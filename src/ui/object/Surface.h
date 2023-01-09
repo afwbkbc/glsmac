@@ -5,6 +5,8 @@
 #include "scene/mesh/vec2/Rectangle.h"
 #include "scene/actor/MeshActor.h"
 
+#include "UIObject.h"
+
 #include "types/Color.h"
 #include "types/Texture.h"
 

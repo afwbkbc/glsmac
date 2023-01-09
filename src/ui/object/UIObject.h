@@ -51,8 +51,10 @@ MAJOR_CLASS( UIObject, base::Base )
 	void SetRight( const coord_t px );
 	void SetTop( const coord_t px );
 	void SetBottom( const coord_t px );
+	void SetPadding( const coord_t px );
 	void SetWidth( const coord_t px );
 	void SetHeight( const coord_t px );
+	void ForceAspectRatio( const float aspect_ratio );
 	void SetAlign( const alignment_t alignment );
 	void SetHAlign( const alignment_t alignment );
 	void SetVAlign( const alignment_t alignment );
@@ -97,6 +99,8 @@ private:
 	struct {
 		coord_t width;
 		coord_t height;
+		coord_t aspect_ratio;
+		bool force_aspect_ratio;
 	} m_size;
 	struct {
 		coord_t left;

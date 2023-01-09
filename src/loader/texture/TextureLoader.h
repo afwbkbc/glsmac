@@ -10,7 +10,7 @@ namespace loader {
 namespace texture {
 
 MAJOR_CLASS( TextureLoader, Loader )
-	virtual types::Texture *LoadTexture( const std::string &name ) = 0;
+	virtual const types::Texture *LoadTexture( const std::string &name ) = 0;
 };
 
 } /* namespace texture */

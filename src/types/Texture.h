@@ -20,6 +20,7 @@ public:
 	const std::string m_name;
 	size_t m_width = 0;
 	size_t m_height = 0;
+	float m_aspect_ratio = 0;
 	unsigned char m_bpp = 0;
 	unsigned char *m_bitmap = NULL;
 	size_t m_bitmap_size = 0;

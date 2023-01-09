@@ -132,6 +132,13 @@ void UIObject::SetBottom( const coord_t px ) {
 	Realign();
 }
 
+void UIObject::SetPadding( const coord_t px ) {
+	SetLeft( px );
+	SetTop( px );
+	SetRight( px );
+	SetBottom( px );
+}
+
 void UIObject::SetWidth( const coord_t px ) {
 	m_size.width = px;
 	m_stick_bits |= STICK_WIDTH;
@@ -141,6 +148,12 @@ void UIObject::SetWidth( const coord_t px ) {
 void UIObject::SetHeight( const coord_t px ) {
 	m_size.height = px;
 	m_stick_bits |= STICK_HEIGHT;
+	Realign();
+}
+
+void UIObject::ForceAspectRatio( const float aspect_ratio ) {
+	m_size.aspect_ratio = aspect_ratio;
+	m_size.force_aspect_ratio = true;
 	Realign();
 }
 
@@ -188,6 +201,38 @@ void UIObject::UpdateObjectArea() {
 		}
 		m_object_area.width = m_object_area.right - m_object_area.left;
 		m_object_area.height = m_object_area.bottom - m_object_area.top;
+		
+		if (m_size.force_aspect_ratio) {
+			float current_aspect_ratio = (float) m_object_area.height / m_object_area.width;
+			if (current_aspect_ratio > m_size.aspect_ratio) {
+				float new_height = m_object_area.height * m_size.aspect_ratio / current_aspect_ratio;
+				if ( ( m_align & ALIGN_VCENTER ) == ALIGN_VCENTER ) {
+					m_object_area.top += ( m_object_area.height - new_height ) / 2;
+					m_object_area.bottom -= ( m_object_area.height - new_height ) / 2;
+				}
+				else if ( m_align & ALIGN_TOP ) {
+					m_object_area.bottom -= ( m_object_area.height - new_height );
+				}
+				else if ( m_align & ALIGN_BOTTOM ) {
+					m_object_area.top += ( m_object_area.height - new_height );
+				}
+				m_object_area.height = new_height;
+			}
+			else if (current_aspect_ratio < m_size.aspect_ratio) {
+				float new_width = m_object_area.width * current_aspect_ratio / m_size.aspect_ratio;
+				if ( ( m_align & ALIGN_HCENTER ) == ALIGN_HCENTER ) {
+					m_object_area.left += ( m_object_area.width - new_width ) / 2;
+					m_object_area.right -= ( m_object_area.width - new_width ) / 2;
+				}
+				else if ( m_align & ALIGN_LEFT ) {
+					m_object_area.right -= ( m_object_area.width - new_width );
+				}
+				else if ( m_align & ALIGN_RIGHT ) {
+					m_object_area.left += ( m_object_area.width - new_width );
+				}
+				m_object_area.width = new_width;
+			}
+		}
 	}
 	else {
 		m_object_area.left = 0;

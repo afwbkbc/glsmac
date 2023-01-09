@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Task.h"
+#include "../Task.h"
 
 #include "types/Texture.h"
-#include "ui/object/Panel.h"
+#include "ui/object/Image.h"
 
 namespace task {
 
@@ -13,8 +13,7 @@ MINOR_CLASS( Intro, Task )
 	void Iterate();
 	
 protected:
-	ui::object::Panel *m_panel;
-	types::Texture *m_logo_image;
+	ui::object::Image *m_image;
 
 };
 

@@ -1,5 +1,11 @@
 #pragma once
 
+// TODO: move to config
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
+#define WINDOW_VSYNC true
+#define MAXFPS 200
+
 #include <string>
 
 #include "base/Module.h"

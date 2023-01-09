@@ -15,7 +15,7 @@
 
 #include "task/test/ManagerTestTask.h"
 
-#include "task/IntroTask.h"
+#include "task/intro/IntroTask.h"
 
 #include "engine/Engine.h"
 #include "task/test/RendererTestTask.h"
@@ -43,7 +43,7 @@ int main(const int argc, const char *argv[]) {
 	loader::font::FreeTypeFontLoader font_loader( "res/fonts" );
 	loader::texture::SDL2ImageTextureLoader texture_loader( "res/textures" );
 	logger::StdoutLogger logger;
-	renderer::OpenGLRenderer renderer( "OpenSMAC", 640, 480, false, 90.0f);
+	renderer::OpenGLRenderer renderer( "OpenSMAC", WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_VSYNC, 90.0f);
 	ui::DefaultUI ui;
 
 	task::Task *task;
