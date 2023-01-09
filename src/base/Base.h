@@ -1,5 +1,8 @@
 #pragma once
 
+// TODO: move to config
+#define MAXFPS 200
+
 #ifdef _WIN32
 #include <windows.h>
 #endif

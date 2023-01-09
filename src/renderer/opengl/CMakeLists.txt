@@ -10,6 +10,7 @@ SET(SRC ${SRC}
 	${PWD}/Actor.cpp
 		${PWD}/MeshActor.cpp
 		${PWD}/TextActor.cpp
+		${PWD}/ImageActor.cpp
 	${PWD}/Scene.cpp
 
 PARENT_SCOPE)

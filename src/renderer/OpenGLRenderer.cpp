@@ -246,4 +246,49 @@ void OpenGLRenderer::UpdateCamera() {
 
 }
 
+void OpenGLRenderer::LoadTexture( const types::Texture* texture ) {
+	
+	Log("Loading texture '" + texture->m_name + "'");
+
+	m_textures[texture] = 0;
+	
+	glActiveTexture( GL_TEXTURE0 );
+	glGenTextures( 1, &m_textures[texture] );
+
+	glBindTexture( GL_TEXTURE_2D, m_textures[texture] );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+
+	if ( glGetError() ) {
+		throw RendererError( "Texture uniform error" );
+	}
+	glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)texture->m_width, (GLsizei)texture->m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture->m_bitmap );
+	if ( glGetError() ) {
+		throw RendererError( "Error loading image of font texture" );
+	};
+	
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+	glBindTexture( GL_TEXTURE_2D, 0 );
+}
+
+void OpenGLRenderer::UnloadTexture( const types::Texture* texture ) {
+	Log("Unloading texture '" + texture->m_name + "'");
+	glDeleteTextures(1, &m_textures[texture] );
+}
+
+void OpenGLRenderer::EnableTexture( const types::Texture* texture ) {
+	glBindTexture( GL_TEXTURE_2D, m_textures[texture] );
+}
+
+void OpenGLRenderer::DisableTexture() {
+	glBindTexture( GL_TEXTURE_2D, 0 );
+}
+
 } /* namespace renderer */

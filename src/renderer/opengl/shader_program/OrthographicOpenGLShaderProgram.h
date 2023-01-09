@@ -6,6 +6,7 @@ namespace renderer {
 namespace opengl {
 
 class MeshActor;
+class ImageActor;
 
 namespace shader_program {
 
@@ -13,9 +14,10 @@ MINOR_CLASS( Orthographic, OpenGLShaderProgram )
 	OrthographicOpenGLShaderProgram() : OpenGLShaderProgram( TYPE_ORTHO ) {};
 protected:
 	friend class opengl::MeshActor;
+	friend class opengl::ImageActor;
 
 	struct {
-		GLint sampler;
+		GLint texture;
 		GLint tint;
 		GLint z_index;
 	} m_gl_uniforms;

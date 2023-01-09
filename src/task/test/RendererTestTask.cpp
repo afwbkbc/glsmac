@@ -26,6 +26,8 @@ scene::mesh::Mesh *testmesh2() {
 void RendererTestTask::Start() {
 	m_scene = new scene::Scene( "RendererTest", scene::SCENE_TYPE_ORTHO );
 	m_logo = new scene::actor::MeshActor( "Logo", testmesh2() );
+	m_logo->SetPosition( scene::actor::Actor::vec3_t( 0.0, 0.0, RANDNUM ) );
+	((scene::actor::MeshActor*)m_logo)->SetTintColor( types::Color( RANDNUM, RANDNUM, RANDNUM, RANDNUM ) );
 	m_scene->AddActor( m_logo );
 	g_engine->GetRenderer()->AddScene( m_scene );
 }

@@ -2,7 +2,8 @@
 
 #include "Task.h"
 
-#include "scene/Scene.h"
+#include "types/Texture.h"
+#include "ui/object/Panel.h"
 
 namespace task {
 
@@ -10,9 +11,11 @@ MINOR_CLASS( Intro, Task )
 	void Start();
 	void Stop();
 	void Iterate();
+	
 protected:
-	scene::Scene *m_scene;
-	scene::actor::Actor *m_logo;
+	ui::object::Panel *m_panel;
+	types::Texture *m_logo_image;
+
 };
 
 } /* namespace task */

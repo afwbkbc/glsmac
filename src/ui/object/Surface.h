@@ -6,6 +6,7 @@
 #include "scene/actor/MeshActor.h"
 
 #include "types/Color.h"
+#include "types/Texture.h"
 
 namespace ui {
 namespace object {
@@ -17,10 +18,14 @@ CHILD_CLASS( Surface, UIObject )
 		Redraw();
 	}
 
+	void SetTexture( const types::Texture* texture ) {
+		m_texture = texture;
+	}
+
 	virtual void Create() {
 		UIObject::Create();
 
-		m_background_mesh = new scene::mesh::vec2::Rectangle;
+		m_background_mesh = new scene::mesh::vec2::Rectangle();
 		m_background = new scene::actor::MeshActor( "Panel::Background", m_background_mesh );
 		m_actors.push_back( m_background );
 
@@ -45,11 +50,15 @@ CHILD_CLASS( Surface, UIObject )
 		UIObject::Draw();
 
 		m_background->SetTintColor( m_colors.background );
+		if ( m_texture ) {
+			m_background->SetTexture( m_texture );
+		}
 	}
 protected:
 	struct {
 		types::Color background;
 	} m_colors;
+	const types::Texture* m_texture = nullptr;
 
 	scene::actor::MeshActor *m_background;
 	scene::mesh::vec2::Rectangle *m_background_mesh;

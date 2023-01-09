@@ -54,7 +54,7 @@ Font::Font( types::Font *font, shader_program::FontOpenGLShaderProgram *shader_p
 		ox += bitmap->width;
 	};
 
-	//glBindBuffer( GL_ARRAY_BUFFER, 0 );
+	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 }
 
 Font::~Font() {

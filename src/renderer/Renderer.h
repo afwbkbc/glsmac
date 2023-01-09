@@ -6,6 +6,7 @@
 #include "base/Error.h"
 
 #include "scene/Scene.h"
+#include "types/Texture.h"
 
 namespace renderer {
 
@@ -17,6 +18,12 @@ MAJOR_CLASS( Renderer, base::Module )
 	const float GetAspectRatio() const {
 		return (float) GetWindowWidth() / GetWindowHeight();
 	}
+	
+	virtual void LoadTexture( const types::Texture* texture ) = 0;
+	virtual void UnloadTexture( const types::Texture* texture ) = 0;
+	virtual void EnableTexture( const types::Texture* texture ) = 0;
+	virtual void DisableTexture() = 0;
+
 protected:
 };
 

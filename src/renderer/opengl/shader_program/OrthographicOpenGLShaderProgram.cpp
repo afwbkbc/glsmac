@@ -21,14 +21,14 @@ void main(void) { \
 
 	this->AddShader( GL_FRAGMENT_SHADER, "#version 130 \n\
 \
-uniform vec4 uTint; \
-uniform sampler2D uSampler; \
-out vec4 FragColor; \
 in vec2 texpos; \
+uniform sampler2D uTexture; \
+uniform vec4 uTint; \
+out vec4 FragColor; \
 \
 void main(void) { \
-	/*FragColor = vec4(texture2D(uSampler, vec2(texpos.st))); */\
-	FragColor = uTint; \
+	FragColor = vec4(texture2D(uTexture, vec2(texpos.xy))) + uTint; \
+	/*FragColor = uTint;*/ \
 } \
 \
 ");
@@ -36,23 +36,23 @@ void main(void) { \
 }
 
 void OrthographicOpenGLShaderProgram::Initialize() {
-	//m_gl_uniforms.sampler = this->GetUniformLocation( "uSampler" );
+	m_gl_attributes.tex_coord = this->GetAttributeLocation( "aTexCoord" );
+	m_gl_uniforms.texture = this->GetUniformLocation( "uTexture" );
 	m_gl_uniforms.z_index = this->GetUniformLocation( "uZIndex" );
 	m_gl_uniforms.tint = this->GetUniformLocation( "uTint" );
 	m_gl_attributes.coord = this->GetAttributeLocation( "aCoord" );
-	//m_gl_attributes.tex_coord = this->GetAttributeLocation( "aTexCoord" );
 };
 
 void OrthographicOpenGLShaderProgram::EnableAttributes() const {
 	glEnableVertexAttribArray( m_gl_attributes.coord );
-	glVertexAttribPointer( m_gl_attributes.coord, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)0 );
-	//glEnableVertexAttribArray( m_gl_attributes.tex_coord );
-	//glVertexAttribPointer( m_gl_attributes.tex_coord, 2, GL_FLOAT, GL_FALSE, 4, (const GLvoid *)2 );
+	glVertexAttribPointer( m_gl_attributes.coord, 2, GL_FLOAT, GL_FALSE, 8, (const GLvoid *)0 );
+	glEnableVertexAttribArray( m_gl_attributes.tex_coord );
+	glVertexAttribPointer( m_gl_attributes.tex_coord, 2, GL_FLOAT, GL_FALSE, 8, (const GLvoid *)8 );
 };
 
 void OrthographicOpenGLShaderProgram::DisableAttributes() const {
 	glDisableVertexAttribArray( m_gl_attributes.coord );
-	//glDisableVertexAttribArray( m_gl_attributes.tex_coord );
+	glDisableVertexAttribArray( m_gl_attributes.tex_coord );
 };
 
 } /* namespace shader_program */

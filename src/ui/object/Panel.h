@@ -6,6 +6,8 @@
 
 #include "Surface.h"
 
+#include "types/Texture.h"
+
 namespace ui {
 namespace object {
 
@@ -14,6 +16,10 @@ CHILD_CLASS( Panel, UIContainer )
 	void SetBackgroundColor( const types::Color &color ) {
 		m_colors.background = color;
 		Redraw();
+	}
+
+	void SetBackgroundTexture( const types::Texture* texture ) {
+		m_texture = texture;
 	}
 
 	void SetBorderColor( const types::Color &color ) {
@@ -68,6 +74,9 @@ CHILD_CLASS( Panel, UIContainer )
 		UIContainer::Draw();
 
 		m_background->SetColor( m_colors.background );
+		if ( m_texture ) {
+			m_background->SetTexture( m_texture );
+		}
 	}
 
 	/*const coord_t GetLeft() const {
@@ -81,7 +90,8 @@ protected:
 		types::Color background;
 		types::Color border;
 	} m_colors;
-
+	const types::Texture* m_texture = nullptr;
+	
 	Surface *m_background;
 
 	unsigned char m_border_width = 0;

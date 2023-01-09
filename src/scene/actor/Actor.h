@@ -20,6 +20,7 @@ MAJOR_CLASS( Actor, Entity )
 	enum type_t {
 		TYPE_MESH,
 		TYPE_TEXT,
+		TYPE_IMAGE,
 	};
 
 	Actor( const type_t type, const std::string &name );

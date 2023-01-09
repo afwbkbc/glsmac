@@ -1,6 +1,8 @@
 #include "Scene.h"
 
 #include "MeshActor.h"
+#include "ImageActor.h"
+
 #include "scene/actor/Actor.h"
 
 #include "../Renderer.h"
@@ -59,6 +61,9 @@ void Scene::Update() {
 			switch (actor_type) {
 				case (scene::actor::Actor::TYPE_MESH):
 					gl_actor = new MeshActor( (scene::actor::MeshActor *)*it );
+					break;
+				case (scene::actor::Actor::TYPE_IMAGE):
+					gl_actor = new ImageActor( (scene::actor::ImageActor *)*it );
 					break;
 				default:
 					gl_actor = m_routine->AddCustomActor( *it );

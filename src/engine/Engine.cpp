@@ -10,6 +10,7 @@ engine::Engine *g_engine = NULL;
 namespace engine {
 
 Engine::Engine(
+	config::Config *config,
 	error_handler::ErrorHandler *error_handler,
 	logger::Logger *logger,
 	loader::font::FontLoader *font_loader,
@@ -18,6 +19,7 @@ Engine::Engine(
 	renderer::Renderer *renderer,
 	ui::UI *ui
 ) :
+	m_config( config ),
 	m_error_handler( error_handler),
 	m_logger( logger ),
 	m_font_loader( font_loader ),
@@ -33,7 +35,8 @@ Engine::Engine(
 
 	g_engine = this;
 
-	m_threads.main.SetIPS( 200 );
+	m_threads.main.SetIPS( MAXFPS );
+	m_threads.main.AddModule( m_config );
 	m_threads.main.AddModule( m_error_handler );
 	m_threads.main.AddModule( m_font_loader );
 	m_threads.main.AddModule( m_logger );
@@ -54,7 +57,7 @@ int Engine::Run() {
 	try {
 
 		m_threads.main.Run();
-
+		
 	} catch ( base::Error &e ) {
 		result = EXIT_FAILURE;
 		this->m_error_handler->HandleError( e );

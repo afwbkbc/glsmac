@@ -1,3 +1,6 @@
+#include <iostream>
+
+#include "config/Config.h"
 #ifdef _WIN32
 #include "error_handler/Win32ErrorHandler.h"
 #else
@@ -21,17 +24,22 @@
 #include "task/test/WorldTestTask.h"
 #include "task/test/ManagerTestTask.h"
 
+
+
 #ifdef _WIN32
 int WINAPI WinMain (HINSTANCE h, HINSTANCE hh, LPSTR cmd, int show) {
 #else
-int main() {
+int main(const int argc, const char *argv[]) {
 #endif
 
+	config::Config config( argc, argv );
+	
 #ifdef _WIN32
 	error_handler::Win32ErrorHandler error_handler;
 #else
 	error_handler::StdoutErrorHandler error_handler;
 #endif
+	
 	loader::font::FreeTypeFontLoader font_loader( "res/fonts" );
 	loader::texture::SDL2ImageTextureLoader texture_loader( "res/textures" );
 	logger::StdoutLogger logger;
@@ -42,18 +50,30 @@ int main() {
 
 	scheduler::SimpleScheduler scheduler;
 	
-	// lite test
-	/*scheduler.AddTask( new task::test::FontTestTask );
-	scheduler.AddTask( new task::test::RendererTestTask );
-	scheduler.AddTask( new task::test::UITestTask );
-	scheduler.AddTask( new task::test::WorldTestTask );*/
+	// simple test
+	//scheduler.AddTask( new task::test::FontTestTask );
+	//scheduler.AddTask( new task::test::RendererTestTask );
+	//scheduler.AddTask( new task::test::UITestTask );
+	//scheduler.AddTask( new task::test::WorldTestTask );
 	
 	// stress-test
-	for (size_t i = 0 ; i < 1000 ; i++) {
+	/*for (size_t i = 0 ; i < 100 ; i++) {
 		scheduler.AddTask( new task::test::ManagerTestTask );
-	}
+	}*/
+	
+	// production
+	scheduler.AddTask( new task::IntroTask );
 
-	engine::Engine engine( &error_handler, &logger, &font_loader, &texture_loader, &scheduler, &renderer, &ui );
+	engine::Engine engine(
+		&config,
+		&error_handler,
+		&logger,
+		&font_loader,
+		&texture_loader,
+		&scheduler,
+		&renderer,
+		&ui
+	);
 
 	return engine.Run();
 }

@@ -4,6 +4,7 @@
 
 #include "../mesh/Mesh.h"
 #include "types/Color.h"
+#include "types/Texture.h"
 
 namespace scene {
 namespace actor {
@@ -15,12 +16,23 @@ public:
 	mesh::Mesh *GetMesh() const {
 		return m_mesh;
 	}
-	void SetTintColor( const types::Color &tint_color ) { m_tint_color = tint_color; }
-	const types::Color & GetTintColor() { return m_tint_color; }
+	void SetTintColor( const types::Color &tint_color ) {
+		m_tint_color = tint_color;
+	}
+	void SetTexture( const types::Texture* texture ) {
+		m_texture = texture;
+	}
+	const types::Color & GetTintColor() {
+		return m_tint_color;
+	}
+	const types::Texture* GetTexture() {
+		return m_texture;
+	}
 protected:
 	mesh::Mesh *m_mesh;
 
 	types::Color m_tint_color;
+	const types::Texture* m_texture = nullptr;
 };
 
 } /* namespace scene */

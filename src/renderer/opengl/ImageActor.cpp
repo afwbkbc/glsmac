@@ -1,108 +1,102 @@
-#include "MeshActor.h"
+#include "ImageActor.h"
 
-#include "scene/actor/MeshActor.h"
+#include "scene/actor/ImageActor.h"
 #include "shader_program/OrthographicOpenGLShaderProgram.h"
 #include "shader_program/WorldOpenGLShaderProgram.h"
 
 #include "types/Matrix44.h"
+#include "scene/actor/ImageActor.h"
 #include "engine/Engine.h"
 
 namespace renderer {
 namespace opengl {
 
-MeshActor::MeshActor( scene::actor::MeshActor *actor ) : Actor( actor ) {
+ImageActor::ImageActor( scene::actor::ImageActor *actor ) : Actor( actor ) {
 
 	Log( "Creating OpenGL actor" );
 
 	glGenBuffers( 1, &m_vbo );
 	glGenBuffers( 1, &m_ibo );
-	/*
-	for (int i=0;i<this->mModel.mMaterials.size();i++) {
-		this->mMaterialTextureObjs.push_back(0);
-		this->mRenderer->ActivateTexture(&this->mModel.mMaterials[i]->mTexture1Map.texture,&this->mMaterialTextureObjs[i]);
-	}*/
 
-	//glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
-	//glBindBuffer( GL_ARRAY_BUFFER, 0 );
-
-	m_update_timestamp = actor->GetMesh()->UpdatedAt();
+	//m_update_timestamp = actor->GetImage()->UpdatedAt();
 }
 
-MeshActor::~MeshActor() {
+ImageActor::~ImageActor() {
 	Log( "Destroying OpenGL actor" );
 
 	glDeleteBuffers( 1, &m_ibo );
 	glDeleteBuffers( 1, &m_vbo );
+
 }
 
-bool MeshActor::ReloadNeeded() {
-	size_t mesh_updated_at = ((scene::actor::MeshActor *)m_actor)->GetMesh()->UpdatedAt();
-	if ( m_update_timestamp == mesh_updated_at )
-		return false;
-	m_update_timestamp = mesh_updated_at;
-	return true;
+bool ImageActor::ReloadNeeded() {
+	// image can't change once it's loaded
+	return false;
 }
 
-void MeshActor::Load() {
-	//Log( "(re)loading OpenGL actor" );
+void ImageActor::Load() {
+	Log( "(re)loading OpenGL actor" );
+	
+	
+/*
+	scene::actor::MeshActor *mesh_actor = (scene::actor::MeshActor *)m_actor;
 
-	auto *actor = (scene::actor::MeshActor *)m_actor;
+	scene::mesh::Mesh *mesh = mesh_actor->GetMesh();
+*/
 
-	scene::mesh::Mesh *mesh = actor->GetMesh();
+	auto *actor = (scene::actor::ImageActor *)m_actor;
+	
+	Log("image width=" + to_string(actor->GetImage()->m_width) + " height=" + to_string(actor->GetImage()->m_height));
+	Log("window width=" + to_string(g_engine->GetRenderer()->GetWindowWidth()) + " height=" + to_string(g_engine->GetRenderer()->GetWindowHeight()));
+	
+	// width and height scaled to viewport (to have same absolute pixel size always)
+	float scaled_w = (float) actor->GetImage()->m_width / g_engine->GetRenderer()->GetWindowWidth();
+	float scaled_h = (float) actor->GetImage()->m_height / g_engine->GetRenderer()->GetWindowHeight();
+	
+	m_vertex_data = { -scaled_w, -scaled_h, scaled_w, -scaled_h, scaled_w, scaled_h, -scaled_w, scaled_h };
+	m_index_data = { 0, 1, 2, 3 };
 
 	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
-	glBufferData( GL_ARRAY_BUFFER, mesh->GetVertexData()->size() * sizeof(scene::mesh::Mesh::coord_t), (GLvoid *)mesh->GetVertexData()->data(), GL_STATIC_DRAW );
+	glBufferData( GL_ARRAY_BUFFER, m_vertex_data.size() * sizeof(float), (GLvoid *)m_vertex_data.data(), GL_STATIC_DRAW );
 
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ibo );
-	glBufferData( GL_ELEMENT_ARRAY_BUFFER, mesh->GetIndexData()->size() * sizeof(scene::mesh::Mesh::index_t), (GLvoid *)mesh->GetIndexData()->data(), GL_STATIC_DRAW);
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, m_index_data.size() * sizeof(unsigned int), (GLvoid *)m_index_data.data(), GL_STATIC_DRAW);
 
-	m_ibo_size = mesh->GetIndexData()->size();
+	m_ibo_size = m_index_data.size();
 
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
-	
-	const auto* texture = actor->GetTexture();
-	if (texture) {
-		g_engine->GetRenderer()->LoadTexture(texture);
-	}
+ 
 }
 
-void MeshActor::Unload() {
+void ImageActor::Unload() {
 	//Log( "Destroying OpenGL actor" );
-
-	auto *actor = (scene::actor::MeshActor *)m_actor;
-	
-	const auto* texture = actor->GetTexture();
-	if (texture) {
-		g_engine->GetRenderer()->UnloadTexture(texture);
-	}
 
 	/*for (int i=0;i<this->mModel.mMaterials.size();i++)
 		this->mRenderer->DeactivateTexture(&this->mModel.mMaterials[i]->mTexture1Map.texture,&this->mMaterialTextureObjs[i]);*/
 
 }
 
-void MeshActor::Draw( shader_program::OpenGLShaderProgram *shader_program ) {
+void ImageActor::Draw( shader_program::OpenGLShaderProgram *shader_program ) {
 
 	//Log( "Drawing" );
 
 	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ibo );
 
-	auto *actor = (scene::actor::MeshActor *)m_actor;
-	
 	shader_program->Enable();
 
 	switch ( shader_program->GetType() ) {
 		case ( shader_program::OpenGLShaderProgram::TYPE_ORTHO ): {
 			auto *ortho_shader_program = (shader_program::OrthographicOpenGLShaderProgram *)shader_program;
 			glUniform1f( ortho_shader_program->m_gl_uniforms.z_index, m_actor->GetPosition().z );
-			types::Color tint_color = actor->GetTintColor();
+			//types::Color tint_color = ((scene::actor::MeshActor *)m_actor)->GetTintColor();
+			types::Color tint_color = types::Color::WHITE();
 			const GLfloat tint_color_data[4] = { tint_color.red, tint_color.green, tint_color.blue, tint_color.alpha };
 			glUniform4fv( ortho_shader_program->m_gl_uniforms.tint, 1, tint_color_data );
 			break;
 		}
-		case ( shader_program::OpenGLShaderProgram::TYPE_PERSP ): {
+/*		case ( shader_program::OpenGLShaderProgram::TYPE_PERSP ): {
 			auto *persp_shader_program = (shader_program::WorldOpenGLShaderProgram *)shader_program;
 
 			types::Matrix44 matrix = m_actor->GetWorldMatrix();
@@ -115,7 +109,7 @@ void MeshActor::Draw( shader_program::OpenGLShaderProgram *shader_program ) {
 
 			break;
 
-		}
+		}*/
 	}
 
 	/*
@@ -134,12 +128,7 @@ void MeshActor::Draw( shader_program::OpenGLShaderProgram *shader_program ) {
 	//glBindTexture(GL_TEXTURE_2D, this->mMaterialTextureObjs[0]);
 	//glActiveTexture(GL_TEXTURE0);
 
-	const auto *texture = actor->GetTexture();
-	if (texture) {
-		g_engine->GetRenderer()->EnableTexture(texture);
-	}
-
-	/*
+/*
 	math::Matrix44 matrix;
 
 	matrix.Identity();
@@ -152,11 +141,7 @@ void MeshActor::Draw( shader_program::OpenGLShaderProgram *shader_program ) {
 
 	//glUniformMatrix4fv(shader_program->mUWorld, 1, GL_TRUE, (const GLfloat*)(&this->mActorFinalMatrices[i]));
 
-	glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
-
-	if (texture) {
-		g_engine->GetRenderer()->DisableTexture();
-	}
+	glDrawElements( GL_QUADS, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
 
 	shader_program->Disable();
 

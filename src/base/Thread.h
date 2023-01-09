@@ -33,7 +33,7 @@ protected:
 	thread_state_t m_state;
 	thread_command_t m_command;
 	base::modules_t m_modules;
-	float m_ips;
+	float m_ips = 10;
 #ifdef DEBUG
 	size_t m_icounter;
 #endif

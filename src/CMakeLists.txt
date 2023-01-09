@@ -1,6 +1,7 @@
 SUBDIR( base )
 SUBDIR( types )
 SUBDIR( util )
+SUBDIR( config )
 SUBDIR( error_handler )
 SUBDIR( logger )
 SUBDIR( loader )
