@@ -23,7 +23,10 @@ MINOR_CLASS( MainMenu, Task )
 	
 protected:
 	const MenuItemMesh m_menu_item_mesh;
-	const MenuItemTexture m_menu_item_background;
+	
+	types::Texture* m_menu_item_top;
+	types::Texture* m_menu_item_body;
+	types::Texture* m_menu_item_bottom;
 	
 	ui::object::Image *m_background;
 	ui::object::Panel *m_panel;

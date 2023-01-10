@@ -41,7 +41,10 @@ int main(const int argc, const char *argv[]) {
 #endif
 	
 	loader::font::FreeTypeFontLoader font_loader( "res/fonts" );
+	
 	loader::texture::SDL2ImageTextureLoader texture_loader( "res/textures" );
+	texture_loader.SetTransparentColor(types::Color::RGBA_From(255, 0, 255, 255));
+	
 	logger::StdoutLogger logger;
 	renderer::OpenGLRenderer renderer( "OpenSMAC", WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_VSYNC, 90.0f);
 	ui::DefaultUI ui;

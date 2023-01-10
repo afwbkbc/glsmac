@@ -1,5 +1,7 @@
 #include "SDL2ImageTextureLoader.h"
 
+using namespace std;
+
 namespace loader {
 namespace texture {
 
@@ -15,7 +17,7 @@ void SDL2ImageTextureLoader::Iterate() {
 
 }
 
-const types::Texture *SDL2ImageTextureLoader::LoadTexture( const std::string &name ) {
+types::Texture *SDL2ImageTextureLoader::LoadTexture( const string &name ) {
 
 	texture_map_t::iterator it = m_textures.find( name );
 	if (it != m_textures.end()) {
@@ -47,11 +49,53 @@ const types::Texture *SDL2ImageTextureLoader::LoadTexture( const std::string &na
 		memcpy( texture->m_bitmap, image->pixels, texture->m_bitmap_size );
 		SDL_FreeSurface(image);
 
+		if (m_transparent_color) {
+			for (size_t i = 0 ; i < texture->m_bitmap_size ; i += texture->m_bpp) {
+				if (!memcmp( texture->m_bitmap + i, m_transparent_color, texture->m_bpp )) {
+					memset( texture->m_bitmap + i, 0, texture->m_bpp );
+				}
+			}
+		}
+		
 		m_textures[name] = texture;
 		
 		return texture;
 	}
 
+}
+
+types::Texture *SDL2ImageTextureLoader::LoadTexture( const string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags ) {
+	
+	const string subtexture_key =
+		name + ":" +
+		to_string( x1 ) + ":" +
+		to_string( y1 ) + ":" +
+		to_string( x2 ) + ":" +
+		to_string( y2 )
+	;
+	
+	texture_map_t::iterator it = m_subtextures.find( subtexture_key );
+	if (it != m_subtextures.end()) {
+		return it->second;
+	}
+	else {
+	
+		auto *full_texture = LoadTexture( name );
+
+		auto* subtexture = new types::Texture(subtexture_key);
+		
+		subtexture->CopyFrom(full_texture, x1, y1, x2, y2);
+		if (flags & LT_ROTATE == LT_ROTATE) {
+			subtexture->Rotate();
+		}
+		if (flags & LT_FLIPV == LT_FLIPV) {
+			subtexture->FlipV();
+		}
+		
+		m_subtextures[subtexture_key] = subtexture;
+
+		return subtexture;
+	}
 }
 
 } /* namespace texture */

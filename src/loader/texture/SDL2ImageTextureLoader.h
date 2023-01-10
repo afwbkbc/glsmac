@@ -16,14 +16,16 @@ MINOR_CLASS( SDL2Image, TextureLoader )
 	void Stop();
 	void Iterate();
 
-	const types::Texture *LoadTexture( const string &name );
+	types::Texture *LoadTexture( const string &name );
+	types::Texture *LoadTexture( const string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags );
 	
 protected:
 	const string m_textures_directory;
 	
 	// cache all textures for future use
-	typedef unordered_map< string, const types::Texture* > texture_map_t;
+	typedef unordered_map< string, types::Texture* > texture_map_t;
 	texture_map_t m_textures;
+	texture_map_t m_subtextures;
 
 };
 
