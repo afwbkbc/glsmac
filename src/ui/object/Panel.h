@@ -8,6 +8,8 @@
 
 #include "types/Texture.h"
 
+#include "ui/UI.h"
+
 namespace ui {
 namespace object {
 
@@ -57,6 +59,7 @@ CHILD_CLASS( Panel, UIContainer )
 		AddChild( m_borders.top );
 		AddChild( m_borders.right );
 		AddChild( m_borders.bottom );
+		
 	}
 
 	virtual void Destroy() {
@@ -67,6 +70,10 @@ CHILD_CLASS( Panel, UIContainer )
 		RemoveChild( m_borders.right );
 		RemoveChild( m_borders.bottom );
 
+		if (!m_child_objects.empty()) {
+			throw UIError("some children still remain when object is about to be destroyed!");
+		}
+		
 		UIContainer::Destroy();
 	}
 

@@ -27,7 +27,7 @@ uniform vec4 uTint; \
 out vec4 FragColor; \
 \
 void main(void) { \
-	FragColor = vec4(texture2D(uTexture, vec2(texpos.xy))) + uTint; \
+	FragColor = vec4(texture2D(uTexture, vec2(texpos.xy)).xyz + uTint.xyz, uTint.w); \
 	/*FragColor = uTint;*/ \
 } \
 \

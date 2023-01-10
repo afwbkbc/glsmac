@@ -18,8 +18,12 @@ MAJOR_CLASS( Actor, base::Base )
 	scene::actor::Actor *GetActor() const {
 		return m_actor;
 	}
+	void UnlinkActor() {
+		m_actor = nullptr;
+	}
 protected:
 	scene::actor::Actor *m_actor;
+	
 };
 
 } /* namespace opengl */

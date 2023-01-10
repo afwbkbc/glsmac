@@ -21,9 +21,13 @@ Scene::~Scene() {
 }
 
 void Scene::RemoveActor( base::ObjectLink *link ) {
-	if ( !link->Removed() )
-		link->GetSrcObject<scene::actor::Actor>()->m_renderer_object = NULL;
 	auto *gl_actor = link->GetDstObject<Actor>();
+	if ( link->Removed() ) {
+		gl_actor->UnlinkActor(); // already removed on other side
+	}
+	else {
+		link->GetSrcObject<scene::actor::Actor>()->m_renderer_object = NULL;
+	}
 	gl_actor->Unload();
 	delete gl_actor;
 	delete link;

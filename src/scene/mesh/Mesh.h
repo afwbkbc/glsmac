@@ -18,8 +18,8 @@ MAJOR_CLASS( Mesh, base::Base )
 
 	const uint8_t GetVertexSize() { return m_vertex_size; }
 	const uint8_t GetSurfaceSize() { return m_surface_size; }
-	std::vector<coord_t> *GetVertexData() { return &m_vertex_data; }
-	std::vector<index_t> *GetIndexData() { return &m_index_data; }
+	const std::vector<coord_t> *GetVertexData() const { return &m_vertex_data; }
+	const std::vector<index_t> *GetIndexData() const { return &m_index_data; }
 	void Clear() {
 		m_vertex_data.clear();
 		m_index_data.clear();
@@ -27,7 +27,7 @@ MAJOR_CLASS( Mesh, base::Base )
 	void Update() {
 		m_update_timestamp++;
 	}
-	const size_t UpdatedAt() {
+	const size_t UpdatedAt() const {
 		return m_update_timestamp;
 	}
 protected:

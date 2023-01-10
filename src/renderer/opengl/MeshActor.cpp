@@ -48,7 +48,7 @@ void MeshActor::Load() {
 
 	auto *actor = (scene::actor::MeshActor *)m_actor;
 
-	scene::mesh::Mesh *mesh = actor->GetMesh();
+	const auto *mesh = actor->GetMesh();
 
 	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
 	glBufferData( GL_ARRAY_BUFFER, mesh->GetVertexData()->size() * sizeof(scene::mesh::Mesh::coord_t), (GLvoid *)mesh->GetVertexData()->data(), GL_STATIC_DRAW );
@@ -70,16 +70,17 @@ void MeshActor::Load() {
 void MeshActor::Unload() {
 	//Log( "Destroying OpenGL actor" );
 
-	auto *actor = (scene::actor::MeshActor *)m_actor;
-	
-	const auto* texture = actor->GetTexture();
-	if (texture) {
-		g_engine->GetRenderer()->UnloadTexture(texture);
+	if ( m_actor ) {
+		auto *actor = (scene::actor::MeshActor *)m_actor;
+
+		const auto* texture = actor->GetTexture();
+		if (texture) {
+			g_engine->GetRenderer()->UnloadTexture(texture);
+		}
+
+		/*for (int i=0;i<this->mModel.mMaterials.size();i++)
+			this->mRenderer->DeactivateTexture(&this->mModel.mMaterials[i]->mTexture1Map.texture,&this->mMaterialTextureObjs[i]);*/
 	}
-
-	/*for (int i=0;i<this->mModel.mMaterials.size();i++)
-		this->mRenderer->DeactivateTexture(&this->mModel.mMaterials[i]->mTexture1Map.texture,&this->mMaterialTextureObjs[i]);*/
-
 }
 
 void MeshActor::Draw( shader_program::OpenGLShaderProgram *shader_program ) {

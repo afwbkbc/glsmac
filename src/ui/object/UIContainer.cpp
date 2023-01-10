@@ -17,7 +17,6 @@ void UIContainer::Create() {
 void UIContainer::Destroy() {
 	for ( auto it = m_child_objects.begin() ; it < m_child_objects.end() ; ++it )
 		DestroyChild( *it );
-
 	UIObject::Destroy();
 }
 

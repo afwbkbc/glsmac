@@ -62,7 +62,7 @@ int main(const int argc, const char *argv[]) {
 	}*/
 	
 	// production
-	scheduler.AddTask( new task::IntroTask );
+	scheduler.AddTask( new task::intro::IntroTask );
 
 	engine::Engine engine(
 		&config,

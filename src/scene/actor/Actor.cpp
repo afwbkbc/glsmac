@@ -10,8 +10,9 @@ Actor::Actor( type_t type, const std::string &name ) : Entity(), m_type( type ) 
 }
 
 Actor::~Actor() {
-	if ( m_renderer_object )
+	if ( m_renderer_object ) {
 		m_renderer_object->Remove();
+	}
 }
 /*
 void Actor::SetPosition( const vec3_t position ) {

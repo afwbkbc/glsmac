@@ -11,6 +11,8 @@ UIObject::UIObject() {
 	m_position.right = 0;
 	m_position.top = 0;
 	m_position.bottom = 0;
+	m_size.aspect_ratio = 0;
+	m_size.force_aspect_ratio = false;
 }
 
 void UIObject::Create() {

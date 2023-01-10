@@ -28,7 +28,7 @@ CHILD_CLASS( Surface, UIObject )
 		UIObject::Create();
 
 		m_background_mesh = new scene::mesh::vec2::Rectangle();
-		m_background = new scene::actor::MeshActor( "Panel::Background", m_background_mesh );
+		m_background = new scene::actor::MeshActor( "UI::Surface", m_background_mesh );
 		m_actors.push_back( m_background );
 
 	}

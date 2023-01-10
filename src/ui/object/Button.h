@@ -2,15 +2,15 @@
 
 /* Clickable button */
 
-#include "UIContainer.h"
+#include "Panel.h"
 
 #include "Surface.h"
 
 namespace ui {
 namespace object {
 
-CHILD_CLASS( Button, UIContainer )
-	virtual void Create() {
+CHILD_CLASS( Button, Panel )
+	/*virtual void Create() {
 		UIContainer::Create();
 
 		AddChild( m_background = new Surface );
@@ -19,9 +19,9 @@ CHILD_CLASS( Button, UIContainer )
 		RemoveChild( m_background );
 
 		UIContainer::Destroy();
-	}
+	}*/
 protected:
-	Surface *m_background;
+	//Surface *m_background;
 };
 
 } /* namespace object */

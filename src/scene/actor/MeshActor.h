@@ -11,9 +11,9 @@ namespace actor {
 
 class MeshActor : public Actor {
 public:
-	MeshActor( const std::string &name, mesh::Mesh *mesh );
+	MeshActor( const std::string &name, const mesh::Mesh *mesh );
 	~MeshActor();
-	mesh::Mesh *GetMesh() const {
+	const mesh::Mesh *GetMesh() const {
 		return m_mesh;
 	}
 	void SetTintColor( const types::Color &tint_color ) {
@@ -29,7 +29,7 @@ public:
 		return m_texture;
 	}
 protected:
-	mesh::Mesh *m_mesh;
+	const mesh::Mesh *m_mesh;
 
 	types::Color m_tint_color;
 	const types::Texture* m_texture = nullptr;
