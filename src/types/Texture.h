@@ -30,6 +30,9 @@ public:
 	void CopyFrom( const types::Texture* source, const size_t x1, const size_t y1, const size_t x2, const size_t y2 );
 	void Rotate();
 	void FlipV();
+	//void FlipH(); // TODO
+	void SetAlpha(const float alpha);
+	void SetContrast(const float contrast);
 };
 
 } /* namespace types */

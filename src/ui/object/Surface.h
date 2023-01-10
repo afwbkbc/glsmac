@@ -23,6 +23,11 @@ CHILD_CLASS( Surface, UIObject )
 	void SetTexture( const types::Texture* texture ) {
 		m_texture = texture;
 	}
+	
+	void SetSizeFromTexture() {
+		SetWidth(m_texture->m_width);
+		SetHeight(m_texture->m_height);
+	}
 
 	virtual void Create() {
 		UIObject::Create();

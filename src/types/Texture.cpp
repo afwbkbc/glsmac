@@ -1,6 +1,7 @@
 #include "Texture.h"
 
 #include <cstring>
+#include <cmath>
 
 namespace types {
 
@@ -57,8 +58,10 @@ void Texture::Rectangle( const size_t x1, const size_t y1, const size_t x2, cons
 }
 
 void Texture::CopyFrom( const types::Texture* source, const size_t x1, const size_t y1, const size_t x2, const size_t y2 ) {
-	const size_t w = x2 - x1;
-	const size_t h = y2 - y1;
+	
+	// +1 because it's inclusive on both sides
+	const size_t w = x2 - x1 + 1;
+	const size_t h = y2 - y1 + 1;
 	
 	Resize( w, h );
 	for (size_t y = 0 ; y < h ; y++) {
@@ -110,5 +113,25 @@ void Texture::FlipV() {
 	m_bitmap = new_bitmap;
 }
 
+void Texture::SetAlpha(const float alpha) {
+	const uint8_t alpha_byte = alpha * 255;
+	for (size_t y = 0 ; y < m_height ; y++) {
+		for (size_t x = 0 ; x < m_width ; x++) {
+			m_bitmap[ ( y * m_width + x ) * m_bpp + 3 ] = alpha_byte;
+		}
+	}
 }
 
+void Texture::SetContrast(const float contrast) {
+	size_t i;
+	for (size_t y = 0 ; y < m_height ; y++) {
+		for (size_t x = 0 ; x < m_width ; x++) {
+			for (size_t b = 0 ; b < 3 ; b++) {
+				i = ( y * m_width + x ) * m_bpp + b;
+				m_bitmap[ i ] = floor(std::fmin(255, (float)m_bitmap[i] * contrast));
+			}
+		}
+	}
+}
+
+}

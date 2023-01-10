@@ -64,14 +64,16 @@ types::Texture *SDL2ImageTextureLoader::LoadTexture( const string &name ) {
 
 }
 
-types::Texture *SDL2ImageTextureLoader::LoadTexture( const string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags ) {
+types::Texture *SDL2ImageTextureLoader::LoadTexture( const string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
 	
 	const string subtexture_key =
 		name + ":" +
 		to_string( x1 ) + ":" +
 		to_string( y1 ) + ":" +
 		to_string( x2 ) + ":" +
-		to_string( y2 )
+		to_string( y2 ) + ":" +
+		to_string(flags) + ":" +
+		to_string(value)
 	;
 	
 	texture_map_t::iterator it = m_subtextures.find( subtexture_key );
@@ -85,11 +87,18 @@ types::Texture *SDL2ImageTextureLoader::LoadTexture( const string &name, const s
 		auto* subtexture = new types::Texture(subtexture_key);
 		
 		subtexture->CopyFrom(full_texture, x1, y1, x2, y2);
-		if (flags & LT_ROTATE == LT_ROTATE) {
+		if ((flags & LT_ROTATE) == LT_ROTATE) {
 			subtexture->Rotate();
 		}
-		if (flags & LT_FLIPV == LT_FLIPV) {
+		if ((flags & LT_FLIPV) == LT_FLIPV) {
 			subtexture->FlipV();
+		}
+		
+		if ((flags & LT_ALPHA) == LT_ALPHA) {
+			subtexture->SetAlpha(value);
+		}
+		if ((flags & LT_CONTRAST) == LT_CONTRAST) {
+			subtexture->SetContrast(value);
 		}
 		
 		m_subtextures[subtexture_key] = subtexture;
