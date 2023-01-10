@@ -24,7 +24,7 @@ void MainMenuTask::Start() {
 	
 	
 	
-	test = new MenuItem( &m_menu_item_mesh );
+	test = new MenuItem( &m_menu_item_background );
 	
 	m_panel->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_BOTTOM );
 	m_panel->SetWidth(400);

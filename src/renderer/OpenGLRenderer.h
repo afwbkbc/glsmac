@@ -59,6 +59,7 @@ private:
 	void UpdateCamera();
 	
 	unordered_map< const types::Texture*, GLuint > m_textures;
+	GLuint m_no_texture;
 	GLuint next_texture_obj_id = 0;
 };
 

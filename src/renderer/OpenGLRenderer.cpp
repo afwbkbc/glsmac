@@ -113,6 +113,28 @@ void OpenGLRenderer::Start() {
 	glCullFace( GL_FRONT );
 	glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );
 
+	// generate 'empty' texture (transparent 1x1)
+	glActiveTexture( GL_TEXTURE0 );
+	glGenTextures( 1, &m_no_texture );
+
+	glBindTexture( GL_TEXTURE_2D, m_no_texture );
+	/*glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );*/
+
+	//glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+
+	uint32_t nothing = 0;
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &nothing );
+	if ( glGetError() ) {
+		throw RendererError( "Error loading texture" );
+	};
+	
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    //glGenerateMipmap(GL_TEXTURE_2D);
+
 	//this->mState=MS_ACTIVE;
 
 	/*for (int i=this->mStartRoutinesQueue.size()-1;i>=0;i--) {
@@ -126,6 +148,9 @@ void OpenGLRenderer::Start() {
 void OpenGLRenderer::Stop() {
 	Log( "Uninitializing OpenGL" );
 
+	glBindTexture( GL_TEXTURE_2D, 0 );
+	glDeleteTextures(1, &m_no_texture );
+	
 	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it )
 		(*it)->Stop();
 
@@ -268,14 +293,14 @@ void OpenGLRenderer::LoadTexture( const types::Texture* texture ) {
 
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)texture->m_width, (GLsizei)texture->m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture->m_bitmap );
 	if ( glGetError() ) {
-		throw RendererError( "Error loading image of font texture" );
+		throw RendererError( "Error loading texture" );
 	};
 	
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glGenerateMipmap(GL_TEXTURE_2D);
 
-	glBindTexture( GL_TEXTURE_2D, 0 );
+	glBindTexture( GL_TEXTURE_2D, m_no_texture );
 }
 
 void OpenGLRenderer::UnloadTexture( const types::Texture* texture ) {
@@ -284,11 +309,12 @@ void OpenGLRenderer::UnloadTexture( const types::Texture* texture ) {
 }
 
 void OpenGLRenderer::EnableTexture( const types::Texture* texture ) {
+	
 	glBindTexture( GL_TEXTURE_2D, m_textures[texture] );
 }
 
 void OpenGLRenderer::DisableTexture() {
-	glBindTexture( GL_TEXTURE_2D, 0 );
+	glBindTexture( GL_TEXTURE_2D, m_no_texture );
 }
 
 } /* namespace renderer */

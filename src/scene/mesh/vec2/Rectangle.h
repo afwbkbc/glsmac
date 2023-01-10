@@ -24,6 +24,8 @@ CHILD_CLASS( Rectangle, Vec2Mesh )
 		AddSurface( v_top_left, v_bottom_left, v_bottom_right );
 		Update();
 	}
+private:
+	const float m_tex_tint = 0;
 };
 
 } /* namespace vec2 */

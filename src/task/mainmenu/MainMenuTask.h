@@ -9,6 +9,7 @@
 #include "ui/object/Panel.h"
 #include "MenuItem.h"
 #include "MenuItemMesh.h"
+#include "MenuItemTexture.h"
 
 using namespace std;
 
@@ -22,6 +23,7 @@ MINOR_CLASS( MainMenu, Task )
 	
 protected:
 	const MenuItemMesh m_menu_item_mesh;
+	const MenuItemTexture m_menu_item_background;
 	
 	ui::object::Image *m_background;
 	ui::object::Panel *m_panel;

@@ -5,28 +5,28 @@ using namespace ui::object;
 namespace task {
 namespace mainmenu {
 
-MenuItem::MenuItem( const MenuItemMesh* mesh )
+MenuItem::MenuItem( const types::Texture* background )
 	: Button()
-	, m_mesh( mesh )
+	//, m_mesh( mesh )
 {
 	
-	SetHeight( 100 );
-	SetWidth( 300 );
+	SetWidth( background->m_width );
+	SetHeight( background->m_height );
 	SetAlign( UIObject::ALIGN_BOTTOM | UIObject::ALIGN_RIGHT );
 	
-	SetBackgroundColor(types::Color::TRANSPARENT());
+	SetBackgroundTexture( background );
 	
-	
+	//SetBackgroundColor(types::Color::TRANSPARENT());
 	
 }
 
 void MenuItem::Create() {
 	Button::Create();
-	
+	/*
 	m_actor = new scene::actor::MeshActor( "MainMenu::MenuItem", m_mesh );
 	m_actor->SetTintColor({ 0.5, 0.7, 0.8, 0.5});
 	m_actors.push_back( m_actor );
-	
+	*/
 	/*m_background_mesh = new scene::mesh::vec2::Rectangle();
 	m_background = new scene::actor::MeshActor( "UI::Surface", m_background_mesh );
 	m_actors.push_back( m_background );*/

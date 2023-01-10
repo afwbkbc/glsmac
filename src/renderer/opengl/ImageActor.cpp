@@ -91,9 +91,9 @@ void ImageActor::Draw( shader_program::OpenGLShaderProgram *shader_program ) {
 			auto *ortho_shader_program = (shader_program::OrthographicOpenGLShaderProgram *)shader_program;
 			glUniform1f( ortho_shader_program->m_gl_uniforms.z_index, m_actor->GetPosition().z );
 			//types::Color tint_color = ((scene::actor::MeshActor *)m_actor)->GetTintColor();
-			types::Color tint_color = types::Color::WHITE();
+			/*types::Color tint_color = types::Color::WHITE();
 			const GLfloat tint_color_data[4] = { tint_color.red, tint_color.green, tint_color.blue, tint_color.alpha };
-			glUniform4fv( ortho_shader_program->m_gl_uniforms.tint, 1, tint_color_data );
+			glUniform4fv( ortho_shader_program->m_gl_uniforms.tint, 1, tint_color_data );*/
 			break;
 		}
 /*		case ( shader_program::OpenGLShaderProgram::TYPE_PERSP ): {

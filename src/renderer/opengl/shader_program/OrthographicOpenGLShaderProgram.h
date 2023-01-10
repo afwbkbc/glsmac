@@ -18,7 +18,6 @@ protected:
 
 	struct {
 		GLint texture;
-		GLint tint;
 		GLint z_index;
 	} m_gl_uniforms;
 

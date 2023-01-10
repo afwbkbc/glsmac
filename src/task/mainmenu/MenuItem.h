@@ -4,13 +4,13 @@
 
 #include "MenuItemMesh.h"
 
-#include "scene/actor/MeshActor.h"
+//#include "scene/actor/MeshActor.h"
 
 namespace task {
 namespace mainmenu {
 
 CHILD_CLASS( MenuItem, ui::object::Button )
-	MenuItem( const MenuItemMesh* mesh );
+	MenuItem( const types::Texture* texture );
 
 	virtual void Create();
 	virtual void Destroy();
@@ -19,8 +19,9 @@ CHILD_CLASS( MenuItem, ui::object::Button )
 
 
 protected:
-	const MenuItemMesh* m_mesh;
-	scene::actor::MeshActor *m_actor;
+	
+	//const MenuItemMesh* m_mesh;
+	//scene::actor::MeshActor *m_actor;
 	
 };
 

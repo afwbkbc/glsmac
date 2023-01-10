@@ -23,12 +23,10 @@ void main(void) { \
 \
 in vec2 texpos; \
 uniform sampler2D uTexture; \
-uniform vec4 uTint; \
 out vec4 FragColor; \
 \
 void main(void) { \
-	FragColor = vec4(texture2D(uTexture, vec2(texpos.xy)).xyz + uTint.xyz, uTint.w); \
-	/*FragColor = uTint;*/ \
+	FragColor = vec4(texture2D(uTexture, vec2(texpos.xy))); \
 } \
 \
 ");
@@ -39,7 +37,6 @@ void OrthographicOpenGLShaderProgram::Initialize() {
 	m_gl_attributes.tex_coord = this->GetAttributeLocation( "aTexCoord" );
 	m_gl_uniforms.texture = this->GetUniformLocation( "uTexture" );
 	m_gl_uniforms.z_index = this->GetUniformLocation( "uZIndex" );
-	m_gl_uniforms.tint = this->GetUniformLocation( "uTint" );
 	m_gl_attributes.coord = this->GetAttributeLocation( "aCoord" );
 };
 

@@ -30,5 +30,6 @@ void Mesh::AddSurface( const index_t v1, const index_t v2, const index_t v3 ) {
 	AddIndex( v3 );
 }
 
+
 } /* namespace mesh */
 } /* namespace scene */
