@@ -16,14 +16,10 @@ CHILD_CLASS( Rectangle, Vec2Mesh )
 	}
 	void SetCoords( const coord_t left, const coord_t top, const coord_t right, const coord_t bottom ) {
 		Clear();
-		auto v_top_left = AddVertex( vec2_t( left, top ) );
-		AddVertex( vec2_t( 0, 0 ) );
-		auto v_top_right = AddVertex( vec2_t( right, top ) );
-		AddVertex( vec2_t( 1, 0 ) );
-		auto v_bottom_right = AddVertex( vec2_t( right, bottom ) );
-		AddVertex( vec2_t( 1, 1 ) );
-		auto v_bottom_left = AddVertex( vec2_t( left, bottom ) );
-		AddVertex( vec2_t( 0, 1 ) );
+		auto v_top_left = AddVertex( vec2_t( left, top ), vec2_t(  0, 0 ) );
+		auto v_top_right = AddVertex( vec2_t( right, top ), vec2_t ( 1, 0 ) );
+		auto v_bottom_right = AddVertex( vec2_t( right, bottom ), vec2_t ( 1, 1 ) );
+		auto v_bottom_left = AddVertex( vec2_t( left, bottom ), vec2_t ( 0, 1 ) );
 		AddSurface( v_top_left, v_top_right, v_bottom_right );
 		AddSurface( v_top_left, v_bottom_left, v_bottom_right );
 		Update();

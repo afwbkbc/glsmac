@@ -24,7 +24,7 @@ void MenuItem::Create() {
 	Button::Create();
 	
 	m_actor = new scene::actor::MeshActor( "MainMenu::MenuItem", m_mesh );
-	
+	m_actor->SetTintColor({ 0.5, 0.7, 0.8, 0.5});
 	m_actors.push_back( m_actor );
 	
 	/*m_background_mesh = new scene::mesh::vec2::Rectangle();

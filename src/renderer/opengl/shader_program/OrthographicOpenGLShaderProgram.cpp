@@ -7,13 +7,13 @@ namespace shader_program {
 void OrthographicOpenGLShaderProgram::AddShaders() {
 	this->AddShader( GL_VERTEX_SHADER, "#version 130 \n\
 \
-in vec2 aCoord; \
+in vec3 aCoord; \
 in vec2 aTexCoord; \
 uniform float uZIndex; \
 out vec2 texpos; \
 \
 void main(void) { \
-	gl_Position = vec4( aCoord, uZIndex, 1.0 ); \
+	gl_Position = vec4( vec3(aCoord.xy, aCoord.z + uZIndex), 1.0 ); \
 	texpos = vec2(aTexCoord); \
 } \
 \
@@ -45,9 +45,9 @@ void OrthographicOpenGLShaderProgram::Initialize() {
 
 void OrthographicOpenGLShaderProgram::EnableAttributes() const {
 	glEnableVertexAttribArray( m_gl_attributes.coord );
-	glVertexAttribPointer( m_gl_attributes.coord, 2, GL_FLOAT, GL_FALSE, 8, (const GLvoid *)0 );
+	glVertexAttribPointer( m_gl_attributes.coord, 3, GL_FLOAT, GL_FALSE, 20, (const GLvoid *)0 );
 	glEnableVertexAttribArray( m_gl_attributes.tex_coord );
-	glVertexAttribPointer( m_gl_attributes.tex_coord, 2, GL_FLOAT, GL_FALSE, 8, (const GLvoid *)8 );
+	glVertexAttribPointer( m_gl_attributes.tex_coord, 2, GL_FLOAT, GL_FALSE, 20, (const GLvoid *)12 );
 };
 
 void OrthographicOpenGLShaderProgram::DisableAttributes() const {
