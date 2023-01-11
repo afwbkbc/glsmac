@@ -3,7 +3,10 @@
 #include <vector>
 
 #include "Scheduler.h"
-#include "task/Task.h"
+
+#include "base/Task.h"
+
+using namespace base;
 
 namespace scheduler {
 
@@ -13,12 +16,12 @@ public:
 	void Start();
 	void Stop();
 	void Iterate();
-	void AddTask( task::Task *task );
-	void RemoveTask( task::Task *task );
+	void AddTask( Task *task );
+	void RemoveTask( Task *task );
 protected:
-	std::vector<task::Task *> m_tasks;
-	std::vector<task::Task *> m_tasks_toadd;
-	std::vector<task::Task *> m_tasks_toremove;
+	std::vector<Task *> m_tasks;
+	std::vector<Task *> m_tasks_toadd;
+	std::vector<Task *> m_tasks_toremove;
 	bool m_active = false;
 	bool m_iterating = false;
 };

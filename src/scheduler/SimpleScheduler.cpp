@@ -2,6 +2,8 @@
 
 #include "SimpleScheduler.h"
 
+using namespace base;
+
 namespace scheduler {
 
 SimpleScheduler::SimpleScheduler() {
@@ -39,7 +41,7 @@ void SimpleScheduler::Iterate() {
 	m_tasks_toremove.clear();
 }
 
-void SimpleScheduler::AddTask( task::Task *task ) {
+void SimpleScheduler::AddTask( Task *task ) {
 	if (m_iterating) {
 		m_tasks_toadd.push_back(task);
 	}
@@ -52,7 +54,7 @@ void SimpleScheduler::AddTask( task::Task *task ) {
 	}
 }
 
-void SimpleScheduler::RemoveTask( task::Task *task ) {
+void SimpleScheduler::RemoveTask( Task *task ) {
 	if (m_iterating) {
 		m_tasks_toremove.push_back(task);
 	}

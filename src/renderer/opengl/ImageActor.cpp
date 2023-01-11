@@ -13,7 +13,7 @@ namespace opengl {
 
 ImageActor::ImageActor( scene::actor::ImageActor *actor ) : Actor( actor ) {
 
-	Log( "Creating OpenGL actor" );
+	//Log( "Creating OpenGL actor" );
 
 	glGenBuffers( 1, &m_vbo );
 	glGenBuffers( 1, &m_ibo );
@@ -22,7 +22,7 @@ ImageActor::ImageActor( scene::actor::ImageActor *actor ) : Actor( actor ) {
 }
 
 ImageActor::~ImageActor() {
-	Log( "Destroying OpenGL actor" );
+	//Log( "Destroying OpenGL actor" );
 
 	glDeleteBuffers( 1, &m_ibo );
 	glDeleteBuffers( 1, &m_vbo );

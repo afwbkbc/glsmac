@@ -12,7 +12,7 @@ namespace opengl {
 
 MeshActor::MeshActor( scene::actor::MeshActor *actor ) : Actor( actor ) {
 
-	Log( "Creating OpenGL actor from " + actor->GetName() );
+	//Log( "Creating OpenGL actor from " + actor->GetName() );
 
 	glGenBuffers( 1, &m_vbo );
 	glGenBuffers( 1, &m_ibo );
@@ -29,7 +29,7 @@ MeshActor::MeshActor( scene::actor::MeshActor *actor ) : Actor( actor ) {
 }
 
 MeshActor::~MeshActor() {
-	Log( "Destroying OpenGL actor" );
+	//Log( "Destroying OpenGL actor" );
 
 	glDeleteBuffers( 1, &m_ibo );
 	glDeleteBuffers( 1, &m_vbo );

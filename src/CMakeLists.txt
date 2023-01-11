@@ -9,9 +9,9 @@ SUBDIR( renderer )
 SUBDIR( scheduler )
 SUBDIR( scene )
 SUBDIR( procedural )
-SUBDIR( task )
 SUBDIR( ui )
 SUBDIR( engine )
+SUBDIR( game )
 
 SUBDIR( opensmac )
 

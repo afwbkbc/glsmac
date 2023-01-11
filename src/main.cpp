@@ -13,16 +13,9 @@
 #include "scheduler/SimpleScheduler.h"
 #include "ui/DefaultUI.h"
 
-#include "task/test/ManagerTestTask.h"
-
-#include "task/intro/IntroTask.h"
+#include "game/intro/Intro.h"
 
 #include "engine/Engine.h"
-#include "task/test/RendererTestTask.h"
-#include "task/test/FontTestTask.h"
-#include "task/test/UITestTask.h"
-#include "task/test/WorldTestTask.h"
-#include "task/test/ManagerTestTask.h"
 
 // TODO: move to config
 #define WINDOW_WIDTH 1024
@@ -52,23 +45,10 @@ int main(const int argc, const char *argv[]) {
 	renderer::opengl::OpenGLRenderer renderer( "OpenSMAC", WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_VSYNC, 90.0f);
 	ui::DefaultUI ui;
 
-	task::Task *task;
-
 	scheduler::SimpleScheduler scheduler;
 	
-	// simple test
-	//scheduler.AddTask( new task::test::FontTestTask );
-	//scheduler.AddTask( new task::test::RendererTestTask );
-	//scheduler.AddTask( new task::test::UITestTask );
-	//scheduler.AddTask( new task::test::WorldTestTask );
-	
-	// stress-test
-	/*for (size_t i = 0 ; i < 100 ; i++) {
-		scheduler.AddTask( new task::test::ManagerTestTask );
-	}*/
-	
-	// production
-	scheduler.AddTask( new task::intro::IntroTask );
+	// game entry point
+	scheduler.AddTask( new game::intro::Intro );
 
 	engine::Engine engine(
 		&config,
