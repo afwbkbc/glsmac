@@ -12,7 +12,7 @@ namespace opengl {
 
 MeshActor::MeshActor( scene::actor::MeshActor *actor ) : Actor( actor ) {
 
-	Log( "Creating OpenGL actor" );
+	Log( "Creating OpenGL actor from " + actor->GetName() );
 
 	glGenBuffers( 1, &m_vbo );
 	glGenBuffers( 1, &m_ibo );
@@ -73,10 +73,11 @@ void MeshActor::Unload() {
 	if ( m_actor ) {
 		auto *actor = (scene::actor::MeshActor *)m_actor;
 
+		/* it's better to keep everything loaded forever
 		const auto* texture = actor->GetTexture();
 		if (texture) {
 			g_engine->GetRenderer()->UnloadTexture(texture);
-		}
+		}*/
 
 		/*for (int i=0;i<this->mModel.mMaterials.size();i++)
 			this->mRenderer->DeactivateTexture(&this->mModel.mMaterials[i]->mTexture1Map.texture,&this->mMaterialTextureObjs[i]);*/

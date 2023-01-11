@@ -4,7 +4,7 @@ namespace renderer {
 namespace opengl {
 
 TextActor::TextActor( scene::actor::TextActor *actor, Font *gl_font ) : Actor( actor ), m_gl_font( gl_font ) {
-	Log( "Creating OpenGL text" );
+	Log( "Creating OpenGL text with " + gl_font->GetName() + " for " + actor->GetName() );
 }
 
 TextActor::~TextActor() {

@@ -20,7 +20,7 @@ MAJOR_CLASS( Renderer, base::Module )
 	}
 	
 	virtual void LoadTexture( const types::Texture* texture ) = 0;
-	virtual void UnloadTexture( const types::Texture* texture ) = 0;
+	//virtual void UnloadTexture( const types::Texture* texture ) = 0;
 	virtual void EnableTexture( const types::Texture* texture ) = 0;
 	virtual void DisableTexture() = 0;
 

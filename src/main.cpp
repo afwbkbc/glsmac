@@ -9,7 +9,7 @@
 #include "logger/StdoutLogger.h"
 #include "loader/font/FreeTypeFontLoader.h"
 #include "loader/texture/SDL2ImageTextureLoader.h"
-#include "renderer/OpenGLRenderer.h"
+#include "renderer/opengl/OpenGLRenderer.h"
 #include "scheduler/SimpleScheduler.h"
 #include "ui/DefaultUI.h"
 
@@ -49,7 +49,7 @@ int main(const int argc, const char *argv[]) {
 	texture_loader.SetTransparentColor(types::Color::RGBA(255, 0, 255, 255));
 	
 	logger::StdoutLogger logger;
-	renderer::OpenGLRenderer renderer( "OpenSMAC", WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_VSYNC, 90.0f);
+	renderer::opengl::OpenGLRenderer renderer( "OpenSMAC", WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_VSYNC, 90.0f);
 	ui::DefaultUI ui;
 
 	task::Task *task;

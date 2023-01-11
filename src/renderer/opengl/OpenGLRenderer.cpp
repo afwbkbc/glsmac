@@ -5,17 +5,18 @@
 
 #include "OpenGLRenderer.h"
 
-#include "opengl/shader_program/OrthographicOpenGLShaderProgram.h"
-#include "opengl/shader_program/FontOpenGLShaderProgram.h"
-#include "opengl/shader_program/SkyboxOpenGLShaderProgram.h"
-#include "opengl/shader_program/WorldOpenGLShaderProgram.h"
+#include "shader_program/OrthographicOpenGLShaderProgram.h"
+#include "shader_program/FontOpenGLShaderProgram.h"
+#include "shader_program/SkyboxOpenGLShaderProgram.h"
+#include "shader_program/WorldOpenGLShaderProgram.h"
 
-#include "opengl/routine/OverlayOpenGLRoutine.h"
-#include "opengl/routine/FontOpenGLRoutine.h"
-#include "opengl/routine/SkyboxOpenGLRoutine.h"
-#include "opengl/routine/WorldOpenGLRoutine.h"
+#include "routine/OverlayOpenGLRoutine.h"
+#include "routine/FontOpenGLRoutine.h"
+#include "routine/SkyboxOpenGLRoutine.h"
+#include "routine/WorldOpenGLRoutine.h"
 
 namespace renderer {
+namespace opengl {
 
 OpenGLRenderer::OpenGLRenderer( const std::string title, const unsigned short window_width, const unsigned short window_height, const bool vsync, const float fov) {
 	m_window = NULL;
@@ -30,24 +31,24 @@ OpenGLRenderer::OpenGLRenderer( const std::string title, const unsigned short wi
 	m_aspect_ratio = (float) m_options.window_width/m_options.window_height;
 
 
-	auto sp_skybox = new opengl::shader_program::SkyboxOpenGLShaderProgram;
+	auto sp_skybox = new shader_program::SkyboxOpenGLShaderProgram;
 	m_shader_programs.push_back( sp_skybox );
-	auto r_skybox = new opengl::routine::SkyboxOpenGLRoutine( sp_skybox );
+	auto r_skybox = new routine::SkyboxOpenGLRoutine( sp_skybox );
 	m_routines.push_back( r_skybox );
 
-	auto sp_world = new opengl::shader_program::WorldOpenGLShaderProgram;
+	auto sp_world = new shader_program::WorldOpenGLShaderProgram;
 	m_shader_programs.push_back( sp_world );
-	auto r_world = new opengl::routine::WorldOpenGLRoutine( sp_world );
+	auto r_world = new routine::WorldOpenGLRoutine( sp_world );
 	m_routines.push_back( r_world );
 
-	auto sp_orthographic = new opengl::shader_program::OrthographicOpenGLShaderProgram;
+	auto sp_orthographic = new shader_program::OrthographicOpenGLShaderProgram;
 	m_shader_programs.push_back( sp_orthographic );
-	auto r_overlay = new opengl::routine::OverlayOpenGLRoutine( sp_orthographic );
+	auto r_overlay = new routine::OverlayOpenGLRoutine( sp_orthographic );
 	m_routines.push_back( r_overlay );
 
-	auto sp_font = new opengl::shader_program::FontOpenGLShaderProgram;
+	auto sp_font = new shader_program::FontOpenGLShaderProgram;
 	m_shader_programs.push_back( sp_font );
-	auto r_font = new opengl::routine::FontOpenGLRoutine( sp_font );
+	auto r_font = new routine::FontOpenGLRoutine( sp_font );
 	m_routines.push_back( r_font );
 
 }
@@ -199,7 +200,7 @@ void OpenGLRenderer::Iterate() {
 			}
 			case SDL_KEYDOWN: {
 /*				if (event.key.keysym.scancode==SDL_SCANCODE_ESCAPE) {
-					opengl::Routine *logo_routine=this->GetRoutineByName("logo");
+					Routine *logo_routine=this->GetRoutineByName("logo");
 					if (logo_routine->IsActive()) {
 						logo_routine->Deactivate();
 						this->GetRoutineByName("menu")->Activate();
@@ -273,40 +274,47 @@ void OpenGLRenderer::UpdateCamera() {
 
 void OpenGLRenderer::LoadTexture( const types::Texture* texture ) {
 	
-	Log("Loading texture '" + texture->m_name + "'");
-
-	m_textures[texture] = 0;
+	m_textures_map::iterator it = m_textures.find( texture );
+	if ( it == m_textures.end() ) {
 	
-	glActiveTexture( GL_TEXTURE0 );
-	glGenTextures( 1, &m_textures[texture] );
+		Log("Loading texture '" + texture->m_name + "'");
 
-	glBindTexture( GL_TEXTURE_2D, m_textures[texture] );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		m_textures[texture] = 0;
 
-	if ( glGetError() ) {
-		throw RendererError( "Texture uniform error" );
+		glActiveTexture( GL_TEXTURE0 );
+		glGenTextures( 1, &m_textures[texture] );
+
+		glBindTexture( GL_TEXTURE_2D, m_textures[texture] );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+
+		if ( glGetError() ) {
+			throw RendererError( "Texture uniform error" );
+		}
+		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)texture->m_width, (GLsizei)texture->m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture->m_bitmap );
+		if ( glGetError() ) {
+			throw RendererError( "Error loading texture" );
+		};
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glBindTexture( GL_TEXTURE_2D, m_no_texture );
+		
 	}
-	glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
-
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)texture->m_width, (GLsizei)texture->m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture->m_bitmap );
-	if ( glGetError() ) {
-		throw RendererError( "Error loading texture" );
-	};
-	
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-	glBindTexture( GL_TEXTURE_2D, m_no_texture );
 }
 
+/* it's better to keep everything loaded
 void OpenGLRenderer::UnloadTexture( const types::Texture* texture ) {
 	Log("Unloading texture '" + texture->m_name + "'");
 	glDeleteTextures(1, &m_textures[texture] );
 }
+*/
 
 void OpenGLRenderer::EnableTexture( const types::Texture* texture ) {
 	
@@ -317,4 +325,5 @@ void OpenGLRenderer::DisableTexture() {
 	glBindTexture( GL_TEXTURE_2D, m_no_texture );
 }
 
+} /* namespace opengl */
 } /* namespace renderer */

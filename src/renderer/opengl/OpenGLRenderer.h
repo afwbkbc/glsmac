@@ -7,16 +7,17 @@
 #include <SDL.h>
 #include <GL/glew.h>
 
-#include "Renderer.h"
+#include "../Renderer.h"
 
-#include "opengl/Scene.h"
+#include "Scene.h"
 
-#include "opengl/shader_program/OpenGLShaderProgram.h"
-#include "opengl/routine/OpenGLRoutine.h"
+#include "shader_program/OpenGLShaderProgram.h"
+#include "routine/OpenGLRoutine.h"
 
 using namespace std;
 
 namespace renderer {
+namespace opengl {
 
 MINOR_CLASS( OpenGL, Renderer )
 	OpenGLRenderer( const string title, const unsigned short window_width, const unsigned short window_height, const bool vsync, const float fov);
@@ -33,7 +34,7 @@ MINOR_CLASS( OpenGL, Renderer )
 		return m_options.window_height;
 	}
 	void LoadTexture( const types::Texture* texture );
-	void UnloadTexture( const types::Texture* texture );
+	//void UnloadTexture( const types::Texture* texture );
 	void EnableTexture( const types::Texture* texture );
 	void DisableTexture();
 
@@ -50,17 +51,19 @@ protected:
 	float m_aspect_ratio;
 	SDL_Window *m_window;
 	SDL_GLContext m_gl_context;
-	vector<opengl::shader_program::OpenGLShaderProgram *> m_shader_programs;
-	vector<opengl::routine::OpenGLRoutine *> m_routines;
+	vector<shader_program::OpenGLShaderProgram *> m_shader_programs;
+	vector<routine::OpenGLRoutine *> m_routines;
 	struct {
 	} m_camera;
 	
 private:
 	void UpdateCamera();
 	
-	unordered_map< const types::Texture*, GLuint > m_textures;
+	typedef unordered_map< const types::Texture*, GLuint > m_textures_map;
+	m_textures_map m_textures;
 	GLuint m_no_texture;
 	GLuint next_texture_obj_id = 0;
 };
 
+} /* namespace opengl */
 } /* namespace renderer */

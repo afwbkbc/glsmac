@@ -8,10 +8,10 @@
 #include "base/Module.h"
 
 namespace renderer {
-
+namespace opengl {
+	
 class OpenGLRenderer;
 
-namespace opengl {
 namespace routine {
 
 MAJOR_CLASS( OpenGLRoutine, base::Module )
@@ -23,7 +23,7 @@ MAJOR_CLASS( OpenGLRoutine, base::Module )
 	}
 	virtual void OnSceneRemove( Scene *scene ) {};
 protected:
-	friend class renderer::OpenGLRenderer;
+	friend class opengl::OpenGLRenderer;
 
 	std::vector<scene::Scene *> m_scenes;
 	std::vector< opengl::Scene *> m_gl_scenes;
@@ -34,4 +34,4 @@ protected:
 } /* namespace opengl */
 } /* namespace renderer */
 
-#include "renderer/OpenGLRenderer.h"
+#include "../OpenGLRenderer.h"

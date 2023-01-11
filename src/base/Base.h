@@ -5,25 +5,19 @@
 #endif
 
 #include <string>
+#include <atomic>
 
 namespace base {
 
 class Base {
 public:
-	virtual const std::string GetNamespace() const {
-		return "XD";
-	}
-	virtual ~Base() {};
-	const std::string GetName() const {
-		if ( !m_name.empty() )
-			return GetNamespace() + "::" + m_name;
-		else
-			return GetNamespace();
-	}
-	const std::string & GetLocalName() const {
-		return m_name;
-	}
+	Base();
+	virtual ~Base();
+	virtual const std::string GetNamespace() const;
+	const std::string GetName() const;
+	const std::string & GetLocalName() const;
 protected:
+	const size_t m_object_id;
 	std::string m_name;
 	void Log( const std::string &text ) const;
 };
@@ -32,7 +26,7 @@ protected:
 class _name : public _parent {\
 public:\
 	virtual const std::string GetNamespace() const {\
-		return _parent::GetNamespace() + "::" # _namespace;\
+		return _parent::GetNamespace() + # _namespace + "::" ;\
 	}
 
 #define CHILD_CLASS( _name, _parent) \
@@ -46,8 +40,8 @@ class _name ## Error : public base::Error {\
 public:\
 	_name ## Error(const std::string &reason) : base::Error::Error( reason ) {};\
 	virtual const std::string GetNamespace() const {\
-		return base::Error::GetNamespace() + "::" # _name;\
-	}\
+		return base::Error::GetNamespace() + # _name + "::" ;\
+	} \
 };\
 NAMED_CLASS( _name, _parent, _name )
 

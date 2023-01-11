@@ -12,5 +12,6 @@ SET(SRC ${SRC}
 		${PWD}/TextActor.cpp
 		${PWD}/ImageActor.cpp
 	${PWD}/Scene.cpp
+	${PWD}/OpenGLRenderer.cpp
 
 PARENT_SCOPE)

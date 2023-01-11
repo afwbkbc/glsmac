@@ -9,8 +9,7 @@
 namespace renderer {
 namespace opengl {
 
-class MeshActor : public Actor {
-public:
+MINOR_CLASS(Mesh, Actor)
 	MeshActor( scene::actor::MeshActor *actor );
 	~MeshActor();
 	bool ReloadNeeded();
