@@ -14,9 +14,11 @@
 #include "scene/actor/MeshActor.h"
 #include "scene/mesh/vec2/Rectangle.h"
 #include "types/Texture.h"
+#include "types/Vec2.h"
 
 using namespace std;
 using namespace scene;
+using namespace types;
 
 namespace ui {
 
@@ -25,7 +27,7 @@ using namespace object;
 MAJOR_CLASS( UI, base::Module )
 
 	typedef float coord_t;
-	typedef types::Vec2<coord_t> vertex_t;
+	typedef Vec2<coord_t> vertex_t;
 
 	void Start();
 	void Stop();
@@ -44,8 +46,10 @@ MAJOR_CLASS( UI, base::Module )
 	
 	void SendEvent( const event::UIEvent* event );
 	
+	void SendMouseMoveEvent( UIObject* object );
 	void ShowDebugFrame( const UIObject* object );
 	void HideDebugFrame( const UIObject* object );
+	void ResizeDebugFrame( const UIObject* object );
 	
 protected:
 	object::Root m_root_object;
@@ -58,6 +62,8 @@ protected:
 		util::Clamper<coord_t> y;
 	} m_clamp;
 	
+	Vec2<size_t> m_last_mouse_position = { 0, 0 };
+	
 private:
 	
 	// debug stuff
@@ -65,7 +71,7 @@ private:
 	Scene *m_debug_scene;
 	
 	typedef struct {
-		types::Texture* texture;
+		Texture* texture;
 		mesh::vec2::Rectangle * mesh;
 		actor::MeshActor* actor;
 	} debug_frame_data_t;

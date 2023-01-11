@@ -1,4 +1,5 @@
 #include <cmath>
+#include <algorithm>
 
 #include "MainMenuTask.h"
 
@@ -6,6 +7,7 @@
 
 #include "scene/actor/TextActor.h"
 
+using namespace std;
 using namespace ui::object;
 using namespace loader::texture;
 
@@ -40,17 +42,14 @@ void MainMenuTask::Start() {
 	
 	m_menu_item_font = g_engine->GetFontLoader()->LoadFont( "arialnb.ttf", 20 );
 	
-	m_menu = new Menu( this );
-	m_menu->AddItem("START GAME");
-	m_menu->AddItem("QUICK START");
-	m_menu->AddItem("SCENARIO");
-	m_menu->AddItem("LOAD GAME");
-	m_menu->AddItem("MULTIPLAYER");
-	m_menu->AddItem("VIEW CREDITS");
-	m_menu->AddItem("EXIT GAME");
-	
-	g_engine->GetUI()->AddObject( m_menu );
-	
+	m_menu_choices.clear();
+	ShowNextMenu();
+
+}
+
+void MainMenuTask::OnMenuClick( const string& choice ) {
+	m_menu_choices.push_back( choice );
+	ShowNextMenu();
 }
 
 void MainMenuTask::Stop() {
@@ -65,6 +64,137 @@ void MainMenuTask::Stop() {
 
 void MainMenuTask::Iterate() {
 
+}
+
+void MainMenuTask::ShowMenu( const vector<string>& choices ) {
+	if (m_menu) {
+		g_engine->GetUI()->RemoveObject( m_menu );
+	}
+	m_menu = new Menu( this );
+	for (auto& c : choices) {
+		m_menu->AddItem(c);
+	}
+	g_engine->GetUI()->AddObject( m_menu );
+}
+
+static vector<string> s_main_menu = {
+	"START GAME",
+	"QUICK START",
+	"SCENARIO",
+	"LOAD GAME",
+	"MULTIPLAYER",
+	"VIEW CREDITS",
+	"EXIT GAME",
+};
+
+static vector<string> s_planetsize_menu = {
+	"TINY PLANET",
+	"SMALL PLANET",
+	"STANDARD PLANET",
+	"LARGE PLANET",
+	"HUGE PLANET",
+};
+
+static vector<string> s_difficulty_menu = {
+	"CITIZEN",
+	"SPECIALIST",
+	"TALENT",
+	"LIBRARIAN",
+	"THINKER",
+	"TRANSCEND",
+};
+
+static vector<string> s_rules_menu = {
+	"PLAY WITH STANDARD RULES",
+	"PLAY WITH CURRENT RULES",
+	"CUSTOMIZE RULES",
+};
+
+static vector<string> s_customize_menu_1 = {
+	"30-50% OF SURFACE",
+	"50-70% OF SURFACE",
+	"70-90% OF SURFACE",
+};
+
+static vector<string> s_customize_menu_2 = {
+	"STRONG",
+	"AVERAGE",
+	"WEAK",
+};
+
+static vector<string> s_customize_menu_3 = {
+	"RARE",
+	"AVERAGE",
+	"ABUNDANT",
+};
+
+static vector<string> s_customize_menu_4 = {
+	"SPARSE",
+	"AVERAGE",
+	"DENSE",
+};
+
+void MainMenuTask::ShowNextMenu() {
+	if (m_menu_choices.empty()) {
+		ShowMenu( s_main_menu );
+	}
+	else {
+		const string& choice = m_menu_choices.back();
+		if (choice == "START GAME") {
+			ShowMenu({
+				"MAKE RANDOM MAP",
+				"CUSTOMIZE RANDOM MAP",
+				"THE MAP OF PLANET",
+				"HUGE MAP OF PLANET",
+				"LOAD MAP FILE",
+			});
+		}
+		else if (choice == "MAKE RANDOM MAP" || choice == "CUSTOMIZE RANDOM MAP") {
+			ShowMenu( s_planetsize_menu );
+		}
+		else if (choice == "THE MAP OF PLANET" || choice == "HUGE MAP OF PLANET") {
+			ShowMenu( s_difficulty_menu );
+		}
+		else if (find(s_planetsize_menu.begin(), s_planetsize_menu.end(), choice) != s_planetsize_menu.end()) {
+			// HACK: check what was before
+			const string& prev_choice = m_menu_choices.at( m_menu_choices.size() - 2 );
+			if (prev_choice == "MAKE RANDOM MAP") {
+				ShowMenu( s_difficulty_menu );
+			}
+			else if (prev_choice == "CUSTOMIZE RANDOM MAP") {
+				ShowMenu( s_customize_menu_1 );
+			}
+		}
+		else if (find(s_customize_menu_1.begin(), s_customize_menu_1.end(), choice) != s_customize_menu_1.end()) {
+			ShowMenu( s_customize_menu_2 );
+		}
+		else if (find(s_customize_menu_2.begin(), s_customize_menu_2.end(), choice) != s_customize_menu_2.end()) {
+			ShowMenu( s_customize_menu_3 );
+		}
+		else if (find(s_customize_menu_3.begin(), s_customize_menu_3.end(), choice) != s_customize_menu_3.end()) {
+			ShowMenu( s_customize_menu_4 );
+		}
+		else if (find(s_customize_menu_4.begin(), s_customize_menu_4.end(), choice) != s_customize_menu_4.end()) {
+			ShowMenu( s_difficulty_menu );
+		}
+		else if (find(s_difficulty_menu.begin(), s_difficulty_menu.end(), choice) != s_difficulty_menu.end()) {
+			ShowMenu( s_rules_menu );
+		}
+		else if (choice == "SCENARIO") {
+			ShowMenu({
+				"PLAY SCENARIO",
+				"CREATE SCENARIO",
+				"LOAD MAP FILE",
+				"EDIT SCENARIO",
+			});
+		}
+		else if (choice == "EXIT GAME") {
+			g_engine->ShutDown();
+		}
+		else {
+			ShowMenu( s_main_menu );
+		}
+	}
 }
 
 } /* namespace mainmenu */

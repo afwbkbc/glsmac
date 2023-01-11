@@ -6,8 +6,6 @@
 
 #include <vector>
 
-#include "MenuItemMesh.h"
-
 using namespace std;
 using namespace ui::object;
 using namespace ui::event;
@@ -18,7 +16,7 @@ namespace mainmenu {
 class Menu;
 	
 CHILD_CLASS( MenuItem, UIContainer )
-	MenuItem( const Menu* menu, const string& text );
+	MenuItem( Menu* menu, const string& text );
 
 	virtual void Create();
 	virtual void Destroy();
@@ -28,8 +26,9 @@ protected:
 
 	void OnMouseOver( const UIEvent::event_data_t* data );
 	void OnMouseOut( const UIEvent::event_data_t* data );
+	void OnMouseDown( const UIEvent::event_data_t* data );
 	
-	const Menu* m_menu;
+	Menu* m_menu;
 	const string m_text;
 	
 	Surface* m_upper_top;

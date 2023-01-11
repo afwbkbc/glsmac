@@ -2,6 +2,10 @@
 
 #include "Util.h"
 
+#include <chrono>
+
+using namespace std::chrono;
+
 namespace util {
 
 CHILD_CLASS( Timer, Util )
@@ -17,10 +21,10 @@ CHILD_CLASS( Timer, Util )
 
 	void Start();
 	void Stop();
-	void SetTimeout(const size_t seconds);
-	void SetInterval(const size_t seconds);
+	void SetTimeout(const size_t ms);
+	void SetInterval(const size_t ms);
 
-	time_t GetElapsed();
+	milliseconds GetElapsed();
 	bool Ticked();
 	
 protected:
@@ -28,10 +32,10 @@ protected:
 	void Tick();
 
 	operation_type_t m_operation = NONE;
-	time_t m_current = 0;
-	time_t m_elapsed = 0;
-	time_t m_target = 0;
-	time_t m_interval = 0;
+	milliseconds m_current = milliseconds::zero();
+	milliseconds m_elapsed = milliseconds::zero();
+	milliseconds m_target = milliseconds::zero();
+	milliseconds m_interval = milliseconds::zero();
 	size_t m_ticks = 0;
 	
 };

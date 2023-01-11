@@ -28,8 +28,6 @@ void Texture::Resize( const size_t width, const size_t height ) {
 	
 	if (m_width != width || m_height != height) {
 		
-		std::cout << "RESIZE TO " << std::to_string(width) << "x" << std::to_string(height) << std::endl;
-		
 		m_width = width;
 		m_height = height;
 	

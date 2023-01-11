@@ -18,7 +18,8 @@ void IntroTask::Start() {
 	m_logo->SetAlign( UIObject::ALIGN_CENTER );
 	g_engine->GetUI()->AddObject( m_logo );
 
-	m_timer.SetTimeout(1); // pretend we're loading something
+	m_timer.SetTimeout(1000); // pretend we're loading something
+	// TODO: do all preloading while this task is running?
 }
 
 void IntroTask::Stop() {

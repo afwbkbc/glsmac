@@ -32,6 +32,10 @@ void UIObject::Destroy() {
 	m_created = false;
 }
 
+void UIObject::Iterate() {
+	
+}
+
 void UIObject::Align() {
 }
 
@@ -177,90 +181,107 @@ void UIObject::ForceAspectRatio( const float aspect_ratio ) {
 }
 
 void UIObject::UpdateObjectArea() {
+	object_area_t object_area;
 	if ( m_parent_object != NULL ) {
-		m_object_area.left = m_parent_object->m_object_area.left + m_position.left;
-		m_object_area.right = m_parent_object->m_object_area.right - m_position.right;
-		m_object_area.top = m_parent_object->m_object_area.top + m_position.top;
-		m_object_area.bottom = m_parent_object->m_object_area.bottom - m_position.bottom;
+		object_area.left = m_parent_object->m_object_area.left + m_position.left;
+		object_area.right = m_parent_object->m_object_area.right - m_position.right;
+		object_area.top = m_parent_object->m_object_area.top + m_position.top;
+		object_area.bottom = m_parent_object->m_object_area.bottom - m_position.bottom;
 		if ( m_stick_bits & STICK_WIDTH ) {
 			if ( ( m_align & ALIGN_HCENTER ) == ALIGN_HCENTER ) {
 				coord_t parent_center = ( m_parent_object->m_object_area.left + m_parent_object->m_object_area.right ) / 2;
-				m_object_area.left = parent_center - m_size.width / 2;
-				m_object_area.right = parent_center + m_size.width / 2;
+				object_area.left = parent_center - m_size.width / 2;
+				object_area.right = parent_center + m_size.width / 2;
 			}
 			else if ( m_align & ALIGN_LEFT )
-				m_object_area.right = m_object_area.left + m_size.width;
+				object_area.right = object_area.left + m_size.width;
 			else if ( m_align & ALIGN_RIGHT )
-				m_object_area.left = m_object_area.right - m_size.width;
+				object_area.left = object_area.right - m_size.width;
 		}
 		if ( m_stick_bits & STICK_HEIGHT ) {
 			if ( ( m_align & ALIGN_VCENTER ) == ALIGN_VCENTER ) {
 				coord_t parent_center = ( m_parent_object->m_object_area.top + m_parent_object->m_object_area.bottom ) / 2;
-				m_object_area.top = parent_center - m_size.height / 2;
-				m_object_area.bottom = parent_center + m_size.height / 2;
+				object_area.top = parent_center - m_size.height / 2;
+				object_area.bottom = parent_center + m_size.height / 2;
 			}
 			else if ( m_align & ALIGN_TOP )
-				m_object_area.bottom = m_object_area.top + m_size.height;
+				object_area.bottom = object_area.top + m_size.height;
 			else if ( m_align & ALIGN_BOTTOM )
-				m_object_area.top = m_object_area.bottom - m_size.height;
+				object_area.top = object_area.bottom - m_size.height;
 		}
-		if ( m_object_area.left > m_object_area.right )
-			m_object_area.left = m_object_area.right;
-		if ( m_object_area.top > m_object_area.bottom )
-			m_object_area.top = m_object_area.bottom;
+		if ( object_area.left > object_area.right )
+			object_area.left = object_area.right;
+		if ( object_area.top > object_area.bottom )
+			object_area.top = object_area.bottom;
 		if ( m_parent_object->GetOverflow() == OVERFLOW_HIDDEN ) {
-			if ( m_object_area.left < m_parent_object->m_object_area.left )
-				m_object_area.left = m_parent_object->m_object_area.left;
-			if ( m_object_area.right > m_parent_object->m_object_area.right )
-				m_object_area.right = m_parent_object->m_object_area.right;
-			if ( m_object_area.top < m_parent_object->m_object_area.top )
-				m_object_area.top = m_parent_object->m_object_area.top;
-			if ( m_object_area.bottom > m_parent_object->m_object_area.bottom )
-				m_object_area.bottom = m_parent_object->m_object_area.bottom;
+			if ( object_area.left < m_parent_object->m_object_area.left )
+				object_area.left = m_parent_object->m_object_area.left;
+			if ( object_area.right > m_parent_object->m_object_area.right )
+				object_area.right = m_parent_object->m_object_area.right;
+			if ( object_area.top < m_parent_object->m_object_area.top )
+				object_area.top = m_parent_object->m_object_area.top;
+			if ( object_area.bottom > m_parent_object->m_object_area.bottom )
+				object_area.bottom = m_parent_object->m_object_area.bottom;
 		}
-		m_object_area.width = m_object_area.right - m_object_area.left;
-		m_object_area.height = m_object_area.bottom - m_object_area.top;
+		object_area.width = object_area.right - object_area.left;
+		object_area.height = object_area.bottom - object_area.top;
 		
 		if (m_size.force_aspect_ratio) {
-			float current_aspect_ratio = (float) m_object_area.height / m_object_area.width;
+			float current_aspect_ratio = (float) object_area.height / object_area.width;
 			if (current_aspect_ratio > m_size.aspect_ratio) {
-				float new_height = m_object_area.height * m_size.aspect_ratio / current_aspect_ratio;
+				float new_height = object_area.height * m_size.aspect_ratio / current_aspect_ratio;
 				if ( ( m_align & ALIGN_VCENTER ) == ALIGN_VCENTER ) {
-					m_object_area.top += ( m_object_area.height - new_height ) / 2;
-					m_object_area.bottom -= ( m_object_area.height - new_height ) / 2;
+					object_area.top += ( object_area.height - new_height ) / 2;
+					object_area.bottom -= ( object_area.height - new_height ) / 2;
 				}
 				else if ( m_align & ALIGN_TOP ) {
-					m_object_area.bottom -= ( m_object_area.height - new_height );
+					object_area.bottom -= ( object_area.height - new_height );
 				}
 				else if ( m_align & ALIGN_BOTTOM ) {
-					m_object_area.top += ( m_object_area.height - new_height );
+					object_area.top += ( object_area.height - new_height );
 				}
-				m_object_area.height = new_height;
+				object_area.height = new_height;
 			}
 			else if (current_aspect_ratio < m_size.aspect_ratio) {
-				float new_width = m_object_area.width * current_aspect_ratio / m_size.aspect_ratio;
+				float new_width = object_area.width * current_aspect_ratio / m_size.aspect_ratio;
 				if ( ( m_align & ALIGN_HCENTER ) == ALIGN_HCENTER ) {
-					m_object_area.left += ( m_object_area.width - new_width ) / 2;
-					m_object_area.right -= ( m_object_area.width - new_width ) / 2;
+					object_area.left += ( object_area.width - new_width ) / 2;
+					object_area.right -= ( object_area.width - new_width ) / 2;
 				}
 				else if ( m_align & ALIGN_LEFT ) {
-					m_object_area.right -= ( m_object_area.width - new_width );
+					object_area.right -= ( object_area.width - new_width );
 				}
 				else if ( m_align & ALIGN_RIGHT ) {
-					m_object_area.left += ( m_object_area.width - new_width );
+					object_area.left += ( object_area.width - new_width );
 				}
-				m_object_area.width = new_width;
+				object_area.width = new_width;
 			}
 		}
 	}
 	else {
-		m_object_area.left = 0;
-		m_object_area.right = g_engine->GetRenderer()->GetWindowWidth();
-		m_object_area.top = 0;
-		m_object_area.bottom = g_engine->GetRenderer()->GetWindowHeight();
-		m_object_area.width = m_object_area.right;
-		m_object_area.height = m_object_area.bottom;
+		object_area.left = 0;
+		object_area.right = g_engine->GetRenderer()->GetWindowWidth();
+		object_area.top = 0;
+		object_area.bottom = g_engine->GetRenderer()->GetWindowHeight();
+		object_area.width = object_area.right;
+		object_area.height = object_area.bottom;
 	}
+	
+	if (object_area != m_object_area) {
+		m_object_area = object_area;
+		
+		if (m_created) {
+			// process any mouseover/mouseout events
+			// mouse may not being moved, but if object area has changed - they should be able to fire too
+			g_engine->GetUI()->SendMouseMoveEvent( this );
+			
+			// resize debug frame to match new area
+			if ( m_has_debug_frame ) {
+				g_engine->GetUI()->ResizeDebugFrame( this );
+			}
+		}
+	}
+	
 }
 
 void UIObject::SetAlign( const alignment_t align ) {
@@ -281,18 +302,25 @@ void UIObject::SetVAlign( const alignment_t align ) {
 
 void UIObject::SendEvent( const UIEvent* event ) {
 	
-	if (( event->m_flags & UIEvent::EF_MOUSE ) == UIEvent::EF_MOUSE ) {
-		if ( IsPointInside( event->m_data.mouse.x, event->m_data.mouse.y ) ) {
-			if ( ( m_state & STATE_MOUSEOVER ) != STATE_MOUSEOVER ) {
-				m_state |= STATE_MOUSEOVER;
-				OnMouseOver( &event->m_data );
+	switch ( event->m_type ) {
+		case UIEvent::EV_MOUSEMOVE: {
+			if ( IsPointInside( event->m_data.mouse.x, event->m_data.mouse.y ) ) {
+				if ( ( m_state & STATE_MOUSEOVER ) != STATE_MOUSEOVER ) {
+					m_state |= STATE_MOUSEOVER;
+					OnMouseOver( &event->m_data );
+				}
 			}
+			else {
+				if ( ( m_state & STATE_MOUSEOVER ) == STATE_MOUSEOVER ) {
+					m_state &= ~STATE_MOUSEOVER;
+					OnMouseOut( &event->m_data );
+				}
+			}
+			break;
 		}
-		else {
-			if ( ( m_state & STATE_MOUSEOVER ) == STATE_MOUSEOVER ) {
-				m_state &= ~STATE_MOUSEOVER;
-				OnMouseOut( &event->m_data );
-			}
+		case UIEvent::EV_MOUSEDOWN: {
+			OnMouseDown( &event->m_data );
+			break;
 		}
 	}
 	

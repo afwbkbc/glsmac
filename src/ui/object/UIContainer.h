@@ -16,10 +16,12 @@ public:
 
 	virtual void Create();
 	virtual void Destroy();
-	virtual void SetZIndex( float z_index );
+	virtual void Iterate();
 	virtual void Realign();
 	virtual void Redraw();
 
+	virtual void SetZIndex( float z_index );
+	
 	void SetOverflow( const overflow_t overflow );
 	void SendEvent( const event::UIEvent* event );
 	

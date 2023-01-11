@@ -7,15 +7,15 @@ using namespace ui::event;
 namespace task {
 namespace mainmenu {
 
-MenuItem::MenuItem( const Menu* menu, const string& text )
+MenuItem::MenuItem( Menu* menu, const string& text )
 	: UIContainer()
 	, m_menu( menu )
 	, m_text( text )
 {
 	
+	SetLeft( 0 );
 	SetHeight( 46 );
 	SetWidth( 300 );
-	SetLeft( 0 );
 	
 	SetAlign( UIObject::ALIGN_BOTTOM | UIObject::ALIGN_LEFT );
 	
@@ -71,6 +71,8 @@ void MenuItem::Create() {
 	
 	m_label = new Label( m_menu->m_task->m_menu_item_font, m_text, m_menu->m_task->m_menu_item_text_color_normal );
 	AddChild(m_label);
+
+	//ShowDebugFrame();
 }
 
 void MenuItem::Destroy() {
@@ -93,6 +95,9 @@ void MenuItem::OnMouseOut( const UIEvent::event_data_t* data ) {
 	m_label->SetTextColor( m_menu->m_task->m_menu_item_text_color_normal );
 }
 
+void MenuItem::OnMouseDown( const UIEvent::event_data_t* data ) {
+	m_menu->OnItemClicked( m_text );
+}
 
 }
 }

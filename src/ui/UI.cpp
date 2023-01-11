@@ -2,6 +2,8 @@
 
 #include "engine/Engine.h"
 
+#include "event/MouseMove.h"
+
 using namespace scene;
 using namespace types;
 
@@ -78,12 +80,20 @@ void UI::Resize() {
 }
 
 void UI::Iterate() {
-
+	m_root_object.Iterate();
 }
 
 void UI::SendEvent( const event::UIEvent* event ) {
-	//Log("Got event: " + event->GetName());
+	if ( event->m_type == UIEvent::EV_MOUSEMOVE ) {
+		// need to save last mouse position to be able to trigger mouseover/mouseout events for objects that will move/resize themselves later
+		m_last_mouse_position = { event->m_data.mouse.x, event->m_data.mouse.y };
+	}
+	
 	m_root_object.SendEvent( event );
+}
+
+void UI::SendMouseMoveEvent( UIObject* object ) {
+	object->SendEvent( new event::MouseMove( m_last_mouse_position.x, m_last_mouse_position.y ) );
 }
 
 void UI::ShowDebugFrame( const UIObject* object ) {
@@ -131,6 +141,14 @@ void UI::ResizeDebugFrame( const UIObject* object, const debug_frame_data_t* dat
 		ClampX(geom.second.x),
 		ClampY(geom.second.y)
 	});
+	
+}
+
+void UI::ResizeDebugFrame( const UIObject* object ) {
+	auto it = m_debug_frames.find( object );
+	if ( it != m_debug_frames.end() ) {
+		ResizeDebugFrame( object, &it->second );
+	}
 }
 
 } /* namespace ui */

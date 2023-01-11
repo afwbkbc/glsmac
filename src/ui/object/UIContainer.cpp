@@ -25,6 +25,14 @@ void UIContainer::Destroy() {
 	UIObject::Destroy();
 }
 
+void UIContainer::Iterate() {
+	UIObject::Iterate();
+	
+	for (auto& c : m_child_objects) {
+		c->Iterate();
+	}
+}
+
 void UIContainer::CreateChild( UIObject *object ) {
 	object->Create();
 	object->Realign();
@@ -85,7 +93,7 @@ void UIContainer::Redraw() {
 }
 
 const float UIContainer::GetChildZIndex() const {
-	return m_z_index - 0.00001;
+	return m_z_index - 0.00001; // every child should be a bit above it's parent to be able to be seen
 }
 
 void UIContainer::SetOverflow( const overflow_t overflow ) {
@@ -98,8 +106,13 @@ void UIContainer::SetOverflow( const overflow_t overflow ) {
 void UIContainer::SendEvent( const UIEvent* event ) {
 	if (( event->m_flags & UIEvent::EF_MOUSE ) == UIEvent::EF_MOUSE ) {
 		for (auto& c : m_child_objects) {
-			auto *child_event = new UIEvent( *event );
-			c->SendEvent( child_event );
+			if (
+				( event->m_type == UIEvent::EV_MOUSEMOVE ) || // mousemove needs to be send to all objects for mouseout events to work
+				c->IsPointInside( event->m_data.mouse.x, event->m_data.mouse.y ) // other events - only to those actually under mouse pointer
+			) {
+				auto *child_event = new UIEvent( *event );
+				c->SendEvent( child_event );
+			}
 		}
 	}
 	

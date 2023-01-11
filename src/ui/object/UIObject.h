@@ -52,6 +52,7 @@ MAJOR_CLASS( UIObject, base::Base )
 
 	virtual void Create();
 	virtual void Destroy();
+	virtual void Iterate();
 	virtual void Align();
 	virtual void Draw();
 
@@ -93,6 +94,7 @@ protected:
 	// callbacks
 	virtual void OnMouseOver( const UIEvent::event_data_t* data ) {};
 	virtual void OnMouseOut( const UIEvent::event_data_t* data ) {};
+	virtual void OnMouseDown( const UIEvent::event_data_t* data ) {};
 	
 	const coord_t ClampX( const coord_t value );
 	const coord_t ClampY( const coord_t value );
@@ -104,14 +106,19 @@ protected:
 
 	float m_z_index = 0.0f;
 
-	struct {
+	typedef struct object_area_struct {
 		coord_t left;
 		coord_t right;
 		coord_t top;
 		coord_t bottom;
 		coord_t width;
 		coord_t height;
-	} m_object_area;
+		bool operator != ( const struct object_area_struct& other ) const {
+			return memcmp( this, &other, sizeof(struct object_area_struct) ) != 0;
+		}
+	} object_area_t;
+	object_area_t m_object_area;
+	
 	bool m_created = false;
 	overflow_t m_overflow = OVERFLOW_VISIBLE;
 

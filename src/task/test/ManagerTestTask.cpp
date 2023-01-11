@@ -21,7 +21,7 @@ void ManagerTestTask::Start() {
 	m_scene->AddActor( m_logo );
 	g_engine->GetRenderer()->AddScene( m_scene );*/
 	
-	m_timer.SetInterval(rand() % 5 + 1);
+	m_timer.SetInterval(rand() % 5000 + 1);
 }
 
 void ManagerTestTask::Stop() {
