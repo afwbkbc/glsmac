@@ -301,7 +301,6 @@ void UIObject::SetVAlign( const alignment_t align ) {
 }
 
 void UIObject::SendEvent( const UIEvent* event ) {
-	
 	switch ( event->m_type ) {
 		case UIEvent::EV_MOUSEMOVE: {
 			if ( IsPointInside( event->m_data.mouse.x, event->m_data.mouse.y ) ) {
@@ -320,6 +319,10 @@ void UIObject::SendEvent( const UIEvent* event ) {
 		}
 		case UIEvent::EV_MOUSEDOWN: {
 			OnMouseDown( &event->m_data );
+			break;
+		}
+		case UIEvent::EV_KEYDOWN: {
+			OnKeyDown( &event->m_data );
 			break;
 		}
 	}

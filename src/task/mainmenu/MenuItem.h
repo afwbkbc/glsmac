@@ -13,10 +13,10 @@ using namespace ui::event;
 namespace task {
 namespace mainmenu {
 
-class Menu;
+class MenuBlock;
 	
 CHILD_CLASS( MenuItem, UIContainer )
-	MenuItem( Menu* menu, const string& text );
+	MenuItem( MenuBlock* menu, const string& text, const bool is_title = false );
 
 	virtual void Create();
 	virtual void Destroy();
@@ -28,8 +28,9 @@ protected:
 	void OnMouseOut( const UIEvent::event_data_t* data );
 	void OnMouseDown( const UIEvent::event_data_t* data );
 	
-	Menu* m_menu;
+	MenuBlock* m_menu;
 	const string m_text;
+	const bool m_is_title;
 	
 	Surface* m_upper_top;
 	Surface* m_lower_top;
@@ -44,4 +45,4 @@ protected:
 }
 }
 
-#include "Menu.h"
+#include "MenuBlock.h"

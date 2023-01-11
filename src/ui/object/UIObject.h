@@ -95,6 +95,7 @@ protected:
 	virtual void OnMouseOver( const UIEvent::event_data_t* data ) {};
 	virtual void OnMouseOut( const UIEvent::event_data_t* data ) {};
 	virtual void OnMouseDown( const UIEvent::event_data_t* data ) {};
+	virtual void OnKeyDown( const UIEvent::event_data_t* data ) {};
 	
 	const coord_t ClampX( const coord_t value );
 	const coord_t ClampY( const coord_t value );

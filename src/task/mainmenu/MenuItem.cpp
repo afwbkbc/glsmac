@@ -7,10 +7,11 @@ using namespace ui::event;
 namespace task {
 namespace mainmenu {
 
-MenuItem::MenuItem( Menu* menu, const string& text )
+MenuItem::MenuItem( MenuBlock* menu, const string& text, const bool is_title )
 	: UIContainer()
 	, m_menu( menu )
 	, m_text( text )
+	, m_is_title( is_title )
 {
 	
 	SetLeft( 0 );
@@ -69,10 +70,10 @@ void MenuItem::Create() {
 	m_bottom->SetSizeFromTexture();
 	AddChild(m_bottom);
 	
-	m_label = new Label( m_menu->m_task->m_menu_item_font, m_text, m_menu->m_task->m_menu_item_text_color_normal );
+	m_label = new Label( m_menu->m_task->m_menu_item_font, m_text,
+		m_is_title ? m_menu->m_task->m_menu_item_text_color_title : m_menu->m_task->m_menu_item_text_color_normal
+	);
 	AddChild(m_label);
-
-	//ShowDebugFrame();
 }
 
 void MenuItem::Destroy() {
@@ -88,15 +89,21 @@ void MenuItem::Destroy() {
 }
 
 void MenuItem::OnMouseOver( const UIEvent::event_data_t* data ) {
-	m_label->SetTextColor( m_menu->m_task->m_menu_item_text_color_highlight );
+	if (!m_is_title) {
+		m_label->SetTextColor( m_menu->m_task->m_menu_item_text_color_highlight );
+	}
 }
 
 void MenuItem::OnMouseOut( const UIEvent::event_data_t* data ) {
-	m_label->SetTextColor( m_menu->m_task->m_menu_item_text_color_normal );
+	if (!m_is_title) {
+		m_label->SetTextColor( m_menu->m_task->m_menu_item_text_color_normal );
+	}
 }
 
 void MenuItem::OnMouseDown( const UIEvent::event_data_t* data ) {
-	m_menu->OnItemClicked( m_text );
+	if (!m_is_title) {
+		m_menu->OnItemClick( m_text );
+	}
 }
 
 }

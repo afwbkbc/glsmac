@@ -17,6 +17,7 @@
 
 #include "ui/event/MouseMove.h"
 #include "ui/event/MouseDown.h"
+#include "ui/event/KeyDown.h"
 
 using namespace ui;
 
@@ -212,16 +213,19 @@ void OpenGLRenderer::Iterate() {
 				break;
 			}
 			case SDL_KEYDOWN: {
-/*				if (event.key.keysym.scancode==SDL_SCANCODE_ESCAPE) {
-					Routine *logo_routine=this->GetRoutineByName("logo");
-					if (logo_routine->IsActive()) {
-						logo_routine->Deactivate();
-						this->GetRoutineByName("menu")->Activate();
+				UIEvent::key_code_t code = UIEvent::K_NONE;
+				switch (event.key.keysym.scancode) {
+					case SDL_SCANCODE_ESCAPE: {
+						code = UIEvent::K_ESCAPE;
+						break;
 					}
-					else
-						this->Trigger(new NE::events::Core_Shutdown());
 				}
-*/
+				if (code != UIEvent::K_NONE) {
+					g_engine->GetUI()->SendEvent( new event::KeyDown( code ) );
+				}
+				else {
+					Log("Skipping unknown keydown code: " + to_string(event.key.keysym.scancode));
+				}
 				break;
 			}
 		}

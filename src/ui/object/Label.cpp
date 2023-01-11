@@ -42,7 +42,7 @@ void Label::Align() {
 
 	size_t xpos = 0;
 	size_t ypos = 0;
-	
+
 	if ( ( m_align & ALIGN_HCENTER ) == ALIGN_HCENTER ) {
 		xpos = ( m_object_area.left + m_object_area.right ) / 2 - m_actor->GetFont()->GetTextWidth(m_text.c_str()) / 2;
 	}

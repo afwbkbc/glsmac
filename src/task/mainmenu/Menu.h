@@ -1,56 +1,39 @@
 #pragma once
 
-#include "ui/object/UIContainer.h"
-
 #include <vector>
 #include <string>
+#include <map>
+#include <functional>
 
-#include "types/Texture.h"
-#include "types/Font.h"
-#include "util/Timer.h"
-
-#include "MenuItem.h"
-
-using namespace ui::object;
 using namespace std;
 
 namespace task {
 namespace mainmenu {
-	
+
 class MainMenuTask;
-
-CHILD_CLASS(Menu, UIContainer)
-	Menu( MainMenuTask* task );
-
-	// how much pixels to shift when fully closed
-	static const size_t MENU_CLOSED_POSITION = 400;
 	
-	// per ms
-	static const size_t SLIDING_SPEED = 5;
-
-	void Create();
-	void Destroy();
-	void Iterate();
+class Menu {
+public:
 	
-	void AddItem(const string& text);
+	typedef function<void()> choice_handler_t;
+	typedef vector<pair<string, choice_handler_t>> choice_handlers_t;
+	
+	Menu( MainMenuTask *task, const string& title, const choice_handlers_t& choices );
+	
+	void Show();
+	void OnItemClick( const string& choice );
 	
 protected:
-	friend class MenuItem;
 	
-	void OnItemClicked( const string& choice );
-	
-	vector<string> m_items;
-	
-	MainMenuTask* m_task;
-	vector<MenuItem*> m_menu_items;
-	
-	string m_clicked_choice = "";
-	
-	ssize_t m_slide_value = -MENU_CLOSED_POSITION;
-	ssize_t m_slide_change = SLIDING_SPEED;
-	util::Timer m_slide_timer;
-};
+	void NextMenu( Menu* menu );
 
+	MainMenuTask *m_task;
+	
+private:
+	const string m_title;
+	const choice_handlers_t m_choices;
+};
+	
 }
 }
 

@@ -37,6 +37,10 @@ bool Timer::Ticked() {
 	return false;
 }
 
+bool Timer::Running() {
+	return m_operation != NONE;
+}
+
 milliseconds Timer::GetElapsed() {
 	Tick();
 	return m_elapsed;

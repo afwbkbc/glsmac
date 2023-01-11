@@ -116,6 +116,14 @@ void UIContainer::SendEvent( const UIEvent* event ) {
 		}
 	}
 	
+	if (( event->m_flags & UIEvent::EF_KEYBOARD ) == UIEvent::EF_KEYBOARD ) {
+		// TODO: send only to focused/active element
+		for (auto& c : m_child_objects) {
+			auto *child_event = new UIEvent( *event );
+			c->SendEvent( child_event );
+		}
+	}
+	
 	UIObject::SendEvent( event );
 }
 

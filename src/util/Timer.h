@@ -24,6 +24,7 @@ CHILD_CLASS( Timer, Util )
 	void SetTimeout(const size_t ms);
 	void SetInterval(const size_t ms);
 
+	bool Running();
 	milliseconds GetElapsed();
 	bool Ticked();
 	
