@@ -36,6 +36,28 @@ public:
 	dimensions_t m_dimensions;
 
 	base::ObjectLink *m_renderer_object = NULL;
+	
+	size_t GetTextWidth(const char* text) const {
+		size_t width = 0;
+		for ( const char *p = text; *p; p++ ) {
+			unsigned char sym = (unsigned char)*p;
+			auto *bitmap = &m_symbols[sym];
+			width += bitmap->width;
+		}
+		return width;
+	}
+	size_t GetTextHeight(const char* text) const {
+		size_t height = 0;
+		for ( const char *p = text; *p; p++ ) {
+			unsigned char sym = (unsigned char)*p;
+			auto *bitmap = &m_symbols[sym];
+			if (bitmap->height > height) {
+				height = bitmap->height;
+			}
+		}
+		return height;
+	}
+
 };
 
 } /* namespace types */

@@ -97,6 +97,14 @@ void UIObject::Redraw() {
 		Draw();
 }
 
+size_t UIObject::GetWidth() const {
+	return m_size.width;
+}
+
+size_t UIObject::GetHeight() const {
+	return m_size.height;
+}
+
 void UIObject::SetLeft( const coord_t px ) {
 	m_position.left = px;
 	m_stick_bits |= STICK_LEFT;

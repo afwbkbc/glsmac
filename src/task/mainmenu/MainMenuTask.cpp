@@ -4,60 +4,58 @@
 
 #include "engine/Engine.h"
 
+#include "scene/actor/TextActor.h"
+
 using namespace ui::object;
 using namespace loader::texture;
 
 namespace task {
 namespace mainmenu {
 
-static MenuItem *test;
-
 #define RANDNUM ( (float)rand() / (float)RAND_MAX )
 
 void MainMenuTask::Start() {
 	
+	// background
 	m_background = new Image( "xopeningb.pcx" );
 	m_background->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_BOTTOM );
 	m_background->SetZIndex( 0.5 );
 	g_engine->GetUI()->AddObject( m_background );
 
-	// TOP
+	// menu entries	
 	m_menu_item_textures = {
-		// TOP
-		//g_engine->GetTextureLoader()->LoadTexture( "console_x.pcx", 717, 1, 731, 311, TextureLoader::LT_ROTATE | TextureLoader::LT_FLIPV | TextureLoader::LT_CONTRAST, 0.7 ),
-		g_engine->GetTextureLoader()->LoadTexture( "console_x.pcx", 708, 1, 715, 311, TextureLoader::LT_ROTATE | TextureLoader::LT_FLIPV | TextureLoader::LT_CONTRAST, 0.7 ),
+		// UPPER TOP
+		g_engine->GetTextureLoader()->LoadTexture( "console_x.pcx", 708, 1, 715, 354, TextureLoader::LT_ROTATE | TextureLoader::LT_FLIPV | TextureLoader::LT_CONTRAST, 1.5 ),
+		// LOWER TOP
+		g_engine->GetTextureLoader()->LoadTexture( "console_x.pcx", 708, 1, 715, 354, TextureLoader::LT_ROTATE | TextureLoader::LT_FLIPV | TextureLoader::LT_CONTRAST, 0.8 ),
 		// BOTTOM
-		g_engine->GetTextureLoader()->LoadTexture( "console_x.pcx", 699, 1, 706, 240, TextureLoader::LT_ROTATE | TextureLoader::LT_FLIPV | TextureLoader::LT_CONTRAST, 0.7 ),
+		g_engine->GetTextureLoader()->LoadTexture( "console_x.pcx", 699, 1, 706, 293, TextureLoader::LT_ROTATE | TextureLoader::LT_FLIPV | TextureLoader::LT_CONTRAST, 0.2 ),
 		// LEFT
-		g_engine->GetTextureLoader()->LoadTexture( "interface.pcx", 472, 756, 476, 799, TextureLoader::LT_CONTRAST, 0.6 ),
+		g_engine->GetTextureLoader()->LoadTexture( "interface.pcx", 472, 756, 476, 786, TextureLoader::LT_CONTRAST, 0.3 ),
 		// RIGHT
-		g_engine->GetTextureLoader()->LoadTexture( "interface.pcx", 299, 756, 303, 799, TextureLoader::LT_CONTRAST, 0.5 ),
+		g_engine->GetTextureLoader()->LoadTexture( "interface.pcx", 299, 756, 303, 786, TextureLoader::LT_CONTRAST, 0.2 ),
 		// BODY
-		g_engine->GetTextureLoader()->LoadTexture( "palette.pcx", 480, 28, 480, 28, TextureLoader::LT_ALPHA, 0.9 )
-		// TOP SHADOW
-		//g_engine->GetTextureLoader()->LoadTexture( "console_x.pcx", 683, 1, 697, 311, TextureLoader::LT_ROTATE | TextureLoader::LT_FLIPV )
+		g_engine->GetTextureLoader()->LoadTexture( "palette.pcx", 450, 28, 450, 28, TextureLoader::LT_ALPHA, 0.8 )
 	};
 	
-	test = new MenuItem( &m_menu_item_textures );
+	m_menu_item_font = g_engine->GetFontLoader()->LoadFont( "arialnb.ttf", 21 );
 	
-	m_panel = new Panel;
+	m_menu = new Menu( this );
+	m_menu->AddItem("START GAME");
+	m_menu->AddItem("QUICK START");
+	m_menu->AddItem("SCENARIO");
+	m_menu->AddItem("LOAD GAME");
+	m_menu->AddItem("MULTIPLAYER");
+	m_menu->AddItem("VIEW CREDITS");
+	m_menu->AddItem("EXIT GAME");
 	
-	m_panel->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_BOTTOM );
-	m_panel->SetWidth(160);
-	m_panel->SetHeight(200);
+	g_engine->GetUI()->AddObject( m_menu );
 	
-	m_panel->SetBackgroundColor(types::Color::TRANSPARENT());
-	
-	m_panel->AddChild(test);
-	
-	g_engine->GetUI()->AddObject( m_panel );
 }
 
 void MainMenuTask::Stop() {
 	
-	m_panel->RemoveChild(test);
-	
-	g_engine->GetUI()->RemoveObject( m_panel );
+	g_engine->GetUI()->RemoveObject( m_menu );
 	g_engine->GetUI()->RemoveObject( m_background );
 	
 	for (auto& t : m_menu_item_textures) {

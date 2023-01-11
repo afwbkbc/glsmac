@@ -3,6 +3,7 @@
 #include "Font.h"
 
 #include "types/Vec22.h"
+#include "engine/Engine.h"
 
 namespace renderer {
 namespace opengl {
@@ -38,6 +39,7 @@ Font::Font( types::Font *font, shader_program::FontOpenGLShaderProgram *shader_p
 	types::Font::bitmap_t *bitmap;
 	for( int ii = 32; ii < 128; ii++ ) { // only ascii for now
 
+		//bitmap = &m_font->m_symbols[ii];
 		bitmap = &m_font->m_symbols[ii];
 
 		if ( bitmap->data ) {
@@ -65,8 +67,8 @@ Font::~Font() {
 }
 
 void Font::Render( const char *text, float x, float y, float z_index, types::Color color ) const {
-	const float sx = 2.0 / m_shader_program->GetWindowWidth();
-	const float sy = 2.0 / m_shader_program->GetWindowHeight();
+	const float sx = 2.0 / g_engine->GetRenderer()->GetWindowWidth();
+	const float sy = 2.0 / g_engine->GetRenderer()->GetWindowHeight();
 
 	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
 

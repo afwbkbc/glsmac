@@ -46,6 +46,9 @@ MAJOR_CLASS( UIObject, base::Base )
 	virtual void Align();
 	virtual void Draw();
 
+	size_t GetWidth() const;
+	size_t GetHeight() const;
+	
 	virtual void SetZIndex( float z_index );
 	void SetLeft( const coord_t px );
 	void SetRight( const coord_t px );
@@ -88,8 +91,17 @@ protected:
 	} m_object_area;
 	bool m_created = false;
 	overflow_t m_overflow = OVERFLOW_VISIBLE;
-private:
-	scene::Scene *GetSceneOfActor( const scene::actor::Actor *actor ) const;
+
+	enum stick_bits_t {
+		STICK_LEFT = 1,
+		STICK_RIGHT = 2,
+		STICK_WIDTH = 4,
+		STICK_TOP = 8,
+		STICK_BOTTOM = 16,
+		STICK_HEIGHT = 32,
+	};
+	unsigned char m_stick_bits = 0;
+	alignment_t m_align = ALIGN_LEFT | ALIGN_TOP;
 	struct {
 		coord_t left;
 		coord_t right;
@@ -108,16 +120,8 @@ private:
 		coord_t top;
 		coord_t bottom;
 	} m_padding;
-	enum stick_bits_t {
-		STICK_LEFT = 1,
-		STICK_RIGHT = 2,
-		STICK_WIDTH = 4,
-		STICK_TOP = 8,
-		STICK_BOTTOM = 16,
-		STICK_HEIGHT = 32,
-	};
-	unsigned char m_stick_bits = 0;
-	alignment_t m_align = ALIGN_LEFT | ALIGN_TOP;
+	
+	scene::Scene *GetSceneOfActor( const scene::actor::Actor *actor ) const;
 };
 
 } /* namespace object */

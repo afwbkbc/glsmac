@@ -24,7 +24,7 @@ public:
 	bool operator != (const Color operand) { return (this->red!=operand.red)||(this->green!=operand.green)||(this->blue!=operand.blue)||(this->alpha!=operand.alpha); };
 
 	const rgba_t GetRGBA() const {
-		return RGBA_From( red * 255, green * 255, blue * 255, alpha * 255 );
+		return RGBA( red * 255, green * 255, blue * 255, alpha * 255 );
 	};
 	
 	static Color TRANSPARENT() { return Color( 0.0, 0.0, 0.0, 0.0 ); }
@@ -32,8 +32,17 @@ public:
 	static Color RED() { return Color( 1.0, 0.0, 0.0, 1.0 ); }
 	static Color GREEN() { return Color( 0.0, 1.0, 0.0, 1.0 ); }
 	static Color BLUE() { return Color( 0.0, 0.0, 1.0, 1.0 ); }
+
+	static Color FromRGBA( const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha ) {
+		return {
+			(float) red / 255,
+			(float) green / 255,
+			(float) blue / 255,
+			(float) alpha / 255
+		};
+	}
 	
-	static rgba_t RGBA_From( const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha ) {
+	static rgba_t RGBA( const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha ) {
 		return red | ( green << 8 ) | ( blue << 16) | ( alpha << 24 );
 	}
 };

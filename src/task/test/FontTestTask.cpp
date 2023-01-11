@@ -28,8 +28,6 @@ void FontTestTask::Stop() {
 	delete m_text1;
 	delete m_text2;
 	delete m_text3;
-	delete m_font1;
-	delete m_font2;
 	delete m_scene;
 }
 

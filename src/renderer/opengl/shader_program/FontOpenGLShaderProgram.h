@@ -11,15 +11,6 @@ namespace shader_program {
 
 MINOR_CLASS( Font, OpenGLShaderProgram )
 	FontOpenGLShaderProgram() : OpenGLShaderProgram( TYPE_FONT ) {};
-	const float GetAspectRatio() const {
-		return 1;
-	}
-	const int GetWindowWidth() const {
-		return 640;
-	}
-	const int GetWindowHeight() const {
-		return 480;
-	}
 protected:
 	friend class opengl::Font;
 

@@ -2,6 +2,7 @@
 
 #include "ui/object/UIContainer.h"
 #include "ui/object/Surface.h"
+#include "ui/object/Label.h"
 
 #include <vector>
 
@@ -13,25 +14,31 @@ using namespace ui::object;
 namespace task {
 namespace mainmenu {
 
+class Menu;
+	
 CHILD_CLASS( MenuItem, UIContainer )
-	MenuItem( const vector<const types::Texture*>* textures );
+	MenuItem( const Menu* menu, const string& text );
 
 	virtual void Create();
 	virtual void Destroy();
-	//virtual void Align()
-	virtual void Draw();
 
 
 protected:
-	const vector<const types::Texture*>* m_textures;
+
+	const Menu* m_menu;
+	const string m_text;
 	
-	Surface* m_top;
+	Surface* m_upper_top;
+	Surface* m_lower_top;
 	Surface* m_bottom;
 	Surface* m_left;
 	Surface* m_right;
 	Surface* m_body;
+	Label* m_label;
 	
 };
 
 }
 }
+
+#include "Menu.h"

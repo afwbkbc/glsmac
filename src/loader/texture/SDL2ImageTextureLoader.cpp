@@ -25,7 +25,7 @@ types::Texture *SDL2ImageTextureLoader::LoadTexture( const string &name ) {
 	}
 	else {
 		Log( "Loading texture \"" + name + "\"" );
-		SDL_Surface *image = IMG_Load( ( /*m_textures_directory*/ GetRoot() + name ).c_str() );
+		SDL_Surface *image = IMG_Load( ( GetRoot() + name ).c_str() );
 		if (!image) {
 			throw TextureLoaderError( IMG_GetError() );
 		}

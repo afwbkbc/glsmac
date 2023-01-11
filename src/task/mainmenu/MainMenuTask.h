@@ -4,12 +4,12 @@
 
 #include <vector>
 
-#include "types/Texture.h"
 #include "ui/object/Image.h"
-#include "ui/object/Panel.h"
+#include "types/Texture.h"
+#include "types/Font.h"
+#include "scene/actor/Actor.h"
+#include "Menu.h"
 #include "MenuItem.h"
-#include "MenuItemMesh.h"
-#include "MenuItemTexture.h"
 
 using namespace std;
 
@@ -22,14 +22,16 @@ MINOR_CLASS( MainMenu, Task )
 	void Iterate();
 	
 protected:
-	const MenuItemMesh m_menu_item_mesh;
-	
-	vector<const types::Texture*> m_menu_item_textures;
+	friend class Menu;
+	friend class MenuItem;
 	
 	ui::object::Image *m_background;
-	ui::object::Panel *m_panel;
+	
+	vector<const types::Texture*> m_menu_item_textures;
+	types::Font *m_menu_item_font;
+	
+	Menu* m_menu;
 
-	vector<MenuItem*> m_menu_items;
 };
 
 } /* namespace mainmenu */

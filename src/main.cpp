@@ -24,7 +24,10 @@
 #include "task/test/WorldTestTask.h"
 #include "task/test/ManagerTestTask.h"
 
-
+// TODO: move to config
+#define WINDOW_WIDTH 1024
+#define WINDOW_HEIGHT 768
+#define WINDOW_VSYNC true
 
 #ifdef _WIN32
 int WINAPI WinMain (HINSTANCE h, HINSTANCE hh, LPSTR cmd, int show) {
@@ -40,10 +43,10 @@ int main(const int argc, const char *argv[]) {
 	error_handler::StdoutErrorHandler error_handler;
 #endif
 	
-	loader::font::FreeTypeFontLoader font_loader( "res/fonts" );
+	loader::font::FreeTypeFontLoader font_loader;
 	
-	loader::texture::SDL2ImageTextureLoader texture_loader( "res/textures" );
-	texture_loader.SetTransparentColor(types::Color::RGBA_From(255, 0, 255, 255));
+	loader::texture::SDL2ImageTextureLoader texture_loader;
+	texture_loader.SetTransparentColor(types::Color::RGBA(255, 0, 255, 255));
 	
 	logger::StdoutLogger logger;
 	renderer::OpenGLRenderer renderer( "OpenSMAC", WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_VSYNC, 90.0f);
