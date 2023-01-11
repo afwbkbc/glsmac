@@ -3,6 +3,8 @@ Open-source client for Sid Meier's Alpha Centauri ( + Alien Crossfire )
 
 Note: you will still need original game to play - this client needs it's resources
 
+OpenSMAC discord : https://discord.gg/fWG3xK7cUx
+
 - Why?
 
 SMAC was a great game, possibly the best in 4x genre, but it's outdated so much it barely runs on modern systems. Especially multiplayer (which is based on ancient directplay).
