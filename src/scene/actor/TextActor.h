@@ -6,22 +6,22 @@
 #include "types/Vec2.h"
 #include "types/Color.h"
 
+using namespace types;
+
 namespace scene {
 namespace actor {
 
 class TextActor : public Actor {
 public:
-	TextActor( types::Font *font, const std::string &text, types::Color color = types::Color::WHITE() );
+	TextActor( Font *font, const std::string &text, Color color = Color::WHITE() );
 	~TextActor();
-	types::Font *GetFont() const {
-		return m_font;
-	}
-	const std::string & GetText() const {
-		return m_text;
-	}
-	const types::Color & GetColor() const {
-		return m_color;
-	}
+	
+	Font *GetFont() const;
+	const std::string & GetText() const;
+	const Color & GetColor() const;
+	
+	void SetColor( const Color& color );
+	
 protected:
 	types::Font *m_font;
 	const std::string m_text;

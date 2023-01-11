@@ -3,17 +3,17 @@
 #include <cstring>
 #include <cmath>
 
+#include <iostream>
+
 namespace types {
 
 Texture::Texture( const std::string& name, const size_t width, const size_t height )
 	: m_name( name )
 {
-	m_width = width;
-	m_height = height;
 	m_bpp = 4; // always RGBA format
 	
-	if (m_width > 0 && m_height > 0) {
-		Resize( m_width, m_height );
+	if (width > 0 && height > 0) {
+		Resize( width, height );
 	}
 }
 
@@ -27,6 +27,8 @@ Texture::~Texture() {
 void Texture::Resize( const size_t width, const size_t height ) {
 	
 	if (m_width != width || m_height != height) {
+		
+		std::cout << "RESIZE TO " << std::to_string(width) << "x" << std::to_string(height) << std::endl;
 		
 		m_width = width;
 		m_height = height;
@@ -42,8 +44,12 @@ void Texture::Resize( const size_t width, const size_t height ) {
 	}
 }
 
+void Texture::SetPixel( const size_t x, const size_t y, const Color::rgba_t& rgba ) {
+	((Color::rgba_t*)m_bitmap)[ y * m_width + x ] = rgba;
+}
+
 void Texture::SetPixel( const size_t x, const size_t y, const Color& color ) {
-	((Color::rgba_t*)m_bitmap)[ y * m_width + x ] = color.GetRGBA();
+	SetPixel( x, y, color.GetRGBA() );
 }
 
 void Texture::Rectangle( const size_t x1, const size_t y1, const size_t x2, const size_t y2, const Color color ) {

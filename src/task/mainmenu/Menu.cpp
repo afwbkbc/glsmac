@@ -21,14 +21,14 @@ void Menu::Create() {
 	
 	SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_BOTTOM );
 	SetWidth(354);
+	SetBottom(16);
 	
 	for (size_t i = m_items.size() ; i > 0 ; i--) {
 		auto *item = new MenuItem( this, m_items[i-1] );
-		item->SetBottom(m_menu_items.size() * item->GetHeight());
+		item->SetBottom(m_menu_items.size() * ( item->GetHeight() + 24 ) );
 		m_menu_items.push_back(item);
 		AddChild(item);
 	}
-	
 }
 
 void Menu::Destroy() {

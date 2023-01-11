@@ -2,22 +2,27 @@
 
 #include "engine/Engine.h"
 
+using namespace types;
+
 namespace ui {
 namespace object {
 
-Label::Label(types::Font* font, const string& text, const types::Color& color)
+Label::Label(Font* font, const string& text, const Color& color)
 	: UIObject()
 	, m_font( font )
 	, m_text( text )
 	, m_color( color )
 {
-	//
+	SetAlign( ALIGN_CENTER );
+}
+
+void Label::SetTextColor( const Color& color ) {
+	m_color = color;
+	m_actor->SetColor( color );
 }
 
 void Label::Create() {
 	UIObject::Create();
-	
-	SetAlign( ALIGN_CENTER );
 	
 	m_actor = new scene::actor::TextActor( m_font, m_text, m_color );
 	
@@ -49,13 +54,13 @@ void Label::Align() {
 	}
 	
 	if ( ( m_align & ALIGN_VCENTER ) == ALIGN_VCENTER ) {
-		ypos = ( m_object_area.top + m_object_area.bottom) / 2 - m_actor->GetFont()->GetTextHeight(m_text.c_str()) / 2;
+		ypos = ( m_object_area.top + m_object_area.bottom ) / 2 + m_actor->GetFont()->GetTextHeight(m_text.c_str()) / 2;
 	}
 	else if ( m_align & ALIGN_TOP ) {
-		ypos = m_object_area.top;
+		ypos = m_object_area.top + m_actor->GetFont()->GetTextHeight(m_text.c_str());
 	}
 	else if ( m_align & ALIGN_BOTTOM ) {
-		ypos = m_object_area.bottom - m_actor->GetFont()->GetTextHeight(m_text.c_str());
+		ypos = m_object_area.bottom;
 	}
 	
 	m_actor->SetPosition({

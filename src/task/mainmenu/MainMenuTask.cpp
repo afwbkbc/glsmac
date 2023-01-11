@@ -31,14 +31,14 @@ void MainMenuTask::Start() {
 		// BOTTOM
 		g_engine->GetTextureLoader()->LoadTexture( "console_x.pcx", 699, 1, 706, 293, TextureLoader::LT_ROTATE | TextureLoader::LT_FLIPV | TextureLoader::LT_CONTRAST, 0.2 ),
 		// LEFT
-		g_engine->GetTextureLoader()->LoadTexture( "interface.pcx", 472, 756, 476, 786, TextureLoader::LT_CONTRAST, 0.3 ),
+		g_engine->GetTextureLoader()->LoadTexture( "interface.pcx", 472, 756, 476, 790, TextureLoader::LT_CONTRAST, 0.3 ),
 		// RIGHT
-		g_engine->GetTextureLoader()->LoadTexture( "interface.pcx", 299, 756, 303, 786, TextureLoader::LT_CONTRAST, 0.2 ),
+		g_engine->GetTextureLoader()->LoadTexture( "interface.pcx", 299, 756, 303, 790, TextureLoader::LT_CONTRAST, 0.2 ),
 		// BODY
 		g_engine->GetTextureLoader()->LoadTexture( "palette.pcx", 450, 28, 450, 28, TextureLoader::LT_ALPHA, 0.8 )
 	};
 	
-	m_menu_item_font = g_engine->GetFontLoader()->LoadFont( "arialnb.ttf", 21 );
+	m_menu_item_font = g_engine->GetFontLoader()->LoadFont( "arialnb.ttf", 20 );
 	
 	m_menu = new Menu( this );
 	m_menu->AddItem("START GAME");

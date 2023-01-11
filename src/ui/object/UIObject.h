@@ -4,10 +4,19 @@
 
 #include "base/Base.h"
 
+#include "ui/event/UIEvent.h"
+
 #include "scene/Scene.h"
 #include "scene/actor/Actor.h"
 
+#include "ui/event/UIEvent.h"
+
+using namespace std;
+
 namespace ui {
+
+using namespace event;
+
 namespace object {
 
 class UIContainer;
@@ -15,7 +24,7 @@ class UIContainer;
 MAJOR_CLASS( UIObject, base::Base )
 	UIObject();
 
-	typedef unsigned char alignment_t;
+	typedef uint8_t alignment_t;
 	const static alignment_t ALIGN_LEFT = 1;
 	const static alignment_t ALIGN_RIGHT = 2;
 	const static alignment_t ALIGN_HCENTER = 3;
@@ -64,13 +73,27 @@ MAJOR_CLASS( UIObject, base::Base )
 
 	const float GetZIndex() const { return m_z_index; };
 	const overflow_t GetOverflow() const { return m_overflow; };
-	/*virtual const coord_t GetLeft() const = 0;
-	virtual const coord_t GetTop() const = 0;
-	virtual const coord_t GetRight() const = 0;
-	virtual const coord_t GetBottom() const = 0;
-	coord_t GetWidth() const { return ( abs( GetRight() - GetLeft() ) ); }
-	coord_t GetHeight() const { return ( abs( GetBottom() - GetTop() ) ); }*/
+	
+	enum event_type_t : uint8_t {
+		EV_MOUSEOVER,
+		EV_MOUSEOUT,
+	};
+	
+	virtual void SendEvent( const event::UIEvent* event );
+	
+	vertex_t GetAreaPosition() const;
+	pair<vertex_t, vertex_t> GetAreaGeometry() const;
+	bool IsPointInside( const size_t x, const size_t y ) const;
+	
+	void ShowDebugFrame();
+	void HideDebugFrame();
+	
 protected:
+	
+	// callbacks
+	virtual void OnMouseOver( const UIEvent::event_data_t* data ) {};
+	virtual void OnMouseOut( const UIEvent::event_data_t* data ) {};
+	
 	const coord_t ClampX( const coord_t value );
 	const coord_t ClampY( const coord_t value );
 	const vertex_t ClampXY( const vertex_t value );
@@ -121,7 +144,14 @@ protected:
 		coord_t bottom;
 	} m_padding;
 	
+	typedef uint8_t state_t;
+	const static state_t STATE_NONE = 0;
+	const static state_t STATE_MOUSEOVER = 1;
+	state_t m_state = STATE_NONE;
+	
 	scene::Scene *GetSceneOfActor( const scene::actor::Actor *actor ) const;
+	
+	bool m_has_debug_frame = false;
 };
 
 } /* namespace object */

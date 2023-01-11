@@ -4,7 +4,12 @@
 
 #include "../UI.h"
 
+using namespace std;
+
 namespace ui {
+
+using namespace event;
+
 namespace object {
 
 void UIContainer::Create() {
@@ -39,7 +44,7 @@ void UIContainer::DestroyChild( UIObject *object ) {
 void UIContainer::AddChild( UIObject *object ) {
 	if ( object->GetParentObject() != NULL )
 		throw UIError( "non-free UIObject insertion" );
-	auto it = std::find( m_child_objects.begin(), m_child_objects.end(), object );
+	auto it = find( m_child_objects.begin(), m_child_objects.end(), object );
 	if ( it < m_child_objects.end() )
 		throw UIError( "duplicate UIObject insertion" );
 	m_child_objects.push_back( object );
@@ -50,7 +55,7 @@ void UIContainer::AddChild( UIObject *object ) {
 }
 
 void UIContainer::RemoveChild( UIObject *object ) {
-	auto it = std::find( m_child_objects.begin(), m_child_objects.end(), object );
+	auto it = find( m_child_objects.begin(), m_child_objects.end(), object );
 	if ( it == m_child_objects.end() )
 		throw UIError( "UIObject to be removed not found" );
 	m_child_objects.erase( it, it + 1 );
@@ -89,6 +94,19 @@ void UIContainer::SetOverflow( const overflow_t overflow ) {
 	for ( auto it = m_child_objects.begin() ; it < m_child_objects.end() ; ++it )
 		(*it)->Realign();
 }
+
+void UIContainer::SendEvent( const UIEvent* event ) {
+	if (( event->m_flags & UIEvent::EF_MOUSE ) == UIEvent::EF_MOUSE ) {
+		for (auto& c : m_child_objects) {
+			auto *child_event = new UIEvent( *event );
+			c->SendEvent( child_event );
+		}
+	}
+	
+	UIObject::SendEvent( event );
+}
+
+
 
 } /* namespace object */
 } /* namespace ui */

@@ -1,9 +1,16 @@
 #include "UIObject.h"
 
+#include <algorithm>
+
 #include "engine/Engine.h"
 #include "../UI.h"
 
+using namespace std;
+
 namespace ui {
+
+using namespace event;
+
 namespace object {
 
 UIObject::UIObject() {
@@ -20,6 +27,8 @@ void UIObject::Create() {
 }
 
 void UIObject::Destroy() {
+	HideDebugFrame();
+	
 	m_created = false;
 }
 
@@ -42,8 +51,8 @@ void UIObject::SetParentObject( UIContainer *parent_object ) {
 
 void UIObject::SetZIndex( float z_index ) {
 	if ( z_index < -1.0 || z_index > 1.0 )
-		throw UIError( "invalid z-index " + std::to_string( z_index ) );
-	//Log( "Changing z-index to " + std::to_string( z_index ) );
+		throw UIError( "invalid z-index " + to_string( z_index ) );
+	//Log( "Changing z-index to " + to_string( z_index ) );
 	for ( auto it = m_actors.begin() ; it < m_actors.end() ; ++it )
 		(*it)->SetPositionZ( z_index );
 	m_z_index = z_index;
@@ -269,6 +278,62 @@ void UIObject::SetHAlign( const alignment_t align ) {
 void UIObject::SetVAlign( const alignment_t align ) {
 	m_align = ( m_align & ALIGN_HCENTER ) | ( align & ALIGN_VCENTER );
 }
+
+void UIObject::SendEvent( const UIEvent* event ) {
+	
+	if (( event->m_flags & UIEvent::EF_MOUSE ) == UIEvent::EF_MOUSE ) {
+		if ( IsPointInside( event->m_data.mouse.x, event->m_data.mouse.y ) ) {
+			if ( ( m_state & STATE_MOUSEOVER ) != STATE_MOUSEOVER ) {
+				m_state |= STATE_MOUSEOVER;
+				OnMouseOver( &event->m_data );
+			}
+		}
+		else {
+			if ( ( m_state & STATE_MOUSEOVER ) == STATE_MOUSEOVER ) {
+				m_state &= ~STATE_MOUSEOVER;
+				OnMouseOut( &event->m_data );
+			}
+		}
+	}
+	
+	// processed, not needed anymore
+	delete event;
+}
+
+UIObject::vertex_t UIObject::GetAreaPosition() const {
+	return { m_object_area.left, m_object_area.top };
+}
+
+pair<UIObject::vertex_t, UIObject::vertex_t> UIObject::GetAreaGeometry() const {
+	return {
+		{ m_object_area.left, m_object_area.top },
+		{ m_object_area.right, m_object_area.bottom }
+	};
+}
+
+bool UIObject::IsPointInside( const size_t x, const size_t y ) const {
+	return (
+		x >= m_object_area.left &&
+		y >= m_object_area.top &&
+		x <= m_object_area.right &&
+		y <= m_object_area.bottom
+	);
+}
+
+void UIObject::ShowDebugFrame() {
+	if ( !m_has_debug_frame ) {
+		g_engine->GetUI()->ShowDebugFrame( this );
+		m_has_debug_frame = true;
+	}
+}
+
+void UIObject::HideDebugFrame() {
+	if ( m_has_debug_frame ) {
+		g_engine->GetUI()->HideDebugFrame( this );
+		m_has_debug_frame = false;
+	}
+}
+
 
 } /* namespace object */
 } /* namespace ui */

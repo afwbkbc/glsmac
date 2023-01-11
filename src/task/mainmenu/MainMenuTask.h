@@ -12,6 +12,7 @@
 #include "MenuItem.h"
 
 using namespace std;
+using namespace types;
 
 namespace task {
 namespace mainmenu {
@@ -29,6 +30,8 @@ protected:
 	
 	vector<const types::Texture*> m_menu_item_textures;
 	types::Font *m_menu_item_font;
+	const Color m_menu_item_text_color_normal = Color::FromRGBA( 94, 162 ,137, 255 );
+	const Color m_menu_item_text_color_highlight = Color::FromRGBA( 193, 240 ,204, 255 );
 	
 	Menu* m_menu;
 

@@ -8,14 +8,17 @@
 #include "scene/actor/TextActor.h"
 
 using namespace std;
+using namespace types;
 
 namespace ui {
 namespace object {
 
 CHILD_CLASS( Label, UIObject )
 	
-	Label(types::Font* m_font, const string& text, const types::Color& color);
+	Label(Font* m_font, const string& text, const Color& color);
 	
+	void SetTextColor( const Color& color );
+
 	void Create();
 	void Destroy();
 	void Align();
@@ -23,9 +26,9 @@ CHILD_CLASS( Label, UIObject )
 	
 protected:
 	
-	types::Font *m_font;
+	Font *m_font;
 	const string m_text;
-	const types::Color m_color;
+	Color m_color;
 	
 	scene::actor::TextActor *m_actor;
 	

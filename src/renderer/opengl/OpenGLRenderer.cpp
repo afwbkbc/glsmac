@@ -15,6 +15,10 @@
 #include "routine/SkyboxOpenGLRoutine.h"
 #include "routine/WorldOpenGLRoutine.h"
 
+#include "ui/event/MouseMoveEvent.h"
+
+using namespace ui;
+
 namespace renderer {
 namespace opengl {
 
@@ -196,6 +200,10 @@ void OpenGLRenderer::Iterate() {
 						this->mWindowDependentShaderPrograms[i]->OnWindowUpdate(this->mOptions.window_width,this->mOptions.window_height,this->mAspectRatio);
 					}*/
 				}
+				break;
+			}
+			case SDL_MOUSEMOTION: {
+				g_engine->GetUI()->SendEvent( new event::MouseMove( event.motion.x, event.motion.y ) );
 				break;
 			}
 			case SDL_KEYDOWN: {

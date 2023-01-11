@@ -1,4 +1,5 @@
 SUBDIR( object )
+SUBDIR( event )
 
 SET(SRC ${SRC}
 

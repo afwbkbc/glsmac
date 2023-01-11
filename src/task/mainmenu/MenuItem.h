@@ -10,6 +10,7 @@
 
 using namespace std;
 using namespace ui::object;
+using namespace ui::event;
 
 namespace task {
 namespace mainmenu {
@@ -25,6 +26,9 @@ CHILD_CLASS( MenuItem, UIContainer )
 
 protected:
 
+	void OnMouseOver( const UIEvent::event_data_t* data );
+	void OnMouseOut( const UIEvent::event_data_t* data );
+	
 	const Menu* m_menu;
 	const string m_text;
 	

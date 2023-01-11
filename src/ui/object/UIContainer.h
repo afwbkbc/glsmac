@@ -4,6 +4,8 @@
 
 #include "UIObject.h"
 
+#include "ui/event/UIEvent.h"
+
 namespace ui {
 namespace object {
 
@@ -19,8 +21,11 @@ public:
 	virtual void Redraw();
 
 	void SetOverflow( const overflow_t overflow );
+	void SendEvent( const event::UIEvent* event );
+	
 protected:
 	std::vector<UIObject *> m_child_objects;
+	
 private:
 	void CreateChild( UIObject *object );
 	void DestroyChild( UIObject *object );

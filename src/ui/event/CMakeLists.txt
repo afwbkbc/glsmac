@@ -1,0 +1,5 @@
+SET(SRC ${SRC}
+
+	${PWD}/UIEvent.cpp
+
+PARENT_SCOPE)
