@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.0)
 
-SET(PROJECT_NAME OpenSMAC)
+SET(PROJECT_NAME GLSMAC)
 project (${PROJECT_NAME})
 
 SET(CMAKE_MODULE_PATH ".")

@@ -1,15 +1,15 @@
-# opensmac
-Open-source client for Sid Meier's Alpha Centauri ( + Alien Crossfire )
+# GLSMAC
+Open-source OpenGL/SDL client for Sid Meier's Alpha Centauri ( + Alien Crossfire )
 
-Note: you will still need original game to play - this client needs it's resources
+Note: you will still need to own original game and expansion - this client uses it's assets.
 
-OpenSMAC discord : https://discord.gg/fWG3xK7cUx
+GLSMAC discord : https://discord.gg/fWG3xK7cUx
 
 - Why?
 
 SMAC was a great game, possibly the best in 4x genre, but it's outdated so much it barely runs on modern systems. Especially multiplayer (which is based on ancient directplay).
 
-- What will be same between OpenSMAC and original game?
+- What will be same between GLSMAC and original game?
 
 Models, images, movies, texts, lore, factions, game rules (such as tech trees, types of armor/weapons etc), UI
 
@@ -19,13 +19,13 @@ Graphics engine, network code are fully rewritten to allow it run as smoothly as
 
 - What may differ slightly?
 
-Random maps generation, AI, dynamic music. While I'll try to get them as close as possible to original logic, they will still be recreated from scratch.
+Random maps generation, AI, dynamic music, some UI parts. While I'll try to get them as close as possible to original logic, they will still be recreated from scratch.
 
 - Compatibility?
 
 Network won't be compatible to original client (so you can't play together with somebody running it).
 
-Maybe I'll make saves compatible, but it's very low priority.
+Maybe I'll make saves and maps compatible, but it's very low priority.
 
 - Other improvements?
 
