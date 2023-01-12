@@ -28,7 +28,7 @@ public:
 		return gLastExceptionMsg;
 	}
 protected:
-	std::string mReason;
+	std::string mReason = "";
 };
 
 } /* namespace base */

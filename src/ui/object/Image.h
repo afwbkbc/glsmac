@@ -11,7 +11,7 @@ CHILD_CLASS( Image, Surface )
 	Image( const std::string& filename );
 
 protected:
-	const types::Texture* m_texture;
+	const types::Texture* m_texture = nullptr;
 };
 
 } /* namespace object */

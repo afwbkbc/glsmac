@@ -45,11 +45,11 @@ protected:
 	
 	void OnItemClick( const string& choice );
 	
-	vector<string> m_items;
+	vector<string> m_items = {};
 	string m_title = "";
 	
-	MainMenu* m_mainmenu;
-	vector<MenuItem*> m_menu_items;
+	MainMenu* m_mainmenu = nullptr;
+	vector<MenuItem*> m_menu_items = {};
 	
 	string m_clicked_choice = "";
 	

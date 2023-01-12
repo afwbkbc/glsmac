@@ -26,7 +26,7 @@ public:
 	void SendEvent( const event::UIEvent* event );
 	
 protected:
-	std::vector<UIObject *> m_child_objects;
+	std::vector<UIObject *> m_child_objects = {};
 	
 private:
 	void CreateChild( UIObject *object );

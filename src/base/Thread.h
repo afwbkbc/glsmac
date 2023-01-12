@@ -30,9 +30,9 @@ MAJOR_CLASS( Thread, Base )
 	void Run();
 	void SetCommand( const thread_command_t command );
 protected:
-	thread_state_t m_state;
-	thread_command_t m_command;
-	base::modules_t m_modules;
+	thread_state_t m_state = STATE_INACTIVE;
+	thread_command_t m_command = COMMAND_NONE;
+	base::modules_t m_modules = {};
 	float m_ips = 10;
 #ifdef DEBUG
 	size_t m_icounter;

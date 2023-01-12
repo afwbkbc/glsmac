@@ -21,8 +21,8 @@ MINOR_CLASS( SDL2Image, TextureLoader )
 protected:
 	// cache all textures for future use
 	typedef unordered_map< string, types::Texture* > texture_map_t;
-	texture_map_t m_textures;
-	texture_map_t m_subtextures;
+	texture_map_t m_textures = {};
+	texture_map_t m_subtextures = {};
 
 };
 

@@ -27,14 +27,14 @@ protected:
 	
 	void NextMenu( Menu* menu );
 
-	MainMenu *m_mainmenu;
+	MainMenu *m_mainmenu = nullptr;
 	
 private:
-	const string m_title;
-	const choice_handlers_t m_choices;
+	const string m_title = "";
+	const choice_handlers_t m_choices = {};
 };
 	
 }
 }
 
-#include "MainMenu.h"
+#include "../MainMenu.h"

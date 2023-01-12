@@ -11,6 +11,7 @@
 namespace scene {
 
 enum scene_type_t {
+	SCENE_TYPE_NONE,
 	SCENE_TYPE_ORTHO,
 	SCENE_TYPE_TEXT,
 	SCENE_TYPE_PERSP,
@@ -35,9 +36,9 @@ MAJOR_CLASS( Scene, base::Base )
 protected:
 	friend class scene::Camera;
 
-	const scene_type_t m_scene_type;
+	const scene_type_t m_scene_type = SCENE_TYPE_NONE;
 
-	std::vector<actor::Actor *> m_actors;
+	std::vector<actor::Actor *> m_actors = {};
 
 	Camera *m_camera = NULL;
 	types::Texture *m_skybox_texture = NULL;

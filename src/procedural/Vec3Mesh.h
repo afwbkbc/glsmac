@@ -15,7 +15,7 @@ public:
 	virtual scene::mesh::Vec3Mesh *Generate();
 	Vec3MeshVertex *AddVertex( Vec3MeshVertex *vertex );
 protected:
-	std::vector<Vec3MeshVertex *> m_vertices;
+	std::vector<Vec3MeshVertex *> m_vertices = {};
 };
 
 } /* namespace procedural */

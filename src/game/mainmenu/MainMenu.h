@@ -11,7 +11,7 @@
 #include "scene/actor/Actor.h"
 #include "MenuBlock.h"
 #include "MenuItem.h"
-#include "Menu.h"
+#include "menu/Menu.h"
 
 #include "game/Settings.h"
 
@@ -37,8 +37,8 @@ protected:
 	
 	ui::object::Image *m_background = nullptr;
 	
-	vector<const types::Texture*> m_menu_item_textures;
-	types::Font *m_menu_item_font;
+	vector<const types::Texture*> m_menu_item_textures = {};
+	types::Font *m_menu_item_font = nullptr;
 	const Color m_menu_item_text_color_normal = Color::FromRGBA( 94, 162 ,137, 255 );
 	const Color m_menu_item_text_color_highlight = Color::FromRGBA( 193, 240 ,204, 255 );
 	const Color m_menu_item_text_color_title = Color::FromRGBA( 230, 243 ,233, 255 );

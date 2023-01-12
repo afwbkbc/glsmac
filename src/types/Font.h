@@ -25,11 +25,11 @@ public:
 		unsigned char *data;
 	} bitmap_t;
 
-	std::string m_name;
-	bitmap_t m_symbols[128];
-	dimensions_t m_dimensions;
+	std::string m_name = "";
+	bitmap_t m_symbols[128] = {};
+	dimensions_t m_dimensions = { 0.0, 0.0 };
 
-	base::ObjectLink *m_renderer_object = NULL;
+	base::ObjectLink *m_renderer_object = nullptr;
 	
 	size_t GetTextWidth(const char* text) const;
 	size_t GetTextHeight(const char* text) const;

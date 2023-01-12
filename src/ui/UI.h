@@ -54,13 +54,13 @@ MAJOR_CLASS( UI, base::Module )
 protected:
 	object::Root m_root_object;
 
-	Scene *m_shape_scene;
-	Scene *m_text_scene;
+	Scene *m_shape_scene = nullptr;
+	Scene *m_text_scene = nullptr;
 
 	struct {
 		util::Clamper<coord_t> x;
 		util::Clamper<coord_t> y;
-	} m_clamp;
+	} m_clamp = {};
 	
 	Vec2<size_t> m_last_mouse_position = { 0, 0 };
 	
@@ -77,7 +77,7 @@ private:
 	} debug_frame_data_t;
 	
 	typedef unordered_map< const UIObject*, debug_frame_data_t > debug_frames_map_t;
-	debug_frames_map_t m_debug_frames;
+	debug_frames_map_t m_debug_frames = {};
 	
 	void ResizeDebugFrame( const UIObject* object, const debug_frame_data_t* data );
 };

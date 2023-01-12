@@ -15,7 +15,7 @@ CHILD_CLASS( Intro, base::Task )
 	void Iterate();
 	
 protected:
-	ui::object::Image *m_logo;
+	ui::object::Image *m_logo = nullptr;
 	util::Timer m_timer;
 
 };

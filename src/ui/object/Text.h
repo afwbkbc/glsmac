@@ -18,7 +18,7 @@ CHILD_CLASS( Surface, UIObject )
 protected:
 	struct {
 		types::Color text;
-	} m_colors;
+	} m_colors = {};
 };
 
 } /* namespace object */

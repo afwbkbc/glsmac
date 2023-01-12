@@ -49,15 +49,14 @@ protected:
 		base::Thread loaders;
 	} m_threads;
 
-	config::Config *const m_config;
-	error_handler::ErrorHandler *m_error_handler;
-	logger::Logger *m_logger;
-	loader::font::FontLoader *m_font_loader;
-	loader::texture::TextureLoader *m_texture_loader;
-	scheduler::Scheduler *m_scheduler;
-	renderer::Renderer *m_renderer;
-	ui::UI *m_ui;
-	
+	config::Config *const m_config = nullptr;
+	error_handler::ErrorHandler *m_error_handler = nullptr;
+	logger::Logger *m_logger = nullptr;
+	loader::font::FontLoader *m_font_loader = nullptr;
+	loader::texture::TextureLoader *m_texture_loader = nullptr;
+	scheduler::Scheduler *m_scheduler = nullptr;
+	renderer::Renderer *m_renderer = nullptr;
+	ui::UI *m_ui = nullptr;
 	
 };
 

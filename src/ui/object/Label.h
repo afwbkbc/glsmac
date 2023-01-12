@@ -26,11 +26,11 @@ CHILD_CLASS( Label, UIObject )
 	
 protected:
 	
-	Font *m_font;
-	const string m_text;
-	Color m_color;
+	Font *m_font = nullptr;
+	const string m_text = "";
+	Color m_color = Color::TRANSPARENT();
 	
-	scene::actor::TextActor *m_actor;
+	scene::actor::TextActor *m_actor = nullptr;
 	
 		
 };

@@ -25,20 +25,20 @@ MAJOR_CLASS( Camera, Entity )
 	void UpdateProjection();
 	void UpdateMatrix();
 protected:
-	types::Vec3 m_up;
-	types::Vec3 m_target;
+	types::Vec3 m_up = { 0.0, 0.0, 0.0 };
+	types::Vec3 m_target = { 0.0, 0.0, 0.0 };
 
-	float m_fov;
-	float m_raw_fov;
+	float m_fov = 90.0;
+	float m_raw_fov = 90.0;
 	float m_z_near = 0.01;
 	float m_z_far = 200.0;
 
 	types::Vec3 m_inverse_vector;
 	struct {
 		types::Matrix44 projection;
-	} m_camera_matrices;
+	} m_camera_matrices = {};
 
-	Scene *m_scene = NULL;
+	Scene *m_scene = nullptr;
 };
 
 } /* namespace scene */

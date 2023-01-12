@@ -5,7 +5,9 @@
 #include "Engine.h"
 
 // TODO: move to config
-#define MAXFPS 200
+//#define MAXFPS 200
+
+#define MAXFPS 5000
 
 engine::Engine *g_engine = NULL;
 

@@ -12,7 +12,7 @@ Thread::Thread() {
 
 Thread::~Thread() {
 	if (m_state != STATE_INACTIVE) {
-		throw ThreadError( "thread was not shutdown properly" );
+		Log( "Thread was not shutdown properly!" );
 	}
 }
 

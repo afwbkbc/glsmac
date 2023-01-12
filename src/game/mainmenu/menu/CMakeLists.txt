@@ -1,5 +1,6 @@
 SET(SRC ${SRC}
 
+	${PWD}/Menu.cpp
 	${PWD}/Main.cpp
 	${PWD}/StartGame.cpp
 	${PWD}/Scenario.cpp

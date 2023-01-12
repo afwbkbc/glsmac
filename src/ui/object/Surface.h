@@ -67,8 +67,8 @@ protected:
 	} m_colors;
 	const types::Texture* m_texture = nullptr;
 
-	scene::actor::MeshActor *m_background;
-	scene::mesh::vec2::Rectangle *m_background_mesh;
+	scene::actor::MeshActor *m_background = nullptr;
+	scene::mesh::vec2::Rectangle *m_background_mesh = nullptr;
 };
 
 } /* namespace object */

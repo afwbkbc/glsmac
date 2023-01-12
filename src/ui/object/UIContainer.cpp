@@ -22,6 +22,11 @@ void UIContainer::Create() {
 void UIContainer::Destroy() {
 	for ( auto it = m_child_objects.begin() ; it < m_child_objects.end() ; ++it )
 		DestroyChild( *it );
+	
+	if (!m_child_objects.empty()) {
+		throw UIError( "some children still alive upon parent destruction!" );
+	}
+	
 	UIObject::Destroy();
 }
 

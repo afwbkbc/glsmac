@@ -19,9 +19,9 @@ public:
 	void AddTask( Task *task );
 	void RemoveTask( Task *task );
 protected:
-	std::vector<Task *> m_tasks;
-	std::vector<Task *> m_tasks_toadd;
-	std::vector<Task *> m_tasks_toremove;
+	std::vector<Task *> m_tasks = {};
+	std::vector<Task *> m_tasks_toadd = {};
+	std::vector<Task *> m_tasks_toremove = {};
 	bool m_active = false;
 	bool m_iterating = false;
 };

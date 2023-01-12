@@ -17,8 +17,8 @@ public:
 	const std::string GetName() const;
 	const std::string & GetLocalName() const;
 protected:
-	const size_t m_object_id;
-	std::string m_name;
+	const size_t m_object_id = 0;
+	std::string m_name = "";
 	void Log( const std::string &text ) const;
 };
 

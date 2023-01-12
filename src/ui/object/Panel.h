@@ -99,7 +99,7 @@ protected:
 	} m_colors;
 	const types::Texture* m_texture = nullptr;
 	
-	Surface *m_background;
+	Surface *m_background = nullptr;
 
 	unsigned char m_border_width = 0;
 	struct {

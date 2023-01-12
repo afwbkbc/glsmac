@@ -6,7 +6,7 @@ class ObjectLink {
 public:
 	template <class T1, class T2>
 	ObjectLink( const T1 *src_object, const T2 *dst_object ) : m_src_object( (const void *)src_object ), m_dst_object( (const void *)dst_object ) {
-		m_removed = false;
+		
 	}
 	bool Removed() const {
 		return m_removed;
@@ -23,9 +23,9 @@ public:
 		m_removed = true;
 	}
 protected:
-	const void *m_src_object;
-	const void *m_dst_object;
-	bool m_removed;
+	const void *m_src_object = nullptr;
+	const void *m_dst_object = nullptr;
+	bool m_removed = false;
 };
 
 } /* namespace base */

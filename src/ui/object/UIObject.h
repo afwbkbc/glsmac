@@ -101,9 +101,9 @@ protected:
 	const coord_t ClampY( const coord_t value );
 	const vertex_t ClampXY( const vertex_t value );
 
-	UIContainer *m_parent_object = NULL;
+	UIContainer *m_parent_object = nullptr;
 
-	std::vector<scene::actor::Actor *> m_actors;
+	std::vector<scene::actor::Actor *> m_actors = {};
 
 	float m_z_index = 0.0f;
 
@@ -118,7 +118,7 @@ protected:
 			return memcmp( this, &other, sizeof(struct object_area_struct) ) != 0;
 		}
 	} object_area_t;
-	object_area_t m_object_area;
+	object_area_t m_object_area = {};
 	
 	bool m_created = false;
 	overflow_t m_overflow = OVERFLOW_VISIBLE;

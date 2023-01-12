@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Menu.h"
+#include "Menu.h"
 
 namespace game {
 namespace mainmenu {

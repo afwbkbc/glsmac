@@ -16,10 +16,10 @@ MAJOR_CLASS( Config, base::Module )
 	}
 	
 private:
-	const int m_argc;
-	const char** const m_argv;
+	const int m_argc = 0;
+	const char** const m_argv = nullptr;
 	
-	string m_game_path;
+	string m_game_path = "";
 };
 
 } /* namespace config */
