@@ -53,3 +53,9 @@ jobs:
         asset_path: ./GLSMAC-ubuntu-bin.tar.gz
         asset_name: GLSMAC-ubuntu-bin.tar.gz
         asset_content_type: application/gzip
+    - uses: dev-drprasad/delete-older-releases@v0.2.0
+      with:
+        keep_latest: 3
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
