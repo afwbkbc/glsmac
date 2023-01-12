@@ -17,6 +17,9 @@
 
 #include "engine/Engine.h"
 
+#include "version.h"
+#include "tmp/last_commit.h"
+
 // TODO: move to config
 #define WINDOW_WIDTH 1024
 #define WINDOW_HEIGHT 768
@@ -42,7 +45,7 @@ int main(const int argc, const char *argv[]) {
 	texture_loader.SetTransparentColor(types::Color::RGBA(255, 0, 255, 255));
 	
 	logger::StdoutLogger logger;
-	renderer::opengl::OpenGLRenderer renderer( "GLSMAC", WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_VSYNC, 90.0f);
+	renderer::opengl::OpenGLRenderer renderer( (string)"GLSMAC " + GLSMAC_VERSION + "-" + GLSMAC_LAST_COMMIT, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_VSYNC, 90.0f);
 	ui::DefaultUI ui;
 
 	scheduler::SimpleScheduler scheduler;

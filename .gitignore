@@ -11,3 +11,4 @@ CTestTestfile.cmake
 _deps
 /bin
 /nbproject
+/src/tmp
