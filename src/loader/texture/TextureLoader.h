@@ -22,8 +22,9 @@ MAJOR_CLASS( TextureLoader, Loader )
 	static const uint8_t LT_ROTATE = 1;
 	static const uint8_t LT_FLIPV = 2;
 	static const uint8_t LT_FLIPH = 4;
-	static const uint8_t LT_ALPHA = 8;
-	static const uint8_t LT_CONTRAST = 16;
+	static const uint8_t LT_TILED = 8;
+	static const uint8_t LT_ALPHA = 16;
+	static const uint8_t LT_CONTRAST = 32;
 
 	// load full texture
 	virtual types::Texture *LoadTexture( const std::string &name ) = 0;

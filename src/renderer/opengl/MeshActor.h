@@ -17,7 +17,7 @@ MINOR_CLASS(Mesh, Actor)
 	void Unload();
 	void Draw( shader_program::OpenGLShaderProgram *shader_program );
 protected:
-	size_t m_update_timestamp = 0;
+	size_t m_update_counter = 0;
 
 	GLuint m_vbo;
 	GLuint m_ibo;

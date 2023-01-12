@@ -12,13 +12,14 @@
 #include "event/UIEvent.h"
 
 #include "scene/actor/MeshActor.h"
-#include "scene/mesh/vec2/Rectangle.h"
+#include "scene/mesh/Rectangle.h"
 #include "types/Texture.h"
 #include "types/Vec2.h"
 #include "util/Timer.h"
 
 #if DEBUG
-#include "UIDebugOverlay.h"
+#include "debug/Overlay.h"
+#include "debug/console/Console.h"
 #endif
 
 using namespace std;
@@ -89,7 +90,7 @@ private:
 	
 	typedef struct {
 		Texture* texture;
-		mesh::vec2::Rectangle * mesh;
+		mesh::Rectangle * mesh;
 		actor::MeshActor* actor;
 	} debug_frame_data_t;
 	
@@ -98,7 +99,8 @@ private:
 	
 	void ResizeDebugFrame( const UIObject* object, const debug_frame_data_t* data );
 	
-	UIDebugOverlay *m_debug_overlay = nullptr;
+	debug::Overlay *m_debug_overlay = nullptr;
+	debug::Console *m_debug_console = nullptr;
 #endif
 	
 };

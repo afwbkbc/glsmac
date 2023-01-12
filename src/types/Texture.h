@@ -19,6 +19,8 @@ public:
 	unsigned char m_bpp = 0;
 	unsigned char *m_bitmap = nullptr;
 	size_t m_bitmap_size = 0;
+	
+	bool m_is_tiled = false;
 
 	base::ObjectLink *m_renderer_object = nullptr;
 	

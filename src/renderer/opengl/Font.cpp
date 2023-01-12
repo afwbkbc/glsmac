@@ -20,6 +20,7 @@ Font::Font( types::Font *font, shader_program::FontOpenGLShaderProgram *shader_p
 	glGenTextures( 1, &m_texture );
 
 	glBindTexture( GL_TEXTURE_2D, m_texture );
+	
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
@@ -57,6 +58,7 @@ Font::Font( types::Font *font, shader_program::FontOpenGLShaderProgram *shader_p
 	};
 
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+	glBindTexture( GL_TEXTURE_2D, 0 );
 }
 
 Font::~Font() {
@@ -111,6 +113,7 @@ void Font::Render( const char *text, float x, float y, float z_index, types::Col
 	m_shader_program->Disable();
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindTexture( GL_TEXTURE_2D, 0 );
 };
 
 } /* namespace opengl */

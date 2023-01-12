@@ -7,6 +7,9 @@
 #include "types/Matrix44.h"
 #include "engine/Engine.h"
 
+using namespace scene;
+using namespace mesh;
+
 namespace renderer {
 namespace opengl {
 
@@ -16,16 +19,6 @@ MeshActor::MeshActor( scene::actor::MeshActor *actor ) : Actor( actor ) {
 
 	glGenBuffers( 1, &m_vbo );
 	glGenBuffers( 1, &m_ibo );
-	/*
-	for (int i=0;i<this->mModel.mMaterials.size();i++) {
-		this->mMaterialTextureObjs.push_back(0);
-		this->mRenderer->ActivateTexture(&this->mModel.mMaterials[i]->mTexture1Map.texture,&this->mMaterialTextureObjs[i]);
-	}*/
-
-	//glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
-	//glBindBuffer( GL_ARRAY_BUFFER, 0 );
-
-	m_update_timestamp = actor->GetMesh()->UpdatedAt();
 }
 
 MeshActor::~MeshActor() {
@@ -36,10 +29,10 @@ MeshActor::~MeshActor() {
 }
 
 bool MeshActor::ReloadNeeded() {
-	size_t mesh_updated_at = ((scene::actor::MeshActor *)m_actor)->GetMesh()->UpdatedAt();
-	if ( m_update_timestamp == mesh_updated_at )
+	size_t mesh_updated_counter = ((scene::actor::MeshActor *)m_actor)->GetMesh()->UpdatedCount();
+	if ( m_update_counter == mesh_updated_counter )
 		return false;
-	m_update_timestamp = mesh_updated_at;
+	m_update_counter = mesh_updated_counter;
 	return true;
 }
 
@@ -51,12 +44,12 @@ void MeshActor::Load() {
 	const auto *mesh = actor->GetMesh();
 
 	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
-	glBufferData( GL_ARRAY_BUFFER, mesh->GetVertexData()->size() * sizeof(scene::mesh::Mesh::coord_t), (GLvoid *)mesh->GetVertexData()->data(), GL_STATIC_DRAW );
+	glBufferData( GL_ARRAY_BUFFER, mesh->GetVertexDataSize(), (GLvoid *)mesh->GetVertexData(), GL_STATIC_DRAW );
 
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ibo );
-	glBufferData( GL_ELEMENT_ARRAY_BUFFER, mesh->GetIndexData()->size() * sizeof(scene::mesh::Mesh::index_t), (GLvoid *)mesh->GetIndexData()->data(), GL_STATIC_DRAW);
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, mesh->GetIndexDataSize(), (GLvoid *)mesh->GetIndexData(), GL_STATIC_DRAW);
 
-	m_ibo_size = mesh->GetIndexData()->size();
+	m_ibo_size = mesh->GetIndexCount();
 
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
@@ -78,9 +71,6 @@ void MeshActor::Unload() {
 		if (texture) {
 			g_engine->GetRenderer()->UnloadTexture(texture);
 		}*/
-
-		/*for (int i=0;i<this->mModel.mMaterials.size();i++)
-			this->mRenderer->DeactivateTexture(&this->mModel.mMaterials[i]->mTexture1Map.texture,&this->mMaterialTextureObjs[i]);*/
 	}
 }
 
@@ -106,7 +96,7 @@ void MeshActor::Draw( shader_program::OpenGLShaderProgram *shader_program ) {
 			break;
 		}
 		case ( shader_program::OpenGLShaderProgram::TYPE_PERSP ): {
-			auto *persp_shader_program = (shader_program::WorldOpenGLShaderProgram *)shader_program;
+			/*auto *persp_shader_program = (shader_program::WorldOpenGLShaderProgram *)shader_program;
 
 			types::Matrix44 matrix = m_actor->GetWorldMatrix();
 			glUniformMatrix4fv( persp_shader_program->m_gl_uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
@@ -115,7 +105,7 @@ void MeshActor::Draw( shader_program::OpenGLShaderProgram *shader_program ) {
 			glUniform1f( persp_shader_program->m_gl_uniforms.light_intensity, 1.0 );
 
 		    //glUniform3f( persp_shader_program->m_gl_uniforms.campos, 0.0, 0.0, 0.0 );
-
+*/
 			break;
 
 		}

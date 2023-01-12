@@ -101,6 +101,10 @@ types::Texture *SDL2ImageTextureLoader::LoadTexture( const string &name, const s
 			subtexture->SetContrast(value);
 		}
 		
+		if ((flags & LT_TILED) == LT_TILED) {
+			subtexture->m_is_tiled = true;
+		}
+		
 		m_subtextures[subtexture_key] = subtexture;
 
 		return subtexture;

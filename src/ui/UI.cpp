@@ -30,9 +30,13 @@ void UI::Start() {
 #if DEBUG
 	m_debug_scene = new Scene( "UIDebug", SCENE_TYPE_ORTHO );
 	g_engine->GetRenderer()->AddScene( m_debug_scene );	
-#endif
+	
+	m_debug_console = new debug::Console;
+	m_debug_console->UpdateHeight();
+	m_root_object.AddChild( m_debug_console );
 	
 	ShowDebugOverlay();
+#endif
 }
 
 void UI::Stop() {
@@ -41,6 +45,8 @@ void UI::Stop() {
 	HideDebugOverlay();
 	
 #if DEBUG
+	m_root_object.RemoveChild( m_debug_console );
+	
 	g_engine->GetRenderer()->RemoveScene( m_debug_scene );
 	delete m_debug_scene;
 #endif
@@ -78,15 +84,18 @@ const UI::coord_t UI::ClampY( const UI::coord_t value ) const {
 }
 
 void UI::Resize() {
-	m_clamp.x.SetSrcRange( 0.0, g_engine->GetRenderer()->GetWindowWidth() );
-	m_clamp.y.SetSrcRange( 0.0, g_engine->GetRenderer()->GetWindowHeight() );
-	m_root_object.Realign();
-	
 #if DEBUG
 	for (auto& it : m_debug_frames) {
 		ResizeDebugFrame( it.first, &it.second );
 	}
+	if ( m_debug_console ) {
+		m_debug_console->UpdateHeight();
+	}
 #endif
+	
+	m_clamp.x.SetSrcRange( 0.0, g_engine->GetRenderer()->GetWindowWidth() );
+	m_clamp.y.SetSrcRange( 0.0, g_engine->GetRenderer()->GetWindowHeight() );
+	m_root_object.Realign();
 }
 
 void UI::Iterate() {
@@ -117,8 +126,7 @@ void UI::ShowDebugFrame( const UIObject* object ) {
 		data.texture = new Texture( "DebugTexture", 1, 1 );
 		data.texture->SetPixel( 0, 0, Color::RGBA( rand() % 256, rand() % 256, rand() % 256, 160 ) );
 		
-		data.mesh = new mesh::vec2::Rectangle();
-		//data.mesh = new mesh::vec2::Rectangle( { -0.4, -0.2 }, { 0.4, 0.6 } );
+		data.mesh = new mesh::Rectangle();
 		
 		data.actor = new actor::MeshActor( "DebugFrame", data.mesh );
 		data.actor->SetTexture( data.texture );
@@ -164,7 +172,7 @@ void UI::ResizeDebugFrame( const UIObject* object ) {
 
 void UI::ShowDebugOverlay() {
 	if ( !m_debug_overlay ) {
-		m_debug_overlay = new UIDebugOverlay();
+		m_debug_overlay = new debug::Overlay();
 		AddObject( m_debug_overlay );
 	}
 }

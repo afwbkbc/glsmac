@@ -1,13 +1,13 @@
 #pragma once
 
-#include "object/UIContainer.h"
+#include "ui/object/UIContainer.h"
 
 #include <vector>
 #include <string>
 
 #include "util/Timer.h"
 #include "types/Font.h"
-#include "object/Label.h"
+#include "ui/object/Label.h"
 
 using namespace types;
 
@@ -15,7 +15,9 @@ namespace ui {
 
 using namespace object;
 
-CHILD_CLASS(UIDebugOverlay, UIContainer)
+namespace debug {
+	
+CHILD_CLASS(Overlay, UIContainer)
 
 	void Create();
 	void Destroy();
@@ -29,4 +31,5 @@ private:
 
 };
 
+}
 }

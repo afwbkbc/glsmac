@@ -1,14 +1,13 @@
-#if DEBUG
-
-#include "UIDebugOverlay.h"
+#include "Overlay.h"
 
 #include "engine/Engine.h"
 
 using namespace std;
 
 namespace ui {
+namespace debug {
 
-void UIDebugOverlay::Create() {
+void Overlay::Create() {
 	UIContainer::Create();
 	
 	m_fps_counter_font = g_engine->GetFontLoader()->LoadFont( "arialn.ttf", 18 );
@@ -17,10 +16,10 @@ void UIDebugOverlay::Create() {
 	m_fps_counter->SetLeft( 3 );
 	g_engine->GetUI()->AddObject( m_fps_counter );
 	
-	m_fps_timer.SetInterval( 1000 ); // count every 1 second
+	m_fps_timer.SetInterval( 1000 ); // update statistics every 1 second
 }
 
-void UIDebugOverlay::Destroy() {
+void Overlay::Destroy() {
 	
 	m_fps_timer.Stop();
 	
@@ -29,7 +28,7 @@ void UIDebugOverlay::Destroy() {
 	UIContainer::Destroy();
 }
 
-void UIDebugOverlay::Iterate() {
+void Overlay::Iterate() {
 	UIContainer::Iterate();
 	
 	m_fps_frames++;
@@ -40,5 +39,4 @@ void UIDebugOverlay::Iterate() {
 }	
 
 }
-
-#endif
+}
