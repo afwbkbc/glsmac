@@ -26,7 +26,7 @@ jobs:
     - name: make
       run: make
     - name: pack
-      run: tar zcvf release/GLSMAC-ubuntu-bin.tar.gz bin/
+      run: tar zcvf GLSMAC-ubuntu-bin.tar.gz bin/
     - name: publish
       uses: actions/upload-artifact@v3
       with:
@@ -40,7 +40,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ github.ref }}
-        release_name: GLSMAC-v0.1
+        release_name: GLSMAC-{{ github.ref_name }}-${{ github.sha }}
         draft: false
         prerelease: false
     - name: Upload Release Asset
@@ -50,6 +50,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps     - name: upload
-        asset_path: ./release/GLSMAC-ubuntu-bin.tar.gz
+        asset_path: ./GLSMAC-ubuntu-bin.tar.gz
         asset_name: GLSMAC-ubuntu-bin.tar.gz
         asset_content_type: application/gzip
