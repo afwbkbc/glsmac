@@ -22,7 +22,7 @@ jobs:
         sudo apt-get install libglu-dev
         sudo apt-get install libglew-dev
     - name: cmake
-      run: cmake -DCMAKE_BUILD_TYPE=Release .
+      run: cmake -DCMAKE_BUILD_TYPE=Portable .
     - name: make
       run: make
     - name: publish
@@ -32,7 +32,7 @@ jobs:
         path: |
           bin/GLSMAC
     - name: release
-      uses: actions/create-release@v1
+      uses: ChanTsune/release-with-commit@v2.8.0
       id: create_release
       with:
         regexp: "Release ((\\d+([.]\\d+)*)-(alpha|beta|rc)\\d*)((\\s|\\S)*)"
