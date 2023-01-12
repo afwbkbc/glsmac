@@ -31,6 +31,10 @@ const Color& TextActor::GetColor() const {
 	return m_color;
 }
 
+void TextActor::SetText( const string& text ) {
+	m_text = text;
+}
+
 void TextActor::SetColor( const Color& color ) {
 	m_color = color;
 }

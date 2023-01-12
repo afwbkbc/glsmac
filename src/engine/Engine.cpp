@@ -5,7 +5,7 @@
 #include "Engine.h"
 
 // TODO: move to config
-#define MAXFPS 500
+const size_t g_max_fps = 500;
 
 engine::Engine *g_engine = NULL;
 
@@ -37,7 +37,7 @@ Engine::Engine(
 
 	g_engine = this;
 
-	m_threads.main.SetIPS( MAXFPS );
+	m_threads.main.SetIPS( g_max_fps );
 	m_threads.main.AddModule( m_config );
 	m_threads.main.AddModule( m_error_handler );
 	m_threads.main.AddModule( m_font_loader );

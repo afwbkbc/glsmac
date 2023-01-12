@@ -17,6 +17,7 @@ CHILD_CLASS( Label, UIObject )
 	
 	Label(Font* m_font, const string& text, const Color& color);
 	
+	void SetText( const string& text );
 	void SetTextColor( const Color& color );
 
 	void Create();
@@ -27,7 +28,7 @@ CHILD_CLASS( Label, UIObject )
 protected:
 	
 	Font *m_font = nullptr;
-	const string m_text = "";
+	string m_text = "";
 	Color m_color = Color::TRANSPARENT();
 	
 	scene::actor::TextActor *m_actor = nullptr;

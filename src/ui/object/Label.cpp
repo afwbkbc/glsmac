@@ -16,6 +16,12 @@ Label::Label(Font* font, const string& text, const Color& color)
 	SetAlign( ALIGN_CENTER );
 }
 
+void Label::SetText( const string& text ) {
+	m_text = text;
+	Realign();
+	m_actor->SetText( text );
+}
+
 void Label::SetTextColor( const Color& color ) {
 	m_color = color;
 	m_actor->SetColor( color );

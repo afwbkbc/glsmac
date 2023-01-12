@@ -15,6 +15,9 @@
 #include "scene/mesh/vec2/Rectangle.h"
 #include "types/Texture.h"
 #include "types/Vec2.h"
+#include "util/Timer.h"
+
+#include "object/Label.h"
 
 using namespace std;
 using namespace scene;
@@ -47,9 +50,12 @@ MAJOR_CLASS( UI, base::Module )
 	void SendEvent( const event::UIEvent* event );
 	
 	void SendMouseMoveEvent( UIObject* object );
+	
+	// debug stuff
 	void ShowDebugFrame( const UIObject* object );
 	void HideDebugFrame( const UIObject* object );
 	void ResizeDebugFrame( const UIObject* object );
+	
 	
 protected:
 	object::Root m_root_object;
@@ -80,6 +86,13 @@ private:
 	debug_frames_map_t m_debug_frames = {};
 	
 	void ResizeDebugFrame( const UIObject* object, const debug_frame_data_t* data );
+	
+	util::Timer m_fps_timer;
+	size_t m_fps_frames = 0;
+	
+	Font *m_fps_counter_font = nullptr;
+	Label *m_fps_counter = nullptr;
+
 };
 
 } /* namespace ui */

@@ -29,11 +29,21 @@ void UI::Start() {
 	
 	m_debug_scene = new Scene( "UIDebug", SCENE_TYPE_ORTHO );
 	g_engine->GetRenderer()->AddScene( m_debug_scene );
+	
+	m_fps_counter_font = g_engine->GetFontLoader()->LoadFont( "arialn.ttf", 18 );
+	m_fps_counter = new Label( m_fps_counter_font, "", { 1.0, 1.0, 1.0, 0.5 } );
+	m_fps_counter->SetAlign( UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+	m_fps_counter->SetLeft( 3 );
+	AddObject( m_fps_counter );
+	
+	m_fps_timer.SetInterval( 1000 ); // count every 1 second
 }
 
 void UI::Stop() {
 	Log( "Destroying UI" );
 
+	RemoveObject( m_fps_counter );
+	
 	g_engine->GetRenderer()->RemoveScene( m_debug_scene );
 	delete m_debug_scene;
 	
@@ -81,6 +91,12 @@ void UI::Resize() {
 
 void UI::Iterate() {
 	m_root_object.Iterate();
+	
+	m_fps_frames++;
+	if (m_fps_timer.Ticked()) {
+		m_fps_counter->SetText( "FPS: " + to_string( m_fps_frames ) + " ( LIMIT = " + to_string(g_max_fps) + " )" );
+		m_fps_frames = 0;
+	}
 }
 
 void UI::SendEvent( const event::UIEvent* event ) {
