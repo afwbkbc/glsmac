@@ -1,3 +1,3 @@
 #pragma once
 
-#define GLSMAC_VERSION "0.1"
+#define GLSMAC_VERSION "v0.1"
