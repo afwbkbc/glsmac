@@ -25,7 +25,9 @@ jobs:
       run: cmake -DCMAKE_BUILD_TYPE=Release .
     - name: make
       run: make
-#    - name: make check
-#      run: make check
-#    - name: make distcheck
-#      run: make distcheck
+    - name: publish
+      uses: actions/upload-artifact@v3
+      with:
+        name: GLSMAC-ubuntu-bin
+        path: |
+          bin/GLSMAC
