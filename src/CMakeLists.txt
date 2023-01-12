@@ -13,8 +13,6 @@ SUBDIR( ui )
 SUBDIR( engine )
 SUBDIR( game )
 
-SUBDIR( opensmac )
-
 SET(SRC ${SRC}
 
 	${PWD}/main.cpp
