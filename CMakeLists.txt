@@ -25,21 +25,29 @@ set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-O2 -ggdb -DDEBU
 
 include_directories("src")
 
-find_package(Boost REQUIRED COMPONENTS system thread atomic chrono)
-include_directories(${Boost_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+INCLUDE(FindPkgConfig)
+
+#find_package(Boost REQUIRED COMPONENTS system thread atomic chrono)
+#include_directories(${Boost_INCLUDE_DIRS})
+#target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 
 find_package(Freetype REQUIRED)
 include_directories(${FREETYPE_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${FREETYPE_LIBRARIES})
 
-find_package(SDL2 REQUIRED)
-include_directories(${SDL2_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY})
+#find_package(SDL2 REQUIRED)
+#include_directories(${SDL2_INCLUDE_DIRS})
+#target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
 
-find_package(SDL2_image REQUIRED)
-include_directories(${SDL2_IMAGE_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} ${SDL2_IMAGE_LIBRARY})
+#find_package(SDL2IMAGE REQUIRED)
+#include_directories(${SDL2IMAGE_INCLUDE_DIRS})
+#target_link_libraries(${PROJECT_NAME} ${SDL2IMAGE_LIBRARIES})
+
+PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
+PKG_SEARCH_MODULE(SDL2IMAGE REQUIRED SDL2_image>=2.0.0)
+
+INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS} ${SDL2IMAGE_INCLUDE_DIRS})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${SDL2_LIBRARIES} ${SDL2IMAGE_LIBRARIES})
 
 find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})

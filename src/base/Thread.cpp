@@ -1,5 +1,7 @@
-#include <boost/thread.hpp>
-#include <boost/chrono.hpp>
+#include <chrono>
+#include <thread>
+
+#include <cmath>
 
 #include "Thread.h"
 
@@ -54,7 +56,7 @@ void Thread::Run() {
 				continue;
 			}
 
-			auto start = boost::chrono::high_resolution_clock::now();
+			auto start = std::chrono::high_resolution_clock::now();
 
 #ifdef DEBUG
 			auto mstart = start;
@@ -64,15 +66,15 @@ void Thread::Run() {
 				//Log( "Iterating [" + (*it)->GetName() + "]" );
 				(*it)->Iterate();
 #ifdef DEBUG
-				auto mfinish = boost::chrono::high_resolution_clock::now();
-				modulensdiff[ it - m_modules.begin() ] = boost::chrono::duration_cast<boost::chrono::nanoseconds>(mfinish - mstart).count();
+				auto mfinish = std::chrono::high_resolution_clock::now();
+				modulensdiff[ it - m_modules.begin() ] = std::chrono::duration_cast<std::chrono::nanoseconds>(mfinish - mstart).count();
 				mstart = mfinish;
 #endif
 			}
 
-			auto finish = boost::chrono::high_resolution_clock::now();
+			auto finish = std::chrono::high_resolution_clock::now();
 
-			auto nsdiff = boost::chrono::duration_cast<boost::chrono::nanoseconds>(finish - start).count();
+			auto nsdiff = std::chrono::duration_cast<std::chrono::nanoseconds>(finish - start).count();
 
 			step_len = 1000000000 / m_ips - step_diff;
 			if ( nsdiff > step_len ) {
@@ -101,7 +103,7 @@ void Thread::Run() {
 #endif
 
 
-				boost::this_thread::sleep_for( boost::chrono::nanoseconds(step_len_rounded) );
+				std::this_thread::sleep_for( std::chrono::nanoseconds(step_len_rounded) );
 			}
 		}
 
