@@ -30,3 +30,27 @@ Maybe I'll make saves and maps compatible, but it's very low priority.
 - Other improvements?
 
 Once I replicate original game, I'll focus on other things, such as: larger maps, larger maximum number of players, custom mod support, online services such as game browser or hosting long-turns games (where people can login and make 1 turn per day or so), alternative art packs (used instead of original, this may mean better graphics)
+
+- Build instructions
+
+For release build (default): cmake . && make
+
+For debug build: cmake -DCMAKE_BUILD_TYPE=Debug . && make
+
+Add -j parameter to make to speed up if you have multiple cores, i.e. "make -j9" for 8
+
+- Launch
+
+Just run ./bin/GLSMAC <smac_directory>
+
+- Reporting problems
+
+If you encountered problem, first thing to try is to update to newest version, maybe it was already fixed.
+
+If it fails to build: create issue with errors from build log
+
+If it crashes: 1) use debug build 2) run gdb --args ./bin/GLSMAC <smac_directory>, type "r", make it crash, then type "bt" and create issue with this backtrace and steps to reproduce
+
+If it freezes: 1) use debug build 2) run gdb --args ./bin/GLSMAC <smac_directory>, get to where it freezes, then press Ctrl+C, type "bt" and create issue with backtrace and steps to reproduce
+
+If it behaves incorrectly: create issue and specify: 1) steps to reproduce 2) expected behavior 3) actual behavior ; attach screenshots if needed

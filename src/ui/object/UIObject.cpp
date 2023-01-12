@@ -275,10 +275,12 @@ void UIObject::UpdateObjectArea() {
 			// mouse may not being moved, but if object area has changed - they should be able to fire too
 			g_engine->GetUI()->SendMouseMoveEvent( this );
 			
+#if DEBUG
 			// resize debug frame to match new area
 			if ( m_has_debug_frame ) {
 				g_engine->GetUI()->ResizeDebugFrame( this );
 			}
+#endif
 		}
 	}
 	
@@ -351,6 +353,7 @@ bool UIObject::IsPointInside( const size_t x, const size_t y ) const {
 	);
 }
 
+#if DEBUG
 void UIObject::ShowDebugFrame() {
 	if ( !m_has_debug_frame ) {
 		g_engine->GetUI()->ShowDebugFrame( this );
@@ -364,7 +367,7 @@ void UIObject::HideDebugFrame() {
 		m_has_debug_frame = false;
 	}
 }
-
+#endif
 
 } /* namespace object */
 } /* namespace ui */

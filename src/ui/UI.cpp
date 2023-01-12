@@ -27,8 +27,10 @@ void UI::Start() {
 	m_clamp.y.SetRange( 0.0, g_engine->GetRenderer()->GetWindowHeight(), -1.0, 1.0 );
 	m_clamp.y.SetInversed( true );
 	
+#if DEBUG
 	m_debug_scene = new Scene( "UIDebug", SCENE_TYPE_ORTHO );
 	g_engine->GetRenderer()->AddScene( m_debug_scene );	
+#endif
 	
 	ShowDebugOverlay();
 }
@@ -38,8 +40,10 @@ void UI::Stop() {
 
 	HideDebugOverlay();
 	
+#if DEBUG
 	g_engine->GetRenderer()->RemoveScene( m_debug_scene );
 	delete m_debug_scene;
+#endif
 	
 	m_root_object.Destroy();
 
@@ -78,9 +82,11 @@ void UI::Resize() {
 	m_clamp.y.SetSrcRange( 0.0, g_engine->GetRenderer()->GetWindowHeight() );
 	m_root_object.Realign();
 	
+#if DEBUG
 	for (auto& it : m_debug_frames) {
 		ResizeDebugFrame( it.first, &it.second );
 	}
+#endif
 }
 
 void UI::Iterate() {
@@ -100,6 +106,7 @@ void UI::SendMouseMoveEvent( UIObject* object ) {
 	object->SendEvent( new event::MouseMove( m_last_mouse_position.x, m_last_mouse_position.y ) );
 }
 
+#if DEBUG
 void UI::ShowDebugFrame( const UIObject* object ) {
 	auto it = m_debug_frames.find( object );
 	if ( it == m_debug_frames.end() ) {
@@ -168,5 +175,6 @@ void UI::HideDebugOverlay() {
 		m_debug_overlay = nullptr;
 	}
 }
+#endif
 
 } /* namespace ui */

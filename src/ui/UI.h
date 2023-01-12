@@ -17,7 +17,9 @@
 #include "types/Vec2.h"
 #include "util/Timer.h"
 
+#if DEBUG
 #include "UIDebugOverlay.h"
+#endif
 
 using namespace std;
 using namespace scene;
@@ -51,13 +53,21 @@ MAJOR_CLASS( UI, base::Module )
 	
 	void SendMouseMoveEvent( UIObject* object );
 	
-	// debug stuff
+#if DEBUG
 	void ShowDebugFrame( const UIObject* object );
 	void HideDebugFrame( const UIObject* object );
 	void ResizeDebugFrame( const UIObject* object );
 	
 	void ShowDebugOverlay();
 	void HideDebugOverlay();
+#else
+	void ShowDebugFrame( const UIObject* object ) {}
+	void HideDebugFrame( const UIObject* object ) {}
+	void ResizeDebugFrame( const UIObject* object ) {}
+	
+	void ShowDebugOverlay() {}
+	void HideDebugOverlay() {}
+#endif
 	
 protected:
 	object::Root m_root_object;
@@ -73,9 +83,8 @@ protected:
 	Vec2<size_t> m_last_mouse_position = { 0, 0 };
 	
 private:
-	
-	// debug stuff
-	
+
+#if DEBUG	
 	Scene *m_debug_scene;
 	
 	typedef struct {
@@ -90,6 +99,8 @@ private:
 	void ResizeDebugFrame( const UIObject* object, const debug_frame_data_t* data );
 	
 	UIDebugOverlay *m_debug_overlay = nullptr;
+#endif
+	
 };
 
 } /* namespace ui */

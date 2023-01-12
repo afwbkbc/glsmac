@@ -1,3 +1,5 @@
+#if DEBUG
+
 #include "UIDebugOverlay.h"
 
 #include "engine/Engine.h"
@@ -38,3 +40,5 @@ void UIDebugOverlay::Iterate() {
 }	
 
 }
+
+#endif

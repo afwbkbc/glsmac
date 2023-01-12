@@ -5,7 +5,7 @@
 #include "Engine.h"
 
 // TODO: move to config
-const size_t g_max_fps = 500;
+const size_t g_max_fps = 500000;
 
 engine::Engine *g_engine = NULL;
 
@@ -71,5 +71,25 @@ int Engine::Run() {
 void Engine::ShutDown() {
 	m_threads.main.SetCommand( base::Thread::COMMAND_STOP );
 }
+
+#if DEBUG
+bool Engine::IsDebugMode() {
+	return m_is_debug_mode;
+}
+
+void Engine::EnableDebugMode() {
+	if ( !m_is_debug_mode ) {
+		m_is_debug_mode = true;
+		GetUI()->ShowDebugOverlay();
+	}
+}
+
+void Engine::DisableDebugMode() {
+	if ( m_is_debug_mode ) {
+		m_is_debug_mode = false;
+		GetUI()->HideDebugOverlay();
+	}
+}
+#endif
 
 } /* namespace engine */

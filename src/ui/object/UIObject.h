@@ -86,8 +86,13 @@ MAJOR_CLASS( UIObject, base::Base )
 	pair<vertex_t, vertex_t> GetAreaGeometry() const;
 	bool IsPointInside( const size_t x, const size_t y ) const;
 	
+#if DEBUG
 	void ShowDebugFrame();
 	void HideDebugFrame();
+#else
+	void ShowDebugFrame() {}
+	void HideDebugFrame() {}
+#endif
 	
 protected:
 	
@@ -159,7 +164,10 @@ protected:
 	
 	scene::Scene *GetSceneOfActor( const scene::actor::Actor *actor ) const;
 	
+#if DEBUG
 	bool m_has_debug_frame = false;
+#endif
+	
 };
 
 } /* namespace object */

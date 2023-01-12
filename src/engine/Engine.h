@@ -45,6 +45,17 @@ MAJOR_CLASS( Engine, base::Base );
 	scheduler::Scheduler *GetScheduler() const { return m_scheduler; }
 	ui::UI *GetUI() const { return m_ui; }
 
+#if DEBUG
+	// needed to bypass debug code in certain places if debug is not enabled
+	bool IsDebugMode();
+	void EnableDebugMode();
+	void DisableDebugMode();
+#else
+	bool IsDebugMode() { return false; }
+	void EnableDebugMode() {}
+	void DisableDebugMode() {}
+#endif
+	
 protected:
 
 	struct {
@@ -61,6 +72,9 @@ protected:
 	renderer::Renderer *m_renderer = nullptr;
 	ui::UI *m_ui = nullptr;
 	
+#if DEBUG
+	bool m_is_debug_mode = false;
+#endif
 };
 
 } /* namespace engine */

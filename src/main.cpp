@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "config/Config.h"
 #ifdef _WIN32
 #include "error_handler/Win32ErrorHandler.h"
@@ -45,7 +43,11 @@ int main(const int argc, const char *argv[]) {
 	texture_loader.SetTransparentColor(types::Color::RGBA(255, 0, 255, 255));
 	
 	logger::StdoutLogger logger;
-	renderer::opengl::OpenGLRenderer renderer( (string)"GLSMAC " + GLSMAC_VERSION + "-" + GLSMAC_LAST_COMMIT, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_VSYNC, 90.0f);
+	auto title = (string) "GLSMAC " + GLSMAC_VERSION + "-" + GLSMAC_LAST_COMMIT;
+#if DEBUG
+	title += "-debug";
+#endif
+	renderer::opengl::OpenGLRenderer renderer( title, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_VSYNC, 90.0f);
 	ui::DefaultUI ui;
 
 	scheduler::SimpleScheduler scheduler;

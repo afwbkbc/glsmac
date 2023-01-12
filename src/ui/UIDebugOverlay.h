@@ -2,6 +2,9 @@
 
 #include "object/UIContainer.h"
 
+#include <vector>
+#include <string>
+
 #include "util/Timer.h"
 #include "types/Font.h"
 #include "object/Label.h"
