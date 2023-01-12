@@ -33,9 +33,11 @@ Once I replicate original game, I'll focus on other things, such as: larger maps
 
 - Build instructions
 
-For release build (default): cmake . && make
+For release build: cmake . -DCMAKE_BUILD_TYPE=Release && make
 
 For debug build: cmake -DCMAKE_BUILD_TYPE=Debug . && make
+
+For same build as before (or Release if it's first build): cmake . && make
 
 Add -j parameter to make to speed up if you have multiple cores, i.e. "make -j9" for 8
 
