@@ -31,25 +31,23 @@ jobs:
         name: GLSMAC-ubuntu-bin
         path: |
           bin/GLSMAC
-    - name: release
-      uses: ChanTsune/release-with-commit@v2.8.0
+    - name: Create Release
       id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        regexp: "Release ((\\d+([.]\\d+)*)-(alpha|beta|rc)\\d*)((\\s|\\S)*)"
-        regexp_options: "us"
-        release_name: "version $1"
-        tag_name: "v$1"
-        body: "$5"
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
         draft: false
         prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
-    - name: upload
+    - name: Upload Release Asset
+      id: upload-release-asset 
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps     - name: upload
         asset_path: ./bin/GLSMAC
         asset_name: GLSMAC-x86_64-ubuntu-bin
         asset_content_type: application/octet-stream
