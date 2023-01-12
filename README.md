@@ -33,6 +33,10 @@ Once I replicate original game, I'll focus on other things, such as: larger maps
 
 - Build instructions
 
+You will need following libraries (-dev versions): FreeType2, SDL2, SDL2_image, GL, GLEW
+
+Target platform is GNU/Linux with GCC compiler, it should also be possible to build it with MinGW (if you're on Windows). Other compilers/platforms weren't tested but you can try.
+
 For release build: cmake . -DCMAKE_BUILD_TYPE=Release && make
 
 For debug build: cmake -DCMAKE_BUILD_TYPE=Debug . && make
