@@ -46,6 +46,8 @@ int main(const int argc, const char *argv[]) {
 	auto title = (string) "GLSMAC " + GLSMAC_VERSION + "-" + GLSMAC_LAST_COMMIT;
 #if DEBUG
 	title += "-debug";
+#elif PORTABLE
+	title += "-portable";
 #endif
 	renderer::opengl::OpenGLRenderer renderer( title, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_VSYNC, 90.0f);
 	ui::DefaultUI ui;
