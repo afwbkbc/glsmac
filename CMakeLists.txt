@@ -14,7 +14,7 @@ ADD_CUSTOM_TARGET( glsmac_version )
 
 ADD_CUSTOM_COMMAND(
 	TARGET glsmac_version PRE_BUILD
-	COMMAND git show -s --format='\#define GLSMAC_LAST_COMMIT \"%h\"' > ./src/tmp/last_commit.h
+	COMMAND git show -s --format='\#define GLSMAC_LAST_COMMIT \"%H\"' > ./src/tmp/last_commit.h
 	DEPENDS .git/COMMIT_EDITMSG
 )
 
