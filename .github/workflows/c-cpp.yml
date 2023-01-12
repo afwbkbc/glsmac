@@ -13,12 +13,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Setup SDL
-      uses: openrndr/setup-sdl2@v1.1
-    - name: Setup OpenGL
-      uses: openrndr/setup-opengl@v1.1
-    - name: Setup GLEW
-      uses: openrndr/setup-glew
+    - name: install_dependencies
+      run: |
+        sudo apt-get install libfreetype-dev
+        sudo apt-get install libsdl2-dev
+        sudo apt-get install libsdl2-image-dev
+        sudo apt-get install libglu-dev
+        sudo apt-get install libglew-dev
     - name: cmake
       run: cmake -DCMAKE_BUILD_TYPE=Release .
     - name: make
