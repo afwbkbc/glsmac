@@ -17,7 +17,7 @@
 #include "types/Vec2.h"
 #include "util/Timer.h"
 
-#include "object/Label.h"
+#include "UIDebugOverlay.h"
 
 using namespace std;
 using namespace scene;
@@ -56,6 +56,8 @@ MAJOR_CLASS( UI, base::Module )
 	void HideDebugFrame( const UIObject* object );
 	void ResizeDebugFrame( const UIObject* object );
 	
+	void ShowDebugOverlay();
+	void HideDebugOverlay();
 	
 protected:
 	object::Root m_root_object;
@@ -87,12 +89,7 @@ private:
 	
 	void ResizeDebugFrame( const UIObject* object, const debug_frame_data_t* data );
 	
-	util::Timer m_fps_timer;
-	size_t m_fps_frames = 0;
-	
-	Font *m_fps_counter_font = nullptr;
-	Label *m_fps_counter = nullptr;
-
+	UIDebugOverlay *m_debug_overlay = nullptr;
 };
 
 } /* namespace ui */
