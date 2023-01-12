@@ -33,7 +33,8 @@ void Label::Create() {
 void Label::Destroy() {
 
 	g_engine->GetUI()->GetTextScene()->RemoveActor(m_actor);
-
+	delete m_actor;
+	
 	UIObject::Destroy();
 }
 
