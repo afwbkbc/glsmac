@@ -32,7 +32,7 @@ jobs:
       with:
         name: GLSMAC-ubuntu-bin
         path: |
-          .release/GLSMAC-ubuntu-bin.tar.gz
+          ./GLSMAC-ubuntu-bin.tar.gz
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
