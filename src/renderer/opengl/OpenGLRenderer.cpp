@@ -1,8 +1,5 @@
 #include "engine/Engine.h"
 
-#include <boost/chrono.hpp>
-#include <boost/thread.hpp>
-
 #include "OpenGLRenderer.h"
 
 #include "shader_program/OrthographicOpenGLShaderProgram.h"
