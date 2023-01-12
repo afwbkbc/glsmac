@@ -13,8 +13,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Setup SDL
+      uses: openrndr/setup-sdl2@v1.1
     - name: Setup OpenGL
       uses: openrndr/setup-opengl@v1.1
+    - name: Setup GLEW
+      uses: openrndr/setup-glew
     - name: cmake
       run: cmake -DCMAKE_BUILD_TYPE=Release .
     - name: make
