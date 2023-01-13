@@ -15,10 +15,11 @@ namespace object {
 
 CHILD_CLASS( Label, UIObject )
 	
-	Label(Font* m_font, const string& text);
+	Label( const string& text );
 	
 	void SetText( const string& text );
 	void SetTextColor( const Color& color );
+	void SetFont( Font* font );
 
 	void Create();
 	void Destroy();

@@ -1,4 +1,4 @@
-#include "SlidingMenuButtonUpperTop.h"
+#include "SlidingMenuItemUpperTop.h"
 
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
@@ -7,10 +7,10 @@ namespace game {
 namespace mainmenu {
 namespace style {
 
-void SlidingMenuButtonUpperTop::SetStyle() {
+void SlidingMenuItemUpperTop::SetStyle() {
 	Set( A_LEFT, 200 );
 	Set( A_TOP, -8 );
-	SetTexture( A_TEXTURE, g_engine->GetTextureLoader()->LoadTexture(
+	SetObject( A_TEXTURE, g_engine->GetTextureLoader()->LoadTexture(
 		"console_x.pcx",
 			708, 1, 715, 354,
 		loader::texture::TextureLoader::LT_ROTATE |

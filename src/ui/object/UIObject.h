@@ -175,7 +175,7 @@ protected:
 	bool Has( const Style::attribute_type_t attribute_type ) const;
 	const ssize_t Get( const Style::attribute_type_t attribute_type ) const;
 	const Color GetColor( const Style::attribute_type_t attribute_type ) const;
-	const Texture* GetTexture( const Style::attribute_type_t attribute_type ) const;
+	const void* GetObject( const Style::attribute_type_t attribute_type ) const;
 	
 #if DEBUG
 	void CheckStylePtr() const;

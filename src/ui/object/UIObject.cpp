@@ -136,11 +136,11 @@ const Color UIObject::GetColor( const Style::attribute_type_t attribute_type ) c
 	return m_style->GetColor( attribute_type, m_style_modifiers );
 }
 
-const Texture* UIObject::GetTexture( const Style::attribute_type_t attribute_type ) const {
+const void* UIObject::GetObject( const Style::attribute_type_t attribute_type ) const {
 #if DEBUG
 	CheckStylePtr();
 #endif
-	return m_style->GetTexture( attribute_type, m_style_modifiers );
+	return m_style->GetObject( attribute_type, m_style_modifiers );
 }
 
 #if DEBUG

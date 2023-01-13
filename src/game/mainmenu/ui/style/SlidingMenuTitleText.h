@@ -1,12 +1,12 @@
 #pragma once
 
-#include "ui/theme/Style.h"
+#include "SlidingMenuItemText.h"
 
 namespace game {
 namespace mainmenu {
 namespace style {
 
-CHILD_CLASS( SlidingMenuTitleText, ui::theme::Style )
+CHILD_CLASS( SlidingMenuTitleText, SlidingMenuItemText )
 protected:
 	void SetStyle();
 };

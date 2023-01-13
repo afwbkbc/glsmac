@@ -40,12 +40,12 @@ void Style::SetColor( const attribute_type_t attribute_type, const Color& value 
 	(*m_attributes_ptr)[ attribute_type ].value.color = value;
 }
 
-void Style::SetTexture( const attribute_type_t attribute_type, const Texture* texture ) {
+void Style::SetObject( const attribute_type_t attribute_type, const void* ptr ) {
 #if DEBUG
 	CheckSet( attribute_type );
 #endif
 	Set( attribute_type );
-	(*m_attributes_ptr)[ attribute_type ].value.texture = texture;
+	(*m_attributes_ptr)[ attribute_type ].value.ptr = ptr;
 }
 
 bool Style::Has( const attribute_type_t attribute_type, const modifier_t modifier ) const {
@@ -71,11 +71,11 @@ const Color Style::GetColor( const attribute_type_t attribute_type, const modifi
 	return m_attributes[ modifier ][ attribute_type ].value.color;
 }
 
-const Texture* Style::GetTexture( const attribute_type_t attribute_type, const modifier_t modifier ) const {
+const void* Style::GetObject( const attribute_type_t attribute_type, const modifier_t modifier ) const {
 #if DEBUG
 	CheckGet( attribute_type, modifier );
 #endif
-	return m_attributes[ modifier ][ attribute_type ].value.texture;
+	return m_attributes[ modifier ][ attribute_type ].value.ptr;
 }
 
 void Style::SetAttributesPtr( attributes_t* attributes ) {

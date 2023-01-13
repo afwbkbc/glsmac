@@ -11,6 +11,8 @@ namespace object {
 
 class UIContainer : public UIObject {
 public:
+	UIContainer( const string& class_name = "" );
+	
 	void AddChild( UIObject *object );
 	void RemoveChild( UIObject *object );
 

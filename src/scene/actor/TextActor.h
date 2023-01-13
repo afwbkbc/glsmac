@@ -25,9 +25,9 @@ public:
 	void SetColor( const Color& color );
 	
 protected:
-	types::Font *m_font;
-	string m_text;
-	types::Color m_color;
+	types::Font *m_font = nullptr;
+	string m_text = "";
+	types::Color m_color = { 0.0, 0.0, 0.0, 0.0 };
 };
 
 } /* namespace actor */

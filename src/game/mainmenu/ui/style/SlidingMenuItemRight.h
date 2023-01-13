@@ -6,7 +6,7 @@ namespace game {
 namespace mainmenu {
 namespace style {
 
-CHILD_CLASS( SlidingMenuButtonBody, ui::theme::Style )
+CHILD_CLASS( SlidingMenuItemRight, ui::theme::Style )
 protected:
 	void SetStyle();
 };

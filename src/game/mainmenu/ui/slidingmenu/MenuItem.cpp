@@ -8,31 +8,31 @@ namespace game {
 namespace mainmenu {
 
 MenuItem::MenuItem( MenuBlock* menu, const string& text, const bool is_title )
-	: UIContainer()
+	: UIContainer( "SlidingMenuItem" )
 	, m_menu( menu )
 	, m_text( text )
 	, m_is_title( is_title )
 {
-	SetClass( "SlidingMenuButton" );
+	//
 }
 
 void MenuItem::Create() {
 	UIContainer::Create();
 
 	m_parts = {
-		new Surface( "SlidingMenuButtonBody" ),
-		new Surface( "SlidingMenuButtonLeft" ),
-		new Surface( "SlidingMenuButtonRight" ),
-		new Surface( "SlidingMenuButtonLowerTop" ),
-		new Surface( "SlidingMenuButtonUpperTop" ),
-		new Surface( "SlidingMenuButtonBottom" )
+		new Surface( "SlidingMenuItemBody" ),
+		new Surface( "SlidingMenuItemLeft" ),
+		new Surface( "SlidingMenuItemRight" ),
+		new Surface( "SlidingMenuItemLowerTop" ),
+		new Surface( "SlidingMenuItemUpperTop" ),
+		new Surface( "SlidingMenuItemBottom" )
 	};
 	
 	for (auto& part : m_parts) {
 		AddChild( part );
 	}
 	
-	m_label = new Label( m_menu->m_menu->m_mainmenu->m_menu_item_font, m_text );
+	m_label = new Label( m_text );
 	m_label->SetClass( m_is_title ? "SlidingMenuTitleText" : "SlidingMenuButtonText" );
 	AddChild(m_label);
 }

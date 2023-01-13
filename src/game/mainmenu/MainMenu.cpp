@@ -26,8 +26,6 @@ void MainMenu::Start() {
 	m_background->SetZIndex( 0.5 );
 	g_engine->GetUI()->AddObject( m_background );
 
-	m_menu_item_font = g_engine->GetFontLoader()->LoadFont( "arialnb.ttf", 20 );
-	
 	ShowMenu( new Main( this ) );
 }
 

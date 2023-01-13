@@ -1,5 +1,7 @@
 #include "Surface.h"
 
+using namespace types;
+
 namespace ui {
 namespace object {
 
@@ -49,7 +51,7 @@ void Surface::ApplyStyle() {
 	UIObject::ApplyStyle();
 	
 	if ( Has( Style::A_TEXTURE ) ) {
-		auto* texture = GetTexture( Style::A_TEXTURE );
+		const auto* texture = (Texture*)GetObject( Style::A_TEXTURE );
 		SetTexture( texture );
 		if ( Has( Style::A_SIZE_FROM_TEXTURE ) ) {
 			SetWidth( texture->m_width );

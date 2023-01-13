@@ -12,6 +12,12 @@ using namespace event;
 
 namespace object {
 
+UIContainer::UIContainer( const string& class_name )
+	: UIObject( class_name )
+{
+	//
+}
+
 void UIContainer::Create() {
 	UIObject::Create();
 

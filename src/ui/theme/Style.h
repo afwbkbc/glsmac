@@ -5,7 +5,6 @@
 #include <vector>
 #include <unordered_map>
 
-#include "types/Texture.h"
 #include "types/Color.h"
 
 using namespace std;
@@ -29,6 +28,7 @@ MAJOR_CLASS( Style, base::Base )
 		A_ALIGN,
 		A_COLOR,
 		A_TEXTURE,
+		A_FONT,
 		A_SIZE_FROM_TEXTURE,
 			
 		ATTRIBUTE_TYPE_MAX
@@ -42,12 +42,12 @@ MAJOR_CLASS( Style, base::Base )
 	void Set( const attribute_type_t attribute_type ); // for bool flags without value
 	void Set( const attribute_type_t attribute_type, const ssize_t value );
 	void SetColor( const attribute_type_t attribute_type, const Color& value );
-	void SetTexture( const attribute_type_t attribute_type, const Texture* value );
+	void SetObject( const attribute_type_t attribute_type, const void* value );
 
 	bool Has( const attribute_type_t attribute_type, const modifier_t modifier ) const;
 	const ssize_t Get( const attribute_type_t attribute_type, const modifier_t modifier ) const;
 	const Color GetColor( const attribute_type_t attribute_type, const modifier_t modifier ) const;
-	const Texture* GetTexture( const attribute_type_t attribute_type, const modifier_t modifier ) const;
+	const void* GetObject( const attribute_type_t attribute_type, const modifier_t modifier ) const;
 	
 protected:
 	
@@ -58,7 +58,7 @@ protected:
 		union {
 			ssize_t scalar;
 			Color::color_t color;
-			const types::Texture* texture;
+			const void *ptr;
 		} value;
 	} attribute_t;
 	typedef attribute_t attributes_t[ ATTRIBUTE_TYPE_MAX ];

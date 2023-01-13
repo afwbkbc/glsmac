@@ -1,4 +1,4 @@
-#include "SlidingMenuButton.h"
+#include "SlidingMenuItem.h"
 
 #include "ui/object/UIObject.h"
 
@@ -6,7 +6,7 @@ namespace game {
 namespace mainmenu {
 namespace style {
 
-void SlidingMenuButton::SetStyle() {
+void SlidingMenuItem::SetStyle() {
 	Set( A_LEFT, 0 );
 	Set( A_WIDTH, 300 );
 	Set( A_HEIGHT, 46 );

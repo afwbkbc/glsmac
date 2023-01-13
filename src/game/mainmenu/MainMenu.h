@@ -6,8 +6,6 @@
 #include <string>
 
 #include "ui/object/Image.h"
-#include "types/Font.h"
-#include "scene/actor/Actor.h"
 
 #include "MenuObject.h"
 
@@ -31,17 +29,11 @@ CHILD_CLASS( MainMenu, base::Task )
 	void GoBack();
 	
 protected:
-	friend class MenuItem; // TODO: remove when sliding menu uses themes
-	
 	MenuTheme m_theme;
 
 	ui::object::Image *m_background = nullptr;
 	
-	//vector<const types::Texture*> m_menu_item_textures = {};
-	types::Font *m_menu_item_font = nullptr;
-	
 	MenuObject *m_menu_object = nullptr;
-	
 	vector<MenuObject*> m_menu_history = {};
 	
 };
