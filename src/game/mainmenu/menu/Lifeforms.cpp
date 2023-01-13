@@ -5,7 +5,7 @@
 namespace game {
 namespace mainmenu {
 
-Lifeforms::Lifeforms( MainMenu *mainmenu ) : Menu( mainmenu, "NATIVE LIFE FORMS", {
+Lifeforms::Lifeforms( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "NATIVE LIFE FORMS", {
 	{ "RARE", [this] () -> void {
 		m_mainmenu->m_settings.map_size = game::Settings::MAP_LIFEFORMS_RARE;
 		NextMenu( new Clouds( m_mainmenu ) );

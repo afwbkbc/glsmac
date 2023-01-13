@@ -1,6 +1,5 @@
 SET(SRC ${SRC}
 
-	${PWD}/Menu.cpp
 	${PWD}/Main.cpp
 	${PWD}/StartGame.cpp
 	${PWD}/Scenario.cpp
@@ -11,5 +10,6 @@ SET(SRC ${SRC}
 	${PWD}/Clouds.cpp
 	${PWD}/Difficulty.cpp
 	${PWD}/Rules.cpp
+	${PWD}/Multiplayer.cpp
 
 PARENT_SCOPE)

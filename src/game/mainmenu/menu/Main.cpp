@@ -3,12 +3,14 @@
 #include "StartGame.h"
 #include "Scenario.h"
 
+#include "Multiplayer.h"
+
 #include "engine/Engine.h"
 
 namespace game {
 namespace mainmenu {
 
-Main::Main( MainMenu *mainmenu ) : Menu( mainmenu, "", {
+Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 	{ "START GAME", [this] () -> void {
 		m_mainmenu->m_settings.game_mode = game::Settings::GM_SINGLEPLAYER;
 		NextMenu( new StartGame( m_mainmenu ) );
@@ -37,6 +39,7 @@ Main::Main( MainMenu *mainmenu ) : Menu( mainmenu, "", {
 	}},
 	{ "MULTIPLAYER", [this] () -> void {
 		m_mainmenu->m_settings.game_mode = game::Settings::GM_MULTIPLAYER;
+		//NextMenu( new Multiplayer( m_mainmenu ) );
 		// TODO
 	}},
 	{ "VIEW CREDITS", [this] () -> void {

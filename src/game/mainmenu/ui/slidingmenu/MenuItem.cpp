@@ -25,7 +25,7 @@ MenuItem::MenuItem( MenuBlock* menu, const string& text, const bool is_title )
 void MenuItem::Create() {
 	UIContainer::Create();
 
-	const auto* textures = &(m_menu->m_mainmenu->m_menu_item_textures);
+	const auto* textures = &(m_menu->m_menu->m_mainmenu->m_menu_item_textures);
 	
 	m_body = new Surface;
 	m_body->SetTop(6);
@@ -70,8 +70,8 @@ void MenuItem::Create() {
 	m_bottom->SetSizeFromTexture();
 	AddChild(m_bottom);
 	
-	m_label = new Label( m_menu->m_mainmenu->m_menu_item_font, m_text,
-		m_is_title ? m_menu->m_mainmenu->m_menu_item_text_color_title : m_menu->m_mainmenu->m_menu_item_text_color_normal
+	m_label = new Label( m_menu->m_menu->m_mainmenu->m_menu_item_font, m_text,
+		m_is_title ? m_menu->m_menu->m_mainmenu->m_menu_item_text_color_title : m_menu->m_menu->m_mainmenu->m_menu_item_text_color_normal
 	);
 	AddChild(m_label);
 }
@@ -90,13 +90,13 @@ void MenuItem::Destroy() {
 
 void MenuItem::OnMouseOver( const UIEvent::event_data_t* data ) {
 	if (!m_is_title) {
-		m_label->SetTextColor( m_menu->m_mainmenu->m_menu_item_text_color_highlight );
+		m_label->SetTextColor( m_menu->m_menu->m_mainmenu->m_menu_item_text_color_highlight );
 	}
 }
 
 void MenuItem::OnMouseOut( const UIEvent::event_data_t* data ) {
 	if (!m_is_title) {
-		m_label->SetTextColor( m_menu->m_mainmenu->m_menu_item_text_color_normal );
+		m_label->SetTextColor( m_menu->m_menu->m_mainmenu->m_menu_item_text_color_normal );
 	}
 }
 

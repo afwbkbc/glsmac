@@ -5,7 +5,7 @@
 namespace game {
 namespace mainmenu {
 
-Clouds::Clouds( MainMenu *mainmenu ) : Menu( mainmenu, "SELECT CLOUD COVER", {
+Clouds::Clouds( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "SELECT CLOUD COVER", {
 	{ "SPARSE", [this] () -> void {
 		m_mainmenu->m_settings.map_size = game::Settings::MAP_CLOUDS_SPARSE;
 		NextMenu( new Difficulty( m_mainmenu ) );

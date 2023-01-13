@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Menu.h"
+#include "../SlidingMenu.h"
 
 namespace game {
 namespace mainmenu {
 	
-class StartGame : public Menu {
+class StartGame : public SlidingMenu {
 public:
 	StartGame( MainMenu *mainmenu );
 };

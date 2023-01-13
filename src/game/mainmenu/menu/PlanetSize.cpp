@@ -10,7 +10,7 @@
 namespace game {
 namespace mainmenu {
 
-PlanetSize::PlanetSize( MainMenu *mainmenu ) : Menu( mainmenu, "SELECT SIZE OF PLANET", {
+PlanetSize::PlanetSize( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "SELECT SIZE OF PLANET", {
 	{ "TINY PLANET", [this] () -> void {
 		m_mainmenu->m_settings.map_size = game::Settings::MAP_TINY;
 		ChooseNext();

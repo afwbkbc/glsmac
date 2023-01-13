@@ -18,10 +18,10 @@ using namespace ui::event;
 namespace game {
 namespace mainmenu {
 	
-class MainMenu;
+class SlidingMenu;
 
 CHILD_CLASS(MenuBlock, UIContainer)
-	MenuBlock( MainMenu* mainmenu );
+	MenuBlock( SlidingMenu* menu );
 
 	// how much pixels to shift when fully closed
 	static const size_t MENU_CLOSED_POSITION = 400;
@@ -48,7 +48,7 @@ protected:
 	vector<string> m_items = {};
 	string m_title = "";
 	
-	MainMenu* m_mainmenu = nullptr;
+	SlidingMenu* m_menu = nullptr;
 	vector<MenuItem*> m_menu_items = {};
 	
 	string m_clicked_choice = "";
@@ -61,4 +61,4 @@ protected:
 }
 }
 
-#include "MainMenu.h"
+#include "../../SlidingMenu.h"

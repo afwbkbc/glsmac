@@ -7,9 +7,9 @@ using namespace std;
 namespace game {
 namespace mainmenu {
 
-MenuBlock::MenuBlock( MainMenu* mainmenu )
+MenuBlock::MenuBlock( SlidingMenu* menu )
 	: UIContainer()
-	, m_mainmenu( mainmenu )
+	, m_menu( menu )
 {
 	SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_BOTTOM );
 	SetWidth(354);
@@ -79,11 +79,11 @@ void MenuBlock::Iterate() {
 				m_slide_timer.Stop();
 				if ( !m_clicked_choice.empty() ) {
 					// return clicked choice to mainmenu
-					m_mainmenu->OnMenuClick( m_clicked_choice );
+					m_menu->OnItemClick( m_clicked_choice );
 				}
 				else {
 					// tell mainmenu to go back
-					m_mainmenu->GoBack();
+					m_menu->GoBack();
 				}
 			}
 		}

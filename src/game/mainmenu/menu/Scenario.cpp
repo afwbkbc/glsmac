@@ -5,7 +5,7 @@ using namespace game;
 namespace game {
 namespace mainmenu {
 
-Scenario::Scenario( MainMenu *mainmenu ) : Menu( mainmenu, "", {
+Scenario::Scenario( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 	{ "PLAY SCENARIO", [this] () -> void {
 		// TODO
 	}},

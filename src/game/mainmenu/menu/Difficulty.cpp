@@ -5,7 +5,7 @@
 namespace game {
 namespace mainmenu {
 
-Difficulty::Difficulty( MainMenu *mainmenu ) : Menu( mainmenu, "PICK A DIFFICULTY LEVEL", {
+Difficulty::Difficulty( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "PICK A DIFFICULTY LEVEL", {
 	{ "CITIZEN", [this] () -> void {
 		m_mainmenu->m_settings.difficulty = game::Settings::DIFFICULTY_CITIZEN;
 		NextMenu( new Rules( m_mainmenu ) );

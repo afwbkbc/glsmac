@@ -17,6 +17,8 @@
 #include "types/Vec2.h"
 #include "util/Timer.h"
 
+#include "theme/Theme.h"
+
 #if DEBUG
 #include "debug/Overlay.h"
 #include "debug/console/Console.h"
@@ -54,6 +56,9 @@ MAJOR_CLASS( UI, base::Module )
 	
 	void SendMouseMoveEvent( UIObject* object );
 	
+	void GetTheme( const theme::Theme* theme );
+	const theme::Theme* GetTheme() const;
+	
 #if DEBUG
 	void ShowDebugFrame( const UIObject* object );
 	void HideDebugFrame( const UIObject* object );
@@ -82,6 +87,8 @@ protected:
 	} m_clamp = {};
 	
 	Vec2<size_t> m_last_mouse_position = { 0, 0 };
+	
+	const theme::Theme* m_theme = nullptr;
 	
 private:
 

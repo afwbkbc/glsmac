@@ -45,18 +45,13 @@ void MainMenu::Start() {
 	ShowMenu( new Main( this ) );
 }
 
-void MainMenu::OnMenuClick( const string& choice ) {
-	if ( m_menu ) {
-		m_menu->OnItemClick( choice );
-	}
-}
-
 void MainMenu::GoBack() {
 	if ( !m_menu_history.empty() ) {
-		delete m_menu;
-		m_menu = m_menu_history.back();
+		m_menu_object->Hide();
+		delete m_menu_object;
+		m_menu_object = m_menu_history.back();
 		m_menu_history.pop_back();
-		m_menu->Show();
+		m_menu_object->Show();
 	}
 	else {
 		g_engine->ShutDown();
@@ -65,12 +60,10 @@ void MainMenu::GoBack() {
 
 void MainMenu::Stop() {
 	
-	if ( m_menu_block ) {
-		g_engine->GetUI()->RemoveObject( m_menu_block );
-	}
-	
-	if ( m_menu ) {
-		delete m_menu;
+	if ( m_menu_object ) {
+		m_menu_object->Hide();
+		delete m_menu_object;
+		
 		for (auto& it : m_menu_history) {
 			delete it;
 		}
@@ -83,26 +76,13 @@ void MainMenu::Stop() {
 	}
 }
 
-void MainMenu::ShowMenu( Menu* menu ) {
-	if (m_menu) {
-		m_menu_history.push_back(m_menu);
+void MainMenu::ShowMenu( MenuObject* menu_object ) {
+	if ( m_menu_object ) {
+		m_menu_object->Hide();
+		m_menu_history.push_back( m_menu_object );
 	}
-	m_menu = menu;
-	m_menu->Show();
-}
-
-void MainMenu::CreateMenu( const string& title, const vector<string> choices ) {
-	if (m_menu_block) {
-		g_engine->GetUI()->RemoveObject( m_menu_block );
-	}
-	m_menu_block = new MenuBlock( this );
-	for (auto& c : choices) {
-		m_menu_block->AddItem(c);
-	}
-	if (!title.empty()) {
-		m_menu_block->AddTitle( title );
-	}
-	g_engine->GetUI()->AddObject( m_menu_block );
+	m_menu_object = menu_object;
+	m_menu_object->Show();
 }
 
 

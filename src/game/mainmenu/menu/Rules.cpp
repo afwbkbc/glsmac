@@ -3,7 +3,7 @@
 namespace game {
 namespace mainmenu {
 
-Rules::Rules( MainMenu *mainmenu ) : Menu( mainmenu, "GAME RULES", {
+Rules::Rules( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "GAME RULES", {
 	{ "PLAY WITH STANDARD RULES", [this] () -> void {
 		m_mainmenu->m_settings.game_rules = game::Settings::GR_STANDARD;
 		// TODO

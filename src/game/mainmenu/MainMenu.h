@@ -9,9 +9,8 @@
 #include "types/Texture.h"
 #include "types/Font.h"
 #include "scene/actor/Actor.h"
-#include "MenuBlock.h"
-#include "MenuItem.h"
-#include "menu/Menu.h"
+
+#include "MenuObject.h"
 
 #include "game/Settings.h"
 
@@ -27,14 +26,12 @@ CHILD_CLASS( MainMenu, base::Task )
 	
 	game::Settings m_settings = {};
 	
-protected:
-	friend class MenuBlock;
-	friend class MenuItem;
-	friend class Menu;
-
-	void OnMenuClick( const string& choice );
+	void ShowMenu( MenuObject* menu_object );
 	void GoBack();
 	
+protected:
+	friend class MenuItem; // TODO: remove when sliding menu uses themes
+
 	ui::object::Image *m_background = nullptr;
 	
 	vector<const types::Texture*> m_menu_item_textures = {};
@@ -43,16 +40,9 @@ protected:
 	const Color m_menu_item_text_color_highlight = Color::FromRGBA( 193, 240 ,204, 255 );
 	const Color m_menu_item_text_color_title = Color::FromRGBA( 230, 243 ,233, 255 );
 	
-	Menu *m_menu = nullptr;
+	MenuObject *m_menu_object = nullptr;
 	
-	vector<Menu*> m_menu_history = {};
-	
-	MenuBlock* m_menu_block = nullptr;
-	
-	void ShowMenu( Menu* menu );
-	
-private:
-	void CreateMenu( const string& title, vector<string> choices = {} );
+	vector<MenuObject*> m_menu_history = {};
 	
 };
 

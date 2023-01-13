@@ -1,9 +1,11 @@
 SUBDIR( menu )
+SUBDIR( ui )
 
 SET(SRC ${SRC}
 
-	${PWD}/MenuItem.cpp
-	${PWD}/MenuBlock.cpp
+	${PWD}/MenuObject.cpp
+	${PWD}/SlidingMenu.cpp
+	${PWD}/PopupMenu.cpp
 	${PWD}/MainMenu.cpp
 
 PARENT_SCOPE)

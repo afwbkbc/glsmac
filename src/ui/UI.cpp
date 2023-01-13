@@ -115,6 +115,20 @@ void UI::SendMouseMoveEvent( UIObject* object ) {
 	object->SendEvent( new event::MouseMove( m_last_mouse_position.x, m_last_mouse_position.y ) );
 }
 
+void UI::GetTheme( const theme::Theme* theme ) {
+	
+}
+
+const theme::Theme* UI::GetTheme() const {
+#if DEBUG
+	if ( !m_theme ) {
+		throw UIError( "theme not set but requested" );
+	}
+#endif
+	return m_theme;
+}
+
+
 #if DEBUG
 void UI::ShowDebugFrame( const UIObject* object ) {
 	auto it = m_debug_frames.find( object );

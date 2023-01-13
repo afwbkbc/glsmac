@@ -5,7 +5,7 @@
 namespace game {
 namespace mainmenu {
 
-Erosive::Erosive( MainMenu *mainmenu ) : Menu( mainmenu, "ADJUST EROSIVE FORCES", {
+Erosive::Erosive( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "ADJUST EROSIVE FORCES", {
 	{ "STRONG", [this] () -> void {
 		m_mainmenu->m_settings.map_size = game::Settings::MAP_EROSIVE_STRONG;
 		NextMenu( new Lifeforms( m_mainmenu ) );
