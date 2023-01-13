@@ -5,10 +5,63 @@
 #endif
 
 #include <string>
-#include <atomic>
+
+#if DEBUG
+#include <mutex>
+#endif
 
 using namespace std;
 
+#if DEBUG
+	
+#define DEBUG_STATS \
+	D( seconds_passed ) \
+	D( objects_created ) \
+	D( objects_destroyed ) \
+	D( objects_active ) \
+	D( frames_rendered ) \
+
+#define D( _stat ) struct { \
+		mutex stat_mutex; \
+		ssize_t total = 0; \
+		ssize_t current = 0; \
+	} _stat;
+	
+	typedef struct {
+		DEBUG_STATS
+	} debug_stats_t;
+	
+#undef D
+	
+	extern debug_stats_t g_debug_stats;
+	
+	#define DEBUG_STAT_GET( _stat, _totalvar, _currentvar ) { \
+		g_debug_stats._stat.stat_mutex.lock(); \
+		_totalvar = g_debug_stats._stat.total; \
+		_currentvar = g_debug_stats._stat.current; \
+		g_debug_stats._stat.current = 0; \
+		g_debug_stats._stat.stat_mutex.unlock(); \
+	}
+
+	#define DEBUG_STAT_INC( _stat ) { \
+		g_debug_stats._stat.stat_mutex.lock(); \
+		g_debug_stats._stat.total++; \
+		g_debug_stats._stat.current++; \
+		g_debug_stats._stat.stat_mutex.unlock(); \
+	}
+
+	#define DEBUG_STAT_DEC( _stat ) ( g_debug_stats._stat-- ) { \
+		g_debug_stats._stat.stat_mutex.lock(); \
+		g_debug_stats._stat.total--; \
+		g_debug_stats._stat.current--; \
+		g_debug_stats._stat.stat_mutex.unlock(); \
+	}
+	
+#else
+	#define DEBUG_STAT_INC( _stat )
+	#define DEBUG_STAT_DEC( _stat )
+#endif
+	
 namespace base {
 
 class Base {

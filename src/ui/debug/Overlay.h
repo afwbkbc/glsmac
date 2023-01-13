@@ -24,10 +24,12 @@ CHILD_CLASS(Overlay, UIContainer)
 	void Iterate();
 
 private:
-	util::Timer m_fps_timer;
-	size_t m_fps_frames = 0;
-	Font *m_fps_counter_font = nullptr;
-	Label *m_fps_counter = nullptr;
+	util::Timer m_stats_timer;
+	
+	Font* m_stats_font = nullptr;
+#define D( _stat ) Label* m_##_stats_label_##_stat = nullptr;
+	DEBUG_STATS;
+#undef D
 
 };
 

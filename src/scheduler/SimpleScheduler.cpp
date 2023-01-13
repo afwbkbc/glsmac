@@ -16,6 +16,9 @@ void SimpleScheduler::Start() {
 		Log( "Starting task [" + (*it)->GetName() + "]" );
 		(*it)->Start();
 	}
+#if DEBUG
+	m_timer.SetInterval( 1000 );
+#endif
 }
 
 void SimpleScheduler::Stop() {
@@ -39,6 +42,12 @@ void SimpleScheduler::Iterate() {
 		RemoveTask(task);
 	}
 	m_tasks_toremove.clear();
+	
+#if DEBUG
+	if ( m_timer.Ticked() ) {
+		DEBUG_STAT_INC( seconds_passed );
+	}
+#endif
 }
 
 void SimpleScheduler::AddTask( Task *task ) {

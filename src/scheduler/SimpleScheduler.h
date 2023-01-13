@@ -5,6 +5,7 @@
 #include "Scheduler.h"
 
 #include "base/Task.h"
+#include "util/Timer.h"
 
 using namespace base;
 
@@ -19,6 +20,10 @@ public:
 	void AddTask( Task *task );
 	void RemoveTask( Task *task );
 protected:
+#if DEBUG
+	util::Timer m_timer;
+#endif
+	
 	std::vector<Task *> m_tasks = {};
 	std::vector<Task *> m_tasks_toadd = {};
 	std::vector<Task *> m_tasks_toremove = {};

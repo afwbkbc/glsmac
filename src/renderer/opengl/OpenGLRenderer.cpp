@@ -251,7 +251,8 @@ void OpenGLRenderer::Iterate() {
 		std::string msg = (char *)errstring;
 		throw RendererError( "OpenGL error occured in render loop: \"" + msg + "\"" );
 	}
-
+	
+	DEBUG_STAT_INC( frames_rendered );
 }
 
 void OpenGLRenderer::AddScene( scene::Scene *scene ) {

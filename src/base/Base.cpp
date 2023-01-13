@@ -1,6 +1,12 @@
 #include "Base.h"
 
+#include <atomic>
+
 #include "engine/Engine.h"
+
+#if DEBUG
+debug_stats_t g_debug_stats = {};
+#endif
 
 namespace base {
 
