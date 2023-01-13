@@ -7,11 +7,10 @@ using namespace types;
 namespace ui {
 namespace object {
 
-Label::Label(Font* font, const string& text, const Color& color)
+Label::Label(Font* font, const string& text)
 	: UIObject()
 	, m_font( font )
 	, m_text( text )
-	, m_color( color )
 {
 	SetAlign( ALIGN_CENTER );
 }
@@ -24,7 +23,9 @@ void Label::SetText( const string& text ) {
 
 void Label::SetTextColor( const Color& color ) {
 	m_color = color;
-	m_actor->SetColor( color );
+	if (m_actor) {
+		m_actor->SetColor( color );
+	}
 }
 
 void Label::Create() {
@@ -81,6 +82,13 @@ void Label::Draw() {
 	UIObject::Draw();
 }
 
+void Label::ApplyStyle() {
+	UIObject::ApplyStyle();
+	
+	if ( Has( Style::A_COLOR ) ) {
+		SetTextColor( GetColor( Style::A_COLOR ) );
+	}
+}
 
 }
 }

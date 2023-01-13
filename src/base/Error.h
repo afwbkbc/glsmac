@@ -18,6 +18,9 @@ public:
 	virtual const std::string GetNamespace() const {
 		return Base::GetNamespace() + "::Error";
 	}
+	virtual const string GetClassName() const {
+		return "Error";
+	}
 	virtual const char* what() const throw() {
 		std::string message = "<" + GetName() + "> " + this->mReason;
 		size_t sz = message.size();

@@ -32,14 +32,9 @@ protected:
 	const string m_text = "";
 	const bool m_is_title = false;
 	
-	Surface* m_upper_top = nullptr;
-	Surface* m_lower_top = nullptr;
-	Surface* m_bottom = nullptr;
-	Surface* m_left = nullptr;
-	Surface* m_right = nullptr;
-	Surface* m_body = nullptr;
 	Label* m_label = nullptr;
 	
+	vector<UIObject*> m_parts = {};
 };
 
 }

@@ -1,5 +1,6 @@
 SET(SRC ${SRC}
 
+	${PWD}/Color.cpp
 	${PWD}/Font.cpp
 	${PWD}/Vec3.cpp
 	${PWD}/Vec4.cpp

@@ -15,7 +15,7 @@ namespace object {
 
 CHILD_CLASS( Label, UIObject )
 	
-	Label(Font* m_font, const string& text, const Color& color);
+	Label(Font* m_font, const string& text);
 	
 	void SetText( const string& text );
 	void SetTextColor( const Color& color );
@@ -27,9 +27,11 @@ CHILD_CLASS( Label, UIObject )
 	
 protected:
 	
+	void ApplyStyle();
+	
 	Font *m_font = nullptr;
 	string m_text = "";
-	Color m_color = Color::TRANSPARENT();
+	Color m_color = { 0.0, 0.0, 0.0, 0.0 };
 	
 	scene::actor::TextActor *m_actor = nullptr;
 	

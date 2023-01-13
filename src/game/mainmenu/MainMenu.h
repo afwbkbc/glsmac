@@ -6,13 +6,14 @@
 #include <string>
 
 #include "ui/object/Image.h"
-#include "types/Texture.h"
 #include "types/Font.h"
 #include "scene/actor/Actor.h"
 
 #include "MenuObject.h"
 
 #include "game/Settings.h"
+
+#include "ui/MenuTheme.h"
 
 using namespace std;
 using namespace types;
@@ -31,14 +32,13 @@ CHILD_CLASS( MainMenu, base::Task )
 	
 protected:
 	friend class MenuItem; // TODO: remove when sliding menu uses themes
+	
+	MenuTheme m_theme;
 
 	ui::object::Image *m_background = nullptr;
 	
-	vector<const types::Texture*> m_menu_item_textures = {};
+	//vector<const types::Texture*> m_menu_item_textures = {};
 	types::Font *m_menu_item_font = nullptr;
-	const Color m_menu_item_text_color_normal = Color::FromRGBA( 94, 162 ,137, 255 );
-	const Color m_menu_item_text_color_highlight = Color::FromRGBA( 193, 240 ,204, 255 );
-	const Color m_menu_item_text_color_title = Color::FromRGBA( 230, 243 ,233, 255 );
 	
 	MenuObject *m_menu_object = nullptr;
 	

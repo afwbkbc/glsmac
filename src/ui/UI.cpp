@@ -115,8 +115,23 @@ void UI::SendMouseMoveEvent( UIObject* object ) {
 	object->SendEvent( new event::MouseMove( m_last_mouse_position.x, m_last_mouse_position.y ) );
 }
 
-void UI::GetTheme( const theme::Theme* theme ) {
-	
+void UI::SetTheme( theme::Theme* theme ) {
+#if DEBUG
+	if ( m_theme ) {
+		throw UIError( "theme already set" );
+	}
+#endif
+	m_theme = theme;
+	m_theme->Finalize();
+}
+
+void UI::UnsetTheme() {
+#if DEBUG
+	if ( !m_theme ) {
+		throw UIError( "theme wasn't set" );
+	}
+#endif
+	m_theme = nullptr;
 }
 
 const theme::Theme* UI::GetTheme() const {
@@ -128,6 +143,9 @@ const theme::Theme* UI::GetTheme() const {
 	return m_theme;
 }
 
+const theme::Style* UI::GetStyle( const string& style_class ) const {
+	return GetTheme()->GetStyle( style_class );
+}
 
 #if DEBUG
 void UI::ShowDebugFrame( const UIObject* object ) {

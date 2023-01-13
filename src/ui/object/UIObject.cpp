@@ -13,13 +13,16 @@ using namespace event;
 
 namespace object {
 
-UIObject::UIObject() {
+UIObject::UIObject( const string& class_name ) {
 	m_position.left = 0;
 	m_position.right = 0;
 	m_position.top = 0;
 	m_position.bottom = 0;
 	m_size.aspect_ratio = 0;
 	m_size.force_aspect_ratio = false;
+	if ( !class_name.empty() ) {
+		SetClass( class_name );
+	}
 }
 
 void UIObject::Create() {
@@ -37,9 +40,11 @@ void UIObject::Iterate() {
 }
 
 void UIObject::Align() {
+	
 }
 
 void UIObject::Draw() {
+	ApplyStyleIfNeeded();
 }
 
 UIObject *UIObject::GetParentObject() const {
@@ -47,16 +52,19 @@ UIObject *UIObject::GetParentObject() const {
 }
 
 void UIObject::SetParentObject( UIContainer *parent_object ) {
+#if DEBUG
 	if ( m_parent_object != NULL )
-		throw UIError( "UIObject parent object changing" );
+		throw UIError( "parent object already set" );
+#endif
 	m_parent_object = parent_object;
 	UpdateObjectArea();
 }
 
 void UIObject::SetZIndex( float z_index ) {
+#if DEBUG
 	if ( z_index < -1.0 || z_index > 1.0 )
 		throw UIError( "invalid z-index " + to_string( z_index ) );
-	//Log( "Changing z-index to " + to_string( z_index ) );
+#endif
 	for ( auto it = m_actors.begin() ; it < m_actors.end() ; ++it )
 		(*it)->SetPositionZ( z_index );
 	m_z_index = z_index;
@@ -76,6 +84,72 @@ scene::Scene *UIObject::GetSceneOfActor( const scene::actor::Actor *actor ) cons
 	}
 	return scene;
 }
+
+void UIObject::ApplyStyle() {
+#if DEBUG
+	CheckStylePtr();
+#endif
+	Log( "Applying style class '" + m_style->GetClassName() + "' (modifiers: " + to_string( m_style_modifiers ) + ")" );
+	
+	if ( Has( Style::A_ALIGN ) ) {
+		SetAlign( Get( Style::A_ALIGN ) );
+	}
+	if ( Has( Style::A_LEFT ) ) {
+		SetLeft( Get( Style::A_LEFT ) );
+	}
+	if ( Has( Style::A_TOP ) ) {
+		SetTop( Get( Style::A_TOP ) );
+	}
+	if ( Has( Style::A_RIGHT ) ) {
+		SetRight( Get( Style::A_RIGHT ) );
+	}
+	if ( Has( Style::A_BOTTOM ) ) {
+		SetBottom( Get( Style::A_BOTTOM ) );
+	}
+	if ( Has( Style::A_WIDTH ) ) {
+		SetWidth( Get( Style::A_WIDTH ) );
+	}
+	if ( Has( Style::A_HEIGHT ) ) {
+		SetHeight( Get( Style::A_HEIGHT ) );
+	}
+
+}
+
+bool UIObject::Has( const Style::attribute_type_t attribute_type ) const {
+#if DEBUG
+	CheckStylePtr();
+#endif
+	return m_style->Has( attribute_type, m_style_modifiers );
+}
+
+const ssize_t UIObject::Get( const Style::attribute_type_t attribute_type ) const {
+#if DEBUG
+	CheckStylePtr();
+#endif
+	return m_style->Get( attribute_type, m_style_modifiers );
+}
+
+const Color UIObject::GetColor( const Style::attribute_type_t attribute_type ) const {
+#if DEBUG
+	CheckStylePtr();
+#endif
+	return m_style->GetColor( attribute_type, m_style_modifiers );
+}
+
+const Texture* UIObject::GetTexture( const Style::attribute_type_t attribute_type ) const {
+#if DEBUG
+	CheckStylePtr();
+#endif
+	return m_style->GetTexture( attribute_type, m_style_modifiers );
+}
+
+#if DEBUG
+void UIObject::CheckStylePtr() const {
+	if ( !m_style ) {
+		throw UIObjectError( "style not set" );
+	}
+}
+#endif
 
 void UIObject::CreateActors() {
 	for ( auto it = m_actors.begin() ; it < m_actors.end() ; ++it )
@@ -106,8 +180,9 @@ void UIObject::Realign() {
 }
 
 void UIObject::Redraw() {
-	if ( m_created )
+	if ( m_created ) {
 		Draw();
+	}
 }
 
 size_t UIObject::GetWidth() const {
@@ -308,12 +383,14 @@ void UIObject::SendEvent( const UIEvent* event ) {
 			if ( IsPointInside( event->m_data.mouse.x, event->m_data.mouse.y ) ) {
 				if ( ( m_state & STATE_MOUSEOVER ) != STATE_MOUSEOVER ) {
 					m_state |= STATE_MOUSEOVER;
+					AddStyleModifier( Style::M_HOVER );
 					OnMouseOver( &event->m_data );
 				}
 			}
 			else {
 				if ( ( m_state & STATE_MOUSEOVER ) == STATE_MOUSEOVER ) {
 					m_state &= ~STATE_MOUSEOVER;
+					RemoveStyleModifier( Style::M_HOVER );
 					OnMouseOut( &event->m_data );
 				}
 			}
@@ -353,6 +430,19 @@ bool UIObject::IsPointInside( const size_t x, const size_t y ) const {
 	);
 }
 
+void UIObject::SetClass( const string& style_class ) {
+#if DEBUG
+	if ( !m_style_class.empty() ) {
+		throw UIObjectError( "style class already set to '" + m_style_class + "'" );
+	}
+	if ( m_style_loaded ) {
+		throw UIObjectError( "style '" + m_style_class + "' already loaded" );
+	}
+#endif
+	Log("Setting style class '" + style_class + "'");
+	m_style_class = style_class;
+}
+
 #if DEBUG
 void UIObject::ShowDebugFrame() {
 	if ( !m_has_debug_frame ) {
@@ -368,6 +458,41 @@ void UIObject::HideDebugFrame() {
 	}
 }
 #endif
+
+void UIObject::ApplyStyleIfNeeded() {
+	if ( !m_style_loaded ) {
+		if ( !m_style_class.empty() ) {
+			m_style = g_engine->GetUI()->GetStyle( m_style_class );
+			ApplyStyle();
+		}
+		m_style_loaded = true;
+	}
+}
+
+void UIObject::AddStyleModifier( const Style::modifier_t modifier ) {
+#if DEBUG
+	if ( m_style_modifiers & modifier ) {
+		throw UIObjectError( "style modifier " + to_string( modifier ) + " already added" );
+	}
+#endif
+	m_style_modifiers |= modifier;
+	if ( m_style ) {
+		ApplyStyle();
+	}
+}
+
+void UIObject::RemoveStyleModifier( const Style::modifier_t modifier ) {
+#if DEBUG
+	if ( !(m_style_modifiers & modifier) ) {
+		throw UIObjectError( "style modifier " + to_string( modifier ) + " already removed" );
+	}
+#endif
+	m_style_modifiers &= ~modifier;
+	if ( m_style ) {
+		ApplyStyle();
+	}
+}
+
 
 } /* namespace object */
 } /* namespace ui */

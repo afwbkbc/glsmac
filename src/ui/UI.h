@@ -56,8 +56,10 @@ MAJOR_CLASS( UI, base::Module )
 	
 	void SendMouseMoveEvent( UIObject* object );
 	
-	void GetTheme( const theme::Theme* theme );
-	const theme::Theme* GetTheme() const;
+	void SetTheme( theme::Theme* theme );
+	void UnsetTheme();
+	
+	const theme::Style* GetStyle( const string& style_class ) const;
 	
 #if DEBUG
 	void ShowDebugFrame( const UIObject* object );
@@ -88,7 +90,8 @@ protected:
 	
 	Vec2<size_t> m_last_mouse_position = { 0, 0 };
 	
-	const theme::Theme* m_theme = nullptr;
+	const theme::Theme* GetTheme() const;
+	theme::Theme* m_theme = nullptr;
 	
 private:
 

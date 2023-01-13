@@ -11,10 +11,10 @@ MenuBlock::MenuBlock( SlidingMenu* menu )
 	: UIContainer()
 	, m_menu( menu )
 {
-	SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_BOTTOM );
-	SetWidth(354);
-	SetBottom(16);
+	SetClass( "SlidingMenuBlock" );
+	
 	SetRight(-MENU_CLOSED_POSITION);
+
 }
 
 void MenuBlock::AddItem(const string& text) {
@@ -34,15 +34,15 @@ void MenuBlock::Create() {
 	
 	for (size_t i = m_items.size() ; i > 0 ; i--) {
 		auto *item = new MenuItem( this, m_items[i-1] );
-		item->SetBottom(m_menu_items.size() * ( item->GetHeight() + 24 ) );
-		m_menu_items.push_back(item);
-		AddChild(item);
+		item->SetBottom( m_menu_items.size() * 70 );
+		m_menu_items.push_back( item );
+		AddChild( item );
 	}
 	if (!m_title.empty()) {
 		auto *item = new MenuItem( this, m_title, true );
-		item->SetBottom(m_menu_items.size() * ( item->GetHeight() + 32 ) );
-		m_menu_items.push_back(item);
-		AddChild(item);
+		item->SetBottom( m_menu_items.size() * 70 + 35 );
+		m_menu_items.push_back( item );
+		AddChild( item );
 	}
 	
 	m_slide_timer.SetInterval( 1 );

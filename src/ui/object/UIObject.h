@@ -11,18 +11,22 @@
 
 #include "ui/event/UIEvent.h"
 
+#include "ui/theme/Style.h"
+
 using namespace std;
+using namespace types;
 
 namespace ui {
 
 using namespace event;
+using namespace theme;
 
 namespace object {
 
 class UIContainer;
 
 MAJOR_CLASS( UIObject, base::Base )
-	UIObject();
+	UIObject( const string& class_name = "" );
 
 	typedef uint8_t alignment_t;
 	const static alignment_t ALIGN_LEFT = 1;
@@ -39,7 +43,7 @@ MAJOR_CLASS( UIObject, base::Base )
 	};
 
 	typedef float coord_t;
-	typedef types::Vec2<coord_t> vertex_t;
+	typedef Vec2<coord_t> vertex_t;
 
 	UIObject *GetParentObject() const;
 	void SetParentObject( UIContainer *parent_object );
@@ -85,6 +89,8 @@ MAJOR_CLASS( UIObject, base::Base )
 	vertex_t GetAreaPosition() const;
 	pair<vertex_t, vertex_t> GetAreaGeometry() const;
 	bool IsPointInside( const size_t x, const size_t y ) const;
+	
+	void SetClass( const string& style );
 	
 #if DEBUG
 	void ShowDebugFrame();
@@ -164,9 +170,29 @@ protected:
 	
 	scene::Scene *GetSceneOfActor( const scene::actor::Actor *actor ) const;
 	
+	virtual void ApplyStyle();
+	
+	bool Has( const Style::attribute_type_t attribute_type ) const;
+	const ssize_t Get( const Style::attribute_type_t attribute_type ) const;
+	const Color GetColor( const Style::attribute_type_t attribute_type ) const;
+	const Texture* GetTexture( const Style::attribute_type_t attribute_type ) const;
+	
 #if DEBUG
+	void CheckStylePtr() const;
+	
 	bool m_has_debug_frame = false;
 #endif
+	
+private:
+	string m_style_class = "";
+	bool m_style_loaded = false; // will load on first draw
+	const Style* m_style = nullptr;
+	
+	void ApplyStyleIfNeeded();
+	
+	Style::modifier_t m_style_modifiers = Style::M_NONE;
+	void AddStyleModifier( const Style::modifier_t modifier );
+	void RemoveStyleModifier( const Style::modifier_t modifier );
 	
 };
 

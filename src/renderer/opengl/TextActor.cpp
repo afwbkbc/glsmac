@@ -4,11 +4,11 @@ namespace renderer {
 namespace opengl {
 
 TextActor::TextActor( scene::actor::TextActor *actor, Font *gl_font ) : Actor( actor ), m_gl_font( gl_font ) {
-	//Log( "Creating OpenGL text with " + gl_font->GetName() + " for " + actor->GetName() );
+	Log( "Creating OpenGL text with " + gl_font->GetName() + " for " + actor->GetName() );
 }
 
 TextActor::~TextActor() {
-	//Log( "Destroying OpenGL text" );
+	Log( "Destroying OpenGL text" );
 }
 
 void TextActor::Draw( shader_program::OpenGLShaderProgram *shader_program ) {

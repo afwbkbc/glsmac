@@ -11,7 +11,8 @@ void Overlay::Create() {
 	UIContainer::Create();
 	
 	m_fps_counter_font = g_engine->GetFontLoader()->LoadFont( "arialn.ttf", 18 );
-	m_fps_counter = new Label( m_fps_counter_font, "", { 1.0, 1.0, 1.0, 0.5 } );
+	m_fps_counter = new Label( m_fps_counter_font, "" );
+	m_fps_counter->SetTextColor( { 1.0, 1.0, 1.0, 0.5 } );
 	m_fps_counter->SetAlign( UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
 	m_fps_counter->SetLeft( 3 );
 	g_engine->GetUI()->AddObject( m_fps_counter );

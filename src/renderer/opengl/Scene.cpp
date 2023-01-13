@@ -57,8 +57,6 @@ void Scene::Update() {
 		obj = (*it)->m_renderer_object;
 		if ( obj == NULL ) {
 
-			//Log( "Creating OpenGL data for [" + (*it)->GetName() + "]" );
-
 			Actor *gl_actor = NULL;
 
 			auto actor_type = (*it)->GetType();

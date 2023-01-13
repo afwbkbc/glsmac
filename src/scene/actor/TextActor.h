@@ -14,7 +14,7 @@ namespace actor {
 
 class TextActor : public Actor {
 public:
-	TextActor( Font *font, const string &text, Color color = Color::WHITE() );
+	TextActor( Font *font, const string &text, Color color = { 1.0, 1.0, 1.0, 0.0 } );
 	~TextActor();
 	
 	Font *GetFont() const;
