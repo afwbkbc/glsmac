@@ -14,6 +14,7 @@ namespace scheduler {
 class SimpleScheduler : public Scheduler {
 public:
 	SimpleScheduler();
+	virtual ~SimpleScheduler();
 	void Start();
 	void Stop();
 	void Iterate();

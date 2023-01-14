@@ -51,13 +51,13 @@ void UI::Stop() {
 	DELETE( m_debug_scene );
 #endif
 	
-	m_root_object.Destroy();
-
 	g_engine->GetRenderer()->RemoveScene( m_text_scene );
 	DELETE( m_text_scene );
 
 	g_engine->GetRenderer()->RemoveScene( m_shape_scene );
 	DELETE( m_shape_scene );
+	
+	m_root_object.Destroy();
 }
 
 void UI::AddObject( object::UIObject *object ) {

@@ -19,6 +19,8 @@ namespace debug {
 
 class MemoryWatcher {
 public:
+	~MemoryWatcher();
+	
 	void New( const Base* object, const size_t size, const string& file, const size_t line );
 	void Delete( const Base* object, const string& file, const size_t line );
 	void GLGenBuffers( GLsizei n, GLuint * buffers, const string& file, const size_t line );

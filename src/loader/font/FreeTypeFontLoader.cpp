@@ -5,6 +5,12 @@ using namespace std;
 namespace loader {
 namespace font {
 
+FreeTypeFontLoader::~FreeTypeFontLoader() {
+	for ( auto& it : m_fonts ) {
+		DELETE( it.second );
+	}
+}
+
 void FreeTypeFontLoader::Start() {
 	if ( FT_Init_FreeType( &m_freetype ) )
 		throw FontLoaderError( "Unable to initialize FreeType" );

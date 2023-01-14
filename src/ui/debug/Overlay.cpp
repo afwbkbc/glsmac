@@ -55,6 +55,7 @@ void Overlay::Destroy() {
 	m_stats_timer.Stop();
 
 	for ( auto& it : m_memory_stats_labels ) {
+		Log( "removing label " + it->GetName() );
 		g_engine->GetUI()->RemoveObject( it );
 	}
 	
@@ -97,6 +98,7 @@ void Overlay::Iterate() {
 
 // not using themes because overlay should be independent of them
 void Overlay::ActivateLabel( Label* label, const size_t left, const size_t top ) {
+	Log( "created label " + label->GetName() );
 	label->SetFont( m_stats_font );
 	label->SetTextColor( { 0.5, 1.0, 0.5, 1.0 } );
 	label->SetLeft( left );

@@ -20,7 +20,7 @@ enum scene_type_t {
 MAJOR_CLASS( Scene, base::Base )
 	Scene( const std::string &name, const scene_type_t scene_type ) : m_scene_type( scene_type ) {
 		m_name = name;
-	} ;
+	}
 	void AddActor( actor::Actor *actor );
 	void RemoveActor( actor::Actor *actor );
 	std::vector<actor::Actor *> *GetActors() {

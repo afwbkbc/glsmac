@@ -3,6 +3,10 @@
 #include <unordered_map>
 #include <iostream>
 #include <algorithm>
+#include <string>
+#include <sstream>
+#include <thread>
+#include <chrono>
 
 // to avoid being intercepted by macros in Base.h again
 void glGenBuffers_real( GLsizei n, GLuint * buffers ) {
@@ -26,6 +30,20 @@ using namespace base;
 namespace debug {
 
 MemoryWatcher g_memory_watcher;
+
+MemoryWatcher::~MemoryWatcher() {
+	
+	Log( "checking for possible memory leaks" );
+	
+	if ( !m_allocated_objects.empty() ) {
+		Log( "WARNING: " + to_string( m_allocated_objects.size() ) + " objects were never freed (possible memory leaks?):" );
+		for (auto& o : m_allocated_objects) {
+			std::stringstream ptrstr;
+			ptrstr << o.second.ptr;
+			Log( "    (" + ptrstr.str() + ") " + o.second.object_name + " @" + o.second.source );
+		}
+	}
+}
 
 void MemoryWatcher::New( const Base* object, const size_t size, const string& file, const size_t line ) {
 	lock_guard<mutex> guard( m_mutex );
@@ -198,7 +216,28 @@ void MemoryWatcher::GLDeleteBuffers( GLsizei n, const GLuint * buffers, const st
 		throw runtime_error( "glDeleteBuffers buffer does not exist @" + source );
 	}
 	
-	Log( "destroying opengl buffer " + to_string( *buffers ) + " @" + source );
+	auto it_vertex = m_opengl.vertex_buffer_sizes.find( *buffers );
+	auto it_index = m_opengl.index_buffer_sizes.find( *buffers );
+	if (
+		( it_vertex == m_opengl.vertex_buffer_sizes.end() ) &&
+		( it_index == m_opengl.index_buffer_sizes.end() )
+	) {
+		throw runtime_error( "glDeleteBuffers buffer is neither vertex buffer nor index buffer, is it a bug? @" + source );
+	}
+	if (
+		( it_vertex != m_opengl.vertex_buffer_sizes.end() ) &&
+		( it_index != m_opengl.index_buffer_sizes.end() )
+	) {
+		throw runtime_error( "glDeleteBuffers buffer is both vertex buffer and index buffer, is it a bug? @" + source );
+	}
+	if ( it_vertex != m_opengl.vertex_buffer_sizes.end() ) {
+		Log( "destroying opengl vertex buffer " + to_string( *buffers ) + " @" + source );
+		m_opengl.vertex_buffer_sizes.erase( it_vertex );
+	}
+	if ( it_index != m_opengl.index_buffer_sizes.end() ) {
+		Log( "destroying opengl index buffer " + to_string( *buffers ) + " @" + source );
+		m_opengl.index_buffer_sizes.erase( it_index );
+	}
 	
 	m_opengl.buffers.erase( *buffers );
 	DEBUG_STAT_DEC( opengl_buffers_count );

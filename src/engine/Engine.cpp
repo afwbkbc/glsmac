@@ -38,13 +38,13 @@ Engine::Engine(
 	g_engine = this;
 
 	m_threads.main.SetIPS( g_max_fps );
+	
 	m_threads.main.AddModule( m_config );
 	m_threads.main.AddModule( m_error_handler );
 	m_threads.main.AddModule( m_font_loader );
 	m_threads.main.AddModule( m_logger );
 	m_threads.main.AddModule( m_renderer );
 	m_threads.main.AddModule( m_ui );
-
 	m_threads.main.AddModule( m_scheduler );
 };
 

@@ -10,6 +10,12 @@ SimpleScheduler::SimpleScheduler() {
 
 }
 
+SimpleScheduler::~SimpleScheduler() {
+	for ( auto& task : m_tasks ) {
+		RemoveTask( task );
+	}
+}
+
 void SimpleScheduler::Start() {
 	m_active = true;
 	for ( auto it = m_tasks.begin() ; it < m_tasks.end() ; it++ ) {

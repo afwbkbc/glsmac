@@ -66,6 +66,7 @@ void UIContainer::AddChild( UIObject *object ) {
 	auto it = find( m_child_objects.begin(), m_child_objects.end(), object );
 	if ( it < m_child_objects.end() )
 		throw UIError( "duplicate UIObject insertion" );
+	Log( "adding child " + object->GetName() );
 	m_child_objects.push_back( object );
 	object->SetParentObject( this );
 	if ( m_created ) {
@@ -77,6 +78,7 @@ void UIContainer::RemoveChild( UIObject *object ) {
 	auto it = find( m_child_objects.begin(), m_child_objects.end(), object );
 	if ( it == m_child_objects.end() )
 		throw UIError( "UIObject to be removed not found" );
+	Log( "removing child " + object->GetName() );
 	m_child_objects.erase( it, it + 1 );
 	DestroyChild( object );
 }

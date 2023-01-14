@@ -11,6 +11,8 @@ namespace loader {
 namespace texture {
 
 MINOR_CLASS( SDL2Image, TextureLoader )
+	virtual ~SDL2ImageTextureLoader();
+	
 	void Start();
 	void Stop();
 	void Iterate();

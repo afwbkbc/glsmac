@@ -27,6 +27,7 @@ class UIContainer;
 
 MAJOR_CLASS( UIObject, base::Base )
 	UIObject( const string& class_name = "" );
+	virtual ~UIObject();
 
 	typedef uint8_t alignment_t;
 	const static alignment_t ALIGN_LEFT = 1;

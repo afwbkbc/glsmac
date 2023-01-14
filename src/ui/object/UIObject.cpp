@@ -25,6 +25,12 @@ UIObject::UIObject( const string& class_name ) {
 	}
 }
 
+UIObject::~UIObject() {
+	if ( m_created ) {
+		Destroy();
+	}
+}
+
 void UIObject::Create() {
 	
 	DEBUG_STAT_INC( ui_elements_created );

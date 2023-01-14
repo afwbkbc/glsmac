@@ -14,7 +14,7 @@ Thread::Thread() {
 
 Thread::~Thread() {
 	if (m_state != STATE_INACTIVE) {
-		Log( "Thread was not shutdown properly!" );
+		Log( "WARNING: thread was not shutdown properly!" );
 	}
 }
 

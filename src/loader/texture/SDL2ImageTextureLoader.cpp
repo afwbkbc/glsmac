@@ -1,9 +1,20 @@
 #include "SDL2ImageTextureLoader.h"
 
+#include <iostream>
+
 using namespace std;
 
 namespace loader {
 namespace texture {
+
+SDL2ImageTextureLoader::~SDL2ImageTextureLoader() {
+	for (auto& it : m_textures) {
+		DELETE( it.second );
+	}
+	for (auto& it : m_subtextures) {
+		DELETE( it.second );
+	}
+}
 
 void SDL2ImageTextureLoader::Start() {
 

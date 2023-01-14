@@ -10,6 +10,9 @@ namespace loader {
 namespace font {
 
 MINOR_CLASS( FreeType, FontLoader )
+	
+	~FreeTypeFontLoader();
+	
 	void Start();
 	void Stop();
 	void Iterate();
