@@ -18,14 +18,14 @@ void Surface::SetTexture( const types::Texture* texture) {
 void Surface::Create() {
 	UIObject::Create();
 
-	m_background_mesh = new scene::mesh::Rectangle();
-	m_background = new scene::actor::MeshActor( "UI::Surface", m_background_mesh );
+	NEW( m_background_mesh, scene::mesh::Rectangle );
+	NEW( m_background, scene::actor::MeshActor, "UI::Surface", m_background_mesh );
 	m_actors.push_back( m_background );
 }
 
 void Surface::Destroy() {
 
-	delete m_background;
+	DELETE( m_background );
 
 	UIObject::Destroy();
 }

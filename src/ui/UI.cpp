@@ -14,10 +14,10 @@ using namespace object;
 void UI::Start() {
 	Log( "Creating UI" );
 
-	m_shape_scene = new Scene( "UIShape", SCENE_TYPE_ORTHO );
+	NEW( m_shape_scene, Scene, "UIShape", SCENE_TYPE_ORTHO );
 	g_engine->GetRenderer()->AddScene( m_shape_scene );
 
-	m_text_scene = new Scene( "UIText", SCENE_TYPE_TEXT );
+	NEW( m_text_scene, Scene, "UIText", SCENE_TYPE_TEXT );
 	g_engine->GetRenderer()->AddScene( m_text_scene );
 
 	m_root_object.Create();
@@ -28,10 +28,10 @@ void UI::Start() {
 	m_clamp.y.SetInversed( true );
 	
 #if DEBUG
-	m_debug_scene = new Scene( "UIDebug", SCENE_TYPE_ORTHO );
+	NEW( m_debug_scene, Scene, "UIDebug", SCENE_TYPE_ORTHO );
 	g_engine->GetRenderer()->AddScene( m_debug_scene );	
 	
-	m_debug_console = new debug::Console;
+	NEW( m_debug_console, debug::Console );
 	m_debug_console->UpdateHeight();
 	m_root_object.AddChild( m_debug_console );
 	
@@ -48,16 +48,16 @@ void UI::Stop() {
 	m_root_object.RemoveChild( m_debug_console );
 	
 	g_engine->GetRenderer()->RemoveScene( m_debug_scene );
-	delete m_debug_scene;
+	DELETE( m_debug_scene );
 #endif
 	
 	m_root_object.Destroy();
 
 	g_engine->GetRenderer()->RemoveScene( m_text_scene );
-	delete m_text_scene;
+	DELETE( m_text_scene );
 
 	g_engine->GetRenderer()->RemoveScene( m_shape_scene );
-	delete m_shape_scene;
+	DELETE( m_shape_scene );
 }
 
 void UI::AddObject( object::UIObject *object ) {
@@ -112,7 +112,8 @@ void UI::SendEvent( const event::UIEvent* event ) {
 }
 
 void UI::SendMouseMoveEvent( UIObject* object ) {
-	object->SendEvent( new event::MouseMove( m_last_mouse_position.x, m_last_mouse_position.y ) );
+	NEWV( event, event::MouseMove, m_last_mouse_position.x, m_last_mouse_position.y );
+	object->SendEvent( event );
 }
 
 void UI::SetTheme( theme::Theme* theme ) {
@@ -155,12 +156,12 @@ void UI::ShowDebugFrame( const UIObject* object ) {
 		debug_frame_data_t data;
 		
 		// semi-transparent 1x1 texture with random color for every frame
-		data.texture = new Texture( "DebugTexture", 1, 1 );
+		NEW( data.texture, Texture, "DebugTexture", 1, 1 );
 		data.texture->SetPixel( 0, 0, Color::RGBA( rand() % 256, rand() % 256, rand() % 256, 160 ) );
 		
-		data.mesh = new mesh::Rectangle();
+		NEW( data.mesh, mesh::Rectangle );
 		
-		data.actor = new actor::MeshActor( "DebugFrame", data.mesh );
+		NEW( data.actor, actor::MeshActor, "DebugFrame", data.mesh );
 		data.actor->SetTexture( data.texture );
 		data.actor->SetPosition( { 0.0, 0.0, -0.9 } );
 		
@@ -177,8 +178,8 @@ void UI::HideDebugFrame( const UIObject* object ) {
 	if ( it != m_debug_frames.end() ) {
 		Log("Hiding debug frame for " + object->GetName());
 		m_debug_scene->RemoveActor( it->second.actor );
-		delete it->second.actor;
-		delete it->second.texture;
+		DELETE( it->second.actor );
+		DELETE( it->second.texture );
 		m_debug_frames.erase( it );
 	}
 }
@@ -204,7 +205,7 @@ void UI::ResizeDebugFrame( const UIObject* object ) {
 
 void UI::ShowDebugOverlay() {
 	if ( !m_debug_overlay ) {
-		m_debug_overlay = new debug::Overlay();
+		NEW( m_debug_overlay, debug::Overlay );
 		AddObject( m_debug_overlay );
 	}
 }

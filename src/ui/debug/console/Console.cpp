@@ -16,7 +16,7 @@ void Console::Create() {
 			, 0.5
 	);
 	*/
-	/*m_body = new Surface();
+	/*NEW( m_body, Surface );
 	m_body->SetLeft( 0 );
 	m_body->SetRight( 0 );
 	m_body->SetTop( 0 );

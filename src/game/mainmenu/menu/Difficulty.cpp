@@ -8,27 +8,33 @@ namespace mainmenu {
 Difficulty::Difficulty( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "PICK A DIFFICULTY LEVEL", {
 	{ "CITIZEN", [this] () -> void {
 		m_mainmenu->m_settings.difficulty = game::Settings::DIFFICULTY_CITIZEN;
-		NextMenu( new Rules( m_mainmenu ) );
+		NEWV( menu, Rules, m_mainmenu );
+		NextMenu( menu );
 	}},
 	{ "SPECIALIST", [this] () -> void {
 		m_mainmenu->m_settings.difficulty = game::Settings::DIFFICULTY_SPECIALIST;
-		NextMenu( new Rules( m_mainmenu ) );
+		NEWV( menu, Rules, m_mainmenu );
+		NextMenu( menu );
 	}},
 	{ "TALENT", [this] () -> void {
 		m_mainmenu->m_settings.difficulty = game::Settings::DIFFICULTY_TALENT;
-		NextMenu( new Rules( m_mainmenu ) );
+		NEWV( menu, Rules, m_mainmenu );
+		NextMenu( menu );
 	}},
 	{ "LIBRARIAN", [this] () -> void {
 		m_mainmenu->m_settings.difficulty = game::Settings::DIFFICULTY_LIBRARIAN;
-		NextMenu( new Rules( m_mainmenu ) );
+		NEWV( menu, Rules, m_mainmenu );
+		NextMenu( menu );
 	}},
 	{ "THINKER", [this] () -> void {
 		m_mainmenu->m_settings.difficulty = game::Settings::DIFFICULTY_THINKER;
-		NextMenu( new Rules( m_mainmenu ) );
+		NEWV( menu, Rules, m_mainmenu );
+		NextMenu( menu );
 	}},
 	{ "TRANSCEND", [this] () -> void {
 		m_mainmenu->m_settings.difficulty = game::Settings::DIFFICULTY_TRANSCEND;
-		NextMenu( new Rules( m_mainmenu ) );		
+		NEWV( menu, Rules, m_mainmenu );
+		NextMenu( menu );		
 	}}
 }) {}
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "base/Base.h"
+
 #include <string>
 
 using namespace std;
@@ -9,8 +11,7 @@ namespace mainmenu {
 	
 class MainMenu;
 	
-class MenuObject {
-public:
+MAJOR_CLASS( MenuObject, base::Base )
 	MenuObject( MainMenu *mainmenu, const string& title );
 	
 	virtual void Show() = 0;

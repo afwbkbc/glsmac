@@ -34,34 +34,36 @@ OpenGLRenderer::OpenGLRenderer( const std::string title, const unsigned short wi
 	m_aspect_ratio = (float) m_options.window_width/m_options.window_height;
 
 
-	auto sp_skybox = new shader_program::SkyboxOpenGLShaderProgram;
+	NEWV( sp_skybox, shader_program::SkyboxOpenGLShaderProgram );
 	m_shader_programs.push_back( sp_skybox );
-	auto r_skybox = new routine::SkyboxOpenGLRoutine( sp_skybox );
+	NEWV( r_skybox, routine::SkyboxOpenGLRoutine, sp_skybox );
 	m_routines.push_back( r_skybox );
 
-	auto sp_world = new shader_program::WorldOpenGLShaderProgram;
+	NEWV( sp_world, shader_program::WorldOpenGLShaderProgram );
 	m_shader_programs.push_back( sp_world );
-	auto r_world = new routine::WorldOpenGLRoutine( sp_world );
+	NEWV( r_world, routine::WorldOpenGLRoutine, sp_world );
 	m_routines.push_back( r_world );
 
-	auto sp_orthographic = new shader_program::OrthographicOpenGLShaderProgram;
+	NEWV( sp_orthographic, shader_program::OrthographicOpenGLShaderProgram );
 	m_shader_programs.push_back( sp_orthographic );
-	auto r_overlay = new routine::OverlayOpenGLRoutine( sp_orthographic );
+	NEWV( r_overlay, routine::OverlayOpenGLRoutine, sp_orthographic );
 	m_routines.push_back( r_overlay );
 
-	auto sp_font = new shader_program::FontOpenGLShaderProgram;
+	NEWV( sp_font, shader_program::FontOpenGLShaderProgram );
 	m_shader_programs.push_back( sp_font );
-	auto r_font = new routine::FontOpenGLRoutine( sp_font );
+	NEWV( r_font, routine::FontOpenGLRoutine, sp_font );
 	m_routines.push_back( r_font );
 
 }
 
 OpenGLRenderer::~OpenGLRenderer() {
-	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it )
-		delete *it;
+	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it ) {
+		DELETE( *it );
+	}
 
-	for ( auto it = m_shader_programs.begin() ; it != m_shader_programs.end() ; ++it )
-		delete *it;
+	for ( auto it = m_shader_programs.begin() ; it != m_shader_programs.end() ; ++it ) {
+		DELETE( *it );
+	}
 }
 
 void OpenGLRenderer::Start() {
@@ -202,11 +204,13 @@ void OpenGLRenderer::Iterate() {
 				break;
 			}
 			case SDL_MOUSEMOTION: {
-				g_engine->GetUI()->SendEvent( new event::MouseMove( event.motion.x, event.motion.y ) );
+				NEWV( ui_event, event::MouseMove, event.motion.x, event.motion.y );
+				g_engine->GetUI()->SendEvent( ui_event );
 				break;
 			}
 			case SDL_MOUSEBUTTONDOWN: {
-				g_engine->GetUI()->SendEvent( new event::MouseDown( event.motion.x, event.motion.y, event.button.button ) );
+				NEWV( ui_event, event::MouseDown, event.motion.x, event.motion.y, event.button.button );
+				g_engine->GetUI()->SendEvent( ui_event );
 				break;
 			}
 			case SDL_KEYDOWN: {
@@ -218,7 +222,8 @@ void OpenGLRenderer::Iterate() {
 					}
 				}
 				if (code != UIEvent::K_NONE) {
-					g_engine->GetUI()->SendEvent( new event::KeyDown( code ) );
+					NEWV( event, event::KeyDown, code );
+					g_engine->GetUI()->SendEvent( event );
 				}
 				else {
 					Log("Skipping unknown keydown code: " + to_string(event.key.keysym.scancode));

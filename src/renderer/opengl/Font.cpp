@@ -14,6 +14,7 @@ Font::Font( types::Font *font, shader_program::FontOpenGLShaderProgram *shader_p
 	Log( "Creating OpenGL font" );
 
 	glGenBuffers( 1, &m_vbo);
+	
 	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
 
 	glActiveTexture( GL_TEXTURE0 );

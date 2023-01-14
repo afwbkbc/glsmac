@@ -16,7 +16,7 @@ bool OpenGLRoutine::AddScene( scene::Scene *scene ) {
 
 		m_scenes.push_back( scene );
 
-		opengl::Scene *gl_scene = new opengl::Scene( scene, this );
+		NEWV( gl_scene, opengl::Scene, scene, this );
 
 		m_gl_scenes.push_back( gl_scene );
 
@@ -37,7 +37,7 @@ bool OpenGLRoutine::RemoveScene( scene::Scene *scene ) {
 
 			OnSceneRemove( *gl_scene_index );
 
-			delete (*gl_scene_index);
+			DELETE( *gl_scene_index );
 			m_gl_scenes.erase( gl_scene_index, gl_scene_index + 1 );
 
 			Log("Scene [" + scene->GetName() + "] removed");
@@ -49,8 +49,9 @@ bool OpenGLRoutine::RemoveScene( scene::Scene *scene ) {
 }
 
 OpenGLRoutine::~OpenGLRoutine() {
-	for ( auto it = m_gl_scenes.begin() ; it != m_gl_scenes.end() ; ++it )
-		delete (*it);
+	for ( auto it = m_gl_scenes.begin() ; it != m_gl_scenes.end() ; ++it ) {
+		DELETE( *it );
+	}
 }
 
 } /* namespace routine */

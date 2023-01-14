@@ -57,7 +57,7 @@ void UIContainer::DestroyChild( UIObject *object ) {
 		object->DestroyActors();
 		object->Destroy();
 	}
-	delete object;
+	DELETE( object );
 }
 
 void UIContainer::AddChild( UIObject *object ) {
@@ -121,7 +121,7 @@ void UIContainer::SendEvent( const UIEvent* event ) {
 				( event->m_type == UIEvent::EV_MOUSEMOVE ) || // mousemove needs to be send to all objects for mouseout events to work
 				c->IsPointInside( event->m_data.mouse.x, event->m_data.mouse.y ) // other events - only to those actually under mouse pointer
 			) {
-				auto *child_event = new UIEvent( *event );
+				NEWV( child_event, UIEvent, *event );
 				c->SendEvent( child_event );
 			}
 		}
@@ -130,7 +130,7 @@ void UIContainer::SendEvent( const UIEvent* event ) {
 	if (( event->m_flags & UIEvent::EF_KEYBOARD ) == UIEvent::EF_KEYBOARD ) {
 		// TODO: send only to focused/active element
 		for (auto& c : m_child_objects) {
-			auto *child_event = new UIEvent( *event );
+			NEWV( child_event, UIEvent, *event );
 			c->SendEvent( child_event );
 		}
 	}

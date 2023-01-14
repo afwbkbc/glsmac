@@ -8,7 +8,8 @@
 namespace types {
 
 Texture::Texture( const std::string& name, const size_t width, const size_t height )
-	: m_name( name )
+	: base::Base()
+	, m_name( name )
 {
 	m_bpp = 4; // always RGBA format
 	
@@ -18,8 +19,9 @@ Texture::Texture( const std::string& name, const size_t width, const size_t heig
 }
 
 Texture::~Texture() {
-	if ( m_bitmap )
-		delete m_bitmap;
+	if ( m_bitmap ) {
+		free( m_bitmap );
+	}
 	if ( m_renderer_object )
 		m_renderer_object->Remove();
 }
@@ -34,7 +36,7 @@ void Texture::Resize( const size_t width, const size_t height ) {
 		m_aspect_ratio = m_height / m_width;
 
 		if ( m_bitmap ) {
-			delete m_bitmap;
+			free( m_bitmap );
 		}
 		m_bitmap_size = this->m_width * this->m_height * this->m_bpp;
 		m_bitmap = (unsigned char*) malloc( m_bitmap_size );
@@ -96,7 +98,7 @@ void Texture::Rotate() {
 		}
 	}
 	
-	delete m_bitmap;
+	free( m_bitmap );
 	m_bitmap = new_bitmap;
 }
 
@@ -113,7 +115,7 @@ void Texture::FlipV() {
 		}
 	}
 	
-	delete m_bitmap;
+	free( m_bitmap );
 	m_bitmap = new_bitmap;
 }
 

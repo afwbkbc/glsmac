@@ -19,6 +19,7 @@ MeshActor::MeshActor( scene::actor::MeshActor *actor ) : Actor( actor ) {
 
 	glGenBuffers( 1, &m_vbo );
 	glGenBuffers( 1, &m_ibo );
+	
 }
 
 MeshActor::~MeshActor() {
@@ -26,6 +27,7 @@ MeshActor::~MeshActor() {
 
 	glDeleteBuffers( 1, &m_ibo );
 	glDeleteBuffers( 1, &m_vbo );
+
 }
 
 bool MeshActor::ReloadNeeded() {

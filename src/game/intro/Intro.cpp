@@ -14,7 +14,7 @@ namespace intro {
 #define RANDNUM ( (float)rand() / (float)RAND_MAX )
 
 void Intro::Start() {
-	m_logo = new Image( "logo.pcx" );
+	NEW( m_logo, Image, "logo.pcx" );
 	m_logo->SetAlign( UIObject::ALIGN_CENTER );
 	g_engine->GetUI()->AddObject( m_logo );
 
@@ -30,7 +30,8 @@ void Intro::Iterate() {
 	if (m_timer.Ticked()) {
 		// switch to main menu
 		g_engine->GetScheduler()->RemoveTask(this);
-		g_engine->GetScheduler()->AddTask(new game::mainmenu::MainMenu);
+		NEWV( task, game::mainmenu::MainMenu );
+		g_engine->GetScheduler()->AddTask( task );
 	}
 }
 

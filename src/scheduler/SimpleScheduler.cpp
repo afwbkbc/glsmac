@@ -76,7 +76,7 @@ void SimpleScheduler::RemoveTask( Task *task ) {
 			task->Stop();
 		}
 		m_tasks.erase( it, it + 1 );
-		delete task;
+		DELETE( task );
 	}
 }
 

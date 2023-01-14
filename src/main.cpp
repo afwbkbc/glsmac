@@ -55,7 +55,8 @@ int main(const int argc, const char *argv[]) {
 	scheduler::SimpleScheduler scheduler;
 	
 	// game entry point
-	scheduler.AddTask( new game::intro::Intro );
+	NEWV( task, game::intro::Intro );
+	scheduler.AddTask( task );
 
 	engine::Engine engine(
 		&config,

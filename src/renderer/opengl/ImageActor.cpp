@@ -17,7 +17,7 @@ ImageActor::ImageActor( scene::actor::ImageActor *actor ) : Actor( actor ) {
 
 	glGenBuffers( 1, &m_vbo );
 	glGenBuffers( 1, &m_ibo );
-
+	
 	//m_update_timestamp = actor->GetImage()->UpdatedAt();
 }
 

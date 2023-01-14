@@ -33,13 +33,13 @@ void MenuBlock::Create() {
 	UIContainer::Create();
 	
 	for (size_t i = m_items.size() ; i > 0 ; i--) {
-		auto *item = new MenuItem( this, m_items[i-1] );
+		NEWV( item, MenuItem, this, m_items[i-1] );
 		item->SetBottom( m_menu_items.size() * 70 );
 		m_menu_items.push_back( item );
 		AddChild( item );
 	}
 	if (!m_title.empty()) {
-		auto *item = new MenuItem( this, m_title, true );
+		NEWV( item, MenuItem, this, m_title, true );
 		item->SetBottom( m_menu_items.size() * 70 + 35 );
 		m_menu_items.push_back( item );
 		AddChild( item );

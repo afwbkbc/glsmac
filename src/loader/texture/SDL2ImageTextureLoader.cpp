@@ -39,25 +39,27 @@ types::Texture *SDL2ImageTextureLoader::LoadTexture( const string &name ) {
 			SDL_FreeSurface(old);
 		}
 
-		auto *texture = new types::Texture( name );
+		NEWV( texture, types::Texture, name );
 		texture->m_width = image->w;
 		texture->m_height = image->h;
 		texture->m_aspect_ratio = (float) texture->m_height / texture->m_width;
 		texture->m_bpp = image->format->BitsPerPixel / 8;
 		texture->m_bitmap_size = image->w * image->h * texture->m_bpp;
-		texture->m_bitmap = new unsigned char[ texture->m_bitmap_size ];
+		texture->m_bitmap = (unsigned char*) malloc( texture->m_bitmap_size );
 		memcpy( texture->m_bitmap, image->pixels, texture->m_bitmap_size );
 		SDL_FreeSurface(image);
 
-		if (m_transparent_color) {
+		if ( m_is_transparent_color_set ) {
 			for (size_t i = 0 ; i < texture->m_bitmap_size ; i += texture->m_bpp) {
-				if (!memcmp( texture->m_bitmap + i, m_transparent_color, texture->m_bpp )) {
+				if (!memcmp( texture->m_bitmap + i, &m_transparent_color, texture->m_bpp )) {
 					memset( texture->m_bitmap + i, 0, texture->m_bpp );
 				}
 			}
 		}
 		
 		m_textures[name] = texture;
+		
+		DEBUG_STAT_INC( textures_loaded );
 		
 		return texture;
 	}
@@ -84,7 +86,7 @@ types::Texture *SDL2ImageTextureLoader::LoadTexture( const string &name, const s
 	
 		auto *full_texture = LoadTexture( name );
 
-		auto* subtexture = new types::Texture(subtexture_key);
+		NEWV( subtexture, types::Texture, subtexture_key );
 		
 		subtexture->CopyFrom(full_texture, x1, y1, x2, y2);
 		if ((flags & LT_ROTATE) == LT_ROTATE) {

@@ -6,7 +6,8 @@ namespace game {
 namespace mainmenu {
 
 MenuObject::MenuObject( MainMenu *mainmenu, const string& title )
-	: m_mainmenu( mainmenu )
+	: base::Base()
+	, m_mainmenu( mainmenu )
 	, m_title( title )
 {
 	//

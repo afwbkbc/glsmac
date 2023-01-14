@@ -68,7 +68,11 @@ void SkyboxOpenGLRoutine::Start() {
 
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ibo );
 	glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_indices), cube_indices, GL_STATIC_DRAW );
+
 	m_ibo_size = sizeof(cube_indices) / sizeof(GLushort);
+	
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 }
 
 void SkyboxOpenGLRoutine::Stop() {
@@ -82,6 +86,7 @@ void SkyboxOpenGLRoutine::Stop() {
 
 	glDeleteBuffers( 1, &m_ibo );
 	glDeleteBuffers( 1, &m_vbo );
+	
 }
 
 void SkyboxOpenGLRoutine::RemoveTexture( base::ObjectLink *link ) {
@@ -89,8 +94,8 @@ void SkyboxOpenGLRoutine::RemoveTexture( base::ObjectLink *link ) {
 		link->GetSrcObject<types::Texture>()->m_renderer_object = NULL;
 	auto *gl_texture = link->GetDstObject<Texture>();
 	gl_texture->Unload();
-	delete gl_texture;
-	delete link;
+	DELETE( gl_texture );
+	DELETE( link );
 }
 
 void SkyboxOpenGLRoutine::OnSceneRemove( Scene *scene ) {
@@ -115,8 +120,8 @@ void SkyboxOpenGLRoutine::Iterate() {
 		if ( !skybox_texture_obj ) {
 			auto *texture = (*it)->GetScene()->GetSkyboxTexture();
 			if ( texture ) {
-				auto *gl_texture = new CubemapTexture( texture );
-				auto obj = new base::ObjectLink( texture, gl_texture );
+				NEWV( gl_texture, CubemapTexture, texture );
+				NEWV( obj, base::ObjectLink, texture, gl_texture );
 				texture->m_renderer_object = obj;
 				(*it)->SetSkyboxTextureObj( obj );
 				gl_texture->Load();

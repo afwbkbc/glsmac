@@ -5,7 +5,7 @@ namespace theme {
 
 Theme::~Theme() {
 	for ( auto& it : m_styles ) {
-		delete it.second;
+		DELETE( it.second );
 	}
 }
 

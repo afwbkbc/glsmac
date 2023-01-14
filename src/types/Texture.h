@@ -1,5 +1,7 @@
 #pragma once
 
+#include "base/Base.h"
+
 #include <string>
 
 #include "base/ObjectLink.h"
@@ -7,8 +9,7 @@
 
 namespace types {
 
-class Texture {
-public:
+MAJOR_CLASS( Texture, base::Base )
 	Texture( const std::string& name, const size_t width = 0, const size_t height = 0 );
 	virtual ~Texture();
 	

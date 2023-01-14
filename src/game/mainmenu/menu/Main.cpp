@@ -13,7 +13,8 @@ namespace mainmenu {
 Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 	{ "START GAME", [this] () -> void {
 		m_mainmenu->m_settings.game_mode = game::Settings::GM_SINGLEPLAYER;
-		NextMenu( new StartGame( m_mainmenu ) );
+		NEWV( menu, StartGame, m_mainmenu );
+		NextMenu( menu );
 	}},
 	{ "QUICK START", [this] () -> void {
 		m_mainmenu->m_settings.game_mode = game::Settings::GM_SINGLEPLAYER;
@@ -32,14 +33,16 @@ Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 	}},
 	{ "SCENARIO", [this] () -> void {
 		m_mainmenu->m_settings.game_mode = game::Settings::GM_SCENARIO;
-		NextMenu( new Scenario( m_mainmenu ) );
+		NEWV( menu, Scenario, m_mainmenu );
+		NextMenu( menu );
 	}},
 	{ "LOAD GAME", [this] () -> void {
 		// TODO
 	}},
 	{ "MULTIPLAYER", [this] () -> void {
 		m_mainmenu->m_settings.game_mode = game::Settings::GM_MULTIPLAYER;
-		//NextMenu( new Multiplayer( m_mainmenu ) );
+		//NEWV( menu, Multiplayer, m_mainmenu )
+		//NextMenu( menu );
 		// TODO
 	}},
 	{ "VIEW CREDITS", [this] () -> void {

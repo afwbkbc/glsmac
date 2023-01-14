@@ -11,12 +11,6 @@ namespace texture {
 
 MAJOR_CLASS( TextureLoader, Loader )
 
-	virtual ~TextureLoader() {
-		if (m_transparent_color) {
-			delete m_transparent_color;
-		}
-	}
-
 	// loadtexture flags
 	static const uint8_t LT_NONE = 0;
 	static const uint8_t LT_ROTATE = 1;
@@ -34,15 +28,13 @@ MAJOR_CLASS( TextureLoader, Loader )
 	
 	// treat specific color as transparent
 	void SetTransparentColor( const types::Color::rgba_t rgba ) {
-		if (m_transparent_color) {
-			delete m_transparent_color;
-		}
-		m_transparent_color = new types::Color::rgba_t;
-		*m_transparent_color = rgba;
+		m_transparent_color = rgba;
+		m_is_transparent_color_set = true;
 	}
 	
 protected:
-	types::Color::rgba_t *m_transparent_color = nullptr;
+	types::Color::rgba_t m_transparent_color;
+	bool m_is_transparent_color_set = false;
 	
 };
 

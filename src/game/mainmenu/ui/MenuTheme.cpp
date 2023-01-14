@@ -14,18 +14,25 @@
 namespace game {
 namespace mainmenu {
 
+using namespace style;
+
 MenuTheme::MenuTheme() : ui::theme::Theme() {
-	
-	AddStyle( new style::SlidingMenuBlock );
-	AddStyle( new style::SlidingMenuItem );
-	AddStyle( new style::SlidingMenuItemUpperTop );
-	AddStyle( new style::SlidingMenuItemLowerTop );
-	AddStyle( new style::SlidingMenuItemLeft );
-	AddStyle( new style::SlidingMenuItemRight );
-	AddStyle( new style::SlidingMenuItemBottom );
-	AddStyle( new style::SlidingMenuItemBody );
-	AddStyle( new style::SlidingMenuButtonText );
-	AddStyle( new style::SlidingMenuTitleText );
+#define ADDSTYLE( _style ) \
+	{ \
+		NEWV( style, _style ); \
+		AddStyle( style ); \
+	}
+	ADDSTYLE( SlidingMenuBlock );
+	ADDSTYLE( SlidingMenuItem );
+	ADDSTYLE( SlidingMenuItemUpperTop );
+	ADDSTYLE( SlidingMenuItemLowerTop );
+	ADDSTYLE( SlidingMenuItemLeft );
+	ADDSTYLE( SlidingMenuItemRight );
+	ADDSTYLE( SlidingMenuItemBottom );
+	ADDSTYLE( SlidingMenuItemBody );
+	ADDSTYLE( SlidingMenuButtonText );
+	ADDSTYLE( SlidingMenuTitleText );
+#undef ADDSTYLE
 	
 }
 

@@ -28,7 +28,7 @@ void SlidingMenu::Show() {
 		choice_texts.push_back( it.first );
 	}
 
-	m_menu_block = new MenuBlock( this );
+	NEW( m_menu_block, MenuBlock, this );
 	for (auto& c : choice_texts) {
 		m_menu_block->AddItem(c);
 	}

@@ -17,8 +17,8 @@ void FontOpenGLRoutine::Stop() {
 }
 
 void FontOpenGLRoutine::RemoveFont( base::ObjectLink *link ) {
-	delete link->GetDstObject<Font>();
-	delete link;
+	DELETE( link->GetDstObject<Font>() );
+	DELETE( link );
 }
 
 void FontOpenGLRoutine::Iterate() {
@@ -63,13 +63,14 @@ opengl::Actor *FontOpenGLRoutine::AddCustomActor( scene::actor::Actor *actor ) {
 				gl_font = font_link->GetDstObject<Font>();
 			else {
 				m_shader_program->Enable();
-				gl_font = new Font( font, m_shader_program );
+				NEW( gl_font, Font, font, m_shader_program );
 				m_shader_program->Disable();
-				font_link = new base::ObjectLink( font, gl_font );
+				NEW( font_link, base::ObjectLink, font, gl_font );
 				m_gl_fonts.push_back( font_link );
 				font->m_renderer_object = font_link;
 			}
-			return new TextActor( (scene::actor::TextActor *)actor, gl_font );
+			NEWV( result, TextActor, (scene::actor::TextActor *)actor, gl_font );
+			return result;
 		}
 	}
 	return NULL;

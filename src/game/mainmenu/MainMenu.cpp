@@ -21,18 +21,19 @@ void MainMenu::Start() {
 	g_engine->GetUI()->SetTheme( &m_theme );
 	
 	// background
-	m_background = new Image( "xopeningb.pcx" );
+	NEW( m_background, Image, "xopeningb.pcx" );
 	m_background->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_BOTTOM );
 	m_background->SetZIndex( 0.5 );
 	g_engine->GetUI()->AddObject( m_background );
 
-	ShowMenu( new Main( this ) );
+	NEWV( menu, Main, this );
+	ShowMenu( menu );
 }
 
 void MainMenu::GoBack() {
 	if ( !m_menu_history.empty() ) {
 		m_menu_object->Hide();
-		delete m_menu_object;
+		DELETE( m_menu_object );
 		m_menu_object = m_menu_history.back();
 		m_menu_history.pop_back();
 		m_menu_object->Show();
@@ -46,10 +47,10 @@ void MainMenu::Stop() {
 	
 	if ( m_menu_object ) {
 		m_menu_object->Hide();
-		delete m_menu_object;
+		DELETE( m_menu_object );
 		
 		for (auto& it : m_menu_history) {
-			delete it;
+			DELETE( it );
 		}
 	}
 	

@@ -37,8 +37,9 @@ PlanetSize::PlanetSize( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "SELECT SI
 }) {}
 
 void PlanetSize::ChooseNext() {
+	SlidingMenu *menu;
 	if (m_mainmenu->m_settings.map_type == game::Settings::MT_CUSTOM) {
-		NextMenu( new Ocean( m_mainmenu ) );
+		NEW( menu, Ocean, m_mainmenu );
 	}
 	else {
 		// randomize settings
@@ -46,8 +47,9 @@ void PlanetSize::ChooseNext() {
 		m_mainmenu->m_settings.map_erosive = rand() % 3 + 1;
 		m_mainmenu->m_settings.map_lifeforms = rand() % 3 + 1;
 		m_mainmenu->m_settings.map_clouds = rand() % 3 + 1;
-		NextMenu( new Difficulty( m_mainmenu ) );
+		NEW( menu, Difficulty, m_mainmenu );
 	}
+	NextMenu( menu );
 }
 
 }

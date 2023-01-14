@@ -8,18 +8,33 @@
 
 #if DEBUG
 #include <mutex>
+#include <iostream>
+#include "debug/MemoryWatcher.h"
 #endif
 
 using namespace std;
 
 #if DEBUG
+
+using namespace debug;
 	
 #define DEBUG_STATS \
 	D( seconds_passed ) \
 	D( objects_created ) \
 	D( objects_destroyed ) \
 	D( objects_active ) \
+	D( bytes_allocated ) \
+	D( textures_loaded ) \
+	D( fonts_loaded ) \
 	D( frames_rendered ) \
+	D( opengl_buffers_count ) \
+	D( opengl_vertex_buffers_size ) \
+	D( opengl_index_buffers_size ) \
+	D( opengl_texture_buffers_count ) \
+	D( opengl_texture_buffers_size ) \
+	D( ui_elements_created ) \
+	D( ui_elements_destroyed )\
+	D( ui_elements_active )
 
 #define D( _stat ) struct { \
 		mutex stat_mutex; \
@@ -43,23 +58,55 @@ using namespace std;
 		g_debug_stats._stat.stat_mutex.unlock(); \
 	}
 
-	#define DEBUG_STAT_INC( _stat ) { \
+	#define DEBUG_STAT_CHANGE_BY( _stat, _by ) { \
 		g_debug_stats._stat.stat_mutex.lock(); \
-		g_debug_stats._stat.total++; \
-		g_debug_stats._stat.current++; \
+		g_debug_stats._stat.total += _by; \
+		g_debug_stats._stat.current += _by; \
 		g_debug_stats._stat.stat_mutex.unlock(); \
 	}
+	#define DEBUG_STAT_INC( _stat ) DEBUG_STAT_CHANGE_BY( _stat, 1 )
+	#define DEBUG_STAT_DEC( _stat ) DEBUG_STAT_CHANGE_BY( _stat, -1 )
+	
+	#define NEW( _var, _class, ... ) \
+		_var = new _class( __VA_ARGS__ ); \
+		g_memory_watcher.New( _var, sizeof( _class ), __FILE__, __LINE__ );
 
-	#define DEBUG_STAT_DEC( _stat ) ( g_debug_stats._stat-- ) { \
-		g_debug_stats._stat.stat_mutex.lock(); \
-		g_debug_stats._stat.total--; \
-		g_debug_stats._stat.current--; \
-		g_debug_stats._stat.stat_mutex.unlock(); \
-	}
+	#define NEWV( _var, _class, ... ) \
+		_class* _var; \
+		NEW( _var, _class, __VA_ARGS__ )
+
+	#define DELETE( _var ) \
+		g_memory_watcher.Delete( _var, __FILE__, __LINE__ ); \
+		delete _var;
+
+	#undef glGenBuffers
+	#define glGenBuffers( _size, _ptr ) g_memory_watcher.GLGenBuffers( _size, _ptr, __FILE__, __LINE__ )
+	
+	#undef glBindBuffer
+	#define glBindBuffer( _type, _ptr ) g_memory_watcher.GLBindBuffer( _type, _ptr, __FILE__, __LINE__ )
+
+	#undef glBufferData
+	#define glBufferData( _type, _size, _data, _mode ) g_memory_watcher.GLBufferData( _type, _size, _data, _mode, __FILE__, __LINE__ )
+
+	#undef glDeleteBuffers
+	#define glDeleteBuffers( _size, _ptr ) g_memory_watcher.GLDeleteBuffers( _size, _ptr, __FILE__, __LINE__ )
+	
+	/*
+	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
+	glBufferData( GL_ARRAY_BUFFER, mesh->GetVertexDataSize(), (GLvoid *)mesh->GetVertexData(), GL_STATIC_DRAW );
+
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ibo );
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, mesh->GetIndexDataSize(), (GLvoid *)mesh->GetIndexData(), GL_STATIC_DRAW);
+	 */
 	
 #else
+	#define DEBUG_STAT_CHANGE_BY( _stat, _by )
 	#define DEBUG_STAT_INC( _stat )
 	#define DEBUG_STAT_DEC( _stat )
+
+	#define NEW( _var, _class, ... ) _var = new _class( __VA_ARGS__ )
+	#define NEWV( _var, _class, ... ) auto* _var = new _class( __VA_ARGS__ )
+	#define DELETE( _var ) delete _var
 #endif
 	
 namespace base {

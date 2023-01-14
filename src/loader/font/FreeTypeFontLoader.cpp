@@ -29,7 +29,7 @@ types::Font *FreeTypeFontLoader::LoadFont( const string &name, const unsigned ch
 	else {
 		Log( "Loading font \"" + font_key + "\"");
 
-		types::Font *font = new types::Font;
+		NEWV( font, types::Font );
 		font->m_name = name;
 
 		FT_Face ftface;
@@ -59,7 +59,7 @@ types::Font *FreeTypeFontLoader::LoadFont( const string &name, const unsigned ch
 			bitmap->left = g->bitmap_left;
 			bitmap->top = g->bitmap_top;
 			sz = bitmap->width * bitmap->height;
-			bitmap->data = new unsigned char [sz];
+			bitmap->data = (unsigned char*) malloc( sz );
 			memcpy( bitmap->data, g->bitmap.buffer, sz );
 
 			font->m_dimensions.width += g->bitmap.width;
@@ -69,6 +69,8 @@ types::Font *FreeTypeFontLoader::LoadFont( const string &name, const unsigned ch
 		FT_Done_Face( ftface );
 
 		m_fonts[font_key] = font;
+		
+		DEBUG_STAT_INC( fonts_loaded );
 		
 		return font;
 	}

@@ -1,12 +1,16 @@
 #pragma once
 
+#include "Base.h"
+
 namespace base {
 
-class ObjectLink {
-public:
+MAJOR_CLASS( ObjectLink, base::Base )
 	template <class T1, class T2>
-	ObjectLink( const T1 *src_object, const T2 *dst_object ) : m_src_object( (const void *)src_object ), m_dst_object( (const void *)dst_object ) {
-		
+	ObjectLink( const T1 *src_object, const T2 *dst_object )
+		: base::Base()
+		, m_src_object( (const void *)src_object ), m_dst_object( (const void *)dst_object )
+	{
+		//
 	}
 	bool Removed() const {
 		return m_removed;

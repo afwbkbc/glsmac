@@ -41,15 +41,16 @@ CHILD_CLASS( Panel, UIContainer )
 	virtual void Create() {
 		UIContainer::Create();
 
-		AddChild( m_background = new Surface );
+		NEW( m_background, Surface );
+		AddChild( m_background );
 
-		m_borders.left = new Surface;
+		NEW( m_borders.left, Surface );
 		m_borders.left->SetAlign( ALIGN_LEFT );
-		m_borders.top = new Surface;
+		NEW( m_borders.top, Surface );
 		m_borders.top->SetAlign( ALIGN_TOP );
-		m_borders.right = new Surface;
+		NEW( m_borders.right, Surface );
 		m_borders.right->SetAlign( ALIGN_RIGHT );
-		m_borders.bottom = new Surface;
+		NEW( m_borders.bottom, Surface );
 		m_borders.bottom->SetAlign( ALIGN_BOTTOM );
 
 		AlignBorders();

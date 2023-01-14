@@ -8,7 +8,7 @@ MeshActor::MeshActor( const std::string &name, const mesh::Mesh *mesh ) : Actor(
 }
 
 MeshActor::~MeshActor() {
-	delete m_mesh;
+	DELETE( m_mesh );
 }
 
 const mesh::Mesh *MeshActor::GetMesh() const {

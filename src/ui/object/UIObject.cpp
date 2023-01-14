@@ -26,6 +26,10 @@ UIObject::UIObject( const string& class_name ) {
 }
 
 void UIObject::Create() {
+	
+	DEBUG_STAT_INC( ui_elements_created );
+	DEBUG_STAT_INC( ui_elements_active );
+	
 	m_created = true;
 }
 
@@ -33,6 +37,9 @@ void UIObject::Destroy() {
 	HideDebugFrame();
 	
 	m_created = false;
+
+	DEBUG_STAT_INC( ui_elements_destroyed );
+	DEBUG_STAT_DEC( ui_elements_active );
 }
 
 void UIObject::Iterate() {
@@ -407,7 +414,7 @@ void UIObject::SendEvent( const UIEvent* event ) {
 	}
 	
 	// processed, not needed anymore
-	delete event;
+	DELETE( event );
 }
 
 UIObject::vertex_t UIObject::GetAreaPosition() const {

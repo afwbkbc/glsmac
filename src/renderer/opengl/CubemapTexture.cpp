@@ -42,7 +42,7 @@ void CubemapTexture::Load() {
 
 	size_t bs = bw * bh * m_texture->m_bpp;
 
-	auto *block_data = new unsigned char[ bs ];
+	unsigned char *block_data = (unsigned char*) malloc( bs );
 
 	for (uint8_t i=0;i<6;i++) { // experimental, we assume GL_TEXTURE_CUBE_MAP_* are sequential
 

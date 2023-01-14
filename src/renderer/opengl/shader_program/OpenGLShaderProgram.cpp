@@ -62,12 +62,12 @@ void OpenGLShaderProgram::AddShader( GLenum type, const std::string data ) {
 	if ( !success ) {
 		GLint info_log_length;
 		glGetShaderiv( gl_shader, GL_INFO_LOG_LENGTH, &info_log_length );
-		GLchar* str_info_log = new GLchar[info_log_length + 1];
+		GLchar* str_info_log = (GLchar*) malloc( info_log_length + 1 );
 		glGetShaderInfoLog( gl_shader, info_log_length, NULL, str_info_log );
 
 		throw OpenGLShaderProgramError("Error compiling shader! shader data: '"+data+"' ; shader error: '"+str_info_log+"'");
 
-		delete str_info_log;
+		free( str_info_log );
 
 	}
 

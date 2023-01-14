@@ -1,13 +1,14 @@
 #pragma once
 
+#include "base/Base.h"
+
 #include <string>
 
 #include "base/ObjectLink.h"
 
 namespace types {
 
-class Font {
-public:
+MAJOR_CLASS( Font, base::Base )
 	virtual ~Font();
 
 	typedef struct dimensions_t {

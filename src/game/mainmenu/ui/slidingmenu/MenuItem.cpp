@@ -19,20 +19,26 @@ MenuItem::MenuItem( MenuBlock* menu, const string& text, const bool is_title )
 void MenuItem::Create() {
 	UIContainer::Create();
 
-	m_parts = {
-		new Surface( "SlidingMenuItemBody" ),
-		new Surface( "SlidingMenuItemLeft" ),
-		new Surface( "SlidingMenuItemRight" ),
-		new Surface( "SlidingMenuItemLowerTop" ),
-		new Surface( "SlidingMenuItemUpperTop" ),
-		new Surface( "SlidingMenuItemBottom" )
-	};
+	m_parts.clear();
+	
+#define ADDPART( _part ) \
+	{ \
+		NEWV( part, Surface, _part ); \
+		m_parts.push_back( part ); \
+	}
+	ADDPART( "SlidingMenuItemBody" );
+	ADDPART( "SlidingMenuItemLeft" );
+	ADDPART( "SlidingMenuItemRight" );
+	ADDPART( "SlidingMenuItemLowerTop" );
+	ADDPART( "SlidingMenuItemUpperTop" );
+	ADDPART( "SlidingMenuItemBottom" );
+#undef ADDPART
 	
 	for (auto& part : m_parts) {
 		AddChild( part );
 	}
 	
-	m_label = new Label( m_text );
+	NEW( m_label, Label, m_text );
 	m_label->SetClass( m_is_title ? "SlidingMenuTitleText" : "SlidingMenuButtonText" );
 	AddChild(m_label);
 }

@@ -29,8 +29,8 @@ void Scene::RemoveActor( base::ObjectLink *link ) {
 		link->GetSrcObject<scene::actor::Actor>()->m_renderer_object = NULL;
 	}
 	gl_actor->Unload();
-	delete gl_actor;
-	delete link;
+	DELETE( gl_actor );
+	DELETE( link );
 }
 
 void Scene::Update() {
@@ -62,10 +62,10 @@ void Scene::Update() {
 			auto actor_type = (*it)->GetType();
 			switch (actor_type) {
 				case (scene::actor::Actor::TYPE_MESH):
-					gl_actor = new MeshActor( (scene::actor::MeshActor *)*it );
+					NEW( gl_actor, MeshActor, (scene::actor::MeshActor *)*it );
 					break;
 				case (scene::actor::Actor::TYPE_IMAGE):
-					gl_actor = new ImageActor( (scene::actor::ImageActor *)*it );
+					NEW( gl_actor, ImageActor, (scene::actor::ImageActor *)*it );
 					break;
 				default:
 					gl_actor = m_routine->AddCustomActor( *it );
@@ -73,7 +73,7 @@ void Scene::Update() {
 
 			if ( gl_actor ) {
 				gl_actor->Load();
-				obj = new base::ObjectLink( (*it), gl_actor );
+				NEW( obj, base::ObjectLink, (*it), gl_actor );
 				m_gl_actors.push_back( obj );
 				(*it)->m_renderer_object = obj;
 			}
