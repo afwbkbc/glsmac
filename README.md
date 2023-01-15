@@ -89,4 +89,4 @@ GLSMAC code is created from scratch and tries to imitate original SMAC logic whi
 
 GLSMAC requires user to have original SMAC (+expansion) installed in order to operate in a way similar to original SMAC.
 
-All rights for SMAC/SMACX assets belong to their respective owners.
+All rights for SMAC/SMACX assets belong to their respective owners. AGPL license you see here only applies to GLSMAC code (and maybe custom-made assets in the future if I decide to make them).
