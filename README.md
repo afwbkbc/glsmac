@@ -86,3 +86,7 @@ If it behaves incorrectly: create issue and specify: 1) steps to reproduce 2) ex
 GLSMAC does not include any copyrighted assets from original SMAC, it is designed to use assets of existing SMAC installation on user's computer. It will also work with any third-party assets, as long as they are in same format and in same directory structure as original SMAC.
 
 GLSMAC code is created from scratch and tries to imitate original SMAC logic while not actually containing any of it. It does not disassemble original SMAC binaries and does not link to any of SMAC libraries.
+
+GLSMAC requires user to have original SMAC (+expansion) installed in order to operate in a way similar to original SMAC.
+
+All rights for SMAC/SMACX assets belong to their respective owners.
