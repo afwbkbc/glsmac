@@ -69,27 +69,27 @@ using namespace debug;
 	
 	#define NEW( _var, _class, ... ) \
 		_var = new _class( __VA_ARGS__ ); \
-		g_memory_watcher.New( _var, sizeof( _class ), __FILE__, __LINE__ );
+		g_memory_watcher->New( _var, sizeof( _class ), __FILE__, __LINE__ );
 
 	#define NEWV( _var, _class, ... ) \
 		_class* _var; \
 		NEW( _var, _class, __VA_ARGS__ )
 
 	#define DELETE( _var ) \
-		g_memory_watcher.Delete( _var, __FILE__, __LINE__ ); \
+		g_memory_watcher->Delete( _var, __FILE__, __LINE__ ); \
 		delete _var;
 
 	#undef glGenBuffers
-	#define glGenBuffers( _size, _ptr ) g_memory_watcher.GLGenBuffers( _size, _ptr, __FILE__, __LINE__ )
+	#define glGenBuffers( _size, _ptr ) g_memory_watcher->GLGenBuffers( _size, _ptr, __FILE__, __LINE__ )
 	
 	#undef glBindBuffer
-	#define glBindBuffer( _type, _ptr ) g_memory_watcher.GLBindBuffer( _type, _ptr, __FILE__, __LINE__ )
+	#define glBindBuffer( _type, _ptr ) g_memory_watcher->GLBindBuffer( _type, _ptr, __FILE__, __LINE__ )
 
 	#undef glBufferData
-	#define glBufferData( _type, _size, _data, _mode ) g_memory_watcher.GLBufferData( _type, _size, _data, _mode, __FILE__, __LINE__ )
+	#define glBufferData( _type, _size, _data, _mode ) g_memory_watcher->GLBufferData( _type, _size, _data, _mode, __FILE__, __LINE__ )
 
 	#undef glDeleteBuffers
-	#define glDeleteBuffers( _size, _ptr ) g_memory_watcher.GLDeleteBuffers( _size, _ptr, __FILE__, __LINE__ )
+	#define glDeleteBuffers( _size, _ptr ) g_memory_watcher->GLDeleteBuffers( _size, _ptr, __FILE__, __LINE__ )
 	
 	/*
 	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );

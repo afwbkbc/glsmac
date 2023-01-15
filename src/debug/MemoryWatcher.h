@@ -19,6 +19,7 @@ namespace debug {
 
 class MemoryWatcher {
 public:
+	MemoryWatcher();
 	~MemoryWatcher();
 	
 	void New( const Base* object, const size_t size, const string& file, const size_t line );
@@ -65,6 +66,6 @@ private:
 	
 };
 
-extern MemoryWatcher g_memory_watcher;
+extern MemoryWatcher* g_memory_watcher;
 
 }

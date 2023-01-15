@@ -85,7 +85,7 @@ void Overlay::Iterate() {
 		#undef D
 
 		// memory statistics
-		const auto stats = g_memory_watcher.GetLargestMemoryConsumerClasses( m_memory_stats_lines );
+		const auto stats = g_memory_watcher->GetLargestMemoryConsumerClasses( m_memory_stats_lines );
 		for ( auto i = 0 ; i < stats.size() ; i++ ) {
 			string size = to_string( stats[i].size ) + "b";
 			size.insert(size.begin(), 14 - size.length() * 1.5 , ' '); 

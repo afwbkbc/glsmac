@@ -29,7 +29,14 @@ using namespace base;
 
 namespace debug {
 
-MemoryWatcher g_memory_watcher;
+MemoryWatcher* g_memory_watcher = nullptr;
+
+MemoryWatcher::MemoryWatcher() {
+	if ( g_memory_watcher != nullptr ) {
+		throw runtime_error( "duplicate MemoryWatcher instantiation" );
+	}
+	g_memory_watcher = this;
+}
 
 MemoryWatcher::~MemoryWatcher() {
 	
