@@ -9,11 +9,10 @@ void OrthographicOpenGLShaderProgram::AddShaders() {
 \
 in vec3 aCoord; \
 in vec2 aTexCoord; \
-uniform float uZIndex; \
 out vec2 texpos; \
 \
 void main(void) { \
-	gl_Position = vec4( vec3(aCoord.xy, aCoord.z + uZIndex), 1.0 ); \
+	gl_Position = vec4( vec3(aCoord.xyz), 1.0 ); \
 	texpos = vec2(aTexCoord); \
 } \
 \
@@ -36,7 +35,6 @@ void main(void) { \
 void OrthographicOpenGLShaderProgram::Initialize() {
 	m_gl_attributes.tex_coord = this->GetAttributeLocation( "aTexCoord" );
 	m_gl_uniforms.texture = this->GetUniformLocation( "uTexture" );
-	m_gl_uniforms.z_index = this->GetUniformLocation( "uZIndex" );
 	m_gl_attributes.coord = this->GetAttributeLocation( "aCoord" );
 };
 

@@ -48,7 +48,6 @@ void UIContainer::CreateChild( UIObject *object ) {
 	object->Create();
 	object->Realign();
 	object->CreateActors();
-	object->SetZIndex( GetChildZIndex() );
 	object->Redraw();
 }
 
@@ -83,12 +82,12 @@ void UIContainer::RemoveChild( UIObject *object ) {
 	DestroyChild( object );
 }
 
-void UIContainer::SetZIndex( float z_index ) {
-	UIObject::SetZIndex( z_index );
-
-	float child_z_index = GetChildZIndex();
-	for ( auto it = m_child_objects.begin() ; it < m_child_objects.end() ; ++it )
-		(*it)->SetZIndex( child_z_index );
+void UIContainer::UpdateZIndex() {
+	UIObject::UpdateZIndex();
+	
+	for ( auto &child : m_child_objects ){
+		child->UpdateZIndex();
+	}
 }
 
 void UIContainer::Realign() {
@@ -103,10 +102,6 @@ void UIContainer::Redraw() {
 
 	for ( auto it = m_child_objects.begin() ; it < m_child_objects.end() ; ++it )
 		(*it)->Redraw();
-}
-
-const float UIContainer::GetChildZIndex() const {
-	return m_z_index - 0.00001; // every child should be a bit above it's parent to be able to be seen
 }
 
 void UIContainer::SetOverflow( const overflow_t overflow ) {

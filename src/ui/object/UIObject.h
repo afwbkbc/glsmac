@@ -65,6 +65,7 @@ MAJOR_CLASS( UIObject, base::Base )
 	size_t GetHeight() const;
 	
 	virtual void SetZIndex( float z_index );
+	void UpdateZIndex();
 	void SetLeft( const coord_t px );
 	void SetRight( const coord_t px );
 	void SetTop( const coord_t px );
@@ -117,7 +118,10 @@ protected:
 
 	std::vector<scene::actor::Actor *> m_actors = {};
 
-	float m_z_index = 0.0f;
+	float m_depth = 0;
+	float m_z_index = 0.5f;
+	
+	float m_absolute_z_index = 0.0f;
 
 	typedef struct object_area_struct {
 		coord_t left;

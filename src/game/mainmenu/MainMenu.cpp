@@ -23,7 +23,7 @@ void MainMenu::Start() {
 	// background
 	NEW( m_background, Image, "xopeningb.pcx" );
 	m_background->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_BOTTOM );
-	m_background->SetZIndex( 0.5 );
+	//m_background->SetZIndex( 0.5 );
 	g_engine->GetUI()->AddObject( m_background );
 
 	NEWV( menu, Main, this );

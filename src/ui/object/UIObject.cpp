@@ -70,17 +70,31 @@ void UIObject::SetParentObject( UIContainer *parent_object ) {
 		throw UIError( "parent object already set" );
 #endif
 	m_parent_object = parent_object;
+	m_depth = m_parent_object->m_depth + 1;
+	UpdateZIndex();
 	UpdateObjectArea();
 }
 
 void UIObject::SetZIndex( float z_index ) {
+	if ( m_z_index != z_index ) {
 #if DEBUG
-	if ( z_index < -1.0 || z_index > 1.0 )
-		throw UIError( "invalid z-index " + to_string( z_index ) );
+		if ( z_index < 0.1 || z_index > 0.9 )
+			throw UIError( "invalid z-index " + to_string( z_index ) );
 #endif
-	for ( auto it = m_actors.begin() ; it < m_actors.end() ; ++it )
-		(*it)->SetPositionZ( z_index );
-	m_z_index = z_index;
+		m_z_index = z_index;
+		UpdateZIndex();
+	}
+}
+
+void UIObject::UpdateZIndex() {
+	float new_absolute_z_index = std::pow( 0.1, m_depth ) * m_z_index;
+	if ( m_parent_object ) {
+		new_absolute_z_index += m_parent_object->m_absolute_z_index;
+	}
+	if ( new_absolute_z_index != m_absolute_z_index ) {
+		m_absolute_z_index = new_absolute_z_index;
+		Realign();
+	}
 }
 
 scene::Scene *UIObject::GetSceneOfActor( const scene::actor::Actor *actor ) const {

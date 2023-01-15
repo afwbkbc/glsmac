@@ -186,13 +186,13 @@ void UI::HideDebugFrame( const UIObject* object ) {
 
 void UI::ResizeDebugFrame( const UIObject* object, const debug_frame_data_t* data ) {
 	auto geom = object->GetAreaGeometry();
-	data->mesh->SetCoords( {
+	data->mesh->SetCoords({
 		ClampX(geom.first.x),
 		ClampY(geom.first.y)
-	}, {
+	},{
 		ClampX(geom.second.x),
 		ClampY(geom.second.y)
-	});
+	}, 2.0 );
 	
 }
 

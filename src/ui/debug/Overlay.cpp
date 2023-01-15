@@ -16,18 +16,17 @@ void Overlay::Create() {
 	UIContainer::Create();
 
 	NEW( m_background_texture, types::Texture, "OverlayBackground", 1, 1 );
-	m_background_texture->SetPixel( 0, 0, { 0.0, 0.0, 0.0, 0.5 } );
+	m_background_texture->SetPixel( 0, 0, { 0.0, 1.0, 0.0, 0.5 } );
 	
-	NEW( m_background, Surface );
+/*	NEW( m_background, Surface );
 	m_background->SetAlign( UIObject::ALIGN_TOP );
 	m_background->SetLeft( 0 );
 	m_background->SetRight( 0 );
 	m_background->SetTop( 0 );
 	m_background->SetHeight( 200 );
-	m_background->SetZIndex( 0.8 );
+	m_background->SetZIndex( 0.9 );
 	m_background->SetTexture( m_background_texture );
-	
-	g_engine->GetUI()->AddObject( m_background );
+	g_engine->GetUI()->AddObject( m_background );*/
 	
 	m_font_size = 16;
 	m_memory_stats_lines = 10;
@@ -64,7 +63,7 @@ void Overlay::Destroy() {
 	DEBUG_STATS;
 	#undef D
 	
-	g_engine->GetUI()->RemoveObject( m_background );
+//	g_engine->GetUI()->RemoveObject( m_background );
 	DELETE( m_background_texture );
 	
 	UIContainer::Destroy();

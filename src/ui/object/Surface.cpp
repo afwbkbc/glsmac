@@ -35,7 +35,8 @@ void Surface::Align() {
 
 	m_background_mesh->SetCoords(
 		{ ClampX( m_object_area.left ), ClampY( m_object_area.top ) },
-		{ ClampX( m_object_area.right ), ClampY( m_object_area.bottom ) }
+		{ ClampX( m_object_area.right ), ClampY( m_object_area.bottom ) },
+		-m_z_index
 	);
 }
 

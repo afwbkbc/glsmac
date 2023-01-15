@@ -22,7 +22,7 @@ public:
 	virtual void Realign();
 	virtual void Redraw();
 
-	virtual void SetZIndex( float z_index );
+	void UpdateZIndex();
 	
 	void SetOverflow( const overflow_t overflow );
 	void SendEvent( const event::UIEvent* event );
@@ -33,7 +33,6 @@ protected:
 private:
 	void CreateChild( UIObject *object );
 	void DestroyChild( UIObject *object );
-	const float GetChildZIndex() const;
 };
 
 } /* namespace object */
