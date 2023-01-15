@@ -19,11 +19,6 @@
 
 #include "theme/Theme.h"
 
-#if DEBUG
-#include "debug/Overlay.h"
-#include "debug/console/Console.h"
-#endif
-
 using namespace std;
 using namespace scene;
 using namespace types;
@@ -65,16 +60,10 @@ MAJOR_CLASS( UI, base::Module )
 	void ShowDebugFrame( const UIObject* object );
 	void HideDebugFrame( const UIObject* object );
 	void ResizeDebugFrame( const UIObject* object );
-	
-	void ShowDebugOverlay();
-	void HideDebugOverlay();
 #else
 	void ShowDebugFrame( const UIObject* object ) {}
 	void HideDebugFrame( const UIObject* object ) {}
 	void ResizeDebugFrame( const UIObject* object ) {}
-	
-	void ShowDebugOverlay() {}
-	void HideDebugOverlay() {}
 #endif
 	
 protected:
@@ -108,9 +97,6 @@ private:
 	debug_frames_map_t m_debug_frames = {};
 	
 	void ResizeDebugFrame( const UIObject* object, const debug_frame_data_t* data );
-	
-	debug::Overlay *m_debug_overlay = nullptr;
-	debug::Console *m_debug_console = nullptr;
 #endif
 	
 };

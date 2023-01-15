@@ -1,24 +1,24 @@
-#include "Overlay.h"
+#include "DebugOverlay.h"
 
 #include "engine/Engine.h"
 
 using namespace std;
-
 using namespace types;
-
 namespace ui {
-
 using namespace object;
+}
 
 namespace debug {
 
-void Overlay::Create() {
-	UIContainer::Create();
-
-	NEW( m_background_texture, types::Texture, "OverlayBackground", 1, 1 );
-	m_background_texture->SetPixel( 0, 0, { 0.0, 1.0, 0.0, 0.5 } );
+void DebugOverlay::Start() {
+	/*NEW( m_background_texture, types::Texture, "OverlayBackground", 2, 2 );
+	m_background_texture->SetPixel( 0, 0, { 1.0, 0.0, 0.0, 0.5 } );
+	m_background_texture->SetPixel( 1, 0, { 0.0, 1.0, 0.0, 0.5 } );
+	m_background_texture->SetPixel( 0, 1, { 0.0, 0.0, 1.0, 0.5 } );
+	m_background_texture->SetPixel( 1, 1, { 1.0, 1.0, 1.0, 0.5 } );
 	
-/*	NEW( m_background, Surface );
+	//NEW( m_background, Surface );
+	NEW( m_background, Surface );
 	m_background->SetAlign( UIObject::ALIGN_TOP );
 	m_background->SetLeft( 0 );
 	m_background->SetRight( 0 );
@@ -26,8 +26,8 @@ void Overlay::Create() {
 	m_background->SetHeight( 200 );
 	m_background->SetZIndex( 0.9 );
 	m_background->SetTexture( m_background_texture );
-	g_engine->GetUI()->AddObject( m_background );*/
-	
+	g_engine->GetUI()->AddObject( m_background );
+	*/
 	m_font_size = 16;
 	m_memory_stats_lines = 10;
 	
@@ -49,7 +49,7 @@ void Overlay::Create() {
 	m_stats_timer.SetInterval( 1000 ); // track stats/second
 }
 
-void Overlay::Destroy() {
+void DebugOverlay::Stop() {
 	
 	m_stats_timer.Stop();
 
@@ -63,15 +63,12 @@ void Overlay::Destroy() {
 	DEBUG_STATS;
 	#undef D
 	
-//	g_engine->GetUI()->RemoveObject( m_background );
-	DELETE( m_background_texture );
+	//g_engine->GetUI()->RemoveObject( m_background );
+	//DELETE( m_background_texture );
 	
-	UIContainer::Destroy();
 }
 
-void Overlay::Iterate() {
-	UIContainer::Iterate();
-
+void DebugOverlay::Iterate() {
 	if (m_stats_timer.Ticked()) {
 		ssize_t total;
 		ssize_t current;
@@ -93,10 +90,10 @@ void Overlay::Iterate() {
 			m_memory_stats_labels[i]->SetText( size + "  " + count + "  " + stats[i].key );
 		}
 	}
-}	
+}
 
 // not using themes because overlay should be independent of them
-void Overlay::ActivateLabel( Label* label, const size_t left, const size_t top ) {
+void DebugOverlay::ActivateLabel( Label* label, const size_t left, const size_t top ) {
 	Log( "created label " + label->GetName() );
 	label->SetFont( m_stats_font );
 	label->SetTextColor( { 0.5, 1.0, 0.5, 1.0 } );
@@ -106,5 +103,5 @@ void Overlay::ActivateLabel( Label* label, const size_t left, const size_t top )
 	g_engine->GetUI()->AddObject( label );
 }
 
-}
+
 }

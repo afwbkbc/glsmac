@@ -12,6 +12,7 @@ TextActor::~TextActor() {
 }
 
 void TextActor::Draw( shader_program::OpenGLShaderProgram *shader_program ) {
+	
 	const scene::actor::TextActor *text_actor = (const scene::actor::TextActor *)m_actor;
 	auto position = m_actor->GetPosition();
 	m_gl_font->Render( text_actor->GetText().c_str(), position.x, position.y, position.z, text_actor->GetColor() );

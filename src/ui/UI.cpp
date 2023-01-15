@@ -30,23 +30,13 @@ void UI::Start() {
 #if DEBUG
 	NEW( m_debug_scene, Scene, "UIDebug", SCENE_TYPE_ORTHO );
 	g_engine->GetRenderer()->AddScene( m_debug_scene );	
-	
-	NEW( m_debug_console, debug::Console );
-	m_debug_console->UpdateHeight();
-	m_root_object.AddChild( m_debug_console );
-	
-	ShowDebugOverlay();
 #endif
 }
 
 void UI::Stop() {
 	Log( "Destroying UI" );
 
-	HideDebugOverlay();
-	
 #if DEBUG
-	m_root_object.RemoveChild( m_debug_console );
-	
 	g_engine->GetRenderer()->RemoveScene( m_debug_scene );
 	DELETE( m_debug_scene );
 #endif
@@ -87,9 +77,6 @@ void UI::Resize() {
 #if DEBUG
 	for (auto& it : m_debug_frames) {
 		ResizeDebugFrame( it.first, &it.second );
-	}
-	if ( m_debug_console ) {
-		m_debug_console->UpdateHeight();
 	}
 #endif
 	
@@ -203,19 +190,6 @@ void UI::ResizeDebugFrame( const UIObject* object ) {
 	}
 }
 
-void UI::ShowDebugOverlay() {
-	if ( !m_debug_overlay ) {
-		NEW( m_debug_overlay, debug::Overlay );
-		AddObject( m_debug_overlay );
-	}
-}
-
-void UI::HideDebugOverlay() {
-	if ( m_debug_overlay ) {
-		RemoveObject( m_debug_overlay );
-		m_debug_overlay = nullptr;
-	}
-}
 #endif
 
 } /* namespace ui */

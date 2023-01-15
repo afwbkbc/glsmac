@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include "util/System.h"
 #include "debug/MemoryWatcher.h"
+#include "debug/DebugOverlay.h"
 using namespace util;
 #endif
 
@@ -105,6 +106,11 @@ int main(const int argc, const char *argv[]) {
 
 		scheduler::SimpleScheduler scheduler;
 
+#if DEBUG
+		NEWV( debug_overlay, debug::DebugOverlay );
+		scheduler.AddTask( debug_overlay );
+#endif
+		
 		// game entry point
 		NEWV( task, game::intro::Intro );
 		scheduler.AddTask( task );

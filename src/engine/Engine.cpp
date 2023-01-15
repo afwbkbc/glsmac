@@ -72,24 +72,4 @@ void Engine::ShutDown() {
 	m_threads.main.SetCommand( base::Thread::COMMAND_STOP );
 }
 
-#if DEBUG
-bool Engine::IsDebugMode() {
-	return m_is_debug_mode;
-}
-
-void Engine::EnableDebugMode() {
-	if ( !m_is_debug_mode ) {
-		m_is_debug_mode = true;
-		GetUI()->ShowDebugOverlay();
-	}
-}
-
-void Engine::DisableDebugMode() {
-	if ( m_is_debug_mode ) {
-		m_is_debug_mode = false;
-		GetUI()->HideDebugOverlay();
-	}
-}
-#endif
-
 } /* namespace engine */

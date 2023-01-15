@@ -53,7 +53,8 @@ void Scene::Update() {
 	}
 
 	// add new actors
-	for ( auto it = GetScene()->GetActors()->begin() ; it < GetScene()->GetActors()->end() ; it++ ) {
+	auto* actors = GetScene()->GetActors();
+	for ( auto it = actors->begin() ; it < actors->end() ; it++ ) {
 		obj = (*it)->m_renderer_object;
 		if ( obj == NULL ) {
 
@@ -83,8 +84,9 @@ void Scene::Update() {
 }
 
 void Scene::Draw( shader_program::OpenGLShaderProgram *shader_program ) {
-	for ( auto it = m_gl_actors.begin() ; it < m_gl_actors.end() ; ++it )
+	for ( auto it = m_gl_actors.begin() ; it < m_gl_actors.end() ; ++it ) {
 		(*it)->GetDstObject<Actor>()->Draw( shader_program );
+	}
 }
 
 } /* namespace opengl */

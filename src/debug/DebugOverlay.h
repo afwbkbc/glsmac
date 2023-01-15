@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui/object/UIContainer.h"
+#include "base/Task.h"
 
 #include <vector>
 #include <string>
@@ -11,20 +11,19 @@
 #include "ui/object/Surface.h"
 
 using namespace types;
-
+using namespace ui;
 namespace ui {
-
 using namespace object;
-
+}
 namespace debug {
-	
-CHILD_CLASS(Overlay, UIContainer)
 
-	void Create();
-	void Destroy();
+CHILD_CLASS( DebugOverlay, base::Task )
+	
+	void Start();
+	void Stop();
 	void Iterate();
 
-private:
+protected:
 	util::Timer m_stats_timer;
 	
 	Texture* m_background_texture = nullptr;
@@ -40,7 +39,8 @@ private:
 	vector<Label*> m_memory_stats_labels = {};
 
 	void ActivateLabel( Label* label, const size_t left, const size_t top );
+
+	
 };
 
-}
 }

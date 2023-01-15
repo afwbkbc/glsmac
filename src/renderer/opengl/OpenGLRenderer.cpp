@@ -34,7 +34,7 @@ OpenGLRenderer::OpenGLRenderer( const std::string title, const unsigned short wi
 	m_aspect_ratio = (float) m_options.window_width/m_options.window_height;
 
 
-	NEWV( sp_skybox, shader_program::SkyboxOpenGLShaderProgram );
+/*	NEWV( sp_skybox, shader_program::SkyboxOpenGLShaderProgram );
 	m_shader_programs.push_back( sp_skybox );
 	NEWV( r_skybox, routine::SkyboxOpenGLRoutine, sp_skybox );
 	m_routines.push_back( r_skybox );
@@ -43,7 +43,7 @@ OpenGLRenderer::OpenGLRenderer( const std::string title, const unsigned short wi
 	m_shader_programs.push_back( sp_world );
 	NEWV( r_world, routine::WorldOpenGLRoutine, sp_world );
 	m_routines.push_back( r_world );
-
+*/
 	NEWV( sp_orthographic, shader_program::OrthographicOpenGLShaderProgram );
 	m_shader_programs.push_back( sp_orthographic );
 	NEWV( r_overlay, routine::OverlayOpenGLRoutine, sp_orthographic );
@@ -132,7 +132,7 @@ void OpenGLRenderer::Start() {
 	//glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
 
 	uint32_t nothing = 0;
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &nothing );
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &nothing );
 	if ( glGetError() ) {
 		throw RendererError( "Error loading texture" );
 	};
@@ -315,7 +315,7 @@ void OpenGLRenderer::LoadTexture( const types::Texture* texture ) {
 		}
 		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
 
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)texture->m_width, (GLsizei)texture->m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture->m_bitmap );
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, (GLsizei)texture->m_width, (GLsizei)texture->m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture->m_bitmap );
 		if ( glGetError() ) {
 			throw RendererError( "Error loading texture" );
 		};
