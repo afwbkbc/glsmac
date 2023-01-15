@@ -5,33 +5,51 @@ Note: you will still need to own original game and expansion - this client uses 
 
 GLSMAC discord : https://discord.gg/fWG3xK7cUx
 
-- Why?
+### Why?
 
 SMAC was a great game, possibly the best in 4x genre, but it's outdated so much it barely runs on modern systems. Especially multiplayer (which is based on ancient directplay).
 
-- What will be same between GLSMAC and original game?
+### What will be same between GLSMAC and original game?
 
 Models, images, movies, texts, lore, factions, game rules (such as tech trees, types of armor/weapons etc), UI
 
-- What will be completely different?
+### What will be completely different?
 
 Graphics engine, network code are fully rewritten to allow it run as smoothly as possible.
 
-- What may differ slightly?
+### What may differ slightly?
 
 Random maps generation, AI, dynamic music, some UI parts. While I'll try to get them as close as possible to original logic, they will still be recreated from scratch.
 
-- Compatibility?
+### Compatibility?
 
 Network won't be compatible to original client (so you can't play together with somebody running it).
 
 Maybe I'll make saves and maps compatible, but it's very low priority.
 
-- Other improvements?
+### Other improvements?
 
 Once I replicate original game, I'll focus on other things, such as: larger maps, larger maximum number of players, custom mod support, online services such as game browser or hosting long-turns games (where people can login and make 1 turn per day or so), alternative art packs (used instead of original, this may mean better graphics)
 
-- Build instructions
+### Roadmap
+
+Versions 0.x: replicating original SMAC gameplay as closely as possible (but without bugs)
+    0.1: fundamental engine functions, such as: rendering, UI, netcode, sound system
+    0.2: basic map functions, such as: tiles, mapgen, creating/saving/loading games, map rendering
+    0.3: basic multiplayer: ability to host and join games, lobby, save/load games with same players. multiplayer support will be maintained during further steps from now on
+    0.4: game processing, such as: game turns, units, buildings, technologies, building of bases, terraforming, basic combat, victory by conquest
+    0.5: all remaining SMAC units, buildings, terraformings, tech, etc
+    0.6: all remaining victory types
+    0.7: AI (computer opponents, cities automation, units automation, etc) and diplomacy
+    0.8: alien lifeforms, ecology
+    0.9: all remaining in-game UI, including game settings
+    0.10: non-crucial things like movies, interludes
+    0.11: final polishing and bugfixing
+Versions 1.x: fixing bugs, adding optional small features that weren't present in original SMAC but won't change it's gameplay drastically. See 'GLSMAC 1.x features' section
+Versions 2.x: adding all kinds of features, as long as they are worth the time. See 'GLSMAC 2.x features' section
+Versions 3.x: not sure yet, probably something cool
+
+### Build instructions
 
 You will need following libraries (-dev versions): FreeType2, SDL2, SDL2_image, GL, GLEW
 
@@ -47,11 +65,11 @@ For same build as before (or Release if it's first build): cmake . && make
 
 Add -j parameter to make to speed up if you have multiple cores, i.e. "make -j9" for 8
 
-- Launch
+### Launch
 
 Just run ./bin/GLSMAC <smac_directory>
 
-- Reporting problems
+### Reporting problems
 
 If you encountered problem, first thing to try is to update to newest version, maybe it was already fixed.
 
@@ -62,3 +80,9 @@ If it crashes: 1) use debug build 2) run gdb --args ./bin/GLSMAC <smac_directory
 If it freezes: 1) use debug build 2) run gdb --args ./bin/GLSMAC <smac_directory>, get to where it freezes, then press Ctrl+C, type "bt" and create issue with backtrace and steps to reproduce
 
 If it behaves incorrectly: create issue and specify: 1) steps to reproduce 2) expected behavior 3) actual behavior ; attach screenshots if needed
+
+### Copyright disclaimer
+
+GLSMAC does not include any copyrighted assets from original SMAC, it is designed to use assets of existing SMAC installation on user's computer. It will also work with any third-party assets, as long as they are in same format and in same directory structure as original SMAC.
+
+GLSMAC code is created from scratch and tries to imitate original SMAC logic while not actually containing any of it.
