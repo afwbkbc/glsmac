@@ -30,14 +30,7 @@ void Label::SetTextColor( const Color& color ) {
 void Label::SetFont( Font* font ) {
 	if ( m_font != font ) {
 		m_font = font;
-		if ( m_actor ) {
-			g_engine->GetUI()->GetTextScene()->RemoveActor(m_actor);
-			Log( "Deleting text actor " + m_actor->GetName() );
-			DELETE( m_actor );
-		}
-		NEW( m_actor, scene::actor::TextActor, m_font, m_text, m_color );
-		Log( "Created text actor " + m_actor->GetName() + " with '" + m_text + "'" );
-		g_engine->GetUI()->GetTextScene()->AddActor(m_actor);
+		UpdateActor();
 	}
 }
 
@@ -45,9 +38,7 @@ void Label::Create() {
 	UIObject::Create();
 	
 	if ( m_font ) {
-		NEW( m_actor, scene::actor::TextActor, m_font, m_text, m_color );
-		Log( "Created text actor " + m_actor->GetName() + " with '" + m_text + "'" );
-		g_engine->GetUI()->GetTextScene()->AddActor(m_actor);
+		UpdateActor();
 	}
 
 }
@@ -111,6 +102,17 @@ void Label::ApplyStyle() {
 	if ( Has( Style::A_FONT ) ) {
 		SetFont( (Font*)GetObject( Style::A_FONT ) );
 	}
+}
+
+void Label::UpdateActor() {
+	if ( m_actor ) {
+		g_engine->GetUI()->GetTextScene()->RemoveActor(m_actor);
+		Log( "Deleting text actor " + m_actor->GetName() );
+		DELETE( m_actor );
+	}
+	NEW( m_actor, scene::actor::TextActor, m_font, m_text, m_color );
+	Log( "Created text actor " + m_actor->GetName() + " with '" + m_text + "'" );
+	g_engine->GetUI()->GetTextScene()->AddActor(m_actor);
 }
 
 }

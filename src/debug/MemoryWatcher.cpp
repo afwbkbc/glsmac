@@ -33,7 +33,7 @@ MemoryWatcher g_memory_watcher;
 
 MemoryWatcher::~MemoryWatcher() {
 	
-	Log( "checking for possible memory leaks" );
+	Log( "Checking for possible memory leaks" );
 	
 	if ( !m_allocated_objects.empty() ) {
 		Log( "WARNING: " + to_string( m_allocated_objects.size() ) + " objects were never freed (possible memory leaks?):" );
@@ -42,6 +42,9 @@ MemoryWatcher::~MemoryWatcher() {
 			ptrstr << o.second.ptr;
 			Log( "    (" + ptrstr.str() + ") " + o.second.object_name + " @" + o.second.source );
 		}
+	}
+	else {
+		Log( "No memory leaks detected." );
 	}
 }
 
@@ -65,7 +68,7 @@ void MemoryWatcher::New( const Base* object, const size_t size, const string& fi
 	DEBUG_STAT_CHANGE_BY( bytes_allocated, size );
 
 	// VERY spammy
-	//Log( "allocated " + to_string( size ) + "b for " + object->GetNamespace() + " @" + source );
+	//Log( "Allocated " + to_string( size ) + "b for " + object->GetNamespace() + " @" + source );
 }
 
 void MemoryWatcher::Delete( const Base* object, const string& file, const size_t line ) {
@@ -83,7 +86,7 @@ void MemoryWatcher::Delete( const Base* object, const string& file, const size_t
 	DEBUG_STAT_CHANGE_BY( bytes_allocated, -obj.size );
 
 	// VERY spammy
-	//Log( "freed " + to_string( obj.size ) + "b from " + object->GetNamespace() + " @" + source );
+	//Log( "Freed " + to_string( obj.size ) + "b from " + object->GetNamespace() + " @" + source );
 	
 	m_allocated_objects.erase( it );
 }
@@ -96,7 +99,7 @@ void MemoryWatcher::GLGenBuffers( GLsizei n, GLuint * buffers, const string& fil
 		throw runtime_error( "glGenBuffers with size " + to_string(n) + ", suspicious, is it a typo? @" + source );
 	}
 	glGenBuffers_real( n, buffers );
-	Log( "created opengl buffer " + to_string( *buffers ) + " @" + source );
+	Log( "Created opengl buffer " + to_string( *buffers ) + " @" + source );
 	
 	if ( m_opengl.buffers.find( *buffers ) != m_opengl.buffers.end() ) {
 		throw runtime_error( "glGenBuffers buffer id overlap @" + source );
@@ -126,14 +129,14 @@ void MemoryWatcher::GLBindBuffer( GLenum target, GLuint buffer, const string& fi
 				throw runtime_error( "glBindBuffer buffer " + to_string( buffer ) + " was previously used as index buffer, but now vertex @" + source );
 			}
 			m_opengl.vertex_buffers.insert( buffer );
-			//Log("binding to opengl vertex buffer " + to_string( buffer ) + " @" + source );
+			//Log("Binding to opengl vertex buffer " + to_string( buffer ) + " @" + source );
 			if ( m_opengl.vertex_buffer_sizes.find( buffer ) == m_opengl.vertex_buffer_sizes.end() ) {
 				m_opengl.vertex_buffer_sizes[ buffer ] = 0;
 			}
 		}
 		else {
 			if ( m_opengl.current_vertex_buffer != 0 ) {
-				//Log("unbinding from opengl vertex buffer " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
+				//Log("Unbinding from opengl vertex buffer " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
 			}
 		}
 		m_opengl.current_vertex_buffer = buffer;
@@ -150,14 +153,14 @@ void MemoryWatcher::GLBindBuffer( GLenum target, GLuint buffer, const string& fi
 				throw runtime_error( "glBindBuffer buffer " + to_string( buffer ) + " was previously used as vertex buffer, but now index @" + source );
 			}
 			m_opengl.index_buffers.insert( buffer );
-			//Log("binding to opengl index buffer " + to_string( buffer ) + " @" + source );
+			//Log("Binding to opengl index buffer " + to_string( buffer ) + " @" + source );
 			if ( m_opengl.index_buffer_sizes.find( buffer ) == m_opengl.index_buffer_sizes.end() ) {
 				m_opengl.index_buffer_sizes[ buffer ] = 0;
 			}
 		}
 		else {
 			if ( m_opengl.current_index_buffer != 0 ) {
-				//Log("unbinding from opengl index buffer " + to_string( m_opengl.current_index_buffer  ) + " @" + source );
+				//Log("Unbinding from opengl index buffer " + to_string( m_opengl.current_index_buffer  ) + " @" + source );
 			}
 		}
 		m_opengl.current_index_buffer = buffer;
@@ -180,10 +183,10 @@ void MemoryWatcher::GLBufferData( GLenum target, GLsizeiptr size, const void * d
 		}
 		size_t old_size = m_opengl.vertex_buffer_sizes.at( m_opengl.current_vertex_buffer );
 		if ( old_size > 0 ) {
-			//Log( "freeing " + to_string( size ) + " bytes from opengl vertex buffer " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
+			//Log( "Freeing " + to_string( size ) + " bytes from opengl vertex buffer " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
 			DEBUG_STAT_CHANGE_BY( opengl_vertex_buffers_size, -old_size );
 		}
-		//Log( "loading " + to_string( size ) + " bytes into opengl vertex buffer " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
+		//Log( "Loading " + to_string( size ) + " bytes into opengl vertex buffer " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
 		m_opengl.vertex_buffer_sizes[ m_opengl.current_vertex_buffer ] = size;
 		DEBUG_STAT_CHANGE_BY( opengl_vertex_buffers_size, size );
 	}
@@ -193,10 +196,10 @@ void MemoryWatcher::GLBufferData( GLenum target, GLsizeiptr size, const void * d
 		}
 		size_t old_size = m_opengl.index_buffer_sizes.at( m_opengl.current_index_buffer );
 		if ( old_size > 0 ) {
-			//Log( "freeing " + to_string( size ) + " bytes from opengl index buffer " + to_string( m_opengl.current_index_buffer ) + " @" + source );
+			//Log( "Freeing " + to_string( size ) + " bytes from opengl index buffer " + to_string( m_opengl.current_index_buffer ) + " @" + source );
 			DEBUG_STAT_CHANGE_BY( opengl_index_buffers_size, -old_size );
 		}
-		//Log( "loading " + to_string( size ) + " bytes into opengl index buffer " + to_string( m_opengl.current_index_buffer ) + " @" + source );
+		//Log( "Loading " + to_string( size ) + " bytes into opengl index buffer " + to_string( m_opengl.current_index_buffer ) + " @" + source );
 		m_opengl.index_buffer_sizes[ m_opengl.current_index_buffer ] = size;
 		DEBUG_STAT_CHANGE_BY( opengl_index_buffers_size, size );
 	}
@@ -231,11 +234,11 @@ void MemoryWatcher::GLDeleteBuffers( GLsizei n, const GLuint * buffers, const st
 		throw runtime_error( "glDeleteBuffers buffer is both vertex buffer and index buffer, is it a bug? @" + source );
 	}
 	if ( it_vertex != m_opengl.vertex_buffer_sizes.end() ) {
-		Log( "destroying opengl vertex buffer " + to_string( *buffers ) + " @" + source );
+		Log( "Destroying opengl vertex buffer " + to_string( *buffers ) + " @" + source );
 		m_opengl.vertex_buffer_sizes.erase( it_vertex );
 	}
 	if ( it_index != m_opengl.index_buffer_sizes.end() ) {
-		Log( "destroying opengl index buffer " + to_string( *buffers ) + " @" + source );
+		Log( "Destroying opengl index buffer " + to_string( *buffers ) + " @" + source );
 		m_opengl.index_buffer_sizes.erase( it_index );
 	}
 	

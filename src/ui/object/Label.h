@@ -36,6 +36,8 @@ protected:
 	
 	scene::actor::TextActor *m_actor = nullptr;
 	
+private:
+	void UpdateActor();
 		
 };
 
