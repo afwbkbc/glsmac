@@ -29,7 +29,7 @@ void Color::operator= ( const color_t& color ) {
 	memcpy( &value, &color, sizeof(color) );
 }
 
-bool Color::operator== ( const Color& other ) {
+bool Color::operator== ( Color& other ) const {
 	return
 		( value.red == other.value.red ) &&
 		( value.green == other.value.green ) &&
@@ -38,7 +38,7 @@ bool Color::operator== ( const Color& other ) {
 	;
 };
 
-bool Color::operator!= ( const Color& other) {
+bool Color::operator!= ( Color& other) const {
 	return
 		( value.red != other.value.red ) ||
 		( value.green != other.value.green) ||

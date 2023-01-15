@@ -55,7 +55,7 @@ opengl::Actor *FontOpenGLRoutine::AddCustomActor( scene::actor::Actor *actor ) {
 	auto actor_type = actor->GetType();
 	switch (actor_type) {
 		case scene::actor::Actor::TYPE_TEXT: {
-			scene::actor::TextActor *text_actor = (scene::actor::TextActor *)actor;
+			auto *text_actor = (scene::actor::TextActor *)actor;
 			auto *font = text_actor->GetFont();
 			base::ObjectLink *font_link = font->m_renderer_object;
 			Font *gl_font;

@@ -31,7 +31,7 @@ PlanetSize::PlanetSize( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "SELECT SI
 		m_mainmenu->m_settings.map_size = game::Settings::MAP_HUGE;
 		ChooseNext();
 	}},
-	{ "HUGE PLANET", [this] () -> void {
+	{ "CUSTOM SIZE", [this] () -> void {
 		// TODO
 	}}
 }) {}

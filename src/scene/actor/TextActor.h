@@ -23,8 +23,14 @@ public:
 	
 	void SetText( const string& text );
 	void SetColor( const Color& color );
+	void UpdatePosition();
+	
+	void Redraw();
 	
 protected:
+	
+	void UpdateText();
+	
 	types::Font *m_font = nullptr;
 	string m_text = "";
 	types::Color m_color = { 0.0, 0.0, 0.0, 0.0 };

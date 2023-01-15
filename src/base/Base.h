@@ -29,7 +29,9 @@ using namespace debug;
 	D( frames_rendered ) \
 	D( opengl_buffers_count ) \
 	D( opengl_vertex_buffers_size ) \
+	D( opengl_vertex_buffers_updates ) \
 	D( opengl_index_buffers_size ) \
+	D( opengl_index_buffers_updates ) \
 	D( opengl_texture_buffers_count ) \
 	D( opengl_texture_buffers_size ) \
 	D( ui_elements_created ) \
@@ -37,12 +39,13 @@ using namespace debug;
 	D( ui_elements_active )
 
 #define D( _stat ) struct { \
-		mutex stat_mutex; \
 		ssize_t total = 0; \
 		ssize_t current = 0; \
 	} _stat;
 	
 	typedef struct {
+		mutex _mutex; \
+		bool _readonly = false;
 		DEBUG_STATS
 	} debug_stats_t;
 	
@@ -50,19 +53,33 @@ using namespace debug;
 	
 	extern debug_stats_t g_debug_stats;
 	
+	// to prevent debug overlay from polluting stats by it's own activity
+	#define DEBUG_STATS_SET_RO() { \
+		g_debug_stats._mutex.lock(); \
+		g_debug_stats._readonly = true; \
+		g_debug_stats._mutex.unlock(); \
+	}
+	#define DEBUG_STATS_SET_RW() { \
+		g_debug_stats._mutex.lock(); \
+		g_debug_stats._readonly = false; \
+		g_debug_stats._mutex.unlock(); \
+	}
+
 	#define DEBUG_STAT_GET( _stat, _totalvar, _currentvar ) { \
-		g_debug_stats._stat.stat_mutex.lock(); \
+		g_debug_stats._mutex.lock(); \
 		_totalvar = g_debug_stats._stat.total; \
 		_currentvar = g_debug_stats._stat.current; \
 		g_debug_stats._stat.current = 0; \
-		g_debug_stats._stat.stat_mutex.unlock(); \
+		g_debug_stats._mutex.unlock(); \
 	}
 
 	#define DEBUG_STAT_CHANGE_BY( _stat, _by ) { \
-		g_debug_stats._stat.stat_mutex.lock(); \
-		g_debug_stats._stat.total += _by; \
-		g_debug_stats._stat.current += _by; \
-		g_debug_stats._stat.stat_mutex.unlock(); \
+		g_debug_stats._mutex.lock(); \
+		if ( !g_debug_stats._readonly ) { \
+			g_debug_stats._stat.total += _by; \
+			g_debug_stats._stat.current += _by; \
+		} \
+		g_debug_stats._mutex.unlock(); \
 	}
 	#define DEBUG_STAT_INC( _stat ) DEBUG_STAT_CHANGE_BY( _stat, 1 )
 	#define DEBUG_STAT_DEC( _stat ) DEBUG_STAT_CHANGE_BY( _stat, -1 )
@@ -81,7 +98,7 @@ using namespace debug;
 
 	#undef glGenBuffers
 	#define glGenBuffers( _size, _ptr ) g_memory_watcher->GLGenBuffers( _size, _ptr, __FILE__, __LINE__ )
-	
+
 	#undef glBindBuffer
 	#define glBindBuffer( _type, _ptr ) g_memory_watcher->GLBindBuffer( _type, _ptr, __FILE__, __LINE__ )
 
@@ -90,15 +107,7 @@ using namespace debug;
 
 	#undef glDeleteBuffers
 	#define glDeleteBuffers( _size, _ptr ) g_memory_watcher->GLDeleteBuffers( _size, _ptr, __FILE__, __LINE__ )
-	
-	/*
-	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
-	glBufferData( GL_ARRAY_BUFFER, mesh->GetVertexDataSize(), (GLvoid *)mesh->GetVertexData(), GL_STATIC_DRAW );
 
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ibo );
-	glBufferData( GL_ELEMENT_ARRAY_BUFFER, mesh->GetIndexDataSize(), (GLvoid *)mesh->GetIndexData(), GL_STATIC_DRAW);
-	 */
-	
 #else
 	#define DEBUG_STAT_CHANGE_BY( _stat, _by )
 	#define DEBUG_STAT_INC( _stat )

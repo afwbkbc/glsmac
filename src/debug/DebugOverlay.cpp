@@ -11,6 +11,8 @@ using namespace object;
 namespace debug {
 
 void DebugOverlay::Start() {
+	DEBUG_STATS_SET_RO();
+	
 	/*NEW( m_background_texture, types::Texture, "OverlayBackground", 2, 2 );
 	m_background_texture->SetPixel( 0, 0, { 1.0, 0.0, 0.0, 0.5 } );
 	m_background_texture->SetPixel( 1, 0, { 0.0, 1.0, 0.0, 0.5 } );
@@ -47,9 +49,11 @@ void DebugOverlay::Start() {
 	}
 	
 	m_stats_timer.SetInterval( 1000 ); // track stats/second
+	DEBUG_STATS_SET_RW();
 }
 
 void DebugOverlay::Stop() {
+	DEBUG_STATS_SET_RO();
 	
 	m_stats_timer.Stop();
 
@@ -66,9 +70,12 @@ void DebugOverlay::Stop() {
 	//g_engine->GetUI()->RemoveObject( m_background );
 	//DELETE( m_background_texture );
 	
+	DEBUG_STATS_SET_RW();
 }
 
 void DebugOverlay::Iterate() {
+	DEBUG_STATS_SET_RO();
+	
 	if (m_stats_timer.Ticked()) {
 		ssize_t total;
 		ssize_t current;
@@ -90,10 +97,13 @@ void DebugOverlay::Iterate() {
 			m_memory_stats_labels[i]->SetText( size + "  " + count + "  " + stats[i].key );
 		}
 	}
+	DEBUG_STATS_SET_RW();
 }
 
 // not using themes because overlay should be independent of them
 void DebugOverlay::ActivateLabel( Label* label, const size_t left, const size_t top ) {
+	DEBUG_STATS_SET_RO();
+	
 	Log( "created label " + label->GetName() );
 	label->SetFont( m_stats_font );
 	label->SetTextColor( { 0.5, 1.0, 0.5, 1.0 } );
@@ -101,6 +111,8 @@ void DebugOverlay::ActivateLabel( Label* label, const size_t left, const size_t 
 	label->SetTop( top );
 	label->SetAlign( UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
 	g_engine->GetUI()->AddObject( label );
+	
+	DEBUG_STATS_SET_RW();
 }
 
 

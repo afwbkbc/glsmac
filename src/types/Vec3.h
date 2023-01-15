@@ -15,18 +15,11 @@ public:
 	DATATYPE y = 0.0f;
 	DATATYPE z = 0.0f;
 
-	Vec3() {
-
-	};
-
-
+	Vec3() {}
+	~Vec3() {}
+	
 	Vec3(DATATYPE x,DATATYPE y,DATATYPE z) {
 		this->Set(x,y,z);
-	};
-
-
-	~Vec3() {
-
 	};
 
 
@@ -40,14 +33,17 @@ public:
 		this->z=z;
 	};
 
-
 	Vec3 operator=(const Vec2<float> source) {
 		return Vec3( source.x, source.y, 0.0 );
 	};
 
 
-	bool operator==(const Vec3 rhs) {
+	bool operator==(const Vec3& rhs) const {
 	    return(this->x == rhs.x && this->y == rhs.y && this->z == rhs.z);
+	};
+
+	bool operator!=(const Vec3& rhs) const {
+	    return(this->x != rhs.x || this->y != rhs.y || this->z != rhs.z);
 	};
 
 

@@ -24,20 +24,28 @@ const float Entity::Get##_name##Z() const {\
 	return m_##_var.z;\
 }\
 void Entity::Set##_name( const types::Vec3 & value ) {\
-	m_##_var = value;\
-	_updates;\
+	if ( m_##_var != value ) {\
+		m_##_var = value;\
+		_updates;\
+	}\
 }\
 void Entity::Set##_name##X( const float value ) {\
-	m_##_var.x = value;\
-	_updates;\
+	if ( m_##_var.x != value ) {\
+		m_##_var.x = value;\
+		_updates;\
+	}\
 }\
 void Entity::Set##_name##Y( const float value ) {\
-	m_##_var.y = value;\
-	_updates;\
+	if ( m_##_var.y != value ) {\
+		m_##_var.y = value;\
+		_updates;\
+	}\
 }\
 void Entity::Set##_name##Z( const float value ) {\
-	m_##_var.z = value;\
-	_updates;\
+	if ( m_##_var.z != value ) {\
+		m_##_var.z = value;\
+		_updates;\
+	}\
 }
 
 _XYZ_SETTER( Angle, angle, UpdateRotation(); UpdateMatrix() );
