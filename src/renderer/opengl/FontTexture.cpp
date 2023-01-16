@@ -42,14 +42,16 @@ FontTexture::FontTexture( types::Font *font ) {
 
 		bitmap = &font->m_symbols[sym];
 
-		if ( bitmap->data ) {
-			glTexSubImage2D( GL_TEXTURE_2D, 0, (GLint)ox, (GLint)oy, (GLsizei)bitmap->width, (GLsizei)bitmap->height, GL_RED, GL_UNSIGNED_BYTE, (const GLvoid *)bitmap->data );
-			if ( glGetError() ) {
-				throw FontError( "Error loading subimage of font texture" );
-			};
-		}
-		else {
-			throw FontError( "font bitmap data is null" );
+		if ( bitmap->width > 0 && bitmap->height > 0 ) {
+			if ( bitmap->data ) {
+				glTexSubImage2D( GL_TEXTURE_2D, 0, (GLint)ox, (GLint)oy, (GLsizei)bitmap->width, (GLsizei)bitmap->height, GL_RED, GL_UNSIGNED_BYTE, (const GLvoid *)bitmap->data );
+				if ( glGetError() ) {
+					throw FontError( "Error loading subimage of font texture" );
+				};
+			}
+			else {
+				throw FontError( "font bitmap data is null" );
+			}
 		}
 
 		m_tx[sym] = ox / font->m_dimensions.width;

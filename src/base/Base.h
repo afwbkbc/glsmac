@@ -35,6 +35,7 @@ using namespace debug;
 	D( opengl_textures_count ) \
 	D( opengl_textures_size ) \
 	D( opengl_textures_updates ) \
+	D( opengl_draw_calls ) \
 	D( ui_elements_created ) \
 	D( ui_elements_destroyed )\
 	D( ui_elements_active )
@@ -118,6 +119,16 @@ using namespace debug;
 	#undef glTexImage2D
 	#define glTexImage2D( _target, _level, _srcfmt, _width, _height, _border, _dstfmt, _type, _ptr ) \
 		g_memory_watcher->GLTexImage2D( _target, _level, _srcfmt, _width, _height, _border, _dstfmt, _type, _ptr, __FILE__, __LINE__ )
+	
+	#undef glTexSubImage2D
+	#define glTexSubImage2D( _target, _level, _xoffset, _yoffset, _width, _height, format, _type, _ptr ) \
+		g_memory_watcher->GLTexSubImage2D( _target, _level, _xoffset, _yoffset, _width, _height, format, _type, _ptr, __FILE__, __LINE__ )
+	
+	#undef glDrawElements
+	#define glDrawElements( _mode, _count, _type, _indices ) g_memory_watcher->GLDrawElements( _mode, _count, _type, _indices, __FILE__, __LINE__ )
+
+	#undef glDrawArrays
+	#define glDrawArrays( _mode, _first, _count ) g_memory_watcher->GLDrawArrays( _mode, _first, _count, __FILE__, __LINE__ )
 	
 	#undef glDeleteTextures
 	#define glDeleteTextures( _size, _ptr ) g_memory_watcher->GLDeleteTextures( _size, _ptr, __FILE__, __LINE__ )

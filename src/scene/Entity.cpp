@@ -11,7 +11,7 @@ Entity::Entity() {
 }
 
 #define _XYZ_SETTER( _name, _var, _updates ) \
-const types::Vec3 Entity::Get##_name() const {\
+const types::Vec3& Entity::Get##_name() const {\
 	return m_##_var;\
 }\
 const float Entity::Get##_name##X() const {\

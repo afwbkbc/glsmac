@@ -7,6 +7,11 @@
 
 using namespace std;
 
+using namespace scene;
+namespace scene {
+using namespace actor;
+}
+
 namespace ui {
 
 using namespace event;
@@ -40,6 +45,12 @@ void UIObject::Create() {
 }
 
 void UIObject::Destroy() {
+#if DEBUG
+	if ( !m_actors.empty() ) {
+		throw UIObjectError( "some actors still present on destruction" );
+	}
+#endif
+	
 	HideDebugFrame();
 	
 	m_created = false;
@@ -76,11 +87,12 @@ void UIObject::SetParentObject( UIContainer *parent_object ) {
 }
 
 void UIObject::SetZIndex( float z_index ) {
-	if ( m_z_index != z_index ) {
 #if DEBUG
-		if ( z_index < 0.1 || z_index > 0.9 )
+		if ( z_index < 0.1 || z_index > 0.9 ) {
 			throw UIError( "invalid z-index " + to_string( z_index ) );
+		}
 #endif
+	if ( m_z_index != z_index ) {
 		m_z_index = z_index;
 		UpdateZIndex();
 	}
@@ -93,17 +105,20 @@ void UIObject::UpdateZIndex() {
 	}
 	if ( new_absolute_z_index != m_absolute_z_index ) {
 		m_absolute_z_index = new_absolute_z_index;
+		for (auto& actor : m_actors) {
+			actor->SetPositionZ( m_absolute_z_index );
+		}
 		Realign();
 	}
 }
 
-scene::Scene *UIObject::GetSceneOfActor( const scene::actor::Actor *actor ) const {
+scene::Scene *UIObject::GetSceneOfActor( const Actor *actor ) const {
 	scene::Scene *scene;
 	switch ( actor->GetType() ) {
-		case ( scene::actor::Actor::TYPE_MESH ):
+		case ( Actor::TYPE_MESH ):
 			scene = g_engine->GetUI()->GetShapeScene();
 			break;
-		case ( scene::actor::Actor::TYPE_TEXT ):
+		case ( Actor::TYPE_TEXT ):
 			scene = g_engine->GetUI()->GetTextScene();
 			break;
 		default:
@@ -178,14 +193,35 @@ void UIObject::CheckStylePtr() const {
 }
 #endif
 
-void UIObject::CreateActors() {
-	for ( auto it = m_actors.begin() ; it < m_actors.end() ; ++it )
-		GetSceneOfActor( *it )->AddActor( *it );
+void UIObject::AddActor( Actor* actor ) {
+#if DEBUG
+	if ( m_actors.find( actor ) != m_actors.end() ) {
+		throw UIObjectError( "duplicate actor add" );
+	}
+#endif
+	actor->SetPositionZ( m_absolute_z_index );
+	m_actors.insert( actor );
 }
 
-void UIObject::DestroyActors() {
-	for ( auto it = m_actors.begin() ; it < m_actors.end() ; ++it )
-		GetSceneOfActor( *it )->RemoveActor( *it );
+void UIObject::RemoveActor( Actor* actor ) {
+#if DEBUG
+	if ( m_actors.find( actor ) == m_actors.end() ) {
+		throw UIObjectError( "actor to be removed not found" );
+	}
+#endif
+	m_actors.erase( actor );
+}
+
+void UIObject::EnableActors() {
+	for ( auto& actor : m_actors ) {
+		GetSceneOfActor( actor )->AddActor( actor );
+	}
+}
+
+void UIObject::DisableActors() {
+	for ( auto& actor : m_actors ) {
+		GetSceneOfActor( actor )->RemoveActor( actor );
+	}
 }
 
 const UIObject::coord_t UIObject::ClampX( const coord_t value ) {

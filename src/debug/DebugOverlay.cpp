@@ -13,23 +13,6 @@ namespace debug {
 void DebugOverlay::Start() {
 	DEBUG_STATS_SET_RO();
 	
-	/*NEW( m_background_texture, types::Texture, "OverlayBackground", 2, 2 );
-	m_background_texture->SetPixel( 0, 0, { 1.0, 0.0, 0.0, 0.5 } );
-	m_background_texture->SetPixel( 1, 0, { 0.0, 1.0, 0.0, 0.5 } );
-	m_background_texture->SetPixel( 0, 1, { 0.0, 0.0, 1.0, 0.5 } );
-	m_background_texture->SetPixel( 1, 1, { 1.0, 1.0, 1.0, 0.5 } );
-	
-	//NEW( m_background, Surface );
-	NEW( m_background, Surface );
-	m_background->SetAlign( UIObject::ALIGN_TOP );
-	m_background->SetLeft( 0 );
-	m_background->SetRight( 0 );
-	m_background->SetTop( 0 );
-	m_background->SetHeight( 200 );
-	m_background->SetZIndex( 0.9 );
-	m_background->SetTexture( m_background_texture );
-	g_engine->GetUI()->AddObject( m_background );
-	*/
 	m_font_size = 16;
 	m_memory_stats_lines = 10;
 	
@@ -38,17 +21,43 @@ void DebugOverlay::Start() {
 	size_t stat_line = 0;
 	#define D( _stat ) \
 		NEW( m_##_stats_label_##_stat, Label ); \
-		ActivateLabel( m_##_stats_label_##_stat, 3, (stat_line++) * m_font_size );
+		ActivateLabel( m_##_stats_label_##_stat, 3, (stat_line++) * ( m_font_size + 1 ) );
 	DEBUG_STATS;
 	#undef D
 	
 	for ( int i = 0 ; i < m_memory_stats_lines ; i++ ) {
 		NEWV( label, Label );
-		ActivateLabel( label, 300, i * ( m_font_size + 1 ) );
+		ActivateLabel( label, 340, i * ( m_font_size + 1 ) );
 		m_memory_stats_labels.push_back( label );
 	}
 	
+	NEW( m_background_texture, types::Texture, "OverlayBackground", 1, 1 );
+	m_background_texture->SetPixel( 0, 0, { 0.0, 0.0, 0.0, 0.7 } );
+	
+	NEW( m_background_left, Surface );
+	m_background_left->SetAlign( UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+	m_background_left->SetLeft( 0 );
+	m_background_left->SetRight( 0 );
+	m_background_left->SetTop( 0 );
+	m_background_left->SetHeight( ( stat_line ) * 18 );
+	m_background_left->SetWidth( 330 );
+	m_background_left->SetZIndex( 0.9 );
+	m_background_left->SetTexture( m_background_texture );
+	g_engine->GetUI()->AddObject( m_background_left );
+	
+	NEW( m_background_middle, Surface );
+	m_background_middle->SetAlign( UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+	m_background_middle->SetLeft( 340 );
+	m_background_middle->SetRight( 0 );
+	m_background_middle->SetTop( 0 );
+	m_background_middle->SetHeight( m_memory_stats_lines * 18 );
+	m_background_middle->SetWidth( 330 );
+	m_background_middle->SetZIndex( 0.9 );
+	m_background_middle->SetTexture( m_background_texture );
+	g_engine->GetUI()->AddObject( m_background_middle );
+	
 	m_stats_timer.SetInterval( 1000 ); // track stats/second
+
 	DEBUG_STATS_SET_RW();
 }
 
@@ -67,8 +76,10 @@ void DebugOverlay::Stop() {
 	DEBUG_STATS;
 	#undef D
 	
-	//g_engine->GetUI()->RemoveObject( m_background );
-	//DELETE( m_background_texture );
+	g_engine->GetUI()->RemoveObject( m_background_left );
+	g_engine->GetUI()->RemoveObject( m_background_middle );
+	
+	DELETE( m_background_texture );
 	
 	DEBUG_STATS_SET_RW();
 }

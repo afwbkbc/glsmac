@@ -20,11 +20,12 @@ void Surface::Create() {
 
 	NEW( m_background_mesh, scene::mesh::Rectangle );
 	NEW( m_background, scene::actor::MeshActor, "UI::Surface", m_background_mesh );
-	m_actors.push_back( m_background );
+	AddActor( m_background );
 }
 
 void Surface::Destroy() {
 
+	RemoveActor( m_background );
 	DELETE( m_background );
 
 	UIObject::Destroy();

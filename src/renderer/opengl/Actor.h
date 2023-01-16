@@ -5,6 +5,10 @@
 #include "scene/actor/Actor.h"
 #include "shader_program/OpenGLShaderProgram.h"
 
+#include "types/Vec3.h"
+
+using namespace types;
+
 namespace renderer {
 namespace opengl {
 
@@ -21,8 +25,12 @@ MAJOR_CLASS( Actor, base::Base )
 	void UnlinkActor() {
 		m_actor = nullptr;
 	}
+	const Vec3& GetPosition() const;
+	void SetPosition( const Vec3& position );
 protected:
 	scene::actor::Actor *m_actor;
+	
+	Vec3 m_position;
 	
 };
 

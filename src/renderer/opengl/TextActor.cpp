@@ -10,7 +10,7 @@ using namespace shader_program;
 
 TextActor::TextActor( scene::actor::TextActor *actor, types::Font *font ) : Actor( actor ), m_font( font ) {
 	Log( "Creating OpenGL text '" + actor->GetText() + "' with " + m_font->GetName() + " for " + actor->GetName() );
-	m_texture = new FontTexture( m_font );
+	NEW( m_texture, FontTexture, m_font );
 	glGenBuffers( 1, &m_vbo );
 	auto *text_actor = (const scene::actor::TextActor *)m_actor;
 	auto position = m_actor->GetPosition();
@@ -20,7 +20,7 @@ TextActor::TextActor( scene::actor::TextActor *actor, types::Font *font ) : Acto
 TextActor::~TextActor() {
 	Log( "Destroying OpenGL text" );
 	glDeleteBuffers( 1, &m_vbo );
-	delete m_texture;
+	DELETE( m_texture );
 }
 
 void TextActor::Update( const string& text, const float x, const float y ) {
@@ -74,7 +74,7 @@ void TextActor::Update( const string& text, const float x, const float y ) {
 	m_boxes_count = boxes.size();
 	
 	if ( !boxes.empty() ) {
-		glBufferData( GL_ARRAY_BUFFER, sizeof(vertex_box_t) * boxes.size(), boxes.data(), GL_DYNAMIC_DRAW );
+		glBufferData( GL_ARRAY_BUFFER, sizeof(vertex_box_t) * boxes.size(), boxes.data(), GL_STATIC_DRAW );
 	}
 	
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );

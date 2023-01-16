@@ -1,12 +1,17 @@
 #pragma once
 
 #include <vector>
+#include <map>
+#include <set>
 
 #include "base/Base.h"
 #include "base/ObjectLink.h"
 #include "scene/Scene.h"
 #include "shader_program/OpenGLShaderProgram.h"
 #include "Texture.h"
+#include "Actor.h"
+
+using namespace std;
 
 namespace renderer {
 namespace opengl {
@@ -34,14 +39,21 @@ MAJOR_CLASS( Scene, base::Base )
 	}
 	void Draw( shader_program::OpenGLShaderProgram *shader_program );
 	void Update();
+	
 protected:
 	scene::Scene *m_scene;
 	routine::OpenGLRoutine *m_routine;
 
 	base::ObjectLink *m_skybox_texture = NULL;
-	std::vector<base::ObjectLink *> m_gl_actors;
+	
+	vector<base::ObjectLink *> m_gl_actors;
+	map< float, set< Actor* > > m_gl_actors_by_zindex;
+	
+	
 private:
 	void RemoveActor( base::ObjectLink *link );
+	void AddActorToZIndexSet( Actor* gl_actor );
+	void RemoveActorFromZIndexSet( Actor* gl_actor );
 };
 
 } /* namespace opengl */

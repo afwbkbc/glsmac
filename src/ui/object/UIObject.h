@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include <unordered_set>
 
 #include "base/Base.h"
 
@@ -15,6 +15,11 @@
 
 using namespace std;
 using namespace types;
+
+using namespace scene;
+namespace scene {
+using namespace actor;
+}
 
 namespace ui {
 
@@ -52,8 +57,10 @@ MAJOR_CLASS( UIObject, base::Base )
 	virtual void Redraw();
 	void UpdateObjectArea();
 
-	void CreateActors();
-	void DestroyActors();
+	void AddActor( Actor* actor );
+	void RemoveActor( Actor* actor );
+	void EnableActors();
+	void DisableActors();
 
 	virtual void Create();
 	virtual void Destroy();
@@ -116,9 +123,9 @@ protected:
 
 	UIContainer *m_parent_object = nullptr;
 
-	std::vector<scene::actor::Actor *> m_actors = {};
+	unordered_set<Actor *> m_actors = {};
 
-	float m_depth = 0;
+	size_t m_depth = 0;
 	float m_z_index = 0.5f;
 	
 	float m_absolute_z_index = 0.0f;
@@ -173,7 +180,7 @@ protected:
 	const static state_t STATE_MOUSEOVER = 1;
 	state_t m_state = STATE_NONE;
 	
-	scene::Scene *GetSceneOfActor( const scene::actor::Actor *actor ) const;
+	scene::Scene *GetSceneOfActor( const Actor *actor ) const;
 	
 	virtual void ApplyStyle();
 	

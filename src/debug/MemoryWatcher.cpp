@@ -30,8 +30,18 @@ void glBindTexture_real( GLenum target, GLuint texture ) {
 void glTexImage2D_real( GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void *pixels) {
 	glTexImage2D( target, level, internalformat, width, height, border, format, type, pixels );
 }
+void glTexSubImage2D_real( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels ) {
+	glTexSubImage2D( target, level, xoffset, yoffset, width, height, format, type, pixels );
+}
 void glDeleteTextures_real( GLsizei n, GLuint * textures ) {
 	glDeleteTextures( n, textures );
+}
+void glDrawElements_real( GLenum mode, GLsizei count, GLenum type, const void * indices ) {
+	glDrawElements( mode, count, type, indices );
+}
+
+void glDrawArrays_real( GLenum mode, GLint first, GLsizei count ) {
+	glDrawArrays( mode, first, count );
 }
 
 #include "base/Base.h"
@@ -389,6 +399,47 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 	glTexImage2D_real( target, level, internalformat, width, height, border, format, type, pixels );
 }
 
+void MemoryWatcher::GLTexSubImage2D( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels, const string& file, const size_t line ) {
+	lock_guard<mutex> guard( m_mutex );
+	const string source = file + ":" + to_string(line);
+	
+	if ( target != GL_TEXTURE_2D ) {
+		throw runtime_error( "glTexSubImage2D unknown target " + to_string(target) + " @" + source );
+	}
+	if ( level != 0 ) {
+		throw runtime_error( "glTexSubImage2D unknown level " + to_string(level) + " @" + source );
+	}
+	if ( width == 0 ) {
+		throw runtime_error( "glTexSubImage2D zero width" );
+	}
+	if ( height == 0 ) {
+		throw runtime_error( "glTexSubImage2D zero height" );
+	}
+	if ( type != GL_UNSIGNED_BYTE ) {
+		throw runtime_error( "glTexSubImage2D unknown type " + to_string(type) + " @" + source );
+	}
+	if ( m_opengl.current_texture == 0 ) {
+		throw runtime_error( "glTexSubImage2D called without bound texture @" + source );
+	}
+	
+	size_t bpp;
+	switch (format) {
+		case GL_RED: {
+			bpp = 1;
+			break;
+		}
+		case GL_RGBA: {
+			bpp = 4;
+			break;
+		}
+		default:
+			throw runtime_error( "glTexImage2D unknown format " + to_string(format) + " @" + source );
+	}
+	
+	DEBUG_STAT_INC( opengl_textures_updates );
+	glTexSubImage2D_real( target, level, xoffset, yoffset, width, height, format, type, pixels );
+}
+
 void MemoryWatcher::GLDeleteTextures( GLsizei n, GLuint * textures, const string& file, const size_t line ) {
 	lock_guard<mutex> guard( m_mutex );
 	const string source = file + ":" + to_string(line);
@@ -405,6 +456,53 @@ void MemoryWatcher::GLDeleteTextures( GLsizei n, GLuint * textures, const string
 	DEBUG_STAT_DEC( opengl_textures_count );
 	
 	glDeleteTextures_real( n, textures );
+}
+
+void MemoryWatcher::GLDrawElements( GLenum mode, GLsizei count, GLenum type, const void * indices, const string& file, const size_t line ) {
+	lock_guard<mutex> guard( m_mutex );
+	const string source = file + ":" + to_string(line);
+	
+	if ( mode != GL_QUADS && mode != GL_TRIANGLES ) {
+		throw runtime_error( "glDrawElements unknown mode " + to_string( mode ) + " @" + source );
+	}
+	if ( type != GL_UNSIGNED_INT ) {
+		throw runtime_error( "glDrawElements unknown type " + to_string( type ) + " @" + source );
+	}
+	if ( indices != nullptr ) {
+		throw runtime_error( "glDrawElements indices non-null @" + source );
+	}
+	if ( !m_opengl.current_vertex_buffer ) {
+		throw runtime_error( "glDrawElements vertex buffer not bound @" + source );
+	}
+	if ( !m_opengl.current_index_buffer ) {
+		throw runtime_error( "glDrawElements index buffer not bound @" + source );
+	}
+	
+	const size_t bpi = 4; // bytes per index, 4 for unsigned int
+	if ( count * bpi != m_opengl.index_buffer_sizes[ m_opengl.current_index_buffer ] ) {
+		throw runtime_error( "glDrawElements count mismatch ( " + to_string( count* bpi ) + " " + to_string( m_opengl.index_buffer_sizes[ m_opengl.current_index_buffer ] ) + " )" );
+	}
+	
+	DEBUG_STAT_INC( opengl_draw_calls );
+	glDrawElements_real( mode, count, type, indices );
+}
+
+void MemoryWatcher::GLDrawArrays( GLenum mode, GLint first, GLsizei count, const string& file, const size_t line ) {
+	lock_guard<mutex> guard( m_mutex );
+	const string source = file + ":" + to_string(line);
+	
+	if ( mode != GL_TRIANGLE_STRIP ) {
+		throw runtime_error( "glDrawArrays unknown mode " + to_string( mode ) + " @" + source );
+	}	
+	if ( !m_opengl.current_vertex_buffer ) {
+		throw runtime_error( "glDrawArrays vertex buffer not bound @" + source );
+	}
+	if ( m_opengl.current_index_buffer ) {
+		throw runtime_error( "glDrawArrays index buffer is bound but not supposed to be @" + source );
+	}
+	
+	DEBUG_STAT_INC( opengl_draw_calls );
+	glDrawArrays_real( mode, first, count );
 }
 
 struct sort_method

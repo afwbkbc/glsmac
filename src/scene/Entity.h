@@ -16,7 +16,7 @@ public:
 
 	// GetAngle(), SetAngle(), etc
 #define _XYZ_SETTER( _name ) \
-	const types::Vec3 Get##_name() const;\
+	const types::Vec3& Get##_name() const;\
 	const float Get##_name##X() const;\
 	const float Get##_name##Y() const;\
 	const float Get##_name##Z() const;\

@@ -27,7 +27,8 @@ protected:
 	util::Timer m_stats_timer;
 	
 	Texture* m_background_texture = nullptr;
-	Surface* m_background = nullptr;
+	Surface* m_background_left = nullptr;
+	Surface* m_background_middle = nullptr;
 	
 	size_t m_memory_stats_lines = 0;
 	size_t m_font_size = 0;

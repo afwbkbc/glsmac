@@ -81,11 +81,16 @@ void Label::Align() {
 			ypos = m_object_area.bottom;
 		}
 
+/*		m_actor->SetPositionX( ClampX( xpos ) );
+		m_actor->SetPositionY( ClampX( ypos ) );
+		m_actor->SetPositionZ( -1.0f );*/
+
 		m_actor->SetPosition({
 			ClampX( xpos ),
 			ClampY( ypos ),
 			-1.0,
 		});
+		
 	}
 }
 

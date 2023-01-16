@@ -22,8 +22,11 @@ public:
 	MemoryWatcher();
 	~MemoryWatcher();
 
+	// memory stuff
 	void New( const Base* object, const size_t size, const string& file, const size_t line );
 	void Delete( const Base* object, const string& file, const size_t line );
+	
+	// opengl stuff
 	void GLGenBuffers( GLsizei n, GLuint * buffers, const string& file, const size_t line );
 	void GLBindBuffer( GLenum target, GLuint buffer, const string& file, const size_t line );
 	void GLBufferData( GLenum target, GLsizeiptr size, const void * data, GLenum usage, const string& file, const size_t line );
@@ -31,8 +34,10 @@ public:
 	void GLGenTextures( GLsizei n, GLuint * textures, const string& file, const size_t line );
 	void GLBindTexture( GLenum target, GLuint texture, const string& file, const size_t line );
 	void GLTexImage2D( GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void *pixels, const string& file, const size_t line );
-
+	void GLTexSubImage2D( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels, const string& file, const size_t line );
 	void GLDeleteTextures( GLsizei n, GLuint * textures, const string& file, const size_t line );
+	void GLDrawElements( GLenum mode, GLsizei count, GLenum type, const void * indices, const string& file, const size_t line );
+	void GLDrawArrays( GLenum mode, GLint first, GLsizei count, const string& file, const size_t line );	
 	
 	typedef struct {
 		const void* ptr;

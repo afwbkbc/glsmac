@@ -15,17 +15,20 @@ Scene::Scene( scene::Scene *scene, routine::OpenGLRoutine *routine ) : m_scene( 
 }
 
 Scene::~Scene() {
-	for ( auto it = m_gl_actors.begin() ; it < m_gl_actors.end() ; ++it )
+	for ( auto it = m_gl_actors.begin() ; it < m_gl_actors.end() ; ++it ) {
 		RemoveActor( *it );
+	}
 
 }
 
 void Scene::RemoveActor( base::ObjectLink *link ) {
 	auto *gl_actor = link->GetDstObject<Actor>();
 	if ( link->Removed() ) {
-		gl_actor->UnlinkActor(); // already removed on other side
+		// already removed on other side
+		gl_actor->UnlinkActor();
 	}
 	else {
+		// unlink from our side
 		link->GetSrcObject<scene::actor::Actor>()->m_renderer_object = NULL;
 	}
 	gl_actor->Unload();
@@ -33,19 +36,50 @@ void Scene::RemoveActor( base::ObjectLink *link ) {
 	DELETE( link );
 }
 
+void Scene::AddActorToZIndexSet( Actor* gl_actor ) {
+#if DEBUG
+	if ( m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].find( gl_actor ) != m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].end() ) {
+		throw SceneError( "actor to be added already found in zindex set" );
+	}
+#endif
+	//Log( "Adding actor " + gl_actor->GetName() + " to zindex set " + to_string( gl_actor->GetPosition().z ) );
+	m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].insert( gl_actor );
+}
+
+void Scene::RemoveActorFromZIndexSet( Actor* gl_actor ) {
+#if DEBUG
+	if ( m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].find( gl_actor ) == m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].end() ) {
+		throw SceneError( "actor to be removed not found in zindex set" );
+	}
+#endif
+	//Log( "Removing actor " + gl_actor->GetName() + " from zindex set " + to_string( gl_actor->GetPosition().z ) );
+	m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].erase( gl_actor );
+}
+
 void Scene::Update() {
 	base::ObjectLink *obj;
 
 	// remove missing actors
 	for ( auto it = m_gl_actors.begin() ; it < m_gl_actors.end() ; ++it ) {
+		Actor *gl_actor = (*it)->GetDstObject<Actor>();
 		if ( (*it)->Removed() ) {
+			RemoveActorFromZIndexSet( gl_actor );
 			RemoveActor( *it );
 			m_gl_actors.erase( it, it + 1 );
 			it--;
 		}
 		else {
-			Actor *gl_actor = (*it)->GetDstObject<Actor>();
-			if ( gl_actor->ReloadNeeded() ) {
+			bool reload_needed = gl_actor->ReloadNeeded();
+			// check if position changed
+			auto& pos = gl_actor->GetActor()->GetPosition();
+			if ( gl_actor->GetPosition() != pos ) {
+				// move to corrent zindex set
+				RemoveActorFromZIndexSet( gl_actor );
+				gl_actor->SetPosition( pos );
+				AddActorToZIndexSet( gl_actor );
+				reload_needed = true;
+			}
+			if ( reload_needed ) {
 				gl_actor->Unload();
 				gl_actor->Load();
 			}
@@ -76,17 +110,43 @@ void Scene::Update() {
 				gl_actor->Load();
 				NEW( obj, base::ObjectLink, (*it), gl_actor );
 				m_gl_actors.push_back( obj );
+				AddActorToZIndexSet( gl_actor );
 				(*it)->m_renderer_object = obj;
 			}
 		}
 	}
 
+#if DEBUG
+	size_t gl_actors_by_zindex_count = 0;
+	for (auto& actors : m_gl_actors_by_zindex) {
+		gl_actors_by_zindex_count += actors.second.size();
+	}
+	if ( gl_actors_by_zindex_count != m_gl_actors.size() ) {
+		throw SceneError( "gl_actors_by_zindex count does not match gl_actors count ( " + to_string( gl_actors_by_zindex_count ) + " , " + to_string( m_gl_actors.size() ) + " )" );
+	}
+#endif
 }
 
 void Scene::Draw( shader_program::OpenGLShaderProgram *shader_program ) {
-	for ( auto it = m_gl_actors.begin() ; it < m_gl_actors.end() ; ++it ) {
-		(*it)->GetDstObject<Actor>()->Draw( shader_program );
+	
+#if DEBUG
+	float last_zindex = -9999999;
+	string zindex_sequence = "";
+#endif
+	for ( auto& actors : m_gl_actors_by_zindex ) {
+#if DEBUG
+		float zindex = actors.first;
+		zindex_sequence += " " + to_string( zindex );
+		if ( zindex < last_zindex ) {
+			throw SceneError( "invalid zindex sequence: " + zindex_sequence );
+		}
+		last_zindex = zindex;
+#endif
+		for ( auto& actor : actors.second ) {
+			actor->Draw( shader_program );
+		}
 	}
+	
 }
 
 } /* namespace opengl */

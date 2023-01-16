@@ -22,6 +22,7 @@ void FontOpenGLRoutine::RemoveFont( base::ObjectLink *link ) {
 }
 
 void FontOpenGLRoutine::Iterate() {
+	
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it )
 		(*it)->Update();
 
@@ -37,12 +38,12 @@ void FontOpenGLRoutine::Iterate() {
 	//glEnable( GL_BLEND );
 	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glEnable(GL_TEXTURE_2D);
+	//glEnable(GL_TEXTURE_2D);
 
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it )
 		(*it)->Draw( m_shader_program );
 
-	glDisable(GL_TEXTURE_2D);
+	//glDisable(GL_TEXTURE_2D);
 	//glDisable(GL_BLEND);
 
 }

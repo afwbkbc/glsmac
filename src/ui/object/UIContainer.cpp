@@ -47,13 +47,13 @@ void UIContainer::Iterate() {
 void UIContainer::CreateChild( UIObject *object ) {
 	object->Create();
 	object->Realign();
-	object->CreateActors();
+	object->EnableActors();
 	object->Redraw();
 }
 
 void UIContainer::DestroyChild( UIObject *object ) {
 	if ( m_created ) {
-		object->DestroyActors();
+		object->DisableActors();
 		object->Destroy();
 	}
 	DELETE( object );
