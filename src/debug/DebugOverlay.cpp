@@ -44,7 +44,7 @@ void DebugOverlay::Start() {
 	
 	for ( int i = 0 ; i < m_memory_stats_lines ; i++ ) {
 		NEWV( label, Label );
-		ActivateLabel( label, 263, i * ( m_font_size + 1 ) );
+		ActivateLabel( label, 300, i * ( m_font_size + 1 ) );
 		m_memory_stats_labels.push_back( label );
 	}
 	

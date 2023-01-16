@@ -38,8 +38,6 @@ Font::Font( types::Font *font, shader_program::FontOpenGLShaderProgram *shader_p
 	GLfloat ox = 0,oy = 0;
 	types::Font::bitmap_t *bitmap;
 
-	//memset( m_boxes_count, 0, sizeof( m_boxes_count ) );
-		
 	for ( int sym = 32; sym < 128; sym++ ) { // only ascii for now
 
 		bitmap = &m_font->m_symbols[sym];
@@ -54,8 +52,6 @@ Font::Font( types::Font *font, shader_program::FontOpenGLShaderProgram *shader_p
 			throw FontError( "font bitmap data is null" );
 		}
 
-		//glGenBuffers( 1, &m_vbos[sym]);
-
 		m_tx[sym] = ox / m_font->m_dimensions.width;
 		m_ty[sym] = oy / m_font->m_dimensions.height;
 
@@ -63,7 +59,6 @@ Font::Font( types::Font *font, shader_program::FontOpenGLShaderProgram *shader_p
 	};
 
 	glBindTexture( GL_TEXTURE_2D, 0 );
-	
 }
 
 Font::~Font() {
@@ -73,99 +68,84 @@ Font::~Font() {
 }
 
 void Font::Update( font_context_t* ctx, const string& text, const float x, const float y ) {
-	if ( text != ctx->m_text || x != ctx->m_x || y != ctx->m_y ) {
-		
-		Log( "Setting text to " + text );
-		
-		types::Font::bitmap_t *bitmap;
-		
-		const float sx = 2.0 / g_engine->GetRenderer()->GetWindowWidth();
-		const float sy = 2.0 / g_engine->GetRenderer()->GetWindowHeight();	
-
-		vector<vertex_box_t> boxes[128] = {};
-		
-		for ( int sym = 32; sym < 128; sym++ ) { // only ascii for now
-			boxes[sym].clear();
-		}
-		
-		float cx = x;
-		float cy = y;
-		
-		for ( const char *p = text.c_str(); *p; p++ ) {
-			unsigned char sym = (unsigned char)*p;
-			
-#if DEBUG
-			if ( sym < 32 || sym >= 128 ) {
-				throw FontError( "unexpected font character " + to_string( sym ) );
-			}
-#endif
-			
-			bitmap = &m_font->m_symbols[sym];
-			
-			float x2 = cx + bitmap->left * sx;
-			float y2 = -cy - bitmap->top * sy;
-			float w = bitmap->width * sx;
-			float h = bitmap->height * sy;
-
-			float tbx1 = this->m_tx[sym];
-			float tby1 = this->m_ty[sym];
-			float tbx2 = this->m_tx[sym] + bitmap->width / m_font->m_dimensions.width;
-			float tby2 = this->m_ty[sym] + bitmap->height / m_font->m_dimensions.height;
-			
-			boxes[sym].push_back({
-				{x2,     -y2    , tbx1, tby1},
-				{x2 + w, -y2    , tbx2, tby1},
-				{x2,     -y2 - h, tbx1, tby2},
-				{x2 + w, -y2 - h, tbx2, tby2},
-			});
-			
-			cx += bitmap->ax * sx;
-			cy += bitmap->ay * sy;
-		}
-
-		for ( int sym = 32; sym < 128; sym++ ) { // only ascii for now
-			ctx->m_boxes_count[sym] = boxes[sym].size();
-			
-			glBindBuffer( GL_ARRAY_BUFFER, ctx->m_vbos[sym] );
-			if ( ctx->m_boxes_count[sym] > 0 ) {
-				glBufferData( GL_ARRAY_BUFFER, sizeof(vertex_box_t) * ctx->m_boxes_count[sym], boxes[sym].data(), GL_DYNAMIC_DRAW );
-			}
-			glBindBuffer( GL_ARRAY_BUFFER, 0 );
-		}
-		
-		ctx->m_text = text;
-		ctx->m_x = x;
-		ctx->m_y = y;
+	types::Font::bitmap_t *bitmap;
+	
+	const float sx = 2.0 / g_engine->GetRenderer()->GetWindowWidth();
+	const float sy = 2.0 / g_engine->GetRenderer()->GetWindowHeight();	
+	
+	vector<vertex_box_t> boxes = {};
+	
+	for ( int sym = 32; sym < 128; sym++ ) {
+		boxes.clear();
 	}
+	
+	float cx = x;
+	float cy = y;
+	
+	for ( const char *p = text.c_str(); *p; p++ ) {
+		unsigned char sym = (unsigned char)*p;
+		
+#if DEBUG
+		if ( sym < 32 || sym >= 128 ) {
+			throw FontError( "unexpected font character " + to_string( sym ) );
+		}
+#endif
+		
+		bitmap = &m_font->m_symbols[sym];
+		
+		float x2 = cx + bitmap->left * sx;
+		float y2 = -cy - bitmap->top * sy;
+		float w = bitmap->width * sx;
+		float h = bitmap->height * sy;
+		
+		float tbx1 = this->m_tx[sym];
+		float tby1 = this->m_ty[sym];
+		float tbx2 = this->m_tx[sym] + bitmap->width / m_font->m_dimensions.width;
+		float tby2 = this->m_ty[sym] + bitmap->height / m_font->m_dimensions.height;
+		
+		boxes.push_back({
+			{x2,     -y2    , tbx1, tby1},
+			{x2 + w, -y2    , tbx2, tby1},
+			{x2,     -y2 - h, tbx1, tby2},
+			{x2 + w, -y2 - h, tbx2, tby2},
+		});
+		
+		cx += bitmap->ax * sx;
+		cy += bitmap->ay * sy;
+	}
+	
+	glBindBuffer( GL_ARRAY_BUFFER, ctx->m_vbo );
+	ctx->m_boxes_count = boxes.size();
+	
+	if ( !boxes.empty() ) {
+		glBufferData( GL_ARRAY_BUFFER, sizeof(vertex_box_t) * boxes.size(), boxes.data(), GL_DYNAMIC_DRAW );
+	}
+	
+	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 }
 
 void Font::Render( const font_context_t* ctx, float z_index, types::Color color ) {
-
-	if ( !ctx->m_text.empty() ) {
 	
-		for ( const char *p = ctx->m_text.c_str(); *p; p++ ) {
-			unsigned char sym = (unsigned char)*p;
-
-			glBindBuffer( GL_ARRAY_BUFFER, ctx->m_vbos[sym] );
-
-			glActiveTexture( GL_TEXTURE0 );
-			glBindTexture( GL_TEXTURE_2D, m_texture );
-
-			m_shader_program->Enable();
-
-			glUniform1i( m_shader_program->m_gl_uniforms.texture, 0 );
-			glUniform4fv( m_shader_program->m_gl_uniforms.color, 1, (const GLfloat *)&color );
-			glUniform1f( m_shader_program->m_gl_uniforms.z_index, z_index );
-
-			for ( size_t c = 0 ; c < ctx->m_boxes_count[sym] ; c++ ) {
-				glDrawArrays( GL_TRIANGLE_STRIP, c * 4, 4 );
-			}
-
-			m_shader_program->Disable();
-
-			glBindTexture( GL_TEXTURE_2D, 0 );
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
+	if ( ctx->m_boxes_count > 0 ) {
+		glBindBuffer( GL_ARRAY_BUFFER, ctx->m_vbo );
+		
+		glActiveTexture( GL_TEXTURE0 );
+		glBindTexture( GL_TEXTURE_2D, m_texture );
+		
+		m_shader_program->Enable();
+		glUniform1i( m_shader_program->m_gl_uniforms.texture, 0 );
+		glUniform4fv( m_shader_program->m_gl_uniforms.color, 1, (const GLfloat *)&color );
+		glUniform1f( m_shader_program->m_gl_uniforms.z_index, z_index );
+		
+		for ( size_t c = 0 ; c < ctx->m_boxes_count ; c++ ) {
+			glDrawArrays( GL_TRIANGLE_STRIP, c * 4, 4 );
 		}
+		
+		m_shader_program->Disable();
+		
+		glBindTexture( GL_TEXTURE_2D, 0 );
+		
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 };
 

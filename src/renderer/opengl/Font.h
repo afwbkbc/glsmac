@@ -35,22 +35,13 @@ MAJOR_CLASS( Font, base::Base )
 
 	class font_context_t {
 	public:
-		GLuint m_vbos[128];
-		size_t m_boxes_count[128];
-		string m_text = "";
-		float m_x = 0;
-		float m_y = 0;
+		GLuint m_vbo = 0;
+		size_t m_boxes_count = 0;
 		font_context_t() {
-			memset( m_vbos, 0, sizeof( m_vbos ) );
-			for ( int sym = 32; sym < 128; sym++ ) {
-				glGenBuffers( 1, &(m_vbos[sym]));
-			}
-			memset( m_boxes_count, 0, sizeof( m_boxes_count ) );
+			glGenBuffers( 1, &m_vbo );
 		}
 		~font_context_t() {
-			for ( int sym = 32; sym < 128; sym++ ) {
-				glDeleteBuffers( 1, &(m_vbos[sym]));
-			}
+			glDeleteBuffers( 1, &m_vbo );
 		}
 	};
 	
@@ -62,7 +53,6 @@ protected:
 	shader_program::FontOpenGLShaderProgram *m_shader_program = nullptr;
 
 	// ascii only for now
-	
 	float m_tx[128];
 	float m_ty[128];
 	

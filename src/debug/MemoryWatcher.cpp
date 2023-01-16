@@ -190,10 +190,10 @@ void MemoryWatcher::GLBufferData( GLenum target, GLsizeiptr size, const void * d
 		}
 		size_t old_size = m_opengl.vertex_buffer_sizes.at( m_opengl.current_vertex_buffer );
 		if ( old_size > 0 ) {
-			Log( "Freeing " + to_string( size ) + " bytes from opengl vertex buffer " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
+			//Log( "Freeing " + to_string( size ) + " bytes from opengl vertex buffer " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
 			DEBUG_STAT_CHANGE_BY( opengl_vertex_buffers_size, -old_size );
 		}
-		Log( "Loading " + to_string( size ) + " bytes into opengl vertex buffer " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
+		//Log( "Loading " + to_string( size ) + " bytes into opengl vertex buffer " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
 		m_opengl.vertex_buffer_sizes[ m_opengl.current_vertex_buffer ] = size;
 		DEBUG_STAT_CHANGE_BY( opengl_vertex_buffers_size, size );
 		DEBUG_STAT_INC( opengl_vertex_buffers_updates ) \
@@ -204,10 +204,10 @@ void MemoryWatcher::GLBufferData( GLenum target, GLsizeiptr size, const void * d
 		}
 		size_t old_size = m_opengl.index_buffer_sizes.at( m_opengl.current_index_buffer );
 		if ( old_size > 0 ) {
-			Log( "Freeing " + to_string( size ) + " bytes from opengl index buffer " + to_string( m_opengl.current_index_buffer ) + " @" + source );
+			//Log( "Freeing " + to_string( size ) + " bytes from opengl index buffer " + to_string( m_opengl.current_index_buffer ) + " @" + source );
 			DEBUG_STAT_CHANGE_BY( opengl_index_buffers_size, -old_size );
 		}
-		Log( "Loading " + to_string( size ) + " bytes into opengl index buffer " + to_string( m_opengl.current_index_buffer ) + " @" + source );
+		//Log( "Loading " + to_string( size ) + " bytes into opengl index buffer " + to_string( m_opengl.current_index_buffer ) + " @" + source );
 		m_opengl.index_buffer_sizes[ m_opengl.current_index_buffer ] = size;
 		DEBUG_STAT_CHANGE_BY( opengl_index_buffers_size, size );
 		DEBUG_STAT_INC( opengl_index_buffers_updates ) \
@@ -302,7 +302,12 @@ const MemoryWatcher::statistics_result_t MemoryWatcher::GetLargestMemoryConsumer
 }
 
 void MemoryWatcher::Log( const string& text ) {
-	cout << "<MemoryWatcher> " << text << endl;
+	g_debug_stats._mutex.lock();
+	if (!g_debug_stats._readonly) { // don't spam from debug overlay
+		cout << "<MemoryWatcher> " << text << endl;
+		fflush(stdout);
+	}
+	g_debug_stats._mutex.unlock();
 }
 
 }

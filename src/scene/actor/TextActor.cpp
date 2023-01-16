@@ -56,7 +56,6 @@ void TextActor::UpdatePosition() {
 }
 
 void TextActor::Redraw() {
-	//Log("UPDATETEXT");
 	if ( m_renderer_object ) {
 		auto* gl_actor = m_renderer_object->GetDstObject<renderer::opengl::TextActor>();
 		gl_actor->Update( m_text, m_position.x, m_position.y );

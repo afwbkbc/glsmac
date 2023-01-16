@@ -116,7 +116,7 @@ void UIObject::ApplyStyle() {
 #if DEBUG
 	CheckStylePtr();
 #endif
-	Log( "Applying style class '" + m_style->GetClassName() + "' (modifiers: " + to_string( m_style_modifiers ) + ")" );
+	//Log( "Applying style class '" + m_style->GetClassName() + "' (modifiers: " + to_string( m_style_modifiers ) + ")" );
 	
 	if ( Has( Style::A_ALIGN ) ) {
 		SetAlign( Get( Style::A_ALIGN ) );

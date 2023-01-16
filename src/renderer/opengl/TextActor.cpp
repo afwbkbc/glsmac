@@ -15,6 +15,7 @@ TextActor::~TextActor() {
 }
 
 void TextActor::Update( const string& text, const float x, const float y ) {
+	
 	m_gl_font->Update( &m_ctx, text, x, y );
 }
 
@@ -22,13 +23,6 @@ void TextActor::Draw( shader_program::OpenGLShaderProgram *shader_program ) {
 	
 	auto *text_actor = (const scene::actor::TextActor *)m_actor;
 	auto position = m_actor->GetPosition();
-	//m_gl_font->Render( text_actor->GetText().c_str(), position.x, position.y, position.z, text_actor->GetColor() );
-	//m_gl_font->Update( text_actor->GetText(), position.x, position.y );
-	//m_gl_font->Update( &m_ctx, text_actor->GetText(), position.x, position.y );
-	m_gl_font->Render( &m_ctx, position.z, text_actor->GetColor() );
-	m_gl_font->Render( &m_ctx, position.z, text_actor->GetColor() );
-	m_gl_font->Render( &m_ctx, position.z, text_actor->GetColor() );
-	m_gl_font->Render( &m_ctx, position.z, text_actor->GetColor() );
 	m_gl_font->Render( &m_ctx, position.z, text_actor->GetColor() );
 }
 
