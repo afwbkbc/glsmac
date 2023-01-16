@@ -5,14 +5,14 @@
 namespace renderer {
 namespace opengl {
 
-class Font;
+class TextActor;
 
 namespace shader_program {
 
 MINOR_CLASS( Font, OpenGLShaderProgram )
 	FontOpenGLShaderProgram() : OpenGLShaderProgram( TYPE_FONT ) {};
 protected:
-	friend class opengl::Font;
+	friend class opengl::TextActor;
 
 	struct {
 		GLint texture;
@@ -35,4 +35,4 @@ protected:
 } /* namespace opengl */
 } /* namespace renderer */
 
-#include "../Font.h"
+#include "../TextActor.h"

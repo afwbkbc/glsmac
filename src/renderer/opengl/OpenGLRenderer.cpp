@@ -149,12 +149,12 @@ void OpenGLRenderer::Start() {
 	}
 	this->mStartRoutinesQueue.clear();*/
 
+	glBindTexture( GL_TEXTURE_2D, 0 );
 }
 
 void OpenGLRenderer::Stop() {
 	Log( "Uninitializing OpenGL" );
 
-	glBindTexture( GL_TEXTURE_2D, 0 );
 	glDeleteTextures(1, &m_no_texture );
 	
 	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it )
@@ -324,7 +324,7 @@ void OpenGLRenderer::LoadTexture( const types::Texture* texture ) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
-		glBindTexture( GL_TEXTURE_2D, m_no_texture );
+		glBindTexture( GL_TEXTURE_2D, 0 );
 		
 	}
 }
@@ -337,12 +337,16 @@ void OpenGLRenderer::UnloadTexture( const types::Texture* texture ) {
 */
 
 void OpenGLRenderer::EnableTexture( const types::Texture* texture ) {
-	
-	glBindTexture( GL_TEXTURE_2D, m_textures[texture] );
+	if ( texture ) {
+		glBindTexture( GL_TEXTURE_2D, m_textures[texture] );
+	}
+	else {
+		glBindTexture( GL_TEXTURE_2D, m_no_texture );
+	}
 }
 
 void OpenGLRenderer::DisableTexture() {
-	glBindTexture( GL_TEXTURE_2D, m_no_texture );
+	glBindTexture( GL_TEXTURE_2D, 0 );
 }
 
 } /* namespace opengl */

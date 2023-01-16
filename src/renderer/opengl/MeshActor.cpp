@@ -129,9 +129,7 @@ void MeshActor::Draw( shader_program::OpenGLShaderProgram *shader_program ) {
 	//glBindTexture(GL_TEXTURE_2D, this->mMaterialTextureObjs[0]);
 	//glActiveTexture(GL_TEXTURE0);
 
-	if (texture) {
-		g_engine->GetRenderer()->EnableTexture(texture);
-	}
+	g_engine->GetRenderer()->EnableTexture(texture);
 
 	/*
 	math::Matrix44 matrix;
@@ -148,9 +146,7 @@ void MeshActor::Draw( shader_program::OpenGLShaderProgram *shader_program ) {
 
 	glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
 
-	if (texture) {
-		g_engine->GetRenderer()->DisableTexture();
-	}
+	g_engine->GetRenderer()->DisableTexture();
 
 	shader_program->Disable();
 

@@ -21,13 +21,18 @@ class MemoryWatcher {
 public:
 	MemoryWatcher();
 	~MemoryWatcher();
-	
+
 	void New( const Base* object, const size_t size, const string& file, const size_t line );
 	void Delete( const Base* object, const string& file, const size_t line );
 	void GLGenBuffers( GLsizei n, GLuint * buffers, const string& file, const size_t line );
 	void GLBindBuffer( GLenum target, GLuint buffer, const string& file, const size_t line );
 	void GLBufferData( GLenum target, GLsizeiptr size, const void * data, GLenum usage, const string& file, const size_t line );
 	void GLDeleteBuffers( GLsizei n, const GLuint * buffers, const string& file, const size_t line );
+	void GLGenTextures( GLsizei n, GLuint * textures, const string& file, const size_t line );
+	void GLBindTexture( GLenum target, GLuint texture, const string& file, const size_t line );
+	void GLTexImage2D( GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void *pixels, const string& file, const size_t line );
+
+	void GLDeleteTextures( GLsizei n, GLuint * textures, const string& file, const size_t line );
 	
 	typedef struct {
 		const void* ptr;
@@ -57,11 +62,14 @@ private:
 	struct {
 		GLuint current_vertex_buffer = 0;
 		GLuint current_index_buffer = 0;
+		GLuint current_texture = 0;
 		unordered_set<GLuint> buffers;
 		unordered_set<GLuint> vertex_buffers;
 		unordered_set<GLuint> index_buffers;
 		unordered_map<GLuint, size_t> vertex_buffer_sizes;
 		unordered_map<GLuint, size_t> index_buffer_sizes;
+		unordered_set<GLuint> textures;
+		unordered_map<GLuint, size_t> texture_sizes;
 	} m_opengl;
 	
 };

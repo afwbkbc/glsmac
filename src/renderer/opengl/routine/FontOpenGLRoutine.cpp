@@ -57,19 +57,19 @@ opengl::Actor *FontOpenGLRoutine::AddCustomActor( scene::actor::Actor *actor ) {
 		case scene::actor::Actor::TYPE_TEXT: {
 			auto *text_actor = (scene::actor::TextActor *)actor;
 			auto *font = text_actor->GetFont();
-			base::ObjectLink *font_link = font->m_renderer_object;
-			Font *gl_font;
-			if ( font_link != NULL )
-				gl_font = font_link->GetDstObject<Font>();
-			else {
-				m_shader_program->Enable();
-				NEW( gl_font, Font, font, m_shader_program );
-				m_shader_program->Disable();
-				NEW( font_link, base::ObjectLink, font, gl_font );
-				m_gl_fonts.push_back( font_link );
-				font->m_renderer_object = font_link;
-			}
-			NEWV( result, TextActor, (scene::actor::TextActor *)actor, gl_font );
+			//base::ObjectLink *font_link = font->m_renderer_object;
+			//Font *gl_font;
+			//if ( font_link != NULL )
+				//gl_font = font_link->GetDstObject<Font>();
+			//else {
+				//m_shader_program->Enable();
+				//NEW( gl_font, Font, font, m_shader_program );
+				//m_shader_program->Disable();
+				//NEW( font_link, base::ObjectLink, font, gl_font );
+				//m_gl_fonts.push_back( font_link );
+				//font->m_renderer_object = font_link;
+			//}
+			NEWV( result, TextActor, (scene::actor::TextActor *)actor, font );
 			return result;
 		}
 	}

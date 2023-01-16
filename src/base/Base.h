@@ -17,7 +17,7 @@ using namespace std;
 #if DEBUG
 
 using namespace debug;
-	
+
 #define DEBUG_STATS \
 	D( seconds_passed ) \
 	D( objects_created ) \
@@ -32,8 +32,9 @@ using namespace debug;
 	D( opengl_vertex_buffers_updates ) \
 	D( opengl_index_buffers_size ) \
 	D( opengl_index_buffers_updates ) \
-	D( opengl_texture_buffers_count ) \
-	D( opengl_texture_buffers_size ) \
+	D( opengl_textures_count ) \
+	D( opengl_textures_size ) \
+	D( opengl_textures_updates ) \
 	D( ui_elements_created ) \
 	D( ui_elements_destroyed )\
 	D( ui_elements_active )
@@ -100,14 +101,27 @@ using namespace debug;
 	#define glGenBuffers( _size, _ptr ) g_memory_watcher->GLGenBuffers( _size, _ptr, __FILE__, __LINE__ )
 
 	#undef glBindBuffer
-	#define glBindBuffer( _type, _ptr ) g_memory_watcher->GLBindBuffer( _type, _ptr, __FILE__, __LINE__ )
+	#define glBindBuffer( _target, _ptr ) g_memory_watcher->GLBindBuffer( _target, _ptr, __FILE__, __LINE__ )
 
 	#undef glBufferData
-	#define glBufferData( _type, _size, _data, _mode ) g_memory_watcher->GLBufferData( _type, _size, _data, _mode, __FILE__, __LINE__ )
+	#define glBufferData( _target, _size, _data, _mode ) g_memory_watcher->GLBufferData( _target, _size, _data, _mode, __FILE__, __LINE__ )
 
 	#undef glDeleteBuffers
 	#define glDeleteBuffers( _size, _ptr ) g_memory_watcher->GLDeleteBuffers( _size, _ptr, __FILE__, __LINE__ )
 
+	#undef glGenTextures
+	#define glGenTextures( _size, _ptr ) g_memory_watcher->GLGenTextures( _size, _ptr, __FILE__, __LINE__ )
+
+	#undef glBindTexture
+	#define glBindTexture( _target, _ptr ) g_memory_watcher->GLBindTexture( _target, _ptr, __FILE__, __LINE__ )
+
+	#undef glTexImage2D
+	#define glTexImage2D( _target, _level, _srcfmt, _width, _height, _border, _dstfmt, _type, _ptr ) \
+		g_memory_watcher->GLTexImage2D( _target, _level, _srcfmt, _width, _height, _border, _dstfmt, _type, _ptr, __FILE__, __LINE__ )
+	
+	#undef glDeleteTextures
+	#define glDeleteTextures( _size, _ptr ) g_memory_watcher->GLDeleteTextures( _size, _ptr, __FILE__, __LINE__ )
+	
 #else
 	#define DEBUG_STAT_CHANGE_BY( _stat, _by )
 	#define DEBUG_STAT_INC( _stat )

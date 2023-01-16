@@ -21,6 +21,18 @@ void glBufferData_real( GLenum target, GLsizeiptr size, const void * data, GLenu
 void glDeleteBuffers_real( GLsizei n, const GLuint * buffers ) {
 	glDeleteBuffers( n, buffers );
 }
+void glGenTextures_real( GLsizei n, GLuint * textures ) {
+	glGenTextures( n, textures );
+}
+void glBindTexture_real( GLenum target, GLuint texture ) {
+	glBindTexture( target, texture );
+}
+void glTexImage2D_real( GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void *pixels) {
+	glTexImage2D( target, level, internalformat, width, height, border, format, type, pixels );
+}
+void glDeleteTextures_real( GLsizei n, GLuint * textures ) {
+	glDeleteTextures( n, textures );
+}
 
 #include "base/Base.h"
 
@@ -177,12 +189,12 @@ void MemoryWatcher::GLBindBuffer( GLenum target, GLuint buffer, const string& fi
 }
 
 void MemoryWatcher::GLBufferData( GLenum target, GLsizeiptr size, const void * data, GLenum usage, const string& file, const size_t line ) {
+	lock_guard<mutex> guard( m_mutex );
+	const string source = file + ":" + to_string(line);
+	
 	if ( target != GL_ARRAY_BUFFER && target != GL_ELEMENT_ARRAY_BUFFER ) {
 		throw runtime_error( "glBufferData unknown target " + to_string(target) );
 	}
-	
-	lock_guard<mutex> guard( m_mutex );
-	const string source = file + ":" + to_string(line);
 	
 	if ( target == GL_ARRAY_BUFFER ) {
 		if ( m_opengl.current_vertex_buffer == 0 ) {
@@ -196,7 +208,7 @@ void MemoryWatcher::GLBufferData( GLenum target, GLsizeiptr size, const void * d
 		//Log( "Loading " + to_string( size ) + " bytes into opengl vertex buffer " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
 		m_opengl.vertex_buffer_sizes[ m_opengl.current_vertex_buffer ] = size;
 		DEBUG_STAT_CHANGE_BY( opengl_vertex_buffers_size, size );
-		DEBUG_STAT_INC( opengl_vertex_buffers_updates ) \
+		DEBUG_STAT_INC( opengl_vertex_buffers_updates );
 	}
 	else {
 		if ( m_opengl.current_index_buffer == 0 ) {
@@ -210,7 +222,7 @@ void MemoryWatcher::GLBufferData( GLenum target, GLsizeiptr size, const void * d
 		//Log( "Loading " + to_string( size ) + " bytes into opengl index buffer " + to_string( m_opengl.current_index_buffer ) + " @" + source );
 		m_opengl.index_buffer_sizes[ m_opengl.current_index_buffer ] = size;
 		DEBUG_STAT_CHANGE_BY( opengl_index_buffers_size, size );
-		DEBUG_STAT_INC( opengl_index_buffers_updates ) \
+		DEBUG_STAT_INC( opengl_index_buffers_updates );
 	}
 	
 	glBufferData_real( target, size, data, usage );
@@ -257,6 +269,142 @@ void MemoryWatcher::GLDeleteBuffers( GLsizei n, const GLuint * buffers, const st
 	DEBUG_STAT_DEC( opengl_buffers_count );
 	
 	glDeleteBuffers_real( n, buffers );
+}
+
+void MemoryWatcher::GLGenTextures( GLsizei n, GLuint * textures, const string& file, const size_t line ) {
+	lock_guard<mutex> guard( m_mutex );
+	const string source = file + ":" + to_string(line);
+	
+	if ( n != 1 ) {
+		throw runtime_error( "glGenTextures with size " + to_string(n) + ", suspicious, is it a typo? @" + source );
+	}
+	glGenTextures_real( n, textures );
+	Log( "Created opengl texture " + to_string( *textures ) + " @" + source );
+	
+	if ( m_opengl.textures.find( *textures ) != m_opengl.textures.end() ) {
+		throw runtime_error( "glGenTextures texture id overlap @" + source );
+	}
+	m_opengl.textures.insert( *textures );
+	
+	DEBUG_STAT_INC( opengl_textures_count );
+}
+
+void MemoryWatcher::GLBindTexture( GLenum target, GLuint texture, const string& file, const size_t line ) {
+	lock_guard<mutex> guard( m_mutex );
+	const string source = file + ":" + to_string(line);
+	
+	if ( target != GL_TEXTURE_2D ) {
+		throw runtime_error( "glBindTexture unknown target " + to_string(target) + " @" + source );
+	}
+
+	if ( m_opengl.current_texture == texture ) {
+		throw runtime_error( "glBindTexture called with same texture ( " + to_string( texture ) + " ) as already bound @" + source );
+	}
+	if ( texture != 0 ) {
+		if ( m_opengl.current_texture != 0 ) {
+			throw runtime_error( "glBindTexture called on already bound texture ( " + to_string( m_opengl.current_texture ) + ", " + to_string( texture ) + " ) @" + source );
+		}
+		//Log("Binding to opengl texture " + to_string( texture ) + " @" + source );
+		if ( m_opengl.texture_sizes.find( texture ) == m_opengl.texture_sizes.end() ) {
+			m_opengl.texture_sizes[ texture ] = 0;
+		}
+	}
+	else {
+		if ( m_opengl.current_texture != 0 ) {
+			//Log("Unbinding from opengl vertex buffer " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
+		}
+	}
+	m_opengl.current_texture = texture;
+	
+	glBindTexture_real( target, texture );
+}
+
+void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void *pixels, const string& file, const size_t line ) {
+	lock_guard<mutex> guard( m_mutex );
+	const string source = file + ":" + to_string(line);
+	
+	if ( target != GL_TEXTURE_2D ) {
+		throw runtime_error( "glTexImage2D unknown target " + to_string(target) + " @" + source );
+	}
+	if ( level != 0 ) {
+		throw runtime_error( "glTexImage2D unknown level " + to_string(level) + " @" + source );
+	}
+	if ( width == 0 ) {
+		throw runtime_error( "glTexImage2D zero width" );
+	}
+	if ( height == 0 ) {
+		throw runtime_error( "glTexImage2D zero height" );
+	}
+	if ( border != 0 ) {
+		throw runtime_error( "glTexImage2D unknown border " + to_string(border) + " @" + source );
+	}
+	if ( type != GL_UNSIGNED_BYTE ) {
+		throw runtime_error( "glTexImage2D unknown type " + to_string(type) + " @" + source );
+	}
+	if ( m_opengl.current_texture == 0 ) {
+		throw runtime_error( "glTexImage2D called without bound texture @" + source );
+	}
+	
+	size_t internalbpp, bpp;
+	switch (internalformat) {
+		case GL_RED: {
+			internalbpp = 1;
+			break;
+		}
+		case GL_RGBA8: {
+			internalbpp = 4;
+			break;
+		}
+		default:
+			throw runtime_error( "glTexImage2D unknown internal format " + to_string(internalformat) + " @" + source );
+	}
+	switch (format) {
+		case GL_RED: {
+			bpp = 1;
+			break;
+		}
+		case GL_RGBA: {
+			bpp = 4;
+			break;
+		}
+		default:
+			throw runtime_error( "glTexImage2D unknown format " + to_string(format) + " @" + source );
+	}
+	if ( internalbpp != bpp ) {
+		throw runtime_error( "glTexImage2D internal bpp (" + to_string( internalbpp ) + ") differs from bpp (" + to_string( bpp ) + ") @" + source );
+	}
+	
+	size_t size = bpp * width * height;
+	size_t old_size = m_opengl.texture_sizes.at( m_opengl.current_texture );
+	if ( old_size > 0 ) {
+		//Log( "Freeing " + to_string( size ) + " bytes from opengl texture " + to_string( m_opengl.current_texture ) + " @" + source );
+		DEBUG_STAT_CHANGE_BY( opengl_textures_size, -old_size );
+	}
+	//Log( "Loading " + to_string( size ) + " bytes into opengl texture " + to_string( m_opengl.current_texture ) + " @" + source );
+	
+	m_opengl.texture_sizes[ m_opengl.current_texture ] = size;
+	DEBUG_STAT_CHANGE_BY( opengl_textures_size, size );
+	DEBUG_STAT_INC( opengl_textures_updates );
+	
+	glTexImage2D_real( target, level, internalformat, width, height, border, format, type, pixels );
+}
+
+void MemoryWatcher::GLDeleteTextures( GLsizei n, GLuint * textures, const string& file, const size_t line ) {
+	lock_guard<mutex> guard( m_mutex );
+	const string source = file + ":" + to_string(line);
+	
+	if ( n != 1 ) {
+		throw runtime_error( "glDeleteTextures with size " + to_string(n) + ", suspicious, is it a typo? @" + source );
+	}
+	
+	if ( m_opengl.textures.find( *textures ) == m_opengl.textures.end() ) {
+		throw runtime_error( "glDeleteTextures texture does not exist @" + source );
+	}
+	
+	m_opengl.textures.erase( *textures );
+	DEBUG_STAT_DEC( opengl_textures_count );
+	
+	glDeleteTextures_real( n, textures );
 }
 
 struct sort_method

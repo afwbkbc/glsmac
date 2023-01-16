@@ -4,8 +4,8 @@ SUBDIR( object )
 
 SET(SRC ${SRC}
 
-	${PWD}/Font.cpp
 	${PWD}/Texture.cpp
+	${PWD}/FontTexture.cpp
 		${PWD}/CubemapTexture.cpp
 	${PWD}/Actor.cpp
 		${PWD}/MeshActor.cpp

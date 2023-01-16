@@ -6,7 +6,7 @@
 
 #include "../shader_program/FontOpenGLShaderProgram.h"
 #include "base/ObjectLink.h"
-#include "../Font.h"
+#include "../FontTexture.h"
 
 namespace renderer {
 namespace opengl {

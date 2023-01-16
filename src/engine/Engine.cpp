@@ -5,7 +5,7 @@
 #include "Engine.h"
 
 // TODO: move to config
-const size_t g_max_fps = 50000;
+const size_t g_max_fps = 500;
 
 engine::Engine *g_engine = NULL;
 
