@@ -341,7 +341,7 @@ void OpenGLRenderer::LoadTexture( const types::Texture* texture ) {
 		}
 		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
 
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, (GLsizei)texture->m_width, (GLsizei)texture->m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture->m_bitmap );
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, (GLsizei)texture->m_width, (GLsizei)texture->m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, ptr( texture->m_bitmap, 0, texture->m_width * texture->m_height * 4 ) );
 		if ( glGetError() ) {
 			throw RendererError( "Error loading texture" );
 		};

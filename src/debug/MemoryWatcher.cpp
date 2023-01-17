@@ -7,6 +7,7 @@
 #include <sstream>
 #include <thread>
 #include <chrono>
+#include <cstring>
 
 // to avoid being intercepted by macros in Base.h again
 
@@ -111,7 +112,7 @@ void MemoryWatcher::New( const Base* object, const size_t size, const string& fi
 	
 	DEBUG_STAT_INC( objects_created );
 	DEBUG_STAT_INC( objects_active );
-	DEBUG_STAT_CHANGE_BY( total_bytes_allocated, size );
+	DEBUG_STAT_CHANGE_BY( heap_allocated_size, size );
 
 	// VERY spammy
 	//Log( "Allocated " + to_string( size ) + "b for " + object->GetNamespace() + " @" + source );
@@ -129,7 +130,7 @@ void MemoryWatcher::Delete( const Base* object, const string& file, const size_t
 	
 	DEBUG_STAT_INC( objects_destroyed );
 	DEBUG_STAT_DEC( objects_active );
-	DEBUG_STAT_CHANGE_BY( total_bytes_allocated, -obj.size );
+	DEBUG_STAT_CHANGE_BY( heap_allocated_size, -obj.size );
 
 	// VERY spammy
 	//Log( "Freed " + to_string( obj.size ) + "b from " + object->GetNamespace() + " @" + source );
@@ -157,12 +158,31 @@ void* MemoryWatcher::Malloc( const size_t size, const string& file, const size_t
 	
 	DEBUG_STAT_INC( buffers_created );
 	DEBUG_STAT_INC( buffers_active );
-	DEBUG_STAT_CHANGE_BY( total_bytes_allocated, size );
+	DEBUG_STAT_CHANGE_BY( heap_allocated_size, size );
 	
 	// VERY spammy
 	Log( "Allocated " + to_string( size ) + "b for " + to_string( (long int)ptr ) + " @" + source );
 	
 	return ptr;
+}
+
+unsigned char* MemoryWatcher::Ptr( unsigned char* ptr, const size_t offset, const size_t size, const string& file, const size_t line  ) {
+	lock_guard<mutex> guard( m_mutex );
+	const string source = file + ":" + to_string(line);
+	
+	if ( ptr == nullptr ) {
+		throw runtime_error( "ptr is null @" + source );
+	}
+	
+	auto it = m_allocated_memory.find( ptr );
+	if ( it == m_allocated_memory.end() ) {
+		throw runtime_error( "ptr on non-allocated pointer @" + source );
+	}
+	if ( offset + size > it->second.size ) {
+		throw runtime_error( "ptr overflow (" + to_string( offset ) + " + " + to_string( size ) + " > " + to_string( it->second.size ) + ") @" + source + " (allocated @" + it->second.source + ")" );
+	}
+	
+	return ptr + offset;
 }
 
 void MemoryWatcher::Free( void* ptr, const string& file, const size_t line ) {
@@ -179,7 +199,7 @@ void MemoryWatcher::Free( void* ptr, const string& file, const size_t line ) {
 	
 	DEBUG_STAT_INC( buffers_destroyed );
 	DEBUG_STAT_DEC( buffers_active );
-	DEBUG_STAT_CHANGE_BY( total_bytes_allocated, -obj.size );
+	DEBUG_STAT_CHANGE_BY( heap_allocated_size, -obj.size );
 	
 	Log( "Freed " + to_string( obj.size ) + "b from " + to_string( (long int)ptr ) + " @" + source );
 	

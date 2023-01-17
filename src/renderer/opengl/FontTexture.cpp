@@ -44,7 +44,7 @@ FontTexture::FontTexture( types::Font *font ) {
 
 		if ( bitmap->width > 0 && bitmap->height > 0 ) {
 			if ( bitmap->data ) {
-				glTexSubImage2D( GL_TEXTURE_2D, 0, (GLint)ox, (GLint)oy, (GLsizei)bitmap->width, (GLsizei)bitmap->height, GL_RED, GL_UNSIGNED_BYTE, (const GLvoid *)bitmap->data );
+				glTexSubImage2D( GL_TEXTURE_2D, 0, (GLint)ox, (GLint)oy, (GLsizei)bitmap->width, (GLsizei)bitmap->height, GL_RED, GL_UNSIGNED_BYTE, (const GLvoid *)ptr( bitmap->data, 0, bitmap->width * bitmap->height ) );
 				if ( glGetError() ) {
 					throw FontError( "Error loading subimage of font texture" );
 				};

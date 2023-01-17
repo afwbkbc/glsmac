@@ -5,7 +5,6 @@
 #include <unordered_set>
 #include <vector>
 #include <mutex>
-
 #include <GL/glew.h>
 
 namespace base {
@@ -26,7 +25,9 @@ public:
 	void New( const Base* object, const size_t size, const string& file, const size_t line );
 	void Delete( const Base* object, const string& file, const size_t line );
 	void* Malloc( const size_t size, const string& file, const size_t line );
+	unsigned char *Ptr( unsigned char* ptr, const size_t offset, const size_t size, const string& file, const size_t line  );
 	void Free( void* ptr, const string& file, const size_t line );
+
 	
 	// opengl stuff
 	void GLGenBuffers( GLsizei n, GLuint * buffers, const string& file, const size_t line );

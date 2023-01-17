@@ -64,7 +64,11 @@ void CubemapTexture::Load() {
 						xpos = x;
 						ypos = y;
 					}
-					block_data[ ( y * bw + x ) * m_texture->m_bpp + bpp ] = m_texture->m_bitmap[ ( ( block_positions[i][1] + ypos ) * m_texture->m_width + ( block_positions[i][0] + xpos ) ) * m_texture->m_bpp + bpp ];
+					//block_data[ ( y * bw + x ) * m_texture->m_bpp + bpp ] = m_texture->m_bitmap[ ( ( block_positions[i][1] + ypos ) * m_texture->m_width + ( block_positions[i][0] + xpos ) ) * m_texture->m_bpp + bpp ];
+					*ptr( block_data, ( y * bw + x ) * m_texture->m_bpp + bpp, 1 )
+						=
+					//m_texture->m_bitmap[ ( ( block_positions[i][1] + ypos ) * m_texture->m_width + ( block_positions[i][0] + xpos ) ) * m_texture->m_bpp + bpp ];
+					*ptr( m_texture->m_bitmap, ( ( block_positions[i][1] + ypos ) * m_texture->m_width + ( block_positions[i][0] + xpos ) ) * m_texture->m_bpp + bpp, 1 );
 				}
 
 		glTexImage2D( target, 0, GL_RGB, bw, bh, 0, pixel_format, GL_UNSIGNED_BYTE, block_data );

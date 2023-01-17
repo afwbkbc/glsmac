@@ -57,13 +57,13 @@ types::Texture *SDL2ImageTextureLoader::LoadTexture( const string &name ) {
 		texture->m_bpp = image->format->BitsPerPixel / 8;
 		texture->m_bitmap_size = image->w * image->h * texture->m_bpp;
 		texture->m_bitmap = (unsigned char*) malloc( texture->m_bitmap_size );
-		memcpy( texture->m_bitmap, image->pixels, texture->m_bitmap_size );
+		memcpy( ptr( texture->m_bitmap, 0, texture->m_bitmap_size ), image->pixels, texture->m_bitmap_size );
 		SDL_FreeSurface(image);
 
 		if ( m_is_transparent_color_set ) {
 			for (size_t i = 0 ; i < texture->m_bitmap_size ; i += texture->m_bpp) {
-				if (!memcmp( texture->m_bitmap + i, &m_transparent_color, texture->m_bpp )) {
-					memset( texture->m_bitmap + i, 0, texture->m_bpp );
+				if (!memcmp( ptr( texture->m_bitmap, i, texture->m_bpp ), &m_transparent_color, texture->m_bpp )) {
+					memset( ptr( texture->m_bitmap, i, texture->m_bpp ), 0, texture->m_bpp );
 				}
 			}
 		}

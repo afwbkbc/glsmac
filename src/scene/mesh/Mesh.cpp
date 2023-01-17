@@ -22,8 +22,8 @@ Mesh::~Mesh() {
 }
 
 void Mesh::Clear() {
-	memset( m_vertex_data, 0, GetVertexDataSize() );
-	memset( m_index_data, 0, GetIndexDataSize() );
+	memset( ptr( m_vertex_data, 0, GetVertexDataSize() ), 0, GetVertexDataSize() );
+	memset( ptr( m_index_data, 0, GetIndexDataSize() ), 0, GetIndexDataSize() );
 	m_is_final = true;
 }
 
@@ -37,7 +37,7 @@ void Mesh::AddSurface( const Mesh::surface_t& surface  ) {
 	}
 #endif
 	// add triangle
-	memcpy( m_index_data + m_surface_i * SURFACE_SIZE * sizeof( index_t ), &surface, sizeof(surface) );
+	memcpy( ptr( m_index_data, m_surface_i * SURFACE_SIZE * sizeof( index_t ), sizeof( surface ) ), &surface, sizeof( surface ) );
 }
 
 Mesh::index_t Mesh::AddVertex( const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord ) {
@@ -49,8 +49,8 @@ Mesh::index_t Mesh::AddVertex( const Vec3 &coord, const Vec2<Mesh::coord_t> &tex
 		throw MeshError( "vertex out of bounds" );
 	}
 #endif
-	memcpy( m_vertex_data + m_vertex_i * VERTEX_SIZE * sizeof( coord_t ), &coord, sizeof(coord) );
-	memcpy( m_vertex_data + m_vertex_i * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), &tex_coord, sizeof(tex_coord) );
+	memcpy( ptr( m_vertex_data, m_vertex_i * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord ) ), &coord, sizeof(coord) );
+	memcpy( ptr( m_vertex_data, m_vertex_i * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( tex_coord ) ), &tex_coord, sizeof(tex_coord) );
 	Mesh::index_t ret = m_vertex_i;
 	m_vertex_i++;
 	return ret;
@@ -65,8 +65,8 @@ void Mesh::SetVertex( const index_t index, const Vec3 &coord, const Vec2<Mesh::c
 		throw MeshError( "index out of bounds" );
 	}
 #endif
-	memcpy( m_vertex_data + index * VERTEX_SIZE * sizeof( coord_t ), &coord, sizeof(coord) );
-	memcpy( m_vertex_data + index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), &tex_coord, sizeof(tex_coord) );
+	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord ) ), &coord, sizeof( coord ) );
+	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( tex_coord ) ), &tex_coord, sizeof( tex_coord ) );
 	Update();
 }
 void Mesh::SetVertex( const index_t index, const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord ) {
@@ -79,7 +79,7 @@ void Mesh::SetVertexCoord( const index_t index, const Vec3 &coord ) {
 		throw MeshError( "index out of bounds" );
 	}
 #endif
-	memcpy( m_vertex_data + index * VERTEX_SIZE * sizeof( coord_t ), &coord, sizeof(coord) );
+	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord ) ), &coord, sizeof( coord ) );
 	Update();
 }
 void Mesh::SetVertexCoord( const index_t index, const Vec2<Mesh::coord_t> &coord ) {
@@ -92,7 +92,7 @@ void Mesh::SetVertexTexCoord( const index_t index, const Vec2<Mesh::coord_t> &te
 		throw MeshError( "index out of bounds" );
 	}
 #endif
-	memcpy( m_vertex_data + index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), &tex_coord, sizeof(tex_coord) );
+	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( tex_coord ) ), &tex_coord, sizeof( tex_coord ) );
 	Update();
 }
 
@@ -103,7 +103,7 @@ void Mesh::SetSurface( const index_t index, const Mesh::surface_t& surface ) {
 	}
 #endif
 	// add triangle
-	memcpy( m_index_data + index * SURFACE_SIZE * sizeof( index_t ), &surface, sizeof(surface) );
+	memcpy( ptr( m_index_data, index * SURFACE_SIZE * sizeof( index_t ), sizeof( surface ) ), &surface, sizeof( surface ) );
 }
 
 
@@ -129,7 +129,7 @@ void Mesh::GetVertexCoord( const index_t index, Vec3* coord ) {
 		throw MeshError( "index out of bounds" );
 	}
 #endif
-	memcpy( coord, m_vertex_data + index * VERTEX_SIZE * sizeof( coord_t ), sizeof(coord) );
+	memcpy( coord, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord ) ), sizeof( coord ) );
 }
 
 const size_t Mesh::GetVertexCount() const {

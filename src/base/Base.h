@@ -26,7 +26,7 @@ using namespace debug;
 	D( objects_created ) \
 	D( objects_destroyed ) \
 	D( objects_active ) \
-	D( total_bytes_allocated ) \
+	D( heap_allocated_size ) \
 	D( textures_loaded ) \
 	D( fonts_loaded ) \
 	D( frames_rendered ) \
@@ -102,6 +102,7 @@ using namespace debug;
 		delete _var;
 
 	#define malloc( __size ) g_memory_watcher->Malloc( __size, __FILE__, __LINE__ )
+	#define ptr( _ptr, _offset, _size ) g_memory_watcher->Ptr( (unsigned char*)_ptr, _offset, _size, __FILE__, __LINE__ )
 	#define free( __ptr ) g_memory_watcher->Free( __ptr, __FILE__, __LINE__ )
 	
 	#undef glGenBuffers
@@ -147,6 +148,7 @@ using namespace debug;
 	#define NEW( _var, _class, ... ) _var = new _class( __VA_ARGS__ )
 	#define NEWV( _var, _class, ... ) auto* _var = new _class( __VA_ARGS__ )
 	#define DELETE( _var ) delete _var
+	#define ptr( _ptr, _offset, _size ) ( _ptr + (_offset) )
 #endif
 	
 namespace base {
