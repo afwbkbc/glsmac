@@ -14,6 +14,8 @@
 
 #include "ui/event/MouseMove.h"
 #include "ui/event/MouseDown.h"
+#include "ui/event/MouseUp.h"
+#include "ui/event/MouseClick.h"
 #include "ui/event/KeyDown.h"
 
 using namespace ui;
@@ -31,7 +33,7 @@ OpenGLRenderer::OpenGLRenderer( const std::string title, const unsigned short wi
 	m_options.vsync = vsync;
 	m_options.fov = fov;
 
-	m_aspect_ratio = (float) m_options.window_width/m_options.window_height;
+	m_aspect_ratio = (float) m_options.window_height / m_options.window_width;
 
 
 /*	NEWV( sp_skybox, shader_program::SkyboxOpenGLShaderProgram );
@@ -182,11 +184,12 @@ void OpenGLRenderer::Iterate() {
 			}
 			case SDL_WINDOWEVENT: {
 				if ( event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED ) {
-					m_options.window_width = event.window.data1;
-					m_options.window_height = event.window.data2;
+					// I'm having weird texture tiling bugs at non-even window heights. let's round them a bit
+					m_options.window_width = event.window.data1 / 2 * 2;
+					m_options.window_height = event.window.data2 / 2 * 2;
 					Log( "Resizing viewport to " + std::to_string( m_options.window_width ) + "x" + std::to_string( m_options.window_height ) );
 					glViewport( 0, 0, m_options.window_width, m_options.window_height );
-					m_aspect_ratio = (float) m_options.window_width / m_options.window_height;
+					m_aspect_ratio = (float) m_options.window_height / m_options.window_width;
 					g_engine->GetUI()->Resize();
 					for ( auto routine = m_routines.begin() ; routine < m_routines.end() ; ++routine ) {
 						for ( auto scene = (*routine)->m_scenes.begin() ; scene < (*routine)->m_scenes.end() ; ++scene ) {
@@ -211,6 +214,29 @@ void OpenGLRenderer::Iterate() {
 			case SDL_MOUSEBUTTONDOWN: {
 				NEWV( ui_event, event::MouseDown, event.motion.x, event.motion.y, event.button.button );
 				g_engine->GetUI()->SendEvent( ui_event );
+#if DEBUG
+				if ( m_active_mousedowns.find( event.button.button ) != m_active_mousedowns.end() ) {
+					throw RendererError( "duplicate mousedown (button=" + to_string( event.button.button ) + ")" );
+				}
+#endif
+				m_active_mousedowns[ event.button.button ] = { event.motion.x, event.motion.y };
+				break;
+			}
+			case SDL_MOUSEBUTTONUP: {
+				NEWV( ui_event, event::MouseUp, event.motion.x, event.motion.y, event.button.button );
+				g_engine->GetUI()->SendEvent( ui_event );
+#if DEBUG
+				if ( m_active_mousedowns.find( event.button.button ) == m_active_mousedowns.end() ) {
+					throw RendererError( "mouseup without mousedown" );
+				}
+#endif
+				auto& mousedown_data = m_active_mousedowns.at( event.button.button );
+				if ( mousedown_data.x == event.motion.x && mousedown_data.y == event.motion.y ) {
+					// mousedown + mouseup at same pixel = mouseclick
+					NEWV( ui_event_2, event::MouseClick, event.motion.x, event.motion.y, event.button.button );
+					g_engine->GetUI()->SendEvent( ui_event_2 );
+				}
+				m_active_mousedowns.erase( event.button.button );
 				break;
 			}
 			case SDL_KEYDOWN: {
@@ -322,6 +348,10 @@ void OpenGLRenderer::LoadTexture( const types::Texture* texture ) {
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);		
+
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		glBindTexture( GL_TEXTURE_2D, 0 );

@@ -12,7 +12,23 @@ Surface::Surface( const string& class_name )
 }
 
 void Surface::SetTexture( const types::Texture* texture) {
-	m_texture = texture;
+	if ( texture != m_texture ) {
+		Log( "Setting texture " + texture->m_name );
+		m_texture = texture;
+		Realign();
+	}
+}
+
+void Surface::SetStretchTexture( const bool stretch_texture ) {
+#if DEBUG
+	if ( !m_texture ) {
+		throw UIObjectError( "stretch texture but texture not set" );
+	}
+#endif
+	if ( stretch_texture != m_stretch_texture ) {
+		m_stretch_texture = stretch_texture;
+		Realign();
+	}
 }
 
 void Surface::Create() {
@@ -34,11 +50,16 @@ void Surface::Destroy() {
 void Surface::Align() {
 	UIObject::Align();
 
-	m_background_mesh->SetCoords(
-		{ ClampX( m_object_area.left ), ClampY( m_object_area.top ) },
-		{ ClampX( m_object_area.right ), ClampY( m_object_area.bottom ) },
-		-m_z_index
-	);
+	const Vec2<coord_t> v1 = { ClampX( m_object_area.left ), ClampY( m_object_area.top ) };
+	const Vec2<coord_t> v2 = { ClampX( m_object_area.right ), ClampY( m_object_area.bottom ) };
+	
+	if ( m_texture && !m_stretch_texture ) {
+		m_background_mesh->SetCoords( v1, v2, { m_texture->m_width, m_texture->m_height }, -m_z_index );
+	}
+	else {
+		m_background_mesh->SetCoords( v1, v2, -m_z_index );
+	}
+	//m_background->Update();
 }
 
 void Surface::Draw() {
@@ -58,6 +79,10 @@ void Surface::ApplyStyle() {
 		if ( Has( Style::A_SIZE_FROM_TEXTURE ) ) {
 			SetWidth( texture->m_width );
 			SetHeight( texture->m_height );
+		}
+		if ( Has( Style::A_STRETCH_TEXTURE ) ) {
+			SetStretchTexture( true );
+			ForceAspectRatio( (float) texture->m_height / texture->m_width );
 		}
 	}
 	

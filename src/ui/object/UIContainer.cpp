@@ -60,11 +60,15 @@ void UIContainer::DestroyChild( UIObject *object ) {
 }
 
 void UIContainer::AddChild( UIObject *object ) {
-	if ( object->GetParentObject() != NULL )
+#if DEBUG
+	if ( object->GetParentObject() != NULL ) {
 		throw UIError( "non-free UIObject insertion" );
+	}
 	auto it = find( m_child_objects.begin(), m_child_objects.end(), object );
-	if ( it < m_child_objects.end() )
+	if ( it < m_child_objects.end() ) {
 		throw UIError( "duplicate UIObject insertion" );
+	}
+#endif
 	Log( "adding child " + object->GetName() );
 	m_child_objects.push_back( object );
 	object->SetParentObject( this );
@@ -99,7 +103,7 @@ void UIContainer::Realign() {
 
 void UIContainer::Redraw() {
 	UIObject::Redraw();
-
+	
 	for ( auto it = m_child_objects.begin() ; it < m_child_objects.end() ; ++it )
 		(*it)->Redraw();
 }
@@ -135,6 +139,14 @@ void UIContainer::SendEvent( const UIEvent* event ) {
 	UIObject::SendEvent( event );
 }
 
+const string UIContainer::Subclass( const string& class_name ) const {
+	//if (this->m_style_class.empty()) {
+		return "";
+	/*}
+	else {
+		return this->m_style_class + class_name;
+	}*/
+}
 
 
 } /* namespace object */

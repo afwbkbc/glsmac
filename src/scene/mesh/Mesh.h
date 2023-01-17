@@ -41,6 +41,8 @@ MAJOR_CLASS( Mesh, base::Base )
 	void SetSurface( const index_t index, const Mesh::surface_t& surface );
 	void Finalize();
 	
+	void GetVertexCoord( const index_t index, Vec3* coord );
+	
 	const size_t GetVertexCount() const;
 	const size_t GetVertexDataSize() const;
 	const uint8_t* GetVertexData() const;

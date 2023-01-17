@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 
-#include "ui/object/Image.h"
+#include "ui/object/Surface.h"
 
 #include "MenuObject.h"
 
@@ -15,6 +15,11 @@
 
 using namespace std;
 using namespace types;
+
+using namespace ui;
+namespace ui {
+using namespace object;
+}
 
 namespace game {
 namespace mainmenu {
@@ -31,7 +36,7 @@ CHILD_CLASS( MainMenu, base::Task )
 protected:
 	MenuTheme m_theme;
 
-	ui::object::Image *m_background = nullptr;
+	Surface *m_background = nullptr;
 	
 	MenuObject *m_menu_object = nullptr;
 	vector<MenuObject*> m_menu_history = {};

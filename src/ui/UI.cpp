@@ -123,11 +123,6 @@ void UI::UnsetTheme() {
 }
 
 const theme::Theme* UI::GetTheme() const {
-#if DEBUG
-	if ( !m_theme ) {
-		throw UIError( "theme not set but requested" );
-	}
-#endif
 	return m_theme;
 }
 
@@ -150,7 +145,7 @@ void UI::ShowDebugFrame( const UIObject* object ) {
 		
 		NEW( data.actor, actor::MeshActor, "DebugFrame", data.mesh );
 		data.actor->SetTexture( data.texture );
-		data.actor->SetPosition( { 0.0, 0.0, -0.9 } );
+		data.actor->SetPosition( { 0.0, 0.0, 0.9 } );
 		
 		m_debug_scene->AddActor( data.actor );
 		

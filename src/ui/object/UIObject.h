@@ -77,6 +77,7 @@ MAJOR_CLASS( UIObject, base::Base )
 	void SetRight( const coord_t px );
 	void SetTop( const coord_t px );
 	void SetBottom( const coord_t px );
+	void Maximize();
 	void SetPadding( const coord_t px );
 	void SetWidth( const coord_t px );
 	void SetHeight( const coord_t px );
@@ -116,11 +117,15 @@ protected:
 	virtual void OnMouseOut( const UIEvent::event_data_t* data ) {};
 	virtual void OnMouseDown( const UIEvent::event_data_t* data ) {};
 	virtual void OnKeyDown( const UIEvent::event_data_t* data ) {};
+	virtual void OnClick( const UIEvent::event_data_t* data ) {};
 	
 	const coord_t ClampX( const coord_t value );
 	const coord_t ClampY( const coord_t value );
 	const vertex_t ClampXY( const vertex_t value );
 
+	bool m_is_focused = false;
+	bool m_is_focusable = false;
+	
 	UIContainer *m_parent_object = nullptr;
 
 	unordered_set<Actor *> m_actors = {};

@@ -1,128 +1,37 @@
 #pragma once
 
-/* rectangle area with border and children objects */
-
 #include "UIContainer.h"
 
-#include "Surface.h"
-
+#include "types/Color.h"
 #include "types/Texture.h"
 
-#include "ui/UI.h"
+#include "Surface.h"
 
 namespace ui {
 namespace object {
 
 CHILD_CLASS( Panel, UIContainer )
+	Panel( const string& class_name = "" );
 
-	void SetBackgroundColor( const types::Color &color ) {
-		m_colors.background = color;
-		Redraw();
-	}
-
-	void SetBackgroundTexture( const types::Texture* texture ) {
-		m_texture = texture;
-	}
-
-	void SetBorderColor( const types::Color &color ) {
-		m_colors.border = color;
-
-		if ( m_created )
-			DrawBorders();
-	}
-
-	void SetBorderWidth( const unsigned char border_width ) {
-		m_border_width = border_width;
-
-		if ( m_created )
-			AlignBorders();
-	}
-
-	virtual void Create() {
-		UIContainer::Create();
-
-		NEW( m_background, Surface );
-		AddChild( m_background );
-
-		NEW( m_borders.left, Surface );
-		m_borders.left->SetAlign( ALIGN_LEFT );
-		NEW( m_borders.top, Surface );
-		m_borders.top->SetAlign( ALIGN_TOP );
-		NEW( m_borders.right, Surface );
-		m_borders.right->SetAlign( ALIGN_RIGHT );
-		NEW( m_borders.bottom, Surface );
-		m_borders.bottom->SetAlign( ALIGN_BOTTOM );
-
-		AlignBorders();
-		DrawBorders();
-
-		AddChild( m_borders.left );
-		AddChild( m_borders.top );
-		AddChild( m_borders.right );
-		AddChild( m_borders.bottom );
-		
-	}
-
-	virtual void Destroy() {
-		RemoveChild( m_background );
-
-		RemoveChild( m_borders.left );
-		RemoveChild( m_borders.top );
-		RemoveChild( m_borders.right );
-		RemoveChild( m_borders.bottom );
-
-		if (!m_child_objects.empty()) {
-			throw UIError("some children still remain when object is about to be destroyed!");
-		}
-		
-		UIContainer::Destroy();
-	}
-
-	virtual void Draw() {
-		UIContainer::Draw();
-
-		m_background->SetColor( m_colors.background );
-		if ( m_texture ) {
-			m_background->SetTexture( m_texture );
-		}
-	}
-
-	/*const coord_t GetLeft() const {
-		return m_coords.top_left.x;
-	}
-	virtual const coord_t GetTop() const = 0;
-	virtual const coord_t GetRight() const = 0;
-	virtual const coord_t GetBottom() const = 0;*/
-protected:
-	struct {
-		types::Color background;
-		types::Color border;
-	} m_colors;
-	const types::Texture* m_texture = nullptr;
+	virtual void Create();
+	virtual void Destroy();
 	
-	Surface *m_background = nullptr;
-
-	unsigned char m_border_width = 0;
-	struct {
-		Surface *left;
-		Surface *top;
-		Surface *right;
-		Surface *bottom;
-	} m_borders;
-private:
-	void AlignBorders() {
-		m_borders.left->SetWidth( m_border_width );
-		m_borders.top->SetHeight( m_border_width );
-		m_borders.right->SetWidth( m_border_width );
-		m_borders.bottom->SetHeight( m_border_width );
-	}
-	void DrawBorders() {
-		m_borders.left->SetColor( m_colors.border );
-		m_borders.top->SetColor( m_colors.border );
-		m_borders.right->SetColor( m_colors.border );
-		m_borders.bottom->SetColor( m_colors.border );
-	}
+protected:
+	virtual void ApplyStyle();
+	
+	Surface* m_background = nullptr;
+	unordered_map<Style::attribute_type_t,Surface* > m_borders = {
+		{ Style::A_TEXTURE_BACK, nullptr },
+		{ Style::A_TEXTURE_BORDER_LEFT, nullptr },
+		{ Style::A_TEXTURE_BORDER_TOP, nullptr },
+		{ Style::A_TEXTURE_BORDER_RIGHT, nullptr },
+		{ Style::A_TEXTURE_BORDER_BOTTOM, nullptr },
+		{ Style::A_TEXTURE_BORDER_CORNER_LT, nullptr },
+		{ Style::A_TEXTURE_BORDER_CORNER_RT, nullptr },
+		{ Style::A_TEXTURE_BORDER_CORNER_RB, nullptr },
+		{ Style::A_TEXTURE_BORDER_CORNER_LB, nullptr },
+	};
 };
 
-} /* namespace object */
-} /* namespace ui */
+}
+}

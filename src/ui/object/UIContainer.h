@@ -30,6 +30,8 @@ public:
 protected:
 	std::vector<UIObject *> m_child_objects = {};
 	
+	const string Subclass( const string& class_name ) const;
+	
 private:
 	void CreateChild( UIObject *object );
 	void DestroyChild( UIObject *object );

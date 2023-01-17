@@ -59,6 +59,20 @@ Mesh::index_t Mesh::AddVertex( const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh
 	return AddVertex( Vec3( coord.x, coord.y, 0.0 ), tex_coord );
 }
 
+void Mesh::SetVertex( const index_t index, const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord ) {
+#if DEBUG
+	if ( index >= m_vertex_count ) {
+		throw MeshError( "index out of bounds" );
+	}
+#endif
+	memcpy( m_vertex_data + index * VERTEX_SIZE * sizeof( coord_t ), &coord, sizeof(coord) );
+	memcpy( m_vertex_data + index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), &tex_coord, sizeof(tex_coord) );
+	Update();
+}
+void Mesh::SetVertex( const index_t index, const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord ) {
+	SetVertex( index, { coord.x, coord.y, 0.0 }, tex_coord );
+}
+
 void Mesh::SetVertexCoord( const index_t index, const Vec3 &coord ) {
 #if DEBUG
 	if ( index >= m_vertex_count ) {
@@ -109,18 +123,13 @@ void Mesh::Finalize() {
 	Update();
 }
 
-void Mesh::SetVertex( const index_t index, const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord ) {
+void Mesh::GetVertexCoord( const index_t index, Vec3* coord ) {
 #if DEBUG
 	if ( index >= m_vertex_count ) {
 		throw MeshError( "index out of bounds" );
 	}
 #endif
-	memcpy( m_vertex_data + index * VERTEX_SIZE * sizeof( coord_t ), &coord, sizeof(coord) );
-	memcpy( m_vertex_data + index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), &tex_coord, sizeof(tex_coord) );
-	Update();
-}
-void Mesh::SetVertex( const index_t index, const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord ) {
-	SetVertex( index, { coord.x, coord.y, 0.0 }, tex_coord );
+	memcpy( coord, m_vertex_data + index * VERTEX_SIZE * sizeof( coord_t ), sizeof(coord) );
 }
 
 const size_t Mesh::GetVertexCount() const {

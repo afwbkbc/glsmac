@@ -11,6 +11,8 @@
 
 #include "Scene.h"
 
+#include "ui/event/UIEvent.h"
+
 #include "shader_program/OpenGLShaderProgram.h"
 #include "routine/OpenGLRoutine.h"
 
@@ -63,6 +65,16 @@ private:
 	m_textures_map m_textures;
 	GLuint m_no_texture;
 	GLuint next_texture_obj_id = 0;
+	
+	/*struct {
+		struct {
+			bool active;
+			ui::event::UIEvent::event_data_t data;
+		} last_mousedown;
+	} m_input;*/
+	
+	unordered_map< uint8_t, Vec2< ssize_t > > m_active_mousedowns;
+	
 };
 
 } /* namespace opengl */

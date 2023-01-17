@@ -1,7 +1,8 @@
 SET(SRC ${SRC}
 
+	${PWD}/Button.cpp
+	${PWD}/Panel.cpp
 	${PWD}/Label.cpp
-	${PWD}/Image.cpp
 	${PWD}/Surface.cpp
 	${PWD}/UIObject.cpp
 	${PWD}/UIContainer.cpp

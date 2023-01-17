@@ -1,5 +1,7 @@
 SET(SRC ${SRC}
 
+	${PWD}/MainMenuBackground.cpp
+
 	${PWD}/SlidingMenuBlock.cpp
 		${PWD}/SlidingMenuItem.cpp
 			${PWD}/SlidingMenuItemUpperTop.cpp
@@ -11,5 +13,8 @@ SET(SRC ${SRC}
 			${PWD}/SlidingMenuItemText.cpp
 				${PWD}/SlidingMenuButtonText.cpp
 				${PWD}/SlidingMenuTitleText.cpp
+
+	${PWD}/PopupMenuFrame.cpp
+	${PWD}/PopupMenuButton.cpp
 
 PARENT_SCOPE)

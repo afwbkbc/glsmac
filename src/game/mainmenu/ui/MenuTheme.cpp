@@ -1,5 +1,7 @@
 #include "MenuTheme.h"
 
+#include "style/MainMenuBackground.h"
+
 #include "style/SlidingMenuBlock.h"
 #include "style/SlidingMenuItem.h"
 #include "style/SlidingMenuItemUpperTop.h"
@@ -10,6 +12,9 @@
 #include "style/SlidingMenuItemBody.h"
 #include "style/SlidingMenuButtonText.h"
 #include "style/SlidingMenuTitleText.h"
+
+#include "style/PopupMenuFrame.h"
+#include "style/PopupMenuButton.h"
 
 namespace game {
 namespace mainmenu {
@@ -22,6 +27,9 @@ MenuTheme::MenuTheme() : ui::theme::Theme() {
 		NEWV( style, _style ); \
 		AddStyle( style ); \
 	}
+	
+	ADDSTYLE( MainMenuBackground );
+	
 	ADDSTYLE( SlidingMenuBlock );
 	ADDSTYLE( SlidingMenuItem );
 	ADDSTYLE( SlidingMenuItemUpperTop );
@@ -32,6 +40,10 @@ MenuTheme::MenuTheme() : ui::theme::Theme() {
 	ADDSTYLE( SlidingMenuItemBody );
 	ADDSTYLE( SlidingMenuButtonText );
 	ADDSTYLE( SlidingMenuTitleText );
+	
+	ADDSTYLE( PopupMenuFrame );
+	ADDSTYLE( PopupMenuButton );
+	
 #undef ADDSTYLE
 	
 }

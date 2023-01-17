@@ -131,7 +131,7 @@ void UIObject::ApplyStyle() {
 #if DEBUG
 	CheckStylePtr();
 #endif
-	//Log( "Applying style class '" + m_style->GetClassName() + "' (modifiers: " + to_string( m_style_modifiers ) + ")" );
+	Log( "Applying style class '" + m_style_class + "' (modifiers: " + to_string( m_style_modifiers ) + ")" );
 	
 	if ( Has( Style::A_ALIGN ) ) {
 		SetAlign( Get( Style::A_ALIGN ) );
@@ -300,6 +300,10 @@ void UIObject::SetPadding( const coord_t px ) {
 	SetBottom( px );
 }
 
+void UIObject::Maximize() {
+	SetPadding( 0 );
+}
+
 void UIObject::SetWidth( const coord_t px ) {
 	m_size.width = px;
 	m_stick_bits |= STICK_WIDTH;
@@ -466,6 +470,9 @@ void UIObject::SendEvent( const UIEvent* event ) {
 		case UIEvent::EV_KEYDOWN: {
 			OnKeyDown( &event->m_data );
 			break;
+		}
+		case UIEvent::EV_MOUSECLICK: {
+			//OnMouseClick( &event->m_data );
 		}
 	}
 	

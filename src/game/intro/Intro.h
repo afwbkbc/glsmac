@@ -3,8 +3,10 @@
 #include "base/Task.h"
 
 #include "types/Texture.h"
-#include "ui/object/Image.h"
+#include "ui/object/Surface.h"
 #include "util/Timer.h"
+
+#include "IntroTheme.h"
 
 namespace game {
 namespace intro {
@@ -15,7 +17,8 @@ CHILD_CLASS( Intro, base::Task )
 	void Iterate();
 	
 protected:
-	ui::object::Image *m_logo = nullptr;
+	IntroTheme m_theme;
+	ui::object::Surface *m_logo = nullptr;
 	util::Timer m_timer;
 
 };

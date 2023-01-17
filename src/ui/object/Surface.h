@@ -18,18 +18,20 @@ CHILD_CLASS( Surface, UIObject )
 	Surface( const string& class_name = "" );
 	
 	void SetTexture( const types::Texture* texture);
-	void UnsetTexture();
+	void SetStretchTexture( const bool stretch_texture );
 	
 	virtual void Create();
 	virtual void Destroy();
 	virtual void Align();
 	virtual void Draw();
 	
+	
 protected:
 	
 	virtual void ApplyStyle();
 	
 	const types::Texture* m_texture = nullptr;
+	bool m_stretch_texture = false;
 
 	scene::actor::MeshActor *m_background = nullptr;
 	scene::mesh::Rectangle *m_background_mesh = nullptr;

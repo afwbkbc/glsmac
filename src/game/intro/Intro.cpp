@@ -14,8 +14,10 @@ namespace intro {
 #define RANDNUM ( (float)rand() / (float)RAND_MAX )
 
 void Intro::Start() {
-	NEW( m_logo, Image, "logo.pcx" );
-	m_logo->SetAlign( UIObject::ALIGN_CENTER );
+	
+	g_engine->GetUI()->SetTheme( &m_theme );
+	
+	NEW( m_logo, Surface, "IntroLogo" );
 	g_engine->GetUI()->AddObject( m_logo );
 
 	m_timer.SetTimeout(1000); // pretend we're loading something
@@ -24,6 +26,8 @@ void Intro::Start() {
 
 void Intro::Stop() {
 	g_engine->GetUI()->RemoveObject( m_logo );
+	
+	g_engine->GetUI()->UnsetTheme();
 }
 
 void Intro::Iterate() {

@@ -39,8 +39,6 @@ bool MeshActor::ReloadNeeded() {
 }
 
 void MeshActor::Load() {
-	//Log( "Loading OpenGL actor" );
-
 	auto *actor = (scene::actor::MeshActor *)m_actor;
 
 	const auto *mesh = actor->GetMesh();
