@@ -20,10 +20,13 @@ using namespace debug;
 
 #define DEBUG_STATS \
 	D( seconds_passed ) \
+	D( buffers_created ) \
+	D( buffers_destroyed ) \
+	D( buffers_active ) \
 	D( objects_created ) \
 	D( objects_destroyed ) \
 	D( objects_active ) \
-	D( bytes_allocated ) \
+	D( total_bytes_allocated ) \
 	D( textures_loaded ) \
 	D( fonts_loaded ) \
 	D( frames_rendered ) \
@@ -98,6 +101,9 @@ using namespace debug;
 		g_memory_watcher->Delete( _var, __FILE__, __LINE__ ); \
 		delete _var;
 
+	#define malloc( __size ) g_memory_watcher->Malloc( __size, __FILE__, __LINE__ )
+	#define free( __ptr ) g_memory_watcher->Free( __ptr, __FILE__, __LINE__ )
+	
 	#undef glGenBuffers
 	#define glGenBuffers( _size, _ptr ) g_memory_watcher->GLGenBuffers( _size, _ptr, __FILE__, __LINE__ )
 

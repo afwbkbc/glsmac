@@ -6,7 +6,9 @@ Font::~Font() {
 	if ( m_renderer_object )
 		m_renderer_object->Remove();
 	for (uint8_t i = 32; i < 128 ; i++) {
-		free( m_symbols[i].data );
+		if ( m_symbols[i].data ) {
+			free( m_symbols[i].data );
+		}
 	}
 }
 

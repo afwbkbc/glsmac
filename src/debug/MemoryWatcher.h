@@ -25,6 +25,8 @@ public:
 	// memory stuff
 	void New( const Base* object, const size_t size, const string& file, const size_t line );
 	void Delete( const Base* object, const string& file, const size_t line );
+	void* Malloc( const size_t size, const string& file, const size_t line );
+	void Free( void* ptr, const string& file, const size_t line );
 	
 	// opengl stuff
 	void GLGenBuffers( GLsizei n, GLuint * buffers, const string& file, const size_t line );
@@ -38,14 +40,6 @@ public:
 	void GLDeleteTextures( GLsizei n, GLuint * textures, const string& file, const size_t line );
 	void GLDrawElements( GLenum mode, GLsizei count, GLenum type, const void * indices, const string& file, const size_t line );
 	void GLDrawArrays( GLenum mode, GLint first, GLsizei count, const string& file, const size_t line );	
-	
-	typedef struct {
-		const void* ptr;
-		size_t size;
-		string object_name;
-		string object_namespace;
-		string source;
-	} object_info_t;
 	
 	typedef struct {
 		size_t size;
@@ -62,7 +56,20 @@ private:
 	
 	void Log( const string& text );
 	
+	typedef struct {
+		const void* ptr;
+		size_t size;
+		string object_name;
+		string object_namespace;
+		string source;
+	} object_info_t;
 	unordered_map<const void*, object_info_t> m_allocated_objects;
+	
+	typedef struct {
+		size_t size;
+		string source;
+	} alloc_t;
+	unordered_map<const void*, alloc_t> m_allocated_memory;
 	
 	struct {
 		GLuint current_vertex_buffer = 0;

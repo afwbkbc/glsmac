@@ -9,6 +9,13 @@
 #include <chrono>
 
 // to avoid being intercepted by macros in Base.h again
+
+void* malloc_real( const size_t size ) {
+	return malloc( size );
+}
+void free_real( void* ptr ) {
+	free( ptr );
+}
 void glGenBuffers_real( GLsizei n, GLuint * buffers ) {
 	glGenBuffers( n, buffers );
 }
@@ -62,14 +69,24 @@ MemoryWatcher::MemoryWatcher() {
 
 MemoryWatcher::~MemoryWatcher() {
 	
-	Log( "Checking for possible memory leaks" );
+	Log( "Checking for possible memory leaks..." );
 	
-	if ( !m_allocated_objects.empty() ) {
-		Log( "WARNING: " + to_string( m_allocated_objects.size() ) + " objects were never freed (possible memory leaks?):" );
-		for (auto& o : m_allocated_objects) {
-			std::stringstream ptrstr;
-			ptrstr << o.second.ptr;
-			Log( "    (" + ptrstr.str() + ") " + o.second.object_name + " @" + o.second.source );
+	if ( !m_allocated_objects.empty() || !m_allocated_memory.empty() ) {
+		if ( !m_allocated_objects.empty() ) {
+			Log( "WARNING: " + to_string( m_allocated_objects.size() ) + " objects were never freed (possible memory leaks?):" );
+			for (auto& o : m_allocated_objects) {
+				std::stringstream ptrstr;
+				ptrstr << o.second.ptr;
+				Log( "    (" + ptrstr.str() + ") " + o.second.object_name + " @" + o.second.source );
+			}
+		}
+		if ( !m_allocated_memory.empty() ) {
+			Log( "WARNING: " + to_string( m_allocated_memory.size() ) + " objects were never freed (possible memory leaks?):" );
+			for (auto& o : m_allocated_memory) {
+				std::stringstream ptrstr;
+				ptrstr << o.first;
+				Log( "    (" + ptrstr.str() + ") @" + o.second.source );
+			}
 		}
 	}
 	else {
@@ -79,10 +96,10 @@ MemoryWatcher::~MemoryWatcher() {
 
 void MemoryWatcher::New( const Base* object, const size_t size, const string& file, const size_t line ) {
 	lock_guard<mutex> guard( m_mutex );
-	
 	const string source = file + ":" + to_string(line);
+
 	if ( m_allocated_objects.find( object ) != m_allocated_objects.end() ) {
-		throw runtime_error( "double-allocation detected @" + source );
+		throw runtime_error( "new double-allocation detected @" + source );
 	}
 	m_allocated_objects[ object ] = {
 		object,
@@ -94,7 +111,7 @@ void MemoryWatcher::New( const Base* object, const size_t size, const string& fi
 	
 	DEBUG_STAT_INC( objects_created );
 	DEBUG_STAT_INC( objects_active );
-	DEBUG_STAT_CHANGE_BY( bytes_allocated, size );
+	DEBUG_STAT_CHANGE_BY( total_bytes_allocated, size );
 
 	// VERY spammy
 	//Log( "Allocated " + to_string( size ) + "b for " + object->GetNamespace() + " @" + source );
@@ -102,8 +119,8 @@ void MemoryWatcher::New( const Base* object, const size_t size, const string& fi
 
 void MemoryWatcher::Delete( const Base* object, const string& file, const size_t line ) {
 	lock_guard<mutex> guard( m_mutex );
-	
 	const string source = file + ":" + to_string(line);
+
 	auto it = m_allocated_objects.find( object );
 	if ( it == m_allocated_objects.end() ) {
 		throw runtime_error( "delete on non-allocated object detected @" + source );
@@ -112,7 +129,7 @@ void MemoryWatcher::Delete( const Base* object, const string& file, const size_t
 	
 	DEBUG_STAT_INC( objects_destroyed );
 	DEBUG_STAT_DEC( objects_active );
-	DEBUG_STAT_CHANGE_BY( bytes_allocated, -obj.size );
+	DEBUG_STAT_CHANGE_BY( total_bytes_allocated, -obj.size );
 
 	// VERY spammy
 	//Log( "Freed " + to_string( obj.size ) + "b from " + object->GetNamespace() + " @" + source );
@@ -120,6 +137,55 @@ void MemoryWatcher::Delete( const Base* object, const string& file, const size_t
 	m_allocated_objects.erase( it );
 }
 
+void* MemoryWatcher::Malloc( const size_t size, const string& file, const size_t line ) {
+	lock_guard<mutex> guard( m_mutex );
+	const string source = file + ":" + to_string(line);
+	
+	if ( !size ) {
+		throw runtime_error( "allocation of size 0 @" + source );
+	}
+	
+	void *ptr = malloc_real( size );
+	
+	if ( m_allocated_memory.find( ptr ) != m_allocated_memory.end() ) {
+		throw runtime_error( "malloc double-allocation detected @" + source );
+	}
+	m_allocated_memory[ ptr ] = {
+		size,
+		source
+	};
+	
+	DEBUG_STAT_INC( buffers_created );
+	DEBUG_STAT_INC( buffers_active );
+	DEBUG_STAT_CHANGE_BY( total_bytes_allocated, size );
+	
+	// VERY spammy
+	Log( "Allocated " + to_string( size ) + "b for " + to_string( (long int)ptr ) + " @" + source );
+	
+	return ptr;
+}
+
+void MemoryWatcher::Free( void* ptr, const string& file, const size_t line ) {
+	lock_guard<mutex> guard( m_mutex );
+	const string source = file + ":" + to_string(line);
+	
+	auto it = m_allocated_memory.find( ptr );
+	if ( it == m_allocated_memory.end() ) {
+		throw runtime_error( "free on non-allocated object detected @" + source );
+	}
+	auto& obj = it->second;
+	
+	free_real( ptr );
+	
+	DEBUG_STAT_INC( buffers_destroyed );
+	DEBUG_STAT_DEC( buffers_active );
+	DEBUG_STAT_CHANGE_BY( total_bytes_allocated, -obj.size );
+	
+	Log( "Freed " + to_string( obj.size ) + "b from " + to_string( (long int)ptr ) + " @" + source );
+	
+	m_allocated_memory.erase( it );
+}
+	
 void MemoryWatcher::GLGenBuffers( GLsizei n, GLuint * buffers, const string& file, const size_t line ) {
 	lock_guard<mutex> guard( m_mutex );
 	const string source = file + ":" + to_string(line);

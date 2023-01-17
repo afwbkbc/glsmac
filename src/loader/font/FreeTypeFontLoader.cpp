@@ -65,7 +65,12 @@ types::Font *FreeTypeFontLoader::LoadFont( const string &name, const unsigned ch
 			bitmap->left = g->bitmap_left;
 			bitmap->top = g->bitmap_top;
 			sz = bitmap->width * bitmap->height;
-			bitmap->data = (unsigned char*) malloc( sz );
+			if ( sz > 0 ) {
+				bitmap->data = (unsigned char*) malloc( sz );
+			}
+			else {
+				bitmap->data = nullptr;
+			}
 			memcpy( bitmap->data, g->bitmap.buffer, sz );
 
 			font->m_dimensions.width += g->bitmap.width;
