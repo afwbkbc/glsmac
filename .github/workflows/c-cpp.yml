@@ -32,10 +32,10 @@ jobs:
       with:
         name: GLSMAC-ubuntu-bin
         path: |
-          ./GLSMAC-ubuntu-bin.tar.gz
+          ./GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-x64.tar.gz
     - uses: dev-drprasad/delete-older-releases@v0.2.0
       with:
-        keep_latest: 2
+        keep_latest: 4
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
