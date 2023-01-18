@@ -18,18 +18,9 @@ jobs:
         sudo apt-get update
         sudo apt-get install libfreetype-dev
         sudo apt-get install libsdl2-dev
-#        sudo apt-get install libsdl2-dev:i386
         sudo apt-get install libsdl2-image-dev
-#        sudo apt-get install libsdl2-image-dev:i386
         sudo apt-get install libglu-dev
         sudo apt-get install libglew-dev
-#        sudo apt-get install gcc-multilib g++-multilib
-#    - name: cmake32
-#      run: cmake -DCMAKE_BUILD_TYPE=Portable32 .
-#    - name: make32
-#      run: make
-#    - name: pack32
-#      run: tar zcvf GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-32.tar.gz bin/
     - name: cmake64
       run: cmake -DCMAKE_BUILD_TYPE=Portable64 .
     - name: make64
@@ -58,16 +49,6 @@ jobs:
         release_name: ${{ github.ref_name }}-${{ github.sha }}
         draft: false
         prerelease: false
-#    - name: Upload Release Asset 32
-#      id: upload-release-asset-32 
-#      uses: actions/upload-release-asset@v1
-#      env:
-#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#      with:
-#        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps     - name: upload
-#        asset_path: ./GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-32.tar.gz
-#        asset_name: GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-32.tar.gz
-#        asset_content_type: application/gzip
     - name: Upload Release Asset 64
       id: upload-release-asset-64 
       uses: actions/upload-release-asset@v1
