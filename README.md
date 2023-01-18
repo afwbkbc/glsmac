@@ -1,5 +1,5 @@
 # GLSMAC
-Open-source OpenGL/SDL client for Sid Meier's Alpha Centauri ( + Alien Crossfire )
+Open-source OpenGL/SDL2 client for Sid Meier's Alpha Centauri ( + Alien Crossfire )
 
 Note: you will still need to own original game and expansion - this client uses it's assets.
 
