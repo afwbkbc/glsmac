@@ -5,6 +5,8 @@
 #include "scene/actor/TextActor.h"
 #include "types/Font.h"
 
+using namespace types;
+
 namespace renderer {
 namespace opengl {
 
@@ -12,10 +14,10 @@ class FontTexture;
 	
 class TextActor : public Actor {
 public:
-	TextActor( scene::actor::TextActor *actor, types::Font* font );
+	TextActor( scene::actor::TextActor *actor, Font* font );
 	~TextActor();
 	
-	void Update( const string& text, const float x, const float y );
+	void Update( Font* font, const string& text, const float x, const float y );
 	void Draw( shader_program::OpenGLShaderProgram *shader_program );
 	
 protected:
@@ -36,7 +38,7 @@ protected:
 	GLuint m_vbo = 0;
 	size_t m_boxes_count = 0;
 
-	types::Font *m_font = nullptr;
+	Font *m_font = nullptr;
 	FontTexture *m_texture = nullptr;
 };
 

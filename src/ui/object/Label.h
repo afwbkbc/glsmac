@@ -24,7 +24,6 @@ CHILD_CLASS( Label, UIObject )
 	void Create();
 	void Destroy();
 	void Align();
-	void Draw();
 	
 protected:
 	
@@ -36,8 +35,6 @@ protected:
 	
 	scene::actor::TextActor *m_actor = nullptr;
 	
-private:
-	void UpdateActor();
 		
 };
 

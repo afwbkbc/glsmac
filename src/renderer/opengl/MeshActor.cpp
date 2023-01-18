@@ -42,6 +42,11 @@ void MeshActor::Load() {
 	auto *actor = (scene::actor::MeshActor *)m_actor;
 
 	const auto *mesh = actor->GetMesh();
+#if DEBUG
+	if ( !mesh ) {
+		throw runtime_error( "actor mesh not set" );
+	}
+#endif
 
 	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
 	glBufferData( GL_ARRAY_BUFFER, mesh->GetVertexDataSize(), (GLvoid *)ptr( mesh->GetVertexData(), 0, mesh->GetVertexDataSize() ), GL_STATIC_DRAW );

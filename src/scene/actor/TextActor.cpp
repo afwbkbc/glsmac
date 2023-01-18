@@ -49,6 +49,14 @@ void TextActor::SetColor( const Color& color ) {
 	}
 }
 
+void TextActor::SetFont( Font* font ) {
+	if ( font != m_font ) {
+		m_font = font;
+		
+		Redraw();
+	}
+}
+
 void TextActor::UpdatePosition() {
 	Actor::UpdatePosition();
 	
@@ -57,8 +65,13 @@ void TextActor::UpdatePosition() {
 
 void TextActor::Redraw() {
 	if ( m_renderer_object ) {
+#if DEBUG
+		if ( m_renderer_object->Removed() ) {
+			throw runtime_error( "textactor renderer object removed" );
+		}
+#endif
 		auto* gl_actor = m_renderer_object->GetDstObject<renderer::opengl::TextActor>();
-		gl_actor->Update( m_text, m_position.x, m_position.y );
+		gl_actor->Update( m_font, m_text, m_position.x, m_position.y );
 	}
 }
 

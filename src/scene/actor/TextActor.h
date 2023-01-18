@@ -23,6 +23,7 @@ public:
 	
 	void SetText( const string& text );
 	void SetColor( const Color& color );
+	void SetFont( Font* font );
 	void UpdatePosition();
 	
 	void Redraw();

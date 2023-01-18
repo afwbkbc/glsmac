@@ -26,6 +26,7 @@ namespace mainmenu {
 
 CHILD_CLASS( MainMenu, base::Task )
 	void Start();
+	void Iterate();
 	void Stop();
 	
 	game::Settings m_settings = {};
@@ -40,6 +41,9 @@ protected:
 	
 	MenuObject *m_menu_object = nullptr;
 	vector<MenuObject*> m_menu_history = {};
+	
+	MenuObject *m_menu_next = nullptr;
+	bool m_goback = false;
 	
 };
 

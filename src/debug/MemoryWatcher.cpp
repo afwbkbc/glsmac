@@ -161,7 +161,7 @@ void* MemoryWatcher::Malloc( const size_t size, const string& file, const size_t
 	DEBUG_STAT_CHANGE_BY( heap_allocated_size, size );
 	
 	// VERY spammy
-	Log( "Allocated " + to_string( size ) + "b for " + to_string( (long int)ptr ) + " @" + source );
+	//Log( "Allocated " + to_string( size ) + "b for " + to_string( (long int)ptr ) + " @" + source );
 	
 	return ptr;
 }
@@ -201,7 +201,8 @@ void MemoryWatcher::Free( void* ptr, const string& file, const size_t line ) {
 	DEBUG_STAT_DEC( buffers_active );
 	DEBUG_STAT_CHANGE_BY( heap_allocated_size, -obj.size );
 	
-	Log( "Freed " + to_string( obj.size ) + "b from " + to_string( (long int)ptr ) + " @" + source );
+	// VERY spammy
+	//Log( "Freed " + to_string( obj.size ) + "b from " + to_string( (long int)ptr ) + " @" + source );
 	
 	m_allocated_memory.erase( it );
 }

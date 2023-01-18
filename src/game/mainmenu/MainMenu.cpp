@@ -30,16 +30,28 @@ void MainMenu::Start() {
 	ShowMenu( menu );
 }
 
-void MainMenu::GoBack() {
-	if ( !m_menu_history.empty() ) {
-		m_menu_object->Hide();
-		DELETE( m_menu_object );
-		m_menu_object = m_menu_history.back();
-		m_menu_history.pop_back();
-		m_menu_object->Show();
+void MainMenu::Iterate() {
+	if ( m_goback ) {
+		m_goback = false;
+		if ( !m_menu_history.empty() ) {
+			m_menu_object->Hide();
+			DELETE( m_menu_object );
+			m_menu_object = m_menu_history.back();
+			m_menu_history.pop_back();
+			m_menu_object->Show();
+		}
+		else {
+			g_engine->ShutDown();
+		}
 	}
-	else {
-		g_engine->ShutDown();
+	else if ( m_menu_next ) {
+		if ( m_menu_object ) {
+			m_menu_object->Hide();
+			m_menu_history.push_back( m_menu_object );
+		}
+		m_menu_object = m_menu_next;
+		m_menu_next = nullptr;
+		m_menu_object->Show();
 	}
 }
 
@@ -49,9 +61,14 @@ void MainMenu::Stop() {
 		m_menu_object->Hide();
 		DELETE( m_menu_object );
 		
-		for (auto& it : m_menu_history) {
-			DELETE( it );
-		}
+	}
+	
+	for (auto& it : m_menu_history) {
+		DELETE( it );
+	}
+	
+	if ( m_menu_next ) {
+		DELETE( m_menu_next );
 	}
 	
 	g_engine->GetUI()->RemoveObject( m_background );
@@ -60,13 +77,22 @@ void MainMenu::Stop() {
 
 }
 
-void MainMenu::ShowMenu( MenuObject* menu_object ) {
-	if ( m_menu_object ) {
-		m_menu_object->Hide();
-		m_menu_history.push_back( m_menu_object );
+void MainMenu::GoBack() {
+#if DEBUG
+	if ( m_goback ) {
+		throw runtime_error( "goback already set" );
 	}
-	m_menu_object = menu_object;
-	m_menu_object->Show();
+#endif
+	m_goback = true;
+}
+
+void MainMenu::ShowMenu( MenuObject* menu_object ) {
+#if DEBUG
+	if ( m_menu_next ) {
+		throw runtime_error( "next menu already set" );
+	}
+#endif
+	m_menu_next = menu_object;
 }
 
 

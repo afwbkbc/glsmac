@@ -14,6 +14,7 @@ Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 	{ "START GAME", [this] () -> void {
 		m_mainmenu->m_settings.game_mode = game::Settings::GM_SINGLEPLAYER;
 		NEWV( menu, StartGame, m_mainmenu );
+		//NEWV( menu, Main, m_mainmenu );
 		NextMenu( menu );
 	}},
 	{ "QUICK START", [this] () -> void {
