@@ -21,18 +21,25 @@ jobs:
         sudo apt-get install libsdl2-image-dev
         sudo apt-get install libglu-dev
         sudo apt-get install libglew-dev
-    - name: cmake
-      run: cmake -DCMAKE_BUILD_TYPE=Portable .
-    - name: make
+    - name: cmake32
+      run: cmake -DCMAKE_BUILD_TYPE=Portable32 .
+    - name: make32
       run: make
-    - name: pack
-      run: tar zcvf GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-x64.tar.gz bin/
+    - name: pack32
+      run: tar zcvf GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-32.tar.gz bin/
+    - name: cmake64
+      run: cmake -DCMAKE_BUILD_TYPE=Portable64 .
+    - name: make64
+      run: make
+    - name: pack64
+      run: tar zcvf GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-64.tar.gz bin/
     - name: publish
       uses: actions/upload-artifact@v3
       with:
         name: GLSMAC-ubuntu-bin
         path: |
-          ./GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-x64.tar.gz
+          ./GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-32.tar.gz |
+          ./GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-64.tar.gz
     - uses: dev-drprasad/delete-older-releases@v0.2.0
       with:
         keep_latest: 4
@@ -49,13 +56,23 @@ jobs:
         release_name: ${{ github.ref_name }}-${{ github.sha }}
         draft: false
         prerelease: false
-    - name: Upload Release Asset
+    - name: Upload Release Asset 32
       id: upload-release-asset 
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps     - name: upload
-        asset_path: ./GLSMAC-ubuntu-bin.tar.gz
-        asset_name: GLSMAC-ubuntu-bin.tar.gz
+        asset_path: ./GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-32.tar.gz
+        asset_name: GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-32.tar.gz
+        asset_content_type: application/gzip
+    - name: Upload Release Asset 64
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps     - name: upload
+        asset_path: ./GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-64.tar.gz
+        asset_name: GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-64.tar.gz
         asset_content_type: application/gzip
