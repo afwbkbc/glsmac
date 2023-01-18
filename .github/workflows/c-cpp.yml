@@ -26,7 +26,7 @@ jobs:
     - name: make
       run: make
     - name: pack
-      run: tar zcvf GLSMAC-ubuntu-bin.tar.gz bin/
+      run: tar zcvf GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-x64.tar.gz bin/
     - name: publish
       uses: actions/upload-artifact@v3
       with:
