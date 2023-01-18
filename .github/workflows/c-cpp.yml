@@ -57,7 +57,7 @@ jobs:
         draft: false
         prerelease: false
     - name: Upload Release Asset 32
-      id: upload-release-asset 
+      id: upload-release-asset-32 
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -67,7 +67,7 @@ jobs:
         asset_name: GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-32.tar.gz
         asset_content_type: application/gzip
     - name: Upload Release Asset 64
-      id: upload-release-asset 
+      id: upload-release-asset-64 
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
