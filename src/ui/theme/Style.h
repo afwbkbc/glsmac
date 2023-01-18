@@ -27,6 +27,7 @@ MAJOR_CLASS( Style, base::Base )
 		A_BOTTOM,
 		A_ALIGN,
 		A_COLOR,
+		A_TEXTCOLOR,
 		A_TEXTURE,
 		A_TEXTURE_BACK,
 		A_TEXTURE_BORDER_LEFT,
@@ -44,10 +45,12 @@ MAJOR_CLASS( Style, base::Base )
 		ATTRIBUTE_TYPE_MAX
 	};
 
+	// bit flags
 	typedef uint8_t modifier_t;
 	static const modifier_t M_NONE = 0;
 	static const modifier_t M_HOVER = 1;
-	static const modifier_t MODIFIER_MAX = 2;
+	static const modifier_t M_ACTIVE = 2;
+	static const modifier_t MODIFIER_MAX = 4;
 	
 	void Set( const attribute_type_t attribute_type ); // for bool flags without value
 	void Set( const attribute_type_t attribute_type, const ssize_t value );
@@ -63,6 +66,9 @@ protected:
 	
 	virtual void SetStyle() = 0;
 	
+	bool Is( const modifier_t modifier ) const;
+	
+private:
 	typedef struct {
 		bool is_set = false;
 		union {
@@ -79,7 +85,6 @@ protected:
 	void SetAttributesPtr( attributes_t* attributes );
 	void UnsetAttributesPtr();
 	
-private:
 	bool m_is_initialized = false;
 	
 	void PrepareAttributes( const modifier_t modifier );

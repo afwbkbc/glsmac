@@ -21,6 +21,13 @@ MAJOR_CLASS( UIEvent, base::Base )
 	const static uint8_t EF_MOUSE = 1;
 	const static uint8_t EF_KEYBOARD = 2;
 
+	enum mouse_button_t : uint8_t {
+		M_NONE,
+		M_LEFT,
+		M_RIGHT,
+		M_MIDDLE,
+	};
+	
 	enum key_code_t {
 		K_NONE,
 		K_ESCAPE,

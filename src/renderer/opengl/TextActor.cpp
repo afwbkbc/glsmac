@@ -11,8 +11,7 @@ namespace opengl {
 using namespace shader_program;
 
 TextActor::TextActor( scene::actor::TextActor *actor, Font *font ) : Actor( actor ), m_font( font ) {
-	Log( "Creating OpenGL text '" + actor->GetText() + "' with " + m_font->GetName() + " for " + actor->GetName() );
-	NEW( m_texture, FontTexture, m_font );
+	Log( "Creating OpenGL text '" + actor->GetText() + "' from " + actor->GetName() );
 	glGenBuffers( 1, &m_vbo );
 	auto *text_actor = (const scene::actor::TextActor *)m_actor;
 	auto position = m_actor->GetPosition();
@@ -34,6 +33,10 @@ void TextActor::Update( Font* font, const string& text, const float x, const flo
 	
 	if ( m_font != nullptr ) {
 	
+		if ( !m_texture ) {
+			NEW( m_texture, FontTexture, m_font );
+		}
+		
 		const float sx = 2.0 / g_engine->GetRenderer()->GetWindowWidth();
 		const float sy = 2.0 / g_engine->GetRenderer()->GetWindowHeight();	
 

@@ -17,6 +17,10 @@
 #include "routine/OpenGLRoutine.h"
 
 using namespace std;
+using namespace ui;
+namespace ui {
+using namespace event;
+}
 
 namespace renderer {
 namespace opengl {
@@ -66,12 +70,7 @@ private:
 	GLuint m_no_texture;
 	GLuint next_texture_obj_id = 0;
 	
-	/*struct {
-		struct {
-			bool active;
-			ui::event::UIEvent::event_data_t data;
-		} last_mousedown;
-	} m_input;*/
+	UIEvent::mouse_button_t GetMouseButton( uint8_t sdl_mouse_button ) const;
 	
 	unordered_map< uint8_t, Vec2< ssize_t > > m_active_mousedowns;
 	

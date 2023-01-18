@@ -68,6 +68,9 @@ Color Color::FromRGBA( const uint8_t red, const uint8_t green, const uint8_t blu
 		(channel_t) alpha / 255
 	};
 }
+Color Color::FromRGB( const uint8_t red, const uint8_t green, const uint8_t blue ) {
+	return FromRGBA( red, green, blue, 255 );
+}
 
 Color::rgba_t Color::RGBA( const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha ) {
 	return red | ( green << 8 ) | ( blue << 16) | ( alpha << 24 );

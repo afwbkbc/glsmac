@@ -8,7 +8,7 @@
 #include "scene/actor/TextActor.h"
 
 #include "menu/Main.h"
-//#include "menu/Multiplayer.h"
+#include "menu/Multiplayer.h"
 
 using namespace std;
 using namespace ui::object;

@@ -34,6 +34,11 @@ UIObject::~UIObject() {
 	if ( m_created ) {
 		Destroy();
 	}
+	for ( auto& handlers : m_event_handlers ) {
+		for ( auto& handler : handlers.second ) {
+			DELETE( handler );
+		}
+	}
 }
 
 void UIObject::Create() {
@@ -431,12 +436,17 @@ void UIObject::SendEvent( const UIEvent* event ) {
 			OnMouseDown( &event->m_data );
 			break;
 		}
-		case UIEvent::EV_KEYDOWN: {
-			OnKeyDown( &event->m_data );
+		case UIEvent::EV_MOUSEUP: {
+			OnMouseUp( &event->m_data );
 			break;
 		}
 		case UIEvent::EV_MOUSECLICK: {
-			//OnMouseClick( &event->m_data );
+			OnMouseClick( &event->m_data );
+			break;
+		}
+		case UIEvent::EV_KEYDOWN: {
+			OnKeyDown( &event->m_data );
+			break;
 		}
 	}
 	
@@ -513,6 +523,25 @@ void UIObject::RemoveStyleModifier( const Style::modifier_t modifier ) {
 	}
 }
 
+void UIObject::AddEventHandler( const UIEvent::event_type_t type, UIEventHandler::handler_function_t func ) {
+	// TODO: check if already added?
+	NEWV( handler, UIEventHandler, func );
+	auto it = m_event_handlers.find( type );
+	if ( it == m_event_handlers.end() ) {
+		m_event_handlers[ type ] = {};
+		it = m_event_handlers.find( type );
+	}
+	it->second.insert( handler );
+}
+
+void UIObject::Trigger( const UIEvent::event_type_t type, const UIEvent::event_data_t* data ) {
+	for ( auto& handlers : m_event_handlers ) {
+		for ( auto& handler : handlers.second ) {
+			handler->Execute( data );
+			// TODO: stop_propagation
+		}
+	}
+}
 
 } /* namespace object */
 } /* namespace ui */

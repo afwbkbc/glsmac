@@ -1,5 +1,6 @@
 #pragma once
 
+#include <unordered_map>
 #include <unordered_set>
 
 #include "base/Base.h"
@@ -10,6 +11,7 @@
 #include "scene/actor/Actor.h"
 
 #include "ui/event/UIEvent.h"
+#include "ui/event/UIEventHandler.h"
 
 #include "ui/theme/Style.h"
 
@@ -116,6 +118,8 @@ protected:
 	virtual void OnMouseOver( const UIEvent::event_data_t* data ) {};
 	virtual void OnMouseOut( const UIEvent::event_data_t* data ) {};
 	virtual void OnMouseDown( const UIEvent::event_data_t* data ) {};
+	virtual void OnMouseUp( const UIEvent::event_data_t* data ) {};
+	virtual void OnMouseClick( const UIEvent::event_data_t* data ) {};
 	virtual void OnKeyDown( const UIEvent::event_data_t* data ) {};
 	virtual void OnClick( const UIEvent::event_data_t* data ) {};
 	
@@ -200,6 +204,13 @@ protected:
 	bool m_has_debug_frame = false;
 #endif
 	
+	void AddStyleModifier( const Style::modifier_t modifier );
+	void RemoveStyleModifier( const Style::modifier_t modifier );
+	
+	void AddEventHandler( const UIEvent::event_type_t type, UIEventHandler::handler_function_t func );
+	// TODO: remove?
+	void Trigger( const UIEvent::event_type_t type, const UIEvent::event_data_t* data );
+	
 private:
 	string m_style_class = "";
 	bool m_style_loaded = false; // will load on first draw
@@ -208,9 +219,9 @@ private:
 	void ApplyStyleIfNeeded();
 	
 	Style::modifier_t m_style_modifiers = Style::M_NONE;
-	void AddStyleModifier( const Style::modifier_t modifier );
-	void RemoveStyleModifier( const Style::modifier_t modifier );
 	
+	typedef unordered_set< UIEventHandler* > event_handlers_t;
+	unordered_map< UIEvent::event_type_t, event_handlers_t > m_event_handlers = {};
 };
 
 } /* namespace object */

@@ -69,7 +69,7 @@ void MeshActor::Unload() {
 	//Log( "Unloading OpenGL actor" );
 
 	if ( m_actor ) {
-		auto *actor = (scene::actor::MeshActor *)m_actor;
+		//auto *actor = (scene::actor::MeshActor *)m_actor;
 
 		/* it's better to keep everything loaded forever
 		const auto* texture = actor->GetTexture();

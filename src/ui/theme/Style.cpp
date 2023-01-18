@@ -70,6 +70,10 @@ const void* Style::GetObject( const attribute_type_t attribute_type, const modif
 	return m_attributes[ modifier ][ attribute_type ].value.ptr;
 }
 
+bool Style::Is( const modifier_t modifier ) const {
+	return ( ( m_modifier & modifier ) == modifier );
+}
+
 void Style::SetAttributesPtr( attributes_t* attributes ) {
 	ASSERT( !m_attributes_ptr, "attributes ptr already set" );
 	m_attributes_ptr = attributes;

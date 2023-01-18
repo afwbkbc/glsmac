@@ -20,7 +20,7 @@ protected:
 	virtual void ApplyStyle();
 	
 	Surface* m_background = nullptr;
-	unordered_map<Style::attribute_type_t,Surface* > m_borders = {
+	unordered_map<Style::attribute_type_t,Surface* > m_surfaces = {
 		{ Style::A_TEXTURE_BACK, nullptr },
 		{ Style::A_TEXTURE_BORDER_LEFT, nullptr },
 		{ Style::A_TEXTURE_BORDER_TOP, nullptr },

@@ -18,12 +18,16 @@
 #include "ui/event/MouseClick.h"
 #include "ui/event/KeyDown.h"
 
+using namespace std;
 using namespace ui;
+namespace ui {
+using namespace event;
+}
 
 namespace renderer {
 namespace opengl {
 
-OpenGLRenderer::OpenGLRenderer( const std::string title, const unsigned short window_width, const unsigned short window_height, const bool vsync, const float fov) {
+OpenGLRenderer::OpenGLRenderer( const string title, const unsigned short window_width, const unsigned short window_height, const bool vsync, const float fov) {
 	m_window = NULL;
 	m_gl_context = NULL;
 
@@ -184,7 +188,7 @@ void OpenGLRenderer::Iterate() {
 					// I'm having weird texture tiling bugs at non-even window heights. let's round them a bit
 					m_options.window_width = event.window.data1 / 2 * 2;
 					m_options.window_height = event.window.data2 / 2 * 2;
-					Log( "Resizing viewport to " + std::to_string( m_options.window_width ) + "x" + std::to_string( m_options.window_height ) );
+					Log( "Resizing viewport to " + to_string( m_options.window_width ) + "x" + to_string( m_options.window_height ) );
 					glViewport( 0, 0, m_options.window_width, m_options.window_height );
 					m_aspect_ratio = (float) m_options.window_height / m_options.window_width;
 					g_engine->GetUI()->Resize();
@@ -209,7 +213,7 @@ void OpenGLRenderer::Iterate() {
 				break;
 			}
 			case SDL_MOUSEBUTTONDOWN: {
-				NEWV( ui_event, event::MouseDown, event.motion.x, event.motion.y, event.button.button );
+				NEWV( ui_event, event::MouseDown, event.motion.x, event.motion.y, GetMouseButton( event.button.button ) );
 				g_engine->GetUI()->SendEvent( ui_event );
 				ASSERT( m_active_mousedowns.find( event.button.button ) == m_active_mousedowns.end(),
 					"duplicate mousedown (button=" + to_string( event.button.button ) + ")"
@@ -218,7 +222,7 @@ void OpenGLRenderer::Iterate() {
 				break;
 			}
 			case SDL_MOUSEBUTTONUP: {
-				NEWV( ui_event, event::MouseUp, event.motion.x, event.motion.y, event.button.button );
+				NEWV( ui_event, event::MouseUp, event.motion.x, event.motion.y, GetMouseButton( event.button.button ) );
 				g_engine->GetUI()->SendEvent( ui_event );
 				ASSERT( m_active_mousedowns.find( event.button.button ) != m_active_mousedowns.end(),
 					"mouseup without mousedown"
@@ -226,7 +230,7 @@ void OpenGLRenderer::Iterate() {
 				auto& mousedown_data = m_active_mousedowns.at( event.button.button );
 				if ( mousedown_data.x == event.motion.x && mousedown_data.y == event.motion.y ) {
 					// mousedown + mouseup at same pixel = mouseclick
-					NEWV( ui_event_2, event::MouseClick, event.motion.x, event.motion.y, event.button.button );
+					NEWV( ui_event_2, event::MouseClick, event.motion.x, event.motion.y, GetMouseButton( event.button.button ) );
 					g_engine->GetUI()->SendEvent( ui_event_2 );
 				}
 				m_active_mousedowns.erase( event.button.button );
@@ -273,7 +277,7 @@ void OpenGLRenderer::Iterate() {
 	GLenum errcode;
 	if ( ( errcode=glGetError() ) != GL_NO_ERROR ) {
 		const GLubyte* errstring = gluErrorString( errcode );
-		std::string msg = (char *)errstring;
+		string msg = (char *)errstring;
 		THROW( "OpenGL error occured in render loop: \"" + msg + "\"" );
 	}
 #endif
@@ -370,6 +374,24 @@ void OpenGLRenderer::EnableTexture( const types::Texture* texture ) {
 
 void OpenGLRenderer::DisableTexture() {
 	glBindTexture( GL_TEXTURE_2D, 0 );
+}
+
+UIEvent::mouse_button_t OpenGLRenderer::GetMouseButton( uint8_t sdl_mouse_button ) const {
+	switch ( sdl_mouse_button ) {
+		case SDL_BUTTON_LEFT: {
+			return UIEvent::M_LEFT;
+		}
+		case SDL_BUTTON_MIDDLE: {
+			return UIEvent::M_MIDDLE;
+		}
+		case SDL_BUTTON_RIGHT: {
+			return UIEvent::M_RIGHT;
+		}
+		default: {
+			Log( "unsupported mouse button " + to_string( sdl_mouse_button ) );
+			return UIEvent::M_NONE;
+		}
+	}
 }
 
 } /* namespace opengl */

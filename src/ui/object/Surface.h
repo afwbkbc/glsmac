@@ -18,6 +18,7 @@ CHILD_CLASS( Surface, UIObject )
 	Surface( const string& class_name = "" );
 	
 	void SetTexture( const types::Texture* texture);
+	void ClearTexture();
 	void SetStretchTexture( const bool stretch_texture );
 	
 	virtual void Create();

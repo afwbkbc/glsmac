@@ -14,7 +14,7 @@ void Panel::Create() {
 	
 	size_t bw = 1;
 	
-	for (auto& b : m_borders) {
+	for (auto& b : m_surfaces) {
 		NEW( b.second, Surface );
 		bool is_corner =
 			b.first == Style::A_TEXTURE_BORDER_CORNER_LT ||
@@ -55,16 +55,16 @@ void Panel::Create() {
 		}
 	}
 	
-	m_borders[ Style::A_TEXTURE_BORDER_LEFT ]->SetAlign( UIObject::ALIGN_LEFT );
-	m_borders[ Style::A_TEXTURE_BORDER_TOP ]->SetAlign( UIObject::ALIGN_TOP );
-	m_borders[ Style::A_TEXTURE_BORDER_LEFT ]->SetAlign( UIObject::ALIGN_RIGHT );
-	m_borders[ Style::A_TEXTURE_BORDER_BOTTOM ]->SetAlign( UIObject::ALIGN_BOTTOM );
-	m_borders[ Style::A_TEXTURE_BORDER_CORNER_LT ]->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
-	m_borders[ Style::A_TEXTURE_BORDER_CORNER_RT ]->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_TOP );
-	m_borders[ Style::A_TEXTURE_BORDER_CORNER_RB ]->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_BOTTOM );
-	m_borders[ Style::A_TEXTURE_BORDER_CORNER_LB ]->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_BOTTOM );
+	m_surfaces[ Style::A_TEXTURE_BORDER_LEFT ]->SetAlign( UIObject::ALIGN_LEFT );
+	m_surfaces[ Style::A_TEXTURE_BORDER_TOP ]->SetAlign( UIObject::ALIGN_TOP );
+	m_surfaces[ Style::A_TEXTURE_BORDER_LEFT ]->SetAlign( UIObject::ALIGN_RIGHT );
+	m_surfaces[ Style::A_TEXTURE_BORDER_BOTTOM ]->SetAlign( UIObject::ALIGN_BOTTOM );
+	m_surfaces[ Style::A_TEXTURE_BORDER_CORNER_LT ]->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
+	m_surfaces[ Style::A_TEXTURE_BORDER_CORNER_RT ]->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_TOP );
+	m_surfaces[ Style::A_TEXTURE_BORDER_CORNER_RB ]->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_BOTTOM );
+	m_surfaces[ Style::A_TEXTURE_BORDER_CORNER_LB ]->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_BOTTOM );
 	
-	for (auto& b : m_borders) {
+	for (auto& b : m_surfaces) {
 		AddChild( b.second );
 	}
 }
@@ -72,7 +72,7 @@ void Panel::Create() {
 void Panel::Destroy() {
 //	RemoveChild( m_background );
 
-	for (auto& b : m_borders) {
+	for (auto& b : m_surfaces) {
 		RemoveChild( b.second );
 	}
 	
@@ -82,10 +82,13 @@ void Panel::Destroy() {
 void Panel::ApplyStyle() {
 	UIContainer::ApplyStyle();
 
-	for (auto& b : m_borders) {
+	for (auto& b : m_surfaces) {
 		if ( Has( b.first ) ) {
 			const auto* texture = (Texture*)GetObject( b.first );
 			b.second->SetTexture( texture );
+		}
+		else {
+			b.second->ClearTexture();
 		}
 	}
 }

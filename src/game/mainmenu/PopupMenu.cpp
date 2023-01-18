@@ -7,6 +7,7 @@ using namespace std;
 using namespace ui;
 namespace ui {
 	using namespace object;
+	using namespace event;
 }
 
 namespace game {
@@ -26,12 +27,17 @@ void PopupMenu::Show() {
 	m_button_ok->SetAlign( UIObject::ALIGN_BOTTOM | UIObject::ALIGN_LEFT );
 	m_button_ok->SetLeft( 12 );
 	m_button_ok->SetBottom( 15 );
+	m_button_ok->SetLabel( "OK" );
 	m_frame->AddChild( m_button_ok );
 	
 	NEW( m_button_cancel, Button, "PopupMenuButton" );
 	m_button_cancel->SetAlign( UIObject::ALIGN_BOTTOM | UIObject::ALIGN_RIGHT );
 	m_button_cancel->SetRight( 12 );
 	m_button_cancel->SetBottom( 15 );
+	m_button_cancel->SetLabel( "CANCEL" );
+	m_button_cancel->OnClick( [this] ( const UIEvent::event_data_t* data ) -> void {
+		GoBack();
+	});
 	m_frame->AddChild( m_button_cancel );
 }
 
