@@ -20,8 +20,7 @@ void Scene::RemoveActor( actor::Actor *actor ) {
 }
 
 void Scene::SetCamera( Camera *camera ) {
-	if ( m_camera != NULL && camera != NULL )
-		throw SceneError( "duplicate camera set" );
+	ASSERT( m_camera == NULL || camera == NULL, "camera overlap" );
 	camera->SetScene( this );
 	m_camera = camera;
 }

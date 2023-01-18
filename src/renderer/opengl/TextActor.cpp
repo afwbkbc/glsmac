@@ -50,11 +50,7 @@ void TextActor::Update( Font* font, const string& text, const float x, const flo
 		for ( const char *p = text.c_str(); *p; p++ ) {
 			unsigned char sym = (unsigned char)*p;
 
-	#if DEBUG
-			if ( sym < 32 || sym >= 128 ) {
-				throw FontError( "unexpected font character " + to_string( sym ) );
-			}
-	#endif
+			ASSERT( sym >= 32 && sym < 128, "unexpected font character " + to_string( sym ) );
 
 			bitmap = &m_font->m_symbols[sym];
 

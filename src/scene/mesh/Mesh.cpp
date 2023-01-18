@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstring>
 
 #include "Mesh.h"
 
@@ -28,27 +29,15 @@ void Mesh::Clear() {
 }
 
 void Mesh::AddSurface( const Mesh::surface_t& surface  ) {
-#if DEBUG
-	if ( m_is_final ) {
-		throw MeshError( "addsurface on already finalized mesh" );
-	}
-	if ( m_surface_i >= m_surface_count ) {
-		throw MeshError( "surface out of bounds" );
-	}
-#endif
+	ASSERT( !m_is_final, "addsurface on already finalized mesh" );
+	ASSERT( m_surface_i < m_surface_count, "surface out of bounds" );
 	// add triangle
 	memcpy( ptr( m_index_data, m_surface_i * SURFACE_SIZE * sizeof( index_t ), sizeof( surface ) ), &surface, sizeof( surface ) );
 }
 
 Mesh::index_t Mesh::AddVertex( const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord ) {
-#if DEBUG
-	if ( m_is_final ) {
-		throw MeshError( "addvertex on already finalized mesh" );
-	}
-	if ( m_vertex_i >= m_vertex_count ) {
-		throw MeshError( "vertex out of bounds" );
-	}
-#endif
+	ASSERT( !m_is_final, "addvertex on already finalized mesh" );
+	ASSERT( m_vertex_i < m_vertex_count, "vertex out of bounds" );
 	memcpy( ptr( m_vertex_data, m_vertex_i * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord ) ), &coord, sizeof(coord) );
 	memcpy( ptr( m_vertex_data, m_vertex_i * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( tex_coord ) ), &tex_coord, sizeof(tex_coord) );
 	Mesh::index_t ret = m_vertex_i;
@@ -60,11 +49,7 @@ Mesh::index_t Mesh::AddVertex( const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh
 }
 
 void Mesh::SetVertex( const index_t index, const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord ) {
-#if DEBUG
-	if ( index >= m_vertex_count ) {
-		throw MeshError( "index out of bounds" );
-	}
-#endif
+	ASSERT( index < m_vertex_count, "index out of bounds" );
 	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord ) ), &coord, sizeof( coord ) );
 	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( tex_coord ) ), &tex_coord, sizeof( tex_coord ) );
 	Update();
@@ -74,11 +59,7 @@ void Mesh::SetVertex( const index_t index, const Vec2<Mesh::coord_t> &coord, con
 }
 
 void Mesh::SetVertexCoord( const index_t index, const Vec3 &coord ) {
-#if DEBUG
-	if ( index >= m_vertex_count ) {
-		throw MeshError( "index out of bounds" );
-	}
-#endif
+	ASSERT( index < m_vertex_count, "index out of bounds" );
 	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord ) ), &coord, sizeof( coord ) );
 	Update();
 }
@@ -87,48 +68,28 @@ void Mesh::SetVertexCoord( const index_t index, const Vec2<Mesh::coord_t> &coord
 }
 
 void Mesh::SetVertexTexCoord( const index_t index, const Vec2<Mesh::coord_t> &tex_coord ) {
-#if DEBUG
-	if ( index >= m_vertex_count ) {
-		throw MeshError( "index out of bounds" );
-	}
-#endif
+	ASSERT( index < m_vertex_count, "index out of bounds" );
 	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( tex_coord ) ), &tex_coord, sizeof( tex_coord ) );
 	Update();
 }
 
 void Mesh::SetSurface( const index_t index, const Mesh::surface_t& surface ) {
-#if DEBUG
-	if ( index >= m_surface_count ) {
-		throw MeshError( "surface out of bounds" );
-	}
-#endif
+	ASSERT( index < m_surface_count, "surface out of bounds" );
 	// add triangle
 	memcpy( ptr( m_index_data, index * SURFACE_SIZE * sizeof( index_t ), sizeof( surface ) ), &surface, sizeof( surface ) );
 }
 
 
 void Mesh::Finalize() {
-#if DEBUG
-	if ( !m_is_final ) {
-		throw MeshError( "finalize on already finalized mesh" );
-	}
-	if ( m_vertex_i != m_vertex_count ) {
-		throw MeshError( "vertex data not fully initialized on finalize" );
-	}
-	if ( m_surface_i != m_surface_count ) {
-		throw MeshError( "surface data not fully initialized on finalize" );
-	}
-#endif
+	ASSERT( !m_is_final, "finalize on already finalized mesh" );
+	ASSERT( m_vertex_i == m_vertex_count, "vertex data not fully initialized on finalize" );
+	ASSERT( m_surface_i == m_surface_count, "surface data not fully initialized on finalize" );
 	m_is_final = true;
 	Update();
 }
 
 void Mesh::GetVertexCoord( const index_t index, Vec3* coord ) {
-#if DEBUG
-	if ( index >= m_vertex_count ) {
-		throw MeshError( "index out of bounds" );
-	}
-#endif
+	ASSERT( index < m_vertex_count, "index out of bounds" );
 	memcpy( coord, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord ) ), sizeof( coord ) );
 }
 

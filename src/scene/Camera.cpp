@@ -20,8 +20,7 @@ Camera::Camera() : Entity() {
 }
 
 void Camera::SetScene( Scene *scene ) {
-	if ( m_scene != NULL && scene != NULL )
-		throw CameraError( "duplicate scene set" );
+	ASSERT( m_scene == NULL || scene == NULL, "duplicate scene set" );
 	m_scene = scene;
 }
 

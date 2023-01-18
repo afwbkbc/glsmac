@@ -12,8 +12,7 @@ FreeTypeFontLoader::~FreeTypeFontLoader() {
 }
 
 void FreeTypeFontLoader::Start() {
-	if ( FT_Init_FreeType( &m_freetype ) )
-		throw FontLoaderError( "Unable to initialize FreeType" );
+	ASSERT( !FT_Init_FreeType( &m_freetype ), "Unable to initialize FreeType" );
 }
 
 void FreeTypeFontLoader::Stop() {
@@ -40,9 +39,7 @@ types::Font *FreeTypeFontLoader::LoadFont( const string &name, const unsigned ch
 
 		FT_Face ftface;
 		string file_name = GetRoot() + name;
-		if ( FT_New_Face( m_freetype, file_name.c_str(), 0, &ftface ) ) {
-			throw FontLoaderError( "Unable to load font \"" + name + "\"" );
-		};
+		ASSERT( !FT_New_Face( m_freetype, file_name.c_str(), 0, &ftface ), "Unable to load font \"" + name + "\"" );
 		FT_Set_Pixel_Sizes( ftface, 0, size );
 
 		font->m_dimensions.width = font->m_dimensions.height = 0;
@@ -52,9 +49,7 @@ types::Font *FreeTypeFontLoader::LoadFont( const string &name, const unsigned ch
 		int sz;
 
 		for (int i=32;i<128;i++) { // only ascii for now
-			if ( FT_Load_Char( ftface, i, FT_LOAD_RENDER ) ) {
-				throw FontLoaderError( "Font \"" + name + "\" bitmap loading failed" );
-			};
+			ASSERT( !FT_Load_Char( ftface, i, FT_LOAD_RENDER ), "Font \"" + name + "\" bitmap loading failed" );
 
 			bitmap = &font->m_symbols[i];
 

@@ -25,15 +25,11 @@ FontTexture::FontTexture( types::Font *font ) {
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 
-	if ( glGetError() ) {
-		throw FontError( "Texture uniform error" );
-	}
+	ASSERT( !glGetError(), "Texture parameter error" );
 	glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
 
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RED, (GLsizei)font->m_dimensions.width, (GLsizei)font->m_dimensions.height, 0, GL_RED, GL_UNSIGNED_BYTE, 0 );
-	if ( glGetError() ) {
-		throw FontError( "Error loading image of font texture" );
-	};
+	ASSERT( !glGetError(), "Error loading image of font texture" );
 
 	GLfloat ox = 0,oy = 0;
 	types::Font::bitmap_t *bitmap;
@@ -43,15 +39,9 @@ FontTexture::FontTexture( types::Font *font ) {
 		bitmap = &font->m_symbols[sym];
 
 		if ( bitmap->width > 0 && bitmap->height > 0 ) {
-			if ( bitmap->data ) {
-				glTexSubImage2D( GL_TEXTURE_2D, 0, (GLint)ox, (GLint)oy, (GLsizei)bitmap->width, (GLsizei)bitmap->height, GL_RED, GL_UNSIGNED_BYTE, (const GLvoid *)ptr( bitmap->data, 0, bitmap->width * bitmap->height ) );
-				if ( glGetError() ) {
-					throw FontError( "Error loading subimage of font texture" );
-				};
-			}
-			else {
-				throw FontError( "font bitmap data is null" );
-			}
+			ASSERT( bitmap->data, "Font bitmap data is null" );
+			glTexSubImage2D( GL_TEXTURE_2D, 0, (GLint)ox, (GLint)oy, (GLsizei)bitmap->width, (GLsizei)bitmap->height, GL_RED, GL_UNSIGNED_BYTE, (const GLvoid *)ptr( bitmap->data, 0, bitmap->width * bitmap->height ) );
+			ASSERT( !glGetError(), "Error loading subimage of font texture" );
 		}
 
 		m_tx[sym] = ox / font->m_dimensions.width;

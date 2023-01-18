@@ -20,11 +20,7 @@ void Surface::SetTexture( const types::Texture* texture) {
 }
 
 void Surface::SetStretchTexture( const bool stretch_texture ) {
-#if DEBUG
-	if ( !m_texture ) {
-		throw UIObjectError( "stretch texture but texture not set" );
-	}
-#endif
+	ASSERT( m_texture, "stretch texture but texture not set" );
 	if ( stretch_texture != m_stretch_texture ) {
 		m_stretch_texture = stretch_texture;
 		Realign();

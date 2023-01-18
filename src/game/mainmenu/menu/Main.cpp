@@ -42,8 +42,8 @@ Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 	}},
 	{ "MULTIPLAYER", [this] () -> void {
 		m_mainmenu->m_settings.game_mode = game::Settings::GM_MULTIPLAYER;
-		/*NEWV( menu, Multiplayer, m_mainmenu );
-		NextMenu( menu );*/
+		//NEWV( menu, Multiplayer, m_mainmenu );
+		//NextMenu( menu );
 		// TODO
 	}},
 	{ "VIEW CREDITS", [this] () -> void {

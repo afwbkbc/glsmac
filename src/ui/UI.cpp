@@ -104,21 +104,13 @@ void UI::SendMouseMoveEvent( UIObject* object ) {
 }
 
 void UI::SetTheme( theme::Theme* theme ) {
-#if DEBUG
-	if ( m_theme ) {
-		throw UIError( "theme already set" );
-	}
-#endif
+	ASSERT( !m_theme, "theme already set" ); // TODO: make changeable?
 	m_theme = theme;
 	m_theme->Finalize();
 }
 
 void UI::UnsetTheme() {
-#if DEBUG
-	if ( !m_theme ) {
-		throw UIError( "theme wasn't set" );
-	}
-#endif
+	ASSERT( m_theme, "theme wasn't set" );
 	m_theme = nullptr;
 }
 

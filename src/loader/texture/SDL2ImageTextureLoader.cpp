@@ -37,16 +37,12 @@ types::Texture *SDL2ImageTextureLoader::LoadTexture( const string &name ) {
 	else {
 		Log( "Loading texture \"" + name + "\"" );
 		SDL_Surface *image = IMG_Load( ( GetRoot() + name ).c_str() );
-		if (!image) {
-			throw TextureLoaderError( IMG_GetError() );
-		}
+		ASSERT( image, IMG_GetError() );
 		if (image->format->format != SDL_PIXELFORMAT_RGBA32) {
 			// we must have all images in same format
 			SDL_Surface *old = image;
 			image = SDL_ConvertSurfaceFormat(old, SDL_PIXELFORMAT_RGBA32, 0);
-			if (!image) {
-				throw TextureLoaderError( IMG_GetError() );
-			}
+			ASSERT( image, IMG_GetError() );
 			SDL_FreeSurface(old);
 		}
 

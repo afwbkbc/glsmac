@@ -78,8 +78,7 @@ void Actor::UpdateMatrix() {
 }
 
 void Actor::SetScene( Scene *scene ) {
-	if ( m_scene != NULL && scene != NULL )
-		throw ActorError( "duplicate scene set" );
+	ASSERT( m_scene == NULL || scene == NULL, "scene overlap" );
 	m_scene = scene;
 }
 

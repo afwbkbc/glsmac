@@ -90,20 +90,19 @@ void OpenGLRenderer::Start() {
 		SDL_WINDOW_OPENGL|SDL_WINDOW_SHOWN|SDL_WINDOW_RESIZABLE
 	);
 
-	// Check that the window was successfully made
-	if ( m_window == NULL ) {
-		throw RendererError( "Could not create SDL2 window!" );
+	// not using ASSERTs below because those errors can be thrown in release mode too, i.e. if there's no opengl support or there is no X at all
+	if ( !m_window ) {
+		THROW( "Could not create SDL2 window!" );
 	}
-
 	Log( "Initializing OpenGL" );
-
 	m_gl_context = SDL_GL_CreateContext( m_window );
-	if ( m_gl_context == NULL )
-		throw RendererError( "Could not create OpenGL context!" );
-
+	if ( !m_gl_context ) {
+		THROW( "Could not create OpenGL context!" );
+	}
 	GLenum res = glewInit();
-	if (res != GLEW_OK)
-		throw RendererError( "Unable to initialize OpenGL!" );
+	if ( res != GLEW_OK ) {
+		THROW( "Unable to initialize OpenGL!" );
+	}
 
 	for ( auto it = m_shader_programs.begin() ; it != m_shader_programs.end() ; ++it )
 		(*it)->Start();
@@ -135,9 +134,7 @@ void OpenGLRenderer::Start() {
 
 	uint32_t nothing = 0;
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &nothing );
-	if ( glGetError() ) {
-		throw RendererError( "Error loading texture" );
-	};
+	ASSERT( !glGetError(), "Error loading texture" );
 	
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -214,22 +211,18 @@ void OpenGLRenderer::Iterate() {
 			case SDL_MOUSEBUTTONDOWN: {
 				NEWV( ui_event, event::MouseDown, event.motion.x, event.motion.y, event.button.button );
 				g_engine->GetUI()->SendEvent( ui_event );
-#if DEBUG
-				if ( m_active_mousedowns.find( event.button.button ) != m_active_mousedowns.end() ) {
-					throw RendererError( "duplicate mousedown (button=" + to_string( event.button.button ) + ")" );
-				}
-#endif
+				ASSERT( m_active_mousedowns.find( event.button.button ) == m_active_mousedowns.end(),
+					"duplicate mousedown (button=" + to_string( event.button.button ) + ")"
+				);
 				m_active_mousedowns[ event.button.button ] = { event.motion.x, event.motion.y };
 				break;
 			}
 			case SDL_MOUSEBUTTONUP: {
 				NEWV( ui_event, event::MouseUp, event.motion.x, event.motion.y, event.button.button );
 				g_engine->GetUI()->SendEvent( ui_event );
-#if DEBUG
-				if ( m_active_mousedowns.find( event.button.button ) == m_active_mousedowns.end() ) {
-					throw RendererError( "mouseup without mousedown" );
-				}
-#endif
+				ASSERT( m_active_mousedowns.find( event.button.button ) != m_active_mousedowns.end(),
+					"mouseup without mousedown"
+				);
 				auto& mousedown_data = m_active_mousedowns.at( event.button.button );
 				if ( mousedown_data.x == event.motion.x && mousedown_data.y == event.motion.y ) {
 					// mousedown + mouseup at same pixel = mouseclick
@@ -276,12 +269,14 @@ void OpenGLRenderer::Iterate() {
 
 	SDL_GL_SwapWindow( m_window );
 
+#if DEBUG
 	GLenum errcode;
 	if ( ( errcode=glGetError() ) != GL_NO_ERROR ) {
 		const GLubyte* errstring = gluErrorString( errcode );
 		std::string msg = (char *)errstring;
-		throw RendererError( "OpenGL error occured in render loop: \"" + msg + "\"" );
+		THROW( "OpenGL error occured in render loop: \"" + msg + "\"" );
 	}
+#endif
 	
 	DEBUG_STAT_INC( frames_rendered );
 }
@@ -292,12 +287,13 @@ void OpenGLRenderer::AddScene( scene::Scene *scene ) {
 	bool added = false;
 
 	auto it = m_routines.begin();
-	for ( ; it < m_routines.end() ; it++ )
-		if ( (*it)->AddScene( scene ) )
+	for ( ; it < m_routines.end() ; it++ ) {
+		if ( (*it)->AddScene( scene ) ) {
 			added = true;
+		}
+	}
 
-	if ( !added )
-		throw RendererError( "no matching routine for scene [" + scene->GetName() + "]" );
+	ASSERT( added, "no matching routine for scene [" + scene->GetName() + "]" );
 }
 
 void OpenGLRenderer::RemoveScene( scene::Scene *scene ) {
@@ -306,12 +302,13 @@ void OpenGLRenderer::RemoveScene( scene::Scene *scene ) {
 	bool removed = false;
 
 	auto it = m_routines.begin();
-	for ( ; it < m_routines.end() ; it++ )
-		if ( (*it)->RemoveScene( scene ))
+	for ( ; it < m_routines.end() ; it++ ) {
+		if ( (*it)->RemoveScene( scene )) {
 			removed = true;
+		}
+	}
 
-	if ( !removed )
-		throw RendererError( "no matching routine for scene [" + scene->GetName() + "]" );
+	ASSERT( removed, "no matching routine for scene [" + scene->GetName() + "]" );
 }
 
 void OpenGLRenderer::UpdateCamera() {
@@ -336,15 +333,11 @@ void OpenGLRenderer::LoadTexture( const types::Texture* texture ) {
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 
-		if ( glGetError() ) {
-			throw RendererError( "Texture uniform error" );
-		}
+		ASSERT( !glGetError(), "Texture parameter error" );
 		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
 
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, (GLsizei)texture->m_width, (GLsizei)texture->m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, ptr( texture->m_bitmap, 0, texture->m_width * texture->m_height * 4 ) );
-		if ( glGetError() ) {
-			throw RendererError( "Error loading texture" );
-		};
+		ASSERT( !glGetError(), "Error loading texture" );
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);

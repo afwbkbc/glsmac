@@ -10,9 +10,7 @@ namespace routine {
 
 bool OpenGLRoutine::AddScene( scene::Scene *scene ) {
 	if ( SceneBelongs( scene )) {
-
-		if ( std::find( m_scenes.begin(), m_scenes.end(), scene ) < m_scenes.end() )
-			throw RendererError( "duplicate scene add" );
+		ASSERT( std::find( m_scenes.begin(), m_scenes.end(), scene ) == m_scenes.end(), "duplicate scene add" );
 
 		m_scenes.push_back( scene );
 

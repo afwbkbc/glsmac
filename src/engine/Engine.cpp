@@ -1,7 +1,5 @@
 #include <ctime>
 
-#include "base/Error.h"
-
 #include "Engine.h"
 
 // TODO: move to config
@@ -30,10 +28,9 @@ Engine::Engine(
 	m_renderer( renderer ),
 	m_ui( ui )
 {
-	if ( g_engine != NULL )
-		throw EngineError("duplicate initialization");
+	ASSERT( g_engine == nullptr, "duplicate engine initialization" );
 
-	srand( time( NULL ) );
+	srand( time( nullptr ) );
 
 	g_engine = this;
 
@@ -60,7 +57,7 @@ int Engine::Run() {
 
 		m_threads.main.Run();
 		
-	} catch ( base::Error &e ) {
+	} catch ( runtime_error &e ) {
 		result = EXIT_FAILURE;
 		this->m_error_handler->HandleError( e );
 	}

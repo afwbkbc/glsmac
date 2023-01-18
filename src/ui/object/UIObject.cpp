@@ -45,11 +45,7 @@ void UIObject::Create() {
 }
 
 void UIObject::Destroy() {
-#if DEBUG
-	if ( !m_actors.empty() ) {
-		throw UIObjectError( "some actors still present on destruction" );
-	}
-#endif
+	ASSERT( m_actors.empty(), "some actors still present on destruction" );
 	
 	HideDebugFrame();
 	
@@ -76,10 +72,7 @@ UIObject *UIObject::GetParentObject() const {
 }
 
 void UIObject::SetParentObject( UIContainer *parent_object ) {
-#if DEBUG
-	if ( m_parent_object != NULL )
-		throw UIError( "parent object already set" );
-#endif
+	ASSERT( !m_parent_object, "parent object already set" );
 	m_parent_object = parent_object;
 	m_depth = m_parent_object->m_depth + 1;
 	UpdateZIndex();
@@ -87,11 +80,7 @@ void UIObject::SetParentObject( UIContainer *parent_object ) {
 }
 
 void UIObject::SetZIndex( float z_index ) {
-#if DEBUG
-		if ( z_index < 0.1 || z_index > 0.9 ) {
-			throw UIError( "invalid z-index " + to_string( z_index ) );
-		}
-#endif
+	ASSERT( z_index >= 0.1 && z_index <= 0.9, "invalid z-index " + to_string( z_index ) );
 	if ( m_z_index != z_index ) {
 		m_z_index = z_index;
 		UpdateZIndex();
@@ -122,15 +111,14 @@ scene::Scene *UIObject::GetSceneOfActor( const Actor *actor ) const {
 			scene = g_engine->GetUI()->GetTextScene();
 			break;
 		default:
-			throw UIError( "unsupported actor type" );
+			THROW( "unsupported actor type" );
 	}
 	return scene;
 }
 
 void UIObject::ApplyStyle() {
-#if DEBUG
-	CheckStylePtr();
-#endif
+	ASSERT( m_style, "style not set" );
+	
 	Log( "Applying style class '" + m_style_class + "' (modifiers: " + to_string( m_style_modifiers ) + ")" );
 	
 	if ( Has( Style::A_ALIGN ) ) {
@@ -158,57 +146,33 @@ void UIObject::ApplyStyle() {
 }
 
 bool UIObject::Has( const Style::attribute_type_t attribute_type ) const {
-#if DEBUG
-	CheckStylePtr();
-#endif
+	ASSERT( m_style, "style not set" );
 	return m_style->Has( attribute_type, m_style_modifiers );
 }
 
 const ssize_t UIObject::Get( const Style::attribute_type_t attribute_type ) const {
-#if DEBUG
-	CheckStylePtr();
-#endif
+	ASSERT( m_style, "style not set" );
 	return m_style->Get( attribute_type, m_style_modifiers );
 }
 
 const Color UIObject::GetColor( const Style::attribute_type_t attribute_type ) const {
-#if DEBUG
-	CheckStylePtr();
-#endif
+	ASSERT( m_style, "style not set" );
 	return m_style->GetColor( attribute_type, m_style_modifiers );
 }
 
 const void* UIObject::GetObject( const Style::attribute_type_t attribute_type ) const {
-#if DEBUG
-	CheckStylePtr();
-#endif
+	ASSERT( m_style, "style not set" );
 	return m_style->GetObject( attribute_type, m_style_modifiers );
 }
 
-#if DEBUG
-void UIObject::CheckStylePtr() const {
-	if ( !m_style ) {
-		throw UIObjectError( "style not set" );
-	}
-}
-#endif
-
 void UIObject::AddActor( Actor* actor ) {
-#if DEBUG
-	if ( m_actors.find( actor ) != m_actors.end() ) {
-		throw UIObjectError( "duplicate actor add" );
-	}
-#endif
+	ASSERT( m_actors.find( actor ) == m_actors.end(), "duplicate actor add" );
 	actor->SetPositionZ( m_absolute_z_index );
 	m_actors.insert( actor );
 }
 
 void UIObject::RemoveActor( Actor* actor ) {
-#if DEBUG
-	if ( m_actors.find( actor ) == m_actors.end() ) {
-		throw UIObjectError( "actor to be removed not found" );
-	}
-#endif
+	ASSERT( m_actors.find( actor ) != m_actors.end(), "actor to be removed not found" );
 	m_actors.erase( actor );
 }
 
@@ -501,14 +465,8 @@ bool UIObject::IsPointInside( const size_t x, const size_t y ) const {
 }
 
 void UIObject::SetClass( const string& style_class ) {
-#if DEBUG
-	if ( !m_style_class.empty() ) {
-		throw UIObjectError( "style class already set to '" + m_style_class + "'" );
-	}
-	if ( m_style_loaded ) {
-		throw UIObjectError( "style '" + m_style_class + "' already loaded" );
-	}
-#endif
+	ASSERT( m_style_class.empty(), "style class already set to '" + m_style_class + "'" ); // TODO: make changeable?
+	ASSERT( !m_style_loaded, "style '" + m_style_class + "' already loaded" );
 	Log("Setting style class '" + style_class + "'");
 	m_style_class = style_class;
 }
@@ -540,11 +498,7 @@ void UIObject::ApplyStyleIfNeeded() {
 }
 
 void UIObject::AddStyleModifier( const Style::modifier_t modifier ) {
-#if DEBUG
-	if ( m_style_modifiers & modifier ) {
-		throw UIObjectError( "style modifier " + to_string( modifier ) + " already added" );
-	}
-#endif
+	ASSERT( !( m_style_modifiers & modifier ), "style modifier " + to_string( modifier ) + " already added" );
 	m_style_modifiers |= modifier;
 	if ( m_style ) {
 		ApplyStyle();
@@ -552,11 +506,7 @@ void UIObject::AddStyleModifier( const Style::modifier_t modifier ) {
 }
 
 void UIObject::RemoveStyleModifier( const Style::modifier_t modifier ) {
-#if DEBUG
-	if ( !(m_style_modifiers & modifier) ) {
-		throw UIObjectError( "style modifier " + to_string( modifier ) + " already removed" );
-	}
-#endif
+	ASSERT( (m_style_modifiers & modifier), "style modifier " + to_string( modifier ) + " already removed" );
 	m_style_modifiers &= ~modifier;
 	if ( m_style ) {
 		ApplyStyle();

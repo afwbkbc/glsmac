@@ -6,11 +6,7 @@ namespace ui {
 namespace theme {
 
 void Style::Initialize() {
-#if DEBUG
-	if ( m_is_initialized ) {
-		throw StyleError( "already initialized" );
-	}
-#endif
+	ASSERT( !m_is_initialized, "style already initialized" );
 	m_is_initialized = true;
 	for ( modifier_t modifier = M_NONE ; modifier < MODIFIER_MAX ; modifier++ ) {
 		PrepareAttributes( modifier );
@@ -49,11 +45,7 @@ void Style::SetObject( const attribute_type_t attribute_type, const void* ptr ) 
 }
 
 bool Style::Has( const attribute_type_t attribute_type, const modifier_t modifier ) const {
-#if DEBUG
-	if ( !m_is_initialized ) {
-		throw StyleError( "style not initialized" );
-	}
-#endif
+	ASSERT( m_is_initialized, "style not initialized" );
 	return m_attributes[ modifier ][ attribute_type ].is_set;
 }
 
@@ -79,20 +71,12 @@ const void* Style::GetObject( const attribute_type_t attribute_type, const modif
 }
 
 void Style::SetAttributesPtr( attributes_t* attributes ) {
-#if DEBUG
-	if ( m_attributes_ptr ) {
-		throw StyleError( "attributes ptr already set" );
-	}
-#endif
+	ASSERT( !m_attributes_ptr, "attributes ptr already set" );
 	m_attributes_ptr = attributes;
 }
 
 void Style::UnsetAttributesPtr() {
-#if DEBUG
-	if ( !m_attributes_ptr ) {
-		throw StyleError( "attributes ptr already unset" );
-	}
-#endif
+	ASSERT( m_attributes_ptr, "attributes ptr already unset" );
 	m_attributes_ptr = nullptr;
 }
 
@@ -105,24 +89,14 @@ void Style::PrepareAttributes( const modifier_t modifier ) {
 
 #if DEBUG
 void Style::CheckSet( const attribute_type_t attribute_type ) const {
-	if ( !m_is_initialized ) {
-		throw StyleError( "style not initialized" );
-	}
-	if ( !m_attributes_ptr ) {
-		throw StyleError( "attributes ptr not set" );
-	}
-	if ( (*m_attributes_ptr)[ attribute_type ].is_set  ) {
-		throw StyleError( "attribute already set" );
-	}
+	ASSERT( m_is_initialized, "style not initialized" );
+	ASSERT( m_attributes_ptr, "attributes ptr not set" );
+	ASSERT( !(*m_attributes_ptr)[ attribute_type ].is_set, "style attribute already set" );
 }
 
 void Style::CheckGet( const attribute_type_t attribute_type, const modifier_t modifier ) const {
-	if ( !m_is_initialized ) {
-		throw StyleError( "style not initialized" );
-	}
-	if ( !m_attributes[ modifier ][ attribute_type ].is_set ) {
-		throw StyleError( "attribute not set" );
-	}
+	ASSERT( m_is_initialized, "style not initialized" );
+	ASSERT( m_attributes[ modifier ][ attribute_type ].is_set, "style attribute not set" );
 }
 #endif
 

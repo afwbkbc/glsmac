@@ -1,6 +1,6 @@
 #include <chrono>
 #include <thread>
-
+#include <cstring>
 #include <cmath>
 
 #include "Thread.h"
@@ -112,22 +112,21 @@ void Thread::Run() {
 			(*it)->Stop();
 		m_state = STATE_INACTIVE;
 
-	} catch ( Error &e ) {
+	} catch ( runtime_error &e ) {
 
 		try {
 			m_state = STATE_STOPPING;
 			for ( modules_t::iterator it = m_modules.end() - 1 ; it >= m_modules.begin() ; --it )
 				(*it)->Stop();
 			m_state = STATE_INACTIVE;
-		} catch ( Error &e ) {};
+		} catch ( runtime_error &e ) {};
 
 		throw e;
 	}
 }
 
 void Thread::SetCommand( const thread_command_t command ) {
-	if ( m_command != COMMAND_NONE )
-		throw ThreadError( "thread command overflow" );
+	ASSERT( m_command == COMMAND_NONE, "thread command overlap" );
 	m_command = command;
 }
 

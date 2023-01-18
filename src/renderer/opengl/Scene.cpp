@@ -37,21 +37,17 @@ void Scene::RemoveActor( base::ObjectLink *link ) {
 }
 
 void Scene::AddActorToZIndexSet( Actor* gl_actor ) {
-#if DEBUG
-	if ( m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].find( gl_actor ) != m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].end() ) {
-		throw SceneError( "actor to be added already found in zindex set" );
-	}
-#endif
+	ASSERT( m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].find( gl_actor ) == m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].end(),
+		"actor to be added already found in zindex set"
+	);
 	//Log( "Adding actor " + gl_actor->GetName() + " to zindex set " + to_string( gl_actor->GetPosition().z ) );
 	m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].insert( gl_actor );
 }
 
 void Scene::RemoveActorFromZIndexSet( Actor* gl_actor ) {
-#if DEBUG
-	if ( m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].find( gl_actor ) == m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].end() ) {
-		throw SceneError( "actor to be removed not found in zindex set" );
-	}
-#endif
+	ASSERT( m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].find( gl_actor ) != m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].end(),
+		"actor to be removed not found in zindex set"
+	);
 	//Log( "Removing actor " + gl_actor->GetName() + " from zindex set " + to_string( gl_actor->GetPosition().z ) );
 	m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].erase( gl_actor );
 }
@@ -122,7 +118,7 @@ void Scene::Update() {
 		gl_actors_by_zindex_count += actors.second.size();
 	}
 	if ( gl_actors_by_zindex_count != m_gl_actors.size() ) {
-		throw SceneError( "gl_actors_by_zindex count does not match gl_actors count ( " + to_string( gl_actors_by_zindex_count ) + " , " + to_string( m_gl_actors.size() ) + " )" );
+		THROW( "gl_actors_by_zindex count does not match gl_actors count ( " + to_string( gl_actors_by_zindex_count ) + " , " + to_string( m_gl_actors.size() ) + " )" );
 	}
 #endif
 }
@@ -138,7 +134,7 @@ void Scene::Draw( shader_program::OpenGLShaderProgram *shader_program ) {
 		float zindex = actors.first;
 		zindex_sequence += " " + to_string( zindex );
 		if ( zindex < last_zindex ) {
-			throw SceneError( "invalid zindex sequence: " + zindex_sequence );
+			THROW( "invalid zindex sequence: " + zindex_sequence );
 		}
 		last_zindex = zindex;
 #endif

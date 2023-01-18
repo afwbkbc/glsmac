@@ -29,9 +29,7 @@ void UIContainer::Destroy() {
 	for ( auto it = m_child_objects.begin() ; it < m_child_objects.end() ; ++it )
 		DestroyChild( *it );
 	
-	if (!m_child_objects.empty()) {
-		throw UIError( "some children still alive upon parent destruction!" );
-	}
+	ASSERT( m_child_objects.empty(), "some children still alive upon parent destruction!" );
 	
 	UIObject::Destroy();
 }
@@ -60,15 +58,8 @@ void UIContainer::DestroyChild( UIObject *object ) {
 }
 
 void UIContainer::AddChild( UIObject *object ) {
-#if DEBUG
-	if ( object->GetParentObject() != NULL ) {
-		throw UIError( "non-free UIObject insertion" );
-	}
-	auto it = find( m_child_objects.begin(), m_child_objects.end(), object );
-	if ( it < m_child_objects.end() ) {
-		throw UIError( "duplicate UIObject insertion" );
-	}
-#endif
+	ASSERT( !object->GetParentObject(),"non-free UIObject insertion" );
+	ASSERT( find( m_child_objects.begin(), m_child_objects.end(), object ) == m_child_objects.end(), "duplicate UIObject insertion" );
 	Log( "adding child " + object->GetName() );
 	m_child_objects.push_back( object );
 	object->SetParentObject( this );
@@ -79,8 +70,7 @@ void UIContainer::AddChild( UIObject *object ) {
 
 void UIContainer::RemoveChild( UIObject *object ) {
 	auto it = find( m_child_objects.begin(), m_child_objects.end(), object );
-	if ( it == m_child_objects.end() )
-		throw UIError( "UIObject to be removed not found" );
+	ASSERT( it != m_child_objects.end(), "UIObject to be removed not found" );
 	Log( "removing child " + object->GetName() );
 	m_child_objects.erase( it, it + 1 );
 	DestroyChild( object );

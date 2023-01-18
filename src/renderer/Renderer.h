@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "base/Module.h"
-#include "base/Error.h"
 
 #include "scene/Scene.h"
 #include "types/Texture.h"

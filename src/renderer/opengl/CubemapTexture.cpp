@@ -35,10 +35,9 @@ void CubemapTexture::Load() {
 	else if ( m_texture->m_bpp == 4 )
 		pixel_format = GL_RGBA;
 	else
-		throw RendererError( "Unsupported texture format ( invalid BPP )" );
-	if ( ( m_texture->m_height * 4 % 3 ) || ( m_texture->m_height * 4 / 3 != m_texture->m_width ) )
-		throw RendererError( "Unsupported cubemap texture format ( invalid dimensions )" );
-
+		THROW( "Unsupported texture format ( invalid BPP )" );
+	
+	ASSERT( ( m_texture->m_height * 4 % 3 == 0 ) && ( m_texture->m_height * 4 / 3 == m_texture->m_width ), "Unsupported cubemap texture format ( invalid dimensions )" );
 
 	size_t bs = bw * bh * m_texture->m_bpp;
 

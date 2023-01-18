@@ -11,8 +11,7 @@ void OpenGLShaderProgram::Start() {
 	Log( "Adding shaders" );
 
 	m_gl_shader_program = glCreateProgram();
-	if ( !m_gl_shader_program )
-		throw OpenGLShaderProgramError( "Unable to create shader program!" );
+	ASSERT( m_gl_shader_program, "Unable to create shader program!" );
 
 	this->AddShaders();
 
@@ -21,13 +20,11 @@ void OpenGLShaderProgram::Start() {
 	GLint success = 0;
 
 	glGetProgramiv( m_gl_shader_program, GL_LINK_STATUS, &success );
-	if ( !success )
-		throw OpenGLShaderProgramError( "Shader program linking failed!" );
+	ASSERT( success, "Shader program linking failed!" );
 
 	glValidateProgram( m_gl_shader_program );
 	glGetProgramiv( m_gl_shader_program, GL_VALIDATE_STATUS, &success );
-	if ( !success )
-		throw OpenGLShaderProgramError( "Invalid shader program!" );
+	ASSERT( success, "Invalid shader program!" );
 
 	glUseProgram( m_gl_shader_program );
 
@@ -47,8 +44,7 @@ void OpenGLShaderProgram::Stop() {
 void OpenGLShaderProgram::AddShader( GLenum type, const std::string data ) {
 
 	GLuint gl_shader = glCreateShader( type );
-	if ( !gl_shader )
-		throw OpenGLShaderProgramError("Error creating OpenGL shader!");
+	ASSERT( gl_shader, "Error creating OpenGL shader!" );
 
 	const GLchar* p[1];
 	p[0] = data.c_str();
@@ -59,17 +55,20 @@ void OpenGLShaderProgram::AddShader( GLenum type, const std::string data ) {
 	glCompileShader( gl_shader );
 	GLint success;
 	glGetShaderiv( gl_shader, GL_COMPILE_STATUS, &success );
+	
+#if DEBUG
 	if ( !success ) {
 		GLint info_log_length;
 		glGetShaderiv( gl_shader, GL_INFO_LOG_LENGTH, &info_log_length );
 		GLchar* str_info_log = (GLchar*) malloc( info_log_length + 1 );
 		glGetShaderInfoLog( gl_shader, info_log_length, NULL, str_info_log );
 
-		throw OpenGLShaderProgramError("Error compiling shader! shader data: '"+data+"' ; shader error: '"+str_info_log+"'");
+		THROW( "Error compiling shader! shader data: '" + data + "' ; shader error: '" + str_info_log + "'" );
 
 		free( str_info_log );
 
 	}
+#endif
 
 	glAttachShader( m_gl_shader_program, gl_shader );
 
@@ -77,15 +76,13 @@ void OpenGLShaderProgram::AddShader( GLenum type, const std::string data ) {
 
 GLint OpenGLShaderProgram::GetUniformLocation( const std::string name ) {
 	GLuint uniform = glGetUniformLocation( m_gl_shader_program, name.c_str() );
-	if ( uniform == 0xFFFFFFFF )
-		throw OpenGLShaderProgramError( "Unable to get uniform location of '"+name+"'!" );
+	ASSERT( uniform != 0xFFFFFFFF, "Unable to get uniform location of '" + name + "'!" );
 	return uniform;
 }
 
 GLint OpenGLShaderProgram::GetAttributeLocation( const std::string name ) {
 	GLuint attribute = glGetAttribLocation( m_gl_shader_program, name.c_str() );
-	if ( attribute == 0xFFFFFFFF )
-		throw OpenGLShaderProgramError( "Unable to get attribute location of '"+name+"'!" );
+	ASSERT( attribute != 0xFFFFFFFF, "Unable to get attribute location of '" + name + "'!" );
 	return attribute;
 }
 

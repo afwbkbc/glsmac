@@ -10,35 +10,19 @@ Theme::~Theme() {
 }
 
 void Theme::AddStyle( Style* style ) {
-#if DEBUG
-	if ( m_is_finalized ) {
-		throw ThemeError( "adding style to finalized theme" );
-	}
-	if ( m_styles.find( style->GetClassName() ) != m_styles.end() ) {
-		throw ThemeError( "style '" + style->GetClassName() + "' already exists" );
-	}
-#endif
+	ASSERT( !m_is_finalized, "adding style to finalized theme" );
+	ASSERT( m_styles.find( style->GetClassName() ) == m_styles.end(), "style '" + style->GetClassName() + "' already exists" );
 	m_styles[ style->GetClassName() ] = style;
 }
 
 const Style* Theme::GetStyle( const string style_class ) const {
-#if DEBUG
-	if ( !m_is_finalized ) {
-		throw ThemeError( "getting style from non-finalized theme" );
-	}
-	if ( m_styles.find( style_class ) == m_styles.end() ) {
-		throw ThemeError( "style '" + style_class + "' does not exist" );
-	}
-#endif
+	ASSERT( m_is_finalized, "getting style from non-finalized theme" );
+	ASSERT( m_styles.find( style_class ) != m_styles.end(), "style '" + style_class + "' does not exist" ); // TODO: make optional
 	return m_styles.at( style_class );
 }
 
 void Theme::Finalize() {
-#if DEBUG
-	if ( m_is_finalized ) {
-		throw ThemeError( "theme already finalized" );
-	}
-#endif
+	ASSERT( !m_is_finalized, "theme already finalized" );
 	for ( auto& style : m_styles ) {
 		style.second->Initialize();
 	}

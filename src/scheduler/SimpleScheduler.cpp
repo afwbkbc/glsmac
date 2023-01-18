@@ -75,8 +75,7 @@ void SimpleScheduler::RemoveTask( Task *task ) {
 	}
 	else {
 		auto it = std::find( m_tasks.begin(), m_tasks.end(), task );
-		if ( it == m_tasks.end() )
-			throw SchedulerError( "removal of non-existent task" );
+		ASSERT( it != m_tasks.end(), "removal of non-existent task" );
 		if ( m_active ) {
 			Log( "Stopping task [" + task->GetName() + "]" );
 			task->Stop();
