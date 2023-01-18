@@ -21,6 +21,7 @@ jobs:
         sudo apt-get install libsdl2-image-dev
         sudo apt-get install libglu-dev
         sudo apt-get install libglew-dev
+        sudo apt-get install gcc-multilib g++-multilib
     - name: cmake32
       run: cmake -DCMAKE_BUILD_TYPE=Portable32 .
     - name: make32
