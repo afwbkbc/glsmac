@@ -2,22 +2,9 @@
 
 #include "style/MainMenuBackground.h"
 
-#include "style/SlidingMenuBlock.h"
-#include "style/SlidingMenuItem.h"
-#include "style/SlidingMenuItemUpperTop.h"
-#include "style/SlidingMenuItemLowerTop.h"
-#include "style/SlidingMenuItemLeft.h"
-#include "style/SlidingMenuItemRight.h"
-#include "style/SlidingMenuItemBottom.h"
-#include "style/SlidingMenuItemBody.h"
-#include "style/SlidingMenuButtonText.h"
-#include "style/SlidingMenuTitleText.h"
-
-#include "style/PopupMenuFrame.h"
-#include "style/PopupMenuHeader.h"
-#include "style/PopupMenuHeaderLabel.h"
-#include "style/PopupMenuButtonOkCancel.h"
-#include "style/PopupMenuButtonList.h"
+#include "style/Common.h"
+#include "style/SlidingMenu.h"
+#include "style/PopupMenu.h"
 
 namespace game {
 namespace mainmenu {
@@ -25,32 +12,10 @@ namespace mainmenu {
 using namespace style;
 
 MenuTheme::MenuTheme() : ui::theme::Theme() {
-#define ADDSTYLE( _style ) \
-	{ \
-		NEWV( style, _style ); \
-		AddStyle( style ); \
-	}
 	
-	ADDSTYLE( MainMenuBackground );
-	
-	ADDSTYLE( SlidingMenuBlock );
-	ADDSTYLE( SlidingMenuItem );
-	ADDSTYLE( SlidingMenuItemUpperTop );
-	ADDSTYLE( SlidingMenuItemLowerTop );
-	ADDSTYLE( SlidingMenuItemLeft );
-	ADDSTYLE( SlidingMenuItemRight );
-	ADDSTYLE( SlidingMenuItemBottom );
-	ADDSTYLE( SlidingMenuItemBody );
-	ADDSTYLE( SlidingMenuButtonText );
-	ADDSTYLE( SlidingMenuTitleText );
-	
-	ADDSTYLE( PopupMenuFrame );
-	ADDSTYLE( PopupMenuHeader );
-	ADDSTYLE( PopupMenuHeaderLabel );
-	ADDSTYLE( PopupMenuButtonOkCancel );
-	ADDSTYLE( PopupMenuButtonList );
-	
-#undef ADDSTYLE
+	AddStyleSheet( &m_styles.common );
+	AddStyleSheet( &m_styles.sliding_menu );
+	AddStyleSheet( &m_styles.popup_menu );
 	
 }
 

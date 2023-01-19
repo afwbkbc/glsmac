@@ -3,16 +3,18 @@
 namespace ui {
 namespace theme {
 
-Theme::~Theme() {
-	for ( auto& it : m_styles ) {
-		DELETE( it.second );
-	}
-}
-
 void Theme::AddStyle( Style* style ) {
 	ASSERT( !m_is_finalized, "adding style to finalized theme" );
 	ASSERT( m_styles.find( style->GetClassName() ) == m_styles.end(), "style '" + style->GetClassName() + "' already exists" );
-	m_styles[ style->GetClassName() ] = style;
+	m_styles[ style->GetStyleName() ] = style;
+	m_styles_order.push_back( style->GetStyleName() );
+}
+
+void Theme::AddStyleSheet( StyleSheet* stylesheet ) {
+	ASSERT( !m_is_finalized, "adding style to finalized theme" );
+	for ( auto& style : stylesheet->GetStyles() ) {
+		AddStyle( style );
+	}
 }
 
 const Style* Theme::GetStyle( const string style_class ) const {
@@ -23,8 +25,8 @@ const Style* Theme::GetStyle( const string style_class ) const {
 
 void Theme::Finalize() {
 	ASSERT( !m_is_finalized, "theme already finalized" );
-	for ( auto& style : m_styles ) {
-		style.second->Initialize();
+	for ( auto& style : m_styles_order ) {
+		m_styles.at( style )->Initialize();
 	}
 	m_is_finalized = true;
 }

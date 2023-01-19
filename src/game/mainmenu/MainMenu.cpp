@@ -8,6 +8,7 @@
 #include "scene/actor/TextActor.h"
 
 #include "menu/Main.h"
+#include "menu/Multiplayer.h"
 
 using namespace std;
 using namespace ui::object;
@@ -25,6 +26,7 @@ void MainMenu::Start() {
 	g_engine->GetUI()->AddObject( m_background );
 
 	NEWV( menu, Main, this );
+	//NEWV( menu, Multiplayer, this );
 	ShowMenu( menu );
 }
 

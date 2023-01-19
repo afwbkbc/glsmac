@@ -1,6 +1,6 @@
 SET(SRC ${SRC}
 
-	${PWD}/IntroLogo.cpp
+	${PWD}/IntroStyle.cpp
 	${PWD}/IntroTheme.cpp
 	${PWD}/Intro.cpp
 

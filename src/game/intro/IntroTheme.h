@@ -2,6 +2,8 @@
 
 #include "ui/theme/Theme.h"
 
+#include "IntroStyle.h"
+
 namespace game {
 namespace intro {
 
@@ -10,7 +12,8 @@ CHILD_CLASS( IntroTheme, ui::theme::Theme )
 
 protected:
 	
-
+private:
+	IntroStyle m_style;
 };
 
 }
