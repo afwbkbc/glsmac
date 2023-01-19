@@ -123,10 +123,11 @@ scene::Scene *UIObject::GetSceneOfActor( const Actor *actor ) const {
 
 void UIObject::ApplyStyle() {
 
-	if ( m_style ) {
-		//Log( "Applying style class '" + m_style_class + "' (modifiers: " + to_string( m_style_modifiers ) + ")" );
+	// Spammy
+	/*if ( m_style ) {
+		Log( "Applying style class '" + m_style_class + "' (modifiers: " + to_string( m_style_modifiers ) + ")" );
 	}
-	/*if ( !m_parent_style_attributes.empty() ) {
+	if ( !m_parent_style_attributes.empty() ) {
 		Log( "Using " + to_string( m_parent_style_attributes.size() ) + " forwarded style attributes from parent (modifiers: " + to_string( m_style_modifiers ) + ")" );
 	}*/
 	

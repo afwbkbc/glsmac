@@ -13,10 +13,10 @@ void ChoiceList::SetChoices( const choices_t& choices ) {
 	m_choices = choices;
 	
 	m_value = "";
-	/*for (auto& choice : m_choices ) {
+	for (auto& choice : m_choices ) {
 		m_value = choice;
 		break;
-	}*/ // TODO
+	}
 	
 	if ( m_created ) {
 		UpdateButtons();
@@ -72,16 +72,16 @@ void ChoiceList::UpdateButtons() {
 				button->SetHeight( 20 );
 				button->SetTop( 2 + ( button->GetHeight() + 2 ) * (line) );
 				button->ForwardStyleAttributes( m_forwarded_style_attributes );
-				/*if ( line == 0) {
+				if ( line == 0) {
 					button->AddStyleModifier( Style::M_SELECTED );
-				}*/ // TODO
+				}
 				button->OnClick( EH( this, button ) {
-					for ( auto& b : m_buttons ) {
-						if ( b.second != button && b.second->HasStyleModifier( Style::M_SELECTED ) ) {
-							b.second->RemoveStyleModifier( Style::M_SELECTED );
-						}
-					}
 					if ( !button->HasStyleModifier( Style::M_SELECTED ) ) {
+						for ( auto& b : m_buttons ) {
+							if ( b.second != button && b.second->HasStyleModifier( Style::M_SELECTED ) ) {
+								b.second->RemoveStyleModifier( Style::M_SELECTED );
+							}
+						}
 						button->AddStyleModifier( Style::M_SELECTED );
 						m_value = button->GetLabel();
 					}

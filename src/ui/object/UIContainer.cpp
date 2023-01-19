@@ -44,6 +44,7 @@ void UIContainer::Iterate() {
 
 void UIContainer::CreateChild( UIObject *object ) {
 	object->Create();
+	object->AddStyleModifier( m_style_modifiers );
 	object->Realign();
 	object->EnableActors();
 	object->Redraw();
@@ -159,7 +160,6 @@ void UIContainer::AddStyleModifier( const Style::modifier_t modifier ) {
 }
 
 void UIContainer::RemoveStyleModifier( const Style::modifier_t modifier ) {
-	
 	UIObject::RemoveStyleModifier( modifier );
 	
 	for (auto& c : m_child_objects) {

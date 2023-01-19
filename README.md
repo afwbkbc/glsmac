@@ -63,7 +63,6 @@ Once I replicate original game, I'll focus on other things, such as: larger maps
 
 ##### Versions 3.x: not sure yet, probably something cool
 
-
 ### Build instructions
 
 You will need following libraries (-dev versions): FreeType2, SDL2, SDL2_image, GL, GLEW
@@ -79,6 +78,8 @@ For portable build (binary that can be executed on different machines): cmake . 
 For same build as before (or Release if it's first build): cmake . && make
 
 Add -j parameter to make to speed up if you have multiple cores, i.e. "make -j9" for 8
+
+You may also just download binary releases from github, they are built for ubuntu but will run on most linux distros (only 64-bit for now).
 
 ### Launch
 
@@ -105,3 +106,13 @@ GLSMAC code is created from scratch and tries to imitate original SMAC logic whi
 GLSMAC requires user to have original SMAC (+expansion) installed in order to operate in a way similar to original SMAC.
 
 All rights for SMAC/SMACX assets belong to their respective owners. AGPL license you see here only applies to GLSMAC code (and maybe custom-made assets in the future if I decide to make them).
+
+### More information
+
+Primary source of information is git log :)
+
+Then there's discord where updates are frequent, sometimes I'll explain technical details or plans and also put screenshots of newly added stuff. You can also ask me questions and coordinate development if you decide to participate.
+
+Then there's this README but I'll only put generic stuff here and won't update often.
+
+Finally, there are multiple threads on various forums and reddits but I don't have enough time to update them often and may be slow to reply.
