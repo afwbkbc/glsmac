@@ -7,13 +7,11 @@ namespace mainmenu {
 namespace style {
 
 void PopupMenuButton::SetStyle() {
-	Set( A_WIDTH, 234 );
-	Set( A_HEIGHT, 20 );
 	
 	unordered_map<Style::attribute_type_t,vector<size_t>> textures = {};
 	
 	// borders
-	if ( Is( M_ACTIVE ) ) {
+	if ( Is( M_ACTIVE ) || Is( M_SELECTED ) ) {
 		textures = {
 			{ A_TEXTURE_BACK, { 68, 170, 134, 187 } },
 			{ A_TEXTURE_BORDER_LEFT, { 64, 170, 64, 187 } },
@@ -46,8 +44,7 @@ void PopupMenuButton::SetStyle() {
 		SetObject( texture.first, g_engine->GetTextureLoader()->LoadTexture( "interface.pcx", texture.second[0] , texture.second[1], texture.second[2], texture.second[3] ) );
 	}
 
-	SetObject( A_FONT, g_engine->GetFontLoader()->LoadFont( "arialnb.ttf", 18 ) );
-	if ( Is( M_HOVER ) && !Is( M_ACTIVE ) ) {
+	if ( Is( M_HOVER ) && !Is( M_ACTIVE ) && !Is( M_SELECTED) ) {
 		SetColor( A_TEXTCOLOR, Color::FromRGB( 164, 176, 232 ) );
 	}
 	else {

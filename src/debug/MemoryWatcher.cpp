@@ -339,12 +339,7 @@ void MemoryWatcher::GLDeleteBuffers( GLsizei n, const GLuint * buffers, const st
 	
 	auto it_vertex = m_opengl.vertex_buffer_sizes.find( *buffers );
 	auto it_index = m_opengl.index_buffer_sizes.find( *buffers );
-	if (
-		( it_vertex == m_opengl.vertex_buffer_sizes.end() ) &&
-		( it_index == m_opengl.index_buffer_sizes.end() )
-	) {
-		throw runtime_error( "glDeleteBuffers buffer is neither vertex buffer nor index buffer, is it a bug? @" + source );
-	}
+	
 	if (
 		( it_vertex != m_opengl.vertex_buffer_sizes.end() ) &&
 		( it_index != m_opengl.index_buffer_sizes.end() )

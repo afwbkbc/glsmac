@@ -130,5 +130,6 @@ extern debug_stats_t g_debug_stats;
 
 #define ASSERT( _condition, _text ) \
 	if ( !( _condition ) ) { \
+		Log( (string) "FATAL: " + _text ); \
 		THROW( _text ); \
 	}

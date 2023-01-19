@@ -13,7 +13,7 @@ Surface::Surface( const string& class_name )
 
 void Surface::SetTexture( const types::Texture* texture) {
 	if ( texture != m_texture ) {
-		Log( "Setting texture " + texture->m_name );
+		//Log( "Setting texture " + texture->m_name );
 		m_texture = texture;
 		if ( m_background ) {
 			m_background->SetTexture( m_texture );
@@ -24,7 +24,7 @@ void Surface::SetTexture( const types::Texture* texture) {
 
 void Surface::ClearTexture() {
 	if ( m_texture ) {
-		Log( "Clearing texture" );
+		//Log( "Clearing texture" );
 		m_texture = nullptr;
 		if ( m_background ) {
 			m_background->SetTexture( nullptr );
@@ -98,6 +98,9 @@ void Surface::ApplyStyle() {
 		else {
 			ClearTexture();
 		}
+	}
+	else {
+		ClearTexture();
 	}
 }
 

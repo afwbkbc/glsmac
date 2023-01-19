@@ -129,6 +129,46 @@ void UIContainer::SendEvent( const UIEvent* event ) {
 	UIObject::SendEvent( event );
 }
 
+void UIContainer::ApplyStyle() {
+	UIObject::ApplyStyle();
+	
+	for (auto& c : m_child_objects) {
+		////c->ReloadStyle();
+		c->ApplyStyle(); // ???
+	}
+}
+
+void UIContainer::ReloadStyle() {
+	if ( m_style_loaded ) {
+		UIObject::ReloadStyle();
+		
+		for (auto& c : m_child_objects) {
+			c->ReloadStyle();
+		}
+	}
+}
+
+void UIContainer::AddStyleModifier( const Style::modifier_t modifier ) {
+	UIObject::AddStyleModifier( modifier );
+	
+	for (auto& c : m_child_objects) {
+		if ( !c->HasStyleModifier( modifier ) ) {
+			c->AddStyleModifier( modifier );
+		}
+	}
+}
+
+void UIContainer::RemoveStyleModifier( const Style::modifier_t modifier ) {
+	
+	UIObject::RemoveStyleModifier( modifier );
+	
+	for (auto& c : m_child_objects) {
+		if ( c->HasStyleModifier( modifier ) ) {
+			c->RemoveStyleModifier( modifier );
+		}
+	}
+}
+
 const string UIContainer::Subclass( const string& class_name ) const {
 	//if (this->m_style_class.empty()) {
 		return "";

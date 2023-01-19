@@ -112,7 +112,16 @@ MAJOR_CLASS( UIObject, base::Base )
 	void HideDebugFrame() {}
 #endif
 	
+	void ForwardStyleAttribute( const Style::attribute_type_t src_type, const Style::attribute_type_t dst_type );
+	void ForwardStyleAttribute( const Style::attribute_type_t type );
+	void ForwardStyleAttributes( const vector< Style::attribute_type_t > type );
+	
+	virtual void AddStyleModifier( const Style::modifier_t modifier );
+	virtual void RemoveStyleModifier( const Style::modifier_t modifier );
+	const bool HasStyleModifier( const Style::modifier_t modifier ) const;
+	
 protected:
+	friend class UIContainer;
 	
 	// callbacks
 	virtual void OnMouseOver( const UIEvent::event_data_t* data ) {};
@@ -129,6 +138,7 @@ protected:
 
 	bool m_is_focused = false;
 	bool m_is_focusable = false;
+	bool m_is_hoverable = false;
 	
 	UIContainer *m_parent_object = nullptr;
 
@@ -192,10 +202,18 @@ protected:
 	scene::Scene *GetSceneOfActor( const Actor *actor ) const;
 	
 	virtual void ApplyStyle();
+	virtual void ReloadStyle();
 	
+	void ForwardStyleAttribute( const Style::attribute_type_t src_type, const Style::attribute_type_t dst_type, UIObject* child );
+	void ForwardStyleAttribute( const Style::attribute_type_t type, UIObject* child );
+	
+	bool Has( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const;
 	bool Has( const Style::attribute_type_t attribute_type ) const;
+	const ssize_t Get( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const;
 	const ssize_t Get( const Style::attribute_type_t attribute_type ) const;
+	const Color GetColor( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const;
 	const Color GetColor( const Style::attribute_type_t attribute_type ) const;
+	const void* GetObject( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const;
 	const void* GetObject( const Style::attribute_type_t attribute_type ) const;
 	
 #if DEBUG
@@ -204,24 +222,26 @@ protected:
 	bool m_has_debug_frame = false;
 #endif
 	
-	void AddStyleModifier( const Style::modifier_t modifier );
-	void RemoveStyleModifier( const Style::modifier_t modifier );
-	
 	void AddEventHandler( const UIEvent::event_type_t type, UIEventHandler::handler_function_t func );
 	// TODO: remove?
 	void Trigger( const UIEvent::event_type_t type, const UIEvent::event_data_t* data );
 	
 private:
+	
+	
 	string m_style_class = "";
 	bool m_style_loaded = false; // will load on first draw
 	const Style* m_style = nullptr;
-	
+	unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_parent_style_attributes = {};
 	void ApplyStyleIfNeeded();
+	
+	const Style::attribute_type_t GetParentAttribute( const Style::attribute_type_t source_type ) const;
 	
 	Style::modifier_t m_style_modifiers = Style::M_NONE;
 	
 	typedef unordered_set< UIEventHandler* > event_handlers_t;
 	unordered_map< UIEvent::event_type_t, event_handlers_t > m_event_handlers = {};
+	
 };
 
 } /* namespace object */

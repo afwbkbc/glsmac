@@ -26,7 +26,7 @@ MAJOR_CLASS( Style, base::Base )
 		A_RIGHT,
 		A_BOTTOM,
 		A_ALIGN,
-		A_COLOR,
+		A_TEXTALIGN,
 		A_TEXTCOLOR,
 		A_TEXTURE,
 		A_TEXTURE_BACK,
@@ -50,7 +50,8 @@ MAJOR_CLASS( Style, base::Base )
 	static const modifier_t M_NONE = 0;
 	static const modifier_t M_HOVER = 1;
 	static const modifier_t M_ACTIVE = 2;
-	static const modifier_t MODIFIER_MAX = 4;
+	static const modifier_t M_SELECTED = 4;
+	static const modifier_t MODIFIER_MAX = 8;
 	
 	void Set( const attribute_type_t attribute_type ); // for bool flags without value
 	void Set( const attribute_type_t attribute_type, const ssize_t value );

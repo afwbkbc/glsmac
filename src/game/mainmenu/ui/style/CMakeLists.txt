@@ -15,6 +15,10 @@ SET(SRC ${SRC}
 				${PWD}/SlidingMenuTitleText.cpp
 
 	${PWD}/PopupMenuFrame.cpp
-	${PWD}/PopupMenuButton.cpp
+		${PWD}/PopupMenuHeader.cpp
+			${PWD}/PopupMenuHeaderLabel.cpp
+		${PWD}/PopupMenuButton.cpp
+			${PWD}/PopupMenuButtonOkCancel.cpp
+			${PWD}/PopupMenuButtonList.cpp
 
 PARENT_SCOPE)

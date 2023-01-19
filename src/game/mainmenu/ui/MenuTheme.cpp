@@ -14,7 +14,10 @@
 #include "style/SlidingMenuTitleText.h"
 
 #include "style/PopupMenuFrame.h"
-#include "style/PopupMenuButton.h"
+#include "style/PopupMenuHeader.h"
+#include "style/PopupMenuHeaderLabel.h"
+#include "style/PopupMenuButtonOkCancel.h"
+#include "style/PopupMenuButtonList.h"
 
 namespace game {
 namespace mainmenu {
@@ -42,7 +45,10 @@ MenuTheme::MenuTheme() : ui::theme::Theme() {
 	ADDSTYLE( SlidingMenuTitleText );
 	
 	ADDSTYLE( PopupMenuFrame );
-	ADDSTYLE( PopupMenuButton );
+	ADDSTYLE( PopupMenuHeader );
+	ADDSTYLE( PopupMenuHeaderLabel );
+	ADDSTYLE( PopupMenuButtonOkCancel );
+	ADDSTYLE( PopupMenuButtonList );
 	
 #undef ADDSTYLE
 	

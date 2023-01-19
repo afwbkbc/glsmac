@@ -11,6 +11,8 @@ using namespace std;
 namespace ui {
 namespace event {
 
+#define EH(...) [__VA_ARGS__] ( const UIEvent::event_data_t* data ) -> void
+	
 MAJOR_CLASS( UIEventHandler, base::Base )
 
 	typedef function<void( const UIEvent::event_data_t* data )> handler_function_t;

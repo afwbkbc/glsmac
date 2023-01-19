@@ -13,7 +13,7 @@ MenuItem::MenuItem( MenuBlock* menu, const string& text, const bool is_title )
 	, m_text( text )
 	, m_is_title( is_title )
 {
-	//
+	m_is_hoverable = true;
 }
 
 void MenuItem::Create() {
@@ -38,7 +38,8 @@ void MenuItem::Create() {
 		AddChild( part );
 	}
 	
-	NEW( m_label, Label, m_text );
+	NEW( m_label, Label );
+	m_label->SetText( m_text );
 	m_label->SetClass( m_is_title ? "SlidingMenuTitleText" : "SlidingMenuButtonText" );
 	AddChild(m_label);
 }

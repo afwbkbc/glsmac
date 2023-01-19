@@ -14,6 +14,7 @@ MAJOR_CLASS( UIEvent, base::Base )
 		EV_MOUSEUP,
 		EV_MOUSECLICK,
 		EV_KEYDOWN,
+		EV_CHANGE,
 	};
 	
 	// event flags

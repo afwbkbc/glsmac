@@ -26,13 +26,19 @@ public:
 	virtual void Show();
 	virtual void Hide();
 	
-protected:
-	Panel* m_frame = nullptr;
-	Button* m_button_ok = nullptr;
-	Button* m_button_cancel = nullptr;
+	virtual void OnOkClick() {};
 	
-	Surface *m_titlebar = nullptr;
-	Surface *m_body = nullptr;
+protected:
+	
+	Panel* m_body = nullptr; // child classes can add elements here
+	
+private:
+	Panel* m_frame = nullptr;
+		Panel* m_titleframe = nullptr;
+			Panel* m_titlebar = nullptr;
+				Label* m_titlelabel = nullptr;
+		Button* m_button_ok = nullptr;
+		Button* m_button_cancel = nullptr;
 	
 	
 	

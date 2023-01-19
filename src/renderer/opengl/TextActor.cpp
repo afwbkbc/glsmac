@@ -21,7 +21,9 @@ TextActor::TextActor( scene::actor::TextActor *actor, Font *font ) : Actor( acto
 TextActor::~TextActor() {
 	Log( "Destroying OpenGL text" );
 	glDeleteBuffers( 1, &m_vbo );
-	DELETE( m_texture );
+	if ( m_texture ) {
+		DELETE( m_texture );
+	}
 }
 
 void TextActor::Update( Font* font, const string& text, const float x, const float y ) {

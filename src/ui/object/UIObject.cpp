@@ -122,9 +122,13 @@ scene::Scene *UIObject::GetSceneOfActor( const Actor *actor ) const {
 }
 
 void UIObject::ApplyStyle() {
-	ASSERT( m_style, "style not set" );
-	
-	Log( "Applying style class '" + m_style_class + "' (modifiers: " + to_string( m_style_modifiers ) + ")" );
+
+	if ( m_style ) {
+		//Log( "Applying style class '" + m_style_class + "' (modifiers: " + to_string( m_style_modifiers ) + ")" );
+	}
+	/*if ( !m_parent_style_attributes.empty() ) {
+		Log( "Using " + to_string( m_parent_style_attributes.size() ) + " forwarded style attributes from parent (modifiers: " + to_string( m_style_modifiers ) + ")" );
+	}*/
 	
 	if ( Has( Style::A_ALIGN ) ) {
 		SetAlign( Get( Style::A_ALIGN ) );
@@ -150,24 +154,74 @@ void UIObject::ApplyStyle() {
 
 }
 
+void UIObject::ReloadStyle() {
+	if ( m_style_loaded ) {
+		m_style_loaded = false;
+	}
+}
+
+void UIObject::ForwardStyleAttribute( const Style::attribute_type_t src_type, const Style::attribute_type_t dst_type ) {
+	m_parent_style_attributes[ dst_type ] = src_type;
+	ReloadStyle();
+}
+
+void UIObject::ForwardStyleAttribute( const Style::attribute_type_t type ) {
+	ForwardStyleAttribute( type, type );
+}
+
+void UIObject::ForwardStyleAttributes( const vector< Style::attribute_type_t > types ) {
+	for ( auto& type : types ) {
+		m_parent_style_attributes[ type ] = type;
+	}
+	ReloadStyle();
+}
+
+bool UIObject::Has( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const {
+	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
+		return true;
+	}
+	auto it = m_parent_style_attributes.find( attribute_type );
+	if ( it != m_parent_style_attributes.end() ) {
+		ASSERT( m_parent_object, "parent style attributes requested but parent is not set" );
+		return m_parent_object->Has( it->second, style_modifiers );
+	}
+	return false;
+}
 bool UIObject::Has( const Style::attribute_type_t attribute_type ) const {
-	ASSERT( m_style, "style not set" );
-	return m_style->Has( attribute_type, m_style_modifiers );
+	return Has( attribute_type, m_style_modifiers );
 }
 
+const ssize_t UIObject::Get( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const {
+	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
+		return m_style->Get( attribute_type, style_modifiers );
+	}
+	ASSERT( m_parent_object, "parent style attributes requested but parent is not set" );
+	return m_parent_object->Get( GetParentAttribute( attribute_type ), style_modifiers );
+}
 const ssize_t UIObject::Get( const Style::attribute_type_t attribute_type ) const {
-	ASSERT( m_style, "style not set" );
-	return m_style->Get( attribute_type, m_style_modifiers );
+	return Get( attribute_type, m_style_modifiers );
 }
 
+const Color UIObject::GetColor( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const {
+	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
+		return m_style->GetColor( attribute_type, style_modifiers );
+	}
+	ASSERT( m_parent_object, "parent style attributes requested but parent is not set" );
+	return m_parent_object->GetColor( GetParentAttribute( attribute_type ), style_modifiers );
+}
 const Color UIObject::GetColor( const Style::attribute_type_t attribute_type ) const {
-	ASSERT( m_style, "style not set" );
-	return m_style->GetColor( attribute_type, m_style_modifiers );
+	return GetColor( attribute_type, m_style_modifiers );
 }
 
+const void* UIObject::GetObject( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const {
+	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
+		return m_style->GetObject( attribute_type, style_modifiers );
+	}
+	ASSERT( m_parent_object, "parent style attributes requested but parent is not set" );
+	return m_parent_object->GetObject( GetParentAttribute( attribute_type ), style_modifiers );
+}
 const void* UIObject::GetObject( const Style::attribute_type_t attribute_type ) const {
-	ASSERT( m_style, "style not set" );
-	return m_style->GetObject( attribute_type, m_style_modifiers );
+	return GetObject( attribute_type, m_style_modifiers );
 }
 
 void UIObject::AddActor( Actor* actor ) {
@@ -419,15 +473,19 @@ void UIObject::SendEvent( const UIEvent* event ) {
 			if ( IsPointInside( event->m_data.mouse.x, event->m_data.mouse.y ) ) {
 				if ( ( m_state & STATE_MOUSEOVER ) != STATE_MOUSEOVER ) {
 					m_state |= STATE_MOUSEOVER;
-					AddStyleModifier( Style::M_HOVER );
-					OnMouseOver( &event->m_data );
+					if ( m_is_hoverable ) {
+						AddStyleModifier( Style::M_HOVER );
+						OnMouseOver( &event->m_data );
+					}
 				}
 			}
 			else {
 				if ( ( m_state & STATE_MOUSEOVER ) == STATE_MOUSEOVER ) {
 					m_state &= ~STATE_MOUSEOVER;
-					RemoveStyleModifier( Style::M_HOVER );
-					OnMouseOut( &event->m_data );
+					if ( m_is_hoverable ) {
+						RemoveStyleModifier( Style::M_HOVER );
+						OnMouseOut( &event->m_data );
+					}
 				}
 			}
 			break;
@@ -479,6 +537,7 @@ void UIObject::SetClass( const string& style_class ) {
 	ASSERT( !m_style_loaded, "style '" + m_style_class + "' already loaded" );
 	Log("Setting style class '" + style_class + "'");
 	m_style_class = style_class;
+	ApplyStyleIfNeeded();
 }
 
 #if DEBUG
@@ -499,28 +558,32 @@ void UIObject::HideDebugFrame() {
 
 void UIObject::ApplyStyleIfNeeded() {
 	if ( !m_style_loaded ) {
-		if ( !m_style_class.empty() ) {
-			m_style = g_engine->GetUI()->GetStyle( m_style_class );
-			ApplyStyle();
+		if ( m_created ) {
+			if ( !m_style_class.empty() || !m_parent_style_attributes.empty() ) {
+				if ( !m_style && !m_style_class.empty() ) {
+					m_style = g_engine->GetUI()->GetStyle( m_style_class );
+				}
+				ApplyStyle();
+			}
+			m_style_loaded = true;
 		}
-		m_style_loaded = true;
 	}
 }
 
 void UIObject::AddStyleModifier( const Style::modifier_t modifier ) {
 	ASSERT( !( m_style_modifiers & modifier ), "style modifier " + to_string( modifier ) + " already added" );
 	m_style_modifiers |= modifier;
-	if ( m_style ) {
-		ApplyStyle();
-	}
+	ApplyStyle();
 }
 
 void UIObject::RemoveStyleModifier( const Style::modifier_t modifier ) {
 	ASSERT( (m_style_modifiers & modifier), "style modifier " + to_string( modifier ) + " already removed" );
 	m_style_modifiers &= ~modifier;
-	if ( m_style ) {
-		ApplyStyle();
-	}
+	ApplyStyle();
+}
+
+const bool UIObject::HasStyleModifier( const Style::modifier_t modifier ) const {
+	return ( (m_style_modifiers & modifier ) == modifier );
 }
 
 void UIObject::AddEventHandler( const UIEvent::event_type_t type, UIEventHandler::handler_function_t func ) {
@@ -542,6 +605,14 @@ void UIObject::Trigger( const UIEvent::event_type_t type, const UIEvent::event_d
 		}
 	}
 }
+
+const Style::attribute_type_t UIObject::GetParentAttribute( const Style::attribute_type_t source_type ) const {
+	auto it = m_parent_style_attributes.find( source_type );
+	ASSERT( it != m_parent_style_attributes.end(), "could not get attribute neither from style nor from parent attributes" );
+	ASSERT( m_parent_object,  "parent is gone" );
+	return it->second;
+}
+
 
 } /* namespace object */
 } /* namespace ui */

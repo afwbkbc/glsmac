@@ -1,4 +1,4 @@
-#include "PopupMenuFrame.h"
+#include "PopupMenuHeader.h"
 
 #include "ui/object/UIObject.h"
 
@@ -8,10 +8,10 @@ namespace game {
 namespace mainmenu {
 namespace style {
 
-void PopupMenuFrame::SetStyle() {
+void PopupMenuHeader::SetStyle() {
 	
 	const unordered_map<Style::attribute_type_t,vector<size_t>> textures = {
-		{ A_TEXTURE_BACK, { 86, 353, 109, 376 } },
+		{ A_TEXTURE_BACK, { 86, 314, 109, 337 } },
 		{ A_TEXTURE_BORDER_LEFT, { 79, 431, 79, 454 } },
 		{ A_TEXTURE_BORDER_TOP, { 86, 307, 109, 307 } },
 		{ A_TEXTURE_BORDER_RIGHT, { 116, 431, 116, 454 } },

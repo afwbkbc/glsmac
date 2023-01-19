@@ -53,6 +53,7 @@ void Panel::Create() {
 			b.second->SetLeft( bw );
 			b.second->SetRight( bw );
 		}
+		b.second->ForwardStyleAttribute( b.first, Style::A_TEXTURE );
 	}
 	
 	m_surfaces[ Style::A_TEXTURE_BORDER_LEFT ]->SetAlign( UIObject::ALIGN_LEFT );
@@ -70,7 +71,6 @@ void Panel::Create() {
 }
 
 void Panel::Destroy() {
-//	RemoveChild( m_background );
 
 	for (auto& b : m_surfaces) {
 		RemoveChild( b.second );
@@ -82,15 +82,6 @@ void Panel::Destroy() {
 void Panel::ApplyStyle() {
 	UIContainer::ApplyStyle();
 
-	for (auto& b : m_surfaces) {
-		if ( Has( b.first ) ) {
-			const auto* texture = (Texture*)GetObject( b.first );
-			b.second->SetTexture( texture );
-		}
-		else {
-			b.second->ClearTexture();
-		}
-	}
 }
 
 }

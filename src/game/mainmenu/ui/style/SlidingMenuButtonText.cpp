@@ -10,10 +10,10 @@ void SlidingMenuButtonText::SetStyle() {
 	SlidingMenuItemText::SetStyle();
 
 	if ( Is( M_HOVER ) ) {
-		SetColor( A_COLOR, Color::FromRGBA( 193, 240 ,204, 255 ) );
+		SetColor( A_TEXTCOLOR, Color::FromRGBA( 193, 240 ,204, 255 ) );
 	}
 	else {
-		SetColor( A_COLOR, Color::FromRGBA( 94, 162 ,137, 255 ) );
+		SetColor( A_TEXTCOLOR, Color::FromRGBA( 94, 162 ,137, 255 ) );
 	}
 }
 

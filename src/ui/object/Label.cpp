@@ -7,9 +7,8 @@ using namespace types;
 namespace ui {
 namespace object {
 
-Label::Label( const string& text )
-	: UIObject()
-	, m_text( text )
+Label::Label( const string& class_name )
+	: UIObject( class_name )
 {
 	SetAlign( ALIGN_CENTER );
 }
@@ -103,8 +102,8 @@ void Label::Align() {
 void Label::ApplyStyle() {
 	UIObject::ApplyStyle();
 	
-	if ( Has( Style::A_COLOR ) ) {
-		SetTextColor( GetColor( Style::A_COLOR ) );
+	if ( Has( Style::A_TEXTCOLOR ) ) {
+		SetTextColor( GetColor( Style::A_TEXTCOLOR ) );
 	}
 	if ( Has( Style::A_FONT ) ) {
 		SetFont( (Font*)GetObject( Style::A_FONT ) );

@@ -27,7 +27,13 @@ public:
 	void SetOverflow( const overflow_t overflow );
 	void SendEvent( const event::UIEvent* event );
 	
+	void AddStyleModifier( const Style::modifier_t modifier );
+	void RemoveStyleModifier( const Style::modifier_t modifier );
+
 protected:
+	virtual void ApplyStyle();
+	virtual void ReloadStyle();
+	
 	std::vector<UIObject *> m_child_objects = {};
 	
 	const string Subclass( const string& class_name ) const;
