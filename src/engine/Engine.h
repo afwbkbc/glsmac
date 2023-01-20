@@ -12,7 +12,8 @@
 #include "logger/Logger.h"
 #include "loader/font/FontLoader.h"
 #include "loader/texture/TextureLoader.h"
-#include "renderer/Renderer.h"
+#include "input/Input.h"
+#include "graphics/Graphics.h"
 #include "scheduler/Scheduler.h"
 #include "ui/UI.h"
 
@@ -29,7 +30,8 @@ MAJOR_CLASS( Engine, base::Base );
 		loader::font::FontLoader *font_loader,
 		loader::texture::TextureLoader *texture_loader,
 		scheduler::Scheduler *scheduler,
-		renderer::Renderer *renderer,
+		input::Input *input,
+		graphics::Graphics *graphics,
 		ui::UI *ui
 	);
 	~Engine();
@@ -41,7 +43,8 @@ MAJOR_CLASS( Engine, base::Base );
 	logger::Logger *GetLogger() const { return m_logger; }
 	loader::font::FontLoader *GetFontLoader() const { return m_font_loader; }
 	loader::texture::TextureLoader *GetTextureLoader() const { return m_texture_loader; }
-	renderer::Renderer *GetRenderer() const { return m_renderer; }
+	input::Input *GetInput() const { return m_input; }
+	graphics::Graphics *GetGraphics() const { return m_graphics; }
 	scheduler::Scheduler *GetScheduler() const { return m_scheduler; }
 	ui::UI *GetUI() const { return m_ui; }
 
@@ -58,7 +61,8 @@ protected:
 	loader::font::FontLoader *m_font_loader = nullptr;
 	loader::texture::TextureLoader *m_texture_loader = nullptr;
 	scheduler::Scheduler *m_scheduler = nullptr;
-	renderer::Renderer *m_renderer = nullptr;
+	input::Input *m_input = nullptr;
+	graphics::Graphics *m_graphics = nullptr;
 	ui::UI *m_ui = nullptr;
 	
 #if DEBUG

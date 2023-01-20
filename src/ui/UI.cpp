@@ -15,21 +15,21 @@ void UI::Start() {
 	Log( "Creating UI" );
 
 	NEW( m_shape_scene, Scene, "UIShape", SCENE_TYPE_ORTHO );
-	g_engine->GetRenderer()->AddScene( m_shape_scene );
+	g_engine->GetGraphics()->AddScene( m_shape_scene );
 
 	NEW( m_text_scene, Scene, "UIText", SCENE_TYPE_TEXT );
-	g_engine->GetRenderer()->AddScene( m_text_scene );
+	g_engine->GetGraphics()->AddScene( m_text_scene );
 
 	m_root_object.Create();
 	m_root_object.UpdateObjectArea();
 
-	m_clamp.x.SetRange( 0.0, g_engine->GetRenderer()->GetWindowWidth(), -1.0, 1.0 );
-	m_clamp.y.SetRange( 0.0, g_engine->GetRenderer()->GetWindowHeight(), -1.0, 1.0 );
+	m_clamp.x.SetRange( 0.0, g_engine->GetGraphics()->GetWindowWidth(), -1.0, 1.0 );
+	m_clamp.y.SetRange( 0.0, g_engine->GetGraphics()->GetWindowHeight(), -1.0, 1.0 );
 	m_clamp.y.SetInversed( true );
 	
 #if DEBUG
 	NEW( m_debug_scene, Scene, "UIDebug", SCENE_TYPE_ORTHO );
-	g_engine->GetRenderer()->AddScene( m_debug_scene );	
+	g_engine->GetGraphics()->AddScene( m_debug_scene );	
 #endif
 }
 
@@ -37,14 +37,14 @@ void UI::Stop() {
 	Log( "Destroying UI" );
 
 #if DEBUG
-	g_engine->GetRenderer()->RemoveScene( m_debug_scene );
+	g_engine->GetGraphics()->RemoveScene( m_debug_scene );
 	DELETE( m_debug_scene );
 #endif
 	
-	g_engine->GetRenderer()->RemoveScene( m_text_scene );
+	g_engine->GetGraphics()->RemoveScene( m_text_scene );
 	DELETE( m_text_scene );
 
-	g_engine->GetRenderer()->RemoveScene( m_shape_scene );
+	g_engine->GetGraphics()->RemoveScene( m_shape_scene );
 	DELETE( m_shape_scene );
 	
 	m_root_object.Destroy();
@@ -80,8 +80,8 @@ void UI::Resize() {
 	}
 #endif
 	
-	m_clamp.x.SetSrcRange( 0.0, g_engine->GetRenderer()->GetWindowWidth() );
-	m_clamp.y.SetSrcRange( 0.0, g_engine->GetRenderer()->GetWindowHeight() );
+	m_clamp.x.SetSrcRange( 0.0, g_engine->GetGraphics()->GetWindowWidth() );
+	m_clamp.y.SetSrcRange( 0.0, g_engine->GetGraphics()->GetWindowHeight() );
 	m_root_object.Realign();
 }
 

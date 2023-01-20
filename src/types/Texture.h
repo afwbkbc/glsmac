@@ -23,7 +23,7 @@ MAJOR_CLASS( Texture, base::Base )
 	
 	bool m_is_tiled = false;
 
-	base::ObjectLink *m_renderer_object = nullptr;
+	base::ObjectLink *m_graphics_object = nullptr;
 	
 	void Resize( const size_t width, const size_t height );
 	

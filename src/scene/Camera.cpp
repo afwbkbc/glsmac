@@ -25,7 +25,7 @@ void Camera::SetScene( Scene *scene ) {
 }
 
 void Camera::UpdateProjection() {
-	m_camera_matrices.projection.ProjectionPerspective( g_engine->GetRenderer()->GetAspectRatio(), m_raw_fov, m_z_near, m_z_far );
+	m_camera_matrices.projection.ProjectionPerspective( g_engine->GetGraphics()->GetAspectRatio(), m_raw_fov, m_z_near, m_z_far );
 }
 
 void Camera::UpdateRotation() {

@@ -9,7 +9,8 @@
 #include "logger/StdoutLogger.h"
 #include "loader/font/FreeTypeFontLoader.h"
 #include "loader/texture/SDL2ImageTextureLoader.h"
-#include "renderer/opengl/OpenGLRenderer.h"
+#include "input/sdl2/SDL2Input.h"
+#include "graphics/opengl/OpenGLGraphics.h"
 #include "scheduler/SimpleScheduler.h"
 #include "ui/DefaultUI.h"
 
@@ -101,7 +102,9 @@ int main(const int argc, const char *argv[]) {
 #elif PORTABLE
 		title += "-portable";
 #endif
-		renderer::opengl::OpenGLRenderer renderer( title, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_VSYNC, 90.0f);
+		input::sdl2::SDL2Input input;
+		
+		graphics::opengl::OpenGLGraphics graphics( title, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_VSYNC, 90.0f);
 		ui::DefaultUI ui;
 
 		scheduler::SimpleScheduler scheduler;
@@ -122,7 +125,8 @@ int main(const int argc, const char *argv[]) {
 			&font_loader,
 			&texture_loader,
 			&scheduler,
-			&renderer,
+			&input,
+			&graphics,
 			&ui
 		);
 

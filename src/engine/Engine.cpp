@@ -16,7 +16,8 @@ Engine::Engine(
 	loader::font::FontLoader *font_loader,
 	loader::texture::TextureLoader *texture_loader,
 	scheduler::Scheduler *scheduler,
-	renderer::Renderer *renderer,
+	input::Input *input,
+	graphics::Graphics *graphics,
 	ui::UI *ui
 ) :
 	m_config( config ),
@@ -25,7 +26,8 @@ Engine::Engine(
 	m_font_loader( font_loader ),
 	m_texture_loader( texture_loader ),
 	m_scheduler( scheduler ),
-	m_renderer( renderer ),
+	m_input( input ),
+	m_graphics( graphics ),
 	m_ui( ui )
 {
 	ASSERT( g_engine == nullptr, "duplicate engine initialization" );
@@ -40,7 +42,8 @@ Engine::Engine(
 	m_threads.main.AddModule( m_error_handler );
 	m_threads.main.AddModule( m_font_loader );
 	m_threads.main.AddModule( m_logger );
-	m_threads.main.AddModule( m_renderer );
+	m_threads.main.AddModule( m_input );
+	m_threads.main.AddModule( m_graphics );
 	m_threads.main.AddModule( m_ui );
 	m_threads.main.AddModule( m_scheduler );
 };

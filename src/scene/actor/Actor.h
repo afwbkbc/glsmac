@@ -29,7 +29,7 @@ MAJOR_CLASS( Actor, Entity )
 		return m_type;
 	}
 
-	base::ObjectLink *m_renderer_object = NULL;
+	base::ObjectLink *m_graphics_object = NULL;
 
 	/*
 	types::Matrix44 & GetScaleMatrix();

@@ -3,7 +3,7 @@
 using namespace std;
 using namespace types;
 
-#include "renderer/opengl/TextActor.h"
+#include "graphics/opengl/TextActor.h"
 
 namespace scene {
 namespace actor {
@@ -64,13 +64,13 @@ void TextActor::UpdatePosition() {
 }
 
 void TextActor::Redraw() {
-	if ( m_renderer_object ) {
+	if ( m_graphics_object ) {
 #if DEBUG
-		if ( m_renderer_object->Removed() ) {
-			throw runtime_error( "textactor renderer object removed" );
+		if ( m_graphics_object->Removed() ) {
+			throw runtime_error( "textactor graphics object removed" );
 		}
 #endif
-		auto* gl_actor = m_renderer_object->GetDstObject<renderer::opengl::TextActor>();
+		auto* gl_actor = m_graphics_object->GetDstObject<graphics::opengl::TextActor>();
 		gl_actor->Update( m_font, m_text, m_position.x, m_position.y );
 	}
 }

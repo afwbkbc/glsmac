@@ -3,8 +3,8 @@
 namespace types {
 
 Font::~Font() {
-	if ( m_renderer_object )
-		m_renderer_object->Remove();
+	if ( m_graphics_object )
+		m_graphics_object->Remove();
 	for (uint8_t i = 32; i < 128 ; i++) {
 		if ( m_symbols[i].data ) {
 			free( m_symbols[i].data );

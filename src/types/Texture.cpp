@@ -22,8 +22,8 @@ Texture::~Texture() {
 	if ( m_bitmap ) {
 		free( m_bitmap );
 	}
-	if ( m_renderer_object )
-		m_renderer_object->Remove();
+	if ( m_graphics_object )
+		m_graphics_object->Remove();
 }
 
 void Texture::Resize( const size_t width, const size_t height ) {

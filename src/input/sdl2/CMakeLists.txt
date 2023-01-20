@@ -1,0 +1,5 @@
+SET(SRC ${SRC}
+
+	${PWD}/SDL2Input.cpp
+
+PARENT_SCOPE)

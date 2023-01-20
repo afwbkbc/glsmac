@@ -1,4 +1,4 @@
-#include "renderer/Renderer.h"
+#include "graphics/Graphics.h"
 
 #include "Actor.h"
 
@@ -10,8 +10,8 @@ Actor::Actor( type_t type, const std::string &name ) : Entity(), m_type( type ) 
 }
 
 Actor::~Actor() {
-	if ( m_renderer_object ) {
-		m_renderer_object->Remove();
+	if ( m_graphics_object ) {
+		m_graphics_object->Remove();
 	}
 }
 /*
