@@ -29,8 +29,6 @@ SDL2Audio::~SDL2Audio() {
 	}
 }
 
-#define MUS_PATH "/home/x/games/smac/fx/opening menu.wav"
-
 void SDL2Audio_callback( void* userdata, Uint8* stream, int len ) {
 	auto audio = (SDL2Audio*)userdata;
 	audio->Mix( stream, len );
