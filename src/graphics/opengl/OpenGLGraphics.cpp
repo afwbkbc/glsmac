@@ -294,7 +294,7 @@ void OpenGLGraphics::DisableTexture() {
 void OpenGLGraphics::ResizeWindow( const size_t width, const size_t height ) {
 	// I'm having weird texture tiling bugs at non-even window heights
 	m_options.window_width = width / 2 * 2;
-	m_options.window_height = height;
+	m_options.window_height = height / 2 * 2;
 	Log( "Resizing viewport to " + to_string( m_options.window_width ) + "x" + to_string( m_options.window_height ) );
 	glViewport( 0, 0, m_options.window_width, m_options.window_height );
 	m_aspect_ratio = (float) m_options.window_height / m_options.window_width;
