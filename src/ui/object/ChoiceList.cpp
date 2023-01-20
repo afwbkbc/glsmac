@@ -4,7 +4,7 @@ namespace ui {
 namespace object {
 
 ChoiceList::ChoiceList( const string& class_name ) : UIContainer( class_name ) {
-	
+	SetEventContexts( EC_KEYBOARD );
 }
 
 void ChoiceList::SetChoices( const choices_t& choices ) {
@@ -12,19 +12,21 @@ void ChoiceList::SetChoices( const choices_t& choices ) {
 	
 	m_choices = choices;
 	
-	m_value = "";
-	for (auto& choice : m_choices ) {
-		m_value = choice;
-		break;
-	}
-	
 	if ( m_created ) {
 		UpdateButtons();
 	}
 }
 
+void ChoiceList::SetValue( const string& value ) {
+	auto it = m_buttons.find( value );
+	ASSERT( it != m_buttons.end(), "value does not exist in choices" );
+	SetActiveButton( it->second );
+}
+
 const string& ChoiceList::GetValue() const {
-	return m_value;
+	ASSERT( !m_choices.empty(), "choices are empty" );
+	ASSERT( m_value < m_choices.size(), "choices value overflow" );
+	return m_choices[ m_value ];
 }
 
 void ChoiceList::Create() {
@@ -47,7 +49,7 @@ void ChoiceList::Destroy() {
 }
 
 /*void ChoiceList::OnChange( UIEventHandler::handler_function_t func ) {
-	AddEventHandler( UIEvent::EV_CHANGE, func );
+	On( UIEvent::EV_CHANGE, func );
 }*/
 
 void ChoiceList::ApplyStyle() {
@@ -61,7 +63,7 @@ void ChoiceList::UpdateButtons() {
 			RemoveChild( button.second );
 		}
 		m_buttons.clear();
-		size_t line = 0;
+		size_t value = 0;
 		for ( auto& choice : m_choices ) {
 			NEWV( button, Button );
 				button->SetLabel( choice );
@@ -70,27 +72,63 @@ void ChoiceList::UpdateButtons() {
 				button->SetLeft( 3 );
 				button->SetRight( 3 );
 				button->SetHeight( 20 );
-				button->SetTop( 2 + ( button->GetHeight() + 2 ) * (line) );
+				button->SetTop( 2 + ( button->GetHeight() + 2 ) * (value) );
 				button->ForwardStyleAttributes( m_forwarded_style_attributes );
-				if ( line == 0) {
-					button->AddStyleModifier( Style::M_SELECTED );
-				}
-				button->OnClick( EH( this, button ) {
+				button->On( UIEvent::EV_BUTTONCLICK, EH( this, button ) {
 					if ( !button->HasStyleModifier( Style::M_SELECTED ) ) {
-						for ( auto& b : m_buttons ) {
-							if ( b.second != button && b.second->HasStyleModifier( Style::M_SELECTED ) ) {
-								b.second->RemoveStyleModifier( Style::M_SELECTED );
-							}
-						}
-						button->AddStyleModifier( Style::M_SELECTED );
-						m_value = button->GetLabel();
+						SetActiveButton( button );
 					}
+					return true;
 				});
-				line++;
 			AddChild( button );
+			m_button_values[ button ] = value;
 			m_buttons[ choice ] = button;
+			value++;
+		}
+		SetValue( m_choices[0] ); // activate first by default
+	}
+}
+
+bool ChoiceList::OnKeyDown( const UIEvent::event_data_t* data ) {
+	switch ( data->key.code ) {
+		case UIEvent::K_DOWN: {
+			if ( m_value < m_choices.size() - 1 ) {
+				SetValue( m_choices[ m_value + 1 ] );
+			}
+			break;
+		}
+		case UIEvent::K_UP: {
+			if ( m_value > 0 ) {
+				SetValue( m_choices[ m_value - 1 ] );
+			}
+			break;
 		}
 	}
+	return true;
+}
+
+bool ChoiceList::OnKeyUp( const UIEvent::event_data_t* data ) {
+	//Log( "KEY UP" );
+	return true;
+}
+
+bool ChoiceList::OnKeyPress( const UIEvent::event_data_t* data ) {
+	//Log( "KEY PRESS" );
+	return true;
+}
+
+void ChoiceList::SetActiveButton( Button* button ) {
+	ASSERT( m_button_values.find( button ) != m_button_values.end(), "button not in buttons list" );
+	for ( auto& b : m_buttons ) {
+		if ( b.second != button && b.second->HasStyleModifier( Style::M_SELECTED ) ) {
+			b.second->RemoveStyleModifier( Style::M_SELECTED );
+		}
+	}
+	button->AddStyleModifier( Style::M_SELECTED );
+	auto it = m_button_values.find( button );
+	ASSERT( it != m_button_values.end(), "button value missing" );
+	ASSERT( it->second < m_choices.size(), "button value overflow" );
+	m_value = it->second;
 }
 
 }

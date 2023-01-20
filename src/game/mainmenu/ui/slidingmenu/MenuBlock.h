@@ -36,12 +36,11 @@ CHILD_CLASS(MenuBlock, UIContainer)
 	void AddItem(const string& text);
 	void AddTitle(const string& text);
 	
+	void GoBack();
 	bool IsSliding();
 	
 protected:
 	friend class MenuItem;
-	
-	void OnKeyDown( const UIEvent::event_data_t* data );
 	
 	void OnItemClick( const string& choice );
 	

@@ -37,6 +37,9 @@ CHILD_CLASS( MainMenu, base::Task )
 protected:
 	MenuTheme m_theme;
 
+	const UIEventHandler* m_key_handler = nullptr;
+	const UIEventHandler* m_mouse_handler = nullptr;
+	
 	Surface *m_background = nullptr;
 	
 	MenuObject *m_menu_object = nullptr;

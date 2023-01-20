@@ -14,7 +14,6 @@ MenuBlock::MenuBlock( SlidingMenu* menu )
 	SetClass( "SlidingMenuBlock" );
 	
 	SetRight(-MENU_CLOSED_POSITION);
-
 }
 
 void MenuBlock::AddItem(const string& text) {
@@ -27,6 +26,12 @@ void MenuBlock::AddTitle(const string& text) {
 
 bool MenuBlock::IsSliding() {
 	return m_slide_timer.Running();
+}
+
+void MenuBlock::GoBack() {
+	m_clicked_choice = "";
+	m_slide_change = -m_slide_change;
+	m_slide_timer.SetInterval( 1 );
 }
 
 void MenuBlock::Create() {
@@ -86,17 +91,6 @@ void MenuBlock::Iterate() {
 					m_menu->GoBack();
 				}
 			}
-		}
-	}
-}
-
-void MenuBlock::OnKeyDown( const UIEvent::event_data_t* data ) {
-	if (!IsSliding()) {
-		if (data->key.code == UIEvent::K_ESCAPE) {
-			// means 'go back'
-			m_clicked_choice = "";
-			m_slide_change = -m_slide_change;
-			m_slide_timer.SetInterval( 1 );
 		}
 	}
 }

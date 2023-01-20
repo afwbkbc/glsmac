@@ -15,6 +15,7 @@ CHILD_CLASS( ChoiceList, UIContainer )
 	ChoiceList( const string& class_name = "" );
 
 	void SetChoices( const choices_t& choices );
+	void SetValue( const string& value );
 	const string& GetValue() const;
 
 	virtual void Create();
@@ -25,11 +26,21 @@ CHILD_CLASS( ChoiceList, UIContainer )
 protected:
 	virtual void ApplyStyle();
 	
+	bool OnKeyDown( const UIEvent::event_data_t* data );
+	bool OnKeyUp( const UIEvent::event_data_t* data );
+	bool OnKeyPress( const UIEvent::event_data_t* data );
+	
+	
+	
 private:
 	void UpdateButtons();
 	
 	choices_t m_choices = {};
-	unordered_map< string, Button* > m_buttons;
+	unordered_map< string, Button* > m_buttons = {};
+	size_t m_value = 0;
+	unordered_map< Button*, size_t > m_button_values = {};
+	
+	void SetActiveButton( Button* button );
 	
 	const vector< Style::attribute_type_t > m_forwarded_style_attributes = {
 		Style::A_TEXTURE_BACK,
@@ -45,8 +56,6 @@ private:
 		Style::A_TEXTCOLOR,
 		Style::A_TEXTALIGN,
 	};
-	
-	string m_value = "";
 };
 
 } /* namespace object */

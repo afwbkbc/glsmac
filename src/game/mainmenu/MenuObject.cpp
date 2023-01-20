@@ -21,5 +21,9 @@ void MenuObject::GoBack() {
 	m_mainmenu->GoBack();
 }
 
+void MenuObject::Close() {
+	GoBack();
+}
+
 }
 }

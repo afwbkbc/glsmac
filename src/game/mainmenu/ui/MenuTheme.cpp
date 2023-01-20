@@ -1,7 +1,5 @@
 #include "MenuTheme.h"
 
-#include "style/MainMenuBackground.h"
-
 #include "style/Common.h"
 #include "style/SlidingMenu.h"
 #include "style/PopupMenu.h"

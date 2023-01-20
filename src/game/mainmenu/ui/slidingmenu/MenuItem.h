@@ -24,9 +24,7 @@ CHILD_CLASS( MenuItem, UIContainer )
 
 protected:
 
-	void OnMouseOver( const UIEvent::event_data_t* data );
-	void OnMouseOut( const UIEvent::event_data_t* data );
-	void OnMouseDown( const UIEvent::event_data_t* data );
+	bool OnMouseDown( const UIEvent::event_data_t* data );
 	
 	MenuBlock* m_menu = nullptr;
 	const string m_text = "";

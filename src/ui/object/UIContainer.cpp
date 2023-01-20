@@ -64,6 +64,7 @@ void UIContainer::AddChild( UIObject *object ) {
 	Log( "adding child " + object->GetName() );
 	m_child_objects.push_back( object );
 	object->SetParentObject( this );
+	object->SetOverriddenEventContexts( m_event_contexts | m_overridden_event_contexts );
 	if ( m_created ) {
 		CreateChild( object );
 	}
@@ -106,15 +107,28 @@ void UIContainer::SetOverflow( const overflow_t overflow ) {
 		(*it)->Realign();
 }
 
-void UIContainer::SendEvent( const UIEvent* event ) {
+void UIContainer::ProcessEvent( UIEvent* event ) {
+	UIObject::ProcessEvent( event );
+	
+	if ( event->IsProcessed() ) {
+		return;
+	}
+	
+	bool is_processed;
 	if (( event->m_flags & UIEvent::EF_MOUSE ) == UIEvent::EF_MOUSE ) {
 		for (auto& c : m_child_objects) {
 			if (
 				( event->m_type == UIEvent::EV_MOUSEMOVE ) || // mousemove needs to be send to all objects for mouseout events to work
 				c->IsPointInside( event->m_data.mouse.x, event->m_data.mouse.y ) // other events - only to those actually under mouse pointer
 			) {
-				NEWV( child_event, UIEvent, *event );
-				c->SendEvent( child_event );
+				NEWV( child_event, UIEvent, event );
+				c->ProcessEvent( child_event );
+				is_processed = child_event->IsProcessed();
+				DELETE( child_event );
+				if ( is_processed ) {
+					event->SetProcessed();
+					return;
+				}
 			}
 		}
 	}
@@ -122,12 +136,16 @@ void UIContainer::SendEvent( const UIEvent* event ) {
 	if (( event->m_flags & UIEvent::EF_KEYBOARD ) == UIEvent::EF_KEYBOARD ) {
 		// TODO: send only to focused/active element
 		for (auto& c : m_child_objects) {
-			NEWV( child_event, UIEvent, *event );
-			c->SendEvent( child_event );
+			NEWV( child_event, UIEvent, event );
+			c->ProcessEvent( child_event );
+			is_processed = child_event->IsProcessed();
+			DELETE( child_event );
+			if ( is_processed ) {
+				event->SetProcessed();
+				return;
+			}
 		}
 	}
-	
-	UIObject::SendEvent( event );
 }
 
 void UIContainer::ApplyStyle() {
@@ -146,6 +164,22 @@ void UIContainer::ReloadStyle() {
 		for (auto& c : m_child_objects) {
 			c->ReloadStyle();
 		}
+	}
+}
+
+void UIContainer::SetEventContexts( event_context_t contexts ) {
+	UIObject::SetEventContexts( contexts );
+	
+	for (auto& c : m_child_objects) {
+		c->SetOverriddenEventContexts( contexts );
+	}
+}
+
+void UIContainer::SetOverriddenEventContexts( event_context_t contexts ) {
+	UIObject::SetOverriddenEventContexts( contexts );
+	
+	for (auto& c : m_child_objects) {
+		c->SetOverriddenEventContexts( contexts );
 	}
 }
 

@@ -19,15 +19,13 @@ CHILD_CLASS( Button, Panel )
 	const string& GetLabel() const;
 	void SetTextAlign( alignment_t alignment );
 
-	void OnClick( UIEventHandler::handler_function_t func );
-	
 protected:
 	virtual void ApplyStyle();
 	
-	void OnMouseOver( const UIEvent::event_data_t* data );
-	void OnMouseOut( const UIEvent::event_data_t* data );
-	virtual void OnMouseDown( const UIEvent::event_data_t* data );
-	void OnMouseUp( const UIEvent::event_data_t* data );
+	bool OnMouseOver( const UIEvent::event_data_t* data );
+	bool OnMouseOut( const UIEvent::event_data_t* data );
+	bool OnMouseDown( const UIEvent::event_data_t* data );
+	bool OnMouseUp( const UIEvent::event_data_t* data );
 	
 	string m_label_text = "";
 	alignment_t m_label_alignment = ALIGN_CENTER;

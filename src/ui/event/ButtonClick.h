@@ -5,9 +5,9 @@
 namespace ui {
 namespace event {
 
-CHILD_CLASS( MouseClick, UIEvent )
+CHILD_CLASS( ButtonClick, UIEvent )
 
-	MouseClick( const size_t x, const size_t y, const uint8_t button ) : UIEvent( EV_MOUSECLICK ) {
+	ButtonClick( const size_t x, const size_t y, const uint8_t button ) : UIEvent( EV_BUTTONCLICK ) {
 		m_flags |= EF_MOUSE;
 		m_data.mouse.x = x;
 		m_data.mouse.y = y;

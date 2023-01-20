@@ -260,6 +260,22 @@ const UIObject::vertex_t UIObject::ClampXY( const vertex_t value ) {
 	return vertex_t( ClampX( value.x ), ClampY( value.y ) );
 }
 
+void UIObject::SetEventContexts( event_context_t contexts ) {
+	m_event_contexts = contexts;
+}
+
+void UIObject::SetOverriddenEventContexts( event_context_t contexts ) {
+	m_overridden_event_contexts = contexts;
+}
+
+bool UIObject::HasEventContext( event_context_t context ) const {
+	return ( m_event_contexts & context );
+}
+
+bool UIObject::IsEventContextOverridden( event_context_t context ) const {
+	return ( m_overridden_event_contexts & context );
+}
+	
 void UIObject::Realign() {
 	UpdateObjectArea();
 	if ( m_created )
@@ -439,7 +455,10 @@ void UIObject::UpdateObjectArea() {
 		if (m_created) {
 			// process any mouseover/mouseout events
 			// mouse may not being moved, but if object area has changed - they should be able to fire too
-			g_engine->GetUI()->SendMouseMoveEvent( this );
+			// don't do this if parent captures MouseOver event tho, we're not supposed to receive mouseovers in that case
+			if ( !IsEventContextOverridden( EC_MOUSEMOVE ) ) {
+				g_engine->GetUI()->SendMouseMoveEvent( this );
+			}
 			
 #if DEBUG
 			// resize debug frame to match new area
@@ -468,49 +487,79 @@ void UIObject::SetVAlign( const alignment_t align ) {
 	m_align = ( m_align & ALIGN_HCENTER ) | ( align & ALIGN_VCENTER );
 }
 
-void UIObject::SendEvent( const UIEvent* event ) {
-	switch ( event->m_type ) {
-		case UIEvent::EV_MOUSEMOVE: {
-			if ( IsPointInside( event->m_data.mouse.x, event->m_data.mouse.y ) ) {
-				if ( ( m_state & STATE_MOUSEOVER ) != STATE_MOUSEOVER ) {
-					m_state |= STATE_MOUSEOVER;
-					if ( m_is_hoverable ) {
-						AddStyleModifier( Style::M_HOVER );
-						OnMouseOver( &event->m_data );
+void UIObject::ProcessEvent( UIEvent* event ) {
+	
+	bool is_processed = Trigger( event->m_type, &event->m_data );
+	
+	if ( !is_processed ) {
+		switch ( event->m_type ) {
+			case UIEvent::EV_MOUSEMOVE: {
+				if ( HasEventContext( EC_MOUSEMOVE ) ) {
+					if ( IsPointInside( event->m_data.mouse.x, event->m_data.mouse.y ) ) {
+						if ( ( m_state & STATE_MOUSEOVER ) != STATE_MOUSEOVER ) {
+							m_state |= STATE_MOUSEOVER;
+							AddStyleModifier( Style::M_HOVER );
+							is_processed = OnMouseOver( &event->m_data );
+						}
+						else {
+							//is_processed = true; // ???
+						}
+					}
+					else {
+						if ( ( m_state & STATE_MOUSEOVER ) == STATE_MOUSEOVER ) {
+							m_state &= ~STATE_MOUSEOVER;
+							RemoveStyleModifier( Style::M_HOVER );
+							is_processed = OnMouseOut( &event->m_data );
+						}
+						else {
+							//is_processed = true; // ???
+						}
 					}
 				}
+				break;
 			}
-			else {
-				if ( ( m_state & STATE_MOUSEOVER ) == STATE_MOUSEOVER ) {
-					m_state &= ~STATE_MOUSEOVER;
-					if ( m_is_hoverable ) {
-						RemoveStyleModifier( Style::M_HOVER );
-						OnMouseOut( &event->m_data );
-					}
+			case UIEvent::EV_MOUSEDOWN: {
+				if ( HasEventContext( EC_MOUSE ) ) {
+					is_processed = OnMouseDown( &event->m_data );
 				}
+				break;
 			}
-			break;
-		}
-		case UIEvent::EV_MOUSEDOWN: {
-			OnMouseDown( &event->m_data );
-			break;
-		}
-		case UIEvent::EV_MOUSEUP: {
-			OnMouseUp( &event->m_data );
-			break;
-		}
-		case UIEvent::EV_MOUSECLICK: {
-			OnMouseClick( &event->m_data );
-			break;
-		}
-		case UIEvent::EV_KEYDOWN: {
-			OnKeyDown( &event->m_data );
-			break;
+			case UIEvent::EV_MOUSEUP: {
+				if ( HasEventContext( EC_MOUSE ) ) {
+					is_processed = OnMouseUp( &event->m_data );
+				}
+				break;
+			}
+			/*case UIEvent::EV_MOUSECLICK: {
+				if ( HasEventContext( EC_MOUSE ) ) {
+					is_processed = OnMouseClick( &event->m_data );
+				}
+				break;
+			}*/
+			case UIEvent::EV_KEYDOWN: {
+				if ( HasEventContext( EC_KEYBOARD ) ) {
+					is_processed = OnKeyDown( &event->m_data );
+				}
+				break;
+			}
+			case UIEvent::EV_KEYUP: {
+				if ( HasEventContext( EC_KEYBOARD ) ) {
+					is_processed = OnKeyUp( &event->m_data );
+				}
+				break;
+			}
+			case UIEvent::EV_KEYPRESS: {
+				if ( HasEventContext( EC_KEYBOARD ) ) {
+					is_processed = OnKeyPress( &event->m_data );
+				}
+				break;
+			}
 		}
 	}
 	
-	// processed, not needed anymore
-	DELETE( event );
+	if ( is_processed ) {
+		event->SetProcessed();
+	}
 }
 
 UIObject::vertex_t UIObject::GetAreaPosition() const {
@@ -587,24 +636,39 @@ const bool UIObject::HasStyleModifier( const Style::modifier_t modifier ) const 
 	return ( (m_style_modifiers & modifier ) == modifier );
 }
 
-void UIObject::AddEventHandler( const UIEvent::event_type_t type, UIEventHandler::handler_function_t func ) {
-	// TODO: check if already added?
+const UIEventHandler* UIObject::On( const UIEvent::event_type_t type, UIEventHandler::handler_function_t func ) {
 	NEWV( handler, UIEventHandler, func );
 	auto it = m_event_handlers.find( type );
 	if ( it == m_event_handlers.end() ) {
 		m_event_handlers[ type ] = {};
 		it = m_event_handlers.find( type );
 	}
-	it->second.insert( handler );
+	it->second.push_back( handler );
+	return handler;
 }
 
-void UIObject::Trigger( const UIEvent::event_type_t type, const UIEvent::event_data_t* data ) {
+void UIObject::Off( const UIEventHandler* handler ) {
 	for ( auto& handlers : m_event_handlers ) {
-		for ( auto& handler : handlers.second ) {
-			handler->Execute( data );
-			// TODO: stop_propagation
+		auto it = find( handlers.second.begin() , handlers.second.end(), handler );
+		if ( it != handlers.second.end() ) {
+			handlers.second.erase( it );
+			DELETE( *it );
+			return;
 		}
 	}
+	ASSERT( false, "handler not found" );
+}
+
+bool UIObject::Trigger( const UIEvent::event_type_t type, const UIEvent::event_data_t* data ) {
+	auto handlers = m_event_handlers.find( type );
+	if ( handlers != m_event_handlers.end() ) {
+		for ( auto& handler : handlers->second ) {
+			if ( handler->Execute( data ) ) {
+				return true; // processed
+			}
+		}
+	}
+	return false; // not processed
 }
 
 const Style::attribute_type_t UIObject::GetParentAttribute( const Style::attribute_type_t source_type ) const {
@@ -613,7 +677,6 @@ const Style::attribute_type_t UIObject::GetParentAttribute( const Style::attribu
 	ASSERT( m_parent_object,  "parent is gone" );
 	return it->second;
 }
-
 
 } /* namespace object */
 } /* namespace ui */

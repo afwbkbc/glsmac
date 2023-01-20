@@ -12,8 +12,10 @@ MAJOR_CLASS( UIEvent, base::Base )
 		EV_MOUSEMOVE,
 		EV_MOUSEDOWN,
 		EV_MOUSEUP,
-		EV_MOUSECLICK,
 		EV_KEYDOWN,
+		EV_KEYUP,
+		EV_KEYPRESS,
+		EV_BUTTONCLICK,
 		EV_CHANGE,
 	};
 	
@@ -31,6 +33,11 @@ MAJOR_CLASS( UIEvent, base::Base )
 	
 	enum key_code_t {
 		K_NONE,
+		K_UP,
+		K_DOWN,
+		K_LEFT,
+		K_RIGHT,
+		K_ENTER,
 		K_ESCAPE,
 	};
 	
@@ -49,9 +56,19 @@ MAJOR_CLASS( UIEvent, base::Base )
 	uint8_t m_flags = EF_NONE;
 	event_data_t m_data = {};
 	
+	// event will stop propagating after this
+	void SetProcessed();
+	const bool IsProcessed() const;
+	
+	// copy from other event
+	UIEvent( const UIEvent* other );
+	
 protected:
 	UIEvent( const event_type_t type );
 	
+	
+private:
+	bool m_is_processed = false;
 	
 };
 

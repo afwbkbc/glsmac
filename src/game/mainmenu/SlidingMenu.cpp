@@ -57,6 +57,11 @@ void SlidingMenu::OnItemClick( const string& choice ) {
 	}
 }
 
+void SlidingMenu::Close() {
+	if ( !m_menu_block->IsSliding() ) {
+		m_menu_block->GoBack();
+	}
+}
 
 }
 }

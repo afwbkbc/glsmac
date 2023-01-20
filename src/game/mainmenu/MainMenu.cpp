@@ -8,7 +8,6 @@
 #include "scene/actor/TextActor.h"
 
 #include "menu/Main.h"
-#include "menu/Multiplayer.h"
 
 using namespace std;
 using namespace ui::object;
@@ -19,14 +18,33 @@ namespace mainmenu {
 
 void MainMenu::Start() {
 
-	g_engine->GetUI()->SetTheme( &m_theme );
+	auto* ui = g_engine->GetUI();
+	
+	ui->SetTheme( &m_theme );
 	
 	// background
 	NEW( m_background, Surface, "MainMenuBackground" );
-	g_engine->GetUI()->AddObject( m_background );
+	ui->AddObject( m_background );
 
+	m_mouse_handler = ui->AddGlobalEventHandler( UIEvent::EV_MOUSEDOWN, EH( this ) {
+		// rightclick = back
+		if ( data->mouse.button == UIEvent::M_RIGHT && m_menu_object ) {
+			m_menu_object->Close();
+			return true;
+		}
+		return false;
+	});
+	
+	m_key_handler = ui->AddGlobalEventHandler( UIEvent::EV_KEYDOWN, EH( this ) {
+		// escape = back
+		if ( data->key.code == UIEvent::K_ESCAPE && m_menu_object ) {
+			m_menu_object->Close();
+			return true;
+		}
+		return false;
+	});
+	
 	NEWV( menu, Main, this );
-	//NEWV( menu, Multiplayer, this );
 	ShowMenu( menu );
 }
 
@@ -71,9 +89,14 @@ void MainMenu::Stop() {
 		DELETE( m_menu_next );
 	}
 	
-	g_engine->GetUI()->RemoveObject( m_background );
+	auto* ui = g_engine->GetUI();
 	
-	g_engine->GetUI()->UnsetTheme();
+	ui->RemoveGlobalEventHandler( m_mouse_handler );
+	ui->RemoveGlobalEventHandler( m_key_handler );
+	
+	ui->RemoveObject( m_background );
+	
+	ui->UnsetTheme();
 
 }
 

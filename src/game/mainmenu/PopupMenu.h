@@ -28,6 +28,8 @@ public:
 	
 	virtual void OnOkClick() {};
 	
+	bool IsAnimating();
+	
 protected:
 	
 	Panel* m_body = nullptr; // child classes can add elements here

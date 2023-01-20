@@ -16,8 +16,10 @@ MAJOR_CLASS( MenuObject, base::Base )
 	
 	virtual void Show() = 0;
 	virtual void Hide() = 0;
-
+	
 	void GoBack();
+	
+	virtual void Close();
 	
 protected:
 	friend class MenuItem;

@@ -4,8 +4,7 @@ namespace ui {
 namespace object {
 
 Button::Button( const string& class_name ) : Panel( class_name ) {
-	m_is_focusable = true;
-	m_is_hoverable = true;
+	SetEventContexts( EC_MOUSE | EC_MOUSEMOVE );
 }
 
 void Button::Create() {
@@ -52,39 +51,38 @@ void Button::SetTextAlign( UIObject::alignment_t alignment ) {
 	}
 }
 
-void Button::OnClick( UIEventHandler::handler_function_t func ) {
-	AddEventHandler( UIEvent::EV_MOUSECLICK, func );
-}
-
 void Button::ApplyStyle() {
 	Panel::ApplyStyle();
 	
 }
 
-void Button::OnMouseOver( const UIEvent::event_data_t* data ) {
-	
+bool Button::OnMouseOver( const UIEvent::event_data_t* data ) {
+	return true;
 }
 
-void Button::OnMouseOut( const UIEvent::event_data_t* data ) {
+bool Button::OnMouseOut( const UIEvent::event_data_t* data ) {
 	if ( m_is_clicking ) {
 		m_is_clicking = false;
 		RemoveStyleModifier( Style::M_ACTIVE );
 	}
+	return true;
 }
 
-void Button::OnMouseDown( const UIEvent::event_data_t* data ) {
+bool Button::OnMouseDown( const UIEvent::event_data_t* data ) {
 	if ( data->mouse.button == UIEvent::M_LEFT ) {
 		AddStyleModifier( Style::M_ACTIVE );
 		m_is_clicking = true;
 	}
+	return true;
 }
 
-void Button::OnMouseUp( const UIEvent::event_data_t* data ) {
+bool Button::OnMouseUp( const UIEvent::event_data_t* data ) {
 	if ( m_is_clicking ) {
 		m_is_clicking = false;
 		RemoveStyleModifier( Style::M_ACTIVE );
-		Trigger( UIEvent::EV_MOUSECLICK, data );
+		return Trigger( UIEvent::EV_BUTTONCLICK, data );
 	}
+	return true;
 }
 
 

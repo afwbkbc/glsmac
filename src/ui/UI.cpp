@@ -89,18 +89,27 @@ void UI::Iterate() {
 	m_root_object.Iterate();	
 }
 
-void UI::SendEvent( const event::UIEvent* event ) {
+void UI::ProcessEvent( UIEvent* event ) {
 	if ( event->m_type == UIEvent::EV_MOUSEMOVE ) {
 		// need to save last mouse position to be able to trigger mouseover/mouseout events for objects that will move/resize themselves later
 		m_last_mouse_position = { event->m_data.mouse.x, event->m_data.mouse.y };
 	}
 	
-	m_root_object.SendEvent( event );
+	m_root_object.ProcessEvent( event );
 }
 
 void UI::SendMouseMoveEvent( UIObject* object ) {
-	NEWV( event, event::MouseMove, m_last_mouse_position.x, m_last_mouse_position.y );
-	object->SendEvent( event );
+	NEWV( event, MouseMove, m_last_mouse_position.x, m_last_mouse_position.y );
+	object->ProcessEvent( event );
+	DELETE( event );
+}
+
+const UIEventHandler* UI::AddGlobalEventHandler( const UIEvent::event_type_t event_type, const UIEventHandler::handler_function_t& handler ) {
+	return m_root_object.On( event_type, handler );
+}
+
+void UI::RemoveGlobalEventHandler( const UIEventHandler* event_handler ) {
+	m_root_object.Off( event_handler );
 }
 
 void UI::SetTheme( theme::Theme* theme ) {
@@ -137,11 +146,10 @@ void UI::ShowDebugFrame( const UIObject* object ) {
 		
 		NEW( data.actor, actor::MeshActor, "DebugFrame", data.mesh );
 		data.actor->SetTexture( data.texture );
-		data.actor->SetPosition( { 0.0, 0.0, 0.9 } );
-		
-		m_debug_scene->AddActor( data.actor );
 		
 		ResizeDebugFrame( object, &data );
+		
+		m_debug_scene->AddActor( data.actor );
 		
 		m_debug_frames[object] = data;
 	}
@@ -166,7 +174,7 @@ void UI::ResizeDebugFrame( const UIObject* object, const debug_frame_data_t* dat
 	},{
 		ClampX(geom.second.x),
 		ClampY(geom.second.y)
-	}, 2.0 );
+	}, -1.0 );
 	
 }
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -96,7 +97,7 @@ MAJOR_CLASS( UIObject, base::Base )
 		EV_MOUSEOUT,
 	};
 	
-	virtual void SendEvent( const event::UIEvent* event );
+	virtual void ProcessEvent( event::UIEvent* event );
 	
 	vertex_t GetAreaPosition() const;
 	pair<vertex_t, vertex_t> GetAreaGeometry() const;
@@ -120,25 +121,38 @@ MAJOR_CLASS( UIObject, base::Base )
 	virtual void RemoveStyleModifier( const Style::modifier_t modifier );
 	const bool HasStyleModifier( const Style::modifier_t modifier ) const;
 	
+	const UIEventHandler* On( const UIEvent::event_type_t type, UIEventHandler::handler_function_t func );
+	void Off( const UIEventHandler* handler );
+	bool Trigger( const UIEvent::event_type_t type, const UIEvent::event_data_t* data );
+	
 protected:
 	friend class UIContainer;
 	
-	// callbacks
-	virtual void OnMouseOver( const UIEvent::event_data_t* data ) {};
-	virtual void OnMouseOut( const UIEvent::event_data_t* data ) {};
-	virtual void OnMouseDown( const UIEvent::event_data_t* data ) {};
-	virtual void OnMouseUp( const UIEvent::event_data_t* data ) {};
-	virtual void OnMouseClick( const UIEvent::event_data_t* data ) {};
-	virtual void OnKeyDown( const UIEvent::event_data_t* data ) {};
-	virtual void OnClick( const UIEvent::event_data_t* data ) {};
+	// callbacks. true if event is processed (then it won't be sent further)
+	virtual bool OnMouseOver( const UIEvent::event_data_t* data ) { return true; };
+	virtual bool OnMouseOut( const UIEvent::event_data_t* data ) { return true; };
+	virtual bool OnMouseDown( const UIEvent::event_data_t* data ) { return true; };
+	virtual bool OnMouseUp( const UIEvent::event_data_t* data ) { return true; };
+	virtual bool OnMouseClick( const UIEvent::event_data_t* data ) { return true; };
+	virtual bool OnKeyDown( const UIEvent::event_data_t* data ) { return true; };
+	virtual bool OnKeyUp( const UIEvent::event_data_t* data ) { return true; };
+	virtual bool OnKeyPress( const UIEvent::event_data_t* data ) { return true; };
 	
 	const coord_t ClampX( const coord_t value );
 	const coord_t ClampY( const coord_t value );
 	const vertex_t ClampXY( const vertex_t value );
 
-	bool m_is_focused = false;
-	bool m_is_focusable = false;
-	bool m_is_hoverable = false;
+	// bit flags
+	typedef uint8_t event_context_t;
+	static const event_context_t EC_NONE = 0;
+	static const event_context_t EC_MOUSE = 1;
+	static const event_context_t EC_MOUSEMOVE = 2; // separate because handling is very different
+	static const event_context_t EC_KEYBOARD = 4;
+	
+	virtual void SetEventContexts( event_context_t contexts );
+	virtual void SetOverriddenEventContexts( event_context_t contexts );
+	bool HasEventContext( event_context_t context ) const;
+	bool IsEventContextOverridden( event_context_t context ) const;
 	
 	UIContainer *m_parent_object = nullptr;
 
@@ -222,12 +236,17 @@ protected:
 	bool m_has_debug_frame = false;
 #endif
 	
-	void AddEventHandler( const UIEvent::event_type_t type, UIEventHandler::handler_function_t func );
-	// TODO: remove?
-	void Trigger( const UIEvent::event_type_t type, const UIEvent::event_data_t* data );
+	typedef unordered_set< UIEvent::event_type_t > events_t;
+	
+	void ListenToEvent( const UIEvent::event_type_t event );
+	void ListenToEvents( const events_t& events );
 	
 private:
 	
+	event_context_t m_event_contexts = EC_NONE;
+	event_context_t m_overridden_event_contexts = EC_NONE; // if parent captures any context - children can't have it until parent releases it
+	
+	events_t m_events_to_listen = {};
 	
 	string m_style_class = "";
 	bool m_style_loaded = false; // will load on first draw
@@ -239,7 +258,7 @@ private:
 	
 	Style::modifier_t m_style_modifiers = Style::M_NONE;
 	
-	typedef unordered_set< UIEventHandler* > event_handlers_t;
+	typedef vector< UIEventHandler* > event_handlers_t;
 	unordered_map< UIEvent::event_type_t, event_handlers_t > m_event_handlers = {};
 	
 };

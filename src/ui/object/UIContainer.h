@@ -25,7 +25,7 @@ public:
 	void UpdateZIndex();
 	
 	void SetOverflow( const overflow_t overflow );
-	void SendEvent( const event::UIEvent* event );
+	void ProcessEvent( event::UIEvent* event );
 	
 	void AddStyleModifier( const Style::modifier_t modifier );
 	void RemoveStyleModifier( const Style::modifier_t modifier );
@@ -33,6 +33,9 @@ public:
 protected:
 	virtual void ApplyStyle();
 	virtual void ReloadStyle();
+	
+	void SetEventContexts( event_context_t contexts );
+	void SetOverriddenEventContexts( event_context_t contexts );
 	
 	std::vector<UIObject *> m_child_objects = {};
 	

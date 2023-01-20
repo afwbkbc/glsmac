@@ -71,6 +71,7 @@ private:
 	GLuint next_texture_obj_id = 0;
 	
 	UIEvent::mouse_button_t GetMouseButton( uint8_t sdl_mouse_button ) const;
+	UIEvent::key_code_t GetKeyCode( uint8_t sdl_scan_code ) const;
 	
 	unordered_map< uint8_t, Vec2< ssize_t > > m_active_mousedowns;
 	

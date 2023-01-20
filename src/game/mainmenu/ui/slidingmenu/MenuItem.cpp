@@ -13,7 +13,7 @@ MenuItem::MenuItem( MenuBlock* menu, const string& text, const bool is_title )
 	, m_text( text )
 	, m_is_title( is_title )
 {
-	m_is_hoverable = true;
+	SetEventContexts( EC_MOUSE | EC_MOUSEMOVE );
 }
 
 void MenuItem::Create() {
@@ -55,22 +55,11 @@ void MenuItem::Destroy() {
 	UIContainer::Destroy();
 }
 
-void MenuItem::OnMouseOver( const UIEvent::event_data_t* data ) {
-	/*if (!m_is_title) {
-		m_label->SetTextColor( m_menu->m_menu->m_mainmenu->m_menu_item_text_color_highlight );
-	}*/
-}
-
-void MenuItem::OnMouseOut( const UIEvent::event_data_t* data ) {
-	/*if (!m_is_title) {
-		m_label->SetTextColor( m_menu->m_menu->m_mainmenu->m_menu_item_text_color_normal );
-	}*/
-}
-
-void MenuItem::OnMouseDown( const UIEvent::event_data_t* data ) {
-	if (!m_is_title) {
+bool MenuItem::OnMouseDown( const UIEvent::event_data_t* data ) {
+	if ( !m_is_title && data->mouse.button == UIEvent::M_LEFT ) {
 		m_menu->OnItemClick( m_text );
 	}
+	return true;
 }
 
 }

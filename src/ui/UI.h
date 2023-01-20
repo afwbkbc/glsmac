@@ -10,6 +10,7 @@
 #include "util/Clamper.h"
 
 #include "event/UIEvent.h"
+#include "event/UIEventHandler.h"
 
 #include "scene/actor/MeshActor.h"
 #include "scene/mesh/Rectangle.h"
@@ -25,6 +26,7 @@ using namespace types;
 
 namespace ui {
 
+using namespace event;
 using namespace object;
 	
 MAJOR_CLASS( UI, base::Module )
@@ -47,9 +49,10 @@ MAJOR_CLASS( UI, base::Module )
 	
 	void Resize();
 	
-	void SendEvent( const event::UIEvent* event );
-	
+	void ProcessEvent( UIEvent* event );
 	void SendMouseMoveEvent( UIObject* object );
+	const UIEventHandler* AddGlobalEventHandler( const UIEvent::event_type_t event_type, const UIEventHandler::handler_function_t& handler );
+	void RemoveGlobalEventHandler( const UIEventHandler* event_handler );
 	
 	void SetTheme( theme::Theme* theme );
 	void UnsetTheme();

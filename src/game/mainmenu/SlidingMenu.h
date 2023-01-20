@@ -25,6 +25,8 @@ public:
 	void Show();
 	void Hide();
 	void OnItemClick( const string& choice );
+	
+	void Close();
 
 private:
 	const choice_handlers_t m_choices = {};
