@@ -7,16 +7,16 @@ namespace mainmenu {
 
 Scenario::Scenario( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 	{ "PLAY SCENARIO", [this] () -> void {
-		// TODO
+		MenuError( "This feature is not available yet." );
 	}},
 	{ "CREATE SCENARIO", [this] () -> void {
-		// TODO
+		MenuError( "This feature is not available yet." );
 	}},
 	{ "LOAD MAP FILE", [this] () -> void {
-		// TODO
+		MenuError( "This feature is not available yet." );
 	}},
 	{ "EDIT SCENARIO", [this] () -> void {
-		// TODO
+		MenuError( "This feature is not available yet." );
 	}},
 }) {}
 

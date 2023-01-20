@@ -21,6 +21,10 @@ void MenuObject::GoBack() {
 	m_mainmenu->GoBack();
 }
 
+void MenuObject::MenuError( const string& error_text ) {
+	m_mainmenu->MenuError( error_text );
+}
+
 void MenuObject::Close() {
 	GoBack();
 }

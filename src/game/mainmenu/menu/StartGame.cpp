@@ -20,14 +20,14 @@ StartGame::StartGame( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 	}},
 	{ "THE MAP OF PLANET", [this] () -> void {
 		m_mainmenu->m_settings.map_type = Settings::MT_PREGEN;
-		// TODO
+		MenuError( "This feature is not available yet." );
 	}},
 	{ "HUGE MAP OF PLANET", [this] () -> void {
 		m_mainmenu->m_settings.map_type = Settings::MT_PREGEN;
-		// TODO
+		MenuError( "This feature is not available yet." );
 	}},
 	{ "LOAD MAP FILE", [this] () -> void {
-		// TODO
+		MenuError( "This feature is not available yet." );
 	}}
 }) {}
 

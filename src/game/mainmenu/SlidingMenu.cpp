@@ -79,5 +79,9 @@ void SlidingMenu::Close() {
 	}
 }
 
+void SlidingMenu::MaybeClose() {
+	Close();
+}
+
 }
 }

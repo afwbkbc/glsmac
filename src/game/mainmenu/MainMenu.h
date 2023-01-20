@@ -33,6 +33,7 @@ CHILD_CLASS( MainMenu, base::Task )
 	
 	void ShowMenu( MenuObject* menu_object );
 	void GoBack();
+	void MenuError( const string& error_text );
 	
 protected:
 	MenuTheme m_theme;

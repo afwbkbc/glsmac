@@ -8,6 +8,7 @@
 #include "scene/actor/TextActor.h"
 
 #include "menu/Main.h"
+#include "menu/Error.h"
 
 using namespace std;
 using namespace ui::object;
@@ -30,7 +31,7 @@ void MainMenu::Start() {
 		// rightclick = back
 		if ( data->mouse.button == UIEvent::M_RIGHT && m_menu_object ) {
 			if ( !m_menu_history.empty() ) { // don't exit game on right-click
-				m_menu_object->Close();
+				m_menu_object->MaybeClose(); // only sliding menus will close on right click
 				return true;
 			}
 		}
@@ -106,22 +107,20 @@ void MainMenu::Stop() {
 }
 
 void MainMenu::GoBack() {
-#if DEBUG
-	if ( m_goback ) {
-		throw runtime_error( "goback already set" );
-	}
-#endif
+	ASSERT( !m_goback, "goback already set" );
 	m_goback = true;
 }
 
 void MainMenu::ShowMenu( MenuObject* menu_object ) {
-#if DEBUG
-	if ( m_menu_next ) {
-		throw runtime_error( "next menu already set" );
-	}
-#endif
+	ASSERT( !m_menu_next, "next menu already set" );
 	m_menu_next = menu_object;
 }
+
+void MainMenu::MenuError( const string& error_text ) {
+	NEWV( menu, Error, this, error_text );
+	ShowMenu( menu );
+}
+
 
 
 } /* namespace mainmenu */

@@ -99,13 +99,13 @@ void SlidingMenu::AddStyles() {
 		s->Set( Style::A_SIZE_FROM_TEXTURE );
 	});
 	
-	AddStyle( "SlidingMenuItemText", SH(this) {
+	AddStyle( "SlidingMenuItemText", SH() {
 		s->SetFont( Style::A_FONT, "arialnb.ttf", 20 );
 	});
 	
 	AddStyle( "SlidingMenuButtonText", {
 		"SlidingMenuItemText"
-	}, SH(this) {
+	}, SH() {
 		if ( s->Is( Style::M_SELECTED ) ) {
 			s->SetColor( Style::A_TEXTCOLOR, Color::FromRGBA( 193, 240 ,204, 255 ) );
 		}
@@ -116,7 +116,7 @@ void SlidingMenu::AddStyles() {
 	
 	AddStyle( "SlidingMenuTitleText", {
 		"SlidingMenuItemText"
-	}, SH(this) {
+	}, SH() {
 		s->SetColor( Style::A_TEXTCOLOR, Color::FromRGBA( 230, 243 ,233, 255 ) );
 	});
 	

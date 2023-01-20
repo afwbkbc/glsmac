@@ -121,15 +121,16 @@ bool ChoiceList::OnKeyPress( const UIEvent::event_data_t* data ) {
 }
 
 void ChoiceList::SetActiveButton( Button* button ) {
-	ASSERT( m_button_values.find( button ) != m_button_values.end(), "button not in buttons list" );
+	auto it = m_button_values.find( button );
+	ASSERT( it != m_button_values.end(), "button not in buttons list" );
 	for ( auto& b : m_buttons ) {
 		if ( b.second != button && b.second->HasStyleModifier( Style::M_SELECTED ) ) {
 			b.second->RemoveStyleModifier( Style::M_SELECTED );
 		}
 	}
-	button->AddStyleModifier( Style::M_SELECTED );
-	auto it = m_button_values.find( button );
-	ASSERT( it != m_button_values.end(), "button value missing" );
+	if ( !button->HasStyleModifier( Style::M_SELECTED ) ) {
+		button->AddStyleModifier( Style::M_SELECTED );
+	}
 	ASSERT( it->second < m_choices.size(), "button value overflow" );
 	m_value = it->second;
 }

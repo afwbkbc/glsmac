@@ -4,7 +4,9 @@ namespace game {
 namespace mainmenu {
 
 Multiplayer::Multiplayer( MainMenu* mainmenu ) : PopupMenu( mainmenu, "MULTIPLAYER SETUP" ) {
-	
+	SetWidth( 500 );
+	SetHeight( 154 );
+	SetFlags( { PF_HAS_OK, PF_HAS_CANCEL } );
 }
 
 void Multiplayer::Show() {
@@ -46,7 +48,15 @@ void Multiplayer::Hide() {
 
 void Multiplayer::OnNext() {
 	Log( "SELECTED VALUE: " + m_choices->GetValue() );
-	GoBack();
+	MenuError( "This feature is not available yet." );
+}
+
+const string Multiplayer::GetChoice() const {
+	return m_choices->GetValue();
+}
+
+void Multiplayer::SetChoice( const string& choice ) {
+	m_choices->SetValue( choice );
 }
 
 }

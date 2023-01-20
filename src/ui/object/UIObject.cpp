@@ -581,8 +581,8 @@ pair<UIObject::vertex_t, UIObject::vertex_t> UIObject::GetAreaGeometry() const {
 
 bool UIObject::IsPointInside( const size_t x, const size_t y ) const {
 	return (
-		x >= m_object_area.left &&
-		y >= m_object_area.top &&
+		x > m_object_area.left &&
+		y > m_object_area.top &&
 		x <= m_object_area.right &&
 		y <= m_object_area.bottom
 	);

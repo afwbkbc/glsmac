@@ -6,7 +6,7 @@ namespace style {
 
 void PopupMenu::AddStyles() {
 	
-	AddStyle( "PopupMenuFrame", SH(this) {
+	AddStyle( "PopupMenuFrame", SH() {
 		const unordered_map<Style::attribute_type_t,vector<size_t>> textures = {
 			{ Style::A_TEXTURE_BACK, { 86, 353, 109, 376 } },
 			{ Style::A_TEXTURE_BORDER_LEFT, { 79, 431, 79, 454 } },
@@ -86,7 +86,7 @@ void PopupMenu::AddStyles() {
 
 	AddStyle( "PopupMenuButtonList", {
 		"PopupMenuButton"
-	}, SH(this) {
+	}, SH() {
 		s->Set( Style::A_LEFT, 3 );
 		s->Set( Style::A_RIGHT, 3 );
 		//s->Set( Style::A_TOP, 3 );
@@ -98,13 +98,17 @@ void PopupMenu::AddStyles() {
 	
 	AddStyle( "PopupMenuButtonOkCancel", {
 		"PopupMenuButton"
-	}, SH(this) {
+	}, SH() {
 		s->Set( Style::A_WIDTH, 234 );
 		s->Set( Style::A_HEIGHT, 20 );
 
 		s->SetFont( Style::A_FONT, "arialnb.ttf", 18 );
 	});
 	
+	AddStyle( "PopupMenuText", SH() {
+		s->SetFont( Style::A_FONT, "arialnb.ttf", 18 );
+		s->SetColor( Style::A_TEXTCOLOR, Color::FromRGB( 129, 146, 198 ) );
+	});
 }
 
 }

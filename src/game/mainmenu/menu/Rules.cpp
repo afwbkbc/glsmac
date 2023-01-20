@@ -6,15 +6,15 @@ namespace mainmenu {
 Rules::Rules( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "GAME RULES", {
 	{ "PLAY WITH STANDARD RULES", [this] () -> void {
 		m_mainmenu->m_settings.game_rules = game::Settings::GR_STANDARD;
-		// TODO
+		MenuError( "This feature is not available yet." );
 	}},
 	{ "PLAY WITH CURRENT RULES", [this] () -> void {
 		m_mainmenu->m_settings.game_rules = game::Settings::GR_CURRENT;
-		// TODO
+		MenuError( "This feature is not available yet." );
 	}},
 	{ "CUSTOMIZE RULES", [this] () -> void {
 		m_mainmenu->m_settings.game_rules = game::Settings::GR_CUSTOM;
-		// TODO
+		MenuError( "This feature is not available yet." );
 	}},
 }) {}
 

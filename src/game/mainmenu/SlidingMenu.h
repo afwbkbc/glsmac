@@ -29,6 +29,7 @@ public:
 	void SetChoice( const string& choice );
 	
 	void Close();
+	void MaybeClose();
 
 private:
 	const choice_handlers_t m_choices = {};

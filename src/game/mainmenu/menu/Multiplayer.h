@@ -7,11 +7,12 @@
 namespace game {
 namespace mainmenu {
 
-class MainMenu;
-	
 class Multiplayer : public PopupMenu {
 public:
 	Multiplayer( MainMenu* mainmenu );
+	
+	const string GetChoice() const;
+	void SetChoice( const string& choice );
 	
 protected:
 	virtual void Show();

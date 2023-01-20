@@ -30,7 +30,7 @@ Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 		m_mainmenu->m_settings.difficulty = rand() % 6 + 1; // TODO: previous difficulty?
 		m_mainmenu->m_settings.game_rules = game::Settings::GR_STANDARD;
 
-		// TODO
+		MenuError( "This feature is not available yet." );
 	}},
 	{ "SCENARIO", [this] () -> void {
 		m_mainmenu->m_settings.game_mode = game::Settings::GM_SCENARIO;
@@ -38,7 +38,7 @@ Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 		NextMenu( menu );
 	}},
 	{ "LOAD GAME", [this] () -> void {
-		// TODO
+		MenuError( "This feature is not available yet." );
 	}},
 	{ "MULTIPLAYER", [this] () -> void {
 		m_mainmenu->m_settings.game_mode = game::Settings::GM_MULTIPLAYER;
@@ -46,7 +46,7 @@ Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 		NextMenu( menu );
 	}},
 	{ "VIEW CREDITS", [this] () -> void {
-		// TODO
+		MenuError( "This feature is not available yet." );
 	}},
 	{ "EXIT GAME", [this] () -> void {
 		g_engine->ShutDown();
