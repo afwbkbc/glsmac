@@ -5,6 +5,8 @@
 #include "Panel.h"
 #include "Label.h"
 
+#include "util/Timer.h"
+
 namespace ui {
 namespace object {
 
@@ -32,6 +34,11 @@ protected:
 	Label* m_label = nullptr;
 	
 	bool m_is_clicking = false; // mouseup at different position after mousedown is still counted as click, as long as it's inside button
+	
+private:
+	bool m_maybe_doubleclick = false;
+	util::Timer m_doubleclick_timer;
+	
 };
 
 } /* namespace object */

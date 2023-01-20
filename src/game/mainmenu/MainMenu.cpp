@@ -26,16 +26,18 @@ void MainMenu::Start() {
 	NEW( m_background, Surface, "MainMenuBackground" );
 	ui->AddObject( m_background );
 
-	m_mouse_handler = ui->AddGlobalEventHandler( UIEvent::EV_MOUSEDOWN, EH( this ) {
+	m_mouse_handler = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_DOWN, EH( this ) {
 		// rightclick = back
 		if ( data->mouse.button == UIEvent::M_RIGHT && m_menu_object ) {
-			m_menu_object->Close();
-			return true;
+			if ( !m_menu_history.empty() ) { // don't exit game on right-click
+				m_menu_object->Close();
+				return true;
+			}
 		}
 		return false;
 	});
 	
-	m_key_handler = ui->AddGlobalEventHandler( UIEvent::EV_KEYDOWN, EH( this ) {
+	m_key_handler = ui->AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this ) {
 		// escape = back
 		if ( data->key.code == UIEvent::K_ESCAPE && m_menu_object ) {
 			m_menu_object->Close();

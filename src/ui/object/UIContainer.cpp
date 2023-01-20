@@ -118,7 +118,7 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 	if (( event->m_flags & UIEvent::EF_MOUSE ) == UIEvent::EF_MOUSE ) {
 		for (auto& c : m_child_objects) {
 			if (
-				( event->m_type == UIEvent::EV_MOUSEMOVE ) || // mousemove needs to be send to all objects for mouseout events to work
+				( event->m_type == UIEvent::EV_MOUSE_MOVE ) || // mousemove needs to be send to all objects for mouseout events to work
 				c->IsPointInside( event->m_data.mouse.x, event->m_data.mouse.y ) // other events - only to those actually under mouse pointer
 			) {
 				NEWV( child_event, UIEvent, event );

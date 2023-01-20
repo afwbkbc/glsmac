@@ -58,6 +58,7 @@ void Timer::Stop() {
 
 void Timer::SetTimeout(const size_t ms) {
 	Tick();
+	Stop();
 	m_operation = TIMEOUT;
 	m_elapsed = milliseconds::zero();
 	m_target = m_current + milliseconds( ms );
@@ -65,6 +66,7 @@ void Timer::SetTimeout(const size_t ms) {
 
 void Timer::SetInterval(const size_t ms) {
 	Tick();
+	Stop();
 	m_operation = INTERVAL;
 	m_elapsed = milliseconds::zero();
 	m_interval = milliseconds( ms );

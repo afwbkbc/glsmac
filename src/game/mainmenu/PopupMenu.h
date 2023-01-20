@@ -26,7 +26,7 @@ public:
 	virtual void Show();
 	virtual void Hide();
 	
-	virtual void OnOkClick() {};
+	virtual void OnNext() {};
 	
 	bool IsAnimating();
 	

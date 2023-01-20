@@ -90,7 +90,7 @@ void UI::Iterate() {
 }
 
 void UI::ProcessEvent( UIEvent* event ) {
-	if ( event->m_type == UIEvent::EV_MOUSEMOVE ) {
+	if ( event->m_type == UIEvent::EV_MOUSE_MOVE ) {
 		// need to save last mouse position to be able to trigger mouseover/mouseout events for objects that will move/resize themselves later
 		m_last_mouse_position = { event->m_data.mouse.x, event->m_data.mouse.y };
 	}

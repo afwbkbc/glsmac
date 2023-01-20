@@ -7,7 +7,7 @@ namespace event {
 
 CHILD_CLASS( MouseUp, UIEvent )
 
-	MouseUp( const size_t x, const size_t y, const uint8_t button ) : UIEvent( EV_MOUSEUP ) {
+	MouseUp( const size_t x, const size_t y, const uint8_t button ) : UIEvent( EV_MOUSE_UP ) {
 		m_flags |= EF_MOUSE;
 		m_data.mouse.x = x;
 		m_data.mouse.y = y;

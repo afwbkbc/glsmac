@@ -74,11 +74,14 @@ void ChoiceList::UpdateButtons() {
 				button->SetHeight( 20 );
 				button->SetTop( 2 + ( button->GetHeight() + 2 ) * (value) );
 				button->ForwardStyleAttributes( m_forwarded_style_attributes );
-				button->On( UIEvent::EV_BUTTONCLICK, EH( this, button ) {
+				button->On( UIEvent::EV_BUTTON_CLICK, EH( this, button ) {
 					if ( !button->HasStyleModifier( Style::M_SELECTED ) ) {
 						SetActiveButton( button );
 					}
 					return true;
+				});
+				button->On( UIEvent::EV_BUTTON_DOUBLE_CLICK, EH( this ) {
+					return Trigger( UIEvent::EV_BUTTON_DOUBLE_CLICK, data );
 				});
 			AddChild( button );
 			m_button_values[ button ] = value;

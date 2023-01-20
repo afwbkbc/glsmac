@@ -22,7 +22,7 @@ PopupMenu::PopupMenu( MainMenu *mainmenu, const string& title )
 void PopupMenu::Show() {
 	
 	auto on_ok = [this] () -> void {
-		OnOkClick();
+		OnNext();
 	};
 	auto on_cancel = [this] () -> void {
 		GoBack();
@@ -32,7 +32,7 @@ void PopupMenu::Show() {
 		m_frame->SetAlign( UIObject::ALIGN_CENTER );
 		m_frame->SetWidth( 500 );
 		m_frame->SetHeight( 154 );
-		m_frame->On( UIEvent::EV_KEYDOWN, EH( this, on_ok, on_cancel ) {
+		m_frame->On( UIEvent::EV_KEY_DOWN, EH( this, on_ok, on_cancel ) {
 			if ( data->key.code == UIEvent::K_ENTER ) {
 				on_ok();
 				return true;
@@ -72,7 +72,7 @@ void PopupMenu::Show() {
 		m_button_ok->SetBottom( 15 );
 		m_button_ok->SetWidth( 234 );
 		m_button_ok->SetLabel( "OK" );
-		m_button_ok->On( UIEvent::EV_BUTTONCLICK, EH( this, on_ok ) {
+		m_button_ok->On( UIEvent::EV_BUTTON_CLICK, EH( this, on_ok ) {
 			on_ok();
 			return true;
 		});
@@ -84,7 +84,7 @@ void PopupMenu::Show() {
 		m_button_cancel->SetBottom( 15 );
 		m_button_cancel->SetWidth( 234 );
 		m_button_cancel->SetLabel( "CANCEL" );
-		m_button_cancel->On( UIEvent::EV_BUTTONCLICK, EH( this, on_cancel ) {
+		m_button_cancel->On( UIEvent::EV_BUTTON_CLICK, EH( this, on_cancel ) {
 			on_cancel();
 			return true;
 		});

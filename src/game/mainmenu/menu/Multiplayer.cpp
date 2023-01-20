@@ -28,6 +28,10 @@ void Multiplayer::Show() {
 			"GLSMAC Internet TCP/IP Connection",
 			"Hotseat/Play-by-Email",
 		});
+		m_choices->On( UIEvent::EV_BUTTON_DOUBLE_CLICK, EH( this ) {
+			OnNext();
+			return true;
+		});
 	m_body->AddChild( m_choices );
 }
 
@@ -40,7 +44,7 @@ void Multiplayer::Hide() {
 	PopupMenu::Hide();
 }
 
-void Multiplayer::OnOkClick() {
+void Multiplayer::OnNext() {
 	Log( "SELECTED VALUE: " + m_choices->GetValue() );
 	GoBack();
 }

@@ -493,7 +493,7 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 	
 	if ( !is_processed ) {
 		switch ( event->m_type ) {
-			case UIEvent::EV_MOUSEMOVE: {
+			case UIEvent::EV_MOUSE_MOVE: {
 				if ( HasEventContext( EC_MOUSEMOVE ) ) {
 					if ( IsPointInside( event->m_data.mouse.x, event->m_data.mouse.y ) ) {
 						if ( ( m_state & STATE_MOUSEOVER ) != STATE_MOUSEOVER ) {
@@ -518,13 +518,13 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 				}
 				break;
 			}
-			case UIEvent::EV_MOUSEDOWN: {
+			case UIEvent::EV_MOUSE_DOWN: {
 				if ( HasEventContext( EC_MOUSE ) ) {
 					is_processed = OnMouseDown( &event->m_data );
 				}
 				break;
 			}
-			case UIEvent::EV_MOUSEUP: {
+			case UIEvent::EV_MOUSE_UP: {
 				if ( HasEventContext( EC_MOUSE ) ) {
 					is_processed = OnMouseUp( &event->m_data );
 				}
@@ -535,20 +535,20 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 					is_processed = OnMouseClick( &event->m_data );
 				}
 				break;
-			}*/
-			case UIEvent::EV_KEYDOWN: {
+			}*/ // conflicts with button click, maybe not needed?
+			case UIEvent::EV_KEY_DOWN: {
 				if ( HasEventContext( EC_KEYBOARD ) ) {
 					is_processed = OnKeyDown( &event->m_data );
 				}
 				break;
 			}
-			case UIEvent::EV_KEYUP: {
+			case UIEvent::EV_KEY_UP: {
 				if ( HasEventContext( EC_KEYBOARD ) ) {
 					is_processed = OnKeyUp( &event->m_data );
 				}
 				break;
 			}
-			case UIEvent::EV_KEYPRESS: {
+			case UIEvent::EV_KEY_PRESS: {
 				if ( HasEventContext( EC_KEYBOARD ) ) {
 					is_processed = OnKeyPress( &event->m_data );
 				}
