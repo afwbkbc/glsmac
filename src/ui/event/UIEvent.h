@@ -10,6 +10,8 @@ MAJOR_CLASS( UIEvent, base::Base )
 	enum event_type_t {
 		EV_NONE,
 		EV_MOUSE_MOVE,
+		EV_MOUSE_OVER,
+		EV_MOUSE_OUT,
 		EV_MOUSE_DOWN,
 		EV_MOUSE_UP,
 		EV_KEY_DOWN,

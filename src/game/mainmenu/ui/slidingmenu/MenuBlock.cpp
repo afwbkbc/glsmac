@@ -14,14 +14,32 @@ MenuBlock::MenuBlock( SlidingMenu* menu )
 	SetClass( "SlidingMenuBlock" );
 	
 	SetRight(-MENU_CLOSED_POSITION);
+	
+	SetEventContexts( EC_KEYBOARD );
 }
 
 void MenuBlock::AddItem(const string& text) {
+	m_selected_item_index = m_items.size();
 	m_items.push_back(text);
 }
 
 void MenuBlock::AddTitle(const string& text) {
 	m_title = text;
+}
+
+const string MenuBlock::GetChoice() const {
+	if ( m_selected_item ) {
+		return m_selected_item->GetText();
+	}
+	else {
+		return "";
+	}
+}
+
+void MenuBlock::SetChoice( const string& choice ) {
+	auto it = find( m_items.begin(), m_items.end(), choice );
+	ASSERT( it != m_items.end(), "choice not found" );
+	SetActiveItem( m_items.end() - it - 1 );
 }
 
 bool MenuBlock::IsSliding() {
@@ -37,9 +55,16 @@ void MenuBlock::GoBack() {
 void MenuBlock::Create() {
 	UIContainer::Create();
 	
+	ASSERT( !m_items.empty(), "items list empty" );
+	
+	// upside down because it's easier to position that way
 	for (size_t i = m_items.size() ; i > 0 ; i--) {
 		NEWV( item, MenuItem, this, m_items[i-1] );
-		item->SetBottom( m_menu_items.size() * 70 );
+			item->SetBottom( m_menu_items.size() * 70 );
+			item->On( UIEvent::EV_MOUSE_OVER, EH( this, i ) {
+				SetActiveItem( m_items.size() - i );
+				return true;
+			});
 		m_menu_items.push_back( item );
 		AddChild( item );
 	}
@@ -49,6 +74,31 @@ void MenuBlock::Create() {
 		m_menu_items.push_back( item );
 		AddChild( item );
 	}
+	
+	On( UIEvent::EV_KEY_DOWN, EH( this ) {
+		if ( data->key.code == UIEvent::K_UP ) {
+			if ( m_selected_item_index < m_items.size() - 1 ) {
+				SetActiveItem( m_selected_item_index + 1 );
+			}
+		}
+		else if ( data->key.code == UIEvent::K_DOWN ) {
+			if ( m_selected_item_index > 0 ) {
+				SetActiveItem( m_selected_item_index - 1 );
+			}
+		}
+		else if ( data->key.code == UIEvent::K_ESCAPE ) {
+			GoBack();
+		}
+		else if ( data->key.code == UIEvent::K_ENTER ) {
+			OnItemClick( m_selected_item->GetText() );
+		}
+		else {
+			return false; // not handled
+		}
+		return true; // handled
+	});
+	
+	SetActiveItem( m_selected_item_index );
 	
 	m_slide_timer.SetInterval( 1 );
 }
@@ -61,6 +111,7 @@ void MenuBlock::Destroy() {
 		RemoveChild(item);
 	}
 	m_menu_items.clear();
+	m_selected_item = nullptr;
 	
 	UIContainer::Destroy();
 }
@@ -102,6 +153,19 @@ void MenuBlock::OnItemClick( const string& choice ) {
 		// start slide-in animation
 		m_slide_change = -m_slide_change;
 		m_slide_timer.SetInterval( 1 );
+	}
+}
+
+void MenuBlock::SetActiveItem( const size_t index ) {
+	ASSERT( index < m_menu_items.size(), "invalid item index" );
+	auto *item = m_menu_items[ index ];
+	if ( item != m_selected_item ) {
+		if ( m_selected_item ) {
+			m_selected_item->RemoveStyleModifier( Style::M_SELECTED );
+		}
+		item->AddStyleModifier( Style::M_SELECTED );
+		m_selected_item = item;
+		m_selected_item_index = index;
 	}
 }
 

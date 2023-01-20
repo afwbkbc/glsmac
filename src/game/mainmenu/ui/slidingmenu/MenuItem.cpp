@@ -55,6 +55,10 @@ void MenuItem::Destroy() {
 	UIContainer::Destroy();
 }
 
+const string& MenuItem::GetText() const {
+	return m_text;
+}
+
 bool MenuItem::OnMouseDown( const UIEvent::event_data_t* data ) {
 	if ( !m_is_title && data->mouse.button == UIEvent::M_LEFT ) {
 		m_menu->OnItemClick( m_text );

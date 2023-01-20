@@ -36,6 +36,9 @@ CHILD_CLASS(MenuBlock, UIContainer)
 	void AddItem(const string& text);
 	void AddTitle(const string& text);
 	
+	const string GetChoice() const;
+	void SetChoice( const string& choice );
+	
 	void GoBack();
 	bool IsSliding();
 	
@@ -44,11 +47,15 @@ protected:
 	
 	void OnItemClick( const string& choice );
 	
+	void SetActiveItem( const size_t index );
+	
 	vector<string> m_items = {};
 	string m_title = "";
 	
 	SlidingMenu* m_menu = nullptr;
 	vector<MenuItem*> m_menu_items = {};
+	MenuItem* m_selected_item = nullptr;
+	size_t m_selected_item_index = 0;
 	
 	string m_clicked_choice = "";
 	

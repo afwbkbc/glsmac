@@ -25,11 +25,14 @@ public:
 	void Show();
 	void Hide();
 	void OnItemClick( const string& choice );
+	const string GetChoice() const;
+	void SetChoice( const string& choice );
 	
 	void Close();
 
 private:
 	const choice_handlers_t m_choices = {};
+	string m_choice = "";
 
 	MenuBlock* m_menu_block = nullptr;
 	

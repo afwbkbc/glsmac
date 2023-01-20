@@ -21,6 +21,7 @@ CHILD_CLASS( MenuItem, UIContainer )
 	virtual void Create();
 	virtual void Destroy();
 
+	const string& GetText() const;
 
 protected:
 

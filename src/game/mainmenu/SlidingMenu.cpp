@@ -57,6 +57,22 @@ void SlidingMenu::OnItemClick( const string& choice ) {
 	}
 }
 
+const string SlidingMenu::GetChoice() const {
+	if ( m_menu_block ) {
+		return m_menu_block->GetChoice();
+	}
+	else {
+		return "";
+	}
+}
+
+void SlidingMenu::SetChoice( const string& choice ) {
+	m_choice = choice;
+	if ( m_menu_block ) {
+		m_menu_block->SetChoice( choice );
+	}
+}
+
 void SlidingMenu::Close() {
 	if ( !m_menu_block->IsSliding() ) {
 		m_menu_block->GoBack();

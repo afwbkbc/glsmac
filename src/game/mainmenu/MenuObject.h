@@ -20,6 +20,8 @@ MAJOR_CLASS( MenuObject, base::Base )
 	void GoBack();
 	
 	virtual void Close();
+	virtual const string GetChoice() const { return ""; };
+	virtual void SetChoice( const string& choice ) {};
 	
 protected:
 	friend class MenuItem;

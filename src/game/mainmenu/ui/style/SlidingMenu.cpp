@@ -106,7 +106,7 @@ void SlidingMenu::AddStyles() {
 	AddStyle( "SlidingMenuButtonText", {
 		"SlidingMenuItemText"
 	}, SH(this) {
-		if ( s->Is( Style::M_HOVER ) ) {
+		if ( s->Is( Style::M_SELECTED ) ) {
 			s->SetColor( Style::A_TEXTCOLOR, Color::FromRGBA( 193, 240 ,204, 255 ) );
 		}
 		else {

@@ -59,6 +59,8 @@ void MainMenu::Iterate() {
 			m_menu_object = m_menu_history.back();
 			m_menu_history.pop_back();
 			m_menu_object->Show();
+			m_menu_object->SetChoice( m_choice_history.back() );
+			m_choice_history.pop_back();
 		}
 		else {
 			g_engine->ShutDown();
@@ -66,6 +68,7 @@ void MainMenu::Iterate() {
 	}
 	else if ( m_menu_next ) {
 		if ( m_menu_object ) {
+			m_choice_history.push_back( m_menu_object->GetChoice() );
 			m_menu_object->Hide();
 			m_menu_history.push_back( m_menu_object );
 		}

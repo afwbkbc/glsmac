@@ -44,6 +44,7 @@ protected:
 	
 	MenuObject *m_menu_object = nullptr;
 	vector<MenuObject*> m_menu_history = {};
+	vector<string> m_choice_history = {};
 	
 	MenuObject *m_menu_next = nullptr;
 	bool m_goback = false;

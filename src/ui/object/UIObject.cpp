@@ -499,7 +499,10 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 						if ( ( m_state & STATE_MOUSEOVER ) != STATE_MOUSEOVER ) {
 							m_state |= STATE_MOUSEOVER;
 							AddStyleModifier( Style::M_HOVER );
-							is_processed = OnMouseOver( &event->m_data );
+							is_processed = Trigger( UIEvent::EV_MOUSE_OVER, &event->m_data );
+							if ( !is_processed ) {
+								is_processed = OnMouseOver( &event->m_data );
+							}
 						}
 						else {
 							//is_processed = true; // ???
@@ -509,7 +512,10 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 						if ( ( m_state & STATE_MOUSEOVER ) == STATE_MOUSEOVER ) {
 							m_state &= ~STATE_MOUSEOVER;
 							RemoveStyleModifier( Style::M_HOVER );
-							is_processed = OnMouseOut( &event->m_data );
+							is_processed = Trigger( UIEvent::EV_MOUSE_OUT, &event->m_data );
+							if ( !is_processed ) {
+								is_processed = OnMouseOut( &event->m_data );
+							}
 						}
 						else {
 							//is_processed = true; // ???
