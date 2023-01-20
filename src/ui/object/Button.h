@@ -4,6 +4,7 @@
 
 #include "Panel.h"
 #include "Label.h"
+#include "SoundEffect.h"
 
 #include "util/Timer.h"
 
@@ -39,6 +40,8 @@ private:
 	bool m_maybe_doubleclick = false;
 	util::Timer m_doubleclick_timer;
 	
+	SoundEffect* m_click_sound = nullptr;
+	SoundEffect* m_move_sound = nullptr;
 };
 
 } /* namespace object */

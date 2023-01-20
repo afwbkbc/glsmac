@@ -6,6 +6,9 @@
 #include <string>
 
 #include "ui/object/Surface.h"
+#include "ui/object/SoundEffect.h"
+
+#include "scene/actor/SoundActor.h"
 
 #include "MenuObject.h"
 
@@ -50,6 +53,7 @@ protected:
 	MenuObject *m_menu_next = nullptr;
 	bool m_goback = false;
 	
+	SoundEffect* m_music = nullptr;
 };
 
 } /* namespace mainmenu */

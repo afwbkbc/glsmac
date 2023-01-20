@@ -5,6 +5,7 @@ SET(SRC ${SRC}
 	${PWD}/Panel.cpp
 	${PWD}/Label.cpp
 	${PWD}/Surface.cpp
+	${PWD}/SoundEffect.cpp
 	${PWD}/UIObject.cpp
 	${PWD}/UIContainer.cpp
 

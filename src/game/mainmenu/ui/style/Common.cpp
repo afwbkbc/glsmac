@@ -12,6 +12,12 @@ void Common::AddStyles() {
 		s->Set( Style::A_STRETCH_TEXTURE );
 	});
 	
+	AddStyle( "MainMenuMusic", SH() {
+		s->SetSound( Style::A_SOUND, "opening menu.wav" );
+		s->Set( Style::A_SOUND_AUTOPLAY );
+		s->Set( Style::A_SOUND_REPEATABLE );
+		s->Set( Style::A_SOUND_VOLUME, 0.8 );
+	});
 }
 
 }

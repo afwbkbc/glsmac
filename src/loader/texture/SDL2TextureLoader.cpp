@@ -1,4 +1,4 @@
-#include "SDL2ImageTextureLoader.h"
+#include "SDL2TextureLoader.h"
 
 #include <iostream>
 
@@ -7,7 +7,7 @@ using namespace std;
 namespace loader {
 namespace texture {
 
-SDL2ImageTextureLoader::~SDL2ImageTextureLoader() {
+SDL2TextureLoader::~SDL2TextureLoader() {
 	for (auto& it : m_textures) {
 		DELETE( it.second );
 	}
@@ -16,19 +16,19 @@ SDL2ImageTextureLoader::~SDL2ImageTextureLoader() {
 	}
 }
 
-void SDL2ImageTextureLoader::Start() {
+void SDL2TextureLoader::Start() {
 
 }
 
-void SDL2ImageTextureLoader::Stop() {
+void SDL2TextureLoader::Stop() {
 
 }
 
-void SDL2ImageTextureLoader::Iterate() {
+void SDL2TextureLoader::Iterate() {
 
 }
 
-types::Texture *SDL2ImageTextureLoader::LoadTexture( const string &name ) {
+types::Texture *SDL2TextureLoader::LoadTexture( const string &name ) {
 
 	texture_map_t::iterator it = m_textures.find( name );
 	if (it != m_textures.end()) {
@@ -73,7 +73,7 @@ types::Texture *SDL2ImageTextureLoader::LoadTexture( const string &name ) {
 
 }
 
-types::Texture *SDL2ImageTextureLoader::LoadTexture( const string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
+types::Texture *SDL2TextureLoader::LoadTexture( const string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
 	
 	const string subtexture_key =
 		name + ":" +

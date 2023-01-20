@@ -103,12 +103,16 @@ void PopupMenu::AddStyles() {
 		s->Set( Style::A_HEIGHT, 20 );
 
 		s->SetFont( Style::A_FONT, "arialnb.ttf", 18 );
+		s->SetSound( Style::A_BUTTON_CLICK_SOUND, "ok.wav" );
+		s->Set( Style::A_SOUND_VOLUME, 0.5 );
 	});
 	
 	AddStyle( "PopupMenuText", SH() {
 		s->SetFont( Style::A_FONT, "arialnb.ttf", 18 );
 		s->SetColor( Style::A_TEXTCOLOR, Color::FromRGB( 129, 146, 198 ) );
 	});
+	
+	
 }
 
 }

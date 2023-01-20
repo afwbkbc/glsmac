@@ -21,11 +21,24 @@ void Button::Create() {
 		});
 		m_label->ForwardStyleAttribute( Style::A_TEXTALIGN, Style::A_ALIGN );
 	AddChild( m_label );
+	
+	NEW( m_click_sound, SoundEffect );
+		m_click_sound->ForwardStyleAttribute( Style::A_BUTTON_CLICK_SOUND, Style::A_SOUND );
+		m_click_sound->ForwardStyleAttribute( Style::A_SOUND_VOLUME );
+	AddChild( m_click_sound );
+	
+	NEW( m_move_sound, SoundEffect );
+		m_move_sound->ForwardStyleAttribute( Style::A_BUTTON_MOVE_SOUND, Style::A_SOUND );
+		m_move_sound->ForwardStyleAttribute( Style::A_SOUND_VOLUME );
+	AddChild( m_move_sound );
 }
 
 void Button::Destroy() {
 	RemoveChild( m_label );
 	m_label = nullptr;
+	
+	RemoveChild( m_click_sound );
+	RemoveChild( m_move_sound );
 	
 	Panel::Destroy();
 }
@@ -55,6 +68,7 @@ void Button::SetTextAlign( UIObject::alignment_t alignment ) {
 
 void Button::ApplyStyle() {
 	Panel::ApplyStyle();
+	
 	
 }
 
@@ -98,6 +112,7 @@ bool Button::OnMouseUp( const UIEvent::event_data_t* data ) {
 			m_doubleclick_timer.SetTimeout( DOUBLECLICK_MAX_MS );
 			m_maybe_doubleclick = true;
 		}
+		m_click_sound->Play();
 		// double click event should go after normal click
 		bool ret = Trigger( UIEvent::EV_BUTTON_CLICK, data );
 		if ( is_double_click ) {

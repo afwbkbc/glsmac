@@ -11,7 +11,7 @@ Surface::Surface( const string& class_name )
 	//
 }
 
-void Surface::SetTexture( const types::Texture* texture) {
+void Surface::SetTexture( const types::Texture* texture ) {
 	if ( texture != m_texture ) {
 		//Log( "Setting texture " + texture->m_name );
 		m_texture = texture;

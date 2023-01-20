@@ -70,7 +70,14 @@ MAJOR_CLASS( Style, base::Base )
 		A_FONT,
 		A_SIZE_FROM_TEXTURE,
 		A_STRETCH_TEXTURE, // will also force aspect ratio of texture
-			
+		A_SOUND,
+		A_SOUND_VOLUME,
+		A_SOUND_AUTOPLAY,
+		A_SOUND_REPEATABLE,
+		A_SOUND_START_DELAY,
+		A_BUTTON_CLICK_SOUND,
+		A_BUTTON_MOVE_SOUND,
+		
 		ATTRIBUTE_TYPE_MAX
 	};
 
@@ -85,7 +92,7 @@ MAJOR_CLASS( Style, base::Base )
 	void SetStyleHandler( const style_handler_t style_handler );
 	
 	void Set( const attribute_type_t attribute_type ); // for bool flags without value
-	void Set( const attribute_type_t attribute_type, const ssize_t value );
+	void Set( const attribute_type_t attribute_type, const float value );
 	void SetColor( const attribute_type_t attribute_type, const Color& value );
 	
 	// raw setter
@@ -94,9 +101,10 @@ MAJOR_CLASS( Style, base::Base )
 	void SetTexture( const attribute_type_t attribute_type, const std::string& name );
 	void SetTexture( const attribute_type_t attribute_type, const string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = TextureLoader::LT_NONE, const float value = 1.0 );
 	void SetFont( const attribute_type_t attribute_type, const std::string &name, const unsigned char size );
+	void SetSound( const attribute_type_t attribute_type, const std::string& name );
 
 	bool Has( const attribute_type_t attribute_type, const modifier_t modifiers ) const;
-	const ssize_t Get( const attribute_type_t attribute_type, const modifier_t modifiers ) const;
+	const float Get( const attribute_type_t attribute_type, const modifier_t modifiers ) const;
 	const Color GetColor( const attribute_type_t attribute_type, const modifier_t modifiers ) const;
 	const void* GetObject( const attribute_type_t attribute_type, const modifier_t modifiers ) const;
 	
@@ -109,7 +117,7 @@ MAJOR_CLASS( Style, base::Base )
 	typedef struct {
 		bool is_set = false;
 		union {
-			ssize_t scalar;
+			float scalar;
 			Color::color_t color;
 			const void *ptr;
 		} value;

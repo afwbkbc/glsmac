@@ -7,10 +7,15 @@
 #include "error_handler/StdoutErrorHandler.h"
 #endif
 #include "logger/StdoutLogger.h"
+
 #include "loader/font/FreeTypeFontLoader.h"
-#include "loader/texture/SDL2ImageTextureLoader.h"
+#include "loader/texture/SDL2TextureLoader.h"
+#include "loader/sound/SDL2SoundLoader.h"
+
 #include "input/sdl2/SDL2Input.h"
 #include "graphics/opengl/OpenGLGraphics.h"
+#include "audio/sdl2/SDL2Audio.h"
+
 #include "scheduler/SimpleScheduler.h"
 #include "ui/DefaultUI.h"
 
@@ -93,9 +98,11 @@ int main(const int argc, const char *argv[]) {
 
 		loader::font::FreeTypeFontLoader font_loader;
 
-		loader::texture::SDL2ImageTextureLoader texture_loader;
+		loader::texture::SDL2TextureLoader texture_loader;
 		texture_loader.SetTransparentColor(types::Color::RGBA(255, 0, 255, 255));
-
+		
+		loader::sound::SDL2SoundLoader sound_loader;
+		
 		auto title = (string) "GLSMAC " + GLSMAC_VERSION + "-" + GLSMAC_LAST_COMMIT;
 #if DEBUG
 		title += "-debug";
@@ -103,8 +110,9 @@ int main(const int argc, const char *argv[]) {
 		title += "-portable";
 #endif
 		input::sdl2::SDL2Input input;
-		
 		graphics::opengl::OpenGLGraphics graphics( title, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_VSYNC, 90.0f);
+		audio::sdl2::SDL2Audio audio;
+		
 		ui::DefaultUI ui;
 
 		scheduler::SimpleScheduler scheduler;
@@ -124,9 +132,11 @@ int main(const int argc, const char *argv[]) {
 			&logger,
 			&font_loader,
 			&texture_loader,
+			&sound_loader,
 			&scheduler,
 			&input,
 			&graphics,
+			&audio,
 			&ui
 		);
 

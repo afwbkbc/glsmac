@@ -61,7 +61,7 @@ void MenuBlock::Create() {
 	for (size_t i = m_items.size() ; i > 0 ; i--) {
 		NEWV( item, MenuItem, this, m_items[i-1] );
 			item->SetBottom( m_menu_items.size() * 70 );
-			item->On( UIEvent::EV_MOUSE_OVER, EH( this, i ) {
+			item->On( UIEvent::EV_MOUSE_MOVE, EH( this, i ) {
 				SetActiveItem( m_items.size() - i );
 				return true;
 			});
@@ -100,6 +100,9 @@ void MenuBlock::Create() {
 	
 	SetActiveItem( m_selected_item_index );
 	
+	NEW( m_sound, SoundEffect, "SlidingMenuSound" );
+	AddChild( m_sound );
+	
 	m_slide_timer.SetInterval( 1 );
 }
 
@@ -107,8 +110,10 @@ void MenuBlock::Destroy() {
 	
 	m_slide_timer.Stop();
 	
+	RemoveChild( m_sound );
+	
 	for (auto& item : m_menu_items) {
-		RemoveChild(item);
+		RemoveChild( item );
 	}
 	m_menu_items.clear();
 	m_selected_item = nullptr;
@@ -157,15 +162,19 @@ void MenuBlock::OnItemClick( const string& choice ) {
 }
 
 void MenuBlock::SetActiveItem( const size_t index ) {
-	ASSERT( index < m_menu_items.size(), "invalid item index" );
-	auto *item = m_menu_items[ index ];
-	if ( item != m_selected_item ) {
-		if ( m_selected_item ) {
-			m_selected_item->RemoveStyleModifier( Style::M_SELECTED );
+	if ( index != m_selected_item_index || !m_selected_item ) {
+		ASSERT( index < m_menu_items.size(), "invalid item index" );
+		auto *item = m_menu_items[ index ];
+		if ( item != m_selected_item ) {
+			if ( m_selected_item && m_selected_item->HasStyleModifier( Style::M_SELECTED ) ) {
+				m_selected_item->RemoveStyleModifier( Style::M_SELECTED );
+			}
+			if ( !item->HasStyleModifier( Style::M_SELECTED ) ) {
+				item->AddStyleModifier( Style::M_SELECTED );
+			}
+			m_selected_item = item;
+			m_selected_item_index = index;
 		}
-		item->AddStyleModifier( Style::M_SELECTED );
-		m_selected_item = item;
-		m_selected_item_index = index;
 	}
 }
 

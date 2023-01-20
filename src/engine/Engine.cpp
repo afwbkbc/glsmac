@@ -15,9 +15,11 @@ Engine::Engine(
 	logger::Logger *logger,
 	loader::font::FontLoader *font_loader,
 	loader::texture::TextureLoader *texture_loader,
+	loader::sound::SoundLoader *sound_loader,
 	scheduler::Scheduler *scheduler,
 	input::Input *input,
 	graphics::Graphics *graphics,
+	audio::Audio *audio,
 	ui::UI *ui
 ) :
 	m_config( config ),
@@ -25,9 +27,11 @@ Engine::Engine(
 	m_logger( logger ),
 	m_font_loader( font_loader ),
 	m_texture_loader( texture_loader ),
+	m_sound_loader( sound_loader ),
 	m_scheduler( scheduler ),
 	m_input( input ),
 	m_graphics( graphics ),
+	m_audio( audio ),
 	m_ui( ui )
 {
 	ASSERT( g_engine == nullptr, "duplicate engine initialization" );
@@ -41,9 +45,12 @@ Engine::Engine(
 	m_threads.main.AddModule( m_config );
 	m_threads.main.AddModule( m_error_handler );
 	m_threads.main.AddModule( m_font_loader );
+	m_threads.main.AddModule( m_texture_loader );
+	m_threads.main.AddModule( m_sound_loader );
 	m_threads.main.AddModule( m_logger );
 	m_threads.main.AddModule( m_input );
 	m_threads.main.AddModule( m_graphics );
+	m_threads.main.AddModule( m_audio );
 	m_threads.main.AddModule( m_ui );
 	m_threads.main.AddModule( m_scheduler );
 };

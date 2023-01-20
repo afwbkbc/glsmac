@@ -34,7 +34,7 @@ void Style::Set( const attribute_type_t attribute_type ) {
 	(*m_attributes_ptr)[ attribute_type ].is_set = true;
 }
 
-void Style::Set( const attribute_type_t attribute_type, const ssize_t value ) {
+void Style::Set( const attribute_type_t attribute_type, const float value ) {
 #if DEBUG
 	CheckSet( attribute_type );
 #endif
@@ -70,12 +70,16 @@ void Style::SetFont( const attribute_type_t attribute_type, const std::string &n
 	SetObject( attribute_type, g_engine->GetFontLoader()->LoadFont( name, size ) );
 }
 
+void Style::SetSound( const attribute_type_t attribute_type, const std::string& name ) {
+	SetObject( attribute_type, g_engine->GetSoundLoader()->LoadSound( name ) );
+}
+
 bool Style::Has( const attribute_type_t attribute_type, const modifier_t modifiers ) const {
 	ASSERT( m_is_initialized, "style '" + GetStyleName() + "' not initialized" );
 	return m_attributes[ modifiers ][ attribute_type ].is_set;
 }
 
-const ssize_t Style::Get( const attribute_type_t attribute_type, const modifier_t modifiers ) const {
+const float Style::Get( const attribute_type_t attribute_type, const modifier_t modifiers ) const {
 #if DEBUG
 	CheckGet( attribute_type, modifiers );
 #endif

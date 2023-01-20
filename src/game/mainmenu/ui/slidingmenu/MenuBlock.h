@@ -2,6 +2,8 @@
 
 #include "ui/object/UIContainer.h"
 
+#include "ui/object/SoundEffect.h"
+
 #include <vector>
 #include <string>
 
@@ -62,6 +64,8 @@ protected:
 	ssize_t m_slide_value = -MENU_CLOSED_POSITION;
 	ssize_t m_slide_change = SLIDING_SPEED;
 	util::Timer m_slide_timer;
+	
+	SoundEffect* m_sound = nullptr;
 };
 
 }

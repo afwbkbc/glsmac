@@ -192,14 +192,14 @@ bool UIObject::Has( const Style::attribute_type_t attribute_type ) const {
 	return Has( attribute_type, m_style_modifiers );
 }
 
-const ssize_t UIObject::Get( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const {
+const float UIObject::Get( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const {
 	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
 		return m_style->Get( attribute_type, style_modifiers );
 	}
 	ASSERT( m_parent_object, "parent style attributes requested but parent is not set" );
 	return m_parent_object->Get( GetParentAttribute( attribute_type ), style_modifiers );
 }
-const ssize_t UIObject::Get( const Style::attribute_type_t attribute_type ) const {
+const float UIObject::Get( const Style::attribute_type_t attribute_type ) const {
 	return Get( attribute_type, m_style_modifiers );
 }
 
@@ -489,14 +489,19 @@ void UIObject::SetVAlign( const alignment_t align ) {
 
 void UIObject::ProcessEvent( UIEvent* event ) {
 	
-	bool is_processed = Trigger( event->m_type, &event->m_data );
+	bool is_processed = false;
+	
+	if ( event->m_type != UIEvent::EV_MOUSE_MOVE ) { // mouse move events are sent to all elements, but we need to process only those inside object area
+		is_processed = Trigger( event->m_type, &event->m_data );
+	}
 	
 	if ( !is_processed ) {
 		switch ( event->m_type ) {
 			case UIEvent::EV_MOUSE_MOVE: {
 				if ( HasEventContext( EC_MOUSEMOVE ) ) {
 					if ( IsPointInside( event->m_data.mouse.x, event->m_data.mouse.y ) ) {
-						if ( ( m_state & STATE_MOUSEOVER ) != STATE_MOUSEOVER ) {
+						is_processed = Trigger( event->m_type, &event->m_data );
+						if ( !is_processed && ( m_state & STATE_MOUSEOVER ) != STATE_MOUSEOVER ) {
 							m_state |= STATE_MOUSEOVER;
 							AddStyleModifier( Style::M_HOVER );
 							is_processed = Trigger( UIEvent::EV_MOUSE_OVER, &event->m_data );

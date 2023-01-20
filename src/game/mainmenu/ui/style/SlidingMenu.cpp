@@ -120,10 +120,15 @@ void SlidingMenu::AddStyles() {
 		s->SetColor( Style::A_TEXTCOLOR, Color::FromRGBA( 230, 243 ,233, 255 ) );
 	});
 	
+	AddStyle( "SlidingMenuSound", SH() {
+		s->SetSound( Style::A_SOUND, "menu out.wav" );
+		s->Set( Style::A_SOUND_AUTOPLAY );
+		s->Set( Style::A_SOUND_START_DELAY, 60 );
+		s->Set( Style::A_SOUND_VOLUME, 0.7 );
+	});
 
 }
 
 }
 }
 }
-

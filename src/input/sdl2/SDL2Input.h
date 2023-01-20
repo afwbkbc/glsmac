@@ -3,7 +3,7 @@
 #include <unordered_map>
 
 #define SDL_MAIN_HANDLED 1
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 #include "../Input.h"
 
@@ -29,10 +29,6 @@ MINOR_CLASS( SDL2, Input )
 	void Start();
 	void Stop();
 	void Iterate();
-	
-protected:
-/*	SDL_Window *m_window;
-	SDL_GLContext m_gl_context;*/
 	
 private:
 	

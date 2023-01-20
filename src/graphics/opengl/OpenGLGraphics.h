@@ -4,7 +4,7 @@
 #include <unordered_map>
 
 #define SDL_MAIN_HANDLED 1
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #include <GL/glew.h>
 
 #include "../Graphics.h"

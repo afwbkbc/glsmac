@@ -1,5 +1,6 @@
 SUBDIR( font )
 SUBDIR( texture )
+SUBDIR( sound )
 
 SET(SRC ${SRC}
 

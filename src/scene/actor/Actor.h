@@ -21,6 +21,7 @@ MAJOR_CLASS( Actor, Entity )
 		TYPE_MESH,
 		TYPE_TEXT,
 		TYPE_IMAGE,
+		TYPE_SOUND,
 	};
 
 	Actor( const type_t type, const std::string &name );

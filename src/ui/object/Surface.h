@@ -1,7 +1,5 @@
 #pragma once
 
-/* simple rectangle surface */
-
 #include "scene/mesh/Rectangle.h"
 #include "scene/actor/MeshActor.h"
 

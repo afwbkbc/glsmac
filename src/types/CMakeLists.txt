@@ -6,5 +6,6 @@ SET(SRC ${SRC}
 	${PWD}/Vec4.cpp
 	${PWD}/Matrix44.cpp
 	${PWD}/Texture.cpp
+	${PWD}/Sound.cpp
 
 PARENT_SCOPE)

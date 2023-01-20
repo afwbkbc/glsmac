@@ -4,5 +4,6 @@ SET(SRC ${SRC}
 	${PWD}/ImageActor.cpp
 	${PWD}/MeshActor.cpp
 	${PWD}/TextActor.cpp
+	${PWD}/SoundActor.cpp
 
 PARENT_SCOPE)

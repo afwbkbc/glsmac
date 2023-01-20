@@ -10,8 +10,8 @@ using namespace std;
 namespace loader {
 namespace texture {
 
-MINOR_CLASS( SDL2Image, TextureLoader )
-	virtual ~SDL2ImageTextureLoader();
+MINOR_CLASS( SDL2, TextureLoader )
+	virtual ~SDL2TextureLoader();
 	
 	void Start();
 	void Stop();

@@ -223,8 +223,8 @@ protected:
 	
 	bool Has( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const;
 	bool Has( const Style::attribute_type_t attribute_type ) const;
-	const ssize_t Get( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const;
-	const ssize_t Get( const Style::attribute_type_t attribute_type ) const;
+	const float Get( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const;
+	const float Get( const Style::attribute_type_t attribute_type ) const;
 	const Color GetColor( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const;
 	const Color GetColor( const Style::attribute_type_t attribute_type ) const;
 	const void* GetObject( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const;

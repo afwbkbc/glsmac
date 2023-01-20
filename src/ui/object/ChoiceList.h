@@ -55,6 +55,8 @@ private:
 		Style::A_FONT,
 		Style::A_TEXTCOLOR,
 		Style::A_TEXTALIGN,
+		Style::A_BUTTON_CLICK_SOUND,
+		Style::A_BUTTON_MOVE_SOUND,
 	};
 };
 
