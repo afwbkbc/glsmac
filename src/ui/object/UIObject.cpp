@@ -457,6 +457,7 @@ void UIObject::UpdateObjectArea() {
 			// mouse may not being moved, but if object area has changed - they should be able to fire too
 			// don't do this if parent captures MouseOver event tho, we're not supposed to receive mouseovers in that case
 			if ( !IsEventContextOverridden( EC_MOUSEMOVE ) ) {
+				Log( "XX NEWAREA " + to_string( m_object_area.left ) + "x" + to_string( m_object_area.top ) + " " + to_string( m_object_area.right ) + "x" + to_string( m_object_area.bottom ) );
 				g_engine->GetUI()->SendMouseMoveEvent( this );
 			}
 			
@@ -500,8 +501,10 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 			case UIEvent::EV_MOUSE_MOVE: {
 				if ( HasEventContext( EC_MOUSEMOVE ) ) {
 					if ( IsPointInside( event->m_data.mouse.x, event->m_data.mouse.y ) ) {
+						Log( "XX " + to_string( event->m_data.mouse.x ) + "x" + to_string( event->m_data.mouse.y ) );
 						is_processed = Trigger( event->m_type, &event->m_data );
 						if ( !is_processed && ( m_state & STATE_MOUSEOVER ) != STATE_MOUSEOVER ) {
+							Log( "Mouseover " + GetName() );
 							m_state |= STATE_MOUSEOVER;
 							AddStyleModifier( Style::M_HOVER );
 							is_processed = Trigger( UIEvent::EV_MOUSE_OVER, &event->m_data );
@@ -515,12 +518,16 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 					}
 					else {
 						if ( ( m_state & STATE_MOUSEOVER ) == STATE_MOUSEOVER ) {
+							Log( "Mouseout " + GetName() );
 							m_state &= ~STATE_MOUSEOVER;
+							Log( "Mouseout modifiers before " + to_string( m_style_modifiers ) );
 							RemoveStyleModifier( Style::M_HOVER );
+							Log( "Mouseout modifiers after " + to_string( m_style_modifiers ) );
 							is_processed = Trigger( UIEvent::EV_MOUSE_OUT, &event->m_data );
 							if ( !is_processed ) {
 								is_processed = OnMouseOut( &event->m_data );
 							}
+							Log( "Mouseout modifiers after 2 " + to_string( m_style_modifiers ) );
 						}
 						else {
 							//is_processed = true; // ???
@@ -585,6 +592,8 @@ pair<UIObject::vertex_t, UIObject::vertex_t> UIObject::GetAreaGeometry() const {
 }
 
 bool UIObject::IsPointInside( const size_t x, const size_t y ) const {
+	
+	Log( "XX " + GetName() + " AREA = " + to_string( m_object_area.left ) + "x" + to_string( m_object_area.top ) + " " + to_string( m_object_area.right ) + "x" + to_string( m_object_area.bottom ) );
 	
 	return ( // this +1 +2 fix makes no sense but it works, need to investigate the reasons
 		x > m_object_area.left &&
@@ -688,6 +697,24 @@ const Style::attribute_type_t UIObject::GetParentAttribute( const Style::attribu
 	ASSERT( it != m_parent_style_attributes.end(), "could not get attribute neither from style nor from parent attributes" );
 	ASSERT( m_parent_object,  "parent is gone" );
 	return it->second;
+}
+
+const string UIObject::GetStyleModifiersString() const {
+	string str = " ";
+#if DEBUG
+	if ( HasStyleModifier( Style::M_HOVER ) ) {
+		str += "HOVER ";
+	}
+	if ( HasStyleModifier( Style::M_ACTIVE ) ) {
+		str += "ACTIVE ";
+	}
+	if ( HasStyleModifier( Style::M_SELECTED ) ) {
+		str += "SELECTED ";
+	}
+	str = "( " + str + " )";
+#endif
+	return str;
+
 }
 
 } /* namespace object */

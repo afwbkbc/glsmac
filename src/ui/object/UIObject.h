@@ -241,6 +241,8 @@ protected:
 	void ListenToEvent( const UIEvent::event_type_t event );
 	void ListenToEvents( const events_t& events );
 	
+	const string GetStyleModifiersString() const;
+	
 private:
 	
 	event_context_t m_event_contexts = EC_NONE;

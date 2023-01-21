@@ -102,6 +102,8 @@ void Label::Align() {
 void Label::ApplyStyle() {
 	UIObject::ApplyStyle();
 	
+	Log( "Mouse Text ApplyStyle " + GetStyleModifiersString() );
+
 	if ( Has( Style::A_TEXTCOLOR ) ) {
 		SetTextColor( GetColor( Style::A_TEXTCOLOR ) );
 	}

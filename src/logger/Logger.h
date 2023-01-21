@@ -7,7 +7,7 @@
 namespace logger {
 
 MAJOR_CLASS( Logger, base::Module )
-	virtual void Log( const std::string &text ) const = 0;
+	virtual void Log( const std::string &text ) = 0;
 };
 
 } /* namespace logger */
