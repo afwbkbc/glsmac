@@ -32,7 +32,7 @@ PlanetSize::PlanetSize( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "SELECT SI
 		ChooseNext();
 	}},
 	{ "CUSTOM SIZE", [this] () -> void {
-		// TODO
+		MenuError( "This feature is not available yet." );
 	}}
 }) {}
 

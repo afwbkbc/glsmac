@@ -6,15 +6,6 @@
 
 #include "SoundActor.h"
 
-// this must match specs of SMAC wavs until resampling is implemented
-#define AUDIO_FREQUENCY 22050
-#define AUDIO_FORMAT AUDIO_S16
-#define AUDIO_CHANNELS 1
-#define AUDIO_SAMPLE_TYPE int16_t
-#define AUDIO_MIX_TYPE double
-#define AUDIO_SAMPLES 4096
-#define AUDIO_VOLUME_LOWERING 0.95 // helps with clicks a bit. it's used as pow( AUDIO_VOLUME_LOWERING, number_of_active_channels )
-
 namespace audio {
 namespace sdl2 {
 
@@ -57,6 +48,12 @@ void SDL2Audio::Start() {
 	/* Start playing */
 	SDL_PauseAudio(0);
 
+	m_buffer_length = AUDIO_SAMPLES * AUDIO_CHANNELS;
+	m_buffer_size = sizeof(AUDIO_SAMPLE_TYPE) * m_buffer_length;
+	m_mix_buffer_size = sizeof(AUDIO_MIX_TYPE) * m_buffer_length;
+	m_mix_buffer = (AUDIO_MIX_TYPE*)malloc( m_mix_buffer_size );
+	m_buffer = (AUDIO_SAMPLE_TYPE*)malloc( m_buffer_size );
+	
 	m_is_sound_enabled = true;
 }
 
@@ -64,6 +61,9 @@ void SDL2Audio::Stop() {
 	if ( !m_is_sound_enabled ) {
 		return;
 	}
+	
+	free( m_buffer );
+	free( m_mix_buffer );
 	
 	Log( "Deinitializing SDL2" );
 	SDL_CloseAudio();
@@ -108,38 +108,26 @@ void SDL2Audio::RemoveActor( scene::actor::SoundActor *actor ) {
 
 
 void SDL2Audio::Mix( Uint8* stream, int len ) {
+	ASSERT( len == m_buffer_size, "sample type or size mismatch" );
 	
-	size_t buffer_length = AUDIO_SAMPLES * AUDIO_CHANNELS;
-	size_t buffer_size = sizeof(AUDIO_SAMPLE_TYPE) * buffer_length;
-	size_t mix_buffer_size = sizeof(AUDIO_MIX_TYPE) * buffer_length;
-	
-	ASSERT( len == buffer_size, "sample type or size mismatch" );
-	
-	AUDIO_SAMPLE_TYPE* buffer = (AUDIO_SAMPLE_TYPE*)malloc( buffer_size );
-	
-	AUDIO_MIX_TYPE* mix_buffer = (AUDIO_MIX_TYPE*)malloc( mix_buffer_size );
-	memset( ptr( mix_buffer, 0, mix_buffer_size ), 0, mix_buffer_size );
-	
+	memset( ptr( m_mix_buffer, 0, m_mix_buffer_size ), 0, m_mix_buffer_size );
 	{
 		lock_guard<mutex> guard( m_actors_mutex );
 		
 		for (auto& actor : m_actors ) {
 			if ( actor.second->IsActive() ) {
-				actor.second->GetNextBuffer( (uint8_t*)buffer, len );
-				for ( size_t i = 0 ; i < buffer_length ; i++ ) {
-					mix_buffer[i] = mix_buffer[i] + buffer[i] * actor.second->GetVolume() * pow( AUDIO_VOLUME_LOWERING, m_actors.size() );
+				actor.second->GetNextBuffer( (uint8_t*)m_buffer, len );
+				for ( size_t i = 0 ; i < m_buffer_length ; i++ ) {
+					m_mix_buffer[i] = m_mix_buffer[i] + m_buffer[i] * actor.second->GetVolume() * pow( AUDIO_VOLUME_LOWERING, m_actors.size() );
 				}
 			}
 		}
 	}
-	for ( size_t i = 0 ; i < buffer_length ; i++ ) {
-		buffer[i] = floor(mix_buffer[i]);
+	for ( size_t i = 0 ; i < m_buffer_length ; i++ ) {
+		m_buffer[i] = floor(m_mix_buffer[i]);
 	}
 
-	SDL_memcpy( stream, (uint8_t*)buffer, len );
-	
-	free( buffer );
-	free( mix_buffer );
+	SDL_memcpy( stream, (uint8_t*)m_buffer, len );
 }
 
 }

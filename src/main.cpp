@@ -118,8 +118,8 @@ int main(const int argc, const char *argv[]) {
 		scheduler::SimpleScheduler scheduler;
 
 #if DEBUG
-		//NEWV( debug_overlay, debug::DebugOverlay );
-		//scheduler.AddTask( debug_overlay );
+		NEWV( debug_overlay, debug::DebugOverlay );
+		scheduler.AddTask( debug_overlay );
 #endif
 		
 		// game entry point
