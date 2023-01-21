@@ -69,7 +69,6 @@ void Button::SetTextAlign( UIObject::alignment_t alignment ) {
 void Button::ApplyStyle() {
 	Panel::ApplyStyle();
 	
-	Log( "Mouse Button ApplyStyle " + GetStyleModifiersString() );
 }
 
 bool Button::OnMouseOver( const UIEvent::event_data_t* data ) {

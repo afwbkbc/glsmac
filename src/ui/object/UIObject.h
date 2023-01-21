@@ -243,7 +243,12 @@ protected:
 	
 	const string GetStyleModifiersString() const;
 	
+	void BlockRealigns();
+	void UnblockRealigns();
+	
 private:
+	
+	bool m_are_realigns_blocked = false;
 	
 	event_context_t m_event_contexts = EC_NONE;
 	event_context_t m_overridden_event_contexts = EC_NONE; // if parent captures any context - children can't have it until parent releases it

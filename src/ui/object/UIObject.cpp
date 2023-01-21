@@ -25,6 +25,14 @@ UIObject::UIObject( const string& class_name ) {
 	m_position.bottom = 0;
 	m_size.aspect_ratio = 0;
 	m_size.force_aspect_ratio = false;
+	m_size.height = 0;
+	m_size.width = 0;
+	m_object_area.bottom = 0;
+	m_object_area.height = 0;
+	m_object_area.left = 0;
+	m_object_area.right = 0;
+	m_object_area.top = 0;
+	m_object_area.width = 0;
 	if ( !class_name.empty() ) {
 		SetClass( class_name );
 	}
@@ -277,9 +285,11 @@ bool UIObject::IsEventContextOverridden( event_context_t context ) const {
 }
 	
 void UIObject::Realign() {
-	UpdateObjectArea();
-	if ( m_created )
-		Align();
+	if ( !m_are_realigns_blocked ) {
+		UpdateObjectArea();
+		if ( m_created )
+			Align();
+	}
 }
 
 void UIObject::Redraw() {
@@ -450,6 +460,7 @@ void UIObject::UpdateObjectArea() {
 	}
 	
 	if (object_area != m_object_area) {
+		
 		m_object_area = object_area;
 		
 		if (m_created) {
@@ -457,7 +468,6 @@ void UIObject::UpdateObjectArea() {
 			// mouse may not being moved, but if object area has changed - they should be able to fire too
 			// don't do this if parent captures MouseOver event tho, we're not supposed to receive mouseovers in that case
 			if ( !IsEventContextOverridden( EC_MOUSEMOVE ) ) {
-				Log( "XX NEWAREA " + to_string( m_object_area.left ) + "x" + to_string( m_object_area.top ) + " " + to_string( m_object_area.right ) + "x" + to_string( m_object_area.bottom ) );
 				g_engine->GetUI()->SendMouseMoveEvent( this );
 			}
 			
@@ -501,10 +511,8 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 			case UIEvent::EV_MOUSE_MOVE: {
 				if ( HasEventContext( EC_MOUSEMOVE ) ) {
 					if ( IsPointInside( event->m_data.mouse.x, event->m_data.mouse.y ) ) {
-						Log( "XX " + to_string( event->m_data.mouse.x ) + "x" + to_string( event->m_data.mouse.y ) );
 						is_processed = Trigger( event->m_type, &event->m_data );
 						if ( !is_processed && ( m_state & STATE_MOUSEOVER ) != STATE_MOUSEOVER ) {
-							Log( "Mouseover " + GetName() );
 							m_state |= STATE_MOUSEOVER;
 							AddStyleModifier( Style::M_HOVER );
 							is_processed = Trigger( UIEvent::EV_MOUSE_OVER, &event->m_data );
@@ -518,16 +526,12 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 					}
 					else {
 						if ( ( m_state & STATE_MOUSEOVER ) == STATE_MOUSEOVER ) {
-							Log( "Mouseout " + GetName() );
 							m_state &= ~STATE_MOUSEOVER;
-							Log( "Mouseout modifiers before " + to_string( m_style_modifiers ) );
 							RemoveStyleModifier( Style::M_HOVER );
-							Log( "Mouseout modifiers after " + to_string( m_style_modifiers ) );
 							is_processed = Trigger( UIEvent::EV_MOUSE_OUT, &event->m_data );
 							if ( !is_processed ) {
 								is_processed = OnMouseOut( &event->m_data );
 							}
-							Log( "Mouseout modifiers after 2 " + to_string( m_style_modifiers ) );
 						}
 						else {
 							//is_processed = true; // ???
@@ -593,13 +597,11 @@ pair<UIObject::vertex_t, UIObject::vertex_t> UIObject::GetAreaGeometry() const {
 
 bool UIObject::IsPointInside( const size_t x, const size_t y ) const {
 	
-	Log( "XX " + GetName() + " AREA = " + to_string( m_object_area.left ) + "x" + to_string( m_object_area.top ) + " " + to_string( m_object_area.right ) + "x" + to_string( m_object_area.bottom ) );
-	
 	return ( // this +1 +2 fix makes no sense but it works, need to investigate the reasons
 		x > m_object_area.left &&
-		y > ( m_object_area.top + 1 ) &&
+		y > ( m_object_area.top + 0 ) &&
 		x <= m_object_area.right &&
-		y < (m_object_area.bottom + 2)
+		y < (m_object_area.bottom + 0 )
 	);
 }
 
@@ -634,7 +636,10 @@ void UIObject::ApplyStyleIfNeeded() {
 				if ( !m_style && !m_style_class.empty() ) {
 					m_style = g_engine->GetUI()->GetStyle( m_style_class );
 				}
+				BlockRealigns();
 				ApplyStyle();
+				UnblockRealigns();
+				Realign();
 			}
 			m_style_loaded = true;
 		}
@@ -714,7 +719,18 @@ const string UIObject::GetStyleModifiersString() const {
 	str = "( " + str + " )";
 #endif
 	return str;
+}
 
+void UIObject::BlockRealigns() {
+	ASSERT( !m_are_realigns_blocked, "realigns already blocked" );
+	Log( "blocking realigns" );
+	m_are_realigns_blocked = true;
+}
+
+void UIObject::UnblockRealigns() {
+	ASSERT( m_are_realigns_blocked, "realigns already unblocked" );
+	Log( "unblocking realigns" );
+	m_are_realigns_blocked = false;
 }
 
 } /* namespace object */

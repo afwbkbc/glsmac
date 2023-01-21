@@ -100,7 +100,6 @@ void UI::ProcessEvent( UIEvent* event ) {
 
 void UI::SendMouseMoveEvent( UIObject* object ) {
 	NEWV( event, MouseMove, m_last_mouse_position.x, m_last_mouse_position.y );
-	Log( "XX LAST " + to_string( m_last_mouse_position.x ) + "x" + to_string( m_last_mouse_position.y ) );
 	object->ProcessEvent( event );
 	DELETE( event );
 }

@@ -88,9 +88,11 @@ void UIContainer::UpdateZIndex() {
 
 void UIContainer::Realign() {
 	UIObject::Realign();
-
-	for ( auto it = m_child_objects.begin() ; it < m_child_objects.end() ; ++it )
-		(*it)->Realign();
+	
+	if ( !m_are_realigns_blocked ) {
+		for ( auto it = m_child_objects.begin() ; it < m_child_objects.end() ; ++it )
+			(*it)->Realign();
+	}
 }
 
 void UIContainer::Redraw() {
@@ -211,7 +213,6 @@ const string UIContainer::Subclass( const string& class_name ) const {
 		return this->m_style_class + class_name;
 	}*/
 }
-
 
 } /* namespace object */
 } /* namespace ui */
