@@ -12,7 +12,7 @@ namespace debug {
 
 void DebugOverlay::Start() {
 	
-	//DEBUG_STATS_SET_RO();
+	DEBUG_STATS_SET_RO();
 	
 	m_font_size = 16;
 	m_memory_stats_lines = 10;
@@ -30,7 +30,7 @@ void DebugOverlay::Start() {
 		return false;
 	});
 	
-	//DEBUG_STATS_SET_RW();
+	DEBUG_STATS_SET_RW();
 
 }
 
@@ -47,7 +47,7 @@ void DebugOverlay::Show() {
 	if ( !m_is_visible ) {
 		Log( "Showing" );
 
-		//DEBUG_STATS_SET_RO();
+		DEBUG_STATS_SET_RO();
 
 		size_t stat_line = 0;
 		#define D( _stat ) \
@@ -88,8 +88,9 @@ void DebugOverlay::Show() {
 
 		m_is_visible = true;
 		
-		//DEBUG_STATS_SET_RW();
-		
+		DEBUG_STATS_SET_RW();
+
+		ClearStats();
 		Refresh();
 	}
 }
@@ -100,7 +101,7 @@ void DebugOverlay::Hide() {
 		
 		m_is_visible = false;
 		
-		//DEBUG_STATS_SET_RO();
+		DEBUG_STATS_SET_RO();
 
 		m_stats_timer.Stop();
 
@@ -118,7 +119,7 @@ void DebugOverlay::Hide() {
 		g_engine->GetUI()->RemoveObject( m_background_left );
 		g_engine->GetUI()->RemoveObject( m_background_middle );
 
-		//DEBUG_STATS_SET_RW();
+		DEBUG_STATS_SET_RW();
 	}
 }
 
@@ -133,12 +134,11 @@ void DebugOverlay::Toggle() {
 	
 }
 
-
 void DebugOverlay::Refresh() {
 	
 	if ( m_is_visible ) {
 
-		//DEBUG_STATS_SET_RO();
+		DEBUG_STATS_SET_RO();
 		
 		ssize_t total;
 		ssize_t current;
@@ -160,10 +160,17 @@ void DebugOverlay::Refresh() {
 			m_memory_stats_labels[i]->SetText( size + "  " + count + "  " + stats[i].key );
 		}
 		
-		//DEBUG_STATS_SET_RW();
+		DEBUG_STATS_SET_RW();
 		
-	}
-	
+	}	
+}
+
+void DebugOverlay::ClearStats() {
+	// common statistics
+	#define D( _stat ) \
+		DEBUG_STAT_CLEAR( _stat );
+	DEBUG_STATS;
+	#undef D
 }
 
 void DebugOverlay::Iterate() {
@@ -171,13 +178,9 @@ void DebugOverlay::Iterate() {
 	if ( m_is_visible ) {
 		
 		if ( m_stats_timer.Ticked() ) {
-			// common statistics
-			#define D( _stat ) \
-				DEBUG_STAT_CLEAR( _stat );
-			DEBUG_STATS;
-			#undef D
-
 			Refresh();
+			
+			ClearStats();
 		}
 		
 	}
@@ -185,7 +188,7 @@ void DebugOverlay::Iterate() {
 
 // not using themes because overlay should be independent of them
 void DebugOverlay::ActivateLabel( Label* label, const size_t left, const size_t top ) {
-	//DEBUG_STATS_SET_RO();
+	DEBUG_STATS_SET_RO();
 	
 	Log( "created label " + label->GetName() );
 	label->SetFont( m_stats_font );
@@ -195,7 +198,7 @@ void DebugOverlay::ActivateLabel( Label* label, const size_t left, const size_t 
 	label->SetAlign( UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
 	g_engine->GetUI()->AddObject( label );
 	
-	//DEBUG_STATS_SET_RW();
+	DEBUG_STATS_SET_RW();
 }
 
 

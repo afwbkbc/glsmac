@@ -26,7 +26,9 @@ CHILD_CLASS( DebugOverlay, base::Task )
 	void Show();
 	void Hide();
 	void Toggle();
+	
 	void Refresh();
+	void ClearStats();
 	
 protected:
 	util::Timer m_stats_timer;
