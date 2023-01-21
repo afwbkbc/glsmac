@@ -53,16 +53,17 @@ OpenGLGraphics::OpenGLGraphics( const string title, const unsigned short window_
 	m_shader_programs.push_back( sp_font );
 	NEWV( r_font, routine::FontOpenGLRoutine, sp_font );
 	m_routines.push_back( r_font );
-
 }
 
 OpenGLGraphics::~OpenGLGraphics() {
 	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it ) {
 		DELETE( *it );
 	}
-
 	for ( auto it = m_shader_programs.begin() ; it != m_shader_programs.end() ; ++it ) {
 		DELETE( *it );
+	}
+	for ( auto& texture : m_textures ) {
+		glDeleteTextures(1, &texture.second );
 	}
 }
 

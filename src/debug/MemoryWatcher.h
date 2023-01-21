@@ -71,18 +71,15 @@ private:
 		string source;
 	} alloc_t;
 	unordered_map<const void*, alloc_t> m_allocated_memory;
-	
+
 	struct {
 		GLuint current_vertex_buffer = 0;
 		GLuint current_index_buffer = 0;
 		GLuint current_texture = 0;
 		unordered_set<GLuint> buffers;
-		unordered_set<GLuint> vertex_buffers;
-		unordered_set<GLuint> index_buffers;
-		unordered_map<GLuint, size_t> vertex_buffer_sizes;
-		unordered_map<GLuint, size_t> index_buffer_sizes;
-		unordered_set<GLuint> textures;
-		unordered_map<GLuint, size_t> texture_sizes;
+		unordered_map<GLuint, alloc_t> vertex_buffers;
+		unordered_map<GLuint, alloc_t> index_buffers;
+		unordered_map<GLuint, alloc_t> textures;
 	} m_opengl;
 	
 };
