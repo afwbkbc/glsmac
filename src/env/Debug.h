@@ -62,6 +62,11 @@ extern debug_stats_t g_debug_stats;
 	g_debug_stats._mutex.lock(); \
 	_totalvar = g_debug_stats._stat.total; \
 	_currentvar = g_debug_stats._stat.current; \
+	g_debug_stats._mutex.unlock(); \
+}
+
+#define DEBUG_STAT_CLEAR( _stat ) { \
+	g_debug_stats._mutex.lock(); \
 	g_debug_stats._stat.current = 0; \
 	g_debug_stats._mutex.unlock(); \
 }

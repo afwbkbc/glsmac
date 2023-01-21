@@ -42,6 +42,7 @@ MAJOR_CLASS( UIEvent, base::Base )
 		K_RIGHT,
 		K_ENTER,
 		K_ESCAPE,
+		K_GRAVE,
 	};
 	
 	typedef union {

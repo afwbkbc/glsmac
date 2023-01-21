@@ -663,8 +663,8 @@ void UIObject::Off( const UIEventHandler* handler ) {
 	for ( auto& handlers : m_event_handlers ) {
 		auto it = find( handlers.second.begin() , handlers.second.end(), handler );
 		if ( it != handlers.second.end() ) {
-			handlers.second.erase( it );
 			DELETE( *it );
+			handlers.second.erase( it );
 			return;
 		}
 	}

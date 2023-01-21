@@ -23,6 +23,11 @@ CHILD_CLASS( DebugOverlay, base::Task )
 	void Stop();
 	void Iterate();
 
+	void Show();
+	void Hide();
+	void Toggle();
+	void Refresh();
+	
 protected:
 	util::Timer m_stats_timer;
 	
@@ -41,6 +46,10 @@ protected:
 
 	void ActivateLabel( Label* label, const size_t left, const size_t top );
 
+private:
+	bool m_is_visible = false;
+	
+	const UIEventHandler* m_toggle_handler = nullptr;
 	
 };
 

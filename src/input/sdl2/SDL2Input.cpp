@@ -142,6 +142,9 @@ UIEvent::key_code_t SDL2Input::GetKeyCode( uint8_t sdl_scan_code ) const {
 		case SDL_SCANCODE_ESCAPE: {
 			return UIEvent::K_ESCAPE;
 		}
+		case SDL_SCANCODE_GRAVE: {
+			return UIEvent::K_GRAVE;
+		}
 		default: {
 			Log( "Skipping unknown keydown code: " + to_string( sdl_scan_code ) );
 			return UIEvent::K_NONE;
