@@ -28,6 +28,7 @@ void PopupMenu::Show() {
 		OnNext();
 	};
 	auto on_cancel = [this] () -> void {
+		OnCancel();
 		GoBack();
 	};
 	
@@ -42,16 +43,17 @@ void PopupMenu::Show() {
 					on_ok();
 					return true;
 				}
-				else if ( HasFlag( PF_HAS_CANCEL ) ) {
+				/*else if ( HasFlag( PF_HAS_CANCEL ) ) {
 					on_cancel();
 					return true;
-				}
+				}*/
 			}
 			else if ( data->key.code == UIEvent::K_ESCAPE ) {
-				if ( HasFlag( PF_HAS_CANCEL ) || HasFlag( PF_HAS_OK ) ) {
+				// TMP
+				//if ( HasFlag( PF_HAS_CANCEL ) || HasFlag( PF_HAS_OK ) ) {
 					on_cancel();
 					return true;
-				}
+				//}
 			}
 			return false;
 		});

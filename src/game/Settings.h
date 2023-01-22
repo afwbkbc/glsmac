@@ -75,6 +75,13 @@ public:
 	};
 	network_type_t network_type = NT_NONE;
 	
+	enum network_role_t {
+		NR_NONE,
+		NR_SERVER,
+		NR_CLIENT,
+	};
+	network_role_t network_role = NR_NONE;
+	
 	// TODO: custom rules struct
 	
 	

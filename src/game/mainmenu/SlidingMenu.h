@@ -28,7 +28,7 @@ CLASS( SlidingMenu, MenuObject )
 	void SetChoice( const string& choice );
 	
 	void Close();
-	void MaybeClose();
+	bool MaybeClose();
 
 private:
 	const choice_handlers_t m_choices = {};

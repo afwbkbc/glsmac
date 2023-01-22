@@ -18,7 +18,7 @@ CLASS( MenuObject, base::Base )
 	virtual void Hide() = 0;
 	
 	virtual void Close();
-	virtual void MaybeClose() {}; // for handling right clicks in menu
+	virtual bool MaybeClose() { return false; }; // for handling right clicks in menu
 	virtual const string GetChoice() const { return ""; };
 	virtual void SetChoice( const string& choice ) {};
 	

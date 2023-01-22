@@ -30,8 +30,7 @@ void MainMenu::Start() {
 		// rightclick = back
 		if ( data->mouse.button == UIEvent::M_RIGHT && m_menu_object ) {
 			if ( !m_menu_history.empty() ) { // don't exit game on right-click
-				m_menu_object->MaybeClose(); // only sliding menus will close on right click
-				return true;
+				return m_menu_object->MaybeClose(); // only sliding menus will close on right click
 			}
 		}
 		return false;
@@ -40,8 +39,7 @@ void MainMenu::Start() {
 	m_key_handler = ui->AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this ) {
 		// escape = back
 		if ( data->key.code == UIEvent::K_ESCAPE && m_menu_object ) {
-			m_menu_object->Close();
-			return true;
+			return m_menu_object->MaybeClose(); // popups have their own escape handler
 		}
 		return false;
 	});

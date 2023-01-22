@@ -1,6 +1,6 @@
 #include "Multiplayer.h"
 
-#include "Lobby.h"
+#include "HostJoin.h"
 #include "ui/object/Section.h"
 
 namespace game {
@@ -43,7 +43,7 @@ void Multiplayer::OnNext() {
 	const auto value = m_choices->GetValue();
 	if ( value == "Simple Internet TCP/IP Connection" ) {
 		m_mainmenu->m_settings.network_type = Settings::NT_SIMPLETCP;
-		NEWV( menu, Lobby, m_mainmenu );
+		NEWV( menu, HostJoin, m_mainmenu );
 		NextMenu( menu );
 	}
 	else {

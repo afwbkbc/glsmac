@@ -35,6 +35,7 @@ CLASS( PopupMenu, MenuObject )
 	virtual void OnNext() {};
 	
 protected:
+	virtual void OnCancel() {};
 	
 	void SetFlags( const unordered_set< popup_flag_t > flags );
 	void SetWidth( const size_t width );

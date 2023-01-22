@@ -79,8 +79,9 @@ void SlidingMenu::Close() {
 	}
 }
 
-void SlidingMenu::MaybeClose() {
+bool SlidingMenu::MaybeClose() {
 	Close();
+	return true;
 }
 
 }
