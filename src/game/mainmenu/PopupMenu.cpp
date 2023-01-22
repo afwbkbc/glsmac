@@ -21,8 +21,8 @@ PopupMenu::PopupMenu( MainMenu *mainmenu, const string& title )
 
 void PopupMenu::Show() {
 	
-	ASSERT( m_width > 0, "width is zero" );
-	ASSERT( m_height > 0, "height is zero" );
+	ASSERT( m_width > 0, "popupmenu width is zero" );
+	ASSERT( m_height > 0, "popupmenu height is zero" );
 	
 	auto on_ok = [this] () -> void {
 		OnNext();
@@ -31,7 +31,8 @@ void PopupMenu::Show() {
 		GoBack();
 	};
 	
-	NEW( m_frame, Panel, "PopupMenuFrame" );
+	NEW( m_frame, Section, "PopupMenuWindow" );
+		m_frame->SetTitleText( m_title );
 		m_frame->SetAlign( UIObject::ALIGN_CENTER );
 		m_frame->SetWidth( m_width );
 		m_frame->SetHeight( m_height );
@@ -56,25 +57,11 @@ void PopupMenu::Show() {
 		});
 	g_engine->GetUI()->AddObject( m_frame );
 	
-	NEW( m_titleframe, Panel, "PopupMenuFrame" );
-		m_titleframe->SetAlign( UIObject::ALIGN_TOP );
-		m_titleframe->SetPadding( 4 );
-		m_titleframe->SetHeight( 24 );
-	m_frame->AddChild( m_titleframe );
-	NEW( m_titlebar, Panel, "PopupMenuHeader" );
-		m_titlebar->SetAlign( UIObject::ALIGN_CENTER );
-		m_titlebar->SetPadding( 3 );
-	m_titleframe->AddChild( m_titlebar );
-	NEW( m_titlelabel, Label, "PopupMenuHeaderLabel" );
-		m_titlelabel->SetText( m_title );
-	m_titlebar->AddChild( m_titlelabel );
-	
-	NEW( m_body, Panel, "PopupMenuFrame" );
+	NEW( m_body, Panel );
 		m_body->SetAlign( UIObject::ALIGN_TOP );
-		m_body->SetLeft( 4 );
-		m_body->SetRight( 4 );
-		m_body->SetTop( 30 );
-		m_body->SetBottom( 40 );
+		if ( HasFlag( PF_HAS_OK ) || HasFlag( PF_HAS_CANCEL ) ) {
+			m_body->SetBottom( 40 );
+		}
 	m_frame->AddChild( m_body );
 	
 	if ( HasFlag( PF_HAS_OK ) ) {
@@ -119,9 +106,6 @@ void PopupMenu::Show() {
 }
 
 void PopupMenu::Hide() {
-			m_titlebar->RemoveChild( m_titlelabel );
-		m_titleframe->RemoveChild( m_titlebar );
-	m_frame->RemoveChild( m_titleframe );
 	
 	m_frame->RemoveChild( m_body );
 	

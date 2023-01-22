@@ -13,8 +13,8 @@ CLASS( UIContainer, UIObject )
 
 	UIContainer( const string& class_name = "" );
 	
-	void AddChild( UIObject *object );
-	void RemoveChild( UIObject *object );
+	virtual void AddChild( UIObject *object );
+	virtual void RemoveChild( UIObject *object );
 
 	virtual void Create();
 	virtual void Destroy();

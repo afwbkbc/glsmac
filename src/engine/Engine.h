@@ -18,6 +18,7 @@
 #include "input/Input.h"
 #include "graphics/Graphics.h"
 #include "audio/Audio.h"
+#include "network/Network.h"
 
 #include "scheduler/Scheduler.h"
 
@@ -40,6 +41,7 @@ CLASS( Engine, base::Base );
 		input::Input *input,
 		graphics::Graphics *graphics,
 		audio::Audio *audio,
+		network::Network *network,
 		ui::UI *ui
 	);
 	~Engine();
@@ -55,6 +57,7 @@ CLASS( Engine, base::Base );
 	input::Input *GetInput() const { return m_input; }
 	graphics::Graphics *GetGraphics() const { return m_graphics; }
 	audio::Audio *GetAudio() const { return m_audio; }
+	network::Network *GetNetwork() const { return m_network; }
 	scheduler::Scheduler *GetScheduler() const { return m_scheduler; }
 	ui::UI *GetUI() const { return m_ui; }
 
@@ -75,6 +78,7 @@ protected:
 	input::Input *m_input = nullptr;
 	graphics::Graphics *m_graphics = nullptr;
 	audio::Audio *m_audio = nullptr;
+	network::Network *m_network = nullptr;
 	ui::UI *m_ui = nullptr;
 	
 #if DEBUG

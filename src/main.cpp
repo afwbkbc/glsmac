@@ -15,11 +15,13 @@
 #include "input/sdl2/SDL2.h"
 #include "graphics/opengl/OpenGL.h"
 #include "audio/sdl2/SDL2.h"
+#include "network/simpletcp/SimpleTCP.h"
 
 #include "scheduler/Simple.h"
 #include "ui/Default.h"
 
 #include "game/intro/Intro.h"
+#include "game/mainmenu/MainMenu.h"
 
 #include "engine/Engine.h"
 
@@ -112,6 +114,7 @@ int main(const int argc, const char *argv[]) {
 		input::sdl2::SDL2 input;
 		graphics::opengl::OpenGL graphics( title, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_VSYNC, 90.0f);
 		audio::sdl2::SDL2 audio;
+		network::simpletcp::SimpleTCP network;
 		
 		ui::Default ui;
 
@@ -123,7 +126,8 @@ int main(const int argc, const char *argv[]) {
 #endif
 		
 		// game entry point
-		NEWV( task, game::intro::Intro );
+		NEWV( task, game::mainmenu::MainMenu );
+		//NEWV( task, game::intro::Intro );
 		scheduler.AddTask( task );
 
 		engine::Engine engine(
@@ -137,6 +141,7 @@ int main(const int argc, const char *argv[]) {
 			&input,
 			&graphics,
 			&audio,
+			&network,
 			&ui
 		);
 

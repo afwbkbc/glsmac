@@ -1,0 +1,5 @@
+SUBDIR( simpletcp )
+
+SET(SRC ${SRC}
+
+PARENT_SCOPE)

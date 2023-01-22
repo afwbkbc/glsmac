@@ -102,6 +102,9 @@ void Label::Align() {
 void Label::ApplyStyle() {
 	UIObject::ApplyStyle();
 	
+	if ( Has( Style::A_TEXTALIGN ) ) {
+		SetAlign( Get( Style::A_TEXTALIGN ) );
+	}
 	if ( Has( Style::A_TEXTCOLOR ) ) {
 		SetTextColor( GetColor( Style::A_TEXTCOLOR ) );
 	}

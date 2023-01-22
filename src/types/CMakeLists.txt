@@ -7,5 +7,6 @@ SET(SRC ${SRC}
 	${PWD}/Matrix44.cpp
 	${PWD}/Texture.cpp
 	${PWD}/Sound.cpp
+        ${PWD}/Packet.cpp
 
 PARENT_SCOPE)

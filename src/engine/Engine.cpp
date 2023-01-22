@@ -20,6 +20,7 @@ Engine::Engine(
 	input::Input *input,
 	graphics::Graphics *graphics,
 	audio::Audio *audio,
+	network::Network *network,
 	ui::UI *ui
 ) :
 	m_config( config ),
@@ -32,6 +33,7 @@ Engine::Engine(
 	m_input( input ),
 	m_graphics( graphics ),
 	m_audio( audio ),
+	m_network( network ),
 	m_ui( ui )
 {
 	ASSERT( g_engine == nullptr, "duplicate engine initialization" );
@@ -51,6 +53,7 @@ Engine::Engine(
 	m_threads.main.AddModule( m_input );
 	m_threads.main.AddModule( m_graphics );
 	m_threads.main.AddModule( m_audio );
+	m_threads.main.AddModule( m_network );
 	m_threads.main.AddModule( m_ui );
 	m_threads.main.AddModule( m_scheduler );
 };

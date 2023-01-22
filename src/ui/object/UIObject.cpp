@@ -178,9 +178,16 @@ void UIObject::ForwardStyleAttribute( const Style::attribute_type_t type ) {
 	ForwardStyleAttribute( type, type );
 }
 
-void UIObject::ForwardStyleAttributes( const vector< Style::attribute_type_t > types ) {
+void UIObject::ForwardStyleAttributesV( const vector< Style::attribute_type_t > types ) {
 	for ( auto& type : types ) {
 		m_parent_style_attributes[ type ] = type;
+	}
+	ReloadStyle();
+}
+
+void UIObject::ForwardStyleAttributesM( const unordered_map< Style::attribute_type_t, Style::attribute_type_t > types ) {
+	for ( auto& type : types ) {
+		m_parent_style_attributes[ type.second ] = type.first;
 	}
 	ReloadStyle();
 }
@@ -597,11 +604,11 @@ pair<UIObject::vertex_t, UIObject::vertex_t> UIObject::GetAreaGeometry() const {
 
 bool UIObject::IsPointInside( const size_t x, const size_t y ) const {
 	
-	return ( // this +1 +2 fix makes no sense but it works, need to investigate the reasons
+	return (
 		x > m_object_area.left &&
-		y > ( m_object_area.top + 0 ) &&
+		y > ( m_object_area.top ) &&
 		x <= m_object_area.right &&
-		y < (m_object_area.bottom + 0 )
+		y < (m_object_area.bottom )
 	);
 }
 

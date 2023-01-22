@@ -73,7 +73,7 @@ void ChoiceList::UpdateButtons() {
 				button->SetRight( 3 );
 				button->SetHeight( 20 );
 				button->SetTop( 2 + ( button->GetHeight() + 2 ) * (value) );
-				button->ForwardStyleAttributes( m_forwarded_style_attributes );
+				button->ForwardStyleAttributesV( m_forwarded_style_attributes );
 				button->On( UIEvent::EV_BUTTON_CLICK, EH( this, button ) {
 					if ( !button->HasStyleModifier( Style::M_SELECTED ) ) {
 						SetActiveButton( button );

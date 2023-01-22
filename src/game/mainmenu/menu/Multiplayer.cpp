@@ -1,54 +1,54 @@
 #include "Multiplayer.h"
 
+#include "Lobby.h"
+#include "ui/object/Section.h"
+
 namespace game {
 namespace mainmenu {
 
 Multiplayer::Multiplayer( MainMenu* mainmenu ) : PopupMenu( mainmenu, "MULTIPLAYER SETUP" ) {
 	SetWidth( 500 );
-	SetHeight( 154 );
+	SetHeight( 150 );
 	SetFlags( { PF_HAS_OK, PF_HAS_CANCEL } );
 }
 
 void Multiplayer::Show() {
 	PopupMenu::Show();
 
-	NEW( m_titlebar, Panel, "PopupMenuHeader" );
-		m_titlebar->SetAlign( UIObject::ALIGN_TOP );
-		m_titlebar->SetPadding( 3 );
-		m_titlebar->SetHeight( 22 );
-	m_body->AddChild( m_titlebar );
-	NEW( m_titlelabel, Label, "PopupMenuHeaderLabel" );
-		m_titlelabel->SetText( "Select a service..." );
-		m_titlelabel->SetPadding( 2 );
-		m_titlelabel->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_VCENTER );
-	m_titlebar->AddChild( m_titlelabel );
+	NEW( m_section, Section, "PopupMenuSection" );
+		m_section->SetTitleText( "Select a service..." );
+	m_body->AddChild( m_section );
 	
 	NEW( m_choices, ChoiceList, "PopupMenuButtonList" );
 		m_choices->SetPadding( 3 );
-		m_choices->SetTop( m_titlebar->GetHeight() + 6 );
 		m_choices->SetChoices({
-			"GLSMAC Internet TCP/IP Connection",
+			"Simple Internet TCP/IP Connection",
 			"Hotseat/Play-by-Email",
 		});
 		m_choices->On( UIEvent::EV_BUTTON_DOUBLE_CLICK, EH( this ) {
 			OnNext();
 			return true;
 		});
-	m_body->AddChild( m_choices );
+	m_section->AddChild( m_choices );
 }
 
 void Multiplayer::Hide() {
-	m_body->RemoveChild( m_choices );
-	
-		m_titlebar->RemoveChild( m_titlelabel );
-	m_body->RemoveChild( m_titlebar );
+		m_section->RemoveChild( m_choices );
+	m_body->RemoveChild( m_section );
 	
 	PopupMenu::Hide();
 }
 
 void Multiplayer::OnNext() {
-	Log( "SELECTED VALUE: " + m_choices->GetValue() );
-	MenuError( "This feature is not available yet." );
+	const auto value = m_choices->GetValue();
+	if ( value == "Simple Internet TCP/IP Connection" ) {
+		m_mainmenu->m_settings.network_type = Settings::NT_SIMPLETCP;
+		NEWV( menu, Lobby, m_mainmenu );
+		NextMenu( menu );
+	}
+	else {
+		MenuError( "This feature is not available yet." );
+	}
 }
 
 const string Multiplayer::GetChoice() const {

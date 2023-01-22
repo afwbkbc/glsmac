@@ -1,5 +1,6 @@
 SET(SRC ${SRC}
 
+	${PWD}/Section.cpp
 	${PWD}/ChoiceList.cpp
 	${PWD}/Button.cpp
 	${PWD}/Panel.cpp

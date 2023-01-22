@@ -12,5 +12,6 @@ SET(SRC ${SRC}
 	${PWD}/Difficulty.cpp
 	${PWD}/Rules.cpp
 	${PWD}/Multiplayer.cpp
+        ${PWD}/Lobby.cpp
 
 PARENT_SCOPE)

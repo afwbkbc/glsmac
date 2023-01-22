@@ -5,38 +5,46 @@ namespace mainmenu {
 namespace style {
 
 void PopupMenu::AddStyles() {
-	
+
 	AddStyle( "PopupMenuFrame", SH() {
-		const unordered_map<Style::attribute_type_t,vector<size_t>> textures = {
-			{ Style::A_TEXTURE_BACK, { 86, 353, 109, 376 } },
-			{ Style::A_TEXTURE_BORDER_LEFT, { 79, 431, 79, 454 } },
-			{ Style::A_TEXTURE_BORDER_TOP, { 86, 307, 109, 307 } },
-			{ Style::A_TEXTURE_BORDER_RIGHT, { 116, 431, 116, 454 } },
-			{ Style::A_TEXTURE_BORDER_BOTTOM, { 86, 461, 109, 461 } },
-		};
-
-		for ( auto& texture : textures ) {
-			s->SetTexture( texture.first, "interface.pcx", texture.second[0] , texture.second[1], texture.second[2], texture.second[3] );
+		// frame
+		{
+			const unordered_map<Style::attribute_type_t,vector<size_t>> textures = {
+				{ Style::A_TEXTURE_BACK, { 86, 353, 109, 376 } },
+				{ Style::A_TEXTURE_BORDER_LEFT, { 79, 431, 79, 454 } },
+				{ Style::A_TEXTURE_BORDER_TOP, { 86, 307, 109, 307 } },
+				{ Style::A_TEXTURE_BORDER_RIGHT, { 116, 431, 116, 454 } },
+				{ Style::A_TEXTURE_BORDER_BOTTOM, { 86, 461, 109, 461 } },
+			};
+			for ( auto& texture : textures ) {
+				s->SetTexture( texture.first, "interface.pcx", texture.second[0] , texture.second[1], texture.second[2], texture.second[3] );
+			}
 		}
+		
+		// header
+		{
+			const unordered_map<Style::attribute_type_t,vector<size_t>> textures = {
+				{ Style::A_HEADER_TEXTURE_BACK, { 86, 314, 109, 337 } },
+				{ Style::A_HEADER_TEXTURE_BORDER_LEFT, { 79, 431, 79, 454 } },
+				{ Style::A_HEADER_TEXTURE_BORDER_TOP, { 86, 307, 109, 307 } },
+				{ Style::A_HEADER_TEXTURE_BORDER_RIGHT, { 116, 431, 116, 454 } },
+				{ Style::A_HEADER_TEXTURE_BORDER_BOTTOM, { 86, 461, 109, 461 } },
+			};
+			for ( auto& texture : textures ) {
+				s->SetTexture( texture.first, "interface.pcx", texture.second[0] , texture.second[1], texture.second[2], texture.second[3] );
+			}
+		}
+		s->SetColor( Style::A_HEADER_TEXTCOLOR, Color::FromRGB( 109, 126, 178 ) );
 	});
 	
-	AddStyle( "PopupMenuHeader", SH() {
-		const unordered_map<Style::attribute_type_t,vector<size_t>> textures = {
-			{ Style::A_TEXTURE_BACK, { 86, 314, 109, 337 } },
-			{ Style::A_TEXTURE_BORDER_LEFT, { 79, 431, 79, 454 } },
-			{ Style::A_TEXTURE_BORDER_TOP, { 86, 307, 109, 307 } },
-			{ Style::A_TEXTURE_BORDER_RIGHT, { 116, 431, 116, 454 } },
-			{ Style::A_TEXTURE_BORDER_BOTTOM, { 86, 461, 109, 461 } },
-		};
-
-		for ( auto& texture : textures ) {
-			s->SetTexture( texture.first, "interface.pcx", texture.second[0] , texture.second[1], texture.second[2], texture.second[3] );
-		}
+	AddStyle( "PopupMenuWindow", { "PopupMenuFrame" }, SH() {
+		s->SetFont( Style::A_HEADER_FONT, "arialnb.ttf", 18 );
+		s->Set( Style::A_HEADER_HEIGHT, 22 );
 	});
 	
-	AddStyle( "PopupMenuHeaderLabel", SH() {
-		s->SetFont( Style::A_FONT, "arialnb.ttf", 18 );
-		s->SetColor( Style::A_TEXTCOLOR, Color::FromRGB( 109, 126, 178 ) );
+	AddStyle( "PopupMenuSection", { "PopupMenuFrame" }, SH() {
+		s->SetFont( Style::A_HEADER_FONT, "arialnb.ttf", 16 );
+		s->Set( Style::A_HEADER_HEIGHT, 20 );
 	});
 	
 	AddStyle( "PopupMenuButton", SH() {

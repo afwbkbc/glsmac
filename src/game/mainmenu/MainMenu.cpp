@@ -5,6 +5,7 @@
 
 #include "engine/Engine.h"
 
+#include "menu/Lobby.h"
 #include "menu/Main.h"
 #include "menu/Error.h"
 
@@ -48,10 +49,7 @@ void MainMenu::Start() {
 	NEW( m_music, SoundEffect, "MainMenuMusic" );
 	g_engine->GetUI()->AddObject( m_music );
 	
-	//NEW( m_music_actor, scene::actor::Sound, "MainMenuMusic", g_engine->GetSoundLoader()->LoadSound( "opening menu.wav" ) );
-		//m_music_actor->SetRepeatable( true );
-	//g_engine->GetAudio()->AddActor( m_music_actor );
-	
+	//NEWV( menu, Lobby, this );
 	NEWV( menu, Main, this );
 	ShowMenu( menu );
 }

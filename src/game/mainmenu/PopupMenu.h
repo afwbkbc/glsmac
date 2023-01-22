@@ -6,6 +6,7 @@
 #include <unordered_set>
 
 #include "ui/object/Panel.h"
+#include "ui/object/Section.h"
 #include "ui/object/Button.h"
 
 using namespace std;
@@ -42,10 +43,7 @@ protected:
 	Panel* m_body = nullptr; // child classes can add elements here
 	
 private:
-	Panel* m_frame = nullptr;
-		Panel* m_titleframe = nullptr;
-			Panel* m_titlebar = nullptr;
-				Label* m_titlelabel = nullptr;
+	Section* m_frame = nullptr;
 		Button* m_button_ok = nullptr;
 		Button* m_button_cancel = nullptr;
 	

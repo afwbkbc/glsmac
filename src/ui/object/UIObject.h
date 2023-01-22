@@ -115,7 +115,8 @@ CLASS( UIObject, base::Base )
 	
 	void ForwardStyleAttribute( const Style::attribute_type_t src_type, const Style::attribute_type_t dst_type );
 	void ForwardStyleAttribute( const Style::attribute_type_t type );
-	void ForwardStyleAttributes( const vector< Style::attribute_type_t > type );
+	void ForwardStyleAttributesV( const vector< Style::attribute_type_t > type );
+	void ForwardStyleAttributesM( const unordered_map< Style::attribute_type_t, Style::attribute_type_t > types );
 	
 	virtual void AddStyleModifier( const Style::modifier_t modifier );
 	virtual void RemoveStyleModifier( const Style::modifier_t modifier );

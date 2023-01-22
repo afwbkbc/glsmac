@@ -2,6 +2,8 @@
 
 #include "UIContainer.h"
 
+#include <unordered_map>
+
 #include "types/Color.h"
 #include "types/Texture.h"
 

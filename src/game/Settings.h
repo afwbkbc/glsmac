@@ -68,6 +68,13 @@ public:
 		GR_CUSTOM,
 	};
 	game_rules_t game_rules = GR_STANDARD;
+	
+	enum network_type_t {
+		NT_NONE,
+		NT_SIMPLETCP,
+	};
+	network_type_t network_type = NT_NONE;
+	
 	// TODO: custom rules struct
 	
 	

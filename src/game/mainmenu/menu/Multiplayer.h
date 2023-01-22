@@ -2,6 +2,7 @@
 
 #include "../PopupMenu.h"
 
+#include "ui/object/Section.h"
 #include "ui/object/ChoiceList.h"
 
 namespace game {
@@ -21,9 +22,9 @@ protected:
 	virtual void OnNext();
 
 private:
-	Panel* m_titlebar = nullptr;
-	 	Label* m_titlelabel = nullptr;
-
+	
+	Section* m_section = nullptr;
+	
 	ChoiceList* m_choices = nullptr;
 		
 };
