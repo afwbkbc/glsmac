@@ -12,7 +12,7 @@
 #include "event/UIEvent.h"
 #include "event/UIEventHandler.h"
 
-#include "scene/actor/MeshActor.h"
+#include "scene/actor/Mesh.h"
 #include "scene/mesh/Rectangle.h"
 #include "types/Texture.h"
 #include "types/Vec2.h"
@@ -29,7 +29,7 @@ namespace ui {
 using namespace event;
 using namespace object;
 	
-MAJOR_CLASS( UI, base::Module )
+CLASS( UI, base::Module )
 
 	typedef float coord_t;
 	typedef Vec2<coord_t> vertex_t;
@@ -93,7 +93,7 @@ private:
 	typedef struct {
 		Texture* texture;
 		mesh::Rectangle * mesh;
-		actor::MeshActor* actor;
+		actor::Mesh* actor;
 	} debug_frame_data_t;
 	
 	typedef unordered_map< const UIObject*, debug_frame_data_t > debug_frames_map_t;

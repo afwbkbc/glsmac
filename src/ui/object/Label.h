@@ -5,7 +5,7 @@
 #include <string>
 
 #include "types/Font.h"
-#include "scene/actor/TextActor.h"
+#include "scene/actor/Text.h"
 
 using namespace std;
 using namespace types;
@@ -13,7 +13,7 @@ using namespace types;
 namespace ui {
 namespace object {
 
-CHILD_CLASS( Label, UIObject )
+CLASS( Label, UIObject )
 	
 	Label( const string& class_name = "" );
 	
@@ -33,7 +33,7 @@ protected:
 	string m_text = "";
 	Color m_color = { 0.0, 0.0, 0.0, 0.0 };
 	
-	scene::actor::TextActor *m_actor = nullptr;
+	scene::actor::Text *m_actor = nullptr;
 	
 		
 };

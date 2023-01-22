@@ -1,5 +1,5 @@
 SET(SRC ${SRC}
 
-	${PWD}/SimpleScheduler.cpp
+	${PWD}/Simple.cpp
 
 PARENT_SCOPE)

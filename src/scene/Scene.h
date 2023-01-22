@@ -17,7 +17,7 @@ enum scene_type_t {
 	SCENE_TYPE_PERSP,
 };
 
-MAJOR_CLASS( Scene, base::Base )
+CLASS( Scene, base::Base )
 	Scene( const std::string &name, const scene_type_t scene_type ) : m_scene_type( scene_type ) {
 		m_name = name;
 	}

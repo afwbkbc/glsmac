@@ -17,7 +17,7 @@ using namespace object;
 }
 namespace debug {
 
-CHILD_CLASS( DebugOverlay, base::Task )
+CLASS( DebugOverlay, base::Task )
 	
 	void Start();
 	void Stop();

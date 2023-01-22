@@ -15,7 +15,7 @@ namespace mainmenu {
 
 class MenuBlock;
 	
-CHILD_CLASS( MenuItem, UIContainer )
+CLASS( MenuItem, UIContainer )
 	MenuItem( MenuBlock* menu, const string& text, const bool is_title = false );
 
 	virtual void Create();

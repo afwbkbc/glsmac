@@ -7,8 +7,8 @@
 namespace game {
 namespace mainmenu {
 
-class Multiplayer : public PopupMenu {
-public:
+CLASS( Multiplayer, PopupMenu )
+		
 	Multiplayer( MainMenu* mainmenu );
 	
 	const string GetChoice() const;

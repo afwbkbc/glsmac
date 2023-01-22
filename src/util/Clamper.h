@@ -5,7 +5,7 @@
 namespace util {
 
 template <typename DATATYPE>
-CHILD_CLASS( Clamper, Util )
+CLASS( Clamper, Util )
 	void SetSrcRange( const DATATYPE src_min, const DATATYPE src_max ) {
 		m_src_min = src_min;
 		m_src_max = src_max;

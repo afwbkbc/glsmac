@@ -9,7 +9,7 @@
 namespace loader {
 namespace font {
 
-MAJOR_CLASS( FontLoader, Loader )
+CLASS( FontLoader, Loader )
 	virtual types::Font *LoadFont( const std::string &name, const unsigned char size ) = 0;
 };
 

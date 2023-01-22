@@ -46,7 +46,7 @@ void Label::Create() {
 	UIObject::Create();
 	
 	if ( !m_actor ) {
-		NEW( m_actor, scene::actor::TextActor, m_font, m_text, m_color );
+		NEW( m_actor, scene::actor::Text, m_font, m_text, m_color );
 		AddActor( m_actor );
 	}
 }

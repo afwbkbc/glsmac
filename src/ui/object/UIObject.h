@@ -33,7 +33,7 @@ namespace object {
 
 class UIContainer;
 
-MAJOR_CLASS( UIObject, base::Base )
+CLASS( UIObject, base::Base )
 	UIObject( const string& class_name = "" );
 	virtual ~UIObject();
 

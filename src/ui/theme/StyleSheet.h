@@ -4,7 +4,7 @@
 
 #include <unordered_map>
 
-#include "Style.h"
+#include "ui/theme/Style.h"
 #include "ui/object/UIObject.h"
 
 using namespace std;
@@ -12,7 +12,7 @@ using namespace std;
 namespace ui {
 namespace theme {
 
-MAJOR_CLASS( StyleSheet, base::Base )
+CLASS( StyleSheet, base::Base )
 	
 	virtual void AddStyles() = 0;
 

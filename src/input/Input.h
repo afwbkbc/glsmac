@@ -4,7 +4,7 @@
 
 namespace input {
 
-MAJOR_CLASS( Input, base::Module )
+CLASS( Input, base::Module )
 };
 
 } /* namespace input */

@@ -11,7 +11,7 @@ Audio::~Audio() {
 	}
 }
 
-void Audio::RemoveAndDeleteActor( scene::actor::SoundActor *actor ) {
+void Audio::RemoveAndDeleteActor( scene::actor::Sound *actor ) {
 	if ( actor->IsReadyToBeDeleted() ) {
 		RemoveActor( actor );
 		DELETE( actor );
@@ -24,7 +24,7 @@ void Audio::RemoveAndDeleteActor( scene::actor::SoundActor *actor ) {
 
 void Audio::Iterate() {
 	for ( auto it = m_removal_queue.begin() ; it != m_removal_queue.end() ; it++ ) {
-		scene::actor::SoundActor* actor = *it;
+		scene::actor::Sound* actor = *it;
 		if ( actor->IsReadyToBeDeleted() ) {
 			RemoveActor( actor );
 			DELETE( actor );

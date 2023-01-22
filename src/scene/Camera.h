@@ -10,7 +10,7 @@ namespace scene {
 
 class Scene;
 
-MAJOR_CLASS( Camera, Entity )
+CLASS( Camera, Entity )
 	Camera();
 
 	void SetScene( Scene *scene );

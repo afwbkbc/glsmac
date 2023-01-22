@@ -1,5 +1,5 @@
 SET(SRC ${SRC}
 
-	${PWD}/SDL2Input.cpp
+	${PWD}/SDL2.cpp
 
 PARENT_SCOPE)

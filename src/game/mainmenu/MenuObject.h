@@ -11,7 +11,7 @@ namespace mainmenu {
 	
 class MainMenu;
 	
-MAJOR_CLASS( MenuObject, base::Base )
+CLASS( MenuObject, base::Base )
 	MenuObject( MainMenu *mainmenu, const string& title );
 	
 	virtual void Show() = 0;

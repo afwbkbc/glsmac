@@ -5,7 +5,7 @@
 
 namespace base {
 
-MAJOR_CLASS( Thread, Base )
+CLASS( Thread, Base )
 
 	enum thread_state_t {
 		STATE_INACTIVE,

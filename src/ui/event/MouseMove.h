@@ -5,7 +5,7 @@
 namespace ui {
 namespace event {
 
-CHILD_CLASS( MouseMove, UIEvent )
+CLASS( MouseMove, UIEvent )
 
 	MouseMove( const size_t x, const size_t y ) : UIEvent( EV_MOUSE_MOVE ) {
 		m_flags |= EF_MOUSE;

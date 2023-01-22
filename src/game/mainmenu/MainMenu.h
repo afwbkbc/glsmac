@@ -8,13 +8,13 @@
 #include "ui/object/Surface.h"
 #include "ui/object/SoundEffect.h"
 
-#include "scene/actor/SoundActor.h"
+#include "scene/actor/Sound.h"
 
 #include "MenuObject.h"
 
 #include "game/Settings.h"
 
-#include "ui/MenuTheme.h"
+#include "ui/Theme.h"
 
 using namespace std;
 using namespace types;
@@ -27,7 +27,7 @@ using namespace object;
 namespace game {
 namespace mainmenu {
 
-CHILD_CLASS( MainMenu, base::Task )
+CLASS( MainMenu, base::Task )
 	void Start();
 	void Iterate();
 	void Stop();
@@ -39,7 +39,7 @@ CHILD_CLASS( MainMenu, base::Task )
 	void MenuError( const string& error_text );
 	
 protected:
-	MenuTheme m_theme;
+	Theme m_theme;
 
 	const UIEventHandler* m_key_handler = nullptr;
 	const UIEventHandler* m_mouse_handler = nullptr;

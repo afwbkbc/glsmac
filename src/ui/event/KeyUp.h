@@ -5,7 +5,7 @@
 namespace ui {
 namespace event {
 
-CHILD_CLASS( KeyUp, UIEvent )
+CLASS( KeyUp, UIEvent )
 
 	KeyUp( const key_code_t code ) : UIEvent( EV_KEY_UP ) {
 		m_flags |= EF_KEYBOARD;

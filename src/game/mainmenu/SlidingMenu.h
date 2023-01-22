@@ -14,8 +14,7 @@ using namespace std;
 namespace game {
 namespace mainmenu {
 
-class SlidingMenu : public MenuObject {
-public:
+CLASS( SlidingMenu, MenuObject )
 	
 	typedef function<void()> choice_handler_t;
 	typedef vector<pair<string, choice_handler_t>> choice_handlers_t;

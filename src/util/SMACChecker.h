@@ -6,7 +6,7 @@
 
 namespace util {
 
-CHILD_CLASS( SMACChecker, Util )
+CLASS( SMACChecker, Util )
 	static void CheckPath( const std::string& path );
 
 private:

@@ -36,9 +36,9 @@ namespace theme {
 
 class StyleSheet;
 	
-#define SH(...) [__VA_ARGS__] ( Style* s ) -> void
+#define SH(...) [__VA_ARGS__] ( ui::theme::Style* s ) -> void
 	
-MAJOR_CLASS( Style, base::Base )
+CLASS( Style, base::Base )
 
 	typedef function<void( Style* s )> style_handler_t;
 	

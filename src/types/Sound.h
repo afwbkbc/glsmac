@@ -8,7 +8,7 @@
 
 namespace types {
 
-MAJOR_CLASS( Sound, base::Base )
+CLASS( Sound, base::Base )
 
 	~Sound();
 	

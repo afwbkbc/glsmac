@@ -13,7 +13,7 @@ namespace event {
 
 #define EH(...) [__VA_ARGS__] ( const UIEvent::event_data_t* data ) -> bool
 	
-MAJOR_CLASS( UIEventHandler, base::Base )
+CLASS( UIEventHandler, base::Base )
 
 	typedef function<bool( const UIEvent::event_data_t* data )> handler_function_t;
 	

@@ -1,5 +1,4 @@
 SUBDIR( object )
-SUBDIR( element )
 SUBDIR( theme )
 SUBDIR( event )
 

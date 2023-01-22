@@ -4,7 +4,7 @@
 
 namespace util {
 
-MAJOR_CLASS( Util, base::Base )
+CLASS( Util, base::Base )
 };
 
 } /* namespace util */

@@ -28,7 +28,7 @@ const std::string Base::GetNamespace() const {
 
 const std::string Base::GetName() const {
 	if ( !m_name.empty() )
-		return GetNamespace() + m_name + "::#" + std::to_string(m_object_id);
+		return GetNamespace() + "(" + m_name + ")#" + std::to_string(m_object_id);
 	else
 		return GetNamespace() + "#" + std::to_string(m_object_id);
 }

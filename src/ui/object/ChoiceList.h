@@ -8,7 +8,7 @@
 namespace ui {
 namespace object {
 
-CHILD_CLASS( ChoiceList, UIContainer )
+CLASS( ChoiceList, UIContainer )
 
 	typedef vector< string > choices_t;
 	

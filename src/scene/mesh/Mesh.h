@@ -11,7 +11,7 @@ using namespace types;
 namespace scene {
 namespace mesh {
 
-MAJOR_CLASS( Mesh, base::Base )
+CLASS( Mesh, base::Base )
 	
 	static const uint8_t VERTEX_COORD_SIZE = 3; // x, y, z
 	static const uint8_t VERTEX_TEXCOORD_SIZE = 2; // tx, ty

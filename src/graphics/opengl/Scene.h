@@ -7,9 +7,9 @@
 #include "base/Base.h"
 #include "base/ObjectLink.h"
 #include "scene/Scene.h"
-#include "shader_program/OpenGLShaderProgram.h"
-#include "Texture.h"
-#include "Actor.h"
+#include "shader_program/ShaderProgram.h"
+#include "texture/Texture.h"
+#include "actor/Actor.h"
 
 using namespace std;
 
@@ -17,11 +17,11 @@ namespace graphics {
 namespace opengl {
 
 namespace routine {
-	class OpenGLRoutine;
+	class Routine;
 }
 
-MAJOR_CLASS( Scene, base::Base )
-	Scene( scene::Scene *scene, routine::OpenGLRoutine *routine );
+CLASS( Scene, base::Base )
+	Scene( scene::Scene *scene, routine::Routine *routine );
 	~Scene();
 	scene::Scene * GetScene() const {
 		return m_scene;
@@ -37,12 +37,12 @@ MAJOR_CLASS( Scene, base::Base )
 	void SetSkyboxTextureObj( base::ObjectLink *skybox_texture ) {
 		m_skybox_texture = skybox_texture;
 	}
-	void Draw( shader_program::OpenGLShaderProgram *shader_program );
+	void Draw( shader_program::ShaderProgram *shader_program );
 	void Update();
 	
 protected:
 	scene::Scene *m_scene;
-	routine::OpenGLRoutine *m_routine;
+	routine::Routine *m_routine;
 
 	base::ObjectLink *m_skybox_texture = NULL;
 	
@@ -59,5 +59,5 @@ private:
 } /* namespace opengl */
 } /* namespace graphics */
 
-#include "routine/OpenGLRoutine.h"
+#include "routine/Routine.h"
 

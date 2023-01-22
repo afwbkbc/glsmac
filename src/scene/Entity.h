@@ -10,8 +10,8 @@
 
 namespace scene {
 
-class Entity : public base::Base {
-public:
+CLASS( Entity, base::Base )
+		
 	Entity();
 
 	// GetAngle(), SetAngle(), etc

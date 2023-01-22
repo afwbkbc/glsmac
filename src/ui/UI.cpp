@@ -144,7 +144,7 @@ void UI::ShowDebugFrame( const UIObject* object ) {
 		
 		NEW( data.mesh, mesh::Rectangle );
 		
-		NEW( data.actor, actor::MeshActor, "DebugFrame", data.mesh );
+		NEW( data.actor, actor::Mesh, "DebugFrame", data.mesh );
 		data.actor->SetTexture( data.texture );
 		
 		ResizeDebugFrame( object, &data );

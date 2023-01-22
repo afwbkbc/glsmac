@@ -5,8 +5,7 @@
 namespace game {
 namespace mainmenu {
 	
-class Erosive : public SlidingMenu {
-public:
+CLASS( Erosive, SlidingMenu )
 	Erosive( MainMenu *mainmenu );
 };
 

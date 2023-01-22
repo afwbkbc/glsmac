@@ -8,7 +8,7 @@
 
 namespace types {
 
-MAJOR_CLASS( Font, base::Base )
+CLASS( Font, base::Base )
 	virtual ~Font();
 
 	typedef struct dimensions_t {

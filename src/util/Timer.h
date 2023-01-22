@@ -8,7 +8,7 @@ using namespace std::chrono;
 
 namespace util {
 
-CHILD_CLASS( Timer, Util )
+CLASS( Timer, Util )
 	
 	enum operation_type_t : uint8_t {
 		NONE,

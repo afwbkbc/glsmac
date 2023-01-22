@@ -5,7 +5,7 @@
 namespace ui {
 namespace object {
 
-CHILD_CLASS( Root, UIContainer )
+CLASS( Root, UIContainer )
 };
 
 } /* namespace object */

@@ -9,7 +9,7 @@
 
 namespace types {
 
-MAJOR_CLASS( Texture, base::Base )
+CLASS( Texture, base::Base )
 	Texture( const std::string& name, const size_t width = 0, const size_t height = 0 );
 	virtual ~Texture();
 	

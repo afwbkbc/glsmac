@@ -7,8 +7,8 @@ namespace mainmenu {
 
 class MainMenu;
 	
-class Error : public PopupMenu {
-public:
+CLASS( Error, PopupMenu )
+		
 	Error( MainMenu* mainmenu, const string& error_text );
 	
 protected:

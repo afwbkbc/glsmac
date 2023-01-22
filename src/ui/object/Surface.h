@@ -1,7 +1,7 @@
 #pragma once
 
 #include "scene/mesh/Rectangle.h"
-#include "scene/actor/MeshActor.h"
+#include "scene/actor/Mesh.h"
 
 #include "UIObject.h"
 
@@ -11,7 +11,7 @@
 namespace ui {
 namespace object {
 
-CHILD_CLASS( Surface, UIObject )
+CLASS( Surface, UIObject )
 
 	Surface( const string& class_name = "" );
 	
@@ -32,7 +32,7 @@ protected:
 	const types::Texture* m_texture = nullptr;
 	bool m_stretch_texture = false;
 
-	scene::actor::MeshActor *m_background = nullptr;
+	scene::actor::Mesh *m_background = nullptr;
 	scene::mesh::Rectangle *m_background_mesh = nullptr;
 };
 

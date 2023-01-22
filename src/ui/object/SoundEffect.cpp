@@ -9,7 +9,7 @@ SoundEffect::SoundEffect( const string& class_name ) : UIObject( class_name )
 	
 }
 
-void SoundEffect::SetSound( const Sound* sound ) {
+void SoundEffect::SetSound( const types::Sound* sound ) {
 	if ( sound != m_sound ) {
 		m_sound = sound;
 
@@ -84,7 +84,7 @@ void SoundEffect::UpdateActor() {
 			// TODO: scene?
 			//RemoveActor( m_actor );
 		}
-		NEW( m_actor, scene::actor::SoundActor, "UI::SoundEffect", m_sound );
+		NEW( m_actor, scene::actor::Sound, "UI::SoundEffect", m_sound );
 			m_actor->SetRepeatable( m_repeatable );
 			m_actor->SetStartDelay( m_start_delay );
 			m_actor->SetVolume( m_volume );
@@ -112,7 +112,7 @@ void SoundEffect::ApplyStyle() {
 	UIObject::ApplyStyle();
 	
 	if ( Has( Style::A_SOUND ) ) {
-		const auto* sound = (Sound*)GetObject( Style::A_SOUND );
+		const auto* sound = (types::Sound*)GetObject( Style::A_SOUND );
 		if ( sound ) {
 			SetSound( sound );
 		}

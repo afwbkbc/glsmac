@@ -5,8 +5,7 @@
 namespace game {
 namespace mainmenu {
 	
-class Lifeforms : public SlidingMenu {
-public:
+CLASS( Lifeforms, SlidingMenu )
 	Lifeforms( MainMenu *mainmenu );
 };
 

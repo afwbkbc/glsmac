@@ -6,7 +6,7 @@
 
 namespace error_handler {
 
-MAJOR_CLASS( ErrorHandler, base::Module )
+CLASS( ErrorHandler, base::Module )
 	virtual void HandleError( const runtime_error &e ) const = 0;
 };
 

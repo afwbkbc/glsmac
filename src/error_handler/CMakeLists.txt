@@ -1,6 +1,6 @@
 SET(SRC ${SRC}
 
-	${PWD}/Win32ErrorHandler.cpp
-	${PWD}/StdoutErrorHandler.cpp
+	${PWD}/Win32.cpp
+	${PWD}/Stdout.cpp
 
 PARENT_SCOPE)

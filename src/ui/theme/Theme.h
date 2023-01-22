@@ -13,7 +13,7 @@ using namespace std;
 namespace ui {
 namespace theme {
 
-MAJOR_CLASS( Theme, base::Base )
+CLASS( Theme, base::Base )
 
 	void AddStyle( Style* style );
 	void AddStyleSheet( StyleSheet* stylesheet );

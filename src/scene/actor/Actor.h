@@ -11,7 +11,7 @@ class Scene;
 
 namespace actor {
 
-MAJOR_CLASS( Actor, Entity )
+CLASS( Actor, Entity )
 
 	typedef float coord_t;
 	typedef types::Vec2<coord_t> vec2_t;

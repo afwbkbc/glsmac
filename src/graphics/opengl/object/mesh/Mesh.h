@@ -7,7 +7,7 @@ namespace opengl {
 namespace object {
 namespace mesh {
 
-MAJOR_CLASS( Mesh, base::Base )
+CLASS( Mesh, base::Base )
 
 };
 

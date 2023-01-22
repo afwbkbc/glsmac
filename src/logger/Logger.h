@@ -6,7 +6,7 @@
 
 namespace logger {
 
-MAJOR_CLASS( Logger, base::Module )
+CLASS( Logger, base::Module )
 	virtual void Log( const std::string &text ) = 0;
 };
 

@@ -2,22 +2,22 @@
 
 #include "config/Config.h"
 #ifdef _WIN32
-#include "error_handler/Win32ErrorHandler.h"
+#include "error_handler/Win32.h"
 #else
-#include "error_handler/StdoutErrorHandler.h"
+#include "error_handler/Stdout.h"
 #endif
-#include "logger/StdoutLogger.h"
+#include "logger/Stdout.h"
 
-#include "loader/font/FreeTypeFontLoader.h"
-#include "loader/texture/SDL2TextureLoader.h"
-#include "loader/sound/SDL2SoundLoader.h"
+#include "loader/font/FreeType.h"
+#include "loader/texture/SDL2.h"
+#include "loader/sound/SDL2.h"
 
-#include "input/sdl2/SDL2Input.h"
-#include "graphics/opengl/OpenGLGraphics.h"
-#include "audio/sdl2/SDL2Audio.h"
+#include "input/sdl2/SDL2.h"
+#include "graphics/opengl/OpenGL.h"
+#include "audio/sdl2/SDL2.h"
 
-#include "scheduler/SimpleScheduler.h"
-#include "ui/DefaultUI.h"
+#include "scheduler/Simple.h"
+#include "ui/Default.h"
 
 #include "game/intro/Intro.h"
 
@@ -86,22 +86,22 @@ int main(const int argc, const char *argv[]) {
 	int result = EXIT_FAILURE;
 
 	// logger needs to be outside of scope to be destroyed last
-	logger::StdoutLogger logger;
+	logger::Stdout logger;
 	{
 		config::Config config( argc, argv );
 		
 #ifdef _WIN32
-		error_handler::Win32ErrorHandler error_handler;
+		error_handler::Win32 error_handler;
 #else
-		error_handler::StdoutErrorHandler error_handler;
+		error_handler::Stdout error_handler;
 #endif
 
-		loader::font::FreeTypeFontLoader font_loader;
+		loader::font::FreeType font_loader;
 
-		loader::texture::SDL2TextureLoader texture_loader;
+		loader::texture::SDL2 texture_loader;
 		texture_loader.SetTransparentColor(types::Color::RGBA(255, 0, 255, 255));
 		
-		loader::sound::SDL2SoundLoader sound_loader;
+		loader::sound::SDL2 sound_loader;
 		
 		auto title = (string) "GLSMAC " + GLSMAC_VERSION + "-" + GLSMAC_LAST_COMMIT;
 #if DEBUG
@@ -109,13 +109,13 @@ int main(const int argc, const char *argv[]) {
 #elif PORTABLE
 		title += "-portable";
 #endif
-		input::sdl2::SDL2Input input;
-		graphics::opengl::OpenGLGraphics graphics( title, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_VSYNC, 90.0f);
-		audio::sdl2::SDL2Audio audio;
+		input::sdl2::SDL2 input;
+		graphics::opengl::OpenGL graphics( title, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_VSYNC, 90.0f);
+		audio::sdl2::SDL2 audio;
 		
-		ui::DefaultUI ui;
+		ui::Default ui;
 
-		scheduler::SimpleScheduler scheduler;
+		scheduler::Simple scheduler;
 
 #if DEBUG
 		NEWV( debug_overlay, debug::DebugOverlay );

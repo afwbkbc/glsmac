@@ -20,8 +20,7 @@ namespace mainmenu {
 	
 class MainMenu;
 
-class PopupMenu : public MenuObject {
-public:
+CLASS( PopupMenu, MenuObject )
 	PopupMenu( MainMenu *mainmenu, const string& title );
 
 	enum popup_flag_t : uint8_t {

@@ -6,11 +6,11 @@ namespace object {
 /* simple text label */
 
 #include "scene/mesh/vec2/Rectangle.h"
-#include "scene/actor/MeshActor.h"
+#include "scene/actor/Mesh.h"
 
 #include "types/Color.h"
 
-CHILD_CLASS( Surface, UIObject )
+CLASS( Surface, UIObject )
 	void SetColor( const types::Color &color) {
 		m_colors.text = color;
 		Redraw();

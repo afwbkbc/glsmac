@@ -4,25 +4,25 @@
 
 #include <vector>
 
-#include "scene/actor/SoundActor.h"
+#include "scene/actor/Sound.h"
 
 namespace audio {
 
-MAJOR_CLASS( Audio, base::Module )
+CLASS( Audio, base::Module )
 
 	virtual ~Audio();
 
 	// TODO: scenes?
-	virtual void AddActor( scene::actor::SoundActor *actor ) = 0;
-	virtual void RemoveActor( scene::actor::SoundActor *actor ) = 0;
+	virtual void AddActor( scene::actor::Sound *actor ) = 0;
+	virtual void RemoveActor( scene::actor::Sound *actor ) = 0;
 	
 	void Iterate();
 	
 	// if sound is still playing - don't delete it until it finishes
-	void RemoveAndDeleteActor( scene::actor::SoundActor *actor );
+	void RemoveAndDeleteActor( scene::actor::Sound *actor );
 	
 protected:
-	vector< scene::actor::SoundActor* > m_removal_queue = {};
+	vector< scene::actor::Sound* > m_removal_queue = {};
 	
 };
 

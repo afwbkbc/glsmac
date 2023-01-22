@@ -5,7 +5,7 @@
 namespace ui {
 namespace event {
 
-MAJOR_CLASS( UIEvent, base::Base )
+CLASS( UIEvent, base::Base )
 
 	enum event_type_t {
 		EV_NONE,

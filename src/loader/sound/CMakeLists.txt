@@ -1,5 +1,5 @@
 SET(SRC ${SRC}
 
-	${PWD}/SDL2SoundLoader.cpp
+	${PWD}/SDL2.cpp
 
 PARENT_SCOPE)

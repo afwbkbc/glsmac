@@ -5,8 +5,7 @@
 namespace game {
 namespace mainmenu {
 	
-class PlanetSize : public SlidingMenu {
-public:
+CLASS( PlanetSize, SlidingMenu )
 	PlanetSize( MainMenu *mainmenu );	
 	void ChooseNext();
 };

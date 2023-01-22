@@ -1,7 +1,7 @@
 SET(SRC ${SRC}
 
-	${PWD}/IntroStyle.cpp
-	${PWD}/IntroTheme.cpp
+	${PWD}/Style.cpp
+	${PWD}/Theme.cpp
 	${PWD}/Intro.cpp
 
 PARENT_SCOPE)

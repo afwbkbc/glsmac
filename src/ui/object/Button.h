@@ -11,7 +11,7 @@
 namespace ui {
 namespace object {
 
-CHILD_CLASS( Button, Panel )
+CLASS( Button, Panel )
 
 	Button( const string& class_name = "" );
 

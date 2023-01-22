@@ -6,18 +6,18 @@
 #include "ui/object/Surface.h"
 #include "util/Timer.h"
 
-#include "IntroTheme.h"
+#include "Theme.h"
 
 namespace game {
 namespace intro {
 
-CHILD_CLASS( Intro, base::Task )
+CLASS( Intro, base::Task )
 	void Start();
 	void Stop();
 	void Iterate();
 	
 protected:
-	IntroTheme m_theme;
+	Theme m_theme;
 	ui::object::Surface *m_logo = nullptr;
 	util::Timer m_timer;
 

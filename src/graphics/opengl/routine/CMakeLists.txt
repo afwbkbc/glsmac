@@ -1,9 +1,9 @@
 SET(SRC ${SRC}
 
-	${PWD}/OpenGLRoutine.cpp
-		${PWD}/OverlayOpenGLRoutine.cpp
-		${PWD}/FontOpenGLRoutine.cpp
-		${PWD}/SkyboxOpenGLRoutine.cpp
-		${PWD}/WorldOpenGLRoutine.cpp
+	${PWD}/Routine.cpp
+		${PWD}/Overlay.cpp
+		${PWD}/Font.cpp
+		${PWD}/Skybox.cpp
+		${PWD}/World.cpp
 
 PARENT_SCOPE)

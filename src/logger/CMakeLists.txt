@@ -1,5 +1,5 @@
 SET(SRC ${SRC}
 
-	${PWD}/StdoutLogger.cpp
+	${PWD}/Stdout.cpp
 
 PARENT_SCOPE)

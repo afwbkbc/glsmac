@@ -9,8 +9,8 @@
 namespace ui {
 namespace object {
 
-class UIContainer : public UIObject {
-public:
+CLASS( UIContainer, UIObject )
+
 	UIContainer( const string& class_name = "" );
 	
 	void AddChild( UIObject *object );

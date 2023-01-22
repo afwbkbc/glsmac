@@ -8,7 +8,7 @@ using namespace std;
 
 namespace loader {
 
-MAJOR_CLASS( Loader, base::Module )
+CLASS( Loader, base::Module )
 
 protected:
 	const string& GetRoot();

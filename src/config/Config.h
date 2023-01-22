@@ -8,7 +8,7 @@ using namespace std;
 
 namespace config {
 
-MAJOR_CLASS( Config, base::Module )
+CLASS( Config, base::Module )
 	Config( const int argc, const char *argv[] );
 	
 	const string& GetGamePath() {

@@ -4,7 +4,7 @@
 
 namespace base {
 
-MAJOR_CLASS( ObjectLink, base::Base )
+CLASS( ObjectLink, base::Base )
 	template <class T1, class T2>
 	ObjectLink( const T1 *src_object, const T2 *dst_object )
 		: base::Base()

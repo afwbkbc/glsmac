@@ -1,7 +1,7 @@
 #include "Scene.h"
 
-#include "MeshActor.h"
-#include "ImageActor.h"
+#include "actor/Mesh.h"
+#include "actor/Image.h"
 
 #include "scene/actor/Actor.h"
 
@@ -10,7 +10,7 @@
 namespace graphics {
 namespace opengl {
 
-Scene::Scene( scene::Scene *scene, routine::OpenGLRoutine *routine ) : m_scene( scene ), m_routine( routine ) {
+Scene::Scene( scene::Scene *scene, routine::Routine *routine ) : m_scene( scene ), m_routine( routine ) {
 	m_name = scene->GetLocalName();
 }
 
@@ -93,10 +93,10 @@ void Scene::Update() {
 			auto actor_type = (*it)->GetType();
 			switch (actor_type) {
 				case (scene::actor::Actor::TYPE_MESH):
-					NEW( gl_actor, MeshActor, (scene::actor::MeshActor *)*it );
+					NEW( gl_actor, Mesh, (scene::actor::Mesh *)*it );
 					break;
 				case (scene::actor::Actor::TYPE_IMAGE):
-					NEW( gl_actor, ImageActor, (scene::actor::ImageActor *)*it );
+					NEW( gl_actor, Image, (scene::actor::Image *)*it );
 					break;
 				default:
 					gl_actor = m_routine->AddCustomActor( *it );
@@ -123,7 +123,7 @@ void Scene::Update() {
 #endif
 }
 
-void Scene::Draw( shader_program::OpenGLShaderProgram *shader_program ) {
+void Scene::Draw( shader_program::ShaderProgram *shader_program ) {
 	
 #if DEBUG
 	float last_zindex = -9999999;

@@ -4,7 +4,7 @@
 
 namespace util {
 
-CHILD_CLASS( System, Util )
+CLASS( System, Util )
 
 #if DEBUG
 	static bool AreWeUnderGDB();

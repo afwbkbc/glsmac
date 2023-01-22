@@ -299,10 +299,10 @@ void MemoryWatcher::GLBufferData( GLenum target, GLsizeiptr size, const void * d
 		auto it = m_opengl.vertex_buffers.find( m_opengl.current_vertex_buffer );
 		ASSERT( it != m_opengl.vertex_buffers.end(), "opengl vertex buffer not bound" );
 		if ( it->second.size > 0 ) {
-			Log( "Freeing " + to_string( size ) + " bytes from opengl vertex buffer " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
+			//Log( "Freeing " + to_string( size ) + " bytes from opengl vertex buffer " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
 			DEBUG_STAT_CHANGE_BY( opengl_vertex_buffers_size, -it->second.size );
 		}
-		Log( "Loading " + to_string( size ) + " bytes into opengl vertex buffer " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
+		//Log( "Loading " + to_string( size ) + " bytes into opengl vertex buffer " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
 		it->second.size = (size_t)size;
 		DEBUG_STAT_CHANGE_BY( opengl_vertex_buffers_size, size );
 		DEBUG_STAT_INC( opengl_vertex_buffers_updates );
@@ -314,10 +314,10 @@ void MemoryWatcher::GLBufferData( GLenum target, GLsizeiptr size, const void * d
 		auto it = m_opengl.index_buffers.find( m_opengl.current_index_buffer );
 		ASSERT( it != m_opengl.index_buffers.end(), "opengl index buffer not bound" );
 		if ( it->second.size > 0 ) {
-			Log( "Freeing " + to_string( size ) + " bytes from opengl index buffer " + to_string( m_opengl.current_index_buffer ) + " @" + source );
+			//Log( "Freeing " + to_string( size ) + " bytes from opengl index buffer " + to_string( m_opengl.current_index_buffer ) + " @" + source );
 			DEBUG_STAT_CHANGE_BY( opengl_index_buffers_size, -it->second.size );
 		}
-		Log( "Loading " + to_string( size ) + " bytes into opengl index buffer " + to_string( m_opengl.current_index_buffer ) + " @" + source );
+		//Log( "Loading " + to_string( size ) + " bytes into opengl index buffer " + to_string( m_opengl.current_index_buffer ) + " @" + source );
 		it->second.size = (size_t)size;
 		DEBUG_STAT_CHANGE_BY( opengl_index_buffers_size, size );
 		DEBUG_STAT_INC( opengl_index_buffers_updates );
@@ -470,10 +470,10 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 	size_t size = bpp * width * height;
 	alloc_t& old = m_opengl.textures.at( m_opengl.current_texture );
 	if ( old.size > 0 ) {
-		Log( "Freeing " + to_string( size ) + " bytes from opengl texture " + to_string( m_opengl.current_texture ) + " @" + source );
+		//Log( "Freeing " + to_string( size ) + " bytes from opengl texture " + to_string( m_opengl.current_texture ) + " @" + source );
 		DEBUG_STAT_CHANGE_BY( opengl_textures_size, -old.size );
 	}
-	Log( "Loading " + to_string( size ) + " bytes into opengl texture " + to_string( m_opengl.current_texture ) + " @" + source );
+	//Log( "Loading " + to_string( size ) + " bytes into opengl texture " + to_string( m_opengl.current_texture ) + " @" + source );
 	
 	m_opengl.textures[ m_opengl.current_texture ] = { size, source };
 	DEBUG_STAT_CHANGE_BY( opengl_textures_size, size );

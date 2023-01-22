@@ -9,7 +9,7 @@
 
 namespace graphics {
 
-MAJOR_CLASS( Graphics, base::Module )
+CLASS( Graphics, base::Module )
 	virtual void AddScene( scene::Scene *scene ) = 0;
 	virtual void RemoveScene( scene::Scene *scene ) = 0;
 	virtual const unsigned short GetWindowWidth() const = 0;

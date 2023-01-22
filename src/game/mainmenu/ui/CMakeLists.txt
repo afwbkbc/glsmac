@@ -4,6 +4,6 @@ SUBDIR( popupmenu )
 
 SET(SRC ${SRC}
 
-	${PWD}/MenuTheme.cpp
+	${PWD}/Theme.cpp
 
 PARENT_SCOPE)

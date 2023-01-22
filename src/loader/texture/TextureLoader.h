@@ -9,7 +9,7 @@
 namespace loader {
 namespace texture {
 
-MAJOR_CLASS( TextureLoader, Loader )
+CLASS( TextureLoader, Loader )
 
 	// loadtexture flags
 	static const uint8_t LT_NONE = 0;

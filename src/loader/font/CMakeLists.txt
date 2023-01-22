@@ -1,5 +1,5 @@
 SET(SRC ${SRC}
 
-	${PWD}/FreeTypeFontLoader.cpp
+	${PWD}/FreeType.cpp
 
 PARENT_SCOPE)

@@ -28,7 +28,7 @@ extern const size_t g_max_fps;
 
 namespace engine {
 
-MAJOR_CLASS( Engine, base::Base );
+CLASS( Engine, base::Base );
 	Engine(
 		config::Config *config,
 		error_handler::ErrorHandler *error_handler,

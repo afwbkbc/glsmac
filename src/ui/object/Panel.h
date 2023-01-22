@@ -10,7 +10,7 @@
 namespace ui {
 namespace object {
 
-CHILD_CLASS( Panel, UIContainer )
+CLASS( Panel, UIContainer )
 	Panel( const string& class_name = "" );
 
 	virtual void Create();

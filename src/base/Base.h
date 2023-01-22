@@ -34,24 +34,15 @@ protected:
 	void Log( const string &text ) const;
 };
 
-#define NAMED_CLASS( _name, _parent, _namespace ) \
+#define CLASS( _name, _parent ) \
 class _name : public _parent { \
 public: \
 	virtual const string GetNamespace() const { \
-		return _parent::GetNamespace() + # _namespace + "::" ; \
+		return _parent::GetNamespace() + # _name + "::" ; \
 	} \
 	const string GetClassName() const { \
 		return #_name; \
 	}
-
-#define CHILD_CLASS( _name, _parent) \
-NAMED_CLASS( _name, _parent, _name )
-
-#define MINOR_CLASS( _name, _parent) \
-NAMED_CLASS( _name ## _parent, _parent, _name )
-
-#define MAJOR_CLASS( _name, _parent ) \
-NAMED_CLASS( _name, _parent, _name )
 
 } /* namespace base */
 

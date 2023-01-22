@@ -22,7 +22,7 @@ namespace mainmenu {
 	
 class SlidingMenu;
 
-CHILD_CLASS(MenuBlock, UIContainer)
+CLASS(MenuBlock, UIContainer)
 	MenuBlock( SlidingMenu* menu );
 
 	// how much pixels to shift when fully closed

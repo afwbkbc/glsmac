@@ -7,7 +7,7 @@ namespace opengl {
 namespace object {
 namespace mesh {
 
-MINOR_CLASS( TwoDimensional, Mesh )
+CLASS( TwoDimensional, Mesh )
 };
 
 } /* namespace mesh */

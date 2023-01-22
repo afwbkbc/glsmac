@@ -44,7 +44,7 @@ void Surface::Create() {
 	UIObject::Create();
 
 	NEW( m_background_mesh, scene::mesh::Rectangle );
-	NEW( m_background, scene::actor::MeshActor, "UI::Surface", m_background_mesh );
+	NEW( m_background, scene::actor::Mesh, "UI::Surface", m_background_mesh );
 	AddActor( m_background );
 }
 
