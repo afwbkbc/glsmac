@@ -19,8 +19,13 @@ void Theme::AddStyleSheet( StyleSheet* stylesheet ) {
 
 const Style* Theme::GetStyle( const string style_class ) const {
 	ASSERT( m_is_finalized, "getting style from non-finalized theme" );
-	ASSERT( m_styles.find( style_class ) != m_styles.end(), "style '" + style_class + "' does not exist" ); // TODO: make optional
-	return m_styles.at( style_class );
+	auto it = m_styles.find( style_class );
+	if ( it == m_styles.end() ) {
+		return nullptr;
+	}
+	else {
+		return it->second;
+	}
 }
 
 void Theme::Finalize() {

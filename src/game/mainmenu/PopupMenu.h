@@ -35,7 +35,8 @@ CLASS( PopupMenu, MenuObject )
 	virtual void OnNext() {};
 	
 protected:
-	virtual void OnCancel() {};
+	// true means cancel is allowed, otherwise do nothing
+	virtual bool OnCancel() { return true; };
 	
 	void SetFlags( const unordered_set< popup_flag_t > flags );
 	void SetWidth( const size_t width );

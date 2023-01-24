@@ -1,12 +1,29 @@
-#include "PopupMenu.h"
+#include "Popup.h"
 
 namespace game {
-namespace mainmenu {
 namespace style {
 
-void PopupMenu::AddStyles() {
-
-	AddStyle( "PopupMenuFrame", SH() {
+void Popup::AddStyles() {
+	
+	// TODO: multilevel includes	
+	AddStyle( "PopupBorder", SH() {
+		// frame
+		{
+			const unordered_map<Style::attribute_type_t,vector<size_t>> textures = {
+				{ Style::A_TEXTURE_BACK, { 86, 353, 109, 376 } },
+				{ Style::A_TEXTURE_BORDER_LEFT, { 79, 431, 79, 454 } },
+				{ Style::A_TEXTURE_BORDER_TOP, { 86, 307, 109, 307 } },
+				{ Style::A_TEXTURE_BORDER_RIGHT, { 116, 431, 116, 454 } },
+				{ Style::A_TEXTURE_BORDER_BOTTOM, { 86, 461, 109, 461 } },
+			};
+			for ( auto& texture : textures ) {
+				s->SetTexture( texture.first, "interface.pcx", texture.second[0] , texture.second[1], texture.second[2], texture.second[3] );
+			}
+		}
+	});
+	
+	AddStyle( "PopupFrame", SH() {
+		
 		// frame
 		{
 			const unordered_map<Style::attribute_type_t,vector<size_t>> textures = {
@@ -37,17 +54,45 @@ void PopupMenu::AddStyles() {
 		s->SetColor( Style::A_HEADER_TEXTCOLOR, Color::FromRGB( 109, 126, 178 ) );
 	});
 	
-	AddStyle( "PopupMenuWindow", { "PopupMenuFrame" }, SH() {
+	AddStyle( "PopupWindow", { "PopupFrame" }, SH() {
 		s->SetFont( Style::A_HEADER_FONT, "arialnb.ttf", 18 );
 		s->Set( Style::A_HEADER_HEIGHT, 22 );
 	});
 	
-	AddStyle( "PopupMenuSection", { "PopupMenuFrame" }, SH() {
+	AddStyle( "PopupSection", { "PopupFrame" }, SH() {
 		s->SetFont( Style::A_HEADER_FONT, "arialnb.ttf", 16 );
 		s->Set( Style::A_HEADER_HEIGHT, 20 );
 	});
 	
-	AddStyle( "PopupMenuButton", SH() {
+	AddStyle( "PopupLabel", SH() {
+		s->SetColor( Style::A_TEXTCOLOR, Color::FromRGB( 109, 126, 178 ) );
+		s->SetFont( Style::A_FONT, "arialnb.ttf", 18 );
+	});
+	
+	AddStyle( "PopupInput",{
+		"PopupBorder"
+	}, SH() {
+		s->SetColor( Style::A_TEXTCOLOR, Color::FromRGB( 159, 196, 198 ) );
+		s->SetFont( Style::A_FONT, "arialnb.ttf", 18 );
+		s->Set( Style::A_HEIGHT, 22 );
+	});
+	
+	// TODO: multilevel includes
+	AddStyle( "Loader", {
+		"PopupFrame"
+	}, SH() {
+		s->SetFont( Style::A_HEADER_FONT, "arialnb.ttf", 18 );
+		s->Set( Style::A_HEADER_HEIGHT, 22 );
+		s->SetColor( Style::A_TEXTCOLOR, Color::FromRGB( 109, 126, 178 ) );
+		s->SetFont( Style::A_FONT, "arialnb.ttf", 20 );
+	});
+	
+	AddStyle( "LoaderLabel", SH() {
+		s->SetColor( Style::A_TEXTCOLOR, Color::FromRGB( 109, 126, 178 ) );
+		s->SetFont( Style::A_FONT, "arialnb.ttf", 20 );
+	});
+	
+	AddStyle( "PopupButton", SH() {
 		unordered_map<Style::attribute_type_t,vector<size_t>> textures = {};
 
 		// borders
@@ -92,8 +137,8 @@ void PopupMenu::AddStyles() {
 		}
 	});
 
-	AddStyle( "PopupMenuButtonList", {
-		"PopupMenuButton"
+	AddStyle( "PopupButtonList", {
+		"PopupButton"
 	}, SH() {
 		s->Set( Style::A_LEFT, 3 );
 		s->Set( Style::A_RIGHT, 3 );
@@ -104,8 +149,19 @@ void PopupMenu::AddStyles() {
 		s->Set( Style::A_TEXTALIGN, UIObject::ALIGN_LEFT );
 	});
 	
-	AddStyle( "PopupMenuButtonOkCancel", {
-		"PopupMenuButton"
+	AddStyle( "PopupButtonOkCancel", {
+		"PopupButton"
+	}, SH() {
+		s->Set( Style::A_WIDTH, 230 );
+		s->Set( Style::A_HEIGHT, 20 );
+
+		s->SetFont( Style::A_FONT, "arialnb.ttf", 18 );
+		s->SetSound( Style::A_BUTTON_CLICK_SOUND, "ok.wav" );
+		s->Set( Style::A_SOUND_VOLUME, 0.5 );
+	});
+	
+	AddStyle( "LoaderButton", {
+		"PopupButton"
 	}, SH() {
 		s->Set( Style::A_WIDTH, 234 );
 		s->Set( Style::A_HEIGHT, 20 );
@@ -115,7 +171,7 @@ void PopupMenu::AddStyles() {
 		s->Set( Style::A_SOUND_VOLUME, 0.5 );
 	});
 	
-	AddStyle( "PopupMenuText", SH() {
+	AddStyle( "PopupText", SH() {
 		s->SetFont( Style::A_FONT, "arialnb.ttf", 18 );
 		s->SetColor( Style::A_TEXTCOLOR, Color::FromRGB( 129, 146, 198 ) );
 	});
@@ -123,7 +179,6 @@ void PopupMenu::AddStyles() {
 	
 }
 
-}
 }
 }
 

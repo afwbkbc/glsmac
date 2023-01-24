@@ -12,41 +12,41 @@ namespace mainmenu {
 
 PlanetSize::PlanetSize( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "SELECT SIZE OF PLANET", {
 	{ "TINY PLANET", [this] () -> void {
-		m_mainmenu->m_settings.map_size = game::Settings::MAP_TINY;
+		m_mainmenu->m_settings.global.map_size = game::GlobalSettings::MAP_TINY;
 		ChooseNext();
 	}},
 	{ "SMALL PLANET", [this] () -> void {
-		m_mainmenu->m_settings.map_size = game::Settings::MAP_SMALL;
+		m_mainmenu->m_settings.global.map_size = game::GlobalSettings::MAP_SMALL;
 		ChooseNext();
 	}},
 	{ "STANDARD PLANET", [this] () -> void {
-		m_mainmenu->m_settings.map_size = game::Settings::MAP_STANDARD;
+		m_mainmenu->m_settings.global.map_size = game::GlobalSettings::MAP_STANDARD;
 		ChooseNext();
 	}},
 	{ "LARGE PLANET", [this] () -> void {
-		m_mainmenu->m_settings.map_size = game::Settings::MAP_LARGE;
+		m_mainmenu->m_settings.global.map_size = game::GlobalSettings::MAP_LARGE;
 		ChooseNext();
 	}},
 	{ "HUGE PLANET", [this] () -> void {
-		m_mainmenu->m_settings.map_size = game::Settings::MAP_HUGE;
+		m_mainmenu->m_settings.global.map_size = game::GlobalSettings::MAP_HUGE;
 		ChooseNext();
 	}},
 	{ "CUSTOM SIZE", [this] () -> void {
-		MenuError( "This feature is not available yet." );
+		MenuError();
 	}}
 }) {}
 
 void PlanetSize::ChooseNext() {
 	SlidingMenu *menu;
-	if (m_mainmenu->m_settings.map_type == game::Settings::MT_CUSTOM) {
+	if (m_mainmenu->m_settings.global.map_type == game::GlobalSettings::MT_CUSTOM) {
 		NEW( menu, Ocean, m_mainmenu );
 	}
 	else {
 		// randomize settings
-		m_mainmenu->m_settings.map_ocean = rand() % 3 + 1;
-		m_mainmenu->m_settings.map_erosive = rand() % 3 + 1;
-		m_mainmenu->m_settings.map_lifeforms = rand() % 3 + 1;
-		m_mainmenu->m_settings.map_clouds = rand() % 3 + 1;
+		m_mainmenu->m_settings.global.map_ocean = rand() % 3 + 1;
+		m_mainmenu->m_settings.global.map_erosive = rand() % 3 + 1;
+		m_mainmenu->m_settings.global.map_lifeforms = rand() % 3 + 1;
+		m_mainmenu->m_settings.global.map_clouds = rand() % 3 + 1;
 		NEW( menu, Difficulty, m_mainmenu );
 	}
 	NextMenu( menu );

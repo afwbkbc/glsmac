@@ -63,10 +63,10 @@ CLASS( Engine, base::Base );
 
 protected:
 
-	struct {
-		base::Thread main;
-		base::Thread loaders;
-	} m_threads;
+	atomic<bool> m_is_shutting_down = false;
+	
+	vector<Thread*> m_threads = {};
+	Thread* m_main_thread = nullptr;
 
 	config::Config *const m_config = nullptr;
 	error_handler::ErrorHandler *m_error_handler = nullptr;

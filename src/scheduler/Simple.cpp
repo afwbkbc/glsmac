@@ -12,7 +12,7 @@ Simple::Simple() {
 
 Simple::~Simple() {
 	for ( auto& task : m_tasks ) {
-		RemoveTask( task );
+		DELETE( task );
 	}
 }
 
@@ -75,12 +75,12 @@ void Simple::RemoveTask( Task *task ) {
 	}
 	else {
 		auto it = std::find( m_tasks.begin(), m_tasks.end(), task );
-		ASSERT( it != m_tasks.end(), "removal of non-existent task" );
+		ASSERT( it != m_tasks.end(), "removal of non-existent task " );
 		if ( m_active ) {
 			Log( "Stopping task [" + task->GetName() + "]" );
 			task->Stop();
 		}
-		m_tasks.erase( it, it + 1 );
+		m_tasks.erase( it );
 		DELETE( task );
 	}
 }

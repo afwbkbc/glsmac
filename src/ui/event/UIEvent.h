@@ -41,6 +41,8 @@ CLASS( UIEvent, base::Base )
 		K_LEFT,
 		K_RIGHT,
 		K_ENTER,
+		K_TAB,
+		K_BACKSPACE,
 		K_ESCAPE,
 		K_GRAVE,
 	};
@@ -52,7 +54,9 @@ CLASS( UIEvent, base::Base )
 			uint8_t button;
 		} mouse;
 		struct {
+			bool is_printable;
 			key_code_t code;
+			char key;
 		} key;
 	} event_data_t;
 	

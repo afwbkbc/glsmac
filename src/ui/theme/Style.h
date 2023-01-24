@@ -103,7 +103,7 @@ CLASS( Style, base::Base )
 	static const modifier_t M_NONE = 0;
 	static const modifier_t M_HOVER = 1;
 	static const modifier_t M_ACTIVE = 2;
-	static const modifier_t M_SELECTED = 4;
+	static const modifier_t M_SELECTED = 4; // also means "focused" (for inputs)
 	static const modifier_t MODIFIER_MAX = 8;
 	
 	void SetStyleHandler( const style_handler_t style_handler );

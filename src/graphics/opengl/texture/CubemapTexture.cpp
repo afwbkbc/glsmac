@@ -11,7 +11,7 @@ CubemapTexture::CubemapTexture( types::Texture *texture ) : Texture( texture ) {
 
 void CubemapTexture::Load() {
 
-	Log( "Creating OpenGL texture ( cubemap )" );
+	//Log( "Creating OpenGL texture ( cubemap )" );
 
 	glGenTextures( 1, &m_texture_obj );
 	glBindTexture( m_target, m_texture_obj );

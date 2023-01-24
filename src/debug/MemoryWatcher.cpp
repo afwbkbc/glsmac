@@ -14,6 +14,9 @@
 void* malloc_real( const size_t size ) {
 	return malloc( size );
 }
+void* realloc_real( void* ptr, const size_t size ) {
+	return realloc( ptr, size );
+}
 void free_real( void* ptr ) {
 	free( ptr );
 }
@@ -167,6 +170,49 @@ void* MemoryWatcher::Malloc( const size_t size, const string& file, const size_t
 	return ptr;
 }
 
+void* MemoryWatcher::Realloc( void* ptr, const size_t size, const string& file, const size_t line ) {
+	lock_guard<mutex> guard( m_mutex );
+	const string source = file + ":" + to_string(line);
+	
+	if ( !ptr ) {
+		throw runtime_error( "reallocation of null @" + source );
+	}
+	
+	if ( !size ) {
+		throw runtime_error( "reallocation of size 0 @" + source );
+	}
+	
+	auto it = m_allocated_memory.find( ptr );
+	if ( it == m_allocated_memory.end() ) {
+		throw runtime_error( "realloc on non-allocated object detected @" + source );
+	}
+	auto& obj = it->second;
+	
+	DEBUG_STAT_CHANGE_BY( heap_allocated_size, -obj.size );
+	
+	// VERY spammy
+	//Log( "Freed " + to_string( obj.size ) + "b from " + to_string( (long int)ptr ) + " @" + source );
+	
+	m_allocated_memory.erase( it );
+	
+	ptr = realloc_real( ptr, size );
+	
+	if ( m_allocated_memory.find( ptr ) != m_allocated_memory.end() ) {
+		throw runtime_error( "realloc double-allocation detected @" + source );
+	}
+	m_allocated_memory[ ptr ] = {
+		size,
+		source
+	};
+	
+	DEBUG_STAT_CHANGE_BY( heap_allocated_size, size );
+	
+	// VERY spammy
+	//Log( "Allocated " + to_string( size ) + "b for " + to_string( (long int)ptr ) + " @" + source );
+	
+	return ptr;
+}
+
 unsigned char* MemoryWatcher::Ptr( unsigned char* ptr, const size_t offset, const size_t size, const string& file, const size_t line  ) {
 	lock_guard<mutex> guard( m_mutex );
 	const string source = file + ":" + to_string(line);
@@ -192,7 +238,7 @@ void MemoryWatcher::Free( void* ptr, const string& file, const size_t line ) {
 	
 	auto it = m_allocated_memory.find( ptr );
 	if ( it == m_allocated_memory.end() ) {
-		throw runtime_error( "free on non-allocated object detected @" + source );
+		throw runtime_error( "free on non-allocated object " + to_string( (long int)ptr ) + " detected @" + source );
 	}
 	auto& obj = it->second;
 	
@@ -216,7 +262,7 @@ void MemoryWatcher::GLGenBuffers( GLsizei n, GLuint * buffers, const string& fil
 		throw runtime_error( "glGenBuffers with size " + to_string(n) + ", suspicious, is it a typo? @" + source );
 	}
 	glGenBuffers_real( n, buffers );
-	Log( "Created opengl buffer " + to_string( *buffers ) + " @" + source );
+	//Log( "Created opengl buffer " + to_string( *buffers ) + " @" + source );
 	
 	if ( m_opengl.buffers.find( *buffers ) != m_opengl.buffers.end() ) {
 		throw runtime_error( "glGenBuffers buffer id overlap @" + source );
@@ -348,12 +394,12 @@ void MemoryWatcher::GLDeleteBuffers( GLsizei n, const GLuint * buffers, const st
 		throw runtime_error( "glDeleteBuffers buffer is both vertex buffer and index buffer, is it a bug? @" + source );
 	}
 	if ( it_vertex != m_opengl.vertex_buffers.end() ) {
-		Log( "Destroying opengl vertex buffer " + to_string( *buffers ) + " @" + source );
+		//Log( "Destroying opengl vertex buffer " + to_string( *buffers ) + " @" + source );
 		DEBUG_STAT_CHANGE_BY( opengl_vertex_buffers_size, -it_vertex->second.size );
 		m_opengl.vertex_buffers.erase( it_vertex );
 	}
 	if ( it_index != m_opengl.index_buffers.end() ) {
-		Log( "Destroying opengl index buffer " + to_string( *buffers ) + " @" + source );
+		//Log( "Destroying opengl index buffer " + to_string( *buffers ) + " @" + source );
 		DEBUG_STAT_CHANGE_BY( opengl_index_buffers_size, -it_index->second.size );
 		m_opengl.index_buffers.erase( it_index );
 	}
@@ -372,7 +418,7 @@ void MemoryWatcher::GLGenTextures( GLsizei n, GLuint * textures, const string& f
 		throw runtime_error( "glGenTextures with size " + to_string(n) + ", suspicious, is it a typo? @" + source );
 	}
 	glGenTextures_real( n, textures );
-	Log( "Created opengl texture " + to_string( *textures ) + " @" + source );
+	//Log( "Created opengl texture " + to_string( *textures ) + " @" + source );
 	
 	if ( m_opengl.textures.find( *textures ) != m_opengl.textures.end() ) {
 		throw runtime_error( "glGenTextures texture id overlap @" + source );

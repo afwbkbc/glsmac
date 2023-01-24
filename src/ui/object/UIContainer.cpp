@@ -61,7 +61,7 @@ void UIContainer::DestroyChild( UIObject *object ) {
 void UIContainer::AddChild( UIObject *object ) {
 	ASSERT( !object->GetParentObject(),"non-free UIObject insertion" );
 	ASSERT( find( m_child_objects.begin(), m_child_objects.end(), object ) == m_child_objects.end(), "duplicate UIObject insertion" );
-	Log( "Adding child " + object->GetName() );
+	//Log( "Adding child " + object->GetName() );
 	m_child_objects.push_back( object );
 	object->SetParentObject( this );
 	object->SetOverriddenEventContexts( m_event_contexts | m_overridden_event_contexts );
@@ -73,7 +73,7 @@ void UIContainer::AddChild( UIObject *object ) {
 void UIContainer::RemoveChild( UIObject *object ) {
 	auto it = find( m_child_objects.begin(), m_child_objects.end(), object );
 	ASSERT( it != m_child_objects.end(), "UIObject to be removed not found" );
-	Log( "Removing child " + object->GetName() );
+	//Log( "Removing child " + object->GetName() );
 	m_child_objects.erase( it, it + 1 );
 	DestroyChild( object );
 }
@@ -204,6 +204,23 @@ void UIContainer::RemoveStyleModifier( const Style::modifier_t modifier ) {
 		}
 	}
 }
+
+void UIContainer::BlockEvents() {
+	UIObject::BlockEvents();
+	
+	for (auto& c : m_child_objects) {
+		c->BlockEvents();
+	}
+}
+
+void UIContainer::UnblockEvents() {
+	UIObject::UnblockEvents();
+
+	for (auto& c : m_child_objects) {
+		c->UnblockEvents();
+	}
+}
+
 
 const string UIContainer::Subclass( const string& class_name ) const {
 	//if (this->m_style_class.empty()) {

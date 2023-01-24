@@ -55,7 +55,6 @@ void Label::Destroy() {
 
 	if ( m_actor ) {
 		RemoveActor(m_actor);
-		Log( "Deleting text actor " + m_actor->GetName() );
 		DELETE( m_actor );
 		m_actor = nullptr;
 	}

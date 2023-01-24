@@ -9,25 +9,25 @@ namespace mainmenu {
 
 StartGame::StartGame( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 	{ "MAKE RANDOM MAP", [this] () -> void {
-		m_mainmenu->m_settings.map_type = Settings::MT_RANDOM;
+		m_mainmenu->m_settings.global.map_type = GlobalSettings::MT_RANDOM;
 		NEWV( menu, PlanetSize, m_mainmenu );
 		NextMenu( menu );
 	}},
 	{ "CUSTOMIZE RANDOM MAP", [this] () -> void {
-		m_mainmenu->m_settings.map_type = Settings::MT_CUSTOM;
+		m_mainmenu->m_settings.global.map_type = GlobalSettings::MT_CUSTOM;
 		NEWV( menu, PlanetSize, m_mainmenu );
 		NextMenu( menu );
 	}},
 	{ "THE MAP OF PLANET", [this] () -> void {
-		m_mainmenu->m_settings.map_type = Settings::MT_PREGEN;
-		MenuError( "This feature is not available yet." );
+		m_mainmenu->m_settings.global.map_type = GlobalSettings::MT_PREGEN;
+		MenuError();
 	}},
 	{ "HUGE MAP OF PLANET", [this] () -> void {
-		m_mainmenu->m_settings.map_type = Settings::MT_PREGEN;
-		MenuError( "This feature is not available yet." );
+		m_mainmenu->m_settings.global.map_type = GlobalSettings::MT_PREGEN;
+		MenuError();
 	}},
 	{ "LOAD MAP FILE", [this] () -> void {
-		MenuError( "This feature is not available yet." );
+		MenuError();
 	}}
 }) {}
 

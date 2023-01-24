@@ -16,6 +16,7 @@ CLASS( MenuObject, base::Base )
 	
 	virtual void Show() = 0;
 	virtual void Hide() = 0;
+	virtual void Iterate() {};
 	
 	virtual void Close();
 	virtual bool MaybeClose() { return false; }; // for handling right clicks in menu
@@ -27,7 +28,7 @@ protected:
 	friend class MenuItem;
 	
 	void NextMenu( MenuObject* menu_object );
-	void MenuError( const string& error_text );
+	void MenuError( const string& error_text = "This feature is not available yet." );
 
 	MainMenu *m_mainmenu = nullptr;
 	const string m_title = "";

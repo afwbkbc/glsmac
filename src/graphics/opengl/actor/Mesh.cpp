@@ -15,7 +15,7 @@ namespace opengl {
 
 Mesh::Mesh( scene::actor::Mesh *actor ) : Actor( actor ) {
 
-	Log( "Creating OpenGL actor for " + actor->GetName() );
+	//Log( "Creating OpenGL actor for " + actor->GetName() );
 
 	glGenBuffers( 1, &m_vbo );
 	glGenBuffers( 1, &m_ibo );
@@ -23,7 +23,7 @@ Mesh::Mesh( scene::actor::Mesh *actor ) : Actor( actor ) {
 }
 
 Mesh::~Mesh() {
-	Log( "Destroying OpenGL actor" );
+	//Log( "Destroying OpenGL actor" );
 
 	glDeleteBuffers( 1, &m_ibo );
 	glDeleteBuffers( 1, &m_vbo );
@@ -66,12 +66,12 @@ void Mesh::Load() {
 }
 
 void Mesh::Unload() {
-	//Log( "Unloading OpenGL actor" );
+	// Log( "Unloading OpenGL actor" );
 
 	if ( m_actor ) {
-		//auto *actor = (scene::actor::Mesh *)m_actor;
+/*		auto *actor = (scene::actor::Mesh *)m_actor;
 
-		/* it's better to keep everything loaded forever
+		// it's better to keep everything loaded forever
 		const auto* texture = actor->GetTexture();
 		if (texture) {
 			g_engine->GetGraphics()->UnloadTexture(texture);

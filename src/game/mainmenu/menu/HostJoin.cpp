@@ -1,25 +1,32 @@
 #include "HostJoin.h"
 
-#include "Loading.h"
-#include "Lobby.h"
+#include "engine/Engine.h"
+
+#include "types/ThreadCall.h"
+
+#include "Host.h"
+#include "Join.h"
 
 namespace game {
 namespace mainmenu {
 
-HostJoin::HostJoin( MainMenu* mainmenu ) : PopupMenu( mainmenu, "MULTIPLAYER SETUP" ) {
+HostJoin::HostJoin( MainMenu* mainmenu ) : PopupMenu( mainmenu, "HOST OR JOIN SESSION" ) {
 	SetWidth( 500 );
 	SetHeight( 150 );
 	SetFlags( { PF_HAS_OK, PF_HAS_CANCEL } );
 }
 
+HostJoin::~HostJoin() {
+}
+
 void HostJoin::Show() {
 	PopupMenu::Show();
 	
-	NEW( m_section, Section, "PopupMenuSection" );
-		m_section->SetTitleText( "Host or join?" );
+	NEW( m_section, Section, "PopupSection" );
+		m_section->SetTitleText( "Would you like to host a new game or join an existing one?" );
 	m_body->AddChild( m_section );
 	
-	NEW( m_choices, ChoiceList, "PopupMenuButtonList" );
+	NEW( m_choices, ChoiceList, "PopupButtonList" );
 		m_choices->SetPadding( 3 );
 		m_choices->SetChoices({
 			"Host new game",
@@ -33,6 +40,7 @@ void HostJoin::Show() {
 }
 
 void HostJoin::Hide() {
+	
 		m_section->RemoveChild( m_choices );
 	m_body->RemoveChild( m_section );
 	
@@ -41,31 +49,17 @@ void HostJoin::Hide() {
 
 void HostJoin::OnNext() {
 	const auto value = m_choices->GetValue();
+	MenuObject* menu = nullptr;
 	if ( value == "Host new game" ) {
-		m_mainmenu->m_settings.network_role = Settings::NR_SERVER;
+		m_mainmenu->m_settings.local.network_role = LocalSettings::NR_SERVER;
+		NEW( menu, Host, m_mainmenu );
+		NextMenu( menu );
 	}
 	else {
-		m_mainmenu->m_settings.network_role = Settings::NR_CLIENT;
+		m_mainmenu->m_settings.local.network_role = LocalSettings::NR_CLIENT;
+		NEW( menu, Join, m_mainmenu );
+		NextMenu( menu );
 	}
-	
-	/*
-	NEWV( menu, Loading, m_mainmenu );
-	menu->SetOnStart( LH( this ) {
-		Log( "ONSTART" );
-		return true;
-		
-	});
-	menu->SetOnIterate( LH( this ) {
-		Log( "ONITERATE" );
-		return true;
-	});
-	menu->SetOnCancel( LH( this ) {
-		Log( "ONCANCEL" );
-		return true;
-	});*/
-	NEWV( menu, Lobby, m_mainmenu );
-	
-	NextMenu( menu );
 }
 
 const string HostJoin::GetChoice() const {

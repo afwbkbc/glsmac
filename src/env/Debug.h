@@ -95,6 +95,7 @@ extern debug_stats_t g_debug_stats;
 	delete _var;
 
 #define malloc( __size ) g_memory_watcher->Malloc( __size, __FILE__, __LINE__ )
+#define realloc( __ptr, __size ) g_memory_watcher->Realloc( __ptr, __size, __FILE__, __LINE__ )
 #define ptr( _ptr, _offset, _size ) g_memory_watcher->Ptr( (unsigned char*)_ptr, _offset, _size, __FILE__, __LINE__ )
 #define free( __ptr ) g_memory_watcher->Free( __ptr, __FILE__, __LINE__ )
 	

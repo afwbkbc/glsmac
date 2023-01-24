@@ -62,6 +62,10 @@ void UIObject::Destroy() {
 	
 	HideDebugFrame();
 	
+	if ( m_is_focusable ) {
+		g_engine->GetUI()->RemoveFromFocusableObjects( this );
+	}
+	
 	m_created = false;
 
 	DEBUG_STAT_INC( ui_elements_destroyed );
@@ -100,18 +104,22 @@ void UIObject::SetZIndex( float z_index ) {
 	}
 }
 
-void UIObject::UpdateZIndex() {
-	float new_absolute_z_index = std::pow( 0.1, m_depth ) * m_z_index;
-	if ( m_parent_object ) {
-		new_absolute_z_index += m_parent_object->m_absolute_z_index;
-	}
-	if ( new_absolute_z_index != m_absolute_z_index ) {
-		m_absolute_z_index = new_absolute_z_index;
+void UIObject::SetAbsoluteZIndex( float absolute_z_index ) {
+	if ( absolute_z_index != m_absolute_z_index ) {
+		m_absolute_z_index = absolute_z_index;
 		for (auto& actor : m_actors) {
 			actor->SetPositionZ( m_absolute_z_index );
 		}
 		Realign();
 	}
+}
+
+void UIObject::UpdateZIndex() {
+	float new_absolute_z_index = std::pow( 0.1, m_depth ) * m_z_index;
+	if ( m_parent_object ) {
+		new_absolute_z_index += m_parent_object->m_absolute_z_index;
+	}
+	SetAbsoluteZIndex( new_absolute_z_index );
 }
 
 scene::Scene *UIObject::GetSceneOfActor( const Actor *actor ) const {
@@ -507,6 +515,10 @@ void UIObject::SetVAlign( const alignment_t align ) {
 
 void UIObject::ProcessEvent( UIEvent* event ) {
 	
+	if ( m_are_events_blocked ) {
+		return;
+	}
+	
 	bool is_processed = false;
 	
 	if ( event->m_type != UIEvent::EV_MOUSE_MOVE ) { // mouse move events are sent to all elements, but we need to process only those inside object area
@@ -548,6 +560,9 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 				break;
 			}
 			case UIEvent::EV_MOUSE_DOWN: {
+				if ( m_is_focusable && !m_is_focused ) {
+					g_engine->GetUI()->FocusObject( this );
+				}
 				if ( HasEventContext( EC_MOUSE ) ) {
 					is_processed = OnMouseDown( &event->m_data );
 				}
@@ -566,7 +581,7 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 				break;
 			}*/ // conflicts with button click, maybe not needed?
 			case UIEvent::EV_KEY_DOWN: {
-				if ( HasEventContext( EC_KEYBOARD ) ) {
+				if ( HasEventContext( EC_KEYBOARD ) || m_is_focused ) {
 					is_processed = OnKeyDown( &event->m_data );
 				}
 				break;
@@ -615,7 +630,7 @@ bool UIObject::IsPointInside( const size_t x, const size_t y ) const {
 void UIObject::SetClass( const string& style_class ) {
 	ASSERT( m_style_class.empty(), "style class already set to '" + m_style_class + "'" ); // TODO: make changeable?
 	ASSERT( !m_style_loaded, "style '" + m_style_class + "' already loaded" );
-	Log("Setting style class '" + style_class + "'");
+	//Log("Setting style class '" + style_class + "'");
 	m_style_class = style_class;
 	ApplyStyleIfNeeded();
 }
@@ -730,14 +745,54 @@ const string UIObject::GetStyleModifiersString() const {
 
 void UIObject::BlockRealigns() {
 	ASSERT( !m_are_realigns_blocked, "realigns already blocked" );
-	Log( "blocking realigns" );
+	//Log( "blocking realigns" );
 	m_are_realigns_blocked = true;
 }
 
 void UIObject::UnblockRealigns() {
 	ASSERT( m_are_realigns_blocked, "realigns already unblocked" );
-	Log( "unblocking realigns" );
+	//Log( "unblocking realigns" );
 	m_are_realigns_blocked = false;
+}
+
+void UIObject::BlockEvents() {
+	if ( !m_are_events_blocked ) {
+		//Log( "blocking events" );
+		m_are_events_blocked = true;
+	}
+}
+
+void UIObject::UnblockEvents() {
+	if ( m_are_events_blocked ) {
+		//Log( "unblocking events" );
+		m_are_events_blocked = false;
+	}
+}
+
+void UIObject::Focus() {
+	Log( "focusing object" );
+	m_is_focused = true;
+	AddStyleModifier( Style::M_SELECTED );
+}
+
+void UIObject::Defocus() {
+	Log( "defocusing object" );
+	m_is_focused = false;
+	RemoveStyleModifier( Style::M_SELECTED );
+}
+
+void UIObject::SetFocusable( bool is_focusable ) {
+	if ( is_focusable != m_is_focusable ) {
+		m_is_focusable = is_focusable;
+		if ( m_is_focusable ) {
+			Log( "setting focusable" );
+			g_engine->GetUI()->AddToFocusableObjects( this );
+		}
+		else {
+			Log( "setting not focusable" );
+			g_engine->GetUI()->RemoveFromFocusableObjects( this );
+		}
+	}
 }
 
 } /* namespace object */

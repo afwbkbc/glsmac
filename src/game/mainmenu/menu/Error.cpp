@@ -16,7 +16,7 @@ Error::Error( MainMenu* mainmenu, const string& error_text )
 void Error::Show() {
 	PopupMenu::Show();
 
-	NEW( m_error_label, Label, "PopupMenuText" );
+	NEW( m_error_label, Label, "PopupText" );
 		m_error_label->SetText( m_error_text );
 	m_body->AddChild( m_error_label );
 }

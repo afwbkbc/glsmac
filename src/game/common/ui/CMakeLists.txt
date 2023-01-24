@@ -1,0 +1,7 @@
+SUBDIR( style )
+
+SET(SRC ${SRC}
+
+
+	
+PARENT_SCOPE)

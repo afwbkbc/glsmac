@@ -2,7 +2,6 @@ SET(SRC ${SRC}
 
 	${PWD}/Main.cpp
 	${PWD}/Error.cpp
-	${PWD}/Loading.cpp
 	${PWD}/StartGame.cpp
 	${PWD}/Scenario.cpp
 	${PWD}/PlanetSize.cpp
@@ -14,6 +13,8 @@ SET(SRC ${SRC}
 	${PWD}/Rules.cpp
 	${PWD}/Multiplayer.cpp
 	${PWD}/HostJoin.cpp
+	${PWD}/Host.cpp
+	${PWD}/Join.cpp
 	${PWD}/Lobby.cpp
 
 PARENT_SCOPE)

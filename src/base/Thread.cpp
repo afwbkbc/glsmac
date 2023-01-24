@@ -7,20 +7,46 @@
 
 namespace base {
 
-Thread::Thread() {
+Thread::Thread( const string& thread_name )
+	: Base()
+	, m_thread_name( thread_name )
+{
 	m_state = STATE_INACTIVE;
 	m_command = COMMAND_NONE;
+	m_name = thread_name;
 }
 
 Thread::~Thread() {
 	if (m_state != STATE_INACTIVE) {
-		Log( "WARNING: thread was not shutdown properly!" );
+		Log( "WARNING: thread " + GetThreadName() + " was not shutdown properly!" );
+	}
+	else {
+		//delete m_thread;
 	}
 }
 
-void Thread::Run() {
+void Thread::T_Start() {
+	ASSERT( !m_thread, "thread object already initialized" );
 	m_state = STATE_STARTING;
+	m_thread = new thread( &Thread::Run, this );
+}
 
+bool Thread::T_IsRunning() {
+	return m_state != STATE_INACTIVE;
+}
+
+void Thread::T_Stop() {
+	ASSERT( m_command == COMMAND_NONE, "thread command overlap" );
+	Log( "Sent STOP command" );
+	m_command = Thread::COMMAND_STOP;
+}
+
+void Thread::Run() {
+	
+	ASSERT( m_state == STATE_STARTING, "starting thread from invalid state" );
+	
+	Log( "Starting thread" );
+	
 #if DEBUG
 	m_icounter = 0;
 #endif
@@ -39,22 +65,11 @@ void Thread::Run() {
 
 	m_state = STATE_ACTIVE;
 
+	Log( "Thread started, entering main loop" );
+	
 	try {
 
 		while ( m_state == STATE_ACTIVE ) {
-
-			if ( m_command != COMMAND_NONE ) {
-
-				switch ( m_command ) {
-					case COMMAND_STOP:
-						m_state = STATE_STOPPING;
-						break;
-					default:;
-				}
-
-				m_command = COMMAND_NONE;
-				continue;
-			}
 
 			auto start = std::chrono::high_resolution_clock::now();
 
@@ -79,8 +94,8 @@ void Thread::Run() {
 			step_len = 1000000000 / m_ips - step_diff;
 			if ( nsdiff > step_len ) {
 #if DEBUG
-				/*
-				Log( "Lag detected!" );
+/*	TODO: fix and add stats to debug overlay			
+				Log( "Thread lag detected!" );
 				for ( modules_t::iterator it = m_modules.begin() ; it != m_modules.end() ; ++it ) {
 					Log( (*it)->GetName() + " " + std::to_string( modulensdiff[ it - m_modules.begin() ] ) + "ns ( " + std::to_string( (float) modulensdiff[ it - m_modules.begin() ] * 100 / step_len ) + "%)");
 				}
@@ -105,11 +120,28 @@ void Thread::Run() {
 
 				std::this_thread::sleep_for( std::chrono::nanoseconds(step_len_rounded) );
 			}
+			
+			switch ( m_command ) {
+				case COMMAND_NONE:
+					// nothing
+					break;
+				case COMMAND_STOP:
+					Log( "Received STOP command" );
+					m_state = STATE_STOPPING;
+					break;
+				default:
+					ASSERT( false, "unknown thread command " + to_string( m_command ) );
+			}
 		}
 
+		Log( "Stopping thread" );
+		
 		m_state = STATE_STOPPING;
 		for ( modules_t::iterator it = m_modules.end() - 1 ; it >= m_modules.begin() ; --it )
 			(*it)->Stop();
+		
+		Log( "Thread stopped" );
+		
 		m_state = STATE_INACTIVE;
 
 	} catch ( runtime_error &e ) {
@@ -125,9 +157,8 @@ void Thread::Run() {
 	}
 }
 
-void Thread::SetCommand( const thread_command_t command ) {
-	ASSERT( m_command == COMMAND_NONE, "thread command overlap" );
-	m_command = command;
+const string& Thread::GetThreadName() const {
+	return m_thread_name;
 }
 
 } /* namespace base */

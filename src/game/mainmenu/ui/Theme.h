@@ -4,7 +4,7 @@
 
 #include "style/Common.h"
 #include "style/SlidingMenu.h"
-#include "style/PopupMenu.h"
+
 
 namespace game {
 namespace mainmenu {
@@ -15,9 +15,8 @@ CLASS( Theme, ui::theme::Theme )
 protected:
 	
 	struct {
-		style::Common common;
+		style::Common mainmenu_common;
 		style::SlidingMenu sliding_menu;
-		style::PopupMenu popup_menu;
 	} m_styles;
 };
 

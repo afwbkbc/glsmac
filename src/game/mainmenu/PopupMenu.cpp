@@ -28,11 +28,12 @@ void PopupMenu::Show() {
 		OnNext();
 	};
 	auto on_cancel = [this] () -> void {
-		OnCancel();
-		GoBack();
+		if ( OnCancel() ) {
+			GoBack();
+		}
 	};
 	
-	NEW( m_frame, Section, "PopupMenuWindow" );
+	NEW( m_frame, Section, "PopupWindow" );
 		m_frame->SetTitleText( m_title );
 		m_frame->SetAlign( UIObject::ALIGN_CENTER );
 		m_frame->SetWidth( m_width );
@@ -67,7 +68,7 @@ void PopupMenu::Show() {
 	m_frame->AddChild( m_body );
 	
 	if ( HasFlag( PF_HAS_OK ) ) {
-		NEW( m_button_ok, Button, "PopupMenuButtonOkCancel" );
+		NEW( m_button_ok, Button, "PopupButtonOkCancel" );
 			if ( HasFlag( PF_HAS_CANCEL ) ) {
 				// two buttons
 				m_button_ok->SetAlign( UIObject::ALIGN_BOTTOM | UIObject::ALIGN_LEFT );
@@ -87,7 +88,7 @@ void PopupMenu::Show() {
 	}
 	
 	if ( HasFlag( PF_HAS_CANCEL ) ) {
-		NEW( m_button_cancel, Button, "PopupMenuButtonOkCancel" );
+		NEW( m_button_cancel, Button, "PopupButtonOkCancel" );
 			if ( HasFlag( PF_HAS_OK ) ) {
 				// two buttons
 				m_button_cancel->SetAlign( UIObject::ALIGN_BOTTOM | UIObject::ALIGN_RIGHT );

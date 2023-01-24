@@ -17,7 +17,7 @@ Texture::~Texture() {
 }
 
 void Texture::Load() {
-	Log( "Creating OpenGL texture" );
+	//Log( "Creating OpenGL texture" );
 
 	glGenTextures( 1, &m_texture_obj );
 	glBindTexture( m_target, m_texture_obj );
@@ -32,9 +32,9 @@ void Texture::Load() {
 }
 
 void Texture::Unload() {
-	Log( "Destroying OpenGL texture" );
+	//Log( "Destroying OpenGL texture" );
 
-	glDeleteTextures( 1, &m_texture_obj );
+	//glDeleteTextures( 1, &m_texture_obj );
 }
 
 void Texture::Enable() {

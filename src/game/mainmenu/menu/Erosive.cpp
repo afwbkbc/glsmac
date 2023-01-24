@@ -7,17 +7,17 @@ namespace mainmenu {
 
 Erosive::Erosive( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "ADJUST EROSIVE FORCES", {
 	{ "STRONG", [this] () -> void {
-		m_mainmenu->m_settings.map_size = game::Settings::MAP_EROSIVE_STRONG;
+		m_mainmenu->m_settings.global.map_size = game::GlobalSettings::MAP_EROSIVE_STRONG;
 		NEWV( menu, Lifeforms, m_mainmenu );
 		NextMenu( menu );
 	}},
 	{ "AVERAGE", [this] () -> void {
-		m_mainmenu->m_settings.map_size = game::Settings::MAP_EROSIVE_AVERAGE;
+		m_mainmenu->m_settings.global.map_size = game::GlobalSettings::MAP_EROSIVE_AVERAGE;
 		NEWV( menu, Lifeforms, m_mainmenu );
 		NextMenu( menu );
 	}},
 	{ "WEAK", [this] () -> void {
-		m_mainmenu->m_settings.map_size = game::Settings::MAP_EROSIVE_WEAK;
+		m_mainmenu->m_settings.global.map_size = game::GlobalSettings::MAP_EROSIVE_WEAK;
 		NEWV( menu, Lifeforms, m_mainmenu );
 		NextMenu( menu );
 	}},

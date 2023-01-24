@@ -13,7 +13,7 @@ namespace opengl {
 FontTexture::FontTexture( types::Font *font ) {
 	m_name = font->m_name;
 
-	Log( "Creating OpenGL font texture" );
+	//Log( "Creating OpenGL font texture" );
 
 	glActiveTexture( GL_TEXTURE0 );
 	glGenTextures( 1, &m_texture );
@@ -54,7 +54,7 @@ FontTexture::FontTexture( types::Font *font ) {
 }
 
 FontTexture::~FontTexture() {
-	Log( "Destroying OpenGL font texture" );
+	//Log( "Destroying OpenGL font texture" );
 
 	glDeleteTextures(1, &m_texture );
 }

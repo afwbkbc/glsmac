@@ -20,7 +20,7 @@ void MainMenu::Start() {
 
 	auto* ui = g_engine->GetUI();
 	
-	ui->SetTheme( &m_theme );
+	ui->AddTheme( &m_theme );
 	
 	// background
 	NEW( m_background, Surface, "MainMenuBackground" );
@@ -78,6 +78,11 @@ void MainMenu::Iterate() {
 		m_menu_next = nullptr;
 		m_menu_object->Show();
 	}
+	else {
+		if ( m_menu_object ) {
+			m_menu_object->Iterate();
+		}
+	}
 }
 
 void MainMenu::Stop() {
@@ -105,7 +110,7 @@ void MainMenu::Stop() {
 	
 	ui->RemoveObject( m_background );
 	
-	ui->UnsetTheme();
+	ui->RemoveTheme( &m_theme );
 
 }
 

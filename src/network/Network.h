@@ -1,11 +1,92 @@
 #pragma once
 
-#include "base/Module.h"
+#include "base/MTModule.h"
+
+#include "Event.h"
+
+#include "types/Packet.h"
+
+using namespace types;
 
 namespace network {
 
-CLASS( Network, base::Module )
+enum op_t {
+	OP_NONE,
+	OP_SUCCESS, // just confirm success
+	OP_CONNECT,
+	OP_DISCONNECT,
+	OP_DISCONNECT_CLIENT,
+	OP_GETEVENTS,
+	OP_SENDEVENT, // todo: multiple?
+};
+
+enum connection_mode_t {
+	CM_NONE,
+	CM_SERVER,
+	CM_CLIENT,
+};
+
+enum result_t {
+	R_NONE,
+	R_SUCCESS,
+	R_ERROR,
+};
 	
+typedef vector<Event> events_t;
+	
+typedef struct {
+	op_t op;
+	struct {
+		connection_mode_t mode;
+		string remote_address;
+	} connect;
+	size_t cid;
+	Event event;
+} MT_Request;
+
+typedef struct {
+	result_t result;
+	string message;
+	events_t events;
+} MT_Response;
+
+typedef base::MTModule< MT_Request, MT_Response > MTModule;
+CLASS( Network, MTModule )
+
+	mt_id_t MT_Connect( const connection_mode_t connect_mode, const string& remote_address = "" );
+	mt_id_t MT_Disconnect();
+	mt_id_t MT_DisconnectClient( const size_t cid );
+	
+	mt_id_t MT_GetEvents();
+	mt_id_t MT_SendEvent( const Event& event );
+	
+	mt_id_t MT_SendPacket( const Packet& packet, const size_t cid = 0 );
+	
+	MT_Response MT_GetResult( mt_id_t mt_id );
+
+protected:
+	
+	virtual MT_Response ListenStart() = 0;
+	virtual MT_Response ListenStop() = 0; 
+	virtual MT_Response Connect( const string& remote_address ) = 0;
+	virtual MT_Response Disconnect() = 0;
+	virtual MT_Response DisconnectClient( const size_t cid ) = 0;
+	
+	const MT_Response ProcessRequest( const MT_Request& request );
+	
+	const MT_Response Error( const string& errmsg = "" );
+	const MT_Response Success();
+	
+	mt_id_t MT_Success();
+	
+	void AddEvent( const Event& event );
+	events_t GetEvents();
+	
+private:
+	connection_mode_t m_current_connection_mode = CM_NONE;
+	
+	events_t m_events_out = {}; // from network to other modules
+	events_t m_events_in = {}; // from other modules to network
 };
 
 }

@@ -1,6 +1,7 @@
-#include <ctime>
-
 #include "Engine.h"
+
+#include <ctime>
+#include <thread>
 
 // TODO: move to config
 const size_t g_max_fps = 500;
@@ -42,34 +43,89 @@ Engine::Engine(
 
 	g_engine = this;
 
-	m_threads.main.SetIPS( g_max_fps );
-	
-	m_threads.main.AddModule( m_config );
-	m_threads.main.AddModule( m_error_handler );
-	m_threads.main.AddModule( m_font_loader );
-	m_threads.main.AddModule( m_texture_loader );
-	m_threads.main.AddModule( m_sound_loader );
-	m_threads.main.AddModule( m_logger );
-	m_threads.main.AddModule( m_input );
-	m_threads.main.AddModule( m_graphics );
-	m_threads.main.AddModule( m_audio );
-	m_threads.main.AddModule( m_network );
-	m_threads.main.AddModule( m_ui );
-	m_threads.main.AddModule( m_scheduler );
+	NEWV( t_main, Thread, "MAIN" );
+		t_main->SetIPS( g_max_fps );
+		t_main->AddModule( m_config );
+		t_main->AddModule( m_error_handler );
+		t_main->AddModule( m_font_loader );
+		t_main->AddModule( m_texture_loader );
+		t_main->AddModule( m_sound_loader );
+		t_main->AddModule( m_logger );
+		t_main->AddModule( m_input );
+		t_main->AddModule( m_graphics );
+		t_main->AddModule( m_audio );
+		t_main->AddModule( m_ui );
+		t_main->AddModule( m_scheduler );
+	m_threads.push_back( t_main );
+	m_main_thread = t_main;
+
+	NEWV( t_network, Thread, "NETWORK" );
+		t_network->SetIPS( 100 );
+		t_network->AddModule( m_network );
+	m_threads.push_back( t_network );
 };
 
 Engine::~Engine()
 {
 	g_engine = NULL;
+	for ( auto& thread : m_threads ) {
+		if ( thread->T_IsRunning() ) {
+			Log( "WARNING: thread " + thread->GetThreadName() + " still running!" );
+		}
+		else {
+			DELETE( thread );
+		}
+	}
 }
 
 int Engine::Run() {
 	int result = EXIT_SUCCESS;
 
-	try {
+	// TODO: dynamic threadpool
+	
+	for ( auto& thread : m_threads ) {
+		thread->T_Start();
+	}
 
-		m_threads.main.Run();
+	try {
+		while ( !m_is_shutting_down ) {
+			for ( auto& thread : m_threads ) {
+				// ?
+			}
+			this_thread::sleep_for( milliseconds( 100 ) );
+		}
+		Log( "Shutting down" );
 		
+		for ( auto& thread : m_threads ) {
+			thread->T_Stop();
+		}
+#if DEBUG 
+		util::Timer thread_running_timer;
+		thread_running_timer.SetInterval( 1000 );
+#endif
+		bool any_thread_running = true;
+		while ( any_thread_running ) {
+			this_thread::sleep_for( milliseconds( 50 ) );
+			any_thread_running = false;
+#if DEBUG
+			const bool announce_frozen_threads = thread_running_timer.Ticked();
+#endif
+			for ( auto& thread : m_threads ) {
+				if ( thread->T_IsRunning() ) {
+#if DEBUG
+					if ( announce_frozen_threads ) {
+						Log( "Thread " + thread->GetThreadName() + " still running" );
+					}
+#endif
+					any_thread_running = true;
+#if DEBUG
+					if ( !announce_frozen_threads )
+#endif
+					break;
+				}
+			}
+		}
+
 	} catch ( runtime_error &e ) {
 		result = EXIT_FAILURE;
 		this->m_error_handler->HandleError( e );
@@ -79,7 +135,7 @@ int Engine::Run() {
 }
 
 void Engine::ShutDown() {
-	m_threads.main.SetCommand( base::Thread::COMMAND_STOP );
+	m_is_shutting_down = true;
 }
 
 } /* namespace engine */

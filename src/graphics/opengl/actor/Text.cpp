@@ -9,7 +9,7 @@ namespace graphics {
 namespace opengl {
 
 Text::Text( scene::actor::Text *actor, Font *font ) : Actor( actor ), m_font( font ) {
-	Log( "Creating OpenGL text '" + actor->GetText() + "' from " + actor->GetName() );
+	//Log( "Creating OpenGL text '" + actor->GetText() + "' from " + actor->GetName() );
 	glGenBuffers( 1, &m_vbo );
 	auto *text_actor = (const scene::actor::Text *)m_actor;
 	auto position = m_actor->GetPosition();
@@ -17,7 +17,7 @@ Text::Text( scene::actor::Text *actor, Font *font ) : Actor( actor ), m_font( fo
 }
 
 Text::~Text() {
-	Log( "Destroying OpenGL text" );
+	//Log( "Destroying OpenGL text" );
 	glDeleteBuffers( 1, &m_vbo );
 	if ( m_texture ) {
 		DELETE( m_texture );

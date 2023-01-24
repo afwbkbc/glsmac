@@ -2,9 +2,7 @@
 
 #include "Logger.h"
 
-#if DEBUG
-#include "util/Timer.h"
-#endif
+#include <mutex>
 
 namespace logger {
 
@@ -12,11 +10,7 @@ CLASS( Stdout, Logger )
 	
 #if DEBUG
 	void Log( const std::string &text );
-	void Iterate();
-	
-	string m_line_buffer = "";
-	util::Timer m_eoln_timer;
-	bool m_is_anything_new = false;
+	mutex m_log_mutex;
 #else
 	void Log( const std::string &text ) {}
 #endif

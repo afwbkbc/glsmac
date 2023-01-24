@@ -62,9 +62,6 @@ OpenGL::~OpenGL() {
 	for ( auto it = m_shader_programs.begin() ; it != m_shader_programs.end() ; ++it ) {
 		DELETE( *it );
 	}
-	for ( auto& texture : m_textures ) {
-		glDeleteTextures(1, &texture.second );
-	}
 }
 
 void OpenGL::Start() {
@@ -162,6 +159,11 @@ void OpenGL::Stop() {
 	for ( auto it = m_shader_programs.begin() ; it != m_shader_programs.end() ; ++it )
 		(*it)->Stop();
 
+	for ( auto& texture : m_textures ) {
+		glDeleteTextures(1, &texture.second );
+	}
+	m_textures.clear();
+	
 	SDL_GL_DeleteContext( m_gl_context );
 
 	Log( "Destroying window" );

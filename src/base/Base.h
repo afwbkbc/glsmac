@@ -8,7 +8,6 @@
 #include <stdexcept>
 
 using namespace std;
-
 #define THROW(  _text ) throw runtime_error( _text )
 
 #if DEBUG
@@ -46,3 +45,4 @@ public: \
 
 } /* namespace base */
 
+using namespace base;

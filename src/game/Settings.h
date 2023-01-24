@@ -1,9 +1,13 @@
 #pragma once
 
+#include "types/Serializable.h"
+
+using namespace types;
+
 namespace game {
 
-class Settings {
-public:
+// settings that are synced between players (host has authority)
+CLASS( GlobalSettings, Serializable )
 	
 	typedef uint8_t map_parameter_t;
 	
@@ -75,6 +79,18 @@ public:
 	};
 	network_type_t network_type = NT_NONE;
 	
+	string game_name = "";
+	
+	// TODO: custom rules struct
+	
+	const Buffer Serialize() const;
+	void Unserialize( Buffer data );
+};
+
+// settings that aren't synced between players
+CLASS( LocalSettings, Serializable )
+public:
+	
 	enum network_role_t {
 		NR_NONE,
 		NR_SERVER,
@@ -82,10 +98,20 @@ public:
 	};
 	network_role_t network_role = NR_NONE;
 	
-	// TODO: custom rules struct
+	string player_name = "";
+	string remote_address = "";
+		
+	const Buffer Serialize() const;
+	void Unserialize( Buffer data );
+};
 	
+CLASS( Settings, Serializable )
 	
+	GlobalSettings global;
+	LocalSettings local;
 	
+	const Buffer Serialize() const;
+	void Unserialize( Buffer data );
 };
 
 }

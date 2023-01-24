@@ -20,8 +20,8 @@
 #include "scheduler/Simple.h"
 #include "ui/Default.h"
 
+#include "game/common/Common.h"
 #include "game/intro/Intro.h"
-#include "game/mainmenu/MainMenu.h"
 
 #include "engine/Engine.h"
 
@@ -125,10 +125,13 @@ int main(const int argc, const char *argv[]) {
 		scheduler.AddTask( debug_overlay );
 #endif
 		
+		// game common stuff
+		NEWV( task_common, game::Common );
+		scheduler.AddTask( task_common );
+		
 		// game entry point
-		NEWV( task, game::mainmenu::MainMenu );
-		//NEWV( task, game::intro::Intro );
-		scheduler.AddTask( task );
+		NEWV( task_intro, game::intro::Intro );
+		scheduler.AddTask( task_intro );
 
 		engine::Engine engine(
 			&config,

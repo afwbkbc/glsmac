@@ -12,41 +12,41 @@ namespace mainmenu {
 
 Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 	{ "START GAME", [this] () -> void {
-		m_mainmenu->m_settings.game_mode = game::Settings::GM_SINGLEPLAYER;
+		m_mainmenu->m_settings.global.game_mode = game::GlobalSettings::GM_SINGLEPLAYER;
 		NEWV( menu, StartGame, m_mainmenu );
 		//NEWV( menu, Main, m_mainmenu );
 		NextMenu( menu );
 	}},
 	{ "QUICK START", [this] () -> void {
-		m_mainmenu->m_settings.game_mode = game::Settings::GM_SINGLEPLAYER;
+		m_mainmenu->m_settings.global.game_mode = game::GlobalSettings::GM_SINGLEPLAYER;
 		
 		// randomize settings
-		m_mainmenu->m_settings.map_type = game::Settings::MT_RANDOM;
-		m_mainmenu->m_settings.map_size = rand() % 5 + 1;
-		m_mainmenu->m_settings.map_ocean = rand() % 3 + 1;
-		m_mainmenu->m_settings.map_erosive = rand() % 3 + 1;
-		m_mainmenu->m_settings.map_lifeforms = rand() % 3 + 1;
-		m_mainmenu->m_settings.map_clouds = rand() % 3 + 1;
-		m_mainmenu->m_settings.difficulty = rand() % 6 + 1; // TODO: previous difficulty?
-		m_mainmenu->m_settings.game_rules = game::Settings::GR_STANDARD;
+		m_mainmenu->m_settings.global.map_type = game::GlobalSettings::MT_RANDOM;
+		m_mainmenu->m_settings.global.map_size = rand() % 5 + 1;
+		m_mainmenu->m_settings.global.map_ocean = rand() % 3 + 1;
+		m_mainmenu->m_settings.global.map_erosive = rand() % 3 + 1;
+		m_mainmenu->m_settings.global.map_lifeforms = rand() % 3 + 1;
+		m_mainmenu->m_settings.global.map_clouds = rand() % 3 + 1;
+		m_mainmenu->m_settings.global.difficulty = rand() % 6 + 1; // TODO: previous difficulty?
+		m_mainmenu->m_settings.global.game_rules = game::GlobalSettings::GR_STANDARD;
 
-		MenuError( "This feature is not available yet." );
+		MenuError();
 	}},
 	{ "SCENARIO", [this] () -> void {
-		m_mainmenu->m_settings.game_mode = game::Settings::GM_SCENARIO;
+		m_mainmenu->m_settings.global.game_mode = game::GlobalSettings::GM_SCENARIO;
 		NEWV( menu, Scenario, m_mainmenu );
 		NextMenu( menu );
 	}},
 	{ "LOAD GAME", [this] () -> void {
-		MenuError( "This feature is not available yet." );
+		MenuError();
 	}},
 	{ "MULTIPLAYER", [this] () -> void {
-		m_mainmenu->m_settings.game_mode = game::Settings::GM_MULTIPLAYER;
+		m_mainmenu->m_settings.global.game_mode = game::GlobalSettings::GM_MULTIPLAYER;
 		NEWV( menu, Multiplayer, m_mainmenu );
 		NextMenu( menu );
 	}},
 	{ "VIEW CREDITS", [this] () -> void {
-		MenuError( "This feature is not available yet." );
+		MenuError();
 	}},
 	{ "EXIT GAME", [this] () -> void {
 		g_engine->ShutDown();

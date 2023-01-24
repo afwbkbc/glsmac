@@ -30,6 +30,9 @@ CLASS( UIContainer, UIObject )
 	void AddStyleModifier( const Style::modifier_t modifier );
 	void RemoveStyleModifier( const Style::modifier_t modifier );
 
+	void BlockEvents();
+	void UnblockEvents();
+	
 protected:
 	virtual void ApplyStyle();
 	virtual void ReloadStyle();

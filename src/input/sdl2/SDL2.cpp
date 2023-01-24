@@ -81,18 +81,22 @@ void SDL2::Iterate() {
 				break;
 			}
 			case SDL_KEYDOWN: {
-				auto code = GetKeyCode( event.key.keysym.scancode );
-				if ( code ) {
-					NEWV( ui_event, event::KeyDown, code );
+				auto modifiers = SDL_GetModState();
+				auto scancode = GetScanCode( event.key.keysym.scancode, modifiers );
+				char keycode = GetKeyCode( event.key.keysym.sym, modifiers );
+				if ( scancode || keycode ) {
+					NEWV( ui_event, event::KeyDown, scancode, keycode );
 					g_engine->GetUI()->ProcessEvent( ui_event );
 					DELETE( ui_event );
 				}
 				break;
 			}
 			case SDL_KEYUP: {
-				auto code = GetKeyCode( event.key.keysym.scancode );
-				if ( code ) {
-					NEWV( ui_event, event::KeyUp, code );
+				auto modifiers = SDL_GetModState();
+				auto scancode = GetScanCode( event.key.keysym.scancode, modifiers );
+				char keycode = GetKeyCode( event.key.keysym.sym, modifiers );
+				if ( scancode || keycode ) {
+					NEWV( ui_event, event::KeyUp, scancode, keycode );
 					g_engine->GetUI()->ProcessEvent( ui_event );
 					DELETE( ui_event );
 				}
@@ -122,34 +126,76 @@ UIEvent::mouse_button_t SDL2::GetMouseButton( uint8_t sdl_mouse_button ) const {
 	}
 }
 
-UIEvent::key_code_t SDL2::GetKeyCode( uint8_t sdl_scan_code ) const {
-	switch ( sdl_scan_code ) {
-		case SDL_SCANCODE_RIGHT: {
-			return UIEvent::K_RIGHT;
+#include <cstdio>
+
+char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
+	
+	char result = 0;
+	if ( ( modifiers & (~KMOD_LSHIFT) & (~KMOD_RSHIFT) & (~KMOD_NUM) & (~KMOD_CAPS) & (~KMOD_SCROLL) ) == 0 ) { // only shift or num/caps/scroll locks
+		bool is_shift = ( modifiers & KMOD_LSHIFT ) || ( modifiers & KMOD_RSHIFT );
+		bool is_caps = ( modifiers & KMOD_CAPS );
+		if ( code >= '0' && code <= '9' && !is_shift ) { // numbers
+			result = code;
 		}
-		case SDL_SCANCODE_LEFT: {
-			return UIEvent::K_LEFT;
+		else if ( // allowed symbols
+		(
+			code == ' ' ||
+			code == '.'
+		) && !is_shift )
+		{
+			result = code;
 		}
-		case SDL_SCANCODE_DOWN: {
-			return UIEvent::K_DOWN;
-		}
-		case SDL_SCANCODE_UP: {
-			return UIEvent::K_UP;
-		}
-		case SDL_SCANCODE_RETURN: {
-			return UIEvent::K_ENTER;
-		}
-		case SDL_SCANCODE_ESCAPE: {
-			return UIEvent::K_ESCAPE;
-		}
-		case SDL_SCANCODE_GRAVE: {
-			return UIEvent::K_GRAVE;
-		}
-		default: {
-			Log( "Skipping unknown keydown code: " + to_string( sdl_scan_code ) );
-			return UIEvent::K_NONE;
+		else if ( code >= 'a' && code <= 'z' ) { // letters
+			result = code;
+			if ( is_shift ^ is_caps ) {
+				result -= 32;
+			}
 		}
 	}
+	if ( result ) {
+		//printf( "KEY=%c\n", result );
+		return result;
+	}
+	else {
+		//Log( "Skipping unknown key code: " + to_string( code ) + " (modifiers: " + to_string( modifiers ) + ")" );
+		return 0;
+	}
+}
+
+UIEvent::key_code_t SDL2::GetScanCode( SDL_Scancode code, SDL_Keymod modifiers ) const {
+	if ( ( modifiers & (~KMOD_NUM) & (~KMOD_CAPS) & (~KMOD_SCROLL) ) == 0 ) { // num/caps/scroll locks are allowed
+		switch ( code ) {
+			case SDL_SCANCODE_RIGHT: {
+				return UIEvent::K_RIGHT;
+			}
+			case SDL_SCANCODE_LEFT: {
+				return UIEvent::K_LEFT;
+			}
+			case SDL_SCANCODE_DOWN: {
+				return UIEvent::K_DOWN;
+			}
+			case SDL_SCANCODE_UP: {
+				return UIEvent::K_UP;
+			}
+			case SDL_SCANCODE_RETURN: {
+				return UIEvent::K_ENTER;
+			}
+			case SDL_SCANCODE_TAB: {
+				return UIEvent::K_TAB;
+			}
+			case SDL_SCANCODE_BACKSPACE: {
+				return UIEvent::K_BACKSPACE;
+			}
+			case SDL_SCANCODE_ESCAPE: {
+				return UIEvent::K_ESCAPE;
+			}
+			case SDL_SCANCODE_GRAVE: {
+				return UIEvent::K_GRAVE;
+			}
+		}
+	}
+	//Log( "Skipping unknown scan code: " + to_string( code ) + " (modifiers: " + to_string( modifiers ) + ")" );
+	return UIEvent::K_NONE;
 }
 
 }

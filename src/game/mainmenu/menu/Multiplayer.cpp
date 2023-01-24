@@ -15,11 +15,11 @@ Multiplayer::Multiplayer( MainMenu* mainmenu ) : PopupMenu( mainmenu, "MULTIPLAY
 void Multiplayer::Show() {
 	PopupMenu::Show();
 
-	NEW( m_section, Section, "PopupMenuSection" );
+	NEW( m_section, Section, "PopupSection" );
 		m_section->SetTitleText( "Select a service..." );
 	m_body->AddChild( m_section );
 	
-	NEW( m_choices, ChoiceList, "PopupMenuButtonList" );
+	NEW( m_choices, ChoiceList, "PopupButtonList" );
 		m_choices->SetPadding( 3 );
 		m_choices->SetChoices({
 			"Simple Internet TCP/IP Connection",
@@ -42,12 +42,12 @@ void Multiplayer::Hide() {
 void Multiplayer::OnNext() {
 	const auto value = m_choices->GetValue();
 	if ( value == "Simple Internet TCP/IP Connection" ) {
-		m_mainmenu->m_settings.network_type = Settings::NT_SIMPLETCP;
+		m_mainmenu->m_settings.global.network_type = GlobalSettings::NT_SIMPLETCP;
 		NEWV( menu, HostJoin, m_mainmenu );
 		NextMenu( menu );
 	}
 	else {
-		MenuError( "This feature is not available yet." );
+		MenuError();
 	}
 }
 

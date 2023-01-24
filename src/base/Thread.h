@@ -3,6 +3,9 @@
 #include "base/Base.h"
 #include "base/Module.h"
 
+#include <atomic>
+#include <thread>
+
 namespace base {
 
 CLASS( Thread, Base )
@@ -19,7 +22,7 @@ CLASS( Thread, Base )
 		COMMAND_STOP,
 	};
 
-	Thread();
+	Thread( const string& thread_name );
 	~Thread();
 	void SetIPS( const float ips ) {
 		m_ips = ips;
@@ -27,11 +30,21 @@ CLASS( Thread, Base )
 	void AddModule( base::Module *module ) {
 		m_modules.push_back( module );
 	}
-	void Run();
+	void T_Start();
+	bool T_IsRunning();
+	void T_Stop();
+	
+	const string& GetThreadName() const;
+	
 	void SetCommand( const thread_command_t command );
 protected:
-	thread_state_t m_state = STATE_INACTIVE;
-	thread_command_t m_command = COMMAND_NONE;
+	const string m_thread_name = "";
+	
+	void Run();
+	thread* m_thread = nullptr;
+	
+	atomic<thread_state_t> m_state = STATE_INACTIVE;
+	atomic<thread_command_t> m_command = COMMAND_NONE;
 	base::modules_t m_modules = {};
 	float m_ips = 10;
 #if DEBUG

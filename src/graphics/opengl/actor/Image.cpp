@@ -13,7 +13,7 @@ namespace opengl {
 
 Image::Image( scene::actor::Image *actor ) : Actor( actor ) {
 
-	Log( "Creating OpenGL actor" );
+	//Log( "Creating OpenGL actor" );
 
 	glGenBuffers( 1, &m_vbo );
 	glGenBuffers( 1, &m_ibo );
@@ -22,7 +22,7 @@ Image::Image( scene::actor::Image *actor ) : Actor( actor ) {
 }
 
 Image::~Image() {
-	Log( "Destroying OpenGL actor" );
+	//Log( "Destroying OpenGL actor" );
 
 	glDeleteBuffers( 1, &m_ibo );
 	glDeleteBuffers( 1, &m_vbo );
@@ -70,7 +70,7 @@ void Image::Load() {
 }
 
 void Image::Unload() {
-	Log( "Unloading OpenGL actor" );
+	//Log( "Unloading OpenGL actor" );
 
 	/*for (int i=0;i<this->mModel.mMaterials.size();i++)
 		this->mGraphics->DeactivateTexture(&this->mModel.mMaterials[i]->mTexture1Map.texture,&this->mMaterialTextureObjs[i]);*/

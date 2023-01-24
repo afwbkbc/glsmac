@@ -11,8 +11,8 @@ namespace base {
 class Base;
 }
 
-using namespace std;
 using namespace base;
+using namespace std;
 
 namespace debug {
 
@@ -25,6 +25,7 @@ public:
 	void New( const Base* object, const size_t size, const string& file, const size_t line );
 	void Delete( const Base* object, const string& file, const size_t line );
 	void* Malloc( const size_t size, const string& file, const size_t line );
+	void* Realloc( void* ptr, const size_t size, const string& file, const size_t line );
 	unsigned char *Ptr( unsigned char* ptr, const size_t offset, const size_t size, const string& file, const size_t line  );
 	void Free( void* ptr, const string& file, const size_t line );
 

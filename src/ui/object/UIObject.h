@@ -126,6 +126,14 @@ CLASS( UIObject, base::Base )
 	void Off( const UIEventHandler* handler );
 	bool Trigger( const UIEvent::event_type_t type, const UIEvent::event_data_t* data );
 	
+	virtual void BlockEvents();
+	virtual void UnblockEvents();
+	
+	void SetFocusable( bool is_focusable );
+	
+	virtual void Focus();
+	virtual void Defocus();
+	
 protected:
 	friend class UIContainer;
 	
@@ -249,7 +257,13 @@ protected:
 	
 private:
 	
+	bool m_is_focusable = false;
+	bool m_is_focused = false;
+	
+	void SetAbsoluteZIndex( float z_index );
+	
 	bool m_are_realigns_blocked = false;
+	bool m_are_events_blocked = false;
 	
 	event_context_t m_event_contexts = EC_NONE;
 	event_context_t m_overridden_event_contexts = EC_NONE; // if parent captures any context - children can't have it until parent releases it

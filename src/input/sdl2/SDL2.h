@@ -33,7 +33,8 @@ CLASS( SDL2, Input )
 private:
 	
 	UIEvent::mouse_button_t GetMouseButton( uint8_t sdl_mouse_button ) const;
-	UIEvent::key_code_t GetKeyCode( uint8_t sdl_scan_code ) const;
+	char GetKeyCode( SDL_Keycode sdl_key_code, SDL_Keymod modifiers ) const;
+	UIEvent::key_code_t GetScanCode( SDL_Scancode code, SDL_Keymod modifiers ) const;
 	
 	unordered_map< uint8_t, Vec2< ssize_t > > m_active_mousedowns;
 	

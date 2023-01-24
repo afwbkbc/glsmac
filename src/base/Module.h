@@ -8,8 +8,6 @@ namespace base {
 
 class Module : public Base {
 public:
-	virtual ~Module() {};
-
 	virtual void Start() {};
 	virtual void Stop() {};
 	virtual void Iterate() {};
