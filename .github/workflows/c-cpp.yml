@@ -2,9 +2,9 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "stable" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "stable" ]
 
 jobs:
   build:
@@ -13,6 +13,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Add SHORT_SHA env property with commit short sha
+      run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
     - name: install_dependencies
       run: |
         sudo apt-get update
@@ -26,27 +28,27 @@ jobs:
     - name: make64
       run: make
     - name: pack64
-      run: tar zcvf GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-64.tar.gz bin/
+      run: tar zcvf GLSMAC-v0.1-${{ ${SHORT_SHA} }}-bin64.tar.gz bin/
     - name: publish
       uses: actions/upload-artifact@v3
       with:
         name: GLSMAC-ubuntu-bin
         path: |
-          ./GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-64.tar.gz
-#   - uses: dev-drprasad/delete-older-releases@v0.2.0
-#      with:
-#        keep_latest: 4
-#        delete_tags: true
-#      env:
-#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ./GLSMAC-v0.1-${{ ${SHORT_SHA} }}-bin64.tar.gz
+    - uses: dev-drprasad/delete-older-releases@v0.2.0
+      with:
+        keep_latest: 4
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref_name }}-${{ github.sha }}
-        release_name: ${{ github.ref_name }}-${{ github.sha }}
+        tag_name: v0.1-${{ ${SHORT_SHA} }}
+        release_name: v0.1-${{ ${SHORT_SHA} }}
         draft: false
         prerelease: false
     - name: Upload Release Asset 64
@@ -56,6 +58,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps     - name: upload
-        asset_path: ./GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-64.tar.gz
-        asset_name: GLSMAC-${{ github.ref_name }}-${{ github.sha }}-bin-64.tar.gz
+        asset_path: ./GLSMAC-v0.1-${SHORT_SHA}-bin64.tar.gz
+        asset_name: GLSMAC-v0.1-${SHORT_SHA}-bin64.tar.gz
         asset_content_type: application/gzip
