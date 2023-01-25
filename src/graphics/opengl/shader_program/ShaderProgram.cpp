@@ -56,7 +56,7 @@ void ShaderProgram::AddShader( GLenum type, const std::string data ) {
 	GLint success;
 	glGetShaderiv( gl_shader, GL_COMPILE_STATUS, &success );
 	
-#if DEBUG
+#ifdef DEBUG
 	if ( !success ) {
 		GLint info_log_length;
 		glGetShaderiv( gl_shader, GL_INFO_LOG_LENGTH, &info_log_length );

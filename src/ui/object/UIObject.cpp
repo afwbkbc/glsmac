@@ -486,7 +486,7 @@ void UIObject::UpdateObjectArea() {
 				g_engine->GetUI()->SendMouseMoveEvent( this );
 			}
 			
-#if DEBUG
+#ifdef DEBUG
 			// resize debug frame to match new area
 			if ( m_has_debug_frame ) {
 				g_engine->GetUI()->ResizeDebugFrame( this );
@@ -635,7 +635,7 @@ void UIObject::SetClass( const string& style_class ) {
 	ApplyStyleIfNeeded();
 }
 
-#if DEBUG
+#ifdef DEBUG
 void UIObject::ShowDebugFrame() {
 	if ( !m_has_debug_frame ) {
 		g_engine->GetUI()->ShowDebugFrame( this );
@@ -728,7 +728,7 @@ const Style::attribute_type_t UIObject::GetParentAttribute( const Style::attribu
 
 const string UIObject::GetStyleModifiersString() const {
 	string str = " ";
-#if DEBUG
+#ifdef DEBUG
 	if ( HasStyleModifier( Style::M_HOVER ) ) {
 		str += "HOVER ";
 	}

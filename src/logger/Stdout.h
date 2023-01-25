@@ -8,7 +8,7 @@ namespace logger {
 
 CLASS( Stdout, Logger )
 	
-#if DEBUG
+#ifdef DEBUG
 	void Log( const std::string &text );
 	mutex m_log_mutex;
 #else

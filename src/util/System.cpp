@@ -1,6 +1,6 @@
 #include "System.h"
 
-#if DEBUG
+#ifdef DEBUG
 #include <unistd.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
@@ -11,7 +11,7 @@ using namespace std;
 
 namespace util {
 
-#if DEBUG
+#ifdef DEBUG
 
 // from https://stackoverflow.com/questions/3596781/how-to-detect-if-the-current-process-is-being-run-by-gdb
 bool System::AreWeUnderGDB() {

@@ -170,7 +170,7 @@ private:
 	
 	void PrepareAttributes( const modifier_t modifiers );
 	
-#if DEBUG
+#ifdef DEBUG
 	void CheckSet( const attribute_type_t attribute_type ) const;
 	void CheckGet( const attribute_type_t attribute_type, const modifier_t modifiers ) const;
 #endif

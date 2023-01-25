@@ -47,7 +47,7 @@ protected:
 	atomic<thread_command_t> m_command = COMMAND_NONE;
 	base::modules_t m_modules = {};
 	float m_ips = 10;
-#if DEBUG
+#ifdef DEBUG
 	size_t m_icounter;
 #endif
 };

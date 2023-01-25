@@ -81,7 +81,7 @@ protected:
 	network::Network *m_network = nullptr;
 	ui::UI *m_ui = nullptr;
 	
-#if DEBUG
+#ifdef DEBUG
 	bool m_is_debug_mode = false;
 #endif
 };

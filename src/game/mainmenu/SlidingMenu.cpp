@@ -18,7 +18,7 @@ SlidingMenu::SlidingMenu( MainMenu* mainmenu, const string& title, const choice_
 }
 
 void SlidingMenu::Show() {
-#if DEBUG
+#ifdef DEBUG
 	if ( m_menu_block ) {
 		throw runtime_error( "duplicate menu show" );
 	}
@@ -39,7 +39,7 @@ void SlidingMenu::Show() {
 }
 
 void SlidingMenu::Hide() {
-#if DEBUG
+#ifdef DEBUG
 	if ( !m_menu_block ) {
 		throw runtime_error( "hide without show" );
 	}

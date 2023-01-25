@@ -22,7 +22,7 @@ void Simple::Start() {
 		Log( "Starting task [" + (*it)->GetName() + "]" );
 		(*it)->Start();
 	}
-#if DEBUG
+#ifdef DEBUG
 	m_timer.SetInterval( 1000 );
 #endif
 }
@@ -49,7 +49,7 @@ void Simple::Iterate() {
 	}
 	m_tasks_toremove.clear();
 	
-#if DEBUG
+#ifdef DEBUG
 	if ( m_timer.Ticked() ) {
 		DEBUG_STAT_INC( seconds_passed );
 	}

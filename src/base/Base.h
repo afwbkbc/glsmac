@@ -2,6 +2,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include "env/Win32.h"
 #endif
 
 #include <string>
@@ -10,7 +11,7 @@
 using namespace std;
 #define THROW(  _text ) throw runtime_error( _text )
 
-#if DEBUG
+#ifdef DEBUG
 #include "env/Debug.h"
 #else
 #include "env/Release.h"

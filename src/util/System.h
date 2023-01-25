@@ -6,7 +6,7 @@ namespace util {
 
 CLASS( System, Util )
 
-#if DEBUG
+#ifdef DEBUG
 	static bool AreWeUnderGDB();
 	static bool IsGDBAvailable();
 #endif

@@ -47,7 +47,7 @@ void Thread::Run() {
 	
 	Log( "Starting thread" );
 	
-#if DEBUG
+#ifdef DEBUG
 	m_icounter = 0;
 #endif
 
@@ -58,7 +58,7 @@ void Thread::Run() {
 	float step_len;
 	size_t step_len_rounded;
 
-#if DEBUG
+#ifdef DEBUG
 	size_t modulensdiff[ m_modules.size() ];
 	memset( modulensdiff, 0, sizeof(modulensdiff ));
 #endif
@@ -73,14 +73,14 @@ void Thread::Run() {
 
 			auto start = std::chrono::high_resolution_clock::now();
 
-#if DEBUG
+#ifdef DEBUG
 			auto mstart = start;
 #endif
 
 			for ( modules_t::iterator it = m_modules.begin() ; it < m_modules.end() ; ++it ) {
 				//Log( "Iterating [" + (*it)->GetName() + "]" );
 				(*it)->Iterate();
-#if DEBUG
+#ifdef DEBUG
 				auto mfinish = std::chrono::high_resolution_clock::now();
 				modulensdiff[ it - m_modules.begin() ] = std::chrono::duration_cast<std::chrono::nanoseconds>(mfinish - mstart).count();
 				mstart = mfinish;
@@ -93,7 +93,7 @@ void Thread::Run() {
 
 			step_len = 1000000000 / m_ips - step_diff;
 			if ( nsdiff > step_len ) {
-#if DEBUG
+#ifdef DEBUG
 /*	TODO: fix and add stats to debug overlay			
 				Log( "Thread lag detected!" );
 				for ( modules_t::iterator it = m_modules.begin() ; it != m_modules.end() ; ++it ) {
@@ -109,7 +109,7 @@ void Thread::Run() {
 				step_len_rounded = ceil( step_len );
 				step_diff = step_len_rounded - step_len;
 
-#if DEBUG
+#ifdef DEBUG
 				m_icounter++;
 /*				Log( "frame " + std::to_string( m_icounter ) + ": sleeping " + std::to_string( step_len_rounded) + "ns (nsdiff: " + std::to_string( nsdiff ) + ", stepdiff: " + std::to_string( step_diff ) + ")" );
 				for ( modules_t::iterator it = m_modules.begin() ; it != m_modules.end() ; ++it ) {

@@ -33,7 +33,7 @@
 #define WINDOW_HEIGHT 768
 #define WINDOW_VSYNC true
 
-#if DEBUG
+#ifdef DEBUG
 #include <iostream>
 #include <string>
 #include <stdlib.h>
@@ -51,7 +51,7 @@ int WINAPI WinMain (HINSTANCE h, HINSTANCE hh, LPSTR cmd, int show) {
 int main(const int argc, const char *argv[]) {
 #endif
 
-#if DEBUG
+#ifdef DEBUG
 #ifdef __linux__
 	// automatically start under gdb if possible
 	if ( !System::AreWeUnderGDB() && System::IsGDBAvailable() ) {
@@ -106,7 +106,7 @@ int main(const int argc, const char *argv[]) {
 		loader::sound::SDL2 sound_loader;
 		
 		auto title = (string) "GLSMAC " + GLSMAC_VERSION + "-" + GLSMAC_LAST_COMMIT;
-#if DEBUG
+#ifdef DEBUG
 		title += "-debug";
 #elif PORTABLE
 		title += "-portable";
@@ -120,7 +120,7 @@ int main(const int argc, const char *argv[]) {
 
 		scheduler::Simple scheduler;
 
-#if DEBUG
+#ifdef DEBUG
 		NEWV( debug_overlay, debug::DebugOverlay );
 		scheduler.AddTask( debug_overlay );
 #endif

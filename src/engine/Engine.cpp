@@ -99,7 +99,7 @@ int Engine::Run() {
 		for ( auto& thread : m_threads ) {
 			thread->T_Stop();
 		}
-#if DEBUG 
+#ifdef DEBUG 
 		util::Timer thread_running_timer;
 		thread_running_timer.SetInterval( 1000 );
 #endif
@@ -107,18 +107,18 @@ int Engine::Run() {
 		while ( any_thread_running ) {
 			this_thread::sleep_for( milliseconds( 50 ) );
 			any_thread_running = false;
-#if DEBUG
+#ifdef DEBUG
 			const bool announce_frozen_threads = thread_running_timer.Ticked();
 #endif
 			for ( auto& thread : m_threads ) {
 				if ( thread->T_IsRunning() ) {
-#if DEBUG
+#ifdef DEBUG
 					if ( announce_frozen_threads ) {
 						Log( "Thread " + thread->GetThreadName() + " still running" );
 					}
 #endif
 					any_thread_running = true;
-#if DEBUG
+#ifdef DEBUG
 					if ( !announce_frozen_threads )
 #endif
 					break;

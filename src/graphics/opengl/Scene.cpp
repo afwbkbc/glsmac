@@ -112,7 +112,7 @@ void Scene::Update() {
 		}
 	}
 
-#if DEBUG
+#ifdef DEBUG
 	size_t gl_actors_by_zindex_count = 0;
 	for (auto& actors : m_gl_actors_by_zindex) {
 		gl_actors_by_zindex_count += actors.second.size();
@@ -125,12 +125,12 @@ void Scene::Update() {
 
 void Scene::Draw( shader_program::ShaderProgram *shader_program ) {
 	
-#if DEBUG
+#ifdef DEBUG
 	float last_zindex = -9999999;
 	string zindex_sequence = "";
 #endif
 	for ( auto& actors : m_gl_actors_by_zindex ) {
-#if DEBUG
+#ifdef DEBUG
 		float zindex = actors.first;
 		zindex_sequence += " " + to_string( zindex );
 		if ( zindex < last_zindex ) {

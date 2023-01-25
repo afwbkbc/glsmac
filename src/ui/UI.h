@@ -79,7 +79,7 @@ CLASS( UI, base::Module )
 	
 	void FocusObject( UIObject* object );
 	
-#if DEBUG
+#ifdef DEBUG
 	void ShowDebugFrame( const UIObject* object );
 	void HideDebugFrame( const UIObject* object );
 	void ResizeDebugFrame( const UIObject* object );
@@ -119,7 +119,7 @@ private:
 	unordered_map< void*, object_iterate_handler_t > m_iterative_objects = {};
 	vector< void* > m_iterative_objects_to_remove = {};
 	
-#if DEBUG	
+#ifdef DEBUG	
 	Scene *m_debug_scene;
 	
 	typedef struct {

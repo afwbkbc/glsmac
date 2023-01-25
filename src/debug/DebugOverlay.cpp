@@ -1,3 +1,5 @@
+#ifdef DEBUG
+
 #include "DebugOverlay.h"
 
 #include "engine/Engine.h"
@@ -203,3 +205,6 @@ void DebugOverlay::ActivateLabel( Label* label, const size_t left, const size_t 
 
 
 }
+
+#endif
+

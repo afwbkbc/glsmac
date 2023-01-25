@@ -65,7 +65,7 @@ void Text::UpdatePosition() {
 
 void Text::Redraw() {
 	if ( m_graphics_object ) {
-#if DEBUG
+#ifdef DEBUG
 		if ( m_graphics_object->Removed() ) {
 			throw runtime_error( "textactor graphics object removed" );
 		}

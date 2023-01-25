@@ -105,7 +105,7 @@ CLASS( UIObject, base::Base )
 	
 	void SetClass( const string& style );
 	
-#if DEBUG
+#ifdef DEBUG
 	void ShowDebugFrame();
 	void HideDebugFrame();
 #else
@@ -239,7 +239,7 @@ protected:
 	const void* GetObject( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const;
 	const void* GetObject( const Style::attribute_type_t attribute_type ) const;
 	
-#if DEBUG
+#ifdef DEBUG
 	void CheckStylePtr() const;
 	
 	bool m_has_debug_frame = false;

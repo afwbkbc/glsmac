@@ -191,7 +191,7 @@ void OpenGL::Iterate() {
 
 	SDL_GL_SwapWindow( m_window );
 
-#if DEBUG
+#ifdef DEBUG
 	GLenum errcode;
 	if ( ( errcode=glGetError() ) != GL_NO_ERROR ) {
 		const GLubyte* errstring = gluErrorString( errcode );

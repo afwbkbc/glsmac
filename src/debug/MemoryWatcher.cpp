@@ -1,3 +1,5 @@
+#ifdef DEBUG
+
 #include "MemoryWatcher.h"
 
 #include <unordered_map>
@@ -691,3 +693,5 @@ void MemoryWatcher::Log( const string& text ) {
 }
 
 }
+
+#endif

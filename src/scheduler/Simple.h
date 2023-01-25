@@ -20,7 +20,7 @@ CLASS( Simple, Scheduler )
 	void AddTask( Task *task );
 	void RemoveTask( Task *task );
 protected:
-#if DEBUG
+#ifdef DEBUG
 	util::Timer m_timer;
 #endif
 	

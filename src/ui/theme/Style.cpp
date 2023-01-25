@@ -28,14 +28,14 @@ void Style::SetStyleHandler( const style_handler_t style_handler ) {
 }
 
 void Style::Set( const attribute_type_t attribute_type ) {
-#if DEBUG
+#ifdef DEBUG
 	CheckSet( attribute_type );
 #endif
 	(*m_attributes_ptr)[ attribute_type ].is_set = true;
 }
 
 void Style::Set( const attribute_type_t attribute_type, const float value ) {
-#if DEBUG
+#ifdef DEBUG
 	CheckSet( attribute_type );
 #endif
 	Set( attribute_type );
@@ -43,7 +43,7 @@ void Style::Set( const attribute_type_t attribute_type, const float value ) {
 }
 
 void Style::SetColor( const attribute_type_t attribute_type, const Color& value ) {
-#if DEBUG
+#ifdef DEBUG
 	CheckSet( attribute_type );
 #endif
 	Set( attribute_type );
@@ -51,7 +51,7 @@ void Style::SetColor( const attribute_type_t attribute_type, const Color& value 
 }
 
 void Style::SetObject( const attribute_type_t attribute_type, const void* ptr ) {
-#if DEBUG
+#ifdef DEBUG
 	CheckSet( attribute_type );
 #endif
 	Set( attribute_type );
@@ -80,21 +80,21 @@ bool Style::Has( const attribute_type_t attribute_type, const modifier_t modifie
 }
 
 const float Style::Get( const attribute_type_t attribute_type, const modifier_t modifiers ) const {
-#if DEBUG
+#ifdef DEBUG
 	CheckGet( attribute_type, modifiers );
 #endif
 	return m_attributes[ modifiers ][ attribute_type ].value.scalar;
 }
 
 const Color Style::GetColor( const attribute_type_t attribute_type, const modifier_t modifiers ) const {
-#if DEBUG
+#ifdef DEBUG
 	CheckGet( attribute_type, modifiers );
 #endif
 	return m_attributes[ modifiers ][ attribute_type ].value.color;
 }
 
 const void* Style::GetObject( const attribute_type_t attribute_type, const modifier_t modifiers ) const {
-#if DEBUG
+#ifdef DEBUG
 	CheckGet( attribute_type, modifiers );
 #endif
 	return m_attributes[ modifiers ][ attribute_type ].value.ptr;
@@ -161,7 +161,7 @@ void Style::PrepareAttributes( const modifier_t modifiers ) {
 	UnsetAttributesPtr();
 }
 
-#if DEBUG
+#ifdef DEBUG
 void Style::CheckSet( const attribute_type_t attribute_type ) const {
 	ASSERT( m_is_initialized, "style '" + GetStyleName() + "' not initialized" );
 	ASSERT( m_attributes_ptr, "attributes ptr not set" );

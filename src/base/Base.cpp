@@ -4,7 +4,7 @@
 
 #include "engine/Engine.h"
 
-#if DEBUG
+#ifdef DEBUG
 debug_stats_t g_debug_stats = {};
 #endif
 

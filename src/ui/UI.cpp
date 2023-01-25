@@ -31,7 +31,7 @@ void UI::Start() {
 		NEW( m_loader, module::Loader );
 	}
 
-#if DEBUG
+#ifdef DEBUG
 	NEW( m_debug_scene, Scene, "UIDebug", SCENE_TYPE_ORTHO );
 	g_engine->GetGraphics()->AddScene( m_debug_scene );	
 #endif
@@ -40,7 +40,7 @@ void UI::Start() {
 void UI::Stop() {
 	Log( "Destroying UI" );
 
-#if DEBUG
+#ifdef DEBUG
 	g_engine->GetGraphics()->RemoveScene( m_debug_scene );
 	DELETE( m_debug_scene );
 #endif
@@ -87,7 +87,7 @@ const UI::coord_t UI::ClampY( const UI::coord_t value ) const {
 }
 
 void UI::Resize() {
-#if DEBUG
+#ifdef DEBUG
 	for (auto& it : m_debug_frames) {
 		ResizeDebugFrame( it.first, &it.second );
 	}
@@ -278,7 +278,7 @@ void UI::UnblockEvents() {
 }
 
 
-#if DEBUG
+#ifdef DEBUG
 void UI::ShowDebugFrame( const UIObject* object ) {
 	auto it = m_debug_frames.find( object );
 	if ( it == m_debug_frames.end() ) {

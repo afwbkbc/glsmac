@@ -42,7 +42,7 @@ void Mesh::Load() {
 	auto *actor = (scene::actor::Mesh *)m_actor;
 
 	const auto *mesh = actor->GetMesh();
-#if DEBUG
+#ifdef DEBUG
 	if ( !mesh ) {
 		throw runtime_error( "actor mesh not set" );
 	}
