@@ -3,7 +3,7 @@
 #include <unordered_map>
 
 #define SDL_MAIN_HANDLED 1
-#include <SDL2/SDL_audio.h>
+#include <SDL_audio.h>
 
 #include "scene/actor/Sound.h"
 #include "Sound.h"

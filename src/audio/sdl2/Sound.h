@@ -3,7 +3,7 @@
 #include "base/Base.h"
 
 #define SDL_MAIN_HANDLED 1
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 #include "scene/actor/Sound.h"
 

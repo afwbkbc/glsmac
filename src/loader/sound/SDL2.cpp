@@ -1,7 +1,7 @@
 #include "SDL2.h"
 
 #define SDL_MAIN_HANDLED 1
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 using namespace types;
 
