@@ -2,8 +2,12 @@
 
 #ifdef DEBUG
 #include <unistd.h>
+
+#ifdef __linux__
 #include <sys/ptrace.h>
 #include <sys/wait.h>
+#endif
+
 #include <iostream>
 #endif
 
@@ -60,6 +64,7 @@ bool System::AreWeUnderGDB() {
 
 #else
 	cout << "WARNING: gdb check skipped due to unsupported platform" << endl;
+	return false;
 #endif
 }
 
@@ -68,6 +73,7 @@ bool System::IsGDBAvailable() {
 	return ( !system("which gdb > /dev/null 2>&1") );
 #else
 	cout << "WARNING: gdb check skipped due to unsupported platform" << endl;
+	return false;
 #endif
 }
 

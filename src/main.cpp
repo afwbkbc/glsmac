@@ -45,11 +45,7 @@ using namespace util;
 
 using namespace std;
 
-#ifdef _WIN32
-int WINAPI WinMain (HINSTANCE h, HINSTANCE hh, LPSTR cmd, int show) {
-#else
 int main(const int argc, const char *argv[]) {
-#endif
 
 #ifdef DEBUG
 #ifdef __linux__

@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef DEBUG
+
 #define DEBUG_STAT_CHANGE_BY( _stat, _by )
 #define DEBUG_STAT_INC( _stat )
 #define DEBUG_STAT_DEC( _stat )
@@ -10,3 +12,6 @@
 #define ptr( _ptr, _offset, _size ) ( _ptr + (_offset) )
 
 #define ASSERT( _condition, _text )
+
+#endif
+

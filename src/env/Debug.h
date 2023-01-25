@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef DEBUG
+
 #include <mutex>
 #include <iostream>
 #include "debug/MemoryWatcher.h"
@@ -139,3 +141,6 @@ extern debug_stats_t g_debug_stats;
 		Log( (string) "FATAL: " + _text ); \
 		THROW( _text ); \
 	}
+
+#endif
+
