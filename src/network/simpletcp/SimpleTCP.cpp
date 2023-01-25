@@ -10,20 +10,30 @@ namespace network {
 namespace simpletcp {
 
 SimpleTCP::SimpleTCP() : Network() {
+#ifndef _WIN32
 	m_server.tmp.client_addr_size = sizeof( m_server.tmp.client_addr );
 	
 	signal(SIGPIPE, SIG_IGN);
+#endif
 }
 
 void SimpleTCP::Start() {
+#ifndef _WIN32
 	signal(SIGPIPE, SIG_IGN);
+#endif
 }
 
 void SimpleTCP::Stop() {
+#ifndef _WIN32
 	ASSERT( m_server.listening_sockets.empty(), "some connection(s) still active when destroying network" );
+#endif
 }
 
 MT_Response SimpleTCP::ListenStart() {
+#ifdef _WIN32
+	return Error( "winsock not implemented yet" );
+#else
+
 	ASSERT( m_server.listening_sockets.empty(), "some connection socket(s) already active" );
 	
 	Log( (string) "Starting server on port " + to_string( GLSMAC_PORT ) );
@@ -109,10 +119,13 @@ MT_Response SimpleTCP::ListenStart() {
 	Log( "Server started" );
 	
 	return Success();
+#endif
 }
 
 MT_Response SimpleTCP::ListenStop() {
-
+#ifdef _WIN32
+	return Error( "winsock not implemented yet" );
+#else
 	for ( auto& it : m_server.client_sockets ) {
 		CloseSocket( it.second.fd, it.first );
 		free( it.second.buffer.data1 );
@@ -135,10 +148,14 @@ MT_Response SimpleTCP::ListenStop() {
 	Log( "Server stopped" );
 	
 	return Success();
+#endif
 }
 
 MT_Response SimpleTCP::Connect( const string& remote_address ) {
 	
+#ifdef _WIN32
+	return Error( "winsock not implemented yet" );
+#else
 	ASSERT( m_client.socket.fd == 0, "connection socket already active" );
 	
 	addrinfo hints, *p;
@@ -193,10 +210,14 @@ MT_Response SimpleTCP::Connect( const string& remote_address ) {
 	Log( "Connection successful" );
 	
 	return Success();
+#endif
 }
 
 MT_Response SimpleTCP::Disconnect() {
 	
+#ifdef _WIN32
+	return Error( "winsock not implemented yet" );
+#else
 	if ( m_client.socket.fd ) {
 		CloseSocket( m_client.socket.fd, 0, true ); // no need to send event if disconnect was initiated by user
 		free( m_client.socket.buffer.data1 );
@@ -205,9 +226,14 @@ MT_Response SimpleTCP::Disconnect() {
 	}
 	
 	return Success();
+#endif
 }
 
 MT_Response SimpleTCP::DisconnectClient( const size_t cid ) {
+#ifdef _WIN32
+	return Error( "winsock not implemented yet" );
+#else
+
 	auto it = m_server.client_sockets.find( cid );
 	if ( it != m_server.client_sockets.end() ) {
 		CloseSocket( it->second.fd, cid );
@@ -216,9 +242,13 @@ MT_Response SimpleTCP::DisconnectClient( const size_t cid ) {
 		m_server.client_sockets.erase( it );
 	}
 	return Success();
+#endif
 }
 
 void SimpleTCP::Iterate() {
+#ifdef _WIN32
+	return;
+#else
 	Network::Iterate();
 	
 	m_tmp.now = time( nullptr );
@@ -344,10 +374,14 @@ void SimpleTCP::Iterate() {
 			++it;
 		}
 	}
+#endif
 }
 
 bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket, const size_t cid ) {
 	
+#ifdef _WIN32
+	return false;
+#else
 	// max allowed size to read
 	m_tmp.tmpint = ( BUFFER_SIZE - socket.buffer.len );
 	
@@ -477,9 +511,13 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket, const size_t cid )
 	}
 	ASSERT( false, "?" );
 	return false;
+#endif
 }
 
 bool SimpleTCP::WriteToSocket( int fd, const string& data ) {
+#ifdef _WIN32
+	return false;
+#else
 	//Log( "WriteToSocket( " + to_string( fd ) + " )" ); // SPAMMY
 	m_tmp.tmpint2 = data.size();
 	//Log( "Writing " + to_string( m_tmp.tmpint2 ) + " bytes" );
@@ -506,9 +544,13 @@ bool SimpleTCP::WriteToSocket( int fd, const string& data ) {
 	}
 	//Log( "Write successful" );
 	return true;
+#endif
 }
 
 bool SimpleTCP::MaybePing( remote_socket_data_t& socket, const size_t cid ) {
+#ifdef _WIN32
+	return false;
+#else
 	m_tmp.time = m_tmp.now - socket.last_data_at;
 	
 	if ( m_tmp.time > SEND_PING_AFTER && !socket.ping_sent ) {
@@ -517,9 +559,13 @@ bool SimpleTCP::MaybePing( remote_socket_data_t& socket, const size_t cid ) {
 	}
 	
 	return true;
+#endif
 }
 
 bool SimpleTCP::MaybePingDo( remote_socket_data_t& socket, const size_t cid ) {
+#ifdef _WIN32
+	return false;
+#else
 	m_tmp.time = m_tmp.now - socket.last_data_at;
 	
 	if ( m_tmp.time > DISCONNECT_AFTER ) {
@@ -546,9 +592,13 @@ bool SimpleTCP::MaybePingDo( remote_socket_data_t& socket, const size_t cid ) {
 	}
 	
 	return true;
+#endif
 }
 
 void SimpleTCP::CloseSocket( int fd, size_t cid, bool skip_event ) {
+#ifdef _WIN32
+	return;
+#else
 	Log( "Closing socket " + to_string( fd ) );
 	uint32_t bye = 0;
 	send( fd, &bye, sizeof( bye ), MSG_NOSIGNAL );
@@ -564,6 +614,7 @@ void SimpleTCP::CloseSocket( int fd, size_t cid, bool skip_event ) {
 		}
 		AddEvent( m_tmp.event );
 	}
+#endif
 }
 
 

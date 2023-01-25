@@ -8,6 +8,8 @@
 #include <sys/socket.h>
 #endif
 
+#include <unordered_map>
+
 #include <sys/types.h>
 #include <memory.h>
 #include <unistd.h>
@@ -77,7 +79,9 @@ private:
 		unordered_map< int, remote_socket_data_t > client_sockets;
 		struct {
 			struct sockaddr_in client_addr;
+#ifndef _WIN32
 			socklen_t client_addr_size;
+#endif
 			int newfd;
 			vector< int > to_remove;
 		} tmp;

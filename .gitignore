@@ -11,5 +11,5 @@ CTestTestfile.cmake
 _deps
 /bin
 /nbproject
-/src/tmp
+/src/tmp/last_commit.h
 /debug.log
