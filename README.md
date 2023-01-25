@@ -65,9 +65,19 @@ Once I replicate original game, I'll focus on other things, such as: larger maps
 
 ### Build instructions
 
-You will need following libraries (-dev versions): FreeType2, SDL2 (with SDL_image and SDL_mixer), GL, GLEW
-
 Target platform is GNU/Linux with GCC compiler, it should also be possible to build it with MinGW (if you're on Windows). Other compilers/platforms weren't tested but you can try.
+
+You will need following libraries (-dev versions): FreeType2, SDL2, SDL_image, GL, GLEW
+
+Ubuntu/Debian/Mint: sudo apt-get install libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev
+
+Gentoo: sudo emerge libsdl2 sdl2-image freetype glew
+
+Building on Windows with MinGW is possible, but tricky. You need to install all those libraries manually, and also FreeGLUT. Make sure to have threads-enabled version of MinGW. MSYS and TDM-GCC are recommended for more consistent development environment. Further MinGW configuration instructions are beyond the scope of this project, but there are plenty of guides on internet.
+
+Building on Windows with MSVC is not supported and will probably require many changes to code to be compatible.
+
+It is recommended to build project using cmake and make instead of adding .cpp and .h files manually to IDE.
 
 For release build: cmake . -DCMAKE_BUILD_TYPE=Release && make
 
