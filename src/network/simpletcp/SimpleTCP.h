@@ -5,9 +5,9 @@
 #else
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <sys/socket.h>
 #endif
 
-#include <sys/socket.h>
 #include <sys/types.h>
 #include <memory.h>
 #include <unistd.h>
