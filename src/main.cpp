@@ -26,7 +26,12 @@
 #include "engine/Engine.h"
 
 #include "version.h"
+
+#ifdef TMP_LAST_COMMIT_H_GENERATED
 #include "tmp/last_commit.h"
+#else
+#define GLSMAC_LAST_COMMIT "???????"
+#endif
 
 // TODO: move to config
 #define WINDOW_WIDTH 1024
