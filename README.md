@@ -67,11 +67,11 @@ Once I replicate original game, I'll focus on other things, such as: larger maps
 
 Target platform is GNU/Linux with GCC compiler, it should also be possible to build it with MinGW (if you're on Windows). Other compilers/platforms weren't tested but you can try.
 
-You will need following libraries (-dev versions): FreeType2, SDL2, SDL_image, GL, GLEW
+You will need following libraries (-dev versions): FreeType2, SDL2, SDL_image, GL, GLU, GLEW
 
 Ubuntu/Debian/Mint: sudo apt-get install libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev
 
-Gentoo: sudo emerge libsdl2 sdl2-image freetype glew
+Gentoo: sudo emerge libsdl2 sdl2-image freetype glu glew
 
 Building on Windows with MinGW is possible, but tricky. You need to install all those libraries manually, and also FreeGLUT. Double-check that you download libraries compiled for MinGW (and not MSVC). GLEW may need to be compiled from source (because they only ship MSVC version). Make sure to have threads-enabled version of MinGW. MSYS and TDM-GCC are recommended for more consistent development environment. Further MinGW configuration instructions are beyond the scope of this project, but there are plenty of guides on internet.
 
@@ -83,7 +83,7 @@ For release build: cmake . -DCMAKE_BUILD_TYPE=Release && make
 
 For debug build: cmake -DCMAKE_BUILD_TYPE=Debug . && make
 
-For portable build (binary that can be executed on different machines): cmake . -DCMAKE_BUILD_TYPE=Portable && make
+For portable build (binary that can be executed on different machines): cmake . -DCMAKE_BUILD_TYPE=Portable64 && make ( use Portable32 for 32-bit )
 
 For same build as before (or Release if it's first build): cmake . && make
 
