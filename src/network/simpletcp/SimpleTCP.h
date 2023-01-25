@@ -1,7 +1,12 @@
 #pragma once
 
+#ifdef _WIN32
+#include <winsock2.h>
+#else
 #include <arpa/inet.h>
 #include <netdb.h>
+#endif
+
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <memory.h>

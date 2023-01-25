@@ -15,9 +15,9 @@ SUBDIR( ui )
 SUBDIR( engine )
 SUBDIR( game )
 
-#IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	SUBDIR( debug )
-#ENDIF()
+ENDIF()
 
 SET(SRC ${SRC}
 
