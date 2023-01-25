@@ -73,7 +73,7 @@ Ubuntu/Debian/Mint: sudo apt-get install libfreetype-dev libsdl2-dev libsdl2-ima
 
 Gentoo: sudo emerge libsdl2 sdl2-image freetype glew
 
-Building on Windows with MinGW is possible, but tricky. You need to install all those libraries manually, and also FreeGLUT. Make sure to have threads-enabled version of MinGW. MSYS and TDM-GCC are recommended for more consistent development environment. Further MinGW configuration instructions are beyond the scope of this project, but there are plenty of guides on internet.
+Building on Windows with MinGW is possible, but tricky. You need to install all those libraries manually, and also FreeGLUT. Double-check that you download libraries compiled for MinGW (and not MSVC). GLEW may need to be compiled from source (because they only ship MSVC version). Make sure to have threads-enabled version of MinGW. MSYS and TDM-GCC are recommended for more consistent development environment. Further MinGW configuration instructions are beyond the scope of this project, but there are plenty of guides on internet.
 
 Building on Windows with MSVC is not supported and will probably require many changes to code to be compatible.
 
