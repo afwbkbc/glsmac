@@ -86,7 +86,8 @@ CLASS( Style, base::Base )
 		A_FONT,
 		A_HEADER_FONT,
 		A_SIZE_FROM_TEXTURE,
-		A_STRETCH_TEXTURE, // will also force aspect ratio of texture
+		A_STRETCH_TEXTURE,
+		A_KEEP_TEXTURE_ASPECT_RATIO,
 		A_SOUND,
 		A_SOUND_VOLUME,
 		A_SOUND_AUTOPLAY,

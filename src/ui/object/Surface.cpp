@@ -92,6 +92,8 @@ void Surface::ApplyStyle() {
 			}
 			if ( Has( Style::A_STRETCH_TEXTURE ) ) {
 				SetStretchTexture( true );
+			}
+			if ( Has( Style::A_KEEP_TEXTURE_ASPECT_RATIO ) ) {
 				ForceAspectRatio( (float) texture->m_height / texture->m_width );
 			}
 		}
