@@ -96,7 +96,7 @@ int main(const int argc, const char *argv[]) {
 	// logger needs to be outside of scope to be destroyed last
 	logger::Stdout logger;
 	{
-		config::Config config( argc, argv );
+		config::Config config( argc, (const char**)argv );
 		
 #ifdef _WIN32
 		error_handler::Win32 error_handler;
