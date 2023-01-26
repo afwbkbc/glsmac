@@ -51,6 +51,10 @@ using namespace util;
 
 using namespace std;
 
+#ifdef main
+#undef main
+#endif
+
 int main(const int argc, const char *argv[]) {
 
 #ifdef DEBUG
@@ -160,7 +164,6 @@ int main(const int argc, const char *argv[]) {
 }
 
 #ifdef _WIN32
-#undef WinMain
 INT WINAPI WinMain( HINSTANCE hInst, HINSTANCE, LPSTR strCmdLine, INT )
 {
     main(__argc, __argv);
