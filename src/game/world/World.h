@@ -13,6 +13,8 @@
 
 #include "util/Clamper.h"
 
+#include "map/Map.h"
+
 using namespace ui;
 namespace ui {
 	using namespace event;
@@ -23,6 +25,8 @@ using namespace scene;
 
 namespace game {
 namespace world {
+	
+using namespace map;
 
 CLASS( World, base::Task )
 	
@@ -38,16 +42,19 @@ protected:
 
 private:
 	
+	Map* m_map = nullptr;
+	
 	Vec3 m_camera_position; // { x, y, zoom }
+	Vec3 m_camera_angle;
 	
 	const Settings m_settings;
 
 	Scene* m_world_scene = nullptr;
 
-	vector<types::Texture*> m_textures = {};
+	//vector<types::Texture*> m_textures = {};
 	
-	mesh::Mesh* m_mesh = nullptr;
-	vector<actor::Mesh*> m_test_actors = {};
+	//mesh::Mesh* m_mesh = nullptr;
+	//vector<actor::Mesh*> m_test_actors = {};
 	
 	Camera* m_camera = nullptr;
 	
@@ -65,9 +72,12 @@ private:
 	} m_handlers;
 	
 	bool m_is_dragging = false;
+	bool m_is_rotating = false;
 	Vec2<float> m_last_drag_position;
+	Vec2<float> m_last_rotate_position;
 	
 	void UpdateCameraPosition();
+	void UpdateCameraAngle();
 	void UpdateCameraScale();
 	
 	void ReturnToMainMenu();

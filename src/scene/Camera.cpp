@@ -10,8 +10,9 @@ Camera::Camera( const camera_type_t camera_type )
 	: Entity()
 	, m_camera_type( camera_type )
 {
-	m_inverse_vector.Set( -1.0f, -1.0f, 1.0f );
-	m_matrices.scale.TransformScale( 1.0, -1.0, 1.0 );
+	//m_inverse_vector.Set( -1.0f, -1.0f, 1.0f );
+	m_inverse_vector.Set( 1.0f, 1.0f, 1.0f );
+	//m_matrices.scale.TransformScale( 1.0, -1.0, -1.0 );
 
 	m_angle.Set( ANGLE_CENTER, ANGLE_CENTER, ANGLE_CENTER );
 
@@ -23,7 +24,8 @@ Camera::Camera( const camera_type_t camera_type )
 }
 
 void Camera::SetScale( types::Vec3 scale ) {
-	m_matrices.scale.TransformScale( scale.x, -scale.y, scale.z );
+	//m_matrices.scale.TransformScale( -scale.x, -scale.y, -scale.z );
+	m_matrices.scale.TransformScale( scale.x, scale.y, scale.z );
 	UpdateMatrix();
 }
 

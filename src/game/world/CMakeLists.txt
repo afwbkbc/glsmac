@@ -1,3 +1,5 @@
+SUBDIR( map )
+SUBDIR( map_generator )
 
 SET(SRC ${SRC}
 

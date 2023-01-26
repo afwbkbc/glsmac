@@ -38,7 +38,7 @@ void Mesh::AddSurface( const Mesh::surface_t& surface  ) {
 
 Mesh::index_t Mesh::AddVertex( const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord ) {
 	ASSERT( !m_is_final, "addvertex on already finalized mesh" );
-	ASSERT( m_vertex_i < m_vertex_count, "vertex out of bounds" );
+	ASSERT( m_vertex_i < m_vertex_count, "vertex out of bounds (" + to_string( m_vertex_i ) + " >= " + to_string( m_vertex_count ) + ")" );
 	memcpy( ptr( m_vertex_data, m_vertex_i * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord ) ), &coord, sizeof(coord) );
 	memcpy( ptr( m_vertex_data, m_vertex_i * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( tex_coord ) ), &tex_coord, sizeof(tex_coord) );
 	Mesh::index_t ret = m_vertex_i;

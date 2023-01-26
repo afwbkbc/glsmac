@@ -82,7 +82,7 @@ void SDL2::Iterate() {
 				break;
 			}
 			case SDL_MOUSEWHEEL: {
-				NEWV( ui_event, event::MouseScroll, event.wheel.y );
+				NEWV( ui_event, event::MouseScroll, event.motion.x, event.motion.y, event.wheel.y );
 				g_engine->GetUI()->ProcessEvent( ui_event );
 				DELETE( ui_event );
 				break;

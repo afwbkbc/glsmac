@@ -18,7 +18,7 @@ void World::Iterate() {
 		(*it)->Update();
 
 	
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 
 	glEnable(GL_LIGHTING);
 /*	glEnable(GL_LIGHT0);
@@ -55,7 +55,7 @@ void World::Iterate() {
 
 	glDisable(GL_LIGHTING);
 
-	glDisable(GL_CULL_FACE);
+	//glDisable(GL_CULL_FACE);
 }
 
 bool World::SceneBelongs( const scene::Scene *scene ) const {

@@ -5,9 +5,12 @@
 
 #include "scene/mesh/Rectangle.h"
 
+#include "map_generator/SimpleRandom.h"
+
 // TODO: move to settings
 #define MAP_SCROLL_SPEED 1.0f
-#define MAP_ZOOM_SPEED 0.01f
+#define MAP_ROTATE_SPEED 2.0f
+#define MAP_ZOOM_SPEED 0.1f
 
 namespace game {
 namespace world {
@@ -22,65 +25,28 @@ void World::Start() {
 	
 	NEW( m_world_scene, Scene, "World", SCENE_TYPE_ORTHO );
 	NEW( m_camera, Camera, Camera::CT_ORTHOGRAPHIC );
-		m_camera->SetAngle( { M_PI * 0.5, -M_PI * 0.75, 0 } );
+	
+	m_camera_angle = { M_PI * 0.5, M_PI * 0.75, 0 };
+	UpdateCameraAngle();
 	
 	m_world_scene->SetCamera( m_camera );
 	g_engine->GetGraphics()->AddScene( m_world_scene );	
 	
-	m_textures.push_back( g_engine->GetTextureLoader()->LoadTexture( "texture.pcx", 172, 343, 227, 398 ) );
-	m_textures.push_back( g_engine->GetTextureLoader()->LoadTexture( "texture.pcx", 172, 400, 227, 455 ) );
-	m_textures.push_back( g_engine->GetTextureLoader()->LoadTexture( "texture.pcx", 172, 457, 227, 512 ) );
-	m_textures.push_back( g_engine->GetTextureLoader()->LoadTexture( "texture.pcx", 172, 514, 227, 569 ) );
+	NEW( m_map, Map, m_world_scene );
 	
-	// draw some test terrain
+	NEWV( tiles, Tiles, 20, 20 );
 	
-	const size_t terrain_size = 40;
-	const float tile_size = 0.5f;
-	const float min_height = 0.0f;
-	const float max_height = 1.5f;
-	
-	const size_t precision = 10000;
-	
-	const ssize_t s1 = 0;
-	const ssize_t s2 = terrain_size;
-	const ssize_t x1 = s1;
-	const ssize_t y1 = s1;
-	const ssize_t x2 = s2;
-	const ssize_t y2 = s2;
-	
-	const float w = tile_size;
-	const float h = tile_size;
-		
-	const size_t heightmap_xsize = x2 - x1 + 2;
-	const size_t heightmap_ysize = y2 - y1 + 2;
-	float heightmap[ heightmap_ysize ][ heightmap_xsize ] = {};
-	
-	for ( ssize_t y = y1 ; y < heightmap_ysize ; y++ ) {
-		for ( ssize_t x = x1 ; x < heightmap_xsize ; x++ ) {
-			heightmap[ x ][ y ] = min_height + (float) ( ( precision * rand() ) % (size_t) ( ( max_height - min_height ) * precision ) ) / precision;
-		}
+	{
+		map_generator::SimpleRandom generator;
+		generator.Generate( tiles );
 	}
 	
-	for ( ssize_t y = y1 ; y <= y2 ; y++ ) {
-		for ( ssize_t x = x1 ; x <= x2 ; x++ ) {
-			
-			NEW( m_mesh, mesh::Mesh, 4, 2 );
-				m_mesh->AddVertex( { x*w, y*h, heightmap[x][y] }, { 0, 0 } );
-				m_mesh->AddVertex( { (x+1)*w, y*h, heightmap[x+1][y] }, { 1, 0 } );
-				m_mesh->AddVertex( { (x+1)*w, (y+1)*h, heightmap[x+1][y+1] }, { 1, 1 } );
-				m_mesh->AddVertex( { x*w, (y+1)*h, heightmap[x][y+1] }, { 0, 1 } );
-				m_mesh->AddSurface( { 2, 3, 0 } );
-				m_mesh->AddSurface( { 0, 1, 2 } );
-			m_mesh->Finalize();
-														
-			NEWV( actor, actor::Mesh, "Test", m_mesh );
-				actor->SetTexture( m_textures.at( rand() % m_textures.size() ) );
-				actor->SetAngle( { 0.0, 0.0, M_PI * 0.25 } );
-			m_world_scene->AddActor( actor );
-			m_test_actors.push_back( actor );
-		}
-	}
+	m_map->SetTiles( tiles );
 	
+	m_camera_position.x = tiles->GetWidth() / 2;
+	m_camera_position.y = tiles->GetHeight() / 2;
+	UpdateCameraPosition();
+
 	auto* ui = g_engine->GetUI();
 	
 	m_handlers.keydown = ui->AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this ) {
@@ -91,9 +57,17 @@ void World::Start() {
 	});
 	
 	m_handlers.mousedown = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_DOWN, EH( this ) {
-		if ( data->mouse.button == UIEvent::M_MIDDLE ) {
-			m_is_dragging = true;
-			m_last_drag_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
+		switch ( data->mouse.button ) {
+			case UIEvent::M_MIDDLE: {
+				m_is_dragging = true;
+				m_last_drag_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
+				break;
+			}
+			case UIEvent::M_RIGHT: {
+				m_is_rotating = true;
+				m_last_rotate_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
+				break;
+			}
 		}
 		return true;
 	});
@@ -109,24 +83,46 @@ void World::Start() {
 			
 			m_last_drag_position = current_drag_position;
 		}
+		if ( m_is_rotating ) {
+			Vec2<float> current_rotate_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
+			Vec2<float> rotate = current_rotate_position - m_last_rotate_position;
+			
+			auto* actor = m_map->GetActor();
+			auto newz = actor->GetAngleZ() + ( (float) rotate.x * MAP_ROTATE_SPEED );
+			auto newy = max( -0.5f, min( 0.5f, actor->GetAngleY() - ( (float) rotate.y * MAP_ROTATE_SPEED ) ) );
+			actor->SetAngleZ( newz );
+			actor->SetAngleY( newy );
+			m_last_rotate_position = current_rotate_position;
+		}
+		
 		return true;
 	});
 	
 	m_handlers.mouseup = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_UP, EH( this ) {
-		if ( data->mouse.button == UIEvent::M_MIDDLE ) {
-			m_is_dragging = false;
+		switch ( data->mouse.button ) {
+			case UIEvent::M_MIDDLE: {
+				m_is_dragging = false;
+				break;
+			}
+			case UIEvent::M_RIGHT: {
+				m_is_rotating = false;
+				break;
+			}
 		}
 		return true;
 	});
 	
 	m_handlers.mousescroll = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_SCROLL, EH( this ) {
-		float new_z = m_camera_position.z + (float) data->mouse.y * MAP_ZOOM_SPEED;
+		
+		float speed = (float) MAP_ZOOM_SPEED * m_camera_position.z;
+		
+		float new_z = m_camera_position.z + (float) data->mouse.scroll_y * speed;
 		
 		if ( new_z < 0.05 ) {
 			new_z = 0.05;
 		}
-		if ( new_z > 1.0 ) {
-			new_z = 1.0;
+		if ( new_z > 0.5 ) {
+			new_z = 0.5;
 		}
 		
 		float diff = m_camera_position.z / new_z;
@@ -158,18 +154,16 @@ void World::Start() {
 
 void World::Stop() {
 	
+	DELETE( m_map );
+	
 	g_engine->GetGraphics()->RemoveOnResizeHandler( this );
 	
 	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.keydown );
 	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.mousedown );
 	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.mousemove );
 	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.mouseup );
+	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.mousescroll );
 	
-	for ( auto& actor : m_test_actors ) {
-		m_world_scene->RemoveActor( actor );
-		DELETE( actor );
-	}
-		
 	g_engine->GetGraphics()->RemoveScene( m_world_scene );	
 	DELETE( m_world_scene );
 	DELETE( m_camera );
@@ -197,10 +191,14 @@ void World::SetCameraPosition( const Vec3 camera_position ) {
 }
 
 void World::UpdateCameraPosition() {
-	m_camera->SetPosition( { ( 0.5f + m_camera_position.x ) * g_engine->GetGraphics()->GetAspectRatio(), 0.5f + m_camera_position.y, 1 } );
+	m_camera->SetPosition( { ( 0.5f + m_camera_position.x ) * g_engine->GetGraphics()->GetAspectRatio(), 0.5f + m_camera_position.y, 0.5f + m_camera_position.y } );
 }
 void World::UpdateCameraScale() {
 	m_camera->SetScale( { m_camera_position.z, m_camera_position.z, m_camera_position.z } );
+}
+
+void World::UpdateCameraAngle() {
+	m_camera->SetAngle( m_camera_angle );
 }
 
 void World::ReturnToMainMenu() {	

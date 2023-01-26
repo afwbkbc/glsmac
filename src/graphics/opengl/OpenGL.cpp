@@ -197,6 +197,8 @@ void OpenGL::Iterate() {
 	glDisable( GL_BLEND );
 	glDisable(GL_DEPTH_TEST);
 
+//	glFlush();
+
 	SDL_GL_SwapWindow( m_window );
 
 #ifdef DEBUG
@@ -304,8 +306,10 @@ void OpenGL::DisableTexture() {
 
 void OpenGL::ResizeWindow( const size_t width, const size_t height ) {
 	// I'm having weird texture tiling bugs at non-even window heights
-	m_options.window_width = width / 2 * 2;
-	m_options.window_height = height / 2 * 2;
+	// also don't let them go below 2 or something will assert/crash
+	m_options.window_width = ( width + 1 ) / 2 * 2;
+	m_options.window_height = ( height + 1 ) / 2 * 2;
+	
 	Log( "Resizing viewport to " + to_string( m_options.window_width ) + "x" + to_string( m_options.window_height ) );
 	glViewport( 0, 0, m_options.window_width, m_options.window_height );
 	m_aspect_ratio = (float) m_options.window_height / m_options.window_width;
