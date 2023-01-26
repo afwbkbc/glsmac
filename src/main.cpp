@@ -158,3 +158,11 @@ int main(const int argc, const char *argv[]) {
 
 	return result;
 }
+
+#ifdef _WIN32
+#undef WinMain
+INT WINAPI WinMain( HINSTANCE hInst, HINSTANCE, LPSTR strCmdLine, INT )
+{
+    main(__argc, __argv);
+}
+#endif
