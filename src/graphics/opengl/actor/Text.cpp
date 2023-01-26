@@ -89,7 +89,7 @@ void Text::Update( Font* font, const string& text, const float x, const float y 
 	}
 }
 
-void Text::Draw( shader_program::ShaderProgram *shader_program ) {
+void Text::Draw( shader_program::ShaderProgram *shader_program, Camera *camera ) {
 	if ( m_boxes_count > 0 ) {
 		auto *sp = (shader_program::Font*)shader_program;
 		

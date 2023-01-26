@@ -22,6 +22,7 @@
 
 #include "game/common/Common.h"
 #include "game/intro/Intro.h"
+#include "game/world/World.h"
 
 #include "engine/Engine.h"
 
@@ -130,9 +131,12 @@ int main(const int argc, const char *argv[]) {
 		NEWV( task_common, game::Common );
 		scheduler.AddTask( task_common );
 		
+		// TMP
 		// game entry point
-		NEWV( task_intro, game::intro::Intro );
-		scheduler.AddTask( task_intro );
+		NEWV( task, game::intro::Intro );
+		game::Settings settings;
+		//NEWV( task, game::world::World, settings );
+		scheduler.AddTask( task );
 
 		engine::Engine engine(
 			&config,

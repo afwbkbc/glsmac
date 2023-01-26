@@ -33,6 +33,7 @@ void Mesh::AddSurface( const Mesh::surface_t& surface  ) {
 	ASSERT( m_surface_i < m_surface_count, "surface out of bounds" );
 	// add triangle
 	memcpy( ptr( m_index_data, m_surface_i * SURFACE_SIZE * sizeof( index_t ), sizeof( surface ) ), &surface, sizeof( surface ) );
+	m_surface_i++;
 }
 
 Mesh::index_t Mesh::AddVertex( const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord ) {

@@ -10,15 +10,14 @@ class Image;
 
 namespace shader_program {
 
-CLASS( Orthographic, ShaderProgram )
-	Orthographic() : ShaderProgram( TYPE_ORTHO ) {};
+CLASS( Simple2D, ShaderProgram )
+	Simple2D() : ShaderProgram( TYPE_SIMPLE2D ) {};
 protected:
 	friend class opengl::Mesh;
 	friend class opengl::Image;
 
 	struct {
 		GLint texture;
-		GLint world;
 	} m_gl_uniforms;
 
 	struct {

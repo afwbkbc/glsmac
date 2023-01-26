@@ -14,6 +14,7 @@ CLASS( UIEvent, base::Base )
 		EV_MOUSE_OUT,
 		EV_MOUSE_DOWN,
 		EV_MOUSE_UP,
+		EV_MOUSE_SCROLL,
 		EV_KEY_DOWN,
 		EV_KEY_UP,
 		EV_KEY_PRESS,
@@ -49,8 +50,8 @@ CLASS( UIEvent, base::Base )
 	
 	typedef union {
 		struct {
-			size_t x;
-			size_t y;
+			ssize_t x;
+			ssize_t y;
 			uint8_t button;
 		} mouse;
 		struct {

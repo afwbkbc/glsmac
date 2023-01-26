@@ -11,6 +11,7 @@ namespace shader_program {
 
 CLASS( ShaderProgram, base::Module )
 	enum type_t {
+		TYPE_SIMPLE2D,
 		TYPE_ORTHO,
 		TYPE_FONT,
 		TYPE_PERSP,

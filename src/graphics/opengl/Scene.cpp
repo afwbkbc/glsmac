@@ -138,8 +138,19 @@ void Scene::Draw( shader_program::ShaderProgram *shader_program ) {
 		}
 		last_zindex = zindex;
 #endif
+		
+		auto *camera = m_scene->GetCamera();
+		if ( camera ) {
+
+			//glEnable( GL_CULL_FACE );
+
+			//shader_program->Enable();
+
+			//glUniformMatrix4fv( shader_program->m_gl_uniforms.pvm, 1, GL_TRUE, (const GLfloat*)&camera->GetMatrix() );
+		}
+		
 		for ( auto& actor : actors.second ) {
-			actor->Draw( shader_program );
+			actor->Draw( shader_program, m_scene->GetCamera() );
 		}
 	}
 	

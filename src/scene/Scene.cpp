@@ -4,6 +4,12 @@
 
 namespace scene {
 
+Scene::~Scene() {
+	if ( m_local_camera ) {
+		DELETE( m_local_camera );
+	}
+}
+
 void Scene::AddActor( actor::Actor *actor ) {
 	//Log( "Adding actor [" + actor->GetName() + "]" );
 	actor->SetScene( this );

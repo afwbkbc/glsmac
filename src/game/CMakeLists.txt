@@ -1,6 +1,7 @@
 SUBDIR( common )
 SUBDIR( intro )
 SUBDIR( mainmenu )
+SUBDIR( world )
 
 SET(SRC ${SRC}
 

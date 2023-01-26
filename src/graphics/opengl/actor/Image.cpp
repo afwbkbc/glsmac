@@ -77,7 +77,7 @@ void Image::Unload() {
 
 }
 
-void Image::Draw( shader_program::ShaderProgram *shader_program ) {
+void Image::Draw( shader_program::ShaderProgram *shader_program, Camera *camera ) {
 
 	//Log( "Drawing" );
 

@@ -79,21 +79,30 @@ void Mesh::Unload() {
 	}
 }
 
-void Mesh::Draw( shader_program::ShaderProgram *shader_program ) {
+void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera ) {
 
 	//Log( "Drawing" );
 
+	
 	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ibo );
+
+	shader_program->Enable();
 
 	auto *actor = (scene::actor::Mesh *)m_actor;
 	const auto *texture = actor->GetTexture();
 	
-	shader_program->Enable();
+	//shader_program->Enable();
 
 	switch ( shader_program->GetType() ) {
 		case ( shader_program::ShaderProgram::TYPE_ORTHO ): {
 			auto *ortho_shader_program = (shader_program::Orthographic *)shader_program;
+
+			
+			types::Matrix44 matrix = m_actor->GetWorldMatrix();
+			glUniformMatrix4fv( ortho_shader_program->m_gl_uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
+
+
 			//glUniform1f( ortho_shader_program->m_gl_uniforms.z_index, m_actor->GetPosition().z );
 			/*types::Color tint_color = actor->GetTintColor();
 			const GLfloat tint_color_data[4] = { tint_color.red, tint_color.green, tint_color.blue, tint_color.alpha };
@@ -155,6 +164,7 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program ) {
 
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+	
 }
 
 } /* namespace opengl */

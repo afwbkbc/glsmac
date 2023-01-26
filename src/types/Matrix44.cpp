@@ -3,6 +3,8 @@
 
 #include "Matrix44.h"
 
+#include <iostream>
+
 namespace types {
 
 Matrix44::Matrix44() {
@@ -94,8 +96,8 @@ void Matrix44::ProjectionPerspective(const float aspect_ratio,const float fov,co
 	this->m[3][0] = 0.0f;	this->m[3][1] = 0.0f;			this->m[3][2] = 1.0f;			this->m[3][3] = 0.0;
 };
 
-void Matrix44::ProjectionOrtho2D(const float znear,const float zfar) {
-	this->m[0][0]=2.0f;	this->m[0][1]=0.0f;	this->m[0][2]=0.0f;	this->m[0][3]=-1.0f;
+void Matrix44::ProjectionOrtho2D(const float aspect_ratio,const float znear,const float zfar) {
+	this->m[0][0]=2.0f/aspect_ratio;	this->m[0][1]=0.0f;	this->m[0][2]=0.0f;	this->m[0][3]=-1.0f;
 	this->m[1][0]=0.0f;	this->m[1][1]=-2.0f;this->m[1][2]=0.0f;	this->m[1][3]=1.0f;
 	this->m[2][0]=0.0f;	this->m[2][1]=0.0f;	this->m[2][2]=2.0f/(zfar-znear);	this->m[2][2]=(znear+zfar)/(znear-zfar);
 	this->m[3][0]=0.0f;	this->m[3][1]=0.0f;	this->m[3][2]=0.0f;	this->m[3][3]=1.0f;

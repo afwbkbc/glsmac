@@ -6,16 +6,24 @@
 
 namespace scene {
 
-Camera::Camera() : Entity() {
+Camera::Camera( const camera_type_t camera_type )
+	: Entity()
+	, m_camera_type( camera_type )
+{
 	m_inverse_vector.Set( -1.0f, -1.0f, 1.0f );
 	m_matrices.scale.TransformScale( 1.0, -1.0, 1.0 );
 
 	m_angle.Set( ANGLE_CENTER, ANGLE_CENTER, ANGLE_CENTER );
 
-	SetFov( 90.0 );
+	SetFov( m_fov );
 
 	UpdateProjection();
 	UpdateRotation();
+	UpdateMatrix();
+}
+
+void Camera::SetScale( types::Vec3 scale ) {
+	m_matrices.scale.TransformScale( scale.x, -scale.y, scale.z );
 	UpdateMatrix();
 }
 
@@ -25,7 +33,19 @@ void Camera::SetScene( Scene *scene ) {
 }
 
 void Camera::UpdateProjection() {
-	m_camera_matrices.projection.ProjectionPerspective( g_engine->GetGraphics()->GetAspectRatio(), m_raw_fov, m_z_near, m_z_far );
+	switch ( m_camera_type ) {
+		case CT_ORTHOGRAPHIC: {
+			m_camera_matrices.projection.ProjectionOrtho2D( g_engine->GetGraphics()->GetAspectRatio(), m_z_near, m_z_far );
+			break;
+		}
+		case CT_PERSPECTIVE: {
+			m_camera_matrices.projection.ProjectionPerspective( g_engine->GetGraphics()->GetAspectRatio(), m_raw_fov, m_z_near, m_z_far );
+			break;
+		}
+		default: {
+			ASSERT( false, "invalid camera type" );
+		}
+	}
 }
 
 void Camera::UpdateRotation() {

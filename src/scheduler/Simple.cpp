@@ -36,7 +36,8 @@ void Simple::Stop() {
 }
 
 void Simple::Iterate() {
-	for (auto& task : m_tasks_toadd) {
+	for ( auto& task : m_tasks_toadd ) {
+		Log( "Adding task " + task->GetName() );
 		AddTask(task);
 	}
 	m_tasks_toadd.clear();
@@ -44,7 +45,8 @@ void Simple::Iterate() {
 	for ( auto it = m_tasks.begin() ; it < m_tasks.end() ; it++ )
 		(*it)->Iterate();
 	m_iterating = false;
-	for (auto& task : m_tasks_toremove) {
+	for ( auto& task : m_tasks_toremove ) {
+		Log( "Removing task " + task->GetName() );
 		RemoveTask(task);
 	}
 	m_tasks_toremove.clear();

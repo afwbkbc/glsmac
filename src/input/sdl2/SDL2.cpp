@@ -5,6 +5,7 @@
 #include "ui/event/MouseMove.h"
 #include "ui/event/MouseDown.h"
 #include "ui/event/MouseUp.h"
+#include "ui/event/MouseScroll.h"
 #include "ui/event/ButtonClick.h"
 #include "ui/event/KeyDown.h"
 #include "ui/event/KeyUp.h"
@@ -77,6 +78,12 @@ void SDL2::Iterate() {
 					DELETE( ui_event_2 );*/ // TODO: conflicts with Button OnClick logic
 				}
 				m_active_mousedowns.erase( event.button.button );
+				DELETE( ui_event );
+				break;
+			}
+			case SDL_MOUSEWHEEL: {
+				NEWV( ui_event, event::MouseScroll, event.wheel.y );
+				g_engine->GetUI()->ProcessEvent( ui_event );
 				DELETE( ui_event );
 				break;
 			}

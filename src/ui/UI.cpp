@@ -14,7 +14,7 @@ using namespace object;
 void UI::Start() {
 	Log( "Creating UI" );
 
-	NEW( m_shape_scene, Scene, "UIShape", SCENE_TYPE_ORTHO );
+	NEW( m_shape_scene, Scene, "UIShape", SCENE_TYPE_SIMPLE2D );
 	g_engine->GetGraphics()->AddScene( m_shape_scene );
 
 	NEW( m_text_scene, Scene, "UIText", SCENE_TYPE_TEXT );
@@ -31,8 +31,19 @@ void UI::Start() {
 		NEW( m_loader, module::Loader );
 	}
 
+	g_engine->GetGraphics()->AddOnResizeHandler( this, RH( this ) {
 #ifdef DEBUG
-	NEW( m_debug_scene, Scene, "UIDebug", SCENE_TYPE_ORTHO );
+		for (auto& it : m_debug_frames) {
+			ResizeDebugFrame( it.first, &it.second );
+		}
+#endif
+		m_clamp.x.SetSrcRange( 0.0, g_engine->GetGraphics()->GetWindowWidth() );
+		m_clamp.y.SetSrcRange( 0.0, g_engine->GetGraphics()->GetWindowHeight() );
+		m_root_object.Realign();
+	});
+	
+#ifdef DEBUG
+	NEW( m_debug_scene, Scene, "UIDebug", SCENE_TYPE_SIMPLE2D );
 	g_engine->GetGraphics()->AddScene( m_debug_scene );	
 #endif
 }
@@ -44,6 +55,8 @@ void UI::Stop() {
 	g_engine->GetGraphics()->RemoveScene( m_debug_scene );
 	DELETE( m_debug_scene );
 #endif
+	
+	g_engine->GetGraphics()->RemoveOnResizeHandler( this );
 	
 	if ( m_loader ) {
 		m_loader->Stop();
@@ -84,18 +97,6 @@ const UI::coord_t UI::ClampX( const UI::coord_t value ) const {
 
 const UI::coord_t UI::ClampY( const UI::coord_t value ) const {
 	return m_clamp.y.Clamp( value );
-}
-
-void UI::Resize() {
-#ifdef DEBUG
-	for (auto& it : m_debug_frames) {
-		ResizeDebugFrame( it.first, &it.second );
-	}
-#endif
-	
-	m_clamp.x.SetSrcRange( 0.0, g_engine->GetGraphics()->GetWindowWidth() );
-	m_clamp.y.SetSrcRange( 0.0, g_engine->GetGraphics()->GetWindowHeight() );
-	m_root_object.Realign();
 }
 
 void UI::Iterate() {

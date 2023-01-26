@@ -17,6 +17,7 @@ void World::Iterate() {
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it )
 		(*it)->Update();
 
+	
 	glEnable(GL_CULL_FACE);
 
 	glEnable(GL_LIGHTING);
@@ -37,15 +38,18 @@ void World::Iterate() {
     glFogi( GL_FOG_COORD_SRC, GL_FOG_COORD );
     //glFogi( GL_FOG_COORD_SRC, GL_FRAGMENT_DEPTH );*/
 
+	/*
     GLint OldCullFaceMode; // possibly hack
     glGetIntegerv(GL_CULL_FACE_MODE, &OldCullFaceMode);
+	 */
+	
     glCullFace(GL_FRONT);
 
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it ) {
 		(*it)->Draw( m_shader_program );
 	}
 
-    glCullFace(OldCullFaceMode);
+    //glCullFace(OldCullFaceMode);
 
 	//glDisable( GL_FOG );
 
@@ -55,7 +59,8 @@ void World::Iterate() {
 }
 
 bool World::SceneBelongs( const scene::Scene *scene ) const {
-	return scene->GetType() == scene::SCENE_TYPE_PERSP;
+	//return scene->GetType() == scene::SCENE_TYPE_PERSP;
+	return scene->GetType() == scene::SCENE_TYPE_ORTHO;
 }
 
 } /* namespace routine */

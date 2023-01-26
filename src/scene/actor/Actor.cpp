@@ -57,15 +57,19 @@ void Actor::UpdateRotation() {
 */
 
 types::Matrix44 & Actor::GetWorldMatrix() {
+	//Log( "GETWORLDMATRIX" );
 	if ( m_need_world_matrix_update )
 		UpdateWorldMatrix();
 	return m_actor_matrices.world;
 }
 
 void Actor::UpdateWorldMatrix() {
+	//Log( "UPDATEWORLDMATRIX 1" );
 	if ( m_scene ) {
+		//Log( "UPDATEWORLDMATRIX 2" );
 		auto *camera = m_scene->GetCamera();
 		if ( camera ) {
+			//Log( "UPDATEWORLDMATRIX 3" );
 			m_actor_matrices.world = camera->GetMatrix() * GetMatrix();
 			m_need_world_matrix_update = false;
 		}

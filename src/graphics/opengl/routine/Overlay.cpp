@@ -29,7 +29,7 @@ void Overlay::Iterate() {
 }
 
 bool Overlay::SceneBelongs( const scene::Scene *scene ) const {
-	return scene->GetType() == scene::SCENE_TYPE_ORTHO;
+	return scene->GetType() == scene::SCENE_TYPE_SIMPLE2D;
 }
 
 } /* namespace routine */

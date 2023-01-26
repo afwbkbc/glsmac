@@ -54,8 +54,6 @@ CLASS( UI, base::Module )
 	const coord_t ClampX( const coord_t value ) const;
 	const coord_t ClampY( const coord_t value ) const;
 	
-	void Resize();
-	
 	void ProcessEvent( UIEvent* event );
 	void SendMouseMoveEvent( UIObject* object );
 	const UIEventHandler* AddGlobalEventHandler( const UIEvent::event_type_t event_type, const UIEventHandler::handler_function_t& handler );
@@ -100,7 +98,7 @@ protected:
 		util::Clamper<coord_t> y;
 	} m_clamp = {};
 	
-	Vec2<size_t> m_last_mouse_position = { 0, 0 };
+	Vec2<ssize_t> m_last_mouse_position = { 0, 0 };
 	
 	typedef unordered_set< theme::Theme* > themes_t;
 	const themes_t GetThemes() const;

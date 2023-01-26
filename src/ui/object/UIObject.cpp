@@ -521,7 +521,10 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 	
 	bool is_processed = false;
 	
-	if ( event->m_type != UIEvent::EV_MOUSE_MOVE ) { // mouse move events are sent to all elements, but we need to process only those inside object area
+	if (
+		( event->m_type != UIEvent::EV_MOUSE_MOVE ) || // mouse move events are sent to all elements, but we need to process only those inside object area
+		( !m_parent_object ) // root object should be able to send mousemove to global handlers
+	) {
 		is_processed = Trigger( event->m_type, &event->m_data );
 	}
 	

@@ -18,7 +18,7 @@ CLASS( Image, Actor )
 	bool ReloadNeeded();
 	void Load();
 	void Unload();
-	void Draw( shader_program::ShaderProgram *shader_program );
+	void Draw( shader_program::ShaderProgram *shader_program, Camera *camera = nullptr );
 protected:
 	//size_t m_update_timestamp = 0;
 

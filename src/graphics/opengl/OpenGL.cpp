@@ -2,6 +2,7 @@
 
 #include "engine/Engine.h"
 
+#include "shader_program/Simple2D.h"
 #include "shader_program/Orthographic.h"
 #include "shader_program/Font.h"
 #include "shader_program/Skybox.h"
@@ -46,7 +47,12 @@ OpenGL::OpenGL( const string title, const unsigned short window_width, const uns
 */
 	NEWV( sp_orthographic, shader_program::Orthographic );
 	m_shader_programs.push_back( sp_orthographic );
-	NEWV( r_overlay, routine::Overlay, sp_orthographic );
+	NEWV( r_world, routine::World, sp_orthographic );
+	m_routines.push_back( r_world );
+	
+	NEWV( sp_simple2d, shader_program::Simple2D );
+	m_shader_programs.push_back( sp_simple2d );
+	NEWV( r_overlay, routine::Overlay, sp_simple2d );
 	m_routines.push_back( r_overlay );
 
 	NEWV( sp_font, shader_program::Font );
@@ -146,6 +152,8 @@ void OpenGL::Start() {
 	this->mStartRoutinesQueue.clear();*/
 
 	glBindTexture( GL_TEXTURE_2D, 0 );
+	
+	OnResize();
 }
 
 void OpenGL::Stop() {
@@ -301,7 +309,7 @@ void OpenGL::ResizeWindow( const size_t width, const size_t height ) {
 	Log( "Resizing viewport to " + to_string( m_options.window_width ) + "x" + to_string( m_options.window_height ) );
 	glViewport( 0, 0, m_options.window_width, m_options.window_height );
 	m_aspect_ratio = (float) m_options.window_height / m_options.window_width;
-	g_engine->GetUI()->Resize();
+	OnResize();
 	for ( auto routine = m_routines.begin() ; routine < m_routines.end() ; ++routine ) {
 		for ( auto scene = (*routine)->m_scenes.begin() ; scene < (*routine)->m_scenes.end() ; ++scene ) {
 			auto camera = (*scene)->GetCamera();

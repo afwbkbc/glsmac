@@ -7,6 +7,8 @@
 
 #include "engine/Engine.h"
 
+#include "game/world/World.h"
+
 namespace game {
 namespace mainmenu {
 
@@ -14,7 +16,6 @@ Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 	{ "START GAME", [this] () -> void {
 		m_mainmenu->m_settings.global.game_mode = game::GlobalSettings::GM_SINGLEPLAYER;
 		NEWV( menu, StartGame, m_mainmenu );
-		//NEWV( menu, Main, m_mainmenu );
 		NextMenu( menu );
 	}},
 	{ "QUICK START", [this] () -> void {
@@ -30,7 +31,11 @@ Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 		m_mainmenu->m_settings.global.difficulty = rand() % 6 + 1; // TODO: previous difficulty?
 		m_mainmenu->m_settings.global.game_rules = game::GlobalSettings::GR_STANDARD;
 
-		MenuError();
+		// start game
+		NEWV( task, game::world::World, m_mainmenu->m_settings );
+		g_engine->GetScheduler()->RemoveTask( m_mainmenu );
+		g_engine->GetScheduler()->AddTask( task );
+
 	}},
 	{ "SCENARIO", [this] () -> void {
 		m_mainmenu->m_settings.global.game_mode = game::GlobalSettings::GM_SCENARIO;

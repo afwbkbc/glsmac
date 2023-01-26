@@ -17,7 +17,7 @@ public:
 	void TransformRotate(const float x,const float y,const float z);
 	void TransformCameraRotate(const Vec3 target,const Vec3 up);
 	void ProjectionPerspective(const float aspect_ratio,const float fov,const float znear,const float zfar);
-	void ProjectionOrtho2D(const float znear,const float zfar);
+	void ProjectionOrtho2D(const float aspect_ratio,const float znear,const float zfar);
 	Matrix44 operator * (const Matrix44 operand);
 	void operator *= (const Matrix44 operand);
 };
