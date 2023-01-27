@@ -25,7 +25,7 @@ Camera::Camera( const camera_type_t camera_type )
 
 void Camera::SetScale( types::Vec3 scale ) {
 	//m_matrices.scale.TransformScale( -scale.x, -scale.y, -scale.z );
-	m_matrices.scale.TransformScale( scale.x, scale.y, scale.z );
+	m_matrices.scale.TransformScale( -scale.x, scale.y, scale.z );
 	UpdateMatrix();
 }
 

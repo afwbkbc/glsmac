@@ -10,12 +10,12 @@ void SimpleRandom::Generate( Tiles* tiles ) {
 	Tile* tile;
 	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {
 		for ( auto x = 0 ; x < tiles->GetWidth() ; x++ ) {
+			if ( ( y % 2 ) != ( x % 2 ) ) {
+				continue;
+			}
+			
 			tile = tiles->At( x, y );
 		
-			ASSERT( tile->elevation.right, "tile right vertex not linked" );
-			ASSERT( tile->elevation.left, "tile left vertex not linked" );
-			ASSERT( tile->elevation.top, "tile top vertex not linked" );
-			
 #define RND Tile::ELEVATION_MIN + rand() % ( Tile::ELEVATION_MAX - Tile::ELEVATION_MIN + 1 )
 			
 			*tile->elevation.top = RND;
@@ -30,9 +30,13 @@ void SimpleRandom::Generate( Tiles* tiles ) {
 		}
 	}
 	
-	// update averages
+	// update averages (TODO: do automatically somewhere?)
 	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {
 		for ( auto x = 0 ; x < tiles->GetWidth() ; x++ ) {
+			if ( ( y % 2 ) != ( x % 2 ) ) {
+				continue;
+			}
+			
 			tile = tiles->At( x, y );
 			
 			tile->elevation.center = ( *tile->elevation.left + *tile->elevation.top + *tile->elevation.right + tile->elevation.bottom ) / 4;

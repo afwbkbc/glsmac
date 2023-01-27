@@ -48,8 +48,8 @@ void Entity::Set##_name##Z( const float value ) {\
 	}\
 }
 
-_XYZ_SETTER( Angle, angle, UpdateRotation(); UpdateMatrix() );
-_XYZ_SETTER( Position, position, UpdatePosition(); UpdateMatrix() );
+_XYZ_SETTER( Angle, angle, UpdateRotation(); UpdateMatrix() )
+_XYZ_SETTER( Position, position, UpdatePosition(); UpdateMatrix() )
 
 #undef _XYZ_SETTER
 

@@ -65,23 +65,24 @@ void Map::GenerateActor() {
 	mesh::Mesh::index_t center, left, right, top, bottom;
 	float xpos, ypos;
 	
-	NEWV( mesh, mesh::Mesh, w * h * 5, w * h * 4 );
+	NEWV( mesh, mesh::Mesh, w * h * 5 / 2, w * h * 4 / 2 );
 	
 	float ox = -( (float) TILE_WIDTH * m_tiles->GetWidth() / 2 - TILE_HALFWIDTH / 2 );
 	float oy = - ( (float) TILE_HEIGHT * m_tiles->GetHeight() / 4 - TILE_HALFHEIGHT );
 	
+	util::Clamper< float > zc;
+	zc.SetRange( Tile::ELEVATION_MIN, Tile::ELEVATION_MAX, -TILE_Z_SCALE, TILE_Z_SCALE );
+	
 	for ( size_t y = 0 ; y < h ; y++ ) {
 		for ( size_t x = 0 ; x < w ; x++ ) {
-			tile = m_tiles->At( x, y );
-			
-			xpos = ox + TILE_WIDTH * x;
-			ypos = oy + TILE_HEIGHT * y / 2;
-			if ( y % 2 ) {
-				xpos += TILE_HALFWIDTH;
+			if ( y % 2 != x % 2 ) {
+				continue;
 			}
 			
-			// TODO: clamper?
-#define SCALE_Z( _var ) ( TILE_Z_SCALE * (float) ( Tile::ELEVATION_MIN + _var ) / ( Tile::ELEVATION_MAX - Tile::ELEVATION_MIN ) )
+			tile = m_tiles->At( x, y );
+			
+			xpos = ox + TILE_HALFWIDTH * x;
+			ypos = oy + TILE_HALFHEIGHT * y;
 			
 			// tmp
 			Vec2< float > tx[4];
@@ -116,12 +117,12 @@ void Map::GenerateActor() {
 				}
 			}
 			
-			left = mesh->AddVertex( { xpos - TILE_HALFWIDTH, ypos, SCALE_Z( *tile->elevation.left ) }, tx[0] );
-			top = mesh->AddVertex( { xpos, ypos - TILE_HALFHEIGHT, SCALE_Z( *tile->elevation.top ) },  tx[1] );
-			right = mesh->AddVertex( { xpos + TILE_HALFWIDTH, ypos, SCALE_Z( *tile->elevation.right ) },  tx[2] );
-			bottom = mesh->AddVertex( { xpos, ypos + TILE_HALFHEIGHT, SCALE_Z( tile->elevation.bottom ) },  tx[3] );
+			left = mesh->AddVertex( { xpos - TILE_HALFWIDTH, ypos, zc.Clamp( *tile->elevation.left ) }, tx[0] );
+			top = mesh->AddVertex( { xpos, ypos - TILE_HALFHEIGHT, zc.Clamp( *tile->elevation.top ) },  tx[1] );
+			right = mesh->AddVertex( { xpos + TILE_HALFWIDTH, ypos, zc.Clamp( *tile->elevation.right ) },  tx[2] );
+			bottom = mesh->AddVertex( { xpos, ypos + TILE_HALFHEIGHT, zc.Clamp( tile->elevation.bottom ) },  tx[3] );
 			
-			center = mesh->AddVertex( { xpos, ypos, SCALE_Z( tile->elevation.center ) }, { 0.5, 0.5 } );
+			center = mesh->AddVertex( { xpos, ypos, zc.Clamp( tile->elevation.center ) }, { 0.5, 0.5 } );
 			
 			mesh->AddSurface( { center, left, top } );
 			mesh->AddSurface( { center, top, right } );
@@ -137,11 +138,11 @@ void Map::GenerateActor() {
 		m_terrain_actor->SetTexture( m_textures[0] );
 		m_terrain_actor->SetPosition( MAP_POSITION );
 		// center at cursor
-/*		m_terrain_actor->SetPosition( {
-			- ( (float) TILE_WIDTH * m_tiles->GetWidth() / 2 - TILE_HALFWIDTH / 2 ),
-			( (float) TILE_HEIGHT * m_tiles->GetHeight() / 4 - TILE_HALFHEIGHT ),
+		m_terrain_actor->SetPosition( {
+			( (float) TILE_WIDTH * m_tiles->GetWidth() / 4 - TILE_HALFWIDTH ),
+			0.0f /*( (float) TILE_HEIGHT * m_tiles->GetHeight() / 4 - TILE_HALFHEIGHT )*/,
 			0.0f
-		});*/
+		});
 		m_terrain_actor->SetAngle( MAP_ROTATION );
 	m_scene->AddActor( m_terrain_actor );
 }
