@@ -27,7 +27,7 @@ Network won't be compatible to original client (so you can't play together with 
 
 Maybe I'll make saves and maps compatible, but it's very low priority.
 
-Mod compatibility - it should work with asset mods that replace .PCX, .WAV or files in SMAC directory (later it will also accept upscaled versions). It won't work with mods that modify or link to terranx.exe. Mods that change .txt files - probably not, maybe some settings and rules will be read from original SMAC's .txt but not all of them.
+Mod compatibility - it should work with asset mods that replace .PCX, .WAV or other asset files in SMAC directory (later it will also accept upscaled versions). It won't work with mods that modify or link to terranx.exe. Mods that change .txt files - probably not, maybe some settings and rules will be read from original SMAC's .txt but not all of them.
 
 ### Other improvements?
 
