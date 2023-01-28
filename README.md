@@ -27,6 +27,8 @@ Network won't be compatible to original client (so you can't play together with 
 
 Maybe I'll make saves and maps compatible, but it's very low priority.
 
+Mod compatibility - it should work with asset mods that replace .PCX, .WAV or files in SMAC directory (later it will also accept upscaled versions). It won't work with mods that modify or link to terranx.exe. Mods that change .txt files - probably not, maybe some settings and rules will be read from original SMAC's .txt but not all of them.
+
 ### Other improvements?
 
 Once I replicate original game, I'll focus on other things, such as: larger maps, larger maximum number of players, custom mod support, online services such as game browser or hosting long-turns games (where people can login and make 1 turn per day or so), alternative art packs (used instead of original, this may mean better graphics)
@@ -37,7 +39,7 @@ Once I replicate original game, I'll focus on other things, such as: larger maps
 
 ### Roadmap
 
-##### Versions 0.x: replicating original SMAC gameplay as closely as possible (but without bugs and some technical limitations)
+##### Versions 0.x+: replicating original SMAC gameplay as closely as possible (but without bugs and some technical limitations)
 
 - v0.1: fundamental engine functions, such as: rendering, UI, netcode, sound system
 
@@ -61,11 +63,11 @@ Once I replicate original game, I'll focus on other things, such as: larger maps
 
 - v0.11: final polishing and bugfixing
 
-##### Versions 1.x: fixing bugs, adding optional small features that weren't present in original SMAC but won't change it's gameplay drastically. See 'GLSMAC v1.x+ features' section at the end
+##### Versions 1.x+: fixing bugs, adding optional small features that weren't present in original SMAC but won't change it's gameplay drastically. See 'GLSMAC v1.x+ features' section at the end
 
-##### Versions 2.x: adding all kinds of features, as long as they are worth the time. See 'GLSMAC v2.x+ features' section at the end
+##### Versions 2.x+: adding all kinds of features, as long as they are worth the time. See 'GLSMAC v2.x+ features' section at the end
 
-##### Versions 3.x: not sure yet, probably something cool.
+##### Versions 3.x+: not sure yet, probably something cool.
 
 ### Build instructions
 
@@ -139,7 +141,7 @@ About features - they aren't promises with guarantees, they are ideas that I'm t
 
 SMAC art is 256-color and sounds are of 22khz mono quality. Maybe it's possible to upscale them and improve quality in runtime.
 
-##### replays
+##### Replays
 
 Easy recording of replays (maybe even 'auto-record replay' checkbox in options), then they can be saved, sent to others and watched, alone or as multiplayer game (host game in replay mode). Replays will play in usual way, like in dota2 or stacraft2.
 
@@ -200,73 +202,73 @@ There will be several options on how players can play games (they can select one
 
 ###### 1) server-clients : default mode and the only one available before 1.x - one player hosts game on his PC and others connect.
 
-    Pros:
+Pros:
 
-        - low lag if players are near (maybe even LAN)
-        - independent from master server (game will keep being playable if it's down)
-        - host will have local saves
+- low lag if players are near (maybe even LAN)
+- independent from master server (game will keep being playable if it's down)
+- host will have local saves
 
-    Cons:
+Cons:
 
-        - requires player to have real IP and ports open in firewall
-        - exposes host's IP to other players and vice versa
-        - puts a higher load on host's PC (if his PC is slow - game may lag between turns)
-        - if host has slow internet connection - game will lag
-        - host can cheat (maphack, spawning items for himself) and others can't even check it (so not eligible for rated mode)
-        - host can lose saves 
+- requires player to have real IP and ports open in firewall
+- exposes host's IP to other players and vice versa
+- puts a higher load on host's PC (if his PC is slow - game may lag between turns)
+- if host has slow internet connection - game will lag
+- host can cheat (maphack, spawning items for himself) and others can't even check it (so not eligible for rated mode)
+- host can lose saves 
 
 ###### 2) master-server : player "host" will configure game, but it will be physically hosted on my server(s). Host won't have special permissions once game is started.
 
-    Pros:
+Pros:
 
-        - IPs of players are hidden from each other
-        - anyone can host, having real IP is not required, no need to configure firewalls/routers etc
-        - no lag from somebody's PC being slow or somebody's internet being slow (only one with slow internet will get lags but not others)
-        - nobody can cheat (so it's eligible for rated mode)
-        - automatic backups of saves
+- IPs of players are hidden from each other
+- anyone can host, having real IP is not required, no need to configure firewalls/routers etc
+- no lag from somebody's PC being slow or somebody's internet being slow (only one with slow internet will get lags but not others)
+- nobody can cheat (so it's eligible for rated mode)
+- automatic backups of saves
 
-    Cons:
+Cons:
 
-        - depends on server being up (risk of downtime will be low though)
-        - if player is too far physically from master server - he can have some lag
-        - if too many games will need to be hosted at same time - there can be queues or server(s) can become overloaded
-        - players won't have local saves (unless maybe there will be option to switch to server-clients mode, in this case saves will be downloaded to new host) 
+- depends on server being up (risk of downtime will be low though)
+- if player is too far physically from master server - he can have some lag
+- if too many games will need to be hosted at same time - there can be queues or server(s) can become overloaded
+- players won't have local saves (unless maybe there will be option to switch to server-clients mode, in this case saves will be downloaded to new host) 
 
 ###### 3) servers-servers : every player is game server, game processing is split between evenly and with some redundancy
 
-    Pros:
+Pros:
 
-        - low lag if players are near (maybe even LAN)
-        - independent from master server (game will keep being playable if it's down)
-        - everybody will have local saves (so harder to lose them)
-        - cheats that spawn items won't work (because players are validating each other)
-        - maybe faster turn processing because load will be split
+- low lag if players are near (maybe even LAN)
+- independent from master server (game will keep being playable if it's down)
+- everybody will have local saves (so harder to lose them)
+- cheats that spawn items won't work (because players are validating each other)
+- maybe faster turn processing because load will be split
 
-    Cons:
+Cons:
 
-        - requires at least one player to have real IP and ports open in firewall
-        - exposes IPs of all players to each other
-        - any player can use maphack (and others won't know)
-        - somewhat harder to implement
-        - may be unstable and prone to bugs, at least at first 
+- requires at least one player to have real IP and ports open in firewall
+- exposes IPs of all players to each other
+- any player can use maphack (and others won't know)
+- somewhat harder to implement
+- may be unstable and prone to bugs, at least at first 
 
 ###### 4) cross-hosting : every player online will partially host some other game of other players. in turn, his game will also be hosted by someone else. coordination will be p2p similar to torrents, master server only as backup when p2p fails for some reason
 
-    Pros:
+Pros:
 
-        - (almost) independent from master server (game will keep being playable if it's down)
-        - nobody in current game can cheat. when hosting game of others - player can use maphack, but it won't give him any benefits
-        - (almost) decentralized, amount of decentralization will depend on how many players are online and enabled cross-hosting (and probably in same region)
-        - saves will be kept on computers of multiple players, plus on master server as backup. They will also replicate between players as hosts change
+- (almost) independent from master server (game will keep being playable if it's down)
+- nobody in current game can cheat. when hosting game of others - player can use maphack, but it won't give him any benefits
+- (almost) decentralized, amount of decentralization will depend on how many players are online and enabled cross-hosting (and probably in same region)
+- saves will be kept on computers of multiple players, plus on master server as backup. They will also replicate between players as hosts change
 
-    Cons:
+Cons:
 
-        - system will work poorly if there's low amount of players online (with cross-hosting enabled), it will fallback to other mode in worst case
-        - user's PC will process games of other players, store saves of other games, some may not like it even if they get same services from others in return
-        - redundancy requirement of at least 2x means it's a bit inefficient in results/work ratio (multiple PCs will need to do the exact same processing)
-        - also 2x or more increased internet traffic, same reason
-        - the most complex system to implement, will certainly be the last if at all
-        - rare sudden lags if hosts change too often (for example game was hosted on 3 PCs but they all went offline at same time)
+- system will work poorly if there's low amount of players online (with cross-hosting enabled), it will fallback to other mode in worst case
+- user's PC will process games of other players, store saves of other games, some may not like it even if they get same services from others in return
+- redundancy requirement of at least 2x means it's a bit inefficient in results/work ratio (multiple PCs will need to do the exact same processing)
+- also 2x or more increased internet traffic, same reason
+- the most complex system to implement, will certainly be the last if at all
+- rare sudden lags if hosts change too often (for example game was hosted on 3 PCs but they all went offline at same time)
 
 ### GLSMAC v2.x+ features
 
