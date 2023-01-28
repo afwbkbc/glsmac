@@ -113,6 +113,8 @@ If it freezes: 1) use debug build 2) run gdb --args ./bin/GLSMAC <smac_directory
 
 If it behaves incorrectly: create issue and specify: 1) steps to reproduce 2) expected behavior 3) actual behavior ; attach screenshots if needed
 
+Update: on Linux debug build will run inside gdb automatically, so just start it normally
+
 ### Copyright disclaimer
 
 GLSMAC does not include any copyrighted assets from original SMAC, it is designed to use assets of existing SMAC installation on user's computer. It will also work with any third-party assets, as long as they are in same format and in same directory structure as original SMAC.
