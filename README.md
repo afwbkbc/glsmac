@@ -47,9 +47,9 @@ Once I replicate original game, I'll focus on other things, such as: larger maps
 
 - v0.3: basic multiplayer: ability to host and join games, lobby, save/load games with same players. multiplayer support will be maintained during further steps from now on
 
-- v0.4: game processing, such as: game turns, units, buildings, technologies, building of bases, terraforming, basic combat, victory by conquest
+- v0.4: game processing, such as: game turns, units (only scout patrols, formers and colony pods), buildings (only recycling tanks), technologies (only centauri ecology), building of bases (only land bases), terraforming (only farms, mines and solar arrays), unit combat, victory by conquest
 
-- v0.5: all remaining SMAC units, buildings, terraformings, tech, etc
+- v0.5: all remaining SMAC units, buildings, terraformings, technologies, etc
 
 - v0.6: all remaining victory types
 
@@ -59,7 +59,7 @@ Once I replicate original game, I'll focus on other things, such as: larger maps
 
 - v0.9: all remaining in-game UI, including game settings
 
-- v0.10: non-crucial things like movies, interludes
+- v0.10: non-crucial things like movies, interludes, dynamic music
 
 - v0.11: final polishing and bugfixing
 
