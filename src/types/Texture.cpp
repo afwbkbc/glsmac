@@ -63,22 +63,69 @@ void Texture::Rectangle( const size_t x1, const size_t y1, const size_t x2, cons
 	}
 }
 
-void Texture::CopyFrom( const types::Texture* source, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x, const size_t dest_y ) {
+void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x, const size_t dest_y, const rotate_t rotate ) {
 	ASSERT( dest_x + ( x2 - x1 ) < m_width, "destination x overflow ( " + to_string( dest_x + ( x2 - x1 ) ) + " >= " + to_string( m_width ) + " )" );
 	ASSERT( dest_y + ( y2 - y1 ) < m_height, "destination y overflow (" + to_string( dest_y + ( y2 - y1 ) ) + " >= " + to_string( m_height ) + " )" );
+	ASSERT( x2 >= x1, "invalid source x size ( " + to_string( x2 ) + " < " + to_string( x1 ) + " )" );
+	ASSERT( y2 >= y1, "invalid source y size ( " + to_string( y2 ) + " < " + to_string( y1 ) + " )" );
+	
+	
 	
 	// +1 because it's inclusive on both sides
 	// TODO: make non-inclusive
 	const size_t w = x2 - x1 + 1;
 	const size_t h = y2 - y1 + 1;
 	
+	const void *from;
+	void *to;
+	
+	ASSERT( rotate < 4, "invalid rotate value " + to_string( rotate ) );
+	if ( rotate > 0 ) {
+		ASSERT( w == h, "rotating supported only for squares for now" );
+	}
+	
 	for (size_t y = 0 ; y < h ; y++) {
 		for (size_t x = 0 ; x < w; x++) {
-			memcpy(
-				ptr( m_bitmap, ( ( y + dest_y ) * m_width + ( x + dest_x ) ) * m_bpp, m_bpp ),
-				ptr( source->m_bitmap, ( ( y + y1 ) * source->m_width + ( x + x1 ) ) * m_bpp, m_bpp ),
-				m_bpp
-			);
+			
+			from = ptr( source->m_bitmap, ( ( y + y1 ) * source->m_width + ( x + x1 ) ) * m_bpp, m_bpp );
+			
+			switch ( rotate ) {
+				case ROTATE_0: {
+					to = ptr( m_bitmap, ( ( y + dest_y ) * m_width + ( x + dest_x ) ) * m_bpp, m_bpp );
+					break;
+				}
+				case ROTATE_90: {
+					to = ptr( m_bitmap, ( ( x + dest_y ) * m_height + ( h - y - 1 + dest_x ) ) * m_bpp, m_bpp );
+					break;
+				}
+				case ROTATE_180: {
+					to = ptr( m_bitmap, ( ( h - y - 1 + dest_y ) * m_width + ( w - x - 1 + dest_x ) ) * m_bpp, m_bpp );
+					break;
+	 			}
+				case ROTATE_270: {
+					to = ptr( m_bitmap, ( ( w - x - 1 + dest_y ) * m_height + ( y + dest_x ) ) * m_bpp, m_bpp );
+					break;
+	 			}
+				default: {
+					ASSERT( false, "invalid rotate value " + to_string( rotate ) );
+				}
+			}
+			
+			switch ( mode ) {
+				case AM_COPY: {
+					memcpy( to, from, m_bpp );
+					break;
+				}
+				case AM_MERGE: {
+					if ( *(uint32_t*)from & 0x000000ff ) {
+						memcpy( to, from, m_bpp );
+					}
+					break;
+				}
+				default: {
+					ASSERT( false, "unsupported texture add mode " + to_string( mode ) );
+				}
+			}
 		}
 	}
 }

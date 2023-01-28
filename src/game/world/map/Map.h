@@ -59,6 +59,12 @@ private:
 			{ 526, 373 }, { 583, 373 }, { 640, 373 }, { 697, 373 },
 			{ 526, 430 }, { 583, 430 }, { 640, 430 }, { 959, 463 },
 		};
+		const tc_t fungus_land[16] = {
+			{ 280, 515 }, { 337, 515 }, { 394, 515 }, { 451, 515 },
+			{ 280, 572 }, { 337, 572 }, { 394, 572 }, { 451, 572 },
+			{ 280, 629 }, { 337, 629 }, { 394, 629 }, { 451, 629 },
+			{ 280, 686 }, { 337, 686 }, { 394, 686 }, { 451, 686 },
+		};
 	} m_tc;
 	
 	Scene* m_scene = nullptr;
@@ -69,6 +75,22 @@ private:
 	Texture* m_texture = nullptr;
 	
 	void GenerateActor();
+	
+	typedef struct {
+		uint8_t inverse_x;
+		uint8_t inverse_y;
+		uint8_t rotate_direction;
+		uint8_t texture_variant;
+	} tile_texture_info_t;
+	
+	enum tile_grouping_criteria_t {
+		TG_MOISTURE,
+		TG_FEATURE,
+	};
+	
+	unordered_map< uint8_t, uint8_t > m_texture_variants = {}; // cache
+	
+	const tile_texture_info_t GetTileTextureInfo( Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature = Tile::F_NONE ) const;
 
 };
 

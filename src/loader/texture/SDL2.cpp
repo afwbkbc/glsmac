@@ -102,7 +102,7 @@ Texture* SDL2::LoadTexture( const string &name, const size_t x1, const size_t y1
 
 		NEWV( subtexture, Texture, subtexture_key, x2 - x1 + 1, y2 - y1 + 1 );
 		
-		subtexture->CopyFrom(full_texture, x1, y1, x2, y2);
+		subtexture->AddFrom(full_texture, Texture::AM_COPY, x1, y1, x2, y2);
 		if ((flags & LT_ROTATE) == LT_ROTATE) {
 			subtexture->Rotate();
 		}

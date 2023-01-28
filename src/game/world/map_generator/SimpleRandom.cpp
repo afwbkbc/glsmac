@@ -23,23 +23,44 @@ void SimpleRandom::Generate( Tiles* tiles ) {
 			*tile->elevation.right = RND;
 			tile->elevation.bottom = RND;
 			
-			switch ( rand() % 6 ) {
-				case 0:
-				case 1:
-				case 2:
-					tile->moisture = Tile::M_MOIST;
-					break;
-				case 3:
-				case 4:
-					tile->moisture = Tile::M_RAINY;
-					break;
-				default:
-					tile->moisture = Tile::M_MOIST;
+			// random moisture etc
+			tile->moisture = rand() % 3 + 1;
+			tile->rockyness = rand() % 3 + 1;
+			tile->features = 0;
+			
+			// spawn some jungles
+			if ( rand() % 30 == 0 ) {
+				tile->SelfAndAround( TH() {
+					if ( rand() % 2 == 0 ) {
+						tile->SelfAndAround( TH() {
+							if ( rand() % 2 == 0 ) {
+								tile->features |= Tile::F_JUNGLE;
+							}
+						});
+					}
+				});
 			}
 			
-			tile->rockyness = rand() % 3;
-			tile->features = rand() % 65536;
-			
+			// spawn some fungus areas
+			if ( rand() % 40 == 0 ) {
+				tile->SelfAndAround( TH() {
+					if ( rand() % 2 == 0 ) {
+						tile->SelfAndAround( TH() {
+							if ( rand() % 3 == 0 ) {
+								tile->SelfAndAround( TH() {
+									if ( rand() % 4 == 0 ) {
+										tile->SelfAndAround( TH() {
+											if ( rand() % 5 == 0 ) {
+												tile->features |= Tile::F_XENOFUNGUS;
+											}
+										});
+									}
+								});
+							}
+						});
+					}
+				});
+			}
 		}
 	}
 	

@@ -24,9 +24,62 @@ namespace map {
 #define TEXTURE_HALFWIDTH ( TEXTURE_WIDTH / 2 )
 #define TEXTURE_HALFHEIGHT ( TEXTURE_HEIGHT / 2 )
 
+#define B(x) S_to_binary_(#x)
+
+static inline unsigned char S_to_binary_(const char *s)
+{
+    unsigned long long i = 0;
+    while (*s) {
+        i <<= 1;
+        i += *s++ - '0';
+    }
+    return i;
+}
+
 Map::Map( Scene* scene )
 	: m_scene( scene )
 {
+	
+	// precache tile texture variants/rotations for fast lookups
+	typedef struct {
+		uint8_t bitmask;
+		uint8_t checked_bits; // some masks don't care about some corners
+	} texture_rule_t;
+	
+	const vector< texture_rule_t > bitmasks = {
+		{ B(00000000), B(10101010) }, // 0
+		{ B(00001000), B(10101010) }, // 1
+		{ B(00101000), B(10111010) }, // 2
+		{ B(00111000), B(10111010) }, // 3
+		{ B(10001000), B(10101010) }, // 4
+		{ B(10101000), B(11111010) }, // 5
+		{ B(10111000), B(11111010) }, // 6
+		{ B(11101000), B(11111010) }, // 7
+		{ B(11111000), B(11111010) }, // 8
+		{ B(10101010), B(11111111) }, // 9
+		{ B(10101110), B(11111111) }, // 10
+		{ B(10111110), B(11111111) }, // 11
+		{ B(11101110), B(11111111) }, // 12
+		{ B(11111110), B(11111111) }, // 13
+		{ B(11111111), B(11111111) }, // 14
+		// 15 ???
+	};
+
+	for ( uint16_t bitmask = 0 ; bitmask < 256 ; bitmask++ ) {
+		ssize_t i = bitmasks.size() - 1;
+		while ( i >= 0 ) {
+			texture_rule_t rules = bitmasks.at( i );
+			if ( ( bitmask & rules.checked_bits ) == ( rules.bitmask & rules.checked_bits ) ) {
+				m_texture_variants[ bitmask ] = i;
+				break;
+			}
+			i--;
+		}
+		if ( i == 0 ) {
+			m_texture_variants[ bitmask ] = 0;
+		}
+	}
+	
 	
 }
 
@@ -50,18 +103,6 @@ void Map::SetTiles( Tiles* tiles ) {
 
 actor::Mesh* Map::GetActor() const {
 	return m_terrain_actor;
-}
-
-#define B(x) S_to_binary_(#x)
-
-static inline unsigned char S_to_binary_(const char *s)
-{
-    unsigned long long i = 0;
-    while (*s) {
-        i <<= 1;
-        i += *s++ - '0';
-    }
-    return i;
 }
 
 void Map::GenerateActor() {
@@ -104,14 +145,10 @@ void Map::GenerateActor() {
 	
 	float tsx = (float) 1 / TEXTURE_WIDTH / w;
 	float tsy = (float) 1 / TEXTURE_HEIGHT / h;
-	float tso = 1; // small offset to remove border artifacts around tiles
+	float tso = 0; // small offset to remove border artifacts around tiles
 	
-	uint8_t rotate;
-	uint8_t inverse_x;
-	uint8_t inverse_y;
 	float ttx1, tty1, ttx2 ,tty2;
 	Vec2< float > txvec[4];
-	uint8_t texture_variant;
 	
 	NEWV( mesh, mesh::Mesh, w * h * 5 / 2, w * h * 4 / 2 );
 	for ( size_t y = 0 ; y < h ; y++ ) {
@@ -132,102 +169,19 @@ void Map::GenerateActor() {
 			tx = tx1 + TEXTURE_HALFWIDTH;
 			ty = ty1 + TEXTURE_HALFHEIGHT;
 			
-			/*Log(
-				" X = " + to_string( x ) +
-				" Y = " + to_string( y ) +
-				" TX1 = " + to_string( tx1 ) +
-				" TY1 = " + to_string( ty1 ) +
-				" TSX1 = " + to_string( tx1 * tsx ) +
-				" TSY1 = " + to_string( ty1 * tsy ) +
-				" TSX2 = " + to_string( tx2 * tsx ) +
-				" TSY2 = " + to_string( ty2 * tsy )
-			);*/
-			
-			auto tx_set = [ this, tx1, ty1 ] ( const tc_t& tc ) -> void {
-				m_texture->CopyFrom( m_source_texture, tc.x, tc.y, tc.x + TEXTURE_WIDTH - 1, tc.y + TEXTURE_HEIGHT - 1, tx1, ty1 );
+			auto tx_add = [ this, tx1, ty1 ] ( const tc_t& tc, const Texture::add_mode_t mode, const uint8_t rotate ) -> void {
+				m_texture->AddFrom( m_source_texture, mode, tc.x, tc.y, tc.x + TEXTURE_WIDTH - 1, tc.y + TEXTURE_HEIGHT - 1, tx1, ty1, rotate );
 			};
 			
-			inverse_x = rand() % 2;
-			inverse_y = rand() % 2;
-			rotate = rand() % 4;
-			texture_variant = 0;
-			
+			tile_texture_info_t txinfo;
 			if ( tile->moisture == Tile::M_MOIST || tile->moisture == Tile::M_RAINY ) {
-				// pick correct texture variant and rotation depending on nearby tiles
-				const bool w = tile->W->moisture == tile->moisture;
-				const bool nw = tile->NW->moisture == tile->moisture;
-				const bool n = tile->N->moisture == tile->moisture;
-				const bool ne = tile->NE->moisture == tile->moisture;
-				const bool e = tile->E->moisture == tile->moisture;
-				const bool se = tile->SE->moisture == tile->moisture;
-				const bool s = tile->S->moisture == tile->moisture;
-				const bool sw = tile->SW->moisture == tile->moisture;
-				
-				const uint8_t c = w + nw + n + ne + e + se + s + sw;
-
-				inverse_x = 0;
-				inverse_y = 0;
-				
-				typedef struct {
-					uint8_t bitmask;
-					uint8_t checked_bits; // some masks don't care about some corners
-				} texture_rule_t;
-
-				const vector< texture_rule_t > bitmasks = {
-					{ B(00000000), B(10101010) }, // 0
-					{ B(00001000), B(10101010) }, // 1
-					{ B(00101000), B(10111010) }, // 2
-					{ B(00111000), B(10111010) }, // 3
-					{ B(10001000), B(10101010) }, // 4
-					{ B(10101000), B(11111010) }, // 5
-					{ B(10111000), B(11111010) }, // 6
-					{ B(11101000), B(11111010) }, // 7
-					{ B(11111000), B(11111010) }, // 8
-					{ B(10101010), B(11111111) }, // 9
-					{ B(10101110), B(11111111) }, // 10
-					{ B(10111110), B(11111111) }, // 11
-					{ B(11101110), B(11111111) }, // 12
-					{ B(11111110), B(11111111) }, // 13
-					{ B(11111111), B(11111111) }, // 14
-				};
-				
-				auto value = tile->moisture;
-				bool matches[ 16 ];
-				uint8_t idx = 0;
-				for ( uint8_t i = 0 ; i < 2 ; i++ ) {
-					tile->Around( TH( &idx, &matches, value ) {
-						matches[ idx++ ] = tile->moisture == value;
-					}, true );
-				}
-				
-				vector< uint8_t > possible_rotates = {};
-				
-				auto try_bitmasks = [ this, &rotate, &texture_variant, &possible_rotates, matches, bitmasks ] () {
-					for ( rotate = 0 ; rotate < 8 ; rotate += 2 ) {
-						uint8_t bitmask = 0;
-						for ( uint8_t i = 0 ; i < 8 ; i++ ) {
-							bitmask |= matches[ i + rotate ] << i;
-						}
-						for ( char i = bitmasks.size() - 1 ; i >= 0 ; i-- ) {
-							texture_rule_t rules = bitmasks.at( i );
-							if ( ( bitmask & rules.checked_bits ) == ( rules.bitmask & rules.checked_bits ) ) {
-								texture_variant = i;
-								possible_rotates.push_back( rotate );
-								break;
-							}
-						}
-					}
-				};
-				
-				try_bitmasks();
-				
-				if ( !possible_rotates.empty() ) {
-					rotate = possible_rotates[ rand() % possible_rotates.size() ] / 2; // TODO: rotate in all 8 directions?
-				}
-				else {
-					texture_variant = 16;
-				}
-				
+				txinfo = GetTileTextureInfo( tile, TG_MOISTURE );
+			}
+			else {
+				txinfo.inverse_x = rand() % 2;
+				txinfo.inverse_y = rand() % 2;
+				txinfo.rotate_direction = rand() % 4;
+				txinfo.texture_variant = 0;
 			}
 			
 			switch ( tile->moisture ) {
@@ -236,25 +190,51 @@ void Map::GenerateActor() {
 					break;
 				}
 				case Tile::M_ARID: {
-					tx_set( m_tc.arid[0] );
+					tx_add( m_tc.arid[0], Texture::AM_COPY, txinfo.rotate_direction );
 					break;
 				}
 				case Tile::M_MOIST: {
-					if ( texture_variant != 16 ) // tmp
-						tx_set( m_tc.moist[ texture_variant ] );
+					txinfo = GetTileTextureInfo( tile, TG_MOISTURE );
+					tx_add( m_tc.moist[ txinfo.texture_variant ], Texture::AM_COPY, txinfo.rotate_direction );
 					break;
 				}
 				case Tile::M_RAINY: {
-					if ( texture_variant != 16 ) // tmp
-						tx_set( m_tc.rainy[ texture_variant ] );
+					txinfo = GetTileTextureInfo( tile, TG_MOISTURE );
+					tx_add( m_tc.rainy[ txinfo.texture_variant ], Texture::AM_COPY, txinfo.rotate_direction );
 					break;
 				}
 				default:
 					ASSERT( false, "invalid moisture value" );
 			}
 			
+			switch ( tile->rockyness ) {
+				case Tile::R_NONE:
+				case Tile::R_FLAT: {
+					// nothing
+					break;
+				}
+				case Tile::R_ROLLING: {
+					tx_add( m_tc.rocks[ rand() % 2 * 2 ], Texture::AM_MERGE, txinfo.rotate_direction );
+					break;
+				}
+				case Tile::R_ROCKY: {
+					tx_add( m_tc.rocks[ rand() % 2 * 2 + 1 ], Texture::AM_MERGE, txinfo.rotate_direction );
+					break;
+				}
+				default:
+					ASSERT( false, "invalid rockyness value" );
+			}
 			
-			if ( inverse_x ) {
+			if ( tile->features	& Tile::F_JUNGLE ) {
+				txinfo = GetTileTextureInfo( tile, TG_FEATURE, Tile::F_JUNGLE );
+				tx_add( m_tc.jungle[ txinfo.texture_variant ], Texture::AM_MERGE, txinfo.rotate_direction );
+			}
+			if ( tile->features & Tile::F_XENOFUNGUS ) {
+				txinfo = GetTileTextureInfo( tile, TG_FEATURE, Tile::F_XENOFUNGUS );
+				tx_add( m_tc.fungus_land[ txinfo.texture_variant ], Texture::AM_MERGE, txinfo.rotate_direction );
+			}
+			
+			if ( txinfo.inverse_x ) {
 				ttx1 = tx2 - tso;
 				ttx2 = tx1 + tso;
 			}
@@ -262,7 +242,7 @@ void Map::GenerateActor() {
 				ttx1 = tx1 + tso;
 				ttx2 = tx2 - tso;
 			}
-			if ( inverse_y ) {
+			if ( txinfo.inverse_y ) {
 				tty1 = ty2 - tso;
 				tty2 = ty1 + tso;
 			}
@@ -271,10 +251,11 @@ void Map::GenerateActor() {
 				tty2 = ty2 - tso;
 			}
 			
-			txvec[ ( rotate++ ) % 4 ] = { ttx1, tty2 };
-			txvec[ ( rotate++ ) % 4 ] = { ttx1, tty1 };
-			txvec[ ( rotate++ ) % 4 ] = { ttx2, tty1 };
-			txvec[ ( rotate++ ) % 4 ] = { ttx2, tty2 };
+			txinfo.rotate_direction = 0; // don't rotate combined texture, everything in it is already rotated
+			txvec[ ( txinfo.rotate_direction++ ) % 4 ] = { ttx1, tty2 };
+			txvec[ ( txinfo.rotate_direction++ ) % 4 ] = { ttx1, tty1 };
+			txvec[ ( txinfo.rotate_direction++ ) % 4 ] = { ttx2, tty1 };
+			txvec[ ( txinfo.rotate_direction++ ) % 4 ] = { ttx2, tty2 };
 			
 			left = mesh->AddVertex( { xpos - TILE_HALFWIDTH, ypos, zc.Clamp( *tile->elevation.left ) }, { txvec[0].x * tsx, txvec[0].y * tsy } );
 			top = mesh->AddVertex( { xpos, ypos - TILE_HALFHEIGHT, zc.Clamp( *tile->elevation.top ) }, { txvec[1].x * tsx, txvec[1].y * tsy } );
@@ -298,6 +279,58 @@ void Map::GenerateActor() {
 		m_terrain_actor->SetPosition( MAP_POSITION );
 		m_terrain_actor->SetAngle( MAP_ROTATION );
 	m_scene->AddActor( m_terrain_actor );
+}
+
+const Map::tile_texture_info_t Map::GetTileTextureInfo( Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature ) const {
+	Map::tile_texture_info_t info;
+	
+	info.inverse_x = 0;
+	info.inverse_y = 0;
+	
+	Tile* source = tile;
+	bool matches[ 16 ];
+	uint8_t idx = 0;
+	for ( uint8_t i = 0 ; i < 2 ; i++ ) {
+		tile->Around( TH( this, &idx, &matches, source, criteria, feature ) {
+			switch ( criteria ) {
+				case TG_MOISTURE: {
+					matches[ idx++ ] = tile->moisture == source->moisture;
+					break;
+				}
+				case TG_FEATURE: {
+					matches[ idx++ ] = ( tile->features & feature ) == ( source->features & feature );
+					break;
+				}
+				default: {
+					ASSERT( false, "invalid tile grouping criteria" );
+				}
+			}
+		}, true );
+	}
+	
+	vector< uint8_t > possible_rotates = {};
+	
+	for ( info.rotate_direction = 0 ; info.rotate_direction < 8 ; info.rotate_direction += 2 ) {
+		uint8_t bitmask = 0;
+		for ( uint8_t i = 0 ; i < 8 ; i++ ) {
+			bitmask |= matches[ i + info.rotate_direction ] << i;
+		}
+		auto it = m_texture_variants.find( bitmask );
+		if ( it != m_texture_variants.end() ) {
+			info.texture_variant = it->second;
+			possible_rotates.push_back( info.rotate_direction );
+			break;
+		}
+	}
+	
+	if ( !possible_rotates.empty() ) {
+		info.rotate_direction = possible_rotates[ rand() % possible_rotates.size() ] / 2; // TODO: rotate in all 8 directions?
+	}
+	else {
+		ASSERT( false, "could not find texture variant" );
+	}
+	
+	return info;
 }
 
 }

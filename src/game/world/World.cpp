@@ -38,6 +38,7 @@ void World::Start() {
 	NEW( m_map, Map, m_world_scene );
 	
 	NEWV( tiles, Tiles, 40, 40 );
+	//NEWV( tiles, Tiles, 10, 10 ); // tmp
 	
 	{
 		map_generator::SimpleRandom generator;
@@ -89,7 +90,7 @@ void World::Start() {
 			
 			auto* actor = m_map->GetActor();
 			auto newz = actor->GetAngleZ() + ( (float) rotate.x * MAP_ROTATE_SPEED );
-			auto newy = max( -0.5f, min( 0.5f, actor->GetAngleY() - ( (float) rotate.y * MAP_ROTATE_SPEED ) ) );
+			auto newy = max( -0.5f, min( 0.5f, actor->GetAngleY() + ( (float) rotate.y * MAP_ROTATE_SPEED ) ) );
 			actor->SetAngleZ( newz );
 			actor->SetAngleY( newy );
 			m_last_rotate_position = current_rotate_position;

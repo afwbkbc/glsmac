@@ -60,6 +60,15 @@ const Color::rgba_t Color::GetRGBA() const {
 	return RGBA( value.red * 255, value.green * 255, value.blue * 255, value.alpha * 255 );
 };
 
+Color Color::FromRGBA( const rgba_t rgba ) {
+	return {
+		(channel_t) ( ( rgba ) & 0xff ),
+		(channel_t) ( ( rgba >> 8 ) & 0xff ),
+		(channel_t) ( ( rgba >> 16 ) & 0xff ),
+		(channel_t) ( ( rgba >> 24 ) & 0xff )
+	};
+}
+
 Color Color::FromRGBA( const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha ) {
 	return {
 		(channel_t) red / 255,
