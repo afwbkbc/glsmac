@@ -137,6 +137,8 @@ Finally, there are multiple threads on various forums and reddits but I don't ha
 
 About features - they aren't promises with guarantees, they are ideas that I'm thinking of implementing once base game is finished. No specific priorities or deadlines (most complex to implement will usually come last). They are also up for discussing on discord, you can also propose your own ideas and I'll add them if they are good.
 
+All features that change SMAC gameplay will be optional and can be enabled/disabled per game, there will also be "Force Classic Mode" checkbox in settings that will disable all game-altering additions.
+
 ### GLSMAC v1.x+ features
 
 ##### Art upscaling
