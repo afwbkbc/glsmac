@@ -20,8 +20,9 @@ CLASS( Tiles, base::Base )
 	Tile::elevation_t* TopVertexAt( const size_t x, const size_t y ) const;
 	Tile::elevation_t* TopRightVertexAt( const size_t x ) const;
 
+	void Validate();
+	
 private:
-
 	size_t m_width;
 	size_t m_height;
 	
@@ -29,6 +30,7 @@ private:
 	Tile::elevation_t* m_top_right_vertex_row;
 	Tile* m_data;
 	
+	bool m_is_validated = false;
 };
 	
 }

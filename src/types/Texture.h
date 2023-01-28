@@ -10,7 +10,7 @@
 namespace types {
 
 CLASS( Texture, base::Base )
-	Texture( const std::string& name, const size_t width = 0, const size_t height = 0 );
+	Texture( const std::string& name, const size_t width, const size_t height );
 	virtual ~Texture();
 	
 	const std::string m_name;
@@ -31,7 +31,7 @@ CLASS( Texture, base::Base )
 	void SetPixel( const size_t x, const size_t y, const Color& color );
 	void Rectangle( const size_t x1, const size_t y1, const size_t x2, const size_t y2, const Color color );
 	
-	void CopyFrom( const types::Texture* source, const size_t x1, const size_t y1, const size_t x2, const size_t y2 );
+	void CopyFrom( const types::Texture* source, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x = 0, const size_t dest_y = 0 );
 	void Rotate();
 	void FlipV();
 	//void FlipH(); // TODO

@@ -30,42 +30,68 @@ Tiles::Tiles( const size_t width, const size_t height )
 			}
 			tile = At( x, y );
 			
+			// link to other tiles
+			tile->W = ( x >= 2 ) ? At( x - 2, y ) : At( m_width - 1 - ( 1 - ( y % 2 ) ), y );
+			tile->NW = ( y >= 1 )
+				? ( ( x >= 1 )
+					? At( x - 1, y - 1 )
+					: At( m_width - 1, y - 1 )
+				)
+				: tile
+			;
+			tile->N = ( y >= 2 ) ? At( x, y - 2 ) : tile;
+			tile->NE = ( y >= 1 )
+				? ( ( x < m_width - 1 )
+					? At( x + 1, y - 1 )
+					: At( 0, y - 1 )
+				)
+				: tile
+			;
+			tile->E = ( x < m_width - 2 ) ? At( x + 2, y ) : At( y % 2, y );
+			tile->SE = ( y < m_height - 1 )
+				? ( ( x < m_width - 1 )
+					? At( x + 1, y + 1 )
+					: At( 0, y + 1 )
+				)
+				: tile
+			;
+			tile->S = ( y < m_height - 2 ) ? At( x, y + 2 ) : tile;
+			tile->SW = ( y < m_height - 1 )
+				? ( ( x >= 1 )
+					? At( x - 1, y + 1 )
+					: At( m_width - 1, y + 1 )
+				)
+				: tile
+			;
+			
 			if ( y >= 2 ) {
-				tile->elevation.top = &At( x, y - 2 )->elevation.bottom;
-				//tile->elevation.top = &tile->elevation.bottom;
+				tile->elevation.top = &tile->N->elevation.bottom;
 			}
 			else if ( y > 0 ) {
 				ASSERT( x > 0, "x is zero while y isn't" );
 				tile->elevation.top = At( x - 1, y - 1)->elevation.right;
-				//tile->elevation.top = &tile->elevation.bottom;
 			}
 			else {
 				tile->elevation.top = TopVertexAt( x/* / 2*/, y );
-				//tile->elevation.top = &tile->elevation.bottom;
 			}
 			
-			if ( x > 1 ) {
-				tile->elevation.left = At( x - 2, y )->elevation.right;
-				//tile->elevation.left = &tile->elevation.bottom;
+			if ( x >= 2 ) {
+				tile->elevation.left = tile->W->elevation.right;
 			}
 			
 			if ( y == 0 ) {
 				tile->elevation.right = TopRightVertexAt( x/* / 2*/ );
-				//tile->elevation.right = &tile->elevation.bottom;
 			}
 			else if ( x < m_width - 1 ) {
 				tile->elevation.right = &At( x + 1, y - 1 )->elevation.bottom;
-				//tile->elevation.right = &tile->elevation.bottom;
 			}
 		}
 		
 		// link left edge to right edge and vice versa
 		if ( y % 2 ) {
 			At( m_width - 1, y )->elevation.right = ( y > 0 ? &At( 0, y - 1 )->elevation.bottom : TopRightVertexAt( 0 ) );
-			//At( m_width - 1, y )->elevation.right = &At( m_width - 1, y )->elevation.bottom;
 		}
 		At( y % 2, y )->elevation.left = At( m_width - 1 - ( 1 - ( y % 2 ) ), y )->elevation.right;
-		//At( y % 2, y )->elevation.left = &At( y % 2, y )->elevation.bottom;
 	}
 
 #ifdef DEBUG
@@ -76,9 +102,23 @@ Tiles::Tiles( const size_t width, const size_t height )
 				continue;
 			}
 			tile = At( x, y );
-			ASSERT( tile->elevation.left, "tile left elevation not linked at " + to_string( x ) + "x" + to_string( y ) );
-			ASSERT( tile->elevation.right, "tile right elevation not linked at " + to_string( x ) + "x" + to_string( y ) );
-			ASSERT( tile->elevation.top, "tile top elevation not linked at " + to_string( x ) + "x" + to_string( y ) );
+			
+#define CHECKTILE( _what ) ASSERT( tile->_what, "tile " #_what " not linked at " + to_string( x ) + "x" + to_string( y ) );
+			
+			CHECKTILE( W );
+			CHECKTILE( NW );
+			CHECKTILE( N );
+			CHECKTILE( NE );
+			CHECKTILE( E );
+			CHECKTILE( SE );
+			CHECKTILE( S );
+			CHECKTILE( SW );
+			
+			CHECKTILE( elevation.left );
+			CHECKTILE( elevation.top );
+			CHECKTILE( elevation.right );
+			
+#undef CHECKTILE
 		}
 	}
 #endif
@@ -116,6 +156,32 @@ Tile::elevation_t* Tiles::TopVertexAt( const size_t x, const size_t y ) const {
 Tile::elevation_t* Tiles::TopRightVertexAt( const size_t x ) const {
 	ASSERT( x < m_width, "invalid top right vertex x coordinate" );
 	return (Tile::elevation_t*)( m_top_right_vertex_row + x );
+}
+
+void Tiles::Validate() {
+	if ( !m_is_validated ) {
+		Log( "Validating map" );
+		
+		Tile* tile;
+		for ( auto y = 0 ; y < m_height ; y++ ) {
+			for ( auto x = 0 ; x < m_width ; x++ ) {
+				if ( ( y % 2 ) != ( x % 2 ) ) {
+					continue;
+				}
+				tile = At( x, y );
+				
+				if ( tile->moisture > 3 ) {
+					Log( "tile moisture overflow ( " + to_string( tile->moisture ) + " > 3 ) at " + to_string( x ) + "x" + to_string( y ) );
+				}
+				if ( tile->rockyness > 3 ) {
+					Log( "tile rockyness overflow ( " + to_string( tile->rockyness ) + " > 3 ) at " + to_string( x ) + "x" + to_string( y ) );
+				}
+				
+			}
+		}
+		
+		m_is_validated = true;
+	}
 }
 
 }

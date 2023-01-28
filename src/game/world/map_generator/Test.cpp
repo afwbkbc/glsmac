@@ -21,16 +21,49 @@ void Test::Generate( Tiles* tiles ) {
 	
 	Tile* tile;
 	
-	SE( 1, 1, 500 );
-	SE( 3, 1, 1500 );
-	SE( 5, 1, 2500 );
-	SE( 7, 1, 3500 );
-	
-	SE( 0, 4, -500 );
-	SE( 2, 4, -1500 );
-	SE( 4, 4, -2500 );
-	SE( 6, 4, -3500 );
-	
+	{
+		// everything arid by default
+		for ( size_t y = 0 ; y < tiles->GetWidth() ; y++ ) {
+			for ( size_t x = 0 ; x < tiles->GetWidth() ; x++ ) {
+				if ( y % 2 != x % 2 ) {
+					continue;
+				}
+				
+				tiles->At( x, y )->moisture = Tile::M_ARID;
+			}
+		}
+	}
+/*	
+	{ // isolated tiles
+		tile = tiles->At( 1, 1 );
+		tile->moisture = Tile::M_ARID;
+		tile->rockyness = Tile::R_ROCKY;
+
+		tile = tiles->At( 3, 1 );
+		tile->moisture = Tile::M_MOIST;
+		tile->rockyness = Tile::R_ROLLING;
+
+		tile = tiles->At( 5, 1 );
+		tile->moisture = Tile::M_RAINY;
+		tile->rockyness = Tile::R_FLAT;
+	}
+*/
+
+	{ // small rainy area
+		/*tiles->At( 5, 5 )->SelfAndAround( TH() {
+			tile->moisture = Tile::M_RAINY;
+		});*/
+		
+		Tile::moisture_t m = Tile::M_RAINY;
+		
+		tile = tiles->At( 4, 4 );
+		//tile->moisture = m;
+		tile->Around( TH( m ) {
+			tile->moisture = m;
+		});
+		
+		
+	}
 }
 
 }

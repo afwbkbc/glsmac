@@ -63,17 +63,19 @@ void Texture::Rectangle( const size_t x1, const size_t y1, const size_t x2, cons
 	}
 }
 
-void Texture::CopyFrom( const types::Texture* source, const size_t x1, const size_t y1, const size_t x2, const size_t y2 ) {
+void Texture::CopyFrom( const types::Texture* source, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x, const size_t dest_y ) {
+	ASSERT( dest_x + ( x2 - x1 ) < m_width, "destination x overflow ( " + to_string( dest_x + ( x2 - x1 ) ) + " >= " + to_string( m_width ) + " )" );
+	ASSERT( dest_y + ( y2 - y1 ) < m_height, "destination y overflow (" + to_string( dest_y + ( y2 - y1 ) ) + " >= " + to_string( m_height ) + " )" );
 	
 	// +1 because it's inclusive on both sides
+	// TODO: make non-inclusive
 	const size_t w = x2 - x1 + 1;
 	const size_t h = y2 - y1 + 1;
 	
-	Resize( w, h );
 	for (size_t y = 0 ; y < h ; y++) {
 		for (size_t x = 0 ; x < w; x++) {
 			memcpy(
-				ptr( m_bitmap, ( y * m_width + x ) * m_bpp, m_bpp ),
+				ptr( m_bitmap, ( ( y + dest_y ) * m_width + ( x + dest_x ) ) * m_bpp, m_bpp ),
 				ptr( source->m_bitmap, ( ( y + y1 ) * source->m_width + ( x + x1 ) ) * m_bpp, m_bpp ),
 				m_bpp
 			);

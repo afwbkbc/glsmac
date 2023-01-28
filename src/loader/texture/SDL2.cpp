@@ -28,7 +28,7 @@ void SDL2::Iterate() {
 
 }
 
-types::Texture *SDL2::LoadTexture( const string &name ) {
+Texture* SDL2::LoadTexture( const string &name ) {
 
 	texture_map_t::iterator it = m_textures.find( name );
 	if (it != m_textures.end()) {
@@ -46,9 +46,7 @@ types::Texture *SDL2::LoadTexture( const string &name ) {
 			SDL_FreeSurface(old);
 		}
 
-		NEWV( texture, types::Texture, name );
-		texture->m_width = image->w;
-		texture->m_height = image->h;
+		NEWV( texture, Texture, name, image->w, image->h );
 		texture->m_aspect_ratio = (float) texture->m_height / texture->m_width;
 		texture->m_bpp = image->format->BitsPerPixel / 8;
 		texture->m_bitmap_size = image->w * image->h * texture->m_bpp;
@@ -73,7 +71,7 @@ types::Texture *SDL2::LoadTexture( const string &name ) {
 
 }
 
-types::Texture *SDL2::LoadTexture( const string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
+Texture* SDL2::LoadTexture( const string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
 	
 	const string subtexture_key =
 		name + ":" +
@@ -93,7 +91,7 @@ types::Texture *SDL2::LoadTexture( const string &name, const size_t x1, const si
 	
 		auto *full_texture = LoadTexture( name );
 
-		NEWV( subtexture, types::Texture, subtexture_key );
+		NEWV( subtexture, Texture, subtexture_key, x2 - x1 + 1, y2 - y1 + 1 );
 		
 		subtexture->CopyFrom(full_texture, x1, y1, x2, y2);
 		if ((flags & LT_ROTATE) == LT_ROTATE) {

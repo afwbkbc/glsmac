@@ -6,6 +6,8 @@
 
 #include "types/Texture.h"
 
+using namespace types;
+
 namespace loader {
 namespace texture {
 
@@ -21,19 +23,17 @@ CLASS( TextureLoader, Loader )
 	static const uint8_t LT_CONTRAST = 32;
 
 	// load full texture
-	virtual types::Texture *LoadTexture( const std::string &name ) = 0;
+	virtual Texture* LoadTexture( const std::string &name ) = 0;
+	Texture* LoadTexture( const std::string &name, const Color::rgba_t transparent_color );
 
 	// load part of texture
-	virtual types::Texture *LoadTexture( const string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = LT_NONE, const float value = 1.0 ) = 0;
+	virtual Texture* LoadTexture( const string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = LT_NONE, const float value = 1.0 ) = 0;
 	
 	// treat specific color as transparent
-	void SetTransparentColor( const types::Color::rgba_t rgba ) {
-		m_transparent_color = rgba;
-		m_is_transparent_color_set = true;
-	}
+	void SetTransparentColor( const Color::rgba_t rgba );
 	
 protected:
-	types::Color::rgba_t m_transparent_color;
+	Color::rgba_t m_transparent_color;
 	bool m_is_transparent_color_set = false;
 	
 };

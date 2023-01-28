@@ -6,7 +6,7 @@
 #include "scene/mesh/Rectangle.h"
 
 #include "map_generator/SimpleRandom.h"
-//#include "map_generator/Test.h"
+#include "map_generator/Test.h"
 
 // TODO: move to settings
 #define MAP_SCROLL_SPEED 1.0f

@@ -23,7 +23,20 @@ void SimpleRandom::Generate( Tiles* tiles ) {
 			*tile->elevation.right = RND;
 			tile->elevation.bottom = RND;
 			
-			tile->moisture = rand() % 3;
+			switch ( rand() % 6 ) {
+				case 0:
+				case 1:
+				case 2:
+					tile->moisture = Tile::M_MOIST;
+					break;
+				case 3:
+				case 4:
+					tile->moisture = Tile::M_RAINY;
+					break;
+				default:
+					tile->moisture = Tile::M_MOIST;
+			}
+			
 			tile->rockyness = rand() % 3;
 			tile->features = rand() % 65536;
 			
