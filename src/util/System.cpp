@@ -11,6 +11,8 @@
 #include <iostream>
 #endif
 
+#include <algorithm>
+
 using namespace std;
 
 namespace util {
@@ -78,5 +80,18 @@ bool System::IsGDBAvailable() {
 }
 
 #endif
+
+vector< string > System::GetPossibleFilenames( const string& filename ) {
+	vector< string > result;
+	result.push_back( filename );
+	
+	string str = filename;
+	std::transform(str.begin(), str.end(),str.begin(), ::toupper);
+	result.push_back( str );
+	std::transform(str.begin(), str.end(),str.begin(), ::tolower);
+	result.push_back( str );
+	
+	return result;
+}
 
 }

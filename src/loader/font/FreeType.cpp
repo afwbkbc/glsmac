@@ -1,5 +1,7 @@
 #include "FreeType.h"
 
+#include "util/System.h"
+
 using namespace std;
 
 namespace loader {
@@ -41,8 +43,14 @@ types::Font *FreeType::LoadFont( const string &name, const unsigned char size ) 
 		font->m_name = name;
 
 		FT_Face ftface;
-		string file_name = GetRoot() + name;
-		res = FT_New_Face( m_freetype, file_name.c_str(), 0, &ftface );
+		auto filenames = util::System::GetPossibleFilenames( name );
+		for ( auto& filename : filenames ) {
+			res = FT_New_Face( m_freetype, ( GetRoot() + filename ).c_str(), 0, &ftface );
+			if ( !res ) {
+				break;
+			}
+		}
+		
 		ASSERT( !res, "Unable to load font \"" + name + "\"" );
 		FT_Set_Pixel_Sizes( ftface, 0, size );
 

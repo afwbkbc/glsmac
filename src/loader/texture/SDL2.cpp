@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "util/System.h"
+
 using namespace std;
 
 namespace loader {
@@ -36,7 +38,14 @@ Texture* SDL2::LoadTexture( const string &name ) {
 	}
 	else {
 		Log( "Loading texture \"" + name + "\"" );
-		SDL_Surface *image = IMG_Load( ( GetRoot() + name ).c_str() );
+		auto filenames = util::System::GetPossibleFilenames( name );
+		SDL_Surface *image = nullptr;
+		for ( auto& filename : filenames ) {
+			image = IMG_Load( ( GetRoot() + name ).c_str() );
+			if ( image ) {
+				break;
+			}
+		}
 		ASSERT( image, IMG_GetError() );
 		if (image->format->format != SDL_PIXELFORMAT_RGBA32) {
 			// we must have all images in same format

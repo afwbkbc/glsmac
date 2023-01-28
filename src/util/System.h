@@ -2,6 +2,9 @@
 
 #include "Util.h"
 
+#include <vector>
+#include <string>
+
 namespace util {
 
 CLASS( System, Util )
@@ -11,6 +14,9 @@ CLASS( System, Util )
 	static bool IsGDBAvailable();
 #endif
 
+	// to workaround uppercase or lowercase filenames
+	static vector< string > GetPossibleFilenames( const string& filename );
+	
 };
 
 }

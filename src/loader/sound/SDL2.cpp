@@ -3,6 +3,8 @@
 #define SDL_MAIN_HANDLED 1
 #include <SDL.h>
 
+#include "util/System.h"
+
 using namespace types;
 
 namespace loader {
@@ -29,15 +31,27 @@ Sound* SDL2::LoadSound( const std::string &name ) {
 		NEWV( sound, Sound );
 		sound->m_name = name;
 
-		string file_name = GetRoot() + "fx/" + name;
-		
 		Uint8 *wav_buffer = nullptr; // buffer containing our audio file
 		Uint32 wav_length = 0; // length of our sample
 		SDL_AudioSpec wav_spec; // the specs of our piece of music
 
-		/* Load the WAV */
-		// the specs, length and buffer of our wav are filled
-		auto ret = SDL_LoadWAV( file_name.c_str(), &wav_spec, &wav_buffer, &wav_length );
+		SDL_AudioSpec* ret = nullptr;
+		
+		auto dirs = util::System::GetPossibleFilenames( "fx" );
+		auto filenames = util::System::GetPossibleFilenames( name );
+		for ( auto& dir : dirs ) {
+			for ( auto& filename : filenames ) {
+				/* Load the WAV */
+				// the specs, length and buffer of our wav are filled
+				ret = SDL_LoadWAV( ( GetRoot() + dir + "/" + filename ).c_str(), &wav_spec, &wav_buffer, &wav_length );
+				if ( ret ) {
+					break;
+				}
+			}
+			if ( ret ) {
+				break;
+			}
+		}
 		ASSERT( ret, "Unable to load sound \"" + name + "\"" );
 
 		sound->m_buffer_size = wav_length;
