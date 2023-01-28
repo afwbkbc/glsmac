@@ -200,7 +200,7 @@ Modern smartphones are more than capable of running game like SMAC. In fact, I p
 
 There will be several options on how players can play games (they can select one when they create game):
 
-#### 1) server-clients : default mode and the only one available before 1.x - one player hosts game on his PC and others connect.
+##### 1) server-clients : default mode and the only one available before 1.x - one player hosts game on his PC and others connect.
 
 Pros:
 
@@ -217,7 +217,7 @@ Cons:
 - host can cheat (maphack, spawning items for himself) and others can't even check it (so not eligible for rated mode)
 - host can lose saves 
 
-#### 2) master-server : player "host" will configure game, but it will be physically hosted on my server(s). Host won't have special permissions once game is started.
+##### 2) master-server : player "host" will configure game, but it will be physically hosted on my server(s). Host won't have special permissions once game is started.
 
 Pros:
 
@@ -234,7 +234,7 @@ Cons:
 - if too many games will need to be hosted at same time - there can be queues or server(s) can become overloaded
 - players won't have local saves (unless maybe there will be option to switch to server-clients mode, in this case saves will be downloaded to new host) 
 
-#### 3) servers-servers : every player is game server, game processing is split between evenly and with some redundancy
+##### 3) servers-servers : every player is game server, game processing is split between evenly and with some redundancy
 
 Pros:
 
@@ -252,7 +252,7 @@ Cons:
 - somewhat harder to implement
 - may be unstable and prone to bugs, at least at first 
 
-#### 4) cross-hosting : every player online will partially host some other game of other players. in turn, his game will also be hosted by someone else. coordination will be p2p similar to torrents, master server only as backup when p2p fails for some reason
+##### 4) cross-hosting : every player online will partially host some other game of other players. in turn, his game will also be hosted by someone else. coordination will be p2p similar to torrents, master server only as backup when p2p fails for some reason
 
 Pros:
 
