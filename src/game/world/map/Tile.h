@@ -79,7 +79,9 @@ CLASS( Tile, base::Base )
 	// helpers
 	Tile* Around( tile_cb_t cb, bool need_all = false );
 	Tile* SelfAndAround( tile_cb_t cb );
-	
+
+	// call this after changing something in tile
+	void Update();
 };
 
 }

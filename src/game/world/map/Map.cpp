@@ -13,7 +13,7 @@ namespace map {
 
 #define TILE_WIDTH 1.0f
 #define TILE_HEIGHT 1.0f
-#define TILE_Z_SCALE 0.5f
+#define TILE_Z_SCALE 1.0f
 
 // must match PCX
 #define TEXTURE_WIDTH 56

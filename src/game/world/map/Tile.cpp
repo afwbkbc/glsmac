@@ -27,6 +27,10 @@ Tile* Tile::SelfAndAround( tile_cb_t cb ) {
 	return Around( cb );
 }
 
+void Tile::Update() {
+	elevation.center = ( *elevation.left + *elevation.top + *elevation.right + elevation.bottom ) / 4;
+}
+
 }
 }
 }

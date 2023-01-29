@@ -20,8 +20,17 @@ public:
 		this->y=y;
 	}
 	
-	Vec2<DATATYPE> operator- ( Vec2<DATATYPE>& other ) {
+	Vec2<DATATYPE> operator- ( Vec2<DATATYPE> other ) {
 		return Vec2<DATATYPE>( x - other.x, y - other.y );
+	}
+	Vec2<DATATYPE> operator+ ( Vec2<DATATYPE> other ) {
+		return Vec2<DATATYPE>( x + other.x, y + other.y );
+	}
+	Vec2<DATATYPE> operator* ( DATATYPE other ) {
+		return Vec2<DATATYPE>( x * other, y * other );
+	}
+	Vec2<DATATYPE> operator/ ( DATATYPE other ) {
+		return Vec2<DATATYPE>( x / other, y / other );
 	}
 	
 	DATATYPE x;

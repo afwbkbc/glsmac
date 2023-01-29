@@ -6,6 +6,7 @@
 #include "scene/mesh/Rectangle.h"
 
 #include "map_generator/SimpleRandom.h"
+#include "map_generator/SimplePerlin.h"
 #include "map_generator/Test.h"
 
 // TODO: move to settings
@@ -37,11 +38,13 @@ void World::Start() {
 	
 	NEW( m_map, Map, m_world_scene );
 	
-	NEWV( tiles, Tiles, 40, 40 );
+	NEWV( tiles, Tiles, 50, 50 );
+	//NEWV( tiles, Tiles, 160, 160 );
 	//NEWV( tiles, Tiles, 10, 10 ); // tmp
 	
 	{
-		map_generator::SimpleRandom generator;
+		map_generator::SimplePerlin generator;
+		//map_generator::SimpleRandom generator;
 		//map_generator::Test generator;
 		generator.Generate( tiles );
 	}
@@ -142,7 +145,7 @@ void World::Start() {
 	m_clamp.x.SetRange( 0.0, g_engine->GetGraphics()->GetWindowWidth(), -0.5, 0.5 );
 	m_clamp.y.SetRange( 0.0, g_engine->GetGraphics()->GetWindowHeight(), -0.5, 0.5 );
 	
-	SetCameraPosition( { 0.0f, 0.0f, 0.2f } );
+	SetCameraPosition( { 0.0f, 0.0f, 0.05f } );
 
 	UpdateCameraPosition();
 	UpdateCameraScale();

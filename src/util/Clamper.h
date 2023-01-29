@@ -24,6 +24,12 @@ CLASS( Clamper, Util )
 			result = m_dst_max - result;
 		else
 			result += m_dst_min;
+		if ( result < m_dst_min ) {
+			result = m_dst_min;
+		}
+		if ( result > m_dst_max ) {
+			result = m_dst_max;
+		}
 		return result;
 	}
 	void SetInversed( const bool inversed ) {
