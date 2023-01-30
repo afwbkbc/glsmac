@@ -187,12 +187,10 @@ void OpenGL::Iterate() {
 	glEnable( GL_BLEND );
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
 
 	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it )
 		(*it)->Iterate();
-
-	glFlush();
 
 	glDisable( GL_BLEND );
 	glDisable(GL_DEPTH_TEST);
@@ -279,15 +277,19 @@ void OpenGL::LoadTexture( const types::Texture* texture ) {
 
 		glBindTexture( GL_TEXTURE_2D, 0 );
 		
+		ASSERT( !glGetError(), "Error somewhere while loading texture" );
 	}
 }
 
-/* it's better to keep everything loaded
 void OpenGL::UnloadTexture( const types::Texture* texture ) {
-	Log("Unloading texture '" + texture->m_name + "'");
-	glDeleteTextures(1, &m_textures[texture] );
+	m_textures_map::iterator it = m_textures.find( texture );
+	if ( it != m_textures.end() ) {
+		Log("Unloading texture '" + texture->m_name + "'");
+		glActiveTexture( GL_TEXTURE0 );
+		glDeleteTextures(1, &it->second );
+		m_textures.erase( it );
+	}
 }
-*/
 
 void OpenGL::EnableTexture( const types::Texture* texture ) {
 	if ( texture ) {

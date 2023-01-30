@@ -40,7 +40,7 @@ CLASS( OpenGL, Graphics )
 		return m_options.window_height;
 	}
 	void LoadTexture( const types::Texture* texture );
-	//void UnloadTexture( const types::Texture* texture );
+	void UnloadTexture( const types::Texture* texture );
 	void EnableTexture( const types::Texture* texture );
 	void DisableTexture();
 

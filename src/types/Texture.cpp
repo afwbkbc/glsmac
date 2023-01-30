@@ -1,4 +1,5 @@
 #include "Texture.h"
+#include "engine/Engine.h"
 
 #include <cstring>
 #include <cmath>
@@ -19,6 +20,9 @@ Texture::Texture( const std::string& name, const size_t width, const size_t heig
 }
 
 Texture::~Texture() {
+	if ( g_engine ) { // may be null if shutting down
+		g_engine->GetGraphics()->UnloadTexture( this );
+	}
 	if ( m_bitmap ) {
 		free( m_bitmap );
 	}

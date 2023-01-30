@@ -24,7 +24,7 @@ CLASS( Graphics, base::Module )
 	virtual const unsigned short GetWindowHeight() const = 0;
 	
 	virtual void LoadTexture( const types::Texture* texture ) = 0;
-	//virtual void UnloadTexture( const types::Texture* texture ) = 0; // better to keep everything loaded forever
+	virtual void UnloadTexture( const types::Texture* texture ) = 0;
 	virtual void EnableTexture( const types::Texture* texture ) = 0;
 	virtual void DisableTexture() = 0;
 

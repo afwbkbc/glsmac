@@ -19,6 +19,7 @@ Texture::~Texture() {
 void Texture::Load() {
 	//Log( "Creating OpenGL texture" );
 
+	glActiveTexture( GL_TEXTURE0 );
 	glGenTextures( 1, &m_texture_obj );
 	glBindTexture( m_target, m_texture_obj );
 	ASSERT( m_texture->m_bpp == 3, "Unsupported texture format ( invalid BPP )" );
