@@ -5,6 +5,7 @@
 #include "base/Base.h"
 
 #include "types/Vec3.h"
+#include "types/Color.h"
 
 using namespace types;
 
@@ -15,7 +16,8 @@ CLASS( Mesh, base::Base )
 	
 	static const uint8_t VERTEX_COORD_SIZE = 3; // x, y, z
 	static const uint8_t VERTEX_TEXCOORD_SIZE = 2; // tx, ty
-	static const uint8_t VERTEX_SIZE = VERTEX_COORD_SIZE + VERTEX_TEXCOORD_SIZE;
+	static const uint8_t VERTEX_EXTRA_SIZE = 4; // tint (rgba)
+	static const uint8_t VERTEX_SIZE = VERTEX_COORD_SIZE + VERTEX_TEXCOORD_SIZE + VERTEX_EXTRA_SIZE;
 	static const uint8_t SURFACE_SIZE = 3; // triangles
 
 	typedef float coord_t;
@@ -31,13 +33,14 @@ CLASS( Mesh, base::Base )
 	
 	void Clear();
 	void AddSurface( const surface_t& surface );
-	index_t AddVertex( const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord = { 0, 0 } );
-	index_t AddVertex( const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord = { 0, 0 } );
-	void SetVertex( const index_t index, const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord );
-	void SetVertex( const index_t index, const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord );
+	index_t AddVertex( const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord = { 0, 0 }, const Color tint = { 1.0f, 1.0f, 1.0f, 1.0f } );
+	index_t AddVertex( const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord = { 0, 0 }, const Color tint = { 1.0f, 1.0f, 1.0f, 1.0f } );
+	void SetVertex( const index_t index, const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord, const Color tint = { 1.0f, 1.0f, 1.0f, 1.0f } );
+	void SetVertex( const index_t index, const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord, const Color tint = { 1.0f, 1.0f, 1.0f, 1.0f } );
 	void SetVertexCoord( const index_t index, const Vec3 &coord );
 	void SetVertexCoord( const index_t index, const Vec2<Mesh::coord_t> &coord );
 	void SetVertexTexCoord( const index_t index, const Vec2<Mesh::coord_t> &tex_coord );
+	void SetVertexTint( const index_t index, const Color tint );
 	void SetSurface( const index_t index, const Mesh::surface_t& surface );
 	void Finalize();
 	

@@ -197,8 +197,6 @@ void OpenGL::Iterate() {
 	glDisable( GL_BLEND );
 	glDisable(GL_DEPTH_TEST);
 
-//	glFlush();
-
 	SDL_GL_SwapWindow( m_window );
 
 #ifdef DEBUG

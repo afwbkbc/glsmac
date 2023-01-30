@@ -29,7 +29,7 @@ CLASS( Texture, base::Base )
 	
 	void SetPixel( const size_t x, const size_t y, const Color::rgba_t& rgba );
 	void SetPixel( const size_t x, const size_t y, const Color& color );
-	void Rectangle( const size_t x1, const size_t y1, const size_t x2, const size_t y2, const Color color );
+	void SetPixelAlpha( const size_t x, const size_t y, const uint8_t alpha );
 	
 	enum add_mode_t {
 		AM_COPY, // copy every pixel from dest to source
@@ -53,7 +53,7 @@ CLASS( Texture, base::Base )
 	 * @param dest_y - (optional) where to start copying to (y coordinate), default 0 (at beginning)
 	 * @param rotate - (optional) apply as rotated or not, default 0 ( not rotated ). see rotate_t
 	 */
-	void AddFrom( const types::Texture* source, const add_mode_t mode, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x = 0, const size_t dest_y = 0, const rotate_t rotate = 0 );
+	void AddFrom( const types::Texture* source, const add_mode_t mode, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x = 0, const size_t dest_y = 0, const rotate_t rotate = 0, const float alpha = 1.0f );
 	
 	void Rotate();
 	void FlipV();

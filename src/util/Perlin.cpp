@@ -90,6 +90,8 @@ float Perlin::Noise(float x, float y, float z, size_t passes) {
 		scale /= 2;
 	}
 	
+	res = max( -1.0f, min( 1.0f, res ) );
+	
 	ASSERT( res >= -1, "perlin (passes=" + to_string( passes ) + ") res overflow ( " + to_string( res ) + " < -1 )" );
 	ASSERT( res <= 1, "perlin (passes=" + to_string( passes ) + ") res overflow ( " + to_string( res ) + " > 1 )" );
 	//Log( "Noise( " + to_string( x ) + "x" + to_string( y ) + ":" + to_string( passes ) + " ) = " + to_string( res ) );

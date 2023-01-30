@@ -2,6 +2,7 @@
 
 #include "base/Base.h"
 
+#include <vector>
 #include <unordered_map>
 
 #include "Tiles.h"
@@ -25,13 +26,16 @@ CLASS( Map, base::Base )
 	void SetTiles( Tiles* tiles );
 	
 	// tmp
-	actor::Mesh* GetActor() const;
+	vector<actor::Mesh*> GetActors() const;
 	
 private:
 	
 	// coordinates of textures (x1 and y1) in texture.pcx
 	typedef Vec2< size_t > tc_t;
 	const struct {
+		const tc_t water[2] = {
+			{ 280, 79 }, {280, 136 },
+		};
 		const tc_t rocks[4] = {
 			{ 1, 1 }, { 58, 1 }, { 115, 1 }, { 172, 1 }
 		};
@@ -67,14 +71,23 @@ private:
 		};
 	} m_tc;
 	
-	Scene* m_scene = nullptr;
-	actor::Mesh* m_terrain_actor = nullptr;
-	Texture* m_source_texture = nullptr;
-	
 	Tiles* m_tiles = nullptr;
-	Texture* m_texture = nullptr;
 	
-	void GenerateActor();
+	struct {
+		Texture* source = nullptr;
+		Texture* terrain = nullptr;
+		Texture* water = nullptr;
+	} m_textures;
+	
+	Scene* m_scene = nullptr;
+	struct {
+		actor::Mesh* terrain = nullptr;
+		actor::Mesh* water = nullptr;
+	} m_actors;
+	
+	void GenerateActors();
+	void GenerateTerrainActor();
+	void GenerateWaterActor();
 	
 	typedef struct {
 		uint8_t inverse_x;

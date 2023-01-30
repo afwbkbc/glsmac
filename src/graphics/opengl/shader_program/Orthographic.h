@@ -24,6 +24,7 @@ protected:
 	struct {
 		GLint coord;
 		GLint tex_coord;
+		GLint tint;
 	} m_gl_attributes;
 
 	void AddShaders();

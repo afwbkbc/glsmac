@@ -22,7 +22,7 @@ void Texture::Load() {
 	glGenTextures( 1, &m_texture_obj );
 	glBindTexture( m_target, m_texture_obj );
 	ASSERT( m_texture->m_bpp == 3, "Unsupported texture format ( invalid BPP )" );
-	glTexImage2D( m_target, 0, GL_RGB, m_texture->m_width, m_texture->m_height, 0, GL_RGB, GL_UNSIGNED_BYTE, m_texture->m_bitmap );
+	glTexImage2D( m_target, 0, GL_RGBA8, m_texture->m_width, m_texture->m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_texture->m_bitmap );
 	glTexParameterf( m_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 	glTexParameterf( m_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	glTexParameterf( m_target, GL_TEXTURE_WRAP_S, GL_REPEAT );

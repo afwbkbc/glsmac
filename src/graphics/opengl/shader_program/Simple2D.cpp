@@ -40,9 +40,9 @@ void Simple2D::Initialize() {
 
 void Simple2D::EnableAttributes() const {
 	glEnableVertexAttribArray( m_gl_attributes.coord );
-	glVertexAttribPointer( m_gl_attributes.coord, 3, GL_FLOAT, GL_FALSE, 20, (const GLvoid *)0 );
+	glVertexAttribPointer( m_gl_attributes.coord, 3, GL_FLOAT, GL_FALSE, 36, (const GLvoid *)0 );
 	glEnableVertexAttribArray( m_gl_attributes.tex_coord );
-	glVertexAttribPointer( m_gl_attributes.tex_coord, 2, GL_FLOAT, GL_FALSE, 20, (const GLvoid *)12 );
+	glVertexAttribPointer( m_gl_attributes.tex_coord, 2, GL_FLOAT, GL_FALSE, 36, (const GLvoid *)12 );
 };
 
 void Simple2D::DisableAttributes() const {

@@ -16,8 +16,7 @@ namespace map_generator {
 void SimplePerlin::Generate( Tiles* tiles ) {
 	Log( "Generating terrain ( " + to_string( tiles->GetWidth() ) + " x " + to_string( tiles->GetHeight() ) + " )" );
 	
-	util::Clamper<float> perlin_to_elevation;
-	perlin_to_elevation.SetRange( -1.0, 1.0, 0, 3500 );
+	util::Clamper<float> perlin_to_elevation( -1.0, 1.0, -3500, 3500 );
 	
 	util::Clamper<float> perlin_to_value; // to moisture or rockyness
 	perlin_to_value.SetRange( -1.0, 1.0, 1, 3 );
@@ -47,14 +46,14 @@ void SimplePerlin::Generate( Tiles* tiles ) {
 			const float z_jungle = 130;
 			const float z_xenofungus = 150;
 			
-			*tile->elevation.left = perlin_to_elevation.Clamp( PERLIN( x, y, z_elevation ) );
-			*tile->elevation.top = perlin_to_elevation.Clamp( PERLIN( x, y, z_elevation ) );
-			*tile->elevation.right = perlin_to_elevation.Clamp( PERLIN( x + 1.0f, y, z_elevation ) );
-			tile->elevation.bottom = perlin_to_elevation.Clamp( PERLIN( x, y + 1.0f, z_elevation ) );
+			*tile->elevation.left = perlin_to_elevation.Clamp( PERLIN( x, y + 0.5f, z_elevation ) );
+			*tile->elevation.top = perlin_to_elevation.Clamp( PERLIN( x + 0.5f, y, z_elevation ) );
+			*tile->elevation.right = perlin_to_elevation.Clamp( PERLIN( x + 1.0f, y + 0.5f, z_elevation ) );
+			tile->elevation.bottom = perlin_to_elevation.Clamp( PERLIN( x + 0.5f, y + 1.0f, z_elevation ) );
 			
 			tile->Update();
 			
-			tile->rockyness = perlin_to_value.Clamp( round( PERLIN_S( x, y, z_rocks, 4.0f ) ) );
+			tile->rockyness = perlin_to_value.Clamp( round( PERLIN_S( x, y, z_rocks, 1.0f ) ) );
 			
 			tile->moisture = perlin_to_value.Clamp( ceil( PERLIN_S( x, y, z_moisture, 0.6f ) ) );
 			if ( tile->moisture == Tile::M_RAINY ) {
@@ -70,8 +69,10 @@ void SimplePerlin::Generate( Tiles* tiles ) {
 			if ( rand() % 30 == 0 ) {
 				tile->rockyness = Tile::R_ROCKY;
 				tile->Around( TH() {
-					if ( rand() % 10 == 0 ) {
-						tile->rockyness = max( Tile::R_ROLLING, tile->rockyness );
+					if ( rand() % 3 != 0 ) {
+						if ( tile->rockyness != Tile::R_ROCKY ) {
+							tile->rockyness = Tile::R_ROLLING;
+						}
 					}
 				});
 			}

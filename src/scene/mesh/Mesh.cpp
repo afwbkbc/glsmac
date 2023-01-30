@@ -36,27 +36,36 @@ void Mesh::AddSurface( const Mesh::surface_t& surface  ) {
 	m_surface_i++;
 }
 
-Mesh::index_t Mesh::AddVertex( const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord ) {
+Mesh::index_t Mesh::AddVertex( const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord, const Color tint ) {
 	ASSERT( !m_is_final, "addvertex on already finalized mesh" );
 	ASSERT( m_vertex_i < m_vertex_count, "vertex out of bounds (" + to_string( m_vertex_i ) + " >= " + to_string( m_vertex_count ) + ")" );
-	memcpy( ptr( m_vertex_data, m_vertex_i * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord ) ), &coord, sizeof(coord) );
-	memcpy( ptr( m_vertex_data, m_vertex_i * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( tex_coord ) ), &tex_coord, sizeof(tex_coord) );
+	size_t offset = m_vertex_i * VERTEX_SIZE * sizeof( coord_t );
+	memcpy( ptr( m_vertex_data, offset, sizeof( coord ) ), &coord, sizeof(coord) );
+	offset += VERTEX_COORD_SIZE * sizeof( coord_t );
+	memcpy( ptr( m_vertex_data, offset, sizeof( tex_coord ) ), &tex_coord, sizeof( tex_coord ) );
+	offset += VERTEX_TEXCOORD_SIZE * sizeof( coord_t );
+	memcpy( ptr( m_vertex_data, offset, sizeof( tint ) ), &tint, sizeof( tint ) );
 	Mesh::index_t ret = m_vertex_i;
 	m_vertex_i++;
 	return ret;
 }
-Mesh::index_t Mesh::AddVertex( const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord ) {
-	return AddVertex( Vec3( coord.x, coord.y, 0.0 ), tex_coord );
+Mesh::index_t Mesh::AddVertex( const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord, const Color tint ) {
+	return AddVertex( Vec3( coord.x, coord.y, 0.0 ), tex_coord, tint );
 }
 
-void Mesh::SetVertex( const index_t index, const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord ) {
+void Mesh::SetVertex( const index_t index, const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord, const Color tint ) {
 	ASSERT( index < m_vertex_count, "index out of bounds" );
-	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord ) ), &coord, sizeof( coord ) );
-	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( tex_coord ) ), &tex_coord, sizeof( tex_coord ) );
+	size_t offset = index * VERTEX_SIZE * sizeof( coord_t );
+	memcpy( ptr( m_vertex_data, offset, sizeof( coord ) ), &coord, sizeof( coord ) );
+	offset += VERTEX_COORD_SIZE * sizeof( coord_t );
+	memcpy( ptr( m_vertex_data, offset, sizeof( tex_coord ) ), &tex_coord, sizeof( tex_coord ) );
+	offset += VERTEX_TEXCOORD_SIZE * sizeof( coord_t );
+	memcpy( ptr( m_vertex_data, offset, sizeof( tint ) ), &tint, sizeof( tint ) );
 	Update();
 }
-void Mesh::SetVertex( const index_t index, const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord ) {
-	SetVertex( index, { coord.x, coord.y, 0.0 }, tex_coord );
+
+void Mesh::SetVertex( const index_t index, const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord, const Color tint ) {
+	SetVertex( index, { coord.x, coord.y, 0.0 }, tex_coord, tint );
 }
 
 void Mesh::SetVertexCoord( const index_t index, const Vec3 &coord ) {
@@ -72,6 +81,11 @@ void Mesh::SetVertexTexCoord( const index_t index, const Vec2<Mesh::coord_t> &te
 	ASSERT( index < m_vertex_count, "index out of bounds" );
 	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( tex_coord ) ), &tex_coord, sizeof( tex_coord ) );
 	Update();
+}
+
+void Mesh::SetVertexTint( const index_t index, const Color tint ) {
+	ASSERT( index < m_vertex_count, "index out of bounds" );
+	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ) + VERTEX_TEXCOORD_SIZE * sizeof( coord_t ), sizeof( Color ) ), &tint, sizeof( tint ) );
 }
 
 void Mesh::SetSurface( const index_t index, const Mesh::surface_t& surface ) {
@@ -100,7 +114,7 @@ const size_t Mesh::GetVertexCount() const {
 const size_t Mesh::GetVertexDataSize() const {
 	return m_vertex_count * VERTEX_SIZE * sizeof( coord_t );
 }
-const uint8_t* Mesh::GetVertexData() const {
+const uint8_t* Mesh::GetVertexData() const {	
 	return m_vertex_data;
 }
 

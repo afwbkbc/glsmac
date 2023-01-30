@@ -45,31 +45,24 @@ void Texture::Resize( const size_t width, const size_t height ) {
 }
 
 void Texture::SetPixel( const size_t x, const size_t y, const Color::rgba_t& rgba ) {
-	*((Color::rgba_t*)ptr( m_bitmap, y * m_width + x, sizeof( rgba ) )) = rgba;
-}
+	memcpy( ptr( m_bitmap, ( y * m_width + x ) * m_bpp, sizeof( rgba ) ), &rgba, sizeof( rgba ) );
+} 
 
 void Texture::SetPixel( const size_t x, const size_t y, const Color& color ) {
 	SetPixel( x, y, color.GetRGBA() );
 }
 
-void Texture::Rectangle( const size_t x1, const size_t y1, const size_t x2, const size_t y2, const Color color ) {
-	
-	auto rgba = color.GetRGBA();
-	
-	for (size_t x = x1 ; x < x2 ; x++) {
-		for (size_t y = y1 ; y < y2 ; y++) {
-			SetPixel(x, y, color);
-		}
-	}
+void Texture::SetPixelAlpha( const size_t x, const size_t y, const uint8_t alpha ) {
+	memcpy( ptr( m_bitmap, ( y * m_width + x ) * m_bpp + 3, sizeof( alpha ) ), &alpha, sizeof( alpha ) );
 }
 
-void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x, const size_t dest_y, const rotate_t rotate ) {
+void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x, const size_t dest_y, const rotate_t rotate, const float alpha ) {
 	ASSERT( dest_x + ( x2 - x1 ) < m_width, "destination x overflow ( " + to_string( dest_x + ( x2 - x1 ) ) + " >= " + to_string( m_width ) + " )" );
 	ASSERT( dest_y + ( y2 - y1 ) < m_height, "destination y overflow (" + to_string( dest_y + ( y2 - y1 ) ) + " >= " + to_string( m_height ) + " )" );
 	ASSERT( x2 >= x1, "invalid source x size ( " + to_string( x2 ) + " < " + to_string( x1 ) + " )" );
 	ASSERT( y2 >= y1, "invalid source y size ( " + to_string( y2 ) + " < " + to_string( y1 ) + " )" );
-	
-	
+	ASSERT( alpha >= 0, "invalid alpha value ( " + to_string( alpha ) + " < 0 )" );
+	ASSERT( alpha <= 1, "invalid alpha value ( " + to_string( alpha ) + " > 1 )" );
 	
 	// +1 because it's inclusive on both sides
 	// TODO: make non-inclusive
@@ -125,6 +118,9 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 				default: {
 					ASSERT( false, "unsupported texture add mode " + to_string( mode ) );
 				}
+			}
+			if ( alpha < 1.0f ) {
+				*(uint8_t*)( to + 3 ) = (uint8_t)floor( alpha * 0xff );
 			}
 		}
 	}

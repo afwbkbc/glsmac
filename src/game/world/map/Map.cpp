@@ -15,6 +15,11 @@ namespace map {
 #define TILE_HEIGHT 1.0f
 #define TILE_Z_SCALE 1.0f
 
+//#define SEA_LEVELS_COAST 1000
+#define SEA_LEVELS_COAST -1
+#define SEA_LEVELS_OCEAN -1000
+#define SEA_LEVELS_TRENCH -2000
+
 // must match PCX
 #define TEXTURE_WIDTH 56
 #define TEXTURE_HEIGHT 56
@@ -84,62 +89,83 @@ Map::Map( Scene* scene )
 }
 
 Map::~Map() {
-	if ( m_terrain_actor ) {
-		DELETE( m_terrain_actor );
+	if ( m_actors.terrain ) {
+		m_scene->RemoveActor( m_actors.terrain );
+		DELETE( m_actors.terrain );
+	}
+	if ( m_actors.water ) {
+		m_scene->RemoveActor( m_actors.water );
+		DELETE( m_actors.water );
 	}
 	if ( m_tiles ) {
 		DELETE( m_tiles );
 	}
-	if ( m_texture ) {
-		DELETE( m_texture );
+	if ( m_textures.terrain ) {
+		DELETE( m_textures.terrain );
+	}
+	if ( m_textures.water ) {
+		DELETE( m_textures.water );
 	}
 }
 
 void Map::SetTiles( Tiles* tiles ) {
 	ASSERT( !m_tiles, "map tiles already set" );
 	m_tiles = tiles;
-	GenerateActor();
+	GenerateActors();
 }
 
-actor::Mesh* Map::GetActor() const {
-	return m_terrain_actor;
+vector<actor::Mesh*> Map::GetActors() const {
+	return {
+		m_actors.terrain,
+		m_actors.water
+	};
 }
 
-void Map::GenerateActor() {
+void Map::GenerateActors() {
 	ASSERT( m_tiles, "map tiles not set" );
-	
 	m_tiles->Validate();
-	
-	if ( m_terrain_actor ) {
-		m_scene->RemoveActor( m_terrain_actor );
-		DELETE( m_terrain_actor );
-		Log( "Regenerating terrain actor" );
-	}
-	else {
-		Log( "Generating terrain actor" );
-	}
-	
-	if ( !m_source_texture ) {
-		m_source_texture = g_engine->GetTextureLoader()->LoadTexture( "texture.pcx", Color::RGBA( 125, 0, 128, 255 ) );
-	}
 	
 	size_t w = m_tiles->GetWidth();
 	size_t h = m_tiles->GetHeight();
+
+	Log( "Generating map actors" );
 	
-	if ( m_texture ) {
-		DELETE( m_texture );
+	// terrain objects
+	if ( !m_textures.source ) {
+		m_textures.source = g_engine->GetTextureLoader()->LoadTexture( "texture.pcx", Color::RGBA( 125, 0, 128, 255 ) );
 	}
-	NEW( m_texture, Texture, "MapTexture", w * TEXTURE_WIDTH, h * TEXTURE_HEIGHT );
+	if ( m_actors.terrain ) {
+		m_scene->RemoveActor( m_actors.terrain );
+		DELETE( m_actors.terrain );
+	}
+	if ( m_textures.terrain ) {
+		DELETE( m_textures.terrain );
+	}
+	NEW( m_textures.terrain, Texture, "TerrainTexture", w * TEXTURE_WIDTH, h * TEXTURE_HEIGHT );
+	NEWV( mesh_terrain, mesh::Mesh, w * h * 5 / 2, w * h * 4 / 2 );
+	mesh::Mesh::index_t t_center, t_left, t_right, t_top, t_bottom;
+
+	// water objects
+	if ( m_actors.water ) {
+		m_scene->RemoveActor( m_actors.water );
+		DELETE( m_actors.water );
+	}
+	if ( m_textures.water ) {
+		DELETE( m_textures.water );
+	}
+	NEW( m_textures.water, Texture, "WaterTexture", w * TEXTURE_WIDTH, h * TEXTURE_HEIGHT );
+	NEWV( mesh_water , mesh::Mesh, w * h * 5 / 2, w * h * 4 / 2 );
+	mesh::Mesh::index_t w_center, w_left, w_right, w_top, w_bottom;
 	
-	mesh::Mesh::index_t center, left, right, top, bottom;
 	float xpos, ypos;
 	float tx, ty, tx1, ty1, tx2, ty2;
 	
 	float ox = -( (float) TILE_WIDTH * m_tiles->GetWidth() / 4 - TILE_HALFWIDTH );
-	float oy = - ( (float) TILE_HEIGHT * m_tiles->GetHeight() / 4 - TILE_HALFHEIGHT );
+	float oy = -( (float) TILE_HEIGHT * m_tiles->GetHeight() / 4 - TILE_HALFHEIGHT );
 	
-	util::Clamper< float > zc;
-	zc.SetRange( Tile::ELEVATION_MIN, Tile::ELEVATION_MAX, -TILE_Z_SCALE, TILE_Z_SCALE );
+	util::Clamper< float > elevation_to_vertex_z( Tile::ELEVATION_MIN, Tile::ELEVATION_MAX, -TILE_Z_SCALE, TILE_Z_SCALE );
+	util::Clamper< float > elevation_to_water_gamma( SEA_LEVELS_TRENCH, SEA_LEVELS_COAST - 200, 0.5f, 1.0f );
+	util::Clamper< float > elevation_to_water_alpha( SEA_LEVELS_COAST, SEA_LEVELS_OCEAN, 1.0f, 1.0f ); // TODO: fix blending bug and reenable alpha
 	
 	Tile* tile;
 	
@@ -150,7 +176,9 @@ void Map::GenerateActor() {
 	float ttx1, tty1, ttx2 ,tty2;
 	Vec2< float > txvec[4];
 	
-	NEWV( mesh, mesh::Mesh, w * h * 5 / 2, w * h * 4 / 2 );
+	// for water textures processing
+	uint8_t wtx, wty;
+	
 	for ( size_t y = 0 ; y < h ; y++ ) {
 		for ( size_t x = 0 ; x < w ; x++ ) {
 			if ( y % 2 != x % 2 ) {
@@ -169,69 +197,92 @@ void Map::GenerateActor() {
 			tx = tx1 + TEXTURE_HALFWIDTH;
 			ty = ty1 + TEXTURE_HALFHEIGHT;
 			
-			auto tx_add = [ this, tx1, ty1 ] ( const tc_t& tc, const Texture::add_mode_t mode, const uint8_t rotate ) -> void {
-				m_texture->AddFrom( m_source_texture, mode, tc.x, tc.y, tc.x + TEXTURE_WIDTH - 1, tc.y + TEXTURE_HEIGHT - 1, tx1, ty1, rotate );
+			auto tx_add = [ this, tx1, ty1 ] ( Texture* texture, const tc_t& tc, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha = 1.0f ) -> void {
+				texture->AddFrom( m_textures.source, mode, tc.x, tc.y, tc.x + TEXTURE_WIDTH - 1, tc.y + TEXTURE_HEIGHT - 1, tx1, ty1, rotate, alpha );
 			};
 			
 			tile_texture_info_t txinfo;
-			if ( tile->moisture == Tile::M_MOIST || tile->moisture == Tile::M_RAINY ) {
-				txinfo = GetTileTextureInfo( tile, TG_MOISTURE );
-			}
-			else {
-				txinfo.inverse_x = rand() % 2;
-				txinfo.inverse_y = rand() % 2;
-				txinfo.rotate_direction = rand() % 4;
-				txinfo.texture_variant = 0;
-			}
+			txinfo.inverse_x = rand() % 2;
+			txinfo.inverse_y = rand() % 2;
+			txinfo.rotate_direction = rand() % 4;
+			txinfo.texture_variant = 0;
 			
-			switch ( tile->moisture ) {
-				case Tile::M_NONE: {
-					// invisible tile (for dev/test purposes)
-					break;
-				}
-				case Tile::M_ARID: {
-					tx_add( m_tc.arid[0], Texture::AM_COPY, txinfo.rotate_direction );
-					break;
-				}
-				case Tile::M_MOIST: {
-					txinfo = GetTileTextureInfo( tile, TG_MOISTURE );
-					tx_add( m_tc.moist[ txinfo.texture_variant ], Texture::AM_COPY, txinfo.rotate_direction );
-					break;
-				}
-				case Tile::M_RAINY: {
-					txinfo = GetTileTextureInfo( tile, TG_MOISTURE );
-					tx_add( m_tc.rainy[ txinfo.texture_variant ], Texture::AM_COPY, txinfo.rotate_direction );
-					break;
-				}
-				default:
-					ASSERT( false, "invalid moisture value" );
-			}
+			Tile::elevation_t e_left = *tile->elevation.left;
+			Tile::elevation_t e_top = *tile->elevation.top;
+			Tile::elevation_t e_right = *tile->elevation.right;
+			Tile::elevation_t e_bottom = tile->elevation.bottom;
+			Tile::elevation_t e_center = tile->elevation.center;
 			
-			switch ( tile->rockyness ) {
-				case Tile::R_NONE:
-				case Tile::R_FLAT: {
-					// nothing
-					break;
-				}
-				case Tile::R_ROLLING: {
-					tx_add( m_tc.rocks[ rand() % 2 * 2 ], Texture::AM_MERGE, txinfo.rotate_direction );
-					break;
-				}
-				case Tile::R_ROCKY: {
-					tx_add( m_tc.rocks[ rand() % 2 * 2 + 1 ], Texture::AM_MERGE, txinfo.rotate_direction );
-					break;
-				}
-				default:
-					ASSERT( false, "invalid rockyness value" );
-			}
+			// some tiles are both is_water and is_land
+			bool is_water = (
+				e_center <= SEA_LEVELS_COAST ||
+				e_left <= SEA_LEVELS_COAST ||
+				e_top <= SEA_LEVELS_COAST ||
+				e_right <= SEA_LEVELS_COAST ||
+				e_bottom <= SEA_LEVELS_COAST
+			);
+			bool is_land = (
+				e_center > SEA_LEVELS_COAST ||
+				e_left > SEA_LEVELS_COAST ||
+				e_top > SEA_LEVELS_COAST ||
+				e_right > SEA_LEVELS_COAST ||
+				e_bottom > SEA_LEVELS_COAST
+			);
 			
-			if ( tile->features	& Tile::F_JUNGLE ) {
-				txinfo = GetTileTextureInfo( tile, TG_FEATURE, Tile::F_JUNGLE );
-				tx_add( m_tc.jungle[ txinfo.texture_variant ], Texture::AM_MERGE, txinfo.rotate_direction );
+			
+			if ( is_water ) {
+				tx_add( m_textures.water, m_tc.water[ 1 ], Texture::AM_COPY, txinfo.rotate_direction );
 			}
-			if ( tile->features & Tile::F_XENOFUNGUS ) {
-				txinfo = GetTileTextureInfo( tile, TG_FEATURE, Tile::F_XENOFUNGUS );
-				tx_add( m_tc.fungus_land[ txinfo.texture_variant ], Texture::AM_MERGE, txinfo.rotate_direction );
+			/*if ( is_land )*/ {
+				switch ( tile->moisture ) {
+					case Tile::M_NONE: {
+						// invisible tile (for dev/test purposes)
+						break;
+					}
+					case Tile::M_ARID: {
+						tx_add( m_textures.terrain, m_tc.arid[0], Texture::AM_COPY, txinfo.rotate_direction );
+						break;
+					}
+					case Tile::M_MOIST: {
+						txinfo = GetTileTextureInfo( tile, TG_MOISTURE );
+						tx_add( m_textures.terrain, m_tc.moist[ txinfo.texture_variant ], Texture::AM_COPY, txinfo.rotate_direction );
+						break;
+					}
+					case Tile::M_RAINY: {
+						txinfo = GetTileTextureInfo( tile, TG_MOISTURE );
+						tx_add( m_textures.terrain, m_tc.rainy[ txinfo.texture_variant ], Texture::AM_COPY, txinfo.rotate_direction );
+						break;
+					}
+					default:
+						ASSERT( false, "invalid moisture value" );
+				}
+
+				switch ( tile->rockyness ) {
+					case Tile::R_NONE:
+					case Tile::R_FLAT: {
+						// nothing
+						break;
+					}
+					case Tile::R_ROLLING: {
+						tx_add( m_textures.terrain, m_tc.rocks[ rand() % 2 * 2 ], Texture::AM_MERGE, txinfo.rotate_direction );
+						break;
+					}
+					case Tile::R_ROCKY: {
+						tx_add( m_textures.terrain, m_tc.rocks[ rand() % 2 * 2 + 1 ], Texture::AM_MERGE, txinfo.rotate_direction );
+						break;
+					}
+					default:
+						ASSERT( false, "invalid rockyness value" );
+				}
+
+				if ( tile->features	& Tile::F_JUNGLE ) {
+					txinfo = GetTileTextureInfo( tile, TG_FEATURE, Tile::F_JUNGLE );
+					tx_add( m_textures.terrain, m_tc.jungle[ txinfo.texture_variant ], Texture::AM_MERGE, txinfo.rotate_direction );
+				}
+				if ( tile->features & Tile::F_XENOFUNGUS ) {
+					txinfo = GetTileTextureInfo( tile, TG_FEATURE, Tile::F_XENOFUNGUS );
+					tx_add( m_textures.terrain, m_tc.fungus_land[ txinfo.texture_variant ], Texture::AM_MERGE, txinfo.rotate_direction );
+				}
 			}
 			
 			if ( txinfo.inverse_x ) {
@@ -256,29 +307,42 @@ void Map::GenerateActor() {
 			txvec[ ( txinfo.rotate_direction++ ) % 4 ] = { ttx1, tty1 };
 			txvec[ ( txinfo.rotate_direction++ ) % 4 ] = { ttx2, tty1 };
 			txvec[ ( txinfo.rotate_direction++ ) % 4 ] = { ttx2, tty2 };
-			
-			left = mesh->AddVertex( { xpos - TILE_HALFWIDTH, ypos, zc.Clamp( *tile->elevation.left ) }, { txvec[0].x * tsx, txvec[0].y * tsy } );
-			top = mesh->AddVertex( { xpos, ypos - TILE_HALFHEIGHT, zc.Clamp( *tile->elevation.top ) }, { txvec[1].x * tsx, txvec[1].y * tsy } );
-			right = mesh->AddVertex( { xpos + TILE_HALFWIDTH, ypos, zc.Clamp( *tile->elevation.right ) }, { txvec[2].x * tsx, txvec[2].y * tsy } );
-			bottom = mesh->AddVertex( { xpos, ypos + TILE_HALFHEIGHT, zc.Clamp( tile->elevation.bottom ) }, { txvec[3].x * tsx, txvec[3].y * tsy } );
-			
-			center = mesh->AddVertex( { xpos, ypos, zc.Clamp( tile->elevation.center ) }, { tx * tsx, ty * tsy } );
-			
-			mesh->AddSurface( { center, left, top } );
-			mesh->AddSurface( { center, top, right } );
-			mesh->AddSurface( { center, right, bottom } );
-			mesh->AddSurface( { center, bottom, left } );
 
+			t_left = mesh_terrain->AddVertex( { xpos - TILE_HALFWIDTH, ypos, elevation_to_vertex_z.Clamp( e_left ) }, { txvec[0].x * tsx, txvec[0].y * tsy } );
+			t_top = mesh_terrain->AddVertex( { xpos, ypos - TILE_HALFHEIGHT, elevation_to_vertex_z.Clamp( e_top ) }, { txvec[1].x * tsx, txvec[1].y * tsy } );
+			t_right = mesh_terrain->AddVertex( { xpos + TILE_HALFWIDTH, ypos, elevation_to_vertex_z.Clamp( e_right ) }, { txvec[2].x * tsx, txvec[2].y * tsy } );
+			t_bottom = mesh_terrain->AddVertex( { xpos, ypos + TILE_HALFHEIGHT, elevation_to_vertex_z.Clamp( e_bottom ) }, { txvec[3].x * tsx, txvec[3].y * tsy } );
+			t_center = mesh_terrain->AddVertex( { xpos, ypos, elevation_to_vertex_z.Clamp( e_center ) }, { tx * tsx, ty * tsy } );
+			mesh_terrain->AddSurface( { t_center, t_left, t_top } );
+			mesh_terrain->AddSurface( { t_center, t_top, t_right } );
+			mesh_terrain->AddSurface( { t_center, t_right, t_bottom } );
+			mesh_terrain->AddSurface( { t_center, t_bottom, t_left } );
+
+			w_left = mesh_water->AddVertex( { xpos - TILE_HALFWIDTH, ypos, elevation_to_vertex_z.Clamp( SEA_LEVELS_COAST ) }, { txvec[0].x * tsx, txvec[0].y * tsy }, { elevation_to_water_gamma.Clamp( e_left ), elevation_to_water_gamma.Clamp( e_left ), elevation_to_water_gamma.Clamp( e_left ), elevation_to_water_alpha.Clamp( e_left ) } );
+			w_top = mesh_water->AddVertex( { xpos, ypos - TILE_HALFHEIGHT, elevation_to_vertex_z.Clamp( SEA_LEVELS_COAST ) }, { txvec[1].x * tsx, txvec[1].y * tsy }, { elevation_to_water_gamma.Clamp( e_top ), elevation_to_water_gamma.Clamp( e_top ), elevation_to_water_gamma.Clamp( e_top ), elevation_to_water_alpha.Clamp( e_top ) } );
+			w_right = mesh_water->AddVertex( { xpos + TILE_HALFWIDTH, ypos, elevation_to_vertex_z.Clamp( SEA_LEVELS_COAST ) }, { txvec[2].x * tsx, txvec[2].y * tsy }, { elevation_to_water_gamma.Clamp( e_right ), elevation_to_water_gamma.Clamp( e_right ), elevation_to_water_gamma.Clamp( e_right ), elevation_to_water_alpha.Clamp( e_right ) } );
+			w_bottom = mesh_water->AddVertex( { xpos, ypos + TILE_HALFHEIGHT, elevation_to_vertex_z.Clamp( SEA_LEVELS_COAST ) }, { txvec[3].x * tsx, txvec[3].y * tsy }, { elevation_to_water_gamma.Clamp( e_bottom ), elevation_to_water_gamma.Clamp( e_bottom ), elevation_to_water_gamma.Clamp( e_bottom ), elevation_to_water_alpha.Clamp( e_bottom ) } );
+			w_center = mesh_water->AddVertex( { xpos, ypos, elevation_to_vertex_z.Clamp( SEA_LEVELS_COAST ) }, { tx * tsx, ty * tsy }, { elevation_to_water_gamma.Clamp( e_center ), elevation_to_water_gamma.Clamp( e_center ), elevation_to_water_gamma.Clamp( e_center ), elevation_to_water_alpha.Clamp( e_center ) } );
+			mesh_water->AddSurface( { w_center, w_left, w_top } );
+			mesh_water->AddSurface( { w_center, w_top, w_right } );
+			mesh_water->AddSurface( { w_center, w_right, w_bottom } );
+			mesh_water->AddSurface( { w_center, w_bottom, w_left } );
 		}
 	}
 	
-	mesh->Finalize();
+	mesh_water->Finalize();
+	NEW( m_actors.water, actor::Mesh, "MapWater", mesh_water );
+		m_actors.water->SetTexture( m_textures.water );
+		m_actors.water->SetPosition( MAP_POSITION );
+		m_actors.water->SetAngle( MAP_ROTATION );
+	m_scene->AddActor( m_actors.water );
 	
-	NEW( m_terrain_actor, actor::Mesh, "MapTerrain", mesh );
-		m_terrain_actor->SetTexture( m_texture );
-		m_terrain_actor->SetPosition( MAP_POSITION );
-		m_terrain_actor->SetAngle( MAP_ROTATION );
-	m_scene->AddActor( m_terrain_actor );
+	mesh_terrain->Finalize();
+	NEW( m_actors.terrain, actor::Mesh, "MapTerrain", mesh_terrain );
+		m_actors.terrain->SetTexture( m_textures.terrain );
+		m_actors.terrain->SetPosition( MAP_POSITION );
+		m_actors.terrain->SetAngle( MAP_ROTATION );
+	m_scene->AddActor( m_actors.terrain );
 }
 
 const Map::tile_texture_info_t Map::GetTileTextureInfo( Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature ) const {
@@ -319,7 +383,6 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( Tile* tile, const tile_g
 		if ( it != m_texture_variants.end() ) {
 			info.texture_variant = it->second;
 			possible_rotates.push_back( info.rotate_direction );
-			break;
 		}
 	}
 	

@@ -40,7 +40,7 @@ void World::Start() {
 	
 	NEWV( tiles, Tiles, 50, 50 );
 	//NEWV( tiles, Tiles, 160, 160 );
-	//NEWV( tiles, Tiles, 10, 10 ); // tmp
+	//NEWV( tiles, Tiles, 20, 20 ); // tmp
 	
 	{
 		map_generator::SimplePerlin generator;
@@ -91,11 +91,12 @@ void World::Start() {
 			Vec2<float> current_rotate_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
 			Vec2<float> rotate = current_rotate_position - m_last_rotate_position;
 			
-			auto* actor = m_map->GetActor();
-			auto newz = actor->GetAngleZ() + ( (float) rotate.x * MAP_ROTATE_SPEED );
-			auto newy = max( -0.5f, min( 0.5f, actor->GetAngleY() + ( (float) rotate.y * MAP_ROTATE_SPEED ) ) );
-			actor->SetAngleZ( newz );
-			actor->SetAngleY( newy );
+			for (auto& actor : m_map->GetActors() ) {
+				auto newz = actor->GetAngleZ() + ( (float) rotate.x * MAP_ROTATE_SPEED );
+				auto newy = max( -0.5f, min( 0.5f, actor->GetAngleY() + ( (float) rotate.y * MAP_ROTATE_SPEED ) ) );
+				actor->SetAngleZ( newz );
+				actor->SetAngleY( newy );
+			}
 			m_last_rotate_position = current_rotate_position;
 		}
 		
@@ -110,7 +111,9 @@ void World::Start() {
 			}
 			case UIEvent::M_MIDDLE: {
 				m_is_rotating = false;
-				m_map->GetActor()->SetAngle( { 0.0, 0.0, 0.0 } );
+				for (auto& actor : m_map->GetActors() ) {
+					actor->SetAngle( { 0.0, 0.0, 0.0 } );
+				}
 				break;
 			}
 		}

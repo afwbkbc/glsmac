@@ -33,6 +33,24 @@ void Test::Generate( Tiles* tiles ) {
 			}
 		}
 	}
+	
+#define SLOPE( _x, _y, _val ) \
+	tile = tiles->At( _x, _y ); \
+	*tile->elevation.left = ( _val + 400 ); \
+	*tile->elevation.top = ( _val + 400 ); \
+	*tile->elevation.right = ( _val - 400 ); \
+	tile->elevation.bottom = ( _val - 400 ); \
+	*tile->E->elevation.right = *tile->elevation.right; \
+	*tile->W->elevation.left = *tile->elevation.left; \
+	tile->Update();
+	
+	SLOPE( 2, 2, 2000 );
+	SLOPE( 4, 4, 1200 );
+	SLOPE( 6, 6, 400 );
+	SLOPE( 8, 8, -400 );
+	SLOPE( 10, 10, -1200 );
+	SLOPE( 12, 12, -2000 );
+	
 /*	
 	{ // isolated tiles
 		tile = tiles->At( 1, 1 );
@@ -48,11 +66,11 @@ void Test::Generate( Tiles* tiles ) {
 		tile->rockyness = Tile::R_FLAT;
 	}
 */
-
+/*
 	{ // small rainy area
 		/*tiles->At( 5, 5 )->SelfAndAround( TH() {
 			tile->moisture = Tile::M_RAINY;
-		});*/
+		});*
 		
 		Tile::moisture_t m = Tile::M_RAINY;
 		
@@ -64,6 +82,9 @@ void Test::Generate( Tiles* tiles ) {
 		
 		
 	}
+*/
+
+
 }
 
 }
