@@ -40,7 +40,7 @@ void World::Start() {
 	
 	NEWV( tiles, Tiles, 50, 50 );
 	//NEWV( tiles, Tiles, 160, 160 );
-	//NEWV( tiles, Tiles, 20, 20 ); // tmp
+	//NEWV( tiles, Tiles, 10, 10 ); // tmp
 	
 	{
 		map_generator::SimplePerlin generator;

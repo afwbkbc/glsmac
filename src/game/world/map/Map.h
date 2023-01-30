@@ -76,13 +76,11 @@ private:
 	struct {
 		Texture* source = nullptr;
 		Texture* terrain = nullptr;
-		Texture* water = nullptr;
 	} m_textures;
 	
 	Scene* m_scene = nullptr;
 	struct {
 		actor::Mesh* terrain = nullptr;
-		actor::Mesh* water = nullptr;
 	} m_actors;
 	
 	void GenerateActors();

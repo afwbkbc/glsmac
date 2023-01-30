@@ -54,6 +54,11 @@ void SimplePerlin::Generate( Tiles* tiles ) {
 			tile->Update();
 			
 			tile->rockyness = perlin_to_value.Clamp( round( PERLIN_S( x, y, z_rocks, 1.0f ) ) );
+			if ( tile->rockyness == Tile::R_ROCKY ) {
+				if ( rand() % 3 == 0 ) {
+					tile->rockyness = Tile::R_ROLLING;
+				}
+			}
 			
 			tile->moisture = perlin_to_value.Clamp( ceil( PERLIN_S( x, y, z_moisture, 0.6f ) ) );
 			if ( tile->moisture == Tile::M_RAINY ) {

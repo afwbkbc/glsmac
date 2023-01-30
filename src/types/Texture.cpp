@@ -92,7 +92,7 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 					break;
 				}
 				case ROTATE_90: {
-					to = ptr( m_bitmap, ( ( x + dest_y ) * m_height + ( h - y - 1 + dest_x ) ) * m_bpp, m_bpp );
+					to = ptr( m_bitmap, ( ( x + dest_y ) * m_width + ( h - y - 1 + dest_x ) ) * m_bpp, m_bpp );
 					break;
 				}
 				case ROTATE_180: {
@@ -100,7 +100,7 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 					break;
 	 			}
 				case ROTATE_270: {
-					to = ptr( m_bitmap, ( ( w - x - 1 + dest_y ) * m_height + ( y + dest_x ) ) * m_bpp, m_bpp );
+					to = ptr( m_bitmap, ( ( w - x - 1 + dest_y ) * m_width + ( y + dest_x ) ) * m_bpp, m_bpp );
 					break;
 	 			}
 				default: {
