@@ -15,10 +15,6 @@ namespace map {
 #define TILE_HEIGHT 1.0f
 #define TILE_Z_SCALE 1.0f
 
-#define SEA_LEVELS_COAST 0
-#define SEA_LEVELS_OCEAN -1000
-#define SEA_LEVELS_TRENCH -2000
-
 // must match PCX
 #define TEXTURE_WIDTH 56
 #define TEXTURE_HEIGHT 56
@@ -154,8 +150,8 @@ void Map::GenerateActors() {
 	float oy = -( (float) TILE_HEIGHT * m_tiles->GetHeight() / 4 - TILE_HALFHEIGHT );
 	
 	util::Clamper< float > elevation_to_vertex_z( Tile::ELEVATION_MIN, Tile::ELEVATION_MAX, -TILE_Z_SCALE, TILE_Z_SCALE );
-	util::Clamper< float > elevation_to_water_gamma( SEA_LEVELS_TRENCH, SEA_LEVELS_COAST, 0.7f, 1.0f );
-	util::Clamper< float > elevation_to_water_alpha( SEA_LEVELS_COAST, SEA_LEVELS_OCEAN, 0.2f, 0.8f );
+	util::Clamper< float > elevation_to_water_gamma( Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST, 0.5f, 1.0f );
+	util::Clamper< float > elevation_to_water_alpha( Tile::ELEVATION_LEVEL_COAST, Tile::ELEVATION_LEVEL_OCEAN, 0.6f, 0.9f );
 	
 	Tile* tile;
 	
@@ -197,27 +193,28 @@ void Map::GenerateActors() {
 			Tile::elevation_t e_left = *tile->elevation.left;
 			Tile::elevation_t e_top = *tile->elevation.top;
 			Tile::elevation_t e_right = *tile->elevation.right;
-			Tile::elevation_t e_bottom = tile->elevation.bottom;
-			Tile::elevation_t e_center = tile->elevation.center;
+			Tile::elevation_t e_bottom = *tile->elevation.bottom;
+			Tile::elevation_t e_center = *tile->elevation.center;
 			
 			// some tiles are both is_water and is_land
 			bool is_water = (
-				e_center <= SEA_LEVELS_COAST ||
-				e_left <= SEA_LEVELS_COAST ||
-				e_top <= SEA_LEVELS_COAST ||
-				e_right <= SEA_LEVELS_COAST ||
-				e_bottom <= SEA_LEVELS_COAST
+				e_center <= Tile::ELEVATION_LEVEL_COAST ||
+				e_left <= Tile::ELEVATION_LEVEL_COAST ||
+				e_top <= Tile::ELEVATION_LEVEL_COAST ||
+				e_right <= Tile::ELEVATION_LEVEL_COAST ||
+				e_bottom <= Tile::ELEVATION_LEVEL_COAST
 			);
 			bool is_land = (
-				e_center > SEA_LEVELS_COAST ||
-				e_left > SEA_LEVELS_COAST ||
-				e_top > SEA_LEVELS_COAST ||
-				e_right > SEA_LEVELS_COAST ||
-				e_bottom > SEA_LEVELS_COAST
+				e_center > Tile::ELEVATION_LEVEL_COAST ||
+				e_left > Tile::ELEVATION_LEVEL_COAST ||
+				e_top > Tile::ELEVATION_LEVEL_COAST ||
+				e_right > Tile::ELEVATION_LEVEL_COAST ||
+				e_bottom > Tile::ELEVATION_LEVEL_COAST
 			);
 			
 			
 			if ( is_water ) {
+				// mixing with coast texture is too much effort, just simulate it with shaders later
 				tx_add( o_water, m_tc.water[ 1 ], Texture::AM_COPY, txinfo.rotate_direction );
 			}
 			
@@ -295,6 +292,64 @@ void Map::GenerateActors() {
 			txvec[ txinfo.rotate_direction++ ] = { ttx2, tty1 };
 			txvec[ txinfo.rotate_direction++ ] = { ttx2, tty2 };
 
+			// modify elevations based on water / not water, to avoid displaying half-submerged tiles
+			// original tile isn't modified, this is just for rendering
+			int8_t em = tile->is_water_tile ? -1 : 1; // setting -1 : 100 gives interesting shadow effect, but it's not very realistic
+			if (
+				( tile->is_water_tile != tile->W->is_water_tile ) ||
+				( tile->is_water_tile != tile->NW->is_water_tile ) ||
+				( tile->is_water_tile != tile->SW->is_water_tile )
+			) {
+				e_left = Tile::ELEVATION_LEVEL_COAST + em;
+			}
+			if (
+				( tile->is_water_tile != tile->E->is_water_tile ) ||
+				( tile->is_water_tile != tile->NE->is_water_tile ) ||
+				( tile->is_water_tile != tile->SE->is_water_tile )
+			) {
+				e_right = Tile::ELEVATION_LEVEL_COAST + em;
+			}
+			if (
+				( tile->is_water_tile != tile->N->is_water_tile ) ||
+				( tile->is_water_tile != tile->NE->is_water_tile ) ||
+				( tile->is_water_tile != tile->NW->is_water_tile )
+			) {
+				e_top = Tile::ELEVATION_LEVEL_COAST + em;
+			}
+			if (
+				( tile->is_water_tile != tile->S->is_water_tile ) ||
+				( tile->is_water_tile != tile->SE->is_water_tile ) ||
+				( tile->is_water_tile != tile->SW->is_water_tile )
+			) {
+				e_bottom = Tile::ELEVATION_LEVEL_COAST + em;
+			}
+			
+			if ( tile->is_water_tile ) {
+				// do not allow anything above water on water tiles
+				if ( e_left >= Tile::ELEVATION_LEVEL_COAST )
+					e_left = Tile::ELEVATION_LEVEL_COAST + em;
+				if ( e_right >= Tile::ELEVATION_LEVEL_COAST )
+					e_right = Tile::ELEVATION_LEVEL_COAST + em;
+				if ( e_top >= Tile::ELEVATION_LEVEL_COAST )
+					e_top = Tile::ELEVATION_LEVEL_COAST + em;
+				if ( e_bottom >= Tile::ELEVATION_LEVEL_COAST )
+					e_bottom = Tile::ELEVATION_LEVEL_COAST + em;
+			}
+			else {
+				// do not allow anything below water on land tiles
+				if ( e_left <= Tile::ELEVATION_LEVEL_COAST )
+					e_left = Tile::ELEVATION_LEVEL_COAST - em;
+				if ( e_right <= Tile::ELEVATION_LEVEL_COAST )
+					e_right = Tile::ELEVATION_LEVEL_COAST - em;
+				if ( e_top <= Tile::ELEVATION_LEVEL_COAST )
+					e_top = Tile::ELEVATION_LEVEL_COAST - em;
+				if ( e_bottom <= Tile::ELEVATION_LEVEL_COAST )
+					e_bottom = Tile::ELEVATION_LEVEL_COAST - em;
+			}
+			
+			// average new center from new corners
+			e_center = ( e_left + e_top + e_right + e_bottom ) / 4;
+
 			// texture coordinates
 			#define txc( _o, _c ) { txvec[ _c ].x * tsx, ( txvec[ _c ].y + _o * h * TEXTURE_HEIGHT ) * tsy }
 			
@@ -308,15 +363,16 @@ void Map::GenerateActors() {
 			mesh_terrain->AddSurface( { l_center, l_right, l_bottom } );
 			mesh_terrain->AddSurface( { l_center, l_bottom, l_left } );
 			
-			#define wg elevation_to_water_gamma.Clamp
-			#define wa elevation_to_water_alpha.Clamp
+			#define wg elevation_to_water_gamma.Clamp // gamma
+			#define wa elevation_to_water_alpha.Clamp // alpha
+			#define txt( _value ) { wg( _value ), wg( _value ), wg( _value ), wa( _value ) }  // tint
 			
-			float z = elevation_to_vertex_z.Clamp( SEA_LEVELS_COAST );
-			w_center = mesh_terrain->AddVertex( { xpos, ypos, z }, txc( o_water, 0 ), { wg( e_center ), wg( e_center ), wg( e_center ), wa( e_center ) } );
-			w_left = mesh_terrain->AddVertex( { xpos - TILE_HALFWIDTH, ypos, z }, txc( o_water, 1 ), { wg( e_left ), wg( e_left ), wg( e_left ), wa( e_left ) } );
-			w_top = mesh_terrain->AddVertex( { xpos, ypos - TILE_HALFHEIGHT, z }, txc( o_water, 2 ), { wg( e_top ), wg( e_top ), wg( e_top ), wa( e_top ) } );
-			w_right = mesh_terrain->AddVertex( { xpos + TILE_HALFWIDTH, ypos, z }, txc( o_water, 3 ), { wg( e_right ), wg( e_right ), wg( e_right ), wa( e_right ) } );
-			w_bottom = mesh_terrain->AddVertex( { xpos, ypos + TILE_HALFHEIGHT, z }, txc( o_water, 4 ), { wg( e_bottom ), wg( e_bottom ), wg( e_bottom ), wa( e_bottom ) } );
+			float z = elevation_to_vertex_z.Clamp( Tile::ELEVATION_LEVEL_COAST ); // sea is always on sea level
+			w_center = mesh_terrain->AddVertex( { xpos, ypos, z }, txc( o_water, 0 ), txt( e_center) );
+			w_left = mesh_terrain->AddVertex( { xpos - TILE_HALFWIDTH, ypos, z }, txc( o_water, 1 ), txt( e_left ) );
+			w_top = mesh_terrain->AddVertex( { xpos, ypos - TILE_HALFHEIGHT, z }, txc( o_water, 2 ), txt( e_top ) );
+			w_right = mesh_terrain->AddVertex( { xpos + TILE_HALFWIDTH, ypos, z }, txc( o_water, 3 ), txt( e_right ) );
+			w_bottom = mesh_terrain->AddVertex( { xpos, ypos + TILE_HALFHEIGHT, z }, txc( o_water, 4 ), txt( e_bottom ) );
 			mesh_terrain->AddSurface( { w_center, w_left, w_top } );
 			mesh_terrain->AddSurface( { w_center, w_top, w_right } );
 			mesh_terrain->AddSurface( { w_center, w_right, w_bottom } );
@@ -338,25 +394,24 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( Tile* tile, const tile_g
 	info.inverse_x = 0;
 	info.inverse_y = 0;
 	
-	Tile* source = tile;
 	bool matches[ 16 ];
 	uint8_t idx = 0;
 	for ( uint8_t i = 0 ; i < 2 ; i++ ) {
-		tile->Around( TH( this, &idx, &matches, source, criteria, feature ) {
+		for ( auto& t : tile->neighbours ) {
 			switch ( criteria ) {
 				case TG_MOISTURE: {
-					matches[ idx++ ] = tile->moisture == source->moisture;
+					matches[ idx++ ] = t->moisture == tile->moisture;
 					break;
 				}
 				case TG_FEATURE: {
-					matches[ idx++ ] = ( tile->features & feature ) == ( source->features & feature );
+					matches[ idx++ ] = ( t->features & feature ) == ( tile->features & feature );
 					break;
 				}
 				default: {
 					ASSERT( false, "invalid tile grouping criteria" );
 				}
 			}
-		}, true );
+		}
 	}
 	
 	vector< uint8_t > possible_rotates = {};

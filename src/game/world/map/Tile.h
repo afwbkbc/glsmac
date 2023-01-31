@@ -12,6 +12,11 @@ namespace map {
 
 #define TH( ... ) [ __VA_ARGS__ ] ( Tile* tile ) -> void
 
+// WARNING: for now everything is public (because it's not clear what should be hidden from what)
+//   you can read any properties you need
+//   but be careful modifying anything, some things are only to be modified within Tile::Update() to keep consistent state
+// Some day this class will be refactored with access isolation and getters/setters
+	
 CLASS( Tile, base::Base )
 
 	typedef function< void( Tile* ) > tile_cb_t;
@@ -20,16 +25,29 @@ CLASS( Tile, base::Base )
 	typedef ssize_t elevation_t;
 	static const elevation_t ELEVATION_MIN = -3500;
 	static const elevation_t ELEVATION_MAX = 3500;
+	static const elevation_t ELEVATION_LEVEL_COAST = 0;
+	static const elevation_t ELEVATION_LEVEL_OCEAN = -1000;
+	static const elevation_t ELEVATION_LEVEL_TRENCH = -2000;
+	
+	// when reading or writing elevation - work only with values, make sure to not modify pointers themselves!
+	// pointers are set only once by Tiles and are not to be changed after
 	struct {
+		elevation_t* center;
 		elevation_t* left;
 		elevation_t* top;
 		elevation_t* right;
+		elevation_t* bottom;
+		vector<elevation_t*> corners; // for more convenient iteration, contains left, top, right and bottom pointers
+	} elevation;
+	
+	struct { // moved to separate structure to allow main structure to have only pointers, for consistency
 		elevation_t bottom;
 		elevation_t center;
-	} elevation;
+	} elevation_data;
 	
 	// links to adjactent tiles ( west, north, east, south and combinations )
 	// will be linked to itself if tile is at north or south map edge
+	// never modify these pointers, work only with values
 	Tile* W;
 	Tile* NW;
 	Tile* N;
@@ -38,7 +56,11 @@ CLASS( Tile, base::Base )
 	Tile* SE;
 	Tile* S;
 	Tile* SW;
+	vector<Tile*> neighbours; // for more convenient iteration, contains all neighbouring tiles
 
+	// dynamic parameters, do not modify them manually
+	bool is_water_tile = false;
+	
 	// scalar
 	typedef uint8_t moisture_t;
 	static const moisture_t M_NONE = 0;
@@ -76,11 +98,9 @@ CLASS( Tile, base::Base )
 	static const feature_t F_UNITY_RADAR = 1 << 15;
 	feature_t features;
 	
-	// helpers
-	Tile* Around( tile_cb_t cb, bool need_all = false );
-	Tile* SelfAndAround( tile_cb_t cb );
-
-	// call this after changing something in tile
+	// WARNING: make sure to call this after changing something in tile
+	//   it recalculates dynamic properties and solves inconsistencies
+	//   safe to call anytime
 	void Update();
 };
 

@@ -137,9 +137,9 @@ int main(const int argc, const char *argv[]) {
 		
 		// TMP
 		// game entry point
-		NEWV( task, game::intro::Intro );
+		//NEWV( task, game::intro::Intro );
 		game::Settings settings;
-		//NEWV( task, game::world::World, settings );
+		NEWV( task, game::world::World, settings );
 		scheduler.AddTask( task );
 
 		engine::Engine engine(

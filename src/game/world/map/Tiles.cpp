@@ -64,15 +64,18 @@ Tiles::Tiles( const size_t width, const size_t height )
 				: tile
 			;
 			
+			tile->elevation.bottom = &tile->elevation_data.bottom;
+			tile->elevation.center = &tile->elevation_data.center;
+			
 			if ( y >= 2 ) {
-				tile->elevation.top = &tile->N->elevation.bottom;
+				tile->elevation.top = tile->N->elevation.bottom;
 			}
 			else if ( y > 0 ) {
 				ASSERT( x > 0, "x is zero while y isn't" );
 				tile->elevation.top = At( x - 1, y - 1)->elevation.right;
 			}
 			else {
-				tile->elevation.top = TopVertexAt( x/* / 2*/, y );
+				tile->elevation.top = TopVertexAt( x, y );
 			}
 			
 			if ( x >= 2 ) {
@@ -80,22 +83,21 @@ Tiles::Tiles( const size_t width, const size_t height )
 			}
 			
 			if ( y == 0 ) {
-				tile->elevation.right = TopRightVertexAt( x/* / 2*/ );
+				tile->elevation.right = TopRightVertexAt( x );
 			}
 			else if ( x < m_width - 1 ) {
-				tile->elevation.right = &At( x + 1, y - 1 )->elevation.bottom;
+				tile->elevation.right = At( x + 1, y - 1 )->elevation.bottom;
 			}
 		}
 		
 		// link left edge to right edge and vice versa
 		if ( y % 2 ) {
-			At( m_width - 1, y )->elevation.right = ( y > 0 ? &At( 0, y - 1 )->elevation.bottom : TopRightVertexAt( 0 ) );
+			At( m_width - 1, y )->elevation.right = ( y > 0 ? At( 0, y - 1 )->elevation.bottom : TopRightVertexAt( 0 ) );
 		}
 		At( y % 2, y )->elevation.left = At( m_width - 1 - ( 1 - ( y % 2 ) ), y )->elevation.right;
+		
 	}
 
-#ifdef DEBUG
-	// check that all pointers are linked to something
 	for ( auto y = 0 ; y < m_height ; y++ ) {
 		for ( auto x = 0 ; x < m_width ; x++ ) {
 			if ( ( y % 2 ) != ( x % 2 ) ) {
@@ -103,6 +105,8 @@ Tiles::Tiles( const size_t width, const size_t height )
 			}
 			tile = At( x, y );
 			
+#ifdef DEBUG
+	// check that all pointers are linked to something
 #define CHECKTILE( _what ) ASSERT( tile->_what, "tile " #_what " not linked at " + to_string( x ) + "x" + to_string( y ) );
 			
 			CHECKTILE( W );
@@ -119,10 +123,29 @@ Tiles::Tiles( const size_t width, const size_t height )
 			CHECKTILE( elevation.right );
 			
 #undef CHECKTILE
+#endif
+			
+			// generate pointer vectors
+			
+			tile->elevation.corners = {
+				tile->elevation.left,
+				tile->elevation.top,
+				tile->elevation.right,
+				tile->elevation.bottom,
+			};
+			
+			tile->neighbours = {
+				tile->W,
+				tile->NW,
+				tile->N,
+				tile->NE,
+				tile->E,
+				tile->SE,
+				tile->S,
+				tile->SW,
+			};
 		}
 	}
-#endif
-	
 }
 
 Tiles::~Tiles() {

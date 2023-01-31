@@ -21,7 +21,7 @@ void SimpleRandom::Generate( Tiles* tiles ) {
 			*tile->elevation.top = RND;
 			*tile->elevation.left = RND;
 			*tile->elevation.right = RND;
-			tile->elevation.bottom = RND;
+			*tile->elevation.bottom = RND;
 			
 			// random moisture etc
 			tile->moisture = rand() % 3 + 1;
@@ -30,52 +30,47 @@ void SimpleRandom::Generate( Tiles* tiles ) {
 			
 			// spawn some jungles
 			if ( rand() % 30 == 0 ) {
-				tile->SelfAndAround( TH() {
+				tile->features |= Tile::F_JUNGLE;
+				for ( auto& t : tile->neighbours ) {
 					if ( rand() % 2 == 0 ) {
-						tile->SelfAndAround( TH() {
+						t->features |= Tile::F_JUNGLE;
+						for ( auto& tt : t->neighbours ) {
 							if ( rand() % 2 == 0 ) {
-								tile->features |= Tile::F_JUNGLE;
+								tt->features |= Tile::F_JUNGLE;
 							}
-						});
+						}
 					}
-				});
+				}
 			}
 			
 			// spawn some fungus areas
 			if ( rand() % 40 == 0 ) {
-				tile->SelfAndAround( TH() {
+				tile->features |= Tile::F_XENOFUNGUS;
+				for ( auto& t : tile->neighbours ) {
 					if ( rand() % 2 == 0 ) {
-						tile->SelfAndAround( TH() {
+						t->features |= Tile::F_XENOFUNGUS;
+						for ( auto& tt : t->neighbours ) {
 							if ( rand() % 3 == 0 ) {
-								tile->SelfAndAround( TH() {
+								tt->features |= Tile::F_XENOFUNGUS;
+								for ( auto& ttt : tt->neighbours ) {
 									if ( rand() % 4 == 0 ) {
-										tile->SelfAndAround( TH() {
+										ttt->features |= Tile::F_XENOFUNGUS;
+										for ( auto& tttt : ttt->neighbours ) {
 											if ( rand() % 5 == 0 ) {
-												tile->features |= Tile::F_XENOFUNGUS;
+												tttt->features |= Tile::F_XENOFUNGUS;
 											}
-										});
+										}
 									}
-								});
+								}
 							}
-						});
+						}
 					}
-				});
+				}
 			}
 		}
 	}
 	
-	// update averages (TODO: do automatically somewhere?)
-	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {
-		for ( auto x = 0 ; x < tiles->GetWidth() ; x++ ) {
-			if ( ( y % 2 ) != ( x % 2 ) ) {
-				continue;
-			}
-			
-			tile = tiles->At( x, y );
-			
-			tile->elevation.center = ( *tile->elevation.left + *tile->elevation.top + *tile->elevation.right + tile->elevation.bottom ) / 4;
-		}
-	}
+	Finalize( tiles );
 	
 }
 

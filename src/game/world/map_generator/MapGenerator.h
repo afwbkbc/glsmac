@@ -15,6 +15,12 @@ CLASS( MapGenerator, base::Base )
 	
 	virtual void Generate( Tiles* tiles ) = 0;
 	
+protected:
+	
+	// various tools
+	
+	void Finalize( Tiles* tiles );
+
 };
 	
 }

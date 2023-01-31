@@ -34,7 +34,7 @@ void World::Start() {
 	UpdateCameraAngle();
 
 	NEW( m_light, Light, Light::LT_DIRECTIONAL );
-	m_light->SetPosition( { 100.0f, 100.0f, 20.0f } );
+	m_light->SetPosition( { 100.0f, 100.0f, 100.0f } );
 	m_light->SetColor( { 1.0f, 1.0f, 1.0f, 0.5f } );
 	
 	m_world_scene->SetCamera( m_camera );
@@ -217,11 +217,11 @@ void World::UpdateCameraAngle() {
 
 void World::ReturnToMainMenu() {	
 	
-	//g_engine->ShutDown(); // TMP
+	g_engine->ShutDown(); // TMP
 	
-	NEWV( task, game::mainmenu::MainMenu );
+	/*NEWV( task, game::mainmenu::MainMenu );
 	g_engine->GetScheduler()->RemoveTask( this );
-	g_engine->GetScheduler()->AddTask( task );
+	g_engine->GetScheduler()->AddTask( task );*/
 	
 }
 

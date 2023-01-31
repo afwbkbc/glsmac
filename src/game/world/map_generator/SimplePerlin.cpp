@@ -7,6 +7,9 @@
 #include "util/Perlin.h"
 #include "util/Clamper.h"
 
+// higher values generate more interesting maps, at cost of longer map generation (isn't noticeable before 200 or so)
+#define PERLIN_PASSES 128
+
 using namespace chrono;
 
 namespace game {
@@ -35,10 +38,10 @@ void SimplePerlin::Generate( Tiles* tiles ) {
 			}
 			tile = tiles->At( x, y );
 			
-#define PERLIN_S( _x, _y, _z, _scale ) perlin.Noise( (float) ( (float)_x ) * _scale, (float) ( (float)_y ) * _scale, _z * _scale, 16 )
+#define PERLIN_S( _x, _y, _z, _scale ) perlin.Noise( (float) ( (float)_x ) * _scale, (float) ( (float)_y ) * _scale, _z * _scale, PERLIN_PASSES )
 #define PERLIN( _x, _y, _z ) PERLIN_S( _x, _y, _z, 1.0f )
 			
-			*tile->elevation.left = *tile->elevation.top = *tile->elevation.right = tile->elevation.bottom = tile->elevation.center = 0;
+			*tile->elevation.left = *tile->elevation.top = *tile->elevation.right = *tile->elevation.bottom = *tile->elevation.center = 0;
 			
 			const float z_elevation = 50;
 			const float z_rocks = 70;
@@ -49,7 +52,7 @@ void SimplePerlin::Generate( Tiles* tiles ) {
 			*tile->elevation.left = perlin_to_elevation.Clamp( PERLIN( x, y + 0.5f, z_elevation ) );
 			*tile->elevation.top = perlin_to_elevation.Clamp( PERLIN( x + 0.5f, y, z_elevation ) );
 			*tile->elevation.right = perlin_to_elevation.Clamp( PERLIN( x + 1.0f, y + 0.5f, z_elevation ) );
-			tile->elevation.bottom = perlin_to_elevation.Clamp( PERLIN( x + 0.5f, y + 1.0f, z_elevation ) );
+			*tile->elevation.bottom = perlin_to_elevation.Clamp( PERLIN( x + 0.5f, y + 1.0f, z_elevation ) );
 			
 			tile->Update();
 			
@@ -73,17 +76,20 @@ void SimplePerlin::Generate( Tiles* tiles ) {
 
 			if ( rand() % 30 == 0 ) {
 				tile->rockyness = Tile::R_ROCKY;
-				tile->Around( TH() {
+				for ( auto& t : tile->neighbours ) {
 					if ( rand() % 3 != 0 ) {
-						if ( tile->rockyness != Tile::R_ROCKY ) {
-							tile->rockyness = Tile::R_ROLLING;
+						if ( t->rockyness != Tile::R_ROCKY ) {
+							t->rockyness = Tile::R_ROLLING;
 						}
 					}
-				});
+				}
 			}
 			
 		}
 	}
+	
+	Finalize( tiles );
+	
 }
 
 }

@@ -39,7 +39,7 @@ void Test::Generate( Tiles* tiles ) {
 	*tile->elevation.left = ( _val + 400 ); \
 	*tile->elevation.top = ( _val + 400 ); \
 	*tile->elevation.right = ( _val - 400 ); \
-	tile->elevation.bottom = ( _val - 400 ); \
+	*tile->elevation.bottom = ( _val - 400 ); \
 	*tile->E->elevation.right = *tile->elevation.right; \
 	*tile->W->elevation.left = *tile->elevation.left; \
 	tile->Update();
