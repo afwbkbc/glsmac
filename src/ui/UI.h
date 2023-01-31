@@ -15,7 +15,7 @@
 #include "event/UIEventHandler.h"
 
 #include "scene/actor/Mesh.h"
-#include "scene/mesh/Rectangle.h"
+#include "types/mesh/Rectangle.h"
 #include "types/Texture.h"
 #include "types/Vec2.h"
 #include "util/Timer.h"

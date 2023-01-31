@@ -31,9 +31,19 @@ void Scene::SetCamera( Camera *camera ) {
 	m_camera = camera;
 }
 
-Camera * Scene::GetCamera() {
+Camera * Scene::GetCamera() const {
 	return m_camera;
 }
+
+void Scene::SetLight( Light *light ) {
+	ASSERT( m_light == NULL || light == NULL, "light overlap" );
+	m_light = light;
+}
+
+Light* Scene::GetLight() const {
+	return m_light;
+}
+
 
 void Scene::SetSkyboxTexture( types::Texture *skybox_texture ) {
 	m_skybox_texture = skybox_texture;

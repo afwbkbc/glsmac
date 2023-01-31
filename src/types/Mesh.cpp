@@ -3,10 +3,12 @@
 
 #include "Mesh.h"
 
-using namespace std;
+#include "util/Math.h"
 
-namespace scene {
-namespace mesh {
+using namespace std;
+using namespace util;
+
+namespace types {
 
 Mesh::Mesh( const size_t vertex_count, const size_t surface_count )
 	: m_vertex_count( vertex_count )
@@ -28,7 +30,7 @@ void Mesh::Clear() {
 	m_is_final = true;
 }
 
-void Mesh::AddSurface( const Mesh::surface_t& surface  ) {
+void Mesh::AddSurface( const surface_t& surface  ) {
 	ASSERT( !m_is_final, "addsurface on already finalized mesh" );
 	ASSERT( m_surface_i < m_surface_count, "surface out of bounds" );
 	// add triangle
@@ -36,7 +38,7 @@ void Mesh::AddSurface( const Mesh::surface_t& surface  ) {
 	m_surface_i++;
 }
 
-Mesh::index_t Mesh::AddVertex( const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord, const Color tint ) {
+Mesh::index_t Mesh::AddVertex( const Vec3 &coord, const Vec2<coord_t> &tex_coord, const Color tint, const Vec3 &normal ) {
 	ASSERT( !m_is_final, "addvertex on already finalized mesh" );
 	ASSERT( m_vertex_i < m_vertex_count, "vertex out of bounds (" + to_string( m_vertex_i ) + " >= " + to_string( m_vertex_count ) + ")" );
 	size_t offset = m_vertex_i * VERTEX_SIZE * sizeof( coord_t );
@@ -45,15 +47,17 @@ Mesh::index_t Mesh::AddVertex( const Vec3 &coord, const Vec2<Mesh::coord_t> &tex
 	memcpy( ptr( m_vertex_data, offset, sizeof( tex_coord ) ), &tex_coord, sizeof( tex_coord ) );
 	offset += VERTEX_TEXCOORD_SIZE * sizeof( coord_t );
 	memcpy( ptr( m_vertex_data, offset, sizeof( tint ) ), &tint, sizeof( tint ) );
-	Mesh::index_t ret = m_vertex_i;
+	offset += VERTEX_TINT_SIZE * sizeof( coord_t );
+	memcpy( ptr( m_vertex_data, offset, sizeof( normal ) ), &normal, sizeof( normal ) );
+	index_t ret = m_vertex_i;
 	m_vertex_i++;
 	return ret;
 }
-Mesh::index_t Mesh::AddVertex( const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord, const Color tint ) {
-	return AddVertex( Vec3( coord.x, coord.y, 0.0 ), tex_coord, tint );
+Mesh::index_t Mesh::AddVertex( const Vec2<coord_t> &coord, const Vec2<coord_t> &tex_coord, const Color tint, const Vec3 &normal ) {
+	return AddVertex( Vec3( coord.x, coord.y, 0.0 ), tex_coord, tint, normal );
 }
 
-void Mesh::SetVertex( const index_t index, const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord, const Color tint ) {
+void Mesh::SetVertex( const index_t index, const Vec3 &coord, const Vec2<coord_t> &tex_coord, const Color tint, const Vec3 &normal ) {
 	ASSERT( index < m_vertex_count, "index out of bounds" );
 	size_t offset = index * VERTEX_SIZE * sizeof( coord_t );
 	memcpy( ptr( m_vertex_data, offset, sizeof( coord ) ), &coord, sizeof( coord ) );
@@ -61,11 +65,13 @@ void Mesh::SetVertex( const index_t index, const Vec3 &coord, const Vec2<Mesh::c
 	memcpy( ptr( m_vertex_data, offset, sizeof( tex_coord ) ), &tex_coord, sizeof( tex_coord ) );
 	offset += VERTEX_TEXCOORD_SIZE * sizeof( coord_t );
 	memcpy( ptr( m_vertex_data, offset, sizeof( tint ) ), &tint, sizeof( tint ) );
+	offset += VERTEX_TINT_SIZE * sizeof( coord_t );
+	memcpy( ptr( m_vertex_data, offset, sizeof( normal ) ), &normal, sizeof( normal ) );
 	Update();
 }
 
-void Mesh::SetVertex( const index_t index, const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord, const Color tint ) {
-	SetVertex( index, { coord.x, coord.y, 0.0 }, tex_coord, tint );
+void Mesh::SetVertex( const index_t index, const Vec2<coord_t> &coord, const Vec2<coord_t> &tex_coord, const Color tint, const Vec3 &normal ) {
+	SetVertex( index, { coord.x, coord.y, 0.0 }, tex_coord, tint, normal );
 }
 
 void Mesh::SetVertexCoord( const index_t index, const Vec3 &coord ) {
@@ -73,11 +79,11 @@ void Mesh::SetVertexCoord( const index_t index, const Vec3 &coord ) {
 	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord ) ), &coord, sizeof( coord ) );
 	Update();
 }
-void Mesh::SetVertexCoord( const index_t index, const Vec2<Mesh::coord_t> &coord ) {
+void Mesh::SetVertexCoord( const index_t index, const Vec2<coord_t> &coord ) {
 	SetVertexCoord( index, { coord.x, coord.y, 0.0 } );
 }
 
-void Mesh::SetVertexTexCoord( const index_t index, const Vec2<Mesh::coord_t> &tex_coord ) {
+void Mesh::SetVertexTexCoord( const index_t index, const Vec2<coord_t> &tex_coord ) {
 	ASSERT( index < m_vertex_count, "index out of bounds" );
 	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( tex_coord ) ), &tex_coord, sizeof( tex_coord ) );
 	Update();
@@ -85,20 +91,27 @@ void Mesh::SetVertexTexCoord( const index_t index, const Vec2<Mesh::coord_t> &te
 
 void Mesh::SetVertexTint( const index_t index, const Color tint ) {
 	ASSERT( index < m_vertex_count, "index out of bounds" );
-	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ) + VERTEX_TEXCOORD_SIZE * sizeof( coord_t ), sizeof( Color ) ), &tint, sizeof( tint ) );
+	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + ( VERTEX_COORD_SIZE + VERTEX_TEXCOORD_SIZE ) * sizeof( coord_t ), sizeof( Color ) ), &tint, sizeof( tint ) );
 }
 
-void Mesh::SetSurface( const index_t index, const Mesh::surface_t& surface ) {
+void Mesh::SetVertexNormal( const index_t index, const Vec3& normal ) {
+	ASSERT( index < m_vertex_count, "index out of bounds" );
+	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + ( VERTEX_COORD_SIZE + VERTEX_TEXCOORD_SIZE + VERTEX_TINT_SIZE ) * sizeof( coord_t ), sizeof( normal ) ), &normal, sizeof( normal ) );
+}
+
+void Mesh::SetSurface( const index_t index, const surface_t& surface ) {
 	ASSERT( index < m_surface_count, "surface out of bounds" );
 	// add triangle
 	memcpy( ptr( m_index_data, index * SURFACE_SIZE * sizeof( index_t ), sizeof( surface ) ), &surface, sizeof( surface ) );
 }
 
-
 void Mesh::Finalize() {
 	ASSERT( !m_is_final, "finalize on already finalized mesh" );
 	ASSERT( m_vertex_i == m_vertex_count, "vertex data not fully initialized on finalize" );
 	ASSERT( m_surface_i == m_surface_count, "surface data not fully initialized on finalize" );
+	
+	UpdateNormals();
+	
 	m_is_final = true;
 	Update();
 }
@@ -139,5 +152,35 @@ const size_t Mesh::UpdatedCount() const {
 	return m_update_counter;
 }
 
-} /* namespace mesh */
-} /* namespace scene */
+void Mesh::UpdateNormals() {
+	Log( "Updating normals");
+	
+	// update normals
+	const surface_t* surface;
+	Vec3 *a, *b, *c;
+	Vec3 ab, ac, n;
+	const size_t vo = VERTEX_COORD_SIZE + VERTEX_TEXCOORD_SIZE + VERTEX_TINT_SIZE;
+	
+	for ( size_t v = 0 ; v < m_vertex_i ; v++ ) {
+		memset( ptr( m_vertex_data, ( v * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ), 0, sizeof( Vec3 ) );
+	}
+	for ( size_t s = 0 ; s < m_surface_i ; s++ ) {
+		surface = (surface_t*)ptr( m_index_data, s * SURFACE_SIZE * sizeof( index_t ), sizeof( surface_t ) );
+		a = (Vec3*)ptr( m_vertex_data, surface->v1 * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord_t ) );
+		b = (Vec3*)ptr( m_vertex_data, surface->v2 * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord_t ) );
+		c = (Vec3*)ptr( m_vertex_data, surface->v3 * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord_t ) );
+        ab = *b - *a;
+        ac = *c - *a;
+        n = Math::Cross( ab, ac );
+		*(Vec3*)ptr( m_vertex_data, ( surface->v1 * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ) += n;
+		*(Vec3*)ptr( m_vertex_data, ( surface->v2 * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ) += n;
+		*(Vec3*)ptr( m_vertex_data, ( surface->v3 * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ) += n;
+	}
+	for ( size_t v = 0 ; v < m_vertex_i ; v++ ) {
+		*(Vec3*)ptr( m_vertex_data, ( v * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) )
+			=
+		Math::Normalize( *(Vec3*)ptr( m_vertex_data, ( v * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ) );
+	}
+}
+
+}

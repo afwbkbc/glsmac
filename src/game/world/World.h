@@ -7,7 +7,8 @@
 #include "ui/event/UIEventHandler.h"
 
 #include "types/Texture.h"
-#include "scene/mesh/Mesh.h"
+#include "types/Mesh.h"
+
 #include "scene/actor/Mesh.h"
 #include "scene/Scene.h"
 
@@ -57,6 +58,8 @@ private:
 	//vector<actor::Mesh*> m_test_actors = {};
 	
 	Camera* m_camera = nullptr;
+	
+	Light* m_light = nullptr;
 	
 	struct {
 		util::Clamper<float> x;

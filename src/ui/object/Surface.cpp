@@ -43,7 +43,7 @@ void Surface::SetStretchTexture( const bool stretch_texture ) {
 void Surface::Create() {
 	UIObject::Create();
 
-	NEW( m_background_mesh, scene::mesh::Rectangle );
+	NEW( m_background_mesh, types::mesh::Rectangle );
 	NEW( m_background, scene::actor::Mesh, "UI::Surface", m_background_mesh );
 	AddActor( m_background );
 }

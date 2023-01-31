@@ -1,6 +1,7 @@
 #pragma once
 
-#include "scene/mesh/Rectangle.h"
+#include "types/mesh/Rectangle.h"
+
 #include "scene/actor/Mesh.h"
 
 #include "UIObject.h"
@@ -33,7 +34,7 @@ protected:
 	bool m_stretch_texture = false;
 
 	scene::actor::Mesh *m_background = nullptr;
-	scene::mesh::Rectangle *m_background_mesh = nullptr;
+	types::mesh::Rectangle *m_background_mesh = nullptr;
 };
 
 } /* namespace object */

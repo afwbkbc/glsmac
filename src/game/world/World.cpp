@@ -3,7 +3,7 @@
 
 #include "../mainmenu/MainMenu.h"
 
-#include "scene/mesh/Rectangle.h"
+#include "types/mesh/Rectangle.h"
 
 #include "map_generator/SimpleRandom.h"
 #include "map_generator/SimplePerlin.h"
@@ -28,19 +28,24 @@ World::World( const Settings& settings )
 void World::Start() {
 	
 	NEW( m_world_scene, Scene, "World", SCENE_TYPE_ORTHO );
-	NEW( m_camera, Camera, Camera::CT_ORTHOGRAPHIC );
 	
+	NEW( m_camera, Camera, Camera::CT_ORTHOGRAPHIC );
 	m_camera_angle = INITIAL_CAMERA_ANGLE;
 	UpdateCameraAngle();
+
+	NEW( m_light, Light, Light::LT_DIRECTIONAL );
+	m_light->SetPosition( { 100.0f, 100.0f, 20.0f } );
+	m_light->SetColor( { 1.0f, 1.0f, 1.0f, 0.5f } );
 	
 	m_world_scene->SetCamera( m_camera );
+	m_world_scene->SetLight( m_light );
 	g_engine->GetGraphics()->AddScene( m_world_scene );	
 	
 	NEW( m_map, Map, m_world_scene );
 	
 	NEWV( tiles, Tiles, 50, 50 );
 	//NEWV( tiles, Tiles, 160, 160 );
-	//NEWV( tiles, Tiles, 10, 10 ); // tmp
+	//NEWV( tiles, Tiles, 30, 30 ); // tmp
 	
 	{
 		map_generator::SimplePerlin generator;
@@ -173,8 +178,9 @@ void World::Stop() {
 	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.mousescroll );
 	
 	g_engine->GetGraphics()->RemoveScene( m_world_scene );	
-	DELETE( m_world_scene );
 	DELETE( m_camera );
+	DELETE( m_light );
+	DELETE( m_world_scene );
 }
 
 void World::Iterate() {

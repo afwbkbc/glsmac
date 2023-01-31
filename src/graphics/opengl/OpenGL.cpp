@@ -128,29 +128,11 @@ void OpenGL::Start() {
 	glGenTextures( 1, &m_no_texture );
 
 	glBindTexture( GL_TEXTURE_2D, m_no_texture );
-	/*glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );*/
-
-	//glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
 
 	uint32_t nothing = 0;
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &nothing );
 	ASSERT( !glGetError(), "Error loading texture" );
 	
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    //glGenerateMipmap(GL_TEXTURE_2D);
-
-	//this->mState=MS_ACTIVE;
-
-	/*for (int i=this->mStartRoutinesQueue.size()-1;i>=0;i--) {
-		Log("Activating routine \""+this->mStartRoutinesQueue[i]->GetName()+"\" by demand");
-		this->mStartRoutinesQueue[i]->Activate();
-	}
-	this->mStartRoutinesQueue.clear();*/
-
 	glBindTexture( GL_TEXTURE_2D, 0 );
 	
 	OnResize();

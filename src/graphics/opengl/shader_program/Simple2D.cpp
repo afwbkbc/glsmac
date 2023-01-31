@@ -39,10 +39,15 @@ void Simple2D::Initialize() {
 };
 
 void Simple2D::EnableAttributes() const {
+	const size_t tsz = sizeof( types::Mesh::coord_t );
+	const size_t vasz = types::Mesh::VERTEX_SIZE * tsz;
+	size_t vaofs = 0;
 	glEnableVertexAttribArray( m_gl_attributes.coord );
-	glVertexAttribPointer( m_gl_attributes.coord, 3, GL_FLOAT, GL_FALSE, 36, (const GLvoid *)0 );
+	glVertexAttribPointer( m_gl_attributes.coord, types::Mesh::VERTEX_COORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	vaofs += types::Mesh::VERTEX_COORD_SIZE * tsz;
 	glEnableVertexAttribArray( m_gl_attributes.tex_coord );
-	glVertexAttribPointer( m_gl_attributes.tex_coord, 2, GL_FLOAT, GL_FALSE, 36, (const GLvoid *)12 );
+	glVertexAttribPointer( m_gl_attributes.tex_coord, types::Mesh::VERTEX_TEXCOORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	vaofs += types::Mesh::VERTEX_TEXCOORD_SIZE * tsz;
 };
 
 void Simple2D::DisableAttributes() const {

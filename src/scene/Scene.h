@@ -6,6 +6,7 @@
 
 #include "actor/Actor.h"
 #include "Camera.h"
+#include "Light.h"
 #include "types/Texture.h"
 
 namespace scene {
@@ -32,20 +33,23 @@ CLASS( Scene, base::Base )
 		return m_scene_type;
 	}
 	void SetCamera( Camera *camera );
-	Camera * GetCamera();
+	Camera* GetCamera() const;
 	void SetSimple2DCamera();
+	void SetLight( Light *light );
+	Light* GetLight() const;
 	void SetSkyboxTexture( types::Texture *skybox_texture );
 	types::Texture *GetSkyboxTexture();
 protected:
 	friend class scene::Camera;
 
-	Camera *m_local_camera = nullptr;
+	Camera* m_local_camera = nullptr;
 	
 	const scene_type_t m_scene_type = SCENE_TYPE_NONE;
 
 	std::vector<actor::Actor *> m_actors = {};
 
-	Camera *m_camera = nullptr;
+	Camera* m_camera = nullptr;
+	Light* m_light = nullptr;
 	types::Texture *m_skybox_texture = nullptr;
 };
 

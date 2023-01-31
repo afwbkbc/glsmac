@@ -4,20 +4,18 @@
 
 #include "base/Base.h"
 
-#include "types/Vec3.h"
-#include "types/Color.h"
+#include "Vec3.h"
+#include "Color.h"
 
-using namespace types;
-
-namespace scene {
-namespace mesh {
+namespace types {
 
 CLASS( Mesh, base::Base )
 	
 	static const uint8_t VERTEX_COORD_SIZE = 3; // x, y, z
 	static const uint8_t VERTEX_TEXCOORD_SIZE = 2; // tx, ty
-	static const uint8_t VERTEX_EXTRA_SIZE = 4; // tint (rgba)
-	static const uint8_t VERTEX_SIZE = VERTEX_COORD_SIZE + VERTEX_TEXCOORD_SIZE + VERTEX_EXTRA_SIZE;
+	static const uint8_t VERTEX_TINT_SIZE = 4; // rgba
+	static const uint8_t VERTEX_NORMAL_SIZE = 3; // x, y, z
+	static const uint8_t VERTEX_SIZE = VERTEX_COORD_SIZE + VERTEX_TEXCOORD_SIZE + VERTEX_TINT_SIZE + VERTEX_NORMAL_SIZE;
 	static const uint8_t SURFACE_SIZE = 3; // triangles
 
 	typedef float coord_t;
@@ -33,14 +31,15 @@ CLASS( Mesh, base::Base )
 	
 	void Clear();
 	void AddSurface( const surface_t& surface );
-	index_t AddVertex( const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord = { 0, 0 }, const Color tint = { 1.0f, 1.0f, 1.0f, 1.0f } );
-	index_t AddVertex( const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord = { 0, 0 }, const Color tint = { 1.0f, 1.0f, 1.0f, 1.0f } );
-	void SetVertex( const index_t index, const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord, const Color tint = { 1.0f, 1.0f, 1.0f, 1.0f } );
-	void SetVertex( const index_t index, const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord, const Color tint = { 1.0f, 1.0f, 1.0f, 1.0f } );
+	index_t AddVertex( const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord = { 0, 0 }, const Color tint = { 1.0f, 1.0f, 1.0f, 1.0f }, const Vec3 &normal = { 0.0f, 0.0f, 0.0f } );
+	index_t AddVertex( const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord = { 0, 0 }, const Color tint = { 1.0f, 1.0f, 1.0f, 1.0f }, const Vec3 &normal = { 0.0f, 0.0f, 0.0f } );
+	void SetVertex( const index_t index, const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord, const Color tint = { 1.0f, 1.0f, 1.0f, 1.0f }, const Vec3 &normal = { 0.0f, 0.0f, 0.0f } );
+	void SetVertex( const index_t index, const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord, const Color tint = { 1.0f, 1.0f, 1.0f, 1.0f }, const Vec3 &normal = { 0.0f, 0.0f, 0.0f } );
 	void SetVertexCoord( const index_t index, const Vec3 &coord );
 	void SetVertexCoord( const index_t index, const Vec2<Mesh::coord_t> &coord );
 	void SetVertexTexCoord( const index_t index, const Vec2<Mesh::coord_t> &tex_coord );
 	void SetVertexTint( const index_t index, const Color tint );
+	void SetVertexNormal( const index_t index, const Vec3& normal );
 	void SetSurface( const index_t index, const Mesh::surface_t& surface );
 	void Finalize();
 	
@@ -71,7 +70,10 @@ protected:
 	uint8_t* m_index_data = nullptr;
 
 	size_t m_update_counter = 0;
+
+private:
+	void UpdateNormals();
+	
 };
 
-} /* namespace mesh */
-} /* namespace scene */
+}

@@ -96,17 +96,22 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 
 	switch ( shader_program->GetType() ) {
 		case ( shader_program::ShaderProgram::TYPE_ORTHO ): {
-			auto *ortho_shader_program = (shader_program::Orthographic *)shader_program;
+			auto *sp = (shader_program::Orthographic *)shader_program;
 
 			
 			types::Matrix44 matrix = m_actor->GetWorldMatrix();
-			glUniformMatrix4fv( ortho_shader_program->m_gl_uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
+			glUniformMatrix4fv( sp->m_gl_uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
 
+			auto* light = actor->GetScene()->GetLight();
+			if ( light ) {
+				glUniform3fv( sp->m_gl_uniforms.light_pos, 1, (const GLfloat*)&light->GetPosition() );
+				glUniform4fv( sp->m_gl_uniforms.light_color, 1, (const GLfloat*)&light->GetColor() );
+			}
 
-			//glUniform1f( ortho_shader_program->m_gl_uniforms.z_index, m_actor->GetPosition().z );
+			//glUniform1f( sp->m_gl_uniforms.z_index, m_actor->GetPosition().z );
 			/*types::Color tint_color = actor->GetTintColor();
 			const GLfloat tint_color_data[4] = { tint_color.red, tint_color.green, tint_color.blue, tint_color.alpha };
-			glUniform4fv( ortho_shader_program->m_gl_uniforms.tint, 1, tint_color_data );*/
+			glUniform4fv( sp->m_gl_uniforms.tint, 1, tint_color_data );*/
 			break;
 		}
 		case ( shader_program::ShaderProgram::TYPE_PERSP ): {

@@ -3,7 +3,7 @@
 namespace scene {
 namespace actor {
 
-Mesh::Mesh( const std::string &name, const mesh::Mesh *mesh ) : Actor( Actor::TYPE_MESH, name ), m_mesh( mesh ) {
+Mesh::Mesh( const std::string &name, const types::Mesh *mesh ) : Actor( Actor::TYPE_MESH, name ), m_mesh( mesh ) {
 	
 }
 
@@ -11,7 +11,7 @@ Mesh::~Mesh() {
 	DELETE( m_mesh );
 }
 
-const mesh::Mesh *Mesh::GetMesh() const {
+const types::Mesh *Mesh::GetMesh() const {
 	return m_mesh;
 }
 

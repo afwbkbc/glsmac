@@ -19,12 +19,15 @@ protected:
 	struct {
 		GLint texture;
 		GLint world;
+		GLint light_pos;
+		GLint light_color;
 	} m_gl_uniforms;
 
 	struct {
 		GLint coord;
 		GLint tex_coord;
 		GLint tint;
+		GLint normal;
 	} m_gl_attributes;
 
 	void AddShaders();

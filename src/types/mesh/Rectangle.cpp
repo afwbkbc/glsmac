@@ -1,7 +1,7 @@
 #include "Rectangle.h"
 #include "engine/Engine.h"
 
-namespace scene {
+namespace types {
 namespace mesh {
 
 Rectangle::Rectangle()

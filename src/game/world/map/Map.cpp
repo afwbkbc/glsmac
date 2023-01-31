@@ -2,7 +2,7 @@
 
 #include "engine/Engine.h"
 
-#include "scene/mesh/Mesh.h"
+#include "types/Mesh.h"
 
 namespace game {
 namespace world {
@@ -136,23 +136,16 @@ void Map::GenerateActors() {
 	
 	// land
 	const size_t o_land = 0;
-	mesh::Mesh::index_t l_center, l_left, l_right, l_top, l_bottom;
+	types::Mesh::index_t l_center, l_left, l_right, l_top, l_bottom;
 	
 	// water
 	const size_t o_water = 1;
-	mesh::Mesh::index_t w_center, w_left, w_right, w_top, w_bottom;
+	types::Mesh::index_t w_center, w_left, w_right, w_top, w_bottom;
 	
 	const size_t o_max = 2;
 	
 	NEW( m_textures.terrain, Texture, "TerrainTexture", w * TEXTURE_WIDTH, ( h * o_max ) * TEXTURE_HEIGHT );
-	NEWV( mesh_terrain, mesh::Mesh, w * ( h * o_max ) * 5 / 2, w * ( h * o_max ) * 4 / 2 );
-	
-	for ( size_t y = 0 ; y < ( h * o_max ) * TEXTURE_HEIGHT ; y++ ) {
-		for ( size_t x = 0 ; x < w * TEXTURE_WIDTH ; x++ ) {
-			//m_textures.terrain->SetPixel( x, y, { 1.0f, 1.0f, 1.0f, 1.0f } );
-		}
-	}
-	
+	NEWV( mesh_terrain, types::Mesh, w * ( h * o_max ) * 5 / 2, w * ( h * o_max ) * 4 / 2 );
 	
 	float xpos, ypos;
 	float tx, ty, tx1, ty1, tx2, ty2;
@@ -190,8 +183,6 @@ void Map::GenerateActors() {
 			ty2 = ty1 + TEXTURE_HEIGHT;
 			tx = tx1 + TEXTURE_HALFWIDTH;
 			ty = ty1 + TEXTURE_HALFHEIGHT;
-			
-			
 			
 			auto tx_add = [ this, tx1, ty1, h ] ( const size_t offset, const tc_t& tc, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha = 1.0f ) -> void {
 				m_textures.terrain->AddFrom( m_textures.source, mode, tc.x, tc.y, tc.x + TEXTURE_WIDTH - 1, tc.y + TEXTURE_HEIGHT - 1, tx1, offset * h * TEXTURE_HEIGHT + ty1, rotate, alpha );
@@ -317,12 +308,15 @@ void Map::GenerateActors() {
 			mesh_terrain->AddSurface( { l_center, l_right, l_bottom } );
 			mesh_terrain->AddSurface( { l_center, l_bottom, l_left } );
 			
+			#define wg elevation_to_water_gamma.Clamp
+			#define wa elevation_to_water_alpha.Clamp
+			
 			float z = elevation_to_vertex_z.Clamp( SEA_LEVELS_COAST );
-			w_center = mesh_terrain->AddVertex( { xpos, ypos, z }, txc( o_water, 0 ), { elevation_to_water_gamma.Clamp( e_center ), elevation_to_water_gamma.Clamp( e_center ), elevation_to_water_gamma.Clamp( e_center ), elevation_to_water_alpha.Clamp( e_center ) } );
-			w_left = mesh_terrain->AddVertex( { xpos - TILE_HALFWIDTH, ypos, z }, txc( o_water, 1 ), { elevation_to_water_gamma.Clamp( e_left ), elevation_to_water_gamma.Clamp( e_left ), elevation_to_water_gamma.Clamp( e_left ), elevation_to_water_alpha.Clamp( e_left ) } );
-			w_top = mesh_terrain->AddVertex( { xpos, ypos - TILE_HALFHEIGHT, z }, txc( o_water, 2 ), { elevation_to_water_gamma.Clamp( e_top ), elevation_to_water_gamma.Clamp( e_top ), elevation_to_water_gamma.Clamp( e_top ), elevation_to_water_alpha.Clamp( e_top ) } );
-			w_right = mesh_terrain->AddVertex( { xpos + TILE_HALFWIDTH, ypos, z }, txc( o_water, 3 ), { elevation_to_water_gamma.Clamp( e_right ), elevation_to_water_gamma.Clamp( e_right ), elevation_to_water_gamma.Clamp( e_right ), elevation_to_water_alpha.Clamp( e_right ) } );
-			w_bottom = mesh_terrain->AddVertex( { xpos, ypos + TILE_HALFHEIGHT, z }, txc( o_water, 4 ), { elevation_to_water_gamma.Clamp( e_bottom ), elevation_to_water_gamma.Clamp( e_bottom ), elevation_to_water_gamma.Clamp( e_bottom ), elevation_to_water_alpha.Clamp( e_bottom ) } );
+			w_center = mesh_terrain->AddVertex( { xpos, ypos, z }, txc( o_water, 0 ), { wg( e_center ), wg( e_center ), wg( e_center ), wa( e_center ) } );
+			w_left = mesh_terrain->AddVertex( { xpos - TILE_HALFWIDTH, ypos, z }, txc( o_water, 1 ), { wg( e_left ), wg( e_left ), wg( e_left ), wa( e_left ) } );
+			w_top = mesh_terrain->AddVertex( { xpos, ypos - TILE_HALFHEIGHT, z }, txc( o_water, 2 ), { wg( e_top ), wg( e_top ), wg( e_top ), wa( e_top ) } );
+			w_right = mesh_terrain->AddVertex( { xpos + TILE_HALFWIDTH, ypos, z }, txc( o_water, 3 ), { wg( e_right ), wg( e_right ), wg( e_right ), wa( e_right ) } );
+			w_bottom = mesh_terrain->AddVertex( { xpos, ypos + TILE_HALFHEIGHT, z }, txc( o_water, 4 ), { wg( e_bottom ), wg( e_bottom ), wg( e_bottom ), wa( e_bottom ) } );
 			mesh_terrain->AddSurface( { w_center, w_left, w_top } );
 			mesh_terrain->AddSurface( { w_center, w_top, w_right } );
 			mesh_terrain->AddSurface( { w_center, w_right, w_bottom } );

@@ -1,10 +1,8 @@
 #pragma once
 
-#include "Mesh.h"
+#include "../Mesh.h"
 
-using namespace types;
-
-namespace scene {
+namespace types {
 namespace mesh {
 
 CLASS( Rectangle, Mesh )
@@ -15,5 +13,5 @@ CLASS( Rectangle, Mesh )
 	void SetCoords( const Vec2<Mesh::coord_t> &top_left, const Vec2<Mesh::coord_t> &bottom_right, const coord_t z );
 };
 
-} /* namespace mesh */
-} /* namespace scene */
+}
+}
