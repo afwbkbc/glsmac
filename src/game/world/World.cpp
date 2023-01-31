@@ -217,11 +217,11 @@ void World::UpdateCameraAngle() {
 
 void World::ReturnToMainMenu() {	
 	
-	g_engine->ShutDown(); // TMP
+	//g_engine->ShutDown(); // TMP
 	
-	/*NEWV( task, game::mainmenu::MainMenu );
+	NEWV( task, game::mainmenu::MainMenu );
 	g_engine->GetScheduler()->RemoveTask( this );
-	g_engine->GetScheduler()->AddTask( task );*/
+	g_engine->GetScheduler()->AddTask( task );
 	
 }
 
