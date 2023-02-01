@@ -45,7 +45,8 @@ void main(void) { \
 	float diff = max( dot(normal, lightdir), 0.0 ); \
 	vec3 diffuse = diff * uLightColor.rgb * uLightColor.a; \
 	vec4 tex = texture2D( uTexture, vec2( texpos.xy ) ); \
-	FragColor = vec4( vec3( tex.r * tint.r, tex.g * tint.g, tex.b * tint.b ) * ( ambient + diffuse ), tint.a * tex.a ); \
+	float gamma = 1.4; /* TODO: pass via uniform */ \
+	FragColor = vec4( vec3( tex.r * tint.r, tex.g * tint.g, tex.b * tint.b ) * ( ambient + diffuse ) * gamma, tint.a * tex.a ); \
 } \
 \
 ");

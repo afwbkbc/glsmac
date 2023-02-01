@@ -13,7 +13,7 @@ class Scene;
 CLASS( Light, Entity )
 
 	enum light_type_t {
-		LT_DIRECTIONAL
+		LT_AMBIENT_DIFFUSE
 	};
 	
 	Light( const light_type_t light_type );

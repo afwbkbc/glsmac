@@ -33,8 +33,8 @@ void World::Start() {
 	m_camera_angle = INITIAL_CAMERA_ANGLE;
 	UpdateCameraAngle();
 
-	NEW( m_light, Light, Light::LT_DIRECTIONAL );
-	m_light->SetPosition( { 100.0f, 100.0f, 100.0f } );
+	NEW( m_light, Light, Light::LT_AMBIENT_DIFFUSE );
+	m_light->SetPosition( { 50.0f, 50.0f, 30.0f } );
 	m_light->SetColor( { 1.0f, 1.0f, 1.0f, 0.5f } );
 	
 	m_world_scene->SetCamera( m_camera );
