@@ -19,7 +19,7 @@ namespace map_generator {
 void SimplePerlin::Generate( Tiles* tiles ) {
 	Log( "Generating terrain ( " + to_string( tiles->GetWidth() ) + " x " + to_string( tiles->GetHeight() ) + " )" );
 	
-	util::Clamper<float> perlin_to_elevation( -1.0, 1.0, -3500, 3500 );
+	util::Clamper<float> perlin_to_elevation( -1.0, 1.0, MAPGEN_ELEVATION_MIN, MAPGEN_ELEVATION_MAX );
 	
 	util::Clamper<float> perlin_to_value; // to moisture or rockyness
 	perlin_to_value.SetRange( -1.0, 1.0, 1, 3 );
@@ -32,6 +32,11 @@ void SimplePerlin::Generate( Tiles* tiles ) {
 	Tile* tile;
 	
 	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {
+		
+		if ( y == 0 ) {
+			continue; // top row should have zero elevation
+		}
+		
 		for ( auto x = 0 ; x < tiles->GetWidth() ; x++ ) {
 			if ( ( y % 2 ) != ( x % 2 ) ) {
 				continue;
@@ -97,6 +102,10 @@ void SimplePerlin::Generate( Tiles* tiles ) {
 			}
 			
 		}
+	}
+	
+	for ( size_t i = 0 ; i < 8 ; i++ ) {
+		SmoothTerrain( tiles, ( i < 2 ), true ); // smooth land 2 times, sea 8 times
 	}
 	
 	Finalize( tiles );

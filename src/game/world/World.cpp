@@ -131,8 +131,8 @@ void World::Start() {
 		
 		float new_z = m_camera_position.z + (float) data->mouse.scroll_y * speed;
 		
-		if ( new_z < 0.05 ) {
-			new_z = 0.05;
+		if ( new_z < 0.02 ) {
+			new_z = 0.02;
 		}
 		if ( new_z > 0.4 ) {
 			new_z = 0.4;

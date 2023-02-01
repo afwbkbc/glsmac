@@ -13,7 +13,7 @@ namespace map {
 
 #define TILE_WIDTH 1.0f
 #define TILE_HEIGHT 1.0f
-#define TILE_Z_SCALE 1.0f
+#define TILE_Z_SCALE 2.0f
 
 // must match PCX
 #define TEXTURE_WIDTH 56
@@ -159,7 +159,7 @@ void Map::GenerateActors() {
 	float tsy = (float) 1 / TEXTURE_HEIGHT / h / o_max;
 	
 	// small padding to reduce border artifacts (they look like tile border) around tiles // <- why does it happen?
-	float tsp = 0.1f;
+	float tsp = 0.0f;
 	
 	float ttx1, tty1, ttx2 ,tty2;
 	Vec2< float > txvec[ 5 ]; // center, left, top, right, bottom

@@ -2,6 +2,8 @@
 
 #include <cstring>
 
+#include "util/Clamper.h"
+
 namespace game {
 namespace world {
 namespace map {
@@ -14,11 +16,11 @@ Tiles::Tiles( const size_t width, const size_t height )
 	m_data = (Tile*)malloc( sz );
 	memset( ptr( m_data, 0, sz ), 0, sz );
 	
-	sz = sizeof( Tile::elevation_t ) * ( width/* / 2*/ ) * 2;
+	sz = sizeof( Tile::elevation_t ) * ( width ) * 2;
 	m_top_vertex_row = (Tile::elevation_t*)malloc( sz );
 	memset( ptr( m_top_vertex_row, 0, sz ), 0, sz );
 
-	sz = sizeof( Tile::elevation_t ) * ( width/* / 2*/ );
+	sz = sizeof( Tile::elevation_t ) * ( width );
 	m_top_right_vertex_row = (Tile::elevation_t*)malloc( sz );
 	memset( ptr( m_top_right_vertex_row, 0, sz ), 0, sz );
 
@@ -205,6 +207,64 @@ void Tiles::Validate() {
 		
 		m_is_validated = true;
 	}
+}
+
+void Tiles::Finalize() {
+	
+	Tile* tile;
+	
+	Tile::elevation_t emin = 0, emax = 0;
+	// determine min and max generated range
+	for ( auto y = 0 ; y < m_height ; y++ ) {
+		for ( auto x = 0 ; x < m_width ; x++ ) {
+			if ( ( y % 2 ) != ( x % 2 ) ) {
+				continue;
+			}
+			tile = At( x, y );
+			for ( auto& c : tile->elevation.corners ) {
+				if ( *c < emin ) {
+					emin = *c;
+				}
+				else if ( *c > emax ) {
+					emax = *c;
+				}
+			}
+		}
+	}
+	
+	// convert every vertex
+	util::Clamper<Tile::elevation_t> converter( emin, emax, Tile::ELEVATION_MIN, Tile::ELEVATION_MAX );
+	for ( auto y = 0 ; y < m_height ; y++ ) {
+		for ( auto x = 0 ; x < m_width ; x++ ) {
+			if ( ( y % 2 ) != ( x % 2 ) ) {
+				continue;
+			}
+			tile = At( x, y );
+			tile->elevation_data.bottom = converter.Clamp( tile->elevation_data.bottom );
+			tile->elevation_data.center = converter.Clamp( tile->elevation_data.center );
+		}
+	}
+	
+	for ( auto y = 0; y < 2 ; y++ ) {
+		for ( auto x = 0 ; x < m_width ; x++ ) {
+			if ( y == 0 ) {
+				*( m_top_right_vertex_row + x ) = converter.Clamp(*( m_top_right_vertex_row + x ));
+			}
+			*( m_top_vertex_row + y * m_width + x ) = converter.Clamp(*( m_top_vertex_row + y * m_width + x ));
+		}
+	}
+
+	for ( auto y = 0 ; y < m_height ; y++ ) {
+		for ( auto x = 0 ; x < m_width ; x++ ) {
+			if ( ( y % 2 ) != ( x % 2 ) ) {
+				continue;
+			}
+			tile = At( x, y );
+			
+			tile->Update();
+		}
+	}
+
 }
 
 }

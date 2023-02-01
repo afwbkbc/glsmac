@@ -13,11 +13,17 @@ namespace map_generator {
 		
 CLASS( MapGenerator, base::Base )
 	
+	// you should stay within these boundaries when generating
+	// currently, any elevations will work because map will be normalized to valid range afterwards. but this may change in future
+	static const Tile::elevation_t MAPGEN_ELEVATION_MIN = -10000;
+	static const Tile::elevation_t MAPGEN_ELEVATION_MAX = 10000;
+
 	virtual void Generate( Tiles* tiles ) = 0;
 	
 protected:
 	
 	// various tools
+	void SmoothTerrain( Tiles* tiles, const bool smooth_land = true, const bool smooth_sea = true );
 	
 	void Finalize( Tiles* tiles );
 

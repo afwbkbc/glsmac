@@ -21,8 +21,10 @@ CLASS( Tiles, base::Base )
 	Tile::elevation_t* TopRightVertexAt( const size_t x ) const;
 
 	void Validate();
+	void Finalize();
 	
 private:
+	
 	size_t m_width;
 	size_t m_height;
 	

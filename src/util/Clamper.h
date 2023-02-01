@@ -24,7 +24,7 @@ CLASS( Clamper, Util )
 	}
 	DATATYPE Clamp( const DATATYPE value ) const {
 		//Log( "Clamping " + to_string( value ) + " from [" + to_string( m_src_min ) + " " + to_string( m_src_max ) + "] to [" + to_string( m_dst_min ) + " " + to_string( m_dst_max ) + "]" );
-		float result = ( value - m_src_min ) * ( ( m_dst_max - m_dst_min ) / ( m_src_max - m_src_min ) );
+		float result = (float) ( value - m_src_min ) * (float) ( (float) ( m_dst_max - m_dst_min ) / ( m_src_max - m_src_min ) );
 		if ( m_inversed )
 			result = m_dst_max - result;
 		else
@@ -35,6 +35,7 @@ CLASS( Clamper, Util )
 		if ( result > m_dst_max ) {
 			result = m_dst_max;
 		}
+		//Log( "RESULT = " + to_string( result ) );
 		return (DATATYPE) result;
 	}
 	void SetInversed( const bool inversed ) {

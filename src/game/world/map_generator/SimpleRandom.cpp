@@ -16,7 +16,7 @@ void SimpleRandom::Generate( Tiles* tiles ) {
 			
 			tile = tiles->At( x, y );
 		
-#define RND Tile::ELEVATION_MIN + rand() % ( Tile::ELEVATION_MAX - Tile::ELEVATION_MIN + 1 )
+#define RND MAPGEN_ELEVATION_MIN + rand() % ( MAPGEN_ELEVATION_MAX - MAPGEN_ELEVATION_MIN + 1 )
 			
 			*tile->elevation.top = RND;
 			*tile->elevation.left = RND;
