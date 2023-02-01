@@ -44,10 +44,6 @@ void SimplePerlin::Generate( Tiles* tiles ) {
 			*tile->elevation.left = *tile->elevation.top = *tile->elevation.right = *tile->elevation.bottom = *tile->elevation.center = 0;
 			
 			const float z_elevation = 50;
-			const float z_rocks = 70;
-			const float z_moisture = 20;
-			const float z_jungle = 130;
-			const float z_xenofungus = 150;
 			
 			*tile->elevation.left = perlin_to_elevation.Clamp( PERLIN( x, y + 0.5f, z_elevation ) );
 			*tile->elevation.top = perlin_to_elevation.Clamp( PERLIN( x + 0.5f, y, z_elevation ) );
@@ -55,7 +51,22 @@ void SimplePerlin::Generate( Tiles* tiles ) {
 			*tile->elevation.bottom = perlin_to_elevation.Clamp( PERLIN( x + 0.5f, y + 1.0f, z_elevation ) );
 			
 			tile->Update();
-			
+		}
+	}
+
+	// start new cycle because we want all tiles have updated averages and dynamic properties
+	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {
+		for ( auto x = 0 ; x < tiles->GetWidth() ; x++ ) {
+			if ( ( y % 2 ) != ( x % 2 ) ) {
+				continue;
+			}
+			tile = tiles->At( x, y );
+
+			const float z_rocks = 70;
+			const float z_moisture = 20;
+			const float z_jungle = 130;
+			const float z_xenofungus = 240;
+
 			tile->rockyness = perlin_to_value.Clamp( round( PERLIN_S( x, y, z_rocks, 1.0f ) ) );
 			if ( tile->rockyness == Tile::R_ROCKY ) {
 				if ( rand() % 3 == 0 ) {
@@ -70,7 +81,7 @@ void SimplePerlin::Generate( Tiles* tiles ) {
 				}
 			}
 			
-			if ( PERLIN_S( x, y, z_xenofungus, 1.0f ) > 0.8 ) {
+			if ( PERLIN_S( x, y, z_xenofungus, 0.6f ) > 0.3 ) {
 				tile->features |= Tile::F_XENOFUNGUS;
 			}
 
