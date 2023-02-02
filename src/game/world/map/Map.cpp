@@ -187,13 +187,14 @@ void Map::GenerateActors() {
 	
 	const size_t o_max = 3;
 
-	struct {
+	typedef struct {
 		types::Mesh::index_t center;
 		types::Mesh::index_t left;
 		types::Mesh::index_t right;
 		types::Mesh::index_t top;
 		types::Mesh::index_t bottom;
-	} v_land, v_water, v_water_surface;
+	} indices_t;
+	indices_t v_land, v_water, v_water_surface;
 	
 	NEW( m_textures.terrain, Texture, "TerrainTexture", w * TEXTURE_WIDTH, ( h * o_max ) * TEXTURE_HEIGHT );
 	NEWV( mesh_terrain, types::Mesh, w * ( h * o_max ) * 5 / 2, w * ( h * o_max ) * 4 / 2 );
@@ -250,6 +251,8 @@ void Map::GenerateActors() {
 	} tint_land, tint_water;
 	
 	vector< pair< types::Mesh::index_t, types::Mesh::index_t > > copy_normals = {};
+	unordered_map< size_t, indices_t > saved_indices = {};
+	unordered_map< types::Mesh::index_t, pair< size_t, Texture::add_mode_t > > need_normals = {};
 	
 	typedef struct {
 		Texture::add_mode_t mode;
@@ -644,12 +647,12 @@ void Map::GenerateActors() {
 						if ( !tile->W->is_water_tile ) {
 							coastline_corner_tmp.can_mirror = true;
 							if ( x >= 2 ) {
-								coastline_corner_tmp.msx = tx1 - TEXTURE_WIDTH * 2;
+								coastline_corner_tmp.msx = x - 2;
 							}
 							else {
-								coastline_corner_tmp.msx = ( w - 1 ) * TEXTURE_WIDTH;
+								coastline_corner_tmp.msx = w - 2;
 							}
-							coastline_corner_tmp.msy = ty1;
+							coastline_corner_tmp.msy = y;
 						}
 						else {
 							coastline_corner_tmp.maybe_mirror_sw = true;
@@ -664,8 +667,8 @@ void Map::GenerateActors() {
 						if ( !tile->N->is_water_tile ) {
 							if ( y >= 2 ) {
 								coastline_corner_tmp.can_mirror = true;
-								coastline_corner_tmp.msx = tx1;
-								coastline_corner_tmp.msy = ty1 - TEXTURE_HEIGHT * 2;
+								coastline_corner_tmp.msx = x;
+								coastline_corner_tmp.msy = y - 2;
 							}
 						}
 						else {
@@ -680,12 +683,12 @@ void Map::GenerateActors() {
 						if ( !tile->E->is_water_tile ) {
 							coastline_corner_tmp.can_mirror = true;
 							if ( x < w - 2 ) {
-								coastline_corner_tmp.msx = tx1 + TEXTURE_WIDTH * 2;
+								coastline_corner_tmp.msx = x + 2;
 							}
 							else {
-								coastline_corner_tmp.msx = 0 * TEXTURE_WIDTH;
+								coastline_corner_tmp.msx = 0;
 							}
-							coastline_corner_tmp.msy = ty1;
+							coastline_corner_tmp.msy = y;
 						}
 						else {
 							coastline_corner_tmp.maybe_mirror_se = true;
@@ -699,8 +702,8 @@ void Map::GenerateActors() {
 						if ( !tile->S->is_water_tile ) {
 							if ( y < h - 2 ) {
 								coastline_corner_tmp.can_mirror = true;
-								coastline_corner_tmp.msx = tx1;
-								coastline_corner_tmp.msy = ty1 + TEXTURE_HEIGHT * 2;
+								coastline_corner_tmp.msx = x;
+								coastline_corner_tmp.msy = y + 2;
 							}
 						}
 						else {
@@ -717,46 +720,46 @@ void Map::GenerateActors() {
 						}
 						
 						if ( !c.can_mirror && y >= 1 ) {
-							c.msy = ty1 - TEXTURE_HEIGHT;
+							c.msy = y - 1;
 							if ( !c.can_mirror && coastline_corner_tmp.maybe_mirror_nw ) {
 								if ( x >= 1 ) {
-									c.msx = tx1 - TEXTURE_WIDTH;
+									c.msx = x - 1;
 								}
 								else {
-									c.msx = ( w - 2 ) * TEXTURE_WIDTH;
+									c.msx = w - 2;
 								}
 								c.mirror_mode = Texture::AM_MIRROR_X;
 								c.can_mirror = true;
 							}
 							if ( !c.can_mirror && coastline_corner_tmp.maybe_mirror_ne ) {
 								if ( x < w - 1 ) {
-									c.msx = tx1 + TEXTURE_WIDTH;
+									c.msx = x + 1;
 								}
 								else {
-									c.msx = 1 * TEXTURE_WIDTH;
+									c.msx = 1;
 								}
 								c.mirror_mode = Texture::AM_MIRROR_Y;
 								c.can_mirror = true;
 							}
 						}
 						if ( !c.can_mirror && y < h - 1 ) {
-							c.msy = ty1 + TEXTURE_HEIGHT;
+							c.msy = y + 1;
 							if ( !c.can_mirror && coastline_corner_tmp.maybe_mirror_sw ) {
 								if ( x >= 1 ) {
-									c.msx = tx1 - TEXTURE_WIDTH;
+									c.msx = x - 1;
 								}
 								else {
-									c.msx = ( w - 2 ) * TEXTURE_WIDTH;
+									c.msx = w - 1;
 								}
 								c.mirror_mode = Texture::AM_MIRROR_X;
 								c.can_mirror = true;
 							}
 							if ( !c.can_mirror && coastline_corner_tmp.maybe_mirror_se ) {
 								if ( x < w - 1 ) {
-									c.msx = tx1 + TEXTURE_WIDTH;
+									c.msx = x + 1;
 								}
 								else {
-									c.msx = 1 * TEXTURE_WIDTH;
+									c.msx = 1;
 								}
 								c.mirror_mode = Texture::AM_MIRROR_Y;
 								c.can_mirror = true;
@@ -765,7 +768,7 @@ void Map::GenerateActors() {
 						
 						if ( c.can_mirror ) {
 							// mirror opposite tile
-							tx_copy_from_after( o_land, c.msx, c.msy, o_water, coastline_mode | c.side | c.mirror_mode, 0 );
+							tx_copy_from_after( o_land, c.msx * TEXTURE_WIDTH, c.msy * TEXTURE_HEIGHT, o_water, coastline_mode | c.side | c.mirror_mode, 0 );
 						}
 						else {
 							// use default texture
@@ -791,6 +794,17 @@ void Map::GenerateActors() {
 				mesh_terrain->AddSurface( { v_land.center, v_land.top, v_land.right } );
 				mesh_terrain->AddSurface( { v_land.center, v_land.right, v_land.bottom } );
 				mesh_terrain->AddSurface( { v_land.center, v_land.bottom, v_land.left } );
+				
+				// if applicable - save normals to be used for water tile corners later
+				if ( !tile->is_water_tile &&
+					( tile->W->is_water_tile && !tile->NW->is_water_tile && !tile->SW->is_water_tile ) ||
+					( tile->N->is_water_tile && !tile->NW->is_water_tile && !tile->NE->is_water_tile ) ||
+					( tile->E->is_water_tile && !tile->NE->is_water_tile && !tile->SE->is_water_tile ) ||
+					( tile->S->is_water_tile && !tile->SE->is_water_tile && !tile->SW->is_water_tile )
+				) {
+					//Log( "Saving normals of " + to_string( y * w + x ) );
+					saved_indices[ y * w + x ] = v_land;
+				}
 				
 				#undef txt
 				#undef txc
@@ -842,11 +856,25 @@ void Map::GenerateActors() {
 				
 				if ( is_coastline ) {
 					// fix incorrect shadows on coasts (because land vertices were moved)
+					// TODO: set only needed ones?
 					copy_normals.push_back( { v_land.left, v_water.left } );
 					copy_normals.push_back( { v_land.top, v_water.top } );
 					copy_normals.push_back( { v_land.right, v_water.right } );
 					copy_normals.push_back( { v_land.bottom, v_water.bottom } );
 					copy_normals.push_back( { v_land.center, v_water.center } );
+				}
+				
+				if ( tile->is_water_tile ) {
+					// get normal from corresponding adjactent tile
+					for ( auto& c : coastline_corners ) {
+						//Log( "Need normals of " + to_string( c.msy * w + c.msx ) );
+						need_normals[
+							c.side == Texture::AM_ROUND_LEFT ? v_water.left :
+							c.side == Texture::AM_ROUND_TOP ? v_water.top :
+							c.side == Texture::AM_ROUND_RIGHT ? v_water.right :
+							c.side == Texture::AM_ROUND_BOTTOM ? v_water.bottom : -1
+						] = { c.msy * w + c.msx, c.side };
+					}
 				}
 				
 				#undef txt
@@ -860,9 +888,21 @@ void Map::GenerateActors() {
 	
 	mesh_terrain->Finalize();
 	
+	Log( "Updating normals" );
 	// update normals where needed
 	for ( auto& cn : copy_normals ) {
 		mesh_terrain->SetVertexNormal( cn.second, mesh_terrain->GetVertexNormal( cn.first ) );
+	}
+	for ( auto& nn : need_normals ) {
+		auto it = saved_indices.find( nn.second.first );
+		if ( it != saved_indices.end() ) {
+			mesh_terrain->SetVertexNormal( nn.first, mesh_terrain->GetVertexNormal(
+				nn.second.second == Texture::AM_ROUND_LEFT ? it->second.right :
+				nn.second.second == Texture::AM_ROUND_TOP ? it->second.bottom :
+				nn.second.second == Texture::AM_ROUND_RIGHT ? it->second.left :
+				nn.second.second == Texture::AM_ROUND_BOTTOM ? it->second.top : -1
+			));
+		}
 	}
 	
 	NEW( m_actors.terrain, actor::Mesh, "MapTerrain", mesh_terrain );
