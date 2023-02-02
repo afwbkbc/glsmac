@@ -56,6 +56,15 @@ bool Color::operator!= ( const Color& other) {
 	;
 };
 
+Color Color::operator* ( const float operand ) {
+	return {
+		value.red * operand,
+		value.green * operand,
+		value.blue * operand,
+		value.alpha // alpha shouldn't change from multiplication?
+	};
+}
+
 const Color::rgba_t Color::GetRGBA() const {
 	return RGBA( value.red * 255, value.green * 255, value.blue * 255, value.alpha * 255 );
 };

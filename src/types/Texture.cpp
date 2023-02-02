@@ -81,26 +81,50 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 		ASSERT( w == h, "rotating supported only for squares for now" );
 	}
 	
+	size_t cx, cy; // center
+	size_t sx, sy; // source
+	size_t dx, dy; // dest
+	
+	float r;
+	if (
+		( mode & AM_ROUND_LEFT ) ||
+		( mode & AM_ROUND_TOP ) ||
+		( mode & AM_ROUND_RIGHT ) ||
+		( mode & AM_ROUND_BOTTOM )
+	) {
+		ASSERT( mode & AM_MERGE, "rounded corners supported only for merge mode" );
+		cx = floor( w / 2 );
+		cy = floor( h / 2 );
+		r = sqrt( pow( (float)cx, 2 ) + pow( (float)cy, 2 ) ) * 0.7f;
+		ASSERT( r >= 0, "sqrt returned negative result: " + to_string( r ) );
+	}
+	
+	float pixel_alpha;
+	
+	bool is_pixel_needed;
+	
 	for (size_t y = 0 ; y < h ; y++) {
 		for (size_t x = 0 ; x < w; x++) {
 			
-			from = ptr( source->m_bitmap, ( ( y + y1 ) * source->m_width + ( x + x1 ) ) * m_bpp, m_bpp );
-			
 			switch ( rotate ) {
 				case ROTATE_0: {
-					to = ptr( m_bitmap, ( ( y + dest_y ) * m_width + ( x + dest_x ) ) * m_bpp, m_bpp );
+					dx = x;
+					dy = y;
 					break;
 				}
 				case ROTATE_90: {
-					to = ptr( m_bitmap, ( ( x + dest_y ) * m_width + ( h - y - 1 + dest_x ) ) * m_bpp, m_bpp );
+					dx = h - y - 1;
+					dy = x;
 					break;
 				}
 				case ROTATE_180: {
-					to = ptr( m_bitmap, ( ( h - y - 1 + dest_y ) * m_width + ( w - x - 1 + dest_x ) ) * m_bpp, m_bpp );
+					dx = w - x - 1;
+					dy = h - y - 1;
 					break;
 	 			}
 				case ROTATE_270: {
-					to = ptr( m_bitmap, ( ( w - x - 1 + dest_y ) * m_width + ( y + dest_x ) ) * m_bpp, m_bpp );
+					dx = y;
+					dy = w - x - 1;
 					break;
 	 			}
 				default: {
@@ -108,23 +132,50 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 				}
 			}
 			
-			switch ( mode ) {
-				case AM_COPY: {
-					memcpy( to, from, m_bpp );
-					break;
+			is_pixel_needed = true;
+			pixel_alpha = alpha;
+			
+			if (
+				( ( mode & AM_ROUND_LEFT ) && ( dx <= cx ) && ( dy >= cy ) ) ||
+				( ( mode & AM_ROUND_TOP ) && ( dx <= cx ) && ( dy <= cy ) ) ||
+				( ( mode & AM_ROUND_RIGHT ) && ( dx >= cx ) && ( dy <= cy ) ) ||
+				( ( mode & AM_ROUND_BOTTOM ) && ( dx >= cx ) && ( dy >= cy ) )
+			) {
+				float d = sqrt( pow( (float) dx - cx, 2 ) + pow( (float) dy - cy, 2 ) );
+				if ( d > r ) {
+					is_pixel_needed = false;
 				}
-				case AM_MERGE: {
-					if ( *(uint32_t*)from & 0x000000ff ) {
-						memcpy( to, from, m_bpp );
-					}
-					break;
-				}
-				default: {
-					ASSERT( false, "unsupported texture add mode " + to_string( mode ) );
+				else if ( d == r ) {
+					pixel_alpha = 0.5f; // some smoothing
 				}
 			}
-			if ( alpha < 1.0f ) {
-				*(uint8_t*)( to + 3 ) = (uint8_t)floor( alpha * 0xff );
+			
+			if ( mode & AM_INVERT ) {
+				is_pixel_needed = !is_pixel_needed;
+			}
+			
+			if ( is_pixel_needed ) {
+				if ( mode & AM_MIRROR_X ) {
+					sx = x2 - x;
+				}
+				else {
+					sx = x + x1;
+				}
+				if ( mode & AM_MIRROR_Y ) {
+					sy = y2 - y;
+				}
+				else {
+					sy = y + y1;
+				}
+				from = ptr( source->m_bitmap, ( ( sy ) * source->m_width + ( sx ) ) * m_bpp, m_bpp );
+				to = ptr( m_bitmap, ( ( dy + dest_y ) * m_width + ( dx + dest_x ) ) * m_bpp, m_bpp );
+
+				if ( ( !( mode & AM_MERGE ) ) || ( *(uint32_t*)from & 0x000000ff ) ) {
+					memcpy( to, from, m_bpp );
+					if ( pixel_alpha < 1.0f ) {
+						*(uint8_t*)( to + 3 ) = (uint8_t)floor( pixel_alpha * 0xff );
+					}
+				}
 			}
 		}
 	}

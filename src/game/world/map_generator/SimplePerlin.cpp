@@ -27,6 +27,8 @@ void SimplePerlin::Generate( Tiles* tiles ) {
 	auto now = chrono::high_resolution_clock::now();
 	auto seed = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count();
 	
+	Log( "Map seed is " + to_string( seed ) );
+	
 	util::Perlin perlin( seed );
 	
 	Tile* tile;
@@ -34,7 +36,7 @@ void SimplePerlin::Generate( Tiles* tiles ) {
 	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {
 		
 		if ( y == 0 ) {
-			continue; // top row should have zero elevation
+			continue; // top row should have zero elevation // TODO: fix universally in some place
 		}
 		
 		for ( auto x = 0 ; x < tiles->GetWidth() ; x++ ) {

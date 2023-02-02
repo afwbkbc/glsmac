@@ -31,10 +31,19 @@ CLASS( Texture, base::Base )
 	void SetPixel( const size_t x, const size_t y, const Color& color );
 	void SetPixelAlpha( const size_t x, const size_t y, const uint8_t alpha );
 	
-	enum add_mode_t {
-		AM_COPY, // copy every pixel from dest to source
-		AM_MERGE, // copy every non-transparent pixel from dest to source
-	};
+	// bitflags
+	typedef uint8_t add_mode_t;
+	static const add_mode_t AM_DEFAULT = 0;
+	static const add_mode_t AM_MERGE = 1 << 0; // copy only non-transparent pixels
+	// round one or several corners
+	static const add_mode_t AM_ROUND_LEFT = 1 << 1;
+	static const add_mode_t AM_ROUND_TOP = 1 << 2;
+	static const add_mode_t AM_ROUND_RIGHT = 1 << 3;
+	static const add_mode_t AM_ROUND_BOTTOM = 1 << 4;
+	// other modifiers
+	static const add_mode_t AM_INVERT = 1 << 5; // add unneeded pixels instead of needed
+	static const add_mode_t AM_MIRROR_X = 1 << 6; // mirrors source by x
+	static const add_mode_t AM_MIRROR_Y = 1 << 7; // mirrors source by y
 	
 	typedef uint8_t rotate_t;
 	static const rotate_t ROTATE_0 = 0;
