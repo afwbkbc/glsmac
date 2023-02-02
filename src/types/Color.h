@@ -35,7 +35,8 @@ public:
 	bool operator== ( Color& other ) const;
 	bool operator!= ( Color& other ) const;
 	bool operator!= ( const Color& other );
-	Color operator* ( const float operand );
+	const Color operator* ( const float operand ) const;
+	const Color operator/ ( const float operand ) const;
 
 	const rgba_t GetRGBA() const;
 	static Color FromRGBA( const rgba_t rgba );

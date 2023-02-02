@@ -56,12 +56,21 @@ bool Color::operator!= ( const Color& other) {
 	;
 };
 
-Color Color::operator* ( const float operand ) {
+const Color Color::operator* ( float operand ) const {
 	return {
 		value.red * operand,
 		value.green * operand,
 		value.blue * operand,
 		value.alpha // alpha shouldn't change from multiplication?
+	};
+}
+
+const Color Color::operator/ ( float operand ) const {
+	return {
+		value.red / operand,
+		value.green / operand,
+		value.blue / operand,
+		value.alpha // alpha shouldn't change from division?
 	};
 }
 
