@@ -134,8 +134,8 @@ void World::Start() {
 		if ( new_z < 0.02 ) {
 			new_z = 0.02;
 		}
-		if ( new_z > 0.4 ) {
-			new_z = 0.4;
+		if ( new_z > 1.0f ) {
+			new_z = 1.0f;
 		}
 		
 		float diff = m_camera_position.z / new_z;

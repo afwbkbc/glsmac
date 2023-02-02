@@ -262,6 +262,8 @@ void Map::GenerateActors() {
 			
 	size_t msx, msy; // texture mirror source for coastlines
 	bool canmirror = false;
+	const Texture::add_mode_t coastline_mode = Texture::AM_MERGE | Texture::AM_INVERT;
+	const Texture::add_mode_t coastline_mirror_mode = coastline_mode | Texture::AM_MIRROR_X | Texture::AM_MIRROR_Y;
 	
 	for ( size_t y = 0 ; y < h ; y++ ) {
 		for ( size_t x = 0 ; x < w ; x++ ) {
@@ -613,61 +615,62 @@ void Map::GenerateActors() {
 				// corners on water tiles
 				if ( tile->is_water_tile ) {
 					
-					Texture::add_mode_t mode = Texture::AM_MERGE | Texture::AM_INVERT;
-					
 					canmirror = false;
 					
-					if ( !tile->W->is_water_tile && !tile->SW->is_water_tile && !tile->NW->is_water_tile ) {
-						mode |= Texture::AM_ROUND_LEFT;
+					if ( !tile->SW->is_water_tile && !tile->NW->is_water_tile ) {
 						tint_water.left = coastline_tint;
-						canmirror = true;
-						if ( x >= 2 ) {
-							msx = tx1 - TEXTURE_WIDTH * 2;
+						if ( !tile->W->is_water_tile ) {
+							canmirror = true;
+							if ( x >= 2 ) {
+								msx = tx1 - TEXTURE_WIDTH * 2;
+							}
+							else {
+								msx = ( w - 1 ) * TEXTURE_WIDTH;
+							}
+							msy = ty1;
+							tx_copy_from_after( o_land, msx, msy, o_water, coastline_mirror_mode | Texture::AM_ROUND_LEFT, 0 );
 						}
-						else {
-							msx = ( w - 1 ) * TEXTURE_WIDTH;
-						}
-						msy = ty1;
 					}
-					if ( !tile->N->is_water_tile && !tile->NW->is_water_tile && !tile->NE->is_water_tile ) {
-						mode |= Texture::AM_ROUND_TOP;
+					if ( !tile->NW->is_water_tile && !tile->NE->is_water_tile ) {
 						tint_water.top = coastline_tint;
-						if ( y >= 2 ) {
-							canmirror = true;
-							msx = tx1;
-							msy = ty1 - TEXTURE_HEIGHT * 2;
+						if ( !tile->N->is_water_tile ) {
+							if ( y >= 2 ) {
+								canmirror = true;
+								msx = tx1;
+								msy = ty1 - TEXTURE_HEIGHT * 2;
+								tx_copy_from_after( o_land, msx, msy, o_water, coastline_mirror_mode | Texture::AM_ROUND_TOP, 0 );
+							}
 						}
 					}
-					if ( !tile->E->is_water_tile && !tile->SE->is_water_tile && !tile->NE->is_water_tile ) {
-						mode |= Texture::AM_ROUND_RIGHT;
+					if ( !tile->SE->is_water_tile && !tile->NE->is_water_tile ) {
 						tint_water.right = coastline_tint;
-						canmirror = true;
-						if ( x < w - 2 ) {
-							msx = tx1 + TEXTURE_WIDTH * 2;
-						}
-						else {
-							msx = 0;
-						}
-						msy = ty1;
-					}
-					if ( !tile->S->is_water_tile && !tile->SE->is_water_tile && !tile->SW->is_water_tile ) {
-						mode |= Texture::AM_ROUND_BOTTOM;
-						tint_water.bottom = coastline_tint;
-						if ( y < w - 2 ) {
+						if ( !tile->E->is_water_tile ) {
 							canmirror = true;
-							msx = tx1;
-							msy = ty1 + TEXTURE_HEIGHT * 2;
+							if ( x < w - 2 ) {
+								msx = tx1 + TEXTURE_WIDTH * 2;
+							}
+							else {
+								msx = 0;
+							}
+							msy = ty1;
+							tx_copy_from_after( o_land, msx, msy, o_water, coastline_mirror_mode | Texture::AM_ROUND_RIGHT, 0 );
+						}
+					}
+					if ( !tile->SE->is_water_tile && !tile->SW->is_water_tile ) {
+						tint_water.bottom = coastline_tint;
+						if ( !tile->S->is_water_tile ) {
+							if ( y < w - 2 ) {
+								canmirror = true;
+								msx = tx1;
+								msy = ty1 + TEXTURE_HEIGHT * 2;
+								tx_copy_from_after( o_land, msx, msy, o_water, coastline_mirror_mode | Texture::AM_ROUND_BOTTOM, 0 );
+							}
 						}
 					}
 					
-					if ( canmirror ) {
-						// have something to copy from
-						mode |= Texture::AM_MIRROR_X | Texture::AM_MIRROR_Y;
-						tx_copy_from_after( o_land, msx, msy, o_water, mode, 0 );
-					}
-					else {
-						// nothing to copy from
-						tx_add( o_water, m_tc.arid[ 0 ], mode, rand() % 4 );
+					if ( !canmirror ) {
+						// nothing to mirror from, just use default texture
+						tx_add( o_water, m_tc.arid[ 0 ], coastline_mode, rand() % 4 );
 					}
 				}
 			}
