@@ -55,7 +55,7 @@ Map::Map( Scene* scene )
 	float my = 1.0f / TEXTURE_HEIGHT;
 	for ( size_t y = 0 ; y < TEXTURE_HEIGHT ; y++ ) {
 		for ( size_t x = 0 ; x < TEXTURE_WIDTH ; x++ ) {
-			s_wireframe_texture->SetPixel( x, y, { mx * x / 2, my * y / 2, 0.0f, 1.0f } );
+			s_wireframe_texture->SetPixel( x, y, { mx * x / 2, my * y / 2, 0f, 1.0f } );
 		}
 	}
 #else
@@ -183,9 +183,10 @@ void Map::GenerateActors() {
 	
 	const size_t o_land = 0; // land tiles
 	const size_t o_water_surface = 1; // water tiles (alpha surface with gradients)
-	const size_t o_water = 2; // sea (for non-alpha objects on water)
+	const size_t o_water_surface_extra = 2; // extra textures/effects for water tiles
+	const size_t o_water = 3; // sea (for non-alpha objects on water)
 	
-	const size_t o_max = 3;
+	const size_t o_max = 4;
 
 	typedef struct {
 		types::Mesh::index_t center;
@@ -194,7 +195,7 @@ void Map::GenerateActors() {
 		types::Mesh::index_t top;
 		types::Mesh::index_t bottom;
 	} indices_t;
-	indices_t v_land, v_water, v_water_surface;
+	indices_t v_land, v_water_surface, v_water_surface_extra, v_water;
 	
 	NEW( m_textures.terrain, Texture, "TerrainTexture", w * TEXTURE_WIDTH, ( h * o_max ) * TEXTURE_HEIGHT );
 	NEWV( mesh_terrain, types::Mesh, w * ( h * o_max ) * 5 / 2, w * ( h * o_max ) * 4 / 2 );
@@ -213,9 +214,17 @@ void Map::GenerateActors() {
 	util::Clamper< float > elevation_to_water_b( Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST, 0.8f, 1.8f ); // sea bottom is very blue so need less here
 	util::Clamper< float > elevation_to_water_a( Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST, 1.0f, 0.5f );
 	
-	//Color coastline_tint = { 1.0f, 1.0f, 1.0f, 1.0f };
-	Color coastline_tint = { 0.6f, 0.7f, 1.0f, 1.0f };
+	const Color underwater_tint = { 0.0, 0.2, 0.5, 1.0 };
+
+	const Color coastline_tint = { 1.0f, 1.0f, 1.0f, 1.0f };
+	//const Color coastline_tint = { 0.6f, 0.7f, 1.0f, 1.0f };
 	Color coastline_tint_land;
+	
+	const Color::channel_t coast_water_alpha = 0.3f;
+	float coast_water_alpha_center_mod_min = 0.1f;
+	float coast_water_alpha_center_mod_max = 0.9f;
+	float coast_water_alpha_center_range_min = 0.3f;
+	float coast_water_alpha_center_range_max = 0.7f;
 	
 	Tile* tile;
 	
@@ -228,7 +237,7 @@ void Map::GenerateActors() {
 		Vec3 top;
 		Vec3 right;
 		Vec3 bottom;
-	} vc = {};
+	} vc = {}, wc = {};
 	
 	// small padding to reduce border artifacts (they look like tile border) around tiles // <- why does it happen?
 	float tsp = 0.0f;
@@ -248,11 +257,13 @@ void Map::GenerateActors() {
 		Color top;
 		Color right;
 		Color bottom;
-	} tint_land, tint_water;
+	} tint_land, tint_water_surface_extra, tint_water;
 	
 	vector< pair< types::Mesh::index_t, types::Mesh::index_t > > copy_normals = {};
 	unordered_map< size_t, indices_t > saved_indices = {};
 	unordered_map< types::Mesh::index_t, pair< size_t, Texture::add_mode_t > > need_normals = {};
+	
+	Texture::add_mode_t add_mode;
 	
 	typedef struct {
 		Texture::add_mode_t mode;
@@ -287,6 +298,8 @@ void Map::GenerateActors() {
 	vector< coastline_corner_t > coastline_corners;
 	coastline_corner_t coastline_corner_tmp;
 	
+	const float water_z = elevation_to_vertex_z.Clamp( Tile::ELEVATION_LEVEL_COAST ); // sea is always on sea level
+			
 	for ( size_t y = 0 ; y < h ; y++ ) {
 		for ( size_t x = 0 ; x < w ; x++ ) {
 			if ( y % 2 != x % 2 ) {
@@ -330,6 +343,14 @@ void Map::GenerateActors() {
 			txinfo.rotate_direction = 0;
 			txinfo.texture_variant = 0;
 			
+			tint_land = tint_water_surface_extra = tint_water = {
+				(Color){ 1.0, 1.0, 1.0, 1.0 },
+				(Color){ 1.0, 1.0, 1.0, 1.0 },
+				(Color){ 1.0, 1.0, 1.0, 1.0 },
+				(Color){ 1.0, 1.0, 1.0, 1.0 },
+				(Color){ 1.0, 1.0, 1.0, 1.0 },
+			};
+			
 			Tile::elevation_t e_left = *tile->elevation.left;
 			Tile::elevation_t e_top = *tile->elevation.top;
 			Tile::elevation_t e_right = *tile->elevation.right;
@@ -342,7 +363,7 @@ void Map::GenerateActors() {
 					break;
 				}
 				case Tile::M_ARID: {
-					tx_add( o_land, m_tc.arid[0], Texture::AM_DEFAULT, txinfo.rotate_direction );
+					tx_add( o_land, m_tc.arid[ 0 ], Texture::AM_DEFAULT, txinfo.rotate_direction );
 					break;
 				}
 				case Tile::M_MOIST: {
@@ -384,8 +405,9 @@ void Map::GenerateActors() {
 
 			if ( tile->features & Tile::F_XENOFUNGUS ) {
 				txinfo = GetTileTextureInfo( tile, TG_FEATURE, Tile::F_XENOFUNGUS );
+				tx_add( o_water, m_tc.fungus_sea[ txinfo.texture_variant ], Texture::AM_MERGE, txinfo.rotate_direction );
 				if ( tile->is_water_tile ) {
-					tx_add( o_water, m_tc.fungus_sea[ txinfo.texture_variant ], Texture::AM_MERGE, txinfo.rotate_direction );
+					//tx_add( o_water, m_tc.fungus_sea[ txinfo.texture_variant ], Texture::AM_MERGE, txinfo.rotate_direction );
 				}
 				else {
 					tx_add( o_land, m_tc.fungus_land[ txinfo.texture_variant ], Texture::AM_MERGE, txinfo.rotate_direction );
@@ -480,13 +502,12 @@ void Map::GenerateActors() {
 			vc.bottom = { xpos, ypos + TILE_HALFHEIGHT, vcz( e_bottom ) };
 			vc.center = { ( vc.left.x + vc.right.x ) / 2, ( vc.top.y + vc.bottom.y ) / 2, vcz( e_center ) };
 			
-			tint_land = tint_water = {
-				(Color){ 1.0, 1.0, 1.0, 1.0 },
-				(Color){ 1.0, 1.0, 1.0, 1.0 },
-				(Color){ 1.0, 1.0, 1.0, 1.0 },
-				(Color){ 1.0, 1.0, 1.0, 1.0 },
-				(Color){ 1.0, 1.0, 1.0, 1.0 },
-			};
+			// water surface extra also uses this
+			wc.left = { xpos - TILE_HALFWIDTH, ypos, water_z };
+			wc.top = { xpos, ypos - TILE_HALFHEIGHT, water_z };
+			wc.right = { xpos + TILE_HALFWIDTH, ypos, water_z };
+			wc.bottom = { xpos, ypos + TILE_HALFHEIGHT, water_z };
+			wc.center = { ( wc.left.x + wc.right.x ) / 2, ( wc.top.y + wc.bottom.y ) / 2, water_z };
 			
 			is_coastline = false;
 			
@@ -596,6 +617,71 @@ void Map::GenerateActors() {
 				e_bottom <= Tile::ELEVATION_LEVEL_COAST
 			);
 			
+			// coast water texture
+			if ( !tile->is_water_tile && (
+				tile->W->is_water_tile ||
+				tile->NW->is_water_tile ||
+				tile->N->is_water_tile ||
+				tile->NE->is_water_tile ||
+				tile->E->is_water_tile ||
+				tile->SE->is_water_tile ||
+				tile->S->is_water_tile ||
+				tile->SW->is_water_tile
+			)) {
+				tx_add( o_water_surface_extra, m_tc.water[ 0 ], Texture::AM_DEFAULT, rand() % 4, coast_water_alpha );
+			}
+				
+				if ( tile->is_water_tile && (
+					!tile->W->is_water_tile ||
+					!tile->NW->is_water_tile ||
+					!tile->N->is_water_tile ||
+					!tile->NE->is_water_tile ||
+					!tile->E->is_water_tile ||
+					!tile->SE->is_water_tile ||
+					!tile->S->is_water_tile ||
+					!tile->SW->is_water_tile
+				)) {
+					
+#define RANDOM( _min, _max ) ( _min + static_cast<float>( rand() ) / ( static_cast<float>( RAND_MAX / ( _max - _min ) ) ) )
+					
+					tint_water_surface_extra.center.value.alpha = RANDOM( coast_water_alpha_center_mod_min, coast_water_alpha_center_mod_max );
+					// TODO: fix this
+					//Log( "OLD: " + to_string( wc.center.x ) + "x" + to_string( wc.center.y ) );
+					//wc.center.x = xpos + ( coast_water_alpha_center_range_min + static_cast<float>( rand() ) / ( static_cast<float>( RAND_MAX / ( coast_water_alpha_center_range_max - coast_water_alpha_center_range_min ) ) ) - 0.5f ) * TILE_WIDTH;
+					//wc.center.y = ypos + ( coast_water_alpha_center_range_min + static_cast<float>( rand() ) / ( static_cast<float>( RAND_MAX / ( coast_water_alpha_center_range_max - coast_water_alpha_center_range_min ) ) ) - 0.5f ) * TILE_HEIGHT;
+					//Log( "NEW: " + to_string( wc.center.x ) + "x" + to_string( wc.center.y ) );
+					
+					if ( tile->W->is_water_tile && tile->NW->is_water_tile && tile->SW->is_water_tile ) {
+						tint_water_surface_extra.left.value.alpha = 0.0f;
+					}
+					else {
+						tint_water_surface_extra.left.value.alpha = 1.0f;
+					}
+					
+					if ( tile->N->is_water_tile && tile->NW->is_water_tile && tile->NE->is_water_tile ) {
+						tint_water_surface_extra.top.value.alpha = 0.0f;
+					}
+					else {
+						tint_water_surface_extra.top.value.alpha = 1.0f;
+					}
+					
+					if ( tile->E->is_water_tile && tile->NE->is_water_tile && tile->SE->is_water_tile ) {
+						tint_water_surface_extra.right.value.alpha = 0.0f;
+					}
+					else {
+						tint_water_surface_extra.right.value.alpha = 1.0f;
+					}
+					
+					if ( tile->S->is_water_tile && tile->SW->is_water_tile && tile->SE->is_water_tile ) {
+						tint_water_surface_extra.bottom.value.alpha = 0.0f;
+					}
+					else {
+						tint_water_surface_extra.bottom.value.alpha = 1.0f;
+					}
+					
+					tx_add( o_water_surface_extra, m_tc.water[ 0 ], Texture::AM_DEFAULT, rand() % 4, coast_water_alpha );
+				}
+
 			if ( has_water ) {
 				
 				tx_add( o_water_surface, m_tc.water[ 1 ], Texture::AM_DEFAULT, rand() % 4 );
@@ -603,18 +689,18 @@ void Map::GenerateActors() {
 				// corners on land tiles
 				if ( is_coastline ) {
 					
-					Texture::add_mode_t mode = Texture::AM_MERGE;
+					add_mode = Texture::AM_MERGE;
 					if ( tile->W->is_water_tile && tile->SW->is_water_tile && tile->NW->is_water_tile ) {
-						mode |= Texture::AM_ROUND_LEFT;
+						add_mode |= Texture::AM_ROUND_LEFT;
 					}
 					if ( tile->N->is_water_tile && tile->NW->is_water_tile && tile->NE->is_water_tile ) {
-						mode |= Texture::AM_ROUND_TOP;
+						add_mode |= Texture::AM_ROUND_TOP;
 					}
 					if ( tile->E->is_water_tile && tile->SE->is_water_tile && tile->NE->is_water_tile ) {
-						mode |= Texture::AM_ROUND_RIGHT;
+						add_mode |= Texture::AM_ROUND_RIGHT;
 					}
 					if ( tile->S->is_water_tile && tile->SE->is_water_tile && tile->SW->is_water_tile ) {
-						mode |= Texture::AM_ROUND_BOTTOM;
+						add_mode |= Texture::AM_ROUND_BOTTOM;
 					}
 					
 					// coastline tint
@@ -632,10 +718,10 @@ void Map::GenerateActors() {
 					}
 
 					// copy texture from land
-					tx_copy( o_land, o_water, mode, 0 );
+					tx_copy( o_land, o_water, add_mode, 0 );
 					
 				}
-				
+								
 				// corners on water tiles
 				if ( tile->is_water_tile ) {
 					
@@ -783,7 +869,7 @@ void Map::GenerateActors() {
 				// texture coordinates (land)
 				#define txc( _o, _c ) { txvec_land._c.x * tsx, ( txvec_land._c.y + _o * h * TEXTURE_HEIGHT ) * tsy }
 				// tint (depending on if this tile is underwater or not)
-				#define txt( _val ) ( tile->is_water_tile ? (Color){ 0.0, 0.2, 0.5, 1.0 } : tint_land._val )
+				#define txt( _val ) ( tile->is_water_tile ? underwater_tint : tint_land._val )
 				
 				v_land.center = mesh_terrain->AddVertex( vc.center, txc( o_land, center ), txt( center ) );
 				v_land.left = mesh_terrain->AddVertex( vc.left, txc( o_land, left ), txt( left ) );
@@ -813,8 +899,6 @@ void Map::GenerateActors() {
 			// texture coordinates
 			#define txc( _o, _c ) { txvec._c.x * tsx, ( txvec._c.y + _o * h * TEXTURE_HEIGHT ) * tsy }
 			
-			float water_z = elevation_to_vertex_z.Clamp( Tile::ELEVATION_LEVEL_COAST ); // sea is always on sea level
-			
 			// water surface
 			{
 				#define wr elevation_to_water_r.Clamp
@@ -823,7 +907,7 @@ void Map::GenerateActors() {
 				#define wa elevation_to_water_a.Clamp
 				#define txt( _val ) { wr( _val ), wg( _val ), wb( _val ), wa( _val ) }  // tint
 
-				v_water_surface.center = mesh_terrain->AddVertex( { xpos, ypos, water_z }, txc( o_water_surface, center ), txt( e_center) );
+				v_water_surface.center = mesh_terrain->AddVertex( { xpos, ypos, water_z }, txc( o_water_surface, center ), txt( e_center ) );
 				v_water_surface.left = mesh_terrain->AddVertex( { xpos - TILE_HALFWIDTH, ypos, water_z }, txc( o_water_surface, left ), txt( e_left ) );
 				v_water_surface.top = mesh_terrain->AddVertex( { xpos, ypos - TILE_HALFHEIGHT, water_z }, txc( o_water_surface, top ), txt( e_top ) );
 				v_water_surface.right = mesh_terrain->AddVertex( { xpos + TILE_HALFWIDTH, ypos, water_z }, txc( o_water_surface, right ), txt( e_right ) );
@@ -840,6 +924,23 @@ void Map::GenerateActors() {
 				#undef wa
 			}
 			
+			// water surface extra
+			{
+				#define txt( _val ) ( tint_water_surface_extra._val )
+				
+				v_water_surface_extra.center = mesh_terrain->AddVertex( wc.center, txc( o_water_surface_extra, center ), txt( center ) );
+				v_water_surface_extra.left = mesh_terrain->AddVertex( wc.left, txc( o_water_surface_extra, left ), txt( left ) );
+				v_water_surface_extra.top = mesh_terrain->AddVertex( wc.top, txc( o_water_surface_extra, top ), txt( top ) );
+				v_water_surface_extra.right = mesh_terrain->AddVertex( wc.right, txc( o_water_surface_extra, right ), txt( right ) );
+				v_water_surface_extra.bottom = mesh_terrain->AddVertex( wc.bottom, txc( o_water_surface_extra, bottom ), txt( bottom ) );
+				mesh_terrain->AddSurface( { v_water_surface_extra.center, v_water_surface_extra.left, v_water_surface_extra.top } );
+				mesh_terrain->AddSurface( { v_water_surface_extra.center, v_water_surface_extra.top, v_water_surface_extra.right } );
+				mesh_terrain->AddSurface( { v_water_surface_extra.center, v_water_surface_extra.right, v_water_surface_extra.bottom } );
+				mesh_terrain->AddSurface( { v_water_surface_extra.center, v_water_surface_extra.bottom, v_water_surface_extra.left } );
+				
+				#undef txt
+			}
+
 			// water
 			{
 				#define txt( _val ) ( tint_water._val )
@@ -879,6 +980,7 @@ void Map::GenerateActors() {
 				
 				#undef txt
 			}
+
 		}
 	}
 	
@@ -929,7 +1031,7 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( Tile* tile, const tile_g
 				}
 				case TG_FEATURE: {
 					matches[ idx++ ] =
-						( t->is_water_tile == tile->is_water_tile ) &&
+						//( t->is_water_tile == tile->is_water_tile ) &&
 						( t->features & feature ) == ( tile->features & feature )
 					;
 					break;

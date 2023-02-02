@@ -32,7 +32,7 @@ CLASS( Texture, base::Base )
 	void SetPixelAlpha( const size_t x, const size_t y, const uint8_t alpha );
 	
 	// bitflags
-	typedef uint8_t add_mode_t;
+	typedef uint16_t add_mode_t;
 	static const add_mode_t AM_DEFAULT = 0;
 	static const add_mode_t AM_MERGE = 1 << 0; // copy only non-transparent pixels
 	// round one or several corners
@@ -44,6 +44,10 @@ CLASS( Texture, base::Base )
 	static const add_mode_t AM_INVERT = 1 << 5; // add unneeded pixels instead of needed
 	static const add_mode_t AM_MIRROR_X = 1 << 6; // mirrors source by x
 	static const add_mode_t AM_MIRROR_Y = 1 << 7; // mirrors source by y
+	static const add_mode_t AM_GRADIENT_LEFT = 1 << 8;
+	static const add_mode_t AM_GRADIENT_TOP = 1 << 9;
+	static const add_mode_t AM_GRADIENT_RIGHT = 1 << 10;
+	static const add_mode_t AM_GRADIENT_BOTTOM = 1 << 11;
 	
 	typedef uint8_t rotate_t;
 	static const rotate_t ROTATE_0 = 0;

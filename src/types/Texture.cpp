@@ -84,19 +84,31 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 	size_t cx, cy; // center
 	size_t sx, sy; // source
 	size_t dx, dy; // dest
-	
 	float r;
+	
 	if (
 		( mode & AM_ROUND_LEFT ) ||
 		( mode & AM_ROUND_TOP ) ||
 		( mode & AM_ROUND_RIGHT ) ||
-		( mode & AM_ROUND_BOTTOM )
+		( mode & AM_ROUND_BOTTOM ) ||
+		( mode & AM_GRADIENT_LEFT ) ||
+		( mode & AM_GRADIENT_TOP ) ||
+		( mode & AM_GRADIENT_RIGHT ) ||
+		( mode & AM_GRADIENT_BOTTOM )
 	) {
-		ASSERT( mode & AM_MERGE, "rounded corners supported only for merge mode" );
 		cx = floor( w / 2 );
 		cy = floor( h / 2 );
-		r = sqrt( pow( (float)cx, 2 ) + pow( (float)cy, 2 ) ) * 0.7f;
-		ASSERT( r >= 0, "sqrt returned negative result: " + to_string( r ) );
+		r = sqrt( pow( (float)cx, 2 ) + pow( (float)cy, 2 ) );
+		if (
+			( mode & AM_ROUND_LEFT ) ||
+			( mode & AM_ROUND_TOP ) ||
+			( mode & AM_ROUND_RIGHT ) ||
+			( mode & AM_ROUND_BOTTOM )
+		) {
+			ASSERT( mode & AM_MERGE, "rounded corners supported only for merge mode" );
+			r *= 0.7f;
+			ASSERT( r >= 0, "sqrt returned negative result: " + to_string( r ) );
+		}
 	}
 	
 	float pixel_alpha;
@@ -171,9 +183,84 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 				to = ptr( m_bitmap, ( ( dy + dest_y ) * m_width + ( dx + dest_x ) ) * m_bpp, m_bpp );
 
 				if ( ( !( mode & AM_MERGE ) ) || ( *(uint32_t*)from & 0x000000ff ) ) {
-					memcpy( to, from, m_bpp );
-					if ( pixel_alpha < 1.0f ) {
-						*(uint8_t*)( to + 3 ) = (uint8_t)floor( pixel_alpha * 0xff );
+					
+					if (
+						( mode & AM_GRADIENT_LEFT ) ||
+						( mode & AM_GRADIENT_TOP ) ||
+						( mode & AM_GRADIENT_RIGHT ) ||
+						( mode & AM_GRADIENT_BOTTOM )
+					) {
+					
+						uint32_t pixel_color;
+						memcpy( &pixel_color, from, m_bpp );
+
+						uint32_t dst_pixel_color;
+						memcpy( &dst_pixel_color, to, m_bpp );
+
+						float p = 0.0f;
+						if ( mode & AM_GRADIENT_LEFT ) {
+							if ( mode & AM_GRADIENT_TOP ) {
+								if ( ( dx + dy ) < ( cx + cy ) ) {
+									p = ( (float)( ( cx + cy ) - ( dx + dy ) ) / ( w + h ) * 2 );
+								}
+							}
+							else if ( mode & AM_GRADIENT_BOTTOM ) {
+								if ( ( dx + cy ) < ( cx + dy ) ) {
+									p = ( (float)( ( cx + dy ) - ( dx + cy ) ) / ( w + h ) * 2 );
+								}
+							}
+							else {
+								if ( dx < cx ) {
+									p = (float)( cx - dx ) / w * 2;
+								}
+							}
+						}
+						else if ( mode & AM_GRADIENT_RIGHT ) {
+							if ( mode & AM_GRADIENT_TOP ) {
+								if ( ( cx + dy ) < ( dx + cy ) ) {
+									p = ( (float)( ( dx + cy ) - ( cx + dy ) ) / ( w + h ) * 2 );
+								}
+							}
+							else if ( mode & AM_GRADIENT_BOTTOM ) {
+								if ( ( cx + cy ) < ( dx + dy ) ) {
+									p = ( (float)( ( dx + dy ) - ( cx + cy ) ) / ( w + h ) * 2 );
+								}
+							}
+							else {
+								if ( cx < dx ) {
+									p = (float)( dx - cx ) / w * 2;
+								}
+							}
+						}
+						else if ( mode & AM_GRADIENT_TOP ) {
+							if ( dy < cy ) {
+								p = (float)( cy - dy ) / h * 2;
+							}
+						}
+						else if ( mode & AM_GRADIENT_BOTTOM ) {
+							if ( cy < dy ) {
+								p = (float)( dy - cy ) / h * 2;
+							}
+						}
+
+						pixel_color = (
+							(uint8_t)( (float)( pixel_color & 0xff ) * p + (float)( dst_pixel_color & 0xff ) * ( 1.0f - p ) ) |
+							(uint8_t)( (float)( pixel_color >> 8 & 0xff ) * p + (float)( dst_pixel_color >> 8 & 0xff ) * ( 1.0f - p ) ) << 8 |
+							(uint8_t)( (float)( pixel_color >> 16 & 0xff ) * p + (float)( dst_pixel_color >> 16 & 0xff ) * ( 1.0f - p ) ) << 16 |
+							(uint8_t)( (float)( pixel_color >> 24 & 0xff ) * p + (float)( dst_pixel_color >> 24 & 0xff ) * ( 1.0f - p ) ) << 24
+						);
+
+						if ( pixel_alpha < 1.0f ) {
+							*(uint8_t*)( &pixel_color + 3 ) = (uint8_t)floor( pixel_alpha * 0xff );
+						}
+
+						memcpy( to, &pixel_color, m_bpp );
+					}
+					else {
+						memcpy( to, from, m_bpp );
+						if ( pixel_alpha < 1.0f ) {
+							*(uint8_t*)( to + 3 ) = (uint8_t)floor( pixel_alpha * 0xff );
+						}
 					}
 				}
 			}
