@@ -105,6 +105,13 @@ void Mesh::SetSurface( const index_t index, const surface_t& surface ) {
 	memcpy( ptr( m_index_data, index * SURFACE_SIZE * sizeof( index_t ), sizeof( surface ) ), &surface, sizeof( surface ) );
 }
 
+const Vec3 Mesh::GetVertexNormal( const index_t index ) const {
+	ASSERT( index < m_vertex_count, "index out of bounds" );
+	Vec3 normal;
+	memcpy( &normal, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + ( VERTEX_COORD_SIZE + VERTEX_TEXCOORD_SIZE + VERTEX_TINT_SIZE ) * sizeof( coord_t ), sizeof( normal ) ), sizeof( normal ) );
+	return normal;
+}
+
 void Mesh::Finalize() {
 	ASSERT( !m_is_final, "finalize on already finalized mesh" );
 	ASSERT( m_vertex_i == m_vertex_count, "vertex data not fully initialized on finalize" );

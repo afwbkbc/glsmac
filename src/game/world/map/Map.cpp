@@ -187,7 +187,13 @@ void Map::GenerateActors() {
 	
 	const size_t o_max = 3;
 
-	types::Mesh::index_t center, left, right, top, bottom;
+	struct {
+		types::Mesh::index_t center;
+		types::Mesh::index_t left;
+		types::Mesh::index_t right;
+		types::Mesh::index_t top;
+		types::Mesh::index_t bottom;
+	} v_land, v_water, v_water_surface;
 	
 	NEW( m_textures.terrain, Texture, "TerrainTexture", w * TEXTURE_WIDTH, ( h * o_max ) * TEXTURE_HEIGHT );
 	NEWV( mesh_terrain, types::Mesh, w * ( h * o_max ) * 5 / 2, w * ( h * o_max ) * 4 / 2 );
@@ -242,6 +248,8 @@ void Map::GenerateActors() {
 		Color right;
 		Color bottom;
 	} tint_land, tint_water;
+	
+	vector< pair< types::Mesh::index_t, types::Mesh::index_t > > copy_normals = {};
 	
 	typedef struct {
 		Texture::add_mode_t mode;
@@ -774,15 +782,15 @@ void Map::GenerateActors() {
 				// tint (depending on if this tile is underwater or not)
 				#define txt( _val ) ( tile->is_water_tile ? (Color){ 0.0, 0.2, 0.5, 1.0 } : tint_land._val )
 				
-				center = mesh_terrain->AddVertex( vc.center, txc( o_land, center ), txt( center ) );
-				left = mesh_terrain->AddVertex( vc.left, txc( o_land, left ), txt( left ) );
-				top = mesh_terrain->AddVertex( vc.top, txc( o_land, top ), txt( top ) );
-				right = mesh_terrain->AddVertex( vc.right, txc( o_land, right ), txt( right ) );
-				bottom = mesh_terrain->AddVertex( vc.bottom, txc( o_land, bottom ), txt( bottom ) );
-				mesh_terrain->AddSurface( { center, left, top } );
-				mesh_terrain->AddSurface( { center, top, right } );
-				mesh_terrain->AddSurface( { center, right, bottom } );
-				mesh_terrain->AddSurface( { center, bottom, left } );
+				v_land.center = mesh_terrain->AddVertex( vc.center, txc( o_land, center ), txt( center ) );
+				v_land.left = mesh_terrain->AddVertex( vc.left, txc( o_land, left ), txt( left ) );
+				v_land.top = mesh_terrain->AddVertex( vc.top, txc( o_land, top ), txt( top ) );
+				v_land.right = mesh_terrain->AddVertex( vc.right, txc( o_land, right ), txt( right ) );
+				v_land.bottom = mesh_terrain->AddVertex( vc.bottom, txc( o_land, bottom ), txt( bottom ) );
+				mesh_terrain->AddSurface( { v_land.center, v_land.left, v_land.top } );
+				mesh_terrain->AddSurface( { v_land.center, v_land.top, v_land.right } );
+				mesh_terrain->AddSurface( { v_land.center, v_land.right, v_land.bottom } );
+				mesh_terrain->AddSurface( { v_land.center, v_land.bottom, v_land.left } );
 				
 				#undef txt
 				#undef txc
@@ -790,9 +798,9 @@ void Map::GenerateActors() {
 			
 			// texture coordinates
 			#define txc( _o, _c ) { txvec._c.x * tsx, ( txvec._c.y + _o * h * TEXTURE_HEIGHT ) * tsy }
-
+			
 			float water_z = elevation_to_vertex_z.Clamp( Tile::ELEVATION_LEVEL_COAST ); // sea is always on sea level
-				
+			
 			// water surface
 			{
 				#define wr elevation_to_water_r.Clamp
@@ -801,15 +809,15 @@ void Map::GenerateActors() {
 				#define wa elevation_to_water_a.Clamp
 				#define txt( _val ) { wr( _val ), wg( _val ), wb( _val ), wa( _val ) }  // tint
 
-				center = mesh_terrain->AddVertex( { xpos, ypos, water_z }, txc( o_water_surface, center ), txt( e_center) );
-				left = mesh_terrain->AddVertex( { xpos - TILE_HALFWIDTH, ypos, water_z }, txc( o_water_surface, left ), txt( e_left ) );
-				top = mesh_terrain->AddVertex( { xpos, ypos - TILE_HALFHEIGHT, water_z }, txc( o_water_surface, top ), txt( e_top ) );
-				right = mesh_terrain->AddVertex( { xpos + TILE_HALFWIDTH, ypos, water_z }, txc( o_water_surface, right ), txt( e_right ) );
-				bottom = mesh_terrain->AddVertex( { xpos, ypos + TILE_HALFHEIGHT, water_z }, txc( o_water_surface, bottom ), txt( e_bottom ) );
-				mesh_terrain->AddSurface( { center, left, top } );
-				mesh_terrain->AddSurface( { center, top, right } );
-				mesh_terrain->AddSurface( { center, right, bottom } );
-				mesh_terrain->AddSurface( { center, bottom, left } );
+				v_water_surface.center = mesh_terrain->AddVertex( { xpos, ypos, water_z }, txc( o_water_surface, center ), txt( e_center) );
+				v_water_surface.left = mesh_terrain->AddVertex( { xpos - TILE_HALFWIDTH, ypos, water_z }, txc( o_water_surface, left ), txt( e_left ) );
+				v_water_surface.top = mesh_terrain->AddVertex( { xpos, ypos - TILE_HALFHEIGHT, water_z }, txc( o_water_surface, top ), txt( e_top ) );
+				v_water_surface.right = mesh_terrain->AddVertex( { xpos + TILE_HALFWIDTH, ypos, water_z }, txc( o_water_surface, right ), txt( e_right ) );
+				v_water_surface.bottom = mesh_terrain->AddVertex( { xpos, ypos + TILE_HALFHEIGHT, water_z }, txc( o_water_surface, bottom ), txt( e_bottom ) );
+				mesh_terrain->AddSurface( { v_water_surface.center, v_water_surface.left, v_water_surface.top } );
+				mesh_terrain->AddSurface( { v_water_surface.center, v_water_surface.top, v_water_surface.right } );
+				mesh_terrain->AddSurface( { v_water_surface.center, v_water_surface.right, v_water_surface.bottom } );
+				mesh_terrain->AddSurface( { v_water_surface.center, v_water_surface.bottom, v_water_surface.left } );
 				
 				#undef txt
 				#undef wr
@@ -820,17 +828,26 @@ void Map::GenerateActors() {
 			
 			// water
 			{
-				#define txt( _val ) tint_water._val
-
-				center = mesh_terrain->AddVertex( { xpos, ypos, water_z }, txc( o_water, center ), txt( center ) );
-				left = mesh_terrain->AddVertex( { xpos - TILE_HALFWIDTH, ypos, water_z }, txc( o_water, left ), txt( left ) );
-				top = mesh_terrain->AddVertex( { xpos, ypos - TILE_HALFHEIGHT, water_z }, txc( o_water, top ), txt( top ) );
-				right = mesh_terrain->AddVertex( { xpos + TILE_HALFWIDTH, ypos, water_z }, txc( o_water, right ), txt( right ) );
-				bottom = mesh_terrain->AddVertex( { xpos, ypos + TILE_HALFHEIGHT, water_z }, txc( o_water, bottom ), txt( bottom ) );
-				mesh_terrain->AddSurface( { center, left, top } );
-				mesh_terrain->AddSurface( { center, top, right } );
-				mesh_terrain->AddSurface( { center, right, bottom } );
-				mesh_terrain->AddSurface( { center, bottom, left } );
+				#define txt( _val ) ( tint_water._val )
+				
+				v_water.center = mesh_terrain->AddVertex( { xpos, ypos, water_z }, txc( o_water, center ), txt( center ) );
+				v_water.left = mesh_terrain->AddVertex( { xpos - TILE_HALFWIDTH, ypos, water_z }, txc( o_water, left ), txt( left ) );
+				v_water.top = mesh_terrain->AddVertex( { xpos, ypos - TILE_HALFHEIGHT, water_z }, txc( o_water, top ), txt( top ) );
+				v_water.right = mesh_terrain->AddVertex( { xpos + TILE_HALFWIDTH, ypos, water_z }, txc( o_water, right ), txt( right ) );
+				v_water.bottom = mesh_terrain->AddVertex( { xpos, ypos + TILE_HALFHEIGHT, water_z }, txc( o_water, bottom ), txt( bottom ) );
+				mesh_terrain->AddSurface( { v_water.center, v_water.left, v_water.top } );
+				mesh_terrain->AddSurface( { v_water.center, v_water.top, v_water.right } );
+				mesh_terrain->AddSurface( { v_water.center, v_water.right, v_water.bottom } );
+				mesh_terrain->AddSurface( { v_water.center, v_water.bottom, v_water.left } );
+				
+				if ( is_coastline ) {
+					// fix incorrect shadows on coasts (because land vertices were moved)
+					copy_normals.push_back( { v_land.left, v_water.left } );
+					copy_normals.push_back( { v_land.top, v_water.top } );
+					copy_normals.push_back( { v_land.right, v_water.right } );
+					copy_normals.push_back( { v_land.bottom, v_water.bottom } );
+					copy_normals.push_back( { v_land.center, v_water.center } );
+				}
 				
 				#undef txt
 			}
@@ -842,6 +859,12 @@ void Map::GenerateActors() {
 	}
 	
 	mesh_terrain->Finalize();
+	
+	// update normals where needed
+	for ( auto& cn : copy_normals ) {
+		mesh_terrain->SetVertexNormal( cn.second, mesh_terrain->GetVertexNormal( cn.first ) );
+	}
+	
 	NEW( m_actors.terrain, actor::Mesh, "MapTerrain", mesh_terrain );
 		m_actors.terrain->SetTexture( m_textures.terrain );
 		m_actors.terrain->SetPosition( MAP_POSITION );

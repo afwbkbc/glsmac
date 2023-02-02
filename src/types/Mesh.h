@@ -30,9 +30,11 @@ CLASS( Mesh, base::Base )
 	~Mesh();
 	
 	void Clear();
+	
 	void AddSurface( const surface_t& surface );
 	index_t AddVertex( const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord = { 0, 0 }, const Color tint = { 1.0f, 1.0f, 1.0f, 1.0f }, const Vec3 &normal = { 0.0f, 0.0f, 0.0f } );
 	index_t AddVertex( const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord = { 0, 0 }, const Color tint = { 1.0f, 1.0f, 1.0f, 1.0f }, const Vec3 &normal = { 0.0f, 0.0f, 0.0f } );
+	
 	void SetVertex( const index_t index, const Vec3 &coord, const Vec2<Mesh::coord_t> &tex_coord, const Color tint = { 1.0f, 1.0f, 1.0f, 1.0f }, const Vec3 &normal = { 0.0f, 0.0f, 0.0f } );
 	void SetVertex( const index_t index, const Vec2<Mesh::coord_t> &coord, const Vec2<Mesh::coord_t> &tex_coord, const Color tint = { 1.0f, 1.0f, 1.0f, 1.0f }, const Vec3 &normal = { 0.0f, 0.0f, 0.0f } );
 	void SetVertexCoord( const index_t index, const Vec3 &coord );
@@ -41,6 +43,9 @@ CLASS( Mesh, base::Base )
 	void SetVertexTint( const index_t index, const Color tint );
 	void SetVertexNormal( const index_t index, const Vec3& normal );
 	void SetSurface( const index_t index, const Mesh::surface_t& surface );
+	
+	const Vec3 GetVertexNormal( const index_t index ) const;
+	
 	void Finalize();
 	
 	void GetVertexCoord( const index_t index, Vec3* coord );
