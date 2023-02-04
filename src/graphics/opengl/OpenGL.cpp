@@ -182,9 +182,11 @@ void OpenGL::Iterate() {
 #ifdef DEBUG
 	GLenum errcode;
 	if ( ( errcode=glGetError() ) != GL_NO_ERROR ) {
+#ifdef __linux__ // gluErrorString can't be found on window
 		const GLubyte* errstring = gluErrorString( errcode );
 		string msg = (char *)errstring;
 		THROW( "OpenGL error occured in render loop: \"" + msg + "\"" );
+#endif
 	}
 #endif
 	

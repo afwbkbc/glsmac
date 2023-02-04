@@ -1,3 +1,8 @@
 {
-    "autoHide.autoHidePanel": false
+    "autoHide.autoHidePanel": false,
+    "files.associations": {
+        "sdl_thread.h": "c",
+        "sdl_syscond_c.h": "c",
+        "mutex": "c"
+    }
 }

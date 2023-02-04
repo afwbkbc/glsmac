@@ -1,9 +1,7 @@
 message(STATUS "Fetching SDL2...")
 
-set(SDL2_DISABLE_SDL2MAIN ON)
-set(SDL2_DISABLE_INSTALL ON)
-set(SDL2_DISABLE_UNINSTALL ON)
-set(SDL_TEST OFF)
+set(SDL_PTHREADS ON)
+add_compile_definitions(SDL_THREAD_GENERIC_COND_SUFFIX)
 
 FetchContent_Declare(SDL2
     GIT_REPOSITORY https://github.com/libsdl-org/SDL

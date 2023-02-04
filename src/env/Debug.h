@@ -4,6 +4,14 @@
 
 #include <mutex>
 #include <iostream>
+
+#ifdef _WIN32
+#if !defined(ssize_t)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif
+#endif
+
 #include "debug/MemoryWatcher.h"
 
 using namespace debug;
