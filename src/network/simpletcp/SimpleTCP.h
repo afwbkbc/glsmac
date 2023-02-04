@@ -6,13 +6,13 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/socket.h>
+#include <unistd.h>
 #endif
 
 #include <unordered_map>
 
 #include <sys/types.h>
 #include <memory.h>
-#include <unistd.h>
 #include <fcntl.h>
 
 #include "../Network.h"

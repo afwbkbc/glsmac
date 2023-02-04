@@ -259,7 +259,7 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 					else {
 						memcpy( to, from, m_bpp );
 						if ( pixel_alpha < 1.0f ) {
-							*(uint8_t*)( to + 3 ) = (uint8_t)floor( pixel_alpha * 0xff );
+							*((uint8_t*)( to ) + 3) = (uint8_t)floor( pixel_alpha * 0xff );
 						}
 					}
 				}
