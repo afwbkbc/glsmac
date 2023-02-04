@@ -16,18 +16,14 @@ namespace game {
 namespace world {
 namespace map_generator {
 
-void SimplePerlin::Generate( Tiles* tiles ) {
+void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 	Log( "Generating terrain ( " + to_string( tiles->GetWidth() ) + " x " + to_string( tiles->GetHeight() ) + " )" );
 	
-	util::Clamper<float> perlin_to_elevation( -1.0, 1.0, MAPGEN_ELEVATION_MIN, MAPGEN_ELEVATION_MAX );
+	const float land_bias = 0.1f; // increase amount of land generated
+	util::Clamper<float> perlin_to_elevation( -1.0 + land_bias, 1.0, MAPGEN_ELEVATION_MIN, MAPGEN_ELEVATION_MAX );
 	
 	util::Clamper<float> perlin_to_value; // to moisture or rockyness
 	perlin_to_value.SetRange( -1.0, 1.0, 1, 3 );
-	
-	auto now = chrono::high_resolution_clock::now();
-	auto seed = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count();
-	
-	Log( "Map seed is " + to_string( seed ) );
 	
 	util::Perlin perlin( seed );
 	
@@ -50,7 +46,7 @@ void SimplePerlin::Generate( Tiles* tiles ) {
 			
 			*tile->elevation.left = *tile->elevation.top = *tile->elevation.right = *tile->elevation.bottom = *tile->elevation.center = 0;
 			
-			const float z_elevation = 50;
+			const float z_elevation = 0;
 			
 			*tile->elevation.left = perlin_to_elevation.Clamp( PERLIN( x, y + 0.5f, z_elevation ) );
 			*tile->elevation.top = perlin_to_elevation.Clamp( PERLIN( x + 0.5f, y, z_elevation ) );

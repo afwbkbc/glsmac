@@ -23,6 +23,10 @@ CLASS( Tiles, base::Base )
 	void Validate();
 	void Finalize();
 	
+	// you can call it from map generator when you think you may have generated extreme slopes
+	// if you don't and keep generating - they will be normalized more aggressively at the end and may make terrain more flat
+	void FixExtremeSlopes();
+	
 private:
 	
 	size_t m_width;
@@ -33,6 +37,14 @@ private:
 	Tile* m_data;
 	
 	bool m_is_validated = false;
+	
+	void NormalizeElevationRange();
+	void SetLandAmount( const float amount ); // 0.0f - 1.0f. can be slow
+	const float GetLandAmount( Tile::elevation_t elevation_diff = 0.0f ); // determine how much land there would be with specified elevation difference
+	void RaiseAllTilesBy( Tile::elevation_t amount );
+	const pair< Tile::elevation_t, Tile::elevation_t > GetElevationsRange() const;
+	void RemoveExtremeSlopes( const Tile::elevation_t max_allowed_diff );
+	void FixTopBottomRows();
 };
 	
 }

@@ -18,7 +18,7 @@ CLASS( MapGenerator, base::Base )
 	static const Tile::elevation_t MAPGEN_ELEVATION_MIN = -10000;
 	static const Tile::elevation_t MAPGEN_ELEVATION_MAX = 10000;
 
-	virtual void Generate( Tiles* tiles ) = 0;
+	virtual void Generate( Tiles* tiles, size_t seed ) = 0;
 	
 protected:
 	

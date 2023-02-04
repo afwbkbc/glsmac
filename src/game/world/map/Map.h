@@ -95,6 +95,7 @@ CLASS( Map, base::Base )
 				const float x =	Map::s_consts.tile.scale.x / 2;
 				const float y =	Map::s_consts.tile.scale.y / 2;
 			} radius;
+			const Tile::elevation_t maximum_allowed_slope_elevation = 1000;
 		} tile;
 		const struct {
 			const struct {
@@ -106,7 +107,7 @@ CLASS( Map, base::Base )
 				const uint8_t y = Map::s_consts.pcx_texture_block.dimensions.y / 2;
 			} radius;
 		} pcx_texture_block;
-		const Vec3 map_position = { 0.0, 0.0, 0.0 };
+		const Vec3 map_position = { 0.0, 0.0, -1.0f - Map::s_consts.tile_scale_z }; // z should be below 0 to always be under UI
 		const Vec3 map_rotation = { 0.0, 0.0, 0.0 };
 		const Color underwater_tint = { 0.0, 0.2, 0.5, 1.0 };
 		const struct {

@@ -16,18 +16,19 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 	float tcwh = tcw * Map::s_consts.pcx_texture_block.dimensions.y;
 	const Texture::add_mode_t coastline_mode = Texture::AM_MERGE | Texture::AM_INVERT;
 	typedef struct {
-		size_t msx;
-		size_t msy;
-		Texture::add_mode_t side;
-		bool can_mirror;
-		bool maybe_mirror_nw;
-		bool maybe_mirror_ne;
-		bool maybe_mirror_se;
-		bool maybe_mirror_sw;
+		size_t msx = 0;
+		size_t msy = 0;
+		Texture::add_mode_t side = 0;
+		bool can_mirror = false;
+		bool maybe_mirror_nw = false;
+		bool maybe_mirror_ne = false;
+		bool maybe_mirror_se = false;
+		bool maybe_mirror_sw = false;
 		Texture::add_mode_t mirror_mode;
 	} coastline_corner_t;
 	vector< coastline_corner_t > coastline_corners = {};
 	coastline_corner_t coastline_corner_tmp = {};
+	
 	if ( !tile->is_water_tile ) {
 	
 		if ( tile->W->is_water_tile || tile->NW->is_water_tile || tile->SW->is_water_tile ) {
@@ -244,7 +245,7 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 						coastline_corner_tmp.msx = tile->coord.x - 2;
 					}
 					else {
-						coastline_corner_tmp.msx = ms->dimensions.x - 2 + ( tile->coord.x % 2 ); // test
+						coastline_corner_tmp.msx = ms->dimensions.x - 2 + tile->coord.x;
 					}
 					coastline_corner_tmp.msy = tile->coord.y;
 				}
@@ -320,7 +321,7 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 							c.msx = tile->coord.x - 1;
 						}
 						else {
-							c.msx = ms->dimensions.x - 2;
+							c.msx = ms->dimensions.x - 1;
 						}
 						c.mirror_mode = Texture::AM_MIRROR_X;
 						c.can_mirror = true;
@@ -359,7 +360,7 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 						c.can_mirror = true;
 					}
 				}
-						
+				
 				if ( c.can_mirror ) {
 					// mirror opposite tile
 					m_map->CopyTextureDeferred( Map::LAYER_LAND, c.msx * Map::s_consts.pcx_texture_block.dimensions.x, c.msy * Map::s_consts.pcx_texture_block.dimensions.y, Map::LAYER_WATER, coastline_mode | c.side | c.mirror_mode, 0 );
@@ -372,6 +373,9 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 			
 			// get normal from corresponding adjactent tile
 			for ( auto& c : coastline_corners ) {
+
+				ASSERT( ( c.msx % 2 ) == ( c.msy % 2 ), "msx and msy oddity does not match ( ( " + to_string( c.msx ) + " % 2 ) != ( " + to_string( c.msy ) + " % 2 )" );
+				
 				ms->need_normals[
 					c.side == Texture::AM_ROUND_LEFT ? &ts->layers[ Map::LAYER_WATER ].indices.left :
 					c.side == Texture::AM_ROUND_TOP ? &ts->layers[ Map::LAYER_WATER ].indices.top :

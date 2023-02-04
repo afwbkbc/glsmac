@@ -4,7 +4,7 @@ namespace game {
 namespace world {
 namespace map_generator {
 
-void Test::Generate( Tiles* tiles ) {
+void Test::Generate( Tiles* tiles, size_t seed ) {
 	Log( "Generating terrain ( " + to_string( tiles->GetWidth() ) + " x " + to_string( tiles->GetHeight() ) + " )" );
 
 #define SE( _x, _y, _e ) { \

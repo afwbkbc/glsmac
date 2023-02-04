@@ -4,17 +4,17 @@
 
 #include "../Settings.h"
 
-#include "ui/event/UIEventHandler.h"
-
 #include "types/Texture.h"
 #include "types/Mesh.h"
-
 #include "scene/actor/Mesh.h"
 #include "scene/Scene.h"
-
 #include "util/Clamper.h"
-
 #include "map/Map.h"
+
+#include "ui/event/UIEventHandler.h"
+
+#include "ui/style/Theme.h"
+#include "ui/bottom_bar/BottomBar.h"
 
 using namespace ui;
 namespace ui {
@@ -43,29 +43,20 @@ protected:
 
 private:
 	
-	Map* m_map = nullptr;
-	
-	Vec3 m_camera_position; // { x, y, zoom }
-	Vec3 m_camera_angle;
-	
+	// game settings (tmp)
 	const Settings m_settings;
 
-	Scene* m_world_scene = nullptr;
-
-	//vector<types::Texture*> m_textures = {};
-	
-	//mesh::Mesh* m_mesh = nullptr;
-	//vector<actor::Mesh*> m_test_actors = {};
-	
+	// map rendering stuff
+	Map* m_map = nullptr;
+	Vec3 m_camera_position; // { x, y, zoom }
+	Vec3 m_camera_angle;
 	Camera* m_camera = nullptr;
-	
 	Light* m_light = nullptr;
-	
+	Scene* m_world_scene = nullptr;
 	struct {
 		util::Clamper<float> x;
 		util::Clamper<float> y;
 	} m_clamp = {};
-	
 	struct {
 		const UIEventHandler* keydown;
 		const UIEventHandler* mousedown;
@@ -73,15 +64,20 @@ private:
 		const UIEventHandler* mouseup;
 		const UIEventHandler* mousescroll;
 	} m_handlers;
-	
 	bool m_is_dragging = false;
 	bool m_is_rotating = false;
 	Vec2<float> m_last_drag_position;
 	Vec2<float> m_last_rotate_position;
-	
 	void UpdateCameraPosition();
 	void UpdateCameraAngle();
 	void UpdateCameraScale();
+	
+	// UI stuff
+	
+	struct {
+		ui::Theme theme;
+		ui::BottomBar* bottom_bar = nullptr;
+	} m_ui;
 	
 	void ReturnToMainMenu();
 	

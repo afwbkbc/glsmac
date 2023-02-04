@@ -8,7 +8,7 @@ namespace map_generator {
 		
 CLASS( Test, MapGenerator )
 	
-	void Generate( Tiles* tiles );
+	void Generate( Tiles* tiles, size_t seed );
 	
 };
 	

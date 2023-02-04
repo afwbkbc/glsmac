@@ -44,14 +44,22 @@ void World::Start() {
 	NEW( m_map, Map, m_world_scene );
 	
 	NEWV( tiles, Tiles, 50, 50 );
-	//NEWV( tiles, Tiles, 160, 160 );
+	//NEWV( tiles, Tiles, 120, 120 );
 	//NEWV( tiles, Tiles, 30, 30 ); // tmp
+	
+	
+	auto now = chrono::high_resolution_clock::now();
+	auto seed = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count();
+
+	Log( "Map seed is " + to_string( seed ) );
+	
+	srand( seed );
 	
 	{
 		map_generator::SimplePerlin generator;
 		//map_generator::SimpleRandom generator;
 		//map_generator::Test generator;
-		generator.Generate( tiles );
+		generator.Generate( tiles, seed );
 	}
 	
 	m_map->SetTiles( tiles );
@@ -134,8 +142,8 @@ void World::Start() {
 		if ( new_z < 0.02 ) {
 			new_z = 0.02;
 		}
-		if ( new_z > 1.0f ) {
-			new_z = 1.0f;
+		if ( new_z > 0.1f ) { // TODO: fix camera z, then can zoom further
+			new_z = 0.1f;
 		}
 		
 		float diff = m_camera_position.z / new_z;
@@ -153,7 +161,7 @@ void World::Start() {
 	m_clamp.x.SetRange( 0.0, g_engine->GetGraphics()->GetWindowWidth(), -0.5, 0.5 );
 	m_clamp.y.SetRange( 0.0, g_engine->GetGraphics()->GetWindowHeight(), -0.5, 0.5 );
 	
-	SetCameraPosition( { 0.0f, 0.0f, 0.05f } );
+	SetCameraPosition( { 0.0f, -0.25f, 0.1f } );
 
 	UpdateCameraPosition();
 	UpdateCameraScale();
@@ -163,9 +171,17 @@ void World::Start() {
 		m_clamp.y.SetSrcRange( 0.0, g_engine->GetGraphics()->GetWindowHeight() );
 		UpdateCameraPosition();
 	});
+	
+	// UI
+	ui->AddTheme( &m_ui.theme );
+	//NEW( m_ui.bottom_bar, ui::BottomBar, this );
+	//ui->AddObject( m_ui.bottom_bar );
 }
 
 void World::Stop() {
+	auto* ui = g_engine->GetUI();
+	//ui->RemoveObject( m_ui.bottom_bar );
+	ui->RemoveTheme( &m_ui.theme );
 	
 	DELETE( m_map );
 	
@@ -205,7 +221,7 @@ void World::SetCameraPosition( const Vec3 camera_position ) {
 }
 
 void World::UpdateCameraPosition() {
-	m_camera->SetPosition( { ( 0.5f + m_camera_position.x ) * g_engine->GetGraphics()->GetAspectRatio(), 0.5f + m_camera_position.y, 1.0f + m_camera_position.y } );
+	m_camera->SetPosition( { ( 0.5f + m_camera_position.x ) * g_engine->GetGraphics()->GetAspectRatio(), 0.5f + m_camera_position.y, 1.0f + m_camera_position.y + m_camera_position.z * 2 } );
 }
 void World::UpdateCameraScale() {
 	m_camera->SetScale( { m_camera_position.z, m_camera_position.z, m_camera_position.z } );

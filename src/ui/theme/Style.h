@@ -36,7 +36,7 @@ namespace theme {
 
 class StyleSheet;
 	
-#define SH(...) [__VA_ARGS__] ( ui::theme::Style* s ) -> void
+#define SH(...) [__VA_ARGS__] ( ::ui::theme::Style* s ) -> void
 	
 CLASS( Style, base::Base )
 
@@ -117,6 +117,7 @@ CLASS( Style, base::Base )
 	void SetObject( const attribute_type_t attribute_type, const void* value );
 	// convenience setters
 	void SetTexture( const attribute_type_t attribute_type, const std::string& name );
+	void SetTexture( const attribute_type_t attribute_type, const std::string& name, const Color::rgba_t transparent_color );
 	void SetTexture( const attribute_type_t attribute_type, const string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = TextureLoader::LT_NONE, const float value = 1.0 );
 	void SetFont( const attribute_type_t attribute_type, const std::string &name, const unsigned char size );
 	void SetSound( const attribute_type_t attribute_type, const std::string& name );
