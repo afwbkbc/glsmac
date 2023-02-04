@@ -375,9 +375,9 @@ void Tiles::NormalizeElevationRange() {
 }
 
 void Tiles::RemoveExtremeSlopes( const Tile::elevation_t max_allowed_diff ) {
-	Tile::elevation_t elevation_fixby_change = 20;
+	Tile::elevation_t elevation_fixby_change = 1;
 	Tile::elevation_t elevation_fixby_max = max_allowed_diff / 3; // to prevent infinite loops when it grows so large it starts creating extreme slopes
-	float elevation_fixby_div_change = 0.1f; // needed to prevent infinite loops when nearby tiles keep 'fixing' each other forever
+	float elevation_fixby_div_change = 0.001f; // needed to prevent infinite loops when nearby tiles keep 'fixing' each other forever
 	size_t pass = 0;
 	Tile* tile;
 	Tile::elevation_t elevation_fixby = 0;
