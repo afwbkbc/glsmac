@@ -4,29 +4,17 @@
 
 #include "types/Mesh.h"
 
+#include "module/Prepare.h"
+#include "module/LandSurface.h"
+#include "module/WaterSurface.h"
+#include "module/Coastlines.h"
+#include "module/Finalize.h"
+
 namespace game {
 namespace world {
 namespace map {
 
-// for development/debug only
-#define WIREFRAMES 0
-#define WIREFRAMES_GRADIENTS 0
-
-#define MAP_POSITION { 0.0, 0.0, 0.0 }
-#define MAP_ROTATION { 0.0, 0.0, 0.0 }
-
-#define TILE_WIDTH 1.0f
-#define TILE_HEIGHT 1.0f
-#define TILE_Z_SCALE 2.0f
-
-// must match PCX
-#define TEXTURE_WIDTH 56
-#define TEXTURE_HEIGHT 56
-
-#define TILE_HALFWIDTH ( TILE_WIDTH / 2 )
-#define TILE_HALFHEIGHT ( TILE_HEIGHT / 2 )
-#define TEXTURE_HALFWIDTH ( TEXTURE_WIDTH / 2 )
-#define TEXTURE_HALFHEIGHT ( TEXTURE_HEIGHT / 2 )
+const Map::consts_t Map::s_consts;
 
 #if WIREFRAMES
 static Texture* s_wireframe_texture = nullptr;
@@ -49,12 +37,12 @@ Map::Map( Scene* scene )
 {
 	
 #if WIREFRAMES
-	NEW( s_wireframe_texture, Texture, "MapWireframe", TEXTURE_WIDTH, TEXTURE_HEIGHT );
+	NEW( s_wireframe_texture, Texture, "MapWireframe", Map::s_consts.pcx_texture_block.dimensions.x, Map::s_consts.pcx_texture_block.dimensions.y );
 #if WIREFRAMES_GRADIENTS
-	float mx = 1.0f / TEXTURE_WIDTH;
-	float my = 1.0f / TEXTURE_HEIGHT;
-	for ( size_t y = 0 ; y < TEXTURE_HEIGHT ; y++ ) {
-		for ( size_t x = 0 ; x < TEXTURE_WIDTH ; x++ ) {
+	float mx = 1.0f / Map::s_consts.pcx_texture_block.dimensions.x;
+	float my = 1.0f / Map::s_consts.pcx_texture_block.dimensions.y;
+	for ( size_t y = 0 ; y < Map::s_consts.pcx_texture_block.dimensions.y ; y++ ) {
+		for ( size_t x = 0 ; x < Map::s_consts.pcx_texture_block.dimensions.x ; x++ ) {
 			s_wireframe_texture->SetPixel( x, y, { mx * x / 2, my * y / 2, 0f, 1.0f } );
 		}
 	}
@@ -65,8 +53,8 @@ Map::Map( Scene* scene )
 	Color value;
 	bool value_x = true;
 	bool value_y = true;
-	for ( size_t y = 0 ; y < TEXTURE_HEIGHT ; y++ ) {
-		for ( size_t x = 0 ; x < TEXTURE_WIDTH ; x++ ) {
+	for ( size_t y = 0 ; y < Map::s_consts.pcx_texture_block.dimensions.y ; y++ ) {
+		for ( size_t x = 0 ; x < Map::s_consts.pcx_texture_block.dimensions.x ; x++ ) {
 			if ( value_y ) {
 				if ( value_x ) {
 					value = color_hv;
@@ -126,7 +114,14 @@ Map::Map( Scene* scene )
 		}
 	}
 	
-	
+	// add map modules
+	//   order is important!
+	Module* m;
+	NEW( m, Prepare, this ); m_modules.push_back( m ); // needs to always be first
+	NEW( m, LandSurface, this ); m_modules.push_back( m );
+	NEW( m, WaterSurface, this ); m_modules.push_back( m );
+	NEW( m, Coastlines, this ); m_modules.push_back( m );
+	NEW( m, Finalize, this ); m_modules.push_back( m ); // needs to always be last
 }
 
 Map::~Map() {
@@ -144,7 +139,12 @@ Map::~Map() {
 	DELETE( s_wireframe_texture );
 	s_wireframe_texture = nullptr;
 #endif
-	
+	for ( auto& m : m_modules ) {
+		DELETE( m );
+	}
+	if ( m_tile_states ) {
+		free( m_tile_states );
+	}
 }
 
 void Map::SetTiles( Tiles* tiles ) {
@@ -163,10 +163,21 @@ void Map::GenerateActors() {
 	ASSERT( m_tiles, "map tiles not set" );
 	m_tiles->Validate();
 	
-	size_t w = m_tiles->GetWidth();
-	size_t h = m_tiles->GetHeight();
-
 	Log( "Loading map" );
+	
+	m_map_state = {};
+	
+	m_map_state.dimensions.x = m_tiles->GetWidth();
+	m_map_state.dimensions.y = m_tiles->GetHeight();
+	m_map_state.coord.x = -( Map::s_consts.tile.scale.x * m_map_state.dimensions.x / 4 - Map::s_consts.tile.radius.x );
+	m_map_state.coord.y = -( Map::s_consts.tile.scale.y * m_map_state.dimensions.y / 4 - Map::s_consts.tile.radius.y );
+	m_map_state.variables.texture_scaling.x = 1.0f / Map::s_consts.pcx_texture_block.dimensions.x / m_map_state.dimensions.x;
+	m_map_state.variables.texture_scaling.y = 1.0f / Map::s_consts.pcx_texture_block.dimensions.y / m_map_state.dimensions.y / LAYER_MAX;
+	
+	ASSERT( !m_tile_states, "m_tile_states already set" );
+	size_t wh = m_map_state.dimensions.x * m_map_state.dimensions.y;
+	m_tile_states = (tile_state_t*)malloc( sizeof( tile_state_t ) * wh );
+	memset( ptr( m_tile_states, 0, wh ), 0, wh );
 	
 	if ( !m_textures.source ) {
 		m_textures.source = g_engine->GetTextureLoader()->LoadTexture( "texture.pcx", Color::RGBA( 125, 0, 128, 255 ) );
@@ -179,850 +190,63 @@ void Map::GenerateActors() {
 		DELETE( m_textures.terrain );
 	}
 	
-	// offsets will align on Y axis
+	NEW( m_textures.terrain, Texture, "TerrainTexture", m_map_state.dimensions.x * Map::s_consts.pcx_texture_block.dimensions.x, ( m_map_state.dimensions.y * LAYER_MAX ) * Map::s_consts.pcx_texture_block.dimensions.y );
+	NEW( m_mesh_terrain, types::Mesh, m_map_state.dimensions.x * ( m_map_state.dimensions.y * LAYER_MAX ) * 5 / 2, m_map_state.dimensions.x * ( m_map_state.dimensions.y * LAYER_MAX ) * 4 / 2 );
 	
-	const size_t o_land = 0; // land tiles
-	const size_t o_water_surface = 1; // water tiles (alpha surface with gradients)
-	const size_t o_water_surface_extra = 2; // extra textures/effects for water tiles
-	const size_t o_water = 3; // sea (for non-alpha objects on water)
-	
-	const size_t o_max = 4;
-
-	typedef struct {
-		types::Mesh::index_t center;
-		types::Mesh::index_t left;
-		types::Mesh::index_t right;
-		types::Mesh::index_t top;
-		types::Mesh::index_t bottom;
-	} indices_t;
-	indices_t v_land, v_water_surface, v_water_surface_extra, v_water;
-	
-	NEW( m_textures.terrain, Texture, "TerrainTexture", w * TEXTURE_WIDTH, ( h * o_max ) * TEXTURE_HEIGHT );
-	NEWV( mesh_terrain, types::Mesh, w * ( h * o_max ) * 5 / 2, w * ( h * o_max ) * 4 / 2 );
-	
-	float xpos, ypos;
-	float tx, ty, tx1, ty1, tx2, ty2;
-	
-	int8_t em;
-	
-	float ox = -( (float) TILE_WIDTH * m_tiles->GetWidth() / 4 - TILE_HALFWIDTH );
-	float oy = -( (float) TILE_HEIGHT * m_tiles->GetHeight() / 4 - TILE_HALFHEIGHT );
-	
-	util::Clamper< float > elevation_to_vertex_z( Tile::ELEVATION_MIN, Tile::ELEVATION_MAX, -TILE_Z_SCALE, TILE_Z_SCALE );
-	util::Clamper< float > elevation_to_water_r( Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST, 0.6f, 1.3f );
-	util::Clamper< float > elevation_to_water_g( Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST, 0.6f, 1.8f );
-	util::Clamper< float > elevation_to_water_b( Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST, 0.8f, 1.8f ); // sea bottom is very blue so need less here
-	util::Clamper< float > elevation_to_water_a( Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST, 1.0f, 0.5f );
-	
-	const Color underwater_tint = { 0.0, 0.2, 0.5, 1.0 };
-
-	const Color coastline_tint = { 0.7f, 0.7f, 0.7f, 1.0f };
-	
-	const Color::channel_t coast_water_alpha = 0.25f;
-	float coast_water_alpha_center_mod_min = 0.1f;
-	float coast_water_alpha_center_mod_max = 0.9f;
-	float coast_water_alpha_center_range_min = 0.3f;
-	float coast_water_alpha_center_range_max = 0.7f;
-	
-	Tile* tile;
-	
-	float tsx = (float) 1 / TEXTURE_WIDTH / w;
-	float tsy = (float) 1 / TEXTURE_HEIGHT / h / o_max;
-	
-	struct {
-		Vec3 center;
-		Vec3 left;
-		Vec3 top;
-		Vec3 right;
-		Vec3 bottom;
-	} vc = {}, wc = {};
-	
-	// small padding to reduce border artifacts (they look like tile border) around tiles // <- why does it happen?
-	float tsp = 0;
-	
-	float ttx1, tty1, ttx2 ,tty2;
-	struct {
-		Vec2< float > center;
-		Vec2< float > left;
-		Vec2< float > top;
-		Vec2< float > right;
-		Vec2< float > bottom;
-	} txvec, txvec_land;
-
-	struct {
-		Color center;
-		Color left;
-		Color top;
-		Color right;
-		Color bottom;
-	} tint_land, tint_water, tint_water_surface_extra;
-	
-	vector< pair< types::Mesh::index_t, types::Mesh::index_t > > copy_normals = {};
-	unordered_map< size_t, indices_t > saved_indices = {};
-	unordered_map< types::Mesh::index_t, pair< size_t, Texture::add_mode_t > > need_normals = {};
-	
-	Texture::add_mode_t add_mode;
-	
-	typedef struct {
-		Texture::add_mode_t mode;
-		size_t tx1_from;
-		size_t ty1_from;
-		size_t tx2_from;
-		size_t ty2_from;
-		size_t tx_to;
-		size_t ty_to;
-		uint8_t rotate;
-		float alpha;
-	} copy_from_after_t;
-	vector< copy_from_after_t > copy_from_after;
-	
-	tile_texture_info_t txinfo;
-	bool has_water;
-	bool is_coastline;
-	
-	// coastline stuff
-	const Texture::add_mode_t coastline_mode = Texture::AM_MERGE | Texture::AM_INVERT;
-	typedef struct {
-		size_t msx;
-		size_t msy;
-		Texture::add_mode_t side;
-		bool can_mirror;
-		bool maybe_mirror_nw;
-		bool maybe_mirror_ne;
-		bool maybe_mirror_se;
-		bool maybe_mirror_sw;
-		Texture::add_mode_t mirror_mode;
-	} coastline_corner_t;
-	vector< coastline_corner_t > coastline_corners;
-	coastline_corner_t coastline_corner_tmp;
-	
-	const float water_z = elevation_to_vertex_z.Clamp( Tile::ELEVATION_LEVEL_COAST ); // sea is always on sea level
-			
-	for ( size_t y = 0 ; y < h ; y++ ) {
-		for ( size_t x = 0 ; x < w ; x++ ) {
+	for ( size_t y = 0 ; y < m_map_state.dimensions.y ; y++ ) {
+		for ( size_t x = 0 ; x < m_map_state.dimensions.x ; x++ ) {
 			if ( y % 2 != x % 2 ) {
 				continue;
 			}
 			
-			tile = m_tiles->At( x, y );
+			m_current_tile = m_tiles->At( x, y );
+			m_current_ts = GetTileState( x, y );
 			
-			xpos = ox + TILE_HALFWIDTH * x;
-			ypos = oy + TILE_HALFHEIGHT * y;
-			
-			tx1 = x * TEXTURE_WIDTH;
-			ty1 = y * TEXTURE_HEIGHT;
-			tx2 = tx1 + TEXTURE_WIDTH;
-			ty2 = ty1 + TEXTURE_HEIGHT;
-			tx = tx1 + TEXTURE_HALFWIDTH;
-			ty = ty1 + TEXTURE_HALFHEIGHT;
-			
-			auto tx_add = [ this, tx1, ty1, h ] ( const size_t offset, const tc_t& tc, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha = 1.0f ) -> void {
-#if WIREFRAMES
-				m_textures.terrain->AddFrom( s_wireframe_texture, mode, 0, 0, TEXTURE_WIDTH - 1, TEXTURE_HEIGHT - 1, tx1, offset * h * TEXTURE_HEIGHT + ty1, rotate, alpha );
-#else
-				m_textures.terrain->AddFrom( m_textures.source, mode, tc.x, tc.y, tc.x + TEXTURE_WIDTH - 1, tc.y + TEXTURE_HEIGHT - 1, tx1, offset * h * TEXTURE_HEIGHT + ty1, rotate, alpha );
-#endif
-			};
-			
-			auto tx_copy_from = [ this, tx1, ty1, h ] ( const size_t offset_from, const size_t tx_from, const size_t ty_from,const size_t offset, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha = 1.0f ) -> void {
-				m_textures.terrain->AddFrom( m_textures.terrain, mode, tx_from, offset_from * h * TEXTURE_HEIGHT + ty_from, tx_from + TEXTURE_WIDTH - 1, offset_from * h * TEXTURE_HEIGHT + ty_from + TEXTURE_HEIGHT - 1, tx1, offset * h * TEXTURE_HEIGHT + ty1, rotate, alpha );
-			};
-			auto tx_copy = [ tx_copy_from, tx1, ty1 ] ( const size_t offset_from, const size_t offset, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha = 1.0f ) -> void {
-				tx_copy_from( offset_from, tx1, ty1, offset, mode, rotate, alpha );
-			};
-			
-			// copy after everything was generated
-			auto tx_copy_from_after = [ this, tx1, ty1, h, &copy_from_after ] ( const size_t offset_from, const size_t tx_from, const size_t ty_from,const size_t offset, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha = 1.0f ) -> void {
-				copy_from_after.push_back({ mode, tx_from, offset_from * h * TEXTURE_HEIGHT + ty_from, tx_from + TEXTURE_WIDTH - 1, offset_from * h * TEXTURE_HEIGHT + ty_from + TEXTURE_HEIGHT - 1, (size_t)tx1, offset * h * TEXTURE_HEIGHT + (size_t)ty1, rotate, alpha });
-			};
-
-			txinfo.inverse_x = 0;
-			txinfo.inverse_y = 0;
-			txinfo.rotate_direction = 0;
-			txinfo.texture_variant = 0;
-			
-			tint_land = tint_water = tint_water_surface_extra = {
-				(Color){ 1.0, 1.0, 1.0, 1.0 },
-				(Color){ 1.0, 1.0, 1.0, 1.0 },
-				(Color){ 1.0, 1.0, 1.0, 1.0 },
-				(Color){ 1.0, 1.0, 1.0, 1.0 },
-				(Color){ 1.0, 1.0, 1.0, 1.0 },
-			};
-			
-			Tile::elevation_t e_left = *tile->elevation.left;
-			Tile::elevation_t e_top = *tile->elevation.top;
-			Tile::elevation_t e_right = *tile->elevation.right;
-			Tile::elevation_t e_bottom = *tile->elevation.bottom;
-			Tile::elevation_t e_center = *tile->elevation.center;
-			
-			switch ( tile->moisture ) {
-				case Tile::M_NONE: {
-					// invisible tile (for dev/test purposes)
-					break;
-				}
-				case Tile::M_ARID: {
-					tx_add( o_land, m_tc.arid[ 0 ], Texture::AM_DEFAULT, txinfo.rotate_direction );
-					break;
-				}
-				case Tile::M_MOIST: {
-					txinfo = GetTileTextureInfo( tile, TG_MOISTURE );
-					tx_add( o_land, m_tc.moist[ txinfo.texture_variant ], Texture::AM_DEFAULT, txinfo.rotate_direction );
-					break;
-				}
-				case Tile::M_RAINY: {
-					txinfo = GetTileTextureInfo( tile, TG_MOISTURE );
-					tx_add( o_land, m_tc.rainy[ txinfo.texture_variant ], Texture::AM_DEFAULT, txinfo.rotate_direction );
-					break;
-				}
-				default:
-					ASSERT( false, "invalid moisture value" );
-			}
-
-			switch ( tile->rockyness ) {
-				case Tile::R_NONE:
-				case Tile::R_FLAT: {
-					// nothing
-					break;
-				}
-				case Tile::R_ROLLING: {
-					tx_add( o_land, m_tc.rocks[ rand() % 2 * 2 ], Texture::AM_MERGE, txinfo.rotate_direction );
-					break;
-				}
-				case Tile::R_ROCKY: {
-					tx_add( o_land, m_tc.rocks[ rand() % 2 * 2 + 1 ], Texture::AM_MERGE, txinfo.rotate_direction );
-					break;
-				}
-				default:
-					ASSERT( false, "invalid rockyness value" );
-			}
-
-			if ( tile->features	& Tile::F_JUNGLE ) {
-				txinfo = GetTileTextureInfo( tile, TG_FEATURE, Tile::F_JUNGLE );
-				tx_add( o_land, m_tc.jungle[ txinfo.texture_variant ], Texture::AM_MERGE, txinfo.rotate_direction );
-			}
-
-			if ( tile->features & Tile::F_XENOFUNGUS ) {
-				txinfo = GetTileTextureInfo( tile, TG_FEATURE, Tile::F_XENOFUNGUS );
-				tx_add( o_water, m_tc.fungus_sea[ txinfo.texture_variant ], Texture::AM_MERGE, txinfo.rotate_direction );
-				if ( tile->is_water_tile ) {
-					//tx_add( o_water, m_tc.fungus_sea[ txinfo.texture_variant ], Texture::AM_MERGE, txinfo.rotate_direction );
-				}
-				else {
-					tx_add( o_land, m_tc.fungus_land[ txinfo.texture_variant ], Texture::AM_MERGE, txinfo.rotate_direction );
-				}
-			}
-			
-			if ( txinfo.inverse_x ) {
-				ttx1 = tx2 - tsp;
-				ttx2 = tx1 + tsp;
-			}
-			else {
-				ttx1 = tx1 + tsp;
-				ttx2 = tx2 - tsp;
-			}
-			if ( txinfo.inverse_y ) {
-				tty1 = ty2 - tsp;
-				tty2 = ty1 + tsp;
-			}
-			else {
-				tty1 = ty1 + tsp;
-				tty2 = ty2 - tsp;
-			}
-			
-			txvec.center = { tx, ty };
-			txvec.left = { ttx1, tty2 };
-			txvec.top = { ttx1, tty1 };
-			txvec.right = { ttx2, tty1 };
-			txvec.bottom = { ttx2, tty2 };
-
-			txvec_land = txvec; // need separate because it can be modified for coastlines
-			
-			// modify elevations based on water / not water, to avoid displaying half-submerged tiles
-			// original tile isn't modified, this is just for rendering
-			em = tile->is_water_tile ? -1 : 3; // setting -1 : 100 gives interesting shadow effect, but it's not very realistic
-			if (
-				( tile->is_water_tile != tile->W->is_water_tile ) ||
-				( tile->is_water_tile != tile->NW->is_water_tile ) ||
-				( tile->is_water_tile != tile->SW->is_water_tile )
-			) {
-				e_left = Tile::ELEVATION_LEVEL_COAST + em;
-			}
-			if (
-				( tile->is_water_tile != tile->E->is_water_tile ) ||
-				( tile->is_water_tile != tile->NE->is_water_tile ) ||
-				( tile->is_water_tile != tile->SE->is_water_tile )
-			) {
-				e_right = Tile::ELEVATION_LEVEL_COAST + em;
-			}
-			if (
-				( tile->is_water_tile != tile->N->is_water_tile ) ||
-				( tile->is_water_tile != tile->NE->is_water_tile ) ||
-				( tile->is_water_tile != tile->NW->is_water_tile )
-			) {
-				e_top = Tile::ELEVATION_LEVEL_COAST + em;
-			}
-			if (
-				( tile->is_water_tile != tile->S->is_water_tile ) ||
-				( tile->is_water_tile != tile->SE->is_water_tile ) ||
-				( tile->is_water_tile != tile->SW->is_water_tile )
-			) {
-				e_bottom = Tile::ELEVATION_LEVEL_COAST + em;
-			}
-			
-			if ( tile->is_water_tile ) {
-				// do not allow anything above water on water tiles
-				if ( e_left >= Tile::ELEVATION_LEVEL_COAST + em )
-					e_left = Tile::ELEVATION_LEVEL_COAST + em;
-				if ( e_right >= Tile::ELEVATION_LEVEL_COAST + em )
-					e_right = Tile::ELEVATION_LEVEL_COAST + em;
-				if ( e_top >= Tile::ELEVATION_LEVEL_COAST + em )
-					e_top = Tile::ELEVATION_LEVEL_COAST + em;
-				if ( e_bottom >= Tile::ELEVATION_LEVEL_COAST + em )
-					e_bottom = Tile::ELEVATION_LEVEL_COAST + em;
-			}
-			else {
-				// do not allow anything below water on land tiles
-				if ( e_left <= Tile::ELEVATION_LEVEL_COAST - em )
-					e_left = Tile::ELEVATION_LEVEL_COAST - em;
-				if ( e_right <= Tile::ELEVATION_LEVEL_COAST - em )
-					e_right = Tile::ELEVATION_LEVEL_COAST - em;
-				if ( e_top <= Tile::ELEVATION_LEVEL_COAST - em )
-					e_top = Tile::ELEVATION_LEVEL_COAST - em;
-				if ( e_bottom <= Tile::ELEVATION_LEVEL_COAST - em )
-					e_bottom = Tile::ELEVATION_LEVEL_COAST - em;
-			}
-			
-			// vertex coodinates for land corners
-			#define vcz( _val ) elevation_to_vertex_z.Clamp( _val )
-			vc.left = { xpos - TILE_HALFWIDTH, ypos, vcz( e_left ) };
-			vc.top = { xpos, ypos - TILE_HALFHEIGHT, vcz( e_top ) };
-			vc.right = { xpos + TILE_HALFWIDTH, ypos, vcz( e_right ) };
-			vc.bottom = { xpos, ypos + TILE_HALFHEIGHT, vcz( e_bottom ) };
-			vc.center = { ( vc.left.x + vc.right.x ) / 2, ( vc.top.y + vc.bottom.y ) / 2, vcz( e_center ) };
-			
-			// water surface extra also uses this
-			wc.left = { xpos - TILE_HALFWIDTH, ypos, water_z };
-			wc.top = { xpos, ypos - TILE_HALFHEIGHT, water_z };
-			wc.right = { xpos + TILE_HALFWIDTH, ypos, water_z };
-			wc.bottom = { xpos, ypos + TILE_HALFHEIGHT, water_z };
-			wc.center = { ( wc.left.x + wc.right.x ) / 2, ( wc.top.y + wc.bottom.y ) / 2, water_z };
-			
-			is_coastline = false;
-			
-			// it is what it is
-			float cw = 0.06f;
-			float cwc = 1.5f;
-			float tcw = cw * 2.0f;
-			float tcwc = cwc * 0.85f;
-			float tcww = tcw * TEXTURE_WIDTH;
-			float tcwh = tcw * TEXTURE_HEIGHT;
-			if ( !tile->is_water_tile ) {
-				if ( tile->W->is_water_tile || tile->NW->is_water_tile || tile->SW->is_water_tile ) {
-					tint_land.left = coastline_tint;
-					if ( tile->W->is_water_tile && ( tile->NW->is_water_tile || tile->SW->is_water_tile ) ) {
-						vc.left.x += cw;
-						if ( !tile->NW->is_water_tile ) {
-							vc.left.y -= cw;
-							txvec_land.left.y -= tcwh;
-						}
-						else if ( !tile->SW->is_water_tile ) {
-							vc.left.y += cw;
-							txvec_land.left.x += tcww;
-						}
-						else {
-							vc.left.x += cw * cwc;
-							txvec_land.left.y -= tcwh * tcwc;
-							txvec_land.left.x += tcww * tcwc;
-						}
-						is_coastline = true;
-					}
-				}
-				if ( tile->N->is_water_tile || tile->NW->is_water_tile || tile->NE->is_water_tile ) {
-					tint_land.top = coastline_tint;
-					if ( tile->N->is_water_tile && ( tile->NW->is_water_tile || tile->NE->is_water_tile ) ) {
-						vc.top.y += cw;
-						if ( !tile->NW->is_water_tile ) {
-							vc.top.x -= cw;
-							txvec_land.top.y += tcwh;
-						}
-						else if ( !tile->NE->is_water_tile ) {
-							vc.top.x += cw;
-							txvec_land.top.x += tcww;
-						}
-						else {
-							vc.top.y += cw * cwc;
-							txvec_land.top.x += tcww * tcwc;
-							txvec_land.top.y += tcwh * tcwc;
-						}
-						is_coastline = true;
-					}
-				}
-				if ( tile->E->is_water_tile || tile->NE->is_water_tile || tile->SE->is_water_tile ) {
-					tint_land.right = coastline_tint;
-					if ( tile->E->is_water_tile && ( tile->NE->is_water_tile || tile->SE->is_water_tile ) ) {
-						vc.right.x -= cw;
-						if ( !tile->NE->is_water_tile ) {
-							vc.right.y -= cw;
-							txvec_land.right.x -= tcww;
-						}
-						else if ( !tile->SE->is_water_tile ) {
-							vc.right.y += cw;
-							txvec_land.right.y += tcwh;
-						}
-						else {
-							vc.right.x -= cw * cwc;
-							txvec_land.right.x -= tcww * tcwc;
-							txvec_land.right.y += tcwh * tcwc;
-						}
-						is_coastline = true;
-					}
-				}
-				if ( tile->S->is_water_tile || tile->SW->is_water_tile || tile->SE->is_water_tile ) {
-					tint_land.bottom = coastline_tint;
-					if ( tile->S->is_water_tile && ( tile->SW->is_water_tile || tile->SE->is_water_tile ) ) {
-						vc.bottom.y -= cw;
-						if ( !tile->SW->is_water_tile ) {
-							vc.bottom.x -= cw;
-							txvec_land.bottom.x -= tcww;
-						}
-						else if ( !tile->SE->is_water_tile ) {
-							vc.bottom.x += cw;
-							txvec_land.bottom.y -= tcwh;
-						}
-						else {
-							vc.bottom.y -= cw * cwc;
-							txvec_land.bottom.x -= tcww * tcwc;
-							txvec_land.bottom.y -= tcwh * tcwc;
-						}
-						is_coastline = true;
-					}
-				}
-				txvec_land.center.x = ( txvec_land.left.x + txvec_land.top.x + txvec_land.right.x + txvec_land.bottom.x ) / 4;
-				txvec_land.center.y = ( txvec_land.left.y + txvec_land.top.y + txvec_land.right.y + txvec_land.bottom.y ) / 4;
-			}
-			
-			// average new center from computed corners
-			e_center = ( e_left + e_top + e_right + e_bottom ) / 4;
-			vc.center = { ( vc.left.x + vc.right.x ) / 2, ( vc.top.y + vc.bottom.y ) / 2, vcz( e_center ) };
-
-			has_water = (
-				is_coastline ||
-				e_center <= Tile::ELEVATION_LEVEL_COAST ||
-				e_left <= Tile::ELEVATION_LEVEL_COAST ||
-				e_top <= Tile::ELEVATION_LEVEL_COAST ||
-				e_right <= Tile::ELEVATION_LEVEL_COAST ||
-				e_bottom <= Tile::ELEVATION_LEVEL_COAST
-			);
-			
-			// coast water texture
-			if ( !tile->is_water_tile && (
-				tile->W->is_water_tile ||
-				tile->NW->is_water_tile ||
-				tile->N->is_water_tile ||
-				tile->NE->is_water_tile ||
-				tile->E->is_water_tile ||
-				tile->SE->is_water_tile ||
-				tile->S->is_water_tile ||
-				tile->SW->is_water_tile
-			)) {
-				tx_add( o_water_surface_extra, m_tc.water[ 0 ], Texture::AM_DEFAULT, rand() % 4, coast_water_alpha );
-				tint_water_surface_extra.center =
-				tint_water_surface_extra.left =
-				tint_water_surface_extra.top =
-				tint_water_surface_extra.right =
-				tint_water_surface_extra.bottom =
-					coastline_tint;
-			}
-				
-				if ( tile->is_water_tile && (
-					!tile->W->is_water_tile ||
-					!tile->NW->is_water_tile ||
-					!tile->N->is_water_tile ||
-					!tile->NE->is_water_tile ||
-					!tile->E->is_water_tile ||
-					!tile->SE->is_water_tile ||
-					!tile->S->is_water_tile ||
-					!tile->SW->is_water_tile
-				)) {
-					
-#define RANDOM( _min, _max ) ( _min + static_cast<float>( rand() ) / ( static_cast<float>( RAND_MAX / ( _max - _min ) ) ) )
-					
-					tint_water_surface_extra.center = coastline_tint * 0.5f;
-					tint_water_surface_extra.center.value.alpha = RANDOM( coast_water_alpha_center_mod_min, coast_water_alpha_center_mod_max );
-					// TODO: fix this
-					//Log( "OLD: " + to_string( wc.center.x ) + "x" + to_string( wc.center.y ) );
-					//wc.center.x = xpos + ( coast_water_alpha_center_range_min + static_cast<float>( rand() ) / ( static_cast<float>( RAND_MAX / ( coast_water_alpha_center_range_max - coast_water_alpha_center_range_min ) ) ) - 0.5f ) * TILE_WIDTH;
-					//wc.center.y = ypos + ( coast_water_alpha_center_range_min + static_cast<float>( rand() ) / ( static_cast<float>( RAND_MAX / ( coast_water_alpha_center_range_max - coast_water_alpha_center_range_min ) ) ) - 0.5f ) * TILE_HEIGHT;
-					//Log( "NEW: " + to_string( wc.center.x ) + "x" + to_string( wc.center.y ) );
-					
-					if ( tile->W->is_water_tile && tile->NW->is_water_tile && tile->SW->is_water_tile ) {
-						tint_water_surface_extra.left.value.alpha = 0.0f;
-					}
-					else {
-						tint_water_surface_extra.left = coastline_tint;
-					}
-					
-					if ( tile->N->is_water_tile && tile->NW->is_water_tile && tile->NE->is_water_tile ) {
-						tint_water_surface_extra.top.value.alpha = 0.0f;
-					}
-					else {
-						tint_water_surface_extra.top = coastline_tint;
-					}
-					
-					if ( tile->E->is_water_tile && tile->NE->is_water_tile && tile->SE->is_water_tile ) {
-						tint_water_surface_extra.right.value.alpha = 0.0f;
-					}
-					else {
-						tint_water_surface_extra.right = coastline_tint;
-					}
-					
-					if ( tile->S->is_water_tile && tile->SW->is_water_tile && tile->SE->is_water_tile ) {
-						tint_water_surface_extra.bottom.value.alpha = 0.0f;
-					}
-					else {
-						tint_water_surface_extra.bottom = coastline_tint;
-					}
-					
-					tx_add( o_water_surface_extra, m_tc.water[ 0 ], Texture::AM_DEFAULT, rand() % 4, coast_water_alpha );
-				}
-
-			if ( has_water ) {
-				
-				tx_add( o_water_surface, m_tc.water[ 1 ], Texture::AM_DEFAULT, rand() % 4 );
-				
-				// corners on land tiles
-				if ( is_coastline ) {
-					
-					add_mode = Texture::AM_MERGE;
-					if ( tile->W->is_water_tile && tile->SW->is_water_tile && tile->NW->is_water_tile ) {
-						add_mode |= Texture::AM_ROUND_LEFT;
-					}
-					if ( tile->N->is_water_tile && tile->NW->is_water_tile && tile->NE->is_water_tile ) {
-						add_mode |= Texture::AM_ROUND_TOP;
-					}
-					if ( tile->E->is_water_tile && tile->SE->is_water_tile && tile->NE->is_water_tile ) {
-						add_mode |= Texture::AM_ROUND_RIGHT;
-					}
-					if ( tile->S->is_water_tile && tile->SE->is_water_tile && tile->SW->is_water_tile ) {
-						add_mode |= Texture::AM_ROUND_BOTTOM;
-					}
-					
-					// coastline tint
-					if ( tile->W->is_water_tile || tile->SW->is_water_tile || tile->NW->is_water_tile ) {
-						tint_water.left = coastline_tint;
-					}
-					if ( tile->N->is_water_tile || tile->NW->is_water_tile || tile->NE->is_water_tile ) {
-						tint_water.top = coastline_tint;
-					}
-					if ( tile->E->is_water_tile || tile->SE->is_water_tile || tile->NE->is_water_tile ) {
-						tint_water.right = coastline_tint;
-					}
-					if ( tile->S->is_water_tile || tile->SW->is_water_tile || tile->SE->is_water_tile ) {
-						tint_water.bottom = coastline_tint;
-					}
-
-					// copy texture from land
-					tx_copy( o_land, o_water, add_mode, 0 );
-					
-				}
-								
-				// corners on water tiles
-				if ( tile->is_water_tile ) {
-					
-					coastline_corners.clear();
-					
-					if ( !tile->SW->is_water_tile && !tile->NW->is_water_tile ) {
-						coastline_corner_tmp.side = Texture::AM_ROUND_LEFT;
-						tint_water.left = coastline_tint;
-						if ( !tile->W->is_water_tile ) {
-							coastline_corner_tmp.can_mirror = true;
-							if ( x >= 2 ) {
-								coastline_corner_tmp.msx = x - 2;
-							}
-							else {
-								coastline_corner_tmp.msx = w - 2;
-							}
-							coastline_corner_tmp.msy = y;
-						}
-						else {
-							coastline_corner_tmp.maybe_mirror_sw = true;
-							coastline_corner_tmp.maybe_mirror_nw = true;
-						}
-						coastline_corners.push_back( coastline_corner_tmp );
-					}
-					
-					if ( !tile->NW->is_water_tile && !tile->NE->is_water_tile ) {
-						coastline_corner_tmp.side = Texture::AM_ROUND_TOP;
-						tint_water.top = coastline_tint;
-						if ( !tile->N->is_water_tile ) {
-							if ( y >= 2 ) {
-								coastline_corner_tmp.can_mirror = true;
-								coastline_corner_tmp.msx = x;
-								coastline_corner_tmp.msy = y - 2;
-							}
-						}
-						else {
-							coastline_corner_tmp.maybe_mirror_nw = true;
-							coastline_corner_tmp.maybe_mirror_ne = true;
-						}
-						coastline_corners.push_back( coastline_corner_tmp );
-					}
-					if ( !tile->SE->is_water_tile && !tile->NE->is_water_tile ) {
-						coastline_corner_tmp.side = Texture::AM_ROUND_RIGHT;
-						tint_water.right = coastline_tint;
-						if ( !tile->E->is_water_tile ) {
-							coastline_corner_tmp.can_mirror = true;
-							if ( x < w - 2 ) {
-								coastline_corner_tmp.msx = x + 2;
-							}
-							else {
-								coastline_corner_tmp.msx = 0;
-							}
-							coastline_corner_tmp.msy = y;
-						}
-						else {
-							coastline_corner_tmp.maybe_mirror_se = true;
-							coastline_corner_tmp.maybe_mirror_ne = true;
-						}
-						coastline_corners.push_back( coastline_corner_tmp );
-					}
-					if ( !tile->SE->is_water_tile && !tile->SW->is_water_tile ) {
-						coastline_corner_tmp.side = Texture::AM_ROUND_BOTTOM;
-						tint_water.bottom = coastline_tint;
-						if ( !tile->S->is_water_tile ) {
-							if ( y < h - 2 ) {
-								coastline_corner_tmp.can_mirror = true;
-								coastline_corner_tmp.msx = x;
-								coastline_corner_tmp.msy = y + 2;
-							}
-						}
-						else {
-							coastline_corner_tmp.maybe_mirror_se = true;
-							coastline_corner_tmp.maybe_mirror_sw = true;
-						}
-						coastline_corners.push_back( coastline_corner_tmp );
-					}
-					
-					for ( auto& c : coastline_corners ) {
-						
-						if ( c.can_mirror ) {
-							c.mirror_mode = Texture::AM_MIRROR_X | Texture::AM_MIRROR_Y;
-						}
-						
-						if ( !c.can_mirror && y >= 1 ) {
-							c.msy = y - 1;
-							if ( !c.can_mirror && coastline_corner_tmp.maybe_mirror_nw ) {
-								if ( x >= 1 ) {
-									c.msx = x - 1;
-								}
-								else {
-									c.msx = w - 2;
-								}
-								c.mirror_mode = Texture::AM_MIRROR_X;
-								c.can_mirror = true;
-							}
-							if ( !c.can_mirror && coastline_corner_tmp.maybe_mirror_ne ) {
-								if ( x < w - 1 ) {
-									c.msx = x + 1;
-								}
-								else {
-									c.msx = 1;
-								}
-								c.mirror_mode = Texture::AM_MIRROR_Y;
-								c.can_mirror = true;
-							}
-						}
-						if ( !c.can_mirror && y < h - 1 ) {
-							c.msy = y + 1;
-							if ( !c.can_mirror && coastline_corner_tmp.maybe_mirror_sw ) {
-								if ( x >= 1 ) {
-									c.msx = x - 1;
-								}
-								else {
-									c.msx = w - 1;
-								}
-								c.mirror_mode = Texture::AM_MIRROR_X;
-								c.can_mirror = true;
-							}
-							if ( !c.can_mirror && coastline_corner_tmp.maybe_mirror_se ) {
-								if ( x < w - 1 ) {
-									c.msx = x + 1;
-								}
-								else {
-									c.msx = 1;
-								}
-								c.mirror_mode = Texture::AM_MIRROR_Y;
-								c.can_mirror = true;
-							}
-						}
-						
-						if ( c.can_mirror ) {
-							// mirror opposite tile
-							tx_copy_from_after( o_land, c.msx * TEXTURE_WIDTH, c.msy * TEXTURE_HEIGHT, o_water, coastline_mode | c.side | c.mirror_mode, 0 );
-						}
-						else {
-							// use default texture
-							tx_add( o_water, m_tc.arid[ 0 ], coastline_mode | c.side, rand() % 4 );
-						}
-					}
-				}
-			}
-			
-			// land
-			{
-				// texture coordinates (land)
-				#define txc( _o, _c ) { txvec_land._c.x * tsx, ( txvec_land._c.y + _o * h * TEXTURE_HEIGHT ) * tsy }
-				// tint (depending on if this tile is underwater or not)
-				#define txt( _val ) ( tile->is_water_tile ? underwater_tint : tint_land._val )
-				
-				v_land.center = mesh_terrain->AddVertex( vc.center, txc( o_land, center ), txt( center ) );
-				v_land.left = mesh_terrain->AddVertex( vc.left, txc( o_land, left ), txt( left ) );
-				v_land.top = mesh_terrain->AddVertex( vc.top, txc( o_land, top ), txt( top ) );
-				v_land.right = mesh_terrain->AddVertex( vc.right, txc( o_land, right ), txt( right ) );
-				v_land.bottom = mesh_terrain->AddVertex( vc.bottom, txc( o_land, bottom ), txt( bottom ) );
-				mesh_terrain->AddSurface( { v_land.center, v_land.left, v_land.top } );
-				mesh_terrain->AddSurface( { v_land.center, v_land.top, v_land.right } );
-				mesh_terrain->AddSurface( { v_land.center, v_land.right, v_land.bottom } );
-				mesh_terrain->AddSurface( { v_land.center, v_land.bottom, v_land.left } );
-				
-				// if applicable - save normals to be used for water tile corners later
-				if ( !tile->is_water_tile &&
-					( tile->W->is_water_tile && !tile->NW->is_water_tile && !tile->SW->is_water_tile ) ||
-					( tile->N->is_water_tile && !tile->NW->is_water_tile && !tile->NE->is_water_tile ) ||
-					( tile->E->is_water_tile && !tile->NE->is_water_tile && !tile->SE->is_water_tile ) ||
-					( tile->S->is_water_tile && !tile->SE->is_water_tile && !tile->SW->is_water_tile )
-				) {
-					//Log( "Saving normals of " + to_string( y * w + x ) );
-					saved_indices[ y * w + x ] = v_land;
-				}
-				
-				#undef txt
-				#undef txc
-			}
-			
-			// texture coordinates
-			#define txc( _o, _c ) { txvec._c.x * tsx, ( txvec._c.y + _o * h * TEXTURE_HEIGHT ) * tsy }
-			
-			// water surface
-			{
-				#define wr elevation_to_water_r.Clamp
-				#define wg elevation_to_water_g.Clamp
-				#define wb elevation_to_water_b.Clamp
-				#define wa elevation_to_water_a.Clamp
-				#define txt( _val ) { wr( _val ), wg( _val ), wb( _val ), wa( _val ) }  // tint
-
-				v_water_surface.center = mesh_terrain->AddVertex( { xpos, ypos, water_z }, txc( o_water_surface, center ), txt( e_center ) );
-				v_water_surface.left = mesh_terrain->AddVertex( { xpos - TILE_HALFWIDTH, ypos, water_z }, txc( o_water_surface, left ), txt( e_left ) );
-				v_water_surface.top = mesh_terrain->AddVertex( { xpos, ypos - TILE_HALFHEIGHT, water_z }, txc( o_water_surface, top ), txt( e_top ) );
-				v_water_surface.right = mesh_terrain->AddVertex( { xpos + TILE_HALFWIDTH, ypos, water_z }, txc( o_water_surface, right ), txt( e_right ) );
-				v_water_surface.bottom = mesh_terrain->AddVertex( { xpos, ypos + TILE_HALFHEIGHT, water_z }, txc( o_water_surface, bottom ), txt( e_bottom ) );
-				mesh_terrain->AddSurface( { v_water_surface.center, v_water_surface.left, v_water_surface.top } );
-				mesh_terrain->AddSurface( { v_water_surface.center, v_water_surface.top, v_water_surface.right } );
-				mesh_terrain->AddSurface( { v_water_surface.center, v_water_surface.right, v_water_surface.bottom } );
-				mesh_terrain->AddSurface( { v_water_surface.center, v_water_surface.bottom, v_water_surface.left } );
-				
-				#undef txt
-				#undef wr
-				#undef wg
-				#undef wb
-				#undef wa
-			}
-			
-			// water surface extra
-			{
-				#define txt( _val ) ( tint_water_surface_extra._val )
-				
-				v_water_surface_extra.center = mesh_terrain->AddVertex( wc.center, txc( o_water_surface_extra, center ), txt( center ) );
-				v_water_surface_extra.left = mesh_terrain->AddVertex( wc.left, txc( o_water_surface_extra, left ), txt( left ) );
-				v_water_surface_extra.top = mesh_terrain->AddVertex( wc.top, txc( o_water_surface_extra, top ), txt( top ) );
-				v_water_surface_extra.right = mesh_terrain->AddVertex( wc.right, txc( o_water_surface_extra, right ), txt( right ) );
-				v_water_surface_extra.bottom = mesh_terrain->AddVertex( wc.bottom, txc( o_water_surface_extra, bottom ), txt( bottom ) );
-				mesh_terrain->AddSurface( { v_water_surface_extra.center, v_water_surface_extra.left, v_water_surface_extra.top } );
-				mesh_terrain->AddSurface( { v_water_surface_extra.center, v_water_surface_extra.top, v_water_surface_extra.right } );
-				mesh_terrain->AddSurface( { v_water_surface_extra.center, v_water_surface_extra.right, v_water_surface_extra.bottom } );
-				mesh_terrain->AddSurface( { v_water_surface_extra.center, v_water_surface_extra.bottom, v_water_surface_extra.left } );
-				
-				#undef txt
-			}
-
-			// water
-			{
-				#define txt( _val ) ( tint_water._val )
-				
-				v_water.center = mesh_terrain->AddVertex( { xpos, ypos, water_z }, txc( o_water, center ), txt( center ) );
-				v_water.left = mesh_terrain->AddVertex( { xpos - TILE_HALFWIDTH, ypos, water_z }, txc( o_water, left ), txt( left ) );
-				v_water.top = mesh_terrain->AddVertex( { xpos, ypos - TILE_HALFHEIGHT, water_z }, txc( o_water, top ), txt( top ) );
-				v_water.right = mesh_terrain->AddVertex( { xpos + TILE_HALFWIDTH, ypos, water_z }, txc( o_water, right ), txt( right ) );
-				v_water.bottom = mesh_terrain->AddVertex( { xpos, ypos + TILE_HALFHEIGHT, water_z }, txc( o_water, bottom ), txt( bottom ) );
-				mesh_terrain->AddSurface( { v_water.center, v_water.left, v_water.top } );
-				mesh_terrain->AddSurface( { v_water.center, v_water.top, v_water.right } );
-				mesh_terrain->AddSurface( { v_water.center, v_water.right, v_water.bottom } );
-				mesh_terrain->AddSurface( { v_water.center, v_water.bottom, v_water.left } );
-				
-				if ( is_coastline ) {
-					// fix incorrect shadows on coasts (because land vertices were moved)
-					// TODO: set only needed ones?
-					copy_normals.push_back( { v_land.left, v_water.left } );
-					copy_normals.push_back( { v_land.top, v_water.top } );
-					copy_normals.push_back( { v_land.right, v_water.right } );
-					copy_normals.push_back( { v_land.bottom, v_water.bottom } );
-					copy_normals.push_back( { v_land.center, v_water.center } );
-				}
-				
-				if ( tile->is_water_tile ) {
-					// get normal from corresponding adjactent tile
-					for ( auto& c : coastline_corners ) {
-						//Log( "Need normals of " + to_string( c.msy * w + c.msx ) );
-						need_normals[
-							c.side == Texture::AM_ROUND_LEFT ? v_water.left :
-							c.side == Texture::AM_ROUND_TOP ? v_water.top :
-							c.side == Texture::AM_ROUND_RIGHT ? v_water.right :
-							c.side == Texture::AM_ROUND_BOTTOM ? v_water.bottom : -1
-						] = { c.msy * w + c.msx, c.side };
-					}
-				}
-				
-				#undef txt
+			for ( auto& m : m_modules ) {
+				m->GenerateTile( m_current_tile, m_current_ts, &m_map_state );
 			}
 
 		}
 	}
 	
-	for ( auto& c : copy_from_after ) {
+	for ( auto& c : m_map_state.copy_from_after ) {
 		m_textures.terrain->AddFrom( m_textures.terrain, c.mode, c.tx1_from, c.ty1_from, c.tx2_from, c.ty2_from, c.tx_to, c.ty_to, c.rotate, c.alpha );
 	}
 	
-	mesh_terrain->Finalize();
+	m_mesh_terrain->Finalize();
 	
-	Log( "Updating normals" );
 	// update normals where needed
-	for ( auto& cn : copy_normals ) {
-		mesh_terrain->SetVertexNormal( cn.second, mesh_terrain->GetVertexNormal( cn.first ) );
+	for ( auto& cn : m_map_state.copy_normals ) {
+		m_mesh_terrain->SetVertexNormal( *cn.second, m_mesh_terrain->GetVertexNormal( *cn.first ) );
 	}
-	for ( auto& nn : need_normals ) {
-		auto it = saved_indices.find( nn.second.first );
-		if ( it != saved_indices.end() ) {
-			mesh_terrain->SetVertexNormal( nn.first, mesh_terrain->GetVertexNormal(
-				nn.second.second == Texture::AM_ROUND_LEFT ? it->second.right :
-				nn.second.second == Texture::AM_ROUND_TOP ? it->second.bottom :
-				nn.second.second == Texture::AM_ROUND_RIGHT ? it->second.left :
-				nn.second.second == Texture::AM_ROUND_BOTTOM ? it->second.top : -1
-			));
-		}
+	for ( auto& nn : m_map_state.need_normals ) {
+		auto* ts = GetTileState( nn.second.first.x, nn.second.first.y );
+
+		m_mesh_terrain->SetVertexNormal( *nn.first, m_mesh_terrain->GetVertexNormal(
+			nn.second.second == Texture::AM_ROUND_LEFT ? ts->layers[ LAYER_LAND ].indices.right :
+			nn.second.second == Texture::AM_ROUND_TOP ? ts->layers[ LAYER_LAND ].indices.bottom :
+			nn.second.second == Texture::AM_ROUND_RIGHT ? ts->layers[ LAYER_LAND ].indices.left :
+			nn.second.second == Texture::AM_ROUND_BOTTOM ? ts->layers[ LAYER_LAND ].indices.top : -1
+		));
 	}
 	
-	NEW( m_actors.terrain, actor::Mesh, "MapTerrain", mesh_terrain );
+	free( m_tile_states );
+	m_tile_states = nullptr;
+	
+	NEW( m_actors.terrain, actor::Mesh, "MapTerrain", m_mesh_terrain );
 		m_actors.terrain->SetTexture( m_textures.terrain );
-		m_actors.terrain->SetPosition( MAP_POSITION );
-		m_actors.terrain->SetAngle( MAP_ROTATION );
+		m_actors.terrain->SetPosition( Map::s_consts.map_position );
+		m_actors.terrain->SetAngle( Map::s_consts.map_rotation );
 	m_scene->AddActor( m_actors.terrain );
+	
+	m_current_tile = nullptr;
+	m_current_ts = nullptr;
+	m_mesh_terrain = nullptr; // deleted by actor
 }
 
-const Map::tile_texture_info_t Map::GetTileTextureInfo( Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature ) const {
+const Map::tile_texture_info_t Map::GetTileTextureInfo( const Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature ) const {
+	ASSERT( m_current_ts, "GetTileTextureInfo called outside of tile generation" );
 	Map::tile_texture_info_t info;
-	
-	info.inverse_x = 0;
-	info.inverse_y = 0;
 	
 	bool matches[ 16 ];
 	uint8_t idx = 0;
@@ -1035,7 +259,7 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( Tile* tile, const tile_g
 				}
 				case TG_FEATURE: {
 					matches[ idx++ ] =
-						//( t->is_water_tile == tile->is_water_tile ) &&
+						//( t->is_water_tile == tile->is_water_tile ) && // TODO: fix coastline_tint influence on coastlines fungus
 						( t->features & feature ) == ( tile->features & feature )
 					;
 					break;
@@ -1070,6 +294,37 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( Tile* tile, const tile_g
 	
 	return info;
 }
+
+void Map::AddTexture( const tile_layer_type_t tile_layer, const pcx_texture_coordinates_t& tc, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha ) {
+	ASSERT( m_current_ts, "AddTexture called outside of tile generation" );
+#if WIREFRAMES
+	m_textures.terrain->AddFrom( s_wireframe_texture, mode, 0, 0, Map::s_consts.pcx_texture_block.dimensions.x - 1, Map::s_consts.pcx_texture_block.dimensions.y - 1, m_current_ts->tex_coord.x1, tile_layer * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + m_current_ts->tex_coord.y1, rotate, alpha );
+#else
+	m_textures.terrain->AddFrom( m_textures.source, mode, tc.x, tc.y, tc.x + Map::s_consts.pcx_texture_block.dimensions.x - 1, tc.y + Map::s_consts.pcx_texture_block.dimensions.y - 1, m_current_ts->tex_coord.x1, tile_layer * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + m_current_ts->tex_coord.y1, rotate, alpha );
+#endif
+};
+
+void Map::CopyTextureFromLayer( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile_layer_type_t tile_layer, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha ) {
+	ASSERT( m_current_ts, "CopyTextureFromLayer called outside of tile generation" );
+	m_textures.terrain->AddFrom( m_textures.terrain, mode, tx_from, tile_layer_from * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + ty_from, tx_from + Map::s_consts.pcx_texture_block.dimensions.x - 1, tile_layer_from * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + ty_from + Map::s_consts.pcx_texture_block.dimensions.y - 1, m_current_ts->tex_coord.x1, tile_layer * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + m_current_ts->tex_coord.y1, rotate, alpha );
+};
+
+void Map::CopyTexture( const tile_layer_type_t tile_layer_from, const tile_layer_type_t tile_layer, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha ) {
+	ASSERT( m_current_ts, "CopyTexture called outside of tile generation" );
+	CopyTextureFromLayer( tile_layer_from, m_current_ts->tex_coord.x1, m_current_ts->tex_coord.y1, tile_layer, mode, rotate, alpha );
+};
+
+void Map::CopyTextureDeferred( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from,const tile_layer_type_t tile_layer, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha ) {
+	ASSERT( m_current_ts, "CopyTextureDeferred called outside of tile generation" );
+	m_map_state.copy_from_after.push_back({ mode, tx_from, tile_layer_from * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + ty_from, tx_from + Map::s_consts.pcx_texture_block.dimensions.x - 1, tile_layer_from * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + ty_from + Map::s_consts.pcx_texture_block.dimensions.y - 1, (size_t)m_current_ts->tex_coord.x1, tile_layer * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + (size_t)m_current_ts->tex_coord.y1, rotate, alpha });
+};
+
+Map::tile_state_t* Map::GetTileState( const size_t x, const size_t y ) const {
+	ASSERT( x < m_tiles->GetWidth(), "tile x overflow" );
+	ASSERT( y < m_tiles->GetHeight(), "tile y overflow" );
+	return &m_tile_states[ y * m_map_state.dimensions.x + x ];
+}
+
 
 }
 }

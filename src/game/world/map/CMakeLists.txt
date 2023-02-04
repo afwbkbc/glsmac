@@ -1,3 +1,4 @@
+SUBDIR( module )
 
 SET(SRC ${SRC}
 

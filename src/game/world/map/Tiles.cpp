@@ -100,6 +100,7 @@ Tiles::Tiles( const size_t width, const size_t height )
 		
 	}
 
+	// add some state variables
 	for ( auto y = 0 ; y < m_height ; y++ ) {
 		for ( auto x = 0 ; x < m_width ; x++ ) {
 			if ( ( y % 2 ) != ( x % 2 ) ) {
@@ -127,15 +128,16 @@ Tiles::Tiles( const size_t width, const size_t height )
 #undef CHECKTILE
 #endif
 			
-			// generate pointer vectors
+			tile->coord.x = x;
+			tile->coord.y = y;
 			
+			// generate pointer vectors
 			tile->elevation.corners = {
 				tile->elevation.left,
 				tile->elevation.top,
 				tile->elevation.right,
 				tile->elevation.bottom,
 			};
-			
 			tile->neighbours = {
 				tile->W,
 				tile->NW,
@@ -232,7 +234,7 @@ void Tiles::Finalize() {
 		}
 	}
 	
-	// convert every vertex
+	// convert every vertex to valid range
 	util::Clamper<Tile::elevation_t> converter( emin, emax, Tile::ELEVATION_MIN, Tile::ELEVATION_MAX );
 	for ( auto y = 0 ; y < m_height ; y++ ) {
 		for ( auto x = 0 ; x < m_width ; x++ ) {
@@ -245,6 +247,7 @@ void Tiles::Finalize() {
 		}
 	}
 	
+	// convert top rows too
 	for ( auto y = 0; y < 2 ; y++ ) {
 		for ( auto x = 0 ; x < m_width ; x++ ) {
 			if ( y == 0 ) {

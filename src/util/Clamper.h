@@ -41,6 +41,15 @@ CLASS( Clamper, Util )
 	void SetInversed( const bool inversed ) {
 		m_inversed = true;
 	}
+	
+	void operator= ( const Clamper& other ) {
+		m_src_min = other.m_src_min;
+		m_src_max = other.m_src_max;
+		m_dst_min = other.m_dst_min;
+		m_dst_max = other.m_dst_max;
+		m_inversed = other.m_inversed;
+	}
+	
 protected:
 	float m_src_min = 0;
 	float m_src_max = 0;

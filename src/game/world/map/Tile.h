@@ -21,6 +21,13 @@ CLASS( Tile, base::Base )
 
 	typedef function< void( Tile* ) > tile_cb_t;
 	
+	// map coordinates
+	// using SMAC coordinate system (increments by 2 horizontally and vertically, by 1 diagonally)
+	struct {
+		size_t x;
+		size_t y;
+	} coord;
+
 	// per-vertex, left, right and top linked to vertices of others tiles
 	typedef ssize_t elevation_t;
 	static const elevation_t ELEVATION_MIN = -3500;

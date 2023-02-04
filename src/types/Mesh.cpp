@@ -120,7 +120,6 @@ void Mesh::Finalize() {
 	UpdateNormals();
 	
 	m_is_final = true;
-	Update();
 }
 
 void Mesh::GetVertexCoord( const index_t index, Vec3* coord ) {
@@ -188,6 +187,8 @@ void Mesh::UpdateNormals() {
 			=
 		Math::Normalize( *(Vec3*)ptr( m_vertex_data, ( v * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ) );
 	}
+	
+	Update();
 }
 
 }
