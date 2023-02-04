@@ -26,8 +26,8 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 		bool maybe_mirror_sw;
 		Texture::add_mode_t mirror_mode;
 	} coastline_corner_t;
-	vector< coastline_corner_t > coastline_corners;
-	coastline_corner_t coastline_corner_tmp;
+	vector< coastline_corner_t > coastline_corners = {};
+	coastline_corner_t coastline_corner_tmp = {};
 	if ( !tile->is_water_tile ) {
 	
 		if ( tile->W->is_water_tile || tile->NW->is_water_tile || tile->SW->is_water_tile ) {
