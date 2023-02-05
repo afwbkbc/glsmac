@@ -4,6 +4,7 @@
 #include "../mainmenu/MainMenu.h"
 
 #include "types/mesh/Rectangle.h"
+#include "util/FS.h"
 
 #include "map_generator/SimpleRandom.h"
 #include "map_generator/SimplePerlin.h"
@@ -55,11 +56,22 @@ void World::Start() {
 	
 	srand( seed );
 	
+#ifdef DEVEL
+#define MAP_FILENAME "./tmp/lastmap.gsm"
+	if ( FS::FileExists( MAP_FILENAME ) ) {
+		// load existing map to avoid waiting for generation (takes several seconds on debug build)
+		tiles->Unserialize( Buffer( FS::ReadFile( MAP_FILENAME ) ) );
+	}
+	else
+#endif
 	{
 		map_generator::SimplePerlin generator;
 		//map_generator::SimpleRandom generator;
 		//map_generator::Test generator;
 		generator.Generate( tiles, seed );
+#ifdef DEVEL
+		FS::WriteFile( MAP_FILENAME, tiles->Serialize().ToString() );
+#endif
 	}
 	
 	m_map->SetTiles( tiles );

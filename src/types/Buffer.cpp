@@ -45,8 +45,9 @@ Buffer::Buffer( Buffer& other) {
 }
 
 void Buffer::Alloc( size_t size ) {
-	if ( size > allocated_len ) {
-		while ( size > allocated_len ) {
+	const size_t new_size = lenw + size;
+	if ( new_size > allocated_len ) {
+		while ( new_size > allocated_len ) {
 			allocated_len += BUFFER_ALLOC_CHUNK;
 		}
 		if ( data ) {
@@ -60,7 +61,7 @@ void Buffer::Alloc( size_t size ) {
 		dw = ptr( data, lenw, 0 );
 		dr = ptr( data, lenr, 0 );
 	}
-	lenw += size;
+	lenw = new_size;
 }
 
 // note: mostly THROWs instead of ASSERTs, because we need that validation in release mode too to prevent buffer overflows
@@ -153,7 +154,7 @@ const int32_t Buffer::ReadInt() {
 }
 
 const string Buffer::ToString() const {
-	return string( (const char*)data, lenw );
+	return data ? string( (const char*)data, lenw ) : "";
 }
 
 }

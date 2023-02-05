@@ -8,11 +8,10 @@ namespace types {
 
 CLASS( Serializable, base::Base )
 	
-
 	virtual const Buffer Serialize() const = 0;
 	virtual void Unserialize( Buffer buffer ) = 0;
 	
-	void operator= ( const Serializable& other ) {
+	virtual void operator= ( const Serializable& other ) {
 		// not super efficient, but convenient
 		Unserialize( other.Serialize() );
 	}

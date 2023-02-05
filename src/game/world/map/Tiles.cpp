@@ -10,146 +10,165 @@ namespace game {
 namespace world {
 namespace map {
 
-Tiles::Tiles( const size_t width, const size_t height )
-	: m_width( width )
-	, m_height( height )
-{
-	size_t sz = sizeof( Tile ) * width * height;
-	m_data = (Tile*)malloc( sz );
-	memset( ptr( m_data, 0, sz ), 0, sz );
+Tiles::Tiles( const size_t width, const size_t height ) {
+	Resize( width, height );
+}
+
+void Tiles::Resize( const size_t width, const size_t height ) {
 	
-	sz = sizeof( Tile::elevation_t ) * ( width ) * 2;
-	m_top_vertex_row = (Tile::elevation_t*)malloc( sz );
-	memset( ptr( m_top_vertex_row, 0, sz ), 0, sz );
-
-	sz = sizeof( Tile::elevation_t ) * ( width );
-	m_top_right_vertex_row = (Tile::elevation_t*)malloc( sz );
-	memset( ptr( m_top_right_vertex_row, 0, sz ), 0, sz );
-
-	Tile* tile;
-	for ( auto y = 0 ; y < m_height ; y++ ) {
-		for ( auto x = 0 ; x < m_width ; x++ ) {
-			if ( ( y % 2 ) != ( x % 2 ) ) {
-				continue;
-			}
-			tile = At( x, y );
-			
-			// link to other tiles
-			tile->W = ( x >= 2 ) ? At( x - 2, y ) : At( m_width - 1 - ( 1 - ( y % 2 ) ), y );
-			tile->NW = ( y >= 1 )
-				? ( ( x >= 1 )
-					? At( x - 1, y - 1 )
-					: At( m_width - 1, y - 1 )
-				)
-				: tile
-			;
-			tile->N = ( y >= 2 ) ? At( x, y - 2 ) : tile;
-			tile->NE = ( y >= 1 )
-				? ( ( x < m_width - 1 )
-					? At( x + 1, y - 1 )
-					: At( 0, y - 1 )
-				)
-				: tile
-			;
-			tile->E = ( x < m_width - 2 ) ? At( x + 2, y ) : At( y % 2, y );
-			tile->SE = ( y < m_height - 1 )
-				? ( ( x < m_width - 1 )
-					? At( x + 1, y + 1 )
-					: At( 0, y + 1 )
-				)
-				: tile
-			;
-			tile->S = ( y < m_height - 2 ) ? At( x, y + 2 ) : tile;
-			tile->SW = ( y < m_height - 1 )
-				? ( ( x >= 1 )
-					? At( x - 1, y + 1 )
-					: At( m_width - 1, y + 1 )
-				)
-				: tile
-			;
-			
-			tile->elevation.bottom = &tile->elevation_data.bottom;
-			tile->elevation.center = &tile->elevation_data.center;
-			
-			if ( y >= 2 ) {
-				tile->elevation.top = tile->N->elevation.bottom;
-			}
-			else if ( y > 0 ) {
-				ASSERT( x > 0, "x is zero while y isn't" );
-				tile->elevation.top = At( x - 1, y - 1)->elevation.right;
-			}
-			else {
-				tile->elevation.top = TopVertexAt( x, y );
-			}
-			
-			if ( x >= 2 ) {
-				tile->elevation.left = tile->W->elevation.right;
-			}
-			
-			if ( y == 0 ) {
-				tile->elevation.right = TopRightVertexAt( x );
-			}
-			else if ( x < m_width - 1 ) {
-				tile->elevation.right = At( x + 1, y - 1 )->elevation.bottom;
-			}
-		}
+	if ( width != m_width || height != m_height ) {
+		Log( "Initializing tiles ( " + to_string( width ) + " x " + to_string( height ) + " )" );
 		
-		// link left edge to right edge and vice versa
-		if ( y % 2 ) {
-			At( m_width - 1, y )->elevation.right = ( y > 0 ? At( 0, y - 1 )->elevation.bottom : TopRightVertexAt( 0 ) );
-		}
-		At( y % 2, y )->elevation.left = At( m_width - 1 - ( 1 - ( y % 2 ) ), y )->elevation.right;
+		m_width = width;
+		m_height = height;
 		
-	}
+		// warning: allocating objects without new (because it's faster), check this if any memory problems arise
+		if ( m_data ) {
+			free( m_data );
+		}
+		size_t sz = sizeof( Tile ) * width * height;
+		m_data = (Tile*)malloc( sz );
+		memset( ptr( m_data, 0, sz ), 0, sz );
 
-	// add some state variables
-	for ( auto y = 0 ; y < m_height ; y++ ) {
-		for ( auto x = 0 ; x < m_width ; x++ ) {
-			if ( ( y % 2 ) != ( x % 2 ) ) {
-				continue;
+		if ( m_top_vertex_row ) {
+			free( m_top_vertex_row );
+		}
+		sz = sizeof( Tile::elevation_t ) * ( width ) * 2;
+		m_top_vertex_row = (Tile::elevation_t*)malloc( sz );
+		memset( ptr( m_top_vertex_row, 0, sz ), 0, sz );
+
+		if ( m_top_right_vertex_row ) {
+			free( m_top_right_vertex_row );
+		}
+		sz = sizeof( Tile::elevation_t ) * ( width );
+		m_top_right_vertex_row = (Tile::elevation_t*)malloc( sz );
+		memset( ptr( m_top_right_vertex_row, 0, sz ), 0, sz );
+
+		Tile* tile;
+		for ( auto y = 0 ; y < m_height ; y++ ) {
+			for ( auto x = 0 ; x < m_width ; x++ ) {
+				if ( ( y % 2 ) != ( x % 2 ) ) {
+					continue;
+				}
+				tile = At( x, y );
+
+				// link to other tiles
+				tile->W = ( x >= 2 ) ? At( x - 2, y ) : At( m_width - 1 - ( 1 - ( y % 2 ) ), y );
+				tile->NW = ( y >= 1 )
+					? ( ( x >= 1 )
+						? At( x - 1, y - 1 )
+						: At( m_width - 1, y - 1 )
+					)
+					: tile
+				;
+				tile->N = ( y >= 2 ) ? At( x, y - 2 ) : tile;
+				tile->NE = ( y >= 1 )
+					? ( ( x < m_width - 1 )
+						? At( x + 1, y - 1 )
+						: At( 0, y - 1 )
+					)
+					: tile
+				;
+				tile->E = ( x < m_width - 2 ) ? At( x + 2, y ) : At( y % 2, y );
+				tile->SE = ( y < m_height - 1 )
+					? ( ( x < m_width - 1 )
+						? At( x + 1, y + 1 )
+						: At( 0, y + 1 )
+					)
+					: tile
+				;
+				tile->S = ( y < m_height - 2 ) ? At( x, y + 2 ) : tile;
+				tile->SW = ( y < m_height - 1 )
+					? ( ( x >= 1 )
+						? At( x - 1, y + 1 )
+						: At( m_width - 1, y + 1 )
+					)
+					: tile
+				;
+
+				tile->elevation.bottom = &tile->elevation_data.bottom;
+				tile->elevation.center = &tile->elevation_data.center;
+
+				if ( y >= 2 ) {
+					tile->elevation.top = tile->N->elevation.bottom;
+				}
+				else if ( y > 0 ) {
+					ASSERT( x > 0, "x is zero while y isn't" );
+					tile->elevation.top = At( x - 1, y - 1)->elevation.right;
+				}
+				else {
+					tile->elevation.top = TopVertexAt( x, y );
+				}
+
+				if ( x >= 2 ) {
+					tile->elevation.left = tile->W->elevation.right;
+				}
+
+				if ( y == 0 ) {
+					tile->elevation.right = TopRightVertexAt( x );
+				}
+				else if ( x < m_width - 1 ) {
+					tile->elevation.right = At( x + 1, y - 1 )->elevation.bottom;
+				}
 			}
-			tile = At( x, y );
-			
+
+			// link left edge to right edge and vice versa
+			if ( y % 2 ) {
+				At( m_width - 1, y )->elevation.right = ( y > 0 ? At( 0, y - 1 )->elevation.bottom : TopRightVertexAt( 0 ) );
+			}
+			At( y % 2, y )->elevation.left = At( m_width - 1 - ( 1 - ( y % 2 ) ), y )->elevation.right;
+
+		}
+
+		// add some state variables
+		for ( auto y = 0 ; y < m_height ; y++ ) {
+			for ( auto x = 0 ; x < m_width ; x++ ) {
+				if ( ( y % 2 ) != ( x % 2 ) ) {
+					continue;
+				}
+				tile = At( x, y );
+
 #ifdef DEBUG
-	// check that all pointers are linked to something
+		// check that all pointers are linked to something
 #define CHECKTILE( _what ) ASSERT( tile->_what, "tile " #_what " not linked at " + to_string( x ) + "x" + to_string( y ) );
-			
-			CHECKTILE( W );
-			CHECKTILE( NW );
-			CHECKTILE( N );
-			CHECKTILE( NE );
-			CHECKTILE( E );
-			CHECKTILE( SE );
-			CHECKTILE( S );
-			CHECKTILE( SW );
-			
-			CHECKTILE( elevation.left );
-			CHECKTILE( elevation.top );
-			CHECKTILE( elevation.right );
-			
+
+				CHECKTILE( W );
+				CHECKTILE( NW );
+				CHECKTILE( N );
+				CHECKTILE( NE );
+				CHECKTILE( E );
+				CHECKTILE( SE );
+				CHECKTILE( S );
+				CHECKTILE( SW );
+
+				CHECKTILE( elevation.left );
+				CHECKTILE( elevation.top );
+				CHECKTILE( elevation.right );
+
 #undef CHECKTILE
 #endif
-			
-			tile->coord.x = x;
-			tile->coord.y = y;
-			
-			// generate pointer vectors
-			tile->elevation.corners = {
-				tile->elevation.left,
-				tile->elevation.top,
-				tile->elevation.right,
-				tile->elevation.bottom,
-			};
-			tile->neighbours = {
-				tile->W,
-				tile->NW,
-				tile->N,
-				tile->NE,
-				tile->E,
-				tile->SE,
-				tile->S,
-				tile->SW,
-			};
+
+				tile->coord.x = x;
+				tile->coord.y = y;
+
+				// generate pointer vectors
+				tile->elevation.corners = {
+					tile->elevation.left,
+					tile->elevation.top,
+					tile->elevation.right,
+					tile->elevation.bottom,
+				};
+				tile->neighbours = {
+					tile->W,
+					tile->NW,
+					tile->N,
+					tile->NE,
+					tile->E,
+					tile->SE,
+					tile->S,
+					tile->SW,
+				};
+			}
 		}
 	}
 }
@@ -172,7 +191,7 @@ Tile* Tiles::At( const size_t x, const size_t y ) const {
 	ASSERT( x < m_width, "invalid x tile coordinate" );
 	ASSERT( y < m_height, "invalid y tile coordinate" );
 	ASSERT( ( x % 2 ) == ( y % 2 ), "tile coordinate axis oddity differs" );
-	return (Tile*)( m_data + m_width * y + x / 2 );
+	return (Tile*)( m_data + y * m_width + x / 2 );
 }
 
 Tile::elevation_t* Tiles::TopVertexAt( const size_t x, const size_t y ) const {
@@ -471,6 +490,40 @@ void Tiles::FixTopBottomRows() {
 	}
 }
 
+const Buffer Tiles::Serialize() const {
+	Buffer buf;
+
+	buf.WriteInt( m_width );
+	buf.WriteInt( m_height );
+	
+	for ( auto y = 0 ; y < m_height ; y++ ) {
+		for ( auto x = 0 ; x < m_width ; x++ ) {
+			if ( ( y % 2 ) != ( x % 2 ) ) {
+				continue;
+			}
+			buf.WriteString( At( x, y )->Serialize().ToString() );
+		}
+	}
+	
+	return buf;
+}
+
+void Tiles::Unserialize( Buffer buf ) {
+	
+	size_t width = buf.ReadInt();
+	size_t height = buf.ReadInt();
+	
+	Resize( width, height );
+	
+	for ( auto y = 0 ; y < m_height ; y++ ) {
+		for ( auto x = 0 ; x < m_width ; x++ ) {
+			if ( ( y % 2 ) != ( x % 2 ) ) {
+				continue;
+			}
+			At( x, y )->Unserialize( Buffer( buf.ReadString() ) );
+		}
+	}
+}
 
 }
 }

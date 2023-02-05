@@ -1,17 +1,22 @@
 #pragma once
 
-#include "base/Base.h"
+#include "types/Serializable.h"
 
 #include "Tile.h"
+
+using namespace types;
 
 namespace game {
 namespace world {
 namespace map {
 
-CLASS( Tiles, base::Base )
+CLASS( Tiles, Serializable )
 	
 	Tiles( const size_t width, const size_t height );
 	~Tiles();
+	
+	// warning: will reset all tiles
+	void Resize( const size_t width, const size_t height );
 	
 	const size_t GetWidth() const;
 	const size_t GetHeight() const;
@@ -27,14 +32,17 @@ CLASS( Tiles, base::Base )
 	// if you don't and keep generating - they will be normalized more aggressively at the end and may make terrain more flat
 	void FixExtremeSlopes();
 	
+	const Buffer Serialize() const;
+	void Unserialize( Buffer data );
+	
 private:
 	
 	size_t m_width;
 	size_t m_height;
 	
-	Tile::elevation_t* m_top_vertex_row;
-	Tile::elevation_t* m_top_right_vertex_row;
-	Tile* m_data;
+	Tile::elevation_t* m_top_vertex_row = nullptr;
+	Tile::elevation_t* m_top_right_vertex_row = nullptr;
+	Tile* m_data = nullptr;
 	
 	bool m_is_validated = false;
 	
