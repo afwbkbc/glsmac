@@ -16,3 +16,4 @@ _deps
 /build
 *.depend
 *.layout
+/tmp
