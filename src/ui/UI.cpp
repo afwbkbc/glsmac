@@ -116,7 +116,20 @@ void UI::Iterate() {
 	}
 }
 
-#include <cstdio>
+void UI::TriggerGlobalEventHandlers( global_event_handler_order_t order, UIEvent* event ) {
+	auto ghs1 = m_global_event_handlers.find( order );
+	if ( ghs1 != m_global_event_handlers.end() ) {
+		auto ghs2 = ghs1->second.find( event->m_type );
+		if ( ghs2 != ghs1->second.end() ) {
+			for ( auto& h : ghs2->second ) {
+				if ( h->Execute( &event->m_data ) ) {
+					event->SetProcessed();
+					return;
+				}
+			}
+		}
+	}
+}
 
 void UI::ProcessEvent( UIEvent* event ) {
 	if ( event->m_type == UIEvent::EV_MOUSE_MOVE ) {
@@ -124,14 +137,18 @@ void UI::ProcessEvent( UIEvent* event ) {
 		m_last_mouse_position = { event->m_data.mouse.x, event->m_data.mouse.y };
 	}
 	
+	TriggerGlobalEventHandlers( GH_BEFORE, event );
+	
 	if ( event->m_type == UIEvent::EV_KEY_DOWN ) {
 		if ( m_focused_object && ( event->m_data.key.code == UIEvent::K_TAB ) ) {
 			FocusNextObject();
-			return;
+			event->SetProcessed();
 		}
 	}
 	
-	m_root_object.ProcessEvent( event );
+	if ( !event->IsProcessed() ) {
+		m_root_object.ProcessEvent( event );
+	}
 	
 	if ( !event->IsProcessed() ) {
 		if ( event->m_type == UIEvent::EV_KEY_DOWN ) {
@@ -143,6 +160,10 @@ void UI::ProcessEvent( UIEvent* event ) {
 			}
 		}
 	}
+
+	if ( !event->IsProcessed() ) {
+		TriggerGlobalEventHandlers( GH_AFTER, event );
+	}
 }
 
 void UI::SendMouseMoveEvent( UIObject* object ) {
@@ -151,12 +172,34 @@ void UI::SendMouseMoveEvent( UIObject* object ) {
 	DELETE( event );
 }
 
-const UIEventHandler* UI::AddGlobalEventHandler( const UIEvent::event_type_t event_type, const UIEventHandler::handler_function_t& handler ) {
-	return m_root_object.On( event_type, handler );
+const UIEventHandler* UI::AddGlobalEventHandler( const UIEvent::event_type_t type, const UIEventHandler::handler_function_t& func, const global_event_handler_order_t order ) {
+	NEWV( handler, UIEventHandler, func );
+	auto its = m_global_event_handlers.find( order );
+	if ( its == m_global_event_handlers.end() ) {
+		m_global_event_handlers[ order ] = {};
+		its = m_global_event_handlers.find( order );
+	}
+	auto it = its->second.find( type );
+	if ( it == its->second.end() ) {
+		its->second[ type ] = {};
+		it = its->second.find( type );
+	}
+	it->second.push_back( handler );
+	return handler;
 }
 
-void UI::RemoveGlobalEventHandler( const UIEventHandler* event_handler ) {
-	m_root_object.Off( event_handler );
+void UI::RemoveGlobalEventHandler( const UIEventHandler* handler ) {
+	for ( auto& its : m_global_event_handlers ) {
+		for ( auto& handlers : its.second ) {
+			auto it = find( handlers.second.begin() , handlers.second.end(), handler );
+			if ( it != handlers.second.end() ) {
+				DELETE( *it );
+				handlers.second.erase( it );
+				return;
+			}
+		}
+	}
+	ASSERT( false, "handler not found" );
 }
 
 void UI::AddTheme( theme::Theme* theme ) {

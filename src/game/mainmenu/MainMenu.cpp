@@ -34,7 +34,7 @@ void MainMenu::Start() {
 			}
 		}
 		return false;
-	});
+	}, UI::GH_BEFORE );
 	
 	m_key_handler = ui->AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this ) {
 		// escape = back
@@ -42,7 +42,7 @@ void MainMenu::Start() {
 			return m_menu_object->MaybeClose(); // popups have their own escape handler
 		}
 		return false;
-	});
+	}, UI::GH_BEFORE );
 
 	NEW( m_music, SoundEffect, "MainMenuMusic" );
 	g_engine->GetUI()->AddObject( m_music );

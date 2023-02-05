@@ -3,6 +3,8 @@
 #include "../UI.h"
 
 #include "ui/object/Surface.h"
+#include "ui/object/Section.h"
+#include "ui/object/Button.h"
 
 namespace game {
 namespace world {
@@ -16,8 +18,20 @@ CLASS( BottomBar, UI )
 	void Destroy();
 	
 protected:
-	Surface* m_frame = nullptr;
-
+	struct {
+		Surface* left = nullptr;
+		Surface* right = nullptr;
+		Surface* middle = nullptr;
+	} m_frames;
+	
+	vector< Surface* > m_backgrounds;
+	
+	struct {
+		Button* menu = nullptr;
+		Button* commlink = nullptr;
+	} m_buttons;
+	
+	Section* m_unit_preview = nullptr;
 };
 	
 }

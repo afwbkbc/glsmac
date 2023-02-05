@@ -123,7 +123,7 @@ Map::Map( Scene* scene )
 	NEW( m, Coastlines, this ); m_modules.push_back( m );
 	NEW( m, Finalize, this ); m_modules.push_back( m ); // needs to always be last
 
-	m_textures.source = g_engine->GetTextureLoader()->LoadTexture( "texture.pcx", Color::RGBA( 125, 0, 128, 255 ) );
+	m_textures.source = g_engine->GetTextureLoader()->LoadTextureTC( "texture.pcx", Color::RGBA( 125, 0, 128, 255 ) );
 }
 
 Map::~Map() {

@@ -56,8 +56,13 @@ CLASS( UI, base::Module )
 	
 	void ProcessEvent( UIEvent* event );
 	void SendMouseMoveEvent( UIObject* object );
-	const UIEventHandler* AddGlobalEventHandler( const UIEvent::event_type_t event_type, const UIEventHandler::handler_function_t& handler );
-	void RemoveGlobalEventHandler( const UIEventHandler* event_handler );
+	
+	enum global_event_handler_order_t {
+		GH_BEFORE, // will be called before UI elements
+		GH_AFTER, // will be called after UI elements
+	};
+	const UIEventHandler* AddGlobalEventHandler( const UIEvent::event_type_t event_type, const UIEventHandler::handler_function_t& func, const global_event_handler_order_t order );
+	void RemoveGlobalEventHandler( const UIEventHandler* handler );
 	
 	void AddTheme( theme::Theme* theme );
 	void RemoveTheme( theme::Theme* theme );
@@ -106,6 +111,9 @@ protected:
 	
 private:
 
+	unordered_map< global_event_handler_order_t, UIObject::event_handlers_t > m_global_event_handlers = {};
+	void TriggerGlobalEventHandlers( global_event_handler_order_t order, UIEvent* event );
+	
 	vector< UIObject* > m_focusable_objects_order = {};
 	unordered_set< UIObject* > m_focusable_objects = {};
 	UIObject* m_focused_object = nullptr;

@@ -134,6 +134,8 @@ CLASS( UIObject, base::Base )
 	virtual void Focus();
 	virtual void Defocus();
 	
+	typedef unordered_map< UIEvent::event_type_t, vector< UIEventHandler* > > event_handlers_t;
+	
 protected:
 	friend class UIContainer;
 	
@@ -280,8 +282,7 @@ private:
 	
 	Style::modifier_t m_style_modifiers = Style::M_NONE;
 	
-	typedef vector< UIEventHandler* > event_handlers_t;
-	unordered_map< UIEvent::event_type_t, event_handlers_t > m_event_handlers = {};
+	event_handlers_t m_event_handlers = {};
 	
 };
 

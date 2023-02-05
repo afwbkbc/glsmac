@@ -98,12 +98,18 @@ void World::Start() {
 	
 	auto* ui = g_engine->GetUI();
 	
+	// UI
+	ui->AddTheme( &m_ui.theme );
+	NEW( m_ui.bottom_bar, ui::BottomBar, this );
+	ui->AddObject( m_ui.bottom_bar );
+
+	// map event handlers
 	m_handlers.keydown = ui->AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this ) {
 		if ( data->key.code == UIEvent::K_ESCAPE ) {
 			ReturnToMainMenu();
 		}
 		return true;
-	});
+	}, UI::GH_AFTER );
 	
 	m_handlers.mousedown = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_DOWN, EH( this ) {
 		switch ( data->mouse.button ) {
@@ -119,7 +125,7 @@ void World::Start() {
 			}
 		}
 		return true;
-	});
+	}, UI::GH_AFTER );
 	
 	m_handlers.mousemove = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_MOVE, EH( this ) {
 		if ( m_is_dragging ) {
@@ -146,7 +152,7 @@ void World::Start() {
 		}
 		
 		return true;
-	});
+	}, UI::GH_AFTER );
 	
 	m_handlers.mouseup = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_UP, EH( this ) {
 		switch ( data->mouse.button ) {
@@ -163,7 +169,7 @@ void World::Start() {
 			}
 		}
 		return true;
-	});
+	}, UI::GH_AFTER );
 	
 	m_handlers.mousescroll = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_SCROLL, EH( this ) {
 		
@@ -174,8 +180,8 @@ void World::Start() {
 		if ( new_z < 0.02 ) {
 			new_z = 0.02;
 		}
-		if ( new_z > 0.224f ) { // TODO: fix camera z, then can zoom closer
-			new_z = 0.224f;
+		if ( new_z > 0.25f ) { // TODO: fix camera z, then can zoom closer
+			new_z = 0.25f;
 		}
 		
 		float diff = m_camera_position.z / new_z;
@@ -188,7 +194,9 @@ void World::Start() {
 		UpdateCameraPosition();
 		
 		return true;
-	});
+	}, UI::GH_AFTER );
+	
+	// other stuff
 	
 	m_clamp.x.SetRange( 0.0, g_engine->GetGraphics()->GetWindowWidth(), -0.5, 0.5 );
 	m_clamp.y.SetRange( 0.0, g_engine->GetGraphics()->GetWindowHeight(), -0.5, 0.5 );
@@ -204,15 +212,11 @@ void World::Start() {
 		UpdateCameraPosition();
 	});
 	
-	// UI
-	ui->AddTheme( &m_ui.theme );
-	//NEW( m_ui.bottom_bar, ui::BottomBar, this );
-	//ui->AddObject( m_ui.bottom_bar );
 }
 
 void World::Stop() {
 	auto* ui = g_engine->GetUI();
-	//ui->RemoveObject( m_ui.bottom_bar );
+	ui->RemoveObject( m_ui.bottom_bar );
 	ui->RemoveTheme( &m_ui.theme );
 	
 	DELETE( m_map );
@@ -253,7 +257,7 @@ void World::SetCameraPosition( const Vec3 camera_position ) {
 }
 
 void World::UpdateCameraPosition() {
-	m_camera->SetPosition( { ( 0.5f + m_camera_position.x ) * g_engine->GetGraphics()->GetAspectRatio(), 0.5f + m_camera_position.y, 1.0f + m_camera_position.y + m_camera_position.z * 2 } );
+	m_camera->SetPosition( { ( 0.5f + m_camera_position.x ) * g_engine->GetGraphics()->GetAspectRatio(), 0.5f + m_camera_position.y, 1.0f + m_camera_position.y + m_camera_position.z } );
 }
 void World::UpdateCameraScale() {
 	m_camera->SetScale( { m_camera_position.z, m_camera_position.z, m_camera_position.z } );

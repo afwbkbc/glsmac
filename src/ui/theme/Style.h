@@ -115,12 +115,13 @@ CLASS( Style, base::Base )
 	
 	// raw setter
 	void SetObject( const attribute_type_t attribute_type, const void* value );
-	// convenience setters
-	void SetTexture( const attribute_type_t attribute_type, const std::string& name );
-	void SetTexture( const attribute_type_t attribute_type, const std::string& name, const Color::rgba_t transparent_color );
+	// convenience setters // TODO: improve SetTexture* API
+	void SetTexture( const attribute_type_t attribute_type, const string& name );
+	void SetTextureTC( const attribute_type_t attribute_type, const string& name, const Color::rgba_t transparent_color );
 	void SetTexture( const attribute_type_t attribute_type, const string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = TextureLoader::LT_NONE, const float value = 1.0 );
-	void SetFont( const attribute_type_t attribute_type, const std::string &name, const unsigned char size );
-	void SetSound( const attribute_type_t attribute_type, const std::string& name );
+	void SetTextureTC( const attribute_type_t attribute_type, const string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const Color::rgba_t transparent_color, const uint8_t flags = TextureLoader::LT_NONE, const float value = 1.0 );
+	void SetFont( const attribute_type_t attribute_type, const string &name, const unsigned char size );
+	void SetSound( const attribute_type_t attribute_type, const string& name );
 
 	bool Has( const attribute_type_t attribute_type, const modifier_t modifiers ) const;
 	const float Get( const attribute_type_t attribute_type, const modifier_t modifiers ) const;

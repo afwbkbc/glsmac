@@ -101,14 +101,16 @@ void Sound::Pause() {
 
 void Sound::Stop() {
 	m_start_delay_timer.Stop();
-	m_is_finished = true;
 	m_is_playing = false;
 	m_is_active = false;
 	if ( m_is_repeatable ) {
 		Rewind();
 	}
+	else {
+		m_is_finished = true;
+	}
 }
-	
+
 const bool Sound::IsActive() {
 	if ( !m_is_active ) {
 		if ( m_start_delay_timer.Ticked() ) {
@@ -116,6 +118,10 @@ const bool Sound::IsActive() {
 		}
 	}
 	return m_is_active;
+}
+
+const bool Sound::IsFinished() const {
+	return m_is_finished;
 }
 
 const bool Sound::IsReadyToBeDeleted() const {

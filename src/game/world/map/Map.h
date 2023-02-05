@@ -107,9 +107,9 @@ CLASS( Map, Serializable )
 				const uint8_t y = Map::s_consts.pcx_texture_block.dimensions.y / 2;
 			} radius;
 		} pcx_texture_block;
-		const Vec3 map_position = { 0.0, 0.0, -1.0f - Map::s_consts.tile_scale_z }; // z should be below 0 to always be under UI
-		const Vec3 map_rotation = { 0.0, 0.0, 0.0 };
-		const Color underwater_tint = { 0.0, 0.2, 0.5, 1.0 };
+		const Vec3 map_position = { 0.0f, 0.0f, 0.0f };
+		const Vec3 map_rotation = { 0.0f, 0.0f, 0.0f };
+		const Color underwater_tint = { 0.0f, 0.2f, 0.5f, 1.0f };
 		const struct {
 			const Color coastline_tint = { 0.7f, 0.7f, 0.7f, 1.0f };
 			const Color::channel_t coast_water_alpha = 0.3f;
