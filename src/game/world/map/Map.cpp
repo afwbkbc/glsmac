@@ -122,6 +122,8 @@ Map::Map( Scene* scene )
 	NEW( m, WaterSurface, this ); m_modules.push_back( m );
 	NEW( m, Coastlines, this ); m_modules.push_back( m );
 	NEW( m, Finalize, this ); m_modules.push_back( m ); // needs to always be last
+
+	m_textures.source = g_engine->GetTextureLoader()->LoadTexture( "texture.pcx", Color::RGBA( 125, 0, 128, 255 ) );
 }
 
 Map::~Map() {
@@ -147,10 +149,12 @@ Map::~Map() {
 	}
 }
 
-void Map::SetTiles( Tiles* tiles ) {
+void Map::SetTiles( Tiles* tiles, bool generate_actors ) {
 	ASSERT( !m_tiles, "map tiles already set" );
 	m_tiles = tiles;
-	GenerateActors();
+	if ( generate_actors ) {
+		GenerateActors();
+	}
 }
 
 vector<actor::Mesh*> Map::GetActors() const {
@@ -163,7 +167,7 @@ void Map::GenerateActors() {
 	ASSERT( m_tiles, "map tiles not set" );
 	m_tiles->Validate();
 	
-	Log( "Loading map" );
+	Log( "Initializing map" );
 	
 	m_map_state = {};
 	
@@ -175,13 +179,10 @@ void Map::GenerateActors() {
 	m_map_state.variables.texture_scaling.y = 1.0f / Map::s_consts.pcx_texture_block.dimensions.y / m_map_state.dimensions.y / LAYER_MAX;
 	
 	ASSERT( !m_tile_states, "m_tile_states already set" );
-	size_t wh = m_map_state.dimensions.x * m_map_state.dimensions.y;
-	m_tile_states = (tile_state_t*)malloc( sizeof( tile_state_t ) * wh );
-	memset( ptr( m_tile_states, 0, wh ), 0, wh );
+	size_t sz = m_map_state.dimensions.y * m_map_state.dimensions.x;
+	m_tile_states = (tile_state_t*)malloc( sizeof( tile_state_t ) * sz );
+	memset( ptr( m_tile_states, 0, sz ), 0, sz );
 	
-	if ( !m_textures.source ) {
-		m_textures.source = g_engine->GetTextureLoader()->LoadTexture( "texture.pcx", Color::RGBA( 125, 0, 128, 255 ) );
-	}
 	if ( m_actors.terrain ) {
 		m_scene->RemoveActor( m_actors.terrain );
 		DELETE( m_actors.terrain );
@@ -205,7 +206,6 @@ void Map::GenerateActors() {
 			for ( auto& m : m_modules ) {
 				m->GenerateTile( m_current_tile, m_current_ts, &m_map_state );
 			}
-
 		}
 	}
 	
@@ -230,9 +230,6 @@ void Map::GenerateActors() {
 		));
 	}
 	
-	free( m_tile_states );
-	m_tile_states = nullptr;
-	
 	NEW( m_actors.terrain, actor::Mesh, "MapTerrain", m_mesh_terrain );
 		m_actors.terrain->SetTexture( m_textures.terrain );
 		m_actors.terrain->SetPosition( Map::s_consts.map_position );
@@ -241,7 +238,6 @@ void Map::GenerateActors() {
 	
 	m_current_tile = nullptr;
 	m_current_ts = nullptr;
-	m_mesh_terrain = nullptr; // deleted by actor
 }
 
 const Map::tile_texture_info_t Map::GetTileTextureInfo( const Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature ) const {
@@ -320,11 +316,274 @@ void Map::CopyTextureDeferred( const tile_layer_type_t tile_layer_from, const si
 };
 
 Map::tile_state_t* Map::GetTileState( const size_t x, const size_t y ) const {
-	ASSERT( x < m_tiles->GetWidth(), "tile x overflow" );
-	ASSERT( y < m_tiles->GetHeight(), "tile y overflow" );
-	return &m_tile_states[ y * m_map_state.dimensions.x + x ];
+	ASSERT( x < m_map_state.dimensions.x, "tile state x overflow" );
+	ASSERT( y < m_map_state.dimensions.y, "tile state y overflow" );
+	ASSERT( ( x % 2 ) == ( y % 2 ), "tile state axis oddity differs" );
+	return &m_tile_states[ y * m_map_state.dimensions.x + x / 2 ];
 }
 
+const Buffer Map::Serialize() const {
+	Buffer buf;
+	
+	ASSERT( m_tiles, "tiles not set, can't serialize" );
+	
+	buf.WriteString( m_map_state.Serialize().ToString() );
+	
+	buf.WriteString( m_tiles->Serialize().ToString() );
+	for ( auto y = 0 ; y < m_map_state.dimensions.y ; y++ ) {
+		for ( auto x = 0; x < m_map_state.dimensions.x ; x++ ) {
+			if ( ( x % 2 ) != ( y % 2 ) ) {
+				continue;
+			}
+			buf.WriteString( GetTileState( x, y )->Serialize().ToString() );
+		}
+	}
+	
+	buf.WriteString( m_textures.terrain->Serialize().ToString() );
+	buf.WriteString( m_mesh_terrain->Serialize().ToString() );
+	
+	return buf;
+}
+
+const Buffer Map::map_state_t::Serialize() const {
+	Buffer buf;
+	
+	buf.WriteFloat( coord.x );
+	buf.WriteFloat( coord.y );
+	
+	buf.WriteInt( dimensions.x );
+	buf.WriteInt( dimensions.y );
+	
+	buf.WriteFloat( variables.texture_scaling.x );
+	buf.WriteFloat( variables.texture_scaling.y );
+	
+	return buf;
+}
+
+const Buffer Map::tile_state_t::Serialize() const {
+	Buffer buf;
+	
+	buf.WriteFloat( coord.x );
+	buf.WriteFloat( coord.y );
+	
+	buf.WriteFloat( tex_coord.x );
+	buf.WriteFloat( tex_coord.y );
+	buf.WriteFloat( tex_coord.x1 );
+	buf.WriteFloat( tex_coord.y1 );
+	buf.WriteFloat( tex_coord.x2 );
+	buf.WriteFloat( tex_coord.y2 );
+	
+	buf.WriteString( elevations.Serialize().ToString() );
+	
+	buf.WriteInt( LAYER_MAX );
+	for ( auto i = 0 ; i < LAYER_MAX ; i++ ) {
+		buf.WriteString( layers[ i ].Serialize().ToString() );
+	}
+	
+	buf.WriteBool( is_coastline_corner );
+	buf.WriteBool( has_water );
+	
+	return buf;
+}
+
+const Buffer Map::tile_elevations_t::Serialize() const {
+	Buffer buf;
+	
+	buf.WriteInt( center );
+	buf.WriteInt( left );
+	buf.WriteInt( top );
+	buf.WriteInt( right );
+	buf.WriteInt( bottom );
+	
+	return buf;
+}
+
+const Buffer Map::tile_layer_t::Serialize() const {
+	Buffer buf;
+	
+	buf.WriteString( indices.Serialize().ToString() );
+	buf.WriteString( coords.Serialize().ToString() );
+	buf.WriteString( tex_coords.Serialize().ToString() );
+	buf.WriteString( colors.Serialize().ToString() );
+	
+	return buf;
+}
+
+const Buffer Map::tile_indices_t::Serialize() const {
+	Buffer buf;
+	
+	buf.WriteInt( center );
+	buf.WriteInt( left );
+	buf.WriteInt( right );
+	buf.WriteInt( top );
+	buf.WriteInt( bottom );
+	
+	return buf;
+}
+
+const Buffer Map::tile_vertices_t::Serialize() const {
+	Buffer buf;
+	
+	buf.WriteVec3( center );
+	buf.WriteVec3( left );
+	buf.WriteVec3( top );
+	buf.WriteVec3( right );
+	buf.WriteVec3( bottom );
+	
+	return buf;
+}
+
+const Buffer Map::tile_tex_coords_t::Serialize() const {
+	Buffer buf;
+	
+	buf.WriteVec2f( center );
+	buf.WriteVec2f( left );
+	buf.WriteVec2f( top );
+	buf.WriteVec2f( right );
+	buf.WriteVec2f( bottom );
+	
+	return buf;
+}
+
+const Buffer Map::tile_colors_t::Serialize() const {
+	Buffer buf;
+	
+	buf.WriteColor( center );
+	buf.WriteColor( left );
+	buf.WriteColor( top );
+	buf.WriteColor( right );
+	buf.WriteColor( bottom );
+	
+	return buf;
+}
+
+void Map::Unserialize( Buffer buf ) {
+	ASSERT( m_tiles, "tiles not set, can't unserialize" );
+	
+	m_map_state.Unserialize( Buffer( buf.ReadString() ) );
+	
+	m_tiles->Unserialize( buf.ReadString() );
+
+	ASSERT( m_tiles->GetWidth() == m_map_state.dimensions.x, "tiles width doesn't match map width ( " + to_string( m_tiles->GetWidth() ) + " != " + to_string( m_map_state.dimensions.x ) + " )" );
+	ASSERT( m_tiles->GetHeight() == m_map_state.dimensions.y, "tiles height doesn't match map height ( " + to_string( m_tiles->GetHeight() ) + " != " + to_string( m_map_state.dimensions.y ) + " )" );
+
+	if ( m_tile_states ) {
+		free( m_tile_states );
+	}
+	size_t sz = m_map_state.dimensions.y * m_map_state.dimensions.x;
+	m_tile_states = (tile_state_t*)malloc( sizeof( tile_state_t ) * sz );
+	memset( ptr( m_tile_states, 0, sz ), 0, sz );
+	
+	for ( auto y = 0 ; y < m_map_state.dimensions.y ; y++ ) {
+		for ( auto x = 0; x < m_map_state.dimensions.x ; x++ ) {
+			if ( ( x % 2 ) != ( y % 2 ) ) {
+				continue;
+			}
+			GetTileState( x, y )->Unserialize( buf.ReadString() );
+		}
+	}
+	
+	if ( m_textures.terrain ) {
+		DELETE( m_textures.terrain );
+	}
+	NEW( m_textures.terrain, Texture, "TerrainTexture", m_map_state.dimensions.x * Map::s_consts.pcx_texture_block.dimensions.x, ( m_map_state.dimensions.y * LAYER_MAX ) * Map::s_consts.pcx_texture_block.dimensions.y );
+	m_textures.terrain->Unserialize( buf.ReadString() );
+	
+	if ( m_actors.terrain ) {
+		m_scene->RemoveActor( m_actors.terrain );
+		DELETE( m_actors.terrain );
+	}
+	NEW( m_mesh_terrain, types::Mesh, m_map_state.dimensions.x * ( m_map_state.dimensions.y * LAYER_MAX ) * 5 / 2, m_map_state.dimensions.x * ( m_map_state.dimensions.y * LAYER_MAX ) * 4 / 2 );
+	m_mesh_terrain->Unserialize( buf.ReadString() );
+	NEW( m_actors.terrain, actor::Mesh, "MapTerrain", m_mesh_terrain );
+		m_actors.terrain->SetTexture( m_textures.terrain );
+		m_actors.terrain->SetPosition( Map::s_consts.map_position );
+		m_actors.terrain->SetAngle( Map::s_consts.map_rotation );
+	m_scene->AddActor( m_actors.terrain );
+	
+}
+
+void Map::map_state_t::Unserialize( Buffer buf ) {
+	coord.x = buf.ReadFloat();
+	coord.y = buf.ReadFloat();
+	
+	dimensions.x = buf.ReadInt();
+	dimensions.y = buf.ReadInt();
+	
+	variables.texture_scaling.x = buf.ReadFloat();
+	variables.texture_scaling.y = buf.ReadFloat();
+}
+
+void Map::tile_state_t::Unserialize( Buffer buf ) {
+	coord.x = buf.ReadFloat();
+	coord.y = buf.ReadFloat();
+	
+	tex_coord.x = buf.ReadFloat();
+	tex_coord.y = buf.ReadFloat();
+	tex_coord.x1 = buf.ReadFloat();
+	tex_coord.y1 = buf.ReadFloat();
+	tex_coord.x2 = buf.ReadFloat();
+	tex_coord.y2 = buf.ReadFloat();
+	
+	elevations.Unserialize( buf.ReadString() );
+	
+	if ( (tile_layer_type_t)buf.ReadInt() != LAYER_MAX ) {
+		THROW( "LAYER_MAX mismatch" );
+	}
+	for ( auto i = 0 ; i < LAYER_MAX ; i++ ) {
+		layers[i].Unserialize( buf.ReadString() );
+	}
+	
+	is_coastline_corner = buf.ReadBool();
+	has_water = buf.ReadBool();
+}
+
+void Map::tile_elevations_t::Unserialize( Buffer buf ) {
+	left = buf.ReadInt();
+	top = buf.ReadInt();
+	right = buf.ReadInt();
+	bottom = buf.ReadInt();
+	center = buf.ReadInt();
+}
+
+void Map::tile_layer_t::Unserialize( Buffer buf ) {
+	indices.Unserialize( buf.ReadString() );
+	coords.Unserialize( buf.ReadString() );
+	tex_coords.Unserialize( buf.ReadString() );
+	colors.Unserialize( buf.ReadString() );
+}
+
+void Map::tile_indices_t::Unserialize( Buffer buf ) {
+	left = buf.ReadInt();
+	top = buf.ReadInt();
+	right = buf.ReadInt();
+	bottom = buf.ReadInt();
+	center = buf.ReadInt();
+}
+
+void Map::tile_vertices_t::Unserialize( Buffer buf ) {
+	left = buf.ReadVec3();
+	top = buf.ReadVec3();
+	right = buf.ReadVec3();
+	bottom = buf.ReadVec3();
+	center = buf.ReadVec3();
+}
+
+void Map::tile_tex_coords_t::Unserialize( Buffer buf ) {
+	left = buf.ReadVec2f();
+	top = buf.ReadVec2f();
+	right = buf.ReadVec2f();
+	bottom = buf.ReadVec2f();
+	center = buf.ReadVec2f();
+}
+
+void Map::tile_colors_t::Unserialize( Buffer buf ) {
+	left = buf.ReadColor();
+	top = buf.ReadColor();
+	right = buf.ReadColor();
+	bottom = buf.ReadColor();
+	center = buf.ReadColor();
+}
 
 }
 }

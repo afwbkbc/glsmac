@@ -17,6 +17,11 @@
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
+#ifdef DEBUG
+#define MAP_FILENAME "./tmp/lastmap.gsm"
+#define MAP_DUMP_FILENAME "./tmp/lastmap.dump"
+#endif
+
 namespace game {
 namespace world {
 
@@ -57,24 +62,39 @@ void World::Start() {
 	srand( seed );
 	
 #ifdef DEVEL
-#define MAP_FILENAME "./tmp/lastmap.gsm"
-	if ( FS::FileExists( MAP_FILENAME ) ) {
-		// load existing map to avoid waiting for generation (takes several seconds on debug build)
-		tiles->Unserialize( Buffer( FS::ReadFile( MAP_FILENAME ) ) );
+	if ( FS::FileExists( MAP_DUMP_FILENAME ) ) {
+		Log( (string) "Loading map dump from " + MAP_DUMP_FILENAME );
+		m_map->SetTiles( tiles, false );
+		m_map->Unserialize( Buffer( FS::ReadFile( MAP_DUMP_FILENAME ) ) );
 	}
 	else
 #endif
 	{
-		map_generator::SimplePerlin generator;
-		//map_generator::SimpleRandom generator;
-		//map_generator::Test generator;
-		generator.Generate( tiles, seed );
 #ifdef DEVEL
-		FS::WriteFile( MAP_FILENAME, tiles->Serialize().ToString() );
+		if ( FS::FileExists( MAP_FILENAME ) ) {
+			Log( (string) "Loading map from " + MAP_FILENAME );
+			tiles->Unserialize( Buffer( FS::ReadFile( MAP_FILENAME ) ) );
+		}
+		else
+#endif
+		{
+			map_generator::SimplePerlin generator;
+			//map_generator::SimpleRandom generator;
+			//map_generator::Test generator;
+			generator.Generate( tiles, seed );
+#ifdef DEBUG
+			// if crash happens - it's handy to have a map file to reproduce it
+			Log( (string) "Saving map to " + MAP_FILENAME );
+			FS::WriteFile( MAP_FILENAME, tiles->Serialize().ToString() );
+#endif
+		}
+		m_map->SetTiles( tiles );
+#ifdef DEBUG
+		// also handy to have dump of generated map
+		Log( (string) "Saving map dump to " + MAP_DUMP_FILENAME );
+		FS::WriteFile( MAP_DUMP_FILENAME, m_map->Serialize().ToString() );
 #endif
 	}
-	
-	m_map->SetTiles( tiles );
 	
 	auto* ui = g_engine->GetUI();
 	

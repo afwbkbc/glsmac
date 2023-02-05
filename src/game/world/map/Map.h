@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/Base.h"
+#include "types/Serializable.h"
 
 #include <vector>
 #include <unordered_map>
@@ -27,7 +27,7 @@ namespace map {
 class Module;
 class Finalize;
 	
-CLASS( Map, base::Base )
+CLASS( Map, Serializable )
 
 	Map( Scene* constscene );
 	~Map();
@@ -129,7 +129,7 @@ CLASS( Map, base::Base )
 	} consts_t;
 	static const consts_t s_consts;
 	
-	void SetTiles( Tiles* tiles );
+	void SetTiles( Tiles* tiles, bool generate_actors = true );
 	
 	// tmp
 	vector<actor::Mesh*> GetActors() const;
@@ -149,6 +149,8 @@ CLASS( Map, base::Base )
 		Vec3 top;
 		Vec3 right;
 		Vec3 bottom;
+		const Buffer Serialize() const;
+		void Unserialize( Buffer buf );
 	} tile_vertices_t;
 
 	typedef struct {
@@ -157,6 +159,8 @@ CLASS( Map, base::Base )
 		types::Mesh::index_t right;
 		types::Mesh::index_t top;
 		types::Mesh::index_t bottom;
+		const Buffer Serialize() const;
+		void Unserialize( Buffer buf );
 	} tile_indices_t;
 	
 	typedef struct {
@@ -165,6 +169,8 @@ CLASS( Map, base::Base )
 		Vec2< float > top;
 		Vec2< float > right;
 		Vec2< float > bottom;
+		const Buffer Serialize() const;
+		void Unserialize( Buffer buf );
 	} tile_tex_coords_t;
 	
 	typedef struct {
@@ -173,6 +179,8 @@ CLASS( Map, base::Base )
 		Color top;
 		Color right;
 		Color bottom;
+		const Buffer Serialize() const;
+		void Unserialize( Buffer buf );
 	} tile_colors_t;
 	
 	typedef struct {
@@ -180,14 +188,18 @@ CLASS( Map, base::Base )
 		tile_vertices_t coords;
 		tile_tex_coords_t tex_coords;
 		tile_colors_t colors;
+		const Buffer Serialize() const;
+		void Unserialize( Buffer buf );
 	} tile_layer_t;
 	
 	typedef struct {
+		Tile::elevation_t center;
 		Tile::elevation_t left;
 		Tile::elevation_t top;
 		Tile::elevation_t right;
 		Tile::elevation_t bottom;
-		Tile::elevation_t center;
+		const Buffer Serialize() const;
+		void Unserialize( Buffer buf );
 	} tile_elevations_t;
 	
 	typedef struct {
@@ -208,6 +220,8 @@ CLASS( Map, base::Base )
 		tile_layer_t layers[ LAYER_MAX ];
 		bool is_coastline_corner;
 		bool has_water;
+		const Buffer Serialize() const;
+		void Unserialize( Buffer buf );
 	} tile_state_t;
 	
 	typedef struct {
@@ -243,6 +257,8 @@ CLASS( Map, base::Base )
 		vector< pair< types::Mesh::index_t*, types::Mesh::index_t* > > copy_normals;
 		unordered_map< types::Mesh::index_t*, pair< Vec2< size_t >, Texture::add_mode_t > > need_normals;
 		
+		const Buffer Serialize() const;
+		void Unserialize( Buffer buf );
 	} map_state_t;
 	
 	// call these only during tile generation
@@ -260,6 +276,9 @@ CLASS( Map, base::Base )
 	} tile_texture_info_t;
 	const tile_texture_info_t GetTileTextureInfo( const Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature = Tile::F_NONE ) const;
 
+	const Buffer Serialize() const;
+	void Unserialize( Buffer buf );
+	
 protected:
 	friend class Finalize;
 	

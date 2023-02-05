@@ -2,6 +2,10 @@
 
 #include "base/Base.h"
 
+#include "types/Vec2.h"
+#include "types/Vec3.h"
+#include "types/Color.h"
+
 using namespace std;
 
 namespace types {
@@ -12,7 +16,6 @@ CLASS( Buffer, base::Base )
 	
 	typedef uint8_t data_t;
 	typedef char checksum_t;
-	typedef char type_t;
 	
 	Buffer();
 	Buffer( const string& strval );
@@ -28,14 +31,42 @@ CLASS( Buffer, base::Base )
 	size_t lenr;
 	checksum_t checksum;
 	
-	void WriteString( const string& strval );
+	void WriteBool( const bool val );
+	const bool ReadBool();
+	void WriteInt( const long long int val );
+	const long long int ReadInt();
+	void WriteFloat( const float val );
+	const float ReadFloat();
+	void WriteString( const string& val );
 	const string ReadString();
-	void WriteInt( const int32_t intval ); // todo: size and sign parameters?
-	const int32_t ReadInt();
+	void WriteVec2f( const Vec2< float > val );
+	const Vec2< float > ReadVec2f();
+	void WriteVec3( const Vec3 val );
+	const Vec3 ReadVec3();
+	void WriteColor( const Color val );
+	const Color ReadColor();
+	void WriteData( const void* data, const size_t len );
+	const void* ReadData( const size_t len );
 	
 	const string ToString() const;
 	
 private:
+	
+	enum type_t : uint8_t {
+		
+		T_NONE,
+		T_BOOL,
+		T_INT,
+		T_FLOAT,
+		T_STRING,
+		T_VEC2F,
+		T_VEC3,
+		T_COLOR,
+		T_DATA,
+		
+		T_MAX
+	};
+	
 	void WriteImpl( const type_t type, const char* s, const size_t sz );
 	char* ReadImpl( const type_t need_type, char* s, size_t* sz, const size_t need_sz = 0 );
 	void Alloc( size_t size );

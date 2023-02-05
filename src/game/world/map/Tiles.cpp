@@ -523,6 +523,17 @@ void Tiles::Unserialize( Buffer buf ) {
 			At( x, y )->Unserialize( Buffer( buf.ReadString() ) );
 		}
 	}
+	
+	for ( auto y = 0 ; y < m_height ; y++ ) {
+		for ( auto x = 0 ; x < m_width ; x++ ) {
+			if ( ( y % 2 ) != ( x % 2 ) ) {
+				continue;
+			}
+			At( x, y )->Update();
+		}
+	}
+	
+	Validate();
 }
 
 }

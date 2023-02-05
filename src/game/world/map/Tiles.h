@@ -33,7 +33,7 @@ CLASS( Tiles, Serializable )
 	void FixExtremeSlopes();
 	
 	const Buffer Serialize() const;
-	void Unserialize( Buffer data );
+	void Unserialize( Buffer buf );
 	
 private:
 	
