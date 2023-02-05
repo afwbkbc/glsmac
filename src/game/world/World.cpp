@@ -142,8 +142,8 @@ void World::Start() {
 		if ( new_z < 0.02 ) {
 			new_z = 0.02;
 		}
-		if ( new_z > 0.2f ) { // TODO: fix camera z, then can zoom closer
-			new_z = 0.2f;
+		if ( new_z > 0.224f ) { // TODO: fix camera z, then can zoom closer
+			new_z = 0.224f;
 		}
 		
 		float diff = m_camera_position.z / new_z;

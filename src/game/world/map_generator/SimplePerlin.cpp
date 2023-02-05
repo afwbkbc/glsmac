@@ -2,7 +2,7 @@
 
 #include <ctime>
 #include <cmath>
-#include <chrono>
+#include <algorithm>
 
 #include "util/Perlin.h"
 #include "util/Clamper.h"
@@ -29,32 +29,33 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 	
 	Tile* tile;
 	
+	// process in random order
+	vector< Tile* > tiles_vec;
 	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {
-		
-		if ( y == 0 ) {
-			continue; // top row should have zero elevation // TODO: fix universally in some place
-		}
-		
 		for ( auto x = 0 ; x < tiles->GetWidth() ; x++ ) {
 			if ( ( y % 2 ) != ( x % 2 ) ) {
 				continue;
 			}
-			tile = tiles->At( x, y );
-			
+			tiles_vec.push_back( tiles->At( x, y ) );
+		}
+	}
+	random_shuffle( tiles_vec.begin(), tiles_vec.end() );
+	
+	for ( auto& tile : tiles_vec ) {
+		
 #define PERLIN_S( _x, _y, _z, _scale ) perlin.Noise( (float) ( (float)_x ) * _scale, (float) ( (float)_y ) * _scale, _z * _scale, PERLIN_PASSES )
 #define PERLIN( _x, _y, _z ) PERLIN_S( _x, _y, _z, 1.0f )
-			
-			*tile->elevation.left = *tile->elevation.top = *tile->elevation.right = *tile->elevation.bottom = *tile->elevation.center = 0;
-			
-			const float z_elevation = 0;
-			
-			*tile->elevation.left = perlin_to_elevation.Clamp( PERLIN( x, y + 0.5f, z_elevation ) );
-			*tile->elevation.top = perlin_to_elevation.Clamp( PERLIN( x + 0.5f, y, z_elevation ) );
-			*tile->elevation.right = perlin_to_elevation.Clamp( PERLIN( x + 1.0f, y + 0.5f, z_elevation ) );
-			*tile->elevation.bottom = perlin_to_elevation.Clamp( PERLIN( x + 0.5f, y + 1.0f, z_elevation ) );
-			
-			tile->Update();
-		}
+		
+		*tile->elevation.left = *tile->elevation.top = *tile->elevation.right = *tile->elevation.bottom = *tile->elevation.center = 0;
+		
+		const float z_elevation = 0;
+		
+		*tile->elevation.left = perlin_to_elevation.Clamp( PERLIN( tile->coord.x, tile->coord.y + 0.5f, z_elevation ) );
+		*tile->elevation.top = perlin_to_elevation.Clamp( PERLIN( tile->coord.x + 0.5f, tile->coord.y, z_elevation ) );
+		*tile->elevation.right = perlin_to_elevation.Clamp( PERLIN( tile->coord.x + 1.0f, tile->coord.y + 0.5f, z_elevation ) );
+		*tile->elevation.bottom = perlin_to_elevation.Clamp( PERLIN( tile->coord.x + 0.5f, tile->coord.y + 1.0f, z_elevation ) );
+		
+		tile->Update();
 	}
 
 	// start new cycle because we want all tiles have updated averages and dynamic properties

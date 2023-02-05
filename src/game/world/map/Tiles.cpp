@@ -1,6 +1,7 @@
 #include "Tiles.h"
 
 #include <cstring>
+#include <algorithm>
 
 #include "util/Clamper.h"
 #include "Map.h"
@@ -287,16 +288,23 @@ const float Tiles::GetLandAmount( Tile::elevation_t elevation_diff ) {
 void Tiles::RaiseAllTilesBy( Tile::elevation_t amount ) {
 	Log( "Raising all tiles by " + to_string( amount ) );
 	Tile* tile;
+	// process in random order
+	vector< Tile* > tiles;
 	for ( auto y = 0 ; y < m_height ; y++ ) {
 		for ( auto x = 0 ; x < m_width ; x++ ) {
 			if ( ( y % 2 ) != ( x % 2 ) ) {
 				continue;
 			}
-			tile = At( x, y );
-			*tile->elevation.center += amount;
-			*tile->elevation.bottom += amount;
+			tiles.push_back( At( x, y ) );
 		}
 	}
+	random_shuffle( tiles.begin(), tiles.end() );
+	
+	for ( auto& tile : tiles ) {
+		*tile->elevation.center += amount;
+		*tile->elevation.bottom += amount;
+	}
+	
 	for ( auto y = 0; y < 2 ; y++ ) {
 		for ( auto x = 0 ; x < m_width ; x++ ) {
 			if ( y == 0 ) {
@@ -349,20 +357,23 @@ void Tiles::NormalizeElevationRange() {
 	auto elevations_range = GetElevationsRange();
 	util::Clamper<Tile::elevation_t> converter( elevations_range.first, elevations_range.second, Tile::ELEVATION_MIN, Tile::ELEVATION_MAX );
 	
-	Tile* tile;
-
-	// convert every vertex to valid range
+	// process in random order
+	vector< Tile* > tiles;
 	for ( auto y = 0 ; y < m_height ; y++ ) {
 		for ( auto x = 0 ; x < m_width ; x++ ) {
 			if ( ( y % 2 ) != ( x % 2 ) ) {
 				continue;
 			}
-			tile = At( x, y );
-			tile->elevation_data.bottom = converter.Clamp( tile->elevation_data.bottom );
-			tile->elevation_data.center = converter.Clamp( tile->elevation_data.center );
+			tiles.push_back( At( x, y ) );
 		}
 	}
+	random_shuffle( tiles.begin(), tiles.end() );
 	
+	for ( auto& tile : tiles ) {
+		tile->elevation_data.bottom = converter.Clamp( tile->elevation_data.bottom );
+		tile->elevation_data.center = converter.Clamp( tile->elevation_data.center );
+	}
+
 	// convert top rows too
 	for ( auto y = 0; y < 2 ; y++ ) {
 		for ( auto x = 0 ; x < m_width ; x++ ) {
@@ -446,6 +457,9 @@ void Tiles::FixTopBottomRows() {
 	}
 	
 	for ( auto y = 0 ; y < m_height ; y++ ) {
+		if ( y > 1 || y < m_height - 2 ) {
+			continue;
+		}
 		for ( auto x = 0 ; x < m_width ; x++ ) {
 			if ( ( y % 2 ) != ( x % 2 ) ) {
 				continue;
