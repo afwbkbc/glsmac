@@ -21,8 +21,11 @@
 #include "ui/Default.h"
 
 #include "game/common/Common.h"
-#include "game/intro/Intro.h"
+#ifdef DEVEL
 #include "game/world/World.h"
+#else
+#include "game/intro/Intro.h"
+#endif
 
 #include "engine/Engine.h"
 
@@ -135,11 +138,13 @@ int main(const int argc, const char *argv[]) {
 		NEWV( task_common, game::Common );
 		scheduler.AddTask( task_common );
 		
-		// TMP
 		// game entry point
-		NEWV( task, game::intro::Intro );
+#ifdef DEVEL
 		game::Settings settings;
-		//NEWV( task, game::world::World, settings );
+		NEWV( task, game::world::World, settings );
+#else
+		NEWV( task, game::intro::Intro );
+#endif
 		scheduler.AddTask( task );
 
 		engine::Engine engine(
