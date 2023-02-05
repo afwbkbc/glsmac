@@ -10,8 +10,6 @@
 // higher values generate more interesting maps, at cost of longer map generation (isn't noticeable before 200 or so)
 #define PERLIN_PASSES 128
 
-using namespace chrono;
-
 namespace game {
 namespace world {
 namespace map_generator {
