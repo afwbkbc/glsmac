@@ -8,6 +8,7 @@
 #include "Camera.h"
 #include "Light.h"
 #include "types/Texture.h"
+#include "types/Vec3.h"
 
 namespace scene {
 
@@ -39,6 +40,11 @@ CLASS( Scene, base::Base )
 	Light* GetLight() const;
 	void SetSkyboxTexture( types::Texture *skybox_texture );
 	types::Texture *GetSkyboxTexture();
+	
+	typedef vector< Vec3 > instances_t;
+	void SetInstances( const instances_t& instances );
+	const instances_t& GetInstances() const;
+	
 protected:
 	friend class scene::Camera;
 
@@ -51,6 +57,8 @@ protected:
 	Camera* m_camera = nullptr;
 	Light* m_light = nullptr;
 	types::Texture *m_skybox_texture = nullptr;
+	
+	instances_t m_instances = { { 0.0f, 0.0f, 0.0f } }; // only 1 instance by default
 };
 
 } /* namespace scene */

@@ -10,7 +10,7 @@ namespace scene {
 namespace actor {
 
 CLASS( Mesh, Actor )
-	Mesh( const std::string &name, const types::Mesh *mesh );
+	Mesh( const std::string &name, const types::Mesh *mesh, const type_t type = TYPE_MESH );
 	~Mesh();
 	const types::Mesh *GetMesh() const;
 	void SetTexture( const types::Texture* texture );

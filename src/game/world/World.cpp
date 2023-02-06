@@ -223,9 +223,11 @@ void World::Start() {
 	
 	g_engine->GetGraphics()->AddOnResizeHandler( this, RH( this ) {
 		UpdateViewport();
+		UpdateMapInstances();
 		UpdateCameraRange();
 	});
 	
+	UpdateMapInstances();
 }
 
 void World::Stop() {
@@ -275,11 +277,14 @@ void World::UpdateViewport() {
 	m_viewport.max.y = g_engine->GetGraphics()->GetWindowHeight() - m_ui.bottom_bar->GetHeight() + 32; // bottom bar has some transparent area at top
 	m_viewport.ratio.x = (float) g_engine->GetGraphics()->GetWindowWidth() / m_viewport.max.x;
 	m_viewport.ratio.y = (float) g_engine->GetGraphics()->GetWindowHeight() / m_viewport.max.y;
+	m_viewport.window_aspect_ratio = g_engine->GetGraphics()->GetAspectRatio();
 	m_clamp.x.SetSrcRange( m_viewport.min.x, m_viewport.max.x );
 	m_clamp.y.SetSrcRange( m_viewport.min.y, m_viewport.max.y );
 }
 
 void World::UpdateCameraPosition() {
+	
+	// prevent vertical scrolling outside viewport
 	if ( m_camera_position.y < m_camera_range.min.y ) {
 		m_camera_position.y = m_camera_range.min.y;
 	}
@@ -289,8 +294,19 @@ void World::UpdateCameraPosition() {
 			m_camera_position.y = ( m_camera_range.min.y + m_camera_range.max.y ) / 2;
 		}
 	}
+	
+	// shift x between instances for infinite horizontal scrolling
+	if ( m_camera_position.x < m_camera_range.min.x ) {
+		Log( "Shifting camera x from " + to_string( m_camera_position.x ) + " to " + to_string( m_camera_range.max.x ) );
+		m_camera_position.x = m_camera_range.max.x;
+	}	
+	else if ( m_camera_position.x > m_camera_range.max.x ) {
+		Log( "Shifting camera x from " + to_string( m_camera_position.x ) + " to " + to_string( m_camera_range.min.x ) );
+		m_camera_position.x = m_camera_range.min.x;
+	}
+	
 	m_camera->SetPosition({
-		( 0.5f + m_camera_position.x ) * g_engine->GetGraphics()->GetAspectRatio(),
+		( 0.5f + m_camera_position.x ) * m_viewport.window_aspect_ratio,
 		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y,
 		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + m_camera_position.z
 	});
@@ -314,9 +330,34 @@ void World::UpdateCameraRange() {
 	}
 	m_camera_range.max.y = ( m_camera_position.z - m_camera_range.min.z ) * ( m_map->GetHeight() + 1 ) * m_viewport.ratio.y * 0.1768f; // TODO: why 0.1768?
 	m_camera_range.min.y = -m_camera_range.max.y;
-	Log( "Camera range change: Z=[" + to_string( m_camera_range.min.z ) + "," + to_string( m_camera_range.max.z ) + "] Y=[" + to_string( m_camera_range.min.y ) + "," + to_string( m_camera_range.max.y ) + "], z=" + to_string( m_camera_position.z ) );
+	
+	//Log( "Camera range change: Z=[" + to_string( m_camera_range.min.z ) + "," + to_string( m_camera_range.max.z ) + "] Y=[" + to_string( m_camera_range.min.y ) + "," + to_string( m_camera_range.max.y ) + "], z=" + to_string( m_camera_position.z ) );
+	
+	//m_camera_range.max.x = 1.0f / m_viewport.ratio.x;
+	//m_camera_range.max.x = ( 1.0f + m_camera_position.z - m_camera_range.min.z ) * ( m_map->GetWidth() + 1 ) * m_viewport.ratio.x * 0.05f;// * 0.1768f;
+	//m_camera_range.min.x = -1.0f / m_viewport.window_aspect_ratio;
+	
+	// m_camera_position.x / m_camera_position.z * m_viewport.window_aspect_ratio
+	
+	m_camera_range.max.x = 10.0f / 40.0f * ( m_map->GetWidth() ) * m_camera_position.z / m_viewport.window_aspect_ratio;
+	m_camera_range.min.x = -m_camera_range.max.x;
+	
 	UpdateCameraPosition();
 	UpdateCameraScale();
+}
+
+void World::UpdateMapInstances() {
+	// needed for horizontal scrolling
+	vector< Vec3 > instances;
+	
+	const float mhw = Map::s_consts.tile.scale.x * m_map->GetWidth() / 2;
+	
+	// TODO: support narrow maps
+	instances.push_back( { +mhw, 0.0f, 0.0f } );
+	instances.push_back( { 0.0f, 0.0f, 0.0f} );
+	instances.push_back( { -mhw, 0.0f, 0.0f } );
+	
+	m_world_scene->SetInstances( instances );
 }
 
 void World::ReturnToMainMenu() {	

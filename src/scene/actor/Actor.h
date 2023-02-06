@@ -19,6 +19,7 @@ CLASS( Actor, Entity )
 
 	enum type_t {
 		TYPE_MESH,
+		TYPE_INSTANCED_MESH,
 		TYPE_TEXT,
 		TYPE_IMAGE,
 		TYPE_SOUND,
@@ -32,19 +33,10 @@ CLASS( Actor, Entity )
 
 	base::ObjectLink *m_graphics_object = NULL;
 
-	/*
-	types::Matrix44 & GetScaleMatrix();
-	types::Matrix44 & GetTranslateMatrix();
-	types::Matrix44 & GetRotateMatrix();
+	virtual types::Matrix44 & GetWorldMatrix();
 
-	void UpdateScale();
-	void UpdatePosition();
-	void UpdateRotation();
-*/
-	types::Matrix44 & GetWorldMatrix();
-
-	void UpdateWorldMatrix();
-	void UpdateMatrix();
+	virtual void UpdateWorldMatrix();
+	virtual void UpdateMatrix();
 
 	void SetScene( Scene *scene );
 	Scene *GetScene();
@@ -54,17 +46,7 @@ protected:
 	struct {
 		types::Matrix44 world;
 	} m_actor_matrices;
-/*
-	vec3_t m_position;
-	vec3_t m_angle;
-	vec3_t m_scale;
-
-	struct {
-		types::Matrix44 scale;
-		types::Matrix44 translate;
-		types::Matrix44 rotate;
-	} m_matrices;
-*/
+	
 	bool m_need_world_matrix_update = true;
 
 	Scene *m_scene = NULL;

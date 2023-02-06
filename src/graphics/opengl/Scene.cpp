@@ -92,14 +92,18 @@ void Scene::Update() {
 
 			auto actor_type = (*it)->GetType();
 			switch (actor_type) {
-				case (scene::actor::Actor::TYPE_MESH):
+				case scene::actor::Actor::TYPE_MESH:
+				case scene::actor::Actor::TYPE_INSTANCED_MESH: {
 					NEW( gl_actor, Mesh, (scene::actor::Mesh *)*it );
 					break;
-				case (scene::actor::Actor::TYPE_IMAGE):
+				}
+				case scene::actor::Actor::TYPE_IMAGE: {
 					NEW( gl_actor, Image, (scene::actor::Image *)*it );
 					break;
-				default:
+				}
+				default: {
 					gl_actor = m_routine->AddCustomActor( *it );
+				}
 			}
 
 			if ( gl_actor ) {

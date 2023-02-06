@@ -13,14 +13,14 @@ in vec3 aCoord; \
 in vec2 aTexCoord; \
 in vec4 aTint; \
 in vec3 aNormal; \
-uniform mat4 uWorld; \
+uniform mat4 uWorld[]; \
 out vec2 texpos; \
 out vec4 tint; \
 out vec3 fragpos; \
 out vec3 normal; \
 \
 void main(void) { \
-	gl_Position = uWorld * vec4( aCoord, 1.0 ); \
+	gl_Position = uWorld[0] * vec4( aCoord, 1.0 ); \
 	texpos = vec2( aTexCoord.xy ); \
 	tint = aTint; \
 	fragpos = aCoord; \

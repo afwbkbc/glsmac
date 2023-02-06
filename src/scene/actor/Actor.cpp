@@ -14,62 +14,17 @@ Actor::~Actor() {
 		m_graphics_object->Remove();
 	}
 }
-/*
-void Actor::SetPosition( const vec3_t position ) {
-	m_position = position;
-
-	UpdatePosition();
-}
-
-Actor::vec3_t Actor::GetPosition() const {
-	return m_position;
-}
-
-Actor::vec3_t *Actor::GetPositionPtr() {
-	return &m_position;
-}
-*/
-
-/*
-types::Matrix44 & Actor::GetScaleMatrix() {
-	return m_matrices.scale;
-}
-
-types::Matrix44 & Actor::GetTranslateMatrix() {
-	return m_matrices.translate;
-}
-
-types::Matrix44 & Actor::GetRotateMatrix() {
-	return m_matrices.rotate;
-}
-
-void Actor::UpdateScale() {
-	m_matrices.scale.TransformScale( m_scale.x, m_scale.y, m_scale.z );
-}
-
-void Actor::UpdatePosition() {
-	m_matrices.translate.TransformTranslate( m_position.x, m_position.y, m_position.z );
-}
-
-void Actor::UpdateRotation() {
-	m_matrices.rotate.TransformRotate( m_angle.x, m_angle.y, m_angle.z );
-}
-*/
 
 types::Matrix44 & Actor::GetWorldMatrix() {
-	//Log( "GETWORLDMATRIX" );
 	if ( m_need_world_matrix_update )
 		UpdateWorldMatrix();
 	return m_actor_matrices.world;
 }
 
 void Actor::UpdateWorldMatrix() {
-	//Log( "UPDATEWORLDMATRIX 1" );
 	if ( m_scene ) {
-		//Log( "UPDATEWORLDMATRIX 2" );
 		auto *camera = m_scene->GetCamera();
 		if ( camera ) {
-			//Log( "UPDATEWORLDMATRIX 3" );
 			m_actor_matrices.world = camera->GetMatrix() * GetMatrix();
 			m_need_world_matrix_update = false;
 		}
@@ -78,7 +33,8 @@ void Actor::UpdateWorldMatrix() {
 
 void Actor::UpdateMatrix() {
 	Entity::UpdateMatrix();
-	UpdateWorldMatrix();
+	
+	m_need_world_matrix_update = true;
 }
 
 void Actor::SetScene( Scene *scene ) {

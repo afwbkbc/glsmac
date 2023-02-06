@@ -35,16 +35,19 @@ CLASS( Entity, base::Base )
 	virtual void UpdatePosition();
 	virtual void UpdateRotation();
 	virtual void UpdateMatrix();
-protected:
-	types::Vec3 m_position = { 0.0, 0.0, 0.0 };
-	types::Vec3 m_angle = { 0.0, 0.0, 0.0 };
-
-	struct {
+	
+	typedef struct {
 		types::Matrix44 rotate;
 		types::Matrix44 translate;
 		types::Matrix44 scale;
 		types::Matrix44 matrix;
-	} m_matrices = {};
+	} matrices_t;
+	
+protected:
+	types::Vec3 m_position = { 0.0, 0.0, 0.0 };
+	types::Vec3 m_angle = { 0.0, 0.0, 0.0 };
+
+	matrices_t m_matrices = {};
 
 };
 

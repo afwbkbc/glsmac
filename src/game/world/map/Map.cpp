@@ -3,6 +3,7 @@
 #include "engine/Engine.h"
 
 #include "types/Mesh.h"
+#include "scene/actor/InstancedMesh.h"
 
 #include "module/Prepare.h"
 #include "module/LandSurface.h"
@@ -230,7 +231,7 @@ void Map::GenerateActors() {
 		));
 	}
 	
-	NEW( m_actors.terrain, actor::Mesh, "MapTerrain", m_mesh_terrain );
+	NEW( m_actors.terrain, actor::InstancedMesh, "MapTerrain", m_mesh_terrain );
 		m_actors.terrain->SetTexture( m_textures.terrain );
 		m_actors.terrain->SetPosition( Map::s_consts.map_position );
 		m_actors.terrain->SetAngle( Map::s_consts.map_rotation );
@@ -503,7 +504,7 @@ void Map::Unserialize( Buffer buf ) {
 	}
 	NEW( m_mesh_terrain, types::Mesh, m_map_state.dimensions.x * ( m_map_state.dimensions.y * LAYER_MAX ) * 5 / 2, m_map_state.dimensions.x * ( m_map_state.dimensions.y * LAYER_MAX ) * 4 / 2 );
 	m_mesh_terrain->Unserialize( buf.ReadString() );
-	NEW( m_actors.terrain, actor::Mesh, "MapTerrain", m_mesh_terrain );
+	NEW( m_actors.terrain, actor::InstancedMesh, "MapTerrain", m_mesh_terrain );
 		m_actors.terrain->SetTexture( m_textures.terrain );
 		m_actors.terrain->SetPosition( Map::s_consts.map_position );
 		m_actors.terrain->SetAngle( Map::s_consts.map_rotation );

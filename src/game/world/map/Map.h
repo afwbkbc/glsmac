@@ -95,6 +95,7 @@ CLASS( Map, Serializable )
 				const float x =	Map::s_consts.tile.scale.x / 2;
 				const float y =	Map::s_consts.tile.scale.y / 2;
 			} radius;
+			const float rotated_width = sqrt( pow( Map::s_consts.tile.scale.x, 2 ) + pow( Map::s_consts.tile.scale.y, 2 ) );
 			const Tile::elevation_t maximum_allowed_slope_elevation = 1000;
 		} tile;
 		const struct {

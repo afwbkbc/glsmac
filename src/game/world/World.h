@@ -62,6 +62,7 @@ private:
 		Vec2< size_t > min;
 		Vec2< size_t > max;
 		Vec2< float > ratio;
+		float window_aspect_ratio;
 	} m_viewport;
 	struct {
 		Vec3 min;
@@ -84,6 +85,7 @@ private:
 	void UpdateCameraAngle();
 	void UpdateCameraScale();
 	void UpdateCameraRange();
+	void UpdateMapInstances();
 	
 	// UI stuff
 	
