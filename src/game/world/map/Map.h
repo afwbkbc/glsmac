@@ -276,6 +276,9 @@ CLASS( Map, Serializable )
 	} tile_texture_info_t;
 	const tile_texture_info_t GetTileTextureInfo( const Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature = Tile::F_NONE ) const;
 
+	const size_t GetWidth() const;
+	const size_t GetHeight() const;
+	
 	const Buffer Serialize() const;
 	void Unserialize( Buffer buf );
 	

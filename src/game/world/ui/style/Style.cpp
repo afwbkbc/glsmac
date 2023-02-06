@@ -67,7 +67,7 @@ void Style::AddStyles() {
 		s->Set( ::Style::A_LEFT, 10 );
 		s->Set( ::Style::A_TOP, 19 );
 		s->SetSound( ::Style::A_BUTTON_CLICK_SOUND, "amenu2.wav" );
-		s->Set( ::Style::A_SOUND_VOLUME, 0.3 );
+		s->Set( ::Style::A_SOUND_VOLUME, 0.4 );
 	});
 	
 	AddStyle( "MapBottomBarButtonCommlink", { "MapBottomBarButton" }, SH() {

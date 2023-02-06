@@ -173,8 +173,8 @@ void Map::GenerateActors() {
 	
 	m_map_state.dimensions.x = m_tiles->GetWidth();
 	m_map_state.dimensions.y = m_tiles->GetHeight();
-	m_map_state.coord.x = -( Map::s_consts.tile.scale.x * m_map_state.dimensions.x / 4 - Map::s_consts.tile.radius.x );
-	m_map_state.coord.y = -( Map::s_consts.tile.scale.y * m_map_state.dimensions.y / 4 - Map::s_consts.tile.radius.y );
+	m_map_state.coord.x = -( Map::s_consts.tile.scale.x * ( m_map_state.dimensions.x + 1 ) / 4 - Map::s_consts.tile.radius.x );
+	m_map_state.coord.y = -( Map::s_consts.tile.scale.y * ( m_map_state.dimensions.y + 1 ) / 4 - Map::s_consts.tile.radius.y );
 	m_map_state.variables.texture_scaling.x = 1.0f / Map::s_consts.pcx_texture_block.dimensions.x / m_map_state.dimensions.x;
 	m_map_state.variables.texture_scaling.y = 1.0f / Map::s_consts.pcx_texture_block.dimensions.y / m_map_state.dimensions.y / LAYER_MAX;
 	
@@ -320,6 +320,14 @@ Map::tile_state_t* Map::GetTileState( const size_t x, const size_t y ) const {
 	ASSERT( y < m_map_state.dimensions.y, "tile state y overflow" );
 	ASSERT( ( x % 2 ) == ( y % 2 ), "tile state axis oddity differs" );
 	return &m_tile_states[ y * m_map_state.dimensions.x + x / 2 ];
+}
+
+const size_t Map::GetWidth() const {
+	return m_map_state.dimensions.x;
+}
+
+const size_t Map::GetHeight() const {
+	return m_map_state.dimensions.y;
 }
 
 const Buffer Map::Serialize() const {

@@ -47,6 +47,7 @@
 #include <string>
 #include <stdlib.h>
 #include "util/System.h"
+#include "util/FS.h"
 #include "debug/MemoryWatcher.h"
 #include "debug/DebugOverlay.h"
 using namespace util;
@@ -87,15 +88,18 @@ int main(const int argc, const char *argv[]) {
 			exit( EXIT_FAILURE );
 		}
 	}
-	
 #else
 	cout << "WARNING: gdb check skipped due to unsupported platform" << endl;
 #endif
 	debug::MemoryWatcher memory_watcher;
 #endif
 	
+#ifdef DEBUG
+	FS::CreateDirectoryIfNotExists( "./tmp" ); // to store debug stuff like dumps
+#endif
+	
 	int result = EXIT_FAILURE;
-
+	
 	// logger needs to be outside of scope to be destroyed last
 	logger::Stdout logger;
 	{

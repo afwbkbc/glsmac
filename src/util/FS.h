@@ -8,6 +8,8 @@ CLASS( FS, Util )
 	
 	static const bool FileExists( const string& filename );
 
+	static void CreateDirectoryIfNotExists( const string& path );
+
 	static const string ReadFile( const string& filename );
 	static const void WriteFile( const string& filename, const string& data );
 	

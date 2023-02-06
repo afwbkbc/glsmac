@@ -57,6 +57,17 @@ private:
 		util::Clamper<float> x;
 		util::Clamper<float> y;
 	} m_clamp = {};
+	
+	struct {
+		Vec2< size_t > min;
+		Vec2< size_t > max;
+		Vec2< float > ratio;
+	} m_viewport;
+	struct {
+		Vec3 min;
+		Vec3 max;
+	} m_camera_range;
+	
 	struct {
 		const UIEventHandler* keydown;
 		const UIEventHandler* mousedown;
@@ -68,9 +79,11 @@ private:
 	bool m_is_rotating = false;
 	Vec2<float> m_last_drag_position;
 	Vec2<float> m_last_rotate_position;
+	void UpdateViewport();
 	void UpdateCameraPosition();
 	void UpdateCameraAngle();
 	void UpdateCameraScale();
+	void UpdateCameraRange();
 	
 	// UI stuff
 	
