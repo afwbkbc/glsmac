@@ -103,13 +103,11 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 			auto* sp = (shader_program::Orthographic *)shader_program;
 			
 			if ( actor->GetType() == scene::Actor::TYPE_INSTANCED_MESH ) {
+				// TODO: fix water transparency artifacts
 				auto* instanced_actor = (scene::actor::InstancedMesh*) m_actor;
 				auto& matrices = instanced_actor->GetWorldMatrices();
-				//glUniformMatrix4fv( sp->m_gl_uniforms.world, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
-				for ( auto& matrix : matrices ) {
-					glUniformMatrix4fv( sp->m_gl_uniforms.world, 1, GL_TRUE, (const GLfloat*)&matrix);
-					glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
-				}
+				glUniformMatrix4fv( sp->m_gl_uniforms.world, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
+				glDrawElementsInstanced( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0), matrices.size() );
 			}
 			else {
 				types::Matrix44 matrix = m_actor->GetWorldMatrix();

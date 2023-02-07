@@ -7,20 +7,20 @@ namespace opengl {
 namespace shader_program {
 
 void Orthographic::AddShaders() {
-	this->AddShader( GL_VERTEX_SHADER, "#version 130 \n\
+	this->AddShader( GL_VERTEX_SHADER, "#version 140 \n\
 \
 in vec3 aCoord; \
 in vec2 aTexCoord; \
 in vec4 aTint; \
 in vec3 aNormal; \
-uniform mat4 uWorld[]; \
+uniform mat4 uWorld[ 3 ]; /* TODO: pass count from somewhere? */ \
 out vec2 texpos; \
 out vec4 tint; \
 out vec3 fragpos; \
 out vec3 normal; \
 \
 void main(void) { \
-	gl_Position = uWorld[0] * vec4( aCoord, 1.0 ); \
+	gl_Position = uWorld[ gl_InstanceID ] * vec4( aCoord, 1.0 ); \
 	texpos = vec2( aTexCoord.xy ); \
 	tint = aTint; \
 	fragpos = aCoord; \
@@ -28,7 +28,7 @@ void main(void) { \
 } \
 \
 ");
-	this->AddShader( GL_FRAGMENT_SHADER, "#version 130 \n\
+	this->AddShader( GL_FRAGMENT_SHADER, "#version 140 \n\
 \
 in vec2 texpos; \
 in vec4 tint; \
@@ -41,7 +41,7 @@ out vec4 FragColor; \
 \
 void main(void) { \
     vec3 ambient = uLightColor.rgb * ( 1.0 - uLightColor.a ); \
-	vec3 lightdir = normalize( uLightPos - fragpos ); \
+	vec3 lightdir = normalize( uLightPos ); \
 	float diff = max( dot(normal, lightdir), 0.0 ); \
 	vec3 diffuse = diff * uLightColor.rgb * uLightColor.a; \
 	vec4 tex = texture2D( uTexture, vec2( texpos.xy ) ); \

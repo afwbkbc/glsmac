@@ -54,7 +54,7 @@ void World::Start() {
 #else
 	NEWV( tiles, Tiles, 80, 40 );
 #endif
-	//NEWV( tiles, Tiles, 160, 80 );
+	//NEWV( tiles, Tiles, 200, 120 );
 	
 	
 	auto now = chrono::high_resolution_clock::now();
@@ -297,11 +297,9 @@ void World::UpdateCameraPosition() {
 	
 	// shift x between instances for infinite horizontal scrolling
 	if ( m_camera_position.x < m_camera_range.min.x ) {
-		Log( "Shifting camera x from " + to_string( m_camera_position.x ) + " to " + to_string( m_camera_range.max.x ) );
 		m_camera_position.x = m_camera_range.max.x;
 	}	
 	else if ( m_camera_position.x > m_camera_range.max.x ) {
-		Log( "Shifting camera x from " + to_string( m_camera_position.x ) + " to " + to_string( m_camera_range.min.x ) );
 		m_camera_position.x = m_camera_range.min.x;
 	}
 	
@@ -309,8 +307,9 @@ void World::UpdateCameraPosition() {
 		( 0.5f + m_camera_position.x ) * m_viewport.window_aspect_ratio,
 		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y,
 		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + m_camera_position.z
-	});
+	});	
 }
+
 void World::UpdateCameraScale() {
 	m_camera->SetScale( { m_camera_position.z, m_camera_position.z, m_camera_position.z } );
 }
@@ -332,12 +331,6 @@ void World::UpdateCameraRange() {
 	m_camera_range.min.y = -m_camera_range.max.y;
 	
 	//Log( "Camera range change: Z=[" + to_string( m_camera_range.min.z ) + "," + to_string( m_camera_range.max.z ) + "] Y=[" + to_string( m_camera_range.min.y ) + "," + to_string( m_camera_range.max.y ) + "], z=" + to_string( m_camera_position.z ) );
-	
-	//m_camera_range.max.x = 1.0f / m_viewport.ratio.x;
-	//m_camera_range.max.x = ( 1.0f + m_camera_position.z - m_camera_range.min.z ) * ( m_map->GetWidth() + 1 ) * m_viewport.ratio.x * 0.05f;// * 0.1768f;
-	//m_camera_range.min.x = -1.0f / m_viewport.window_aspect_ratio;
-	
-	// m_camera_position.x / m_camera_position.z * m_viewport.window_aspect_ratio
 	
 	m_camera_range.max.x = 10.0f / 40.0f * ( m_map->GetWidth() ) * m_camera_position.z / m_viewport.window_aspect_ratio;
 	m_camera_range.min.x = -m_camera_range.max.x;
