@@ -20,6 +20,7 @@ const InstancedMesh::world_matrices_t& InstancedMesh::GetWorldMatrices() {
 
 types::Matrix44& InstancedMesh::GetWorldMatrix() {
 	ASSERT( false, "use GetWorldMatrices() for instanced mesh" );
+	return m_actor_matrices.world; // just to fix warning
 }
 	
 void InstancedMesh::UpdateWorldMatrix() {
