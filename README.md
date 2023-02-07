@@ -115,7 +115,7 @@ below name in the configuration. You need to replace the path with your own path
 
 #### MinGW
 
-Building on Windows with MinGW is possible, but tricky. You need to install all those libraries manually, and also FreeGLUT. Double-check that you download libraries compiled for MinGW (and not MSVC). GLEW may need to be compiled from source (because they only ship MSVC version). Make sure to have threads-enabled version of MinGW. MSYS and TDM-GCC are recommended for more consistent development environment. Maybe this guide will help you - https://github.com/induktio/mingw-glsmac
+Building on Windows with MinGW is possible, but tricky. You need to install all those libraries manually, and also FreeGLUT. Double-check that you download libraries compiled for MinGW (and not MSVC). GLEW may need to be compiled from source (because they only ship MSVC version). Make sure to have threads-enabled version of MinGW. Maybe this guide will help you - https://github.com/induktio/mingw-glsmac
 
 Building on Windows with MSVC is not supported and will probably require many changes to code to be compatible.
 
