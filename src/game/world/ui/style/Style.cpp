@@ -20,20 +20,20 @@ void Style::AddStyles() {
 	AddStyle( "MapBottomBarFrameLeft", { "MapBottomBarFrame" }, SH() {
 		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_LEFT );
 		s->Set( ::Style::A_WIDTH, 356 );
-		s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx.png", 0, 0, 356, 256, Color::RGB( 100, 16, 156 ) );
+		s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx", 0, 0, 356, 256, Color::RGB( 100, 16, 156 ) );
 	});
 	
 	AddStyle( "MapBottomBarFrameMiddle", { "MapBottomBarFrame" }, SH() {
 		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM );
 		s->Set( ::Style::A_LEFT, 356 );
 		s->Set( ::Style::A_RIGHT, 520 );
-		s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx.png", 357, 0, ( 1024 - 521 ), 256, Color::RGB( 100, 16, 156 ) );
+		s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx", 357, 0, ( 1024 - 521 ), 256, Color::RGB( 100, 16, 156 ) );
 	});
 	
 	AddStyle( "MapBottomBarFrameRight", { "MapBottomBarFrame" }, SH() {
 		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_RIGHT );
 		s->Set( ::Style::A_WIDTH, 520 );
-		s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx.png", ( 1024 - 520 ), 0, 1023, 256, Color::RGB( 100, 16, 156 ) );
+		s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx", ( 1024 - 520 ), 0, 1023, 256, Color::RGB( 100, 16, 156 ) );
 	});
 	
 	AddStyle( "MapBottomBarFrameBackground", SH() {
