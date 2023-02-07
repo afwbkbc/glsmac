@@ -3,6 +3,7 @@
 #include <ctime>
 #include <cmath>
 #include <algorithm>
+#include <random>
 
 #include "util/Perlin.h"
 #include "util/Clamper.h"
@@ -37,7 +38,10 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 			tiles_vec.push_back( tiles->At( x, y ) );
 		}
 	}
-	random_shuffle( tiles_vec.begin(), tiles_vec.end() );
+
+	std::random_device rd;
+	std::mt19937 g(rd());
+	std::shuffle( tiles_vec.begin(), tiles_vec.end(), g);
 	
 	for ( auto& tile : tiles_vec ) {
 		

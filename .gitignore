@@ -16,4 +16,7 @@ _deps
 /build
 *.depend
 *.layout
+/out
+.vs
+.vscode
 /tmp

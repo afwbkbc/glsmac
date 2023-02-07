@@ -3,18 +3,17 @@
 #include <sys/stat.h>
 #include <fstream>
 #include <sstream>
+#include <filesystem>
 
 namespace util {
 
 const bool FS::FileExists( const string& filename ) {
-	struct stat buffer;   
-	return ( stat ( filename.c_str(), &buffer ) == 0 ); 
+	return std::filesystem::exists(filename);
 }
 
 void FS::CreateDirectoryIfNotExists( const string& path ) {
-	struct stat st = {0};
-	if ( stat( path.c_str(), &st ) == -1) {
-		mkdir( path.c_str(), 0700);
+	if (!std::filesystem::is_directory(path) || !std::filesystem::exists(path)) {
+		std::filesystem::create_directory(path);
 	}
 }
 

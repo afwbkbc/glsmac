@@ -1,9 +1,9 @@
 #include "System.h"
 
 #ifdef DEBUG
-#include <unistd.h>
 
 #ifdef __linux__
+#include <unistd.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 #endif

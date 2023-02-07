@@ -4,6 +4,7 @@
 
 #include <mutex>
 #include <iostream>
+
 #include "debug/MemoryWatcher.h"
 
 using namespace debug;
