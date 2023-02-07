@@ -58,9 +58,10 @@ void Camera::UpdateRotation() {
 void Camera::UpdateMatrix() {
 	Entity::UpdateMatrix();
 	m_matrices.matrix = m_camera_matrices.projection * m_matrices.matrix;
-	if ( m_scene )
+	if ( m_scene ) {
 		for ( auto it = m_scene->m_actors.begin() ; it < m_scene->m_actors.end() ; ++it )
 			(*it)->UpdateWorldMatrix();
+	}
 }
 
 const float Camera::GetFov() const {

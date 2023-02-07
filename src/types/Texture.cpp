@@ -9,8 +9,7 @@
 namespace types {
 
 Texture::Texture( const std::string& name, const size_t width, const size_t height )
-	: base::Base()
-	, m_name( name )
+	: m_name( name )
 {
 	m_bpp = 4; // always RGBA format
 	
@@ -325,6 +324,47 @@ void Texture::SetContrast(const float contrast) {
 			}
 		}
 	}
+}
+
+const Buffer Texture::Serialize() const {
+	Buffer buf;
+	
+	buf.WriteString( m_name );
+	buf.WriteInt( m_width );
+	buf.WriteInt( m_height );
+	buf.WriteFloat( m_aspect_ratio );
+	buf.WriteInt( m_bpp );
+	
+	buf.WriteInt( m_bitmap_size );
+	buf.WriteData( m_bitmap, m_bitmap_size );
+	
+	buf.WriteBool( m_is_tiled );
+
+	return buf;
+}
+
+void Texture::Unserialize( Buffer buf ) {
+	
+	m_name = buf.ReadString();
+	size_t width = buf.ReadInt();
+	ASSERT( width == m_width, "texture read width mismatch ( " + to_string( width ) + " != " + to_string( m_width ) + " )" );
+	size_t height = buf.ReadInt();
+	ASSERT( height == m_height, "texture read height mismatch ( " + to_string( height ) + " != " + to_string( m_height ) + " )" );
+	
+	m_aspect_ratio = buf.ReadFloat();
+	
+	m_bpp = buf.ReadInt();
+	ASSERT( m_bpp == 4, "invalid bpp" );
+	
+	m_bitmap_size = buf.ReadInt();
+	
+	if ( m_bitmap ) {
+		free( m_bitmap );
+	}
+	m_bitmap = (unsigned char*)buf.ReadData( m_bitmap_size );
+	
+	m_is_tiled = buf.ReadBool();
+	
 }
 
 }

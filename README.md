@@ -115,6 +115,8 @@ If it behaves incorrectly: create issue and specify: 1) steps to reproduce 2) ex
 
 Update: on Linux debug build will run inside gdb automatically, so just start it normally
 
+Upon loading of map debug build will also create files tmp/lastmap.gsm (map file) and tmp/lastmap.dump (full dump of initialized map), attach them too if your issue is related to map. Make sure to gzip lastmap.dump, it's huge otherwise.
+
 ### Copyright disclaimer
 
 GLSMAC does not include any copyrighted assets from original SMAC, it is designed to use assets of existing SMAC installation on user's computer. It will also work with any third-party assets, as long as they are in same format and in same directory structure as original SMAC.

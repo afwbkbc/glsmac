@@ -62,8 +62,16 @@ void Style::SetTexture( const attribute_type_t attribute_type, const std::string
 	SetObject( attribute_type, g_engine->GetTextureLoader()->LoadTexture( name ) );
 }
 
+void Style::SetTextureTC( const attribute_type_t attribute_type, const std::string& name, const Color::rgba_t transparent_color ) {
+	SetObject( attribute_type, g_engine->GetTextureLoader()->LoadTextureTC( name, transparent_color ) );
+}
+
 void Style::SetTexture( const attribute_type_t attribute_type, const string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
 	SetObject( attribute_type, g_engine->GetTextureLoader()->LoadTexture( name, x1, y1, x2, y2, flags, value ) );
+}
+
+void Style::SetTextureTC( const attribute_type_t attribute_type, const string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const Color::rgba_t transparent_color, const uint8_t flags, const float value ) {
+	SetObject( attribute_type, g_engine->GetTextureLoader()->LoadTextureTC( name, x1, y1, x2, y2, transparent_color, flags, value ) );
 }
 
 void Style::SetFont( const attribute_type_t attribute_type, const std::string &name, const unsigned char size ) {

@@ -30,6 +30,7 @@ CLASS( Sound, Actor )
 	void Stop();
 	
 	const bool IsActive();
+	const bool IsFinished() const;
 	const float GetVolume() const;
 	const bool IsReadyToBeDeleted() const;
 	

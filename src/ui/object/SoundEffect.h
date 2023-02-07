@@ -23,6 +23,7 @@ CLASS( SoundEffect, UIObject )
 	void Stop();
 	
 	void Create();
+	void Iterate();
 	void Destroy();
 	
 protected:
@@ -36,8 +37,7 @@ protected:
 	bool m_repeatable = false;
 	size_t m_start_delay = 0;
 	
-	actor::Sound* m_actor = nullptr;
-	void UpdateActor();
+	vector< actor::Sound* > m_actors = {};
 };
 
 }

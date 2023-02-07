@@ -1,10 +1,12 @@
 #pragma once
 
-#include "base/Base.h"
-
+#include <cstdint>
 #include <functional>
 
+#include "types/Serializable.h"
+
 using namespace std;
+using namespace types;
 
 namespace game {
 namespace world {
@@ -16,8 +18,8 @@ namespace map {
 //   you can read any properties you need
 //   but be careful modifying anything, some things are only to be modified within Tile::Update() to keep consistent state
 // Some day this class will be refactored with access isolation and getters/setters
-	
-CLASS( Tile, base::Base )
+class Tile { // not deriving from anything because tiles are initialized with malloc (without new) so vtable would get screwed
+	public:
 
 	typedef function< void( Tile* ) > tile_cb_t;
 	
@@ -109,6 +111,9 @@ CLASS( Tile, base::Base )
 	//   it recalculates dynamic properties and solves inconsistencies
 	//   safe to call anytime
 	void Update();
+	
+	const Buffer Serialize() const;
+	void Unserialize( Buffer data );
 };
 
 }

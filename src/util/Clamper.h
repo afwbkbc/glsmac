@@ -29,17 +29,22 @@ CLASS( Clamper, Util )
 			result = m_dst_max - result;
 		else
 			result += m_dst_min;
-		if ( result < m_dst_min ) {
-			result = m_dst_min;
-		}
-		if ( result > m_dst_max ) {
-			result = m_dst_max;
+		if ( !m_overflow_allowed ) {
+			if ( result < m_dst_min ) {
+				result = m_dst_min;
+			}
+			if ( result > m_dst_max ) {
+				result = m_dst_max;
+			}
 		}
 		//Log( "RESULT = " + to_string( result ) );
 		return (DATATYPE) result;
 	}
 	void SetInversed( const bool inversed ) {
 		m_inversed = true;
+	}
+	void SetOverflowAllowed( const bool overflow_allowed ) {
+		m_overflow_allowed = overflow_allowed;
 	}
 	
 	void operator= ( const Clamper& other ) {
@@ -56,6 +61,7 @@ protected:
 	float m_dst_min = 0;
 	float m_dst_max = 0;
 	bool m_inversed = false;
+	bool m_overflow_allowed = false;
 };
 
 } /* namespace util */

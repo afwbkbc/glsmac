@@ -20,6 +20,8 @@ void Overlay::Iterate() {
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it )
 		(*it)->Update();
 
+	glClear( GL_DEPTH_BUFFER_BIT ); // overlay must be always on top
+	
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it ) {
 		(*it)->Draw( m_shader_program );
 	}

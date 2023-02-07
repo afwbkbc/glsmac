@@ -34,10 +34,10 @@ protected:
 	types::Vec3 m_up = { 0.0, 0.0, 0.0 };
 	types::Vec3 m_target = { 0.0, 0.0, 0.0 };
 
-	float m_fov = 90.0;
-	float m_raw_fov = 90.0 * M_PI / 180;
-	float m_z_near = 0.01;
-	float m_z_far = 200.0;
+	float m_fov = 90.0f;
+	float m_raw_fov = 90.0f * M_PI / 180;
+	float m_z_near = 0.01f;
+	float m_z_far = 10.0f;
 
 	const camera_type_t m_camera_type;
 	

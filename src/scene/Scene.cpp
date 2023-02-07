@@ -13,6 +13,7 @@ Scene::~Scene() {
 void Scene::AddActor( actor::Actor *actor ) {
 	//Log( "Adding actor [" + actor->GetName() + "]" );
 	actor->SetScene( this );
+	actor->UpdatePosition();
 	m_actors.push_back( actor );
 }
 
@@ -51,6 +52,18 @@ void Scene::SetSkyboxTexture( types::Texture *skybox_texture ) {
 
 types::Texture *Scene::GetSkyboxTexture() {
 	return m_skybox_texture;
+}
+
+void Scene::SetInstances( const instances_t& instances ) {
+	Log( "Setting " + to_string( instances.size() ) + " instances" );
+	m_instances = instances;
+	for ( auto& actor : m_actors ) {
+		actor->UpdatePosition();
+	}
+}
+
+const Scene::instances_t& Scene::GetInstances() const {
+	return m_instances;
 }
 
 

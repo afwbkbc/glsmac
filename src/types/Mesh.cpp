@@ -159,7 +159,7 @@ const size_t Mesh::UpdatedCount() const {
 }
 
 void Mesh::UpdateNormals() {
-	Log( "Updating normals");
+	//Log( "Updating normals");
 	
 	// update normals
 	const surface_t* surface;
@@ -188,6 +188,44 @@ void Mesh::UpdateNormals() {
 		Math::Normalize( *(Vec3*)ptr( m_vertex_data, ( v * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ) );
 	}
 	
+	Update();
+}
+
+const Buffer Mesh::Serialize() const {
+	Buffer buf;
+	
+	buf.WriteBool( m_is_final );
+	
+	buf.WriteInt( m_vertex_count );
+	buf.WriteInt( m_vertex_i );
+	buf.WriteData( m_vertex_data, GetVertexDataSize() );
+
+	buf.WriteInt( m_index_count );
+	buf.WriteInt( m_surface_count );
+	buf.WriteInt( m_surface_i );
+	buf.WriteData( m_index_data, GetIndexDataSize() );
+
+	return buf;
+}
+
+void Mesh::Unserialize( Buffer buf ) {
+	
+	m_is_final = buf.ReadBool();
+	
+	size_t vertex_count = buf.ReadInt();
+	ASSERT( vertex_count == m_vertex_count, "mesh read vertex count mismatch ( " + to_string( vertex_count ) + " != " + to_string( m_vertex_count ) + " )" );
+	m_vertex_i = buf.ReadInt();
+	m_vertex_data = (uint8_t*)buf.ReadData( GetVertexDataSize() );
+	
+	size_t index_count = buf.ReadInt();
+	ASSERT( index_count == m_index_count, "mesh read index count mismatch ( " + to_string( index_count ) + " != " + to_string( m_index_count ) + " )" );
+	
+	size_t surface_count = buf.ReadInt();
+	ASSERT( surface_count == m_surface_count, "mesh read surface count mismatch ( " + to_string( surface_count ) + " != " + to_string( m_surface_count ) + " )" );
+	
+	m_surface_i = buf.ReadInt();
+	m_index_data = (uint8_t*)buf.ReadData( GetIndexDataSize() );
+
 	Update();
 }
 

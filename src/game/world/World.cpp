@@ -4,6 +4,7 @@
 #include "../mainmenu/MainMenu.h"
 
 #include "types/mesh/Rectangle.h"
+#include "util/FS.h"
 
 #include "map_generator/SimpleRandom.h"
 #include "map_generator/SimplePerlin.h"
@@ -15,6 +16,11 @@
 #define MAP_ZOOM_SPEED 0.1f
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
+
+#ifdef DEBUG
+#define MAP_FILENAME "./tmp/lastmap.gsm"
+#define MAP_DUMP_FILENAME "./tmp/lastmap.dump"
+#endif
 
 namespace game {
 namespace world {
@@ -43,27 +49,70 @@ void World::Start() {
 	
 	NEW( m_map, Map, m_world_scene );
 	
-	NEWV( tiles, Tiles, 50, 50 );
-	//NEWV( tiles, Tiles, 160, 160 );
-	//NEWV( tiles, Tiles, 30, 30 ); // tmp
+#ifdef DEVEL
+	NEWV( tiles, Tiles, 40, 20 );
+#else
+	NEWV( tiles, Tiles, 80, 40 );
+#endif
+	//NEWV( tiles, Tiles, 200, 120 );
 	
-	{
-		map_generator::SimplePerlin generator;
-		//map_generator::SimpleRandom generator;
-		//map_generator::Test generator;
-		generator.Generate( tiles );
+	
+	auto now = chrono::high_resolution_clock::now();
+	auto seed = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count();
+
+	Log( "Map seed is " + to_string( seed ) );
+	
+	srand( seed );
+	
+#ifdef DEVEL
+	if ( FS::FileExists( MAP_DUMP_FILENAME ) ) {
+		Log( (string) "Loading map dump from " + MAP_DUMP_FILENAME );
+		m_map->SetTiles( tiles, false );
+		m_map->Unserialize( Buffer( FS::ReadFile( MAP_DUMP_FILENAME ) ) );
 	}
-	
-	m_map->SetTiles( tiles );
+	else
+#endif
+	{
+#ifdef DEVEL
+		if ( FS::FileExists( MAP_FILENAME ) ) {
+			Log( (string) "Loading map from " + MAP_FILENAME );
+			tiles->Unserialize( Buffer( FS::ReadFile( MAP_FILENAME ) ) );
+		}
+		else
+#endif
+		{
+			map_generator::SimplePerlin generator;
+			//map_generator::SimpleRandom generator;
+			//map_generator::Test generator;
+			generator.Generate( tiles, seed );
+#ifdef DEBUG
+			// if crash happens - it's handy to have a map file to reproduce it
+			Log( (string) "Saving map to " + MAP_FILENAME );
+			FS::WriteFile( MAP_FILENAME, tiles->Serialize().ToString() );
+#endif
+		}
+		m_map->SetTiles( tiles );
+#ifdef DEBUG
+		// also handy to have dump of generated map
+		Log( (string) "Saving map dump to " + MAP_DUMP_FILENAME );
+		FS::WriteFile( MAP_DUMP_FILENAME, m_map->Serialize().ToString() );
+#endif
+	}
 	
 	auto* ui = g_engine->GetUI();
 	
+	// UI
+	ui->AddTheme( &m_ui.theme );
+	NEW( m_ui.bottom_bar, ui::BottomBar, this );
+	ui->AddObject( m_ui.bottom_bar );
+
+	// map event handlers
 	m_handlers.keydown = ui->AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this ) {
 		if ( data->key.code == UIEvent::K_ESCAPE ) {
 			ReturnToMainMenu();
 		}
 		return true;
-	});
+	}, UI::GH_AFTER );
 	
 	m_handlers.mousedown = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_DOWN, EH( this ) {
 		switch ( data->mouse.button ) {
@@ -72,26 +121,29 @@ void World::Start() {
 				m_last_drag_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
 				break;
 			}
+#ifdef DEBUG
 			case UIEvent::M_MIDDLE: {
 				m_is_rotating = true;
 				m_last_rotate_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
 				break;
 			}
+#endif
 		}
 		return true;
-	});
+	}, UI::GH_AFTER );
 	
 	m_handlers.mousemove = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_MOVE, EH( this ) {
 		if ( m_is_dragging ) {
 			Vec2<float> current_drag_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
 			Vec2<float> drag = current_drag_position - m_last_drag_position;
 			
-			m_camera_position.x += ( (float) drag.x * MAP_SCROLL_SPEED );
-			m_camera_position.y += ( (float) drag.y * MAP_SCROLL_SPEED );
+			m_camera_position.x += (float) drag.x * MAP_SCROLL_SPEED;
+			m_camera_position.y += (float) drag.y * MAP_SCROLL_SPEED;
 			UpdateCameraPosition();
 			
 			m_last_drag_position = current_drag_position;
 		}
+#ifdef DEBUG
 		if ( m_is_rotating ) {
 			Vec2<float> current_rotate_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
 			Vec2<float> rotate = current_rotate_position - m_last_rotate_position;
@@ -104,9 +156,9 @@ void World::Start() {
 			}
 			m_last_rotate_position = current_rotate_position;
 		}
-		
+#endif
 		return true;
-	});
+	}, UI::GH_AFTER );
 	
 	m_handlers.mouseup = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_UP, EH( this ) {
 		switch ( data->mouse.button ) {
@@ -114,6 +166,7 @@ void World::Start() {
 				m_is_dragging = false;
 				break;
 			}
+#ifdef DEBUG
 			case UIEvent::M_MIDDLE: {
 				m_is_rotating = false;
 				for (auto& actor : m_map->GetActors() ) {
@@ -121,9 +174,10 @@ void World::Start() {
 				}
 				break;
 			}
+#endif
 		}
 		return true;
-	});
+	}, UI::GH_AFTER );
 	
 	m_handlers.mousescroll = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_SCROLL, EH( this ) {
 		
@@ -131,11 +185,11 @@ void World::Start() {
 		
 		float new_z = m_camera_position.z + (float) data->mouse.scroll_y * speed;
 		
-		if ( new_z < 0.02 ) {
-			new_z = 0.02;
+		if ( new_z < m_camera_range.min.z ) {
+			new_z = m_camera_range.min.z;
 		}
-		if ( new_z > 1.0f ) {
-			new_z = 1.0f;
+		if ( new_z > m_camera_range.max.z ) {
+			new_z = m_camera_range.max.z;
 		}
 		
 		float diff = m_camera_position.z / new_z;
@@ -145,27 +199,41 @@ void World::Start() {
 		
 		m_camera_position.x /= diff;
 		m_camera_position.y /= diff;
-		UpdateCameraPosition();
+
+		UpdateCameraRange();
 		
 		return true;
-	});
+	}, UI::GH_AFTER );
 	
-	m_clamp.x.SetRange( 0.0, g_engine->GetGraphics()->GetWindowWidth(), -0.5, 0.5 );
-	m_clamp.y.SetRange( 0.0, g_engine->GetGraphics()->GetWindowHeight(), -0.5, 0.5 );
+	// other stuff
 	
-	SetCameraPosition( { 0.0f, 0.0f, 0.05f } );
+	m_clamp.x.SetDstRange( -0.5f, 0.5f );
+	m_clamp.y.SetDstRange( -0.5f, 0.5f );
+	
+	// map should continue scrolling even if mouse is outside viewport
+	m_clamp.x.SetOverflowAllowed( true );
+	m_clamp.y.SetOverflowAllowed( true );
+	
+	UpdateViewport();
+	
+	SetCameraPosition( { 0.0f, -0.25f, 0.1f } );
 
-	UpdateCameraPosition();
+	UpdateCameraRange();
 	UpdateCameraScale();
 	
 	g_engine->GetGraphics()->AddOnResizeHandler( this, RH( this ) {
-		m_clamp.x.SetSrcRange( 0.0, g_engine->GetGraphics()->GetWindowWidth() );
-		m_clamp.y.SetSrcRange( 0.0, g_engine->GetGraphics()->GetWindowHeight() );
-		UpdateCameraPosition();
+		UpdateViewport();
+		UpdateMapInstances();
+		UpdateCameraRange();
 	});
+	
+	UpdateMapInstances();
 }
 
 void World::Stop() {
+	auto* ui = g_engine->GetUI();
+	ui->RemoveObject( m_ui.bottom_bar );
+	ui->RemoveTheme( &m_ui.theme );
 	
 	DELETE( m_map );
 	
@@ -204,9 +272,44 @@ void World::SetCameraPosition( const Vec3 camera_position ) {
 	}
 }
 
-void World::UpdateCameraPosition() {
-	m_camera->SetPosition( { ( 0.5f + m_camera_position.x ) * g_engine->GetGraphics()->GetAspectRatio(), 0.5f + m_camera_position.y, 1.0f + m_camera_position.y } );
+void World::UpdateViewport() {
+	m_viewport.max.x = g_engine->GetGraphics()->GetWindowWidth();
+	m_viewport.max.y = g_engine->GetGraphics()->GetWindowHeight() - m_ui.bottom_bar->GetHeight() + 32; // bottom bar has some transparent area at top
+	m_viewport.ratio.x = (float) g_engine->GetGraphics()->GetWindowWidth() / m_viewport.max.x;
+	m_viewport.ratio.y = (float) g_engine->GetGraphics()->GetWindowHeight() / m_viewport.max.y;
+	m_viewport.window_aspect_ratio = g_engine->GetGraphics()->GetAspectRatio();
+	m_clamp.x.SetSrcRange( m_viewport.min.x, m_viewport.max.x );
+	m_clamp.y.SetSrcRange( m_viewport.min.y, m_viewport.max.y );
 }
+
+void World::UpdateCameraPosition() {
+	
+	// prevent vertical scrolling outside viewport
+	if ( m_camera_position.y < m_camera_range.min.y ) {
+		m_camera_position.y = m_camera_range.min.y;
+	}
+	if ( m_camera_position.y > m_camera_range.max.y ) {
+		m_camera_position.y = m_camera_range.max.y;
+		if ( m_camera_position.y < m_camera_range.min.y ) {
+			m_camera_position.y = ( m_camera_range.min.y + m_camera_range.max.y ) / 2;
+		}
+	}
+	
+	// shift x between instances for infinite horizontal scrolling
+	if ( m_camera_position.x < m_camera_range.min.x ) {
+		m_camera_position.x = m_camera_range.max.x;
+	}	
+	else if ( m_camera_position.x > m_camera_range.max.x ) {
+		m_camera_position.x = m_camera_range.min.x;
+	}
+	
+	m_camera->SetPosition({
+		( 0.5f + m_camera_position.x ) * m_viewport.window_aspect_ratio,
+		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y,
+		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + m_camera_position.z
+	});	
+}
+
 void World::UpdateCameraScale() {
 	m_camera->SetScale( { m_camera_position.z, m_camera_position.z, m_camera_position.z } );
 }
@@ -215,13 +318,50 @@ void World::UpdateCameraAngle() {
 	m_camera->SetAngle( m_camera_angle );
 }
 
+void World::UpdateCameraRange() {
+	m_camera_range.min.z = 2.82f / ( m_map->GetHeight() + 1 ) / m_viewport.ratio.y; // TODO: why 2.82?
+	m_camera_range.max.z = 0.20f; // TODO: fix camera z and allow to zoom in more
+	if ( m_camera_position.z < m_camera_range.min.z ) {
+		m_camera_position.z = m_camera_range.min.z;
+	}
+	if ( m_camera_position.z > m_camera_range.max.z ) {
+		m_camera_position.z = m_camera_range.max.z;
+	}
+	m_camera_range.max.y = ( m_camera_position.z - m_camera_range.min.z ) * ( m_map->GetHeight() + 1 ) * m_viewport.ratio.y * 0.1768f; // TODO: why 0.1768?
+	m_camera_range.min.y = -m_camera_range.max.y;
+	
+	//Log( "Camera range change: Z=[" + to_string( m_camera_range.min.z ) + "," + to_string( m_camera_range.max.z ) + "] Y=[" + to_string( m_camera_range.min.y ) + "," + to_string( m_camera_range.max.y ) + "], z=" + to_string( m_camera_position.z ) );
+	
+	m_camera_range.max.x = ( m_map->GetWidth() ) * m_camera_position.z / m_viewport.window_aspect_ratio * 0.25f;
+	m_camera_range.min.x = -m_camera_range.max.x;
+	
+	UpdateCameraPosition();
+	UpdateCameraScale();
+}
+
+void World::UpdateMapInstances() {
+	// needed for horizontal scrolling
+	vector< Vec3 > instances;
+	
+	const float mhw = Map::s_consts.tile.scale.x * m_map->GetWidth() / 2;
+	
+	// TODO: support narrow maps
+	instances.push_back( { -mhw, 0.0f, 0.0f } );
+	instances.push_back( { 0.0f, 0.0f, 0.0f} );
+	instances.push_back( { +mhw, 0.0f, 0.0f } );
+	
+	m_world_scene->SetInstances( instances );
+}
+
 void World::ReturnToMainMenu() {	
 	
-	//g_engine->ShutDown(); // TMP
-	
+#ifdef DEVEL
+	g_engine->ShutDown();
+#else
 	NEWV( task, game::mainmenu::MainMenu );
 	g_engine->GetScheduler()->RemoveTask( this );
 	g_engine->GetScheduler()->AddTask( task );
+#endif
 	
 }
 

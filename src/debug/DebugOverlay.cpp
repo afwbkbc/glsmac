@@ -30,7 +30,7 @@ void DebugOverlay::Start() {
 			return true;
 		}
 		return false;
-	});
+	}, UI::GH_BEFORE );
 	
 	DEBUG_STATS_SET_RW();
 

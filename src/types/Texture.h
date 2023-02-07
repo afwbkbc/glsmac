@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/Base.h"
+#include "types/Serializable.h"
 
 #include <string>
 
@@ -9,11 +9,11 @@
 
 namespace types {
 
-CLASS( Texture, base::Base )
+CLASS( Texture, Serializable )
 	Texture( const std::string& name, const size_t width, const size_t height );
 	virtual ~Texture();
 	
-	const std::string m_name;
+	std::string m_name;
 	size_t m_width = 0;
 	size_t m_height = 0;
 	float m_aspect_ratio = 0;
@@ -73,6 +73,9 @@ CLASS( Texture, base::Base )
 	//void FlipH(); // TODO
 	void SetAlpha(const float alpha);
 	void SetContrast(const float contrast);
+
+	const Buffer Serialize() const;
+	void Unserialize( Buffer buf );
 };
 
 } /* namespace types */

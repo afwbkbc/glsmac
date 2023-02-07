@@ -12,16 +12,14 @@ SoundEffect::SoundEffect( const string& class_name ) : UIObject( class_name )
 void SoundEffect::SetSound( const types::Sound* sound ) {
 	if ( sound != m_sound ) {
 		m_sound = sound;
-
-		UpdateActor();
 	}
 }
 
 void SoundEffect::SetAutoPlay( const bool autoplay ) {
 	if ( autoplay != m_autoplay ) {
 		m_autoplay = autoplay;
-		if ( m_actor ) {
-			m_actor->SetAutoPlay( autoplay );
+		for ( auto& actor : m_actors ) {
+			actor->SetAutoPlay( autoplay );
 		}
 	}
 }
@@ -29,8 +27,8 @@ void SoundEffect::SetAutoPlay( const bool autoplay ) {
 void SoundEffect::SetRepeatable( const bool repeatable ) {
 	if ( repeatable != m_repeatable ) {
 		m_repeatable = repeatable;
-		if ( m_actor ) {
-			m_actor->SetRepeatable( m_repeatable );
+		for ( auto& actor : m_actors ) {
+			actor->SetRepeatable( m_repeatable );
 		}
 	}
 }
@@ -38,8 +36,8 @@ void SoundEffect::SetRepeatable( const bool repeatable ) {
 void SoundEffect::SetStartDelay( const size_t start_delay ) {
 	if ( start_delay != m_start_delay ) {
 		m_start_delay = start_delay;
-		if ( m_actor ) {
-			m_actor->SetStartDelay( m_start_delay );
+		for ( auto& actor : m_actors ) {
+			actor->SetStartDelay( m_start_delay );
 		}
 	}
 }
@@ -47,63 +45,70 @@ void SoundEffect::SetStartDelay( const size_t start_delay ) {
 void SoundEffect::SetVolume( const float volume ) {
 	if ( volume != m_volume ) {
 		m_volume = volume;
-		if ( m_actor ) {
-			m_actor->SetVolume( m_volume );
+		for ( auto& actor : m_actors ) {
+			actor->SetVolume( m_volume );
 		}
 	}
 }
 
 void SoundEffect::Play() {
-	if ( m_actor ) {
-		m_actor->Play();
+	if ( m_sound && m_created ) {
+		Log( "Creating sound actor" );
+		NEWV( actor, scene::actor::Sound, "UI::SoundEffect", m_sound );
+			actor->SetRepeatable( m_repeatable );
+			actor->SetStartDelay( m_start_delay );
+			actor->SetVolume( m_volume );
+			actor->SetAutoPlay( m_autoplay );
+		g_engine->GetAudio()->AddActor( actor );
+		m_actors.push_back( actor );
+		actor->Play();
 	}
 }
 
 void SoundEffect::Pause() {
-	if ( m_actor ) {
-		m_actor->Pause();
+	for ( auto& actor : m_actors ) {
+		actor->Pause();
 	}
 }
 
 void SoundEffect::Stop() {
-	if ( m_actor ) {
-		m_actor->Stop();
+	for ( auto& actor : m_actors ) {
+		//actor->Stop();
 	}
 }
 
 void SoundEffect::Create() {
 	UIObject::Create();
 	
-	UpdateActor();
+	if ( m_autoplay && m_actors.empty() ) {
+		Play();
+	}
 }
 
-void SoundEffect::UpdateActor() {
-	if ( m_sound && m_created ) {
-		if ( m_actor ) {
-			g_engine->GetAudio()->RemoveAndDeleteActor( m_actor );
-			// TODO: scene?
-			//RemoveActor( m_actor );
+void SoundEffect::Iterate() {
+	UIObject::Iterate();
+	
+	vector< actor::Sound* > active_actors = {};
+	for ( auto& actor : m_actors ) {
+		if ( actor->IsFinished() ) {
+			Log( "Destroying inactive sound actor" );
+			g_engine->GetAudio()->RemoveAndDeleteActor( actor );
 		}
-		NEW( m_actor, scene::actor::Sound, "UI::SoundEffect", m_sound );
-			m_actor->SetRepeatable( m_repeatable );
-			m_actor->SetStartDelay( m_start_delay );
-			m_actor->SetVolume( m_volume );
-		
-		g_engine->GetAudio()->AddActor( m_actor );
-		// TODO: scene?
-		//AddActor( m_actor );
+		else {
+			active_actors.push_back( actor );
+		}
 	}
+	m_actors = active_actors;
 }
 
 void SoundEffect::Destroy() {
-	if ( m_actor ) {
-		
-		g_engine->GetAudio()->RemoveAndDeleteActor( m_actor );
+	for ( auto& actor : m_actors ) {
+		//actor->Stop(); // stop or not?
+		g_engine->GetAudio()->RemoveAndDeleteActor( actor );
 		// TODO: scene?
 		//RemoveActor( m_actor );
-		
-		m_actor = nullptr;
 	}
+	m_actors.clear();
 	
 	UIObject::Destroy();
 }
@@ -127,6 +132,10 @@ void SoundEffect::ApplyStyle() {
 		}
 		if ( Has( Style::A_SOUND_START_DELAY ) ) {
 			SetStartDelay( Get( Style::A_SOUND_START_DELAY ) );
+		}
+		
+		if ( m_autoplay && m_actors.empty() ) {
+			Play();
 		}
 	}
 	

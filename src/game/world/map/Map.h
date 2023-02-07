@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/Base.h"
+#include "types/Serializable.h"
 
 #include <vector>
 #include <unordered_map>
@@ -27,7 +27,7 @@ namespace map {
 class Module;
 class Finalize;
 	
-CLASS( Map, base::Base )
+CLASS( Map, Serializable )
 
 	Map( Scene* constscene );
 	~Map();
@@ -95,6 +95,8 @@ CLASS( Map, base::Base )
 				const float x =	Map::s_consts.tile.scale.x / 2;
 				const float y =	Map::s_consts.tile.scale.y / 2;
 			} radius;
+			const float rotated_width = sqrt( pow( Map::s_consts.tile.scale.x, 2 ) + pow( Map::s_consts.tile.scale.y, 2 ) );
+			const Tile::elevation_t maximum_allowed_slope_elevation = 1000;
 		} tile;
 		const struct {
 			const struct {
@@ -106,9 +108,9 @@ CLASS( Map, base::Base )
 				const uint8_t y = Map::s_consts.pcx_texture_block.dimensions.y / 2;
 			} radius;
 		} pcx_texture_block;
-		const Vec3 map_position = { 0.0, 0.0, 0.0 };
-		const Vec3 map_rotation = { 0.0, 0.0, 0.0 };
-		const Color underwater_tint = { 0.0, 0.2, 0.5, 1.0 };
+		const Vec3 map_position = { 0.0f, 0.0f, 0.0f };
+		const Vec3 map_rotation = { 0.0f, 0.0f, 0.0f };
+		const Color underwater_tint = { 0.0f, 0.2f, 0.5f, 1.0f };
 		const struct {
 			const Color coastline_tint = { 0.7f, 0.7f, 0.7f, 1.0f };
 			const Color::channel_t coast_water_alpha = 0.3f;
@@ -128,7 +130,7 @@ CLASS( Map, base::Base )
 	} consts_t;
 	static const consts_t s_consts;
 	
-	void SetTiles( Tiles* tiles );
+	void SetTiles( Tiles* tiles, bool generate_actors = true );
 	
 	// tmp
 	vector<actor::Mesh*> GetActors() const;
@@ -148,6 +150,8 @@ CLASS( Map, base::Base )
 		Vec3 top;
 		Vec3 right;
 		Vec3 bottom;
+		const Buffer Serialize() const;
+		void Unserialize( Buffer buf );
 	} tile_vertices_t;
 
 	typedef struct {
@@ -156,6 +160,8 @@ CLASS( Map, base::Base )
 		types::Mesh::index_t right;
 		types::Mesh::index_t top;
 		types::Mesh::index_t bottom;
+		const Buffer Serialize() const;
+		void Unserialize( Buffer buf );
 	} tile_indices_t;
 	
 	typedef struct {
@@ -164,6 +170,8 @@ CLASS( Map, base::Base )
 		Vec2< float > top;
 		Vec2< float > right;
 		Vec2< float > bottom;
+		const Buffer Serialize() const;
+		void Unserialize( Buffer buf );
 	} tile_tex_coords_t;
 	
 	typedef struct {
@@ -172,6 +180,8 @@ CLASS( Map, base::Base )
 		Color top;
 		Color right;
 		Color bottom;
+		const Buffer Serialize() const;
+		void Unserialize( Buffer buf );
 	} tile_colors_t;
 	
 	typedef struct {
@@ -179,14 +189,18 @@ CLASS( Map, base::Base )
 		tile_vertices_t coords;
 		tile_tex_coords_t tex_coords;
 		tile_colors_t colors;
+		const Buffer Serialize() const;
+		void Unserialize( Buffer buf );
 	} tile_layer_t;
 	
 	typedef struct {
+		Tile::elevation_t center;
 		Tile::elevation_t left;
 		Tile::elevation_t top;
 		Tile::elevation_t right;
 		Tile::elevation_t bottom;
-		Tile::elevation_t center;
+		const Buffer Serialize() const;
+		void Unserialize( Buffer buf );
 	} tile_elevations_t;
 	
 	typedef struct {
@@ -205,8 +219,14 @@ CLASS( Map, base::Base )
 		} tex_coord;
 		tile_elevations_t elevations;
 		tile_layer_t layers[ LAYER_MAX ];
+		struct {
+			tile_vertices_t coords;
+			tile_indices_t indices;
+		} overdraw_column; // need to copy first column after last one to make blending and light compute correctly in instancing
 		bool is_coastline_corner;
 		bool has_water;
+		const Buffer Serialize() const;
+		void Unserialize( Buffer buf );
 	} tile_state_t;
 	
 	typedef struct {
@@ -242,6 +262,8 @@ CLASS( Map, base::Base )
 		vector< pair< types::Mesh::index_t*, types::Mesh::index_t* > > copy_normals;
 		unordered_map< types::Mesh::index_t*, pair< Vec2< size_t >, Texture::add_mode_t > > need_normals;
 		
+		const Buffer Serialize() const;
+		void Unserialize( Buffer buf );
 	} map_state_t;
 	
 	// call these only during tile generation
@@ -259,6 +281,12 @@ CLASS( Map, base::Base )
 	} tile_texture_info_t;
 	const tile_texture_info_t GetTileTextureInfo( const Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature = Tile::F_NONE ) const;
 
+	const size_t GetWidth() const;
+	const size_t GetHeight() const;
+	
+	const Buffer Serialize() const;
+	void Unserialize( Buffer buf );
+	
 protected:
 	friend class Finalize;
 	
@@ -284,9 +312,8 @@ private:
 	} m_actors;
 	
 	void GenerateActors();
-	void GenerateTerrainActor();
-	void GenerateWaterActor();
 	
+	void InitTextureAndMesh();
 	
 	unordered_map< uint8_t, uint8_t > m_texture_variants = {}; // cache
 	

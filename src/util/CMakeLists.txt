@@ -5,5 +5,6 @@ SET(SRC ${SRC}
 	${PWD}/System.cpp
 	${PWD}/Math.cpp
 	${PWD}/Perlin.cpp
+	${PWD}/FS.cpp
 
 PARENT_SCOPE)

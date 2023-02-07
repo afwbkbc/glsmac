@@ -1,15 +1,15 @@
 #pragma once
 
-#include <vector>
+#include "types/Serializable.h"
 
-#include "base/Base.h"
+#include <vector>
 
 #include "Vec3.h"
 #include "Color.h"
 
 namespace types {
 
-CLASS( Mesh, base::Base )
+CLASS( Mesh, Serializable )
 	
 	static const uint8_t VERTEX_COORD_SIZE = 3; // x, y, z
 	static const uint8_t VERTEX_TEXCOORD_SIZE = 2; // tx, ty
@@ -61,16 +61,18 @@ CLASS( Mesh, base::Base )
 	void Update();
 	const size_t UpdatedCount() const;
 	
+	const Buffer Serialize() const;
+	void Unserialize( Buffer buf );
 protected:
 
 	bool m_is_final = false;
 	
-	const size_t m_vertex_count = 0;
+	size_t m_vertex_count = 0;
 	size_t m_vertex_i = 0;
 	uint8_t* m_vertex_data = nullptr;
 
-	const size_t m_index_count = 0;
-	const size_t m_surface_count = 0;
+	size_t m_index_count = 0;
+	size_t m_surface_count = 0;
 	size_t m_surface_i = 0;
 	uint8_t* m_index_data = nullptr;
 

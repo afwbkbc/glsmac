@@ -4,7 +4,7 @@ namespace game {
 namespace world {
 namespace map_generator {
 
-void SimpleRandom::Generate( Tiles* tiles ) {
+void SimpleRandom::Generate( Tiles* tiles, size_t seed ) {
 	Log( "Generating terrain ( " + to_string( tiles->GetWidth() ) + " x " + to_string( tiles->GetHeight() ) + " )" );
 	
 	Tile* tile;
