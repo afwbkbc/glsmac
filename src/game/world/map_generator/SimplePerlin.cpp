@@ -64,10 +64,10 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 			}
 			tile = tiles->At( x, y );
 
-			const float z_rocks = 70;
-			const float z_moisture = 20;
-			const float z_jungle = 130;
-			const float z_xenofungus = 240;
+			const float z_rocks = 1/70;
+			const float z_moisture = 1/20;
+			const float z_jungle = 1/130;
+			const float z_xenofungus = 1/240;
 
 			tile->rockyness = perlin_to_value.Clamp( round( PERLIN_S( x + 0.5f, y + 0.5f, z_rocks, 1.0f ) ) );
 			if ( tile->rockyness == Tile::R_ROCKY ) {
@@ -76,14 +76,14 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 				}
 			}
 			
-			tile->moisture = perlin_to_value.Clamp( ceil( PERLIN_S( x + 0.5f, y + 0.5f, z_moisture, 1.0f ) ) );
+			tile->moisture = perlin_to_value.Clamp( ceil( PERLIN_S( x + 0.5f, y + 0.5f, z_moisture, 0.6f ) ) );
 			if ( tile->moisture == Tile::M_RAINY ) {
-				if ( PERLIN_S( x + 0.5f, y + 0.5f, z_jungle, 1.0f ) > 0.7 ) {
+				if ( PERLIN_S( x + 0.5f, y + 0.5f, z_jungle, 0.2f ) > 0.7 ) {
 					tile->features |= Tile::F_JUNGLE;
 				}
 			}
 			
-			if ( PERLIN_S( x + 0.5f, y + 0.5f, z_xenofungus, 1.0f ) > 0.6 ) {
+			if ( PERLIN_S( x + 0.5f, y + 0.5f, z_xenofungus, 0.6f ) > 0.4 ) {
 				tile->features |= Tile::F_XENOFUNGUS;
 			}
 
