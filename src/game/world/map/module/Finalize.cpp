@@ -17,6 +17,13 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 		x( right ); \
 		x( bottom )
 
+	#define do_xs() \
+		x( center, left, top ); \
+		x( center, top, right ); \
+		x( center, right, bottom ); \
+		x( center, bottom, left )
+
+
 	for ( auto lt = 0 ; lt < Map::LAYER_MAX ; lt++ ) {
 		
 		vertices = ts->layers[ lt ].coords;
@@ -53,18 +60,42 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 		#define x( _k ) ts->layers[ lt ].indices._k = m_map->m_mesh_terrain->AddVertex( vertices._k, tex_coords._k, tint._k )
 			do_x();
 		#undef x
-
+		
 		#define x( _a, _b, _c ) m_map->m_mesh_terrain->AddSurface( { ts->layers[ lt ].indices._a, ts->layers[ lt ].indices._b, ts->layers[ lt ].indices._c } )
-			x( center, left, top );
-			x( center, top, right );
-			x( center, right, bottom );
-			x( center, bottom, left );
+			do_xs();
 		#undef x
 
+		if ( tile->coord.x == 0 && lt == Map::LAYER_LAND ) {
+			// copy tile to overdraw column
+			auto* layer = &ts->layers[ lt ];
+
+			#define x( _k ) { \
+				ts->overdraw_column.coords._k.x = vertices._k.x + ms->dimensions.x * 0.5f; /* TODO: why 0.5? */ \
+				ts->overdraw_column.coords._k.y = vertices._k.y; \
+				ts->overdraw_column.coords._k.z = vertices._k.z; \
+			}
+				do_x();
+			#undef x
+
+			Log( (string) "Copying land layer for overdraw from " +
+				"[ ~" + to_string( vertices.center.x ) + ", ~" + to_string( vertices.center.y ) + " ]" +
+				" to " +
+				"[ ~" + to_string( ts->overdraw_column.coords.center.x ) + ", ~" + to_string( ts->overdraw_column.coords.center.y ) + " ]"
+			);
+
+			#define x( _k ) ts->overdraw_column.indices._k = m_map->m_mesh_terrain->AddVertex( ts->overdraw_column.coords._k, tex_coords._k, tint._k )
+				do_x();
+			#undef x
+
+			#define x( _a, _b, _c ) m_map->m_mesh_terrain->AddSurface( { ts->overdraw_column.indices._a, ts->overdraw_column.indices._b, ts->overdraw_column.indices._c } )
+				do_xs();
+			#undef x
+		}
+	
 	}
 	
 	#undef do_x
-	
+
 }
 
 }

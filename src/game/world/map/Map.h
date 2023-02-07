@@ -219,6 +219,10 @@ CLASS( Map, Serializable )
 		} tex_coord;
 		tile_elevations_t elevations;
 		tile_layer_t layers[ LAYER_MAX ];
+		struct {
+			tile_vertices_t coords;
+			tile_indices_t indices;
+		} overdraw_column; // need to copy first column after last one to make blending and light compute correctly in instancing
 		bool is_coastline_corner;
 		bool has_water;
 		const Buffer Serialize() const;
@@ -308,9 +312,8 @@ private:
 	} m_actors;
 	
 	void GenerateActors();
-	void GenerateTerrainActor();
-	void GenerateWaterActor();
 	
+	void InitTextureAndMesh();
 	
 	unordered_map< uint8_t, uint8_t > m_texture_variants = {}; // cache
 	

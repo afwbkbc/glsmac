@@ -176,7 +176,7 @@ void Map::GenerateActors() {
 	m_map_state.dimensions.y = m_tiles->GetHeight();
 	m_map_state.coord.x = -( Map::s_consts.tile.scale.x * ( m_map_state.dimensions.x + 1 ) / 4 - Map::s_consts.tile.radius.x );
 	m_map_state.coord.y = -( Map::s_consts.tile.scale.y * ( m_map_state.dimensions.y + 1 ) / 4 - Map::s_consts.tile.radius.y );
-	m_map_state.variables.texture_scaling.x = 1.0f / Map::s_consts.pcx_texture_block.dimensions.x / m_map_state.dimensions.x;
+	m_map_state.variables.texture_scaling.x = 1.0f / Map::s_consts.pcx_texture_block.dimensions.x / ( m_map_state.dimensions.x + 1 ); // + 1 for overdraw column
 	m_map_state.variables.texture_scaling.y = 1.0f / Map::s_consts.pcx_texture_block.dimensions.y / m_map_state.dimensions.y / LAYER_MAX;
 	
 	ASSERT( !m_tile_states, "m_tile_states already set" );
@@ -188,12 +188,8 @@ void Map::GenerateActors() {
 		m_scene->RemoveActor( m_actors.terrain );
 		DELETE( m_actors.terrain );
 	}
-	if ( m_textures.terrain ) {
-		DELETE( m_textures.terrain );
-	}
-	
-	NEW( m_textures.terrain, Texture, "TerrainTexture", m_map_state.dimensions.x * Map::s_consts.pcx_texture_block.dimensions.x, ( m_map_state.dimensions.y * LAYER_MAX ) * Map::s_consts.pcx_texture_block.dimensions.y );
-	NEW( m_mesh_terrain, types::Mesh, m_map_state.dimensions.x * ( m_map_state.dimensions.y * LAYER_MAX ) * 5 / 2, m_map_state.dimensions.x * ( m_map_state.dimensions.y * LAYER_MAX ) * 4 / 2 );
+
+	InitTextureAndMesh();
 	
 	for ( size_t y = 0 ; y < m_map_state.dimensions.y ; y++ ) {
 		for ( size_t x = 0 ; x < m_map_state.dimensions.x ; x++ ) {
@@ -239,6 +235,23 @@ void Map::GenerateActors() {
 	
 	m_current_tile = nullptr;
 	m_current_ts = nullptr;
+}
+
+void Map::InitTextureAndMesh() {
+	
+	if ( m_textures.terrain ) {
+		DELETE( m_textures.terrain );
+	}
+	NEW( m_textures.terrain, Texture, "TerrainTexture",
+		( m_map_state.dimensions.x + 1 ) * Map::s_consts.pcx_texture_block.dimensions.x, // + 1 for overdraw_column
+		( m_map_state.dimensions.y * LAYER_MAX ) * Map::s_consts.pcx_texture_block.dimensions.y
+	);
+	
+	// not deleting mesh because if it exists - it means it's already linked to actor and they are deleted together
+	NEW( m_mesh_terrain, types::Mesh,
+		( ( m_map_state.dimensions.x * LAYER_MAX ) + 1 ) * m_map_state.dimensions.y * 5 / 2, // + 1 for overdraw column
+		( ( m_map_state.dimensions.x * LAYER_MAX ) + 1 ) * m_map_state.dimensions.y * 4 / 2 // + 1 for overdraw column
+	);
 }
 
 const Map::tile_texture_info_t Map::GetTileTextureInfo( const Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature ) const {
@@ -492,18 +505,11 @@ void Map::Unserialize( Buffer buf ) {
 		}
 	}
 	
-	if ( m_textures.terrain ) {
-		DELETE( m_textures.terrain );
-	}
-	NEW( m_textures.terrain, Texture, "TerrainTexture", m_map_state.dimensions.x * Map::s_consts.pcx_texture_block.dimensions.x, ( m_map_state.dimensions.y * LAYER_MAX ) * Map::s_consts.pcx_texture_block.dimensions.y );
-	m_textures.terrain->Unserialize( buf.ReadString() );
+	InitTextureAndMesh();
 	
-	if ( m_actors.terrain ) {
-		m_scene->RemoveActor( m_actors.terrain );
-		DELETE( m_actors.terrain );
-	}
-	NEW( m_mesh_terrain, types::Mesh, m_map_state.dimensions.x * ( m_map_state.dimensions.y * LAYER_MAX ) * 5 / 2, m_map_state.dimensions.x * ( m_map_state.dimensions.y * LAYER_MAX ) * 4 / 2 );
+	m_textures.terrain->Unserialize( buf.ReadString() );
 	m_mesh_terrain->Unserialize( buf.ReadString() );
+	
 	NEW( m_actors.terrain, actor::InstancedMesh, "MapTerrain", m_mesh_terrain );
 		m_actors.terrain->SetTexture( m_textures.terrain );
 		m_actors.terrain->SetPosition( Map::s_consts.map_position );

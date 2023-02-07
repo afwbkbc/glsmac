@@ -332,7 +332,7 @@ void World::UpdateCameraRange() {
 	
 	//Log( "Camera range change: Z=[" + to_string( m_camera_range.min.z ) + "," + to_string( m_camera_range.max.z ) + "] Y=[" + to_string( m_camera_range.min.y ) + "," + to_string( m_camera_range.max.y ) + "], z=" + to_string( m_camera_position.z ) );
 	
-	m_camera_range.max.x = 10.0f / 40.0f * ( m_map->GetWidth() ) * m_camera_position.z / m_viewport.window_aspect_ratio;
+	m_camera_range.max.x = ( m_map->GetWidth() ) * m_camera_position.z / m_viewport.window_aspect_ratio * 0.25f;
 	m_camera_range.min.x = -m_camera_range.max.x;
 	
 	UpdateCameraPosition();
@@ -346,9 +346,9 @@ void World::UpdateMapInstances() {
 	const float mhw = Map::s_consts.tile.scale.x * m_map->GetWidth() / 2;
 	
 	// TODO: support narrow maps
-	instances.push_back( { +mhw, 0.0f, 0.0f } );
-	instances.push_back( { 0.0f, 0.0f, 0.0f} );
 	instances.push_back( { -mhw, 0.0f, 0.0f } );
+	instances.push_back( { 0.0f, 0.0f, 0.0f} );
+	instances.push_back( { +mhw, 0.0f, 0.0f } );
 	
 	m_world_scene->SetInstances( instances );
 }
