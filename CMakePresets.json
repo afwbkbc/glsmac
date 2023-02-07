@@ -23,7 +23,8 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
-        "VENDORED_DEPENDENCIES": true
+        "VENDORED_DEPENDENCIES": true,
+        "VISUAL_STUDIO": true
       },
       "condition": {
         "type": "equals",

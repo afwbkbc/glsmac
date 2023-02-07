@@ -182,7 +182,7 @@ void OpenGL::Iterate() {
 #ifdef DEBUG
 	GLenum errcode;
 	if ( ( errcode=glGetError() ) != GL_NO_ERROR ) {
-#ifdef __linux__ // gluErrorString can't be found on window
+#ifndef  VISUAL_STUDIO // gluErrorString can't be found by MSVC and Clang from Visual Studio
 		const GLubyte* errstring = gluErrorString( errcode );
 		string msg = (char *)errstring;
 		THROW( "OpenGL error occured in render loop: \"" + msg + "\"" );
