@@ -71,6 +71,8 @@ Once I replicate original game, I'll focus on other things, such as: larger maps
 
 ### Build instructions
 
+### Linux
+
 Target platform is GNU/Linux with GCC compiler, it should also be possible to build it with MinGW (if you're on Windows). Other compilers/platforms weren't tested but you can try.
 
 You will need following libraries (-dev versions): FreeType2, SDL2, SDL_image, GL, GLU, GLEW
@@ -78,10 +80,6 @@ You will need following libraries (-dev versions): FreeType2, SDL2, SDL_image, G
 Ubuntu/Debian/Mint: sudo apt-get install libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev
 
 Gentoo: sudo emerge libsdl2 sdl2-image freetype glu glew
-
-Building on Windows with MinGW is possible, but tricky. You need to install all those libraries manually, and also FreeGLUT. Double-check that you download libraries compiled for MinGW (and not MSVC). GLEW may need to be compiled from source (because they only ship MSVC version). Make sure to have threads-enabled version of MinGW. MSYS and TDM-GCC are recommended for more consistent development environment. Maybe this guide will help you - https://github.com/induktio/mingw-glsmac
-
-Building on Windows with MSVC is not supported and will probably require many changes to code to be compatible.
 
 It is recommended to build project using cmake and make instead of adding .cpp and .h files manually to IDE.
 
@@ -96,6 +94,30 @@ For same build as before (or Release if it's first build): cmake . && make
 Add -j parameter to make to speed up if you have multiple cores, i.e. "make -j9" for 8
 
 You may also just download binary releases from github, they are built for ubuntu but will run on most linux distros (only 64-bit for now).
+
+### Windows
+
+#### Visual Studio
+
+Building with Visual Studio is recommended for windows. You will need **git** and **Visual Studio 2022** installed. Use the Visual Studio Installer and click **modify**->**individual components** on Visual Studio 2022.
+
+You will need to install the following `C++ CMake tools for windows`, `C++ Clang Compiler for windows`, `C++ Clang-cl`, `Windows 11 SDK (10.2.22621.0)`.
+
+Once that is done you should clone the git, then open the folder. Press the top button **Project**->**Configure**, then the output should open. Wait for it to say "CMake generation finished.". Once that is done select the build target `GLSMAC.exe` and press the debug button.
+
+You are going to want to add your path to the start argument when running, to do that open the **Solution Explorer** and press **Show all files**. Then go to `out\build\x64-debug-win-clang\bin`, right click GLSMAC.exe and select **Add Debug Configuration**->**Default**.
+
+Then in the file that just open paste
+
+`"args": [ "\"C:\\GOG Games\\Sid Meier's Alpha Centauri\"" ]`
+
+below name in the configuration. You need to replace the path with your own path to the game. Then you are done and can run the game in Visual Studio.
+
+#### MinGW
+
+Building on Windows with MinGW is possible, but tricky. You need to install all those libraries manually, and also FreeGLUT. Double-check that you download libraries compiled for MinGW (and not MSVC). GLEW may need to be compiled from source (because they only ship MSVC version). Make sure to have threads-enabled version of MinGW. MSYS and TDM-GCC are recommended for more consistent development environment. Maybe this guide will help you - https://github.com/induktio/mingw-glsmac
+
+Building on Windows with MSVC is not supported and will probably require many changes to code to be compatible.
 
 ### Launch
 
