@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <algorithm>
+#include <random>
 
 #include "util/Clamper.h"
 #include "Map.h"
@@ -317,7 +318,9 @@ void Tiles::RaiseAllTilesBy( Tile::elevation_t amount ) {
 			tiles.push_back( At( x, y ) );
 		}
 	}
-	random_shuffle( tiles.begin(), tiles.end() );
+	std::random_device rd;
+	std::mt19937 g(rd());
+	std::shuffle( tiles.begin(), tiles.end(), g);
 	
 	for ( auto& tile : tiles ) {
 		*tile->elevation.center += amount;
@@ -386,7 +389,9 @@ void Tiles::NormalizeElevationRange() {
 			tiles.push_back( At( x, y ) );
 		}
 	}
-	random_shuffle( tiles.begin(), tiles.end() );
+	std::random_device rd;
+	std::mt19937 g(rd());
+	std::shuffle( tiles.begin(), tiles.end(), g);
 	
 	for ( auto& tile : tiles ) {
 		tile->elevation_data.bottom = converter.Clamp( tile->elevation_data.bottom );

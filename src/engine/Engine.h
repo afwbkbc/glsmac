@@ -22,7 +22,7 @@
 
 #include "scheduler/Scheduler.h"
 
-#include "ui/UI.h"
+#include "../ui/UI.h"
 
 // TODO: move to config
 extern const size_t g_max_fps;
