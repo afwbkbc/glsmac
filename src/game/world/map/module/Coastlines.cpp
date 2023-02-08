@@ -139,7 +139,14 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 		tile->S->is_water_tile ||
 		tile->SW->is_water_tile
 	)) {
-		m_map->AddTexture( Map::LAYER_WATER_SURFACE_EXTRA, Map::s_consts.pcx_textures.water[ 0 ], Texture::AM_DEFAULT, rand() % 4, Map::s_consts.coastlines.coast_water_alpha );
+		m_map->AddTexture(
+			Map::LAYER_WATER_SURFACE_EXTRA,
+			Map::s_consts.pcx_textures.water[ 0 ],
+			Texture::AM_DEFAULT,
+			RandomRotate(),
+			Map::s_consts.coastlines.coast_water_alpha
+		);
+		
 		ts->layers[ Map::LAYER_WATER_SURFACE_EXTRA ].colors.center =
 		ts->layers[ Map::LAYER_WATER_SURFACE_EXTRA ].colors.left =
 		ts->layers[ Map::LAYER_WATER_SURFACE_EXTRA ].colors.top =
@@ -190,12 +197,23 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 			ts->layers[ Map::LAYER_WATER_SURFACE_EXTRA ].colors.bottom = Map::s_consts.coastlines.coastline_tint;
 		}
 
-		m_map->AddTexture( Map::LAYER_WATER_SURFACE_EXTRA, Map::s_consts.pcx_textures.water[ 0 ], Texture::AM_DEFAULT, rand() % 4, Map::s_consts.coastlines.coast_water_alpha );
+		m_map->AddTexture(
+			Map::LAYER_WATER_SURFACE_EXTRA,
+			Map::s_consts.pcx_textures.water[ 0 ],
+			Texture::AM_DEFAULT,
+			RandomRotate(),
+			Map::s_consts.coastlines.coast_water_alpha
+		);
 	}
 
 	if ( ts->has_water ) {
 
-		m_map->AddTexture( Map::LAYER_WATER_SURFACE, Map::s_consts.pcx_textures.water[ 1 ], Texture::AM_DEFAULT, rand() % 4 );
+		m_map->AddTexture(
+			Map::LAYER_WATER_SURFACE,
+			Map::s_consts.pcx_textures.water[ 1 ],
+			Texture::AM_DEFAULT,
+			RandomRotate()
+		);
 
 		// corners on land tiles
 		if ( ts->is_coastline_corner ) {
@@ -367,7 +385,12 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 				}
 				else {
 					// use default texture
-					m_map->AddTexture( Map::LAYER_WATER, Map::s_consts.pcx_textures.arid[ 0 ], coastline_mode | c.side, rand() % 4 );
+					m_map->AddTexture(
+						Map::LAYER_WATER,
+						Map::s_consts.pcx_textures.arid[ 0 ],
+						coastline_mode | c.side,
+						RandomRotate()
+					);
 				}
 			}
 			

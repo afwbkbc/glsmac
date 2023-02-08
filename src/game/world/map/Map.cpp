@@ -33,8 +33,9 @@ static inline unsigned char S_to_binary_(const char *s)
     return i;
 }
 
-Map::Map( Scene* scene )
-	: m_scene( scene )
+Map::Map( Random* random, Scene* scene )
+	: m_random( random )
+	, m_scene( scene )
 {
 	
 #if WIREFRAMES
@@ -296,7 +297,7 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const Tile* tile, const 
 	}
 	
 	if ( !possible_rotates.empty() ) {
-		info.rotate_direction = possible_rotates[ rand() % possible_rotates.size() ] / 2;
+		info.rotate_direction = possible_rotates[ m_random->GetUInt( 0, possible_rotates.size() - 1 ) ] / 2;
 	}
 	else {
 		ASSERT( false, "could not find texture variant" );
@@ -342,6 +343,10 @@ const size_t Map::GetWidth() const {
 
 const size_t Map::GetHeight() const {
 	return m_map_state.dimensions.y;
+}
+
+Random* Map::GetRandom() const {
+	return m_random;
 }
 
 const Buffer Map::Serialize() const {

@@ -15,6 +15,7 @@
 #include "game/Settings.h"
 
 #include "ui/Theme.h"
+#include "util/Random.h"
 
 using namespace std;
 using namespace types;
@@ -38,7 +39,9 @@ CLASS( MainMenu, base::Task )
 	void GoBack();
 	void MenuError( const string& error_text );
 	
-protected:
+	util::Random* GetRandom();
+	
+private:
 	Theme m_theme;
 
 	const UIEventHandler* m_key_handler = nullptr;
@@ -54,6 +57,9 @@ protected:
 	bool m_goback = false;
 	
 	SoundEffect* m_music = nullptr;
+	
+	util::Random m_random;
+
 };
 
 } /* namespace mainmenu */

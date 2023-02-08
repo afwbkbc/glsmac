@@ -9,6 +9,7 @@
 #include "scene/actor/Mesh.h"
 #include "scene/Scene.h"
 #include "util/Clamper.h"
+#include "util/Random.h"
 #include "map/Map.h"
 
 #include "ui/event/UIEventHandler.h"
@@ -32,20 +33,24 @@ using namespace map;
 CLASS( World, base::Task )
 	
 	World( const Settings& settings );
+	~World();
 	
 	void Start();
 	void Stop();
 	void Iterate();
 	
-	void SetCameraPosition( const Vec3 camera_position );
-	
 protected:
 
 private:
 	
+	void SetCameraPosition( const Vec3 camera_position );
+	
 	// game settings (tmp)
 	const Settings m_settings;
-
+	
+	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)
+	Random* m_random = nullptr;
+	
 	// map rendering stuff
 	Map* m_map = nullptr;
 	Vec3 m_camera_position; // { x, y, zoom }

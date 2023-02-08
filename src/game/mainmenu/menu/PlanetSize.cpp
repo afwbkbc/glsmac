@@ -43,10 +43,10 @@ void PlanetSize::ChooseNext() {
 	}
 	else {
 		// randomize settings
-		m_mainmenu->m_settings.global.map_ocean = rand() % 3 + 1;
-		m_mainmenu->m_settings.global.map_erosive = rand() % 3 + 1;
-		m_mainmenu->m_settings.global.map_lifeforms = rand() % 3 + 1;
-		m_mainmenu->m_settings.global.map_clouds = rand() % 3 + 1;
+		m_mainmenu->m_settings.global.map_ocean = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
+		m_mainmenu->m_settings.global.map_erosive = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
+		m_mainmenu->m_settings.global.map_lifeforms = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
+		m_mainmenu->m_settings.global.map_clouds = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
 		NEW( menu, Difficulty, m_mainmenu );
 	}
 	NextMenu( menu );

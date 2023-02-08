@@ -12,17 +12,32 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 			break;
 		}
 		case Tile::M_ARID: {
-			m_map->AddTexture( Map::LAYER_LAND, Map::s_consts.pcx_textures.arid[ 0 ], Texture::AM_DEFAULT, rand() % 4 );
+			m_map->AddTexture(
+				Map::LAYER_LAND,
+				Map::s_consts.pcx_textures.arid[ 0 ],
+				Texture::AM_DEFAULT,
+				RandomRotate()
+			);
 			break;
 		}
 		case Tile::M_MOIST: {
 			auto txinfo = m_map->GetTileTextureInfo( tile, Map::TG_MOISTURE );
-			m_map->AddTexture( Map::LAYER_LAND, Map::s_consts.pcx_textures.moist[ txinfo.texture_variant ], Texture::AM_DEFAULT, txinfo.rotate_direction );
+			m_map->AddTexture(
+				Map::LAYER_LAND,
+				Map::s_consts.pcx_textures.moist[ txinfo.texture_variant ],
+				Texture::AM_DEFAULT,
+				txinfo.rotate_direction
+			);
 			break;
 		}
 		case Tile::M_RAINY: {
 			auto txinfo = m_map->GetTileTextureInfo( tile, Map::TG_MOISTURE );
-			m_map->AddTexture( Map::LAYER_LAND, Map::s_consts.pcx_textures.rainy[ txinfo.texture_variant ], Texture::AM_DEFAULT, txinfo.rotate_direction );
+			m_map->AddTexture(
+				Map::LAYER_LAND,
+				Map::s_consts.pcx_textures.rainy[ txinfo.texture_variant ],
+				Texture::AM_DEFAULT,
+				txinfo.rotate_direction
+			);
 			break;
 		}
 		default:
@@ -36,11 +51,21 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 			break;
 		}
 		case Tile::R_ROLLING: {
-			m_map->AddTexture( Map::LAYER_LAND, Map::s_consts.pcx_textures.rocks[ rand() % 2 * 2 ], Texture::AM_MERGE, rand() % 4 );
+			m_map->AddTexture(
+				Map::LAYER_LAND,
+				Map::s_consts.pcx_textures.rocks[ m_map->GetRandom()->GetUInt( 0, 1 ) * 2 ],
+				Texture::AM_MERGE,
+				RandomRotate()
+			);
 			break;
 		}
 		case Tile::R_ROCKY: {
-			m_map->AddTexture( Map::LAYER_LAND, Map::s_consts.pcx_textures.rocks[ rand() % 2 * 2 + 1 ], Texture::AM_MERGE, rand() % 4 );
+			m_map->AddTexture(
+				Map::LAYER_LAND,
+				Map::s_consts.pcx_textures.rocks[ m_map->GetRandom()->GetUInt( 0, 1 ) * 2 + 1 ],
+				Texture::AM_MERGE,
+				RandomRotate()
+			);
 			break;
 		}
 		default:
@@ -49,17 +74,32 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 	
 	if ( tile->features	& Tile::F_JUNGLE ) {
 		auto txinfo = m_map->GetTileTextureInfo( tile, Map::TG_FEATURE, Tile::F_JUNGLE );
-		m_map->AddTexture( Map::LAYER_LAND, Map::s_consts.pcx_textures.jungle[ txinfo.texture_variant ], Texture::AM_MERGE, txinfo.rotate_direction );
+		m_map->AddTexture(
+			Map::LAYER_LAND,
+			Map::s_consts.pcx_textures.jungle[ txinfo.texture_variant ],
+			Texture::AM_MERGE,
+			txinfo.rotate_direction
+		);
 	}
 	
 	if ( tile->features & Tile::F_XENOFUNGUS ) {
 		auto txinfo = m_map->GetTileTextureInfo( tile, Map::TG_FEATURE, Tile::F_XENOFUNGUS );
 		
 		if ( tile->is_water_tile || ts->is_coastline_corner ) {
-			m_map->AddTexture( Map::LAYER_WATER, Map::s_consts.pcx_textures.fungus_sea[ txinfo.texture_variant ], Texture::AM_MERGE, txinfo.rotate_direction );
+			m_map->AddTexture(
+				Map::LAYER_WATER,
+				Map::s_consts.pcx_textures.fungus_sea[ txinfo.texture_variant ],
+				Texture::AM_MERGE,
+				txinfo.rotate_direction
+			);
 		}
 		if ( !tile->is_water_tile ) {
-			m_map->AddTexture( Map::LAYER_LAND, Map::s_consts.pcx_textures.fungus_land[ txinfo.texture_variant ], Texture::AM_MERGE, txinfo.rotate_direction );
+			m_map->AddTexture(
+				Map::LAYER_LAND,
+				Map::s_consts.pcx_textures.fungus_land[ txinfo.texture_variant ],
+				Texture::AM_MERGE,
+				txinfo.rotate_direction
+			);
 		}
 	}
 }

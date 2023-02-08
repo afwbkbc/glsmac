@@ -29,7 +29,7 @@ class Finalize;
 	
 CLASS( Map, Serializable )
 
-	Map( Scene* constscene );
+	Map( Random* random, Scene* scene );
 	~Map();
 	
 	// coordinates of textures (x1 and y1) in texture.pcx
@@ -284,6 +284,8 @@ CLASS( Map, Serializable )
 	const size_t GetWidth() const;
 	const size_t GetHeight() const;
 	
+	Random* GetRandom() const;
+	
 	const Buffer Serialize() const;
 	void Unserialize( Buffer buf );
 	
@@ -305,6 +307,8 @@ private:
 		Texture* source = nullptr;
 		Texture* terrain = nullptr;
 	} m_textures;
+	
+	Random* m_random = nullptr;
 	
 	Scene* m_scene = nullptr;
 	struct {

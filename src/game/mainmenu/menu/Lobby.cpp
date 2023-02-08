@@ -279,7 +279,11 @@ void Lobby::RefreshUI() {
 		NEWV( label, Label );
 			label->SetText( name.second );
 			label->SetFont( g_engine->GetFontLoader()->LoadFont( "arialnb.ttf", 18 ) );
-			label->SetTextColor( Color::FromRGB( 100 + rand() % 155, 100 + rand() % 155, rand() % 155 ) );
+			label->SetTextColor( Color::FromRGB(
+				m_mainmenu->GetRandom()->GetUInt( 100, 155 ),
+				m_mainmenu->GetRandom()->GetUInt( 100, 155 ),
+				m_mainmenu->GetRandom()->GetUInt( 100, 155 )
+			));
 			label->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
 			label->SetLeft( 10 );
 			label->SetTop( 6 + m_player_labels.size() * 22 );

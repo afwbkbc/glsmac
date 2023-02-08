@@ -137,7 +137,7 @@ If it behaves incorrectly: create issue and specify: 1) steps to reproduce 2) ex
 
 Update: on Linux debug build will run inside gdb automatically, so just start it normally
 
-Upon loading of map debug build will also create files tmp/lastmap.gsm (map file) and tmp/lastmap.dump (full dump of initialized map), attach them too if your issue is related to map. Make sure to gzip lastmap.dump, it's huge otherwise.
+Upon loading of map debug build will also create files tmp/lastmap.seed, tmp/lastmap.gsm (map file) and tmp/lastmap.dump (full dump of initialized map), attach them too if your issue is related to map. Make sure to gzip lastmap.dump, it's huge otherwise.
 
 ### Copyright disclaimer
 

@@ -10,6 +10,10 @@ Module::Module( Map* map )
 	
 }
 
+const uint8_t Module::RandomRotate() const {
+	return m_map->GetRandom()->GetUInt( 0, 3 );
+}
+
 }
 }
 }

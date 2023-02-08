@@ -31,17 +31,13 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 	// process in random order
 	vector< Tile* > tiles_vec;
 	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {
-		for ( auto x = 0 ; x < tiles->GetWidth() ; x++ ) {
-			if ( ( y % 2 ) != ( x % 2 ) ) {
-				continue;
-			}
+		for ( auto x = y & 1 ; x < tiles->GetWidth() ; x += 2 ) {
 			tiles_vec.push_back( tiles->At( x, y ) );
 		}
 	}
 
-	std::random_device rd;
-	std::mt19937 g(rd());
-	std::shuffle( tiles_vec.begin(), tiles_vec.end(), g);
+	mt19937 g( seed );
+	shuffle( tiles_vec.begin(), tiles_vec.end(), g );
 	
 	for ( auto& tile : tiles_vec ) {
 		
@@ -62,10 +58,7 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 
 	// start new cycle because we want all tiles have updated averages and dynamic properties
 	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {
-		for ( auto x = 0 ; x < tiles->GetWidth() ; x++ ) {
-			if ( ( y % 2 ) != ( x % 2 ) ) {
-				continue;
-			}
+		for ( auto x = y & 1 ; x < tiles->GetWidth() ; x += 2 ) {
 			tile = tiles->At( x, y );
 
 			const float z_rocks = 1/70;
@@ -75,7 +68,7 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 
 			tile->rockyness = perlin_to_value.Clamp( round( PERLIN_S( x + 0.5f, y + 0.5f, z_rocks, 1.0f ) ) );
 			if ( tile->rockyness == Tile::R_ROCKY ) {
-				if ( rand() % 3 == 0 ) {
+				if ( tiles->GetRandom()->IsLucky( 3 ) ) {
 					tile->rockyness = Tile::R_ROLLING;
 				}
 			}
@@ -91,10 +84,10 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 				tile->features |= Tile::F_XENOFUNGUS;
 			}
 
-			if ( rand() % 30 == 0 ) {
+			if ( tiles->GetRandom()->IsLucky( 30 ) ) {
 				tile->rockyness = Tile::R_ROCKY;
 				for ( auto& t : tile->neighbours ) {
-					if ( rand() % 3 != 0 ) {
+					if ( tiles->GetRandom()->IsLucky( 3 ) ) {
 						if ( t->rockyness != Tile::R_ROCKY ) {
 							t->rockyness = Tile::R_ROLLING;
 						}

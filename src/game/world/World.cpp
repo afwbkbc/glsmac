@@ -20,6 +20,7 @@
 #ifdef DEBUG
 #define MAP_FILENAME "./tmp/lastmap.gsm"
 #define MAP_DUMP_FILENAME "./tmp/lastmap.dump"
+#define MAP_SEED_FILENAME "./tmp/lastmap.seed"
 #endif
 
 namespace game {
@@ -28,7 +29,14 @@ namespace world {
 World::World( const Settings& settings )
 	: m_settings( settings )
 {
-	//
+	NEW( m_random, Random );
+#ifdef DEVEL
+	//m_random->SetState(  );
+#endif
+}
+
+World::~World() {
+	DELETE( m_random );
 }
 
 void World::Start() {
@@ -47,22 +55,21 @@ void World::Start() {
 	m_world_scene->SetLight( m_light );
 	g_engine->GetGraphics()->AddScene( m_world_scene );	
 	
-	NEW( m_map, Map, m_world_scene );
+	NEW( m_map, Map, m_random, m_world_scene );
 	
 #ifdef DEVEL
-	NEWV( tiles, Tiles, 40, 20 );
+	NEWV( tiles, Tiles, 40, 20, m_random );
 #else
-	NEWV( tiles, Tiles, 80, 40 );
+	NEWV( tiles, Tiles, 80, 40, m_random );
 #endif
-	//NEWV( tiles, Tiles, 200, 120 );
+	//NEWV( tiles, Tiles, 200, 120, m_random );
 	
+	Log( "Map seed is " + m_random->GetStateString() );
 	
-	auto now = chrono::high_resolution_clock::now();
-	auto seed = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count();
-
-	Log( "Map seed is " + to_string( seed ) );
-	
-	srand( seed );
+#ifdef DEBUG
+	// if crash happens - it's handy to have a seed to reproduce it
+	FS::WriteFile( MAP_SEED_FILENAME, m_random->GetStateString() );
+#endif
 	
 #ifdef DEVEL
 	if ( FS::FileExists( MAP_DUMP_FILENAME ) ) {
@@ -84,7 +91,7 @@ void World::Start() {
 			map_generator::SimplePerlin generator;
 			//map_generator::SimpleRandom generator;
 			//map_generator::Test generator;
-			generator.Generate( tiles, seed );
+			generator.Generate( tiles, m_random->GetUInt( 0, UINT32_MAX - 1 ) );
 #ifdef DEBUG
 			// if crash happens - it's handy to have a map file to reproduce it
 			Log( (string) "Saving map to " + MAP_FILENAME );

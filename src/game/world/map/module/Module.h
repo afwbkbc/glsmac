@@ -17,6 +17,8 @@ CLASS( Module, base::Base )
 	
 protected:
 	Map* const m_map;
+	
+	const uint8_t RandomRotate() const;
 };
 	
 }

@@ -39,8 +39,6 @@ Engine::Engine(
 {
 	ASSERT( g_engine == nullptr, "duplicate engine initialization" );
 
-	srand( time( nullptr ) );
-
 	g_engine = this;
 
 	NEWV( t_main, Thread, "MAIN" );

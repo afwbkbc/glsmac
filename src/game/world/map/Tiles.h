@@ -4,7 +4,10 @@
 
 #include "Tile.h"
 
+#include "util/Random.h"
+
 using namespace types;
+using namespace util;
 
 namespace game {
 namespace world {
@@ -12,7 +15,7 @@ namespace map {
 
 CLASS( Tiles, Serializable )
 	
-	Tiles( const size_t width, const size_t height );
+	Tiles( const size_t width, const size_t height, Random* random );
 	~Tiles();
 	
 	// warning: will reset all tiles
@@ -32,10 +35,14 @@ CLASS( Tiles, Serializable )
 	// if you don't and keep generating - they will be normalized more aggressively at the end and may make terrain more flat
 	void FixExtremeSlopes();
 	
+	Random* GetRandom() const;
+	
 	const Buffer Serialize() const;
 	void Unserialize( Buffer buf );
 	
 private:
+	
+	Random* m_random = nullptr;
 	
 	size_t m_width;
 	size_t m_height;

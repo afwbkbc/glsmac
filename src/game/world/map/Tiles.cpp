@@ -11,8 +11,16 @@ namespace game {
 namespace world {
 namespace map {
 
-Tiles::Tiles( const size_t width, const size_t height ) {
+Tiles::Tiles( const size_t width, const size_t height, Random* random )
+	: m_random( random )
+{
 	Resize( width, height );
+}
+
+Tiles::~Tiles() {
+	free( m_data );
+	free( m_top_vertex_row );
+	free( m_top_right_vertex_row );
 }
 
 void Tiles::Resize( const size_t width, const size_t height ) {
@@ -47,10 +55,7 @@ void Tiles::Resize( const size_t width, const size_t height ) {
 
 		Tile* tile;
 		for ( auto y = 0 ; y < m_height ; y++ ) {
-			for ( auto x = 0 ; x < m_width ; x++ ) {
-				if ( ( y % 2 ) != ( x % 2 ) ) {
-					continue;
-				}
+			for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 				tile = At( x, y );
 
 				// link to other tiles
@@ -123,10 +128,7 @@ void Tiles::Resize( const size_t width, const size_t height ) {
 
 		// add some state variables
 		for ( auto y = 0 ; y < m_height ; y++ ) {
-			for ( auto x = 0 ; x < m_width ; x++ ) {
-				if ( ( y % 2 ) != ( x % 2 ) ) {
-					continue;
-				}
+			for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 				tile = At( x, y );
 
 #ifdef DEBUG
@@ -174,12 +176,6 @@ void Tiles::Resize( const size_t width, const size_t height ) {
 	}
 }
 
-Tiles::~Tiles() {
-	free( m_data );
-	free( m_top_vertex_row );
-	free( m_top_right_vertex_row );
-}
-
 const size_t Tiles::GetWidth() const {
 	return m_width;
 }
@@ -213,10 +209,7 @@ void Tiles::Validate() {
 		
 		Tile* tile;
 		for ( auto y = 0 ; y < m_height ; y++ ) {
-			for ( auto x = 0 ; x < m_width ; x++ ) {
-				if ( ( y % 2 ) != ( x % 2 ) ) {
-					continue;
-				}
+			for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 				tile = At( x, y );
 				
 				if ( tile->moisture > 3 ) {
@@ -293,10 +286,7 @@ void Tiles::SetLandAmount( const float amount ) {
 const float Tiles::GetLandAmount( Tile::elevation_t elevation_diff ) {
 	size_t land_tiles = 0;
 	for ( auto y = 0 ; y < m_height ; y++ ) {
-		for ( auto x = 0 ; x < m_width ; x++ ) {
-			if ( ( y % 2 ) != ( x % 2 ) ) {
-				continue;
-			}
+		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 			if ( *At( x, y )->elevation.center > -elevation_diff ) {
 				land_tiles++;
 			}
@@ -311,16 +301,12 @@ void Tiles::RaiseAllTilesBy( Tile::elevation_t amount ) {
 	// process in random order
 	vector< Tile* > tiles;
 	for ( auto y = 0 ; y < m_height ; y++ ) {
-		for ( auto x = 0 ; x < m_width ; x++ ) {
-			if ( ( y % 2 ) != ( x % 2 ) ) {
-				continue;
-			}
+		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 			tiles.push_back( At( x, y ) );
 		}
 	}
-	std::random_device rd;
-	std::mt19937 g(rd());
-	std::shuffle( tiles.begin(), tiles.end(), g);
+	mt19937 g( m_random->GetUInt( 0, UINT32_MAX - 1 ) );
+	shuffle( tiles.begin(), tiles.end(), g );
 	
 	for ( auto& tile : tiles ) {
 		*tile->elevation.center += amount;
@@ -336,10 +322,7 @@ void Tiles::RaiseAllTilesBy( Tile::elevation_t amount ) {
 		}
 	}
 	for ( auto y = 0 ; y < m_height ; y++ ) {
-		for ( auto x = 0 ; x < m_width ; x++ ) {
-			if ( ( y % 2 ) != ( x % 2 ) ) {
-				continue;
-			}
+		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 			At( x, y )->Update();
 		}
 	}
@@ -350,10 +333,7 @@ const pair< Tile::elevation_t, Tile::elevation_t > Tiles::GetElevationsRange() c
 	Tile* tile;
 	// determine min and max elevations from generated tiles
 	for ( auto y = 0 ; y < m_height ; y++ ) {
-		for ( auto x = 0 ; x < m_width ; x++ ) {
-			if ( ( y % 2 ) != ( x % 2 ) ) {
-				continue;
-			}
+		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 			tile = At( x, y );
 			for ( auto& c : tile->elevation.corners ) {
 				if ( *c < result.first ) {
@@ -375,6 +355,10 @@ void Tiles::FixExtremeSlopes() {
 	RemoveExtremeSlopes( abs( converter.Clamp( Map::s_consts.tile.maximum_allowed_slope_elevation ) ) );
 }
 
+Random* Tiles::GetRandom() const {
+	return m_random;
+}
+
 void Tiles::NormalizeElevationRange() {
 	auto elevations_range = GetElevationsRange();
 	util::Clamper<Tile::elevation_t> converter( elevations_range.first, elevations_range.second, Tile::ELEVATION_MIN, Tile::ELEVATION_MAX );
@@ -382,16 +366,12 @@ void Tiles::NormalizeElevationRange() {
 	// process in random order
 	vector< Tile* > tiles;
 	for ( auto y = 0 ; y < m_height ; y++ ) {
-		for ( auto x = 0 ; x < m_width ; x++ ) {
-			if ( ( y % 2 ) != ( x % 2 ) ) {
-				continue;
-			}
+		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 			tiles.push_back( At( x, y ) );
 		}
 	}
-	std::random_device rd;
-	std::mt19937 g(rd());
-	std::shuffle( tiles.begin(), tiles.end(), g);
+	mt19937 g( m_random->GetUInt( 0, UINT32_MAX - 1 ) );
+	shuffle( tiles.begin(), tiles.end(), g );
 	
 	for ( auto& tile : tiles ) {
 		tile->elevation_data.bottom = converter.Clamp( tile->elevation_data.bottom );
@@ -431,8 +411,8 @@ void Tiles::RemoveExtremeSlopes( const Tile::elevation_t max_allowed_diff ) {
 		// don't run in normal cycle because it can give terrain some straight edges, go in random order instead
 		// assume that on average we'll hit all tiles (but skipping some is no big deal)
 		for ( i = 0 ; i < sz ; i++ ) {
-			x = rand() % m_width;
-			y = rand() % m_height;
+			x = m_random->GetUInt( 0, m_width - 1 );
+			y = m_random->GetUInt( 0, m_height - 1 );
 			if ( ( y % 2 ) != ( x % 2 ) ) {
 				continue;
 			}
@@ -467,7 +447,7 @@ void Tiles::FixTopBottomRows() {
 	Tile* tile;
 	Tile::elevation_t top_bottom_elevation;
 	for ( auto x = 0 ; x < m_width ; x++ ) {
-		top_bottom_elevation = rand() % 2 ? 1 : -1;
+		top_bottom_elevation = m_random->GetBool() ? 1 : -1;
 		if ( x % 2 == 0 ) {
 			tile = At( x, 0 );
 			*tile->elevation.left = *tile->elevation.right = top_bottom_elevation;
@@ -484,10 +464,7 @@ void Tiles::FixTopBottomRows() {
 		if ( y > 1 || y < m_height - 2 ) {
 			continue;
 		}
-		for ( auto x = 0 ; x < m_width ; x++ ) {
-			if ( ( y % 2 ) != ( x % 2 ) ) {
-				continue;
-			}
+		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 			tile = At( x, y );
 			
 			tile->Update();
@@ -502,10 +479,7 @@ const Buffer Tiles::Serialize() const {
 	buf.WriteInt( m_height );
 	
 	for ( auto y = 0 ; y < m_height ; y++ ) {
-		for ( auto x = 0 ; x < m_width ; x++ ) {
-			if ( ( y % 2 ) != ( x % 2 ) ) {
-				continue;
-			}
+		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 			buf.WriteString( At( x, y )->Serialize().ToString() );
 		}
 	}
@@ -521,19 +495,13 @@ void Tiles::Unserialize( Buffer buf ) {
 	Resize( width, height );
 	
 	for ( auto y = 0 ; y < m_height ; y++ ) {
-		for ( auto x = 0 ; x < m_width ; x++ ) {
-			if ( ( y % 2 ) != ( x % 2 ) ) {
-				continue;
-			}
+		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 			At( x, y )->Unserialize( Buffer( buf.ReadString() ) );
 		}
 	}
 	
 	for ( auto y = 0 ; y < m_height ; y++ ) {
-		for ( auto x = 0 ; x < m_width ; x++ ) {
-			if ( ( y % 2 ) != ( x % 2 ) ) {
-				continue;
-			}
+		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 			At( x, y )->Update();
 		}
 	}

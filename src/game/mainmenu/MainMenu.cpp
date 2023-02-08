@@ -129,7 +129,9 @@ void MainMenu::MenuError( const string& error_text ) {
 	ShowMenu( menu );
 }
 
-
+util::Random* MainMenu::GetRandom() {
+	return &m_random;
+}
 
 } /* namespace mainmenu */
 } /* namespace game */

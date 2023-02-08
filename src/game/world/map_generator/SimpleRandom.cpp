@@ -9,14 +9,10 @@ void SimpleRandom::Generate( Tiles* tiles, size_t seed ) {
 	
 	Tile* tile;
 	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {
-		for ( auto x = 0 ; x < tiles->GetWidth() ; x++ ) {
-			if ( ( y % 2 ) != ( x % 2 ) ) {
-				continue;
-			}
-			
+		for ( auto x = y & 1 ; x < tiles->GetWidth() ; x += 2 ) {
 			tile = tiles->At( x, y );
 		
-#define RND MAPGEN_ELEVATION_MIN + rand() % ( MAPGEN_ELEVATION_MAX - MAPGEN_ELEVATION_MIN + 1 )
+#define RND MAPGEN_ELEVATION_MIN + tiles->GetRandom()->GetUInt( 0, MAPGEN_ELEVATION_MAX - MAPGEN_ELEVATION_MIN )
 			
 			*tile->elevation.top = RND;
 			*tile->elevation.left = RND;
@@ -24,18 +20,18 @@ void SimpleRandom::Generate( Tiles* tiles, size_t seed ) {
 			*tile->elevation.bottom = RND;
 			
 			// random moisture etc
-			tile->moisture = rand() % 3 + 1;
-			tile->rockyness = rand() % 3 + 1;
+			tile->moisture = tiles->GetRandom()->GetUInt( 1, 3 );
+			tile->rockyness = tiles->GetRandom()->GetUInt( 1, 3 );
 			tile->features = 0;
 			
 			// spawn some jungles
-			if ( rand() % 30 == 0 ) {
+			if ( tiles->GetRandom()->IsLucky( 30 ) ) {
 				tile->features |= Tile::F_JUNGLE;
 				for ( auto& t : tile->neighbours ) {
-					if ( rand() % 2 == 0 ) {
+					if ( tiles->GetRandom()->IsLucky( 2 ) ) {
 						t->features |= Tile::F_JUNGLE;
 						for ( auto& tt : t->neighbours ) {
-							if ( rand() % 2 == 0 ) {
+							if ( tiles->GetRandom()->IsLucky( 2 ) ) {
 								tt->features |= Tile::F_JUNGLE;
 							}
 						}
@@ -44,19 +40,19 @@ void SimpleRandom::Generate( Tiles* tiles, size_t seed ) {
 			}
 			
 			// spawn some fungus areas
-			if ( rand() % 40 == 0 ) {
+			if ( tiles->GetRandom()->IsLucky( 40 ) ) {
 				tile->features |= Tile::F_XENOFUNGUS;
 				for ( auto& t : tile->neighbours ) {
-					if ( rand() % 2 == 0 ) {
+					if ( tiles->GetRandom()->IsLucky( 2 ) ) {
 						t->features |= Tile::F_XENOFUNGUS;
 						for ( auto& tt : t->neighbours ) {
-							if ( rand() % 3 == 0 ) {
+							if ( tiles->GetRandom()->IsLucky( 3 ) ) {
 								tt->features |= Tile::F_XENOFUNGUS;
 								for ( auto& ttt : tt->neighbours ) {
-									if ( rand() % 4 == 0 ) {
+									if ( tiles->GetRandom()->IsLucky( 4 ) ) {
 										ttt->features |= Tile::F_XENOFUNGUS;
 										for ( auto& tttt : ttt->neighbours ) {
-											if ( rand() % 5 == 0 ) {
+											if ( tiles->GetRandom()->IsLucky( 5 ) ) {
 												tttt->features |= Tile::F_XENOFUNGUS;
 											}
 										}

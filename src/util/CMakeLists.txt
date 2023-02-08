@@ -6,5 +6,6 @@ SET(SRC ${SRC}
 	${PWD}/Math.cpp
 	${PWD}/Perlin.cpp
 	${PWD}/FS.cpp
+	${PWD}/Random.cpp
 
 PARENT_SCOPE)

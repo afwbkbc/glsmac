@@ -11,8 +11,6 @@ using namespace ui::object;
 namespace game {
 namespace intro {
 
-#define RANDNUM ( (float)rand() / (float)RAND_MAX )
-
 void Intro::Start() {
 	
 	g_engine->GetUI()->AddTheme( &m_theme );

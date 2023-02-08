@@ -23,12 +23,12 @@ Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 		
 		// randomize settings
 		m_mainmenu->m_settings.global.map_type = game::GlobalSettings::MT_RANDOM;
-		m_mainmenu->m_settings.global.map_size = rand() % 5 + 1;
-		m_mainmenu->m_settings.global.map_ocean = rand() % 3 + 1;
-		m_mainmenu->m_settings.global.map_erosive = rand() % 3 + 1;
-		m_mainmenu->m_settings.global.map_lifeforms = rand() % 3 + 1;
-		m_mainmenu->m_settings.global.map_clouds = rand() % 3 + 1;
-		m_mainmenu->m_settings.global.difficulty = rand() % 6 + 1; // TODO: previous difficulty?
+		m_mainmenu->m_settings.global.map_size = m_mainmenu->GetRandom()->GetUInt( 1, 5 );
+		m_mainmenu->m_settings.global.map_ocean = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
+		m_mainmenu->m_settings.global.map_erosive = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
+		m_mainmenu->m_settings.global.map_lifeforms = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
+		m_mainmenu->m_settings.global.map_clouds = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
+		m_mainmenu->m_settings.global.difficulty = m_mainmenu->GetRandom()->GetUInt( 1, 6 ); // TODO: previous difficulty?
 		m_mainmenu->m_settings.global.game_rules = game::GlobalSettings::GR_STANDARD;
 
 		// start game

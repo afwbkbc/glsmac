@@ -16,10 +16,7 @@ void MapGenerator::SmoothTerrain( Tiles* tiles, const bool smooth_land, const bo
 	Tile* tile;
 	uint8_t i;
 	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {
-		for ( auto x = 0 ; x < tiles->GetWidth() ; x++ ) {
-			if ( ( y % 2 ) != ( x % 2 ) ) {
-				continue;
-			}
+		for ( auto x = y & 1 ; x < tiles->GetWidth() ; x += 2 ) {
 			tile = tiles->At( x, y );
 			
 			tile->Update();
