@@ -11,7 +11,9 @@ class Image;
 namespace shader_program {
 
 CLASS( Orthographic, ShaderProgram )
+
 	Orthographic() : ShaderProgram( TYPE_ORTHO ) {};
+	
 protected:
 	friend class opengl::Mesh;
 	friend class opengl::Image;

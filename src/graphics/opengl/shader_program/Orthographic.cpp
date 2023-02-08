@@ -2,6 +2,8 @@
 
 using namespace scene;
 
+#include "graphics/Graphics.h"
+
 namespace graphics {
 namespace opengl {
 namespace shader_program {
@@ -13,7 +15,7 @@ in vec3 aCoord; \
 in vec2 aTexCoord; \
 in vec4 aTint; \
 in vec3 aNormal; \
-uniform mat4 uWorld[ 3 ]; /* TODO: pass count from somewhere? */ \
+uniform mat4 uWorld[" + to_string( Graphics::MAX_WORLD_INSTANCES ) + "]; \
 out vec2 texpos; \
 out vec4 tint; \
 out vec3 fragpos; \

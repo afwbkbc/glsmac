@@ -67,6 +67,9 @@ private:
 		Vec2< size_t > min;
 		Vec2< size_t > max;
 		Vec2< float > ratio;
+		size_t width;
+		size_t height;
+		float aspect_ratio;
 		float window_aspect_ratio;
 	} m_viewport;
 	struct {

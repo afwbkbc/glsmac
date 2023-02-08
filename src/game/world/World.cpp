@@ -3,6 +3,8 @@
 
 #include "../mainmenu/MainMenu.h"
 
+#include "graphics/Graphics.h"
+
 #include "types/mesh/Rectangle.h"
 #include "util/FS.h"
 
@@ -230,8 +232,8 @@ void World::Start() {
 	
 	g_engine->GetGraphics()->AddOnResizeHandler( this, RH( this ) {
 		UpdateViewport();
-		UpdateMapInstances();
 		UpdateCameraRange();
+		UpdateMapInstances();
 	});
 	
 	UpdateMapInstances();
@@ -284,6 +286,9 @@ void World::UpdateViewport() {
 	m_viewport.max.y = g_engine->GetGraphics()->GetWindowHeight() - m_ui.bottom_bar->GetHeight() + 32; // bottom bar has some transparent area at top
 	m_viewport.ratio.x = (float) g_engine->GetGraphics()->GetWindowWidth() / m_viewport.max.x;
 	m_viewport.ratio.y = (float) g_engine->GetGraphics()->GetWindowHeight() / m_viewport.max.y;
+	m_viewport.width = m_viewport.max.x - m_viewport.min.x;
+	m_viewport.height = m_viewport.max.y - m_viewport.min.y;
+	m_viewport.aspect_ratio = (float) m_viewport.width / m_viewport.height;
 	m_viewport.window_aspect_ratio = g_engine->GetGraphics()->GetAspectRatio();
 	m_clamp.x.SetSrcRange( m_viewport.min.x, m_viewport.max.x );
 	m_clamp.y.SetSrcRange( m_viewport.min.y, m_viewport.max.y );
@@ -352,10 +357,20 @@ void World::UpdateMapInstances() {
 	
 	const float mhw = Map::s_consts.tile.scale.x * m_map->GetWidth() / 2;
 	
-	// TODO: support narrow maps
-	instances.push_back( { -mhw, 0.0f, 0.0f } );
+	uint8_t instances_before_after = floor( m_viewport.aspect_ratio / ( (float) m_map->GetWidth() / m_map->GetHeight() ) / 2 ) + 1;
+	
+	// don't spawn more instances than graphics system can support
+	while ( instances_before_after * 2 + 1 > graphics::Graphics::MAX_WORLD_INSTANCES ) {
+		instances_before_after--;
+	}
+	
+	for ( uint8_t i = instances_before_after ; i > 0 ; i-- ) {
+		instances.push_back( { -mhw * i, 0.0f, 0.0f } );
+	}
 	instances.push_back( { 0.0f, 0.0f, 0.0f} );
-	instances.push_back( { +mhw, 0.0f, 0.0f } );
+	for ( uint8_t i = 1 ; i <= instances_before_after ; i++ ) {
+		instances.push_back( { +mhw * i, 0.0f, 0.0f } );
+	}
 	
 	m_world_scene->SetInstances( instances );
 }
