@@ -39,22 +39,24 @@ void PopupMenu::Show() {
 		m_frame->SetWidth( m_width );
 		m_frame->SetHeight( m_height );
 		m_frame->On( UIEvent::EV_KEY_DOWN, EH( this, on_ok, on_cancel ) {
-			if ( data->key.code == UIEvent::K_ENTER ) {
-				if ( HasFlag( PF_HAS_OK ) ) {
-					on_ok();
-					return true;
+			if ( !data->key.modifiers ) {
+				if ( data->key.code == UIEvent::K_ENTER ) {
+					if ( HasFlag( PF_HAS_OK ) ) {
+						on_ok();
+						return true;
+					}
+					/*else if ( HasFlag( PF_HAS_CANCEL ) ) {
+						on_cancel();
+						return true;
+					}*/
 				}
-				/*else if ( HasFlag( PF_HAS_CANCEL ) ) {
-					on_cancel();
-					return true;
-				}*/
-			}
-			else if ( data->key.code == UIEvent::K_ESCAPE ) {
-				// TMP
-				//if ( HasFlag( PF_HAS_CANCEL ) || HasFlag( PF_HAS_OK ) ) {
-					on_cancel();
-					return true;
-				//}
+				else if ( data->key.code == UIEvent::K_ESCAPE ) {
+					// TMP
+					//if ( HasFlag( PF_HAS_CANCEL ) || HasFlag( PF_HAS_OK ) ) {
+						on_cancel();
+						return true;
+					//}
+				}
 			}
 			return false;
 		});

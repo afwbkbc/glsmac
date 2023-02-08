@@ -22,20 +22,28 @@ CLASS( Graphics, base::Module )
 
 	virtual void AddScene( scene::Scene *scene ) = 0;
 	virtual void RemoveScene( scene::Scene *scene ) = 0;
-	virtual const unsigned short GetWindowWidth() const = 0;
-	virtual const unsigned short GetWindowHeight() const = 0;
+	virtual const unsigned short GetViewportWidth() const = 0;
+	virtual const unsigned short GetViewportHeight() const = 0;
 	
 	virtual void LoadTexture( const types::Texture* texture ) = 0;
 	virtual void UnloadTexture( const types::Texture* texture ) = 0;
 	virtual void EnableTexture( const types::Texture* texture ) = 0;
 	virtual void DisableTexture() = 0;
 
-	virtual void ResizeWindow( const size_t width, const size_t height ) = 0;
+	virtual const bool IsFullscreen() const = 0;
+	virtual void SetFullscreen() = 0;
+	virtual void SetWindowed() = 0;
+	
+	virtual const bool IsMouseLocked() const = 0;
+	
+	virtual void ResizeViewport( const size_t width, const size_t height ) = 0;
 	
 	const float GetAspectRatio() const;
 	
 	void AddOnResizeHandler( void* object, const on_resize_handler_t& handler );
 	void RemoveOnResizeHandler( void* object );
+	
+	void ToggleFullscreen();
 	
 protected:
 	

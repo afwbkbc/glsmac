@@ -26,36 +26,44 @@ namespace graphics {
 namespace opengl {
 
 CLASS( OpenGL, Graphics )
-	OpenGL( const string title, const unsigned short window_width, const unsigned short window_height, const bool vsync, const float fov);
+	OpenGL( const string title, const unsigned short window_width, const unsigned short window_height, const bool vsync, const bool fullscreen );
 	~OpenGL();
 	void Start();
 	void Stop();
 	void Iterate();
 	void AddScene( scene::Scene *scene );
 	void RemoveScene( scene::Scene *scene );
-	const unsigned short GetWindowWidth() const {
-		return m_options.window_width;
+	const unsigned short GetViewportWidth() const {
+		return m_options.viewport_width;
 	}
-	const unsigned short GetWindowHeight() const {
-		return m_options.window_height;
+	const unsigned short GetViewportHeight() const {
+		return m_options.viewport_height;
 	}
 	void LoadTexture( const types::Texture* texture );
 	void UnloadTexture( const types::Texture* texture );
 	void EnableTexture( const types::Texture* texture );
 	void DisableTexture();
 
+	const bool IsFullscreen() const;
+	void SetFullscreen();
+	void SetWindowed();
+	
+	const bool IsMouseLocked() const;
+	
+	void ResizeViewport( const size_t width, const size_t height );
 	void ResizeWindow( const size_t width, const size_t height );
 	
 protected:
 	struct {
 		string title;
-		unsigned short window_width;
-		unsigned short window_height;
+		unsigned short viewport_width;
+		unsigned short viewport_height;
 		bool vsync;
-		float fov;
-		float znear;
-		float zfar;
 	} m_options;
+	struct {
+		unsigned short width;
+		unsigned short height;
+	} m_window_size;
 	float m_aspect_ratio;
 	SDL_Window *m_window;
 	SDL_GLContext m_gl_context;
@@ -77,6 +85,7 @@ private:
 	
 	unordered_map< uint8_t, Vec2< ssize_t > > m_active_mousedowns;
 	
+	bool m_is_fullscreen = false;
 };
 
 } /* namespace opengl */

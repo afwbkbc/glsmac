@@ -87,7 +87,7 @@ void World::DisableAttributes() const {
 types::Matrix44 World::GetWorldMatrix() {
 	types::Matrix44 projection_matrix, rotate_matrix, translate_matrix;
 
-	projection_matrix.ProjectionPerspective( (float)g_engine->GetGraphics()->GetWindowWidth() / g_engine->GetGraphics()->GetWindowHeight(), 90, 0.01, 100);
+	projection_matrix.ProjectionPerspective( (float)g_engine->GetGraphics()->GetViewportWidth() / g_engine->GetGraphics()->GetViewportHeight(), 90, 0.01, 100);
 
 	types::Vec3 target, up;
 	//this->CalculateTargetUp(angle,&target,&up);

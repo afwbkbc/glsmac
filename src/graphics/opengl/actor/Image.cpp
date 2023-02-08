@@ -47,11 +47,11 @@ void Image::Load() {
 	auto *actor = (scene::actor::Image *)m_actor;
 	
 	Log("image width=" + to_string(actor->GetImage()->m_width) + " height=" + to_string(actor->GetImage()->m_height));
-	Log("window width=" + to_string(g_engine->GetGraphics()->GetWindowWidth()) + " height=" + to_string(g_engine->GetGraphics()->GetWindowHeight()));
+	Log("viewport width=" + to_string(g_engine->GetGraphics()->GetViewportWidth()) + " height=" + to_string(g_engine->GetGraphics()->GetViewportHeight()));
 	
 	// width and height scaled to viewport (to have same absolute pixel size always)
-	float scaled_w = (float) actor->GetImage()->m_width / g_engine->GetGraphics()->GetWindowWidth();
-	float scaled_h = (float) actor->GetImage()->m_height / g_engine->GetGraphics()->GetWindowHeight();
+	float scaled_w = (float) actor->GetImage()->m_width / g_engine->GetGraphics()->GetViewportWidth();
+	float scaled_h = (float) actor->GetImage()->m_height / g_engine->GetGraphics()->GetViewportHeight();
 	
 	m_vertex_data = { -scaled_w, -scaled_h, scaled_w, -scaled_h, scaled_w, scaled_h, -scaled_w, scaled_h };
 	m_index_data = { 0, 1, 2, 3 };

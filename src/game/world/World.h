@@ -70,7 +70,7 @@ private:
 		size_t width;
 		size_t height;
 		float aspect_ratio;
-		float window_aspect_ratio;
+		float viewport_aspect_ratio;
 	} m_viewport;
 	struct {
 		Vec3 min;

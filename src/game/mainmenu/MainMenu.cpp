@@ -38,7 +38,7 @@ void MainMenu::Start() {
 	
 	m_key_handler = ui->AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this ) {
 		// escape = back
-		if ( data->key.code == UIEvent::K_ESCAPE && m_menu_object ) {
+		if ( !data->key.modifiers && data->key.code == UIEvent::K_ESCAPE && m_menu_object ) {
 			return m_menu_object->MaybeClose(); // popups have their own escape handler
 		}
 		return false;

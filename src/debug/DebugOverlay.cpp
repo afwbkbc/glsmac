@@ -25,7 +25,7 @@ void DebugOverlay::Start() {
 	m_background_texture->SetPixel( 0, 0, { 0.0, 0.0, 0.0, 0.7 } );
 
 	m_toggle_handler = g_engine->GetUI()->AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this ) {
-		if ( data->key.code == UIEvent::K_GRAVE ) {
+		if ( data->key.code == UIEvent::K_GRAVE && !data->key.modifiers ) {
 			Toggle();
 			return true;
 		}

@@ -22,18 +22,18 @@ using namespace event;
 namespace graphics {
 namespace opengl {
 
-OpenGL::OpenGL( const string title, const unsigned short window_width, const unsigned short window_height, const bool vsync, const float fov) {
+OpenGL::OpenGL( const string title, const unsigned short viewport_width, const unsigned short viewport_height, const bool vsync, const bool fullscreen ) {
 	m_window = NULL;
 	m_gl_context = NULL;
 
 	m_options.title = title;
-	m_options.window_width = window_width;
-	m_options.window_height = window_height;
+	m_options.viewport_width = m_window_size.width = viewport_width;
+	m_options.viewport_height = m_window_size.height = viewport_height;
 	m_options.vsync = vsync;
-	m_options.fov = fov;
 
-	m_aspect_ratio = (float) m_options.window_height / m_options.window_width;
+	m_aspect_ratio = (float) m_options.viewport_width / m_options.viewport_height;
 
+	m_is_fullscreen = fullscreen;
 
 /*	NEWV( sp_skybox, shader_program::Skybox );
 	m_shader_programs.push_back( sp_skybox );
@@ -76,13 +76,15 @@ void OpenGL::Start() {
 	SDL_VideoInit( NULL );
 
 	Log( "Creating window" );
-
+	
+	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
+	
 	m_window = SDL_CreateWindow(
 		m_options.title.c_str(),
-		SDL_WINDOWPOS_UNDEFINED,
-		SDL_WINDOWPOS_UNDEFINED,
-		m_options.window_width,
-		m_options.window_height,
+		SDL_WINDOWPOS_CENTERED,
+		SDL_WINDOWPOS_CENTERED,
+		m_options.viewport_width,
+		m_options.viewport_height,
 		SDL_WINDOW_OPENGL|SDL_WINDOW_SHOWN|SDL_WINDOW_RESIZABLE
 	);
 	
@@ -91,10 +93,16 @@ void OpenGL::Start() {
 	if ( !m_window ) {
 		THROW( "Could not create SDL2 window!" );
 	}
+	
+	if ( m_is_fullscreen ) {
+		m_is_fullscreen = false; // to prevent assert on next line
+		SetFullscreen();
+	}
+	
 	Log( "Initializing OpenGL" );
 	
 	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 24 );
+	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 32 );
 	SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 8 );
 	SDL_GL_SetSwapInterval( (char)m_options.vsync );
 
@@ -113,7 +121,7 @@ void OpenGL::Start() {
 	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it )
 		(*it)->Start();
 
-	glViewport( 0, 0, m_options.window_width, m_options.window_height );
+	glViewport( 0, 0, m_options.viewport_width, m_options.viewport_height );
 	glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
 	glClearDepth( 1.0f );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -171,8 +179,9 @@ void OpenGL::Iterate() {
 
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
 
-	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it )
+	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it ) {
 		(*it)->Iterate();
+	}
 
 	glDisable( GL_BLEND );
 	glDisable(GL_DEPTH_TEST);
@@ -240,10 +249,6 @@ void OpenGL::LoadTexture( const types::Texture* texture ) {
 		glGenTextures( 1, &m_textures[texture] );
 
 		glBindTexture( GL_TEXTURE_2D, m_textures[texture] );
-		//glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-		//glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-		//glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-		//glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 
 		ASSERT( !glGetError(), "Texture parameter error" );
 		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
@@ -251,10 +256,10 @@ void OpenGL::LoadTexture( const types::Texture* texture ) {
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, (GLsizei)texture->m_width, (GLsizei)texture->m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, ptr( texture->m_bitmap, 0, texture->m_width * texture->m_height * 4 ) );
 		ASSERT( !glGetError(), "Error loading texture" );
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
 
 		glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -287,15 +292,21 @@ void OpenGL::DisableTexture() {
 	glBindTexture( GL_TEXTURE_2D, 0 );
 }
 
-void OpenGL::ResizeWindow( const size_t width, const size_t height ) {
+void OpenGL::ResizeViewport( const size_t width, const size_t height ) {
+	
 	// I'm having weird texture tiling bugs at non-even window heights
 	// also don't let them go below 2 or something will assert/crash
-	m_options.window_width = ( width + 1 ) / 2 * 2;
-	m_options.window_height = ( height + 1 ) / 2 * 2;
+	m_options.viewport_width = ( width + 1 ) / 2 * 2;
+	m_options.viewport_height = ( height + 1 ) / 2 * 2;
 	
-	Log( "Resizing viewport to " + to_string( m_options.window_width ) + "x" + to_string( m_options.window_height ) );
-	glViewport( 0, 0, m_options.window_width, m_options.window_height );
-	m_aspect_ratio = (float) m_options.window_height / m_options.window_width;
+	if ( !m_is_fullscreen ) {
+		m_window_size.width = m_options.viewport_width;
+		m_window_size.height = m_options.viewport_height;
+	}
+	
+	Log( "Resizing viewport to " + to_string( m_options.viewport_width ) + "x" + to_string( m_options.viewport_height ) );
+	glViewport( 0, 0, m_options.viewport_width, m_options.viewport_height );
+	m_aspect_ratio = (float) m_options.viewport_height / m_options.viewport_width;
 	OnResize();
 	for ( auto routine = m_routines.begin() ; routine < m_routines.end() ; ++routine ) {
 		for ( auto scene = (*routine)->m_scenes.begin() ; scene < (*routine)->m_scenes.end() ; ++scene ) {
@@ -306,6 +317,54 @@ void OpenGL::ResizeWindow( const size_t width, const size_t height ) {
 			}
 		}
 	}
+}
+
+const bool OpenGL::IsFullscreen() const {
+	return m_is_fullscreen;
+}
+
+const bool OpenGL::IsMouseLocked() const {
+	return m_is_fullscreen; // always locked in fullscreen, unlocked otherwise
+}
+
+void OpenGL::SetFullscreen() {
+	ASSERT( !m_is_fullscreen, "already fullscreen" );
+	
+	Log( "Switching to fullscreen" );
+	m_is_fullscreen = true;
+	
+	SDL_DisplayMode dm;
+	SDL_GetDesktopDisplayMode( 0, &dm );
+	
+	//SDL_SetWindowResizable( m_window, SDL_FALSE );
+	//SDL_SetWindowBordered( m_window, SDL_FALSE );
+	SDL_SetWindowPosition( m_window, 0, 0 );
+	SDL_SetWindowSize( m_window, dm.w, dm.h );
+	//SDL_RaiseWindow( m_window );
+	SDL_SetWindowFullscreen( m_window, true );
+	SDL_SetWindowGrab( m_window, SDL_TRUE );
+			
+	ResizeViewport( dm.w, dm.h );
+}
+
+void OpenGL::SetWindowed() {
+	ASSERT( m_is_fullscreen, "already windowed" );
+	
+	Log( "Switching to window" );
+	m_is_fullscreen = false;
+	
+	SDL_DisplayMode dm;
+	SDL_GetDesktopDisplayMode( 0, &dm );
+	
+	SDL_SetWindowFullscreen( m_window, false );
+	//SDL_SetWindowBordered( m_window, SDL_TRUE );
+	//SDL_SetWindowResizable( m_window, SDL_TRUE );
+	SDL_SetWindowSize( m_window, m_window_size.width, m_window_size.height );
+	SDL_SetWindowPosition( m_window, ( dm.w - m_window_size.width ) / 2, ( dm.h - m_window_size.height ) / 2 );
+	
+	SDL_SetWindowGrab( m_window, SDL_FALSE );
+	
+	ResizeViewport( m_window_size.width, m_window_size.height );
 }
 
 } /* namespace opengl */

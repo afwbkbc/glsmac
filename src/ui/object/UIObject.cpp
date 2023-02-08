@@ -467,9 +467,9 @@ void UIObject::UpdateObjectArea() {
 	}
 	else {
 		object_area.left = 0;
-		object_area.right = g_engine->GetGraphics()->GetWindowWidth();
+		object_area.right = g_engine->GetGraphics()->GetViewportWidth();
 		object_area.top = 0;
-		object_area.bottom = g_engine->GetGraphics()->GetWindowHeight();
+		object_area.bottom = g_engine->GetGraphics()->GetViewportHeight();
 		object_area.width = object_area.right;
 		object_area.height = object_area.bottom;
 	}

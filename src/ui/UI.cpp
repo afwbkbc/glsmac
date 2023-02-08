@@ -23,8 +23,8 @@ void UI::Start() {
 	m_root_object.Create();
 	m_root_object.UpdateObjectArea();
 
-	m_clamp.x.SetRange( 0.0, g_engine->GetGraphics()->GetWindowWidth(), -1.0, 1.0 );
-	m_clamp.y.SetRange( 0.0, g_engine->GetGraphics()->GetWindowHeight(), -1.0, 1.0 );
+	m_clamp.x.SetRange( 0.0, g_engine->GetGraphics()->GetViewportWidth(), -1.0, 1.0 );
+	m_clamp.y.SetRange( 0.0, g_engine->GetGraphics()->GetViewportHeight(), -1.0, 1.0 );
 	m_clamp.y.SetInversed( true );
 	
 	if ( !m_loader ) {
@@ -37,10 +37,19 @@ void UI::Start() {
 			ResizeDebugFrame( it.first, &it.second );
 		}
 #endif
-		m_clamp.x.SetSrcRange( 0.0, g_engine->GetGraphics()->GetWindowWidth() );
-		m_clamp.y.SetSrcRange( 0.0, g_engine->GetGraphics()->GetWindowHeight() );
+		m_clamp.x.SetSrcRange( 0.0, g_engine->GetGraphics()->GetViewportWidth() );
+		m_clamp.y.SetSrcRange( 0.0, g_engine->GetGraphics()->GetViewportHeight() );
 		m_root_object.Realign();
 	});
+	
+	m_keydown_handler = AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this ) {
+		// only most global handlers here
+		if ( ( data->key.modifiers & UIEvent::KM_ALT ) && data->key.code == UIEvent::K_ENTER ) {
+			g_engine->GetGraphics()->ToggleFullscreen();
+			return true;
+		}
+		return false;
+	}, UI::GH_BEFORE );
 	
 #ifdef DEBUG
 	NEW( m_debug_scene, Scene, "UIDebug", SCENE_TYPE_SIMPLE2D );
@@ -55,6 +64,8 @@ void UI::Stop() {
 	g_engine->GetGraphics()->RemoveScene( m_debug_scene );
 	DELETE( m_debug_scene );
 #endif
+	
+	RemoveGlobalEventHandler( m_keydown_handler );
 	
 	g_engine->GetGraphics()->RemoveOnResizeHandler( this );
 	
@@ -140,7 +151,7 @@ void UI::ProcessEvent( UIEvent* event ) {
 	TriggerGlobalEventHandlers( GH_BEFORE, event );
 	
 	if ( event->m_type == UIEvent::EV_KEY_DOWN ) {
-		if ( m_focused_object && ( event->m_data.key.code == UIEvent::K_TAB ) ) {
+		if ( m_focused_object && !event->m_data.key.modifiers && ( event->m_data.key.code == UIEvent::K_TAB ) ) {
 			FocusNextObject();
 			event->SetProcessed();
 		}
@@ -152,7 +163,7 @@ void UI::ProcessEvent( UIEvent* event ) {
 	
 	if ( !event->IsProcessed() ) {
 		if ( event->m_type == UIEvent::EV_KEY_DOWN ) {
-			if ( m_focused_object && (
+			if ( m_focused_object && !event->m_data.key.modifiers && (
 				( event->m_data.key.key ) || // ascii key
 				( event->m_data.key.code == UIEvent::K_BACKSPACE )
 			) ) {

@@ -125,6 +125,8 @@ private:
 	unordered_map< void*, object_iterate_handler_t > m_iterative_objects = {};
 	vector< void* > m_iterative_objects_to_remove = {};
 	
+	const UIEventHandler* m_keydown_handler = nullptr;
+	
 #ifdef DEBUG	
 	Scene *m_debug_scene;
 	

@@ -16,7 +16,7 @@ const float Graphics::GetAspectRatio() const {
 }
 
 void Graphics::OnResize() {
-	m_aspect_ratio = (float) GetWindowWidth() / GetWindowHeight();
+	m_aspect_ratio = (float) GetViewportWidth() / GetViewportHeight();
 	for ( auto& it : m_on_resize_handlers ) {
 		it.second( m_aspect_ratio );
 	}
@@ -31,6 +31,15 @@ void Graphics::RemoveOnResizeHandler( void* object ) {
 	auto it = m_on_resize_handlers.find( object );
 	ASSERT( it != m_on_resize_handlers.end(), "resize handler not found" );
 	m_on_resize_handlers.erase( it );
+}
+
+void Graphics::ToggleFullscreen() {
+	if ( IsFullscreen() ) {
+		SetWindowed();
+	}
+	else {
+		SetFullscreen();
+	}
 }
 
 }

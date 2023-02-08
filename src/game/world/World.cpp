@@ -117,10 +117,11 @@ void World::Start() {
 
 	// map event handlers
 	m_handlers.keydown = ui->AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this ) {
-		if ( data->key.code == UIEvent::K_ESCAPE ) {
+		if ( !data->key.modifiers && data->key.code == UIEvent::K_ESCAPE ) {
 			ReturnToMainMenu();
+			return true;
 		}
-		return true;
+		return false;
 	}, UI::GH_AFTER );
 	
 	m_handlers.mousedown = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_DOWN, EH( this ) {
@@ -282,14 +283,14 @@ void World::SetCameraPosition( const Vec3 camera_position ) {
 }
 
 void World::UpdateViewport() {
-	m_viewport.max.x = g_engine->GetGraphics()->GetWindowWidth();
-	m_viewport.max.y = g_engine->GetGraphics()->GetWindowHeight() - m_ui.bottom_bar->GetHeight() + 32; // bottom bar has some transparent area at top
-	m_viewport.ratio.x = (float) g_engine->GetGraphics()->GetWindowWidth() / m_viewport.max.x;
-	m_viewport.ratio.y = (float) g_engine->GetGraphics()->GetWindowHeight() / m_viewport.max.y;
+	m_viewport.max.x = g_engine->GetGraphics()->GetViewportWidth();
+	m_viewport.max.y = g_engine->GetGraphics()->GetViewportHeight() - m_ui.bottom_bar->GetHeight() + 32; // bottom bar has some transparent area at top
+	m_viewport.ratio.x = (float) g_engine->GetGraphics()->GetViewportWidth() / m_viewport.max.x;
+	m_viewport.ratio.y = (float) g_engine->GetGraphics()->GetViewportHeight() / m_viewport.max.y;
 	m_viewport.width = m_viewport.max.x - m_viewport.min.x;
 	m_viewport.height = m_viewport.max.y - m_viewport.min.y;
 	m_viewport.aspect_ratio = (float) m_viewport.width / m_viewport.height;
-	m_viewport.window_aspect_ratio = g_engine->GetGraphics()->GetAspectRatio();
+	m_viewport.viewport_aspect_ratio = g_engine->GetGraphics()->GetAspectRatio();
 	m_clamp.x.SetSrcRange( m_viewport.min.x, m_viewport.max.x );
 	m_clamp.y.SetSrcRange( m_viewport.min.y, m_viewport.max.y );
 }
@@ -316,7 +317,7 @@ void World::UpdateCameraPosition() {
 	}
 	
 	m_camera->SetPosition({
-		( 0.5f + m_camera_position.x ) * m_viewport.window_aspect_ratio,
+		( 0.5f + m_camera_position.x ) * m_viewport.viewport_aspect_ratio,
 		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + Map::s_consts.tile_scale_z * m_camera_position.z / 1.41f, // TODO: why 1.41?
 		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + m_camera_position.z
 	});
@@ -344,7 +345,7 @@ void World::UpdateCameraRange() {
 	
 	//Log( "Camera range change: Z=[" + to_string( m_camera_range.min.z ) + "," + to_string( m_camera_range.max.z ) + "] Y=[" + to_string( m_camera_range.min.y ) + "," + to_string( m_camera_range.max.y ) + "], z=" + to_string( m_camera_position.z ) );
 	
-	m_camera_range.max.x = ( m_map->GetWidth() ) * m_camera_position.z / m_viewport.window_aspect_ratio * 0.25f;
+	m_camera_range.max.x = ( m_map->GetWidth() ) * m_camera_position.z / m_viewport.viewport_aspect_ratio * 0.25f;
 	m_camera_range.min.x = -m_camera_range.max.x;
 	
 	UpdateCameraPosition();

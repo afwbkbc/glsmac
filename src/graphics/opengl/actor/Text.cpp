@@ -37,8 +37,8 @@ void Text::Update( Font* font, const string& text, const float x, const float y 
 			NEW( m_texture, FontTexture, m_font );
 		}
 		
-		const float sx = 2.0 / g_engine->GetGraphics()->GetWindowWidth();
-		const float sy = 2.0 / g_engine->GetGraphics()->GetWindowHeight();	
+		const float sx = 2.0 / g_engine->GetGraphics()->GetViewportWidth();
+		const float sy = 2.0 / g_engine->GetGraphics()->GetViewportHeight();	
 
 		vector<vertex_box_t> boxes = {};
 

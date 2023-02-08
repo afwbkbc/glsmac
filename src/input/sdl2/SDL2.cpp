@@ -44,7 +44,7 @@ void SDL2::Iterate() {
 			}
 			case SDL_WINDOWEVENT: {
 				if ( event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED ) {
-					g_engine->GetGraphics()->ResizeWindow( event.window.data1, event.window.data2 );
+					g_engine->GetGraphics()->ResizeViewport( event.window.data1, event.window.data2 );
 				}
 				break;
 			}
@@ -92,7 +92,8 @@ void SDL2::Iterate() {
 				auto scancode = GetScanCode( event.key.keysym.scancode, modifiers );
 				char keycode = GetKeyCode( event.key.keysym.sym, modifiers );
 				if ( scancode || keycode ) {
-					NEWV( ui_event, event::KeyDown, scancode, keycode );
+					UIEvent::key_modifier_t keymodifiers = GetModifiers( modifiers );
+					NEWV( ui_event, event::KeyDown, scancode, keycode, keymodifiers );
 					g_engine->GetUI()->ProcessEvent( ui_event );
 					DELETE( ui_event );
 				}
@@ -103,7 +104,8 @@ void SDL2::Iterate() {
 				auto scancode = GetScanCode( event.key.keysym.scancode, modifiers );
 				char keycode = GetKeyCode( event.key.keysym.sym, modifiers );
 				if ( scancode || keycode ) {
-					NEWV( ui_event, event::KeyUp, scancode, keycode );
+					UIEvent::key_modifier_t keymodifiers = GetModifiers( modifiers );
+					NEWV( ui_event, event::KeyUp, scancode, keycode, keymodifiers );
 					g_engine->GetUI()->ProcessEvent( ui_event );
 					DELETE( ui_event );
 				}
@@ -136,7 +138,6 @@ UIEvent::mouse_button_t SDL2::GetMouseButton( uint8_t sdl_mouse_button ) const {
 #include <cstdio>
 
 char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
-	
 	char result = 0;
 	if ( ( modifiers & (~KMOD_LSHIFT) & (~KMOD_RSHIFT) & (~KMOD_NUM) & (~KMOD_CAPS) & (~KMOD_SCROLL) ) == 0 ) { // only shift or num/caps/scroll locks
 		bool is_shift = ( modifiers & KMOD_LSHIFT ) || ( modifiers & KMOD_RSHIFT );
@@ -170,39 +171,55 @@ char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 }
 
 UIEvent::key_code_t SDL2::GetScanCode( SDL_Scancode code, SDL_Keymod modifiers ) const {
-	if ( ( modifiers & (~KMOD_NUM) & (~KMOD_CAPS) & (~KMOD_SCROLL) ) == 0 ) { // num/caps/scroll locks are allowed
-		switch ( code ) {
-			case SDL_SCANCODE_RIGHT: {
-				return UIEvent::K_RIGHT;
-			}
-			case SDL_SCANCODE_LEFT: {
-				return UIEvent::K_LEFT;
-			}
-			case SDL_SCANCODE_DOWN: {
-				return UIEvent::K_DOWN;
-			}
-			case SDL_SCANCODE_UP: {
-				return UIEvent::K_UP;
-			}
-			case SDL_SCANCODE_RETURN: {
-				return UIEvent::K_ENTER;
-			}
-			case SDL_SCANCODE_TAB: {
-				return UIEvent::K_TAB;
-			}
-			case SDL_SCANCODE_BACKSPACE: {
-				return UIEvent::K_BACKSPACE;
-			}
-			case SDL_SCANCODE_ESCAPE: {
-				return UIEvent::K_ESCAPE;
-			}
-			case SDL_SCANCODE_GRAVE: {
-				return UIEvent::K_GRAVE;
-			}
+	switch ( code ) {
+		case SDL_SCANCODE_RIGHT: {
+			return UIEvent::K_RIGHT;
+		}
+		case SDL_SCANCODE_LEFT: {
+			return UIEvent::K_LEFT;
+		}
+		case SDL_SCANCODE_DOWN: {
+			return UIEvent::K_DOWN;
+		}
+		case SDL_SCANCODE_UP: {
+			return UIEvent::K_UP;
+		}
+		case SDL_SCANCODE_RETURN: {
+			return UIEvent::K_ENTER;
+		}
+		case SDL_SCANCODE_TAB: {
+			return UIEvent::K_TAB;
+		}
+		case SDL_SCANCODE_BACKSPACE: {
+			return UIEvent::K_BACKSPACE;
+		}
+		case SDL_SCANCODE_ESCAPE: {
+			return UIEvent::K_ESCAPE;
+		}
+		case SDL_SCANCODE_GRAVE: {
+			return UIEvent::K_GRAVE;
 		}
 	}
 	//Log( "Skipping unknown scan code: " + to_string( code ) + " (modifiers: " + to_string( modifiers ) + ")" );
 	return UIEvent::K_NONE;
+}
+
+UIEvent::key_modifier_t SDL2::GetModifiers( SDL_Keymod modifiers ) const {
+	UIEvent::key_modifier_t result = UIEvent::KM_NONE;
+	
+	if ( ( modifiers & KMOD_LSHIFT ) || ( modifiers & KMOD_RSHIFT) ) {
+		result |= UIEvent::KM_SHIFT;
+	}
+	
+	if ( ( modifiers & KMOD_LCTRL ) || ( modifiers & KMOD_RCTRL) ) {
+		result |= UIEvent::KM_CTRL;
+	}
+	
+	if ( ( modifiers & KMOD_LALT ) || ( modifiers & KMOD_RALT) ) {
+		result |= UIEvent::KM_ALT;
+	}
+	
+	return result;
 }
 
 }

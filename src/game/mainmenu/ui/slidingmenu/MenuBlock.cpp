@@ -76,26 +76,31 @@ void MenuBlock::Create() {
 	}
 	
 	On( UIEvent::EV_KEY_DOWN, EH( this ) {
-		if ( data->key.code == UIEvent::K_UP ) {
-			if ( m_selected_item_index < m_items.size() - 1 ) {
-				SetActiveItem( m_selected_item_index + 1 );
+		if ( !data->key.modifiers ) {
+			if ( data->key.code == UIEvent::K_UP ) {
+				if ( m_selected_item_index < m_items.size() - 1 ) {
+					SetActiveItem( m_selected_item_index + 1 );
+				}
 			}
-		}
-		else if ( data->key.code == UIEvent::K_DOWN ) {
-			if ( m_selected_item_index > 0 ) {
-				SetActiveItem( m_selected_item_index - 1 );
+			else if ( data->key.code == UIEvent::K_DOWN ) {
+				if ( m_selected_item_index > 0 ) {
+					SetActiveItem( m_selected_item_index - 1 );
+				}
 			}
-		}
-		else if ( data->key.code == UIEvent::K_ESCAPE ) {
-			GoBack();
-		}
-		else if ( data->key.code == UIEvent::K_ENTER ) {
-			OnItemClick( m_selected_item->GetText() );
+			else if ( data->key.code == UIEvent::K_ESCAPE ) {
+				GoBack();
+			}
+			else if ( data->key.code == UIEvent::K_ENTER ) {
+				OnItemClick( m_selected_item->GetText() );
+			}
+			else {
+				return false; // not handled
+			}
+			return true; // handled
 		}
 		else {
 			return false; // not handled
 		}
-		return true; // handled
 	});
 	
 	SetActiveItem( m_selected_item_index );

@@ -40,7 +40,12 @@
 // TODO: move to config
 #define WINDOW_WIDTH 1024
 #define WINDOW_HEIGHT 768
-#define WINDOW_VSYNC true
+#define VSYNC true
+#ifdef DEBUG
+#define START_FULLSCREEN false
+#else
+#define START_FULLSCREEN true
+#endif
 
 #ifdef DEBUG
 #include <iostream>
@@ -125,7 +130,7 @@ int main(const int argc, const char *argv[]) {
 		title += "-portable";
 #endif
 		input::sdl2::SDL2 input;
-		graphics::opengl::OpenGL graphics( title, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_VSYNC, 90.0f);
+		graphics::opengl::OpenGL graphics( title, WINDOW_WIDTH, WINDOW_HEIGHT, VSYNC, START_FULLSCREEN );
 		audio::sdl2::SDL2 audio;
 		network::simpletcp::SimpleTCP network;
 		

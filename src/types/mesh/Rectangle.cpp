@@ -21,8 +21,8 @@ void Rectangle::SetCoords( const Vec2<Mesh::coord_t> &top_left, const Vec2<Mesh:
 {
 	const float rectwidth = ( bottom_right.x - top_left.x ) / 2;
 	const float rectheight = ( top_left.y - bottom_right.y ) / 2;
-	const float texwidth = (float) tx.x / g_engine->GetGraphics()->GetWindowWidth();
-	const float texheight = (float) tx.y / g_engine->GetGraphics()->GetWindowHeight();
+	const float texwidth = (float) tx.x / g_engine->GetGraphics()->GetViewportWidth();
+	const float texheight = (float) tx.y / g_engine->GetGraphics()->GetViewportHeight();
 	const float sx = rectwidth / texwidth;
 	const float sy = rectheight / texheight;
 	
