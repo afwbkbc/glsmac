@@ -305,9 +305,9 @@ void World::UpdateCameraPosition() {
 	
 	m_camera->SetPosition({
 		( 0.5f + m_camera_position.x ) * m_viewport.window_aspect_ratio,
-		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y,
+		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + Map::s_consts.tile_scale_z * m_camera_position.z / 1.41f, // TODO: why 1.41?
 		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + m_camera_position.z
-	});	
+	});
 }
 
 void World::UpdateCameraScale() {
@@ -320,7 +320,7 @@ void World::UpdateCameraAngle() {
 
 void World::UpdateCameraRange() {
 	m_camera_range.min.z = 2.82f / ( m_map->GetHeight() + 1 ) / m_viewport.ratio.y; // TODO: why 2.82?
-	m_camera_range.max.z = 0.20f; // TODO: fix camera z and allow to zoom in more
+	m_camera_range.max.z = 0.22f; // TODO: fix camera z and allow to zoom in more
 	if ( m_camera_position.z < m_camera_range.min.z ) {
 		m_camera_position.z = m_camera_range.min.z;
 	}

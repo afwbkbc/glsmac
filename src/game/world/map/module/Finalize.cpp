@@ -57,6 +57,12 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 			#undef x
 		}
 		
+		// raise everything on z axis to prevent negative z values ( camera doesn't like it when zoomed in )
+		#define x( _k ) vertices._k.z += Map::s_consts.tile_scale_z;
+
+			do_x();
+		#undef x
+				
 		#define x( _k ) ts->layers[ lt ].indices._k = m_map->m_mesh_terrain->AddVertex( vertices._k, tex_coords._k, tint._k )
 			do_x();
 		#undef x
