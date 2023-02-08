@@ -119,7 +119,7 @@ bool Button::OnMouseUp( const UIEvent::event_data_t* data ) {
 		}
 		return ret;
 	}
-	return true;
+	return false;
 }
 
 
