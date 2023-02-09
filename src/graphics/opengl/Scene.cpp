@@ -37,19 +37,25 @@ void Scene::RemoveActor( base::ObjectLink *link ) {
 }
 
 void Scene::AddActorToZIndexSet( Actor* gl_actor ) {
-	ASSERT( m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].find( gl_actor ) == m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].end(),
-		"actor to be added already found in zindex set"
-	);
+	const float zindex = gl_actor->GetPosition().z;
+	auto it = m_gl_actors_by_zindex.find( zindex );
+	if ( it == m_gl_actors_by_zindex.end() ) {
+		m_gl_actors_by_zindex[ zindex ] = {};
+		it = m_gl_actors_by_zindex.find( zindex );
+	}
+	ASSERT( find( it->second.begin(), it->second.end(), gl_actor ) == it->second.end(), "actor already found in zindex set" );
 	//Log( "Adding actor " + gl_actor->GetName() + " to zindex set " + to_string( gl_actor->GetPosition().z ) );
-	m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].insert( gl_actor );
+	it->second.push_back( gl_actor );
 }
 
 void Scene::RemoveActorFromZIndexSet( Actor* gl_actor ) {
-	ASSERT( m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].find( gl_actor ) != m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].end(),
-		"actor to be removed not found in zindex set"
-	);
+	const float zindex = gl_actor->GetPosition().z;
+	auto it = m_gl_actors_by_zindex.find( zindex );
+	ASSERT( it != m_gl_actors_by_zindex.end(), "zindex set not found" );
+	auto actor_it = find( it->second.begin(), it->second.end(), gl_actor );
+	ASSERT( actor_it != it->second.end(), "actor not found in zindex set" );
 	//Log( "Removing actor " + gl_actor->GetName() + " from zindex set " + to_string( gl_actor->GetPosition().z ) );
-	m_gl_actors_by_zindex[ gl_actor->GetPosition().z ].erase( gl_actor );
+	it->second.erase( actor_it );
 }
 
 void Scene::Update() {
@@ -142,16 +148,6 @@ void Scene::Draw( shader_program::ShaderProgram *shader_program ) {
 		}
 		last_zindex = zindex;
 #endif
-		
-		auto *camera = m_scene->GetCamera();
-		if ( camera ) {
-
-			//glEnable( GL_CULL_FACE );
-
-			//shader_program->Enable();
-
-			//glUniformMatrix4fv( shader_program->m_gl_uniforms.pvm, 1, GL_TRUE, (const GLfloat*)&camera->GetMatrix() );
-		}
 		
 		for ( auto& actor : actors.second ) {
 			actor->Draw( shader_program, m_scene->GetCamera() );

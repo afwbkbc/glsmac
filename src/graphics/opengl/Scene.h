@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <map>
-#include <set>
 
 #include "base/Base.h"
 #include "base/ObjectLink.h"
@@ -47,7 +46,7 @@ protected:
 	base::ObjectLink *m_skybox_texture = NULL;
 	
 	vector<base::ObjectLink *> m_gl_actors;
-	map< float, set< Actor* > > m_gl_actors_by_zindex;
+	map< float, vector< Actor* > > m_gl_actors_by_zindex;
 	
 	
 private:

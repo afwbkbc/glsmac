@@ -25,8 +25,8 @@ CLASS( Routine, base::Module )
 protected:
 	friend class opengl::OpenGL;
 
-	std::vector<scene::Scene *> m_scenes;
-	std::vector< opengl::Scene *> m_gl_scenes;
+	std::vector< scene::Scene* > m_scenes;
+	std::vector< opengl::Scene* > m_gl_scenes;
 	virtual bool SceneBelongs( const scene::Scene *scene ) const = 0;
 };
 
