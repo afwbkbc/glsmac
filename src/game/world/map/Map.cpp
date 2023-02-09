@@ -369,6 +369,8 @@ const Buffer Map::Serialize() const {
 	buf.WriteString( m_textures.terrain->Serialize().ToString() );
 	buf.WriteString( m_mesh_terrain->Serialize().ToString() );
 	
+	
+	
 	return buf;
 }
 
@@ -407,6 +409,9 @@ const Buffer Map::tile_state_t::Serialize() const {
 		buf.WriteString( layers[ i ].Serialize().ToString() );
 	}
 	
+	buf.WriteString( overdraw_column.coords.Serialize().ToString() );
+	buf.WriteString( overdraw_column.indices.Serialize().ToString() );
+	
 	buf.WriteBool( is_coastline_corner );
 	buf.WriteBool( has_water );
 	
@@ -441,8 +446,8 @@ const Buffer Map::tile_indices_t::Serialize() const {
 	
 	buf.WriteInt( center );
 	buf.WriteInt( left );
-	buf.WriteInt( right );
 	buf.WriteInt( top );
+	buf.WriteInt( right );
 	buf.WriteInt( bottom );
 	
 	return buf;
@@ -554,16 +559,19 @@ void Map::tile_state_t::Unserialize( Buffer buf ) {
 		layers[i].Unserialize( buf.ReadString() );
 	}
 	
+	overdraw_column.coords.Unserialize( buf.ReadString() );
+	overdraw_column.indices.Unserialize( buf.ReadString() );
+	
 	is_coastline_corner = buf.ReadBool();
 	has_water = buf.ReadBool();
 }
 
 void Map::tile_elevations_t::Unserialize( Buffer buf ) {
+	center = buf.ReadInt();
 	left = buf.ReadInt();
 	top = buf.ReadInt();
 	right = buf.ReadInt();
 	bottom = buf.ReadInt();
-	center = buf.ReadInt();
 }
 
 void Map::tile_layer_t::Unserialize( Buffer buf ) {
@@ -574,35 +582,35 @@ void Map::tile_layer_t::Unserialize( Buffer buf ) {
 }
 
 void Map::tile_indices_t::Unserialize( Buffer buf ) {
+	center = buf.ReadInt();
 	left = buf.ReadInt();
 	top = buf.ReadInt();
 	right = buf.ReadInt();
 	bottom = buf.ReadInt();
-	center = buf.ReadInt();
 }
 
 void Map::tile_vertices_t::Unserialize( Buffer buf ) {
+	center = buf.ReadVec3();
 	left = buf.ReadVec3();
 	top = buf.ReadVec3();
 	right = buf.ReadVec3();
 	bottom = buf.ReadVec3();
-	center = buf.ReadVec3();
 }
 
 void Map::tile_tex_coords_t::Unserialize( Buffer buf ) {
+	center = buf.ReadVec2f();
 	left = buf.ReadVec2f();
 	top = buf.ReadVec2f();
 	right = buf.ReadVec2f();
 	bottom = buf.ReadVec2f();
-	center = buf.ReadVec2f();
 }
 
 void Map::tile_colors_t::Unserialize( Buffer buf ) {
+	center = buf.ReadColor();
 	left = buf.ReadColor();
 	top = buf.ReadColor();
 	right = buf.ReadColor();
 	bottom = buf.ReadColor();
-	center = buf.ReadColor();
 }
 
 }
