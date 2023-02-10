@@ -3,34 +3,50 @@
 namespace scene {
 namespace actor {
 
-Mesh::Mesh( const std::string &name, const types::mesh::Mesh *mesh, const type_t type ) : Actor( type, name ), m_mesh( mesh ) {
+Mesh::Mesh( const std::string &name, const mesh::Mesh *mesh, const type_t type ) : Actor( type, name ), m_mesh( mesh ) {
 	
 }
 
 Mesh::~Mesh() {
-	DELETE( m_mesh );
+	if ( m_mesh ) {
+		DELETE( m_mesh );
+	}
 	if ( m_data_mesh ) {
 		DELETE( m_data_mesh );
 	}
 }
 
-const types::mesh::Mesh *Mesh::GetMesh() const {
+void Mesh::SetMesh( const mesh::Mesh* mesh ) {
+	ASSERT( !m_mesh, "mesh already set" );
+	m_mesh = mesh;
+}
+
+const mesh::Mesh *Mesh::GetMesh() const {
+	ASSERT( m_mesh, "mesh not set" );
 	return m_mesh;
 }
 
-const types::mesh::Data* Mesh::GetDataMesh() const {
+void Mesh::SetRenderFlags( const render_flag_t render_flags ) {
+	m_render_flags = render_flags;
+}
+
+const Mesh::render_flag_t Mesh::GetRenderFlags() const {
+	return m_render_flags;
+}
+
+const mesh::Data* Mesh::GetDataMesh() const {
 	return m_data_mesh;
 }
 
-void Mesh::SetTexture( const types::Texture* texture ) {
+void Mesh::SetTexture( const Texture* texture ) {
 	m_texture = texture;
 }
 
-const types::Texture* Mesh::GetTexture() {
+const Texture* Mesh::GetTexture() {
 	return m_texture;
 }
 
-void Mesh::SetDataMesh( const types::mesh::Data* data_mesh ) {
+void Mesh::SetDataMesh( const mesh::Data* data_mesh ) {
 	ASSERT( !m_data_mesh, "data mesh already set" );
 	m_data_mesh = data_mesh;
 }
@@ -49,12 +65,12 @@ Mesh::data_request_id_t Mesh::GetDataAt( const size_t screen_x, const size_t scr
 	return id;
 }
 
-pair< bool, types::mesh::Data::data_t > Mesh::GetDataResponse( const data_request_id_t id ) {
+pair< bool, mesh::Data::data_t > Mesh::GetDataResponse( const data_request_id_t id ) {
 	auto it = m_data_requests.find( id );
 	ASSERT( it != m_data_requests.end(), "data request not found" );
 	
 	if ( it->second.is_processed ) {
-		pair< bool, types::mesh::Data::data_t > result = { true, it->second.result };
+		pair< bool, mesh::Data::data_t > result = { true, it->second.result };
 		// Log( "Data request " + to_string( id ) + " completed" );
 		m_data_requests.erase( it );
 		return result;

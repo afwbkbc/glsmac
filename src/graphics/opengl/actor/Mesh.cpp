@@ -190,20 +190,20 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 			if ( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO ) {
 				auto* light = actor->GetScene()->GetLight();
 				if ( light ) {
-					glUniform3fv( sp->m_gl_uniforms.light_pos, 1, (const GLfloat*)&light->GetPosition() );
-					glUniform4fv( sp->m_gl_uniforms.light_color, 1, (const GLfloat*)&light->GetColor() );
+					glUniform3fv( sp->uniforms.light_pos, 1, (const GLfloat*)&light->GetPosition() );
+					glUniform4fv( sp->uniforms.light_color, 1, (const GLfloat*)&light->GetColor() );
 				}
 			}
 
 			if ( actor->GetType() == scene::Actor::TYPE_INSTANCED_MESH ) {
 				auto* instanced_actor = (scene::actor::InstancedMesh*) m_actor;
 				auto& matrices = instanced_actor->GetWorldMatrices();
-				glUniformMatrix4fv( sp->m_gl_uniforms.world, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
+				glUniformMatrix4fv( sp->uniforms.world, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
 				glDrawElementsInstanced( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0), matrices.size() );
 			}
 			else {
 				types::Matrix44 matrix = m_actor->GetWorldMatrix();
-				glUniformMatrix4fv( sp->m_gl_uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
+				glUniformMatrix4fv( sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
 				glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
 			}
 

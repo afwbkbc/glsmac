@@ -18,12 +18,12 @@ protected:
 
 	struct {
 		GLint texture;
-	} m_gl_uniforms;
+	} uniforms;
 
 	struct {
 		GLint coord;
 		GLint tex_coord;
-	} m_gl_attributes;
+	} attributes;
 
 	void AddShaders();
 	void Initialize();

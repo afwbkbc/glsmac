@@ -19,11 +19,11 @@ protected:
 	struct {
 		GLint pvm;
 		GLint cubemap;
-	} m_gl_uniforms;
+	} uniforms;
 
 	struct {
 		GLint vertex;
-	} m_gl_attributes;
+	} attributes;
 
 	void AddShaders();
 	void Initialize();

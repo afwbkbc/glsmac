@@ -28,12 +28,12 @@ protected:
 		GLint light_color;
 		GLint light_intensity;
 		GLint campos;
-	} m_gl_uniforms;
+	} uniforms;
 
 	struct {
 		GLint position;
 		GLint tex_coord;
-	} m_gl_attributes;
+	} attributes;
 
 	void AddShaders();
 	void Initialize();

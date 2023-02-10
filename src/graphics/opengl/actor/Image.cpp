@@ -89,23 +89,23 @@ void Image::Draw( shader_program::ShaderProgram *shader_program, Camera *camera 
 	switch ( shader_program->GetType() ) {
 		case ( shader_program::ShaderProgram::TYPE_ORTHO ): {
 			auto *ortho_shader_program = (shader_program::Orthographic *)shader_program;
-			//glUniform1f( ortho_shader_program->m_gl_uniforms.z_index, m_actor->GetPosition().z );
+			//glUniform1f( ortho_shader_program->uniforms.z_index, m_actor->GetPosition().z );
 			//types::Color tint_color = ((scene::actor::Mesh *)m_actor)->GetTintColor();
 			/*types::Color tint_color = types::Color::WHITE();
 			const GLfloat tint_color_data[4] = { tint_color.red, tint_color.green, tint_color.blue, tint_color.alpha };
-			glUniform4fv( ortho_shader_program->m_gl_uniforms.tint, 1, tint_color_data );*/
+			glUniform4fv( ortho_shader_program->uniforms.tint, 1, tint_color_data );*/
 			break;
 		}
 /*		case ( shader_program::ShaderProgram::TYPE_PERSP ): {
 			auto *persp_shader_program = (shader_program::World *)shader_program;
 
 			types::Matrix44 matrix = m_actor->GetWorldMatrix();
-			glUniformMatrix4fv( persp_shader_program->m_gl_uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
+			glUniformMatrix4fv( persp_shader_program->uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
 
-			glUniform3f( persp_shader_program->m_gl_uniforms.light_color, 1.0, 1.0, 1.0 );
-			glUniform1f( persp_shader_program->m_gl_uniforms.light_intensity, 1.0 );
+			glUniform3f( persp_shader_program->uniforms.light_color, 1.0, 1.0, 1.0 );
+			glUniform1f( persp_shader_program->uniforms.light_intensity, 1.0 );
 
-		    //glUniform3f( persp_shader_program->m_gl_uniforms.campos, 0.0, 0.0, 0.0 );
+		    //glUniform3f( persp_shader_program->uniforms.campos, 0.0, 0.0, 0.0 );
 
 			break;
 
@@ -134,10 +134,10 @@ void Image::Draw( shader_program::ShaderProgram *shader_program, Camera *camera 
 	matrix.Identity();
 	matrix.ProjectionOrtho2D( 0.01f, 100.0f );
 
-	glUniformMatrix4fv( m_shader_program->m_gl_uniforms.position, 1, GL_TRUE, (const GLfloat *) &matrix );*/
+	glUniformMatrix4fv( m_shader_program->uniforms.position, 1, GL_TRUE, (const GLfloat *) &matrix );*/
 
 	//math::Vec2<> matrix( 0.0f, 0.0f );
-	//glUniformMatrix2fv( m_shader_program->m_gl_uniforms.position, 1, GL_TRUE, (const GLfloat *) &matrix );
+	//glUniformMatrix2fv( m_shader_program->uniforms.position, 1, GL_TRUE, (const GLfloat *) &matrix );
 
 	//glUniformMatrix4fv(shader_program->mUWorld, 1, GL_TRUE, (const GLfloat*)(&this->mActorFinalMatrices[i]));
 

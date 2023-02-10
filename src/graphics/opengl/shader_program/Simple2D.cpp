@@ -33,26 +33,26 @@ void main(void) { \
 }
 
 void Simple2D::Initialize() {
-	m_gl_attributes.tex_coord = this->GetAttributeLocation( "aTexCoord" );
-	m_gl_attributes.coord = this->GetAttributeLocation( "aCoord" );
-	m_gl_uniforms.texture = this->GetUniformLocation( "uTexture" );
+	attributes.tex_coord = this->GetAttributeLocation( "aTexCoord" );
+	attributes.coord = this->GetAttributeLocation( "aCoord" );
+	uniforms.texture = this->GetUniformLocation( "uTexture" );
 };
 
 void Simple2D::EnableAttributes() const {
 	const size_t tsz = sizeof( types::mesh::Mesh::coord_t );
 	const size_t vasz = types::mesh::Simple::VERTEX_SIZE * tsz;
 	size_t vaofs = 0;
-	glEnableVertexAttribArray( m_gl_attributes.coord );
-	glVertexAttribPointer( m_gl_attributes.coord, types::mesh::Simple::VERTEX_COORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	glEnableVertexAttribArray( attributes.coord );
+	glVertexAttribPointer( attributes.coord, types::mesh::Simple::VERTEX_COORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
 	vaofs += types::mesh::Simple::VERTEX_COORD_SIZE * tsz;
-	glEnableVertexAttribArray( m_gl_attributes.tex_coord );
-	glVertexAttribPointer( m_gl_attributes.tex_coord, types::mesh::Simple::VERTEX_TEXCOORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	glEnableVertexAttribArray( attributes.tex_coord );
+	glVertexAttribPointer( attributes.tex_coord, types::mesh::Simple::VERTEX_TEXCOORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
 	vaofs += types::mesh::Simple::VERTEX_TEXCOORD_SIZE * tsz;
 };
 
 void Simple2D::DisableAttributes() const {
-	glDisableVertexAttribArray( m_gl_attributes.coord );
-	glDisableVertexAttribArray( m_gl_attributes.tex_coord );
+	glDisableVertexAttribArray( attributes.coord );
+	glDisableVertexAttribArray( attributes.tex_coord );
 };
 
 } /* namespace shader_program */

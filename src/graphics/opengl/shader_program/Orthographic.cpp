@@ -39,6 +39,8 @@ in vec3 normal; \
 uniform sampler2D uTexture; \
 uniform vec3 uLightPos; \
 uniform vec4 uLightColor; \
+uniform uint uFlags; \
+uniform uint uTint; \
 out vec4 FragColor; \
 \
 void main(void) { \
@@ -55,39 +57,40 @@ void main(void) { \
 }
 
 void Orthographic::Initialize() {
-	m_gl_attributes.tex_coord = this->GetAttributeLocation( "aTexCoord" );
-	m_gl_attributes.coord = this->GetAttributeLocation( "aCoord" );
-	m_gl_attributes.tint = this->GetAttributeLocation( "aTint" );
-	m_gl_attributes.normal = this->GetAttributeLocation( "aNormal" );
-	m_gl_uniforms.texture = this->GetUniformLocation( "uTexture" );
-	m_gl_uniforms.light_pos = this->GetUniformLocation( "uLightPos" );
-	m_gl_uniforms.light_color = this->GetUniformLocation( "uLightColor" );
-	m_gl_uniforms.world = this->GetUniformLocation("uWorld");
+	attributes.tex_coord = this->GetAttributeLocation( "aTexCoord" );
+	attributes.coord = this->GetAttributeLocation( "aCoord" );
+	attributes.tint = this->GetAttributeLocation( "aTint" );
+	attributes.normal = this->GetAttributeLocation( "aNormal" );
+	uniforms.texture = this->GetUniformLocation( "uTexture" );
+	uniforms.light_pos = this->GetUniformLocation( "uLightPos" );
+	uniforms.light_color = this->GetUniformLocation( "uLightColor" );
+	uniforms.world = this->GetUniformLocation("uWorld");
+	
 };
 
 void Orthographic::EnableAttributes() const {
 	const size_t tsz = sizeof( types::mesh::Mesh::coord_t );
 	const size_t vasz = types::mesh::Render::VERTEX_SIZE * tsz;
 	size_t vaofs = 0;
-	glEnableVertexAttribArray( m_gl_attributes.coord );
-	glVertexAttribPointer( m_gl_attributes.coord, types::mesh::Render::VERTEX_COORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	glEnableVertexAttribArray( attributes.coord );
+	glVertexAttribPointer( attributes.coord, types::mesh::Render::VERTEX_COORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
 	vaofs += types::mesh::Render::VERTEX_COORD_SIZE * tsz;
-	glEnableVertexAttribArray( m_gl_attributes.tex_coord );
-	glVertexAttribPointer( m_gl_attributes.tex_coord, types::mesh::Render::VERTEX_TEXCOORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	glEnableVertexAttribArray( attributes.tex_coord );
+	glVertexAttribPointer( attributes.tex_coord, types::mesh::Render::VERTEX_TEXCOORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
 	vaofs += types::mesh::Render::VERTEX_TEXCOORD_SIZE * tsz;
-	glEnableVertexAttribArray( m_gl_attributes.tint );
-	glVertexAttribPointer( m_gl_attributes.tint, types::mesh::Render::VERTEX_TINT_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	glEnableVertexAttribArray( attributes.tint );
+	glVertexAttribPointer( attributes.tint, types::mesh::Render::VERTEX_TINT_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
 	vaofs += types::mesh::Render::VERTEX_TINT_SIZE * tsz;
-	glEnableVertexAttribArray( m_gl_attributes.normal );
-	glVertexAttribPointer( m_gl_attributes.normal, types::mesh::Render::VERTEX_NORMAL_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	glEnableVertexAttribArray( attributes.normal );
+	glVertexAttribPointer( attributes.normal, types::mesh::Render::VERTEX_NORMAL_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
 	vaofs += types::mesh::Render::VERTEX_NORMAL_SIZE * tsz;
 };
 
 void Orthographic::DisableAttributes() const {
-	glDisableVertexAttribArray( m_gl_attributes.coord );
-	glDisableVertexAttribArray( m_gl_attributes.tex_coord );
-	glDisableVertexAttribArray( m_gl_attributes.tint );
-	glDisableVertexAttribArray( m_gl_attributes.normal );
+	glDisableVertexAttribArray( attributes.coord );
+	glDisableVertexAttribArray( attributes.tex_coord );
+	glDisableVertexAttribArray( attributes.tint );
+	glDisableVertexAttribArray( attributes.normal );
 };
 
 } /* namespace shader_program */

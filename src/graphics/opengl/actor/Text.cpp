@@ -102,9 +102,9 @@ void Text::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 		glBindTexture( GL_TEXTURE_2D, m_texture->m_texture );
 		
 		sp->Enable();
-		glUniform1i( sp->m_gl_uniforms.texture, 0 );
-		glUniform4fv( sp->m_gl_uniforms.color, 1, (const GLfloat *)&text_actor->GetColor() );
-		glUniform1f( sp->m_gl_uniforms.z_index, position.z );
+		glUniform1i( sp->uniforms.texture, 0 );
+		glUniform4fv( sp->uniforms.color, 1, (const GLfloat *)&text_actor->GetColor() );
+		glUniform1f( sp->uniforms.z_index, position.z );
 		
 		for ( size_t c = 0 ; c < m_boxes_count ; c++ ) {
 			glDrawArrays( GL_TRIANGLE_STRIP, c * 4, 4 );

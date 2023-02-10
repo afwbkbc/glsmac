@@ -63,25 +63,25 @@ void main() \
  */
 
 void World::Initialize() {
-	m_gl_uniforms.world = this->GetUniformLocation("uWorld");
-	m_gl_uniforms.light_color = this->GetUniformLocation( "uLightA.Color" );
-	m_gl_uniforms.light_intensity = this->GetUniformLocation( "uLightA.Intensity" );
-	m_gl_uniforms.campos = this->GetUniformLocation("uCamPos");
+	uniforms.world = this->GetUniformLocation("uWorld");
+	uniforms.light_color = this->GetUniformLocation( "uLightA.Color" );
+	uniforms.light_intensity = this->GetUniformLocation( "uLightA.Intensity" );
+	uniforms.campos = this->GetUniformLocation("uCamPos");
 	//this->mUSampler=this->GetUniformLocation("uSampler");
-	m_gl_attributes.position = this->GetAttributeLocation("aPosition");
-//	m_gl_attributes.tex_coord = this->GetAttributeLocation("aTexCoord");
+	attributes.position = this->GetAttributeLocation("aPosition");
+//	attributes.tex_coord = this->GetAttributeLocation("aTexCoord");
 };
 
 void World::EnableAttributes() const {
-	glEnableVertexAttribArray( m_gl_attributes.position );
-	glVertexAttribPointer( m_gl_attributes.position, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)0 );
+	glEnableVertexAttribArray( attributes.position );
+	glVertexAttribPointer( attributes.position, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)0 );
 	//glEnableVertexAttribArray(this->mATexCoord);
 	//glVertexAttribPointer( this->mATexCoord, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)sizeof(OpenGLVec3));
 };
 
 void World::DisableAttributes() const {
-	glDisableVertexAttribArray( m_gl_attributes.position );
-	//glDisableVertexAttribArray( m_gl_attributes.tex_coord );
+	glDisableVertexAttribArray( attributes.position );
+	//glDisableVertexAttribArray( attributes.tex_coord );
 };
 
 types::Matrix44 World::GetWorldMatrix() {

@@ -35,25 +35,25 @@ void main(void) { \
 }
 
 void OrthographicData::Initialize() {
-	m_gl_attributes.coord = this->GetAttributeLocation( "aCoord" );
-	m_gl_attributes.data = this->GetAttributeLocation( "aData" );
-	m_gl_uniforms.world = this->GetUniformLocation("uWorld");
+	attributes.coord = this->GetAttributeLocation( "aCoord" );
+	attributes.data = this->GetAttributeLocation( "aData" );
+	uniforms.world = this->GetUniformLocation("uWorld");
 };
 
 void OrthographicData::EnableAttributes() const {
 	const size_t tsz = sizeof( types::mesh::Data::coord_t );
 	const size_t vasz = types::mesh::Data::VERTEX_SIZE * tsz;
 	size_t vaofs = 0;
-	glEnableVertexAttribArray( m_gl_attributes.coord );
-	glVertexAttribPointer( m_gl_attributes.coord, types::mesh::Data::VERTEX_COORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	glEnableVertexAttribArray( attributes.coord );
+	glVertexAttribPointer( attributes.coord, types::mesh::Data::VERTEX_COORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
 	vaofs += types::mesh::Data::VERTEX_COORD_SIZE * tsz;
-	glEnableVertexAttribArray( m_gl_attributes.data );
-	glVertexAttribPointer( m_gl_attributes.data, types::mesh::Data::VERTEX_DATA_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	glEnableVertexAttribArray( attributes.data );
+	glVertexAttribPointer( attributes.data, types::mesh::Data::VERTEX_DATA_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
 };
 
 void OrthographicData::DisableAttributes() const {
-	glDisableVertexAttribArray( m_gl_attributes.coord );
-	glDisableVertexAttribArray( m_gl_attributes.data );
+	glDisableVertexAttribArray( attributes.coord );
+	glDisableVertexAttribArray( attributes.data );
 };
 
 } /* namespace shader_program */

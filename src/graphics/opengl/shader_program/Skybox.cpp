@@ -33,18 +33,18 @@ void main (void) { \
 };
 
 void Skybox::Initialize() {
-	m_gl_uniforms.pvm = this->GetUniformLocation( "uPVM" );
-	m_gl_uniforms.cubemap = this->GetUniformLocation( "uCubemap" );
-	m_gl_attributes.vertex = this->GetAttributeLocation("aVertex");
+	uniforms.pvm = this->GetUniformLocation( "uPVM" );
+	uniforms.cubemap = this->GetUniformLocation( "uCubemap" );
+	attributes.vertex = this->GetAttributeLocation("aVertex");
 };
 
 void Skybox::EnableAttributes() const {
-	glEnableVertexAttribArray( m_gl_attributes.vertex );
-	glVertexAttribPointer( m_gl_attributes.vertex, 3, GL_FLOAT, GL_FALSE, 0, 0 );
+	glEnableVertexAttribArray( attributes.vertex );
+	glVertexAttribPointer( attributes.vertex, 3, GL_FLOAT, GL_FALSE, 0, 0 );
 };
 
 void Skybox::DisableAttributes() const {
-	glDisableVertexAttribArray( m_gl_attributes.vertex );
+	glDisableVertexAttribArray( attributes.vertex );
 };
 
 } /* namespace shader_program */

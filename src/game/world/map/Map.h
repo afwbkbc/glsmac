@@ -133,7 +133,7 @@ CLASS( Map, Serializable )
 	void SetTiles( Tiles* tiles, bool generate_actors = true );
 	
 #ifdef DEBUG
-	vector<actor::Mesh*> GetActors() const;
+	vector<scene::actor::Mesh*> GetActors() const;
 #endif
 	
 	// order is important (it defines rendering order)
@@ -314,7 +314,7 @@ protected:
 	
 private:
 	
-	actor::Mesh::data_request_id_t m_tile_at_request_id = 0;
+	scene::actor::Mesh::data_request_id_t m_tile_at_request_id = 0;
 	
 	tile_state_t* m_tile_states = nullptr;
 	tile_state_t* GetTileState( const size_t x, const size_t y ) const;
@@ -332,7 +332,7 @@ private:
 	
 	Scene* m_scene = nullptr;
 	struct {
-		actor::Mesh* terrain = nullptr;
+		scene::actor::Mesh* terrain = nullptr;
 	} m_actors;
 	
 	void GenerateActors();

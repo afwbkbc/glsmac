@@ -34,19 +34,19 @@ void main(void) { \
 }
 
 void Font::Initialize() {
-	m_gl_uniforms.texture = this->GetUniformLocation( "uTexture" );
-	m_gl_uniforms.color = this->GetUniformLocation( "uColor" );
-	m_gl_uniforms.z_index = this->GetUniformLocation( "uZIndex" );
-	m_gl_attributes.coord = this->GetAttributeLocation( "aCoord" );
+	uniforms.texture = this->GetUniformLocation( "uTexture" );
+	uniforms.color = this->GetUniformLocation( "uColor" );
+	uniforms.z_index = this->GetUniformLocation( "uZIndex" );
+	attributes.coord = this->GetAttributeLocation( "aCoord" );
 };
 
 void Font::EnableAttributes() const {
-	glEnableVertexAttribArray( m_gl_attributes.coord );
-	glVertexAttribPointer( m_gl_attributes.coord, 4, GL_FLOAT, GL_FALSE, 0, 0 );
+	glEnableVertexAttribArray( attributes.coord );
+	glVertexAttribPointer( attributes.coord, 4, GL_FLOAT, GL_FALSE, 0, 0 );
 };
 
 void Font::DisableAttributes() const {
-	glDisableVertexAttribArray( m_gl_attributes.coord );
+	glDisableVertexAttribArray( attributes.coord );
 };
 
 } /* namespace shader_program */

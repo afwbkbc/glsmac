@@ -4,9 +4,6 @@
 
 #include "../Settings.h"
 
-#include "types/Texture.h"
-#include "types/mesh/Render.h"
-#include "scene/actor/Mesh.h"
 #include "scene/Scene.h"
 #include "util/Clamper.h"
 #include "util/Random.h"
@@ -16,6 +13,8 @@
 
 #include "ui/style/Theme.h"
 #include "ui/bottom_bar/BottomBar.h"
+
+#include "actor/TileSelection.h"
 
 using namespace ui;
 namespace ui {
@@ -109,10 +108,15 @@ private:
 	void SelectTileAtPoint( const size_t x, const size_t y );
 	void SelectTile( Map::tile_info_t tileinfo );
 	void DeselectTile();
-	struct {
+	
+	/*struct {
 		types::Texture* texture = nullptr;
 		actor::Mesh* actor = nullptr;
-	} m_tile_selection = {};
+	} m_tile_selection = {};*/
+	
+	struct {
+		actor::TileSelection* tile_selection = nullptr;
+	} m_actors;
 };
 
 }

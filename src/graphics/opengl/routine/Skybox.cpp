@@ -143,7 +143,7 @@ void Skybox::Iterate() {
 
 				m_shader_program->Enable();
 
-				glUniformMatrix4fv( m_shader_program->m_gl_uniforms.pvm, 1, GL_TRUE, (const GLfloat*)&camera->GetMatrix() );
+				glUniformMatrix4fv( m_shader_program->uniforms.pvm, 1, GL_TRUE, (const GLfloat*)&camera->GetMatrix() );
 
 				GLint OldCullFaceMode;
 				glGetIntegerv( GL_CULL_FACE_MODE, &OldCullFaceMode );

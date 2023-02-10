@@ -407,9 +407,6 @@ void World::SelectTileAtPoint( const size_t x, const size_t y ) {
 }
 
 void World::SelectTile( Map::tile_info_t tileinfo ) {
-	if ( !m_tile_selection.texture ) {
-		m_tile_selection.texture = g_engine->GetTextureLoader()->LoadTexture( "texture.pcx", 1, 571, 56, 626 );
-	}
 	DeselectTile();
 	auto tile = tileinfo.tile;
 	auto ts = tileinfo.ts;
@@ -435,40 +432,15 @@ void World::SelectTile( Map::tile_info_t tileinfo ) {
 		}
 	}
 	
-	NEWV( mesh, types::mesh::Render, 5, 4 );
-	
-		#define x( _k, _tx, _ty ) \
-		coords._k.z += Map::s_consts.tile_scale_z + 0.01f; \
-		/*Log( (string) "_k=" + #_k + " _tx=" + to_string( _tx ) + " _ty=" + to_string( _ty ) );*/ \
-		auto _k = mesh->AddVertex( coords._k, { \
-			_tx, \
-			_ty \
-		});
-			x( center, 0.5f, 0.5f );
-			x( left, 0.0f, 1.0f );
-			x( top, 0.0f, 0.0f );
-			x( right, 1.0f, 0.0f );
-			x( bottom, 1.0f, 1.0f );
-		#undef x
-
-		#define x( _a, _b, _c ) mesh->AddSurface( { _a, _b, _c } )
-			x( center, left, top );
-			x( center, top, right );
-			x( center, right, bottom );
-			x( center, bottom, left );
-		#undef x
-	mesh->Finalize();
-	
-	NEW( m_tile_selection.actor, actor::InstancedMesh, "TileSelection", mesh );
-		m_tile_selection.actor->SetTexture( m_tile_selection.texture );
-	m_world_scene->AddActor( m_tile_selection.actor );
+	NEW( m_actors.tile_selection, actor::TileSelection, coords );
+	m_world_scene->AddActor( m_actors.tile_selection );
 }
 
 void World::DeselectTile() {
-	if ( m_tile_selection.actor ) {
-		m_world_scene->RemoveActor( m_tile_selection.actor );
-		DELETE( m_tile_selection.actor );
-		m_tile_selection.actor = nullptr;
+	if ( m_actors.tile_selection ) {
+		m_world_scene->RemoveActor( m_actors.tile_selection );
+		DELETE( m_actors.tile_selection );
+		m_actors.tile_selection = nullptr;
 	}
 }
 
