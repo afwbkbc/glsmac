@@ -12,7 +12,7 @@ TileSelection::TileSelection( map::Map::tile_vertices_t coords )
 	NEWV( mesh, types::mesh::Render, 5, 4 );
 	
 		#define x( _k, _tx, _ty ) \
-		coords._k.z += map::Map::s_consts.tile_scale_z + 0.01f; /* prevent obstruction by tile */ \
+		coords._k.z += 0.01f; /* prevent obstruction by tile */ \
 		auto _k = mesh->AddVertex( coords._k, { \
 			_tx, \
 			_ty \

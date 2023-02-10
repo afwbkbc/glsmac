@@ -25,10 +25,15 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 
 
 	for ( auto lt = 0 ; lt < Map::LAYER_MAX ; lt++ ) {
+
+		// raise everything on z axis to prevent negative z values ( camera doesn't like it when zoomed in )
+		#define x( _k ) ts->layers[ lt ].coords._k.z += Map::s_consts.tile_scale_z;
+			do_x();
+		#undef x
 		
 		vertices = ts->layers[ lt ].coords;
 		if ( lt != Map::LAYER_LAND ) {
-			vertices.center.z = vertices.left.z = vertices.top.z = vertices.right.z = vertices.bottom.z = Map::s_consts.levels.water;
+			vertices.center.z = vertices.left.z = vertices.top.z = vertices.right.z = vertices.bottom.z = Map::s_consts.levels.water + Map::s_consts.tile_scale_z;
 		}
 		
 		#define x( _k ) tex_coords._k = { \
@@ -56,11 +61,6 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 				do_x();
 			#undef x
 		}
-		
-		// raise everything on z axis to prevent negative z values ( camera doesn't like it when zoomed in )
-		#define x( _k ) vertices._k.z += Map::s_consts.tile_scale_z;
-			do_x();
-		#undef x
 		
 		#define x( _k ) ts->layers[ lt ].indices._k = m_map->m_mesh_terrain->AddVertex( vertices._k, tex_coords._k, tint._k )
 			do_x();
@@ -125,11 +125,6 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 		}
 	}
 	
-	// raise everything on z axis to prevent negative z values ( camera doesn't like it when zoomed in )
-	#define x( _k ) vertices._k.z += Map::s_consts.tile_scale_z;
-		do_x();
-	#undef x
-
 	// store tile coordinates
 	mesh::Data::data_t data = tile->coord.y * ms->dimensions.x + tile->coord.x + 1; // +1 because we need to differentiate 'tile at 0,0' from 'no tiles'
 	
