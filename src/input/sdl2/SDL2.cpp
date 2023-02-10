@@ -67,17 +67,17 @@ void SDL2::Iterate() {
 			case SDL_MOUSEBUTTONUP: {
 				NEWV( ui_event, event::MouseUp, event.motion.x, event.motion.y, GetMouseButton( event.button.button ) );
 				g_engine->GetUI()->ProcessEvent( ui_event );
-				ASSERT( m_active_mousedowns.find( event.button.button ) != m_active_mousedowns.end(),
-					"mouseup without mousedown"
-				);
-				auto& mousedown_data = m_active_mousedowns.at( event.button.button );
-				if ( mousedown_data.x == event.motion.x && mousedown_data.y == event.motion.y ) {
-					// mousedown + mouseup at same pixel = mouseclick
-					/*NEWV( ui_event_2, event::MouseClick, event.motion.x, event.motion.y, GetMouseButton( event.button.button ) );
-					g_engine->GetUI()->ProcessEvent( ui_event_2 );
-					DELETE( ui_event_2 );*/ // TODO: conflicts with Button OnClick logic
+				auto it = m_active_mousedowns.find( event.button.button );
+				if ( it != m_active_mousedowns.end() ) { // sometimes touchscreen sends mouseup without or before mousedown, just ignore it
+					auto& mousedown_data = m_active_mousedowns.at( event.button.button );
+					if ( mousedown_data.x == event.motion.x && mousedown_data.y == event.motion.y ) {
+						// mousedown + mouseup at same pixel = mouseclick
+						/*NEWV( ui_event_2, event::MouseClick, event.motion.x, event.motion.y, GetMouseButton( event.button.button ) );
+						g_engine->GetUI()->ProcessEvent( ui_event_2 );
+						DELETE( ui_event_2 );*/ // TODO: conflicts with Button OnClick logic
+					}
+					m_active_mousedowns.erase( event.button.button );
 				}
-				m_active_mousedowns.erase( event.button.button );
 				DELETE( ui_event );
 				break;
 			}
