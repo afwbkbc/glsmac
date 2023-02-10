@@ -5,7 +5,7 @@
 #include "../Settings.h"
 
 #include "types/Texture.h"
-#include "types/Mesh.h"
+#include "types/RenderMesh.h"
 #include "scene/actor/Mesh.h"
 #include "scene/Scene.h"
 #include "util/Clamper.h"
@@ -66,6 +66,7 @@ private:
 	struct {
 		Vec2< size_t > min;
 		Vec2< size_t > max;
+		size_t bottom_bar_overlap;
 		Vec2< float > ratio;
 		size_t width;
 		size_t height;
@@ -104,6 +105,14 @@ private:
 	
 	void ReturnToMainMenu();
 	
+	// tiles stuff
+	void SelectTileAtPoint( const size_t x, const size_t y );
+	void SelectTile( Map::tile_info_t tileinfo );
+	void DeselectTile();
+	struct {
+		types::Texture* texture = nullptr;
+		actor::Mesh* actor = nullptr;
+	} m_tile_selection = {};
 };
 
 }

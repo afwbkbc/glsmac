@@ -4,6 +4,13 @@ namespace graphics {
 namespace opengl {
 namespace routine {
 
+World::World( shader_program::Orthographic* shader_program, shader_program::OrthographicData* data_shader_program )
+	: m_shader_program( shader_program )
+	, m_data_shader_program( data_shader_program )
+{
+	//
+}
+
 void World::Start() {
 
 }
@@ -13,10 +20,9 @@ void World::Stop() {
 }
 
 void World::Iterate() {
-
+	
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it )
 		(*it)->Update();
-
 	
 	glEnable(GL_CULL_FACE);
 /*
@@ -33,7 +39,7 @@ void World::Iterate() {
 */
 	
     glCullFace(GL_FRONT);
-
+	
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it ) {
 		(*it)->Draw( m_shader_program );
 	}
@@ -42,6 +48,11 @@ void World::Iterate() {
 	glDisable( GL_FOG );
 */
 	glDisable(GL_CULL_FACE);
+	
+	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it ) {
+		(*it)->Draw( m_data_shader_program );
+	}
+
 }
 
 bool World::SceneBelongs( const scene::Scene *scene ) const {

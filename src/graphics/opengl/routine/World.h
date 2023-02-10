@@ -4,14 +4,14 @@
 
 //#include "../shader_program/World.h"
 #include "../shader_program/Orthographic.h"
+#include "../shader_program/OrthographicData.h"
 
 namespace graphics {
 namespace opengl {
 namespace routine {
 
 CLASS( World, Routine )
-	//World( shader_program::World *shader_program ) : m_shader_program( shader_program ) {};
-	World( shader_program::Orthographic *shader_program ) : m_shader_program( shader_program ) {};
+	World( shader_program::Orthographic* shader_program, shader_program::OrthographicData* data_shader_program );
 
 	bool SceneBelongs( const scene::Scene *scene ) const;
 
@@ -21,6 +21,7 @@ CLASS( World, Routine )
 
 protected:
 	shader_program::Orthographic *m_shader_program;
+	shader_program::OrthographicData *m_data_shader_program;
 };
 
 } /* namespace routine */

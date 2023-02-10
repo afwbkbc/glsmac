@@ -39,6 +39,8 @@ CLASS( Scene, base::Base )
 	void Draw( shader_program::ShaderProgram *shader_program );
 	void Update();
 	
+	void OnResize();
+	
 protected:
 	scene::Scene *m_scene;
 	routine::Routine *m_routine;

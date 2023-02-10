@@ -5,7 +5,7 @@
 
 #include "graphics/Graphics.h"
 
-#include "types/mesh/Rectangle.h"
+#include "scene/actor/InstancedMesh.h"
 #include "util/FS.h"
 
 #include "map_generator/SimpleRandom.h"
@@ -115,6 +115,8 @@ void World::Start() {
 	NEW( m_ui.bottom_bar, ui::BottomBar, this );
 	ui->AddObject( m_ui.bottom_bar );
 
+	m_viewport.bottom_bar_overlap = 32; // it has transparent area on top so let map render through it
+	
 	// map event handlers
 	m_handlers.keydown = ui->AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this ) {
 		if ( !data->key.modifiers && data->key.code == UIEvent::K_ESCAPE ) {
@@ -126,6 +128,10 @@ void World::Start() {
 	
 	m_handlers.mousedown = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_DOWN, EH( this ) {
 		switch ( data->mouse.button ) {
+			case UIEvent::M_LEFT: {
+				SelectTileAtPoint( data->mouse.x, data->mouse.y ); // async
+				break;
+			}
 			case UIEvent::M_RIGHT: {
 				m_is_dragging = true;
 				m_last_drag_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
@@ -262,7 +268,11 @@ void World::Stop() {
 }
 
 void World::Iterate() {
-	
+	// response for clicked tile (if click happened)
+	auto tileinfo = m_map->GetTileAtScreenCoordsResult();
+	if ( tileinfo.tile ) {
+		SelectTile( tileinfo );
+	}
 }
 
 void World::SetCameraPosition( const Vec3 camera_position ) {
@@ -284,7 +294,7 @@ void World::SetCameraPosition( const Vec3 camera_position ) {
 
 void World::UpdateViewport() {
 	m_viewport.max.x = g_engine->GetGraphics()->GetViewportWidth();
-	m_viewport.max.y = g_engine->GetGraphics()->GetViewportHeight() - m_ui.bottom_bar->GetHeight() + 32; // bottom bar has some transparent area at top
+	m_viewport.max.y = g_engine->GetGraphics()->GetViewportHeight() - m_ui.bottom_bar->GetHeight() + m_viewport.bottom_bar_overlap;
 	m_viewport.ratio.x = (float) g_engine->GetGraphics()->GetViewportWidth() / m_viewport.max.x;
 	m_viewport.ratio.y = (float) g_engine->GetGraphics()->GetViewportHeight() / m_viewport.max.y;
 	m_viewport.width = m_viewport.max.x - m_viewport.min.x;
@@ -376,7 +386,7 @@ void World::UpdateMapInstances() {
 	m_world_scene->SetInstances( instances );
 }
 
-void World::ReturnToMainMenu() {	
+void World::ReturnToMainMenu() {
 	
 #ifdef DEVEL
 	g_engine->ShutDown();
@@ -385,7 +395,81 @@ void World::ReturnToMainMenu() {
 	g_engine->GetScheduler()->RemoveTask( this );
 	g_engine->GetScheduler()->AddTask( task );
 #endif
+
+}
+
+void World::SelectTileAtPoint( const size_t x, const size_t y ) {
+	DeselectTile();
 	
+	Log( "Looking up tile at " + to_string( x ) + "x" + to_string( y ) );
+	
+	m_map->GetTileAtScreenCoords( x, g_engine->GetGraphics()->GetViewportHeight() - y ); // async
+}
+
+void World::SelectTile( Map::tile_info_t tileinfo ) {
+	if ( !m_tile_selection.texture ) {
+		m_tile_selection.texture = g_engine->GetTextureLoader()->LoadTexture( "texture.pcx", 1, 571, 56, 626 );
+	}
+	DeselectTile();
+	auto tile = tileinfo.tile;
+	auto ts = tileinfo.ts;
+	auto ms = tileinfo.ms;
+	
+	Log( "Selecting tile at " + to_string( tile->coord.x ) + "x" + to_string( tile->coord.y ) );
+	Map::tile_layer_type_t lt = ( tile->is_water_tile ? Map::LAYER_WATER : Map::LAYER_LAND );
+	auto& layer = ts->layers[ lt ];
+	auto coords = layer.coords;
+	
+	if ( !tile->is_water_tile && ts->is_coastline_corner ) {
+		if ( tile->W->is_water_tile ) {
+			coords.left = ts->layers[ Map::LAYER_WATER ].coords.left;
+		}
+		if ( tile->N->is_water_tile ) {
+			coords.top = ts->layers[ Map::LAYER_WATER ].coords.top;
+		}
+		if ( tile->E->is_water_tile ) {
+			coords.right = ts->layers[ Map::LAYER_WATER ].coords.right;
+		}
+		if ( tile->S->is_water_tile ) {
+			coords.bottom = ts->layers[ Map::LAYER_WATER ].coords.bottom;
+		}
+	}
+	
+	NEWV( mesh, types::RenderMesh, 5, 4 );
+	
+		#define x( _k, _tx, _ty ) \
+		coords._k.z += Map::s_consts.tile_scale_z + 0.01f; \
+		/*Log( (string) "_k=" + #_k + " _tx=" + to_string( _tx ) + " _ty=" + to_string( _ty ) );*/ \
+		auto _k = mesh->AddVertex( coords._k, { \
+			_tx, \
+			_ty \
+		});
+			x( center, 0.5f, 0.5f );
+			x( left, 0.0f, 1.0f );
+			x( top, 0.0f, 0.0f );
+			x( right, 1.0f, 0.0f );
+			x( bottom, 1.0f, 1.0f );
+		#undef x
+
+		#define x( _a, _b, _c ) mesh->AddSurface( { _a, _b, _c } )
+			x( center, left, top );
+			x( center, top, right );
+			x( center, right, bottom );
+			x( center, bottom, left );
+		#undef x
+	mesh->Finalize();
+	
+	NEW( m_tile_selection.actor, actor::InstancedMesh, "TileSelection", mesh );
+		m_tile_selection.actor->SetTexture( m_tile_selection.texture );
+	m_world_scene->AddActor( m_tile_selection.actor );
+}
+
+void World::DeselectTile() {
+	if ( m_tile_selection.actor ) {
+		m_world_scene->RemoveActor( m_tile_selection.actor );
+		DELETE( m_tile_selection.actor );
+		m_tile_selection.actor = nullptr;
+	}
 }
 
 }

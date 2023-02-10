@@ -156,5 +156,12 @@ void Scene::Draw( shader_program::ShaderProgram *shader_program ) {
 	
 }
 
+void Scene::OnResize() {
+	for ( auto& link : m_gl_actors ) {
+		auto *gl_actor = link->GetDstObject<Actor>();
+		gl_actor->OnResize();
+	}
+}
+
 } /* namespace opengl */
 } /* namespace graphics */

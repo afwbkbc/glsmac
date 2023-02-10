@@ -2,7 +2,8 @@
 
 #include "engine/Engine.h"
 
-#include "types/Mesh.h"
+#include "types/RenderMesh.h"
+#include "types/DataMesh.h"
 #include "scene/actor/InstancedMesh.h"
 
 #include "module/Prepare.h"
@@ -129,6 +130,9 @@ Map::Map( Random* random, Scene* scene )
 }
 
 Map::~Map() {
+	if ( m_tile_at_request_id ) {
+		m_actors.terrain->CancelDataRequest( m_tile_at_request_id );
+	}
 	if ( m_actors.terrain ) {
 		m_scene->RemoveActor( m_actors.terrain );
 		DELETE( m_actors.terrain );
@@ -159,11 +163,13 @@ void Map::SetTiles( Tiles* tiles, bool generate_actors ) {
 	}
 }
 
+#ifdef DEBUG
 vector<actor::Mesh*> Map::GetActors() const {
 	return {
 		m_actors.terrain,
 	};
 }
+#endif
 
 void Map::GenerateActors() {
 	ASSERT( m_tiles, "map tiles not set" );
@@ -212,6 +218,7 @@ void Map::GenerateActors() {
 	}
 	
 	m_mesh_terrain->Finalize();
+	m_mesh_terrain_data->Finalize();
 	
 	// update normals where needed
 	for ( auto& cn : m_map_state.copy_normals ) {
@@ -232,6 +239,7 @@ void Map::GenerateActors() {
 		m_actors.terrain->SetTexture( m_textures.terrain );
 		m_actors.terrain->SetPosition( Map::s_consts.map_position );
 		m_actors.terrain->SetAngle( Map::s_consts.map_rotation );
+		m_actors.terrain->SetDataMesh( m_mesh_terrain_data );
 	m_scene->AddActor( m_actors.terrain );
 	
 	m_current_tile = nullptr;
@@ -248,10 +256,14 @@ void Map::InitTextureAndMesh() {
 		( m_map_state.dimensions.y * LAYER_MAX ) * Map::s_consts.pcx_texture_block.dimensions.y
 	);
 	
-	// not deleting mesh because if it exists - it means it's already linked to actor and they are deleted together
-	NEW( m_mesh_terrain, types::Mesh,
-		( ( m_map_state.dimensions.x * LAYER_MAX ) + 1 ) * m_map_state.dimensions.y * 5 / 2, // + 1 for overdraw column
-		( ( m_map_state.dimensions.x * LAYER_MAX ) + 1 ) * m_map_state.dimensions.y * 4 / 2 // + 1 for overdraw column
+	// not deleting meshes because if they exist - it means they are already linked to actor and are deleted together when needed
+	NEW( m_mesh_terrain, types::RenderMesh,
+		( m_map_state.dimensions.x * LAYER_MAX + 1 ) * m_map_state.dimensions.y * 5 / 2, // + 1 for overdraw column
+		( m_map_state.dimensions.x * LAYER_MAX + 1 ) * m_map_state.dimensions.y * 4 / 2 // + 1 for overdraw column
+	);
+	NEW( m_mesh_terrain_data, types::DataMesh, // data mesh has only one layer and no overdraw column
+		m_map_state.dimensions.x * m_map_state.dimensions.y * 5 / 2,
+		m_map_state.dimensions.x * m_map_state.dimensions.y * 4 / 2
 	);
 }
 
@@ -349,6 +361,47 @@ Random* Map::GetRandom() const {
 	return m_random;
 }
 
+const Map::tile_info_t Map::GetTileAt( const size_t tile_x, const size_t tile_y ) const {
+	ASSERT( m_tiles, "tiles not set" );
+	tile_info_t result;
+	return { m_tiles->At( tile_x, tile_y ), GetTileState( tile_x, tile_y ), &m_map_state };
+}
+
+void Map::CancelTileAtRequest() {
+	ASSERT( m_tile_at_request_id, "tileat request not found" );
+	m_actors.terrain->CancelDataRequest( m_tile_at_request_id );
+	m_tile_at_request_id = 0;
+}	
+
+void Map::GetTileAtScreenCoords( const size_t screen_x, const size_t screen_inverse_y ) {
+	if ( m_tile_at_request_id ) {
+		m_actors.terrain->CancelDataRequest( m_tile_at_request_id );
+	}
+	m_tile_at_request_id = m_actors.terrain->GetDataAt( screen_x, screen_inverse_y );
+}
+
+Map::tile_info_t Map::GetTileAtScreenCoordsResult() {
+	if ( m_tile_at_request_id ) {
+		auto result = m_actors.terrain->GetDataResponse( m_tile_at_request_id );
+		if ( result.first ) {
+			m_tile_at_request_id = 0;
+			
+			if ( result.second ) { // some tile was clicked
+				
+				result.second--; // we used +1 increment to differentiate 'tile at 0,0' from 'no tiles'
+				
+				size_t tile_x = result.second % m_map_state.dimensions.x;
+				size_t tile_y = result.second / m_map_state.dimensions.x;
+
+				return GetTileAt( tile_x, tile_y );
+			}
+		}
+	}
+	
+	// no data
+	return { nullptr, nullptr, nullptr };
+}
+
 const Buffer Map::Serialize() const {
 	Buffer buf;
 	
@@ -368,8 +421,7 @@ const Buffer Map::Serialize() const {
 	
 	buf.WriteString( m_textures.terrain->Serialize().ToString() );
 	buf.WriteString( m_mesh_terrain->Serialize().ToString() );
-	
-	
+	buf.WriteString( m_mesh_terrain_data->Serialize().ToString() );
 	
 	return buf;
 }
@@ -519,11 +571,13 @@ void Map::Unserialize( Buffer buf ) {
 	
 	m_textures.terrain->Unserialize( buf.ReadString() );
 	m_mesh_terrain->Unserialize( buf.ReadString() );
+	m_mesh_terrain_data->Unserialize( buf.ReadString() );
 	
 	NEW( m_actors.terrain, actor::InstancedMesh, "MapTerrain", m_mesh_terrain );
 		m_actors.terrain->SetTexture( m_textures.terrain );
 		m_actors.terrain->SetPosition( Map::s_consts.map_position );
 		m_actors.terrain->SetAngle( Map::s_consts.map_rotation );
+		m_actors.terrain->SetDataMesh( m_mesh_terrain_data );
 	m_scene->AddActor( m_actors.terrain );
 	
 }
@@ -612,6 +666,7 @@ void Map::tile_colors_t::Unserialize( Buffer buf ) {
 	right = buf.ReadColor();
 	bottom = buf.ReadColor();
 }
+
 
 }
 }

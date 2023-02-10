@@ -67,20 +67,20 @@ void Orthographic::Initialize() {
 
 void Orthographic::EnableAttributes() const {
 	const size_t tsz = sizeof( types::Mesh::coord_t );
-	const size_t vasz = types::Mesh::VERTEX_SIZE * tsz;
+	const size_t vasz = types::RenderMesh::VERTEX_SIZE * tsz;
 	size_t vaofs = 0;
 	glEnableVertexAttribArray( m_gl_attributes.coord );
-	glVertexAttribPointer( m_gl_attributes.coord, types::Mesh::VERTEX_COORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
-	vaofs += types::Mesh::VERTEX_COORD_SIZE * tsz;
+	glVertexAttribPointer( m_gl_attributes.coord, types::RenderMesh::VERTEX_COORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	vaofs += types::RenderMesh::VERTEX_COORD_SIZE * tsz;
 	glEnableVertexAttribArray( m_gl_attributes.tex_coord );
-	glVertexAttribPointer( m_gl_attributes.tex_coord, types::Mesh::VERTEX_TEXCOORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
-	vaofs += types::Mesh::VERTEX_TEXCOORD_SIZE * tsz;
+	glVertexAttribPointer( m_gl_attributes.tex_coord, types::RenderMesh::VERTEX_TEXCOORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	vaofs += types::RenderMesh::VERTEX_TEXCOORD_SIZE * tsz;
 	glEnableVertexAttribArray( m_gl_attributes.tint );
-	glVertexAttribPointer( m_gl_attributes.tint, types::Mesh::VERTEX_TINT_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
-	vaofs += types::Mesh::VERTEX_TINT_SIZE * tsz;
+	glVertexAttribPointer( m_gl_attributes.tint, types::RenderMesh::VERTEX_TINT_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	vaofs += types::RenderMesh::VERTEX_TINT_SIZE * tsz;
 	glEnableVertexAttribArray( m_gl_attributes.normal );
-	glVertexAttribPointer( m_gl_attributes.normal, types::Mesh::VERTEX_NORMAL_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
-	vaofs += types::Mesh::VERTEX_NORMAL_SIZE * tsz;
+	glVertexAttribPointer( m_gl_attributes.normal, types::RenderMesh::VERTEX_NORMAL_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	vaofs += types::RenderMesh::VERTEX_NORMAL_SIZE * tsz;
 };
 
 void Orthographic::DisableAttributes() const {

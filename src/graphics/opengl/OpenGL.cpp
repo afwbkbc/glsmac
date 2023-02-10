@@ -47,7 +47,9 @@ OpenGL::OpenGL( const string title, const unsigned short viewport_width, const u
 */
 	NEWV( sp_orthographic, shader_program::Orthographic );
 	m_shader_programs.push_back( sp_orthographic );
-	NEWV( r_world, routine::World, sp_orthographic );
+	NEWV( sp_orthographic_data, shader_program::OrthographicData );
+	m_shader_programs.push_back( sp_orthographic_data );
+	NEWV( r_world, routine::World, sp_orthographic, sp_orthographic_data );
 	m_routines.push_back( r_world );
 	
 	NEWV( sp_simple2d, shader_program::Simple2D );
@@ -173,7 +175,7 @@ void OpenGL::Stop() {
 
 void OpenGL::Iterate() {
 	
-	glEnable(GL_DEPTH_TEST);
+	glEnable( GL_DEPTH_TEST );
 	glEnable( GL_BLEND );
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -183,8 +185,8 @@ void OpenGL::Iterate() {
 		(*it)->Iterate();
 	}
 
+	glDisable( GL_DEPTH_TEST );
 	glDisable( GL_BLEND );
-	glDisable(GL_DEPTH_TEST);
 
 	SDL_GL_SwapWindow( m_window );
 
@@ -232,8 +234,12 @@ void OpenGL::RemoveScene( scene::Scene *scene ) {
 	ASSERT( removed, "no matching routine for scene [" + scene->GetName() + "]" );
 }
 
-void OpenGL::UpdateCamera() {
-
+void OpenGL::OnResize() {
+	Graphics::OnResize();
+	
+	for ( auto& r : m_routines ) {
+		r->OnResize();
+	}
 }
 
 void OpenGL::LoadTexture( const types::Texture* texture ) {

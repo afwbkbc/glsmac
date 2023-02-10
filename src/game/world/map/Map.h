@@ -132,8 +132,9 @@ CLASS( Map, Serializable )
 	
 	void SetTiles( Tiles* tiles, bool generate_actors = true );
 	
-	// tmp
+#ifdef DEBUG
 	vector<actor::Mesh*> GetActors() const;
+#endif
 	
 	// order is important (it defines rendering order)
 	enum tile_layer_type_t {
@@ -223,6 +224,10 @@ CLASS( Map, Serializable )
 			tile_vertices_t coords;
 			tile_indices_t indices;
 		} overdraw_column; // need to copy first column after last one to make blending and light compute correctly in instancing
+		struct {
+			tile_vertices_t coords;
+			tile_indices_t indices;
+		} data_mesh;
 		bool is_coastline_corner;
 		bool has_water;
 		const Buffer Serialize() const;
@@ -286,15 +291,30 @@ CLASS( Map, Serializable )
 	
 	Random* GetRandom() const;
 	
+	typedef struct {
+		const Tile* tile;
+		const tile_state_t* ts;
+		const map_state_t* ms;
+	} tile_info_t;
+	const tile_info_t GetTileAt( const size_t tile_x, const size_t tile_y ) const;
+	
+	// tile request stuff
+	void CancelTileAtRequest();
+	void GetTileAtScreenCoords( const size_t screen_x, const size_t screen_inverse_y ); // async, y needs to be upside down
+	tile_info_t GetTileAtScreenCoordsResult();
+	
 	const Buffer Serialize() const;
 	void Unserialize( Buffer buf );
 	
 protected:
 	friend class Finalize;
 	
-	types::Mesh* m_mesh_terrain = nullptr;
+	types::RenderMesh* m_mesh_terrain = nullptr;
+	types::DataMesh* m_mesh_terrain_data = nullptr;
 	
 private:
+	
+	actor::Mesh::data_request_id_t m_tile_at_request_id = 0;
 	
 	tile_state_t* m_tile_states = nullptr;
 	tile_state_t* GetTileState( const size_t x, const size_t y ) const;

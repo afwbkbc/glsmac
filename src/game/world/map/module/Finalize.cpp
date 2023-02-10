@@ -59,10 +59,9 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 		
 		// raise everything on z axis to prevent negative z values ( camera doesn't like it when zoomed in )
 		#define x( _k ) vertices._k.z += Map::s_consts.tile_scale_z;
-
 			do_x();
 		#undef x
-				
+		
 		#define x( _k ) ts->layers[ lt ].indices._k = m_map->m_mesh_terrain->AddVertex( vertices._k, tex_coords._k, tint._k )
 			do_x();
 		#undef x
@@ -70,9 +69,11 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 		#define x( _a, _b, _c ) m_map->m_mesh_terrain->AddSurface( { ts->layers[ lt ].indices._a, ts->layers[ lt ].indices._b, ts->layers[ lt ].indices._c } )
 			do_xs();
 		#undef x
-
+		
 		if ( tile->coord.x == 0 && lt == Map::LAYER_LAND ) {
-			// copy tile to overdraw column
+			
+			// also copy tile to overdraw column
+			
 			auto* layer = &ts->layers[ lt ];
 
 			#define x( _k ) { \
@@ -100,8 +101,49 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 	
 	}
 	
-	#undef do_x
+	// also add to data mesh for click lookups
+	
+	if ( tile->is_water_tile ) {
+		vertices = ts->layers[ Map::LAYER_WATER ].coords;
+	}
+	else {
+		vertices = ts->layers[ Map::LAYER_LAND ].coords;
+		if ( ts->is_coastline_corner ) {
+			if ( tile->W->is_water_tile ) {
+				vertices.left = ts->layers[ Map::LAYER_WATER ].coords.left;
+			}
+			if ( tile->N->is_water_tile ) {
+				vertices.top = ts->layers[ Map::LAYER_WATER ].coords.top;
+			}
+			if ( tile->E->is_water_tile ) {
+				vertices.right = ts->layers[ Map::LAYER_WATER ].coords.right;
+			}
+			if ( tile->S->is_water_tile ) {
+				vertices.bottom = ts->layers[ Map::LAYER_WATER ].coords.bottom;
+			}
+			vertices.center.z = ( vertices.left.z + vertices.top.z + vertices.right.z + vertices.bottom.z ) / 4;
+		}
+	}
+	
+	// raise everything on z axis to prevent negative z values ( camera doesn't like it when zoomed in )
+	#define x( _k ) vertices._k.z += Map::s_consts.tile_scale_z;
+		do_x();
+	#undef x
 
+	// store tile coordinates
+	DataMesh::data_t data = tile->coord.y * ms->dimensions.x + tile->coord.x + 1; // +1 because we need to differentiate 'tile at 0,0' from 'no tiles'
+	
+	#define x( _k ) ts->data_mesh.indices._k = m_map->m_mesh_terrain_data->AddVertex( vertices._k, data )
+		do_x();
+	#undef x
+	
+	#define x( _a, _b, _c ) m_map->m_mesh_terrain_data->AddSurface( { ts->data_mesh.indices._a, ts->data_mesh.indices._b, ts->data_mesh.indices._c } )
+		do_xs();
+	#undef x
+
+	#undef do_x
+	#undef do_xs
+	
 }
 
 }

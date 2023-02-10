@@ -28,13 +28,26 @@ Mesh::~Mesh() {
 
 	glDeleteBuffers( 1, &m_ibo );
 	glDeleteBuffers( 1, &m_vbo );
-
+	
+	if ( m_data.is_allocated ) {
+		glDeleteFramebuffers( 1, &m_data.fbo );
+		glDeleteTextures( 1, &m_data.picking_texture );
+		glDeleteTextures( 1, &m_data.depth_texture );
+		glDeleteBuffers( 1, &m_data.vbo );
+		glDeleteBuffers( 1, &m_data.ibo );
+	}
 }
 
 bool Mesh::ReloadNeeded() {
-	size_t mesh_updated_counter = ((scene::actor::Mesh *)m_actor)->GetMesh()->UpdatedCount();
-	if ( m_update_counter == mesh_updated_counter )
+	auto* actor = (scene::actor::Mesh *) m_actor;
+	size_t mesh_updated_counter = actor->GetMesh()->UpdatedCount();
+	auto *data_mesh = actor->GetDataMesh();
+	if ( data_mesh ) {
+		mesh_updated_counter = max( mesh_updated_counter, data_mesh->UpdatedCount() );
+	}
+	if ( m_update_counter == mesh_updated_counter ) {
 		return false;
+	}
 	m_update_counter = mesh_updated_counter;
 	return true;
 }
@@ -66,6 +79,61 @@ void Mesh::Load() {
 	}
 }
 
+void Mesh::PrepareDataMesh() {
+	auto* actor = (scene::actor::Mesh *) m_actor;
+	const auto *data_mesh = actor->GetDataMesh();
+	if ( data_mesh && !m_data.is_up_to_date ) {
+		if ( !m_data.is_allocated ) {
+			Log( "Initializing data mesh" );
+			glGenFramebuffers( 1, &m_data.fbo );
+			glGenTextures( 1, &m_data.picking_texture );
+			glGenTextures( 1, &m_data.depth_texture );
+			glGenBuffers( 1, &m_data.vbo );
+			glGenBuffers( 1, &m_data.ibo );
+
+			glBindBuffer( GL_ARRAY_BUFFER, m_data.vbo );
+			glBufferData( GL_ARRAY_BUFFER, data_mesh->GetVertexDataSize(), (GLvoid *)ptr( data_mesh->GetVertexData(), 0, data_mesh->GetVertexDataSize() ), GL_STATIC_DRAW );
+
+			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_data.ibo );
+			glBufferData( GL_ELEMENT_ARRAY_BUFFER, data_mesh->GetIndexDataSize(), (GLvoid *)ptr( data_mesh->GetIndexData(), 0, data_mesh->GetIndexDataSize() ), GL_STATIC_DRAW);
+
+			m_data.ibo_size = data_mesh->GetIndexCount();
+
+			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+			glBindBuffer( GL_ARRAY_BUFFER, 0 );
+
+			m_data.is_allocated = true;
+		}
+		
+		size_t w = g_engine->GetGraphics()->GetViewportWidth();
+		size_t h = g_engine->GetGraphics()->GetViewportHeight();
+		
+		Log( "(re)loading data mesh (viewport size: " + to_string( w ) + "x" + to_string( h ) + ")" );
+		
+		glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
+		
+		glBindTexture( GL_TEXTURE_2D, m_data.picking_texture );
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32UI, w, h, 0, GL_RGB_INTEGER, GL_UNSIGNED_INT, NULL );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_data.picking_texture, 0 );
+		glBindTexture( GL_TEXTURE_2D, 0 );
+		
+		glBindTexture( GL_TEXTURE_2D, m_data.depth_texture );
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL );
+		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_data.depth_texture, 0 );
+		glBindTexture( GL_TEXTURE_2D, 0 );
+		
+		GLenum status = glCheckFramebufferStatus( GL_FRAMEBUFFER );
+		ASSERT( status == GL_FRAMEBUFFER_COMPLETE, "FB error, status: " + to_string( status ) );
+		
+		glBindFramebuffer( GL_FRAMEBUFFER, 0 );	
+
+		m_data.is_up_to_date = true;
+	}
+
+}
+
 void Mesh::Unload() {
 	// Log( "Unloading OpenGL actor" );
 
@@ -84,12 +152,28 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 
 	//Log( "Drawing" );
 	
-	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ibo );
-
+	auto* actor = (scene::actor::Mesh*) m_actor;
+	
+	if ( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA ) {
+		if ( !actor->GetDataMesh() || m_data.last_processed_data_request_id == actor->GetLastDataRequestId() ) {
+			return; // nothing to do
+		}
+		PrepareDataMesh();
+		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, m_data.fbo );
+		glDrawBuffer( GL_COLOR_ATTACHMENT0 );
+		glBindBuffer( GL_ARRAY_BUFFER, m_data.vbo );
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_data.ibo );
+		
+		// set clean state
+		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
+	}
+	else {
+		glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ibo );
+	}
+	
 	shader_program->Enable();
 
-	auto* actor = (scene::actor::Mesh*) m_actor;
 	const auto* texture = actor->GetTexture();
 
 	g_engine->GetGraphics()->EnableTexture(texture);
@@ -99,11 +183,19 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 			glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
 			break;
 		}
-		case ( shader_program::ShaderProgram::TYPE_ORTHO ): {
+		case ( shader_program::ShaderProgram::TYPE_ORTHO ):
+		case ( shader_program::ShaderProgram::TYPE_ORTHO_DATA ): {
 			auto* sp = (shader_program::Orthographic *)shader_program;
 			
+			if ( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO ) {
+				auto* light = actor->GetScene()->GetLight();
+				if ( light ) {
+					glUniform3fv( sp->m_gl_uniforms.light_pos, 1, (const GLfloat*)&light->GetPosition() );
+					glUniform4fv( sp->m_gl_uniforms.light_color, 1, (const GLfloat*)&light->GetColor() );
+				}
+			}
+
 			if ( actor->GetType() == scene::Actor::TYPE_INSTANCED_MESH ) {
-				// TODO: fix water transparency artifacts
 				auto* instanced_actor = (scene::actor::InstancedMesh*) m_actor;
 				auto& matrices = instanced_actor->GetWorldMatrices();
 				glUniformMatrix4fv( sp->m_gl_uniforms.world, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
@@ -113,12 +205,6 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 				types::Matrix44 matrix = m_actor->GetWorldMatrix();
 				glUniformMatrix4fv( sp->m_gl_uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
 				glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
-			}
-
-			auto* light = actor->GetScene()->GetLight();
-			if ( light ) {
-				glUniform3fv( sp->m_gl_uniforms.light_pos, 1, (const GLfloat*)&light->GetPosition() );
-				glUniform4fv( sp->m_gl_uniforms.light_color, 1, (const GLfloat*)&light->GetColor() );
 			}
 
 			break;
@@ -135,14 +221,57 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 			ASSERT( false, "shader program type " + to_string( shader_program->GetType() ) + " not implemented" );
 		}
 	}
-
+	
 	g_engine->GetGraphics()->DisableTexture();
-
+	
+	if ( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA ) {
+		
+		glDrawBuffer( GL_NONE );
+		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
+		
+		glBindFramebuffer( GL_READ_FRAMEBUFFER, m_data.fbo );
+		glReadBuffer( GL_COLOR_ATTACHMENT0 );
+	
+		auto* requests = actor->GetDataRequests();
+		for ( auto& r : *requests ) {
+			if ( !r.second.is_processed ) {
+				// Log( "Processing data request " + to_string( r.first ) );
+				r.second.result = GetDataAt( r.second.screen_x, r.second.screen_inverse_y );
+				r.second.is_processed = true;
+			}
+		}
+		
+		glReadBuffer( GL_NONE );
+		glBindFramebuffer( GL_READ_FRAMEBUFFER, 0 );
+	
+		// processed all pending requests
+		m_data.last_processed_data_request_id = actor->GetLastDataRequestId();
+		
+	}
+	
 	shader_program->Disable();
-
+	
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	
+}
+
+void Mesh::OnResize() {
+	if ( m_data.is_allocated ) {
+		m_data.is_up_to_date = false; // need to recreate fbo for new window size
+	}
+}
+
+DataMesh::data_t Mesh::GetDataAt( const size_t x, const size_t y ) {
+	ASSERT( m_data.is_allocated, "mesh data not allocated" );
+	
+	DataMesh::data_t data = 0;
+	
+	glReadPixels( x, y, 1, 1, GL_RGB_INTEGER, GL_UNSIGNED_INT, &data );
+	
+	ASSERT( !glGetError(), "Error reading data pixel" );
+	
+	return data;
 }
 
 } /* namespace opengl */

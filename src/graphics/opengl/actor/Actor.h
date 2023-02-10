@@ -29,6 +29,9 @@ CLASS( Actor, base::Base )
 	}
 	const Vec3& GetPosition() const;
 	void SetPosition( const Vec3& position );
+	
+	virtual void OnResize() {};
+	
 protected:
 	actor::Actor *m_actor;
 	

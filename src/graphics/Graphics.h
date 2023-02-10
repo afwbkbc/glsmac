@@ -48,7 +48,7 @@ CLASS( Graphics, base::Module )
 protected:
 	
 	// make sure to call this at initialization and after every resize
-	void OnResize();
+	virtual void OnResize();
 	
 private:
 	float m_aspect_ratio = 0;

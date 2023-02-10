@@ -14,9 +14,6 @@ void Overlay::Stop() {
 
 void Overlay::Iterate() {
 
-	//glEnable( GL_BLEND );
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it )
 		(*it)->Update();
 
@@ -25,8 +22,6 @@ void Overlay::Iterate() {
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it ) {
 		(*it)->Draw( m_shader_program );
 	}
-
-	//glDisable( GL_BLEND );
 
 }
 

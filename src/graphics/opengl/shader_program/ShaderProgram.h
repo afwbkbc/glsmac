@@ -13,6 +13,7 @@ CLASS( ShaderProgram, base::Module )
 	enum type_t {
 		TYPE_SIMPLE2D,
 		TYPE_ORTHO,
+		TYPE_ORTHO_DATA,
 		TYPE_FONT,
 		TYPE_PERSP,
 		TYPE_SKYBOX,

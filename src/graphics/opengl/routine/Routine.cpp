@@ -47,8 +47,14 @@ bool Routine::RemoveScene( scene::Scene *scene ) {
 }
 
 Routine::~Routine() {
-	for ( auto it = m_gl_scenes.begin() ; it != m_gl_scenes.end() ; ++it ) {
-		DELETE( *it );
+	for ( auto& s : m_gl_scenes ) {
+		DELETE( s );
+	}
+}
+
+void Routine::OnResize() {
+	for ( auto& s : m_gl_scenes ) {
+		s->OnResize();
 	}
 }
 

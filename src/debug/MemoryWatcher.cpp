@@ -491,7 +491,7 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 	if ( border != 0 ) {
 		throw runtime_error( "glTexImage2D unknown border " + to_string(border) + " @" + source );
 	}
-	if ( type != GL_UNSIGNED_BYTE ) {
+	if ( type != GL_UNSIGNED_BYTE && type != GL_UNSIGNED_INT && type != GL_FLOAT ) {
 		throw runtime_error( "glTexImage2D unknown type " + to_string(type) + " @" + source );
 	}
 	if ( m_opengl.current_texture == 0 ) {
@@ -508,6 +508,14 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 			internalbpp = 4;
 			break;
 		}
+		case GL_RGB32UI: {
+			internalbpp = 4;
+			break;
+		}
+		case GL_DEPTH_COMPONENT: {
+			internalbpp = 1;
+			break;
+		}
 		default:
 			throw runtime_error( "glTexImage2D unknown internal format " + to_string(internalformat) + " @" + source );
 	}
@@ -518,6 +526,14 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 		}
 		case GL_RGBA: {
 			bpp = 4;
+			break;
+		}
+		case GL_RGB_INTEGER: {
+			bpp = 4;
+			break;
+		}
+		case GL_DEPTH_COMPONENT: {
+			bpp = 1;
 			break;
 		}
 		default:
