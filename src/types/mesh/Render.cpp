@@ -82,9 +82,8 @@ void Render::Finalize() {
 }
 
 void Render::UpdateNormals() {
-	Log( "Updating normals");
+	//Log( "Updating normals");
 	
-	// update normals
 	const surface_t* surface;
 	Vec3 *a, *b, *c;
 	Vec3 ab, ac, n;

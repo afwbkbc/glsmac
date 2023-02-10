@@ -349,6 +349,14 @@ Map::tile_state_t* Map::GetTileState( const size_t x, const size_t y ) const {
 	return &m_tile_states[ y * m_map_state.dimensions.x + x / 2 ];
 }
 
+Map::tile_state_t* Map::GetTileState( const Tile* tile ) const {
+	return GetTileState( tile->coord.x, tile->coord.y );
+}
+
+const Map::map_state_t* Map::GetMapState() const {
+	return &m_map_state;
+}
+
 const size_t Map::GetWidth() const {
 	return m_map_state.dimensions.x;
 }
@@ -463,6 +471,9 @@ const Buffer Map::tile_state_t::Serialize() const {
 	
 	buf.WriteString( overdraw_column.coords.Serialize().ToString() );
 	buf.WriteString( overdraw_column.indices.Serialize().ToString() );
+	
+	buf.WriteString( data_mesh.coords.Serialize().ToString() );
+	buf.WriteString( data_mesh.indices.Serialize().ToString() );
 	
 	buf.WriteBool( is_coastline_corner );
 	buf.WriteBool( has_water );
@@ -615,6 +626,9 @@ void Map::tile_state_t::Unserialize( Buffer buf ) {
 	
 	overdraw_column.coords.Unserialize( buf.ReadString() );
 	overdraw_column.indices.Unserialize( buf.ReadString() );
+	
+	data_mesh.coords.Unserialize( buf.ReadString() );
+	data_mesh.indices.Unserialize( buf.ReadString() );
 	
 	is_coastline_corner = buf.ReadBool();
 	has_water = buf.ReadBool();

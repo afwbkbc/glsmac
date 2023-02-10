@@ -306,6 +306,10 @@ CLASS( Map, Serializable )
 	const Buffer Serialize() const;
 	void Unserialize( Buffer buf );
 	
+	tile_state_t* GetTileState( const size_t x, const size_t y ) const;
+	tile_state_t* GetTileState( const Tile* tile ) const;
+	const map_state_t* GetMapState() const;
+	
 protected:
 	friend class Finalize;
 	
@@ -317,7 +321,6 @@ private:
 	scene::actor::Mesh::data_request_id_t m_tile_at_request_id = 0;
 	
 	tile_state_t* m_tile_states = nullptr;
-	tile_state_t* GetTileState( const size_t x, const size_t y ) const;
 	
 	map_state_t m_map_state;
 	

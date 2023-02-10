@@ -111,11 +111,6 @@ private:
 	void SelectTile( Map::tile_info_t tileinfo );
 	void DeselectTile();
 	
-	/*struct {
-		types::Texture* texture = nullptr;
-		actor::Mesh* actor = nullptr;
-	} m_tile_selection = {};*/
-	
 	struct {
 		actor::TileSelection* tile_selection = nullptr;
 	} m_actors;
@@ -123,6 +118,8 @@ private:
 	unordered_set< actor::Actor* > m_actors_vec = {};
 	void AddActor( actor::Actor* actor );
 	void RemoveActor( actor::Actor* actor );
+	
+	void CenterMapAtTile( const Tile* tile, const Map::tile_state_t* ts );
 };
 
 }

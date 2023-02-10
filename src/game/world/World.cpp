@@ -277,6 +277,7 @@ void World::Iterate() {
 	auto tileinfo = m_map->GetTileAtScreenCoordsResult();
 	if ( tileinfo.tile ) {
 		SelectTile( tileinfo );
+		CenterMapAtTile( tileinfo.tile, tileinfo.ts );
 	}
 }
 
@@ -460,6 +461,14 @@ void World::RemoveActor( actor::Actor* actor ) {
 	m_actors_vec.erase( it );
 	m_world_scene->RemoveActor( actor );
 	DELETE( actor );
+}
+
+void World::CenterMapAtTile( const Tile* tile, const Map::tile_state_t* ts ) {
+
+	m_camera_position.x = - ts->coord.x / m_viewport.viewport_aspect_ratio * m_camera_position.z;
+	m_camera_position.y = - ( ts->coord.y - max( 0.0f, Map::s_consts.clampers.elevation_to_vertex_z.Clamp( ts->elevations.center ) ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f;
+	
+	UpdateCameraPosition();
 }
 
 }

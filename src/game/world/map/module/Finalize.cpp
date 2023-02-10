@@ -84,11 +84,11 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 				do_x();
 			#undef x
 
-			Log( (string) "Copying land layer for overdraw from " +
+			/*Log( (string) "Copying land layer for overdraw from " +
 				"[ ~" + to_string( vertices.center.x ) + ", ~" + to_string( vertices.center.y ) + " ]" +
 				" to " +
 				"[ ~" + to_string( ts->overdraw_column.coords.center.x ) + ", ~" + to_string( ts->overdraw_column.coords.center.y ) + " ]"
-			);
+			);*/
 
 			#define x( _k ) ts->overdraw_column.indices._k = m_map->m_mesh_terrain->AddVertex( ts->overdraw_column.coords._k, tex_coords._k, tint._k )
 				do_x();

@@ -15,7 +15,7 @@ void Prepare::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 	ts->tex_coord.y2 = ts->tex_coord.y1 + Map::s_consts.pcx_texture_block.dimensions.y;
 	ts->tex_coord.x = ts->tex_coord.x1 + Map::s_consts.pcx_texture_block.radius.x;
 	ts->tex_coord.y = ts->tex_coord.y1 + Map::s_consts.pcx_texture_block.radius.y;
-			
+	
 	ts->elevations.left = *tile->elevation.left;
 	ts->elevations.top = *tile->elevation.top;
 	ts->elevations.right = *tile->elevation.right;

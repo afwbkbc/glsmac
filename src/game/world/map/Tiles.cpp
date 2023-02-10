@@ -205,7 +205,7 @@ Tile::elevation_t* Tiles::TopRightVertexAt( const size_t x ) const {
 
 void Tiles::Validate() {
 	if ( !m_is_validated ) {
-		Log( "Validating map" );
+		//Log( "Validating map" );
 		
 		Tile* tile;
 		for ( auto y = 0 ; y < m_height ; y++ ) {
