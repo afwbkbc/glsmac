@@ -3,7 +3,7 @@
 namespace scene {
 namespace actor {
 
-InstancedMesh::InstancedMesh( const std::string &name, const types::RenderMesh *mesh ) : Mesh( name, mesh, TYPE_INSTANCED_MESH ) {
+InstancedMesh::InstancedMesh( const std::string &name, const types::mesh::Render *mesh ) : Mesh( name, mesh, TYPE_INSTANCED_MESH ) {
 	
 }
 

@@ -262,10 +262,10 @@ void Mesh::OnResize() {
 	}
 }
 
-DataMesh::data_t Mesh::GetDataAt( const size_t x, const size_t y ) {
+mesh::Data::data_t Mesh::GetDataAt( const size_t x, const size_t y ) {
 	ASSERT( m_data.is_allocated, "mesh data not allocated" );
 	
-	DataMesh::data_t data = 0;
+	mesh::Data::data_t data = 0;
 	
 	glReadPixels( x, y, 1, 1, GL_RGB_INTEGER, GL_UNSIGNED_INT, &data );
 	

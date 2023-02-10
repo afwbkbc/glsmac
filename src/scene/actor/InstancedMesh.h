@@ -11,7 +11,7 @@ namespace scene {
 namespace actor {
 
 CLASS( InstancedMesh, Mesh )
-	InstancedMesh( const std::string &name, const types::RenderMesh *mesh );
+	InstancedMesh( const std::string &name, const types::mesh::Render *mesh );
 	~InstancedMesh();
 	
 	typedef vector< types::Matrix44 > world_matrices_t;

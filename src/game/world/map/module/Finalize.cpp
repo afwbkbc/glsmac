@@ -131,7 +131,7 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 	#undef x
 
 	// store tile coordinates
-	DataMesh::data_t data = tile->coord.y * ms->dimensions.x + tile->coord.x + 1; // +1 because we need to differentiate 'tile at 0,0' from 'no tiles'
+	mesh::Data::data_t data = tile->coord.y * ms->dimensions.x + tile->coord.x + 1; // +1 because we need to differentiate 'tile at 0,0' from 'no tiles'
 	
 	#define x( _k ) ts->data_mesh.indices._k = m_map->m_mesh_terrain_data->AddVertex( vertices._k, data )
 		do_x();

@@ -4,10 +4,11 @@
 
 #include <vector>
 
-#include "Vec3.h"
-#include "Color.h"
+#include "../Vec3.h"
+#include "../Color.h"
 
 namespace types {
+namespace mesh {
 
 CLASS( Mesh, Serializable )
 	
@@ -67,4 +68,5 @@ protected:
 	size_t m_update_counter = 0;
 };
 
+}
 }

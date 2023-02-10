@@ -41,7 +41,7 @@ protected:
 		actor::Mesh::data_request_id_t last_processed_data_request_id = 0;
 	} m_data = {};
 	
-	DataMesh::data_t GetDataAt( const size_t x, const size_t y );
+	mesh::Data::data_t GetDataAt( const size_t x, const size_t y );
 
 };
 

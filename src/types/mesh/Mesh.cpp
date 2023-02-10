@@ -9,6 +9,7 @@ using namespace std;
 using namespace util;
 
 namespace types {
+namespace mesh {
 
 Mesh::Mesh( const uint8_t vertex_size, const size_t vertex_count, const size_t surface_count )
 	: VERTEX_SIZE( vertex_size )
@@ -141,4 +142,5 @@ void Mesh::Unserialize( Buffer buf ) {
 	Update();
 }
 
+}
 }

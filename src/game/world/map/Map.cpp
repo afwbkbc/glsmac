@@ -2,8 +2,8 @@
 
 #include "engine/Engine.h"
 
-#include "types/RenderMesh.h"
-#include "types/DataMesh.h"
+#include "types/mesh/Render.h"
+#include "types/mesh/Data.h"
 #include "scene/actor/InstancedMesh.h"
 
 #include "module/Prepare.h"
@@ -257,11 +257,11 @@ void Map::InitTextureAndMesh() {
 	);
 	
 	// not deleting meshes because if they exist - it means they are already linked to actor and are deleted together when needed
-	NEW( m_mesh_terrain, types::RenderMesh,
+	NEW( m_mesh_terrain, types::mesh::Render,
 		( m_map_state.dimensions.x * LAYER_MAX + 1 ) * m_map_state.dimensions.y * 5 / 2, // + 1 for overdraw column
 		( m_map_state.dimensions.x * LAYER_MAX + 1 ) * m_map_state.dimensions.y * 4 / 2 // + 1 for overdraw column
 	);
-	NEW( m_mesh_terrain_data, types::DataMesh, // data mesh has only one layer and no overdraw column
+	NEW( m_mesh_terrain_data, types::mesh::Data, // data mesh has only one layer and no overdraw column
 		m_map_state.dimensions.x * m_map_state.dimensions.y * 5 / 2,
 		m_map_state.dimensions.x * m_map_state.dimensions.y * 4 / 2
 	);

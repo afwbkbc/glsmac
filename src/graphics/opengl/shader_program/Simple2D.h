@@ -36,4 +36,3 @@ protected:
 } /* namespace graphics */
 
 #include "../actor/Mesh.h"
-

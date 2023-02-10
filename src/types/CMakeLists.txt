@@ -10,9 +10,6 @@ SET(SRC ${SRC}
 	${PWD}/Vec4.cpp
 	${PWD}/Matrix44.cpp
 	${PWD}/Texture.cpp
-	${PWD}/Mesh.cpp
-	${PWD}/RenderMesh.cpp
-	${PWD}/DataMesh.cpp
 	${PWD}/Sound.cpp
 	${PWD}/Packet.cpp
 	${PWD}/ThreadCall.cpp

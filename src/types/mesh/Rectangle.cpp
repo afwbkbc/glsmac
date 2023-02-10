@@ -5,13 +5,13 @@ namespace types {
 namespace mesh {
 
 Rectangle::Rectangle()
-	: RenderMesh( 4, 2 )
+	: Simple( 4, 2 )
 {
 	Clear();
 }
 
 Rectangle::Rectangle( const Vec2<Mesh::coord_t> &top_left, const Vec2<Mesh::coord_t> &bottom_right, const coord_t z )
-	: RenderMesh( 4, 2 )
+	: Simple( 4, 2 )
 {
 	Clear();
 	SetCoords( top_left, bottom_right, z );

@@ -5,7 +5,7 @@
 #include "../Settings.h"
 
 #include "types/Texture.h"
-#include "types/RenderMesh.h"
+#include "types/mesh/Render.h"
 #include "scene/actor/Mesh.h"
 #include "scene/Scene.h"
 #include "util/Clamper.h"

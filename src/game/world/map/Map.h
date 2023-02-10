@@ -156,11 +156,11 @@ CLASS( Map, Serializable )
 	} tile_vertices_t;
 
 	typedef struct {
-		types::Mesh::index_t center;
-		types::Mesh::index_t left;
-		types::Mesh::index_t right;
-		types::Mesh::index_t top;
-		types::Mesh::index_t bottom;
+		types::mesh::Mesh::index_t center;
+		types::mesh::Mesh::index_t left;
+		types::mesh::Mesh::index_t right;
+		types::mesh::Mesh::index_t top;
+		types::mesh::Mesh::index_t bottom;
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
 	} tile_indices_t;
@@ -264,8 +264,8 @@ CLASS( Map, Serializable )
 		vector< copy_from_after_t > copy_from_after;
 
 		// TODO: refactor this
-		vector< pair< types::Mesh::index_t*, types::Mesh::index_t* > > copy_normals;
-		unordered_map< types::Mesh::index_t*, pair< Vec2< size_t >, Texture::add_mode_t > > need_normals;
+		vector< pair< types::mesh::Mesh::index_t*, types::mesh::Mesh::index_t* > > copy_normals;
+		unordered_map< types::mesh::Mesh::index_t*, pair< Vec2< size_t >, Texture::add_mode_t > > need_normals;
 		
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
@@ -309,8 +309,8 @@ CLASS( Map, Serializable )
 protected:
 	friend class Finalize;
 	
-	types::RenderMesh* m_mesh_terrain = nullptr;
-	types::DataMesh* m_mesh_terrain_data = nullptr;
+	types::mesh::Render* m_mesh_terrain = nullptr;
+	types::mesh::Data* m_mesh_terrain_data = nullptr;
 	
 private:
 	

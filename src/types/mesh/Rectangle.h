@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../RenderMesh.h"
+#include "Simple.h"
 
 namespace types {
 namespace mesh {
 
-CLASS( Rectangle, RenderMesh )
+CLASS( Rectangle, Simple )
 	Rectangle ();
 	Rectangle( const Vec2<Mesh::coord_t> &top_left, const Vec2<Mesh::coord_t> &bottom_right, const coord_t z );
 	

@@ -41,14 +41,14 @@ void OrthographicData::Initialize() {
 };
 
 void OrthographicData::EnableAttributes() const {
-	const size_t tsz = sizeof( types::DataMesh::coord_t );
-	const size_t vasz = types::DataMesh::VERTEX_SIZE * tsz;
+	const size_t tsz = sizeof( types::mesh::Data::coord_t );
+	const size_t vasz = types::mesh::Data::VERTEX_SIZE * tsz;
 	size_t vaofs = 0;
 	glEnableVertexAttribArray( m_gl_attributes.coord );
-	glVertexAttribPointer( m_gl_attributes.coord, types::DataMesh::VERTEX_COORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
-	vaofs += types::DataMesh::VERTEX_COORD_SIZE * tsz;
+	glVertexAttribPointer( m_gl_attributes.coord, types::mesh::Data::VERTEX_COORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	vaofs += types::mesh::Data::VERTEX_COORD_SIZE * tsz;
 	glEnableVertexAttribArray( m_gl_attributes.data );
-	glVertexAttribPointer( m_gl_attributes.data, types::DataMesh::VERTEX_DATA_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	glVertexAttribPointer( m_gl_attributes.data, types::mesh::Data::VERTEX_DATA_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
 };
 
 void OrthographicData::DisableAttributes() const {

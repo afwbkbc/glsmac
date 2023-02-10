@@ -435,7 +435,7 @@ void World::SelectTile( Map::tile_info_t tileinfo ) {
 		}
 	}
 	
-	NEWV( mesh, types::RenderMesh, 5, 4 );
+	NEWV( mesh, types::mesh::Render, 5, 4 );
 	
 		#define x( _k, _tx, _ty ) \
 		coords._k.z += Map::s_consts.tile_scale_z + 0.01f; \
