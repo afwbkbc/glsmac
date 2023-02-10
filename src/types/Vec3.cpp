@@ -17,7 +17,7 @@ void Vec3::Rotate(const DATATYPE angle,const Vec3 axe) {
 	cq.Conjugate();
 	cq.Normalize();
 	rq=rq*(*this)*cq;
-	this->Set(rq.x,rq.y,rq.z);
+	Set(rq.x,rq.y,rq.z);
 };
 
 #undef DATATYPE

@@ -164,7 +164,7 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 		glBindBuffer( GL_ARRAY_BUFFER, m_data.vbo );
 		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_data.ibo );
 		
-		// set clean state
+		// reset framebuffer to clean state
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
 	}
 	else {
@@ -185,13 +185,20 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 		}
 		case ( shader_program::ShaderProgram::TYPE_ORTHO ):
 		case ( shader_program::ShaderProgram::TYPE_ORTHO_DATA ): {
-			auto* sp = (shader_program::Orthographic *)shader_program;
+			auto* sp = (shader_program::Orthographic *)shader_program; // TODO: make base class for ortho and ortho_data
 			
+			// uniforms apply only to render mesh
 			if ( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO ) {
+				
 				auto* light = actor->GetScene()->GetLight();
 				if ( light ) {
 					glUniform3fv( sp->uniforms.light_pos, 1, (const GLfloat*)&light->GetPosition() );
 					glUniform4fv( sp->uniforms.light_color, 1, (const GLfloat*)&light->GetColor() );
+				}
+				auto flags = actor->GetRenderFlags();
+				glUniform1ui( sp->uniforms.flags, flags );
+				if ( flags & actor::Mesh::RF_USE_TINT ) {
+					glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&actor->GetTintColor() );
 				}
 			}
 

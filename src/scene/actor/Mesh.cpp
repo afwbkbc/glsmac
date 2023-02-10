@@ -34,6 +34,14 @@ const Mesh::render_flag_t Mesh::GetRenderFlags() const {
 	return m_render_flags;
 }
 
+void Mesh::SetTintColor( const Color tint_color ) {
+	m_tint_color = tint_color;
+}
+
+const Color& Mesh::GetTintColor() {
+	return m_tint_color;
+}
+
 const mesh::Data* Mesh::GetDataMesh() const {
 	return m_data_mesh;
 }

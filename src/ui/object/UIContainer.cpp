@@ -223,11 +223,11 @@ void UIContainer::UnblockEvents() {
 
 
 const string UIContainer::Subclass( const string& class_name ) const {
-	//if (this->m_style_class.empty()) {
+	//if (m_style_class.empty()) {
 		return "";
 	/*}
 	else {
-		return this->m_style_class + class_name;
+		return m_style_class + class_name;
 	}*/
 }
 

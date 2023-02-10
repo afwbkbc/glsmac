@@ -5,7 +5,7 @@ namespace opengl {
 namespace shader_program {
 
 void Simple2D::AddShaders() {
-	this->AddShader( GL_VERTEX_SHADER, "#version 130 \n\
+	AddShader( GL_VERTEX_SHADER, "#version 130 \n\
 \
 in vec3 aCoord; \
 in vec2 aTexCoord; \
@@ -18,7 +18,7 @@ void main(void) { \
 \
 ");
 
-	this->AddShader( GL_FRAGMENT_SHADER, "#version 130 \n\
+	AddShader( GL_FRAGMENT_SHADER, "#version 130 \n\
 \
 in vec2 texpos; \
 uniform sampler2D uTexture; \
@@ -33,9 +33,9 @@ void main(void) { \
 }
 
 void Simple2D::Initialize() {
-	attributes.tex_coord = this->GetAttributeLocation( "aTexCoord" );
-	attributes.coord = this->GetAttributeLocation( "aCoord" );
-	uniforms.texture = this->GetUniformLocation( "uTexture" );
+	attributes.tex_coord = GetAttributeLocation( "aTexCoord" );
+	attributes.coord = GetAttributeLocation( "aCoord" );
+	uniforms.texture = GetUniformLocation( "uTexture" );
 };
 
 void Simple2D::EnableAttributes() const {

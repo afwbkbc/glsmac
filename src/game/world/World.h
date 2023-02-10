@@ -2,6 +2,8 @@
 
 #include "base/Task.h"
 
+#include <unordered_set>
+
 #include "../Settings.h"
 
 #include "scene/Scene.h"
@@ -117,6 +119,10 @@ private:
 	struct {
 		actor::TileSelection* tile_selection = nullptr;
 	} m_actors;
+	// some additional management of world actors such as calling Iterate()
+	unordered_set< actor::Actor* > m_actors_vec = {};
+	void AddActor( actor::Actor* actor );
+	void RemoveActor( actor::Actor* actor );
 };
 
 }

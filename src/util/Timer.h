@@ -21,7 +21,11 @@ CLASS( Timer, Util )
 
 	void Start();
 	void Stop();
+	
+	// use if ( timer.Ticked() ) { ... } to check
 	void SetTimeout(const size_t ms);
+	
+	// use while ( timer.Ticked() ) { ... } to check because it can tick multiple times per iteration ( for example if FPS is low )
 	void SetInterval(const size_t ms);
 
 	bool Running();

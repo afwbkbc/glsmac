@@ -5,7 +5,7 @@ namespace opengl {
 namespace shader_program {
 
 void Font::AddShaders() {
-	this->AddShader( GL_VERTEX_SHADER, "#version 130 \n\
+	AddShader( GL_VERTEX_SHADER, "#version 130 \n\
 \
 in vec4 aCoord; \
 out vec2 aTexCoord; \
@@ -18,7 +18,7 @@ void main(void) { \
 \
 ");
 
-	this->AddShader( GL_FRAGMENT_SHADER, "#version 130 \n\
+	AddShader( GL_FRAGMENT_SHADER, "#version 130 \n\
 \
 in vec2 aTexCoord; \
 uniform sampler2D uTexture; \
@@ -34,10 +34,10 @@ void main(void) { \
 }
 
 void Font::Initialize() {
-	uniforms.texture = this->GetUniformLocation( "uTexture" );
-	uniforms.color = this->GetUniformLocation( "uColor" );
-	uniforms.z_index = this->GetUniformLocation( "uZIndex" );
-	attributes.coord = this->GetAttributeLocation( "aCoord" );
+	uniforms.texture = GetUniformLocation( "uTexture" );
+	uniforms.color = GetUniformLocation( "uColor" );
+	uniforms.z_index = GetUniformLocation( "uZIndex" );
+	attributes.coord = GetAttributeLocation( "aCoord" );
 };
 
 void Font::EnableAttributes() const {

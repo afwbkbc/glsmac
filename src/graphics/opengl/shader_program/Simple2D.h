@@ -17,12 +17,12 @@ protected:
 	friend class opengl::Image;
 
 	struct {
-		GLint texture;
+		GLuint texture;
 	} uniforms;
 
 	struct {
-		GLint coord;
-		GLint tex_coord;
+		GLuint coord;
+		GLuint tex_coord;
 	} attributes;
 
 	void AddShaders();

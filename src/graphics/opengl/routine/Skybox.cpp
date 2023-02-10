@@ -21,7 +21,7 @@ void Skybox::Start() {
 	uint16_t target = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
 	//Texture *texture2d;
 	for (uint8_t i=0;i<6;i++) { // experimental, we assume GL_TEXTURE_CUBE_MAP_* are sequential
-		//texture2d=this->mTexture->mTextures[i];
+		//texture2d=mTexture->mTextures[i];
 
 		size_t width = 512;
 		size_t height = 512;

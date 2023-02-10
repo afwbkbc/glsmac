@@ -7,7 +7,7 @@ namespace opengl {
 namespace shader_program {
 
 void World::AddShaders() {
-	this->AddShader( GL_VERTEX_SHADER, "#version 130 \n\
+	AddShader( GL_VERTEX_SHADER, "#version 130 \n\
 \
 in vec3 aPosition; \
 in vec2 aTexCoord; \
@@ -24,7 +24,7 @@ void main() \
 } \
 ");
 
-	this->AddShader( GL_FRAGMENT_SHADER, "#version 130 \n\
+	AddShader( GL_FRAGMENT_SHADER, "#version 130 \n\
 const vec3 uFogColor = vec3(1., 1., 1.);\
 uniform vec3 uCamPos;\
 in vec2 TexCoord0; \
@@ -63,20 +63,20 @@ void main() \
  */
 
 void World::Initialize() {
-	uniforms.world = this->GetUniformLocation("uWorld");
-	uniforms.light_color = this->GetUniformLocation( "uLightA.Color" );
-	uniforms.light_intensity = this->GetUniformLocation( "uLightA.Intensity" );
-	uniforms.campos = this->GetUniformLocation("uCamPos");
-	//this->mUSampler=this->GetUniformLocation("uSampler");
-	attributes.position = this->GetAttributeLocation("aPosition");
-//	attributes.tex_coord = this->GetAttributeLocation("aTexCoord");
+	uniforms.world = GetUniformLocation("uWorld");
+	uniforms.light_color = GetUniformLocation( "uLightA.Color" );
+	uniforms.light_intensity = GetUniformLocation( "uLightA.Intensity" );
+	uniforms.campos = GetUniformLocation("uCamPos");
+	//mUSampler=GetUniformLocation("uSampler");
+	attributes.position = GetAttributeLocation("aPosition");
+//	attributes.tex_coord = GetAttributeLocation("aTexCoord");
 };
 
 void World::EnableAttributes() const {
 	glEnableVertexAttribArray( attributes.position );
 	glVertexAttribPointer( attributes.position, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)0 );
-	//glEnableVertexAttribArray(this->mATexCoord);
-	//glVertexAttribPointer( this->mATexCoord, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)sizeof(OpenGLVec3));
+	//glEnableVertexAttribArray(mATexCoord);
+	//glVertexAttribPointer( mATexCoord, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)sizeof(OpenGLVec3));
 };
 
 void World::DisableAttributes() const {
@@ -90,7 +90,7 @@ types::Matrix44 World::GetWorldMatrix() {
 	projection_matrix.ProjectionPerspective( (float)g_engine->GetGraphics()->GetViewportWidth() / g_engine->GetGraphics()->GetViewportHeight(), 90, 0.01, 100);
 
 	types::Vec3 target, up;
-	//this->CalculateTargetUp(angle,&target,&up);
+	//CalculateTargetUp(angle,&target,&up);
 	types::Vec3 axis(0.0f,1.0f,0.0f);
 	types::Vec3 view(1.0f,0.0f,0.0f);
 	view.Rotate( 45.0, axis );

@@ -13,7 +13,7 @@ void ShaderProgram::Start() {
 	m_gl_shader_program = glCreateProgram();
 	ASSERT( m_gl_shader_program, "Unable to create shader program!" );
 
-	this->AddShaders();
+	AddShaders();
 
 	glLinkProgram( m_gl_shader_program );
 
@@ -89,7 +89,7 @@ GLint ShaderProgram::GetAttributeLocation( const std::string name ) {
 void ShaderProgram::Enable() {
 	if ( !m_enabled ) {
 
-		this->EnableAttributes();
+		EnableAttributes();
 
 		glUseProgram( m_gl_shader_program );
 
@@ -100,7 +100,7 @@ void ShaderProgram::Enable() {
 void ShaderProgram::Disable() {
 	if ( m_enabled ) {
 
-		this->DisableAttributes();
+		DisableAttributes();
 
 		glUseProgram(0);
 
@@ -110,6 +110,10 @@ void ShaderProgram::Disable() {
 
 void ShaderProgram::BindAttribLocation( GLuint index,const std::string name ) {
 	glBindAttribLocation( m_gl_shader_program, index, name.c_str() );
+}
+
+const string ShaderProgram::S_HasFlag( const string& var, const GLuint flag ) const {
+	return "( ( " + var + " & uint( " + to_string( flag ) + " ) ) == uint( " + to_string( flag ) + " ) )";
 }
 
 } /* namespace shader_program */

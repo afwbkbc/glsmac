@@ -10,6 +10,8 @@ CLASS( Actor, scene::actor::InstancedMesh )
 	
 	Actor( const string& name );
 	
+	virtual void Iterate() {}
+
 };
 
 }

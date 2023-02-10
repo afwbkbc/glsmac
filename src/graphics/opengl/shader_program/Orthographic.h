@@ -19,17 +19,19 @@ protected:
 	friend class opengl::Image;
 
 	struct {
-		GLint texture;
-		GLint world;
-		GLint light_pos;
-		GLint light_color;
+		GLuint texture;
+		GLuint world;
+		GLuint light_pos;
+		GLuint light_color;
+		GLuint flags;
+		GLuint tint_color;
 	} uniforms;
 
 	struct {
-		GLint coord;
-		GLint tex_coord;
-		GLint tint;
-		GLint normal;
+		GLuint coord;
+		GLuint tex_coord;
+		GLuint tint_color;
+		GLuint normal;
 	} attributes;
 
 	void AddShaders();

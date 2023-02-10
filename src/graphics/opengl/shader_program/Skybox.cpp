@@ -5,7 +5,7 @@ namespace opengl {
 namespace shader_program {
 
 void Skybox::AddShaders() {
-	this->AddShader( GL_VERTEX_SHADER, "#version 130 \n\
+	AddShader( GL_VERTEX_SHADER, "#version 130 \n\
 \
 in vec3 aVertex; \
 out vec3 texCoord0; \
@@ -18,7 +18,7 @@ void main() { \
 \
 ");
 
-	this->AddShader( GL_FRAGMENT_SHADER, "#version 130 \n\
+	AddShader( GL_FRAGMENT_SHADER, "#version 130 \n\
 \
 in vec3 texCoord0; \
 out vec4 FragColor; \
@@ -33,9 +33,9 @@ void main (void) { \
 };
 
 void Skybox::Initialize() {
-	uniforms.pvm = this->GetUniformLocation( "uPVM" );
-	uniforms.cubemap = this->GetUniformLocation( "uCubemap" );
-	attributes.vertex = this->GetAttributeLocation("aVertex");
+	uniforms.pvm = GetUniformLocation( "uPVM" );
+	uniforms.cubemap = GetUniformLocation( "uCubemap" );
+	attributes.vertex = GetAttributeLocation("aVertex");
 };
 
 void Skybox::EnableAttributes() const {

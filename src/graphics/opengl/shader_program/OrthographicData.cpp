@@ -9,7 +9,7 @@ namespace opengl {
 namespace shader_program {
 
 void OrthographicData::AddShaders() {
-	this->AddShader( GL_VERTEX_SHADER, "#version 140 \n\
+	AddShader( GL_VERTEX_SHADER, "#version 140 \n\
 \
 in vec3 aCoord; \
 in uint aData; \
@@ -22,7 +22,7 @@ void main(void) { \
 } \
 \
 ");
-	this->AddShader( GL_FRAGMENT_SHADER, "#version 140 \n\
+	AddShader( GL_FRAGMENT_SHADER, "#version 140 \n\
 \
 in float data; \
 out uint FragColor; \
@@ -35,9 +35,9 @@ void main(void) { \
 }
 
 void OrthographicData::Initialize() {
-	attributes.coord = this->GetAttributeLocation( "aCoord" );
-	attributes.data = this->GetAttributeLocation( "aData" );
-	uniforms.world = this->GetUniformLocation("uWorld");
+	attributes.coord = GetAttributeLocation( "aCoord" );
+	attributes.data = GetAttributeLocation( "aData" );
+	uniforms.world = GetUniformLocation("uWorld");
 };
 
 void OrthographicData::EnableAttributes() const {

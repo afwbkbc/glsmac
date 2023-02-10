@@ -268,6 +268,11 @@ void World::Stop() {
 }
 
 void World::Iterate() {
+	
+	for ( auto& actor : m_actors_vec ) {
+		actor->Iterate();
+	}
+	
 	// response for clicked tile (if click happened)
 	auto tileinfo = m_map->GetTileAtScreenCoordsResult();
 	if ( tileinfo.tile ) {
@@ -433,15 +438,28 @@ void World::SelectTile( Map::tile_info_t tileinfo ) {
 	}
 	
 	NEW( m_actors.tile_selection, actor::TileSelection, coords );
-	m_world_scene->AddActor( m_actors.tile_selection );
+	AddActor( m_actors.tile_selection );
 }
 
 void World::DeselectTile() {
 	if ( m_actors.tile_selection ) {
-		m_world_scene->RemoveActor( m_actors.tile_selection );
-		DELETE( m_actors.tile_selection );
+		RemoveActor( m_actors.tile_selection );
 		m_actors.tile_selection = nullptr;
 	}
+}
+
+void World::AddActor( actor::Actor* actor ) {
+	ASSERT( m_actors_vec.find( actor ) == m_actors_vec.end(), "world actor already added" );
+	m_actors_vec.insert( actor );
+	m_world_scene->AddActor( actor );
+}
+
+void World::RemoveActor( actor::Actor* actor ) {
+	auto it = m_actors_vec.find( actor );
+	ASSERT( it != m_actors_vec.end(), "world actor not found" );
+	m_actors_vec.erase( it );
+	m_world_scene->RemoveActor( actor );
+	DELETE( actor );
 }
 
 }

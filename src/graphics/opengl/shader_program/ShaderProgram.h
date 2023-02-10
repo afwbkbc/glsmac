@@ -42,6 +42,10 @@ protected:
 
 	bool m_enabled = false;
 	GLuint m_gl_shader_program = 0;
+	
+	// shader helpers
+	const string S_HasFlag( const string& var, const GLuint flag ) const;
+	
 };
 
 } /* namespace shader_program */

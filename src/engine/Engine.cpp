@@ -126,7 +126,7 @@ int Engine::Run() {
 
 	} catch ( runtime_error &e ) {
 		result = EXIT_FAILURE;
-		this->m_error_handler->HandleError( e );
+		m_error_handler->HandleError( e );
 	}
 
 	return result;

@@ -72,8 +72,8 @@ void Image::Load() {
 void Image::Unload() {
 	//Log( "Unloading OpenGL actor" );
 
-	/*for (int i=0;i<this->mModel.mMaterials.size();i++)
-		this->mGraphics->DeactivateTexture(&this->mModel.mMaterials[i]->mTexture1Map.texture,&this->mMaterialTextureObjs[i]);*/
+	/*for (int i=0;i<mModel.mMaterials.size();i++)
+		mGraphics->DeactivateTexture(&mModel.mMaterials[i]->mTexture1Map.texture,&mMaterialTextureObjs[i]);*/
 
 }
 
@@ -125,7 +125,7 @@ void Image::Draw( shader_program::ShaderProgram *shader_program, Camera *camera 
 	//glVertexPointer( 2, GL_FLOAT, 0, (void *) 0 );
 	// enable shader program?
 
-	//glBindTexture(GL_TEXTURE_2D, this->mMaterialTextureObjs[0]);
+	//glBindTexture(GL_TEXTURE_2D, mMaterialTextureObjs[0]);
 	//glActiveTexture(GL_TEXTURE0);
 
 /*
@@ -139,7 +139,7 @@ void Image::Draw( shader_program::ShaderProgram *shader_program, Camera *camera 
 	//math::Vec2<> matrix( 0.0f, 0.0f );
 	//glUniformMatrix2fv( m_shader_program->uniforms.position, 1, GL_TRUE, (const GLfloat *) &matrix );
 
-	//glUniformMatrix4fv(shader_program->mUWorld, 1, GL_TRUE, (const GLfloat*)(&this->mActorFinalMatrices[i]));
+	//glUniformMatrix4fv(shader_program->mUWorld, 1, GL_TRUE, (const GLfloat*)(&mActorFinalMatrices[i]));
 
 	glDrawElements( GL_QUADS, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
 

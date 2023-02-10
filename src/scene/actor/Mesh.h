@@ -29,14 +29,15 @@ CLASS( Mesh, Actor )
 	void SetTexture( const Texture* texture );
 	const Texture* GetTexture();
 	
-	enum render_flag_t : uint32_t {
-		RF_NONE = 0,
-		RF_USE_TINT = 1 << 0,
-		RF_IGNORE_LIGHT = 1 << 1,
-	};
+	typedef uint32_t render_flag_t;
+	static const render_flag_t RF_NONE = 0;
+	static const render_flag_t RF_USE_TINT = 1 << 0;
+	static const render_flag_t RF_IGNORE_LIGHTING = 1 << 1;
 	
 	void SetRenderFlags( const render_flag_t render_flags );
 	const render_flag_t GetRenderFlags() const;
+	void SetTintColor( const Color tint_color );
+	const Color& GetTintColor();
 	
 	// data mesh stuff
 	
@@ -64,7 +65,7 @@ protected:
 	const bool m_is_texture_tiled = false;
 
 	render_flag_t m_render_flags = RF_NONE;
-	Color m_tint_color = { 0.0f, 0.0f, 0.0f, 0.0f };
+	Color m_tint_color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	
 	// data mesh stuff
 	const mesh::Data* m_data_mesh = nullptr;

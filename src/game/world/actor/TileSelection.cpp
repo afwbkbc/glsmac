@@ -35,6 +35,26 @@ TileSelection::TileSelection( map::Map::tile_vertices_t coords )
 	
 	SetMesh( mesh );
 	SetTexture( g_engine->GetTextureLoader()->LoadTexture( "texture.pcx", 1, 571, 56, 626 ) );
+	SetRenderFlags( RF_USE_TINT | RF_IGNORE_LIGHTING );
+	
+	m_glow_timer.SetInterval( GLOW_STEP );
+}
+
+void TileSelection::Iterate() {
+	
+	while ( m_glow_timer.Ticked() ) {
+		m_glow += GLOW_SPEED * m_glow_direction;
+		if ( m_glow < GLOW_MIN ) {
+			m_glow = GLOW_MIN;
+			m_glow_direction = 1;
+		}
+		else if ( m_glow > GLOW_MAX ) {
+			m_glow = GLOW_MAX;
+			m_glow_direction = -1;
+		}
+		SetTintColor( { 1.5f, 1.5f, 1.5f, m_glow } );
+	}
+	
 }
 
 }

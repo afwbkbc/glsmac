@@ -41,7 +41,7 @@ void Texture::Resize( const size_t width, const size_t height ) {
 		if ( m_bitmap ) {
 			free( m_bitmap );
 		}
-		m_bitmap_size = this->m_width * this->m_height * this->m_bpp;
+		m_bitmap_size = m_width * m_height * m_bpp;
 		m_bitmap = (unsigned char*) malloc( m_bitmap_size );
 		memset( ptr( m_bitmap, 0, m_bitmap_size ), 0, m_bitmap_size );
 	}

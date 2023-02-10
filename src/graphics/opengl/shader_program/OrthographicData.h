@@ -17,12 +17,12 @@ protected:
 	friend class opengl::Mesh;
 
 	struct {
-		GLint world;
+		GLuint world;
 	} uniforms;
 
 	struct {
-		GLint coord;
-		GLint data;
+		GLuint coord;
+		GLuint data;
 	} attributes;
 
 	void AddShaders();
