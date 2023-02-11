@@ -26,21 +26,6 @@ void Surface::Create() {
 	SetMesh( m_background_mesh );
 }
 
-void Surface::Align() {
-	Mesh::Align();
-
-	const Vec2<coord_t> v1 = { ClampX( m_object_area.left ), ClampY( m_object_area.top ) };
-	const Vec2<coord_t> v2 = { ClampX( m_object_area.right ), ClampY( m_object_area.bottom ) };
-	
-	if ( m_texture && !m_stretch_texture ) {
-		m_background_mesh->SetCoords( v1, v2, { m_texture->m_width, m_texture->m_height }, -m_z_index );
-	}
-	else {
-		m_background_mesh->SetCoords( v1, v2, -m_z_index );
-	}
-	
-}
-
 void Surface::ApplyStyle() {
 	Mesh::ApplyStyle();
 	

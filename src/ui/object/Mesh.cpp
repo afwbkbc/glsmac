@@ -18,7 +18,12 @@ void Mesh::SetMesh( const types::mesh::Mesh* mesh ) {
 		m_actor = nullptr;
 	}
 	if ( mesh ) {
-		NEW( m_actor, scene::actor::Mesh, "UI::Mesh", mesh );
+		if ( m_original_mesh ) {
+			DELETE( m_original_mesh );
+		}
+		m_original_mesh = mesh;
+		NEW( m_mesh, types::mesh::Mesh, *m_original_mesh ); // copy
+		NEW( m_actor, scene::actor::Mesh, "UI::Mesh", m_mesh );
 		if ( m_texture ) {
 			m_actor->SetTexture( m_texture );
 		}
@@ -53,6 +58,10 @@ void Mesh::Destroy() {
 		RemoveActor( m_actor );
 		DELETE( m_actor );
 	}
+	if ( m_original_mesh ) {
+		DELETE( m_original_mesh );
+		m_original_mesh = nullptr;
+	}
 
 	UIObject::Destroy();
 }
@@ -64,6 +73,23 @@ void Mesh::Draw() {
 	/*if ( m_texture ) {
 		m_actor->SetTexture( m_texture );
 	}*/
+}
+
+void Mesh::Align() {
+	
+	Log( "MESH ALIGN" );
+	
+/*
+	const Vec2<coord_t> v1 = { ClampX( m_object_area.left ), ClampY( m_object_area.top ) };
+	const Vec2<coord_t> v2 = { ClampX( m_object_area.right ), ClampY( m_object_area.bottom ) };
+	
+	if ( m_texture && !m_stretch_texture ) {
+		m_background_mesh->SetCoords( v1, v2, { m_texture->m_width, m_texture->m_height }, -m_z_index );
+	}
+	else {
+		m_background_mesh->SetCoords( v1, v2, -m_z_index );
+	}
+*/	
 }
 
 }

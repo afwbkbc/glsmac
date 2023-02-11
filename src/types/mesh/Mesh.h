@@ -25,6 +25,7 @@ CLASS( Mesh, Serializable )
 	} surface_t;
 	
 	Mesh( const uint8_t vertex_size, const size_t vertex_count, const size_t surface_count );
+	Mesh( const Mesh& other ); // copy from other
 	~Mesh();
 	
 	void Clear();

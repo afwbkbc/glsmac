@@ -22,9 +22,14 @@ CLASS( Mesh, UIObject )
 	
 	virtual void Destroy();
 	virtual void Draw();
+	virtual void Align();
 	
 	
 protected:
+	
+	// one if kept as-is, other gets resized on align
+	const types::mesh::Mesh* m_original_mesh = nullptr;
+	types::mesh::Mesh* m_mesh = nullptr;
 	
 	const types::Texture* m_texture = nullptr;
 	bool m_stretch_texture = false;

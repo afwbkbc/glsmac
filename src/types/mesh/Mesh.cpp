@@ -18,6 +18,24 @@ Mesh::Mesh( const uint8_t vertex_size, const size_t vertex_count, const size_t s
 	m_index_data = (uint8_t*)malloc( GetIndexDataSize() );
 }
 
+Mesh::Mesh( const Mesh& other )
+	: VERTEX_SIZE( other.VERTEX_SIZE )
+	, m_vertex_count( other.m_vertex_count )
+	, m_surface_count( other.m_surface_count )
+	, m_index_count( other.m_index_count )
+	, m_vertex_i( other.m_vertex_i )
+	, m_surface_i( other.m_surface_i )
+	, m_update_counter( other.m_update_counter )
+	, m_is_final( other.m_is_final )
+{
+	size_t sz = GetVertexDataSize();
+	m_vertex_data = (uint8_t*)malloc( sz );
+	memcpy( ptr( m_vertex_data, 0, sz ), ptr( other.m_vertex_data, 0, sz ), sz );
+	sz = GetIndexDataSize();
+	m_index_data = (uint8_t*)malloc( sz );
+	memcpy( ptr( m_index_data, 0, sz ), ptr( other.m_index_data, 0, sz ), sz );
+}
+
 Mesh::~Mesh() {
 	free( m_vertex_data );
 	free( m_index_data );

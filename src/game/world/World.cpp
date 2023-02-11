@@ -441,7 +441,7 @@ void World::SelectTile( const Map::tile_info_t& tile_info ) {
 	
 	AddActor( m_actors.tile_selection );
 	
-	//m_ui.bottom_bar->PreviewTile( tile_info );
+	m_ui.bottom_bar->PreviewTile( tile_info );
 }
 
 void World::DeselectTile() {
@@ -450,7 +450,7 @@ void World::DeselectTile() {
 		m_actors.tile_selection = nullptr;
 	}
 	
-	//m_ui.bottom_bar->HideTilePreview();
+	m_ui.bottom_bar->HideTilePreview();
 }
 
 void World::AddActor( actor::Actor* actor ) {
