@@ -1,9 +1,11 @@
 #pragma once
 
 #ifdef _WIN32
+#ifdef VISUAL_STUDIO
 #if !defined(ssize_t)
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
+#endif
 #endif
 
 #define NOMINMAX
