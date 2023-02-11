@@ -12,29 +12,24 @@
 namespace ui {
 namespace object {
 
-CLASS( Surface, UIObject )
+CLASS( Mesh, UIObject )
 
-	Surface( const string& class_name = "" );
+	Mesh( const string& class_name = "" );
 	
+	void SetMesh( const types::mesh::Mesh* mesh );
 	void SetTexture( const types::Texture* texture);
 	void ClearTexture();
-	void SetStretchTexture( const bool stretch_texture );
 	
-	virtual void Create();
 	virtual void Destroy();
-	virtual void Align();
 	virtual void Draw();
 	
 	
 protected:
 	
-	virtual void ApplyStyle();
-	
 	const types::Texture* m_texture = nullptr;
 	bool m_stretch_texture = false;
 
-	scene::actor::Mesh *m_background = nullptr;
-	types::mesh::Rectangle *m_background_mesh = nullptr;
+	scene::actor::Mesh *m_actor = nullptr;
 };
 
 } /* namespace object */

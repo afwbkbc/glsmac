@@ -6,30 +6,9 @@ namespace ui {
 namespace object {
 
 Surface::Surface( const string& class_name )
-	: UIObject( class_name )
+	: Mesh( class_name )
 {
 	//
-}
-
-void Surface::SetTexture( const types::Texture* texture ) {
-	if ( texture != m_texture ) {
-		//Log( "Setting texture " + texture->m_name );
-		m_texture = texture;
-		if ( m_background ) {
-			m_background->SetTexture( m_texture );
-		}
-		Realign();
-	}
-}
-
-void Surface::ClearTexture() {
-	if ( m_texture ) {
-		//Log( "Clearing texture" );
-		m_texture = nullptr;
-		if ( m_background ) {
-			m_background->SetTexture( nullptr );
-		}
-	}
 }
 
 void Surface::SetStretchTexture( const bool stretch_texture ) {
@@ -41,23 +20,14 @@ void Surface::SetStretchTexture( const bool stretch_texture ) {
 }
 
 void Surface::Create() {
-	UIObject::Create();
+	Mesh::Create();
 
 	NEW( m_background_mesh, types::mesh::Rectangle );
-	NEW( m_background, scene::actor::Mesh, "UI::Surface", m_background_mesh );
-	AddActor( m_background );
-}
-
-void Surface::Destroy() {
-
-	RemoveActor( m_background );
-	DELETE( m_background );
-
-	UIObject::Destroy();
+	SetMesh( m_background_mesh );
 }
 
 void Surface::Align() {
-	UIObject::Align();
+	Mesh::Align();
 
 	const Vec2<coord_t> v1 = { ClampX( m_object_area.left ), ClampY( m_object_area.top ) };
 	const Vec2<coord_t> v2 = { ClampX( m_object_area.right ), ClampY( m_object_area.bottom ) };
@@ -68,19 +38,11 @@ void Surface::Align() {
 	else {
 		m_background_mesh->SetCoords( v1, v2, -m_z_index );
 	}
-	//m_background->Update();
-}
-
-void Surface::Draw() {
-	UIObject::Draw();
-
-	if ( m_texture ) {
-		m_background->SetTexture( m_texture );
-	}
+	
 }
 
 void Surface::ApplyStyle() {
-	UIObject::ApplyStyle();
+	Mesh::ApplyStyle();
 	
 	if ( Has( Style::A_TEXTURE ) ) {
 		const auto* texture = (Texture*)GetObject( Style::A_TEXTURE );
