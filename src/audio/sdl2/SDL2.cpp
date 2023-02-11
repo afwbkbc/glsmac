@@ -120,7 +120,7 @@ void SDL2::Mix( Uint8* stream, int len ) {
 			if ( actor.second->IsActive() ) {
 				actor.second->GetNextBuffer( (uint8_t*)m_buffer, len );
 				for ( size_t i = 0 ; i < m_buffer_length ; i++ ) {
-					m_mix_buffer[i] = m_mix_buffer[i] + m_buffer[i] * actor.second->GetVolume() * pow( AUDIO_VOLUME_LOWERING, m_actors.size() );
+					m_mix_buffer[i] = m_mix_buffer[i] + m_buffer[i] * actor.second->GetVolume() * AUDIO_VOLUME * pow( AUDIO_VOLUME_LOWERING_FROM_ACTORS, m_actors.size() );
 				}
 			}
 		}
