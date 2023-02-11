@@ -1,5 +1,11 @@
 #include <thread>
 
+#ifdef DEBUG
+#include <iostream>
+#include <string>
+#include <stdlib.h>
+#endif
+
 #include "config/Config.h"
 #ifdef _WIN32
 #include "error_handler/Win32.h"
@@ -48,9 +54,6 @@
 #endif
 
 #ifdef DEBUG
-#include <iostream>
-#include <string>
-#include <stdlib.h>
 #include "util/System.h"
 #include "util/FS.h"
 #include "debug/MemoryWatcher.h"

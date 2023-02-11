@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Mesh.h"
-
 #include <vector>
+
+#include "Mesh.h"
 
 #include "types/Matrix44.h"
 #include "scene/Scene.h"

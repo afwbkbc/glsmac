@@ -1,7 +1,7 @@
-#include "Random.h"
-
 #include <random>
 #include <climits>
+
+#include "Random.h"
 
 namespace util {
 

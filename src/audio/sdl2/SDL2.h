@@ -5,12 +5,12 @@
 #define SDL_MAIN_HANDLED 1
 #include <SDL_audio.h>
 
+#include <mutex>
+
 #include "scene/actor/Sound.h"
 #include "Sound.h"
 
 #include "../Audio.h"
-
-#include <mutex>
 
 // this must match specs of SMAC wavs until resampling is implemented
 #define AUDIO_FREQUENCY 22050

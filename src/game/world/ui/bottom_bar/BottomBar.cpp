@@ -102,6 +102,14 @@ void BottomBar::Destroy() {
 	UI::Destroy();
 }
 
+void BottomBar::PreviewTile( const Map::tile_info_t& tile_info ) {
+	m_tile_preview->PreviewTile( tile_info );
+}
+
+void BottomBar::HideTilePreview() {
+	m_tile_preview->HideTilePreview();
+}
+
 }
 }
 }

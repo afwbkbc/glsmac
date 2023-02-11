@@ -1,9 +1,9 @@
-#include "SimplePerlin.h"
-
 #include <ctime>
 #include <cmath>
 #include <algorithm>
 #include <random>
+
+#include "SimplePerlin.h"
 
 #include "util/Perlin.h"
 #include "util/Clamper.h"

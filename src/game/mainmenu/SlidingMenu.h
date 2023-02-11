@@ -1,11 +1,11 @@
 #pragma once
 
-#include "MenuObject.h"
-
 #include <vector>
 #include <string>
 #include <map>
 #include <functional>
+
+#include "MenuObject.h"
 
 #include "ui/slidingmenu/MenuBlock.h"
 

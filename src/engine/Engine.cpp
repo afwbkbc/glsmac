@@ -1,7 +1,7 @@
-#include "Engine.h"
-
 #include <ctime>
 #include <thread>
+
+#include "Engine.h"
 
 // TODO: move to config
 const size_t g_max_fps = 500;

@@ -1,15 +1,16 @@
 #pragma once
 
-#include "base/Task.h"
-
 #include <vector>
 #include <string>
+
+#include "base/Task.h"
 
 #include "util/Timer.h"
 #include "types/Font.h"
 #include "ui/object/Label.h"
 #include "ui/object/Surface.h"
 
+using namespace std;
 using namespace types;
 using namespace ui;
 namespace ui {

@@ -1,5 +1,3 @@
-#include "System.h"
-
 #ifdef DEBUG
 
 #ifdef __linux__
@@ -13,7 +11,7 @@
 
 #include <algorithm>
 
-using namespace std;
+#include "System.h"
 
 namespace util {
 

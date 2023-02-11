@@ -1,12 +1,9 @@
-#include "Data.h"
-
 #include <cmath>
 #include <cstring>
 
-#include "util/Math.h"
+#include "Data.h"
 
-using namespace std;
-using namespace util;
+#include "util/Math.h"
 
 namespace types {
 namespace mesh {

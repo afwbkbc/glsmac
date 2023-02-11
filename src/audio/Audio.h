@@ -1,8 +1,8 @@
 #pragma once
 
-#include "base/Module.h"
-
 #include <vector>
+
+#include "base/Module.h"
 
 #include "scene/actor/Sound.h"
 

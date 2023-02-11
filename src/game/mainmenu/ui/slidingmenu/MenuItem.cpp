@@ -1,9 +1,5 @@
 #include "MenuItem.h"
 
-using namespace std;
-using namespace ui::object;
-using namespace ui::event;
-
 namespace game {
 namespace mainmenu {
 

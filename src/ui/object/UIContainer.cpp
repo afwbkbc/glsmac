@@ -4,8 +4,6 @@
 
 #include "../UI.h"
 
-using namespace std;
-
 namespace ui {
 
 using namespace event;

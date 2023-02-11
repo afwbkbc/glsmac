@@ -2,8 +2,6 @@
 
 #include "util/System.h"
 
-using namespace std;
-
 namespace loader {
 namespace font {
 

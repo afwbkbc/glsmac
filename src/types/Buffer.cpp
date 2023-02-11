@@ -1,6 +1,6 @@
-#include "Buffer.h"
-
 #include <cstring>
+
+#include "Buffer.h"
 
 namespace types {
 

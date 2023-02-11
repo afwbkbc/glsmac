@@ -1,10 +1,9 @@
-#include "Texture.h"
-#include "engine/Engine.h"
-
 #include <cstring>
 #include <cmath>
-
 #include <iostream>
+
+#include "Texture.h"
+#include "engine/Engine.h"
 
 namespace types {
 

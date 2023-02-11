@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Logger.h"
-
 #include <mutex>
+
+#include "Logger.h"
 
 namespace logger {
 

@@ -1,10 +1,10 @@
-#include "Perlin.h"
-
-// based on https://github.com/sol-prog/Perlin_Noise
-
 #include <numeric>
 #include <random>
 #include <algorithm>
+
+#include "Perlin.h"
+
+// based on https://github.com/sol-prog/Perlin_Noise
 
 namespace util {
 

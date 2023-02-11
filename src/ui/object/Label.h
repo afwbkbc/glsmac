@@ -1,8 +1,8 @@
 #pragma once
 
-#include "UIObject.h"
-
 #include <string>
+
+#include "UIObject.h"
 
 #include "types/Font.h"
 #include "scene/actor/Text.h"

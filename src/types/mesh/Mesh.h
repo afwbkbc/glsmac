@@ -1,11 +1,13 @@
 #pragma once
 
-#include "types/Serializable.h"
-
 #include <vector>
+
+#include "types/Serializable.h"
 
 #include "../Vec3.h"
 #include "../Color.h"
+
+using namespace std;
 
 namespace types {
 namespace mesh {

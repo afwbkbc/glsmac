@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../PopupMenu.h"
-
 #include <string>
+
+#include "../PopupMenu.h"
 
 #include "base/MTModule.h"
 

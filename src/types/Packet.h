@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Serializable.h"
-
 #include <vector>
+
+#include "Serializable.h"
 
 namespace types {
 

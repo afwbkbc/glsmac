@@ -1,8 +1,8 @@
 #pragma once
 
-#include "base/Module.h"
-
 #include <stdexcept>
+
+#include "base/Module.h"
 
 namespace error_handler {
 

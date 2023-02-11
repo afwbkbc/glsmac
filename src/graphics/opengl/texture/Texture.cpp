@@ -1,7 +1,5 @@
 #include "Texture.h"
 
-#include <stdexcept>
-
 #include "graphics/Graphics.h"
 
 namespace graphics {

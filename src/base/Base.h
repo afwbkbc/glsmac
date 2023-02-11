@@ -15,6 +15,8 @@
 #include "env/Release.h"
 #endif
 
+using namespace std;
+
 namespace base {
 
 class Base {

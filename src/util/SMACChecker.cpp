@@ -1,18 +1,12 @@
-#include "SMACChecker.h"
-
 #include <vector>
 #include <string>
 #include <iostream>
 #include <fcntl.h>
 #ifdef __linux__
 #include <unistd.h>
-#else
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 #endif
 
-using namespace std;
+#include "SMACChecker.h"
 
 namespace util {
 

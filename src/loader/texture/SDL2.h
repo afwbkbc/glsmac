@@ -1,9 +1,9 @@
 #pragma once
 
-#include "TextureLoader.h"
-
 #include <unordered_map>
 #include <SDL_image.h>
+
+#include "TextureLoader.h"
 
 using namespace std;
 

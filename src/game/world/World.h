@@ -1,8 +1,8 @@
 #pragma once
 
-#include "base/Task.h"
-
 #include <unordered_set>
+
+#include "base/Task.h"
 
 #include "../Settings.h"
 
@@ -108,7 +108,7 @@ private:
 	
 	// tiles stuff
 	void SelectTileAtPoint( const size_t x, const size_t y );
-	void SelectTile( Map::tile_info_t tileinfo );
+	void SelectTile( const Map::tile_info_t& tile_info );
 	void DeselectTile();
 	
 	struct {
@@ -119,7 +119,7 @@ private:
 	void AddActor( actor::Actor* actor );
 	void RemoveActor( actor::Actor* actor );
 	
-	void CenterMapAtTile( const Tile* tile, const Map::tile_state_t* ts );
+	void CenterMapAtTile( const Map::tile_state_t* ts );
 };
 
 }

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "base/Base.h"
-
 #include <unordered_map>
 #include <string>
+
+#include "base/Base.h"
 
 #include "Style.h"
 #include "StyleSheet.h"

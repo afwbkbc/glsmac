@@ -1,4 +1,4 @@
-#include "shader_program/ShaderProgram.h"
+#include "OpenGL.h"
 
 #include "engine/Engine.h"
 
@@ -12,12 +12,6 @@
 #include "routine/Font.h"
 #include "routine/Skybox.h"
 #include "routine/World.h"
-
-using namespace std;
-using namespace ui;
-namespace ui {
-using namespace event;
-}
 
 namespace graphics {
 namespace opengl {

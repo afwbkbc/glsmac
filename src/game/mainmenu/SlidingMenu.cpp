@@ -1,11 +1,7 @@
 #include "SlidingMenu.h"
 
-#include <stdexcept>
-
 #include "game/Settings.h"
 #include "engine/Engine.h"
-
-using namespace std;
 
 namespace game {
 namespace mainmenu {

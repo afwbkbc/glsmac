@@ -1,7 +1,7 @@
-#include "SimpleTCP.h"
-
 #include <signal.h>
 #include <thread>
+
+#include "SimpleTCP.h"
 
 #define GLSMAC_PORT 4888
 #define GLSMAC_MAX_INCOMING_CONNECTIONS 64

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "MenuObject.h"
-
 #include <string>
 #include <unordered_set>
+
+#include "MenuObject.h"
 
 #include "ui/object/Panel.h"
 #include "ui/object/Section.h"

@@ -1,12 +1,9 @@
-#include "Simple.h"
-
 #include <cmath>
 #include <cstring>
 
-#include "util/Math.h"
+#include "Simple.h"
 
-using namespace std;
-using namespace util;
+#include "util/Math.h"
 
 namespace types {
 namespace mesh {

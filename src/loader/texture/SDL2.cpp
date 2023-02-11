@@ -1,10 +1,8 @@
-#include "SDL2.h"
-
 #include <iostream>
 
-#include "util/System.h"
+#include "SDL2.h"
 
-using namespace std;
+#include "util/System.h"
 
 namespace loader {
 namespace texture {

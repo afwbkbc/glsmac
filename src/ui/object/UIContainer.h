@@ -6,6 +6,8 @@
 
 #include "ui/event/UIEvent.h"
 
+using namespace std;
+
 namespace ui {
 namespace object {
 

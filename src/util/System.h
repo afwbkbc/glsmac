@@ -1,9 +1,11 @@
 #pragma once
 
-#include "Util.h"
-
 #include <vector>
 #include <string>
+
+#include "Util.h"
+
+using namespace std;
 
 namespace util {
 

@@ -135,7 +135,7 @@ UIEvent::mouse_button_t SDL2::GetMouseButton( uint8_t sdl_mouse_button ) const {
 	}
 }
 
-#include <cstdio>
+//#include <cstdio>
 
 char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 	char result = 0;

@@ -1,11 +1,11 @@
 #pragma once
 
+#include <vector>
+#include <string>
+
 #include "ui/object/UIContainer.h"
 
 #include "ui/object/SoundEffect.h"
-
-#include <vector>
-#include <string>
 
 #include "types/Texture.h"
 #include "types/Font.h"

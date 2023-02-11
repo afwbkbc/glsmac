@@ -1,8 +1,10 @@
 #pragma once
 
+#include <vector>
+
 #include "Mesh.h"
 
-#include <vector>
+using namespace std;
 
 namespace types {
 namespace mesh {

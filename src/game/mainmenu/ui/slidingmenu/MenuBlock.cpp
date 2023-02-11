@@ -2,8 +2,6 @@
 
 #include "ui/event/UIEvent.h"
 
-using namespace std;
-
 namespace game {
 namespace mainmenu {
 

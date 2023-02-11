@@ -4,8 +4,6 @@
 
 #include "engine/Engine.h"
 
-using namespace std;
-using namespace types;
 namespace ui {
 using namespace object;
 }

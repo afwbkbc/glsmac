@@ -1,8 +1,8 @@
 #pragma once
 
-#include "types/Serializable.h"
-
 #include <string>
+
+#include "types/Serializable.h"
 
 #include "base/ObjectLink.h"
 #include "Color.h"

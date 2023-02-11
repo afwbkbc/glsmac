@@ -1,17 +1,13 @@
-#include "MainMenu.h"
-
 #include <cmath>
 #include <algorithm>
+
+#include "MainMenu.h"
 
 #include "engine/Engine.h"
 
 #include "menu/Lobby.h"
 #include "menu/Main.h"
 #include "menu/Error.h"
-
-using namespace std;
-using namespace ui::object;
-using namespace loader::texture;
 
 namespace game {
 namespace mainmenu {

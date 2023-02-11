@@ -1,7 +1,5 @@
 #ifdef DEBUG
 
-#include "MemoryWatcher.h"
-
 #include <unordered_map>
 #include <iostream>
 #include <algorithm>
@@ -10,6 +8,8 @@
 #include <thread>
 #include <chrono>
 #include <cstring>
+
+#include "MemoryWatcher.h"
 
 // to avoid being intercepted by macros in Base.h again
 
@@ -58,9 +58,6 @@ void glDrawArrays_real( GLenum mode, GLint first, GLsizei count ) {
 }
 
 #include "base/Base.h"
-
-using namespace std;
-using namespace base;
 
 namespace debug {
 

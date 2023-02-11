@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Util.h"
-
 #include <string>
+
+#include "Util.h"
 
 namespace util {
 

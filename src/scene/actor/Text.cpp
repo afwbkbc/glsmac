@@ -1,8 +1,5 @@
 #include "Text.h"
 
-using namespace std;
-using namespace types;
-
 #include "graphics/opengl/actor/Text.h"
 
 namespace scene {

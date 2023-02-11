@@ -2,9 +2,9 @@
 
 // based on https://github.com/sol-prog/Perlin_Noise
 
-#include "Util.h"
-
 #include <vector>
+
+#include "Util.h"
 
 #include "types/Vec2.h"
 

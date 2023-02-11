@@ -1,8 +1,8 @@
+#include <algorithm>
+
 #include "SDL2.h"
 
 #include "engine/Engine.h"
-
-#include <algorithm>
 
 namespace audio {
 namespace sdl2 {

@@ -1,11 +1,10 @@
-#include "Render.h"
-
 #include <cmath>
 #include <cstring>
 
+#include "Render.h"
+
 #include "util/Math.h"
 
-using namespace std;
 using namespace util;
 
 namespace types {

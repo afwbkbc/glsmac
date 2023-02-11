@@ -1,8 +1,6 @@
-#include "Timer.h"
-
 #include <ctime>
 
-using namespace std::chrono;
+#include "Timer.h"
 
 namespace util {
 

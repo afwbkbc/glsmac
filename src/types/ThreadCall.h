@@ -3,9 +3,9 @@
 // callback-based request-response API
 // use to communicate across threads
 
-#include "base/Base.h"
-
 #include <functional>
+
+#include "base/Base.h"
 
 namespace types {
 

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "base/Task.h"
-
 #include <vector>
 #include <string>
+
+#include "base/Task.h"
 
 #include "ui/object/Surface.h"
 #include "ui/object/SoundEffect.h"
@@ -19,6 +19,7 @@
 
 using namespace std;
 using namespace types;
+using namespace loader::texture;
 
 using namespace ui;
 namespace ui {

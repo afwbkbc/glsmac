@@ -274,10 +274,10 @@ void World::Iterate() {
 	}
 	
 	// response for clicked tile (if click happened)
-	auto tileinfo = m_map->GetTileAtScreenCoordsResult();
-	if ( tileinfo.tile ) {
-		SelectTile( tileinfo );
-		CenterMapAtTile( tileinfo.tile, tileinfo.ts );
+	auto tile_info = m_map->GetTileAtScreenCoordsResult();
+	if ( tile_info.tile ) {
+		SelectTile( tile_info );
+		CenterMapAtTile( tile_info.ts );
 	}
 }
 
@@ -412,11 +412,10 @@ void World::SelectTileAtPoint( const size_t x, const size_t y ) {
 	m_map->GetTileAtScreenCoords( x, g_engine->GetGraphics()->GetViewportHeight() - y ); // async
 }
 
-void World::SelectTile( Map::tile_info_t tileinfo ) {
+void World::SelectTile( const Map::tile_info_t& tile_info ) {
 	DeselectTile();
-	auto tile = tileinfo.tile;
-	auto ts = tileinfo.ts;
-	auto ms = tileinfo.ms;
+	auto tile = tile_info.tile;
+	auto ts = tile_info.ts;
 	
 	Log( "Selecting tile at " + to_string( tile->coord.x ) + "x" + to_string( tile->coord.y ) );
 	Map::tile_layer_type_t lt = ( tile->is_water_tile ? Map::LAYER_WATER : Map::LAYER_LAND );
@@ -439,7 +438,10 @@ void World::SelectTile( Map::tile_info_t tileinfo ) {
 	}
 	
 	NEW( m_actors.tile_selection, actor::TileSelection, coords );
+	
 	AddActor( m_actors.tile_selection );
+	
+	//m_ui.bottom_bar->PreviewTile( tile_info );
 }
 
 void World::DeselectTile() {
@@ -447,6 +449,8 @@ void World::DeselectTile() {
 		RemoveActor( m_actors.tile_selection );
 		m_actors.tile_selection = nullptr;
 	}
+	
+	//m_ui.bottom_bar->HideTilePreview();
 }
 
 void World::AddActor( actor::Actor* actor ) {
@@ -463,7 +467,7 @@ void World::RemoveActor( actor::Actor* actor ) {
 	DELETE( actor );
 }
 
-void World::CenterMapAtTile( const Tile* tile, const Map::tile_state_t* ts ) {
+void World::CenterMapAtTile( const Map::tile_state_t* ts ) {
 
 	m_camera_position.x = - ts->coord.x / m_viewport.viewport_aspect_ratio * m_camera_position.z;
 	m_camera_position.y = - ( ts->coord.y - max( 0.0f, Map::s_consts.clampers.elevation_to_vertex_z.Clamp( ts->elevations.center ) ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f;

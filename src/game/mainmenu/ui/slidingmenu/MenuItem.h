@@ -1,10 +1,10 @@
 #pragma once
 
+#include <vector>
+
 #include "ui/object/UIContainer.h"
 #include "ui/object/Surface.h"
 #include "ui/object/Label.h"
-
-#include <vector>
 
 using namespace std;
 using namespace ui::object;

@@ -1,7 +1,5 @@
 #include "MenuObject.h"
 
-using namespace std;
-
 namespace game {
 namespace mainmenu {
 

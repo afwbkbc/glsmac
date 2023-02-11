@@ -1,6 +1,6 @@
-#include "Sound.h"
-
 #include <cstring>
+
+#include "Sound.h"
 
 namespace scene {
 namespace actor {

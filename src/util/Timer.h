@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Util.h"
-
 #include <chrono>
+
+#include "Util.h"
 
 using namespace std::chrono;
 

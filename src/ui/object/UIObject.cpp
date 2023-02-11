@@ -1,16 +1,9 @@
-#include "UIObject.h"
-
 #include <algorithm>
+
+#include "UIObject.h"
 
 #include "engine/Engine.h"
 #include "../UI.h"
-
-using namespace std;
-
-using namespace scene;
-namespace scene {
-using namespace actor;
-}
 
 namespace ui {
 

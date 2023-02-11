@@ -2,14 +2,6 @@
 
 #include "engine/Engine.h"
 
-using namespace std;
-
-using namespace ui;
-namespace ui {
-	using namespace object;
-	using namespace event;
-}
-
 namespace game {
 namespace mainmenu {
 
