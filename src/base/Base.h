@@ -7,7 +7,6 @@
 #include <string>
 #include <stdexcept>
 
-using namespace std;
 #define THROW(  _text ) throw runtime_error( _text )
 
 #ifdef DEBUG
