@@ -71,7 +71,7 @@ void Section::ApplyStyle() {
 		m_body->SetTop( Get( Style::A_HEADER_HEIGHT ) + 2 );
 	}
 	else {
-		m_body->SetTop( 2 );
+		m_body->SetTop( 0 );
 	}
 
 	UIContainer::ApplyStyle();

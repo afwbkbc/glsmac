@@ -77,6 +77,9 @@ void BottomBar::Create() {
 	
 	NEW( m_unit_preview, Section, "MapBottomBarUnitPreview" );
 	AddChild( m_unit_preview );
+	
+	NEW( m_tile_preview, TilePreview, m_world );
+	AddChild( m_tile_preview );
 }
 
 void BottomBar::Destroy() {
@@ -93,6 +96,8 @@ void BottomBar::Destroy() {
 	RemoveChild( m_frames.left );
 	RemoveChild( m_frames.middle );
 	RemoveChild( m_frames.right );
+	
+	RemoveChild( m_tile_preview );
 	
 	UI::Destroy();
 }

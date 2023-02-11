@@ -201,23 +201,23 @@ protected:
 	unsigned char m_stick_bits = 0;
 	alignment_t m_align = ALIGN_LEFT | ALIGN_TOP;
 	struct {
-		coord_t left;
-		coord_t right;
-		coord_t top;
-		coord_t bottom;
-	} m_position;
+		coord_t left = 0;
+		coord_t right = 0;
+		coord_t top = 0;
+		coord_t bottom = 0;
+	} m_position = {};
 	struct {
-		coord_t width;
-		coord_t height;
+		coord_t width = 0;
+		coord_t height = 0;
 		coord_t aspect_ratio;
-		bool force_aspect_ratio;
-	} m_size;
+		bool force_aspect_ratio = false;
+	} m_size = {};
 	struct {
-		coord_t left;
-		coord_t right;
-		coord_t top;
-		coord_t bottom;
-	} m_padding;
+		coord_t left = 0;
+		coord_t right = 0;
+		coord_t top = 0;
+		coord_t bottom = 0;
+	} m_padding = {};
 	
 	typedef uint8_t state_t;
 	const static state_t STATE_NONE = 0;

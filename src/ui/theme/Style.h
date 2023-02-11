@@ -61,6 +61,7 @@ CLASS( Style, base::Base )
 		A_HEADER_TEXTALIGN,
 		A_TEXTCOLOR,
 		A_HEADER_TEXTCOLOR,
+		A_BORDER_WIDTH,
 		A_TEXTURE,
 		
 		// TODO: combine into multitexture

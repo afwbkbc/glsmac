@@ -34,6 +34,7 @@ protected:
 	
 		// TODO: style attribute scopes/inheritance
 	const unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_forwarded_style_attributes = {
+		{ Style::A_BORDER_WIDTH, Style::A_BORDER_WIDTH },
 		{ Style::A_HEADER_TEXTURE_BACK, Style::A_HEADER_TEXTURE_BACK },
 		{ Style::A_HEADER_TEXTURE_BORDER_LEFT, Style::A_HEADER_TEXTURE_BORDER_LEFT },
 		{ Style::A_HEADER_TEXTURE_BORDER_TOP, Style::A_HEADER_TEXTURE_BORDER_TOP },
@@ -44,9 +45,13 @@ protected:
 		{ Style::A_HEADER_TEXTALIGN, Style::A_HEADER_TEXTALIGN },
 		{ Style::A_TEXTURE_BACK, Style::A_TEXTURE_BACK },
 		{ Style::A_TEXTURE_BORDER_LEFT, Style::A_TEXTURE_BORDER_LEFT },
+		{ Style::A_TEXTURE_BORDER_CORNER_LT, Style::A_TEXTURE_BORDER_CORNER_LT },
 		{ Style::A_TEXTURE_BORDER_TOP, Style::A_TEXTURE_BORDER_TOP },
+		{ Style::A_TEXTURE_BORDER_CORNER_RT, Style::A_TEXTURE_BORDER_CORNER_RT },
 		{ Style::A_TEXTURE_BORDER_RIGHT, Style::A_TEXTURE_BORDER_RIGHT },
+		{ Style::A_TEXTURE_BORDER_CORNER_RB, Style::A_TEXTURE_BORDER_CORNER_RB },
 		{ Style::A_TEXTURE_BORDER_BOTTOM, Style::A_TEXTURE_BORDER_BOTTOM },
+		{ Style::A_TEXTURE_BORDER_CORNER_LB, Style::A_TEXTURE_BORDER_CORNER_LB },
 		{ Style::A_HEADER_HEIGHT, Style::A_HEADER_HEIGHT },
 	};
 	

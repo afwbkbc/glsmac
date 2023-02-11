@@ -27,7 +27,7 @@ void SDL2::Start() {
 	Log( "Initializing SDL2" );
 	
 	if ( SDL_Init( SDL_INIT_AUDIO ) ) {
-		Log( "failed to enable audio, game will start without sound" );
+		Log( "Failed to enable audio, game will start without sound." );
 		return;
 	}
 	
@@ -41,7 +41,11 @@ void SDL2::Start() {
 	
 	/* Open the audio device */
 	auto ret = SDL_OpenAudio( &wav_spec, NULL );
-	ASSERT( ret >= 0, (string) "Couldn't open audio: " + SDL_GetError() );
+	if ( ret < 0 ) {
+		Log( (string) "Couldn't open audio: " + SDL_GetError() );
+		Log( "Failed to enable audio, game will start without sound." );
+		return;
+	}
 	
 	/* Start playing */
 	SDL_PauseAudio(0);

@@ -17,8 +17,14 @@ CLASS( Panel, UIContainer )
 
 	virtual void Create();
 	virtual void Destroy();
+	virtual void Align();
+	
+	void SetBorderWidth( const size_t border_width );
 	
 protected:
+	
+	size_t m_border_width = 1;
+	
 	virtual void ApplyStyle();
 	
 	Surface* m_background = nullptr;

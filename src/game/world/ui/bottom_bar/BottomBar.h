@@ -6,6 +6,8 @@
 #include "ui/object/Section.h"
 #include "ui/object/Button.h"
 
+#include "TilePreview.h"
+
 namespace game {
 namespace world {
 namespace ui {
@@ -30,6 +32,8 @@ protected:
 		Button* menu = nullptr;
 		Button* commlink = nullptr;
 	} m_buttons;
+	
+	TilePreview* m_tile_preview = nullptr;
 	
 	Section* m_unit_preview = nullptr;
 };

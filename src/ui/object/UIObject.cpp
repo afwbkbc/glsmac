@@ -62,12 +62,12 @@ void UIObject::Destroy() {
 	
 	HideDebugFrame();
 	
+	m_created = false;
+
 	if ( m_is_focusable ) {
 		g_engine->GetUI()->RemoveFromFocusableObjects( this );
 	}
 	
-	m_created = false;
-
 	DEBUG_STAT_INC( ui_elements_destroyed );
 	DEBUG_STAT_DEC( ui_elements_active );
 }

@@ -53,7 +53,7 @@ void SoundEffect::SetVolume( const float volume ) {
 
 void SoundEffect::Play() {
 	if ( m_sound && m_created ) {
-		Log( "Creating sound actor" );
+		//Log( "Creating sound actor" );
 		NEWV( actor, scene::actor::Sound, "UI::SoundEffect", m_sound );
 			actor->SetRepeatable( m_repeatable );
 			actor->SetStartDelay( m_start_delay );
@@ -91,7 +91,7 @@ void SoundEffect::Iterate() {
 	vector< actor::Sound* > active_actors = {};
 	for ( auto& actor : m_actors ) {
 		if ( actor->IsFinished() ) {
-			Log( "Destroying inactive sound actor" );
+			//Log( "Destroying inactive sound actor" );
 			g_engine->GetAudio()->RemoveAndDeleteActor( actor );
 		}
 		else {
