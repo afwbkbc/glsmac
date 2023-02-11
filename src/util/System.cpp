@@ -63,7 +63,7 @@ bool System::AreWeUnderGDB() {
 	return res;
 
 #else
-	cout << "WARNING: gdb check skipped due to unsupported platform" << endl;
+	std::cout << "WARNING: gdb check skipped due to unsupported platform" << std::endl;
 	return false;
 #endif
 }
@@ -72,7 +72,7 @@ bool System::IsGDBAvailable() {
 #ifdef __linux__
 	return ( !system("which gdb > /dev/null 2>&1") );
 #else
-	cout << "WARNING: gdb check skipped due to unsupported platform" << endl;
+	std::cout << "WARNING: gdb check skipped due to unsupported platform" << std::endl;
 	return false;
 #endif
 }
