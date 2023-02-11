@@ -20,10 +20,10 @@ CLASS( Mesh, UIObject )
 	void SetTexture( const types::Texture* texture);
 	void ClearTexture();
 	
+	virtual void Create();
 	virtual void Destroy();
 	virtual void Draw();
 	virtual void Align();
-	
 	
 protected:
 	
@@ -32,7 +32,6 @@ protected:
 	types::mesh::Mesh* m_mesh = nullptr;
 	
 	const types::Texture* m_texture = nullptr;
-	bool m_stretch_texture = false;
 
 	scene::actor::Mesh *m_actor = nullptr;
 };

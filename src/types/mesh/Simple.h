@@ -22,6 +22,8 @@ CLASS( Simple, Mesh )
 
 	void SetVertexTexCoord( const index_t index, const Vec2<coord_t> &tex_coord );
 	
+	void GetVertexTexCoord( const index_t index, Vec2<coord_t>* tex_coord ) const;
+	
 };
 
 }

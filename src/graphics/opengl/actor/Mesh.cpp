@@ -38,21 +38,34 @@ Mesh::~Mesh() {
 	}
 }
 
-bool Mesh::ReloadNeeded() {
+bool Mesh::MeshReloadNeeded() {
 	auto* actor = (scene::actor::Mesh *) m_actor;
 	size_t mesh_updated_counter = actor->GetMesh()->UpdatedCount();
 	auto *data_mesh = actor->GetDataMesh();
 	if ( data_mesh ) {
-		mesh_updated_counter = std::max( mesh_updated_counter, data_mesh->UpdatedCount() );
+		mesh_updated_counter = mesh_updated_counter + data_mesh->UpdatedCount();
 	}
-	if ( m_update_counter == mesh_updated_counter ) {
-		return false;
+	
+	if ( m_mesh_update_counter != mesh_updated_counter ) {
+		m_mesh_update_counter = mesh_updated_counter;
+		return true;
 	}
-	m_update_counter = mesh_updated_counter;
-	return true;
+	return false;
 }
 
-void Mesh::Load() {
+bool Mesh::TextureReloadNeeded() {
+	auto* actor = (scene::actor::Mesh *) m_actor;
+	auto* texture = actor->GetTexture();
+	const std::string last_texture_name = texture ? texture->m_name : "";
+	
+	if ( m_last_texture_name != last_texture_name ) {
+		m_last_texture_name = last_texture_name;
+		return true;
+	}
+	return false;
+}
+
+void Mesh::LoadMesh() {
 	auto *actor = (scene::actor::Mesh *)m_actor;
 
 	const auto *mesh = actor->GetMesh();
@@ -69,9 +82,14 @@ void Mesh::Load() {
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	
+}
+
+void Mesh::LoadTexture() {
+	auto *actor = (scene::actor::Mesh *)m_actor;
 	const auto* texture = actor->GetTexture();
-	if (texture) {
-		g_engine->GetGraphics()->LoadTexture(texture);
+	
+	if ( texture ) {
+		g_engine->GetGraphics()->LoadTexture( texture );
 	}
 }
 
@@ -130,18 +148,31 @@ void Mesh::PrepareDataMesh() {
 
 }
 
-void Mesh::Unload() {
+void Mesh::UnloadMesh() {
 	// Log( "Unloading OpenGL actor" );
 
-	if ( m_actor ) {
-/*		auto *actor = (scene::actor::Mesh *)m_actor;
+	/*if ( m_actor ) {
+		auto *actor = (scene::actor::Mesh *)m_actor;
 
 		// it's better to keep everything loaded forever
 		const auto* texture = actor->GetTexture();
 		if (texture) {
 			g_engine->GetGraphics()->UnloadTexture(texture);
-		}*/
-	}
+		}
+	}*/
+}
+
+void Mesh::UnloadTexture() {
+	// keep loaded forever?
+	/*if ( m_actor ) {
+		auto *actor = (scene::actor::Mesh *)m_actor;
+		if ( actor ) {
+			const auto* texture = actor->GetTexture();
+			if ( texture ) {
+				g_engine->GetGraphics()->UnloadTexture( texture ); // test
+			}
+		}
+	}*/
 }
 
 void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera ) {

@@ -272,6 +272,14 @@ const UIObject::coord_t UIObject::ClampY( const coord_t value ) {
 	return g_engine->GetUI()->ClampY( value );
 }
 
+const UIObject::coord_t UIObject::UnclampX( const coord_t value ) {
+	return g_engine->GetUI()->UnclampX( value );
+}
+
+const UIObject::coord_t UIObject::UnclampY( const coord_t value ) {
+	return g_engine->GetUI()->UnclampY( value );
+}
+	
 const UIObject::vertex_t UIObject::ClampXY( const vertex_t value ) {
 	return vertex_t( ClampX( value.x ), ClampY( value.y ) );
 }

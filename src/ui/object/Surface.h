@@ -14,9 +14,11 @@ CLASS( Surface, Mesh )
 	void SetStretchTexture( const bool stretch_texture );
 	
 	virtual void Create();
+	virtual void Align();
 	
 protected:
 	
+	virtual void Resize();
 	virtual void ApplyStyle();
 	
 	bool m_stretch_texture = false;

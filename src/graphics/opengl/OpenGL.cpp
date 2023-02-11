@@ -247,7 +247,7 @@ void OpenGL::LoadTexture( const types::Texture* texture ) {
 
 		glActiveTexture( GL_TEXTURE0 );
 		glGenTextures( 1, &m_textures[texture] );
-
+		
 		glBindTexture( GL_TEXTURE_2D, m_textures[texture] );
 
 		ASSERT( !glGetError(), "Texture parameter error" );
@@ -281,7 +281,9 @@ void OpenGL::UnloadTexture( const types::Texture* texture ) {
 
 void OpenGL::EnableTexture( const types::Texture* texture ) {
 	if ( texture ) {
-		glBindTexture( GL_TEXTURE_2D, m_textures[texture] );
+		auto it = m_textures.find( texture );
+		ASSERT( it != m_textures.end(), "texture to be enabled not found" );
+		glBindTexture( GL_TEXTURE_2D, it->second );
 	}
 	else {
 		glBindTexture( GL_TEXTURE_2D, m_no_texture );

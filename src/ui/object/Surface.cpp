@@ -23,6 +23,7 @@ void Surface::Create() {
 	Mesh::Create();
 
 	NEW( m_background_mesh, types::mesh::Rectangle );
+	Resize();
 	SetMesh( m_background_mesh );
 }
 
@@ -51,6 +52,26 @@ void Surface::ApplyStyle() {
 	else {
 		ClearTexture();
 	}
+}
+
+void Surface::Align() {
+	Resize();
+	
+	Mesh::Align();
+}
+
+void Surface::Resize() {
+
+	Vec2< coord_t > v1 = { ClampX( m_object_area.left ), ClampY( m_object_area.top ) };
+	Vec2< coord_t > v2 = { ClampX( m_object_area.right ), ClampY( m_object_area.bottom ) };
+	
+	if ( m_texture && !m_stretch_texture ) {
+		m_background_mesh->SetCoords( v1, v2, { m_texture->m_width, m_texture->m_height }, -m_z_index );
+	}
+	else {
+		m_background_mesh->SetCoords( v1, v2, -m_z_index );
+	}
+
 }
 
 }

@@ -52,6 +52,8 @@ CLASS( UI, base::Module )
 	
 	const coord_t ClampX( const coord_t value ) const;
 	const coord_t ClampY( const coord_t value ) const;
+	const coord_t UnclampX( const coord_t value ) const;
+	const coord_t UnclampY( const coord_t value ) const;
 	
 	void ProcessEvent( UIEvent* event );
 	void SendMouseMoveEvent( UIObject* object );

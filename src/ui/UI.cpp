@@ -102,14 +102,22 @@ Scene *UI::GetTextScene() {
 	return m_text_scene;
 }
 
-const UI::coord_t UI::ClampX( const UI::coord_t value ) const {
+const UI::coord_t UI::ClampX( const coord_t value ) const {
 	return m_clamp.x.Clamp( value );
 }
 
-const UI::coord_t UI::ClampY( const UI::coord_t value ) const {
+const UI::coord_t UI::ClampY( const coord_t value ) const {
 	return m_clamp.y.Clamp( value );
 }
 
+const UI::coord_t UI::UnclampX( const coord_t value ) const {
+	return m_clamp.x.Unclamp( value );
+}
+
+const UI::coord_t UI::UnclampY( const coord_t value ) const {
+	return m_clamp.y.Unclamp( value );
+}
+	
 void UI::Iterate() {
 	m_root_object.Iterate();
 	

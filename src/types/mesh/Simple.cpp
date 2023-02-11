@@ -9,7 +9,7 @@ namespace types {
 namespace mesh {
 
 Simple::Simple( const size_t vertex_count, const size_t surface_count )
-	: Mesh( VERTEX_SIZE, vertex_count, surface_count )
+	: Mesh( MT_SIMPLE, VERTEX_SIZE, vertex_count, surface_count )
 {
 	
 }
@@ -45,6 +45,11 @@ void Simple::SetVertexTexCoord( const index_t index, const Vec2<coord_t> &tex_co
 	ASSERT( index < m_vertex_count, "index out of bounds" );
 	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( tex_coord ) ), &tex_coord, sizeof( tex_coord ) );
 	Update();
+}
+
+void Simple::GetVertexTexCoord( const index_t index, Vec2<coord_t>* coord ) const {
+	ASSERT( index < m_vertex_count, "index out of bounds" );
+	memcpy( coord, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( coord ) ), sizeof( coord ) );
 }
 
 }

@@ -1,5 +1,7 @@
 #include "Mesh.h"
 
+#include "util/Clamper.h"
+
 using namespace types;
 
 namespace ui {
@@ -53,6 +55,16 @@ void Mesh::ClearTexture() {
 	}
 }
 
+void Mesh::Create() {
+	UIObject::Create();
+	
+/* not needed?
+	if ( m_actor && m_texture ) {
+		m_actor->SetTexture( m_texture );
+	}
+ */
+}
+
 void Mesh::Destroy() {
 	if ( m_actor ) {
 		RemoveActor( m_actor );
@@ -76,20 +88,60 @@ void Mesh::Draw() {
 }
 
 void Mesh::Align() {
+	UIObject::Align();
 	
-	Log( "MESH ALIGN" );
+	auto c = m_original_mesh->GetVertexCount();
 	
-/*
-	const Vec2<coord_t> v1 = { ClampX( m_object_area.left ), ClampY( m_object_area.top ) };
-	const Vec2<coord_t> v2 = { ClampX( m_object_area.right ), ClampY( m_object_area.bottom ) };
+	Vec3 coord = {};
+	Vec2< coord_t > tex_coord = {};
 	
-	if ( m_texture && !m_stretch_texture ) {
-		m_background_mesh->SetCoords( v1, v2, { m_texture->m_width, m_texture->m_height }, -m_z_index );
+	coord_t mesh_left, mesh_top, mesh_right, mesh_bottom;
+	
+	for ( types::mesh::Mesh::index_t i = 0 ; i < c ; i++ ) {
+		m_original_mesh->GetVertexCoord( i, &coord );
+		if ( i == 0 || coord.x < mesh_left ) {
+			mesh_left = coord.x;
+		}
+		if ( i == 0 || coord.y < mesh_bottom ) {
+			mesh_bottom = coord.y;
+		}
+		if ( i == 0 || coord.x > mesh_right ) {
+			mesh_right = coord.x;
+		}
+		if ( i == 0 || coord.y > mesh_top ) {
+			mesh_top = coord.y;
+		}
 	}
-	else {
-		m_background_mesh->SetCoords( v1, v2, -m_z_index );
+	struct {
+		util::Clamper<coord_t> x;
+		util::Clamper<coord_t> y;
+	} object_area_to_mesh_coords;
+	
+	float w = mesh_right - mesh_left;
+	float h = mesh_bottom - mesh_top;
+	
+	object_area_to_mesh_coords.x.SetRange( UnclampX( mesh_left ), UnclampX( mesh_right ), m_object_area.left, m_object_area.right );
+	object_area_to_mesh_coords.y.SetRange( UnclampY( mesh_top ), UnclampY( mesh_bottom ), m_object_area.top, m_object_area.bottom );
+
+	for ( types::mesh::Mesh::index_t i = 0 ; i < c ; i++ ) {
+		m_original_mesh->GetVertexCoord( i, &coord );
+		
+		coord.x = ClampX( object_area_to_mesh_coords.x.Clamp( UnclampX( coord.x ) ) );
+		coord.y = ClampY( object_area_to_mesh_coords.y.Clamp( UnclampY( coord.y ) ) );
+		
+		m_mesh->SetVertexCoord( i, coord );
+
+		ASSERT( m_mesh->GetType() == m_original_mesh->GetType(), "mesh and original mesh have different types" );
+		switch ( m_mesh->GetType() ) {
+			case types::mesh::Mesh::MT_SIMPLE: {
+				auto *from = (types::mesh::Simple*) m_original_mesh;
+				auto *to = (types::mesh::Simple*) m_mesh;
+				from->GetVertexTexCoord( i, &tex_coord );
+				to->SetVertexTexCoord( i, tex_coord );
+				break;
+			}
+		}
 	}
-*/	
 }
 
 }

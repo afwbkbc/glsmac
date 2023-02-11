@@ -23,7 +23,7 @@ CLASS( Clamper, Util )
 		SetDstRange( dst_min, dst_max );
 	}
 	DATATYPE Clamp( const DATATYPE value ) const {
-		//Log( "Clamping " + to_string( value ) + " from [" + to_string( m_src_min ) + " " + to_string( m_src_max ) + "] to [" + to_string( m_dst_min ) + " " + to_string( m_dst_max ) + "]" );
+		//Log( "Clamping " + std::to_string( value ) + " from [" + std::to_string( m_src_min ) + " " + std::to_string( m_src_max ) + "] to [" + std::to_string( m_dst_min ) + " " + std::to_string( m_dst_max ) + "]" );
 		float result = (float) ( value - m_src_min ) * (float) ( (float) ( m_dst_max - m_dst_min ) / ( m_src_max - m_src_min ) );
 		if ( m_inversed )
 			result = m_dst_max - result;
@@ -37,7 +37,25 @@ CLASS( Clamper, Util )
 				result = m_dst_max;
 			}
 		}
-		//Log( "RESULT = " + to_string( result ) );
+		//Log( "RESULT = " + std::to_string( result ) );
+		return (DATATYPE) result;
+	}
+	DATATYPE Unclamp( const DATATYPE value ) const {
+		//Log( "Unclamping " + std::to_string( value ) + " from [" + std::to_string( m_src_min ) + " " + std::to_string( m_src_max ) + "] to [" + std::to_string( m_dst_min ) + " " + std::to_string( m_dst_max ) + "]" );
+		float result = (float) ( value - m_dst_min ) * (float) ( (float) ( m_src_max - m_src_min ) / ( m_dst_max - m_dst_min ) );
+		if ( m_inversed )
+			result = m_src_max - result;
+		else
+			result += m_src_min;
+		if ( !m_overflow_allowed ) {
+			if ( result < m_src_min ) {
+				result = m_src_min;
+			}
+			if ( result > m_src_max ) {
+				result = m_src_max;
+			}
+		}
+		//Log( "RESULT = " + std::to_string( result ) );
 		return (DATATYPE) result;
 	}
 	void SetInversed( const bool inversed ) {
