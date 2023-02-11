@@ -3,7 +3,7 @@
 namespace game {
 namespace mainmenu {
 
-MenuItem::MenuItem( MenuBlock* menu, const string& text, const bool is_title )
+MenuItem::MenuItem( MenuBlock* menu, const std::string& text, const bool is_title )
 	: UIContainer( "SlidingMenuItem" )
 	, m_menu( menu )
 	, m_text( text )
@@ -51,7 +51,7 @@ void MenuItem::Destroy() {
 	UIContainer::Destroy();
 }
 
-const string& MenuItem::GetText() const {
+const std::string& MenuItem::GetText() const {
 	return m_text;
 }
 

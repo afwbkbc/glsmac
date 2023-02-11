@@ -3,7 +3,7 @@
 namespace game {
 namespace mainmenu {
 
-Error::Error( MainMenu* mainmenu, const string& error_text )
+Error::Error( MainMenu* mainmenu, const std::string& error_text )
 	: PopupMenu( mainmenu, "ERROR" )
 	, m_error_text( error_text )
 {

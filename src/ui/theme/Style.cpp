@@ -7,7 +7,7 @@ using namespace types;
 namespace ui {
 namespace theme {
 
-Style::Style( const string& style_name, const StyleSheet* stylesheet )
+Style::Style( const std::string& style_name, const StyleSheet* stylesheet )
 	: m_style_name( style_name )
 	, m_stylesheet( stylesheet )
 {
@@ -66,11 +66,11 @@ void Style::SetTextureTC( const attribute_type_t attribute_type, const std::stri
 	SetObject( attribute_type, g_engine->GetTextureLoader()->LoadTextureTC( name, transparent_color ) );
 }
 
-void Style::SetTexture( const attribute_type_t attribute_type, const string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
+void Style::SetTexture( const attribute_type_t attribute_type, const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
 	SetObject( attribute_type, g_engine->GetTextureLoader()->LoadTexture( name, x1, y1, x2, y2, flags, value ) );
 }
 
-void Style::SetTextureTC( const attribute_type_t attribute_type, const string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const Color::rgba_t transparent_color, const uint8_t flags, const float value ) {
+void Style::SetTextureTC( const attribute_type_t attribute_type, const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const Color::rgba_t transparent_color, const uint8_t flags, const float value ) {
 	SetObject( attribute_type, g_engine->GetTextureLoader()->LoadTextureTC( name, x1, y1, x2, y2, transparent_color, flags, value ) );
 }
 
@@ -108,7 +108,7 @@ const void* Style::GetObject( const attribute_type_t attribute_type, const modif
 	return m_attributes[ modifiers ][ attribute_type ].value.ptr;
 }
 
-const string& Style::GetStyleName() const {
+const std::string& Style::GetStyleName() const {
 	return m_style_name;
 }
 
@@ -117,7 +117,7 @@ void Style::SetStyle() {
 	m_style_handler( this );
 }
 
-void Style::Include( const string& style_name ) {
+void Style::Include( const std::string& style_name ) {
 	m_includes.push_back( style_name );
 }
 

@@ -27,8 +27,8 @@ CLASS( TextureLoader, Loader )
 	Texture* LoadTextureTC( const std::string &name, const Color::rgba_t transparent_color );
 
 	// load part of texture
-	virtual Texture* LoadTexture( const string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = LT_NONE, const float value = 1.0 ) = 0;
-	Texture* LoadTextureTC( const string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const Color::rgba_t transparent_color, const uint8_t flags = LT_NONE, const float value = 1.0 );
+	virtual Texture* LoadTexture( const std::string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = LT_NONE, const float value = 1.0 ) = 0;
+	Texture* LoadTextureTC( const std::string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const Color::rgba_t transparent_color, const uint8_t flags = LT_NONE, const float value = 1.0 );
 	
 	// treat specific color as transparent
 	void SetTransparentColor( const Color::rgba_t rgba );

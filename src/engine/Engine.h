@@ -63,9 +63,9 @@ CLASS( Engine, base::Base );
 
 protected:
 
-	atomic<bool> m_is_shutting_down = false;
+	std::atomic<bool> m_is_shutting_down = false;
 	
-	vector<Thread*> m_threads = {};
+	std::vector<Thread*> m_threads = {};
 	Thread* m_main_thread = nullptr;
 
 	config::Config *const m_config = nullptr;

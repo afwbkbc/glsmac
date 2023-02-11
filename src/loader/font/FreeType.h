@@ -6,8 +6,6 @@
 
 #include "FontLoader.h"
 
-using namespace std;
-
 namespace loader {
 namespace font {
 
@@ -25,7 +23,7 @@ protected:
 	FT_Library m_freetype;
 	
 	// cache all fonts for future use
-	typedef unordered_map< string, types::Font* > font_map_t;
+	typedef std::unordered_map< std::string, types::Font* > font_map_t;
 	font_map_t m_fonts;
 };
 

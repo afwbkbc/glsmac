@@ -5,6 +5,8 @@
 
 #include "FS.h"
 
+using namespace std;
+
 namespace util {
 
 const bool FS::FileExists( const string& filename ) {

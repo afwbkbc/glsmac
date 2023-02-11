@@ -10,7 +10,7 @@ namespace object {
 
 CLASS( SoundEffect, UIObject )
 
-	SoundEffect( const string& class_name = "" );
+	SoundEffect( const std::string& class_name = "" );
 
 	void SetSound( const types::Sound* sound );
 	void SetVolume( const float volume );
@@ -37,7 +37,7 @@ protected:
 	bool m_repeatable = false;
 	size_t m_start_delay = 0;
 	
-	vector< actor::Sound* > m_actors = {};
+	std::vector< actor::Sound* > m_actors = {};
 };
 
 }

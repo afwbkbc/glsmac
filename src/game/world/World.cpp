@@ -370,7 +370,7 @@ void World::UpdateCameraRange() {
 
 void World::UpdateMapInstances() {
 	// needed for horizontal scrolling
-	vector< Vec3 > instances;
+	std::vector< Vec3 > instances;
 	
 	const float mhw = Map::s_consts.tile.scale.x * m_map->GetWidth() / 2;
 	
@@ -407,7 +407,7 @@ void World::ReturnToMainMenu() {
 void World::SelectTileAtPoint( const size_t x, const size_t y ) {
 	DeselectTile();
 	
-	Log( "Looking up tile at " + to_string( x ) + "x" + to_string( y ) );
+	Log( "Looking up tile at " + std::to_string( x ) + "x" + std::to_string( y ) );
 	
 	m_map->GetTileAtScreenCoords( x, g_engine->GetGraphics()->GetViewportHeight() - y ); // async
 }
@@ -417,7 +417,7 @@ void World::SelectTile( const Map::tile_info_t& tile_info ) {
 	auto tile = tile_info.tile;
 	auto ts = tile_info.ts;
 	
-	Log( "Selecting tile at " + to_string( tile->coord.x ) + "x" + to_string( tile->coord.y ) );
+	Log( "Selecting tile at " + std::to_string( tile->coord.x ) + "x" + std::to_string( tile->coord.y ) );
 	Map::tile_layer_type_t lt = ( tile->is_water_tile ? Map::LAYER_WATER : Map::LAYER_LAND );
 	auto& layer = ts->layers[ lt ];
 	auto coords = layer.coords;
@@ -470,7 +470,7 @@ void World::RemoveActor( actor::Actor* actor ) {
 void World::CenterMapAtTile( const Map::tile_state_t* ts ) {
 
 	m_camera_position.x = - ts->coord.x / m_viewport.viewport_aspect_ratio * m_camera_position.z;
-	m_camera_position.y = - ( ts->coord.y - max( 0.0f, Map::s_consts.clampers.elevation_to_vertex_z.Clamp( ts->elevations.center ) ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f;
+	m_camera_position.y = - ( ts->coord.y - std::max( 0.0f, Map::s_consts.clampers.elevation_to_vertex_z.Clamp( ts->elevations.center ) ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f;
 	
 	UpdateCameraPosition();
 }

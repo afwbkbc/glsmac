@@ -6,6 +6,8 @@
 
 // based on https://github.com/sol-prog/Perlin_Noise
 
+using namespace std;
+
 namespace util {
 
 // Initialize with the reference values for the permutation vector

@@ -28,8 +28,8 @@ CLASS( Packet, Serializable )
 	} udata;
 	
 	struct {
-		string str;
-		vector< string > vec;
+		std::string str;
+		std::vector< std::string > vec;
 	} data;
 
 	const Buffer Serialize() const;

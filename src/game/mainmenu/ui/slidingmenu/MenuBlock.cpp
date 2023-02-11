@@ -16,16 +16,16 @@ MenuBlock::MenuBlock( SlidingMenu* menu )
 	SetEventContexts( EC_KEYBOARD );
 }
 
-void MenuBlock::AddItem(const string& text) {
+void MenuBlock::AddItem(const std::string& text) {
 	m_selected_item_index = m_items.size();
 	m_items.push_back(text);
 }
 
-void MenuBlock::AddTitle(const string& text) {
+void MenuBlock::AddTitle(const std::string& text) {
 	m_title = text;
 }
 
-const string MenuBlock::GetChoice() const {
+const std::string MenuBlock::GetChoice() const {
 	if ( m_selected_item ) {
 		return m_selected_item->GetText();
 	}
@@ -34,8 +34,8 @@ const string MenuBlock::GetChoice() const {
 	}
 }
 
-void MenuBlock::SetChoice( const string& choice ) {
-	auto it = find( m_items.begin(), m_items.end(), choice );
+void MenuBlock::SetChoice( const std::string& choice ) {
+	auto it = std::find( m_items.begin(), m_items.end(), choice );
 	ASSERT( it != m_items.end(), "choice not found" );
 	SetActiveItem( m_items.end() - it - 1 );
 }
@@ -154,7 +154,7 @@ void MenuBlock::Iterate() {
 	}
 }
 
-void MenuBlock::OnItemClick( const string& choice ) {
+void MenuBlock::OnItemClick( const std::string& choice ) {
 	if (!IsSliding()) { // this is first click of this menu
 		// save choice
 		m_clicked_choice = choice;

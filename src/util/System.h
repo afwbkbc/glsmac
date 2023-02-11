@@ -5,8 +5,6 @@
 
 #include "Util.h"
 
-using namespace std;
-
 namespace util {
 
 CLASS( System, Util )
@@ -17,7 +15,7 @@ CLASS( System, Util )
 #endif
 
 	// to workaround uppercase or lowercase filenames
-	static vector< string > GetPossibleFilenames( const string& filename );
+	static std::vector< std::string > GetPossibleFilenames( const std::string& filename );
 	
 };
 

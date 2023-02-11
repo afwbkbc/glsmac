@@ -23,9 +23,9 @@ const Random::value_t Random::Generate() {
 #undef rot32
 
 void Random::SetSeed( const value_t seed ) {
-	lock_guard<mutex> guard( m_mutex );
+	std::lock_guard<std::mutex> guard( m_mutex );
 	
-	Log( "Setting seed " + to_string( seed ) );
+	Log( "Setting seed " + std::to_string( seed ) );
 	m_state.a = 0xf1ea5eed, m_state.b = m_state.c = m_state.d = seed;
 	for ( value_t i = 0; i < 20; ++i ) {
 		(void)Generate();
@@ -43,7 +43,7 @@ const bool Random::GetBool() {
 }
 
 const uint32_t Random::GetUInt( const uint32_t min, const uint32_t max ) {
-	lock_guard<mutex> guard( m_mutex );
+	std::lock_guard<std::mutex> guard( m_mutex );
 	
 	ASSERT( max >= min, "GetUInt max larger than min" );
 	
@@ -55,7 +55,7 @@ const uint32_t Random::GetUInt( const uint32_t min, const uint32_t max ) {
 
 #define FLOAT_PRECISION ( (float)INT_MAX / FLOAT_RANGE_MAX )
 const float Random::GetFloat( const float min, const float max ) {
-	lock_guard<mutex> guard( m_mutex );
+	std::lock_guard<std::mutex> guard( m_mutex );
 	
 	ASSERT( max >= min, "GetFloat max larger than min" );
 	
@@ -77,13 +77,13 @@ const bool Random::IsLucky( const value_t difficulty ) {
 }
 
 const Random::state_t Random::GetState() {
-	lock_guard<mutex> guard( m_mutex );
+	std::lock_guard<std::mutex> guard( m_mutex );
 	
 	return m_state;
 }
 
 void Random::SetState( const state_t& state ) {
-	lock_guard<mutex> guard( m_mutex );
+	std::lock_guard<std::mutex> guard( m_mutex );
 	
 	m_state.a = state.a;
 	m_state.b = state.b;
@@ -92,16 +92,16 @@ void Random::SetState( const state_t& state ) {
 	Log( "State set to " + GetStateStr() );
 }
 
-const string Random::GetStateString() {
-	lock_guard<mutex> guard( m_mutex );
+const std::string Random::GetStateString() {
+	std::lock_guard<std::mutex> guard( m_mutex );
 	
 	return GetStateStr();
 }
 
-const string Random::GetStateStr() {
+const std::string Random::GetStateStr() {
 	// no lock guard, internal method
 	
-	return "{" + to_string( m_state.a ) + "," + to_string( m_state.b ) + "," + to_string( m_state.c ) + "," + to_string( m_state.d ) + "}";
+	return "{" + std::to_string( m_state.a ) + "," + std::to_string( m_state.b ) + "," + std::to_string( m_state.c ) + "," + std::to_string( m_state.d ) + "}";
 }
 
 }

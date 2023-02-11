@@ -3,7 +3,7 @@
 namespace ui {
 namespace object {
 
-ChoiceList::ChoiceList( const string& class_name ) : UIContainer( class_name ) {
+ChoiceList::ChoiceList( const std::string& class_name ) : UIContainer( class_name ) {
 	SetEventContexts( EC_KEYBOARD );
 }
 
@@ -17,13 +17,13 @@ void ChoiceList::SetChoices( const choices_t& choices ) {
 	}
 }
 
-void ChoiceList::SetValue( const string& value ) {
+void ChoiceList::SetValue( const std::string& value ) {
 	auto it = m_buttons.find( value );
 	ASSERT( it != m_buttons.end(), "value does not exist in choices" );
 	SetActiveButton( it->second );
 }
 
-const string& ChoiceList::GetValue() const {
+const std::string& ChoiceList::GetValue() const {
 	ASSERT( !m_choices.empty(), "choices are empty" );
 	ASSERT( m_value < m_choices.size(), "choices value overflow" );
 	return m_choices[ m_value ];

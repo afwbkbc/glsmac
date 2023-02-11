@@ -5,7 +5,7 @@
 namespace ui {
 namespace object {
 
-Panel::Panel( const string& class_name ) : UIContainer( class_name ) {
+Panel::Panel( const std::string& class_name ) : UIContainer( class_name ) {
 	
 }
 

@@ -73,12 +73,12 @@ Mesh::data_request_id_t Mesh::GetDataAt( const size_t screen_x, const size_t scr
 	return id;
 }
 
-pair< bool, mesh::Data::data_t > Mesh::GetDataResponse( const data_request_id_t id ) {
+std::pair< bool, mesh::Data::data_t > Mesh::GetDataResponse( const data_request_id_t id ) {
 	auto it = m_data_requests.find( id );
 	ASSERT( it != m_data_requests.end(), "data request not found" );
 	
 	if ( it->second.is_processed ) {
-		pair< bool, mesh::Data::data_t > result = { true, it->second.result };
+		std::pair< bool, mesh::Data::data_t > result = { true, it->second.result };
 		// Log( "Data request " + to_string( id ) + " completed" );
 		m_data_requests.erase( it );
 		return result;

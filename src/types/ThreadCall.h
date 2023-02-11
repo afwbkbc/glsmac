@@ -12,7 +12,7 @@ namespace types {
 template< typename REQUESTDATATYPE, typename RESPONSEDATATYPE >
 CLASS( ThreadCall, base::Base )
 	
-	typedef function<RESPONSEDATATYPE(REQUESTDATATYPE data)> threadcall_func_t;
+	typedef std::function<RESPONSEDATATYPE(REQUESTDATATYPE data)> threadcall_func_t;
 //ThreadCall( threadcall_func_t)
 
 	void SetRequest( REQUESTDATATYPE );

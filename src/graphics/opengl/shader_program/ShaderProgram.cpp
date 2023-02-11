@@ -2,6 +2,8 @@
 
 #include "ShaderProgram.h"
 
+using namespace std;
+
 namespace graphics {
 namespace opengl {
 namespace shader_program {

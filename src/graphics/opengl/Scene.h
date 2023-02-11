@@ -10,8 +10,6 @@
 #include "texture/Texture.h"
 #include "actor/Actor.h"
 
-using namespace std;
-
 namespace graphics {
 namespace opengl {
 
@@ -47,8 +45,8 @@ protected:
 
 	base::ObjectLink *m_skybox_texture = NULL;
 	
-	vector<base::ObjectLink *> m_gl_actors;
-	map< float, vector< Actor* > > m_gl_actors_by_zindex;
+	std::vector<base::ObjectLink *> m_gl_actors;
+	std::map< float, std::vector< Actor* > > m_gl_actors_by_zindex;
 	
 	
 private:

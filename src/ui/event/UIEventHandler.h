@@ -6,8 +6,6 @@
 
 #include "UIEvent.h"
 
-using namespace std;
-
 namespace ui {
 namespace event {
 
@@ -15,7 +13,7 @@ namespace event {
 	
 CLASS( UIEventHandler, base::Base )
 
-	typedef function<bool( const UIEvent::event_data_t* data )> handler_function_t;
+	typedef std::function<bool( const UIEvent::event_data_t* data )> handler_function_t;
 	
 	UIEventHandler( const handler_function_t func );
 	

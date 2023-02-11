@@ -4,8 +4,6 @@
 
 #include "Util.h"
 
-using namespace std::chrono;
-
 namespace util {
 
 CLASS( Timer, Util )
@@ -29,7 +27,7 @@ CLASS( Timer, Util )
 	void SetInterval(const size_t ms);
 
 	bool Running();
-	milliseconds GetElapsed();
+	std::chrono::milliseconds GetElapsed();
 	bool Ticked();
 	
 protected:
@@ -37,10 +35,10 @@ protected:
 	void Tick();
 
 	operation_type_t m_operation = NONE;
-	milliseconds m_current = milliseconds::zero();
-	milliseconds m_elapsed = milliseconds::zero();
-	milliseconds m_target = milliseconds::zero();
-	milliseconds m_interval = milliseconds::zero();
+	std::chrono::milliseconds m_current = std::chrono::milliseconds::zero();
+	std::chrono::milliseconds m_elapsed = std::chrono::milliseconds::zero();
+	std::chrono::milliseconds m_target = std::chrono::milliseconds::zero();
+	std::chrono::milliseconds m_interval = std::chrono::milliseconds::zero();
 	size_t m_ticks = 0;
 	
 };

@@ -11,8 +11,6 @@
  *   (this class is thread-safe)
  */
 
-using namespace std;
-
 namespace util {
 
 CLASS( Random, Util )
@@ -39,15 +37,15 @@ CLASS( Random, Util )
 	
 	const state_t GetState();
 	void SetState( const state_t& state );
-	const string GetStateString();
+	const std::string GetStateString();
 	
 private:
 	
-	mutex m_mutex;
+	std::mutex m_mutex;
 	state_t m_state = {};
 	
 	const value_t Generate();
-	const string GetStateStr();
+	const std::string GetStateStr();
 };
 
 }

@@ -6,8 +6,6 @@ namespace ui {
 
 void Style::AddStyles() {
 	
-	const pair< size_t, size_t > split_bottom_frame_at = { 356, 520 };
-	
 	AddStyle( "MapBottomBar", SH() {
 		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM );
 		s->Set( ::Style::A_HEIGHT, 256 );

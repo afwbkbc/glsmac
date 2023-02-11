@@ -7,8 +7,6 @@
 #include "../Vec3.h"
 #include "../Color.h"
 
-using namespace std;
-
 namespace types {
 namespace mesh {
 

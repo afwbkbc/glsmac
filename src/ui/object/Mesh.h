@@ -14,7 +14,7 @@ namespace object {
 
 CLASS( Mesh, UIObject )
 
-	Mesh( const string& class_name = "" );
+	Mesh( const std::string& class_name = "" );
 	
 	void SetMesh( const types::mesh::Mesh* mesh );
 	void SetTexture( const types::Texture* texture);

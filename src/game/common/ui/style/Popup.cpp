@@ -9,7 +9,7 @@ void Popup::AddStyles() {
 	AddStyle( "PopupBorder", SH() {
 		// frame
 		{
-			const unordered_map<Style::attribute_type_t,vector<size_t>> textures = {
+			const std::unordered_map< Style::attribute_type_t, std::vector< size_t > > textures = {
 				{ Style::A_TEXTURE_BACK, { 86, 353, 109, 376 } },
 				{ Style::A_TEXTURE_BORDER_LEFT, { 79, 431, 79, 454 } },
 				{ Style::A_TEXTURE_BORDER_TOP, { 86, 307, 109, 307 } },
@@ -26,7 +26,7 @@ void Popup::AddStyles() {
 		
 		// frame
 		{
-			const unordered_map<Style::attribute_type_t,vector<size_t>> textures = {
+			const std::unordered_map< Style::attribute_type_t, std::vector< size_t > > textures = {
 				{ Style::A_TEXTURE_BACK, { 86, 353, 109, 376 } },
 				{ Style::A_TEXTURE_BORDER_LEFT, { 79, 431, 79, 454 } },
 				{ Style::A_TEXTURE_BORDER_TOP, { 86, 307, 109, 307 } },
@@ -40,7 +40,7 @@ void Popup::AddStyles() {
 		
 		// header
 		{
-			const unordered_map<Style::attribute_type_t,vector<size_t>> textures = {
+			const std::unordered_map< Style::attribute_type_t, std::vector< size_t > > textures = {
 				{ Style::A_HEADER_TEXTURE_BACK, { 86, 314, 109, 337 } },
 				{ Style::A_HEADER_TEXTURE_BORDER_LEFT, { 79, 431, 79, 454 } },
 				{ Style::A_HEADER_TEXTURE_BORDER_TOP, { 86, 307, 109, 307 } },
@@ -93,7 +93,7 @@ void Popup::AddStyles() {
 	});
 	
 	AddStyle( "PopupButton", SH() {
-		unordered_map<Style::attribute_type_t,vector<size_t>> textures = {};
+		std::unordered_map< Style::attribute_type_t, std::vector< size_t > > textures = {};
 
 		// borders
 		if ( s->Is( Style::M_ACTIVE ) || s->Is( Style::M_SELECTED ) ) {

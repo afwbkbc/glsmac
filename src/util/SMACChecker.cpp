@@ -8,6 +8,8 @@
 
 #include "SMACChecker.h"
 
+using namespace std;
+
 namespace util {
 
 void SMACChecker::CheckPath( const string& path ) {
@@ -15,13 +17,13 @@ void SMACChecker::CheckPath( const string& path ) {
 		"terranx.exe"
 	};
 	for (auto& file : important_files) {
-		std::string fullPath = path + "/" + file;
+		string fullPath = path + "/" + file;
 #ifdef _WIN32
 		if (GetFileAttributesA(fullPath.c_str()) == INVALID_FILE_ATTRIBUTES) {
 #else
 		if (access(fullPath.c_str(), F_OK) == -1) {
 #endif
-			throw std::runtime_error("Invalid SMAC directory or SMAC installation corrupted (could not find file: '" + fullPath + "').");
+			throw runtime_error("Invalid SMAC directory or SMAC installation corrupted (could not find file: '" + fullPath + "').");
 		}
 		//if ( access( ( path + "/" + file ).c_str(), F_OK ) == -1 ) {
 		//	throw runtime_error("Invalid SMAC directory or SMAC installation corrupted (could not find file: '" + path + "/" + file + "').");

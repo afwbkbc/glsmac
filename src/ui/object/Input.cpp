@@ -8,7 +8,7 @@
 namespace ui {
 namespace object {
 
-Input::Input( const string& class_name ) : Panel( class_name ) {
+Input::Input( const std::string& class_name ) : Panel( class_name ) {
 	SetEventContexts( EC_MOUSE | EC_MOUSEMOVE );
 }
 
@@ -53,14 +53,14 @@ void Input::Destroy() {
 	Panel::Destroy();
 }
 
-void Input::SetValue( const string& value ) {
+void Input::SetValue( const std::string& value ) {
 	if ( value != m_value ) {
 		m_value = value;
 		UpdateValueLabel();
 	}
 }
 
-const string& Input::GetValue() const {
+const std::string& Input::GetValue() const {
 	return m_value;
 }
 
@@ -82,7 +82,7 @@ bool Input::OnKeyDown( const UIEvent::event_data_t* data ) {
 	}
 	else if ( data->key.is_printable ) {
 		if ( m_max_length > 0 && m_value.size() < m_max_length - 1 ) {
-			m_value += string( 1, data->key.key );
+			m_value += std::string( 1, data->key.key );
 			UpdateValueLabel();
 		}
 	}

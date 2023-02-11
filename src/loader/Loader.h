@@ -4,14 +4,12 @@
 
 #include "base/Module.h"
 
-using namespace std;
-
 namespace loader {
 
 CLASS( Loader, base::Module )
 
 protected:
-	const string& GetRoot();
+	const std::string& GetRoot();
 };
 
 } /* namespace loader */

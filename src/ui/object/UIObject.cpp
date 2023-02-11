@@ -11,7 +11,7 @@ using namespace event;
 
 namespace object {
 
-UIObject::UIObject( const string& class_name ) {
+UIObject::UIObject( const std::string& class_name ) {
 	m_position.left = 0;
 	m_position.right = 0;
 	m_position.top = 0;
@@ -179,14 +179,14 @@ void UIObject::ForwardStyleAttribute( const Style::attribute_type_t type ) {
 	ForwardStyleAttribute( type, type );
 }
 
-void UIObject::ForwardStyleAttributesV( const vector< Style::attribute_type_t > types ) {
+void UIObject::ForwardStyleAttributesV( const std::vector< Style::attribute_type_t > types ) {
 	for ( auto& type : types ) {
 		m_parent_style_attributes[ type ] = type;
 	}
 	ReloadStyle();
 }
 
-void UIObject::ForwardStyleAttributesM( const unordered_map< Style::attribute_type_t, Style::attribute_type_t > types ) {
+void UIObject::ForwardStyleAttributesM( const std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > types ) {
 	for ( auto& type : types ) {
 		m_parent_style_attributes[ type.second ] = type.first;
 	}
@@ -606,7 +606,7 @@ UIObject::vertex_t UIObject::GetAreaPosition() const {
 	return { m_object_area.left, m_object_area.top };
 }
 
-pair<UIObject::vertex_t, UIObject::vertex_t> UIObject::GetAreaGeometry() const {
+std::pair< UIObject::vertex_t, UIObject::vertex_t > UIObject::GetAreaGeometry() const {
 	return {
 		{ m_object_area.left, m_object_area.top },
 		{ m_object_area.right, m_object_area.bottom }
@@ -623,7 +623,7 @@ bool UIObject::IsPointInside( const size_t x, const size_t y ) const {
 	);
 }
 
-void UIObject::SetClass( const string& style_class ) {
+void UIObject::SetClass( const std::string& style_class ) {
 	ASSERT( m_style_class.empty(), "style class already set to '" + m_style_class + "'" ); // TODO: make changeable?
 	ASSERT( !m_style_loaded, "style '" + m_style_class + "' already loaded" );
 	//Log("Setting style class '" + style_class + "'");
@@ -722,8 +722,8 @@ const Style::attribute_type_t UIObject::GetParentAttribute( const Style::attribu
 	return it->second;
 }
 
-const string UIObject::GetStyleModifiersString() const {
-	string str = " ";
+const std::string UIObject::GetStyleModifiersString() const {
+	std::string str = " ";
 #ifdef DEBUG
 	if ( HasStyleModifier( Style::M_HOVER ) ) {
 		str += "HOVER ";

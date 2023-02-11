@@ -19,8 +19,8 @@ CLASS( Event, base::Base )
 	
 	event_type_t type = ET_NONE;
 	struct {
-		string remote_address;
-		string packet_data;
+		std::string remote_address;
+		std::string packet_data;
 	} data;
 	
 	void operator= ( const Event& other ) {

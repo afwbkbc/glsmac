@@ -22,7 +22,7 @@ CLASS( Audio, base::Module )
 	void RemoveAndDeleteActor( scene::actor::Sound *actor );
 	
 protected:
-	vector< scene::actor::Sound* > m_removal_queue = {};
+	std::vector< scene::actor::Sound* > m_removal_queue = {};
 	
 };
 

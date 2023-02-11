@@ -5,7 +5,7 @@
 namespace game {
 namespace mainmenu {
 
-PopupMenu::PopupMenu( MainMenu *mainmenu, const string& title )
+PopupMenu::PopupMenu( MainMenu *mainmenu, const std::string& title )
 	: MenuObject( mainmenu, title )
 {
 	
@@ -117,7 +117,7 @@ void PopupMenu::Hide() {
 	g_engine->GetUI()->RemoveObject( m_frame );
 }
 
-void PopupMenu::SetFlags( const unordered_set< popup_flag_t > flags ) {
+void PopupMenu::SetFlags( const std::unordered_set< popup_flag_t > flags ) {
 	m_flags = flags;
 }
 

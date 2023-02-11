@@ -25,8 +25,8 @@ CLASS( HostJoin, PopupMenu )
 
 	void OnNext();
 	
-	const string GetChoice() const;
-	void SetChoice( const string& choice );
+	const std::string GetChoice() const;
+	void SetChoice( const std::string& choice );
 
 private:
 	

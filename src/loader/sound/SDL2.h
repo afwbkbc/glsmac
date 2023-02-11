@@ -4,8 +4,6 @@
 
 #include "SoundLoader.h"
 
-using namespace std;
-
 namespace loader {
 namespace sound {
 
@@ -17,7 +15,7 @@ CLASS( SDL2, SoundLoader )
 
 private:
 	// cache all sounds for future use
-	typedef unordered_map< string, types::Sound* > sound_map_t;
+	typedef std::unordered_map< std::string, types::Sound* > sound_map_t;
 	sound_map_t m_sounds;
 };
 

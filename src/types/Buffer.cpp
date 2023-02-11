@@ -13,7 +13,7 @@ Buffer::Buffer() {
 	dr = nullptr;
 }
 
-Buffer::Buffer( const string& val ) {
+Buffer::Buffer( const std::string& val ) {
 	allocated_len = val.size();
 	lenw = val.size();
 	lenr = 0;
@@ -92,12 +92,12 @@ char* Buffer::ReadImpl( type_t need_type, char* s, size_t* sz, const size_t need
 	}
 	memcpy( &type, dr, sizeof( type ) ); dr += sizeof( type );
 	if ( type != need_type ) {
-		THROW( "unexpected type on buffer read ( " + to_string( need_type ) + " != " + to_string( type ) + " )" );
+		THROW( "unexpected type on buffer read ( " + std::to_string( need_type ) + " != " + std::to_string( type ) + " )" );
 	}
 	memcpy( sz, dr, sizeof( *sz ) );
 	dr += sizeof( *sz );
 	if ( need_sz && ( need_sz != *sz ) ) {
-		THROW( "buffer read size mismatch ( " + to_string( need_sz ) + " != " + to_string( *sz ) + " )" );
+		THROW( "buffer read size mismatch ( " + std::to_string( need_sz ) + " != " + std::to_string( *sz ) + " )" );
 	}
 	checksum_t need_c = 0;
 	lenr += sizeof( type ) + sizeof( *sz ) + *sz + sizeof( need_c );
@@ -119,7 +119,7 @@ char* Buffer::ReadImpl( type_t need_type, char* s, size_t* sz, const size_t need
 	//Log( "Checking checksum (" + to_string( need_c ) + ")" );
 	checksum_t c = *(dr++);
 	if ( need_c != c ) {
-		THROW( "buffer read checksum mismatch ( " + to_string( need_c ) + " != " + to_string( c ) + " )" );
+		THROW( "buffer read checksum mismatch ( " + std::to_string( need_c ) + " != " + std::to_string( c ) + " )" );
 	}
 	ASSERT( dr - data == lenr, "buffer read bytes count mismatch ( " + to_string( dr - data ) + " != " + to_string( lenr ) + " )" );
 	//Log( "Read successfully" );
@@ -161,15 +161,15 @@ const float Buffer::ReadFloat() {
 	return val;
 }
 
-void Buffer::WriteString( const string& val ) {
+void Buffer::WriteString( const std::string& val ) {
 	WriteImpl( T_STRING, val.data(), val.size() );
 }
 
-const string Buffer::ReadString() {
+const std::string Buffer::ReadString() {
 	size_t sz = 0;
 	char *res_data = ReadImpl( T_STRING, nullptr, &sz );
 	if ( sz > 0 ) {
-		string result = string( res_data, sz );
+		std::string result = std::string( res_data, sz );
 		free( res_data );
 		return result;
 	}
@@ -222,8 +222,8 @@ const void* Buffer::ReadData( const size_t len ) {
 	return val;
 }
 
-const string Buffer::ToString() const {
-	return data ? string( (const char*)data, lenw ) : "";
+const std::string Buffer::ToString() const {
+	return data ? std::string( (const char*)data, lenw ) : "";
 }
 
 }

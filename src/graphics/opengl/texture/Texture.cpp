@@ -8,7 +8,7 @@ namespace opengl {
 Texture::Texture( types::Texture *texture ) : m_texture( texture ) {
 	m_name = texture->m_name;
 	
-	throw runtime_error( "deprecated" );
+	THROW( "deprecated" );
 }
 
 Texture::~Texture() {

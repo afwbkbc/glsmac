@@ -7,13 +7,13 @@ using namespace types;
 namespace ui {
 namespace object {
 
-Label::Label( const string& class_name )
+Label::Label( const std::string& class_name )
 	: UIObject( class_name )
 {
 	SetAlign( ALIGN_CENTER );
 }
 
-void Label::SetText( const string& text ) {
+void Label::SetText( const std::string& text ) {
 	if ( m_text != text ) {
 		m_text = text;
 		Realign();

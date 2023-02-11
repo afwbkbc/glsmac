@@ -55,7 +55,7 @@ types::Texture *Scene::GetSkyboxTexture() {
 }
 
 void Scene::SetInstances( const instances_t& instances ) {
-	Log( "Setting " + to_string( instances.size() ) + " instances" );
+	Log( "Setting " + std::to_string( instances.size() ) + " instances" );
 	m_instances = instances;
 	for ( auto& actor : m_actors ) {
 		actor->UpdatePosition();

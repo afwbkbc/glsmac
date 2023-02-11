@@ -6,14 +6,12 @@
 
 #include "ui/event/UIEvent.h"
 
-using namespace std;
-
 namespace ui {
 namespace object {
 
 CLASS( UIContainer, UIObject )
 
-	UIContainer( const string& class_name = "" );
+	UIContainer( const std::string& class_name = "" );
 	
 	virtual void AddChild( UIObject *object );
 	virtual void RemoveChild( UIObject *object );
@@ -44,7 +42,7 @@ protected:
 	
 	std::vector<UIObject *> m_child_objects = {};
 	
-	const string Subclass( const string& class_name ) const;
+	const std::string Subclass( const std::string& class_name ) const;
 	
 private:
 	void CreateChild( UIObject *object );

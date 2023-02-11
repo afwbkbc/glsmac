@@ -43,7 +43,7 @@ bool Mesh::ReloadNeeded() {
 	size_t mesh_updated_counter = actor->GetMesh()->UpdatedCount();
 	auto *data_mesh = actor->GetDataMesh();
 	if ( data_mesh ) {
-		mesh_updated_counter = max( mesh_updated_counter, data_mesh->UpdatedCount() );
+		mesh_updated_counter = std::max( mesh_updated_counter, data_mesh->UpdatedCount() );
 	}
 	if ( m_update_counter == mesh_updated_counter ) {
 		return false;
@@ -108,7 +108,7 @@ void Mesh::PrepareDataMesh() {
 		size_t w = g_engine->GetGraphics()->GetViewportWidth();
 		size_t h = g_engine->GetGraphics()->GetViewportHeight();
 		
-		Log( "(re)loading data mesh (viewport size: " + to_string( w ) + "x" + to_string( h ) + ")" );
+		Log( "(re)loading data mesh (viewport size: " + std::to_string( w ) + "x" + std::to_string( h ) + ")" );
 		
 		glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
 		

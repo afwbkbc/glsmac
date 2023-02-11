@@ -44,7 +44,7 @@ protected:
 	GLuint m_gl_shader_program = 0;
 	
 	// shader helpers
-	const string S_HasFlag( const string& var, const GLuint flag ) const;
+	const std::string S_HasFlag( const std::string& var, const GLuint flag ) const;
 	
 };
 

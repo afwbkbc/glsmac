@@ -12,9 +12,9 @@ namespace object {
 
 CLASS( Section, UIContainer )
 
-	Section( const string& class_name = "" );
+	Section( const std::string& class_name = "" );
 		
-	void SetTitleText( const string& title_text );
+	void SetTitleText( const std::string& title_text );
 
 	virtual void AddChild( UIObject *object );
 	virtual void RemoveChild( UIObject *object );
@@ -25,7 +25,7 @@ CLASS( Section, UIContainer )
 protected:
 	void ApplyStyle();
 	
-	string m_title_text = "";
+	std::string m_title_text = "";
 	
 	Panel* m_frame = nullptr;
 		Panel* m_titlebar = nullptr;
@@ -33,7 +33,7 @@ protected:
 		Panel* m_body = nullptr;
 	
 		// TODO: style attribute scopes/inheritance
-	const unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_forwarded_style_attributes = {
+	const std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_forwarded_style_attributes = {
 		{ Style::A_BORDER_WIDTH, Style::A_BORDER_WIDTH },
 		{ Style::A_HEADER_TEXTURE_BACK, Style::A_HEADER_TEXTURE_BACK },
 		{ Style::A_HEADER_TEXTURE_BORDER_LEFT, Style::A_HEADER_TEXTURE_BORDER_LEFT },
@@ -55,7 +55,7 @@ protected:
 		{ Style::A_HEADER_HEIGHT, Style::A_HEADER_HEIGHT },
 	};
 	
-	const unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_forwarded_header_style_attributes = {
+	const std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_forwarded_header_style_attributes = {
 		{ Style::A_HEADER_TEXTURE_BACK, Style::A_TEXTURE_BACK },
 		{ Style::A_HEADER_TEXTURE_BORDER_LEFT, Style::A_TEXTURE_BORDER_LEFT },
 		{ Style::A_HEADER_TEXTURE_BORDER_TOP, Style::A_TEXTURE_BORDER_TOP },
@@ -67,7 +67,7 @@ protected:
 		{ Style::A_HEADER_HEIGHT, Style::A_HEIGHT },
 	};
 	
-	const unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_forwarded_header_label_style_attributes = {
+	const std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_forwarded_header_label_style_attributes = {
 		{ Style::A_HEADER_FONT, Style::A_FONT },
 		{ Style::A_HEADER_TEXTCOLOR, Style::A_TEXTCOLOR },
 		{ Style::A_HEADER_TEXTALIGN, Style::A_TEXTALIGN },

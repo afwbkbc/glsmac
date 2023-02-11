@@ -13,7 +13,6 @@
 
 #include "MenuItem.h"
 
-using namespace std;
 using namespace ui::object;
 using namespace ui::event;
 
@@ -35,11 +34,11 @@ CLASS(MenuBlock, UIContainer)
 	void Destroy();
 	void Iterate();
 	
-	void AddItem(const string& text);
-	void AddTitle(const string& text);
+	void AddItem(const std::string& text);
+	void AddTitle(const std::string& text);
 	
-	const string GetChoice() const;
-	void SetChoice( const string& choice );
+	const std::string GetChoice() const;
+	void SetChoice( const std::string& choice );
 	
 	void GoBack();
 	bool IsSliding();
@@ -47,19 +46,19 @@ CLASS(MenuBlock, UIContainer)
 protected:
 	friend class MenuItem;
 	
-	void OnItemClick( const string& choice );
+	void OnItemClick( const std::string& choice );
 	
 	void SetActiveItem( const size_t index );
 	
-	vector<string> m_items = {};
-	string m_title = "";
+	std::vector<std::string> m_items = {};
+	std::string m_title = "";
 	
 	SlidingMenu* m_menu = nullptr;
-	vector<MenuItem*> m_menu_items = {};
+	std::vector<MenuItem*> m_menu_items = {};
 	MenuItem* m_selected_item = nullptr;
 	size_t m_selected_item_index = 0;
 	
-	string m_clicked_choice = "";
+	std::string m_clicked_choice = "";
 	
 	ssize_t m_slide_value = -MENU_CLOSED_POSITION;
 	ssize_t m_slide_change = SLIDING_SPEED;

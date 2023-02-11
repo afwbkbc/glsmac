@@ -3,11 +3,11 @@
 namespace ui {
 namespace object {
 	
-Section::Section( const string& class_name ) : UIContainer( class_name ) {
+Section::Section( const std::string& class_name ) : UIContainer( class_name ) {
 	//
 }
 	
-void Section::SetTitleText( const string& title_text ) {
+void Section::SetTitleText( const std::string& title_text ) {
 	if ( title_text != m_title_text ) {
 		m_title_text = title_text;
 		if ( m_titlelabel ) {

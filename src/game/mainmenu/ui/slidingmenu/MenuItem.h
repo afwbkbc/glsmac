@@ -6,7 +6,6 @@
 #include "ui/object/Surface.h"
 #include "ui/object/Label.h"
 
-using namespace std;
 using namespace ui::object;
 using namespace ui::event;
 
@@ -16,24 +15,24 @@ namespace mainmenu {
 class MenuBlock;
 	
 CLASS( MenuItem, UIContainer )
-	MenuItem( MenuBlock* menu, const string& text, const bool is_title = false );
+	MenuItem( MenuBlock* menu, const std::string& text, const bool is_title = false );
 
 	virtual void Create();
 	virtual void Destroy();
 
-	const string& GetText() const;
+	const std::string& GetText() const;
 
 protected:
 
 	bool OnMouseDown( const UIEvent::event_data_t* data );
 	
 	MenuBlock* m_menu = nullptr;
-	const string m_text = "";
+	const std::string m_text = "";
 	const bool m_is_title = false;
 	
 	Label* m_label = nullptr;
 	
-	vector<UIObject*> m_parts = {};
+	std::vector< UIObject* > m_parts = {};
 };
 
 }

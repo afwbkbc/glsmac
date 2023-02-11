@@ -18,7 +18,7 @@ SDL2::~SDL2() {
 
 Sound* SDL2::LoadSound( const std::string &name ) {
 	
-	string font_key = name;
+	std::string font_key = name;
 	
 	sound_map_t::iterator it = m_sounds.find( font_key );
 	if (it != m_sounds.end()) {

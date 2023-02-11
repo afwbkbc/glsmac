@@ -32,7 +32,7 @@ protected:
 		Surface* middle = nullptr;
 	} m_frames;
 	
-	vector< Surface* > m_backgrounds;
+	std::vector< Surface* > m_backgrounds;
 	
 	struct {
 		Button* menu = nullptr;

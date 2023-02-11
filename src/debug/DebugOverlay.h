@@ -10,7 +10,6 @@
 #include "ui/object/Label.h"
 #include "ui/object/Surface.h"
 
-using namespace std;
 using namespace types;
 using namespace ui;
 namespace ui {

@@ -17,7 +17,7 @@ CLASS( Text, Actor )
 	Text( scene::actor::Text *actor, Font* font );
 	~Text();
 	
-	void Update( Font* font, const string& text, const float x, const float y );
+	void Update( Font* font, const std::string& text, const float x, const float y );
 	void Draw( shader_program::ShaderProgram *shader_program, Camera *camera = nullptr );
 	
 protected:

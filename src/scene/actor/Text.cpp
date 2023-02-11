@@ -5,7 +5,7 @@
 namespace scene {
 namespace actor {
 
-Text::Text( types::Font *font, const string &text, types::Color color ) :
+Text::Text( types::Font *font, const std::string &text, types::Color color ) :
 	Actor( Actor::TYPE_TEXT, "Text" ),
 	m_font( font ),
 	m_text( text ),
@@ -22,7 +22,7 @@ Font *Text::GetFont() const {
 	return m_font;
 }
 
-const string& Text::GetText() const {
+const std::string& Text::GetText() const {
 	return m_text;
 }
 
@@ -30,7 +30,7 @@ const Color& Text::GetColor() const {
 	return m_color;
 }
 
-void Text::SetText( const string& text ) {
+void Text::SetText( const std::string& text ) {
 	if ( text != m_text ) {
 		m_text = text;
 

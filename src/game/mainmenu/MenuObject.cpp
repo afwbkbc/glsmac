@@ -3,7 +3,7 @@
 namespace game {
 namespace mainmenu {
 
-MenuObject::MenuObject( MainMenu *mainmenu, const string& title )
+MenuObject::MenuObject( MainMenu *mainmenu, const std::string& title )
 	: base::Base()
 	, m_mainmenu( mainmenu )
 	, m_title( title )
@@ -19,7 +19,7 @@ void MenuObject::GoBack() {
 	m_mainmenu->GoBack();
 }
 
-void MenuObject::MenuError( const string& error_text ) {
+void MenuObject::MenuError( const std::string& error_text ) {
 	m_mainmenu->MenuError( error_text );
 }
 

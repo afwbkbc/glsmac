@@ -4,8 +4,6 @@
 
 #include "Mesh.h"
 
-using namespace std;
-
 namespace types {
 namespace mesh {
 

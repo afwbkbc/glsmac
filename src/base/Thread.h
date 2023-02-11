@@ -22,7 +22,7 @@ CLASS( Thread, Base )
 		COMMAND_STOP,
 	};
 
-	Thread( const string& thread_name );
+	Thread( const std::string& thread_name );
 	~Thread();
 	void SetIPS( const float ips ) {
 		m_ips = ips;
@@ -34,17 +34,17 @@ CLASS( Thread, Base )
 	bool T_IsRunning();
 	void T_Stop();
 	
-	const string& GetThreadName() const;
+	const std::string& GetThreadName() const;
 	
 	void SetCommand( const thread_command_t command );
 protected:
-	const string m_thread_name = "";
+	const std::string m_thread_name = "";
 	
 	void Run();
-	thread* m_thread = nullptr;
+	std::thread* m_thread = nullptr;
 	
-	atomic<thread_state_t> m_state = STATE_INACTIVE;
-	atomic<thread_command_t> m_command = COMMAND_NONE;
+	std::atomic<thread_state_t> m_state = STATE_INACTIVE;
+	std::atomic<thread_command_t> m_command = COMMAND_NONE;
 	base::modules_t m_modules = {};
 	float m_ips = 10;
 #ifdef DEBUG

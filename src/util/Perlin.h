@@ -24,7 +24,7 @@ CLASS( Perlin, Util )
 private:
 	
 	// The permutation vector
-	vector<int> p;
+	std::vector<int> p;
 	
 	float Fade( float t );
 	float Lerp( float t, float a, float b );

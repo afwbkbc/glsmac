@@ -17,7 +17,7 @@ void Theme::AddStyleSheet( StyleSheet* stylesheet ) {
 	}
 }
 
-const Style* Theme::GetStyle( const string style_class ) const {
+const Style* Theme::GetStyle( const std::string style_class ) const {
 	ASSERT( m_is_finalized, "getting style from non-finalized theme" );
 	auto it = m_styles.find( style_class );
 	if ( it == m_styles.end() ) {

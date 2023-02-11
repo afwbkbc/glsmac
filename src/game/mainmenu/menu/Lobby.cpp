@@ -160,7 +160,7 @@ void Lobby::Iterate() {
 													break;
 												}
 												default: {
-													Log( "WARNING: invalid packet type from server: " + to_string( packet.type ) );
+													Log( "WARNING: invalid packet type from server: " + std::to_string( packet.type ) );
 												}
 											}
 										}
@@ -175,7 +175,7 @@ void Lobby::Iterate() {
 										break;
 									}
 									default: {
-										Log( "WARNING: invalid event type from server: " + to_string( event.type ) );
+										Log( "WARNING: invalid event type from server: " + std::to_string( event.type ) );
 									}
 								}
 								break;
@@ -190,7 +190,7 @@ void Lobby::Iterate() {
 										break;
 									}
 									case Event::ET_CLIENT_CONNECT: {
-										Log( to_string( event.cid ) + " connected" );
+										Log( std::to_string( event.cid ) + " connected" );
 										ASSERT( m_player_names.find( event.cid ) == m_player_names.end(), "player cid already in player names" );
 										m_player_names[ event.cid ] = ""; // to be queried
 										{
@@ -201,7 +201,7 @@ void Lobby::Iterate() {
 										break;
 									}
 									case Event::ET_CLIENT_DISCONNECT: {
-										Log( to_string( event.cid ) + " disconnected" );
+										Log( std::to_string( event.cid ) + " disconnected" );
 										auto it = m_player_names.find( event.cid );
 										if ( it != m_player_names.end() ) {
 											m_player_names.erase( it );
@@ -215,17 +215,17 @@ void Lobby::Iterate() {
 										switch ( packet.type ) {
 											case Packet::PT_AUTH: {
 												if ( packet.data.str.empty() ) {
-													Log( "Authentication from " + to_string( event.cid ) + " failed, disconnecting" );
+													Log( "Authentication from " + std::to_string( event.cid ) + " failed, disconnecting" );
 													network->MT_DisconnectClient( event.cid );
 												}
 												else {
-													Log( "Got authentication from " + to_string( event.cid ) + ": " + packet.data.str );
+													Log( "Got authentication from " + std::to_string( event.cid ) + ": " + packet.data.str );
 													
 													// update name
 													ASSERT( m_player_names.find( event.cid ) != m_player_names.end(), "player cid not found" );
 													m_player_names[ event.cid ] = packet.data.str;
 													
-													Log( "Sending global settings to " + to_string( event.cid ) );
+													Log( "Sending global settings to " + std::to_string( event.cid ) );
 													Packet p;
 													p.type = Packet::PT_GLOBAL_SETTINGS;
 													p.data.str = m_mainmenu->m_settings.global.Serialize().ToString();
@@ -236,13 +236,13 @@ void Lobby::Iterate() {
 												break;
 											}
 											default: {
-												Log( "WARNING: invalid packet type from client " + to_string( event.cid ) + " : " + to_string( packet.type ) );
+												Log( "WARNING: invalid packet type from client " + std::to_string( event.cid ) + " : " + std::to_string( packet.type ) );
 											}
 										}
 										break;
 									}
 									default: {
-										Log( "WARNING: invalid event type from client " + to_string( event.cid ) + " : " + to_string( event.type ) );
+										Log( "WARNING: invalid event type from client " + std::to_string( event.cid ) + " : " + std::to_string( event.type ) );
 									}
 								}
 								break;

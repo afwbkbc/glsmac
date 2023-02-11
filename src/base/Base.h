@@ -7,7 +7,7 @@
 #include <string>
 #include <stdexcept>
 
-#define THROW(  _text ) throw runtime_error( _text )
+#define THROW(  _text ) throw std::runtime_error( _text )
 
 #ifdef DEBUG
 #include "env/Debug.h"
@@ -15,32 +15,30 @@
 #include "env/Release.h"
 #endif
 
-using namespace std;
-
 namespace base {
 
 class Base {
 public:
 	Base();
 	virtual ~Base();
-	virtual const string GetNamespace() const;
-	const string GetName() const;
-	const string& GetLocalName() const;
-	virtual const string GetClassName() const = 0;
+	virtual const std::string GetNamespace() const;
+	const std::string GetName() const;
+	const std::string& GetLocalName() const;
+	virtual const std::string GetClassName() const = 0;
 protected:
 	const size_t m_object_id = 0;
-	string m_class_name = "";
-	string m_name = "";
-	void Log( const string &text ) const;
+	std::string m_class_name = "";
+	std::string m_name = "";
+	void Log( const std::string &text ) const;
 };
 
 #define CLASS( _name, _parent ) \
 class _name : public _parent { \
 public: \
-	virtual const string GetNamespace() const { \
+	virtual const std::string GetNamespace() const { \
 		return _parent::GetNamespace() + # _name + "::" ; \
 	} \
-	const string GetClassName() const { \
+	const std::string GetClassName() const { \
 		return #_name; \
 	}
 

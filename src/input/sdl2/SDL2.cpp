@@ -129,7 +129,7 @@ UIEvent::mouse_button_t SDL2::GetMouseButton( uint8_t sdl_mouse_button ) const {
 			return UIEvent::M_RIGHT;
 		}
 		default: {
-			Log( "unsupported mouse button " + to_string( sdl_mouse_button ) );
+			Log( "unsupported mouse button " + std::to_string( sdl_mouse_button ) );
 			return UIEvent::M_NONE;
 		}
 	}

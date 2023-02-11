@@ -120,7 +120,7 @@ void MainMenu::ShowMenu( MenuObject* menu_object ) {
 	m_menu_next = menu_object;
 }
 
-void MainMenu::MenuError( const string& error_text ) {
+void MainMenu::MenuError( const std::string& error_text ) {
 	NEWV( menu, Error, this, error_text );
 	ShowMenu( menu );
 }

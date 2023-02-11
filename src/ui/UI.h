@@ -24,13 +24,12 @@
 
 #include "module/Loader.h"
 
-using namespace std;
 using namespace scene;
 using namespace types;
 
 namespace ui {
 
-typedef function<void()> object_iterate_handler_t;
+typedef std::function<void()> object_iterate_handler_t;
 #define IH( ... ) [ __VA_ARGS__ ] () -> void
 	
 using namespace event;
@@ -67,7 +66,7 @@ CLASS( UI, base::Module )
 	void AddTheme( theme::Theme* theme );
 	void RemoveTheme( theme::Theme* theme );
 	
-	const theme::Style* GetStyle( const string& style_class ) const;
+	const theme::Style* GetStyle( const std::string& style_class ) const;
 	
 	void AddIterativeObject( void* object, const object_iterate_handler_t handler );
 	void RemoveIterativeObject( void* object );
@@ -105,25 +104,25 @@ protected:
 	
 	Vec2<ssize_t> m_last_mouse_position = { 0, 0 };
 	
-	typedef unordered_set< theme::Theme* > themes_t;
+	typedef std::unordered_set< theme::Theme* > themes_t;
 	const themes_t GetThemes() const;
 	themes_t m_themes = {};
 	
 private:
 
-	unordered_map< global_event_handler_order_t, UIObject::event_handlers_t > m_global_event_handlers = {};
+	std::unordered_map< global_event_handler_order_t, UIObject::event_handlers_t > m_global_event_handlers = {};
 	void TriggerGlobalEventHandlers( global_event_handler_order_t order, UIEvent* event );
 	
-	vector< UIObject* > m_focusable_objects_order = {};
-	unordered_set< UIObject* > m_focusable_objects = {};
+	std::vector< UIObject* > m_focusable_objects_order = {};
+	std::unordered_set< UIObject* > m_focusable_objects = {};
 	UIObject* m_focused_object = nullptr;
 	void UpdateFocusableObjectsOrder();
 	void FocusNextObject();
 	
 	module::Loader* m_loader = nullptr;
 	
-	unordered_map< void*, object_iterate_handler_t > m_iterative_objects = {};
-	vector< void* > m_iterative_objects_to_remove = {};
+	std::unordered_map< void*, object_iterate_handler_t > m_iterative_objects = {};
+	std::vector< void* > m_iterative_objects_to_remove = {};
 	
 	const UIEventHandler* m_keydown_handler = nullptr;
 	
@@ -136,7 +135,7 @@ private:
 		actor::Mesh* actor;
 	} debug_frame_data_t;
 	
-	typedef unordered_map< const UIObject*, debug_frame_data_t > debug_frames_map_t;
+	typedef std::unordered_map< const UIObject*, debug_frame_data_t > debug_frames_map_t;
 	debug_frames_map_t m_debug_frames = {};
 	
 	void ResizeDebugFrame( const UIObject* object, const debug_frame_data_t* data );

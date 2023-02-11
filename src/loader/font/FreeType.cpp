@@ -24,9 +24,9 @@ void FreeType::Iterate() {
 
 }
 
-types::Font *FreeType::LoadFont( const string &name, const unsigned char size ) {
+types::Font *FreeType::LoadFont( const std::string &name, const unsigned char size ) {
 	
-	string font_key = name + ":" + to_string(size);
+	std::string font_key = name + ":" + std::to_string(size);
 	
 	font_map_t::iterator it = m_fonts.find( font_key );
 	if (it != m_fonts.end()) {
@@ -80,7 +80,7 @@ types::Font *FreeType::LoadFont( const string &name, const unsigned char size ) 
 			}
 
 			font->m_dimensions.width += g->bitmap.width;
-			font->m_dimensions.height = max( font->m_dimensions.height, (float)g->bitmap.rows );
+			font->m_dimensions.height = std::max( font->m_dimensions.height, (float)g->bitmap.rows );
 		}
 
 		FT_Done_Face( ftface );

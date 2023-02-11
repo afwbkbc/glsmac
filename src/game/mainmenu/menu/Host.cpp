@@ -69,11 +69,11 @@ void Host::Hide() {
 	PopupMenu::Hide();
 }
 
-const string Host::GetChoice() const {
+const std::string Host::GetChoice() const {
 	return m_input_yourname->GetValue() + ";" + m_input_gamename->GetValue(); // HACK
 }
 
-void Host::SetChoice( const string& choice ) {
+void Host::SetChoice( const std::string& choice ) {
 	// HACK
 	size_t pos = choice.find( ";" );
 	ASSERT( pos >= 0, "; not found in choice" );

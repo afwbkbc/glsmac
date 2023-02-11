@@ -13,13 +13,13 @@ namespace object {
 
 CLASS( Button, Panel )
 
-	Button( const string& class_name = "" );
+	Button( const std::string& class_name = "" );
 
 	virtual void Create();
 	virtual void Destroy();
 	
-	void SetLabel( const string& text );
-	const string& GetLabel() const;
+	void SetLabel( const std::string& text );
+	const std::string& GetLabel() const;
 	void SetTextAlign( alignment_t alignment );
 
 protected:
@@ -30,7 +30,7 @@ protected:
 	bool OnMouseDown( const UIEvent::event_data_t* data );
 	bool OnMouseUp( const UIEvent::event_data_t* data );
 	
-	string m_label_text = "";
+	std::string m_label_text = "";
 	alignment_t m_label_alignment = ALIGN_CENTER;
 	Label* m_label = nullptr;
 	

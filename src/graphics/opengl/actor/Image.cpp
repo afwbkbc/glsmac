@@ -46,8 +46,8 @@ void Image::Load() {
 
 	auto *actor = (scene::actor::Image *)m_actor;
 	
-	Log("image width=" + to_string(actor->GetImage()->m_width) + " height=" + to_string(actor->GetImage()->m_height));
-	Log("viewport width=" + to_string(g_engine->GetGraphics()->GetViewportWidth()) + " height=" + to_string(g_engine->GetGraphics()->GetViewportHeight()));
+	Log( "image width=" + std::to_string( actor->GetImage()->m_width ) + " height=" + std::to_string( actor->GetImage()->m_height ) );
+	Log( "viewport width=" + std::to_string( g_engine->GetGraphics()->GetViewportWidth() ) + " height=" + std::to_string( g_engine->GetGraphics()->GetViewportHeight() ) );
 	
 	// width and height scaled to viewport (to have same absolute pixel size always)
 	float scaled_w = (float) actor->GetImage()->m_width / g_engine->GetGraphics()->GetViewportWidth();

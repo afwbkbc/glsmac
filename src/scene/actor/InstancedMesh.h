@@ -14,7 +14,7 @@ CLASS( InstancedMesh, Mesh )
 	InstancedMesh( const std::string &name, const types::mesh::Render *mesh = nullptr );
 	~InstancedMesh();
 	
-	typedef vector< types::Matrix44 > world_matrices_t;
+	typedef std::vector< types::Matrix44 > world_matrices_t;
 	const world_matrices_t& GetWorldMatrices();
 	types::Matrix44 & GetWorldMatrix();
 	
@@ -32,7 +32,7 @@ protected:
 		types::Matrix44 world;
 	} instanced_matrices_t;
 	
-	vector< instanced_matrices_t > m_instance_matrices = {};
+	std::vector< instanced_matrices_t > m_instance_matrices = {};
 	
 private:
 	const scene::Scene::instances_t* GetInstances();

@@ -79,7 +79,7 @@ CLASS( GlobalSettings, Serializable )
 	};
 	network_type_t network_type = NT_NONE;
 	
-	string game_name = "";
+	std::string game_name = "";
 	
 	// TODO: custom rules struct
 	
@@ -98,8 +98,8 @@ public:
 	};
 	network_role_t network_role = NR_NONE;
 	
-	string player_name = "";
-	string remote_address = "";
+	std::string player_name = "";
+	std::string remote_address = "";
 		
 	const Buffer Serialize() const;
 	void Unserialize( Buffer data );
