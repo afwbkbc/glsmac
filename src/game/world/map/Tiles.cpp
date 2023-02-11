@@ -133,7 +133,7 @@ void Tiles::Resize( const size_t width, const size_t height ) {
 
 #ifdef DEBUG
 		// check that all pointers are linked to something
-#define CHECKTILE( _what ) ASSERT( tile->_what, "tile " #_what " not linked at " + to_string( x ) + "x" + to_string( y ) );
+#define CHECKTILE( _what ) ASSERT( tile->_what, "tile " #_what " not linked at " + std::to_string( x ) + "x" + std::to_string( y ) );
 
 				CHECKTILE( W );
 				CHECKTILE( NW );

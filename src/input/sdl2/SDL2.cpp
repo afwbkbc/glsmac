@@ -58,7 +58,7 @@ void SDL2::Iterate() {
 				NEWV( ui_event, event::MouseDown, event.motion.x, event.motion.y, GetMouseButton( event.button.button ) );
 				g_engine->GetUI()->ProcessEvent( ui_event );
 				ASSERT( m_active_mousedowns.find( event.button.button ) == m_active_mousedowns.end(),
-					"duplicate mousedown (button=" + to_string( event.button.button ) + ")"
+					"duplicate mousedown (button=" + std::to_string( event.button.button ) + ")"
 				);
 				m_active_mousedowns[ event.button.button ] = { event.motion.x, event.motion.y };
 				DELETE( ui_event );

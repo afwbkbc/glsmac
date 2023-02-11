@@ -75,7 +75,7 @@ void World::Start() {
 	
 #ifdef DEVEL
 	if ( FS::FileExists( MAP_DUMP_FILENAME ) ) {
-		Log( (string) "Loading map dump from " + MAP_DUMP_FILENAME );
+		Log( (std::string) "Loading map dump from " + MAP_DUMP_FILENAME );
 		m_map->SetTiles( tiles, false );
 		m_map->Unserialize( Buffer( FS::ReadFile( MAP_DUMP_FILENAME ) ) );
 	}
@@ -84,7 +84,7 @@ void World::Start() {
 	{
 #ifdef DEVEL
 		if ( FS::FileExists( MAP_FILENAME ) ) {
-			Log( (string) "Loading map from " + MAP_FILENAME );
+			Log( (std::string) "Loading map from " + MAP_FILENAME );
 			tiles->Unserialize( Buffer( FS::ReadFile( MAP_FILENAME ) ) );
 		}
 		else
@@ -96,14 +96,14 @@ void World::Start() {
 			generator.Generate( tiles, m_random->GetUInt( 0, UINT32_MAX - 1 ) );
 #ifdef DEBUG
 			// if crash happens - it's handy to have a map file to reproduce it
-			Log( (string) "Saving map to " + MAP_FILENAME );
+			Log( (std::string) "Saving map to " + MAP_FILENAME );
 			FS::WriteFile( MAP_FILENAME, tiles->Serialize().ToString() );
 #endif
 		}
 		m_map->SetTiles( tiles );
 #ifdef DEBUG
 		// also handy to have dump of generated map
-		Log( (string) "Saving map dump to " + MAP_DUMP_FILENAME );
+		Log( (std::string) "Saving map dump to " + MAP_DUMP_FILENAME );
 		FS::WriteFile( MAP_DUMP_FILENAME, m_map->Serialize().ToString() );
 #endif
 	}
@@ -166,7 +166,7 @@ void World::Start() {
 			
 			for (auto& actor : m_map->GetActors() ) {
 				auto newz = actor->GetAngleZ() + ( (float) rotate.x * MAP_ROTATE_SPEED );
-				auto newy = max( -0.5f, min( 0.5f, actor->GetAngleY() + ( (float) rotate.y * MAP_ROTATE_SPEED ) ) );
+				auto newy = std::max( -0.5f, std::min( 0.5f, actor->GetAngleY() + ( (float) rotate.y * MAP_ROTATE_SPEED ) ) );
 				actor->SetAngleZ( newz );
 				actor->SetAngleY( newy );
 			}

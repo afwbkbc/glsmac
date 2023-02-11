@@ -16,7 +16,7 @@ Simple::Simple( const size_t vertex_count, const size_t surface_count )
 
 Simple::index_t Simple::AddVertex( const Vec3 &coord, const Vec2<coord_t> &tex_coord ) {
 	ASSERT( !m_is_final, "addvertex on already finalized mesh" );
-	ASSERT( m_vertex_i < m_vertex_count, "vertex out of bounds (" + to_string( m_vertex_i ) + " >= " + to_string( m_vertex_count ) + ")" );
+	ASSERT( m_vertex_i < m_vertex_count, "vertex out of bounds (" + std::to_string( m_vertex_i ) + " >= " + std::to_string( m_vertex_count ) + ")" );
 	size_t offset = m_vertex_i * VERTEX_SIZE * sizeof( coord_t );
 	memcpy( ptr( m_vertex_data, offset, sizeof( coord ) ), &coord, sizeof(coord) );
 	offset += VERTEX_COORD_SIZE * sizeof( coord_t );

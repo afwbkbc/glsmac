@@ -66,7 +66,7 @@ void Buffer::Alloc( size_t size ) {
 
 // note: mostly THROWs instead of ASSERTs, because we need that validation in release mode too to prevent buffer overflows
 void Buffer::WriteImpl( type_t type, const char* s, const size_t sz ) {
-	ASSERT( type > T_NONE && type < T_MAX, "invalid buffer write type " + to_string( type ) );
+	ASSERT( type > T_NONE && type < T_MAX, "invalid buffer write type " + std::to_string( type ) );
 	//Log( "Writing " + to_string( sz ) + " bytes (type=" + to_string( type ) + ")" );
 	checksum_t c = 0;
 	Alloc( sizeof(type) + sizeof(sz) + sz + sizeof(c) );
@@ -80,12 +80,12 @@ void Buffer::WriteImpl( type_t type, const char* s, const size_t sz ) {
 	//Log( "Writing checksum (" + to_string( c ) + ")" );
 	*(dw++) = c;
 	
-	ASSERT( dw - data == lenw, "buffer write bytes count mismatch ( " + to_string( dw - data ) + " != " + to_string( lenw ) + " )" );
+	ASSERT( dw - data == lenw, "buffer write bytes count mismatch ( " + std::to_string( dw - data ) + " != " + std::to_string( lenw ) + " )" );
 	//Log( "Written successfully" );
 }
 
 char* Buffer::ReadImpl( type_t need_type, char* s, size_t* sz, const size_t need_sz ) {
-	ASSERT( need_type > T_NONE && need_type < T_MAX, "invalid buffer read type " + to_string( need_type ) );
+	ASSERT( need_type > T_NONE && need_type < T_MAX, "invalid buffer read type " + std::to_string( need_type ) );
 	type_t type = T_NONE;
 	if ( lenw < lenr + sizeof( type ) + sizeof( *sz ) ) {
 		THROW( "buffer ends prematurely (while reading header)" );
@@ -121,7 +121,7 @@ char* Buffer::ReadImpl( type_t need_type, char* s, size_t* sz, const size_t need
 	if ( need_c != c ) {
 		THROW( "buffer read checksum mismatch ( " + std::to_string( need_c ) + " != " + std::to_string( c ) + " )" );
 	}
-	ASSERT( dr - data == lenr, "buffer read bytes count mismatch ( " + to_string( dr - data ) + " != " + to_string( lenr ) + " )" );
+	ASSERT( dr - data == lenr, "buffer read bytes count mismatch ( " + std::to_string( dr - data ) + " != " + std::to_string( lenr ) + " )" );
 	//Log( "Read successfully" );
 	
 	return s;

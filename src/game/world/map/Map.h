@@ -133,7 +133,7 @@ CLASS( Map, Serializable )
 	void SetTiles( Tiles* tiles, bool generate_actors = true );
 	
 #ifdef DEBUG
-	vector<scene::actor::Mesh*> GetActors() const;
+	std::vector<scene::actor::Mesh*> GetActors() const;
 #endif
 	
 	// order is important (it defines rendering order)

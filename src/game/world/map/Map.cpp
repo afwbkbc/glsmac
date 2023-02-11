@@ -559,8 +559,8 @@ void Map::Unserialize( Buffer buf ) {
 	
 	m_tiles->Unserialize( buf.ReadString() );
 
-	ASSERT( m_tiles->GetWidth() == m_map_state.dimensions.x, "tiles width doesn't match map width ( " + to_string( m_tiles->GetWidth() ) + " != " + to_string( m_map_state.dimensions.x ) + " )" );
-	ASSERT( m_tiles->GetHeight() == m_map_state.dimensions.y, "tiles height doesn't match map height ( " + to_string( m_tiles->GetHeight() ) + " != " + to_string( m_map_state.dimensions.y ) + " )" );
+	ASSERT( m_tiles->GetWidth() == m_map_state.dimensions.x, "tiles width doesn't match map width ( " + std::to_string( m_tiles->GetWidth() ) + " != " + std::to_string( m_map_state.dimensions.x ) + " )" );
+	ASSERT( m_tiles->GetHeight() == m_map_state.dimensions.y, "tiles height doesn't match map height ( " + std::to_string( m_tiles->GetHeight() ) + " != " + std::to_string( m_map_state.dimensions.y ) + " )" );
 
 	if ( m_tile_states ) {
 		free( m_tile_states );

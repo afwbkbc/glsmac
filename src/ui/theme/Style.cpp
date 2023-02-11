@@ -173,7 +173,7 @@ void Style::PrepareAttributes( const modifier_t modifiers ) {
 void Style::CheckSet( const attribute_type_t attribute_type ) const {
 	ASSERT( m_is_initialized, "style '" + GetStyleName() + "' not initialized" );
 	ASSERT( m_attributes_ptr, "attributes ptr not set" );
-	ASSERT( !(*m_attributes_ptr)[ attribute_type ].is_set, "style attribute '" + to_string( attribute_type ) + "' in style '" + GetStyleName() + "' already set" );
+	ASSERT( !(*m_attributes_ptr)[ attribute_type ].is_set, "style attribute '" + std::to_string( attribute_type ) + "' in style '" + GetStyleName() + "' already set" );
 }
 
 void Style::CheckGet( const attribute_type_t attribute_type, const modifier_t modifiers ) const {

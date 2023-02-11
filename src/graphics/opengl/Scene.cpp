@@ -128,7 +128,7 @@ void Scene::Update() {
 		gl_actors_by_zindex_count += actors.second.size();
 	}
 	if ( gl_actors_by_zindex_count != m_gl_actors.size() ) {
-		THROW( "gl_actors_by_zindex count does not match gl_actors count ( " + to_string( gl_actors_by_zindex_count ) + " , " + to_string( m_gl_actors.size() ) + " )" );
+		THROW( "gl_actors_by_zindex count does not match gl_actors count ( " + std::to_string( gl_actors_by_zindex_count ) + " , " + std::to_string( m_gl_actors.size() ) + " )" );
 	}
 #endif
 }
@@ -137,12 +137,12 @@ void Scene::Draw( shader_program::ShaderProgram *shader_program ) {
 	
 #ifdef DEBUG
 	float last_zindex = -9999999;
-	string zindex_sequence = "";
+	std::string zindex_sequence = "";
 #endif
 	for ( auto& actors : m_gl_actors_by_zindex ) {
 #ifdef DEBUG
 		float zindex = actors.first;
-		zindex_sequence += " " + to_string( zindex );
+		zindex_sequence += " " + std::to_string( zindex );
 		if ( zindex < last_zindex ) {
 			THROW( "invalid zindex sequence: " + zindex_sequence );
 		}

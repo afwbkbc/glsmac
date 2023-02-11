@@ -71,7 +71,7 @@ void Sound::SetAutoPlay( const bool autoplay ) {
 }
 
 void Sound::SetVolume( const float volume ) {
-	ASSERT( volume >= 0 && volume <= 1, "invalid volume " + to_string( volume ) );
+	ASSERT( volume >= 0 && volume <= 1, "invalid volume " + std::to_string( volume ) );
 	m_volume = volume;
 }
 

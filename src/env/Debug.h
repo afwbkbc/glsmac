@@ -40,7 +40,7 @@ using namespace debug;
 	} _stat;
 	
 	typedef struct {
-		mutex _mutex; \
+		std::mutex _mutex; \
 		bool _readonly = false;
 		DEBUG_STATS
 	} debug_stats_t;
@@ -139,7 +139,7 @@ extern debug_stats_t g_debug_stats;
 
 #define ASSERT( _condition, _text ) \
 	if ( !( _condition ) ) { \
-		Log( (string) "FATAL: " + _text ); \
+		Log( (std::string) "FATAL: " + _text ); \
 		THROW( _text ); \
 	}
 

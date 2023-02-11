@@ -27,7 +27,7 @@ bool System::AreWeUnderGDB() {
 	if (pid == -1)
 	{
 		perror("fork");
-		cout << "WARNING: gdb check failed" << endl;
+		std::cout << "WARNING: gdb check failed" << std::endl;
 		return false;
 	}
 

@@ -90,7 +90,7 @@ void UIObject::SetParentObject( UIContainer *parent_object ) {
 }
 
 void UIObject::SetZIndex( float z_index ) {
-	ASSERT( z_index >= 0.1 && z_index <= 0.9, "invalid z-index " + to_string( z_index ) );
+	ASSERT( z_index >= 0.1 && z_index <= 0.9, "invalid z-index " + std::to_string( z_index ) );
 	if ( m_z_index != z_index ) {
 		m_z_index = z_index;
 		UpdateZIndex();
@@ -665,13 +665,13 @@ void UIObject::ApplyStyleIfNeeded() {
 }
 
 void UIObject::AddStyleModifier( const Style::modifier_t modifier ) {
-	ASSERT( !( m_style_modifiers & modifier ), "style modifier " + to_string( modifier ) + " already added" );
+	ASSERT( !( m_style_modifiers & modifier ), "style modifier " + std::to_string( modifier ) + " already added" );
 	m_style_modifiers |= modifier;
 	ApplyStyle();
 }
 
 void UIObject::RemoveStyleModifier( const Style::modifier_t modifier ) {
-	ASSERT( (m_style_modifiers & modifier), "style modifier " + to_string( modifier ) + " already removed" );
+	ASSERT( (m_style_modifiers & modifier), "style modifier " + std::to_string( modifier ) + " already removed" );
 	m_style_modifiers &= ~modifier;
 	ApplyStyle();
 }
