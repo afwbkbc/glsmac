@@ -603,7 +603,7 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 				break;
 			}
 			default: {
-				ASSERT( false, "unknown event type " + std::to_string( event->m_type ) );
+				// nothing
 			}
 		}
 	}
