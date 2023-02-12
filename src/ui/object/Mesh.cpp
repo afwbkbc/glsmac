@@ -118,20 +118,35 @@ void Mesh::Align() {
 		util::Clamper<coord_t> y;
 	} object_area_to_mesh_coords;
 	
-	float w = mesh_right - mesh_left;
-	float h = mesh_bottom - mesh_top;
-	
 	bool is_render_mesh = m_mesh->GetType() == types::mesh::Mesh::MT_RENDER;
 	
 	if ( is_render_mesh ) {
-		Log( "BEGIN ( area: "
-			+ std::to_string( m_object_area.left ) + "x" + std::to_string( m_object_area.top )
-			+ std::to_string( m_object_area.top ) + "x" + std::to_string( m_object_area.bottom )
-			+ ", vertex size: " + std::to_string( m_mesh->VERTEX_SIZE ) + " )"
-		);
+		// for render meshes y is inversed for some reason, TODO: investigate
 		auto tmp = mesh_bottom;
 		mesh_bottom = mesh_top;
 		mesh_top = tmp;
+		
+		if ( m_aspect_ratio_mode != AM_NONE ) {
+			
+			float ws = mesh_right - mesh_left;
+			float hs = mesh_bottom - mesh_top;
+			float as = hs / ws;
+			float wd = m_object_area.right - m_object_area.left;
+			float hd = m_object_area.bottom - m_object_area.top;
+			float ad = hd / wd; 
+
+			if ( as != ad ) {
+				Log( "SOURCE W=" + std::to_string( ws ) + " H=" + std::to_string( hs ) + " A=" + std::to_string( as ) );
+				Log( "  DEST W=" + std::to_string( wd ) + " H=" + std::to_string( hd ) + " A=" + std::to_string( ad ) );
+				if ( m_aspect_ratio_mode == AM_SCALE_WIDTH ) {
+					float c = ( mesh_right + mesh_left ) / 2;
+					ws /= ad * 2;
+					mesh_right = c + ws;
+					mesh_left = c - ws;
+				}
+			}
+			
+		}
 	}
 	
 	object_area_to_mesh_coords.x.SetRange( UnclampX( mesh_left ), UnclampX( mesh_right ), m_object_area.left, m_object_area.right );
@@ -140,25 +155,8 @@ void Mesh::Align() {
 	for ( types::mesh::Mesh::index_t i = 0 ; i < c ; i++ ) {
 		m_original_mesh->GetVertexCoord( i, &coord );
 		
-		/*if ( is_render_mesh ) {
-			Log( (std::string) "FROM: "
-				+ std::to_string( coord.x ) + "x" + std::to_string( coord.y ) + " ( "
-				+ std::to_string( UnclampX( coord.x ) ) + "x" + std::to_string( UnclampY( coord.y ) ) + " )"
-				+ " z=" + std::to_string( coord.z )
-			);
-			coord.x = ClampX( object_area_to_mesh_coords.x.Clamp( UnclampX( coord.x ) ) );
-			coord.y = ClampY( object_area_to_mesh_coords.y.Clamp( UnclampY( coord.y ) ) );
-			
-			Log( (std::string) "TO: "
-				+ std::to_string( coord.x ) + "x" + std::to_string( coord.y ) + " ( "
-				+ std::to_string( UnclampX( coord.x ) ) + "x" + std::to_string( UnclampY( coord.y ) ) + " )"
-				+ " z=" + std::to_string( coord.z )
-			);
-		}
-		else {*/
-			coord.x = ClampX( object_area_to_mesh_coords.x.Clamp( UnclampX( coord.x ) ) );
-			coord.y = ClampY( object_area_to_mesh_coords.y.Clamp( UnclampY( coord.y ) ) );
-		//}
+		coord.x = ClampX( object_area_to_mesh_coords.x.Clamp( UnclampX( coord.x ) ) );
+		coord.y = ClampY( object_area_to_mesh_coords.y.Clamp( UnclampY( coord.y ) ) );
 		
 		m_mesh->SetVertexCoord( i, coord );
 
@@ -179,16 +177,10 @@ void Mesh::Align() {
 				break;
 			}
 		}
-	}
-	
-	if ( is_render_mesh ) {
-		Log( "END" );
-	}
-	
+	}	
 }
 
 void Mesh::SetAspectRatioMode( const aspect_ratio_mode_t mode ) {
-	ASSERT( false, "not implemented yet" );
 	if ( mode != m_aspect_ratio_mode ) {
 		m_aspect_ratio_mode = mode;
 		Realign();

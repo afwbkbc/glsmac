@@ -33,9 +33,22 @@ void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
 	auto tile = tile_info.tile;
 	auto ts = tile_info.ts;
 	auto ms = tile_info.ms;
-	/*
+	
 	// TODO: copy actual coords
-	Map::tile_vertices_t coords = tile->is_water_tile ? ts->layers[ Map::LAYER_WATER ].coords : ts->layers[ Map::LAYER_LAND ].coords;
+	Map::tile_vertices_t coords;
+	
+	if ( tile->is_water_tile ) {
+		coords = ts->layers[ Map::LAYER_WATER ].coords;
+	}
+	else {
+		if ( ts->is_coastline_corner ) {
+			coords = ts->layers[ Map::LAYER_WATER ].coords;
+		}
+		else {
+			coords = ts->layers[ Map::LAYER_LAND ].coords;
+		}
+	}
+	
 	// absolute coords to relative
 	#define x( _k ) coords._k -= coords.center
 		x( left );
@@ -43,15 +56,25 @@ void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
 		x( right );
 		x( bottom );
 	#undef x
-	coords.center = { 0.0f, 0.0f, 0.0f };
+	coords.center.x = 0.0f;
+	coords.center.y = 0.0f;
+	coords.center.z = 0.0f; // ( coords.left.z + coords.top.z + coords.right.z + coords.bottom.z ) / 4;
+	
+	// fix projection a bit (TODO: finish world ui camera stuff)
+/*	#define x( _k ) { coords._k.y = coords._k.z / 2; coords._k.z /= 2; }
+		x( left );
+		x( top );
+		x( right );
+		x( bottom );
+	#undef x
 	*/
-	Map::tile_vertices_t coords = {
+	/*Map::tile_vertices_t coords = {
 		{ 0.0f, 0.0f, 1.0f }, // center
 		{ -0.5f, 0.0f, 1.0f }, // left
 		{ 0.0f, -0.5f, 1.0f }, // top
 		{ 0.5f, 0.0f, 1.0f }, // right
 		{ 0.0f, 0.5f, 1.0f }, // bottom
-	};
+	};*/
 	
 	
 	std::vector< map::Map::tile_layer_type_t > layers = {};
@@ -61,15 +84,24 @@ void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
 		layers.push_back( map::Map::LAYER_WATER );
 	}
 	else {
-		layers.push_back( map::Map::LAYER_LAND );
+		if ( ts->is_coastline_corner ) {
+			layers.push_back( map::Map::LAYER_WATER_SURFACE );
+			layers.push_back( map::Map::LAYER_WATER_SURFACE_EXTRA );
+			layers.push_back( map::Map::LAYER_WATER );
+		}
+		else {
+			layers.push_back( map::Map::LAYER_LAND );
+		}
 	}
 	
 	for ( auto &lt : layers ) {
 		
 		NEWV( mesh, mesh::Render, 5, 4 );
 	
+		auto& layer = ts->layers[ lt ];
+		
 		// copy texcoords from tile
-		#define x( _k ) auto _k = mesh->AddVertex( coords._k, ts->layers[ lt ].tex_coords._k, { 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 0.5f, 0.7f } )
+		#define x( _k ) auto _k = mesh->AddVertex( coords._k, layer.tex_coords._k, layer.colors._k )
 			x( center );
 			x( left );
 			x( top );
@@ -87,7 +119,7 @@ void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
 		mesh->Finalize();
 
 		NEWV( preview, object::Mesh, "MapBottomBarTilePreviewImage" );
-			// TODO preview->SetAspectRatioMode( object::Mesh::AM_SCALE_HEIGHT );
+			preview->SetAspectRatioMode( object::Mesh::AM_SCALE_WIDTH );
 			preview->SetMesh( mesh );
 			preview->SetTexture( tile_info.ms->terrain_texture );
 		m_previews.push_back( preview );
