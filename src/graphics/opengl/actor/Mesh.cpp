@@ -98,25 +98,26 @@ void Mesh::PrepareDataMesh() {
 	const auto *data_mesh = actor->GetDataMesh();
 	if ( data_mesh && !m_data.is_up_to_date ) {
 		if ( !m_data.is_allocated ) {
+			
 			Log( "Initializing data mesh" );
+			
 			glGenFramebuffers( 1, &m_data.fbo );
-			glGenTextures( 1, &m_data.picking_texture );
-			glGenTextures( 1, &m_data.depth_texture );
+			glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
+			
 			glGenBuffers( 1, &m_data.vbo );
-			glGenBuffers( 1, &m_data.ibo );
-
 			glBindBuffer( GL_ARRAY_BUFFER, m_data.vbo );
 			glBufferData( GL_ARRAY_BUFFER, data_mesh->GetVertexDataSize(), (GLvoid *)ptr( data_mesh->GetVertexData(), 0, data_mesh->GetVertexDataSize() ), GL_STATIC_DRAW );
-
-			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_data.ibo );
-			glBufferData( GL_ELEMENT_ARRAY_BUFFER, data_mesh->GetIndexDataSize(), (GLvoid *)ptr( data_mesh->GetIndexData(), 0, data_mesh->GetIndexDataSize() ), GL_STATIC_DRAW);
-
-			m_data.ibo_size = data_mesh->GetIndexCount();
-
-			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 			glBindBuffer( GL_ARRAY_BUFFER, 0 );
 
-			m_data.is_allocated = true;
+			glGenBuffers( 1, &m_data.ibo );
+			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_data.ibo );
+			glBufferData( GL_ELEMENT_ARRAY_BUFFER, data_mesh->GetIndexDataSize(), (GLvoid *)ptr( data_mesh->GetIndexData(), 0, data_mesh->GetIndexDataSize() ), GL_STATIC_DRAW);
+			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+
+			m_data.ibo_size = data_mesh->GetIndexCount();
+		}
+		else {
+			glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
 		}
 		
 		size_t w = g_engine->GetGraphics()->GetViewportWidth();
@@ -124,8 +125,9 @@ void Mesh::PrepareDataMesh() {
 		
 		Log( "(re)loading data mesh (viewport size: " + std::to_string( w ) + "x" + std::to_string( h ) + ")" );
 		
-		glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
-		
+		if ( !m_data.is_allocated ) {
+			glGenTextures( 1, &m_data.picking_texture );
+		}
 		glBindTexture( GL_TEXTURE_2D, m_data.picking_texture );
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32UI, w, h, 0, GL_RGB_INTEGER, GL_UNSIGNED_INT, NULL );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
@@ -133,6 +135,9 @@ void Mesh::PrepareDataMesh() {
 		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_data.picking_texture, 0 );
 		glBindTexture( GL_TEXTURE_2D, 0 );
 		
+		if ( !m_data.is_allocated ) {
+			glGenTextures( 1, &m_data.depth_texture );
+		}
 		glBindTexture( GL_TEXTURE_2D, m_data.depth_texture );
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL );
 		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_data.depth_texture, 0 );
@@ -144,6 +149,9 @@ void Mesh::PrepareDataMesh() {
 		glBindFramebuffer( GL_FRAMEBUFFER, 0 );	
 
 		m_data.is_up_to_date = true;
+		if ( !m_data.is_allocated ) {
+			m_data.is_allocated = true;
+		}
 	}
 
 }
