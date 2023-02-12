@@ -5,7 +5,7 @@
 namespace loader {
 
 const std::string& Loader::GetRoot() {
-	return g_engine->GetConfig()->GetGamePath();
+	return g_engine->GetConfig()->GetSMACPath();
 }
 
 }

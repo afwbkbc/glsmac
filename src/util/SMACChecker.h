@@ -7,7 +7,7 @@
 namespace util {
 
 CLASS( SMACChecker, Util )
-	static void CheckPath( const std::string& path );
+	static bool IsSMACDirectory( const std::string& path );
 
 private:
 };
