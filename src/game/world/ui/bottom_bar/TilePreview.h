@@ -4,6 +4,7 @@
 
 #include "ui/object/Section.h"
 #include "ui/object/Mesh.h"
+#include "ui/object/Label.h"
 
 #include "../../map/Map.h"
 
@@ -29,6 +30,9 @@ private:
 	Section* m_inner = nullptr;
 	
 	std::vector< object::Mesh* > m_previews = {}; // multiple layers of textures
+	
+	// TODO: multiline labels?
+	std::vector< Label* > m_info_lines = {};
 	
 };
 	

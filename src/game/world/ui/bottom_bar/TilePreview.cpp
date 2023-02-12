@@ -20,7 +20,9 @@ void TilePreview::Create() {
 }
 
 void TilePreview::Destroy() {
+	
 	HideTilePreview();
+	
 	m_outer->RemoveChild( m_inner );
 	RemoveChild( m_outer );
 	
@@ -86,23 +88,6 @@ void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
 		
 		auto tint = layer.colors;
 		
-		if ( lt == map::Map::LAYER_WATER_SURFACE ) {
-			// make water tiles darker based on depth
-			//util::Clamper< float > depth_to_tint_ratio( map::Tile::ELEVATION_LEVEL_TRENCH, map::Tile::ELEVATION_LEVEL_COAST, 0.5f, 1.0f );
-/*			#define x( _k ) tint._k = (Color){ \
-				Map::s_consts.clampers.elevation_to_water_r.Clamp( ts->elevations._k ), \
-				Map::s_consts.clampers.elevation_to_water_g.Clamp( ts->elevations._k ), \
-				Map::s_consts.clampers.elevation_to_water_b.Clamp( ts->elevations._k ), \
-				Map::s_consts.clampers.elevation_to_water_a.Clamp( ts->elevations._k ) \
-			}
-				x( center );
-				x( left );
-				x( top );
-				x( right );
-				x( bottom );
-			#undef x*/
-		}
-		
 		// copy texcoords from tile
 		#define x( _k ) auto _k = mesh->AddVertex( coords._k, layer.tex_coords._k, tint._k )
 			x( center );
@@ -126,10 +111,89 @@ void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
 			preview->SetTexture( tile_info.ms->terrain_texture );
 		m_previews.push_back( preview );
 		m_inner->AddChild( preview );
+		
 	}
+	
+	size_t label_top = m_previews.front()->GetHeight() + 6;
+	std::vector< std::string > info_lines;
+	
+	auto e = *tile->elevation.center;
+	if ( tile->is_water_tile ) {
+		if ( e < map::Tile::ELEVATION_LEVEL_TRENCH ) {
+			info_lines.push_back( "Ocean Trench" );
+		}
+		else if ( e < map::Tile::ELEVATION_LEVEL_OCEAN ) {
+			info_lines.push_back( "Ocean" );
+		}
+		else {
+			info_lines.push_back( "Ocean Shelf" );
+		}
+		info_lines.push_back( "Depth: " + std::to_string( -e ) + "m" );
+		if ( tile->features & map::Tile::F_XENOFUNGUS ) {
+			info_lines.push_back( "Sea Fungus" );
+		}
+	}
+	else {
+		info_lines.push_back( "Elev: " + std::to_string( e ) + "m" );
+		std::string tilestr = "";
+		switch ( tile->rockyness ) {
+			case map::Tile::R_FLAT: {
+				tilestr += "Flat";
+				break;
+			}
+			case map::Tile::R_ROLLING: {
+				tilestr += "Rolling";
+				break;
+			}
+			case map::Tile::R_ROCKY: {
+				tilestr += "Rocky";
+				break;
+			}
+		}
+		tilestr += " & ";
+		switch ( tile->moisture ) {
+			case map::Tile::M_ARID: {
+				tilestr += "Arid";
+				break;
+			}
+			case map::Tile::M_MOIST: {
+				tilestr += "Moist";
+				break;
+			}
+			case map::Tile::M_RAINY: {
+				tilestr += "Rainy";
+				break;
+			}
+		}
+		info_lines.push_back( tilestr );
+		if ( tile->features & map::Tile::F_JUNGLE ) {
+			info_lines.push_back( "Jungle" );
+		}
+		if ( tile->features & map::Tile::F_XENOFUNGUS ) {
+			info_lines.push_back( "Xenofungus" );
+		}
+	}
+	
+	for ( auto& line : info_lines ) {
+		NEWV( label, object::Label, "MapBottomBarTilePreviewTextLine" );
+			label->SetText( line );
+			label->SetTop( label_top );
+		m_info_lines.push_back( label );
+		m_inner->AddChild( label );
+		label_top += label->GetHeight();
+	}
+	
+	NEWV( label, object::Label, "MapBottomBarTilePreviewTextFooter" );
+		label->SetText( "(" + std::to_string( tile->coord.x ) + "," + std::to_string( tile->coord.y ) + ")" );
+	m_info_lines.push_back( label );
+	m_inner->AddChild( label );
 }
 
 void TilePreview::HideTilePreview() {
+	for ( auto& label : m_info_lines ) {
+		m_inner->RemoveChild( label );
+	}
+	m_info_lines.clear();
 	for ( auto& preview : m_previews ) {
 		m_inner->RemoveChild( preview );
 	}

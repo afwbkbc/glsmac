@@ -112,7 +112,27 @@ void Style::AddStyles() {
 	});
 
 	AddStyle( "MapBottomBarTilePreviewImage", SH() {
-		s->Set( ::Style::A_HEIGHT, 60 );
+		s->Set( ::Style::A_TOP, 2 );
+		s->Set( ::Style::A_LEFT, 2 );
+		s->Set( ::Style::A_RIGHT, 2 );
+		s->Set( ::Style::A_HEIGHT, 52 );
+	});
+	
+	AddStyle( "MapBottomBarTilePreviewText", SH() {
+		s->SetFont( ::Style::A_FONT, "arialn.ttf", 14 );
+		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 116, 156, 56 ) );
+		s->Set( ::Style::A_HEIGHT, 15 );
+	});
+	
+	AddStyle( "MapBottomBarTilePreviewTextLine", { "MapBottomBarTilePreviewText" }, SH() {
+		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+		s->Set( ::Style::A_LEFT, 3 );
+	});
+	
+	AddStyle( "MapBottomBarTilePreviewTextFooter", { "MapBottomBarTilePreviewText" }, SH() {
+		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_RIGHT );
+		s->Set( ::Style::A_RIGHT, 2 );
+		s->Set( ::Style::A_BOTTOM, 6 );
 	});
 	
 	AddStyle( "MapBottomBarUnitPreview", SH() {
