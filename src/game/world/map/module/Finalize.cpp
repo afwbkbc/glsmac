@@ -33,21 +33,24 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 		
 		vertices = ts->layers[ lt ].coords;
 		if ( lt != Map::LAYER_LAND ) {
-			vertices.center.z = vertices.left.z = vertices.top.z = vertices.right.z = vertices.bottom.z = Map::s_consts.levels.water + Map::s_consts.tile_scale_z;
+			#define x( _k ) vertices._k.z = Map::s_consts.levels.water + Map::s_consts.tile_scale_z
+				do_x();
+			#undef x
 		}
-		
-		#define x( _k ) tex_coords._k = { \
+		#define x( _k ) tex_coords._k = ts->layers[ lt ].tex_coords._k = { \
 				ts->layers[ lt ].tex_coords._k.x * ms->variables.texture_scaling.x, \
 				( ts->layers[ lt ].tex_coords._k.y + lt * ms->dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y ) * ms->variables.texture_scaling.y \
 			}
-				do_x();
-			#undef x
+			do_x();
+		#undef x
 		
 		if ( lt == Map::LAYER_LAND && tile->is_water_tile ) {
-			tint.center = tint.left = tint.top = tint.right = tint.bottom = Map::s_consts.underwater_tint;
+			#define x( _k ) ts->layers[ lt ].colors._k = Map::s_consts.underwater_tint;
+				do_x();
+			#undef x
 		}
 		else if ( lt == Map::LAYER_WATER_SURFACE ) {
-			#define x( _k ) tint._k = (Color){ \
+			#define x( _k ) ts->layers[ lt ].colors._k = (Color){ \
 				Map::s_consts.clampers.elevation_to_water_r.Clamp( ts->elevations._k ), \
 				Map::s_consts.clampers.elevation_to_water_g.Clamp( ts->elevations._k ), \
 				Map::s_consts.clampers.elevation_to_water_b.Clamp( ts->elevations._k ), \
@@ -56,12 +59,9 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 				do_x();
 			#undef x
 		}
-		else {
-			#define x( _k ) tint._k = ts->layers[ lt ].colors._k;
-				do_x();
-			#undef x
-		}
 		
+		tint = ts->layers[ lt ].colors;
+			
 		#define x( _k ) ts->layers[ lt ].indices._k = m_map->m_mesh_terrain->AddVertex( vertices._k, tex_coords._k, tint._k )
 			do_x();
 		#undef x
@@ -123,6 +123,14 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 			}
 			vertices.center.z = ( vertices.left.z + vertices.top.z + vertices.right.z + vertices.bottom.z ) / 4;
 		}
+	}
+	
+	// fix some rare elevation glitches // TODO: investigate why it happens
+	if (
+		( tile->is_water_tile && *tile->elevation.center > 0 ) ||
+		( !tile->is_water_tile && *tile->elevation.center < 0 )
+	) {
+		*tile->elevation.center *= -1;
 	}
 	
 	// store tile coordinates

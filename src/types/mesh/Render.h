@@ -26,6 +26,7 @@ CLASS( Render, Mesh )
 	void SetVertexTint( const index_t index, const Color tint );
 	void SetVertexNormal( const index_t index, const Vec3& normal );
 	
+	void GetVertexTexCoord( const index_t index, Vec2<coord_t>* tex_coord ) const;
 	const Vec3 GetVertexNormal( const index_t index ) const;
 	
 	void Finalize();

@@ -43,13 +43,17 @@ OpenGL::OpenGL( const std::string title, const unsigned short viewport_width, co
 	m_shader_programs.push_back( sp_orthographic );
 	NEWV( sp_orthographic_data, shader_program::OrthographicData );
 	m_shader_programs.push_back( sp_orthographic_data );
-	NEWV( r_world, routine::World, sp_orthographic, sp_orthographic_data );
+
+	NEWV( r_world, routine::World, scene::SCENE_TYPE_ORTHO, sp_orthographic, sp_orthographic_data );
 	m_routines.push_back( r_world );
 	
 	NEWV( sp_simple2d, shader_program::Simple2D );
 	m_shader_programs.push_back( sp_simple2d );
 	NEWV( r_overlay, routine::Overlay, sp_simple2d );
 	m_routines.push_back( r_overlay );
+
+	NEWV( r_world_ui, routine::World, scene::SCENE_TYPE_ORTHO_UI, sp_orthographic, sp_orthographic_data );
+	m_routines.push_back( r_world_ui );
 
 	NEWV( sp_font, shader_program::Font );
 	m_shader_programs.push_back( sp_font );
@@ -247,7 +251,7 @@ void OpenGL::LoadTexture( const types::Texture* texture ) {
 
 		glActiveTexture( GL_TEXTURE0 );
 		glGenTextures( 1, &m_textures[texture] );
-
+		
 		glBindTexture( GL_TEXTURE_2D, m_textures[texture] );
 
 		ASSERT( !glGetError(), "Texture parameter error" );
@@ -281,7 +285,9 @@ void OpenGL::UnloadTexture( const types::Texture* texture ) {
 
 void OpenGL::EnableTexture( const types::Texture* texture ) {
 	if ( texture ) {
-		glBindTexture( GL_TEXTURE_2D, m_textures[texture] );
+		auto it = m_textures.find( texture );
+		ASSERT( it != m_textures.end(), "texture to be enabled not found" );
+		glBindTexture( GL_TEXTURE_2D, it->second );
 	}
 	else {
 		glBindTexture( GL_TEXTURE_2D, m_no_texture );

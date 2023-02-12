@@ -119,7 +119,7 @@ scene::Scene *UIObject::GetSceneOfActor( const Actor *actor ) const {
 	scene::Scene *scene;
 	switch ( actor->GetType() ) {
 		case ( Actor::TYPE_MESH ):
-			scene = g_engine->GetUI()->GetShapeScene();
+			scene = g_engine->GetUI()->GetShapeScene( ((actor::Mesh*)actor)->GetMesh() );
 			break;
 		case ( Actor::TYPE_TEXT ):
 			scene = g_engine->GetUI()->GetTextScene();
@@ -272,6 +272,14 @@ const UIObject::coord_t UIObject::ClampY( const coord_t value ) {
 	return g_engine->GetUI()->ClampY( value );
 }
 
+const UIObject::coord_t UIObject::UnclampX( const coord_t value ) {
+	return g_engine->GetUI()->UnclampX( value );
+}
+
+const UIObject::coord_t UIObject::UnclampY( const coord_t value ) {
+	return g_engine->GetUI()->UnclampY( value );
+}
+	
 const UIObject::vertex_t UIObject::ClampXY( const vertex_t value ) {
 	return vertex_t( ClampX( value.x ), ClampY( value.y ) );
 }

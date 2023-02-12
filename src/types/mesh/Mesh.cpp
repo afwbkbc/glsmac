@@ -8,14 +8,34 @@
 namespace types {
 namespace mesh {
 
-Mesh::Mesh( const uint8_t vertex_size, const size_t vertex_count, const size_t surface_count )
-	: VERTEX_SIZE( vertex_size )
+Mesh::Mesh( const mesh_type_t mesh_type, const uint8_t vertex_size, const size_t vertex_count, const size_t surface_count )
+	: m_mesh_type( mesh_type )
+	, VERTEX_SIZE( vertex_size )
 	, m_vertex_count( vertex_count )
 	, m_surface_count( surface_count )
 	, m_index_count( surface_count * SURFACE_SIZE )
 {
 	m_vertex_data = (uint8_t*)malloc( GetVertexDataSize() );
 	m_index_data = (uint8_t*)malloc( GetIndexDataSize() );
+}
+
+Mesh::Mesh( const Mesh& other )
+	: m_mesh_type( other.m_mesh_type )
+	, VERTEX_SIZE( other.VERTEX_SIZE )
+	, m_vertex_count( other.m_vertex_count )
+	, m_surface_count( other.m_surface_count )
+	, m_index_count( other.m_index_count )
+	, m_vertex_i( other.m_vertex_i )
+	, m_surface_i( other.m_surface_i )
+	, m_update_counter( other.m_update_counter )
+	, m_is_final( other.m_is_final )
+{
+	size_t sz = GetVertexDataSize();
+	m_vertex_data = (uint8_t*)malloc( sz );
+	memcpy( ptr( m_vertex_data, 0, sz ), ptr( other.m_vertex_data, 0, sz ), sz );
+	sz = GetIndexDataSize();
+	m_index_data = (uint8_t*)malloc( sz );
+	memcpy( ptr( m_index_data, 0, sz ), ptr( other.m_index_data, 0, sz ), sz );
 }
 
 Mesh::~Mesh() {
@@ -60,9 +80,9 @@ void Mesh::Finalize() {
 	m_is_final = true;
 }
 
-void Mesh::GetVertexCoord( const index_t index, Vec3* coord ) {
+void Mesh::GetVertexCoord( const index_t index, Vec3* coord ) const {
 	ASSERT( index < m_vertex_count, "index out of bounds" );
-	memcpy( coord, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord ) ), sizeof( coord ) );
+	memcpy( coord, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( Vec3 ) ), sizeof( Vec3 ) );
 }
 
 const size_t Mesh::GetVertexCount() const {
@@ -101,11 +121,15 @@ const size_t Mesh::UpdatedCount() const {
 	return m_update_counter;
 }
 
+const Mesh::mesh_type_t Mesh::GetType() const {
+	return m_mesh_type;
+}
+
 const Buffer Mesh::Serialize() const {
 	Buffer buf;
-	
-	buf.WriteBool( m_is_final );
-	
+
+	buf.WriteInt( m_mesh_type );
+
 	buf.WriteInt( m_vertex_count );
 	buf.WriteInt( m_vertex_i );
 	buf.WriteData( m_vertex_data, GetVertexDataSize() );
@@ -115,12 +139,15 @@ const Buffer Mesh::Serialize() const {
 	buf.WriteInt( m_surface_i );
 	buf.WriteData( m_index_data, GetIndexDataSize() );
 
+	buf.WriteBool( m_is_final );
+	
 	return buf;
 }
 
 void Mesh::Unserialize( Buffer buf ) {
 	
-	m_is_final = buf.ReadBool();
+	auto mesh_type = (mesh_type_t)buf.ReadInt();
+	ASSERT( m_mesh_type == mesh_type, "mesh type mismatch" );
 	
 	size_t vertex_count = buf.ReadInt();
 	ASSERT( vertex_count == m_vertex_count, "mesh read vertex count mismatch ( " + std::to_string( vertex_count ) + " != " + std::to_string( m_vertex_count ) + " )" );
@@ -136,6 +163,8 @@ void Mesh::Unserialize( Buffer buf ) {
 	m_surface_i = buf.ReadInt();
 	m_index_data = (uint8_t*)buf.ReadData( GetIndexDataSize() );
 
+	m_is_final = buf.ReadBool();
+	
 	Update();
 }
 

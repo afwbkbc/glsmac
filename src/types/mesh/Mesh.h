@@ -12,6 +12,13 @@ namespace mesh {
 
 CLASS( Mesh, Serializable )
 	
+	enum mesh_type_t {
+		MT_BARE, // coordinates only
+		MT_SIMPLE, // coordinates, texture
+		MT_RENDER, // coordinates, texture, tint, normals
+		MT_DATA // coordinates, data
+	};
+	
 	const uint8_t VERTEX_SIZE; // set in constructor
 	static const uint8_t VERTEX_COORD_SIZE = 3; // x, y, z
 	static const uint8_t SURFACE_SIZE = 3; // triangles
@@ -24,7 +31,8 @@ CLASS( Mesh, Serializable )
 		const index_t v3;
 	} surface_t;
 	
-	Mesh( const uint8_t vertex_size, const size_t vertex_count, const size_t surface_count );
+	Mesh( const mesh_type_t type, const uint8_t vertex_size, const size_t vertex_count, const size_t surface_count );
+	Mesh( const Mesh& other ); // copy from other
 	~Mesh();
 	
 	void Clear();
@@ -37,7 +45,7 @@ CLASS( Mesh, Serializable )
 	
 	virtual void Finalize();
 	
-	void GetVertexCoord( const index_t index, Vec3* coord );
+	void GetVertexCoord( const index_t index, Vec3* coord ) const;
 	
 	const size_t GetVertexCount() const;
 	const size_t GetVertexDataSize() const;
@@ -50,10 +58,14 @@ CLASS( Mesh, Serializable )
 	void Update();
 	const size_t UpdatedCount() const;
 	
+	const mesh_type_t GetType() const;
+	
 	const Buffer Serialize() const;
 	void Unserialize( Buffer buf );
 protected:
 
+	const mesh_type_t m_mesh_type = MT_BARE;
+	
 	bool m_is_final = false;
 	
 	size_t m_vertex_count = 0;

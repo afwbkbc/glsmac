@@ -16,9 +16,9 @@ CLASS( Surface, Mesh )
 	virtual void Create();
 	virtual void Align();
 	
-	
 protected:
 	
+	virtual void Resize();
 	virtual void ApplyStyle();
 	
 	bool m_stretch_texture = false;

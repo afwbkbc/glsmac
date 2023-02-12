@@ -11,7 +11,7 @@ namespace types {
 namespace mesh {
 
 Render::Render( const size_t vertex_count, const size_t surface_count )
-	: Mesh( VERTEX_SIZE, vertex_count, surface_count )
+	: Mesh( MT_RENDER, VERTEX_SIZE, vertex_count, surface_count )
 {
 	
 }
@@ -65,6 +65,11 @@ void Render::SetVertexTint( const index_t index, const Color tint ) {
 void Render::SetVertexNormal( const index_t index, const Vec3& normal ) {
 	ASSERT( index < m_vertex_count, "index out of bounds" );
 	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + ( VERTEX_COORD_SIZE + VERTEX_TEXCOORD_SIZE + VERTEX_TINT_SIZE ) * sizeof( coord_t ), sizeof( normal ) ), &normal, sizeof( normal ) );
+}
+
+void Render::GetVertexTexCoord( const index_t index, Vec2<coord_t>* coord ) const {
+	ASSERT( index < m_vertex_count, "index out of bounds" );
+	memcpy( coord, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( Vec2<coord_t> ) ), sizeof( Vec2<coord_t> ) );
 }
 
 const Vec3 Render::GetVertexNormal( const index_t index ) const {

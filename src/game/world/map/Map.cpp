@@ -265,6 +265,8 @@ void Map::InitTextureAndMesh() {
 		m_map_state.dimensions.x * m_map_state.dimensions.y * 5 / 2,
 		m_map_state.dimensions.x * m_map_state.dimensions.y * 4 / 2
 	);
+	
+	m_map_state.terrain_texture = m_textures.terrain;
 }
 
 const Map::tile_texture_info_t Map::GetTileTextureInfo( const Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature ) const {

@@ -233,7 +233,7 @@ void World::Start() {
 	UpdateViewport();
 	
 	SetCameraPosition( { 0.0f, -0.25f, 0.1f } );
-
+	
 	UpdateCameraRange();
 	UpdateCameraScale();
 	
@@ -244,6 +244,8 @@ void World::Start() {
 	});
 	
 	UpdateMapInstances();
+	
+	UpdateUICamera();
 }
 
 void World::Stop() {
@@ -341,10 +343,12 @@ void World::UpdateCameraPosition() {
 
 void World::UpdateCameraScale() {
 	m_camera->SetScale( { m_camera_position.z, m_camera_position.z, m_camera_position.z } );
+	//UpdateUICamera();
 }
 
 void World::UpdateCameraAngle() {
 	m_camera->SetAngle( m_camera_angle );
+	//UpdateUICamera();
 }
 
 void World::UpdateCameraRange() {
@@ -390,6 +394,20 @@ void World::UpdateMapInstances() {
 	}
 	
 	m_world_scene->SetInstances( instances );
+}
+
+void World::UpdateUICamera() {
+	// TODO: finish it
+	// snapshot camera matrix for world ui
+	/*m_camera->GetMatrix()*/
+	// tmp/hack
+	/*for ( auto& a : m_map->GetActors() ) {
+		for ( auto& m : ((scene::actor::InstancedMesh*)a)->GetWorldMatrices() ) {
+			g_engine->GetUI()->SetWorldUIMatrix( m );
+			break;
+		}
+		break;
+	}*/
 }
 
 void World::ReturnToMainMenu() {
@@ -441,7 +459,7 @@ void World::SelectTile( const Map::tile_info_t& tile_info ) {
 	
 	AddActor( m_actors.tile_selection );
 	
-	//m_ui.bottom_bar->PreviewTile( tile_info );
+	m_ui.bottom_bar->PreviewTile( tile_info );
 }
 
 void World::DeselectTile() {
@@ -450,7 +468,7 @@ void World::DeselectTile() {
 		m_actors.tile_selection = nullptr;
 	}
 	
-	//m_ui.bottom_bar->HideTilePreview();
+	m_ui.bottom_bar->HideTilePreview();
 }
 
 void World::AddActor( actor::Actor* actor ) {

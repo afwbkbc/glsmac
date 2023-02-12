@@ -10,11 +10,17 @@ namespace graphics {
 namespace opengl {
 
 CLASS(Mesh, Actor)
+	
 	Mesh( scene::actor::Mesh *actor );
 	~Mesh();
-	bool ReloadNeeded();
-	void Load();
-	void Unload();
+	
+	bool MeshReloadNeeded();
+	bool TextureReloadNeeded();
+	void LoadMesh();
+	void LoadTexture();
+	void UnloadMesh();
+	void UnloadTexture();
+	
 	void Draw( shader_program::ShaderProgram *shader_program, Camera *camera = nullptr );
 	
 	void OnResize();
@@ -23,7 +29,8 @@ protected:
 	
 	void PrepareDataMesh();
 	
-	size_t m_update_counter = 0;
+	size_t m_mesh_update_counter = 0;
+	std::string m_last_texture_name = "";
 
 	GLuint m_vbo = 0;
 	GLuint m_ibo = 0;

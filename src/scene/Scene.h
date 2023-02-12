@@ -16,6 +16,7 @@ enum scene_type_t {
 	SCENE_TYPE_NONE,
 	SCENE_TYPE_SIMPLE2D,
 	SCENE_TYPE_ORTHO,
+	SCENE_TYPE_ORTHO_UI, // same as ortho, but is drawn on overlay step
 	SCENE_TYPE_TEXT,
 	SCENE_TYPE_PERSP,
 };

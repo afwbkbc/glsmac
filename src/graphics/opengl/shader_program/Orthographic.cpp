@@ -16,13 +16,19 @@ in vec2 aTexCoord; \
 in vec4 aTintColor; \
 in vec3 aNormal; \
 uniform mat4 uWorld[" + std::to_string( Graphics::MAX_WORLD_INSTANCES ) + "]; \
+uniform uint uFlags; \
 out vec2 texpos; \
 out vec4 tintcolor; \
 out vec3 fragpos; \
 out vec3 normal; \
 \
 void main(void) { \
-	gl_Position = uWorld[ gl_InstanceID ] * vec4( aCoord, 1.0 ); \
+	if ( " + S_HasFlag( "uFlags", actor::Mesh::RF_IGNORE_CAMERA ) + " ) { \
+		gl_Position = vec4( aCoord, 1.0 ); \
+	} \
+	else { \
+		gl_Position = uWorld[ gl_InstanceID ] * vec4( aCoord, 1.0 ); \
+	} \
 	texpos = vec2( aTexCoord.xy ); \
 	tintcolor = aTintColor; \
 	fragpos = aCoord; \

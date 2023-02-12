@@ -38,21 +38,34 @@ Mesh::~Mesh() {
 	}
 }
 
-bool Mesh::ReloadNeeded() {
+bool Mesh::MeshReloadNeeded() {
 	auto* actor = (scene::actor::Mesh *) m_actor;
 	size_t mesh_updated_counter = actor->GetMesh()->UpdatedCount();
 	auto *data_mesh = actor->GetDataMesh();
 	if ( data_mesh ) {
-		mesh_updated_counter = std::max( mesh_updated_counter, data_mesh->UpdatedCount() );
+		mesh_updated_counter = mesh_updated_counter + data_mesh->UpdatedCount();
 	}
-	if ( m_update_counter == mesh_updated_counter ) {
-		return false;
+	
+	if ( m_mesh_update_counter != mesh_updated_counter ) {
+		m_mesh_update_counter = mesh_updated_counter;
+		return true;
 	}
-	m_update_counter = mesh_updated_counter;
-	return true;
+	return false;
 }
 
-void Mesh::Load() {
+bool Mesh::TextureReloadNeeded() {
+	auto* actor = (scene::actor::Mesh *) m_actor;
+	auto* texture = actor->GetTexture();
+	const std::string last_texture_name = texture ? texture->m_name : "";
+	
+	if ( m_last_texture_name != last_texture_name ) {
+		m_last_texture_name = last_texture_name;
+		return true;
+	}
+	return false;
+}
+
+void Mesh::LoadMesh() {
 	auto *actor = (scene::actor::Mesh *)m_actor;
 
 	const auto *mesh = actor->GetMesh();
@@ -69,9 +82,14 @@ void Mesh::Load() {
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	
+}
+
+void Mesh::LoadTexture() {
+	auto *actor = (scene::actor::Mesh *)m_actor;
 	const auto* texture = actor->GetTexture();
-	if (texture) {
-		g_engine->GetGraphics()->LoadTexture(texture);
+	
+	if ( texture ) {
+		g_engine->GetGraphics()->LoadTexture( texture );
 	}
 }
 
@@ -130,18 +148,31 @@ void Mesh::PrepareDataMesh() {
 
 }
 
-void Mesh::Unload() {
+void Mesh::UnloadMesh() {
 	// Log( "Unloading OpenGL actor" );
 
-	if ( m_actor ) {
-/*		auto *actor = (scene::actor::Mesh *)m_actor;
+	/*if ( m_actor ) {
+		auto *actor = (scene::actor::Mesh *)m_actor;
 
 		// it's better to keep everything loaded forever
 		const auto* texture = actor->GetTexture();
 		if (texture) {
 			g_engine->GetGraphics()->UnloadTexture(texture);
-		}*/
-	}
+		}
+	}*/
+}
+
+void Mesh::UnloadTexture() {
+	// keep loaded forever?
+	/*if ( m_actor ) {
+		auto *actor = (scene::actor::Mesh *)m_actor;
+		if ( actor ) {
+			const auto* texture = actor->GetTexture();
+			if ( texture ) {
+				g_engine->GetGraphics()->UnloadTexture( texture ); // test
+			}
+		}
+	}*/
 }
 
 void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera ) {
@@ -183,7 +214,9 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 		case ( shader_program::ShaderProgram::TYPE_ORTHO_DATA ): {
 			auto* sp = (shader_program::Orthographic *)shader_program; // TODO: make base class for ortho and ortho_data
 			
-			// uniforms apply only to render mesh
+			auto flags = actor->GetRenderFlags();
+			
+			// non-world uniforms apply only to render mesh
 			if ( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO ) {
 				
 				auto* light = actor->GetScene()->GetLight();
@@ -191,23 +224,29 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 					glUniform3fv( sp->uniforms.light_pos, 1, (const GLfloat*)&light->GetPosition() );
 					glUniform4fv( sp->uniforms.light_color, 1, (const GLfloat*)&light->GetColor() );
 				}
-				auto flags = actor->GetRenderFlags();
 				glUniform1ui( sp->uniforms.flags, flags );
 				if ( flags & actor::Mesh::RF_USE_TINT ) {
 					glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&actor->GetTintColor() );
 				}
 			}
 
-			if ( actor->GetType() == scene::Actor::TYPE_INSTANCED_MESH ) {
+			const bool ignore_camera = ( flags & scene::actor::Mesh::RF_IGNORE_CAMERA );
+			if ( ignore_camera || actor->GetType() == scene::Actor::TYPE_MESH ) {
+				types::Matrix44 matrix = ignore_camera
+					? g_engine->GetUI()->GetWorldUIMatrix()
+					: m_actor->GetWorldMatrix()
+				;
+				glUniformMatrix4fv( sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
+				glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
+			}
+			else if ( actor->GetType() == scene::Actor::TYPE_INSTANCED_MESH ) {
 				auto* instanced_actor = (scene::actor::InstancedMesh*) m_actor;
 				auto& matrices = instanced_actor->GetWorldMatrices();
 				glUniformMatrix4fv( sp->uniforms.world, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
 				glDrawElementsInstanced( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0), matrices.size() );
 			}
 			else {
-				types::Matrix44 matrix = m_actor->GetWorldMatrix();
-				glUniformMatrix4fv( sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
-				glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
+				ASSERT( false, "unknown actor type " + std::to_string( actor->GetType() ) );
 			}
 
 			break;

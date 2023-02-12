@@ -1,5 +1,7 @@
 #include "Mesh.h"
 
+#include "util/Clamper.h"
+
 using namespace types;
 
 namespace ui {
@@ -18,10 +20,16 @@ void Mesh::SetMesh( const types::mesh::Mesh* mesh ) {
 		m_actor = nullptr;
 	}
 	if ( mesh ) {
-		NEW( m_actor, scene::actor::Mesh, "UI::Mesh", mesh );
-		if ( m_texture ) {
-			m_actor->SetTexture( m_texture );
+		if ( m_original_mesh ) {
+			DELETE( m_original_mesh );
 		}
+		m_original_mesh = mesh;
+		NEW( m_mesh, types::mesh::Mesh, *m_original_mesh ); // copy
+		NEW( m_actor, scene::actor::Mesh, "UI::Mesh", m_mesh );
+			m_actor->SetRenderFlags( scene::actor::Mesh::RF_IGNORE_CAMERA );
+			if ( m_texture ) {
+				m_actor->SetTexture( m_texture );
+			}
 		AddActor( m_actor );
 		Realign();
 	}
@@ -48,10 +56,24 @@ void Mesh::ClearTexture() {
 	}
 }
 
+void Mesh::Create() {
+	UIObject::Create();
+	
+/* not needed?
+	if ( m_actor && m_texture ) {
+		m_actor->SetTexture( m_texture );
+	}
+ */
+}
+
 void Mesh::Destroy() {
 	if ( m_actor ) {
 		RemoveActor( m_actor );
 		DELETE( m_actor );
+	}
+	if ( m_original_mesh ) {
+		DELETE( m_original_mesh );
+		m_original_mesh = nullptr;
 	}
 
 	UIObject::Destroy();
@@ -64,6 +86,112 @@ void Mesh::Draw() {
 	/*if ( m_texture ) {
 		m_actor->SetTexture( m_texture );
 	}*/
+}
+
+void Mesh::Align() {
+	UIObject::Align();
+	
+	auto c = m_original_mesh->GetVertexCount();
+	
+	Vec3 coord = {};
+	Vec2< coord_t > tex_coord = {};
+	
+	coord_t mesh_left, mesh_top, mesh_right, mesh_bottom;
+	
+	for ( types::mesh::Mesh::index_t i = 0 ; i < c ; i++ ) {
+		m_original_mesh->GetVertexCoord( i, &coord );
+		if ( i == 0 || coord.x < mesh_left ) {
+			mesh_left = coord.x;
+		}
+		if ( i == 0 || coord.y < mesh_bottom ) {
+			mesh_bottom = coord.y;
+		}
+		if ( i == 0 || coord.x > mesh_right ) {
+			mesh_right = coord.x;
+		}
+		if ( i == 0 || coord.y > mesh_top ) {
+			mesh_top = coord.y;
+		}
+	}
+	struct {
+		util::Clamper<coord_t> x;
+		util::Clamper<coord_t> y;
+	} object_area_to_mesh_coords;
+	
+	bool is_render_mesh = m_mesh->GetType() == types::mesh::Mesh::MT_RENDER;
+	
+	if ( is_render_mesh ) {
+		// for render meshes y is inversed for some reason, TODO: investigate
+		auto tmp = mesh_bottom;
+		mesh_bottom = mesh_top;
+		mesh_top = tmp;
+		
+		if ( m_aspect_ratio_mode != AM_NONE ) {
+			
+			float ws = mesh_right - mesh_left;
+			float hs = mesh_bottom - mesh_top;
+			float as = hs / ws;
+			float wd = m_object_area.right - m_object_area.left;
+			float hd = m_object_area.bottom - m_object_area.top;
+			float ad = hd / wd; 
+
+			if ( as != ad ) {
+				if ( m_aspect_ratio_mode == AM_SCALE_WIDTH ) {
+					float c = ( mesh_right + mesh_left ) / 2;
+					ws /= ad * 2;
+					mesh_right = c + ws;
+					mesh_left = c - ws;
+				}
+				else if ( m_aspect_ratio_mode == AM_SCALE_HEIGHT ) {
+					float c = ( mesh_bottom + mesh_top ) / 2;
+					hs *= ad / 2;
+					mesh_bottom = c + hs;
+					mesh_top = c - hs;
+				}
+				else {
+					ASSERT( false, "unknown aspect ratio mode " + std::to_string( m_aspect_ratio_mode ) );
+				}
+			}
+			
+		}
+	}
+	
+	object_area_to_mesh_coords.x.SetRange( UnclampX( mesh_left ), UnclampX( mesh_right ), m_object_area.left, m_object_area.right );
+	object_area_to_mesh_coords.y.SetRange( UnclampY( mesh_top ), UnclampY( mesh_bottom ), m_object_area.top, m_object_area.bottom );
+	
+	for ( types::mesh::Mesh::index_t i = 0 ; i < c ; i++ ) {
+		m_original_mesh->GetVertexCoord( i, &coord );
+		
+		coord.x = ClampX( object_area_to_mesh_coords.x.Clamp( UnclampX( coord.x ) ) );
+		coord.y = ClampY( object_area_to_mesh_coords.y.Clamp( UnclampY( coord.y ) ) );
+		
+		m_mesh->SetVertexCoord( i, coord );
+
+		ASSERT( m_mesh->GetType() == m_original_mesh->GetType(), "mesh and original mesh have different types" );
+		switch ( m_mesh->GetType() ) {
+			case types::mesh::Mesh::MT_SIMPLE: {
+				auto *from = (types::mesh::Simple*) m_original_mesh;
+				auto *to = (types::mesh::Simple*) m_mesh;
+				from->GetVertexTexCoord( i, &tex_coord );
+				to->SetVertexTexCoord( i, tex_coord );
+				break;
+			}
+			case types::mesh::Mesh::MT_RENDER: {
+				auto *from = (types::mesh::Render*) m_original_mesh;
+				auto *to = (types::mesh::Render*) m_mesh;
+				from->GetVertexTexCoord( i, &tex_coord );
+				to->SetVertexTexCoord( i, tex_coord );
+				break;
+			}
+		}
+	}	
+}
+
+void Mesh::SetAspectRatioMode( const aspect_ratio_mode_t mode ) {
+	if ( mode != m_aspect_ratio_mode ) {
+		m_aspect_ratio_mode = mode;
+		Realign();
+	}
 }
 
 }

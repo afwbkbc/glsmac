@@ -151,6 +151,9 @@ protected:
 	const coord_t ClampX( const coord_t value );
 	const coord_t ClampY( const coord_t value );
 	const vertex_t ClampXY( const vertex_t value );
+	
+	const coord_t UnclampX( const coord_t value );
+	const coord_t UnclampY( const coord_t value );
 
 	// bit flags
 	typedef uint8_t event_context_t;
