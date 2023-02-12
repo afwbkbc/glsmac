@@ -91,7 +91,7 @@ void OpenGL::Start() {
 	// not using ASSERTs below because those errors should be thrown in release mode too, i.e. if there's no opengl support or there is no X at all
 	
 	if ( !m_window ) {
-		THROW( "Could not create SDL2 window!" );
+		THROW( (std::string) "Could not create SDL2 window: " + SDL_GetError() );
 	}
 	
 	if ( m_is_fullscreen ) {
@@ -108,7 +108,7 @@ void OpenGL::Start() {
 
 	m_gl_context = SDL_GL_CreateContext( m_window );
 	if ( !m_gl_context ) {
-		THROW( "Could not create OpenGL context!" );
+		THROW( (std::string) "Could not create OpenGL context: " + SDL_GetError() );
 	}
 	GLenum res = glewInit();
 	if ( res != GLEW_OK ) {
