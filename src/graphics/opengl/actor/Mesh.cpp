@@ -214,7 +214,9 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 		case ( shader_program::ShaderProgram::TYPE_ORTHO_DATA ): {
 			auto* sp = (shader_program::Orthographic *)shader_program; // TODO: make base class for ortho and ortho_data
 			
-			// uniforms apply only to render mesh
+			auto flags = actor->GetRenderFlags();
+			
+			// non-world uniforms apply only to render mesh
 			if ( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO ) {
 				
 				auto* light = actor->GetScene()->GetLight();
@@ -222,23 +224,31 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 					glUniform3fv( sp->uniforms.light_pos, 1, (const GLfloat*)&light->GetPosition() );
 					glUniform4fv( sp->uniforms.light_color, 1, (const GLfloat*)&light->GetColor() );
 				}
-				auto flags = actor->GetRenderFlags();
 				glUniform1ui( sp->uniforms.flags, flags );
 				if ( flags & actor::Mesh::RF_USE_TINT ) {
 					glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&actor->GetTintColor() );
 				}
 			}
 
-			if ( actor->GetType() == scene::Actor::TYPE_INSTANCED_MESH ) {
+			const bool ignore_camera = ( flags & scene::actor::Mesh::RF_IGNORE_CAMERA );
+			if ( ignore_camera || actor->GetType() == scene::Actor::TYPE_MESH ) {
+				types::Matrix44 matrix = ignore_camera
+					? g_engine->GetUI()->GetWorldUIMatrix()
+					: m_actor->GetWorldMatrix()
+				;
+				glUniformMatrix4fv( sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
+				glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
+			}
+			else if ( actor->GetType() == scene::Actor::TYPE_INSTANCED_MESH ) {
 				auto* instanced_actor = (scene::actor::InstancedMesh*) m_actor;
 				auto& matrices = instanced_actor->GetWorldMatrices();
-				glUniformMatrix4fv( sp->uniforms.world, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
+				if ( ! ( flags & scene::actor::Mesh::RF_IGNORE_CAMERA ) ) {
+					glUniformMatrix4fv( sp->uniforms.world, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
+				}
 				glDrawElementsInstanced( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0), matrices.size() );
 			}
 			else {
-				types::Matrix44 matrix = m_actor->GetWorldMatrix();
-				glUniformMatrix4fv( sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
-				glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
+				ASSERT( false, "unknown actor type " + std::to_string( actor->GetType() ) );
 			}
 
 			break;

@@ -26,9 +26,10 @@ void Mesh::SetMesh( const types::mesh::Mesh* mesh ) {
 		m_original_mesh = mesh;
 		NEW( m_mesh, types::mesh::Mesh, *m_original_mesh ); // copy
 		NEW( m_actor, scene::actor::Mesh, "UI::Mesh", m_mesh );
-		if ( m_texture ) {
-			m_actor->SetTexture( m_texture );
-		}
+			m_actor->SetRenderFlags( scene::actor::Mesh::RF_IGNORE_CAMERA );
+			if ( m_texture ) {
+				m_actor->SetTexture( m_texture );
+			}
 		AddActor( m_actor );
 		Realign();
 	}
@@ -120,20 +121,39 @@ void Mesh::Align() {
 	float w = mesh_right - mesh_left;
 	float h = mesh_bottom - mesh_top;
 	
+	bool is_render_mesh = m_mesh->GetType() == types::mesh::Mesh::MT_RENDER;
+	
 	object_area_to_mesh_coords.x.SetRange( UnclampX( mesh_left ), UnclampX( mesh_right ), m_object_area.left, m_object_area.right );
 	object_area_to_mesh_coords.y.SetRange( UnclampY( mesh_top ), UnclampY( mesh_bottom ), m_object_area.top, m_object_area.bottom );
 
+	if ( is_render_mesh ) {
+		Log( "BEGIN (area: "
+			+ std::to_string( m_object_area.left ) + "x" + std::to_string( m_object_area.top )
+			+ std::to_string( m_object_area.top ) + "x" + std::to_string( m_object_area.bottom )
+			+ ")"
+		);
+	}
+	
 	for ( types::mesh::Mesh::index_t i = 0 ; i < c ; i++ ) {
 		m_original_mesh->GetVertexCoord( i, &coord );
 		
-		coord.x = ClampX( object_area_to_mesh_coords.x.Clamp( UnclampX( coord.x ) ) );
-		coord.y = ClampY( object_area_to_mesh_coords.y.Clamp( UnclampY( coord.y ) ) );
+		if ( is_render_mesh ) {
+			Log( "FROM: " + std::to_string( coord.x ) + "x" + std::to_string( coord.y ) );
+			coord.x = ClampX( object_area_to_mesh_coords.x.Clamp( UnclampX( coord.x ) ) );
+			coord.y = ClampY( object_area_to_mesh_coords.y.Clamp( UnclampY( coord.y ) ) );
+			Log( "TO: " + std::to_string( coord.x ) + "x" + std::to_string( coord.y ) );
+		}
+		else {
+			coord.x = ClampX( object_area_to_mesh_coords.x.Clamp( UnclampX( coord.x ) ) );
+			coord.y = ClampY( object_area_to_mesh_coords.y.Clamp( UnclampY( coord.y ) ) );
+		}
 		
 		m_mesh->SetVertexCoord( i, coord );
 
 		ASSERT( m_mesh->GetType() == m_original_mesh->GetType(), "mesh and original mesh have different types" );
 		switch ( m_mesh->GetType() ) {
-			case types::mesh::Mesh::MT_SIMPLE: {
+			case types::mesh::Mesh::MT_SIMPLE:
+			case types::mesh::Mesh::MT_RENDER: {
 				auto *from = (types::mesh::Simple*) m_original_mesh;
 				auto *to = (types::mesh::Simple*) m_mesh;
 				from->GetVertexTexCoord( i, &tex_coord );
@@ -141,6 +161,19 @@ void Mesh::Align() {
 				break;
 			}
 		}
+	}
+	
+	if ( is_render_mesh ) {
+		Log( "END" );
+	}
+	
+}
+
+void Mesh::SetAspectRatioMode( const aspect_ratio_mode_t mode ) {
+	ASSERT( false, "not implemented yet" );
+	if ( mode != m_aspect_ratio_mode ) {
+		m_aspect_ratio_mode = mode;
+		Realign();
 	}
 }
 

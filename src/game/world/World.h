@@ -96,6 +96,7 @@ private:
 	void UpdateCameraScale();
 	void UpdateCameraRange();
 	void UpdateMapInstances();
+	void UpdateUICamera();
 	
 	// UI stuff
 	

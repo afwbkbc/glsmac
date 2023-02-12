@@ -119,7 +119,7 @@ scene::Scene *UIObject::GetSceneOfActor( const Actor *actor ) const {
 	scene::Scene *scene;
 	switch ( actor->GetType() ) {
 		case ( Actor::TYPE_MESH ):
-			scene = g_engine->GetUI()->GetShapeScene();
+			scene = g_engine->GetUI()->GetShapeScene( ((actor::Mesh*)actor)->GetMesh() );
 			break;
 		case ( Actor::TYPE_TEXT ):
 			scene = g_engine->GetUI()->GetTextScene();

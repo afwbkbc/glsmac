@@ -244,6 +244,8 @@ void World::Start() {
 	});
 	
 	UpdateMapInstances();
+	
+	UpdateUICamera();
 }
 
 void World::Stop() {
@@ -341,10 +343,12 @@ void World::UpdateCameraPosition() {
 
 void World::UpdateCameraScale() {
 	m_camera->SetScale( { m_camera_position.z, m_camera_position.z, m_camera_position.z } );
+	//UpdateUICamera();
 }
 
 void World::UpdateCameraAngle() {
 	m_camera->SetAngle( m_camera_angle );
+	//UpdateUICamera();
 }
 
 void World::UpdateCameraRange() {
@@ -390,6 +394,11 @@ void World::UpdateMapInstances() {
 	}
 	
 	m_world_scene->SetInstances( instances );
+}
+
+void World::UpdateUICamera() {
+	// snapshot camera matrix for world ui
+	g_engine->GetUI()->SetWorldUIMatrix( m_camera->GetMatrix() );
 }
 
 void World::ReturnToMainMenu() {

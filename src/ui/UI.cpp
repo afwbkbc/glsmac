@@ -14,9 +14,11 @@ using namespace object;
 void UI::Start() {
 	Log( "Creating UI" );
 
-	NEW( m_shape_scene, Scene, "UIShape", SCENE_TYPE_SIMPLE2D );
-	g_engine->GetGraphics()->AddScene( m_shape_scene );
-
+	NEW( m_shape_scene_simple2d, Scene, "UIScene::Simple2D", SCENE_TYPE_SIMPLE2D );
+	g_engine->GetGraphics()->AddScene( m_shape_scene_simple2d );
+	NEW( m_shape_scene_ortho, Scene, "UIScene::Ortho", SCENE_TYPE_ORTHO_UI );
+	g_engine->GetGraphics()->AddScene( m_shape_scene_ortho );
+	
 	NEW( m_text_scene, Scene, "UIText", SCENE_TYPE_TEXT );
 	g_engine->GetGraphics()->AddScene( m_text_scene );
 
@@ -78,8 +80,10 @@ void UI::Stop() {
 	g_engine->GetGraphics()->RemoveScene( m_text_scene );
 	DELETE( m_text_scene );
 
-	g_engine->GetGraphics()->RemoveScene( m_shape_scene );
-	DELETE( m_shape_scene );
+	g_engine->GetGraphics()->RemoveScene( m_shape_scene_simple2d );
+	DELETE( m_shape_scene_simple2d );
+	g_engine->GetGraphics()->RemoveScene( m_shape_scene_ortho );
+	DELETE( m_shape_scene_ortho );
 	
 	ASSERT( m_focusable_objects.empty(), "some objects still remain focusable" );
 	ASSERT( m_focusable_objects_order.empty(), "some objects still remain in focusable order" );
@@ -94,12 +98,30 @@ void UI::RemoveObject( object::UIObject *object ) {
 	m_root_object.RemoveChild( object );
 }
 
-Scene *UI::GetShapeScene() {
-	return m_shape_scene;
+Scene *UI::GetShapeScene( const types::mesh::Mesh* mesh ) {
+	switch ( mesh->GetType() ) {
+		case types::mesh::Mesh::MT_SIMPLE: {
+			return m_shape_scene_simple2d;
+		}
+		case types::mesh::Mesh::MT_RENDER: {
+			return m_shape_scene_ortho;
+		}
+		default: {
+			ASSERT( false, "unsupported shape mesh type" );
+		}
+	}
 }
 
 Scene *UI::GetTextScene() {
 	return m_text_scene;
+}
+
+void UI::SetWorldUIMatrix( const types::Matrix44& matrix ) {
+	m_world_ui_matrix = matrix;
+}
+
+const types::Matrix44& UI::GetWorldUIMatrix() const {
+	return m_world_ui_matrix;
 }
 
 const UI::coord_t UI::ClampX( const coord_t value ) const {

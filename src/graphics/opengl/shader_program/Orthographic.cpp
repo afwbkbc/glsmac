@@ -16,6 +16,7 @@ in vec2 aTexCoord; \
 in vec4 aTintColor; \
 in vec3 aNormal; \
 uniform mat4 uWorld[" + std::to_string( Graphics::MAX_WORLD_INSTANCES ) + "]; \
+uniform uint uFlags; \
 out vec2 texpos; \
 out vec4 tintcolor; \
 out vec3 fragpos; \

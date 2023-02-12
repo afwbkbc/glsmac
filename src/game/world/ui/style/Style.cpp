@@ -110,6 +110,10 @@ void Style::AddStyles() {
 		s->Set( ::Style::A_HEIGHT, 134 );
 		
 	});
+
+	AddStyle( "MapBottomBarTilePreviewImage", SH() {
+		s->Set( ::Style::A_HEIGHT, 60 );
+	});
 	
 	AddStyle( "MapBottomBarUnitPreview", SH() {
 		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_LEFT );
@@ -118,6 +122,7 @@ void Style::AddStyles() {
 		s->Set( ::Style::A_WIDTH, 135 );
 		s->Set( ::Style::A_HEIGHT, 196 );
 	});
+	
 }
 
 }

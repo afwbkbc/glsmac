@@ -4,8 +4,9 @@ namespace graphics {
 namespace opengl {
 namespace routine {
 
-World::World( shader_program::Orthographic* shader_program, shader_program::OrthographicData* data_shader_program )
-	: m_shader_program( shader_program )
+World::World( const scene::scene_type_t scene_type, shader_program::Orthographic* shader_program, shader_program::OrthographicData* data_shader_program )
+	: m_scene_type( scene_type )
+	, m_shader_program( shader_program )
 	, m_data_shader_program( data_shader_program )
 {
 	//
@@ -57,7 +58,7 @@ void World::Iterate() {
 
 bool World::SceneBelongs( const scene::Scene *scene ) const {
 	//return scene->GetType() == scene::SCENE_TYPE_PERSP; // TODO: support both
-	return scene->GetType() == scene::SCENE_TYPE_ORTHO;
+	return scene->GetType() == m_scene_type;
 }
 
 } /* namespace routine */

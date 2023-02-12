@@ -35,13 +35,12 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 		if ( lt != Map::LAYER_LAND ) {
 			vertices.center.z = vertices.left.z = vertices.top.z = vertices.right.z = vertices.bottom.z = Map::s_consts.levels.water + Map::s_consts.tile_scale_z;
 		}
-		
-		#define x( _k ) tex_coords._k = { \
+		#define x( _k ) tex_coords._k = ts->layers[ lt ].tex_coords._k = { \
 				ts->layers[ lt ].tex_coords._k.x * ms->variables.texture_scaling.x, \
 				( ts->layers[ lt ].tex_coords._k.y + lt * ms->dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y ) * ms->variables.texture_scaling.y \
 			}
-				do_x();
-			#undef x
+			do_x();
+		#undef x
 		
 		if ( lt == Map::LAYER_LAND && tile->is_water_tile ) {
 			tint.center = tint.left = tint.top = tint.right = tint.bottom = Map::s_consts.underwater_tint;

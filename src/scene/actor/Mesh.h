@@ -33,6 +33,7 @@ CLASS( Mesh, Actor )
 	static const render_flag_t RF_NONE = 0;
 	static const render_flag_t RF_USE_TINT = 1 << 0;
 	static const render_flag_t RF_IGNORE_LIGHTING = 1 << 1;
+	static const render_flag_t RF_IGNORE_CAMERA = 1 << 2;
 	
 	void SetRenderFlags( const render_flag_t render_flags );
 	const render_flag_t GetRenderFlags() const;
