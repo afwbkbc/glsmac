@@ -136,13 +136,20 @@ void Mesh::Align() {
 			float ad = hd / wd; 
 
 			if ( as != ad ) {
-				Log( "SOURCE W=" + std::to_string( ws ) + " H=" + std::to_string( hs ) + " A=" + std::to_string( as ) );
-				Log( "  DEST W=" + std::to_string( wd ) + " H=" + std::to_string( hd ) + " A=" + std::to_string( ad ) );
 				if ( m_aspect_ratio_mode == AM_SCALE_WIDTH ) {
 					float c = ( mesh_right + mesh_left ) / 2;
 					ws /= ad * 2;
 					mesh_right = c + ws;
 					mesh_left = c - ws;
+				}
+				else if ( m_aspect_ratio_mode == AM_SCALE_HEIGHT ) {
+					float c = ( mesh_bottom + mesh_top ) / 2;
+					hs *= ad / 2;
+					mesh_bottom = c + hs;
+					mesh_top = c - hs;
+				}
+				else {
+					ASSERT( false, "unknown aspect ratio mode " + std::to_string( m_aspect_ratio_mode ) );
 				}
 			}
 			

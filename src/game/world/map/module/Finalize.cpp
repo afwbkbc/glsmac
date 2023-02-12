@@ -43,10 +43,12 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 		#undef x
 		
 		if ( lt == Map::LAYER_LAND && tile->is_water_tile ) {
-			tint.center = tint.left = tint.top = tint.right = tint.bottom = Map::s_consts.underwater_tint;
+			#define x( _k ) ts->layers[ lt ].colors._k = Map::s_consts.underwater_tint;
+				do_x();
+			#undef x
 		}
 		else if ( lt == Map::LAYER_WATER_SURFACE ) {
-			#define x( _k ) tint._k = (Color){ \
+			#define x( _k ) ts->layers[ lt ].colors._k = (Color){ \
 				Map::s_consts.clampers.elevation_to_water_r.Clamp( ts->elevations._k ), \
 				Map::s_consts.clampers.elevation_to_water_g.Clamp( ts->elevations._k ), \
 				Map::s_consts.clampers.elevation_to_water_b.Clamp( ts->elevations._k ), \
@@ -55,12 +57,11 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 				do_x();
 			#undef x
 		}
-		else {
-			#define x( _k ) tint._k = ts->layers[ lt ].colors._k;
-				do_x();
-			#undef x
-		}
 		
+		#define x( _k ) tint._k = ts->layers[ lt ].colors._k;
+			do_x();
+		#undef x
+
 		#define x( _k ) ts->layers[ lt ].indices._k = m_map->m_mesh_terrain->AddVertex( vertices._k, tex_coords._k, tint._k )
 			do_x();
 		#undef x

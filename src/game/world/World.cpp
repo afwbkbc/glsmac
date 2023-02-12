@@ -233,7 +233,7 @@ void World::Start() {
 	UpdateViewport();
 	
 	SetCameraPosition( { 0.0f, -0.25f, 0.1f } );
-
+	
 	UpdateCameraRange();
 	UpdateCameraScale();
 	
@@ -397,8 +397,17 @@ void World::UpdateMapInstances() {
 }
 
 void World::UpdateUICamera() {
+	// TODO: finish it
 	// snapshot camera matrix for world ui
-	g_engine->GetUI()->SetWorldUIMatrix( m_camera->GetMatrix() );
+	/*m_camera->GetMatrix()*/
+	// tmp/hack
+	/*for ( auto& a : m_map->GetActors() ) {
+		for ( auto& m : ((scene::actor::InstancedMesh*)a)->GetWorldMatrices() ) {
+			g_engine->GetUI()->SetWorldUIMatrix( m );
+			break;
+		}
+		break;
+	}*/
 }
 
 void World::ReturnToMainMenu() {

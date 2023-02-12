@@ -58,28 +58,12 @@ void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
 	#undef x
 	coords.center.x = 0.0f;
 	coords.center.y = 0.0f;
-	coords.center.z = 0.0f; // ( coords.left.z + coords.top.z + coords.right.z + coords.bottom.z ) / 4;
-	
-	// fix projection a bit (TODO: finish world ui camera stuff)
-/*	#define x( _k ) { coords._k.y = coords._k.z / 2; coords._k.z /= 2; }
-		x( left );
-		x( top );
-		x( right );
-		x( bottom );
-	#undef x
-	*/
-	/*Map::tile_vertices_t coords = {
-		{ 0.0f, 0.0f, 1.0f }, // center
-		{ -0.5f, 0.0f, 1.0f }, // left
-		{ 0.0f, -0.5f, 1.0f }, // top
-		{ 0.5f, 0.0f, 1.0f }, // right
-		{ 0.0f, 0.5f, 1.0f }, // bottom
-	};*/
-	
+	coords.center.z = 0.0f; //( coords.left.z + coords.top.z + coords.right.z + coords.bottom.z ) / 4;
 	
 	std::vector< map::Map::tile_layer_type_t > layers = {};
 	
 	if ( tile->is_water_tile ) {
+		layers.push_back( map::Map::LAYER_LAND );
 		layers.push_back( map::Map::LAYER_WATER_SURFACE );
 		layers.push_back( map::Map::LAYER_WATER );
 	}
@@ -100,8 +84,27 @@ void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
 	
 		auto& layer = ts->layers[ lt ];
 		
+		auto tint = layer.colors;
+		
+		if ( lt == map::Map::LAYER_WATER_SURFACE ) {
+			// make water tiles darker based on depth
+			//util::Clamper< float > depth_to_tint_ratio( map::Tile::ELEVATION_LEVEL_TRENCH, map::Tile::ELEVATION_LEVEL_COAST, 0.5f, 1.0f );
+/*			#define x( _k ) tint._k = (Color){ \
+				Map::s_consts.clampers.elevation_to_water_r.Clamp( ts->elevations._k ), \
+				Map::s_consts.clampers.elevation_to_water_g.Clamp( ts->elevations._k ), \
+				Map::s_consts.clampers.elevation_to_water_b.Clamp( ts->elevations._k ), \
+				Map::s_consts.clampers.elevation_to_water_a.Clamp( ts->elevations._k ) \
+			}
+				x( center );
+				x( left );
+				x( top );
+				x( right );
+				x( bottom );
+			#undef x*/
+		}
+		
 		// copy texcoords from tile
-		#define x( _k ) auto _k = mesh->AddVertex( coords._k, layer.tex_coords._k, layer.colors._k )
+		#define x( _k ) auto _k = mesh->AddVertex( coords._k, layer.tex_coords._k, tint._k )
 			x( center );
 			x( left );
 			x( top );
@@ -119,7 +122,6 @@ void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
 		mesh->Finalize();
 
 		NEWV( preview, object::Mesh, "MapBottomBarTilePreviewImage" );
-			preview->SetAspectRatioMode( object::Mesh::AM_SCALE_WIDTH );
 			preview->SetMesh( mesh );
 			preview->SetTexture( tile_info.ms->terrain_texture );
 		m_previews.push_back( preview );
