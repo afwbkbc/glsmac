@@ -5,7 +5,7 @@ namespace world {
 namespace map_generator {
 
 void SimpleRandom::Generate( Tiles* tiles, size_t seed ) {
-	Log( "Generating terrain ( " + to_string( tiles->GetWidth() ) + " x " + to_string( tiles->GetHeight() ) + " )" );
+	Log( "Generating terrain ( " + std::to_string( tiles->GetWidth() ) + " x " + std::to_string( tiles->GetHeight() ) + " )" );
 	
 	Tile* tile;
 	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {

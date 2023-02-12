@@ -23,7 +23,7 @@ protected:
 	
 	Section* m_map_settings_section = nullptr;
 	Section* m_players_section = nullptr;
-		unordered_map< size_t, Label* > m_player_labels = {};
+		std::unordered_map< size_t, Label* > m_player_labels = {};
 		Button* m_launch_button = nullptr;
 		Button* m_cancel_button = nullptr;
 	Section* m_chat_section = nullptr;
@@ -32,7 +32,7 @@ protected:
 	
 	mt_id_t m_getevents_mt_id = 0;
 	
-	unordered_map< size_t, string > m_player_names = {};
+	std::unordered_map< size_t, std::string > m_player_names = {};
 	
 private:
 	void RefreshUI();

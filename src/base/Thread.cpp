@@ -5,6 +5,8 @@
 
 #include "Thread.h"
 
+using namespace std;
+
 namespace base {
 
 Thread::Thread( const string& thread_name )

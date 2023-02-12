@@ -1,12 +1,10 @@
 #pragma once
 
-#include "base/Base.h"
-
 #include <functional>
 
-#include "UIEvent.h"
+#include "base/Base.h"
 
-using namespace std;
+#include "UIEvent.h"
 
 namespace ui {
 namespace event {
@@ -15,7 +13,7 @@ namespace event {
 	
 CLASS( UIEventHandler, base::Base )
 
-	typedef function<bool( const UIEvent::event_data_t* data )> handler_function_t;
+	typedef std::function<bool( const UIEvent::event_data_t* data )> handler_function_t;
 	
 	UIEventHandler( const handler_function_t func );
 	

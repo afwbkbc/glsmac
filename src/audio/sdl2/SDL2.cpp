@@ -1,8 +1,8 @@
+#include <algorithm>
+
 #include "SDL2.h"
 
 #include "engine/Engine.h"
-
-#include <algorithm>
 
 namespace audio {
 namespace sdl2 {
@@ -12,7 +12,7 @@ SDL2::SDL2() {
 }
 
 SDL2::~SDL2() {
-	lock_guard<mutex> guard( m_actors_mutex );
+	std::lock_guard<std::mutex> guard( m_actors_mutex );
 	for ( auto& actor : m_actors ) {
 		DELETE( actor.second );
 	}
@@ -42,7 +42,7 @@ void SDL2::Start() {
 	/* Open the audio device */
 	auto ret = SDL_OpenAudio( &wav_spec, NULL );
 	if ( ret < 0 ) {
-		Log( (string) "Couldn't open audio: " + SDL_GetError() );
+		Log( (std::string) "Couldn't open audio: " + SDL_GetError() );
 		Log( "Failed to enable audio, game will start without sound." );
 		return;
 	}
@@ -86,7 +86,7 @@ void SDL2::AddActor( scene::actor::Sound *actor ) {
 		return;
 	}
 	
-	lock_guard<mutex> guard( m_actors_mutex );
+	std::lock_guard<std::mutex> guard( m_actors_mutex );
 	
 	Log( "Adding sound actor " + actor->GetName() );
 	ASSERT( m_actors.find( actor ) == m_actors.end(), "sound actor already added" );
@@ -99,7 +99,7 @@ void SDL2::RemoveActor( scene::actor::Sound *actor ) {
 		return;
 	}
 	
-	lock_guard<mutex> guard( m_actors_mutex );
+	std::lock_guard<std::mutex> guard( m_actors_mutex );
 	
 	Log( "Removing sound actor " + actor->GetName() );
 	auto it = m_actors.find( actor );
@@ -114,7 +114,7 @@ void SDL2::Mix( Uint8* stream, int len ) {
 	
 	memset( ptr( m_mix_buffer, 0, m_mix_buffer_size ), 0, m_mix_buffer_size );
 	{
-		lock_guard<mutex> guard( m_actors_mutex );
+		std::lock_guard<std::mutex> guard( m_actors_mutex );
 		
 		for (auto& actor : m_actors ) {
 			if ( actor.second->IsActive() ) {

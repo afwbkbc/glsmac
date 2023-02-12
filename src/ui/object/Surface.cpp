@@ -5,7 +5,7 @@ using namespace types;
 namespace ui {
 namespace object {
 
-Surface::Surface( const string& class_name )
+Surface::Surface( const std::string& class_name )
 	: Mesh( class_name )
 {
 	//

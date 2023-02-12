@@ -4,7 +4,7 @@ namespace game {
 namespace world {
 namespace actor {
 
-Actor::Actor( const string& name )
+Actor::Actor( const std::string& name )
 	: scene::actor::InstancedMesh( name )
 {
 	//

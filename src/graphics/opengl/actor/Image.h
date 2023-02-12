@@ -7,8 +7,6 @@
 
 #include "scene/actor/Image.h"
 
-using namespace std;
-
 namespace graphics {
 namespace opengl {
 
@@ -27,8 +25,8 @@ protected:
 	GLuint m_ibo_size;
 	
 private:
-	vector<float> m_vertex_data;
-	vector<unsigned int> m_index_data;
+	std::vector<float> m_vertex_data;
+	std::vector<unsigned int> m_index_data;
 };
 
 } /* namespace opengl */

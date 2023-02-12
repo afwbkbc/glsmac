@@ -1,17 +1,15 @@
 #pragma once
 
-#include "base/Module.h"
-
 #include <string>
 
-using namespace std;
+#include "base/Module.h"
 
 namespace loader {
 
 CLASS( Loader, base::Module )
 
 protected:
-	const string& GetRoot();
+	const std::string& GetRoot();
 };
 
 } /* namespace loader */

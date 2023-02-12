@@ -1,6 +1,6 @@
-#include "Audio.h"
-
 #include <algorithm>
+
+#include "Audio.h"
 
 namespace audio {
 

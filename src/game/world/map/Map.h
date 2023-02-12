@@ -1,9 +1,9 @@
 #pragma once
 
-#include "types/Serializable.h"
-
 #include <vector>
 #include <unordered_map>
+
+#include "types/Serializable.h"
 
 #include "Tiles.h"
 
@@ -133,7 +133,7 @@ CLASS( Map, Serializable )
 	void SetTiles( Tiles* tiles, bool generate_actors = true );
 	
 #ifdef DEBUG
-	vector<scene::actor::Mesh*> GetActors() const;
+	std::vector<scene::actor::Mesh*> GetActors() const;
 #endif
 	
 	// order is important (it defines rendering order)
@@ -261,11 +261,11 @@ CLASS( Map, Serializable )
 				float y;
 			} texture_scaling;
 		} variables;
-		vector< copy_from_after_t > copy_from_after;
+		std::vector< copy_from_after_t > copy_from_after;
 
 		// TODO: refactor this
-		vector< pair< types::mesh::Mesh::index_t*, types::mesh::Mesh::index_t* > > copy_normals;
-		unordered_map< types::mesh::Mesh::index_t*, pair< Vec2< size_t >, Texture::add_mode_t > > need_normals;
+		std::vector< std::pair< types::mesh::Mesh::index_t*, types::mesh::Mesh::index_t* > > copy_normals;
+		std::unordered_map< types::mesh::Mesh::index_t*, std::pair< Vec2< size_t >, Texture::add_mode_t > > need_normals;
 		
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
@@ -342,12 +342,12 @@ private:
 	
 	void InitTextureAndMesh();
 	
-	unordered_map< uint8_t, uint8_t > m_texture_variants = {}; // cache
+	std::unordered_map< uint8_t, uint8_t > m_texture_variants = {}; // cache
 	
 	tile_state_t* m_current_ts = nullptr;
 	Tile* m_current_tile = nullptr;
 
-	vector< Module* > m_modules;
+	std::vector< Module* > m_modules;
 };
 
 }

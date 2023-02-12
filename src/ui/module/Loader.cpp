@@ -46,7 +46,7 @@ void Loader::Start() {
 			m_button_cancel->SetLabel( "CANCEL" );
 			m_button_cancel->On( UIEvent::EV_BUTTON_CLICK, EH( this ) {
 				while ( !m_handlers.on_stop( this ) ) {
-					this_thread::sleep_for( milliseconds( 100 ) );
+					std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
 				}
 				Stop();
 				return true;
@@ -113,7 +113,7 @@ void Loader::SetOnStop( const loading_handler_t handler ) {
 	m_handlers.on_stop = handler;
 }
 
-void Loader::SetLoadingText( const string& loading_text ) {
+void Loader::SetLoadingText( const std::string& loading_text ) {
 	if ( loading_text != m_loading_text ) {
 		m_loading_text = loading_text;
 		if ( m_label ) {
@@ -122,14 +122,14 @@ void Loader::SetLoadingText( const string& loading_text ) {
 	}
 }
 
-const string Loader::GetDots() {
+const std::string Loader::GetDots() {
 	while ( m_dots_timer.Ticked() ) {
 		m_dots_count++;
 		if ( m_dots_count > MAX_DOTS ) {
 			m_dots_count = 0;
 		}
 	}
-	return string( m_dots_count, '.' ) + string( ( MAX_DOTS - m_dots_count ) * 2, ' ' );
+	return std::string( m_dots_count, '.' ) + std::string( ( MAX_DOTS - m_dots_count ) * 2, ' ' );
 }
 
 }

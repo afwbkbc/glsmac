@@ -16,7 +16,6 @@
 #include "shader_program/ShaderProgram.h"
 #include "routine/Routine.h"
 
-using namespace std;
 using namespace ui;
 namespace ui {
 using namespace event;
@@ -26,7 +25,7 @@ namespace graphics {
 namespace opengl {
 
 CLASS( OpenGL, Graphics )
-	OpenGL( const string title, const unsigned short window_width, const unsigned short window_height, const bool vsync, const bool fullscreen );
+	OpenGL( const std::string title, const unsigned short window_width, const unsigned short window_height, const bool vsync, const bool fullscreen );
 	~OpenGL();
 	void Start();
 	void Stop();
@@ -55,7 +54,7 @@ CLASS( OpenGL, Graphics )
 	
 protected:
 	struct {
-		string title;
+		std::string title;
 		unsigned short viewport_width;
 		unsigned short viewport_height;
 		bool vsync;
@@ -67,19 +66,19 @@ protected:
 	float m_aspect_ratio;
 	SDL_Window *m_window;
 	SDL_GLContext m_gl_context;
-	vector<shader_program::ShaderProgram *> m_shader_programs;
-	vector<routine::Routine *> m_routines;
+	std::vector<shader_program::ShaderProgram *> m_shader_programs;
+	std::vector<routine::Routine *> m_routines;
 	
 	void OnResize();
 	
 private:
 	
-	typedef unordered_map< const types::Texture*, GLuint > m_textures_map;
+	typedef std::unordered_map< const types::Texture*, GLuint > m_textures_map;
 	m_textures_map m_textures;
 	GLuint m_no_texture;
 	GLuint next_texture_obj_id = 0;
 	
-	unordered_map< uint8_t, Vec2< ssize_t > > m_active_mousedowns;
+	std::unordered_map< uint8_t, Vec2< ssize_t > > m_active_mousedowns;
 	
 	bool m_is_fullscreen = false;
 };

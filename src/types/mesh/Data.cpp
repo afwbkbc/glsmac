@@ -1,12 +1,9 @@
-#include "Data.h"
-
 #include <cmath>
 #include <cstring>
 
-#include "util/Math.h"
+#include "Data.h"
 
-using namespace std;
-using namespace util;
+#include "util/Math.h"
 
 namespace types {
 namespace mesh {
@@ -19,7 +16,7 @@ Data::Data( const size_t vertex_count, const size_t surface_count )
 
 Mesh::index_t Data::AddVertex( const Vec3 &coord, const data_t data ) {
 	ASSERT( !m_is_final, "addvertex on already finalized mesh" );
-	ASSERT( m_vertex_i < m_vertex_count, "vertex out of bounds (" + to_string( m_vertex_i ) + " >= " + to_string( m_vertex_count ) + ")" );
+	ASSERT( m_vertex_i < m_vertex_count, "vertex out of bounds (" + std::to_string( m_vertex_i ) + " >= " + std::to_string( m_vertex_count ) + ")" );
 	size_t offset = m_vertex_i * VERTEX_SIZE * sizeof( coord_t );
 	memcpy( ptr( m_vertex_data, offset, sizeof( coord ) ), &coord, sizeof(coord) );
 	offset += VERTEX_COORD_SIZE * sizeof( coord_t );

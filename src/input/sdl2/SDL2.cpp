@@ -58,7 +58,7 @@ void SDL2::Iterate() {
 				NEWV( ui_event, event::MouseDown, event.motion.x, event.motion.y, GetMouseButton( event.button.button ) );
 				g_engine->GetUI()->ProcessEvent( ui_event );
 				ASSERT( m_active_mousedowns.find( event.button.button ) == m_active_mousedowns.end(),
-					"duplicate mousedown (button=" + to_string( event.button.button ) + ")"
+					"duplicate mousedown (button=" + std::to_string( event.button.button ) + ")"
 				);
 				m_active_mousedowns[ event.button.button ] = { event.motion.x, event.motion.y };
 				DELETE( ui_event );
@@ -129,13 +129,13 @@ UIEvent::mouse_button_t SDL2::GetMouseButton( uint8_t sdl_mouse_button ) const {
 			return UIEvent::M_RIGHT;
 		}
 		default: {
-			Log( "unsupported mouse button " + to_string( sdl_mouse_button ) );
+			Log( "unsupported mouse button " + std::to_string( sdl_mouse_button ) );
 			return UIEvent::M_NONE;
 		}
 	}
 }
 
-#include <cstdio>
+//#include <cstdio>
 
 char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 	char result = 0;

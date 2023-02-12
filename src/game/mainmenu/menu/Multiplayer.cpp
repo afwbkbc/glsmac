@@ -51,11 +51,11 @@ void Multiplayer::OnNext() {
 	}
 }
 
-const string Multiplayer::GetChoice() const {
+const std::string Multiplayer::GetChoice() const {
 	return m_choices->GetValue();
 }
 
-void Multiplayer::SetChoice( const string& choice ) {
+void Multiplayer::SetChoice( const std::string& choice ) {
 	m_choices->SetValue( choice );
 }
 

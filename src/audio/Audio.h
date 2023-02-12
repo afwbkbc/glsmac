@@ -1,8 +1,8 @@
 #pragma once
 
-#include "base/Module.h"
-
 #include <vector>
+
+#include "base/Module.h"
 
 #include "scene/actor/Sound.h"
 
@@ -22,7 +22,7 @@ CLASS( Audio, base::Module )
 	void RemoveAndDeleteActor( scene::actor::Sound *actor );
 	
 protected:
-	vector< scene::actor::Sound* > m_removal_queue = {};
+	std::vector< scene::actor::Sound* > m_removal_queue = {};
 	
 };
 

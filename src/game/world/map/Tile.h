@@ -5,7 +5,6 @@
 
 #include "types/Serializable.h"
 
-using namespace std;
 using namespace types;
 
 namespace game {
@@ -21,7 +20,7 @@ namespace map {
 class Tile { // not deriving from anything because tiles are initialized with malloc (without new) so vtable would get screwed
 	public:
 
-	typedef function< void( Tile* ) > tile_cb_t;
+	typedef std::function< void( Tile* ) > tile_cb_t;
 	
 	// map coordinates
 	// using SMAC coordinate system (increments by 2 horizontally and vertically, by 1 diagonally)
@@ -46,7 +45,7 @@ class Tile { // not deriving from anything because tiles are initialized with ma
 		elevation_t* top;
 		elevation_t* right;
 		elevation_t* bottom;
-		vector<elevation_t*> corners; // for more convenient iteration, contains left, top, right and bottom pointers
+		std::vector<elevation_t*> corners; // for more convenient iteration, contains left, top, right and bottom pointers
 	} elevation;
 	
 	struct { // moved to separate structure to allow main structure to have only pointers, for consistency
@@ -65,7 +64,7 @@ class Tile { // not deriving from anything because tiles are initialized with ma
 	Tile* SE;
 	Tile* S;
 	Tile* SW;
-	vector<Tile*> neighbours; // for more convenient iteration, contains all neighbouring tiles
+	std::vector<Tile*> neighbours; // for more convenient iteration, contains all neighbouring tiles
 
 	// dynamic parameters, do not modify them manually
 	bool is_water_tile = false;

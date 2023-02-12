@@ -10,8 +10,6 @@
 
 #include "../shader_program/Font.h"
 
-using namespace std;
-
 namespace graphics {
 namespace opengl {
 

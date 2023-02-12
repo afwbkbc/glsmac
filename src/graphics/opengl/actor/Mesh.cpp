@@ -43,7 +43,7 @@ bool Mesh::ReloadNeeded() {
 	size_t mesh_updated_counter = actor->GetMesh()->UpdatedCount();
 	auto *data_mesh = actor->GetDataMesh();
 	if ( data_mesh ) {
-		mesh_updated_counter = max( mesh_updated_counter, data_mesh->UpdatedCount() );
+		mesh_updated_counter = std::max( mesh_updated_counter, data_mesh->UpdatedCount() );
 	}
 	if ( m_update_counter == mesh_updated_counter ) {
 		return false;
@@ -56,11 +56,7 @@ void Mesh::Load() {
 	auto *actor = (scene::actor::Mesh *)m_actor;
 
 	const auto *mesh = actor->GetMesh();
-#ifdef DEBUG
-	if ( !mesh ) {
-		throw runtime_error( "actor mesh not set" );
-	}
-#endif
+	ASSERT( mesh, "actor mesh not set" );
 
 	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
 	glBufferData( GL_ARRAY_BUFFER, mesh->GetVertexDataSize(), (GLvoid *)ptr( mesh->GetVertexData(), 0, mesh->GetVertexDataSize() ), GL_STATIC_DRAW );
@@ -108,7 +104,7 @@ void Mesh::PrepareDataMesh() {
 		size_t w = g_engine->GetGraphics()->GetViewportWidth();
 		size_t h = g_engine->GetGraphics()->GetViewportHeight();
 		
-		Log( "(re)loading data mesh (viewport size: " + to_string( w ) + "x" + to_string( h ) + ")" );
+		Log( "(re)loading data mesh (viewport size: " + std::to_string( w ) + "x" + std::to_string( h ) + ")" );
 		
 		glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
 		
@@ -125,7 +121,7 @@ void Mesh::PrepareDataMesh() {
 		glBindTexture( GL_TEXTURE_2D, 0 );
 		
 		GLenum status = glCheckFramebufferStatus( GL_FRAMEBUFFER );
-		ASSERT( status == GL_FRAMEBUFFER_COMPLETE, "FB error, status: " + to_string( status ) );
+		ASSERT( status == GL_FRAMEBUFFER_COMPLETE, "FB error, status: " + std::to_string( status ) );
 		
 		glBindFramebuffer( GL_FRAMEBUFFER, 0 );	
 
@@ -225,7 +221,7 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 
 		}
 		default: {
-			ASSERT( false, "shader program type " + to_string( shader_program->GetType() ) + " not implemented" );
+			ASSERT( false, "shader program type " + std::to_string( shader_program->GetType() ) + " not implemented" );
 		}
 	}
 	

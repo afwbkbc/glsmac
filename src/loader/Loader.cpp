@@ -4,7 +4,7 @@
 
 namespace loader {
 
-const string& Loader::GetRoot() {
+const std::string& Loader::GetRoot() {
 	return g_engine->GetConfig()->GetGamePath();
 }
 

@@ -26,7 +26,7 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 		bool maybe_mirror_sw = false;
 		Texture::add_mode_t mirror_mode;
 	} coastline_corner_t;
-	vector< coastline_corner_t > coastline_corners = {};
+	std::vector< coastline_corner_t > coastline_corners = {};
 	coastline_corner_t coastline_corner_tmp = {};
 	
 	if ( !tile->is_water_tile ) {
@@ -397,7 +397,7 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 			// get normal from corresponding adjactent tile
 			for ( auto& c : coastline_corners ) {
 
-				ASSERT( ( c.msx % 2 ) == ( c.msy % 2 ), "msx and msy oddity does not match ( ( " + to_string( c.msx ) + " % 2 ) != ( " + to_string( c.msy ) + " % 2 )" );
+				ASSERT( ( c.msx % 2 ) == ( c.msy % 2 ), "msx and msy oddity does not match ( ( " + std::to_string( c.msx ) + " % 2 ) != ( " + std::to_string( c.msy ) + " % 2 )" );
 				
 				ms->need_normals[
 					c.side == Texture::AM_ROUND_LEFT ? &ts->layers[ Map::LAYER_WATER ].indices.left :

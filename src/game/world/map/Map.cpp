@@ -83,7 +83,7 @@ Map::Map( Random* random, Scene* scene )
 		uint8_t checked_bits; // some masks don't care about some corners
 	} texture_rule_t;
 	
-	const vector< texture_rule_t > bitmasks = {
+	const std::vector< texture_rule_t > bitmasks = {
 		{ B(00000000), B(10101010) }, // 0
 		{ B(00001000), B(10101010) }, // 1
 		{ B(00101000), B(10111010) }, // 2
@@ -164,7 +164,7 @@ void Map::SetTiles( Tiles* tiles, bool generate_actors ) {
 }
 
 #ifdef DEBUG
-vector<actor::Mesh*> Map::GetActors() const {
+std::vector<actor::Mesh*> Map::GetActors() const {
 	return {
 		m_actors.terrain,
 	};
@@ -294,7 +294,7 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const Tile* tile, const 
 		}
 	}
 	
-	vector< uint8_t > possible_rotates = {};
+	std::vector< uint8_t > possible_rotates = {};
 	
 	for ( info.rotate_direction = 0 ; info.rotate_direction < 8 ; info.rotate_direction += 2 ) {
 		uint8_t bitmask = 0;
@@ -559,8 +559,8 @@ void Map::Unserialize( Buffer buf ) {
 	
 	m_tiles->Unserialize( buf.ReadString() );
 
-	ASSERT( m_tiles->GetWidth() == m_map_state.dimensions.x, "tiles width doesn't match map width ( " + to_string( m_tiles->GetWidth() ) + " != " + to_string( m_map_state.dimensions.x ) + " )" );
-	ASSERT( m_tiles->GetHeight() == m_map_state.dimensions.y, "tiles height doesn't match map height ( " + to_string( m_tiles->GetHeight() ) + " != " + to_string( m_map_state.dimensions.y ) + " )" );
+	ASSERT( m_tiles->GetWidth() == m_map_state.dimensions.x, "tiles width doesn't match map width ( " + std::to_string( m_tiles->GetWidth() ) + " != " + std::to_string( m_map_state.dimensions.x ) + " )" );
+	ASSERT( m_tiles->GetHeight() == m_map_state.dimensions.y, "tiles height doesn't match map height ( " + std::to_string( m_tiles->GetHeight() ) + " != " + std::to_string( m_map_state.dimensions.y ) + " )" );
 
 	if ( m_tile_states ) {
 		free( m_tile_states );

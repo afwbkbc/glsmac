@@ -5,7 +5,7 @@ using namespace types;
 namespace ui {
 namespace object {
 
-Mesh::Mesh( const string& class_name )
+Mesh::Mesh( const std::string& class_name )
 	: UIObject( class_name )
 {
 	//

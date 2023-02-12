@@ -295,7 +295,7 @@ void UI::FocusObject( UIObject* object ) {
 	}
 }
 
-const theme::Style* UI::GetStyle( const string& style_class ) const {
+const theme::Style* UI::GetStyle( const std::string& style_class ) const {
 	for ( auto& theme : m_themes ) {
 		auto* style = theme->GetStyle( style_class );
 		if ( style ) {

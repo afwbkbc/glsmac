@@ -16,7 +16,6 @@
 
 #include "ui/theme/Style.h"
 
-using namespace std;
 using namespace types;
 
 using namespace scene;
@@ -34,7 +33,7 @@ namespace object {
 class UIContainer;
 
 CLASS( UIObject, base::Base )
-	UIObject( const string& class_name = "" );
+	UIObject( const std::string& class_name = "" );
 	virtual ~UIObject();
 
 	typedef uint8_t alignment_t;
@@ -100,10 +99,10 @@ CLASS( UIObject, base::Base )
 	virtual void ProcessEvent( event::UIEvent* event );
 	
 	vertex_t GetAreaPosition() const;
-	pair<vertex_t, vertex_t> GetAreaGeometry() const;
+	std::pair<vertex_t, vertex_t> GetAreaGeometry() const;
 	bool IsPointInside( const size_t x, const size_t y ) const;
 	
-	void SetClass( const string& style );
+	void SetClass( const std::string& style );
 	
 #ifdef DEBUG
 	void ShowDebugFrame();
@@ -115,8 +114,8 @@ CLASS( UIObject, base::Base )
 	
 	void ForwardStyleAttribute( const Style::attribute_type_t src_type, const Style::attribute_type_t dst_type );
 	void ForwardStyleAttribute( const Style::attribute_type_t type );
-	void ForwardStyleAttributesV( const vector< Style::attribute_type_t > type );
-	void ForwardStyleAttributesM( const unordered_map< Style::attribute_type_t, Style::attribute_type_t > types );
+	void ForwardStyleAttributesV( const std::vector< Style::attribute_type_t > type );
+	void ForwardStyleAttributesM( const std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > types );
 	
 	virtual void AddStyleModifier( const Style::modifier_t modifier );
 	virtual void RemoveStyleModifier( const Style::modifier_t modifier );
@@ -134,7 +133,7 @@ CLASS( UIObject, base::Base )
 	virtual void Focus();
 	virtual void Defocus();
 	
-	typedef unordered_map< UIEvent::event_type_t, vector< UIEventHandler* > > event_handlers_t;
+	typedef std::unordered_map< UIEvent::event_type_t, std::vector< UIEventHandler* > > event_handlers_t;
 	
 protected:
 	friend class UIContainer;
@@ -167,7 +166,7 @@ protected:
 	
 	UIContainer *m_parent_object = nullptr;
 
-	unordered_set<Actor *> m_actors = {};
+	std::unordered_set<Actor *> m_actors = {};
 
 	size_t m_depth = 0;
 	float m_z_index = 0.5f;
@@ -247,12 +246,12 @@ protected:
 	bool m_has_debug_frame = false;
 #endif
 	
-	typedef unordered_set< UIEvent::event_type_t > events_t;
+	typedef std::unordered_set< UIEvent::event_type_t > events_t;
 	
 	void ListenToEvent( const UIEvent::event_type_t event );
 	void ListenToEvents( const events_t& events );
 	
-	const string GetStyleModifiersString() const;
+	const std::string GetStyleModifiersString() const;
 	
 	void BlockRealigns();
 	void UnblockRealigns();
@@ -272,10 +271,10 @@ private:
 	
 	events_t m_events_to_listen = {};
 	
-	string m_style_class = "";
+	std::string m_style_class = "";
 	bool m_style_loaded = false; // will load on first draw
 	const Style* m_style = nullptr;
-	unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_parent_style_attributes = {};
+	std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_parent_style_attributes = {};
 	void ApplyStyleIfNeeded();
 	
 	const Style::attribute_type_t GetParentAttribute( const Style::attribute_type_t source_type ) const;

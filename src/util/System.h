@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Util.h"
-
 #include <vector>
 #include <string>
+
+#include "Util.h"
 
 namespace util {
 
@@ -15,7 +15,7 @@ CLASS( System, Util )
 #endif
 
 	// to workaround uppercase or lowercase filenames
-	static vector< string > GetPossibleFilenames( const string& filename );
+	static std::vector< std::string > GetPossibleFilenames( const std::string& filename );
 	
 };
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Actor.h"
-
 #include <unordered_map>
+
+#include "Actor.h"
 
 #include "types/mesh/Simple.h"
 #include "types/mesh/Render.h"
@@ -50,11 +50,11 @@ CLASS( Mesh, Actor )
 		mesh::Data::data_t result;
 	} data_request_t;
 	typedef size_t data_request_id_t;
-	typedef unordered_map< data_request_id_t, data_request_t > data_requests_t;
+	typedef std::unordered_map< data_request_id_t, data_request_t > data_requests_t;
 	
 	// make sure to call these from same thread only
 	data_request_id_t GetDataAt( const size_t screen_x, const size_t screen_inverse_y );
-	pair< bool, mesh::Data::data_t > GetDataResponse( const data_request_id_t id );
+	std::pair< bool, mesh::Data::data_t > GetDataResponse( const data_request_id_t id );
 	void CancelDataRequest( const data_request_id_t id );
 	data_requests_t* GetDataRequests();
 	const data_request_id_t GetLastDataRequestId() const;

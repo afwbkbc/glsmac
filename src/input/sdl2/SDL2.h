@@ -13,7 +13,6 @@
 
 using namespace types;
 
-using namespace std;
 using namespace ui;
 namespace ui {
 using namespace event;
@@ -37,7 +36,7 @@ private:
 	UIEvent::key_code_t GetScanCode( SDL_Scancode code, SDL_Keymod modifiers ) const;
 	UIEvent::key_modifier_t GetModifiers( SDL_Keymod modifiers ) const;
 	
-	unordered_map< uint8_t, Vec2< ssize_t > > m_active_mousedowns;
+	std::unordered_map< uint8_t, Vec2< ssize_t > > m_active_mousedowns;
 	
 };
 

@@ -1,4 +1,4 @@
-#include "shader_program/ShaderProgram.h"
+#include "OpenGL.h"
 
 #include "engine/Engine.h"
 
@@ -13,16 +13,10 @@
 #include "routine/Skybox.h"
 #include "routine/World.h"
 
-using namespace std;
-using namespace ui;
-namespace ui {
-using namespace event;
-}
-
 namespace graphics {
 namespace opengl {
 
-OpenGL::OpenGL( const string title, const unsigned short viewport_width, const unsigned short viewport_height, const bool vsync, const bool fullscreen ) {
+OpenGL::OpenGL( const std::string title, const unsigned short viewport_width, const unsigned short viewport_height, const bool vsync, const bool fullscreen ) {
 	m_window = NULL;
 	m_gl_context = NULL;
 
@@ -192,10 +186,10 @@ void OpenGL::Iterate() {
 
 #ifdef DEBUG
 	GLenum errcode;
-	if ( ( errcode=glGetError() ) != GL_NO_ERROR ) {
+	if ( ( errcode = glGetError() ) != GL_NO_ERROR ) {
 #ifndef  VISUAL_STUDIO // gluErrorString can't be found by MSVC and Clang from Visual Studio
 		const GLubyte* errstring = gluErrorString( errcode );
-		string msg = (char *)errstring;
+		std::string msg = (char *)errstring;
 		THROW( "OpenGL error occured in render loop: \"" + msg + "\"" );
 #endif
 	}
@@ -310,7 +304,7 @@ void OpenGL::ResizeViewport( const size_t width, const size_t height ) {
 		m_window_size.height = m_options.viewport_height;
 	}
 	
-	Log( "Resizing viewport to " + to_string( m_options.viewport_width ) + "x" + to_string( m_options.viewport_height ) );
+	Log( "Resizing viewport to " + std::to_string( m_options.viewport_width ) + "x" + std::to_string( m_options.viewport_height ) );
 	glViewport( 0, 0, m_options.viewport_width, m_options.viewport_height );
 	m_aspect_ratio = (float) m_options.viewport_height / m_options.viewport_width;
 	OnResize();

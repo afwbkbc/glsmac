@@ -1,9 +1,9 @@
 #pragma once
 
-#include "base/Task.h"
-
 #include <vector>
 #include <string>
+
+#include "base/Task.h"
 
 #include "ui/object/Surface.h"
 #include "ui/object/SoundEffect.h"
@@ -17,8 +17,8 @@
 #include "ui/Theme.h"
 #include "util/Random.h"
 
-using namespace std;
 using namespace types;
+using namespace loader::texture;
 
 using namespace ui;
 namespace ui {
@@ -37,7 +37,7 @@ CLASS( MainMenu, base::Task )
 	
 	void ShowMenu( MenuObject* menu_object );
 	void GoBack();
-	void MenuError( const string& error_text );
+	void MenuError( const std::string& error_text );
 	
 	util::Random* GetRandom();
 	
@@ -50,8 +50,8 @@ private:
 	Surface *m_background = nullptr;
 	
 	MenuObject *m_menu_object = nullptr;
-	vector<MenuObject*> m_menu_history = {};
-	vector<string> m_choice_history = {};
+	std::vector<MenuObject*> m_menu_history = {};
+	std::vector<std::string> m_choice_history = {};
 	
 	MenuObject *m_menu_next = nullptr;
 	bool m_goback = false;

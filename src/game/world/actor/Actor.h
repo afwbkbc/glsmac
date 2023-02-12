@@ -8,7 +8,7 @@ namespace actor {
 
 CLASS( Actor, scene::actor::InstancedMesh )
 	
-	Actor( const string& name );
+	Actor( const std::string& name );
 	
 	virtual void Iterate() {}
 

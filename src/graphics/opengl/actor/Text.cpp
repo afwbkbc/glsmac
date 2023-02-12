@@ -24,7 +24,7 @@ Text::~Text() {
 	}
 }
 
-void Text::Update( Font* font, const string& text, const float x, const float y ) {
+void Text::Update( Font* font, const std::string& text, const float x, const float y ) {
 	
 	if ( m_font != font ) {
 		Log( "Changing font from " + m_font->m_name + " to " + font->m_name );
@@ -40,7 +40,7 @@ void Text::Update( Font* font, const string& text, const float x, const float y 
 		const float sx = 2.0 / g_engine->GetGraphics()->GetViewportWidth();
 		const float sy = 2.0 / g_engine->GetGraphics()->GetViewportHeight();	
 
-		vector<vertex_box_t> boxes = {};
+		std::vector<vertex_box_t> boxes = {};
 
 		for ( int sym = 32; sym < 128; sym++ ) {
 			boxes.clear();
@@ -53,7 +53,7 @@ void Text::Update( Font* font, const string& text, const float x, const float y 
 		for ( const char *p = text.c_str(); *p; p++ ) {
 			unsigned char sym = (unsigned char)*p;
 
-			ASSERT( sym >= 32 && sym < 128, "unexpected font character " + to_string( sym ) );
+			ASSERT( sym >= 32 && sym < 128, "unexpected font character " + std::to_string( sym ) );
 
 			bitmap = &m_font->m_symbols[sym];
 

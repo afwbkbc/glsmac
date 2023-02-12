@@ -13,7 +13,7 @@ void OrthographicData::AddShaders() {
 \
 in vec3 aCoord; \
 in uint aData; \
-uniform mat4 uWorld[" + to_string( Graphics::MAX_WORLD_INSTANCES ) + "]; \
+uniform mat4 uWorld[" + std::to_string( Graphics::MAX_WORLD_INSTANCES ) + "]; \
 out float data; \
 \
 void main(void) { \

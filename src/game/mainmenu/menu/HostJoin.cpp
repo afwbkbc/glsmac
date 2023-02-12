@@ -62,11 +62,11 @@ void HostJoin::OnNext() {
 	}
 }
 
-const string HostJoin::GetChoice() const {
+const std::string HostJoin::GetChoice() const {
 	return m_choices->GetValue();
 }
 
-void HostJoin::SetChoice( const string& choice ) {
+void HostJoin::SetChoice( const std::string& choice ) {
 	m_choices->SetValue( choice );
 }
 

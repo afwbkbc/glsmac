@@ -1,9 +1,9 @@
-#include "SimplePerlin.h"
-
 #include <ctime>
 #include <cmath>
 #include <algorithm>
 #include <random>
+
+#include "SimplePerlin.h"
 
 #include "util/Perlin.h"
 #include "util/Clamper.h"
@@ -16,7 +16,7 @@ namespace world {
 namespace map_generator {
 
 void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
-	Log( "Generating terrain ( " + to_string( tiles->GetWidth() ) + " x " + to_string( tiles->GetHeight() ) + " )" );
+	Log( "Generating terrain ( " + std::to_string( tiles->GetWidth() ) + " x " + std::to_string( tiles->GetHeight() ) + " )" );
 	
 	const float land_bias = 0.1f; // increase amount of land generated
 	util::Clamper<float> perlin_to_elevation( -1.0 + land_bias, 1.0, MAPGEN_ELEVATION_MIN, MAPGEN_ELEVATION_MAX );
@@ -29,15 +29,15 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 	Tile* tile;
 	
 	// process in random order
-	vector< Tile* > tiles_vec;
+	std::vector< Tile* > tiles_vec;
 	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {
 		for ( auto x = y & 1 ; x < tiles->GetWidth() ; x += 2 ) {
 			tiles_vec.push_back( tiles->At( x, y ) );
 		}
 	}
 
-	mt19937 g( seed );
-	shuffle( tiles_vec.begin(), tiles_vec.end(), g );
+	std::mt19937 g( seed );
+	std::shuffle( tiles_vec.begin(), tiles_vec.end(), g );
 	
 	for ( auto& tile : tiles_vec ) {
 		

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "UIModule.h"
-
 #include <string>
+
+#include "UIModule.h"
 
 #include "ui/object/Section.h"
 #include "ui/object/Button.h"
@@ -14,7 +14,7 @@ namespace module {
 
 class Loader;
 	
-typedef function<bool( ui::module::Loader* loader )> loading_handler_t;
+typedef std::function<bool( ui::module::Loader* loader )> loading_handler_t;
 #define LH( ... ) [ __VA_ARGS__ ] ( ui::module::Loader* loader ) -> bool
 
 CLASS( Loader, UIModule )
@@ -28,9 +28,9 @@ CLASS( Loader, UIModule )
 	void SetOnIterate( const loading_handler_t handler );
 	void SetOnStop( const loading_handler_t handler );
 	
-	void SetLoadingText( const string& loading_text );
+	void SetLoadingText( const std::string& loading_text );
 	
-	const string GetDots();
+	const std::string GetDots();
 	
 private:
 	
@@ -40,7 +40,7 @@ private:
 	
 	bool m_is_iterating = false;
 	
-	string m_loading_text = "";
+	std::string m_loading_text = "";
 	
 	Section* m_section = nullptr;
 	Label* m_label = nullptr;

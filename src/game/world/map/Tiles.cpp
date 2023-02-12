@@ -1,8 +1,8 @@
-#include "Tiles.h"
-
 #include <cstring>
 #include <algorithm>
 #include <random>
+
+#include "Tiles.h"
 
 #include "util/Clamper.h"
 #include "Map.h"
@@ -26,7 +26,7 @@ Tiles::~Tiles() {
 void Tiles::Resize( const size_t width, const size_t height ) {
 	
 	if ( width != m_width || height != m_height ) {
-		Log( "Initializing tiles ( " + to_string( width ) + " x " + to_string( height ) + " )" );
+		Log( "Initializing tiles ( " + std::to_string( width ) + " x " + std::to_string( height ) + " )" );
 		
 		m_width = width;
 		m_height = height;
@@ -133,7 +133,7 @@ void Tiles::Resize( const size_t width, const size_t height ) {
 
 #ifdef DEBUG
 		// check that all pointers are linked to something
-#define CHECKTILE( _what ) ASSERT( tile->_what, "tile " #_what " not linked at " + to_string( x ) + "x" + to_string( y ) );
+#define CHECKTILE( _what ) ASSERT( tile->_what, "tile " #_what " not linked at " + std::to_string( x ) + "x" + std::to_string( y ) );
 
 				CHECKTILE( W );
 				CHECKTILE( NW );
@@ -213,10 +213,10 @@ void Tiles::Validate() {
 				tile = At( x, y );
 				
 				if ( tile->moisture > 3 ) {
-					Log( "tile moisture overflow ( " + to_string( tile->moisture ) + " > 3 ) at " + to_string( x ) + "x" + to_string( y ) );
+					Log( "tile moisture overflow ( " + std::to_string( tile->moisture ) + " > 3 ) at " + std::to_string( x ) + "x" + std::to_string( y ) );
 				}
 				if ( tile->rockyness > 3 ) {
-					Log( "tile rockyness overflow ( " + to_string( tile->rockyness ) + " > 3 ) at " + to_string( x ) + "x" + to_string( y ) );
+					Log( "tile rockyness overflow ( " + std::to_string( tile->rockyness ) + " > 3 ) at " + std::to_string( x ) + "x" + std::to_string( y ) );
 				}
 				
 			}
@@ -243,12 +243,12 @@ void Tiles::Finalize() {
 		acceptable_inaccuracy *= 1.1f;
 	//} while ( fabs( GetLandAmount() - desired_land_amount ) > acceptable_inaccuracy );
 	
-	Log( "Final land amount: " + to_string( GetLandAmount() ) );
+	Log( "Final land amount: " + std::to_string( GetLandAmount() ) );
 }
 
 void Tiles::SetLandAmount( const float amount ) {
 	
-	Log( "Setting land amount to " + to_string( amount ) );
+	Log( "Setting land amount to " + std::to_string( amount ) );
 	
 	float acceptable_inaccuracy = 0.01f;
 	Tile::elevation_t elevation = Tile::ELEVATION_LEVEL_COAST; // start with 0
@@ -257,7 +257,7 @@ void Tiles::SetLandAmount( const float amount ) {
 	int8_t last_direction = 0;
 	while ( elevation_change_by > 1 ) {
 		current_land_amount = GetLandAmount( elevation );
-		Log( "ELEVATION=" + to_string( elevation ) + " LAND_AMOUNT=" + to_string( current_land_amount ) );
+		Log( "ELEVATION=" + std::to_string( elevation ) + " LAND_AMOUNT=" + std::to_string( current_land_amount ) );
 		
 		if ( current_land_amount >= amount - acceptable_inaccuracy && current_land_amount <= amount + acceptable_inaccuracy ) {
 			// found optimal elevation
@@ -296,17 +296,17 @@ const float Tiles::GetLandAmount( Tile::elevation_t elevation_diff ) {
 }
 
 void Tiles::RaiseAllTilesBy( Tile::elevation_t amount ) {
-	Log( "Raising all tiles by " + to_string( amount ) );
+	Log( "Raising all tiles by " + std::to_string( amount ) );
 	Tile* tile;
 	// process in random order
-	vector< Tile* > tiles;
+	std::vector< Tile* > tiles;
 	for ( auto y = 0 ; y < m_height ; y++ ) {
 		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 			tiles.push_back( At( x, y ) );
 		}
 	}
-	mt19937 g( m_random->GetUInt( 0, UINT32_MAX - 1 ) );
-	shuffle( tiles.begin(), tiles.end(), g );
+	std::mt19937 g( m_random->GetUInt( 0, UINT32_MAX - 1 ) );
+	std::shuffle( tiles.begin(), tiles.end(), g );
 	
 	for ( auto& tile : tiles ) {
 		*tile->elevation.center += amount;
@@ -328,8 +328,8 @@ void Tiles::RaiseAllTilesBy( Tile::elevation_t amount ) {
 	}
 }
 
-const pair< Tile::elevation_t, Tile::elevation_t > Tiles::GetElevationsRange() const {
-	pair< Tile::elevation_t, Tile::elevation_t > result = { 0, 0 };
+const std::pair< Tile::elevation_t, Tile::elevation_t > Tiles::GetElevationsRange() const {
+	std::pair< Tile::elevation_t, Tile::elevation_t > result = { 0, 0 };
 	Tile* tile;
 	// determine min and max elevations from generated tiles
 	for ( auto y = 0 ; y < m_height ; y++ ) {
@@ -345,7 +345,7 @@ const pair< Tile::elevation_t, Tile::elevation_t > Tiles::GetElevationsRange() c
 			}
 		}
 	}
-	Log( "Elevations range: min=" + to_string( result.first ) + " max=" + to_string( result.second ) );
+	Log( "Elevations range: min=" + std::to_string( result.first ) + " max=" + std::to_string( result.second ) );
 	return result;
 }
 
@@ -364,14 +364,14 @@ void Tiles::NormalizeElevationRange() {
 	util::Clamper<Tile::elevation_t> converter( elevations_range.first, elevations_range.second, Tile::ELEVATION_MIN, Tile::ELEVATION_MAX );
 	
 	// process in random order
-	vector< Tile* > tiles;
+	std::vector< Tile* > tiles;
 	for ( auto y = 0 ; y < m_height ; y++ ) {
 		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 			tiles.push_back( At( x, y ) );
 		}
 	}
-	mt19937 g( m_random->GetUInt( 0, UINT32_MAX - 1 ) );
-	shuffle( tiles.begin(), tiles.end(), g );
+	std::mt19937 g( m_random->GetUInt( 0, UINT32_MAX - 1 ) );
+	std::shuffle( tiles.begin(), tiles.end(), g );
 	
 	for ( auto& tile : tiles ) {
 		tile->elevation_data.bottom = converter.Clamp( tile->elevation_data.bottom );
@@ -405,7 +405,7 @@ void Tiles::RemoveExtremeSlopes( const Tile::elevation_t max_allowed_diff ) {
 			elevation_fixby += elevation_fixby_change;
 		}
 		elevation_fixby_div += elevation_fixby_div_change;
-		Log( "Checking/fixing extreme slopes (pass " + to_string( ++pass ) + ")" );
+		Log( "Checking/fixing extreme slopes (pass " + std::to_string( ++pass ) + ")" );
 		found = false;
 		
 		// don't run in normal cycle because it can give terrain some straight edges, go in random order instead

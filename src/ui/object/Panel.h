@@ -1,8 +1,8 @@
 #pragma once
 
-#include "UIContainer.h"
-
 #include <unordered_map>
+
+#include "UIContainer.h"
 
 #include "types/Color.h"
 #include "types/Texture.h"
@@ -13,7 +13,7 @@ namespace ui {
 namespace object {
 
 CLASS( Panel, UIContainer )
-	Panel( const string& class_name = "" );
+	Panel( const std::string& class_name = "" );
 
 	virtual void Create();
 	virtual void Destroy();
@@ -28,7 +28,7 @@ protected:
 	virtual void ApplyStyle();
 	
 	Surface* m_background = nullptr;
-	unordered_map<Style::attribute_type_t,Surface* > m_surfaces = {
+	std::unordered_map<Style::attribute_type_t,Surface* > m_surfaces = {
 		{ Style::A_TEXTURE_BACK, nullptr },
 		{ Style::A_TEXTURE_BORDER_LEFT, nullptr },
 		{ Style::A_TEXTURE_BORDER_TOP, nullptr },

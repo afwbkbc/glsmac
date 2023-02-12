@@ -1,7 +1,7 @@
-#include "SDL2.h"
-
 #define SDL_MAIN_HANDLED 1
 #include <SDL.h>
+
+#include "SDL2.h"
 
 #include "util/System.h"
 
@@ -18,7 +18,7 @@ SDL2::~SDL2() {
 
 Sound* SDL2::LoadSound( const std::string &name ) {
 	
-	string font_key = name;
+	std::string font_key = name;
 	
 	sound_map_t::iterator it = m_sounds.find( font_key );
 	if (it != m_sounds.end()) {

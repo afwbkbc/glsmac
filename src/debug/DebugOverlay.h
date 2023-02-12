@@ -1,9 +1,9 @@
 #pragma once
 
-#include "base/Task.h"
-
 #include <vector>
 #include <string>
+
+#include "base/Task.h"
 
 #include "util/Timer.h"
 #include "types/Font.h"
@@ -44,7 +44,7 @@ protected:
 	DEBUG_STATS;
 #undef D
 	
-	vector<Label*> m_memory_stats_labels = {};
+	std::vector<Label*> m_memory_stats_labels = {};
 
 	void ActivateLabel( Label* label, const size_t left, const size_t top );
 

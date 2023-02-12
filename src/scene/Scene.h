@@ -41,7 +41,7 @@ CLASS( Scene, base::Base )
 	void SetSkyboxTexture( types::Texture *skybox_texture );
 	types::Texture *GetSkyboxTexture();
 	
-	typedef vector< Vec3 > instances_t;
+	typedef std::vector< Vec3 > instances_t;
 	void SetInstances( const instances_t& instances );
 	const instances_t& GetInstances() const;
 	

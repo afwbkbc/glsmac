@@ -1,5 +1,3 @@
-#include "System.h"
-
 #ifdef DEBUG
 
 #ifdef __linux__
@@ -13,7 +11,7 @@
 
 #include <algorithm>
 
-using namespace std;
+#include "System.h"
 
 namespace util {
 
@@ -29,7 +27,7 @@ bool System::AreWeUnderGDB() {
 	if (pid == -1)
 	{
 		perror("fork");
-		cout << "WARNING: gdb check failed" << endl;
+		std::cout << "WARNING: gdb check failed" << std::endl;
 		return false;
 	}
 
@@ -65,7 +63,7 @@ bool System::AreWeUnderGDB() {
 	return res;
 
 #else
-	cout << "WARNING: gdb check skipped due to unsupported platform" << endl;
+	std::cout << "WARNING: gdb check skipped due to unsupported platform" << std::endl;
 	return false;
 #endif
 }
@@ -74,18 +72,18 @@ bool System::IsGDBAvailable() {
 #ifdef __linux__
 	return ( !system("which gdb > /dev/null 2>&1") );
 #else
-	cout << "WARNING: gdb check skipped due to unsupported platform" << endl;
+	std::cout << "WARNING: gdb check skipped due to unsupported platform" << std::endl;
 	return false;
 #endif
 }
 
 #endif
 
-vector< string > System::GetPossibleFilenames( const string& filename ) {
-	vector< string > result;
+std::vector< std::string > System::GetPossibleFilenames( const std::string& filename ) {
+	std::vector< std::string > result;
 	result.push_back( filename );
 	
-	string str = filename;
+	std::string str = filename;
 	std::transform(str.begin(), str.end(),str.begin(), ::toupper);
 	result.push_back( str );
 	std::transform(str.begin(), str.end(),str.begin(), ::tolower);

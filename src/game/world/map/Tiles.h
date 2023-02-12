@@ -57,7 +57,7 @@ private:
 	void SetLandAmount( const float amount ); // 0.0f - 1.0f. can be slow
 	const float GetLandAmount( Tile::elevation_t elevation_diff = 0.0f ); // determine how much land there would be with specified elevation difference
 	void RaiseAllTilesBy( Tile::elevation_t amount );
-	const pair< Tile::elevation_t, Tile::elevation_t > GetElevationsRange() const;
+	const std::pair< Tile::elevation_t, Tile::elevation_t > GetElevationsRange() const;
 	void RemoveExtremeSlopes( const Tile::elevation_t max_allowed_diff );
 	void FixTopBottomRows();
 };

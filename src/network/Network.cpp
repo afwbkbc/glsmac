@@ -2,7 +2,7 @@
 
 namespace network {
 
-mt_id_t Network::MT_Connect( const connection_mode_t connect_mode, const string& remote_address ) {
+mt_id_t Network::MT_Connect( const connection_mode_t connect_mode, const std::string& remote_address ) {
 	MT_Request request;
 	request.op = OP_CONNECT;
 	request.connect.mode = connect_mode;
@@ -50,7 +50,7 @@ mt_id_t Network::MT_SendPacket( const Packet& packet, const size_t cid ) {
 	e.cid = cid;
 	e.type = Event::ET_PACKET;
 	e.data.packet_data = packet.Serialize().ToString();
-	Log( "Sending packet (type=" + to_string( packet.type ) + ")" + ( cid ? " to client " + to_string( cid ) : "" ) );
+	Log( "Sending packet (type=" + std::to_string( packet.type ) + ")" + ( cid ? " to client " + std::to_string( cid ) : "" ) );
 	return MT_SendEvent( e );
 }
 
@@ -135,7 +135,7 @@ const MT_Response Network::ProcessRequest( const MT_Request& request ) {
 			return response;
 		}
 		default: {
-			ASSERT( false, "unknown network request " + to_string( request.op ) );
+			ASSERT( false, "unknown network request " + std::to_string( request.op ) );
 		}
 	}
 	return Error();
@@ -155,7 +155,7 @@ MT_Response Network::MT_GetResult( mt_id_t mt_id ) {
 	return MT_GetResponse( mt_id );
 }
 
-const MT_Response Network::Error( const string& errmsg ) {
+const MT_Response Network::Error( const std::string& errmsg ) {
 	MT_Response response;
 	response.result = R_ERROR;
 	response.message = errmsg;

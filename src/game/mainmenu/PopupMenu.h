@@ -1,15 +1,13 @@
 #pragma once
 
-#include "MenuObject.h"
-
 #include <string>
 #include <unordered_set>
+
+#include "MenuObject.h"
 
 #include "ui/object/Panel.h"
 #include "ui/object/Section.h"
 #include "ui/object/Button.h"
-
-using namespace std;
 
 using namespace ui;
 namespace ui {
@@ -22,7 +20,7 @@ namespace mainmenu {
 class MainMenu;
 
 CLASS( PopupMenu, MenuObject )
-	PopupMenu( MainMenu *mainmenu, const string& title );
+	PopupMenu( MainMenu *mainmenu, const std::string& title );
 
 	enum popup_flag_t : uint8_t {
 		PF_HAS_OK,
@@ -38,7 +36,7 @@ protected:
 	// true means cancel is allowed, otherwise do nothing
 	virtual bool OnCancel() { return true; };
 	
-	void SetFlags( const unordered_set< popup_flag_t > flags );
+	void SetFlags( const std::unordered_set< popup_flag_t > flags );
 	void SetWidth( const size_t width );
 	void SetHeight( const size_t height );
 	
@@ -49,7 +47,7 @@ private:
 		Button* m_button_ok = nullptr;
 		Button* m_button_cancel = nullptr;
 	
-	unordered_set< popup_flag_t > m_flags = {};
+	std::unordered_set< popup_flag_t > m_flags = {};
 	size_t m_width = 0;
 	size_t m_height = 0;
 	

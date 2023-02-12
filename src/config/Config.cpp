@@ -1,7 +1,7 @@
-#include "Config.h"
-
 #include <stdexcept>
 #include <iostream>
+
+#include "Config.h"
 
 #include "util/SMACChecker.h"
 

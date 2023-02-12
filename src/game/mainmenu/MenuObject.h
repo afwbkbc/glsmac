@@ -1,10 +1,8 @@
 #pragma once
 
-#include "base/Base.h"
-
 #include <string>
 
-using namespace std;
+#include "base/Base.h"
 
 namespace game {
 namespace mainmenu {
@@ -12,7 +10,7 @@ namespace mainmenu {
 class MainMenu;
 	
 CLASS( MenuObject, base::Base )
-	MenuObject( MainMenu *mainmenu, const string& title );
+	MenuObject( MainMenu *mainmenu, const std::string& title );
 	
 	virtual void Show() = 0;
 	virtual void Hide() = 0;
@@ -20,18 +18,18 @@ CLASS( MenuObject, base::Base )
 	
 	virtual void Close();
 	virtual bool MaybeClose() { return false; }; // for handling right clicks in menu
-	virtual const string GetChoice() const { return ""; };
-	virtual void SetChoice( const string& choice ) {};
+	virtual const std::string GetChoice() const { return ""; };
+	virtual void SetChoice( const std::string& choice ) {};
 	
 	void GoBack();
 protected:
 	friend class MenuItem;
 	
 	void NextMenu( MenuObject* menu_object );
-	void MenuError( const string& error_text = "This feature is not available yet." );
+	void MenuError( const std::string& error_text = "This feature is not available yet." );
 
 	MainMenu *m_mainmenu = nullptr;
-	const string m_title = "";
+	const std::string m_title = "";
 	
 };
 

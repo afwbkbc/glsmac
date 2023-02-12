@@ -6,8 +6,6 @@
 #include "types/Vec3.h"
 #include "types/Color.h"
 
-using namespace std;
-
 namespace types {
 	
 CLASS( Buffer, base::Base )
@@ -18,7 +16,7 @@ CLASS( Buffer, base::Base )
 	typedef char checksum_t;
 	
 	Buffer();
-	Buffer( const string& strval );
+	Buffer( const std::string& strval );
 	~Buffer();
 	
 	Buffer( Buffer& other);
@@ -37,8 +35,8 @@ CLASS( Buffer, base::Base )
 	const long long int ReadInt();
 	void WriteFloat( const float val );
 	const float ReadFloat();
-	void WriteString( const string& val );
-	const string ReadString();
+	void WriteString( const std::string& val );
+	const std::string ReadString();
 	void WriteVec2f( const Vec2< float > val );
 	const Vec2< float > ReadVec2f();
 	void WriteVec3( const Vec3 val );
@@ -48,7 +46,7 @@ CLASS( Buffer, base::Base )
 	void WriteData( const void* data, const size_t len );
 	const void* ReadData( const size_t len );
 	
-	const string ToString() const;
+	const std::string ToString() const;
 	
 private:
 	

@@ -1,16 +1,15 @@
 #pragma once
 
-#include "base/Base.h"
-
 #include <vector>
 #include <unordered_map>
 #include <functional>
+
+#include "base/Base.h"
 
 #include "types/Color.h"
 #include "loader/texture/TextureLoader.h"
 #include "loader/font/FontLoader.h"
 
-using namespace std;
 using namespace types;
 
 using namespace loader;
@@ -40,9 +39,9 @@ class StyleSheet;
 	
 CLASS( Style, base::Base )
 
-	typedef function<void( Style* s )> style_handler_t;
+	typedef std::function<void( Style* s )> style_handler_t;
 	
-	Style( const string& style_name, const StyleSheet* stylesheet );
+	Style( const std::string& style_name, const StyleSheet* stylesheet );
 	
 	void Initialize();
 
@@ -117,21 +116,21 @@ CLASS( Style, base::Base )
 	// raw setter
 	void SetObject( const attribute_type_t attribute_type, const void* value );
 	// convenience setters // TODO: improve SetTexture* API
-	void SetTexture( const attribute_type_t attribute_type, const string& name );
-	void SetTextureTC( const attribute_type_t attribute_type, const string& name, const Color::rgba_t transparent_color );
-	void SetTexture( const attribute_type_t attribute_type, const string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = TextureLoader::LT_NONE, const float value = 1.0 );
-	void SetTextureTC( const attribute_type_t attribute_type, const string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const Color::rgba_t transparent_color, const uint8_t flags = TextureLoader::LT_NONE, const float value = 1.0 );
-	void SetFont( const attribute_type_t attribute_type, const string &name, const unsigned char size );
-	void SetSound( const attribute_type_t attribute_type, const string& name );
+	void SetTexture( const attribute_type_t attribute_type, const std::string& name );
+	void SetTextureTC( const attribute_type_t attribute_type, const std::string& name, const Color::rgba_t transparent_color );
+	void SetTexture( const attribute_type_t attribute_type, const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = TextureLoader::LT_NONE, const float value = 1.0 );
+	void SetTextureTC( const attribute_type_t attribute_type, const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const Color::rgba_t transparent_color, const uint8_t flags = TextureLoader::LT_NONE, const float value = 1.0 );
+	void SetFont( const attribute_type_t attribute_type, const std::string &name, const unsigned char size );
+	void SetSound( const attribute_type_t attribute_type, const std::string& name );
 
 	bool Has( const attribute_type_t attribute_type, const modifier_t modifiers ) const;
 	const float Get( const attribute_type_t attribute_type, const modifier_t modifiers ) const;
 	const Color GetColor( const attribute_type_t attribute_type, const modifier_t modifiers ) const;
 	const void* GetObject( const attribute_type_t attribute_type, const modifier_t modifiers ) const;
 	
-	const string& GetStyleName() const;
+	const std::string& GetStyleName() const;
 	
-	void Include( const string& style_name );
+	void Include( const std::string& style_name );
 	
 	bool Is( const modifier_t modifier ) const;
 	
@@ -145,7 +144,7 @@ CLASS( Style, base::Base )
 	} attribute_t;
 	typedef attribute_t attributes_t[ ATTRIBUTE_TYPE_MAX ];
 	
-	typedef vector< string > includes_t;
+	typedef std::vector< std::string > includes_t;
 	void SetIncludes( const includes_t& includes );
 	
 	void SetStyleForInclude( attributes_t* attributes_ptr, const modifier_t modifiers );
@@ -158,7 +157,7 @@ protected:
 	
 private:
 	
-	const string m_style_name = "";
+	const std::string m_style_name = "";
 	
 	includes_t m_includes = {};
 	

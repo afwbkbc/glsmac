@@ -1,16 +1,12 @@
 #include "SlidingMenu.h"
 
-#include <stdexcept>
-
 #include "game/Settings.h"
 #include "engine/Engine.h"
-
-using namespace std;
 
 namespace game {
 namespace mainmenu {
 
-SlidingMenu::SlidingMenu( MainMenu* mainmenu, const string& title, const choice_handlers_t& choices )
+SlidingMenu::SlidingMenu( MainMenu* mainmenu, const std::string& title, const choice_handlers_t& choices )
 	: MenuObject( mainmenu, title )
 	, m_choices ( choices )
 {
@@ -18,12 +14,9 @@ SlidingMenu::SlidingMenu( MainMenu* mainmenu, const string& title, const choice_
 }
 
 void SlidingMenu::Show() {
-#ifdef DEBUG
-	if ( m_menu_block ) {
-		throw runtime_error( "duplicate menu show" );
-	}
-#endif
-	vector<string> choice_texts = {};
+	ASSERT( !m_menu_block, "duplicate menu show" );
+	
+	std::vector< std::string > choice_texts = {};
 	for (auto& it : m_choices) {
 		choice_texts.push_back( it.first );
 	}
@@ -39,16 +32,13 @@ void SlidingMenu::Show() {
 }
 
 void SlidingMenu::Hide() {
-#ifdef DEBUG
-	if ( !m_menu_block ) {
-		throw runtime_error( "hide without show" );
-	}
-#endif
+	ASSERT( m_menu_block, "hide without show" );
+	
 	g_engine->GetUI()->RemoveObject( m_menu_block );
 	m_menu_block = nullptr;
 }
 
-void SlidingMenu::OnItemClick( const string& choice ) {
+void SlidingMenu::OnItemClick( const std::string& choice ) {
 	for (auto& it : m_choices) {
 		if (it.first == choice) {
 			it.second();
@@ -57,7 +47,7 @@ void SlidingMenu::OnItemClick( const string& choice ) {
 	}
 }
 
-const string SlidingMenu::GetChoice() const {
+const std::string SlidingMenu::GetChoice() const {
 	if ( m_menu_block ) {
 		return m_menu_block->GetChoice();
 	}
@@ -66,7 +56,7 @@ const string SlidingMenu::GetChoice() const {
 	}
 }
 
-void SlidingMenu::SetChoice( const string& choice ) {
+void SlidingMenu::SetChoice( const std::string& choice ) {
 	m_choice = choice;
 	if ( m_menu_block ) {
 		m_menu_block->SetChoice( choice );

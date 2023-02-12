@@ -1,7 +1,7 @@
-#include "Engine.h"
-
 #include <ctime>
 #include <thread>
+
+#include "Engine.h"
 
 // TODO: move to config
 const size_t g_max_fps = 500;
@@ -90,7 +90,7 @@ int Engine::Run() {
 			for ( auto& thread : m_threads ) {
 				// ?
 			}
-			this_thread::sleep_for( milliseconds( 100 ) );
+			std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
 		}
 		Log( "Shutting down" );
 		
@@ -103,7 +103,7 @@ int Engine::Run() {
 #endif
 		bool any_thread_running = true;
 		while ( any_thread_running ) {
-			this_thread::sleep_for( milliseconds( 50 ) );
+			std::this_thread::sleep_for( std::chrono::milliseconds( 50 ) );
 			any_thread_running = false;
 #ifdef DEBUG
 			const bool announce_frozen_threads = thread_running_timer.Ticked();
@@ -124,7 +124,7 @@ int Engine::Run() {
 			}
 		}
 
-	} catch ( runtime_error &e ) {
+	} catch ( std::runtime_error &e ) {
 		result = EXIT_FAILURE;
 		m_error_handler->HandleError( e );
 	}

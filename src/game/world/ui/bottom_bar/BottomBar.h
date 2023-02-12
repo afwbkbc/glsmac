@@ -10,6 +10,9 @@
 
 namespace game {
 namespace world {
+	
+using namespace map;
+
 namespace ui {
 	
 CLASS( BottomBar, UI )
@@ -19,6 +22,9 @@ CLASS( BottomBar, UI )
 	void Create();
 	void Destroy();
 	
+	void PreviewTile( const Map::tile_info_t& tile_info );
+	void HideTilePreview();
+	
 protected:
 	struct {
 		Surface* left = nullptr;
@@ -26,7 +32,7 @@ protected:
 		Surface* middle = nullptr;
 	} m_frames;
 	
-	vector< Surface* > m_backgrounds;
+	std::vector< Surface* > m_backgrounds;
 	
 	struct {
 		Button* menu = nullptr;

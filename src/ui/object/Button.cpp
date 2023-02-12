@@ -5,7 +5,7 @@
 namespace ui {
 namespace object {
 
-Button::Button( const string& class_name ) : Panel( class_name ) {
+Button::Button( const std::string& class_name ) : Panel( class_name ) {
 	SetEventContexts( EC_MOUSE | EC_MOUSEMOVE );
 }
 
@@ -44,7 +44,7 @@ void Button::Destroy() {
 }
 
 
-void Button::SetLabel( const string& text ) {
+void Button::SetLabel( const std::string& text ) {
 	if ( text != m_label_text ) {
 		m_label_text = text;
 		if ( m_label ) {
@@ -53,7 +53,7 @@ void Button::SetLabel( const string& text ) {
 	}
 }
 
-const string& Button::GetLabel() const {
+const std::string& Button::GetLabel() const {
 	return m_label_text;
 }
 

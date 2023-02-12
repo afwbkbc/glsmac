@@ -75,7 +75,7 @@ void World::Start() {
 	
 #ifdef DEVEL
 	if ( FS::FileExists( MAP_DUMP_FILENAME ) ) {
-		Log( (string) "Loading map dump from " + MAP_DUMP_FILENAME );
+		Log( (std::string) "Loading map dump from " + MAP_DUMP_FILENAME );
 		m_map->SetTiles( tiles, false );
 		m_map->Unserialize( Buffer( FS::ReadFile( MAP_DUMP_FILENAME ) ) );
 	}
@@ -84,7 +84,7 @@ void World::Start() {
 	{
 #ifdef DEVEL
 		if ( FS::FileExists( MAP_FILENAME ) ) {
-			Log( (string) "Loading map from " + MAP_FILENAME );
+			Log( (std::string) "Loading map from " + MAP_FILENAME );
 			tiles->Unserialize( Buffer( FS::ReadFile( MAP_FILENAME ) ) );
 		}
 		else
@@ -96,14 +96,14 @@ void World::Start() {
 			generator.Generate( tiles, m_random->GetUInt( 0, UINT32_MAX - 1 ) );
 #ifdef DEBUG
 			// if crash happens - it's handy to have a map file to reproduce it
-			Log( (string) "Saving map to " + MAP_FILENAME );
+			Log( (std::string) "Saving map to " + MAP_FILENAME );
 			FS::WriteFile( MAP_FILENAME, tiles->Serialize().ToString() );
 #endif
 		}
 		m_map->SetTiles( tiles );
 #ifdef DEBUG
 		// also handy to have dump of generated map
-		Log( (string) "Saving map dump to " + MAP_DUMP_FILENAME );
+		Log( (std::string) "Saving map dump to " + MAP_DUMP_FILENAME );
 		FS::WriteFile( MAP_DUMP_FILENAME, m_map->Serialize().ToString() );
 #endif
 	}
@@ -166,7 +166,7 @@ void World::Start() {
 			
 			for (auto& actor : m_map->GetActors() ) {
 				auto newz = actor->GetAngleZ() + ( (float) rotate.x * MAP_ROTATE_SPEED );
-				auto newy = max( -0.5f, min( 0.5f, actor->GetAngleY() + ( (float) rotate.y * MAP_ROTATE_SPEED ) ) );
+				auto newy = std::max( -0.5f, std::min( 0.5f, actor->GetAngleY() + ( (float) rotate.y * MAP_ROTATE_SPEED ) ) );
 				actor->SetAngleZ( newz );
 				actor->SetAngleY( newy );
 			}
@@ -274,10 +274,10 @@ void World::Iterate() {
 	}
 	
 	// response for clicked tile (if click happened)
-	auto tileinfo = m_map->GetTileAtScreenCoordsResult();
-	if ( tileinfo.tile ) {
-		SelectTile( tileinfo );
-		CenterMapAtTile( tileinfo.tile, tileinfo.ts );
+	auto tile_info = m_map->GetTileAtScreenCoordsResult();
+	if ( tile_info.tile ) {
+		SelectTile( tile_info );
+		CenterMapAtTile( tile_info.ts );
 	}
 }
 
@@ -370,7 +370,7 @@ void World::UpdateCameraRange() {
 
 void World::UpdateMapInstances() {
 	// needed for horizontal scrolling
-	vector< Vec3 > instances;
+	std::vector< Vec3 > instances;
 	
 	const float mhw = Map::s_consts.tile.scale.x * m_map->GetWidth() / 2;
 	
@@ -407,18 +407,17 @@ void World::ReturnToMainMenu() {
 void World::SelectTileAtPoint( const size_t x, const size_t y ) {
 	DeselectTile();
 	
-	Log( "Looking up tile at " + to_string( x ) + "x" + to_string( y ) );
+	Log( "Looking up tile at " + std::to_string( x ) + "x" + std::to_string( y ) );
 	
 	m_map->GetTileAtScreenCoords( x, g_engine->GetGraphics()->GetViewportHeight() - y ); // async
 }
 
-void World::SelectTile( Map::tile_info_t tileinfo ) {
+void World::SelectTile( const Map::tile_info_t& tile_info ) {
 	DeselectTile();
-	auto tile = tileinfo.tile;
-	auto ts = tileinfo.ts;
-	auto ms = tileinfo.ms;
+	auto tile = tile_info.tile;
+	auto ts = tile_info.ts;
 	
-	Log( "Selecting tile at " + to_string( tile->coord.x ) + "x" + to_string( tile->coord.y ) );
+	Log( "Selecting tile at " + std::to_string( tile->coord.x ) + "x" + std::to_string( tile->coord.y ) );
 	Map::tile_layer_type_t lt = ( tile->is_water_tile ? Map::LAYER_WATER : Map::LAYER_LAND );
 	auto& layer = ts->layers[ lt ];
 	auto coords = layer.coords;
@@ -439,7 +438,10 @@ void World::SelectTile( Map::tile_info_t tileinfo ) {
 	}
 	
 	NEW( m_actors.tile_selection, actor::TileSelection, coords );
+	
 	AddActor( m_actors.tile_selection );
+	
+	//m_ui.bottom_bar->PreviewTile( tile_info );
 }
 
 void World::DeselectTile() {
@@ -447,6 +449,8 @@ void World::DeselectTile() {
 		RemoveActor( m_actors.tile_selection );
 		m_actors.tile_selection = nullptr;
 	}
+	
+	//m_ui.bottom_bar->HideTilePreview();
 }
 
 void World::AddActor( actor::Actor* actor ) {
@@ -463,10 +467,10 @@ void World::RemoveActor( actor::Actor* actor ) {
 	DELETE( actor );
 }
 
-void World::CenterMapAtTile( const Tile* tile, const Map::tile_state_t* ts ) {
+void World::CenterMapAtTile( const Map::tile_state_t* ts ) {
 
 	m_camera_position.x = - ts->coord.x / m_viewport.viewport_aspect_ratio * m_camera_position.z;
-	m_camera_position.y = - ( ts->coord.y - max( 0.0f, Map::s_consts.clampers.elevation_to_vertex_z.Clamp( ts->elevations.center ) ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f;
+	m_camera_position.y = - ( ts->coord.y - std::max( 0.0f, Map::s_consts.clampers.elevation_to_vertex_z.Clamp( ts->elevations.center ) ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f;
 	
 	UpdateCameraPosition();
 }

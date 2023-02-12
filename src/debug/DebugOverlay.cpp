@@ -4,8 +4,6 @@
 
 #include "engine/Engine.h"
 
-using namespace std;
-using namespace types;
 namespace ui {
 using namespace object;
 }
@@ -148,16 +146,16 @@ void DebugOverlay::Refresh() {
 		// common statistics
 		#define D( _stat ) \
 			DEBUG_STAT_GET( _stat, total, current ); \
-			m_##_stats_label_##_stat->SetText( (string) #_stat + " : " + to_string( total ) + " ( " + ( current > 0 ? "+" : "" ) + to_string( current ) + "/sec )" );
+			m_##_stats_label_##_stat->SetText( (std::string) #_stat + " : " + std::to_string( total ) + " ( " + ( current > 0 ? "+" : "" ) + std::to_string( current ) + "/sec )" );
 		DEBUG_STATS;
 		#undef D
 
 		// memory statistics
 		const auto stats = g_memory_watcher->GetLargestMemoryConsumerClasses( m_memory_stats_lines );
 		for ( auto i = 0 ; i < stats.size() ; i++ ) {
-			string size = to_string( stats[i].size ) + "b";
+			std::string size = std::to_string( stats[i].size ) + "b";
 			size.insert(size.begin(), 14 - size.length() * 1.5 , ' '); 
-			string count = "(" + to_string( stats[i].count ) + ")";
+			std::string count = "(" + std::to_string( stats[i].count ) + ")";
 			count.insert(count.begin(), 6 - count.length() , ' '); 
 			m_memory_stats_labels[i]->SetText( size + "  " + count + "  " + stats[i].key );
 		}

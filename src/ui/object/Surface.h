@@ -9,7 +9,7 @@ namespace object {
 
 CLASS( Surface, Mesh )
 
-	Surface( const string& class_name = "" );
+	Surface( const std::string& class_name = "" );
 	
 	void SetStretchTexture( const bool stretch_texture );
 	

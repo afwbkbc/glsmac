@@ -1,16 +1,16 @@
 #pragma once
 
-#include "Module.h"
-
 #include <mutex>
 #include <functional>
 #include <unordered_map>
+
+#include "Module.h"
 
 namespace base {
 
 typedef size_t mt_id_t;
 
-static mutex s_next_mt_id_mutex;
+static std::mutex s_next_mt_id_mutex;
 static mt_id_t s_next_mt_id = 0;
 
 template< typename REQUEST_TYPE, typename RESPONSE_TYPE >
@@ -85,8 +85,8 @@ private:
 		RESPONSE_TYPE response;
 	} mt_state_t;
 	
-	typedef unordered_map<mt_id_t, REQUEST_TYPE> mt_request_map_t;
-	typedef unordered_map<mt_id_t, RESPONSE_TYPE> mt_response_map_t;
+	typedef std::unordered_map<mt_id_t, REQUEST_TYPE> mt_request_map_t;
+	typedef std::unordered_map<mt_id_t, RESPONSE_TYPE> mt_response_map_t;
 	
 	mt_request_map_t MT_GetRequests() {
 		mt_request_map_t result = {};
@@ -117,8 +117,8 @@ private:
 		}
 	}
 	
-	typedef unordered_map< mt_id_t, mt_state_t > mt_states_t;
-	mutex m_mt_states_mutex;
+	typedef std::unordered_map< mt_id_t, mt_state_t > mt_states_t;
+	std::mutex m_mt_states_mutex;
 	mt_states_t m_mt_states = {};
 	
 };

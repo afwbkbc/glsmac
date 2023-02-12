@@ -11,7 +11,7 @@ namespace ui {
 	
 CLASS( UI, UIContainer )
 	
-	UI( const World* world, const string& class_name );
+	UI( const World* world, const std::string& class_name );
 	
 protected:
 	const World* m_world = nullptr;

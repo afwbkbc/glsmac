@@ -5,7 +5,6 @@
 #include "types/Sound.h"
 #include "util/Timer.h"
 
-using namespace std;
 using namespace types;
 
 namespace scene {

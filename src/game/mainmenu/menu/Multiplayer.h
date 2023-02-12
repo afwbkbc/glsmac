@@ -12,8 +12,8 @@ CLASS( Multiplayer, PopupMenu )
 		
 	Multiplayer( MainMenu* mainmenu );
 	
-	const string GetChoice() const;
-	void SetChoice( const string& choice );
+	const std::string GetChoice() const;
+	void SetChoice( const std::string& choice );
 	
 protected:
 	virtual void Show();

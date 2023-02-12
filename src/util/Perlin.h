@@ -2,9 +2,9 @@
 
 // based on https://github.com/sol-prog/Perlin_Noise
 
-#include "Util.h"
-
 #include <vector>
+
+#include "Util.h"
 
 #include "types/Vec2.h"
 
@@ -24,7 +24,7 @@ CLASS( Perlin, Util )
 private:
 	
 	// The permutation vector
-	vector<int> p;
+	std::vector<int> p;
 	
 	float Fade( float t );
 	float Lerp( float t, float a, float b );

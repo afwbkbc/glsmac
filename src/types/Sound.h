@@ -1,8 +1,8 @@
 #pragma once
 
-#include "base/Base.h"
-
 #include <string>
+
+#include "base/Base.h"
 
 //#include "base/ObjectLink.h"
 
@@ -26,7 +26,7 @@ CLASS( Sound, base::Base )
 		uint32_t size; // audio buffer size (bytes)
 	} m_spec;
 	
-	string m_name = "";	
+	std::string m_name = "";	
 };
 
 }

@@ -45,7 +45,7 @@ protected:
 
 	MT_Response ListenStart();
 	MT_Response ListenStop();
-	MT_Response Connect( const string& remote_address );
+	MT_Response Connect( const std::string& remote_address );
 	MT_Response Disconnect();
 	MT_Response DisconnectClient( const size_t cid );
 	
@@ -54,12 +54,12 @@ private:
 	const int32_t ptype_ping = Packet::PT_PING;
 	
 	typedef struct {
-		string local_address;
+		std::string local_address;
 		int fd;
 	} local_socket_data_t;
 	
 	typedef struct remote_socket_data_t {
-		string remote_address;
+		std::string remote_address;
 		int fd;
 		struct {
 			char* data1;
@@ -75,15 +75,15 @@ private:
 	} remote_socket_data_t;
 	
 	struct {
-		unordered_map< int, local_socket_data_t > listening_sockets;
-		unordered_map< int, remote_socket_data_t > client_sockets;
+		std::unordered_map< int, local_socket_data_t > listening_sockets;
+		std::unordered_map< int, remote_socket_data_t > client_sockets;
 		struct {
 			struct sockaddr_in client_addr;
 #ifndef _WIN32
 			socklen_t client_addr_size;
 #endif
 			int newfd;
-			vector< int > to_remove;
+			std::vector< int > to_remove;
 		} tmp;
 	} m_server = {};
 	
@@ -104,7 +104,7 @@ private:
 private:
 	// true on success, false on error
 	bool ReadFromSocket( remote_socket_data_t& socket, const size_t cid = 0 );
-	bool WriteToSocket( int fd, const string& data );
+	bool WriteToSocket( int fd, const std::string& data );
 	bool MaybePing( remote_socket_data_t& socket, const size_t cid = 0 );
 	bool MaybePingDo( remote_socket_data_t& socket, const size_t cid = 0 );
 	void CloseSocket( int fd, size_t cid = 0, bool skip_event = false );

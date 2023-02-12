@@ -8,7 +8,7 @@
 #include "scene/Scene.h"
 #include "types/Texture.h"
 
-typedef function<void( const float aspect_ratio )> on_resize_handler_t;
+typedef std::function<void( const float aspect_ratio )> on_resize_handler_t;
 
 #define RH(...) [ __VA_ARGS__ ] ( const float aspect_ratio ) -> void
 
@@ -52,7 +52,7 @@ protected:
 	
 private:
 	float m_aspect_ratio = 0;
-	unordered_map< void*, on_resize_handler_t > m_on_resize_handlers;
+	std::unordered_map< void*, on_resize_handler_t > m_on_resize_handlers;
 };
 
 } /* namespace graphics */

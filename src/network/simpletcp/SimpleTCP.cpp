@@ -1,7 +1,7 @@
-#include "SimpleTCP.h"
-
 #include <signal.h>
 #include <thread>
+
+#include "SimpleTCP.h"
 
 #define GLSMAC_PORT 4888
 #define GLSMAC_MAX_INCOMING_CONNECTIONS 64
@@ -36,7 +36,7 @@ MT_Response SimpleTCP::ListenStart() {
 
 	ASSERT( m_server.listening_sockets.empty(), "some connection socket(s) already active" );
 	
-	Log( (string) "Starting server on port " + to_string( GLSMAC_PORT ) );
+	Log( (std::string) "Starting server on port " + std::to_string( GLSMAC_PORT ) );
 	
 	addrinfo hints, *res, *p;
 	memset(&hints, 0, sizeof(hints));
@@ -45,9 +45,9 @@ MT_Response SimpleTCP::ListenStart() {
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags    = AI_PASSIVE;
 
-	m_tmp.tmpint = getaddrinfo( nullptr, to_string( GLSMAC_PORT ).c_str(), &hints, &res );
+	m_tmp.tmpint = getaddrinfo( nullptr, std::to_string( GLSMAC_PORT ).c_str(), &hints, &res );
 	if ( m_tmp.tmpint != 0 ) {
-		return Error( (string) "Failed to getaddrinfo: " + gai_strerror( m_tmp.tmpint ) );
+		return Error( (std::string) "Failed to getaddrinfo: " + gai_strerror( m_tmp.tmpint ) );
 	}
 
 	unsigned int addr_i = 0;
@@ -113,7 +113,7 @@ MT_Response SimpleTCP::ListenStart() {
 	freeaddrinfo(res);
 
 	if ( m_server.listening_sockets.empty() ) {
-		return Error( "Failed to listen on port " + to_string( GLSMAC_PORT ) );
+		return Error( "Failed to listen on port " + std::to_string( GLSMAC_PORT ) );
 	}
 	
 	Log( "Server started" );
@@ -151,7 +151,7 @@ MT_Response SimpleTCP::ListenStop() {
 #endif
 }
 
-MT_Response SimpleTCP::Connect( const string& remote_address ) {
+MT_Response SimpleTCP::Connect( const std::string& remote_address ) {
 	
 #ifdef _WIN32
 	return Error( "winsock not implemented yet" );
@@ -164,11 +164,11 @@ MT_Response SimpleTCP::Connect( const string& remote_address ) {
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 	
-	Log( (string) "Connecting to " + remote_address + " port " + to_string( GLSMAC_PORT ) );
+	Log( (std::string) "Connecting to " + remote_address + " port " + std::to_string( GLSMAC_PORT ) );
 	
-	m_tmp.tmpint = getaddrinfo( remote_address.c_str(), to_string( GLSMAC_PORT ).c_str(), &hints, &p );
+	m_tmp.tmpint = getaddrinfo( remote_address.c_str(), std::to_string( GLSMAC_PORT ).c_str(), &hints, &p );
 	if ( m_tmp.tmpint != 0 ) {
-		return Error( (string) "Failed to getaddrinfo: " + gai_strerror( m_tmp.tmpint ) );
+		return Error( (std::string) "Failed to getaddrinfo: " + gai_strerror( m_tmp.tmpint ) );
 	}
 	
 	if ( p == nullptr ) {
@@ -188,12 +188,12 @@ MT_Response SimpleTCP::Connect( const string& remote_address ) {
 		if ( errno == EINPROGRESS && m_tmp.tmpint2 > 0 )
 		{
 			m_tmp.tmpint2--;
-			this_thread::sleep_for( chrono::milliseconds( 20 ) );
+			std::this_thread::sleep_for( std::chrono::milliseconds( 20 ) );
 		}
 		else {
 			close( m_client.socket.fd );
 			m_client.socket.fd = 0;
-			return Error( "Connection failed: " + to_string( errno ) );
+			return Error( "Connection failed: " + std::to_string( errno ) );
 		}
     }
 	
@@ -261,7 +261,7 @@ void SimpleTCP::Iterate() {
 			m_server.tmp.newfd = accept( it.first, (sockaddr *) &m_server.tmp.client_addr, &m_server.tmp.client_addr_size );
 			if (m_server.tmp.newfd != -1) {
 				
-				Log( "Accepting connection " + to_string( m_server.tmp.newfd ) );
+				Log( "Accepting connection " + std::to_string( m_server.tmp.newfd ) );
 				
 				m_tmp.tmpint = 1;
 				setsockopt( m_server.tmp.newfd, SOL_SOCKET, MSG_NOSIGNAL, (void *)&m_tmp.tmpint, sizeof(m_tmp.tmpint) );
@@ -323,7 +323,7 @@ void SimpleTCP::Iterate() {
 	for ( auto& event : events ) {
 		switch ( event.type ) {
 			case Event::ET_PACKET: {
-				Log( "Packet event ( cid = " + to_string( event.cid ) + " )" );
+				Log( "Packet event ( cid = " + std::to_string( event.cid ) + " )" );
 				if ( event.cid ) { // presense of cid means we are server
 					m_tmp.tmpint = 0;
 					auto it = m_server.client_sockets.find( event.cid );
@@ -396,7 +396,7 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket, const size_t cid )
 			}
 		}
 		else {
-			Log( "Connection failed (result=" + to_string( m_tmp.tmpint2 ) + " code=" + to_string( errno ) + ")" );
+			Log( "Connection failed (result=" + std::to_string( m_tmp.tmpint2 ) + " code=" + std::to_string( errno ) + ")" );
 			return false;
 		}
 	}
@@ -460,7 +460,7 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket, const size_t cid )
 			//Log( "Read packet (" + to_string( m_tmp.tmpint ) + " bytes)" );
 			m_tmp.event.Clear();
 			m_tmp.event.type = Event::ET_PACKET;
-			m_tmp.event.data.packet_data = string( m_tmp.ptr, m_tmp.tmpint );
+			m_tmp.event.data.packet_data = std::string( m_tmp.ptr, m_tmp.tmpint );
 			if ( cid ) {
 				m_tmp.event.cid = cid;
 			}
@@ -514,7 +514,7 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket, const size_t cid )
 #endif
 }
 
-bool SimpleTCP::WriteToSocket( int fd, const string& data ) {
+bool SimpleTCP::WriteToSocket( int fd, const std::string& data ) {
 #ifdef _WIN32
 	return false;
 #else
@@ -528,7 +528,7 @@ bool SimpleTCP::WriteToSocket( int fd, const string& data ) {
 		{
 			return true; // no data but connection is alive
 		}
-		Log( "Error writing size to socket (errno=" + to_string( errno ) + " size=" + to_string( m_tmp.tmpint ) + " reqsize=" + to_string( m_tmp.tmpint2 ) + ")" );
+		Log( "Error writing size to socket (errno=" + std::to_string( errno ) + " size=" + std::to_string( m_tmp.tmpint ) + " reqsize=" + std::to_string( m_tmp.tmpint2 ) + ")" );
 		
 		return false;
 	}
@@ -569,25 +569,25 @@ bool SimpleTCP::MaybePingDo( remote_socket_data_t& socket, const size_t cid ) {
 	m_tmp.time = m_tmp.now - socket.last_data_at;
 	
 	if ( m_tmp.time > DISCONNECT_AFTER ) {
-		Log( "Ping timeout on " + to_string( socket.fd ) );
+		Log( "Ping timeout on " + std::to_string( socket.fd ) );
 		
 		return false;
 	}
 	
 	if ( socket.ping_needed && !socket.ping_sent ) {
-		Log( "Sending ping to " + to_string( socket.fd ) );
+		Log( "Sending ping to " + std::to_string( socket.fd ) );
 		Packet packet;
 		packet.type = Packet::PT_PING;
-		string data = packet.Serialize().ToString();
+		std::string data = packet.Serialize().ToString();
 		socket.ping_sent = true;
 		return WriteToSocket( socket.fd, data );
 	}
 	if ( socket.pong_needed ) {
-		Log( "Ping received, sending pong to " + to_string( socket.fd ) );
+		Log( "Ping received, sending pong to " + std::to_string( socket.fd ) );
 		Packet packet;
 		packet.type = Packet::PT_PONG;
 		socket.pong_needed = false;
-		string data = packet.Serialize().ToString();
+		std::string data = packet.Serialize().ToString();
 		return WriteToSocket( socket.fd, data );
 	}
 	
@@ -599,7 +599,7 @@ void SimpleTCP::CloseSocket( int fd, size_t cid, bool skip_event ) {
 #ifdef _WIN32
 	return;
 #else
-	Log( "Closing socket " + to_string( fd ) );
+	Log( "Closing socket " + std::to_string( fd ) );
 	uint32_t bye = 0;
 	send( fd, &bye, sizeof( bye ), MSG_NOSIGNAL );
 	close( fd );

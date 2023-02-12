@@ -1,38 +1,36 @@
 #pragma once
 
-#include "MenuObject.h"
-
 #include <vector>
 #include <string>
 #include <map>
 #include <functional>
 
-#include "ui/slidingmenu/MenuBlock.h"
+#include "MenuObject.h"
 
-using namespace std;
+#include "ui/slidingmenu/MenuBlock.h"
 
 namespace game {
 namespace mainmenu {
 
 CLASS( SlidingMenu, MenuObject )
 	
-	typedef function<void()> choice_handler_t;
-	typedef vector<pair<string, choice_handler_t>> choice_handlers_t;
+	typedef std::function<void()> choice_handler_t;
+	typedef std::vector< std::pair< std::string, choice_handler_t > > choice_handlers_t;
 	
-	SlidingMenu( MainMenu *mainmenu, const string& title, const choice_handlers_t& choices );
+	SlidingMenu( MainMenu *mainmenu, const std::string& title, const choice_handlers_t& choices );
 	
 	void Show();
 	void Hide();
-	void OnItemClick( const string& choice );
-	const string GetChoice() const;
-	void SetChoice( const string& choice );
+	void OnItemClick( const std::string& choice );
+	const std::string GetChoice() const;
+	void SetChoice( const std::string& choice );
 	
 	void Close();
 	bool MaybeClose();
 
 private:
 	const choice_handlers_t m_choices = {};
-	string m_choice = "";
+	std::string m_choice = "";
 
 	MenuBlock* m_menu_block = nullptr;
 	

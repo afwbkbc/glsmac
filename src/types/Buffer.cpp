@@ -1,6 +1,6 @@
-#include "Buffer.h"
-
 #include <cstring>
+
+#include "Buffer.h"
 
 namespace types {
 
@@ -13,7 +13,7 @@ Buffer::Buffer() {
 	dr = nullptr;
 }
 
-Buffer::Buffer( const string& val ) {
+Buffer::Buffer( const std::string& val ) {
 	allocated_len = val.size();
 	lenw = val.size();
 	lenr = 0;
@@ -66,7 +66,7 @@ void Buffer::Alloc( size_t size ) {
 
 // note: mostly THROWs instead of ASSERTs, because we need that validation in release mode too to prevent buffer overflows
 void Buffer::WriteImpl( type_t type, const char* s, const size_t sz ) {
-	ASSERT( type > T_NONE && type < T_MAX, "invalid buffer write type " + to_string( type ) );
+	ASSERT( type > T_NONE && type < T_MAX, "invalid buffer write type " + std::to_string( type ) );
 	//Log( "Writing " + to_string( sz ) + " bytes (type=" + to_string( type ) + ")" );
 	checksum_t c = 0;
 	Alloc( sizeof(type) + sizeof(sz) + sz + sizeof(c) );
@@ -80,24 +80,24 @@ void Buffer::WriteImpl( type_t type, const char* s, const size_t sz ) {
 	//Log( "Writing checksum (" + to_string( c ) + ")" );
 	*(dw++) = c;
 	
-	ASSERT( dw - data == lenw, "buffer write bytes count mismatch ( " + to_string( dw - data ) + " != " + to_string( lenw ) + " )" );
+	ASSERT( dw - data == lenw, "buffer write bytes count mismatch ( " + std::to_string( dw - data ) + " != " + std::to_string( lenw ) + " )" );
 	//Log( "Written successfully" );
 }
 
 char* Buffer::ReadImpl( type_t need_type, char* s, size_t* sz, const size_t need_sz ) {
-	ASSERT( need_type > T_NONE && need_type < T_MAX, "invalid buffer read type " + to_string( need_type ) );
+	ASSERT( need_type > T_NONE && need_type < T_MAX, "invalid buffer read type " + std::to_string( need_type ) );
 	type_t type = T_NONE;
 	if ( lenw < lenr + sizeof( type ) + sizeof( *sz ) ) {
 		THROW( "buffer ends prematurely (while reading header)" );
 	}
 	memcpy( &type, dr, sizeof( type ) ); dr += sizeof( type );
 	if ( type != need_type ) {
-		THROW( "unexpected type on buffer read ( " + to_string( need_type ) + " != " + to_string( type ) + " )" );
+		THROW( "unexpected type on buffer read ( " + std::to_string( need_type ) + " != " + std::to_string( type ) + " )" );
 	}
 	memcpy( sz, dr, sizeof( *sz ) );
 	dr += sizeof( *sz );
 	if ( need_sz && ( need_sz != *sz ) ) {
-		THROW( "buffer read size mismatch ( " + to_string( need_sz ) + " != " + to_string( *sz ) + " )" );
+		THROW( "buffer read size mismatch ( " + std::to_string( need_sz ) + " != " + std::to_string( *sz ) + " )" );
 	}
 	checksum_t need_c = 0;
 	lenr += sizeof( type ) + sizeof( *sz ) + *sz + sizeof( need_c );
@@ -119,9 +119,9 @@ char* Buffer::ReadImpl( type_t need_type, char* s, size_t* sz, const size_t need
 	//Log( "Checking checksum (" + to_string( need_c ) + ")" );
 	checksum_t c = *(dr++);
 	if ( need_c != c ) {
-		THROW( "buffer read checksum mismatch ( " + to_string( need_c ) + " != " + to_string( c ) + " )" );
+		THROW( "buffer read checksum mismatch ( " + std::to_string( need_c ) + " != " + std::to_string( c ) + " )" );
 	}
-	ASSERT( dr - data == lenr, "buffer read bytes count mismatch ( " + to_string( dr - data ) + " != " + to_string( lenr ) + " )" );
+	ASSERT( dr - data == lenr, "buffer read bytes count mismatch ( " + std::to_string( dr - data ) + " != " + std::to_string( lenr ) + " )" );
 	//Log( "Read successfully" );
 	
 	return s;
@@ -161,15 +161,15 @@ const float Buffer::ReadFloat() {
 	return val;
 }
 
-void Buffer::WriteString( const string& val ) {
+void Buffer::WriteString( const std::string& val ) {
 	WriteImpl( T_STRING, val.data(), val.size() );
 }
 
-const string Buffer::ReadString() {
+const std::string Buffer::ReadString() {
 	size_t sz = 0;
 	char *res_data = ReadImpl( T_STRING, nullptr, &sz );
 	if ( sz > 0 ) {
-		string result = string( res_data, sz );
+		std::string result = std::string( res_data, sz );
 		free( res_data );
 		return result;
 	}
@@ -222,8 +222,8 @@ const void* Buffer::ReadData( const size_t len ) {
 	return val;
 }
 
-const string Buffer::ToString() const {
-	return data ? string( (const char*)data, lenw ) : "";
+const std::string Buffer::ToString() const {
+	return data ? std::string( (const char*)data, lenw ) : "";
 }
 
 }

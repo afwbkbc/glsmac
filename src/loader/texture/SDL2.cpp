@@ -1,10 +1,8 @@
-#include "SDL2.h"
-
 #include <iostream>
 
-#include "util/System.h"
+#include "SDL2.h"
 
-using namespace std;
+#include "util/System.h"
 
 namespace loader {
 namespace texture {
@@ -30,7 +28,7 @@ void SDL2::Iterate() {
 
 }
 
-Texture* SDL2::LoadTexture( const string &name ) {
+Texture* SDL2::LoadTexture( const std::string &name ) {
 
 	texture_map_t::iterator it = m_textures.find( name );
 	if (it != m_textures.end()) {
@@ -80,16 +78,16 @@ Texture* SDL2::LoadTexture( const string &name ) {
 
 }
 
-Texture* SDL2::LoadTexture( const string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
+Texture* SDL2::LoadTexture( const std::string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
 	
-	const string subtexture_key =
+	const std::string subtexture_key =
 		name + ":" +
-		to_string( x1 ) + ":" +
-		to_string( y1 ) + ":" +
-		to_string( x2 ) + ":" +
-		to_string( y2 ) + ":" +
-		to_string(flags) + ":" +
-		to_string(value)
+		std::to_string( x1 ) + ":" +
+		std::to_string( y1 ) + ":" +
+		std::to_string( x2 ) + ":" +
+		std::to_string( y2 ) + ":" +
+		std::to_string(flags) + ":" +
+		std::to_string(value)
 	;
 	
 	texture_map_t::iterator it = m_subtextures.find( subtexture_key );

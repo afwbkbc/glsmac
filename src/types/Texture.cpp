@@ -1,10 +1,9 @@
-#include "Texture.h"
-#include "engine/Engine.h"
-
 #include <cstring>
 #include <cmath>
-
 #include <iostream>
+
+#include "Texture.h"
+#include "engine/Engine.h"
 
 namespace types {
 
@@ -60,12 +59,12 @@ void Texture::SetPixelAlpha( const size_t x, const size_t y, const uint8_t alpha
 }
 
 void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x, const size_t dest_y, const rotate_t rotate, const float alpha ) {
-	ASSERT( dest_x + ( x2 - x1 ) < m_width, "destination x overflow ( " + to_string( dest_x + ( x2 - x1 ) ) + " >= " + to_string( m_width ) + " )" );
-	ASSERT( dest_y + ( y2 - y1 ) < m_height, "destination y overflow (" + to_string( dest_y + ( y2 - y1 ) ) + " >= " + to_string( m_height ) + " )" );
-	ASSERT( x2 >= x1, "invalid source x size ( " + to_string( x2 ) + " < " + to_string( x1 ) + " )" );
-	ASSERT( y2 >= y1, "invalid source y size ( " + to_string( y2 ) + " < " + to_string( y1 ) + " )" );
-	ASSERT( alpha >= 0, "invalid alpha value ( " + to_string( alpha ) + " < 0 )" );
-	ASSERT( alpha <= 1, "invalid alpha value ( " + to_string( alpha ) + " > 1 )" );
+	ASSERT( dest_x + ( x2 - x1 ) < m_width, "destination x overflow ( " + std::to_string( dest_x + ( x2 - x1 ) ) + " >= " + std::to_string( m_width ) + " )" );
+	ASSERT( dest_y + ( y2 - y1 ) < m_height, "destination y overflow (" + std::to_string( dest_y + ( y2 - y1 ) ) + " >= " + std::to_string( m_height ) + " )" );
+	ASSERT( x2 >= x1, "invalid source x size ( " + std::to_string( x2 ) + " < " + std::to_string( x1 ) + " )" );
+	ASSERT( y2 >= y1, "invalid source y size ( " + std::to_string( y2 ) + " < " + std::to_string( y1 ) + " )" );
+	ASSERT( alpha >= 0, "invalid alpha value ( " + std::to_string( alpha ) + " < 0 )" );
+	ASSERT( alpha <= 1, "invalid alpha value ( " + std::to_string( alpha ) + " > 1 )" );
 	
 	// +1 because it's inclusive on both sides
 	// TODO: make non-inclusive
@@ -75,7 +74,7 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 	const void *from;
 	void *to;
 	
-	ASSERT( rotate < 4, "invalid rotate value " + to_string( rotate ) );
+	ASSERT( rotate < 4, "invalid rotate value " + std::to_string( rotate ) );
 	if ( rotate > 0 ) {
 		ASSERT( w == h, "rotating supported only for squares for now" );
 	}
@@ -106,7 +105,7 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 		) {
 			ASSERT( mode & AM_MERGE, "rounded corners supported only for merge mode" );
 			r *= 0.7f;
-			ASSERT( r >= 0, "sqrt returned negative result: " + to_string( r ) );
+			ASSERT( r >= 0, "sqrt returned negative result: " + std::to_string( r ) );
 		}
 	}
 	
@@ -139,7 +138,7 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 					break;
 	 			}
 				default: {
-					ASSERT( false, "invalid rotate value " + to_string( rotate ) );
+					ASSERT( false, "invalid rotate value " + std::to_string( rotate ) );
 				}
 			}
 			
@@ -347,9 +346,9 @@ void Texture::Unserialize( Buffer buf ) {
 	
 	m_name = buf.ReadString();
 	size_t width = buf.ReadInt();
-	ASSERT( width == m_width, "texture read width mismatch ( " + to_string( width ) + " != " + to_string( m_width ) + " )" );
+	ASSERT( width == m_width, "texture read width mismatch ( " + std::to_string( width ) + " != " + std::to_string( m_width ) + " )" );
 	size_t height = buf.ReadInt();
-	ASSERT( height == m_height, "texture read height mismatch ( " + to_string( height ) + " != " + to_string( m_height ) + " )" );
+	ASSERT( height == m_height, "texture read height mismatch ( " + std::to_string( height ) + " != " + std::to_string( m_height ) + " )" );
 	
 	m_aspect_ratio = buf.ReadFloat();
 	

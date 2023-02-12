@@ -32,13 +32,13 @@ enum result_t {
 	R_ERROR,
 };
 	
-typedef vector<Event> events_t;
+typedef std::vector<Event> events_t;
 	
 typedef struct {
 	op_t op;
 	struct {
 		connection_mode_t mode;
-		string remote_address;
+		std::string remote_address;
 	} connect;
 	size_t cid;
 	Event event;
@@ -46,14 +46,14 @@ typedef struct {
 
 typedef struct {
 	result_t result;
-	string message;
+	std::string message;
 	events_t events;
 } MT_Response;
 
 typedef base::MTModule< MT_Request, MT_Response > MTModule;
 CLASS( Network, MTModule )
 
-	mt_id_t MT_Connect( const connection_mode_t connect_mode, const string& remote_address = "" );
+	mt_id_t MT_Connect( const connection_mode_t connect_mode, const std::string& remote_address = "" );
 	mt_id_t MT_Disconnect();
 	mt_id_t MT_DisconnectClient( const size_t cid );
 	
@@ -68,13 +68,13 @@ protected:
 	
 	virtual MT_Response ListenStart() = 0;
 	virtual MT_Response ListenStop() = 0; 
-	virtual MT_Response Connect( const string& remote_address ) = 0;
+	virtual MT_Response Connect( const std::string& remote_address ) = 0;
 	virtual MT_Response Disconnect() = 0;
 	virtual MT_Response DisconnectClient( const size_t cid ) = 0;
 	
 	const MT_Response ProcessRequest( const MT_Request& request );
 	
-	const MT_Response Error( const string& errmsg = "" );
+	const MT_Response Error( const std::string& errmsg = "" );
 	const MT_Response Success();
 	
 	mt_id_t MT_Success();

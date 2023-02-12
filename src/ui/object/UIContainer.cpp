@@ -4,15 +4,13 @@
 
 #include "../UI.h"
 
-using namespace std;
-
 namespace ui {
 
 using namespace event;
 
 namespace object {
 
-UIContainer::UIContainer( const string& class_name )
+UIContainer::UIContainer( const std::string& class_name )
 	: UIObject( class_name )
 {
 	//
@@ -222,7 +220,7 @@ void UIContainer::UnblockEvents() {
 }
 
 
-const string UIContainer::Subclass( const string& class_name ) const {
+const std::string UIContainer::Subclass( const std::string& class_name ) const {
 	//if (m_style_class.empty()) {
 		return "";
 	/*}

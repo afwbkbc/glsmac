@@ -5,12 +5,12 @@
 #define SDL_MAIN_HANDLED 1
 #include <SDL_audio.h>
 
+#include <mutex>
+
 #include "scene/actor/Sound.h"
 #include "Sound.h"
 
 #include "../Audio.h"
-
-#include <mutex>
 
 // this must match specs of SMAC wavs until resampling is implemented
 #define AUDIO_FREQUENCY 22050
@@ -43,8 +43,8 @@ protected:
 private:
 	bool m_is_sound_enabled = false;
 	
-	mutex m_actors_mutex;
-	unordered_map< scene::actor::Sound*, sdl2::Sound* > m_actors = {};
+	std::mutex m_actors_mutex;
+	std::unordered_map< scene::actor::Sound*, sdl2::Sound* > m_actors = {};
 	
 	size_t m_buffer_length = 0;
 	size_t m_buffer_size = 0;

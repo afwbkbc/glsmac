@@ -69,11 +69,11 @@ void Join::Hide() {
 	PopupMenu::Hide();
 }
 
-const string Join::GetChoice() const {
+const std::string Join::GetChoice() const {
 	return m_input_yourname->GetValue() + ";" + m_input_gameip->GetValue(); // HACK
 }
 
-void Join::SetChoice( const string& choice ) {
+void Join::SetChoice( const std::string& choice ) {
 	// HACK
 	size_t pos = choice.find( ";" );
 	ASSERT( pos >= 0, "; not found in choice" );

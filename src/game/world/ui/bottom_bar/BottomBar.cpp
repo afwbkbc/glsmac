@@ -28,7 +28,7 @@ void BottomBar::Create() {
 		const Vec2< size_t > size;
 		const float zindex; // needed in case game window is shrunk to the point where frame starts to overlap other side
 	} bg_coords_t;
-	const vector< bg_coords_t > bg_coords = {
+	const std::vector< bg_coords_t > bg_coords = {
 		{ UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT, { 4, 57 }, { 241, 196 }, 0.35f }, // left side part under unit and tile previews (+ a bit under units)
 		{ UIObject::ALIGN_TOP | UIObject::ALIGN_RIGHT, { 4, 57 }, { 241, 196 }, 0.25f }, // part under minimap
 		{ UIObject::ALIGN_BOTTOM, { 245, 5 }, { 0, 62 }, 0.2f }, // bottom part (under units)
@@ -100,6 +100,14 @@ void BottomBar::Destroy() {
 	RemoveChild( m_tile_preview );
 	
 	UI::Destroy();
+}
+
+void BottomBar::PreviewTile( const Map::tile_info_t& tile_info ) {
+	m_tile_preview->PreviewTile( tile_info );
+}
+
+void BottomBar::HideTilePreview() {
+	m_tile_preview->HideTilePreview();
 }
 
 }

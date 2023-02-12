@@ -1,14 +1,11 @@
 #include "Text.h"
 
-using namespace std;
-using namespace types;
-
 #include "graphics/opengl/actor/Text.h"
 
 namespace scene {
 namespace actor {
 
-Text::Text( types::Font *font, const string &text, types::Color color ) :
+Text::Text( types::Font *font, const std::string &text, types::Color color ) :
 	Actor( Actor::TYPE_TEXT, "Text" ),
 	m_font( font ),
 	m_text( text ),
@@ -25,7 +22,7 @@ Font *Text::GetFont() const {
 	return m_font;
 }
 
-const string& Text::GetText() const {
+const std::string& Text::GetText() const {
 	return m_text;
 }
 
@@ -33,7 +30,7 @@ const Color& Text::GetColor() const {
 	return m_color;
 }
 
-void Text::SetText( const string& text ) {
+void Text::SetText( const std::string& text ) {
 	if ( text != m_text ) {
 		m_text = text;
 
@@ -65,11 +62,8 @@ void Text::UpdatePosition() {
 
 void Text::Redraw() {
 	if ( m_graphics_object ) {
-#ifdef DEBUG
-		if ( m_graphics_object->Removed() ) {
-			throw runtime_error( "textactor graphics object removed" );
-		}
-#endif
+		ASSERT( !m_graphics_object->Removed(), "textactor graphics object removed" );
+		
 		auto* gl_actor = m_graphics_object->GetDstObject<graphics::opengl::Text>();
 		gl_actor->Update( m_font, m_text, m_position.x, m_position.y );
 	}

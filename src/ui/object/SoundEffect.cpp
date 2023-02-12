@@ -4,7 +4,7 @@
 namespace ui {
 namespace object {
 
-SoundEffect::SoundEffect( const string& class_name ) : UIObject( class_name )
+SoundEffect::SoundEffect( const std::string& class_name ) : UIObject( class_name )
 {
 	
 }
@@ -88,7 +88,7 @@ void SoundEffect::Create() {
 void SoundEffect::Iterate() {
 	UIObject::Iterate();
 	
-	vector< actor::Sound* > active_actors = {};
+	std::vector< actor::Sound* > active_actors = {};
 	for ( auto& actor : m_actors ) {
 		if ( actor->IsFinished() ) {
 			//Log( "Destroying inactive sound actor" );
