@@ -22,12 +22,12 @@ void BottomBar::Create() {
 	
 	// background
 	
-	typedef struct {
+	struct bg_coords_t {
 		const UIObject::alignment_t alignment;
 		const Vec2< size_t > position;
 		const Vec2< size_t > size;
 		const float zindex; // needed in case game window is shrunk to the point where frame starts to overlap other side
-	} bg_coords_t;
+	};
 	const std::vector< bg_coords_t > bg_coords = {
 		{ UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT, { 4, 57 }, { 241, 196 }, 0.35f }, // left side part under unit and tile previews (+ a bit under units)
 		{ UIObject::ALIGN_TOP | UIObject::ALIGN_RIGHT, { 4, 57 }, { 241, 196 }, 0.25f }, // part under minimap

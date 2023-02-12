@@ -22,12 +22,12 @@ CLASS( Random, Util )
 	void SetSeed( const value_t seed );
 	static const value_t NewSeed();
 	
-	typedef struct {
+	struct state_t {
 		value_t a;
 		value_t b;
 		value_t c;
 		value_t d;
-	} state_t;
+	};
 	
 	const bool GetBool();
 	const uint32_t GetUInt( const uint32_t min, const uint32_t max );

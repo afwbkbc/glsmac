@@ -31,11 +31,11 @@ class Tile { // not deriving from anything because tiles are initialized with ma
 
 	// per-vertex, left, right and top linked to vertices of others tiles
 	typedef ssize_t elevation_t;
-	static const elevation_t ELEVATION_MIN = -3500;
-	static const elevation_t ELEVATION_MAX = 3500;
-	static const elevation_t ELEVATION_LEVEL_COAST = 0;
-	static const elevation_t ELEVATION_LEVEL_OCEAN = -1000;
-	static const elevation_t ELEVATION_LEVEL_TRENCH = -2000;
+	static constexpr elevation_t ELEVATION_MIN = -3500;
+	static constexpr elevation_t ELEVATION_MAX = 3500;
+	static constexpr elevation_t ELEVATION_LEVEL_COAST = 0;
+	static constexpr elevation_t ELEVATION_LEVEL_OCEAN = -1000;
+	static constexpr elevation_t ELEVATION_LEVEL_TRENCH = -2000;
 	
 	// when reading or writing elevation - work only with values, make sure to not modify pointers themselves!
 	// pointers are set only once by Tiles and are not to be changed after
@@ -71,39 +71,39 @@ class Tile { // not deriving from anything because tiles are initialized with ma
 	
 	// scalar
 	typedef uint8_t moisture_t;
-	static const moisture_t M_NONE = 0;
-	static const moisture_t M_ARID = 1;
-	static const moisture_t M_MOIST = 2;
-	static const moisture_t M_RAINY = 3;
+	static constexpr moisture_t M_NONE = 0;
+	static constexpr moisture_t M_ARID = 1;
+	static constexpr moisture_t M_MOIST = 2;
+	static constexpr moisture_t M_RAINY = 3;
 	moisture_t moisture;
 	
 	// scalar
 	typedef uint8_t rockyness_t;
-	static const rockyness_t R_NONE = 0;
-	static const rockyness_t R_FLAT = 1;
-	static const rockyness_t R_ROLLING = 2;
-	static const rockyness_t R_ROCKY = 3;
+	static constexpr rockyness_t R_NONE = 0;
+	static constexpr rockyness_t R_FLAT = 1;
+	static constexpr rockyness_t R_ROLLING = 2;
+	static constexpr rockyness_t R_ROCKY = 3;
 	rockyness_t rockyness;
 	
 	// bitflags
 	typedef uint16_t feature_t;
-	static const feature_t F_NONE = 0;
-	static const feature_t F_NUTRIENT_BONUS = 1 << 0;
-	static const feature_t F_MINERALS_BONUS = 1 << 1;
-	static const feature_t F_ENERGY_BONUS = 1 << 2;
-	static const feature_t F_RIVER = 1 << 3;
-	static const feature_t F_MONOLITH = 1 << 4;
-	static const feature_t F_XENOFUNGUS = 1 << 5;
-	static const feature_t F_JUNGLE = 1 << 6;
-	static const feature_t F_SURVEY_POD = 1 << 7;
-	static const feature_t F_VOLCANO = 1 << 8;
-	static const feature_t F_SUNNY_MESA = 1 << 9;
-	static const feature_t F_URANIUM_FLATS = 1 << 10;
-	static const feature_t F_GARLAND_CRATER = 1 << 11;
-	static const feature_t F_FOSSIL_FIELD_RIDGE = 1 << 12;
-	static const feature_t F_UNITY_ENERGY = 1 << 13;
-	static const feature_t F_UNITY_CHOPPER = 1 << 14;
-	static const feature_t F_UNITY_RADAR = 1 << 15;
+	static constexpr feature_t F_NONE = 0;
+	static constexpr feature_t F_NUTRIENT_BONUS = 1 << 0;
+	static constexpr feature_t F_MINERALS_BONUS = 1 << 1;
+	static constexpr feature_t F_ENERGY_BONUS = 1 << 2;
+	static constexpr feature_t F_RIVER = 1 << 3;
+	static constexpr feature_t F_MONOLITH = 1 << 4;
+	static constexpr feature_t F_XENOFUNGUS = 1 << 5;
+	static constexpr feature_t F_JUNGLE = 1 << 6;
+	static constexpr feature_t F_SURVEY_POD = 1 << 7;
+	static constexpr feature_t F_VOLCANO = 1 << 8;
+	static constexpr feature_t F_SUNNY_MESA = 1 << 9;
+	static constexpr feature_t F_URANIUM_FLATS = 1 << 10;
+	static constexpr feature_t F_GARLAND_CRATER = 1 << 11;
+	static constexpr feature_t F_FOSSIL_FIELD_RIDGE = 1 << 12;
+	static constexpr feature_t F_UNITY_ENERGY = 1 << 13;
+	static constexpr feature_t F_UNITY_CHOPPER = 1 << 14;
+	static constexpr feature_t F_UNITY_RADAR = 1 << 15;
 	feature_t features;
 	
 	// WARNING: make sure to call this after changing something in tile

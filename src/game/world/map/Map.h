@@ -35,7 +35,7 @@ CLASS( Map, Serializable )
 	// coordinates of textures (x1 and y1) in texture.pcx
 	typedef Vec2< size_t > pcx_texture_coordinates_t;
 	
-	typedef struct {
+	struct consts_t {
 		const struct {
 			const pcx_texture_coordinates_t water[2] = {
 				{ 280, 79 }, {280, 136 },
@@ -89,13 +89,13 @@ CLASS( Map, Serializable )
 			const struct {
 				const float x = 1.0f;
 				const float y = 1.0f;
-				const float z = Map::s_consts.tile_scale_z;
+				const float z = s_consts.tile_scale_z;
 			} scale;
 			const struct {
-				const float x =	Map::s_consts.tile.scale.x / 2;
-				const float y =	Map::s_consts.tile.scale.y / 2;
+				const float x =	s_consts.tile.scale.x / 2;
+				const float y =	s_consts.tile.scale.y / 2;
 			} radius;
-			const float rotated_width = sqrt( pow( Map::s_consts.tile.scale.x, 2 ) + pow( Map::s_consts.tile.scale.y, 2 ) );
+			const float rotated_width = sqrt( pow( s_consts.tile.scale.x, 2 ) + pow( s_consts.tile.scale.y, 2 ) );
 			const Tile::elevation_t maximum_allowed_slope_elevation = 800;
 		} tile;
 		const struct {
@@ -104,8 +104,8 @@ CLASS( Map, Serializable )
 				const uint8_t y = 56;
 			} dimensions;
 			const struct {
-				const uint8_t x = Map::s_consts.pcx_texture_block.dimensions.x / 2;
-				const uint8_t y = Map::s_consts.pcx_texture_block.dimensions.y / 2;
+				const uint8_t x = s_consts.pcx_texture_block.dimensions.x / 2;
+				const uint8_t y = s_consts.pcx_texture_block.dimensions.y / 2;
 			} radius;
 		} pcx_texture_block;
 		const Vec3 map_position = { 0.0f, 0.0f, 0.0f };
@@ -118,16 +118,16 @@ CLASS( Map, Serializable )
 			const float coast_water_center_alpha_tint_mod = 0.75f;
 		} coastlines;
 		const struct {
-			const util::Clamper< float > elevation_to_vertex_z = { Tile::ELEVATION_MIN, Tile::ELEVATION_MAX, -Map::s_consts.tile_scale_z, Map::s_consts.tile_scale_z };
+			const util::Clamper< float > elevation_to_vertex_z = { Tile::ELEVATION_MIN, Tile::ELEVATION_MAX, -s_consts.tile_scale_z, s_consts.tile_scale_z };
 			const util::Clamper< float > elevation_to_water_r = { Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST, 0.6f, 1.3f };
 			const util::Clamper< float > elevation_to_water_g = { Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST, 0.6f, 1.8f };
 			const util::Clamper< float > elevation_to_water_b = { Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST, 0.8f, 1.8f };
 			const util::Clamper< float > elevation_to_water_a = { Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST, 1.0f, 0.5f };
 		} clampers;
 		const struct {
-			const float water = Map::s_consts.clampers.elevation_to_vertex_z.Clamp( Tile::ELEVATION_LEVEL_COAST ); // sea is always on sea level
+			const float water = s_consts.clampers.elevation_to_vertex_z.Clamp( Tile::ELEVATION_LEVEL_COAST ); // sea is always on sea level
 		} levels;
-	} consts_t;
+	};
 	static const consts_t s_consts;
 	
 	void SetTiles( Tiles* tiles, bool generate_actors = true );
@@ -145,7 +145,7 @@ CLASS( Map, Serializable )
 		LAYER_MAX
 	};
 
-	typedef struct {
+	struct tile_vertices_t {
 		Vec3 center;
 		Vec3 left;
 		Vec3 top;
@@ -153,9 +153,9 @@ CLASS( Map, Serializable )
 		Vec3 bottom;
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
-	} tile_vertices_t;
+	};
 
-	typedef struct {
+	struct tile_indices_t {
 		types::mesh::Mesh::index_t center;
 		types::mesh::Mesh::index_t left;
 		types::mesh::Mesh::index_t right;
@@ -163,9 +163,9 @@ CLASS( Map, Serializable )
 		types::mesh::Mesh::index_t bottom;
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
-	} tile_indices_t;
+	};
 	
-	typedef struct {
+	struct tile_tex_coords_t {
 		Vec2< float > center;
 		Vec2< float > left;
 		Vec2< float > top;
@@ -173,9 +173,9 @@ CLASS( Map, Serializable )
 		Vec2< float > bottom;
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
-	} tile_tex_coords_t;
+	};
 	
-	typedef struct {
+	struct tile_colors_t {
 		Color center;
 		Color left;
 		Color top;
@@ -183,18 +183,18 @@ CLASS( Map, Serializable )
 		Color bottom;
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
-	} tile_colors_t;
+	};
 	
-	typedef struct {
+	struct tile_layer_t {
 		tile_indices_t indices;
 		tile_vertices_t coords;
 		tile_tex_coords_t tex_coords;
 		tile_colors_t colors;
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
-	} tile_layer_t;
+	};
 	
-	typedef struct {
+	struct tile_elevations_t {
 		Tile::elevation_t center;
 		Tile::elevation_t left;
 		Tile::elevation_t top;
@@ -202,9 +202,9 @@ CLASS( Map, Serializable )
 		Tile::elevation_t bottom;
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
-	} tile_elevations_t;
+	};
 	
-	typedef struct {
+	struct tile_state_t {
 		// world coordinates
 		struct {
 			float x;
@@ -232,9 +232,9 @@ CLASS( Map, Serializable )
 		bool has_water;
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
-	} tile_state_t;
+	};
 	
-	typedef struct {
+	struct copy_from_after_t {
 		Texture::add_mode_t mode;
 		size_t tx1_from;
 		size_t ty1_from;
@@ -244,9 +244,9 @@ CLASS( Map, Serializable )
 		size_t ty_to;
 		uint8_t rotate;
 		float alpha;
-	} copy_from_after_t;
+	};
 	
-	typedef struct {
+	struct map_state_t {
 		struct {
 			float x;
 			float y;
@@ -271,7 +271,7 @@ CLASS( Map, Serializable )
 		
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
-	} map_state_t;
+	};
 	
 	// call these only during tile generation
 	void AddTexture( const tile_layer_type_t tile_layer, const pcx_texture_coordinates_t& tc, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha = 1.0f );
@@ -282,10 +282,10 @@ CLASS( Map, Serializable )
 		TG_MOISTURE,
 		TG_FEATURE,
 	};
-	typedef struct {
+	struct tile_texture_info_t {
 		uint8_t rotate_direction;
 		uint8_t texture_variant;
-	} tile_texture_info_t;
+	};
 	const tile_texture_info_t GetTileTextureInfo( const Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature = Tile::F_NONE ) const;
 
 	const size_t GetWidth() const;
@@ -293,11 +293,11 @@ CLASS( Map, Serializable )
 	
 	Random* GetRandom() const;
 	
-	typedef struct {
+	struct tile_info_t {
 		const Tile* tile;
 		const tile_state_t* ts;
 		const map_state_t* ms;
-	} tile_info_t;
+	};
 	const tile_info_t GetTileAt( const size_t tile_x, const size_t tile_y ) const;
 	
 	// tile request stuff

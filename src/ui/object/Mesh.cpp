@@ -183,6 +183,9 @@ void Mesh::Align() {
 				to->SetVertexTexCoord( i, tex_coord );
 				break;
 			}
+			default: {
+				ASSERT( false, "unknown mesh type " + std::to_string( m_mesh->GetType() ) );
+			}
 		}
 	}	
 }

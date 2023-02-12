@@ -25,10 +25,10 @@ CLASS(MenuBlock, UIContainer)
 	MenuBlock( SlidingMenu* menu );
 
 	// how much pixels to shift when fully closed
-	static const size_t MENU_CLOSED_POSITION = 400;
+	static constexpr coord_t MENU_CLOSED_POSITION = 400;
 	
 	// per ms
-	static const size_t SLIDING_SPEED = 5;
+	static constexpr size_t SLIDING_SPEED = 5;
 
 	void Create();
 	void Destroy();

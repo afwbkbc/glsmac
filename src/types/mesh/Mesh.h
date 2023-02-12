@@ -20,16 +20,16 @@ CLASS( Mesh, Serializable )
 	};
 	
 	const uint8_t VERTEX_SIZE; // set in constructor
-	static const uint8_t VERTEX_COORD_SIZE = 3; // x, y, z
-	static const uint8_t SURFACE_SIZE = 3; // triangles
+	static constexpr uint8_t VERTEX_COORD_SIZE = 3; // x, y, z
+	static constexpr uint8_t SURFACE_SIZE = 3; // triangles
 
 	typedef float coord_t;
 	typedef unsigned int index_t;
-	typedef struct {
+	struct surface_t {
 		const index_t v1;
 		const index_t v2;
 		const index_t v3;
-	} surface_t;
+	};
 	
 	Mesh( const mesh_type_t type, const uint8_t vertex_size, const size_t vertex_count, const size_t surface_count );
 	Mesh( const Mesh& other ); // copy from other

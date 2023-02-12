@@ -106,6 +106,9 @@ Scene *UI::GetShapeScene( const types::mesh::Mesh* mesh ) {
 		case types::mesh::Mesh::MT_RENDER: {
 			return m_shape_scene_ortho;
 		}
+		default: {
+			ASSERT( false, "unknown mesh type " + std::to_string( mesh->GetType() ) );
+		}
 	}
 	ASSERT( false, "unsupported shape mesh type" );
 	return nullptr; // remove warning

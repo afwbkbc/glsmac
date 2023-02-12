@@ -15,8 +15,8 @@ CLASS( MapGenerator, base::Base )
 	
 	// you should stay within these boundaries when generating
 	// currently, any elevations will work because map will be normalized to valid range afterwards. but this may change in future
-	static const Tile::elevation_t MAPGEN_ELEVATION_MIN = -10000;
-	static const Tile::elevation_t MAPGEN_ELEVATION_MAX = 10000;
+	static constexpr Tile::elevation_t MAPGEN_ELEVATION_MIN = -10000;
+	static constexpr Tile::elevation_t MAPGEN_ELEVATION_MAX = 10000;
 
 	virtual void Generate( Tiles* tiles, size_t seed ) = 0;
 	

@@ -36,12 +36,12 @@ CLASS( Entity, base::Base )
 	virtual void UpdateRotation();
 	virtual void UpdateMatrix();
 	
-	typedef struct {
+	struct matrices_t {
 		types::Matrix44 rotate;
 		types::Matrix44 translate;
 		types::Matrix44 scale;
 		types::Matrix44 matrix;
-	} matrices_t;
+	};
 	
 protected:
 	types::Vec3 m_position = { 0.0, 0.0, 0.0 };

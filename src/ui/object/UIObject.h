@@ -157,10 +157,10 @@ protected:
 
 	// bit flags
 	typedef uint8_t event_context_t;
-	static const event_context_t EC_NONE = 0;
-	static const event_context_t EC_MOUSE = 1;
-	static const event_context_t EC_MOUSEMOVE = 2; // separate because handling is very different
-	static const event_context_t EC_KEYBOARD = 4;
+	static constexpr event_context_t EC_NONE = 0;
+	static constexpr event_context_t EC_MOUSE = 1;
+	static constexpr event_context_t EC_MOUSEMOVE = 2; // separate because handling is very different
+	static constexpr event_context_t EC_KEYBOARD = 4;
 	
 	virtual void SetEventContexts( event_context_t contexts );
 	virtual void SetOverriddenEventContexts( event_context_t contexts );
@@ -176,17 +176,17 @@ protected:
 	
 	float m_absolute_z_index = 0.0f;
 
-	typedef struct object_area_struct {
+	struct object_area_t {
 		coord_t left;
 		coord_t right;
 		coord_t top;
 		coord_t bottom;
 		coord_t width;
 		coord_t height;
-		bool operator != ( const struct object_area_struct& other ) const {
-			return memcmp( this, &other, sizeof(struct object_area_struct) ) != 0;
+		bool operator != ( const object_area_t& other ) const {
+			return memcmp( this, &other, sizeof( other ) ) != 0;
 		}
-	} object_area_t;
+	};
 	object_area_t m_object_area = {};
 	
 	bool m_created = false;

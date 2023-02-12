@@ -103,6 +103,9 @@ void Image::Draw( shader_program::ShaderProgram *shader_program, Camera *camera 
 			break;
 
 		}*/
+		default: {
+			ASSERT( false, "unknown shader program " + std::to_string( shader_program->GetType() ) );
+		}
 	}
 
 	/*

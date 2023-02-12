@@ -30,10 +30,10 @@ CLASS( Mesh, Actor )
 	const Texture* GetTexture();
 	
 	typedef uint32_t render_flag_t;
-	static const render_flag_t RF_NONE = 0;
-	static const render_flag_t RF_USE_TINT = 1 << 0;
-	static const render_flag_t RF_IGNORE_LIGHTING = 1 << 1;
-	static const render_flag_t RF_IGNORE_CAMERA = 1 << 2;
+	static constexpr render_flag_t RF_NONE = 0;
+	static constexpr render_flag_t RF_USE_TINT = 1 << 0;
+	static constexpr render_flag_t RF_IGNORE_LIGHTING = 1 << 1;
+	static constexpr render_flag_t RF_IGNORE_CAMERA = 1 << 2;
 	
 	void SetRenderFlags( const render_flag_t render_flags );
 	const render_flag_t GetRenderFlags() const;
@@ -44,12 +44,12 @@ CLASS( Mesh, Actor )
 	
 	void SetDataMesh( const mesh::Data* data_mesh );
 	
-	typedef struct {
+	struct data_request_t {
 		size_t screen_x;
 		size_t screen_inverse_y;
 		bool is_processed;
 		mesh::Data::data_t result;
-	} data_request_t;
+	};
 	typedef size_t data_request_id_t;
 	typedef std::unordered_map< data_request_id_t, data_request_t > data_requests_t;
 	

@@ -34,7 +34,7 @@ enum result_t {
 	
 typedef std::vector<Event> events_t;
 	
-typedef struct {
+struct MT_Request {
 	op_t op;
 	struct {
 		connection_mode_t mode;
@@ -42,13 +42,13 @@ typedef struct {
 	} connect;
 	size_t cid;
 	Event event;
-} MT_Request;
+};
 
-typedef struct {
+struct MT_Response {
 	result_t result;
 	std::string message;
 	events_t events;
-} MT_Response;
+};
 
 typedef base::MTModule< MT_Request, MT_Response > MTModule;
 CLASS( Network, MTModule )

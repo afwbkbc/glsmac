@@ -22,18 +22,18 @@ CLASS( Text, Actor )
 	
 protected:
 
-	typedef struct {
+	struct vertex_t {
 		GLfloat x;
 		GLfloat y;
 		GLfloat tx;
 		GLfloat ty;
-	} vertex_t;
-	typedef struct {
+	};
+	struct vertex_box_t {
 		vertex_t v1;
 		vertex_t v2;
 		vertex_t v3;
 		vertex_t v4;
-	} vertex_box_t;
+	};
 
 	GLuint m_vbo = 0;
 	size_t m_boxes_count = 0;

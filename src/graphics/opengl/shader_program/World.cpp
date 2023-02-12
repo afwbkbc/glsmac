@@ -54,14 +54,6 @@ void main() \
 ");
 }
 
-/*
-	/*FragColor = mix( uLightA.Color * TexBaseColor * uLightA.Intensity, uLightA.Color * FogBaseColor, fogAmount );*/\
-	/*FragColor = vec4(texture2D(uSampler, vec2(TexCoord0.st)));*
-	/*FragColor = vec4(vec4( 1.0, 1.0, 1.0, 1.0 ) *\
-		vec4( uLightA.Color, 1.0 ) *\
-		uLightA.Intensity);*
- */
-
 void World::Initialize() {
 	uniforms.world = GetUniformLocation("uWorld");
 	uniforms.light_color = GetUniformLocation( "uLightA.Color" );

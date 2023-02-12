@@ -78,10 +78,10 @@ Map::Map( Random* random, Scene* scene )
 #endif
 	
 	// precache tile texture variants/rotations for fast lookups
-	typedef struct {
+	struct texture_rule_t {
 		uint8_t bitmask;
 		uint8_t checked_bits; // some masks don't care about some corners
-	} texture_rule_t;
+	};
 	
 	const std::vector< texture_rule_t > bitmasks = {
 		{ B(00000000), B(10101010) }, // 0

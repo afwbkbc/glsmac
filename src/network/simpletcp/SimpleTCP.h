@@ -53,12 +53,12 @@ private:
 
 	const int32_t ptype_ping = Packet::PT_PING;
 	
-	typedef struct {
+	struct local_socket_data_t {
 		std::string local_address;
 		int fd;
-	} local_socket_data_t;
+	};
 	
-	typedef struct remote_socket_data_t {
+	struct remote_socket_data_t {
 		std::string remote_address;
 		int fd;
 		struct {
@@ -72,7 +72,7 @@ private:
 		bool ping_needed;
 		bool ping_sent;
 		bool pong_needed;
-	} remote_socket_data_t;
+	};
 	
 	struct {
 		std::unordered_map< int, local_socket_data_t > listening_sockets;

@@ -9,8 +9,8 @@ namespace mesh {
 
 CLASS( Data, Mesh )
 	
-	static const uint8_t VERTEX_DATA_SIZE = 1; // data value
-	static const uint8_t VERTEX_SIZE = VERTEX_COORD_SIZE + VERTEX_DATA_SIZE;
+	static constexpr uint8_t VERTEX_DATA_SIZE = 1; // data value
+	static constexpr uint8_t VERTEX_SIZE = VERTEX_COORD_SIZE + VERTEX_DATA_SIZE;
 
 	typedef uint32_t data_t;
 	

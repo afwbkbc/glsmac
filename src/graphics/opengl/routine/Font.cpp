@@ -73,6 +73,9 @@ opengl::Actor *Font::AddCustomActor( scene::actor::Actor *actor ) {
 			NEWV( result, Text, (scene::actor::Text *)actor, font );
 			return result;
 		}
+		default: {
+			ASSERT( false, "unknown actor type " + std::to_string( actor_type ) );
+		}
 	}
 	return NULL;
 }

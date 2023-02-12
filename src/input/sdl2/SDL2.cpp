@@ -199,6 +199,9 @@ UIEvent::key_code_t SDL2::GetScanCode( SDL_Scancode code, SDL_Keymod modifiers )
 		case SDL_SCANCODE_GRAVE: {
 			return UIEvent::K_GRAVE;
 		}
+		default: {
+			return UIEvent::K_NONE;
+		}
 	}
 	//Log( "Skipping unknown scan code: " + to_string( code ) + " (modifiers: " + to_string( modifiers ) + ")" );
 	return UIEvent::K_NONE;

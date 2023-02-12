@@ -325,7 +325,7 @@ size_t UIObject::GetHeight() const {
 void UIObject::SetLeft( const coord_t px ) {
 	m_position.left = px;
 	m_stick_bits |= STICK_LEFT;
-	if ( ! m_align & ALIGN_HCENTER )
+	if ( ! ( m_align & ALIGN_HCENTER ) )
 		m_align = ( m_align & (~ALIGN_RIGHT) ) | ALIGN_LEFT;
 	if ( m_stick_bits & STICK_RIGHT )
 		m_stick_bits &= ~( STICK_RIGHT | STICK_WIDTH );
@@ -336,7 +336,7 @@ void UIObject::SetLeft( const coord_t px ) {
 void UIObject::SetRight( const coord_t px ) {
 	m_position.right = px;
 	m_stick_bits |= STICK_RIGHT;
-	if ( ! m_align & ALIGN_HCENTER )
+	if ( ! ( m_align & ALIGN_HCENTER ) )
 		m_align = ( m_align & (~ALIGN_LEFT) ) | ALIGN_RIGHT;
 	if ( m_stick_bits & STICK_LEFT )
 		m_stick_bits &= ~( STICK_LEFT | STICK_WIDTH );
@@ -601,6 +601,9 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 					is_processed = OnKeyPress( &event->m_data );
 				}
 				break;
+			}
+			default: {
+				ASSERT( false, "unknown event type " + std::to_string( event->m_type ) );
 			}
 		}
 	}

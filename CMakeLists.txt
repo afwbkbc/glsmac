@@ -98,4 +98,4 @@ IF (NOT WIN32)
 	ADD_DEPENDENCIES(${PROJECT_NAME} glsmac_version)
 ENDIF()
 
-SET( CMAKE_CXX_FLAGS  " -std=c++17 ${CMAKE_CXX_FLAGS} -Wno-pointer-arith " )
+SET( CMAKE_CXX_FLAGS  " -std=c++17 ${CMAKE_CXX_FLAGS} -Wno-pointer-arith" )

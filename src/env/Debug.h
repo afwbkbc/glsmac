@@ -39,11 +39,11 @@ using namespace debug;
 		ssize_t current = 0; \
 	} _stat;
 	
-	typedef struct {
+	struct debug_stats_t {
 		std::mutex _mutex; \
 		bool _readonly = false;
 		DEBUG_STATS
-	} debug_stats_t;
+	};
 	
 #undef D
 	

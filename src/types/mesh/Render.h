@@ -9,10 +9,10 @@ namespace mesh {
 
 CLASS( Render, Mesh )
 	
-	static const uint8_t VERTEX_TEXCOORD_SIZE = 2; // tx, ty
-	static const uint8_t VERTEX_TINT_SIZE = 4; // rgba
-	static const uint8_t VERTEX_NORMAL_SIZE = 3; // x, y, z
-	static const uint8_t VERTEX_SIZE = VERTEX_COORD_SIZE + VERTEX_TEXCOORD_SIZE + VERTEX_TINT_SIZE + VERTEX_NORMAL_SIZE;
+	static constexpr uint8_t VERTEX_TEXCOORD_SIZE = 2; // tx, ty
+	static constexpr uint8_t VERTEX_TINT_SIZE = 4; // rgba
+	static constexpr uint8_t VERTEX_NORMAL_SIZE = 3; // x, y, z
+	static constexpr uint8_t VERTEX_SIZE = VERTEX_COORD_SIZE + VERTEX_TEXCOORD_SIZE + VERTEX_TINT_SIZE + VERTEX_NORMAL_SIZE;
 
 	Render( const size_t vertex_count, const size_t surface_count );
 	

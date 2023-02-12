@@ -247,6 +247,9 @@ void Lobby::Iterate() {
 								}
 								break;
 							}
+							default: {
+								ASSERT(false, "unknown network role " + std::to_string(m_mainmenu->m_settings.local.network_role));
+							}
 						}
 					}
 				}

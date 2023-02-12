@@ -14,7 +14,9 @@
 #include <windows.h>
 
 // static link glew, otherwise there are linker errors
+#ifndef GLEW_STATIC
 #define GLEW_STATIC
+#endif
 
 // fix collisions with windows libraries
 #undef CM_NONE

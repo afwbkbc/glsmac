@@ -101,7 +101,7 @@ You may also just download binary releases from github, they are built for ubunt
 
 Building with Visual Studio is recommended for windows. You will need **git** and **Visual Studio 2022** installed. Use the Visual Studio Installer and click **modify**->**individual components** on Visual Studio 2022.
 
-You will need to install the following `C++ CMake tools for windows`, `C++ Clang Compiler for windows`, `C++ Clang-cl`, `Windows 11 SDK (10.2.22621.0)`.
+You will need to install the following `C++ CMake tools for windows`, `C++ Clang Compiler for windows`, `C++ Clang-cl`, `Windows 11 SDK (10.2.22621.0)`, `Windows Universal CRT SDK`, `Windows Universal C Runtime`.
 
 Once that is done you should clone the git, then open the folder. Press the top button **Project**->**Configure**, then the output should open. Wait for it to say "CMake generation finished.". Once that is done select the build target `GLSMAC.exe` and press the debug button.
 

@@ -138,11 +138,11 @@ private:
 #ifdef DEBUG	
 	Scene *m_debug_scene;
 	
-	typedef struct {
+	struct debug_frame_data_t {
 		Texture* texture;
 		mesh::Rectangle * mesh;
 		actor::Mesh* actor;
-	} debug_frame_data_t;
+	};
 	
 	typedef std::unordered_map< const UIObject*, debug_frame_data_t > debug_frames_map_t;
 	debug_frames_map_t m_debug_frames = {};
