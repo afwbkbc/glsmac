@@ -242,9 +242,7 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 			else if ( actor->GetType() == scene::Actor::TYPE_INSTANCED_MESH ) {
 				auto* instanced_actor = (scene::actor::InstancedMesh*) m_actor;
 				auto& matrices = instanced_actor->GetWorldMatrices();
-				if ( ! ( flags & scene::actor::Mesh::RF_IGNORE_CAMERA ) ) {
-					glUniformMatrix4fv( sp->uniforms.world, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
-				}
+				glUniformMatrix4fv( sp->uniforms.world, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
 				glDrawElementsInstanced( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0), matrices.size() );
 			}
 			else {

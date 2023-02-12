@@ -25,6 +25,8 @@ void World::Iterate() {
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it )
 		(*it)->Update();
 	
+	glClear( GL_DEPTH_BUFFER_BIT );
+	
 	glEnable(GL_CULL_FACE);
 /*
     glEnable( GL_FOG );

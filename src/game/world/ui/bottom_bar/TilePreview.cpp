@@ -46,11 +46,11 @@ void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
 	coords.center = { 0.0f, 0.0f, 0.0f };
 	*/
 	Map::tile_vertices_t coords = {
-		{ 0.5f, 0.5f, 0.0f }, // center
-		{ 0.0f, 0.5f, 0.0f }, // left
-		{ 0.5f, 0.0f, 0.0f }, // top
-		{ 1.0f, 0.5f, 0.0f }, // right
-		{ 0.5f, 1.0f, 0.0f }, // bottom
+		{ 0.0f, 0.0f, 1.0f }, // center
+		{ -0.5f, 0.0f, 1.0f }, // left
+		{ 0.0f, -0.5f, 1.0f }, // top
+		{ 0.5f, 0.0f, 1.0f }, // right
+		{ 0.0f, 0.5f, 1.0f }, // bottom
 	};
 	
 	
@@ -69,7 +69,7 @@ void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
 		NEWV( mesh, mesh::Render, 5, 4 );
 	
 		// copy texcoords from tile
-		#define x( _k ) auto _k = mesh->AddVertex( coords._k, ts->layers[ lt ].tex_coords._k )
+		#define x( _k ) auto _k = mesh->AddVertex( coords._k, ts->layers[ lt ].tex_coords._k, { 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 0.5f, 0.7f } )
 			x( center );
 			x( left );
 			x( top );
@@ -84,7 +84,7 @@ void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
 			x( center, bottom, left );
 		#undef x
 
-		//mesh->Finalize();
+		mesh->Finalize();
 
 		NEWV( preview, object::Mesh, "MapBottomBarTilePreviewImage" );
 			// TODO preview->SetAspectRatioMode( object::Mesh::AM_SCALE_HEIGHT );

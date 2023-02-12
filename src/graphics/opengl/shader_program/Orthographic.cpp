@@ -23,7 +23,12 @@ out vec3 fragpos; \
 out vec3 normal; \
 \
 void main(void) { \
-	gl_Position = uWorld[ gl_InstanceID ] * vec4( aCoord, 1.0 ); \
+	if ( " + S_HasFlag( "uFlags", actor::Mesh::RF_IGNORE_CAMERA ) + " ) { \
+		gl_Position = vec4( aCoord, 1.0 ); \
+	} \
+	else { \
+		gl_Position = uWorld[ gl_InstanceID ] * vec4( aCoord, 1.0 ); \
+	} \
 	texpos = vec2( aTexCoord.xy ); \
 	tintcolor = aTintColor; \
 	fragpos = aCoord; \

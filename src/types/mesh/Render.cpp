@@ -67,6 +67,11 @@ void Render::SetVertexNormal( const index_t index, const Vec3& normal ) {
 	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + ( VERTEX_COORD_SIZE + VERTEX_TEXCOORD_SIZE + VERTEX_TINT_SIZE ) * sizeof( coord_t ), sizeof( normal ) ), &normal, sizeof( normal ) );
 }
 
+void Render::GetVertexTexCoord( const index_t index, Vec2<coord_t>* coord ) const {
+	ASSERT( index < m_vertex_count, "index out of bounds" );
+	memcpy( coord, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( Vec2<coord_t> ) ), sizeof( Vec2<coord_t> ) );
+}
+
 const Vec3 Render::GetVertexNormal( const index_t index ) const {
 	ASSERT( index < m_vertex_count, "index out of bounds" );
 	Vec3 normal;

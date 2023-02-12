@@ -82,7 +82,7 @@ void Mesh::Finalize() {
 
 void Mesh::GetVertexCoord( const index_t index, Vec3* coord ) const {
 	ASSERT( index < m_vertex_count, "index out of bounds" );
-	memcpy( coord, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord ) ), sizeof( coord ) );
+	memcpy( coord, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( Vec3 ) ), sizeof( Vec3 ) );
 }
 
 const size_t Mesh::GetVertexCount() const {

@@ -49,7 +49,7 @@ void Simple::SetVertexTexCoord( const index_t index, const Vec2<coord_t> &tex_co
 
 void Simple::GetVertexTexCoord( const index_t index, Vec2<coord_t>* coord ) const {
 	ASSERT( index < m_vertex_count, "index out of bounds" );
-	memcpy( coord, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( coord ) ), sizeof( coord ) );
+	memcpy( coord, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( Vec2<coord_t> ) ), sizeof( Vec2<coord_t> ) );
 }
 
 }

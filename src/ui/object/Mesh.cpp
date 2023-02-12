@@ -123,39 +123,57 @@ void Mesh::Align() {
 	
 	bool is_render_mesh = m_mesh->GetType() == types::mesh::Mesh::MT_RENDER;
 	
-	object_area_to_mesh_coords.x.SetRange( UnclampX( mesh_left ), UnclampX( mesh_right ), m_object_area.left, m_object_area.right );
-	object_area_to_mesh_coords.y.SetRange( UnclampY( mesh_top ), UnclampY( mesh_bottom ), m_object_area.top, m_object_area.bottom );
-
 	if ( is_render_mesh ) {
-		Log( "BEGIN (area: "
+		Log( "BEGIN ( area: "
 			+ std::to_string( m_object_area.left ) + "x" + std::to_string( m_object_area.top )
 			+ std::to_string( m_object_area.top ) + "x" + std::to_string( m_object_area.bottom )
-			+ ")"
+			+ ", vertex size: " + std::to_string( m_mesh->VERTEX_SIZE ) + " )"
 		);
+		auto tmp = mesh_bottom;
+		mesh_bottom = mesh_top;
+		mesh_top = tmp;
 	}
+	
+	object_area_to_mesh_coords.x.SetRange( UnclampX( mesh_left ), UnclampX( mesh_right ), m_object_area.left, m_object_area.right );
+	object_area_to_mesh_coords.y.SetRange( UnclampY( mesh_top ), UnclampY( mesh_bottom ), m_object_area.top, m_object_area.bottom );
 	
 	for ( types::mesh::Mesh::index_t i = 0 ; i < c ; i++ ) {
 		m_original_mesh->GetVertexCoord( i, &coord );
 		
-		if ( is_render_mesh ) {
-			Log( "FROM: " + std::to_string( coord.x ) + "x" + std::to_string( coord.y ) );
+		/*if ( is_render_mesh ) {
+			Log( (std::string) "FROM: "
+				+ std::to_string( coord.x ) + "x" + std::to_string( coord.y ) + " ( "
+				+ std::to_string( UnclampX( coord.x ) ) + "x" + std::to_string( UnclampY( coord.y ) ) + " )"
+				+ " z=" + std::to_string( coord.z )
+			);
 			coord.x = ClampX( object_area_to_mesh_coords.x.Clamp( UnclampX( coord.x ) ) );
 			coord.y = ClampY( object_area_to_mesh_coords.y.Clamp( UnclampY( coord.y ) ) );
-			Log( "TO: " + std::to_string( coord.x ) + "x" + std::to_string( coord.y ) );
+			
+			Log( (std::string) "TO: "
+				+ std::to_string( coord.x ) + "x" + std::to_string( coord.y ) + " ( "
+				+ std::to_string( UnclampX( coord.x ) ) + "x" + std::to_string( UnclampY( coord.y ) ) + " )"
+				+ " z=" + std::to_string( coord.z )
+			);
 		}
-		else {
+		else {*/
 			coord.x = ClampX( object_area_to_mesh_coords.x.Clamp( UnclampX( coord.x ) ) );
 			coord.y = ClampY( object_area_to_mesh_coords.y.Clamp( UnclampY( coord.y ) ) );
-		}
+		//}
 		
 		m_mesh->SetVertexCoord( i, coord );
 
 		ASSERT( m_mesh->GetType() == m_original_mesh->GetType(), "mesh and original mesh have different types" );
 		switch ( m_mesh->GetType() ) {
-			case types::mesh::Mesh::MT_SIMPLE:
-			case types::mesh::Mesh::MT_RENDER: {
+			case types::mesh::Mesh::MT_SIMPLE: {
 				auto *from = (types::mesh::Simple*) m_original_mesh;
 				auto *to = (types::mesh::Simple*) m_mesh;
+				from->GetVertexTexCoord( i, &tex_coord );
+				to->SetVertexTexCoord( i, tex_coord );
+				break;
+			}
+			case types::mesh::Mesh::MT_RENDER: {
+				auto *from = (types::mesh::Render*) m_original_mesh;
+				auto *to = (types::mesh::Render*) m_mesh;
 				from->GetVertexTexCoord( i, &tex_coord );
 				to->SetVertexTexCoord( i, tex_coord );
 				break;
