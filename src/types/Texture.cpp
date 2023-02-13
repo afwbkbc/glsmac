@@ -195,50 +195,57 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 						uint32_t dst_pixel_color;
 						memcpy( &dst_pixel_color, to, m_bpp );
 
+						size_t range = ( mode & AM_GRADIENT_TIGHTER ) ? 1 : 2;
+						
 						float p = 0.0f;
+						
 						if ( mode & AM_GRADIENT_LEFT ) {
 							if ( mode & AM_GRADIENT_TOP ) {
 								if ( ( dx + dy ) < ( cx + cy ) ) {
-									p = ( (float)( ( cx + cy ) - ( dx + dy ) ) / ( w + h ) * 2 );
+									p = ( (float)( ( cx + cy ) - ( dx + dy ) ) / ( w + h ) * range );
 								}
 							}
 							else if ( mode & AM_GRADIENT_BOTTOM ) {
 								if ( ( dx + cy ) < ( cx + dy ) ) {
-									p = ( (float)( ( cx + dy ) - ( dx + cy ) ) / ( w + h ) * 2 );
+									p = ( (float)( ( cx + dy ) - ( dx + cy ) ) / ( w + h ) * range );
 								}
 							}
 							else {
 								if ( dx < cx ) {
-									p = (float)( cx - dx ) / w * 2;
+									p = (float)( cx - dx ) / w * range;
 								}
 							}
 						}
 						else if ( mode & AM_GRADIENT_RIGHT ) {
 							if ( mode & AM_GRADIENT_TOP ) {
 								if ( ( cx + dy ) < ( dx + cy ) ) {
-									p = ( (float)( ( dx + cy ) - ( cx + dy ) ) / ( w + h ) * 2 );
+									p = ( (float)( ( dx + cy ) - ( cx + dy ) ) / ( w + h ) * range );
 								}
 							}
 							else if ( mode & AM_GRADIENT_BOTTOM ) {
 								if ( ( cx + cy ) < ( dx + dy ) ) {
-									p = ( (float)( ( dx + dy ) - ( cx + cy ) ) / ( w + h ) * 2 );
+									p = ( (float)( ( dx + dy ) - ( cx + cy ) ) / ( w + h ) * range );
 								}
 							}
 							else {
 								if ( cx < dx ) {
-									p = (float)( dx - cx ) / w * 2;
+									p = (float)( dx - cx ) / w * range;
 								}
 							}
 						}
 						else if ( mode & AM_GRADIENT_TOP ) {
 							if ( dy < cy ) {
-								p = (float)( cy - dy ) / h * 2;
+								p = (float)( cy - dy ) / h * range;
 							}
 						}
 						else if ( mode & AM_GRADIENT_BOTTOM ) {
 							if ( cy < dy ) {
-								p = (float)( dy - cy ) / h * 2;
+								p = (float)( dy - cy ) / h * range;
 							}
+						}
+
+						if ( pixel_alpha < 1.0f ) {
+							p *= pixel_alpha;
 						}
 
 						pixel_color = (
@@ -248,16 +255,32 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 							(uint8_t)( (float)( pixel_color >> 24 & 0xff ) * p + (float)( dst_pixel_color >> 24 & 0xff ) * ( 1.0f - p ) ) << 24
 						);
 
-						if ( pixel_alpha < 1.0f ) {
-							*((uint8_t*)&pixel_color + 3 ) = (uint8_t)floor( pixel_alpha * 0xff );
-						}
-
 						memcpy( to, &pixel_color, m_bpp );
 					}
 					else {
 						memcpy( to, from, m_bpp );
 						if ( pixel_alpha < 1.0f ) {
-							*((uint8_t*)( to ) + 3) = (uint8_t)floor( pixel_alpha * 0xff );
+							if ( mode & AM_MERGE ) {
+								
+								// TODO: refactor
+								
+								uint32_t pixel_color;
+								memcpy( &pixel_color, from, m_bpp );
+								uint32_t dst_pixel_color;
+								memcpy( &dst_pixel_color, to, m_bpp );
+								
+								pixel_color =
+									(uint8_t)( (float)( pixel_color & 0xff ) * pixel_alpha + (float)( dst_pixel_color & 0xff ) * ( 1.0f - pixel_alpha ) ) |
+									(uint8_t)( (float)( pixel_color >> 8 & 0xff ) * pixel_alpha + (float)( dst_pixel_color >> 8 & 0xff ) * ( 1.0f - pixel_alpha ) ) << 8 |
+									(uint8_t)( (float)( pixel_color >> 16 & 0xff ) * pixel_alpha + (float)( dst_pixel_color >> 16 & 0xff ) * ( 1.0f - pixel_alpha ) ) << 16 |
+									(uint8_t)( (float)( pixel_color >> 24 & 0xff ) * pixel_alpha + (float)( dst_pixel_color >> 24 & 0xff ) * ( 1.0f - pixel_alpha ) ) << 24
+								;
+								
+								//*((uint8_t*)( to ) + 3 ) = (uint8_t)floor( pixel_alpha * 0xff + ( 1.0f - pixel_alpha ) * *((uint8_t*)( to ) + 3 ) );
+							}
+							else {
+								*((uint8_t*)( to ) + 3 ) = (uint8_t)floor( pixel_alpha * 0xff );
+							}
 						}
 					}
 				}

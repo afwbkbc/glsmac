@@ -125,7 +125,8 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 		}
 	}
 	
-	// fix some rare elevation glitches // TODO: investigate why it happens
+	// fix some rare elevation glitches (slightly positive elevations on water tiles, slightly negative on land tiles)
+	// TODO: investigate why it happens
 	if (
 		( tile->is_water_tile && *tile->elevation.center > 0 ) ||
 		( !tile->is_water_tile && *tile->elevation.center < 0 )

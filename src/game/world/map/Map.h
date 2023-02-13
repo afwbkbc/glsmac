@@ -16,10 +16,6 @@
 using namespace types;
 using namespace scene;
 
-// for development/debug only
-#define WIREFRAMES 0
-#define WIREFRAMES_GRADIENTS 0
-
 namespace game {
 namespace world {
 namespace map {
@@ -138,7 +134,7 @@ CLASS( Map, Serializable )
 	
 	// order is important (it defines rendering order)
 	enum tile_layer_type_t {
-		LAYER_LAND, // land tiles
+		LAYER_LAND, // land tiles, includes edge-smoothed moisture textures
 		LAYER_WATER_SURFACE, // water tiles (alpha surface with gradients)
 		LAYER_WATER_SURFACE_EXTRA, // extra textures/effects for water tiles
 		LAYER_WATER, // sea (for non-alpha objects on water)
@@ -230,6 +226,7 @@ CLASS( Map, Serializable )
 		} data_mesh;
 		bool is_coastline_corner;
 		bool has_water;
+		Texture* moisture_original;
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
 	};
@@ -278,6 +275,9 @@ CLASS( Map, Serializable )
 	void CopyTextureFromLayer( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile_layer_type_t tile_layer, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha = 1.0f );
 	void CopyTexture( const tile_layer_type_t tile_layer_from, const tile_layer_type_t tile_layer, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha = 1.0f );
 	void CopyTextureDeferred( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from,const tile_layer_type_t tile_layer, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha = 1.0f );
+	void GetTexture( Texture* dest_texture, const pcx_texture_coordinates_t& tc, const Texture::add_mode_t mode, const uint8_t rotate = 0, const float alpha = 1.0f );
+	void SetTexture( const tile_layer_type_t tile_layer, Texture* src_texture, const Texture::add_mode_t mode, const uint8_t rotate = 0, const float alpha = 1.0f );
+
 	enum tile_grouping_criteria_t {
 		TG_MOISTURE,
 		TG_FEATURE,
@@ -349,7 +349,8 @@ private:
 	tile_state_t* m_current_ts = nullptr;
 	Tile* m_current_tile = nullptr;
 
-	std::vector< Module* > m_modules;
+	typedef std::vector< Module* > module_pass_t;
+	std::vector< module_pass_t > m_modules;
 };
 
 }

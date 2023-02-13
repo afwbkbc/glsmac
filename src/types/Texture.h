@@ -48,6 +48,7 @@ CLASS( Texture, Serializable )
 	static constexpr add_mode_t AM_GRADIENT_TOP = 1 << 9;
 	static constexpr add_mode_t AM_GRADIENT_RIGHT = 1 << 10;
 	static constexpr add_mode_t AM_GRADIENT_BOTTOM = 1 << 11;
+	static constexpr add_mode_t AM_GRADIENT_TIGHTER = 1 << 12; // gradient range is twice smaller
 	
 	typedef uint8_t rotate_t;
 	static constexpr rotate_t ROTATE_0 = 0;
