@@ -8,6 +8,12 @@ namespace graphics {
 namespace opengl {
 namespace routine {
 
+Routine::Routine( OpenGL* opengl )
+	: m_opengl( opengl )
+{
+	//
+}
+
 bool Routine::AddScene( scene::Scene *scene ) {
 	if ( SceneBelongs( scene )) {
 		ASSERT( std::find( m_scenes.begin(), m_scenes.end(), scene ) == m_scenes.end(), "duplicate scene add" );

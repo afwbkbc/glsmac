@@ -6,6 +6,13 @@ namespace graphics {
 namespace opengl {
 namespace routine {
 
+Font::Font( OpenGL* opengl, shader_program::Font *shader_program )
+	: Routine( opengl )
+	, m_shader_program( shader_program )
+{
+	//
+}
+
 void Font::Start() {
 
 }

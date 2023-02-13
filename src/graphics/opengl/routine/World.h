@@ -13,7 +13,12 @@ namespace opengl {
 namespace routine {
 
 CLASS( World, Routine )
-	World( const scene::scene_type_t scene_type, shader_program::Orthographic* shader_program, shader_program::OrthographicData* data_shader_program );
+	World(
+		OpenGL* opengl,
+		const scene::scene_type_t scene_type,
+		shader_program::Orthographic* shader_program,
+		shader_program::OrthographicData* data_shader_program
+	);
 
 	bool SceneBelongs( const scene::Scene *scene ) const;
 

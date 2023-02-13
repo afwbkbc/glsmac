@@ -75,7 +75,7 @@ void Mesh::LoadMesh() {
 	glBufferData( GL_ARRAY_BUFFER, mesh->GetVertexDataSize(), (GLvoid *)ptr( mesh->GetVertexData(), 0, mesh->GetVertexDataSize() ), GL_STATIC_DRAW );
 
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ibo );
-	glBufferData( GL_ELEMENT_ARRAY_BUFFER, mesh->GetIndexDataSize(), (GLvoid *)ptr( mesh->GetIndexData(), 0, mesh->GetIndexDataSize() ), GL_STATIC_DRAW);
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, mesh->GetIndexDataSize(), (GLvoid *)ptr( mesh->GetIndexData(), 0, mesh->GetIndexDataSize() ), GL_STATIC_DRAW );
 
 	m_ibo_size = mesh->GetIndexCount();
 
@@ -143,8 +143,10 @@ void Mesh::PrepareDataMesh() {
 		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_data.depth_texture, 0 );
 		glBindTexture( GL_TEXTURE_2D, 0 );
 		
+#ifdef DEBUG
 		GLenum status = glCheckFramebufferStatus( GL_FRAMEBUFFER );
 		ASSERT( status == GL_FRAMEBUFFER_COMPLETE, "FB error, status: " + std::to_string( status ) );
+#endif
 		
 		glBindFramebuffer( GL_FRAMEBUFFER, 0 );	
 

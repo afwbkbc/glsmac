@@ -15,9 +15,13 @@ class OpenGL;
 namespace routine {
 
 CLASS( Routine, base::Module )
+	
+	Routine( OpenGL* opengl );
+	~Routine();
+	
 	bool AddScene( scene::Scene *scene );
 	bool RemoveScene( scene::Scene *scene );
-	~Routine();
+	
 	virtual opengl::Actor *AddCustomActor( scene::actor::Actor *actor ) {
 		return NULL;
 	}
@@ -28,8 +32,10 @@ CLASS( Routine, base::Module )
 protected:
 	friend class opengl::OpenGL;
 
-	std::vector< scene::Scene* > m_scenes;
-	std::vector< opengl::Scene* > m_gl_scenes;
+	OpenGL* m_opengl = nullptr;
+	
+	std::vector< scene::Scene* > m_scenes = {};
+	std::vector< opengl::Scene* > m_gl_scenes = {};
 	virtual bool SceneBelongs( const scene::Scene *scene ) const = 0;
 };
 

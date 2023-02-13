@@ -285,6 +285,9 @@ private:
 	Style::modifier_t m_style_modifiers = Style::M_NONE;
 	
 	event_handlers_t m_event_handlers = {};
+
+	// redraws overlay
+	void Refresh();
 	
 };
 
@@ -292,4 +295,3 @@ private:
 } /* namespace ui */
 
 #include "UIContainer.h"
-

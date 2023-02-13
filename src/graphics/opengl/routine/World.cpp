@@ -4,8 +4,14 @@ namespace graphics {
 namespace opengl {
 namespace routine {
 
-World::World( const scene::scene_type_t scene_type, shader_program::Orthographic* shader_program, shader_program::OrthographicData* data_shader_program )
-	: m_scene_type( scene_type )
+World::World(
+	OpenGL* opengl,
+	const scene::scene_type_t scene_type,
+	shader_program::Orthographic* shader_program,
+	shader_program::OrthographicData* data_shader_program
+)
+	: Routine( opengl )
+	, m_scene_type( scene_type )
 	, m_shader_program( shader_program )
 	, m_data_shader_program( data_shader_program )
 {

@@ -70,11 +70,12 @@ void UIObject::Iterate() {
 }
 
 void UIObject::Align() {
-	
+	Refresh();
 }
 
 void UIObject::Draw() {
 	ApplyStyleIfNeeded();
+	Refresh();
 }
 
 UIObject *UIObject::GetParentObject() const {
@@ -800,6 +801,10 @@ void UIObject::SetFocusable( bool is_focusable ) {
 			g_engine->GetUI()->RemoveFromFocusableObjects( this );
 		}
 	}
+}
+
+void UIObject::Refresh() {
+	g_engine->GetUI()->Redraw(); // TODO: partial updates
 }
 
 } /* namespace object */

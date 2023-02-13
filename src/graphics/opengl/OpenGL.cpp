@@ -39,26 +39,21 @@ OpenGL::OpenGL( const std::string title, const unsigned short viewport_width, co
 	NEWV( r_world, routine::World, sp_world );
 	m_routines.push_back( r_world );
 */
-	NEWV( sp_orthographic, shader_program::Orthographic );
-	m_shader_programs.push_back( sp_orthographic );
-	NEWV( sp_orthographic_data, shader_program::OrthographicData );
-	m_shader_programs.push_back( sp_orthographic_data );
-
-	NEWV( r_world, routine::World, scene::SCENE_TYPE_ORTHO, sp_orthographic, sp_orthographic_data );
-	m_routines.push_back( r_world );
 	
-	NEWV( sp_simple2d, shader_program::Simple2D );
-	m_shader_programs.push_back( sp_simple2d );
-	NEWV( r_overlay, routine::Overlay, sp_simple2d );
-	m_routines.push_back( r_overlay );
+	// shader programs
+	NEWV( sp_orthographic, shader_program::Orthographic ); m_shader_programs.push_back( sp_orthographic );
+	NEWV( sp_orthographic_data, shader_program::OrthographicData ); m_shader_programs.push_back( sp_orthographic_data );
+	NEWV( sp_simple2d, shader_program::Simple2D ); m_shader_programs.push_back( sp_simple2d );
+	NEWV( sp_font, shader_program::Font ); m_shader_programs.push_back( sp_font );
 
-	NEWV( r_world_ui, routine::World, scene::SCENE_TYPE_ORTHO_UI, sp_orthographic, sp_orthographic_data );
-	m_routines.push_back( r_world_ui );
-
-	NEWV( sp_font, shader_program::Font );
-	m_shader_programs.push_back( sp_font );
-	NEWV( r_font, routine::Font, sp_font );
-	m_routines.push_back( r_font );
+	// routines ( order is important )
+	NEWV( r_world, routine::World, this, scene::SCENE_TYPE_ORTHO, sp_orthographic, sp_orthographic_data ); m_routines.push_back( r_world );
+	NEWV( r_overlay, routine::Overlay, this, sp_simple2d ); m_routines.push_back( r_overlay );
+	NEWV( r_world_ui, routine::World, this, scene::SCENE_TYPE_ORTHO_UI, sp_orthographic, sp_orthographic_data ); m_routines.push_back( r_world_ui );
+	NEWV( r_font, routine::Font, this, sp_font ); m_routines.push_back( r_font );
+	
+	// some routines are special
+	m_routine_overlay = r_overlay;
 }
 
 OpenGL::~OpenGL() {
@@ -232,8 +227,20 @@ void OpenGL::RemoveScene( scene::Scene *scene ) {
 	ASSERT( removed, "no matching routine for scene [" + scene->GetName() + "]" );
 }
 
+const unsigned short OpenGL::GetViewportWidth() const {
+	return m_options.viewport_width;
+}
+
+const unsigned short OpenGL::GetViewportHeight() const {
+	return m_options.viewport_height;
+}
+
 void OpenGL::OnResize() {
 	Graphics::OnResize();
+	
+	for ( auto& f : m_fbos ) {
+		f->Resize( m_options.viewport_width, m_options.viewport_height );
+	}
 	
 	for ( auto& r : m_routines ) {
 		r->OnResize();
@@ -296,6 +303,21 @@ void OpenGL::EnableTexture( const types::Texture* texture ) {
 
 void OpenGL::DisableTexture() {
 	glBindTexture( GL_TEXTURE_2D, 0 );
+}
+
+FBO* OpenGL::CreateFBO() {
+	NEWV( fbo, FBO, m_options.viewport_width, m_options.viewport_height );
+	Log( "Created FBO " + fbo->GetName() );
+	m_fbos.insert( fbo );
+	return fbo;
+}
+
+void OpenGL::DestroyFBO( FBO* fbo ) {
+	auto it = m_fbos.find( fbo );
+	ASSERT( it != m_fbos.end(), "fbo not found" );
+	m_fbos.erase( it );
+	Log( "Destroyed FBO " + fbo->GetName() );
+	DELETE( fbo );
 }
 
 void OpenGL::ResizeViewport( const size_t width, const size_t height ) {
@@ -371,6 +393,10 @@ void OpenGL::SetWindowed() {
 	SDL_SetWindowGrab( m_window, SDL_FALSE );
 	
 	ResizeViewport( m_window_size.width, m_window_size.height );
+}
+
+void OpenGL::RedrawOverlay() {
+	m_routine_overlay->Redraw();
 }
 
 } /* namespace opengl */

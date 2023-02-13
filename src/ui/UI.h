@@ -87,6 +87,8 @@ CLASS( UI, base::Module )
 	
 	void FocusObject( UIObject* object );
 	
+	void Redraw();
+	
 #ifdef DEBUG
 	void ShowDebugFrame( const UIObject* object );
 	void HideDebugFrame( const UIObject* object );
@@ -116,6 +118,8 @@ protected:
 	themes_t m_themes = {};
 	
 private:
+	
+	bool m_is_redraw_needed = false;
 	
 	types::Matrix44 m_world_ui_matrix = {};
 

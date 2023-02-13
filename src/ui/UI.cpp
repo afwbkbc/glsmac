@@ -157,6 +157,12 @@ void UI::Iterate() {
 	for ( auto& it : m_iterative_objects ) {
 		it.second();
 	}
+	
+	if ( m_is_redraw_needed ) {
+		Log( "Redrawing UI" );
+		g_engine->GetGraphics()->RedrawOverlay();
+		m_is_redraw_needed = false;
+	}
 }
 
 void UI::TriggerGlobalEventHandlers( global_event_handler_order_t order, UIEvent* event ) {
@@ -364,6 +370,9 @@ void UI::UnblockEvents() {
 	m_root_object.UnblockEvents();
 }
 
+void UI::Redraw() {
+	m_is_redraw_needed = true;
+}
 
 #ifdef DEBUG
 void UI::ShowDebugFrame( const UIObject* object ) {
