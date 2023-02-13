@@ -93,6 +93,7 @@ CLASS( Map, Serializable )
 			} radius;
 			const float rotated_width = sqrt( pow( s_consts.tile.scale.x, 2 ) + pow( s_consts.tile.scale.y, 2 ) );
 			const Tile::elevation_t maximum_allowed_slope_elevation = 800;
+			const float texture_stretch_randomness = 2.0f;
 		} tile;
 		const struct {
 			const struct {
@@ -214,6 +215,16 @@ CLASS( Map, Serializable )
 			float x2;
 			float y2;
 		} tex_coord;
+		// links to neighbours
+		tile_state_t* W;
+		tile_state_t* NW;
+		tile_state_t* N;
+		tile_state_t* NE;
+		tile_state_t* E;
+		tile_state_t* SE;
+		tile_state_t* S;
+		tile_state_t* SW;
+		// coordinates etc
 		tile_elevations_t elevations;
 		tile_layer_t layers[ LAYER_MAX ];
 		struct {
@@ -224,9 +235,11 @@ CLASS( Map, Serializable )
 			tile_vertices_t coords;
 			tile_indices_t indices;
 		} data_mesh;
+		// visual traits
 		bool is_coastline_corner;
 		bool has_water;
 		Texture* moisture_original;
+		Vec2< mesh::Mesh::coord_t > texture_stretch; // each tile has only one 'own' stretch value (for bottom vertex), others are copied from neighbours
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
 	};
@@ -339,6 +352,8 @@ private:
 	struct {
 		scene::actor::Mesh* terrain = nullptr;
 	} m_actors;
+	
+	void LinkTileStates();
 	
 	void GenerateActors();
 	

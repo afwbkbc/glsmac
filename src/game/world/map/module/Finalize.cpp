@@ -37,6 +37,7 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 				do_x();
 			#undef x
 		}
+		
 		#define x( _k ) tex_coords._k = ts->layers[ lt ].tex_coords._k = { \
 				ts->layers[ lt ].tex_coords._k.x * ms->variables.texture_scaling.x, \
 				( ts->layers[ lt ].tex_coords._k.y + lt * ms->dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y ) * ms->variables.texture_scaling.y \

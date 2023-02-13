@@ -56,6 +56,8 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 			
 			float ratio = t->moisture == Tile::M_RAINY ? 0.7f : 0.5f;
 			
+			ratio = 1.0f;
+			
 			m_map->SetTexture( Map::LAYER_LAND, src, Texture::AM_MERGE | Texture::AM_GRADIENT_TIGHTER | add_mode, 0, ratio );
 		}
 	}

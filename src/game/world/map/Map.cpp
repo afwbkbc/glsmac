@@ -161,6 +161,51 @@ std::vector<actor::Mesh*> Map::GetActors() const {
 }
 #endif
 
+void Map::LinkTileStates() {
+	Log( "Linking tile states" );
+	
+	// link to each other via pointers
+	// TODO: refactor this and Tiles
+	for ( auto y = 0 ; y < m_map_state.dimensions.y ; y++ ) {
+		for ( auto x = y & 1 ; x < m_map_state.dimensions.x ; x += 2 ) {
+			auto* ts = GetTileState( x, y );
+			ts->W = ( x >= 2 ) ? GetTileState( x - 2, y ) : GetTileState( m_map_state.dimensions.x - 1 - ( 1 - ( y % 2 ) ), y );
+			ts->NW = ( y >= 1 )
+				? ( ( x >= 1 )
+					? GetTileState( x - 1, y - 1 )
+					: GetTileState( m_map_state.dimensions.x - 1, y - 1 )
+				)
+				: ts
+			;
+			ts->N = ( y >= 2 ) ? GetTileState( x, y - 2 ) : ts;
+			ts->NE = ( y >= 1 )
+				? ( ( x < m_map_state.dimensions.x - 1 )
+					? GetTileState( x + 1, y - 1 )
+					: GetTileState( 0, y - 1 )
+				)
+				: ts
+			;
+			ts->E = ( x < m_map_state.dimensions.x - 2 ) ? GetTileState( x + 2, y ) : GetTileState( y % 2, y );
+			ts->SE = ( y < m_map_state.dimensions.y - 1 )
+				? ( ( x < m_map_state.dimensions.x - 1 )
+					? GetTileState( x + 1, y + 1 )
+					: GetTileState( 0, y + 1 )
+				)
+				: ts
+			;
+			ts->S = ( y < m_map_state.dimensions.y - 2 ) ? GetTileState( x, y + 2 ) : ts;
+			ts->SW = ( y < m_map_state.dimensions.y - 1 )
+				? ( ( x >= 1 )
+					? GetTileState( x - 1, y + 1 )
+					: GetTileState( m_map_state.dimensions.x - 1, y + 1 )
+				)
+				: ts
+			;
+
+		}
+	}
+}
+
 void Map::GenerateActors() {
 	ASSERT( m_tiles, "map tiles not set" );
 	m_tiles->Validate();
@@ -180,6 +225,8 @@ void Map::GenerateActors() {
 	size_t sz = m_map_state.dimensions.y * m_map_state.dimensions.x;
 	m_tile_states = (tile_state_t*)malloc( sizeof( tile_state_t ) * sz );
 	memset( ptr( m_tile_states, 0, sz ), 0, sz );
+	
+	LinkTileStates();
 	
 	if ( m_actors.terrain ) {
 		m_scene->RemoveActor( m_actors.terrain );
@@ -543,6 +590,8 @@ const Buffer Map::tile_state_t::Serialize() const {
 	
 	buf.WriteString( moisture_original->Serialize().ToString() );
 	
+	buf.WriteVec2f( texture_stretch );
+	
 	return buf;
 }
 
@@ -634,6 +683,8 @@ void Map::Unserialize( Buffer buf ) {
 	m_tile_states = (tile_state_t*)malloc( sizeof( tile_state_t ) * sz );
 	memset( ptr( m_tile_states, 0, sz ), 0, sz );
 	
+	LinkTileStates();
+	
 	for ( auto y = 0 ; y < m_map_state.dimensions.y ; y++ ) {
 		for ( auto x = 0; x < m_map_state.dimensions.x ; x++ ) {
 			if ( ( x % 2 ) != ( y % 2 ) ) {
@@ -700,6 +751,8 @@ void Map::tile_state_t::Unserialize( Buffer buf ) {
 	
 	NEW( moisture_original, Texture, "Moisture", Map::s_consts.pcx_texture_block.dimensions.x, Map::s_consts.pcx_texture_block.dimensions.y );
 	moisture_original->Unserialize( buf.ReadString() );
+
+	texture_stretch = buf.ReadVec2f();
 }
 
 void Map::tile_elevations_t::Unserialize( Buffer buf ) {
