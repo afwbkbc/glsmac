@@ -9,6 +9,8 @@ void BottomBar::AddStyles() {
 	
 	SetPrefix( "MapBottomBar" );
 	
+	// frame
+	
 	AddStyle( "", SH() {
 		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM );
 		s->Set( ::Style::A_HEIGHT, 256 );
@@ -40,6 +42,35 @@ void BottomBar::AddStyles() {
 	AddStyle( "FrameBackground", SH() {
 		s->SetTexture( ::Style::A_TEXTURE, "interface.pcx", 86, 665, 109, 688 );
 	});
+	
+	AddStyle( "Section", SH() {
+		s->Set( ::Style::A_BORDER_WIDTH, 3 );
+	});
+	
+	AddStyle( "SectionOuter", { "Section" }, SH() {
+		s->SetTexture( ::Style::A_TEXTURE_BORDER_LEFT, "interface.pcx", 40, 275, 42, 298 );
+		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LT, "interface.pcx", 40, 268, 42, 270 );
+		s->SetTexture( ::Style::A_TEXTURE_BORDER_TOP, "interface.pcx", 47, 268, 70, 270 );
+		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_RT, "interface.pcx", 75, 268, 77, 270 );
+		s->SetTexture( ::Style::A_TEXTURE_BORDER_RIGHT, "interface.pcx", 75, 275, 77, 298 );
+		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_RB, "interface.pcx", 75, 303, 77, 305 );
+		s->SetTexture( ::Style::A_TEXTURE_BORDER_BOTTOM, "interface.pcx", 47, 303, 70, 305 );
+		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LB, "interface.pcx", 40, 303, 42, 305 );
+	});
+	
+	AddStyle( "SectionInner", { "Section" }, SH() {
+		s->SetTexture( ::Style::A_TEXTURE_BORDER_LEFT, "interface.pcx", 1, 275, 3, 298 );
+		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LT, "interface.pcx", 1, 268, 3, 270 );
+		s->SetTexture( ::Style::A_TEXTURE_BORDER_TOP, "interface.pcx", 8, 268, 31, 270 );
+		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_RT, "interface.pcx", 36, 268, 38, 270 );
+		s->SetTexture( ::Style::A_TEXTURE_BORDER_RIGHT, "interface.pcx", 36, 275, 38, 298 );
+		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_RB, "interface.pcx", 36, 303, 38, 305 );
+		s->SetTexture( ::Style::A_TEXTURE_BORDER_BOTTOM, "interface.pcx", 8, 303, 31, 305 );
+		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LB, "interface.pcx", 1, 303, 3, 305 );
+		s->SetTexture( ::Style::A_TEXTURE_BACK, "interface.pcx", 86, 548, 109, 571 );
+	});
+	
+	// buttons
 	
 	AddStyle( "Button", SH() {
 		s->Set( ::Style::A_WIDTH, 108 );
@@ -78,47 +109,37 @@ void BottomBar::AddStyles() {
 		s->Set( ::Style::A_SOUND_VOLUME, 0.2 );
 	});
 	
-	AddStyle( "Section", SH() {
-		s->Set( ::Style::A_BORDER_WIDTH, 3 );
-	});
+	// unit preview
 	
-	AddStyle( "SectionOuter", { "Section" }, SH() {
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_LEFT, "interface.pcx", 40, 275, 42, 298 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LT, "interface.pcx", 40, 268, 42, 270 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_TOP, "interface.pcx", 47, 268, 70, 270 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_RT, "interface.pcx", 75, 268, 77, 270 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_RIGHT, "interface.pcx", 75, 275, 77, 298 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_RB, "interface.pcx", 75, 303, 77, 305 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_BOTTOM, "interface.pcx", 47, 303, 70, 305 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LB, "interface.pcx", 40, 303, 42, 305 );
-	});
-	
-	AddStyle( "SectionInner", { "Section" }, SH() {
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_LEFT, "interface.pcx", 1, 275, 3, 298 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LT, "interface.pcx", 1, 268, 3, 270 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_TOP, "interface.pcx", 8, 268, 31, 270 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_RT, "interface.pcx", 36, 268, 38, 270 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_RIGHT, "interface.pcx", 36, 275, 38, 298 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_RB, "interface.pcx", 36, 303, 38, 305 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_BOTTOM, "interface.pcx", 8, 303, 31, 305 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LB, "interface.pcx", 1, 303, 3, 305 );
-		s->SetTexture( ::Style::A_TEXTURE_BACK, "interface.pcx", 86, 548, 109, 571 );
-	});
-	
-	AddStyle( "TilePreview", SH() {
-		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_LEFT );
-		s->Set( ::Style::A_LEFT, 140 );
+	AddStyle( "UnitPreview", SH() {
+		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
 		s->Set( ::Style::A_TOP, 58 );
 		s->Set( ::Style::A_BOTTOM, 6 );
-		s->Set( ::Style::A_WIDTH, 103 );
-		
+		s->Set( ::Style::A_LEFT, 5 );
+		s->Set( ::Style::A_WIDTH, 136 );
+	});
+	
+	// tile preview
+	
+	AddStyle( "TilePreview", SH() {
+		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+		s->Set( ::Style::A_TOP, 58 );
+		s->Set( ::Style::A_BOTTOM, 6 );
+		s->Set( ::Style::A_LEFT, 139 );
+		s->Set( ::Style::A_WIDTH, 105 );
 	});
 
 	AddStyle( "TilePreviewImage", SH() {
+		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_HCENTER );
 		s->Set( ::Style::A_TOP, 2 );
-		s->Set( ::Style::A_LEFT, 2 );
-		s->Set( ::Style::A_RIGHT, 2 );
-		s->Set( ::Style::A_HEIGHT, 52 );
+		
+		/* classic */
+		/*s->Set( ::Style::A_WIDTH, 84 );
+		s->Set( ::Style::A_HEIGHT, 52 );*/
+		
+		/* topdown */
+		s->Set( ::Style::A_WIDTH, 84 );
+		s->Set( ::Style::A_HEIGHT, 84 );
 	});
 	
 	AddStyle( "TilePreviewText", SH() {
@@ -137,15 +158,35 @@ void BottomBar::AddStyles() {
 		s->Set( ::Style::A_RIGHT, 2 );
 		s->Set( ::Style::A_BOTTOM, 6 );
 	});
-	
-	AddStyle( "UnitPreview", SH() {
-		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_LEFT );
-		s->Set( ::Style::A_LEFT, 5 );
-		s->Set( ::Style::A_BOTTOM, 5 );
-		s->Set( ::Style::A_WIDTH, 135 );
-		s->Set( ::Style::A_HEIGHT, 196 );
+
+	// info panels at center
+	AddStyle( "InfoPanels", SH() {
+		s->Set( ::Style::A_LEFT, 262 );
+		s->Set( ::Style::A_TOP, 68 );
+		s->Set( ::Style::A_RIGHT, 262 );
+		s->Set( ::Style::A_BOTTOM, 85 );
 	});
 	
+	// units list at bottom
+	
+	AddStyle( "UnitsList", SH() {
+		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM );
+		s->Set( ::Style::A_BOTTOM, 6 );
+		s->Set( ::Style::A_LEFT, 242 );
+		s->Set( ::Style::A_RIGHT, 257 );
+		s->Set( ::Style::A_HEIGHT, 60 );
+	});
+	
+	// minimap
+	
+	AddStyle( "MiniMap", SH() {
+		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_RIGHT );
+		s->Set( ::Style::A_TOP, 58 );
+		s->Set( ::Style::A_BOTTOM, 6 );
+		s->Set( ::Style::A_RIGHT, 6 );
+		s->Set( ::Style::A_WIDTH, 238 );
+	});
+
 }
 
 }

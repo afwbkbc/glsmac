@@ -75,19 +75,26 @@ void BottomBar::Create() {
 	
 	// sections
 	
-	NEW( m_unit_preview, Section, "MapBottomBarUnitPreview" );
-	AddChild( m_unit_preview );
+	NEW( m_sections.unit_preview, UnitPreview, m_world );
+	AddChild( m_sections.unit_preview );
 	
-	NEW( m_tile_preview, TilePreview, m_world );
-	AddChild( m_tile_preview );
+	NEW( m_sections.tile_preview, TilePreview, m_world );
+	AddChild( m_sections.tile_preview );
+	
+	NEW( m_sections.info_panels, InfoPanels, m_world );
+	AddChild( m_sections.info_panels );
+	
+	NEW( m_sections.units_list, UnitsList, m_world );
+	AddChild( m_sections.units_list );
+	
+	NEW( m_sections.mini_map, MiniMap, m_world );
+	AddChild( m_sections.mini_map );
 }
 
 void BottomBar::Destroy() {
 	
 	RemoveChild( m_buttons.menu );
 	RemoveChild( m_buttons.commlink );
-	
-	RemoveChild( m_unit_preview );
 	
 	for ( auto& b : m_backgrounds ) {
 		RemoveChild( b );
@@ -97,17 +104,27 @@ void BottomBar::Destroy() {
 	RemoveChild( m_frames.middle );
 	RemoveChild( m_frames.right );
 	
-	RemoveChild( m_tile_preview );
+	RemoveChild( m_sections.unit_preview );
+	RemoveChild( m_sections.tile_preview );
+	RemoveChild( m_sections.info_panels );
+	RemoveChild( m_sections.mini_map );
+	RemoveChild( m_sections.units_list);
 	
 	UI::Destroy();
 }
 
+void BottomBar::Align() {
+	UI::Align();
+	
+	
+}
+
 void BottomBar::PreviewTile( const Map::tile_info_t& tile_info ) {
-	m_tile_preview->PreviewTile( tile_info );
+	m_sections.tile_preview->PreviewTile( tile_info );
 }
 
 void BottomBar::HideTilePreview() {
-	m_tile_preview->HideTilePreview();
+	m_sections.tile_preview->HideTilePreview();
 }
 
 }

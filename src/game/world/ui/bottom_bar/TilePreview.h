@@ -1,8 +1,7 @@
 #pragma once
 
-#include "../UI.h"
+#include "Section.h"
 
-#include "ui/object/Section.h"
 #include "ui/object/Mesh.h"
 #include "ui/object/Label.h"
 
@@ -15,9 +14,9 @@ using namespace map;
 
 namespace ui {
 
-CLASS( TilePreview, UI )
+CLASS( TilePreview, Section )
 
-	TilePreview( const World* world ) : UI( world, "MapBottomBarTilePreview" ) {}
+	TilePreview( const World* world ) : Section( world, "TilePreview" ) {}
 	
 	void Create();
 	void Destroy();
@@ -26,8 +25,6 @@ CLASS( TilePreview, UI )
 	void HideTilePreview();
 	
 private:
-	Section* m_outer = nullptr;
-	Section* m_inner = nullptr;
 	
 	std::vector< object::Mesh* > m_previews = {}; // multiple layers of textures
 	

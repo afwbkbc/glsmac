@@ -6,7 +6,12 @@
 #include "ui/object/Section.h"
 #include "ui/object/Button.h"
 
+// sections
+#include "UnitPreview.h"
 #include "TilePreview.h"
+#include "InfoPanels.h"
+#include "UnitsList.h"
+#include "MiniMap.h"
 
 namespace game {
 namespace world {
@@ -21,6 +26,7 @@ CLASS( BottomBar, UI )
 
 	void Create();
 	void Destroy();
+	void Align();
 	
 	void PreviewTile( const Map::tile_info_t& tile_info );
 	void HideTilePreview();
@@ -39,11 +45,16 @@ protected:
 		Button* commlink = nullptr;
 	} m_buttons;
 	
-	TilePreview* m_tile_preview = nullptr;
+	struct {
+		UnitPreview* unit_preview = nullptr;
+		TilePreview* tile_preview = nullptr;
+		InfoPanels* info_panels = nullptr;
+		UnitsList* units_list = nullptr;
+		MiniMap* mini_map = nullptr;
+	} m_sections;
 	
-	Section* m_unit_preview = nullptr;
 };
-	
+
 }
 }
 }

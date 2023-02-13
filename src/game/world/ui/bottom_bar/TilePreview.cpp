@@ -9,24 +9,14 @@ namespace world {
 namespace ui {
 
 void TilePreview::Create() {
-	UI::Create();
-	
-	NEW( m_outer, Section, "MapBottomBarSectionOuter" );
-	AddChild( m_outer );
-	
-	NEW( m_inner, Section, "MapBottomBarSectionInner" );
-	m_outer->AddChild( m_inner );
+	Section::Create();
 	
 }
 
 void TilePreview::Destroy() {
-	
 	HideTilePreview();
 	
-	m_outer->RemoveChild( m_inner );
-	RemoveChild( m_outer );
-	
-	UI::Destroy();
+	Section::Destroy();
 }
 
 void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
@@ -110,7 +100,7 @@ void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
 			preview->SetMesh( mesh );
 			preview->SetTexture( tile_info.ms->terrain_texture );
 		m_previews.push_back( preview );
-		m_inner->AddChild( preview );
+		AddChild( preview );
 		
 	}
 	
@@ -179,23 +169,23 @@ void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
 			label->SetText( line );
 			label->SetTop( label_top );
 		m_info_lines.push_back( label );
-		m_inner->AddChild( label );
+		AddChild( label );
 		label_top += label->GetHeight();
 	}
 	
 	NEWV( label, object::Label, "MapBottomBarTilePreviewTextFooter" );
 		label->SetText( "(" + std::to_string( tile->coord.x ) + "," + std::to_string( tile->coord.y ) + ")" );
 	m_info_lines.push_back( label );
-	m_inner->AddChild( label );
+	AddChild( label );
 }
 
 void TilePreview::HideTilePreview() {
 	for ( auto& label : m_info_lines ) {
-		m_inner->RemoveChild( label );
+		RemoveChild( label );
 	}
 	m_info_lines.clear();
 	for ( auto& preview : m_previews ) {
-		m_inner->RemoveChild( preview );
+		RemoveChild( preview );
 	}
 	m_previews.clear();
 }
