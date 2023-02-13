@@ -23,10 +23,15 @@ CLASS( StyleSheet, base::Base )
 	const std::vector< Style* > GetStyles();
 	Style* GetStylePtr( const std::string& style_name ) const;
 	
+protected:
+	void SetPrefix( const std::string& prefix );
+	
 private:
 	styles_t m_styles = {};
 	std::vector< std::string > m_styles_order = {};
 	bool m_is_initialized = false;
+	
+	std::string m_prefix = "";
 };
 
 }

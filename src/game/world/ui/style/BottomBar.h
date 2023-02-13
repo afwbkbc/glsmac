@@ -6,8 +6,8 @@ namespace game {
 namespace world {
 namespace ui {
 namespace style {
-			
-CLASS( Style, ::ui::theme::StyleSheet )
+
+CLASS( BottomBar, ::ui::theme::StyleSheet )
 	void AddStyles();
 };
 

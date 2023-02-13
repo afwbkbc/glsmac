@@ -101,7 +101,7 @@ private:
 	// UI stuff
 	
 	struct {
-		ui::Theme theme;
+		ui::style::Theme theme;
 		ui::BottomBar* bottom_bar = nullptr;
 	} m_ui;
 	
