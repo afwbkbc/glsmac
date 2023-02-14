@@ -32,7 +32,33 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 		#undef x
 		
 		vertices = ts->layers[ lt ].coords;
-		if ( lt != Map::LAYER_LAND ) {
+		if ( lt == Map::LAYER_LAND && !tile->is_water_tile ) {
+			
+			// smooth center vertices a bit and add some randomness
+			
+			auto& cw = ts->W->layers[ lt ].coords;
+			auto& cn = ts->N->layers[ lt ].coords;
+			auto& ce = ts->E->layers[ lt ].coords;
+			auto& cs = ts->S->layers[ lt ].coords;
+			vertices.center.z += (
+				( cw.right.z - cw.left.z ) +
+				( cn.bottom.z - cn.top.z ) +
+				( ce.left.z - ce.right.z ) +
+				( cs.top.z - cs.bottom.z )
+			) / 12;
+			
+			if (
+				( tile->is_water_tile && vertices.center.z > 0 ) ||
+				( !tile->is_water_tile && vertices.center.z < 0 )
+			) {
+				vertices.center.z *= -1.0f;
+			}
+			
+			vertices.center.x += m_map->GetRandom()->GetFloat( -Map::s_consts.tile.center_coordinates_randomness, Map::s_consts.tile.center_coordinates_randomness ) * 0.001f;
+			vertices.center.y += m_map->GetRandom()->GetFloat( -Map::s_consts.tile.center_coordinates_randomness, Map::s_consts.tile.center_coordinates_randomness ) * 0.001f;
+			
+		}
+		else if ( lt != Map::LAYER_LAND ) {
 			#define x( _k ) vertices._k.z = Map::s_consts.levels.water + Map::s_consts.tile_scale_z
 				do_x();
 			#undef x

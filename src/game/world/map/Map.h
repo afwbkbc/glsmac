@@ -94,6 +94,7 @@ CLASS( Map, Serializable )
 			const float rotated_width = sqrt( pow( s_consts.tile.scale.x, 2 ) + pow( s_consts.tile.scale.y, 2 ) );
 			const Tile::elevation_t maximum_allowed_slope_elevation = 800;
 			const float texture_stretch_randomness = 2.0f;
+			const float center_coordinates_randomness = 2.0f;
 		} tile;
 		const struct {
 			const struct {

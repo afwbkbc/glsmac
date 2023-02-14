@@ -239,7 +239,11 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 					glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&actor->GetTintColor() );
 				}
 			}
-
+			
+			if ( flags & actor::Mesh::RF_IGNORE_DEPTH ) {
+				glDisable( GL_DEPTH_TEST );
+			}
+			
 			const bool ignore_camera = ( flags & scene::actor::Mesh::RF_IGNORE_CAMERA );
 			if ( ignore_camera || actor->GetType() == scene::Actor::TYPE_MESH ) {
 				types::Matrix44 matrix = ignore_camera
@@ -259,6 +263,10 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 				ASSERT( false, "unknown actor type " + std::to_string( actor->GetType() ) );
 			}
 
+			if ( flags & actor::Mesh::RF_IGNORE_DEPTH ) {
+				glEnable( GL_DEPTH_TEST );
+			}
+			
 			break;
 		}
 		case ( shader_program::ShaderProgram::TYPE_PERSP ): {
