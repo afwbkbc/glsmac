@@ -256,8 +256,10 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 			else if ( actor->GetType() == scene::Actor::TYPE_INSTANCED_MESH ) {
 				auto* instanced_actor = (scene::actor::InstancedMesh*) m_actor;
 				auto& matrices = instanced_actor->GetWorldMatrices();
-				glUniformMatrix4fv( sp->uniforms.world, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
-				glDrawElementsInstanced( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0), matrices.size() );
+				for ( auto& matrix : matrices ) {
+					glUniformMatrix4fv( sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
+					glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
+				}
 			}
 			else {
 				ASSERT( false, "unknown actor type " + std::to_string( actor->GetType() ) );

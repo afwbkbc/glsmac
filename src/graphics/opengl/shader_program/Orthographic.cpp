@@ -9,13 +9,13 @@ namespace opengl {
 namespace shader_program {
 
 void Orthographic::AddShaders() {
-	AddShader( GL_VERTEX_SHADER, "#version 140 \n\
+	AddShader( GL_VERTEX_SHADER, "#version 130 \n\
 \
 in vec3 aCoord; \
 in vec2 aTexCoord; \
 in vec4 aTintColor; \
 in vec3 aNormal; \
-uniform mat4 uWorld[" + std::to_string( Graphics::MAX_WORLD_INSTANCES ) + "]; \
+uniform mat4 uWorld; \
 uniform uint uFlags; \
 out vec2 texpos; \
 out vec4 tintcolor; \
@@ -27,7 +27,7 @@ void main(void) { \
 		gl_Position = vec4( aCoord, 1.0 ); \
 	} \
 	else { \
-		gl_Position = uWorld[ gl_InstanceID ] * vec4( aCoord, 1.0 ); \
+		gl_Position = uWorld * vec4( aCoord, 1.0 ); \
 	} \
 	texpos = vec2( aTexCoord.xy ); \
 	tintcolor = aTintColor; \
@@ -36,7 +36,7 @@ void main(void) { \
 } \
 \
 ");
-	AddShader( GL_FRAGMENT_SHADER, "#version 140 \n\
+	AddShader( GL_FRAGMENT_SHADER, "#version 130 \n\
 \
 in vec2 texpos; \
 in vec4 tintcolor; \
