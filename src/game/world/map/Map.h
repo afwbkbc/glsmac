@@ -95,6 +95,10 @@ CLASS( Map, Serializable )
 			const Tile::elevation_t maximum_allowed_slope_elevation = 800;
 			const float texture_stretch_randomness = 2.0f;
 			const float center_coordinates_randomness = 2.0f;
+			struct {
+				Tile::elevation_t elevation_value = 10;
+				mesh::Mesh::coord_t z_value = 0.01f;
+			} puddle_bug_workaround;
 		} tile;
 		const struct {
 			const struct {
