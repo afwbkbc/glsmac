@@ -226,17 +226,29 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 			
 			auto flags = actor->GetRenderFlags();
 			
-			// non-world uniforms apply only to render mesh
-			if ( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO ) {
-				
-				auto* light = actor->GetScene()->GetLight();
-				if ( light ) {
-					glUniform3fv( sp->uniforms.light_pos, 1, (const GLfloat*)&light->GetPosition() );
-					glUniform4fv( sp->uniforms.light_color, 1, (const GLfloat*)&light->GetColor() );
+			GLuint ibo_size = 0;
+			
+			switch ( shader_program->GetType() ) {
+				case shader_program::ShaderProgram::TYPE_ORTHO: {
+					// non-world uniforms apply only to render mesh
+					auto* light = actor->GetScene()->GetLight();
+					if ( light ) {
+						glUniform3fv( sp->uniforms.light_pos, 1, (const GLfloat*)&light->GetPosition() );
+						glUniform4fv( sp->uniforms.light_color, 1, (const GLfloat*)&light->GetColor() );
+					}
+					glUniform1ui( sp->uniforms.flags, flags );
+					if ( flags & actor::Mesh::RF_USE_TINT ) {
+						glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&actor->GetTintColor() );
+					}
+					ibo_size = m_ibo_size;
+					break;
 				}
-				glUniform1ui( sp->uniforms.flags, flags );
-				if ( flags & actor::Mesh::RF_USE_TINT ) {
-					glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&actor->GetTintColor() );
+				case shader_program::ShaderProgram::TYPE_ORTHO_DATA: {
+					ibo_size = m_data.ibo_size;
+					break;
+				}
+				default: {
+					ASSERT( false, "unknown shader program type " + std::to_string( shader_program->GetType() ) );
 				}
 			}
 			
@@ -245,19 +257,20 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 			}
 			
 			const bool ignore_camera = ( flags & scene::actor::Mesh::RF_IGNORE_CAMERA );
+			
 			if ( ignore_camera || actor->GetType() == scene::Actor::TYPE_MESH ) {
 				types::Matrix44 matrix = ignore_camera
 					? g_engine->GetUI()->GetWorldUIMatrix()
 					: m_actor->GetWorldMatrix()
 				;
 				glUniformMatrix4fv( sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
-				glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
+				glDrawElements( GL_TRIANGLES, ibo_size, GL_UNSIGNED_INT, (void *)(0) );
 			}
 			else if ( actor->GetType() == scene::Actor::TYPE_INSTANCED_MESH ) {
 				auto* instanced_actor = (scene::actor::InstancedMesh*) m_actor;
 				auto& matrices = instanced_actor->GetWorldMatrices();
 				glUniformMatrix4fv( sp->uniforms.world, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
-				glDrawElementsInstanced( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0), matrices.size() );
+				glDrawElementsInstanced( GL_TRIANGLES, ibo_size, GL_UNSIGNED_INT, (void *)(0), matrices.size() );
 			}
 			else {
 				ASSERT( false, "unknown actor type " + std::to_string( actor->GetType() ) );
