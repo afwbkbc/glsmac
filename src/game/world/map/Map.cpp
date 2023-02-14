@@ -19,7 +19,7 @@ namespace game {
 namespace world {
 namespace map {
 
-const Map::consts_t Map::s_consts;
+const Map::consts_t Map::s_consts = {};
 
 #define B(x) S_to_binary_(#x)
 
