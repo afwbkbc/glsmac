@@ -68,9 +68,9 @@ void Test::Generate( Tiles* tiles, size_t seed ) {
 */
 /*
 	{ // small rainy area
-		/*tiles->At( 5, 5 )->SelfAndAround( TH() {
-			tile->moisture = Tile::M_RAINY;
-		});*
+		//tiles->At( 5, 5 )->SelfAndAround( TH() {
+			//tile->moisture = Tile::M_RAINY;
+		//});
 		
 		Tile::moisture_t m = Tile::M_RAINY;
 		

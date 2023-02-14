@@ -9,7 +9,8 @@ namespace opengl {
 namespace routine {
 
 CLASS( Skybox, Routine )
-	Skybox( shader_program::Skybox *shader_program ) : m_shader_program( shader_program ) {};
+
+	Skybox( OpenGL* opengl, shader_program::Skybox *shader_program );
 
 	bool SceneBelongs( const scene::Scene *scene ) const;
 
@@ -18,6 +19,7 @@ CLASS( Skybox, Routine )
 	void Iterate();
 
 	void OnSceneRemove( Scene *scene );
+	
 protected:
 	shader_program::Skybox *m_shader_program;
 

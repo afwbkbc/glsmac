@@ -23,6 +23,9 @@ const Buffer Packet::Serialize() const {
 			}
 			break;
 		}
+		default: {
+			ASSERT(false, "unknown packet type " + std::to_string( type ));
+		}
 	}
 	
 	return buf;
@@ -48,6 +51,9 @@ void Packet::Unserialize( Buffer buf ) {
 				data.vec.push_back( buf.ReadString() );
 			}
 			break;
+		}
+		default: {
+			ASSERT(false, "unknown packet type " + std::to_string(type));
 		}
 	}
 }

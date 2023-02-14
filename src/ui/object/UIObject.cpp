@@ -70,11 +70,12 @@ void UIObject::Iterate() {
 }
 
 void UIObject::Align() {
-	
+	Refresh();
 }
 
 void UIObject::Draw() {
 	ApplyStyleIfNeeded();
+	Refresh();
 }
 
 UIObject *UIObject::GetParentObject() const {
@@ -119,7 +120,7 @@ scene::Scene *UIObject::GetSceneOfActor( const Actor *actor ) const {
 	scene::Scene *scene;
 	switch ( actor->GetType() ) {
 		case ( Actor::TYPE_MESH ):
-			scene = g_engine->GetUI()->GetShapeScene();
+			scene = g_engine->GetUI()->GetShapeScene( ((actor::Mesh*)actor)->GetMesh() );
 			break;
 		case ( Actor::TYPE_TEXT ):
 			scene = g_engine->GetUI()->GetTextScene();
@@ -272,6 +273,14 @@ const UIObject::coord_t UIObject::ClampY( const coord_t value ) {
 	return g_engine->GetUI()->ClampY( value );
 }
 
+const UIObject::coord_t UIObject::UnclampX( const coord_t value ) {
+	return g_engine->GetUI()->UnclampX( value );
+}
+
+const UIObject::coord_t UIObject::UnclampY( const coord_t value ) {
+	return g_engine->GetUI()->UnclampY( value );
+}
+	
 const UIObject::vertex_t UIObject::ClampXY( const vertex_t value ) {
 	return vertex_t( ClampX( value.x ), ClampY( value.y ) );
 }
@@ -317,7 +326,7 @@ size_t UIObject::GetHeight() const {
 void UIObject::SetLeft( const coord_t px ) {
 	m_position.left = px;
 	m_stick_bits |= STICK_LEFT;
-	if ( ! m_align & ALIGN_HCENTER )
+	if ( ! ( m_align & ALIGN_HCENTER ) )
 		m_align = ( m_align & (~ALIGN_RIGHT) ) | ALIGN_LEFT;
 	if ( m_stick_bits & STICK_RIGHT )
 		m_stick_bits &= ~( STICK_RIGHT | STICK_WIDTH );
@@ -328,7 +337,7 @@ void UIObject::SetLeft( const coord_t px ) {
 void UIObject::SetRight( const coord_t px ) {
 	m_position.right = px;
 	m_stick_bits |= STICK_RIGHT;
-	if ( ! m_align & ALIGN_HCENTER )
+	if ( ! ( m_align & ALIGN_HCENTER ) )
 		m_align = ( m_align & (~ALIGN_LEFT) ) | ALIGN_RIGHT;
 	if ( m_stick_bits & STICK_LEFT )
 		m_stick_bits &= ~( STICK_LEFT | STICK_WIDTH );
@@ -594,6 +603,9 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 				}
 				break;
 			}
+			default: {
+				// nothing
+			}
 		}
 	}
 	
@@ -789,6 +801,10 @@ void UIObject::SetFocusable( bool is_focusable ) {
 			g_engine->GetUI()->RemoveFromFocusableObjects( this );
 		}
 	}
+}
+
+void UIObject::Refresh() {
+	g_engine->GetUI()->Redraw(); // TODO: partial updates
 }
 
 } /* namespace object */

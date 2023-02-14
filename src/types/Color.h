@@ -10,7 +10,7 @@ public:
 	
 	typedef float channel_t;
 	
-	typedef struct {
+	struct color_t {
 		channel_t red;
 		channel_t green;
 		channel_t blue;
@@ -18,7 +18,7 @@ public:
 		void operator= ( const Color& color ) {
 			memcpy( this, &color.value, sizeof(color.value) );
 		}
-	} color_t;
+	};
 	
 	color_t value;
 	

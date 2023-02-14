@@ -26,11 +26,11 @@ protected:
 	
 	world_matrices_t m_world_matrices = {};
 	
-	typedef struct {
+	struct instanced_matrices_t {
 		types::Matrix44 translate;
 		types::Matrix44 matrix;
 		types::Matrix44 world;
-	} instanced_matrices_t;
+	};
 	
 	std::vector< instanced_matrices_t > m_instance_matrices = {};
 	

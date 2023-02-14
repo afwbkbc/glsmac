@@ -121,6 +121,9 @@ void Join::OnNext() {
 					NextMenu( menu );
 					return false;
 				}
+				default: {
+					ASSERT( false, "unknown network result " + std::to_string( result.result ) );
+				}
 			} 
 			return true;
 		});

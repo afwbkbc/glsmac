@@ -78,12 +78,12 @@ protected:
 	
 private:
 	
-	typedef struct {
+	struct mt_state_t {
 		REQUEST_TYPE request;
 		bool is_processing;
 		bool is_executed;
 		RESPONSE_TYPE response;
-	} mt_state_t;
+	};
 	
 	typedef std::unordered_map<mt_id_t, REQUEST_TYPE> mt_request_map_t;
 	typedef std::unordered_map<mt_id_t, RESPONSE_TYPE> mt_response_map_t;

@@ -15,6 +15,8 @@ Image::Image( scene::actor::Image *actor ) : Actor( actor ) {
 
 	//Log( "Creating OpenGL actor" );
 
+	ASSERT( false, "deprecated" );
+	
 	glGenBuffers( 1, &m_vbo );
 	glGenBuffers( 1, &m_ibo );
 	
@@ -29,12 +31,11 @@ Image::~Image() {
 
 }
 
-bool Image::ReloadNeeded() {
-	// image can't change once it's loaded
-	return false;
+void Image::LoadTexture() {
+	// ???
 }
 
-void Image::Load() {
+void Image::LoadMesh() {
 	Log( "Loading OpenGL actor" );
 	
 	
@@ -67,14 +68,6 @@ void Image::Load() {
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
  
-}
-
-void Image::Unload() {
-	//Log( "Unloading OpenGL actor" );
-
-	/*for (int i=0;i<mModel.mMaterials.size();i++)
-		mGraphics->DeactivateTexture(&mModel.mMaterials[i]->mTexture1Map.texture,&mMaterialTextureObjs[i]);*/
-
 }
 
 void Image::Draw( shader_program::ShaderProgram *shader_program, Camera *camera ) {
@@ -110,6 +103,9 @@ void Image::Draw( shader_program::ShaderProgram *shader_program, Camera *camera 
 			break;
 
 		}*/
+		default: {
+			ASSERT( false, "unknown shader program " + std::to_string( shader_program->GetType() ) );
+		}
 	}
 
 	/*

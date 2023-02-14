@@ -33,27 +33,28 @@ CLASS( Texture, Serializable )
 	
 	// bitflags
 	typedef uint16_t add_mode_t;
-	static const add_mode_t AM_DEFAULT = 0;
-	static const add_mode_t AM_MERGE = 1 << 0; // copy only non-transparent pixels
+	static constexpr add_mode_t AM_DEFAULT = 0;
+	static constexpr add_mode_t AM_MERGE = 1 << 0; // copy only non-transparent pixels
 	// round one or several corners
-	static const add_mode_t AM_ROUND_LEFT = 1 << 1;
-	static const add_mode_t AM_ROUND_TOP = 1 << 2;
-	static const add_mode_t AM_ROUND_RIGHT = 1 << 3;
-	static const add_mode_t AM_ROUND_BOTTOM = 1 << 4;
+	static constexpr add_mode_t AM_ROUND_LEFT = 1 << 1;
+	static constexpr add_mode_t AM_ROUND_TOP = 1 << 2;
+	static constexpr add_mode_t AM_ROUND_RIGHT = 1 << 3;
+	static constexpr add_mode_t AM_ROUND_BOTTOM = 1 << 4;
 	// other modifiers
-	static const add_mode_t AM_INVERT = 1 << 5; // add unneeded pixels instead of needed
-	static const add_mode_t AM_MIRROR_X = 1 << 6; // mirrors source by x
-	static const add_mode_t AM_MIRROR_Y = 1 << 7; // mirrors source by y
-	static const add_mode_t AM_GRADIENT_LEFT = 1 << 8;
-	static const add_mode_t AM_GRADIENT_TOP = 1 << 9;
-	static const add_mode_t AM_GRADIENT_RIGHT = 1 << 10;
-	static const add_mode_t AM_GRADIENT_BOTTOM = 1 << 11;
+	static constexpr add_mode_t AM_INVERT = 1 << 5; // add unneeded pixels instead of needed
+	static constexpr add_mode_t AM_MIRROR_X = 1 << 6; // mirrors source by x
+	static constexpr add_mode_t AM_MIRROR_Y = 1 << 7; // mirrors source by y
+	static constexpr add_mode_t AM_GRADIENT_LEFT = 1 << 8;
+	static constexpr add_mode_t AM_GRADIENT_TOP = 1 << 9;
+	static constexpr add_mode_t AM_GRADIENT_RIGHT = 1 << 10;
+	static constexpr add_mode_t AM_GRADIENT_BOTTOM = 1 << 11;
+	static constexpr add_mode_t AM_GRADIENT_TIGHTER = 1 << 12; // gradient range is twice smaller
 	
 	typedef uint8_t rotate_t;
-	static const rotate_t ROTATE_0 = 0;
-	static const rotate_t ROTATE_90 = 1;
-	static const rotate_t ROTATE_180 = 2;
-	static const rotate_t ROTATE_270 = 3;
+	static constexpr rotate_t ROTATE_0 = 0;
+	static constexpr rotate_t ROTATE_90 = 1;
+	static constexpr rotate_t ROTATE_180 = 2;
+	static constexpr rotate_t ROTATE_270 = 3;
 	/**
 	 * 
 	 * @param source - source Texture object

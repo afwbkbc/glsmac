@@ -12,7 +12,7 @@ using namespace std;
 
 namespace util {
 
-void SMACChecker::CheckPath( const string& path ) {
+bool SMACChecker::IsSMACDirectory( const string& path ) {
 	const vector<string> important_files = {
 		"terranx.exe"
 	};
@@ -23,13 +23,10 @@ void SMACChecker::CheckPath( const string& path ) {
 #else
 		if (access(fullPath.c_str(), F_OK) == -1) {
 #endif
-			throw runtime_error("Invalid SMAC directory or SMAC installation corrupted (could not find file: '" + fullPath + "').");
+			return false;
 		}
-		//if ( access( ( path + "/" + file ).c_str(), F_OK ) == -1 ) {
-		//	throw runtime_error("Invalid SMAC directory or SMAC installation corrupted (could not find file: '" + path + "/" + file + "').");
-		//}
 	}
-	
+	return true;
 }
 
 }

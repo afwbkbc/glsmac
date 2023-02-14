@@ -31,7 +31,8 @@ void Scene::RemoveActor( base::ObjectLink *link ) {
 		// unlink from our side
 		link->GetSrcObject<scene::actor::Actor>()->m_graphics_object = NULL;
 	}
-	gl_actor->Unload();
+	gl_actor->UnloadMesh();
+	gl_actor->UnloadTexture();
 	DELETE( gl_actor );
 	DELETE( link );
 }
@@ -71,19 +72,27 @@ void Scene::Update() {
 			it--;
 		}
 		else {
-			bool reload_needed = gl_actor->ReloadNeeded();
+			bool mesh_reload_needed = gl_actor->MeshReloadNeeded();
+			bool texture_reload_needed = gl_actor->TextureReloadNeeded();
+			
 			// check if position changed
+			// TODO: only for Simple2D
 			auto& pos = gl_actor->GetActor()->GetPosition();
 			if ( gl_actor->GetPosition() != pos ) {
 				// move to corrent zindex set
 				RemoveActorFromZIndexSet( gl_actor );
 				gl_actor->SetPosition( pos );
 				AddActorToZIndexSet( gl_actor );
-				reload_needed = true;
+				mesh_reload_needed = true;
 			}
-			if ( reload_needed ) {
-				gl_actor->Unload();
-				gl_actor->Load();
+			
+			if ( mesh_reload_needed ) {
+				gl_actor->UnloadMesh();
+				gl_actor->LoadMesh();
+			}
+			if ( texture_reload_needed ) {
+				gl_actor->UnloadTexture();
+				gl_actor->LoadTexture();
 			}
 		}
 	}
@@ -113,10 +122,11 @@ void Scene::Update() {
 			}
 
 			if ( gl_actor ) {
-				gl_actor->Load();
+				gl_actor->LoadMesh();
+				gl_actor->LoadTexture();
 				NEW( obj, base::ObjectLink, (*it), gl_actor );
 				m_gl_actors.push_back( obj );
-				AddActorToZIndexSet( gl_actor );
+				AddActorToZIndexSet( gl_actor ); // TODO: only Simple2D
 				(*it)->m_graphics_object = obj;
 			}
 		}

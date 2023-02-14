@@ -11,7 +11,7 @@ MenuBlock::MenuBlock( SlidingMenu* menu )
 {
 	SetClass( "SlidingMenuBlock" );
 	
-	SetRight(-MENU_CLOSED_POSITION);
+	SetRight( -MENU_CLOSED_POSITION );
 	
 	SetEventContexts( EC_KEYBOARD );
 }

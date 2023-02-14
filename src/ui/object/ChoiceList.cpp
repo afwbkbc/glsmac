@@ -106,6 +106,9 @@ bool ChoiceList::OnKeyDown( const UIEvent::event_data_t* data ) {
 			}
 			break;
 		}
+		default: {
+			return true;
+		}
 	}
 	return true;
 }

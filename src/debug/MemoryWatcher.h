@@ -42,11 +42,11 @@ public:
 	void GLDrawElements( GLenum mode, GLsizei count, GLenum type, const void * indices, const std::string& file, const size_t line );
 	void GLDrawArrays( GLenum mode, GLint first, GLsizei count, const std::string& file, const size_t line );	
 	
-	typedef struct {
+	struct statistics_item_t {
 		size_t size;
 		size_t count;
 		std::string key;
-	} statistics_item_t;
+	};
 	typedef std::unordered_map< std::string, statistics_item_t > statistics_t;
 	typedef std::vector< statistics_item_t > statistics_result_t;
 	
@@ -57,19 +57,19 @@ private:
 	
 	void Log( const std::string& text );
 	
-	typedef struct {
+	struct object_info_t {
 		const void* ptr;
 		size_t size;
 		std::string object_name;
 		std::string object_namespace;
 		std::string source;
-	} object_info_t;
+	};
 	std::unordered_map<const void*, object_info_t> m_allocated_objects;
 	
-	typedef struct {
+	struct alloc_t {
 		size_t size;
 		std::string source;
-	} alloc_t;
+	};
 	std::unordered_map<const void*, alloc_t> m_allocated_memory;
 
 	struct {

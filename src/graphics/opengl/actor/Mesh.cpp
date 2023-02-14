@@ -38,21 +38,34 @@ Mesh::~Mesh() {
 	}
 }
 
-bool Mesh::ReloadNeeded() {
+bool Mesh::MeshReloadNeeded() {
 	auto* actor = (scene::actor::Mesh *) m_actor;
 	size_t mesh_updated_counter = actor->GetMesh()->UpdatedCount();
 	auto *data_mesh = actor->GetDataMesh();
 	if ( data_mesh ) {
-		mesh_updated_counter = std::max( mesh_updated_counter, data_mesh->UpdatedCount() );
+		mesh_updated_counter = mesh_updated_counter + data_mesh->UpdatedCount();
 	}
-	if ( m_update_counter == mesh_updated_counter ) {
-		return false;
+	
+	if ( m_mesh_update_counter != mesh_updated_counter ) {
+		m_mesh_update_counter = mesh_updated_counter;
+		return true;
 	}
-	m_update_counter = mesh_updated_counter;
-	return true;
+	return false;
 }
 
-void Mesh::Load() {
+bool Mesh::TextureReloadNeeded() {
+	auto* actor = (scene::actor::Mesh *) m_actor;
+	auto* texture = actor->GetTexture();
+	const std::string last_texture_name = texture ? texture->m_name : "";
+	
+	if ( m_last_texture_name != last_texture_name ) {
+		m_last_texture_name = last_texture_name;
+		return true;
+	}
+	return false;
+}
+
+void Mesh::LoadMesh() {
 	auto *actor = (scene::actor::Mesh *)m_actor;
 
 	const auto *mesh = actor->GetMesh();
@@ -62,16 +75,21 @@ void Mesh::Load() {
 	glBufferData( GL_ARRAY_BUFFER, mesh->GetVertexDataSize(), (GLvoid *)ptr( mesh->GetVertexData(), 0, mesh->GetVertexDataSize() ), GL_STATIC_DRAW );
 
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ibo );
-	glBufferData( GL_ELEMENT_ARRAY_BUFFER, mesh->GetIndexDataSize(), (GLvoid *)ptr( mesh->GetIndexData(), 0, mesh->GetIndexDataSize() ), GL_STATIC_DRAW);
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, mesh->GetIndexDataSize(), (GLvoid *)ptr( mesh->GetIndexData(), 0, mesh->GetIndexDataSize() ), GL_STATIC_DRAW );
 
 	m_ibo_size = mesh->GetIndexCount();
 
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	
+}
+
+void Mesh::LoadTexture() {
+	auto *actor = (scene::actor::Mesh *)m_actor;
 	const auto* texture = actor->GetTexture();
-	if (texture) {
-		g_engine->GetGraphics()->LoadTexture(texture);
+	
+	if ( texture ) {
+		g_engine->GetGraphics()->LoadTexture( texture );
 	}
 }
 
@@ -80,25 +98,26 @@ void Mesh::PrepareDataMesh() {
 	const auto *data_mesh = actor->GetDataMesh();
 	if ( data_mesh && !m_data.is_up_to_date ) {
 		if ( !m_data.is_allocated ) {
+			
 			Log( "Initializing data mesh" );
+			
 			glGenFramebuffers( 1, &m_data.fbo );
-			glGenTextures( 1, &m_data.picking_texture );
-			glGenTextures( 1, &m_data.depth_texture );
+			glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
+			
 			glGenBuffers( 1, &m_data.vbo );
-			glGenBuffers( 1, &m_data.ibo );
-
 			glBindBuffer( GL_ARRAY_BUFFER, m_data.vbo );
 			glBufferData( GL_ARRAY_BUFFER, data_mesh->GetVertexDataSize(), (GLvoid *)ptr( data_mesh->GetVertexData(), 0, data_mesh->GetVertexDataSize() ), GL_STATIC_DRAW );
-
-			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_data.ibo );
-			glBufferData( GL_ELEMENT_ARRAY_BUFFER, data_mesh->GetIndexDataSize(), (GLvoid *)ptr( data_mesh->GetIndexData(), 0, data_mesh->GetIndexDataSize() ), GL_STATIC_DRAW);
-
-			m_data.ibo_size = data_mesh->GetIndexCount();
-
-			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 			glBindBuffer( GL_ARRAY_BUFFER, 0 );
 
-			m_data.is_allocated = true;
+			glGenBuffers( 1, &m_data.ibo );
+			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_data.ibo );
+			glBufferData( GL_ELEMENT_ARRAY_BUFFER, data_mesh->GetIndexDataSize(), (GLvoid *)ptr( data_mesh->GetIndexData(), 0, data_mesh->GetIndexDataSize() ), GL_STATIC_DRAW);
+			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+
+			m_data.ibo_size = data_mesh->GetIndexCount();
+		}
+		else {
+			glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
 		}
 		
 		size_t w = g_engine->GetGraphics()->GetViewportWidth();
@@ -106,8 +125,9 @@ void Mesh::PrepareDataMesh() {
 		
 		Log( "(re)loading data mesh (viewport size: " + std::to_string( w ) + "x" + std::to_string( h ) + ")" );
 		
-		glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
-		
+		if ( !m_data.is_allocated ) {
+			glGenTextures( 1, &m_data.picking_texture );
+		}
 		glBindTexture( GL_TEXTURE_2D, m_data.picking_texture );
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32UI, w, h, 0, GL_RGB_INTEGER, GL_UNSIGNED_INT, NULL );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
@@ -115,33 +135,54 @@ void Mesh::PrepareDataMesh() {
 		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_data.picking_texture, 0 );
 		glBindTexture( GL_TEXTURE_2D, 0 );
 		
+		if ( !m_data.is_allocated ) {
+			glGenTextures( 1, &m_data.depth_texture );
+		}
 		glBindTexture( GL_TEXTURE_2D, m_data.depth_texture );
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL );
 		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_data.depth_texture, 0 );
 		glBindTexture( GL_TEXTURE_2D, 0 );
 		
+#ifdef DEBUG
 		GLenum status = glCheckFramebufferStatus( GL_FRAMEBUFFER );
 		ASSERT( status == GL_FRAMEBUFFER_COMPLETE, "FB error, status: " + std::to_string( status ) );
+#endif
 		
 		glBindFramebuffer( GL_FRAMEBUFFER, 0 );	
 
 		m_data.is_up_to_date = true;
+		if ( !m_data.is_allocated ) {
+			m_data.is_allocated = true;
+		}
 	}
 
 }
 
-void Mesh::Unload() {
+void Mesh::UnloadMesh() {
 	// Log( "Unloading OpenGL actor" );
 
-	if ( m_actor ) {
-/*		auto *actor = (scene::actor::Mesh *)m_actor;
+	/*if ( m_actor ) {
+		auto *actor = (scene::actor::Mesh *)m_actor;
 
 		// it's better to keep everything loaded forever
 		const auto* texture = actor->GetTexture();
 		if (texture) {
 			g_engine->GetGraphics()->UnloadTexture(texture);
-		}*/
-	}
+		}
+	}*/
+}
+
+void Mesh::UnloadTexture() {
+	// keep loaded forever?
+	/*if ( m_actor ) {
+		auto *actor = (scene::actor::Mesh *)m_actor;
+		if ( actor ) {
+			const auto* texture = actor->GetTexture();
+			if ( texture ) {
+				g_engine->GetGraphics()->UnloadTexture( texture ); // test
+			}
+		}
+	}*/
 }
 
 void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera ) {
@@ -183,7 +224,9 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 		case ( shader_program::ShaderProgram::TYPE_ORTHO_DATA ): {
 			auto* sp = (shader_program::Orthographic *)shader_program; // TODO: make base class for ortho and ortho_data
 			
-			// uniforms apply only to render mesh
+			auto flags = actor->GetRenderFlags();
+			
+			// non-world uniforms apply only to render mesh
 			if ( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO ) {
 				
 				auto* light = actor->GetScene()->GetLight();
@@ -191,25 +234,39 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 					glUniform3fv( sp->uniforms.light_pos, 1, (const GLfloat*)&light->GetPosition() );
 					glUniform4fv( sp->uniforms.light_color, 1, (const GLfloat*)&light->GetColor() );
 				}
-				auto flags = actor->GetRenderFlags();
 				glUniform1ui( sp->uniforms.flags, flags );
 				if ( flags & actor::Mesh::RF_USE_TINT ) {
 					glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&actor->GetTintColor() );
 				}
 			}
-
-			if ( actor->GetType() == scene::Actor::TYPE_INSTANCED_MESH ) {
+			
+			if ( flags & actor::Mesh::RF_IGNORE_DEPTH ) {
+				glDisable( GL_DEPTH_TEST );
+			}
+			
+			const bool ignore_camera = ( flags & scene::actor::Mesh::RF_IGNORE_CAMERA );
+			if ( ignore_camera || actor->GetType() == scene::Actor::TYPE_MESH ) {
+				types::Matrix44 matrix = ignore_camera
+					? g_engine->GetUI()->GetWorldUIMatrix()
+					: m_actor->GetWorldMatrix()
+				;
+				glUniformMatrix4fv( sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
+				glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
+			}
+			else if ( actor->GetType() == scene::Actor::TYPE_INSTANCED_MESH ) {
 				auto* instanced_actor = (scene::actor::InstancedMesh*) m_actor;
 				auto& matrices = instanced_actor->GetWorldMatrices();
 				glUniformMatrix4fv( sp->uniforms.world, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
 				glDrawElementsInstanced( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0), matrices.size() );
 			}
 			else {
-				types::Matrix44 matrix = m_actor->GetWorldMatrix();
-				glUniformMatrix4fv( sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
-				glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
+				ASSERT( false, "unknown actor type " + std::to_string( actor->GetType() ) );
 			}
 
+			if ( flags & actor::Mesh::RF_IGNORE_DEPTH ) {
+				glEnable( GL_DEPTH_TEST );
+			}
+			
 			break;
 		}
 		case ( shader_program::ShaderProgram::TYPE_PERSP ): {

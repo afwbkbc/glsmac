@@ -13,7 +13,8 @@ namespace opengl {
 namespace routine {
 
 CLASS( Font, Routine )
-	Font( shader_program::Font *shader_program ) : m_shader_program( shader_program ) {};
+	
+	Font( OpenGL* opengl, shader_program::Font *shader_program );
 
 	bool SceneBelongs( const scene::Scene *scene ) const;
 
@@ -22,10 +23,12 @@ CLASS( Font, Routine )
 	void Iterate();
 
 	opengl::Actor *AddCustomActor( scene::actor::Actor *actor );
+	
 protected:
 	shader_program::Font *m_shader_program;
 
 	std::vector<base::ObjectLink *> m_gl_fonts;
+	
 private:
 	void RemoveFont( base::ObjectLink *link );
 };

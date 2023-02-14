@@ -10,7 +10,7 @@ namespace types {
 	
 CLASS( Buffer, base::Base )
 	
-	static const size_t BUFFER_ALLOC_CHUNK = 1024;
+	static constexpr size_t BUFFER_ALLOC_CHUNK = 1024;
 	
 	typedef uint8_t data_t;
 	typedef char checksum_t;

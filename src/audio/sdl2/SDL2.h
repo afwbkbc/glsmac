@@ -19,8 +19,8 @@
 #define AUDIO_SAMPLE_TYPE int16_t
 #define AUDIO_MIX_TYPE double
 #define AUDIO_SAMPLES 4096
-#define AUDIO_VOLUME 0.7 // TODO: put to config/settings
-#define AUDIO_VOLUME_LOWERING_FROM_ACTORS 0.95 // helps with clicks a bit. it's used as pow( AUDIO_VOLUME_LOWERING, number_of_active_channels )
+#define AUDIO_VOLUME 0.75 // TODO: put to config/settings
+#define AUDIO_VOLUME_LOWERING_FROM_ACTORS 0.92 // helps with clicks a bit. it's used as pow( x, number_of_active_channels )
 
 namespace audio {
 namespace sdl2 {

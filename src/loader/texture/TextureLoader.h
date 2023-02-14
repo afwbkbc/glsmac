@@ -14,13 +14,13 @@ namespace texture {
 CLASS( TextureLoader, Loader )
 
 	// loadtexture flags
-	static const uint8_t LT_NONE = 0;
-	static const uint8_t LT_ROTATE = 1;
-	static const uint8_t LT_FLIPV = 2;
-	static const uint8_t LT_FLIPH = 4;
-	static const uint8_t LT_TILED = 8;
-	static const uint8_t LT_ALPHA = 16;
-	static const uint8_t LT_CONTRAST = 32;
+	static constexpr uint8_t LT_NONE = 0;
+	static constexpr uint8_t LT_ROTATE = 1;
+	static constexpr uint8_t LT_FLIPV = 2;
+	static constexpr uint8_t LT_FLIPH = 4;
+	static constexpr uint8_t LT_TILED = 8;
+	static constexpr uint8_t LT_ALPHA = 16;
+	static constexpr uint8_t LT_CONTRAST = 32;
 
 	// load full texture
 	virtual Texture* LoadTexture( const std::string &name ) = 0;

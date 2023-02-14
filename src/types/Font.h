@@ -11,12 +11,12 @@ namespace types {
 CLASS( Font, base::Base )
 	virtual ~Font();
 
-	typedef struct dimensions_t {
+	struct dimensions_t {
 		float width;
 		float height;
-	} dimensions_t;
+	};
 
-	typedef struct bitmap_t {
+	struct bitmap_t {
 		int ax; // advance.x
 		int ay; // advance.y
 		unsigned int width; // bitmap.width;
@@ -24,7 +24,7 @@ CLASS( Font, base::Base )
 		int left; // bitmap_left;
 		int top; // bitmap_top;
 		unsigned char *data;
-	} bitmap_t;
+	};
 
 	std::string m_name = "";
 	bitmap_t m_symbols[128] = {};

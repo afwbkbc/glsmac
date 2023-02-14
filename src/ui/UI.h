@@ -18,6 +18,7 @@
 #include "types/mesh/Rectangle.h"
 #include "types/Texture.h"
 #include "types/Vec2.h"
+#include "types/Matrix44.h"
 #include "util/Timer.h"
 
 #include "theme/Theme.h"
@@ -47,11 +48,16 @@ CLASS( UI, base::Module )
 	void AddObject( object::UIObject *object );
 	void RemoveObject( object::UIObject *object );
 	
-	Scene *GetShapeScene();
+	Scene *GetShapeScene( const types::mesh::Mesh* mesh );
 	Scene *GetTextScene();
+	
+	void SetWorldUIMatrix( const types::Matrix44& matrix );
+	const types::Matrix44& GetWorldUIMatrix() const;
 	
 	const coord_t ClampX( const coord_t value ) const;
 	const coord_t ClampY( const coord_t value ) const;
+	const coord_t UnclampX( const coord_t value ) const;
+	const coord_t UnclampY( const coord_t value ) const;
 	
 	void ProcessEvent( UIEvent* event );
 	void SendMouseMoveEvent( UIObject* object );
@@ -81,6 +87,8 @@ CLASS( UI, base::Module )
 	
 	void FocusObject( UIObject* object );
 	
+	void Redraw();
+	
 #ifdef DEBUG
 	void ShowDebugFrame( const UIObject* object );
 	void HideDebugFrame( const UIObject* object );
@@ -94,7 +102,8 @@ CLASS( UI, base::Module )
 protected:
 	object::Root m_root_object;
 
-	Scene *m_shape_scene = nullptr;
+	Scene *m_shape_scene_simple2d = nullptr;
+	Scene *m_shape_scene_ortho = nullptr;
 	Scene *m_text_scene = nullptr;
 
 	struct {
@@ -109,6 +118,10 @@ protected:
 	themes_t m_themes = {};
 	
 private:
+	
+	bool m_is_redraw_needed = false;
+	
+	types::Matrix44 m_world_ui_matrix = {};
 
 	std::unordered_map< global_event_handler_order_t, UIObject::event_handlers_t > m_global_event_handlers = {};
 	void TriggerGlobalEventHandlers( global_event_handler_order_t order, UIEvent* event );
@@ -129,11 +142,11 @@ private:
 #ifdef DEBUG	
 	Scene *m_debug_scene;
 	
-	typedef struct {
+	struct debug_frame_data_t {
 		Texture* texture;
 		mesh::Rectangle * mesh;
 		actor::Mesh* actor;
-	} debug_frame_data_t;
+	};
 	
 	typedef std::unordered_map< const UIObject*, debug_frame_data_t > debug_frames_map_t;
 	debug_frames_map_t m_debug_frames = {};

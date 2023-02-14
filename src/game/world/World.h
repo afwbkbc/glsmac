@@ -96,11 +96,12 @@ private:
 	void UpdateCameraScale();
 	void UpdateCameraRange();
 	void UpdateMapInstances();
+	void UpdateUICamera();
 	
 	// UI stuff
 	
 	struct {
-		ui::Theme theme;
+		ui::style::Theme theme;
 		ui::BottomBar* bottom_bar = nullptr;
 	} m_ui;
 	

@@ -2,6 +2,7 @@ SET(SRC ${SRC}
 
 	${PWD}/Module.cpp
 	${PWD}/Prepare.cpp
+	${PWD}/LandMoisture.cpp
 	${PWD}/LandSurface.cpp
 	${PWD}/WaterSurface.cpp
 	${PWD}/Coastlines.cpp

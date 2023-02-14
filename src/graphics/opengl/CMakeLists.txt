@@ -7,6 +7,7 @@ SUBDIR( texture )
 SET(SRC ${SRC}
 
 	${PWD}/Scene.cpp
+	${PWD}/FBO.cpp
 	${PWD}/OpenGL.cpp
 
 PARENT_SCOPE)

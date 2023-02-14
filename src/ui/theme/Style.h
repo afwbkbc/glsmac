@@ -101,11 +101,11 @@ CLASS( Style, base::Base )
 
 	// bit flags
 	typedef uint8_t modifier_t;
-	static const modifier_t M_NONE = 0;
-	static const modifier_t M_HOVER = 1;
-	static const modifier_t M_ACTIVE = 2;
-	static const modifier_t M_SELECTED = 4; // also means "focused" (for inputs)
-	static const modifier_t MODIFIER_MAX = 8;
+	static constexpr modifier_t M_NONE = 0;
+	static constexpr modifier_t M_HOVER = 1;
+	static constexpr modifier_t M_ACTIVE = 2;
+	static constexpr modifier_t M_SELECTED = 4; // also means "focused" (for inputs)
+	static constexpr modifier_t MODIFIER_MAX = 8;
 	
 	void SetStyleHandler( const style_handler_t style_handler );
 	
@@ -134,14 +134,14 @@ CLASS( Style, base::Base )
 	
 	bool Is( const modifier_t modifier ) const;
 	
-	typedef struct {
+	struct attribute_t {
 		bool is_set = false;
 		union {
 			float scalar;
 			Color::color_t color;
 			const void *ptr;
 		} value;
-	} attribute_t;
+	};
 	typedef attribute_t attributes_t[ ATTRIBUTE_TYPE_MAX ];
 	
 	typedef std::vector< std::string > includes_t;

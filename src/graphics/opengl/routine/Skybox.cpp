@@ -10,6 +10,13 @@ namespace graphics {
 namespace opengl {
 namespace routine {
 
+Skybox::Skybox( OpenGL* opengl, shader_program::Skybox *shader_program )
+	: Routine( opengl )
+	, m_shader_program( shader_program )
+{
+	//
+}
+
 void Skybox::Start() {
 
 	glGenBuffers( 1, &m_vbo );
