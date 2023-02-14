@@ -131,6 +131,9 @@ extern debug_stats_t g_debug_stats;
 #undef glDrawElements
 #define glDrawElements( _mode, _count, _type, _indices ) g_memory_watcher->GLDrawElements( _mode, _count, _type, _indices, __FILE__, __LINE__ )
 
+#undef glDrawElementsInstanced
+#define glDrawElementsInstanced( _mode, _count, _type, _indices, _primcount ) g_memory_watcher->GLDrawElementsInstanced( _mode, _count, _type, _indices, _primcount, __FILE__, __LINE__ )
+
 #undef glDrawArrays
 #define glDrawArrays( _mode, _first, _count ) g_memory_watcher->GLDrawArrays( _mode, _first, _count, __FILE__, __LINE__ )
 	

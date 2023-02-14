@@ -52,6 +52,9 @@ void glDeleteTextures_real( GLsizei n, GLuint * textures ) {
 void glDrawElements_real( GLenum mode, GLsizei count, GLenum type, const void * indices ) {
 	glDrawElements( mode, count, type, indices );
 }
+void glDrawElementsInstanced_real( GLenum mode, GLsizei count, GLenum type, const void * indices, GLsizei primcount ) {
+	glDrawElementsInstanced( mode, count, type, indices, primcount );
+}
 
 void glDrawArrays_real( GLenum mode, GLint first, GLsizei count ) {
 	glDrawArrays( mode, first, count );
@@ -576,6 +579,27 @@ void MemoryWatcher::GLDrawElements( GLenum mode, GLsizei count, GLenum type, con
 	
 	DEBUG_STAT_INC( opengl_draw_calls );
 	glDrawElements_real( mode, count, type, indices );
+}
+
+void MemoryWatcher::GLDrawElementsInstanced( GLenum mode, GLsizei count, GLenum type, const void * indices, GLsizei primcount, const std::string& file, const size_t line ) {
+	std::lock_guard< std::mutex > guard( m_mutex );
+	const std::string source = file + ":" + std::to_string(line);
+	
+	ASSERT( mode == GL_QUADS || mode == GL_TRIANGLES, "glDrawElementsInstanced unknown mode " + std::to_string( mode ) + " @" + source );
+	ASSERT( type == GL_UNSIGNED_INT, "glDrawElementsInstanced unknown type " + std::to_string( type ) + " @" + source );
+	ASSERT( indices == nullptr, "glDrawElementsInstanced indices non-null @" + source );
+	ASSERT( m_opengl.current_vertex_buffer, "glDrawElementsInstanced vertex buffer not bound @" + source );
+	ASSERT( m_opengl.current_index_buffer, "glDrawElementsInstanced index buffer not bound @" + source );
+	
+	const size_t bpi = 4; // bytes per index, 4 for unsigned int
+	auto it = m_opengl.index_buffers.find( m_opengl.current_index_buffer );
+	ASSERT( it != m_opengl.index_buffers.end(), "index buffer not found" );
+	ASSERT( count * bpi == it->second.size,
+		"glDrawElementsInstanced count mismatch ( " + std::to_string( count* bpi ) + " " + std::to_string( it->second.size ) + " ) at index buffer " + std::to_string( m_opengl.current_index_buffer ) + " @" + source
+	);
+	
+	DEBUG_STAT_INC( opengl_draw_calls );
+	glDrawElementsInstanced_real( mode, count, type, indices, primcount );
 }
 
 void MemoryWatcher::GLDrawArrays( GLenum mode, GLint first, GLsizei count, const std::string& file, const size_t line ) {

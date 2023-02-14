@@ -40,6 +40,7 @@ public:
 	void GLTexSubImage2D( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels, const std::string& file, const size_t line );
 	void GLDeleteTextures( GLsizei n, GLuint * textures, const std::string& file, const size_t line );
 	void GLDrawElements( GLenum mode, GLsizei count, GLenum type, const void * indices, const std::string& file, const size_t line );
+	void GLDrawElementsInstanced( GLenum mode, GLsizei count, GLenum type, const void * indices, GLsizei primcount, const std::string& file, const size_t line );
 	void GLDrawArrays( GLenum mode, GLint first, GLsizei count, const std::string& file, const size_t line );	
 	
 	struct statistics_item_t {
