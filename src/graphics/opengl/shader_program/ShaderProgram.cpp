@@ -29,9 +29,9 @@ void ShaderProgram::Start() {
 	ASSERT( success, "Invalid shader program!" );
 
 	glUseProgram( m_gl_shader_program );
-
 	Initialize();
-
+	glUseProgram( 0 );
+	
 	m_enabled = false;
 }
 
@@ -102,9 +102,9 @@ void ShaderProgram::Enable() {
 void ShaderProgram::Disable() {
 	if ( m_enabled ) {
 
-		DisableAttributes();
-
 		glUseProgram(0);
+
+		DisableAttributes();
 
 		m_enabled = false;
 	}

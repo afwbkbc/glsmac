@@ -29,6 +29,7 @@ using namespace debug;
 	D( opengl_textures_count ) \
 	D( opengl_textures_size ) \
 	D( opengl_textures_updates ) \
+	D( opengl_framebuffers_count ) \
 	D( opengl_draw_calls ) \
 	D( ui_elements_created ) \
 	D( ui_elements_destroyed )\
@@ -128,6 +129,33 @@ extern debug_stats_t g_debug_stats;
 #define glTexSubImage2D( _target, _level, _xoffset, _yoffset, _width, _height, format, _type, _ptr ) \
 	g_memory_watcher->GLTexSubImage2D( _target, _level, _xoffset, _yoffset, _width, _height, format, _type, _ptr, __FILE__, __LINE__ )
 	
+#undef glGenFramebuffers
+#define glGenFramebuffers( _size, _ptr ) g_memory_watcher->GLGenFramebuffers( _size, _ptr, __FILE__, __LINE__ )
+
+#undef glBindFramebuffer
+#define glBindFramebuffer( _target, _ptr ) g_memory_watcher->GLBindFramebuffer( _target, _ptr, __FILE__, __LINE__ )
+
+#undef glFramebufferTexture2D
+#define glFramebufferTexture2D( _target, _attachment, _textarget, _texture, _level ) g_memory_watcher->GLFramebufferTexture2D( _target, _attachment, _textarget, _texture, _level, __FILE__, __LINE__ )
+
+#undef glDeleteFramebuffers
+#define glDeleteFramebuffers( _size, _ptr ) g_memory_watcher->GLDeleteFramebuffers( _size, _ptr, __FILE__, __LINE__ )
+
+#undef glCreateProgram
+#define glCreateProgram() g_memory_watcher->GLCreateProgram( __FILE__, __LINE__ )
+
+#undef glLinkProgram
+#define glLinkProgram( _program ) g_memory_watcher->GLLinkProgram( _program, __FILE__, __LINE__ )
+
+#undef glValidateProgram
+#define glValidateProgram( _program ) g_memory_watcher->GLValidateProgram( _program, __FILE__, __LINE__ )
+
+#undef glUseProgram
+#define glUseProgram( _program ) g_memory_watcher->GLUseProgram( _program, __FILE__, __LINE__ )
+
+#undef glDeleteProgram
+#define glDeleteProgram( _program ) g_memory_watcher->GLDeleteProgram( _program, __FILE__, __LINE__ )
+
 #undef glDrawElements
 #define glDrawElements( _mode, _count, _type, _indices ) g_memory_watcher->GLDrawElements( _mode, _count, _type, _indices, __FILE__, __LINE__ )
 

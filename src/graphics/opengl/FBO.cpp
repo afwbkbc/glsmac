@@ -4,17 +4,8 @@ namespace graphics {
 namespace opengl {
 
 FBO::FBO( const size_t width, const size_t height ) {
-	
-	glGenFramebuffers( 1, &m_fbo );
-	glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
-	
-#ifdef DEBUG
-	GLenum status = glCheckFramebufferStatus( GL_FRAMEBUFFER );
-	ASSERT( GL_FRAMEBUFFER_COMPLETE, "FB error, status: " + std::to_string( status ) );
-#endif
-	
-	glGenTextures( 1, &m_textures.render );
-	glGenTextures( 1, &m_textures.depth );
+
+	// texture render buffers
 	glGenBuffers( 1, &m_vbo );
 	glGenBuffers( 1, &m_ibo );
 	
@@ -39,15 +30,30 @@ FBO::FBO( const size_t width, const size_t height ) {
 
 	m_ibo_size = m_mesh->GetIndexCount();
 	
+	// framebuffer
+	glGenFramebuffers( 1, &m_fbo );
+	glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+	
+#ifdef DEBUG
+	GLenum status = glCheckFramebufferStatus( GL_FRAMEBUFFER );
+	ASSERT( GL_FRAMEBUFFER_COMPLETE, "FB error, status: " + std::to_string( status ) );
+#endif
+	
+	glGenTextures( 1, &m_textures.render );
+	glGenTextures( 1, &m_textures.depth );
+	
 	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 }
 
 FBO::~FBO() {
 	
-	glDeleteTextures( 1, &m_textures.render );
-	glDeleteTextures( 1, &m_textures.depth );
 	glDeleteBuffers( 1, &m_vbo );
 	glDeleteBuffers( 1, &m_ibo );
+	
+	glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+	glDeleteTextures( 1, &m_textures.render );
+	glDeleteTextures( 1, &m_textures.depth );
+	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 	glDeleteFramebuffers( 1, &m_fbo );
 	
 	DELETE( m_mesh );
@@ -69,13 +75,13 @@ void FBO::Resize( const size_t width, const size_t height ) {
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_textures.render, 0 );
 		glBindTexture( GL_TEXTURE_2D, 0 );
+		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_textures.render, 0 );
 
 		glBindTexture( GL_TEXTURE_2D, m_textures.depth );
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, m_width, m_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL );
-		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_textures.depth , 0 );
 		glBindTexture( GL_TEXTURE_2D, 0 );
+		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_textures.depth , 0 );
 		
 		glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 		

@@ -30,11 +30,13 @@ Mesh::~Mesh() {
 	glDeleteBuffers( 1, &m_vbo );
 	
 	if ( m_data.is_allocated ) {
-		glDeleteFramebuffers( 1, &m_data.fbo );
+		glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
 		glDeleteTextures( 1, &m_data.picking_texture );
 		glDeleteTextures( 1, &m_data.depth_texture );
 		glDeleteBuffers( 1, &m_data.vbo );
 		glDeleteBuffers( 1, &m_data.ibo );
+		glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+		glDeleteFramebuffers( 1, &m_data.fbo );
 	}
 }
 
@@ -132,16 +134,16 @@ void Mesh::PrepareDataMesh() {
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32UI, w, h, 0, GL_RGB_INTEGER, GL_UNSIGNED_INT, NULL );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_data.picking_texture, 0 );
 		glBindTexture( GL_TEXTURE_2D, 0 );
+		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_data.picking_texture, 0 );
 		
 		if ( !m_data.is_allocated ) {
 			glGenTextures( 1, &m_data.depth_texture );
 		}
 		glBindTexture( GL_TEXTURE_2D, m_data.depth_texture );
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL );
-		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_data.depth_texture, 0 );
 		glBindTexture( GL_TEXTURE_2D, 0 );
+		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_data.depth_texture, 0 );
 		
 #ifdef DEBUG
 		GLenum status = glCheckFramebufferStatus( GL_FRAMEBUFFER );
@@ -297,7 +299,12 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 	
 	g_engine->GetGraphics()->DisableTexture();
 	
+	shader_program->Disable();
+	
 	if ( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA ) {
+		
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+		glBindBuffer( GL_ARRAY_BUFFER, 0 );
 		
 		glDrawBuffer( GL_NONE );
 		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
@@ -321,12 +328,10 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 		m_data.last_processed_data_request_id = actor->GetLastDataRequestId();
 		
 	}
-	
-	shader_program->Disable();
-	
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
-	glBindBuffer( GL_ARRAY_BUFFER, 0 );
-	
+	else {
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+		glBindBuffer( GL_ARRAY_BUFFER, 0 );
+	}
 }
 
 void Mesh::OnResize() {
