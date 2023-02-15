@@ -72,9 +72,9 @@ void World::Start() {
 #ifdef DEVEL
 	NEWV( tiles, Tiles, 40, 20, m_random );
 #else
-	//NEWV( tiles, Tiles, 80, 40, m_random );
+	NEWV( tiles, Tiles, 80, 40, m_random );
 #endif
-	NEWV( tiles, Tiles, 200, 120, m_random );
+	//NEWV( tiles, Tiles, 200, 120, m_random );
 	
 	Log( "Map seed is " + m_random->GetStateString() );
 	
