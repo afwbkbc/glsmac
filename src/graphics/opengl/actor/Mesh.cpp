@@ -236,8 +236,8 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 					glUniform1ui( sp->uniforms.flags, flags );
 					auto* lights = actor->GetScene()->GetLights();
 					if ( !( flags & actor::Mesh::RF_IGNORE_LIGHTING ) && !lights->empty() ) {
-						Vec3 light_pos[ lights->size() ] = {};
-						Color light_color[ lights->size() ] = {};
+						Vec3 light_pos[ lights->size() ];
+						Color light_color[ lights->size() ];
 						size_t i = 0;
 						for ( auto& light : *lights ) {
 							light_pos[ i ] = light->GetPosition();
