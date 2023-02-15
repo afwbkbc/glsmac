@@ -118,6 +118,14 @@ const string ShaderProgram::S_HasFlag( const string& var, const GLuint flag ) co
 	return "( ( " + var + " & uint( " + to_string( flag ) + " ) ) == uint( " + to_string( flag ) + " ) )";
 }
 
+const std::string ShaderProgram::S_For( const std::string& iterator, const size_t begin, const size_t end, const std::string& body ) const {
+	std::string result;
+	for ( auto i = begin ; i < end ; i++ ) {
+		result += " { int " + iterator + " = " + std::to_string( i ) + "; " + body + " } ";
+	}
+	return result;
+}
+
 } /* namespace shader_program */
 } /* namespace opengl */
 } /* namespace graphics */

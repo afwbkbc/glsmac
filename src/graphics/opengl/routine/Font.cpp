@@ -47,8 +47,10 @@ void Font::Iterate() {
 
 	//glEnable(GL_TEXTURE_2D);
 
-	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it )
+	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it ) {
 		(*it)->Draw( m_shader_program );
+		ASSERT( !glGetError(), "Font draw error" );
+	}
 
 	//glDisable(GL_TEXTURE_2D);
 	//glDisable(GL_BLEND);

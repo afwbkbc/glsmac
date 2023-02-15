@@ -233,12 +233,20 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 			switch ( shader_program->GetType() ) {
 				case shader_program::ShaderProgram::TYPE_ORTHO: {
 					// non-world uniforms apply only to render mesh
-					auto* light = actor->GetScene()->GetLight();
-					if ( light ) {
-						glUniform3fv( sp->uniforms.light_pos, 1, (const GLfloat*)&light->GetPosition() );
-						glUniform4fv( sp->uniforms.light_color, 1, (const GLfloat*)&light->GetColor() );
-					}
 					glUniform1ui( sp->uniforms.flags, flags );
+					auto* lights = actor->GetScene()->GetLights();
+					if ( !( flags & actor::Mesh::RF_IGNORE_LIGHTING ) && !lights->empty() ) {
+						Vec3 light_pos[ lights->size() ] = {};
+						Color light_color[ lights->size() ] = {};
+						size_t i = 0;
+						for ( auto& light : *lights ) {
+							light_pos[ i ] = light->GetPosition();
+							light_color[ i ] = light->GetColor();
+							i++;
+						}
+						glUniform3fv( sp->uniforms.light_pos, lights->size(), (const GLfloat*)light_pos );
+						glUniform4fv( sp->uniforms.light_color, lights->size(), (const GLfloat*)light_color );
+					}
 					if ( flags & actor::Mesh::RF_USE_TINT ) {
 						glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&actor->GetTintColor() );
 					}

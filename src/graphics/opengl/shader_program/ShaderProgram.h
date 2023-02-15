@@ -45,6 +45,7 @@ protected:
 	
 	// shader helpers
 	const std::string S_HasFlag( const std::string& var, const GLuint flag ) const;
+	const std::string S_For( const std::string& iterator, const size_t begin, const size_t end, const std::string& body ) const;
 	
 };
 

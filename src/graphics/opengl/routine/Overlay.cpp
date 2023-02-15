@@ -29,6 +29,7 @@ void Overlay::Iterate() {
 		m_fbo->WriteBegin();
 		for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it ) {
 			(*it)->Draw( m_shader_program );
+			ASSERT( !glGetError(), "Overlay draw error" );
 		}
 		m_fbo->WriteEnd();
 		m_is_redraw_needed = false;

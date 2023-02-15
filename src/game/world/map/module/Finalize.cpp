@@ -50,7 +50,7 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 				( cn.bottom.z - cn.top.z ) +
 				( ce.left.z - ce.right.z ) +
 				( cs.top.z - cs.bottom.z )
-			) / 12;
+			) / 4;
 			
 			vertices.center.x += m_map->GetRandom()->GetFloat( -Map::s_consts.tile.center_coordinates_randomness, Map::s_consts.tile.center_coordinates_randomness ) * 0.001f;
 			vertices.center.y += m_map->GetRandom()->GetFloat( -Map::s_consts.tile.center_coordinates_randomness, Map::s_consts.tile.center_coordinates_randomness ) * 0.001f;

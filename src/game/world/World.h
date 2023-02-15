@@ -57,7 +57,8 @@ private:
 	Vec3 m_camera_position; // { x, y, zoom }
 	Vec3 m_camera_angle;
 	Camera* m_camera = nullptr;
-	Light* m_light = nullptr;
+	Light* m_light_a = nullptr; // Alpha Centauri A
+	Light* m_light_b = nullptr; // Alpha Centauri B
 	Scene* m_world_scene = nullptr;
 	struct {
 		util::Clamper<float> x;

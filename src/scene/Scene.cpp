@@ -1,6 +1,7 @@
 #include <algorithm>
 
 #include "Scene.h"
+#include "graphics/Graphics.h"
 
 namespace scene {
 
@@ -36,15 +37,15 @@ Camera * Scene::GetCamera() const {
 	return m_camera;
 }
 
-void Scene::SetLight( Light *light ) {
-	ASSERT( m_light == NULL || light == NULL, "light overlap" );
-	m_light = light;
+void Scene::AddLight( Light *light ) {
+	ASSERT( m_lights.find( light ) == m_lights.end(), "light overlap" );
+	ASSERT( m_lights.size() < graphics::Graphics::MAX_WORLD_LIGHTS, "maximum light count exceeded" );
+	m_lights.insert( light );
 }
 
-Light* Scene::GetLight() const {
-	return m_light;
+std::unordered_set< Light* >* Scene::GetLights() {
+	return &m_lights;
 }
-
 
 void Scene::SetSkyboxTexture( types::Texture *skybox_texture ) {
 	m_skybox_texture = skybox_texture;

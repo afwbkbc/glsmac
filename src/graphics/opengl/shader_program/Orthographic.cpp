@@ -43,19 +43,25 @@ in vec4 tintcolor; \
 in vec3 fragpos; \
 in vec3 normal; \
 uniform sampler2D uTexture; \
-uniform vec3 uLightPos; \
-uniform vec4 uLightColor; \
+uniform vec3 uLightPos[" + std::to_string( Graphics::MAX_WORLD_LIGHTS ) + "]; \
+uniform vec4 uLightColor[" + std::to_string( Graphics::MAX_WORLD_LIGHTS ) + "]; \
 uniform uint uFlags; \
 uniform vec4 uTintColor; \
 out vec4 FragColor; \
 \
 void main(void) { \
-    vec3 ambient = uLightColor.rgb * ( 1.0 - uLightColor.a ); \
-	vec3 lightdir = normalize( uLightPos ); \
-	float diff = max( dot(normal, lightdir), 0.0 ); \
-	vec3 diffuse = diff * uLightColor.rgb * uLightColor.a; \
+	vec3 ambient = vec3( 0.0, 0.0, 0.0 ); \
+	vec3 diffuse = vec3( 0.0, 0.0, 0.0 ); \
+	" + S_For( "i", 0, Graphics::MAX_WORLD_LIGHTS, " \
+		ambient += uLightColor[ i ].rgb * ( 1.0 - uLightColor[ i ].a ); \
+		vec3 lightdir = normalize( uLightPos[ i ] ); \
+		float diff = max( dot(normal, lightdir), 0.0 ); \
+		diffuse += diff * uLightColor[ i ].rgb * uLightColor[ i ].a; \
+	" ) + " \
+	ambient /= " + std::to_string( Graphics::MAX_WORLD_LIGHTS ) + "; \
+	diffuse /= " + std::to_string( Graphics::MAX_WORLD_LIGHTS ) + "; \
 	vec4 tex = texture2D( uTexture, vec2( texpos.xy ) ); \
-	float gamma = 1.4; /* TODO: pass via uniform */ \
+	float gamma = 1.6; /* TODO: pass via uniform */ \
 	vec3 color = vec3( tex.r * tintcolor.r, tex.g * tintcolor.g, tex.b * tintcolor.b ); \
 	float alpha = tintcolor.a * tex.a; \
 	if ( " + S_HasFlag( "uFlags", actor::Mesh::RF_USE_TINT ) + " ) { \

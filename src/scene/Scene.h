@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <unordered_set>
 
 #include "base/Base.h"
 
@@ -37,8 +38,8 @@ CLASS( Scene, base::Base )
 	void SetCamera( Camera *camera );
 	Camera* GetCamera() const;
 	void SetSimple2DCamera();
-	void SetLight( Light *light );
-	Light* GetLight() const;
+	void AddLight( Light *light );
+	std::unordered_set< Light* >* GetLights();
 	void SetSkyboxTexture( types::Texture *skybox_texture );
 	types::Texture *GetSkyboxTexture();
 	
@@ -56,7 +57,7 @@ protected:
 	std::vector<actor::Actor *> m_actors = {};
 
 	Camera* m_camera = nullptr;
-	Light* m_light = nullptr;
+	std::unordered_set< Light* > m_lights = {};
 	types::Texture *m_skybox_texture = nullptr;
 	
 	instances_t m_instances = { { 0.0f, 0.0f, 0.0f } }; // only 1 instance by default

@@ -51,6 +51,7 @@ void World::Iterate() {
 	
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it ) {
 		(*it)->Draw( m_shader_program );
+		ASSERT( !glGetError(), "World draw error" );
 	}
 
 /*
@@ -60,6 +61,7 @@ void World::Iterate() {
 	
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it ) {
 		(*it)->Draw( m_data_shader_program );
+		ASSERT( !glGetError(), "World data draw error" );
 	}
 
 }

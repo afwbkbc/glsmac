@@ -49,12 +49,22 @@ void World::Start() {
 	m_camera_angle = INITIAL_CAMERA_ANGLE;
 	UpdateCameraAngle();
 
-	NEW( m_light, Light, Light::LT_AMBIENT_DIFFUSE );
-	m_light->SetPosition( { 50.0f, 50.0f, 30.0f } );
-	m_light->SetColor( { 1.0f, 1.0f, 1.0f, 0.5f } );
-	
 	m_world_scene->SetCamera( m_camera );
-	m_world_scene->SetLight( m_light );
+	
+	// don't set exact 45 degree angles for lights, it will produce weird straight lines because of shadows
+	{
+		NEW( m_light_a, Light, Light::LT_AMBIENT_DIFFUSE );
+		m_light_a->SetPosition( { 48.227f, 20.412f, 32.65f } );
+		m_light_a->SetColor( { 0.8f, 0.9f, 1.0f, 0.5f } );
+		m_world_scene->AddLight( m_light_a );
+	}
+	{
+		NEW( m_light_b, Light, Light::LT_AMBIENT_DIFFUSE );
+		m_light_b->SetPosition( { 25.412f, 46.227f, 34.35f } );
+		m_light_b->SetColor( { 1.0f, 0.9f, 0.8f, 0.5f } );
+		m_world_scene->AddLight( m_light_b );
+	}
+	
 	g_engine->GetGraphics()->AddScene( m_world_scene );	
 	
 	NEW( m_map, Map, m_random, m_world_scene );
@@ -265,7 +275,8 @@ void World::Stop() {
 	
 	g_engine->GetGraphics()->RemoveScene( m_world_scene );	
 	DELETE( m_camera );
-	DELETE( m_light );
+	DELETE( m_light_a );
+	DELETE( m_light_b );
 	DELETE( m_world_scene );
 }
 
