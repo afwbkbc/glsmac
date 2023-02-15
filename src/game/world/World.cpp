@@ -54,14 +54,14 @@ void World::Start() {
 	// don't set exact 45 degree angles for lights, it will produce weird straight lines because of shadows
 	{
 		NEW( m_light_a, Light, Light::LT_AMBIENT_DIFFUSE );
-		m_light_a->SetPosition( { 48.227f, 20.412f, 32.65f } );
-		m_light_a->SetColor( { 0.8f, 0.9f, 1.0f, 0.5f } );
+		m_light_a->SetPosition( { 48.227f, 20.412f, 52.65f } );
+		m_light_a->SetColor( { 0.8f, 0.9f, 1.0f, 0.7f } );
 		m_world_scene->AddLight( m_light_a );
 	}
 	{
 		NEW( m_light_b, Light, Light::LT_AMBIENT_DIFFUSE );
-		m_light_b->SetPosition( { 25.412f, 46.227f, 34.35f } );
-		m_light_b->SetColor( { 1.0f, 0.9f, 0.8f, 0.5f } );
+		m_light_b->SetPosition( { 25.412f, 46.227f, 54.35f } );
+		m_light_b->SetColor( { 1.0f, 0.9f, 0.8f, 0.7f } );
 		m_world_scene->AddLight( m_light_b );
 	}
 	
@@ -72,9 +72,9 @@ void World::Start() {
 #ifdef DEVEL
 	NEWV( tiles, Tiles, 40, 20, m_random );
 #else
-	NEWV( tiles, Tiles, 80, 40, m_random );
+	//NEWV( tiles, Tiles, 80, 40, m_random );
 #endif
-	//NEWV( tiles, Tiles, 200, 120, m_random );
+	NEWV( tiles, Tiles, 200, 120, m_random );
 	
 	Log( "Map seed is " + m_random->GetStateString() );
 	

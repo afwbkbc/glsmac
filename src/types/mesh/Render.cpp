@@ -88,9 +88,6 @@ void Render::Finalize() {
 void Render::UpdateNormals() {
 	//Log( "Updating normals");
 	
-	// randomize normals a bit
-	float nr = 0.005f;
-	
 	const surface_t* surface;
 	Vec3 *a, *b, *c;
 	Vec3 ab, ac, n;
@@ -108,10 +105,6 @@ void Render::UpdateNormals() {
         ac = *c - *a;
         n = Math::Cross( ab, ac );
 		
-		n.x += (float)( rand() % 20000 ) / 10000 * nr - nr;
-		n.y += (float)( rand() % 20000 ) / 10000 * nr - nr;
-		//n.z += (float)( rand() % 10000 ) / 10000 * nr;
-
 		*(Vec3*)ptr( m_vertex_data, ( surface->v1 * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ) += n;
 		*(Vec3*)ptr( m_vertex_data, ( surface->v2 * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ) += n;
 		*(Vec3*)ptr( m_vertex_data, ( surface->v3 * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ) += n;

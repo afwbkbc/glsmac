@@ -23,21 +23,16 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 		x( center, right, bottom ); \
 		x( center, bottom, left )
 
-	// fix some rare elevation glitches (slightly positive elevations on water tiles, slightly negative on land tiles)
-	// TODO: investigate why it happens
-	
-	const auto em = Map::s_consts.tile.puddle_bug_workaround.elevation_value;
-	if ( tile->is_water_tile && *tile->elevation.center > -em ) {
-		*tile->elevation.center = -em;
-	}
-	if ( !tile->is_water_tile && *tile->elevation.center < em ) {
-		*tile->elevation.center = em;
-	}
-	
+
 	for ( auto lt = 0 ; lt < Map::LAYER_MAX ; lt++ ) {
 
+		// raise everything on z axis to prevent negative z values ( camera doesn't like it when zoomed in )
+		#define x( _k ) ts->layers[ lt ].coords._k.z += Map::s_consts.tile_scale_z;
+			do_x();
+		#undef x
+		
 		vertices = ts->layers[ lt ].coords;
-		if ( lt == Map::LAYER_LAND && !tile->is_water_tile ) {
+		if ( lt == Map::LAYER_LAND && !tile->is_water_tile && !ts->has_water ) {
 			
 			// smooth center vertices a bit and add some randomness
 			
@@ -50,10 +45,20 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 				( cn.bottom.z - cn.top.z ) +
 				( ce.left.z - ce.right.z ) +
 				( cs.top.z - cs.bottom.z )
-			) / 4;
+			) / 12;
 			
-			vertices.center.x += m_map->GetRandom()->GetFloat( -Map::s_consts.tile.center_coordinates_randomness, Map::s_consts.tile.center_coordinates_randomness ) * 0.001f;
-			vertices.center.y += m_map->GetRandom()->GetFloat( -Map::s_consts.tile.center_coordinates_randomness, Map::s_consts.tile.center_coordinates_randomness ) * 0.001f;
+			
+			if (
+				( tile->is_water_tile && vertices.center.z > 0 ) ||
+				( !tile->is_water_tile && vertices.center.z < 0 )
+			) {
+				vertices.center.z *= -1.0f;
+			}
+			
+			#define xx( _k ) vertices.center._k += m_map->GetRandom()->GetFloat( -Map::s_consts.tile.center_coordinates_randomness, Map::s_consts.tile.center_coordinates_randomness ) * 0.05f
+				xx( x );
+				xx( y );
+			#undef xx
 			
 		}
 		else if ( lt != Map::LAYER_LAND ) {
@@ -86,20 +91,7 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 		}
 		
 		tint = ts->layers[ lt ].colors;
-		
-		const float emf = Map::s_consts.tile.puddle_bug_workaround.z_value;
-		if ( tile->is_water_tile && ts->layers[ lt ].coords.bottom.z > -emf ) {
-			ts->layers[ lt ].coords.bottom.z = -emf;
-		}
-		if ( !tile->is_water_tile && ts->layers[ lt ].coords.bottom.z < emf ) {
-			ts->layers[ lt ].coords.bottom.z = emf;
-		}
-	
-		// raise everything on z axis to prevent negative z values ( camera doesn't like it when zoomed in )
-		#define x( _k ) vertices._k.z = ts->layers[ lt ].coords._k.z += Map::s_consts.tile_scale_z;
-			do_x();
-		#undef x
-		
+			
 		#define x( _k ) ts->layers[ lt ].indices._k = m_map->m_mesh_terrain->AddVertex( vertices._k, tex_coords._k, tint._k )
 			do_x();
 		#undef x
@@ -161,6 +153,15 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 			}
 			vertices.center.z = ( vertices.left.z + vertices.top.z + vertices.right.z + vertices.bottom.z ) / 4;
 		}
+	}
+	
+	// fix some rare elevation glitches (slightly positive elevations on water tiles, slightly negative on land tiles)
+	// TODO: investigate why it happens
+	if (
+		( tile->is_water_tile && *tile->elevation.center > 0 ) ||
+		( !tile->is_water_tile && *tile->elevation.center < 0 )
+	) {
+		*tile->elevation.center *= -1;
 	}
 	
 	// store tile coordinates
