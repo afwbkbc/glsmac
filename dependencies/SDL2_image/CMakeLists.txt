@@ -4,7 +4,7 @@ set(SDL2IMAGE_INSTALL OFF)
 
 FetchContent_Declare(sdl_image
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_image
-    GIT_TAG release-2.6.2
+    GIT_TAG release-2.6.3
 )
 
 FetchContent_MakeAvailable(sdl_image)
