@@ -109,12 +109,12 @@ CLASS( Map, Serializable )
 		const Vec3 map_position = { 0.0f, 0.0f, 0.0f };
 		const Vec3 map_rotation = { 0.0f, 0.0f, 0.0f };
 		const Color underwater_tint = { 0.0f, 0.2f, 0.5f, 1.0f };
-		const struct {
+		/*const struct {
 			const Color coastline_tint = { 0.7f, 0.7f, 0.7f, 1.0f };
 			const Color::channel_t coast_water_alpha = 0.3f;
 			const float coast_water_center_alpha = 0.5f;
 			const float coast_water_center_alpha_tint_mod = 0.75f;
-		} coastlines;
+		} coastlines;*/
 		const struct {
 			const util::Clamper< float > elevation_to_vertex_z = { Tile::ELEVATION_MIN, Tile::ELEVATION_MAX, -s_consts.tile_scale_z, s_consts.tile_scale_z };
 			const util::Clamper< float > elevation_to_water_r = { Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST, 0.6f, 1.3f };
@@ -290,8 +290,10 @@ CLASS( Map, Serializable )
 	void CopyTexture( const tile_layer_type_t tile_layer_from, const tile_layer_type_t tile_layer, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha = 1.0f );
 	void CopyTextureDeferred( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from,const tile_layer_type_t tile_layer, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha = 1.0f );
 	void GetTexture( Texture* dest_texture, const pcx_texture_coordinates_t& tc, const Texture::add_mode_t mode, const uint8_t rotate = 0, const float alpha = 1.0f );
+	void GetTextureFromLayer( Texture* dest_texture, const tile_layer_type_t tile_layer, const size_t tx_from, const size_t ty_from, const Texture::add_mode_t mode = Texture::AM_DEFAULT, const uint8_t rotate = 0, const float alpha = 1.0f ) const;
 	void SetTexture( const tile_layer_type_t tile_layer, Texture* src_texture, const Texture::add_mode_t mode, const uint8_t rotate = 0, const float alpha = 1.0f );
-
+	const Texture* GetTerrainTexture() const;
+	
 	enum tile_grouping_criteria_t {
 		TG_MOISTURE,
 		TG_FEATURE,

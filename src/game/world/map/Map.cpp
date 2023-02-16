@@ -434,6 +434,23 @@ void Map::GetTexture( Texture* dest_texture, const pcx_texture_coordinates_t& tc
 	);
 }
 
+void Map::GetTextureFromLayer( Texture* dest_texture, const tile_layer_type_t tile_layer, const size_t tx_from, const size_t ty_from, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha ) const {
+	ASSERT( dest_texture->m_width == Map::s_consts.pcx_texture_block.dimensions.x, "tile dest texture width mismatch" );
+	ASSERT( dest_texture->m_height == Map::s_consts.pcx_texture_block.dimensions.y, "tile dest texture height mismatch" );
+	dest_texture->AddFrom(
+		m_textures.terrain,
+		mode,
+		tx_from,
+		tile_layer * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + ty_from,
+		tx_from + Map::s_consts.pcx_texture_block.dimensions.x - 1,
+		tile_layer * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + ty_from + Map::s_consts.pcx_texture_block.dimensions.y - 1,
+		0,
+		0,
+		rotate,
+		alpha
+	);
+}
+
 void Map::SetTexture( const tile_layer_type_t tile_layer, Texture* src_texture, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha ) {
 	ASSERT( m_current_ts, "SetTexture called outside of tile generation" );
 	ASSERT( src_texture->m_width == Map::s_consts.pcx_texture_block.dimensions.x, "tile src texture width mismatch" );
@@ -450,6 +467,11 @@ void Map::SetTexture( const tile_layer_type_t tile_layer, Texture* src_texture, 
 		rotate,
 		alpha
 	);
+}
+
+const Texture* Map::GetTerrainTexture() const {
+	ASSERT( m_textures.terrain, "terrain texture requested but not initialized" );
+	return m_textures.terrain;
 }
 
 Map::tile_state_t* Map::GetTileState( const size_t x, const size_t y ) const {

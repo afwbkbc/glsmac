@@ -26,7 +26,7 @@ void Mesh::SetMesh( const types::mesh::Mesh* mesh ) {
 		m_original_mesh = mesh;
 		NEW( m_mesh, types::mesh::Mesh, *m_original_mesh ); // copy
 		NEW( m_actor, scene::actor::Mesh, "UI::Mesh", m_mesh );
-			m_actor->SetRenderFlags( scene::actor::Mesh::RF_IGNORE_CAMERA );
+			m_actor->SetRenderFlags( scene::actor::Mesh::RF_IGNORE_CAMERA | scene::actor::Mesh::RF_IGNORE_LIGHTING );
 			if ( m_texture ) {
 				m_actor->SetTexture( m_texture );
 			}

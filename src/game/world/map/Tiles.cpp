@@ -391,15 +391,23 @@ void Tiles::NormalizeElevationRange() {
 
 void Tiles::RemoveExtremeSlopes( const Tile::elevation_t max_allowed_diff ) {
 	Tile::elevation_t elevation_fixby_change = 1;
-	Tile::elevation_t elevation_fixby_max = max_allowed_diff / 3; // to prevent infinite loops when it grows so large it starts creating extreme slopes
+	Tile::elevation_t elevation_fixby_max = max_allowed_diff / 3; // to prevent infinite loops when it grows so large it starts creating new extreme slopes
 	float elevation_fixby_div_change = 0.001f; // needed to prevent infinite loops when nearby tiles keep 'fixing' each other forever
 	size_t pass = 0;
 	Tile* tile;
 	Tile::elevation_t elevation_fixby = 0;
 	float elevation_fixby_div = 1.0f;
 	bool found = true;
-	size_t sz = m_width * m_height;
-	size_t x, y, i;
+	size_t i;
+
+	// process in random order
+	std::vector< Tile* > tiles;
+	for ( auto y = 0 ; y < m_height ; y++ ) {
+		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
+			tiles.push_back( At( x, y ) );
+		}
+	}
+
 	while ( found ) {
 		if ( elevation_fixby < elevation_fixby_max ) {
 			elevation_fixby += elevation_fixby_change;
@@ -408,19 +416,17 @@ void Tiles::RemoveExtremeSlopes( const Tile::elevation_t max_allowed_diff ) {
 		Log( "Checking/fixing extreme slopes (pass " + std::to_string( ++pass ) + ")" );
 		found = false;
 		
+		std::mt19937 g( m_random->GetUInt( 0, UINT32_MAX - 1 ) );
+		std::shuffle( tiles.begin(), tiles.end(), g );
+	
 		// don't run in normal cycle because it can give terrain some straight edges, go in random order instead
 		// assume that on average we'll hit all tiles (but skipping some is no big deal)
-		for ( i = 0 ; i < sz ; i++ ) {
-			x = m_random->GetUInt( 0, m_width - 1 );
-			y = m_random->GetUInt( 0, m_height - 1 );
-			if ( ( y % 2 ) != ( x % 2 ) ) {
-				continue;
-			}
-			tile = At( x, y );
+		for ( i = 0 ; i < tiles.size() ; i++ ) {
+			tile = tiles[ i ];
 
 			#define x( _a, _b ) \
-				while ( abs( *tile->elevation._a - *tile->elevation._b ) > max_allowed_diff ) { \
-					/*Log( "fixing slope: " + to_string( *tile->elevation._a ) + "," + to_string( *tile->elevation._b ) + " / " + to_string( elevation_fixby ) );*/ \
+				if ( abs( *tile->elevation._a - *tile->elevation._b ) > max_allowed_diff ) { \
+					Log( "fixing slope: " + std::to_string( *tile->elevation._a ) + "," + std::to_string( *tile->elevation._b ) + " / " + std::to_string( elevation_fixby ) ); \
 					*tile->elevation._a += ( *tile->elevation._a < *tile->elevation._b ) ? elevation_fixby : -elevation_fixby; \
 					*tile->elevation._b += ( *tile->elevation._b < *tile->elevation._a ) ? elevation_fixby : -elevation_fixby; \
 					*tile->elevation._a /= elevation_fixby_div; \

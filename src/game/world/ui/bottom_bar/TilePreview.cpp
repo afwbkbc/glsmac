@@ -4,6 +4,10 @@
 
 #include "engine/Engine.h"
 
+// in future it may be needed to add additional modifications to preview image
+// for now we can just set texture of terrain
+#define COPY_TEXTURE 0
+
 namespace game {
 namespace world {
 namespace ui {
@@ -19,7 +23,7 @@ void TilePreview::Destroy() {
 	Section::Destroy();
 }
 
-void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
+void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info ) {
 	HideTilePreview();
 	
 	auto tile = tile_info.tile;
@@ -50,7 +54,7 @@ void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
 	#undef x
 	coords.center.x = 0.0f;
 	coords.center.y = 0.0f;
-	coords.center.z = 0.0f; //( coords.left.z + coords.top.z + coords.right.z + coords.bottom.z ) / 4;
+	coords.center.z = 0.0f;
 	
 	std::vector< map::Map::tile_layer_type_t > layers = {};
 	
@@ -70,6 +74,18 @@ void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
 		}
 	}
 	
+#if COPY_TEXTURE
+	// texture size (px)
+	const uint8_t tw = map::Map::s_consts.pcx_texture_block.dimensions.x;
+	const uint8_t th = map::Map::s_consts.pcx_texture_block.dimensions.y;
+	// scale map terrain tex_coords to local tex_coords
+	const float sx = (float)map->GetTerrainTexture()->m_width / (float)tw;
+	const float sy = (float)map->GetTerrainTexture()->m_height / (float)th;
+#endif
+	
+	// looks a bit too bright without lighting otherwise
+	const float tint_modifier = 0.7f;
+	
 	for ( auto &lt : layers ) {
 		
 		NEWV( mesh, mesh::Render, 5, 4 );
@@ -77,9 +93,25 @@ void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
 		auto& layer = ts->layers[ lt ];
 		
 		auto tint = layer.colors;
+	
+#if COPY_TEXTURE
+		NEWV( texture, types::Texture, "TilePreviewImage", tw, th );
+		map->GetTextureFromLayer(
+			texture,
+			lt,
+			tile->coord.x * tw,
+			tile->coord.y * th
+		);
+#endif
 		
-		// copy texcoords from tile
-		#define x( _k ) auto _k = mesh->AddVertex( coords._k, layer.tex_coords._k, tint._k )
+#if COPY_TEXTURE
+		#define x( _k ) auto _k = mesh->AddVertex( coords._k, { \
+			layer.tex_coords._k.x * sx, \
+			layer.tex_coords._k.y * sy, \
+		}, tint._k * tint_modifier )
+#else
+		#define x( _k ) auto _k = mesh->AddVertex( coords._k, layer.tex_coords._k, tint._k * tint_modifier )
+#endif
 			x( center );
 			x( left );
 			x( top );
@@ -95,16 +127,28 @@ void TilePreview::PreviewTile( const Map::tile_info_t& tile_info ) {
 		#undef x
 
 		mesh->Finalize();
-
+		
 		NEWV( preview, object::Mesh, "MapBottomBarTilePreviewImage" );
 			preview->SetMesh( mesh );
-			preview->SetTexture( tile_info.ms->terrain_texture );
-		m_previews.push_back( preview );
+#if COPY_TEXTURE
+			preview->SetTexture( texture );
+#else
+			preview->SetTexture( map->GetTerrainTexture() );
+#endif
+		m_preview_layers.push_back({
+			preview,
+#if COPY_TEXTURE
+			texture
+#else
+			nullptr
+#endif
+		});
+		
 		AddChild( preview );
 		
 	}
 	
-	size_t label_top = m_previews.front()->GetHeight() + 6;
+	size_t label_top = m_preview_layers.front().object->GetHeight() + 6;
 	std::vector< std::string > info_lines;
 	
 	auto e = *tile->elevation.center;
@@ -184,10 +228,13 @@ void TilePreview::HideTilePreview() {
 		RemoveChild( label );
 	}
 	m_info_lines.clear();
-	for ( auto& preview : m_previews ) {
-		RemoveChild( preview );
+	for ( auto& preview_layer : m_preview_layers ) {
+		RemoveChild( preview_layer.object );
+#if COPY_TEXTURE
+		DELETE( preview_layer.texture );
+#endif
 	}
-	m_previews.clear();
+	m_preview_layers.clear();
 }
 
 }

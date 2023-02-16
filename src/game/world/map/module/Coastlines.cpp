@@ -32,7 +32,7 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 	if ( !tile->is_water_tile ) {
 	
 		if ( tile->W->is_water_tile || tile->NW->is_water_tile || tile->SW->is_water_tile ) {
-			ts->layers[ Map::LAYER_LAND ].colors.left = Map::s_consts.coastlines.coastline_tint;
+			//ts->layers[ Map::LAYER_LAND ].colors.left = Map::s_consts.coastlines.coastline_tint;
 			if ( tile->W->is_water_tile && ( tile->NW->is_water_tile || tile->SW->is_water_tile ) ) {
 				ts->layers[ Map::LAYER_LAND ].coords.left.x += cw;
 				if ( !tile->NW->is_water_tile ) {
@@ -51,7 +51,7 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 			}
 		}
 		if ( tile->N->is_water_tile || tile->NW->is_water_tile || tile->NE->is_water_tile ) {
-			ts->layers[ Map::LAYER_LAND ].colors.top = Map::s_consts.coastlines.coastline_tint;
+			//ts->layers[ Map::LAYER_LAND ].colors.top = Map::s_consts.coastlines.coastline_tint;
 			if ( tile->N->is_water_tile && ( tile->NW->is_water_tile || tile->NE->is_water_tile ) ) {
 				ts->layers[ Map::LAYER_LAND ].coords.top.y += cw;
 				if ( !tile->NW->is_water_tile ) {
@@ -70,7 +70,7 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 			}
 		}
 		if ( tile->E->is_water_tile || tile->NE->is_water_tile || tile->SE->is_water_tile ) {
-			ts->layers[ Map::LAYER_LAND ].colors.right = Map::s_consts.coastlines.coastline_tint;
+			//ts->layers[ Map::LAYER_LAND ].colors.right = Map::s_consts.coastlines.coastline_tint;
 			if ( tile->E->is_water_tile && ( tile->NE->is_water_tile || tile->SE->is_water_tile ) ) {
 				ts->layers[ Map::LAYER_LAND ].coords.right.x -= cw;
 				if ( !tile->NE->is_water_tile ) {
@@ -89,7 +89,7 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 			}
 		}
 		if ( tile->S->is_water_tile || tile->SW->is_water_tile || tile->SE->is_water_tile ) {
-			ts->layers[ Map::LAYER_LAND ].colors.bottom = Map::s_consts.coastlines.coastline_tint;
+			//ts->layers[ Map::LAYER_LAND ].colors.bottom = Map::s_consts.coastlines.coastline_tint;
 			if ( tile->S->is_water_tile && ( tile->SW->is_water_tile || tile->SE->is_water_tile ) ) {
 				ts->layers[ Map::LAYER_LAND ].coords.bottom.y -= cw;
 				if ( !tile->SW->is_water_tile ) {
@@ -119,7 +119,6 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 			ms->copy_normals.push_back( { &ts->layers[ Map::LAYER_LAND ].indices.bottom, &ts->layers[ Map::LAYER_WATER ].indices.bottom } );
 			ms->copy_normals.push_back( { &ts->layers[ Map::LAYER_LAND ].indices.center, &ts->layers[ Map::LAYER_WATER ].indices.center } );
 		}
-		
 	}
 	
 	ts->layers[ Map::LAYER_LAND ].coords.center = {
@@ -129,7 +128,7 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 	};
 	
 	// coast water texture
-	if ( !tile->is_water_tile && (
+	/*if ( !tile->is_water_tile && (
 		tile->W->is_water_tile ||
 		tile->NW->is_water_tile ||
 		tile->N->is_water_tile ||
@@ -204,19 +203,20 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 			RandomRotate(),
 			Map::s_consts.coastlines.coast_water_alpha
 		);
-	}
+	}*/
 
 	if ( ts->has_water ) {
-
-		m_map->AddTexture(
-			Map::LAYER_WATER_SURFACE,
-			Map::s_consts.pcx_textures.water[ 1 ],
-			Texture::AM_DEFAULT,
-			RandomRotate()
-		);
-
+		
 		// corners on land tiles
 		if ( ts->is_coastline_corner ) {
+
+			// water under corner
+			m_map->AddTexture(
+				Map::LAYER_WATER_SURFACE_EXTRA,
+				Map::s_consts.pcx_textures.water[ 1 ],
+				Texture::AM_DEFAULT,
+				RandomRotate()
+			);
 
 			auto add_mode = Texture::AM_MERGE;
 			if ( tile->W->is_water_tile && tile->SW->is_water_tile && tile->NW->is_water_tile ) {
@@ -232,7 +232,7 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 				add_mode |= Texture::AM_ROUND_BOTTOM;
 			}
 
-			// coastline tint
+/*			// coastline tint
 			if ( tile->W->is_water_tile || tile->SW->is_water_tile || tile->NW->is_water_tile ) {
 				ts->layers[ Map::LAYER_WATER ].colors.left = Map::s_consts.coastlines.coastline_tint;
 			}
@@ -245,7 +245,7 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 			if ( tile->S->is_water_tile || tile->SW->is_water_tile || tile->SE->is_water_tile ) {
 				ts->layers[ Map::LAYER_WATER ].colors.bottom = Map::s_consts.coastlines.coastline_tint;
 			}
-
+*/
 			// copy texture from land
 			m_map->CopyTexture( Map::LAYER_LAND, Map::LAYER_WATER, add_mode, 0 );
 
@@ -256,7 +256,7 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 
 			if ( !tile->SW->is_water_tile && !tile->NW->is_water_tile ) {
 				coastline_corner_tmp.side = Texture::AM_ROUND_LEFT;
-				ts->layers[ Map::LAYER_WATER ].colors.left = Map::s_consts.coastlines.coastline_tint;
+				//ts->layers[ Map::LAYER_WATER ].colors.left = Map::s_consts.coastlines.coastline_tint;
 				if ( !tile->W->is_water_tile ) {
 					coastline_corner_tmp.can_mirror = true;
 					if ( tile->coord.x >= 2 ) {
@@ -276,7 +276,7 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 
 			if ( !tile->NW->is_water_tile && !tile->NE->is_water_tile ) {
 				coastline_corner_tmp.side = Texture::AM_ROUND_TOP;
-				ts->layers[ Map::LAYER_WATER ].colors.top = Map::s_consts.coastlines.coastline_tint;
+				//ts->layers[ Map::LAYER_WATER ].colors.top = Map::s_consts.coastlines.coastline_tint;
 				if ( !tile->N->is_water_tile ) {
 					if ( tile->coord.y >= 2 ) {
 						coastline_corner_tmp.can_mirror = true;
@@ -292,7 +292,7 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 			}
 			if ( !tile->SE->is_water_tile && !tile->NE->is_water_tile ) {
 				coastline_corner_tmp.side = Texture::AM_ROUND_RIGHT;
-				ts->layers[ Map::LAYER_WATER ].colors.right = Map::s_consts.coastlines.coastline_tint;
+				//ts->layers[ Map::LAYER_WATER ].colors.right = Map::s_consts.coastlines.coastline_tint;
 				if ( !tile->E->is_water_tile ) {
 					coastline_corner_tmp.can_mirror = true;
 					if ( tile->coord.x < ms->dimensions.x - 2 ) {
@@ -311,7 +311,7 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 			}
 			if ( !tile->SE->is_water_tile && !tile->SW->is_water_tile ) {
 				coastline_corner_tmp.side = Texture::AM_ROUND_BOTTOM;
-				ts->layers[ Map::LAYER_WATER ].colors.bottom = Map::s_consts.coastlines.coastline_tint;
+				//ts->layers[ Map::LAYER_WATER ].colors.bottom = Map::s_consts.coastlines.coastline_tint;
 				if ( !tile->S->is_water_tile ) {
 					if ( tile->coord.y < ms->dimensions.y - 2 ) {
 						coastline_corner_tmp.can_mirror = true;

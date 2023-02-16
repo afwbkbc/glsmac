@@ -28,7 +28,7 @@ CLASS( BottomBar, UI )
 	void Destroy();
 	void Align();
 	
-	void PreviewTile( const Map::tile_info_t& tile_info );
+	void PreviewTile( const Map* map, const Map::tile_info_t& tile_info );
 	void HideTilePreview();
 	
 protected:

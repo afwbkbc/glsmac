@@ -100,25 +100,14 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 		);
 	}
 	
-	if ( tile->features & Tile::F_XENOFUNGUS ) {
+	if ( ( tile->features & Tile::F_XENOFUNGUS ) && !tile->is_water_tile ) {
 		auto txinfo = m_map->GetTileTextureInfo( tile, Map::TG_FEATURE, Tile::F_XENOFUNGUS );
-		
-		if ( tile->is_water_tile || ts->is_coastline_corner ) {
-			m_map->AddTexture(
-				Map::LAYER_WATER,
-				Map::s_consts.pcx_textures.fungus_sea[ txinfo.texture_variant ],
-				Texture::AM_MERGE,
-				txinfo.rotate_direction
-			);
-		}
-		if ( !tile->is_water_tile ) {
-			m_map->AddTexture(
-				Map::LAYER_LAND,
-				Map::s_consts.pcx_textures.fungus_land[ txinfo.texture_variant ],
-				Texture::AM_MERGE,
-				txinfo.rotate_direction
-			);
-		}
+		m_map->AddTexture(
+			Map::LAYER_LAND,
+			Map::s_consts.pcx_textures.fungus_land[ txinfo.texture_variant ],
+			Texture::AM_MERGE,
+			txinfo.rotate_direction
+		);
 	}
 }
 
