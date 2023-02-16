@@ -11,6 +11,10 @@
 #include "ui/event/KeyUp.h"
 #include "ui/event/KeyPress.h"
 
+#if ( !SDL_VERSION_ATLEAST(2,0,18) )
+	#define KMOD_SCROLL 0x8000 // workaround for ancient systems
+#endif
+
 namespace input {
 namespace sdl2 {
 
@@ -134,8 +138,6 @@ UIEvent::mouse_button_t SDL2::GetMouseButton( uint8_t sdl_mouse_button ) const {
 		}
 	}
 }
-
-//#include <cstdio>
 
 char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 	char result = 0;
