@@ -259,6 +259,9 @@ void Map::GenerateActors() {
 	m_mesh_terrain_data->Finalize();
 	
 	// fix normals
+	
+	Log( "Fixing normals" );
+	
 	std::vector< mesh::Mesh::index_t > v, vtmp;
 	
 	// to prevent reallocations
@@ -305,6 +308,8 @@ void Map::GenerateActors() {
 			) / 4 );
 		}
 	}
+	
+	Log( "Spawning terrain actor" );
 	
 	NEW( m_actors.terrain, actor::InstancedMesh, "MapTerrain", m_mesh_terrain );
 		m_actors.terrain->SetTexture( m_textures.terrain );
