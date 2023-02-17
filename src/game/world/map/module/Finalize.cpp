@@ -56,7 +56,7 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 				( cn.bottom.z - cn.top.z ) +
 				( ce.left.z - ce.right.z ) +
 				( cs.top.z - cs.bottom.z )
-			) / 12;
+			) / 24; // TODO: fix black lines when texture is perpendicular to camera
 			
 			if ( tile->is_water_tile && vertices.center.z > -emf ) {
 				vertices.center.z = -emf;

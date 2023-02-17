@@ -38,6 +38,7 @@ World::World( const Settings& settings )
 	//m_random->SetState( {946763678,2473140922,2270397686,4138960536} ); // another weird light bug
 	//m_random->SetState( {70351513,643661934,2396482743,1984892262} ); // stretch bug
 	//m_random->SetState( {3083264277,2759361294,2259827786,799043819} ); // lots of fungus
+	//m_random->SetState( {2057306363,3857423773,2087610360,4043297429} ); // texture shift glitch
 #endif
 }
 
