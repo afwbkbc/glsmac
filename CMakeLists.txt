@@ -96,6 +96,8 @@ ENDIF()
 
 IF (NOT WIN32)
 	ADD_DEPENDENCIES(${PROJECT_NAME} glsmac_version)
+
+	SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -pthread" )
 ENDIF()
 
 SET( CMAKE_CXX_FLAGS  " -std=c++17 ${CMAKE_CXX_FLAGS} -Wno-pointer-arith" )
