@@ -18,7 +18,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 			// TODO: add pointer connection between tile and tile_state_t?
 			auto src = m_map->GetTileState( t->coord.x, t->coord.y )->moisture_original;
 			
-			Texture::add_mode_t add_mode = Texture::AM_DEFAULT;
+			Texture::add_flags_t add_mode = Texture::AM_DEFAULT;
 
 			if ( t == tile->NW ) {
 				add_mode = Texture::AM_GRADIENT_LEFT;
@@ -102,13 +102,15 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 	
 	if ( ( tile->features & Tile::F_XENOFUNGUS ) && !tile->is_water_tile ) {
 		auto txinfo = m_map->GetTileTextureInfo( tile, Map::TG_FEATURE, Tile::F_XENOFUNGUS );
+		auto mode = Texture::AM_MERGE;
 		if ( !ts->has_water && txinfo.texture_variant >= 14 ) {
-			ts->layers[ Map::LAYER_LAND ].stronger_texture_stretch = true;
+			ts->layers[ Map::LAYER_LAND ].texture_stretch_at_edges = true;
+			mode |= Texture::AM_RANDOM_SHIFT_X | Texture::AM_RANDOM_SHIFT_Y | Texture::AM_RANDOM_MIRROR_X | Texture::AM_RANDOM_MIRROR_Y;
 		}
 		m_map->AddTexture(
 			Map::LAYER_LAND,
 			Map::s_consts.pcx_textures.fungus_land[ txinfo.texture_variant ],
-			Texture::AM_MERGE,
+			mode,
 			txinfo.rotate_direction
 		);
 	}

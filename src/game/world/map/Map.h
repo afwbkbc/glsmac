@@ -189,7 +189,7 @@ CLASS( Map, Serializable )
 		tile_tex_coords_t tex_coords;
 		tile_colors_t colors;
 		Vec2< mesh::Mesh::coord_t > texture_stretch; // each tile has only one 'own' stretch value (for bottom vertex), others are copied from neighbours
-		bool stronger_texture_stretch;
+		bool texture_stretch_at_edges;
 		
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
@@ -249,7 +249,7 @@ CLASS( Map, Serializable )
 	};
 	
 	struct copy_from_after_t {
-		Texture::add_mode_t mode;
+		Texture::add_flags_t mode;
 		size_t tx1_from;
 		size_t ty1_from;
 		size_t tx2_from;
@@ -284,13 +284,13 @@ CLASS( Map, Serializable )
 	};
 	
 	// call these only during tile generation
-	void AddTexture( const tile_layer_type_t tile_layer, const pcx_texture_coordinates_t& tc, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha = 1.0f );
-	void CopyTextureFromLayer( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile_layer_type_t tile_layer, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha = 1.0f );
-	void CopyTexture( const tile_layer_type_t tile_layer_from, const tile_layer_type_t tile_layer, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha = 1.0f );
-	void CopyTextureDeferred( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from,const tile_layer_type_t tile_layer, const Texture::add_mode_t mode, const uint8_t rotate, const float alpha = 1.0f );
-	void GetTexture( Texture* dest_texture, const pcx_texture_coordinates_t& tc, const Texture::add_mode_t mode, const uint8_t rotate = 0, const float alpha = 1.0f );
-	void GetTextureFromLayer( Texture* dest_texture, const tile_layer_type_t tile_layer, const size_t tx_from, const size_t ty_from, const Texture::add_mode_t mode = Texture::AM_DEFAULT, const uint8_t rotate = 0, const float alpha = 1.0f ) const;
-	void SetTexture( const tile_layer_type_t tile_layer, Texture* src_texture, const Texture::add_mode_t mode, const uint8_t rotate = 0, const float alpha = 1.0f );
+	void AddTexture( const tile_layer_type_t tile_layer, const pcx_texture_coordinates_t& tc, const Texture::add_flags_t mode, const uint8_t rotate, const float alpha = 1.0f );
+	void CopyTextureFromLayer( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile_layer_type_t tile_layer, const Texture::add_flags_t mode, const uint8_t rotate, const float alpha = 1.0f );
+	void CopyTexture( const tile_layer_type_t tile_layer_from, const tile_layer_type_t tile_layer, const Texture::add_flags_t mode, const uint8_t rotate, const float alpha = 1.0f );
+	void CopyTextureDeferred( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from,const tile_layer_type_t tile_layer, const Texture::add_flags_t mode, const uint8_t rotate, const float alpha = 1.0f );
+	void GetTexture( Texture* dest_texture, const pcx_texture_coordinates_t& tc, const Texture::add_flags_t mode, const uint8_t rotate = 0, const float alpha = 1.0f );
+	void GetTextureFromLayer( Texture* dest_texture, const tile_layer_type_t tile_layer, const size_t tx_from, const size_t ty_from, const Texture::add_flags_t mode = Texture::AM_DEFAULT, const uint8_t rotate = 0, const float alpha = 1.0f ) const;
+	void SetTexture( const tile_layer_type_t tile_layer, Texture* src_texture, const Texture::add_flags_t mode, const uint8_t rotate = 0, const float alpha = 1.0f );
 	const Texture* GetTerrainTexture() const;
 	
 	enum tile_grouping_criteria_t {

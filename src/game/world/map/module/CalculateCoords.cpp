@@ -26,17 +26,16 @@ void CalculateCoords::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map
 		float ofs = 1.0f; // remove lines between tiles
 		
 		// TODO: implement texture tiling and shifting
-		/*if ( ts->layers[ lt ].stronger_texture_stretch ) {
-			const float sr = 1.0f;
-			#define RND m_map->GetRandom()->GetFloat( 0, Map::s_consts.tile.texture_stretch_randomness * sr * 2 )
+		if ( ts->layers[ lt ].texture_stretch_at_edges ) {
+			#define RND m_map->GetRandom()->GetFloat( 0, Map::s_consts.tile.texture_stretch_randomness )
 			// initialize tex_coords with some stretching
 			ts->layers[ lt ].tex_coords = {
 				{ ts->tex_coord.x + m_map->GetRandom()->GetFloat(
-					-Map::s_consts.tile.texture_stretch_randomness * sr / 2,
-					Map::s_consts.tile.texture_stretch_randomness * sr / 2
+					-Map::s_consts.tile.texture_stretch_randomness,
+					Map::s_consts.tile.texture_stretch_randomness
 				), ts->tex_coord.y + m_map->GetRandom()->GetFloat(
-					-Map::s_consts.tile.texture_stretch_randomness * sr / 2,
-					Map::s_consts.tile.texture_stretch_randomness * sr / 2
+					-Map::s_consts.tile.texture_stretch_randomness,
+					Map::s_consts.tile.texture_stretch_randomness
 				) }, // center
 				{
 					ts->tex_coord.x1 + ofs + ts->NW->layers[ lt ].texture_stretch.x + RND,
@@ -57,7 +56,7 @@ void CalculateCoords::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map
 			};
 			#undef RND
 		}
-		else {*/
+		else {
 			// initialize tex_coords with some stretching
 			ts->layers[ lt ].tex_coords = {
 				{ ts->tex_coord.x + m_map->GetRandom()->GetFloat(
@@ -72,7 +71,7 @@ void CalculateCoords::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map
 				{ ts->tex_coord.x2 - ofs - ts->NE->layers[ lt ].texture_stretch.x, ts->tex_coord.y1 + ofs + ts->NE->layers[ lt ].texture_stretch.x }, // right
 				{ ts->tex_coord.x2 - ofs - ts->layers[ lt ].texture_stretch.x, ts->tex_coord.y2 - ofs - ts->layers[ lt ].texture_stretch.y } // bottom
 			};
-		//}
+		}
 		
 	}
 }

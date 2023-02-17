@@ -91,7 +91,7 @@ void Prepare::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 			(Color){ 1.0, 1.0, 1.0, 1.0 },
 		};
 		
-		ts->layers[ lt ].stronger_texture_stretch = false;
+		ts->layers[ lt ].texture_stretch_at_edges = false;
 		
 	}
 	

@@ -14,17 +14,17 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 	float tcwc = cwc * 0.85f;
 	float tcww = tcw * Map::s_consts.pcx_texture_block.dimensions.x;
 	float tcwh = tcw * Map::s_consts.pcx_texture_block.dimensions.y;
-	const Texture::add_mode_t coastline_mode = Texture::AM_MERGE | Texture::AM_INVERT;
+	const Texture::add_flags_t coastline_mode = Texture::AM_MERGE | Texture::AM_INVERT;
 	struct coastline_corner_t {
 		size_t msx = 0;
 		size_t msy = 0;
-		Texture::add_mode_t side = 0;
+		Texture::add_flags_t side = 0;
 		bool can_mirror = false;
 		bool maybe_mirror_nw = false;
 		bool maybe_mirror_ne = false;
 		bool maybe_mirror_se = false;
 		bool maybe_mirror_sw = false;
-		Texture::add_mode_t mirror_mode;
+		Texture::add_flags_t mirror_mode;
 	};
 	std::vector< coastline_corner_t > coastline_corners = {};
 	coastline_corner_t coastline_corner_tmp = {};

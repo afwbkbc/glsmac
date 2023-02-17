@@ -58,7 +58,7 @@ void Texture::SetPixelAlpha( const size_t x, const size_t y, const uint8_t alpha
 	memcpy( ptr( m_bitmap, ( y * m_width + x ) * m_bpp + 3, sizeof( alpha ) ), &alpha, sizeof( alpha ) );
 }
 
-void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x, const size_t dest_y, const rotate_t rotate, const float alpha ) {
+void Texture::AddFrom( const types::Texture* source, add_flags_t flags, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x, const size_t dest_y, const rotate_t rotate, const float alpha, util::Random* rng ) {
 	ASSERT( dest_x + ( x2 - x1 ) < m_width, "destination x overflow ( " + std::to_string( dest_x + ( x2 - x1 ) ) + " >= " + std::to_string( m_width ) + " )" );
 	ASSERT( dest_y + ( y2 - y1 ) < m_height, "destination y overflow (" + std::to_string( dest_y + ( y2 - y1 ) ) + " >= " + std::to_string( m_height ) + " )" );
 	ASSERT( x2 >= x1, "invalid source x size ( " + std::to_string( x2 ) + " < " + std::to_string( x1 ) + " )" );
@@ -79,34 +79,65 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 		ASSERT( w == h, "rotating supported only for squares for now" );
 	}
 	
+	size_t shiftx, shifty; // for random shifts
 	size_t cx, cy; // center
 	size_t sx, sy; // source
 	size_t dx, dy; // dest
 	float r;
 	
 	if (
-		( mode & AM_ROUND_LEFT ) ||
-		( mode & AM_ROUND_TOP ) ||
-		( mode & AM_ROUND_RIGHT ) ||
-		( mode & AM_ROUND_BOTTOM ) ||
-		( mode & AM_GRADIENT_LEFT ) ||
-		( mode & AM_GRADIENT_TOP ) ||
-		( mode & AM_GRADIENT_RIGHT ) ||
-		( mode & AM_GRADIENT_BOTTOM )
+		( flags & AM_ROUND_LEFT ) ||
+		( flags & AM_ROUND_TOP ) ||
+		( flags & AM_ROUND_RIGHT ) ||
+		( flags & AM_ROUND_BOTTOM ) ||
+		( flags & AM_GRADIENT_LEFT ) ||
+		( flags & AM_GRADIENT_TOP ) ||
+		( flags & AM_GRADIENT_RIGHT ) ||
+		( flags & AM_GRADIENT_BOTTOM )
 	) {
 		cx = floor( w / 2 );
 		cy = floor( h / 2 );
 		r = sqrt( pow( (float)cx, 2 ) + pow( (float)cy, 2 ) );
 		if (
-			( mode & AM_ROUND_LEFT ) ||
-			( mode & AM_ROUND_TOP ) ||
-			( mode & AM_ROUND_RIGHT ) ||
-			( mode & AM_ROUND_BOTTOM )
+			( flags & AM_ROUND_LEFT ) ||
+			( flags & AM_ROUND_TOP ) ||
+			( flags & AM_ROUND_RIGHT ) ||
+			( flags & AM_ROUND_BOTTOM )
 		) {
-			ASSERT( mode & AM_MERGE, "rounded corners supported only for merge mode" );
+			ASSERT( flags & AM_MERGE, "rounded corners supported only for merge flags" );
 			r *= 0.7f;
 			ASSERT( r >= 0, "sqrt returned negative result: " + std::to_string( r ) );
 		}
+	}
+	
+	if ( flags & AM_RANDOM_MIRROR_X ) {
+		ASSERT( rng, "no rng provided for random mirror" );
+		if ( rng->IsLucky( 2 ) ) {
+			flags ^= AM_MIRROR_X;
+		}
+	}
+	
+	if ( flags & AM_RANDOM_MIRROR_Y ) {
+		ASSERT( rng, "no rng provided for random mirror" );
+		if ( rng->IsLucky( 2 ) ) {
+			flags ^= AM_MIRROR_Y;
+		}
+	}
+	
+	if ( flags & AM_RANDOM_SHIFT_X ) {
+		ASSERT( rng, "no rng provided for random shift" );
+		shiftx = rng->GetUInt( 0, w - 1 );
+	}
+	else {
+		shiftx = 0;
+	}
+	
+	if ( flags & AM_RANDOM_SHIFT_Y ) {
+		ASSERT( rng, "no rng provided for random shift" );
+		shifty = rng->GetUInt( 0, h - 1 );
+	}
+	else {
+		shifty = 0;
 	}
 	
 	float pixel_alpha;
@@ -142,14 +173,31 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 				}
 			}
 			
+			if ( flags & AM_RANDOM_SHIFT_X ) {
+				if ( dx > shiftx ) {
+					dx -= shiftx;
+				}
+				else {
+					dx = w - dx - 1;
+				}
+			}
+			if ( flags & AM_RANDOM_SHIFT_Y ) {
+				if ( dy > shifty ) {
+					dy -= shifty;
+				}
+				else {
+					dy = h - dy - 1;
+				}
+			}
+			
 			is_pixel_needed = true;
 			pixel_alpha = alpha;
 			
 			if (
-				( ( mode & AM_ROUND_LEFT ) && ( dx <= cx ) && ( dy >= cy ) ) ||
-				( ( mode & AM_ROUND_TOP ) && ( dx <= cx ) && ( dy <= cy ) ) ||
-				( ( mode & AM_ROUND_RIGHT ) && ( dx >= cx ) && ( dy <= cy ) ) ||
-				( ( mode & AM_ROUND_BOTTOM ) && ( dx >= cx ) && ( dy >= cy ) )
+				( ( flags & AM_ROUND_LEFT ) && ( dx <= cx ) && ( dy >= cy ) ) ||
+				( ( flags & AM_ROUND_TOP ) && ( dx <= cx ) && ( dy <= cy ) ) ||
+				( ( flags & AM_ROUND_RIGHT ) && ( dx >= cx ) && ( dy <= cy ) ) ||
+				( ( flags & AM_ROUND_BOTTOM ) && ( dx >= cx ) && ( dy >= cy ) )
 			) {
 				float d = sqrt( pow( (float) dx - cx, 2 ) + pow( (float) dy - cy, 2 ) );
 				if ( d > r ) {
@@ -161,18 +209,18 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 				}
 			}
 			
-			if ( mode & AM_INVERT ) {
+			if ( flags & AM_INVERT ) {
 				is_pixel_needed = !is_pixel_needed;
 			}
 			
 			if ( is_pixel_needed ) {
-				if ( mode & AM_MIRROR_X ) {
+				if ( flags & AM_MIRROR_X ) {
 					sx = x2 - x;
 				}
 				else {
 					sx = x + x1;
 				}
-				if ( mode & AM_MIRROR_Y ) {
+				if ( flags & AM_MIRROR_Y ) {
 					sy = y2 - y;
 				}
 				else {
@@ -181,13 +229,13 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 				from = ptr( source->m_bitmap, ( ( sy ) * source->m_width + ( sx ) ) * m_bpp, m_bpp );
 				to = ptr( m_bitmap, ( ( dy + dest_y ) * m_width + ( dx + dest_x ) ) * m_bpp, m_bpp );
 
-				if ( ( !( mode & AM_MERGE ) ) || ( *(uint32_t*)from & 0x000000ff ) ) {
+				if ( ( !( flags & AM_MERGE ) ) || ( *(uint32_t*)from & 0x000000ff ) ) {
 					
 					if (
-						( mode & AM_GRADIENT_LEFT ) ||
-						( mode & AM_GRADIENT_TOP ) ||
-						( mode & AM_GRADIENT_RIGHT ) ||
-						( mode & AM_GRADIENT_BOTTOM )
+						( flags & AM_GRADIENT_LEFT ) ||
+						( flags & AM_GRADIENT_TOP ) ||
+						( flags & AM_GRADIENT_RIGHT ) ||
+						( flags & AM_GRADIENT_BOTTOM )
 					) {
 					
 						uint32_t pixel_color;
@@ -196,17 +244,17 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 						uint32_t dst_pixel_color;
 						memcpy( &dst_pixel_color, to, m_bpp );
 
-						size_t range = ( mode & AM_GRADIENT_TIGHTER ) ? 1 : 2;
+						size_t range = ( flags & AM_GRADIENT_TIGHTER ) ? 1 : 2;
 						
 						float p = 0.0f;
 						
-						if ( mode & AM_GRADIENT_LEFT ) {
-							if ( mode & AM_GRADIENT_TOP ) {
+						if ( flags & AM_GRADIENT_LEFT ) {
+							if ( flags & AM_GRADIENT_TOP ) {
 								if ( ( dx + dy ) < ( cx + cy ) ) {
 									p = ( (float)( ( cx + cy ) - ( dx + dy ) ) / ( w + h ) * range );
 								}
 							}
-							else if ( mode & AM_GRADIENT_BOTTOM ) {
+							else if ( flags & AM_GRADIENT_BOTTOM ) {
 								if ( ( dx + cy ) < ( cx + dy ) ) {
 									p = ( (float)( ( cx + dy ) - ( dx + cy ) ) / ( w + h ) * range );
 								}
@@ -217,13 +265,13 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 								}
 							}
 						}
-						else if ( mode & AM_GRADIENT_RIGHT ) {
-							if ( mode & AM_GRADIENT_TOP ) {
+						else if ( flags & AM_GRADIENT_RIGHT ) {
+							if ( flags & AM_GRADIENT_TOP ) {
 								if ( ( cx + dy ) < ( dx + cy ) ) {
 									p = ( (float)( ( dx + cy ) - ( cx + dy ) ) / ( w + h ) * range );
 								}
 							}
-							else if ( mode & AM_GRADIENT_BOTTOM ) {
+							else if ( flags & AM_GRADIENT_BOTTOM ) {
 								if ( ( cx + cy ) < ( dx + dy ) ) {
 									p = ( (float)( ( dx + dy ) - ( cx + cy ) ) / ( w + h ) * range );
 								}
@@ -234,12 +282,12 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 								}
 							}
 						}
-						else if ( mode & AM_GRADIENT_TOP ) {
+						else if ( flags & AM_GRADIENT_TOP ) {
 							if ( dy < cy ) {
 								p = (float)( cy - dy ) / h * range;
 							}
 						}
-						else if ( mode & AM_GRADIENT_BOTTOM ) {
+						else if ( flags & AM_GRADIENT_BOTTOM ) {
 							if ( cy < dy ) {
 								p = (float)( dy - cy ) / h * range;
 							}
@@ -261,7 +309,7 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 					else {
 						memcpy( to, from, m_bpp );
 						if ( pixel_alpha < 1.0f ) {
-							if ( mode & AM_MERGE ) {
+							if ( flags & AM_MERGE ) {
 								
 								// TODO: refactor
 								
