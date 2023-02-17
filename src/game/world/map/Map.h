@@ -188,6 +188,9 @@ CLASS( Map, Serializable )
 		tile_vertices_t coords;
 		tile_tex_coords_t tex_coords;
 		tile_colors_t colors;
+		Vec2< mesh::Mesh::coord_t > texture_stretch; // each tile has only one 'own' stretch value (for bottom vertex), others are copied from neighbours
+		bool stronger_texture_stretch;
+		
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
 	};
@@ -240,7 +243,7 @@ CLASS( Map, Serializable )
 		bool is_coastline_corner;
 		bool has_water;
 		Texture* moisture_original;
-		Vec2< mesh::Mesh::coord_t > texture_stretch; // each tile has only one 'own' stretch value (for bottom vertex), others are copied from neighbours
+		
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
 	};

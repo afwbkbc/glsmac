@@ -36,6 +36,7 @@ World::World( const Settings& settings )
 	//m_random->SetState( {3927071555,2047740357,9789330,4039274482} ); // had slope removal bug
 	//m_random->SetState( {3199628599,474732328,355451379,1762265997} ); // weird light bug on 1 tile?
 	//m_random->SetState( {946763678,2473140922,2270397686,4138960536} ); // another weird light bug
+	//m_random->SetState( {70351513,643661934,2396482743,1984892262} ); // stretch bug
 #endif
 }
 

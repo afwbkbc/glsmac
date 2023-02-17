@@ -12,6 +12,7 @@
 #include "module/LandMoisture.h"
 #include "module/LandSurface.h"
 #include "module/WaterSurface.h"
+#include "module/CalculateCoords.h"
 #include "module/Coastlines.h"
 #include "module/Finalize.h"
 
@@ -93,7 +94,7 @@ Map::Map( Random* random, Scene* scene )
 		m_modules.push_back( module_pass );
 	}
 	
-	{ // needs to be in separate pass because moisture original textures need to be available for all tiles in next passes
+	{ // needs to be in separate pass because moisture original textures need to be available for all tiles in next pass
 		module_pass.clear();
 		NEW( m, LandMoisture, this ); module_pass.push_back( m );
 		m_modules.push_back( module_pass );
@@ -103,6 +104,7 @@ Map::Map( Random* random, Scene* scene )
 		module_pass.clear();
 		NEW( m, LandSurface, this ); module_pass.push_back( m );
 		NEW( m, WaterSurface, this ); module_pass.push_back( m );
+		NEW( m, CalculateCoords, this ); module_pass.push_back( m );
 		NEW( m, Coastlines, this ); module_pass.push_back( m );
 		m_modules.push_back( module_pass );
 	}
@@ -619,33 +621,24 @@ const Buffer Map::tile_state_t::Serialize() const {
 	
 	buf.WriteFloat( coord.x );
 	buf.WriteFloat( coord.y );
-	
 	buf.WriteFloat( tex_coord.x );
 	buf.WriteFloat( tex_coord.y );
 	buf.WriteFloat( tex_coord.x1 );
 	buf.WriteFloat( tex_coord.y1 );
 	buf.WriteFloat( tex_coord.x2 );
 	buf.WriteFloat( tex_coord.y2 );
-	
 	buf.WriteString( elevations.Serialize().ToString() );
-	
 	buf.WriteInt( LAYER_MAX );
 	for ( auto i = 0 ; i < LAYER_MAX ; i++ ) {
 		buf.WriteString( layers[ i ].Serialize().ToString() );
 	}
-	
 	buf.WriteString( overdraw_column.coords.Serialize().ToString() );
 	buf.WriteString( overdraw_column.indices.Serialize().ToString() );
-	
 	buf.WriteString( data_mesh.coords.Serialize().ToString() );
 	buf.WriteString( data_mesh.indices.Serialize().ToString() );
-	
 	buf.WriteBool( is_coastline_corner );
 	buf.WriteBool( has_water );
-	
 	buf.WriteString( moisture_original->Serialize().ToString() );
-	
-	buf.WriteVec2f( texture_stretch );
 	
 	return buf;
 }
@@ -669,6 +662,8 @@ const Buffer Map::tile_layer_t::Serialize() const {
 	buf.WriteString( coords.Serialize().ToString() );
 	buf.WriteString( tex_coords.Serialize().ToString() );
 	buf.WriteString( colors.Serialize().ToString() );
+	buf.WriteVec2f( texture_stretch );
+	buf.WriteBool( stronger_texture_stretch );
 	
 	return buf;
 }
@@ -778,36 +773,27 @@ void Map::map_state_t::Unserialize( Buffer buf ) {
 void Map::tile_state_t::Unserialize( Buffer buf ) {
 	coord.x = buf.ReadFloat();
 	coord.y = buf.ReadFloat();
-	
 	tex_coord.x = buf.ReadFloat();
 	tex_coord.y = buf.ReadFloat();
 	tex_coord.x1 = buf.ReadFloat();
 	tex_coord.y1 = buf.ReadFloat();
 	tex_coord.x2 = buf.ReadFloat();
 	tex_coord.y2 = buf.ReadFloat();
-	
 	elevations.Unserialize( buf.ReadString() );
-	
 	if ( (tile_layer_type_t)buf.ReadInt() != LAYER_MAX ) {
 		THROW( "LAYER_MAX mismatch" );
 	}
 	for ( auto i = 0 ; i < LAYER_MAX ; i++ ) {
 		layers[i].Unserialize( buf.ReadString() );
 	}
-	
 	overdraw_column.coords.Unserialize( buf.ReadString() );
 	overdraw_column.indices.Unserialize( buf.ReadString() );
-	
 	data_mesh.coords.Unserialize( buf.ReadString() );
 	data_mesh.indices.Unserialize( buf.ReadString() );
-	
 	is_coastline_corner = buf.ReadBool();
 	has_water = buf.ReadBool();
-	
 	NEW( moisture_original, Texture, "Moisture", Map::s_consts.pcx_texture_block.dimensions.x, Map::s_consts.pcx_texture_block.dimensions.y );
 	moisture_original->Unserialize( buf.ReadString() );
-
-	texture_stretch = buf.ReadVec2f();
 }
 
 void Map::tile_elevations_t::Unserialize( Buffer buf ) {
@@ -823,6 +809,8 @@ void Map::tile_layer_t::Unserialize( Buffer buf ) {
 	coords.Unserialize( buf.ReadString() );
 	tex_coords.Unserialize( buf.ReadString() );
 	colors.Unserialize( buf.ReadString() );
+	texture_stretch = buf.ReadVec2f();
+	stronger_texture_stretch = buf.ReadBool();
 }
 
 void Map::tile_indices_t::Unserialize( Buffer buf ) {

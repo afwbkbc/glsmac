@@ -5,6 +5,7 @@ SET(SRC ${SRC}
 	${PWD}/LandMoisture.cpp
 	${PWD}/LandSurface.cpp
 	${PWD}/WaterSurface.cpp
+	${PWD}/CalculateCoords.cpp
 	${PWD}/Coastlines.cpp
 	${PWD}/Finalize.cpp
 

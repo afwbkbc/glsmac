@@ -18,6 +18,9 @@ void WaterSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::m
 	// TODO: fix to match corner color and alpha to neighbour water tiles
 	if ( ( tile->features & Tile::F_XENOFUNGUS ) && ( tile->is_water_tile || ts->is_coastline_corner ) ) {
 		auto txinfo = m_map->GetTileTextureInfo( tile, Map::TG_FEATURE, Tile::F_XENOFUNGUS );
+		if ( txinfo.texture_variant >= 14 ) {
+			ts->layers[ Map::LAYER_WATER ].stronger_texture_stretch = true;
+		}
 		m_map->AddTexture(
 			Map::LAYER_WATER,
 			Map::s_consts.pcx_textures.fungus_sea[ txinfo.texture_variant ],

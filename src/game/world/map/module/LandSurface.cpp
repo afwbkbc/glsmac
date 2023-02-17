@@ -102,6 +102,9 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 	
 	if ( ( tile->features & Tile::F_XENOFUNGUS ) && !tile->is_water_tile ) {
 		auto txinfo = m_map->GetTileTextureInfo( tile, Map::TG_FEATURE, Tile::F_XENOFUNGUS );
+		if ( !ts->has_water && txinfo.texture_variant >= 14 ) {
+			ts->layers[ Map::LAYER_LAND ].stronger_texture_stretch = true;
+		}
 		m_map->AddTexture(
 			Map::LAYER_LAND,
 			Map::s_consts.pcx_textures.fungus_land[ txinfo.texture_variant ],
