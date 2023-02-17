@@ -47,33 +47,32 @@ public:
 	};
 
 
-	Vec3 operator/(const Vec3 rhs) {
+	const Vec3 operator/ ( const Vec3 rhs ) const {
 	    return Vec3( this->x / rhs.x,
 	                 this->y / rhs.y,
 	                 this->z / rhs.z);
 	};
 
 
-	Vec3 operator*(const Vec3 rhs) {
+	const Vec3 operator* ( const Vec3 rhs ) const {
 	    return Vec3( this->x * rhs.x,
 	                 this->y * rhs.y,
 	                 this->z * rhs.z);
 	};
 
 
-	Vec3 operator+(const Vec3 rhs) {
+	const Vec3 operator+ ( const Vec3 rhs ) const {
 	    return Vec3( this->x + rhs.x,
 	                 this->y + rhs.y,
 	                 this->z + rhs.z);
 	};
 
 
-	Vec3 operator-(const Vec3 rhs) {
+	const Vec3 operator- ( const Vec3 rhs ) const {
 	    return Vec3( this->x - rhs.x,
 	                 this->y - rhs.y,
 	                 this->z - rhs.z);
 	};
-
 
 	void operator+=(const Vec3 rhs) {
 		this->x+=rhs.x;
@@ -103,28 +102,28 @@ public:
 	};
 
 
-	Vec3 operator/(const DATATYPE scalar) {
+	const Vec3 operator/ ( const DATATYPE scalar ) const {
 	    return Vec3( this->x / scalar,
 	                 this->y / scalar,
 	                 this->z / scalar);
 	};
 
 
-	Vec3 operator*(const DATATYPE scalar) {
+	const Vec3 operator* ( const DATATYPE scalar ) const {
 	    return Vec3( this->x * scalar,
 	                 this->y * scalar,
 	                 this->z * scalar);
 	};
 
 
-	Vec3 operator+(const DATATYPE scalar) {
+	const Vec3 operator+ ( const DATATYPE scalar ) const {
 	    return Vec3( this->x + scalar,
 	                 this->y + scalar,
 	                 this->z + scalar);
 	};
 
 
-	Vec3 operator-(const DATATYPE scalar) {
+	const Vec3 operator- ( const DATATYPE scalar ) const {
 	    return Vec3( this->x - scalar,
 	                 this->y - scalar,
 	                 this->z - scalar);

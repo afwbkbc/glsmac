@@ -79,6 +79,25 @@ const Vec3 Render::GetVertexNormal( const index_t index ) const {
 	return normal;
 }
 
+void Render::CombineNormals( const std::vector< index_t >& indices ) {
+	ASSERT( !indices.empty(), "normals list empty" );
+#ifdef DEBUG
+	std::string logstr = "";
+	for ( auto i : indices ) {
+		logstr += std::to_string( i ) + " ";
+	}
+	Log( "Combining normals ( " + logstr + ")" );
+#endif
+	Vec3 normal = { 0.0f, 0.0f, 0.0f };
+	for ( auto i : indices ) {
+		normal += GetVertexNormal( i );
+	}
+	normal /= indices.size();
+	for ( auto i : indices ) {
+		SetVertexNormal( i, normal );
+	}
+}
+
 void Render::Finalize() {
 	Mesh::Finalize();
 	

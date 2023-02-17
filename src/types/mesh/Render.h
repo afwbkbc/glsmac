@@ -29,6 +29,8 @@ CLASS( Render, Mesh )
 	void GetVertexTexCoord( const index_t index, Vec2<coord_t>* tex_coord ) const;
 	const Vec3 GetVertexNormal( const index_t index ) const;
 	
+	void CombineNormals( const std::vector< index_t >& indices );
+	
 	void Finalize();
 	
 private:

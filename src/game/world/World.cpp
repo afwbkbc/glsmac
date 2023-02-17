@@ -35,7 +35,7 @@ World::World( const Settings& settings )
 #ifdef DEVEL
 	//m_random->SetState( {3927071555,2047740357,9789330,4039274482} ); // had slope removal bug
 	//m_random->SetState( {3199628599,474732328,355451379,1762265997} ); // weird light bug on 1 tile?
-	//m_random->SetState( {946763678,2473140922,2270397686,4138960536} ); another weird light bug
+	//m_random->SetState( {946763678,2473140922,2270397686,4138960536} ); // another weird light bug
 #endif
 }
 
@@ -57,13 +57,13 @@ void World::Start() {
 	{
 		NEW( m_light_a, Light, Light::LT_AMBIENT_DIFFUSE );
 		m_light_a->SetPosition( { 48.227f, 20.412f, 57.65f } );
-		m_light_a->SetColor( { 0.8f, 0.9f, 1.0f, 0.5f } );
+		m_light_a->SetColor( { 0.8f, 0.9f, 1.0f, 0.8f } );
 		m_world_scene->AddLight( m_light_a );
 	}
 	{
 		NEW( m_light_b, Light, Light::LT_AMBIENT_DIFFUSE );
 		m_light_b->SetPosition( { 22.412f, 62.227f, 43.35f } );
-		m_light_b->SetColor( { 1.0f, 0.9f, 0.8f, 0.5f } );
+		m_light_b->SetColor( { 1.0f, 0.9f, 0.8f, 0.8f } );
 		m_world_scene->AddLight( m_light_b );
 	}
 	

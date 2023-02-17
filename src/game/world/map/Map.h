@@ -274,10 +274,6 @@ CLASS( Map, Serializable )
 		} variables;
 		std::vector< copy_from_after_t > copy_from_after;
 
-		// TODO: refactor this
-		std::vector< std::pair< types::mesh::Mesh::index_t*, types::mesh::Mesh::index_t* > > copy_normals;
-		std::unordered_map< types::mesh::Mesh::index_t*, std::pair< Vec2< size_t >, Texture::add_mode_t > > need_normals;
-		
 		const Texture* terrain_texture;
 		
 		const Buffer Serialize() const;

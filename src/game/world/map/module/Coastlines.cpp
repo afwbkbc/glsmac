@@ -110,15 +110,6 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 		ts->layers[ Map::LAYER_LAND ].tex_coords.center.x = ( ts->layers[ Map::LAYER_LAND ].tex_coords.left.x + ts->layers[ Map::LAYER_LAND ].tex_coords.top.x + ts->layers[ Map::LAYER_LAND ].tex_coords.right.x + ts->layers[ Map::LAYER_LAND ].tex_coords.bottom.x ) / 4;
 		ts->layers[ Map::LAYER_LAND ].tex_coords.center.y = ( ts->layers[ Map::LAYER_LAND ].tex_coords.left.y + ts->layers[ Map::LAYER_LAND ].tex_coords.top.y + ts->layers[ Map::LAYER_LAND ].tex_coords.right.y + ts->layers[ Map::LAYER_LAND ].tex_coords.bottom.y ) / 4;
 		
-		if ( ts->is_coastline_corner ) {
-			// fix incorrect shadows on coasts (because land vertices were moved)
-			// TODO: set only needed ones?
-			ms->copy_normals.push_back( { &ts->layers[ Map::LAYER_LAND ].indices.left, &ts->layers[ Map::LAYER_WATER ].indices.left } );
-			ms->copy_normals.push_back( { &ts->layers[ Map::LAYER_LAND ].indices.top, &ts->layers[ Map::LAYER_WATER ].indices.top } );
-			ms->copy_normals.push_back( { &ts->layers[ Map::LAYER_LAND ].indices.right, &ts->layers[ Map::LAYER_WATER ].indices.right } );
-			ms->copy_normals.push_back( { &ts->layers[ Map::LAYER_LAND ].indices.bottom, &ts->layers[ Map::LAYER_WATER ].indices.bottom } );
-			ms->copy_normals.push_back( { &ts->layers[ Map::LAYER_LAND ].indices.center, &ts->layers[ Map::LAYER_WATER ].indices.center } );
-		}
 	}
 	
 	ts->layers[ Map::LAYER_LAND ].coords.center = {
@@ -392,19 +383,6 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 						RandomRotate()
 					);
 				}
-			}
-			
-			// get normal from corresponding adjactent tile
-			for ( auto& c : coastline_corners ) {
-
-				ASSERT( ( c.msx % 2 ) == ( c.msy % 2 ), "msx and msy oddity does not match ( ( " + std::to_string( c.msx ) + " % 2 ) != ( " + std::to_string( c.msy ) + " % 2 )" );
-				
-				ms->need_normals[
-					c.side == Texture::AM_ROUND_LEFT ? &ts->layers[ Map::LAYER_WATER ].indices.left :
-					c.side == Texture::AM_ROUND_TOP ? &ts->layers[ Map::LAYER_WATER ].indices.top :
-					c.side == Texture::AM_ROUND_RIGHT ? &ts->layers[ Map::LAYER_WATER ].indices.right :
-					c.side == Texture::AM_ROUND_BOTTOM ? &ts->layers[ Map::LAYER_WATER ].indices.bottom : nullptr
-				] = { { c.msx, c.msy }, c.side };
 			}
 		}
 	}

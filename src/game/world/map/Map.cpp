@@ -256,19 +256,52 @@ void Map::GenerateActors() {
 	m_mesh_terrain->Finalize();
 	m_mesh_terrain_data->Finalize();
 	
-	// update normals where needed
-	for ( auto& cn : m_map_state.copy_normals ) {
-		m_mesh_terrain->SetVertexNormal( *cn.second, m_mesh_terrain->GetVertexNormal( *cn.first ) );
-	}
-	for ( auto& nn : m_map_state.need_normals ) {
-		auto* ts = GetTileState( nn.second.first.x, nn.second.first.y );
+	// fix normals
+	std::vector< mesh::Mesh::index_t > v, vtmp;
+	
+	// to prevent reallocations
+	vtmp.reserve( 4 );
+	v.reserve( 8 );
+	
+	for ( auto y = 0 ; y < m_map_state.dimensions.y ; y++ ) {
+		for ( auto x = y & 1 ; x < m_map_state.dimensions.x ; x += 2 ) {
+			auto* tile = m_tiles->At( x, y );
+			auto* ts = GetTileState( x, y );
+			
+			// combine at left vertex
+			#define x( _lt ) { \
+				ts->layers[ _lt ].indices.left, \
+				ts->NW->layers[ _lt ].indices.bottom, \
+				ts->W->layers[ _lt ].indices.right, \
+				ts->SW->layers[ _lt ].indices.top, \
+			}
 
-		m_mesh_terrain->SetVertexNormal( *nn.first, m_mesh_terrain->GetVertexNormal(
-			nn.second.second == Texture::AM_ROUND_LEFT ? ts->layers[ LAYER_LAND ].indices.right :
-			nn.second.second == Texture::AM_ROUND_TOP ? ts->layers[ LAYER_LAND ].indices.bottom :
-			nn.second.second == Texture::AM_ROUND_RIGHT ? ts->layers[ LAYER_LAND ].indices.left :
-			nn.second.second == Texture::AM_ROUND_BOTTOM ? ts->layers[ LAYER_LAND ].indices.top : -1
-		));
+			v = x( LAYER_LAND );
+			
+			if ( tile->is_water_tile || tile->W->is_water_tile || tile->NW->is_water_tile ) {
+				vtmp = x( LAYER_WATER );
+				v.insert( v.end(), vtmp.begin(), vtmp.end() );
+			}
+			
+			m_mesh_terrain->CombineNormals( v );
+			
+			#undef x
+		}
+	}
+	
+	// average center normals
+	for ( auto y = 0 ; y < m_map_state.dimensions.y ; y++ ) {
+		for ( auto x = y & 1 ; x < m_map_state.dimensions.x ; x += 2 ) {
+			auto* tile = m_tiles->At( x, y );
+			auto* ts = GetTileState( x, y );
+			
+			m_mesh_terrain->SetVertexNormal( ts->layers[ LAYER_LAND ].indices.center, (
+				m_mesh_terrain->GetVertexNormal( ts->layers[ LAYER_LAND ].indices.left ) +
+				m_mesh_terrain->GetVertexNormal( ts->layers[ LAYER_LAND ].indices.top ) +
+				m_mesh_terrain->GetVertexNormal( ts->layers[ LAYER_LAND ].indices.right ) +
+				m_mesh_terrain->GetVertexNormal( ts->layers[ LAYER_LAND ].indices.bottom )
+			) / 4 );
+		}
 	}
 	
 	NEW( m_actors.terrain, actor::InstancedMesh, "MapTerrain", m_mesh_terrain );

@@ -156,7 +156,8 @@ void Texture::AddFrom( const types::Texture* source, const add_mode_t mode, cons
 					is_pixel_needed = false;
 				}
 				else if ( d == r ) {
-					pixel_alpha = 0.5f; // some smoothing
+					//pixel_alpha = 0.5f; // some smoothing
+					// idk if it helps tbh
 				}
 			}
 			
