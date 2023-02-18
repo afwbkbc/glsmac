@@ -95,11 +95,12 @@ void Prepare::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 		
 	}
 	
+	// TODO: refactor?
 	ts->is_coastline_corner = !tile->is_water_tile && (
-		( tile->W->is_water_tile && ( tile->NW->is_water_tile || tile->SW->is_water_tile ) ) ||
-		( tile->N->is_water_tile && ( tile->NW->is_water_tile || tile->NE->is_water_tile ) ) ||
-		( tile->E->is_water_tile && ( tile->NE->is_water_tile || tile->SE->is_water_tile ) ) ||
-		( tile->S->is_water_tile && ( tile->SW->is_water_tile || tile->SE->is_water_tile ) )
+		( tile->W->is_water_tile && ( ( tile->NW->is_water_tile || tile->coord.y == 0 ) || ( tile->SW->is_water_tile || tile->coord.y == ms->dimensions.y - 1 ) ) ) ||
+		( ( tile->N->is_water_tile || tile->coord.y <= 1 ) && ( tile->NW->is_water_tile || tile->NE->is_water_tile || tile->coord.y == 0 ) ) ||
+		( tile->E->is_water_tile && ( ( tile->NE->is_water_tile || tile->coord.y == 0 ) || ( tile->SE->is_water_tile || tile->coord.y == ms->dimensions.y - 1 ) ) ) ||
+		( ( tile->S->is_water_tile || tile->coord.y >= ms->dimensions.y - 2 ) && ( tile->SW->is_water_tile || tile->SE->is_water_tile || tile->coord.y == ms->dimensions.y - 1 ) )
 	);
 	
 	ts->has_water = (

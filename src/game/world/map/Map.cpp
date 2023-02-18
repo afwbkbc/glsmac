@@ -252,7 +252,7 @@ void Map::GenerateActors() {
 	}
 	
 	for ( auto& c : m_map_state.copy_from_after ) {
-		m_textures.terrain->AddFrom( m_textures.terrain, c.mode, c.tx1_from, c.ty1_from, c.tx2_from, c.ty2_from, c.tx_to, c.ty_to, c.rotate, c.alpha, m_random );
+		m_textures.terrain->AddFrom( m_textures.terrain, c.mode, c.tx1_from, c.ty1_from, c.tx2_from, c.ty2_from, c.tx_to, c.ty_to, c.rotate, c.alpha, m_random, c.perlin );
 	}
 	
 	m_mesh_terrain->Finalize();
@@ -396,7 +396,7 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const Tile* tile, const 
 	return info;
 }
 
-void Map::AddTexture( const tile_layer_type_t tile_layer, const pcx_texture_coordinates_t& tc, const Texture::add_flags_t mode, const uint8_t rotate, const float alpha ) {
+void Map::AddTexture( const tile_layer_type_t tile_layer, const pcx_texture_coordinates_t& tc, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
 	ASSERT( m_current_ts, "AddTexture called outside of tile generation" );
 	m_textures.terrain->AddFrom(
 		m_textures.source,
@@ -413,7 +413,7 @@ void Map::AddTexture( const tile_layer_type_t tile_layer, const pcx_texture_coor
 	);
 };
 
-void Map::CopyTextureFromLayer( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile_layer_type_t tile_layer, const Texture::add_flags_t mode, const uint8_t rotate, const float alpha ) {
+void Map::CopyTextureFromLayer( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
 	ASSERT( m_current_ts, "CopyTextureFromLayer called outside of tile generation" );
 	m_textures.terrain->AddFrom(
 		m_textures.terrain,
@@ -430,7 +430,7 @@ void Map::CopyTextureFromLayer( const tile_layer_type_t tile_layer_from, const s
 	);
 };
 
-void Map::CopyTexture( const tile_layer_type_t tile_layer_from, const tile_layer_type_t tile_layer, const Texture::add_flags_t mode, const uint8_t rotate, const float alpha ) {
+void Map::CopyTexture( const tile_layer_type_t tile_layer_from, const tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
 	ASSERT( m_current_ts, "CopyTexture called outside of tile generation" );
 	CopyTextureFromLayer(
 		tile_layer_from,
@@ -443,7 +443,7 @@ void Map::CopyTexture( const tile_layer_type_t tile_layer_from, const tile_layer
 	);
 };
 
-void Map::CopyTextureDeferred( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from,const tile_layer_type_t tile_layer, const Texture::add_flags_t mode, const uint8_t rotate, const float alpha ) {
+void Map::CopyTextureDeferred( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from,const tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
 	ASSERT( m_current_ts, "CopyTextureDeferred called outside of tile generation" );
 	m_map_state.copy_from_after.push_back({
 		mode,
@@ -454,11 +454,12 @@ void Map::CopyTextureDeferred( const tile_layer_type_t tile_layer_from, const si
 		(size_t)m_current_ts->tex_coord.x1,
 		tile_layer * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + (size_t)m_current_ts->tex_coord.y1,
 		rotate,
-		alpha
+		alpha,
+		perlin
 	});
 };
 
-void Map::GetTexture( Texture* dest_texture, const pcx_texture_coordinates_t& tc, const Texture::add_flags_t mode, const uint8_t rotate, const float alpha ) {
+void Map::GetTexture( Texture* dest_texture, const pcx_texture_coordinates_t& tc, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
 	ASSERT( m_current_ts, "GetTexture called outside of tile generation" );
 	ASSERT( dest_texture->m_width == Map::s_consts.pcx_texture_block.dimensions.x, "tile dest texture width mismatch" );
 	ASSERT( dest_texture->m_height == Map::s_consts.pcx_texture_block.dimensions.y, "tile dest texture height mismatch" );
@@ -477,7 +478,7 @@ void Map::GetTexture( Texture* dest_texture, const pcx_texture_coordinates_t& tc
 	);
 }
 
-void Map::GetTextureFromLayer( Texture* dest_texture, const tile_layer_type_t tile_layer, const size_t tx_from, const size_t ty_from, const Texture::add_flags_t mode, const uint8_t rotate, const float alpha ) const {
+void Map::GetTextureFromLayer( Texture* dest_texture, const tile_layer_type_t tile_layer, const size_t tx_from, const size_t ty_from, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha ) const {
 	ASSERT( dest_texture->m_width == Map::s_consts.pcx_texture_block.dimensions.x, "tile dest texture width mismatch" );
 	ASSERT( dest_texture->m_height == Map::s_consts.pcx_texture_block.dimensions.y, "tile dest texture height mismatch" );
 	dest_texture->AddFrom(
@@ -495,7 +496,7 @@ void Map::GetTextureFromLayer( Texture* dest_texture, const tile_layer_type_t ti
 	);
 }
 
-void Map::SetTexture( const tile_layer_type_t tile_layer, Texture* src_texture, const Texture::add_flags_t mode, const uint8_t rotate, const float alpha ) {
+void Map::SetTexture( const tile_layer_type_t tile_layer, Texture* src_texture, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
 	ASSERT( m_current_ts, "SetTexture called outside of tile generation" );
 	ASSERT( src_texture->m_width == Map::s_consts.pcx_texture_block.dimensions.x, "tile src texture width mismatch" );
 	ASSERT( src_texture->m_height == Map::s_consts.pcx_texture_block.dimensions.y, "tile src texture height mismatch" );

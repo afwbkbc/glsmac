@@ -18,7 +18,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 			// TODO: add pointer connection between tile and tile_state_t?
 			auto src = m_map->GetTileState( t->coord.x, t->coord.y )->moisture_original;
 			
-			Texture::add_flags_t add_mode = Texture::AM_DEFAULT;
+			Texture::add_flag_t add_mode = Texture::AM_DEFAULT;
 
 			if ( t == tile->NW ) {
 				add_mode = Texture::AM_GRADIENT_LEFT;

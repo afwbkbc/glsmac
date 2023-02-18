@@ -58,7 +58,7 @@ void Texture::SetPixelAlpha( const size_t x, const size_t y, const uint8_t alpha
 	memcpy( ptr( m_bitmap, ( y * m_width + x ) * m_bpp + 3, sizeof( alpha ) ), &alpha, sizeof( alpha ) );
 }
 
-void Texture::AddFrom( const types::Texture* source, add_flags_t flags, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x, const size_t dest_y, const rotate_t rotate, const float alpha, util::Random* rng ) {
+void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x, const size_t dest_y, const rotate_t rotate, const float alpha, util::Random* rng, util::Perlin* perlin ) {
 	ASSERT( dest_x + ( x2 - x1 ) < m_width, "destination x overflow ( " + std::to_string( dest_x + ( x2 - x1 ) ) + " >= " + std::to_string( m_width ) + " )" );
 	ASSERT( dest_y + ( y2 - y1 ) < m_height, "destination y overflow (" + std::to_string( dest_y + ( y2 - y1 ) ) + " >= " + std::to_string( m_height ) + " )" );
 	ASSERT( x2 >= x1, "invalid source x size ( " + std::to_string( x2 ) + " < " + std::to_string( x1 ) + " )" );
@@ -144,6 +144,65 @@ void Texture::AddFrom( const types::Texture* source, add_flags_t flags, const si
 	
 	bool is_pixel_needed;
 	
+	size_t perlin_maxx[ h ];
+	size_t perlin_maxy[ w ];
+	
+	if ( flags & ( AM_PERLIN_LEFT | AM_PERLIN_TOP | AM_PERLIN_RIGHT | AM_PERLIN_BOTTOM ) ) {
+		
+		ASSERT( perlin, "no perlin provided for perlin edge" );
+		const float pr = 0.3f; // perlin range
+		const float pf = 0.1f; // perlin frequency
+		const uint8_t pp = 16; // perlin passes
+		const float pc = 0.4f; // perlin cut percentage
+		// perlin range (for cutting)
+		std::pair< size_t, size_t > prx = { 0, w };
+		std::pair< size_t, size_t > pry = { 0, h };
+		Vec2< float > pfs = { 1.0f, 1.0f }; // perlin fade start (1.0 = no fade)
+		if ( flags & AM_PERLIN_CUT_LEFT ) {
+			prx.first += round( (float)w * pc );
+		}
+		if ( flags & AM_PERLIN_CUT_TOP ) {
+			pry.first += round( (float)h * pc );
+		}
+		if ( flags & AM_PERLIN_CUT_RIGHT ) {
+			prx.second -= round( (float)w * pc );
+		}
+		if ( flags & AM_PERLIN_CUT_BOTTOM ) {
+			pry.second -= round( (float)h * pc );
+		}
+		if ( flags & ( AM_PERLIN_LEFT | AM_PERLIN_RIGHT ) ) {
+			for ( auto y = 0 ; y < h ; y++ ) {
+				if ( y >= pry.first && y <= pry.second ) {
+					perlin_maxx[ y ] = ( perlin->Noise( 0, (float)y * pf, 0, pp ) + 1.0f ) / 2 * h * pr;
+/* TODO: gradient decline
+						perlin_maxx[ y ] = 
+						( ( perlin->Noise( 0, (float)y * pf, 0, pp ) + 1.0f ) / 2 * h * pr )
+							*
+						std::max( 1.0f, (float)( y - pry.first ) / ( pry.second ) )
+					;*/
+				}
+				else {
+					perlin_maxx[ y ] = 0;
+				}
+				Log( "Perlin maxx[" + std::to_string( y ) + "] = " + std::to_string( perlin_maxx[ y ] ) );
+			}
+		}
+		if ( flags & ( AM_PERLIN_TOP | AM_PERLIN_BOTTOM ) ) {
+			for ( auto x = 0 ; x < w ; x++ ) {
+				if ( x >= prx.first && x <= prx.second ) {
+					perlin_maxy[ x ] = 
+						( ( perlin->Noise( 0, (float)x * pf, 0, pp ) + 1.0f ) / 2 * w * pr )
+							*
+						std::max( 1.0f, (float)( x - prx.first ) / ( prx.second ) )
+					;
+				}
+				else {
+					perlin_maxy[ x ] = 0;
+				}
+				Log( "Perlin maxy[" + std::to_string( x ) + "] = " + std::to_string( perlin_maxy[ x ] ) );
+			}
+		}
+	}
 	for (size_t y = 0 ; y < h ; y++) {
 		for (size_t x = 0 ; x < w; x++) {
 			
@@ -206,6 +265,36 @@ void Texture::AddFrom( const types::Texture* source, add_flags_t flags, const si
 				else if ( d == r ) {
 					//pixel_alpha = 0.5f; // some smoothing
 					// idk if it helps tbh
+				}
+			}
+			
+			if ( flags & ( AM_PERLIN_LEFT | AM_PERLIN_TOP | AM_PERLIN_RIGHT | AM_PERLIN_BOTTOM ) ) {
+				
+				bool perlin_need_pixel = false; // combine all enabled perlin edges, at least one positive is needed to keep pixel
+				
+				if ( !perlin_need_pixel && flags & AM_PERLIN_LEFT ) {
+					if ( x < perlin_maxx[ y ] ) {
+						perlin_need_pixel = true;
+					}
+				}
+				if ( !perlin_need_pixel && ( flags & AM_PERLIN_TOP ) ) {
+					if ( y < perlin_maxy[ x ] ) {
+						perlin_need_pixel = true;
+					}
+				}
+				if ( !perlin_need_pixel && flags & AM_PERLIN_RIGHT ) {
+					if ( ( w - x ) < perlin_maxx[ y ] ) {
+						perlin_need_pixel = true;
+					}
+				}
+				if ( !perlin_need_pixel && ( flags & AM_PERLIN_BOTTOM ) ) {
+					if ( ( h - y ) < perlin_maxy[ x ] ) {
+						perlin_need_pixel = true;
+					}
+				}
+				
+				if ( !perlin_need_pixel ) {
+					is_pixel_needed = false;
 				}
 			}
 			
