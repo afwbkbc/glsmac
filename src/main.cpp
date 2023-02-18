@@ -27,7 +27,7 @@
 #include "ui/Default.h"
 
 #include "game/common/Common.h"
-#ifdef DEVEL
+#if defined(DEVEL) || defined(MAPGEN_BENCHMARK)
 #include "game/world/World.h"
 #else
 #include "game/intro/Intro.h"
@@ -155,7 +155,7 @@ int main_real(const int argc, const char* argv[]) {
 		scheduler.AddTask( task_common );
 		
 		// game entry point
-#ifdef DEVEL
+#if defined(DEVEL) || defined(MAPGEN_BENCHMARK)
 		game::Settings settings;
 		NEWV( task, game::world::World, settings );
 #else

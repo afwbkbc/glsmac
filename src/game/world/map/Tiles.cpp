@@ -426,7 +426,7 @@ void Tiles::RemoveExtremeSlopes( const Tile::elevation_t max_allowed_diff ) {
 
 			#define x( _a, _b ) \
 				if ( abs( *tile->elevation._a - *tile->elevation._b ) > max_allowed_diff ) { \
-					Log( "fixing slope: " + std::to_string( *tile->elevation._a ) + "," + std::to_string( *tile->elevation._b ) + " / " + std::to_string( elevation_fixby ) ); \
+					/*Log( "fixing slope: " + std::to_string( *tile->elevation._a ) + "," + std::to_string( *tile->elevation._b ) + " / " + std::to_string( elevation_fixby ) );*/ \
 					*tile->elevation._a += ( *tile->elevation._a < *tile->elevation._b ) ? elevation_fixby : -elevation_fixby; \
 					*tile->elevation._b += ( *tile->elevation._b < *tile->elevation._a ) ? elevation_fixby : -elevation_fixby; \
 					*tile->elevation._a /= elevation_fixby_div; \

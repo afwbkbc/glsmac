@@ -1,4 +1,5 @@
 #include "World.h"
+
 #include "engine/Engine.h"
 
 #include "../mainmenu/MainMenu.h"
@@ -8,7 +9,13 @@
 #include "scene/actor/InstancedMesh.h"
 #include "util/FS.h"
 
+#ifdef MAPGEN_BENCHMARK
+#include <iostream>
 #include "map_generator/SimpleRandom.h"
+#include "map_generator/SimpleRandomNoLoops.h"
+#include "map_generator/SimpleRandomNoPointers.h"
+#endif
+
 #include "map_generator/SimplePerlin.h"
 #include "map_generator/Test.h"
 
@@ -76,10 +83,14 @@ void World::Start() {
 	
 	NEW( m_map, Map, m_random, m_world_scene );
 	
-#ifdef DEVEL
-	NEWV( tiles, Tiles, 40, 20, m_random );
+#ifdef MAPGEN_BENCHMARK
+	NEWV( tiles, Tiles, 2400, 1600, m_random );
 #else
-	NEWV( tiles, Tiles, 80, 40, m_random );
+	#ifdef DEVEL
+		NEWV( tiles, Tiles, 40, 20, m_random );
+	#else
+		NEWV( tiles, Tiles, 80, 40, m_random );
+	#endif
 #endif
 	//NEWV( tiles, Tiles, 200, 120, m_random );
 	
@@ -109,8 +120,22 @@ void World::Start() {
 		{
 			map_generator::SimplePerlin generator;
 			//map_generator::SimpleRandom generator;
+			//map_generator::SimpleRandomNoLoops generator;
+			//map_generator::SimpleRandomNoPointers generator;
 			//map_generator::Test generator;
+#if defined(DEBUG) || defined(MAPGEN_BENCHMARK)
+			util::Timer timer;
+			timer.Start();
+#endif
 			generator.Generate( tiles, m_random->GetUInt( 0, UINT32_MAX - 1 ) );
+#ifdef DEBUG
+			Log( "Map generation took " + std::to_string( timer.GetElapsed().count() ) + "ms" );
+#elif defined(MAPGEN_BENCHMARK)
+			std::cout << "Map generation took " << std::to_string( timer.GetElapsed().count() ) << "ms" << std::endl;
+#endif
+#ifdef MAPGEN_BENCHMARK
+			exit(0);
+#endif
 #ifdef DEBUG
 			// if crash happens - it's handy to have a map file to reproduce it
 			Log( (std::string) "Saving map to " + MAP_FILENAME );
