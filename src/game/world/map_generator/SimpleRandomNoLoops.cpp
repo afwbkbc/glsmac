@@ -12,8 +12,12 @@ void SimpleRandomNoLoops::Generate( Tiles* tiles, size_t seed ) {
 	Log( "Generating terrain ( " + std::to_string( tiles->GetWidth() ) + " x " + std::to_string( tiles->GetHeight() ) + " )" );
 	
 	Tile* tile;
-	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {
-		for ( auto x = y & 1 ; x < tiles->GetWidth() ; x += 2 ) {
+	
+	const size_t width = tiles->GetWidth();
+	const size_t height = tiles->GetHeight();
+	
+	for ( auto y = 0 ; y < height ; y++ ) {
+		for ( auto x = y & 1 ; x < width ; x += 2 ) {
 			tile = tiles->At( x, y );
 		
 #define RND MAPGEN_ELEVATION_MIN + tiles->GetRandom()->GetUInt( 0, MAPGEN_ELEVATION_MAX - MAPGEN_ELEVATION_MIN )
@@ -50,11 +54,11 @@ void SimpleRandomNoLoops::Generate( Tiles* tiles, size_t seed ) {
 						} \
 						JUNGLES2( (_tile)->W ); \
 						JUNGLES2( (_tile)->E ); \
-						if ( (_tile)->coord.y < tiles->GetHeight() - 1 ) { \
+						if ( (_tile)->coord.y < height - 1 ) { \
 							JUNGLES2( (_tile)->SW ); \
 							JUNGLES2( (_tile)->SE ); \
 						} \
-						if ( (_tile)->coord.y < tiles->GetHeight() - 2 ) { \
+						if ( (_tile)->coord.y < height - 2 ) { \
 							JUNGLES2( (_tile)->S ); \
 						} \
 					} \
@@ -69,11 +73,11 @@ void SimpleRandomNoLoops::Generate( Tiles* tiles, size_t seed ) {
 				}
 				JUNGLES1( tile->W );
 				JUNGLES1( tile->E );
-				if ( tile->coord.y < tiles->GetHeight() - 1 ) {
+				if ( tile->coord.y < height - 1 ) {
 					JUNGLES1( tile->SW );
 					JUNGLES1( tile->SE );
 				}
-				if ( tile->coord.y < tiles->GetHeight() - 2 ) {
+				if ( tile->coord.y < height - 2 ) {
 					JUNGLES1( tile->S );
 				}
 
@@ -103,11 +107,11 @@ void SimpleRandomNoLoops::Generate( Tiles* tiles, size_t seed ) {
 						} \
 						FUNGUS4( (_tile)->W ); \
 						FUNGUS4( (_tile)->E ); \
-						if ( (_tile)->coord.y < tiles->GetHeight() - 1 ) { \
+						if ( (_tile)->coord.y < height - 1 ) { \
 							FUNGUS4( (_tile)->SW ); \
 							FUNGUS4( (_tile)->SE ); \
 						} \
-						if ( (_tile)->coord.y < tiles->GetHeight() - 2 ) { \
+						if ( (_tile)->coord.y < height - 2 ) { \
 							FUNGUS4( (_tile)->S ); \
 						} \
 					} \
@@ -125,11 +129,11 @@ void SimpleRandomNoLoops::Generate( Tiles* tiles, size_t seed ) {
 						} \
 						FUNGUS3( (_tile)->W ); \
 						FUNGUS3( (_tile)->E ); \
-						if ( (_tile)->coord.y < tiles->GetHeight() - 1 ) { \
+						if ( (_tile)->coord.y < height - 1 ) { \
 							FUNGUS3( (_tile)->SW ); \
 							FUNGUS3( (_tile)->SE ); \
 						} \
-						if ( (_tile)->coord.y < tiles->GetHeight() - 2 ) { \
+						if ( (_tile)->coord.y < height - 2 ) { \
 							FUNGUS3( (_tile)->S ); \
 						} \
 					} \
@@ -147,11 +151,11 @@ void SimpleRandomNoLoops::Generate( Tiles* tiles, size_t seed ) {
 						} \
 						FUNGUS2( (_tile)->W ); \
 						FUNGUS2( (_tile)->E ); \
-						if ( (_tile)->coord.y < tiles->GetHeight() - 1 ) { \
+						if ( (_tile)->coord.y < height - 1 ) { \
 							FUNGUS2( (_tile)->SW ); \
 							FUNGUS2( (_tile)->SE ); \
 						} \
-						if ( (_tile)->coord.y < tiles->GetHeight() - 2 ) { \
+						if ( (_tile)->coord.y < height - 2 ) { \
 							FUNGUS2( (_tile)->S ); \
 						} \
 					} \
@@ -166,11 +170,11 @@ void SimpleRandomNoLoops::Generate( Tiles* tiles, size_t seed ) {
 				}
 				FUNGUS1( tile->W );
 				FUNGUS1( tile->E );
-				if ( tile->coord.y < tiles->GetHeight() - 1 ) {
+				if ( tile->coord.y < height - 1 ) {
 					FUNGUS1( tile->SW );
 					FUNGUS1( tile->SE );
 				}
-				if ( tile->coord.y < tiles->GetHeight() - 2 ) {
+				if ( tile->coord.y < height - 2 ) {
 					FUNGUS1( tile->S );
 				}
 				#undef FUNGUS1

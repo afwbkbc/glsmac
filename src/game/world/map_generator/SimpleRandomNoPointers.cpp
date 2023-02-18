@@ -11,9 +11,12 @@ namespace map_generator {
 void SimpleRandomNoPointers::Generate( Tiles* tiles, size_t seed ) {
 	Log( "Generating terrain ( " + std::to_string( tiles->GetWidth() ) + " x " + std::to_string( tiles->GetHeight() ) + " )" );
 	
+	const size_t width = tiles->GetWidth();
+	const size_t height = tiles->GetHeight();
+	
 	Tile* tile;
-	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {
-		for ( auto x = y & 1 ; x < tiles->GetWidth() ; x += 2 ) {
+	for ( auto y = 0 ; y < height ; y++ ) {
+		for ( auto x = y & 1 ; x < width ; x += 2 ) {
 			tile = tiles->At( x, y );
 		
 #define RND MAPGEN_ELEVATION_MIN + tiles->GetRandom()->GetUInt( 0, MAPGEN_ELEVATION_MAX - MAPGEN_ELEVATION_MIN )
@@ -22,8 +25,8 @@ void SimpleRandomNoPointers::Generate( Tiles* tiles, size_t seed ) {
 				tiles->At( x, y - 2 )->elevation_data.bottom = RND;
 			}
 			if ( tile->coord.y > 0 ) {
-				tiles->At( x > 0 ? x - 1 : tiles->GetWidth() - 1, y - 1 )->elevation_data.bottom = RND;
-				tiles->At( x < tiles->GetWidth() - 1 ? x + 1 : 0, y - 1 )->elevation_data.bottom = RND;
+				tiles->At( x > 0 ? x - 1 : width - 1, y - 1 )->elevation_data.bottom = RND;
+				tiles->At( x < width - 1 ? x + 1 : 0, y - 1 )->elevation_data.bottom = RND;
 			}
 			tile->elevation_data.bottom = RND;
 			
@@ -49,19 +52,19 @@ void SimpleRandomNoPointers::Generate( Tiles* tiles, size_t seed ) {
 							JUNGLES2( (_x), (_y) - 2 ); \
 						} \
 						if ( (_y) > 0 ) { \
-							JUNGLES2( (_x) > 0 ? (_x) - 1 : tiles->GetWidth() - 1, (_y) - 1 ); \
-							JUNGLES2( (_x) < tiles->GetWidth() - 1 ? (_x) + 1 : 0, (_y) - 1 ); \
+							JUNGLES2( (_x) > 0 ? (_x) - 1 : width - 1, (_y) - 1 ); \
+							JUNGLES2( (_x) < width - 1 ? (_x) + 1 : 0, (_y) - 1 ); \
 						} \
-						JUNGLES2( (_x) > 1 ? (_x) - 2 : tiles->GetWidth() - 1 - ( 1 - ( (_y) % 2 ) ), (_y) ); \
-						JUNGLES2( (_x) < tiles->GetWidth() - 2 ? (_x) + 2 : (_y) % 2, (_y) ); \
+						JUNGLES2( (_x) > 1 ? (_x) - 2 : width - 1 - ( 1 - ( (_y) % 2 ) ), (_y) ); \
+						JUNGLES2( (_x) < width - 2 ? (_x) + 2 : (_y) % 2, (_y) ); \
 						if ( (_y) > 1 ) { \
 							JUNGLES2( (_x), (_y) - 2 ); \
 						} \
-						if ( (_y) < tiles->GetHeight() - 1 ) { \
-							JUNGLES2( (_x) > 0 ? (_x) - 1 : tiles->GetWidth() - 1, (_y) + 1 ); \
-							JUNGLES2( (_x) < tiles->GetWidth() - 1 ? (_x) + 1 : 0, (_y) + 1 ); \
+						if ( (_y) < height - 1 ) { \
+							JUNGLES2( (_x) > 0 ? (_x) - 1 : width - 1, (_y) + 1 ); \
+							JUNGLES2( (_x) < width - 1 ? (_x) + 1 : 0, (_y) + 1 ); \
 						} \
-						if ( (_y) < tiles->GetHeight() - 2 ) { \
+						if ( (_y) < height - 2 ) { \
 							JUNGLES2( (_x), (_y) + 2 ); \
 						} \
 					} \
@@ -71,19 +74,19 @@ void SimpleRandomNoPointers::Generate( Tiles* tiles, size_t seed ) {
 					JUNGLES1( x, y - 2 ); // N
 				}
 				if ( y > 0 ) {
-					JUNGLES1( x > 0 ? x - 1 : tiles->GetWidth() - 1, y - 1 ); // NW
-					JUNGLES1( x < tiles->GetWidth() - 1 ? x + 1 : 0, y - 1 ); // NE
+					JUNGLES1( x > 0 ? x - 1 : width - 1, y - 1 ); // NW
+					JUNGLES1( x < width - 1 ? x + 1 : 0, y - 1 ); // NE
 				}
-				JUNGLES1( x > 1 ? x - 2 : tiles->GetWidth() - 1 - ( 1 - ( y % 2 ) ), y ); // W
-				JUNGLES1( x < tiles->GetWidth() - 2 ? x + 2 : y % 2, y ); // E
+				JUNGLES1( x > 1 ? x - 2 : width - 1 - ( 1 - ( y % 2 ) ), y ); // W
+				JUNGLES1( x < width - 2 ? x + 2 : y % 2, y ); // E
 				if ( y > 1 ) {
 					JUNGLES1( x, y - 2 ); // N
 				}
-				if ( y < tiles->GetHeight() - 1 ) {
-					JUNGLES1( x > 0 ? x - 1 : tiles->GetWidth() - 1, y + 1 ); // SW
-					JUNGLES1( x < tiles->GetWidth() - 1 ? x + 1 : 0, y + 1 ); // SE
+				if ( y < height - 1 ) {
+					JUNGLES1( x > 0 ? x - 1 : width - 1, y + 1 ); // SW
+					JUNGLES1( x < width - 1 ? x + 1 : 0, y + 1 ); // SE
 				}
-				if ( y < tiles->GetHeight() - 2 ) {
+				if ( y < height - 2 ) {
 					JUNGLES1( x, y + 2 ); // S
 				}
 				#undef JUNGLES1
@@ -107,19 +110,19 @@ void SimpleRandomNoPointers::Generate( Tiles* tiles, size_t seed ) {
 							FUNGUS4( (_x), (_y) - 2 ); \
 						} \
 						if ( (_y) > 0 ) { \
-							FUNGUS4( (_x) > 0 ? (_x) - 1 : tiles->GetWidth() - 1, (_y) - 1 ); \
-							FUNGUS4( (_x) < tiles->GetWidth() - 1 ? (_x) + 1 : 0, (_y) - 1 ); \
+							FUNGUS4( (_x) > 0 ? (_x) - 1 : width - 1, (_y) - 1 ); \
+							FUNGUS4( (_x) < width - 1 ? (_x) + 1 : 0, (_y) - 1 ); \
 						} \
-						FUNGUS4( (_x) > 1 ? (_x) - 2 : tiles->GetWidth() - 1 - ( 1 - ( (_y) % 2 ) ), (_y) ); \
-						FUNGUS4( (_x) < tiles->GetWidth() - 2 ? (_x) + 2 : (_y) % 2, (_y) ); \
+						FUNGUS4( (_x) > 1 ? (_x) - 2 : width - 1 - ( 1 - ( (_y) % 2 ) ), (_y) ); \
+						FUNGUS4( (_x) < width - 2 ? (_x) + 2 : (_y) % 2, (_y) ); \
 						if ( (_y) > 1 ) { \
 							FUNGUS4( (_x), (_y) - 2 ); \
 						} \
-						if ( (_y) < tiles->GetHeight() - 1 ) { \
-							FUNGUS4( (_x) > 0 ? (_x) - 1 : tiles->GetWidth() - 1, (_y) + 1 ); \
-							FUNGUS4( (_x) < tiles->GetWidth() - 1 ? (_x) + 1 : 0, (_y) + 1 ); \
+						if ( (_y) < height - 1 ) { \
+							FUNGUS4( (_x) > 0 ? (_x) - 1 : width - 1, (_y) + 1 ); \
+							FUNGUS4( (_x) < width - 1 ? (_x) + 1 : 0, (_y) + 1 ); \
 						} \
-						if ( (_y) < tiles->GetHeight() - 2 ) { \
+						if ( (_y) < height - 2 ) { \
 							FUNGUS4( (_x), (_y) + 2 ); \
 						} \
 					} \
@@ -132,19 +135,19 @@ void SimpleRandomNoPointers::Generate( Tiles* tiles, size_t seed ) {
 							FUNGUS3( (_x), (_y) - 2 ); \
 						} \
 						if ( (_y) > 0 ) { \
-							FUNGUS3( (_x) > 0 ? (_x) - 1 : tiles->GetWidth() - 1, (_y) - 1 ); \
-							FUNGUS3( (_x) < tiles->GetWidth() - 1 ? (_x) + 1 : 0, (_y) - 1 ); \
+							FUNGUS3( (_x) > 0 ? (_x) - 1 : width - 1, (_y) - 1 ); \
+							FUNGUS3( (_x) < width - 1 ? (_x) + 1 : 0, (_y) - 1 ); \
 						} \
-						FUNGUS3( (_x) > 1 ? (_x) - 2 : tiles->GetWidth() - 1 - ( 1 - ( (_y) % 2 ) ), (_y) ); \
-						FUNGUS3( (_x) < tiles->GetWidth() - 2 ? (_x) + 2 : (_y) % 2, (_y) ); \
+						FUNGUS3( (_x) > 1 ? (_x) - 2 : width - 1 - ( 1 - ( (_y) % 2 ) ), (_y) ); \
+						FUNGUS3( (_x) < width - 2 ? (_x) + 2 : (_y) % 2, (_y) ); \
 						if ( (_y) > 1 ) { \
 							FUNGUS3( (_x), (_y) - 2 ); \
 						} \
-						if ( (_y) < tiles->GetHeight() - 1 ) { \
-							FUNGUS3( (_x) > 0 ? (_x) - 1 : tiles->GetWidth() - 1, (_y) + 1 ); \
-							FUNGUS3( (_x) < tiles->GetWidth() - 1 ? (_x) + 1 : 0, (_y) + 1 ); \
+						if ( (_y) < height - 1 ) { \
+							FUNGUS3( (_x) > 0 ? (_x) - 1 : width - 1, (_y) + 1 ); \
+							FUNGUS3( (_x) < width - 1 ? (_x) + 1 : 0, (_y) + 1 ); \
 						} \
-						if ( (_y) < tiles->GetHeight() - 2 ) { \
+						if ( (_y) < height - 2 ) { \
 							FUNGUS3( (_x), (_y) + 2 ); \
 						} \
 					} \
@@ -157,19 +160,19 @@ void SimpleRandomNoPointers::Generate( Tiles* tiles, size_t seed ) {
 							FUNGUS2( (_x), (_y) - 2 ); \
 						} \
 						if ( (_y) > 0 ) { \
-							FUNGUS2( (_x) > 0 ? (_x) - 1 : tiles->GetWidth() - 1, (_y) - 1 ); \
-							FUNGUS2( (_x) < tiles->GetWidth() - 1 ? (_x) + 1 : 0, (_y) - 1 ); \
+							FUNGUS2( (_x) > 0 ? (_x) - 1 : width - 1, (_y) - 1 ); \
+							FUNGUS2( (_x) < width - 1 ? (_x) + 1 : 0, (_y) - 1 ); \
 						} \
-						FUNGUS2( (_x) > 1 ? (_x) - 2 : tiles->GetWidth() - 1 - ( 1 - ( (_y) % 2 ) ), (_y) ); \
-						FUNGUS2( (_x) < tiles->GetWidth() - 2 ? (_x) + 2 : (_y) % 2, (_y) ); \
+						FUNGUS2( (_x) > 1 ? (_x) - 2 : width - 1 - ( 1 - ( (_y) % 2 ) ), (_y) ); \
+						FUNGUS2( (_x) < width - 2 ? (_x) + 2 : (_y) % 2, (_y) ); \
 						if ( (_y) > 1 ) { \
 							FUNGUS2( (_x), (_y) - 2 ); \
 						} \
-						if ( (_y) < tiles->GetHeight() - 1 ) { \
-							FUNGUS2( (_x) > 0 ? (_x) - 1 : tiles->GetWidth() - 1, (_y) + 1 ); \
-							FUNGUS2( (_x) < tiles->GetWidth() - 1 ? (_x) + 1 : 0, (_y) + 1 ); \
+						if ( (_y) < height - 1 ) { \
+							FUNGUS2( (_x) > 0 ? (_x) - 1 : width - 1, (_y) + 1 ); \
+							FUNGUS2( (_x) < width - 1 ? (_x) + 1 : 0, (_y) + 1 ); \
 						} \
-						if ( (_y) < tiles->GetHeight() - 2 ) { \
+						if ( (_y) < height - 2 ) { \
 							FUNGUS2( (_x), (_y) + 2 ); \
 						} \
 					} \
@@ -179,19 +182,19 @@ void SimpleRandomNoPointers::Generate( Tiles* tiles, size_t seed ) {
 					FUNGUS1( x, y - 2 ); // N
 				}
 				if ( y > 0 ) {
-					FUNGUS1( x > 0 ? x - 1 : tiles->GetWidth() - 1, y - 1 ); // NW
-					FUNGUS1( x < tiles->GetWidth() - 1 ? x + 1 : 0, y - 1 ); // NE
+					FUNGUS1( x > 0 ? x - 1 : width - 1, y - 1 ); // NW
+					FUNGUS1( x < width - 1 ? x + 1 : 0, y - 1 ); // NE
 				}
-				FUNGUS1( x > 1 ? x - 2 : tiles->GetWidth() - 1 - ( 1 - ( y % 2 ) ), y ); // W
-				FUNGUS1( x < tiles->GetWidth() - 2 ? x + 2 : y % 2, y ); // E
+				FUNGUS1( x > 1 ? x - 2 : width - 1 - ( 1 - ( y % 2 ) ), y ); // W
+				FUNGUS1( x < width - 2 ? x + 2 : y % 2, y ); // E
 				if ( y > 1 ) {
 					FUNGUS1( x, y - 2 ); // N
 				}
-				if ( y < tiles->GetHeight() - 1 ) {
-					FUNGUS1( x > 0 ? x - 1 : tiles->GetWidth() - 1, y + 1 ); // SW
-					FUNGUS1( x < tiles->GetWidth() - 1 ? x + 1 : 0, y + 1 ); // SE
+				if ( y < height - 1 ) {
+					FUNGUS1( x > 0 ? x - 1 : width - 1, y + 1 ); // SW
+					FUNGUS1( x < width - 1 ? x + 1 : 0, y + 1 ); // SE
 				}
-				if ( y < tiles->GetHeight() - 2 ) {
+				if ( y < height - 2 ) {
 					FUNGUS1( x, y + 2 ); // S
 				}
 				#undef FUNGUS1
