@@ -5,6 +5,10 @@
 #include "Texture.h"
 #include "engine/Engine.h"
 
+// TODO: refactor, remove map dependency
+#include "game/world/map/Map.h"
+using namespace game::world::map;
+
 namespace types {
 
 Texture::Texture( const std::string& name, const size_t width, const size_t height )
@@ -149,15 +153,26 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 	
 	if ( flags & ( AM_PERLIN_LEFT | AM_PERLIN_TOP | AM_PERLIN_RIGHT | AM_PERLIN_BOTTOM ) ) {
 		
+		ASSERT( rng, "no rng provided for perlin edge" );
 		ASSERT( perlin, "no perlin provided for perlin edge" );
-		const float pr = 0.3f; // perlin range
-		const float pf = 0.1f; // perlin frequency
-		const uint8_t pp = 16; // perlin passes
-		const float pc = 0.4f; // perlin cut percentage
+		
+		// perlin base // TODO: pattern continuation between tiles
+		const float pb = rng->GetFloat( -1.0f, 1.0f ) * 1000000;
+		
+		// consts
+		// TODO: pass from parameters somehow (need to refactor)
+		const float pr = Map::s_consts.coastlines.perlin.range;
+		const float pf = Map::s_consts.coastlines.perlin.frequency;
+		const uint8_t pp = Map::s_consts.coastlines.perlin.passes;
+		const float pc = Map::s_consts.coastlines.perlin.cut;
+		
 		// perlin range (for cutting)
 		std::pair< size_t, size_t > prx = { 0, w };
 		std::pair< size_t, size_t > pry = { 0, h };
-		Vec2< float > pfs = { 1.0f, 1.0f }; // perlin fade start (1.0 = no fade)
+		
+		// temp vars
+		size_t key;
+		
 		if ( flags & AM_PERLIN_CUT_LEFT ) {
 			prx.first += round( (float)w * pc );
 		}
@@ -172,34 +187,32 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 		}
 		if ( flags & ( AM_PERLIN_LEFT | AM_PERLIN_RIGHT ) ) {
 			for ( auto y = 0 ; y < h ; y++ ) {
-				if ( y >= pry.first && y <= pry.second ) {
-					perlin_maxx[ y ] = ( perlin->Noise( 0, (float)y * pf, 0, pp ) + 1.0f ) / 2 * h * pr;
-/* TODO: gradient decline
-						perlin_maxx[ y ] = 
-						( ( perlin->Noise( 0, (float)y * pf, 0, pp ) + 1.0f ) / 2 * h * pr )
-							*
-						std::max( 1.0f, (float)( y - pry.first ) / ( pry.second ) )
-					;*/
+				key = ( flags & AM_PERLIN_LEFT )
+					? y
+					: h - y - 1
+				;
+				if ( key >= pry.first && key <= pry.second ) {
+					perlin_maxx[ key ] = ( perlin->Noise( pb, (float)y * pf, pb, pp ) + 1.0f ) / 2 * h * pr;
 				}
 				else {
-					perlin_maxx[ y ] = 0;
+					perlin_maxx[ key ] = 0;
 				}
-				Log( "Perlin maxx[" + std::to_string( y ) + "] = " + std::to_string( perlin_maxx[ y ] ) );
+				//Log( "Perlin maxx[" + std::to_string( y ) + "] = " + std::to_string( perlin_maxx[ y ] ) );
 			}
 		}
 		if ( flags & ( AM_PERLIN_TOP | AM_PERLIN_BOTTOM ) ) {
 			for ( auto x = 0 ; x < w ; x++ ) {
-				if ( x >= prx.first && x <= prx.second ) {
-					perlin_maxy[ x ] = 
-						( ( perlin->Noise( 0, (float)x * pf, 0, pp ) + 1.0f ) / 2 * w * pr )
-							*
-						std::max( 1.0f, (float)( x - prx.first ) / ( prx.second ) )
-					;
+				key = ( flags & AM_PERLIN_TOP )
+					? x
+					: w - x - 1
+				;
+				if ( key >= prx.first && key <= prx.second ) {
+					perlin_maxy[ key ] = ( perlin->Noise( pb, (float)x * pf, pb, pp ) + 1.0f ) / 2 * w * pr;
 				}
 				else {
-					perlin_maxy[ x ] = 0;
+					perlin_maxy[ key ] = 0;
 				}
-				Log( "Perlin maxy[" + std::to_string( x ) + "] = " + std::to_string( perlin_maxy[ x ] ) );
+				//Log( "Perlin maxy[" + std::to_string( x ) + "] = " + std::to_string( perlin_maxy[ x ] ) );
 			}
 		}
 	}

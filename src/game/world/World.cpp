@@ -40,6 +40,7 @@ World::World( const Settings& settings )
 	//m_random->SetState( {3083264277,2759361294,2259827786,799043819} ); // lots of fungus
 	//m_random->SetState( {2057306363,3857423773,2087610360,4043297429} ); // texture shift glitch
 	//m_random->SetState( {2194870243,307068045,2446867731,2103210869} ); // long straight island
+	//m_random->SetState( {3684284985,1052465576,1524137173,3726230539} ); // mirroring perlin coastlines
 #endif
 }
 

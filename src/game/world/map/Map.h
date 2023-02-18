@@ -109,12 +109,18 @@ CLASS( Map, Serializable )
 		const Vec3 map_position = { 0.0f, 0.0f, 0.0f };
 		const Vec3 map_rotation = { 0.0f, 0.0f, 0.0f };
 		const Color underwater_tint = { 0.0f, 0.2f, 0.5f, 1.0f };
-		/*const struct {
-			const Color coastline_tint = { 0.7f, 0.7f, 0.7f, 1.0f };
+		const struct {
+/*			const Color coastline_tint = { 0.7f, 0.7f, 0.7f, 1.0f };
 			const Color::channel_t coast_water_alpha = 0.3f;
 			const float coast_water_center_alpha = 0.5f;
-			const float coast_water_center_alpha_tint_mod = 0.75f;
-		} coastlines;*/
+			const float coast_water_center_alpha_tint_mod = 0.75f;*/
+			const struct {
+				const float range = 0.35f;
+				const float frequency = 0.14f;
+				const uint8_t passes = 4;
+				const float cut = 0.35f;
+			} perlin;
+		} coastlines;
 		const struct {
 			const util::Clamper< float > elevation_to_vertex_z = { Tile::ELEVATION_MIN, Tile::ELEVATION_MAX, -s_consts.tile_scale_z, s_consts.tile_scale_z };
 			const util::Clamper< float > elevation_to_water_r = { Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST, 0.6f, 1.3f };
