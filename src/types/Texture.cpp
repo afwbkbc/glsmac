@@ -157,7 +157,10 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 		ASSERT( perlin, "no perlin provided for perlin edge" );
 		
 		// perlin base // TODO: pattern continuation between tiles
-		const float pb = alpha * 1000000; // TODO: refactor the whole thing!
+		
+		// if we go outside 0.0 - 1.0 range then edges between tiles won't align properly
+		// if we stay inside 0.0 - 1.0 range then pattern is too repeative
+		const float pb = alpha * 10; // * 1000000; // TODO: refactor the whole thing!
 		
 		// consts
 		// TODO: pass from parameters somehow (need to refactor)
@@ -192,7 +195,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 					: h - y - 1
 				;
 				if ( key >= pry.first && key <= pry.second ) {
-					perlin_maxx[ key ] = ( perlin->Noise( pb, (float)y * pf, pb, pp ) + 1.0f ) / 2 * h * pr;
+					perlin_maxx[ key ] = ( perlin->Noise( pb, (float)y * pf, 0.5f, pp ) + 1.0f ) / 2 * (float)h * pr;
 				}
 				else {
 					perlin_maxx[ key ] = 0;
@@ -207,7 +210,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 					: w - x - 1
 				;
 				if ( key >= prx.first && key <= prx.second ) {
-					perlin_maxy[ key ] = ( perlin->Noise( pb, (float)x * pf, pb, pp ) + 1.0f ) / 2 * w * pr;
+					perlin_maxy[ key ] = ( perlin->Noise( pb, (float)x * pf, pb, pp ) + 1.0f ) / 2 * (float)w * pr;
 				}
 				else {
 					perlin_maxy[ key ] = 0;

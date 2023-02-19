@@ -213,7 +213,7 @@ void Coastlines::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map
 				Map::LAYER_WATER,
 				Texture::AM_MERGE | c.flags,
 				0,
-				m_perlin->Noise( c.msx, c.msy, 0.5f ) / 2 + 0.5f,
+				m_perlin->Noise( ( c.msx + tile->coord.x ) / 2, ( c.msy + tile->coord.y ) / 2, 0.5f ) / 2 + 0.5f,
 				m_perlin
 			);
 		}
