@@ -11,8 +11,6 @@ Random::Random( const value_t seed ) {
 
 #define rot32(x,k) (((x)<<(k))|((x)>>(32-(k))))
 const Random::value_t Random::Generate() {
-	// no lock guard, internal method
-	
 	value_t e = m_state.a - rot32( m_state.b, 27 );
 	m_state.a = m_state.b ^ rot32(m_state.c, 17);
 	m_state.b = m_state.c + m_state.d;
@@ -23,14 +21,12 @@ const Random::value_t Random::Generate() {
 #undef rot32
 
 void Random::SetSeed( const value_t seed ) {
-	std::lock_guard<std::mutex> guard( m_mutex );
-	
 	Log( "Setting seed " + std::to_string( seed ) );
 	m_state.a = 0xf1ea5eed, m_state.b = m_state.c = m_state.d = seed;
 	for ( value_t i = 0; i < 20; ++i ) {
 		(void)Generate();
 	}
-	Log( "State set to " + GetStateStr() );
+	Log( "State set to " + GetStateString() );
 }
 
 const Random::value_t Random::NewSeed() {
@@ -43,8 +39,6 @@ const bool Random::GetBool() {
 }
 
 const uint32_t Random::GetUInt( const uint32_t min, const uint32_t max ) {
-	std::lock_guard<std::mutex> guard( m_mutex );
-	
 	ASSERT( max >= min, "GetUInt max larger than min" );
 	
 	value_t value = Generate();
@@ -55,12 +49,10 @@ const uint32_t Random::GetUInt( const uint32_t min, const uint32_t max ) {
 
 #define FLOAT_PRECISION ( (float)INT_MAX / FLOAT_RANGE_MAX )
 const float Random::GetFloat( const float min, const float max ) {
-	std::lock_guard<std::mutex> guard( m_mutex );
-	
 	ASSERT( max >= min, "GetFloat max larger than min" );
 	
-	ASSERT( min > -FLOAT_RANGE_MAX && min < FLOAT_RANGE_MAX, "GetFloat min overflow" );
-	ASSERT( max > -FLOAT_RANGE_MAX && max < FLOAT_RANGE_MAX, "GetFloat max overflow" );
+	ASSERT( min > -FLOAT_RANGE_MAX && min < FLOAT_RANGE_MAX, "GetFloat min range overflow" );
+	ASSERT( max > -FLOAT_RANGE_MAX && max < FLOAT_RANGE_MAX, "GetFloat max range overflow" );
 	
 	value_t value = Generate();
 	
@@ -77,31 +69,19 @@ const bool Random::IsLucky( const value_t difficulty ) {
 }
 
 const Random::state_t Random::GetState() {
-	std::lock_guard<std::mutex> guard( m_mutex );
-	
 	return m_state;
 }
 
 void Random::SetState( const state_t& state ) {
-	std::lock_guard<std::mutex> guard( m_mutex );
-	
 	m_state.a = state.a;
 	m_state.b = state.b;
 	m_state.c = state.c;
 	m_state.d = state.d;
-	Log( "State set to " + GetStateStr() );
+	Log( "State set to " + GetStateString() );
 }
 
 const std::string Random::GetStateString() {
-	std::lock_guard<std::mutex> guard( m_mutex );
-	
-	return GetStateStr();
-}
-
-const std::string Random::GetStateStr() {
-	// no lock guard, internal method
-	
-	return "{" + std::to_string( m_state.a ) + "," + std::to_string( m_state.b ) + "," + std::to_string( m_state.c ) + "," + std::to_string( m_state.d ) + "}";
+	return "{" + std::to_string( m_state.a ) + "," + std::to_string( m_state.b ) + "," + std::to_string( m_state.c ) + "," + std::to_string( m_state.d ) + "}";	
 }
 
 }

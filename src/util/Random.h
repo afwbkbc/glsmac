@@ -1,14 +1,11 @@
 #pragma once
 
-#include <mutex>
-
 #include "Util.h"
 
 /**
  * Jenkins Small Fast 32-bit
  *   (can't use 64-bit for compatibility reasons, GLSMAC may run on 32-bit systems that connect to 64-bit host, etc)
  *   (can't use builtin C++ random classes because we need to be able to save and restore rng states)
- *   (this class is thread-safe)
  */
 
 namespace util {
@@ -41,11 +38,9 @@ CLASS( Random, Util )
 	
 private:
 	
-	std::mutex m_mutex;
 	state_t m_state = {};
 	
 	const value_t Generate();
-	const std::string GetStateStr();
 };
 
 }
