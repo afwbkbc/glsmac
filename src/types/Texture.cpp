@@ -157,7 +157,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 		ASSERT( perlin, "no perlin provided for perlin edge" );
 		
 		// perlin base // TODO: pattern continuation between tiles
-		const float pb = rng->GetFloat( -1.0f, 1.0f ) * 1000000;
+		const float pb = alpha * 1000000; // TODO: refactor the whole thing!
 		
 		// consts
 		// TODO: pass from parameters somehow (need to refactor)

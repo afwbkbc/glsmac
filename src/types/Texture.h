@@ -75,7 +75,7 @@ CLASS( Texture, Serializable )
 	static constexpr rotate_t ROTATE_270 = 3;
 	
 	/**
-	 * TODO: refactor this huge parameter list somehow
+	 * TODO: refactor this huge parameter list somehow!!!
 	 * 
 	 * @param source - source Texture object
 	 * @param flags - method of how (and when) pixels from source are applied to dest, see add_flag_t
@@ -86,7 +86,7 @@ CLASS( Texture, Serializable )
 	 * @param dest_x - (optional) where to start copying to (x coordinate), default 0 (at beginning)
 	 * @param dest_y - (optional) where to start copying to (y coordinate), default 0 (at beginning)
 	 * @param rotate - (optional) apply as rotated or not, default 0 ( not rotated ). see rotate_t
-	 * @param alpha - (optional) parameter for alpha-related flags
+	 * @param alpha - (optional) parameter for alpha-related flags. !!! For perlin modes it's used as perlin base !!!
 	 * @param rng - (optional) random generator for random-related flags
 	 * @param perlin - (optional) perlin generator for perlin-related flags
 	 */

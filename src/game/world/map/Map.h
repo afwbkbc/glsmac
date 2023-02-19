@@ -115,9 +115,9 @@ CLASS( Map, Serializable )
 			const float coast_water_center_alpha = 0.5f;
 			const float coast_water_center_alpha_tint_mod = 0.75f;*/
 			const struct {
-				const float range = 0.35f;
-				const float frequency = 0.14f;
-				const uint8_t passes = 4;
+				const float range = 0.4f;
+				const float frequency = 0.15f;
+				const uint8_t passes = 8;
 				const float cut = 0.35f;
 			} perlin;
 		} coastlines;
