@@ -13,7 +13,8 @@
 #include "module/LandSurface.h"
 #include "module/WaterSurface.h"
 #include "module/CalculateCoords.h"
-#include "module/Coastlines.h"
+#include "module/Coastlines1.h"
+#include "module/Coastlines2.h"
 #include "module/Finalize.h"
 
 namespace game {
@@ -105,7 +106,13 @@ Map::Map( Random* random, Scene* scene )
 		NEW( m, LandSurface, this ); module_pass.push_back( m );
 		NEW( m, WaterSurface, this ); module_pass.push_back( m );
 		NEW( m, CalculateCoords, this ); module_pass.push_back( m );
-		NEW( m, Coastlines, this ); module_pass.push_back( m );
+		NEW( m, Coastlines1, this ); module_pass.push_back( m );
+		m_modules.push_back( module_pass );
+	}
+	
+	{ // post-processing pass. needed to read and write tile states of nearby neighbours after they are fully generated in main pass
+		module_pass.clear();
+		NEW( m, Coastlines2, this ); module_pass.push_back( m );
 		m_modules.push_back( module_pass );
 	}
 	
@@ -396,7 +403,7 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const Tile* tile, const 
 	return info;
 }
 
-void Map::AddTexture( const tile_layer_type_t tile_layer, const pcx_texture_coordinates_t& tc, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
+void Map::AddTexture( const tile_layer_type_t tile_layer, const pcx_texture_coordinates_t& tc, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
 	ASSERT( m_current_ts, "AddTexture called outside of tile generation" );
 	m_textures.terrain->AddFrom(
 		m_textures.source,
@@ -409,7 +416,8 @@ void Map::AddTexture( const tile_layer_type_t tile_layer, const pcx_texture_coor
 		tile_layer * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + m_current_ts->tex_coord.y1,
 		rotate,
 		alpha,
-		m_random
+		m_random,
+		perlin
 	);
 };
 

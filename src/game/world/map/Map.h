@@ -110,14 +110,16 @@ CLASS( Map, Serializable )
 		const Vec3 map_rotation = { 0.0f, 0.0f, 0.0f };
 		const Color underwater_tint = { 0.0f, 0.2f, 0.5f, 1.0f };
 		const struct {
-/*			const Color coastline_tint = { 0.7f, 0.7f, 0.7f, 1.0f };
-			const Color::channel_t coast_water_alpha = 0.3f;
-			const float coast_water_center_alpha = 0.5f;
-			const float coast_water_center_alpha_tint_mod = 0.75f;*/
+			//const Color coastline_tint = { 0.7f, 0.7f, 0.7f, 1.0f };
+			const Color coastline_tint = { 1.0f, 1.0f, 1.0f, 1.0f };
+			const float coast_water_alpha = 0.5f;
+			const float coast_water_center_alpha = coast_water_alpha / 1.35f;
+			const float coast_water_center_alpha_corner_mod = 0.7f;
+			//const float coast_water_center_alpha_tint_mod = 0.75f;
 			const struct {
-				const float range = 0.4f;
+				const float range = 0.35f;
 				const float frequency = 0.15f;
-				const uint8_t passes = 8;
+				const uint8_t passes = 4;
 				const float cut = 0.35f;
 			} perlin;
 		} coastlines;
@@ -291,7 +293,7 @@ CLASS( Map, Serializable )
 	};
 	
 	// call these only during tile generation
-	void AddTexture( const tile_layer_type_t tile_layer, const pcx_texture_coordinates_t& tc, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha = 1.0f );
+	void AddTexture( const tile_layer_type_t tile_layer, const pcx_texture_coordinates_t& tc, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha = 1.0f, util::Perlin* perlin = nullptr );
 	void CopyTextureFromLayer( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha = 1.0f );
 	void CopyTexture( const tile_layer_type_t tile_layer_from, const tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha = 1.0f );
 	void CopyTextureDeferred( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from,const tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha = 1.0f, util::Perlin* perlin = nullptr );

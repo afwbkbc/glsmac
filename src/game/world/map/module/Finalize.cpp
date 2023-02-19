@@ -27,7 +27,7 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 	// fix some rare elevation glitches (slightly positive elevations on water tiles, slightly negative on land tiles)
 	// TODO: investigate why it happens
 	const uint8_t em = 1; // for elevations
-	const float emf = 0.001f; // for vertices z
+	const float emf = 0.00000;//1f; // for vertices z
 	if ( tile->is_water_tile && *tile->elevation.center > -em ) {
 		*tile->elevation.center = -em;
 	}
@@ -56,13 +56,13 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 				( cn.bottom.z - cn.top.z ) +
 				( ce.left.z - ce.right.z ) +
 				( cs.top.z - cs.bottom.z )
-			) / 24; // TODO: fix black lines when texture is perpendicular to camera
+			) / 12; // TODO: fix black lines when texture is perpendicular to camera
 			
-			if ( tile->is_water_tile && vertices.center.z > -emf ) {
-				vertices.center.z = -emf;
+			if ( tile->is_water_tile && vertices.center.z > Map::s_consts.tile_scale_z - emf ) {
+				vertices.center.z = Map::s_consts.tile_scale_z - emf;
 			}
-			if ( !tile->is_water_tile && vertices.center.z < emf ) {
-				vertices.center.z = emf;
+			if ( !tile->is_water_tile && vertices.center.z < Map::s_consts.tile_scale_z + emf ) {
+				vertices.center.z = Map::s_consts.tile_scale_z + emf;
 			}
 			
 			#define xx( _k ) vertices.center._k += m_map->GetRandom()->GetFloat( -Map::s_consts.tile.center_coordinates_randomness, Map::s_consts.tile.center_coordinates_randomness ) * 0.05f
@@ -84,22 +84,6 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 			do_x();
 		#undef x
 		
-		if ( lt == Map::LAYER_LAND && tile->is_water_tile ) {
-			#define x( _k ) ts->layers[ lt ].colors._k = Map::s_consts.underwater_tint;
-				do_x();
-			#undef x
-		}
-		else if ( lt == Map::LAYER_WATER_SURFACE ) {
-			#define x( _k ) ts->layers[ lt ].colors._k = (Color){ \
-				Map::s_consts.clampers.elevation_to_water_r.Clamp( ts->elevations._k ), \
-				Map::s_consts.clampers.elevation_to_water_g.Clamp( ts->elevations._k ), \
-				Map::s_consts.clampers.elevation_to_water_b.Clamp( ts->elevations._k ), \
-				Map::s_consts.clampers.elevation_to_water_a.Clamp( ts->elevations._k ) \
-			}
-				do_x();
-			#undef x
-		}
-		
 		tint = ts->layers[ lt ].colors;
 		
 		// fix some rare elevation glitches (slightly positive elevations on water tiles, slightly negative on land tiles)
@@ -107,17 +91,17 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 		{
 			#define x( _k ) \
 				if ( !tile->is_water_tile ) { \
-					if ( lt == Map::LAYER_LAND && vertices._k.z < emf ) { \
-						vertices._k.z = emf; \
+					if ( lt == Map::LAYER_LAND && vertices._k.z < Map::s_consts.tile_scale_z + emf ) { \
+						vertices._k.z = Map::s_consts.tile_scale_z + emf; \
 					} \
-					else if ( lt == Map::LAYER_WATER_SURFACE && vertices._k.z > -emf ) { \
-						vertices._k.z = -emf; \
+					else if ( lt == Map::LAYER_WATER_SURFACE && vertices._k.z > Map::s_consts.tile_scale_z - emf ) { \
+						vertices._k.z = Map::s_consts.tile_scale_z - emf; \
 					} \
 				}
 				do_x();
 			#undef x
 		}
-
+		
 		#define x( _k ) ts->layers[ lt ].indices._k = m_map->m_mesh_terrain->AddVertex( vertices._k, tex_coords._k, tint._k )
 			do_x();
 		#undef x

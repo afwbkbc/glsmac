@@ -61,6 +61,7 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 	if ( tile->is_water_tile ) {
 		layers.push_back( map::Map::LAYER_LAND );
 		layers.push_back( map::Map::LAYER_WATER_SURFACE );
+		layers.push_back( map::Map::LAYER_WATER_SURFACE_EXTRA ); // TODO: only near coastlines?
 		layers.push_back( map::Map::LAYER_WATER );
 	}
 	else {

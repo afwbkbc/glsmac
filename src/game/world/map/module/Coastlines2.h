@@ -6,10 +6,10 @@ namespace game {
 namespace world {
 namespace map {
 
-CLASS( Coastlines, Module )
+CLASS( Coastlines2, Module )
 	
-	Coastlines( Map* const map );
-	~Coastlines();
+	Coastlines2( Map* const map );
+	~Coastlines2();
 	
 	void GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_state_t* ms );
 	

@@ -62,6 +62,19 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 		}
 	}
 	
+	// add underwater color
+	if ( tile->is_water_tile ) {
+		#define x( _k ) ts->layers[ Map::LAYER_LAND ].colors._k = Map::s_consts.underwater_tint;
+			x( center );
+			x( left );
+			x( top );
+			x( right );
+			x( bottom );
+		#undef x
+	}
+	
+	// add map details
+	
 	switch ( tile->rockyness ) {
 		case Tile::R_NONE:
 		case Tile::R_FLAT: {

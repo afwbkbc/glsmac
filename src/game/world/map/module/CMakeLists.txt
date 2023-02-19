@@ -6,7 +6,8 @@ SET(SRC ${SRC}
 	${PWD}/LandSurface.cpp
 	${PWD}/WaterSurface.cpp
 	${PWD}/CalculateCoords.cpp
-	${PWD}/Coastlines.cpp
+	${PWD}/Coastlines1.cpp
+	${PWD}/Coastlines2.cpp
 	${PWD}/Finalize.cpp
 
 PARENT_SCOPE)
