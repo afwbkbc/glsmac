@@ -115,7 +115,9 @@ CLASS( Map, Serializable )
 			const float coast_water_alpha = 0.4f;
 			const float coast_water_center_alpha = coast_water_alpha / 1.5f;
 			const float coast_water_center_alpha_corner_mod = 0.7f;
-			const Color border_color = { 0.365f, 0.298f, 0.231f, 1.0f };
+			const Color border_color = { 0.425f, 0.378f, 0.311f, 1.0f };
+			const float border_alpha = 0.7f;
+			const float border_size = 6.0f;
 			const struct {
 				const float range = 0.35f;
 				const float frequency = 0.15f;

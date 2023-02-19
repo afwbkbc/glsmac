@@ -77,8 +77,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 		(uint8_t)( (float)( (_a) >> 24 & 0xff ) * (_alpha) + (float)( (_b) >> 24 & 0xff ) * ( 1.0f - (_alpha) ) ) << 24 \
 	)
 
-	//#define COASTLINES_BORDER_RND ( (float)rng->GetUInt( 10, 50 ) / 10 )
-	#define COASTLINES_BORDER_RND ( (float)perlin->Noise( x, y, 1.5f ) * 5.0f )
+	#define COASTLINES_BORDER_RND ( (float)( perlin->Noise( x * 4, y * 4, 1.5f ) + 1.0f ) / 2 * Map::s_consts.coastlines.border_size )
 			
 	// +1 because it's inclusive on both sides
 	// TODO: make non-inclusive
@@ -294,7 +293,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 				}
 				if ( flags & AM_COASTLINE_BORDER ) {
 					ASSERT( perlin, "perlin for coastline border not set" );
-					if ( d >= r - COASTLINES_BORDER_RND ) {
+					if ( d >= r - 2.0f ) {
 						// TODO: fix for AM_INVERT
 						mix_color = Map::s_consts.coastlines.border_color.GetRGBA();
 					}
@@ -405,7 +404,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 						uint32_t pixel_color;
 						memcpy( &pixel_color, from, m_bpp );
 						if ( mix_color ) {
-							pixel_color = MIX_COLORS( pixel_color, mix_color, 0.25f );
+							pixel_color = MIX_COLORS( mix_color, pixel_color, Map::s_consts.coastlines.border_alpha );
 						}
 
 						uint32_t dst_pixel_color;
@@ -471,7 +470,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 						if ( mix_color ) {
 							uint32_t pixel_color;
 							memcpy( &pixel_color, from, m_bpp );
-							pixel_color = MIX_COLORS( pixel_color, mix_color, 0.25f );
+							pixel_color = MIX_COLORS( mix_color, pixel_color, Map::s_consts.coastlines.border_alpha );
 							memcpy( to, &pixel_color, m_bpp );
 						}
 						else {
@@ -485,7 +484,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 								uint32_t pixel_color;
 								memcpy( &pixel_color, from, m_bpp );
 								if ( mix_color ) {
-									pixel_color = MIX_COLORS( pixel_color, mix_color, 0.25f );
+									pixel_color = MIX_COLORS( mix_color, pixel_color, Map::s_consts.coastlines.border_alpha );
 								}
 								uint32_t dst_pixel_color;
 								memcpy( &dst_pixel_color, to, m_bpp );
