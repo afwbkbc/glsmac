@@ -5,7 +5,7 @@ namespace world {
 namespace map {
 
 Coastlines1::Coastlines1( Map* const map )
-	: Module( map )
+	: Coastlines( map )
 {
 	NEW( m_perlin, util::Perlin, map->GetRandom()->GetUInt( 0, UINT32_MAX - 1 ) );
 }
@@ -25,17 +25,7 @@ void Coastlines1::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 	float tcww = tcw * Map::s_consts.pcx_texture_block.dimensions.x;
 	float tcwh = tcw * Map::s_consts.pcx_texture_block.dimensions.y;
 	const Texture::add_flag_t coastline_mode = Texture::AM_MERGE | Texture::AM_INVERT;
-	struct coastline_corner_t {
-		size_t msx = 0;
-		size_t msy = 0;
-		Texture::add_flag_t flags = 0;
-		bool can_mirror = false;
-		bool maybe_mirror_nw = false;
-		bool maybe_mirror_ne = false;
-		bool maybe_mirror_se = false;
-		bool maybe_mirror_sw = false;
-		Texture::add_flag_t mirror_mode;
-	};
+	
 	std::vector< coastline_corner_t > coastline_corners = {};
 	coastline_corner_t coastline_corner_tmp = {};
 	
@@ -123,114 +113,6 @@ void Coastlines1::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 	}
 	else { // is_water_tile
 		
-		// add perlin borders where needed
-		
-		coastline_corners.clear();
-		
-		if ( !tile->NW->is_water_tile && tile->coord.y > 0 ) {
-			coastline_corner_tmp = {};
-			coastline_corner_tmp.flags = Texture::AM_MIRROR_X | Texture::AM_PERLIN_LEFT;
-			if ( tile->N->is_water_tile ) {
-				coastline_corner_tmp.flags |= Texture::AM_PERLIN_CUT_TOP;
-			}
-			if ( tile->W->is_water_tile ) {
-				coastline_corner_tmp.flags |= Texture::AM_PERLIN_CUT_BOTTOM;
-			}
-			if ( tile->coord.x > 0 ) {
-				coastline_corner_tmp.msx = tile->coord.x - 1;
-			}
-			else {
-				coastline_corner_tmp.msx = ms->dimensions.x - 1;
-			}
-			coastline_corner_tmp.msy = tile->coord.y - 1;
-			coastline_corners.push_back( coastline_corner_tmp );
-		}
-		if ( !tile->NE->is_water_tile && tile->coord.y > 0 ) {
-			coastline_corner_tmp = {};
-			coastline_corner_tmp.flags |= Texture::AM_MIRROR_Y | Texture::AM_PERLIN_TOP;
-			if ( tile->N->is_water_tile ) {
-				coastline_corner_tmp.flags |= Texture::AM_PERLIN_CUT_LEFT;
-			}
-			if ( tile->E->is_water_tile ) {
-				coastline_corner_tmp.flags |= Texture::AM_PERLIN_CUT_RIGHT;
-			}
-			if ( tile->coord.x < ms->dimensions.x - 1 ) {
-				coastline_corner_tmp.msx = tile->coord.x + 1;
-			}
-			else {
-				coastline_corner_tmp.msx = 0;
-			}
-			coastline_corner_tmp.msy = tile->coord.y - 1;
-			coastline_corners.push_back( coastline_corner_tmp );
-		}
-		if ( !tile->SE->is_water_tile && tile->coord.y < ms->dimensions.y - 1 ) {
-			coastline_corner_tmp = {};
-			coastline_corner_tmp.flags |= Texture::AM_MIRROR_X | Texture::AM_PERLIN_RIGHT;
-			if ( tile->E->is_water_tile ) {
-				coastline_corner_tmp.flags |= Texture::AM_PERLIN_CUT_TOP;
-			}
-			if ( tile->S->is_water_tile ) {
-				coastline_corner_tmp.flags |= Texture::AM_PERLIN_CUT_BOTTOM;
-			}
-			if ( tile->coord.x < ms->dimensions.x - 1 ) {
-				coastline_corner_tmp.msx = tile->coord.x + 1;
-			}
-			else {
-				coastline_corner_tmp.msx = 0;
-			}
-			coastline_corner_tmp.msy = tile->coord.y + 1;
-			coastline_corners.push_back( coastline_corner_tmp );
-		}
-		if ( !tile->SW->is_water_tile && tile->coord.y < ms->dimensions.y - 1 ) {
-			coastline_corner_tmp = {};
-			coastline_corner_tmp.flags |= Texture::AM_MIRROR_Y | Texture::AM_PERLIN_BOTTOM;
-			if ( tile->W->is_water_tile ) {
-				coastline_corner_tmp.flags |= Texture::AM_PERLIN_CUT_LEFT;
-			}
-			if ( tile->S->is_water_tile ) {
-				coastline_corner_tmp.flags |= Texture::AM_PERLIN_CUT_RIGHT;
-			}
-			if ( tile->coord.x > 0 ) {
-				coastline_corner_tmp.msx = tile->coord.x - 1;
-			}
-			else {
-				coastline_corner_tmp.msx = ms->dimensions.x - 1;
-			}
-			coastline_corner_tmp.msy = tile->coord.y + 1;
-			coastline_corners.push_back( coastline_corner_tmp );
-		}
-
-		for ( auto& c : coastline_corners ) {
-			ASSERT( ( c.msx % 2 ) == ( c.msy % 2 ), "msx and msy oddity differs" );
-			
-			const float pb = m_perlin->Noise(
-				( c.msx + tile->coord.x ) / 2 + c.flags * ms->dimensions.x,
-				( c.msy + tile->coord.y ) / 2 + c.flags * ms->dimensions.y,
-				0.5f
-			) / 2 + 0.5f;
-			
-			// water part
-			/*m_map->AddTexture(
-				Map::LAYER_WATER_SURFACE_EXTRA,
-				Map::s_consts.pcx_textures.water[ 0 ],
-				Texture::AM_MERGE | c.flags | Texture::AM_PERLIN_WIDER,
-				0,
-				pb,
-				m_perlin
-			);*/
-			
-			// land part
-			m_map->CopyTextureDeferred(
-				Map::LAYER_LAND,
-				c.msx * Map::s_consts.pcx_texture_block.dimensions.x,
-				c.msy * Map::s_consts.pcx_texture_block.dimensions.y,
-				Map::LAYER_WATER,
-				Texture::AM_MERGE | c.flags,
-				0,
-				pb,
-				m_perlin
-			);
-		}
 	}
 	
 	ts->layers[ Map::LAYER_LAND ].coords.center = {
@@ -277,7 +159,6 @@ void Coastlines1::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 		!tile->SW->is_water_tile
 	)) {
 	
-		//ts->layers[ Map::LAYER_WATER_SURFACE_EXTRA ].colors.center = Map::s_consts.coastlines.coastline_tint * Map::s_consts.coastlines.coast_water_center_alpha_tint_mod;
 		ts->layers[ Map::LAYER_WATER_SURFACE_EXTRA ].colors.center.value.alpha = Map::s_consts.coastlines.coast_water_center_alpha;
 
 		if ( tile->W->is_water_tile && tile->NW->is_water_tile && tile->SW->is_water_tile ) {
@@ -331,7 +212,7 @@ void Coastlines1::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 			);
 
 			// TODO: refactor?
-			auto add_flags = Texture::AM_MERGE;
+			auto add_flags = Texture::AM_MERGE | Texture::AM_COASTLINE_BORDER;
 			if (
 				tile->W->is_water_tile &&
 				( tile->SW->is_water_tile || tile->coord.y == ms->dimensions.y - 1 ) &&
@@ -376,7 +257,7 @@ void Coastlines1::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 			}*/
 
 			// copy texture from land
-			m_map->CopyTexture( Map::LAYER_LAND, Map::LAYER_WATER, add_flags, 0 );
+			m_map->CopyTexture( Map::LAYER_LAND, Map::LAYER_WATER, add_flags, 0, 1.0f, m_perlin );
 			
 		}
 
@@ -516,7 +397,14 @@ void Coastlines1::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 				
 				if ( c.can_mirror ) {
 					// mirror opposite tile
-					m_map->CopyTextureDeferred( Map::LAYER_LAND, c.msx * Map::s_consts.pcx_texture_block.dimensions.x, c.msy * Map::s_consts.pcx_texture_block.dimensions.y, Map::LAYER_WATER, coastline_mode | c.flags | c.mirror_mode, 0 );
+					m_map->CopyTextureDeferred(
+						Map::LAYER_LAND,
+						c.msx * Map::s_consts.pcx_texture_block.dimensions.x,
+						c.msy * Map::s_consts.pcx_texture_block.dimensions.y,
+						Map::LAYER_WATER,
+						coastline_mode | c.flags | c.mirror_mode,
+						0
+					);
 				}
 				else {
 					// use default texture

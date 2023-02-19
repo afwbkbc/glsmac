@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Module.h"
+#include "Coastlines.h"
 
 namespace game {
 namespace world {
 namespace map {
 
-CLASS( Coastlines1, Module )
+CLASS( Coastlines1, Coastlines )
 	
 	Coastlines1( Map* const map );
 	~Coastlines1();

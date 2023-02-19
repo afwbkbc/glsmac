@@ -112,10 +112,10 @@ CLASS( Map, Serializable )
 		const struct {
 			//const Color coastline_tint = { 0.7f, 0.7f, 0.7f, 1.0f };
 			const Color coastline_tint = { 1.0f, 1.0f, 1.0f, 1.0f };
-			const float coast_water_alpha = 0.5f;
-			const float coast_water_center_alpha = coast_water_alpha / 1.35f;
+			const float coast_water_alpha = 0.4f;
+			const float coast_water_center_alpha = coast_water_alpha / 1.5f;
 			const float coast_water_center_alpha_corner_mod = 0.7f;
-			//const float coast_water_center_alpha_tint_mod = 0.75f;
+			const Color border_color = { 0.365f, 0.298f, 0.231f, 1.0f };
 			const struct {
 				const float range = 0.35f;
 				const float frequency = 0.15f;
@@ -294,8 +294,8 @@ CLASS( Map, Serializable )
 	
 	// call these only during tile generation
 	void AddTexture( const tile_layer_type_t tile_layer, const pcx_texture_coordinates_t& tc, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha = 1.0f, util::Perlin* perlin = nullptr );
-	void CopyTextureFromLayer( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha = 1.0f );
-	void CopyTexture( const tile_layer_type_t tile_layer_from, const tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha = 1.0f );
+	void CopyTextureFromLayer( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha = 1.0f, util::Perlin* perlin = nullptr );
+	void CopyTexture( const tile_layer_type_t tile_layer_from, const tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha = 1.0f, util::Perlin* perlin = nullptr );
 	void CopyTextureDeferred( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from,const tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha = 1.0f, util::Perlin* perlin = nullptr );
 	void GetTexture( Texture* dest_texture, const pcx_texture_coordinates_t& tc, const Texture::add_flag_t mode, const uint8_t rotate = 0, const float alpha = 1.0f );
 	void GetTextureFromLayer( Texture* dest_texture, const tile_layer_type_t tile_layer, const size_t tx_from, const size_t ty_from, const Texture::add_flag_t mode = Texture::AM_DEFAULT, const uint8_t rotate = 0, const float alpha = 1.0f ) const;

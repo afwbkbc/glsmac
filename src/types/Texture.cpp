@@ -69,7 +69,17 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 	ASSERT( y2 >= y1, "invalid source y size ( " + std::to_string( y2 ) + " < " + std::to_string( y1 ) + " )" );
 	ASSERT( alpha >= 0, "invalid alpha value ( " + std::to_string( alpha ) + " < 0 )" );
 	ASSERT( alpha <= 1, "invalid alpha value ( " + std::to_string( alpha ) + " > 1 )" );
-	
+
+	#define MIX_COLORS( _a, _b, _alpha ) ( \
+		(uint8_t)( (float)( (_a) & 0xff ) * (_alpha) + (float)( (_b) & 0xff ) * ( 1.0f - (_alpha) ) ) | \
+		(uint8_t)( (float)( (_a) >> 8 & 0xff ) * (_alpha) + (float)( (_b) >> 8 & 0xff ) * ( 1.0f - (_alpha) ) ) << 8 | \
+		(uint8_t)( (float)( (_a) >> 16 & 0xff ) * (_alpha) + (float)( (_b) >> 16 & 0xff ) * ( 1.0f - (_alpha) ) ) << 16 | \
+		(uint8_t)( (float)( (_a) >> 24 & 0xff ) * (_alpha) + (float)( (_b) >> 24 & 0xff ) * ( 1.0f - (_alpha) ) ) << 24 \
+	)
+
+	//#define COASTLINES_BORDER_RND ( (float)rng->GetUInt( 10, 50 ) / 10 )
+	#define COASTLINES_BORDER_RND ( (float)perlin->Noise( x, y, 1.5f ) * 5.0f )
+			
 	// +1 because it's inclusive on both sides
 	// TODO: make non-inclusive
 	const size_t w = x2 - x1 + 1;
@@ -147,6 +157,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 	float pixel_alpha;
 	
 	bool is_pixel_needed;
+	Color::rgba_t mix_color;
 	
 	size_t perlin_maxx[ h ];
 	size_t perlin_maxy[ w ];
@@ -160,11 +171,12 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 		
 		// if we go outside 0.0 - 1.0 range then edges between tiles won't align properly
 		// if we stay inside 0.0 - 1.0 range then pattern is too repeative
-		const float pb = alpha * 10; // * 1000000; // TODO: refactor the whole thing!
+		const float pb = alpha * 1000000; // TODO: refactor the whole thing!
 		
 		// consts
 		// TODO: pass from parameters somehow (need to refactor)
-		const float pr = Map::s_consts.coastlines.perlin.range;
+		//const float pb = ( flags & AM_COASTLINE_BORDER ) ? 0.1f : 0;
+		const float pr = Map::s_consts.coastlines.perlin.range;// + ( ( flags & AM_PERLIN_WIDER ) ? 0.1f : 0 );
 		const float pf = Map::s_consts.coastlines.perlin.frequency;
 		const uint8_t pp = Map::s_consts.coastlines.perlin.passes;
 		const float pc = Map::s_consts.coastlines.perlin.cut;
@@ -195,7 +207,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 					: h - y - 1
 				;
 				if ( key >= pry.first && key <= pry.second ) {
-					perlin_maxx[ key ] = ( perlin->Noise( pb, (float)y * pf, 0.5f, pp ) + 1.0f ) / 2 * (float)h * pr;
+					perlin_maxx[ key ] = std::max( 1.0f, ( perlin->Noise( pb, (float)y * pf, 0.5f, pp ) + 1.0f ) / 2 * (float)h * pr );
 				}
 				else {
 					perlin_maxx[ key ] = 0;
@@ -210,7 +222,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 					: w - x - 1
 				;
 				if ( key >= prx.first && key <= prx.second ) {
-					perlin_maxy[ key ] = ( perlin->Noise( pb, (float)x * pf, pb, pp ) + 1.0f ) / 2 * (float)w * pr;
+					perlin_maxy[ key ] = std::max( 1.0f, ( perlin->Noise( (float)x * pf, pb, 0.5f, pp ) + 1.0f ) / 2 * (float)w * pr );
 				}
 				else {
 					perlin_maxy[ key ] = 0;
@@ -221,6 +233,8 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 	}
 	for (size_t y = 0 ; y < h ; y++) {
 		for (size_t x = 0 ; x < w; x++) {
+			
+			mix_color = 0;
 			
 			switch ( rotate ) {
 				case ROTATE_0: {
@@ -278,39 +292,84 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 				if ( d > r ) {
 					is_pixel_needed = false;
 				}
-				else if ( d == r ) {
-					//pixel_alpha = 0.5f; // some smoothing
-					// idk if it helps tbh
+				if ( flags & AM_COASTLINE_BORDER ) {
+					ASSERT( perlin, "perlin for coastline border not set" );
+					if ( d >= r - COASTLINES_BORDER_RND ) {
+						// TODO: fix for AM_INVERT
+						mix_color = Map::s_consts.coastlines.border_color.GetRGBA();
+					}
 				}
 			}
 			
 			if ( flags & ( AM_PERLIN_LEFT | AM_PERLIN_TOP | AM_PERLIN_RIGHT | AM_PERLIN_BOTTOM ) ) {
 				
 				bool perlin_need_pixel = false; // combine all enabled perlin edges, at least one positive is needed to keep pixel
+				bool perlin_need_border = false;
 				
-				if ( !perlin_need_pixel && flags & AM_PERLIN_LEFT ) {
-					if ( x < perlin_maxx[ y ] ) {
+				if ( flags & AM_PERLIN_LEFT ) {
+					if ( !perlin_need_pixel && x < perlin_maxx[ y ] ) {
 						perlin_need_pixel = true;
 					}
-				}
-				if ( !perlin_need_pixel && ( flags & AM_PERLIN_TOP ) ) {
-					if ( y < perlin_maxy[ x ] ) {
-						perlin_need_pixel = true;
+					if ( !perlin_need_pixel && !perlin_need_border && ( flags & AM_COASTLINE_BORDER ) ) {
+						if (
+							( perlin_maxx[ y ] && x < perlin_maxx[ y ] + COASTLINES_BORDER_RND ) ||
+							( y > 0 && x <= perlin_maxx[ y - 1 ] ) ||
+							( y < h - 1 && x <= perlin_maxx[ y + 1 ] )
+						) {
+							perlin_need_border = true;
+						}
 					}
 				}
-				if ( !perlin_need_pixel && flags & AM_PERLIN_RIGHT ) {
-					if ( ( w - x ) < perlin_maxx[ y ] ) {
+				if ( flags & AM_PERLIN_TOP ) {
+					if ( !perlin_need_pixel && y < perlin_maxy[ x ] ) {
 						perlin_need_pixel = true;
 					}
+					if ( !perlin_need_pixel && !perlin_need_border && ( flags & AM_COASTLINE_BORDER ) ) {
+						if (
+							( perlin_maxy[ x ] && y < perlin_maxy[ x ] + COASTLINES_BORDER_RND ) ||
+							( x > 0 && y <= perlin_maxy[ x - 1 ] ) ||
+							( x < w - 1 && y <= perlin_maxy[ x + 1 ] )
+						) {
+							perlin_need_border = true;
+						}
+					}
 				}
-				if ( !perlin_need_pixel && ( flags & AM_PERLIN_BOTTOM ) ) {
-					if ( ( h - y ) < perlin_maxy[ x ] ) {
+				if ( flags & AM_PERLIN_RIGHT ) {
+					if ( !perlin_need_pixel && ( w - x ) < perlin_maxx[ y ] ) {
 						perlin_need_pixel = true;
+					}
+					if ( !perlin_need_pixel && !perlin_need_border && ( flags & AM_COASTLINE_BORDER ) ) {
+						if (
+							( perlin_maxx[ y ] && ( w - x ) < perlin_maxx[ y ] + COASTLINES_BORDER_RND ) ||
+							( y > 0 && ( w - x ) <= perlin_maxx[ y - 1 ] ) ||
+							( y < h - 1 && ( w - x ) <= perlin_maxx[ y + 1 ] )
+						) {
+							perlin_need_border = true;
+						}
+					}
+				}
+				if ( flags & AM_PERLIN_BOTTOM ) {
+					if ( !perlin_need_pixel && ( h - y ) < perlin_maxy[ x ] ) {
+						perlin_need_pixel = true;
+					}
+					if ( !perlin_need_pixel && !perlin_need_border && ( flags & AM_COASTLINE_BORDER ) ) {
+						if (
+							( perlin_maxy[ x ] && ( h - y ) < perlin_maxy[ x ] + COASTLINES_BORDER_RND ) ||
+							( x > 0 && ( h - y ) <= perlin_maxy[ x - 1 ] ) ||
+							( x < w - 1 && ( h - y ) <= perlin_maxy[ x + 1 ] )
+						) {
+							perlin_need_border = true;
+						}
 					}
 				}
 				
 				if ( !perlin_need_pixel ) {
 					is_pixel_needed = false;
+				}
+				
+				if ( perlin_need_border ) {
+					is_pixel_needed = true;
+					mix_color = Map::s_consts.coastlines.border_color.GetRGBA();
 				}
 			}
 			
@@ -345,6 +404,9 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 					
 						uint32_t pixel_color;
 						memcpy( &pixel_color, from, m_bpp );
+						if ( mix_color ) {
+							pixel_color = MIX_COLORS( pixel_color, mix_color, 0.25f );
+						}
 
 						uint32_t dst_pixel_color;
 						memcpy( &dst_pixel_color, to, m_bpp );
@@ -401,18 +463,20 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 						if ( pixel_alpha < 1.0f ) {
 							p *= pixel_alpha;
 						}
-
-						pixel_color = (
-							(uint8_t)( (float)( pixel_color & 0xff ) * p + (float)( dst_pixel_color & 0xff ) * ( 1.0f - p ) ) |
-							(uint8_t)( (float)( pixel_color >> 8 & 0xff ) * p + (float)( dst_pixel_color >> 8 & 0xff ) * ( 1.0f - p ) ) << 8 |
-							(uint8_t)( (float)( pixel_color >> 16 & 0xff ) * p + (float)( dst_pixel_color >> 16 & 0xff ) * ( 1.0f - p ) ) << 16 |
-							(uint8_t)( (float)( pixel_color >> 24 & 0xff ) * p + (float)( dst_pixel_color >> 24 & 0xff ) * ( 1.0f - p ) ) << 24
-						);
-
+						
+						pixel_color = MIX_COLORS( pixel_color, dst_pixel_color, p );
 						memcpy( to, &pixel_color, m_bpp );
 					}
 					else {
-						memcpy( to, from, m_bpp );
+						if ( mix_color ) {
+							uint32_t pixel_color;
+							memcpy( &pixel_color, from, m_bpp );
+							pixel_color = MIX_COLORS( pixel_color, mix_color, 0.25f );
+							memcpy( to, &pixel_color, m_bpp );
+						}
+						else {
+							memcpy( to, from, m_bpp );
+						}
 						if ( pixel_alpha < 1.0f ) {
 							if ( flags & AM_MERGE ) {
 								
@@ -420,15 +484,13 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 								
 								uint32_t pixel_color;
 								memcpy( &pixel_color, from, m_bpp );
+								if ( mix_color ) {
+									pixel_color = MIX_COLORS( pixel_color, mix_color, 0.25f );
+								}
 								uint32_t dst_pixel_color;
 								memcpy( &dst_pixel_color, to, m_bpp );
 								
-								pixel_color =
-									(uint8_t)( (float)( pixel_color & 0xff ) * pixel_alpha + (float)( dst_pixel_color & 0xff ) * ( 1.0f - pixel_alpha ) ) |
-									(uint8_t)( (float)( pixel_color >> 8 & 0xff ) * pixel_alpha + (float)( dst_pixel_color >> 8 & 0xff ) * ( 1.0f - pixel_alpha ) ) << 8 |
-									(uint8_t)( (float)( pixel_color >> 16 & 0xff ) * pixel_alpha + (float)( dst_pixel_color >> 16 & 0xff ) * ( 1.0f - pixel_alpha ) ) << 16 |
-									(uint8_t)( (float)( pixel_color >> 24 & 0xff ) * pixel_alpha + (float)( dst_pixel_color >> 24 & 0xff ) * ( 1.0f - pixel_alpha ) ) << 24
-								;
+								pixel_color = MIX_COLORS( pixel_color, dst_pixel_color, pixel_alpha );
 								
 								//*((uint8_t*)( to ) + 3 ) = (uint8_t)floor( pixel_alpha * 0xff + ( 1.0f - pixel_alpha ) * *((uint8_t*)( to ) + 3 ) );
 							}
@@ -441,6 +503,8 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 			}
 		}
 	}
+	#undef MIX_COLORS
+	#undef COASTLINES_BORDER_RND
 }
 
 void Texture::Rotate() {

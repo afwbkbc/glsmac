@@ -67,6 +67,8 @@ CLASS( Texture, Serializable )
 	static constexpr add_flag_t AM_PERLIN_CUT_TOP = 1 << 22;
 	static constexpr add_flag_t AM_PERLIN_CUT_RIGHT = 1 << 23;
 	static constexpr add_flag_t AM_PERLIN_CUT_BOTTOM = 1 << 24;
+	// adds border to perlin pattern
+	static constexpr add_flag_t AM_COASTLINE_BORDER = 1 << 25;
 	
 	typedef uint8_t rotate_t;
 	static constexpr rotate_t ROTATE_0 = 0;

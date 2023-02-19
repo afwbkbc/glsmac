@@ -421,7 +421,7 @@ void Map::AddTexture( const tile_layer_type_t tile_layer, const pcx_texture_coor
 	);
 };
 
-void Map::CopyTextureFromLayer( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
+void Map::CopyTextureFromLayer( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
 	ASSERT( m_current_ts, "CopyTextureFromLayer called outside of tile generation" );
 	m_textures.terrain->AddFrom(
 		m_textures.terrain,
@@ -434,11 +434,12 @@ void Map::CopyTextureFromLayer( const tile_layer_type_t tile_layer_from, const s
 		tile_layer * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + m_current_ts->tex_coord.y1,
 		rotate,
 		alpha,
-		m_random
+		m_random,
+		perlin
 	);
 };
 
-void Map::CopyTexture( const tile_layer_type_t tile_layer_from, const tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
+void Map::CopyTexture( const tile_layer_type_t tile_layer_from, const tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
 	ASSERT( m_current_ts, "CopyTexture called outside of tile generation" );
 	CopyTextureFromLayer(
 		tile_layer_from,
@@ -447,7 +448,8 @@ void Map::CopyTexture( const tile_layer_type_t tile_layer_from, const tile_layer
 		tile_layer,
 		mode,
 		rotate,
-		alpha
+		alpha,
+		perlin
 	);
 };
 
