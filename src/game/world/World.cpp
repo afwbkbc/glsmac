@@ -20,9 +20,7 @@
 #include "map_generator/Test.h"
 
 // TODO: move to settings
-#define MAP_SCROLL_SPEED 1.0f
 #define MAP_ROTATE_SPEED 2.0f
-#define MAP_ZOOM_SPEED 0.1f
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -195,13 +193,12 @@ void World::Start() {
 	
 	m_handlers.mousemove = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_MOVE, EH( this ) {
 		if ( m_is_dragging ) {
-			m_scrolling.timer.Stop();
 				
 			Vec2<float> current_drag_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
 			Vec2<float> drag = current_drag_position - m_last_drag_position;
 			
-			m_camera_position.x += (float) drag.x * MAP_SCROLL_SPEED;
-			m_camera_position.y += (float) drag.y * MAP_SCROLL_SPEED;
+			m_camera_position.x += (float) drag.x;
+			m_camera_position.y += (float) drag.y;
 			UpdateCameraPosition();
 			
 			m_last_drag_position = current_drag_position;
@@ -244,9 +241,9 @@ void World::Start() {
 	
 	m_handlers.mousescroll = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_SCROLL, EH( this ) {
 		
-		float speed = (float) MAP_ZOOM_SPEED * m_camera_position.z;
+		float speed = World::s_consts.map_scroll.zoom_speed * m_camera_position.z;
 		
-		float new_z = m_camera_position.z + (float) data->mouse.scroll_y * speed;
+		float new_z = m_camera_position.z + data->mouse.scroll_y * speed;
 		
 		if ( new_z < m_camera_range.min.z ) {
 			new_z = m_camera_range.min.z;
@@ -257,14 +254,20 @@ void World::Start() {
 		
 		float diff = m_camera_position.z / new_z;
 		
-		m_camera_position.z = new_z;
+		ScrollTo({
+			m_camera_position.x / diff,
+			m_camera_position.y / diff,
+			new_z
+		});
+		
+/*		m_camera_position.z = new_z;
 		UpdateCameraScale();
 		
 		m_camera_position.x /= diff;
 		m_camera_position.y /= diff;
 
 		UpdateCameraRange();
-		
+		*/
 		return true;
 	}, UI::GH_AFTER );
 	
@@ -340,6 +343,10 @@ void World::Iterate() {
 				break;
 			}
 		} while ( m_scrolling.timer.Ticked() );
+		if ( m_scrolling.step.z != 0 ) {
+			UpdateCameraScale();
+			UpdateCameraRange();
+		}
 		UpdateCameraPosition();
 	}
 }
@@ -551,10 +558,6 @@ void World::ScrollTo( const Vec3& target ) {
 	Log( "Scrolling from " + m_camera_position.ToString() + " to " + m_scrolling.target_position.ToString() );
 }
 
-void World::ScrollToXY( const float x, const float y ) {
-	ScrollTo( { x, y, m_camera_position.z } );
-}
-
 void World::ScrollToTile( const Map::tile_state_t* ts ) {
 	float tile_x = ts->coord.x / m_viewport.viewport_aspect_ratio * m_camera_position.z;
 	
@@ -571,10 +574,11 @@ void World::ScrollToTile( const Map::tile_state_t* ts ) {
 		tile_x = tile_x_shifted;
 	}
 	
-	ScrollToXY(
+	ScrollTo({
 		- tile_x,
-		- ( ts->coord.y - std::max( 0.0f, Map::s_consts.clampers.elevation_to_vertex_z.Clamp( ts->elevations.center ) ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f
-	);
+		- ( ts->coord.y - std::max( 0.0f, Map::s_consts.clampers.elevation_to_vertex_z.Clamp( ts->elevations.center ) ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f,
+		m_camera_position.z
+	});
 }
 
 void World::CenterAtTile( const Map::tile_state_t* ts ) {

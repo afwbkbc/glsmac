@@ -45,6 +45,7 @@ CLASS( World, base::Task )
 			const uint16_t scroll_time_ms = 100;
 			const uint16_t scroll_step_ms = 2;
 			const uint8_t scroll_steps = scroll_time_ms / scroll_step_ms;
+			const float zoom_speed = 0.37f;
 		} map_scroll;
 	};
 	static const consts_t s_consts;
@@ -138,7 +139,6 @@ private:
 	void RemoveActor( actor::Actor* actor );
 	
 	void ScrollTo( const Vec3& target );
-	void ScrollToXY( const float x, const float y );
 	void ScrollToTile( const Map::tile_state_t* ts );
 	void CenterAtTile( const Map::tile_state_t* ts );
 };
