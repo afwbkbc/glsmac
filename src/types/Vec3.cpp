@@ -20,6 +20,10 @@ void Vec3::Rotate(const DATATYPE angle,const Vec3 axe) {
 	Set(rq.x,rq.y,rq.z);
 };
 
+const std::string Vec3::ToString() const {
+	return "[ " + std::to_string( x ) + " " + std::to_string( y ) + " " + std::to_string( z ) + " ]";
+}
+
 #undef DATATYPE
 
 } /* namespace types */

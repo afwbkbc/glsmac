@@ -2,6 +2,7 @@
 
 #include <cfloat>
 #include <cmath>
+#include <string>
 
 #include "Vec2.h"
 
@@ -193,6 +194,8 @@ public:
 
 	void Rotate(const DATATYPE angle,const Vec3 axe);
 
+	const std::string ToString() const;
+	
 };
 
 #undef DATATYPE

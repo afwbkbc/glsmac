@@ -39,6 +39,15 @@ CLASS( World, base::Task )
 	void Start();
 	void Stop();
 	void Iterate();
+
+	struct consts_t {
+		const struct {
+			const uint16_t scroll_time_ms = 100;
+			const uint16_t scroll_step_ms = 2;
+			const uint8_t scroll_steps = scroll_time_ms / scroll_step_ms;
+		} map_scroll;
+	};
+	static const consts_t s_consts;
 	
 protected:
 
@@ -64,6 +73,13 @@ private:
 		util::Clamper<float> x;
 		util::Clamper<float> y;
 	} m_clamp = {};
+	
+	struct {
+		util::Timer timer;
+		Vec3 step;
+		Vec3 target_position;
+		uint8_t steps_left;
+	} m_scrolling;
 	
 	struct {
 		Vec2< size_t > min;
@@ -121,7 +137,10 @@ private:
 	void AddActor( actor::Actor* actor );
 	void RemoveActor( actor::Actor* actor );
 	
-	void CenterMapAtTile( const Map::tile_state_t* ts );
+	void ScrollTo( const Vec3& target );
+	void ScrollToXY( const float x, const float y );
+	void ScrollToTile( const Map::tile_state_t* ts );
+	void CenterAtTile( const Map::tile_state_t* ts );
 };
 
 }

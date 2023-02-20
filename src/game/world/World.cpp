@@ -35,6 +35,8 @@
 namespace game {
 namespace world {
 
+const World::consts_t World::s_consts = {};
+
 World::World( const Settings& settings )
 	: m_settings( settings )
 {
@@ -175,6 +177,7 @@ void World::Start() {
 				break;
 			}
 			case UIEvent::M_RIGHT: {
+				m_scrolling.timer.Stop();
 				m_is_dragging = true;
 				m_last_drag_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
 				break;
@@ -192,6 +195,8 @@ void World::Start() {
 	
 	m_handlers.mousemove = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_MOVE, EH( this ) {
 		if ( m_is_dragging ) {
+			m_scrolling.timer.Stop();
+				
 			Vec2<float> current_drag_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
 			Vec2<float> drag = current_drag_position - m_last_drag_position;
 			
@@ -322,7 +327,20 @@ void World::Iterate() {
 	auto tile_info = m_map->GetTileAtScreenCoordsResult();
 	if ( tile_info.tile ) {
 		SelectTile( tile_info );
-		CenterMapAtTile( tile_info.ts );
+		CenterAtTile( tile_info.ts );
+	}
+	
+	if ( m_scrolling.timer.Ticked() ) {
+		do {
+			ASSERT( m_scrolling.steps_left, "no scrolling steps but timer running" );
+			m_camera_position += m_scrolling.step;
+			if ( !--m_scrolling.steps_left ) {
+				Log( "Scrolling finished" );
+				m_scrolling.timer.Stop();
+				break;
+			}
+		} while ( m_scrolling.timer.Ticked() );
+		UpdateCameraPosition();
 	}
 }
 
@@ -525,12 +543,42 @@ void World::RemoveActor( actor::Actor* actor ) {
 	DELETE( actor );
 }
 
-void World::CenterMapAtTile( const Map::tile_state_t* ts ) {
+void World::ScrollTo( const Vec3& target ) {
+	m_scrolling.target_position = target;
+	m_scrolling.steps_left = World::s_consts.map_scroll.scroll_steps;
+	m_scrolling.step = ( m_scrolling.target_position - m_camera_position ) / m_scrolling.steps_left;
+	m_scrolling.timer.SetInterval( World::s_consts.map_scroll.scroll_step_ms );
+	Log( "Scrolling from " + m_camera_position.ToString() + " to " + m_scrolling.target_position.ToString() );
+}
 
-	m_camera_position.x = - ts->coord.x / m_viewport.viewport_aspect_ratio * m_camera_position.z;
-	m_camera_position.y = - ( ts->coord.y - std::max( 0.0f, Map::s_consts.clampers.elevation_to_vertex_z.Clamp( ts->elevations.center ) ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f;
+void World::ScrollToXY( const float x, const float y ) {
+	ScrollTo( { x, y, m_camera_position.z } );
+}
+
+void World::ScrollToTile( const Map::tile_state_t* ts ) {
+	float tile_x = ts->coord.x / m_viewport.viewport_aspect_ratio * m_camera_position.z;
 	
-	UpdateCameraPosition();
+	const float tile_x_shifted = m_camera_position.x > 0
+		? tile_x - ( m_camera_range.max.x - m_camera_range.min.x )
+		: tile_x + ( m_camera_range.max.x - m_camera_range.min.x )
+	;
+	if (
+		fabs( tile_x_shifted - -m_camera_position.x )
+			<
+		fabs( tile_x - -m_camera_position.x )
+	) {
+		// smaller distance if going other side
+		tile_x = tile_x_shifted;
+	}
+	
+	ScrollToXY(
+		- tile_x,
+		- ( ts->coord.y - std::max( 0.0f, Map::s_consts.clampers.elevation_to_vertex_z.Clamp( ts->elevations.center ) ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f
+	);
+}
+
+void World::CenterAtTile( const Map::tile_state_t* ts ) {
+	ScrollToTile( ts );
 }
 
 }

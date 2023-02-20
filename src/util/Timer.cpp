@@ -50,8 +50,10 @@ void Timer::Start() {
 }
 
 void Timer::Stop() {
-	m_operation = NONE;
-	m_elapsed = std::chrono::milliseconds::zero();
+	if ( m_operation != NONE ) {
+		m_operation = NONE;
+		m_elapsed = std::chrono::milliseconds::zero();
+	}
 }
 
 void Timer::SetTimeout(const size_t ms) {
