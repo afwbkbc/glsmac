@@ -4,6 +4,7 @@
 #include <functional>
 
 #include "types/Serializable.h"
+#include "types/Vec2.h"
 
 using namespace types;
 
@@ -24,10 +25,7 @@ class Tile { // not deriving from anything because tiles are initialized with ma
 	
 	// map coordinates
 	// using SMAC coordinate system (increments by 2 horizontally and vertically, by 1 diagonally)
-	struct {
-		size_t x;
-		size_t y;
-	} coord;
+	Vec2< size_t > coord;
 
 	// per-vertex, left, right and top linked to vertices of others tiles
 	typedef ssize_t elevation_t;

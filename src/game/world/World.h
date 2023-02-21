@@ -59,6 +59,9 @@ CLASS( World, base::Task )
 					0.003f * scroll_step_ms,
 				};
 			} static_scrolling;
+			struct {
+				const float scroll_if_selected_tile_farther_from_center_than = 0.4f;
+			} key_scrolling;
 		} map_scroll;
 	};
 	static const consts_t s_consts;
@@ -83,6 +86,7 @@ private:
 	Light* m_light_a = nullptr; // Alpha Centauri A
 	Light* m_light_b = nullptr; // Alpha Centauri B
 	Scene* m_world_scene = nullptr;
+	
 	struct {
 		util::Clamper<float> x;
 		util::Clamper<float> y;
@@ -105,6 +109,8 @@ private:
 		bool is_rotating = false;
 		Vec2< float > last_rotate_position;
 	} m_map_control = {};
+	
+	Map::tile_info_t m_selected_tile_info = {};
 	
 	struct {
 		size_t window_width;
@@ -160,6 +166,8 @@ private:
 	std::unordered_set< actor::Actor* > m_actors_vec = {};
 	void AddActor( actor::Actor* actor );
 	void RemoveActor( actor::Actor* actor );
+	
+	const Vec2< float > GetTileWindowCoordinates( const Map::tile_state_t* ts );
 	
 	void ScrollTo( const Vec3& target );
 	void ScrollToTile( const Map::tile_state_t* ts );

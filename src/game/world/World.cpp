@@ -161,9 +161,70 @@ void World::Start() {
 	
 	// map event handlers
 	m_handlers.keydown = ui->AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this ) {
-		if ( !data->key.modifiers && data->key.code == UIEvent::K_ESCAPE ) {
-			ReturnToMainMenu();
-			return true;
+		if ( !data->key.modifiers ) {
+			
+			if ( m_selected_tile_info.tile && m_selected_tile_info.ts ) {
+				
+				// move tile selector
+				bool is_tile_moved = true;
+				if ( data->key.code == UIEvent::K_LEFT || data->key.code == UIEvent::K_KP_LEFT ) {
+					m_selected_tile_info.tile = m_selected_tile_info.tile->W;
+					m_selected_tile_info.ts = m_selected_tile_info.ts->W;
+				}
+				else if ( data->key.code == UIEvent::K_UP || data->key.code == UIEvent::K_KP_UP ) {
+					m_selected_tile_info.tile = m_selected_tile_info.tile->N;
+					m_selected_tile_info.ts = m_selected_tile_info.ts->N;
+				}
+				else if ( data->key.code == UIEvent::K_RIGHT || data->key.code == UIEvent::K_KP_RIGHT ) {
+					m_selected_tile_info.tile = m_selected_tile_info.tile->E;
+					m_selected_tile_info.ts = m_selected_tile_info.ts->E;
+				}
+				else if ( data->key.code == UIEvent::K_DOWN || data->key.code == UIEvent::K_KP_DOWN ) {
+					m_selected_tile_info.tile = m_selected_tile_info.tile->S;
+					m_selected_tile_info.ts = m_selected_tile_info.ts->S;
+				}
+				else if ( data->key.code == UIEvent::K_HOME || data->key.code == UIEvent::K_KP_LEFT_UP ) {
+					m_selected_tile_info.tile = m_selected_tile_info.tile->NW;
+					m_selected_tile_info.ts = m_selected_tile_info.ts->NW;
+				}
+				else if (
+					data->key.code == UIEvent::K_END || data->key.code == UIEvent::K_KP_LEFT_DOWN ) {
+					m_selected_tile_info.tile = m_selected_tile_info.tile->SW;
+					m_selected_tile_info.ts = m_selected_tile_info.ts->SW;
+				}
+				else if (
+					data->key.code == UIEvent::K_PAGEUP || data->key.code == UIEvent::K_KP_RIGHT_UP ) {
+					m_selected_tile_info.tile = m_selected_tile_info.tile->NE;
+					m_selected_tile_info.ts = m_selected_tile_info.ts->NE;
+				}
+				else if (
+					data->key.code == UIEvent::K_PAGEDOWN || data->key.code == UIEvent::K_KP_RIGHT_DOWN ) {
+					m_selected_tile_info.tile = m_selected_tile_info.tile->SE;
+					m_selected_tile_info.ts = m_selected_tile_info.ts->SE;
+				}
+				else {
+					is_tile_moved = false; // not moved
+				}
+				
+				if ( is_tile_moved ) {
+					// moved
+					SelectTile( m_selected_tile_info );
+					auto tc = GetTileWindowCoordinates( m_selected_tile_info.ts );
+					if (
+						( fabs( -m_camera_position.x - tc.x ) > World::s_consts.map_scroll.key_scrolling.scroll_if_selected_tile_farther_from_center_than ) ||
+						( fabs( -m_camera_position.y - tc.y ) > World::s_consts.map_scroll.key_scrolling.scroll_if_selected_tile_farther_from_center_than )
+					) {
+						ScrollToTile( m_selected_tile_info.ts );
+					}
+					return true;
+				}
+			}
+			
+			// exit to main menu
+			if ( data->key.code == UIEvent::K_ESCAPE ) {
+				ReturnToMainMenu();
+				return true;
+			}
 		}
 		return false;
 	}, UI::GH_AFTER );
@@ -574,10 +635,11 @@ void World::SelectTile( const Map::tile_info_t& tile_info ) {
 	}
 	
 	NEW( m_actors.tile_selection, actor::TileSelection, coords );
-	
 	AddActor( m_actors.tile_selection );
 	
 	m_ui.bottom_bar->PreviewTile( m_map, tile_info );
+	
+	m_selected_tile_info = tile_info;
 }
 
 void World::DeselectTile() {
@@ -603,6 +665,13 @@ void World::RemoveActor( actor::Actor* actor ) {
 	DELETE( actor );
 }
 
+const Vec2< float > World::GetTileWindowCoordinates( const Map::tile_state_t* ts ) {
+	return {
+		ts->coord.x / m_viewport.viewport_aspect_ratio * m_camera_position.z,
+		( ts->coord.y - std::max( 0.0f, Map::s_consts.clampers.elevation_to_vertex_z.Clamp( ts->elevations.center ) ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f
+	};
+}
+
 void World::ScrollTo( const Vec3& target ) {
 	m_smooth_scrolling.target_position = target;
 	m_smooth_scrolling.steps_left = World::s_consts.map_scroll.smooth_scrolling.scroll_steps;
@@ -612,24 +681,24 @@ void World::ScrollTo( const Vec3& target ) {
 }
 
 void World::ScrollToTile( const Map::tile_state_t* ts ) {
-	float tile_x = ts->coord.x / m_viewport.viewport_aspect_ratio * m_camera_position.z;
+	auto tc = GetTileWindowCoordinates( ts );
 	
 	const float tile_x_shifted = m_camera_position.x > 0
-		? tile_x - ( m_camera_range.max.x - m_camera_range.min.x )
-		: tile_x + ( m_camera_range.max.x - m_camera_range.min.x )
+		? tc.x - ( m_camera_range.max.x - m_camera_range.min.x )
+		: tc.x + ( m_camera_range.max.x - m_camera_range.min.x )
 	;
 	if (
 		fabs( tile_x_shifted - -m_camera_position.x )
 			<
-		fabs( tile_x - -m_camera_position.x )
+		fabs( tc.x - -m_camera_position.x )
 	) {
 		// smaller distance if going other side
-		tile_x = tile_x_shifted;
+		tc.x = tile_x_shifted;
 	}
 	
 	ScrollTo({
-		- tile_x,
-		- ( ts->coord.y - std::max( 0.0f, Map::s_consts.clampers.elevation_to_vertex_z.Clamp( ts->elevations.center ) ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f,
+		- tc.x,
+		- tc.y,
 		m_camera_position.z
 	});
 }

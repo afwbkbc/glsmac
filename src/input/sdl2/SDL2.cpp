@@ -173,6 +173,7 @@ char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 }
 
 UIEvent::key_code_t SDL2::GetScanCode( SDL_Scancode code, SDL_Keymod modifiers ) const {
+	//Log( "Scan code: " + std::to_string( code ) + " (modifiers: " + std::to_string( modifiers ) + ")" );
 	switch ( code ) {
 		case SDL_SCANCODE_RIGHT: {
 			return UIEvent::K_RIGHT;
@@ -201,11 +202,46 @@ UIEvent::key_code_t SDL2::GetScanCode( SDL_Scancode code, SDL_Keymod modifiers )
 		case SDL_SCANCODE_GRAVE: {
 			return UIEvent::K_GRAVE;
 		}
+		case SDL_SCANCODE_PAGEUP: {
+			return UIEvent::K_PAGEUP;
+		}
+		case SDL_SCANCODE_PAGEDOWN: {
+			return UIEvent::K_PAGEDOWN;
+		}
+		case SDL_SCANCODE_HOME: {
+			return UIEvent::K_HOME;
+		}
+		case SDL_SCANCODE_END: {
+			return UIEvent::K_END;
+		}
+		case SDL_SCANCODE_KP_4: {
+			return UIEvent::K_KP_LEFT;
+		}
+		case SDL_SCANCODE_KP_7: {
+			return UIEvent::K_KP_LEFT_UP;
+		}
+		case SDL_SCANCODE_KP_8: {
+			return UIEvent::K_KP_UP;
+		}
+		case SDL_SCANCODE_KP_9: {
+			return UIEvent::K_KP_RIGHT_UP;
+		}
+		case SDL_SCANCODE_KP_6: {
+			return UIEvent::K_KP_RIGHT;
+		}
+		case SDL_SCANCODE_KP_3: {
+			return UIEvent::K_KP_RIGHT_DOWN;
+		}
+		case SDL_SCANCODE_KP_2: {
+			return UIEvent::K_KP_DOWN;
+		}
+		case SDL_SCANCODE_KP_1: {
+			return UIEvent::K_KP_LEFT_DOWN;
+		}
 		default: {
 			return UIEvent::K_NONE;
 		}
 	}
-	//Log( "Skipping unknown scan code: " + to_string( code ) + " (modifiers: " + to_string( modifiers ) + ")" );
 	return UIEvent::K_NONE;
 }
 
