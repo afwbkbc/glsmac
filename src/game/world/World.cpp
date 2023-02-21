@@ -357,14 +357,6 @@ void World::Start() {
 			new_z
 		});
 		
-/*		m_camera_position.z = new_z;
-		UpdateCameraScale();
-		
-		m_camera_position.x /= diff;
-		m_camera_position.y /= diff;
-
-		UpdateCameraRange();
-		*/
 		return true;
 	}, UI::GH_AFTER );
 	
@@ -393,6 +385,10 @@ void World::Start() {
 	UpdateMapInstances();
 	
 	UpdateUICamera();
+	
+	// select tile at center
+	Vec2< size_t > coords = { m_map->GetWidth() / 2, m_map->GetHeight() / 2 };
+	SelectTile( m_map->GetTileAt( coords.x, coords.y ) );
 }
 
 void World::Stop() {
