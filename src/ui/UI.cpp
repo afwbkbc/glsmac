@@ -183,7 +183,7 @@ void UI::TriggerGlobalEventHandlers( global_event_handler_order_t order, UIEvent
 void UI::ProcessEvent( UIEvent* event ) {
 	if ( event->m_type == UIEvent::EV_MOUSE_MOVE ) {
 		// need to save last mouse position to be able to trigger mouseover/mouseout events for objects that will move/resize themselves later
-		m_last_mouse_position = { event->m_data.mouse.x, event->m_data.mouse.y };
+		m_last_mouse_position = { event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y };
 	}
 	
 	TriggerGlobalEventHandlers( GH_BEFORE, event );

@@ -521,6 +521,11 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 		return;
 	}
 	
+	if ( event->m_flags & UIEvent::EF_MOUSE ) {
+		event->m_data.mouse.relative.x = event->m_data.mouse.absolute.x - m_object_area.left;
+		event->m_data.mouse.relative.y = event->m_data.mouse.absolute.y - m_object_area.top;
+	}
+
 	bool is_processed = false;
 	
 	if (
@@ -531,10 +536,11 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 	}
 	
 	if ( !is_processed ) {
+		
 		switch ( event->m_type ) {
 			case UIEvent::EV_MOUSE_MOVE: {
 				if ( HasEventContext( EC_MOUSEMOVE ) ) {
-					if ( IsPointInside( event->m_data.mouse.x, event->m_data.mouse.y ) ) {
+					if ( IsPointInside( event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y ) ) {
 						is_processed = Trigger( event->m_type, &event->m_data );
 						if ( !is_processed && ( m_state & STATE_MOUSEOVER ) != STATE_MOUSEOVER ) {
 							m_state |= STATE_MOUSEOVER;
@@ -692,27 +698,31 @@ const bool UIObject::HasStyleModifier( const Style::modifier_t modifier ) const 
 	return ( (m_style_modifiers & modifier ) == modifier );
 }
 
-const UIEventHandler* UIObject::On( const UIEvent::event_type_t type, UIEventHandler::handler_function_t func ) {
+const UIEventHandler* UIObject::On( const std::vector< UIEvent::event_type_t >& types, UIEventHandler::handler_function_t func ) {
 	NEWV( handler, UIEventHandler, func );
-	auto it = m_event_handlers.find( type );
-	if ( it == m_event_handlers.end() ) {
-		m_event_handlers[ type ] = {};
-		it = m_event_handlers.find( type );
+	for ( auto& type : types ) {
+		auto it = m_event_handlers.find( type );
+		if ( it == m_event_handlers.end() ) {
+			m_event_handlers[ type ] = {};
+			it = m_event_handlers.find( type );
+		}
+		it->second.push_back( handler );
 	}
-	it->second.push_back( handler );
 	return handler;
+}
+
+const UIEventHandler* UIObject::On( const UIEvent::event_type_t type, UIEventHandler::handler_function_t func ) {
+	return On( std::vector{ type }, func );
 }
 
 void UIObject::Off( const UIEventHandler* handler ) {
 	for ( auto& handlers : m_event_handlers ) {
 		auto it = find( handlers.second.begin() , handlers.second.end(), handler );
 		if ( it != handlers.second.end() ) {
-			DELETE( *it );
 			handlers.second.erase( it );
-			return;
 		}
 	}
-	ASSERT( false, "handler not found" );
+	DELETE( handler );
 }
 
 bool UIObject::Trigger( const UIEvent::event_type_t type, const UIEvent::event_data_t* data ) {

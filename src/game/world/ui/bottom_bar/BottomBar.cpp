@@ -1,5 +1,7 @@
 #include "BottomBar.h"
 
+#include "engine/Engine.h"
+
 namespace game {
 namespace world {
 namespace ui {
@@ -89,9 +91,27 @@ void BottomBar::Create() {
 	
 	NEW( m_sections.mini_map, MiniMap, m_world );
 	AddChild( m_sections.mini_map );
+	
+	m_mouse_blocker = On( UIEvent::EV_MOUSE_DOWN, EH( this ) {
+		// don't let clicks that weren't handled by child elements go through to map
+		if (
+			data->mouse.relative.x > 164 &&
+			data->mouse.relative.x < g_engine->GetGraphics()->GetViewportWidth() - 162 &&
+			data->mouse.relative.y <= 32
+		) {
+			// allow clicks through transparent area at top
+			return false;
+		}
+		
+		// block all other clicks
+		return true;
+	});
 }
 
 void BottomBar::Destroy() {
+	
+	Off( m_mouse_blocker );
+	m_mouse_blocker = nullptr;
 	
 	RemoveChild( m_buttons.menu );
 	RemoveChild( m_buttons.commlink );

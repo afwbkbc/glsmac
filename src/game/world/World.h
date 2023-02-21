@@ -58,7 +58,7 @@ CLASS( World, base::Task )
 					0.002f * scroll_step_ms,
 					0.003f * scroll_step_ms,
 				};
-			} edge_scrolling;
+			} static_scrolling;
 		} map_scroll;
 	};
 	static const consts_t s_consts;
@@ -100,7 +100,7 @@ private:
 		Vec2< float > last_drag_position;
 		struct {
 			util::Timer timer;
-			Vec2< float > speed;
+			Vec2< float > speed = { 0, 0 };
 		} edge_scrolling;
 		bool is_rotating = false;
 		Vec2< float > last_rotate_position;

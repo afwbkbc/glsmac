@@ -9,8 +9,8 @@ CLASS( MouseMove, UIEvent )
 
 	MouseMove( const size_t x, const size_t y ) : UIEvent( EV_MOUSE_MOVE ) {
 		m_flags |= EF_MOUSE;
-		m_data.mouse.x = x;
-		m_data.mouse.y = y;
+		m_data.mouse.absolute.x = m_data.mouse.relative.x = x;
+		m_data.mouse.absolute.y = m_data.mouse.relative.y = y;
 	};
 	
 };

@@ -171,19 +171,19 @@ void World::Start() {
 	m_handlers.mousedown = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_DOWN, EH( this ) {
 		switch ( data->mouse.button ) {
 			case UIEvent::M_LEFT: {
-				SelectTileAtPoint( data->mouse.x, data->mouse.y ); // async
+				SelectTileAtPoint( data->mouse.absolute.x, data->mouse.absolute.y ); // async
 				break;
 			}
 			case UIEvent::M_RIGHT: {
 				m_smooth_scrolling.timer.Stop();
 				m_map_control.is_dragging = true;
-				m_map_control.last_drag_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
+				m_map_control.last_drag_position = { m_clamp.x.Clamp( data->mouse.absolute.x ), m_clamp.y.Clamp( data->mouse.absolute.y ) };
 				break;
 			}
 #ifdef DEBUG
 			case UIEvent::M_MIDDLE: {
 				m_map_control.is_rotating = true;
-				m_map_control.last_rotate_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
+				m_map_control.last_rotate_position = { m_clamp.x.Clamp( data->mouse.absolute.x ), m_clamp.y.Clamp( data->mouse.absolute.y ) };
 				break;
 			}
 #endif
@@ -194,7 +194,7 @@ void World::Start() {
 	m_handlers.mousemove = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_MOVE, EH( this ) {
 		if ( m_map_control.is_dragging ) {
 				
-			Vec2<float> current_drag_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
+			Vec2<float> current_drag_position = { m_clamp.x.Clamp( data->mouse.absolute.x ), m_clamp.y.Clamp( data->mouse.absolute.y ) };
 			Vec2<float> drag = current_drag_position - m_map_control.last_drag_position;
 			
 			m_camera_position.x += (float) drag.x;
@@ -205,7 +205,7 @@ void World::Start() {
 		}
 #ifdef DEBUG
 		else if ( m_map_control.is_rotating ) {
-			Vec2<float> current_rotate_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
+			Vec2<float> current_rotate_position = { m_clamp.x.Clamp( data->mouse.absolute.x ), m_clamp.y.Clamp( data->mouse.absolute.y ) };
 			Vec2<float> rotate = current_rotate_position - m_map_control.last_rotate_position;
 			
 			for (auto& actor : m_map->GetActors() ) {
@@ -218,24 +218,24 @@ void World::Start() {
 		}
 #endif
 		else {
-			const size_t edge_distance = m_viewport.is_fullscreen
-				? World::s_consts.map_scroll.edge_scrolling.edge_distance_px.fullscreen
-				: World::s_consts.map_scroll.edge_scrolling.edge_distance_px.windowed
+			const ssize_t edge_distance = m_viewport.is_fullscreen
+				? World::s_consts.map_scroll.static_scrolling.edge_distance_px.fullscreen
+				: World::s_consts.map_scroll.static_scrolling.edge_distance_px.windowed
 			;
-			if ( data->mouse.x <= edge_distance ) {
-				m_map_control.edge_scrolling.speed.x = World::s_consts.map_scroll.edge_scrolling.speed.x;
+			if ( data->mouse.absolute.x < edge_distance ) {
+				m_map_control.edge_scrolling.speed.x = World::s_consts.map_scroll.static_scrolling.speed.x;
 			}
-			else if ( data->mouse.x >= m_viewport.window_width - edge_distance ) {
-				m_map_control.edge_scrolling.speed.x = -World::s_consts.map_scroll.edge_scrolling.speed.x;
+			else if ( data->mouse.absolute.x >= m_viewport.window_width - edge_distance ) {
+				m_map_control.edge_scrolling.speed.x = -World::s_consts.map_scroll.static_scrolling.speed.x;
 			}
 			else {
 				m_map_control.edge_scrolling.speed.x = 0;
 			}
-			if ( data->mouse.y <= edge_distance ) {
-				m_map_control.edge_scrolling.speed.y = World::s_consts.map_scroll.edge_scrolling.speed.y;
+			if ( data->mouse.absolute.y <= edge_distance ) {
+				m_map_control.edge_scrolling.speed.y = World::s_consts.map_scroll.static_scrolling.speed.y;
 			}
-			else if ( data->mouse.y >= m_viewport.window_height - edge_distance ) {
-				m_map_control.edge_scrolling.speed.y = -World::s_consts.map_scroll.edge_scrolling.speed.y;
+			else if ( data->mouse.absolute.y >= m_viewport.window_height - edge_distance ) {
+				m_map_control.edge_scrolling.speed.y = -World::s_consts.map_scroll.static_scrolling.speed.y;
 			}
 			else {
 				m_map_control.edge_scrolling.speed.y = 0;
@@ -243,7 +243,7 @@ void World::Start() {
 			if ( m_map_control.edge_scrolling.speed ) {
 				if ( !m_map_control.edge_scrolling.timer.Running() ) {
 					Log( "Edge scrolling started" );
-					m_map_control.edge_scrolling.timer.SetInterval( World::s_consts.map_scroll.edge_scrolling.scroll_step_ms );
+					m_map_control.edge_scrolling.timer.SetInterval( World::s_consts.map_scroll.static_scrolling.scroll_step_ms );
 				}
 			}
 			else {
@@ -358,10 +358,6 @@ void World::Stop() {
 
 void World::Iterate() {
 	
-	for ( auto& actor : m_actors_vec ) {
-		actor->Iterate();
-	}
-	
 	// response for clicked tile (if click happened)
 	auto tile_info = m_map->GetTileAtScreenCoordsResult();
 	if ( tile_info.tile ) {
@@ -397,6 +393,10 @@ void World::Iterate() {
 	}
 	if ( is_camera_position_updated ) {
 		UpdateCameraPosition();
+	}
+	
+	for ( auto& actor : m_actors_vec ) {
+		actor->Iterate();
 	}
 }
 

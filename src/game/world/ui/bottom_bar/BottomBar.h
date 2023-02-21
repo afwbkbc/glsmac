@@ -53,6 +53,9 @@ protected:
 		MiniMap* mini_map = nullptr;
 	} m_sections;
 	
+private:
+	const UIEventHandler* m_mouse_blocker = nullptr;
+	
 };
 
 }

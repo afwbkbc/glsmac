@@ -121,6 +121,7 @@ CLASS( UIObject, base::Base )
 	virtual void RemoveStyleModifier( const Style::modifier_t modifier );
 	const bool HasStyleModifier( const Style::modifier_t modifier ) const;
 	
+	const UIEventHandler* On( const std::vector< UIEvent::event_type_t >& types, UIEventHandler::handler_function_t func );
 	const UIEventHandler* On( const UIEvent::event_type_t type, UIEventHandler::handler_function_t func );
 	void Off( const UIEventHandler* handler );
 	bool Trigger( const UIEvent::event_type_t type, const UIEvent::event_data_t* data );

@@ -108,18 +108,21 @@ void UIContainer::SetOverflow( const overflow_t overflow ) {
 }
 
 void UIContainer::ProcessEvent( UIEvent* event ) {
-	UIObject::ProcessEvent( event );
 	
-	if ( event->IsProcessed() ) {
-		return;
+	if ( !( event->m_flags & UIEvent::EF_MOUSE ) ) {
+		// non-mouse events are processed by parent before children
+		UIObject::ProcessEvent( event );
+		if ( event->IsProcessed() ) {
+			return;
+		}
 	}
 	
 	bool is_processed;
-	if (( event->m_flags & UIEvent::EF_MOUSE ) == UIEvent::EF_MOUSE ) {
+	if ( event->m_flags & UIEvent::EF_MOUSE ) {
 		for (auto& c : m_child_objects) {
 			if (
 				( event->m_type == UIEvent::EV_MOUSE_MOVE ) || // mousemove needs to be send to all objects for mouseout events to work
-				c->IsPointInside( event->m_data.mouse.x, event->m_data.mouse.y ) // other events - only to those actually under mouse pointer
+				c->IsPointInside( event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y ) // other events - only to those actually under mouse pointer
 			) {
 				NEWV( child_event, UIEvent, event );
 				c->ProcessEvent( child_event );
@@ -144,6 +147,13 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 				event->SetProcessed();
 				return;
 			}
+		}
+	}
+
+	if ( event->m_flags & UIEvent::EF_MOUSE ) {
+		// mouse events are processed by children before parent
+		if ( !event->IsProcessed() ) {
+			UIObject::ProcessEvent( event );
 		}
 	}
 }

@@ -58,8 +58,10 @@ CLASS( UIEvent, base::Base )
 	
 	typedef union {
 		struct {
-			ssize_t x;
-			ssize_t y;
+			struct {
+				ssize_t x;
+				ssize_t y;
+			} absolute, relative;
 			uint8_t button;
 			ssize_t scroll_y;
 		} mouse;
