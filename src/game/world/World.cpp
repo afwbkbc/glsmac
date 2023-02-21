@@ -175,15 +175,15 @@ void World::Start() {
 				break;
 			}
 			case UIEvent::M_RIGHT: {
-				m_scrolling.timer.Stop();
-				m_is_dragging = true;
-				m_last_drag_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
+				m_smooth_scrolling.timer.Stop();
+				m_map_control.is_dragging = true;
+				m_map_control.last_drag_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
 				break;
 			}
 #ifdef DEBUG
 			case UIEvent::M_MIDDLE: {
-				m_is_rotating = true;
-				m_last_rotate_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
+				m_map_control.is_rotating = true;
+				m_map_control.last_rotate_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
 				break;
 			}
 #endif
@@ -192,21 +192,21 @@ void World::Start() {
 	}, UI::GH_AFTER );
 	
 	m_handlers.mousemove = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_MOVE, EH( this ) {
-		if ( m_is_dragging ) {
+		if ( m_map_control.is_dragging ) {
 				
 			Vec2<float> current_drag_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
-			Vec2<float> drag = current_drag_position - m_last_drag_position;
+			Vec2<float> drag = current_drag_position - m_map_control.last_drag_position;
 			
 			m_camera_position.x += (float) drag.x;
 			m_camera_position.y += (float) drag.y;
 			UpdateCameraPosition();
 			
-			m_last_drag_position = current_drag_position;
+			m_map_control.last_drag_position = current_drag_position;
 		}
 #ifdef DEBUG
-		if ( m_is_rotating ) {
+		else if ( m_map_control.is_rotating ) {
 			Vec2<float> current_rotate_position = { m_clamp.x.Clamp( data->mouse.x ), m_clamp.y.Clamp( data->mouse.y ) };
-			Vec2<float> rotate = current_rotate_position - m_last_rotate_position;
+			Vec2<float> rotate = current_rotate_position - m_map_control.last_rotate_position;
 			
 			for (auto& actor : m_map->GetActors() ) {
 				auto newz = actor->GetAngleZ() + ( (float) rotate.x * MAP_ROTATE_SPEED );
@@ -214,21 +214,57 @@ void World::Start() {
 				actor->SetAngleZ( newz );
 				actor->SetAngleY( newy );
 			}
-			m_last_rotate_position = current_rotate_position;
+			m_map_control.last_rotate_position = current_rotate_position;
 		}
 #endif
+		else {
+			const size_t edge_distance = m_viewport.is_fullscreen
+				? World::s_consts.map_scroll.edge_scrolling.edge_distance_px.fullscreen
+				: World::s_consts.map_scroll.edge_scrolling.edge_distance_px.windowed
+			;
+			if ( data->mouse.x <= edge_distance ) {
+				m_map_control.edge_scrolling.speed.x = World::s_consts.map_scroll.edge_scrolling.speed.x;
+			}
+			else if ( data->mouse.x >= m_viewport.window_width - edge_distance ) {
+				m_map_control.edge_scrolling.speed.x = -World::s_consts.map_scroll.edge_scrolling.speed.x;
+			}
+			else {
+				m_map_control.edge_scrolling.speed.x = 0;
+			}
+			if ( data->mouse.y <= edge_distance ) {
+				m_map_control.edge_scrolling.speed.y = World::s_consts.map_scroll.edge_scrolling.speed.y;
+			}
+			else if ( data->mouse.y >= m_viewport.window_height - edge_distance ) {
+				m_map_control.edge_scrolling.speed.y = -World::s_consts.map_scroll.edge_scrolling.speed.y;
+			}
+			else {
+				m_map_control.edge_scrolling.speed.y = 0;
+			}
+			if ( m_map_control.edge_scrolling.speed ) {
+				if ( !m_map_control.edge_scrolling.timer.Running() ) {
+					Log( "Edge scrolling started" );
+					m_map_control.edge_scrolling.timer.SetInterval( World::s_consts.map_scroll.edge_scrolling.scroll_step_ms );
+				}
+			}
+			else {
+				if ( m_map_control.edge_scrolling.timer.Running() ) {
+					Log( "Edge scrolling stopped" );
+					m_map_control.edge_scrolling.timer.Stop();
+				}
+			}
+		}
 		return true;
 	}, UI::GH_AFTER );
 	
 	m_handlers.mouseup = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_UP, EH( this ) {
 		switch ( data->mouse.button ) {
 			case UIEvent::M_RIGHT: {
-				m_is_dragging = false;
+				m_map_control.is_dragging = false;
 				break;
 			}
 #ifdef DEBUG
 			case UIEvent::M_MIDDLE: {
-				m_is_rotating = false;
+				m_map_control.is_rotating = false;
 				for (auto& actor : m_map->GetActors() ) {
 					actor->SetAngle( { 0.0, 0.0, 0.0 } );
 				}
@@ -241,7 +277,7 @@ void World::Start() {
 	
 	m_handlers.mousescroll = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_SCROLL, EH( this ) {
 		
-		float speed = World::s_consts.map_scroll.zoom_speed * m_camera_position.z;
+		float speed = World::s_consts.map_scroll.smooth_scrolling.zoom_speed * m_camera_position.z;
 		
 		float new_z = m_camera_position.z + data->mouse.scroll_y * speed;
 		
@@ -333,20 +369,33 @@ void World::Iterate() {
 		CenterAtTile( tile_info.ts );
 	}
 	
-	if ( m_scrolling.timer.Ticked() ) {
-		do {
-			ASSERT( m_scrolling.steps_left, "no scrolling steps but timer running" );
-			m_camera_position += m_scrolling.step;
-			if ( !--m_scrolling.steps_left ) {
-				Log( "Scrolling finished" );
-				m_scrolling.timer.Stop();
-				break;
-			}
-		} while ( m_scrolling.timer.Ticked() );
-		if ( m_scrolling.step.z != 0 ) {
-			UpdateCameraScale();
-			UpdateCameraRange();
+	bool is_camera_position_updated = false;
+	bool is_camera_scale_updated = false;
+	while ( m_map_control.edge_scrolling.timer.Ticked() ) {
+		m_camera_position.x += m_map_control.edge_scrolling.speed.x;
+		m_camera_position.y += m_map_control.edge_scrolling.speed.y;
+		is_camera_position_updated = true;
+	}
+	
+	while ( m_smooth_scrolling.timer.Ticked() ) {
+		ASSERT( m_smooth_scrolling.steps_left, "no scrolling steps but timer running" );
+		m_camera_position += m_smooth_scrolling.step;
+		if ( !--m_smooth_scrolling.steps_left ) {
+			Log( "Scrolling finished" );
+			m_smooth_scrolling.timer.Stop();
+			break;
 		}
+		is_camera_position_updated = true;
+		if ( m_smooth_scrolling.step.z != 0 ) {
+			is_camera_scale_updated = true;
+		}
+	}
+	
+	if ( is_camera_scale_updated ) {
+		UpdateCameraScale();
+		UpdateCameraRange();
+	}
+	if ( is_camera_position_updated ) {
 		UpdateCameraPosition();
 	}
 }
@@ -369,14 +418,18 @@ void World::SetCameraPosition( const Vec3 camera_position ) {
 }
 
 void World::UpdateViewport() {
-	m_viewport.max.x = g_engine->GetGraphics()->GetViewportWidth();
-	m_viewport.max.y = g_engine->GetGraphics()->GetViewportHeight() - m_ui.bottom_bar->GetHeight() + m_viewport.bottom_bar_overlap;
-	m_viewport.ratio.x = (float) g_engine->GetGraphics()->GetViewportWidth() / m_viewport.max.x;
-	m_viewport.ratio.y = (float) g_engine->GetGraphics()->GetViewportHeight() / m_viewport.max.y;
+	auto* graphics = g_engine->GetGraphics();
+	m_viewport.window_width = graphics->GetViewportWidth();
+	m_viewport.window_height = graphics->GetViewportHeight();
+	m_viewport.max.x = m_viewport.window_width;
+	m_viewport.max.y = m_viewport.window_height - m_ui.bottom_bar->GetHeight() + m_viewport.bottom_bar_overlap;
+	m_viewport.ratio.x = (float) m_viewport.window_width / m_viewport.max.x;
+	m_viewport.ratio.y = (float) m_viewport.window_height / m_viewport.max.y;
 	m_viewport.width = m_viewport.max.x - m_viewport.min.x;
 	m_viewport.height = m_viewport.max.y - m_viewport.min.y;
 	m_viewport.aspect_ratio = (float) m_viewport.width / m_viewport.height;
-	m_viewport.viewport_aspect_ratio = g_engine->GetGraphics()->GetAspectRatio();
+	m_viewport.viewport_aspect_ratio = graphics->GetAspectRatio();
+	m_viewport.is_fullscreen = graphics->IsFullscreen();
 	m_clamp.x.SetSrcRange( m_viewport.min.x, m_viewport.max.x );
 	m_clamp.y.SetSrcRange( m_viewport.min.y, m_viewport.max.y );
 }
@@ -492,7 +545,7 @@ void World::ReturnToMainMenu() {
 
 void World::SelectTileAtPoint( const size_t x, const size_t y ) {
 	Log( "Looking up tile at " + std::to_string( x ) + "x" + std::to_string( y ) );
-	m_map->GetTileAtScreenCoords( x, g_engine->GetGraphics()->GetViewportHeight() - y ); // async
+	m_map->GetTileAtScreenCoords( x, m_viewport.window_height - y ); // async
 }
 
 void World::SelectTile( const Map::tile_info_t& tile_info ) {
@@ -551,11 +604,11 @@ void World::RemoveActor( actor::Actor* actor ) {
 }
 
 void World::ScrollTo( const Vec3& target ) {
-	m_scrolling.target_position = target;
-	m_scrolling.steps_left = World::s_consts.map_scroll.scroll_steps;
-	m_scrolling.step = ( m_scrolling.target_position - m_camera_position ) / m_scrolling.steps_left;
-	m_scrolling.timer.SetInterval( World::s_consts.map_scroll.scroll_step_ms );
-	Log( "Scrolling from " + m_camera_position.ToString() + " to " + m_scrolling.target_position.ToString() );
+	m_smooth_scrolling.target_position = target;
+	m_smooth_scrolling.steps_left = World::s_consts.map_scroll.smooth_scrolling.scroll_steps;
+	m_smooth_scrolling.step = ( m_smooth_scrolling.target_position - m_camera_position ) / m_smooth_scrolling.steps_left;
+	m_smooth_scrolling.timer.SetInterval( World::s_consts.map_scroll.smooth_scrolling.scroll_step_ms );
+	Log( "Scrolling from " + m_camera_position.ToString() + " to " + m_smooth_scrolling.target_position.ToString() );
 }
 
 void World::ScrollToTile( const Map::tile_state_t* ts ) {

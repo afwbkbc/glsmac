@@ -42,10 +42,23 @@ CLASS( World, base::Task )
 
 	struct consts_t {
 		const struct {
-			const uint16_t scroll_time_ms = 100;
-			const uint16_t scroll_step_ms = 2;
-			const uint8_t scroll_steps = scroll_time_ms / scroll_step_ms;
-			const float zoom_speed = 0.37f;
+			const struct {
+				const uint16_t scroll_time_ms = 100;
+				const uint16_t scroll_step_ms = 2;
+				const uint8_t scroll_steps = scroll_time_ms / scroll_step_ms;
+				const float zoom_speed = 0.0037f * scroll_time_ms;
+			} smooth_scrolling;
+			struct {
+				struct {
+					const size_t fullscreen = 1;
+					const size_t windowed = 10; // harder to place cursor at edge of window
+				} edge_distance_px;
+				const uint16_t scroll_step_ms = 2;
+				const Vec2< float > speed = {
+					0.002f * scroll_step_ms,
+					0.003f * scroll_step_ms,
+				};
+			} edge_scrolling;
 		} map_scroll;
 	};
 	static const consts_t s_consts;
@@ -80,9 +93,22 @@ private:
 		Vec3 step;
 		Vec3 target_position;
 		uint8_t steps_left;
-	} m_scrolling;
+	} m_smooth_scrolling;
 	
 	struct {
+		bool is_dragging = false;
+		Vec2< float > last_drag_position;
+		struct {
+			util::Timer timer;
+			Vec2< float > speed;
+		} edge_scrolling;
+		bool is_rotating = false;
+		Vec2< float > last_rotate_position;
+	} m_map_control = {};
+	
+	struct {
+		size_t window_width;
+		size_t window_height;
 		Vec2< size_t > min;
 		Vec2< size_t > max;
 		size_t bottom_bar_overlap;
@@ -91,6 +117,7 @@ private:
 		size_t height;
 		float aspect_ratio;
 		float viewport_aspect_ratio;
+		bool is_fullscreen;
 	} m_viewport;
 	struct {
 		Vec3 min;
@@ -104,10 +131,6 @@ private:
 		const UIEventHandler* mouseup;
 		const UIEventHandler* mousescroll;
 	} m_handlers;
-	bool m_is_dragging = false;
-	bool m_is_rotating = false;
-	Vec2<float> m_last_drag_position;
-	Vec2<float> m_last_rotate_position;
 	void UpdateViewport();
 	void UpdateCameraPosition();
 	void UpdateCameraAngle();
