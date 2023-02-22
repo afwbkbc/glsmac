@@ -108,6 +108,7 @@ private:
 		} edge_scrolling;
 		bool is_rotating = false;
 		Vec2< float > last_rotate_position;
+		Vec2< ssize_t > last_mouse_position;
 	} m_map_control = {};
 	
 	Map::tile_info_t m_selected_tile_info = {};
@@ -129,6 +130,9 @@ private:
 		Vec3 min;
 		Vec3 max;
 	} m_camera_range;
+	
+	const float GetFixedX( float x ) const;
+	void FixCameraX();
 	
 	struct {
 		const UIEventHandler* keydown;

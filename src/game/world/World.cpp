@@ -253,6 +253,10 @@ void World::Start() {
 	}, UI::GH_AFTER );
 	
 	m_handlers.mousemove = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_MOVE, EH( this ) {
+		m_map_control.last_mouse_position = {
+			data->mouse.absolute.x,
+			data->mouse.absolute.y
+		};
 		if ( m_map_control.is_dragging ) {
 				
 			Vec2<float> current_drag_position = { m_clamp.x.Clamp( data->mouse.absolute.x ), m_clamp.y.Clamp( data->mouse.absolute.y ) };
@@ -351,11 +355,21 @@ void World::Start() {
 		
 		float diff = m_camera_position.z / new_z;
 		
-		ScrollTo({
-			m_camera_position.x / diff,
-			m_camera_position.y / diff,
-			new_z
-		});
+		Vec2< float > m = {
+			m_clamp.x.Clamp( m_map_control.last_mouse_position.x ),
+			m_clamp.y.Clamp( m_map_control.last_mouse_position.y )
+		};
+		
+		const float new_x = ( m_camera_position.x - m.x ) / diff + m.x;
+		const float new_y = ( m_camera_position.y - m.y ) / diff + m.y;
+		
+		// TODO: fix
+		//ScrollTo({ new_x, new_y, new_z });
+		
+		m_camera_position = { new_x, new_y, new_z };
+		UpdateCameraScale();
+		UpdateCameraRange();
+		UpdateCameraPosition();
 		
 		return true;
 	}, UI::GH_AFTER );
@@ -385,6 +399,12 @@ void World::Start() {
 	UpdateMapInstances();
 	
 	UpdateUICamera();
+	
+	// some reasonable defaults
+	m_map_control.last_mouse_position = {
+		(ssize_t)m_viewport.window_width / 2,
+		(ssize_t)m_viewport.window_height / 2
+	};
 	
 	// select tile at center
 	Vec2< size_t > coords = { m_map->GetWidth() / 2, m_map->GetHeight() / 2 };
@@ -474,6 +494,20 @@ void World::SetCameraPosition( const Vec3 camera_position ) {
 	}
 }
 
+const float World::GetFixedX( float x ) const {
+	if ( x < m_camera_range.min.x ) {
+		x += m_camera_range.max.x - m_camera_range.min.x;
+	}	
+	else if ( x > m_camera_range.max.x ) {
+		x -= m_camera_range.max.x - m_camera_range.min.x;
+	}
+	return x;
+}
+
+void World::FixCameraX() {
+	m_camera_position.x = GetFixedX( m_camera_position.x );
+}
+
 void World::UpdateViewport() {
 	auto* graphics = g_engine->GetGraphics();
 	m_viewport.window_width = graphics->GetViewportWidth();
@@ -504,13 +538,7 @@ void World::UpdateCameraPosition() {
 		}
 	}
 	
-	// shift x between instances for infinite horizontal scrolling
-	if ( m_camera_position.x < m_camera_range.min.x ) {
-		m_camera_position.x = m_camera_range.max.x;
-	}	
-	else if ( m_camera_position.x > m_camera_range.max.x ) {
-		m_camera_position.x = m_camera_range.min.x;
-	}
+	FixCameraX();
 	
 	m_camera->SetPosition({
 		( 0.5f + m_camera_position.x ) * m_viewport.viewport_aspect_ratio,
@@ -669,6 +697,9 @@ const Vec2< float > World::GetTileWindowCoordinates( const Map::tile_state_t* ts
 }
 
 void World::ScrollTo( const Vec3& target ) {
+	if ( m_smooth_scrolling.timer.Running() ) {
+		m_smooth_scrolling.timer.Stop();
+	}
 	m_smooth_scrolling.target_position = target;
 	m_smooth_scrolling.steps_left = World::s_consts.map_scroll.smooth_scrolling.scroll_steps;
 	m_smooth_scrolling.step = ( m_smooth_scrolling.target_position - m_camera_position ) / m_smooth_scrolling.steps_left;
@@ -677,6 +708,7 @@ void World::ScrollTo( const Vec3& target ) {
 }
 
 void World::ScrollToTile( const Map::tile_state_t* ts ) {
+	
 	auto tc = GetTileWindowCoordinates( ts );
 	
 	const float tile_x_shifted = m_camera_position.x > 0
