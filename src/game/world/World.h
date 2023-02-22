@@ -108,7 +108,7 @@ private:
 		} edge_scrolling;
 		bool is_rotating = false;
 		Vec2< float > last_rotate_position;
-		Vec2< ssize_t > last_mouse_position;
+		Vec2< float > last_mouse_position;
 	} m_map_control = {};
 	
 	Map::tile_info_t m_selected_tile_info = {};
@@ -131,6 +131,7 @@ private:
 		Vec3 max;
 	} m_camera_range;
 	
+	// shift x to center instance when needed
 	const float GetFixedX( float x ) const;
 	void FixCameraX();
 	

@@ -254,8 +254,8 @@ void World::Start() {
 	
 	m_handlers.mousemove = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_MOVE, EH( this ) {
 		m_map_control.last_mouse_position = {
-			data->mouse.absolute.x,
-			data->mouse.absolute.y
+			GetFixedX( data->mouse.absolute.x ),
+			(float)data->mouse.absolute.y
 		};
 		if ( m_map_control.is_dragging ) {
 				
@@ -360,16 +360,11 @@ void World::Start() {
 			m_clamp.y.Clamp( m_map_control.last_mouse_position.y )
 		};
 		
-		const float new_x = ( m_camera_position.x - m.x ) / diff + m.x;
-		const float new_y = ( m_camera_position.y - m.y ) / diff + m.y;
-		
-		// TODO: fix
-		//ScrollTo({ new_x, new_y, new_z });
-		
-		m_camera_position = { new_x, new_y, new_z };
-		UpdateCameraScale();
-		UpdateCameraRange();
-		UpdateCameraPosition();
+		ScrollTo({
+			( m_camera_position.x - m.x ) / diff + m.x,
+			( m_camera_position.y - m.y ) / diff + m.y,
+			new_z
+		});
 		
 		return true;
 	}, UI::GH_AFTER );
@@ -402,8 +397,8 @@ void World::Start() {
 	
 	// some reasonable defaults
 	m_map_control.last_mouse_position = {
-		(ssize_t)m_viewport.window_width / 2,
-		(ssize_t)m_viewport.window_height / 2
+		(float)m_viewport.window_width / 2,
+		(float)m_viewport.window_height / 2
 	};
 	
 	// select tile at center
@@ -453,14 +448,14 @@ void World::Iterate() {
 	while ( m_smooth_scrolling.timer.Ticked() ) {
 		ASSERT( m_smooth_scrolling.steps_left, "no scrolling steps but timer running" );
 		m_camera_position += m_smooth_scrolling.step;
+		is_camera_position_updated = true;
+		if ( m_smooth_scrolling.step.z != 0 ) {
+			is_camera_scale_updated = true;
+		}
 		if ( !--m_smooth_scrolling.steps_left ) {
 			Log( "Scrolling finished" );
 			m_smooth_scrolling.timer.Stop();
 			break;
-		}
-		is_camera_position_updated = true;
-		if ( m_smooth_scrolling.step.z != 0 ) {
-			is_camera_scale_updated = true;
 		}
 	}
 	
@@ -538,7 +533,9 @@ void World::UpdateCameraPosition() {
 		}
 	}
 	
-	FixCameraX();
+	if ( !m_smooth_scrolling.timer.Running() ) {
+		FixCameraX();
+	}
 	
 	m_camera->SetPosition({
 		( 0.5f + m_camera_position.x ) * m_viewport.viewport_aspect_ratio,
