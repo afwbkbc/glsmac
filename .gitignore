@@ -20,3 +20,4 @@ _deps
 .vs
 .vscode
 /tmp
+*.ninja*
