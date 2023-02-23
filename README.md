@@ -1,7 +1,7 @@
 # GLSMAC
-Unofficial open-source OpenGL/SDL2 client for Sid Meier's Alpha Centauri ( + Alien Crossfire )
+Unofficial open-source OpenGL/SDL2 client for Sid Meier's Alpha Centauri ( + Alien Crossfire ). Drop-in replacement for terranx.exe.
 
-Note: you will still need to own original game and expansion - this client uses it's assets.
+Note: you will still need to own original game and expansion - GLSMAC will load it's resources like images or sounds.
 
 GLSMAC discord : https://discord.gg/fWG3xK7cUx
 
@@ -171,7 +171,7 @@ All rights for SMAC/SMACX assets belong to their respective owners, same for gam
 
 Primary source of information is git log.
 
-Then there's discord where updates are frequent, sometimes I'll explain technical details or plans and also put screenshots of newly added stuff. You can also ask me questions and coordinate development if you decide to participate.
+Then there's discord where updates are frequent, sometimes I'll explain technical details or plans and also put screenshots of newly added features. There you can also ask me questions and coordinate development if you decide to participate.
 
 Then there's this README but I'll only put generic stuff here and won't update often.
 
@@ -179,7 +179,9 @@ Finally, there are multiple threads on various forums and reddits but I don't ha
 
 About features - they aren't promises with guarantees, they are ideas that I'm thinking of implementing once base game is finished. No specific priorities or deadlines (most complex to implement will usually come last). They are also up for discussing on discord, you can also propose your own ideas and I'll add them if they are good.
 
-All features that change SMAC gameplay will be optional and can be enabled/disabled per game, there will also be "Force Classic Mode" checkbox in settings that will disable all game-altering additions.
+All features that change SMAC gameplay will be optional and can be enabled/disabled per game, there will also be "Force Classic Mode" checkbox in settings that will conveniently disable all game-altering additions, for classic SMAC experience.
+
+Emphasis on graphics is average, that means I try to make it look modern and not ugly, but will postpone time-consuming improvements to after v1.0 at least. That means graphics you see now is not final version, it will be better, but now gameplay is higher priority.
 
 ### GLSMAC v1.x+ features
 
