@@ -209,13 +209,51 @@ void World::Start() {
 				if ( is_tile_moved ) {
 					// moved
 					SelectTile( m_selected_tile_info );
+					
 					auto tc = GetTileWindowCoordinates( m_selected_tile_info.ts );
-					if (
-						( fabs( -m_camera_position.x - tc.x ) > World::s_consts.map_scroll.key_scrolling.scroll_if_selected_tile_farther_from_center_than ) ||
-						( fabs( -m_camera_position.y - tc.y ) > World::s_consts.map_scroll.key_scrolling.scroll_if_selected_tile_farther_from_center_than )
-					) {
-						ScrollToTile( m_selected_tile_info.ts );
+					
+					Vec2< float > uc = {
+						GetFixedX( tc.x + m_camera_position.x ),
+						tc.y + m_camera_position.y
+					};
+					
+					Vec2< float > scroll_by = { 0, 0 };
+					
+					//Log( "Resolved tile coordinates to " + uc.ToString() + " ( camera: " + m_camera_position.ToString() + " )" );
+					
+					// tile size
+					Vec2< float > ts = {
+						Map::s_consts.tile.scale.x * m_camera_position.z,
+						Map::s_consts.tile.scale.y * m_camera_position.z
+					};
+					// edge size
+					Vec2< float > es = {
+						0.5f - ts.x,
+						0.5f - ts.y
+					};
+					
+					if ( uc.x < -es.x ) {
+						scroll_by.x = ts.x - 0.5f - uc.x;
 					}
+					else if ( uc.x > es.x ) {
+						scroll_by.x = 0.5f - ts.x - uc.x;
+					}
+					if ( uc.y < -es.y ) {
+						scroll_by.y = ts.y - 0.5f - uc.y;
+					}
+					else if ( uc.y > es.y ) {
+						scroll_by.y = 0.5f - ts.y - uc.y;
+					}
+					
+					if ( scroll_by ) {
+						FixCameraX();
+						ScrollTo({
+							m_camera_position.x + scroll_by.x,
+							m_camera_position.y + scroll_by.y,
+							m_camera_position.z
+						});
+					}
+					
 					return true;
 				}
 			}
