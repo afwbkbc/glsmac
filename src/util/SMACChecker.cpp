@@ -2,7 +2,7 @@
 #include <string>
 #include <iostream>
 #include <fcntl.h>
-#ifdef __linux__
+#ifndef _WIN32
 #include <unistd.h>
 #endif
 

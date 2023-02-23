@@ -71,15 +71,24 @@ Once I replicate original game, I'll focus on other things, such as: larger maps
 
 ### Build instructions
 
-Target platform is GNU/Linux with GCC compiler, it's also possible to build it with Visual Studio + Clang or MinGW on Windows. Other compilers/platforms weren't tested but you can try and please report results if you do (or pull request if you manage to get it running on some other OS).
+Supported platforms:
 
-### Linux
+- GNU/Linux with GCC compiler
+- FreeBSD with Clang compiler
+- Windows ( Visual Studio + Clang )
+- Windows ( MinGW )
+
+Other platforms/toolchains weren't tested but you can try and please report results if you do (or pull request if you manage to get it running on more OSes).
+
+### Linux / FreeBSD
 
 You will need following libraries (-dev versions): FreeType2, SDL2, SDL_image, GL, GLU, GLEW
 
 Ubuntu/Debian/Mint: sudo apt-get install libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev
 
 Gentoo: sudo emerge libsdl2 sdl2-image freetype glu glew
+
+FreeBSD: install ports: devel/sdl20 (with PTHREADS, X11 and OPENGL), graphics/sdl2_image, print/freetype2 and graphics/glew
 
 It is recommended to build project using cmake and make instead of adding .cpp and .h files manually to IDE.
 
@@ -94,10 +103,6 @@ For same build as before (or Release if it's first build): cmake . && make
 Add -j parameter to make to speed up if you have multiple cores, i.e. "make -j9" for 8
 
 You may also just download binary releases from github, they are built for ubuntu but will run on most linux distros (only 64-bit for now).
-
-### FreeBSD
-
-Coming soon (maybe).
 
 ### Windows
 
