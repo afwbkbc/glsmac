@@ -1,5 +1,5 @@
 # GLSMAC
-Open-source OpenGL/SDL2 client for Sid Meier's Alpha Centauri ( + Alien Crossfire )
+Unofficial open-source OpenGL/SDL2 client for Sid Meier's Alpha Centauri ( + Alien Crossfire )
 
 Note: you will still need to own original game and expansion - this client uses it's assets.
 
@@ -73,7 +73,7 @@ Once I replicate original game, I'll focus on other things, such as: larger maps
 
 ### Linux
 
-Target platform is GNU/Linux with GCC compiler, it should also be possible to build it with MinGW (if you're on Windows). Other compilers/platforms weren't tested but you can try.
+Target platform is GNU/Linux with GCC compiler, it's also possible to build it with Visual Studio + Clang or MinGW on Windows. Other compilers/platforms weren't tested but you can try.
 
 You will need following libraries (-dev versions): FreeType2, SDL2, SDL_image, GL, GLU, GLEW
 
@@ -113,31 +113,45 @@ Then in the file that just open paste
 
 below name in the configuration. You need to replace the path with your own path to the game. Then you are done and can run the game in Visual Studio.
 
+Alternatively, set working directory to that of your SMAC installation, it will work without arguments then.
+
 #### MinGW
 
 Building on Windows with MinGW is possible, but tricky. You need to install all those libraries manually, and also FreeGLUT. Double-check that you download libraries compiled for MinGW (and not MSVC). GLEW may need to be compiled from source (because they only ship MSVC version). Make sure to have threads-enabled version of MinGW. Maybe this guide will help you - https://github.com/induktio/mingw-glsmac
 
-Building on Windows with MSVC is not supported and will probably require many changes to code to be compatible.
+### MSVC
+
+Wasn't tested. Feel free to test, but I have feeling it will require many changes to code to be compatible.
 
 ### Launch
 
 Just run ./bin/GLSMAC <smac_directory>
 
+Or copy GLSMAC into your SMAC directory and run without arguments from there.
+
 ### Reporting problems
 
 If you encountered problem, first thing to try is to update to newest version, maybe it was already fixed.
 
-If it fails to build: create issue with errors from build log
+Next step is to try Stable branch. Main branch contains latest code that may be unfinished or partially finished, and/or contain bugs aswell. Stable branch is supposed to be consistent and bug-free.
 
-If it crashes: 1) use debug build 2) run gdb --args ./bin/GLSMAC <smac_directory>, type "r", make it crash, then type "bt" and create issue with this backtrace and steps to reproduce
+Until GLSMAC is v1.0 please do not comment on tiny glitches, sometimes I postpone them bit. Only important game-breaking bugs.
 
-If it freezes: 1) use debug build 2) run gdb --args ./bin/GLSMAC <smac_directory>, get to where it freezes, then press Ctrl+C, type "bt" and create issue with backtrace and steps to reproduce
+Check existing issues, maybe this bug is already known. Then it would be nice if you comment on existing one with your system specs and maybe other details.
 
-If it behaves incorrectly: create issue and specify: 1) steps to reproduce 2) expected behavior 3) actual behavior ; attach screenshots if needed
+If this feature was working correctly earlier - maybe you can find latest commit where it still worked, it will make fixing faster.
+
+If it fails to build: create issue with errors from build log.
+
+If it crashes: 1) use debug build 2) run gdb --args ./bin/GLSMAC <smac_directory>, type "r", make it crash, then type "bt" and create issue with this backtrace and steps to reproduce.
+
+If it freezes: 1) use debug build 2) run gdb --args ./bin/GLSMAC <smac_directory>, get to where it freezes, then press Ctrl+C, type "bt" and create issue with backtrace and steps to reproduce.
+
+If it behaves incorrectly: create issue and specify: 1) steps to reproduce 2) expected behavior 3) actual behavior ; attach screenshots if needed.
 
 Update: on Linux debug build will run inside gdb automatically, so just start it normally
 
-Upon loading of map debug build will also create files tmp/lastmap.seed, tmp/lastmap.gsm (map file) and tmp/lastmap.dump (full dump of initialized map), attach them too if your issue is related to map. Make sure to gzip lastmap.dump, it's huge otherwise.
+If you're using debug build - it will create files tmp/lastmap.seed, tmp/lastmap.gsm (map file) and tmp/lastmap.dump (full dump of initialized map), attach them too if your issue is related to map. Make sure to gzip lastmap.dump, it's huge otherwise.
 
 ### Copyright disclaimer
 
@@ -147,11 +161,11 @@ GLSMAC code is created from scratch and tries to imitate original SMAC logic whi
 
 GLSMAC requires user to have original SMAC (+expansion) installed in order to operate in a way similar to original SMAC.
 
-All rights for SMAC/SMACX assets belong to their respective owners. AGPL license you see here only applies to GLSMAC code (and maybe custom-made assets in the future if I decide to make them).
+All rights for SMAC/SMACX assets belong to their respective owners, same for game mechanics, lore and other content (except for new GLSMAC features which didn't exist in original SMAC). AGPL license you see here only applies to GLSMAC code (and maybe custom-made assets in the future if I decide to make them).
 
 ### More information
 
-Primary source of information is git log :)
+Primary source of information is git log.
 
 Then there's discord where updates are frequent, sometimes I'll explain technical details or plans and also put screenshots of newly added stuff. You can also ask me questions and coordinate development if you decide to participate.
 
@@ -167,11 +181,11 @@ All features that change SMAC gameplay will be optional and can be enabled/disab
 
 ##### Art upscaling
 
-SMAC art is 256-color and sounds are of 22khz mono quality. Maybe it's possible to upscale them and improve quality in runtime.
+SMAC art is 256-color and sounds are of 22khz mono quality. Maybe it's possible to upscale them and improve quality in runtime. Voice can be generated with something like https://beta.elevenlabs.io/ 
 
 ##### Replays
 
-Easy recording of replays (maybe even 'auto-record replay' checkbox in options), then they can be saved, sent to others and watched, alone or as multiplayer game (host game in replay mode). Replays will play in usual way, like in dota2 or stacraft2.
+Easy recording of replays (maybe even 'auto-record replay' checkbox in options), then they can be saved, sent to others and watched, alone or as multiplayer game (host game in replay mode). Replays will play in usual way, like in dota2 or stacraft2. Maybe also add replay-to-video and streaming functions.
 
 ##### Javascript-based modding support
 
@@ -207,6 +221,15 @@ If enabled in settings, during multiplayer games players will be able to talk in
 ##### Game browser
 
 Unlike in original SMAC, after pressing "JOIN" in Multiplayer player will see game browser with games hosted by others. There will be new ones (not started yet) and those he played before. So he can just click and join, also he can add specific players to friends to see their games before others, and other stuff like this. Of course there will be 'join by IP' button too just in case (i.e. if master server is down). 
+
+#### AI vs AI mode
+
+Allow players to code their own AIs (most likely in JavaScript), then host or join games (with special AI-only game mode). Then game will start and AIs will fight each other automatically, players can observe. Turns will go fast so it's a plus (but there will be turn timer just in case some). Then maybe AIs will get ratings, mmr, 'hall of fame' page for best ones.
+
+Actually it's better to just let GLSMAC open network or local port and communicate via it's special AI API with whatever connects - then user can code AI in any language, f.e. in C for speed reasons, maybe even run it on separate powerful server.
+AI-vs-AI mode will also be available as 'single player' where player can test his AIs vs each other, either different AIs or same one (maybe even make it learn by playing many games fast).
+
+Also maybe it should be allowed for player to join as AI to any games (unless host disabled 'Allow remote AIs' in options). 
 
 ##### MMR system
 
@@ -299,6 +322,27 @@ Cons:
 - the most complex system to implement, will certainly be the last if at all (probably not before 2.x)
 
 ### GLSMAC v2.x+ features
+
+##### Spherical planet
+
+Planet can be actually spherical. It means that:
+
+- planet will look like a sphere when zoomed out
+- north and south poles will also be passable  (maybe only by aircraft)
+- map can be rotated infinitely up and down too (or diagonal)
+- map rendering will need to be done in perspective projection instead of orthographic, possibly other warping will be needed to display distances between things correctly
+
+##### Tiles manipulation
+
+Add some late game technology branch that enables manipulation of tiles themselves. Some examples:
+
+- merging several tiles into one (so they all can be crossed in 1 move)
+- splitting tile into several (so units will have to spend more moves to cross them, or for example to fit more terraforming or even cities in same space)
+- connecting two tiles as 'doorway' - when unit steps on it - it teleports to other side, and vice versa
+- alter time on tile (for example, turns may happen only once per 5 real turns, or multiple turns per 1 real turn, or variable speeds
+- removing tile permanently from map (it will just look as black spot and nobody can enter it anymore). every adjactent tile will be harder to remove (to prevent somebody from building impassable 'wall')
+
+Root technology will add special terraforming module (named maybe Space-Time Manipulator). Visually tiles will be distorted too, for example if somebody merges 5 tiles in straight line - he will get a tile that is elongated. Somewhat later there can be missile module (Void Rift Payload?), when detonated - it will permanently erase tiles in round area around it, then this rift will slowly grow in random directions (either for specific duration or infinitely until stopped by some other technology).
 
 ##### RTS mode
 
