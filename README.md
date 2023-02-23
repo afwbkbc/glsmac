@@ -88,7 +88,7 @@ Ubuntu/Debian/Mint: sudo apt-get install libfreetype-dev libsdl2-dev libsdl2-ima
 
 Gentoo: sudo emerge libsdl2 sdl2-image freetype glu glew
 
-FreeBSD: install ports: devel/sdl20 (with PTHREADS, X11 and OPENGL), graphics/sdl2_image, print/freetype2 and graphics/glew
+FreeBSD: install ports: devel/sdl20 (with PTHREADS, X11 and OPENGL and some option like OSS if you want sound), graphics/sdl2_image, print/freetype2 and graphics/glew
 
 It is recommended to build project using cmake and make instead of adding .cpp and .h files manually to IDE.
 
