@@ -71,9 +71,9 @@ Once I replicate original game, I'll focus on other things, such as: larger maps
 
 ### Build instructions
 
-### Linux
+Target platform is GNU/Linux with GCC compiler, it's also possible to build it with Visual Studio + Clang or MinGW on Windows. Other compilers/platforms weren't tested but you can try and please report results if you do (or pull request if you manage to get it running on some other OS).
 
-Target platform is GNU/Linux with GCC compiler, it's also possible to build it with Visual Studio + Clang or MinGW on Windows. Other compilers/platforms weren't tested but you can try.
+### Linux
 
 You will need following libraries (-dev versions): FreeType2, SDL2, SDL_image, GL, GLU, GLEW
 
@@ -94,6 +94,10 @@ For same build as before (or Release if it's first build): cmake . && make
 Add -j parameter to make to speed up if you have multiple cores, i.e. "make -j9" for 8
 
 You may also just download binary releases from github, they are built for ubuntu but will run on most linux distros (only 64-bit for now).
+
+### FreeBSD
+
+Coming soon (maybe).
 
 ### Windows
 
@@ -119,7 +123,7 @@ Alternatively, set working directory to that of your SMAC installation, it will 
 
 Building on Windows with MinGW is possible, but tricky. You need to install all those libraries manually, and also FreeGLUT. Double-check that you download libraries compiled for MinGW (and not MSVC). GLEW may need to be compiled from source (because they only ship MSVC version). Make sure to have threads-enabled version of MinGW. Maybe this guide will help you - https://github.com/induktio/mingw-glsmac
 
-### MSVC
+#### MSVC
 
 Wasn't tested. Feel free to test, but I have feeling it will require many changes to code to be compatible.
 
