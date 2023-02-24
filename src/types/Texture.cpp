@@ -94,9 +94,11 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 	
 	size_t shiftx, shifty; // for random shifts
 	size_t cx, cy; // center
-	size_t sx, sy; // source
-	size_t dx, dy; // dest
-	float r;
+	ssize_t sx, sy; // source
+	ssize_t dx, dy; // dest
+	float r; // radius for rounded corners
+	std::pair< float, float > srx, sry; // stretch ratio ranges
+	float ssx_start, ssx, ssy; // stretched source
 	
 	if (
 		( flags & AM_ROUND_LEFT ) ||
@@ -230,6 +232,34 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 			}
 		}
 	}
+	
+	if ( flags & AM_RANDOM_STRETCH_SHUFFLE ) {
+		flags |= AM_RANDOM_STRETCH | AM_RANDOM_STRETCH_SHRINK | AM_RANDOM_STRETCH_SHIFT;
+	}
+	
+	if ( flags & AM_RANDOM_STRETCH ) {
+		ASSERT( rng, "no rng provided for random mirror" );
+		// randomize random ratio ranges (per-tile)
+		const float rmin = 0.01f, rmax = 0.1f;
+		srx = {
+			rng->GetFloat( rmin, rmax ),
+			( flags & AM_RANDOM_STRETCH_SHRINK ) ? rng->GetFloat( rmin, rmax ) : 0.0f
+		};
+		sry = {
+			rng->GetFloat( rmin, rmax ),
+			( flags & AM_RANDOM_STRETCH_SHRINK ) ? rng->GetFloat( rmin, rmax ) : 0.0f
+		};
+		//Log( "srx=" + std::to_string( srx ) + " sry=" + std::to_string( sry ) );
+		// they will (mostly) follow x and y, but with added random 'speed'
+		ssx_start = 0.0f;
+		ssy = rng->GetFloat( -sry.first, sry.second );
+		if ( flags & AM_RANDOM_STRETCH_SHIFT ) {
+			ssx_start += rng->GetUInt( 0, w - 1 ) * ( 1.0f + srx.second );
+			ssy += rng->GetUInt( 0, h - 1 ) * ( 1.0f + sry.second );
+		}
+		ssx = ssx_start + rng->GetFloat( -srx.first, srx.second );
+	}
+	
 	for (size_t y = 0 ; y < h ; y++) {
 		for (size_t x = 0 ; x < w; x++) {
 			
@@ -377,17 +407,39 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 			}
 			
 			if ( is_pixel_needed ) {
-				if ( flags & AM_MIRROR_X ) {
-					sx = x2 - x;
+				if ( flags & AM_RANDOM_STRETCH ) {
+					// round and wrap if needed
+					sx = round( ssx );
+					while ( sx < 0 ) {
+						sx += w;
+					}
+					while ( sx > w - 1 ) {
+						sx -= w - 1;
+					}
+					sy = round( ssy );
+					while ( sy < 0 ) {
+						sy += h;
+					}
+					while ( sy > h - 1 ) {
+						sy -= h - 1;
+					}
+					//Log( "sx=" + std::to_string( sx ) + " sy=" + std::to_string( sy ) );
 				}
 				else {
-					sx = x + x1;
+					sx = x;
+					sy = y;
+				}
+				if ( flags & AM_MIRROR_X ) {
+					sx = x2 - sx;
+				}
+				else {
+					sx = sx + x1;
 				}
 				if ( flags & AM_MIRROR_Y ) {
-					sy = y2 - y;
+					sy = y2 - sy;
 				}
 				else {
-					sy = y + y1;
+					sy = sy + y1;
 				}
 				from = ptr( source->m_bitmap, ( ( sy ) * source->m_width + ( sx ) ) * m_bpp, m_bpp );
 				to = ptr( m_bitmap, ( ( dy + dest_y ) * m_width + ( dx + dest_x ) ) * m_bpp, m_bpp );
@@ -491,7 +543,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 								
 								pixel_color = MIX_COLORS( pixel_color, dst_pixel_color, pixel_alpha );
 								
-								//*((uint8_t*)( to ) + 3 ) = (uint8_t)floor( pixel_alpha * 0xff + ( 1.0f - pixel_alpha ) * *((uint8_t*)( to ) + 3 ) );
+								memcpy( to, &pixel_color, m_bpp );
 							}
 							else {
 								*((uint8_t*)( to ) + 3 ) = (uint8_t)floor( pixel_alpha * 0xff );
@@ -499,6 +551,24 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 						}
 					}
 				}
+			}
+			if ( flags & AM_RANDOM_STRETCH ) {
+				if ( flags & AM_RANDOM_STRETCH_SHUFFLE ) {
+					ssx += rng->GetFloat( 1.0f - srx.first, 1.0f + srx.second );
+				}
+				else {
+					ssx += 1.0f + srx.second - srx.first;
+				}
+				//Log( "xy = [ " + std::to_string( x + 1 ) + " " + std::to_string( y ) + " ] sxy = [ " + std::to_string( ssx ) + " " + std::to_string( ssy ) + " ]" );
+			}
+		}
+		if ( flags & AM_RANDOM_STRETCH ) {
+			ssx = ssx_start + rng->GetFloat( -srx.first, srx.second );
+			if ( flags & AM_RANDOM_STRETCH_SHUFFLE ) {
+				ssy += rng->GetFloat( 1.0f - sry.first, 1.0f + sry.second );
+			}
+			else {
+				ssy += 1.0f + sry.second - sry.first;
 			}
 		}
 	}

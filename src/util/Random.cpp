@@ -56,7 +56,12 @@ const float Random::GetFloat( const float min, const float max ) {
 	
 	value_t value = Generate();
 	
-	return (float)( min * FLOAT_PRECISION + value % (value_t)( ( max + 1 - min ) * FLOAT_PRECISION ) ) / FLOAT_PRECISION;
+	const float small_value = 0.00001f;
+	
+	float ret = (float)( ( min + small_value ) * FLOAT_PRECISION + value % (value_t)( ( max - min - small_value * 2 ) * FLOAT_PRECISION ) ) / FLOAT_PRECISION;
+	ASSERT( ret >= min, "GetFloat ret < min ( " + std::to_string( ret ) + " < " + std::to_string( min ) + " )" );
+	ASSERT( ret <= max, "GetFloat ret > max ( " + std::to_string( ret ) + " > " + std::to_string( max ) + " )" );
+	return ret;
 }
 #undef FLOAT_PRECISION
 #undef FLOAT_RANGE_MAX

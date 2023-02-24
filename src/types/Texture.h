@@ -69,6 +69,11 @@ CLASS( Texture, Serializable )
 	static constexpr add_flag_t AM_PERLIN_CUT_BOTTOM = 1 << 24;
 	// adds border to perlin pattern
 	static constexpr add_flag_t AM_COASTLINE_BORDER = 1 << 25;
+	// randomly stretch texture during copy
+	static constexpr add_flag_t AM_RANDOM_STRETCH = 1 << 26; // just stretch up
+	static constexpr add_flag_t AM_RANDOM_STRETCH_SHRINK = 1 << 27; // texture can stretch down too
+	static constexpr add_flag_t AM_RANDOM_STRETCH_SHIFT = 1 << 28; // also start x and y from random positions
+	static constexpr add_flag_t AM_RANDOM_STRETCH_SHUFFLE = 1 << 29; // shuffle more. also implies all other stretch flags
 	
 	typedef uint8_t rotate_t;
 	static constexpr rotate_t ROTATE_0 = 0;

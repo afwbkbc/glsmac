@@ -25,7 +25,7 @@ void CalculateCoords::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map
 
 		float ofs = 1.0f; // remove lines between tiles
 		
-		// TODO: implement texture tiling and shifting
+/*		// TODO: implement texture tiling and shifting
 		if ( ts->layers[ lt ].texture_stretch_at_edges ) {
 			#define RND m_map->GetRandom()->GetFloat( 0, Map::s_consts.tile.texture_stretch_randomness )
 			// initialize tex_coords with some stretching
@@ -72,6 +72,15 @@ void CalculateCoords::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map
 				{ ts->tex_coord.x2 - ofs - ts->layers[ lt ].texture_stretch.x, ts->tex_coord.y2 - ofs - ts->layers[ lt ].texture_stretch.y } // bottom
 			};
 		}
+		*/
+		
+			ts->layers[ lt ].tex_coords = {
+				{ ts->tex_coord.x, ts->tex_coord.y }, // center
+				{ ts->tex_coord.x1 + ofs, ts->tex_coord.y2 - ofs }, // left
+				{ ts->tex_coord.x1 + ofs, ts->tex_coord.y1 + ofs }, // top
+				{ ts->tex_coord.x2 - ofs, ts->tex_coord.y1 + ofs }, // right
+				{ ts->tex_coord.x2 - ofs, ts->tex_coord.y2 - ofs } // bottom
+			};
 		
 	}
 }

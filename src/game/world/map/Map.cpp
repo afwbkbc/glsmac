@@ -362,14 +362,11 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const Tile* tile, const 
 		for ( auto& t : tile->neighbours ) {
 			switch ( criteria ) {
 				case TG_MOISTURE: {
-					matches[ idx++ ] = t->moisture == tile->moisture;
+					matches[ idx++ ] = t->moisture >= tile->moisture;
 					break;
 				}
 				case TG_FEATURE: {
-					matches[ idx++ ] =
-						//( t->is_water_tile == tile->is_water_tile ) && // TODO: fix coastline_tint influence on coastlines fungus
-						( t->features & feature ) == ( tile->features & feature )
-					;
+					matches[ idx++ ] = ( t->features & feature ) == ( tile->features & feature );
 					break;
 				}
 				default: {
@@ -400,6 +397,19 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const Tile* tile, const 
 		ASSERT( false, "could not find texture variant" );
 	}
 	
+	if ( info.texture_variant >= 14 ) {
+		// no important edges so we can shuffle harder
+		info.texture_flags =
+			/*Texture::AM_RANDOM_SHIFT_X | // TODO: fix
+			Texture::AM_RANDOM_SHIFT_Y |*/
+			Texture::AM_RANDOM_MIRROR_X |
+			Texture::AM_RANDOM_MIRROR_Y |
+			Texture::AM_RANDOM_STRETCH_SHUFFLE
+		;
+	}
+	else {
+		info.texture_flags = Texture::AM_RANDOM_STRETCH;
+	}
 	return info;
 }
 

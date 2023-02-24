@@ -18,8 +18,8 @@ namespace map_generator {
 void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 	Log( "Generating terrain ( " + std::to_string( tiles->GetWidth() ) + " x " + std::to_string( tiles->GetHeight() ) + " )" );
 	
-	const float land_bias = 0.1f; // increase amount of land generated
-	util::Clamper<float> perlin_to_elevation( -1.0 + land_bias, 1.0, MAPGEN_ELEVATION_MIN, MAPGEN_ELEVATION_MAX );
+	const float land_bias = 1.3f; // increase amount of land generated
+	util::Clamper<float> perlin_to_elevation( -1.0 - land_bias, 1.0, MAPGEN_ELEVATION_MIN, MAPGEN_ELEVATION_MAX );
 	
 	util::Clamper<float> perlin_to_value; // to moisture or rockyness
 	perlin_to_value.SetRange( -1.0, 1.0, 1, 3 );

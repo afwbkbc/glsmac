@@ -18,47 +18,48 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 			// TODO: add pointer connection between tile and tile_state_t?
 			auto src = m_map->GetTileState( t->coord.x, t->coord.y )->moisture_original;
 			
-			Texture::add_flag_t add_mode = Texture::AM_DEFAULT;
+			Texture::add_flag_t add_flags = Texture::AM_DEFAULT;
 
 			if ( t == tile->NW ) {
-				add_mode = Texture::AM_GRADIENT_LEFT;
+				add_flags = Texture::AM_GRADIENT_LEFT;
 			}
 			else if ( t == tile->N ) {
-				add_mode = Texture::AM_GRADIENT_LEFT | Texture::AM_GRADIENT_TOP;
+				add_flags = Texture::AM_GRADIENT_LEFT | Texture::AM_GRADIENT_TOP;
 			}
 			else if ( t == tile->NE ) {
-				add_mode = Texture::AM_GRADIENT_TOP;
+				add_flags = Texture::AM_GRADIENT_TOP;
 			}
 			else if ( t == tile->E ) {
-				add_mode = Texture::AM_GRADIENT_TOP | Texture::AM_GRADIENT_RIGHT;
+				add_flags = Texture::AM_GRADIENT_TOP | Texture::AM_GRADIENT_RIGHT;
 			}
 			else if ( t == tile->SE ) {
-				add_mode = Texture::AM_GRADIENT_RIGHT;
+				add_flags = Texture::AM_GRADIENT_RIGHT;
 			}
 			else if ( t == tile->S ) {
-				add_mode = Texture::AM_GRADIENT_RIGHT | Texture::AM_GRADIENT_BOTTOM;
+				add_flags = Texture::AM_GRADIENT_RIGHT | Texture::AM_GRADIENT_BOTTOM;
 			}
 			else if ( t == tile->SW ) {
-				add_mode = Texture::AM_GRADIENT_BOTTOM;
+				add_flags = Texture::AM_GRADIENT_BOTTOM;
 			}
 			else if ( t == tile->W ) {
-				add_mode = Texture::AM_GRADIENT_BOTTOM | Texture::AM_GRADIENT_LEFT;
+				add_flags = Texture::AM_GRADIENT_BOTTOM | Texture::AM_GRADIENT_LEFT;
 			}
 			
-			if ( add_mode & ( Texture::AM_GRADIENT_LEFT | Texture::AM_GRADIENT_RIGHT ) ) {
-				add_mode |= Texture::AM_MIRROR_X;
+			if ( add_flags & ( Texture::AM_GRADIENT_LEFT | Texture::AM_GRADIENT_RIGHT ) ) {
+				add_flags |= Texture::AM_MIRROR_X;
 			}
-			if ( add_mode & ( Texture::AM_GRADIENT_TOP | Texture::AM_GRADIENT_BOTTOM ) ) {
-				add_mode |= Texture::AM_MIRROR_Y;
+			if ( add_flags & ( Texture::AM_GRADIENT_TOP | Texture::AM_GRADIENT_BOTTOM ) ) {
+				add_flags |= Texture::AM_MIRROR_Y;
 			}
 
-			ASSERT( add_mode != Texture::AM_DEFAULT, "could not determine moisture add mode" );
+			ASSERT( add_flags != Texture::AM_DEFAULT, "could not determine moisture add flags" );
 			
-			float ratio = t->moisture == Tile::M_RAINY ? 0.7f : 0.5f;
-			
-			ratio = 1.0f;
-			
-			m_map->SetTexture( Map::LAYER_LAND, src, Texture::AM_MERGE | Texture::AM_GRADIENT_TIGHTER | add_mode, 0, ratio );
+			m_map->SetTexture( Map::LAYER_LAND, src,
+				add_flags |
+				Texture::AM_MERGE |
+				Texture::AM_GRADIENT_TIGHTER |
+				Texture::AM_RANDOM_STRETCH
+			, 0, 0.72f);
 		}
 	}
 	
@@ -85,7 +86,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 			m_map->AddTexture(
 				Map::LAYER_LAND,
 				Map::s_consts.pcx_textures.rocks[ m_map->GetRandom()->GetUInt( 0, 1 ) * 2 ],
-				Texture::AM_MERGE,
+				Texture::AM_MERGE | Texture::AM_RANDOM_STRETCH,
 				RandomRotate()
 			);
 			break;
@@ -94,7 +95,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 			m_map->AddTexture(
 				Map::LAYER_LAND,
 				Map::s_consts.pcx_textures.rocks[ m_map->GetRandom()->GetUInt( 0, 1 ) * 2 + 1 ],
-				Texture::AM_MERGE,
+				Texture::AM_MERGE | Texture::AM_RANDOM_STRETCH,
 				RandomRotate()
 			);
 			break;
@@ -108,22 +109,17 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 		m_map->AddTexture(
 			Map::LAYER_LAND,
 			Map::s_consts.pcx_textures.jungle[ txinfo.texture_variant ],
-			Texture::AM_MERGE,
+			Texture::AM_MERGE | txinfo.texture_flags,
 			txinfo.rotate_direction
 		);
 	}
 	
 	if ( ( tile->features & Tile::F_XENOFUNGUS ) && !tile->is_water_tile ) {
 		auto txinfo = m_map->GetTileTextureInfo( tile, Map::TG_FEATURE, Tile::F_XENOFUNGUS );
-		auto mode = Texture::AM_MERGE;
-		if ( !ts->has_water && txinfo.texture_variant >= 14 ) {
-			ts->layers[ Map::LAYER_LAND ].texture_stretch_at_edges = true;
-			mode |= Texture::AM_RANDOM_SHIFT_X | Texture::AM_RANDOM_SHIFT_Y | Texture::AM_RANDOM_MIRROR_X | Texture::AM_RANDOM_MIRROR_Y;
-		}
 		m_map->AddTexture(
 			Map::LAYER_LAND,
 			Map::s_consts.pcx_textures.fungus_land[ txinfo.texture_variant ],
-			mode,
+			Texture::AM_MERGE | txinfo.texture_flags,
 			txinfo.rotate_direction
 		);
 	}

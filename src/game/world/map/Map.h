@@ -311,6 +311,7 @@ CLASS( Map, Serializable )
 	struct tile_texture_info_t {
 		uint8_t rotate_direction;
 		uint8_t texture_variant;
+		Texture::add_flag_t texture_flags;
 	};
 	const tile_texture_info_t GetTileTextureInfo( const Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature = Tile::F_NONE ) const;
 
