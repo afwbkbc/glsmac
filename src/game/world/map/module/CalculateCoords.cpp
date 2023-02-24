@@ -75,7 +75,13 @@ void CalculateCoords::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map
 		*/
 		
 			ts->layers[ lt ].tex_coords = {
-				{ ts->tex_coord.x, ts->tex_coord.y }, // center
+				{ ts->tex_coord.x + m_map->GetRandom()->GetFloat(
+					-Map::s_consts.tile.texture_stretch_randomness,
+					Map::s_consts.tile.texture_stretch_randomness
+				), ts->tex_coord.y + m_map->GetRandom()->GetFloat(
+					-Map::s_consts.tile.texture_stretch_randomness,
+					Map::s_consts.tile.texture_stretch_randomness
+				) }, // center
 				{ ts->tex_coord.x1 + ofs, ts->tex_coord.y2 - ofs }, // left
 				{ ts->tex_coord.x1 + ofs, ts->tex_coord.y1 + ofs }, // top
 				{ ts->tex_coord.x2 - ofs, ts->tex_coord.y1 + ofs }, // right

@@ -240,7 +240,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 	if ( flags & AM_RANDOM_STRETCH ) {
 		ASSERT( rng, "no rng provided for random mirror" );
 		// randomize random ratio ranges (per-tile)
-		const float rmin = 0.01f, rmax = 0.1f;
+		const float rmin = 0.025f, rmax = 0.2f;
 		srx = {
 			rng->GetFloat( rmin, rmax ),
 			( flags & AM_RANDOM_STRETCH_SHRINK ) ? rng->GetFloat( rmin, rmax ) : 0.0f
@@ -251,8 +251,8 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 		};
 		//Log( "srx=" + std::to_string( srx ) + " sry=" + std::to_string( sry ) );
 		// they will (mostly) follow x and y, but with added random 'speed'
-		ssx_start = 0.0f;
-		ssy = rng->GetFloat( -sry.first, sry.second );
+		ssx_start = ( srx.first + srx.second ) / 2 * w / 2;
+		ssy = ( sry.first + sry.second ) / 2 * h / 2 + rng->GetFloat( -sry.first, sry.second );
 		if ( flags & AM_RANDOM_STRETCH_SHIFT ) {
 			ssx_start += rng->GetUInt( 0, w - 1 ) * ( 1.0f + srx.second );
 			ssy += rng->GetUInt( 0, h - 1 ) * ( 1.0f + sry.second );
@@ -342,8 +342,8 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 					if ( !perlin_need_pixel && !perlin_need_border && ( flags & AM_COASTLINE_BORDER ) ) {
 						if (
 							( perlin_maxx[ y ] && x < perlin_maxx[ y ] + COASTLINES_BORDER_RND ) ||
-							( y > 0 && x <= perlin_maxx[ y - 1 ] ) ||
-							( y < h - 1 && x <= perlin_maxx[ y + 1 ] )
+							( perlin_maxx[ y - 1 ] && y > 0 && x <= perlin_maxx[ y - 1 ] ) ||
+							( perlin_maxx[ y + 1 ] && y < h - 1 && x <= perlin_maxx[ y + 1 ] )
 						) {
 							perlin_need_border = true;
 						}
@@ -356,8 +356,8 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 					if ( !perlin_need_pixel && !perlin_need_border && ( flags & AM_COASTLINE_BORDER ) ) {
 						if (
 							( perlin_maxy[ x ] && y < perlin_maxy[ x ] + COASTLINES_BORDER_RND ) ||
-							( x > 0 && y <= perlin_maxy[ x - 1 ] ) ||
-							( x < w - 1 && y <= perlin_maxy[ x + 1 ] )
+							( perlin_maxy[ x - 1 ] && x > 0 && y <= perlin_maxy[ x - 1 ] ) ||
+							( perlin_maxy[ x + 1 ] && x < w - 1 && y <= perlin_maxy[ x + 1 ] )
 						) {
 							perlin_need_border = true;
 						}
@@ -370,8 +370,8 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 					if ( !perlin_need_pixel && !perlin_need_border && ( flags & AM_COASTLINE_BORDER ) ) {
 						if (
 							( perlin_maxx[ y ] && ( w - x ) < perlin_maxx[ y ] + COASTLINES_BORDER_RND ) ||
-							( y > 0 && ( w - x ) <= perlin_maxx[ y - 1 ] ) ||
-							( y < h - 1 && ( w - x ) <= perlin_maxx[ y + 1 ] )
+							( perlin_maxx[ y - 1 ] && y > 0 && ( w - x ) <= perlin_maxx[ y - 1 ] ) ||
+							( perlin_maxx[ y + 1 ] && y < h - 1 && ( w - x ) <= perlin_maxx[ y + 1 ] )
 						) {
 							perlin_need_border = true;
 						}
@@ -384,8 +384,8 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 					if ( !perlin_need_pixel && !perlin_need_border && ( flags & AM_COASTLINE_BORDER ) ) {
 						if (
 							( perlin_maxy[ x ] && ( h - y ) < perlin_maxy[ x ] + COASTLINES_BORDER_RND ) ||
-							( x > 0 && ( h - y ) <= perlin_maxy[ x - 1 ] ) ||
-							( x < w - 1 && ( h - y ) <= perlin_maxy[ x + 1 ] )
+							( perlin_maxy[ x - 1 ] && x > 0 && ( h - y ) <= perlin_maxy[ x - 1 ] ) ||
+							( perlin_maxy[ x + 1 ] && x < w - 1 && ( h - y ) <= perlin_maxy[ x + 1 ] )
 						) {
 							perlin_need_border = true;
 						}
