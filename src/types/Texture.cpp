@@ -240,7 +240,8 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 	if ( flags & AM_RANDOM_STRETCH ) {
 		ASSERT( rng, "no rng provided for random mirror" );
 		// randomize random ratio ranges (per-tile)
-		const float rmin = 0.025f, rmax = 0.2f;
+		const float rmin = Map::s_consts.tile.random.texture_edge_stretch_min;
+		const float rmax = Map::s_consts.tile.random.texture_edge_stretch_max;
 		srx = {
 			rng->GetFloat( rmin, rmax ),
 			( flags & AM_RANDOM_STRETCH_SHRINK ) ? rng->GetFloat( rmin, rmax ) : 0.0f
@@ -252,13 +253,23 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 		//Log( "srx=" + std::to_string( srx ) + " sry=" + std::to_string( sry ) );
 		// they will (mostly) follow x and y, but with added random 'speed'
 		ssx_start = ( srx.first + srx.second ) / 2 * w / 2;
-		ssy = ( sry.first + sry.second ) / 2 * h / 2 + rng->GetFloat( -sry.first, sry.second );
+		ssy = ( sry.first + sry.second ) / 2 * h / 2;
 		if ( flags & AM_RANDOM_STRETCH_SHIFT ) {
 			ssx_start += rng->GetUInt( 0, w - 1 ) * ( 1.0f + srx.second );
 			ssy += rng->GetUInt( 0, h - 1 ) * ( 1.0f + sry.second );
 		}
 		ssx = ssx_start + rng->GetFloat( -srx.first, srx.second );
+		ssy += rng->GetFloat( -sry.first, sry.second );
 	}
+	
+#ifdef DEBUG
+	// extra checks to make sure every destination pixel was processed (and only once)
+	bool px_processed[ w ][ h ];
+	memset( px_processed, false, sizeof( px_processed ) );
+#endif
+	
+	// spammy
+	//Log( "Texture processing begin" );
 	
 	for (size_t y = 0 ; y < h ; y++) {
 		for (size_t x = 0 ; x < w; x++) {
@@ -292,15 +303,15 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 			}
 			
 			if ( flags & AM_RANDOM_SHIFT_X ) {
-				if ( dx > shiftx ) {
-					dx -= shiftx;
+				if ( dx >= shiftx ) {
+					dx -= shiftx + 1;
 				}
 				else {
 					dx = w - dx - 1;
 				}
 			}
 			if ( flags & AM_RANDOM_SHIFT_Y ) {
-				if ( dy > shifty ) {
+				if ( dy >= shifty ) {
 					dy -= shifty;
 				}
 				else {
@@ -409,41 +420,78 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 			if ( is_pixel_needed ) {
 				if ( flags & AM_RANDOM_STRETCH ) {
 					// round and wrap if needed
-					sx = round( ssx );
+					sx = floor( ssx );
 					while ( sx < 0 ) {
 						sx += w;
 					}
-					while ( sx > w - 1 ) {
-						sx -= w - 1;
+					while ( sx >= w ) {
+						sx -= w;
 					}
-					sy = round( ssy );
+					sy = floor( ssy );
 					while ( sy < 0 ) {
 						sy += h;
 					}
 					while ( sy > h - 1 ) {
 						sy -= h - 1;
 					}
-					//Log( "sx=" + std::to_string( sx ) + " sy=" + std::to_string( sy ) );
 				}
 				else {
 					sx = x;
 					sy = y;
 				}
+				
 				if ( flags & AM_MIRROR_X ) {
 					sx = x2 - sx;
 				}
 				else {
 					sx = sx + x1;
 				}
+				
 				if ( flags & AM_MIRROR_Y ) {
 					sy = y2 - sy;
 				}
 				else {
 					sy = sy + y1;
 				}
+				
+				// VERY spammy
+				/*if ( flags & AM_RANDOM_STRETCH ) {
+					Log( "SSX=" + std::to_string( ssx ) + " SSY=" + std::to_string( ssy ) + " SX=" + std::to_string( sx ) + " SY=" + std::to_string( sy ) + " DX=" + std::to_string( dx ) + " DY=" + std::to_string( dy ) );
+				}*/
+				
+				ASSERT( sx >= x1, "sx < x1" );
+				ASSERT( sx <= x2, "sx > x2" );
+				ASSERT( sy >= y1, "sy < y1" );
+				ASSERT( sy <= y2, "sy > y2" );
+				
+				ASSERT( dx >= 0, "dx < 0" );
+				ASSERT( dx <= w, "dx > w" );
+				ASSERT( dy >= 0, "dy < 0" );
+				ASSERT( dy <= h, "dy > h" );
+				
+#ifdef DEBUG
+				ASSERT( !px_processed[ dx ][ dy ], "pixel at " + std::to_string( dx ) + "x" + std::to_string( dy ) + " was already processed" );
+				px_processed[ dx ][ dy ] = true;
+#endif				
 				from = ptr( source->m_bitmap, ( ( sy ) * source->m_width + ( sx ) ) * m_bpp, m_bpp );
 				to = ptr( m_bitmap, ( ( dy + dest_y ) * m_width + ( dx + dest_x ) ) * m_bpp, m_bpp );
-
+				
+#ifdef DEBUG
+				{
+					uint32_t pixel_color;
+					memcpy( &pixel_color, from, m_bpp );
+					
+					// this color is used in texture.pcx (and maybe others) between texture blocks
+					// if it got read - then it means source coordinates got wrong
+					// some day it may start giving false positives if valid texture happens to have pixel of same color, but it's unlikely
+					ASSERT(
+						pixel_color != Color::RGBA( 0, 255, 252, 255 ),
+						"source texture overflow (tried to read pixel " + std::to_string( sx ) + "x" + std::to_string( sy ) + ")" +
+						" x1=" + std::to_string( x1 ) + " y1=" + std::to_string( y1 ) + " x2=" + std::to_string( x2 ) + " y2=" + std::to_string( y2 )
+					);
+				}
+#endif
+				
 				if ( ( !( flags & AM_MERGE ) ) || ( *(uint32_t*)from & 0x000000ff ) ) {
 					
 					if (
@@ -552,26 +600,35 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 					}
 				}
 			}
+#ifdef DEBUG
+			else {
+				ASSERT( !px_processed[ dx ][ dy ], "pixel at " + std::to_string( dx ) + "x" + std::to_string( dy ) + " was already processed" );
+				px_processed[ dx ][ dy ] = true;
+			}
+#endif				
+			
 			if ( flags & AM_RANDOM_STRETCH ) {
-				if ( flags & AM_RANDOM_STRETCH_SHUFFLE ) {
-					ssx += rng->GetFloat( 1.0f - srx.first, 1.0f + srx.second );
-				}
-				else {
-					ssx += 1.0f + srx.second - srx.first;
-				}
-				//Log( "xy = [ " + std::to_string( x + 1 ) + " " + std::to_string( y ) + " ] sxy = [ " + std::to_string( ssx ) + " " + std::to_string( ssy ) + " ]" );
+				ssx += rng->GetFloat( 1.0f - srx.first, 1.0f + srx.second );
 			}
 		}
 		if ( flags & AM_RANDOM_STRETCH ) {
 			ssx = ssx_start + rng->GetFloat( -srx.first, srx.second );
-			if ( flags & AM_RANDOM_STRETCH_SHUFFLE ) {
-				ssy += rng->GetFloat( 1.0f - sry.first, 1.0f + sry.second );
-			}
-			else {
-				ssy += 1.0f + sry.second - sry.first;
-			}
+			ssy += rng->GetFloat( 1.0f - sry.first, 1.0f + sry.second );
 		}
 	}
+	
+#ifdef DEBUG
+	// make sure every pixel was processed
+	for ( auto y = 0 ; y < h ; y++ ) {
+		for ( auto x = 0 ; x < w ; x++ ) {
+			ASSERT( px_processed[ x ][ y ], "pixel at " + std::to_string( x ) + "x" + std::to_string( y ) + " was not processed (flags: " + std::to_string( flags ) + ")" );
+		}
+	}
+#endif
+	
+	// spammy
+	//Log( "Texture processing end" );
+	
 	#undef MIX_COLORS
 	#undef COASTLINES_BORDER_RND
 }

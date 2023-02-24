@@ -86,7 +86,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 			m_map->AddTexture(
 				Map::LAYER_LAND,
 				Map::s_consts.pcx_textures.rocks[ m_map->GetRandom()->GetUInt( 0, 1 ) * 2 ],
-				Texture::AM_MERGE | Texture::AM_RANDOM_STRETCH,
+				Texture::AM_MERGE | Texture::AM_RANDOM_STRETCH | Texture::AM_RANDOM_STRETCH_SHRINK | Texture::AM_RANDOM_STRETCH_SHIFT,
 				RandomRotate()
 			);
 			break;
@@ -95,7 +95,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 			m_map->AddTexture(
 				Map::LAYER_LAND,
 				Map::s_consts.pcx_textures.rocks[ m_map->GetRandom()->GetUInt( 0, 1 ) * 2 + 1 ],
-				Texture::AM_MERGE | Texture::AM_RANDOM_STRETCH,
+				Texture::AM_MERGE | Texture::AM_RANDOM_STRETCH | Texture::AM_RANDOM_STRETCH_SHRINK,
 				RandomRotate()
 			);
 			break;

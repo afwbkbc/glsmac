@@ -88,6 +88,11 @@ void glDrawArrays_real( GLenum mode, GLint first, GLsizei count ) {
 
 #include "base/Base.h"
 
+// always debug memory when developing
+#ifdef DEVEL
+#define MEMORY_DEBUG
+#endif
+
 namespace debug {
 
 MemoryWatcher* g_memory_watcher = nullptr;

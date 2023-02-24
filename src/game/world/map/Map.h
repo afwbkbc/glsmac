@@ -68,16 +68,16 @@ CLASS( Map, Serializable )
 				{ 526, 430 }, { 583, 430 }, { 640, 430 }, { 959, 463 },
 			};
 			const pcx_texture_coordinates_t fungus_land[16] = {
-				{ 280, 515 }, { 337, 515 }, { 394, 515 }, { 451, 515 },
-				{ 280, 572 }, { 337, 572 }, { 394, 572 }, { 451, 572 },
-				{ 280, 629 }, { 337, 629 }, { 394, 629 }, { 451, 629 },
-				{ 280, 686 }, { 337, 686 }, { 394, 686 }, { 451, 686 },
+				{ 280, 516 }, { 337, 516 }, { 394, 516 }, { 451, 516 },
+				{ 280, 573 }, { 337, 573 }, { 394, 573 }, { 451, 573 },
+				{ 280, 630 }, { 337, 630 }, { 394, 630 }, { 451, 630 },
+				{ 280, 687 }, { 337, 687 }, { 394, 687 }, { 451, 687 },
 			};
 			const pcx_texture_coordinates_t fungus_sea[16] = {
-				{ 508, 515 }, { 565, 515 }, { 622, 515 }, { 679, 515 },
-				{ 508, 572 }, { 565, 572 }, { 622, 572 }, { 679, 572 },
-				{ 508, 629 }, { 565, 629 }, { 622, 629 }, { 679, 629 },
-				{ 508, 686 }, { 565, 686 }, { 622, 686 }, { 679, 686 },
+				{ 508, 516 }, { 565, 516 }, { 622, 516 }, { 679, 516 },
+				{ 508, 573 }, { 565, 573 }, { 622, 573 }, { 679, 573 },
+				{ 508, 630 }, { 565, 630 }, { 622, 630 }, { 679, 630 },
+				{ 508, 687 }, { 565, 687 }, { 622, 687 }, { 679, 687 },
 			};
 		} pcx_textures;
 		const float tile_scale_z = 2.0f;
@@ -93,8 +93,12 @@ CLASS( Map, Serializable )
 			} radius;
 			const float rotated_width = sqrt( pow( s_consts.tile.scale.x, 2 ) + pow( s_consts.tile.scale.y, 2 ) );
 			const Tile::elevation_t maximum_allowed_slope_elevation = 650; // TODO: fix black lines when texture is perpendicular to camera
-			const float texture_stretch_randomness = 2.0f;
-			const float center_coordinates_randomness = 2.0f;
+			const struct {
+				const float texture_edge_stretch_min = 0.05f;
+				const float texture_edge_stretch_max = 0.15f;
+				const float texture_center_stretch = 4.0f;
+				const float center_coordinates_shift = 2.0f;
+			} random;
 		} tile;
 		const struct {
 			const struct {

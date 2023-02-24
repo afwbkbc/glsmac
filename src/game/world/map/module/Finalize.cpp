@@ -65,7 +65,7 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 				vertices.center.z = Map::s_consts.tile_scale_z + emf;
 			}
 			
-			#define xx( _k ) vertices.center._k += m_map->GetRandom()->GetFloat( -Map::s_consts.tile.center_coordinates_randomness, Map::s_consts.tile.center_coordinates_randomness ) * 0.05f
+			#define xx( _k ) vertices.center._k += m_map->GetRandom()->GetFloat( -Map::s_consts.tile.random.center_coordinates_shift, Map::s_consts.tile.random.center_coordinates_shift ) * 0.05f
 				xx( x );
 				xx( y );
 			#undef xx
