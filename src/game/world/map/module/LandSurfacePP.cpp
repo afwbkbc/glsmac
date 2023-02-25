@@ -1,14 +1,14 @@
-#include "PostProcess.h"
+#include "LandSurfacePP.h"
 
 namespace game {
 namespace world {
 namespace map {
 
-void PostProcess::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_state_t* ms ) {
+void LandSurfacePP::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_state_t* ms ) {
 	
 	if ( !tile->is_water_tile ) {
 		if ( tile->features & Tile::F_RIVER ) {
-			if ( ts->is_coastline ) {
+			if ( ts->has_water ) {
 				
 				// apply river texture again on top of coastline border to erase beach
 

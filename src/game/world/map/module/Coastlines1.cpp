@@ -198,7 +198,7 @@ void Coastlines1::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 		);
 	}
 
-	if ( ts->is_coastline ) {
+	if ( ts->has_water ) {
 		
 		// corners on land tiles
 		if ( ts->is_coastline_corner ) {

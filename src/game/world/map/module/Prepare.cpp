@@ -102,7 +102,7 @@ void Prepare::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 		( tile->S->is_water_tile && ( tile->SW->is_water_tile || tile->SE->is_water_tile ) )
 	);
 	
-	ts->is_coastline = (
+	ts->has_water = (
 		ts->is_coastline_corner ||
 		ts->elevations.center <= Tile::ELEVATION_LEVEL_COAST ||
 		ts->elevations.left <= Tile::ELEVATION_LEVEL_COAST ||

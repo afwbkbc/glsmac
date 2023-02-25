@@ -11,7 +11,8 @@ CLASS( SimplePerlin, MapGenerator )
 	void Generate( Tiles* tiles, size_t seed );
 	
 private:
-	void GenerateRiver( Tiles* tiles, Tile* tile, uint8_t length, uint8_t direction );
+	void GenerateRiver( Tiles* tiles, Tile* tile, uint8_t length, uint8_t direction, int8_t direction_diagonal );
+	bool HasRiversNearby( Tile* current_tile, Tile* tile );
 
 };
 	

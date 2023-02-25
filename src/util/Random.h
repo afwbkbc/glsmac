@@ -30,7 +30,7 @@ CLASS( Random, Util )
 	const uint32_t GetUInt( const uint32_t min, const uint32_t max );
 	const float GetFloat( const float min, const float max );
 	
-	const bool IsLucky( const value_t difficulty );
+	const bool IsLucky( const value_t difficulty = 2 ); // 2 means 50/50 chance
 	
 	const state_t GetState();
 	void SetState( const state_t& state );

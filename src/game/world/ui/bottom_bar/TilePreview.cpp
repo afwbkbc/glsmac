@@ -201,18 +201,36 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 			}
 		}
 		info_lines.push_back( tilestr );
-		if ( tile->features & map::Tile::F_JUNGLE ) {
-			info_lines.push_back( "Jungle" );
-		}
 		if ( tile->features & map::Tile::F_XENOFUNGUS ) {
 			info_lines.push_back( "Xenofungus" );
+		}
+		if ( tile->features & map::Tile::F_JUNGLE ) {
+			info_lines.push_back( "Jungle" );
 		}
 		if ( tile->features & map::Tile::F_RIVER ) {
 			info_lines.push_back( "River" );
 		}
 	}
-	
+
+	// combine into printable lines
+	std::string info_line = "";
+	std::string info_line_new = "";
+	constexpr size_t max_length = 15; // TODO: determine width from actual text because different symbols are different
+	std::vector< std::string > print_lines = {};
 	for ( auto& line : info_lines ) {
+		info_line_new = info_line + ( info_line.empty() ? "" : ", " ) + line;
+		if ( info_line_new.size() > max_length ) {
+			print_lines.push_back( info_line );
+			info_line = line;
+		}
+		else {
+			info_line = info_line_new;
+		}
+	}
+	print_lines.push_back( info_line );
+	
+	// print lines
+	for ( auto& line : print_lines ) {
 		NEWV( label, object::Label, "MapBottomBarTilePreviewTextLine" );
 			label->SetText( line );
 			label->SetTop( label_top );
@@ -221,6 +239,7 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 		label_top += label->GetHeight();
 	}
 	
+	// print tile coordinates
 	NEWV( label, object::Label, "MapBottomBarTilePreviewTextFooter" );
 		label->SetText( "(" + std::to_string( tile->coord.x ) + "," + std::to_string( tile->coord.y ) + ")" );
 	m_info_lines.push_back( label );

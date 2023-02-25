@@ -11,14 +11,15 @@
 // higher values generate more interesting maps, at cost of longer map generation (isn't noticeable before 200 or so)
 #define PERLIN_PASSES 128
 
-#define RIVER_SPAWN_CHANCE_DIFFICULTY 20
-#define RIVER_STARTING_LENGTH_MIN 2
-#define RIVER_STARTING_LENGTH_MAX 5
-#define RIVER_SHORTENING_CHANCE_DIFFICULTY 3
-#define RIVER_DIRECTION_CHANGE_CHANCE_DIFFICULTY 8
-#define RIVER_SPLIT_CHANCE_DIFFICULTY 20
+#define RIVER_SPAWN_CHANCE_DIFFICULTY 16
+#define RIVER_STARTING_LENGTH_MIN 3
+#define RIVER_STARTING_LENGTH_MAX 24
+#define RIVER_DIRECTION_CHANGE_CHANCE_DIFFICULTY 2
+#define RIVER_SPLIT_CHANCE_DIFFICULTY 6
+#define RIVER_JOIN_CHANCE_DIFFICULTY 6
 
-#define RANDOM_DIRECTION ( tiles->GetRandom()->GetUInt( 0, ( tile->neighbours.size() - 1 ) / 2 ) * 2 + 1 )
+#define RANDOM_DIRECTION ( tiles->GetRandom()->GetUInt( 0, ( tile->neighbours.size() - 1 ) ) )
+#define RANDOM_DIRECTION_DIAGONAL ( tiles->GetRandom()->GetUInt( 0, 1 ) * 2 - 1 )
 
 namespace game {
 namespace world {
@@ -113,7 +114,8 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 					tiles,
 					tile,
 					tiles->GetRandom()->GetUInt( RIVER_STARTING_LENGTH_MIN, RIVER_STARTING_LENGTH_MAX ),
-					RANDOM_DIRECTION
+					RANDOM_DIRECTION,
+					RANDOM_DIRECTION_DIAGONAL
 				);
 			}
 			
@@ -128,7 +130,7 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 	
 }
 
-void SimplePerlin::GenerateRiver( Tiles* tiles, Tile* tile, uint8_t length, uint8_t direction ) {
+void SimplePerlin::GenerateRiver( Tiles* tiles, Tile* tile, uint8_t length, uint8_t direction, int8_t direction_diagonal ) {
 	
 	if ( tile->features & Tile::F_RIVER ) {
 		// joined existing river
@@ -137,20 +139,82 @@ void SimplePerlin::GenerateRiver( Tiles* tiles, Tile* tile, uint8_t length, uint
 	
 	tile->features |= Tile::F_RIVER;
 	
-	while ( length > 0 && tiles->GetRandom()->IsLucky( RIVER_SHORTENING_CHANCE_DIFFICULTY ) ) {
-		length--;
-	}
-	if ( tiles->GetRandom()->IsLucky( RIVER_DIRECTION_CHANGE_CHANCE_DIFFICULTY ) )  {
-		direction = RANDOM_DIRECTION;
-	}
-	
+	length--;
 	if ( length > 0 ) {
-		GenerateRiver( tiles, tile->neighbours.at( direction ), length, direction );
+		
+		if ( tiles->GetRandom()->IsLucky( RIVER_DIRECTION_CHANGE_CHANCE_DIFFICULTY ) )  {
+			if ( tiles->GetRandom()->IsLucky() ) {
+				if ( direction < tile->neighbours.size() - 1 ) {
+					direction++;
+				}
+				else {
+					direction = 0;
+				}
+			}
+			else {
+				if ( direction > 0 ) {
+					direction--;
+				}
+				else {
+					direction = tile->neighbours.size() - 1;
+				}
+			}
+		}
+		
+		int8_t real_direction;
+		if ( direction % 2 ) {
+			real_direction = direction;
+		}
+		else {
+			real_direction = direction + direction_diagonal;
+			if ( real_direction < 0 ) {
+				real_direction = tile->neighbours.size() - 1;
+			}
+			else if ( real_direction > tile->neighbours.size() - 1 ) {
+				real_direction = 0;
+			}
+			direction_diagonal *= -1;
+		}
+		auto* selected_tile = tile->neighbours.at( real_direction );
+		if ( !HasRiversNearby( tile, selected_tile ) || tiles->GetRandom()->IsLucky( RIVER_JOIN_CHANCE_DIFFICULTY ) ) {
+			GenerateRiver( tiles, selected_tile, length, real_direction, direction_diagonal );
+		}
+		
 		while ( tiles->GetRandom()->IsLucky( RIVER_SPLIT_CHANCE_DIFFICULTY ) ) {
-			direction = RANDOM_DIRECTION;
-			GenerateRiver( tiles, tile->neighbours.at( direction ), length, direction );
-		} ;
+			// split at 90 degrees angle
+			uint8_t child_direction = direction;
+			if ( tiles->GetRandom()->IsLucky() ) { // clockwise
+				if ( child_direction < tile->neighbours.size() - 2 ) {
+					child_direction += 2;
+				}
+				else {
+					child_direction = child_direction + 2 - tile->neighbours.size();
+				}
+			}
+			else { // counter-clockwise
+				if ( child_direction >= 2 ) {
+					child_direction -= 2;
+				}
+				else {
+					child_direction = tile->neighbours.size() - child_direction - 1;
+				}
+			}
+			
+			selected_tile = tile->neighbours.at( child_direction );
+			if ( !HasRiversNearby( tile, selected_tile ) || tiles->GetRandom()->IsLucky( RIVER_JOIN_CHANCE_DIFFICULTY ) ) {
+				GenerateRiver( tiles, selected_tile, length, child_direction, direction_diagonal * -1 );
+			}
+		}
 	}
+}
+
+bool SimplePerlin::HasRiversNearby( Tile* current_tile, Tile* tile ) {
+	for ( auto& t : tile->neighbours ) {
+		if ( t != current_tile && t->features & Tile::F_RIVER ) {
+			return true;
+		}
+	}
+	return false;
 }
 
 }

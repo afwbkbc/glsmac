@@ -18,7 +18,7 @@ void Coastlines2::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 	
 	// fix coastline texture center alpha for corners
 	
-	if ( ts->is_coastline ) {
+	if ( ts->has_water ) {
 		if ( ts->is_coastline_corner ) {
 			if (
 				tile->W->is_water_tile &&

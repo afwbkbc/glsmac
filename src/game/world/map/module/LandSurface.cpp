@@ -136,7 +136,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 				add_flags,
 				txinfo.rotate_direction
 			);
-			if ( ts->is_coastline ) {
+			if ( ts->has_water ) {
 				// need to save original river texture to draw it on top of coastline border later (to erase 'beach' on river exit)
 				ASSERT( !ts->river_original, "river original texture already set" );
 				NEW(

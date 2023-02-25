@@ -11,8 +11,9 @@
 #include "module/Prepare.h"
 #include "module/LandMoisture.h"
 #include "module/LandSurface.h"
-#include "module/PostProcess.h"
+#include "module/LandSurfacePP.h"
 #include "module/WaterSurface.h"
+#include "module/WaterSurfacePP.h"
 #include "module/CalculateCoords.h"
 #include "module/Coastlines1.h"
 #include "module/Coastlines2.h"
@@ -122,9 +123,15 @@ Map::Map( Random* random, Scene* scene )
 		m_modules.push_back( module_pass );
 	}
 	
-	{ // deferred pass (after all other passes and deferred calls are processed)
+	// deferred passes (after all other passes and deferred calls are processed)
+	{
 		module_pass.clear();
-		NEW( m, PostProcess, this ); module_pass.push_back( m );
+		NEW( m, LandSurfacePP, this ); module_pass.push_back( m );
+		m_modules_deferred.push_back( module_pass );
+	}
+	{
+		module_pass.clear();
+		NEW( m, WaterSurfacePP, this ); module_pass.push_back( m );
 		m_modules_deferred.push_back( module_pass );
 	}
 }
@@ -728,7 +735,7 @@ const Buffer Map::tile_state_t::Serialize() const {
 	buf.WriteString( overdraw_column.indices.Serialize().ToString() );
 	buf.WriteString( data_mesh.coords.Serialize().ToString() );
 	buf.WriteString( data_mesh.indices.Serialize().ToString() );
-	buf.WriteBool( is_coastline );
+	buf.WriteBool( has_water );
 	buf.WriteBool( is_coastline_corner );
 	buf.WriteString( moisture_original->Serialize().ToString() );
 	if ( river_original ) {
@@ -887,7 +894,7 @@ void Map::tile_state_t::Unserialize( Buffer buf ) {
 	overdraw_column.indices.Unserialize( buf.ReadString() );
 	data_mesh.coords.Unserialize( buf.ReadString() );
 	data_mesh.indices.Unserialize( buf.ReadString() );
-	is_coastline = buf.ReadBool();
+	has_water = buf.ReadBool();
 	is_coastline_corner = buf.ReadBool();
 	
 	const auto w = Map::s_consts.pcx_texture_block.dimensions.x;

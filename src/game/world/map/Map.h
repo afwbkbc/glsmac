@@ -260,7 +260,7 @@ CLASS( Map, Serializable )
 			tile_indices_t indices;
 		} data_mesh;
 		// visual traits
-		bool is_coastline;
+		bool has_water;
 		bool is_coastline_corner;
 		Texture* moisture_original;
 		Texture* river_original;
