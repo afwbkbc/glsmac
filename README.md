@@ -3,6 +3,8 @@ Unofficial open-source OpenGL/SDL2 client for Sid Meier's Alpha Centauri ( + Ali
 
 Note: you will still need to own original game and expansion - GLSMAC will load it's resources like images or sounds.
 
+Check [Screenshots](https://github.com/afwbkbc/glsmac/wiki/Screenshots) for current state of project.
+
 GLSMAC discord : https://discord.gg/fWG3xK7cUx
 
 ### Why?
