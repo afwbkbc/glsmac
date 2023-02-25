@@ -201,6 +201,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 		if ( flags & AM_PERLIN_CUT_BOTTOM ) {
 			pry.second -= round( (float)h * pc );
 		}
+		
 		if ( flags & ( AM_PERLIN_LEFT | AM_PERLIN_RIGHT ) ) {
 			for ( auto y = 0 ; y < h ; y++ ) {
 				key = ( flags & AM_PERLIN_LEFT )
@@ -411,6 +412,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 					is_pixel_needed = true;
 					mix_color = Map::s_consts.coastlines.border_color.GetRGBA();
 				}
+				
 			}
 			
 			if ( flags & AM_INVERT ) {

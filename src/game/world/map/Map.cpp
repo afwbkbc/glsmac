@@ -39,14 +39,9 @@ Map::Map( Random* random, Scene* scene )
 	: m_random( random )
 	, m_scene( scene )
 {
-	
-	// precache tile texture variants/rotations for fast lookups
-	struct texture_rule_t {
-		uint8_t bitmask;
-		uint8_t checked_bits; // some masks don't care about some corners
-	};
-	
-	const std::vector< texture_rule_t > bitmasks = {
+
+	// add texture variant bitmap maps
+	CalculateTextureVariants( TVT_TILES, {
 		{ B(00000000), B(10101010) }, // 0
 		{ B(00001000), B(10101010) }, // 1
 		{ B(00101000), B(10111010) }, // 2
@@ -63,23 +58,27 @@ Map::Map( Random* random, Scene* scene )
 		{ B(11111110), B(11111111) }, // 13
 		{ B(11111111), B(11111111) }, // 14
 		// 15 ???
-	};
+	});
+	CalculateTextureVariants( TVT_RIVERS, {
+		{ B(00000000), B(10101010) }, // 0
+		{ B(00100000), B(10101010) }, // 1
+		{ B(10000000), B(10101010) }, // 2
+		{ B(10100000), B(10101010) }, // 3
+		{ B(00000010), B(10101010) }, // 4
+		{ B(00100010), B(10101010) }, // 5
+		{ B(10000010), B(10101010) }, // 6
+		{ B(10100010), B(10101010) }, // 7
+		{ B(00001000), B(10101010) }, // 8
+		{ B(00101000), B(10101010) }, // 9
+		{ B(10001000), B(10101010) }, // 10
+		{ B(10101000), B(10101010) }, // 11
+		{ B(00001010), B(10101010) }, // 12
+		{ B(00101010), B(10101010) }, // 13
+		{ B(10001010), B(10101010) }, // 14
+		{ B(10101010), B(10101010) }, // 15
+	});
 
-	for ( uint16_t bitmask = 0 ; bitmask < 256 ; bitmask++ ) {
-		ssize_t i = bitmasks.size() - 1;
-		while ( i >= 0 ) {
-			texture_rule_t rules = bitmasks.at( i );
-			if ( ( bitmask & rules.checked_bits ) == ( rules.bitmask & rules.checked_bits ) ) {
-				m_texture_variants[ bitmask ] = i;
-				break;
-			}
-			i--;
-		}
-		if ( i == 0 ) {
-			m_texture_variants[ bitmask ] = 0;
-		}
-	}
-	
+	// main source texture
 	m_textures.source = g_engine->GetTextureLoader()->LoadTextureTC( "texture.pcx", Color::RGBA( 125, 0, 128, 255 ) );
 	
 	// add map modules
@@ -352,7 +351,7 @@ void Map::InitTextureAndMesh() {
 	m_map_state.terrain_texture = m_textures.terrain;
 }
 
-const Map::tile_texture_info_t Map::GetTileTextureInfo( const Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature ) const {
+const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_type_t type, const Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature ) const {
 	ASSERT( m_current_ts, "GetTileTextureInfo called outside of tile generation" );
 	Map::tile_texture_info_t info;
 	
@@ -366,7 +365,10 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const Tile* tile, const 
 					break;
 				}
 				case TG_FEATURE: {
-					matches[ idx++ ] = ( t->features & feature ) == ( tile->features & feature );
+					matches[ idx++ ] = (
+						( t->features & feature ) == ( tile->features & feature ) ||
+						( type == TVT_RIVERS && !tile->is_water_tile && t->is_water_tile ) // rivers end in sea
+					);
 					break;
 				}
 				default: {
@@ -376,25 +378,35 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const Tile* tile, const 
 		}
 	}
 	
-	std::vector< uint8_t > possible_rotates = {};
+	std::unordered_map< uint8_t, std::vector< uint8_t > > possible_variants = {}; // variant -> rotations
+	
+	const auto& variants = m_texture_variants.find( type );
+	ASSERT( variants != m_texture_variants.end(), "texture variants for " + std::to_string( type ) + " not calculated" );
 	
 	for ( info.rotate_direction = 0 ; info.rotate_direction < 8 ; info.rotate_direction += 2 ) {
 		uint8_t bitmask = 0;
 		for ( uint8_t i = 0 ; i < 8 ; i++ ) {
 			bitmask |= matches[ i + info.rotate_direction ] << i;
 		}
-		auto it = m_texture_variants.find( bitmask );
-		if ( it != m_texture_variants.end() ) {
-			info.texture_variant = it->second;
-			possible_rotates.push_back( info.rotate_direction );
+		const auto& it = variants->second.find( bitmask );
+		if ( it != variants->second.end() ) {
+			for ( auto& v : it->second ) {
+				possible_variants[ v ].push_back( info.rotate_direction );
+			}
 		}
 	}
 	
-	if ( !possible_rotates.empty() ) {
-		info.rotate_direction = possible_rotates[ m_random->GetUInt( 0, possible_rotates.size() - 1 ) ] / 2;
+	if ( !possible_variants.empty() ) {
+		// pick random variant if multiple
+		auto it = possible_variants.begin();
+		std::advance( it, m_random->GetUInt( 0, possible_variants.size() - 1 ) );
+		info.texture_variant = it->first;
+		info.rotate_direction = it->second[ m_random->GetUInt( 0, it->second.size() - 1 ) ] / 2;
 	}
 	else {
-		ASSERT( false, "could not find texture variant" );
+		info.texture_variant = 0;
+		info.rotate_direction = 0;
+		//ASSERT( false, "could not find texture variant" );
 	}
 	
 	if ( info.texture_variant >= 14 ) {
@@ -606,6 +618,22 @@ Map::tile_info_t Map::GetTileAtScreenCoordsResult() {
 	
 	// no data
 	return { nullptr, nullptr, nullptr };
+}
+
+void Map::CalculateTextureVariants( const texture_variants_type_t type, const texture_variants_rules_t& rules ) {
+	ASSERT( m_texture_variants.find( type ) == m_texture_variants.end(), "texture variants for " + std::to_string( type ) + " already calculated" );
+	auto& variants = m_texture_variants[ type ];
+	for ( uint16_t bitmask = 0 ; bitmask < 256 ; bitmask++ ) {
+		ssize_t i = rules.size() - 1;
+		auto& v = variants[ bitmask ] = {};
+		while ( i >= 0 ) {
+			const auto& rule = rules.at( i );
+			if ( ( bitmask & rule.checked_bits ) == ( rule.bitmask & rule.checked_bits ) ) {
+				v.push_back( i );
+			}
+			i--;
+		}
+	}
 }
 
 const Buffer Map::Serialize() const {

@@ -17,7 +17,10 @@
 #endif
 
 #include "map_generator/SimplePerlin.h"
+
+#ifdef DEVEL
 #include "map_generator/Test.h"
+#endif
 
 // TODO: move to settings
 #define MAP_ROTATE_SPEED 2.0f
@@ -87,7 +90,7 @@ void World::Start() {
 	NEWV( tiles, Tiles, 2400, 1600, m_random );
 #else
 	#ifdef DEVEL
-		NEWV( tiles, Tiles, 40, 20, m_random );
+		NEWV( tiles, Tiles, 20, 16, m_random );
 	#else
 		NEWV( tiles, Tiles, 80, 40, m_random );
 	#endif
@@ -119,18 +122,18 @@ void World::Start() {
 #endif
 		{
 			map_generator::SimplePerlin generator;
+			//map_generator::Test generator;
+#if defined( DEBUG ) || defined( MAPGEN_BENCHMARK )
 			//map_generator::SimpleRandom generator;
 			//map_generator::SimpleRandomNoLoops generator;
 			//map_generator::SimpleRandomNoPointers generator;
-			//map_generator::Test generator;
-#if defined(DEBUG) || defined(MAPGEN_BENCHMARK)
 			util::Timer timer;
 			timer.Start();
 #endif
 			generator.Generate( tiles, m_random->GetUInt( 0, UINT32_MAX - 1 ) );
 #ifdef DEBUG
 			Log( "Map generation took " + std::to_string( timer.GetElapsed().count() ) + "ms" );
-#elif defined(MAPGEN_BENCHMARK)
+#elif defined( MAPGEN_BENCHMARK )
 			std::cout << "Map generation took " << std::to_string( timer.GetElapsed().count() ) << "ms" << std::endl;
 #endif
 #ifdef MAPGEN_BENCHMARK
@@ -441,6 +444,9 @@ void World::Start() {
 	
 	// select tile at center
 	Vec2< size_t > coords = { m_map->GetWidth() / 2, m_map->GetHeight() / 2 };
+	if ( ( coords.y % 2 ) != ( coords.x % 2 ) ) {
+		coords.y++;
+	}
 	SelectTile( m_map->GetTileAt( coords.x, coords.y ) );
 }
 

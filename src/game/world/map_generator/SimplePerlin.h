@@ -10,6 +10,9 @@ CLASS( SimplePerlin, MapGenerator )
 	
 	void Generate( Tiles* tiles, size_t seed );
 	
+private:
+	void GenerateRiver( Tiles* tiles, Tile* tile, uint8_t length, uint8_t direction );
+
 };
 	
 }

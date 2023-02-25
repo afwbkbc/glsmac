@@ -28,14 +28,14 @@ void LandMoisture::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::m
 			break;
 		}
 		case Tile::M_MOIST: {
-			auto txinfo = m_map->GetTileTextureInfo( tile, Map::TG_MOISTURE );
+			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_TILES, tile, Map::TG_MOISTURE );
 			tc = Map::s_consts.pcx_textures.moist[ txinfo.texture_variant ];
 			rotate = txinfo.rotate_direction;
 			add_flags = txinfo.texture_flags;
 			break;
 		}
 		case Tile::M_RAINY: {
-			auto txinfo = m_map->GetTileTextureInfo( tile, Map::TG_MOISTURE );
+			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_TILES, tile, Map::TG_MOISTURE );
 			tc = Map::s_consts.pcx_textures.rainy[ txinfo.texture_variant ];
 			rotate = txinfo.rotate_direction;
 			add_flags = txinfo.texture_flags;

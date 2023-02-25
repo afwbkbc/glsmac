@@ -1,5 +1,7 @@
 #include "Test.h"
 
+#ifdef DEVEL
+
 namespace game {
 namespace world {
 namespace map_generator {
@@ -8,7 +10,7 @@ void Test::Generate( Tiles* tiles, size_t seed ) {
 	Log( "Generating terrain ( " + std::to_string( tiles->GetWidth() ) + " x " + std::to_string( tiles->GetHeight() ) + " )" );
 
 	{
-		for ( size_t y = 0 ; y < tiles->GetWidth() ; y++ ) {
+		for ( size_t y = 0 ; y < tiles->GetHeight() ; y++ ) {
 			for ( size_t x = y & 1 ; x < tiles->GetWidth() ; x += 2 ) {
 				auto tile = tiles->At( x, y );
 				
@@ -16,9 +18,12 @@ void Test::Generate( Tiles* tiles, size_t seed ) {
 					*c = 100;
 				}
 				
-				tile->moisture = Tile::M_MOIST;
+				tile->moisture = Tile::M_ARID;
 				tile->rockyness = Tile::R_FLAT;
-				tile->features |= Tile::F_XENOFUNGUS;
+				
+				if ( tiles->GetRandom()->IsLucky( 2 ) ) {
+					tile->features |= Tile::F_RIVER;
+				}
 				
 			}
 		}
@@ -29,3 +34,5 @@ void Test::Generate( Tiles* tiles, size_t seed ) {
 }
 }
 }
+
+#endif

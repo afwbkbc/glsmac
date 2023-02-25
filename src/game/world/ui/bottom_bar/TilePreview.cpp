@@ -207,6 +207,9 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 		if ( tile->features & map::Tile::F_XENOFUNGUS ) {
 			info_lines.push_back( "Xenofungus" );
 		}
+		if ( tile->features & map::Tile::F_RIVER ) {
+			info_lines.push_back( "River" );
+		}
 	}
 	
 	for ( auto& line : info_lines ) {

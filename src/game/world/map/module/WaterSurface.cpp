@@ -15,7 +15,7 @@ void WaterSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::m
 		);
 	
 		if ( tile->features & Tile::F_XENOFUNGUS ) {
-			auto txinfo = m_map->GetTileTextureInfo( tile, Map::TG_FEATURE, Tile::F_XENOFUNGUS );
+			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_TILES, tile, Map::TG_FEATURE, Tile::F_XENOFUNGUS );
 			m_map->AddTexture(
 				Map::LAYER_WATER,
 				Map::s_consts.pcx_textures.fungus_sea[ txinfo.texture_variant ],

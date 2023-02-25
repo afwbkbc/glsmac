@@ -79,6 +79,12 @@ CLASS( Map, Serializable )
 				{ 508, 630 }, { 565, 630 }, { 622, 630 }, { 679, 630 },
 				{ 508, 687 }, { 565, 687 }, { 622, 687 }, { 679, 687 },
 			};
+			const pcx_texture_coordinates_t river[16] = {
+				{ 280, 259 }, { 337, 259 }, { 394, 259 }, { 451, 259 },
+				{ 280, 316 }, { 337, 316 }, { 394, 316 }, { 451, 316 },
+				{ 280, 373 }, { 337, 373 }, { 394, 373 }, { 451, 373 },
+				{ 280, 430 }, { 337, 430 }, { 394, 430 }, { 451, 430 },
+			};
 		} pcx_textures;
 		const float tile_scale_z = 2.0f;
 		const struct {
@@ -317,8 +323,15 @@ CLASS( Map, Serializable )
 		uint8_t texture_variant;
 		Texture::add_flag_t texture_flags;
 	};
-	const tile_texture_info_t GetTileTextureInfo( const Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature = Tile::F_NONE ) const;
-
+	
+	enum texture_variants_type_t {
+		TVT_NONE,
+		TVT_TILES,
+		TVT_RIVERS,
+		TVT_ROADS
+	};
+	const tile_texture_info_t GetTileTextureInfo( const texture_variants_type_t type, const Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature = Tile::F_NONE ) const;
+	
 	const size_t GetWidth() const;
 	const size_t GetHeight() const;
 	
@@ -377,13 +390,23 @@ private:
 	
 	void InitTextureAndMesh();
 	
-	std::unordered_map< uint8_t, uint8_t > m_texture_variants = {}; // cache
+	// texture.pcx contains some textures grouped in certain way based on adjactent neighbours
+	// calculate all variants once and cache for faster lookups later
+	struct texture_rule_t {
+		uint8_t bitmask; // presence of nearby neighbours ( 1 bit per neighbour )
+		uint8_t checked_bits; // some masks don't care about some corners
+	};
+	typedef std::vector< texture_rule_t > texture_variants_rules_t;
+	typedef std::unordered_map< uint8_t, std::vector< uint8_t > > texture_variants_t; // neighbours bitmask -> texture variants (can be multiple)
+	std::unordered_map< texture_variants_type_t, texture_variants_t > m_texture_variants = {};
+	void CalculateTextureVariants( const texture_variants_type_t type, const texture_variants_rules_t& rules );
 	
 	tile_state_t* m_current_ts = nullptr;
 	Tile* m_current_tile = nullptr;
 
 	typedef std::vector< Module* > module_pass_t;
 	std::vector< module_pass_t > m_modules;
+	
 };
 
 }

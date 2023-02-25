@@ -75,6 +75,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 	}
 	
 	// add map details
+	// order is important (textures are drawn on top of previous ones)
 	
 	switch ( tile->rockyness ) {
 		case Tile::R_NONE:
@@ -105,7 +106,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 	}
 	
 	if ( tile->features	& Tile::F_JUNGLE ) {
-		auto txinfo = m_map->GetTileTextureInfo( tile, Map::TG_FEATURE, Tile::F_JUNGLE );
+		auto txinfo = m_map->GetTileTextureInfo( Map::TVT_TILES, tile, Map::TG_FEATURE, Tile::F_JUNGLE );
 		m_map->AddTexture(
 			Map::LAYER_LAND,
 			Map::s_consts.pcx_textures.jungle[ txinfo.texture_variant ],
@@ -114,14 +115,28 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 		);
 	}
 	
-	if ( ( tile->features & Tile::F_XENOFUNGUS ) && !tile->is_water_tile ) {
-		auto txinfo = m_map->GetTileTextureInfo( tile, Map::TG_FEATURE, Tile::F_XENOFUNGUS );
-		m_map->AddTexture(
-			Map::LAYER_LAND,
-			Map::s_consts.pcx_textures.fungus_land[ txinfo.texture_variant ],
-			Texture::AM_MERGE | txinfo.texture_flags,
-			txinfo.rotate_direction
-		);
+	if ( !tile->is_water_tile ) {
+		
+		if ( tile->features & Tile::F_XENOFUNGUS ) {
+			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_TILES, tile, Map::TG_FEATURE, Tile::F_XENOFUNGUS );
+			m_map->AddTexture(
+				Map::LAYER_LAND,
+				Map::s_consts.pcx_textures.fungus_land[ txinfo.texture_variant ],
+				Texture::AM_MERGE | txinfo.texture_flags,
+				txinfo.rotate_direction
+			);
+		}
+
+		if ( tile->features & Tile::F_RIVER ) {
+			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_RIVERS, tile, Map::TG_FEATURE, Tile::F_RIVER );
+			m_map->AddTexture(
+				Map::LAYER_LAND,
+				Map::s_consts.pcx_textures.river[ txinfo.texture_variant ],
+				Texture::AM_MERGE,
+				txinfo.rotate_direction
+			);
+		}
+		
 	}
 }
 

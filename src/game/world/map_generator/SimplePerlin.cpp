@@ -11,6 +11,15 @@
 // higher values generate more interesting maps, at cost of longer map generation (isn't noticeable before 200 or so)
 #define PERLIN_PASSES 128
 
+#define RIVER_SPAWN_CHANCE_DIFFICULTY 20
+#define RIVER_STARTING_LENGTH_MIN 2
+#define RIVER_STARTING_LENGTH_MAX 5
+#define RIVER_SHORTENING_CHANCE_DIFFICULTY 3
+#define RIVER_DIRECTION_CHANGE_CHANCE_DIFFICULTY 8
+#define RIVER_SPLIT_CHANCE_DIFFICULTY 20
+
+#define RANDOM_DIRECTION ( tiles->GetRandom()->GetUInt( 0, ( tile->neighbours.size() - 1 ) / 2 ) * 2 + 1 )
+
 namespace game {
 namespace world {
 namespace map_generator {
@@ -66,13 +75,7 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 			const float z_jungle = 1/130;
 			const float z_xenofungus = 1/240;
 
-			tile->rockyness = perlin_to_value.Clamp( round( PERLIN_S( x + 0.5f, y + 0.5f, z_rocks, 1.0f ) ) );
-			if ( tile->rockyness == Tile::R_ROCKY ) {
-				if ( tiles->GetRandom()->IsLucky( 3 ) ) {
-					tile->rockyness = Tile::R_ROLLING;
-				}
-			}
-			
+			// moisture
 			tile->moisture = perlin_to_value.Clamp( ceil( PERLIN_S( x + 0.5f, y + 0.5f, z_moisture, 0.6f ) ) );
 			if ( tile->moisture == Tile::M_RAINY ) {
 				if ( PERLIN_S( x + 0.5f, y + 0.5f, z_jungle, 0.2f ) > 0.7 ) {
@@ -80,10 +83,14 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 				}
 			}
 			
-			if ( PERLIN_S( x + 0.5f, y + 0.5f, z_xenofungus, 0.6f ) > 0.4 ) {
-				tile->features |= Tile::F_XENOFUNGUS;
+			// rockyness
+			tile->rockyness = perlin_to_value.Clamp( round( PERLIN_S( x + 0.5f, y + 0.5f, z_rocks, 1.0f ) ) );
+			if ( tile->rockyness == Tile::R_ROCKY ) {
+				if ( tiles->GetRandom()->IsLucky( 3 ) ) {
+					tile->rockyness = Tile::R_ROLLING;
+				}
 			}
-
+			// extra rockyness spots
 			if ( tiles->GetRandom()->IsLucky( 30 ) ) {
 				tile->rockyness = Tile::R_ROCKY;
 				for ( auto& t : tile->neighbours ) {
@@ -95,6 +102,21 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 				}
 			}
 			
+			// fungus
+			if ( PERLIN_S( x + 0.5f, y + 0.5f, z_xenofungus, 0.6f ) > 0.4 ) {
+				tile->features |= Tile::F_XENOFUNGUS;
+			}
+
+			// add some rivers
+			if ( tiles->GetRandom()->IsLucky( RIVER_SPAWN_CHANCE_DIFFICULTY ) ) {
+				GenerateRiver(
+					tiles,
+					tile,
+					tiles->GetRandom()->GetUInt( RIVER_STARTING_LENGTH_MIN, RIVER_STARTING_LENGTH_MAX ),
+					RANDOM_DIRECTION
+				);
+			}
+			
 		}
 	}
 	
@@ -104,6 +126,31 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 	
 	Finalize( tiles );
 	
+}
+
+void SimplePerlin::GenerateRiver( Tiles* tiles, Tile* tile, uint8_t length, uint8_t direction ) {
+	
+	if ( tile->features & Tile::F_RIVER ) {
+		// joined existing river
+		return;
+	}
+	
+	tile->features |= Tile::F_RIVER;
+	
+	while ( length > 0 && tiles->GetRandom()->IsLucky( RIVER_SHORTENING_CHANCE_DIFFICULTY ) ) {
+		length--;
+	}
+	if ( tiles->GetRandom()->IsLucky( RIVER_DIRECTION_CHANGE_CHANCE_DIFFICULTY ) )  {
+		direction = RANDOM_DIRECTION;
+	}
+	
+	if ( length > 0 ) {
+		GenerateRiver( tiles, tile->neighbours.at( direction ), length, direction );
+		while ( tiles->GetRandom()->IsLucky( RIVER_SPLIT_CHANCE_DIFFICULTY ) ) {
+			direction = RANDOM_DIRECTION;
+			GenerateRiver( tiles, tile->neighbours.at( direction ), length, direction );
+		} ;
+	}
 }
 
 }
