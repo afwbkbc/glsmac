@@ -260,9 +260,10 @@ CLASS( Map, Serializable )
 			tile_indices_t indices;
 		} data_mesh;
 		// visual traits
+		bool is_coastline;
 		bool is_coastline_corner;
-		bool has_water;
 		Texture* moisture_original;
+		Texture* river_original;
 		
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
@@ -311,6 +312,7 @@ CLASS( Map, Serializable )
 	void CopyTextureDeferred( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from,const tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha = 1.0f, util::Perlin* perlin = nullptr );
 	void GetTexture( Texture* dest_texture, const pcx_texture_coordinates_t& tc, const Texture::add_flag_t mode, const uint8_t rotate = 0, const float alpha = 1.0f );
 	void GetTextureFromLayer( Texture* dest_texture, const tile_layer_type_t tile_layer, const size_t tx_from, const size_t ty_from, const Texture::add_flag_t mode = Texture::AM_DEFAULT, const uint8_t rotate = 0, const float alpha = 1.0f ) const;
+	void SetTexture( const tile_layer_type_t tile_layer, tile_state_t* ts, Texture* src_texture, const Texture::add_flag_t mode, const uint8_t rotate = 0, const float alpha = 1.0f );
 	void SetTexture( const tile_layer_type_t tile_layer, Texture* src_texture, const Texture::add_flag_t mode, const uint8_t rotate = 0, const float alpha = 1.0f );
 	const Texture* GetTerrainTexture() const;
 	
@@ -384,11 +386,15 @@ private:
 		scene::actor::Mesh* terrain = nullptr;
 	} m_actors;
 	
+	typedef std::vector< Module* > module_pass_t;
+	typedef std::vector< module_pass_t > module_passes_t;
+	module_passes_t m_modules; // before finalizing and deferred calls
+	module_passes_t m_modules_deferred; // after finalizing and deferred calls
+	
 	void LinkTileStates();
-	
-	void GenerateActors();
-	
+	void RunModulePasses( module_passes_t& module_passes );
 	void InitTextureAndMesh();
+	void GenerateActors();
 	
 	// texture.pcx contains some textures grouped in certain way based on adjactent neighbours
 	// calculate all variants once and cache for faster lookups later
@@ -404,9 +410,6 @@ private:
 	tile_state_t* m_current_ts = nullptr;
 	Tile* m_current_tile = nullptr;
 
-	typedef std::vector< Module* > module_pass_t;
-	std::vector< module_pass_t > m_modules;
-	
 };
 
 }

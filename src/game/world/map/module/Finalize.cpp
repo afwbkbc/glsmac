@@ -43,7 +43,7 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 		#undef x
 		
 		vertices = ts->layers[ lt ].coords;
-		if ( lt == Map::LAYER_LAND && !tile->is_water_tile && !ts->has_water ) {
+		if ( lt == Map::LAYER_LAND && !tile->is_water_tile && !ts->is_coastline ) {
 			
 			// smooth center vertices a bit and add some randomness
 			

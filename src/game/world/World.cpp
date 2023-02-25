@@ -43,14 +43,7 @@ World::World( const Settings& settings )
 {
 	NEW( m_random, Random );
 #ifdef DEVEL
-	//m_random->SetState( {3927071555,2047740357,9789330,4039274482} ); // had slope removal bug
-	//m_random->SetState( {3199628599,474732328,355451379,1762265997} ); // weird light bug on 1 tile?
-	//m_random->SetState( {946763678,2473140922,2270397686,4138960536} ); // another weird light bug
-	//m_random->SetState( {70351513,643661934,2396482743,1984892262} ); // stretch bug
-	//m_random->SetState( {3083264277,2759361294,2259827786,799043819} ); // lots of fungus
-	//m_random->SetState( {2057306363,3857423773,2087610360,4043297429} ); // texture shift glitch
-	//m_random->SetState( {2194870243,307068045,2446867731,2103210869} ); // long straight island
-	//m_random->SetState( {3684284985,1052465576,1524137173,3726230539} ); // mirroring perlin coastlines
+	//m_random->SetState( {2732229821,930350826,1501051256,922767116} ); // rivers test
 #endif
 }
 
@@ -84,6 +77,8 @@ void World::Start() {
 	
 	g_engine->GetGraphics()->AddScene( m_world_scene );	
 	
+	Log( "Map seed is " + m_random->GetStateString() );
+	
 	NEW( m_map, Map, m_random, m_world_scene );
 	
 #ifdef MAPGEN_BENCHMARK
@@ -96,8 +91,6 @@ void World::Start() {
 	#endif
 #endif
 	//NEWV( tiles, Tiles, 200, 120, m_random );
-	
-	Log( "Map seed is " + m_random->GetStateString() );
 	
 #ifdef DEBUG
 	// if crash happens - it's handy to have a seed to reproduce it

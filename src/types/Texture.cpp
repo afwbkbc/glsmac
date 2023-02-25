@@ -415,6 +415,19 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 				
 			}
 			
+			ASSERT( dx >= 0, "dx < 0" );
+			ASSERT( dx <= w, "dx > w" );
+			ASSERT( dy >= 0, "dy < 0" );
+			ASSERT( dy <= h, "dy > h" );
+			to = ptr( m_bitmap, ( ( dy + dest_y ) * m_width + ( dx + dest_x ) ) * m_bpp, m_bpp );
+			
+			if ( is_pixel_needed && ( flags & AM_KEEP_TRANSPARENCY ) ) {
+				// don't overwrite transparent pixels
+				if ( !*((uint8_t*)( to ) + 3 ) ) {
+					is_pixel_needed = false;
+				}
+			}
+			
 			if ( flags & AM_INVERT ) {
 				is_pixel_needed = !is_pixel_needed;
 			}
@@ -461,22 +474,15 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 					Log( "SSX=" + std::to_string( ssx ) + " SSY=" + std::to_string( ssy ) + " SX=" + std::to_string( sx ) + " SY=" + std::to_string( sy ) + " DX=" + std::to_string( dx ) + " DY=" + std::to_string( dy ) );
 				}*/
 				
-				ASSERT( sx >= x1, "sx < x1" );
-				ASSERT( sx <= x2, "sx > x2" );
-				ASSERT( sy >= y1, "sy < y1" );
-				ASSERT( sy <= y2, "sy > y2" );
-				
-				ASSERT( dx >= 0, "dx < 0" );
-				ASSERT( dx <= w, "dx > w" );
-				ASSERT( dy >= 0, "dy < 0" );
-				ASSERT( dy <= h, "dy > h" );
-				
 #ifdef DEBUG
 				ASSERT( !px_processed[ dx ][ dy ], "pixel at " + std::to_string( dx ) + "x" + std::to_string( dy ) + " was already processed" );
 				px_processed[ dx ][ dy ] = true;
 #endif				
+				ASSERT( sx >= x1, "sx < x1" );
+				ASSERT( sx <= x2, "sx > x2" );
+				ASSERT( sy >= y1, "sy < y1" );
+				ASSERT( sy <= y2, "sy > y2" );
 				from = ptr( source->m_bitmap, ( ( sy ) * source->m_width + ( sx ) ) * m_bpp, m_bpp );
-				to = ptr( m_bitmap, ( ( dy + dest_y ) * m_width + ( dx + dest_x ) ) * m_bpp, m_bpp );
 				
 #ifdef DEBUG
 				{

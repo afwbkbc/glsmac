@@ -8,7 +8,6 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 	
 	ASSERT( ts->moisture_original, "moisture original texture not set" );
 	
-	
 	m_map->SetTexture( Map::LAYER_LAND, ts->moisture_original, Texture::AM_DEFAULT );
 	
 	// blend a bit from rainy to non-rainy and vice versa
@@ -129,12 +128,26 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 
 		if ( tile->features & Tile::F_RIVER ) {
 			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_RIVERS, tile, Map::TG_FEATURE, Tile::F_RIVER );
+			auto& tc = Map::s_consts.pcx_textures.river[ txinfo.texture_variant ];
+			auto add_flags = Texture::AM_MERGE | txinfo.texture_flags;
 			m_map->AddTexture(
 				Map::LAYER_LAND,
-				Map::s_consts.pcx_textures.river[ txinfo.texture_variant ],
-				Texture::AM_MERGE,
+				tc,
+				add_flags,
 				txinfo.rotate_direction
 			);
+			if ( ts->is_coastline ) {
+				// need to save original river texture to draw it on top of coastline border later (to erase 'beach' on river exit)
+				ASSERT( !ts->river_original, "river original texture already set" );
+				NEW(
+					ts->river_original,
+					Texture,
+					"RiverOriginal",
+					Map::s_consts.pcx_texture_block.dimensions.x,
+					Map::s_consts.pcx_texture_block.dimensions.y
+				);
+				m_map->GetTexture( ts->river_original, tc, add_flags, txinfo.rotate_direction );
+			}
 		}
 		
 	}
