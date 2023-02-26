@@ -132,7 +132,8 @@ CLASS( Map, Serializable )
 				const float range = 0.35f;
 				const float frequency = 0.15f;
 				const uint8_t passes = 4;
-				const float cut = 0.35f;
+				const float cut = 0.3f;
+				const float round_range = 2.0f;
 			} perlin;
 		} coastlines;
 		const struct {

@@ -44,6 +44,7 @@ World::World( const Settings& settings )
 	NEW( m_random, Random );
 #ifdef DEVEL
 	//m_random->SetState( {2732229821,930350826,1501051256,922767116} ); // rivers test
+	//m_random->SetState( {2689742529,3024081097,1050996921,1660550922} ); // round island
 #endif
 }
 

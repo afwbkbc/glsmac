@@ -100,6 +100,10 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 	std::pair< float, float > srx, sry; // stretch ratio ranges
 	float ssx_start, ssx, ssy; // stretched source
 	
+	// for perlin borders
+	size_t perlin_maxx[ h ];
+	size_t perlin_maxy[ w ];
+	
 	if (
 		( flags & AM_ROUND_LEFT ) ||
 		( flags & AM_ROUND_TOP ) ||
@@ -112,6 +116,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 	) {
 		cx = floor( w / 2 );
 		cy = floor( h / 2 );
+		
 		r = sqrt( pow( (float)cx, 2 ) + pow( (float)cy, 2 ) );
 		if (
 			( flags & AM_ROUND_LEFT ) ||
@@ -159,9 +164,6 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 	
 	bool is_pixel_needed;
 	Color::rgba_t mix_color;
-	
-	size_t perlin_maxx[ h ];
-	size_t perlin_maxy[ w ];
 	
 	if ( flags & ( AM_PERLIN_LEFT | AM_PERLIN_TOP | AM_PERLIN_RIGHT | AM_PERLIN_BOTTOM ) ) {
 		
@@ -330,12 +332,15 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 				( ( flags & AM_ROUND_BOTTOM ) && ( dx >= cx ) && ( dy >= cy ) )
 			) {
 				float d = sqrt( pow( (float) dx - cx, 2 ) + pow( (float) dy - cy, 2 ) );
+				if ( flags & AM_COASTLINE_BORDER ) {
+					ASSERT( perlin, "perlin for coastline border not set" );
+					d = std::min( d, d - (float) sqrt( pow( COASTLINES_BORDER_RND, 2 ) * 2 ) + Map::s_consts.coastlines.border_size / 2 );
+				}
 				if ( d > r ) {
 					is_pixel_needed = false;
 				}
 				if ( flags & AM_COASTLINE_BORDER ) {
-					ASSERT( perlin, "perlin for coastline border not set" );
-					if ( d >= r - 2.0f ) {
+					if ( d >= r - Map::s_consts.coastlines.perlin.round_range ) {
 						// TODO: fix for AM_INVERT
 						mix_color = Map::s_consts.coastlines.border_color.GetRGBA();
 					}

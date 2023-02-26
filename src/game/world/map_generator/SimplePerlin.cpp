@@ -12,11 +12,11 @@
 #define PERLIN_PASSES 128
 
 #define RIVER_SPAWN_CHANCE_DIFFICULTY 16
-#define RIVER_STARTING_LENGTH_MIN 3
-#define RIVER_STARTING_LENGTH_MAX 24
-#define RIVER_DIRECTION_CHANGE_CHANCE_DIFFICULTY 2
-#define RIVER_SPLIT_CHANCE_DIFFICULTY 6
-#define RIVER_JOIN_CHANCE_DIFFICULTY 6
+#define RIVER_STARTING_LENGTH_MIN 12
+#define RIVER_STARTING_LENGTH_MAX 36
+#define RIVER_DIRECTION_CHANGE_CHANCE_DIFFICULTY 8
+#define RIVER_SPLIT_CHANCE_DIFFICULTY 8
+#define RIVER_JOIN_CHANCE_DIFFICULTY 8
 
 #define RANDOM_DIRECTION ( tiles->GetRandom()->GetUInt( 0, ( tile->neighbours.size() - 1 ) ) )
 #define RANDOM_DIRECTION_DIAGONAL ( tiles->GetRandom()->GetUInt( 0, 1 ) * 2 - 1 )
@@ -136,6 +136,10 @@ void SimplePerlin::GenerateRiver( Tiles* tiles, Tile* tile, uint8_t length, uint
 		// joined existing river
 		return;
 	}
+	if ( tile->is_water_tile ) {
+		// reached water
+		return;
+	}
 	
 	tile->features |= Tile::F_RIVER;
 	
@@ -166,7 +170,7 @@ void SimplePerlin::GenerateRiver( Tiles* tiles, Tile* tile, uint8_t length, uint
 			real_direction = direction;
 		}
 		else {
-			real_direction = direction + direction_diagonal;
+			real_direction = (int8_t)direction + direction_diagonal;
 			if ( real_direction < 0 ) {
 				real_direction = tile->neighbours.size() - 1;
 			}
