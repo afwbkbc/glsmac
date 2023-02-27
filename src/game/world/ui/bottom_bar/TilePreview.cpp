@@ -164,9 +164,6 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 			info_lines.push_back( "Ocean Shelf" );
 		}
 		info_lines.push_back( "Depth: " + std::to_string( -e ) + "m" );
-		if ( tile->features & map::Tile::F_XENOFUNGUS ) {
-			info_lines.push_back( "Sea Fungus" );
-		}
 	}
 	else {
 		info_lines.push_back( "Elev: " + std::to_string( e ) + "m" );
@@ -208,8 +205,13 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 	if ( tile->features & map::Tile::_feature ) { \
 		info_lines.push_back( _line ); \
 	}
-		
-	FEATURE( F_XENOFUNGUS, "Xenofungus" )
+	
+	if ( tile->is_water_tile ) {
+		FEATURE( F_XENOFUNGUS, "Sea Fungus" )
+	}
+	else {
+		FEATURE( F_XENOFUNGUS, "Xenofungus" )
+	}
 	FEATURE( F_JUNGLE, "Jungle" )
 	FEATURE( F_RIVER, "River" )
 	FEATURE( F_NUTRIENT_BONUS, "Nutrient bonus" )
