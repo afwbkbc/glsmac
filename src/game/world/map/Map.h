@@ -10,8 +10,11 @@
 #include "util/Clamper.h"
 
 #include "types/Texture.h"
-#include "scene/actor/Mesh.h"
+
 #include "scene/Scene.h"
+#include "scene/actor/Sprite.h"
+#include "scene/actor/Mesh.h"
+#include "scene/actor/Instanced.h"
 
 using namespace types;
 using namespace scene;
@@ -33,59 +36,92 @@ CLASS( Map, Serializable )
 	
 	struct consts_t {
 		const struct {
-			const pcx_texture_coordinates_t water[2] = {
-				{ 280, 79 }, {280, 136 },
-			};
-			const pcx_texture_coordinates_t sunny_mesa[8] = {
-				{ 768, 15 }, { 825, 15 }, { 882, 15 }, { 939, 15 },
-				{ 768, 72 }, { 825, 72 }, { 882, 72 }, { 939, 72 },
-			};
-			const pcx_texture_coordinates_t rocks[4] = {
-				{ 1, 1 }, { 58, 1 }, { 115, 1 }, { 172, 1 }
-			};
-			const pcx_texture_coordinates_t dunes[1] = {
-				{ 229, 1 }
-			};
-			const pcx_texture_coordinates_t arid[1] = {
-				{ 1, 58 }
-			};
-			const pcx_texture_coordinates_t moist[16] = {
-				{ 1, 115 }, { 58, 115 }, { 115, 115 }, { 172, 115 },
-				{ 1, 172 }, { 58, 172 }, { 115, 172 }, { 172, 172 },
-				{ 1, 229 }, { 58, 229 }, { 115, 229 }, { 172, 229 },
-				{ 1, 286 }, { 58, 286 }, { 115, 286 }, { 172, 286 },
-			};
-			const pcx_texture_coordinates_t rainy[16] = {
-				{ 1, 343 }, { 58, 343 }, { 115, 343 }, { 172, 343 },
-				{ 1, 400 }, { 58, 400 }, { 115, 400 }, { 172, 400 },
-				{ 1, 457 }, { 58, 457 }, { 115, 457 }, { 172, 457 },
-				{ 1, 514 }, { 58, 514 }, { 115, 514 }, { 172, 514 },
-			};
-			const pcx_texture_coordinates_t jungle[16] = {
-				{ 526, 259 }, { 583, 259 }, { 640, 259 }, { 697, 259 },
-				{ 526, 316 }, { 583, 316 }, { 640, 316 }, { 697, 316 },
-				{ 526, 373 }, { 583, 373 }, { 640, 373 }, { 697, 373 },
-				{ 526, 430 }, { 583, 430 }, { 640, 430 }, { 959, 463 },
-			};
-			const pcx_texture_coordinates_t fungus_land[16] = {
-				{ 280, 516 }, { 337, 516 }, { 394, 516 }, { 451, 516 },
-				{ 280, 573 }, { 337, 573 }, { 394, 573 }, { 451, 573 },
-				{ 280, 630 }, { 337, 630 }, { 394, 630 }, { 451, 630 },
-				{ 280, 687 }, { 337, 687 }, { 394, 687 }, { 451, 687 },
-			};
-			const pcx_texture_coordinates_t fungus_sea[16] = {
-				{ 508, 516 }, { 565, 516 }, { 622, 516 }, { 679, 516 },
-				{ 508, 573 }, { 565, 573 }, { 622, 573 }, { 679, 573 },
-				{ 508, 630 }, { 565, 630 }, { 622, 630 }, { 679, 630 },
-				{ 508, 687 }, { 565, 687 }, { 622, 687 }, { 679, 687 },
-			};
-			const pcx_texture_coordinates_t river[16] = {
-				{ 280, 259 }, { 337, 259 }, { 394, 259 }, { 451, 259 },
-				{ 280, 316 }, { 337, 316 }, { 394, 316 }, { 451, 316 },
-				{ 280, 373 }, { 337, 373 }, { 394, 373 }, { 451, 373 },
-				{ 280, 430 }, { 337, 430 }, { 394, 430 }, { 451, 430 },
-			};
-		} pcx_textures;
+			const struct {
+				
+				const Vec2< size_t > dimensions = { 56, 56 };
+				
+				const pcx_texture_coordinates_t water[2] = {
+					{ 280, 79 }, {280, 136 },
+				};
+				const pcx_texture_coordinates_t sunny_mesa[8] = {
+					{ 768, 15 }, { 825, 15 }, { 882, 15 }, { 939, 15 },
+					{ 768, 72 }, { 825, 72 }, { 882, 72 }, { 939, 72 },
+				};
+				const pcx_texture_coordinates_t rocks[4] = {
+					{ 1, 1 }, { 58, 1 }, { 115, 1 }, { 172, 1 }
+				};
+				const pcx_texture_coordinates_t dunes[1] = {
+					{ 229, 1 }
+				};
+				const pcx_texture_coordinates_t arid[1] = {
+					{ 1, 58 }
+				};
+				const pcx_texture_coordinates_t moist[16] = {
+					{ 1, 115 }, { 58, 115 }, { 115, 115 }, { 172, 115 },
+					{ 1, 172 }, { 58, 172 }, { 115, 172 }, { 172, 172 },
+					{ 1, 229 }, { 58, 229 }, { 115, 229 }, { 172, 229 },
+					{ 1, 286 }, { 58, 286 }, { 115, 286 }, { 172, 286 },
+				};
+				const pcx_texture_coordinates_t rainy[16] = {
+					{ 1, 343 }, { 58, 343 }, { 115, 343 }, { 172, 343 },
+					{ 1, 400 }, { 58, 400 }, { 115, 400 }, { 172, 400 },
+					{ 1, 457 }, { 58, 457 }, { 115, 457 }, { 172, 457 },
+					{ 1, 514 }, { 58, 514 }, { 115, 514 }, { 172, 514 },
+				};
+				const pcx_texture_coordinates_t jungle[16] = {
+					{ 526, 259 }, { 583, 259 }, { 640, 259 }, { 697, 259 },
+					{ 526, 316 }, { 583, 316 }, { 640, 316 }, { 697, 316 },
+					{ 526, 373 }, { 583, 373 }, { 640, 373 }, { 697, 373 },
+					{ 526, 430 }, { 583, 430 }, { 640, 430 }, { 959, 463 },
+				};
+				const pcx_texture_coordinates_t fungus_land[16] = {
+					{ 280, 516 }, { 337, 516 }, { 394, 516 }, { 451, 516 },
+					{ 280, 573 }, { 337, 573 }, { 394, 573 }, { 451, 573 },
+					{ 280, 630 }, { 337, 630 }, { 394, 630 }, { 451, 630 },
+					{ 280, 687 }, { 337, 687 }, { 394, 687 }, { 451, 687 },
+				};
+				const pcx_texture_coordinates_t fungus_sea[16] = {
+					{ 508, 516 }, { 565, 516 }, { 622, 516 }, { 679, 516 },
+					{ 508, 573 }, { 565, 573 }, { 622, 573 }, { 679, 573 },
+					{ 508, 630 }, { 565, 630 }, { 622, 630 }, { 679, 630 },
+					{ 508, 687 }, { 565, 687 }, { 622, 687 }, { 679, 687 },
+				};
+				const pcx_texture_coordinates_t river[16] = {
+					{ 280, 259 }, { 337, 259 }, { 394, 259 }, { 451, 259 },
+					{ 280, 316 }, { 337, 316 }, { 394, 316 }, { 451, 316 },
+					{ 280, 373 }, { 337, 373 }, { 394, 373 }, { 451, 373 },
+					{ 280, 430 }, { 337, 430 }, { 394, 430 }, { 451, 430 },
+				};
+				
+			} texture_pcx;
+			const struct {
+				
+				const Vec2< size_t > dimensions = { 100, 62 };
+				
+				// some coordinates were altered to fix alignment
+				const pcx_texture_coordinates_t nutrient_bonus_sea[ 2 ] = {
+					{ 4, 257 }, { 106, 257 },
+					//{ 1, 253 }, { 103, 253 },
+				};
+				const pcx_texture_coordinates_t nutrient_bonus_land[ 2 ] = {
+					{ 207, 257 }, { 308, 257 },
+					//{ 203, 253 }, { 304, 253 },
+				};
+				const pcx_texture_coordinates_t minerals_bonus_sea[ 2 ] = {
+					{ 1, 316 }, { 102, 316 },
+				};
+				const pcx_texture_coordinates_t minerals_bonus_land[ 2 ] = {
+					{ 203, 316 }, { 304, 316 },
+				};
+				const pcx_texture_coordinates_t energy_bonus_sea[ 2 ] = {
+					{ 1, 379 }, { 102, 379 },
+				};
+				const pcx_texture_coordinates_t energy_bonus_land[ 2 ] = {
+					{ 203, 379 }, { 304, 379 },
+				};
+				
+			} ter1_pcx;
+		} tc;
 		const float tile_scale_z = 2.0f;
 		const struct {
 			const struct {
@@ -108,14 +144,20 @@ CLASS( Map, Serializable )
 		} tile;
 		const struct {
 			const struct {
-				const uint8_t x = 56;
-				const uint8_t y = 56;
+				const uint8_t x = s_consts.tc.texture_pcx.dimensions.x;
+				const uint8_t y = s_consts.tc.texture_pcx.dimensions.y;
 			} dimensions;
 			const struct {
-				const uint8_t x = s_consts.pcx_texture_block.dimensions.x / 2;
-				const uint8_t y = s_consts.pcx_texture_block.dimensions.y / 2;
+				const uint8_t x = s_consts.tile_texture.dimensions.x / 2;
+				const uint8_t y = s_consts.tile_texture.dimensions.y / 2;
 			} radius;
-		} pcx_texture_block;
+		} tile_texture;
+		const struct {
+			const float zoom = 0.005f;
+			// to compensate for view angle difference from SMAC's
+			const float y_scale = 0.8f;
+			const float y_shift = 0.12f;
+		} sprite;
 		const Vec3 map_position = { 0.0f, 0.0f, 0.0f };
 		const Vec3 map_rotation = { 0.0f, 0.0f, 0.0f };
 		const Color underwater_tint = { 0.0f, 0.2f, 0.5f, 1.0f };
@@ -152,7 +194,7 @@ CLASS( Map, Serializable )
 	void SetTiles( Tiles* tiles, bool generate_actors = true );
 	
 #ifdef DEBUG
-	std::vector<scene::actor::Mesh*> GetActors() const;
+	std::vector<scene::actor::Instanced*> GetActors() const;
 #endif
 	
 	// order is important (it defines rendering order)
@@ -227,7 +269,8 @@ CLASS( Map, Serializable )
 	};
 	
 	struct tile_state_t {
-		// world coordinates
+		
+		// coordinates in world
 		struct {
 			float x;
 			float y;
@@ -240,6 +283,7 @@ CLASS( Map, Serializable )
 			float x2;
 			float y2;
 		} tex_coord;
+		
 		// links to neighbours
 		tile_state_t* W;
 		tile_state_t* NW;
@@ -249,6 +293,7 @@ CLASS( Map, Serializable )
 		tile_state_t* SE;
 		tile_state_t* S;
 		tile_state_t* SW;
+		
 		// coordinates etc
 		tile_elevations_t elevations;
 		tile_layer_t layers[ LAYER_MAX ];
@@ -260,14 +305,24 @@ CLASS( Map, Serializable )
 			tile_vertices_t coords;
 			tile_indices_t indices;
 		} data_mesh;
+		
 		// visual traits
 		bool has_water;
 		bool is_coastline_corner;
 		Texture* moisture_original;
 		Texture* river_original;
 		
+		// bonus resources, supply pods and terraforming (except for roads/tubes)
+		typedef struct {
+			scene::actor::Instanced* actor;
+			pcx_texture_coordinates_t tex_coords;
+		} sprite_t;
+		typedef std::vector< sprite_t > sprites_t;
+		sprites_t sprites;
+		
 		const Buffer Serialize() const;
-		void Unserialize( Buffer buf );
+		void Unserialize( const Map* map, Buffer buf );
+		
 	};
 	
 	struct copy_from_after_t {
@@ -301,6 +356,8 @@ CLASS( Map, Serializable )
 		std::vector< copy_from_after_t > copy_from_after;
 
 		const Texture* terrain_texture;
+		
+		const Texture* ter1_pcx;
 		
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
@@ -359,6 +416,10 @@ CLASS( Map, Serializable )
 	tile_state_t* GetTileState( const Tile* tile ) const;
 	const map_state_t* GetMapState() const;
 	
+	Scene* GetScene() const;
+	
+	scene::actor::Instanced* GenerateTerrainSpriteActor( const std::string& name, const pcx_texture_coordinates_t& tex_coords ) const;
+	
 protected:
 	friend class Finalize;
 	
@@ -376,7 +437,10 @@ private:
 	Tiles* m_tiles = nullptr;
 	
 	struct {
-		Texture* source = nullptr;
+		struct {
+			Texture* texture_pcx = nullptr;
+			Texture* ter1_pcx = nullptr;
+		} source;
 		Texture* terrain = nullptr;
 	} m_textures;
 	
@@ -384,7 +448,7 @@ private:
 	
 	Scene* m_scene = nullptr;
 	struct {
-		scene::actor::Mesh* terrain = nullptr;
+		scene::actor::Instanced* terrain = nullptr;
 	} m_actors;
 	
 	typedef std::vector< Module* > module_pass_t;
@@ -395,6 +459,7 @@ private:
 	void LinkTileStates();
 	void RunModulePasses( module_passes_t& module_passes );
 	void InitTextureAndMesh();
+	void InitTerrainActor();
 	void GenerateActors();
 	
 	// texture.pcx contains some textures grouped in certain way based on adjactent neighbours

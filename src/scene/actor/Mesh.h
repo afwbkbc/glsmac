@@ -27,7 +27,7 @@ CLASS( Mesh, Actor )
 	const mesh::Data* GetDataMesh() const;
 	
 	void SetTexture( const Texture* texture );
-	const Texture* GetTexture();
+	const Texture* GetTexture() const;
 	
 	typedef uint32_t render_flag_t;
 	static constexpr render_flag_t RF_NONE = 0;

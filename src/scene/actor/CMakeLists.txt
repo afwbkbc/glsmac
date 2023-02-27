@@ -1,9 +1,10 @@
 SET(SRC ${SRC}
 
 	${PWD}/Actor.cpp
+	${PWD}/Instanced.cpp
 	${PWD}/Image.cpp
+	${PWD}/Sprite.cpp
 	${PWD}/Mesh.cpp
-	${PWD}/InstancedMesh.cpp
 	${PWD}/Text.cpp
 	${PWD}/Sound.cpp
 

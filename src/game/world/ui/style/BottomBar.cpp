@@ -142,6 +142,14 @@ void BottomBar::AddStyles() {
 		s->Set( ::Style::A_HEIGHT, 84 );
 	});
 	
+	AddStyle( "TilePreviewSprite", SH() {
+		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_HCENTER );
+		// TODO: fix styles overriding manually set dimensions
+		//s->Set( ::Style::A_TOP, 16 ); // to compensate for view angle difference with SMAC's
+		//s->Set( ::Style::A_WIDTH, 84 );
+		//s->Set( ::Style::A_HEIGHT, 84 );
+	});
+	
 	AddStyle( "TilePreviewText", SH() {
 		s->SetFont( ::Style::A_FONT, "arialn.ttf", 14 );
 		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 116, 156, 56 ) );

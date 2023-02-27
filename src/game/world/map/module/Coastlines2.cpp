@@ -150,8 +150,8 @@ void Coastlines2::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 			
 			m_map->CopyTextureDeferred(
 				Map::LAYER_LAND,
-				c.msx * Map::s_consts.pcx_texture_block.dimensions.x,
-				c.msy * Map::s_consts.pcx_texture_block.dimensions.y,
+				c.msx * Map::s_consts.tile_texture.dimensions.x,
+				c.msy * Map::s_consts.tile_texture.dimensions.y,
 				Map::LAYER_WATER,
 				Texture::AM_MERGE | c.flags | Texture::AM_COASTLINE_BORDER,
 				0,

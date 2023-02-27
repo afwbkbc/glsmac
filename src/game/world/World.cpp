@@ -6,7 +6,6 @@
 
 #include "graphics/Graphics.h"
 
-#include "scene/actor/InstancedMesh.h"
 #include "util/FS.h"
 
 #ifdef MAPGEN_BENCHMARK
@@ -45,6 +44,7 @@ World::World( const Settings& settings )
 #ifdef DEVEL
 	//m_random->SetState( {2732229821,930350826,1501051256,922767116} ); // rivers test
 	//m_random->SetState( {2689742529,3024081097,1050996921,1660550922} ); // round island
+	//m_random->SetState( {2397595838,3310020656,514128209,2496081703} ); // cool lake
 #endif
 }
 
@@ -463,6 +463,13 @@ void World::Stop() {
 	DELETE( m_camera );
 	DELETE( m_light_a );
 	DELETE( m_light_b );
+
+	for ( auto& it : m_actors_map ) {
+		m_world_scene->RemoveActor( it.second );
+		DELETE( it.second );
+	}
+	m_actors_map.clear();
+
 	DELETE( m_world_scene );
 }
 
@@ -505,8 +512,8 @@ void World::Iterate() {
 		UpdateCameraPosition();
 	}
 	
-	for ( auto& actor : m_actors_vec ) {
-		actor->Iterate();
+	for ( auto& actor : m_actors_map ) {
+		actor.first->Iterate();
 	}
 }
 
@@ -643,7 +650,7 @@ void World::UpdateUICamera() {
 	/*m_camera->GetMatrix()*/
 	// tmp/hack
 	/*for ( auto& a : m_map->GetActors() ) {
-		for ( auto& m : ((scene::actor::InstancedMesh*)a)->GetWorldMatrices() ) {
+		for ( auto& m : ((scene::actor::Instanced*)a)->GetWorldMatrices() ) {
 			g_engine->GetUI()->SetWorldUIMatrix( m );
 			break;
 		}
@@ -711,17 +718,18 @@ void World::DeselectTile() {
 }
 
 void World::AddActor( actor::Actor* actor ) {
-	ASSERT( m_actors_vec.find( actor ) == m_actors_vec.end(), "world actor already added" );
-	m_actors_vec.insert( actor );
-	m_world_scene->AddActor( actor );
+	ASSERT( m_actors_map.find( actor ) == m_actors_map.end(), "world actor already added" );
+	NEWV( instanced, scene::actor::Instanced, actor );
+	m_world_scene->AddActor( instanced );
+	m_actors_map[ actor ] = instanced;
 }
 
 void World::RemoveActor( actor::Actor* actor ) {
-	auto it = m_actors_vec.find( actor );
-	ASSERT( it != m_actors_vec.end(), "world actor not found" );
-	m_actors_vec.erase( it );
-	m_world_scene->RemoveActor( actor );
-	DELETE( actor );
+	auto it = m_actors_map.find( actor );
+	ASSERT( it != m_actors_map.end(), "world actor not found" );
+	m_world_scene->RemoveActor( it->second );
+	DELETE( it->second );
+	m_actors_map.erase( it );
 }
 
 const Vec2< float > World::GetTileWindowCoordinates( const Map::tile_state_t* ts ) {

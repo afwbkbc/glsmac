@@ -43,8 +43,30 @@ void Actor::SetScene( Scene *scene ) {
 }
 
 Scene *Actor::GetScene() {
+	ASSERT( m_scene, "scene not set" );
 	return m_scene;
 }
+
+const types::Buffer Actor::Serialize() const {
+	types::Buffer buf = Entity::Serialize();
+	
+	buf.WriteInt( m_type );
+	
+	return buf;
+}
+
+void Actor::Unserialize( types::Buffer buf ) {
+	Entity::Unserialize( buf );
+	// HACK! TODO: refactor
+	buf.ReadVec3();
+	buf.ReadVec3();
+	
+	type_t type = (type_t)buf.ReadInt();
+	ASSERT( type == m_type, "loaded actor of wrong type ( " + std::to_string( type ) + " != " + std::to_string( m_type ) + " )" );
+	
+	UpdateMatrix();
+}
+
 
 } /* namespace actor */
 } /* namespace scene */

@@ -85,7 +85,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 		case Tile::R_ROLLING: {
 			m_map->AddTexture(
 				Map::LAYER_LAND,
-				Map::s_consts.pcx_textures.rocks[ m_map->GetRandom()->GetUInt( 0, 1 ) * 2 ],
+				Map::s_consts.tc.texture_pcx.rocks[ m_map->GetRandom()->GetUInt( 0, 1 ) * 2 ],
 				Texture::AM_MERGE | Texture::AM_RANDOM_STRETCH | Texture::AM_RANDOM_STRETCH_SHRINK | Texture::AM_RANDOM_STRETCH_SHIFT,
 				RandomRotate()
 			);
@@ -94,7 +94,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 		case Tile::R_ROCKY: {
 			m_map->AddTexture(
 				Map::LAYER_LAND,
-				Map::s_consts.pcx_textures.rocks[ m_map->GetRandom()->GetUInt( 0, 1 ) * 2 + 1 ],
+				Map::s_consts.tc.texture_pcx.rocks[ m_map->GetRandom()->GetUInt( 0, 1 ) * 2 + 1 ],
 				Texture::AM_MERGE | Texture::AM_RANDOM_STRETCH | Texture::AM_RANDOM_STRETCH_SHRINK,
 				RandomRotate()
 			);
@@ -108,7 +108,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 		auto txinfo = m_map->GetTileTextureInfo( Map::TVT_TILES, tile, Map::TG_FEATURE, Tile::F_JUNGLE );
 		m_map->AddTexture(
 			Map::LAYER_LAND,
-			Map::s_consts.pcx_textures.jungle[ txinfo.texture_variant ],
+			Map::s_consts.tc.texture_pcx.jungle[ txinfo.texture_variant ],
 			Texture::AM_MERGE | txinfo.texture_flags,
 			txinfo.rotate_direction
 		);
@@ -120,7 +120,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_TILES, tile, Map::TG_FEATURE, Tile::F_XENOFUNGUS );
 			m_map->AddTexture(
 				Map::LAYER_LAND,
-				Map::s_consts.pcx_textures.fungus_land[ txinfo.texture_variant ],
+				Map::s_consts.tc.texture_pcx.fungus_land[ txinfo.texture_variant ],
 				Texture::AM_MERGE | txinfo.texture_flags,
 				txinfo.rotate_direction
 			);
@@ -128,7 +128,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 
 		if ( tile->features & Tile::F_RIVER ) {
 			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_RIVERS, tile, Map::TG_FEATURE, Tile::F_RIVER );
-			auto& tc = Map::s_consts.pcx_textures.river[ txinfo.texture_variant ];
+			auto& tc = Map::s_consts.tc.texture_pcx.river[ txinfo.texture_variant ];
 			auto add_flags = Texture::AM_MERGE | txinfo.texture_flags;
 			m_map->AddTexture(
 				Map::LAYER_LAND,
@@ -143,8 +143,8 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 					ts->river_original,
 					Texture,
 					"RiverOriginal",
-					Map::s_consts.pcx_texture_block.dimensions.x,
-					Map::s_consts.pcx_texture_block.dimensions.y
+					Map::s_consts.tile_texture.dimensions.x,
+					Map::s_consts.tile_texture.dimensions.y
 				);
 				m_map->GetTexture( ts->river_original, tc, add_flags, txinfo.rotate_direction );
 			}

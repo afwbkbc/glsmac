@@ -170,7 +170,7 @@ protected:
 	
 	UIContainer *m_parent_object = nullptr;
 
-	std::unordered_set<Actor *> m_actors = {};
+	std::vector<Actor*> m_actors = {};
 
 	size_t m_depth = 0;
 	float m_z_index = 0.5f;
@@ -259,6 +259,8 @@ protected:
 	
 	void BlockRealigns();
 	void UnblockRealigns();
+	
+	const std::string& GetStyleClass();
 	
 private:
 	

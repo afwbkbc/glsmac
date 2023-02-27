@@ -178,6 +178,17 @@ const std::string Buffer::ReadString() {
 	}
 }
 
+void Buffer::WriteVec2u( const Vec2< long unsigned int > val ) {
+	WriteImpl( T_VEC2U, (const char*)&val, sizeof( val ) );
+}
+
+const Vec2< long unsigned int > Buffer::ReadVec2u() {
+	Vec2< long unsigned int > val = { 0, 0 };
+	size_t sz = 0;
+	ReadImpl( T_VEC2U, (char*)&val, &sz, sizeof( val ) );
+	return val;
+}
+
 void Buffer::WriteVec2f( const Vec2< float > val ) {
 	WriteImpl( T_VEC2F, (const char*)&val, sizeof( val ) );
 }

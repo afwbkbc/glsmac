@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/Base.h"
+#include "types/Serializable.h"
 
 #include "types/Matrix44.h"
 
@@ -10,7 +10,7 @@
 
 namespace scene {
 
-CLASS( Entity, base::Base )
+CLASS( Entity, types::Serializable )
 		
 	Entity();
 
@@ -42,6 +42,9 @@ CLASS( Entity, base::Base )
 		types::Matrix44 scale;
 		types::Matrix44 matrix;
 	};
+
+	virtual const types::Buffer Serialize() const;
+	virtual void Unserialize( types::Buffer buf );
 	
 protected:
 	types::Vec3 m_position = { 0.0, 0.0, 0.0 };

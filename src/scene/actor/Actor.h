@@ -18,6 +18,8 @@ CLASS( Actor, Entity )
 	typedef types::Vec3 vec3_t;
 
 	enum type_t {
+		TYPE_SPRITE,
+		TYPE_INSTANCED_SPRITE,
 		TYPE_MESH,
 		TYPE_INSTANCED_MESH,
 		TYPE_TEXT,
@@ -26,7 +28,7 @@ CLASS( Actor, Entity )
 	};
 
 	Actor( const type_t type, const std::string &name );
-	~Actor();
+	virtual ~Actor();
 	const type_t GetType() const {
 		return m_type;
 	}
@@ -40,6 +42,10 @@ CLASS( Actor, Entity )
 
 	void SetScene( Scene *scene );
 	Scene *GetScene();
+	
+	virtual const types::Buffer Serialize() const;
+	virtual void Unserialize( types::Buffer buf );
+	
 protected:
 	const type_t m_type;
 

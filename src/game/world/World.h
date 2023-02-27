@@ -7,6 +7,8 @@
 #include "../Settings.h"
 
 #include "scene/Scene.h"
+#include "scene/actor/Instanced.h"
+
 #include "util/Clamper.h"
 #include "util/Random.h"
 #include "map/Map.h"
@@ -46,7 +48,7 @@ CLASS( World, base::Task )
 				const uint16_t scroll_time_ms = 100;
 				const uint16_t scroll_step_ms = 2;
 				const uint8_t scroll_steps = scroll_time_ms / scroll_step_ms;
-				const float zoom_speed = 0.0037f * scroll_time_ms;
+				const float zoom_speed = 0.003f * scroll_time_ms;
 			} smooth_scrolling;
 			struct {
 				struct {
@@ -167,8 +169,11 @@ private:
 	struct {
 		actor::TileSelection* tile_selection = nullptr;
 	} m_actors;
+	
 	// some additional management of world actors such as calling Iterate()
-	std::unordered_set< actor::Actor* > m_actors_vec = {};
+	// note that all world actors must be instanced
+	std::unordered_map< actor::Actor*, scene::actor::Instanced* > m_actors_map = {};
+	
 	void AddActor( actor::Actor* actor );
 	void RemoveActor( actor::Actor* actor );
 	

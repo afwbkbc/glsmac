@@ -5,7 +5,7 @@ namespace world {
 namespace actor {
 
 Actor::Actor( const std::string& name )
-	: scene::actor::InstancedMesh( name )
+	: scene::actor::Mesh( name )
 {
 	//
 }

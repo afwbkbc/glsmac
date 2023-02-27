@@ -52,6 +52,8 @@ void Tile::Unserialize( Buffer buf ) {
 	moisture = buf.ReadInt();
 	rockyness = buf.ReadInt();
 	
+	features = buf.ReadInt();
+	
 }
 
 }

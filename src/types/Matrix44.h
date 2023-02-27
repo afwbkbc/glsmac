@@ -20,6 +20,7 @@ public:
 	void ProjectionOrtho2D(const float aspect_ratio,const float znear,const float zfar);
 	Matrix44 operator * (const Matrix44 operand);
 	void operator *= (const Matrix44 operand);
+	const std::string ToString() const;
 };
 
 } /* namespace types */

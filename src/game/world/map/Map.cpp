@@ -6,7 +6,8 @@
 
 #include "types/mesh/Render.h"
 #include "types/mesh/Data.h"
-#include "scene/actor/InstancedMesh.h"
+#include "scene/actor/Instanced.h"
+#include "scene/actor/Mesh.h"
 
 #include "module/Prepare.h"
 #include "module/LandMoisture.h"
@@ -17,7 +18,12 @@
 #include "module/CalculateCoords.h"
 #include "module/Coastlines1.h"
 #include "module/Coastlines2.h"
+#include "module/Sprites.h"
 #include "module/Finalize.h"
+
+#include "scene/actor/Sprite.h"
+
+using namespace scene::actor;
 
 namespace game {
 namespace world {
@@ -80,8 +86,12 @@ Map::Map( Random* random, Scene* scene )
 		{ B(10101010), B(10101010) }, // 15
 	});
 
-	// main source texture
-	m_textures.source = g_engine->GetTextureLoader()->LoadTextureTC( "texture.pcx", Color::RGBA( 125, 0, 128, 255 ) );
+	// main source textures
+	m_textures.source.texture_pcx = g_engine->GetTextureLoader()->LoadTextureTC( "texture.pcx", Color::RGBA( 125, 0, 128, 255 ) );
+	m_textures.source.ter1_pcx = g_engine->GetTextureLoader()->LoadTextureTCS( "ter1.pcx", {
+		Color::RGBA( 152, 24, 228, 255 ), // remove transparency color
+		Color::RGBA( 253, 189, 118, 255 ) // remove drawn shadows too (we'll have our own)
+	});
 	
 	// add map modules
 	//   order of passes is important
@@ -132,13 +142,14 @@ Map::Map( Random* random, Scene* scene )
 	{
 		module_pass.clear();
 		NEW( m, WaterSurfacePP, this ); module_pass.push_back( m );
+		NEW( m, Sprites, this ); module_pass.push_back( m );
 		m_modules_deferred.push_back( module_pass );
 	}
 }
 
 Map::~Map() {
 	if ( m_tile_at_request_id ) {
-		m_actors.terrain->CancelDataRequest( m_tile_at_request_id );
+		m_actors.terrain->GetMeshActor()->CancelDataRequest( m_tile_at_request_id );
 	}
 	if ( m_actors.terrain ) {
 		m_scene->RemoveActor( m_actors.terrain );
@@ -163,7 +174,9 @@ Map::~Map() {
 	if ( m_tile_states ) {
 		for ( size_t y = 0 ; y < m_map_state.dimensions.y ; y++ ) {
 			for ( size_t x = y & 1 ; x < m_map_state.dimensions.x ; x+= 2 ) {
+				
 				auto* ts = GetTileState( x, y );
+				
 				if ( ts->moisture_original ) {
 					DELETE( ts->moisture_original );
 					ts->moisture_original = nullptr;
@@ -171,6 +184,10 @@ Map::~Map() {
 				if ( ts->river_original ) {
 					DELETE( ts->river_original );
 					ts->river_original = nullptr;
+				}
+				for ( auto& a : ts->sprites ) {
+					m_scene->RemoveActor( a.actor );
+					DELETE( a.actor );
 				}
 			}
 		}
@@ -187,7 +204,7 @@ void Map::SetTiles( Tiles* tiles, bool generate_actors ) {
 }
 
 #ifdef DEBUG
-std::vector<actor::Mesh*> Map::GetActors() const {
+std::vector<actor::Instanced*> Map::GetActors() const {
 	return {
 		m_actors.terrain,
 	};
@@ -270,8 +287,8 @@ void Map::InitTextureAndMesh() {
 		DELETE( m_textures.terrain );
 	}
 	NEW( m_textures.terrain, Texture, "TerrainTexture",
-		( m_map_state.dimensions.x + 1 ) * Map::s_consts.pcx_texture_block.dimensions.x, // + 1 for overdraw_column
-		( m_map_state.dimensions.y * LAYER_MAX ) * Map::s_consts.pcx_texture_block.dimensions.y
+		( m_map_state.dimensions.x + 1 ) * Map::s_consts.tile_texture.dimensions.x, // + 1 for overdraw_column
+		( m_map_state.dimensions.y * LAYER_MAX ) * Map::s_consts.tile_texture.dimensions.y
 	);
 	
 	// not deleting meshes because if they exist - it means they are already linked to actor and are deleted together when needed
@@ -285,6 +302,22 @@ void Map::InitTextureAndMesh() {
 	);
 	
 	m_map_state.terrain_texture = m_textures.terrain;
+	m_map_state.ter1_pcx = m_textures.source.ter1_pcx;
+}
+
+void Map::InitTerrainActor() {
+	Log( "Spawning terrain actor" );
+	
+	ASSERT( !m_actors.terrain, "terrain actor already exists" );
+	
+	NEWV( terrain, actor::Mesh, "MapTerrain", m_mesh_terrain );
+		terrain->SetTexture( m_textures.terrain );
+		terrain->SetPosition( Map::s_consts.map_position );
+		terrain->SetAngle( Map::s_consts.map_rotation );
+		terrain->SetDataMesh( m_mesh_terrain_data );
+	
+	NEW( m_actors.terrain, actor::Instanced, terrain );
+	m_scene->AddActor( m_actors.terrain );
 }
 
 void Map::GenerateActors() {
@@ -299,8 +332,8 @@ void Map::GenerateActors() {
 	m_map_state.dimensions.y = m_tiles->GetHeight();
 	m_map_state.coord.x = -( Map::s_consts.tile.scale.x * ( m_map_state.dimensions.x + 1 ) / 4 - Map::s_consts.tile.radius.x );
 	m_map_state.coord.y = -( Map::s_consts.tile.scale.y * ( m_map_state.dimensions.y + 1 ) / 4 - Map::s_consts.tile.radius.y );
-	m_map_state.variables.texture_scaling.x = 1.0f / Map::s_consts.pcx_texture_block.dimensions.x / ( m_map_state.dimensions.x + 1 ); // + 1 for overdraw column
-	m_map_state.variables.texture_scaling.y = 1.0f / Map::s_consts.pcx_texture_block.dimensions.y / m_map_state.dimensions.y / LAYER_MAX;
+	m_map_state.variables.texture_scaling.x = 1.0f / Map::s_consts.tile_texture.dimensions.x / ( m_map_state.dimensions.x + 1 ); // + 1 for overdraw column
+	m_map_state.variables.texture_scaling.y = 1.0f / Map::s_consts.tile_texture.dimensions.y / m_map_state.dimensions.y / LAYER_MAX;
 	
 	LinkTileStates();
 	
@@ -374,14 +407,7 @@ void Map::GenerateActors() {
 		}
 	}
 	
-	Log( "Spawning terrain actor" );
-	
-	NEW( m_actors.terrain, actor::InstancedMesh, "MapTerrain", m_mesh_terrain );
-		m_actors.terrain->SetTexture( m_textures.terrain );
-		m_actors.terrain->SetPosition( Map::s_consts.map_position );
-		m_actors.terrain->SetAngle( Map::s_consts.map_rotation );
-		m_actors.terrain->SetDataMesh( m_mesh_terrain_data );
-	m_scene->AddActor( m_actors.terrain );
+	InitTerrainActor();
 	
 	m_current_tile = nullptr;
 	m_current_ts = nullptr;
@@ -464,14 +490,14 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_t
 void Map::AddTexture( const tile_layer_type_t tile_layer, const pcx_texture_coordinates_t& tc, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
 	ASSERT( m_current_ts, "AddTexture called outside of tile generation" );
 	m_textures.terrain->AddFrom(
-		m_textures.source,
+		m_textures.source.texture_pcx,
 		mode,
 		tc.x,
 		tc.y,
-		tc.x + Map::s_consts.pcx_texture_block.dimensions.x - 1,
-		tc.y + Map::s_consts.pcx_texture_block.dimensions.y - 1,
+		tc.x + Map::s_consts.tile_texture.dimensions.x - 1,
+		tc.y + Map::s_consts.tile_texture.dimensions.y - 1,
 		m_current_ts->tex_coord.x1,
-		tile_layer * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + m_current_ts->tex_coord.y1,
+		tile_layer * m_map_state.dimensions.y * Map::s_consts.tile_texture.dimensions.y + m_current_ts->tex_coord.y1,
 		rotate,
 		alpha,
 		m_random,
@@ -485,11 +511,11 @@ void Map::CopyTextureFromLayer( const tile_layer_type_t tile_layer_from, const s
 		m_textures.terrain,
 		mode,
 		tx_from,
-		tile_layer_from * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + ty_from,
-		tx_from + Map::s_consts.pcx_texture_block.dimensions.x - 1,
-		tile_layer_from * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + ty_from + Map::s_consts.pcx_texture_block.dimensions.y - 1,
+		tile_layer_from * m_map_state.dimensions.y * Map::s_consts.tile_texture.dimensions.y + ty_from,
+		tx_from + Map::s_consts.tile_texture.dimensions.x - 1,
+		tile_layer_from * m_map_state.dimensions.y * Map::s_consts.tile_texture.dimensions.y + ty_from + Map::s_consts.tile_texture.dimensions.y - 1,
 		m_current_ts->tex_coord.x1,
-		tile_layer * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + m_current_ts->tex_coord.y1,
+		tile_layer * m_map_state.dimensions.y * Map::s_consts.tile_texture.dimensions.y + m_current_ts->tex_coord.y1,
 		rotate,
 		alpha,
 		m_random,
@@ -516,11 +542,11 @@ void Map::CopyTextureDeferred( const tile_layer_type_t tile_layer_from, const si
 	m_map_state.copy_from_after.push_back({
 		mode,
 		tx_from,
-		tile_layer_from * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + ty_from,
-		tx_from + Map::s_consts.pcx_texture_block.dimensions.x - 1,
-		tile_layer_from * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + ty_from + Map::s_consts.pcx_texture_block.dimensions.y - 1,
+		tile_layer_from * m_map_state.dimensions.y * Map::s_consts.tile_texture.dimensions.y + ty_from,
+		tx_from + Map::s_consts.tile_texture.dimensions.x - 1,
+		tile_layer_from * m_map_state.dimensions.y * Map::s_consts.tile_texture.dimensions.y + ty_from + Map::s_consts.tile_texture.dimensions.y - 1,
 		(size_t)m_current_ts->tex_coord.x1,
-		tile_layer * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + (size_t)m_current_ts->tex_coord.y1,
+		tile_layer * m_map_state.dimensions.y * Map::s_consts.tile_texture.dimensions.y + (size_t)m_current_ts->tex_coord.y1,
 		rotate,
 		alpha,
 		perlin
@@ -529,15 +555,15 @@ void Map::CopyTextureDeferred( const tile_layer_type_t tile_layer_from, const si
 
 void Map::GetTexture( Texture* dest_texture, const pcx_texture_coordinates_t& tc, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
 	ASSERT( m_current_ts, "GetTexture called outside of tile generation" );
-	ASSERT( dest_texture->m_width == Map::s_consts.pcx_texture_block.dimensions.x, "tile dest texture width mismatch" );
-	ASSERT( dest_texture->m_height == Map::s_consts.pcx_texture_block.dimensions.y, "tile dest texture height mismatch" );
+	ASSERT( dest_texture->m_width == Map::s_consts.tile_texture.dimensions.x, "tile dest texture width mismatch" );
+	ASSERT( dest_texture->m_height == Map::s_consts.tile_texture.dimensions.y, "tile dest texture height mismatch" );
 	dest_texture->AddFrom(
-		m_textures.source,
+		m_textures.source.texture_pcx,
 		mode,
 		tc.x,
 		tc.y,
-		tc.x + Map::s_consts.pcx_texture_block.dimensions.x - 1,
-		tc.y + Map::s_consts.pcx_texture_block.dimensions.y - 1,
+		tc.x + Map::s_consts.tile_texture.dimensions.x - 1,
+		tc.y + Map::s_consts.tile_texture.dimensions.y - 1,
 		0,
 		0,
 		rotate,
@@ -547,15 +573,15 @@ void Map::GetTexture( Texture* dest_texture, const pcx_texture_coordinates_t& tc
 }
 
 void Map::GetTextureFromLayer( Texture* dest_texture, const tile_layer_type_t tile_layer, const size_t tx_from, const size_t ty_from, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha ) const {
-	ASSERT( dest_texture->m_width == Map::s_consts.pcx_texture_block.dimensions.x, "tile dest texture width mismatch" );
-	ASSERT( dest_texture->m_height == Map::s_consts.pcx_texture_block.dimensions.y, "tile dest texture height mismatch" );
+	ASSERT( dest_texture->m_width == Map::s_consts.tile_texture.dimensions.x, "tile dest texture width mismatch" );
+	ASSERT( dest_texture->m_height == Map::s_consts.tile_texture.dimensions.y, "tile dest texture height mismatch" );
 	dest_texture->AddFrom(
 		m_textures.terrain,
 		mode,
 		tx_from,
-		tile_layer * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + ty_from,
-		tx_from + Map::s_consts.pcx_texture_block.dimensions.x - 1,
-		tile_layer * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + ty_from + Map::s_consts.pcx_texture_block.dimensions.y - 1,
+		tile_layer * m_map_state.dimensions.y * Map::s_consts.tile_texture.dimensions.y + ty_from,
+		tx_from + Map::s_consts.tile_texture.dimensions.x - 1,
+		tile_layer * m_map_state.dimensions.y * Map::s_consts.tile_texture.dimensions.y + ty_from + Map::s_consts.tile_texture.dimensions.y - 1,
 		0,
 		0,
 		rotate,
@@ -566,17 +592,17 @@ void Map::GetTextureFromLayer( Texture* dest_texture, const tile_layer_type_t ti
 
 void Map::SetTexture( const tile_layer_type_t tile_layer, tile_state_t* ts, Texture* src_texture, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
 	ASSERT( m_current_ts, "SetTexture called outside of tile generation" );
-	ASSERT( src_texture->m_width == Map::s_consts.pcx_texture_block.dimensions.x, "tile src texture width mismatch" );
-	ASSERT( src_texture->m_height == Map::s_consts.pcx_texture_block.dimensions.y, "tile src texture height mismatch" );
+	ASSERT( src_texture->m_width == Map::s_consts.tile_texture.dimensions.x, "tile src texture width mismatch" );
+	ASSERT( src_texture->m_height == Map::s_consts.tile_texture.dimensions.y, "tile src texture height mismatch" );
 	m_textures.terrain->AddFrom(
 		src_texture,
 		mode,
 		0,
 		0,
-		Map::s_consts.pcx_texture_block.dimensions.x - 1,
-		Map::s_consts.pcx_texture_block.dimensions.x - 1,
+		Map::s_consts.tile_texture.dimensions.x - 1,
+		Map::s_consts.tile_texture.dimensions.x - 1,
 		ts->tex_coord.x1,
-		tile_layer * m_map_state.dimensions.y * Map::s_consts.pcx_texture_block.dimensions.y + ts->tex_coord.y1,
+		tile_layer * m_map_state.dimensions.y * Map::s_consts.tile_texture.dimensions.y + ts->tex_coord.y1,
 		rotate,
 		alpha,
 		m_random
@@ -607,6 +633,35 @@ const Map::map_state_t* Map::GetMapState() const {
 	return &m_map_state;
 }
 
+Scene* Map::GetScene() const {
+	return m_scene;
+}
+
+scene::actor::Instanced* Map::GenerateTerrainSpriteActor( const std::string& name, const pcx_texture_coordinates_t& tex_coords ) const {
+	NEWV(
+		sprite,
+		scene::actor::Sprite,
+		name,
+		{
+			Map::s_consts.tile.scale.x,
+			Map::s_consts.tile.scale.y * Map::s_consts.sprite.y_scale
+		},
+		m_textures.source.ter1_pcx,
+		{
+			{
+				(float) 1.0f / m_textures.source.ter1_pcx->m_width * ( tex_coords.x + 1 ) + Map::s_consts.sprite.zoom,
+				(float) 1.0f / m_textures.source.ter1_pcx->m_height * ( tex_coords.y + 1 ) + Map::s_consts.sprite.zoom
+			},
+			{
+				(float) 1.0f / m_textures.source.ter1_pcx->m_width * ( tex_coords.x + Map::s_consts.tc.ter1_pcx.dimensions.x - 2 ) - Map::s_consts.sprite.zoom,
+				(float) 1.0f / m_textures.source.ter1_pcx->m_height * ( tex_coords.y + Map::s_consts.tc.ter1_pcx.dimensions.y - 2 ) - Map::s_consts.sprite.zoom
+			}
+		}
+	);
+	NEWV( instanced, scene::actor::Instanced, sprite );
+	return instanced;
+}
+
 const size_t Map::GetWidth() const {
 	return m_map_state.dimensions.x;
 }
@@ -627,20 +682,20 @@ const Map::tile_info_t Map::GetTileAt( const size_t tile_x, const size_t tile_y 
 
 void Map::CancelTileAtRequest() {
 	ASSERT( m_tile_at_request_id, "tileat request not found" );
-	m_actors.terrain->CancelDataRequest( m_tile_at_request_id );
+	m_actors.terrain->GetMeshActor()->CancelDataRequest( m_tile_at_request_id );
 	m_tile_at_request_id = 0;
 }	
 
 void Map::GetTileAtScreenCoords( const size_t screen_x, const size_t screen_inverse_y ) {
 	if ( m_tile_at_request_id ) {
-		m_actors.terrain->CancelDataRequest( m_tile_at_request_id );
+		m_actors.terrain->GetMeshActor()->CancelDataRequest( m_tile_at_request_id );
 	}
-	m_tile_at_request_id = m_actors.terrain->GetDataAt( screen_x, screen_inverse_y );
+	m_tile_at_request_id = m_actors.terrain->GetMeshActor()->GetDataAt( screen_x, screen_inverse_y );
 }
 
 Map::tile_info_t Map::GetTileAtScreenCoordsResult() {
 	if ( m_tile_at_request_id ) {
-		auto result = m_actors.terrain->GetDataResponse( m_tile_at_request_id );
+		auto result = m_actors.terrain->GetMeshActor()->GetDataResponse( m_tile_at_request_id );
 		if ( result.first ) {
 			m_tile_at_request_id = 0;
 			
@@ -746,6 +801,19 @@ const Buffer Map::tile_state_t::Serialize() const {
 		buf.WriteBool( false );
 	}
 	
+	buf.WriteInt( sprites.size() );
+	for ( auto& a : sprites ) {
+#ifdef DEBUG
+		if ( !a.actor ) {
+			THROW( "sprite actor not set" );
+		}
+#endif
+		buf.WriteVec2u( a.tex_coords );
+		buf.WriteString( a.actor->GetLocalName() );
+		buf.WriteString( a.actor->Serialize().ToString() );
+		buf.WriteString( a.actor->GetSpriteActor()->Serialize().ToString() );
+	}
+	
 	return buf;
 }
 
@@ -844,7 +912,7 @@ void Map::Unserialize( Buffer buf ) {
 			if ( ( x % 2 ) != ( y % 2 ) ) {
 				continue;
 			}
-			GetTileState( x, y )->Unserialize( buf.ReadString() );
+			GetTileState( x, y )->Unserialize( this, buf.ReadString() );
 		}
 	}
 	
@@ -854,13 +922,7 @@ void Map::Unserialize( Buffer buf ) {
 	m_mesh_terrain->Unserialize( buf.ReadString() );
 	m_mesh_terrain_data->Unserialize( buf.ReadString() );
 	
-	NEW( m_actors.terrain, actor::InstancedMesh, "MapTerrain", m_mesh_terrain );
-		m_actors.terrain->SetTexture( m_textures.terrain );
-		m_actors.terrain->SetPosition( Map::s_consts.map_position );
-		m_actors.terrain->SetAngle( Map::s_consts.map_rotation );
-		m_actors.terrain->SetDataMesh( m_mesh_terrain_data );
-	m_scene->AddActor( m_actors.terrain );
-	
+	InitTerrainActor();
 }
 
 void Map::map_state_t::Unserialize( Buffer buf ) {
@@ -874,7 +936,7 @@ void Map::map_state_t::Unserialize( Buffer buf ) {
 	variables.texture_scaling.y = buf.ReadFloat();
 }
 
-void Map::tile_state_t::Unserialize( Buffer buf ) {
+void Map::tile_state_t::Unserialize( const Map* map, Buffer buf ) {
 	coord.x = buf.ReadFloat();
 	coord.y = buf.ReadFloat();
 	tex_coord.x = buf.ReadFloat();
@@ -897,8 +959,8 @@ void Map::tile_state_t::Unserialize( Buffer buf ) {
 	has_water = buf.ReadBool();
 	is_coastline_corner = buf.ReadBool();
 	
-	const auto w = Map::s_consts.pcx_texture_block.dimensions.x;
-	const auto h = Map::s_consts.pcx_texture_block.dimensions.y;
+	const auto w = Map::s_consts.tile_texture.dimensions.x;
+	const auto h = Map::s_consts.tile_texture.dimensions.y;
 	
 	NEW( moisture_original, Texture, "MoistureOriginal", w, h );
 	moisture_original->Unserialize( buf.ReadString() );
@@ -907,6 +969,19 @@ void Map::tile_state_t::Unserialize( Buffer buf ) {
 		NEW( river_original, Texture, "RiverOriginal", w, h );
 		river_original->Unserialize( buf.ReadString() );
 	}
+	
+	const size_t sprites_count = buf.ReadInt();
+	sprites.clear();
+	for ( size_t i = 0 ; i < sprites_count ; i++ ) {
+		sprite_t sprite;
+		sprite.tex_coords = buf.ReadVec2u();
+		sprite.actor = map->GenerateTerrainSpriteActor( buf.ReadString(), sprite.tex_coords );
+		sprite.actor->Unserialize( buf.ReadString() );
+		sprite.actor->GetSpriteActor()->Unserialize( buf.ReadString() );
+		map->m_scene->AddActor( sprite.actor );
+		sprites.push_back( sprite );
+	}
+
 }
 
 void Map::tile_elevations_t::Unserialize( Buffer buf ) {

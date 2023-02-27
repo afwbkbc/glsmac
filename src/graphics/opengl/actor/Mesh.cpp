@@ -1,7 +1,8 @@
 #include "Mesh.h"
 
 #include "scene/actor/Mesh.h"
-#include "scene/actor/InstancedMesh.h"
+#include "scene/actor/Instanced.h"
+
 #include "../shader_program/Orthographic.h"
 #include "../shader_program/World.h"
 
@@ -14,7 +15,7 @@ using namespace mesh;
 namespace graphics {
 namespace opengl {
 
-Mesh::Mesh( scene::actor::Mesh *actor ) : Actor( actor ) {
+Mesh::Mesh( scene::actor::Actor *actor ) : Actor( actor ) {
 
 	//Log( "Creating OpenGL actor for " + actor->GetName() );
 
@@ -41,7 +42,7 @@ Mesh::~Mesh() {
 }
 
 bool Mesh::MeshReloadNeeded() {
-	auto* actor = (scene::actor::Mesh *) m_actor;
+	auto* actor = GetMeshActor();
 	size_t mesh_updated_counter = actor->GetMesh()->UpdatedCount();
 	auto *data_mesh = actor->GetDataMesh();
 	if ( data_mesh ) {
@@ -56,8 +57,7 @@ bool Mesh::MeshReloadNeeded() {
 }
 
 bool Mesh::TextureReloadNeeded() {
-	auto* actor = (scene::actor::Mesh *) m_actor;
-	auto* texture = actor->GetTexture();
+	auto* texture = GetMeshActor()->GetTexture();
 	const std::string last_texture_name = texture ? texture->m_name : "";
 	
 	if ( m_last_texture_name != last_texture_name ) {
@@ -68,9 +68,8 @@ bool Mesh::TextureReloadNeeded() {
 }
 
 void Mesh::LoadMesh() {
-	auto *actor = (scene::actor::Mesh *)m_actor;
-
-	const auto *mesh = actor->GetMesh();
+	
+	const auto *mesh = GetMeshActor()->GetMesh();
 	ASSERT( mesh, "actor mesh not set" );
 
 	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
@@ -87,17 +86,32 @@ void Mesh::LoadMesh() {
 }
 
 void Mesh::LoadTexture() {
-	auto *actor = (scene::actor::Mesh *)m_actor;
-	const auto* texture = actor->GetTexture();
+	const auto* texture = GetMeshActor()->GetTexture();
 	
 	if ( texture ) {
 		g_engine->GetGraphics()->LoadTexture( texture );
 	}
 }
 
+scene::actor::Mesh* Mesh::GetMeshActor() const {
+	switch ( m_actor->GetType() ) {
+		case scene::Actor::TYPE_MESH: {
+			return (scene::actor::Mesh*)m_actor;
+			break;
+		}
+		case scene::Actor::TYPE_INSTANCED_MESH: {
+			return ((scene::actor::Instanced*)m_actor)->GetMeshActor();
+			break;
+		}
+		default: {
+			ASSERT( false, "unknown actor type " + std::to_string( m_actor->GetType() ) );
+			return nullptr;
+		}
+	}
+}
+
 void Mesh::PrepareDataMesh() {
-	auto* actor = (scene::actor::Mesh *) m_actor;
-	const auto *data_mesh = actor->GetDataMesh();
+	const auto *data_mesh = GetMeshActor()->GetDataMesh();
 	if ( data_mesh && !m_data.is_up_to_date ) {
 		if ( !m_data.is_allocated ) {
 			
@@ -160,41 +174,14 @@ void Mesh::PrepareDataMesh() {
 
 }
 
-void Mesh::UnloadMesh() {
-	// Log( "Unloading OpenGL actor" );
-
-	/*if ( m_actor ) {
-		auto *actor = (scene::actor::Mesh *)m_actor;
-
-		// it's better to keep everything loaded forever
-		const auto* texture = actor->GetTexture();
-		if (texture) {
-			g_engine->GetGraphics()->UnloadTexture(texture);
-		}
-	}*/
-}
-
-void Mesh::UnloadTexture() {
-	// keep loaded forever?
-	/*if ( m_actor ) {
-		auto *actor = (scene::actor::Mesh *)m_actor;
-		if ( actor ) {
-			const auto* texture = actor->GetTexture();
-			if ( texture ) {
-				g_engine->GetGraphics()->UnloadTexture( texture ); // test
-			}
-		}
-	}*/
-}
-
 void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera ) {
 
 	//Log( "Drawing" );
 	
-	auto* actor = (scene::actor::Mesh*) m_actor;
+	auto* mesh_actor = GetMeshActor();
 	
 	if ( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA ) {
-		if ( !actor->GetDataMesh() || m_data.last_processed_data_request_id == actor->GetLastDataRequestId() ) {
+		if ( !mesh_actor->GetDataMesh() || m_data.last_processed_data_request_id == mesh_actor->GetLastDataRequestId() ) {
 			return; // nothing to do
 		}
 		PrepareDataMesh();
@@ -213,7 +200,7 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 	
 	shader_program->Enable();
 
-	const auto* texture = actor->GetTexture();
+	const auto* texture = mesh_actor->GetTexture();
 
 	g_engine->GetGraphics()->EnableTexture(texture);
 	
@@ -226,7 +213,7 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 		case ( shader_program::ShaderProgram::TYPE_ORTHO_DATA ): {
 			auto* sp = (shader_program::Orthographic *)shader_program; // TODO: make base class for ortho and ortho_data
 			
-			auto flags = actor->GetRenderFlags();
+			auto flags = mesh_actor->GetRenderFlags();
 			
 			GLuint ibo_size = 0;
 			
@@ -234,7 +221,7 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 				case shader_program::ShaderProgram::TYPE_ORTHO: {
 					// non-world uniforms apply only to render mesh
 					glUniform1ui( sp->uniforms.flags, flags );
-					auto* lights = actor->GetScene()->GetLights();
+					auto* lights = m_actor->GetScene()->GetLights();
 					if ( !( flags & actor::Mesh::RF_IGNORE_LIGHTING ) && !lights->empty() ) {
 						Vec3 light_pos[ lights->size() ];
 						Color light_color[ lights->size() ];
@@ -248,7 +235,7 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 						glUniform4fv( sp->uniforms.light_color, lights->size(), (const GLfloat*)light_color );
 					}
 					if ( flags & actor::Mesh::RF_USE_TINT ) {
-						glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&actor->GetTintColor() );
+						glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&mesh_actor->GetTintColor() );
 					}
 					ibo_size = m_ibo_size;
 					break;
@@ -268,7 +255,7 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 			
 			const bool ignore_camera = ( flags & scene::actor::Mesh::RF_IGNORE_CAMERA );
 			
-			if ( ignore_camera || actor->GetType() == scene::Actor::TYPE_MESH ) {
+			if ( ignore_camera || m_actor->GetType() == scene::Actor::TYPE_MESH ) {
 				types::Matrix44 matrix = ignore_camera
 					? g_engine->GetUI()->GetWorldUIMatrix()
 					: m_actor->GetWorldMatrix()
@@ -276,14 +263,14 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 				glUniformMatrix4fv( sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
 				glDrawElements( GL_TRIANGLES, ibo_size, GL_UNSIGNED_INT, (void *)(0) );
 			}
-			else if ( actor->GetType() == scene::Actor::TYPE_INSTANCED_MESH ) {
-				auto* instanced_actor = (scene::actor::InstancedMesh*) m_actor;
-				auto& matrices = instanced_actor->GetWorldMatrices();
+			else if ( m_actor->GetType() == scene::Actor::TYPE_INSTANCED_MESH ) {
+				auto* instanced = (scene::actor::Instanced*) m_actor;
+				auto& matrices = instanced->GetWorldMatrices();
 				glUniformMatrix4fv( sp->uniforms.world, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
 				glDrawElementsInstanced( GL_TRIANGLES, ibo_size, GL_UNSIGNED_INT, (void *)(0), matrices.size() );
 			}
 			else {
-				ASSERT( false, "unknown actor type " + std::to_string( actor->GetType() ) );
+				ASSERT( false, "unknown actor type " + std::to_string( m_actor->GetType() ) );
 			}
 
 			if ( flags & actor::Mesh::RF_IGNORE_DEPTH ) {
@@ -320,7 +307,7 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 		glBindFramebuffer( GL_READ_FRAMEBUFFER, m_data.fbo );
 		glReadBuffer( GL_COLOR_ATTACHMENT0 );
 	
-		auto* requests = actor->GetDataRequests();
+		auto* requests = mesh_actor->GetDataRequests();
 		for ( auto& r : *requests ) {
 			if ( !r.second.is_processed ) {
 				// Log( "Processing data request " + to_string( r.first ) );
@@ -333,7 +320,7 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 		glBindFramebuffer( GL_READ_FRAMEBUFFER, 0 );
 	
 		// processed all pending requests
-		m_data.last_processed_data_request_id = actor->GetLastDataRequestId();
+		m_data.last_processed_data_request_id = mesh_actor->GetLastDataRequestId();
 		
 	}
 	else {

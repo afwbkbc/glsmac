@@ -126,4 +126,20 @@ void Matrix44::operator *= (const Matrix44 operand) {
 	}
 };
 
+const std::string Matrix44::ToString() const {
+	std::string ret = "";
+	for ( uint8_t i = 0 ; i < 4 ; i++ ) {
+		if ( i ) {
+			ret += "\n";
+		}
+		for ( uint8_t j = 0 ; j < 4 ; j++ ) {
+			if ( j ) {
+				ret += " ";
+			}
+			ret += std::to_string( m[ i ][ j ] );
+		}
+	}
+	return ret + "\n";
+}
+
 } /* namespace types */

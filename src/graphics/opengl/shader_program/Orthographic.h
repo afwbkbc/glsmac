@@ -5,6 +5,7 @@
 namespace graphics {
 namespace opengl {
 
+class Sprite;
 class Mesh;
 class Image;
 
@@ -15,6 +16,7 @@ CLASS( Orthographic, ShaderProgram )
 	Orthographic() : ShaderProgram( TYPE_ORTHO ) {};
 	
 protected:
+	friend class opengl::Sprite;
 	friend class opengl::Mesh;
 	friend class opengl::Image;
 
@@ -44,5 +46,6 @@ protected:
 } /* namespace opengl */
 } /* namespace graphics */
 
+#include "../actor/Sprite.h"
 #include "../actor/Mesh.h"
 

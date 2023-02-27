@@ -62,9 +62,14 @@ Texture* SDL2::LoadTexture( const std::string &name ) {
 		SDL_FreeSurface(image);
 
 		if ( m_is_transparent_color_set ) {
+			void *at = nullptr;
 			for (size_t i = 0 ; i < texture->m_bitmap_size ; i += texture->m_bpp) {
-				if (!memcmp( ptr( texture->m_bitmap, i, texture->m_bpp ), &m_transparent_color, texture->m_bpp )) {
-					memset( ptr( texture->m_bitmap, i, texture->m_bpp ), 0, texture->m_bpp );
+				at = ptr( texture->m_bitmap, i, texture->m_bpp );
+				for ( auto& c : m_transparent_colors ) {
+					if ( !memcmp( at, &c, texture->m_bpp ) ) {
+						memset( at, 0, texture->m_bpp );
+						break;
+					}
 				}
 			}
 		}

@@ -1,5 +1,6 @@
 #include "Scene.h"
 
+#include "actor/Sprite.h"
 #include "actor/Mesh.h"
 #include "actor/Image.h"
 
@@ -45,7 +46,7 @@ void Scene::AddActorToZIndexSet( Actor* gl_actor ) {
 		it = m_gl_actors_by_zindex.find( zindex );
 	}
 	ASSERT( find( it->second.begin(), it->second.end(), gl_actor ) == it->second.end(), "actor already found in zindex set" );
-	//Log( "Adding actor " + gl_actor->GetName() + " to zindex set " + to_string( gl_actor->GetPosition().z ) );
+	//Log( "Adding actor " + gl_actor->GetName() + " to zindex set " + std::to_string( gl_actor->GetPosition().z ) );
 	it->second.push_back( gl_actor );
 }
 
@@ -107,6 +108,11 @@ void Scene::Update() {
 
 			auto actor_type = (*it)->GetType();
 			switch (actor_type) {
+				case scene::actor::Actor::TYPE_SPRITE:
+				case scene::actor::Actor::TYPE_INSTANCED_SPRITE: {
+					NEW( gl_actor, Sprite, (scene::actor::Sprite *)*it );
+					break;
+				}
 				case scene::actor::Actor::TYPE_MESH:
 				case scene::actor::Actor::TYPE_INSTANCED_MESH: {
 					NEW( gl_actor, Mesh, (scene::actor::Mesh *)*it );

@@ -24,9 +24,14 @@ void Mesh::SetMesh( const types::mesh::Mesh* mesh ) {
 			DELETE( m_original_mesh );
 		}
 		m_original_mesh = mesh;
+		std::string cls = "UI::Mesh";
+		std::string style_class = GetStyleClass();
+		if ( !style_class.empty() ) {
+			cls += "::" + style_class;
+		}
 		NEW( m_mesh, types::mesh::Mesh, *m_original_mesh ); // copy
-		NEW( m_actor, scene::actor::Mesh, "UI::Mesh", m_mesh );
-			m_actor->SetRenderFlags( scene::actor::Mesh::RF_IGNORE_CAMERA | scene::actor::Mesh::RF_IGNORE_LIGHTING );
+		NEW( m_actor, scene::actor::Mesh, cls, m_mesh );
+			m_actor->SetRenderFlags( scene::actor::Mesh::RF_IGNORE_CAMERA | scene::actor::Mesh::RF_IGNORE_LIGHTING | scene::actor::Mesh::RF_IGNORE_DEPTH );
 			if ( m_texture ) {
 				m_actor->SetTexture( m_texture );
 			}

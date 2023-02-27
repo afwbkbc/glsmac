@@ -10,6 +10,7 @@ SET(SRC ${SRC}
 	${PWD}/CalculateCoords.cpp
 	${PWD}/Coastlines1.cpp
 	${PWD}/Coastlines2.cpp
+	${PWD}/Sprites.cpp
 	${PWD}/Finalize.cpp
 
 PARENT_SCOPE)

@@ -3,7 +3,6 @@
 #include <GL/glew.h>
 
 #include "Actor.h"
-
 #include "scene/actor/Mesh.h"
 
 namespace graphics {
@@ -11,21 +10,21 @@ namespace opengl {
 
 CLASS(Mesh, Actor)
 	
-	Mesh( scene::actor::Mesh *actor );
+	Mesh( scene::actor::Actor *actor );
 	~Mesh();
 	
 	bool MeshReloadNeeded();
 	bool TextureReloadNeeded();
 	void LoadMesh();
 	void LoadTexture();
-	void UnloadMesh();
-	void UnloadTexture();
 	
 	void Draw( shader_program::ShaderProgram *shader_program, Camera *camera = nullptr );
 	
 	void OnResize();
 	
 protected:
+	
+	scene::actor::Mesh* GetMeshActor() const;
 	
 	void PrepareDataMesh();
 	
@@ -49,7 +48,7 @@ protected:
 	} m_data = {};
 	
 	mesh::Data::data_t GetDataAt( const size_t x, const size_t y );
-
+	
 };
 
 } /* namespace opengl */

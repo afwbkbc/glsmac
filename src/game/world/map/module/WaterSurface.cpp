@@ -9,7 +9,7 @@ void WaterSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::m
 	if ( ts->has_water ) {
 		m_map->AddTexture(
 			Map::LAYER_WATER_SURFACE,
-			Map::s_consts.pcx_textures.water[ 1 ],
+			Map::s_consts.tc.texture_pcx.water[ 1 ],
 			Texture::AM_DEFAULT,
 			RandomRotate()
 		);

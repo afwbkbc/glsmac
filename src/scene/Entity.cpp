@@ -3,7 +3,7 @@
 namespace scene {
 
 Entity::Entity() {
-	m_matrices.scale.TransformScale( 1.0f, -1.0f, 1.0f );
+	m_matrices.scale.TransformScale( 1.0f, -1.0f, 1.0f ); // TODO: remove y inversion
 
 	UpdatePosition();
 	UpdateRotation();
@@ -71,6 +71,23 @@ types::Matrix44 & Entity::GetMatrix() {
 	return m_matrices.matrix;
 }
 
+const types::Buffer Entity::Serialize() const {
+	types::Buffer buf;
+	
+	buf.WriteVec3( m_position );
+	buf.WriteVec3( m_angle );
+	
+	return buf;
+}
+
+void Entity::Unserialize( types::Buffer buf ) {
+	
+	m_position = buf.ReadVec3();
+	m_angle = buf.ReadVec3();
+	
+	UpdatePosition();
+	UpdateRotation();
+}
 
 
 } /* namespace scene */

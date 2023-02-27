@@ -77,8 +77,8 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 	
 #if COPY_TEXTURE
 	// texture size (px)
-	const uint8_t tw = map::Map::s_consts.pcx_texture_block.dimensions.x;
-	const uint8_t th = map::Map::s_consts.pcx_texture_block.dimensions.y;
+	const uint8_t tw = map::Map::s_consts.tile_texture.dimensions.x;
+	const uint8_t th = map::Map::s_consts.tile_texture.dimensions.y;
 	// scale map terrain tex_coords to local tex_coords
 	const float sx = (float)map->GetTerrainTexture()->m_width / (float)tw;
 	const float sy = (float)map->GetTerrainTexture()->m_height / (float)th;
@@ -201,17 +201,23 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 			}
 		}
 		info_lines.push_back( tilestr );
-		if ( tile->features & map::Tile::F_XENOFUNGUS ) {
-			info_lines.push_back( "Xenofungus" );
-		}
-		if ( tile->features & map::Tile::F_JUNGLE ) {
-			info_lines.push_back( "Jungle" );
-		}
-		if ( tile->features & map::Tile::F_RIVER ) {
-			info_lines.push_back( "River" );
-		}
+		
 	}
 
+#define FEATURE( _feature, _line ) \
+	if ( tile->features & map::Tile::_feature ) { \
+		info_lines.push_back( _line ); \
+	}
+		
+	FEATURE( F_XENOFUNGUS, "Xenofungus" )
+	FEATURE( F_JUNGLE, "Jungle" )
+	FEATURE( F_RIVER, "River" )
+	FEATURE( F_NUTRIENT_BONUS, "Nutrient bonus" )
+	FEATURE( F_MINERALS_BONUS, "Minerals bonus" )
+	FEATURE( F_ENERGY_BONUS, "Energy bonus" )
+	
+#undef FEATURE
+	
 	// combine into printable lines
 	std::string info_line = "";
 	std::string info_line_new = "";
@@ -227,7 +233,9 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 			info_line = info_line_new;
 		}
 	}
-	print_lines.push_back( info_line );
+	if ( !info_line.empty() ) {
+		print_lines.push_back( info_line );
+	}
 	
 	// print lines
 	for ( auto& line : print_lines ) {
@@ -244,6 +252,36 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 		label->SetText( "(" + std::to_string( tile->coord.x ) + "," + std::to_string( tile->coord.y ) + ")" );
 	m_info_lines.push_back( label );
 	AddChild( label );
+	
+	// copy sprites from tile
+	for ( auto& s : ts->sprites ) {
+		auto sprite = s.actor->GetSpriteActor();
+		auto mesh = sprite->GenerateMesh();
+		NEWV( sprite_preview, object::Mesh, "MapBottomBarTilePreviewSprite" );
+		sprite_preview->SetMesh( mesh );
+		
+		if ( // ugly hack to keep energy bonus round in preview
+			( s.tex_coords == Map::s_consts.tc.ter1_pcx.energy_bonus_land[ 0 ] ) ||
+			( s.tex_coords == Map::s_consts.tc.ter1_pcx.energy_bonus_sea[ 0 ] ) ||
+			( s.tex_coords == Map::s_consts.tc.ter1_pcx.energy_bonus_land[ 1 ] ) ||
+			( s.tex_coords == Map::s_consts.tc.ter1_pcx.energy_bonus_sea[ 1 ] )
+		) {
+			sprite_preview->SetHeight( 68 );
+			sprite_preview->SetWidth( 100 );
+			sprite_preview->SetTop( 25 );
+		}
+		else { // TODO: prevent styles from overriding manually set dimensions
+			sprite_preview->SetHeight( 84 );
+			sprite_preview->SetWidth( 84 );
+			sprite_preview->SetTop( 2 );
+		}
+		sprite_preview->SetTexture( sprite->GetTexture() );
+		m_preview_layers.push_back({
+			sprite_preview,
+			nullptr
+		});
+		AddChild( sprite_preview );
+	}
 }
 
 void TilePreview::HideTilePreview() {

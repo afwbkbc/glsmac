@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "Mesh.h"
+#include "Actor.h"
 
 #include "types/Matrix44.h"
 #include "scene/Scene.h"
@@ -10,9 +10,13 @@
 namespace scene {
 namespace actor {
 
-CLASS( InstancedMesh, Mesh )
-	InstancedMesh( const std::string &name, const types::mesh::Render *mesh = nullptr );
-	~InstancedMesh();
+class Sprite;
+class Mesh;
+	
+CLASS( Instanced, Actor )
+
+	Instanced( Actor* actor );
+	virtual ~Instanced();
 	
 	typedef std::vector< types::Matrix44 > world_matrices_t;
 	const world_matrices_t& GetWorldMatrices();
@@ -22,8 +26,12 @@ CLASS( InstancedMesh, Mesh )
 	void UpdatePosition();
 	void UpdateMatrix();
 	
-protected:
-	
+	Sprite* GetSpriteActor() const;
+	Mesh* GetMeshActor() const;
+
+private:
+	Actor* m_actor = nullptr;
+
 	world_matrices_t m_world_matrices = {};
 	
 	struct instanced_matrices_t {
@@ -34,9 +42,11 @@ protected:
 	
 	std::vector< instanced_matrices_t > m_instance_matrices = {};
 	
-private:
 	const scene::Scene::instances_t* GetInstances();
 };
 
 }
 }
+
+#include "Sprite.h"
+#include "Mesh.h"

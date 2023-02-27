@@ -22,8 +22,8 @@ void Coastlines1::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 	float cwc = 1.5f;
 	float tcw = cw * 2.0f;
 	float tcwc = cwc * 0.85f;
-	float tcww = tcw * Map::s_consts.pcx_texture_block.dimensions.x;
-	float tcwh = tcw * Map::s_consts.pcx_texture_block.dimensions.y;
+	float tcww = tcw * Map::s_consts.tile_texture.dimensions.x;
+	float tcwh = tcw * Map::s_consts.tile_texture.dimensions.y;
 	const Texture::add_flag_t coastline_mode = Texture::AM_MERGE | Texture::AM_INVERT;
 	
 	std::vector< coastline_corner_t > coastline_corners = {};
@@ -134,7 +134,7 @@ void Coastlines1::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 	)) {
 		/*m_map->AddTexture(
 			Map::LAYER_WATER_SURFACE,
-			Map::s_consts.pcx_textures.water[ 0 ],
+			Map::s_consts.tc.texture_pcx.water[ 0 ],
 			Texture::AM_DEFAULT,
 			RandomRotate(),
 			Map::s_consts.coastlines.coast_water_alpha
@@ -191,7 +191,7 @@ void Coastlines1::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 
 		m_map->AddTexture(
 			Map::LAYER_WATER_SURFACE_EXTRA,
-			Map::s_consts.pcx_textures.water[ 0 ],
+			Map::s_consts.tc.texture_pcx.water[ 0 ],
 			Texture::AM_DEFAULT,
 			RandomRotate(),
 			Map::s_consts.coastlines.coast_water_alpha
@@ -205,7 +205,7 @@ void Coastlines1::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 
 			m_map->AddTexture(
 				Map::LAYER_WATER_SURFACE_EXTRA,
-				Map::s_consts.pcx_textures.water[ 0 ],
+				Map::s_consts.tc.texture_pcx.water[ 0 ],
 				Texture::AM_DEFAULT,
 				RandomRotate(),
 				Map::s_consts.coastlines.coast_water_alpha
@@ -399,8 +399,8 @@ void Coastlines1::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 					// mirror opposite tile
 					m_map->CopyTextureDeferred(
 						Map::LAYER_LAND,
-						c.msx * Map::s_consts.pcx_texture_block.dimensions.x,
-						c.msy * Map::s_consts.pcx_texture_block.dimensions.y,
+						c.msx * Map::s_consts.tile_texture.dimensions.x,
+						c.msy * Map::s_consts.tile_texture.dimensions.y,
 						Map::LAYER_WATER,
 						coastline_mode | c.flags | c.mirror_mode,
 						0
@@ -410,7 +410,7 @@ void Coastlines1::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 					// use default texture
 					m_map->AddTexture(
 						Map::LAYER_WATER,
-						Map::s_consts.pcx_textures.arid[ 0 ],
+						Map::s_consts.tc.texture_pcx.arid[ 0 ],
 						coastline_mode | c.flags,
 						RandomRotate()
 					);

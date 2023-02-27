@@ -50,7 +50,7 @@ void Mesh::SetTexture( const Texture* texture ) {
 	m_texture = texture;
 }
 
-const Texture* Mesh::GetTexture() {
+const Texture* Mesh::GetTexture() const {
 	return m_texture;
 }
 

@@ -243,14 +243,15 @@ const void* UIObject::GetObject( const Style::attribute_type_t attribute_type ) 
 }
 
 void UIObject::AddActor( Actor* actor ) {
-	ASSERT( m_actors.find( actor ) == m_actors.end(), "duplicate actor add" );
+	ASSERT( std::find( m_actors.begin(), m_actors.end(), actor ) == m_actors.end(), "duplicate actor add" );
 	actor->SetPositionZ( m_absolute_z_index );
-	m_actors.insert( actor );
+	m_actors.push_back( actor );
 }
 
 void UIObject::RemoveActor( Actor* actor ) {
-	ASSERT( m_actors.find( actor ) != m_actors.end(), "actor to be removed not found" );
-	m_actors.erase( actor );
+	auto it = std::find( m_actors.begin(), m_actors.end(), actor );
+	ASSERT( it != m_actors.end(), "actor to be removed not found" );
+	m_actors.erase( it );
 }
 
 void UIObject::EnableActors() {
@@ -771,6 +772,10 @@ void UIObject::UnblockRealigns() {
 	ASSERT( m_are_realigns_blocked, "realigns already unblocked" );
 	//Log( "unblocking realigns" );
 	m_are_realigns_blocked = false;
+}
+
+const std::string& UIObject::GetStyleClass() {
+	return m_style_class;
 }
 
 void UIObject::BlockEvents() {
