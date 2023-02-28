@@ -181,7 +181,7 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 	auto* mesh_actor = GetMeshActor();
 	
 	if ( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA ) {
-		if ( !mesh_actor->GetDataMesh() || m_data.last_processed_data_request_id == mesh_actor->GetLastDataRequestId() ) {
+		if ( !mesh_actor->GetDataMesh() || !mesh_actor->HasRenderLoopRequestsOfType( scene::actor::Mesh::RLR_GETDATA ) ) {
 			return; // nothing to do
 		}
 		PrepareDataMesh();
@@ -307,21 +307,18 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 		glBindFramebuffer( GL_READ_FRAMEBUFFER, m_data.fbo );
 		glReadBuffer( GL_COLOR_ATTACHMENT0 );
 	
-		auto* requests = mesh_actor->GetDataRequests();
+		auto* requests = mesh_actor->GetRenderLoopRequests();
 		for ( auto& r : *requests ) {
-			if ( !r.second.is_processed ) {
-				// Log( "Processing data request " + to_string( r.first ) );
-				r.second.result = GetDataAt( r.second.screen_x, r.second.screen_inverse_y );
+			if ( !r.second.is_processed && r.second.type == scene::actor::Mesh::RLR_GETDATA ) {
+				//Log( "Processing data request " + std::to_string( r.first ) );
+				r.second.result.getdata.data = GetDataAt( r.second.getdata.screen_x, r.second.getdata.screen_inverse_y );
 				r.second.is_processed = true;
 			}
 		}
 		
 		glReadBuffer( GL_NONE );
 		glBindFramebuffer( GL_READ_FRAMEBUFFER, 0 );
-	
-		// processed all pending requests
-		m_data.last_processed_data_request_id = mesh_actor->GetLastDataRequestId();
-		
+
 	}
 	else {
 		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );

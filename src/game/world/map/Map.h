@@ -433,7 +433,7 @@ protected:
 	
 private:
 	
-	scene::actor::Mesh::data_request_id_t m_tile_at_request_id = 0;
+	scene::actor::Mesh::render_loop_request_id_t m_tile_at_request_id = 0;
 	
 	tile_state_t* m_tile_states = nullptr;
 	

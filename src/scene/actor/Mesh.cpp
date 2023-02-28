@@ -59,48 +59,51 @@ void Mesh::SetDataMesh( const mesh::Data* data_mesh ) {
 	m_data_mesh = data_mesh;
 }
 
-static Mesh::data_request_id_t s_next_data_request_id = 1;
+static Mesh::render_loop_request_id_t s_next_render_loop_request_id = 1;
 	
-Mesh::data_request_id_t Mesh::GetDataAt( const size_t screen_x, const size_t screen_inverse_y ) {
-	data_request_id_t id = m_last_data_request_id = s_next_data_request_id++;
-	// Log( "Requesting data at " + to_string( screen_x ) + "x" + to_string( screen_inverse_y ) );
-	m_data_requests[ id ] = {
-		screen_x,
-		screen_inverse_y,
-		false,
-		0,
-	};
+Mesh::render_loop_request_id_t Mesh::GetDataAt( const size_t screen_x, const size_t screen_inverse_y ) {
+	render_loop_request_id_t id = m_last_render_loop_request_id = s_next_render_loop_request_id++;
+	//Log( "Requesting data at " + std::to_string( screen_x ) + "x" + std::to_string( screen_inverse_y ) );
+	auto& request = m_render_loop_requests[ id ] = {};
+	request.type = RLR_GETDATA;
+	request.getdata.screen_x = screen_x;
+	request.getdata.screen_inverse_y = screen_inverse_y;
 	return id;
 }
 
-std::pair< bool, mesh::Data::data_t > Mesh::GetDataResponse( const data_request_id_t id ) {
-	auto it = m_data_requests.find( id );
-	ASSERT( it != m_data_requests.end(), "data request not found" );
+std::pair< bool, std::optional< Mesh::render_loop_response_t > > Mesh::GetRenderLoopResponse( const render_loop_request_id_t id ) {
+	auto it = m_render_loop_requests.find( id );
+	ASSERT( it != m_render_loop_requests.end(), "data request not found" );
 	
 	if ( it->second.is_processed ) {
-		std::pair< bool, mesh::Data::data_t > result = { true, it->second.result };
-		// Log( "Data request " + to_string( id ) + " completed" );
-		m_data_requests.erase( it );
+		std::pair< bool, std::optional< render_loop_response_t > > result = { true, it->second.result };
+		//Log( "Render loop request " + std::to_string( id ) + " completed" );
+		m_render_loop_requests.erase( it );
 		return result;
 	}
 	else {
-		return { false, 0 };
+		return { false, std::nullopt };
 	}
 }
 
-void Mesh::CancelDataRequest( const data_request_id_t id ) {
-	auto it = m_data_requests.find( id );
-	ASSERT( it != m_data_requests.end(), "data request not found for removal" );
-	// Log( "Canceling data request " + to_string( id ) );
-	m_data_requests.erase( it );
+void Mesh::CancelRenderLoopRequest( const render_loop_request_id_t id ) {
+	auto it = m_render_loop_requests.find( id );
+	ASSERT( it != m_render_loop_requests.end(), "data request not found for removal" );
+	//Log( "Canceling render loop request " + std::to_string( id ) );
+	m_render_loop_requests.erase( it );
 }
 
-Mesh::data_requests_t* Mesh::GetDataRequests() {
-	return &m_data_requests;
+Mesh::render_loop_requests_t* Mesh::GetRenderLoopRequests() {
+	return &m_render_loop_requests;
 }
 
-const Mesh::data_request_id_t Mesh::GetLastDataRequestId() const {
-	return m_last_data_request_id;
+const bool Mesh::HasRenderLoopRequestsOfType( const render_loop_request_type_t type ) const {
+	for ( auto& r : m_render_loop_requests ) {
+		if ( r.second.type == type ) {
+			return true;
+		}
+	}
+	return false;
 }
 
 } /* namespace actor */

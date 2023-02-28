@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <optional>
 
 #include "Actor.h"
 
@@ -41,25 +42,43 @@ CLASS( Mesh, Actor )
 	void SetTintColor( const Color tint_color );
 	const Color& GetTintColor();
 	
-	// data mesh stuff
-	
 	void SetDataMesh( const mesh::Data* data_mesh );
 	
-	struct data_request_t {
-		size_t screen_x;
-		size_t screen_inverse_y;
-		bool is_processed;
-		mesh::Data::data_t result;
+	// render loop requests/responses are for things that need opengl to process
+	// such as getting data mesh value at position or screenshotting to texture
+	
+	enum render_loop_request_type_t {
+		RLR_NONE,
+		RLR_GETDATA,
 	};
-	typedef size_t data_request_id_t;
-	typedef std::unordered_map< data_request_id_t, data_request_t > data_requests_t;
+	struct render_loop_response_t {
+		union {
+			struct {
+				mesh::Data::data_t data;
+			} getdata;
+		};
+	};
+	struct render_loop_request_t {
+		render_loop_request_type_t type;
+		union {
+			struct {
+				size_t screen_x;
+				size_t screen_inverse_y;
+			} getdata;
+		};
+		bool is_processed = false;
+		render_loop_response_t result;
+	};
+	typedef size_t render_loop_request_id_t;
+	typedef std::unordered_map< render_loop_request_id_t, render_loop_request_t > render_loop_requests_t;
 	
 	// make sure to call these from same thread only
-	data_request_id_t GetDataAt( const size_t screen_x, const size_t screen_inverse_y );
-	std::pair< bool, mesh::Data::data_t > GetDataResponse( const data_request_id_t id );
-	void CancelDataRequest( const data_request_id_t id );
-	data_requests_t* GetDataRequests();
-	const data_request_id_t GetLastDataRequestId() const;
+	render_loop_request_id_t GetDataAt( const size_t screen_x, const size_t screen_inverse_y );
+	
+	std::pair< bool, std::optional< render_loop_response_t > > GetRenderLoopResponse( const render_loop_request_id_t id );
+	void CancelRenderLoopRequest( const render_loop_request_id_t id );
+	render_loop_requests_t* GetRenderLoopRequests();
+	const bool HasRenderLoopRequestsOfType( const render_loop_request_type_t type ) const;
 	
 protected:
 	const mesh::Mesh* m_mesh = nullptr;
@@ -71,8 +90,8 @@ protected:
 	
 	// data mesh stuff
 	const mesh::Data* m_data_mesh = nullptr;
-	data_requests_t m_data_requests = {};
-	data_request_id_t m_last_data_request_id = 0;
+	render_loop_requests_t m_render_loop_requests = {};
+	render_loop_request_id_t m_last_render_loop_request_id = 0;
 };
 
 } /* namespace scene */
