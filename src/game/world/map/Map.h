@@ -18,6 +18,8 @@
 #include "scene/actor/Mesh.h"
 #include "scene/actor/Instanced.h"
 
+#include "rr/GetData.h"
+
 using namespace types;
 using namespace scene;
 
@@ -433,7 +435,7 @@ protected:
 	
 private:
 	
-	scene::actor::Mesh::render_loop_request_id_t m_tile_at_request_id = 0;
+	rr::id_t m_tile_at_request_id = 0;
 	
 	tile_state_t* m_tile_states = nullptr;
 	

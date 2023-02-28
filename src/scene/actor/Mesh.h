@@ -11,6 +11,8 @@
 #include "types/Color.h"
 #include "types/Texture.h"
 
+#include "rr/GetData.h"
+
 using namespace types;
 
 namespace scene {
@@ -44,41 +46,11 @@ CLASS( Mesh, Actor )
 	
 	void SetDataMesh( const mesh::Data* data_mesh );
 	
-	// render loop requests/responses are for things that need opengl to process
-	// such as getting data mesh value at position or screenshotting to texture
-	
-	enum render_loop_request_type_t {
-		RLR_NONE,
-		RLR_GETDATA,
-	};
-	struct render_loop_response_t {
-		union {
-			struct {
-				mesh::Data::data_t data;
-			} getdata;
-		};
-	};
-	struct render_loop_request_t {
-		render_loop_request_type_t type;
-		union {
-			struct {
-				size_t screen_x;
-				size_t screen_inverse_y;
-			} getdata;
-		};
-		bool is_processed = false;
-		render_loop_response_t result;
-	};
-	typedef size_t render_loop_request_id_t;
-	typedef std::unordered_map< render_loop_request_id_t, render_loop_request_t > render_loop_requests_t;
-	
 	// make sure to call these from same thread only
-	render_loop_request_id_t GetDataAt( const size_t screen_x, const size_t screen_inverse_y );
-	
-	std::pair< bool, std::optional< render_loop_response_t > > GetRenderLoopResponse( const render_loop_request_id_t id );
-	void CancelRenderLoopRequest( const render_loop_request_id_t id );
-	render_loop_requests_t* GetRenderLoopRequests();
-	const bool HasRenderLoopRequestsOfType( const render_loop_request_type_t type ) const;
+	typedef std::pair< bool, std::optional< rr::GetData::data_t > > data_response_t;
+	rr::id_t GetDataAt( const size_t screen_x, const size_t screen_inverse_y );
+	data_response_t GetDataResponse( const rr::id_t id ) const;
+	void CancelDataRequest( const rr::id_t id );
 	
 protected:
 	const mesh::Mesh* m_mesh = nullptr;
@@ -90,8 +62,6 @@ protected:
 	
 	// data mesh stuff
 	const mesh::Data* m_data_mesh = nullptr;
-	render_loop_requests_t m_render_loop_requests = {};
-	render_loop_request_id_t m_last_render_loop_request_id = 0;
 };
 
 } /* namespace scene */

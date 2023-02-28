@@ -151,7 +151,7 @@ Map::Map( Random* random, Scene* scene )
 
 Map::~Map() {
 	if ( m_tile_at_request_id ) {
-		m_actors.terrain->GetMeshActor()->CancelRenderLoopRequest( m_tile_at_request_id );
+		m_actors.terrain->GetMeshActor()->CancelDataRequest( m_tile_at_request_id );
 	}
 	if ( m_actors.terrain ) {
 		m_scene->RemoveActor( m_actors.terrain );
@@ -717,32 +717,34 @@ const Map::tile_info_t Map::GetTileAt( const size_t tile_x, const size_t tile_y 
 
 void Map::CancelTileAtRequest() {
 	ASSERT( m_tile_at_request_id, "tileat request not found" );
-	m_actors.terrain->GetMeshActor()->CancelRenderLoopRequest( m_tile_at_request_id );
+	m_actors.terrain->GetMeshActor()->CancelDataRequest( m_tile_at_request_id );
 	m_tile_at_request_id = 0;
 }	
 
 void Map::GetTileAtScreenCoords( const size_t screen_x, const size_t screen_inverse_y ) {
 	if ( m_tile_at_request_id ) {
-		m_actors.terrain->GetMeshActor()->CancelRenderLoopRequest( m_tile_at_request_id );
+		m_actors.terrain->GetMeshActor()->CancelDataRequest( m_tile_at_request_id );
 	}
 	m_tile_at_request_id = m_actors.terrain->GetMeshActor()->GetDataAt( screen_x, screen_inverse_y );
 }
 
 Map::tile_info_t Map::GetTileAtScreenCoordsResult() {
 	if ( m_tile_at_request_id ) {
-		auto result = m_actors.terrain->GetMeshActor()->GetRenderLoopResponse( m_tile_at_request_id );
+		auto result = m_actors.terrain->GetMeshActor()->GetDataResponse( m_tile_at_request_id );
 		if ( result.first ) {
 			m_tile_at_request_id = 0;
 			
-			if ( result.second ) { // some tile was clicked
-				auto& response = (*result.second).getdata;
+			if ( result.second ) {
+				auto data = *result.second;
+				if ( data ) { // some tile was clicked
 				
-				response.data--; // we used +1 increment to differentiate 'tile at 0,0' from 'no tiles'
-				
-				size_t tile_x = response.data % m_map_state.dimensions.x;
-				size_t tile_y = response.data / m_map_state.dimensions.x;
+					data--; // we used +1 increment to differentiate 'tile at 0,0' from 'no tiles'
 
-				return GetTileAt( tile_x, tile_y );
+					size_t tile_x = data % m_map_state.dimensions.x;
+					size_t tile_y = data / m_map_state.dimensions.x;
+
+					return GetTileAt( tile_x, tile_y );
+				}
 			}
 		}
 	}

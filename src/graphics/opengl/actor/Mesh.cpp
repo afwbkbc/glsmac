@@ -6,6 +6,8 @@
 #include "../shader_program/Orthographic.h"
 #include "../shader_program/World.h"
 
+#include "rr/GetData.h"
+
 #include "types/Matrix44.h"
 #include "engine/Engine.h"
 
@@ -68,6 +70,8 @@ bool Mesh::TextureReloadNeeded() {
 }
 
 void Mesh::LoadMesh() {
+	
+	//Log( "Loading mesh" );
 	
 	const auto *mesh = GetMeshActor()->GetMesh();
 	ASSERT( mesh, "actor mesh not set" );
@@ -181,7 +185,7 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 	auto* mesh_actor = GetMeshActor();
 	
 	if ( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA ) {
-		if ( !mesh_actor->GetDataMesh() || !mesh_actor->HasRenderLoopRequestsOfType( scene::actor::Mesh::RLR_GETDATA ) ) {
+		if ( !mesh_actor->GetDataMesh() || !rr::HasRequests<rr::GetData>() ) {
 			return; // nothing to do
 		}
 		PrepareDataMesh();
@@ -307,13 +311,10 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 		glBindFramebuffer( GL_READ_FRAMEBUFFER, m_data.fbo );
 		glReadBuffer( GL_COLOR_ATTACHMENT0 );
 	
-		auto* requests = mesh_actor->GetRenderLoopRequests();
-		for ( auto& r : *requests ) {
-			if ( !r.second.is_processed && r.second.type == scene::actor::Mesh::RLR_GETDATA ) {
-				//Log( "Processing data request " + std::to_string( r.first ) );
-				r.second.result.getdata.data = GetDataAt( r.second.getdata.screen_x, r.second.getdata.screen_inverse_y );
-				r.second.is_processed = true;
-			}
+		auto requests = rr::GetRequests< rr::GetData >();
+		for ( auto& r : requests ) {
+			r->data = GetDataAt( r->screen_x, r->screen_inverse_y );
+			r->SetProcessed();
 		}
 		
 		glReadBuffer( GL_NONE );

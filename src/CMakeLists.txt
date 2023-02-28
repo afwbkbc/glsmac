@@ -13,6 +13,7 @@ SUBDIR( scheduler )
 SUBDIR( scene )
 SUBDIR( ui )
 SUBDIR( engine )
+SUBDIR( rr )
 SUBDIR( game )
 
 IF(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "MemoryDebug" OR CMAKE_BUILD_TYPE STREQUAL "Devel")

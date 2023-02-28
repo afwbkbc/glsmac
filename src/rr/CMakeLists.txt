@@ -1,0 +1,5 @@
+SET(SRC ${SRC}
+
+	${PWD}/RR.cpp
+
+PARENT_SCOPE)

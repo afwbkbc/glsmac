@@ -44,7 +44,6 @@ protected:
 		GLuint ibo = 0;
 		GLuint ibo_size = 0;
 		bool is_up_to_date = false; // reset on window resize or other events when it needs to be reloaded
-		actor::Mesh::render_loop_request_id_t last_processed_data_request_id = 0;
 	} m_data = {};
 	
 	mesh::Data::data_t GetDataAt( const size_t x, const size_t y );
