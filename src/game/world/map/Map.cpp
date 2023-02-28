@@ -19,6 +19,7 @@
 #include "module/Coastlines1.h"
 #include "module/Coastlines2.h"
 #include "module/Sprites.h"
+#include "module/Minimap.h"
 #include "module/Finalize.h"
 
 #include "scene/actor/Sprite.h"
@@ -118,6 +119,7 @@ Map::Map( Random* random, Scene* scene )
 		NEW( m, WaterSurface, this ); module_pass.push_back( m );
 		NEW( m, CalculateCoords, this ); module_pass.push_back( m );
 		NEW( m, Coastlines1, this ); module_pass.push_back( m );
+		NEW( m, Minimap, this ); module_pass.push_back( m );
 		m_modules.push_back( module_pass );
 	}
 	
@@ -160,6 +162,9 @@ Map::~Map() {
 	}
 	if ( m_textures.terrain ) {
 		DELETE( m_textures.terrain );
+	}
+	if ( m_textures.minimap ) {
+		DELETE( m_textures.minimap );
 	}
 	for ( auto& module_pass : m_modules ) {
 		for ( auto& m : module_pass ) {
@@ -291,6 +296,16 @@ void Map::InitTextureAndMesh() {
 		( m_map_state.dimensions.y * LAYER_MAX ) * Map::s_consts.tile_texture.dimensions.y
 	);
 	
+	if ( m_textures.minimap ) {
+		DELETE( m_textures.minimap );
+	}
+	// packed coordinates
+	// 1px per tile (TODO: make higher resolution?)	
+	NEW( m_textures.minimap, Texture, "MinimapTexture",
+		( m_map_state.dimensions.x / 2 ) + 1,
+		m_map_state.dimensions.y / 2 
+	);
+	
 	// not deleting meshes because if they exist - it means they are already linked to actor and are deleted together when needed
 	NEW( m_mesh_terrain, types::mesh::Render,
 		( m_map_state.dimensions.x * LAYER_MAX + 1 ) * m_map_state.dimensions.y * 5 / 2, // + 1 for overdraw column
@@ -301,6 +316,7 @@ void Map::InitTextureAndMesh() {
 		m_map_state.dimensions.x * m_map_state.dimensions.y * 4 / 2
 	);
 	
+	// TODO: refactor?
 	m_map_state.terrain_texture = m_textures.terrain;
 	m_map_state.ter1_pcx = m_textures.source.ter1_pcx;
 }
@@ -613,9 +629,28 @@ void Map::SetTexture( const tile_layer_type_t tile_layer, Texture* src_texture, 
 	SetTexture( tile_layer, m_current_ts, src_texture, mode, rotate, alpha );
 }
 
+void Map::SetMinimapColor( const Color& color ) {
+	ASSERT( m_current_tile, "SetMinimapColor called outside of tile generation" );
+	ASSERT( m_textures.minimap, "minimap texture does not exist" );
+	Log( "Setting minimap color for " + m_current_tile->coord.ToString() + " to " + color.ToString() );
+	// convert from SMAC to packed coordinates
+	auto coord = m_current_tile->coord;
+	coord.x /= 2;
+	if ( coord.y % 2 ) {
+		coord.x += 1;
+	}
+	coord.y /= 2;
+	m_textures.minimap->SetPixel( coord.x, coord.y, color );
+}
+
 const Texture* Map::GetTerrainTexture() const {
 	ASSERT( m_textures.terrain, "terrain texture requested but not initialized" );
 	return m_textures.terrain;
+}
+
+const Texture* Map::GetMinimapTexture() const {
+	ASSERT( m_textures.minimap, "minimap texture requested but not initialized" );
+	return m_textures.minimap;
 }
 
 Map::tile_state_t* Map::GetTileState( const size_t x, const size_t y ) const {
@@ -749,6 +784,7 @@ const Buffer Map::Serialize() const {
 	}
 	
 	buf.WriteString( m_textures.terrain->Serialize().ToString() );
+	buf.WriteString( m_textures.minimap->Serialize().ToString() );
 	buf.WriteString( m_mesh_terrain->Serialize().ToString() );
 	buf.WriteString( m_mesh_terrain_data->Serialize().ToString() );
 	
@@ -919,6 +955,7 @@ void Map::Unserialize( Buffer buf ) {
 	InitTextureAndMesh();
 	
 	m_textures.terrain->Unserialize( buf.ReadString() );
+	m_textures.minimap->Unserialize( buf.ReadString() );
 	m_mesh_terrain->Unserialize( buf.ReadString() );
 	m_mesh_terrain_data->Unserialize( buf.ReadString() );
 	

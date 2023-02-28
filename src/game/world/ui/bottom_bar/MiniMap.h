@@ -3,6 +3,8 @@
 #include "Section.h"
 #include "ui/object/Section.h"
 
+#include "ui/object/Mesh.h"
+
 namespace game {
 namespace world {
 namespace ui {
@@ -14,6 +16,9 @@ CLASS( MiniMap, Section )
 	void Create();
 	void Destroy();
 
+private:
+	object::Mesh* m_map_surface = nullptr;
+	
 };
 	
 }

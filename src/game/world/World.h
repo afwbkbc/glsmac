@@ -1,5 +1,7 @@
 #pragma once
 
+// TODO: merge this class with Map?
+
 #include <unordered_set>
 
 #include "base/Task.h"
@@ -67,6 +69,8 @@ CLASS( World, base::Task )
 		} map_scroll;
 	};
 	static const consts_t s_consts;
+	
+	Map* GetMap() const;
 	
 protected:
 

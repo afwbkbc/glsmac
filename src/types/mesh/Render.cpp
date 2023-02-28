@@ -137,5 +137,19 @@ void Render::UpdateNormals() {
 	Update();
 }
 
+Render* Render::Rectangle( float w, float h, const tex_coords_t tex_coords ) {
+	w /= 2;
+	h /= 2;
+	NEWV( mesh, Render, 4, 2 );
+	const auto top_left = mesh->AddVertex( { -w, -h, 0.0f }, { tex_coords.first.x, tex_coords.first.y } );
+	const auto top_right = mesh->AddVertex( { w, -h, 0.0f }, { tex_coords.second.x, tex_coords.first.y } );
+	const auto bottom_right = mesh->AddVertex( { w, h, 0.0f }, { tex_coords.second.x, tex_coords.second.y } );
+	const auto bottom_left = mesh->AddVertex( { -w, h, 0.0f }, { tex_coords.first.x, tex_coords.second.y } );
+	mesh->AddSurface( { bottom_right, bottom_left, top_left } );
+	mesh->AddSurface( { top_left, top_right, bottom_right } );
+	mesh->Finalize();
+	return mesh;
+}
+
 }
 }

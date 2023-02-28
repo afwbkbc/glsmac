@@ -1,5 +1,7 @@
 #pragma once
 
+// TODO: merge this class with World?
+
 #include <vector>
 #include <unordered_map>
 
@@ -356,7 +358,6 @@ CLASS( Map, Serializable )
 		std::vector< copy_from_after_t > copy_from_after;
 
 		const Texture* terrain_texture;
-		
 		const Texture* ter1_pcx;
 		
 		const Buffer Serialize() const;
@@ -372,7 +373,11 @@ CLASS( Map, Serializable )
 	void GetTextureFromLayer( Texture* dest_texture, const tile_layer_type_t tile_layer, const size_t tx_from, const size_t ty_from, const Texture::add_flag_t mode = Texture::AM_DEFAULT, const uint8_t rotate = 0, const float alpha = 1.0f ) const;
 	void SetTexture( const tile_layer_type_t tile_layer, tile_state_t* ts, Texture* src_texture, const Texture::add_flag_t mode, const uint8_t rotate = 0, const float alpha = 1.0f );
 	void SetTexture( const tile_layer_type_t tile_layer, Texture* src_texture, const Texture::add_flag_t mode, const uint8_t rotate = 0, const float alpha = 1.0f );
+	
+	void SetMinimapColor( const Color& color );
+	
 	const Texture* GetTerrainTexture() const;
+	const Texture* GetMinimapTexture() const;
 	
 	enum tile_grouping_criteria_t {
 		TG_MOISTURE,
@@ -442,6 +447,7 @@ private:
 			Texture* ter1_pcx = nullptr;
 		} source;
 		Texture* terrain = nullptr;
+		Texture* minimap = nullptr;
 	} m_textures;
 	
 	Random* m_random = nullptr;

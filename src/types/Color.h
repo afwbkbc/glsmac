@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <cstdint>
 #include <cstring>
 
@@ -44,6 +45,8 @@ public:
 	static Color FromRGB( const uint8_t red, const uint8_t green, const uint8_t blue );
 	static rgba_t RGBA( const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha );
 	static rgba_t RGB( const uint8_t red, const uint8_t green, const uint8_t blue );
+	
+	const std::string ToString() const;
 };
 
 } /* namespace types */

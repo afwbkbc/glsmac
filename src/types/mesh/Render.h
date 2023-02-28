@@ -33,6 +33,10 @@ CLASS( Render, Mesh )
 	
 	void Finalize();
 	
+	typedef coord_t tex_coord_t;
+	typedef std::pair< Vec2< tex_coord_t >, Vec2< tex_coord_t > > tex_coords_t;
+	static Render* Rectangle( float w = 0.5f, float h = 0.5f, const tex_coords_t tex_coords = { { 0.0f, 0.0f }, { 1.0f, 1.0f } } );
+	
 private:
 	void UpdateNormals();
 	

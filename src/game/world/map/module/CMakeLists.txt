@@ -11,6 +11,7 @@ SET(SRC ${SRC}
 	${PWD}/Coastlines1.cpp
 	${PWD}/Coastlines2.cpp
 	${PWD}/Sprites.cpp
+	${PWD}/Minimap.cpp
 	${PWD}/Finalize.cpp
 
 PARENT_SCOPE)

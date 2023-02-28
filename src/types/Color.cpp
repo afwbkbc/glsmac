@@ -107,6 +107,8 @@ Color::rgba_t Color::RGB( const uint8_t red, const uint8_t green, const uint8_t 
 	return RGBA( red, green, blue, 255 );
 }
 
-
+const std::string Color::ToString() const {
+	return "{" + std::to_string( value.red ) + ":" + std::to_string( value.green ) + ":" + std::to_string( value.blue ) + ":" + std::to_string( value.alpha ) + "}";
+}
 
 }

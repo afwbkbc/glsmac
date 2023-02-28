@@ -62,6 +62,7 @@ CLASS( Mesh, Serializable )
 	
 	const Buffer Serialize() const;
 	void Unserialize( Buffer buf );
+	
 protected:
 
 	const mesh_type_t m_mesh_type = MT_BARE;

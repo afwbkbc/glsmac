@@ -517,6 +517,11 @@ void World::Iterate() {
 	}
 }
 
+Map* World::GetMap() const {
+	ASSERT( m_map, "m_map not set during GetMap()" );
+	return m_map;
+}
+
 void World::SetCameraPosition( const Vec3 camera_position ) {
 	if ( camera_position != m_camera_position ) {
 		bool position_updated =
