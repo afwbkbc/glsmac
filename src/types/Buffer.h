@@ -37,8 +37,8 @@ CLASS( Buffer, base::Base )
 	const float ReadFloat();
 	void WriteString( const std::string& val );
 	const std::string ReadString();
-	void WriteVec2u( const Vec2< long unsigned int > val );
-	const Vec2< long unsigned int > ReadVec2u();
+	void WriteVec2u( const Vec2< unsigned long long > val );
+	const Vec2< unsigned long long > ReadVec2u();
 	void WriteVec2f( const Vec2< float > val );
 	const Vec2< float > ReadVec2f();
 	void WriteVec3( const Vec3 val );
