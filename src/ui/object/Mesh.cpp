@@ -31,7 +31,7 @@ void Mesh::SetMesh( const types::mesh::Mesh* mesh ) {
 		}
 		NEW( m_mesh, types::mesh::Mesh, *m_original_mesh ); // copy
 		NEW( m_actor, scene::actor::Mesh, cls, m_mesh );
-			m_actor->SetRenderFlags( scene::actor::Mesh::RF_IGNORE_CAMERA | scene::actor::Mesh::RF_IGNORE_LIGHTING | scene::actor::Mesh::RF_IGNORE_DEPTH );
+			UpdateRenderFlags();
 			if ( m_texture ) {
 				m_actor->SetTexture( m_texture );
 			}
@@ -59,6 +59,12 @@ void Mesh::ClearTexture() {
 		}
 		m_texture = nullptr;
 	}
+}
+
+void Mesh::SetTintColor( const types::Color color ) {
+	m_tint_color.enabled = true;
+	m_tint_color.color = color;
+	UpdateRenderFlags();
 }
 
 void Mesh::Create() {
@@ -199,6 +205,17 @@ void Mesh::SetAspectRatioMode( const aspect_ratio_mode_t mode ) {
 	if ( mode != m_aspect_ratio_mode ) {
 		m_aspect_ratio_mode = mode;
 		Realign();
+	}
+}
+
+void Mesh::UpdateRenderFlags() {
+	if ( m_actor ) {
+		auto render_flags = scene::actor::Mesh::RF_IGNORE_CAMERA | scene::actor::Mesh::RF_IGNORE_LIGHTING | scene::actor::Mesh::RF_IGNORE_DEPTH;
+		if ( m_tint_color.enabled ) {
+			render_flags |= scene::actor::Mesh::RF_USE_TINT;
+			m_actor->SetTintColor( m_tint_color.color );
+		}
+		m_actor->SetRenderFlags( render_flags );
 	}
 }
 

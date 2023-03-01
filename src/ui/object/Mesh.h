@@ -1,6 +1,7 @@
 #pragma once
 
 #include "types/mesh/Rectangle.h"
+#include "types/Color.h"
 
 #include "scene/actor/Mesh.h"
 
@@ -19,6 +20,8 @@ CLASS( Mesh, UIObject )
 	void SetMesh( const types::mesh::Mesh* mesh );
 	void SetTexture( const types::Texture* texture);
 	void ClearTexture();
+	
+	void SetTintColor( const types::Color color );
 	
 	virtual void Create();
 	virtual void Destroy();
@@ -43,6 +46,13 @@ protected:
 	const types::Texture* m_texture = nullptr;
 
 	scene::actor::Mesh *m_actor = nullptr;
+	
+	struct {
+		bool enabled = false;
+		types::Color color;
+	} m_tint_color = {};
+	
+	void UpdateRenderFlags();
 };
 
 } /* namespace object */

@@ -261,6 +261,7 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 		auto mesh = sprite->GenerateMesh();
 		NEWV( sprite_preview, object::Mesh, "MapBottomBarTilePreviewSprite" );
 		sprite_preview->SetMesh( mesh );
+		sprite_preview->SetTintColor({ 0.7f, 0.7f, 0.7f, 1.0f }); // lower brightness a bit because it's too high otherwise for some reason
 		
 		if ( // ugly hack to keep energy bonus round in preview
 			( s.tex_coords == Map::s_consts.tc.ter1_pcx.energy_bonus_land[ 0 ] ) ||

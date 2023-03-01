@@ -116,6 +116,7 @@ CLASS( Map, Serializable )
 				};
 				const pcx_texture_coordinates_t minerals_bonus_land[ 2 ] = {
 					{ 203, 316 }, { 304, 316 },
+					//{ 203, 316 }, { 304, 316 },
 				};
 				const pcx_texture_coordinates_t energy_bonus_sea[ 2 ] = {
 					{ 1, 379 }, { 102, 379 },
