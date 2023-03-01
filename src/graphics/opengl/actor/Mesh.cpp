@@ -149,7 +149,7 @@ void Mesh::PrepareDataMesh() {
 			glGenTextures( 1, &m_data.picking_texture );
 		}
 		glBindTexture( GL_TEXTURE_2D, m_data.picking_texture );
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32UI, w, h, 0, GL_RGB_INTEGER, GL_UNSIGNED_INT, NULL );
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_R32UI, w, h, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 		glBindTexture( GL_TEXTURE_2D, 0 );

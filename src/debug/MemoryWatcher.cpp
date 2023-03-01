@@ -570,8 +570,8 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 			internalbpp = 4;
 			break;
 		}
-		case GL_RGB32UI: {
-			internalbpp = 4;
+		case GL_R32UI: {
+			internalbpp = 1;
 			break;
 		}
 		case GL_DEPTH_COMPONENT: {
@@ -590,8 +590,8 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 			bpp = 4;
 			break;
 		}
-		case GL_RGB_INTEGER: {
-			bpp = 4;
+		case GL_RED_INTEGER: {
+			bpp = 1;
 			break;
 		}
 		case GL_DEPTH_COMPONENT: {
