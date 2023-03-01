@@ -36,7 +36,7 @@ CLASS( Map, Serializable )
 	~Map();
 	
 	// coordinates of textures (x1 and y1) in texture.pcx
-	typedef Vec2< size_t > pcx_texture_coordinates_t;
+	typedef Vec2< uint32_t > pcx_texture_coordinates_t;
 	
 	struct consts_t {
 		const struct {
