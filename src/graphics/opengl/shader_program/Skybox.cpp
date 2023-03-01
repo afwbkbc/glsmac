@@ -5,7 +5,7 @@ namespace opengl {
 namespace shader_program {
 
 void Skybox::AddShaders() {
-	AddShader( GL_VERTEX_SHADER, "#version 130 \n\
+	AddShader( GL_VERTEX_SHADER, "#version 330 \n\
 \
 in vec3 aVertex; \
 out vec3 texCoord0; \
@@ -18,7 +18,7 @@ void main() { \
 \
 ");
 
-	AddShader( GL_FRAGMENT_SHADER, "#version 130 \n\
+	AddShader( GL_FRAGMENT_SHADER, "#version 330 \n\
 \
 in vec3 texCoord0; \
 out vec4 FragColor; \

@@ -7,7 +7,7 @@ namespace opengl {
 namespace shader_program {
 
 void World::AddShaders() {
-	AddShader( GL_VERTEX_SHADER, "#version 130 \n\
+	AddShader( GL_VERTEX_SHADER, "#version 330 \n\
 \
 in vec3 aPosition; \
 in vec2 aTexCoord; \
@@ -24,7 +24,7 @@ void main() \
 } \
 ");
 
-	AddShader( GL_FRAGMENT_SHADER, "#version 130 \n\
+	AddShader( GL_FRAGMENT_SHADER, "#version 330 \n\
 const vec3 uFogColor = vec3(1., 1., 1.);\
 uniform vec3 uCamPos;\
 in vec2 TexCoord0; \

@@ -9,7 +9,7 @@ namespace opengl {
 namespace shader_program {
 
 void OrthographicData::AddShaders() {
-	AddShader( GL_VERTEX_SHADER, "#version 140 \n\
+	AddShader( GL_VERTEX_SHADER, "#version 330 \n\
 \
 in vec3 aCoord; \
 in uint aData; \
@@ -22,7 +22,7 @@ void main(void) { \
 } \
 \
 ");
-	AddShader( GL_FRAGMENT_SHADER, "#version 140 \n\
+	AddShader( GL_FRAGMENT_SHADER, "#version 330 \n\
 \
 in float data; \
 out uint FragColor; \

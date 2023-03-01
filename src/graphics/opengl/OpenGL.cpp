@@ -110,6 +110,25 @@ void OpenGL::Start() {
 		THROW( "Unable to initialize OpenGL!" );
 	}
 
+	{ // print some OpenGL info
+		auto* renderer = (const char*)glGetString( GL_RENDERER );
+		auto* vendor = (const char*)glGetString( GL_VENDOR );
+		auto* version = (const char*)glGetString( GL_VERSION );
+		auto* glslVersion = (const char*)glGetString( GL_SHADING_LANGUAGE_VERSION );
+
+		GLint major, minor;
+		glGetIntegerv(GL_MAJOR_VERSION, &major);
+		glGetIntegerv(GL_MINOR_VERSION, &minor);
+
+		Log( (std::string) 
+			"\nGL Vendor            : " + vendor +
+			"\nGL Renderer          : " + renderer +
+			"\nGL Version (string)  : " + version +
+			"\nGL Version (integer) : " + std::to_string( major ) + "." + std::to_string( minor ) +
+			"\nGLSL Version         : " + glslVersion
+		);
+	 }
+
 	for ( auto it = m_shader_programs.begin() ; it != m_shader_programs.end() ; ++it )
 		(*it)->Start();
 

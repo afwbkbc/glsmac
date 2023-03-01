@@ -5,7 +5,7 @@ namespace opengl {
 namespace shader_program {
 
 void Font::AddShaders() {
-	AddShader( GL_VERTEX_SHADER, "#version 130 \n\
+	AddShader( GL_VERTEX_SHADER, "#version 330 \n\
 \
 in vec4 aCoord; \
 out vec2 aTexCoord; \
@@ -18,7 +18,7 @@ void main(void) { \
 \
 ");
 
-	AddShader( GL_FRAGMENT_SHADER, "#version 130 \n\
+	AddShader( GL_FRAGMENT_SHADER, "#version 330 \n\
 \
 in vec2 aTexCoord; \
 uniform sampler2D uTexture; \
