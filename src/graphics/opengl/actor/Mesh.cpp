@@ -336,13 +336,15 @@ void Mesh::OnResize() {
 mesh::Data::data_t Mesh::GetDataAt( const size_t x, const size_t y ) {
 	ASSERT( m_data.is_allocated, "mesh data not allocated" );
 	
-	mesh::Data::data_t data = 0;
-	
-	glReadPixels( x, y, 1, 1, GL_RGB_INTEGER, GL_UNSIGNED_INT, &data );
-	
+	// some GPUs may write 3 uints instead of 1
+	GLuint data[4] = {};
+	glReadPixels( x, y, 1, 1, GL_RGB_INTEGER, GL_UNSIGNED_INT, data );
 	ASSERT( !glGetError(), "Error reading data pixel" );
 	
-	return data;
+	// they shouldn't write 4 or more uints tho
+	ASSERT( data[4] == 0, "glReadPixels is acting funny" );
+	
+	return data[0]; // we're only interested in first uint ('red' value)
 }
 
 } /* namespace opengl */
