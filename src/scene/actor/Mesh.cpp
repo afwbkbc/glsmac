@@ -3,8 +3,11 @@
 namespace scene {
 namespace actor {
 
-Mesh::Mesh( const std::string &name, const mesh::Mesh *mesh, const type_t type ) : Actor( type, name ), m_mesh( mesh ) {
-	
+Mesh::Mesh( const std::string &name, const mesh::Mesh *mesh, const type_t type )
+	: Actor( type, name )
+	, m_mesh( mesh )
+{
+	//
 }
 
 Mesh::~Mesh() {
@@ -64,11 +67,11 @@ rr::id_t Mesh::GetDataAt( const size_t screen_x, const size_t screen_inverse_y )
 	NEWV( request, rr::GetData );
 	request->screen_x = screen_x;
 	request->screen_inverse_y = screen_inverse_y;
-	return rr::Send( request );
+	return RR_Send( request );
 }
 
-Mesh::data_response_t Mesh::GetDataResponse( const rr::id_t id ) const {
-	auto* r = rr::GetResponse<rr::GetData>( id );
+Mesh::data_response_t Mesh::GetDataResponse( const rr::id_t id ) {
+	auto* r = RR_GetResponse<rr::GetData>( id );
 	if ( r ) {
 		data_response_t result = { true, r->data };
 		//Log( "Data request " + std::to_string( id ) + " completed" );
@@ -82,7 +85,7 @@ Mesh::data_response_t Mesh::GetDataResponse( const rr::id_t id ) const {
 
 void Mesh::CancelDataRequest( const rr::id_t id ) {
 	//Log( "Canceling data request " + std::to_string( id ) );
-	rr::Cancel<rr::GetData>( id );
+	RR_Cancel<rr::GetData>( id );
 }
 
 } /* namespace actor */

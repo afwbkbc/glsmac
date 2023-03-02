@@ -4,6 +4,7 @@
 #include <optional>
 
 #include "Actor.h"
+#include "base/RRAware.h"
 
 #include "types/mesh/Simple.h"
 #include "types/mesh/Render.h"
@@ -18,11 +19,11 @@ using namespace types;
 namespace scene {
 namespace actor {
 
-CLASS( Mesh, Actor )
+CLASS2( Mesh, Actor, RRAware )
 
 	// mesh can also be set in constructor of derived class, but it MUST be set
-	Mesh( const std::string &name, const mesh::Mesh* mesh = nullptr, const type_t type = TYPE_MESH );
-	~Mesh();
+	Mesh( const std::string &name, const mesh::Mesh* mesh = nullptr, const Actor::type_t type = Actor::TYPE_MESH );
+	virtual ~Mesh();
 	
 	void SetMesh( const mesh::Mesh* mesh );
 	
@@ -49,7 +50,7 @@ CLASS( Mesh, Actor )
 	// make sure to call these from same thread only
 	typedef std::pair< bool, std::optional< rr::GetData::data_t > > data_response_t;
 	rr::id_t GetDataAt( const size_t screen_x, const size_t screen_inverse_y );
-	data_response_t GetDataResponse( const rr::id_t id ) const;
+	data_response_t GetDataResponse( const rr::id_t id );
 	void CancelDataRequest( const rr::id_t id );
 	
 protected:

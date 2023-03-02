@@ -36,8 +36,7 @@ protected:
 	void Log( const std::string &text ) const;
 };
 
-#define CLASS( _name, _parent ) \
-class _name : public _parent { \
+#define CLASS_HEADER( _name, _parent ) \
 public: \
 	virtual const std::string GetNamespace() const { \
 		return _parent::GetNamespace() + # _name + "::" ; \
@@ -45,6 +44,14 @@ public: \
 	const std::string GetClassName() const { \
 		return #_name; \
 	}
+
+#define CLASS( _name, _parent ) \
+class _name : public _parent { \
+	CLASS_HEADER( _name, _parent )
+
+#define CLASS2( _name, _parent1, _parent2 ) \
+class _name : public _parent1, public _parent2 { \
+	CLASS_HEADER( _name, _parent1 )
 
 } /* namespace base */
 

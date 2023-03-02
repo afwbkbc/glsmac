@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <unordered_map>
 
 #include "base/Base.h"
 
@@ -31,28 +32,5 @@ private:
 };
 
 typedef size_t id_t;
-
-// static API
-// per-thread. that means request won't reach something running in different thread
-// TODO: timeouts?
-
-template< class RRClass >
-const id_t Send( RRClass* rr );
-template< class RRClass >
-RRClass* GetResponse( const id_t id );
-template< class RRClass >
-void Cancel( const id_t id );
-template< class RRClass >
-std::vector< RRClass* > GetRequests();
-template< class RRClass >
-const bool HasRequests();
-
-// TODO: refactor?
-#define INSTANTIATE( _rr ) \
-	template const id_t Send< _rr >( _rr* rr ); \
-	template _rr* GetResponse< _rr >( const id_t id ); \
-	template void Cancel<_rr>( const id_t id ); \
-	template std::vector< _rr* > GetRequests< _rr >(); \
-	template const bool HasRequests< _rr >();
 
 }

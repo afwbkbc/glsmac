@@ -185,7 +185,7 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 	auto* mesh_actor = GetMeshActor();
 	
 	if ( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA ) {
-		if ( !mesh_actor->GetDataMesh() || !rr::HasRequests<rr::GetData>() ) {
+		if ( !mesh_actor->GetDataMesh() || !mesh_actor->RR_HasRequests<rr::GetData>() ) {
 			return; // nothing to do
 		}
 		PrepareDataMesh();
@@ -311,7 +311,7 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 		glBindFramebuffer( GL_READ_FRAMEBUFFER, m_data.fbo );
 		glReadBuffer( GL_COLOR_ATTACHMENT0 );
 	
-		auto requests = rr::GetRequests< rr::GetData >();
+		auto requests = mesh_actor->RR_GetRequests< rr::GetData >();
 		for ( auto& r : requests ) {
 			r->data = GetDataAt( r->screen_x, r->screen_inverse_y );
 			r->SetProcessed();
