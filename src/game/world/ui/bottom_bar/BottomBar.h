@@ -6,6 +6,8 @@
 #include "ui/object/Section.h"
 #include "ui/object/Button.h"
 
+#include "types/Texture.h"
+
 // sections
 #include "UnitPreview.h"
 #include "TilePreview.h"
@@ -31,19 +33,21 @@ CLASS( BottomBar, UI )
 	void PreviewTile( const Map* map, const Map::tile_info_t& tile_info );
 	void HideTilePreview();
 	
+	void SetMinimapTexture( types::Texture* texture );
+	
 protected:
 	struct {
 		Surface* left = nullptr;
 		Surface* right = nullptr;
 		Surface* middle = nullptr;
-	} m_frames;
+	} m_frames = {};
 	
-	std::vector< Surface* > m_backgrounds;
+	std::vector< Surface* > m_backgrounds = {};
 	
 	struct {
 		Button* menu = nullptr;
 		Button* commlink = nullptr;
-	} m_buttons;
+	} m_buttons = {};
 	
 	struct {
 		UnitPreview* unit_preview = nullptr;
@@ -51,7 +55,11 @@ protected:
 		InfoPanels* info_panels = nullptr;
 		UnitsList* units_list = nullptr;
 		MiniMap* mini_map = nullptr;
-	} m_sections;
+	} m_sections = {};
+	
+	struct {
+		types::Texture* minimap = nullptr;
+	} m_textures = {};
 	
 private:
 	const UIEventHandler* m_mouse_blocker = nullptr;

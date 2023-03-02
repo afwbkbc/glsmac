@@ -21,8 +21,9 @@ public:
 	const bool RR_HasRequests();
 	
 private:
-	std::unordered_map< id_t, rr::RR* > s_rrs = {};
-	id_t s_next_rr_id = 1;
+	std::unordered_map< id_t, rr::RR* > m_rrs = {};
+	id_t m_next_rr_id = 1;
+	
 };
 
 // TODO: refactor?

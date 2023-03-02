@@ -430,11 +430,14 @@ void World::Start() {
 	
 	UpdateUICamera();
 	
-	// some reasonable defaults
+	// assume mouse starts at center
 	m_map_control.last_mouse_position = {
 		(float)m_viewport.window_width / 2,
 		(float)m_viewport.window_height / 2
 	};
+	
+	// update minimap
+	m_map->GetMinimapTexture();
 	
 	// select tile at center
 	Vec2< size_t > coords = { m_map->GetWidth() / 2, m_map->GetHeight() / 2 };
@@ -480,6 +483,12 @@ void World::Iterate() {
 	if ( tile_info.tile ) {
 		SelectTile( tile_info );
 		CenterAtTile( tile_info.ts );
+	}
+	
+	// update minimap (if it was updated)
+	auto minimap_texture = m_map->GetMinimapTextureResult();
+	if ( minimap_texture ) {
+		m_ui.bottom_bar->SetMinimapTexture( minimap_texture );
 	}
 	
 	bool is_camera_position_updated = false;

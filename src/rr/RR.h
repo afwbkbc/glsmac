@@ -10,6 +10,7 @@ namespace rr {
 enum type_t {
 	RR_NONE,
 	RR_GETDATA,
+	RR_CAPTURE,
 };
 
 // Request-Response

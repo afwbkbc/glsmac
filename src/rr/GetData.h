@@ -2,8 +2,12 @@
 
 #include "RR.h"
 
+/**
+ * Requests data from data mesh at window coordinates
+ */
+
 namespace rr {
-	
+
 CLASS( GetData, RR )
 	
 	typedef uint32_t data_t;

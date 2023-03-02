@@ -1,5 +1,8 @@
 #include "Mesh.h"
 
+#include "rr/GetData.h"
+#include "rr/Capture.h"
+
 namespace scene {
 namespace actor {
 
@@ -70,8 +73,8 @@ rr::id_t Mesh::GetDataAt( const size_t screen_x, const size_t screen_inverse_y )
 	return RR_Send( request );
 }
 
-Mesh::data_response_t Mesh::GetDataResponse( const rr::id_t id ) {
-	auto* r = RR_GetResponse<rr::GetData>( id );
+Mesh::data_response_t Mesh::GetDataResponse( const rr::id_t request_id ) {
+	auto* r = RR_GetResponse< rr::GetData >( request_id );
 	if ( r ) {
 		data_response_t result = { true, r->data };
 		//Log( "Data request " + std::to_string( id ) + " completed" );
@@ -83,9 +86,31 @@ Mesh::data_response_t Mesh::GetDataResponse( const rr::id_t id ) {
 	}
 }
 
-void Mesh::CancelDataRequest( const rr::id_t id ) {
+void Mesh::CancelDataRequest( const rr::id_t request_id ) {
 	//Log( "Canceling data request " + std::to_string( id ) );
-	RR_Cancel<rr::GetData>( id );
+	RR_Cancel<rr::GetData>( request_id );
+}
+
+rr::id_t Mesh::CaptureToTexture() {
+	Log( "Requesting texture capture" );
+	NEWV( request, rr::Capture );
+	return RR_Send( request );
+}
+
+Texture* Mesh::GetCaptureToTextureResponse( const rr::id_t request_id ) {
+	auto* r = RR_GetResponse< rr::Capture >( request_id );
+	if ( r ) {
+		Texture* result = r->texture;
+		ASSERT( result, "received null texture response for " + std::to_string( request_id ) );
+		Log( "Received texture capture response for " + std::to_string( request_id ) );
+		DELETE( r );
+		return result;
+	}
+	return nullptr;
+}
+
+void Mesh::CancelCaptureToTextureRequest( const rr::id_t request_id ) {
+	Log( "Canceling texture capture request " + std::to_string( request_id ) );
 }
 
 } /* namespace actor */

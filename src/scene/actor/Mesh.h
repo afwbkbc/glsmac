@@ -47,11 +47,16 @@ CLASS2( Mesh, Actor, RRAware )
 	
 	void SetDataMesh( const mesh::Data* data_mesh );
 	
-	// make sure to call these from same thread only
+	// data mesh stuff
 	typedef std::pair< bool, std::optional< rr::GetData::data_t > > data_response_t;
 	rr::id_t GetDataAt( const size_t screen_x, const size_t screen_inverse_y );
-	data_response_t GetDataResponse( const rr::id_t id );
-	void CancelDataRequest( const rr::id_t id );
+	data_response_t GetDataResponse( const rr::id_t request_id );
+	void CancelDataRequest( const rr::id_t request_id );
+	
+	// capture rendered mesh to texture
+	rr::id_t CaptureToTexture();
+	Texture* GetCaptureToTextureResponse( const rr::id_t request_id );
+	void CancelCaptureToTextureRequest( const rr::id_t request_id );
 	
 protected:
 	const mesh::Mesh* m_mesh = nullptr;

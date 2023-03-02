@@ -7,6 +7,7 @@
 #include "../shader_program/World.h"
 
 #include "rr/GetData.h"
+#include "rr/Capture.h"
 
 #include "types/Matrix44.h"
 #include "engine/Engine.h"
@@ -184,6 +185,8 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 	
 	auto* mesh_actor = GetMeshActor();
 	
+	
+	
 	if ( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA ) {
 		if ( !mesh_actor->GetDataMesh() || !mesh_actor->RR_HasRequests<rr::GetData>() ) {
 			return; // nothing to do
@@ -198,6 +201,16 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
 	}
 	else {
+		
+		// TODO: capture texture with fbo
+		auto requests = mesh_actor->RR_GetRequests< rr::Capture >();
+		for ( auto& r : requests ) {
+			// return dummy 1x1 texture
+			NEW( r->texture, types::Texture, "Test", 1, 1 );
+			r->texture->SetPixel( 0, 0, { 0.2f, 0.2f, 0.2f, 0.4f } );
+			r->SetProcessed();
+		}
+		
 		glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
 		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ibo );
 	}

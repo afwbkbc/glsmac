@@ -18,8 +18,6 @@
 #include "scene/actor/Mesh.h"
 #include "scene/actor/Instanced.h"
 
-#include "rr/GetData.h"
-
 using namespace types;
 using namespace scene;
 
@@ -417,6 +415,10 @@ CLASS( Map, Serializable )
 	void GetTileAtScreenCoords( const size_t screen_x, const size_t screen_inverse_y ); // async, y needs to be upside down
 	tile_info_t GetTileAtScreenCoordsResult();
 	
+	// for minimap
+	void GetMinimapTexture();
+	Texture* GetMinimapTextureResult();
+	
 	const Buffer Serialize() const;
 	void Unserialize( Buffer buf );
 	
@@ -437,6 +439,7 @@ protected:
 private:
 	
 	rr::id_t m_tile_at_request_id = 0;
+	rr::id_t m_minimap_texture_request_id = 0;
 	
 	tile_state_t* m_tile_states = nullptr;
 	

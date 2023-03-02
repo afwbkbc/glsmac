@@ -90,6 +90,9 @@ void BottomBar::Create() {
 	AddChild( m_sections.units_list );
 	
 	NEW( m_sections.mini_map, MiniMap, m_world );
+		if ( m_textures.minimap ) {
+			m_sections.mini_map->SetMinimapTexture( m_textures.minimap );
+		}
 	AddChild( m_sections.mini_map );
 	
 	m_mouse_blocker = On( UIEvent::EV_MOUSE_DOWN, EH( this ) {
@@ -130,6 +133,11 @@ void BottomBar::Destroy() {
 	RemoveChild( m_sections.mini_map );
 	RemoveChild( m_sections.units_list);
 	
+	if ( m_textures.minimap ) {
+		DELETE( m_textures.minimap );
+		m_textures.minimap = nullptr;
+	}
+	
 	UI::Destroy();
 }
 
@@ -145,6 +153,16 @@ void BottomBar::PreviewTile( const Map* map, const Map::tile_info_t& tile_info )
 
 void BottomBar::HideTilePreview() {
 	m_sections.tile_preview->HideTilePreview();
+}
+
+void BottomBar::SetMinimapTexture( types::Texture* texture ) {
+	if ( m_sections.mini_map ) {
+		m_sections.mini_map->SetMinimapTexture( texture );
+	}
+	if ( m_textures.minimap ) {
+		DELETE( m_textures.minimap );
+	}
+	m_textures.minimap = texture;
 }
 
 }

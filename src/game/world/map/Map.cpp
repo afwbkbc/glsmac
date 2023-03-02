@@ -753,6 +753,28 @@ Map::tile_info_t Map::GetTileAtScreenCoordsResult() {
 	return { nullptr, nullptr, nullptr };
 }
 
+void Map::GetMinimapTexture() {
+	if ( m_minimap_texture_request_id ) {
+		Log( "Canceling minimap texture request" );
+		m_actors.terrain->GetMeshActor()->CancelDataRequest( m_minimap_texture_request_id );
+	}
+	Log( "Requesting minimap texture" );
+	m_minimap_texture_request_id = m_actors.terrain->GetMeshActor()->CaptureToTexture();
+}
+
+Texture* Map::GetMinimapTextureResult() {
+	if ( m_minimap_texture_request_id ) {
+		auto result = m_actors.terrain->GetMeshActor()->GetCaptureToTextureResponse( m_minimap_texture_request_id );
+		if ( result ) {
+			Log( "Received minimap texture" );
+			m_minimap_texture_request_id = 0;
+			return result;
+		}
+	}
+	// no texture (yet)
+	return nullptr;
+}
+
 void Map::CalculateTextureVariants( const texture_variants_type_t type, const texture_variants_rules_t& rules ) {
 	ASSERT( m_texture_variants.find( type ) == m_texture_variants.end(), "texture variants for " + std::to_string( type ) + " already calculated" );
 	auto& variants = m_texture_variants[ type ];

@@ -12,6 +12,7 @@
 #define ptr( _ptr, _offset, _size ) ( _ptr + (_offset) )
 
 #define ASSERT( _condition, _text )
+#define ASSERT_NOLOG( _condition, _text )
 
 #endif
 

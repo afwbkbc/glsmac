@@ -174,5 +174,10 @@ extern debug_stats_t g_debug_stats;
 		THROW( _text ); \
 	}
 
-#endif
+// for rare cases when Log() is not available
+#define ASSERT_NOLOG( _condition, _text ) \
+	if ( !( _condition ) ) { \
+		THROW( _text ); \
+	}
 
+#endif
