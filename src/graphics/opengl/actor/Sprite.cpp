@@ -45,10 +45,9 @@ bool Sprite::MeshReloadNeeded() {
 
 bool Sprite::TextureReloadNeeded() {
 	auto* texture = GetSpriteActor()->GetTexture();
-	const std::string last_texture_name = texture ? texture->m_name : "";
 	
-	if ( m_last_texture_name != last_texture_name ) {
-		m_last_texture_name = last_texture_name;
+	if ( m_last_texture != texture ) {
+		m_last_texture = texture;
 		return true;
 	}
 	return false;

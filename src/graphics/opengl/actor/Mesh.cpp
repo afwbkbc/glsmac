@@ -61,10 +61,8 @@ bool Mesh::MeshReloadNeeded() {
 
 bool Mesh::TextureReloadNeeded() {
 	auto* texture = GetMeshActor()->GetTexture();
-	const std::string last_texture_name = texture ? texture->m_name : "";
-	
-	if ( m_last_texture_name != last_texture_name ) {
-		m_last_texture_name = last_texture_name;
+	if ( m_last_texture != texture ) {
+		m_last_texture = texture;
 		return true;
 	}
 	return false;
@@ -181,11 +179,14 @@ void Mesh::PrepareDataMesh() {
 
 void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera ) {
 
+l_draw_begin:
+	
 	//Log( "Drawing" );
 	
 	auto* mesh_actor = GetMeshActor();
 	
-	
+	rr::Capture* capture_request = nullptr;
+	FBO* fbo = nullptr;
 	
 	if ( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA ) {
 		if ( !mesh_actor->GetDataMesh() || !mesh_actor->RR_HasRequests<rr::GetData>() ) {
@@ -202,13 +203,17 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 	}
 	else {
 		
-		// TODO: capture texture with fbo
-		auto requests = mesh_actor->RR_GetRequests< rr::Capture >();
-		for ( auto& r : requests ) {
-			// return dummy 1x1 texture
-			NEW( r->texture, types::Texture, "Test", 1, 1 );
-			r->texture->SetPixel( 0, 0, { 0.2f, 0.2f, 0.2f, 0.4f } );
-			r->SetProcessed();
+		if ( mesh_actor->RR_HasRequests< rr::Capture >() ) {
+			Log( "Creating FBO for capture" );
+			
+			// process only one per Draw() because cameras may differ
+			// in vast majority of cases only one call will be here anyway
+			capture_request = mesh_actor->RR_GetRequests< rr::Capture >().front();
+			ASSERT( capture_request->camera, "capture request without camera" );
+			
+			NEW( fbo, FBO, capture_request->texture_width, capture_request->texture_height );
+			fbo->WriteBegin();
+			
 		}
 		
 		glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
@@ -270,19 +275,33 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 				glDisable( GL_DEPTH_TEST );
 			}
 			
-			const bool ignore_camera = ( flags & scene::actor::Mesh::RF_IGNORE_CAMERA );
+			const bool ignore_camera =
+				( flags & scene::actor::Mesh::RF_IGNORE_CAMERA )// ||
+				//fbo
+			;
 			
+			// TODO: instanced capture_request ?
 			if ( ignore_camera || m_actor->GetType() == scene::Actor::TYPE_MESH ) {
-				types::Matrix44 matrix = ignore_camera
-					? g_engine->GetUI()->GetWorldUIMatrix()
-					: m_actor->GetWorldMatrix()
-				;
+				types::Matrix44 matrix;
+				ASSERT( !capture_request, "non-instanced captures not implemented" );
+				if ( ignore_camera ) {
+					matrix = g_engine->GetUI()->GetWorldUIMatrix();
+				}
+				else {
+					matrix = m_actor->GetWorldMatrix();
+				}
 				glUniformMatrix4fv( sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
 				glDrawElements( GL_TRIANGLES, ibo_size, GL_UNSIGNED_INT, (void *)(0) );
 			}
 			else if ( m_actor->GetType() == scene::Actor::TYPE_INSTANCED_MESH ) {
 				auto* instanced = (scene::actor::Instanced*) m_actor;
-				auto& matrices = instanced->GetWorldMatrices();
+				scene::actor::Instanced::world_matrices_t matrices;
+				if ( capture_request ) {
+					matrices = instanced->GenerateWorldMatrices( capture_request->camera );
+				}
+				else {
+					matrices = instanced->GetWorldMatrices();
+				}
 				glUniformMatrix4fv( sp->uniforms.world, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
 				glDrawElementsInstanced( GL_TRIANGLES, ibo_size, GL_UNSIGNED_INT, (void *)(0), matrices.size() );
 			}
@@ -337,6 +356,22 @@ void Mesh::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 	else {
 		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 		glBindBuffer( GL_ARRAY_BUFFER, 0 );
+		
+		if ( mesh_actor->RR_HasRequests< rr::Capture >() ) {
+
+			fbo->WriteEnd();
+		
+			capture_request->texture = fbo->CaptureToTexture();
+			capture_request->SetProcessed();
+			
+			DELETE( capture_request->camera );
+
+			Log( "Destroying FBO for capture" );
+			DELETE( fbo );
+			
+			// this draw was captured into texture, draw for real now (or process next capture if there are more)
+			goto l_draw_begin;
+		}
 	}
 }
 

@@ -378,7 +378,6 @@ CLASS( Map, Serializable )
 	void SetMinimapColor( const Color& color );
 	
 	const Texture* GetTerrainTexture() const;
-	const Texture* GetMinimapTexture() const;
 	
 	enum tile_grouping_criteria_t {
 		TG_MOISTURE,
@@ -416,7 +415,7 @@ CLASS( Map, Serializable )
 	tile_info_t GetTileAtScreenCoordsResult();
 	
 	// for minimap
-	void GetMinimapTexture();
+	void GetMinimapTexture( scene::Camera* camera, const Vec2< size_t > texture_dimensions );
 	Texture* GetMinimapTextureResult();
 	
 	const Buffer Serialize() const;

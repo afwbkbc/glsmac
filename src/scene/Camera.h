@@ -19,6 +19,7 @@ CLASS( Camera, Entity )
 	Camera( const camera_type_t camera_type );
 
 	void SetScale( types::Vec3 scale );
+	const types::Vec3& GetScale() const;
 	void SetScene( Scene *scene );
 
 	const float GetFov() const;
@@ -30,9 +31,13 @@ CLASS( Camera, Entity )
 	void UpdateRotation();
 	void UpdateProjection();
 	void UpdateMatrix();
+	
+	void SetCustomAspectRatio( const float aspect_ratio );
+	
 protected:
-	types::Vec3 m_up = { 0.0, 0.0, 0.0 };
-	types::Vec3 m_target = { 0.0, 0.0, 0.0 };
+	types::Vec3 m_scale = { 0.0f, 0.0f, 0.0f };
+	types::Vec3 m_up = { 0.0f, 0.0f, 0.0f };
+	types::Vec3 m_target = { 0.0f, 0.0f, 0.0f };
 
 	float m_fov = 90.0f;
 	float m_raw_fov = 90.0f * M_PI / 180;
@@ -47,6 +52,11 @@ protected:
 	} m_camera_matrices = {};
 
 	Scene *m_scene = nullptr;
+	
+	bool m_is_custom_aspect_ratio = false;
+	float m_custom_aspect_ratio = 0.0f;
+	const float GetAspectRatio();
+	
 };
 
 } /* namespace scene */

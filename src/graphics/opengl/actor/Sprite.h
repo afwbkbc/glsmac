@@ -26,7 +26,7 @@ protected:
 	scene::actor::Sprite* GetSpriteActor() const;
 	
 	actor::Sprite::coords_t m_last_dimensions = { 0.0f, 0.0f };
-	std::string m_last_texture_name = "";
+	const types::Texture* m_last_texture = nullptr;
 	mesh::Render::tex_coords_t m_last_tex_coords = { { 0.0f, 0.0f }, { 0.0f, 0.0f } };
 	
 	GLuint m_vbo = 0;

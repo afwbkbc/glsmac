@@ -86,7 +86,8 @@ void World::Start() {
 	NEWV( tiles, Tiles, 2400, 1600, m_random );
 #else
 	#ifdef DEVEL
-		NEWV( tiles, Tiles, 20, 16, m_random );
+		NEWV( tiles, Tiles, 20, 10, m_random );
+		//NEWV( tiles, Tiles, 40, 20, m_random );
 	#else
 		NEWV( tiles, Tiles, 80, 40, m_random );
 	#endif
@@ -322,6 +323,7 @@ void World::Start() {
 				? World::s_consts.map_scroll.static_scrolling.edge_distance_px.fullscreen
 				: World::s_consts.map_scroll.static_scrolling.edge_distance_px.windowed
 			;
+			/* tmp
 			if ( data->mouse.absolute.x < edge_distance ) {
 				m_map_control.edge_scrolling.speed.x = World::s_consts.map_scroll.static_scrolling.speed.x;
 			}
@@ -351,7 +353,7 @@ void World::Start() {
 					Log( "Edge scrolling stopped" );
 					m_map_control.edge_scrolling.timer.Stop();
 				}
-			}
+			}*/
 		}
 		return true;
 	}, UI::GH_AFTER );
@@ -437,7 +439,7 @@ void World::Start() {
 	};
 	
 	// update minimap
-	m_map->GetMinimapTexture();
+	UpdateMinimap();
 	
 	// select tile at center
 	Vec2< size_t > coords = { m_map->GetWidth() / 2, m_map->GetHeight() / 2 };
@@ -489,6 +491,7 @@ void World::Iterate() {
 	auto minimap_texture = m_map->GetMinimapTextureResult();
 	if ( minimap_texture ) {
 		m_ui.bottom_bar->SetMinimapTexture( minimap_texture );
+		UpdateMinimap();
 	}
 	
 	bool is_camera_position_updated = false;
@@ -566,6 +569,7 @@ void World::UpdateViewport() {
 	auto* graphics = g_engine->GetGraphics();
 	m_viewport.window_width = graphics->GetViewportWidth();
 	m_viewport.window_height = graphics->GetViewportHeight();
+	m_viewport.window_aspect_ratio = graphics->GetAspectRatio();
 	m_viewport.max.x = m_viewport.window_width;
 	m_viewport.max.y = m_viewport.window_height - m_ui.bottom_bar->GetHeight() + m_viewport.bottom_bar_overlap;
 	m_viewport.ratio.x = (float) m_viewport.window_width / m_viewport.max.x;
@@ -573,7 +577,6 @@ void World::UpdateViewport() {
 	m_viewport.width = m_viewport.max.x - m_viewport.min.x;
 	m_viewport.height = m_viewport.max.y - m_viewport.min.y;
 	m_viewport.aspect_ratio = (float) m_viewport.width / m_viewport.height;
-	m_viewport.viewport_aspect_ratio = graphics->GetAspectRatio();
 	m_viewport.is_fullscreen = graphics->IsFullscreen();
 	m_clamp.x.SetSrcRange( m_viewport.min.x, m_viewport.max.x );
 	m_clamp.y.SetSrcRange( m_viewport.min.y, m_viewport.max.y );
@@ -597,7 +600,7 @@ void World::UpdateCameraPosition() {
 	}
 	
 	m_camera->SetPosition({
-		( 0.5f + m_camera_position.x ) * m_viewport.viewport_aspect_ratio,
+		( 0.5f + m_camera_position.x ) * m_viewport.window_aspect_ratio,
 		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + Map::s_consts.tile_scale_z * m_camera_position.z / 1.41f, // TODO: why 1.41?
 		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + m_camera_position.z
 	});
@@ -627,7 +630,7 @@ void World::UpdateCameraRange() {
 	
 	//Log( "Camera range change: Z=[" + to_string( m_camera_range.min.z ) + "," + to_string( m_camera_range.max.z ) + "] Y=[" + to_string( m_camera_range.min.y ) + "," + to_string( m_camera_range.max.y ) + "], z=" + to_string( m_camera_position.z ) );
 	
-	m_camera_range.max.x = ( m_map->GetWidth() ) * m_camera_position.z / m_viewport.viewport_aspect_ratio * 0.25f;
+	m_camera_range.max.x = ( m_map->GetWidth() ) * m_camera_position.z / m_viewport.window_aspect_ratio * 0.25f;
 	m_camera_range.min.x = -m_camera_range.max.x;
 	
 	UpdateCameraPosition();
@@ -748,7 +751,7 @@ void World::RemoveActor( actor::Actor* actor ) {
 
 const Vec2< float > World::GetTileWindowCoordinates( const Map::tile_state_t* ts ) {
 	return {
-		ts->coord.x / m_viewport.viewport_aspect_ratio * m_camera_position.z,
+		ts->coord.x / m_viewport.window_aspect_ratio * m_camera_position.z,
 		( ts->coord.y - std::max( 0.0f, Map::s_consts.clampers.elevation_to_vertex_z.Clamp( ts->elevations.center ) ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f
 	};
 }
@@ -790,6 +793,34 @@ void World::ScrollToTile( const Map::tile_state_t* ts ) {
 
 void World::CenterAtTile( const Map::tile_state_t* ts ) {
 	ScrollToTile( ts );
+}
+
+void World::UpdateMinimap() {
+	NEWV( camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
+	
+	const auto mm = m_ui.bottom_bar->GetMinimapDimensions();
+	
+	const float sx = (float)mm.x / (float)( m_map->GetWidth() ) / (float)Map::s_consts.tc.texture_pcx.dimensions.x;
+	const float sy = (float)mm.y / (float)( m_map->GetHeight() ) / (float)Map::s_consts.tc.texture_pcx.dimensions.y;
+	const float sz = (sx + sy ) / 2;
+	const float ss = ( (float) mm.y / (float) m_viewport.window_height );
+	
+	camera->SetAngle( m_camera->GetAngle() );
+	camera->SetScale({
+		sx * ss * 0.64f,
+		sy * ss * 1.08f,
+		sz * ss
+	});
+	camera->SetPosition({
+		sx * ss * 3.2f,
+		1.0f - sy * ss / 2.9f,
+		1.0f + sz * ss
+	});
+	
+	m_map->GetMinimapTexture( camera, {
+		mm.x,
+		mm.y
+	});	
 }
 
 }

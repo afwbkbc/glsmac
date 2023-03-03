@@ -17,6 +17,7 @@ Camera::Camera( const camera_type_t camera_type )
 	m_angle.Set( ANGLE_CENTER, ANGLE_CENTER, ANGLE_CENTER );
 
 	SetFov( m_fov );
+	SetScale( { 1.0f, 1.0f, 1.0f } );
 
 	UpdateProjection();
 	UpdateRotation();
@@ -24,9 +25,16 @@ Camera::Camera( const camera_type_t camera_type )
 }
 
 void Camera::SetScale( types::Vec3 scale ) {
-	//m_matrices.scale.TransformScale( -scale.x, -scale.y, -scale.z );
-	m_matrices.scale.TransformScale( -scale.x, scale.y, scale.z );
-	UpdateMatrix();
+	if ( scale != m_scale ) {
+		//m_matrices.scale.TransformScale( -scale.x, -scale.y, -scale.z );
+		m_matrices.scale.TransformScale( -scale.x, scale.y, scale.z );
+		UpdateMatrix();
+		m_scale = scale;
+	}
+}
+
+const types::Vec3& Camera::GetScale() const {
+	return m_scale;
 }
 
 void Camera::SetScene( Scene *scene ) {
@@ -34,14 +42,23 @@ void Camera::SetScene( Scene *scene ) {
 	m_scene = scene;
 }
 
+const float Camera::GetAspectRatio() {
+	if ( m_is_custom_aspect_ratio ) {
+		return m_custom_aspect_ratio;
+	}
+	else {
+		return g_engine->GetGraphics()->GetAspectRatio();
+	}
+}
+
 void Camera::UpdateProjection() {
 	switch ( m_camera_type ) {
 		case CT_ORTHOGRAPHIC: {
-			m_camera_matrices.projection.ProjectionOrtho2D( g_engine->GetGraphics()->GetAspectRatio(), m_z_near, m_z_far );
+			m_camera_matrices.projection.ProjectionOrtho2D( GetAspectRatio(), m_z_near, m_z_far );
 			break;
 		}
 		case CT_PERSPECTIVE: {
-			m_camera_matrices.projection.ProjectionPerspective( g_engine->GetGraphics()->GetAspectRatio(), m_raw_fov, m_z_near, m_z_far );
+			m_camera_matrices.projection.ProjectionPerspective( GetAspectRatio(), m_raw_fov, m_z_near, m_z_far );
 			break;
 		}
 		default: {
@@ -62,6 +79,13 @@ void Camera::UpdateMatrix() {
 		for ( auto it = m_scene->m_actors.begin() ; it < m_scene->m_actors.end() ; ++it )
 			(*it)->UpdateWorldMatrix();
 	}
+}
+
+void Camera::SetCustomAspectRatio( const float aspect_ratio ) {
+	ASSERT( !m_is_custom_aspect_ratio, "custom aspect ratio already set, is it a bug/typo?" );
+	m_is_custom_aspect_ratio = true;
+	m_custom_aspect_ratio = aspect_ratio;
+	UpdateProjection();
 }
 
 const float Camera::GetFov() const {

@@ -29,7 +29,7 @@ protected:
 	void PrepareDataMesh();
 	
 	size_t m_mesh_update_counter = 0;
-	std::string m_last_texture_name = "";
+	const types::Texture* m_last_texture = nullptr;
 
 	GLuint m_vbo = 0;
 	GLuint m_ibo = 0;

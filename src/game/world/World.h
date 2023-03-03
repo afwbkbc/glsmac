@@ -129,7 +129,7 @@ private:
 		size_t width;
 		size_t height;
 		float aspect_ratio;
-		float viewport_aspect_ratio;
+		float window_aspect_ratio;
 		bool is_fullscreen;
 	} m_viewport;
 	struct {
@@ -186,6 +186,9 @@ private:
 	void ScrollTo( const Vec3& target );
 	void ScrollToTile( const Map::tile_state_t* ts );
 	void CenterAtTile( const Map::tile_state_t* ts );
+	
+	void UpdateMinimap();
+	
 };
 
 }

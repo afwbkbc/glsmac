@@ -6,6 +6,7 @@
 
 #include "types/Matrix44.h"
 #include "scene/Scene.h"
+#include "scene/Camera.h"
 
 namespace scene {
 namespace actor {
@@ -21,6 +22,7 @@ CLASS( Instanced, Actor )
 	typedef std::vector< types::Matrix44 > world_matrices_t;
 	const world_matrices_t& GetWorldMatrices();
 	types::Matrix44 & GetWorldMatrix();
+	world_matrices_t GenerateWorldMatrices( scene::Camera* camera );
 	
 	void UpdateWorldMatrix();
 	void UpdatePosition();

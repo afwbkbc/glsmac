@@ -312,7 +312,7 @@ void OpenGL::UnloadTexture( const types::Texture* texture ) {
 void OpenGL::EnableTexture( const types::Texture* texture ) {
 	if ( texture ) {
 		auto it = m_textures.find( texture );
-		ASSERT( it != m_textures.end(), "texture to be enabled not found" );
+		ASSERT( it != m_textures.end(), "texture to be enabled ( " + texture->m_name + " ) not found" );
 		glBindTexture( GL_TEXTURE_2D, it->second );
 	}
 	else {

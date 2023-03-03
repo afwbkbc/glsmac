@@ -648,11 +648,6 @@ const Texture* Map::GetTerrainTexture() const {
 	return m_textures.terrain;
 }
 
-const Texture* Map::GetMinimapTexture() const {
-	ASSERT( m_textures.minimap, "minimap texture requested but not initialized" );
-	return m_textures.minimap;
-}
-
 Map::tile_state_t* Map::GetTileState( const size_t x, const size_t y ) const {
 	ASSERT( x < m_map_state.dimensions.x, "tile state x overflow" );
 	ASSERT( y < m_map_state.dimensions.y, "tile state y overflow" );
@@ -753,13 +748,13 @@ Map::tile_info_t Map::GetTileAtScreenCoordsResult() {
 	return { nullptr, nullptr, nullptr };
 }
 
-void Map::GetMinimapTexture() {
+void Map::GetMinimapTexture( scene::Camera* camera, const Vec2< size_t > texture_dimensions ) {
 	if ( m_minimap_texture_request_id ) {
 		Log( "Canceling minimap texture request" );
 		m_actors.terrain->GetMeshActor()->CancelDataRequest( m_minimap_texture_request_id );
 	}
 	Log( "Requesting minimap texture" );
-	m_minimap_texture_request_id = m_actors.terrain->GetMeshActor()->CaptureToTexture();
+	m_minimap_texture_request_id = m_actors.terrain->GetMeshActor()->CaptureToTexture( camera, texture_dimensions );
 }
 
 Texture* Map::GetMinimapTextureResult() {

@@ -34,6 +34,7 @@ CLASS( BottomBar, UI )
 	void HideTilePreview();
 	
 	void SetMinimapTexture( types::Texture* texture );
+	const Vec2< size_t > GetMinimapDimensions() const;
 	
 protected:
 	struct {

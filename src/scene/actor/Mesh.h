@@ -11,6 +11,7 @@
 #include "types/mesh/Data.h"
 #include "types/Color.h"
 #include "types/Texture.h"
+#include "scene/Camera.h"
 
 #include "rr/GetData.h"
 
@@ -54,7 +55,7 @@ CLASS2( Mesh, Actor, RRAware )
 	void CancelDataRequest( const rr::id_t request_id );
 	
 	// capture rendered mesh to texture
-	rr::id_t CaptureToTexture();
+	rr::id_t CaptureToTexture( scene::Camera* camera, const Vec2< size_t > texture_dimensions );
 	Texture* GetCaptureToTextureResponse( const rr::id_t request_id );
 	void CancelCaptureToTextureRequest( const rr::id_t request_id );
 	

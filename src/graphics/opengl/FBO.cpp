@@ -43,6 +43,9 @@ FBO::FBO( const size_t width, const size_t height ) {
 	glGenTextures( 1, &m_textures.depth );
 	
 	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+	
+	m_width = m_height = 0;
+	Resize( width, height );
 }
 
 FBO::~FBO() {
@@ -90,12 +93,15 @@ void FBO::Resize( const size_t width, const size_t height ) {
 
 void FBO::WriteBegin() {
 	ASSERT( !m_is_enabled, "fbo already enabled" );
+	ASSERT( m_width > 0, "fbo width is zero" );
+	ASSERT( m_height > 0, "fbo height is zero" );
 	
 	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, m_fbo );
 	glDrawBuffer( GL_COLOR_ATTACHMENT0 );
 	
 	// start with clean state
 	// TODO: partial redraws?
+	//glClearColor( 0.5f, 0.5f, 0.5f, 0.5f );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
 	
 	m_is_enabled = true;
@@ -112,6 +118,8 @@ void FBO::WriteEnd() {
 
 void FBO::Draw( shader_program::Simple2D* sp ) {
 	ASSERT( !m_is_enabled, "can't draw fbo that is being written to" );
+	ASSERT( m_width > 0, "fbo width is zero" );
+	ASSERT( m_height > 0, "fbo height is zero" );
 	
 	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ibo );
@@ -126,6 +134,24 @@ void FBO::Draw( shader_program::Simple2D* sp ) {
 	
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+}
+
+types::Texture* FBO::CaptureToTexture() {
+	ASSERT( !m_is_enabled, "can't read fbo that is being written to" );
+	ASSERT( m_width > 0, "fbo width is zero" );
+	ASSERT( m_height > 0, "fbo height is zero" );
+	
+	NEWV( texture, types::Texture, "FBOCapture", m_width, m_height );
+	
+	glBindFramebuffer( GL_READ_FRAMEBUFFER, m_fbo );
+	glReadBuffer( GL_COLOR_ATTACHMENT0 );
+	
+	glReadPixels( 0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, texture->m_bitmap );
+	
+	glReadBuffer( GL_NONE );
+	glBindFramebuffer( GL_READ_FRAMEBUFFER, 0 );
+
+	return texture;
 }
 
 }

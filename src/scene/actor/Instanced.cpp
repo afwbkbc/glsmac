@@ -28,16 +28,22 @@ types::Matrix44& Instanced::GetWorldMatrix() {
 	ASSERT( false, "use GetWorldMatrices() for instanced actors" );
 	return m_actor_matrices.world; // just to fix warning
 }
-	
+
+Instanced::world_matrices_t Instanced::GenerateWorldMatrices( scene::Camera* camera ) {
+	world_matrices_t matrices;
+	auto& instances = m_scene->GetInstances();
+	matrices.resize( instances.size() );
+	for ( auto i = 0 ; i < instances.size() ; i++ ) {
+		matrices[i] = camera->GetMatrix() * m_instance_matrices[i].matrix;
+	}
+	return matrices;
+}
+
 void Instanced::UpdateWorldMatrix() {
 	if ( m_scene ) {
 		auto* camera = m_scene->GetCamera();
 		if ( camera ) {
-			auto& instances = m_scene->GetInstances();
-			m_world_matrices.resize( instances.size() );
-			for ( auto i = 0 ; i < instances.size() ; i++ ) {
-				m_world_matrices[i] = camera->GetMatrix() * m_instance_matrices[i].matrix;
-			}
+			m_world_matrices = GenerateWorldMatrices( camera );
 			m_need_world_matrix_update = false;
 		}
 	}

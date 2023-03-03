@@ -91,9 +91,12 @@ void Mesh::CancelDataRequest( const rr::id_t request_id ) {
 	RR_Cancel<rr::GetData>( request_id );
 }
 
-rr::id_t Mesh::CaptureToTexture() {
-	Log( "Requesting texture capture" );
+rr::id_t Mesh::CaptureToTexture( scene::Camera* camera, const Vec2< size_t > texture_dimensions ) {
+	Log( "Requesting capture-to-texture" );
 	NEWV( request, rr::Capture );
+		request->camera = camera;
+		request->texture_width = texture_dimensions.x;
+		request->texture_height = texture_dimensions.y;
 	return RR_Send( request );
 }
 
@@ -102,7 +105,7 @@ Texture* Mesh::GetCaptureToTextureResponse( const rr::id_t request_id ) {
 	if ( r ) {
 		Texture* result = r->texture;
 		ASSERT( result, "received null texture response for " + std::to_string( request_id ) );
-		Log( "Received texture capture response for " + std::to_string( request_id ) );
+		Log( "Received capture-to-texture response for " + std::to_string( request_id ) );
 		DELETE( r );
 		return result;
 	}
@@ -110,7 +113,7 @@ Texture* Mesh::GetCaptureToTextureResponse( const rr::id_t request_id ) {
 }
 
 void Mesh::CancelCaptureToTextureRequest( const rr::id_t request_id ) {
-	Log( "Canceling texture capture request " + std::to_string( request_id ) );
+	Log( "Canceling capture-to-texture request " + std::to_string( request_id ) );
 }
 
 } /* namespace actor */
