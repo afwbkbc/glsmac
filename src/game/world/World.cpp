@@ -323,7 +323,6 @@ void World::Start() {
 				? World::s_consts.map_scroll.static_scrolling.edge_distance_px.fullscreen
 				: World::s_consts.map_scroll.static_scrolling.edge_distance_px.windowed
 			;
-			/* tmp
 			if ( data->mouse.absolute.x < edge_distance ) {
 				m_map_control.edge_scrolling.speed.x = World::s_consts.map_scroll.static_scrolling.speed.x;
 			}
@@ -353,7 +352,7 @@ void World::Start() {
 					Log( "Edge scrolling stopped" );
 					m_map_control.edge_scrolling.timer.Stop();
 				}
-			}*/
+			}
 		}
 		return true;
 	}, UI::GH_AFTER );
@@ -426,6 +425,7 @@ void World::Start() {
 		UpdateViewport();
 		UpdateCameraRange();
 		UpdateMapInstances();
+		UpdateMinimap();
 	});
 	
 	UpdateMapInstances();
@@ -491,7 +491,7 @@ void World::Iterate() {
 	auto minimap_texture = m_map->GetMinimapTextureResult();
 	if ( minimap_texture ) {
 		m_ui.bottom_bar->SetMinimapTexture( minimap_texture );
-		//UpdateMinimap();
+		//UpdateMinimap(); // tmp
 	}
 	
 	bool is_camera_position_updated = false;
@@ -798,7 +798,25 @@ void World::CenterAtTile( const Map::tile_state_t* ts ) {
 void World::UpdateMinimap() {
 	NEWV( camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
 	
-	const auto mm = m_ui.bottom_bar->GetMinimapDimensions();
+	auto mm = m_ui.bottom_bar->GetMinimapDimensions();
+	// 'black grid' artifact workaround
+	// TODO: find reason and fix properly
+	Vec2< float > scale = {
+		(float) m_viewport.window_width / mm.x,
+		(float) m_viewport.window_height / mm.y
+	};
+	const float ma = (float) mm.y / mm.x;
+	const float sa = (float) scale.y / scale.x;
+	
+	if ( sa < ma ) {
+		scale.x = scale.y / ma;
+	}
+	else {
+		scale.y = scale.x * ma;
+	}
+	
+	mm.x *= scale.x;
+	mm.y *= scale.y;
 	
 	const float sx = (float)mm.x / (float)m_map->GetWidth() / (float)Map::s_consts.tc.texture_pcx.dimensions.x;
 	const float sy = (float)mm.y / (float)m_map->GetHeight() / (float)Map::s_consts.tc.texture_pcx.dimensions.y;
@@ -807,8 +825,8 @@ void World::UpdateMinimap() {
 	
 	camera->SetAngle( m_camera->GetAngle() );
 	camera->SetScale({
-		sx * ss * 0.64f,
-		sy * ss,
+		sx * ss * 0.8f / scale.x,
+		sy * ss / scale.y,
 		//sy * ss * 0.91f, // 60
 		//sy * ss * 1.08f, // 10
 		//sy * ss * 0.92f, // 50
@@ -816,16 +834,18 @@ void World::UpdateMinimap() {
 		0.01f //sz * ss
 	});
 	
-	Log( "A " + std::to_string( m_viewport.aspect_ratio ) + " " + std::to_string( m_viewport.window_aspect_ratio ) );
+	//Log( "A " + std::to_string( m_viewport.aspect_ratio ) + " " + std::to_string( m_viewport.window_aspect_ratio ) );
 	
 	camera->SetPosition({
-		ss * 0.64f,
+		ss * 0.8f,
 		//1.0f - ss * 0.44f, // 6x4
-		1.0f - ss * 0.44f, // 60x40
+		//1.0f - ss * 0.44f, // 60x40 scale=1
+		1.0f - ss * 0.47f, // 60x40 scale=2
 		//1.0f - sz * ss * 1.64f, // 10
 		//1.0f - sz * ss * 3.0f, // 50
 		//1.0f - ss * ( 0.3f + 0.046f * (float)( m_map->GetHeight() - 1 ) ),
-		1.0f + ss * 0.44f // 1.0f + sz * ss
+		//1.0f + ss * 0.44f // 1.0f + sz * ss
+		0.5f
 	});
 	
 	m_map->GetMinimapTexture( camera, {
