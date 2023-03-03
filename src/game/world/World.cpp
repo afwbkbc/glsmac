@@ -491,7 +491,7 @@ void World::Iterate() {
 	auto minimap_texture = m_map->GetMinimapTextureResult();
 	if ( minimap_texture ) {
 		m_ui.bottom_bar->SetMinimapTexture( minimap_texture );
-		UpdateMinimap();
+		//UpdateMinimap();
 	}
 	
 	bool is_camera_position_updated = false;
@@ -800,21 +800,32 @@ void World::UpdateMinimap() {
 	
 	const auto mm = m_ui.bottom_bar->GetMinimapDimensions();
 	
-	const float sx = (float)mm.x / (float)( m_map->GetWidth() ) / (float)Map::s_consts.tc.texture_pcx.dimensions.x;
-	const float sy = (float)mm.y / (float)( m_map->GetHeight() ) / (float)Map::s_consts.tc.texture_pcx.dimensions.y;
-	const float sz = (sx + sy ) / 2;
+	const float sx = (float)mm.x / (float)m_map->GetWidth() / (float)Map::s_consts.tc.texture_pcx.dimensions.x;
+	const float sy = (float)mm.y / (float)m_map->GetHeight() / (float)Map::s_consts.tc.texture_pcx.dimensions.y;
+	const float sz = ( sx + sy ) / 2;
 	const float ss = ( (float) mm.y / (float) m_viewport.window_height );
 	
 	camera->SetAngle( m_camera->GetAngle() );
 	camera->SetScale({
 		sx * ss * 0.64f,
-		sy * ss * 1.08f,
-		sz * ss
+		sy * ss,
+		//sy * ss * 0.91f, // 60
+		//sy * ss * 1.08f, // 10
+		//sy * ss * 0.92f, // 50
+		//sy * ss * ( 1.12f - 0.005f * (float)( m_map->GetHeight() - 1 ) ),
+		0.01f //sz * ss
 	});
+	
+	Log( "A " + std::to_string( m_viewport.aspect_ratio ) + " " + std::to_string( m_viewport.window_aspect_ratio ) );
+	
 	camera->SetPosition({
-		sx * ss * 3.2f,
-		1.0f - sy * ss / 2.9f,
-		1.0f + sz * ss
+		ss * 0.64f,
+		//1.0f - ss * 0.44f, // 6x4
+		1.0f - ss * 0.44f, // 60x40
+		//1.0f - sz * ss * 1.64f, // 10
+		//1.0f - sz * ss * 3.0f, // 50
+		//1.0f - ss * ( 0.3f + 0.046f * (float)( m_map->GetHeight() - 1 ) ),
+		1.0f + ss * 0.44f // 1.0f + sz * ss
 	});
 	
 	m_map->GetMinimapTexture( camera, {
