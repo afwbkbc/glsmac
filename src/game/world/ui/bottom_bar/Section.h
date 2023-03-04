@@ -18,6 +18,11 @@ CLASS( Section, UI )
 	void AddChild( UIObject *object );
 	void RemoveChild( UIObject *object );
 	
+protected:
+	struct {
+		bool no_inner_border = false;
+	} m_config = {};
+	
 private:
 	object::Section* m_outer = nullptr;
 	object::Section* m_inner = nullptr;

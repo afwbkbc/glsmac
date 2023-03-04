@@ -378,6 +378,12 @@ void World::Start() {
 	
 	m_handlers.mousescroll = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_SCROLL, EH( this ) {
 		
+		if ( m_map_control.last_mouse_position.y > m_viewport.max.y ) {
+			// scroll happens over bottom bar, ignore it
+			// TODO: make mouse scroll events go to element under mouse coordinates and handle in BottomBar
+			return true;
+		}
+		
 		float speed = World::s_consts.map_scroll.smooth_scrolling.zoom_speed * m_camera_position.z;
 		
 		float new_z = m_camera_position.z + data->mouse.scroll_y * speed;

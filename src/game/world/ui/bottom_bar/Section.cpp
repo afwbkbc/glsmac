@@ -14,7 +14,7 @@ void Section::Create() {
 	NEW( m_outer, object::Section, "MapBottomBarSectionOuter" );
 	UI::AddChild( m_outer );
 	
-	NEW( m_inner, object::Section, "MapBottomBarSectionInner" );
+	NEW( m_inner, object::Section, m_config.no_inner_border ? "" : "MapBottomBarSectionInner" );
 	m_outer->AddChild( m_inner );
 	
 }

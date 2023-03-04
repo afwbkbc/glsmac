@@ -43,11 +43,8 @@ void BottomBar::AddStyles() {
 		s->SetTexture( ::Style::A_TEXTURE, "interface.pcx", 86, 665, 109, 688 );
 	});
 	
-	AddStyle( "Section", SH() {
+	AddStyle( "SectionOuter", SH() {
 		s->Set( ::Style::A_BORDER_WIDTH, 3 );
-	});
-	
-	AddStyle( "SectionOuter", { "Section" }, SH() {
 		s->SetTexture( ::Style::A_TEXTURE_BORDER_LEFT, "interface.pcx", 40, 275, 42, 298 );
 		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LT, "interface.pcx", 40, 268, 42, 270 );
 		s->SetTexture( ::Style::A_TEXTURE_BORDER_TOP, "interface.pcx", 47, 268, 70, 270 );
@@ -58,7 +55,8 @@ void BottomBar::AddStyles() {
 		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LB, "interface.pcx", 40, 303, 42, 305 );
 	});
 	
-	AddStyle( "SectionInner", { "Section" }, SH() {
+	AddStyle( "SectionInner", SH() {
+		s->Set( ::Style::A_BORDER_WIDTH, 3 );
 		s->SetTexture( ::Style::A_TEXTURE_BORDER_LEFT, "interface.pcx", 1, 275, 3, 298 );
 		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LT, "interface.pcx", 1, 268, 3, 270 );
 		s->SetTexture( ::Style::A_TEXTURE_BORDER_TOP, "interface.pcx", 8, 268, 31, 270 );
@@ -195,13 +193,70 @@ void BottomBar::AddStyles() {
 		s->Set( ::Style::A_WIDTH, 238 );
 	});
 
+	AddStyle( "MinimapTurnCompleteButton", SH() {
+		
+		const auto f_buttonstyle = [ &s ] ( const size_t ox, const size_t oy ) -> void {
+			const std::string t = "console_x2_a.pcx";
+			s->SetTexture( ::Style::A_TEXTURE_BORDER_LEFT, t, 0 + ox, 6 + oy, 5 + ox, 18 + oy );
+			s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LT, t, 0 + ox, 0 + oy, 5 + ox, 5 + oy );
+			s->SetTexture( ::Style::A_TEXTURE_BORDER_TOP, t, 6 + ox, 0 + oy, 181 + ox, 5 + oy );
+			s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_RT, t, 182 + ox, 0 + oy, 187 + ox, 5 + oy );
+			s->SetTexture( ::Style::A_TEXTURE_BORDER_RIGHT, t, 182 + ox, 6 + oy, 187 + ox, 18 + oy );
+			s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_RB, t, 182 + ox, 19 + oy, 187 + ox, 24 + oy );
+			s->SetTexture( ::Style::A_TEXTURE_BORDER_BOTTOM, t, 6 + ox, 19 + oy, 181 + ox, 24 + oy );
+			s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LB, t, 0 + ox, 19 + oy, 5 + ox, 24 + oy );
+			s->SetTexture( ::Style::A_TEXTURE_BACK, t, 6 + ox, 6 + oy, 182 + ox, 19 + oy );
+		};
+	
+		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_HCENTER );
+		s->Set( ::Style::A_TOP, 1 );
+		s->Set( ::Style::A_LEFT, 1 );
+		s->Set( ::Style::A_RIGHT, 1 );
+		s->Set( ::Style::A_HEIGHT, 25 );
+		
+		s->SetFont( ::Style::A_FONT, "arialnb.ttf", 16 );
+		
+		s->Set( ::Style::A_BORDER_WIDTH, 6 );
+		
+		if ( s->Is( ::Style::M_ACTIVE ) ) {
+			f_buttonstyle( 193, 55 );
+			s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 0, 0, 0 ) );
+		}
+		else if ( s->Is( ::Style::M_HOVER ) ) {
+			f_buttonstyle( 2, 55 );
+			s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 228, 104, 24 ) );
+		}
+		else {
+			f_buttonstyle( 2, 1 );
+			s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 228, 104, 24 ) );
+		}
+
+		s->SetSound( ::Style::A_BUTTON_CLICK_SOUND, "ok.wav" );
+		s->Set( ::Style::A_SOUND_VOLUME, 0.5f );
+	});
+	
 	AddStyle( "MinimapImage", SH() {
 		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_HCENTER );
-		s->Set( ::Style::A_TOP, 32 );
+		s->Set( ::Style::A_TOP, 29 );
 		s->Set( ::Style::A_WIDTH, 224 );
 		s->Set( ::Style::A_HEIGHT, 112 );
 	});
 	
+	AddStyle( "MinimapBottomBar", { "SectionInner" }, SH() {
+		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_LEFT );
+		s->Set( ::Style::A_BOTTOM, -2 );
+		s->Set( ::Style::A_LEFT, -2 );
+		s->Set( ::Style::A_WIDTH, 118 );
+		s->Set( ::Style::A_HEIGHT, 41 );
+	});
+	
+	AddStyle( "MinimapBottomBarLabel", SH() {
+		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+		s->SetFont( ::Style::A_FONT, "arialn.ttf", 14 );
+		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 60, 148, 124 ) );
+		s->Set( ::Style::A_LEFT, 5 );
+		s->Set( ::Style::A_HEIGHT, 15 );
+	});
 }
 
 }

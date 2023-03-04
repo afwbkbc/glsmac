@@ -95,18 +95,21 @@ void BottomBar::Create() {
 		}
 	AddChild( m_sections.mini_map );
 	
-	m_mouse_blocker = On( UIEvent::EV_MOUSE_DOWN, EH( this ) {
-		// don't let clicks that weren't handled by child elements go through to map
+	m_mouse_blocker = On({
+		UIEvent::EV_MOUSE_DOWN,
+		UIEvent::EV_MOUSE_SCROLL // TODO: fix mouse coordinates at scroll
+	}, EH( this ) {
+		// don't let mouse events that weren't handled by child elements go through to map
 		if (
 			data->mouse.relative.x > 164 &&
 			data->mouse.relative.x < g_engine->GetGraphics()->GetViewportWidth() - 162 &&
 			data->mouse.relative.y <= 32
 		) {
-			// allow clicks through transparent area at top
+			// allow through transparent area at top
 			return false;
 		}
 		
-		// block all other clicks
+		// block everything else
 		return true;
 	});
 }

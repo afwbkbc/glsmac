@@ -42,7 +42,7 @@ void Mesh::SetMesh( const types::mesh::Mesh* mesh ) {
 
 void Mesh::SetTexture( const types::Texture* texture ) {
 	if ( texture != m_texture ) {
-		if ( m_texture && m_texture ) {
+		/*if ( m_texture && m_texture ) {
 			Log( "Changing texture from " + m_texture->m_name + " to " + texture->m_name );
 		}
 		else if ( texture ) {
@@ -50,7 +50,7 @@ void Mesh::SetTexture( const types::Texture* texture ) {
 		}
 		else if ( m_texture ) {
 			Log( "Clearing texture " + texture->m_name );
-		}
+		}*/
 		m_texture = texture;
 		if ( m_actor ) {
 			m_actor->SetTexture( m_texture );
