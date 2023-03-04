@@ -104,6 +104,7 @@ Texture* Mesh::GetCaptureToTextureResponse( const rr::id_t request_id ) {
 	auto* r = RR_GetResponse< rr::Capture >( request_id );
 	if ( r ) {
 		Texture* result = r->texture;
+		r->texture = nullptr; // to prevent deletion in destructor
 		ASSERT( result, "received null texture response for " + std::to_string( request_id ) );
 		Log( "Received capture-to-texture response for " + std::to_string( request_id ) );
 		DELETE( r );

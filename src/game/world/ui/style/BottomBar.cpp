@@ -196,11 +196,10 @@ void BottomBar::AddStyles() {
 	});
 
 	AddStyle( "MinimapImage", SH() {
-		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_CENTER );
-		s->Set( ::Style::A_LEFT, 0 );
-		s->Set( ::Style::A_TOP, 0 );
-		s->Set( ::Style::A_RIGHT, 0 );
-		s->Set( ::Style::A_BOTTOM, 0 );
+		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_HCENTER );
+		s->Set( ::Style::A_TOP, 32 );
+		s->Set( ::Style::A_WIDTH, 224 );
+		s->Set( ::Style::A_HEIGHT, 112 );
 	});
 	
 }

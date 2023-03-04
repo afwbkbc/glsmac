@@ -364,8 +364,6 @@ l_draw_begin:
 			capture_request->texture = fbo->CaptureToTexture();
 			capture_request->SetProcessed();
 			
-			DELETE( capture_request->camera );
-
 			Log( "Destroying FBO for capture" );
 			DELETE( fbo );
 			

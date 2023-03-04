@@ -167,7 +167,7 @@ void BottomBar::SetMinimapTexture( types::Texture* texture ) {
 
 const Vec2< size_t > BottomBar::GetMinimapDimensions() const {
 	ASSERT( m_sections.mini_map, "minimap not initialized" );
-	return { 224, 178 }; // TODO: get from minimap style
+	return { 224, 112 }; // TODO: get from minimap style
 }
 
 }

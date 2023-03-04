@@ -818,33 +818,24 @@ void World::UpdateMinimap() {
 	mm.x *= scale.x;
 	mm.y *= scale.y;
 	
+	// TODO: not perfect formulas yet
+	
 	const float sx = (float)mm.x / (float)m_map->GetWidth() / (float)Map::s_consts.tc.texture_pcx.dimensions.x;
 	const float sy = (float)mm.y / (float)m_map->GetHeight() / (float)Map::s_consts.tc.texture_pcx.dimensions.y;
 	const float sz = ( sx + sy ) / 2;
 	const float ss = ( (float) mm.y / (float) m_viewport.window_height );
+	const float sxy = (float) scale.x / scale.y;
 	
 	camera->SetAngle( m_camera->GetAngle() );
 	camera->SetScale({
-		sx * ss * 0.8f / scale.x,
-		sy * ss / scale.y,
-		//sy * ss * 0.91f, // 60
-		//sy * ss * 1.08f, // 10
-		//sy * ss * 0.92f, // 50
-		//sy * ss * ( 1.12f - 0.005f * (float)( m_map->GetHeight() - 1 ) ),
-		0.01f //sz * ss
+		sx * ss * sxy / scale.x,
+		sy * ss * 1.64f / scale.y,
+		0.01f
 	});
 	
-	//Log( "A " + std::to_string( m_viewport.aspect_ratio ) + " " + std::to_string( m_viewport.window_aspect_ratio ) );
-	
 	camera->SetPosition({
-		ss * 0.8f,
-		//1.0f - ss * 0.44f, // 6x4
-		//1.0f - ss * 0.44f, // 60x40 scale=1
-		1.0f - ss * 0.47f, // 60x40 scale=2
-		//1.0f - sz * ss * 1.64f, // 10
-		//1.0f - sz * ss * 3.0f, // 50
-		//1.0f - ss * ( 0.3f + 0.046f * (float)( m_map->GetHeight() - 1 ) ),
-		//1.0f + ss * 0.44f // 1.0f + sz * ss
+		ss * sxy,
+		1.0f - ss * 0.444f, // 60x40 scale=2
 		0.5f
 	});
 	

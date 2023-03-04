@@ -28,6 +28,14 @@ CLASS( Capture, RR )
 	// response
 	types::Texture* texture = nullptr;
 
+	~Capture() {
+		if ( camera ) {
+			DELETE( camera );
+		}
+		if ( texture ) {
+			DELETE( texture );
+		}
+	}
 };
 
 }
