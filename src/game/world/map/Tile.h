@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <vector>
 
 #include "types/Serializable.h"
 #include "types/Vec2.h"
