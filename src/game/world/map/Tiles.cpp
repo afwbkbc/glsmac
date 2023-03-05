@@ -11,7 +11,7 @@ namespace game {
 namespace world {
 namespace map {
 
-Tiles::Tiles( const size_t width, const size_t height, Random* random )
+Tiles::Tiles( const uint32_t width, const uint32_t height, Random* random )
 	: m_random( random )
 {
 	Resize( width, height );
@@ -23,7 +23,7 @@ Tiles::~Tiles() {
 	free( m_top_right_vertex_row );
 }
 
-void Tiles::Resize( const size_t width, const size_t height ) {
+void Tiles::Resize( const uint32_t width, const uint32_t height ) {
 	
 	if ( width != m_width || height != m_height ) {
 		Log( "Initializing tiles ( " + std::to_string( width ) + " x " + std::to_string( height ) + " )" );
@@ -176,11 +176,11 @@ void Tiles::Resize( const size_t width, const size_t height ) {
 	}
 }
 
-const size_t Tiles::GetWidth() const {
+const uint32_t Tiles::GetWidth() const {
 	return m_width;
 }
 
-const size_t Tiles::GetHeight() const {
+const uint32_t Tiles::GetHeight() const {
 	return m_height;
 }
 	

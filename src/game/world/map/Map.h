@@ -146,14 +146,8 @@ CLASS( Map, Serializable )
 			} random;
 		} tile;
 		const struct {
-			const struct {
-				const uint8_t x = s_consts.tc.texture_pcx.dimensions.x;
-				const uint8_t y = s_consts.tc.texture_pcx.dimensions.y;
-			} dimensions;
-			const struct {
-				const uint8_t x = s_consts.tile_texture.dimensions.x / 2;
-				const uint8_t y = s_consts.tile_texture.dimensions.y / 2;
-			} radius;
+			const Vec2< size_t > dimensions = s_consts.tc.texture_pcx.dimensions;
+			const Vec2< size_t > radius = s_consts.tile_texture.dimensions / (size_t)2;
 		} tile_texture;
 		const struct {
 			const float zoom = 0.005f;
@@ -274,10 +268,7 @@ CLASS( Map, Serializable )
 	struct tile_state_t {
 		
 		// coordinates in world
-		struct {
-			float x;
-			float y;
-		} coord;
+		Vec2< float > coord;
 		struct {
 			float x;
 			float y;
@@ -342,19 +333,18 @@ CLASS( Map, Serializable )
 	};
 	
 	struct map_state_t {
+		Vec2< float > coord;
 		struct {
-			float x;
-			float y;
-		} coord;
-		struct {
-			size_t x;
-			size_t y;
-		} dimensions;
-		struct {
+			Vec2< float > min;
+			Vec2< float > max;
 			struct {
-				float x;
-				float y;
-			} texture_scaling;
+				util::Clamper< float > x;
+				util::Clamper< float > y;
+			} percent_to_absolute;
+		} range;
+		Vec2< uint32_t > dimensions;
+		struct {
+			Vec2< float > texture_scaling;
 		} variables;
 		std::vector< copy_from_after_t > copy_from_after;
 

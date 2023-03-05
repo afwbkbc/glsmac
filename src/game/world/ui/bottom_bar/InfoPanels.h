@@ -22,7 +22,7 @@ namespace ui {
 	
 CLASS( InfoPanels, UI )
 	
-	InfoPanels( const World* world ) : UI( world, "MapBottomBarInfoPanels" ) {}
+	InfoPanels( World* world ) : UI( world, "MapBottomBarInfoPanels" ) {}
 
 	void Create();
 	void Destroy();

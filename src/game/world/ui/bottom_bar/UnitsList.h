@@ -9,7 +9,7 @@ namespace ui {
 
 CLASS( UnitsList, Section )
 
-	UnitsList( const World* world ) : Section( world, "UnitsList" ) {}
+	UnitsList( World* world ) : Section( world, "UnitsList" ) {}
 	
 	void Create();
 	void Destroy();

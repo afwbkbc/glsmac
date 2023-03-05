@@ -136,6 +136,16 @@ CLASS( UIObject, base::Base )
 	
 	typedef std::unordered_map< UIEvent::event_type_t, std::vector< UIEventHandler* > > event_handlers_t;
 	
+	// bit flags
+	typedef uint8_t event_context_t;
+	static constexpr event_context_t EC_NONE = 0;
+	static constexpr event_context_t EC_MOUSE = 1;
+	static constexpr event_context_t EC_MOUSEMOVE = 2; // separate because handling is very different
+	static constexpr event_context_t EC_KEYBOARD = 4;
+	
+	virtual void SetEventContexts( event_context_t contexts );
+	virtual void AddEventContexts( event_context_t contexts );
+	
 protected:
 	friend class UIContainer;
 	
@@ -156,15 +166,8 @@ protected:
 	const coord_t UnclampX( const coord_t value );
 	const coord_t UnclampY( const coord_t value );
 
-	// bit flags
-	typedef uint8_t event_context_t;
-	static constexpr event_context_t EC_NONE = 0;
-	static constexpr event_context_t EC_MOUSE = 1;
-	static constexpr event_context_t EC_MOUSEMOVE = 2; // separate because handling is very different
-	static constexpr event_context_t EC_KEYBOARD = 4;
-	
-	virtual void SetEventContexts( event_context_t contexts );
 	virtual void SetOverriddenEventContexts( event_context_t contexts );
+	virtual void AddOverriddenEventContexts( event_context_t contexts );
 	bool HasEventContext( event_context_t context ) const;
 	bool IsEventContextOverridden( event_context_t context ) const;
 	

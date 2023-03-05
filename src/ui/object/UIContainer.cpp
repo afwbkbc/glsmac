@@ -185,11 +185,27 @@ void UIContainer::SetEventContexts( event_context_t contexts ) {
 	}
 }
 
+void UIContainer::AddEventContexts( event_context_t contexts ) {
+	UIObject::AddEventContexts( contexts );
+	
+	for (auto& c : m_child_objects) {
+		c->AddOverriddenEventContexts( contexts );
+	}
+}
+
 void UIContainer::SetOverriddenEventContexts( event_context_t contexts ) {
 	UIObject::SetOverriddenEventContexts( contexts );
 	
 	for (auto& c : m_child_objects) {
 		c->SetOverriddenEventContexts( contexts );
+	}
+}
+
+void UIContainer::AddOverriddenEventContexts( event_context_t contexts ) {
+	UIObject::AddOverriddenEventContexts( contexts );
+	
+	for (auto& c : m_child_objects) {
+		c->AddOverriddenEventContexts( contexts );
 	}
 }
 

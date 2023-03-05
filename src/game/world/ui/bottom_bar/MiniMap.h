@@ -15,7 +15,7 @@ namespace ui {
 
 CLASS( MiniMap, Section )
 
-	MiniMap( const World* world ) : Section( world, "MiniMap" ) {}
+	MiniMap( World* world );
 	
 	void Create();
 	void Destroy();
@@ -24,6 +24,7 @@ CLASS( MiniMap, Section )
 	
 private:
 	types::Texture* m_texture = nullptr;
+	bool m_is_dragging = false;
 	
 	object::Button* m_turn_complete_button = nullptr;
 	

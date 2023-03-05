@@ -24,7 +24,7 @@ namespace ui {
 	
 CLASS( BottomBar, UI )
 	
-	BottomBar( const World* world ) : UI( world, "MapBottomBar" ) {}
+	BottomBar( World* world ) : UI( world, "MapBottomBar" ) {}
 
 	void Create();
 	void Destroy();

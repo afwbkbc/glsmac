@@ -9,7 +9,7 @@ namespace ui {
 
 CLASS( UnitPreview, Section )
 
-	UnitPreview( const World* world ) : Section( world, "UnitPreview" ) {}
+	UnitPreview( World* world ) : Section( world, "UnitPreview" ) {}
 	
 	void Create();
 	void Destroy();

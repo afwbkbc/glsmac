@@ -19,7 +19,7 @@ CLASS( Capture, RR )
 		return RR_CAPTURE;
 	}
 	Capture() : RR( Type() ) {}
-
+	
 	// request
 	scene::Camera* camera = nullptr;
 	size_t texture_width = 0;
@@ -27,7 +27,8 @@ CLASS( Capture, RR )
 	
 	// response
 	types::Texture* texture = nullptr;
-
+	
+	// cleanup
 	~Capture() {
 		if ( camera ) {
 			DELETE( camera );

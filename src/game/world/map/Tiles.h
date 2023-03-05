@@ -15,14 +15,14 @@ namespace map {
 
 CLASS( Tiles, Serializable )
 	
-	Tiles( const size_t width, const size_t height, Random* random );
+	Tiles( const uint32_t width, const uint32_t height, Random* random );
 	~Tiles();
 	
 	// warning: will reset all tiles
-	void Resize( const size_t width, const size_t height );
+	void Resize( const uint32_t width, const uint32_t height );
 	
-	const size_t GetWidth() const;
-	const size_t GetHeight() const;
+	const uint32_t GetWidth() const;
+	const uint32_t GetHeight() const;
 	
 	Tile* At( const size_t x, const size_t y ) const;
 	Tile::elevation_t* TopVertexAt( const size_t x, const size_t y ) const;
@@ -44,8 +44,8 @@ private:
 	
 	Random* m_random = nullptr;
 	
-	size_t m_width;
-	size_t m_height;
+	uint32_t m_width;
+	uint32_t m_height;
 	
 	Tile::elevation_t* m_top_vertex_row = nullptr;
 	Tile::elevation_t* m_top_right_vertex_row = nullptr;

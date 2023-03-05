@@ -16,7 +16,7 @@ namespace ui {
 
 CLASS( TilePreview, Section )
 
-	TilePreview( const World* world ) : Section( world, "TilePreview" ) {}
+	TilePreview( World* world ) : Section( world, "TilePreview" ) {}
 	
 	void Create();
 	void Destroy();

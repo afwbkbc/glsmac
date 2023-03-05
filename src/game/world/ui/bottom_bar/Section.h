@@ -10,7 +10,7 @@ namespace ui {
 
 CLASS( Section, UI )
 
-	Section( const World* world, const std::string subclass ) : UI( world, "MapBottomBar" + subclass ) {}
+	Section( World* world, const std::string subclass ) : UI( world, "MapBottomBar" + subclass ) {}
 	
 	void Create();
 	void Destroy();

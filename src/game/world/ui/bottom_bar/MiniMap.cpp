@@ -8,6 +8,12 @@ namespace game {
 namespace world {
 namespace ui {
 
+MiniMap::MiniMap( World* world )
+	: Section( world, "MiniMap" )
+{
+	
+}
+
 void MiniMap::Create() {
 	m_config.no_inner_border = true;
 	Section::Create();
@@ -21,6 +27,29 @@ void MiniMap::Create() {
 		if ( m_texture ) {
 			m_map_surface->SetTexture( m_texture );
 		}
+		m_map_surface->AddEventContexts( EC_MOUSEMOVE );
+		const auto f_scrollto = [ this ] ( const Vec2< ssize_t > coords ) -> void {
+			Log( "Minimap select at " + coords.ToString() );
+			m_world->ScrollToCoordinatePercents({
+				(float) coords.x / m_map_surface->GetWidth(),
+				(float) coords.y / m_map_surface->GetHeight()
+			});
+		};
+		m_map_surface->On( UIEvent::EV_MOUSE_DOWN, EH( this, f_scrollto ) {
+			m_is_dragging = true;
+			f_scrollto( { data->mouse.relative.x, data->mouse.relative.y } );
+			return true;
+		});
+		m_map_surface->On( UIEvent::EV_MOUSE_MOVE, EH( this, f_scrollto ) {
+			if ( m_is_dragging ) {
+				f_scrollto( { data->mouse.relative.x, data->mouse.relative.y } );
+			}
+			return true;
+		});
+		m_map_surface->On( UIEvent::EV_MOUSE_UP, EH( this ) {
+			m_is_dragging = false;
+			return true;
+		});
 	AddChild( m_map_surface );
 
 	NEW( m_bottom_bar, object::Section, "MapBottomBarMinimapBottomBar" );

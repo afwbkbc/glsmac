@@ -72,6 +72,8 @@ CLASS( World, base::Task )
 	
 	Map* GetMap() const;
 	
+	void ScrollToCoordinatePercents( const Vec2< float > position_percents );
+	
 protected:
 
 private:

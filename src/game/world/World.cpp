@@ -86,8 +86,8 @@ void World::Start() {
 	NEWV( tiles, Tiles, 2400, 1600, m_random );
 #else
 	#ifdef DEVEL
-		NEWV( tiles, Tiles, 20, 10, m_random );
-		//NEWV( tiles, Tiles, 40, 20, m_random );
+		//NEWV( tiles, Tiles, 20, 10, m_random );
+		NEWV( tiles, Tiles, 40, 20, m_random );
 	#else
 		NEWV( tiles, Tiles, 80, 40, m_random );
 	#endif
@@ -538,6 +538,20 @@ void World::Iterate() {
 Map* World::GetMap() const {
 	ASSERT( m_map, "m_map not set during GetMap()" );
 	return m_map;
+}
+
+void World::ScrollToCoordinatePercents( const Vec2< float > position_percents ) {
+	const Vec2< float > position = {
+		m_map->GetMapState()->range.percent_to_absolute.x.Clamp( position_percents.x ),
+		m_map->GetMapState()->range.percent_to_absolute.y.Clamp( position_percents.y )
+	};
+	Log( "Scrolling to percents " + position_percents.ToString() );
+	m_camera_position = {
+		GetFixedX( - position.x * m_camera_position.z / m_viewport.window_aspect_ratio ),
+		- position.y * m_camera_position.z,
+		m_camera_position.z
+	};
+	UpdateCameraPosition();
 }
 
 void World::SetCameraPosition( const Vec3 camera_position ) {

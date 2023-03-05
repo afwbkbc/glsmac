@@ -344,12 +344,18 @@ void Map::GenerateActors() {
 	
 	m_map_state = {};
 	
-	m_map_state.dimensions.x = m_tiles->GetWidth();
-	m_map_state.dimensions.y = m_tiles->GetHeight();
-	m_map_state.coord.x = -( Map::s_consts.tile.scale.x * ( m_map_state.dimensions.x + 1 ) / 4 - Map::s_consts.tile.radius.x );
-	m_map_state.coord.y = -( Map::s_consts.tile.scale.y * ( m_map_state.dimensions.y + 1 ) / 4 - Map::s_consts.tile.radius.y );
-	m_map_state.variables.texture_scaling.x = 1.0f / Map::s_consts.tile_texture.dimensions.x / ( m_map_state.dimensions.x + 1 ); // + 1 for overdraw column
-	m_map_state.variables.texture_scaling.y = 1.0f / Map::s_consts.tile_texture.dimensions.y / m_map_state.dimensions.y / LAYER_MAX;
+	m_map_state.dimensions = {
+		m_tiles->GetWidth(),
+		m_tiles->GetHeight()
+	};
+	m_map_state.coord = {
+		- ( Map::s_consts.tile.scale.x * ( m_map_state.dimensions.x + 1 ) / 4 - Map::s_consts.tile.radius.x ),
+		- ( Map::s_consts.tile.scale.y * ( m_map_state.dimensions.y + 1 ) / 4 - Map::s_consts.tile.radius.y )
+	};
+	m_map_state.variables.texture_scaling = {
+		1.0f / Map::s_consts.tile_texture.dimensions.x / ( m_map_state.dimensions.x + 1 ), // + 1 for overdraw column
+		1.0f / Map::s_consts.tile_texture.dimensions.y / m_map_state.dimensions.y / LAYER_MAX
+	};
 	
 	LinkTileStates();
 	
@@ -422,6 +428,11 @@ void Map::GenerateActors() {
 			) / 4 );
 		}
 	}
+	
+	m_map_state.range.min = GetTileState( 0, 0 )->coord;
+	m_map_state.range.max = GetTileState( m_map_state.dimensions.x - 1, m_map_state.dimensions.y - 1 )->coord;
+	m_map_state.range.percent_to_absolute.x.SetRange( 0.0f, 1.0f, m_map_state.range.min.x, m_map_state.range.max.x );
+	m_map_state.range.percent_to_absolute.y.SetRange( 0.0f, 1.0f, m_map_state.range.min.y, m_map_state.range.max.y );
 	
 	InitTerrainActor();
 	
@@ -814,14 +825,11 @@ const Buffer Map::Serialize() const {
 const Buffer Map::map_state_t::Serialize() const {
 	Buffer buf;
 	
-	buf.WriteFloat( coord.x );
-	buf.WriteFloat( coord.y );
-	
-	buf.WriteInt( dimensions.x );
-	buf.WriteInt( dimensions.y );
-	
-	buf.WriteFloat( variables.texture_scaling.x );
-	buf.WriteFloat( variables.texture_scaling.y );
+	buf.WriteVec2f( coord );
+	buf.WriteVec2f( range.min );
+	buf.WriteVec2f( range.max );
+	buf.WriteVec2u( dimensions );
+	buf.WriteVec2f( variables.texture_scaling );
 	
 	return buf;
 }
@@ -829,8 +837,7 @@ const Buffer Map::map_state_t::Serialize() const {
 const Buffer Map::tile_state_t::Serialize() const {
 	Buffer buf;
 	
-	buf.WriteFloat( coord.x );
-	buf.WriteFloat( coord.y );
+	buf.WriteVec2f( coord );
 	buf.WriteFloat( tex_coord.x );
 	buf.WriteFloat( tex_coord.y );
 	buf.WriteFloat( tex_coord.x1 );
@@ -980,22 +987,21 @@ void Map::Unserialize( Buffer buf ) {
 	m_mesh_terrain_data->Unserialize( buf.ReadString() );
 	
 	InitTerrainActor();
+	
+	m_map_state.range.percent_to_absolute.x.SetRange( 0.0f, 1.0f, m_map_state.range.min.x, m_map_state.range.max.x );
+	m_map_state.range.percent_to_absolute.y.SetRange( 0.0f, 1.0f, m_map_state.range.min.y, m_map_state.range.max.y );
 }
 
 void Map::map_state_t::Unserialize( Buffer buf ) {
-	coord.x = buf.ReadFloat();
-	coord.y = buf.ReadFloat();
-	
-	dimensions.x = buf.ReadInt();
-	dimensions.y = buf.ReadInt();
-	
-	variables.texture_scaling.x = buf.ReadFloat();
-	variables.texture_scaling.y = buf.ReadFloat();
+	coord = buf.ReadVec2f();
+	range.min = buf.ReadVec2f();
+	range.max = buf.ReadVec2f();
+	dimensions = buf.ReadVec2u();
+	variables.texture_scaling = buf.ReadVec2f();
 }
 
 void Map::tile_state_t::Unserialize( const Map* map, Buffer buf ) {
-	coord.x = buf.ReadFloat();
-	coord.y = buf.ReadFloat();
+	coord = buf.ReadVec2f();
 	tex_coord.x = buf.ReadFloat();
 	tex_coord.y = buf.ReadFloat();
 	tex_coord.x1 = buf.ReadFloat();

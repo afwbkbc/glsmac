@@ -290,8 +290,16 @@ void UIObject::SetEventContexts( event_context_t contexts ) {
 	m_event_contexts = contexts;
 }
 
+void UIObject::AddEventContexts( event_context_t contexts ) {
+	m_event_contexts |= contexts;
+}
+
 void UIObject::SetOverriddenEventContexts( event_context_t contexts ) {
 	m_overridden_event_contexts = contexts;
+}
+
+void UIObject::AddOverriddenEventContexts( event_context_t contexts ) {
+	m_overridden_event_contexts |= contexts;
 }
 
 bool UIObject::HasEventContext( event_context_t context ) const {

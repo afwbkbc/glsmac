@@ -33,12 +33,15 @@ CLASS( UIContainer, UIObject )
 	void BlockEvents();
 	void UnblockEvents();
 	
+	void SetEventContexts( event_context_t contexts );
+	void AddEventContexts( event_context_t contexts );
+	
 protected:
 	virtual void ApplyStyle();
 	virtual void ReloadStyle();
 	
-	void SetEventContexts( event_context_t contexts );
 	void SetOverriddenEventContexts( event_context_t contexts );
+	void AddOverriddenEventContexts( event_context_t contexts );
 	
 	std::vector<UIObject *> m_child_objects = {};
 	
