@@ -173,6 +173,16 @@ const Vec2< size_t > BottomBar::GetMinimapDimensions() const {
 	return { 224, 112 }; // TODO: get from minimap style
 }
 
+void BottomBar::SetMinimapSelection( const Vec2< float > position_percents, const Vec2< float > zoom ) {
+	ASSERT( m_sections.mini_map, "minimap not initialized" );
+	m_sections.mini_map->SetMinimapSelection( position_percents, zoom );
+}
+
+const bool BottomBar::IsMouseOverMiniMap() const {
+	ASSERT( m_sections.mini_map, "minimap not initialized" );
+	return m_sections.mini_map->IsMouseOver();
+}
+
 }
 }
 }

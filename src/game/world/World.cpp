@@ -377,37 +377,12 @@ void World::Start() {
 	}, UI::GH_AFTER );
 	
 	m_handlers.mousescroll = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_SCROLL, EH( this ) {
-		
-		if ( m_map_control.last_mouse_position.y > m_viewport.max.y ) {
-			// scroll happens over bottom bar, ignore it
-			// TODO: make mouse scroll events go to element under mouse coordinates and handle in BottomBar
-			return true;
+		if ( m_ui.bottom_bar->IsMouseOverMiniMap() ) { // TODO: fix mousescroll events propagation and remove this hack
+			MouseScroll( { (float)m_viewport.width / 2, (float)m_viewport.height / 2 }, data->mouse.scroll_y );
 		}
-		
-		float speed = World::s_consts.map_scroll.smooth_scrolling.zoom_speed * m_camera_position.z;
-		
-		float new_z = m_camera_position.z + data->mouse.scroll_y * speed;
-		
-		if ( new_z < m_camera_range.min.z ) {
-			new_z = m_camera_range.min.z;
+		else {
+			MouseScroll( m_map_control.last_mouse_position, data->mouse.scroll_y );
 		}
-		if ( new_z > m_camera_range.max.z ) {
-			new_z = m_camera_range.max.z;
-		}
-		
-		float diff = m_camera_position.z / new_z;
-		
-		Vec2< float > m = {
-			m_clamp.x.Clamp( m_map_control.last_mouse_position.x ),
-			m_clamp.y.Clamp( m_map_control.last_mouse_position.y )
-		};
-		
-		ScrollTo({
-			( m_camera_position.x - m.x ) / diff + m.x,
-			( m_camera_position.y - m.y ) / diff + m.y,
-			new_z
-		});
-		
 		return true;
 	}, UI::GH_AFTER );
 	
@@ -516,7 +491,7 @@ void World::Iterate() {
 			is_camera_scale_updated = true;
 		}
 		if ( !--m_smooth_scrolling.steps_left ) {
-			Log( "Scrolling finished" );
+			//Log( "Scrolling finished" );
 			m_smooth_scrolling.timer.Stop();
 			break;
 		}
@@ -545,7 +520,7 @@ void World::ScrollToCoordinatePercents( const Vec2< float > position_percents ) 
 		m_map->GetMapState()->range.percent_to_absolute.x.Clamp( position_percents.x ),
 		m_map->GetMapState()->range.percent_to_absolute.y.Clamp( position_percents.y )
 	};
-	Log( "Scrolling to percents " + position_percents.ToString() );
+	//Log( "Scrolling to percents " + position_percents.ToString() );
 	m_camera_position = {
 		GetFixedX( - position.x * m_camera_position.z / m_viewport.window_aspect_ratio ),
 		- position.y * m_camera_position.z,
@@ -623,6 +598,14 @@ void World::UpdateCameraPosition() {
 		( 0.5f + m_camera_position.x ) * m_viewport.window_aspect_ratio,
 		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + Map::s_consts.tile_scale_z * m_camera_position.z / 1.41f, // TODO: why 1.41?
 		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + m_camera_position.z
+	});
+
+	m_ui.bottom_bar->SetMinimapSelection({
+		1.0f - m_map->GetMapState()->range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z * m_viewport.window_aspect_ratio ),
+		1.0f - m_map->GetMapState()->range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z )
+	}, {
+		1.0f - m_camera_position.z * 4.4f / m_viewport.window_aspect_ratio,
+		1.0f + m_camera_range.min.z - ( m_camera_position.z - m_camera_range.min.z ) * 5.0f
 	});
 }
 
@@ -784,7 +767,7 @@ void World::ScrollTo( const Vec3& target ) {
 	m_smooth_scrolling.steps_left = World::s_consts.map_scroll.smooth_scrolling.scroll_steps;
 	m_smooth_scrolling.step = ( m_smooth_scrolling.target_position - m_camera_position ) / m_smooth_scrolling.steps_left;
 	m_smooth_scrolling.timer.SetInterval( World::s_consts.map_scroll.smooth_scrolling.scroll_step_ms );
-	Log( "Scrolling from " + m_camera_position.ToString() + " to " + m_smooth_scrolling.target_position.ToString() );
+	//Log( "Scrolling from " + m_camera_position.ToString() + " to " + m_smooth_scrolling.target_position.ToString() );
 }
 
 void World::ScrollToTile( const Map::tile_state_t* ts ) {
@@ -838,7 +821,7 @@ void World::UpdateMinimap() {
 	mm.x *= scale.x;
 	mm.y *= scale.y;
 	
-	// TODO: not perfect formulas yet
+	// TODO: formulas not perfect yet
 	
 	const float sx = (float)mm.x / (float)m_map->GetWidth() / (float)Map::s_consts.tc.texture_pcx.dimensions.x;
 	const float sy = (float)mm.y / (float)m_map->GetHeight() / (float)Map::s_consts.tc.texture_pcx.dimensions.y;
@@ -855,7 +838,7 @@ void World::UpdateMinimap() {
 	
 	camera->SetPosition({
 		ss * sxy,
-		1.0f - ss * 0.444f, // 60x40 scale=2
+		1.0f - ss * 0.444f,
 		0.5f
 	});
 	
@@ -863,6 +846,38 @@ void World::UpdateMinimap() {
 		mm.x,
 		mm.y
 	});	
+}
+
+void World::MouseScroll( const Vec2< float > position, const float scroll_value ) {
+	if ( position.y > m_viewport.max.y ) {
+		// scroll happens over bottom bar, ignore it
+		// TODO: make mouse scroll events go to element under mouse coordinates and handled in BottomBar
+		return;
+	}
+
+	float speed = World::s_consts.map_scroll.smooth_scrolling.zoom_speed * m_camera_position.z;
+
+	float new_z = m_camera_position.z + scroll_value * speed;
+
+	if ( new_z < m_camera_range.min.z ) {
+		new_z = m_camera_range.min.z;
+	}
+	if ( new_z > m_camera_range.max.z ) {
+		new_z = m_camera_range.max.z;
+	}
+
+	float diff = m_camera_position.z / new_z;
+
+	Vec2< float > m = {
+		m_clamp.x.Clamp( position.x ),
+		m_clamp.y.Clamp( position.y )
+	};
+
+	ScrollTo({
+		( m_camera_position.x - m.x ) / diff + m.x,
+		( m_camera_position.y - m.y ) / diff + m.y,
+		new_z
+	});
 }
 
 }

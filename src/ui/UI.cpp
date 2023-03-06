@@ -159,7 +159,7 @@ void UI::Iterate() {
 	}
 	
 	if ( m_is_redraw_needed ) {
-		Log( "Redrawing UI" );
+		//Log( "Redrawing UI" );
 		g_engine->GetGraphics()->RedrawOverlay();
 		m_is_redraw_needed = false;
 	}

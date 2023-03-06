@@ -22,13 +22,23 @@ CLASS( MiniMap, Section )
 
 	void SetMinimapTexture( types::Texture* texture );
 	
+	void SetMinimapSelection( const Vec2< float > position_percents, const Vec2< float > zoom );
+	void ClearMinimapSelection();
+	
+	const bool IsMouseOver() const;
+	
 private:
 	types::Texture* m_texture = nullptr;
 	bool m_is_dragging = false;
+	bool m_is_mouse_over = false;
+	types::Texture* m_map_selection_texture = nullptr;
+	const UIEventHandler* m_mouseup_handler = nullptr;
+	Vec2< ssize_t > m_last_mouse_position = { 0, 0 }; // TODO: fix mouse coordinates passing with mouse scroll
 	
 	object::Button* m_turn_complete_button = nullptr;
 	
 	object::Mesh* m_map_surface = nullptr;
+	object::Mesh* m_map_selection = nullptr;
 	
 	object::Section* m_bottom_bar = nullptr;
 	struct {

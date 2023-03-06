@@ -271,7 +271,7 @@ void OpenGL::LoadTexture( const types::Texture* texture ) {
 	m_textures_map::iterator it = m_textures.find( texture );
 	if ( it == m_textures.end() ) {
 	
-		Log("Loading texture '" + texture->m_name + "'");
+		//Log("Loading texture '" + texture->m_name + "'");
 
 		m_textures[texture] = 0;
 
@@ -302,7 +302,7 @@ void OpenGL::LoadTexture( const types::Texture* texture ) {
 void OpenGL::UnloadTexture( const types::Texture* texture ) {
 	m_textures_map::iterator it = m_textures.find( texture );
 	if ( it != m_textures.end() ) {
-		Log("Unloading texture '" + texture->m_name + "'");
+		//Log("Unloading texture '" + texture->m_name + "'");
 		glActiveTexture( GL_TEXTURE0 );
 		glDeleteTextures(1, &it->second );
 		m_textures.erase( it );

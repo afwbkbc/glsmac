@@ -74,6 +74,8 @@ CLASS( World, base::Task )
 	
 	void ScrollToCoordinatePercents( const Vec2< float > position_percents );
 	
+	void MouseScroll( const Vec2< float > position, const float scroll_value );
+
 protected:
 
 private:
@@ -190,7 +192,6 @@ private:
 	void CenterAtTile( const Map::tile_state_t* ts );
 	
 	void UpdateMinimap();
-	
 };
 
 }
