@@ -602,7 +602,6 @@ void World::UpdateCameraPosition() {
 
 	const auto* ms = m_map->GetMapState();
 	
-	// TODO: make more accurate
 	m_ui.bottom_bar->SetMinimapSelection({
 		1.0f - ms->range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z * m_viewport.window_aspect_ratio ),
 		1.0f - ms->range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z )
