@@ -318,7 +318,7 @@ void World::Start() {
 			m_map_control.last_rotate_position = current_rotate_position;
 		}
 #endif
-		else {
+		else if ( !m_ui.bottom_bar->IsMouseDraggingMiniMap() ) {
 			const ssize_t edge_distance = m_viewport.is_fullscreen
 				? World::s_consts.map_scroll.static_scrolling.edge_distance_px.fullscreen
 				: World::s_consts.map_scroll.static_scrolling.edge_distance_px.windowed
@@ -600,12 +600,13 @@ void World::UpdateCameraPosition() {
 		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + m_camera_position.z
 	});
 
+	// TODO: make more accurate
 	m_ui.bottom_bar->SetMinimapSelection({
 		1.0f - m_map->GetMapState()->range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z * m_viewport.window_aspect_ratio ),
 		1.0f - m_map->GetMapState()->range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z )
 	}, {
-		1.0f - m_camera_position.z * 4.4f / m_viewport.window_aspect_ratio,
-		1.0f + m_camera_range.min.z - ( m_camera_position.z - m_camera_range.min.z ) * 5.0f
+		1.0f + m_camera_range.min.z - m_camera_range.max.x / 3.0f,
+		1.0f + m_camera_range.min.z - m_camera_range.max.y / 2.0f,
 	});
 }
 

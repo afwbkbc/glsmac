@@ -26,6 +26,7 @@ CLASS( MiniMap, Section )
 	void ClearMinimapSelection();
 	
 	const bool IsMouseOver() const;
+	const bool IsMouseDragging() const;
 	
 private:
 	types::Texture* m_texture = nullptr;

@@ -183,6 +183,11 @@ const bool BottomBar::IsMouseOverMiniMap() const {
 	return m_sections.mini_map->IsMouseOver();
 }
 
+const bool BottomBar::IsMouseDraggingMiniMap() const {
+	ASSERT( m_sections.mini_map, "minimap not initialized" );
+	return m_sections.mini_map->IsMouseDragging();
+}
+
 }
 }
 }

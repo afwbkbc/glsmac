@@ -88,16 +88,20 @@ void MiniMap::Create() {
 void MiniMap::SetMinimapSelection( const Vec2< float > position_percents, const Vec2< float > zoom ) {
 	ClearMinimapSelection();
 	
-	//Log( "Setting minimap selection to " + position_percents.ToString() + " ( zoom " + zoom.ToString() + " )" );
-	
-	Vec2< size_t > size = {
-		(size_t)floor( (float) m_map_surface->GetWidth() * zoom.x ),
-		(size_t)floor( (float) m_map_surface->GetHeight() * zoom.y )
+	Vec2< ssize_t > size = {
+		(ssize_t)floor( (float) m_map_surface->GetWidth() * zoom.x ),
+		(ssize_t)floor( (float) m_map_surface->GetHeight() * zoom.y )
 	};
 	
+	if ( size.x <= 0 || size.y <= 0 ) {
+		return;
+	}
+	
+	//Log( "Setting minimap selection to " + position_percents.ToString() + " ( zoom " + zoom.ToString() + " )" );
+	
 	Vec2< ssize_t > top_left = {
-		(ssize_t)round( (float) m_map_surface->GetWidth() * position_percents.x - size.x / 2 ),
-		(ssize_t)round( (float) m_map_surface->GetHeight() * position_percents.y - size.y / 2 + 29 )
+		(ssize_t)floor( (float) m_map_surface->GetWidth() * position_percents.x - size.x / 2 ) + 1,
+		(ssize_t)floor( (float) m_map_surface->GetHeight() * position_percents.y - size.y / 2 ) + 29
 	};
 	
 	//Log( "Selection size=" + size.ToString() + " top_left=" + top_left.ToString() );
@@ -144,6 +148,10 @@ const bool MiniMap::IsMouseOver() const {
 		});
 	}
 	return m_is_mouse_over;
+}
+
+const bool MiniMap::IsMouseDragging() const {
+	return m_is_dragging;
 }
 
 void MiniMap::Destroy() {
