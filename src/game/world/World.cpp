@@ -600,13 +600,15 @@ void World::UpdateCameraPosition() {
 		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + m_camera_position.z
 	});
 
+	const auto* ms = m_map->GetMapState();
+	
 	// TODO: make more accurate
 	m_ui.bottom_bar->SetMinimapSelection({
-		1.0f - m_map->GetMapState()->range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z * m_viewport.window_aspect_ratio ), // correct
-		1.0f - m_map->GetMapState()->range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z ) // correct
+		1.0f - ms->range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z * m_viewport.window_aspect_ratio ),
+		1.0f - ms->range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z )
 	}, {
-		1.0f - m_camera_range.max.x / 2.0f / 2,
-		1.0f - m_camera_range.max.y / m_viewport.ratio.y / 2.0f // correct
+		2.0f / ( (float) m_map->GetWidth() * m_camera_position.z / m_viewport.window_aspect_ratio ),
+		2.0f / ( (float) m_map->GetHeight() * m_camera_position.z / m_viewport.window_aspect_ratio ),
 	});
 }
 
