@@ -602,11 +602,11 @@ void World::UpdateCameraPosition() {
 
 	// TODO: make more accurate
 	m_ui.bottom_bar->SetMinimapSelection({
-		1.0f - m_map->GetMapState()->range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z * m_viewport.window_aspect_ratio ),
-		1.0f - m_map->GetMapState()->range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z )
+		1.0f - m_map->GetMapState()->range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z * m_viewport.window_aspect_ratio ), // correct
+		1.0f - m_map->GetMapState()->range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z ) // correct
 	}, {
-		1.0f + m_camera_range.min.z - m_camera_range.max.x / 3.0f,
-		1.0f + m_camera_range.min.z - m_camera_range.max.y / 2.0f,
+		1.0f - m_camera_range.max.x / 2.0f / 2,
+		1.0f - m_camera_range.max.y / m_viewport.ratio.y / 2.0f // correct
 	});
 }
 
