@@ -36,6 +36,8 @@ void Texture::Resize( const size_t width, const size_t height ) {
 	
 	if (m_width != width || m_height != height) {
 		
+		//Log( "Setting texture size to " + std::to_string( width ) + "x" + std::to_string( height ) );
+		
 		m_width = width;
 		m_height = height;
 	

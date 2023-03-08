@@ -565,8 +565,8 @@ void World::UpdateViewport() {
 	m_viewport.window_width = graphics->GetViewportWidth();
 	m_viewport.window_height = graphics->GetViewportHeight();
 	m_viewport.window_aspect_ratio = graphics->GetAspectRatio();
-	m_viewport.max.x = m_viewport.window_width;
-	m_viewport.max.y = m_viewport.window_height - m_ui.bottom_bar->GetHeight() + m_viewport.bottom_bar_overlap;
+	m_viewport.max.x = std::max< ssize_t >( m_viewport.min.x, m_viewport.window_width );
+	m_viewport.max.y = std::max< ssize_t >( m_viewport.min.y, m_viewport.window_height - m_ui.bottom_bar->GetHeight() + m_viewport.bottom_bar_overlap );
 	m_viewport.ratio.x = (float) m_viewport.window_width / m_viewport.max.x;
 	m_viewport.ratio.y = (float) m_viewport.window_height / m_viewport.max.y;
 	m_viewport.width = m_viewport.max.x - m_viewport.min.x;
@@ -601,7 +601,7 @@ void World::UpdateCameraPosition() {
 	});
 
 	const auto* ms = m_map->GetMapState();
-	
+
 	m_ui.bottom_bar->SetMinimapSelection({
 		1.0f - ms->range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z * m_viewport.window_aspect_ratio ),
 		1.0f - ms->range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z )
@@ -805,25 +805,14 @@ void World::UpdateMinimap() {
 	
 	auto mm = m_ui.bottom_bar->GetMinimapDimensions();
 	// 'black grid' artifact workaround
-	// TODO: find reason and fix properly
+	// TODO: find reason and fix properly, maybe just keep larger internal viewport
 	Vec2< float > scale = {
 		(float) m_viewport.window_width / mm.x,
 		(float) m_viewport.window_height / mm.y
 	};
-	const float ma = (float) mm.y / mm.x;
-	const float sa = (float) scale.y / scale.x;
-	
-	if ( sa < ma ) {
-		scale.x = scale.y / ma;
-	}
-	else {
-		scale.y = scale.x * ma;
-	}
 	
 	mm.x *= scale.x;
 	mm.y *= scale.y;
-	
-	// TODO: formulas not perfect yet
 	
 	const float sx = (float)mm.x / (float)m_map->GetWidth() / (float)Map::s_consts.tc.texture_pcx.dimensions.x;
 	const float sy = (float)mm.y / (float)m_map->GetHeight() / (float)Map::s_consts.tc.texture_pcx.dimensions.y;
@@ -834,20 +823,20 @@ void World::UpdateMinimap() {
 	camera->SetAngle( m_camera->GetAngle() );
 	camera->SetScale({
 		sx * ss * sxy / scale.x,
-		sy * ss * 1.64f / scale.y,
+		sy * ss * 1.38f / scale.y,
 		0.01f
 	});
 	
 	camera->SetPosition({
 		ss * sxy,
-		1.0f - ss * 0.444f,
+		1.0f - ss * 0.48f,
 		0.5f
 	});
 	
 	m_map->GetMinimapTexture( camera, {
 		mm.x,
 		mm.y
-	});	
+	});
 }
 
 void World::MouseScroll( const Vec2< float > position, const float scroll_value ) {
