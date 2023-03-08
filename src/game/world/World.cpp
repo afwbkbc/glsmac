@@ -516,14 +516,15 @@ Map* World::GetMap() const {
 }
 
 void World::ScrollToCoordinatePercents( const Vec2< float > position_percents ) {
+	const auto* ms = m_map->GetMapState();
 	const Vec2< float > position = {
-		m_map->GetMapState()->range.percent_to_absolute.x.Clamp( position_percents.x ),
-		m_map->GetMapState()->range.percent_to_absolute.y.Clamp( position_percents.y )
+		ms->range.percent_to_absolute.x.Clamp( position_percents.x ),
+		ms->range.percent_to_absolute.y.Clamp( position_percents.y )
 	};
 	//Log( "Scrolling to percents " + position_percents.ToString() );
 	m_camera_position = {
 		GetFixedX( - position.x * m_camera_position.z / m_viewport.window_aspect_ratio ),
-		- position.y * m_camera_position.z,
+		- position.y * m_camera_position.z * m_viewport.ratio.y * 0.707f,
 		m_camera_position.z
 	};
 	UpdateCameraPosition();
@@ -596,7 +597,7 @@ void World::UpdateCameraPosition() {
 	
 	m_camera->SetPosition({
 		( 0.5f + m_camera_position.x ) * m_viewport.window_aspect_ratio,
-		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + Map::s_consts.tile_scale_z * m_camera_position.z / 1.41f, // TODO: why 1.41?
+		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + Map::s_consts.tile_scale_z * m_camera_position.z / 1.414f, // TODO: why 1.414?
 		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + m_camera_position.z
 	});
 
@@ -604,10 +605,10 @@ void World::UpdateCameraPosition() {
 
 	m_ui.bottom_bar->SetMinimapSelection({
 		1.0f - ms->range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z * m_viewport.window_aspect_ratio ),
-		1.0f - ms->range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z )
+		1.0f - ms->range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z / m_viewport.ratio.y / 0.707f )
 	}, {
-		2.0f / ( (float) m_map->GetWidth() * m_camera_position.z / m_viewport.window_aspect_ratio ),
-		2.75f / ( (float) m_map->GetHeight() * m_camera_position.z * m_viewport.ratio.y ),
+		2.0f / ( (float) ( m_map->GetWidth() ) * m_camera_position.z / m_viewport.window_aspect_ratio ),
+		2.0f / ( (float) ( m_map->GetHeight() ) * m_camera_position.z * m_viewport.ratio.y * 0.707f ),
 	});
 }
 
