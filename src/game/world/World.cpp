@@ -607,7 +607,7 @@ void World::UpdateCameraPosition() {
 		1.0f - ms->range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z )
 	}, {
 		2.0f / ( (float) m_map->GetWidth() * m_camera_position.z / m_viewport.window_aspect_ratio ),
-		2.0f / ( (float) m_map->GetHeight() * m_camera_position.z / m_viewport.window_aspect_ratio ),
+		2.75f / ( (float) m_map->GetHeight() * m_camera_position.z * m_viewport.ratio.y ),
 	});
 }
 
