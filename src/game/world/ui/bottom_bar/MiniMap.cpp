@@ -104,18 +104,17 @@ void MiniMap::Create() {
 }
 
 void MiniMap::SetMinimapSelection( const Vec2< float > position_percents, const Vec2< float > zoom ) {
-	ClearMinimapSelection();
 	
 	Vec2< ssize_t > size = {
-		(ssize_t)floor( (float) m_map_surface->GetWidth() * zoom.x ),
-		(ssize_t)floor( (float) m_map_surface->GetHeight() * zoom.y )
+		(ssize_t)round( (float) m_map_surface->GetWidth() * zoom.x ),
+		(ssize_t)round( (float) m_map_surface->GetHeight() * zoom.y )
 	};
 	
 	if ( size.x <= 0 || size.y <= 0 ) {
+		// prevent crash
+		ClearMinimapSelection();
 		return;
 	}
-	
-	//Log( "Setting minimap selection to " + position_percents.ToString() + " ( zoom " + zoom.ToString() + " )" );
 	
 	const size_t w = m_map_surface->GetWidth();
 	const size_t h = m_map_surface->GetHeight();
@@ -133,7 +132,7 @@ void MiniMap::SetMinimapSelection( const Vec2< float > position_percents, const 
 	size.x = shw * 2;
 	size.y = shh * 2;
 	
-	// draw 3 quads with 1 screen distance between them, to make selection also appear from other side when move to one side
+	// draw 3 quads with 1 screen distance between them, to make selection also appear from other side when moved to one side
 	const Vec2< size_t > full_size = {
 		w * 2 + size.x,
 		h
@@ -144,49 +143,60 @@ void MiniMap::SetMinimapSelection( const Vec2< float > position_percents, const 
 		(ssize_t)floor( h * position_percents.y - full_size.y / 2 ) + 29
 	};
 	
-	//Log( "Selection size=" + size.ToString() + " top_left=" + top_left.ToString() );
+	if ( size != m_last_selection_size ) {
+		// redraw selection texture
+		// TODO: add 'lines' shader program and do it without texture
+		
+		//Log( "Redrawing selection texture ( size=" + size.ToString() + " top_left=" + top_left.ToString() + " )" );
 	
-	const Color c( 1.0f, 1.0f, 1.0f, 0.5f );
+		ClearMinimapSelection();
+		
+		const Color c( 1.0f, 1.0f, 1.0f, 0.6f );
+
+		const Vec2< size_t > half_size = {
+			full_size.x / 2,
+			full_size.y / 2
+		};
+
+		NEW( m_map_selection_texture, types::Texture, "MapSelection", full_size.x, full_size.y );
+		for ( auto y = 0 ; y < size.y ; y++ ) {
+			const auto yy = half_size.y - shh + y;
+			// left instance
+			m_map_selection_texture->SetPixel( 0, yy, c );
+			m_map_selection_texture->SetPixel( size.x - 1, yy, c );
+			// center instance
+			m_map_selection_texture->SetPixel( half_size.x - shw, yy, c );
+			m_map_selection_texture->SetPixel( half_size.x + shw - 1, yy, c );
+			// right instance
+			m_map_selection_texture->SetPixel( full_size.x - size.x, yy, c );
+			m_map_selection_texture->SetPixel( full_size.x - 1, yy, c );
+		}
+		for ( auto x = 0 ; x < size.x ; x++ ) {
+			// left instance
+			m_map_selection_texture->SetPixel( x, half_size.y - shh, c );
+			m_map_selection_texture->SetPixel( x, half_size.y + shh - 1, c );
+			// center instance
+			m_map_selection_texture->SetPixel( x + half_size.x - shw, half_size.y - shh, c );
+			m_map_selection_texture->SetPixel( x + half_size.x - shw, half_size.y + shh - 1, c );
+			// right instance
+			m_map_selection_texture->SetPixel( x + full_size.x - size.x, half_size.y - shh, c );
+			m_map_selection_texture->SetPixel( x + full_size.x - size.x, half_size.y + shh - 1, c );
+		}
+		NEW( m_map_selection, object::Mesh );
+			m_map_selection->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
+			m_map_selection->SetWidth( full_size.x );
+			m_map_selection->SetHeight( full_size.y );
+			m_map_selection->SetMesh( types::mesh::Render::Rectangle() );
+			m_map_selection->SetTexture( m_map_selection_texture );
+			m_map_selection->SetCoordinateLimitsByObject( m_map_surface );
+		AddChild( m_map_selection );
 	
-	const Vec2< size_t > half_size = {
-		full_size.x / 2,
-		full_size.y / 2
-	};
-	
-	NEW( m_map_selection_texture, types::Texture, "MapSelection", full_size.x, full_size.y );
-	for ( auto y = 0 ; y < size.y ; y++ ) {
-		const auto yy = half_size.y - shh + y;
-		// left instance
-		m_map_selection_texture->SetPixel( 0, yy, c );
-		m_map_selection_texture->SetPixel( size.x - 1, yy, c );
-		// center instance
-		m_map_selection_texture->SetPixel( half_size.x - shw, yy, c );
-		m_map_selection_texture->SetPixel( half_size.x + shw - 1, yy, c );
-		// right instance
-		m_map_selection_texture->SetPixel( full_size.x - size.x, yy, c );
-		m_map_selection_texture->SetPixel( full_size.x - 1, yy, c );
+		m_last_selection_size = size;
 	}
-	for ( auto x = 0 ; x < size.x ; x++ ) {
-		// left instance
-		m_map_selection_texture->SetPixel( x, half_size.y - shh, c );
-		m_map_selection_texture->SetPixel( x, half_size.y + shh - 1, c );
-		// center instance
-		m_map_selection_texture->SetPixel( x + half_size.x - shw, half_size.y - shh, c );
-		m_map_selection_texture->SetPixel( x + half_size.x - shw, half_size.y + shh - 1, c );
-		// right instance
-		m_map_selection_texture->SetPixel( x + full_size.x - size.x, half_size.y - shh, c );
-		m_map_selection_texture->SetPixel( x + full_size.x - size.x, half_size.y + shh - 1, c );
-	}
-	NEW( m_map_selection, object::Mesh );
-		m_map_selection->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
-		m_map_selection->SetLeft( top_left.x );
-		m_map_selection->SetTop( top_left.y );
-		m_map_selection->SetWidth( full_size.x );
-		m_map_selection->SetHeight( full_size.y );
-		m_map_selection->SetMesh( types::mesh::Render::Rectangle() );
-		m_map_selection->SetTexture( m_map_selection_texture );
-		m_map_selection->SetCoordinateLimitsByObject( m_map_surface );
-	AddChild( m_map_selection );
+	
+	m_map_selection->SetLeft( top_left.x );
+	m_map_selection->SetTop( top_left.y );
+	
 }
 
 void MiniMap::ClearMinimapSelection() {
@@ -199,6 +209,8 @@ void MiniMap::ClearMinimapSelection() {
 		DELETE( m_map_selection_texture );
 		m_map_selection_texture = nullptr;
 	}
+	
+	m_last_selection_size = { 0, 0 };
 }
 
 const bool MiniMap::IsMouseOver() const {

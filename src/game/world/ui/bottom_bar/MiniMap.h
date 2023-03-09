@@ -33,6 +33,7 @@ private:
 	bool m_is_dragging = false;
 	bool m_is_mouse_over = false;
 	types::Texture* m_map_selection_texture = nullptr;
+	Vec2< ssize_t > m_last_selection_size = { 0, 0 };
 	
 	struct {
 		const UIEventHandler* mouse_up = nullptr;

@@ -32,6 +32,12 @@ public:
 	const Vec2<DATATYPE> operator/ ( DATATYPE other ) const {
 		return Vec2<DATATYPE>( x / other, y / other );
 	}
+	bool operator== ( const Vec2<DATATYPE> &other ) const {
+		return x == other.x && y == other.y;
+	}
+	bool operator!= ( const Vec2<DATATYPE> &other ) const {
+		return x != other.x || y != other.y;
+	}
 	
 	operator bool() const {
 		return x || y;
