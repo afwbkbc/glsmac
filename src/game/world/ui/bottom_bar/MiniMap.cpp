@@ -58,12 +58,30 @@ void MiniMap::Create() {
 			}
 			return false;
 		});
-		m_mouseup_handler = g_engine->GetUI()->AddGlobalEventHandler( UIEvent::EV_MOUSE_UP, EH( this ) { // mouseup should work anywhere
+		
+		auto* ui = g_engine->GetUI();
+		
+		// mousemove should keep working if mouse is outside minimap but dragging continues
+		m_handlers.mouse_move = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_MOVE, EH( this, f_scrollto ) {
+			if ( m_is_dragging ) {
+				auto geom = m_map_surface->GetAreaGeometry();
+				m_last_mouse_position = {
+					data->mouse.absolute.x - (ssize_t)geom.first.x,
+					data->mouse.absolute.y - (ssize_t)geom.first.y
+				};
+				f_scrollto( m_last_mouse_position );
+			}
+			return false;
+		}, ::ui::UI::GH_BEFORE );
+		
+		// dragging should be cancelable anywhere
+		m_handlers.mouse_up = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_UP, EH( this ) {
 			if ( m_is_dragging ) {
 				m_is_dragging = false;
 			}
 			return false;
 		}, ::ui::UI::GH_BEFORE );
+		
 		m_map_surface->On( UIEvent::EV_MOUSE_SCROLL, EH( this, f_scrollto ) { // TODO: fix ui to actually receive this event here
 			f_scrollto( m_last_mouse_position );
 			m_world->MouseScroll( { 0.5f, 0.5f }, data->mouse.scroll_y );
@@ -204,7 +222,8 @@ void MiniMap::Destroy() {
 	
 	RemoveChild( m_turn_complete_button );
 	
-	g_engine->GetUI()->RemoveGlobalEventHandler( m_mouseup_handler );
+	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.mouse_move );
+	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.mouse_up );
 	RemoveChild( m_map_surface );
 	
 	m_bottom_bar->RemoveChild( m_bottom_bar_labels.mission_year );
