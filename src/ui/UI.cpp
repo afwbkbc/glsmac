@@ -26,7 +26,9 @@ void UI::Start() {
 	m_root_object.UpdateObjectArea();
 
 	m_clamp.x.SetRange( 0.0, g_engine->GetGraphics()->GetViewportWidth(), -1.0, 1.0 );
+	m_clamp.x.SetOverflowAllowed( true );
 	m_clamp.y.SetRange( 0.0, g_engine->GetGraphics()->GetViewportHeight(), -1.0, 1.0 );
+	m_clamp.y.SetOverflowAllowed( true );
 	m_clamp.y.SetInversed( true );
 	
 	if ( !m_loader ) {
