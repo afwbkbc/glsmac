@@ -262,22 +262,6 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 		NEWV( sprite_preview, object::Mesh, "MapBottomBarTilePreviewSprite" );
 		sprite_preview->SetMesh( mesh );
 		sprite_preview->SetTintColor({ 0.7f, 0.7f, 0.7f, 1.0f }); // lower brightness a bit because it's too high otherwise for some reason
-		
-		if ( // ugly hack to keep energy bonus round in preview
-			( s.tex_coords == Map::s_consts.tc.ter1_pcx.energy_bonus_land[ 0 ] ) ||
-			( s.tex_coords == Map::s_consts.tc.ter1_pcx.energy_bonus_sea[ 0 ] ) ||
-			( s.tex_coords == Map::s_consts.tc.ter1_pcx.energy_bonus_land[ 1 ] ) ||
-			( s.tex_coords == Map::s_consts.tc.ter1_pcx.energy_bonus_sea[ 1 ] )
-		) {
-			sprite_preview->SetHeight( 68 );
-			sprite_preview->SetWidth( 100 );
-			sprite_preview->SetTop( 25 );
-		}
-		else { // TODO: prevent styles from overriding manually set dimensions
-			sprite_preview->SetHeight( 84 );
-			sprite_preview->SetWidth( 84 );
-			sprite_preview->SetTop( 2 );
-		}
 		sprite_preview->SetTexture( sprite->GetTexture() );
 		m_preview_layers.push_back({
 			sprite_preview,
