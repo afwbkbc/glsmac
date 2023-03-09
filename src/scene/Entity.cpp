@@ -89,5 +89,20 @@ void Entity::Unserialize( types::Buffer buf ) {
 	UpdateRotation();
 }
 
+void Entity::Show() {
+	if ( !m_is_visible ) {
+		m_is_visible = true;
+	}
+}
+
+void Entity::Hide() {
+	if ( m_is_visible ) {
+		m_is_visible = false;
+	}
+}
+
+const bool Entity::IsVisible() const {
+	return m_is_visible;
+}
 
 } /* namespace scene */

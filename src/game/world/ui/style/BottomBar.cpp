@@ -164,12 +164,72 @@ void BottomBar::AddStyles() {
 		s->Set( ::Style::A_BOTTOM, 6 );
 	});
 
-	// info panels at center
-	AddStyle( "InfoPanels", SH() {
+	// stuff at center
+	
+	AddStyle( "MiddleArea", SH() {
 		s->Set( ::Style::A_LEFT, 262 );
 		s->Set( ::Style::A_TOP, 68 );
 		s->Set( ::Style::A_RIGHT, 262 );
 		s->Set( ::Style::A_BOTTOM, 85 );
+	});
+	
+	AddStyle( "MiddleAreaButton", SH() {
+		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_RIGHT );
+		s->Set( ::Style::A_RIGHT, 4 );
+		s->Set( ::Style::A_WIDTH, 19 );
+		s->SetFont( ::Style::A_FONT, "arialnb.ttf", 16 );
+		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 0, 0, 0 ) );
+		if ( s->Is( ::Style::M_HOVER ) || s->Is( ::Style::M_SELECTED ) ) {
+			s->SetTexture( ::Style::A_TEXTURE_BORDER_LEFT, "interface.pcx", 40, 587, 40, 610 );
+			s->SetTexture( ::Style::A_TEXTURE_BORDER_TOP, "interface.pcx", 47, 580, 70, 580 );
+			s->SetTexture( ::Style::A_TEXTURE_BORDER_RIGHT, "interface.pcx", 77, 587, 77, 610 );
+			s->SetTexture( ::Style::A_TEXTURE_BORDER_BOTTOM, "interface.pcx", 47, 617, 70, 617 );
+		}
+		else {
+			s->SetTexture( ::Style::A_TEXTURE_BORDER_LEFT, "interface.pcx", 8, 587, 8, 610 );
+			s->SetTexture( ::Style::A_TEXTURE_BORDER_TOP, "interface.pcx", 8, 588, 31, 588 );
+			s->SetTexture( ::Style::A_TEXTURE_BORDER_RIGHT, "interface.pcx", 31, 587, 31, 610 );
+			s->SetTexture( ::Style::A_TEXTURE_BORDER_BOTTOM, "interface.pcx", 8, 610, 31, 610 );
+		}
+		if ( s->Is( ::Style::M_ACTIVE ) || s->Is( ::Style::M_SELECTED ) ) {
+			s->SetTexture( ::Style::A_TEXTURE_BACK, "interface.pcx", 86, 587, 109, 610 );
+		}
+		else {
+			s->SetTexture( ::Style::A_TEXTURE_BACK, "interface.pcx", 47, 587, 70, 610 );
+		}
+	});
+	
+	AddStyle( "MiddleAreaPage", SH() {
+		s->Set( ::Style::A_LEFT, 0 );
+		s->Set( ::Style::A_TOP, 0 );
+		s->Set( ::Style::A_RIGHT, 27 );
+		s->Set( ::Style::A_BOTTOM, 0 );
+		
+	});
+	
+	// messages page
+	
+	AddStyle( "MiddleAreaMessages", { "MiddleAreaPage" }, SH() {
+		
+	});
+	
+	AddStyle( "MiddleAreaMessagesList", { "SectionInner" }, SH() {
+		s->Set( ::Style::A_LEFT, 0 );
+		s->Set( ::Style::A_TOP, 0 );
+		s->Set( ::Style::A_RIGHT, 0 );
+		s->Set( ::Style::A_BOTTOM, 0 );
+	});
+	
+	// toolbar page
+	
+	AddStyle( "MiddleAreaToolbar", { "MiddleAreaPage" }, SH() {
+		
+	});
+	
+	// info panels page
+	
+	AddStyle( "MiddleAreaInfoPanels", { "MiddleAreaPage" }, SH() {
+		
 	});
 	
 	// units list at bottom

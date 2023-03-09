@@ -36,6 +36,9 @@ CLASS( UIContainer, UIObject )
 	void SetEventContexts( event_context_t contexts );
 	void AddEventContexts( event_context_t contexts );
 	
+	virtual void Show();
+	virtual void Hide();
+	
 protected:
 	virtual void ApplyStyle();
 	virtual void ReloadStyle();

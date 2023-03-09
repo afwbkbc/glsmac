@@ -11,7 +11,7 @@ namespace ui {
 void Section::Create() {
 	UI::Create();
 	
-	NEW( m_outer, object::Section, "MapBottomBarSectionOuter" );
+	NEW( m_outer, object::Section, m_config.no_outer_border ? "" : "MapBottomBarSectionOuter" );
 	UI::AddChild( m_outer );
 	
 	NEW( m_inner, object::Section, m_config.no_inner_border ? "" : "MapBottomBarSectionInner" );

@@ -1,21 +1,21 @@
-#include "InfoPanels.h"
+#include "Toolbar.h"
 
 namespace game {
 namespace world {
 namespace ui {
 
-void InfoPanels::Create() {
+void Toolbar::Create() {
 	MiddleAreaPage::Create();
 	
 }
 
-void InfoPanels::Destroy() {
+void Toolbar::Destroy() {
 	
 	
 	MiddleAreaPage::Destroy();
 }
 
-void InfoPanels::Align() {
+void Toolbar::Align() {
 	MiddleAreaPage::Align();
 	
 	

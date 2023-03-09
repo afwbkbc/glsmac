@@ -1,28 +1,17 @@
 #pragma once
 
-#include "../UI.h"
+#include "MiddleAreaPage.h"
 
-#include "ui/object/Surface.h"
-#include "ui/object/Section.h"
-#include "ui/object/Button.h"
-
-// sections
-#include "UnitPreview.h"
-#include "TilePreview.h"
 #include "InfoPanel.h"
-#include "UnitsList.h"
-#include "MiniMap.h"
 
 namespace game {
 namespace world {
 	
-using namespace map;
-
 namespace ui {
 	
-CLASS( InfoPanels, UI )
+CLASS( InfoPanels, MiddleAreaPage )
 	
-	InfoPanels( World* world ) : UI( world, "MapBottomBarInfoPanels" ) {}
+	InfoPanels( World* world ) : MiddleAreaPage( world, "InfoPanels" ) {}
 
 	void Create();
 	void Destroy();

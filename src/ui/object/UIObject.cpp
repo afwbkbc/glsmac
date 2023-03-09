@@ -245,6 +245,12 @@ const void* UIObject::GetObject( const Style::attribute_type_t attribute_type ) 
 void UIObject::AddActor( Actor* actor ) {
 	ASSERT( std::find( m_actors.begin(), m_actors.end(), actor ) == m_actors.end(), "duplicate actor add" );
 	actor->SetPositionZ( m_absolute_z_index );
+	if ( m_is_visible ) {
+		actor->Show();
+	}
+	else {
+		actor->Hide();
+	}
 	m_actors.push_back( actor );
 }
 
@@ -526,7 +532,7 @@ void UIObject::SetVAlign( const alignment_t align ) {
 
 void UIObject::ProcessEvent( UIEvent* event ) {
 	
-	if ( m_are_events_blocked ) {
+	if ( m_are_events_blocked || !m_is_visible ) {
 		return;
 	}
 	
@@ -800,18 +806,44 @@ void UIObject::UnblockEvents() {
 	}
 }
 
+void UIObject::Select() {
+	AddStyleModifier( Style::M_SELECTED );
+}
+
+void UIObject::Deselect() {
+	RemoveStyleModifier( Style::M_SELECTED );
+}
+
 void UIObject::Focus() {
-	Log( "focusing object" );
 	m_is_focused = true;
 	AddStyleModifier( Style::M_SELECTED );
 }
 
 void UIObject::Defocus() {
-	Log( "defocusing object" );
 	m_is_focused = false;
 	RemoveStyleModifier( Style::M_SELECTED );
 }
 
+void UIObject::Show() {
+	if ( !m_is_visible ) {
+		m_is_visible = true;
+		for ( auto& actor : m_actors ) {
+			actor->Show();
+		}
+		Refresh();
+	}
+}
+
+void UIObject::Hide() {
+	if ( m_is_visible ) {
+		m_is_visible = false;
+		for ( auto& actor : m_actors ) {
+			actor->Hide();
+		}
+		Refresh();
+	}
+}
+	
 void UIObject::SetFocusable( bool is_focusable ) {
 	if ( is_focusable != m_is_focusable ) {
 		m_is_focusable = is_focusable;

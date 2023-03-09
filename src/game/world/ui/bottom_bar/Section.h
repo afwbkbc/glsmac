@@ -20,6 +20,7 @@ CLASS( Section, UI )
 	
 protected:
 	struct {
+		bool no_outer_border = false;
 		bool no_inner_border = false;
 	} m_config = {};
 	

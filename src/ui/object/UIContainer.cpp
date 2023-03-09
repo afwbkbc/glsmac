@@ -245,6 +245,23 @@ void UIContainer::UnblockEvents() {
 	}
 }
 
+void UIContainer::Show() {
+	if ( !m_is_visible ) {
+		UIObject::Show();
+		for (auto& c : m_child_objects) {
+			c->Show();
+		}
+	}
+}
+
+void UIContainer::Hide() {
+	if ( m_is_visible ) {
+		UIObject::Hide();
+		for (auto& c : m_child_objects) {
+			c->Hide();
+		}
+	}
+}
 
 const std::string UIContainer::Subclass( const std::string& class_name ) const {
 	//if (m_style_class.empty()) {

@@ -131,8 +131,14 @@ CLASS( UIObject, base::Base )
 	
 	void SetFocusable( bool is_focusable );
 	
+	void Select();
+	void Deselect();
+	
 	virtual void Focus();
 	virtual void Defocus();
+	
+	virtual void Show();
+	virtual void Hide();
 	
 	typedef std::unordered_map< UIEvent::event_type_t, std::vector< UIEventHandler* > > event_handlers_t;
 	
@@ -269,6 +275,8 @@ private:
 	
 	bool m_is_focusable = false;
 	bool m_is_focused = false;
+	
+	bool m_is_visible = true;
 	
 	void SetAbsoluteZIndex( float z_index );
 	

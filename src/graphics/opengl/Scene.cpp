@@ -166,7 +166,9 @@ void Scene::Draw( shader_program::ShaderProgram *shader_program ) {
 #endif
 		
 		for ( auto& actor : actors.second ) {
-			actor->Draw( shader_program, m_scene->GetCamera() );
+			if ( actor->GetActor()->IsVisible() ) {
+				actor->Draw( shader_program, m_scene->GetCamera() );
+			}
 		}
 	}
 	

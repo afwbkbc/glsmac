@@ -83,8 +83,8 @@ void BottomBar::Create() {
 	NEW( m_sections.tile_preview, TilePreview, m_world );
 	AddChild( m_sections.tile_preview );
 	
-	NEW( m_sections.info_panels, InfoPanels, m_world );
-	AddChild( m_sections.info_panels );
+	NEW( m_sections.middle_area, MiddleArea, m_world );
+	AddChild( m_sections.middle_area );
 	
 	NEW( m_sections.units_list, UnitsList, m_world );
 	AddChild( m_sections.units_list );
@@ -132,7 +132,7 @@ void BottomBar::Destroy() {
 	
 	RemoveChild( m_sections.unit_preview );
 	RemoveChild( m_sections.tile_preview );
-	RemoveChild( m_sections.info_panels );
+	RemoveChild( m_sections.middle_area );
 	RemoveChild( m_sections.mini_map );
 	RemoveChild( m_sections.units_list);
 	

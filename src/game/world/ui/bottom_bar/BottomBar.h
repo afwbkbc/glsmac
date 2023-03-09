@@ -11,7 +11,7 @@
 // sections
 #include "UnitPreview.h"
 #include "TilePreview.h"
-#include "InfoPanels.h"
+#include "MiddleArea.h"
 #include "UnitsList.h"
 #include "MiniMap.h"
 
@@ -56,7 +56,7 @@ protected:
 	struct {
 		UnitPreview* unit_preview = nullptr;
 		TilePreview* tile_preview = nullptr;
-		InfoPanels* info_panels = nullptr;
+		MiddleArea* middle_area = nullptr;
 		UnitsList* units_list = nullptr;
 		MiniMap* mini_map = nullptr;
 	} m_sections = {};

@@ -11,11 +11,10 @@ namespace ui {
 MiniMap::MiniMap( World* world )
 	: Section( world, "MiniMap" )
 {
-	
+	m_config.no_inner_border = true;
 }
 
 void MiniMap::Create() {
-	m_config.no_inner_border = true;
 	Section::Create();
 
 	NEW( m_turn_complete_button, object::Button, "MapBottomBarMinimapTurnCompleteButton" );

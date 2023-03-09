@@ -46,11 +46,17 @@ CLASS( Entity, types::Serializable )
 	virtual const types::Buffer Serialize() const;
 	virtual void Unserialize( types::Buffer buf );
 	
+	void Show();
+	void Hide();
+	const bool IsVisible() const;
+	
 protected:
 	types::Vec3 m_position = { 0.0, 0.0, 0.0 };
 	types::Vec3 m_angle = { 0.0, 0.0, 0.0 };
 
 	matrices_t m_matrices = {};
+	
+	bool m_is_visible = true;
 
 };
 
