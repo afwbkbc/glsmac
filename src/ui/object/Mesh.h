@@ -22,6 +22,9 @@ CLASS( Mesh, UIObject )
 	void ClearTexture();
 	
 	void SetTintColor( const types::Color color );
+	typedef std::pair< Vec2< coord_t >, Vec2< coord_t > > coordinate_limits_t;
+	void SetCoordinateLimits( const coordinate_limits_t limits );
+	void SetCoordinateLimitsByObject( const UIObject* source_object ); // make sure source object lives longer than this one!
 	
 	virtual void Create();
 	virtual void Destroy();
@@ -51,8 +54,14 @@ protected:
 		bool enabled = false;
 		types::Color color;
 	} m_tint_color = {};
+	struct {
+		bool enabled = false;
+		const UIObject* source_object = nullptr;
+		coordinate_limits_t limits;
+	} m_coordinate_limits = {};
 	
 	void UpdateRenderFlags();
+	void UpdateCoordinateLimits();
 };
 
 } /* namespace object */

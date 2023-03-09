@@ -34,7 +34,7 @@ TileSelection::TileSelection( map::Map::tile_vertices_t coords )
 	
 	SetMesh( mesh );
 	SetTexture( g_engine->GetTextureLoader()->LoadTexture( "texture.pcx", 1, 571, 56, 626 ) );
-	SetRenderFlags( RF_USE_TINT | RF_IGNORE_LIGHTING | RF_IGNORE_DEPTH );
+	SetRenderFlags( RF_IGNORE_LIGHTING | RF_IGNORE_DEPTH );
 	
 	m_glow_timer.SetInterval( GLOW_STEP );
 }

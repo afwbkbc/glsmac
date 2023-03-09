@@ -167,6 +167,7 @@ void MiniMap::SetMinimapSelection( const Vec2< float > position_percents, const 
 		m_map_selection->SetHeight( full_size.y );
 		m_map_selection->SetMesh( types::mesh::Render::Rectangle() );
 		m_map_selection->SetTexture( m_map_selection_texture );
+		m_map_selection->SetCoordinateLimitsByObject( m_map_surface );
 	AddChild( m_map_selection );
 }
 

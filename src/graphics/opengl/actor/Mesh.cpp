@@ -259,6 +259,11 @@ l_draw_begin:
 					if ( flags & actor::Mesh::RF_USE_TINT ) {
 						glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&mesh_actor->GetTintColor() );
 					}
+					if ( flags & actor::Mesh::RF_USE_COORDINATE_LIMITS ) {
+						const auto& limits = mesh_actor->GetCoordinateLimits();
+						glUniform3fv( sp->uniforms.coordinate_limits.min, 1, (const GLfloat*)&limits.first );
+						glUniform3fv( sp->uniforms.coordinate_limits.max, 1, (const GLfloat*)&limits.second );
+					}
 					ibo_size = m_ibo_size;
 					break;
 				}

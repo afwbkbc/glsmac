@@ -27,6 +27,10 @@ protected:
 		GLuint light_color;
 		GLuint flags;
 		GLuint tint_color;
+		struct {
+			GLuint min;
+			GLuint max;
+		} coordinate_limits;
 	} uniforms;
 
 	struct {

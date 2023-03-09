@@ -47,9 +47,23 @@ uniform vec3 uLightPos[" + std::to_string( Graphics::MAX_WORLD_LIGHTS ) + "]; \
 uniform vec4 uLightColor[" + std::to_string( Graphics::MAX_WORLD_LIGHTS ) + "]; \
 uniform uint uFlags; \
 uniform vec4 uTintColor; \
+uniform vec3 uCoordLimitsMin; \
+uniform vec3 uCoordLimitsMax; \
 out vec4 FragColor; \
 \
 void main(void) { \
+	if ( " + S_HasFlag( "uFlags", actor::Mesh::RF_USE_COORDINATE_LIMITS ) + " ) { \
+		if ( \
+			fragpos.x < uCoordLimitsMin.x || \
+			fragpos.x > uCoordLimitsMax.x || \
+			-fragpos.y < -uCoordLimitsMin.y || \
+			-fragpos.y > -uCoordLimitsMax.y \
+			/* TODO: fix Y inversion */ \
+		) { \
+			FragColor = vec4( 0.0, 0.0, 0.0, 0.0 ); \
+			return; \
+		} \
+	} \
 	vec3 ambient = vec3( 0.0, 0.0, 0.0 ); \
 	vec3 diffuse = vec3( 0.0, 0.0, 0.0 ); \
 	" + S_For( "i", 0, Graphics::MAX_WORLD_LIGHTS, " \
@@ -88,7 +102,8 @@ void Orthographic::Initialize() {
 	uniforms.world = GetUniformLocation("uWorld");
 	uniforms.flags = GetUniformLocation("uFlags");
 	uniforms.tint_color = GetUniformLocation("uTintColor");
-	
+	uniforms.coordinate_limits.min = GetUniformLocation( "uCoordLimitsMin" );
+	uniforms.coordinate_limits.max = GetUniformLocation( "uCoordLimitsMax" );
 };
 
 void Orthographic::EnableAttributes() const {
