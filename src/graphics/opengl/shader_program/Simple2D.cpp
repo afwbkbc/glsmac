@@ -10,10 +10,12 @@ void Simple2D::AddShaders() {
 in vec3 aCoord; \
 in vec2 aTexCoord; \
 out vec2 texpos; \
+out vec3 fragpos; \
 \
 void main(void) { \
 	gl_Position = vec4( aCoord, 1.0 ); \
 	texpos = vec2(aTexCoord); \
+	fragpos = aCoord; \
 } \
 \
 ");
@@ -21,10 +23,26 @@ void main(void) { \
 	AddShader( GL_FRAGMENT_SHADER, "#version 330 \n\
 \
 in vec2 texpos; \
+in vec3 fragpos; \
 uniform sampler2D uTexture; \
+uniform uint uFlags; \
+uniform vec3 uCoordLimitsMin; \
+uniform vec3 uCoordLimitsMax; \
 out vec4 FragColor; \
 \
 void main(void) { \
+	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_COORDINATE_LIMITS ) + " ) { \
+		if ( \
+			fragpos.x < uCoordLimitsMin.x || \
+			fragpos.x > uCoordLimitsMax.x || \
+			-fragpos.y < -uCoordLimitsMin.y || \
+			-fragpos.y > -uCoordLimitsMax.y \
+			/* TODO: fix Y inversion */ \
+		) { \
+			FragColor = vec4( 0.0, 0.0, 0.0, 0.0 ); \
+			return; \
+		} \
+	} \
 	FragColor = vec4(texture2D(uTexture, vec2(texpos.xy))); \
 } \
 \
@@ -36,6 +54,9 @@ void Simple2D::Initialize() {
 	attributes.tex_coord = GetAttributeLocation( "aTexCoord" );
 	attributes.coord = GetAttributeLocation( "aCoord" );
 	uniforms.texture = GetUniformLocation( "uTexture" );
+	uniforms.flags = GetUniformLocation("uFlags");
+	uniforms.coordinate_limits.min = GetUniformLocation( "uCoordLimitsMin" );
+	uniforms.coordinate_limits.max = GetUniformLocation( "uCoordLimitsMax" );
 };
 
 void Simple2D::EnableAttributes() const {

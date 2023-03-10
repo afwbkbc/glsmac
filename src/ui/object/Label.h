@@ -19,6 +19,8 @@ CLASS( Label, UIObject )
 	void SetText( const std::string& text );
 	void SetTextColor( const Color& color );
 	void SetFont( Font* font );
+	
+	const std::string& GetText() const;
 
 	void Create();
 	void Destroy();

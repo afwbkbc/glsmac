@@ -32,14 +32,6 @@ const mesh::Mesh *Mesh::GetMesh() const {
 	return m_mesh;
 }
 
-void Mesh::SetRenderFlags( const render_flag_t render_flags ) {
-	m_render_flags = render_flags;
-}
-
-const Mesh::render_flag_t Mesh::GetRenderFlags() const {
-	return m_render_flags;
-}
-
 void Mesh::SetTintColor( const Color tint_color ) {
 	m_render_flags |= RF_USE_TINT;
 	m_tint_color = tint_color;
@@ -47,16 +39,6 @@ void Mesh::SetTintColor( const Color tint_color ) {
 
 const Color& Mesh::GetTintColor() const {
 	return m_tint_color;
-}
-
-void Mesh::SetCoordinateLimits( const coordinate_limits_t limits ) {
-	//Log( "Setting coordinate limits to " + limits.first.ToString() + "," + limits.second.ToString() );
-	m_render_flags |= RF_USE_COORDINATE_LIMITS;
-	m_coordinate_limits = limits;
-}
-
-const Mesh::coordinate_limits_t& Mesh::GetCoordinateLimits() const {
-	return m_coordinate_limits;
 }
 
 const mesh::Data* Mesh::GetDataMesh() const {

@@ -175,7 +175,7 @@ void BottomBar::AddStyles() {
 	
 	AddStyle( "MiddleAreaButton", SH() {
 		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_RIGHT );
-		s->Set( ::Style::A_RIGHT, 4 );
+		s->Set( ::Style::A_RIGHT, 3 );
 		s->Set( ::Style::A_WIDTH, 19 );
 		s->SetFont( ::Style::A_FONT, "arialnb.ttf", 16 );
 		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 0, 0, 0 ) );
@@ -200,11 +200,10 @@ void BottomBar::AddStyles() {
 	});
 	
 	AddStyle( "MiddleAreaPage", SH() {
-		s->Set( ::Style::A_LEFT, 0 );
-		s->Set( ::Style::A_TOP, 0 );
-		s->Set( ::Style::A_RIGHT, 27 );
-		s->Set( ::Style::A_BOTTOM, 0 );
-		
+		s->Set( ::Style::A_LEFT, 2 );
+		s->Set( ::Style::A_TOP, 2 );
+		s->Set( ::Style::A_RIGHT, 26 );
+		s->Set( ::Style::A_BOTTOM, 2 );
 	});
 	
 	// messages page

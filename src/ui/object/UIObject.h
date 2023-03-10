@@ -37,21 +37,23 @@ CLASS( UIObject, base::Base )
 	virtual ~UIObject();
 
 	typedef uint8_t alignment_t;
-	const static alignment_t ALIGN_LEFT = 1;
-	const static alignment_t ALIGN_RIGHT = 2;
-	const static alignment_t ALIGN_HCENTER = 3;
-	const static alignment_t ALIGN_TOP = 4;
-	const static alignment_t ALIGN_BOTTOM = 8;
-	const static alignment_t ALIGN_VCENTER = 12;
-	const static alignment_t ALIGN_CENTER = 15;
+	const static alignment_t ALIGN_NONE = 0;
+	const static alignment_t ALIGN_LEFT = 1 << 0;
+	const static alignment_t ALIGN_RIGHT = 1 << 1;
+	const static alignment_t ALIGN_HCENTER = ALIGN_LEFT | ALIGN_RIGHT;
+	const static alignment_t ALIGN_TOP = 1 << 2;
+	const static alignment_t ALIGN_BOTTOM = 1 << 3;
+	const static alignment_t ALIGN_VCENTER = ALIGN_TOP | ALIGN_BOTTOM;
+	const static alignment_t ALIGN_CENTER = ALIGN_HCENTER | ALIGN_VCENTER;
 
 	enum overflow_t {
-		OVERFLOW_VISIBLE,
-		OVERFLOW_HIDDEN
+		OVERFLOW_VISIBLE, // Allow children to be rendered outside of this object (default)
+		OVERFLOW_HIDDEN, // Hide parts of children that are outside of this object
+		OVERFLOW_GROW // Grow automatically when children are added
 	};
 
 	typedef float coord_t;
-	typedef Vec2<coord_t> vertex_t;
+	typedef Vec2< coord_t > vertex_t;
 
 	UIObject *GetParentObject() const;
 	void SetParentObject( UIContainer *parent_object );
@@ -70,8 +72,12 @@ CLASS( UIObject, base::Base )
 	virtual void Align();
 	virtual void Draw();
 
-	size_t GetWidth() const;
-	size_t GetHeight() const;
+	const coord_t GetLeft() const;
+	const coord_t GetRight() const;
+	const coord_t GetTop() const;
+	const coord_t GetBottom() const;
+	const coord_t GetWidth() const;
+	const coord_t GetHeight() const;
 	
 	virtual void SetZIndex( float z_index );
 	void UpdateZIndex();
@@ -81,15 +87,16 @@ CLASS( UIObject, base::Base )
 	void SetBottom( const coord_t px );
 	void Maximize();
 	void SetPadding( const coord_t px );
-	void SetWidth( const coord_t px );
-	void SetHeight( const coord_t px );
+	virtual void SetWidth( const coord_t px );
+	virtual void SetHeight( const coord_t px );
 	void ForceAspectRatio( const float aspect_ratio );
 	void SetAlign( const alignment_t alignment );
 	void SetHAlign( const alignment_t alignment );
 	void SetVAlign( const alignment_t alignment );
+	void SetOverflow( const overflow_t overflow );
 
-	const float GetZIndex() const { return m_z_index; };
-	const overflow_t GetOverflow() const { return m_overflow; };
+	const float GetZIndex() const;
+	const overflow_t GetOverflow() const;
 	
 	enum event_type_t : uint8_t {
 		EV_MOUSEOVER,
@@ -139,6 +146,10 @@ CLASS( UIObject, base::Base )
 	
 	virtual void Show();
 	virtual void Hide();
+	
+	typedef std::pair< Vec2< coord_t >, Vec2< coord_t > > coordinate_limits_t;
+	virtual void SetCoordinateLimits( const coordinate_limits_t limits );
+	virtual void SetCoordinateLimitsByObject( const UIObject* source_object ); // make sure source object lives longer than this one!
 	
 	typedef std::unordered_map< UIEvent::event_type_t, std::vector< UIEventHandler* > > event_handlers_t;
 	
@@ -300,6 +311,13 @@ private:
 	
 	event_handlers_t m_event_handlers = {};
 
+	struct {
+		bool enabled = false;
+		const UIObject* source_object = nullptr;
+		coordinate_limits_t limits;
+	} m_coordinate_limits = {};
+	void UpdateCoordinateLimits();
+	
 	// redraws overlay
 	void Refresh();
 	

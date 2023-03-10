@@ -13,8 +13,8 @@ CLASS( UIContainer, UIObject )
 
 	UIContainer( const std::string& class_name = "" );
 	
-	virtual void AddChild( UIObject *object );
-	virtual void RemoveChild( UIObject *object );
+	void AddChild( UIObject *object );
+	void RemoveChild( UIObject *object );
 
 	virtual void Create();
 	virtual void Destroy();
@@ -30,6 +30,9 @@ CLASS( UIContainer, UIObject )
 	void AddStyleModifier( const Style::modifier_t modifier );
 	void RemoveStyleModifier( const Style::modifier_t modifier );
 
+	virtual void SetCoordinateLimits( const coordinate_limits_t limits );
+	virtual void SetCoordinateLimitsByObject( const UIObject* source_object ); // make sure source object lives longer than this one!
+	
 	void BlockEvents();
 	void UnblockEvents();
 	

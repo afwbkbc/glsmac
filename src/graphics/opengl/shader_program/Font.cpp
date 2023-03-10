@@ -8,25 +8,43 @@ void Font::AddShaders() {
 	AddShader( GL_VERTEX_SHADER, "#version 330 \n\
 \
 in vec4 aCoord; \
-out vec2 aTexCoord; \
 uniform float uZIndex; \
+out vec2 texpos; \
+out vec2 fragpos; \
 \
 void main(void) { \
 	gl_Position = vec4(aCoord.xy, uZIndex, 1); \
-	aTexCoord = vec2(aCoord.zw); \
+	texpos = vec2(aCoord.zw); \
+	fragpos = aCoord.xy; \
 } \
 \
 ");
 
 	AddShader( GL_FRAGMENT_SHADER, "#version 330 \n\
 \
-in vec2 aTexCoord; \
+in vec2 texpos; \
+in vec2 fragpos; \
 uniform sampler2D uTexture; \
 uniform vec4 uColor; \
-out vec4 oFragColor; \
+uniform uint uFlags; \
+uniform vec3 uCoordLimitsMin; \
+uniform vec3 uCoordLimitsMax; \
+out vec4 FragColor; \
 \
 void main(void) { \
-	oFragColor = vec4(1, 1, 1, texture2D(uTexture, aTexCoord).r) * uColor; \
+	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_COORDINATE_LIMITS ) + " ) { \
+		if ( \
+			fragpos.x < uCoordLimitsMin.x || \
+			fragpos.x > uCoordLimitsMax.x || \
+			-fragpos.y < -uCoordLimitsMin.y || \
+			-fragpos.y > -uCoordLimitsMax.y \
+			/* TODO: fix Y inversion */ \
+		) { \
+			FragColor = vec4( 0.0, 0.0, 0.0, 0.0 ); \
+			return; \
+		} \
+	} \
+	FragColor = vec4(1, 1, 1, texture2D(uTexture, texpos).r) * uColor; \
 } \
 \
 ");
@@ -34,10 +52,13 @@ void main(void) { \
 }
 
 void Font::Initialize() {
+	attributes.coord = GetAttributeLocation( "aCoord" );
 	uniforms.texture = GetUniformLocation( "uTexture" );
 	uniforms.color = GetUniformLocation( "uColor" );
 	uniforms.z_index = GetUniformLocation( "uZIndex" );
-	attributes.coord = GetAttributeLocation( "aCoord" );
+	uniforms.flags = GetUniformLocation("uFlags");
+	uniforms.coordinate_limits.min = GetUniformLocation( "uCoordLimitsMin" );
+	uniforms.coordinate_limits.max = GetUniformLocation( "uCoordLimitsMax" );
 };
 
 void Font::EnableAttributes() const {

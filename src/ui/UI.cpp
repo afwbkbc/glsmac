@@ -396,7 +396,7 @@ void UI::ShowDebugFrame( const UIObject* object ) {
 		
 		m_debug_scene->AddActor( data.actor );
 		
-		m_debug_frames[object] = data;
+		m_debug_frames[ object ] = data;
 	}
 }
 
@@ -414,11 +414,11 @@ void UI::HideDebugFrame( const UIObject* object ) {
 void UI::ResizeDebugFrame( const UIObject* object, const debug_frame_data_t* data ) {
 	auto geom = object->GetAreaGeometry();
 	data->mesh->SetCoords({
-		ClampX(geom.first.x),
-		ClampY(geom.first.y)
+		ClampX( geom.first.x ),
+		ClampY( geom.first.y )
 	},{
-		ClampX(geom.second.x),
-		ClampY(geom.second.y)
+		ClampX( geom.second.x ),
+		ClampY( geom.second.y )
 	}, -1.0 );
 	
 }

@@ -2,7 +2,8 @@
 
 #include "MiddleAreaPage.h"
 
-#include "ui/object/Section.h"
+#include "ui/object/ScrollView.h"
+#include "ui/object/Label.h"
 
 namespace game {
 namespace world {
@@ -18,7 +19,8 @@ CLASS( Messages, MiddleAreaPage )
 	void Align();
 	
 private:
-	object::Section* m_messages_list = nullptr;
+	object::ScrollView* m_messages_list = nullptr;
+	std::vector< object::Label* > m_messages_labels = {};
 	
 };
 

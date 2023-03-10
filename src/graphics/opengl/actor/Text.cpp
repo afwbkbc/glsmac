@@ -102,6 +102,16 @@ void Text::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 		glBindTexture( GL_TEXTURE_2D, m_texture->m_texture );
 		
 		sp->Enable();
+		
+		auto flags = text_actor->GetRenderFlags();
+	
+		glUniform1ui( sp->uniforms.flags, flags );
+		if ( flags & actor::Actor::RF_USE_COORDINATE_LIMITS ) {
+			const auto& limits = text_actor->GetCoordinateLimits();
+			glUniform3fv( sp->uniforms.coordinate_limits.min, 1, (const GLfloat*)&limits.first );
+			glUniform3fv( sp->uniforms.coordinate_limits.max, 1, (const GLfloat*)&limits.second );
+		}
+		
 		glUniform1i( sp->uniforms.texture, 0 );
 		glUniform4fv( sp->uniforms.color, 1, (const GLfloat *)&text_actor->GetColor() );
 		glUniform1f( sp->uniforms.z_index, position.z );

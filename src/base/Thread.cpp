@@ -69,7 +69,7 @@ void Thread::Run() {
 
 	Log( "Thread started, entering main loop" );
 	
-	try {
+//	try {
 
 		while ( m_state == STATE_ACTIVE ) {
 
@@ -146,7 +146,7 @@ void Thread::Run() {
 		
 		m_state = STATE_INACTIVE;
 
-	} catch ( runtime_error &e ) {
+/*	} catch ( runtime_error &e ) {
 
 		try {
 			m_state = STATE_STOPPING;
@@ -156,7 +156,7 @@ void Thread::Run() {
 		} catch ( runtime_error &e ) {};
 
 		throw e;
-	}
+	}*/
 }
 
 const string& Thread::GetThreadName() const {

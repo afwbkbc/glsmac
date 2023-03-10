@@ -1,5 +1,6 @@
 SET(SRC ${SRC}
 
+	${PWD}/ScrollView.cpp
 	${PWD}/Section.cpp
 	${PWD}/ChoiceList.cpp
 	${PWD}/Input.cpp

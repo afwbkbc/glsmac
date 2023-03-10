@@ -75,21 +75,6 @@ void Mesh::SetTintColor( const types::Color color ) {
 	UpdateRenderFlags();
 }
 
-void Mesh::SetCoordinateLimits( const coordinate_limits_t limits ) {
-	m_coordinate_limits.enabled = true;
-	m_coordinate_limits.source_object = nullptr;
-	m_coordinate_limits.limits = limits;
-	UpdateRenderFlags();
-}
-
-void Mesh::SetCoordinateLimitsByObject( const UIObject* source_object ) {
-	ASSERT( source_object, "source object is null" );
-	m_coordinate_limits.enabled = true;
-	m_coordinate_limits.source_object = source_object;
-	m_coordinate_limits.limits = {};
-	UpdateRenderFlags();
-}
-
 void Mesh::Create() {
 	UIObject::Create();
 	
@@ -186,7 +171,6 @@ void Mesh::Align() {
 					ASSERT( false, "unknown aspect ratio mode " + std::to_string( m_aspect_ratio_mode ) );
 				}
 			}
-			
 		}
 	}
 	
@@ -222,9 +206,6 @@ void Mesh::Align() {
 			}
 		}
 	}
-	if ( m_actor && m_coordinate_limits.enabled ) {
-		UpdateCoordinateLimits();
-	}
 }
 
 void Mesh::SetAspectRatioMode( const aspect_ratio_mode_t mode ) {
@@ -237,27 +218,14 @@ void Mesh::SetAspectRatioMode( const aspect_ratio_mode_t mode ) {
 void Mesh::UpdateRenderFlags() {
 	if ( m_actor ) {
 		m_actor->SetRenderFlags(
-			scene::actor::Mesh::RF_IGNORE_CAMERA |
-			scene::actor::Mesh::RF_IGNORE_LIGHTING |
-			scene::actor::Mesh::RF_IGNORE_DEPTH
+			scene::actor::Actor::RF_IGNORE_CAMERA |
+			scene::actor::Actor::RF_IGNORE_LIGHTING |
+			scene::actor::Actor::RF_IGNORE_DEPTH
 		);
 		if ( m_tint_color.enabled ) {
 			m_actor->SetTintColor( m_tint_color.color );
 		}
-		if ( m_coordinate_limits.enabled ) {
-			UpdateCoordinateLimits();
-		}
 	}
-}
-
-void Mesh::UpdateCoordinateLimits() {
-	if ( m_coordinate_limits.source_object ) {
-		m_coordinate_limits.limits = m_coordinate_limits.source_object->GetAreaGeometry();
-	}
-	m_actor->SetCoordinateLimits({ // TODO: better z?
-		{ ClampX( m_coordinate_limits.limits.first.x ), ClampY( m_coordinate_limits.limits.first.y ), -1.0f },
-		{ ClampX( m_coordinate_limits.limits.second.x ), ClampY( m_coordinate_limits.limits.second.y ), 1.0f }
-	});
 }
 
 }

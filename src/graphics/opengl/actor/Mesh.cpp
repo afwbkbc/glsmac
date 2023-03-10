@@ -223,19 +223,25 @@ l_draw_begin:
 	shader_program->Enable();
 
 	const auto* texture = mesh_actor->GetTexture();
-
+	auto flags = mesh_actor->GetRenderFlags();
+	
 	g_engine->GetGraphics()->EnableTexture(texture);
 	
 	switch ( shader_program->GetType() ) {
 		case ( shader_program::ShaderProgram::TYPE_SIMPLE2D ) : {
+			auto* sp = (shader_program::Simple2D *)shader_program;
+			glUniform1ui( sp->uniforms.flags, flags );
+			if ( flags & actor::Actor::RF_USE_COORDINATE_LIMITS ) {
+				const auto& limits = mesh_actor->GetCoordinateLimits();
+				glUniform3fv( sp->uniforms.coordinate_limits.min, 1, (const GLfloat*)&limits.first );
+				glUniform3fv( sp->uniforms.coordinate_limits.max, 1, (const GLfloat*)&limits.second );
+			}
 			glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
 			break;
 		}
 		case ( shader_program::ShaderProgram::TYPE_ORTHO ):
 		case ( shader_program::ShaderProgram::TYPE_ORTHO_DATA ): {
 			auto* sp = (shader_program::Orthographic *)shader_program; // TODO: make base class for ortho and ortho_data
-			
-			auto flags = mesh_actor->GetRenderFlags();
 			
 			GLuint ibo_size = 0;
 			
@@ -244,7 +250,7 @@ l_draw_begin:
 					// non-world uniforms apply only to render mesh
 					glUniform1ui( sp->uniforms.flags, flags );
 					auto* lights = m_actor->GetScene()->GetLights();
-					if ( !( flags & actor::Mesh::RF_IGNORE_LIGHTING ) && !lights->empty() ) {
+					if ( !( flags & actor::Actor::RF_IGNORE_LIGHTING ) && !lights->empty() ) {
 						Vec3 light_pos[ lights->size() ];
 						Color light_color[ lights->size() ];
 						size_t i = 0;
@@ -256,10 +262,10 @@ l_draw_begin:
 						glUniform3fv( sp->uniforms.light_pos, lights->size(), (const GLfloat*)light_pos );
 						glUniform4fv( sp->uniforms.light_color, lights->size(), (const GLfloat*)light_color );
 					}
-					if ( flags & actor::Mesh::RF_USE_TINT ) {
+					if ( flags & actor::Actor::RF_USE_TINT ) {
 						glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&mesh_actor->GetTintColor() );
 					}
-					if ( flags & actor::Mesh::RF_USE_COORDINATE_LIMITS ) {
+					if ( flags & actor::Actor::RF_USE_COORDINATE_LIMITS ) {
 						const auto& limits = mesh_actor->GetCoordinateLimits();
 						glUniform3fv( sp->uniforms.coordinate_limits.min, 1, (const GLfloat*)&limits.first );
 						glUniform3fv( sp->uniforms.coordinate_limits.max, 1, (const GLfloat*)&limits.second );
@@ -276,12 +282,12 @@ l_draw_begin:
 				}
 			}
 			
-			if ( flags & actor::Mesh::RF_IGNORE_DEPTH ) {
+			if ( flags & actor::Actor::RF_IGNORE_DEPTH ) {
 				glDisable( GL_DEPTH_TEST );
 			}
 			
 			const bool ignore_camera =
-				( flags & scene::actor::Mesh::RF_IGNORE_CAMERA )// ||
+				( flags & scene::actor::Actor::RF_IGNORE_CAMERA )// ||
 				//fbo
 			;
 			
@@ -314,7 +320,7 @@ l_draw_begin:
 				ASSERT( false, "unknown actor type " + std::to_string( m_actor->GetType() ) );
 			}
 
-			if ( flags & actor::Mesh::RF_IGNORE_DEPTH ) {
+			if ( flags & actor::Actor::RF_IGNORE_DEPTH ) {
 				glEnable( GL_DEPTH_TEST );
 			}
 			

@@ -70,6 +70,9 @@ void UIObject::Iterate() {
 }
 
 void UIObject::Align() {
+	if ( m_coordinate_limits.enabled ) {
+		UpdateCoordinateLimits();
+	}
 	Refresh();
 }
 
@@ -330,11 +333,27 @@ void UIObject::Redraw() {
 	}
 }
 
-size_t UIObject::GetWidth() const {
+const UIObject::coord_t UIObject::GetLeft() const {
+	return m_position.left;
+}
+
+const UIObject::coord_t UIObject::GetRight() const {
+	return m_position.right;
+}
+
+const UIObject::coord_t UIObject::GetTop() const {
+	return m_position.top;
+}
+
+const UIObject::coord_t UIObject::GetBottom() const {
+	return m_position.bottom;
+}
+	
+const UIObject::coord_t UIObject::GetWidth() const {
 	return m_size.width;
 }
 
-size_t UIObject::GetHeight() const {
+const UIObject::coord_t UIObject::GetHeight() const {
 	return m_size.height;
 }
 
@@ -437,22 +456,13 @@ void UIObject::UpdateObjectArea() {
 			object_area.left = object_area.right;
 		if ( object_area.top > object_area.bottom )
 			object_area.top = object_area.bottom;
-		if ( m_parent_object->GetOverflow() == OVERFLOW_HIDDEN ) {
-			if ( object_area.left < m_parent_object->m_object_area.left )
-				object_area.left = m_parent_object->m_object_area.left;
-			if ( object_area.right > m_parent_object->m_object_area.right )
-				object_area.right = m_parent_object->m_object_area.right;
-			if ( object_area.top < m_parent_object->m_object_area.top )
-				object_area.top = m_parent_object->m_object_area.top;
-			if ( object_area.bottom > m_parent_object->m_object_area.bottom )
-				object_area.bottom = m_parent_object->m_object_area.bottom;
-		}
+		
 		object_area.width = object_area.right - object_area.left;
 		object_area.height = object_area.bottom - object_area.top;
 		
-		if (m_size.force_aspect_ratio) {
+		if ( m_size.force_aspect_ratio ) {
 			float current_aspect_ratio = (float) object_area.height / object_area.width;
-			if (current_aspect_ratio > m_size.aspect_ratio) {
+			if ( current_aspect_ratio > m_size.aspect_ratio ) {
 				float new_height = object_area.height * m_size.aspect_ratio / current_aspect_ratio;
 				if ( ( m_align & ALIGN_VCENTER ) == ALIGN_VCENTER ) {
 					object_area.top += ( object_area.height - new_height ) / 2;
@@ -466,7 +476,7 @@ void UIObject::UpdateObjectArea() {
 				}
 				object_area.height = new_height;
 			}
-			else if (current_aspect_ratio < m_size.aspect_ratio) {
+			else if ( current_aspect_ratio < m_size.aspect_ratio ) {
 				float new_width = object_area.width * current_aspect_ratio / m_size.aspect_ratio;
 				if ( ( m_align & ALIGN_HCENTER ) == ALIGN_HCENTER ) {
 					object_area.left += ( object_area.width - new_width ) / 2;
@@ -511,7 +521,6 @@ void UIObject::UpdateObjectArea() {
 #endif
 		}
 	}
-	
 }
 
 void UIObject::SetAlign( const alignment_t align ) {
@@ -528,6 +537,21 @@ void UIObject::SetHAlign( const alignment_t align ) {
 
 void UIObject::SetVAlign( const alignment_t align ) {
 	m_align = ( m_align & ALIGN_HCENTER ) | ( align & ALIGN_VCENTER );
+}
+
+void UIObject::SetOverflow( const overflow_t overflow ) {
+	if ( m_overflow != overflow ) {
+		m_overflow = overflow;
+		Realign();
+	}
+}
+
+const float UIObject::GetZIndex() const {
+	return m_z_index;
+}
+
+const UIObject::overflow_t UIObject::GetOverflow() const {
+	return m_overflow;
 }
 
 void UIObject::ProcessEvent( UIEvent* event ) {
@@ -667,7 +691,9 @@ void UIObject::SetClass( const std::string& style_class ) {
 #ifdef DEBUG
 void UIObject::ShowDebugFrame() {
 	if ( !m_has_debug_frame ) {
-		g_engine->GetUI()->ShowDebugFrame( this );
+		if ( m_is_visible ) {
+			g_engine->GetUI()->ShowDebugFrame( this );
+		}
 		m_has_debug_frame = true;
 	}
 }
@@ -830,6 +856,11 @@ void UIObject::Show() {
 		for ( auto& actor : m_actors ) {
 			actor->Show();
 		}
+#ifdef DEBUG
+		if ( m_has_debug_frame ) {
+			g_engine->GetUI()->ShowDebugFrame( this );
+		}
+#endif
 		Refresh();
 	}
 }
@@ -840,10 +871,31 @@ void UIObject::Hide() {
 		for ( auto& actor : m_actors ) {
 			actor->Hide();
 		}
+#ifdef DEBUG
+		if ( m_has_debug_frame ) {
+			g_engine->GetUI()->HideDebugFrame( this );
+		}
+#endif
 		Refresh();
 	}
 }
-	
+
+void UIObject::SetCoordinateLimits( const coordinate_limits_t limits ) {
+	m_coordinate_limits.enabled = true;
+	m_coordinate_limits.source_object = nullptr;
+	m_coordinate_limits.limits = limits;
+	UpdateCoordinateLimits();
+}
+
+void UIObject::SetCoordinateLimitsByObject( const UIObject* source_object ) {
+	ASSERT( source_object, "source object is null" );
+	//Log( "Setting coordinate limits by object " + source_object->GetName() );
+	m_coordinate_limits.enabled = true;
+	m_coordinate_limits.source_object = source_object;
+	m_coordinate_limits.limits = {};
+	UpdateCoordinateLimits();
+}
+
 void UIObject::SetFocusable( bool is_focusable ) {
 	if ( is_focusable != m_is_focusable ) {
 		m_is_focusable = is_focusable;
@@ -860,6 +912,19 @@ void UIObject::SetFocusable( bool is_focusable ) {
 
 void UIObject::Refresh() {
 	g_engine->GetUI()->Redraw(); // TODO: partial updates
+}
+
+void UIObject::UpdateCoordinateLimits() {
+	if ( m_coordinate_limits.source_object ) {
+		m_coordinate_limits.limits = m_coordinate_limits.source_object->GetAreaGeometry();
+	}
+	scene::actor::Mesh::coordinate_limits_t limits = { // TODO: better z?
+		{ ClampX( m_coordinate_limits.limits.first.x ), ClampY( m_coordinate_limits.limits.first.y ), -1.0f },
+		{ ClampX( m_coordinate_limits.limits.second.x ), ClampY( m_coordinate_limits.limits.second.y ), 1.0f }
+	};
+	for ( auto& actor : m_actors ) {
+		actor->SetCoordinateLimits( limits );
+	}
 }
 
 } /* namespace object */

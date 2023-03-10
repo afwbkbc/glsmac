@@ -34,22 +34,8 @@ CLASS2( Mesh, Actor, RRAware )
 	void SetTexture( const Texture* texture );
 	const Texture* GetTexture() const;
 	
-	typedef uint32_t render_flag_t;
-	static constexpr render_flag_t RF_NONE = 0;
-	static constexpr render_flag_t RF_USE_TINT = 1 << 0;
-	static constexpr render_flag_t RF_IGNORE_LIGHTING = 1 << 1;
-	static constexpr render_flag_t RF_IGNORE_CAMERA = 1 << 2;
-	static constexpr render_flag_t RF_IGNORE_DEPTH = 1 << 3;
-	static constexpr render_flag_t RF_USE_COORDINATE_LIMITS = 1 << 4;
-	
-	void SetRenderFlags( const render_flag_t render_flags );
-	const render_flag_t GetRenderFlags() const;
 	void SetTintColor( const Color tint_color );
 	const Color& GetTintColor() const;
-	typedef std::pair< Vec3, Vec3 > coordinate_limits_t;
-	void SetCoordinateLimits( const coordinate_limits_t limits );
-	const coordinate_limits_t& GetCoordinateLimits() const;
-	
 	
 	void SetDataMesh( const mesh::Data* data_mesh );
 	
@@ -69,9 +55,7 @@ protected:
 	const Texture* m_texture = nullptr;
 	const bool m_is_texture_tiled = false;
 
-	render_flag_t m_render_flags = RF_NONE;
 	Color m_tint_color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	coordinate_limits_t m_coordinate_limits = {};
 	
 	// data mesh stuff
 	const mesh::Data* m_data_mesh = nullptr;

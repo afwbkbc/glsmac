@@ -43,6 +43,21 @@ CLASS( Actor, Entity )
 	void SetScene( Scene *scene );
 	Scene *GetScene();
 	
+	typedef std::pair< types::Vec3, types::Vec3 > coordinate_limits_t;
+	void SetCoordinateLimits( const coordinate_limits_t limits );
+	const coordinate_limits_t& GetCoordinateLimits() const;
+	
+	typedef uint32_t render_flag_t;
+	static constexpr render_flag_t RF_NONE = 0;
+	static constexpr render_flag_t RF_USE_TINT = 1 << 0;
+	static constexpr render_flag_t RF_IGNORE_LIGHTING = 1 << 1;
+	static constexpr render_flag_t RF_IGNORE_CAMERA = 1 << 2;
+	static constexpr render_flag_t RF_IGNORE_DEPTH = 1 << 3;
+	static constexpr render_flag_t RF_USE_COORDINATE_LIMITS = 1 << 4;
+	
+	void SetRenderFlags( const render_flag_t render_flags );
+	const render_flag_t GetRenderFlags() const;
+	
 	virtual const types::Buffer Serialize() const;
 	virtual void Unserialize( types::Buffer buf );
 	
@@ -56,6 +71,10 @@ protected:
 	bool m_need_world_matrix_update = true;
 
 	Scene *m_scene = NULL;
+
+	render_flag_t m_render_flags = RF_NONE;
+	coordinate_limits_t m_coordinate_limits = {};
+	
 };
 
 } /* namespace actor */

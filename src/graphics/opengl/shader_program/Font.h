@@ -18,6 +18,11 @@ protected:
 		GLint texture;
 		GLint color;
 		GLint z_index;
+		GLuint flags;
+		struct {
+			GLuint min;
+			GLuint max;
+		} coordinate_limits;
 	} uniforms;
 
 	struct {

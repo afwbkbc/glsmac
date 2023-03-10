@@ -23,7 +23,7 @@ out vec3 fragpos; \
 out vec3 normal; \
 \
 void main(void) { \
-	if ( " + S_HasFlag( "uFlags", actor::Mesh::RF_IGNORE_CAMERA ) + " ) { \
+	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_IGNORE_CAMERA ) + " ) { \
 		gl_Position = vec4( aCoord, 1.0 ); \
 	} \
 	else { \
@@ -52,7 +52,7 @@ uniform vec3 uCoordLimitsMax; \
 out vec4 FragColor; \
 \
 void main(void) { \
-	if ( " + S_HasFlag( "uFlags", actor::Mesh::RF_USE_COORDINATE_LIMITS ) + " ) { \
+	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_COORDINATE_LIMITS ) + " ) { \
 		if ( \
 			fragpos.x < uCoordLimitsMin.x || \
 			fragpos.x > uCoordLimitsMax.x || \
@@ -78,11 +78,11 @@ void main(void) { \
 	float gamma = 1.4; /* TODO: pass via uniform */ \
 	vec3 color = vec3( tex.r * tintcolor.r, tex.g * tintcolor.g, tex.b * tintcolor.b ); \
 	float alpha = tintcolor.a * tex.a; \
-	if ( " + S_HasFlag( "uFlags", actor::Mesh::RF_USE_TINT ) + " ) { \
+	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_TINT ) + " ) { \
 		color *= uTintColor.rgb; \
 		alpha *= uTintColor.a; \
 	} \
-	if ( ! " + S_HasFlag( "uFlags", actor::Mesh::RF_IGNORE_LIGHTING ) + " ) { \
+	if ( ! " + S_HasFlag( "uFlags", actor::Actor::RF_IGNORE_LIGHTING ) + " ) { \
 		color *= ambient + diffuse; \
 	} \
 	FragColor = vec4( color * gamma, alpha ); \

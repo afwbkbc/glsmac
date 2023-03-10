@@ -42,6 +42,10 @@ void Label::SetFont( Font* font ) {
 	}
 }
 
+const std::string& Label::GetText() const {
+	return m_text;
+}
+
 void Label::Create() {
 	UIObject::Create();
 	

@@ -29,7 +29,7 @@ void MiddleArea::Create() {
 	NEW( m_buttons.toolbar, ::ui::Button, buttonclass );
 		m_buttons.toolbar->SetLabel( "T" );
 		m_buttons.toolbar->SetTop( 27 );
-		m_buttons.toolbar->SetHeight( 38 );
+		m_buttons.toolbar->SetHeight( 37 );
 		m_buttons.toolbar->On( UIEvent::EV_BUTTON_CLICK, EH( this ) {
 			SwitchPage( m_buttons.toolbar, m_pages.toolbar );
 			return true;
@@ -38,7 +38,7 @@ void MiddleArea::Create() {
 	
 	NEW( m_buttons.info_panels, ::ui::Button, buttonclass );
 		m_buttons.info_panels->SetLabel( "I" );
-		m_buttons.info_panels->SetTop( 70 );
+		m_buttons.info_panels->SetTop( 69 );
 		m_buttons.info_panels->SetHeight( 19 );
 		m_buttons.info_panels->On( UIEvent::EV_BUTTON_CLICK, EH( this ) {
 			SwitchPage( m_buttons.info_panels, m_pages.info_panels );
