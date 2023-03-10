@@ -34,11 +34,13 @@ protected:
 		vertex_t v3;
 		vertex_t v4;
 	};
+	Vec2< float > m_coords = { 0, 0 };
 
 	GLuint m_vbo = 0;
 	size_t m_boxes_count = 0;
 
 	Font *m_font = nullptr;
+	std::string m_text = "";
 	FontTexture *m_texture = nullptr;
 };
 

@@ -15,9 +15,10 @@ protected:
 	friend class opengl::Text;
 
 	struct {
-		GLint texture;
-		GLint color;
-		GLint z_index;
+		GLuint position;
+		GLuint texture;
+		GLuint color;
+		GLuint z_index;
 		GLuint flags;
 		struct {
 			GLuint min;
@@ -26,7 +27,7 @@ protected:
 	} uniforms;
 
 	struct {
-		GLint coord;
+		GLuint coord;
 	} attributes;
 
 	void AddShaders();

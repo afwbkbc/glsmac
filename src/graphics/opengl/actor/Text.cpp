@@ -9,7 +9,7 @@ namespace graphics {
 namespace opengl {
 
 Text::Text( scene::actor::Text *actor, Font *font ) : Actor( actor ), m_font( font ) {
-	//Log( "Creating OpenGL text '" + actor->GetText() + "' from " + actor->GetName() );
+	//Log( "Creating OpenGL text '" + actor->GetText() + "' with font " + font->m_name );
 	glGenBuffers( 1, &m_vbo );
 	auto *text_actor = (const scene::actor::Text *)m_actor;
 	auto position = m_actor->GetPosition();
@@ -26,12 +26,20 @@ Text::~Text() {
 
 void Text::Update( Font* font, const std::string& text, const float x, const float y ) {
 	
-	if ( m_font != font ) {
-		Log( "Changing font from " + m_font->m_name + " to " + font->m_name );
-		m_font = font;
-	}
+	const bool need_reload = ( font != m_font || text != m_text );
 	
-	if ( m_font != nullptr ) {
+	if ( need_reload ) {
+
+		ASSERT( font, "font is null" );
+		
+		if ( m_font != font ) {
+			//Log( "Changing font from " + m_font->m_name + " to " + font->m_name );
+			m_font = font;
+		}
+		if ( m_text != text ) {
+			//Log( "Changing text from " + m_text + " to " + text );
+			m_text = text;
+		}
 	
 		if ( !m_texture ) {
 			NEW( m_texture, FontTexture, m_font );
@@ -46,11 +54,11 @@ void Text::Update( Font* font, const std::string& text, const float x, const flo
 			boxes.clear();
 		}
 
-		float cx = x;
-		float cy = y;
+		float cx = 0;
+		float cy = 0;
 
 		Font::bitmap_t *bitmap = nullptr;
-		for ( const char *p = text.c_str(); *p; p++ ) {
+		for ( const char *p = m_text.c_str(); *p; p++ ) {
 			unsigned char sym = (unsigned char)*p;
 
 			ASSERT( sym >= 32 && sym < 128, "unexpected font character " + std::to_string( sym ) );
@@ -87,6 +95,11 @@ void Text::Update( Font* font, const std::string& text, const float x, const flo
 
 		glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	}
+	
+	if ( m_coords.x != x || m_coords.y != y ) {
+		//Log( "Setting coordinates to " + std::to_string( x ) + "x" + std::to_string( y ) );
+		m_coords = { x, y };
+	}
 }
 
 void Text::Draw( shader_program::ShaderProgram *shader_program, Camera *camera ) {
@@ -94,7 +107,6 @@ void Text::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 		auto *sp = (shader_program::Font*)shader_program;
 		
 		auto *text_actor = (const scene::actor::Text *)m_actor;
-		auto position = m_actor->GetPosition();
 	
 		glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
 		
@@ -112,8 +124,10 @@ void Text::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 			glUniform3fv( sp->uniforms.coordinate_limits.max, 1, (const GLfloat*)&limits.second );
 		}
 		
+		glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&m_coords );
 		glUniform1i( sp->uniforms.texture, 0 );
-		glUniform4fv( sp->uniforms.color, 1, (const GLfloat *)&text_actor->GetColor() );
+		glUniform4fv( sp->uniforms.color, 1, (const GLfloat*)&text_actor->GetColor() );
+		auto position = m_actor->GetPosition();
 		glUniform1f( sp->uniforms.z_index, position.z );
 		
 		for ( size_t c = 0 ; c < m_boxes_count ; c++ ) {

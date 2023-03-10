@@ -8,14 +8,15 @@ void Font::AddShaders() {
 	AddShader( GL_VERTEX_SHADER, "#version 330 \n\
 \
 in vec4 aCoord; \
+uniform vec2 uPosition; \
 uniform float uZIndex; \
 out vec2 texpos; \
 out vec2 fragpos; \
 \
 void main(void) { \
-	gl_Position = vec4(aCoord.xy, uZIndex, 1); \
-	texpos = vec2(aCoord.zw); \
-	fragpos = aCoord.xy; \
+	gl_Position = vec4( uPosition + aCoord.xy, uZIndex, 1 ); \
+	texpos = vec2( aCoord.zw ); \
+	fragpos = uPosition + aCoord.xy; \
 } \
 \
 ");
@@ -53,6 +54,7 @@ void main(void) { \
 
 void Font::Initialize() {
 	attributes.coord = GetAttributeLocation( "aCoord" );
+	uniforms.position = GetUniformLocation( "uPosition" );
 	uniforms.texture = GetUniformLocation( "uTexture" );
 	uniforms.color = GetUniformLocation( "uColor" );
 	uniforms.z_index = GetUniformLocation( "uZIndex" );
