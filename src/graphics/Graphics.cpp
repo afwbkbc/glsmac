@@ -15,19 +15,19 @@ const float Graphics::GetAspectRatio() const {
 	return m_aspect_ratio;
 }
 
-void Graphics::OnResize() {
+void Graphics::OnWindowResize() {
 	m_aspect_ratio = (float) GetViewportWidth() / GetViewportHeight();
 	for ( auto& it : m_on_resize_handlers ) {
 		it.second( m_aspect_ratio );
 	}
 }
 
-void Graphics::AddOnResizeHandler( void* object, const on_resize_handler_t& handler ) {
+void Graphics::AddOnWindowResizeHandler( void* object, const on_resize_handler_t& handler ) {
 	ASSERT( m_on_resize_handlers.find( object ) == m_on_resize_handlers.end(), "duplicate resize handler" );
 	m_on_resize_handlers[ object ] = handler;
 }
 
-void Graphics::RemoveOnResizeHandler( void* object ) {
+void Graphics::RemoveOnWindowResizeHandler( void* object ) {
 	auto it = m_on_resize_handlers.find( object );
 	ASSERT( it != m_on_resize_handlers.end(), "resize handler not found" );
 	m_on_resize_handlers.erase( it );

@@ -45,9 +45,9 @@ void UIContainer::Iterate() {
 void UIContainer::CreateChild( UIObject *object ) {
 	object->Create();
 	object->AddStyleModifier( m_style_modifiers );
-	object->Realign();
+	//object->Realign();
 	object->EnableActors();
-	object->Redraw();
+	//object->Redraw();
 }
 
 void UIContainer::DestroyChild( UIObject *object ) {
@@ -67,22 +67,21 @@ void UIContainer::AddChild( UIObject *object ) {
 	object->SetOverriddenEventContexts( m_event_contexts | m_overridden_event_contexts );
 	if ( m_overflow == OVERFLOW_GROW ) {
 		const coord_t need_height = object->GetTop() + object->GetHeight();
-		const auto geom = object->GetAreaGeometry();
 		if ( need_height > GetHeight() ) {
 			Log( "Growing height from " + std::to_string( GetHeight() ) + " to " + std::to_string( need_height ) );
 			SetHeight( need_height );
 		}
 	}
 	else if ( m_overflow == OVERFLOW_HIDDEN ) {
-		object->SetCoordinateLimitsByObject( this );
+		object->SetAreaLimitsByObject( this );
 		// TODO: fix
 	}
-	else if ( m_coordinate_limits.enabled ) {
-		if ( m_coordinate_limits.source_object ) {
-			object->SetCoordinateLimitsByObject( m_coordinate_limits.source_object );
+	else if ( m_area_limits.enabled ) {
+		if ( m_area_limits.source_object ) {
+			object->SetAreaLimitsByObject( m_area_limits.source_object );
 		}
 		else {
-			object->SetCoordinateLimits( m_coordinate_limits.limits );
+			object->SetAreaLimits( m_area_limits.limits );
 		}
 	}
 	if ( m_created ) {
@@ -106,12 +105,27 @@ void UIContainer::UpdateZIndex() {
 	}
 }
 
-void UIContainer::Realign() {
-	UIObject::Realign();
+void UIContainer::SetPadding( const coord_t px ) {
+	if ( m_padding != px ) {
+		m_padding = px;
+		if ( !m_are_realigns_blocked ) {
+			for ( auto& child : m_child_objects ) {
+				child->Realign();
+			}
+		}
+	}
+}
+
+const UIObject::coord_t UIContainer::GetPadding() const {
+	return m_padding;
+}
+
+void UIContainer::RealignNow() {
+	UIObject::RealignNow();
 	
 	if ( !m_are_realigns_blocked ) {
 		for ( auto& child : m_child_objects ) {
-			child->Realign();
+			child->RealignNow();
 		}
 	}
 }
@@ -129,7 +143,7 @@ void UIContainer::SetOverflow( const overflow_t overflow ) {
 	
 	if ( m_overflow == OVERFLOW_HIDDEN ) {
 		for ( auto& child : m_child_objects ) {
-			child->SetCoordinateLimitsByObject( this );
+			child->SetAreaLimitsByObject( this );
 		}
 	}
 	
@@ -187,6 +201,25 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 			UIObject::ProcessEvent( event );
 		}
 	}
+}
+
+const UIObject::object_area_t UIContainer::GetInternalObjectArea() {
+	auto area = UIObject::GetInternalObjectArea();
+	if ( m_padding > 0 ) {
+		area.left += m_padding;
+		area.top += m_padding;
+		area.right -= m_padding;
+		area.bottom -= m_padding;
+		if ( area.right < area.left ) {
+			area.right = area.left;
+		}
+		if ( area.bottom < area.top ) {
+			area.bottom = area.top;
+		}
+		area.height = area.top - area.bottom;
+		area.width = area.right - area.left;
+	}
+	return area;
 }
 
 void UIContainer::ApplyStyle() {
@@ -260,19 +293,19 @@ void UIContainer::RemoveStyleModifier( const Style::modifier_t modifier ) {
 	}
 }
 
-void UIContainer::SetCoordinateLimits( const coordinate_limits_t limits ) {
-	UIObject::SetCoordinateLimits( limits );
+void UIContainer::SetAreaLimits( const coord_box_t limits ) {
+	UIObject::SetAreaLimits( limits );
 	
 	for (auto& c : m_child_objects) {
-		c->SetCoordinateLimits( limits );
+		c->SetAreaLimits( limits );
 	}
 }
 
-void UIContainer::SetCoordinateLimitsByObject( const UIObject* source_object ) {
-	UIObject::SetCoordinateLimitsByObject( source_object );
+void UIContainer::SetAreaLimitsByObject( UIObject* source_object ) {
+	UIObject::SetAreaLimitsByObject( source_object );
 
 	for (auto& c : m_child_objects) {
-		c->SetCoordinateLimitsByObject( source_object );
+		c->SetAreaLimitsByObject( source_object );
 	}
 }
 	

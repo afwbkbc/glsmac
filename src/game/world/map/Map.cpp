@@ -431,14 +431,14 @@ void Map::GenerateActors() {
 	
 	m_map_state.range.min = GetTileState( 0, 0 )->coord;
 	m_map_state.range.max = GetTileState( m_map_state.dimensions.x - 1, m_map_state.dimensions.y - 1 )->coord;
-	m_map_state.range.percent_to_absolute.x.SetRange(
-		0.0f, 1.0f,
-		m_map_state.range.min.x - Map::s_consts.tile.radius.x , m_map_state.range.max.x + Map::s_consts.tile.radius.x
-	);
-	m_map_state.range.percent_to_absolute.y.SetRange(
-		0.0f, 1.0f,
-		m_map_state.range.min.y - Map::s_consts.tile.radius.y, m_map_state.range.max.y + Map::s_consts.tile.radius.y
-	);
+	m_map_state.range.percent_to_absolute.x.SetRange({
+		{ 0.0f, 1.0f },
+		{ m_map_state.range.min.x - Map::s_consts.tile.radius.x , m_map_state.range.max.x + Map::s_consts.tile.radius.x }
+	});
+	m_map_state.range.percent_to_absolute.y.SetRange({
+		{ 0.0f, 1.0f },
+		{ m_map_state.range.min.y - Map::s_consts.tile.radius.y, m_map_state.range.max.y + Map::s_consts.tile.radius.y }
+	});
 	
 	InitTerrainActor();
 	
@@ -994,8 +994,14 @@ void Map::Unserialize( Buffer buf ) {
 	
 	InitTerrainActor();
 	
-	m_map_state.range.percent_to_absolute.x.SetRange( 0.0f, 1.0f, m_map_state.range.min.x, m_map_state.range.max.x );
-	m_map_state.range.percent_to_absolute.y.SetRange( 0.0f, 1.0f, m_map_state.range.min.y, m_map_state.range.max.y );
+	m_map_state.range.percent_to_absolute.x.SetRange({
+		{ 0.0f, 1.0f },
+		{ m_map_state.range.min.x, m_map_state.range.max.x }
+	});
+	m_map_state.range.percent_to_absolute.y.SetRange({
+		{ 0.0f, 1.0f },
+		{ m_map_state.range.min.y, m_map_state.range.max.y }
+	});
 }
 
 void Map::map_state_t::Unserialize( Buffer buf ) {

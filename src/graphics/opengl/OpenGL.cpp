@@ -157,7 +157,7 @@ void OpenGL::Start() {
 	
 	glBindTexture( GL_TEXTURE_2D, 0 );
 	
-	OnResize();
+	OnWindowResize();
 }
 
 void OpenGL::Stop() {
@@ -254,15 +254,15 @@ const unsigned short OpenGL::GetViewportHeight() const {
 	return m_options.viewport_height;
 }
 
-void OpenGL::OnResize() {
-	Graphics::OnResize();
+void OpenGL::OnWindowResize() {
+	Graphics::OnWindowResize();
 	
 	for ( auto& f : m_fbos ) {
 		f->Resize( m_options.viewport_width, m_options.viewport_height );
 	}
 	
 	for ( auto& r : m_routines ) {
-		r->OnResize();
+		r->OnWindowResize();
 	}
 }
 
@@ -354,7 +354,7 @@ void OpenGL::ResizeViewport( const size_t width, const size_t height ) {
 	Log( "Resizing viewport to " + std::to_string( m_options.viewport_width ) + "x" + std::to_string( m_options.viewport_height ) );
 	glViewport( 0, 0, m_options.viewport_width, m_options.viewport_height );
 	m_aspect_ratio = (float) m_options.viewport_height / m_options.viewport_width;
-	OnResize();
+	OnWindowResize();
 	for ( auto routine = m_routines.begin() ; routine < m_routines.end() ; ++routine ) {
 		for ( auto scene = (*routine)->m_scenes.begin() ; scene < (*routine)->m_scenes.end() ; ++scene ) {
 			auto camera = (*scene)->GetCamera();

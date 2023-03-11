@@ -126,6 +126,8 @@ void FBO::Draw( shader_program::Simple2D* sp ) {
 	
 	sp->Enable();
 	
+	glUniform1ui( sp->uniforms.flags, 0 );
+	
 	glBindTexture( GL_TEXTURE_2D, m_textures.render );
 	glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
 	glBindTexture( GL_TEXTURE_2D, 0 );

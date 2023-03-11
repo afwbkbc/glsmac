@@ -11,7 +11,7 @@ Text::Text( types::Font *font, const std::string &text, types::Color color ) :
 	m_text( text ),
 	m_color( color )
 {
-
+	m_render_flags |= actor::Actor::RF_USE_2D_POSITION;
 }
 
 Text::~Text() {

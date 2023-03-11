@@ -388,8 +388,8 @@ void World::Start() {
 	
 	// other stuff
 	
-	m_clamp.x.SetDstRange( -0.5f, 0.5f );
-	m_clamp.y.SetDstRange( -0.5f, 0.5f );
+	m_clamp.x.SetDstRange( { -0.5f, 0.5f } );
+	m_clamp.y.SetDstRange( { -0.5f, 0.5f } );
 	
 	// map should continue scrolling even if mouse is outside viewport
 	m_clamp.x.SetOverflowAllowed( true );
@@ -402,7 +402,7 @@ void World::Start() {
 	UpdateCameraRange();
 	UpdateCameraScale();
 	
-	g_engine->GetGraphics()->AddOnResizeHandler( this, RH( this ) {
+	g_engine->GetGraphics()->AddOnWindowResizeHandler( this, RH( this ) {
 		UpdateViewport();
 		UpdateCameraRange();
 		UpdateMapInstances();
@@ -437,7 +437,7 @@ void World::Stop() {
 	
 	DELETE( m_map );
 	
-	g_engine->GetGraphics()->RemoveOnResizeHandler( this );
+	g_engine->GetGraphics()->RemoveOnWindowResizeHandler( this );
 	
 	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.keydown );
 	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.mousedown );
@@ -574,8 +574,8 @@ void World::UpdateViewport() {
 	m_viewport.height = m_viewport.max.y - m_viewport.min.y;
 	m_viewport.aspect_ratio = (float) m_viewport.width / m_viewport.height;
 	m_viewport.is_fullscreen = graphics->IsFullscreen();
-	m_clamp.x.SetSrcRange( m_viewport.min.x, m_viewport.max.x );
-	m_clamp.y.SetSrcRange( m_viewport.min.y, m_viewport.max.y );
+	m_clamp.x.SetSrcRange( { (float)m_viewport.min.x, (float)m_viewport.max.x } );
+	m_clamp.y.SetSrcRange( { (float)m_viewport.min.y, (float)m_viewport.max.y } );
 }
 
 void World::UpdateCameraPosition() {

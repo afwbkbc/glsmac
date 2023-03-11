@@ -351,7 +351,10 @@ const std::pair< Tile::elevation_t, Tile::elevation_t > Tiles::GetElevationsRang
 
 void Tiles::FixExtremeSlopes() {
 	auto elevations_range = GetElevationsRange();
-	util::Clamper<Tile::elevation_t> converter( Tile::ELEVATION_MIN, Tile::ELEVATION_MAX, elevations_range.first, elevations_range.second );
+	util::Clamper< Tile::elevation_t > converter({
+		{ Tile::ELEVATION_MIN, Tile::ELEVATION_MAX },
+		{ elevations_range.first, elevations_range.second }
+	});
 	RemoveExtremeSlopes( abs( converter.Clamp( Map::s_consts.tile.maximum_allowed_slope_elevation ) ) );
 }
 
@@ -361,7 +364,10 @@ Random* Tiles::GetRandom() const {
 
 void Tiles::NormalizeElevationRange() {
 	auto elevations_range = GetElevationsRange();
-	util::Clamper<Tile::elevation_t> converter( elevations_range.first, elevations_range.second, Tile::ELEVATION_MIN, Tile::ELEVATION_MAX );
+	util::Clamper< Tile::elevation_t > converter({
+		{ elevations_range.first, elevations_range.second },
+		{ Tile::ELEVATION_MIN, Tile::ELEVATION_MAX }
+	});
 	
 	// process in random order
 	std::vector< Tile* > tiles;

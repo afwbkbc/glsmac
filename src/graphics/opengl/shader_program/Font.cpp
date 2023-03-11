@@ -8,15 +8,20 @@ void Font::AddShaders() {
 	AddShader( GL_VERTEX_SHADER, "#version 330 \n\
 \
 in vec4 aCoord; \
+uniform uint uFlags; \
 uniform vec2 uPosition; \
 uniform float uZIndex; \
 out vec2 texpos; \
 out vec2 fragpos; \
 \
 void main(void) { \
-	gl_Position = vec4( uPosition + aCoord.xy, uZIndex, 1 ); \
+	vec2 coord = aCoord.xy; \
+	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_2D_POSITION ) + " ) { \
+		coord += uPosition; \
+	}\
+	gl_Position = vec4( coord, uZIndex, 1 ); \
 	texpos = vec2( aCoord.zw ); \
-	fragpos = uPosition + aCoord.xy; \
+	fragpos = coord; \
 } \
 \
 ");
@@ -25,20 +30,20 @@ void main(void) { \
 \
 in vec2 texpos; \
 in vec2 fragpos; \
+uniform uint uFlags; \
 uniform sampler2D uTexture; \
 uniform vec4 uColor; \
-uniform uint uFlags; \
-uniform vec3 uCoordLimitsMin; \
-uniform vec3 uCoordLimitsMax; \
+uniform vec3 uAreaLimitsMin; \
+uniform vec3 uAreaLimitsMax; \
 out vec4 FragColor; \
 \
 void main(void) { \
-	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_COORDINATE_LIMITS ) + " ) { \
+	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_AREA_LIMITS ) + " ) { \
 		if ( \
-			fragpos.x < uCoordLimitsMin.x || \
-			fragpos.x > uCoordLimitsMax.x || \
-			-fragpos.y < -uCoordLimitsMin.y || \
-			-fragpos.y > -uCoordLimitsMax.y \
+			fragpos.x < uAreaLimitsMin.x || \
+			fragpos.x > uAreaLimitsMax.x || \
+			-fragpos.y < -uAreaLimitsMin.y || \
+			-fragpos.y > -uAreaLimitsMax.y \
 			/* TODO: fix Y inversion */ \
 		) { \
 			FragColor = vec4( 0.0, 0.0, 0.0, 0.0 ); \
@@ -54,13 +59,13 @@ void main(void) { \
 
 void Font::Initialize() {
 	attributes.coord = GetAttributeLocation( "aCoord" );
+	uniforms.flags = GetUniformLocation("uFlags");
 	uniforms.position = GetUniformLocation( "uPosition" );
 	uniforms.texture = GetUniformLocation( "uTexture" );
 	uniforms.color = GetUniformLocation( "uColor" );
 	uniforms.z_index = GetUniformLocation( "uZIndex" );
-	uniforms.flags = GetUniformLocation("uFlags");
-	uniforms.coordinate_limits.min = GetUniformLocation( "uCoordLimitsMin" );
-	uniforms.coordinate_limits.max = GetUniformLocation( "uCoordLimitsMax" );
+	uniforms.area_limits.min = GetUniformLocation( "uAreaLimitsMin" );
+	uniforms.area_limits.max = GetUniformLocation( "uAreaLimitsMax" );
 };
 
 void Font::EnableAttributes() const {

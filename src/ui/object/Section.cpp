@@ -29,7 +29,7 @@ void Section::Create() {
 
 	NEW( m_frame, Panel );
 		m_frame->SetAlign( UIObject::ALIGN_CENTER );
-		m_frame->SetPadding( 3 );
+		m_frame->SetMargin( 3 );
 		//m_frame->SetWidth( m_width );
 		//m_frame->SetHeight( m_height );
 		m_frame->ForwardStyleAttributesM( m_forwarded_style_attributes );
@@ -38,13 +38,18 @@ void Section::Create() {
 	if ( !m_title_text.empty() ) {
 		NEW( m_titlebar, Panel );
 			m_titlebar->SetAlign( UIObject::ALIGN_TOP );
-			m_titlebar->SetPadding( 3 );
+			m_titlebar->SetMargin({
+				3, // left
+				3, // top
+				3, // right
+				-3 // bottom
+			});
 			//m_titlebar->SetHeight( 22 );
 			m_titlebar->ForwardStyleAttributesM( m_forwarded_header_style_attributes );
 		m_frame->AddChild( m_titlebar );
 		NEW( m_titlelabel, Label );
 			m_titlelabel->SetText( m_title_text );
-			m_titlelabel->SetPadding( 2 );
+			m_titlelabel->SetMargin( 2 );
 			m_titlelabel->ForwardStyleAttributesM( m_forwarded_header_label_style_attributes );
 		m_titlebar->AddChild( m_titlelabel );
 	}

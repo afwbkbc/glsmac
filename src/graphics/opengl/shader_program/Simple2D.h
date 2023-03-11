@@ -6,7 +6,7 @@ namespace graphics {
 namespace opengl {
 
 class Mesh;
-class Image;
+class FBO;
 
 namespace shader_program {
 
@@ -14,15 +14,16 @@ CLASS( Simple2D, ShaderProgram )
 	Simple2D() : ShaderProgram( TYPE_SIMPLE2D ) {};
 protected:
 	friend class opengl::Mesh;
-	friend class opengl::Image;
+	friend class opengl::FBO;
 
 	struct {
-		GLuint texture;
 		GLuint flags;
+		GLuint position;
+		GLuint texture;
 		struct {
 			GLuint min;
 			GLuint max;
-		} coordinate_limits;
+		} area_limits;
 	} uniforms;
 
 	struct {

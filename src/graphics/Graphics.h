@@ -44,15 +44,15 @@ CLASS( Graphics, base::Module )
 	
 	const float GetAspectRatio() const;
 	
-	void AddOnResizeHandler( void* object, const on_resize_handler_t& handler );
-	void RemoveOnResizeHandler( void* object );
+	void AddOnWindowResizeHandler( void* object, const on_resize_handler_t& handler );
+	void RemoveOnWindowResizeHandler( void* object );
 	
 	void ToggleFullscreen();
 	
 protected:
 	
 	// make sure to call this at initialization and after every resize
-	virtual void OnResize();
+	virtual void OnWindowResize();
 	
 private:
 	float m_aspect_ratio = 0;

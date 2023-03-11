@@ -34,7 +34,7 @@ protected:
 	
 		// TODO: style attribute scopes/inheritance
 	const std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_forwarded_style_attributes = {
-		{ Style::A_BORDER_WIDTH, Style::A_BORDER_WIDTH },
+		{ Style::A_BORDER_SIZE, Style::A_BORDER_SIZE },
 		{ Style::A_HEADER_TEXTURE_BACK, Style::A_HEADER_TEXTURE_BACK },
 		{ Style::A_HEADER_TEXTURE_BORDER_LEFT, Style::A_HEADER_TEXTURE_BORDER_LEFT },
 		{ Style::A_HEADER_TEXTURE_BORDER_TOP, Style::A_HEADER_TEXTURE_BORDER_TOP },

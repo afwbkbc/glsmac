@@ -15,6 +15,7 @@ in vec3 aCoord; \
 in vec2 aTexCoord; \
 in vec4 aTintColor; \
 in vec3 aNormal; \
+uniform vec2 uPosition; \
 uniform mat4 uWorld[" + std::to_string( Graphics::MAX_WORLD_INSTANCES ) + "]; \
 uniform uint uFlags; \
 out vec2 texpos; \
@@ -23,15 +24,20 @@ out vec3 fragpos; \
 out vec3 normal; \
 \
 void main(void) { \
+	vec4 position; \
 	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_IGNORE_CAMERA ) + " ) { \
-		gl_Position = vec4( aCoord, 1.0 ); \
+		position = vec4( aCoord, 1.0 ); \
 	} \
 	else { \
-		gl_Position = uWorld[ gl_InstanceID ] * vec4( aCoord, 1.0 ); \
+		position = uWorld[ gl_InstanceID ] * vec4( aCoord, 1.0 ); \
 	} \
+	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_2D_POSITION ) + " ) { \
+		position += vec4( uPosition, 0.0, 0.0 ); \
+	}\
+	gl_Position = position; \
 	texpos = vec2( aTexCoord.xy ); \
 	tintcolor = aTintColor; \
-	fragpos = aCoord; \
+	fragpos = position.xyz; \
 	normal = aNormal; \
 } \
 \
@@ -47,17 +53,17 @@ uniform vec3 uLightPos[" + std::to_string( Graphics::MAX_WORLD_LIGHTS ) + "]; \
 uniform vec4 uLightColor[" + std::to_string( Graphics::MAX_WORLD_LIGHTS ) + "]; \
 uniform uint uFlags; \
 uniform vec4 uTintColor; \
-uniform vec3 uCoordLimitsMin; \
-uniform vec3 uCoordLimitsMax; \
+uniform vec3 uAreaLimitsMin; \
+uniform vec3 uAreaLimitsMax; \
 out vec4 FragColor; \
 \
 void main(void) { \
-	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_COORDINATE_LIMITS ) + " ) { \
+	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_AREA_LIMITS ) + " ) { \
 		if ( \
-			fragpos.x < uCoordLimitsMin.x || \
-			fragpos.x > uCoordLimitsMax.x || \
-			-fragpos.y < -uCoordLimitsMin.y || \
-			-fragpos.y > -uCoordLimitsMax.y \
+			fragpos.x < uAreaLimitsMin.x || \
+			fragpos.x > uAreaLimitsMax.x || \
+			-fragpos.y < -uAreaLimitsMin.y || \
+			-fragpos.y > -uAreaLimitsMax.y \
 			/* TODO: fix Y inversion */ \
 		) { \
 			FragColor = vec4( 0.0, 0.0, 0.0, 0.0 ); \
@@ -96,14 +102,15 @@ void Orthographic::Initialize() {
 	attributes.coord = GetAttributeLocation( "aCoord" );
 	attributes.tint_color = GetAttributeLocation( "aTintColor" );
 	attributes.normal = GetAttributeLocation( "aNormal" );
+	uniforms.position = GetUniformLocation( "uPosition" );
 	uniforms.texture = GetUniformLocation( "uTexture" );
 	uniforms.light_pos = GetUniformLocation( "uLightPos" );
 	uniforms.light_color = GetUniformLocation( "uLightColor" );
 	uniforms.world = GetUniformLocation("uWorld");
 	uniforms.flags = GetUniformLocation("uFlags");
 	uniforms.tint_color = GetUniformLocation("uTintColor");
-	uniforms.coordinate_limits.min = GetUniformLocation( "uCoordLimitsMin" );
-	uniforms.coordinate_limits.max = GetUniformLocation( "uCoordLimitsMax" );
+	uniforms.area_limits.min = GetUniformLocation( "uAreaLimitsMin" );
+	uniforms.area_limits.max = GetUniformLocation( "uAreaLimitsMax" );
 };
 
 void Orthographic::EnableAttributes() const {

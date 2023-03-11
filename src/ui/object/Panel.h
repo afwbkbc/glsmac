@@ -20,10 +20,11 @@ CLASS( Panel, UIContainer )
 	virtual void Align();
 	
 	void SetBorderWidth( const size_t border_width );
+	const size_t GetBorderSize() const;
 	
 protected:
 	
-	size_t m_border_width = 1;
+	size_t m_border_size = 1;
 	
 	virtual void ApplyStyle();
 	

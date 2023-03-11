@@ -19,19 +19,25 @@ CLASS( UIContainer, UIObject )
 	virtual void Create();
 	virtual void Destroy();
 	virtual void Iterate();
-	virtual void Realign();
+	virtual void RealignNow();
 	virtual void Redraw();
 
 	void UpdateZIndex();
 	
+	// for now this only affects OVERFLOW_HIDDEN frame
+	void SetPadding( const coord_t px );
+	const coord_t GetPadding() const;
+	
 	void SetOverflow( const overflow_t overflow );
 	void ProcessEvent( event::UIEvent* event );
+	
+	virtual const object_area_t GetInternalObjectArea();
 	
 	void AddStyleModifier( const Style::modifier_t modifier );
 	void RemoveStyleModifier( const Style::modifier_t modifier );
 
-	virtual void SetCoordinateLimits( const coordinate_limits_t limits );
-	virtual void SetCoordinateLimitsByObject( const UIObject* source_object ); // make sure source object lives longer than this one!
+	virtual void SetAreaLimits( const coord_box_t limits );
+	virtual void SetAreaLimitsByObject( UIObject* source_object ); // make sure source object lives longer than this one!
 	
 	void BlockEvents();
 	void UnblockEvents();
@@ -52,6 +58,8 @@ protected:
 	std::vector<UIObject *> m_child_objects = {};
 	
 	const std::string Subclass( const std::string& class_name ) const;
+	
+	coord_t m_padding = 0;
 	
 private:
 	void CreateChild( UIObject *object );

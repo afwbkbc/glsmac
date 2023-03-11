@@ -23,7 +23,6 @@ CLASS( Actor, Entity )
 		TYPE_MESH,
 		TYPE_INSTANCED_MESH,
 		TYPE_TEXT,
-		TYPE_IMAGE,
 		TYPE_SOUND,
 	};
 
@@ -43,9 +42,9 @@ CLASS( Actor, Entity )
 	void SetScene( Scene *scene );
 	Scene *GetScene();
 	
-	typedef std::pair< types::Vec3, types::Vec3 > coordinate_limits_t;
-	void SetCoordinateLimits( const coordinate_limits_t limits );
-	const coordinate_limits_t& GetCoordinateLimits() const;
+	typedef std::pair< types::Vec3, types::Vec3 > area_limits_t;
+	void SetAreaLimits( const area_limits_t limits );
+	const area_limits_t& GetAreaLimits() const;
 	
 	typedef uint32_t render_flag_t;
 	static constexpr render_flag_t RF_NONE = 0;
@@ -53,7 +52,8 @@ CLASS( Actor, Entity )
 	static constexpr render_flag_t RF_IGNORE_LIGHTING = 1 << 1;
 	static constexpr render_flag_t RF_IGNORE_CAMERA = 1 << 2;
 	static constexpr render_flag_t RF_IGNORE_DEPTH = 1 << 3;
-	static constexpr render_flag_t RF_USE_COORDINATE_LIMITS = 1 << 4;
+	static constexpr render_flag_t RF_USE_AREA_LIMITS = 1 << 4;
+	static constexpr render_flag_t RF_USE_2D_POSITION = 1 << 5;
 	
 	void SetRenderFlags( const render_flag_t render_flags );
 	const render_flag_t GetRenderFlags() const;
@@ -73,7 +73,7 @@ protected:
 	Scene *m_scene = NULL;
 
 	render_flag_t m_render_flags = RF_NONE;
-	coordinate_limits_t m_coordinate_limits = {};
+	area_limits_t m_area_limits = {};
 	
 };
 

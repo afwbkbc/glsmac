@@ -176,11 +176,26 @@ CLASS( Map, Serializable )
 			} perlin;
 		} coastlines;
 		const struct {
-			const util::Clamper< float > elevation_to_vertex_z = { Tile::ELEVATION_MIN, Tile::ELEVATION_MAX, -s_consts.tile_scale_z, s_consts.tile_scale_z };
-			const util::Clamper< float > elevation_to_water_r = { Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST, 0.6f, 1.3f };
-			const util::Clamper< float > elevation_to_water_g = { Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST, 0.6f, 1.8f };
-			const util::Clamper< float > elevation_to_water_b = { Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST, 0.8f, 1.8f };
-			const util::Clamper< float > elevation_to_water_a = { Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST, 1.0f, 0.5f };
+			const util::Clamper< float > elevation_to_vertex_z = {{
+				{ Tile::ELEVATION_MIN, Tile::ELEVATION_MAX },
+				{ -s_consts.tile_scale_z, s_consts.tile_scale_z }
+			}};
+			const util::Clamper< float > elevation_to_water_r = {{
+				{ Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST },
+				{ 0.6f, 1.3f }
+			}};
+			const util::Clamper< float > elevation_to_water_g = {{
+				{ Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST },
+				{ 0.6f, 1.8f }
+			}};
+			const util::Clamper< float > elevation_to_water_b = {{
+				{ Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST },
+				{ 0.8f, 1.8f }
+			}};
+			const util::Clamper< float > elevation_to_water_a = {{
+				{ Tile::ELEVATION_LEVEL_TRENCH, Tile::ELEVATION_LEVEL_COAST },
+				{ 1.0f, 0.5f }
+			}};
 		} clampers;
 		const struct {
 			const float water = s_consts.clampers.elevation_to_vertex_z.Clamp( Tile::ELEVATION_LEVEL_COAST ); // sea is always on sea level

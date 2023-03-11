@@ -60,13 +60,15 @@ void MiniMap::Create() {
 		
 		auto* ui = g_engine->GetUI();
 		
+		// TODO: make dragging global event
+		
 		// mousemove should keep working if mouse is outside minimap but dragging continues
 		m_handlers.mouse_move = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_MOVE, EH( this, f_scrollto ) {
 			if ( m_is_dragging ) {
-				auto geom = m_map_surface->GetAreaGeometry();
+				auto area = m_map_surface->GetObjectArea();
 				m_last_mouse_position = {
-					data->mouse.absolute.x - (ssize_t)geom.first.x,
-					data->mouse.absolute.y - (ssize_t)geom.first.y
+					data->mouse.absolute.x - (ssize_t)area.left,
+					data->mouse.absolute.y - (ssize_t)area.top
 				};
 				f_scrollto( m_last_mouse_position );
 			}
@@ -103,7 +105,7 @@ void MiniMap::Create() {
 }
 
 void MiniMap::SetMinimapSelection( const Vec2< float > position_percents, const Vec2< float > zoom ) {
-	
+
 	Vec2< ssize_t > size = {
 		(ssize_t)round( (float) m_map_surface->GetWidth() * zoom.x ),
 		(ssize_t)round( (float) m_map_surface->GetHeight() * zoom.y )
@@ -142,7 +144,7 @@ void MiniMap::SetMinimapSelection( const Vec2< float > position_percents, const 
 		(ssize_t)floor( h * position_percents.y - full_size.y / 2 ) + 29
 	};
 	
-	if ( size != m_last_selection_size ) {
+	if ( size != m_last_selection_size || !m_map_selection ) {
 		// redraw selection texture
 		// TODO: add 'lines' shader program and do it without texture
 		
@@ -181,20 +183,24 @@ void MiniMap::SetMinimapSelection( const Vec2< float > position_percents, const 
 			m_map_selection_texture->SetPixel( x + full_size.x - size.x, half_size.y - shh, c );
 			m_map_selection_texture->SetPixel( x + full_size.x - size.x, half_size.y + shh - 1, c );
 		}
+		
 		NEW( m_map_selection, object::Mesh );
 			m_map_selection->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
+			m_map_selection->SetLeft( top_left.x );
+			m_map_selection->SetTop( top_left.y );
 			m_map_selection->SetWidth( full_size.x );
 			m_map_selection->SetHeight( full_size.y );
 			m_map_selection->SetMesh( types::mesh::Render::Rectangle() );
 			m_map_selection->SetTexture( m_map_selection_texture );
-			m_map_selection->SetCoordinateLimitsByObject( m_map_surface );
+			m_map_selection->SetAreaLimitsByObject( m_map_surface );
 		AddChild( m_map_selection );
 	
 		m_last_selection_size = size;
 	}
-	
-	m_map_selection->SetLeft( top_left.x );
-	m_map_selection->SetTop( top_left.y );
+	else {
+		m_map_selection->SetLeft( top_left.x );
+		m_map_selection->SetTop( top_left.y );
+	}
 	
 }
 
@@ -233,8 +239,9 @@ void MiniMap::Destroy() {
 	
 	RemoveChild( m_turn_complete_button );
 	
-	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.mouse_move );
-	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.mouse_up );
+	auto* ui = g_engine->GetUI();
+	ui->RemoveGlobalEventHandler( m_handlers.mouse_move );
+	ui->RemoveGlobalEventHandler( m_handlers.mouse_up );
 	RemoveChild( m_map_surface );
 	
 	m_bottom_bar->RemoveChild( m_bottom_bar_labels.mission_year );

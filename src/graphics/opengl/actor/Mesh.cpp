@@ -4,6 +4,7 @@
 #include "scene/actor/Instanced.h"
 
 #include "../shader_program/Orthographic.h"
+#include "../shader_program/OrthographicData.h"
 #include "../shader_program/World.h"
 
 #include "rr/GetData.h"
@@ -53,6 +54,7 @@ bool Mesh::MeshReloadNeeded() {
 	}
 	
 	if ( m_mesh_update_counter != mesh_updated_counter ) {
+		//Log( "Mesh reload needed ( " + std::to_string( m_mesh_update_counter ) + " != " + std::to_string( mesh_updated_counter ) + " )" );
 		m_mesh_update_counter = mesh_updated_counter;
 		return true;
 	}
@@ -231,17 +233,21 @@ l_draw_begin:
 		case ( shader_program::ShaderProgram::TYPE_SIMPLE2D ) : {
 			auto* sp = (shader_program::Simple2D *)shader_program;
 			glUniform1ui( sp->uniforms.flags, flags );
-			if ( flags & actor::Actor::RF_USE_COORDINATE_LIMITS ) {
-				const auto& limits = mesh_actor->GetCoordinateLimits();
-				glUniform3fv( sp->uniforms.coordinate_limits.min, 1, (const GLfloat*)&limits.first );
-				glUniform3fv( sp->uniforms.coordinate_limits.max, 1, (const GLfloat*)&limits.second );
+			if ( flags & actor::Actor::RF_USE_AREA_LIMITS ) {
+				const auto& limits = mesh_actor->GetAreaLimits();
+				glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
+				glUniform3fv( sp->uniforms.area_limits.max, 1, (const GLfloat*)&limits.second );
+			}
+			if ( flags & actor::Actor::RF_USE_2D_POSITION ) {
+				glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&mesh_actor->GetPosition() );
 			}
 			glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
 			break;
 		}
 		case ( shader_program::ShaderProgram::TYPE_ORTHO ):
 		case ( shader_program::ShaderProgram::TYPE_ORTHO_DATA ): {
-			auto* sp = (shader_program::Orthographic *)shader_program; // TODO: make base class for ortho and ortho_data
+			auto* sp = (shader_program::Orthographic *)shader_program;
+			auto* sp_data = (shader_program::OrthographicData *)shader_program;
 			
 			GLuint ibo_size = 0;
 			
@@ -265,10 +271,13 @@ l_draw_begin:
 					if ( flags & actor::Actor::RF_USE_TINT ) {
 						glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&mesh_actor->GetTintColor() );
 					}
-					if ( flags & actor::Actor::RF_USE_COORDINATE_LIMITS ) {
-						const auto& limits = mesh_actor->GetCoordinateLimits();
-						glUniform3fv( sp->uniforms.coordinate_limits.min, 1, (const GLfloat*)&limits.first );
-						glUniform3fv( sp->uniforms.coordinate_limits.max, 1, (const GLfloat*)&limits.second );
+					if ( flags & actor::Actor::RF_USE_AREA_LIMITS ) {
+						const auto& limits = mesh_actor->GetAreaLimits();
+						glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
+						glUniform3fv( sp->uniforms.area_limits.max, 1, (const GLfloat*)&limits.second );
+					}
+					if ( flags & actor::Actor::RF_USE_2D_POSITION ) {
+						glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&mesh_actor->GetPosition() );
 					}
 					ibo_size = m_ibo_size;
 					break;
@@ -301,7 +310,10 @@ l_draw_begin:
 				else {
 					matrix = m_actor->GetWorldMatrix();
 				}
-				glUniformMatrix4fv( sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
+				glUniformMatrix4fv( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA
+					? sp_data->uniforms.world
+					: sp->uniforms.world
+				, 1, GL_TRUE, (const GLfloat*)(&matrix));
 				glDrawElements( GL_TRIANGLES, ibo_size, GL_UNSIGNED_INT, (void *)(0) );
 			}
 			else if ( m_actor->GetType() == scene::Actor::TYPE_INSTANCED_MESH ) {
@@ -313,7 +325,10 @@ l_draw_begin:
 				else {
 					matrices = instanced->GetWorldMatrices();
 				}
-				glUniformMatrix4fv( sp->uniforms.world, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
+				glUniformMatrix4fv( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA
+					? sp_data->uniforms.world
+					: sp->uniforms.world
+				, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
 				glDrawElementsInstanced( GL_TRIANGLES, ibo_size, GL_UNSIGNED_INT, (void *)(0), matrices.size() );
 			}
 			else {
@@ -384,7 +399,7 @@ l_draw_begin:
 	}
 }
 
-void Mesh::OnResize() {
+void Mesh::OnWindowResize() {
 	if ( m_data.is_allocated ) {
 		m_data.is_up_to_date = false; // need to recreate fbo for new window size
 	}

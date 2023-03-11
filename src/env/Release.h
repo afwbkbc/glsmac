@@ -14,5 +14,9 @@
 #define ASSERT( _condition, _text )
 #define ASSERT_NOLOG( _condition, _text )
 
+#define TEST_THIS( _obj )
+#define TEST_HERE( _obj )
+#define TESTING( _obj ) false
+
 #endif
 

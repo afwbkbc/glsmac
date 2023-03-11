@@ -41,6 +41,8 @@ protected:
 
 	Font *m_font = nullptr;
 	std::string m_text = "";
+	Vec2< size_t > m_last_window_size = { 0, 0 };
+	
 	FontTexture *m_texture = nullptr;
 };
 

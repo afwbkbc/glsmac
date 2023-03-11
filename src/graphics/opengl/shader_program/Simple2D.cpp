@@ -9,11 +9,17 @@ void Simple2D::AddShaders() {
 \
 in vec3 aCoord; \
 in vec2 aTexCoord; \
+uniform uint uFlags; \
+uniform vec2 uPosition; \
 out vec2 texpos; \
 out vec3 fragpos; \
 \
 void main(void) { \
-	gl_Position = vec4( aCoord, 1.0 ); \
+	vec3 coord = aCoord; \
+	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_2D_POSITION ) + " ) { \
+		coord += vec3( uPosition, 0.0 ); \
+	}\
+	gl_Position = vec4( coord, 1.0 ); \
 	texpos = vec2(aTexCoord); \
 	fragpos = aCoord; \
 } \
@@ -24,19 +30,19 @@ void main(void) { \
 \
 in vec2 texpos; \
 in vec3 fragpos; \
-uniform sampler2D uTexture; \
 uniform uint uFlags; \
-uniform vec3 uCoordLimitsMin; \
-uniform vec3 uCoordLimitsMax; \
+uniform sampler2D uTexture; \
+uniform vec3 uAreaLimitsMin; \
+uniform vec3 uAreaLimitsMax; \
 out vec4 FragColor; \
 \
 void main(void) { \
-	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_COORDINATE_LIMITS ) + " ) { \
+	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_AREA_LIMITS ) + " ) { \
 		if ( \
-			fragpos.x < uCoordLimitsMin.x || \
-			fragpos.x > uCoordLimitsMax.x || \
-			-fragpos.y < -uCoordLimitsMin.y || \
-			-fragpos.y > -uCoordLimitsMax.y \
+			fragpos.x < uAreaLimitsMin.x || \
+			fragpos.x > uAreaLimitsMax.x || \
+			-fragpos.y < -uAreaLimitsMin.y || \
+			-fragpos.y > -uAreaLimitsMax.y \
 			/* TODO: fix Y inversion */ \
 		) { \
 			FragColor = vec4( 0.0, 0.0, 0.0, 0.0 ); \
@@ -53,10 +59,11 @@ void main(void) { \
 void Simple2D::Initialize() {
 	attributes.tex_coord = GetAttributeLocation( "aTexCoord" );
 	attributes.coord = GetAttributeLocation( "aCoord" );
-	uniforms.texture = GetUniformLocation( "uTexture" );
 	uniforms.flags = GetUniformLocation("uFlags");
-	uniforms.coordinate_limits.min = GetUniformLocation( "uCoordLimitsMin" );
-	uniforms.coordinate_limits.max = GetUniformLocation( "uCoordLimitsMax" );
+	uniforms.position = GetUniformLocation( "uPosition" );
+	uniforms.texture = GetUniformLocation( "uTexture" );
+	uniforms.area_limits.min = GetUniformLocation( "uAreaLimitsMin" );
+	uniforms.area_limits.max = GetUniformLocation( "uAreaLimitsMax" );
 };
 
 void Simple2D::EnableAttributes() const {

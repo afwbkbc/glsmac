@@ -47,14 +47,14 @@ Scene *Actor::GetScene() {
 	return m_scene;
 }
 
-void Actor::SetCoordinateLimits( const coordinate_limits_t limits ) {
-	//Log( "Setting coordinate limits to " + limits.first.ToString() + "," + limits.second.ToString() );
-	m_render_flags |= RF_USE_COORDINATE_LIMITS;
-	m_coordinate_limits = limits;
+void Actor::SetAreaLimits( const area_limits_t limits ) {
+	//Log( "Setting area limits to " + limits.first.ToString() + "," + limits.second.ToString() );
+	m_render_flags |= RF_USE_AREA_LIMITS;
+	m_area_limits = limits;
 }
 
-const Actor::coordinate_limits_t& Actor::GetCoordinateLimits() const {
-	return m_coordinate_limits;
+const Actor::area_limits_t& Actor::GetAreaLimits() const {
+	return m_area_limits;
 }
 
 void Actor::SetRenderFlags( const render_flag_t render_flags ) {

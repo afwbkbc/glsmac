@@ -27,7 +27,7 @@ CLASS( Routine, base::Module )
 	}
 	virtual void OnSceneRemove( Scene *scene ) {};
 	
-	void OnResize();
+	void OnWindowResize();
 	
 protected:
 	friend class opengl::OpenGL;

@@ -52,51 +52,56 @@ void Panel::Align() {
 			b.first == Style::A_TEXTURE_BORDER_CORNER_LB
 		;
 		if ( b.first == Style::A_TEXTURE_BACK ) {
-			b.second->SetPadding( m_border_width );
+			b.second->SetMargin( m_border_size );
+			b.second->Maximize();
 		}
 		if (
 			b.first == Style::A_TEXTURE_BORDER_LEFT ||
 			b.first == Style::A_TEXTURE_BORDER_RIGHT ||
 			is_corner
 		) {
-			b.second->SetWidth( m_border_width );
+			b.second->SetWidth( m_border_size );
 		}
 		if (
 			b.first == Style::A_TEXTURE_BORDER_TOP ||
 			b.first == Style::A_TEXTURE_BORDER_BOTTOM ||
 			is_corner
 		) {
-			b.second->SetHeight( m_border_width );
+			b.second->SetHeight( m_border_size );
 		}
 		if (
 			b.first == Style::A_TEXTURE_BORDER_LEFT ||
 			b.first == Style::A_TEXTURE_BORDER_RIGHT
 		) {
-			b.second->SetTop( m_border_width );
-			b.second->SetBottom( m_border_width );
+			b.second->SetTop( m_border_size );
+			b.second->SetBottom( m_border_size );
 		}
 		if (
 			b.first == Style::A_TEXTURE_BORDER_TOP ||
 			b.first == Style::A_TEXTURE_BORDER_BOTTOM
 		) {
-			b.second->SetLeft( m_border_width );
-			b.second->SetRight( m_border_width );
+			b.second->SetLeft( m_border_size );
+			b.second->SetRight( m_border_size );
 		}
 	}
 }
 
-void Panel::SetBorderWidth( const size_t border_width ) {
-	if ( border_width != m_border_width ) {
-		m_border_width = border_width;
+void Panel::SetBorderWidth( const size_t border_size ) {
+	if ( border_size != m_border_size ) {
+		m_border_size = border_size;
 		Realign();
 	}
+}
+
+const size_t Panel::GetBorderSize() const {
+	return m_border_size;
 }
 
 void Panel::ApplyStyle() {
 	UIContainer::ApplyStyle();
 	
-	if ( Has( Style::A_BORDER_WIDTH ) ) {
-		SetBorderWidth( Get( Style::A_BORDER_WIDTH ) );
+	if ( Has( Style::A_BORDER_SIZE ) ) {
+		SetBorderWidth( Get( Style::A_BORDER_SIZE ) );
 	}
 
 }

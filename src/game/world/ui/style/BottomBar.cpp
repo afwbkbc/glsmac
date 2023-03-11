@@ -44,7 +44,7 @@ void BottomBar::AddStyles() {
 	});
 	
 	AddStyle( "SectionOuter", SH() {
-		s->Set( ::Style::A_BORDER_WIDTH, 3 );
+		s->Set( ::Style::A_BORDER_SIZE, 3 );
 		s->SetTexture( ::Style::A_TEXTURE_BORDER_LEFT, "interface.pcx", 40, 275, 42, 298 );
 		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LT, "interface.pcx", 40, 268, 42, 270 );
 		s->SetTexture( ::Style::A_TEXTURE_BORDER_TOP, "interface.pcx", 47, 268, 70, 270 );
@@ -56,7 +56,7 @@ void BottomBar::AddStyles() {
 	});
 	
 	AddStyle( "SectionInner", SH() {
-		s->Set( ::Style::A_BORDER_WIDTH, 3 );
+		s->Set( ::Style::A_BORDER_SIZE, 3 );
 		s->SetTexture( ::Style::A_TEXTURE_BORDER_LEFT, "interface.pcx", 1, 275, 3, 298 );
 		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LT, "interface.pcx", 1, 268, 3, 270 );
 		s->SetTexture( ::Style::A_TEXTURE_BORDER_TOP, "interface.pcx", 8, 268, 31, 270 );
@@ -274,7 +274,7 @@ void BottomBar::AddStyles() {
 		
 		s->SetFont( ::Style::A_FONT, "arialnb.ttf", 16 );
 		
-		s->Set( ::Style::A_BORDER_WIDTH, 6 );
+		s->Set( ::Style::A_BORDER_SIZE, 6 );
 		
 		if ( s->Is( ::Style::M_ACTIVE ) ) {
 			f_buttonstyle( 193, 55 );

@@ -125,6 +125,8 @@ void MenuBlock::Destroy() {
 }
 
 void MenuBlock::Iterate() {
+	UIContainer::Iterate();
+	
 	while (m_slide_timer.Ticked()) {
 		m_slide_value += m_slide_change;
 		SetRight( m_slide_value );

@@ -43,7 +43,6 @@ void MainMenu::Start() {
 	NEW( m_music, SoundEffect, "MainMenuMusic" );
 	g_engine->GetUI()->AddObject( m_music );
 	
-	//NEWV( menu, Lobby, this );
 	NEWV( menu, Main, this );
 	ShowMenu( menu );
 }

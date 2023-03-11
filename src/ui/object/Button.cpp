@@ -14,7 +14,7 @@ void Button::Create() {
 	
 	NEW( m_label, Label );
 		m_label->SetText( m_label_text );
-		m_label->SetPadding( 3 );
+		m_label->SetMargin( 3 );
 		m_label->ForwardStyleAttributesV({
 			Style::A_FONT,
 			Style::A_TEXTCOLOR,

@@ -7,7 +7,6 @@ namespace opengl {
 
 class Sprite;
 class Mesh;
-class Image;
 
 namespace shader_program {
 
@@ -18,9 +17,9 @@ CLASS( Orthographic, ShaderProgram )
 protected:
 	friend class opengl::Sprite;
 	friend class opengl::Mesh;
-	friend class opengl::Image;
 
 	struct {
+		GLuint position;
 		GLuint texture;
 		GLuint world;
 		GLuint light_pos;
@@ -30,7 +29,7 @@ protected:
 		struct {
 			GLuint min;
 			GLuint max;
-		} coordinate_limits;
+		} area_limits;
 	} uniforms;
 
 	struct {

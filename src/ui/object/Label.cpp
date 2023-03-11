@@ -16,6 +16,10 @@ Label::Label( const std::string& class_name )
 void Label::SetText( const std::string& text ) {
 	if ( m_text != text ) {
 		m_text = text;
+		if ( m_font ) {
+			m_text_width = m_font->GetTextWidth( m_text.c_str() );
+			m_text_height = m_font->GetTextHeight( m_text.c_str() );
+		}
 		Realign();
 		if ( m_actor ) {
 			m_actor->SetText( text );
@@ -35,6 +39,8 @@ void Label::SetTextColor( const Color& color ) {
 void Label::SetFont( Font* font ) {
 	if ( m_font != font ) {
 		m_font = font;
+		m_text_width = m_font->GetTextWidth( m_text.c_str() );
+		m_text_height = m_font->GetTextHeight( m_text.c_str() );
 		Realign();
 		if ( m_actor ) {
 			m_actor->SetFont( m_font );
@@ -68,26 +74,26 @@ void Label::Destroy() {
 
 void Label::Align() {
 	UIObject::Align();
-
+	
 	if ( m_actor && m_font ) {
 		size_t xpos = 0;
 		size_t ypos = 0;
 
 		if ( ( m_align & ALIGN_HCENTER ) == ALIGN_HCENTER ) {
-			xpos = ( m_object_area.left + m_object_area.right ) / 2 - m_font->GetTextWidth(m_text.c_str()) / 2;
+			xpos = ( m_object_area.left + m_object_area.right ) / 2 - m_text_width / 2;
 		}
 		else if ( m_align & ALIGN_LEFT ) {
 			xpos = m_object_area.left;
 		}
 		else if ( m_align & ALIGN_RIGHT ) {
-			xpos = m_object_area.right - m_font->GetTextWidth(m_text.c_str());
+			xpos = m_object_area.right - m_text_width;
 		}
 
 		if ( ( m_align & ALIGN_VCENTER ) == ALIGN_VCENTER ) {
-			ypos = ( m_object_area.top + m_object_area.bottom ) / 2 + m_font->GetTextHeight(m_text.c_str()) / 2;
+			ypos = ( m_object_area.top + m_object_area.bottom ) / 2 + m_text_height / 2;
 		}
 		else if ( m_align & ALIGN_TOP ) {
-			ypos = m_object_area.top + m_font->GetTextHeight(m_text.c_str());
+			ypos = m_object_area.top + m_text_height;
 		}
 		else if ( m_align & ALIGN_BOTTOM ) {
 			ypos = m_object_area.bottom;
@@ -98,7 +104,6 @@ void Label::Align() {
 			ClampY( ypos ),
 			-1.0,
 		});
-		
 	}
 }
 

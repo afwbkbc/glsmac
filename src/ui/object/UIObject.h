@@ -57,7 +57,11 @@ CLASS( UIObject, base::Base )
 
 	UIObject *GetParentObject() const;
 	void SetParentObject( UIContainer *parent_object );
-	virtual void Realign();
+	
+	virtual void RealignNow(); // slow, use only if up-to-date state is needed immediately
+	void Realign(); // use in all other cases
+	virtual void RealignMaybe(); // realign only if needed, to be called from UI
+	
 	virtual void Redraw();
 	void UpdateObjectArea();
 
@@ -85,11 +89,28 @@ CLASS( UIObject, base::Base )
 	void SetRight( const coord_t px );
 	void SetTop( const coord_t px );
 	void SetBottom( const coord_t px );
+	
+	struct coord_box_t {
+		coord_t left;
+		coord_t top;
+		coord_t right;
+		coord_t bottom;
+		bool operator != ( const coord_box_t& other ) const {
+			return memcmp( this, &other, sizeof( other ) ) != 0;
+		}
+		operator bool() const {
+			return left || top || right || bottom;
+		}
+	};
+
 	void Maximize();
-	void SetPadding( const coord_t px );
+	void SetMargin( const coord_box_t px );
+	void SetMargin( const coord_t px );
+	
+	void SetOverflowMargin( const coord_t px );
 	virtual void SetWidth( const coord_t px );
 	virtual void SetHeight( const coord_t px );
-	void ForceAspectRatio( const float aspect_ratio );
+	virtual void ForceAspectRatio( const float aspect_ratio );
 	void SetAlign( const alignment_t alignment );
 	void SetHAlign( const alignment_t alignment );
 	void SetVAlign( const alignment_t alignment );
@@ -105,8 +126,21 @@ CLASS( UIObject, base::Base )
 	
 	virtual void ProcessEvent( event::UIEvent* event );
 	
+	struct object_area_t {
+		coord_t left;
+		coord_t right;
+		coord_t top;
+		coord_t bottom;
+		coord_t width;
+		coord_t height;
+		bool operator != ( const object_area_t& other ) const {
+			return memcmp( this, &other, sizeof( other ) ) != 0;
+		}
+	};
+	
 	vertex_t GetAreaPosition() const;
-	std::pair<vertex_t, vertex_t> GetAreaGeometry() const;
+	virtual const object_area_t GetObjectArea();
+	virtual const object_area_t GetInternalObjectArea(); // for UIContainer
 	bool IsPointInside( const size_t x, const size_t y ) const;
 	
 	void SetClass( const std::string& style );
@@ -114,6 +148,11 @@ CLASS( UIObject, base::Base )
 #ifdef DEBUG
 	void ShowDebugFrame();
 	void HideDebugFrame();
+	
+	// use these to track lifecycle of specific object
+	void SetTesting( const bool testing );
+	const bool IsTesting() const;
+	void TestBreakpoint(); // set gdb breakpoint inside
 #else
 	void ShowDebugFrame() {}
 	void HideDebugFrame() {}
@@ -147,9 +186,10 @@ CLASS( UIObject, base::Base )
 	virtual void Show();
 	virtual void Hide();
 	
-	typedef std::pair< Vec2< coord_t >, Vec2< coord_t > > coordinate_limits_t;
-	virtual void SetCoordinateLimits( const coordinate_limits_t limits );
-	virtual void SetCoordinateLimitsByObject( const UIObject* source_object ); // make sure source object lives longer than this one!
+	virtual void SetAreaLimits( const coord_box_t limits );
+	virtual void SetAreaLimitsByObject( UIObject* source_object ); // make sure source object lives longer than this one!
+	void AddAreaLimitsChild( UIObject* child_object );
+	void RemoveAreaLimitsChild( UIObject* child_object );
 	
 	typedef std::unordered_map< UIEvent::event_type_t, std::vector< UIEventHandler* > > event_handlers_t;
 	
@@ -197,31 +237,21 @@ protected:
 	
 	float m_absolute_z_index = 0.0f;
 
-	struct object_area_t {
-		coord_t left;
-		coord_t right;
-		coord_t top;
-		coord_t bottom;
-		coord_t width;
-		coord_t height;
-		bool operator != ( const object_area_t& other ) const {
-			return memcmp( this, &other, sizeof( other ) ) != 0;
-		}
-	};
 	object_area_t m_object_area = {};
 	
 	bool m_created = false;
 	overflow_t m_overflow = OVERFLOW_VISIBLE;
 
 	enum stick_bits_t {
-		STICK_LEFT = 1,
-		STICK_RIGHT = 2,
-		STICK_WIDTH = 4,
-		STICK_TOP = 8,
-		STICK_BOTTOM = 16,
-		STICK_HEIGHT = 32,
+		STICK_NONE = 0,
+		STICK_LEFT = 1 << 0,
+		STICK_RIGHT = 1 << 1,
+		STICK_WIDTH = 1 << 2,
+		STICK_TOP = 1 << 3,
+		STICK_BOTTOM = 1 << 4,
+		STICK_HEIGHT = 1 << 5,
 	};
-	unsigned char m_stick_bits = 0;
+	unsigned char m_stick_bits = STICK_NONE;
 	alignment_t m_align = ALIGN_LEFT | ALIGN_TOP;
 	struct {
 		coord_t left = 0;
@@ -235,12 +265,6 @@ protected:
 		coord_t aspect_ratio;
 		bool force_aspect_ratio = false;
 	} m_size = {};
-	struct {
-		coord_t left = 0;
-		coord_t right = 0;
-		coord_t top = 0;
-		coord_t bottom = 0;
-	} m_padding = {};
 	
 	typedef uint8_t state_t;
 	const static state_t STATE_NONE = 0;
@@ -268,6 +292,8 @@ protected:
 	void CheckStylePtr() const;
 	
 	bool m_has_debug_frame = false;
+	
+	bool m_is_testing = false;
 #endif
 	
 	typedef std::unordered_set< UIEvent::event_type_t > events_t;
@@ -280,7 +306,15 @@ protected:
 	void BlockRealigns();
 	void UnblockRealigns();
 	
+	bool m_is_realign_needed = true;
+	
 	const std::string& GetStyleClass();
+
+	coord_box_t m_margin = {};
+	coord_t m_overflow_margin = 0;
+	
+	// redraws overlay
+	void Refresh();
 	
 private:
 	
@@ -313,13 +347,11 @@ private:
 
 	struct {
 		bool enabled = false;
-		const UIObject* source_object = nullptr;
-		coordinate_limits_t limits;
-	} m_coordinate_limits = {};
-	void UpdateCoordinateLimits();
-	
-	// redraws overlay
-	void Refresh();
+		UIObject* source_object = nullptr;
+		std::unordered_set< UIObject* > child_objects = {};
+		coord_box_t limits;
+	} m_area_limits = {};
+	void UpdateAreaLimits();
 	
 };
 

@@ -32,6 +32,8 @@ protected:
 	
 	Font *m_font = nullptr;
 	std::string m_text = "";
+	size_t m_text_width = 0;
+	size_t m_text_height = 0;
 	Color m_color = { 0.0, 0.0, 0.0, 0.0 };
 	
 	scene::actor::Text *m_actor = nullptr;

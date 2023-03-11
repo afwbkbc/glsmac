@@ -1,6 +1,7 @@
 #include "Mesh.h"
 
 #include "util/Clamper.h"
+#include "engine/Engine.h"
 
 using namespace types;
 
@@ -36,7 +37,6 @@ void Mesh::SetMesh( const types::mesh::Mesh* mesh ) {
 				m_actor->SetTexture( m_texture );
 			}
 		AddActor( m_actor );
-		Realign();
 	}
 }
 
@@ -75,16 +75,6 @@ void Mesh::SetTintColor( const types::Color color ) {
 	UpdateRenderFlags();
 }
 
-void Mesh::Create() {
-	UIObject::Create();
-	
-/* not needed?
-	if ( m_actor && m_texture ) {
-		m_actor->SetTexture( m_texture );
-	}
- */
-}
-
 void Mesh::Destroy() {
 	if ( m_actor ) {
 		RemoveActor( m_actor );
@@ -96,15 +86,6 @@ void Mesh::Destroy() {
 	}
 
 	UIObject::Destroy();
-}
-
-void Mesh::Draw() {
-	UIObject::Draw();
-
-	// looks like this isn't needed. keep this code for a while in case some bugs happen without it
-	/*if ( m_texture ) {
-		m_actor->SetTexture( m_texture );
-	}*/
 }
 
 void Mesh::Align() {
@@ -132,10 +113,6 @@ void Mesh::Align() {
 			mesh_top = coord.y;
 		}
 	}
-	struct {
-		util::Clamper<coord_t> x;
-		util::Clamper<coord_t> y;
-	} object_area_to_mesh_coords;
 	
 	bool is_render_mesh = m_mesh->GetType() == types::mesh::Mesh::MT_RENDER;
 	
@@ -150,8 +127,8 @@ void Mesh::Align() {
 			float ws = mesh_right - mesh_left;
 			float hs = mesh_bottom - mesh_top;
 			float as = hs / ws;
-			float wd = m_object_area.right - m_object_area.left;
-			float hd = m_object_area.bottom - m_object_area.top;
+			float wd = m_object_area.width;
+			float hd = m_object_area.height;
 			float ad = hd / wd; 
 
 			if ( as != ad ) {
@@ -173,36 +150,98 @@ void Mesh::Align() {
 			}
 		}
 	}
-	
-	object_area_to_mesh_coords.x.SetRange( UnclampX( mesh_left ), UnclampX( mesh_right ), m_object_area.left, m_object_area.right );
-	object_area_to_mesh_coords.y.SetRange( UnclampY( mesh_top ), UnclampY( mesh_bottom ), m_object_area.top, m_object_area.bottom );
-	
-	for ( types::mesh::Mesh::index_t i = 0 ; i < c ; i++ ) {
-		m_original_mesh->GetVertexCoord( i, &coord );
-		
-		coord.x = ClampX( object_area_to_mesh_coords.x.Clamp( UnclampX( coord.x ) ) );
-		coord.y = ClampY( object_area_to_mesh_coords.y.Clamp( UnclampY( coord.y ) ) );
-		
-		m_mesh->SetVertexCoord( i, coord );
 
-		ASSERT( m_mesh->GetType() == m_original_mesh->GetType(), "mesh and original mesh have different types" );
-		switch ( m_mesh->GetType() ) {
-			case types::mesh::Mesh::MT_SIMPLE: {
-				auto *from = (types::mesh::Simple*) m_original_mesh;
-				auto *to = (types::mesh::Simple*) m_mesh;
-				from->GetVertexTexCoord( i, &tex_coord );
-				to->SetVertexTexCoord( i, tex_coord );
-				break;
-			}
-			case types::mesh::Mesh::MT_RENDER: {
-				auto *from = (types::mesh::Render*) m_original_mesh;
-				auto *to = (types::mesh::Render*) m_mesh;
-				from->GetVertexTexCoord( i, &tex_coord );
-				to->SetVertexTexCoord( i, tex_coord );
-				break;
-			}
-			default: {
-				ASSERT( false, "unknown mesh type " + std::to_string( m_mesh->GetType() ) );
+	m_actor->SetPositionX( ClampX( m_object_area.left ) + 1.0f );
+	m_actor->SetPositionY( ClampY( m_object_area.top ) - 1.0f );
+	
+	bool need_resize = false;
+	if (
+		m_last_object_area.width != m_object_area.width ||
+		m_last_object_area.height != m_object_area.height
+	) {
+		//Log( "Resizing because object area has changed ( " + std::to_string( m_last_object_area.width ) + " != " + std::to_string( m_object_area.width ) + " || " + std::to_string( m_last_object_area.height ) + " != " + std::to_string( m_object_area.height ) + " )" );
+		m_last_object_area = m_object_area;
+		need_resize = true;
+	}
+	if ( m_texture && ( m_last_texture_size.x != m_texture->m_width || m_last_texture_size.y != m_texture->m_height ) ) {
+		//Log( "Resizing because texture size has changed" );
+		m_last_texture_size = {
+			m_texture->m_width,
+			m_texture->m_height
+		};
+		need_resize = true;
+	}
+	if ( m_last_mesh != m_mesh ) {
+		//Log( "Resizing because mesh has changed" );
+		m_last_mesh = m_mesh;
+		need_resize = true;
+	}
+	if ( m_force_resize ) {
+		//Log( "Resizing because forced" );
+		m_force_resize = false;
+		need_resize = true;
+	}
+	if ( m_last_margin != m_margin ) {
+		//Log( "Resizing because margin has changed" );
+		m_last_margin = m_margin;
+		need_resize = true;
+	}
+	auto *g = g_engine->GetGraphics();
+	Vec2< size_t > viewport_size = {
+		g->GetViewportWidth(),
+		g->GetViewportHeight()
+	};
+	if ( m_last_viewport_size != viewport_size ) {
+		//Log( "Resizing because viewport size has changed" );
+		m_last_viewport_size = viewport_size;
+		need_resize = true;
+	}
+
+	if ( need_resize ) {
+		
+		 // SLOW! Do this only when absolutely needed
+		
+		struct {
+			util::Clamper<coord_t> x;
+			util::Clamper<coord_t> y;
+		} object_area_to_mesh_coords;
+		
+		object_area_to_mesh_coords.x.SetRange({
+			{ UnclampX( mesh_left ), UnclampX( mesh_right ) },
+			{ 0.0f, m_object_area.width }
+		});
+		object_area_to_mesh_coords.y.SetRange({
+			{ UnclampY( mesh_top ), UnclampY( mesh_bottom ) },
+			{ 0.0f, m_object_area.height }
+		});
+		
+		for ( types::mesh::Mesh::index_t i = 0 ; i < c ; i++ ) {
+			m_original_mesh->GetVertexCoord( i, &coord );
+
+			coord.x = ClampX( object_area_to_mesh_coords.x.Clamp( UnclampX( coord.x ) ) );
+			coord.y = ClampY( object_area_to_mesh_coords.y.Clamp( UnclampY( coord.y ) ) );
+			
+			m_mesh->SetVertexCoord( i, coord );
+
+			ASSERT( m_mesh->GetType() == m_original_mesh->GetType(), "mesh and original mesh have different types" );
+			switch ( m_mesh->GetType() ) {
+				case types::mesh::Mesh::MT_SIMPLE: {
+					auto *from = (types::mesh::Simple*) m_original_mesh;
+					auto *to = (types::mesh::Simple*) m_mesh;
+					from->GetVertexTexCoord( i, &tex_coord );
+					to->SetVertexTexCoord( i, tex_coord );
+					break;
+				}
+				case types::mesh::Mesh::MT_RENDER: {
+					auto *from = (types::mesh::Render*) m_original_mesh;
+					auto *to = (types::mesh::Render*) m_mesh;
+					from->GetVertexTexCoord( i, &tex_coord );
+					to->SetVertexTexCoord( i, tex_coord );
+					break;
+				}
+				default: {
+					ASSERT( false, "unknown mesh type " + std::to_string( m_mesh->GetType() ) );
+				}
 			}
 		}
 	}
@@ -220,7 +259,8 @@ void Mesh::UpdateRenderFlags() {
 		m_actor->SetRenderFlags(
 			scene::actor::Actor::RF_IGNORE_CAMERA |
 			scene::actor::Actor::RF_IGNORE_LIGHTING |
-			scene::actor::Actor::RF_IGNORE_DEPTH
+			scene::actor::Actor::RF_IGNORE_DEPTH |
+			scene::actor::Actor::RF_USE_2D_POSITION
 		);
 		if ( m_tint_color.enabled ) {
 			m_actor->SetTintColor( m_tint_color.color );

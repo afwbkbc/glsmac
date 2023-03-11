@@ -17,7 +17,7 @@ void Input::Create() {
 	
 	NEW( m_label, Label );
 		m_label->SetText( m_value );
-		m_label->SetPadding( 5 ); // TODO: align properly
+		m_label->SetMargin( 5 ); // TODO: align properly
 		m_label->ForwardStyleAttributesV({
 			Style::A_FONT,
 			Style::A_TEXTCOLOR,

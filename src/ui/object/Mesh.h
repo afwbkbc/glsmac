@@ -18,14 +18,12 @@ CLASS( Mesh, UIObject )
 	Mesh( const std::string& class_name = "" );
 	
 	void SetMesh( const types::mesh::Mesh* mesh );
-	void SetTexture( const types::Texture* texture);
+	virtual void SetTexture( const types::Texture* texture );
 	void ClearTexture();
 	
 	void SetTintColor( const types::Color color );
 	
-	virtual void Create();
 	virtual void Destroy();
-	virtual void Draw();
 	virtual void Align();
 	
 	enum aspect_ratio_mode_t {
@@ -51,6 +49,13 @@ protected:
 		bool enabled = false;
 		types::Color color;
 	} m_tint_color = {};
+	
+	bool m_force_resize = false;
+	object_area_t m_last_object_area = { 0, 0 };
+	Vec2< size_t > m_last_viewport_size = { 0, 0 };
+	coord_t m_last_margin = 0;
+	types::mesh::Mesh* m_last_mesh = nullptr;
+	Vec2< size_t > m_last_texture_size = { 0, 0 };
 	
 	void UpdateRenderFlags();
 };

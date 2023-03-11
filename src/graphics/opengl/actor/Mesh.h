@@ -20,7 +20,7 @@ CLASS(Mesh, Actor)
 	
 	void Draw( shader_program::ShaderProgram *shader_program, Camera *camera = nullptr );
 	
-	void OnResize();
+	void OnWindowResize();
 	
 protected:
 	

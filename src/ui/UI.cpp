@@ -24,10 +24,17 @@ void UI::Start() {
 
 	m_root_object.Create();
 	m_root_object.UpdateObjectArea();
-
-	m_clamp.x.SetRange( 0.0, g_engine->GetGraphics()->GetViewportWidth(), -1.0, 1.0 );
+	
+	m_clamp.x.SetRange({
+		{ 0.0, (float)g_engine->GetGraphics()->GetViewportWidth() },
+		{ -1.0, 1.0 }
+	});
 	m_clamp.x.SetOverflowAllowed( true );
-	m_clamp.y.SetRange( 0.0, g_engine->GetGraphics()->GetViewportHeight(), -1.0, 1.0 );
+	
+	m_clamp.y.SetRange({
+		{ 0.0, (float)g_engine->GetGraphics()->GetViewportHeight() },
+		{ -1.0, 1.0 }
+	});
 	m_clamp.y.SetOverflowAllowed( true );
 	m_clamp.y.SetInversed( true );
 	
@@ -35,14 +42,14 @@ void UI::Start() {
 		NEW( m_loader, module::Loader );
 	}
 
-	g_engine->GetGraphics()->AddOnResizeHandler( this, RH( this ) {
+	g_engine->GetGraphics()->AddOnWindowResizeHandler( this, RH( this ) {
 #ifdef DEBUG
 		for (auto& it : m_debug_frames) {
 			ResizeDebugFrame( it.first, &it.second );
 		}
 #endif
-		m_clamp.x.SetSrcRange( 0.0, g_engine->GetGraphics()->GetViewportWidth() );
-		m_clamp.y.SetSrcRange( 0.0, g_engine->GetGraphics()->GetViewportHeight() );
+		m_clamp.x.SetSrcRange( { 0.0, (float)g_engine->GetGraphics()->GetViewportWidth() } );
+		m_clamp.y.SetSrcRange( { 0.0, (float)g_engine->GetGraphics()->GetViewportHeight() } );
 		m_root_object.Realign();
 	});
 	
@@ -71,7 +78,7 @@ void UI::Stop() {
 	
 	RemoveGlobalEventHandler( m_keydown_handler );
 	
-	g_engine->GetGraphics()->RemoveOnResizeHandler( this );
+	g_engine->GetGraphics()->RemoveOnWindowResizeHandler( this );
 	
 	if ( m_loader ) {
 		m_loader->Stop();
@@ -377,7 +384,7 @@ void UI::Redraw() {
 }
 
 #ifdef DEBUG
-void UI::ShowDebugFrame( const UIObject* object ) {
+void UI::ShowDebugFrame( UIObject* object ) {
 	auto it = m_debug_frames.find( object );
 	if ( it == m_debug_frames.end() ) {
 		Log("Showing debug frame for " + object->GetName());
@@ -400,7 +407,7 @@ void UI::ShowDebugFrame( const UIObject* object ) {
 	}
 }
 
-void UI::HideDebugFrame( const UIObject* object ) {
+void UI::HideDebugFrame( UIObject* object ) {
 	auto it = m_debug_frames.find( object );
 	if ( it != m_debug_frames.end() ) {
 		Log("Hiding debug frame for " + object->GetName());
@@ -411,19 +418,19 @@ void UI::HideDebugFrame( const UIObject* object ) {
 	}
 }
 
-void UI::ResizeDebugFrame( const UIObject* object, const debug_frame_data_t* data ) {
-	auto geom = object->GetAreaGeometry();
+void UI::ResizeDebugFrame( UIObject* object, const debug_frame_data_t* data ) {
+	auto area = object->GetObjectArea();
 	data->mesh->SetCoords({
-		ClampX( geom.first.x ),
-		ClampY( geom.first.y )
+		ClampX( area.left ),
+		ClampY( area.top )
 	},{
-		ClampX( geom.second.x ),
-		ClampY( geom.second.y )
+		ClampX( area.right ),
+		ClampY( area.bottom )
 	}, -1.0 );
 	
 }
 
-void UI::ResizeDebugFrame( const UIObject* object ) {
+void UI::ResizeDebugFrame( UIObject* object ) {
 	auto it = m_debug_frames.find( object );
 	if ( it != m_debug_frames.end() ) {
 		ResizeDebugFrame( object, &it->second );

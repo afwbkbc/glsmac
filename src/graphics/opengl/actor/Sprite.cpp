@@ -123,7 +123,11 @@ void Sprite::Draw( shader_program::ShaderProgram *shader_program, Camera *camera
 		case ( shader_program::ShaderProgram::TYPE_ORTHO ): {
 			auto* sp = (shader_program::Orthographic *)shader_program;
 			
-			glUniform1ui( sp->uniforms.flags, 0 );
+			auto flags = sprite_actor->GetRenderFlags();
+			glUniform1ui( sp->uniforms.flags, flags );
+			if ( flags & actor::Actor::RF_USE_2D_POSITION ) {
+				glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&sprite_actor->GetPosition() );
+			}
 			
 			auto* lights = m_actor->GetScene()->GetLights();
 			if ( !lights->empty() ) {

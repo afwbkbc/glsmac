@@ -90,9 +90,9 @@ CLASS( UI, base::Module )
 	void Redraw();
 	
 #ifdef DEBUG
-	void ShowDebugFrame( const UIObject* object );
-	void HideDebugFrame( const UIObject* object );
-	void ResizeDebugFrame( const UIObject* object );
+	void ShowDebugFrame( UIObject* object );
+	void HideDebugFrame( UIObject* object );
+	void ResizeDebugFrame( UIObject* object );
 #else
 	void ShowDebugFrame( const UIObject* object ) {}
 	void HideDebugFrame( const UIObject* object ) {}
@@ -148,10 +148,10 @@ private:
 		actor::Mesh* actor;
 	};
 	
-	typedef std::unordered_map< const UIObject*, debug_frame_data_t > debug_frames_map_t;
+	typedef std::unordered_map< UIObject*, debug_frame_data_t > debug_frames_map_t;
 	debug_frames_map_t m_debug_frames = {};
 	
-	void ResizeDebugFrame( const UIObject* object, const debug_frame_data_t* data );
+	void ResizeDebugFrame( UIObject* object, const debug_frame_data_t* data );
 #endif
 	
 };

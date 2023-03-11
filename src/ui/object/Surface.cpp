@@ -15,7 +15,8 @@ void Surface::SetStretchTexture( const bool stretch_texture ) {
 	ASSERT( m_texture, "stretch texture but texture not set" );
 	if ( stretch_texture != m_stretch_texture ) {
 		m_stretch_texture = stretch_texture;
-		Realign();
+		m_force_resize = true; // because Mesh doesn't know about m_stretch_texture
+		Resize();
 	}
 }
 
@@ -23,8 +24,16 @@ void Surface::Create() {
 	Mesh::Create();
 
 	NEW( m_background_mesh, types::mesh::Rectangle );
-	Resize();
+	ResizeNow();
 	SetMesh( m_background_mesh );
+}
+
+void Surface::Iterate() {
+	if ( m_need_resize ) {
+		ResizeNow();
+	}
+	
+	Mesh::Iterate();
 }
 
 void Surface::ApplyStyle() {
@@ -55,23 +64,40 @@ void Surface::ApplyStyle() {
 }
 
 void Surface::Align() {
-	Resize();
+	
+	if ( m_background_mesh ) {
+		ResizeNow();
+	}
+	else {
+		Resize(); // resize when mesh is available
+	}
 	
 	Mesh::Align();
 }
 
 void Surface::Resize() {
+	m_need_resize = true;
+}
 
-	Vec2< coord_t > v1 = { ClampX( m_object_area.left ), ClampY( m_object_area.top ) };
-	Vec2< coord_t > v2 = { ClampX( m_object_area.right ), ClampY( m_object_area.bottom ) };
-	
-	if ( m_texture && !m_stretch_texture ) {
-		m_background_mesh->SetCoords( v1, v2, { m_texture->m_width, m_texture->m_height }, -m_z_index );
-	}
-	else {
-		m_background_mesh->SetCoords( v1, v2, -m_z_index );
-	}
+void Surface::ResizeNow() {
+	if ( m_background_mesh ) {
+		Vec2< coord_t > pos = { 0.0f, 0.0f };
+		Vec2< coord_t > size = {
+			ClampX( m_object_area.right ) - ClampX( m_object_area.left ),
+			ClampY( m_object_area.bottom ) - ClampY( m_object_area.top )
+		};
 
+		//Log( "Resizing surface to " + size.ToString() );
+
+		if ( m_texture && !m_stretch_texture ) {
+			m_background_mesh->SetCoords( pos, size, { m_texture->m_width, m_texture->m_height }, -m_z_index );
+		}
+		else {
+			m_background_mesh->SetCoords( pos, size, -m_z_index );
+		}
+
+		m_need_resize = false;
+	}
 }
 
 }

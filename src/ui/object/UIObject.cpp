@@ -40,6 +40,9 @@ UIObject::~UIObject() {
 			DELETE( handler );
 		}
 	}
+	if ( m_area_limits.source_object ) {
+		m_area_limits.source_object->RemoveAreaLimitsChild( this );
+	}
 }
 
 void UIObject::Create() {
@@ -66,18 +69,16 @@ void UIObject::Destroy() {
 }
 
 void UIObject::Iterate() {
-	
+	RealignMaybe();
 }
 
 void UIObject::Align() {
-	if ( m_coordinate_limits.enabled ) {
-		UpdateCoordinateLimits();
-	}
-	Refresh();
+	
 }
 
 void UIObject::Draw() {
 	ApplyStyleIfNeeded();
+	RealignMaybe();
 	Refresh();
 }
 
@@ -319,16 +320,36 @@ bool UIObject::IsEventContextOverridden( event_context_t context ) const {
 	return ( m_overridden_event_contexts & context );
 }
 	
-void UIObject::Realign() {
+void UIObject::RealignNow() {
 	if ( !m_are_realigns_blocked ) {
 		UpdateObjectArea();
-		if ( m_created )
+		if ( m_created ) {
 			Align();
+		}
+		m_is_realign_needed = false;
+		for ( auto& child : m_area_limits.child_objects ) {
+			child->UpdateAreaLimits();
+		}
+		Refresh();
+	}
+}
+
+void UIObject::Realign() {
+	if ( !m_are_realigns_blocked ) {
+		//Log( "Realigning" );
+		m_is_realign_needed = true;
+	}
+}
+
+void UIObject::RealignMaybe() {
+	if ( m_is_realign_needed ) {
+		RealignNow();
 	}
 }
 
 void UIObject::Redraw() {
 	if ( m_created ) {
+		RealignMaybe();
 		Draw();
 	}
 }
@@ -358,81 +379,122 @@ const UIObject::coord_t UIObject::GetHeight() const {
 }
 
 void UIObject::SetLeft( const coord_t px ) {
-	m_position.left = px;
 	m_stick_bits |= STICK_LEFT;
-	if ( ! ( m_align & ALIGN_HCENTER ) )
+	if ( ! ( m_align & ALIGN_HCENTER ) ) {
 		m_align = ( m_align & (~ALIGN_RIGHT) ) | ALIGN_LEFT;
-	if ( m_stick_bits & STICK_RIGHT )
+	}
+	if ( m_stick_bits & STICK_RIGHT ) {
 		m_stick_bits &= ~( STICK_RIGHT | STICK_WIDTH );
-	Realign();
-
+	}
+	if ( m_position.left != px ) {
+		m_position.left = px;
+		Realign();
+	}
 }
 
 void UIObject::SetRight( const coord_t px ) {
-	m_position.right = px;
 	m_stick_bits |= STICK_RIGHT;
-	if ( ! ( m_align & ALIGN_HCENTER ) )
+	if ( ! ( m_align & ALIGN_HCENTER ) ) {
 		m_align = ( m_align & (~ALIGN_LEFT) ) | ALIGN_RIGHT;
-	if ( m_stick_bits & STICK_LEFT )
+	}
+	if ( m_stick_bits & STICK_LEFT ) {
 		m_stick_bits &= ~( STICK_LEFT | STICK_WIDTH );
-	Realign();
+	}
+	if ( m_position.right != px ) {
+		m_position.right = px;
+		Realign();
+	}
 }
 
 void UIObject::SetTop( const coord_t px ) {
-	m_position.top = px;
 	m_stick_bits |= STICK_TOP;
-	if ( m_stick_bits & STICK_BOTTOM )
+	if ( ! ( m_align & ALIGN_VCENTER ) ) {
+		m_align = ( m_align & (~ALIGN_BOTTOM) ) | ALIGN_TOP;
+	}
+	if ( m_stick_bits & STICK_BOTTOM ) {
 		m_stick_bits &= ~( STICK_BOTTOM | STICK_HEIGHT );
-	Realign();
+	}
+	if ( m_position.top != px ) {
+		m_position.top = px;
+		Realign();
+	}
 }
 
 void UIObject::SetBottom( const coord_t px ) {
-	m_position.bottom = px;
 	m_stick_bits |= STICK_BOTTOM;
-	if ( m_stick_bits & STICK_TOP )
+	if ( ! ( m_align & ALIGN_VCENTER ) ) {
+		m_align = ( m_align & (~ALIGN_TOP) ) | ALIGN_BOTTOM;
+	}
+	if ( m_stick_bits & STICK_TOP ) {
 		m_stick_bits &= ~( STICK_TOP | STICK_HEIGHT );
-	Realign();
+	}
+	if ( m_position.bottom != px ) {
+		m_position.bottom = px;
+		Realign();
+	}
 }
 
-void UIObject::SetPadding( const coord_t px ) {
-	SetLeft( px );
-	SetTop( px );
-	SetRight( px );
-	SetBottom( px );
+void UIObject::SetMargin( const coord_box_t px ) {
+	if ( m_margin != px ) {
+		m_margin = px;
+		Realign();
+	}
+}
+
+void UIObject::SetMargin( const coord_t px ) {
+	SetMargin({ px, px, px, px });
+}
+
+void UIObject::SetOverflowMargin( const coord_t px ) {
+	if ( m_overflow_margin != px ) {
+		m_overflow_margin = px;
+		Realign();
+	}
 }
 
 void UIObject::Maximize() {
-	SetPadding( 0 );
+	SetLeft( 0 );
+	SetTop( 0 );
+	SetRight( 0 );
+	SetBottom( 0 );
 }
 
 void UIObject::SetWidth( const coord_t px ) {
-	m_size.width = px;
 	m_stick_bits |= STICK_WIDTH;
-	Realign();
+	if ( m_size.width != px ) {
+		m_size.width = px;
+		Realign();
+	}
 }
 
 void UIObject::SetHeight( const coord_t px ) {
-	m_size.height = px;
 	m_stick_bits |= STICK_HEIGHT;
-	Realign();
+	if ( m_size.height != px ) {
+		m_size.height = px;
+		Realign();
+	}
 }
 
 void UIObject::ForceAspectRatio( const float aspect_ratio ) {
-	m_size.aspect_ratio = aspect_ratio;
-	m_size.force_aspect_ratio = true;
-	Realign();
+	if ( m_size.aspect_ratio != aspect_ratio ) {
+		m_size.aspect_ratio = aspect_ratio;
+		m_size.force_aspect_ratio = true;
+		Realign();
+	}
 }
 
 void UIObject::UpdateObjectArea() {
+	//Log( "Stick bits = " + std::to_string( m_stick_bits ) );
 	object_area_t object_area;
 	if ( m_parent_object != NULL ) {
-		object_area.left = m_parent_object->m_object_area.left + m_position.left;
-		object_area.right = m_parent_object->m_object_area.right - m_position.right;
-		object_area.top = m_parent_object->m_object_area.top + m_position.top;
-		object_area.bottom = m_parent_object->m_object_area.bottom - m_position.bottom;
+		const auto area = m_parent_object->GetInternalObjectArea();
+		object_area.left = area.left + m_position.left;
+		object_area.right = area.right - m_position.right;
+		object_area.top = area.top + m_position.top;
+		object_area.bottom = area.bottom - m_position.bottom;
 		if ( m_stick_bits & STICK_WIDTH ) {
 			if ( ( m_align & ALIGN_HCENTER ) == ALIGN_HCENTER ) {
-				coord_t parent_center = ( m_parent_object->m_object_area.left + m_parent_object->m_object_area.right ) / 2;
+				coord_t parent_center = ( area.left + area.right ) / 2;
 				object_area.left = parent_center - m_size.width / 2;
 				object_area.right = parent_center + m_size.width / 2;
 			}
@@ -443,7 +505,7 @@ void UIObject::UpdateObjectArea() {
 		}
 		if ( m_stick_bits & STICK_HEIGHT ) {
 			if ( ( m_align & ALIGN_VCENTER ) == ALIGN_VCENTER ) {
-				coord_t parent_center = ( m_parent_object->m_object_area.top + m_parent_object->m_object_area.bottom ) / 2;
+				coord_t parent_center = ( area.top + area.bottom ) / 2;
 				object_area.top = parent_center - m_size.height / 2;
 				object_area.bottom = parent_center + m_size.height / 2;
 			}
@@ -499,6 +561,29 @@ void UIObject::UpdateObjectArea() {
 		object_area.bottom = g_engine->GetGraphics()->GetViewportHeight();
 		object_area.width = object_area.right;
 		object_area.height = object_area.bottom;
+	}
+	
+	if ( m_margin ) {
+		if ( m_margin.left ) {
+			object_area.left += m_margin.left;
+		}
+		if ( m_margin.top ) {
+			object_area.top += m_margin.top;
+		}
+		if ( m_margin.right ) {
+			object_area.right -= m_margin.right;
+		}
+		if ( m_margin.bottom ) {
+			object_area.bottom -= m_margin.bottom;
+		}
+		if ( object_area.right < object_area.left ) {
+			object_area.right = object_area.left;
+		}
+		if ( object_area.bottom < object_area.top ) {
+			object_area.bottom = object_area.top;
+		}
+		object_area.width = object_area.right - object_area.left;
+		object_area.height = object_area.bottom - object_area.top;
 	}
 	
 	if (object_area != m_object_area) {
@@ -663,11 +748,13 @@ UIObject::vertex_t UIObject::GetAreaPosition() const {
 	return { m_object_area.left, m_object_area.top };
 }
 
-std::pair< UIObject::vertex_t, UIObject::vertex_t > UIObject::GetAreaGeometry() const {
-	return {
-		{ m_object_area.left, m_object_area.top },
-		{ m_object_area.right, m_object_area.bottom }
-	};
+const UIObject::object_area_t UIObject::GetObjectArea() {
+	RealignMaybe();
+	return m_object_area;
+}
+
+const UIObject::object_area_t UIObject::GetInternalObjectArea() {
+	return GetObjectArea();
 }
 
 bool UIObject::IsPointInside( const size_t x, const size_t y ) const {
@@ -704,6 +791,20 @@ void UIObject::HideDebugFrame() {
 		m_has_debug_frame = false;
 	}
 }
+
+void UIObject::SetTesting( const bool testing ) {
+	m_is_testing = testing;
+}
+const bool UIObject::IsTesting() const {
+	return m_is_testing;
+}
+void UIObject::TestBreakpoint() {
+	if ( IsTesting() ) {
+		int a = 5;
+		/**** put gdb breakpoint here ****/
+		a++;
+	}
+}
 #endif
 
 void UIObject::ApplyStyleIfNeeded() {
@@ -727,12 +828,14 @@ void UIObject::AddStyleModifier( const Style::modifier_t modifier ) {
 	ASSERT( !( m_style_modifiers & modifier ), "style modifier " + std::to_string( modifier ) + " already added" );
 	m_style_modifiers |= modifier;
 	ApplyStyle();
+	Redraw();
 }
 
 void UIObject::RemoveStyleModifier( const Style::modifier_t modifier ) {
 	ASSERT( (m_style_modifiers & modifier), "style modifier " + std::to_string( modifier ) + " already removed" );
 	m_style_modifiers &= ~modifier;
 	ApplyStyle();
+	Redraw();
 }
 
 const bool UIObject::HasStyleModifier( const Style::modifier_t modifier ) const {
@@ -880,20 +983,33 @@ void UIObject::Hide() {
 	}
 }
 
-void UIObject::SetCoordinateLimits( const coordinate_limits_t limits ) {
-	m_coordinate_limits.enabled = true;
-	m_coordinate_limits.source_object = nullptr;
-	m_coordinate_limits.limits = limits;
-	UpdateCoordinateLimits();
+void UIObject::SetAreaLimits( const coord_box_t limits ) {
+	m_area_limits.enabled = true;
+	m_area_limits.source_object = nullptr;
+	m_area_limits.limits = limits;
+	UpdateAreaLimits();
 }
 
-void UIObject::SetCoordinateLimitsByObject( const UIObject* source_object ) {
+void UIObject::SetAreaLimitsByObject( UIObject* source_object ) {
 	ASSERT( source_object, "source object is null" );
-	//Log( "Setting coordinate limits by object " + source_object->GetName() );
-	m_coordinate_limits.enabled = true;
-	m_coordinate_limits.source_object = source_object;
-	m_coordinate_limits.limits = {};
-	UpdateCoordinateLimits();
+	ASSERT( !m_area_limits.source_object, "area limits source object already set" );
+	//Log( "Setting area limits by object " + source_object->GetName() );
+	m_area_limits.enabled = true;
+	m_area_limits.source_object = source_object;
+	source_object->AddAreaLimitsChild( this );
+	m_area_limits.limits = {};
+	UpdateAreaLimits();
+}
+
+void UIObject::AddAreaLimitsChild( UIObject* child_object ) {
+	ASSERT( m_area_limits.child_objects.find( child_object ) == m_area_limits.child_objects.end(), "area limits child already added" );
+	m_area_limits.child_objects.insert( child_object );
+}
+
+void UIObject::RemoveAreaLimitsChild( UIObject* child_object ) {
+	auto it = m_area_limits.child_objects.find( child_object );
+	ASSERT( it != m_area_limits.child_objects.end(), "area limits child not found" );
+	m_area_limits.child_objects.erase( it );
 }
 
 void UIObject::SetFocusable( bool is_focusable ) {
@@ -914,16 +1030,25 @@ void UIObject::Refresh() {
 	g_engine->GetUI()->Redraw(); // TODO: partial updates
 }
 
-void UIObject::UpdateCoordinateLimits() {
-	if ( m_coordinate_limits.source_object ) {
-		m_coordinate_limits.limits = m_coordinate_limits.source_object->GetAreaGeometry();
-	}
-	scene::actor::Mesh::coordinate_limits_t limits = { // TODO: better z?
-		{ ClampX( m_coordinate_limits.limits.first.x ), ClampY( m_coordinate_limits.limits.first.y ), -1.0f },
-		{ ClampX( m_coordinate_limits.limits.second.x ), ClampY( m_coordinate_limits.limits.second.y ), 1.0f }
-	};
-	for ( auto& actor : m_actors ) {
-		actor->SetCoordinateLimits( limits );
+void UIObject::UpdateAreaLimits() {
+	if ( m_area_limits.enabled ) {
+		if ( m_area_limits.source_object ) {
+			const auto area = m_area_limits.source_object->GetInternalObjectArea();
+			m_area_limits.limits = {
+				area.left + m_overflow_margin,
+				area.top + m_overflow_margin,
+				area.right - m_overflow_margin,
+				area.bottom - m_overflow_margin
+			};
+		}
+		scene::actor::Mesh::area_limits_t limits = { // TODO: better z?
+			{ ClampX( m_area_limits.limits.left ), ClampY( m_area_limits.limits.top ), -1.0f },
+			{ ClampX( m_area_limits.limits.right ), ClampY( m_area_limits.limits.bottom ), 1.0f }
+		};
+		//Log( "Setting area limits to " + limits.first.ToString() + " -> " + limits.second.ToString() );
+		for ( auto& actor : m_actors ) {
+			actor->SetAreaLimits( limits );
+		}
 	}
 }
 

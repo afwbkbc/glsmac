@@ -52,9 +52,7 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 		x( right );
 		x( bottom );
 	#undef x
-	coords.center.x = 0.0f;
-	coords.center.y = 0.0f;
-	coords.center.z = 0.0f;
+	coords.center = { 0.0f, 0.0f, 0.0f };
 	
 	std::vector< map::Map::tile_layer_type_t > layers = {};
 	
@@ -105,6 +103,8 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 		);
 #endif
 		
+		//Log( "Coords = " + coords.center.ToString() + " " + coords.left.ToString() + " " + coords.top.ToString() + " " + coords.right.ToString() + " " + coords.bottom.ToString() );
+		
 #if COPY_TEXTURE
 		#define x( _k ) auto _k = mesh->AddVertex( coords._k, { \
 			layer.tex_coords._k.x * sx, \
@@ -144,7 +144,7 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 			nullptr
 #endif
 		});
-		
+
 		AddChild( preview );
 		
 	}

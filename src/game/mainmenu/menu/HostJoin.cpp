@@ -27,7 +27,7 @@ void HostJoin::Show() {
 	m_body->AddChild( m_section );
 	
 	NEW( m_choices, ChoiceList, "PopupButtonList" );
-		m_choices->SetPadding( 3 );
+		m_choices->SetMargin( 3 );
 		m_choices->SetChoices({
 			"Host new game",
 			"Join existing game",

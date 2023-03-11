@@ -154,7 +154,7 @@ void MemoryWatcher::New( const Base* object, const size_t size, const std::strin
 	DEBUG_STAT_CHANGE_BY( heap_allocated_size, size );
 
 	// VERY spammy
-	//Log( "Allocated " + to_string( size ) + "b for " + object->GetNamespace() + " @" + source );
+	//Log( "Allocated " + std::to_string( size ) + "b for " + object->GetNamespace() + " @" + source );
 #endif
 }
 
@@ -173,7 +173,7 @@ void MemoryWatcher::Delete( const Base* object, const std::string& file, const s
 	DEBUG_STAT_CHANGE_BY( heap_allocated_size, -obj.size );
 
 	// VERY spammy
-	//Log( "Freed " + to_string( obj.size ) + "b from " + object->GetNamespace() + " @" + source );
+	//Log( "Freed " + std::to_string( obj.size ) + "b from " + object->GetNamespace() + " @" + source );
 	
 	m_allocated_objects.erase( it );
 #endif
@@ -201,7 +201,7 @@ void* MemoryWatcher::Malloc( const size_t size, const std::string& file, const s
 	DEBUG_STAT_CHANGE_BY( heap_allocated_size, size );
 	
 	// VERY spammy
-	//Log( "Allocated " + to_string( size ) + "b for " + to_string( (long int)ptr ) + " @" + source );
+	//Log( "Allocated " + std::to_string( size ) + "b for " + std::to_string( (long int)ptr ) + " @" + source );
 #endif	
 	return ptr;
 }
@@ -223,7 +223,7 @@ void* MemoryWatcher::Realloc( void* ptr, const size_t size, const std::string& f
 	DEBUG_STAT_CHANGE_BY( heap_allocated_size, -obj.size );
 	
 	// VERY spammy
-	//Log( "Freed " + to_string( obj.size ) + "b from " + to_string( (long int)ptr ) + " @" + source );
+	//Log( "Freed " + std::to_string( obj.size ) + "b from " + std::to_string( (long int)ptr ) + " @" + source );
 	
 	m_allocated_memory.erase( it );
 #endif	
@@ -239,7 +239,7 @@ void* MemoryWatcher::Realloc( void* ptr, const size_t size, const std::string& f
 	DEBUG_STAT_CHANGE_BY( heap_allocated_size, size );
 	
 	// VERY spammy
-	//Log( "Allocated " + to_string( size ) + "b for " + to_string( (long int)ptr ) + " @" + source );
+	//Log( "Allocated " + std::to_string( size ) + "b for " + std::to_string( (long int)ptr ) + " @" + source );
 #endif
 	return ptr;
 }
@@ -278,7 +278,7 @@ void MemoryWatcher::Free( void* ptr, const std::string& file, const size_t line 
 	DEBUG_STAT_CHANGE_BY( heap_allocated_size, -obj.size );
 	
 	// VERY spammy
-	//Log( "Freed " + to_string( obj.size ) + "b from " + to_string( (long int)ptr ) + " @" + source );
+	//Log( "Freed " + std::to_string( obj.size ) + "b from " + std::to_string( (long int)ptr ) + " @" + source );
 	
 	m_allocated_memory.erase( it );
 #endif
@@ -291,7 +291,7 @@ void MemoryWatcher::GLGenBuffers( GLsizei n, GLuint * buffers, const std::string
 	ASSERT( n == 1, "glGenBuffers with size " + std::to_string( n ) + ", suspicious, is it a typo? @" + source );
 	
 	glGenBuffers_real( n, buffers );
-	//Log( "Created opengl buffer " + to_string( *buffers ) + " @" + source );
+	//Log( "Created opengl buffer " + std::to_string( *buffers ) + " @" + source );
 	
 	ASSERT( m_opengl.buffers.find( *buffers ) == m_opengl.buffers.end(), "glGenBuffers buffer id overlap @" + source );
 	
@@ -370,11 +370,11 @@ void MemoryWatcher::GLBindBuffer( GLenum target, GLuint buffer, const std::strin
 			if ( m_opengl.index_buffers.find( buffer ) == m_opengl.index_buffers.end() ) {
 				m_opengl.index_buffers[ buffer ] = { 0, source };
 			}
-			//Log("Binding to opengl index buffer " + to_string( buffer ) + " @" + source );
+			//Log("Binding to opengl index buffer " + std::to_string( buffer ) + " @" + source );
 		}
 		else {
 			if ( m_opengl.current_index_buffer != 0 ) {
-				//Log("Unbinding from opengl index buffer " + to_string( m_opengl.current_index_buffer  ) + " @" + source );
+				//Log("Unbinding from opengl index buffer " + std::to_string( m_opengl.current_index_buffer  ) + " @" + source );
 			}
 		}
 		m_opengl.current_index_buffer = buffer;
@@ -399,10 +399,10 @@ void MemoryWatcher::GLBufferData( GLenum target, GLsizeiptr size, const void * d
 		auto it = m_opengl.vertex_buffers.find( m_opengl.current_vertex_buffer );
 		ASSERT( it != m_opengl.vertex_buffers.end(), "opengl vertex buffer not bound" );
 		if ( it->second.size > 0 ) {
-			//Log( "Freeing " + to_string( size ) + " bytes from opengl vertex buffer " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
+			//Log( "Freeing " + std::to_string( size ) + " bytes from opengl vertex buffer " + std::to_string( m_opengl.current_vertex_buffer ) + " @" + source );
 			DEBUG_STAT_CHANGE_BY( opengl_vertex_buffers_size, -it->second.size );
 		}
-		//Log( "Loading " + to_string( size ) + " bytes into opengl vertex buffer " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
+		//Log( "Loading " + std::to_string( size ) + " bytes into opengl vertex buffer " + std::to_string( m_opengl.current_vertex_buffer ) + " @" + source );
 		it->second.size = (size_t)size;
 		DEBUG_STAT_CHANGE_BY( opengl_vertex_buffers_size, size );
 		DEBUG_STAT_INC( opengl_vertex_buffers_updates );
@@ -413,10 +413,10 @@ void MemoryWatcher::GLBufferData( GLenum target, GLsizeiptr size, const void * d
 		auto it = m_opengl.index_buffers.find( m_opengl.current_index_buffer );
 		ASSERT( it != m_opengl.index_buffers.end(), "opengl index buffer not bound" );
 		if ( it->second.size > 0 ) {
-			//Log( "Freeing " + to_string( size ) + " bytes from opengl index buffer " + to_string( m_opengl.current_index_buffer ) + " @" + source );
+			//Log( "Freeing " + std::to_string( size ) + " bytes from opengl index buffer " + std::to_string( m_opengl.current_index_buffer ) + " @" + source );
 			DEBUG_STAT_CHANGE_BY( opengl_index_buffers_size, -it->second.size );
 		}
-		//Log( "Loading " + to_string( size ) + " bytes into opengl index buffer " + to_string( m_opengl.current_index_buffer ) + " @" + source );
+		//Log( "Loading " + std::to_string( size ) + " bytes into opengl index buffer " + std::to_string( m_opengl.current_index_buffer ) + " @" + source );
 		it->second.size = (size_t)size;
 		DEBUG_STAT_CHANGE_BY( opengl_index_buffers_size, size );
 		DEBUG_STAT_INC( opengl_index_buffers_updates );
@@ -441,13 +441,13 @@ void MemoryWatcher::GLDeleteBuffers( GLsizei n, const GLuint * buffers, const st
 	);
 	if ( it_vertex != m_opengl.vertex_buffers.end() ) {
 		ASSERT( m_opengl.current_vertex_buffer != *buffers, "glDeleteBuffers destroying vertex buffer while it's still bound @" + source );
-		//Log( "Destroying opengl vertex buffer " + to_string( *buffers ) + " @" + source );
+		//Log( "Destroying opengl vertex buffer " + std::to_string( *buffers ) + " @" + source );
 		DEBUG_STAT_CHANGE_BY( opengl_vertex_buffers_size, -it_vertex->second.size );
 		m_opengl.vertex_buffers.erase( it_vertex );
 	}
 	if ( it_index != m_opengl.index_buffers.end() ) {
 		ASSERT( m_opengl.current_index_buffer != *buffers, "glDeleteBuffers destroying index buffer while it's still bound @" + source );
-		//Log( "Destroying opengl index buffer " + to_string( *buffers ) + " @" + source );
+		//Log( "Destroying opengl index buffer " + std::to_string( *buffers ) + " @" + source );
 		DEBUG_STAT_CHANGE_BY( opengl_index_buffers_size, -it_index->second.size );
 		m_opengl.index_buffers.erase( it_index );
 	}
@@ -481,7 +481,7 @@ void MemoryWatcher::GLGenTextures( GLsizei n, GLuint * textures, const std::stri
 	ASSERT( n == 1, "glGenTextures with size " + std::to_string( n ) + ", suspicious, is it a typo? @" + source );
 	
 	glGenTextures_real( n, textures );
-	//Log( "Created opengl texture " + to_string( *textures ) + " @" + source );
+	//Log( "Created opengl texture " + std::to_string( *textures ) + " @" + source );
 	
 	ASSERT( m_opengl.textures.find( *textures ) == m_opengl.textures.end(), "glGenTextures texture id overlap @" + source );
 	
@@ -528,14 +528,14 @@ void MemoryWatcher::GLBindTexture( GLenum target, GLuint texture, const std::str
 	
 	if ( texture != 0 ) {
 		ASSERT( m_opengl.current_texture == 0, "glBindTexture called on already bound texture ( " + std::to_string( m_opengl.current_texture ) + ", " + std::to_string( texture ) + " ) @" + source );
-		//Log("Binding to opengl texture " + to_string( texture ) + " @" + source );
+		//Log("Binding to opengl texture " + std::to_string( texture ) + " @" + source );
 		if ( m_opengl.textures.find( texture ) == m_opengl.textures.end() ) {
 			m_opengl.textures[ texture ] = { 0, source };
 		}
 	}
 	else {
 		if ( m_opengl.current_texture != 0 ) {
-			//Log("Unbinding from opengl texture " + to_string( m_opengl.current_vertex_buffer ) + " @" + source );
+			//Log("Unbinding from opengl texture " + std::to_string( m_opengl.current_vertex_buffer ) + " @" + source );
 		}
 	}
 	m_opengl.current_texture = texture;
@@ -608,10 +608,10 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 	size_t size = bpp * width * height;
 	alloc_t& old = m_opengl.textures.at( m_opengl.current_texture );
 	if ( old.size > 0 ) {
-		//Log( "Freeing " + to_string( size ) + " bytes from opengl texture " + to_string( m_opengl.current_texture ) + " @" + source );
+		//Log( "Freeing " + std::to_string( size ) + " bytes from opengl texture " + std::to_string( m_opengl.current_texture ) + " @" + source );
 		DEBUG_STAT_CHANGE_BY( opengl_textures_size, -old.size );
 	}
-	//Log( "Loading " + to_string( size ) + " bytes into opengl texture " + to_string( m_opengl.current_texture ) + " @" + source );
+	//Log( "Loading " + std::to_string( size ) + " bytes into opengl texture " + std::to_string( m_opengl.current_texture ) + " @" + source );
 	
 	m_opengl.textures[ m_opengl.current_texture ] = { size, source };
 	DEBUG_STAT_CHANGE_BY( opengl_textures_size, size );
@@ -698,7 +698,7 @@ void MemoryWatcher::GLGenFramebuffers( GLsizei n, GLuint * buffers, const std::s
 	ASSERT( n == 1, "glGenFramebuffers with size " + std::to_string( n ) + ", suspicious, is it a typo? @" + source );
 	
 	glGenFramebuffers_real( n, buffers );
-	//Log( "Created opengl buffer " + to_string( *buffers ) + " @" + source );
+	//Log( "Created opengl buffer " + std::to_string( *buffers ) + " @" + source );
 	
 	ASSERT( m_opengl.framebuffers.find( *buffers ) == m_opengl.framebuffers.end(), "glGenFramebuffers buffer id overlap @" + source );
 	m_opengl.framebuffers[ *buffers ] = {};

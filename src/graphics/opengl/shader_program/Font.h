@@ -15,15 +15,15 @@ protected:
 	friend class opengl::Text;
 
 	struct {
+		GLuint flags;
 		GLuint position;
 		GLuint texture;
 		GLuint color;
 		GLuint z_index;
-		GLuint flags;
 		struct {
 			GLuint min;
 			GLuint max;
-		} coordinate_limits;
+		} area_limits;
 	} uniforms;
 
 	struct {

@@ -2,7 +2,6 @@
 
 #include "actor/Sprite.h"
 #include "actor/Mesh.h"
-#include "actor/Image.h"
 
 #include "scene/actor/Actor.h"
 
@@ -63,28 +62,29 @@ void Scene::RemoveActorFromZIndexSet( Actor* gl_actor ) {
 void Scene::Update() {
 	base::ObjectLink *obj;
 
-	// remove missing actors
 	for ( auto it = m_gl_actors.begin() ; it < m_gl_actors.end() ; ++it ) {
 		Actor *gl_actor = (*it)->GetDstObject<Actor>();
 		if ( (*it)->Removed() ) {
+			// remove missing actors
+			
 			RemoveActorFromZIndexSet( gl_actor );
 			RemoveActor( *it );
 			m_gl_actors.erase( it, it + 1 );
 			it--;
 		}
 		else {
+			// reload actors when needed
+			
 			bool mesh_reload_needed = gl_actor->MeshReloadNeeded();
 			bool texture_reload_needed = gl_actor->TextureReloadNeeded();
 			
-			// check if position changed
-			// TODO: only for Simple2D
+			// check if z index changed
 			auto& pos = gl_actor->GetActor()->GetPosition();
-			if ( gl_actor->GetPosition() != pos ) {
+			if ( gl_actor->GetPosition().z != pos.z ) {
 				// move to corrent zindex set
 				RemoveActorFromZIndexSet( gl_actor );
 				gl_actor->SetPosition( pos );
 				AddActorToZIndexSet( gl_actor );
-				mesh_reload_needed = true;
 			}
 			
 			if ( mesh_reload_needed ) {
@@ -116,10 +116,6 @@ void Scene::Update() {
 				case scene::actor::Actor::TYPE_MESH:
 				case scene::actor::Actor::TYPE_INSTANCED_MESH: {
 					NEW( gl_actor, Mesh, (scene::actor::Mesh *)*it );
-					break;
-				}
-				case scene::actor::Actor::TYPE_IMAGE: {
-					NEW( gl_actor, Image, (scene::actor::Image *)*it );
 					break;
 				}
 				default: {
@@ -174,10 +170,10 @@ void Scene::Draw( shader_program::ShaderProgram *shader_program ) {
 	
 }
 
-void Scene::OnResize() {
+void Scene::OnWindowResize() {
 	for ( auto& link : m_gl_actors ) {
 		auto *gl_actor = link->GetDstObject<Actor>();
-		gl_actor->OnResize();
+		gl_actor->OnWindowResize();
 	}
 }
 

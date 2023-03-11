@@ -18,7 +18,7 @@ void Intro::Start() {
 	NEW( m_logo, Surface, "IntroLogo" );
 	g_engine->GetUI()->AddObject( m_logo );
 
-	m_timer.SetTimeout(1000); // pretend we're loading something
+	m_timer.SetTimeout( 1000 ); // pretend we're loading something
 	// TODO: do all preloading while intro is running?
 }
 
@@ -29,7 +29,7 @@ void Intro::Stop() {
 }
 
 void Intro::Iterate() {
-	if (m_timer.Ticked()) {
+	if ( m_timer.Ticked() ) {
 		// switch to main menu
 		g_engine->GetScheduler()->RemoveTask( this );
 		NEWV( task, game::mainmenu::MainMenu );

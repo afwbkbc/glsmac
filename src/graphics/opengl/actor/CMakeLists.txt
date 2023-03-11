@@ -4,6 +4,5 @@ SET(SRC ${SRC}
 		${PWD}/Sprite.cpp
 		${PWD}/Mesh.cpp
 		${PWD}/Text.cpp
-		${PWD}/Image.cpp
 
 PARENT_SCOPE)

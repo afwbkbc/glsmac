@@ -20,7 +20,7 @@ void Multiplayer::Show() {
 	m_body->AddChild( m_section );
 	
 	NEW( m_choices, ChoiceList, "PopupButtonList" );
-		m_choices->SetPadding( 3 );
+		m_choices->SetMargin( 3 );
 		m_choices->SetChoices({
 			"Simple Internet TCP/IP Connection",
 			"Hotseat/Play-by-Email",

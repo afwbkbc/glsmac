@@ -22,7 +22,7 @@ void Host::Show() {
 	PopupMenu::Show();
 	
 	NEW( m_section, Section, "PopupSection" );
-		m_section->SetPadding( 4 );
+		m_section->SetMargin( 4 );
 	m_body->AddChild( m_section );
 	
 	NEW( m_label_yourname, Label, "PopupLabel" );
@@ -110,22 +110,24 @@ void Host::OnNext() {
 		loader->SetOnIterate( LH( this, network ) {
 			loader->SetLoadingText( "Creating game" + loader->GetDots() );
 			auto result = network->MT_GetResult( m_mt_id );
-			switch ( result.result ) {
-				case network::R_ERROR: {
-					Show();
-					MenuError( result.message );
-					return false;
-				}
-				case network::R_SUCCESS: {
-					Show();
-					NEWV( menu, Lobby, m_mainmenu );
-					NextMenu( menu );
-					return false;
-				}
-				default: {
-					ASSERT( false, "unknown network result " + std::to_string( result.result ) );
-				}
-			} 
+			if ( result.result != network::R_NONE ) {
+				switch ( result.result ) {
+					case network::R_ERROR: {
+						Show();
+						MenuError( result.message );
+						return false;
+					}
+					case network::R_SUCCESS: {
+						Show();
+						NEWV( menu, Lobby, m_mainmenu );
+						NextMenu( menu );
+						return false;
+					}
+					default: {
+						ASSERT( false, "unknown network result " + std::to_string( result.result ) );
+					}
+				} 
+			}
 			return true;
 		});
 		loader->SetOnStop( LH( this, network ) {

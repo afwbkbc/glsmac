@@ -83,7 +83,7 @@ protected:
 	// some routines are special
 	routine::Overlay* m_routine_overlay = nullptr;
 	
-	void OnResize();
+	void OnWindowResize();
 	
 private:
 	

@@ -58,9 +58,9 @@ Routine::~Routine() {
 	}
 }
 
-void Routine::OnResize() {
+void Routine::OnWindowResize() {
 	for ( auto& s : m_gl_scenes ) {
-		s->OnResize();
+		s->OnWindowResize();
 	}
 }
 

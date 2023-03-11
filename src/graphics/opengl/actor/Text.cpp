@@ -26,7 +26,13 @@ Text::~Text() {
 
 void Text::Update( Font* font, const std::string& text, const float x, const float y ) {
 	
-	const bool need_reload = ( font != m_font || text != m_text );
+	const auto* g = g_engine->GetGraphics();
+	const Vec2< size_t > window_size = {
+		g->GetViewportWidth(),
+		g->GetViewportHeight()
+	};
+		
+	const bool need_reload = ( font != m_font || text != m_text || window_size != m_last_window_size );
 	
 	if ( need_reload ) {
 
@@ -39,6 +45,11 @@ void Text::Update( Font* font, const std::string& text, const float x, const flo
 		if ( m_text != text ) {
 			//Log( "Changing text from " + m_text + " to " + text );
 			m_text = text;
+		}
+		
+		if ( m_last_window_size != window_size ) {
+			//Log( "Resizing for window size " + window_size.ToString() );
+			m_last_window_size = window_size;
 		}
 	
 		if ( !m_texture ) {
@@ -118,13 +129,16 @@ void Text::Draw( shader_program::ShaderProgram *shader_program, Camera *camera )
 		auto flags = text_actor->GetRenderFlags();
 	
 		glUniform1ui( sp->uniforms.flags, flags );
-		if ( flags & actor::Actor::RF_USE_COORDINATE_LIMITS ) {
-			const auto& limits = text_actor->GetCoordinateLimits();
-			glUniform3fv( sp->uniforms.coordinate_limits.min, 1, (const GLfloat*)&limits.first );
-			glUniform3fv( sp->uniforms.coordinate_limits.max, 1, (const GLfloat*)&limits.second );
+		if ( flags & actor::Actor::RF_USE_AREA_LIMITS ) {
+			const auto& limits = text_actor->GetAreaLimits();
+			glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
+			glUniform3fv( sp->uniforms.area_limits.max, 1, (const GLfloat*)&limits.second );
 		}
 		
-		glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&m_coords );
+		if ( flags & actor::Actor::RF_USE_2D_POSITION ) {
+			glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&m_coords );
+		}
+		
 		glUniform1i( sp->uniforms.texture, 0 );
 		glUniform4fv( sp->uniforms.color, 1, (const GLfloat*)&text_actor->GetColor() );
 		auto position = m_actor->GetPosition();
