@@ -32,13 +32,13 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 	
 	const float land_bias = 1.3f; // increase amount of land generated
 	util::Clamper<float> perlin_to_elevation({
-		{ -1.0 - land_bias, 1.0 },
+		{ -1.0f - land_bias, 1.0f },
 		{ MAPGEN_ELEVATION_MIN, MAPGEN_ELEVATION_MAX }
 	});
 	
 	util::Clamper<float> perlin_to_value({ // to moisture or rockyness
-		{ -1.0, 1.0 },
-		{ 1, 3 }
+		{ -1.0f, 1.0f },
+		{ 1.0f, 3.0f }
 	});	
 	
 	util::Perlin perlin( seed );
