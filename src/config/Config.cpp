@@ -39,7 +39,7 @@ Config::Config( const int argc, const char *argv[] )
 		if ( c[ 0 ] != '-' || c[ 1 ] != '-' ) {
 			f_error( (std::string) "Unknown argument \"" + c + "\"." + s_help_for_more_options );
 		}
-		kv = { c + 2 };
+		kv = ( c + 2 );
 		size_t splitpos = kv.find( '=' );
 		if ( splitpos != std::string::npos ) {
 			k = kv.substr( 0, splitpos );

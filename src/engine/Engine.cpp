@@ -43,7 +43,7 @@ Engine::Engine(
 
 	NEWV( t_main, Thread, "MAIN" );
 		if ( m_config->HasLaunchFlag( config::Config::LF_BENCHMARK ) ) {
-			t_main->SetIPS( 99999999 );
+			t_main->SetIPS( 999999.9f );
 		}
 		else {
 			t_main->SetIPS( g_max_fps );
