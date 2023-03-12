@@ -71,6 +71,16 @@ Once I replicate original game, I'll focus on other things, such as: larger maps
 
 ##### Versions 3.x+: not sure yet, probably something cool.
 
+### Hardware requirements
+
+Minimum recommended (for at least 60 FPS):
+
+- GPU: Intel HD 4400, AMD Radeon R7, Geforce GT710 or similar
+- RAM: 2-4GB
+- HDD: 50MB
+
+Requirements may go up slightly as more features are added to game. But I'll try to keep FPS above 60 on low-end cards as above. Amount of RAM will limit maximum size of map you can play on (until some kind of disk caching is implemented, but that will cost performance). Disk space is needed for GLSMAC binary, config files, saves, maybe map files and replays.
+
 ### Build instructions
 
 Supported platforms:
@@ -84,15 +94,15 @@ Other platforms/toolchains weren't tested but you can try and please report resu
 
 ### Linux / FreeBSD
 
-You will need following libraries (-dev versions): FreeType2, SDL2, SDL_image, GL, GLU, GLEW
+You will need CMake and following libraries (-dev versions): FreeType2, SDL2, SDL_image, GL, GLU, GLEW
 
-Ubuntu/Debian/Mint: sudo apt-get install libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev
+Ubuntu/Debian/Mint: sudo apt install cmake build-essential libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev
 
-Gentoo: sudo emerge libsdl2 sdl2-image freetype glu glew
+Gentoo: sudo emerge cmake libsdl2 sdl2-image freetype glu glew
 
-FreeBSD: install ports: devel/sdl20 (with PTHREADS, X11 and OPENGL and some option like OSS if you want sound), graphics/sdl2_image, print/freetype2 and graphics/glew
+FreeBSD: install ports: devel/cmake, devel/sdl20 (with PTHREADS, X11 and OPENGL and some sound option like OSS if you want sound), graphics/sdl2_image, print/freetype2 and graphics/glew
 
-It is recommended to build project using cmake and make instead of adding .cpp and .h files manually to IDE.
+It is highly recommended to build project using cmake and make instead of adding .cpp and .h files manually to IDE.
 
 For release build: cmake . -DCMAKE_BUILD_TYPE=Release && make
 
