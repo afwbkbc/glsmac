@@ -5,7 +5,7 @@
 namespace game {
 namespace intro {
 			
-CLASS( Style, ui::theme::StyleSheet )
+CLASS( Style, ::ui::theme::StyleSheet )
 	void AddStyles();
 };
 

@@ -120,7 +120,7 @@ You are going to want to add your path to the start argument when running, to do
 
 Then in the file that just open paste
 
-`"args": [ "\"C:\\GOG Games\\Sid Meier's Alpha Centauri\"" ]`
+`"args": [ "--smacpath", "\"C:\\GOG Games\\Sid Meier's Alpha Centauri\"" ]`
 
 below name in the configuration. You need to replace the path with your own path to the game. Then you are done and can run the game in Visual Studio.
 
@@ -136,9 +136,11 @@ Wasn't tested. Feel free to test, but I have feeling it will require many change
 
 ### Launch
 
-Just run ./bin/GLSMAC <smac_directory>
+Just run ./bin/GLSMAC --smacpath <smac_directory>
 
 Or copy GLSMAC into your SMAC directory and run without arguments from there.
+
+Run ./bin/GLSMAC --help to see more options.
 
 ### Reporting problems
 

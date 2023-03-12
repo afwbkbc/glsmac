@@ -18,7 +18,7 @@ CLASS( Intro, base::Task )
 	
 protected:
 	Theme m_theme;
-	ui::object::Surface *m_logo = nullptr;
+	::ui::object::Surface *m_logo = nullptr;
 	util::Timer m_timer;
 
 };

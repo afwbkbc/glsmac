@@ -7,7 +7,7 @@
 namespace game {
 namespace intro {
 
-CLASS( Theme, ui::theme::Theme )
+CLASS( Theme, ::ui::theme::Theme )
 	Theme();
 
 protected:

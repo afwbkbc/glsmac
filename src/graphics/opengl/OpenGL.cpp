@@ -186,6 +186,7 @@ void OpenGL::Stop() {
 }
 
 void OpenGL::Iterate() {
+	Graphics::Iterate();
 	
 	glEnable( GL_DEPTH_TEST );
 	glEnable( GL_BLEND );

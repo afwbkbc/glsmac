@@ -7,12 +7,26 @@ using namespace ui::object;
 namespace game {
 
 void Common::Start() {
+	auto* ui = g_engine->GetUI();
 	
-	g_engine->GetUI()->AddTheme( &m_theme );
+	ui->AddTheme( &m_theme );
+	
+	if ( g_engine->GetConfig()->HasLaunchFlag( config::Config::LF_BENCHMARK ) ) {
+		NEW( m_fps_counter, ui::FPSCounter );
+			
+		ui->AddObject( m_fps_counter );
+	}
 }
 
 void Common::Stop() {
-	g_engine->GetUI()->RemoveTheme( &m_theme );
+	auto* ui = g_engine->GetUI();
+	
+	if ( m_fps_counter ) {
+		ui->RemoveObject( m_fps_counter );
+		m_fps_counter = nullptr;
+	}
+	
+	ui->RemoveTheme( &m_theme );
 }
 
 void Common::Iterate() {

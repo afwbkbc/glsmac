@@ -10,6 +10,10 @@ Graphics::~Graphics() {
 #endif
 }
 
+void Graphics::Iterate() {
+	m_frames_count++;
+}
+
 const float Graphics::GetAspectRatio() const {
 	ASSERT( m_aspect_ratio, "aspect ratio not set" );
 	return m_aspect_ratio;
@@ -40,6 +44,12 @@ void Graphics::ToggleFullscreen() {
 	else {
 		SetFullscreen();
 	}
+}
+
+const size_t Graphics::GetFramesCountAndReset() {
+	const size_t frames_count = m_frames_count;
+	m_frames_count = 0;
+	return frames_count;
 }
 
 }

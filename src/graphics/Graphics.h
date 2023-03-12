@@ -22,6 +22,8 @@ CLASS( Graphics, base::Module )
 
 	virtual ~Graphics();
 
+	virtual void Iterate();
+	
 	virtual void AddScene( scene::Scene *scene ) = 0;
 	virtual void RemoveScene( scene::Scene *scene ) = 0;
 	virtual const unsigned short GetViewportWidth() const = 0;
@@ -49,10 +51,14 @@ CLASS( Graphics, base::Module )
 	
 	void ToggleFullscreen();
 	
+	const size_t GetFramesCountAndReset();
+	
 protected:
 	
 	// make sure to call this at initialization and after every resize
 	virtual void OnWindowResize();
+	
+	size_t m_frames_count = 0;
 	
 private:
 	float m_aspect_ratio = 0;

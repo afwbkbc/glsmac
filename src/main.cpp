@@ -137,7 +137,11 @@ int main_real(const int argc, const char* argv[]) {
 		title += "-portable";
 #endif
 		input::sdl2::SDL2 input;
-		graphics::opengl::OpenGL graphics( title, WINDOW_WIDTH, WINDOW_HEIGHT, VSYNC, START_FULLSCREEN );
+		bool vsync = VSYNC;
+		if ( config.HasLaunchFlag( config::Config::LF_BENCHMARK ) ) {
+			vsync = false;
+		}
+		graphics::opengl::OpenGL graphics( title, WINDOW_WIDTH, WINDOW_HEIGHT, vsync, START_FULLSCREEN );
 		audio::sdl2::SDL2 audio;
 		network::simpletcp::SimpleTCP network;
 		

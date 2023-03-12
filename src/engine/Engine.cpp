@@ -42,7 +42,12 @@ Engine::Engine(
 	g_engine = this;
 
 	NEWV( t_main, Thread, "MAIN" );
-		t_main->SetIPS( g_max_fps );
+		if ( m_config->HasLaunchFlag( config::Config::LF_BENCHMARK ) ) {
+			t_main->SetIPS( 99999999 );
+		}
+		else {
+			t_main->SetIPS( g_max_fps );
+		}
 		t_main->AddModule( m_config );
 		t_main->AddModule( m_error_handler );
 		t_main->AddModule( m_font_loader );
