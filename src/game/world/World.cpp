@@ -8,18 +8,9 @@
 
 #include "util/FS.h"
 
-#ifdef MAPGEN_BENCHMARK
-#include <iostream>
-#include "map_generator/SimpleRandom.h"
-#include "map_generator/SimpleRandomNoLoops.h"
-#include "map_generator/SimpleRandomNoPointers.h"
-#endif
-
 #include "map_generator/SimplePerlin.h"
 
-#ifdef DEVEL
-#include "map_generator/Test.h"
-#endif
+//#include "map_generator/Test.h"
 
 // TODO: move to settings
 #define MAP_ROTATE_SPEED 2.0f
@@ -28,7 +19,7 @@
 
 #ifdef DEBUG
 #define MAP_FILENAME "./tmp/lastmap.gsm"
-#define MAP_DUMP_FILENAME "./tmp/lastmap.dump"
+#define MAP_DUMP_FILENAME "./tmp/lastmap.gsmd"
 #define MAP_SEED_FILENAME "./tmp/lastmap.seed"
 #endif
 
@@ -40,20 +31,26 @@ const World::consts_t World::s_consts = {};
 World::World( const Settings& settings )
 	: m_settings( settings )
 {
-	NEW( m_random, Random );
-#ifdef DEVEL
-	//m_random->SetState( {2732229821,930350826,1501051256,922767116} ); // rivers test
-	//m_random->SetState( {2689742529,3024081097,1050996921,1660550922} ); // round island
-	//m_random->SetState( {2397595838,3310020656,514128209,2496081703} ); // cool lake
-#endif
+	
 }
 
 World::~World() {
-	DELETE( m_random );
+	
 }
 
 void World::Start() {
+
+	NEW( m_random, Random );
+
+#ifdef DEBUG
+	const auto* config = g_engine->GetConfig();
+	if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_SEED ) ) {
+		m_random->SetState( config->GetQuickstartSeed() );
+	}
+#endif
 	
+	Log( "World seed: " + m_random->GetStateString() );
+
 	NEW( m_world_scene, Scene, "World", SCENE_TYPE_ORTHO );
 	
 	NEW( m_camera, Camera, Camera::CT_ORTHOGRAPHIC );
@@ -78,47 +75,49 @@ void World::Start() {
 	
 	g_engine->GetGraphics()->AddScene( m_world_scene );	
 	
-	Log( "Map seed is " + m_random->GetStateString() );
-	
 	NEW( m_map, Map, m_random, m_world_scene );
 	
-#ifdef MAPGEN_BENCHMARK
-	NEWV( tiles, Tiles, 2400, 1600, m_random );
-#else
-	#ifdef DEVEL
-		//NEWV( tiles, Tiles, 20, 10, m_random );
-		NEWV( tiles, Tiles, 40, 20, m_random );
-	#else
-		NEWV( tiles, Tiles, 80, 40, m_random );
+	Tiles* tiles = nullptr;
+	#ifdef DEBUG
+	if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAPSIZE ) ) {
+		const auto& map_size = config->GetQuickstartMapSize();
+		NEW( tiles, Tiles, map_size.x, map_size.y, m_random );
+	}
+	else
 	#endif
-#endif
-	//NEWV( tiles, Tiles, 200, 120, m_random );
+	{
+		NEW( tiles, Tiles, 80, 40, m_random );
+	}
 	
 #ifdef DEBUG
 	// if crash happens - it's handy to have a seed to reproduce it
 	FS::WriteFile( MAP_SEED_FILENAME, m_random->GetStateString() );
 #endif
 	
-#ifdef DEVEL
-	if ( FS::FileExists( MAP_DUMP_FILENAME ) ) {
-		Log( (std::string) "Loading map dump from " + MAP_DUMP_FILENAME );
+#ifdef DEBUG
+	if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAPDUMP ) ) {
+		const std::string& filename = config->GetQuickstartMapDump();
+		ASSERT( FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
+		Log( (std::string) "Loading map dump from " + filename );
 		m_map->SetTiles( tiles, false );
-		m_map->Unserialize( Buffer( FS::ReadFile( MAP_DUMP_FILENAME ) ) );
+		m_map->Unserialize( Buffer( FS::ReadFile( filename ) ) );
 	}
 	else
 #endif
 	{
-#ifdef DEVEL
-		if ( FS::FileExists( MAP_FILENAME ) ) {
-			Log( (std::string) "Loading map from " + MAP_FILENAME );
-			tiles->Unserialize( Buffer( FS::ReadFile( MAP_FILENAME ) ) );
+#ifdef DEBUG
+		if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAPFILE ) ) {
+			const std::string& filename = config->GetQuickstartMapFile();
+			ASSERT( FS::FileExists( filename ), "map file \"" + filename + "\" not found" );
+			Log( (std::string) "Loading map from " + filename );
+			tiles->Unserialize( Buffer( FS::ReadFile( filename ) ) );
 		}
 		else
 #endif
 		{
 			map_generator::SimplePerlin generator;
 			//map_generator::Test generator;
-#if defined( DEBUG ) || defined( MAPGEN_BENCHMARK )
+#ifdef DEBUG
 			//map_generator::SimpleRandom generator;
 			//map_generator::SimpleRandomNoLoops generator;
 			//map_generator::SimpleRandomNoPointers generator;
@@ -128,13 +127,6 @@ void World::Start() {
 			generator.Generate( tiles, m_random->GetUInt( 0, UINT32_MAX - 1 ) );
 #ifdef DEBUG
 			Log( "Map generation took " + std::to_string( timer.GetElapsed().count() ) + "ms" );
-#elif defined( MAPGEN_BENCHMARK )
-			std::cout << "Map generation took " << std::to_string( timer.GetElapsed().count() ) << "ms" << std::endl;
-#endif
-#ifdef MAPGEN_BENCHMARK
-			exit(0);
-#endif
-#ifdef DEBUG
 			// if crash happens - it's handy to have a map file to reproduce it
 			Log( (std::string) "Saving map to " + MAP_FILENAME );
 			FS::WriteFile( MAP_FILENAME, tiles->Serialize().ToString() );
@@ -457,6 +449,8 @@ void World::Stop() {
 	m_actors_map.clear();
 
 	DELETE( m_world_scene );
+	
+	DELETE( m_random );
 }
 
 void World::Iterate() {
@@ -683,13 +677,18 @@ void World::UpdateUICamera() {
 
 void World::ReturnToMainMenu() {
 	
-#ifdef DEVEL
-	g_engine->ShutDown();
-#else
-	NEWV( task, game::mainmenu::MainMenu );
-	g_engine->GetScheduler()->RemoveTask( this );
-	g_engine->GetScheduler()->AddTask( task );
+#ifdef DEBUG
+	const auto* config = g_engine->GetConfig();
+	if ( config->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
+		g_engine->ShutDown();
+	}
+	else
 #endif
+	{
+		NEWV( task, game::mainmenu::MainMenu );
+		g_engine->GetScheduler()->RemoveTask( this );
+		g_engine->GetScheduler()->AddTask( task );
+	}
 
 }
 

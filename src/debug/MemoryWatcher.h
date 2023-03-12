@@ -17,7 +17,7 @@ namespace debug {
 
 class MemoryWatcher {
 public:
-	MemoryWatcher();
+	MemoryWatcher( const bool memory_debug = false );
 	~MemoryWatcher();
 
 	// memory stuff
@@ -62,6 +62,7 @@ public:
 	const statistics_result_t GetLargestMemoryConsumerClasses( size_t count = 10 );
 	
 private:
+	const bool m_memory_debug = false;
 	std::mutex m_mutex;
 	
 	void Log( const std::string& text );

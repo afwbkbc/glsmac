@@ -19,6 +19,7 @@ CLASS( Random, Util )
 	void SetSeed( const value_t seed );
 	static const value_t NewSeed();
 	
+	static constexpr char s_state_divisor = ':';
 	struct state_t {
 		value_t a;
 		value_t b;
@@ -35,6 +36,8 @@ CLASS( Random, Util )
 	const state_t GetState();
 	void SetState( const state_t& state );
 	const std::string GetStateString();
+	
+	static const Random::state_t GetStateFromString( std::string value );
 	
 private:
 	

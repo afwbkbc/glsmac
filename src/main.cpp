@@ -27,21 +27,14 @@
 #include "ui/Default.h"
 
 #include "game/common/Common.h"
-#if defined(DEVEL) || defined(MAPGEN_BENCHMARK)
+#if defined(DEBUG)
 #include "game/world/World.h"
-#else
-#include "game/intro/Intro.h"
 #endif
+#include "game/intro/Intro.h"
 
 #include "engine/Engine.h"
 
 #include "version.h"
-
-#ifdef TMP_LAST_COMMIT_H_GENERATED
-#include "tmp/last_commit.h"
-#else
-#define GLSMAC_LAST_COMMIT "???????"
-#endif
 
 // TODO: move to config
 #define WINDOW_WIDTH 1024
@@ -73,7 +66,10 @@ int main(const int argc, const char *argv[]) {
 int main_real(const int argc, const char* argv[]) {
 #endif
 
+	config::Config config( argc, argv );
+	
 #ifdef DEBUG
+if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
 #ifdef __linux__
 	// automatically start under gdb if possible
 	if ( !System::AreWeUnderGDB() && System::IsGDBAvailable() ) {
@@ -103,7 +99,8 @@ int main_real(const int argc, const char* argv[]) {
 #else
 	cout << "WARNING: gdb check skipped due to unsupported platform" << endl;
 #endif
-	debug::MemoryWatcher memory_watcher;
+}
+	debug::MemoryWatcher memory_watcher( config.HasDebugFlag( config::Config::DF_MEMORYDEBUG ) );
 #endif
 	
 #ifdef DEBUG
@@ -115,7 +112,6 @@ int main_real(const int argc, const char* argv[]) {
 	// logger needs to be outside of scope to be destroyed last
 	logger::Stdout logger;
 	{
-		config::Config config( argc, argv );
 		
 #ifdef _WIN32
 		error_handler::Win32 error_handler;
@@ -130,7 +126,7 @@ int main_real(const int argc, const char* argv[]) {
 		
 		loader::sound::SDL2 sound_loader;
 		
-		auto title = (string) "GLSMAC " + GLSMAC_VERSION + "-" + GLSMAC_LAST_COMMIT;
+		auto title = GLSMAC_VERSION_FULL;
 #ifdef DEBUG
 		title += "-debug";
 #elif PORTABLE
@@ -159,12 +155,18 @@ int main_real(const int argc, const char* argv[]) {
 		scheduler.AddTask( task_common );
 		
 		// game entry point
-#if defined(DEVEL) || defined(MAPGEN_BENCHMARK)
-		game::Settings settings;
-		NEWV( task, game::world::World, settings );
-#else
-		NEWV( task, game::intro::Intro );
+		base::Task* task = nullptr;
+#ifdef DEBUG
+		if ( config.HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
+			game::Settings settings; // TODO: initialize randomly
+			NEW( task, game::world::World, settings );
+		}
+		else
 #endif
+		{
+			NEW( task, game::intro::Intro );
+		}
+		
 		scheduler.AddTask( task );
 
 		engine::Engine engine(

@@ -1,7 +1,5 @@
 #include "Test.h"
 
-#ifdef DEVEL
-
 namespace game {
 namespace world {
 namespace map_generator {
@@ -34,5 +32,3 @@ void Test::Generate( Tiles* tiles, size_t seed ) {
 }
 }
 }
-
-#endif

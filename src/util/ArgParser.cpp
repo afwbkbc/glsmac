@@ -17,7 +17,7 @@ void ArgParser::AddRule( const std::string& argument, const std::string& descrip
 		description,
 		handler
 	};
-	size_t sz = argument.size() + 4;
+	size_t sz = argument.size() + 6;
 	while ( m_offset < sz ) {
 		m_offset += m_offset_step;
 	}
@@ -31,7 +31,7 @@ void ArgParser::AddRule( const std::string& argument, const std::string& value_n
 		description,
 		handler
 	};
-	size_t sz = argument.size() + value_name.size() + 4;
+	size_t sz = argument.size() + value_name.size() + 6;
 	while ( m_offset < sz ) {
 		m_offset += m_offset_step;
 	}
@@ -53,9 +53,6 @@ const std::string ArgParser::GetHelpString() const {
 			rule.second.description
 		+ "\n";
 	}
-	result +=
-		"\n"
-	;
 	return result;
 }
 
@@ -71,7 +68,7 @@ void ArgParser::Parse() {
 	for ( int i = 1 ; i < m_argc ; i++ ) {
 		c = m_argv[ i ];
 		if ( c[ 0 ] != '-' || c[ 1 ] != '-' ) {
-			throw std::runtime_error( (std::string) "Unknown argument \"" + c + "\".\n" + GetUnknownArgumentNote() );
+			throw std::runtime_error( (std::string) "Unknown argument \"" + c + "\"!" );
 		}
 		kv = ( c + 2 );
 		size_t splitpos = kv.find( '=' );
@@ -92,10 +89,10 @@ void ArgParser::Parse() {
 		}
 		const auto& it = m_arg_rules.find( k );
 		if ( it == m_arg_rules.end() ) {
-			throw std::runtime_error( (std::string) "Unknown argument --" + k + ".\n" + GetUnknownArgumentNote() );
+			throw std::runtime_error( (std::string) "Unknown argument --" + k + "!" );
 		}
 		if ( it->second.has_value && i == m_argc - 1 ) {
-			throw std::runtime_error( (std::string) "--" + k + " requires a value.\n" + GetUnknownArgumentNote() );
+			throw std::runtime_error( (std::string) "--" + k + " requires a value!" );
 		}
 		it->second.handler( v );
 		if ( it->second.has_value ) {

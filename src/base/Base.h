@@ -15,10 +15,6 @@
 #include "env/Release.h"
 #endif
 
-// uncomment to only test mapgen time and quit
-// warning: build will be very long in release due to loop unrolling with macros in some mapgens
-// #define MAPGEN_BENCHMARK 1
-
 namespace base {
 
 class Base {

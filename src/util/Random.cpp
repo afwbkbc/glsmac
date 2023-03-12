@@ -21,7 +21,7 @@ const Random::value_t Random::Generate() {
 #undef rot32
 
 void Random::SetSeed( const value_t seed ) {
-	Log( "Setting seed " + std::to_string( seed ) );
+	//Log( "Setting seed " + std::to_string( seed ) );
 	m_state.a = 0xf1ea5eed, m_state.b = m_state.c = m_state.d = seed;
 	for ( value_t i = 0; i < 20; ++i ) {
 		(void)Generate();
@@ -86,7 +86,34 @@ void Random::SetState( const state_t& state ) {
 }
 
 const std::string Random::GetStateString() {
-	return "{" + std::to_string( m_state.a ) + "," + std::to_string( m_state.b ) + "," + std::to_string( m_state.c ) + "," + std::to_string( m_state.d ) + "}";	
+	return std::to_string( m_state.a ) + s_state_divisor + std::to_string( m_state.b ) + s_state_divisor + std::to_string( m_state.c ) + s_state_divisor + std::to_string( m_state.d );
+}
+
+const Random::state_t Random::GetStateFromString( std::string value ) {
+	state_t state = {};
+	size_t pos = 0;
+	const std::string s_invalid_state_format = "Invalid state format";
+	const auto f_trynext = [ &value, &pos, &s_invalid_state_format ] ( value_t* ptr ) -> void {
+		pos = value.find( s_state_divisor );
+		if ( pos == std::string::npos ) {
+			THROW( s_invalid_state_format );
+		}
+		try {
+			*ptr = std::stoul( value.substr( 0, pos ) );
+		} catch ( std::invalid_argument& e ) {
+			THROW( s_invalid_state_format );
+		}
+		value = value.substr( pos + 1 );
+	};
+	f_trynext( &state.a );
+	f_trynext( &state.b );
+	f_trynext( &state.c );
+	try {
+		state.d = std::stoul( value );
+	} catch ( std::invalid_argument& e ) {
+		THROW( s_invalid_state_format );
+	}
+	return state;
 }
 
 }

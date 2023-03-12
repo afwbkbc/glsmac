@@ -66,9 +66,7 @@ void SimpleRandom::Generate( Tiles* tiles, size_t seed ) {
 		}
 	}
 	
-#ifndef MAPGEN_BENCHMARK
 	Finalize( tiles );
-#endif
 	
 }
 

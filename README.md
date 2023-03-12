@@ -150,7 +150,7 @@ Just run ./bin/GLSMAC --smacpath <smac_directory>
 
 Or copy GLSMAC into your SMAC directory and run without arguments from there.
 
-Run ./bin/GLSMAC --help to see more options.
+Run ./bin/GLSMAC --help to see more options. Debug builds have extra options that aren't available for release builds.
 
 ### Reporting problems
 
@@ -172,7 +172,7 @@ If it freezes: 1) use debug build 2) run gdb --args ./bin/GLSMAC <smac_directory
 
 If it behaves incorrectly: create issue and specify: 1) steps to reproduce 2) expected behavior 3) actual behavior ; attach screenshots if needed.
 
-Update: on Linux debug build will run inside gdb automatically, so just start it normally
+Update: on Linux you can use --gdb argument for debug build to start inside gdb automatically
 
 If you're using debug build - it will create files tmp/lastmap.seed, tmp/lastmap.gsm (map file) and tmp/lastmap.dump (full dump of initialized map), attach them too if your issue is related to map. Make sure to gzip lastmap.dump, it's huge otherwise.
 

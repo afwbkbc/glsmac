@@ -88,16 +88,13 @@ void glDrawArrays_real( GLenum mode, GLint first, GLsizei count ) {
 
 #include "base/Base.h"
 
-// always debug memory when developing
-#ifdef DEVEL
-#define MEMORY_DEBUG
-#endif
-
 namespace debug {
 
 MemoryWatcher* g_memory_watcher = nullptr;
 
-MemoryWatcher::MemoryWatcher() {
+MemoryWatcher::MemoryWatcher( const bool memory_debug )
+	: m_memory_debug( memory_debug )
+{
 	ASSERT( !g_memory_watcher, "duplicate MemoryWatcher instantiation" );
 	g_memory_watcher = this;
 }
@@ -117,10 +114,10 @@ MemoryWatcher::~MemoryWatcher() {
 		} \
 		any_leaks = true; \
 	}
-#ifdef MEMORY_DEBUG
-	CHECK_LEAKS( m_allocated_objects )
-	CHECK_LEAKS( m_allocated_memory )
-#endif
+	if ( m_memory_debug ) {
+		CHECK_LEAKS( m_allocated_objects )
+		CHECK_LEAKS( m_allocated_memory )
+	}
 	CHECK_LEAKS( m_opengl.vertex_buffers )
 	CHECK_LEAKS( m_opengl.index_buffers )
 	CHECK_LEAKS( m_opengl.textures )
@@ -129,14 +126,17 @@ MemoryWatcher::~MemoryWatcher() {
 			
 	if ( !any_leaks ) {
 		Log( "No memory/opengl leaks detected." );
-#ifndef MEMORY_DEBUG
-		Log( "Memory allocations were not checked. Use MemoryDebug build to test them too." );
-#endif
+		if ( !m_memory_debug ) {
+			Log( "Memory allocations were not checked. Run with --memorydebug to test them too." );
+		}
 	}
 }
 
 void MemoryWatcher::New( const Base* object, const size_t size, const std::string& file, const size_t line ) {
-#ifdef MEMORY_DEBUG
+	if ( !m_memory_debug ) {
+		return;
+	}
+	
 	std::lock_guard< std::mutex > guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
@@ -155,11 +155,13 @@ void MemoryWatcher::New( const Base* object, const size_t size, const std::strin
 
 	// VERY spammy
 	//Log( "Allocated " + std::to_string( size ) + "b for " + object->GetNamespace() + " @" + source );
-#endif
 }
 
 void MemoryWatcher::Delete( const Base* object, const std::string& file, const size_t line ) {
-#ifdef MEMORY_DEBUG
+	if ( !m_memory_debug ) {
+		return;
+	}
+	
 	std::lock_guard< std::mutex > guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
@@ -176,19 +178,19 @@ void MemoryWatcher::Delete( const Base* object, const std::string& file, const s
 	//Log( "Freed " + std::to_string( obj.size ) + "b from " + object->GetNamespace() + " @" + source );
 	
 	m_allocated_objects.erase( it );
-#endif
 }
 
 void* MemoryWatcher::Malloc( const size_t size, const std::string& file, const size_t line ) {
-#ifdef MEMORY_DEBUG
+	if ( !m_memory_debug ) {
+		return malloc_real( size );
+	}
+	
 	std::lock_guard< std::mutex> guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 	
 	ASSERT( size > 0, "allocation of size 0 @" + source );
 	
-#endif
 	void *ptr = malloc_real( size );
-#ifdef MEMORY_DEBUG	
 	ASSERT( m_allocated_memory.find( ptr ) == m_allocated_memory.end(), "malloc double-allocation detected @" + source );
 	
 	m_allocated_memory[ ptr ] = {
@@ -202,12 +204,16 @@ void* MemoryWatcher::Malloc( const size_t size, const std::string& file, const s
 	
 	// VERY spammy
 	//Log( "Allocated " + std::to_string( size ) + "b for " + std::to_string( (long int)ptr ) + " @" + source );
-#endif	
+	
 	return ptr;
 }
 
 void* MemoryWatcher::Realloc( void* ptr, const size_t size, const std::string& file, const size_t line ) {
-#ifdef MEMORY_DEBUG
+	
+	if ( !m_memory_debug ) {
+		return realloc_real( ptr, size );
+	}
+	
 	std::lock_guard< std::mutex > guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 	
@@ -226,9 +232,9 @@ void* MemoryWatcher::Realloc( void* ptr, const size_t size, const std::string& f
 	//Log( "Freed " + std::to_string( obj.size ) + "b from " + std::to_string( (long int)ptr ) + " @" + source );
 	
 	m_allocated_memory.erase( it );
-#endif	
+	
 	ptr = realloc_real( ptr, size );
-#ifdef MEMORY_DEBUG	
+	
 	ASSERT( m_allocated_memory.find( ptr ) == m_allocated_memory.end(), "realloc double-allocation detected @" + source );
 	
 	m_allocated_memory[ ptr ] = {
@@ -240,29 +246,33 @@ void* MemoryWatcher::Realloc( void* ptr, const size_t size, const std::string& f
 	
 	// VERY spammy
 	//Log( "Allocated " + std::to_string( size ) + "b for " + std::to_string( (long int)ptr ) + " @" + source );
-#endif
+	
 	return ptr;
 }
 
 unsigned char* MemoryWatcher::Ptr( unsigned char* ptr, const size_t offset, const size_t size, const std::string& file, const size_t line  ) {
-#ifdef MEMORY_DEBUG
-	std::lock_guard< std::mutex > guard( m_mutex );
-	const std::string source = file + ":" + std::to_string( line );
-	
-	ASSERT( ptr, "ptr is null @" + source );
-	
-	auto it = m_allocated_memory.find( ptr );
-	ASSERT( it != m_allocated_memory.end(), "ptr on non-allocated pointer @" + source );
-	
-	ASSERT( offset + size <= it->second.size,
-		"ptr overflow (" + std::to_string( offset ) + " + " + std::to_string( size ) + " > " + std::to_string( it->second.size ) + ") @" + source + " (allocated @" + it->second.source + ")"
-	);
-#endif	
+	if ( m_memory_debug ) {
+		std::lock_guard< std::mutex > guard( m_mutex );
+		const std::string source = file + ":" + std::to_string( line );
+
+		ASSERT( ptr, "ptr is null @" + source );
+
+		auto it = m_allocated_memory.find( ptr );
+		ASSERT( it != m_allocated_memory.end(), "ptr on non-allocated pointer @" + source );
+
+		ASSERT( offset + size <= it->second.size,
+			"ptr overflow (" + std::to_string( offset ) + " + " + std::to_string( size ) + " > " + std::to_string( it->second.size ) + ") @" + source + " (allocated @" + it->second.source + ")"
+		);
+	}
 	return ptr + offset;
 }
 
 void MemoryWatcher::Free( void* ptr, const std::string& file, const size_t line ) {
-#ifdef MEMORY_DEBUG
+	if ( !m_memory_debug ) {
+		free_real( ptr );
+		return;
+	}
+
 	std::lock_guard< std::mutex > guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 	
@@ -270,9 +280,9 @@ void MemoryWatcher::Free( void* ptr, const std::string& file, const size_t line 
 	ASSERT( it != m_allocated_memory.end(), "free on non-allocated object " + std::to_string( (long int)ptr ) + " detected @" + source );
 	
 	auto& obj = it->second;
-#endif	
+	
 	free_real( ptr );
-#ifdef MEMORY_DEBUG	
+	
 	DEBUG_STAT_INC( buffers_destroyed );
 	DEBUG_STAT_DEC( buffers_active );
 	DEBUG_STAT_CHANGE_BY( heap_allocated_size, -obj.size );
@@ -281,7 +291,6 @@ void MemoryWatcher::Free( void* ptr, const std::string& file, const size_t line 
 	//Log( "Freed " + std::to_string( obj.size ) + "b from " + std::to_string( (long int)ptr ) + " @" + source );
 	
 	m_allocated_memory.erase( it );
-#endif
 }
 	
 void MemoryWatcher::GLGenBuffers( GLsizei n, GLuint * buffers, const std::string& file, const size_t line ) {
