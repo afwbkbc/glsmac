@@ -37,7 +37,7 @@ Config::Config( const int argc, const char *argv[] )
 		}
 		m_smac_path = value + "/";
 	});
-	parser.AddRule( "version", "Show version of GLSMAC binary", AH() {
+	parser.AddRule( "version", "Show version of GLSMAC", AH() {
 		std::cout
 				<< std::endl
 			<< GLSMAC_VERSION_FULL << ' ' << GLSMAC_URL << std::endl

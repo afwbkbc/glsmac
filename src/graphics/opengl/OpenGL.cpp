@@ -203,18 +203,10 @@ void OpenGL::Iterate() {
 
 	SDL_GL_SwapWindow( m_window );
 
-#ifdef DEBUG
 	GLenum errcode;
 	if ( ( errcode = glGetError() ) != GL_NO_ERROR ) {
-#ifndef VENDORED_DEPENDENCIES // gluErrorString can't be found in vendored libraries // TODO: add FreeGLUT
-		const GLubyte* errstring = gluErrorString( errcode );
-		std::string msg = (char *)errstring;
-		THROW( "OpenGL error occured in render loop: \"" + msg + "\"" );
-#else
-		THROW( "OpenGL error occured in render loop" );
-#endif
+		THROW( "OpenGL error occured in render loop, aborting" );
 	}
-#endif
 	
 	DEBUG_STAT_INC( frames_rendered );
 }
