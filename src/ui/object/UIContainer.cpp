@@ -66,7 +66,13 @@ void UIContainer::AddChild( UIObject *object ) {
 	object->SetParentObject( this );
 	object->SetOverriddenEventContexts( m_event_contexts | m_overridden_event_contexts );
 	if ( m_overflow == OVERFLOW_GROW ) {
-		const coord_t need_height = object->GetTop() + object->GetHeight();
+		const auto& margin = object->GetMargin();
+		const coord_t need_width = object->GetLeft() + object->GetWidth() + margin.left + margin.right;
+		if ( need_width > GetWidth() ) {
+			Log( "Growing width from " + std::to_string( GetWidth() ) + " to " + std::to_string( need_width ) );
+			SetWidth( need_width );
+		}
+		const coord_t need_height = object->GetTop() + object->GetHeight() + margin.top + margin.bottom;
 		if ( need_height > GetHeight() ) {
 			Log( "Growing height from " + std::to_string( GetHeight() ) + " to " + std::to_string( need_height ) );
 			SetHeight( need_height );

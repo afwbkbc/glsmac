@@ -445,6 +445,10 @@ void UIObject::SetMargin( const coord_t px ) {
 	SetMargin({ px, px, px, px });
 }
 
+const UIObject::coord_box_t& UIObject::GetMargin() const {
+	return m_margin;
+}
+
 void UIObject::SetOverflowMargin( const coord_t px ) {
 	if ( m_overflow_margin != px ) {
 		m_overflow_margin = px;
@@ -485,6 +489,9 @@ void UIObject::ForceAspectRatio( const float aspect_ratio ) {
 
 void UIObject::UpdateObjectArea() {
 	//Log( "Stick bits = " + std::to_string( m_stick_bits ) );
+	const auto* g = g_engine->GetGraphics();
+	const auto gw = g->GetViewportWidth();
+	const auto gh = g->GetViewportHeight();
 	object_area_t object_area;
 	if ( m_parent_object != NULL ) {
 		const auto area = m_parent_object->GetInternalObjectArea();
@@ -556,9 +563,9 @@ void UIObject::UpdateObjectArea() {
 	}
 	else {
 		object_area.left = 0;
-		object_area.right = g_engine->GetGraphics()->GetViewportWidth();
+		object_area.right = gw;
 		object_area.top = 0;
-		object_area.bottom = g_engine->GetGraphics()->GetViewportHeight();
+		object_area.bottom = gh;
 		object_area.width = object_area.right;
 		object_area.height = object_area.bottom;
 	}
@@ -586,11 +593,11 @@ void UIObject::UpdateObjectArea() {
 		object_area.height = object_area.bottom - object_area.top;
 	}
 	
-	if (object_area != m_object_area) {
+	if ( object_area != m_object_area ) {
 		
 		m_object_area = object_area;
 		
-		if (m_created) {
+		if ( m_created ) {
 			// process any mouseover/mouseout events
 			// mouse may not being moved, but if object area has changed - they should be able to fire too
 			// don't do this if parent captures MouseOver event tho, we're not supposed to receive mouseovers in that case
@@ -757,7 +764,7 @@ const UIObject::object_area_t UIObject::GetInternalObjectArea() {
 	return GetObjectArea();
 }
 
-bool UIObject::IsPointInside( const size_t x, const size_t y ) const {
+bool UIObject::IsPointInside( const ssize_t x, const ssize_t y ) const {
 	
 	return (
 		x > m_object_area.left &&

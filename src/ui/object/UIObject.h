@@ -106,6 +106,7 @@ CLASS( UIObject, base::Base )
 	void Maximize();
 	void SetMargin( const coord_box_t px );
 	void SetMargin( const coord_t px );
+	const coord_box_t& GetMargin() const;
 	
 	void SetOverflowMargin( const coord_t px );
 	virtual void SetWidth( const coord_t px );
@@ -141,7 +142,7 @@ CLASS( UIObject, base::Base )
 	vertex_t GetAreaPosition() const;
 	virtual const object_area_t GetObjectArea();
 	virtual const object_area_t GetInternalObjectArea(); // for UIContainer
-	bool IsPointInside( const size_t x, const size_t y ) const;
+	bool IsPointInside( const ssize_t x, const ssize_t y ) const;
 	
 	void SetClass( const std::string& style );
 	

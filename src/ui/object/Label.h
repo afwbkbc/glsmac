@@ -38,7 +38,7 @@ protected:
 	
 	scene::actor::Text *m_actor = nullptr;
 	
-		
+	void UpdateTextDimensions();
 };
 
 }

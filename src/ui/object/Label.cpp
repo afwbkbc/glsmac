@@ -17,8 +17,7 @@ void Label::SetText( const std::string& text ) {
 	if ( m_text != text ) {
 		m_text = text;
 		if ( m_font ) {
-			m_text_width = m_font->GetTextWidth( m_text.c_str() );
-			m_text_height = m_font->GetTextHeight( m_text.c_str() );
+			UpdateTextDimensions();
 		}
 		Realign();
 		if ( m_actor ) {
@@ -39,8 +38,7 @@ void Label::SetTextColor( const Color& color ) {
 void Label::SetFont( Font* font ) {
 	if ( m_font != font ) {
 		m_font = font;
-		m_text_width = m_font->GetTextWidth( m_text.c_str() );
-		m_text_height = m_font->GetTextHeight( m_text.c_str() );
+		UpdateTextDimensions();
 		Realign();
 		if ( m_actor ) {
 			m_actor->SetFont( m_font );
@@ -76,9 +74,9 @@ void Label::Align() {
 	UIObject::Align();
 	
 	if ( m_actor && m_font ) {
-		size_t xpos = 0;
-		size_t ypos = 0;
-
+		ssize_t xpos = 0;
+		ssize_t ypos = 0;
+		
 		if ( ( m_align & ALIGN_HCENTER ) == ALIGN_HCENTER ) {
 			xpos = ( m_object_area.left + m_object_area.right ) / 2 - m_text_width / 2;
 		}
@@ -98,7 +96,7 @@ void Label::Align() {
 		else if ( m_align & ALIGN_BOTTOM ) {
 			ypos = m_object_area.bottom;
 		}
-
+		
 		m_actor->SetPosition({
 			ClampX( xpos ),
 			ClampY( ypos ),
@@ -119,6 +117,14 @@ void Label::ApplyStyle() {
 	if ( Has( Style::A_FONT ) ) {
 		SetFont( (Font*)GetObject( Style::A_FONT ) );
 	}
+}
+
+void Label::UpdateTextDimensions() {
+	m_text_width = m_font->GetTextWidth( m_text.c_str() );
+	m_text_height = m_font->GetTextHeight( m_text.c_str() );
+	
+	SetWidth( m_text_width );
+	SetHeight( m_text_height );
 }
 
 }
