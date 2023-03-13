@@ -1,5 +1,7 @@
 # GLSMAC
-Unofficial open-source OpenGL/SDL2 client for Sid Meier's Alpha Centauri ( + Alien Crossfire ). Drop-in replacement for terranx.exe.
+Unofficial open-source OpenGL/SDL2 port for Sid Meier's Alpha Centauri ( + Alien Crossfire ).
+
+![Screenshot_2023-03-13_15-14-47_-min](https://user-images.githubusercontent.com/7736265/224713483-ac71778d-08ae-48ff-8aa7-840204f99fb8.png)
 
 Note: you will still need to own original game and expansion - GLSMAC will load it's resources like images or sounds.
 
