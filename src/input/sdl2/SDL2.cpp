@@ -53,12 +53,20 @@ void SDL2::Iterate() {
 				break;
 			}
 			case SDL_MOUSEMOTION: {
+				m_last_mouse_position = {
+					event.motion.x,
+					event.motion.y
+				};
 				NEWV( ui_event, event::MouseMove, event.motion.x, event.motion.y );
 				g_engine->GetUI()->ProcessEvent( ui_event );
 				DELETE( ui_event );
 				break;
 			}
 			case SDL_MOUSEBUTTONDOWN: {
+				m_last_mouse_position = { // just in case, maybe some devices like touchscreens don't produce mouse move event before click
+					event.motion.x,
+					event.motion.y
+				};
 				NEWV( ui_event, event::MouseDown, event.motion.x, event.motion.y, GetMouseButton( event.button.button ) );
 				g_engine->GetUI()->ProcessEvent( ui_event );
 				ASSERT( m_active_mousedowns.find( event.button.button ) == m_active_mousedowns.end(),
@@ -86,7 +94,7 @@ void SDL2::Iterate() {
 				break;
 			}
 			case SDL_MOUSEWHEEL: {
-				NEWV( ui_event, event::MouseScroll, event.motion.x, event.motion.y, event.wheel.y );
+				NEWV( ui_event, event::MouseScroll, m_last_mouse_position.x, m_last_mouse_position.y, event.wheel.y );
 				g_engine->GetUI()->ProcessEvent( ui_event );
 				DELETE( ui_event );
 				break;

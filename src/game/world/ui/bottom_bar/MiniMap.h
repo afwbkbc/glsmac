@@ -25,7 +25,6 @@ CLASS( MiniMap, Section )
 	void SetMinimapSelection( const Vec2< float > position_percents, const Vec2< float > zoom );
 	void ClearMinimapSelection();
 	
-	const bool IsMouseOver() const;
 	const bool IsMouseDragging() const;
 	
 private:
@@ -39,8 +38,6 @@ private:
 		const UIEventHandler* mouse_up = nullptr;
 		const UIEventHandler* mouse_move = nullptr;
 	} m_handlers;
-	
-	Vec2< ssize_t > m_last_mouse_position = { 0, 0 }; // TODO: fix mouse coordinates passing with mouse scroll
 	
 	object::Button* m_turn_complete_button = nullptr;
 	

@@ -29,7 +29,7 @@ void MiniMap::Create() {
 		m_map_surface->AddEventContexts( EC_MOUSEMOVE );
 		const auto f_scrollto = [ this ] ( const Vec2< ssize_t > coords ) -> void {
 			//Log( "Minimap select at " + coords.ToString() );
-			m_world->ScrollToCoordinatePercents({
+			m_world->CenterAtCoordinatePercents({
 				(float) coords.x / m_map_surface->GetWidth(),
 				(float) coords.y / m_map_surface->GetHeight()
 			});
@@ -48,12 +48,11 @@ void MiniMap::Create() {
 			return false;
 		});
 		m_map_surface->On( UIEvent::EV_MOUSE_MOVE, EH( this, f_scrollto ) {
-			m_last_mouse_position = {
-				data->mouse.relative.x,
-				data->mouse.relative.y
-			};
 			if ( m_is_dragging ) {
-				f_scrollto( m_last_mouse_position );
+				f_scrollto({
+					data->mouse.relative.x,
+					data->mouse.relative.y
+				});
 			}
 			return false;
 		});
@@ -66,11 +65,10 @@ void MiniMap::Create() {
 		m_handlers.mouse_move = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_MOVE, EH( this, f_scrollto ) {
 			if ( m_is_dragging ) {
 				auto area = m_map_surface->GetObjectArea();
-				m_last_mouse_position = {
+				f_scrollto({
 					data->mouse.absolute.x - (ssize_t)area.left,
 					data->mouse.absolute.y - (ssize_t)area.top
-				};
-				f_scrollto( m_last_mouse_position );
+				});
 			}
 			return false;
 		}, ::ui::UI::GH_BEFORE );
@@ -83,9 +81,12 @@ void MiniMap::Create() {
 			return false;
 		}, ::ui::UI::GH_BEFORE );
 		
-		m_map_surface->On( UIEvent::EV_MOUSE_SCROLL, EH( this, f_scrollto ) { // TODO: fix ui to actually receive this event here
-			f_scrollto( m_last_mouse_position );
-			m_world->MouseScroll( { 0.5f, 0.5f }, data->mouse.scroll_y );
+		m_map_surface->On( UIEvent::EV_MOUSE_SCROLL, EH( this, f_scrollto ) {
+			f_scrollto({
+				data->mouse.relative.x,
+				data->mouse.relative.y
+			});
+			m_world->SmoothScroll( data->mouse.scroll_y );
 			return true;
 		});
 
@@ -216,17 +217,6 @@ void MiniMap::ClearMinimapSelection() {
 	}
 	
 	m_last_selection_size = { 0, 0 };
-}
-
-const bool MiniMap::IsMouseOver() const {
-	if ( m_is_mouse_over ) {
-		// TODO: fix mousescroll propagation
-		m_world->ScrollToCoordinatePercents({
-			(float) m_last_mouse_position.x / m_map_surface->GetWidth(),
-			(float) m_last_mouse_position.y / m_map_surface->GetHeight()
-		});
-	}
-	return m_is_mouse_over;
 }
 
 const bool MiniMap::IsMouseDragging() const {

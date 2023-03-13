@@ -36,7 +36,6 @@ CLASS( BottomBar, UI )
 	void SetMinimapTexture( types::Texture* texture );
 	const Vec2< size_t > GetMinimapDimensions() const;
 	void SetMinimapSelection( const Vec2< float > position_percents, const Vec2< float > zoom );
-	const bool IsMouseOverMiniMap() const;
 	const bool IsMouseDraggingMiniMap() const;
 	
 protected:

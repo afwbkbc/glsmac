@@ -1,6 +1,7 @@
 SET(SRC ${SRC}
 
 	${PWD}/Timer.cpp
+	${PWD}/Scroller.cpp
 	${PWD}/SMACChecker.cpp
 	${PWD}/System.cpp
 	${PWD}/Math.cpp

@@ -24,7 +24,7 @@ void FPSCounter::Create() {
 void FPSCounter::Iterate() {
 	Label::Iterate();
 	
-	while ( m_timer.Ticked() ) {
+	while ( m_timer.HasTicked() ) {
 		SetText( std::to_string( g_engine->GetGraphics()->GetFramesCountAndReset() ) );
 	}
 }

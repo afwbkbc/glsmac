@@ -13,6 +13,7 @@
 
 #include "util/Clamper.h"
 #include "util/Random.h"
+#include "util/Scroller.h"
 #include "map/Map.h"
 
 #include "ui/event/UIEventHandler.h"
@@ -47,10 +48,7 @@ CLASS( World, base::Task )
 	struct consts_t {
 		const struct {
 			const struct {
-				const uint16_t scroll_time_ms = 100;
-				const uint16_t scroll_step_ms = 2;
-				const uint8_t scroll_steps = scroll_time_ms / scroll_step_ms;
-				const float zoom_speed = 0.003f * scroll_time_ms;
+				const float zoom_speed = 0.3f;
 			} smooth_scrolling;
 			struct {
 				struct {
@@ -72,9 +70,10 @@ CLASS( World, base::Task )
 	
 	Map* GetMap() const;
 	
-	void ScrollToCoordinatePercents( const Vec2< float > position_percents );
+	void CenterAtCoordinatePercents( const Vec2< float > position_percents );
 	
-	void MouseScroll( const Vec2< float > position, const float scroll_value );
+	void SmoothScroll( const float scroll_value );
+	void SmoothScroll( const Vec2< float > position, const float scroll_value );
 
 protected:
 
@@ -102,12 +101,7 @@ private:
 		util::Clamper<float> y;
 	} m_clamp = {};
 	
-	struct {
-		util::Timer timer;
-		Vec3 step;
-		Vec3 target_position;
-		uint8_t steps_left;
-	} m_smooth_scrolling;
+	util::Scroller m_scroller;
 	
 	struct {
 		bool is_dragging = false;
@@ -119,6 +113,7 @@ private:
 		bool is_rotating = false;
 		Vec2< float > last_rotate_position;
 		Vec2< float > last_mouse_position;
+		float key_zooming = 0;
 	} m_map_control = {};
 	
 	Map::tile_info_t m_selected_tile_info = {};
@@ -147,6 +142,7 @@ private:
 	
 	struct {
 		const UIEventHandler* keydown;
+		const UIEventHandler* keyup;
 		const UIEventHandler* mousedown;
 		const UIEventHandler* mousemove;
 		const UIEventHandler* mouseup;

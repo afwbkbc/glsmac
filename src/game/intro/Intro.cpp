@@ -29,7 +29,7 @@ void Intro::Stop() {
 }
 
 void Intro::Iterate() {
-	if ( m_timer.Ticked() ) {
+	if ( m_timer.HasTicked() ) {
 		// switch to main menu
 		g_engine->GetScheduler()->RemoveTask( this );
 		NEWV( task, game::mainmenu::MainMenu );

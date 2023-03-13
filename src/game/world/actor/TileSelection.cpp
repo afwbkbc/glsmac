@@ -41,7 +41,7 @@ TileSelection::TileSelection( map::Map::tile_vertices_t coords )
 
 void TileSelection::Iterate() {
 	
-	while ( m_glow_timer.Ticked() ) {
+	while ( m_glow_timer.HasTicked() ) {
 		m_glow += GLOW_SPEED * m_glow_direction;
 		if ( m_glow < GLOW_MIN ) {
 			m_glow = GLOW_MIN;

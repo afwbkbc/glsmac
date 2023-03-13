@@ -248,6 +248,15 @@ void World::Start() {
 				}
 			}
 			
+			if ( data->key.key == 'z' ) {
+				m_map_control.key_zooming = 1;
+				return true;
+			}
+			if ( data->key.key == 'x' ) {
+				m_map_control.key_zooming = -1;
+				return true;
+			}
+			
 			// exit to main menu
 			if ( data->key.code == UIEvent::K_ESCAPE ) {
 				ReturnToMainMenu();
@@ -257,6 +266,16 @@ void World::Start() {
 		return false;
 	}, UI::GH_AFTER );
 	
+	m_handlers.keyup = ui->AddGlobalEventHandler( UIEvent::EV_KEY_UP, EH( this ) {
+		if ( data->key.key == 'z' || data->key.key == 'x' ) {
+			if ( m_map_control.key_zooming ) {
+				m_map_control.key_zooming = 0;
+				m_scroller.Stop();
+			}
+		}
+		return false;
+	}, UI::GH_BEFORE );
+	
 	m_handlers.mousedown = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_DOWN, EH( this ) {
 		switch ( data->mouse.button ) {
 			case UIEvent::M_LEFT: {
@@ -264,7 +283,7 @@ void World::Start() {
 				break;
 			}
 			case UIEvent::M_RIGHT: {
-				m_smooth_scrolling.timer.Stop();
+				m_scroller.Stop();
 				m_map_control.is_dragging = true;
 				m_map_control.last_drag_position = { m_clamp.x.Clamp( data->mouse.absolute.x ), m_clamp.y.Clamp( data->mouse.absolute.y ) };
 				break;
@@ -334,13 +353,13 @@ void World::Start() {
 				m_map_control.edge_scrolling.speed.y = 0;
 			}
 			if ( m_map_control.edge_scrolling.speed ) {
-				if ( !m_map_control.edge_scrolling.timer.Running() ) {
+				if ( !m_map_control.edge_scrolling.timer.IsRunning() ) {
 					Log( "Edge scrolling started" );
 					m_map_control.edge_scrolling.timer.SetInterval( World::s_consts.map_scroll.static_scrolling.scroll_step_ms );
 				}
 			}
 			else {
-				if ( m_map_control.edge_scrolling.timer.Running() ) {
+				if ( m_map_control.edge_scrolling.timer.IsRunning() ) {
 					Log( "Edge scrolling stopped" );
 					m_map_control.edge_scrolling.timer.Stop();
 				}
@@ -369,12 +388,7 @@ void World::Start() {
 	}, UI::GH_AFTER );
 	
 	m_handlers.mousescroll = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_SCROLL, EH( this ) {
-		if ( m_ui.bottom_bar->IsMouseOverMiniMap() ) { // TODO: fix mousescroll events propagation and remove this hack
-			MouseScroll( { (float)m_viewport.width / 2, (float)m_viewport.height / 2 }, data->mouse.scroll_y );
-		}
-		else {
-			MouseScroll( m_map_control.last_mouse_position, data->mouse.scroll_y );
-		}
+		SmoothScroll( m_map_control.last_mouse_position, data->mouse.scroll_y );
 		return true;
 	}, UI::GH_AFTER );
 	
@@ -432,6 +446,7 @@ void World::Stop() {
 	g_engine->GetGraphics()->RemoveOnWindowResizeHandler( this );
 	
 	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.keydown );
+	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.keyup );
 	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.mousedown );
 	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.mousemove );
 	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.mouseup );
@@ -471,23 +486,23 @@ void World::Iterate() {
 	
 	bool is_camera_position_updated = false;
 	bool is_camera_scale_updated = false;
-	while ( m_map_control.edge_scrolling.timer.Ticked() ) {
+	while ( m_map_control.edge_scrolling.timer.HasTicked() ) {
 		m_camera_position.x += m_map_control.edge_scrolling.speed.x;
 		m_camera_position.y += m_map_control.edge_scrolling.speed.y;
 		is_camera_position_updated = true;
 	}
 	
-	while ( m_smooth_scrolling.timer.Ticked() ) {
-		ASSERT( m_smooth_scrolling.steps_left, "no scrolling steps but timer running" );
-		m_camera_position += m_smooth_scrolling.step;
+	while ( m_scroller.HasTicked() ) {
+		const auto& new_position = m_scroller.GetPosition();
 		is_camera_position_updated = true;
-		if ( m_smooth_scrolling.step.z != 0 ) {
+		if ( new_position.z != m_camera_position.z ) {
 			is_camera_scale_updated = true;
 		}
-		if ( !--m_smooth_scrolling.steps_left ) {
-			//Log( "Scrolling finished" );
-			m_smooth_scrolling.timer.Stop();
-			break;
+		m_camera_position = new_position;
+	}
+	if ( !m_scroller.IsRunning() ) {
+		if ( m_map_control.key_zooming != 0 ) {
+			SmoothScroll( m_map_control.key_zooming );
 		}
 	}
 	
@@ -509,7 +524,7 @@ Map* World::GetMap() const {
 	return m_map;
 }
 
-void World::ScrollToCoordinatePercents( const Vec2< float > position_percents ) {
+void World::CenterAtCoordinatePercents( const Vec2< float > position_percents ) {
 	const auto* ms = m_map->GetMapState();
 	const Vec2< float > position = {
 		ms->range.percent_to_absolute.x.Clamp( position_percents.x ),
@@ -585,7 +600,7 @@ void World::UpdateCameraPosition() {
 		}
 	}
 	
-	if ( !m_smooth_scrolling.timer.Running() ) {
+	if ( !m_scroller.IsRunning() ) {
 		FixCameraX();
 	}
 	
@@ -762,14 +777,7 @@ const Vec2< float > World::GetTileWindowCoordinates( const Map::tile_state_t* ts
 }
 
 void World::ScrollTo( const Vec3& target ) {
-	if ( m_smooth_scrolling.timer.Running() ) {
-		m_smooth_scrolling.timer.Stop();
-	}
-	m_smooth_scrolling.target_position = target;
-	m_smooth_scrolling.steps_left = World::s_consts.map_scroll.smooth_scrolling.scroll_steps;
-	m_smooth_scrolling.step = ( m_smooth_scrolling.target_position - m_camera_position ) / m_smooth_scrolling.steps_left;
-	m_smooth_scrolling.timer.SetInterval( World::s_consts.map_scroll.smooth_scrolling.scroll_step_ms );
-	//Log( "Scrolling from " + m_camera_position.ToString() + " to " + m_smooth_scrolling.target_position.ToString() );
+	m_scroller.Scroll( m_camera_position, target );
 }
 
 void World::ScrollToTile( const Map::tile_state_t* ts ) {
@@ -839,13 +847,12 @@ void World::UpdateMinimap() {
 	});
 }
 
-void World::MouseScroll( const Vec2< float > position, const float scroll_value ) {
-	if ( position.y > m_viewport.max.y ) {
-		// scroll happens over bottom bar, ignore it
-		// TODO: make mouse scroll events go to element under mouse coordinates and handled in BottomBar
-		return;
-	}
+void World::SmoothScroll( const float scroll_value ) {
+	SmoothScroll( { (float)m_viewport.width / 2, (float)m_viewport.height / 2 }, scroll_value );
+}
 
+void World::SmoothScroll( const Vec2< float > position, const float scroll_value ) {
+	
 	float speed = World::s_consts.map_scroll.smooth_scrolling.zoom_speed * m_camera_position.z;
 
 	float new_z = m_camera_position.z + scroll_value * speed;

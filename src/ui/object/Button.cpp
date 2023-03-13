@@ -101,7 +101,7 @@ bool Button::OnMouseUp( const UIEvent::event_data_t* data ) {
 		RemoveStyleModifier( Style::M_ACTIVE );
 		bool is_double_click = false;
 		if ( m_maybe_doubleclick ) {
-			if ( !m_doubleclick_timer.Ticked() ) {
+			if ( !m_doubleclick_timer.HasTicked() ) {
 				is_double_click = true;
 			}
 			m_doubleclick_timer.Stop();

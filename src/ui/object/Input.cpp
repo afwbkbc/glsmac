@@ -33,7 +33,7 @@ void Input::Create() {
 void Input::Iterate() {
 	Panel::Iterate();
 	
-	if ( m_cursor_blink_timer.Ticked() ) {
+	if ( m_cursor_blink_timer.HasTicked() ) {
 		if ( m_cursor_blink_value == " " ) {
 			m_cursor_blink_value = CURSOR_BLINK_SYMBOL;
 		}

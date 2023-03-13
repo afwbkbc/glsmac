@@ -111,7 +111,7 @@ int Engine::Run() {
 			std::this_thread::sleep_for( std::chrono::milliseconds( 50 ) );
 			any_thread_running = false;
 #ifdef DEBUG
-			const bool announce_frozen_threads = thread_running_timer.Ticked();
+			const bool announce_frozen_threads = thread_running_timer.HasTicked();
 #endif
 			for ( auto& thread : m_threads ) {
 				if ( thread->T_IsRunning() ) {

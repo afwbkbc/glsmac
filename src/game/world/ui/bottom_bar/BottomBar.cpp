@@ -97,8 +97,9 @@ void BottomBar::Create() {
 	
 	m_mouse_blocker = On({
 		UIEvent::EV_MOUSE_DOWN,
-		UIEvent::EV_MOUSE_SCROLL // TODO: fix mouse coordinates at scroll
+		UIEvent::EV_MOUSE_SCROLL
 	}, EH( this ) {
+		
 		// don't let mouse events that weren't handled by child elements go through to map
 		if (
 			data->mouse.relative.x > 164 &&
@@ -176,11 +177,6 @@ const Vec2< size_t > BottomBar::GetMinimapDimensions() const {
 void BottomBar::SetMinimapSelection( const Vec2< float > position_percents, const Vec2< float > zoom ) {
 	ASSERT( m_sections.mini_map, "minimap not initialized" );
 	m_sections.mini_map->SetMinimapSelection( position_percents, zoom );
-}
-
-const bool BottomBar::IsMouseOverMiniMap() const {
-	ASSERT( m_sections.mini_map, "minimap not initialized" );
-	return m_sections.mini_map->IsMouseOver();
 }
 
 const bool BottomBar::IsMouseDraggingMiniMap() const {

@@ -177,7 +177,7 @@ void DebugOverlay::Iterate() {
 
 	if ( m_is_visible ) {
 		
-		if ( m_stats_timer.Ticked() ) {
+		if ( m_stats_timer.HasTicked() ) {
 			Refresh();
 			
 			ClearStats();

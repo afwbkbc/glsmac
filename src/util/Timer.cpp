@@ -16,7 +16,7 @@ void Timer::Tick() {
 	m_current = current;
 }
 
-bool Timer::Ticked() {
+const bool Timer::HasTicked() {
 	if (m_operation != NONE) {
 		Tick();
 		if (m_operation == TIMEOUT || m_operation == INTERVAL) {
@@ -35,7 +35,7 @@ bool Timer::Ticked() {
 	return false;
 }
 
-bool Timer::Running() {
+const bool Timer::IsRunning() const {
 	return m_operation != NONE;
 }
 

@@ -17,18 +17,18 @@ CLASS( Timer, Util )
 	
 	Timer();
 
-	void Start();
+	virtual void Start();
 	void Stop();
 	
-	// use if ( timer.Ticked() ) { ... } to check
-	void SetTimeout(const size_t ms);
+	// use if ( timer.HasTicked() ) { ... } to check
+	virtual void SetTimeout(const size_t ms);
 	
-	// use while ( timer.Ticked() ) { ... } to check because it can tick multiple times per iteration ( for example if FPS is low )
-	void SetInterval(const size_t ms);
+	// use while ( timer.HasTicked() ) { ... } to check because it can tick multiple times per iteration ( for example if FPS is low )
+	virtual void SetInterval(const size_t ms);
 
-	bool Running();
+	const bool IsRunning() const;
 	std::chrono::milliseconds GetElapsed();
-	bool Ticked();
+	virtual const bool HasTicked();
 	
 protected:
 

@@ -113,7 +113,7 @@ void Sound::Stop() {
 
 const bool Sound::IsActive() {
 	if ( !m_is_active ) {
-		if ( m_start_delay_timer.Ticked() ) {
+		if ( m_start_delay_timer.HasTicked() ) {
 			m_is_active = true;
 		}
 	}

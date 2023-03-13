@@ -41,7 +41,7 @@ void MenuBlock::SetChoice( const std::string& choice ) {
 }
 
 bool MenuBlock::IsSliding() {
-	return m_slide_timer.Running();
+	return m_slide_timer.IsRunning();
 }
 
 void MenuBlock::GoBack() {
@@ -127,7 +127,7 @@ void MenuBlock::Destroy() {
 void MenuBlock::Iterate() {
 	UIContainer::Iterate();
 	
-	while (m_slide_timer.Ticked()) {
+	while (m_slide_timer.HasTicked()) {
 		m_slide_value += m_slide_change;
 		SetRight( m_slide_value );
 		if (m_slide_value == 0) {

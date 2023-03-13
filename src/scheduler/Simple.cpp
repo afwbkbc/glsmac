@@ -52,7 +52,7 @@ void Simple::Iterate() {
 	m_tasks_toremove.clear();
 	
 #ifdef DEBUG
-	if ( m_timer.Ticked() ) {
+	if ( m_timer.HasTicked() ) {
 		DEBUG_STAT_INC( seconds_passed );
 	}
 #endif

@@ -123,7 +123,7 @@ void Loader::SetLoadingText( const std::string& loading_text ) {
 }
 
 const std::string Loader::GetDots() {
-	while ( m_dots_timer.Ticked() ) {
+	while ( m_dots_timer.HasTicked() ) {
 		m_dots_count++;
 		if ( m_dots_count > MAX_DOTS ) {
 			m_dots_count = 0;
