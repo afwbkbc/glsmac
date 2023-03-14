@@ -12,19 +12,18 @@ void Messages::Create() {
 	NEW( m_messages_list, object::ScrollView, "MapBottomBarMiddleAreaMessagesList" );
 	
 	// for testing
-/*	auto* test_font = g_engine->GetFontLoader()->LoadFont( "arialn.ttf", 16 );
-	for ( auto i = 1 ; i <= 8 ; i++ ) {
+	auto* test_font = g_engine->GetFontLoader()->LoadFont( "arialn.ttf", 16 );
+	for ( auto i = 1 ; i <= 12 ; i++ ) {
 		NEWV( label, object::Label );
 		label->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
 		label->SetFont( test_font );
 		label->SetTextColor( Color::FromRGB( 255, 255, 255 ) );
-		label->SetText( "SCROLLVIEW LINE " + std::to_string( i ) );
-		label->SetLeft( 4 );
-		label->SetTop( 4 + ( i - 1 ) * 17 );
-		label->SetHeight( 17 );
+		label->SetText( "SCROLLVIEW TEST LINE " + std::to_string( i ) );
+		label->SetLeft( 2 );
+		label->SetTop( 1 + ( i - 1 ) * 17 );
 		m_messages_labels.push_back( label );
 		m_messages_list->AddChild( label );
-	}*/
+	}
 	
 	AddChild( m_messages_list );
 }

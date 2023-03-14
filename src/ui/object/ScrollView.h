@@ -4,7 +4,7 @@
 
 #include "Panel.h"
 
-#include "util/Timer.h"
+#include "util/Scroller.h"
 
 namespace ui {
 namespace object {
@@ -22,6 +22,7 @@ CLASS( ScrollView, Panel )
 	ScrollView( const std::string& class_name = "" );
 
 	virtual void Create();
+	virtual void Iterate();
 	virtual void Destroy();
 
 	void AddChild( UIObject* object );
@@ -39,18 +40,17 @@ CLASS( ScrollView, Panel )
 
 private:
 	
-	coord_t m_scroll_speed = 10.0f;
+	size_t m_scroll_speed = 17;
+	bool m_is_sticky = true;
 	
 	vertex_t m_internal_size = { 0, 0 };
 	vertex_t m_scroll = { 0, 0 };
-	struct {
-		util::Timer timer;
-		vertex_t scrolltarget = { 0, 0 };
-	} m_smooth_scrolling;
 	void UpdateInternalSize();
 	
 	std::vector< UIObject* > m_to_add = {};
 	std::vector< UIObject* > m_to_remove = {};
+	
+	util::Scroller< float > m_scroller;
 	
 	UIContainer* m_viewport = nullptr;
 	Panel* m_body = nullptr;

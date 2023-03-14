@@ -54,7 +54,12 @@ void ScrollView::Create() {
 	});
 
 	On( UIEvent::EV_MOUSE_SCROLL, EH( this ) {
-		SetScrollY( m_scroll.y + (coord_t) data->mouse.scroll_y * m_scroll_speed );
+		const float source = m_scroller.IsRunning() ? m_scroller.GetTargetPosition() : m_scroll.y;
+		float target = m_scroll.y + (coord_t) data->mouse.scroll_y * m_scroll_speed;
+		if ( m_is_sticky ) {
+			target = (ssize_t) round( target ) / 17 * 17;
+		}
+		m_scroller.Scroll( source, target );
 		return true;
 	});
 
@@ -78,6 +83,14 @@ void ScrollView::Create() {
 		return false;
 	}, ::ui::UI::GH_BEFORE );
 	
+}
+
+void ScrollView::Iterate() {
+	Panel::Iterate();
+	
+	while ( m_scroller.HasTicked() ) {
+		SetScrollY( m_scroller.GetPosition() );
+	}
 }
 
 void ScrollView::Destroy() {
@@ -157,7 +170,7 @@ void ScrollView::SetScroll( vertex_t px ) {
 			if ( m_scroll.y < limits.top ) {
 				m_scroll.y = limits.top;
 			}
-			Log( "Scrolling to " + m_scroll.ToString() + " (area: " + std::to_string( area.left ) + " " + std::to_string( area.top ) + " " + std::to_string( area.right ) + " " + std::to_string( area.bottom ) + " " + std::to_string( area.width ) + " " + std::to_string( area.height ) + " )" );
+			//Log( "Scrolling to " + m_scroll.ToString() + " (area: " + std::to_string( area.left ) + " " + std::to_string( area.top ) + " " + std::to_string( area.right ) + " " + std::to_string( area.bottom ) + " " + std::to_string( area.width ) + " " + std::to_string( area.height ) + " )" );
 			m_body->SetLeft( -m_scroll.x );
 			m_body->SetTop( -m_scroll.y );
 		}

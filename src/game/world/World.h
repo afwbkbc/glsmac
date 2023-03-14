@@ -101,7 +101,7 @@ private:
 		util::Clamper<float> y;
 	} m_clamp = {};
 	
-	util::Scroller m_scroller;
+	util::Scroller< types::Vec3 > m_scroller;
 	
 	struct {
 		bool is_dragging = false;
