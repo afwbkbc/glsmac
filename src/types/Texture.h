@@ -107,6 +107,8 @@ CLASS( Texture, Serializable )
 	void SetAlpha(const float alpha);
 	void SetContrast(const float contrast);
 
+	static const Texture* FromColor( const Color& color );
+	
 	const Buffer Serialize() const;
 	void Unserialize( Buffer buf );
 };

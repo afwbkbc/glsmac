@@ -123,8 +123,12 @@ void Label::UpdateTextDimensions() {
 	m_text_width = m_font->GetTextWidth( m_text.c_str() );
 	m_text_height = m_font->GetTextHeight( m_text.c_str() );
 	
-	SetWidth( m_text_width );
-	SetHeight( m_text_height );
+	if ( !m_size.width ) {
+		SetWidth( m_text_width );
+	}
+	if ( !m_size.height ) {
+		SetHeight( m_text_height );
+	}
 }
 
 }

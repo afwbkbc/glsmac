@@ -31,6 +31,10 @@ void ScrollView::Create() {
 	
 	SetScroll( m_scroll );
 	
+	NEW( m_scrollbar, ScrollBar );
+		
+	Panel::AddChild( m_scrollbar );
+	
 	if ( !m_to_add.empty() ) {
 		for ( auto& child : m_to_add ) {
 			child->SetOverflowMargin( m_border_size );
@@ -55,9 +59,9 @@ void ScrollView::Create() {
 
 	On( UIEvent::EV_MOUSE_SCROLL, EH( this ) {
 		const float source = m_scroller.IsRunning() ? m_scroller.GetTargetPosition() : m_scroll.y;
-		float target = m_scroll.y + (coord_t) data->mouse.scroll_y * m_scroll_speed;
+		float target = m_scroll.y - (coord_t) data->mouse.scroll_y * m_scroll_speed;
 		if ( m_is_sticky ) {
-			target = (ssize_t) round( target ) / 17 * 17;
+			target = (ssize_t)round( target ) / (ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed;
 		}
 		m_scroller.Scroll( source, target );
 		return true;
@@ -82,7 +86,6 @@ void ScrollView::Create() {
 		}
 		return false;
 	}, ::ui::UI::GH_BEFORE );
-	
 }
 
 void ScrollView::Iterate() {
@@ -105,6 +108,9 @@ void ScrollView::Destroy() {
 		}
 		m_to_remove.clear();
 	}
+	
+	Panel::RemoveChild( m_scrollbar );
+	
 	m_viewport->RemoveChild( m_body );
 	Panel::RemoveChild( m_viewport );
 	

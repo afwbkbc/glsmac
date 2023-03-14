@@ -6,6 +6,8 @@
 
 #include "util/Scroller.h"
 
+#include "ScrollBar.h"
+
 namespace ui {
 namespace object {
 
@@ -42,6 +44,8 @@ private:
 	
 	size_t m_scroll_speed = 17;
 	bool m_is_sticky = true;
+	
+	ScrollBar* m_scrollbar = nullptr;
 	
 	vertex_t m_internal_size = { 0, 0 };
 	vertex_t m_scroll = { 0, 0 };

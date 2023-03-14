@@ -304,13 +304,13 @@ void BottomBar::AddStyles() {
 		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_LEFT );
 		s->Set( ::Style::A_BOTTOM, -2 );
 		s->Set( ::Style::A_LEFT, -2 );
-		s->Set( ::Style::A_WIDTH, 118 );
+		s->Set( ::Style::A_WIDTH, 122 );
 		s->Set( ::Style::A_HEIGHT, 41 );
 	});
 	
 	AddStyle( "MinimapBottomBarLabel", SH() {
 		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
-		s->SetFont( ::Style::A_FONT, "arialn.ttf", 14 );
+		s->SetFont( ::Style::A_FONT, "arialnb.ttf", 15 );
 		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 60, 148, 124 ) );
 		s->Set( ::Style::A_LEFT, 5 );
 		s->Set( ::Style::A_HEIGHT, 15 );

@@ -707,6 +707,12 @@ void Texture::SetContrast(const float contrast) {
 	}
 }
 
+const Texture* Texture::FromColor( const Color& color ) {
+	NEWV( texture, Texture, "FromColor", 1, 1 );
+	texture->SetPixel( 0, 0, color );
+	return texture;
+}
+
 const Buffer Texture::Serialize() const {
 	Buffer buf;
 	

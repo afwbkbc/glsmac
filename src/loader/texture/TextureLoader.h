@@ -6,6 +6,7 @@
 #include "../Loader.h"
 
 #include "types/Texture.h"
+#include "types/Color.h"
 
 using namespace types;
 
@@ -35,12 +36,17 @@ CLASS( TextureLoader, Loader )
 	Texture* LoadTextureTCS( const std::string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const transparent_colors_t transparent_colors, const uint8_t flags = LT_NONE, const float value = 1.0 );
 	Texture* LoadTextureTC( const std::string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const Color::rgba_t transparent_color, const uint8_t flags, const float value );
 	
+	const Texture* GetColorTexture( const Color& color );
+	
 	// treat specific color as transparent
 	void SetTransparentColor( const Color::rgba_t rgba );
 	
 protected:
 	transparent_colors_t m_transparent_colors;
 	bool m_is_transparent_color_set = false;
+	
+	typedef std::unordered_map< Color::rgba_t, const Texture* > color_texture_map_t;
+	color_texture_map_t m_color_textures = {};
 	
 };
 
