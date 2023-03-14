@@ -45,26 +45,26 @@ void BottomBar::AddStyles() {
 	
 	AddStyle( "SectionOuter", SH() {
 		s->Set( ::Style::A_BORDER_SIZE, 3 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_LEFT, "interface.pcx", 40, 275, 42, 298 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LT, "interface.pcx", 40, 268, 42, 270 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_TOP, "interface.pcx", 47, 268, 70, 270 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_RT, "interface.pcx", 75, 268, 77, 270 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_RIGHT, "interface.pcx", 75, 275, 77, 298 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_RB, "interface.pcx", 75, 303, 77, 305 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_BOTTOM, "interface.pcx", 47, 303, 70, 305 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LB, "interface.pcx", 40, 303, 42, 305 );
+		s->SetTexture( ::Style::A_TEXTURE_LEFT, "interface.pcx", 40, 275, 42, 298 );
+		s->SetTexture( ::Style::A_TEXTURE_LEFTTOP, "interface.pcx", 40, 268, 42, 270 );
+		s->SetTexture( ::Style::A_TEXTURE_TOP, "interface.pcx", 47, 268, 70, 270 );
+		s->SetTexture( ::Style::A_TEXTURE_RIGHTTOP, "interface.pcx", 75, 268, 77, 270 );
+		s->SetTexture( ::Style::A_TEXTURE_RIGHT, "interface.pcx", 75, 275, 77, 298 );
+		s->SetTexture( ::Style::A_TEXTURE_RIGHTBOTTOM, "interface.pcx", 75, 303, 77, 305 );
+		s->SetTexture( ::Style::A_TEXTURE_BOTTOM, "interface.pcx", 47, 303, 70, 305 );
+		s->SetTexture( ::Style::A_TEXTURE_LEFTBOTTOM, "interface.pcx", 40, 303, 42, 305 );
 	});
 	
 	AddStyle( "SectionInner", SH() {
 		s->Set( ::Style::A_BORDER_SIZE, 3 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_LEFT, "interface.pcx", 1, 275, 3, 298 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LT, "interface.pcx", 1, 268, 3, 270 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_TOP, "interface.pcx", 8, 268, 31, 270 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_RT, "interface.pcx", 36, 268, 38, 270 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_RIGHT, "interface.pcx", 36, 275, 38, 298 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_RB, "interface.pcx", 36, 303, 38, 305 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_BOTTOM, "interface.pcx", 8, 303, 31, 305 );
-		s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LB, "interface.pcx", 1, 303, 3, 305 );
+		s->SetTexture( ::Style::A_TEXTURE_LEFT, "interface.pcx", 1, 275, 3, 298 );
+		s->SetTexture( ::Style::A_TEXTURE_LEFTTOP, "interface.pcx", 1, 268, 3, 270 );
+		s->SetTexture( ::Style::A_TEXTURE_TOP, "interface.pcx", 8, 268, 31, 270 );
+		s->SetTexture( ::Style::A_TEXTURE_RIGHTTOP, "interface.pcx", 36, 268, 38, 270 );
+		s->SetTexture( ::Style::A_TEXTURE_RIGHT, "interface.pcx", 36, 275, 38, 298 );
+		s->SetTexture( ::Style::A_TEXTURE_RIGHTBOTTOM, "interface.pcx", 36, 303, 38, 305 );
+		s->SetTexture( ::Style::A_TEXTURE_BOTTOM, "interface.pcx", 8, 303, 31, 305 );
+		s->SetTexture( ::Style::A_TEXTURE_LEFTBOTTOM, "interface.pcx", 1, 303, 3, 305 );
 		s->SetTexture( ::Style::A_TEXTURE_BACK, "interface.pcx", 86, 548, 109, 571 );
 	});
 	
@@ -180,16 +180,16 @@ void BottomBar::AddStyles() {
 		s->SetFont( ::Style::A_FONT, "arialnb.ttf", 16 );
 		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 0, 0, 0 ) );
 		if ( s->Is( ::Style::M_HOVER ) || s->Is( ::Style::M_SELECTED ) ) {
-			s->SetTexture( ::Style::A_TEXTURE_BORDER_LEFT, "interface.pcx", 40, 587, 40, 610 );
-			s->SetTexture( ::Style::A_TEXTURE_BORDER_TOP, "interface.pcx", 47, 580, 70, 580 );
-			s->SetTexture( ::Style::A_TEXTURE_BORDER_RIGHT, "interface.pcx", 77, 587, 77, 610 );
-			s->SetTexture( ::Style::A_TEXTURE_BORDER_BOTTOM, "interface.pcx", 47, 617, 70, 617 );
+			s->SetTexture( ::Style::A_TEXTURE_LEFT, "interface.pcx", 40, 587, 40, 610 );
+			s->SetTexture( ::Style::A_TEXTURE_TOP, "interface.pcx", 47, 580, 70, 580 );
+			s->SetTexture( ::Style::A_TEXTURE_RIGHT, "interface.pcx", 77, 587, 77, 610 );
+			s->SetTexture( ::Style::A_TEXTURE_BOTTOM, "interface.pcx", 47, 617, 70, 617 );
 		}
 		else {
-			s->SetTexture( ::Style::A_TEXTURE_BORDER_LEFT, "interface.pcx", 8, 587, 8, 610 );
-			s->SetTexture( ::Style::A_TEXTURE_BORDER_TOP, "interface.pcx", 8, 588, 31, 588 );
-			s->SetTexture( ::Style::A_TEXTURE_BORDER_RIGHT, "interface.pcx", 31, 587, 31, 610 );
-			s->SetTexture( ::Style::A_TEXTURE_BORDER_BOTTOM, "interface.pcx", 8, 610, 31, 610 );
+			s->SetTexture( ::Style::A_TEXTURE_LEFT, "interface.pcx", 8, 587, 8, 610 );
+			s->SetTexture( ::Style::A_TEXTURE_TOP, "interface.pcx", 8, 588, 31, 588 );
+			s->SetTexture( ::Style::A_TEXTURE_RIGHT, "interface.pcx", 31, 587, 31, 610 );
+			s->SetTexture( ::Style::A_TEXTURE_BOTTOM, "interface.pcx", 8, 610, 31, 610 );
 		}
 		if ( s->Is( ::Style::M_ACTIVE ) || s->Is( ::Style::M_SELECTED ) ) {
 			s->SetTexture( ::Style::A_TEXTURE_BACK, "interface.pcx", 86, 587, 109, 610 );
@@ -255,14 +255,14 @@ void BottomBar::AddStyles() {
 		
 		const auto f_buttonstyle = [ &s ] ( const size_t ox, const size_t oy ) -> void {
 			const std::string t = "console_x2_a.pcx";
-			s->SetTexture( ::Style::A_TEXTURE_BORDER_LEFT, t, 0 + ox, 6 + oy, 5 + ox, 18 + oy );
-			s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LT, t, 0 + ox, 0 + oy, 5 + ox, 5 + oy );
-			s->SetTexture( ::Style::A_TEXTURE_BORDER_TOP, t, 6 + ox, 0 + oy, 181 + ox, 5 + oy );
-			s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_RT, t, 182 + ox, 0 + oy, 187 + ox, 5 + oy );
-			s->SetTexture( ::Style::A_TEXTURE_BORDER_RIGHT, t, 182 + ox, 6 + oy, 187 + ox, 18 + oy );
-			s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_RB, t, 182 + ox, 19 + oy, 187 + ox, 24 + oy );
-			s->SetTexture( ::Style::A_TEXTURE_BORDER_BOTTOM, t, 6 + ox, 19 + oy, 181 + ox, 24 + oy );
-			s->SetTexture( ::Style::A_TEXTURE_BORDER_CORNER_LB, t, 0 + ox, 19 + oy, 5 + ox, 24 + oy );
+			s->SetTexture( ::Style::A_TEXTURE_LEFT, t, 0 + ox, 6 + oy, 5 + ox, 18 + oy );
+			s->SetTexture( ::Style::A_TEXTURE_LEFTTOP, t, 0 + ox, 0 + oy, 5 + ox, 5 + oy );
+			s->SetTexture( ::Style::A_TEXTURE_TOP, t, 6 + ox, 0 + oy, 181 + ox, 5 + oy );
+			s->SetTexture( ::Style::A_TEXTURE_RIGHTTOP, t, 182 + ox, 0 + oy, 187 + ox, 5 + oy );
+			s->SetTexture( ::Style::A_TEXTURE_RIGHT, t, 182 + ox, 6 + oy, 187 + ox, 18 + oy );
+			s->SetTexture( ::Style::A_TEXTURE_RIGHTBOTTOM, t, 182 + ox, 19 + oy, 187 + ox, 24 + oy );
+			s->SetTexture( ::Style::A_TEXTURE_BOTTOM, t, 6 + ox, 19 + oy, 181 + ox, 24 + oy );
+			s->SetTexture( ::Style::A_TEXTURE_LEFTBOTTOM, t, 0 + ox, 19 + oy, 5 + ox, 24 + oy );
 			s->SetTexture( ::Style::A_TEXTURE_BACK, t, 6 + ox, 6 + oy, 182 + ox, 19 + oy );
 		};
 	

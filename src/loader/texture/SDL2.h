@@ -24,6 +24,9 @@ protected:
 	texture_map_t m_textures = {};
 	texture_map_t m_subtextures = {};
 
+private:
+	void FixTransparency( Texture* texture ) const;
+	
 };
 
 } /* namespace texture */

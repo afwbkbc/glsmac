@@ -4,7 +4,7 @@
 
 #include "Common.h"
 #include "Popup.h"
-
+#include "Scrollbars.h"
 
 namespace game {
 namespace style {
@@ -17,6 +17,7 @@ protected:
 	struct {
 		Common common;
 		Popup popup_menu;
+		Scrollbars scrollbars;
 	} m_styles;
 };
 

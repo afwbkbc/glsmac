@@ -29,10 +29,37 @@ void ScrollView::Create() {
 		m_body->SetOverflow( UIObject::OVERFLOW_GROW );
 	m_viewport->AddChild( m_body );
 	
-	SetScroll( m_scroll );
+	const auto f_scroll_y = [ this ]( float target ) -> void {
+		const float source = m_scroller.IsRunning() ? m_scroller.GetTargetPosition() : m_scroll.y;
+		m_scroller.Scroll( source, target );
+	};
 	
-	NEW( m_scrollbar, ScrollBar );
-		
+	const auto f_handle_mouse_scroll = [ this, f_scroll_y ]( const UIEvent::event_data_t* data ) -> void {
+		f_scroll_y( m_scroll.y - (coord_t)data->mouse.scroll_y * m_scroll_speed );
+		if ( m_is_sticky ) {
+			m_need_stickyness = true;
+		}
+	};
+	
+	NEW( m_scrollbar, Scrollbar, Scrollbar::SD_VERTICAL, "ScrollbarVerticalThick" );
+		m_scrollbar->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_VCENTER );
+		m_scrollbar->SetTop( m_border_size + 1 );
+		m_scrollbar->SetRight( m_border_size + 1 );
+		m_scrollbar->SetBottom( m_border_size + 1 );
+		m_scrollbar->On( UIEvent::EV_MOUSE_SCROLL, EH( this, f_handle_mouse_scroll ) {
+			f_handle_mouse_scroll( data );
+			return true;
+		});
+		m_scrollbar->On( UIEvent::EV_CHANGE, EH( this ) {
+			if ( data->change.scroll.is_scrolling ) {
+				const auto limits = GetScrollLimits();
+				SetScrollY( ( limits.bottom - limits.top )  * data->change.scroll.percentage / 100.0f );
+			}
+			else if ( m_is_sticky ) {
+				m_need_stickyness = true;
+			}
+			return true;
+		});
 	Panel::AddChild( m_scrollbar );
 	
 	if ( !m_to_add.empty() ) {
@@ -57,16 +84,11 @@ void ScrollView::Create() {
 		return true;
 	});
 
-	On( UIEvent::EV_MOUSE_SCROLL, EH( this ) {
-		const float source = m_scroller.IsRunning() ? m_scroller.GetTargetPosition() : m_scroll.y;
-		float target = m_scroll.y - (coord_t) data->mouse.scroll_y * m_scroll_speed;
-		if ( m_is_sticky ) {
-			target = (ssize_t)round( target ) / (ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed;
-		}
-		m_scroller.Scroll( source, target );
+	On( UIEvent::EV_MOUSE_SCROLL, EH( this, f_handle_mouse_scroll ) {
+		f_handle_mouse_scroll( data );
 		return true;
 	});
-
+	
 	auto* ui = g_engine->GetUI();
 	// mousemove should keep working if mouse is outside minimap but dragging continues
 	m_handlers.mouse_move = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_MOVE, EH( this ) {
@@ -82,14 +104,25 @@ void ScrollView::Create() {
 		if ( data->mouse.button == UIEvent::M_RIGHT ) {
 			if ( m_is_dragging ) {
 				m_is_dragging = false;
+				if ( m_is_sticky ) {
+					m_scroller.Scroll( m_scroll.y, (ssize_t)round( m_scroll.y + m_scroll_speed / 2.0f ) / (ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed );
+					// TODO: fix strange 'bounce' at bottom
+				}
 			}
 		}
 		return false;
 	}, ::ui::UI::GH_BEFORE );
+
+	m_scroller.Scroll( m_scroll, m_scroll ); // small hack to initialize scrollbar a bit later
 }
 
 void ScrollView::Iterate() {
 	Panel::Iterate();
+	
+	if ( !m_scroller.IsRunning() && m_need_stickyness ) {
+		m_need_stickyness = false;
+		m_scroller.Scroll( m_scroll.y, (ssize_t)round( m_scroll.y + m_scroll_speed / 2.0f ) / (ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed );
+	}
 	
 	while ( m_scroller.HasTicked() ) {
 		SetScrollY( m_scroller.GetPosition() );
@@ -156,14 +189,7 @@ void ScrollView::SetScroll( vertex_t px ) {
 	if ( m_scroll != px ) {
 		if ( m_body ) {
 			m_scroll = px;
-			const auto& area = GetObjectArea();
-			const auto& body_area = m_body->GetInternalObjectArea();
-			const coord_box_t limits = {
-				0, // left
-				0, // top
-				body_area.width - area.width + m_border_size * 2, // right
-				body_area.height - area.height + m_border_size * 2 // bottom
-			};
+			const coord_box_t limits = GetScrollLimits();
 			if ( m_scroll.x > limits.right ) {
 				m_scroll.x = limits.right;
 			}
@@ -179,6 +205,18 @@ void ScrollView::SetScroll( vertex_t px ) {
 			//Log( "Scrolling to " + m_scroll.ToString() + " (area: " + std::to_string( area.left ) + " " + std::to_string( area.top ) + " " + std::to_string( area.right ) + " " + std::to_string( area.bottom ) + " " + std::to_string( area.width ) + " " + std::to_string( area.height ) + " )" );
 			m_body->SetLeft( -m_scroll.x );
 			m_body->SetTop( -m_scroll.y );
+			
+			if ( m_scrollbar ) {
+				const auto& area = GetInternalObjectArea();
+				const auto& body_area = m_body->GetObjectArea();
+				if ( body_area.height > area.height ) {
+					m_scrollbar->Show();
+					m_scrollbar->SetPercentage( (float)m_scroll.y / ( limits.bottom - limits.top ) * 100.0f );
+				}
+				else {
+					m_scrollbar->Hide();
+				}
+			}
 		}
 	}
 }
@@ -214,6 +252,17 @@ void ScrollView::UpdateInternalSize() {
 			m_body->SetHeight( m_internal_size.y );
 		}
 	}
+}
+
+const UIObject::coord_box_t ScrollView::GetScrollLimits() {
+	const auto& area = GetInternalObjectArea();
+	const auto& body_area = m_body->GetObjectArea();
+	return {
+		0, // left
+		0, // top
+		body_area.width - area.width + m_border_size * 2, // right
+		body_area.height - area.height + m_border_size * 2 // bottom
+	};
 }
 
 }

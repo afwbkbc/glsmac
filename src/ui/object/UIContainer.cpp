@@ -331,20 +331,20 @@ void UIContainer::UnblockEvents() {
 	}
 }
 
-void UIContainer::Show() {
-	if ( !m_is_visible ) {
-		UIObject::Show();
+void UIContainer::ShowActors() {
+	if ( m_is_visible && !m_is_actually_visible ) {
+		UIObject::ShowActors();
 		for (auto& c : m_child_objects) {
-			c->Show();
+			c->ShowActors();
 		}
 	}
 }
 
-void UIContainer::Hide() {
-	if ( m_is_visible ) {
-		UIObject::Hide();
+void UIContainer::HideActors() {
+	if ( m_is_actually_visible ) {
+		UIObject::HideActors();
 		for (auto& c : m_child_objects) {
-			c->Hide();
+			c->HideActors();
 		}
 	}
 }

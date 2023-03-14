@@ -61,19 +61,8 @@ Texture* SDL2::LoadTexture( const std::string &name ) {
 		memcpy( ptr( texture->m_bitmap, 0, texture->m_bitmap_size ), image->pixels, texture->m_bitmap_size );
 		SDL_FreeSurface(image);
 
-		if ( m_is_transparent_color_set ) {
-			void *at = nullptr;
-			for (size_t i = 0 ; i < texture->m_bitmap_size ; i += texture->m_bpp) {
-				at = ptr( texture->m_bitmap, i, texture->m_bpp );
-				for ( auto& c : m_transparent_colors ) {
-					if ( !memcmp( at, &c, texture->m_bpp ) ) {
-						memset( at, 0, texture->m_bpp );
-						break;
-					}
-				}
-			}
-		}
-		
+		FixTransparency( texture ); // TODO: base texture should be saved as-is
+
 		m_textures[name] = texture;
 		
 		DEBUG_STAT_INC( textures_loaded );
@@ -124,11 +113,29 @@ Texture* SDL2::LoadTexture( const std::string &name, const size_t x1, const size
 			subtexture->m_is_tiled = true;
 		}
 		
+		FixTransparency( subtexture );
+		
 		m_subtextures[subtexture_key] = subtexture;
 
 		return subtexture;
 	}
 }
+
+void SDL2::FixTransparency( Texture* texture ) const {
+	if ( m_is_transparent_color_set ) {
+		void *at = nullptr;
+		for (size_t i = 0 ; i < texture->m_bitmap_size ; i += texture->m_bpp) {
+			at = ptr( texture->m_bitmap, i, texture->m_bpp );
+			for ( auto& c : m_transparent_colors ) {
+				if ( !memcmp( at, &c, texture->m_bpp ) ) {
+					memset( at, 0, texture->m_bpp );
+					break;
+				}
+			}
+		}
+	}
+}		
+
 
 } /* namespace texture */
 } /* namespace loader */

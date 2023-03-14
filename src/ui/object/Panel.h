@@ -28,17 +28,16 @@ protected:
 	
 	virtual void ApplyStyle();
 	
-	Surface* m_background = nullptr;
-	std::unordered_map<Style::attribute_type_t,Surface* > m_surfaces = {
+	std::unordered_map< Style::attribute_type_t, Surface* > m_surfaces = {
 		{ Style::A_TEXTURE_BACK, nullptr },
-		{ Style::A_TEXTURE_BORDER_LEFT, nullptr },
-		{ Style::A_TEXTURE_BORDER_TOP, nullptr },
-		{ Style::A_TEXTURE_BORDER_RIGHT, nullptr },
-		{ Style::A_TEXTURE_BORDER_BOTTOM, nullptr },
-		{ Style::A_TEXTURE_BORDER_CORNER_LT, nullptr },
-		{ Style::A_TEXTURE_BORDER_CORNER_RT, nullptr },
-		{ Style::A_TEXTURE_BORDER_CORNER_RB, nullptr },
-		{ Style::A_TEXTURE_BORDER_CORNER_LB, nullptr },
+		{ Style::A_TEXTURE_LEFT, nullptr },
+		{ Style::A_TEXTURE_TOP, nullptr },
+		{ Style::A_TEXTURE_RIGHT, nullptr },
+		{ Style::A_TEXTURE_BOTTOM, nullptr },
+		{ Style::A_TEXTURE_LEFTTOP, nullptr },
+		{ Style::A_TEXTURE_RIGHTTOP, nullptr },
+		{ Style::A_TEXTURE_RIGHTBOTTOM, nullptr },
+		{ Style::A_TEXTURE_LEFTBOTTOM, nullptr },
 	};
 };
 

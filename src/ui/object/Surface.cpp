@@ -58,9 +58,6 @@ void Surface::ApplyStyle() {
 			ClearTexture();
 		}
 	}
-	else {
-		ClearTexture();
-	}
 }
 
 void Surface::Align() {

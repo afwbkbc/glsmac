@@ -83,6 +83,12 @@ CLASS( UIEvent, base::Base )
 			char key;
 			key_modifier_t modifiers;
 		} key;
+		union {
+			struct {
+				bool is_scrolling;
+				float percentage;
+			} scroll;
+		} change;
 	} event_data_t;
 	
 	const event_type_t m_type = EV_NONE;

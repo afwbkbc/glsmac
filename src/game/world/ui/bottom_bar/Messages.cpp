@@ -13,7 +13,7 @@ void Messages::Create() {
 	
 	// for testing
 	auto* test_font = g_engine->GetFontLoader()->LoadFont( "arialn.ttf", 16 );
-	for ( auto i = 1 ; i <= 12 ; i++ ) {
+	for ( auto i = 1 ; i <= 15 ; i++ ) {
 		NEWV( label, object::Label );
 		label->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
 		label->SetFont( test_font );

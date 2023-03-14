@@ -185,14 +185,24 @@ CLASS( UIObject, base::Base )
 	virtual void Defocus();
 	
 	virtual void Show();
+	virtual void ShowActors();
 	virtual void Hide();
+	virtual void HideActors();
 	
 	virtual void SetAreaLimits( const coord_box_t limits );
 	virtual void SetAreaLimitsByObject( UIObject* source_object ); // make sure source object lives longer than this one!
 	void AddAreaLimitsChild( UIObject* child_object );
 	void RemoveAreaLimitsChild( UIObject* child_object );
 	
-	typedef std::unordered_map< UIEvent::event_type_t, std::vector< UIEventHandler* > > event_handlers_t;
+	typedef std::unordered_map<
+		UIEvent::event_type_t,
+		std::vector<
+			std::pair<
+				UIEventHandler*,
+				bool // delete handler in destructor or not
+			>
+		>
+	> event_handlers_t;
 	
 	// bit flags
 	typedef uint8_t event_context_t;
@@ -323,6 +333,7 @@ private:
 	bool m_is_focused = false;
 	
 	bool m_is_visible = true;
+	bool m_is_actually_visible = true;
 	
 	void SetAbsoluteZIndex( float z_index );
 	

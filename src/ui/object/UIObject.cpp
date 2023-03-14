@@ -37,7 +37,9 @@ UIObject::~UIObject() {
 	}
 	for ( auto& handlers : m_event_handlers ) {
 		for ( auto& handler : handlers.second ) {
-			DELETE( handler );
+			if ( handler.second ) {
+				DELETE( handler.first );
+			}
 		}
 	}
 	if ( m_area_limits.source_object ) {
@@ -249,7 +251,7 @@ const void* UIObject::GetObject( const Style::attribute_type_t attribute_type ) 
 void UIObject::AddActor( Actor* actor ) {
 	ASSERT( std::find( m_actors.begin(), m_actors.end(), actor ) == m_actors.end(), "duplicate actor add" );
 	actor->SetPositionZ( m_absolute_z_index );
-	if ( m_is_visible ) {
+	if ( m_is_actually_visible ) {
 		actor->Show();
 	}
 	else {
@@ -322,11 +324,11 @@ bool UIObject::IsEventContextOverridden( event_context_t context ) const {
 	
 void UIObject::RealignNow() {
 	if ( !m_are_realigns_blocked ) {
+		m_is_realign_needed = false;
 		UpdateObjectArea();
 		if ( m_created ) {
 			Align();
 		}
-		m_is_realign_needed = false;
 		for ( auto& child : m_area_limits.child_objects ) {
 			child->UpdateAreaLimits();
 		}
@@ -648,7 +650,7 @@ const UIObject::overflow_t UIObject::GetOverflow() const {
 
 void UIObject::ProcessEvent( UIEvent* event ) {
 	
-	if ( m_are_events_blocked || !m_is_visible ) {
+	if ( m_are_events_blocked || !m_is_actually_visible ) {
 		return;
 	}
 	
@@ -785,7 +787,7 @@ void UIObject::SetClass( const std::string& style_class ) {
 #ifdef DEBUG
 void UIObject::ShowDebugFrame() {
 	if ( !m_has_debug_frame ) {
-		if ( m_is_visible ) {
+		if ( m_is_actually_visible ) {
 			g_engine->GetUI()->ShowDebugFrame( this );
 		}
 		m_has_debug_frame = true;
@@ -851,13 +853,18 @@ const bool UIObject::HasStyleModifier( const Style::modifier_t modifier ) const 
 
 const UIEventHandler* UIObject::On( const std::vector< UIEvent::event_type_t >& types, UIEventHandler::handler_function_t func ) {
 	NEWV( handler, UIEventHandler, func );
+	bool need_delete = true; // need to delete only once
 	for ( auto& type : types ) {
 		auto it = m_event_handlers.find( type );
 		if ( it == m_event_handlers.end() ) {
 			m_event_handlers[ type ] = {};
 			it = m_event_handlers.find( type );
 		}
-		it->second.push_back( handler );
+		it->second.push_back({
+			handler,
+			need_delete
+		});
+		need_delete = false;
 	}
 	return handler;
 }
@@ -868,9 +875,14 @@ const UIEventHandler* UIObject::On( const UIEvent::event_type_t type, UIEventHan
 
 void UIObject::Off( const UIEventHandler* handler ) {
 	for ( auto& handlers : m_event_handlers ) {
-		auto it = find( handlers.second.begin() , handlers.second.end(), handler );
-		if ( it != handlers.second.end() ) {
-			handlers.second.erase( it );
+		auto it = handlers.second.begin();
+		while ( it != handlers.second.end() ) {
+			if ( it->first == handler ) {
+				it = handlers.second.erase( it );
+			}
+			else {
+				it++;
+			}
 		}
 	}
 	DELETE( handler );
@@ -880,7 +892,7 @@ bool UIObject::Trigger( const UIEvent::event_type_t type, const UIEvent::event_d
 	auto handlers = m_event_handlers.find( type );
 	if ( handlers != m_event_handlers.end() ) {
 		for ( auto& handler : handlers->second ) {
-			if ( handler->Execute( data ) ) {
+			if ( handler.first->Execute( data ) ) {
 				return true; // processed
 			}
 		}
@@ -963,6 +975,13 @@ void UIObject::Defocus() {
 void UIObject::Show() {
 	if ( !m_is_visible ) {
 		m_is_visible = true;
+		ShowActors();
+	}
+}
+
+void UIObject::ShowActors() {
+	if ( m_is_visible && !m_is_actually_visible ) {
+		m_is_actually_visible = true;
 		for ( auto& actor : m_actors ) {
 			actor->Show();
 		}
@@ -978,6 +997,13 @@ void UIObject::Show() {
 void UIObject::Hide() {
 	if ( m_is_visible ) {
 		m_is_visible = false;
+		HideActors();
+	}
+}
+
+void UIObject::HideActors() {
+	if ( m_is_actually_visible ) {
+		m_is_actually_visible = false;
 		for ( auto& actor : m_actors ) {
 			actor->Hide();
 		}

@@ -180,7 +180,7 @@ void UI::TriggerGlobalEventHandlers( global_event_handler_order_t order, UIEvent
 		auto ghs2 = ghs1->second.find( event->m_type );
 		if ( ghs2 != ghs1->second.end() ) {
 			for ( auto& h : ghs2->second ) {
-				if ( h->Execute( &event->m_data ) ) {
+				if ( h.first->Execute( &event->m_data ) ) {
 					event->SetProcessed();
 					return;
 				}
@@ -242,18 +242,27 @@ const UIEventHandler* UI::AddGlobalEventHandler( const UIEvent::event_type_t typ
 		its->second[ type ] = {};
 		it = its->second.find( type );
 	}
-	it->second.push_back( handler );
+	it->second.push_back({
+		handler,
+		true
+	});
 	return handler;
 }
 
 void UI::RemoveGlobalEventHandler( const UIEventHandler* handler ) {
 	for ( auto& its : m_global_event_handlers ) {
 		for ( auto& handlers : its.second ) {
-			auto it = find( handlers.second.begin() , handlers.second.end(), handler );
-			if ( it != handlers.second.end() ) {
-				DELETE( *it );
-				handlers.second.erase( it );
-				return;
+			auto it = handlers.second.begin();
+			while ( it != handlers.second.end() ) {
+				if ( it->first == handler ) {
+					ASSERT( it->second, "global event handler need_delete is false" );
+					handlers.second.erase( it );
+					DELETE( handler );
+					return;
+				}
+				else {
+					it++;
+				}
 			}
 		}
 	}

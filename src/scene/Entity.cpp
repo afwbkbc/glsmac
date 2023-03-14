@@ -48,8 +48,8 @@ void Entity::Set##_name##Z( const float value ) {\
 	}\
 }
 
-_XYZ_SETTER( Angle, angle, UpdateRotation(); UpdateMatrix() )
-_XYZ_SETTER( Position, position, UpdatePosition(); UpdateMatrix() )
+_XYZ_SETTER( Angle, angle, UpdateRotation(); )
+_XYZ_SETTER( Position, position, UpdatePosition(); )
 
 #undef _XYZ_SETTER
 
@@ -59,6 +59,7 @@ void Entity::UpdateRotation() {
 
 void Entity::UpdatePosition() {
 	m_matrices.translate.TransformTranslate( m_position.x , m_position.y, m_position.z );
+	UpdateMatrix();
 }
 
 void Entity::UpdateMatrix() {

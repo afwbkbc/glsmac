@@ -11,10 +11,10 @@ void Popup::AddStyles() {
 		{
 			const std::unordered_map< Style::attribute_type_t, std::vector< size_t > > textures = {
 				{ Style::A_TEXTURE_BACK, { 86, 353, 109, 376 } },
-				{ Style::A_TEXTURE_BORDER_LEFT, { 79, 431, 79, 454 } },
-				{ Style::A_TEXTURE_BORDER_TOP, { 86, 307, 109, 307 } },
-				{ Style::A_TEXTURE_BORDER_RIGHT, { 116, 431, 116, 454 } },
-				{ Style::A_TEXTURE_BORDER_BOTTOM, { 86, 461, 109, 461 } },
+				{ Style::A_TEXTURE_LEFT, { 79, 431, 79, 454 } },
+				{ Style::A_TEXTURE_TOP, { 86, 307, 109, 307 } },
+				{ Style::A_TEXTURE_RIGHT, { 116, 431, 116, 454 } },
+				{ Style::A_TEXTURE_BOTTOM, { 86, 461, 109, 461 } },
 			};
 			for ( auto& texture : textures ) {
 				s->SetTexture( texture.first, "interface.pcx", texture.second[0] , texture.second[1], texture.second[2], texture.second[3] );
@@ -28,10 +28,10 @@ void Popup::AddStyles() {
 		{
 			const std::unordered_map< Style::attribute_type_t, std::vector< size_t > > textures = {
 				{ Style::A_TEXTURE_BACK, { 86, 353, 109, 376 } },
-				{ Style::A_TEXTURE_BORDER_LEFT, { 79, 431, 79, 454 } },
-				{ Style::A_TEXTURE_BORDER_TOP, { 86, 307, 109, 307 } },
-				{ Style::A_TEXTURE_BORDER_RIGHT, { 116, 431, 116, 454 } },
-				{ Style::A_TEXTURE_BORDER_BOTTOM, { 86, 461, 109, 461 } },
+				{ Style::A_TEXTURE_LEFT, { 79, 431, 79, 454 } },
+				{ Style::A_TEXTURE_TOP, { 86, 307, 109, 307 } },
+				{ Style::A_TEXTURE_RIGHT, { 116, 431, 116, 454 } },
+				{ Style::A_TEXTURE_BOTTOM, { 86, 461, 109, 461 } },
 			};
 			for ( auto& texture : textures ) {
 				s->SetTexture( texture.first, "interface.pcx", texture.second[0] , texture.second[1], texture.second[2], texture.second[3] );
@@ -42,10 +42,10 @@ void Popup::AddStyles() {
 		{
 			const std::unordered_map< Style::attribute_type_t, std::vector< size_t > > textures = {
 				{ Style::A_HEADER_TEXTURE_BACK, { 86, 314, 109, 337 } },
-				{ Style::A_HEADER_TEXTURE_BORDER_LEFT, { 79, 431, 79, 454 } },
-				{ Style::A_HEADER_TEXTURE_BORDER_TOP, { 86, 307, 109, 307 } },
-				{ Style::A_HEADER_TEXTURE_BORDER_RIGHT, { 116, 431, 116, 454 } },
-				{ Style::A_HEADER_TEXTURE_BORDER_BOTTOM, { 86, 461, 109, 461 } },
+				{ Style::A_HEADER_TEXTURE_LEFT, { 79, 431, 79, 454 } },
+				{ Style::A_HEADER_TEXTURE_TOP, { 86, 307, 109, 307 } },
+				{ Style::A_HEADER_TEXTURE_RIGHT, { 116, 431, 116, 454 } },
+				{ Style::A_HEADER_TEXTURE_BOTTOM, { 86, 461, 109, 461 } },
 			};
 			for ( auto& texture : textures ) {
 				s->SetTexture( texture.first, "interface.pcx", texture.second[0] , texture.second[1], texture.second[2], texture.second[3] );
@@ -99,27 +99,27 @@ void Popup::AddStyles() {
 		if ( s->Is( Style::M_ACTIVE ) || s->Is( Style::M_SELECTED ) ) {
 			textures = {
 				{ Style::A_TEXTURE_BACK, { 68, 170, 134, 187 } },
-				{ Style::A_TEXTURE_BORDER_LEFT, { 64, 170, 64, 187 } },
-				{ Style::A_TEXTURE_BORDER_TOP, { 68, 169, 134, 169 } },
-				{ Style::A_TEXTURE_BORDER_RIGHT, { 138, 170, 138, 187 } },
-				{ Style::A_TEXTURE_BORDER_BOTTOM, { 68, 188, 134, 188 } },
+				{ Style::A_TEXTURE_LEFT, { 64, 170, 64, 187 } },
+				{ Style::A_TEXTURE_TOP, { 68, 169, 134, 169 } },
+				{ Style::A_TEXTURE_RIGHT, { 138, 170, 138, 187 } },
+				{ Style::A_TEXTURE_BOTTOM, { 68, 188, 134, 188 } },
 			};
 		}
 		else { 
 			if ( s->Is( Style::M_HOVER ) ) {
 				textures = {
-					{ Style::A_TEXTURE_BORDER_LEFT, { 64, 149, 64, 166 } },
-					{ Style::A_TEXTURE_BORDER_TOP, { 68, 148, 134, 148 } },
-					{ Style::A_TEXTURE_BORDER_RIGHT, { 138, 149, 138, 166 } },
-					{ Style::A_TEXTURE_BORDER_BOTTOM, { 68, 167, 134, 167 } },
+					{ Style::A_TEXTURE_LEFT, { 64, 149, 64, 166 } },
+					{ Style::A_TEXTURE_TOP, { 68, 148, 134, 148 } },
+					{ Style::A_TEXTURE_RIGHT, { 138, 149, 138, 166 } },
+					{ Style::A_TEXTURE_BOTTOM, { 68, 167, 134, 167 } },
 				};
 			}
 			else {
 				textures = {
-					{ Style::A_TEXTURE_BORDER_LEFT, { 64, 128, 64, 145 } },
-					{ Style::A_TEXTURE_BORDER_TOP, { 68, 127, 134, 127 } },
-					{ Style::A_TEXTURE_BORDER_RIGHT, { 138, 128, 138, 145 } },
-					{ Style::A_TEXTURE_BORDER_BOTTOM, { 68, 146, 134, 146 } },
+					{ Style::A_TEXTURE_LEFT, { 64, 128, 64, 145 } },
+					{ Style::A_TEXTURE_TOP, { 68, 127, 134, 127 } },
+					{ Style::A_TEXTURE_RIGHT, { 138, 128, 138, 145 } },
+					{ Style::A_TEXTURE_BOTTOM, { 68, 146, 134, 146 } },
 				};
 			}
 			textures[ Style::A_TEXTURE_BACK ] = { 68, 149, 134, 166 };

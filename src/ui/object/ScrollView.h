@@ -6,7 +6,7 @@
 
 #include "util/Scroller.h"
 
-#include "ScrollBar.h"
+#include "Scrollbar.h"
 
 namespace ui {
 namespace object {
@@ -45,16 +45,19 @@ private:
 	size_t m_scroll_speed = 17;
 	bool m_is_sticky = true;
 	
-	ScrollBar* m_scrollbar = nullptr;
+	Scrollbar* m_scrollbar = nullptr;
 	
 	vertex_t m_internal_size = { 0, 0 };
 	vertex_t m_scroll = { 0, 0 };
 	void UpdateInternalSize();
 	
+	const coord_box_t GetScrollLimits();
+	
 	std::vector< UIObject* > m_to_add = {};
 	std::vector< UIObject* > m_to_remove = {};
 	
 	util::Scroller< float > m_scroller;
+	bool m_need_stickyness = false;
 	
 	UIContainer* m_viewport = nullptr;
 	Panel* m_body = nullptr;

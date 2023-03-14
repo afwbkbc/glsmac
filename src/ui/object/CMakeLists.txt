@@ -1,10 +1,11 @@
 SET(SRC ${SRC}
 
-	${PWD}/ScrollBar.cpp
+	${PWD}/Scrollbar.cpp
 	${PWD}/ScrollView.cpp
 	${PWD}/Section.cpp
 	${PWD}/ChoiceList.cpp
 	${PWD}/Input.cpp
+	${PWD}/SimpleButton.cpp
 	${PWD}/Button.cpp
 	${PWD}/Panel.cpp
 	${PWD}/Label.cpp

@@ -89,7 +89,7 @@ Map::Map( Random* random, Scene* scene )
 
 	// main source textures
 	m_textures.source.texture_pcx = g_engine->GetTextureLoader()->LoadTextureTC( "texture.pcx", Color::RGBA( 125, 0, 128, 255 ) );
-	m_textures.source.ter1_pcx = g_engine->GetTextureLoader()->LoadTextureTCS( "ter1.pcx", {
+	m_textures.source.ter1_pcx = g_engine->GetTextureLoader()->LoadTextureTCs( "ter1.pcx", {
 		Color::RGBA( 152, 24, 228, 255 ), // remove transparency color
 		Color::RGBA( 253, 189, 118, 255 ) // remove drawn shadows too (we'll have our own)
 	});

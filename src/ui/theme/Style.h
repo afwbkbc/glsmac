@@ -48,46 +48,43 @@ CLASS( Style, base::Base )
 	// TODO: attribute grouping/inheritance
 	enum attribute_type_t : uint8_t {
 		A_NONE,
+		
+		// positioning
+		A_ALIGN,
 		A_WIDTH,
 		A_HEIGHT,
-		A_HEADER_HEIGHT,
 		A_LEFT,
 		A_TOP,
 		A_RIGHT,
 		A_BOTTOM,
-		A_ALIGN,
-		A_TEXTALIGN,
-		A_HEADER_TEXTALIGN,
-		A_TEXTCOLOR,
-		A_HEADER_TEXTCOLOR,
-		A_BORDER_SIZE,
+		
+		// textures
 		A_TEXTURE,
-		
-		// TODO: combine into multitexture
-		A_TEXTURE_BACK,
-		A_TEXTURE_BORDER_LEFT,
-		A_TEXTURE_BORDER_TOP,
-		A_TEXTURE_BORDER_RIGHT,
-		A_TEXTURE_BORDER_BOTTOM,
-		A_TEXTURE_BORDER_CORNER_LT,
-		A_TEXTURE_BORDER_CORNER_RT,
-		A_TEXTURE_BORDER_CORNER_RB,
-		A_TEXTURE_BORDER_CORNER_LB,
-		A_HEADER_TEXTURE_BACK,
-		A_HEADER_TEXTURE_BORDER_LEFT,
-		A_HEADER_TEXTURE_BORDER_TOP,
-		A_HEADER_TEXTURE_BORDER_RIGHT,
-		A_HEADER_TEXTURE_BORDER_BOTTOM,
-		A_HEADER_TEXTURE_BORDER_CORNER_LT,
-		A_HEADER_TEXTURE_BORDER_CORNER_RT,
-		A_HEADER_TEXTURE_BORDER_CORNER_RB,
-		A_HEADER_TEXTURE_BORDER_CORNER_LB,
-		
-		A_FONT,
-		A_HEADER_FONT,
 		A_SIZE_FROM_TEXTURE,
 		A_STRETCH_TEXTURE,
 		A_KEEP_TEXTURE_ASPECT_RATIO,
+
+		// TODO: combine into multitexture?
+		A_TEXTURE_BACK, // for things like panel background, scrollbar background
+		A_TEXTURE_CENTER, // for things like scrollbar slider
+		
+		// borders and things like slider up button, slider down button
+		A_BORDER_SIZE,
+		A_TEXTURE_LEFT,
+		A_TEXTURE_TOP,
+		A_TEXTURE_RIGHT,
+		A_TEXTURE_BOTTOM,
+		A_TEXTURE_LEFTTOP,
+		A_TEXTURE_RIGHTTOP,
+		A_TEXTURE_RIGHTBOTTOM,
+		A_TEXTURE_LEFTBOTTOM,
+		
+		// fonts
+		A_FONT,
+		A_TEXTALIGN,
+		A_TEXTCOLOR,
+		
+		// sounds
 		A_SOUND,
 		A_SOUND_VOLUME,
 		A_SOUND_AUTOPLAY,
@@ -96,6 +93,23 @@ CLASS( Style, base::Base )
 		A_BUTTON_CLICK_SOUND,
 		A_BUTTON_MOVE_SOUND,
 		
+		// headers
+		A_HEADER_HEIGHT,
+		A_HEADER_TEXTALIGN,
+		A_HEADER_TEXTCOLOR,
+		A_HEADER_FONT,
+		// header borders
+		A_HEADER_TEXTURE_BACK,
+		A_HEADER_TEXTURE_LEFT,
+		A_HEADER_TEXTURE_TOP,
+		A_HEADER_TEXTURE_RIGHT,
+		A_HEADER_TEXTURE_BOTTOM,
+		A_HEADER_TEXTURE_LEFTTOP,
+		A_HEADER_TEXTURE_RIGHTTOP,
+		A_HEADER_TEXTURE_RIGHTBOTTOM,
+		A_HEADER_TEXTURE_LEFTBOTTOM,
+		
+		// must be last
 		ATTRIBUTE_TYPE_MAX
 	};
 
@@ -120,6 +134,8 @@ CLASS( Style, base::Base )
 	void SetTextureTC( const attribute_type_t attribute_type, const std::string& name, const Color::rgba_t transparent_color );
 	void SetTexture( const attribute_type_t attribute_type, const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = TextureLoader::LT_NONE, const float value = 1.0 );
 	void SetTextureTC( const attribute_type_t attribute_type, const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const Color::rgba_t transparent_color, const uint8_t flags = TextureLoader::LT_NONE, const float value = 1.0 );
+	void SetTextureTCs( const attribute_type_t attribute_type, const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const TextureLoader::transparent_colors_t& transparent_colors, const uint8_t flags = TextureLoader::LT_NONE, const float value = 1.0 );
+	void SetColorTexture( const attribute_type_t attribute_type, const Color& color );
 	void SetFont( const attribute_type_t attribute_type, const std::string &name, const unsigned char size );
 	void SetSound( const attribute_type_t attribute_type, const std::string& name );
 
