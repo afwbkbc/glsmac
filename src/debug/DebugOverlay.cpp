@@ -73,16 +73,18 @@ void DebugOverlay::Show() {
 		m_background_left->SetTexture( m_background_texture );
 		g_engine->GetUI()->AddObject( m_background_left );
 
-		NEW( m_background_middle, Surface );
-		m_background_middle->SetAlign( UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
-		m_background_middle->SetLeft( 340 );
-		m_background_middle->SetRight( 0 );
-		m_background_middle->SetTop( 0 );
-		m_background_middle->SetHeight( m_memory_stats_lines * 18 );
-		m_background_middle->SetWidth( 330 );
-		m_background_middle->SetZIndex( 0.9 );
-		m_background_middle->SetTexture( m_background_texture );
-		g_engine->GetUI()->AddObject( m_background_middle );
+		if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_MEMORYDEBUG ) ) {
+			NEW( m_background_middle, Surface );
+			m_background_middle->SetAlign( UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+			m_background_middle->SetLeft( 340 );
+			m_background_middle->SetRight( 0 );
+			m_background_middle->SetTop( 0 );
+			m_background_middle->SetHeight( m_memory_stats_lines * 18 );
+			m_background_middle->SetWidth( 330 );
+			m_background_middle->SetZIndex( 0.9 );
+			m_background_middle->SetTexture( m_background_texture );
+			g_engine->GetUI()->AddObject( m_background_middle );
+		}
 
 		m_stats_timer.SetInterval( 1000 ); // track stats/second
 
@@ -117,7 +119,10 @@ void DebugOverlay::Hide() {
 		#undef D
 
 		g_engine->GetUI()->RemoveObject( m_background_left );
-		g_engine->GetUI()->RemoveObject( m_background_middle );
+		
+		if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_MEMORYDEBUG ) ) {
+			g_engine->GetUI()->RemoveObject( m_background_middle );
+		}
 
 		DEBUG_STATS_SET_RW();
 	}

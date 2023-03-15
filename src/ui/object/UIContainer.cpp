@@ -92,6 +92,7 @@ void UIContainer::AddChild( UIObject *object ) {
 	}
 	if ( m_created ) {
 		CreateChild( object );
+		Refresh();
 	}
 }
 
@@ -101,6 +102,7 @@ void UIContainer::RemoveChild( UIObject *object ) {
 	//Log( "Removing child " + object->GetName() );
 	m_child_objects.erase( it, it + 1 );
 	DestroyChild( object );
+	Refresh();
 }
 
 void UIContainer::UpdateZIndex() {
