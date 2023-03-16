@@ -5,7 +5,10 @@ namespace graphics {
 Graphics::~Graphics() {
 #ifdef DEBUG
 	if ( !m_on_resize_handlers.empty() ) {
-		Log( "some resize handlers still set" );
+		Log( "WARNING: some resize handlers still set" );
+	}
+	if ( !m_on_resize_handlers_order.empty() ) {
+		Log( "WARNING: some resize handlers still set in order vector" );
 	}
 #endif
 }
@@ -21,20 +24,29 @@ const float Graphics::GetAspectRatio() const {
 
 void Graphics::OnWindowResize() {
 	m_aspect_ratio = (float) GetViewportWidth() / GetViewportHeight();
-	for ( auto& it : m_on_resize_handlers ) {
-		it.second( m_aspect_ratio );
+	for ( auto& object : m_on_resize_handlers_order ) {
+		ASSERT( m_on_resize_handlers.find( object ) != m_on_resize_handlers.end(), "resize handler not found but exists in order vector" );
+		m_on_resize_handlers.at( object )( m_aspect_ratio );
 	}
 }
 
 void Graphics::AddOnWindowResizeHandler( void* object, const on_resize_handler_t& handler ) {
 	ASSERT( m_on_resize_handlers.find( object ) == m_on_resize_handlers.end(), "duplicate resize handler" );
 	m_on_resize_handlers[ object ] = handler;
+	m_on_resize_handlers_order.push_back( object );
 }
 
 void Graphics::RemoveOnWindowResizeHandler( void* object ) {
-	auto it = m_on_resize_handlers.find( object );
-	ASSERT( it != m_on_resize_handlers.end(), "resize handler not found" );
-	m_on_resize_handlers.erase( it );
+	{
+		auto it = m_on_resize_handlers.find( object );
+		ASSERT( it != m_on_resize_handlers.end(), "resize handler not found" );
+		m_on_resize_handlers.erase( it );
+	}
+	{
+		auto it = std::find( m_on_resize_handlers_order.begin(), m_on_resize_handlers_order.end(), object );
+		ASSERT( it != m_on_resize_handlers_order.end(), "resize handler not found in order vector" );
+		m_on_resize_handlers_order.erase( it );
+	}
 }
 
 void Graphics::ToggleFullscreen() {

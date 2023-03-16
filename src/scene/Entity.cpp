@@ -55,6 +55,7 @@ _XYZ_SETTER( Position, position, UpdatePosition(); )
 
 void Entity::UpdateRotation() {
 	m_matrices.rotate.TransformRotate( m_angle.y, m_angle.x, m_angle.z );
+	UpdateMatrix();
 }
 
 void Entity::UpdatePosition() {

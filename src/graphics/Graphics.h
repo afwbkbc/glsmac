@@ -62,7 +62,8 @@ protected:
 	
 private:
 	float m_aspect_ratio = 0;
-	std::unordered_map< void*, on_resize_handler_t > m_on_resize_handlers;
+	std::unordered_map< void*, on_resize_handler_t > m_on_resize_handlers = {};
+	std::vector< void* > m_on_resize_handlers_order = {};
 };
 
 } /* namespace graphics */
