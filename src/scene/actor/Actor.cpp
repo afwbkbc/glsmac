@@ -53,6 +53,11 @@ void Actor::SetAreaLimits( const area_limits_t limits ) {
 	m_area_limits = limits;
 }
 
+void Actor::RemoveAreaLimits() {
+	//Log( "Removing area limits" );
+	m_render_flags &=~ RF_USE_AREA_LIMITS;
+}
+
 const Actor::area_limits_t& Actor::GetAreaLimits() const {
 	return m_area_limits;
 }

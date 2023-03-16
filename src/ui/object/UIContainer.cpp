@@ -47,7 +47,11 @@ void UIContainer::CreateChild( UIObject *object ) {
 	object->AddStyleModifier( m_style_modifiers );
 	//object->Realign();
 	object->EnableActors();
+	if ( !m_is_actually_visible ) {
+		object->HideActors();
+	}
 	//object->Redraw();
+
 }
 
 void UIContainer::DestroyChild( UIObject *object ) {
@@ -66,23 +70,15 @@ void UIContainer::AddChild( UIObject *object ) {
 	object->SetParentObject( this );
 	object->SetOverriddenEventContexts( m_event_contexts | m_overridden_event_contexts );
 	if ( m_overflow == OVERFLOW_GROW ) {
-		const auto& margin = object->GetMargin();
-		const coord_t need_width = object->GetLeft() + object->GetWidth() + margin.left + margin.right;
-		if ( need_width > GetWidth() ) {
-			Log( "Growing width from " + std::to_string( GetWidth() ) + " to " + std::to_string( need_width ) );
-			SetWidth( need_width );
-		}
-		const coord_t need_height = object->GetTop() + object->GetHeight() + margin.top + margin.bottom;
-		if ( need_height > GetHeight() ) {
-			Log( "Growing height from " + std::to_string( GetHeight() ) + " to " + std::to_string( need_height ) );
-			SetHeight( need_height );
-		}
+		GrowFromObject( object );
 	}
-	else if ( m_overflow == OVERFLOW_HIDDEN ) {
+	else if (
+		m_overflow == OVERFLOW_HIDDEN
+	) {
+		Log( "Setting overflow limits for " + object->GetName() );
 		object->SetAreaLimitsByObject( this );
-		// TODO: fix
 	}
-	else if ( m_area_limits.enabled ) {
+	if ( m_area_limits.enabled ) {
 		if ( m_area_limits.source_object ) {
 			object->SetAreaLimitsByObject( m_area_limits.source_object );
 		}
@@ -102,6 +98,9 @@ void UIContainer::RemoveChild( UIObject *object ) {
 	//Log( "Removing child " + object->GetName() );
 	m_child_objects.erase( it, it + 1 );
 	DestroyChild( object );
+	if ( m_overflow == OVERFLOW_GROW ) {
+		ShrinkToFit();
+	}
 	Refresh();
 }
 
@@ -151,7 +150,9 @@ void UIContainer::SetOverflow( const overflow_t overflow ) {
 	
 	if ( m_overflow == OVERFLOW_HIDDEN ) {
 		for ( auto& child : m_child_objects ) {
-			child->SetAreaLimitsByObject( this );
+			if ( child->GetOverflow() != OVERFLOW_VISIBLE_ALWAYS ) {
+				child->SetAreaLimitsByObject( this );
+			}
 		}
 	}
 	
@@ -351,6 +352,26 @@ void UIContainer::HideActors() {
 	}
 }
 
+void UIContainer::GrowFromObjectMaybe( UIObject *object ) {
+	if ( m_overflow == OVERFLOW_GROW ) {
+		GrowFromObject( object );
+	}
+}
+
+void UIContainer::ShrinkToFitMaybe() {
+	if ( m_overflow == OVERFLOW_GROW ) {
+		ShrinkToFit();
+	}
+}
+
+void UIContainer::UpdateAreaLimits() {
+	UIObject::UpdateAreaLimits();
+	
+	for ( auto& c : m_child_objects ) {
+		c->UpdateAreaLimits();
+	}
+}
+
 const std::string UIContainer::Subclass( const std::string& class_name ) const {
 	//if (m_style_class.empty()) {
 		return "";
@@ -358,6 +379,37 @@ const std::string UIContainer::Subclass( const std::string& class_name ) const {
 	else {
 		return m_style_class + class_name;
 	}*/
+}
+
+void UIContainer::GrowFromObject( UIObject *object ) {
+	const auto& margin = object->GetMargin();
+	const coord_t need_width = object->GetLeft() + object->GetWidth() + object->GetRight() + margin.left + margin.right;
+	if ( need_width > GetWidth() ) {
+		//Log( "Growing width from " + std::to_string( GetWidth() ) + " to " + std::to_string( need_width ) );
+		SetWidth( need_width );
+	}
+	const coord_t need_height = object->GetTop() + object->GetHeight() + object->GetBottom() + margin.top + margin.bottom;
+	if ( need_height > GetHeight() ) {
+		//Log( "Growing height from " + std::to_string( GetHeight() ) + " to " + std::to_string( need_height ) );
+		SetHeight( need_height );
+	}
+}
+
+void UIContainer::ShrinkToFit() {
+	Vec2< coord_t > shrink_to = { 0.0f, 0.0f };
+	for ( auto& object : m_child_objects ) {
+		const auto& margin = object->GetMargin();
+		shrink_to.x = std::max< coord_t >( shrink_to.x, object->GetLeft() + object->GetWidth() + object->GetRight() + margin.left + margin.right );
+		shrink_to.y = std::max< coord_t >( shrink_to.y, object->GetTop() + object->GetHeight() + object->GetBottom() + margin.top + margin.bottom );
+	}
+	if ( GetWidth() > shrink_to.x ) {
+		//Log( "Shrinking width from " + std::to_string( GetWidth() ) + " to " + std::to_string( shrink_to.x ) );
+		SetWidth( shrink_to.x );
+	}
+	if ( GetHeight() > shrink_to.y ) {
+		//Log( "Shrinking height from " + std::to_string( GetHeight() ) + " to " + std::to_string( shrink_to.y ) );
+		SetHeight( shrink_to.y );
+	}
 }
 
 } /* namespace object */

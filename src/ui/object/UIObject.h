@@ -48,6 +48,7 @@ CLASS( UIObject, base::Base )
 
 	enum overflow_t {
 		OVERFLOW_VISIBLE, // Allow children to be rendered outside of this object (default)
+		OVERFLOW_VISIBLE_ALWAYS, // Render outside of object and override OVERFLOW_HIDDEN of parent
 		OVERFLOW_HIDDEN, // Hide parts of children that are outside of this object
 		OVERFLOW_GROW // Grow automatically when children are added
 	};
@@ -159,10 +160,12 @@ CLASS( UIObject, base::Base )
 	void HideDebugFrame() {}
 #endif
 	
+	void SetParentStyleObject( const UIContainer* object );
 	void ForwardStyleAttribute( const Style::attribute_type_t src_type, const Style::attribute_type_t dst_type );
 	void ForwardStyleAttribute( const Style::attribute_type_t type );
 	void ForwardStyleAttributesV( const std::vector< Style::attribute_type_t > type );
 	void ForwardStyleAttributesM( const std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > types );
+	void ForwardAllStyleAttributes();
 	
 	virtual void AddStyleModifier( const Style::modifier_t modifier );
 	virtual void RemoveStyleModifier( const Style::modifier_t modifier );
@@ -286,6 +289,8 @@ protected:
 	
 	virtual void ApplyStyle();
 	virtual void ReloadStyle();
+
+	void ApplyStyleIfNeeded();
 	
 	void ForwardStyleAttribute( const Style::attribute_type_t src_type, const Style::attribute_type_t dst_type, UIObject* child );
 	void ForwardStyleAttribute( const Style::attribute_type_t type, UIObject* child );
@@ -348,8 +353,9 @@ private:
 	std::string m_style_class = "";
 	bool m_style_loaded = false; // will load on first draw
 	const Style* m_style = nullptr;
+	const UIContainer* m_parent_style_object = nullptr;
 	std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_parent_style_attributes = {};
-	void ApplyStyleIfNeeded();
+	bool m_forward_all_style_attributes = false;
 	
 	const Style::attribute_type_t GetParentAttribute( const Style::attribute_type_t source_type ) const;
 	

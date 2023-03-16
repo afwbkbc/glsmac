@@ -14,6 +14,7 @@ void Panel::Create() {
 	
 	for ( auto& b : m_surfaces ) {
 		NEW( b.second, Surface );
+		b.second->SetOverflow( UIObject::OVERFLOW_VISIBLE_ALWAYS );
 		b.second->ForwardStyleAttribute( b.first, Style::A_TEXTURE );
 	}
 	

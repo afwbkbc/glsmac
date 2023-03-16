@@ -5,28 +5,25 @@
 namespace ui {
 namespace object {
 
-ScrollView::ScrollView( const std::string& class_name )
-	: Panel( class_name )
-{
-	
-}
-
 void ScrollView::Create() {
 	Panel::Create();
 	
 	NEW( m_viewport, UIContainer );
 		m_viewport->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
 		m_viewport->SetMargin( m_border_size );
-		//m_viewport->SetOverflow( UIObject::OVERFLOW_HIDDEN ); // TODO: fix so that it works here
+		m_viewport->SetOverflow( UIObject::OVERFLOW_HIDDEN );
 	Panel::AddChild( m_viewport );
 	
 	NEW( m_body, Panel );
 		m_body->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
-		m_body->SetLeft( -m_scroll.x );
-		m_body->SetTop( -m_scroll.y );
 		m_body->SetWidth( m_internal_size.x );
 		m_body->SetHeight( m_internal_size.y );
+		m_body->SetMargin( m_border_size );
 		m_body->SetOverflow( UIObject::OVERFLOW_GROW );
+		m_body->On( UIEvent::EV_RESIZE, EH( this ) {
+			m_need_body_refresh = true;
+			return true;
+		});
 	m_viewport->AddChild( m_body );
 	
 	const auto f_scroll_y = [ this ]( float target ) -> void {
@@ -64,13 +61,10 @@ void ScrollView::Create() {
 	
 	if ( !m_to_add.empty() ) {
 		for ( auto& child : m_to_add ) {
-			child->SetOverflowMargin( m_border_size );
-			m_body->AddChild( child );
+			AddChildToBody( child );
 		}
 		m_to_add.clear();
 	}
-	
-	m_viewport->SetOverflow( UIObject::OVERFLOW_HIDDEN );
 	
 	// TODO: make dragging global event
 	On( UIEvent::EV_MOUSE_DOWN, EH( this ) {
@@ -113,11 +107,19 @@ void ScrollView::Create() {
 		return false;
 	}, ::ui::UI::GH_BEFORE );
 
-	m_scroller.Scroll( m_scroll, m_scroll ); // small hack to initialize scrollbar a bit later
+	m_need_body_refresh = true;
 }
 
 void ScrollView::Iterate() {
 	Panel::Iterate();
+	
+	if ( m_need_body_refresh ) {
+		//Log( "Refreshing body" );
+		m_need_body_refresh = false;
+		m_scroller.Stop();
+		SetScroll( m_scroll, true );
+	}
+
 	
 	if ( !m_scroller.IsRunning() && m_need_stickyness ) {
 		m_need_stickyness = false;
@@ -137,7 +139,7 @@ void ScrollView::Destroy() {
 	
 	if ( !m_to_remove.empty() ) {
 		for ( auto& child : m_to_remove ) {
-			m_body->RemoveChild( child );
+			RemoveChildFromBody( child );
 		}
 		m_to_remove.clear();
 	}
@@ -152,8 +154,7 @@ void ScrollView::Destroy() {
 
 void ScrollView::AddChild( UIObject* object ) {
 	if ( m_body ) {
-		object->SetOverflowMargin( m_border_size );
-		m_body->AddChild( object );
+		AddChildToBody( object );
 	}
 	else {
 		m_to_add.push_back( object );
@@ -162,7 +163,7 @@ void ScrollView::AddChild( UIObject* object ) {
 
 void ScrollView::RemoveChild( UIObject* object ) {
 	if ( m_body ) {
-		m_body->RemoveChild( object );
+		RemoveChildFromBody( object );
 	}
 	else {
 		m_to_remove.push_back( object );
@@ -185,11 +186,11 @@ void ScrollView::SetHeight( const coord_t px ) {
 	}
 }
 
-void ScrollView::SetScroll( vertex_t px ) {
-	if ( m_scroll != px ) {
+void ScrollView::SetScroll( vertex_t px, const bool force ) {
+	if ( m_scroll != px || force ) {	
+		m_scroll = px;
+		const coord_box_t limits = GetScrollLimits();
 		if ( m_body ) {
-			m_scroll = px;
-			const coord_box_t limits = GetScrollLimits();
 			if ( m_scroll.x > limits.right ) {
 				m_scroll.x = limits.right;
 			}
@@ -206,16 +207,16 @@ void ScrollView::SetScroll( vertex_t px ) {
 			m_body->SetLeft( -m_scroll.x );
 			m_body->SetTop( -m_scroll.y );
 			
-			if ( m_scrollbar ) {
-				const auto& area = GetInternalObjectArea();
-				const auto& body_area = m_body->GetObjectArea();
-				if ( body_area.height > area.height ) {
-					m_scrollbar->Show();
-					m_scrollbar->SetPercentage( (float)m_scroll.y / ( limits.bottom - limits.top ) * 100.0f );
-				}
-				else {
-					m_scrollbar->Hide();
-				}
+		}
+		if ( m_scrollbar ) {
+			const auto& area = GetInternalObjectArea();
+			const auto& body_area = m_body->GetObjectArea();
+			if ( body_area.height > area.height ) {
+				m_scrollbar->Show();
+				m_scrollbar->SetPercentage( (float)m_scroll.y / ( limits.bottom - limits.top ) * 100.0f );
+			}
+			else {
+				m_scrollbar->Hide();
 			}
 		}
 	}
@@ -227,6 +228,10 @@ void ScrollView::SetScrollX( const coord_t px ) {
 
 void ScrollView::SetScrollY( const coord_t px ) {
 	SetScroll({ m_scroll.x, px });
+}
+
+void ScrollView::SetScrollSpeed( const size_t scroll_speed ) {
+	m_scroll_speed = scroll_speed;
 }
 
 void ScrollView::SetInternalWidth( const coord_t px ) {
@@ -263,6 +268,27 @@ const UIObject::coord_box_t ScrollView::GetScrollLimits() {
 		body_area.width - area.width + m_border_size * 2, // right
 		body_area.height - area.height + m_border_size * 2 // bottom
 	};
+}
+
+void ScrollView::AddChildToBody( UIObject* child ) {
+	//child->SetOverflowMargin( m_border_size );
+	child->SetParentStyleObject( this );
+	m_body->AddChild( child );
+	FixScrollY();
+}
+
+void ScrollView::RemoveChildFromBody( UIObject* child ) {
+	m_body->RemoveChild( child );
+	FixScrollY();
+}
+
+void ScrollView::FixScrollY() {
+	const auto limits = GetScrollLimits();
+	float scroll_y = ( limits.bottom - limits.top ) * m_scrollbar->GetPercentage() / 100.0f;
+	//if ( m_is_sticky ) {
+		//scroll_y = (ssize_t)round( scroll_y ) / (ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed;
+	//}
+	SetScrollY( scroll_y );
 }
 
 }

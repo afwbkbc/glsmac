@@ -26,6 +26,7 @@ CLASS( Scrollbar, UIContainer )
 	void Destroy();
 	
 	void SetPercentage( const float percentage );
+	const float GetPercentage() const;
 
 private:
 	

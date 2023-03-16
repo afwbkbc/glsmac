@@ -21,7 +21,7 @@ CLASS( ScrollView, Panel )
 		} smooth_scrolling;
 	};
 	
-	ScrollView( const std::string& class_name = "" );
+	ScrollView( const std::string& class_name = "" ) : Panel( class_name ) {}
 
 	virtual void Create();
 	virtual void Iterate();
@@ -33,9 +33,11 @@ CLASS( ScrollView, Panel )
 	void SetWidth( const coord_t px );
 	void SetHeight( const coord_t px );
 	
-	void SetScroll( vertex_t px );
+	void SetScroll( vertex_t px, const bool force = false );
 	void SetScrollX( const coord_t px );
 	void SetScrollY( const coord_t px );
+	
+	void SetScrollSpeed( const size_t scroll_speed );
 	
 	void SetInternalWidth( const coord_t px );
 	void SetInternalHeight( const coord_t px );
@@ -62,12 +64,18 @@ private:
 	UIContainer* m_viewport = nullptr;
 	Panel* m_body = nullptr;
 	
+	bool m_need_body_refresh = false;
+	
 	bool m_is_dragging = false;
 	Vec2< ssize_t > m_drag_start_position = { 0, 0 };
 	struct {
 		const UIEventHandler* mouse_up;
 		const UIEventHandler* mouse_move;
 	} m_handlers;
+	
+	void AddChildToBody( UIObject* child );
+	void RemoveChildFromBody( UIObject* child );
+	void FixScrollY();
 };
 
 }

@@ -72,11 +72,13 @@ void Section::Destroy() {
 
 void Section::ApplyStyle() {
 	
-	if ( Has( Style::A_HEADER_HEIGHT ) && !m_title_text.empty() ) {
-		m_body->SetTop( Get( Style::A_HEADER_HEIGHT ) + 2 );
-	}
-	else {
-		m_body->SetTop( 0 );
+	if ( m_body ) {
+		if ( Has( Style::A_HEADER_HEIGHT ) && !m_title_text.empty() ) {
+			m_body->SetTop( Get( Style::A_HEADER_HEIGHT ) + 2 );
+		}
+		else {
+			m_body->SetTop( 0 );
+		}
 	}
 
 	UIContainer::ApplyStyle();

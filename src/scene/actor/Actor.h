@@ -44,6 +44,7 @@ CLASS( Actor, Entity )
 	
 	typedef std::pair< types::Vec3, types::Vec3 > area_limits_t;
 	void SetAreaLimits( const area_limits_t limits );
+	void RemoveAreaLimits();
 	const area_limits_t& GetAreaLimits() const;
 	
 	typedef uint32_t render_flag_t;

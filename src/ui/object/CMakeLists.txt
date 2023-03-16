@@ -2,6 +2,7 @@ SET(SRC ${SRC}
 
 	${PWD}/Scrollbar.cpp
 	${PWD}/ScrollView.cpp
+	${PWD}/TextView.cpp
 	${PWD}/Section.cpp
 	${PWD}/ChoiceList.cpp
 	${PWD}/Input.cpp

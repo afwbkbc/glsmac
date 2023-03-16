@@ -168,7 +168,7 @@ void BottomBar::AddStyles() {
 	
 	AddStyle( "MiddleArea", SH() {
 		s->Set( ::Style::A_LEFT, 262 );
-		s->Set( ::Style::A_TOP, 68 );
+		s->Set( ::Style::A_TOP, 67 );
 		s->Set( ::Style::A_RIGHT, 262 );
 		s->Set( ::Style::A_BOTTOM, 85 );
 	});
@@ -213,10 +213,19 @@ void BottomBar::AddStyles() {
 	});
 	
 	AddStyle( "MiddleAreaMessagesList", { "SectionInner" }, SH() {
+		
 		s->Set( ::Style::A_LEFT, 0 );
 		s->Set( ::Style::A_TOP, 0 );
 		s->Set( ::Style::A_RIGHT, 0 );
 		s->Set( ::Style::A_BOTTOM, 0 );
+		
+		// items
+		s->Set( Style::A_ITEM_HEIGHT, 17 ); // TODO: auto-size
+		s->Set( Style::A_ITEM_WIDTH, 440 ); // TODO: auto-size
+		s->Set( Style::A_ITEM_MARGIN, 0 ); // TODO: fix alignment if non-zero
+		s->Set( Style::A_TEXTALIGN, UIObject::ALIGN_LEFT );
+		s->SetFont( ::Style::A_FONT, "arialn.ttf", 16 );
+		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 60, 148, 124 ) );
 	});
 	
 	// toolbar page

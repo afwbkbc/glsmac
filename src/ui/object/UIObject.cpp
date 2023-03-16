@@ -75,7 +75,7 @@ void UIObject::Iterate() {
 }
 
 void UIObject::Align() {
-	
+	UpdateAreaLimits();
 }
 
 void UIObject::Draw() {
@@ -200,14 +200,29 @@ void UIObject::ForwardStyleAttributesM( const std::unordered_map< Style::attribu
 	ReloadStyle();
 }
 
+void UIObject::ForwardAllStyleAttributes() {
+	m_forward_all_style_attributes = true;
+	ReloadStyle();
+}
+
+void UIObject::SetParentStyleObject( const UIContainer* object ) {
+	ASSERT( !m_parent_style_object, "parent style object already set" );
+	m_parent_style_object = object;
+}
+
 bool UIObject::Has( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const {
 	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
 		return true;
 	}
+	const UIContainer* style_object = m_parent_style_object ? m_parent_style_object : m_parent_object;
+	if ( m_forward_all_style_attributes ) {
+		ASSERT( style_object, "parent style attributes requested but parent is not set" );
+		return style_object->Has( attribute_type, style_modifiers );
+	}
 	auto it = m_parent_style_attributes.find( attribute_type );
 	if ( it != m_parent_style_attributes.end() ) {
-		ASSERT( m_parent_object, "parent style attributes requested but parent is not set" );
-		return m_parent_object->Has( it->second, style_modifiers );
+		ASSERT( style_object, "parent style attributes requested but parent is not set" );
+		return style_object->Has( it->second, style_modifiers );
 	}
 	return false;
 }
@@ -219,8 +234,9 @@ const float UIObject::Get( const Style::attribute_type_t attribute_type, const S
 	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
 		return m_style->Get( attribute_type, style_modifiers );
 	}
-	ASSERT( m_parent_object, "parent style attributes requested but parent is not set" );
-	return m_parent_object->Get( GetParentAttribute( attribute_type ), style_modifiers );
+	const UIContainer* style_object = m_parent_style_object ? m_parent_style_object : m_parent_object;
+	ASSERT( style_object, "parent style attributes requested but parent is not set" );
+	return style_object->Get( GetParentAttribute( attribute_type ), style_modifiers );
 }
 const float UIObject::Get( const Style::attribute_type_t attribute_type ) const {
 	return Get( attribute_type, m_style_modifiers );
@@ -230,8 +246,9 @@ const Color UIObject::GetColor( const Style::attribute_type_t attribute_type, co
 	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
 		return m_style->GetColor( attribute_type, style_modifiers );
 	}
-	ASSERT( m_parent_object, "parent style attributes requested but parent is not set" );
-	return m_parent_object->GetColor( GetParentAttribute( attribute_type ), style_modifiers );
+	const UIContainer* style_object = m_parent_style_object ? m_parent_style_object : m_parent_object;
+	ASSERT( style_object, "parent style attributes requested but parent is not set" );
+	return style_object->GetColor( GetParentAttribute( attribute_type ), style_modifiers );
 }
 const Color UIObject::GetColor( const Style::attribute_type_t attribute_type ) const {
 	return GetColor( attribute_type, m_style_modifiers );
@@ -241,8 +258,9 @@ const void* UIObject::GetObject( const Style::attribute_type_t attribute_type, c
 	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
 		return m_style->GetObject( attribute_type, style_modifiers );
 	}
-	ASSERT( m_parent_object, "parent style attributes requested but parent is not set" );
-	return m_parent_object->GetObject( GetParentAttribute( attribute_type ), style_modifiers );
+	const UIContainer* style_object = m_parent_style_object ? m_parent_style_object : m_parent_object;
+	ASSERT( style_object, "parent style attributes requested but parent is not set" );
+	return style_object->GetObject( GetParentAttribute( attribute_type ), style_modifiers );
 }
 const void* UIObject::GetObject( const Style::attribute_type_t attribute_type ) const {
 	return GetObject( attribute_type, m_style_modifiers );
@@ -267,6 +285,7 @@ void UIObject::RemoveActor( Actor* actor ) {
 }
 
 void UIObject::EnableActors() {
+	UpdateAreaLimits();
 	for ( auto& actor : m_actors ) {
 		GetSceneOfActor( actor )->AddActor( actor );
 	}
@@ -325,14 +344,27 @@ bool UIObject::IsEventContextOverridden( event_context_t context ) const {
 void UIObject::RealignNow() {
 	if ( !m_are_realigns_blocked ) {
 		m_is_realign_needed = false;
+		const auto object_area_old = GetObjectArea();
 		UpdateObjectArea();
 		if ( m_created ) {
 			Align();
+			if ( m_parent_object ) {
+				m_parent_object->GrowFromObjectMaybe( this );
+				//m_parent_object->ShrinkToFitMaybe(); // TODO: make it work
+			}
 		}
 		for ( auto& child : m_area_limits.child_objects ) {
 			child->UpdateAreaLimits();
 		}
 		Refresh();
+		const auto& object_area_new = GetObjectArea();
+		if (
+			round( object_area_old.width ) != round( object_area_new.width ) ||
+			round( object_area_old.height ) != round( object_area_new.height )
+		) {
+			UIEvent::event_data_t d = {};
+			Trigger( UIEvent::EV_RESIZE, &d );
+		}
 	}
 }
 
@@ -819,7 +851,7 @@ void UIObject::TestBreakpoint() {
 void UIObject::ApplyStyleIfNeeded() {
 	if ( !m_style_loaded ) {
 		if ( m_created ) {
-			if ( !m_style_class.empty() || !m_parent_style_attributes.empty() ) {
+			if ( !m_style_class.empty() || !m_parent_style_attributes.empty() || m_forward_all_style_attributes ) {
 				if ( !m_style && !m_style_class.empty() ) {
 					m_style = g_engine->GetUI()->GetStyle( m_style_class );
 				}
@@ -901,9 +933,12 @@ bool UIObject::Trigger( const UIEvent::event_type_t type, const UIEvent::event_d
 }
 
 const Style::attribute_type_t UIObject::GetParentAttribute( const Style::attribute_type_t source_type ) const {
+	if ( m_forward_all_style_attributes ) {
+		return source_type;
+	}
 	auto it = m_parent_style_attributes.find( source_type );
 	ASSERT( it != m_parent_style_attributes.end(), "could not get attribute neither from style nor from parent attributes" );
-	ASSERT( m_parent_object,  "parent is gone" );
+	ASSERT( m_parent_style_object ? m_parent_style_object : m_parent_object,  "parent is gone" );
 	return it->second;
 }
 
@@ -982,6 +1017,7 @@ void UIObject::Show() {
 void UIObject::ShowActors() {
 	if ( m_is_visible && !m_is_actually_visible ) {
 		m_is_actually_visible = true;
+		UpdateAreaLimits();
 		for ( auto& actor : m_actors ) {
 			actor->Show();
 		}
@@ -1064,7 +1100,7 @@ void UIObject::Refresh() {
 }
 
 void UIObject::UpdateAreaLimits() {
-	if ( m_area_limits.enabled ) {
+	if ( m_area_limits.enabled && GetOverflow() != OVERFLOW_VISIBLE_ALWAYS ) {
 		if ( m_area_limits.source_object ) {
 			const auto area = m_area_limits.source_object->GetInternalObjectArea();
 			m_area_limits.limits = {
@@ -1081,6 +1117,11 @@ void UIObject::UpdateAreaLimits() {
 		//Log( "Setting area limits to " + limits.first.ToString() + " -> " + limits.second.ToString() );
 		for ( auto& actor : m_actors ) {
 			actor->SetAreaLimits( limits );
+		}
+	}
+	else {
+		for ( auto& actor : m_actors ) {
+			actor->RemoveAreaLimits();
 		}
 	}
 }

@@ -48,6 +48,11 @@ CLASS( UIContainer, UIObject )
 	virtual void ShowActors();
 	virtual void HideActors();
 	
+	void GrowFromObjectMaybe( UIObject *object );
+	void ShrinkToFitMaybe();
+	
+	void UpdateAreaLimits();
+	
 protected:
 	virtual void ApplyStyle();
 	virtual void ReloadStyle();
@@ -64,6 +69,12 @@ protected:
 private:
 	void CreateChild( UIObject *object );
 	void DestroyChild( UIObject *object );
+
+	void GrowFromObject( UIObject *object );
+	
+	void ShrinkToObject( UIObject *object );
+	void ShrinkToFit();
+
 };
 
 } /* namespace object */

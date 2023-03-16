@@ -9,31 +9,30 @@ namespace ui {
 void Messages::Create() {
 	MiddleAreaPage::Create();
 	
-	NEW( m_messages_list, object::ScrollView, "MapBottomBarMiddleAreaMessagesList" );
+	NEW( m_messages_list, object::TextView, "MapBottomBarMiddleAreaMessagesList" );
+		m_messages_list->SetLinesLimit( 20 );
+	AddChild( m_messages_list );
+
+	// for testing
+	m_test_timer.SetInterval( 200 );
+	/*for ( auto i = 1 ; i <= 15 ; i++ ) {
+		m_messages_list->AddLine( "SCROLLVIEW TEST LINE " + std::to_string( i ) );
+	}*/
+	
+
+}
+
+void Messages::Iterate() {
+	MiddleAreaPage::Iterate();
 	
 	// for testing
-	auto* test_font = g_engine->GetFontLoader()->LoadFont( "arialn.ttf", 16 );
-	for ( auto i = 1 ; i <= 15 ; i++ ) {
-		NEWV( label, object::Label );
-		label->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
-		label->SetFont( test_font );
-		label->SetTextColor( Color::FromRGB( 255, 255, 255 ) );
-		label->SetText( "SCROLLVIEW TEST LINE " + std::to_string( i ) );
-		label->SetLeft( 2 );
-		label->SetTop( 1 + ( i - 1 ) * 17 );
-		m_messages_labels.push_back( label );
-		m_messages_list->AddChild( label );
+	while ( m_test_timer.HasTicked () ) {
+		m_messages_list->AddLine( "SCROLLVIEW TEST LINE " + std::to_string( rand() % 99999999 ) );
 	}
-	
-	AddChild( m_messages_list );
+
 }
 
 void Messages::Destroy() {
-	
-	for ( auto& label : m_messages_labels ) {
-		m_messages_list->RemoveChild( label );
-	}
-	m_messages_labels.clear();
 	
 	RemoveChild( m_messages_list );
 	

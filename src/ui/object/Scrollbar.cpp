@@ -145,6 +145,10 @@ void Scrollbar::SetPercentage( const float percentage ) {
 	}
 }
 
+const float Scrollbar::GetPercentage() const {
+	return m_percentage;
+}
+
 void Scrollbar::ProcessArrowScroll() {
 	// emulate mouse scroll
 	UIEvent::event_data_t d = {};

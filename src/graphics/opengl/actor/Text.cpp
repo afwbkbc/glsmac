@@ -36,8 +36,6 @@ void Text::Update( Font* font, const std::string& text, const float x, const flo
 	
 	if ( need_reload ) {
 
-		ASSERT( font, "font is null" );
-		
 		if ( m_font != font ) {
 			//Log( "Changing font from " + m_font->m_name + " to " + font->m_name );
 			m_font = font;
@@ -51,60 +49,63 @@ void Text::Update( Font* font, const std::string& text, const float x, const flo
 			//Log( "Resizing for window size " + window_size.ToString() );
 			m_last_window_size = window_size;
 		}
-	
-		if ( !m_texture ) {
-			NEW( m_texture, FontTexture, m_font );
-		}
 		
-		const float sx = 2.0 / g_engine->GetGraphics()->GetViewportWidth();
-		const float sy = 2.0 / g_engine->GetGraphics()->GetViewportHeight();	
+		if ( m_font ) {
+	
+			if ( !m_texture ) {
+				NEW( m_texture, FontTexture, m_font );
+			}
 
-		std::vector<vertex_box_t> boxes = {};
+			const float sx = 2.0 / g_engine->GetGraphics()->GetViewportWidth();
+			const float sy = 2.0 / g_engine->GetGraphics()->GetViewportHeight();	
 
-		for ( int sym = 32; sym < 128; sym++ ) {
-			boxes.clear();
+			std::vector<vertex_box_t> boxes = {};
+
+			for ( int sym = 32; sym < 128; sym++ ) {
+				boxes.clear();
+			}
+
+			float cx = 0;
+			float cy = 0;
+
+			Font::bitmap_t *bitmap = nullptr;
+			for ( const char *p = m_text.c_str(); *p; p++ ) {
+				unsigned char sym = (unsigned char)*p;
+
+				ASSERT( sym >= 32 && sym < 128, "unexpected font character " + std::to_string( sym ) );
+
+				bitmap = &m_font->m_symbols[sym];
+
+				float x2 = cx + bitmap->left * sx;
+				float y2 = -cy - bitmap->top * sy;
+				float w = bitmap->width * sx;
+				float h = bitmap->height * sy;
+
+				float tbx1 = m_texture->m_tx[sym];
+				float tby1 = m_texture->m_ty[sym];
+				float tbx2 = m_texture->m_tx[sym] + bitmap->width / m_font->m_dimensions.width;
+				float tby2 = m_texture->m_ty[sym] + bitmap->height / m_font->m_dimensions.height;
+
+				boxes.push_back({
+					{x2,     -y2    , tbx1, tby1},
+					{x2 + w, -y2    , tbx2, tby1},
+					{x2,     -y2 - h, tbx1, tby2},
+					{x2 + w, -y2 - h, tbx2, tby2},
+				});
+
+				cx += bitmap->ax * sx;
+				cy += bitmap->ay * sy;
+			}
+
+			glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
+			m_boxes_count = boxes.size();
+
+			if ( !boxes.empty() ) {
+				glBufferData( GL_ARRAY_BUFFER, sizeof(vertex_box_t) * boxes.size(), boxes.data(), GL_STATIC_DRAW );
+			}
+
+			glBindBuffer( GL_ARRAY_BUFFER, 0 );
 		}
-
-		float cx = 0;
-		float cy = 0;
-
-		Font::bitmap_t *bitmap = nullptr;
-		for ( const char *p = m_text.c_str(); *p; p++ ) {
-			unsigned char sym = (unsigned char)*p;
-
-			ASSERT( sym >= 32 && sym < 128, "unexpected font character " + std::to_string( sym ) );
-
-			bitmap = &m_font->m_symbols[sym];
-
-			float x2 = cx + bitmap->left * sx;
-			float y2 = -cy - bitmap->top * sy;
-			float w = bitmap->width * sx;
-			float h = bitmap->height * sy;
-
-			float tbx1 = m_texture->m_tx[sym];
-			float tby1 = m_texture->m_ty[sym];
-			float tbx2 = m_texture->m_tx[sym] + bitmap->width / m_font->m_dimensions.width;
-			float tby2 = m_texture->m_ty[sym] + bitmap->height / m_font->m_dimensions.height;
-
-			boxes.push_back({
-				{x2,     -y2    , tbx1, tby1},
-				{x2 + w, -y2    , tbx2, tby1},
-				{x2,     -y2 - h, tbx1, tby2},
-				{x2 + w, -y2 - h, tbx2, tby2},
-			});
-
-			cx += bitmap->ax * sx;
-			cy += bitmap->ay * sy;
-		}
-
-		glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
-		m_boxes_count = boxes.size();
-
-		if ( !boxes.empty() ) {
-			glBufferData( GL_ARRAY_BUFFER, sizeof(vertex_box_t) * boxes.size(), boxes.data(), GL_STATIC_DRAW );
-		}
-
-		glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	}
 	
 	if ( m_coords.x != x || m_coords.y != y ) {

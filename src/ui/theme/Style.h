@@ -109,6 +109,11 @@ CLASS( Style, base::Base )
 		A_HEADER_TEXTURE_RIGHTBOTTOM,
 		A_HEADER_TEXTURE_LEFTBOTTOM,
 		
+		// lists etc
+		A_ITEM_HEIGHT,
+		A_ITEM_WIDTH,
+		A_ITEM_MARGIN,
+		
 		// must be last
 		ATTRIBUTE_TYPE_MAX
 	};
