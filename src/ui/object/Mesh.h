@@ -56,6 +56,7 @@ protected:
 	coord_t m_last_margin = 0;
 	types::mesh::Mesh* m_last_mesh = nullptr;
 	Vec2< size_t > m_last_texture_size = { 0, 0 };
+	size_t m_last_mesh_updated_count = 0;
 	
 	void UpdateRenderFlags();
 };

@@ -850,18 +850,16 @@ void UIObject::TestBreakpoint() {
 
 void UIObject::ApplyStyleIfNeeded() {
 	if ( !m_style_loaded ) {
-		if ( m_created ) {
-			if ( !m_style_class.empty() || !m_parent_style_attributes.empty() || m_forward_all_style_attributes ) {
-				if ( !m_style && !m_style_class.empty() ) {
-					m_style = g_engine->GetUI()->GetStyle( m_style_class );
-				}
-				BlockRealigns();
-				ApplyStyle();
-				UnblockRealigns();
-				Realign();
+		if ( !m_style_class.empty() || !m_parent_style_attributes.empty() || m_forward_all_style_attributes ) {
+			if ( !m_style && !m_style_class.empty() ) {
+				m_style = g_engine->GetUI()->GetStyle( m_style_class );
 			}
-			m_style_loaded = true;
+			BlockRealigns();
+			ApplyStyle();
+			UnblockRealigns();
+			Realign();
 		}
+		m_style_loaded = true;
 	}
 }
 

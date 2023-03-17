@@ -220,8 +220,7 @@ void BottomBar::AddStyles() {
 		s->Set( ::Style::A_BOTTOM, 0 );
 		
 		// items
-		s->Set( Style::A_ITEM_HEIGHT, 17 ); // TODO: auto-size
-		s->Set( Style::A_ITEM_WIDTH, 440 ); // TODO: auto-size
+		s->Set( Style::A_ITEM_HEIGHT, 17 ); // TODO: auto-size?
 		s->Set( Style::A_ITEM_MARGIN, 0 ); // TODO: fix alignment if non-zero
 		s->Set( Style::A_TEXTALIGN, UIObject::ALIGN_LEFT );
 		s->SetFont( ::Style::A_FONT, "arialn.ttf", 16 );

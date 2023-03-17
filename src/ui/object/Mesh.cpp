@@ -155,9 +155,9 @@ void Mesh::Align() {
 	m_actor->SetPositionY( ClampY( m_object_area.top ) - 1.0f );
 	
 	bool need_resize = false;
-	if (
-		m_last_object_area.width != m_object_area.width ||
-		m_last_object_area.height != m_object_area.height
+	if ( // TODO: make object areas ints?
+		round( m_last_object_area.width ) != round( m_object_area.width ) ||
+		round( m_last_object_area.height ) != round( m_object_area.height )
 	) {
 		//Log( "Resizing because object area has changed ( " + std::to_string( m_last_object_area.width ) + " != " + std::to_string( m_object_area.width ) + " || " + std::to_string( m_last_object_area.height ) + " != " + std::to_string( m_object_area.height ) + " )" );
 		m_last_object_area = m_object_area;
@@ -172,8 +172,13 @@ void Mesh::Align() {
 		need_resize = true;
 	}
 	if ( m_last_mesh != m_mesh ) {
-		//Log( "Resizing because mesh has changed" );
+		//Log( "Resizing because mesh has been replaced" );
 		m_last_mesh = m_mesh;
+		need_resize = true;
+	}
+	if ( m_last_mesh_updated_count != m_original_mesh->UpdatedCount() ) {
+		//Log( "Resizing because mesh has changed" );
+		m_last_mesh_updated_count = m_original_mesh->UpdatedCount();
 		need_resize = true;
 	}
 	if ( m_force_resize ) {

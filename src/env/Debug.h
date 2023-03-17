@@ -180,8 +180,9 @@ extern debug_stats_t g_debug_stats;
 		THROW( _text ); \
 	}
 
-#define TEST_THIS( _obj ) _obj->SetTesting( true )
-#define TEST_HERE( _obj ) _obj->TestBreakpoint()
-#define TESTING( _obj ) _obj->IsTesting()
+#define TEST_OBJECT( _obj ) _obj->SetTesting( true )
+#define UNTEST_OBJECT( _obj ) _obj->SetTesting( false )
+#define TEST_BREAKPOINT( _obj ) _obj->TestBreakpoint()
+#define IS_TESTING( _obj ) _obj->IsTesting()
 
 #endif
