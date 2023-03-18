@@ -13,10 +13,6 @@ namespace ui {
 	
 CLASS( Toolbar, MiddleAreaPage )
 	
-	static constexpr uint8_t s_tool_button_width = 44; // also includes margin
-	static constexpr uint8_t s_tool_button_height = 19; // also includes margin
-	static constexpr uint8_t s_tool_buttons_in_row = 5;
-
 	Toolbar( World* world ) : MiddleAreaPage( world, "Toolbar" ) {}
 
 	void Create();
@@ -27,6 +23,10 @@ private:
 
 	// tools
 	
+	static constexpr uint8_t s_tool_button_width = 44; // also includes margin
+	static constexpr uint8_t s_tool_button_height = 19; // also includes margin
+	static constexpr uint8_t s_tool_buttons_in_row = 5;
+
 	enum editing_tool_t {
 		ET_NONE,
 		
@@ -62,6 +62,7 @@ private:
 	
 	// note: those are also used for button class name
 	const std::unordered_map< editing_tool_t, std::string > m_tool_names = {
+		{ ET_NONE, "None" },
 		{ ET_ELEVATIONS, "Elevations" },
 		{ ET_MOISTURE, "Moisture" },
 		{ ET_FOREST, "Forest" },
@@ -94,6 +95,42 @@ private:
 	
 	void SelectTool( editing_tool_t tool );
 	
+	// brushes
+	
+	static constexpr uint8_t s_brush_button_width = 25; // also includes margin
+	static constexpr uint8_t s_brush_button_height = 25; // also includes margin
+	static constexpr uint8_t s_brush_buttons_in_column = 3;
+
+	enum editing_brush_t {
+		EB_NONE,
+		
+		EB_DOT,
+		EB_CROSS,
+		EB_SQUARE_3_3,
+		EB_SQUARE_5_5,
+		EB_SQUARE_7_7,
+		EB_SQUARE_9_9,
+		
+		EB_MAX
+	};
+	editing_brush_t m_active_brush = EB_NONE;
+
+	// note: those are also used for button class name
+	const std::unordered_map< editing_brush_t, std::string > m_brush_names = {
+		{ EB_NONE, "None" },
+		{ EB_DOT, "Dot" },
+		{ EB_CROSS, "Cross" },
+		{ EB_SQUARE_3_3, "Square 3x3" },
+		{ EB_SQUARE_5_5, "Square 5x5" },
+		{ EB_SQUARE_7_7, "Square 7x7" },
+		{ EB_SQUARE_9_9, "Square 9x9" }
+	};
+	
+	std::vector< ::ui::object::SimpleButton* > m_brush_buttons = {};
+	::ui::object::SimpleButton* m_active_brush_button = nullptr;
+	
+	void SelectBrush( editing_brush_t brush );
+
 };
 
 }

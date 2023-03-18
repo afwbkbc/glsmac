@@ -233,97 +233,125 @@ void BottomBar::AddStyles() {
 		
 	});
 	
-	const auto f_toolbar_button_texture = [] ( Style* s, const size_t tx, const size_t ty, bool fix_weird_lines = false ) -> void {
-		
+	const auto f_toolbar_button_texture = [] ( Style* s, const size_t tx, const size_t ty, const size_t xsize, const size_t ysize ) -> void {
 		if ( s->Is( ::Style::M_ACTIVE ) || s->Is( ::Style::M_SELECTED ) ) {
-			s->SetTexture( ::Style::A_TEXTURE, "interface.pcx", tx, ty + 38, tx + 42, ty + 55 );
+			s->SetTexture( ::Style::A_TEXTURE, "interface.pcx", tx, ty + ( ysize + 1 ) * 2, tx + xsize - 1, ty + ( ysize - 1 ) + ( ysize + 1 ) * 2 );
 		}
 		else if ( s->Is( ::Style::M_HOVER ) ) {
-			s->SetTexture( ::Style::A_TEXTURE, "interface.pcx", tx, ty + 19, tx + 42, ty + 36 );
+			s->SetTexture( ::Style::A_TEXTURE, "interface.pcx", tx, ty + ( ysize + 1 ), tx + xsize - 1, ty + ( ysize - 1 ) + ( ysize + 1 ) );
 		}
 		else {
-			s->SetTexture( ::Style::A_TEXTURE, "interface.pcx", tx, ty, tx + 42, ty + 17 );
+			s->SetTexture( ::Style::A_TEXTURE, "interface.pcx", tx, ty, tx + xsize - 1, ty + ( ysize - 1 ) );
 		}
-	};
+	};	
 	
-	AddStyle( "MiddleAreaToolbarButton", SH() {
+	const auto f_toolbar_tool_button_texture = [ f_toolbar_button_texture ] ( Style* s, const size_t tx, const size_t ty ) -> void {
+		f_toolbar_button_texture( s, tx, ty, 43, 18 );
+	};
+	AddStyle( "MiddleAreaToolbarButton Tool", SH() {
 		s->Set( ::Style::A_WIDTH, 43 );
 		s->Set( ::Style::A_HEIGHT, 18 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Elevations", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 350, 245 );
+	AddStyle( "MiddleAreaToolbarButton Tool Elevations", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 350, 245 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Moisture", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 702, 302 );
+	AddStyle( "MiddleAreaToolbarButton Tool Moisture", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 702, 302 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Forest", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 438, 302 );
+	AddStyle( "MiddleAreaToolbarButton Tool Forest", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 438, 302 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Sensor Array", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 658, 302 );
+	AddStyle( "MiddleAreaToolbarButton Tool Sensor Array", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 658, 302 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Monolith", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 526, 359 );
+	AddStyle( "MiddleAreaToolbarButton Tool Monolith", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 526, 359 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Rockiness", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 394, 245 );
+	AddStyle( "MiddleAreaToolbarButton Tool Rockiness", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 394, 245 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Farm", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 614, 245 );
+	AddStyle( "MiddleAreaToolbarButton Tool Farm", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 614, 245 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Road", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 482, 302 );
+	AddStyle( "MiddleAreaToolbarButton Tool Road", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 482, 302 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Fungus", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 350, 359 );
+	AddStyle( "MiddleAreaToolbarButton Tool Fungus", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 350, 359 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Jungle", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 570, 359 );
+	AddStyle( "MiddleAreaToolbarButton Tool Jungle", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 570, 359 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Rivers", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 438, 245 );
+	AddStyle( "MiddleAreaToolbarButton Tool Rivers", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 438, 245 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Soil Enricher", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 658, 245 );
+	AddStyle( "MiddleAreaToolbarButton Tool Soil Enricher", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 658, 245 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Mag Tube", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 526, 302 );
+	AddStyle( "MiddleAreaToolbarButton Tool Mag Tube", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 526, 302 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Condenser", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 394, 359 );
+	AddStyle( "MiddleAreaToolbarButton Tool Condenser", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 394, 359 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Dunes", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 614, 359 );
+	AddStyle( "MiddleAreaToolbarButton Tool Dunes", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 614, 359 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Resources", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 482, 245 );
+	AddStyle( "MiddleAreaToolbarButton Tool Resources", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 482, 245 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Mine", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 350, 302 );
+	AddStyle( "MiddleAreaToolbarButton Tool Mine", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 350, 302 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Bunker", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 570, 302 );
+	AddStyle( "MiddleAreaToolbarButton Tool Bunker", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 570, 302 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Echelon Mirror", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 438, 359 );
+	AddStyle( "MiddleAreaToolbarButton Tool Echelon Mirror", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 438, 359 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Uranium", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 658, 359 );
+	AddStyle( "MiddleAreaToolbarButton Tool Uranium", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 658, 359 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Unity Pods", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 526, 245 );
+	AddStyle( "MiddleAreaToolbarButton Tool Unity Pods", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 526, 245 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Solar Collector", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 394, 302 );
+	AddStyle( "MiddleAreaToolbarButton Tool Solar Collector", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 394, 302 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Airbase", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 614, 302 );
+	AddStyle( "MiddleAreaToolbarButton Tool Airbase", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 614, 302 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Thermal Borehole", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 482, 359 );
+	AddStyle( "MiddleAreaToolbarButton Tool Thermal Borehole", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 482, 359 );
 	});
-	AddStyle( "MiddleAreaToolbarButton Geothermal", { "MiddleAreaToolbarButton" }, SH( f_toolbar_button_texture ) {
-		f_toolbar_button_texture( s, 350, 416 );
+	AddStyle( "MiddleAreaToolbarButton Tool Geothermal", { "MiddleAreaToolbarButton Tool" }, SH( f_toolbar_tool_button_texture ) {
+		f_toolbar_tool_button_texture( s, 350, 416 );
+	});
+	
+	AddStyle( "MiddleAreaToolbarButton Brush", SH() {
+		s->Set( ::Style::A_WIDTH, 24 );
+		s->Set( ::Style::A_HEIGHT, 24 );
+	});
+	const auto f_toolbar_brush_button_texture = [ f_toolbar_button_texture ] ( Style* s, const size_t tx, const size_t ty ) -> void {
+		f_toolbar_button_texture( s, tx, ty, 24, 24 );
+	};
+	AddStyle( "MiddleAreaToolbarButton Brush Dot", { "MiddleAreaToolbarButton Brush" }, SH( f_toolbar_brush_button_texture ) {
+		f_toolbar_brush_button_texture( s, 465, 438 );
+	});
+	AddStyle( "MiddleAreaToolbarButton Brush Cross", { "MiddleAreaToolbarButton Brush" }, SH( f_toolbar_brush_button_texture ) {
+		f_toolbar_brush_button_texture( s, 490, 438 );
+	});
+	AddStyle( "MiddleAreaToolbarButton Brush Square 3x3", { "MiddleAreaToolbarButton Brush" }, SH( f_toolbar_brush_button_texture ) {
+		f_toolbar_brush_button_texture( s, 515, 438 );
+	});
+	AddStyle( "MiddleAreaToolbarButton Brush Square 5x5", { "MiddleAreaToolbarButton Brush" }, SH( f_toolbar_brush_button_texture ) {
+		f_toolbar_brush_button_texture( s, 540, 438 );
+	});
+	AddStyle( "MiddleAreaToolbarButton Brush Square 7x7", { "MiddleAreaToolbarButton Brush" }, SH( f_toolbar_brush_button_texture ) {
+		f_toolbar_brush_button_texture( s, 565, 438 );
+	});
+	AddStyle( "MiddleAreaToolbarButton Brush Square 9x9", { "MiddleAreaToolbarButton Brush" }, SH( f_toolbar_brush_button_texture ) {
+		f_toolbar_brush_button_texture( s, 590, 438 );
 	});
 	
 	// info panels page
