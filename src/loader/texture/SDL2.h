@@ -27,6 +27,8 @@ protected:
 private:
 	void FixTransparency( Texture* texture ) const;
 	
+	void FixTexture( Texture* texture ) const;
+	
 };
 
 } /* namespace texture */

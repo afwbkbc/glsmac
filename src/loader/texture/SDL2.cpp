@@ -61,6 +61,8 @@ Texture* SDL2::LoadTexture( const std::string &name ) {
 		memcpy( ptr( texture->m_bitmap, 0, texture->m_bitmap_size ), image->pixels, texture->m_bitmap_size );
 		SDL_FreeSurface(image);
 
+		FixTexture( texture ); // some pcx files have strange artifacts that we need to fix procedurally
+		
 		FixTransparency( texture ); // TODO: base texture should be saved as-is
 
 		m_textures[name] = texture;
@@ -135,6 +137,25 @@ void SDL2::FixTransparency( Texture* texture ) const {
 		}
 	}
 }		
+
+void SDL2::FixTexture( Texture* texture ) const {
+	if ( texture->m_name == "interface.pcx" ) {
+		ASSERT( texture->m_width == 750 && texture->m_height == 900, "unexpected texture.pcx dimensions" );
+		// rain icons have weird brown lines on them
+		const std::vector< Vec2< size_t > > pixels_to_fix = {
+			{ 725, 309 },
+			{ 724, 310 },
+			{ 723, 310 },
+			{ 722, 310 },
+			{ 721, 311 },
+			{ 720, 312 },
+			{ 719, 312 },
+		};
+		for ( auto& v : pixels_to_fix ) {
+			texture->SetPixel( v.x, v.y, texture->GetPixel( v.x + 1, v.y ) );
+		}
+	}
+}
 
 
 } /* namespace texture */

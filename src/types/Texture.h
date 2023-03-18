@@ -33,6 +33,8 @@ CLASS( Texture, Serializable )
 	void SetPixel( const size_t x, const size_t y, const Color& color );
 	void SetPixelAlpha( const size_t x, const size_t y, const uint8_t alpha );
 	
+	const Color::rgba_t GetPixel( const size_t x, const size_t y ) const;
+	
 	// bitflags
 	typedef uint32_t add_flag_t;
 	static constexpr add_flag_t AM_DEFAULT = 0;
