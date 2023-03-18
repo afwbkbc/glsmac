@@ -59,7 +59,7 @@ void MiddleArea::Create() {
 		m_pages.info_panels->Hide();
 	AddChild( m_pages.info_panels );
 	
-	SwitchPage( m_buttons.messages, m_pages.messages );
+	SwitchPage( m_buttons.info_panels, m_pages.info_panels );
 }
 
 void MiddleArea::Destroy() {

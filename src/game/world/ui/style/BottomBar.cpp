@@ -239,6 +239,16 @@ void BottomBar::AddStyles() {
 		
 	});
 	
+	AddStyle( "MiddleAreaInfoPanel", SH() {
+		
+	});
+	
+	AddStyle( "MiddleAreaInfoPanelLabel", SH() {
+		s->Set( ::Style::A_TEXTALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+		s->SetFont( ::Style::A_FONT, "arialn.ttf", 14 );
+		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 116, 156, 56 ) );
+	});
+	
 	// units list at bottom
 	
 	AddStyle( "UnitsList", SH() {

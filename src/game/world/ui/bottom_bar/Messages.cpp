@@ -10,25 +10,26 @@ void Messages::Create() {
 	MiddleAreaPage::Create();
 	
 	NEW( m_messages_list, object::TextView, "MapBottomBarMiddleAreaMessagesList" );
-		m_messages_list->SetLinesLimit( 20 );
+		m_messages_list->SetLinesLimit( 200 );
 	AddChild( m_messages_list );
 
 	// for testing
-	m_test_timer.SetInterval( 200 );
+	//m_test_timer.SetInterval( 200 );
 	/*for ( auto i = 1 ; i <= 15 ; i++ ) {
 		m_messages_list->AddLine( "SCROLLVIEW TEST LINE " + std::to_string( i ) );
 	}*/
 	
-
+	// tmp
+	m_messages_list->AddLine( "Scenario Editor ACTIVATED." );
 }
 
 void Messages::Iterate() {
 	MiddleAreaPage::Iterate();
 	
 	// for testing
-	while ( m_test_timer.HasTicked () ) {
+	/*while ( m_test_timer.HasTicked () ) {
 		m_messages_list->AddLine( "SCROLLVIEW TEST LINE " + std::to_string( rand() % 99999999 ) );
-	}
+	}*/
 
 }
 

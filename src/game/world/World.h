@@ -75,6 +75,8 @@ CLASS( World, base::Task )
 	void SmoothScroll( const float scroll_value );
 	void SmoothScroll( const Vec2< float > position, const float scroll_value );
 
+	util::Random* GetRandom() const;
+	
 protected:
 
 private:

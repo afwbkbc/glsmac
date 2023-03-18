@@ -878,5 +878,9 @@ void World::SmoothScroll( const Vec2< float > position, const float scroll_value
 	});
 }
 
+util::Random* World::GetRandom() const {
+	return m_random;
+}
+
 }
 }
