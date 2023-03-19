@@ -35,7 +35,8 @@ void Tiles::Resize( const uint32_t width, const uint32_t height ) {
 		if ( m_data ) {
 			free( m_data );
 		}
-		size_t sz = sizeof( Tile ) * width * height;
+		m_data_count = width * height;
+		size_t sz = sizeof( Tile ) * m_data_count;
 		m_data = (Tile*)malloc( sz );
 		memset( ptr( m_data, 0, sz ), 0, sz );
 
@@ -360,6 +361,14 @@ void Tiles::FixExtremeSlopes() {
 
 Random* Tiles::GetRandom() const {
 	return m_random;
+}
+
+const size_t Tiles::GetDataCount() const {
+	return m_data_count;
+}
+
+const Tile* Tiles::GetDataPtr() const {
+	return m_data;
 }
 
 void Tiles::NormalizeElevationRange() {

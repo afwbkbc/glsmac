@@ -19,7 +19,6 @@
 #include "module/Coastlines1.h"
 #include "module/Coastlines2.h"
 #include "module/Sprites.h"
-#include "module/Minimap.h"
 #include "module/Finalize.h"
 
 #include "scene/actor/Sprite.h"
@@ -119,7 +118,6 @@ Map::Map( Random* random, Scene* scene )
 		NEW( m, WaterSurface, this ); module_pass.push_back( m );
 		NEW( m, CalculateCoords, this ); module_pass.push_back( m );
 		NEW( m, Coastlines1, this ); module_pass.push_back( m );
-		//NEW( m, Minimap, this ); module_pass.push_back( m ); TODO: remake via fbo
 		m_modules.push_back( module_pass );
 	}
 	
@@ -270,20 +268,95 @@ void Map::LinkTileStates() {
 	}
 }
 
-void Map::RunModulePasses( module_passes_t& module_passes ) {
+void Map::ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles ) {
 	for ( auto& module_pass : module_passes ) {
-		for ( size_t y = 0 ; y < m_map_state.dimensions.y ; y++ ) {
-			for ( size_t x = y & 1 ; x < m_map_state.dimensions.x ; x+= 2 ) {
-				
-				m_current_tile = m_tiles->At( x, y );
-				m_current_ts = GetTileState( x, y );
+		for ( const auto& tile : tiles ) {
+			m_current_tile = tile;
+			m_current_ts = GetTileState( tile->coord.x, tile->coord.y );
 
-				for ( auto& m : module_pass ) {
-					m->GenerateTile( m_current_tile, m_current_ts, &m_map_state );
-				}
+			// spammy
+			//Log( "Loading tile " + m_current_tile->coord.ToString() );
+			for ( auto& m : module_pass ) {
+				m->GenerateTile( m_current_tile, m_current_ts, &m_map_state );
 			}
+			
 		}
 	}
+}
+
+void Map::LoadTiles( const tiles_t& tiles ) {
+	
+	Log( "Loading " + std::to_string( tiles.size() ) + " tiles" );
+	
+	ProcessTiles( m_modules, tiles );
+	
+	for ( auto& c : m_map_state.copy_from_after ) {
+		m_textures.terrain->AddFrom( m_textures.terrain, c.mode, c.tx1_from, c.ty1_from, c.tx2_from, c.ty2_from, c.tx_to, c.ty_to, c.rotate, c.alpha, m_random, c.perlin );
+	}
+	m_map_state.copy_from_after.clear();
+	
+	ProcessTiles( m_modules_deferred, tiles );
+}
+
+void Map::FixNormals( const tiles_t& tiles ) {
+	Log( "Fixing normals" );
+	
+	m_mesh_terrain->UpdateNormals(); // TODO: partial updates
+	
+	std::vector< mesh::Mesh::index_t > v, vtmp;
+	
+	// to prevent reallocations
+	vtmp.reserve( 4 );
+	v.reserve( 8 );
+	
+	for ( const auto& tile : tiles ) {
+		auto* ts = GetTileState( tile->coord.x, tile->coord.y );
+
+		// combine at left vertex
+		#define x( _lt ) { \
+			ts->layers[ _lt ].indices.left, \
+			ts->NW->layers[ _lt ].indices.bottom, \
+			ts->W->layers[ _lt ].indices.right, \
+			ts->SW->layers[ _lt ].indices.top, \
+		}
+
+		v = x( LAYER_LAND );
+
+		if ( tile->is_water_tile || tile->W->is_water_tile || tile->NW->is_water_tile ) {
+			vtmp = x( LAYER_WATER );
+			v.insert( v.end(), vtmp.begin(), vtmp.end() );
+		}
+
+		m_mesh_terrain->CombineNormals( v );
+
+		#undef x
+	}
+	
+	// average center normals
+	for ( const auto& tile : tiles ) {
+		auto* ts = GetTileState( tile->coord.x, tile->coord.y );
+
+		m_mesh_terrain->SetVertexNormal( ts->layers[ LAYER_LAND ].indices.center, (
+			m_mesh_terrain->GetVertexNormal( ts->layers[ LAYER_LAND ].indices.left ) +
+			m_mesh_terrain->GetVertexNormal( ts->layers[ LAYER_LAND ].indices.top ) +
+			m_mesh_terrain->GetVertexNormal( ts->layers[ LAYER_LAND ].indices.right ) +
+			m_mesh_terrain->GetVertexNormal( ts->layers[ LAYER_LAND ].indices.bottom )
+		) / 4 );
+	}
+}
+
+const Map::tiles_t Map::GetAllTiles() const {
+	tiles_t tiles;
+	const size_t tiles_count = m_tiles->GetDataCount() / 2; // / 2 because SMAC coordinate system
+	tiles.reserve( tiles_count );
+	for ( size_t y = 0 ; y < m_map_state.dimensions.y ; y++ ) {
+		for ( size_t x = y & 1 ; x < m_map_state.dimensions.x ; x+= 2 ) {
+			tiles.push_back( m_tiles->At( x, y ) );
+		}
+	}
+	ASSERT( tiles.size() == tiles_count, "tiles count mismatch on load ( " + std::to_string( tiles.size() ) + " != " + std::to_string( tiles_count ) + " )" );
+
+	return tiles;
 }
 
 void Map::InitTextureAndMesh() {
@@ -366,68 +439,14 @@ void Map::GenerateActors() {
 
 	InitTextureAndMesh();
 	
-	RunModulePasses( m_modules );
+	const auto tiles = GetAllTiles();
 	
-	for ( auto& c : m_map_state.copy_from_after ) {
-		m_textures.terrain->AddFrom( m_textures.terrain, c.mode, c.tx1_from, c.ty1_from, c.tx2_from, c.ty2_from, c.tx_to, c.ty_to, c.rotate, c.alpha, m_random, c.perlin );
-	}
-	m_map_state.copy_from_after.clear();
-	
-	RunModulePasses( m_modules_deferred );
+	LoadTiles( tiles );
 	
 	m_mesh_terrain->Finalize();
 	m_mesh_terrain_data->Finalize();
 	
-	// fix normals
-	
-	Log( "Fixing normals" );
-	
-	std::vector< mesh::Mesh::index_t > v, vtmp;
-	
-	// to prevent reallocations
-	vtmp.reserve( 4 );
-	v.reserve( 8 );
-	
-	for ( auto y = 0 ; y < m_map_state.dimensions.y ; y++ ) {
-		for ( auto x = y & 1 ; x < m_map_state.dimensions.x ; x += 2 ) {
-			auto* tile = m_tiles->At( x, y );
-			auto* ts = GetTileState( x, y );
-			
-			// combine at left vertex
-			#define x( _lt ) { \
-				ts->layers[ _lt ].indices.left, \
-				ts->NW->layers[ _lt ].indices.bottom, \
-				ts->W->layers[ _lt ].indices.right, \
-				ts->SW->layers[ _lt ].indices.top, \
-			}
-
-			v = x( LAYER_LAND );
-			
-			if ( tile->is_water_tile || tile->W->is_water_tile || tile->NW->is_water_tile ) {
-				vtmp = x( LAYER_WATER );
-				v.insert( v.end(), vtmp.begin(), vtmp.end() );
-			}
-			
-			m_mesh_terrain->CombineNormals( v );
-			
-			#undef x
-		}
-	}
-	
-	// average center normals
-	for ( auto y = 0 ; y < m_map_state.dimensions.y ; y++ ) {
-		for ( auto x = y & 1 ; x < m_map_state.dimensions.x ; x += 2 ) {
-			auto* tile = m_tiles->At( x, y );
-			auto* ts = GetTileState( x, y );
-			
-			m_mesh_terrain->SetVertexNormal( ts->layers[ LAYER_LAND ].indices.center, (
-				m_mesh_terrain->GetVertexNormal( ts->layers[ LAYER_LAND ].indices.left ) +
-				m_mesh_terrain->GetVertexNormal( ts->layers[ LAYER_LAND ].indices.top ) +
-				m_mesh_terrain->GetVertexNormal( ts->layers[ LAYER_LAND ].indices.right ) +
-				m_mesh_terrain->GetVertexNormal( ts->layers[ LAYER_LAND ].indices.bottom )
-			) / 4 );
-		}
-	}
+	FixNormals( tiles );
 	
 	m_map_state.range.min = GetTileState( 0, 0 )->coord;
 	m_map_state.range.max = GetTileState( m_map_state.dimensions.x - 1, m_map_state.dimensions.y - 1 )->coord;

@@ -37,6 +37,11 @@ CLASS( Tiles, Serializable )
 	
 	Random* GetRandom() const;
 	
+	const size_t GetDataCount() const;
+	
+	// be very careful with this
+	const Tile* GetDataPtr() const;
+	
 	const Buffer Serialize() const;
 	void Unserialize( Buffer buf );
 	
@@ -49,6 +54,7 @@ private:
 	
 	Tile::elevation_t* m_top_vertex_row = nullptr;
 	Tile::elevation_t* m_top_right_vertex_row = nullptr;
+	size_t m_data_count = 0;
 	Tile* m_data = nullptr;
 	
 	bool m_is_validated = false;

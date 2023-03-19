@@ -473,7 +473,15 @@ private:
 	module_passes_t m_modules_deferred; // after finalizing and deferred calls
 	
 	void LinkTileStates();
-	void RunModulePasses( module_passes_t& module_passes );
+	
+	typedef std::vector< const Tile* > tiles_t;
+	
+	void ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles );
+	void LoadTiles( const tiles_t& tiles );
+	void FixNormals( const tiles_t& tiles );
+	
+	const tiles_t GetAllTiles() const;
+	
 	void InitTextureAndMesh();
 	void InitTerrainActor();
 	void GenerateActors();
@@ -490,7 +498,7 @@ private:
 	void CalculateTextureVariants( const texture_variants_type_t type, const texture_variants_rules_t& rules );
 	
 	tile_state_t* m_current_ts = nullptr;
-	Tile* m_current_tile = nullptr;
+	const Tile* m_current_tile = nullptr;
 
 };
 

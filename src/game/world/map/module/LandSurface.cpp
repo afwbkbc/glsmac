@@ -58,7 +58,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 				Texture::AM_MERGE |
 				Texture::AM_GRADIENT_TIGHTER |
 				Texture::AM_RANDOM_STRETCH
-			, 0, 0.72f);
+			, 0, 0.72f );
 		}
 	}
 	

@@ -100,8 +100,6 @@ void Render::CombineNormals( const std::vector< index_t >& indices ) {
 
 void Render::Finalize() {
 	Mesh::Finalize();
-	
-	UpdateNormals();
 }
 
 void Render::UpdateNormals() {

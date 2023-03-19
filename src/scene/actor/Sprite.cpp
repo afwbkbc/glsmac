@@ -35,7 +35,9 @@ const types::mesh::Render::tex_coords_t& Sprite::GetTexCoords() const {
 }
 
 const types::mesh::Render* Sprite::GenerateMesh() const {
-	return types::mesh::Render::Rectangle( m_dimensions.x, m_dimensions.y, m_tex_coords );
+	auto* mesh = types::mesh::Render::Rectangle( m_dimensions.x, m_dimensions.y, m_tex_coords );
+	mesh->UpdateNormals();
+	return mesh;
 }
 
 }

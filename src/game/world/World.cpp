@@ -128,15 +128,19 @@ void World::Start() {
 #ifdef DEBUG
 			Log( "Map generation took " + std::to_string( timer.GetElapsed().count() ) + "ms" );
 			// if crash happens - it's handy to have a map file to reproduce it
-			Log( (std::string) "Saving map to " + MAP_FILENAME );
-			FS::WriteFile( MAP_FILENAME, tiles->Serialize().ToString() );
+			if ( !config->HasDebugFlag( config::Config::DF_QUICKSTART_MAPFILE ) ) { // no point saving if we just loaded it
+				Log( (std::string) "Saving map to " + MAP_FILENAME );
+				FS::WriteFile( MAP_FILENAME, tiles->Serialize().ToString() );
+			}
 #endif
 		}
 		m_map->SetTiles( tiles );
 #ifdef DEBUG
 		// also handy to have dump of generated map
-		Log( (std::string) "Saving map dump to " + MAP_DUMP_FILENAME );
-		FS::WriteFile( MAP_DUMP_FILENAME, m_map->Serialize().ToString() );
+		if ( !config->HasDebugFlag( config::Config::DF_QUICKSTART_MAPDUMP ) ) { // no point saving if we just loaded it
+			Log( (std::string) "Saving map dump to " + MAP_DUMP_FILENAME );
+			FS::WriteFile( MAP_DUMP_FILENAME, m_map->Serialize().ToString() );
+		}
 #endif
 	}
 	
