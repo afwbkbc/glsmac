@@ -284,7 +284,7 @@ void Map::ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles ) {
 	}
 }
 
-void Map::LoadTiles( const tiles_t& tiles ) {
+	void Map::LoadTiles( const tiles_t& tiles ) {
 	
 	Log( "Loading " + std::to_string( tiles.size() ) + " tiles" );
 	
@@ -439,6 +439,9 @@ void Map::GenerateActors() {
 
 	InitTextureAndMesh();
 	
+	// some processing is only done on first run
+	m_map_state.first_run = true;
+	
 	const auto tiles = GetAllTiles();
 	
 	LoadTiles( tiles );
@@ -447,6 +450,8 @@ void Map::GenerateActors() {
 	m_mesh_terrain_data->Finalize();
 	
 	FixNormals( tiles );
+	
+	m_map_state.first_run = false;
 	
 	m_map_state.range.min = GetTileState( 0, 0 )->coord;
 	m_map_state.range.max = GetTileState( m_map_state.dimensions.x - 1, m_map_state.dimensions.y - 1 )->coord;
@@ -537,6 +542,18 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_t
 		}
 	}
 	return info;
+}
+
+void Map::ClearTexture() {
+	ASSERT( m_current_ts, "ClearTexture called outside of tile generation" );
+	for ( auto lt = 0 ; lt < Map::LAYER_MAX ; lt++ ) {
+		m_textures.terrain->Erase(
+			m_current_ts->tex_coord.x1,
+			lt * m_map_state.dimensions.y * Map::s_consts.tile_texture.dimensions.y + m_current_ts->tex_coord.y1,
+			m_current_ts->tex_coord.x2,
+			lt * m_map_state.dimensions.y * Map::s_consts.tile_texture.dimensions.y + m_current_ts->tex_coord.y2
+		);
+	}
 }
 
 void Map::AddTexture( const tile_layer_type_t tile_layer, const pcx_texture_coordinates_t& tc, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {

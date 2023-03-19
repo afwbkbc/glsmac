@@ -47,16 +47,27 @@ Mesh::~Mesh() {
 
 bool Mesh::MeshReloadNeeded() {
 	auto* actor = GetMeshActor();
+	bool data_mesh_reload_needed = DataMeshReloadNeeded();
 	size_t mesh_updated_counter = actor->GetMesh()->UpdatedCount();
-	auto *data_mesh = actor->GetDataMesh();
-	if ( data_mesh ) {
-		mesh_updated_counter = mesh_updated_counter + data_mesh->UpdatedCount();
-	}
-	
 	if ( m_mesh_update_counter != mesh_updated_counter ) {
 		//Log( "Mesh reload needed ( " + std::to_string( m_mesh_update_counter ) + " != " + std::to_string( mesh_updated_counter ) + " )" );
 		m_mesh_update_counter = mesh_updated_counter;
 		return true;
+	}
+	return data_mesh_reload_needed;
+}
+
+bool Mesh::DataMeshReloadNeeded() {
+	auto* actor = GetMeshActor();
+	auto *data_mesh = actor->GetDataMesh();
+	if ( data_mesh ) {
+		size_t mesh_updated_counter = data_mesh->UpdatedCount();
+		if ( m_data_mesh_update_counter != mesh_updated_counter ) {
+			//Log( "Data mesh reload needed ( " + std::to_string( m_data_mesh_update_counter ) + " != " + std::to_string( mesh_updated_counter ) + " )" );
+			m_data_mesh_update_counter = mesh_updated_counter;
+			m_data.is_up_to_date = false;
+			return true;
+		}
 	}
 	return false;
 }
@@ -64,8 +75,18 @@ bool Mesh::MeshReloadNeeded() {
 bool Mesh::TextureReloadNeeded() {
 	auto* texture = GetMeshActor()->GetTexture();
 	if ( m_last_texture != texture ) {
+		Log( "Texture reload needed ( texture was replaced )" );
 		m_last_texture = texture;
+		m_last_texture_update_counter = texture ? texture->UpdatedCount() : 0;
 		return true;
+	}
+	if ( texture ) {
+		size_t last_texture_update_counter = texture->UpdatedCount();
+		if ( m_last_texture_update_counter != last_texture_update_counter ) {
+			Log( "Texture reload needed ( " + std::to_string( m_last_texture_update_counter ) + " != " + std::to_string( last_texture_update_counter ) + " )" );
+			m_last_texture_update_counter = last_texture_update_counter;
+			return true;
+		}
 	}
 	return false;
 }
@@ -94,6 +115,7 @@ void Mesh::LoadTexture() {
 	const auto* texture = GetMeshActor()->GetTexture();
 	
 	if ( texture ) {
+		
 		g_engine->GetGraphics()->LoadTexture( texture );
 	}
 }
@@ -126,21 +148,23 @@ void Mesh::PrepareDataMesh() {
 			glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
 			
 			glGenBuffers( 1, &m_data.vbo );
-			glBindBuffer( GL_ARRAY_BUFFER, m_data.vbo );
-			glBufferData( GL_ARRAY_BUFFER, data_mesh->GetVertexDataSize(), (GLvoid *)ptr( data_mesh->GetVertexData(), 0, data_mesh->GetVertexDataSize() ), GL_STATIC_DRAW );
-			glBindBuffer( GL_ARRAY_BUFFER, 0 );
-
 			glGenBuffers( 1, &m_data.ibo );
-			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_data.ibo );
-			glBufferData( GL_ELEMENT_ARRAY_BUFFER, data_mesh->GetIndexDataSize(), (GLvoid *)ptr( data_mesh->GetIndexData(), 0, data_mesh->GetIndexDataSize() ), GL_STATIC_DRAW);
-			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 
+			glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+			
 			m_data.ibo_size = data_mesh->GetIndexCount();
 		}
-		else {
-			glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
-		}
 		
+		glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
+		
+		glBindBuffer( GL_ARRAY_BUFFER, m_data.vbo );
+		glBufferData( GL_ARRAY_BUFFER, data_mesh->GetVertexDataSize(), (GLvoid *)ptr( data_mesh->GetVertexData(), 0, data_mesh->GetVertexDataSize() ), GL_STATIC_DRAW );
+		glBindBuffer( GL_ARRAY_BUFFER, 0 );
+
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_data.ibo );
+		glBufferData( GL_ELEMENT_ARRAY_BUFFER, data_mesh->GetIndexDataSize(), (GLvoid *)ptr( data_mesh->GetIndexData(), 0, data_mesh->GetIndexDataSize() ), GL_STATIC_DRAW);
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+
 		size_t w = g_engine->GetGraphics()->GetViewportWidth();
 		size_t h = g_engine->GetGraphics()->GetViewportHeight();
 		

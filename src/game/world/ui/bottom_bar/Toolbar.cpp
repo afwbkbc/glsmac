@@ -21,8 +21,8 @@ void Toolbar::Create() {
 	{ // tool buttons
 		const Vec2< size_t > offset = { 0, 0 };
 		uint8_t bx = 0, by = 0;
-		for ( auto t = ET_NONE + 1 ; t < ET_MAX ; t++ ) {
-			const auto tool = (editing_tool_t) t;
+		for ( auto t = MapEditor::TT_NONE + 1 ; t < MapEditor::TT_MAX ; t++ ) {
+			const auto tool = (MapEditor::tool_type_t) t;
 			ASSERT( m_tool_names.find( tool ) != m_tool_names.end(), "tool name not found" );
 			const std::string& tool_name = m_tool_names.at( tool );
 			NEWV( button, ::ui::object::SimpleButton, "MapBottomBarMiddleAreaToolbarButton Tool " + tool_name );
@@ -46,8 +46,8 @@ void Toolbar::Create() {
 	{ // brush buttons
 		const Vec2< size_t > offset = { 225, 10 };
 		uint8_t bx = 0, by = 0;
-		for ( auto b = EB_NONE + 1 ; b < EB_MAX ; b++ ) {
-			const auto brush = (editing_brush_t) b;
+		for ( auto b = MapEditor::BT_NONE + 1 ; b < MapEditor::BT_MAX ; b++ ) {
+			const auto brush = (MapEditor::brush_type_t) b;
 			ASSERT( m_brush_names.find( brush ) != m_brush_names.end(), "brush name not found" );
 			const std::string& brush_name = m_brush_names.at( brush );
 			NEWV( button, ::ui::object::SimpleButton, "MapBottomBarMiddleAreaToolbarButton Brush " + brush_name );
@@ -96,14 +96,14 @@ void Toolbar::Create() {
 	);
 	m_tool_info.labels[ TI_MODE ]->SetText( "PLAY mode (No Scroll Lock)" );
 	
-	SelectTool( ET_ELEVATIONS );
-	SelectBrush( EB_DOT );
+	SelectTool( MapEditor::TT_ELEVATIONS );
+	SelectBrush( MapEditor::BT_DOT );
 }
 
 void Toolbar::Destroy() {
 	
 	{ // tools
-		SelectTool( ET_NONE );
+		SelectTool( MapEditor::TT_NONE );
 		for ( auto& button : m_tool_buttons ) {
 			m_centered_block->RemoveChild( button );
 		}
@@ -111,7 +111,7 @@ void Toolbar::Destroy() {
 	}
 	
 	{ // brushes
-		SelectBrush( EB_NONE );
+		SelectBrush( MapEditor::BT_NONE );
 		for ( auto& button : m_brush_buttons ) {
 			m_centered_block->RemoveChild( button );
 		}
@@ -146,47 +146,49 @@ void Toolbar::Align() {
 	}
 }
 
-void Toolbar::SelectTool( editing_tool_t tool ) {
+void Toolbar::SelectTool( MapEditor::tool_type_t tool ) {
 	
-	if ( m_active_tool != tool ) {
-		m_active_tool = tool;
+	if ( m_world->GetMapEditor()->GetActiveTool() != tool ) {
 		
-		Log( "Selecting tool: " + m_tool_names.at( m_active_tool ) );
+		Log( "Selecting tool: " + m_tool_names.at( tool ) );
+		
+		m_world->GetMapEditor()->SelectTool( tool );
 
 		if ( m_active_tool_button ) {
 			m_active_tool_button->RemoveStyleModifier( Style::M_SELECTED );
 		}
-		if ( tool == ET_NONE ) {
+		if ( tool == MapEditor::TT_NONE ) {
 			m_active_tool_button = nullptr;
 		}
 		else {
-			m_active_tool_button = m_tool_buttons.at( m_active_tool - 1 ); // because there's no button for ET_NONE
+			m_active_tool_button = m_tool_buttons.at( tool - 1 ); // because there's no button for MapEditor::TT_NONE
 			m_active_tool_button->AddStyleModifier( Style::M_SELECTED );
 		}
 		
-		m_tool_info.labels[ TI_TOOL ]->SetText( "Editing: " + m_tool_names.at( m_active_tool ) );
+		m_tool_info.labels[ TI_TOOL ]->SetText( "Editing: " + m_tool_names.at( tool ) );
 	}
 }
 
-void Toolbar::SelectBrush( editing_brush_t brush ) {
+void Toolbar::SelectBrush( MapEditor::brush_type_t brush ) {
 	
-	if ( m_active_brush != brush ) {
-		m_active_brush = brush;
+	if ( m_world->GetMapEditor()->GetActiveBrush() != brush ) {
 		
-		Log( "Selecting brush: " + m_brush_names.at( m_active_brush ) );
+		Log( "Selecting brush: " + m_brush_names.at( brush ) );
 
+		m_world->GetMapEditor()->SelectBrush( brush );
+		
 		if ( m_active_brush_button ) {
 			m_active_brush_button->RemoveStyleModifier( Style::M_SELECTED );
 		}
-		if ( brush == EB_NONE ) {
+		if ( brush == MapEditor::BT_NONE ) {
 			m_active_brush_button = nullptr;
 		}
 		else {
-			m_active_brush_button = m_brush_buttons.at( m_active_brush - 1 ); // because there's no button for EB_NONE
+			m_active_brush_button = m_brush_buttons.at( brush - 1 ); // because there's no button for MapEditor::BT_NONE
 			m_active_brush_button->AddStyleModifier( Style::M_SELECTED );
 		}
 		
-		m_tool_info.labels[ TI_BRUSH ]->SetText( "Brush: " + m_brush_names.at( m_active_brush ) );
+		m_tool_info.labels[ TI_BRUSH ]->SetText( "Brush: " + m_brush_names.at( brush ) );
 	}
 }
 

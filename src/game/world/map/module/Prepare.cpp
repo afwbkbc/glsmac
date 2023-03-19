@@ -6,15 +6,21 @@ namespace map {
 
 void Prepare::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_state_t* ms ) {
 	
-	// set some defaults
-	ts->coord.x = ms->coord.x + tile->coord.x * Map::s_consts.tile.radius.x;
-	ts->coord.y = ms->coord.y + tile->coord.y * Map::s_consts.tile.radius.y;
-	ts->tex_coord.x1 = tile->coord.x * Map::s_consts.tile_texture.dimensions.x;
-	ts->tex_coord.y1 = tile->coord.y * Map::s_consts.tile_texture.dimensions.y;
-	ts->tex_coord.x2 = ts->tex_coord.x1 + Map::s_consts.tile_texture.dimensions.x;
-	ts->tex_coord.y2 = ts->tex_coord.y1 + Map::s_consts.tile_texture.dimensions.y;
-	ts->tex_coord.x = ts->tex_coord.x1 + Map::s_consts.tile_texture.radius.x;
-	ts->tex_coord.y = ts->tex_coord.y1 + Map::s_consts.tile_texture.radius.y;
+	if ( ms->first_run ) {
+		// set some defaults
+		ts->coord.x = ms->coord.x + tile->coord.x * Map::s_consts.tile.radius.x;
+		ts->coord.y = ms->coord.y + tile->coord.y * Map::s_consts.tile.radius.y;
+		ts->tex_coord.x1 = tile->coord.x * Map::s_consts.tile_texture.dimensions.x;
+		ts->tex_coord.y1 = tile->coord.y * Map::s_consts.tile_texture.dimensions.y;
+		ts->tex_coord.x2 = ts->tex_coord.x1 + Map::s_consts.tile_texture.dimensions.x;
+		ts->tex_coord.y2 = ts->tex_coord.y1 + Map::s_consts.tile_texture.dimensions.y;
+		ts->tex_coord.x = ts->tex_coord.x1 + Map::s_consts.tile_texture.radius.x;
+		ts->tex_coord.y = ts->tex_coord.y1 + Map::s_consts.tile_texture.radius.y;
+	}
+	else {
+		// start drawing with empty state
+		m_map->ClearTexture();
+	}
 	
 	ts->elevations.left = *tile->elevation.left;
 	ts->elevations.top = *tile->elevation.top;

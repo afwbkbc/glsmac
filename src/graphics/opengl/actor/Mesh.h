@@ -14,6 +14,7 @@ CLASS(Mesh, Actor)
 	~Mesh();
 	
 	bool MeshReloadNeeded();
+	bool DataMeshReloadNeeded();
 	bool TextureReloadNeeded();
 	void LoadMesh();
 	void LoadTexture();
@@ -29,7 +30,9 @@ protected:
 	void PrepareDataMesh();
 	
 	size_t m_mesh_update_counter = 0;
+	size_t m_data_mesh_update_counter = 0;
 	const types::Texture* m_last_texture = nullptr;
+	size_t m_last_texture_update_counter = 0;
 
 	GLuint m_vbo = 0;
 	GLuint m_ibo = 0;

@@ -172,7 +172,7 @@ void OpenGL::Stop() {
 		(*it)->Stop();
 
 	for ( auto& texture : m_textures ) {
-		glDeleteTextures(1, &texture.second );
+		glDeleteTextures(1, &texture.second.obj );
 	}
 	m_textures.clear();
 	
@@ -262,18 +262,36 @@ void OpenGL::OnWindowResize() {
 }
 
 void OpenGL::LoadTexture( const types::Texture* texture ) {
+	ASSERT( texture, "texture is null" );
+	
+	bool is_reload_needed = false;
+	
+	const size_t texture_update_counter = texture->UpdatedCount();
 	
 	m_textures_map::iterator it = m_textures.find( texture );
 	if ( it == m_textures.end() ) {
 	
-		//Log("Loading texture '" + texture->m_name + "'");
-
-		m_textures[texture] = 0;
+		Log( "Initializing texture '" + texture->m_name + "'" );
+		m_textures[texture] = { 0, texture->UpdatedCount() };
 
 		glActiveTexture( GL_TEXTURE0 );
-		glGenTextures( 1, &m_textures[texture] );
+		glGenTextures( 1, &m_textures[ texture ].obj );
 		
-		glBindTexture( GL_TEXTURE_2D, m_textures[texture] );
+		is_reload_needed = true;
+	}
+	
+	auto& t = m_textures[ texture ];
+	
+	// TODO: partial updates
+	if ( t.last_texture_update_counter != texture_update_counter ) {
+		t.last_texture_update_counter = texture_update_counter;
+		is_reload_needed = true;
+	}
+	
+	if ( is_reload_needed ) {
+		Log( "Loading texture '" + texture->m_name + "'" );
+
+		glBindTexture( GL_TEXTURE_2D, t.obj );
 
 		ASSERT( !glGetError(), "Texture parameter error" );
 		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
@@ -289,7 +307,7 @@ void OpenGL::LoadTexture( const types::Texture* texture ) {
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		glBindTexture( GL_TEXTURE_2D, 0 );
-		
+
 		ASSERT( !glGetError(), "Error somewhere while loading texture" );
 	}
 }
@@ -297,9 +315,9 @@ void OpenGL::LoadTexture( const types::Texture* texture ) {
 void OpenGL::UnloadTexture( const types::Texture* texture ) {
 	m_textures_map::iterator it = m_textures.find( texture );
 	if ( it != m_textures.end() ) {
-		//Log("Unloading texture '" + texture->m_name + "'");
+		Log("Unloading texture '" + texture->m_name + "'");
 		glActiveTexture( GL_TEXTURE0 );
-		glDeleteTextures(1, &it->second );
+		glDeleteTextures(1, &it->second.obj );
 		m_textures.erase( it );
 	}
 }
@@ -308,7 +326,7 @@ void OpenGL::EnableTexture( const types::Texture* texture ) {
 	if ( texture ) {
 		auto it = m_textures.find( texture );
 		ASSERT( it != m_textures.end(), "texture to be enabled ( " + texture->m_name + " ) not found" );
-		glBindTexture( GL_TEXTURE_2D, it->second );
+		glBindTexture( GL_TEXTURE_2D, it->second.obj );
 	}
 	else {
 		glBindTexture( GL_TEXTURE_2D, m_no_texture );

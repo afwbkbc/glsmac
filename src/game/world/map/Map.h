@@ -348,6 +348,7 @@ CLASS( Map, Serializable )
 	};
 	
 	struct map_state_t {
+		bool first_run;
 		Vec2< float > coord;
 		struct {
 			Vec2< float > min;
@@ -371,6 +372,7 @@ CLASS( Map, Serializable )
 	};
 	
 	// call these only during tile generation
+	void ClearTexture();
 	void AddTexture( const tile_layer_type_t tile_layer, const pcx_texture_coordinates_t& tc, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha = 1.0f, util::Perlin* perlin = nullptr );
 	void CopyTextureFromLayer( const tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha = 1.0f, util::Perlin* perlin = nullptr );
 	void CopyTexture( const tile_layer_type_t tile_layer_from, const tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha = 1.0f, util::Perlin* perlin = nullptr );
@@ -408,7 +410,7 @@ CLASS( Map, Serializable )
 	Random* GetRandom() const;
 	
 	struct tile_info_t {
-		const Tile* tile;
+		Tile* tile;
 		const tile_state_t* ts;
 		const map_state_t* ms;
 	};
@@ -433,6 +435,12 @@ CLASS( Map, Serializable )
 	Scene* GetScene() const;
 	
 	scene::actor::Instanced* GenerateTerrainSpriteActor( const std::string& name, const pcx_texture_coordinates_t& tex_coords ) const;
+	
+	typedef std::vector< Tile* > tiles_t;
+	void LoadTiles( const tiles_t& tiles );
+	void FixNormals( const tiles_t& tiles );
+	
+	const tiles_t GetAllTiles() const;
 	
 protected:
 	friend class Finalize;
@@ -474,13 +482,7 @@ private:
 	
 	void LinkTileStates();
 	
-	typedef std::vector< const Tile* > tiles_t;
-	
 	void ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles );
-	void LoadTiles( const tiles_t& tiles );
-	void FixNormals( const tiles_t& tiles );
-	
-	const tiles_t GetAllTiles() const;
 	
 	void InitTextureAndMesh();
 	void InitTerrainActor();

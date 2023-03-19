@@ -102,12 +102,17 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 			#undef x
 		}
 		
-		#define x( _k ) ts->layers[ lt ].indices._k = m_map->m_mesh_terrain->AddVertex( vertices._k, tex_coords._k, tint._k )
-			do_x();
-		#undef x
+		if ( ms->first_run ) {
+			#define x( _k ) ts->layers[ lt ].indices._k = m_map->m_mesh_terrain->AddEmptyVertex()
+				do_x();
+			#undef x
+			#define x( _a, _b, _c ) m_map->m_mesh_terrain->AddSurface( { ts->layers[ lt ].indices._a, ts->layers[ lt ].indices._b, ts->layers[ lt ].indices._c } )
+				do_xs();
+			#undef x
+		}
 		
-		#define x( _a, _b, _c ) m_map->m_mesh_terrain->AddSurface( { ts->layers[ lt ].indices._a, ts->layers[ lt ].indices._b, ts->layers[ lt ].indices._c } )
-			do_xs();
+		#define x( _k ) m_map->m_mesh_terrain->SetVertex( ts->layers[ lt ].indices._k, vertices._k, tex_coords._k, tint._k )
+			do_x();
 		#undef x
 		
 		if ( tile->coord.x == 0 && lt == Map::LAYER_LAND ) {
@@ -130,13 +135,19 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 				"[ ~" + to_string( ts->overdraw_column.coords.center.x ) + ", ~" + to_string( ts->overdraw_column.coords.center.y ) + " ]"
 			);*/
 
-			#define x( _k ) ts->overdraw_column.indices._k = m_map->m_mesh_terrain->AddVertex( ts->overdraw_column.coords._k, tex_coords._k, tint._k )
+			if ( ms->first_run ) {
+				#define x( _k ) ts->overdraw_column.indices._k = m_map->m_mesh_terrain->AddEmptyVertex()
+					do_x();
+				#undef x
+				#define x( _a, _b, _c ) m_map->m_mesh_terrain->AddSurface( { ts->overdraw_column.indices._a, ts->overdraw_column.indices._b, ts->overdraw_column.indices._c } )
+					do_xs();
+				#undef x
+			}
+			
+			#define x( _k ) m_map->m_mesh_terrain->SetVertex( ts->overdraw_column.indices._k, ts->overdraw_column.coords._k, tex_coords._k, tint._k )
 				do_x();
 			#undef x
 
-			#define x( _a, _b, _c ) m_map->m_mesh_terrain->AddSurface( { ts->overdraw_column.indices._a, ts->overdraw_column.indices._b, ts->overdraw_column.indices._c } )
-				do_xs();
-			#undef x
 		}
 	
 	}
@@ -168,14 +179,19 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 	// store tile coordinates
 	mesh::Data::data_t data = tile->coord.y * ms->dimensions.x + tile->coord.x + 1; // +1 because we need to differentiate 'tile at 0,0' from 'no tiles'
 	
-	#define x( _k ) ts->data_mesh.indices._k = m_map->m_mesh_terrain_data->AddVertex( vertices._k, data )
+	if ( ms->first_run ) {
+		#define x( _k ) ts->data_mesh.indices._k = m_map->m_mesh_terrain_data->AddEmptyVertex()
+			do_x();
+		#undef x
+		#define x( _a, _b, _c ) m_map->m_mesh_terrain_data->AddSurface( { ts->data_mesh.indices._a, ts->data_mesh.indices._b, ts->data_mesh.indices._c } )
+			do_xs();
+		#undef x
+	}
+	
+	#define x( _k ) m_map->m_mesh_terrain_data->SetVertex( ts->data_mesh.indices._k, vertices._k, data )
 		do_x();
 	#undef x
 	
-	#define x( _a, _b, _c ) m_map->m_mesh_terrain_data->AddSurface( { ts->data_mesh.indices._a, ts->data_mesh.indices._b, ts->data_mesh.indices._c } )
-		do_xs();
-	#undef x
-
 	#undef do_x
 	#undef do_xs
 	

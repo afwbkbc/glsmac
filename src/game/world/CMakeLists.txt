@@ -1,5 +1,6 @@
 SUBDIR( map )
 SUBDIR( map_generator )
+SUBDIR( map_editor )
 SUBDIR( ui )
 SUBDIR( actor )
 

@@ -143,6 +143,9 @@ void World::Start() {
 		}
 #endif
 	}
+
+	// init map editor
+	NEW( m_map_editor, map_editor::MapEditor, this );
 	
 	auto* ui = g_engine->GetUI();
 	
@@ -267,6 +270,12 @@ void World::Start() {
 				return true;
 			}
 		}
+		else if ( data->key.code == UIEvent::K_CTRL ) {
+			if ( m_map_editor->IsEnabled() ) {
+				m_is_editing_mode = true;
+			}
+		}
+		
 		return false;
 	}, UI::GH_AFTER );
 	
@@ -277,28 +286,52 @@ void World::Start() {
 				m_scroller.Stop();
 			}
 		}
+		else if ( data->key.code == UIEvent::K_CTRL ) {
+			if ( m_map_editor->IsEnabled() ) {
+				m_is_editing_mode = false;
+			}
+		}
 		return false;
 	}, UI::GH_BEFORE );
 	
 	m_handlers.mousedown = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_DOWN, EH( this ) {
-		switch ( data->mouse.button ) {
-			case UIEvent::M_LEFT: {
-				SelectTileAtPoint( data->mouse.absolute.x, data->mouse.absolute.y ); // async
-				break;
+		if ( m_is_editing_mode ) {
+			switch ( data->mouse.button ) {
+				case UIEvent::M_LEFT: {
+					m_editing_draw_mode = map_editor::MapEditor::DM_INC;
+					break;
+				}
+				case UIEvent::M_RIGHT: {
+					m_editing_draw_mode = map_editor::MapEditor::DM_DEC;
+					break;
+				}
+				default: {
+					m_editing_draw_mode = map_editor::MapEditor::DM_NONE;
+				}
+					
 			}
-			case UIEvent::M_RIGHT: {
-				m_scroller.Stop();
-				m_map_control.is_dragging = true;
-				m_map_control.last_drag_position = { m_clamp.x.Clamp( data->mouse.absolute.x ), m_clamp.y.Clamp( data->mouse.absolute.y ) };
-				break;
-			}
+			SelectTileAtPoint( data->mouse.absolute.x, data->mouse.absolute.y ); // async
+		}
+		else {
+			switch ( data->mouse.button ) {
+				case UIEvent::M_LEFT: {
+					SelectTileAtPoint( data->mouse.absolute.x, data->mouse.absolute.y ); // async
+					break;
+				}
+				case UIEvent::M_RIGHT: {
+					m_scroller.Stop();
+					m_map_control.is_dragging = true;
+					m_map_control.last_drag_position = { m_clamp.x.Clamp( data->mouse.absolute.x ), m_clamp.y.Clamp( data->mouse.absolute.y ) };
+					break;
+				}
 #ifdef DEBUG
-			case UIEvent::M_MIDDLE: {
-				m_map_control.is_rotating = true;
-				m_map_control.last_rotate_position = { m_clamp.x.Clamp( data->mouse.absolute.x ), m_clamp.y.Clamp( data->mouse.absolute.y ) };
-				break;
-			}
+				case UIEvent::M_MIDDLE: {
+					m_map_control.is_rotating = true;
+					m_map_control.last_rotate_position = { m_clamp.x.Clamp( data->mouse.absolute.x ), m_clamp.y.Clamp( data->mouse.absolute.y ) };
+					break;
+				}
 #endif
+			}
 		}
 		return true;
 	}, UI::GH_AFTER );
@@ -438,12 +471,16 @@ void World::Start() {
 		coords.y++;
 	}
 	SelectTile( m_map->GetTileAt( coords.x, coords.y ) );
+	
 }
 
 void World::Stop() {
+	
 	auto* ui = g_engine->GetUI();
 	ui->RemoveObject( m_ui.bottom_bar );
 	ui->RemoveTheme( &m_ui.theme );
+	
+	DELETE( m_map_editor );
 	
 	DELETE( m_map );
 	
@@ -478,7 +515,17 @@ void World::Iterate() {
 	auto tile_info = m_map->GetTileAtScreenCoordsResult();
 	if ( tile_info.tile ) {
 		SelectTile( tile_info );
-		CenterAtTile( tile_info.ts );
+		if ( m_is_editing_mode ) {
+			const auto tiles_to_reload = m_map_editor->Draw( tile_info.tile, m_editing_draw_mode );
+			m_map->LoadTiles( tiles_to_reload );
+			//m_map->FixNormals( tiles_to_reload );
+			m_map->FixNormals( m_map->GetAllTiles() ); // TODO: partial UpdateNormals() and partial FixNormals()
+			
+			SelectTile( tile_info );
+		}
+		else {
+			CenterAtTile( tile_info.ts );
+		}
 	}
 	
 	// update minimap (if it was updated)
@@ -526,6 +573,10 @@ void World::Iterate() {
 Map* World::GetMap() const {
 	ASSERT( m_map, "m_map not set during GetMap()" );
 	return m_map;
+}
+
+map_editor::MapEditor* World::GetMapEditor() const {
+	return m_map_editor;
 }
 
 void World::CenterAtCoordinatePercents( const Vec2< float > position_percents ) {

@@ -29,6 +29,8 @@ CLASS( Texture, Serializable )
 	
 	void Resize( const size_t width, const size_t height );
 	
+	// these methods won't update counter because it would happen too often (and is bad for performance)
+	// call Update() manually after you're done
 	void SetPixel( const size_t x, const size_t y, const Color::rgba_t& rgba );
 	void SetPixel( const size_t x, const size_t y, const Color& color );
 	void SetPixelAlpha( const size_t x, const size_t y, const uint8_t alpha );
@@ -85,6 +87,8 @@ CLASS( Texture, Serializable )
 	static constexpr rotate_t ROTATE_180 = 2;
 	static constexpr rotate_t ROTATE_270 = 3;
 	
+	void Erase( const size_t x1, const size_t y1, const size_t x2, const size_t y2 );
+	
 	/**
 	 * TODO: refactor this huge parameter list somehow!!!
 	 * 
@@ -110,9 +114,15 @@ CLASS( Texture, Serializable )
 	void SetContrast(const float contrast);
 
 	static const Texture* FromColor( const Color& color );
-	
+
+	const size_t UpdatedCount() const;
+	void Update();
+
 	const Buffer Serialize() const;
 	void Unserialize( Buffer buf );
+	
+private:
+	size_t m_update_counter = 0;
 };
 
 } /* namespace types */

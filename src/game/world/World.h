@@ -14,7 +14,9 @@
 #include "util/Clamper.h"
 #include "util/Random.h"
 #include "util/Scroller.h"
+
 #include "map/Map.h"
+#include "map_editor/MapEditor.h"
 
 #include "ui/event/UIEventHandler.h"
 
@@ -70,6 +72,8 @@ CLASS( World, base::Task )
 	
 	Map* GetMap() const;
 	
+	map_editor::MapEditor* GetMapEditor() const;
+	
 	void CenterAtCoordinatePercents( const Vec2< float > position_percents );
 	
 	void SmoothScroll( const float scroll_value );
@@ -97,6 +101,10 @@ private:
 	Light* m_light_a = nullptr; // Alpha Centauri A
 	Light* m_light_b = nullptr; // Alpha Centauri B
 	Scene* m_world_scene = nullptr;
+	
+	map_editor::MapEditor* m_map_editor = nullptr;
+	bool m_is_editing_mode = false;
+	map_editor::MapEditor::draw_mode_t m_editing_draw_mode = map_editor::MapEditor::DM_NONE;
 	
 	struct {
 		util::Clamper<float> x;

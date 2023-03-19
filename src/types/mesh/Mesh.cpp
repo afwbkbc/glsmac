@@ -49,6 +49,14 @@ void Mesh::Clear() {
 	m_is_final = true;
 }
 
+Mesh::index_t Mesh::AddEmptyVertex() {
+	ASSERT( !m_is_final, "addvertex on already finalized mesh" );
+	ASSERT( m_vertex_i < m_vertex_count, "vertex out of bounds (" + std::to_string( m_vertex_i ) + " >= " + std::to_string( m_vertex_count ) + ")" );
+	index_t ret = m_vertex_i;
+	m_vertex_i++;
+	return ret;
+}
+
 void Mesh::AddSurface( const surface_t& surface  ) {
 	ASSERT( !m_is_final, "addsurface on already finalized mesh" );
 	ASSERT( m_surface_i < m_surface_count, "surface out of bounds" );

@@ -37,6 +37,7 @@ CLASS( Mesh, Serializable )
 	
 	void Clear();
 	
+	index_t AddEmptyVertex(); // empty vertex (to be modified later)
 	void AddSurface( const surface_t& surface );
 	
 	void SetVertexCoord( const index_t index, const Vec3 &coord );

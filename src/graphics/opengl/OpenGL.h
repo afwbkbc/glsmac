@@ -87,7 +87,11 @@ protected:
 	
 private:
 	
-	typedef std::unordered_map< const types::Texture*, GLuint > m_textures_map;
+	struct texture_data_t {
+		GLuint obj = 0;
+		size_t last_texture_update_counter = 0;
+	};
+	typedef std::unordered_map< const types::Texture*, texture_data_t > m_textures_map;
 	m_textures_map m_textures = {};
 	GLuint m_no_texture = 0;
 	GLuint next_texture_obj_id = 0;

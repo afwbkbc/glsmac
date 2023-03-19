@@ -12,7 +12,9 @@ void LandMoisture::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::m
 	Map::pcx_texture_coordinates_t tc = {};
 	uint8_t rotate = 0;
 	
-	NEW( ts->moisture_original, Texture, "MoistureOriginal", w, h );
+	if ( !ts->moisture_original ) {
+		NEW( ts->moisture_original, Texture, "MoistureOriginal", w, h );
+	}
 
 	auto add_flags = Texture::AM_DEFAULT;
 	

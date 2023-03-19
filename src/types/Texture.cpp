@@ -33,7 +33,6 @@ Texture::~Texture() {
 }
 
 void Texture::Resize( const size_t width, const size_t height ) {
-	
 	if (m_width != width || m_height != height) {
 		
 		//Log( "Setting texture size to " + std::to_string( width ) + "x" + std::to_string( height ) );
@@ -49,17 +48,17 @@ void Texture::Resize( const size_t width, const size_t height ) {
 		m_bitmap_size = m_width * m_height * m_bpp;
 		m_bitmap = (unsigned char*) malloc( m_bitmap_size );
 		memset( ptr( m_bitmap, 0, m_bitmap_size ), 0, m_bitmap_size );
+		
+		Update();
 	}
 }
 
 void Texture::SetPixel( const size_t x, const size_t y, const Color::rgba_t& rgba ) {
 	memcpy( ptr( m_bitmap, ( y * m_width + x ) * m_bpp, sizeof( rgba ) ), &rgba, sizeof( rgba ) );
 } 
-
 void Texture::SetPixel( const size_t x, const size_t y, const Color& color ) {
 	SetPixel( x, y, color.GetRGBA() );
 }
-
 void Texture::SetPixelAlpha( const size_t x, const size_t y, const uint8_t alpha ) {
 	memcpy( ptr( m_bitmap, ( y * m_width + x ) * m_bpp + 3, sizeof( alpha ) ), &alpha, sizeof( alpha ) );
 }
@@ -68,6 +67,14 @@ const Color::rgba_t Texture::GetPixel( const size_t x, const size_t y ) const {
 	Color::rgba_t rgba;
 	memcpy( &rgba, ptr( m_bitmap, ( y * m_width + x ) * m_bpp, sizeof( rgba ) ), sizeof( rgba ) );
 	return rgba;
+}
+
+void Texture::Erase( const size_t x1, const size_t y1, const size_t x2, const size_t y2 ) {
+	for ( auto y = y1 ; y <= y2 ; y++ ) {
+		for ( auto x = x1 ; x <= x2 ; x++ ) {
+			SetPixel( x, y, 0 );
+		}
+	}
 }
 
 void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x, const size_t dest_y, const rotate_t rotate, const float alpha, util::Random* rng, util::Perlin* perlin ) {
@@ -652,6 +659,8 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 	
 	#undef MIX_COLORS
 	#undef COASTLINES_BORDER_RND
+
+	Update();
 }
 
 void Texture::Rotate() {
@@ -673,6 +682,8 @@ void Texture::Rotate() {
 	
 	free( m_bitmap );
 	m_bitmap = new_bitmap;
+	
+	Update();
 }
 
 void Texture::FlipV() {
@@ -690,6 +701,8 @@ void Texture::FlipV() {
 	
 	free( m_bitmap );
 	m_bitmap = new_bitmap;
+	
+	Update();
 }
 
 void Texture::SetAlpha(const float alpha) {
@@ -699,6 +712,8 @@ void Texture::SetAlpha(const float alpha) {
 			*ptr( m_bitmap, ( y * m_width + x ) * m_bpp + 3, sizeof( alpha_byte ) ) = alpha_byte;
 		}
 	}
+	
+	Update();
 }
 
 void Texture::SetContrast(const float contrast) {
@@ -711,12 +726,22 @@ void Texture::SetContrast(const float contrast) {
 			}
 		}
 	}
+	
+	Update();
 }
 
 const Texture* Texture::FromColor( const Color& color ) {
 	NEWV( texture, Texture, "FromColor", 1, 1 );
 	texture->SetPixel( 0, 0, color );
 	return texture;
+}
+
+const size_t Texture::UpdatedCount() const {
+	return m_update_counter;
+}
+
+void Texture::Update() {
+	m_update_counter++;
 }
 
 const Buffer Texture::Serialize() const {
@@ -757,7 +782,8 @@ void Texture::Unserialize( Buffer buf ) {
 	m_bitmap = (unsigned char*)buf.ReadData( m_bitmap_size );
 	
 	m_is_tiled = buf.ReadBool();
-	
+
+	Update();
 }
 
 }

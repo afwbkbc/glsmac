@@ -59,7 +59,8 @@ CLASS( UIEvent, base::Base )
 		K_KP_RIGHT,
 		K_KP_RIGHT_DOWN,
 		K_KP_DOWN,
-		K_KP_LEFT_DOWN
+		K_KP_LEFT_DOWN,
+		K_CTRL
 	};
 	
 	// modifier flags

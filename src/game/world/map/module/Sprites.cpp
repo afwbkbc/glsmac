@@ -8,6 +8,13 @@ namespace map {
 
 void Sprites::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_state_t* ms ) {
 	
+	// TODO: keep existing ones?
+	for ( auto& sprite : ts->sprites ) {
+		m_map->GetScene()->RemoveActor( sprite.actor );
+		DELETE( sprite.actor );
+	}
+	ts->sprites.clear();
+	
 #define SPRITE( _feature, _name, _texture ) \
 	if ( tile->features & Tile::_feature ) { \
 		GenerateSprite( tile, ts, _name, Map::s_consts.tc.ter1_pcx._texture ); \

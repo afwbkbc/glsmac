@@ -246,6 +246,10 @@ UIEvent::key_code_t SDL2::GetScanCode( SDL_Scancode code, SDL_Keymod modifiers )
 		case SDL_SCANCODE_KP_1: {
 			return UIEvent::K_KP_LEFT_DOWN;
 		}
+		case SDL_SCANCODE_LCTRL: // do we need to differentiate?
+		case SDL_SCANCODE_RCTRL: {
+			return UIEvent::K_CTRL;
+		}
 		default: {
 			return UIEvent::K_NONE;
 		}
