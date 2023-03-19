@@ -362,7 +362,7 @@ void BottomBar::AddStyles() {
 	AddStyle( "MiddleAreaToolbarInfoLabel", SH() {
 		s->Set( ::Style::A_TEXTALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
 		s->SetFont( ::Style::A_FONT, "arialn.ttf", 14 );
-		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 116, 156, 56 ) );
+		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 184, 192, 96 ) );
 	});
 	
 	// info panels page
@@ -378,7 +378,7 @@ void BottomBar::AddStyles() {
 	AddStyle( "MiddleAreaInfoPanelLabel", SH() {
 		s->Set( ::Style::A_TEXTALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
 		s->SetFont( ::Style::A_FONT, "arialn.ttf", 14 );
-		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 116, 156, 56 ) );
+		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 184, 192, 96 ) );
 	});
 	
 	// units list at bottom
