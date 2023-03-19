@@ -1008,7 +1008,9 @@ void UIObject::Defocus() {
 void UIObject::Show() {
 	if ( !m_is_visible ) {
 		m_is_visible = true;
-		ShowActors();
+		if ( !m_parent_object || m_parent_object->IsVisible() ) {
+			ShowActors();
+		}
 	}
 }
 
@@ -1048,6 +1050,10 @@ void UIObject::HideActors() {
 #endif
 		Refresh();
 	}
+}
+
+const bool UIObject::IsVisible() const {
+	return m_is_actually_visible;
 }
 
 void UIObject::SetAreaLimits( const coord_box_t limits ) {

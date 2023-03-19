@@ -11,6 +11,9 @@ void Toolbar::Create() {
 	
 	SetMargin( -3 );
 	
+	NEW( m_centered_block, CenteredBlock );
+	AddChild( m_centered_block );
+	
 	// TODO: put everything into style?
 	
 	// TODO: split to separate panels/sections?
@@ -29,7 +32,7 @@ void Toolbar::Create() {
 					SelectTool( tool );
 					return true;
 				});
-			AddChild( button );
+			m_centered_block->AddChild( button );
 			m_tool_buttons.push_back( button );
 
 			// horizontal, then vertical
@@ -54,7 +57,7 @@ void Toolbar::Create() {
 					SelectBrush( brush );
 					return true;
 				});
-			AddChild( button );
+			m_centered_block->AddChild( button );
 			m_brush_buttons.push_back( button );
 
 			// vertical, then horizontal
@@ -67,7 +70,7 @@ void Toolbar::Create() {
 	
 	{ // tool info
 		NEW( m_tool_info.body, Section, m_world, "MiddleAreaToolbarToolInfo" );
-		AddChild( m_tool_info.body );
+		m_centered_block->AddChild( m_tool_info.body );
 		
 		const size_t offset = 4;
 		uint8_t by = 0;
@@ -102,7 +105,7 @@ void Toolbar::Destroy() {
 	{ // tools
 		SelectTool( ET_NONE );
 		for ( auto& button : m_tool_buttons ) {
-			RemoveChild( button );
+			m_centered_block->RemoveChild( button );
 		}
 		m_tool_buttons.clear();
 	}
@@ -110,7 +113,7 @@ void Toolbar::Destroy() {
 	{ // brushes
 		SelectBrush( EB_NONE );
 		for ( auto& button : m_brush_buttons ) {
-			RemoveChild( button );
+			m_centered_block->RemoveChild( button );
 		}
 		m_brush_buttons.clear();
 	}
@@ -119,8 +122,10 @@ void Toolbar::Destroy() {
 		for ( auto& label : m_tool_info.labels ) {
 			m_tool_info.body->RemoveChild( label.second );
 		}
-		RemoveChild( m_tool_info.body );
+		m_centered_block->RemoveChild( m_tool_info.body );
 	}
+	
+	RemoveChild( m_centered_block );
 	
 	MiddleAreaPage::Destroy();
 }
@@ -132,9 +137,11 @@ void Toolbar::Align() {
 		// TODO: implement in Style ?
 		if ( m_object_area.width >= 460 ) {
 			m_tool_info.body->Show();
+			m_centered_block->SetAlign( UIObject::ALIGN_CENTER );
 		}
 		else {
 			m_tool_info.body->Hide();
+			m_centered_block->SetAlign( UIObject::ALIGN_LEFT );
 		}
 	}
 }

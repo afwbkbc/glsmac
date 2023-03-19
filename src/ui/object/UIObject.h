@@ -191,6 +191,7 @@ CLASS( UIObject, base::Base )
 	virtual void ShowActors();
 	virtual void Hide();
 	virtual void HideActors();
+	const bool IsVisible() const;
 	
 	virtual void SetAreaLimits( const coord_box_t limits );
 	virtual void SetAreaLimitsByObject( UIObject* source_object ); // make sure source object lives longer than this one!

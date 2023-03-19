@@ -4,6 +4,7 @@
 
 #include "MiddleAreaPage.h"
 
+#include "CenteredBlock.h"
 #include "ui/object/SimpleButton.h"
 #include "Section.h"
 #include "ui/object/Label.h"
@@ -23,6 +24,8 @@ CLASS( Toolbar, MiddleAreaPage )
 	
 private:
 
+	CenteredBlock* m_centered_block = nullptr;
+	
 	// tools
 	
 	static constexpr uint8_t s_tool_button_width = 44; // also includes margin

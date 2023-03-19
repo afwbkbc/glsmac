@@ -107,6 +107,12 @@ void BottomBar::AddStyles() {
 		s->Set( ::Style::A_SOUND_VOLUME, 0.2 );
 	});
 	
+	// centered block (used to center narrow bottom bar contents on high resolutions
+	AddStyle( "CenteredBlock", SH() {
+		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_CENTER );
+		s->Set( ::Style::A_WIDTH, 460 );
+	});
+	
 	// unit preview
 	
 	AddStyle( "UnitPreview", SH() {
