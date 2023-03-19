@@ -5,6 +5,8 @@
 #include "MiddleAreaPage.h"
 
 #include "ui/object/SimpleButton.h"
+#include "Section.h"
+#include "ui/object/Label.h"
 
 namespace game {
 namespace world {
@@ -131,6 +133,27 @@ private:
 	
 	void SelectBrush( editing_brush_t brush );
 
+	// tool info
+
+	static constexpr uint8_t s_tool_info_line_height = 14; // also includes margin
+
+	enum tool_info_line_t {
+		TI_NONE,
+		
+		TI_FILE,
+		TI_TOOL,
+		TI_BRUSH,
+		TI_MAP_SIZE,
+		TI_MODE,
+		
+		TI_MAX
+	};
+	
+	struct {
+		Section* body = nullptr;
+		std::unordered_map< tool_info_line_t, ::ui::object::Label* > labels = {};
+	} m_tool_info = {};
+	
 };
 
 }

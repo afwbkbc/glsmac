@@ -1,5 +1,7 @@
 #include "Toolbar.h"
 
+#include "../../World.h"
+
 namespace game {
 namespace world {
 namespace ui {
@@ -8,6 +10,8 @@ void Toolbar::Create() {
 	MiddleAreaPage::Create();
 	
 	SetMargin( -3 );
+	
+	// TODO: put everything into style?
 	
 	// TODO: split to separate panels/sections?
 	
@@ -34,11 +38,10 @@ void Toolbar::Create() {
 				by++;
 			}
 		}
-		SelectTool( ET_ELEVATIONS );
 	}
 	
 	{ // brush buttons
-		const Vec2< size_t > offset = { 230, 10 };
+		const Vec2< size_t > offset = { 225, 10 };
 		uint8_t bx = 0, by = 0;
 		for ( auto b = EB_NONE + 1 ; b < EB_MAX ; b++ ) {
 			const auto brush = (editing_brush_t) b;
@@ -60,30 +63,80 @@ void Toolbar::Create() {
 				bx++;
 			}
 		}
-		SelectBrush( EB_DOT );
 	}
+	
+	{ // tool info
+		NEW( m_tool_info.body, Section, m_world, "MiddleAreaToolbarToolInfo" );
+		AddChild( m_tool_info.body );
+		
+		const size_t offset = 4;
+		uint8_t by = 0;
+		for ( auto t = TI_NONE + 1 ; t < TI_MAX ; t++ ) {
+			const auto ti = (tool_info_line_t) t;
+			NEWV( label, ::ui::object::Label, "MapBottomBarMiddleAreaToolbarInfoLabel" );
+				label->SetLeft( offset );
+				label->SetTop( offset + by * s_tool_info_line_height );
+			m_tool_info.body->AddChild( label );
+			m_tool_info.labels[ ti ] = label;
+			
+			by++;
+		}
+	}
+
+	// initialize
+	const auto* map = m_world->GetMap();
+	m_tool_info.labels[ TI_FILE ]->SetText( "File: maps/untitled.gsm" );
+	m_tool_info.labels[ TI_MAP_SIZE ]->SetText( "Map Size: " +
+		std::to_string( map->GetWidth() ) +
+			"x" +
+		std::to_string( map->GetHeight() )
+	);
+	m_tool_info.labels[ TI_MODE ]->SetText( "PLAY mode (No Scroll Lock)" );
+	
+	SelectTool( ET_ELEVATIONS );
+	SelectBrush( EB_DOT );
 }
 
 void Toolbar::Destroy() {
 	
-	SelectTool( ET_NONE );
-	for ( auto& button : m_tool_buttons ) {
-		RemoveChild( button );
+	{ // tools
+		SelectTool( ET_NONE );
+		for ( auto& button : m_tool_buttons ) {
+			RemoveChild( button );
+		}
+		m_tool_buttons.clear();
 	}
-	m_tool_buttons.clear();
 	
-	SelectBrush( EB_NONE );
-	for ( auto& button : m_brush_buttons ) {
-		RemoveChild( button );
+	{ // brushes
+		SelectBrush( EB_NONE );
+		for ( auto& button : m_brush_buttons ) {
+			RemoveChild( button );
+		}
+		m_brush_buttons.clear();
 	}
-	m_brush_buttons.clear();
 
+	{ // tool info
+		for ( auto& label : m_tool_info.labels ) {
+			m_tool_info.body->RemoveChild( label.second );
+		}
+		RemoveChild( m_tool_info.body );
+	}
+	
 	MiddleAreaPage::Destroy();
 }
 
 void Toolbar::Align() {
 	MiddleAreaPage::Align();
-		
+	
+	if ( m_tool_info.body ) {
+		// TODO: implement in Style ?
+		if ( m_object_area.width >= 460 ) {
+			m_tool_info.body->Show();
+		}
+		else {
+			m_tool_info.body->Hide();
+		}
+	}
 }
 
 void Toolbar::SelectTool( editing_tool_t tool ) {
@@ -103,6 +156,8 @@ void Toolbar::SelectTool( editing_tool_t tool ) {
 			m_active_tool_button = m_tool_buttons.at( m_active_tool - 1 ); // because there's no button for ET_NONE
 			m_active_tool_button->AddStyleModifier( Style::M_SELECTED );
 		}
+		
+		m_tool_info.labels[ TI_TOOL ]->SetText( "Editing: " + m_tool_names.at( m_active_tool ) );
 	}
 }
 
@@ -123,6 +178,8 @@ void Toolbar::SelectBrush( editing_brush_t brush ) {
 			m_active_brush_button = m_brush_buttons.at( m_active_brush - 1 ); // because there's no button for EB_NONE
 			m_active_brush_button->AddStyleModifier( Style::M_SELECTED );
 		}
+		
+		m_tool_info.labels[ TI_BRUSH ]->SetText( "Brush: " + m_brush_names.at( m_active_brush ) );
 	}
 }
 

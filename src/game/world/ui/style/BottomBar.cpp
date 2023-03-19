@@ -354,6 +354,17 @@ void BottomBar::AddStyles() {
 		f_toolbar_brush_button_texture( s, 590, 438 );
 	});
 	
+	AddStyle( "MiddleAreaToolbarToolInfo", SH() {
+		s->Set( ::Style::A_LEFT, 277 );
+		s->Set( ::Style::A_WIDTH, 185 );
+	});
+	
+	AddStyle( "MiddleAreaToolbarInfoLabel", SH() {
+		s->Set( ::Style::A_TEXTALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+		s->SetFont( ::Style::A_FONT, "arialn.ttf", 14 );
+		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 116, 156, 56 ) );
+	});
+	
 	// info panels page
 	
 	AddStyle( "MiddleAreaInfoPanels", { "MiddleAreaPage" }, SH() {
