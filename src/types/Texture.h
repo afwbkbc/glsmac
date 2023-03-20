@@ -121,6 +121,9 @@ CLASS( Texture, Serializable )
 		size_t top;
 		size_t right;
 		size_t bottom;
+		const std::string ToString() const {
+			return "[ " + std::to_string( left ) + "x" + std::to_string( top ) + " " + std::to_string( right ) + "x" + std::to_string( bottom ) + " ]";
+		}
 	};
 	typedef std::vector< updated_area_t > updated_areas_t;
 	updated_areas_t m_updated_areas = {};

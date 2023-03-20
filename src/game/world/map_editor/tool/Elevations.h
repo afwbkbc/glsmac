@@ -11,8 +11,8 @@ namespace tool {
 
 CLASS( Elevations, Tool )
 	
-	static constexpr map::Tile::elevation_t elevation_change_min = 200;
-	static constexpr map::Tile::elevation_t elevation_change_max = 400;
+	static constexpr map::Tile::elevation_t elevation_change_min = 500;
+	static constexpr map::Tile::elevation_t elevation_change_max = 1000;
 	
 	Elevations( World* world );
 	

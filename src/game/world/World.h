@@ -67,6 +67,9 @@ CLASS( World, base::Task )
 				const float scroll_if_selected_tile_farther_from_center_than = 0.4f;
 			} key_scrolling;
 		} map_scroll;
+		const struct {
+			const size_t draw_frequency_ms = 50; // TODO: this value doesn't seem realistic, why?
+		} map_editing;
 	};
 	static const consts_t s_consts;
 	
@@ -105,6 +108,7 @@ private:
 	map_editor::MapEditor* m_map_editor = nullptr;
 	bool m_is_editing_mode = false;
 	map_editor::MapEditor::draw_mode_t m_editing_draw_mode = map_editor::MapEditor::DM_NONE;
+	util::Timer m_editing_draw_timer;
 	
 	struct {
 		util::Clamper<float> x;

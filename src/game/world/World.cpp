@@ -289,6 +289,8 @@ void World::Start() {
 		else if ( data->key.code == UIEvent::K_CTRL ) {
 			if ( m_map_editor->IsEnabled() ) {
 				m_is_editing_mode = false;
+				m_editing_draw_timer.Stop();
+				m_editing_draw_mode = map_editor::MapEditor::DM_NONE;
 			}
 		}
 		return false;
@@ -311,6 +313,7 @@ void World::Start() {
 					
 			}
 			SelectTileAtPoint( data->mouse.absolute.x, data->mouse.absolute.y ); // async
+			m_editing_draw_timer.SetInterval( World::s_consts.map_editing.draw_frequency_ms ); // keep drawing until mouseup
 		}
 		else {
 			switch ( data->mouse.button ) {
@@ -421,6 +424,10 @@ void World::Start() {
 			}
 #endif
 		}
+		if ( m_is_editing_mode ) {
+			m_editing_draw_timer.Stop();
+			m_editing_draw_mode = map_editor::MapEditor::DM_NONE;
+		}
 		return true;
 	}, UI::GH_AFTER );
 	
@@ -511,6 +518,12 @@ void World::Stop() {
 
 void World::Iterate() {
 	
+	while ( m_editing_draw_timer.HasTicked() ) {
+		if ( m_is_editing_mode ) {
+			SelectTileAtPoint( m_map_control.last_mouse_position.x, m_map_control.last_mouse_position.y ); // async
+		}
+	}
+	
 	// response for clicked tile (if click happened)
 	auto tile_info = m_map->GetTileAtScreenCoordsResult();
 	if ( tile_info.tile ) {
@@ -520,7 +533,6 @@ void World::Iterate() {
 			m_map->LoadTiles( tiles_to_reload );
 			//m_map->FixNormals( tiles_to_reload );
 			m_map->FixNormals( m_map->GetAllTiles() ); // TODO: partial UpdateNormals() and partial FixNormals()
-			
 			SelectTile( tile_info );
 		}
 		else {

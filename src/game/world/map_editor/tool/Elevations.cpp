@@ -29,7 +29,7 @@ const MapEditor::tiles_to_reload_t Elevations::Draw( map::Tile* tile, const MapE
 		}
 		
 		// prevent extreme slopes
-		const auto el = Map::s_consts.tile.maximum_allowed_slope_elevation;
+		const auto el = Map::s_consts.tile.maximum_allowed_slope_elevation / 2; // / 2 because relative to center
 		#define x( _s, _d ) \
 			*tile->elevation._s = std::min< Tile::elevation_t >( *tile->elevation._s, *tile->_d->elevation.center + el ); \
 			*tile->elevation._s = std::max< Tile::elevation_t >( *tile->elevation._s, *tile->_d->elevation.center - el ); \

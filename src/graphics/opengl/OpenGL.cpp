@@ -319,45 +319,124 @@ void OpenGL::LoadTexture( types::Texture* texture ) {
 		}
 		else if ( !texture->GetUpdatedAreas().empty() ) {
 			
-			// combine multiple updates into one
-			size_t left = UINT_MAX;
-			size_t top = UINT_MAX;
-			size_t right = 0;
-			size_t bottom = 0;
-			// TODO: leave far areas apart (in reality there won' t be many such cases tho)
-			for ( auto& updated_area : texture->GetUpdatedAreas() ) {
-				left = std::min< size_t >( left, updated_area.left );
-				top = std::min< size_t >( top, updated_area.top );
-				right = std::max< size_t >( right, updated_area.right );
-				bottom = std::max< size_t >( bottom, updated_area.bottom );
-				
+			// combine multiple updates into one or fewer
+			
+			types::Texture::updated_areas_t areas = {};
+			
+			const auto& updated_areas = texture->GetUpdatedAreas();
+			
+			const uint8_t od = 1; // overlap distance
+			
+			const auto f_are_combineable = [] ( const types::Texture::updated_area_t& first, const types::Texture::updated_area_t& second ) -> bool {
+				return
+					(
+						( first.left + od >= second.left && first.left - od <= second.right ) ||
+						( first.right + od >= second.left && first.right - od <= second.right )
+					) &&
+					(
+						( first.top + od >= second.top && first.top - od <= second.bottom ) ||
+						( first.bottom + od >= second.top && first.bottom - od <= second.bottom )
+					)
+				;
+			};
+			
+			const auto f_combine = [] ( types::Texture::updated_area_t& first, const types::Texture::updated_area_t& second ) -> void {
+				//Log( "Merging texture area " + second.ToString() + " into " + first.ToString() );
+				first.left = std::min< size_t >( first.left, second.left );
+				first.top = std::min< size_t >( first.top, second.top );
+				first.right = std::max< size_t >( first.right, second.right );
+				first.bottom = std::max< size_t >( first.bottom, second.bottom );
+			};
+			
+			// mark area as removed (merged into another)
+			const auto f_remove = [] ( types::Texture::updated_area_t& area ) -> void {
+				area.right = area.top = 0; // hackish but no actual area would have these coordinates at 0
+			};
+			
+			// check if area was marked as removed (to skip)
+			const auto f_is_removed = [] ( const types::Texture::updated_area_t& area ) -> bool {
+				return area.right == 0 && area.top == 0;
+			};
+			
+			for ( auto& updated_area : updated_areas ) {
+				//Log( "Processing texture area " + updated_area.ToString() );
+				// try to merge with existing one
+				auto it = areas.begin();
+				while ( it != areas.end() ) {
+					// if it overlaps then we can merge with existing (TODO: can optimize further by measuring overlap size)
+					if ( f_are_combineable( updated_area, *it ) ) {
+						// extend area to fit both new one and old one
+						f_combine( *it, updated_area );
+						break;
+					}
+					it++;
+				}
+				if ( it == areas.end() ) {
+					// couldn't find any suitable areas, add new one
+					//Log( "Adding texture area " + updated_area.ToString() );
+					areas.push_back({
+						updated_area.left,
+						updated_area.top,
+						updated_area.right,
+						updated_area.bottom
+					});
+				}
 			}
 			
-			Log( "Reloading texture part [ "+ std::to_string( left ) + " " + std::to_string( top ) + " " + std::to_string( right ) + " " + std::to_string( bottom ) + " ]" );
+			// keep combining until can't combine anymore
+			bool combined = true;
+			do {
+				combined = false;
+				for ( auto it_dst = areas.begin() ; it_dst < areas.end() ; it_dst++ ) {
+					if ( f_is_removed( *it_dst ) ) {
+						continue;
+					}
+					for ( auto it_src = it_dst + 1 ; it_src < areas.end() ; it_src++ ) {
+						if ( f_is_removed( *it_src ) ) {
+							continue;
+						}
+						if ( f_are_combineable( *it_dst, *it_src ) ) {
+							//Log( "Merging texture area " + it_src->ToString() + " into " + it_dst->ToString() );
+							f_combine( *it_dst, *it_src );
+							f_remove( *it_src );
+							combined = true;
+						}
+					}
+				}
+			} while ( combined );
 			
-			const size_t w = right - left;
-			const size_t h = bottom - top;
+			// reload areas into opengl
+			for ( auto& area : areas ) {
+				if ( f_is_removed( area ) ) {
+					continue;
+				}
+				
+				//Log( "Reloading texture area " + area.ToString() );
 
-			auto* bitmap = texture->CopyBitmap(
-				left,
-				top,
-				right,
-				bottom
-			);
+				const size_t w = area.right - area.left;
+				const size_t h = area.bottom - area.top;
 
-			glTexSubImage2D(
-				GL_TEXTURE_2D,
-				0,
-				left,
-				top,
-				w,
-				h,
-				GL_RGBA,
-				GL_UNSIGNED_BYTE,
-				ptr( bitmap, 0, w * h * 4 )
-			);
+				auto* bitmap = texture->CopyBitmap(
+					area.left,
+					area.top,
+					area.right,
+					area.bottom
+				);
 
-			free( bitmap );
+				glTexSubImage2D(
+					GL_TEXTURE_2D,
+					0,
+					area.left,
+					area.top,
+					w,
+					h,
+					GL_RGBA,
+					GL_UNSIGNED_BYTE,
+					ptr( bitmap, 0, w * h * 4 )
+				);
+
+				free( bitmap );
+			}
 		}
 		texture->ClearUpdatedAreas();
 		
