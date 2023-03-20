@@ -1,3 +1,5 @@
+#include <climits>
+
 #include "OpenGL.h"
 
 #include "engine/Engine.h"
@@ -261,7 +263,7 @@ void OpenGL::OnWindowResize() {
 	}
 }
 
-void OpenGL::LoadTexture( const types::Texture* texture ) {
+void OpenGL::LoadTexture( types::Texture* texture ) {
 	ASSERT( texture, "texture is null" );
 	
 	bool is_reload_needed = false;
@@ -269,6 +271,7 @@ void OpenGL::LoadTexture( const types::Texture* texture ) {
 	const size_t texture_update_counter = texture->UpdatedCount();
 	
 	m_textures_map::iterator it = m_textures.find( texture );
+	bool need_full_update = false;
 	if ( it == m_textures.end() ) {
 	
 		Log( "Initializing texture '" + texture->m_name + "'" );
@@ -278,11 +281,11 @@ void OpenGL::LoadTexture( const types::Texture* texture ) {
 		glGenTextures( 1, &m_textures[ texture ].obj );
 		
 		is_reload_needed = true;
+		need_full_update = true;
 	}
 	
 	auto& t = m_textures[ texture ];
 	
-	// TODO: partial updates
 	if ( t.last_texture_update_counter != texture_update_counter ) {
 		t.last_texture_update_counter = texture_update_counter;
 		is_reload_needed = true;
@@ -293,16 +296,72 @@ void OpenGL::LoadTexture( const types::Texture* texture ) {
 
 		glBindTexture( GL_TEXTURE_2D, t.obj );
 
-		ASSERT( !glGetError(), "Texture parameter error" );
-		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+		if ( need_full_update ) {
+			ASSERT( !glGetError(), "Texture parameter error" );
+			glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
 
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, (GLsizei)texture->m_width, (GLsizei)texture->m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, ptr( texture->m_bitmap, 0, texture->m_width * texture->m_height * 4 ) );
+			glTexImage2D(
+				GL_TEXTURE_2D,
+				0,
+				GL_RGBA8,
+				(GLsizei)texture->m_width,
+				(GLsizei)texture->m_height,
+				0,
+				GL_RGBA,
+				GL_UNSIGNED_BYTE,
+				ptr( texture->m_bitmap, 0, texture->m_width * texture->m_height * 4 )
+			);
+			
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+		}
+		else if ( !texture->GetUpdatedAreas().empty() ) {
+			
+			// combine multiple updates into one
+			size_t left = UINT_MAX;
+			size_t top = UINT_MAX;
+			size_t right = 0;
+			size_t bottom = 0;
+			// TODO: leave far areas apart (in reality there won' t be many such cases tho)
+			for ( auto& updated_area : texture->GetUpdatedAreas() ) {
+				left = std::min< size_t >( left, updated_area.left );
+				top = std::min< size_t >( top, updated_area.top );
+				right = std::max< size_t >( right, updated_area.right );
+				bottom = std::max< size_t >( bottom, updated_area.bottom );
+				
+			}
+			
+			Log( "Reloading texture part [ "+ std::to_string( left ) + " " + std::to_string( top ) + " " + std::to_string( right ) + " " + std::to_string( bottom ) + " ]" );
+			
+			const size_t w = right - left;
+			const size_t h = bottom - top;
+
+			auto* bitmap = texture->CopyBitmap(
+				left,
+				top,
+				right,
+				bottom
+			);
+
+			glTexSubImage2D(
+				GL_TEXTURE_2D,
+				0,
+				left,
+				top,
+				w,
+				h,
+				GL_RGBA,
+				GL_UNSIGNED_BYTE,
+				ptr( bitmap, 0, w * h * 4 )
+			);
+
+			free( bitmap );
+		}
+		texture->ClearUpdatedAreas();
+		
 		ASSERT( !glGetError(), "Error loading texture" );
-
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
 
 		glGenerateMipmap(GL_TEXTURE_2D);
 

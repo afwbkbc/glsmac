@@ -76,7 +76,7 @@ void Sprite::LoadMesh() {
 }
 
 void Sprite::LoadTexture() {
-	const auto* texture = GetSpriteActor()->GetTexture();
+	auto* texture = GetSpriteActor()->GetTexture();
 	
 	if ( texture ) {
 		g_engine->GetGraphics()->LoadTexture( texture );

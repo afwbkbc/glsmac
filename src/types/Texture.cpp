@@ -49,7 +49,7 @@ void Texture::Resize( const size_t width, const size_t height ) {
 		m_bitmap = (unsigned char*) malloc( m_bitmap_size );
 		memset( ptr( m_bitmap, 0, m_bitmap_size ), 0, m_bitmap_size );
 		
-		Update();
+		FullUpdate();
 	}
 }
 
@@ -70,6 +70,13 @@ const Color::rgba_t Texture::GetPixel( const size_t x, const size_t y ) const {
 }
 
 void Texture::Erase( const size_t x1, const size_t y1, const size_t x2, const size_t y2 ) {
+	ASSERT( x1 < x2, "x1 must be smaller than x2" );
+	ASSERT( y1 < y2, "y1 must be smaller than y2" );
+	ASSERT( x1 < m_width, "x1 overflow" );
+	ASSERT( y1 < m_height, "y1 overflow" );
+	ASSERT( x2 < m_width, "x2 overflow" );
+	ASSERT( y2 < m_height, "y2 overflow" );
+	
 	for ( auto y = y1 ; y <= y2 ; y++ ) {
 		for ( auto x = x1 ; x <= x2 ; x++ ) {
 			SetPixel( x, y, 0 );
@@ -660,7 +667,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 	#undef MIX_COLORS
 	#undef COASTLINES_BORDER_RND
 
-	Update();
+	Update( { dest_x, dest_y, dest_x + w - 1, dest_y + h - 1 } );
 }
 
 void Texture::Rotate() {
@@ -683,7 +690,7 @@ void Texture::Rotate() {
 	free( m_bitmap );
 	m_bitmap = new_bitmap;
 	
-	Update();
+	FullUpdate();
 }
 
 void Texture::FlipV() {
@@ -702,7 +709,7 @@ void Texture::FlipV() {
 	free( m_bitmap );
 	m_bitmap = new_bitmap;
 	
-	Update();
+	FullUpdate();
 }
 
 void Texture::SetAlpha(const float alpha) {
@@ -713,7 +720,7 @@ void Texture::SetAlpha(const float alpha) {
 		}
 	}
 	
-	Update();
+	FullUpdate();
 }
 
 void Texture::SetContrast(const float contrast) {
@@ -727,7 +734,7 @@ void Texture::SetContrast(const float contrast) {
 		}
 	}
 	
-	Update();
+	FullUpdate();
 }
 
 const Texture* Texture::FromColor( const Color& color ) {
@@ -736,12 +743,55 @@ const Texture* Texture::FromColor( const Color& color ) {
 	return texture;
 }
 
+void Texture::Update( const updated_area_t updated_area ) {
+	//Log( "Need texture update [ "+ std::to_string( updated_area.left ) + " " + std::to_string( updated_area.top ) + " " + std::to_string( updated_area.right ) + " " + std::to_string( updated_area.bottom ) + " ]" );
+	m_updated_areas.push_back( updated_area );
+	m_update_counter++;
+}
+
+void Texture::FullUpdate() {
+	ClearUpdatedAreas();
+	Update( { 0, 0, m_width, m_height } );
+}
+
+
 const size_t Texture::UpdatedCount() const {
 	return m_update_counter;
 }
 
-void Texture::Update() {
-	m_update_counter++;
+const Texture::updated_areas_t& Texture::GetUpdatedAreas() const {
+	return m_updated_areas;
+}
+
+void Texture::ClearUpdatedAreas() {
+	m_updated_areas.clear();
+}
+
+unsigned char *Texture::CopyBitmap( const size_t x1, const size_t y1, const size_t x2, const size_t y2 ) {
+	
+	ASSERT( x1 < x2, "x1 must be smaller than x2" );
+	ASSERT( y1 < y2, "y1 must be smaller than y2" );
+	ASSERT( x1 <= m_width, "x1 overflow" );
+	ASSERT( y1 <= m_height, "y1 overflow" );
+	ASSERT( x2 <= m_width, "x2 overflow" );
+	ASSERT( y2 <= m_height, "y2 overflow" );
+	
+	const size_t w = x2 - x1;
+	const size_t h = y2 - y1;
+	const uint8_t bpp = 4;
+	
+	const size_t wbpp = w * bpp;
+	
+	unsigned char* bitmap = (unsigned char*)malloc( w * h * bpp );
+	for ( size_t y = 0 ; y < h ; y++ ) {
+		memcpy(
+			ptr( bitmap, y * wbpp, wbpp ),
+			ptr( m_bitmap, ( ( y1 + y ) * m_width + x1 ) * bpp, wbpp ),
+			wbpp
+		);
+	}
+	
+	return bitmap;
 }
 
 const Buffer Texture::Serialize() const {
@@ -783,7 +833,7 @@ void Texture::Unserialize( Buffer buf ) {
 	
 	m_is_tiled = buf.ReadBool();
 
-	Update();
+	FullUpdate();
 }
 
 }

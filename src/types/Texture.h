@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "types/Serializable.h"
 
@@ -115,9 +116,26 @@ CLASS( Texture, Serializable )
 
 	static const Texture* FromColor( const Color& color );
 
+	struct updated_area_t {
+		size_t left;
+		size_t top;
+		size_t right;
+		size_t bottom;
+	};
+	typedef std::vector< updated_area_t > updated_areas_t;
+	updated_areas_t m_updated_areas = {};
+	
+	void Update( const updated_area_t updated_area );
+	void FullUpdate();
 	const size_t UpdatedCount() const;
-	void Update();
+	const updated_areas_t& GetUpdatedAreas() const;
+	void ClearUpdatedAreas();
 
+	// allocates and returns copy of bitmap from specified area
+	// don't forget to free() it later
+	// supposed to be faster than AddFrom
+	unsigned char *CopyBitmap( const size_t x1, const size_t y1, const size_t x2, const size_t y2 );
+	
 	const Buffer Serialize() const;
 	void Unserialize( Buffer buf );
 	

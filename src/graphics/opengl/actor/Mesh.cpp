@@ -112,7 +112,7 @@ void Mesh::LoadMesh() {
 }
 
 void Mesh::LoadTexture() {
-	const auto* texture = GetMeshActor()->GetTexture();
+	auto* texture = GetMeshActor()->GetTexture();
 	
 	if ( texture ) {
 		

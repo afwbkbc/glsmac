@@ -31,8 +31,8 @@ CLASS2( Mesh, Actor, RRAware )
 	const mesh::Mesh *GetMesh() const;
 	const mesh::Data* GetDataMesh() const;
 	
-	void SetTexture( const Texture* texture );
-	const Texture* GetTexture() const;
+	void SetTexture( Texture* texture );
+	Texture* GetTexture() const;
 	
 	void SetTintColor( const Color tint_color );
 	const Color& GetTintColor() const;
@@ -52,7 +52,7 @@ CLASS2( Mesh, Actor, RRAware )
 	
 protected:
 	const mesh::Mesh* m_mesh = nullptr;
-	const Texture* m_texture = nullptr;
+	Texture* m_texture = nullptr;
 	const bool m_is_texture_tiled = false;
 
 	Color m_tint_color = { 1.0f, 1.0f, 1.0f, 1.0f };

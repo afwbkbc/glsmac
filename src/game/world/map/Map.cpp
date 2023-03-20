@@ -550,8 +550,8 @@ void Map::ClearTexture() {
 		m_textures.terrain->Erase(
 			m_current_ts->tex_coord.x1,
 			lt * m_map_state.dimensions.y * Map::s_consts.tile_texture.dimensions.y + m_current_ts->tex_coord.y1,
-			m_current_ts->tex_coord.x2,
-			lt * m_map_state.dimensions.y * Map::s_consts.tile_texture.dimensions.y + m_current_ts->tex_coord.y2
+			m_current_ts->tex_coord.x2 - 1,
+			lt * m_map_state.dimensions.y * Map::s_consts.tile_texture.dimensions.y + m_current_ts->tex_coord.y2 - 1
 		);
 	}
 }
@@ -696,7 +696,7 @@ void Map::SetMinimapColor( const Color& color ) {
 	m_textures.minimap->SetPixel( coord.x, coord.y, color );
 }
 
-const Texture* Map::GetTerrainTexture() const {
+Texture* Map::GetTerrainTexture() const {
 	ASSERT( m_textures.terrain, "terrain texture requested but not initialized" );
 	return m_textures.terrain;
 }

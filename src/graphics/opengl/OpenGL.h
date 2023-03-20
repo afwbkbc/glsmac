@@ -44,7 +44,7 @@ CLASS( OpenGL, Graphics )
 	const unsigned short GetViewportWidth() const;
 	const unsigned short GetViewportHeight() const;
 	
-	void LoadTexture( const types::Texture* texture );
+	void LoadTexture( types::Texture* texture );
 	void UnloadTexture( const types::Texture* texture );
 	void EnableTexture( const types::Texture* texture );
 	void DisableTexture();

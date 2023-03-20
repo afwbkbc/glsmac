@@ -12,7 +12,7 @@ CLASS( Surface, Mesh )
 
 	Surface( const std::string& class_name = "" );
 	
-	void SetTexture( const types::Texture* texture );
+	void SetTexture( types::Texture* texture );
 	void SetStretchTexture( const bool stretch_texture );
 	
 	virtual void Create();

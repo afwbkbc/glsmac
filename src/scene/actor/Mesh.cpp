@@ -45,11 +45,11 @@ const mesh::Data* Mesh::GetDataMesh() const {
 	return m_data_mesh;
 }
 
-void Mesh::SetTexture( const Texture* texture ) {
+void Mesh::SetTexture( Texture* texture ) {
 	m_texture = texture;
 }
 
-const Texture* Mesh::GetTexture() const {
+Texture* Mesh::GetTexture() const {
 	return m_texture;
 }
 

@@ -29,7 +29,7 @@ CLASS( Graphics, base::Module )
 	virtual const unsigned short GetViewportWidth() const = 0;
 	virtual const unsigned short GetViewportHeight() const = 0;
 	
-	virtual void LoadTexture( const types::Texture* texture ) = 0;
+	virtual void LoadTexture( types::Texture* texture ) = 0;
 	virtual void UnloadTexture( const types::Texture* texture ) = 0;
 	virtual void EnableTexture( const types::Texture* texture ) = 0;
 	virtual void DisableTexture() = 0;

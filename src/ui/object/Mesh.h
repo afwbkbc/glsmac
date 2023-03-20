@@ -18,7 +18,7 @@ CLASS( Mesh, UIObject )
 	Mesh( const std::string& class_name = "" );
 	
 	void SetMesh( const types::mesh::Mesh* mesh );
-	virtual void SetTexture( const types::Texture* texture );
+	virtual void SetTexture( types::Texture* texture );
 	void ClearTexture();
 	
 	void SetTintColor( const types::Color color );
@@ -41,7 +41,7 @@ protected:
 	
 	aspect_ratio_mode_t m_aspect_ratio_mode = AM_NONE;
 	
-	const types::Texture* m_texture = nullptr;
+	types::Texture* m_texture = nullptr;
 
 	scene::actor::Mesh *m_actor = nullptr;
 	

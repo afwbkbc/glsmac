@@ -384,7 +384,7 @@ CLASS( Map, Serializable )
 	
 	void SetMinimapColor( const Color& color );
 	
-	const Texture* GetTerrainTexture() const;
+	Texture* GetTerrainTexture() const;
 	
 	enum tile_grouping_criteria_t {
 		TG_MOISTURE,

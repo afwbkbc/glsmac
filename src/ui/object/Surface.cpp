@@ -11,7 +11,7 @@ Surface::Surface( const std::string& class_name )
 	//
 }
 
-void Surface::SetTexture( const types::Texture* texture ) {
+void Surface::SetTexture( types::Texture* texture ) {
 	if ( texture != m_texture ) {
 		Mesh::SetTexture( texture );
 		Resize();
@@ -47,7 +47,7 @@ void Surface::ApplyStyle() {
 	Mesh::ApplyStyle();
 	
 	if ( Has( Style::A_TEXTURE ) ) {
-		const auto* texture = (Texture*)GetObject( Style::A_TEXTURE );
+		auto* texture = (Texture*)GetObject( Style::A_TEXTURE );
 		if ( texture ) {
 			SetTexture( texture );
 			if ( Has( Style::A_SIZE_FROM_TEXTURE ) ) {

@@ -40,7 +40,7 @@ void Mesh::SetMesh( const types::mesh::Mesh* mesh ) {
 	}
 }
 
-void Mesh::SetTexture( const types::Texture* texture ) {
+void Mesh::SetTexture( types::Texture* texture ) {
 	if ( texture != m_texture ) {
 		/*if ( m_texture && m_texture ) {
 			Log( "Changing texture from " + m_texture->m_name + " to " + texture->m_name );
