@@ -16,7 +16,7 @@ Square::Square( World* world, const MapEditor::brush_type_t type, const uint16_t
 }
 	
 const MapEditor::tiles_t Square::Draw( map::Tile* center_tile ) {
-	const auto halfwidth = ( m_width + 1 ) / 2; // + 1 for center tile
+	const auto halfwidth = ( m_width ) / 2;
 	const auto* map = m_world->GetMap()->GetTilesPtr();
 	MapEditor::tiles_t tiles = {};
 	tiles.reserve( m_width * m_width );
@@ -24,6 +24,14 @@ const MapEditor::tiles_t Square::Draw( map::Tile* center_tile ) {
 	// TODO: shuffle
 	for ( int y = halfwidth - 1 ; y >= 0 ; y-- ) {
 		for ( int x = halfwidth - 1 ; x >= 0 ; x-- ) {
+			
+			if ( x == 0 && y == 0 ) {
+				continue; // center tile will be added last
+			}
+			if ( x && y && x + y > halfwidth ) {
+				continue; // draw diagonal square instead of full square
+			}
+			
 			if ( center_tile->coord.x >= x && center_tile->coord.y >= y ) {
 				tiles.push_back( map->At( center_tile->coord.x - x, center_tile->coord.y - y ) );
 			}
