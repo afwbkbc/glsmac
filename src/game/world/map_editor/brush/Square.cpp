@@ -16,19 +16,21 @@ Square::Square( World* world, const MapEditor::brush_type_t type, const uint16_t
 }
 	
 const MapEditor::tiles_t Square::Draw( map::Tile* center_tile ) {
-	const auto halfwidth = ( m_width ) / 2;
 	const auto* map = m_world->GetMap()->GetTilesPtr();
 	MapEditor::tiles_t tiles = {};
 	tiles.reserve( m_width * m_width );
 	// order is important, start with sides and move towards center for greatest effect
 	// TODO: shuffle
-	for ( int y = halfwidth - 1 ; y >= 0 ; y-- ) {
-		for ( int x = halfwidth - 1 ; x >= 0 ; x-- ) {
+	for ( int y = -m_width ; y <= m_width ; y++ ) {
+		for ( int x = -m_width ; x <= m_width ; x ++ ) {
+			if ( ( y & 1 ) != ( x & 1 ) ) {
+				continue;
+			}
 			
 			if ( x == 0 && y == 0 ) {
 				continue; // center tile will be added last
 			}
-			if ( x && y && x + y > halfwidth ) {
+			if ( abs( x ) + abs( y ) > m_width ) {
 				continue; // draw diagonal square instead of full square
 			}
 			
