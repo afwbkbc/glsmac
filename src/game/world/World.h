@@ -68,7 +68,7 @@ CLASS( World, base::Task )
 			} key_scrolling;
 		} map_scroll;
 		const struct {
-			const size_t draw_frequency_ms = 50; // TODO: this value doesn't seem realistic, why?
+			const size_t draw_frequency_ms = 60; // TODO: this value doesn't seem realistic, why?
 		} map_editing;
 	};
 	static const consts_t s_consts;

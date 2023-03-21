@@ -395,6 +395,10 @@ const Map::tiles_t Map::GetAllTiles() const {
 	return tiles;
 }
 
+const Tiles* Map::GetTilesPtr() const {
+	return m_tiles;
+}
+
 void Map::InitTextureAndMesh() {
 	
 	if ( m_textures.terrain ) {
@@ -810,6 +814,10 @@ void Map::GetTileAtScreenCoords( const size_t screen_x, const size_t screen_inve
 		m_actors.terrain->GetMeshActor()->CancelDataRequest( m_tile_at_request_id );
 	}
 	m_tile_at_request_id = m_actors.terrain->GetMeshActor()->GetDataAt( screen_x, screen_inverse_y );
+}
+
+const bool Map::IsTileAtRequestPending() const {
+	return m_tile_at_request_id;
 }
 
 Map::tile_info_t Map::GetTileAtScreenCoordsResult() {

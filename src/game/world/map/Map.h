@@ -430,6 +430,7 @@ CLASS( Map, Serializable )
 	// tile request stuff
 	void CancelTileAtRequest();
 	void GetTileAtScreenCoords( const size_t screen_x, const size_t screen_inverse_y ); // async, y needs to be upside down
+	const bool IsTileAtRequestPending() const;
 	tile_info_t GetTileAtScreenCoordsResult();
 	
 	// for minimap
@@ -452,6 +453,7 @@ CLASS( Map, Serializable )
 	void FixNormals( const tiles_t& tiles );
 	
 	const tiles_t GetAllTiles() const;
+	const Tiles* GetTilesPtr() const;
 	
 protected:
 	friend class Finalize;

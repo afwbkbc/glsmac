@@ -148,7 +148,7 @@ void Toolbar::Align() {
 
 void Toolbar::SelectTool( MapEditor::tool_type_t tool ) {
 	
-	if ( m_world->GetMapEditor()->GetActiveTool() != tool ) {
+	if ( m_world->GetMapEditor()->GetActiveToolType() != tool ) {
 		
 		Log( "Selecting tool: " + m_tool_names.at( tool ) );
 		
@@ -171,7 +171,7 @@ void Toolbar::SelectTool( MapEditor::tool_type_t tool ) {
 
 void Toolbar::SelectBrush( MapEditor::brush_type_t brush ) {
 	
-	if ( m_world->GetMapEditor()->GetActiveBrush() != brush ) {
+	if ( m_world->GetMapEditor()->GetActiveBrushType() != brush ) {
 		
 		Log( "Selecting brush: " + m_brush_names.at( brush ) );
 

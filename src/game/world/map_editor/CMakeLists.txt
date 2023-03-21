@@ -1,3 +1,4 @@
+SUBDIR( brush )
 SUBDIR( tool )
 
 SET(SRC ${SRC}

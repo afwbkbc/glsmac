@@ -17,6 +17,9 @@ namespace map_editor {
 namespace tool {
 	class Tool;
 }
+namespace brush {
+	class Brush;
+}
 
 CLASS( MapEditor, base::Base )
 
@@ -55,7 +58,7 @@ CLASS( MapEditor, base::Base )
 	std::unordered_map< tool_type_t, tool::Tool* > m_tools = {};
 	tool::Tool* m_active_tool = nullptr;
 	void SelectTool( tool_type_t tool );
-	const tool_type_t GetActiveTool() const;
+	const tool_type_t GetActiveToolType() const;
 
 	// brushes
 	enum brush_type_t {
@@ -70,9 +73,10 @@ CLASS( MapEditor, base::Base )
 		
 		BT_MAX
 	};
-	brush_type_t m_active_brush = BT_NONE;
+	std::unordered_map< brush_type_t, brush::Brush* > m_brushes = {};
+	brush::Brush* m_active_brush = nullptr;
 	void SelectBrush( MapEditor::brush_type_t brush );
-	const brush_type_t GetActiveBrush() const;
+	const brush_type_t GetActiveBrushType() const;
 	
 	MapEditor( World* world );
 	~MapEditor();

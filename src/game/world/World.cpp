@@ -518,8 +518,8 @@ void World::Stop() {
 
 void World::Iterate() {
 	
-	while ( m_editing_draw_timer.HasTicked() ) {
-		if ( m_is_editing_mode ) {
+	if ( m_editing_draw_timer.HasTicked() ) {
+		if ( m_is_editing_mode && !m_map->IsTileAtRequestPending() ) {
 			SelectTileAtPoint( m_map_control.last_mouse_position.x, m_map_control.last_mouse_position.y ); // async
 		}
 	}
