@@ -82,6 +82,8 @@ void Texture::Erase( const size_t x1, const size_t y1, const size_t x2, const si
 			SetPixel( x, y, 0 );
 		}
 	}
+	
+	Update( { x1, y1, x2, y2 } );
 }
 
 void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x, const size_t dest_y, const rotate_t rotate, const float alpha, util::Random* rng, util::Perlin* perlin ) {
