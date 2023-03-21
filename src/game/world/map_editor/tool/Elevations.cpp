@@ -18,30 +18,41 @@ const MapEditor::tiles_t Elevations::Draw( map::Tile* tile, const MapEditor::dra
 	
 	if ( tile->coord.y > 1 && tile->coord.y < m_world->GetMap()->GetHeight() - 2 ) { // editing poles will screw things up
 	
-		for ( auto& corner : tile->elevation.corners ) {
-			const auto change = (Tile::elevation_t)m_world->GetRandom()->GetUInt( elevation_change_min, elevation_change_max );
-			if ( mode == MapEditor::DM_DEC ) {
-				*corner = std::max< Tile::elevation_t >( Tile::ELEVATION_MIN, *corner - change );
-			}
-			else if ( mode == MapEditor::DM_INC ) {
-				*corner = std::min< Tile::elevation_t >( Tile::ELEVATION_MAX, *corner + change );
-			}
-		}
+		Tile::elevation_t elevation, change;
 		
 		// prevent extreme slopes
-		const auto el = Map::s_consts.tile.maximum_allowed_slope_elevation / 2; // / 2 because relative to center
-		#define x( _s, _d ) \
-			*tile->elevation._s = std::min< Tile::elevation_t >( *tile->elevation._s, *tile->_d->elevation._s + el ); \
-			*tile->elevation._s = std::max< Tile::elevation_t >( *tile->elevation._s, *tile->_d->elevation._s - el ); \
-			tile->_d->Update()
-			x( left, W );
-			x( top, N );
-			x( right, E );
-			x( bottom, S );
-		#undef x
+		const auto el = Map::s_consts.tile.maximum_allowed_slope_elevation;
+		const auto f_change_corner =
+			[ this, &tile, &mode, &elevation, &change, &el ]
+			( Tile::elevation_t* corner )
+		-> void {
+			elevation = *corner;
+			change = (Tile::elevation_t)m_world->GetRandom()->GetUInt( elevation_change_min, elevation_change_max );
+			if ( mode == MapEditor::DM_DEC ) {
+				elevation = std::max< Tile::elevation_t >( Tile::ELEVATION_MIN, elevation - change );
+			}
+			else if ( mode == MapEditor::DM_INC ) {
+				elevation = std::min< Tile::elevation_t >( Tile::ELEVATION_MAX, elevation + change );
+			}
+			for ( auto& n : tile->neighbours ) {
+				elevation = std::min< Tile::elevation_t >( elevation, *n->elevation.center + el );
+				elevation = std::max< Tile::elevation_t >( elevation, *n->elevation.center - el );
+			}
+			if ( mode == MapEditor::DM_DEC ) {
+				*corner = std::min< Tile::elevation_t >( *corner, elevation );
+			}
+			else if ( mode == MapEditor::DM_INC ) {
+				*corner = std::max< Tile::elevation_t >( *corner, elevation );
+			}
+		};
+		
+		f_change_corner( tile->elevation.left );
+		f_change_corner( tile->elevation.top );
+		f_change_corner( tile->elevation.right );
+		f_change_corner( tile->elevation.bottom );
 		
 		tile->Update();
-
+		
 		// tile can be either full-underwater or full-land
 		for ( auto& corner : tile->elevation.corners ) {
 			if ( *tile->elevation.center > 0 != *corner > 0 ) {
@@ -49,6 +60,11 @@ const MapEditor::tiles_t Elevations::Draw( map::Tile* tile, const MapEditor::dra
 			}
 		}
 		tile->Update();
+
+		// update neighbour tiles because they share some corners
+		for ( auto& n : tile->neighbours ) {
+			n->Update();
+		}
 
 		// we need to reload quite a few tiles because coastlines 2 tiles away may need to be redrawn or removed
 		// TODO: reduce based on some conditions
