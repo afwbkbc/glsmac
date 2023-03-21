@@ -301,7 +301,32 @@ void Map::ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles ) {
 void Map::FixNormals( const tiles_t& tiles ) {
 	Log( "Fixing normals" );
 	
-	m_mesh_terrain->UpdateNormals(); // TODO: partial updates
+	std::vector< types::mesh::Mesh::surface_id_t > surfaces = {};
+	
+	// avoiding reallocations is more important than saving memory
+	// worst case scenario: 4 surfaces per tile, 4 layers + overdraw column (only land layer)
+	surfaces.reserve( tiles.size() * 4 * 5 );
+	
+	for ( auto& tile : tiles ) {
+		auto* ts = GetTileState( tile->coord.x, tile->coord.y );
+		#define x( _layer ) \
+			surfaces.push_back( _layer.surfaces.left_top ); \
+			surfaces.push_back( _layer.surfaces.top_right ); \
+			surfaces.push_back( _layer.surfaces.right_bottom ); \
+			surfaces.push_back( _layer.surfaces.bottom_left )
+			x( ts->layers[ LAYER_LAND ] );
+			if ( ts->has_water ) {
+				x( ts->layers[ LAYER_WATER ] );
+				x( ts->layers[ LAYER_WATER_SURFACE ] );
+				x( ts->layers[ LAYER_WATER_SURFACE_EXTRA ] );
+			}
+			if ( tile->coord.x == 0 ) {
+				// also update overdraw column
+				x( ts->overdraw_column );
+			}
+		#undef x
+	}
+	m_mesh_terrain->UpdateNormals( surfaces );
 	
 	std::vector< mesh::Mesh::index_t > v, vtmp;
 	
@@ -309,27 +334,38 @@ void Map::FixNormals( const tiles_t& tiles ) {
 	vtmp.reserve( 4 );
 	v.reserve( 8 );
 	
-	for ( const auto& tile : tiles ) {
+	// normals will be combined at left vertex of tile
+	const auto f_combine_normals_at_left_vertex = [ this, &v, &vtmp ]( const Tile* tile ) -> void {
 		auto* ts = GetTileState( tile->coord.x, tile->coord.y );
-
-		// combine at left vertex
 		#define x( _lt ) { \
 			ts->layers[ _lt ].indices.left, \
 			ts->NW->layers[ _lt ].indices.bottom, \
 			ts->W->layers[ _lt ].indices.right, \
 			ts->SW->layers[ _lt ].indices.top, \
 		}
-
 		v = x( LAYER_LAND );
-
 		if ( tile->is_water_tile || tile->W->is_water_tile || tile->NW->is_water_tile ) {
 			vtmp = x( LAYER_WATER );
 			v.insert( v.end(), vtmp.begin(), vtmp.end() );
 		}
+		#undef x
 
 		m_mesh_terrain->CombineNormals( v );
-
-		#undef x
+	};
+	std::unordered_set< const Tile* > processed_tiles = {}; // to prevent duplicate combining
+	processed_tiles.reserve( tiles.size() * 4 ); // minimizing reallocations is more important than saving memory
+	const auto f_combine_normals_maybe = [ &f_combine_normals_at_left_vertex, &processed_tiles ]( const Tile* tile ) -> void {
+		if ( processed_tiles.find( tile ) == processed_tiles.end() ) {
+			f_combine_normals_at_left_vertex( tile );
+			processed_tiles.insert( tile );
+		}
+	};
+	
+	for ( const auto& tile : tiles ) {
+		f_combine_normals_maybe( tile );
+		f_combine_normals_maybe( tile->NE );
+		f_combine_normals_maybe( tile->E );
+		f_combine_normals_maybe( tile->SE );
 	}
 	
 	// average center normals
@@ -893,6 +929,7 @@ const Buffer Map::tile_state_t::Serialize() const {
 	}
 	buf.WriteString( overdraw_column.coords.Serialize().ToString() );
 	buf.WriteString( overdraw_column.indices.Serialize().ToString() );
+	buf.WriteString( overdraw_column.surfaces.Serialize().ToString() );
 	buf.WriteString( data_mesh.coords.Serialize().ToString() );
 	buf.WriteString( data_mesh.indices.Serialize().ToString() );
 	buf.WriteBool( has_water );
@@ -937,12 +974,25 @@ const Buffer Map::tile_elevations_t::Serialize() const {
 const Buffer Map::tile_layer_t::Serialize() const {
 	Buffer buf;
 	
-	buf.WriteString( indices.Serialize().ToString() );
 	buf.WriteString( coords.Serialize().ToString() );
+	buf.WriteString( indices.Serialize().ToString() );
+	buf.WriteString( surfaces.Serialize().ToString() );
 	buf.WriteString( tex_coords.Serialize().ToString() );
 	buf.WriteString( colors.Serialize().ToString() );
 	buf.WriteVec2f( texture_stretch );
 	buf.WriteBool( texture_stretch_at_edges );
+	
+	return buf;
+}
+
+const Buffer Map::tile_vertices_t::Serialize() const {
+	Buffer buf;
+	
+	buf.WriteVec3( center );
+	buf.WriteVec3( left );
+	buf.WriteVec3( top );
+	buf.WriteVec3( right );
+	buf.WriteVec3( bottom );
 	
 	return buf;
 }
@@ -959,14 +1009,13 @@ const Buffer Map::tile_indices_t::Serialize() const {
 	return buf;
 }
 
-const Buffer Map::tile_vertices_t::Serialize() const {
+const Buffer Map::tile_surfaces_t::Serialize() const {
 	Buffer buf;
 	
-	buf.WriteVec3( center );
-	buf.WriteVec3( left );
-	buf.WriteVec3( top );
-	buf.WriteVec3( right );
-	buf.WriteVec3( bottom );
+	buf.WriteInt( left_top );
+	buf.WriteInt( top_right );
+	buf.WriteInt( right_bottom );
+	buf.WriteInt( bottom_left );
 	
 	return buf;
 }
@@ -1065,6 +1114,7 @@ void Map::tile_state_t::Unserialize( const Map* map, Buffer buf ) {
 	}
 	overdraw_column.coords.Unserialize( buf.ReadString() );
 	overdraw_column.indices.Unserialize( buf.ReadString() );
+	overdraw_column.surfaces.Unserialize( buf.ReadString() );
 	data_mesh.coords.Unserialize( buf.ReadString() );
 	data_mesh.indices.Unserialize( buf.ReadString() );
 	has_water = buf.ReadBool();
@@ -1104,12 +1154,21 @@ void Map::tile_elevations_t::Unserialize( Buffer buf ) {
 }
 
 void Map::tile_layer_t::Unserialize( Buffer buf ) {
-	indices.Unserialize( buf.ReadString() );
 	coords.Unserialize( buf.ReadString() );
+	indices.Unserialize( buf.ReadString() );
+	surfaces.Unserialize( buf.ReadString() );
 	tex_coords.Unserialize( buf.ReadString() );
 	colors.Unserialize( buf.ReadString() );
 	texture_stretch = buf.ReadVec2f();
 	texture_stretch_at_edges = buf.ReadBool();
+}
+
+void Map::tile_vertices_t::Unserialize( Buffer buf ) {
+	center = buf.ReadVec3();
+	left = buf.ReadVec3();
+	top = buf.ReadVec3();
+	right = buf.ReadVec3();
+	bottom = buf.ReadVec3();
 }
 
 void Map::tile_indices_t::Unserialize( Buffer buf ) {
@@ -1120,12 +1179,11 @@ void Map::tile_indices_t::Unserialize( Buffer buf ) {
 	bottom = buf.ReadInt();
 }
 
-void Map::tile_vertices_t::Unserialize( Buffer buf ) {
-	center = buf.ReadVec3();
-	left = buf.ReadVec3();
-	top = buf.ReadVec3();
-	right = buf.ReadVec3();
-	bottom = buf.ReadVec3();
+void Map::tile_surfaces_t::Unserialize( Buffer buf ) {
+	left_top = buf.ReadInt();
+	top_right = buf.ReadInt();
+	right_bottom = buf.ReadInt();
+	bottom_left = buf.ReadInt();
 }
 
 void Map::tile_tex_coords_t::Unserialize( Buffer buf ) {

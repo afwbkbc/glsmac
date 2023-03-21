@@ -527,15 +527,14 @@ void World::Iterate() {
 	// response for clicked tile (if click happened)
 	auto tile_info = m_map->GetTileAtScreenCoordsResult();
 	if ( tile_info.tile ) {
-		SelectTile( tile_info );
 		if ( m_is_editing_mode ) {
 			const auto tiles_to_reload = m_map_editor->Draw( tile_info.tile, m_editing_draw_mode );
 			m_map->LoadTiles( tiles_to_reload );
-			//m_map->FixNormals( tiles_to_reload );
-			m_map->FixNormals( m_map->GetAllTiles() ); // TODO: partial UpdateNormals() and partial FixNormals()
+			m_map->FixNormals( tiles_to_reload );
 			SelectTile( tile_info );
 		}
 		else {
+			SelectTile( tile_info );
 			CenterAtTile( tile_info.ts );
 		}
 	}

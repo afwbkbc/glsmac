@@ -57,12 +57,14 @@ Mesh::index_t Mesh::AddEmptyVertex() {
 	return ret;
 }
 
-void Mesh::AddSurface( const surface_t& surface  ) {
+Mesh::surface_id_t Mesh::AddSurface( const surface_t& surface  ) {
 	ASSERT( !m_is_final, "addsurface on already finalized mesh" );
 	ASSERT( m_surface_i < m_surface_count, "surface out of bounds" );
 	// add triangle
 	memcpy( ptr( m_index_data, m_surface_i * SURFACE_SIZE * sizeof( index_t ), sizeof( surface ) ), &surface, sizeof( surface ) );
+	surface_id_t ret = m_surface_i;
 	m_surface_i++;
+	return ret;
 }
 
 void Mesh::SetVertexCoord( const index_t index, const Vec3 &coord ) {

@@ -32,7 +32,8 @@ CLASS( Render, Mesh )
 	void CombineNormals( const std::vector< index_t >& indices );
 	
 	void Finalize();
-	void UpdateNormals();
+	void UpdateNormals( const std::vector< surface_id_t >& surfaces );
+	void UpdateAllNormals();
 	
 	typedef coord_t tex_coord_t;
 	typedef std::pair< Vec2< tex_coord_t >, Vec2< tex_coord_t > > tex_coords_t;

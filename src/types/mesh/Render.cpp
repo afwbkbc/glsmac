@@ -102,37 +102,52 @@ void Render::Finalize() {
 	Mesh::Finalize();
 }
 
-void Render::UpdateNormals() {
-	//Log( "Updating normals");
+void Render::UpdateNormals( const std::vector< surface_id_t >& surfaces ) {
+	Log( "Updating normals for " + std::to_string( surfaces.size() ) + " surface(s)" );
 	
 	const surface_t* surface;
 	Vec3 *a, *b, *c;
-	Vec3 ab, ac, n;
+	Vec3 n;
 	const size_t vo = VERTEX_COORD_SIZE + VERTEX_TEXCOORD_SIZE + VERTEX_TINT_SIZE;
 	
-	for ( size_t v = 0 ; v < m_vertex_i ; v++ ) {
-		memset( ptr( m_vertex_data, ( v * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ), 0, sizeof( Vec3 ) );
-	}
-	for ( size_t s = 0 ; s < m_surface_i ; s++ ) {
-		surface = (surface_t*)ptr( m_index_data, s * SURFACE_SIZE * sizeof( index_t ), sizeof( surface_t ) );
+	for ( surface_id_t surface_id : surfaces ) {
+		surface = (surface_t*)ptr( m_index_data, surface_id * SURFACE_SIZE * sizeof( index_t ), sizeof( surface_t ) );
+		
+		memset( ptr( m_vertex_data, ( surface->v1 * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ), 0, sizeof( Vec3 ) );
+		memset( ptr( m_vertex_data, ( surface->v2 * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ), 0, sizeof( Vec3 ) );
+		memset( ptr( m_vertex_data, ( surface->v3 * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ), 0, sizeof( Vec3 ) );
+		
 		a = (Vec3*)ptr( m_vertex_data, surface->v1 * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord_t ) );
 		b = (Vec3*)ptr( m_vertex_data, surface->v2 * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord_t ) );
 		c = (Vec3*)ptr( m_vertex_data, surface->v3 * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord_t ) );
-        ab = *b - *a;
-        ac = *c - *a;
-        n = Math::Cross( ab, ac );
+		
+		n = Math::Cross( *b - *a, *c - *a );
 		
 		*(Vec3*)ptr( m_vertex_data, ( surface->v1 * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ) += n;
 		*(Vec3*)ptr( m_vertex_data, ( surface->v2 * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ) += n;
 		*(Vec3*)ptr( m_vertex_data, ( surface->v3 * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ) += n;
-	}
-	for ( size_t v = 0 ; v < m_vertex_i ; v++ ) {
-		*(Vec3*)ptr( m_vertex_data, ( v * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) )
+		
+		*(Vec3*)ptr( m_vertex_data, ( surface->v1 * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) )
 			=
-		Math::Normalize( *(Vec3*)ptr( m_vertex_data, ( v * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ) );
+		Math::Normalize( *(Vec3*)ptr( m_vertex_data, ( surface->v1 * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ) );
+		*(Vec3*)ptr( m_vertex_data, ( surface->v2 * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) )
+			=
+		Math::Normalize( *(Vec3*)ptr( m_vertex_data, ( surface->v2 * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ) );
+		*(Vec3*)ptr( m_vertex_data, ( surface->v3 * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) )
+			=
+		Math::Normalize( *(Vec3*)ptr( m_vertex_data, ( surface->v3 * VERTEX_SIZE + vo ) * sizeof( coord_t ), sizeof( Vec3 ) ) );
 	}
 	
 	Update();
+}
+
+void Render::UpdateAllNormals() {
+	std::vector< surface_id_t > surfaces = {};
+	surfaces.reserve( m_surface_i );
+	for ( surface_id_t i = 0 ; i < m_surface_i ; i++ ) {
+		surfaces.push_back( i );
+	}
+	UpdateNormals( surfaces );
 }
 
 Render* Render::Rectangle( float w, float h, const tex_coords_t tex_coords ) {

@@ -24,7 +24,8 @@ CLASS( Mesh, Serializable )
 	static constexpr uint8_t SURFACE_SIZE = 3; // triangles
 
 	typedef float coord_t;
-	typedef unsigned int index_t;
+	typedef uint32_t index_t;
+	typedef uint32_t surface_id_t;
 	struct surface_t {
 		const index_t v1;
 		const index_t v2;
@@ -38,7 +39,7 @@ CLASS( Mesh, Serializable )
 	void Clear();
 	
 	index_t AddEmptyVertex(); // empty vertex (to be modified later)
-	void AddSurface( const surface_t& surface );
+	surface_id_t AddSurface( const surface_t& surface );
 	
 	void SetVertexCoord( const index_t index, const Vec3 &coord );
 	void SetVertexCoord( const index_t index, const Vec2<coord_t> &coord );
@@ -70,13 +71,14 @@ protected:
 	
 	bool m_is_final = false;
 	
-	size_t m_vertex_count = 0;
-	size_t m_vertex_i = 0;
+	index_t m_vertex_count = 0;
+	index_t m_vertex_i = 0;
 	uint8_t* m_vertex_data = nullptr;
 
-	size_t m_index_count = 0;
-	size_t m_surface_count = 0;
-	size_t m_surface_i = 0;
+	index_t m_index_count = 0;
+	
+	surface_id_t m_surface_count = 0;
+	surface_id_t m_surface_i = 0;
 	uint8_t* m_index_data = nullptr;
 
 	size_t m_update_counter = 0;

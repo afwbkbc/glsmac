@@ -106,7 +106,7 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 			#define x( _k ) ts->layers[ lt ].indices._k = m_map->m_mesh_terrain->AddEmptyVertex()
 				do_x();
 			#undef x
-			#define x( _a, _b, _c ) m_map->m_mesh_terrain->AddSurface( { ts->layers[ lt ].indices._a, ts->layers[ lt ].indices._b, ts->layers[ lt ].indices._c } )
+			#define x( _a, _b, _c ) ts->layers[ lt ].surfaces._b##_##_c = m_map->m_mesh_terrain->AddSurface( { ts->layers[ lt ].indices._a, ts->layers[ lt ].indices._b, ts->layers[ lt ].indices._c } )
 				do_xs();
 			#undef x
 		}
@@ -139,7 +139,7 @@ void Finalize::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_s
 				#define x( _k ) ts->overdraw_column.indices._k = m_map->m_mesh_terrain->AddEmptyVertex()
 					do_x();
 				#undef x
-				#define x( _a, _b, _c ) m_map->m_mesh_terrain->AddSurface( { ts->overdraw_column.indices._a, ts->overdraw_column.indices._b, ts->overdraw_column.indices._c } )
+				#define x( _a, _b, _c ) ts->overdraw_column.surfaces._b##_##_c = m_map->m_mesh_terrain->AddSurface( { ts->overdraw_column.indices._a, ts->overdraw_column.indices._b, ts->overdraw_column.indices._c } )
 					do_xs();
 				#undef x
 			}

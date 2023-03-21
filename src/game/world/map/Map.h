@@ -238,6 +238,15 @@ CLASS( Map, Serializable )
 		void Unserialize( Buffer buf );
 	};
 	
+	struct tile_surfaces_t {
+		types::mesh::Mesh::surface_id_t left_top;
+		types::mesh::Mesh::surface_id_t top_right;
+		types::mesh::Mesh::surface_id_t right_bottom;
+		types::mesh::Mesh::surface_id_t bottom_left;
+		const Buffer Serialize() const;
+		void Unserialize( Buffer buf );
+	};
+	
 	struct tile_tex_coords_t {
 		Vec2< float > center;
 		Vec2< float > left;
@@ -259,8 +268,9 @@ CLASS( Map, Serializable )
 	};
 	
 	struct tile_layer_t {
-		tile_indices_t indices;
 		tile_vertices_t coords;
+		tile_indices_t indices;
+		tile_surfaces_t surfaces;
 		tile_tex_coords_t tex_coords;
 		tile_colors_t colors;
 		Vec2< mesh::Mesh::coord_t > texture_stretch; // each tile has only one 'own' stretch value (for bottom vertex), others are copied from neighbours
@@ -309,6 +319,7 @@ CLASS( Map, Serializable )
 		struct {
 			tile_vertices_t coords;
 			tile_indices_t indices;
+			tile_surfaces_t surfaces;
 		} overdraw_column; // need to copy first column after last one to make blending and light compute correctly in instancing
 		struct {
 			tile_vertices_t coords;
