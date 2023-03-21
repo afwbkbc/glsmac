@@ -85,12 +85,13 @@ CLASS( MapEditor, base::Base )
 		DM_INC // add / increase intensity
 	};
 	
-	typedef std::vector< map::Tile* > tiles_to_reload_t;
-	const tiles_to_reload_t Draw( map::Tile* tile, const draw_mode_t mode ); // returns tiles that need reload
+	typedef std::vector< map::Tile* > tiles_t;
+	const tiles_t Draw( map::Tile* tile, const draw_mode_t mode ); // returns tiles that need reload
 	
 private:
 	World* m_world = nullptr;
 	
+	const tiles_t GetUniqueTiles( const tiles_t& tiles ) const;
 };
 
 }

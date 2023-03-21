@@ -16,7 +16,7 @@ CLASS( Elevations, Tool )
 	
 	Elevations( World* world );
 	
-	const MapEditor::tiles_to_reload_t Draw( map::Tile* tile, const MapEditor::draw_mode_t mode );
+	const MapEditor::tiles_t Draw( map::Tile* tile, const MapEditor::draw_mode_t mode );
 	
 };
 	

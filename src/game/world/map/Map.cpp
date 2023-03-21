@@ -284,7 +284,7 @@ void Map::ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles ) {
 	}
 }
 
-	void Map::LoadTiles( const tiles_t& tiles ) {
+void Map::LoadTiles( const tiles_t& tiles ) {
 	
 	Log( "Loading " + std::to_string( tiles.size() ) + " tiles" );
 	

@@ -1,3 +1,5 @@
+#include <unordered_set>
+
 #include "MapEditor.h"
 
 #include "types/Vec2.h"
@@ -27,10 +29,11 @@ const bool MapEditor::IsEnabled() const {
 	return true;
 }
 
-const MapEditor::tiles_to_reload_t MapEditor::Draw( map::Tile* tile, const draw_mode_t mode ) {
+const MapEditor::tiles_t MapEditor::Draw( map::Tile* tile, const draw_mode_t mode ) {
 	if ( IsEnabled() && mode != DM_NONE && m_active_tool ) {
 		Log( "Drawing at " + tile->coord.ToString() );
-		return m_active_tool->Draw( tile, mode );
+		
+		return GetUniqueTiles( m_active_tool->Draw( tile, mode ) );
 	}
 	else {
 		return {};
@@ -76,6 +79,20 @@ void MapEditor::SelectBrush( MapEditor::brush_type_t brush ) {
 
 const MapEditor::brush_type_t MapEditor::GetActiveBrush() const {
 	return m_active_brush;
+}
+
+const MapEditor::tiles_t MapEditor::GetUniqueTiles( const tiles_t& tiles ) const {
+	std::unordered_set< map::Tile* > added_tiles = {};
+	added_tiles.reserve( tiles.size() );
+	tiles_t result = {};
+	result.reserve( tiles.size() );
+	for ( auto& tile : tiles ) {
+		if ( added_tiles.find( tile ) == added_tiles.end() ) {
+			added_tiles.insert( tile );
+			result.push_back( tile );
+		}
+	}
+	return result;
 }
 
 }

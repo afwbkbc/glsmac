@@ -13,8 +13,8 @@ Elevations::Elevations( World* world )
 	//
 }
 
-const MapEditor::tiles_to_reload_t Elevations::Draw( map::Tile* tile, const MapEditor::draw_mode_t mode ) {
-	MapEditor::tiles_to_reload_t tiles_to_reload = {};
+const MapEditor::tiles_t Elevations::Draw( map::Tile* tile, const MapEditor::draw_mode_t mode ) {
+	MapEditor::tiles_t tiles_to_reload = {};
 	
 	if ( tile->coord.y > 1 && tile->coord.y < m_world->GetMap()->GetHeight() - 2 ) { // editing poles will screw things up
 	
@@ -31,8 +31,8 @@ const MapEditor::tiles_to_reload_t Elevations::Draw( map::Tile* tile, const MapE
 		// prevent extreme slopes
 		const auto el = Map::s_consts.tile.maximum_allowed_slope_elevation / 2; // / 2 because relative to center
 		#define x( _s, _d ) \
-			*tile->elevation._s = std::min< Tile::elevation_t >( *tile->elevation._s, *tile->_d->elevation.center + el ); \
-			*tile->elevation._s = std::max< Tile::elevation_t >( *tile->elevation._s, *tile->_d->elevation.center - el ); \
+			*tile->elevation._s = std::min< Tile::elevation_t >( *tile->elevation._s, *tile->_d->elevation._s + el ); \
+			*tile->elevation._s = std::max< Tile::elevation_t >( *tile->elevation._s, *tile->_d->elevation._s - el ); \
 			tile->_d->Update()
 			x( left, W );
 			x( top, N );
