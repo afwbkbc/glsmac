@@ -48,6 +48,11 @@ void Sprites::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 		}
 		FEATURE_SPRITE( F_GEOTHERMAL, "Geothermal", geothermal[ 0 ], 0.0f );
 		FEATURE_SPRITE( F_UNITY_POD, "UnityPodSea", unity_pod_sea[ m_map->GetRandom()->GetUInt( 0, 2 ) ], 0.0f );
+		
+		if ( !( tile->features & Tile::F_XENOFUNGUS ) ) {
+			// TODO: select based on nutrients yields instead of moisture
+			TERRAFORMING_SPRITE( T_FARM, "KelpFarm", kelp_farm[ 0 ] );
+		}
 	}
 	else {
 		switch ( tile->bonus ) {
@@ -69,6 +74,11 @@ void Sprites::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 		}
 		FEATURE_SPRITE( F_URANIUM, "Uranium", uranium[ 0 ], 0.0f );
 		FEATURE_SPRITE( F_UNITY_POD, "UnityPodLand", unity_pod_land[ m_map->GetRandom()->GetUInt( 0, 2 ) ], 0.0f );
+
+		if ( !( tile->features & Tile::F_XENOFUNGUS ) ) {
+			// TODO: select based on nutrients yields instead of moisture
+			TERRAFORMING_SPRITE( T_FARM, "Farm", farm[ tile->moisture ] );
+		}
 	}
 	
 	FEATURE_SPRITE( F_MONOLITH, "Monolith", monolith[ 0 ], 0.0f );

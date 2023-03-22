@@ -29,7 +29,7 @@ const MapEditor::tiles_t Terraforming::Draw( map::Tile* tile, const MapEditor::d
 	}
 	
 	// some terraforming types will alter surrounding tiles, others won't
-	if ( m_terraforming & ( Tile::T_FOREST ) ) {
+	if ( m_terraforming & ( Tile::T_FOREST | Tile::T_FARM ) ) {
 		return {
 			tile,
 			tile->W,

@@ -250,12 +250,13 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 	}
 	
 	if ( tile->is_water_tile ) {
-		
+		TERRAFORMING( T_FARM, "Kelp Farm" );
 	}
 	else {
 		TERRAFORMING( T_FOREST, "Forest" );
-		TERRAFORMING( T_SENSOR, "Sensor" );
+		TERRAFORMING( T_FARM, "Farm" );
 	}
+	TERRAFORMING( T_SENSOR, "Sensor" );
 	
 #undef TERRAFORMING
 	

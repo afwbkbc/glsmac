@@ -125,6 +125,16 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 	
 	if ( !tile->is_water_tile ) {
 		
+		if ( tile->terraforming & Tile::T_FARM ) {
+			// TODO: select based on nutrients yields instead of moisture
+			m_map->AddTexture(
+				Map::LAYER_LAND,
+				Map::s_consts.tc.texture_pcx.farm[ m_map->GetRandom()->GetUInt( 0, 2 ) * 3 + ( tile->moisture - 1 ) ],
+				Texture::AM_MERGE,
+				RandomRotate()
+			);
+		}
+		
 		if ( tile->terraforming & Tile::T_FOREST ) {
 			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_RIVERS_FORESTS, tile, Map::TG_TERRAFORMING, Tile::T_FOREST );
 			auto& tc = Map::s_consts.tc.texture_pcx.forest[ txinfo.texture_variant ];
@@ -171,10 +181,8 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 				m_map->GetTexture( ts->river_original, tc, add_flags, txinfo.rotate_direction );
 			}
 		}
+		
 	}
-	
-	
-	
 }
 
 }

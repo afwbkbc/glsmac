@@ -100,6 +100,11 @@ CLASS( Map, Serializable )
 					{ 280, 373 }, { 337, 373 }, { 394, 373 }, { 451, 373 },
 					{ 280, 430 }, { 337, 430 }, { 394, 430 }, { 451, 430 },
 				};
+				const pcx_texture_coordinates_t farm[ 9 ] = {
+					{ 775, 219 }, { 832, 219 }, { 889, 219 },
+					{ 775, 276 }, { 832, 276 }, { 889, 276 },
+					{ 775, 333 }, { 832, 333 }, { 889, 333 },
+				};
 				
 			} texture_pcx;
 			const struct {
@@ -146,6 +151,15 @@ CLASS( Map, Serializable )
 				};
 				const pcx_texture_coordinates_t sensor[ 1 ] = {
 					{ 708, 316 },
+				};
+				const pcx_texture_coordinates_t farm[ 4 ] = {
+					{ 923, 453 },
+					{ 923, 516 },
+					{ 923, 579 },
+					{ 923, 642 },
+				};
+				const pcx_texture_coordinates_t kelp_farm[ 1 ] = {
+					{ 607, 190 },
 				};
 				
 			} ter1_pcx;
