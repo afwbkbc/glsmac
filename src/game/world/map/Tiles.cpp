@@ -186,8 +186,8 @@ const uint32_t Tiles::GetHeight() const {
 }
 	
 Tile* Tiles::At( const size_t x, const size_t y ) const {
-	ASSERT( x < m_width, "invalid x tile coordinate" );
-	ASSERT( y < m_height, "invalid y tile coordinate" );
+	ASSERT( x < m_width, "invalid x tile coordinate ( " + std::to_string( x ) + " >= " + std::to_string( m_width ) + " )" );
+	ASSERT( y < m_height, "invalid y tile coordinate ( " + std::to_string( y ) + " >= " + std::to_string( m_height ) + " )" );
 	ASSERT( ( x % 2 ) == ( y % 2 ), "tile coordinate axis oddity differs" );
 	return (Tile*)( m_data + y * m_width + x / 2 );
 }
