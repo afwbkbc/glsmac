@@ -77,12 +77,12 @@ class Tile { // not deriving from anything because tiles are initialized with ma
 	moisture_t moisture;
 	
 	// scalar
-	typedef uint8_t rockyness_t;
-	static constexpr rockyness_t R_NONE = 0;
-	static constexpr rockyness_t R_FLAT = 1;
-	static constexpr rockyness_t R_ROLLING = 2;
-	static constexpr rockyness_t R_ROCKY = 3;
-	rockyness_t rockyness;
+	typedef uint8_t rockiness_t;
+	static constexpr rockiness_t R_NONE = 0;
+	static constexpr rockiness_t R_FLAT = 1;
+	static constexpr rockiness_t R_ROLLING = 2;
+	static constexpr rockiness_t R_ROCKY = 3;
+	rockiness_t rockiness;
 	
 	// bitflags
 	typedef uint16_t feature_t;

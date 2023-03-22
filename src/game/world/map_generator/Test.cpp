@@ -17,7 +17,7 @@ void Test::Generate( Tiles* tiles, size_t seed ) {
 				}
 				
 				tile->moisture = Tile::M_ARID;
-				tile->rockyness = Tile::R_FLAT;
+				tile->rockiness = Tile::R_FLAT;
 				
 				if ( tiles->GetRandom()->IsLucky( 2 ) ) {
 					tile->features |= Tile::F_RIVER;

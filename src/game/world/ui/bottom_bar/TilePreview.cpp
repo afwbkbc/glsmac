@@ -168,7 +168,7 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 	else {
 		info_lines.push_back( "Elev: " + std::to_string( e ) + "m" );
 		std::string tilestr = "";
-		switch ( tile->rockyness ) {
+		switch ( tile->rockiness ) {
 			case map::Tile::R_FLAT: {
 				tilestr += "Flat";
 				break;

@@ -36,7 +36,7 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 		{ MAPGEN_ELEVATION_MIN, MAPGEN_ELEVATION_MAX }
 	});
 	
-	util::Clamper<float> perlin_to_value({ // to moisture or rockyness
+	util::Clamper<float> perlin_to_value({ // to moisture or rockiness
 		{ -1.0f, 1.0f },
 		{ 1.0f, 3.0f }
 	});	
@@ -91,20 +91,20 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 				}
 			}
 			
-			// rockyness
-			tile->rockyness = perlin_to_value.Clamp( round( PERLIN_S( x + 0.5f, y + 0.5f, z_rocks, 1.0f ) ) );
-			if ( tile->rockyness == Tile::R_ROCKY ) {
+			// rockiness
+			tile->rockiness = perlin_to_value.Clamp( round( PERLIN_S( x + 0.5f, y + 0.5f, z_rocks, 1.0f ) ) );
+			if ( tile->rockiness == Tile::R_ROCKY ) {
 				if ( tiles->GetRandom()->IsLucky( 3 ) ) {
-					tile->rockyness = Tile::R_ROLLING;
+					tile->rockiness = Tile::R_ROLLING;
 				}
 			}
-			// extra rockyness spots
+			// extra rockiness spots
 			if ( tiles->GetRandom()->IsLucky( 30 ) ) {
-				tile->rockyness = Tile::R_ROCKY;
+				tile->rockiness = Tile::R_ROCKY;
 				for ( auto& t : tile->neighbours ) {
 					if ( tiles->GetRandom()->IsLucky( 3 ) ) {
-						if ( t->rockyness != Tile::R_ROCKY ) {
-							t->rockyness = Tile::R_ROLLING;
+						if ( t->rockiness != Tile::R_ROCKY ) {
+							t->rockiness = Tile::R_ROLLING;
 						}
 					}
 				}

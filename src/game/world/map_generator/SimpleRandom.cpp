@@ -20,8 +20,8 @@ void SimpleRandom::Generate( Tiles* tiles, size_t seed ) {
 			*tile->elevation.bottom = RND;
 			
 			// random moisture etc
-			tile->moisture = tiles->GetRandom()->GetUInt( 1, 3 );
-			tile->rockyness = tiles->GetRandom()->GetUInt( 1, 3 );
+			tile->moisture = tiles->GetRandom()->GetUInt( Tile::M_ARID, Tile::M_MOIST );
+			tile->rockiness = tiles->GetRandom()->GetUInt( Tile::R_FLAT, Tile::R_ROCKY );
 			tile->features = 0;
 			
 			// spawn some jungles

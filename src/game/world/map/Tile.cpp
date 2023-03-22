@@ -31,7 +31,7 @@ const Buffer Tile::Serialize() const {
 	buf.WriteInt( *elevation.bottom );
 	
 	buf.WriteInt( moisture );
-	buf.WriteInt( rockyness );
+	buf.WriteInt( rockiness );
 	
 	buf.WriteInt( features );
 	
@@ -50,7 +50,7 @@ void Tile::Unserialize( Buffer buf ) {
 	*elevation.center = buf.ReadInt();
 	
 	moisture = buf.ReadInt();
-	rockyness = buf.ReadInt();
+	rockiness = buf.ReadInt();
 	
 	features = buf.ReadInt();
 	

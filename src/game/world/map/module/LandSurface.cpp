@@ -76,7 +76,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 	// add map details
 	// order is important (textures are drawn on top of previous ones)
 	
-	switch ( tile->rockyness ) {
+	switch ( tile->rockiness ) {
 		case Tile::R_NONE:
 		case Tile::R_FLAT: {
 			// nothing
@@ -101,7 +101,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 			break;
 		}
 		default:
-			ASSERT( false, "invalid rockyness value" );
+			ASSERT( false, "invalid rockiness value" );
 	}
 	
 	if ( tile->features	& Tile::F_JUNGLE ) {

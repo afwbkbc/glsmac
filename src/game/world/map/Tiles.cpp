@@ -213,11 +213,11 @@ void Tiles::Validate() {
 			for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 				tile = At( x, y );
 				
-				if ( tile->moisture > 3 ) {
+				if ( tile->moisture > Tile::M_RAINY ) {
 					Log( "tile moisture overflow ( " + std::to_string( tile->moisture ) + " > 3 ) at " + std::to_string( x ) + "x" + std::to_string( y ) );
 				}
-				if ( tile->rockyness > 3 ) {
-					Log( "tile rockyness overflow ( " + std::to_string( tile->rockyness ) + " > 3 ) at " + std::to_string( x ) + "x" + std::to_string( y ) );
+				if ( tile->rockiness > Tile::R_ROCKY ) {
+					Log( "tile rockiness overflow ( " + std::to_string( tile->rockiness ) + " > 3 ) at " + std::to_string( x ) + "x" + std::to_string( y ) );
 				}
 				
 			}

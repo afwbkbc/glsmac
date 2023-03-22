@@ -11,6 +11,8 @@
 #include "brush/Square.h"
 
 #include "tool/Elevations.h"
+#include "tool/Moisture.h"
+#include "tool/Rockiness.h"
 
 namespace game {
 namespace world {
@@ -27,6 +29,8 @@ MapEditor::MapEditor( World* world )
 	NEW( m_brushes[ BT_SQUARE_9_9 ], brush::Square, m_world, BT_SQUARE_9_9, 9 );
 	
 	NEW( m_tools[ TT_ELEVATIONS ], tool::Elevations, m_world );
+	NEW( m_tools[ TT_MOISTURE ], tool::Moisture, m_world );
+	NEW( m_tools[ TT_ROCKINESS ], tool::Rockiness, m_world );
 }
 
 MapEditor::~MapEditor() {
