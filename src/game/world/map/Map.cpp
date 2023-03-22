@@ -87,10 +87,12 @@ Map::Map( Random* random, Scene* scene )
 	});
 
 	// main source textures
-	m_textures.source.texture_pcx = g_engine->GetTextureLoader()->LoadTextureTC( "texture.pcx", Color::RGBA( 125, 0, 128, 255 ) );
+	m_textures.source.texture_pcx = g_engine->GetTextureLoader()->LoadTextureTC( "texture.pcx", Color::RGB( 125, 0, 128 ) );
 	m_textures.source.ter1_pcx = g_engine->GetTextureLoader()->LoadTextureTCs( "ter1.pcx", {
-		Color::RGBA( 152, 24, 228, 255 ), // remove transparency color
-		Color::RGBA( 253, 189, 118, 255 ) // remove drawn shadows too (we'll have our own)
+		Color::RGB( 152, 24, 228 ), // remove transparency color
+		Color::RGB( 100, 16, 156 ), // remove second transparency color
+		Color::RGB( 24, 184, 228 ), // remove frame
+		Color::RGB( 253, 189, 118 ) // remove drawn shadows too (we'll have our own)
 	});
 	
 	// add map modules
@@ -772,12 +774,12 @@ scene::actor::Instanced* Map::GenerateTerrainSpriteActor( const std::string& nam
 		m_textures.source.ter1_pcx,
 		{
 			{
-				(float) 1.0f / m_textures.source.ter1_pcx->m_width * ( tex_coords.x + 1 ) + Map::s_consts.sprite.zoom,
-				(float) 1.0f / m_textures.source.ter1_pcx->m_height * ( tex_coords.y + 1 ) + Map::s_consts.sprite.zoom
+				(float) 1.0f / m_textures.source.ter1_pcx->m_width * ( tex_coords.x + 1 ),
+				(float) 1.0f / m_textures.source.ter1_pcx->m_height * ( tex_coords.y + 1 )
 			},
 			{
-				(float) 1.0f / m_textures.source.ter1_pcx->m_width * ( tex_coords.x + Map::s_consts.tc.ter1_pcx.dimensions.x - 2 ) - Map::s_consts.sprite.zoom,
-				(float) 1.0f / m_textures.source.ter1_pcx->m_height * ( tex_coords.y + Map::s_consts.tc.ter1_pcx.dimensions.y - 2 ) - Map::s_consts.sprite.zoom
+				(float) 1.0f / m_textures.source.ter1_pcx->m_width * ( tex_coords.x + Map::s_consts.tc.ter1_pcx.dimensions.x - 4 ),
+				(float) 1.0f / m_textures.source.ter1_pcx->m_height * ( tex_coords.y + Map::s_consts.tc.ter1_pcx.dimensions.y - 4 )
 			}
 		}
 	);

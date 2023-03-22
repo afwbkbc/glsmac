@@ -15,27 +15,28 @@ void Sprites::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 	}
 	ts->sprites.clear();
 	
-#define SPRITE( _feature, _name, _texture ) \
+#define SPRITE( _feature, _name, _texture, _y_shift ) \
 	if ( tile->features & Tile::_feature ) { \
-		GenerateSprite( tile, ts, _name, Map::s_consts.tc.ter1_pcx._texture ); \
+		GenerateSprite( tile, ts, _name, Map::s_consts.tc.ter1_pcx._texture, _y_shift ); \
 	}
 	
 	if ( tile->is_water_tile ) {
-		SPRITE( F_NUTRIENT_BONUS, "NutrientBonusSea", nutrient_bonus_sea[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
-		SPRITE( F_MINERALS_BONUS, "MineralsBonusSea", minerals_bonus_sea[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
-		SPRITE( F_ENERGY_BONUS, "EnergyBonusSea", energy_bonus_sea[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
+		SPRITE( F_NUTRIENT_BONUS, "NutrientBonusSea", nutrient_bonus_sea[ m_map->GetRandom()->GetUInt( 0, 1 ) ], 0.12f );
+		SPRITE( F_MINERALS_BONUS, "MineralsBonusSea", minerals_bonus_sea[ m_map->GetRandom()->GetUInt( 0, 1 ) ], 0.12f );
+		SPRITE( F_ENERGY_BONUS, "EnergyBonusSea", energy_bonus_sea[ m_map->GetRandom()->GetUInt( 0, 1 ) ], 0.12f );
 	}
 	else {
-		SPRITE( F_NUTRIENT_BONUS, "NutrientBonusLand", nutrient_bonus_land[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
-		SPRITE( F_MINERALS_BONUS, "MineralsBonusLand", minerals_bonus_land[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
-		SPRITE( F_ENERGY_BONUS, "EnergyBonusLand", energy_bonus_land[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
+		SPRITE( F_NUTRIENT_BONUS, "NutrientBonusLand", nutrient_bonus_land[ m_map->GetRandom()->GetUInt( 0, 1 ) ], 0.12f );
+		SPRITE( F_MINERALS_BONUS, "MineralsBonusLand", minerals_bonus_land[ m_map->GetRandom()->GetUInt( 0, 1 ) ], 0.12f );
+		SPRITE( F_ENERGY_BONUS, "EnergyBonusLand", energy_bonus_land[ m_map->GetRandom()->GetUInt( 0, 1 ) ], 0.12f );
 	}
+	SPRITE( F_MONOLITH, "Monolith", monolith[ 0 ], 0.0f );
 	
 #undef SPRITE
 	
 }
 
-void Sprites::GenerateSprite( const Tile* tile, Map::tile_state_t* ts, const std::string& name, const Map::pcx_texture_coordinates_t& tex_coords ) {
+void Sprites::GenerateSprite( const Tile* tile, Map::tile_state_t* ts, const std::string& name, const Map::pcx_texture_coordinates_t& tex_coords, const float y_shift ) {
 	Map::tile_state_t::sprite_t sprite = {};
 	
 	sprite.tex_coords = tex_coords;
@@ -45,7 +46,7 @@ void Sprites::GenerateSprite( const Tile* tile, Map::tile_state_t* ts, const std
 	
 	sprite.actor->SetPosition({
 		coords.center.x,
-		- ( coords.center.y + Map::s_consts.sprite.y_shift ), // TODO: fix y inversion
+		- ( coords.center.y + y_shift ), // TODO: fix y inversion
 		coords.center.z
 	});
 	

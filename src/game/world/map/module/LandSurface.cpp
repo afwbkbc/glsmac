@@ -149,8 +149,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 				}
 				m_map->GetTexture( ts->river_original, tc, add_flags, txinfo.rotate_direction );
 			}
-		}
-		
+		}	
 	}
 }
 

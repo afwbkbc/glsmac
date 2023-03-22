@@ -14,7 +14,7 @@ namespace tool {
 
 CLASS( Tool, base::Base )
 	
-	Tool( World* world, MapEditor::tool_type_t type );
+	Tool( World* world, const MapEditor::tool_type_t type );
 
 	const MapEditor::tool_type_t GetType() const;
 

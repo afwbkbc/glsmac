@@ -122,6 +122,10 @@ CLASS( Map, Serializable )
 				const pcx_texture_coordinates_t energy_bonus_land[ 2 ] = {
 					{ 203, 379 }, { 304, 379 },
 				};
+				const pcx_texture_coordinates_t monolith[ 1 ] = {
+					{ 304, 0 },
+					//{ 304, 1 },
+				};
 				
 			} ter1_pcx;
 		} tc;
@@ -150,10 +154,8 @@ CLASS( Map, Serializable )
 			const Vec2< size_t > radius = s_consts.tile_texture.dimensions / (size_t)2;
 		} tile_texture;
 		const struct {
-			const float zoom = 0.005f;
 			// to compensate for view angle difference from SMAC's
 			const float y_scale = 0.8f;
-			const float y_shift = 0.12f;
 		} sprite;
 		const Vec3 map_position = { 0.0f, 0.0f, 0.0f };
 		const Vec3 map_rotation = { 0.0f, 0.0f, 0.0f };

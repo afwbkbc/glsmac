@@ -5,7 +5,7 @@ namespace world {
 namespace map_editor {
 namespace tool {
 
-Tool::Tool( World* world, MapEditor::tool_type_t type )
+Tool::Tool( World* world, const MapEditor::tool_type_t type )
 	: m_world( world )
 	, m_type( type )
 {
