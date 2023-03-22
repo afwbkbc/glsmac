@@ -84,25 +84,32 @@ class Tile { // not deriving from anything because tiles are initialized with ma
 	static constexpr rockiness_t R_ROCKY = 3;
 	rockiness_t rockiness;
 	
+	// scalar
+	typedef uint8_t bonus_t;
+	static constexpr bonus_t B_NONE = 0;
+	static constexpr bonus_t B_NUTRIENT = 1;
+	static constexpr bonus_t B_ENERGY = 2;
+	static constexpr bonus_t B_MINERALS = 3;
+	bonus_t bonus;
+	
 	// bitflags
 	typedef uint16_t feature_t;
 	static constexpr feature_t F_NONE = 0;
-	static constexpr feature_t F_NUTRIENT_BONUS = 1 << 0;
-	static constexpr feature_t F_MINERALS_BONUS = 1 << 1;
-	static constexpr feature_t F_ENERGY_BONUS = 1 << 2;
-	static constexpr feature_t F_RIVER = 1 << 3;
-	static constexpr feature_t F_MONOLITH = 1 << 4;
-	static constexpr feature_t F_XENOFUNGUS = 1 << 5;
-	static constexpr feature_t F_JUNGLE = 1 << 6;
-	static constexpr feature_t F_SURVEY_POD = 1 << 7;
-	static constexpr feature_t F_VOLCANO = 1 << 8;
-	static constexpr feature_t F_SUNNY_MESA = 1 << 9;
-	static constexpr feature_t F_URANIUM_FLATS = 1 << 10;
-	static constexpr feature_t F_GARLAND_CRATER = 1 << 11;
-	static constexpr feature_t F_FOSSIL_FIELD_RIDGE = 1 << 12;
-	static constexpr feature_t F_UNITY_ENERGY = 1 << 13;
-	static constexpr feature_t F_UNITY_CHOPPER = 1 << 14;
-	static constexpr feature_t F_UNITY_RADAR = 1 << 15;
+	static constexpr feature_t F_RIVER = 1 << 0;
+	static constexpr feature_t F_MONOLITH = 1 << 1;
+	static constexpr feature_t F_XENOFUNGUS = 1 << 2;
+	static constexpr feature_t F_JUNGLE = 1 << 3;
+	static constexpr feature_t F_URANIUM = 1 << 4;
+	static constexpr feature_t F_GEOTHERMAL = 1 << 5;
+	static constexpr feature_t F_UNITY_POD = 1 << 6;
+	static constexpr feature_t F_VOLCANO = 1 << 7;
+	static constexpr feature_t F_SUNNY_MESA = 1 << 8;
+	static constexpr feature_t F_GARLAND_CRATER = 1 << 9;
+	static constexpr feature_t F_FOSSIL_FIELD_RIDGE = 1 << 10;
+	static constexpr feature_t F_UNITY_ENERGY = 1 << 11;
+	static constexpr feature_t F_UNITY_CHOPPER = 1 << 12;
+	static constexpr feature_t F_UNITY_RADAR = 1 << 13;
+	static constexpr feature_t F_DUNES = 1 << 14;
 	feature_t features;
 	
 	// WARNING: make sure to call this after changing something in tile

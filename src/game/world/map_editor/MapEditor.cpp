@@ -36,6 +36,12 @@ MapEditor::MapEditor( World* world )
 	#define x( _tt, _ft ) NEW( m_tools[ _tt ], tool::Feature, m_world, _tt, map::Tile::_ft )
 		x( TT_MONOLITH, F_MONOLITH );
 		x( TT_FUNGUS, F_XENOFUNGUS );
+		x( TT_JUNGLE, F_JUNGLE );
+		x( TT_RIVERS, F_RIVER );
+		x( TT_DUNES, F_DUNES );
+		x( TT_URANIUM, F_URANIUM );
+		x( TT_GEOTHERMAL, F_GEOTHERMAL );
+		x( TT_UNITY_PODS, F_UNITY_POD );
 	#undef x
 
 }

@@ -211,12 +211,35 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 	}
 	else {
 		FEATURE( F_XENOFUNGUS, "Xenofungus" )
+	}
+	
+	switch ( tile->bonus ) {
+		case Tile::B_NUTRIENT: {
+			info_lines.push_back( "Nutrient bonus" );
+			break;
+		}
+		case Tile::B_ENERGY: {
+			info_lines.push_back( "Energy bonus" );
+			break;
+		}
+		case Tile::B_MINERALS: {
+			info_lines.push_back( "Minerals bonus" );
+			break;
+		}
+		default: {
+			// nothing
+		}
+	}
+	
+	if ( tile->is_water_tile ) {
+		FEATURE( F_GEOTHERMAL, "Geothermal" )
+	}
+	else {
 		FEATURE( F_RIVER, "River" )
 		FEATURE( F_JUNGLE, "Jungle" )
+		FEATURE( F_DUNES, "Dunes" )
+		FEATURE( F_URANIUM, "Uranium" )
 	}
-	FEATURE( F_NUTRIENT_BONUS, "Nutrient bonus" )
-	FEATURE( F_MINERALS_BONUS, "Minerals bonus" )
-	FEATURE( F_ENERGY_BONUS, "Energy bonus" )
 	FEATURE( F_MONOLITH, "Monolith" )
 	
 #undef FEATURE

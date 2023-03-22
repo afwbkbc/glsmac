@@ -126,6 +126,18 @@ CLASS( Map, Serializable )
 					{ 304, 0 },
 					//{ 304, 1 },
 				};
+				const pcx_texture_coordinates_t uranium[ 1 ] = {
+					{ 822, 253 },
+				};
+				const pcx_texture_coordinates_t geothermal[ 1 ] = {
+					{ 822, 190 },
+				};
+				const pcx_texture_coordinates_t unity_pod_sea[ 3 ] = {
+					{ 418, 379 }, { 620, 379 }, { 822, 379 },
+				};
+				const pcx_texture_coordinates_t unity_pod_land[ 3 ] = {
+					{ 519, 379 }, { 721, 379 }, { 923, 379 },
+				};
 				
 			} ter1_pcx;
 		} tc;

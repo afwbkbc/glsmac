@@ -274,7 +274,7 @@ void OpenGL::LoadTexture( types::Texture* texture ) {
 	bool need_full_update = false;
 	if ( it == m_textures.end() ) {
 	
-		Log( "Initializing texture '" + texture->m_name + "'" );
+		//Log( "Initializing texture '" + texture->m_name + "'" );
 		m_textures[texture] = { 0, texture->UpdatedCount() };
 
 		glActiveTexture( GL_TEXTURE0 );
@@ -292,7 +292,7 @@ void OpenGL::LoadTexture( types::Texture* texture ) {
 	}
 	
 	if ( is_reload_needed ) {
-		Log( "Loading texture '" + texture->m_name + "'" );
+		//Log( "Loading texture '" + texture->m_name + "'" );
 
 		glBindTexture( GL_TEXTURE_2D, t.obj );
 
@@ -453,7 +453,7 @@ void OpenGL::LoadTexture( types::Texture* texture ) {
 void OpenGL::UnloadTexture( const types::Texture* texture ) {
 	m_textures_map::iterator it = m_textures.find( texture );
 	if ( it != m_textures.end() ) {
-		Log("Unloading texture '" + texture->m_name + "'");
+		//Log("Unloading texture '" + texture->m_name + "'");
 		glActiveTexture( GL_TEXTURE0 );
 		glDeleteTextures(1, &it->second.obj );
 		m_textures.erase( it );

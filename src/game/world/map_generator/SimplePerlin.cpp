@@ -143,24 +143,7 @@ void SimplePerlin::Generate( Tiles* tiles, size_t seed ) {
 			
 			// bonus resources
 			if ( tiles->GetRandom()->IsLucky( RESOURCE_SPAWN_CHANCE_DIFFICULTY ) ) {
-				switch ( tiles->GetRandom()->GetUInt( 0, 2 ) ) {
-					case 0: {
-						tile->features |= Tile::F_NUTRIENT_BONUS;
-						Log( "Nutrient bonus at " + tile->coord.ToString() );
-						break;
-					}
-					case 1: {
-						tile->features |= Tile::F_MINERALS_BONUS;
-						Log( "Minerals bonus at " + tile->coord.ToString() );
-						break;
-					}
-					case 2: {
-						tile->features |= Tile::F_ENERGY_BONUS;
-						Log( "Energy bonus at " + tile->coord.ToString() );
-						break;
-					}
-					default: {}
-				}
+				tile->bonus = tiles->GetRandom()->GetUInt( Tile::B_NUTRIENT, Tile::B_MINERALS );
 			}
 		}
 	}
