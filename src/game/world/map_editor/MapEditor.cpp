@@ -13,6 +13,7 @@
 #include "tool/Elevations.h"
 #include "tool/Moisture.h"
 #include "tool/Rockiness.h"
+#include "tool/Resource.h"
 #include "tool/Feature.h"
 
 namespace game {
@@ -32,6 +33,8 @@ MapEditor::MapEditor( World* world )
 	NEW( m_tools[ TT_ELEVATIONS ], tool::Elevations, m_world );
 	NEW( m_tools[ TT_MOISTURE ], tool::Moisture, m_world );
 	NEW( m_tools[ TT_ROCKINESS ], tool::Rockiness, m_world );
+	
+	NEW( m_tools[ TT_RESOURCES ], tool::Resource, m_world );
 	
 	#define x( _tt, _ft ) NEW( m_tools[ _tt ], tool::Feature, m_world, _tt, map::Tile::_ft )
 		x( TT_MONOLITH, F_MONOLITH );

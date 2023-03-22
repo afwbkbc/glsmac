@@ -28,20 +28,25 @@ const MapEditor::tiles_t Feature::Draw( map::Tile* tile, const MapEditor::draw_m
 		tile->features |= m_feature;
 	}
 	
-	// we need to reload surrounding tiles too because they need to blend correctly
-	return {
-		tile,
-		tile->W,
-		tile->NW,
-		tile->N,
-		tile->NE,
-		tile->E,
-		tile->SE,
-		tile->S,
-		tile->SW,
-	};
+	// some features will alter surrounding tiles, others won't
+	if ( tile->features & ( Tile::F_JUNGLE | Tile::F_RIVER | Tile::F_XENOFUNGUS ) ) {
+		return {
+			tile,
+			tile->W,
+			tile->NW,
+			tile->N,
+			tile->NE,
+			tile->E,
+			tile->SE,
+			tile->S,
+			tile->SW,
+		};
+	}
+	else {
+		return { tile };
+	}
 }
-	
+
 }
 }
 }

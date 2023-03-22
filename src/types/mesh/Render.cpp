@@ -103,7 +103,7 @@ void Render::Finalize() {
 }
 
 void Render::UpdateNormals( const std::vector< surface_id_t >& surfaces ) {
-	Log( "Updating normals for " + std::to_string( surfaces.size() ) + " surface(s)" );
+	//Log( "Updating normals for " + std::to_string( surfaces.size() ) + " surface(s)" );
 	
 	const surface_t* surface;
 	Vec3 *a, *b, *c;
