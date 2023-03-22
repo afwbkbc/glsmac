@@ -211,9 +211,9 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 	}
 	else {
 		FEATURE( F_XENOFUNGUS, "Xenofungus" )
+		FEATURE( F_RIVER, "River" )
+		FEATURE( F_JUNGLE, "Jungle" )
 	}
-	FEATURE( F_JUNGLE, "Jungle" )
-	FEATURE( F_RIVER, "River" )
 	FEATURE( F_NUTRIENT_BONUS, "Nutrient bonus" )
 	FEATURE( F_MINERALS_BONUS, "Minerals bonus" )
 	FEATURE( F_ENERGY_BONUS, "Energy bonus" )
@@ -262,10 +262,6 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 		auto sprite = s.actor->GetSpriteActor();
 		auto mesh = sprite->GenerateMesh();
 		NEWV( sprite_preview, object::Mesh, "MapBottomBarTilePreviewSprite" );
-		
-		
-		
-		//sprite_preview->SetTop( 4 );
 		sprite_preview->SetMesh( mesh );
 		sprite_preview->SetTintColor({ 0.7f, 0.7f, 0.7f, 1.0f }); // lower brightness a bit because it's too high otherwise for some reason
 		sprite_preview->SetTexture( sprite->GetTexture() );
