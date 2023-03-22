@@ -35,6 +35,7 @@ const Buffer Tile::Serialize() const {
 	buf.WriteInt( bonus );
 	
 	buf.WriteInt( features );
+	buf.WriteInt( terraforming );
 	
 	return buf;
 }
@@ -55,6 +56,7 @@ void Tile::Unserialize( Buffer buf ) {
 	bonus = buf.ReadInt();
 	
 	features = buf.ReadInt();
+	terraforming = buf.ReadInt();
 	
 }
 

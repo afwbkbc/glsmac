@@ -15,6 +15,7 @@
 #include "tool/Rockiness.h"
 #include "tool/Resource.h"
 #include "tool/Feature.h"
+#include "tool/Terraforming.h"
 
 namespace game {
 namespace world {
@@ -36,7 +37,7 @@ MapEditor::MapEditor( World* world )
 	
 	NEW( m_tools[ TT_RESOURCES ], tool::Resource, m_world );
 	
-	#define x( _tt, _ft ) NEW( m_tools[ _tt ], tool::Feature, m_world, _tt, map::Tile::_ft )
+	#define x( _tt, _f ) NEW( m_tools[ _tt ], tool::Feature, m_world, _tt, map::Tile::_f )
 		x( TT_MONOLITH, F_MONOLITH );
 		x( TT_FUNGUS, F_XENOFUNGUS );
 		x( TT_JUNGLE, F_JUNGLE );
@@ -47,6 +48,9 @@ MapEditor::MapEditor( World* world )
 		x( TT_UNITY_PODS, F_UNITY_POD );
 	#undef x
 
+	#define x( _tt, _t ) NEW( m_tools[ _tt ], tool::Terraforming, m_world, _tt, map::Tile::_t )
+		x( TT_FOREST, T_FOREST );
+	#undef x
 }
 
 MapEditor::~MapEditor() {

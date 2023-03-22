@@ -29,7 +29,7 @@ const MapEditor::tiles_t Feature::Draw( map::Tile* tile, const MapEditor::draw_m
 	}
 	
 	// some features will alter surrounding tiles, others won't
-	if ( tile->features & ( Tile::F_JUNGLE | Tile::F_RIVER | Tile::F_XENOFUNGUS ) ) {
+	if ( m_feature & ( Tile::F_JUNGLE | Tile::F_RIVER | Tile::F_XENOFUNGUS ) ) {
 		return {
 			tile,
 			tile->W,

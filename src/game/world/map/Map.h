@@ -70,6 +70,12 @@ CLASS( Map, Serializable )
 					{ 1, 457 }, { 58, 457 }, { 115, 457 }, { 172, 457 },
 					{ 1, 514 }, { 58, 514 }, { 115, 514 }, { 172, 514 },
 				};
+				const pcx_texture_coordinates_t forest[16] = {
+					{ 526, 6 }, { 583, 6 }, { 640, 6 }, { 697, 6 },
+					{ 526, 63 }, { 583, 63 }, { 640, 63 }, { 697, 63 },
+					{ 526, 120 }, { 583, 120 }, { 640, 120 }, { 697, 120 },
+					{ 526, 177 }, { 583, 177 }, { 640, 177 }, { 697, 177 },
+				};
 				const pcx_texture_coordinates_t jungle[16] = {
 					{ 526, 259 }, { 583, 259 }, { 640, 259 }, { 697, 259 },
 					{ 526, 316 }, { 583, 316 }, { 640, 316 }, { 697, 316 },
@@ -414,6 +420,7 @@ CLASS( Map, Serializable )
 	enum tile_grouping_criteria_t {
 		TG_MOISTURE,
 		TG_FEATURE,
+		TG_TERRAFORMING,
 	};
 	struct tile_texture_info_t {
 		uint8_t rotate_direction;
@@ -424,7 +431,7 @@ CLASS( Map, Serializable )
 	enum texture_variants_type_t {
 		TVT_NONE,
 		TVT_TILES,
-		TVT_RIVERS,
+		TVT_RIVERS_FORESTS,
 		TVT_ROADS
 	};
 	const tile_texture_info_t GetTileTextureInfo( const texture_variants_type_t type, const Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature = Tile::F_NONE ) const;

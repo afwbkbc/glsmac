@@ -7,6 +7,7 @@ namespace map {
 void LandSurfacePP::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_state_t* ms ) {
 	
 	if ( !tile->is_water_tile ) {
+		
 		if ( tile->features & Tile::F_RIVER ) {
 			if ( ts->has_water ) {
 				

@@ -67,7 +67,7 @@ Map::Map( Random* random, Scene* scene )
 		{ B(11111111), B(11111111) }, // 14
 		// 15 ???
 	});
-	CalculateTextureVariants( TVT_RIVERS, {
+	CalculateTextureVariants( TVT_RIVERS_FORESTS, {
 		{ B(00000000), B(10101010) }, // 0
 		{ B(00100000), B(10101010) }, // 1
 		{ B(10000000), B(10101010) }, // 2
@@ -512,7 +512,7 @@ void Map::GenerateActors() {
 	m_current_ts = nullptr;
 }
 
-const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_type_t type, const Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature ) const {
+const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_type_t type, const Tile* tile, const tile_grouping_criteria_t criteria, const uint16_t value ) const {
 	ASSERT( m_current_ts, "GetTileTextureInfo called outside of tile generation" );
 	Map::tile_texture_info_t info;
 	
@@ -527,8 +527,15 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_t
 				}
 				case TG_FEATURE: {
 					matches[ idx++ ] = (
-						( t->features & feature ) == ( tile->features & feature ) ||
-						( type == TVT_RIVERS && !tile->is_water_tile && t->is_water_tile ) // rivers end in sea
+						( t->features & value ) == ( tile->features & value ) ||
+						( type == TVT_RIVERS_FORESTS && !tile->is_water_tile && t->is_water_tile ) // rivers end in sea
+					);
+					break;
+				}
+				case TG_TERRAFORMING: {
+					matches[ idx++ ] = (
+						( t->terraforming & value ) == ( tile->terraforming & value ) &&
+						t->is_water_tile == tile->is_water_tile // terraforming doesn't continue into water
 					);
 					break;
 				}
@@ -545,6 +552,12 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_t
 	ASSERT( variants != m_texture_variants.end(), "texture variants for " + std::to_string( type ) + " not calculated" );
 	
 	for ( info.rotate_direction = 0 ; info.rotate_direction < 8 ; info.rotate_direction += 2 ) {
+		if ( criteria == TG_TERRAFORMING && value == Tile::T_FOREST ) {
+			// forests must always be vertical
+			if ( info.rotate_direction != 6 ) {
+				continue;
+			}
+		}
 		uint8_t bitmask = 0;
 		for ( uint8_t i = 0 ; i < 8 ; i++ ) {
 			bitmask |= matches[ i + info.rotate_direction ] << i;

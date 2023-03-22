@@ -241,8 +241,22 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 		FEATURE( F_URANIUM, "Uranium" )
 	}
 	FEATURE( F_MONOLITH, "Monolith" )
-	
+			
 #undef FEATURE
+		
+#define TERRAFORMING( _terraforming, _line ) \
+	if ( tile->terraforming & map::Tile::_terraforming ) { \
+		info_lines.push_back( _line ); \
+	}
+	
+	if ( tile->is_water_tile ) {
+		
+	}
+	else {
+		TERRAFORMING( T_FOREST, "Forest" );
+	}
+	
+#undef TERRAFORMING
 	
 	// combine into printable lines
 	std::string info_line = "";

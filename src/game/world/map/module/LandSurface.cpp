@@ -125,6 +125,18 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 	
 	if ( !tile->is_water_tile ) {
 		
+		if ( tile->terraforming & Tile::T_FOREST ) {
+			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_RIVERS_FORESTS, tile, Map::TG_TERRAFORMING, Tile::T_FOREST );
+			auto& tc = Map::s_consts.tc.texture_pcx.forest[ txinfo.texture_variant ];
+			auto add_flags = Texture::AM_MERGE | txinfo.texture_flags;
+			m_map->AddTexture(
+				Map::LAYER_LAND,
+				tc,
+				add_flags,
+				txinfo.rotate_direction
+			);
+		}
+		
 		if ( tile->features & Tile::F_XENOFUNGUS ) {
 			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_TILES, tile, Map::TG_FEATURE, Tile::F_XENOFUNGUS );
 			m_map->AddTexture(
@@ -136,7 +148,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 		}
 
 		if ( tile->features & Tile::F_RIVER ) {
-			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_RIVERS, tile, Map::TG_FEATURE, Tile::F_RIVER );
+			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_RIVERS_FORESTS, tile, Map::TG_FEATURE, Tile::F_RIVER );
 			auto& tc = Map::s_consts.tc.texture_pcx.river[ txinfo.texture_variant ];
 			auto add_flags = Texture::AM_MERGE | txinfo.texture_flags;
 			m_map->AddTexture(
