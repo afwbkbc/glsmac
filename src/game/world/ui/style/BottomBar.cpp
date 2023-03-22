@@ -136,19 +136,13 @@ void BottomBar::AddStyles() {
 	AddStyle( "TilePreviewImage", SH() {
 		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_HCENTER );
 		s->Set( ::Style::A_TOP, 2 );
-		
-		/* classic */
-		/*s->Set( ::Style::A_WIDTH, 84 );
-		s->Set( ::Style::A_HEIGHT, 52 );*/
-		
-		/* topdown */
 		s->Set( ::Style::A_WIDTH, 84 );
-		s->Set( ::Style::A_HEIGHT, 84 );
+		s->Set( ::Style::A_HEIGHT, 52 );
 	});
 	
 	AddStyle( "TilePreviewSprite", SH() {
 		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_HCENTER );
-		s->Set( ::Style::A_TOP, 25 ); // to compensate for view angle difference with SMAC's
+		s->Set( ::Style::A_TOP, 2 );
 		s->Set( ::Style::A_WIDTH, 100 );
 		s->Set( ::Style::A_HEIGHT, 68 );
 	});

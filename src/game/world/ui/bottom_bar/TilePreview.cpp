@@ -217,13 +217,14 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 	FEATURE( F_NUTRIENT_BONUS, "Nutrient bonus" )
 	FEATURE( F_MINERALS_BONUS, "Minerals bonus" )
 	FEATURE( F_ENERGY_BONUS, "Energy bonus" )
+	FEATURE( F_MONOLITH, "Monolith" )
 	
 #undef FEATURE
 	
 	// combine into printable lines
 	std::string info_line = "";
 	std::string info_line_new = "";
-	constexpr size_t max_length = 15; // TODO: determine width from actual text because different symbols are different
+	constexpr size_t max_length = 16; // TODO: determine width from actual text because different symbols are different
 	std::vector< std::string > print_lines = {};
 	for ( auto& line : info_lines ) {
 		info_line_new = info_line + ( info_line.empty() ? "" : ", " ) + line;
@@ -256,10 +257,15 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 	AddChild( label );
 	
 	// copy sprites from tile
+	uint8_t sprite_top = 0;
 	for ( auto& s : ts->sprites ) {
 		auto sprite = s.actor->GetSpriteActor();
 		auto mesh = sprite->GenerateMesh();
 		NEWV( sprite_preview, object::Mesh, "MapBottomBarTilePreviewSprite" );
+		
+		
+		
+		//sprite_preview->SetTop( 4 );
 		sprite_preview->SetMesh( mesh );
 		sprite_preview->SetTintColor({ 0.7f, 0.7f, 0.7f, 1.0f }); // lower brightness a bit because it's too high otherwise for some reason
 		sprite_preview->SetTexture( sprite->GetTexture() );

@@ -102,12 +102,12 @@ CLASS( Map, Serializable )
 				
 				// some coordinates were altered to fix alignment
 				const pcx_texture_coordinates_t nutrient_bonus_sea[ 2 ] = {
-					{ 4, 257 }, { 106, 257 },
-					//{ 1, 253 }, { 103, 253 },
+					//{ 4, 257 }, { 106, 257 },
+					{ 1, 253 }, { 103, 253 },
 				};
 				const pcx_texture_coordinates_t nutrient_bonus_land[ 2 ] = {
-					{ 207, 257 }, { 308, 257 },
-					//{ 203, 253 }, { 304, 253 },
+					//{ 207, 257 }, { 308, 257 },
+					{ 203, 253 }, { 304, 253 },
 				};
 				const pcx_texture_coordinates_t minerals_bonus_sea[ 2 ] = {
 					{ 1, 316 }, { 102, 316 },
