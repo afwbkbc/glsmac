@@ -53,6 +53,7 @@ MapEditor::MapEditor( World* world )
 	#define x( _tt, _t ) NEW( m_tools[ _tt ], tool::Terraforming, m_world, _tt, map::Tile::_t )
 		x( TT_FOREST, T_FOREST );
 		x( TT_FARM, T_FARM );
+		x( TT_SOIL_ENRICHER, T_SOIL_ENRICHER );
 		x( TT_SENSOR_ARRAY, T_SENSOR );
 	#undef x
 }

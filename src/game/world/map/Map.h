@@ -158,6 +158,12 @@ CLASS( Map, Serializable )
 					{ 923, 579 },
 					{ 923, 642 },
 				};
+				const pcx_texture_coordinates_t soil_enricher[ 4 ] = {
+					{ 822, 453 },
+					{ 822, 516 },
+					{ 822, 579 },
+					{ 822, 642 },
+				};
 				const pcx_texture_coordinates_t kelp_farm[ 1 ] = {
 					{ 607, 190 },
 				};

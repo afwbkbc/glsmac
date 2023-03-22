@@ -255,6 +255,10 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 	else {
 		TERRAFORMING( T_FOREST, "Forest" );
 		TERRAFORMING( T_FARM, "Farm" );
+		
+		if ( tile->terraforming & map::Tile::T_FARM ) {
+			TERRAFORMING( T_SOIL_ENRICHER, "Soil Enricher" );
+		}
 	}
 	TERRAFORMING( T_SENSOR, "Sensor" );
 	
