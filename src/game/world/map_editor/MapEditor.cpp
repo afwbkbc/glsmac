@@ -26,10 +26,12 @@ MapEditor::MapEditor( World* world )
 {
 	NEW( m_brushes[ BT_DOT ], brush::Dot, m_world );
 	NEW( m_brushes[ BT_CROSS ], brush::Cross, m_world );
-	NEW( m_brushes[ BT_SQUARE_3_3 ], brush::Square, m_world, BT_SQUARE_3_3, 3 );
-	NEW( m_brushes[ BT_SQUARE_5_5 ], brush::Square, m_world, BT_SQUARE_5_5, 5 );
-	NEW( m_brushes[ BT_SQUARE_7_7 ], brush::Square, m_world, BT_SQUARE_7_7, 7 );
-	NEW( m_brushes[ BT_SQUARE_9_9 ], brush::Square, m_world, BT_SQUARE_9_9, 9 );
+	#define x( _bt, _w ) NEW( m_brushes[ _bt ], brush::Square, m_world, _bt, _w )
+		x( BT_SQUARE_3_3, 3 );
+		x( BT_SQUARE_5_5, 5 );
+		x( BT_SQUARE_7_7, 7 );
+		x( BT_SQUARE_9_9, 9 );
+	#undef x
 	
 	NEW( m_tools[ TT_ELEVATIONS ], tool::Elevations, m_world );
 	NEW( m_tools[ TT_MOISTURE ], tool::Moisture, m_world );
@@ -50,6 +52,7 @@ MapEditor::MapEditor( World* world )
 
 	#define x( _tt, _t ) NEW( m_tools[ _tt ], tool::Terraforming, m_world, _tt, map::Tile::_t )
 		x( TT_FOREST, T_FOREST );
+		x( TT_SENSOR_ARRAY, T_SENSOR );
 	#undef x
 }
 

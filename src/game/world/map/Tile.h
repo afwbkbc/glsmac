@@ -124,8 +124,9 @@ class Tile { // not deriving from anything because tiles are initialized with ma
 	static constexpr terraforming_t T_CONDENSER = 1 << 6;
 	static constexpr terraforming_t T_ECHELON = 1 << 7;
 	static constexpr terraforming_t T_BOREHOLE = 1 << 8;
-	static constexpr terraforming_t T_BUNKER = 1 << 9;
-	static constexpr terraforming_t T_AIRBASE = 1 << 10;
+	static constexpr terraforming_t T_SENSOR = 1 << 9;
+	static constexpr terraforming_t T_BUNKER = 1 << 10;
+	static constexpr terraforming_t T_AIRBASE = 1 << 11;
 	terraforming_t terraforming;
 	
 	// WARNING: make sure to call this after changing something in tile

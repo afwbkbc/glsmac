@@ -23,6 +23,11 @@ void Sprites::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 		SPRITE( _name, _texture, _y_shift ); \
 	}
 	
+#define TERRAFORMING_SPRITE( _terraforming, _name, _texture ) \
+	if ( tile->terraforming & Tile::_terraforming ) { \
+		SPRITE( _name, _texture, 0.0f ); \
+	}
+	
 	if ( tile->is_water_tile ) {
 		switch ( tile->bonus ) {
 			case Tile::B_NUTRIENT: {
@@ -67,8 +72,12 @@ void Sprites::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 	}
 	
 	FEATURE_SPRITE( F_MONOLITH, "Monolith", monolith[ 0 ], 0.0f );
+	
+	TERRAFORMING_SPRITE( T_SENSOR, "Sensor", sensor[ 0 ] );
+	
 
 #undef FEATURE_SPRITE
+#undef TERRAFORMING_SPRITE
 #undef SPRITE
 	
 }

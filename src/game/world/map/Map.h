@@ -128,10 +128,6 @@ CLASS( Map, Serializable )
 				const pcx_texture_coordinates_t energy_bonus_land[ 2 ] = {
 					{ 203, 379 }, { 304, 379 },
 				};
-				const pcx_texture_coordinates_t monolith[ 1 ] = {
-					{ 304, 0 },
-					//{ 304, 1 },
-				};
 				const pcx_texture_coordinates_t uranium[ 1 ] = {
 					{ 822, 253 },
 				};
@@ -143,6 +139,13 @@ CLASS( Map, Serializable )
 				};
 				const pcx_texture_coordinates_t unity_pod_land[ 3 ] = {
 					{ 519, 379 }, { 721, 379 }, { 923, 379 },
+				};
+				const pcx_texture_coordinates_t monolith[ 1 ] = {
+					{ 304, 0 },
+					//{ 304, 1 },
+				};
+				const pcx_texture_coordinates_t sensor[ 1 ] = {
+					{ 708, 316 },
 				};
 				
 			} ter1_pcx;
