@@ -120,7 +120,7 @@ void BottomBar::AddStyles() {
 		s->Set( ::Style::A_TOP, 58 );
 		s->Set( ::Style::A_BOTTOM, 6 );
 		s->Set( ::Style::A_LEFT, 5 );
-		s->Set( ::Style::A_WIDTH, 136 );
+		s->Set( ::Style::A_WIDTH, 133 );
 	});
 	
 	// tile preview
@@ -129,8 +129,8 @@ void BottomBar::AddStyles() {
 		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
 		s->Set( ::Style::A_TOP, 58 );
 		s->Set( ::Style::A_BOTTOM, 6 );
-		s->Set( ::Style::A_LEFT, 139 );
-		s->Set( ::Style::A_WIDTH, 105 );
+		s->Set( ::Style::A_LEFT, 136 );
+		s->Set( ::Style::A_WIDTH, 108 );
 	});
 
 	AddStyle( "TilePreviewImage", SH() {

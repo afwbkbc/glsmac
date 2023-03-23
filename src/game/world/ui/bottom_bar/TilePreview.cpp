@@ -251,16 +251,28 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 	
 	if ( tile->is_water_tile ) {
 		TERRAFORMING( T_FARM, "Kelp Farm" );
+		TERRAFORMING( T_SOLAR, "Tidal Harness" );
+		TERRAFORMING( T_MINE, "Mining Platform" );
+		
+		TERRAFORMING( T_SENSOR, "Sensor Buoy" );
 	}
 	else {
 		TERRAFORMING( T_FOREST, "Forest" );
 		TERRAFORMING( T_FARM, "Farm" );
+		TERRAFORMING( T_MINE, "Mine" );
+		TERRAFORMING( T_SOLAR, "Solar Collector" );
 		
 		if ( tile->terraforming & map::Tile::T_FARM ) {
 			TERRAFORMING( T_SOIL_ENRICHER, "Soil Enricher" );
 		}
+		TERRAFORMING( T_CONDENSER, "Condenser" );
+		TERRAFORMING( T_MIRROR, "Echelon Mirror" );
+		TERRAFORMING( T_BOREHOLE, "Thermal Borehole" );
+		
+		TERRAFORMING( T_SENSOR, "Sensor Array" );
+		TERRAFORMING( T_BUNKER, "Bunker" );
+		TERRAFORMING( T_AIRBASE, "Airbase" );
 	}
-	TERRAFORMING( T_SENSOR, "Sensor" );
 	
 #undef TERRAFORMING
 	

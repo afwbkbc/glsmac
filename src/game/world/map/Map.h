@@ -145,18 +145,26 @@ CLASS( Map, Serializable )
 				const pcx_texture_coordinates_t unity_pod_land[ 3 ] = {
 					{ 519, 379 }, { 721, 379 }, { 923, 379 },
 				};
-				const pcx_texture_coordinates_t monolith[ 1 ] = {
-					{ 304, 0 },
-					//{ 304, 1 },
+				const pcx_texture_coordinates_t farm_sea[ 1 ] = {
+					{ 607, 190 },
 				};
-				const pcx_texture_coordinates_t sensor[ 1 ] = {
-					{ 708, 316 },
-				};
-				const pcx_texture_coordinates_t farm[ 4 ] = {
+				const pcx_texture_coordinates_t farm_land[ 4 ] = {
 					{ 923, 453 },
 					{ 923, 516 },
 					{ 923, 579 },
 					{ 923, 642 },
+				};
+				const pcx_texture_coordinates_t solar_sea[ 1 ] = {
+					{ 506, 127 },
+				};
+				const pcx_texture_coordinates_t solar_land[ 1 ] = {
+					{ 607, 127 },
+				};
+				const pcx_texture_coordinates_t mine_sea[ 1 ] = {
+					{ 506, 64 },
+				};
+				const pcx_texture_coordinates_t mine_land[ 1 ] = {
+					{ 607, 64 },
 				};
 				const pcx_texture_coordinates_t soil_enricher[ 4 ] = {
 					{ 822, 453 },
@@ -164,8 +172,27 @@ CLASS( Map, Serializable )
 					{ 822, 579 },
 					{ 822, 642 },
 				};
-				const pcx_texture_coordinates_t kelp_farm[ 1 ] = {
-					{ 607, 190 },
+				const pcx_texture_coordinates_t condenser[ 1 ] = {
+					{ 506, 253 },
+				};
+				const pcx_texture_coordinates_t mirror[ 1 ] = {
+					{ 607, 253 },
+				};
+				const pcx_texture_coordinates_t borehole[ 1 ] = {
+					{ 708, 253 },
+				};
+				const pcx_texture_coordinates_t sensor[ 1 ] = {
+					{ 708, 316 },
+				};
+				const pcx_texture_coordinates_t bunker[ 1 ] = {
+					{ 506, 316 },
+				};
+				const pcx_texture_coordinates_t airbase[ 1 ] = {
+					{ 607, 316 },
+				};
+				const pcx_texture_coordinates_t monolith[ 1 ] = {
+					{ 304, 0 },
+					//{ 304, 1 },
 				};
 				
 			} ter1_pcx;

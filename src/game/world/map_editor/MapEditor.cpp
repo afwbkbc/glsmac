@@ -53,8 +53,15 @@ MapEditor::MapEditor( World* world )
 	#define x( _tt, _t ) NEW( m_tools[ _tt ], tool::Terraforming, m_world, _tt, map::Tile::_t )
 		x( TT_FOREST, T_FOREST );
 		x( TT_FARM, T_FARM );
+		x( TT_SOLAR_COLLECTOR, T_SOLAR );
+		x( TT_MINE, T_MINE );
 		x( TT_SOIL_ENRICHER, T_SOIL_ENRICHER );
+		x( TT_CONDENSER, T_CONDENSER );
+		x( TT_ECHELON_MIRROR, T_MIRROR );
+		x( TT_THERMAL_BOREHOLE, T_BOREHOLE );
 		x( TT_SENSOR_ARRAY, T_SENSOR );
+		x( TT_BUNKER, T_BUNKER );
+		x( TT_AIRBASE, T_AIRBASE );
 	#undef x
 }
 

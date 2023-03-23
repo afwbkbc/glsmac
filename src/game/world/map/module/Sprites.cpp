@@ -15,90 +15,98 @@ void Sprites::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 	}
 	ts->sprites.clear();
 	
-#define SPRITE( _name, _texture, _y_shift ) \
-	GenerateSprite( tile, ts, _name, Map::s_consts.tc.ter1_pcx._texture, _y_shift )
+#define SPRITE( _name, _texture ) \
+	GenerateSprite( tile, ts, _name, Map::s_consts.tc.ter1_pcx._texture )
 	
-#define FEATURE_SPRITE( _feature, _name, _texture, _y_shift ) \
+#define FEATURE_SPRITE( _feature, _name, _texture ) \
 	if ( tile->features & Tile::_feature ) { \
-		SPRITE( _name, _texture, _y_shift ); \
+		SPRITE( _name, _texture ); \
 	}
 	
 #define TERRAFORMING_SPRITE( _terraforming, _name, _texture ) \
 	if ( tile->terraforming & Tile::_terraforming ) { \
-		SPRITE( _name, _texture, 0.0f ); \
+		SPRITE( _name, _texture ); \
 	}
 	
 	if ( tile->is_water_tile ) {
 		switch ( tile->bonus ) {
 			case Tile::B_NUTRIENT: {
-				SPRITE( "NutrientBonusSea", nutrient_bonus_sea[ m_map->GetRandom()->GetUInt( 0, 1 ) ], 0.12f );
+				SPRITE( "NutrientBonusSea", nutrient_bonus_sea[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
 				break;
 			}
 			case Tile::B_ENERGY: {
-				SPRITE( "EnergyBonusSea", energy_bonus_sea[ m_map->GetRandom()->GetUInt( 0, 1 ) ], 0.12f );
+				SPRITE( "EnergyBonusSea", energy_bonus_sea[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
 				break;
 			}
 			case Tile::B_MINERALS: {
-				SPRITE( "MineralsBonusSea", minerals_bonus_sea[ m_map->GetRandom()->GetUInt( 0, 1 ) ], 0.12f );
+				SPRITE( "MineralsBonusSea", minerals_bonus_sea[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
 				break;
 			}
 			default: {
 				// nothing
 			}
 		}
-		FEATURE_SPRITE( F_GEOTHERMAL, "Geothermal", geothermal[ 0 ], 0.0f );
-		FEATURE_SPRITE( F_UNITY_POD, "UnityPodSea", unity_pod_sea[ m_map->GetRandom()->GetUInt( 0, 2 ) ], 0.0f );
+		FEATURE_SPRITE( F_GEOTHERMAL, "Geothermal", geothermal[ 0 ] );
+		FEATURE_SPRITE( F_UNITY_POD, "UnityPodSea", unity_pod_sea[ m_map->GetRandom()->GetUInt( 0, 2 ) ] );
 		
-		if ( !( tile->features & Tile::F_XENOFUNGUS ) ) {
-			TERRAFORMING_SPRITE( T_FARM, "KelpFarm", kelp_farm[ 0 ] );
-		}
+		TERRAFORMING_SPRITE( T_FARM, "FarmSea", farm_sea[ 0 ] );
+		TERRAFORMING_SPRITE( T_SOLAR, "SolarSea", solar_sea[ 0 ] );
+		TERRAFORMING_SPRITE( T_MINE, "MineSea", mine_sea[ 0 ] );
 	}
 	else {
 		switch ( tile->bonus ) {
 			case Tile::B_NUTRIENT: {
-				SPRITE( "NutrientBonusLand", nutrient_bonus_land[ m_map->GetRandom()->GetUInt( 0, 1 ) ], 0.12f );
+				SPRITE( "NutrientBonusLand", nutrient_bonus_land[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
 				break;
 			}
 			case Tile::B_ENERGY: {
-				SPRITE( "EnergyBonusLand", energy_bonus_land[ m_map->GetRandom()->GetUInt( 0, 1 ) ], 0.12f );
+				SPRITE( "EnergyBonusLand", energy_bonus_land[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
 				break;
 			}
 			case Tile::B_MINERALS: {
-				SPRITE( "MineralsBonusLand", minerals_bonus_land[ m_map->GetRandom()->GetUInt( 0, 1 ) ], 0.12f );
+				SPRITE( "MineralsBonusLand", minerals_bonus_land[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
 				break;
 			}
 			default: {
 				// nothing
 			}
 		}
-		FEATURE_SPRITE( F_URANIUM, "Uranium", uranium[ 0 ], 0.0f );
-		FEATURE_SPRITE( F_UNITY_POD, "UnityPodLand", unity_pod_land[ m_map->GetRandom()->GetUInt( 0, 2 ) ], 0.0f );
+		FEATURE_SPRITE( F_URANIUM, "Uranium", uranium[ 0 ] );
+		FEATURE_SPRITE( F_UNITY_POD, "UnityPodLand", unity_pod_land[ m_map->GetRandom()->GetUInt( 0, 2 ) ] );
 
-		if ( !( tile->features & Tile::F_XENOFUNGUS ) ) {
-			// TODO: select based on nutrients yields instead of moisture
-			if ( tile->terraforming & Tile::T_FARM ) {
-				if ( tile->terraforming & Tile::T_SOIL_ENRICHER ) {
-					SPRITE( "SoilEnricher", soil_enricher[ tile->moisture ], 0.0f );
-				}
-				else {
-					SPRITE( "Farm", farm[ tile->moisture ], 0.0f );
-				}
+		// TODO: select based on nutrients yields instead of moisture
+		if ( tile->terraforming & Tile::T_FARM ) {
+			if ( tile->terraforming & Tile::T_SOIL_ENRICHER ) {
+				SPRITE( "SoilEnricher", soil_enricher[ tile->moisture ] );
+			}
+			else {
+				SPRITE( "FarmLand", farm_land[ tile->moisture ] );
 			}
 		}
+		TERRAFORMING_SPRITE( T_SOLAR, "SolarLand", solar_land[ 0 ] );
+		TERRAFORMING_SPRITE( T_MINE, "MineLand", mine_land[ 0 ] );
+		TERRAFORMING_SPRITE( T_CONDENSER, "Condenser", condenser[ 0 ] );
+		TERRAFORMING_SPRITE( T_MIRROR, "EchelonMirror", mirror[ 0 ] );
+		TERRAFORMING_SPRITE( T_BOREHOLE, "ThermalBorehole", borehole[ 0 ] );
+
+		TERRAFORMING_SPRITE( T_AIRBASE, "Airbase", airbase[ 0 ] );
 	}
-	
-	FEATURE_SPRITE( F_MONOLITH, "Monolith", monolith[ 0 ], 0.0f );
 	
 	TERRAFORMING_SPRITE( T_SENSOR, "Sensor", sensor[ 0 ] );
 	
-
+	if ( !tile->is_water_tile ) {
+		TERRAFORMING_SPRITE( T_BUNKER, "Bunker", bunker[ 0 ] );
+	}
+		
+	FEATURE_SPRITE( F_MONOLITH, "Monolith", monolith[ 0 ] );
+	
 #undef FEATURE_SPRITE
 #undef TERRAFORMING_SPRITE
 #undef SPRITE
 	
 }
 
-void Sprites::GenerateSprite( const Tile* tile, Map::tile_state_t* ts, const std::string& name, const Map::pcx_texture_coordinates_t& tex_coords, const float y_shift ) {
+void Sprites::GenerateSprite( const Tile* tile, Map::tile_state_t* ts, const std::string& name, const Map::pcx_texture_coordinates_t& tex_coords ) {
 	Map::tile_state_t::sprite_t sprite = {};
 	
 	sprite.tex_coords = tex_coords;
@@ -108,7 +116,7 @@ void Sprites::GenerateSprite( const Tile* tile, Map::tile_state_t* ts, const std
 	
 	sprite.actor->SetPosition({
 		coords.center.x,
-		- ( coords.center.y + y_shift ), // TODO: fix y inversion
+		- coords.center.y, // TODO: fix y inversion
 		coords.center.z
 	});
 	
