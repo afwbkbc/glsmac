@@ -1,7 +1,7 @@
 # GLSMAC
 Unofficial open-source OpenGL/SDL2 client for Sid Meier's Alpha Centauri ( + Alien Crossfire ).
 
-![Screenshot_2023-03-19_02-59-26-min](https://user-images.githubusercontent.com/7736265/226148114-a46f29ae-fc6b-48bd-ab59-5c8369ac8b23.png)
+![github-preview-min](https://user-images.githubusercontent.com/7736265/227072592-0acc91e6-d3b4-46d2-98f6-0ba4e430328f.png)
 
 Note: you will still need to own original game and expansion - GLSMAC will load it's resources like images or sounds.
 
