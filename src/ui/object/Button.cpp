@@ -17,9 +17,9 @@ void Button::Create() {
 		m_label->SetMargin( 3 );
 		m_label->ForwardStyleAttributesV({
 			Style::A_FONT,
-			Style::A_TEXTCOLOR,
+			Style::A_TEXT_COLOR,
 		});
-		m_label->ForwardStyleAttribute( Style::A_TEXTALIGN, Style::A_ALIGN );
+		m_label->ForwardStyleAttribute( Style::A_TEXT_ALIGN, Style::A_ALIGN );
 	AddChild( m_label );
 	
 	NEW( m_click_sound, SoundEffect );

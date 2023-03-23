@@ -639,13 +639,13 @@ void UIObject::UpdateObjectArea() {
 				g_engine->GetUI()->SendMouseMoveEvent( this );
 			}
 			
-#ifdef DEBUG
-			// resize debug frame to match new area
-			if ( m_has_debug_frame ) {
-				g_engine->GetUI()->ResizeDebugFrame( this );
-			}
-#endif
 		}
+#ifdef DEBUG
+		// resize debug frame to match new area
+		if ( m_has_debug_frame ) {
+			g_engine->GetUI()->ResizeDebugFrame( this );
+		}
+#endif
 	}
 }
 

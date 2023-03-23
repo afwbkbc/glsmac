@@ -6,9 +6,23 @@ namespace ui {
 namespace object {
 
 SimpleButton::SimpleButton( const std::string& class_name )
-	: Surface( class_name )
+	: UIContainer( class_name )
 {	
 	SetEventContexts( EC_MOUSE | EC_MOUSEMOVE );
+}
+
+void SimpleButton::Create() {
+	UIContainer::Create();
+	
+	NEW( m_background, Surface );
+		m_background->ForwardStyleAttribute( Style::A_TEXTURE );
+	AddChild( m_background );
+}
+
+void SimpleButton::Destroy() {
+	RemoveChild( m_background );
+	
+	UIContainer::Destroy();
 }
 
 bool SimpleButton::OnMouseOver( const UIEvent::event_data_t* data ) {

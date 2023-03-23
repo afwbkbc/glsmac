@@ -1,5 +1,3 @@
-#include <regex>
-
 #include "InfoPanel.h"
 
 #include "engine/Engine.h"

@@ -57,6 +57,7 @@ CLASS( Style, base::Base )
 		A_TOP,
 		A_RIGHT,
 		A_BOTTOM,
+		A_PADDING,
 		
 		// textures
 		A_TEXTURE,
@@ -79,10 +80,11 @@ CLASS( Style, base::Base )
 		A_TEXTURE_RIGHTBOTTOM,
 		A_TEXTURE_LEFTBOTTOM,
 		
-		// fonts
+		// text
 		A_FONT,
-		A_TEXTALIGN,
-		A_TEXTCOLOR,
+		A_TEXT_ALIGN,
+		A_TEXT_COLOR,
+		A_TEXT_LEFT,
 		
 		// sounds
 		A_SOUND,

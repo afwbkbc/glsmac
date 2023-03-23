@@ -1,5 +1,3 @@
-#include <regex>
-
 #include "UnitsList.h"
 
 #include "engine/Engine.h"

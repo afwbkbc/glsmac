@@ -15,6 +15,9 @@
 #include "UnitsList.h"
 #include "MiniMap.h"
 
+// side menus
+#include "left_menu/LeftMenu.h"
+
 namespace game {
 namespace world {
 	
@@ -38,7 +41,9 @@ CLASS( BottomBar, UI )
 	void SetMinimapSelection( const Vec2< float > position_percents, const Vec2< float > zoom );
 	const bool IsMouseDraggingMiniMap() const;
 	
-protected:
+	void CloseMenus();
+	
+private:
 	struct {
 		Surface* left = nullptr;
 		Surface* right = nullptr;
@@ -61,10 +66,13 @@ protected:
 	} m_sections = {};
 	
 	struct {
+		menu::LeftMenu* left = nullptr;
+	} m_side_menus = {};
+	
+	struct {
 		types::Texture* minimap = nullptr;
 	} m_textures = {};
 	
-private:
 	const UIEventHandler* m_mouse_blocker = nullptr;
 	
 };

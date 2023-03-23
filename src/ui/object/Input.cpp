@@ -20,7 +20,7 @@ void Input::Create() {
 		m_label->SetMargin( 5 ); // TODO: align properly
 		m_label->ForwardStyleAttributesV({
 			Style::A_FONT,
-			Style::A_TEXTCOLOR,
+			Style::A_TEXT_COLOR,
 		});
 		m_label->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_BOTTOM );
 	AddChild( m_label );

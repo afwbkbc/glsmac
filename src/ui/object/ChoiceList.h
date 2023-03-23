@@ -53,8 +53,8 @@ private:
 		Style::A_TEXTURE_RIGHTBOTTOM,
 		Style::A_TEXTURE_LEFTBOTTOM,
 		Style::A_FONT,
-		Style::A_TEXTCOLOR,
-		Style::A_TEXTALIGN,
+		Style::A_TEXT_COLOR,
+		Style::A_TEXT_ALIGN,
 		Style::A_BUTTON_CLICK_SOUND,
 		Style::A_BUTTON_MOVE_SOUND,
 	};

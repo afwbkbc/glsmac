@@ -108,11 +108,11 @@ void Label::Align() {
 void Label::ApplyStyle() {
 	UIObject::ApplyStyle();
 	
-	if ( Has( Style::A_TEXTALIGN ) ) {
-		SetAlign( Get( Style::A_TEXTALIGN ) );
+	if ( Has( Style::A_TEXT_ALIGN ) ) {
+		SetAlign( Get( Style::A_TEXT_ALIGN ) );
 	}
-	if ( Has( Style::A_TEXTCOLOR ) ) {
-		SetTextColor( GetColor( Style::A_TEXTCOLOR ) );
+	if ( Has( Style::A_TEXT_COLOR ) ) {
+		SetTextColor( GetColor( Style::A_TEXT_COLOR ) );
 	}
 	if ( Has( Style::A_FONT ) ) {
 		SetFont( (Font*)GetObject( Style::A_FONT ) );

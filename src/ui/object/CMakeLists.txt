@@ -7,6 +7,7 @@ SET(SRC ${SRC}
 	${PWD}/ChoiceList.cpp
 	${PWD}/Input.cpp
 	${PWD}/SimpleButton.cpp
+	${PWD}/LabelButton.cpp
 	${PWD}/Button.cpp
 	${PWD}/Panel.cpp
 	${PWD}/Label.cpp

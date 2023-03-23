@@ -84,6 +84,9 @@ CLASS( World, base::Task )
 
 	util::Random* GetRandom() const;
 	
+	void CloseMenus();
+	void ReturnToMainMenu();
+	
 protected:
 
 private:
@@ -176,8 +179,6 @@ private:
 		ui::style::Theme theme;
 		ui::BottomBar* bottom_bar = nullptr;
 	} m_ui;
-	
-	void ReturnToMainMenu();
 	
 	// tiles stuff
 	void SelectTileAtPoint( const size_t x, const size_t y );

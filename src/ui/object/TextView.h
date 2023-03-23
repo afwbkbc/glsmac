@@ -35,8 +35,8 @@ private:
 	
 	const std::vector< Style::attribute_type_t > m_forwarded_style_attributes = {
 		Style::A_FONT,
-		Style::A_TEXTCOLOR,
-		Style::A_TEXTALIGN,
+		Style::A_TEXT_COLOR,
+		Style::A_TEXT_ALIGN,
 	};
 	
 	std::vector< std::string > m_lines = {};

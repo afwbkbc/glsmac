@@ -69,8 +69,8 @@ protected:
 	
 	const std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_forwarded_header_label_style_attributes = {
 		{ Style::A_HEADER_FONT, Style::A_FONT },
-		{ Style::A_HEADER_TEXTCOLOR, Style::A_TEXTCOLOR },
-		{ Style::A_HEADER_TEXTALIGN, Style::A_TEXTALIGN },
+		{ Style::A_HEADER_TEXTCOLOR, Style::A_TEXT_COLOR },
+		{ Style::A_HEADER_TEXTALIGN, Style::A_TEXT_ALIGN },
 	};
 };
 

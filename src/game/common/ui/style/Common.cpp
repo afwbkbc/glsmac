@@ -10,7 +10,7 @@ void Common::AddStyles() {
 		s->Set( Style::A_LEFT, 0 );
 		s->Set( Style::A_TOP, 0 );
 		s->SetFont( Style::A_FONT, "arialnb.ttf", 18 );
-		s->SetColor( Style::A_TEXTCOLOR, Color( 0.5f, 1.0f, 0.3f, 0.7f ) );
+		s->SetColor( Style::A_TEXT_COLOR, Color( 0.5f, 1.0f, 0.3f, 0.7f ) );
 	});
 	
 }

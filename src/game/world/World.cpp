@@ -483,6 +483,8 @@ void World::Start() {
 
 void World::Stop() {
 	
+	CloseMenus();
+	
 	auto* ui = g_engine->GetUI();
 	ui->RemoveObject( m_ui.bottom_bar );
 	ui->RemoveTheme( &m_ui.theme );
@@ -946,6 +948,12 @@ void World::SmoothScroll( const Vec2< float > position, const float scroll_value
 
 util::Random* World::GetRandom() const {
 	return m_random;
+}
+
+void World::CloseMenus() {
+	if ( m_ui.bottom_bar ) {
+		m_ui.bottom_bar->CloseMenus();
+	}
 }
 
 }

@@ -236,6 +236,10 @@ const UIObject::object_area_t UIContainer::GetInternalObjectArea() {
 void UIContainer::ApplyStyle() {
 	UIObject::ApplyStyle();
 	
+	if ( Has( Style::A_PADDING ) ) {
+		SetPadding( Get( Style::A_PADDING ) );
+	}
+	
 	for (auto& c : m_child_objects) {
 		////c->ReloadStyle();
 		c->ApplyStyle(); // ???

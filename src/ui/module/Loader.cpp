@@ -37,7 +37,7 @@ void Loader::Start() {
 		m_label->SetTop( 36 );
 		m_label->SetLeft( 80 );
 		m_label->SetText( m_loading_text );
-		m_label->ForwardStyleAttributesV({ Style::A_FONT, Style::A_TEXTCOLOR });
+		m_label->ForwardStyleAttributesV({ Style::A_FONT, Style::A_TEXT_COLOR });
 	m_section->AddChild( m_label );
 	
 	NEW( m_button_cancel, Button, "LoaderButton" );

@@ -65,14 +65,14 @@ void Popup::AddStyles() {
 	});
 	
 	AddStyle( "PopupLabel", SH() {
-		s->SetColor( Style::A_TEXTCOLOR, Color::FromRGB( 109, 126, 178 ) );
+		s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 109, 126, 178 ) );
 		s->SetFont( Style::A_FONT, "arialnb.ttf", 18 );
 	});
 	
 	AddStyle( "PopupInput",{
 		"PopupBorder"
 	}, SH() {
-		s->SetColor( Style::A_TEXTCOLOR, Color::FromRGB( 159, 196, 198 ) );
+		s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 159, 196, 198 ) );
 		s->SetFont( Style::A_FONT, "arialnb.ttf", 18 );
 		s->Set( Style::A_HEIGHT, 22 );
 	});
@@ -83,12 +83,12 @@ void Popup::AddStyles() {
 	}, SH() {
 		s->SetFont( Style::A_HEADER_FONT, "arialnb.ttf", 18 );
 		s->Set( Style::A_HEADER_HEIGHT, 22 );
-		s->SetColor( Style::A_TEXTCOLOR, Color::FromRGB( 109, 126, 178 ) );
+		s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 109, 126, 178 ) );
 		s->SetFont( Style::A_FONT, "arialnb.ttf", 20 );
 	});
 	
 	AddStyle( "LoaderLabel", SH() {
-		s->SetColor( Style::A_TEXTCOLOR, Color::FromRGB( 109, 126, 178 ) );
+		s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 109, 126, 178 ) );
 		s->SetFont( Style::A_FONT, "arialnb.ttf", 20 );
 	});
 	
@@ -130,10 +130,10 @@ void Popup::AddStyles() {
 		}
 
 		if ( s->Is( Style::M_HOVER ) && !s->Is( Style::M_ACTIVE ) && !s->Is( Style::M_SELECTED) ) {
-			s->SetColor( Style::A_TEXTCOLOR, Color::FromRGB( 164, 176, 232 ) );
+			s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 164, 176, 232 ) );
 		}
 		else {
-			s->SetColor( Style::A_TEXTCOLOR, Color::FromRGB( 13, 23, 36 ) );
+			s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 13, 23, 36 ) );
 		}
 	});
 
@@ -146,7 +146,7 @@ void Popup::AddStyles() {
 		s->Set( Style::A_BOTTOM, 3 );
 
 		s->SetFont( Style::A_FONT, "arialnb.ttf", 16 );
-		s->Set( Style::A_TEXTALIGN, UIObject::ALIGN_LEFT );
+		s->Set( Style::A_TEXT_ALIGN, UIObject::ALIGN_LEFT );
 	});
 	
 	AddStyle( "PopupButtonOkCancel", {
@@ -173,7 +173,7 @@ void Popup::AddStyles() {
 	
 	AddStyle( "PopupText", SH() {
 		s->SetFont( Style::A_FONT, "arialnb.ttf", 18 );
-		s->SetColor( Style::A_TEXTCOLOR, Color::FromRGB( 129, 146, 198 ) );
+		s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 129, 146, 198 ) );
 	});
 	
 	

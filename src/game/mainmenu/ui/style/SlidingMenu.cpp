@@ -107,17 +107,17 @@ void SlidingMenu::AddStyles() {
 		"SlidingMenuItemText"
 	}, SH() {
 		if ( s->Is( Style::M_SELECTED ) ) {
-			s->SetColor( Style::A_TEXTCOLOR, Color::FromRGBA( 193, 240 ,204, 255 ) );
+			s->SetColor( Style::A_TEXT_COLOR, Color::FromRGBA( 193, 240 ,204, 255 ) );
 		}
 		else {
-			s->SetColor( Style::A_TEXTCOLOR, Color::FromRGBA( 94, 162 ,137, 255 ) );
+			s->SetColor( Style::A_TEXT_COLOR, Color::FromRGBA( 94, 162 ,137, 255 ) );
 		}
 	});
 	
 	AddStyle( "SlidingMenuTitleText", {
 		"SlidingMenuItemText"
 	}, SH() {
-		s->SetColor( Style::A_TEXTCOLOR, Color::FromRGBA( 230, 243 ,233, 255 ) );
+		s->SetColor( Style::A_TEXT_COLOR, Color::FromRGBA( 230, 243 ,233, 255 ) );
 	});
 	
 	AddStyle( "SlidingMenuSound", SH() {

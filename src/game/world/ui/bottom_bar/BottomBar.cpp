@@ -68,6 +68,17 @@ void BottomBar::Create() {
 	
 	NEW( m_buttons.menu, Button, "MapBottomBarButtonMenu" );
 		m_buttons.menu->SetLabel( "MENU" );
+		m_buttons.menu->On( UIEvent::EV_BUTTON_CLICK, EH( this ) {
+			if ( m_side_menus.left->IsVisible() ) {
+				m_buttons.menu->RemoveStyleModifier( Style::M_SELECTED );
+				m_side_menus.left->Hide();
+			}
+			else {
+				m_buttons.menu->AddStyleModifier( Style::M_SELECTED );
+				m_side_menus.left->Show();
+			}
+			return true;
+		});
 	AddChild( m_buttons.menu );
 	
 	NEW( m_buttons.commlink, Button, "MapBottomBarButtonCommlink" );
@@ -94,6 +105,15 @@ void BottomBar::Create() {
 			m_sections.mini_map->SetMinimapTexture( m_textures.minimap );
 		}
 	AddChild( m_sections.mini_map );
+	
+	// side menus
+	auto* ui = g_engine->GetUI();
+	// adding to UI because they need to catch clicks outside of bottom bar
+	NEW( m_side_menus.left, menu::LeftMenu, m_world );
+		m_side_menus.left->SetBottom( GetHeight() );
+	ui->AddObject( m_side_menus.left );
+	
+	// other
 	
 	m_mouse_blocker = On({
 		UIEvent::EV_MOUSE_DOWN,
@@ -136,6 +156,9 @@ void BottomBar::Destroy() {
 	RemoveChild( m_sections.middle_area );
 	RemoveChild( m_sections.mini_map );
 	RemoveChild( m_sections.units_list);
+	
+	auto* ui = g_engine->GetUI();
+	ui->RemoveObject( m_side_menus.left );
 	
 	if ( m_textures.minimap ) {
 		DELETE( m_textures.minimap );
@@ -182,6 +205,13 @@ void BottomBar::SetMinimapSelection( const Vec2< float > position_percents, cons
 const bool BottomBar::IsMouseDraggingMiniMap() const {
 	ASSERT( m_sections.mini_map, "minimap not initialized" );
 	return m_sections.mini_map->IsMouseDragging();
+}
+
+void BottomBar::CloseMenus() {
+	if ( m_buttons.menu->HasStyleModifier( Style::M_SELECTED ) ) {
+		m_buttons.menu->RemoveStyleModifier( Style::M_SELECTED );
+		m_side_menus.left->Hide();
+	}
 }
 
 }

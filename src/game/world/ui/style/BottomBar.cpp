@@ -76,17 +76,17 @@ void BottomBar::AddStyles() {
 		
 		s->SetFont( ::Style::A_FONT, "arialnb.ttf", 16 );
 		
-		if ( s->Is( ::Style::M_ACTIVE ) ) {
+		if ( s->Is( ::Style::M_ACTIVE ) || s->Is( ::Style::M_SELECTED ) ) {
 			s->SetTexture( ::Style::A_TEXTURE_BACK, "console_x2_a.pcx", 1, 247, 106, 260 );
-			s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 0, 0, 0 ) );
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 0, 0, 0 ) );
 		}
 		else if ( s->Is( ::Style::M_HOVER ) ) {
 			s->SetTexture( ::Style::A_TEXTURE_BACK, "console_x2_a.pcx", 1, 232, 106, 245 );
-			s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 0, 0, 0 ) );
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 0, 0, 0 ) );
 		}
 		else {
 			s->SetTexture( ::Style::A_TEXTURE_BACK, "console_x2_a.pcx", 1, 217, 106, 230 );
-			s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 228, 104, 24 ) );
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 228, 104, 24 ) );
 		}
 
 	});
@@ -149,7 +149,7 @@ void BottomBar::AddStyles() {
 	
 	AddStyle( "TilePreviewText", SH() {
 		s->SetFont( ::Style::A_FONT, "arialn.ttf", 14 );
-		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 116, 156, 56 ) );
+		s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 116, 156, 56 ) );
 		s->Set( ::Style::A_HEIGHT, 15 );
 	});
 	
@@ -178,7 +178,7 @@ void BottomBar::AddStyles() {
 		s->Set( ::Style::A_RIGHT, 3 );
 		s->Set( ::Style::A_WIDTH, 19 );
 		s->SetFont( ::Style::A_FONT, "arialnb.ttf", 16 );
-		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 0, 0, 0 ) );
+		s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 0, 0, 0 ) );
 		if ( s->Is( ::Style::M_HOVER ) || s->Is( ::Style::M_SELECTED ) ) {
 			s->SetTexture( ::Style::A_TEXTURE_LEFT, "interface.pcx", 40, 587, 40, 610 );
 			s->SetTexture( ::Style::A_TEXTURE_TOP, "interface.pcx", 47, 580, 70, 580 );
@@ -222,9 +222,9 @@ void BottomBar::AddStyles() {
 		// items
 		s->Set( Style::A_ITEM_HEIGHT, 17 ); // TODO: auto-size?
 		s->Set( Style::A_ITEM_MARGIN, 0 ); // TODO: fix alignment if non-zero
-		s->Set( Style::A_TEXTALIGN, UIObject::ALIGN_LEFT );
+		s->Set( Style::A_TEXT_ALIGN, UIObject::ALIGN_LEFT );
 		s->SetFont( ::Style::A_FONT, "arialn.ttf", 16 );
-		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 60, 148, 124 ) );
+		s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 60, 148, 124 ) );
 	});
 	
 	// toolbar page
@@ -360,9 +360,9 @@ void BottomBar::AddStyles() {
 	});
 	
 	AddStyle( "MiddleAreaToolbarInfoLabel", SH() {
-		s->Set( ::Style::A_TEXTALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+		s->Set( ::Style::A_TEXT_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
 		s->SetFont( ::Style::A_FONT, "arialn.ttf", 14 );
-		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 184, 192, 96 ) );
+		s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 184, 192, 96 ) );
 	});
 	
 	// info panels page
@@ -376,9 +376,9 @@ void BottomBar::AddStyles() {
 	});
 	
 	AddStyle( "MiddleAreaInfoPanelLabel", SH() {
-		s->Set( ::Style::A_TEXTALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+		s->Set( ::Style::A_TEXT_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
 		s->SetFont( ::Style::A_FONT, "arialn.ttf", 14 );
-		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 184, 192, 96 ) );
+		s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 184, 192, 96 ) );
 	});
 	
 	// units list at bottom
@@ -428,15 +428,15 @@ void BottomBar::AddStyles() {
 		
 		if ( s->Is( ::Style::M_ACTIVE ) ) {
 			f_buttonstyle( 193, 55 );
-			s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 0, 0, 0 ) );
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 0, 0, 0 ) );
 		}
 		else if ( s->Is( ::Style::M_HOVER ) ) {
 			f_buttonstyle( 2, 55 );
-			s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 228, 104, 24 ) );
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 228, 104, 24 ) );
 		}
 		else {
 			f_buttonstyle( 2, 1 );
-			s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 228, 104, 24 ) );
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 228, 104, 24 ) );
 		}
 
 		s->SetSound( ::Style::A_BUTTON_CLICK_SOUND, "ok.wav" );
@@ -461,9 +461,40 @@ void BottomBar::AddStyles() {
 	AddStyle( "MinimapBottomBarLabel", SH() {
 		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
 		s->SetFont( ::Style::A_FONT, "arialnb.ttf", 15 );
-		s->SetColor( ::Style::A_TEXTCOLOR, Color::FromRGB( 60, 148, 124 ) );
+		s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 60, 148, 124 ) );
 		s->Set( ::Style::A_LEFT, 5 );
 		s->Set( ::Style::A_HEIGHT, 15 );
+	});
+	
+	// side menus
+	AddStyle( "SideMenu", SH() {
+		s->Set( ::Style::A_WIDTH, 136 );
+	});
+	
+	AddStyle( "SideMenuBackground", SH() {
+		s->SetTexture( ::Style::A_TEXTURE, "interface.pcx", 439, 64, 458, 83 );
+	});
+	
+	AddStyle( "SideMenuButton", SH() {
+		s->SetFont( ::Style::A_FONT, "arialnb.ttf", 17 );
+		s->Set( Style::A_TEXT_ALIGN, UIObject::ALIGN_LEFT | UIObject::ALIGN_VCENTER );
+		s->Set( Style::A_TEXT_LEFT, 4 );
+		if ( s->Is( ::Style::M_ACTIVE ) || s->Is( ::Style::M_SELECTED ) ) {
+			s->SetTexture( ::Style::A_TEXTURE, "console_x2_a.pcx", 1, 249, 106, 258 );
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 0, 0, 0 ) );
+		}
+		else if ( s->Is( ::Style::M_HOVER ) ) {
+//			s->SetTexture( ::Style::A_TEXTURE, "interface.pcx", 68, 65, 134, 82 );
+			s->SetTexture( ::Style::A_TEXTURE, "console_x2_a.pcx", 1, 219, 106, 228 );
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 228, 104, 24 ) );
+		}
+		else {
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 176, 212, 235 ) );			
+		}
+	});
+	
+	AddStyle( "LeftMenu", { "SideMenu" }, SH() {
+		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_LEFT );
 	});
 }
 

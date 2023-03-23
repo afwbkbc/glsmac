@@ -1,5 +1,3 @@
-#include <regex>
-
 #include "UnitPreview.h"
 
 #include "engine/Engine.h"
