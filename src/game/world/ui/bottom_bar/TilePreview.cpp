@@ -259,15 +259,16 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 	else {
 		TERRAFORMING( T_FOREST, "Forest" );
 		TERRAFORMING( T_FARM, "Farm" );
+		TERRAFORMING( T_SOIL_ENRICHER, "Soil Enricher" );
 		TERRAFORMING( T_MINE, "Mine" );
 		TERRAFORMING( T_SOLAR, "Solar Collector" );
 		
-		if ( tile->terraforming & map::Tile::T_FARM ) {
-			TERRAFORMING( T_SOIL_ENRICHER, "Soil Enricher" );
-		}
 		TERRAFORMING( T_CONDENSER, "Condenser" );
 		TERRAFORMING( T_MIRROR, "Echelon Mirror" );
 		TERRAFORMING( T_BOREHOLE, "Thermal Borehole" );
+		
+		TERRAFORMING( T_ROAD, "Road" );
+		TERRAFORMING( T_MAG_TUBE, "Mag Tube" );
 		
 		TERRAFORMING( T_SENSOR, "Sensor Array" );
 		TERRAFORMING( T_BUNKER, "Bunker" );

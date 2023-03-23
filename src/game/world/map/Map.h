@@ -105,7 +105,16 @@ CLASS( Map, Serializable )
 					{ 775, 276 }, { 832, 276 }, { 889, 276 },
 					{ 775, 333 }, { 832, 333 }, { 889, 333 },
 				};
-				
+				const pcx_texture_coordinates_t road[ 9 ] = {
+					{ 775, 395 }, { 832, 395 }, { 889, 395 },
+					{ 775, 452 }, { 832, 452 }, { 889, 452 },
+					{ 775, 509 }, { 832, 509 }, { 889, 509 },
+				};
+				const pcx_texture_coordinates_t mag_tube[ 9 ] = {
+					{ 775, 566 }, { 832, 566 }, { 889, 566 },
+					{ 775, 623 }, { 832, 623 }, { 889, 623 },
+					{ 775, 680 }, { 832, 680 }, { 889, 680 },
+				};
 			} texture_pcx;
 			const struct {
 				
@@ -481,8 +490,7 @@ CLASS( Map, Serializable )
 	enum texture_variants_type_t {
 		TVT_NONE,
 		TVT_TILES,
-		TVT_RIVERS_FORESTS,
-		TVT_ROADS
+		TVT_RIVERS_FORESTS
 	};
 	const tile_texture_info_t GetTileTextureInfo( const texture_variants_type_t type, const Tile* tile, const tile_grouping_criteria_t criteria, const Tile::feature_t feature = Tile::F_NONE ) const;
 	

@@ -62,6 +62,8 @@ MapEditor::MapEditor( World* world )
 		x( TT_SENSOR_ARRAY, T_SENSOR );
 		x( TT_BUNKER, T_BUNKER );
 		x( TT_AIRBASE, T_AIRBASE );
+		x( TT_ROAD, T_ROAD );
+		x( TT_MAG_TUBE, T_MAG_TUBE );
 	#undef x
 }
 

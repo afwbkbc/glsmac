@@ -74,18 +74,14 @@ void Sprites::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 		FEATURE_SPRITE( F_URANIUM, "Uranium", uranium[ 0 ] );
 		FEATURE_SPRITE( F_UNITY_POD, "UnityPodLand", unity_pod_land[ m_map->GetRandom()->GetUInt( 0, 2 ) ] );
 
-		// TODO: select based on nutrients yields instead of moisture
-		if ( tile->terraforming & Tile::T_FARM ) {
-			if ( tile->terraforming & Tile::T_SOIL_ENRICHER ) {
-				SPRITE( "SoilEnricher", soil_enricher[ tile->moisture ] );
-			}
-			else {
-				SPRITE( "FarmLand", farm_land[ tile->moisture ] );
-			}
-		}
 		TERRAFORMING_SPRITE( T_SOLAR, "SolarLand", solar_land[ 0 ] );
-		TERRAFORMING_SPRITE( T_MINE, "MineLand", mine_land[ 0 ] );
 		TERRAFORMING_SPRITE( T_CONDENSER, "Condenser", condenser[ 0 ] );
+		
+		// TODO: select based on nutrients yields instead of moisture
+		TERRAFORMING_SPRITE( T_FARM, "FarmLand", farm_land[ tile->moisture ] );
+		TERRAFORMING_SPRITE( T_SOIL_ENRICHER, "SoilEnricher", soil_enricher[ tile->moisture ] );
+		
+		TERRAFORMING_SPRITE( T_MINE, "MineLand", mine_land[ 0 ] );
 		TERRAFORMING_SPRITE( T_MIRROR, "EchelonMirror", mirror[ 0 ] );
 		TERRAFORMING_SPRITE( T_BOREHOLE, "ThermalBorehole", borehole[ 0 ] );
 

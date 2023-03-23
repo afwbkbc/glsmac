@@ -125,7 +125,7 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 	
 	if ( !tile->is_water_tile ) {
 		
-		if ( tile->terraforming & Tile::T_FARM ) {
+		if ( tile->terraforming & Tile::T_FARM || tile->terraforming & Tile::T_SOIL_ENRICHER ) {
 			// TODO: select based on nutrients yields instead of moisture
 			m_map->AddTexture(
 				Map::LAYER_LAND,
@@ -182,6 +182,41 @@ void LandSurface::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::ma
 			}
 		}
 		
+		for ( const auto& t : { Tile::T_ROAD, Tile::T_MAG_TUBE } ) {
+			if ( tile->terraforming & t ) {
+				std::vector< uint8_t > road_variants = {};
+				road_variants.reserve( 9 ); // to minimize reallocations
+
+				#define x( _side, _variant ) { \
+					if ( tile->_side->terraforming & t ) \
+						road_variants.push_back( _variant ); \
+					}
+					x( NE, 1 );
+					x( E, 2 );
+					x( SE, 3 );
+					x( S, 4 );
+					x( SW, 5 );
+					x( W, 6 );
+					x( NW, 7 );
+					x( N, 8 );
+				#undef x
+
+				if ( road_variants.empty() )
+					road_variants.push_back( 0 );
+
+				for ( auto& variant : road_variants ) {
+					m_map->AddTexture(
+						Map::LAYER_LAND,
+						t == Tile::T_ROAD
+							? Map::s_consts.tc.texture_pcx.road[ variant ]
+							: Map::s_consts.tc.texture_pcx.mag_tube[ variant ]
+						,
+						Texture::AM_MERGE,
+						0
+					);
+				}
+			}
+		}
 	}
 }
 

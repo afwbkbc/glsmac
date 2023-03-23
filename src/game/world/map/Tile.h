@@ -116,7 +116,7 @@ class Tile { // not deriving from anything because tiles are initialized with ma
 	typedef uint16_t terraforming_t;
 	static constexpr terraforming_t T_NONE = 0;
 	static constexpr terraforming_t T_ROAD = 1 << 0;
-	static constexpr terraforming_t T_MAGTUBE = 1 << 1;
+	static constexpr terraforming_t T_MAG_TUBE = 1 << 1;
 	static constexpr terraforming_t T_FOREST = 1 << 2;
 	static constexpr terraforming_t T_FARM = 1 << 3;
 	static constexpr terraforming_t T_SOIL_ENRICHER = 1 << 4;
