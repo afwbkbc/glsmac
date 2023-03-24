@@ -26,11 +26,24 @@ public:
 	const std::string& GetLocalName() const;
 	virtual const std::string GetClassName() const = 0;
 	
+#ifdef DEBUG
+	// use these to track lifecycle of specific object
+	void SetTesting( const bool testing );
+	const bool IsTesting() const;
+	void TestBreakpoint(); // set gdb breakpoint inside
+#endif
+
 protected:
 	const size_t m_object_id = 0;
 	std::string m_class_name = "";
 	std::string m_name = "";
 	void Log( const std::string &text ) const;
+	
+private:
+#ifdef DEBUG
+	bool m_is_testing = false;
+#endif
+	
 };
 
 #define CLASS_HEADER( _name, _parent ) \

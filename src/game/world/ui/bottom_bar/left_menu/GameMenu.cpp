@@ -9,19 +9,19 @@ namespace ui {
 namespace menu {
 
 GameMenu::GameMenu( World* world )
-	: SideMenu( world )
+	: Menu( world )
 {
 #if DEBUG
 	AddItem( "Save Dump..." );
 	AddItem( "Load Dump..." );
 #endif
 	
-	AddItem( "Start New Game", SMH( this ) {
+	AddItem( "Start New Game", MH( this ) {
 		m_world->ReturnToMainMenu();
 		return false;
 	});
 	
-	AddItem( "Quit", SMH( this ) {
+	AddItem( "Quit", MH( this ) {
 		g_engine->ShutDown();
 		return false;
 	});

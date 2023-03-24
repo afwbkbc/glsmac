@@ -157,7 +157,15 @@ void World::Start() {
 	m_viewport.bottom_bar_overlap = 32; // it has transparent area on top so let map render through it
 	
 	// map event handlers
-	m_handlers.keydown = ui->AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this ) {
+	m_handlers.keydown = ui->AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this, ui ) {
+		
+		if ( ui->HasPopup() && (
+			data->key.code != UIEvent::K_ESCAPE ||
+			data->key.modifiers
+		)) {
+			return false;
+		}
+		
 		if ( !data->key.modifiers ) {
 			
 			if ( m_selected_tile_info.tile && m_selected_tile_info.ts ) {
@@ -264,9 +272,13 @@ void World::Start() {
 				return true;
 			}
 			
-			// exit to main menu
 			if ( data->key.code == UIEvent::K_ESCAPE ) {
-				ReturnToMainMenu();
+				if ( ui->HasPopup() ) {
+					ui->CloseLastPopup();
+				}
+				else {
+					ReturnToMainMenu();
+				}
 				return true;
 			}
 		}
@@ -296,7 +308,11 @@ void World::Start() {
 		return false;
 	}, UI::GH_BEFORE );
 	
-	m_handlers.mousedown = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_DOWN, EH( this ) {
+	m_handlers.mousedown = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_DOWN, EH( this, ui ) {
+		if ( ui->HasPopup() ) {
+			return false;
+		}
+		
 		if ( m_is_editing_mode ) {
 			switch ( data->mouse.button ) {
 				case UIEvent::M_LEFT: {
@@ -339,11 +355,16 @@ void World::Start() {
 		return true;
 	}, UI::GH_AFTER );
 	
-	m_handlers.mousemove = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_MOVE, EH( this ) {
+	m_handlers.mousemove = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_MOVE, EH( this, ui ) {
 		m_map_control.last_mouse_position = {
 			GetFixedX( data->mouse.absolute.x ),
 			(float)data->mouse.absolute.y
 		};
+		
+		if ( ui->HasPopup() ) {
+			return false;
+		}
+		
 		if ( m_map_control.is_dragging ) {
 				
 			Vec2<float> current_drag_position = { m_clamp.x.Clamp( data->mouse.absolute.x ), m_clamp.y.Clamp( data->mouse.absolute.y ) };
@@ -431,7 +452,11 @@ void World::Start() {
 		return true;
 	}, UI::GH_AFTER );
 	
-	m_handlers.mousescroll = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_SCROLL, EH( this ) {
+	m_handlers.mousescroll = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_SCROLL, EH( this, ui ) {
+		if ( ui->HasPopup() ) {
+			return false;
+		}
+
 		SmoothScroll( m_map_control.last_mouse_position, data->mouse.scroll_y );
 		return true;
 	}, UI::GH_AFTER );

@@ -14,6 +14,5 @@ SET(SRC ${SRC}
 	${PWD}/InfoPanel.cpp
 	${PWD}/UnitsList.cpp
 	${PWD}/MiniMap.cpp
-	${PWD}/SideMenu.cpp
 
 PARENT_SCOPE)

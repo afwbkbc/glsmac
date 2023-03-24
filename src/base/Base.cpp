@@ -42,5 +42,20 @@ void Base::Log( const std::string &text ) const {
 		g_engine->GetLogger()->Log( "<" + GetName() + "> " + text );
 }
 
+#ifdef DEBUG
+void Base::SetTesting( const bool testing ) {
+	m_is_testing = testing;
+}
+const bool Base::IsTesting() const {
+	return m_is_testing;
+}
+void Base::TestBreakpoint() {
+	if ( IsTesting() ) {
+		int a = 5;
+		/**** put gdb breakpoint here ****/
+		a++;
+	}
+}
+#endif
 
 } /* namespace base */

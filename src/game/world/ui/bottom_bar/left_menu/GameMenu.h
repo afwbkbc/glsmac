@@ -3,14 +3,14 @@
 #include <vector>
 #include <string>
 
-#include "../SideMenu.h"
+#include "../../Menu.h"
 
 namespace game {
 namespace world {
 namespace ui {
 namespace menu {
 
-CLASS( GameMenu, SideMenu )
+CLASS( GameMenu, Menu )
 
 	GameMenu( World* world );
 	

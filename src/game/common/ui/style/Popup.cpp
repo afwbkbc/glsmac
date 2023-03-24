@@ -176,7 +176,14 @@ void Popup::AddStyles() {
 		s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 129, 146, 198 ) );
 	});
 	
+	AddStyle( "Popup", { "PopupFrame" }, SH() {
+		s->Set( Style::A_Z_INDEX, 0.9f );
+	});
 	
+	AddStyle( "PopupBackground", SH() {
+		s->Set( Style::A_Z_INDEX, 0.8f );
+		s->SetColorTexture( Style::A_TEXTURE, Color( 0.0f, 0.0f, 0.0f, 0.5f ) );
+	});
 }
 
 }

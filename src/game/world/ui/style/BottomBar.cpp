@@ -467,15 +467,15 @@ void BottomBar::AddStyles() {
 	});
 	
 	// side menus
-	AddStyle( "SideMenu", SH() {
+	AddStyle( "Menu", SH() {
 		s->Set( ::Style::A_WIDTH, 136 );
 	});
 	
-	AddStyle( "SideMenuBackground", SH() {
+	AddStyle( "MenuBackground", SH() {
 		s->SetTexture( ::Style::A_TEXTURE, "interface.pcx", 439, 64, 458, 83 );
 	});
 	
-	AddStyle( "SideMenuButton", SH() {
+	AddStyle( "MenuButton", SH() {
 		s->SetFont( ::Style::A_FONT, "arialnb.ttf", 17 );
 		s->Set( Style::A_TEXT_ALIGN, UIObject::ALIGN_LEFT | UIObject::ALIGN_VCENTER );
 		s->Set( Style::A_TEXT_LEFT, 4 );
@@ -493,7 +493,7 @@ void BottomBar::AddStyles() {
 		}
 	});
 	
-	AddStyle( "LeftMenu", { "SideMenu" }, SH() {
+	AddStyle( "LeftMenu", { "Menu" }, SH() {
 		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_LEFT );
 	});
 }

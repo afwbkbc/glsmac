@@ -150,11 +150,6 @@ CLASS( UIObject, base::Base )
 #ifdef DEBUG
 	void ShowDebugFrame();
 	void HideDebugFrame();
-	
-	// use these to track lifecycle of specific object
-	void SetTesting( const bool testing );
-	const bool IsTesting() const;
-	void TestBreakpoint(); // set gdb breakpoint inside
 #else
 	void ShowDebugFrame() {}
 	void HideDebugFrame() {}
@@ -307,10 +302,7 @@ protected:
 	
 #ifdef DEBUG
 	void CheckStylePtr() const;
-	
-	bool m_has_debug_frame = false;
-	
-	bool m_is_testing = false;
+	bool m_has_debug_frame = false;	
 #endif
 	
 	typedef std::unordered_set< UIEvent::event_type_t > events_t;

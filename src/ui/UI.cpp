@@ -71,6 +71,10 @@ void UI::Start() {
 void UI::Stop() {
 	Log( "Destroying UI" );
 
+	while ( HasPopup() ) {
+		CloseLastPopup();
+	}
+	
 #ifdef DEBUG
 	g_engine->GetGraphics()->RemoveScene( m_debug_scene );
 	DELETE( m_debug_scene );
@@ -205,7 +209,12 @@ void UI::ProcessEvent( UIEvent* event ) {
 	}
 	
 	if ( !event->IsProcessed() ) {
-		m_root_object.ProcessEvent( event );
+		if ( HasPopup() ) {
+			m_popups.back()->ProcessEvent( event );
+		}
+		else {
+			m_root_object.ProcessEvent( event );
+		}
 	}
 	
 	if ( !event->IsProcessed() ) {
@@ -390,6 +399,26 @@ void UI::UnblockEvents() {
 
 void UI::Redraw() {
 	m_is_redraw_needed = true;
+}
+
+bool UI::HasPopup() const {
+	return !m_popups.empty();
+}
+
+void UI::OpenPopup( Popup* popup ) {
+	m_popups.push_back( popup );
+	AddObject( popup );
+}
+
+void UI::ClosePopup( Popup* popup ) {
+	ASSERT( popup == m_popups.back(), "invalid popup close order" );
+	RemoveObject( popup );
+	m_popups.pop_back();
+}
+
+void UI::CloseLastPopup() {
+	ASSERT( !m_popups.empty(), "no popup to close" );
+	ClosePopup( m_popups.back() );
 }
 
 #ifdef DEBUG

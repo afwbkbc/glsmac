@@ -58,6 +58,7 @@ CLASS( Style, base::Base )
 		A_RIGHT,
 		A_BOTTOM,
 		A_PADDING,
+		A_Z_INDEX,
 		
 		// textures
 		A_TEXTURE,

@@ -168,6 +168,9 @@ void UIObject::ApplyStyle() {
 	if ( Has( Style::A_HEIGHT ) ) {
 		SetHeight( Get( Style::A_HEIGHT ) );
 	}
+	if ( Has( Style::A_Z_INDEX ) ) {
+		SetZIndex( Get( Style::A_Z_INDEX ) );
+	}
 
 }
 
@@ -833,19 +836,6 @@ void UIObject::HideDebugFrame() {
 	}
 }
 
-void UIObject::SetTesting( const bool testing ) {
-	m_is_testing = testing;
-}
-const bool UIObject::IsTesting() const {
-	return m_is_testing;
-}
-void UIObject::TestBreakpoint() {
-	if ( IsTesting() ) {
-		int a = 5;
-		/**** put gdb breakpoint here ****/
-		a++;
-	}
-}
 #endif
 
 void UIObject::ApplyStyleIfNeeded() {

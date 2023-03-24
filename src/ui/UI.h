@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <functional>
+#include <vector>
 
 #include "base/Module.h"
 
@@ -22,6 +23,9 @@
 #include "util/Timer.h"
 
 #include "theme/Theme.h"
+
+#include "object/Popup.h"
+#include "object/Surface.h"
 
 #include "module/Loader.h"
 
@@ -89,6 +93,11 @@ CLASS( UI, base::Module )
 	
 	void Redraw();
 	
+	bool HasPopup() const;
+	void OpenPopup( Popup* popup );
+	void ClosePopup( Popup* popup );
+	void CloseLastPopup();
+	
 #ifdef DEBUG
 	void ShowDebugFrame( UIObject* object );
 	void HideDebugFrame( UIObject* object );
@@ -99,7 +108,7 @@ CLASS( UI, base::Module )
 	void ResizeDebugFrame( const UIObject* object ) {}
 #endif
 	
-protected:
+private:
 	object::Root m_root_object;
 
 	Scene *m_shape_scene_simple2d = nullptr;
@@ -116,8 +125,6 @@ protected:
 	typedef std::unordered_set< theme::Theme* > themes_t;
 	const themes_t GetThemes() const;
 	themes_t m_themes = {};
-	
-private:
 	
 	bool m_is_redraw_needed = false;
 	
@@ -138,6 +145,8 @@ private:
 	std::vector< void* > m_iterative_objects_to_remove = {};
 	
 	const UIEventHandler* m_keydown_handler = nullptr;
+	
+	std::vector< Popup* > m_popups = {};
 	
 #ifdef DEBUG	
 	Scene *m_debug_scene;

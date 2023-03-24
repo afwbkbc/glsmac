@@ -25,6 +25,9 @@ void Overlay::Iterate() {
 		(*it)->Update();
 
 	if ( m_is_redraw_needed ) {
+		
+		glDisable( GL_DEPTH_TEST );
+		
 		//Log( "Redrawing overlay" );
 		m_fbo->WriteBegin();
 		for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it ) {
@@ -32,12 +35,16 @@ void Overlay::Iterate() {
 			ASSERT( !glGetError(), "Overlay draw error" );
 		}
 		m_fbo->WriteEnd();
+		
+		glEnable( GL_DEPTH_TEST );
+	
 		m_is_redraw_needed = false;
 	}
 	
 	glClear( GL_DEPTH_BUFFER_BIT ); // overlay must always be on top
 	
 	m_fbo->Draw( m_shader_program );
+	
 }
 
 void Overlay::Redraw() {

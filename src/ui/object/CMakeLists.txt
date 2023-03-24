@@ -1,5 +1,6 @@
 SET(SRC ${SRC}
 
+	${PWD}/Popup.cpp
 	${PWD}/Scrollbar.cpp
 	${PWD}/ScrollView.cpp
 	${PWD}/TextView.cpp

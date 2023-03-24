@@ -1,13 +1,13 @@
-#include "SideMenu.h"
+#include "Menu.h"
 
 #include "engine/Engine.h"
-#include "../../World.h"
+#include "../World.h"
 
 namespace game {
 namespace world {
 namespace ui {
 
-SideMenu::SideMenu( World* world, const uint8_t item_height, const uint8_t margin )
+Menu::Menu( World* world, const uint8_t item_height, const uint8_t margin )
 	: UI( world, "MapBottomBarLeftMenu" )
 	, m_item_height( item_height )
 	, m_margin( margin )
@@ -15,7 +15,7 @@ SideMenu::SideMenu( World* world, const uint8_t item_height, const uint8_t margi
 	Hide(); // closed by default
 }
 
-SideMenu::~SideMenu() {
+Menu::~Menu() {
 	for ( auto& item : m_menu_items ) {
 		if ( item.submenu ) {
 			g_engine->GetUI()->RemoveObject( item.submenu );
@@ -23,19 +23,19 @@ SideMenu::~SideMenu() {
 	}
 }
 
-void SideMenu::Create() {
+void Menu::Create() {
 	UI::Create();
 	
 	Log( "Creating side menu" );
 	
 	SetHeight( m_margin * 2 + m_item_height * m_menu_items.size() );
 	
-	NEW( m_background, ::ui::object::Surface, "MapBottomBarSideMenuBackground" );
+	NEW( m_background, ::ui::object::Surface, "MapBottomBarMenuBackground" );
 	AddChild( m_background );
 	
 	size_t top = m_margin;
 	for ( auto& item : m_menu_items ) {
-		NEWV( button, ::ui::object::LabelButton, "MapBottomBarSideMenuButton" );
+		NEWV( button, ::ui::object::LabelButton, "MapBottomBarMenuButton" );
 		button->SetHeight( m_item_height );
 		button->SetTop( top );
 		button->SetLabel( item.label );
@@ -85,7 +85,7 @@ void SideMenu::Create() {
 	});
 }
 
-void SideMenu::Destroy() {
+void Menu::Destroy() {
 	
 	Log( "Destroying side menu" );
 	
@@ -100,11 +100,11 @@ void SideMenu::Destroy() {
 	UI::Destroy();
 }
 
-void SideMenu::Show() {
+void Menu::Show() {
 	UI::Show();
 }
 
-void SideMenu::Hide() {
+void Menu::Hide() {
 	
 	if ( m_active_button ) {
 		m_active_button->RemoveStyleModifier( Style::M_SELECTED );
@@ -118,7 +118,7 @@ void SideMenu::Hide() {
 	UI::Hide();
 }
 
-void SideMenu::AddItem( const std::string& label, std::function<bool( LabelButton* button, menu_item_t item )> on_click ) {
+void Menu::AddItem( const std::string& label, std::function<bool( LabelButton* button, menu_item_t item )> on_click ) {
 	ASSERT( !m_created, "don't add items to active menu" );
 	m_menu_items.push_back({
 		label,
@@ -127,7 +127,7 @@ void SideMenu::AddItem( const std::string& label, std::function<bool( LabelButto
 	});
 }
 
-void SideMenu::AddSubMenu( const std::string& label, SideMenu* submenu ) {
+void Menu::AddSubMenu( const std::string& label, Menu* submenu ) {
 	ASSERT( !m_created, "don't add submenus to active menu" );
 	m_menu_items.push_back({
 		label,

@@ -18,7 +18,7 @@ void main(void) { \
 	vec3 coord = aCoord; \
 	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_2D_POSITION ) + " ) { \
 		coord += vec3( uPosition, 0.0 ); \
-	}\
+	} \
 	gl_Position = vec4( coord, 1.0 ); \
 	texpos = vec2(aTexCoord); \
 	fragpos = aCoord; \
