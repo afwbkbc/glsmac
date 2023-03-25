@@ -8,7 +8,7 @@ namespace world {
 namespace ui {
 
 Menu::Menu( World* world, const uint8_t item_height, const uint8_t margin )
-	: UI( world, "MapBottomBarLeftMenu" )
+	: UI( world, "BBLeftMenu" )
 	, m_item_height( item_height )
 	, m_margin( margin )
 {
@@ -30,12 +30,12 @@ void Menu::Create() {
 	
 	SetHeight( m_margin * 2 + m_item_height * m_menu_items.size() );
 	
-	NEW( m_background, ::ui::object::Surface, "MapBottomBarMenuBackground" );
+	NEW( m_background, ::ui::object::Surface, "BBMenuBackground" );
 	AddChild( m_background );
 	
 	size_t top = m_margin;
 	for ( auto& item : m_menu_items ) {
-		NEWV( button, ::ui::object::LabelButton, "MapBottomBarMenuButton" );
+		NEWV( button, ::ui::object::LabelButton, "BBMenuButton" );
 		button->SetHeight( m_item_height );
 		button->SetTop( top );
 		button->SetLabel( item.label );
@@ -74,7 +74,7 @@ void Menu::Create() {
 		AddChild( button );
 		m_buttons.push_back( button );
 		if ( item.submenu ) {
-			item.submenu->SetBottom( GetBottom() + GetHeight() - ( button->GetTop() + button->GetHeight() ) );
+			item.submenu->SetBottom( GetBottom() + GetHeight() - ( button->GetTop() + button->GetHeight() ) - m_margin );
 			item.submenu->SetLeft( GetWidth() + GetLeft() );
 		}
 		top += m_item_height;

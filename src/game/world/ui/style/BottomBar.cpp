@@ -7,13 +7,14 @@ namespace style {
 
 void BottomBar::AddStyles() {
 	
-	SetPrefix( "MapBottomBar" );
+	SetPrefix( "BB" );
 	
 	// frame
 	
 	AddStyle( "", SH() {
 		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM );
 		s->Set( ::Style::A_HEIGHT, 256 );
+		s->Set( Style::A_Z_INDEX, 0.8f );
 	});
 	
 	AddStyle( "Frame", SH() {
@@ -53,6 +54,7 @@ void BottomBar::AddStyles() {
 		s->SetTexture( ::Style::A_TEXTURE_RIGHTBOTTOM, "interface.pcx", 75, 303, 77, 305 );
 		s->SetTexture( ::Style::A_TEXTURE_BOTTOM, "interface.pcx", 47, 303, 70, 305 );
 		s->SetTexture( ::Style::A_TEXTURE_LEFTBOTTOM, "interface.pcx", 40, 303, 42, 305 );
+		s->SetTexture( ::Style::A_TEXTURE_BACK, "interface.pcx", 86, 665, 109, 688 );
 	});
 	
 	AddStyle( "SectionInner", SH() {

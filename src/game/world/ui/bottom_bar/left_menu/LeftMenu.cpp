@@ -2,7 +2,7 @@
 
 // submenus
 #include "GameMenu.h"
-#include "MapMenu.h"
+#include "EditMapMenu.h"
 
 namespace game {
 namespace world {
@@ -12,8 +12,13 @@ namespace menu {
 LeftMenu::LeftMenu( World* world )
 	: Menu( world )
 {
-	{ NEWV( game_menu, GameMenu, m_world ); AddSubMenu( "GAME", game_menu ); }
-	{ NEWV( map_menu, MapMenu, m_world ); AddSubMenu( "MAP", map_menu ); }
+	#define x( _n, _m ) { \
+		NEWV( menu, _m, m_world ); \
+		AddSubMenu( _n, menu ); \
+	}
+		x( "GAME", GameMenu );
+		x( "EDIT MAP", EditMapMenu );
+	#undef x
 }
 
 }

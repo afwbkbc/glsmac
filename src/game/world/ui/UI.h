@@ -4,9 +4,7 @@
 
 namespace game {
 namespace world {
-	
-class World;
-	
+	class World;
 namespace ui {
 	
 CLASS( UI, UIContainer )

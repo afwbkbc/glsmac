@@ -72,7 +72,7 @@ void UI::Stop() {
 	Log( "Destroying UI" );
 
 	while ( HasPopup() ) {
-		CloseLastPopup();
+		CloseLastPopup( true );
 	}
 	
 #ifdef DEBUG
@@ -410,15 +410,17 @@ void UI::OpenPopup( Popup* popup ) {
 	AddObject( popup );
 }
 
-void UI::ClosePopup( Popup* popup ) {
+void UI::ClosePopup( Popup* popup, bool force ) {
 	ASSERT( popup == m_popups.back(), "invalid popup close order" );
-	RemoveObject( popup );
-	m_popups.pop_back();
+	if ( force || popup->MaybeClose() ) { // ask popup to close, remove if it was closed (unless forced)
+		RemoveObject( popup );
+		m_popups.pop_back();
+	}
 }
 
-void UI::CloseLastPopup() {
+void UI::CloseLastPopup( bool force ) {
 	ASSERT( !m_popups.empty(), "no popup to close" );
-	ClosePopup( m_popups.back() );
+	ClosePopup( m_popups.back(), force );
 }
 
 #ifdef DEBUG

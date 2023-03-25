@@ -6,14 +6,14 @@ namespace ui {
 namespace object {
 
 Popup::Popup( const std::string& class_name )
-	: Section( class_name )
+	: UIContainer( class_name )
 {
 	SetAlign( ALIGN_CENTER );
 
 }
 
 void Popup::Create() {
-	Section::Create();
+	UIContainer::Create();
 	
 	// TODO: fix blending
 	// TODO: maybe not needed?
@@ -26,7 +26,11 @@ void Popup::Destroy() {
 	// TODO: maybe not needed?
 	//g_engine->GetUI()->RemoveObject( m_background_locker );
 	
-	Section::Destroy();
+	UIContainer::Destroy();
+}
+
+bool Popup::MaybeClose() {
+	return true;
 }
 
 }

@@ -7,13 +7,13 @@ namespace world {
 namespace ui {
 
 void UnitsList::Create() {
-	Section::Create();
+	BBSection::Create();
 	
 }
 
 void UnitsList::Destroy() {
 	
-	Section::Destroy();
+	BBSection::Destroy();
 }
 
 }

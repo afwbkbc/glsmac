@@ -75,6 +75,8 @@ Texture* SDL2::LoadTexture( const std::string &name ) {
 }
 
 Texture* SDL2::LoadTexture( const std::string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
+	ASSERT( x1 <= x2, "LoadTexture x overflow ( " + std::to_string( x1 ) + " > " + std::to_string( x2 ) + " )" );
+	ASSERT( y1 <= y2, "LoadTexture y overflow ( " + std::to_string( y1 ) + " > " + std::to_string( y2 ) + " )" );
 	
 	const std::string subtexture_key =
 		name + ":" +

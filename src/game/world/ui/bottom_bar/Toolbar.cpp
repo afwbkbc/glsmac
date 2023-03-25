@@ -25,7 +25,7 @@ void Toolbar::Create() {
 			const auto tool = (MapEditor::tool_type_t) t;
 			ASSERT( m_tool_names.find( tool ) != m_tool_names.end(), "tool name not found" );
 			const std::string& tool_name = m_tool_names.at( tool );
-			NEWV( button, ::ui::object::SimpleButton, "MapBottomBarMiddleAreaToolbarButton Tool " + tool_name );
+			NEWV( button, ::ui::object::SimpleButton, "BBMiddleAreaToolbarButton Tool " + tool_name );
 				button->SetLeft( offset.x + bx * s_tool_button_width );
 				button->SetTop( offset.y + by * s_tool_button_height );
 				button->On( UIEvent::EV_MOUSE_DOWN, EH( this, tool ) {
@@ -50,7 +50,7 @@ void Toolbar::Create() {
 			const auto brush = (MapEditor::brush_type_t) b;
 			ASSERT( m_brush_names.find( brush ) != m_brush_names.end(), "brush name not found" );
 			const std::string& brush_name = m_brush_names.at( brush );
-			NEWV( button, ::ui::object::SimpleButton, "MapBottomBarMiddleAreaToolbarButton Brush " + brush_name );
+			NEWV( button, ::ui::object::SimpleButton, "BBMiddleAreaToolbarButton Brush " + brush_name );
 				button->SetLeft( offset.x + bx * s_brush_button_width );
 				button->SetTop( offset.y + by * s_brush_button_height );
 				button->On( UIEvent::EV_MOUSE_DOWN, EH( this, brush ) {
@@ -69,14 +69,14 @@ void Toolbar::Create() {
 	}
 	
 	{ // tool info
-		NEW( m_tool_info.body, Section, m_world, "MiddleAreaToolbarToolInfo" );
+		NEW( m_tool_info.body, BBSection, m_world, "MiddleAreaToolbarToolInfo" );
 		m_centered_block->AddChild( m_tool_info.body );
 		
 		const size_t offset = 4;
 		uint8_t by = 0;
 		for ( auto t = TI_NONE + 1 ; t < TI_MAX ; t++ ) {
 			const auto ti = (tool_info_line_t) t;
-			NEWV( label, ::ui::object::Label, "MapBottomBarMiddleAreaToolbarInfoLabel" );
+			NEWV( label, ::ui::object::Label, "BBMiddleAreaToolbarInfoLabel" );
 				label->SetLeft( offset );
 				label->SetTop( offset + by * s_tool_info_line_height );
 			m_tool_info.body->AddChild( label );

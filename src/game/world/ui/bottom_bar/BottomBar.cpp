@@ -11,14 +11,14 @@ void BottomBar::Create() {
 	
 	// frames
 	
-	NEW( m_frames.left, Surface, "MapBottomBarFrameLeft" );
+	NEW( m_frames.left, Surface, "BBFrameLeft" );
 		m_frames.left->SetZIndex( 0.4f ); // needed because it needs to be above its background because in pcx there's transparent line around one of borders
 	AddChild( m_frames.left );
 	
-	NEW( m_frames.middle, Surface, "MapBottomBarFrameMiddle" );
+	NEW( m_frames.middle, Surface, "BBFrameMiddle" );
 	AddChild( m_frames.middle );
 	
-	NEW( m_frames.right, Surface, "MapBottomBarFrameRight" );
+	NEW( m_frames.right, Surface, "BBFrameRight" );
 		m_frames.right->SetZIndex( 0.3f ); // same as above (but needs to go under left panel if interface is shrunk)
 	AddChild( m_frames.right );
 	
@@ -37,7 +37,7 @@ void BottomBar::Create() {
 		{ UIObject::ALIGN_TOP, { 261, 67 }, { 0, 105 }, 0.2f }, // middle part (with info panels)
 	};
 	for ( auto& b : bg_coords ) {
-		NEWV( background, Surface, "MapBottomBarFrameBackground" );
+		NEWV( background, Surface, "BBFrameBackground" );
 			background->SetAlign( b.alignment );
 			if ( b.alignment & UIObject::ALIGN_LEFT ) {
 				background->SetLeft( b.position.x );
@@ -66,7 +66,7 @@ void BottomBar::Create() {
 	
 	// buttons
 	
-	NEW( m_buttons.menu, Button, "MapBottomBarButtonMenu" );
+	NEW( m_buttons.menu, Button, "BBButtonMenu" );
 		m_buttons.menu->SetLabel( "MENU" );
 		m_buttons.menu->On( UIEvent::EV_BUTTON_CLICK, EH( this ) {
 			if ( m_side_menus.left->IsVisible() ) {
@@ -81,7 +81,7 @@ void BottomBar::Create() {
 		});
 	AddChild( m_buttons.menu );
 	
-	NEW( m_buttons.commlink, Button, "MapBottomBarButtonCommlink" );
+	NEW( m_buttons.commlink, Button, "BBButtonCommlink" );
 		m_buttons.commlink->SetAlign( UIObject::ALIGN_TOP | UIObject::ALIGN_RIGHT );
 		m_buttons.commlink->SetLabel( "COMMLINK" );
 	AddChild( m_buttons.commlink );
@@ -212,6 +212,14 @@ void BottomBar::CloseMenus() {
 		m_buttons.menu->RemoveStyleModifier( Style::M_SELECTED );
 		m_side_menus.left->Hide();
 	}
+}
+
+const size_t BottomBar::GetMiddleHeight() const {
+	return
+		GetHeight() // element height
+		- 32 // transparent area on top
+		- 24 // transparent area below top line
+	;
 }
 
 }

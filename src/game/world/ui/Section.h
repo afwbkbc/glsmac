@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../UI.h"
+#include "UI.h"
 
 #include "ui/object/Section.h"
 
@@ -10,7 +10,7 @@ namespace ui {
 
 CLASS( Section, UI )
 
-	Section( World* world, const std::string subclass ) : UI( world, "MapBottomBar" + subclass ) {}
+	Section( World* world, const std::string class_name, const std::string section_class_prefix );
 	
 	void Create();
 	void Destroy();
@@ -25,6 +25,8 @@ protected:
 	} m_config = {};
 	
 private:
+	const std::string m_section_class_prefix = "";
+	
 	object::Section* m_outer = nullptr;
 	object::Section* m_inner = nullptr;
 	

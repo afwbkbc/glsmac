@@ -1,15 +1,15 @@
 #pragma once
 
-#include "Section.h"
+#include "BBSection.h"
 #include "ui/object/Section.h"
 
 namespace game {
 namespace world {
 namespace ui {
 
-CLASS( UnitsList, Section )
+CLASS( UnitsList, BBSection )
 
-	UnitsList( World* world ) : Section( world, "UnitsList" ) {}
+	UnitsList( World* world ) : BBSection( world, "UnitsList" ) {}
 	
 	void Create();
 	void Destroy();

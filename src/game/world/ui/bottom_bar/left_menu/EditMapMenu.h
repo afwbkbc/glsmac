@@ -10,9 +10,9 @@ namespace world {
 namespace ui {
 namespace menu {
 
-CLASS( MapMenu, Menu )
+CLASS( EditMapMenu, Menu )
 
-	MapMenu( World* world );
+	EditMapMenu( World* world );
 	
 };
 

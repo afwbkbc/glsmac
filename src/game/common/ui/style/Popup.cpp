@@ -177,13 +177,14 @@ void Popup::AddStyles() {
 	});
 	
 	AddStyle( "Popup", { "PopupFrame" }, SH() {
-		s->Set( Style::A_Z_INDEX, 0.9f );
+		s->Set( Style::A_Z_INDEX, 0.8f );
 	});
 	
-	AddStyle( "PopupBackground", SH() {
-		s->Set( Style::A_Z_INDEX, 0.8f );
+	// TODO: fix overlay fbo blending
+	/*AddStyle( "PopupBackground", SH() {
+		s->Set( Style::A_Z_INDEX, 0.7f );
 		s->SetColorTexture( Style::A_TEXTURE, Color( 0.0f, 0.0f, 0.0f, 0.5f ) );
-	});
+	});*/
 }
 
 }

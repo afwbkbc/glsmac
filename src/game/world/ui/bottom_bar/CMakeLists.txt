@@ -3,7 +3,6 @@ SUBDIR( left_menu )
 SET(SRC ${SRC}
 
 	${PWD}/BottomBar.cpp
-	${PWD}/Section.cpp
 	${PWD}/UnitPreview.cpp
 	${PWD}/TilePreview.cpp
 	${PWD}/MiddleArea.cpp

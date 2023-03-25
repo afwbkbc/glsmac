@@ -8,19 +8,19 @@ namespace world {
 namespace ui {
 
 InfoPanel::InfoPanel( World* world )
-	: Section( world, "MiddleAreaInfoPanel" )
+	: BBSection( world, "MiddleAreaInfoPanel" )
 {
 	m_config.no_outer_border = true;
 }
 
 void InfoPanel::Create() {
-	Section::Create();
+	BBSection::Create();
 	
 	Restart();
 }
 
 void InfoPanel::Iterate() {
-	Section::Iterate();
+	BBSection::Iterate();
 	
 	while ( m_timer.HasTicked() ) {
 		ASSERT( m_line_index <= m_lines.size(), "line index lines overflow" );
@@ -39,7 +39,7 @@ void InfoPanel::Iterate() {
 			}
 			else {
 				while ( m_line_index >= m_labels.size() ) {
-					NEWV( label, ::ui::object::Label, "MapBottomBarMiddleAreaInfoPanelLabel" );
+					NEWV( label, ::ui::object::Label, "BBMiddleAreaInfoPanelLabel" );
 					label->SetLeft( s_padding );
 					label->SetTop( s_padding + m_line_index * s_label_height );
 					AddChild( label );
@@ -58,7 +58,7 @@ void InfoPanel::Destroy() {
 		RemoveChild( label );
 	}
 	
-	Section::Destroy();
+	BBSection::Destroy();
 }
 
 void InfoPanel::Restart() {

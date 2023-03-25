@@ -9,7 +9,6 @@
 
 namespace game {
 namespace world {
-	
 namespace ui {
 	
 CLASS( Messages, MiddleAreaPage )

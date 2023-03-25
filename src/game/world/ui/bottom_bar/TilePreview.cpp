@@ -11,14 +11,14 @@ namespace world {
 namespace ui {
 
 void TilePreview::Create() {
-	Section::Create();
+	BBSection::Create();
 	
 }
 
 void TilePreview::Destroy() {
 	HideTilePreview();
 	
-	Section::Destroy();
+	BBSection::Destroy();
 }
 
 void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info ) {
@@ -127,7 +127,7 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 
 		mesh->Finalize();
 		
-		NEWV( preview, object::Mesh, "MapBottomBarTilePreviewImage" );
+		NEWV( preview, object::Mesh, "BBTilePreviewImage" );
 			preview->SetMesh( mesh );
 #if COPY_TEXTURE
 			preview->SetTexture( texture );
@@ -296,7 +296,7 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 	
 	// print lines
 	for ( auto& line : print_lines ) {
-		NEWV( label, object::Label, "MapBottomBarTilePreviewTextLine" );
+		NEWV( label, object::Label, "BBTilePreviewTextLine" );
 			label->SetText( line );
 			label->SetTop( label_top );
 		m_info_lines.push_back( label );
@@ -305,7 +305,7 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 	}
 	
 	// print tile coordinates
-	NEWV( label, object::Label, "MapBottomBarTilePreviewTextFooter" );
+	NEWV( label, object::Label, "BBTilePreviewTextFooter" );
 		label->SetText( "(" + std::to_string( tile->coord.x ) + "," + std::to_string( tile->coord.y ) + ")" );
 	m_info_lines.push_back( label );
 	AddChild( label );
@@ -315,7 +315,7 @@ void TilePreview::PreviewTile( const Map* map, const Map::tile_info_t& tile_info
 	for ( auto& s : ts->sprites ) {
 		auto sprite = s.actor->GetSpriteActor();
 		auto mesh = sprite->GenerateMesh();
-		NEWV( sprite_preview, object::Mesh, "MapBottomBarTilePreviewSprite" );
+		NEWV( sprite_preview, object::Mesh, "BBTilePreviewSprite" );
 		sprite_preview->SetMesh( mesh );
 		sprite_preview->SetTintColor({ 0.7f, 0.7f, 0.7f, 1.0f }); // lower brightness a bit because it's too high otherwise for some reason
 		sprite_preview->SetTexture( sprite->GetTexture() );

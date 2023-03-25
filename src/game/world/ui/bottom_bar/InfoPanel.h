@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include "Section.h"
+#include "BBSection.h"
 
 #include "util/Timer.h"
 #include "ui/object/Label.h"
@@ -12,7 +12,7 @@ namespace game {
 namespace world {
 namespace ui {
 
-CLASS( InfoPanel, Section )
+CLASS( InfoPanel, BBSection )
 
 	static constexpr size_t s_character_frequency_ms = 100;
 	static constexpr size_t s_wait_after_print = 10000;

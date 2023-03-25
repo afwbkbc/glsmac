@@ -5,17 +5,17 @@ namespace world {
 namespace ui {
 
 MiddleArea::MiddleArea( World* world )
-	: Section( world, "MiddleArea" )
+	: BBSection( world, "MiddleArea" )
 {
 	m_config.no_inner_border = true;
 }
 
 void MiddleArea::Create() {
-	Section::Create();
+	BBSection::Create();
 	
 	// buttons
 	
-	const std::string buttonclass = "MapBottomBarMiddleAreaButton";
+	const std::string buttonclass = "BBMiddleAreaButton";
 	NEW( m_buttons.messages, ::ui::Button, buttonclass );
 		m_buttons.messages->SetLabel( "M" );
 		m_buttons.messages->SetTop( 3 );
@@ -75,13 +75,7 @@ void MiddleArea::Destroy() {
 	RemoveChild( m_pages.toolbar );
 	RemoveChild( m_pages.info_panels );
 	
-	Section::Destroy();
-}
-
-void MiddleArea::Align() {
-	Section::Align();
-	
-	
+	BBSection::Destroy();
 }
 
 void MiddleArea::SwitchPage( ::ui::Button* active_button, MiddleAreaPage* active_page ) {

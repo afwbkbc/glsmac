@@ -46,7 +46,7 @@ void UIContainer::CreateChild( UIObject *object ) {
 	object->ApplyStyleIfNeeded();
 	object->Create();
 	object->AddStyleModifier( m_style_modifiers );
-	//object->Realign();
+	object->Realign();
 	object->EnableActors();
 	if ( !m_is_actually_visible ) {
 		object->HideActors();

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Section.h"
+#include "BBSection.h"
 
 #include "ui/object/Button.h"
 
@@ -10,16 +10,14 @@
 
 namespace game {
 namespace world {
-	
 namespace ui {
 	
-CLASS( MiddleArea, Section )
+CLASS( MiddleArea, BBSection )
 	
 	MiddleArea( World* world );
 
 	void Create();
 	void Destroy();
-	void Align();
 	
 private:
 	

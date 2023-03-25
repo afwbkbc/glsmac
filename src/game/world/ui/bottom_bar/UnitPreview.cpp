@@ -7,13 +7,13 @@ namespace world {
 namespace ui {
 
 void UnitPreview::Create() {
-	Section::Create();
+	BBSection::Create();
 	
 }
 
 void UnitPreview::Destroy() {
 	
-	Section::Destroy();
+	BBSection::Destroy();
 }
 
 }

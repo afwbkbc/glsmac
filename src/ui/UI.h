@@ -95,8 +95,8 @@ CLASS( UI, base::Module )
 	
 	bool HasPopup() const;
 	void OpenPopup( Popup* popup );
-	void ClosePopup( Popup* popup );
-	void CloseLastPopup();
+	void ClosePopup( Popup* popup, bool force = false );
+	void CloseLastPopup( bool force = false );
 	
 #ifdef DEBUG
 	void ShowDebugFrame( UIObject* object );

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Section.h"
+#include "BBSection.h"
 
 #include "ui/object/Button.h"
 #include "ui/object/Mesh.h"
@@ -13,7 +13,7 @@ namespace game {
 namespace world {
 namespace ui {
 
-CLASS( MiniMap, Section )
+CLASS( MiniMap, BBSection )
 
 	MiniMap( World* world );
 	

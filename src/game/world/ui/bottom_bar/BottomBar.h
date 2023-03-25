@@ -27,7 +27,7 @@ namespace ui {
 	
 CLASS( BottomBar, UI )
 	
-	BottomBar( World* world ) : UI( world, "MapBottomBar" ) {}
+	BottomBar( World* world ) : UI( world, "BB" ) {}
 
 	void Create();
 	void Destroy();
@@ -42,6 +42,8 @@ CLASS( BottomBar, UI )
 	const bool IsMouseDraggingMiniMap() const;
 	
 	void CloseMenus();
+	
+	const size_t GetMiddleHeight() const;
 	
 private:
 	struct {

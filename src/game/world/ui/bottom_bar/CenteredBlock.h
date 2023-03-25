@@ -8,7 +8,7 @@ namespace ui {
 	
 CLASS( CenteredBlock, ::ui::object::UIContainer )
 	
-	CenteredBlock() : ::ui::object::UIContainer( "MapBottomBarCenteredBlock" ) {}
+	CenteredBlock() : ::ui::object::UIContainer( "BBCenteredBlock" ) {}
 	
 };
 

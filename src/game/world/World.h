@@ -87,6 +87,8 @@ CLASS( World, base::Task )
 	void CloseMenus();
 	void ReturnToMainMenu();
 	
+	const size_t GetBottomBarMiddleHeight() const;
+	
 protected:
 
 private:

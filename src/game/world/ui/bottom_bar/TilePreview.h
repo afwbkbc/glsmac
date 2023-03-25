@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Section.h"
+#include "BBSection.h"
 
 #include "ui/object/Mesh.h"
 #include "ui/object/Label.h"
@@ -9,14 +9,12 @@
 
 namespace game {
 namespace world {
-
-using namespace map;
-
+	using namespace map;
 namespace ui {
 
-CLASS( TilePreview, Section )
+CLASS( TilePreview, BBSection )
 
-	TilePreview( World* world ) : Section( world, "TilePreview" ) {}
+	TilePreview( World* world ) : BBSection( world, "TilePreview" ) {}
 	
 	void Create();
 	void Destroy();

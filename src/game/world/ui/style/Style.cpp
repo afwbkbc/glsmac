@@ -6,8 +6,7 @@ namespace ui {
 namespace style {
 
 void Style::AddStyles() {
-	
-	
+
 }
 
 }

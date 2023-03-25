@@ -9,19 +9,19 @@ namespace world {
 namespace ui {
 
 MiniMap::MiniMap( World* world )
-	: Section( world, "MiniMap" )
+	: BBSection( world, "MiniMap" )
 {
 	m_config.no_inner_border = true;
 }
 
 void MiniMap::Create() {
-	Section::Create();
+	BBSection::Create();
 
-	NEW( m_turn_complete_button, object::Button, "MapBottomBarMinimapTurnCompleteButton" );
+	NEW( m_turn_complete_button, object::Button, "BBMinimapTurnCompleteButton" );
 		m_turn_complete_button->SetLabel( "TURN COMPLETE" );
 	AddChild( m_turn_complete_button );
 	
-	NEW( m_map_surface, object::Mesh, "MapBottomBarMinimapImage" );
+	NEW( m_map_surface, object::Mesh, "BBMinimapImage" );
 		m_map_surface->SetMesh( types::mesh::Render::Rectangle() );
 		if ( m_texture ) {
 			m_map_surface->SetTexture( m_texture );
@@ -92,13 +92,13 @@ void MiniMap::Create() {
 
 	AddChild( m_map_surface );
 
-	NEW( m_bottom_bar, object::Section, "MapBottomBarMinimapBottomBar" );
+	NEW( m_bottom_bar, object::Section, "BBMinimapBottomBar" );
 	AddChild( m_bottom_bar );
-	NEW( m_bottom_bar_labels.mission_year, object::Label, "MapBottomBarMinimapBottomBarLabel" );
+	NEW( m_bottom_bar_labels.mission_year, object::Label, "BBMinimapBottomBarLabel" );
 		m_bottom_bar_labels.mission_year->SetText( "Mission Year 2101" );
 		m_bottom_bar_labels.mission_year->SetTop( 3 );
 	m_bottom_bar->AddChild( m_bottom_bar_labels.mission_year );
-	NEW( m_bottom_bar_labels.energy, object::Label, "MapBottomBarMinimapBottomBarLabel" );
+	NEW( m_bottom_bar_labels.energy, object::Label, "BBMinimapBottomBarLabel" );
 		m_bottom_bar_labels.energy->SetText( "Energy: 0" );
 		m_bottom_bar_labels.energy->SetTop( 18 );
 	m_bottom_bar->AddChild( m_bottom_bar_labels.energy );
@@ -238,7 +238,7 @@ void MiniMap::Destroy() {
 	m_bottom_bar->RemoveChild( m_bottom_bar_labels.energy );
 	RemoveChild( m_bottom_bar );
 	
-	Section::Destroy();
+	BBSection::Destroy();
 }
 
 void MiniMap::SetMinimapTexture( types::Texture* texture ) {

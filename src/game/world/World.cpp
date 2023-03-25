@@ -277,7 +277,16 @@ void World::Start() {
 					ui->CloseLastPopup();
 				}
 				else {
-					ReturnToMainMenu();
+#ifdef DEBUG
+					const auto* config = g_engine->GetConfig();
+					if ( config->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
+						g_engine->ShutDown();
+					}
+					else
+#endif
+					{
+						ReturnToMainMenu();
+					}
 				}
 				return true;
 			}
@@ -785,19 +794,15 @@ void World::UpdateUICamera() {
 
 void World::ReturnToMainMenu() {
 	
-#ifdef DEBUG
-	const auto* config = g_engine->GetConfig();
-	if ( config->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
-		g_engine->ShutDown();
-	}
-	else
-#endif
-	{
-		NEWV( task, game::mainmenu::MainMenu );
-		g_engine->GetScheduler()->RemoveTask( this );
-		g_engine->GetScheduler()->AddTask( task );
-	}
+	NEWV( task, game::mainmenu::MainMenu );
+	g_engine->GetScheduler()->RemoveTask( this );
+	g_engine->GetScheduler()->AddTask( task );
 
+}
+
+const size_t World::GetBottomBarMiddleHeight() const {
+	ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
+	return m_ui.bottom_bar->GetMiddleHeight();
 }
 
 void World::SelectTileAtPoint( const size_t x, const size_t y ) {

@@ -1,22 +1,22 @@
-#include "MapMenu.h"
+#include "EditMapMenu.h"
 
 #include "engine/Engine.h"
-#include "ui/object/Popup.h"
+
+#include "../../popup/Save.h"
 
 namespace game {
 namespace world {
 namespace ui {
 namespace menu {
 
-MapMenu::MapMenu( World* world )
+EditMapMenu::EditMapMenu( World* world )
 	: Menu( world )
 {
 	auto* ui = g_engine->GetUI();
-	AddItem( "Save Map...", MH( ui ) {
-		NEWV( popup, Popup );
+	AddItem( "Save Map...", MH( this, ui ) {
+		NEWV( popup, popup::Save, m_world );
 			popup->SetWidth( 600 );
-			popup->SetBottom( 260 );
-			popup->SetTop( 80 );
+			popup->SetHeight( 500 );
 			ui->OpenPopup( popup );
 		return true;
 	});

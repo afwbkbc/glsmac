@@ -6,15 +6,13 @@
 
 #include "CenteredBlock.h"
 #include "ui/object/SimpleButton.h"
-#include "Section.h"
+#include "BBSection.h"
 #include "ui/object/Label.h"
 #include "../../map_editor/MapEditor.h"
 
 namespace game {
 namespace world {
-
-using namespace map_editor;
-	
+	using namespace map_editor;
 namespace ui {
 	
 CLASS( Toolbar, MiddleAreaPage )
@@ -109,7 +107,7 @@ private:
 	};
 	
 	struct {
-		Section* body = nullptr;
+		BBSection* body = nullptr;
 		std::unordered_map< tool_info_line_t, ::ui::object::Label* > labels = {};
 	} m_tool_info = {};
 	
