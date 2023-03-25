@@ -206,6 +206,10 @@ void Map::SetTiles( Tiles* tiles, bool generate_actors ) {
 	if ( generate_actors ) {
 		GenerateActors();
 	}
+	else {
+		// loaded from dump?
+		m_map_state.first_run = false;
+	}
 }
 
 #ifdef DEBUG
