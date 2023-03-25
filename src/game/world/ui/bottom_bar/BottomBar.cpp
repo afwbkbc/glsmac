@@ -70,11 +70,15 @@ void BottomBar::Create() {
 		m_buttons.menu->SetLabel( "MENU" );
 		m_buttons.menu->On( UIEvent::EV_BUTTON_CLICK, EH( this ) {
 			if ( m_side_menus.left->IsVisible() ) {
-				m_buttons.menu->RemoveStyleModifier( Style::M_SELECTED );
+				if ( m_buttons.menu->HasStyleModifier( Style::M_SELECTED ) ) {
+					m_buttons.menu->RemoveStyleModifier( Style::M_SELECTED );
+				}
 				m_side_menus.left->Hide();
 			}
 			else {
-				m_buttons.menu->AddStyleModifier( Style::M_SELECTED );
+				if ( !m_buttons.menu->HasStyleModifier( Style::M_SELECTED ) ) {
+					m_buttons.menu->AddStyleModifier( Style::M_SELECTED );
+				}
 				m_side_menus.left->Show();
 			}
 			return true;
@@ -110,7 +114,7 @@ void BottomBar::Create() {
 	auto* ui = g_engine->GetUI();
 	// adding to UI because they need to catch clicks outside of bottom bar
 	NEW( m_side_menus.left, menu::LeftMenu, m_world );
-		m_side_menus.left->SetBottom( GetHeight() );
+		m_side_menus.left->SetBottom( GetHeight() - 1 ); // - 1 because there's 1 transparent pixel we need to cover
 	ui->AddObject( m_side_menus.left );
 	
 	// other

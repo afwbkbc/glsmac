@@ -3,6 +3,9 @@
 // submenus
 #include "GameMenu.h"
 #include "EditMapMenu.h"
+#ifdef DEBUG
+#include "DebugMenu.h"
+#endif
 
 namespace game {
 namespace world {
@@ -18,7 +21,12 @@ LeftMenu::LeftMenu( World* world )
 	}
 		x( "GAME", GameMenu );
 		x( "EDIT MAP", EditMapMenu );
+#ifdef DEBUG
+		x( "DEBUG", DebugMenu );
+#endif
 	#undef x
+
+	m_config.use_slide_animation = true;
 }
 
 }

@@ -477,6 +477,23 @@ void BottomBar::AddStyles() {
 		s->SetTexture( ::Style::A_TEXTURE, "interface.pcx", 439, 64, 458, 83 );
 	});
 	
+	AddStyle( "MenuFrame", SH() {
+		s->Set( ::Style::A_WIDTH, 139 );
+		s->Set( ::Style::A_HEIGHT, 5 );
+		s->Set( ::Style::A_Z_INDEX, 0.3f ); // TODO: why doesn't it work correctly without?
+		s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx", 0, 0, 138, 4, Color::RGB( 100, 16, 156 ) );
+	});
+	
+	AddStyle( "MenuTopFrame", { "MenuFrame" }, SH() {
+		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP );
+		s->Set( ::Style::A_TOP, -4 );
+	});
+	
+	AddStyle( "MenuBottomFrame", { "MenuFrame" }, SH() {
+		s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM );
+		s->Set( ::Style::A_BOTTOM, -4 );
+	});
+	
 	AddStyle( "MenuButton", SH() {
 		s->SetFont( ::Style::A_FONT, "arialnb.ttf", 17 );
 		s->Set( Style::A_TEXT_ALIGN, UIObject::ALIGN_LEFT | UIObject::ALIGN_VCENTER );

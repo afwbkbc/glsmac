@@ -11,11 +11,6 @@ namespace menu {
 GameMenu::GameMenu( World* world )
 	: Menu( world )
 {
-#if DEBUG
-	AddItem( "Save Dump..." );
-	AddItem( "Load Dump..." );
-#endif
-	
 	AddItem( "Start New Game", MH( this ) {
 		m_world->ReturnToMainMenu();
 		return false;

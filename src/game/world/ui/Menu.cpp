@@ -28,10 +28,14 @@ void Menu::Create() {
 	
 	Log( "Creating side menu" );
 	
-	SetHeight( m_margin * 2 + m_item_height * m_menu_items.size() );
-	
 	NEW( m_background, ::ui::object::Surface, "BBMenuBackground" );
 	AddChild( m_background );
+	
+	NEW( m_frames.top, ::ui::object::Surface, "BBMenuTopFrame" );
+	AddChild( m_frames.top );
+	
+	NEW( m_frames.bottom, ::ui::object::Surface, "BBMenuBottomFrame" );
+	AddChild( m_frames.bottom );
 	
 	size_t top = m_margin;
 	for ( auto& item : m_menu_items ) {
@@ -56,9 +60,10 @@ void Menu::Create() {
 					m_active_submenu = nullptr;
 				}
 				else {
-					button->AddStyleModifier( Style::M_SELECTED );
-					item.submenu->Show();
 					m_active_button = button;
+					m_active_button->AddStyleModifier( Style::M_SELECTED );
+					item.submenu->SetBottom( GetBottom() + GetHeight() - ( button->GetTop() + button->GetHeight() ) - m_margin );
+					item.submenu->Show();
 					m_active_submenu = item.submenu;
 				}
 			}
@@ -74,7 +79,6 @@ void Menu::Create() {
 		AddChild( button );
 		m_buttons.push_back( button );
 		if ( item.submenu ) {
-			item.submenu->SetBottom( GetBottom() + GetHeight() - ( button->GetTop() + button->GetHeight() ) - m_margin );
 			item.submenu->SetLeft( GetWidth() + GetLeft() );
 		}
 		top += m_item_height;
@@ -83,15 +87,55 @@ void Menu::Create() {
 	On( UIEvent::EV_MOUSE_DOWN, EH() {
 		return true; // prevent clickthrough
 	});
+	
+	if ( m_config.use_slide_animation ) {
+		SetHeight( 0 );
+	}
+	else {
+		SetHeight( CalculateHeight() );
+	}
+}
+
+void Menu::Align() {
+	UI::Align();
+	
+	if ( m_config.use_slide_animation ) {
+		// TODO: make proper z index logic for texts
+		const auto* g = g_engine->GetGraphics();
+		SetAreaLimits({
+			0,
+			0,
+			(coord_t) g->GetViewportWidth(),
+			(coord_t)( m_world->GetViewportHeight() - 32 ) // - 32 because world viewport also includes transparent area on bottom bar top
+		});
+	}
+}
+
+void Menu::Iterate() {
+	UI::Iterate();
+	
+	if ( m_config.use_slide_animation ) {
+		bool has_ticked = false;
+		while ( m_slide.HasTicked() ) {
+			SetHeight( m_slide.GetPosition() );
+			has_ticked = true;
+		}
+		if ( !has_ticked && m_is_closing ) {
+			// slidedown finished
+			UI::Hide();
+		}
+	}
 }
 
 void Menu::Destroy() {
 	
 	Log( "Destroying side menu" );
 	
-	Hide();
+	UI::Hide();
 	
 	RemoveChild( m_background );
+	RemoveChild( m_frames.top );
+	RemoveChild( m_frames.bottom );
 	for ( auto& button : m_buttons ) {
 		RemoveChild( button );
 	}
@@ -100,7 +144,19 @@ void Menu::Destroy() {
 	UI::Destroy();
 }
 
+void Menu::ProcessEvent( event::UIEvent* event ) {
+	if ( !m_slide.IsRunning() ) { // ignore events during slide
+		UI::ProcessEvent( event );
+	}
+}
+
 void Menu::Show() {
+	if ( m_config.use_slide_animation ) {
+		// slide up
+		m_is_closing = false;
+		m_slide.Scroll( GetHeight(), CalculateHeight() );
+	}
+	
 	UI::Show();
 }
 
@@ -115,7 +171,14 @@ void Menu::Hide() {
 		m_active_submenu = nullptr;
 	}
 	
-	UI::Hide();
+	if ( m_config.use_slide_animation ) {
+		// slide down
+		m_is_closing = true;
+		m_slide.Scroll( GetHeight(), 0 );
+	}
+	else {
+		UI::Hide();
+	}
 }
 
 void Menu::AddItem( const std::string& label, std::function<bool( LabelButton* button, menu_item_t item )> on_click ) {
@@ -135,6 +198,10 @@ void Menu::AddSubMenu( const std::string& label, Menu* submenu ) {
 		0
 	});
 	g_engine->GetUI()->AddObject( submenu );
+}
+
+const size_t Menu::CalculateHeight() const {
+	return m_margin * 2 + m_item_height * m_menu_items.size();
 }
 
 }
