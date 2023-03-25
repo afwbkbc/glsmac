@@ -1,5 +1,7 @@
 SET(SRC ${SRC}
 
-	${PWD}/Save.cpp
+	${PWD}/Popup.cpp
+	${PWD}/OkCancelPopup.cpp
+	${PWD}/SaveMap.cpp
 
 PARENT_SCOPE)

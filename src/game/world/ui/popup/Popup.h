@@ -2,7 +2,7 @@
 
 #include "ui/object/Popup.h"
 
-#include "Section.h"
+#include "../Section.h"
 #include "ui/object/Surface.h"
 #include "ui/object/SoundEffect.h"
 
@@ -12,23 +12,29 @@ namespace game {
 namespace world {
 	class World;
 namespace ui {
+namespace popup {
 
 CLASS( Popup, ::ui::object::Popup )
 	
 	Popup( World* world );
 	
 	void Create();
+	virtual void Align();
 	void Iterate();
 	void Destroy();
-	
 	void ProcessEvent( event::UIEvent* event );
-
 	bool MaybeClose();
+	void SetHeight( const coord_t px );
+	
+	void SetTitleText( const std::string& title_text );
 	
 protected:
 	World* m_world = nullptr;
 
 private:
+	coord_t m_original_height = 0; // TODO: move to styles?
+	std::string m_title_text = "";
+	
 	Section* m_body = nullptr;
 	struct {
 		::ui::object::Surface* left_left = nullptr;
@@ -46,6 +52,7 @@ private:
 	} m_sounds;
 };
 
+}
 }
 }
 }

@@ -105,7 +105,7 @@ void Popup::AddStyles() {
 				{ Style::A_TEXTURE_BOTTOM, { 68, 188, 134, 188 } },
 			};
 		}
-		else { 
+		else {
 			if ( s->Is( Style::M_HOVER ) ) {
 				textures = {
 					{ Style::A_TEXTURE_LEFT, { 64, 149, 64, 166 } },

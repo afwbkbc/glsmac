@@ -1,19 +1,22 @@
 #pragma once
 
-#include "../Popup.h"
+#include "OkCancelPopup.h"
 
 namespace game {
 namespace world {
 namespace ui {
 namespace popup {
 
-CLASS( Save, Popup )
+CLASS( SaveMap, OkCancelPopup )
 	
-	Save( World* world ) : Popup( world ) {}
+	SaveMap( World* world );
 	
 	void Create();
 	void Destroy();
 
+protected:
+	void OnOk();
+	
 };
 
 }

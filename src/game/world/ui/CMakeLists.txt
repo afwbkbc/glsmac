@@ -7,6 +7,5 @@ SET(SRC ${SRC}
 	${PWD}/UI.cpp
 	${PWD}/Section.cpp
 	${PWD}/Menu.cpp
-	${PWD}/Popup.cpp
 
 PARENT_SCOPE)

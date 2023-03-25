@@ -88,6 +88,7 @@ CLASS( World, base::Task )
 	void ReturnToMainMenu();
 	
 	const size_t GetBottomBarMiddleHeight() const;
+	const size_t GetViewportHeight() const;
 	
 protected:
 

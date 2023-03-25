@@ -20,6 +20,9 @@ void Section::Create() {
 	UI::AddChild( m_outer );
 	
 	NEW( m_inner, object::Section, m_config.no_inner_border ? "" : m_section_class_prefix + "SectionInner" );
+	if ( !m_title_text.empty() ) {
+		m_inner->SetTitleText( m_title_text );
+	}
 	m_outer->AddChild( m_inner );
 	
 }
@@ -38,6 +41,15 @@ void Section::AddChild( UIObject *object ) {
 
 void Section::RemoveChild( UIObject *object ) {
 	m_inner->RemoveChild( object );
+}
+
+void Section::SetTitleText( const std::string& title_text ) {
+	if ( m_title_text != title_text ) {
+		m_title_text = title_text;
+		if ( m_inner ) {
+			m_inner->SetTitleText( m_title_text );
+		}
+	}
 }
 
 }

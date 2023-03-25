@@ -283,6 +283,7 @@ protected:
 	
 	scene::Scene *GetSceneOfActor( const Actor *actor ) const;
 	
+	void IgnoreStyleAttribute( const Style::attribute_type_t type );
 	virtual void ApplyStyle();
 	virtual void ReloadStyle();
 
@@ -343,12 +344,14 @@ private:
 	
 	events_t m_events_to_listen = {};
 	
+	bool m_is_applying_style = false;
 	std::string m_style_class = "";
 	bool m_style_loaded = false; // will load on first draw
 	const Style* m_style = nullptr;
 	const UIContainer* m_parent_style_object = nullptr;
 	std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_parent_style_attributes = {};
 	bool m_forward_all_style_attributes = false;
+	std::unordered_set< Style::attribute_type_t > m_ignore_style_attributes = {};
 	
 	const Style::attribute_type_t GetParentAttribute( const Style::attribute_type_t source_type ) const;
 	

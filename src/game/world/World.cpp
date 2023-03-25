@@ -805,6 +805,10 @@ const size_t World::GetBottomBarMiddleHeight() const {
 	return m_ui.bottom_bar->GetMiddleHeight();
 }
 
+const size_t World::GetViewportHeight() const {
+	return m_viewport.height;
+}
+
 void World::SelectTileAtPoint( const size_t x, const size_t y ) {
 	Log( "Looking up tile at " + std::to_string( x ) + "x" + std::to_string( y ) );
 	m_map->GetTileAtScreenCoords( x, m_viewport.window_height - y ); // async

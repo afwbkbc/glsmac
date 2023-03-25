@@ -2,7 +2,7 @@
 
 #include "engine/Engine.h"
 
-#include "../../popup/Save.h"
+#include "../../popup/SaveMap.h"
 
 namespace game {
 namespace world {
@@ -12,15 +12,12 @@ namespace menu {
 EditMapMenu::EditMapMenu( World* world )
 	: Menu( world )
 {
-	auto* ui = g_engine->GetUI();
-	AddItem( "Save Map...", MH( this, ui ) {
-		NEWV( popup, popup::Save, m_world );
-			popup->SetWidth( 600 );
-			popup->SetHeight( 500 );
-			ui->OpenPopup( popup );
+	AddItem( "Save Map...", MH( this ) {
+		NEWV( popup, popup::SaveMap, m_world );
+		popup->Open();
 		return true;
 	});
-	AddItem( "Load Map...", MH( ui ) {
+	AddItem( "Load Map...", MH() {
 		return true;
 	});
 }

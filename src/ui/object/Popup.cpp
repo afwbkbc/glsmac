@@ -29,7 +29,20 @@ void Popup::Destroy() {
 	UIContainer::Destroy();
 }
 
+void Popup::Open() {
+	ASSERT( !m_is_opened, "popup already opened" );
+	m_is_opened = true;
+	g_engine->GetUI()->OpenPopup( this );
+}
+
+void Popup::Close() {
+	ASSERT( m_is_opened, "popup already closed" );
+	g_engine->GetUI()->ClosePopup( this );
+}
+
 bool Popup::MaybeClose() {
+	ASSERT( m_is_opened, "maybeclose but popup not opened" );
+	m_is_opened = false;
 	return true;
 }
 

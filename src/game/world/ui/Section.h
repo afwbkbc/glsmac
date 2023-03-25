@@ -18,6 +18,8 @@ CLASS( Section, UI )
 	void AddChild( UIObject *object );
 	void RemoveChild( UIObject *object );
 	
+	void SetTitleText( const std::string& title_text );
+	
 protected:
 	struct {
 		bool no_outer_border = false;
@@ -26,6 +28,7 @@ protected:
 	
 private:
 	const std::string m_section_class_prefix = "";
+	std::string m_title_text = "";
 	
 	object::Section* m_outer = nullptr;
 	object::Section* m_inner = nullptr;

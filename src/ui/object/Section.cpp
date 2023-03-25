@@ -30,8 +30,6 @@ void Section::Create() {
 	NEW( m_frame, Panel );
 		m_frame->SetAlign( UIObject::ALIGN_CENTER );
 		m_frame->SetMargin( 3 );
-		//m_frame->SetWidth( m_width );
-		//m_frame->SetHeight( m_height );
 		m_frame->ForwardStyleAttributesM( m_forwarded_style_attributes );
 	UIContainer::AddChild( m_frame );
 	
@@ -44,7 +42,6 @@ void Section::Create() {
 				3, // right
 				-3 // bottom
 			});
-			//m_titlebar->SetHeight( 22 );
 			m_titlebar->ForwardStyleAttributesM( m_forwarded_header_style_attributes );
 		m_frame->AddChild( m_titlebar );
 		NEW( m_titlelabel, Label );

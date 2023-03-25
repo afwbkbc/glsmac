@@ -174,6 +174,12 @@ void UIObject::ApplyStyle() {
 
 }
 
+void UIObject::IgnoreStyleAttribute( const Style::attribute_type_t type ) {
+	if ( !m_is_applying_style ) {
+		m_ignore_style_attributes.insert( type );
+	}
+}
+
 void UIObject::ReloadStyle() {
 	if ( m_style_loaded ) {
 		m_style_loaded = false;
@@ -214,6 +220,9 @@ void UIObject::SetParentStyleObject( const UIContainer* object ) {
 }
 
 bool UIObject::Has( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const {
+	if ( m_ignore_style_attributes.find( attribute_type ) != m_ignore_style_attributes.end() ) {
+		return false;
+	}
 	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
 		return true;
 	}
@@ -234,6 +243,7 @@ bool UIObject::Has( const Style::attribute_type_t attribute_type ) const {
 }
 
 const float UIObject::Get( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const {
+	ASSERT( Has( attribute_type, style_modifiers ), "attribute get without has" );
 	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
 		return m_style->Get( attribute_type, style_modifiers );
 	}
@@ -246,6 +256,7 @@ const float UIObject::Get( const Style::attribute_type_t attribute_type ) const 
 }
 
 const Color UIObject::GetColor( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const {
+	ASSERT( Has( attribute_type, style_modifiers ), "attribute get without has" );
 	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
 		return m_style->GetColor( attribute_type, style_modifiers );
 	}
@@ -258,6 +269,7 @@ const Color UIObject::GetColor( const Style::attribute_type_t attribute_type ) c
 }
 
 const void* UIObject::GetObject( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const {
+	ASSERT( Has( attribute_type, style_modifiers ), "attribute get without has" );
 	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
 		return m_style->GetObject( attribute_type, style_modifiers );
 	}
@@ -506,6 +518,7 @@ void UIObject::SetWidth( const coord_t px ) {
 		m_size.width = px;
 		Realign();
 	}
+	IgnoreStyleAttribute( Style::A_WIDTH );
 }
 
 void UIObject::SetHeight( const coord_t px ) {
@@ -514,6 +527,7 @@ void UIObject::SetHeight( const coord_t px ) {
 		m_size.height = px;
 		Realign();
 	}
+	IgnoreStyleAttribute( Style::A_HEIGHT );
 }
 
 void UIObject::ForceAspectRatio( const float aspect_ratio ) {
@@ -845,7 +859,9 @@ void UIObject::ApplyStyleIfNeeded() {
 				m_style = g_engine->GetUI()->GetStyle( m_style_class );
 			}
 			BlockRealigns();
+			m_is_applying_style = true;
 			ApplyStyle();
+			m_is_applying_style = false;
 			UnblockRealigns();
 			Realign();
 		}
@@ -856,14 +872,18 @@ void UIObject::ApplyStyleIfNeeded() {
 void UIObject::AddStyleModifier( const Style::modifier_t modifier ) {
 	ASSERT( !( m_style_modifiers & modifier ), "style modifier " + std::to_string( modifier ) + " already added" );
 	m_style_modifiers |= modifier;
+	m_is_applying_style = true;
 	ApplyStyle();
+	m_is_applying_style = false;
 	Redraw();
 }
 
 void UIObject::RemoveStyleModifier( const Style::modifier_t modifier ) {
 	ASSERT( (m_style_modifiers & modifier), "style modifier " + std::to_string( modifier ) + " already removed" );
 	m_style_modifiers &= ~modifier;
+	m_is_applying_style = true;
 	ApplyStyle();
+	m_is_applying_style = false;
 	Redraw();
 }
 
