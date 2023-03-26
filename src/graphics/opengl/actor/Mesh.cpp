@@ -225,7 +225,7 @@ l_draw_begin:
 		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_data.ibo );
 		
 		// reset framebuffer to clean state
-		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
+		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	}
 	else {
 		

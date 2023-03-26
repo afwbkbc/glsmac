@@ -102,7 +102,7 @@ void FBO::WriteBegin() {
 	// start with clean state
 	// TODO: partial redraws?
 	//glClearColor( 0.5f, 0.5f, 0.5f, 0.5f );
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	
 	m_is_enabled = true;
 }

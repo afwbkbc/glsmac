@@ -11,7 +11,6 @@
 #include "shader_program/World.h"
 
 #include "routine/Overlay.h"
-#include "routine/Font.h"
 #include "routine/Skybox.h"
 #include "routine/World.h"
 
@@ -50,9 +49,8 @@ OpenGL::OpenGL( const std::string title, const unsigned short viewport_width, co
 
 	// routines ( order is important )
 	NEWV( r_world, routine::World, this, scene::SCENE_TYPE_ORTHO, sp_orthographic, sp_orthographic_data ); m_routines.push_back( r_world );
-	NEWV( r_overlay, routine::Overlay, this, sp_simple2d ); m_routines.push_back( r_overlay );
+	NEWV( r_overlay, routine::Overlay, this, sp_simple2d, sp_font ); m_routines.push_back( r_overlay );
 	NEWV( r_world_ui, routine::World, this, scene::SCENE_TYPE_ORTHO_UI, sp_orthographic, sp_orthographic_data ); m_routines.push_back( r_world_ui );
-	NEWV( r_font, routine::Font, this, sp_font ); m_routines.push_back( r_font );
 	
 	// some routines are special
 	m_routine_overlay = r_overlay;
@@ -100,7 +98,6 @@ void OpenGL::Start() {
 	
 	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 32 );
-	SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 8 );
 	SDL_GL_SetSwapInterval( (char)m_options.vsync );
 
 	m_gl_context = SDL_GL_CreateContext( m_window );
@@ -194,7 +191,7 @@ void OpenGL::Iterate() {
 	glEnable( GL_BLEND );
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it ) {
 		(*it)->Iterate();

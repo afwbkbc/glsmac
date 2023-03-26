@@ -23,7 +23,7 @@ void Popup::Create() {
 		m_body->SetTitleText( m_title_text );
 	}
 	AddChild( m_body );
-	 
+	
 	#define x( _k, _n ) {\
 		NEW( m_side_frames._k, ::ui::object::Surface, "WP" _n "Frame" ); \
 		AddChild( m_side_frames._k ); \
@@ -60,13 +60,13 @@ void Popup::Align() {
 	::ui::object::Popup::SetHeight( std::min< coord_t >( m_original_height, m_world->GetViewportHeight() ) );
 
 	// TODO: make proper z index logic for texts
-	const auto* g = g_engine->GetGraphics();
+	/*const auto* g = g_engine->GetGraphics();
 	SetAreaLimits({
 		0,
 		0,
 		(coord_t) g->GetViewportWidth(),
 		(coord_t) m_world->GetViewportHeight()
-	});
+	});*/
 	
 	::ui::object::Popup::Align();
 }
