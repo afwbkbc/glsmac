@@ -44,8 +44,8 @@ Buffer::Buffer( Buffer& other) {
 	dr = data + lenr;
 }
 
-void Buffer::Alloc( size_t size ) {
-	const size_t new_size = lenw + size;
+void Buffer::Alloc( uint32_t size ) {
+	const uint32_t new_size = lenw + size;
 	if ( new_size > allocated_len ) {
 		while ( new_size > allocated_len ) {
 			allocated_len += BUFFER_ALLOC_CHUNK;
@@ -65,7 +65,7 @@ void Buffer::Alloc( size_t size ) {
 }
 
 // note: mostly THROWs instead of ASSERTs, because we need that validation in release mode too to prevent buffer overflows
-void Buffer::WriteImpl( type_t type, const char* s, const size_t sz ) {
+void Buffer::WriteImpl( type_t type, const char* s, const uint32_t sz ) {
 	ASSERT( type > T_NONE && type < T_MAX, "invalid buffer write type " + std::to_string( type ) );
 	//Log( "Writing " + to_string( sz ) + " bytes (type=" + to_string( type ) + ")" );
 	checksum_t c = 0;
@@ -73,7 +73,7 @@ void Buffer::WriteImpl( type_t type, const char* s, const size_t sz ) {
 	memcpy( dw, &type, sizeof( type ) ); dw += sizeof( type );
 	memcpy( dw, &sz, sizeof( sz ) ); dw += sizeof( sz );
 	
-	for ( size_t i = 0 ; i < sz ; i++ ) {
+	for (uint32_t i = 0 ; i < sz ; i++ ) {
 		c ^= (*(dw++) = *(s++));
 	}
 	
@@ -84,7 +84,7 @@ void Buffer::WriteImpl( type_t type, const char* s, const size_t sz ) {
 	//Log( "Written successfully" );
 }
 
-char* Buffer::ReadImpl( type_t need_type, char* s, size_t* sz, const size_t need_sz ) {
+char* Buffer::ReadImpl( type_t need_type, char* s, uint32_t* sz, const uint32_t need_sz ) {
 	ASSERT( need_type > T_NONE && need_type < T_MAX, "invalid buffer read type " + std::to_string( need_type ) );
 	type_t type = T_NONE;
 	if ( lenw < lenr + sizeof( type ) + sizeof( *sz ) ) {
@@ -104,7 +104,7 @@ char* Buffer::ReadImpl( type_t need_type, char* s, size_t* sz, const size_t need
 	if ( lenw < lenr ) {
 		THROW( "buffer ends prematurely (while reading data)" );
 	}
-	//Log( "Reading " + to_string( *sz ) + " bytes (type=" + to_string( type ) + ")" );
+	Log( "Reading " + std::to_string( *sz ) + " bytes (type=" + std::to_string( type ) + ")" );
 	
 	if ( s == nullptr && *sz > 0 ) {
 		s = (char*)malloc( *sz );
@@ -112,7 +112,7 @@ char* Buffer::ReadImpl( type_t need_type, char* s, size_t* sz, const size_t need
 	
 	char* s_ptr = s;
 	
-	for ( size_t i = 0 ; i < *sz ; i++ ) {
+	for ( uint32_t i = 0 ; i < *sz ; i++ ) {
 		need_c ^= (*(s_ptr++) = *(dr++));
 	}
 	
@@ -134,7 +134,7 @@ void Buffer::WriteBool( const bool val ) {
 
 const bool Buffer::ReadBool() {
 	bool boolval = false;
-	size_t sz = 0;
+	uint32_t sz = 0;
 	ReadImpl( T_BOOL, (char*)&boolval, &sz, sizeof( boolval ) );
 	return boolval;
 }
@@ -145,7 +145,7 @@ void Buffer::WriteInt( const long long int val ) {
 
 const long long int Buffer::ReadInt() {
 	long long int val = 0;
-	size_t sz = 0;
+	uint32_t sz = 0;
 	ReadImpl( T_INT, (char*)&val, &sz, sizeof( val ) );
 	return val;
 }
@@ -156,7 +156,7 @@ void Buffer::WriteFloat( const float val ) {
 
 const float Buffer::ReadFloat() {
 	float val = 0;
-	size_t sz = 0;
+	uint32_t sz = 0;
 	ReadImpl( T_FLOAT, (char*)&val, &sz, sizeof( val ) );
 	return val;
 }
@@ -166,7 +166,7 @@ void Buffer::WriteString( const std::string& val ) {
 }
 
 const std::string Buffer::ReadString() {
-	size_t sz = 0;
+	uint32_t sz = 0;
 	char *res_data = ReadImpl( T_STRING, nullptr, &sz );
 	if ( sz > 0 ) {
 		std::string result = std::string( res_data, sz );
@@ -184,7 +184,7 @@ void Buffer::WriteVec2u( const Vec2< uint32_t > val ) {
 
 const Vec2< uint32_t > Buffer::ReadVec2u() {
 	Vec2< uint32_t > val = { 0, 0 };
-	size_t sz = 0;
+	uint32_t sz = 0;
 	ReadImpl( T_VEC2U, (char*)&val, &sz, sizeof( val ) );
 	return val;
 }
@@ -195,7 +195,7 @@ void Buffer::WriteVec2f( const Vec2< float > val ) {
 
 const Vec2< float > Buffer::ReadVec2f() {
 	Vec2< float > val = { 0, 0 };
-	size_t sz = 0;
+	uint32_t sz = 0;
 	ReadImpl( T_VEC2F, (char*)&val, &sz, sizeof( val ) );
 	return val;
 }
@@ -206,7 +206,7 @@ void Buffer::WriteVec3( const Vec3 val ) {
 
 const Vec3 Buffer::ReadVec3() {
 	Vec3 val;
-	size_t sz = 0;
+	uint32_t sz = 0;
 	ReadImpl( T_VEC3, (char*)&val, &sz, sizeof( val ) );
 	return val;
 }
@@ -217,17 +217,17 @@ void Buffer::WriteColor( const Color val ) {
 
 const Color Buffer::ReadColor() {
 	Color val;
-	size_t sz = 0;
+	uint32_t sz = 0;
 	ReadImpl( T_COLOR, (char*)&val, &sz, sizeof( val ) );
 	return val;
 }
 
-void Buffer::WriteData( const void* data, const size_t len ) {
+void Buffer::WriteData( const void* data, const uint32_t len ) {
 	WriteImpl( T_DATA, (const char*)data, len );
 }
 
-const void* Buffer::ReadData( const size_t len ) {
-	size_t sz = 0;
+const void* Buffer::ReadData( const uint32_t len ) {
+	uint32_t sz = 0;
 	const void* val = ReadImpl( T_DATA, nullptr, &sz );
 	ASSERT( sz == len, "buffer data read size mismatch" );
 	return val;

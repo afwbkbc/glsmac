@@ -10,10 +10,10 @@ namespace types {
 	
 CLASS( Buffer, base::Base )
 	
-	static constexpr size_t BUFFER_ALLOC_CHUNK = 1024;
+	static constexpr uint32_t BUFFER_ALLOC_CHUNK = 1024;
 	
 	typedef uint8_t data_t;
-	typedef char checksum_t;
+	typedef uint8_t checksum_t;
 	
 	Buffer();
 	Buffer( const std::string& strval );
@@ -24,9 +24,9 @@ CLASS( Buffer, base::Base )
 	data_t* data;
 	data_t* dw;
 	data_t* dr;
-	size_t allocated_len;
-	size_t lenw;
-	size_t lenr;
+	uint32_t allocated_len;
+	uint32_t lenw;
+	uint32_t lenr;
 	checksum_t checksum;
 	
 	void WriteBool( const bool val );
@@ -45,8 +45,8 @@ CLASS( Buffer, base::Base )
 	const Vec3 ReadVec3();
 	void WriteColor( const Color val );
 	const Color ReadColor();
-	void WriteData( const void* data, const size_t len );
-	const void* ReadData( const size_t len );
+	void WriteData( const void* data, const uint32_t len );
+	const void* ReadData( const uint32_t len );
 	
 	const std::string ToString() const;
 	
@@ -68,9 +68,9 @@ private:
 		T_MAX
 	};
 	
-	void WriteImpl( const type_t type, const char* s, const size_t sz );
-	char* ReadImpl( const type_t need_type, char* s, size_t* sz, const size_t need_sz = 0 );
-	void Alloc( size_t size );
+	void WriteImpl( const type_t type, const char* s, const uint32_t sz );
+	char* ReadImpl( const type_t need_type, char* s, uint32_t* sz, const uint32_t need_sz = 0 );
+	void Alloc( uint32_t size );
 	
 };
 
