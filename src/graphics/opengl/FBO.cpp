@@ -10,10 +10,10 @@ FBO::FBO( const size_t width, const size_t height ) {
 	glGenBuffers( 1, &m_ibo );
 	
 	NEW( m_mesh, mesh::Simple, 4, 2 ); // TODO: quad mesh
-	auto top_left = m_mesh->AddVertex( { -1, -1 }, { 0.0f, 0.0f } );
-	auto top_right = m_mesh->AddVertex( { 1, -1 }, { 1.0f / INTERNAL_RESOLUTION_MULTIPLIER, 0.0f } );
-	auto bottom_right = m_mesh->AddVertex( { 1, 1 }, { 1.0f / INTERNAL_RESOLUTION_MULTIPLIER, 1.0f / INTERNAL_RESOLUTION_MULTIPLIER } );
-	auto bottom_left = m_mesh->AddVertex( { -1, 1 }, { 0.0f, 1.0f / INTERNAL_RESOLUTION_MULTIPLIER } );
+	auto top_left = m_mesh->AddVertex( { -1, -1, -1 }, { 0.0f, 0.0f } );
+	auto top_right = m_mesh->AddVertex( { 1, -1, -1 }, { 1.0f, 0.0f } );
+	auto bottom_right = m_mesh->AddVertex( { 1, 1, -1 }, { 1.0f, 1.0f } );
+	auto bottom_left = m_mesh->AddVertex( { -1, 1, -1 }, { 0.0f, 1.0f } );
 	
 	m_mesh->AddSurface( { top_left, top_right, bottom_right } );
 	m_mesh->AddSurface( { top_left, bottom_left, bottom_right } );
@@ -103,10 +103,18 @@ void FBO::WriteBegin() {
 	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, m_fbo );
 	glDrawBuffer( GL_COLOR_ATTACHMENT0 );
 	
+	if ( INTERNAL_RESOLUTION_MULTIPLIER != 1 ) {
+		// upscale
+		glViewport( 0, 0, m_width, m_height );
+	}
+	
 	// start with clean state
 	// TODO: partial redraws?
 	//glClearColor( 0.5f, 0.5f, 0.5f, 0.5f );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	
+	// blending fix
+	glBlendFuncSeparate( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
 	
 	m_is_enabled = true;
 }
@@ -114,8 +122,16 @@ void FBO::WriteBegin() {
 void FBO::WriteEnd() {
 	ASSERT( m_is_enabled, "fbo already disabled" );
 	
+	// restore default
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+	
 	glDrawBuffer( GL_NONE );
 	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
+	
+	if ( INTERNAL_RESOLUTION_MULTIPLIER != 1 ) {
+		// restore
+		glViewport( 0, 0, m_width / INTERNAL_RESOLUTION_MULTIPLIER, m_height / INTERNAL_RESOLUTION_MULTIPLIER );
+	}
 	
 	m_is_enabled = false;
 }
@@ -124,6 +140,9 @@ void FBO::Draw( shader_program::Simple2D* sp ) {
 	ASSERT( !m_is_enabled, "can't draw fbo that is being written to" );
 	ASSERT( m_width > 0, "fbo width is zero" );
 	ASSERT( m_height > 0, "fbo height is zero" );
+	
+	// blending fix
+	glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
 	
 	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ibo );
@@ -140,6 +159,9 @@ void FBO::Draw( shader_program::Simple2D* sp ) {
 	
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+	
+	// restore default
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 }
 
 types::Texture* FBO::CaptureToTexture() {

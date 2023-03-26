@@ -27,8 +27,6 @@ void Overlay::Iterate() {
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it )
 		(*it)->Update();
 
-	glClear( GL_DEPTH_BUFFER_BIT ); // overlay must always be on top
-	
 	if ( m_is_redraw_needed ) {
 		
 		glDisable( GL_DEPTH_TEST );
@@ -59,7 +57,6 @@ void Overlay::Iterate() {
 	}
 	
 	m_fbo->Draw( m_shader_program );
-	
 }
 
 opengl::Actor *Overlay::AddCustomActor( scene::actor::Actor *actor ) {
