@@ -10,10 +10,10 @@ FBO::FBO( const size_t width, const size_t height ) {
 	glGenBuffers( 1, &m_ibo );
 	
 	NEW( m_mesh, mesh::Simple, 4, 2 ); // TODO: quad mesh
-	auto top_left = m_mesh->AddVertex( { -1, -1 }, { 0, 0 } );
-	auto top_right = m_mesh->AddVertex( { 1, -1 }, { 1, 0 } );
-	auto bottom_right = m_mesh->AddVertex( { 1, 1 }, { 1, 1 } );
-	auto bottom_left = m_mesh->AddVertex( { -1, 1 }, { 0, 1 } );
+	auto top_left = m_mesh->AddVertex( { -1, -1 }, { 0.0f, 0.0f } );
+	auto top_right = m_mesh->AddVertex( { 1, -1 }, { 1.0f / INTERNAL_RESOLUTION_MULTIPLIER, 0.0f } );
+	auto bottom_right = m_mesh->AddVertex( { 1, 1 }, { 1.0f / INTERNAL_RESOLUTION_MULTIPLIER, 1.0f / INTERNAL_RESOLUTION_MULTIPLIER } );
+	auto bottom_left = m_mesh->AddVertex( { -1, 1 }, { 0.0f, 1.0f / INTERNAL_RESOLUTION_MULTIPLIER } );
 	
 	m_mesh->AddSurface( { top_left, top_right, bottom_right } );
 	m_mesh->AddSurface( { top_left, bottom_left, bottom_right } );
@@ -62,10 +62,14 @@ FBO::~FBO() {
 	DELETE( m_mesh );
 }
 	
-void FBO::Resize( const size_t width, const size_t height ) {
+void FBO::Resize( size_t width, size_t height ) {
 	
 	ASSERT( width > 0, "fbo width zero" );
 	ASSERT( height > 0, "fbo height zero" );
+	
+	// upscale
+	width *= INTERNAL_RESOLUTION_MULTIPLIER;
+	height *= INTERNAL_RESOLUTION_MULTIPLIER;
 	
 	if ( width != m_width || height != m_height ) {
 	
@@ -143,12 +147,16 @@ types::Texture* FBO::CaptureToTexture() {
 	ASSERT( m_width > 0, "fbo width is zero" );
 	ASSERT( m_height > 0, "fbo height is zero" );
 	
-	NEWV( texture, types::Texture, "FBOCapture", m_width, m_height );
+	// downscale
+	const auto width = m_width / INTERNAL_RESOLUTION_MULTIPLIER;
+	const auto height = m_height / INTERNAL_RESOLUTION_MULTIPLIER;
+	
+	NEWV( texture, types::Texture, "FBOCapture", width, height );
 	
 	glBindFramebuffer( GL_READ_FRAMEBUFFER, m_fbo );
 	glReadBuffer( GL_COLOR_ATTACHMENT0 );
 	
-	glReadPixels( 0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, texture->m_bitmap );
+	glReadPixels( 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, texture->m_bitmap );
 	
 	glReadBuffer( GL_NONE );
 	glBindFramebuffer( GL_READ_FRAMEBUFFER, 0 );

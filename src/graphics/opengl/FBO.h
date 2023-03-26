@@ -14,10 +14,13 @@ namespace opengl {
 
 CLASS( FBO, base::Base )
 	
+	// this doesn't seem to help with anything, keep it at 1 for now
+	static constexpr ssize_t INTERNAL_RESOLUTION_MULTIPLIER = 1;
+	
 	FBO( const size_t width, const size_t height );
 	~FBO();
 	
-	void Resize( const size_t width, const size_t height );
+	void Resize( size_t width, size_t height );
 
 	void WriteBegin();
 	void WriteEnd();
