@@ -47,7 +47,6 @@ void FileBrowser::ChangeDirectory( const std::string& directory ) {
 		m_file_list->Clear();
 		
 		const std::string cls = "PopupFileListItem";
-		
 		const auto items = util::FS::ListDirectory( m_current_directory, true );
 		
 		m_file_list->SetLinesLimit( items.size() + 1 ); // need to fit all items
@@ -74,13 +73,14 @@ void FileBrowser::ChangeDirectory( const std::string& directory ) {
 }
 
 void FileBrowser::SelectItem( const std::string& item ) {
-	const std::string path = m_current_directory + "/" + item;
+	const std::string sep = util::FS::GetPathSeparator();
+	const std::string path = m_current_directory + sep + item;
 	
 	if ( item == ".." ) {
 		Log( "Selected directory up" );
-		const auto pos = m_current_directory.rfind( "/" ); // TODO: check on windows
+		const auto pos = m_current_directory.rfind( sep ); // TODO: check on windows
 		if ( pos == std::string::npos ) {
-			ChangeDirectory( "/" ); // TODO: check on windows
+			ChangeDirectory( sep ); // TODO: check on windows
 		}
 		else {
 			ChangeDirectory( m_current_directory.substr( 0, pos ) );

@@ -9,6 +9,8 @@ namespace util {
 	
 CLASS( FS, Util )
 	
+	static const std::string GetPathSeparator();
+
 	static const std::string GetCurrentDirectory();
 	
 	static const bool Exists( const std::string& path );
