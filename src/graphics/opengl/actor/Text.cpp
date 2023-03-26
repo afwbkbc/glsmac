@@ -72,7 +72,10 @@ void Text::Update( Font* font, const std::string& text, const float x, const flo
 			for ( const char *p = m_text.c_str(); *p; p++ ) {
 				unsigned char sym = (unsigned char)*p;
 
-				ASSERT( sym >= 32 && sym < 128, "unexpected font character " + std::to_string( sym ) );
+				//ASSERT( sym >= 32 && sym < 128, "unexpected font character " + std::to_string( sym ) );
+				if ( sym < 32 || sym >= 128 ) {
+					sym = ' '; // replace unprintable characters with spaces
+				}
 
 				bitmap = &m_font->m_symbols[sym];
 

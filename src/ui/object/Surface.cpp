@@ -84,6 +84,7 @@ void Surface::Resize() {
 }
 
 void Surface::ResizeNow() {
+	
 	if ( m_background_mesh ) {
 		
 		bool need_resize = false;
@@ -119,7 +120,7 @@ void Surface::ResizeNow() {
 				ClampY( m_surface_object_area.bottom ) - ClampY( m_surface_object_area.top )
 			};
 
-			//Log( "Resizing surface to " + size.ToString() ); // 1.97265625 1.96354175
+			//Log( "Resizing surface to " + size.ToString() );
 
 			if ( m_texture && !m_surface_stretch_texture ) {
 				m_background_mesh->SetCoords( pos, size, { m_texture->m_width, m_texture->m_height }, -m_z_index );

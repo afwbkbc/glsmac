@@ -114,7 +114,7 @@ CLASS( Texture, Serializable )
 	void SetAlpha(const float alpha);
 	void SetContrast(const float contrast);
 
-	static const Texture* FromColor( const Color& color );
+	static Texture* FromColor( const Color& color );
 
 	struct updated_area_t {
 		size_t left;

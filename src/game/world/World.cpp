@@ -157,12 +157,22 @@ void World::Start() {
 	m_viewport.bottom_bar_overlap = 32; // it has transparent area on top so let map render through it
 	
 	// map event handlers
-	m_handlers.keydown = ui->AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this, ui ) {
+	
+	m_handlers.keydown_before = ui->AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this, ui ) {
+		if (
+			ui->HasPopup() &&
+			!data->key.modifiers &&
+			data->key.code == UIEvent::K_ESCAPE
+		) {
+			ui->CloseLastPopup();
+			return true;
+		}
+		return false;
+	}, UI::GH_BEFORE );
+	
+	m_handlers.keydown_after = ui->AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this, ui ) {
 		
-		if ( ui->HasPopup() && (
-			data->key.code != UIEvent::K_ESCAPE ||
-			data->key.modifiers
-		)) {
+		if ( ui->HasPopup() ) {
 			return false;
 		}
 		
@@ -273,20 +283,15 @@ void World::Start() {
 			}
 			
 			if ( data->key.code == UIEvent::K_ESCAPE ) {
-				if ( ui->HasPopup() ) {
-					ui->CloseLastPopup();
-				}
-				else {
 #ifdef DEBUG
-					const auto* config = g_engine->GetConfig();
-					if ( config->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
-						g_engine->ShutDown();
-					}
-					else
+				const auto* config = g_engine->GetConfig();
+				if ( config->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
+					g_engine->ShutDown();
+				}
+				else
 #endif
-					{
-						ReturnToMainMenu();
-					}
+				{
+					ReturnToMainMenu();
 				}
 				return true;
 			}
@@ -529,7 +534,8 @@ void World::Stop() {
 	
 	g_engine->GetGraphics()->RemoveOnWindowResizeHandler( this );
 	
-	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.keydown );
+	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.keydown_before );
+	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.keydown_after );
 	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.keyup );
 	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.mousedown );
 	g_engine->GetUI()->RemoveGlobalEventHandler( m_handlers.mousemove );

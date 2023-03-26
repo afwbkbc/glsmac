@@ -48,9 +48,9 @@ void ScrollView::Create() {
 			return true;
 		});
 		m_scrollbar->On( UIEvent::EV_CHANGE, EH( this ) {
-			if ( data->change.scroll.is_scrolling ) {
+			if ( data->value.scroll.is_scrolling ) {
 				const auto limits = GetScrollLimits();
-				SetScrollY( ( limits.bottom - limits.top )  * data->change.scroll.percentage / 100.0f );
+				SetScrollY( ( limits.bottom - limits.top )  * data->value.scroll.percentage / 100.0f );
 			}
 			else if ( m_is_sticky ) {
 				m_need_stickyness = true;

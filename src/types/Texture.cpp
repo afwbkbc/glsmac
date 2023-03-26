@@ -739,7 +739,7 @@ void Texture::SetContrast(const float contrast) {
 	FullUpdate();
 }
 
-const Texture* Texture::FromColor( const Color& color ) {
+Texture* Texture::FromColor( const Color& color ) {
 	NEWV( texture, Texture, "FromColor", 1, 1 );
 	texture->SetPixel( 0, 0, color );
 	return texture;

@@ -21,6 +21,7 @@ CLASS( Label, UIObject )
 	void SetFont( Font* font );
 	
 	const std::string& GetText() const;
+	const std::string* GetTextPtr() const; // be careful
 
 	void Create();
 	void Destroy();

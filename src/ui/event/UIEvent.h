@@ -21,6 +21,7 @@ CLASS( UIEvent, base::Base )
 		EV_BUTTON_CLICK,
 		EV_BUTTON_DOUBLE_CLICK,
 		EV_CHANGE,
+		EV_SELECT,
 		EV_RESIZE
 	};
 	
@@ -90,7 +91,10 @@ CLASS( UIEvent, base::Base )
 				bool is_scrolling;
 				float percentage;
 			} scroll;
-		} change;
+			struct {
+				const std::string* ptr;
+			} text;
+		} value;
 	} event_data_t;
 	
 	const event_type_t m_type = EV_NONE;

@@ -161,7 +161,8 @@ private:
 	void FixCameraX();
 	
 	struct {
-		const UIEventHandler* keydown;
+		const UIEventHandler* keydown_before;
+		const UIEventHandler* keydown_after;
 		const UIEventHandler* keyup;
 		const UIEventHandler* mousedown;
 		const UIEventHandler* mousemove;

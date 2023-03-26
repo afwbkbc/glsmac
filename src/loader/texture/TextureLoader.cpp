@@ -27,13 +27,13 @@ Texture* TextureLoader::LoadTextureTC( const std::string &name, const size_t x1,
 	return LoadTextureTCs( name, x1, y1, x2, y2, { transparent_color }, flags, value );
 }
 
-const Texture* TextureLoader::GetColorTexture( const Color& color ) {
+Texture* TextureLoader::GetColorTexture( const Color& color ) {
 	const Color::rgba_t c = color.GetRGBA();
 	const auto& it = m_color_textures.find( c );
 	if ( it != m_color_textures.end() ) {
 		return it->second;
 	}
-	const auto* texture = Texture::FromColor( color );
+	auto* texture = Texture::FromColor( color );
 	m_color_textures[ c ] = texture;
 	return texture;
 }

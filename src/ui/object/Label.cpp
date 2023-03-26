@@ -50,6 +50,10 @@ const std::string& Label::GetText() const {
 	return m_text;
 }
 
+const std::string* Label::GetTextPtr() const {
+	return &m_text;
+}
+
 void Label::Create() {
 	UIObject::Create();
 	

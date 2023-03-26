@@ -1,6 +1,5 @@
 SUBDIR( routine )
 SUBDIR( shader_program )
-SUBDIR( object )
 SUBDIR( actor )
 SUBDIR( texture )
 

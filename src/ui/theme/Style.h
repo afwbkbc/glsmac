@@ -84,8 +84,8 @@ CLASS( Style, base::Base )
 		// text
 		A_FONT,
 		A_TEXT_ALIGN,
-		A_TEXT_COLOR,
 		A_TEXT_LEFT,
+		A_TEXT_COLOR,
 		
 		// sounds
 		A_SOUND,
@@ -113,14 +113,17 @@ CLASS( Style, base::Base )
 		A_HEADER_TEXTURE_LEFTBOTTOM,
 		
 		// lists etc
-		A_ITEM_HEIGHT,
 		A_ITEM_WIDTH,
+		A_ITEM_HEIGHT,
 		A_ITEM_MARGIN,
+		A_ITEM_TEXTURE,
+		A_ITEM_ICON_WIDTH,
+		A_ITEM_ICON_TEXTURE,
 		
 		// must be last
 		ATTRIBUTE_TYPE_MAX
 	};
-
+	
 	// bit flags
 	typedef uint8_t modifier_t;
 	static constexpr modifier_t M_NONE = 0;

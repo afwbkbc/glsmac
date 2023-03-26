@@ -185,8 +185,60 @@ void Popup::AddStyles() {
 		s->Set( Style::A_Z_INDEX, 0.7f );
 		s->SetColorTexture( Style::A_TEXTURE, Color( 0.0f, 0.0f, 0.0f, 0.5f ) );
 	});*/
+	
+	AddStyle( "PopupFileList", SH() {
+		s->Set( Style::A_RIGHT, 4 );
+		s->Set( Style::A_BOTTOM, 30 ); // to fit text input
+		s->SetFont( ::Style::A_FONT, "arialn.ttf", 16 );
+		s->Set( Style::A_ITEM_HEIGHT, 17 ); // TODO: auto-size?
+	});
+	
+	AddStyle( "PopupFileListInput", { "PopupBorder" }, SH() {
+		s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 92, 124, 188 ) );
+		s->SetFont( Style::A_FONT, "arialn.ttf", 18 );
+		s->Set( Style::A_HEIGHT, 22 );
+		s->Set( Style::A_ALIGN, UIObject::ALIGN_HCENTER | UIObject::ALIGN_BOTTOM );
+		s->Set( Style::A_BOTTOM, 2 );
+		s->Set( Style::A_LEFT, 4 );
+		s->Set( Style::A_RIGHT, 4 );
+	});
+	
+	AddStyle( "PopupFileListItem", SH() {
+		s->Set( Style::A_TEXT_ALIGN, UIObject::ALIGN_LEFT | UIObject::ALIGN_VCENTER );
+		s->Set( Style::A_TEXT_LEFT, 20 );
+		
+		if ( s->Is( Style::M_SELECTED ) ) {
+			s->SetTexture( Style::A_ITEM_TEXTURE, "interface.pcx", 68, 169, 134, 188 );
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 13, 23, 36 ) );
+		}
+		else if ( s->Is( Style::M_HOVER ) ) {
+			s->SetTexture( Style::A_ITEM_TEXTURE, "interface.pcx", 68, 149, 134, 166, TextureLoader::LT_CONTRAST, 0.7f );
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 120, 164, 212 ) );
+		}
+		else {
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 92, 124, 188 ) );
+			
+			// TODO: fix styles where texture is absent in normal modifier and remove this hack
+			s->SetColorTexture( Style::A_ITEM_TEXTURE, Color( 0.0f, 0.0f, 0.0f, 0.0f ) );
+		}
+		
+		s->Set( Style::A_ITEM_ICON_WIDTH, 16 );
+	});
+	
+	const auto tc = Color::RGB( 100, 16, 156 );
+	
+	AddStyle( "PopupFileListItemFile", { "PopupFileListItem" }, SH( tc ) {
+		s->SetTextureTC( Style::A_ITEM_ICON_TEXTURE, "Jackal.pcx", 18, 1, 33, 16, tc );
+	});
+
+	AddStyle( "PopupFileListItemDir", { "PopupFileListItem" }, SH( tc ) {
+		s->SetTextureTC( Style::A_ITEM_ICON_TEXTURE, "Jackal.pcx", 1, 1, 16, 16, tc );
+	});
+
+	AddStyle( "PopupFileListItemDirUp", { "PopupFileListItem" }, SH( tc ) {
+		s->SetTextureTC( Style::A_ITEM_ICON_TEXTURE, "Jackal.pcx", 35, 1, 50, 16, tc );
+	});
 }
 
 }
 }
-

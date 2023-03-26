@@ -2,6 +2,8 @@
 
 #include "OkCancelPopup.h"
 
+#include "ui/object/FileBrowser.h"
+
 namespace game {
 namespace world {
 namespace ui {
@@ -16,6 +18,9 @@ CLASS( SaveMap, OkCancelPopup )
 
 protected:
 	void OnOk();
+	
+private:
+	::ui::object::FileBrowser* m_file_browser = nullptr;
 	
 };
 

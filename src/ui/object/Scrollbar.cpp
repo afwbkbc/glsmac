@@ -58,7 +58,7 @@ void Scrollbar::Create() {
 				m_slider_scroll.is_dragging = false;
 				m_slider->RemoveStyleModifier( Style::M_ACTIVE );
 				UIEvent::event_data_t d = {};
-				d.change.scroll.is_scrolling = false;
+				d.value.scroll.is_scrolling = false;
 				Trigger( UIEvent::EV_CHANGE, &d );
 			}
 			return false;
@@ -174,8 +174,8 @@ void Scrollbar::UpdatePercentage() {
 	if ( percentage != m_percentage ) {
 		m_percentage = percentage;
 		UIEvent::event_data_t d = {};
-		d.change.scroll.is_scrolling = true;
-		d.change.scroll.percentage = m_percentage;
+		d.value.scroll.is_scrolling = true;
+		d.value.scroll.percentage = m_percentage;
 		Trigger( UIEvent::EV_CHANGE, &d );
 	}
 }

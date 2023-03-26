@@ -52,6 +52,8 @@ void UIObject::Create() {
 	DEBUG_STAT_INC( ui_elements_created );
 	DEBUG_STAT_INC( ui_elements_active );
 	
+	m_style_modifiers = Style::M_NONE;
+	
 	m_created = true;
 }
 
@@ -816,7 +818,6 @@ const UIObject::object_area_t UIObject::GetInternalObjectArea() {
 }
 
 bool UIObject::IsPointInside( const ssize_t x, const ssize_t y ) const {
-	
 	return (
 		x > m_object_area.left &&
 		y > ( m_object_area.top ) &&
@@ -1050,6 +1051,12 @@ void UIObject::Hide() {
 void UIObject::HideActors() {
 	if ( m_is_actually_visible ) {
 		m_is_actually_visible = false;
+		if ( m_state & STATE_MOUSEOVER ) {
+			m_state &= ~STATE_MOUSEOVER;
+			RemoveStyleModifier( Style::M_HOVER );
+			UIEvent::event_data_t data = {};
+			Trigger( UIEvent::EV_MOUSE_OUT, &data );
+		}
 		for ( auto& actor : m_actors ) {
 			actor->Hide();
 		}
