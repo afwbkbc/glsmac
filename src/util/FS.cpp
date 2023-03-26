@@ -67,14 +67,14 @@ namespace util {
 	const string FS::ReadFile(const string& path) {
 		ASSERT_NOLOG(FileExists(path), "file \"" + path + "\" does not exist or is not a file");
 		stringstream data;
-		ifstream in(path);
-		data << in.rdbuf();
+		ifstream in( path, std::ios_base::binary );
+		while ( data << in.rdbuf() );
 		in.close();
 		return data.str();
 	}
 
 	const void FS::WriteFile(const string& path, const string& data) {
-		ofstream out(path);
+		ofstream out( path, std::ios_base::binary );
 		out << data;
 		out.close();
 	}

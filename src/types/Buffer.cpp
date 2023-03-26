@@ -104,7 +104,7 @@ char* Buffer::ReadImpl( type_t need_type, char* s, uint32_t* sz, const uint32_t 
 	if ( lenw < lenr ) {
 		THROW( "buffer ends prematurely (while reading data)" );
 	}
-	Log( "Reading " + std::to_string( *sz ) + " bytes (type=" + std::to_string( type ) + ")" );
+	//Log( "Reading " + std::to_string( *sz ) + " bytes (type=" + std::to_string( type ) + ")" );
 	
 	if ( s == nullptr && *sz > 0 ) {
 		s = (char*)malloc( *sz );
