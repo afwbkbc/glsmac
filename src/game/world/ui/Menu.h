@@ -24,7 +24,6 @@ CLASS( Menu, UI )
 	~Menu();
 	
 	void Create();
-	void Align();
 	void Iterate();
 	void Destroy();
 	void ProcessEvent( event::UIEvent* event );

@@ -43,6 +43,7 @@ void Menu::Create() {
 		button->SetHeight( m_item_height );
 		button->SetTop( top );
 		button->SetLabel( item.label );
+		button->SetAreaLimitsByObject( this );
 		button->On( UIEvent::EV_BUTTON_CLICK, EH( this, item, button ) {
 			if ( m_active_button && m_active_button != button ) {
 				m_active_button->RemoveStyleModifier( Style::M_SELECTED );
@@ -93,21 +94,6 @@ void Menu::Create() {
 	}
 	else {
 		SetHeight( CalculateHeight() );
-	}
-}
-
-void Menu::Align() {
-	UI::Align();
-	
-	if ( m_config.use_slide_animation ) {
-		// TODO: make proper z index logic for texts
-		const auto* g = g_engine->GetGraphics();
-		SetAreaLimits({
-			0,
-			0,
-			(coord_t) g->GetViewportWidth(),
-			(coord_t)( m_world->GetViewportHeight() - 32 ) // - 32 because world viewport also includes transparent area on bottom bar top
-		});
 	}
 }
 

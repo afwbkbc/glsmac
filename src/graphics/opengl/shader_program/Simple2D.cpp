@@ -21,7 +21,7 @@ void main(void) { \
 	} \
 	gl_Position = vec4( coord, 1.0 ); \
 	texpos = vec2(aTexCoord); \
-	fragpos = aCoord; \
+	fragpos = coord; \
 } \
 \
 ");

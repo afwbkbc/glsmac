@@ -14,7 +14,6 @@ void TextLine::Create() {
 	UIContainer::Create();
 	
 	NEW( m_background, Surface );
-		m_background->SetOverflow( OVERFLOW_VISIBLE_ALWAYS ); // TODO: fix overflow bugs
 		m_background->ForwardStyleAttributesM( m_forwarded_style_attributes.background );
 		m_background->SetZIndex( 0.6f ); // TODO: fix z index bugs
 	AddChild( m_background );
@@ -25,7 +24,6 @@ void TextLine::Create() {
 		m_label->ForwardStyleAttributesM( m_forwarded_style_attributes.label );
 	AddChild( m_label );
 	NEW( m_icon, Surface );
-		m_icon->SetOverflow( OVERFLOW_VISIBLE_ALWAYS ); // TODO: fix overflow bugs
 		m_icon->ForwardStyleAttributesM( m_forwarded_style_attributes.icon );
 		m_icon->SetZIndex( 0.6f ); // TODO: fix z index bugs
 	AddChild( m_icon );
