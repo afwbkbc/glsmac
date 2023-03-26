@@ -145,7 +145,7 @@ void Scene::Update() {
 #endif
 }
 
-void Scene::Draw( shader_program::ShaderProgram *shader_program ) {
+void Scene::Draw( shader_program::ShaderProgram *shader_program, shader_program::ShaderProgram *other_shader_program ) {
 	
 #ifdef DEBUG
 	float last_zindex = -9999999;
@@ -163,7 +163,14 @@ void Scene::Draw( shader_program::ShaderProgram *shader_program ) {
 		
 		for ( auto& actor : actors.second ) {
 			if ( actor->GetActor()->IsVisible() ) {
-				actor->Draw( shader_program, m_scene->GetCamera() );
+				// TODO: refactor
+				if ( actor->GetActor()->GetType() == scene::actor::Actor::TYPE_TEXT ) {
+					ASSERT( other_shader_program, "text actor needs other_shader_program but it's null" );
+					actor->Draw( other_shader_program, m_scene->GetCamera() );
+				}
+				else {
+					actor->Draw( shader_program, m_scene->GetCamera() );
+				}
 			}
 		}
 	}

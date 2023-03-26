@@ -59,15 +59,6 @@ void Popup::Align() {
 	// TODO: add 'max_height' to styles
 	::ui::object::Popup::SetHeight( std::min< coord_t >( m_original_height, m_world->GetViewportHeight() ) );
 
-	// TODO: make proper z index logic for texts
-	/*const auto* g = g_engine->GetGraphics();
-	SetAreaLimits({
-		0,
-		0,
-		(coord_t) g->GetViewportWidth(),
-		(coord_t) m_world->GetViewportHeight()
-	});*/
-	
 	::ui::object::Popup::Align();
 }
 

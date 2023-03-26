@@ -34,7 +34,8 @@ CLASS( Scene, base::Base )
 	void SetSkyboxTextureObj( base::ObjectLink *skybox_texture ) {
 		m_skybox_texture = skybox_texture;
 	}
-	void Draw( shader_program::ShaderProgram *shader_program );
+	// other_shader_program is used for fonts in Overlay routine // TODO: refactor
+	void Draw( shader_program::ShaderProgram *shader_program, shader_program::ShaderProgram *other_shader_program = nullptr );
 	void Update();
 	
 	void OnWindowResize();

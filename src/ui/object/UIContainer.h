@@ -37,7 +37,9 @@ CLASS( UIContainer, UIObject )
 	void RemoveStyleModifier( const Style::modifier_t modifier );
 
 	virtual void SetAreaLimits( const coord_box_t limits );
+	virtual void SetAreaLimitsMaybe( const coord_box_t limits ); // set limits for self and for children that aren't limited by object(s)
 	virtual void SetAreaLimitsByObject( UIObject* source_object ); // make sure source object lives longer than this one!
+	virtual void ClearAreaLimits();
 	
 	void BlockEvents();
 	void UnblockEvents();

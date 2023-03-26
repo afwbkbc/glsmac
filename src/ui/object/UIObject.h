@@ -189,9 +189,11 @@ CLASS( UIObject, base::Base )
 	const bool IsVisible() const;
 	
 	virtual void SetAreaLimits( const coord_box_t limits );
+	virtual void SetAreaLimitsMaybe( const coord_box_t limits ); // sets limits if not limited by object(s)
 	virtual void SetAreaLimitsByObject( UIObject* source_object ); // make sure source object lives longer than this one!
 	void AddAreaLimitsChild( UIObject* child_object );
 	void RemoveAreaLimitsChild( UIObject* child_object );
+	virtual void ClearAreaLimits();
 	
 	typedef std::unordered_map<
 		UIEvent::event_type_t,
@@ -361,7 +363,7 @@ private:
 
 	struct {
 		bool enabled = false;
-		UIObject* source_object = nullptr;
+		std::unordered_set< UIObject* > source_objects = {};
 		std::unordered_set< UIObject* > child_objects = {};
 		coord_box_t limits;
 	} m_area_limits = {};

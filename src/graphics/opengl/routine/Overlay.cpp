@@ -36,11 +36,7 @@ void Overlay::Iterate() {
 		for ( auto& scene : m_gl_scenes ) {
 			switch ( scene->GetScene()->GetType() ) {
 				case scene::SCENE_TYPE_SIMPLE2D: {
-					scene->Draw( m_shader_program );
-					break;
-				}
-				case scene::SCENE_TYPE_TEXT: {
-					scene->Draw( m_shader_program_font );
+					scene->Draw( m_shader_program, m_shader_program_font );
 					break;
 				}
 				default: {
@@ -64,20 +60,7 @@ opengl::Actor *Overlay::AddCustomActor( scene::actor::Actor *actor ) {
 	switch (actor_type) {
 		case scene::actor::Actor::TYPE_TEXT: {
 			auto *text_actor = (scene::actor::Text *)actor;
-			auto *font = text_actor->GetFont();
-			//base::ObjectLink *font_link = font->m_graphics_object;
-			//Font *gl_font;
-			//if ( font_link != NULL )
-				//gl_font = font_link->GetDstObject<Font>();
-			//else {
-				//m_shader_program->Enable();
-				//NEW( gl_font, Font, font, m_shader_program );
-				//m_shader_program->Disable();
-				//NEW( font_link, base::ObjectLink, font, gl_font );
-				//m_gl_fonts.push_back( font_link );
-				//font->m_graphics_object = font_link;
-			//}
-			NEWV( result, Text, (scene::actor::Text *)actor, font );
+			NEWV( result, Text, text_actor, text_actor->GetFont() );
 			return result;
 		}
 		default: {
@@ -94,10 +77,7 @@ void Overlay::Redraw() {
 }
 
 bool Overlay::SceneBelongs( const scene::Scene *scene ) const {
-	return
-		scene->GetType() == scene::SCENE_TYPE_SIMPLE2D ||
-		scene->GetType() == scene::SCENE_TYPE_TEXT
-	;
+	return scene->GetType() == scene::SCENE_TYPE_SIMPLE2D;
 }
 
 } /* namespace routine */

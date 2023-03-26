@@ -10,18 +10,11 @@ namespace util {
 template< class POSITION_TYPE >
 CLASS( Scroller, util::Util )
 	
-	struct consts_t {
-		const uint16_t scroll_time_ms = 100;
-		const uint16_t scroll_step_ms = 2;
-		const uint8_t scroll_steps = scroll_time_ms / scroll_step_ms;
-	};
-	static const consts_t s_consts;
+	static constexpr uint16_t scroll_time_ms = 100;
+	static constexpr uint16_t scroll_step_ms = 10;
+	static constexpr uint8_t scroll_steps = scroll_time_ms / scroll_step_ms;
 	
 	void Scroll( const POSITION_TYPE& from, const POSITION_TYPE& to ) {
-		const uint16_t scroll_time_ms = 100;
-		const uint16_t scroll_step_ms = 2;
-		const uint8_t scroll_steps = scroll_time_ms / scroll_step_ms;
-
 		if ( IsRunning() ) {
 			Stop();
 		}

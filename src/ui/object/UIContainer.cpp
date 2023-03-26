@@ -80,8 +80,10 @@ void UIContainer::AddChild( UIObject *object ) {
 		object->SetAreaLimitsByObject( this );
 	}
 	if ( m_area_limits.enabled ) {
-		if ( m_area_limits.source_object ) {
-			object->SetAreaLimitsByObject( m_area_limits.source_object );
+		if ( !m_area_limits.source_objects.empty() ) {
+			for ( auto& source_object : m_area_limits.source_objects ) {
+				object->SetAreaLimitsByObject( source_object );
+			}
 		}
 		else {
 			object->SetAreaLimits( m_area_limits.limits );
@@ -175,7 +177,7 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 	
 	bool is_processed;
 	if ( event->m_flags & UIEvent::EF_MOUSE ) {
-		for (auto& c : m_child_objects) {
+		for ( auto& c : m_child_objects ) {
 			if (
 				( event->m_type == UIEvent::EV_MOUSE_MOVE ) || // mousemove needs to be send to all objects for mouseout events to work
 				c->IsPointInside( event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y ) // other events - only to those actually under mouse pointer
@@ -194,7 +196,7 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 	
 	if (( event->m_flags & UIEvent::EF_KEYBOARD ) == UIEvent::EF_KEYBOARD ) {
 		// TODO: send only to focused/active element
-		for (auto& c : m_child_objects) {
+		for ( auto& c : m_child_objects ) {
 			NEWV( child_event, UIEvent, event );
 			c->ProcessEvent( child_event );
 			is_processed = child_event->IsProcessed();
@@ -240,7 +242,7 @@ void UIContainer::ApplyStyle() {
 		SetPadding( Get( Style::A_PADDING ) );
 	}
 	
-	for (auto& c : m_child_objects) {
+	for ( auto& c : m_child_objects ) {
 		////c->ReloadStyle();
 		c->ApplyStyle(); // ???
 	}
@@ -250,7 +252,7 @@ void UIContainer::ReloadStyle() {
 	if ( m_style_loaded ) {
 		UIObject::ReloadStyle();
 		
-		for (auto& c : m_child_objects) {
+		for ( auto& c : m_child_objects ) {
 			c->ReloadStyle();
 		}
 	}
@@ -259,7 +261,7 @@ void UIContainer::ReloadStyle() {
 void UIContainer::SetEventContexts( event_context_t contexts ) {
 	UIObject::SetEventContexts( contexts );
 	
-	for (auto& c : m_child_objects) {
+	for ( auto& c : m_child_objects ) {
 		c->SetOverriddenEventContexts( contexts );
 	}
 }
@@ -267,7 +269,7 @@ void UIContainer::SetEventContexts( event_context_t contexts ) {
 void UIContainer::AddEventContexts( event_context_t contexts ) {
 	UIObject::AddEventContexts( contexts );
 	
-	for (auto& c : m_child_objects) {
+	for ( auto& c : m_child_objects ) {
 		c->AddOverriddenEventContexts( contexts );
 	}
 }
@@ -275,7 +277,7 @@ void UIContainer::AddEventContexts( event_context_t contexts ) {
 void UIContainer::SetOverriddenEventContexts( event_context_t contexts ) {
 	UIObject::SetOverriddenEventContexts( contexts );
 	
-	for (auto& c : m_child_objects) {
+	for ( auto& c : m_child_objects ) {
 		c->SetOverriddenEventContexts( contexts );
 	}
 }
@@ -283,7 +285,7 @@ void UIContainer::SetOverriddenEventContexts( event_context_t contexts ) {
 void UIContainer::AddOverriddenEventContexts( event_context_t contexts ) {
 	UIObject::AddOverriddenEventContexts( contexts );
 	
-	for (auto& c : m_child_objects) {
+	for ( auto& c : m_child_objects ) {
 		c->AddOverriddenEventContexts( contexts );
 	}
 }
@@ -291,7 +293,7 @@ void UIContainer::AddOverriddenEventContexts( event_context_t contexts ) {
 void UIContainer::AddStyleModifier( const Style::modifier_t modifier ) {
 	UIObject::AddStyleModifier( modifier );
 	
-	for (auto& c : m_child_objects) {
+	for ( auto& c : m_child_objects ) {
 		if ( !c->HasStyleModifier( modifier ) ) {
 			c->AddStyleModifier( modifier );
 		}
@@ -301,7 +303,7 @@ void UIContainer::AddStyleModifier( const Style::modifier_t modifier ) {
 void UIContainer::RemoveStyleModifier( const Style::modifier_t modifier ) {
 	UIObject::RemoveStyleModifier( modifier );
 	
-	for (auto& c : m_child_objects) {
+	for ( auto& c : m_child_objects ) {
 		if ( c->HasStyleModifier( modifier ) ) {
 			c->RemoveStyleModifier( modifier );
 		}
@@ -311,23 +313,41 @@ void UIContainer::RemoveStyleModifier( const Style::modifier_t modifier ) {
 void UIContainer::SetAreaLimits( const coord_box_t limits ) {
 	UIObject::SetAreaLimits( limits );
 	
-	for (auto& c : m_child_objects) {
+	for ( auto& c : m_child_objects ) {
 		c->SetAreaLimits( limits );
+	}
+}
+
+void UIContainer::SetAreaLimitsMaybe( const coord_box_t limits ) {
+	if ( !m_area_limits.enabled || m_area_limits.source_objects.empty() ) {
+		UIObject::SetAreaLimitsMaybe( limits );
+
+		for ( auto& c : m_child_objects ) {
+			c->SetAreaLimitsMaybe( limits );
+		}
 	}
 }
 
 void UIContainer::SetAreaLimitsByObject( UIObject* source_object ) {
 	UIObject::SetAreaLimitsByObject( source_object );
 
-	for (auto& c : m_child_objects) {
+	for ( auto& c : m_child_objects ) {
 		c->SetAreaLimitsByObject( source_object );
 	}
 }
+
+void UIContainer::ClearAreaLimits() {
+	UIObject::ClearAreaLimits();
 	
+	for ( auto& c : m_child_objects ) {
+		c->ClearAreaLimits();
+	}
+}
+
 void UIContainer::BlockEvents() {
 	UIObject::BlockEvents();
 	
-	for (auto& c : m_child_objects) {
+	for ( auto& c : m_child_objects ) {
 		c->BlockEvents();
 	}
 }
@@ -335,7 +355,7 @@ void UIContainer::BlockEvents() {
 void UIContainer::UnblockEvents() {
 	UIObject::UnblockEvents();
 
-	for (auto& c : m_child_objects) {
+	for ( auto& c : m_child_objects ) {
 		c->UnblockEvents();
 	}
 }
@@ -343,7 +363,7 @@ void UIContainer::UnblockEvents() {
 void UIContainer::ShowActors() {
 	if ( m_is_visible && !m_is_actually_visible ) {
 		UIObject::ShowActors();
-		for (auto& c : m_child_objects) {
+		for ( auto& c : m_child_objects ) {
 			c->ShowActors();
 		}
 	}
@@ -352,7 +372,7 @@ void UIContainer::ShowActors() {
 void UIContainer::HideActors() {
 	if ( m_is_actually_visible ) {
 		UIObject::HideActors();
-		for (auto& c : m_child_objects) {
+		for ( auto& c : m_child_objects ) {
 			c->HideActors();
 		}
 	}

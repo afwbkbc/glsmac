@@ -19,9 +19,6 @@ void UI::Start() {
 	NEW( m_shape_scene_ortho, Scene, "UIScene::Ortho", SCENE_TYPE_ORTHO_UI );
 	g_engine->GetGraphics()->AddScene( m_shape_scene_ortho );
 	
-	NEW( m_text_scene, Scene, "UIText", SCENE_TYPE_TEXT );
-	g_engine->GetGraphics()->AddScene( m_text_scene );
-
 	m_root_object.Create();
 	m_root_object.UpdateObjectArea();
 	
@@ -90,9 +87,6 @@ void UI::Stop() {
 		m_loader = nullptr;
 	}
 	
-	g_engine->GetGraphics()->RemoveScene( m_text_scene );
-	DELETE( m_text_scene );
-
 	g_engine->GetGraphics()->RemoveScene( m_shape_scene_simple2d );
 	DELETE( m_shape_scene_simple2d );
 	g_engine->GetGraphics()->RemoveScene( m_shape_scene_ortho );
@@ -128,7 +122,7 @@ Scene *UI::GetShapeScene( const types::mesh::Mesh* mesh ) {
 }
 
 Scene *UI::GetTextScene() {
-	return m_text_scene;
+	return m_shape_scene_simple2d;
 }
 
 void UI::SetWorldUIMatrix( const types::Matrix44& matrix ) {

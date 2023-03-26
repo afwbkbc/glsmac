@@ -101,14 +101,12 @@ void Menu::Iterate() {
 	UI::Iterate();
 	
 	if ( m_config.use_slide_animation ) {
-		bool has_ticked = false;
-		while ( m_slide.HasTicked() ) {
-			SetHeight( m_slide.GetPosition() );
-			has_ticked = true;
-		}
-		if ( !has_ticked && m_is_closing ) {
+		if ( !m_slide.IsRunning() && m_is_closing ) {
 			// slidedown finished
 			UI::Hide();
+		}
+		while ( m_slide.HasTicked() ) {
+			SetHeight( m_slide.GetPosition() );
 		}
 	}
 }

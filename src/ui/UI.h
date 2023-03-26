@@ -113,7 +113,6 @@ private:
 
 	Scene *m_shape_scene_simple2d = nullptr;
 	Scene *m_shape_scene_ortho = nullptr;
-	Scene *m_text_scene = nullptr;
 
 	struct {
 		util::Clamper<coord_t> x;

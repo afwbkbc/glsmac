@@ -21,6 +21,7 @@ void TextLine::Create() {
 		if ( !m_text.empty() ) {
 			m_label->SetText( m_text );
 		}
+		m_label->SetZIndex( 0.6f ); // TODO: fix z index bugs
 		m_label->ForwardStyleAttributesM( m_forwarded_style_attributes.label );
 	AddChild( m_label );
 	NEW( m_icon, Surface );

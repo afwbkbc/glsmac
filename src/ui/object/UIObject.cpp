@@ -42,8 +42,10 @@ UIObject::~UIObject() {
 			}
 		}
 	}
-	if ( m_area_limits.source_object ) {
-		m_area_limits.source_object->RemoveAreaLimitsChild( this );
+	if ( !m_area_limits.source_objects.empty() ) {
+		for ( auto& source_object : m_area_limits.source_objects ) {
+			source_object->RemoveAreaLimitsChild( this );
+		}
 	}
 }
 
@@ -1075,17 +1077,26 @@ const bool UIObject::IsVisible() const {
 
 void UIObject::SetAreaLimits( const coord_box_t limits ) {
 	m_area_limits.enabled = true;
-	m_area_limits.source_object = nullptr;
+	for ( auto& source_object : m_area_limits.source_objects ) {
+		source_object->RemoveAreaLimitsChild( this );
+	}
+	m_area_limits.source_objects.clear();
 	m_area_limits.limits = limits;
 	UpdateAreaLimits();
 }
 
+void UIObject::SetAreaLimitsMaybe( const coord_box_t limits ) {
+	if ( !m_area_limits.enabled || m_area_limits.source_objects.empty() ) {
+		UIObject::SetAreaLimits( limits );
+	}
+}
+
 void UIObject::SetAreaLimitsByObject( UIObject* source_object ) {
 	ASSERT( source_object, "source object is null" );
-	ASSERT( !m_area_limits.source_object, "area limits source object already set" );
+	ASSERT( m_area_limits.source_objects.find( source_object ) == m_area_limits.source_objects.end(), "area limits source object already set" );
 	//Log( "Setting area limits by object " + source_object->GetName() );
 	m_area_limits.enabled = true;
-	m_area_limits.source_object = source_object;
+	m_area_limits.source_objects.insert( source_object );
 	source_object->AddAreaLimitsChild( this );
 	m_area_limits.limits = {};
 	UpdateAreaLimits();
@@ -1100,6 +1111,13 @@ void UIObject::RemoveAreaLimitsChild( UIObject* child_object ) {
 	auto it = m_area_limits.child_objects.find( child_object );
 	ASSERT( it != m_area_limits.child_objects.end(), "area limits child not found" );
 	m_area_limits.child_objects.erase( it );
+}
+
+void UIObject::ClearAreaLimits() {
+	if ( m_area_limits.enabled ) {
+		m_area_limits.enabled = false;
+		UpdateAreaLimits();
+	}
 }
 
 void UIObject::SetFocusable( bool is_focusable ) {
@@ -1122,14 +1140,23 @@ void UIObject::Refresh() {
 
 void UIObject::UpdateAreaLimits() {
 	if ( m_area_limits.enabled && GetOverflow() != OVERFLOW_VISIBLE_ALWAYS ) {
-		if ( m_area_limits.source_object ) {
-			const auto area = m_area_limits.source_object->GetInternalObjectArea();
-			m_area_limits.limits = {
-				area.left + m_overflow_margin,
-				area.top + m_overflow_margin,
-				area.right - m_overflow_margin,
-				area.bottom - m_overflow_margin
+		if ( !m_area_limits.source_objects.empty() ) {
+			const auto* g = g_engine->GetGraphics();
+			m_area_limits.limits = { // TODO: better z?
+				0.0f,
+				0.0f,
+				(coord_t) g->GetViewportWidth(),
+				(coord_t) g->GetViewportHeight()
 			};
+			for ( auto& source_object : m_area_limits.source_objects ) { // find the smallest box from all source objects
+				const auto area = source_object->GetInternalObjectArea();
+				m_area_limits.limits = {
+					std::max< coord_t >( m_area_limits.limits.left, area.left + m_overflow_margin ),
+					std::max< coord_t >( m_area_limits.limits.top, area.top + m_overflow_margin ),
+					std::min< coord_t >( m_area_limits.limits.right, area.right - m_overflow_margin ),
+					std::min< coord_t >( m_area_limits.limits.bottom, area.bottom - m_overflow_margin )
+				};
+			}
 		}
 		scene::actor::Mesh::area_limits_t limits = { // TODO: better z?
 			{ ClampX( m_area_limits.limits.left ), ClampY( m_area_limits.limits.top ), -1.0f },

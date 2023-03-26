@@ -104,7 +104,7 @@ void Label::Align() {
 		m_actor->SetPosition({
 			ClampX( xpos ),
 			ClampY( ypos ),
-			-1.0,
+			m_absolute_z_index,
 		});
 	}
 }
