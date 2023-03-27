@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <map>
 
 #include "ScrollView.h"
 
@@ -46,11 +47,14 @@ CLASS( TextView, ScrollView )
 	void SelectNextLine();
 	void SelectPreviousPage();
 	void SelectNextPage();
+	size_t SelectByMask( std::string mask ); // returns number of matched characters
 	
 protected:
 	void ApplyStyle();
 	
 private:
+	
+	typedef ssize_t index_t;
 	
 	textview_type_t m_type = TT_SIMPLE;
 	size_t m_lines_limit = 200;
@@ -72,7 +76,9 @@ private:
 		std::string line_class;
 	};
 	std::vector< line_t > m_lines = {};
-	std::unordered_map< std::string, ssize_t > m_lines_indices = {};
+	typedef std::map< std::string, index_t > lines_indices_t;
+	lines_indices_t m_lines_indices = {}; // ordered because of SelectByMask()
+	lines_indices_t m_lines_indices_ci = {}; // uppercase lines for case-insensitive matches
 	
 	std::vector< UIObject* > m_items = {}; // Label objects for TT_SIMPLE, TextLine objects for TT_EXTENDED
 	
@@ -81,9 +87,9 @@ private:
 	TextLine* m_active_textline = nullptr;
 	bool m_maybe_doubleclick = false;
 	util::Timer m_doubleclick_timer;
-	void SelectItem( const ssize_t index );
+	void SelectItem( const index_t index );
 	
-	ssize_t m_current_index = -1;
+	index_t m_current_index = -1;
 	void AddItem( const size_t index, const line_t& line );
 	void AlignItem( UIObject* item, const size_t top );
 	void RemoveItem( const size_t index );

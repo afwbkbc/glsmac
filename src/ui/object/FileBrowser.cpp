@@ -15,12 +15,16 @@ void FileBrowser::Create() {
 	NEW( m_file_list, TextView, "PopupFileList" );
 		m_file_list->SetType( TextView::TT_EXTENDED );
 		m_file_list->On( UIEvent::EV_CHANGE, EH( this ) {
-			m_input->SetValue( data->value.list_item.text_ptr ? *data->value.list_item.text_ptr : "" );
+			const std::string v = data->value.text.ptr ? *data->value.text.ptr : "";
+			m_input->SetHint( v );
+			if ( !m_is_typing ) {
+				m_input->SetValue( v != util::FS::GetUpDirString() ? v : "" );
+			}
 			return true;
 		});
 		m_file_list->On( UIEvent::EV_SELECT, EH( this ) {
-			ASSERT( data->value.list_item.text_ptr, "null text ptr in select event data" );
-			SelectItem( *data->value.list_item.text_ptr );
+			ASSERT( data->value.text.ptr, "null text ptr in select event data" );
+			SelectItem( *data->value.text.ptr );
 			return true;
 		});
 	AddChild( m_file_list );
@@ -28,6 +32,19 @@ void FileBrowser::Create() {
 	NEW( m_input, Input, "PopupFileListInput" );
 		m_input->SetZIndex( 0.8f ); // TODO: fix z index bugs
 		m_input->SetMaxLength( 128 ); // TODO: make scrollable horizontally when overflowed
+		m_input->On( UIEvent::EV_CHANGE, EH( this ) {
+			ASSERT( data->value.text.ptr, "input changed but test ptr is null" );
+			m_is_typing = true; // prevent input value change while typing
+			if ( m_file_list->SelectByMask( *data->value.text.ptr ) == m_input->GetValue().size() ) { // full match
+				m_input->SetHint( m_file_list->GetSelectedText() );
+				m_input->SetValue( m_file_list->GetSelectedText().substr( 0, m_input->GetValue().size() ) ); // fix case
+			}
+			else {
+				m_input->SetHint( "" ); // no full match, hint is invalid
+			}
+			m_is_typing = false;
+			return true;
+		});
 	AddChild( m_input );
 	
 	On( UIEvent::EV_KEY_DOWN, EH( this ) {
@@ -55,6 +72,10 @@ void FileBrowser::Create() {
 				}
 				case UIEvent::K_END: {
 					m_file_list->SelectLastLine();
+					break;
+				}
+				case UIEvent::K_TAB: {
+					m_input->SetValue( m_file_list->GetSelectedText() );
 					break;
 				}
 				case UIEvent::K_ENTER: {
@@ -106,7 +127,7 @@ void FileBrowser::ChangeDirectory( const std::string& directory ) {
 		
 		// directory up
 		if ( m_current_directory != "" ) {
-			m_file_list->AddLine( "..", cls + "DirUp" );
+			m_file_list->AddLine( util::FS::GetUpDirString(), cls + "DirUp" );
 		}
 		
 		// directories
@@ -122,14 +143,22 @@ void FileBrowser::ChangeDirectory( const std::string& directory ) {
 				m_file_list->AddLine( item.substr( m_current_directory.size() + 1 ), cls + "File" );
 			}
 		}
+		
+		m_input->SetValue( "" );
+		m_input->SetHint( util::FS::GetUpDirString() );
 	}
 }
 
-void FileBrowser::SelectItem( const std::string& item ) {
+void FileBrowser::SelectItem( std::string item ) {
+	
+	if ( item.empty() ) {
+		item = m_file_list->GetSelectedText();
+	}
+	
 	const std::string sep = util::FS::GetPathSeparator();
 	const std::string path = m_current_directory + sep + item;
 	
-	if ( item == ".." ) {
+	if ( item == util::FS::GetUpDirString() ) {
 		//Log( "Selected directory up" );
 		const auto pos = m_current_directory.rfind( sep ); // TODO: check on windows
 		if ( pos == std::string::npos ) {
@@ -158,7 +187,7 @@ void FileBrowser::SelectItem( const std::string& item ) {
 		) {
 			//Log( "Selected file: " + path );
 			UIEvent::event_data_t data = {};
-			data.value.list_item.text_ptr = &path;
+			data.value.text.ptr = &path;
 			Trigger( UIEvent::EV_SELECT, &data );
 			
 		}

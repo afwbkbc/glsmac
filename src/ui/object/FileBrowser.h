@@ -31,7 +31,8 @@ private:
 	
 	std::vector< std::string > m_selection_stack = {};
 	
-	void SelectItem( const std::string& item );
+	void SelectItem( std::string item );
+	bool m_is_typing = false;
 	
 	TextView* m_file_list = nullptr;
 	Input* m_input = nullptr;

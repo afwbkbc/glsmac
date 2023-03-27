@@ -86,6 +86,7 @@ CLASS( Style, base::Base )
 		A_TEXT_ALIGN,
 		A_TEXT_LEFT,
 		A_TEXT_COLOR,
+		A_HINT_COLOR,
 		
 		// sounds
 		A_SOUND,

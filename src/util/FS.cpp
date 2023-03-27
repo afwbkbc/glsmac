@@ -20,6 +20,10 @@ namespace util {
 		return PATH_SEPARATOR;
 	}
 
+	const std::string FS::GetUpDirString() {
+		return "..";
+	}
+	
 	const std::string FS::GetCurrentDirectory() {
 		return std::filesystem::current_path().string();
 	}

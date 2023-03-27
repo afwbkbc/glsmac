@@ -195,6 +195,7 @@ void Popup::AddStyles() {
 	
 	AddStyle( "PopupFileListInput", { "PopupBorder" }, SH() {
 		s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 92, 124, 188 ) );
+		s->SetColor( Style::A_HINT_COLOR, Color::FromRGBA( 92, 124, 188, 127 ) );
 		s->SetFont( Style::A_FONT, "arialn.ttf", 18 );
 		s->Set( Style::A_HEIGHT, 22 );
 		s->Set( Style::A_ALIGN, UIObject::ALIGN_HCENTER | UIObject::ALIGN_BOTTOM );

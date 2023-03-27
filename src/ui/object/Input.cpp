@@ -15,15 +15,16 @@ Input::Input( const std::string& class_name ) : Panel( class_name ) {
 void Input::Create() {
 	Panel::Create();
 	
-	NEW( m_label, Label );
-		m_label->SetText( m_value );
-		m_label->SetMargin( 5 ); // TODO: align properly
-		m_label->ForwardStyleAttributesV({
-			Style::A_FONT,
-			Style::A_TEXT_COLOR,
-		});
-		m_label->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_BOTTOM );
-	AddChild( m_label );
+	NEW( m_value_label, Label );
+		m_value_label->SetText( m_value );
+		m_value_label->SetMargin( 5 ); // TODO: align properly
+		m_value_label->ForwardStyleAttributesM( m_forwarded_style_attributes.value_label );
+		m_value_label->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_BOTTOM );
+	AddChild( m_value_label );
+	
+	if ( !m_hint.empty() ) {
+		UpdateHintLabel();
+	}
 	
 	SetFocusable( true );
 	
@@ -47,8 +48,13 @@ void Input::Iterate() {
 void Input::Destroy() {
 	m_cursor_blink_timer.Stop();
 	
-	RemoveChild( m_label );
-	m_label = nullptr;
+	RemoveChild( m_value_label );
+	m_value_label = nullptr;
+	
+	if ( m_hint_label ) {
+		RemoveChild( m_hint_label );
+		m_hint_label = nullptr;
+	}
 	
 	Panel::Destroy();
 }
@@ -64,6 +70,13 @@ const std::string& Input::GetValue() const {
 	return m_value;
 }
 
+void Input::SetHint( const std::string& hint ) {
+	if ( m_hint != hint ) {
+		m_hint = hint;
+		UpdateHintLabel();
+	}
+}
+
 void Input::SetMaxLength( const size_t max_length ) {
 	if ( max_length != m_max_length ) {
 		m_max_length = max_length;
@@ -73,26 +86,47 @@ void Input::SetMaxLength( const size_t max_length ) {
 	}
 }
 
+void Input::Clear() {
+	SetValue( "" );
+	SetHint( "" );
+}
+
 bool Input::OnKeyDown( const UIEvent::event_data_t* data ) {
 	if ( data->key.code == UIEvent::K_BACKSPACE ) {
 		if ( !m_value.empty() ) {
 			m_value = m_value.substr( 0, m_value.size() - 1 );
-			UpdateValueLabel();
+			UpdateValueLabel( true );
 		}
 	}
 	else if ( data->key.is_printable ) {
 		if ( m_max_length > 0 && m_value.size() < m_max_length - 1 ) {
 			m_value += std::string( 1, data->key.key );
-			UpdateValueLabel();
+			UpdateValueLabel( true );
 		}
 	}
 	return true;
 }
 
-void Input::UpdateValueLabel() {
-	if ( m_label ) {
-		m_label->SetText( m_value + m_cursor_blink_value );
+void Input::UpdateValueLabel( const bool send_event ) {
+	if ( m_value_label ) {
+		m_value_label->SetText( m_value + m_cursor_blink_value );
+		if ( send_event ) {
+			UIEvent::event_data_t data = {};
+			data.value.text.ptr = &m_value;
+			Trigger( UIEvent::EV_CHANGE, &data );
+		}
 	}
+}
+
+void Input::UpdateHintLabel() {
+	if ( !m_hint_label ) {
+		NEW( m_hint_label, Label );
+			m_hint_label->SetMargin( 5 ); // TODO: align properly
+			m_hint_label->ForwardStyleAttributesM( m_forwarded_style_attributes.hint_label );
+			m_hint_label->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_BOTTOM );
+		AddChild( m_hint_label );
+	}
+	m_hint_label->SetText( m_hint );
 }
 
 void Input::Focus() {

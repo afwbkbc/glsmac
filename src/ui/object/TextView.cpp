@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "TextView.h"
 
 #include "engine/Engine.h"
@@ -83,11 +85,12 @@ void TextView::Clear() {
 	
 	if ( m_type == TT_EXTENDED ) {
 		m_lines_indices.clear();
+		m_lines_indices_ci.clear();
 		m_current_index = -1;
 		if ( m_active_textline ) {
 			m_active_textline = nullptr;
 			UIEvent::event_data_t d = {};
-			d.value.list_item.text_ptr = nullptr;
+			d.value.text.ptr = nullptr;
 			Trigger( UIEvent::EV_CHANGE, &d );
 		}
 	}
@@ -95,13 +98,16 @@ void TextView::Clear() {
 
 void TextView::AddLine( const std::string& text, const std::string& line_class ) {
 	ASSERT( line_class.empty() || m_type == TT_EXTENDED, "can't assign line class for simple text view" );
-	const ssize_t index = m_lines.size();
+	const index_t index = m_lines.size();
 	m_lines.push_back({
 		text,
 		line_class
 	});
 	if ( m_type == TT_EXTENDED ) {
 		m_lines_indices[ text ] = index;
+		std::string text_ci = text;
+		std::transform( text_ci.begin(), text_ci.end(), text_ci.begin(), ::toupper );
+		m_lines_indices_ci[ text_ci ] = index;
 	}
 	if ( m_created ) {
 		AddItem( index, m_lines.back() );
@@ -112,9 +118,19 @@ void TextView::AddLine( const std::string& text, const std::string& line_class )
 void TextView::RemoveLine( const size_t index ) {
 	ASSERT( index < m_lines.size(), "line out of bounds" );
 	if ( m_type == TT_EXTENDED ) {
-		const auto it = m_lines_indices.find( m_lines.at( index ).text );
-		if ( it != m_lines_indices.end() ) {
-			m_lines_indices.erase( it );
+		std::string t = m_lines.at( index ).text;
+		{
+			const auto it = m_lines_indices.find( t );
+			if ( it != m_lines_indices.end() ) {
+				m_lines_indices.erase( it );
+			}
+		}
+		std::transform( t.begin(), t.end(), t.begin(), ::toupper );
+		{
+			const auto it = m_lines_indices_ci.find( t );
+			if ( it != m_lines_indices_ci.end() ) {
+				m_lines_indices_ci.erase( it );
+			}
 		}
 	}
 	m_lines.erase( m_lines.begin() + index );
@@ -161,6 +177,9 @@ void TextView::SelectPreviousLine() {
 		if ( m_current_index > 0 ) {
 			SelectItem( m_current_index - 1 );
 		}
+		else {
+			SelectItem( m_current_index );
+		}
 	}
 }
 
@@ -169,6 +188,9 @@ void TextView::SelectNextLine() {
 	if ( !m_items.empty() ) {
 		if ( m_current_index < m_items.size() - 1 ) {
 			SelectItem( m_current_index + 1 );
+		}
+		else {
+			SelectItem( m_current_index );
 		}
 	}
 }
@@ -200,6 +222,49 @@ void TextView::SelectNextPage() {
 	}
 }
 
+size_t TextView::SelectByMask( std::string mask ) {
+	std::transform( mask.begin(), mask.end(), mask.begin(), ::toupper );
+	ASSERT( m_type == TT_EXTENDED, "can only select page in extended text view" );
+	index_t best_candidate = -1;
+	size_t i = 0;
+	size_t match_size = 0;
+	for ( auto& line_index : m_lines_indices_ci ) {
+		const std::string& value = line_index.first;
+		//Log( "Comparing " + mask + " to " + value );
+		
+		// TODO: optimize?
+		
+		if ( match_size && memcmp( mask.c_str(), value.c_str(), match_size ) ) {
+			// beginning doesn't match already, can't be candidate
+			continue;
+		}
+			
+		for ( i = match_size ; i < value.size() ; i++ ) {
+			if ( mask[ i ] != value[ i ] ) {
+				break;
+			}
+		}
+		if ( i == match_size ) {
+			continue;
+		}
+		
+		best_candidate = line_index.second;
+		match_size = i;
+		if ( i == value.size() && i == mask.size() ) {
+			// full match, no need to search further
+			break;
+		}
+	}
+	if ( best_candidate >= 0 ) {
+		//Log( "Best match for " + mask + " : " + m_lines[ best_candidate ].text );
+		SelectItem( best_candidate );
+	}
+	else {
+		SelectFirstLine();
+	}
+	return match_size;
+}
+
 void TextView::ApplyStyle() {
 	ScrollView::ApplyStyle();
 	
@@ -218,7 +283,7 @@ void TextView::ApplyStyle() {
 	}
 }
 
-void TextView::SelectItem( const ssize_t index ) {
+void TextView::SelectItem( const index_t index ) {
 	ASSERT( m_type == TT_EXTENDED, "can only select line in extended text view" );
 	ASSERT( index >= 0, "index can't be negative" );
 	ASSERT( index < m_items.size(), "index overflow" );
@@ -235,7 +300,7 @@ void TextView::SelectItem( const ssize_t index ) {
 		ScrollToObjectMaybe( m_active_textline );
 		m_active_textline->AddStyleModifier( Style::M_SELECTED );
 		UIEvent::event_data_t d = {};
-		d.value.list_item.text_ptr = textline->GetTextPtr();
+		d.value.text.ptr = textline->GetTextPtr();
 		Trigger( UIEvent::EV_CHANGE, &d );
 	}
 }
@@ -272,7 +337,7 @@ void TextView::AddItem( const size_t index, const line_t& line ) {
 						}
 						if ( is_double_click ) {
 							UIEvent::event_data_t d = {};
-							d.value.list_item.text_ptr = textline->GetTextPtr();
+							d.value.text.ptr = textline->GetTextPtr();
 							Trigger( UIEvent::EV_SELECT, &d );
 						}
 						return true;
@@ -323,7 +388,7 @@ void TextView::RemoveItem( const size_t index ) {
 		m_current_index = -1;
 		m_active_textline = nullptr;
 		UIEvent::event_data_t d = {};
-		d.value.list_item.text_ptr = nullptr;
+		d.value.text.ptr = nullptr;
 		Trigger( UIEvent::EV_CHANGE, &d );
 	}
 	RemoveChild( item );

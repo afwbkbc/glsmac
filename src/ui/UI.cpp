@@ -196,7 +196,12 @@ void UI::ProcessEvent( UIEvent* event ) {
 	TriggerGlobalEventHandlers( GH_BEFORE, event );
 	
 	if ( event->m_type == UIEvent::EV_KEY_DOWN ) {
-		if ( m_focused_object && !event->m_data.key.modifiers && ( event->m_data.key.code == UIEvent::K_TAB ) ) {
+		if (
+			m_focused_object &&
+			m_focusable_objects.size() > 1 &&
+			!event->m_data.key.modifiers &&
+			( event->m_data.key.code == UIEvent::K_TAB )
+		) {
 			FocusNextObject();
 			event->SetProcessed();
 		}

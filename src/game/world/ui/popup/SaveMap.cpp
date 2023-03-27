@@ -23,7 +23,7 @@ void SaveMap::Create() {
 		m_file_browser->SetBottom( 66 );
 		m_file_browser->SetRight( 6 );
 		m_file_browser->On( UIEvent::EV_SELECT, EH( this ) {
-			SelectFile( *data->value.list_item.text_ptr );
+			SelectFile( *data->value.text.ptr );
 			return true;
 		});
 	AddChild( m_file_browser );
