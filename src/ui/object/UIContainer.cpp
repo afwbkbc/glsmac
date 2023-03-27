@@ -175,23 +175,25 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 		}
 	}
 	
-	bool is_processed;
+	bool is_processed = false;
 	if ( event->m_flags & UIEvent::EF_MOUSE ) {
 		for ( auto& c : m_child_objects ) {
 			if (
-				( event->m_type == UIEvent::EV_MOUSE_MOVE ) || // mousemove needs to be send to all objects for mouseout events to work
-				c->IsPointInside( event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y ) // other events - only to those actually under mouse pointer
+				( event->m_type == UIEvent::EV_MOUSE_MOVE ) || // mousemove needs to be sent to all objects for mouseout events to work
+				( // other events - only until handled and only to those actually under mouse pointer
+					!is_processed &&
+					c->IsPointInside( event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y )
+				)
 			) {
 				NEWV( child_event, UIEvent, event );
 				c->ProcessEvent( child_event );
 				is_processed = child_event->IsProcessed();
 				DELETE( child_event );
-				if ( is_processed ) {
-					event->SetProcessed();
-					return;
-				}
 			}
 		}
+	}
+	if ( is_processed ) {
+		event->SetProcessed();
 	}
 	
 	if (( event->m_flags & UIEvent::EF_KEYBOARD ) == UIEvent::EF_KEYBOARD ) {
@@ -210,7 +212,10 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 
 	if ( event->m_flags & UIEvent::EF_MOUSE ) {
 		// mouse events are processed by children before parent
-		if ( !event->IsProcessed() ) {
+		if (
+			( event->m_type == UIEvent::EV_MOUSE_MOVE ) || // mousemove needs to be sent to all objects for mouseout events to work
+			!event->IsProcessed()
+		) {
 			UIObject::ProcessEvent( event );
 		}
 	}
