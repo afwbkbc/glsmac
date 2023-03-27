@@ -17,7 +17,14 @@ CLASS( FilePopup, OkCancelPopup )
 		FM_WRITE
 	};
 	
-	FilePopup( World* world, const std::string& title, const file_mode_t file_mode, const std::string& default_directory = "" );
+	FilePopup(
+		World* world,
+		const std::string& title,
+		const file_mode_t file_mode,
+		const std::string& default_directory = "",
+		const std::string& file_extension = "",
+		const std::string& default_filename = ""
+	);
 	
 	void Create();
 	void Destroy();
@@ -31,6 +38,8 @@ private:
 	const std::string m_title = "";
 	const file_mode_t m_file_mode = FM_NONE;
 	const std::string m_default_directory = "";
+	const std::string m_file_extension = "";
+	const std::string m_default_filename = "";
 	
 	::ui::object::FileBrowser* m_file_browser = nullptr;
 

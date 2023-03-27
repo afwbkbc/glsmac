@@ -6,7 +6,7 @@ namespace ui {
 namespace popup {
 
 SaveMap::SaveMap( World* world )
-	: FilePopup( world, "SAVE MAP", FM_WRITE, "maps" )
+	: FilePopup( world, "SAVE MAP", FM_WRITE, "maps", ".gsm", "untitled" )
 {
 	
 }

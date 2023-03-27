@@ -17,6 +17,12 @@ CLASS( FileBrowser, UIContainer )
 	// directory to show first
 	void SetDefaultDirectory( const std::string& default_directory );
 
+	// force specific file extension
+	void SetFileExtension( const std::string& file_extension );
+	
+	// specify default file name (without extension)
+	void SetDefaultFileName( const std::string& default_filename );
+	
 	// whether to allow selecting existing files only, or any file
 	void SetExistingOnly( bool existing_only );
 
@@ -28,6 +34,8 @@ CLASS( FileBrowser, UIContainer )
 	
 private:
 	std::string m_default_directory = "";
+	std::string m_file_extension = "";
+	std::string m_default_filename = "";
 	
 	std::string m_current_directory = "";
 	void ChangeDirectory( std::string directory );

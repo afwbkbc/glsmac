@@ -10,6 +10,20 @@ void FileBrowser::SetDefaultDirectory( const std::string& default_directory ) {
 	m_default_directory = default_directory;
 }
 
+// force specific file extension
+void FileBrowser::SetFileExtension( const std::string& file_extension ) {
+	ASSERT( !m_file_list, "can't change file extension after initialization" );
+	if ( !file_extension.empty() ) {
+		ASSERT( file_extension[ 0 ] == '.', "file extension must start with ." );
+	}
+	m_file_extension = file_extension;
+}
+
+void FileBrowser::SetDefaultFileName( const std::string& default_filename ) {
+	ASSERT( !m_file_list, "can't change default filename after initialization" );
+	m_default_filename = default_filename;
+}
+
 void FileBrowser::SetExistingOnly( bool existing_only ) {
 	m_existing_only = existing_only;
 }
@@ -49,7 +63,33 @@ void FileBrowser::Create() {
 				m_input->SetValue( m_file_list->GetSelectedText().substr( 0, m_input->GetValue().size() ) ); // fix case
 			}
 			else {
-				m_input->SetHint( "" ); // no full match, hint is invalid
+				// no full match, hint is invalid
+				const auto& v = m_input->GetValue();
+				bool hint_set = false;
+				if (
+					!v.empty() &&
+					!m_file_extension.empty()
+				) {
+					// hint extension if possible/applicable
+					const auto pos = v.find( '.' );
+					if ( pos == std::string::npos ) {
+						m_input->SetHint( v + m_file_extension );
+						hint_set = true;
+					}
+					else {
+						// compare ending of input with beginning of extension
+						const auto ext_len = v.size() - pos;
+						if ( ext_len <= m_file_extension.size() && !memcmp( v.c_str() + pos, m_file_extension.c_str(), ext_len ) ) {
+							// matching extension is typed
+							m_input->SetHint( v + m_file_extension.substr( ext_len ) );
+							hint_set = true;
+						}
+					}
+				}
+				
+				if ( !hint_set ) {
+					m_input->SetHint( "" );
+				}
 			}
 			m_is_typing = false;
 			return true;
@@ -103,7 +143,20 @@ void FileBrowser::Create() {
 		return false;
 	});
 	
+	m_selection_stack.clear();
+	size_t oldpos = 0, pos = 0;
+	const auto sep = util::FS::GetPathSeparator();
+	while ( ( pos = m_default_directory.find( sep, oldpos ) ) != std::string::npos ) {
+		m_selection_stack.push_back( m_default_directory.substr( oldpos, pos - oldpos ) );
+		//Log( "Path part: " + m_selection_stack.back() );
+		oldpos = pos + 1;
+	}
+	m_selection_stack.push_back( m_default_directory.substr( oldpos ) );
+	//Log( "Path part: " + m_selection_stack.back() );
+	
 	ChangeDirectory( m_default_directory );
+	
+	m_input->SetValue( m_default_filename + m_file_extension );
 }
 
 void FileBrowser::Destroy() {
