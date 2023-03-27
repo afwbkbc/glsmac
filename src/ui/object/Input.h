@@ -23,8 +23,10 @@ CLASS( Input, Panel )
 	
 	void SetValue( const std::string& value );
 	const std::string& GetValue() const;
-	void SetHint( const std::string& hint );
 	void SetMaxLength( const size_t max_length );
+	
+	void SetHint( const std::string& hint );
+	const std::string& GetHint() const;
 	
 	void Clear();
 	

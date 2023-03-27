@@ -77,6 +77,10 @@ void Input::SetHint( const std::string& hint ) {
 	}
 }
 
+const std::string& Input::GetHint() const {
+	return m_hint;
+}
+
 void Input::SetMaxLength( const size_t max_length ) {
 	if ( max_length != m_max_length ) {
 		m_max_length = max_length;

@@ -77,10 +77,10 @@ namespace util {
 
 #ifdef _WIN32
 	std::vector< std::string > FS::ListDirectory( std::string directory, const bool return_absolute_paths ) {
+		ASSERT_NOLOG( !directory.empty(), "directory is empty" );
 #else
 	std::vector< std::string > FS::ListDirectory( const std::string& directory, const bool return_absolute_paths ) {
 #endif
-		ASSERT_NOLOG( !directory.empty(), "directory is empty" );
 		std::vector< std::string > result = {};
 
 		try {

@@ -75,7 +75,10 @@ void FileBrowser::Create() {
 					break;
 				}
 				case UIEvent::K_TAB: {
-					m_input->SetValue( m_file_list->GetSelectedText() );
+					const auto& hint = m_input->GetHint();
+					if ( !hint.empty() ) {
+						m_input->SetValue( hint );
+					}
 					break;
 				}
 				case UIEvent::K_ENTER: {

@@ -155,17 +155,19 @@ char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 		if ( code >= '0' && code <= '9' && !is_shift ) { // numbers
 			result = code;
 		}
-		else if ( // allowed symbols
-			(
-				code == ' ' ||
-				code == '.' ||
-				code == '_' ||
-				code == ':'
-			)
-			&& !is_shift
-		)
-		{
+		else if ( !is_shift && (
+			code == ' ' ||
+			code == '.' ||
+			code == '-' ||
+			code == ';'
+		)) {
 			result = code;
+		}
+		else if ( is_shift && code == '-' ) {
+			result = '_';
+		}
+		else if ( is_shift && code == ';' ) {
+			result = ':';
 		}
 		else if ( code >= 'a' && code <= 'z' ) { // letters
 			result = code;
