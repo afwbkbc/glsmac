@@ -48,6 +48,7 @@ void FilePopup::Create() {
 		m_file_browser->SetDefaultFileName( m_default_filename );
 		m_file_browser->On( UIEvent::EV_SELECT, EH( this ) {
 			const auto& path = *data->value.text.ptr;
+			OnFileSelect( path );
 			return true;
 		});
 	AddChild( m_file_browser );

@@ -21,3 +21,4 @@ _deps
 .vscode
 /tmp
 *.ninja*
+/maps

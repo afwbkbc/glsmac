@@ -20,6 +20,8 @@ CLASS( Messages, MiddleAreaPage )
 	void Destroy();
 	void Align();
 	
+	void AddMessage( const std::string& text );
+	
 private:
 	object::TextView* m_messages_list = nullptr;
 	

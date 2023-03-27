@@ -243,12 +243,12 @@ void FileBrowser::SelectItem( std::string item ) {
 	
 	const std::string sep = util::FS::GetPathSeparator();
 #ifdef _WIN32
-	const std::string path = ( m_current_directory.empty() && util::FS::IsWindowsDriveLabel(item) )
+	std::string path = ( m_current_directory.empty() && util::FS::IsWindowsDriveLabel(item) )
 		? item
 		: m_current_directory + sep + item
 	;
 #else
-	const std::string path = m_current_directory + sep + item;
+	std::string path = m_current_directory + sep + item;
 #endif
 	
 	if ( item == util::FS::GetUpDirString() ) {
@@ -274,23 +274,28 @@ void FileBrowser::SelectItem( std::string item ) {
 			m_selection_stack.push_back( item );
 			ChangeDirectory( path );
 		}
-		else if (
+		else {
+			if ( !m_file_extension.empty() && path.find( '.' ) == std::string::npos ) {
+				path += m_file_extension;
+			}
+			if (
 #ifdef _WIN32
-			!m_current_directory.empty() && // can't read/write files outside of drives
+				!m_current_directory.empty() && // can't read/write files outside of drives
 #endif
-			(
-				util::FS::IsFile( path ) ||
 				(
-					!m_existing_only &&
-					!util::FS::Exists( path )
+					util::FS::IsFile( path ) ||
+					(
+						!m_existing_only &&
+						!util::FS::Exists( path )
+					)
 				)
-			)
-		) {
-			//Log( "Selected file: " + path );
-			UIEvent::event_data_t data = {};
-			data.value.text.ptr = &path;
-			Trigger( UIEvent::EV_SELECT, &data );
-			
+			) {
+				//Log( "Selected file: " + path );
+				UIEvent::event_data_t data = {};
+				data.value.text.ptr = &path;
+				Trigger( UIEvent::EV_SELECT, &data );
+
+			}
 		}
 	}
 }

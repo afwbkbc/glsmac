@@ -46,6 +46,11 @@ void Messages::Align() {
 	
 }
 
+void Messages::AddMessage( const std::string& text ) {
+	ASSERT( m_messages_list, "messages list not initialied" );
+	m_messages_list->AddLine( text );
+}
+
 }
 }
 }

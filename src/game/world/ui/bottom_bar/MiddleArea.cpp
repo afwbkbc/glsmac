@@ -78,6 +78,11 @@ void MiddleArea::Destroy() {
 	BBSection::Destroy();
 }
 
+void MiddleArea::AddMessage( const std::string& text ) {
+	m_pages.messages->AddMessage( text );
+	SwitchPage( m_buttons.messages, m_pages.messages );
+}
+
 void MiddleArea::SwitchPage( ::ui::Button* active_button, MiddleAreaPage* active_page ) {
 	if ( m_active_button != active_button ) {
 		if ( m_active_button ) {

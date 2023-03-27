@@ -226,6 +226,10 @@ const size_t BottomBar::GetMiddleHeight() const {
 	;
 }
 
+void BottomBar::AddMessage( const std::string& text ) {
+	m_sections.middle_area->AddMessage( text );
+}
+
 }
 }
 }

@@ -1,4 +1,5 @@
 #include "SaveMap.h"
+#include "game/world/World.h"
 
 namespace game {
 namespace world {
@@ -12,7 +13,8 @@ SaveMap::SaveMap( World* world )
 }
 
 void SaveMap::OnFileSelect( const std::string& path ) {
-	Log( "Selected file: " + path );
+	m_world->SaveMap( path );
+	Close();
 }
 
 }

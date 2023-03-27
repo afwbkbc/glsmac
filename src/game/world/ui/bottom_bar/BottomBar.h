@@ -45,6 +45,8 @@ CLASS( BottomBar, UI )
 	
 	const size_t GetMiddleHeight() const;
 	
+	void AddMessage( const std::string& text );
+	
 private:
 	struct {
 		Surface* left = nullptr;

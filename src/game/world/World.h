@@ -90,6 +90,9 @@ CLASS( World, base::Task )
 	const size_t GetBottomBarMiddleHeight() const;
 	const size_t GetViewportHeight() const;
 	
+	void AddMessage( const std::string& text );
+	void SaveMap( const std::string& path );
+	
 protected:
 
 private:

@@ -815,6 +815,16 @@ const size_t World::GetViewportHeight() const {
 	return m_viewport.height;
 }
 
+void World::SaveMap( const std::string& path ) {
+	FS::WriteFile( path, m_map->GetTilesPtr()->Serialize().ToString() );
+	AddMessage( "Map saved to " + path ); // TODO: checks of success
+}
+
+void World::AddMessage( const std::string& text ) {
+	ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
+	m_ui.bottom_bar->AddMessage( text );
+}
+
 void World::SelectTileAtPoint( const size_t x, const size_t y ) {
 	Log( "Looking up tile at " + std::to_string( x ) + "x" + std::to_string( y ) );
 	m_map->GetTileAtScreenCoords( x, m_viewport.window_height - y ); // async

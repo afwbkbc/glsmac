@@ -19,6 +19,8 @@ CLASS( MiddleArea, BBSection )
 	void Create();
 	void Destroy();
 	
+	void AddMessage( const std::string& text );
+	
 private:
 	
 	struct {
