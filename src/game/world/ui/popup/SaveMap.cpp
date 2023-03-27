@@ -22,6 +22,10 @@ void SaveMap::Create() {
 		m_file_browser->SetLeft( 6 );
 		m_file_browser->SetBottom( 66 );
 		m_file_browser->SetRight( 6 );
+		m_file_browser->On( UIEvent::EV_SELECT, EH( this ) {
+			SelectFile( *data->value.list_item.text_ptr );
+			return true;
+		});
 	AddChild( m_file_browser );
 }
 
@@ -32,7 +36,11 @@ void SaveMap::Destroy() {
 }
 
 void SaveMap::OnOk() {
-	Log( "OK CLICKED" );
+	m_file_browser->SelectCurrentItem();
+}
+
+void SaveMap::SelectFile( const std::string& file ) {
+	Log( "Selected file: " + file );
 }
 
 }

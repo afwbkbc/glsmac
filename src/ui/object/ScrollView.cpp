@@ -26,13 +26,8 @@ void ScrollView::Create() {
 		});
 	m_viewport->AddChild( m_body );
 	
-	const auto f_scroll_y = [ this ]( float target ) -> void {
-		const float source = m_scroller.IsRunning() ? m_scroller.GetTargetPosition() : m_scroll.y;
-		m_scroller.Scroll( source, target );
-	};
-	
-	const auto f_handle_mouse_scroll = [ this, f_scroll_y ]( const UIEvent::event_data_t* data ) -> void {
-		f_scroll_y( m_scroll.y - (coord_t)data->mouse.scroll_y * m_scroll_speed );
+	const auto f_handle_mouse_scroll = [ this ]( const UIEvent::event_data_t* data ) -> void {
+		ScrollTo( m_scroll.y - (coord_t)data->mouse.scroll_y * m_scroll_speed );
 		if ( m_is_sticky ) {
 			m_need_stickyness = true;
 		}
@@ -123,7 +118,12 @@ void ScrollView::Iterate() {
 	
 	if ( !m_scroller.IsRunning() && m_need_stickyness ) {
 		m_need_stickyness = false;
-		m_scroller.Scroll( m_scroll.y, (ssize_t)round( m_scroll.y + m_scroll_speed / 2.0f ) / (ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed );
+		m_scroller.Scroll(
+			m_scroll.y,
+			(ssize_t) round( m_scroll.y + m_scroll_speed / 2.0f )
+				/
+			(ssize_t) m_scroll_speed * (ssize_t) m_scroll_speed
+		);
 	}
 	
 	while ( m_scroller.HasTicked() ) {
@@ -248,6 +248,21 @@ void ScrollView::SetInternalHeight( const coord_t px ) {
 	}
 }
 
+void ScrollView::ScrollToObjectMaybe( UIObject* object ) {
+	if ( object->GetTop() < m_scroll.y ) {
+		SetScrollY( object->GetTop() );
+	}
+	else {
+		const auto area = GetInternalObjectArea();
+		const auto& object_area = object->GetObjectArea();
+		const auto h = m_scroll.y + area.height;
+		const auto oh = object->GetTop() + object_area.height + 2; // TODO: why +2 ?
+		if ( oh > h ) {
+			SetScrollY( oh - area.height );
+		}
+	}
+}
+
 void ScrollView::UpdateInternalSize() {
 	if ( m_body ) {
 		if ( m_body->GetWidth() != m_internal_size.x ) {
@@ -266,9 +281,14 @@ const UIObject::coord_box_t ScrollView::GetScrollLimits() {
 		0, // left
 		0, // top
 		body_area.width - area.width + m_border_size * 2, // right
-		body_area.height - area.height + m_border_size * 2 // bottom
+		body_area.height - area.height + m_border_size * 2 + 2 // bottom // TODO: why + 2 ?
 	};
 }
+
+void ScrollView::ScrollTo( float target ) {
+	const float source = m_scroller.IsRunning() ? m_scroller.GetTargetPosition() : m_scroll.y;
+	m_scroller.Scroll( source, target );
+};
 
 void ScrollView::AddChildToBody( UIObject* child ) {
 	//child->SetOverflowMargin( m_border_size );

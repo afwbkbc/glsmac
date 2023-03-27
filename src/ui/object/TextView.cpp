@@ -12,8 +12,10 @@ void TextView::Create() {
 	
 	ApplyStyleIfNeeded(); // TODO: move to UIContainer?
 	
+	size_t index = 0;
 	for ( auto& line : m_lines ) {
-		AddItem( line );
+		AddItem( index, line );
+		index++;
 	}
 }
 
@@ -77,31 +79,44 @@ void TextView::Clear() {
 		RemoveChild( item );
 	}
 	m_items.clear();
-	
 	m_lines.clear();
-
-	if ( m_active_textline ) {
-		m_active_textline = nullptr;
-		UIEvent::event_data_t d = {};
-		d.value.text.ptr = nullptr;
-		Trigger( UIEvent::EV_CHANGE, &d );
+	
+	if ( m_type == TT_EXTENDED ) {
+		m_lines_indices.clear();
+		m_current_index = -1;
+		if ( m_active_textline ) {
+			m_active_textline = nullptr;
+			UIEvent::event_data_t d = {};
+			d.value.list_item.text_ptr = nullptr;
+			Trigger( UIEvent::EV_CHANGE, &d );
+		}
 	}
 }
 
 void TextView::AddLine( const std::string& text, const std::string& line_class ) {
 	ASSERT( line_class.empty() || m_type == TT_EXTENDED, "can't assign line class for simple text view" );
+	const ssize_t index = m_lines.size();
 	m_lines.push_back({
 		text,
 		line_class
 	});
+	if ( m_type == TT_EXTENDED ) {
+		m_lines_indices[ text ] = index;
+	}
 	if ( m_created ) {
-		AddItem( m_lines.back() );
+		AddItem( index, m_lines.back() );
 	}
 	LimitLines();
 }
 
 void TextView::RemoveLine( const size_t index ) {
 	ASSERT( index < m_lines.size(), "line out of bounds" );
+	if ( m_type == TT_EXTENDED ) {
+		const auto it = m_lines_indices.find( m_lines.at( index ).text );
+		if ( it != m_lines_indices.end() ) {
+			m_lines_indices.erase( it );
+		}
+	}
 	m_lines.erase( m_lines.begin() + index );
 	if ( m_created ) {
 		RemoveItem( index );
@@ -115,6 +130,73 @@ const std::string& TextView::GetSelectedText() const {
 	}
 	else {
 		return m_empty_value;
+	}
+}
+
+void TextView::SelectLine( const std::string& line ) {
+	ASSERT( m_type == TT_EXTENDED, "can only select line in extended text view" );
+	const auto it = m_lines_indices.find( line );
+	if ( it != m_lines_indices.end() ) {
+		SelectItem( it->second );
+	}
+}
+
+void TextView::SelectFirstLine() {
+	ASSERT( m_type == TT_EXTENDED, "can only select line in extended text view" );
+	if ( !m_items.empty() ) {
+		SelectItem( 0 );
+	}
+}
+
+void TextView::SelectLastLine() {
+	ASSERT( m_type == TT_EXTENDED, "can only select line in extended text view" );
+	if ( !m_items.empty() ) {
+		SelectItem( m_items.size() - 1 );
+	}
+}
+
+void TextView::SelectPreviousLine() {
+	ASSERT( m_type == TT_EXTENDED, "can only select line in extended text view" );
+	if ( !m_items.empty() ) {
+		if ( m_current_index > 0 ) {
+			SelectItem( m_current_index - 1 );
+		}
+	}
+}
+
+void TextView::SelectNextLine() {
+	ASSERT( m_type == TT_EXTENDED, "can only select line in extended text view" );
+	if ( !m_items.empty() ) {
+		if ( m_current_index < m_items.size() - 1 ) {
+			SelectItem( m_current_index + 1 );
+		}
+	}
+}
+
+// TODO: determine from actual items in ScrollView
+#define LINES_PER_PAGE 20
+
+void TextView::SelectPreviousPage() {
+	ASSERT( m_type == TT_EXTENDED, "can only select page in extended text view" );
+	if ( !m_items.empty() ) {
+		if ( m_current_index >= LINES_PER_PAGE ) {
+			SelectItem( m_current_index - LINES_PER_PAGE );
+		}
+		else {
+			SelectFirstLine();
+		}
+	}
+}
+
+void TextView::SelectNextPage() {
+	ASSERT( m_type == TT_EXTENDED, "can only select page in extended text view" );
+	if ( !m_items.empty() ) {
+		if ( m_current_index + LINES_PER_PAGE <= m_items.size() - 1 ) {
+			SelectItem( m_current_index + LINES_PER_PAGE );
+		}
+		else {
+			SelectLastLine();
+		}
 	}
 }
 
@@ -136,7 +218,29 @@ void TextView::ApplyStyle() {
 	}
 }
 
-void TextView::AddItem( const line_t& line ) {
+void TextView::SelectItem( const ssize_t index ) {
+	ASSERT( m_type == TT_EXTENDED, "can only select line in extended text view" );
+	ASSERT( index >= 0, "index can't be negative" );
+	ASSERT( index < m_items.size(), "index overflow" );
+	
+	auto* textline = (TextLine*) m_items[ index ];
+	ASSERT( textline, "textline is null" );
+	
+	if ( m_active_textline != textline ) {
+		if ( m_active_textline ) {
+			m_active_textline->RemoveStyleModifier( Style::M_SELECTED );
+		}
+		m_current_index = index;
+		m_active_textline = textline;
+		ScrollToObjectMaybe( m_active_textline );
+		m_active_textline->AddStyleModifier( Style::M_SELECTED );
+		UIEvent::event_data_t d = {};
+		d.value.list_item.text_ptr = textline->GetTextPtr();
+		Trigger( UIEvent::EV_CHANGE, &d );
+	}
+}
+
+void TextView::AddItem( const size_t index, const line_t& line ) {
 	//Log( "Adding line \"" + line.text + "\"" );
 	UIObject* item = nullptr;
 	switch ( m_type ) {
@@ -149,7 +253,7 @@ void TextView::AddItem( const line_t& line ) {
 		case TT_EXTENDED: {
 			NEWV( textline, TextLine, line.line_class );
 				textline->SetText( line.text );
-				textline->On( UIEvent::EV_MOUSE_DOWN, EH( this, textline ) {
+				textline->On( UIEvent::EV_MOUSE_DOWN, EH( this, index, textline ) {
 					if ( data->mouse.button == UIEvent::M_LEFT ) {
 						bool is_double_click = false;
 						if ( m_active_textline == textline && m_maybe_doubleclick ) {
@@ -163,20 +267,13 @@ void TextView::AddItem( const line_t& line ) {
 							m_doubleclick_timer.SetTimeout( DOUBLECLICK_MAX_MS );
 							m_maybe_doubleclick = true;
 						}
-						if ( m_active_textline != textline || is_double_click ) {
+						if ( m_active_textline != textline ) {
+							SelectItem( index );
+						}
+						if ( is_double_click ) {
 							UIEvent::event_data_t d = {};
-							d.value.text.ptr = textline->GetTextPtr();
-							if ( m_active_textline != textline ) {
-								if ( m_active_textline ) {
-									m_active_textline->RemoveStyleModifier( Style::M_SELECTED );
-								}
-								m_active_textline = textline;
-								m_active_textline->AddStyleModifier( Style::M_SELECTED );
-								Trigger( UIEvent::EV_CHANGE, &d );
-							}
-							if ( is_double_click ) {
-								Trigger( UIEvent::EV_SELECT, &d );
-							}
+							d.value.list_item.text_ptr = textline->GetTextPtr();
+							Trigger( UIEvent::EV_SELECT, &d );
 						}
 						return true;
 					}
@@ -197,6 +294,11 @@ void TextView::AddItem( const line_t& line ) {
 	);
 	AddChild( item );
 	m_items.push_back( item );
+	if ( m_type == TT_EXTENDED ) {
+		if ( m_current_index < 0 ) {
+			SelectItem( index );
+		}
+	}
 }
 
 void TextView::AlignItem( UIObject* item, const size_t top ) {
@@ -218,9 +320,10 @@ void TextView::RemoveItem( const size_t index ) {
 		item->SetTop( item->GetTop() - h );
 	}
 	if ( m_active_textline == item ) {
+		m_current_index = -1;
 		m_active_textline = nullptr;
 		UIEvent::event_data_t d = {};
-		d.value.text.ptr = nullptr;
+		d.value.list_item.text_ptr = nullptr;
 		Trigger( UIEvent::EV_CHANGE, &d );
 	}
 	RemoveChild( item );

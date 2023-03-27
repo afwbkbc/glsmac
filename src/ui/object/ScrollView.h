@@ -42,6 +42,9 @@ CLASS( ScrollView, Panel )
 	void SetInternalWidth( const coord_t px );
 	void SetInternalHeight( const coord_t px );
 
+protected:
+	void ScrollToObjectMaybe( UIObject* object );
+	
 private:
 	
 	size_t m_scroll_speed = 17;
@@ -54,6 +57,7 @@ private:
 	void UpdateInternalSize();
 	
 	const coord_box_t GetScrollLimits();
+	void ScrollTo( float target );
 	
 	std::vector< UIObject* > m_to_add = {};
 	std::vector< UIObject* > m_to_remove = {};
@@ -76,6 +80,7 @@ private:
 	void AddChildToBody( UIObject* child );
 	void RemoveChildFromBody( UIObject* child );
 	void FixScrollY();
+	
 };
 
 }

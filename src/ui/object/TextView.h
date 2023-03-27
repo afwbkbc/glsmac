@@ -39,6 +39,13 @@ CLASS( TextView, ScrollView )
 	
 	// for TT_EXTENDED
 	const std::string& GetSelectedText() const;
+	void SelectLine( const std::string& line );
+	void SelectFirstLine();
+	void SelectLastLine();
+	void SelectPreviousLine();
+	void SelectNextLine();
+	void SelectPreviousPage();
+	void SelectNextPage();
 	
 protected:
 	void ApplyStyle();
@@ -65,6 +72,7 @@ private:
 		std::string line_class;
 	};
 	std::vector< line_t > m_lines = {};
+	std::unordered_map< std::string, ssize_t > m_lines_indices = {};
 	
 	std::vector< UIObject* > m_items = {}; // Label objects for TT_SIMPLE, TextLine objects for TT_EXTENDED
 	
@@ -73,8 +81,10 @@ private:
 	TextLine* m_active_textline = nullptr;
 	bool m_maybe_doubleclick = false;
 	util::Timer m_doubleclick_timer;
+	void SelectItem( const ssize_t index );
 	
-	void AddItem( const line_t& line );
+	ssize_t m_current_index = -1;
+	void AddItem( const size_t index, const line_t& line );
 	void AlignItem( UIObject* item, const size_t top );
 	void RemoveItem( const size_t index );
 	

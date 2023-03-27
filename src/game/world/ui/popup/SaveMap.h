@@ -22,6 +22,7 @@ protected:
 private:
 	::ui::object::FileBrowser* m_file_browser = nullptr;
 	
+	void SelectFile( const std::string& file );
 };
 
 }
