@@ -5,11 +5,20 @@
 namespace ui {
 namespace object {
 
+void FileBrowser::SetDefaultDirectory( const std::string& default_directory ) {
+	ASSERT( !m_file_list, "can't change default directory after initialization" );
+	m_default_directory = default_directory;
+}
+
 void FileBrowser::SetExistingOnly( bool existing_only ) {
 	m_existing_only = existing_only;
 }
 
 void FileBrowser::Create() {
+	ASSERT( !m_default_directory.empty(), "file browser default directory not set" );
+	
+	util::FS::CreateDirectoryIfNotExists( m_default_directory );
+	
 	UIContainer::Create();
 	
 	NEW( m_file_list, TextView, "PopupFileList" );
@@ -94,7 +103,7 @@ void FileBrowser::Create() {
 		return false;
 	});
 	
-	ChangeDirectory( util::FS::GetCurrentDirectory() );
+	ChangeDirectory( m_default_directory );
 }
 
 void FileBrowser::Destroy() {
@@ -115,8 +124,13 @@ void FileBrowser::SelectCurrentItem() {
 	SelectItem( GetSelectedItem() );
 }
 
-void FileBrowser::ChangeDirectory( const std::string& directory ) {
-
+void FileBrowser::ChangeDirectory( std::string directory ) {
+	
+	// remove trailing slash
+	if ( !directory.empty() && directory[ directory.size() - 1 ] == util::FS::GetPathSeparator()[ 0 ] ) {
+		directory.pop_back();
+	}
+	
 	if ( m_current_directory != directory ) {
 		m_current_directory = directory;
 	

@@ -13,7 +13,10 @@ namespace object {
 CLASS( FileBrowser, UIContainer )
 	
 	FileBrowser( const std::string& class_name = "" ) : UIContainer( class_name ) {}
-	
+
+	// directory to show first
+	void SetDefaultDirectory( const std::string& default_directory );
+
 	// whether to allow selecting existing files only, or any file
 	void SetExistingOnly( bool existing_only );
 
@@ -24,8 +27,10 @@ CLASS( FileBrowser, UIContainer )
 	void SelectCurrentItem();
 	
 private:
+	std::string m_default_directory = "";
+	
 	std::string m_current_directory = "";
-	void ChangeDirectory( const std::string& directory );
+	void ChangeDirectory( std::string directory );
 	
 	bool m_existing_only = false;
 	
