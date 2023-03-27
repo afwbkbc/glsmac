@@ -23,6 +23,27 @@ namespace util {
 	const std::string FS::GetUpDirString() {
 		return "..";
 	}
+
+#ifdef _WIN32
+
+	const bool FS::IsWindowsDriveLabel( const std::string& directory ) {
+		return directory.size() == 2 && directory[1] == ':'; // C:, D:, ...
+		// todo: multiletter drives?
+	}
+	
+	const std::vector< std::string > FS::GetWindowsDrives() {
+		std::vector< std::string > result = {};
+		const auto drives = GetLogicalDrives();
+		ASSERT_NOLOG( sizeof( drives ) == 4, "drives bitmask is not 32-bit" );
+		for ( uint8_t i = 0; i < ( 'Z' - 'A' ); i++ ) {
+			if ( drives & ( 1 << i ) ) {
+				result.push_back( std::string(1, 'A' + i) + ":" );
+			}
+		}
+		return result;
+	}
+
+#endif
 	
 	const std::string FS::GetCurrentDirectory() {
 		return std::filesystem::current_path().string();
@@ -54,19 +75,40 @@ namespace util {
 		}
 	}
 
+#ifdef _WIN32
+	std::vector< std::string > FS::ListDirectory( std::string directory, const bool return_absolute_paths ) {
+#else
 	std::vector< std::string > FS::ListDirectory( const std::string& directory, const bool return_absolute_paths ) {
+#endif
+		ASSERT_NOLOG( !directory.empty(), "directory is empty" );
 		std::vector< std::string > result = {};
 
 		try {
 
+#ifdef _WIN32
+			ASSERT_NOLOG( directory.find(':') != std::string::npos, "invalid windows path '" + directory + "' (must contain a colon)" );
+			const bool is_windows_drive_label = IsWindowsDriveLabel( directory );
+			if ( is_windows_drive_label ) {
+				directory += PATH_SEPARATOR;
+			}
+#endif
 			std::vector< std::filesystem::path > items;
-			std::copy( std::filesystem::directory_iterator( !directory.empty() ? directory : PATH_SEPARATOR ), std::filesystem::directory_iterator(), std::back_inserter( items ) );
+			std::copy(
+				std::filesystem::directory_iterator(
+					!directory.empty()
+						? directory
+						: PATH_SEPARATOR
+				),
+				std::filesystem::directory_iterator(),
+				std::back_inserter( items )
+			);
 			std::sort( items.begin(), items.end() );
 
 			for (const auto& item : items) {
 				const auto item_str = item.string();
-				ASSERT_NOLOG( item_str.substr( 0, directory.size() + 1 ) == directory + PATH_SEPARATOR, "unexpected path in directory list results: " + item_str );
-				result.push_back( return_absolute_paths ? item_str : item_str.substr( directory.size() + 1 ) );
+				const uint8_t prefix_len = directory[ directory.size() - 1 ] == PATH_SEPARATOR[ 0 ] ? 0 : 1;
+				ASSERT_NOLOG( item_str.substr( 0, directory.size() ) == directory, "unexpected path in directory list results: " + item_str );
+				result.push_back( return_absolute_paths ? item_str : item_str.substr( directory.size() + prefix_len) );
 			}
 		}
 		catch ( std::filesystem::filesystem_error& e ) {

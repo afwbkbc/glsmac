@@ -12,6 +12,11 @@ CLASS( FS, Util )
 	static const std::string GetPathSeparator();
 	static const std::string GetUpDirString();
 
+#ifdef _WIN32
+	static const bool IsWindowsDriveLabel( const std::string& directory );
+	static const std::vector< std::string> GetWindowsDrives();
+#endif
+
 	static const std::string GetCurrentDirectory();
 	
 	static const bool Exists( const std::string& path );
@@ -22,7 +27,11 @@ CLASS( FS, Util )
 
 	static void CreateDirectoryIfNotExists( const std::string& path );
 
+#ifdef _WIN32
+	static std::vector< std::string > ListDirectory( std::string directory, const bool return_absolute_paths );
+#else
 	static std::vector< std::string > ListDirectory( const std::string& directory, const bool return_absolute_paths = false );
+#endif
 	
 	static const std::string ReadFile( const std::string& path );
 	static const void WriteFile( const std::string& path, const std::string& data );

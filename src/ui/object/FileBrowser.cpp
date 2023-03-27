@@ -113,6 +113,7 @@ void FileBrowser::SelectCurrentItem() {
 }
 
 void FileBrowser::ChangeDirectory( const std::string& directory ) {
+
 	if ( m_current_directory != directory ) {
 		m_current_directory = directory;
 	
@@ -121,7 +122,21 @@ void FileBrowser::ChangeDirectory( const std::string& directory ) {
 		m_file_list->Clear();
 		
 		const std::string cls = "PopupFileListItem";
-		const auto items = util::FS::ListDirectory( m_current_directory, true );
+
+		std::vector< std::string > items;
+		uint8_t item_prefix_size = 1;
+#ifdef _WIN32
+		const auto& sep = util::FS::GetPathSeparator();
+		if ( m_current_directory == sep ) {
+			items = util::FS::GetWindowsDrives();
+			m_current_directory = "";
+			item_prefix_size = 0;
+		}
+		else
+#endif
+		{
+			items = util::FS::ListDirectory( m_current_directory, true );
+		}
 		
 		m_file_list->SetLinesLimit( items.size() + 1 ); // need to fit all items
 		
@@ -132,15 +147,16 @@ void FileBrowser::ChangeDirectory( const std::string& directory ) {
 		
 		// directories
 		for ( auto& item : items ) {
+			//Log( "  Directory item: " + item );
 			if ( util::FS::IsDirectory( item ) ) {
-				m_file_list->AddLine( item.substr( m_current_directory.size() + 1 ), cls + "Dir" );
+				m_file_list->AddLine( item.substr( m_current_directory.size() + item_prefix_size ), cls + "Dir" );
 			}
 		}
 		
 		// files
 		for ( auto& item : items ) {
 			if ( util::FS::IsFile( item ) ) {
-				m_file_list->AddLine( item.substr( m_current_directory.size() + 1 ), cls + "File" );
+				m_file_list->AddLine( item.substr( m_current_directory.size() + item_prefix_size ), cls + "File" );
 			}
 		}
 		
@@ -156,13 +172,20 @@ void FileBrowser::SelectItem( std::string item ) {
 	}
 	
 	const std::string sep = util::FS::GetPathSeparator();
+#ifdef _WIN32
+	const std::string path = ( m_current_directory.empty() && util::FS::IsWindowsDriveLabel(item) )
+		? item
+		: m_current_directory + sep + item
+	;
+#else
 	const std::string path = m_current_directory + sep + item;
+#endif
 	
 	if ( item == util::FS::GetUpDirString() ) {
 		//Log( "Selected directory up" );
-		const auto pos = m_current_directory.rfind( sep ); // TODO: check on windows
+		const auto pos = m_current_directory.rfind( sep );
 		if ( pos == std::string::npos ) {
-			ChangeDirectory( sep ); // TODO: check on windows
+			ChangeDirectory( sep );
 		}
 		else {
 			ChangeDirectory( m_current_directory.substr( 0, pos ) );
@@ -182,8 +205,16 @@ void FileBrowser::SelectItem( std::string item ) {
 			ChangeDirectory( path );
 		}
 		else if (
-			util::FS::IsFile( path ) ||
-			( !m_existing_only && !util::FS::Exists( path ) )
+#ifdef _WIN32
+			!m_current_directory.empty() && // can't read/write files outside of drives
+#endif
+			(
+				util::FS::IsFile( path ) ||
+				(
+					!m_existing_only &&
+					!util::FS::Exists( path )
+				)
+			)
 		) {
 			//Log( "Selected file: " + path );
 			UIEvent::event_data_t data = {};

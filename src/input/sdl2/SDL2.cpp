@@ -156,11 +156,14 @@ char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 			result = code;
 		}
 		else if ( // allowed symbols
-		(
-			code == ' ' ||
-			code == '.' ||
-			code == '_'
-		) && !is_shift )
+			(
+				code == ' ' ||
+				code == '.' ||
+				code == '_' ||
+				code == ':'
+			)
+			&& !is_shift
+		)
 		{
 			result = code;
 		}
