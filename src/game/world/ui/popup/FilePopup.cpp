@@ -20,19 +20,13 @@ FilePopup::FilePopup(
 	: OkCancelPopup( world )
 	, m_title( title )
 	, m_file_mode( file_mode )
-	, m_default_directory(
-		util::FS::GetCurrentDirectory() +
-		(
-			!default_directory.empty()
-			? ( util::FS::GetPathSeparator() + default_directory )
-			: ""
-		)
-	)
+	, m_default_directory( default_directory )
 	, m_file_extension( file_extension )
 	, m_default_filename( default_filename )
 {
+	// TODO: load from styles?
 	SetWidth( 400 );
-	SetHeight( 480 );
+	SetHeight( 600 );
 	SetTitleText( m_title );
 }
 

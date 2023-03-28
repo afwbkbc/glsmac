@@ -10,6 +10,7 @@
 #include "Tiles.h"
 
 #include "util/Clamper.h"
+#include "util/FS.h"
 
 #include "types/Texture.h"
 
@@ -279,6 +280,11 @@ CLASS( Map, Serializable )
 		const struct {
 			const float water = s_consts.clampers.elevation_to_vertex_z.Clamp( Tile::ELEVATION_LEVEL_COAST ); // sea is always on sea level
 		} levels;
+		const struct {
+			const std::string default_map_directory = "maps";
+			const std::string default_map_filename = "untitled";
+			const std::string default_map_extension = ".gsm";
+		} fs;
 	};
 	static const consts_t s_consts;
 	
@@ -532,7 +538,13 @@ CLASS( Map, Serializable )
 	void FixNormals( const tiles_t& tiles );
 	
 	const tiles_t GetAllTiles() const;
-	const Tiles* GetTilesPtr() const;
+	Tiles* GetTilesPtr() const; // be very careful
+	
+	const std::string& GetFileName() const;
+	void SetFileName( const std::string& file_name );
+	
+	const std::string& GetLastDirectory() const;
+	void SetLastDirectory( const std::string& last_directory );
 	
 protected:
 	friend class Finalize;
@@ -541,6 +553,17 @@ protected:
 	types::mesh::Data* m_mesh_terrain_data = nullptr;
 	
 private:
+
+	std::string m_file_name =
+		s_consts.fs.default_map_filename +
+		s_consts.fs.default_map_extension
+	;
+	
+	std::string m_last_directory =
+		util::FS::GetCurrentDirectory() +
+		util::FS::GetPathSeparator() +
+		s_consts.fs.default_map_directory
+	;
 	
 	rr::id_t m_tile_at_request_id = 0;
 	rr::id_t m_minimap_texture_request_id = 0;

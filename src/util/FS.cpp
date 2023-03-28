@@ -49,6 +49,16 @@ namespace util {
 		return std::filesystem::current_path().string();
 	}
 
+	const std::string FS::GetDirName( const std::string& path ) {
+		const auto pos = path.rfind( PATH_SEPARATOR );
+		if ( pos == std::string::npos ) {
+			return "";
+		}
+		else {
+			return path.substr( 0, pos );
+		}
+	}
+	
 	const std::string FS::GetBaseName( const std::string& path ) {
 		const auto pos = path.rfind( PATH_SEPARATOR );
 		if ( pos == std::string::npos ) {

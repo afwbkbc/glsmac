@@ -230,6 +230,10 @@ void BottomBar::AddMessage( const std::string& text ) {
 	m_sections.middle_area->AddMessage( text );
 }
 
+void BottomBar::UpdateMapFileName() {
+	m_sections.middle_area->UpdateMapFileName();
+}
+
 }
 }
 }

@@ -18,6 +18,7 @@ CLASS( FS, Util )
 #endif
 
 	static const std::string GetCurrentDirectory();
+	static const std::string GetDirName( const std::string& path );
 	static const std::string GetBaseName( const std::string& path );
 	
 	static const bool Exists( const std::string& path );

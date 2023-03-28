@@ -2,6 +2,8 @@
 
 #include "../../World.h"
 
+#include "util/FS.h"
+
 namespace game {
 namespace world {
 namespace ui {
@@ -88,7 +90,7 @@ void Toolbar::Create() {
 
 	// initialize
 	const auto* map = m_world->GetMap();
-	m_tool_info.labels[ TI_FILE ]->SetText( "File: maps/untitled.gsm" );
+	UpdateMapFileName();
 	m_tool_info.labels[ TI_MAP_SIZE ]->SetText( "Map Size: " +
 		std::to_string( map->GetWidth() ) +
 			"x" +
@@ -144,6 +146,11 @@ void Toolbar::Align() {
 			m_centered_block->SetAlign( UIObject::ALIGN_LEFT );
 		}
 	}
+}
+
+void Toolbar::UpdateMapFileName() {
+	ASSERT( m_tool_info.labels.find( TI_FILE ) != m_tool_info.labels.end(), "file line not found" );
+	m_tool_info.labels[ TI_FILE ]->SetText( "File: " + m_world->GetMap()->GetFileName() );
 }
 
 void Toolbar::SelectTool( MapEditor::tool_type_t tool ) {

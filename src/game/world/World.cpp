@@ -108,9 +108,7 @@ void World::Start() {
 #ifdef DEBUG
 		if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAPFILE ) ) {
 			const std::string& filename = config->GetQuickstartMapFile();
-			ASSERT( FS::FileExists( filename ), "map file \"" + filename + "\" not found" );
-			Log( (std::string) "Loading map from " + filename );
-			tiles->Unserialize( Buffer( FS::ReadFile( filename ) ) );
+			LoadMap( filename );
 		}
 		else
 #endif
@@ -125,6 +123,7 @@ void World::Start() {
 			timer.Start();
 #endif
 			generator.Generate( tiles, m_random->GetUInt( 0, UINT32_MAX - 1 ) );
+			m_map->SetTiles( tiles );
 #ifdef DEBUG
 			Log( "Map generation took " + std::to_string( timer.GetElapsed().count() ) + "ms" );
 			// if crash happens - it's handy to have a map file to reproduce it
@@ -134,7 +133,6 @@ void World::Start() {
 			}
 #endif
 		}
-		m_map->SetTiles( tiles );
 #ifdef DEBUG
 		// also handy to have dump of generated map
 		if ( !config->HasDebugFlag( config::Config::DF_QUICKSTART_MAPDUMP ) ) { // no point saving if we just loaded it
@@ -815,14 +813,37 @@ const size_t World::GetViewportHeight() const {
 	return m_viewport.height;
 }
 
+void World::LoadMap( const std::string& path ) {
+	ASSERT( FS::FileExists( path ), "map file \"" + path + "\" not found" );
+	Log( (std::string) "Loading map from " + path );
+	NEWV( tiles, Tiles, 0, 0, m_random );
+	tiles->Unserialize( Buffer( FS::ReadFile( path ) ) );
+	m_map->SetTiles( tiles );
+	
+	 // TODO: checks of success?
+	m_map->SetLastDirectory( util::FS::GetDirName( path ) );
+	m_map->SetFileName( util::FS::GetBaseName( path ) );
+	if ( m_ui.bottom_bar ) {
+		m_ui.bottom_bar->UpdateMapFileName();
+	}
+	AddMessage( "Map loaded from " + path );
+}
+
 void World::SaveMap( const std::string& path ) {
+	ASSERT( m_map, "map is not set" );
 	FS::WriteFile( path, m_map->GetTilesPtr()->Serialize().ToString() );
-	AddMessage( "Map saved to " + path ); // TODO: checks of success
+	
+	 // TODO: checks of success?
+	m_map->SetLastDirectory( util::FS::GetDirName( path ) );
+	m_map->SetFileName( util::FS::GetBaseName( path ) );
+	m_ui.bottom_bar->UpdateMapFileName();
+	AddMessage( "Map saved to " + path );
 }
 
 void World::AddMessage( const std::string& text ) {
-	ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
-	m_ui.bottom_bar->AddMessage( text );
+	if ( m_ui.bottom_bar ) {
+		m_ui.bottom_bar->AddMessage( text );
+	}
 }
 
 void World::SelectTileAtPoint( const size_t x, const size_t y ) {

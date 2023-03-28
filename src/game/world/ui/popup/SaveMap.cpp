@@ -11,7 +11,14 @@ namespace ui {
 namespace popup {
 
 SaveMap::SaveMap( World* world )
-	: FilePopup( world, "SAVE MAP", FM_WRITE, "maps", ".gsm", "untitled" )
+	: FilePopup(
+		world,
+		"SAVE MAP",
+		FM_WRITE,
+		world->GetMap()->GetLastDirectory(),
+		map::Map::s_consts.fs.default_map_extension,
+		world->GetMap()->GetFileName()
+	)
 {
 	
 }

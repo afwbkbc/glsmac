@@ -80,7 +80,12 @@ void MiddleArea::Destroy() {
 
 void MiddleArea::AddMessage( const std::string& text ) {
 	m_pages.messages->AddMessage( text );
-	SwitchPage( m_buttons.messages, m_pages.messages );
+}
+
+void MiddleArea::UpdateMapFileName() {
+	if ( m_pages.toolbar ) { // map editor may be unavailable
+		m_pages.toolbar->UpdateMapFileName();
+	}
 }
 
 void MiddleArea::SwitchPage( ::ui::Button* active_button, MiddleAreaPage* active_page ) {

@@ -401,8 +401,28 @@ const Map::tiles_t Map::GetAllTiles() const {
 	return tiles;
 }
 
-const Tiles* Map::GetTilesPtr() const {
+Tiles* Map::GetTilesPtr() const {
 	return m_tiles;
+}
+
+const std::string& Map::GetFileName() const {
+	return m_file_name;
+}
+
+void Map::SetFileName( const std::string& file_name ) {
+	if ( m_file_name != file_name ) {
+		m_file_name = file_name;
+	}
+}
+
+const std::string& Map::GetLastDirectory() const {
+	return m_last_directory;
+}
+
+void Map::SetLastDirectory( const std::string& last_directory ) {
+	if ( m_last_directory != last_directory ) {
+		m_last_directory = last_directory;
+	}
 }
 
 void Map::InitTextureAndMesh() {
@@ -907,6 +927,8 @@ const Buffer Map::Serialize() const {
 	
 	ASSERT( m_tiles, "tiles not set, can't serialize" );
 	
+	buf.WriteString( m_file_name );
+	
 	buf.WriteString( m_map_state.Serialize().ToString() );
 	
 	buf.WriteString( m_tiles->Serialize().ToString() );
@@ -1073,6 +1095,8 @@ const Buffer Map::tile_colors_t::Serialize() const {
 
 void Map::Unserialize( Buffer buf ) {
 	ASSERT( m_tiles, "tiles not set, can't unserialize" );
+	
+	m_file_name = buf.ReadString();
 	
 	m_map_state.Unserialize( Buffer( buf.ReadString() ) );
 	

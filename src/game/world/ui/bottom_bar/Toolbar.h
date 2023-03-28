@@ -23,6 +23,8 @@ CLASS( Toolbar, MiddleAreaPage )
 	void Destroy();
 	void Align();
 	
+	void UpdateMapFileName();
+	
 private:
 
 	CenteredBlock* m_centered_block = nullptr;

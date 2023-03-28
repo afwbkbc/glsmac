@@ -20,6 +20,7 @@ CLASS( MiddleArea, BBSection )
 	void Destroy();
 	
 	void AddMessage( const std::string& text );
+	void UpdateMapFileName();
 	
 private:
 	

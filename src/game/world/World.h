@@ -91,6 +91,8 @@ CLASS( World, base::Task )
 	const size_t GetViewportHeight() const;
 	
 	void AddMessage( const std::string& text );
+	
+	void LoadMap( const std::string& path );
 	void SaveMap( const std::string& path );
 	
 protected:
