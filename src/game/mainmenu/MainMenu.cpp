@@ -5,6 +5,8 @@
 
 #include "engine/Engine.h"
 
+#include "game/world/World.h"
+
 #include "menu/Lobby.h"
 #include "menu/Main.h"
 #include "menu/Error.h"
@@ -42,6 +44,12 @@ void MainMenu::Start() {
 
 	NEW( m_music, SoundEffect, "MainMenuMusic" );
 	g_engine->GetUI()->AddObject( m_music );
+	
+	g_engine->GetGraphics()->AddOnWindowResizeHandler( this, RH( this ) {
+		if ( m_menu_object ) {
+			m_menu_object->Align();
+		}
+	});
 	
 	NEWV( menu, Main, this );
 	ShowMenu( menu );
@@ -81,6 +89,8 @@ void MainMenu::Iterate() {
 }
 
 void MainMenu::Stop() {
+	
+	g_engine->GetGraphics()->RemoveOnWindowResizeHandler( this );
 	
 	if ( m_menu_object ) {
 		m_menu_object->Hide();
@@ -122,6 +132,12 @@ void MainMenu::ShowMenu( MenuObject* menu_object ) {
 void MainMenu::MenuError( const std::string& error_text ) {
 	NEWV( menu, Error, this, error_text );
 	ShowMenu( menu );
+}
+
+void MainMenu::StartGame() {
+	NEWV( task, game::world::World, m_settings );
+	g_engine->GetScheduler()->RemoveTask( this );
+	g_engine->GetScheduler()->AddTask( task );
 }
 
 util::Random* MainMenu::GetRandom() {

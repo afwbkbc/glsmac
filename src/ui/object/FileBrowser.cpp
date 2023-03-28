@@ -132,7 +132,7 @@ void FileBrowser::Create() {
 					break;
 				}
 				case UIEvent::K_ENTER: {
-					SelectCurrentItem();
+					SelectCurrentValue();
 					break;
 				}
 				default: {
@@ -170,13 +170,42 @@ void FileBrowser::Destroy() {
 	UIContainer::Destroy();
 }
 
-const std::string& FileBrowser::GetSelectedItem() const {
-	ASSERT( m_input, "file browser input not initialized" );
-	return m_input->GetValue();
+const std::string FileBrowser::GetSelectedFile() const {
+	const auto sep = util::FS::GetPathSeparator();
+	const auto& value = m_input->GetValue();
+	return
+#ifdef _WIN32
+		( m_current_directory.empty() && util::FS::IsWindowsDriveLabel( value ) )
+			? value
+			: m_current_directory + sep + value
+#else
+		m_current_directory + sep + value
+#endif
+	;
 }
 
-void FileBrowser::SelectCurrentItem() {
-	SelectItem( GetSelectedItem() );
+void FileBrowser::SelectCurrentValue() {
+	SelectItem( m_input->GetValue() );
+}
+
+void FileBrowser::SelectCurrentValueOrItem() {
+	const auto sep = util::FS::GetPathSeparator();
+#ifdef _WIN32
+	if ( !m_current_directory.empty() )
+#endif
+	{
+		const auto& value = m_input->GetValue();
+		const auto& item = m_file_list->GetSelectedText();
+		if (
+			!util::FS::FileExists( m_current_directory + sep + value ) &&
+			util::FS::FileExists( m_current_directory + sep + item )
+		) {
+			Log( "Updating value from list: " + value + " -> " + item );
+			m_input->SetValue( item );
+			m_input->SetHint( "" );
+		}
+	}
+	SelectCurrentValue();
 }
 
 void FileBrowser::ChangeDirectory( std::string directory ) {
@@ -263,7 +292,7 @@ void FileBrowser::SelectItem( std::string item ) {
 	}
 	
 	const std::string sep = util::FS::GetPathSeparator();
-#ifdef _WIN32
+/*#ifdef _WIN32
 	std::string path = ( m_current_directory.empty() && util::FS::IsWindowsDriveLabel(item) )
 		? item
 		: m_current_directory + sep + item
@@ -271,6 +300,8 @@ void FileBrowser::SelectItem( std::string item ) {
 #else
 	std::string path = m_current_directory + sep + item;
 #endif
+	*/
+	std::string path = GetSelectedFile();
 	
 	if ( item == util::FS::GetUpDirString() ) {
 		//Log( "Selected directory up" );

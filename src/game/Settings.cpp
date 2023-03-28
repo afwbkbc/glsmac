@@ -45,7 +45,8 @@ const Buffer LocalSettings::Serialize() const {
 	buf.WriteInt( network_role );
 	buf.WriteString( player_name );
 	buf.WriteString( remote_address );
-	
+	buf.WriteString( map_file );
+		
 	return buf;
 }
 
@@ -53,6 +54,7 @@ void LocalSettings::Unserialize( Buffer buf ) {
 	network_role = (network_role_t) buf.ReadInt();
 	player_name = buf.ReadString();
 	remote_address = buf.ReadString();
+	map_file = buf.ReadString();
 }
 
 

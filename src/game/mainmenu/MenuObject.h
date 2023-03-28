@@ -14,6 +14,7 @@ CLASS( MenuObject, base::Base )
 	
 	virtual void Show() = 0;
 	virtual void Hide() = 0;
+	virtual void Align() {};
 	virtual void Iterate() {};
 	
 	virtual void Close();

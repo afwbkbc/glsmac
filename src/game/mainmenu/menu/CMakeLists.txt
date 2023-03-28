@@ -3,6 +3,7 @@ SET(SRC ${SRC}
 	${PWD}/Main.cpp
 	${PWD}/Error.cpp
 	${PWD}/StartGame.cpp
+	${PWD}/LoadMapFile.cpp
 	${PWD}/Scenario.cpp
 	${PWD}/PlanetSize.cpp
 	${PWD}/Ocean.cpp

@@ -113,25 +113,31 @@ void World::Start() {
 		else
 #endif
 		{
-			map_generator::SimplePerlin generator;
-			//map_generator::Test generator;
-#ifdef DEBUG
-			//map_generator::SimpleRandom generator;
-			//map_generator::SimpleRandomNoLoops generator;
-			//map_generator::SimpleRandomNoPointers generator;
-			util::Timer timer;
-			timer.Start();
-#endif
-			generator.Generate( tiles, m_random->GetUInt( 0, UINT32_MAX - 1 ) );
-			m_map->SetTiles( tiles );
-#ifdef DEBUG
-			Log( "Map generation took " + std::to_string( timer.GetElapsed().count() ) + "ms" );
-			// if crash happens - it's handy to have a map file to reproduce it
-			if ( !config->HasDebugFlag( config::Config::DF_QUICKSTART_MAPFILE ) ) { // no point saving if we just loaded it
-				Log( (std::string) "Saving map to " + MAP_FILENAME );
-				FS::WriteFile( MAP_FILENAME, tiles->Serialize().ToString() );
+			if ( m_settings.global.map_type == GlobalSettings::MT_MAPFILE ) {
+				ASSERT( !m_settings.local.map_file.empty(), "loading map needed but map file not specified" );
+				LoadMap( m_settings.local.map_file );
 			}
+			else {
+				map_generator::SimplePerlin generator;
+				//map_generator::Test generator;
+#ifdef DEBUG
+				//map_generator::SimpleRandom generator;
+				//map_generator::SimpleRandomNoLoops generator;
+				//map_generator::SimpleRandomNoPointers generator;
+				util::Timer timer;
+				timer.Start();
 #endif
+				generator.Generate( tiles, m_random->GetUInt( 0, UINT32_MAX - 1 ) );
+				m_map->SetTiles( tiles );
+#ifdef DEBUG
+				Log( "Map generation took " + std::to_string( timer.GetElapsed().count() ) + "ms" );
+				// if crash happens - it's handy to have a map file to reproduce it
+				if ( !config->HasDebugFlag( config::Config::DF_QUICKSTART_MAPFILE ) ) { // no point saving if we just loaded it
+					Log( (std::string) "Saving map to " + MAP_FILENAME );
+					FS::WriteFile( MAP_FILENAME, tiles->Serialize().ToString() );
+				}
+#endif
+			}
 		}
 #ifdef DEBUG
 		// also handy to have dump of generated map

@@ -86,7 +86,19 @@ void FilePopup::Destroy() {
 }
 
 void FilePopup::OnOk() {
-	m_file_browser->SelectCurrentItem();
+	switch ( m_file_mode ) {
+		case FM_READ: {
+			m_file_browser->SelectCurrentValue();
+			break;
+		}
+		case FM_WRITE: {
+			m_file_browser->SelectCurrentValue();
+			break;
+		}
+		default: {
+			ASSERT( false, "unknown file mode " + std::to_string( m_file_mode ) );
+		}
+	}
 }
 
 }

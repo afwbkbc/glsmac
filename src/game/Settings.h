@@ -21,7 +21,7 @@ CLASS( GlobalSettings, Serializable )
 	enum map_type_t {
 		MT_RANDOM,
 		MT_CUSTOM,
-		MT_PREGEN,
+		MT_MAPFILE,
 	};
 	map_type_t map_type = MT_RANDOM;
 	
@@ -100,7 +100,9 @@ public:
 	
 	std::string player_name = "";
 	std::string remote_address = "";
-		
+	
+	std::string map_file = "";
+	
 	const Buffer Serialize() const;
 	void Unserialize( Buffer data );
 };

@@ -42,6 +42,8 @@ protected:
 	
 	Panel* m_body = nullptr; // child classes can add elements here
 	
+	void Resize();
+	
 private:
 	Section* m_frame = nullptr;
 		Button* m_button_ok = nullptr;

@@ -7,8 +7,6 @@
 
 #include "engine/Engine.h"
 
-#include "game/world/World.h"
-
 namespace game {
 namespace mainmenu {
 
@@ -32,10 +30,7 @@ Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 		m_mainmenu->m_settings.global.game_rules = game::GlobalSettings::GR_STANDARD;
 
 		// start game
-		NEWV( task, game::world::World, m_mainmenu->m_settings );
-		g_engine->GetScheduler()->RemoveTask( m_mainmenu );
-		g_engine->GetScheduler()->AddTask( task );
-
+		m_mainmenu->StartGame();
 	}},
 	{ "SCENARIO", [this] () -> void {
 		m_mainmenu->m_settings.global.game_mode = game::GlobalSettings::GM_SCENARIO;

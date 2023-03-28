@@ -28,8 +28,7 @@ void PopupMenu::Show() {
 	NEW( m_frame, Section, "PopupWindow" );
 		m_frame->SetTitleText( m_title );
 		m_frame->SetAlign( UIObject::ALIGN_CENTER );
-		m_frame->SetWidth( m_width );
-		m_frame->SetHeight( m_height );
+		Resize();
 		m_frame->On( UIEvent::EV_KEY_DOWN, EH( this, on_ok, on_cancel ) {
 			if ( !data->key.modifiers ) {
 				if ( data->key.code == UIEvent::K_ENTER ) {
@@ -131,6 +130,13 @@ void PopupMenu::SetHeight( const size_t height ) {
 
 bool PopupMenu::HasFlag( const popup_flag_t flag ) const {
 	return m_flags.find( flag ) != m_flags.end();
+}
+
+void PopupMenu::Resize() {
+	if ( m_frame ) {
+		m_frame->SetWidth( m_width );
+		m_frame->SetHeight( m_height );
+	}
 }
 
 }

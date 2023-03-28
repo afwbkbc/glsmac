@@ -29,8 +29,11 @@ CLASS( FileBrowser, UIContainer )
 	void Create();
 	void Destroy();
 
-	const std::string& GetSelectedItem() const;
-	void SelectCurrentItem();
+	const std::string& GetValue() const; // value typed in input
+	const std::string GetSelectedFile() const; // full path to specified file
+	
+	void SelectCurrentValue(); // ask for EV_SELECT event with current input value
+	void SelectCurrentValueOrItem(); // same but if file in input does not exist but list item does - update input value first
 	
 private:
 	std::string m_default_directory = "";
