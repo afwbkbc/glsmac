@@ -28,10 +28,14 @@ CLASS( Sound, Actor )
 	void Pause();
 	void Stop();
 	
+	void Mute();
+	
 	const bool IsActive();
 	const bool IsFinished() const;
 	const float GetVolume() const;
 	const bool IsReadyToBeDeleted() const;
+	
+	const size_t GetPos() const;
 	
 	void Rewind();
 	void GetNextBuffer( uint8_t* buffer, int len );
@@ -39,7 +43,7 @@ private:
 	const types::Sound* m_sound = nullptr;
 	
 	bool m_is_repeatable = false;
-	
+	bool m_is_muted = false;
 	bool m_is_playing = false;
 	bool m_is_autoplay = false;
 	

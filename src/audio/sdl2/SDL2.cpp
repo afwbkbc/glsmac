@@ -88,6 +88,15 @@ void SDL2::AddActor( scene::actor::Sound *actor ) {
 	
 	std::lock_guard<std::mutex> guard( m_actors_mutex );
 	
+	// check if same sound was double-added (can happen if two popups close at same time, for example)
+	// in this case we'll ignore second sound to avoid volume spike
+	for ( const auto& a : m_actors ) {
+		if ( a.first->GetPos() == 0 && a.first->GetSound() == actor->GetSound() ) {
+			Log( "Muting " + actor->GetName() + " to prevent double-sound" );
+			actor->Mute();
+		}
+	}
+	
 	Log( "Adding sound actor " + actor->GetName() );
 	ASSERT( m_actors.find( actor ) == m_actors.end(), "sound actor already added" );
 	NEWV( sound_actor, Sound, actor );

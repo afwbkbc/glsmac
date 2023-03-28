@@ -36,6 +36,7 @@ void Sound::GetNextBuffer( uint8_t* buffer, int len ) {
 		memset( ptr( buffer, 0, len ), 0, len );
 		return;
 	}
+	
 	size_t newlen = 0;
 	if ( len + m_pos > m_sound->m_buffer_size ) {
 		newlen = m_sound->m_buffer_size - m_pos;
@@ -45,7 +46,12 @@ void Sound::GetNextBuffer( uint8_t* buffer, int len ) {
 		//}
 		len = newlen;
 	}
-	memcpy( ptr( buffer, 0, len ), ptr( m_sound->m_buffer, m_pos, len ), len );
+	if ( m_is_muted ) {
+		memset( ptr( buffer, 0, len ), 0, len );
+	}
+	else {
+		memcpy( ptr( buffer, 0, len ), ptr( m_sound->m_buffer, m_pos, len ), len );
+	}
 	m_pos += len;
 	if ( m_is_finished && m_is_repeatable ) {
 		Rewind();
@@ -111,6 +117,10 @@ void Sound::Stop() {
 	}
 }
 
+void Sound::Mute() {
+	m_is_muted = true;
+}
+
 const bool Sound::IsActive() {
 	if ( !m_is_active ) {
 		if ( m_start_delay_timer.HasTicked() ) {
@@ -126,6 +136,10 @@ const bool Sound::IsFinished() const {
 
 const bool Sound::IsReadyToBeDeleted() const {
 	return ( m_is_repeatable || !m_is_playing );
+}
+
+const size_t Sound::GetPos() const {
+	return m_pos;
 }
 
 const float Sound::GetVolume() const {
