@@ -410,10 +410,23 @@ void UI::OpenPopup( Popup* popup ) {
 }
 
 void UI::ClosePopup( Popup* popup, bool force ) {
-	ASSERT( popup == m_popups.back(), "invalid popup close order" );
 	if ( force || popup->MaybeClose() ) { // ask popup to close, remove if it was closed (unless forced)
-		RemoveObject( popup );
-		m_popups.pop_back();
+		if ( popup == m_popups.back() ) {
+			RemoveObject( popup );
+			m_popups.pop_back();
+			while (
+				!m_popups_close_queue.empty() &&
+				!m_popups.empty() &&
+				m_popups_close_queue.back() == m_popups.back()
+			) {
+				// TODO: test properly
+				ClosePopup( m_popups_close_queue.back() );
+				m_popups_close_queue.pop_back();
+			}
+		}
+		else {
+			m_popups_close_queue.push_back( popup ); // wait for other popup to close first
+		}
 	}
 }
 

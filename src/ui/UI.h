@@ -146,6 +146,7 @@ private:
 	const UIEventHandler* m_keydown_handler = nullptr;
 	
 	std::vector< Popup* > m_popups = {};
+	std::vector< Popup* > m_popups_close_queue = {};
 	
 #ifdef DEBUG	
 	Scene *m_debug_scene;

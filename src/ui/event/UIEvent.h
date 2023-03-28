@@ -22,7 +22,8 @@ CLASS( UIEvent, base::Base )
 		EV_BUTTON_DOUBLE_CLICK,
 		EV_CHANGE,
 		EV_SELECT,
-		EV_RESIZE
+		EV_RESIZE,
+		EV_CONFIRM
 	};
 	
 	// event flags
