@@ -157,6 +157,7 @@ void FileBrowser::Create() {
 	ChangeDirectory( m_default_directory );
 	
 	m_input->SetValue( m_default_filename + m_file_extension );
+	m_file_list->SelectLine( m_input->GetValue() );
 }
 
 void FileBrowser::Destroy() {
