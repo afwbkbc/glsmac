@@ -42,7 +42,7 @@ void Popup::Create() {
 
 void Popup::Align() {
 	
-	// don't let popup top go outside window
+	// don't let popup top go outside of window
 	// TODO: add 'max_height' to styles
 	object::Popup::SetHeight( std::min< coord_t >( m_original_height, m_world->GetViewportHeight() ) );
 

@@ -25,7 +25,7 @@ FilePopup::FilePopup(
 	, m_default_filename( default_filename )
 {
 	// TODO: load from styles?
-	SetWidth( 400 );
+	SetWidth( 500 );
 	SetHeight( 600 );
 	SetTitleText( m_title );
 }
