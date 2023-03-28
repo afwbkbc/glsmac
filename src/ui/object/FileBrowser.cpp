@@ -226,6 +226,23 @@ void FileBrowser::ChangeDirectory( std::string directory ) {
 		// files
 		for ( auto& item : items ) {
 			if ( util::FS::IsFile( item ) ) {
+				if ( !m_file_extension.empty() ) {
+					// show only files with matching extension
+					const auto pos = item.rfind( '.' );
+					if (
+						pos == std::string::npos ||
+						memcmp(
+							item.c_str() + pos,
+							m_file_extension.c_str(),
+							std::min< size_t >(
+								m_file_extension.size(),
+								item.size() - pos
+							)
+						) 
+					) {
+						continue; // wrong/missing extension
+					}
+				}
 				m_file_list->AddLine( item.substr( m_current_directory.size() + item_prefix_size ), cls + "File" );
 			}
 		}

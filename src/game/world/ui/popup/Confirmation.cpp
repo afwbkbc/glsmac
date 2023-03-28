@@ -9,8 +9,11 @@ Confirmation::Confirmation( World* world )
 	: ::ui::object::Popup()
 	, m_world( world )
 {
+	// TODO: determine size from text
 	SetWidth( 520 );
 	SetHeight( 120 );
+	
+	// TODO: fix z index bugs
 	SetZIndex( 0.9f );
 }
 
