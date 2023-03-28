@@ -484,6 +484,12 @@ void World::Start() {
 	
 	UpdateViewport();
 	
+	// assume mouse starts at center
+	m_map_control.last_mouse_position = {
+		(float)m_viewport.window_width / 2,
+		(float)m_viewport.window_height / 2
+	};
+	
 	SetCameraPosition( { 0.0f, -0.25f, 0.1f } );
 	
 	UpdateCameraRange();
@@ -496,26 +502,7 @@ void World::Start() {
 		UpdateMinimap();
 	});
 	
-	UpdateMapInstances();
-	
-	UpdateUICamera();
-	
-	// assume mouse starts at center
-	m_map_control.last_mouse_position = {
-		(float)m_viewport.window_width / 2,
-		(float)m_viewport.window_height / 2
-	};
-	
-	// update minimap
-	UpdateMinimap();
-	
-	// select tile at center
-	Vec2< size_t > coords = { m_map->GetWidth() / 2, m_map->GetHeight() / 2 };
-	if ( ( coords.y % 2 ) != ( coords.x % 2 ) ) {
-		coords.y++;
-	}
-	SelectTile( m_map->GetTileAt( coords.x, coords.y ) );
-	
+	ResetMapState();
 }
 
 void World::Stop() {
@@ -815,10 +802,19 @@ const size_t World::GetViewportHeight() const {
 
 void World::LoadMap( const std::string& path ) {
 	ASSERT( FS::FileExists( path ), "map file \"" + path + "\" not found" );
+	
+	bool was_map_initialized = m_map->HasTiles();
+	if ( was_map_initialized ) {
+		m_map->UnsetTiles();
+	}
+	
 	Log( (std::string) "Loading map from " + path );
 	NEWV( tiles, Tiles, 0, 0, m_random );
 	tiles->Unserialize( Buffer( FS::ReadFile( path ) ) );
 	m_map->SetTiles( tiles );
+	if ( was_map_initialized ) {
+		ResetMapState();
+	}
 	
 	 // TODO: checks of success?
 	m_map->SetLastDirectory( util::FS::GetDirName( path ) );
@@ -984,6 +980,20 @@ void World::UpdateMinimap() {
 		mm.x,
 		mm.y
 	});
+}
+
+void World::ResetMapState() {
+	UpdateCameraPosition();
+	UpdateMapInstances();
+	UpdateUICamera();
+	UpdateMinimap();
+	
+	// select tile at center
+	Vec2< size_t > coords = { m_map->GetWidth() / 2, m_map->GetHeight() / 2 };
+	if ( ( coords.y % 2 ) != ( coords.x % 2 ) ) {
+		coords.y++;
+	}
+	SelectTile( m_map->GetTileAt( coords.x, coords.y ) );
 }
 
 void World::SmoothScroll( const float scroll_value ) {

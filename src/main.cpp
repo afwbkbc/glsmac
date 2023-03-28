@@ -142,7 +142,6 @@ if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
 		network::simpletcp::SimpleTCP network;
 		
 		ui::Default ui;
-		ui.SetPopupClass( "Popup" );
 
 		scheduler::Simple scheduler;
 

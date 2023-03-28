@@ -212,6 +212,8 @@ private:
 	void CenterAtTile( const Map::tile_state_t* ts );
 	
 	void UpdateMinimap();
+	
+	void ResetMapState();
 };
 
 }

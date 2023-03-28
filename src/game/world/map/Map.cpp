@@ -177,27 +177,12 @@ Map::~Map() {
 		}
 	}
 	if ( m_tile_states ) {
-		for ( size_t y = 0 ; y < m_map_state.dimensions.y ; y++ ) {
-			for ( size_t x = y & 1 ; x < m_map_state.dimensions.x ; x+= 2 ) {
-				
-				auto* ts = GetTileState( x, y );
-				
-				if ( ts->moisture_original ) {
-					DELETE( ts->moisture_original );
-					ts->moisture_original = nullptr;
-				}
-				if ( ts->river_original ) {
-					DELETE( ts->river_original );
-					ts->river_original = nullptr;
-				}
-				for ( auto& a : ts->sprites ) {
-					m_scene->RemoveActor( a.actor );
-					DELETE( a.actor );
-				}
-			}
-		}
-		free( m_tile_states );
+		FreeTileStates();
 	}
+}
+
+const bool Map::HasTiles() const {
+	return m_tiles != nullptr;
 }
 
 void Map::SetTiles( Tiles* tiles, bool generate_actors ) {
@@ -210,6 +195,21 @@ void Map::SetTiles( Tiles* tiles, bool generate_actors ) {
 		// loaded from dump?
 		m_map_state.first_run = false;
 	}
+}
+
+void Map::UnsetTiles() {
+	ASSERT( m_tiles, "map tiles not set" );
+	
+	if ( m_actors.terrain ) {
+		m_scene->RemoveActor( m_actors.terrain );
+		DELETE( m_actors.terrain );
+		m_actors.terrain = nullptr;
+	}
+	DELETE( m_tiles );
+	if ( m_tile_states ) {
+		FreeTileStates();
+	}
+	m_tiles = nullptr;
 }
 
 #ifdef DEBUG
@@ -401,7 +401,7 @@ const Map::tiles_t Map::GetAllTiles() const {
 	return tiles;
 }
 
-Tiles* Map::GetTilesPtr() const {
+const Tiles* Map::GetTilesPtr() const {
 	return m_tiles;
 }
 
@@ -928,6 +928,7 @@ const Buffer Map::Serialize() const {
 	ASSERT( m_tiles, "tiles not set, can't serialize" );
 	
 	buf.WriteString( m_file_name );
+	buf.WriteString( m_last_directory );
 	
 	buf.WriteString( m_map_state.Serialize().ToString() );
 	
@@ -1097,6 +1098,7 @@ void Map::Unserialize( Buffer buf ) {
 	ASSERT( m_tiles, "tiles not set, can't unserialize" );
 	
 	m_file_name = buf.ReadString();
+	m_last_directory = buf.ReadString();
 	
 	m_map_state.Unserialize( Buffer( buf.ReadString() ) );
 	
@@ -1253,6 +1255,30 @@ void Map::tile_colors_t::Unserialize( Buffer buf ) {
 	bottom = buf.ReadColor();
 }
 
+void Map::FreeTileStates() {
+	ASSERT( m_tile_states, "tile states not set" );
+	for ( size_t y = 0 ; y < m_map_state.dimensions.y ; y++ ) {
+		for ( size_t x = y & 1 ; x < m_map_state.dimensions.x ; x+= 2 ) {
+
+			auto* ts = GetTileState( x, y );
+
+			if ( ts->moisture_original ) {
+				DELETE( ts->moisture_original );
+				ts->moisture_original = nullptr;
+			}
+			if ( ts->river_original ) {
+				DELETE( ts->river_original );
+				ts->river_original = nullptr;
+			}
+			for ( auto& a : ts->sprites ) {
+				m_scene->RemoveActor( a.actor );
+				DELETE( a.actor );
+			}
+		}
+	}
+	free( m_tile_states );
+	m_tile_states = nullptr;
+}
 
 }
 }

@@ -98,10 +98,8 @@ CLASS( UI, base::Module )
 	void ClosePopup( Popup* popup, bool force = false );
 	void CloseLastPopup( bool force = false );
 	
-	// configure parts
-	void SetPopupClass( const std::string& popup_class );
-	
 	// popups
+	void Error( const std::string& text );
 	void Confirm( const std::string& text, const ui_handler_t on_confirm );
 	
 #ifdef DEBUG
@@ -153,10 +151,6 @@ private:
 	
 	std::vector< Popup* > m_popups = {};
 	std::vector< Popup* > m_popups_close_queue = {};
-	
-	struct {
-		std::string popup = "";
-	} m_parts_classes = {};
 	
 #ifdef DEBUG	
 	Scene *m_debug_scene;

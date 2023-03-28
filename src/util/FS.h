@@ -17,9 +17,13 @@ CLASS( FS, Util )
 	static const std::vector< std::string> GetWindowsDrives();
 #endif
 
+	static bool IsAbsolutePath( const std::string& path );
+	
 	static const std::string GetCurrentDirectory();
 	static const std::string GetDirName( const std::string& path );
 	static const std::string GetBaseName( const std::string& path );
+	static const std::string GetFilteredPath( const std::string& path );
+	static const std::string GetAbsolutePath( const std::string& path );
 	
 	static const bool Exists( const std::string& path );
 	static const bool IsFile( const std::string& path );

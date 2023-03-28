@@ -4,7 +4,8 @@
 
 #include "event/MouseMove.h"
 
-#include "popup/Confirmation.h"
+#include "popup/Error.h"
+#include "popup/Confirm.h"
 
 using namespace scene;
 using namespace types;
@@ -437,14 +438,14 @@ void UI::CloseLastPopup( bool force ) {
 	ClosePopup( m_popups.back(), force );
 }
 
-void UI::SetPopupClass( const std::string& popup_class ) {
-	if ( popup_class != m_parts_classes.popup ) {
-		m_parts_classes.popup = popup_class;
-	}
+void UI::Error( const std::string& text ) {
+	NEWV( popup, popup::Error );
+		popup->SetText( text );
+	popup->Open();
 }
 
 void UI::Confirm( const std::string& text, const ui_handler_t on_confirm ) {
-	NEWV( popup, popup::Confirmation, m_parts_classes.popup );
+	NEWV( popup, popup::Confirm );
 		popup->SetText( text );
 		popup->On( UIEvent::EV_CONFIRM, EH( on_confirm ) {
 			on_confirm();

@@ -3,6 +3,7 @@
 #include "engine/Engine.h"
 
 #include "../../popup/SaveMap.h"
+#include "../../popup/LoadMap.h"
 
 namespace game {
 namespace world {
@@ -17,7 +18,9 @@ EditMapMenu::EditMapMenu( World* world )
 		popup->Open();
 		return true;
 	});
-	AddItem( "Load Map...", MH() {
+	AddItem( "Load Map...", MH( this ) {
+		NEWV( popup, popup::LoadMap, m_world );
+		popup->Open();
 		return true;
 	});
 }

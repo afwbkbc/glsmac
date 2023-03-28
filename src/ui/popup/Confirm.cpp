@@ -1,10 +1,10 @@
-#include "Confirmation.h"
+#include "Confirm.h"
 
 namespace ui {
 namespace popup {
 
-Confirmation::Confirmation( const std::string class_name )
-	: ::ui::object::Popup( class_name )
+Confirm::Confirm( const std::string class_name )
+	: object::Popup( class_name )
 {
 	// TODO: determine size from text
 	SetWidth( 520 );
@@ -14,14 +14,14 @@ Confirmation::Confirmation( const std::string class_name )
 	SetZIndex( 0.9f );
 }
 
-void Confirmation::Create() {
-	::ui::object::Popup::Create();
+void Confirm::Create() {
+	object::Popup::Create();
 	
 	NEW( m_body, Section, SubClass( "Window" ) );
 		m_body->SetTitleText( "Confirmation" );
 	AddChild( m_body );
 	
-	NEW( m_label, ::ui::object::Label, SubClass( "Text" ) );
+	NEW( m_label, object::Label, SubClass( "Text" ) );
 		if ( !m_text.empty() ) {
 			m_label->SetText( m_text );
 		}
@@ -29,26 +29,25 @@ void Confirmation::Create() {
 		m_label->SetTop( 20 ); // TODO: style?
 	m_body->AddChild( m_label );
 	
-	// TODO: merge with OkCancelPopup ?
-	NEW( m_buttons.ok, ::ui::object::Button, SubClass( "ButtonOkCancel" ) );
-		m_buttons.ok->SetAlign( ::ui::object::UIObject::ALIGN_LEFT | ::ui::object::UIObject::ALIGN_BOTTOM );
+	NEW( m_buttons.ok, object::Button, SubClass( "ButtonOkCancel" ) );
+		m_buttons.ok->SetAlign( object::UIObject::ALIGN_LEFT | object::UIObject::ALIGN_BOTTOM );
 		m_buttons.ok->SetLeft( 12 );
 		m_buttons.ok->SetBottom( 6 );
 		m_buttons.ok->SetLabel( "YES" );
 		m_buttons.ok->SetZIndex( 0.9f ); // TODO: hack
-		m_buttons.ok->On( ::ui::UIEvent::EV_BUTTON_CLICK, EH( this ) {
-			Confirm();
+		m_buttons.ok->On( UIEvent::EV_BUTTON_CLICK, EH( this ) {
+			Confirmed();
 			return true;
 		});
 	m_body->AddChild( m_buttons.ok );
 
-	NEW( m_buttons.cancel, ::ui::object::Button, SubClass( "ButtonOkCancel" ) );
-		m_buttons.cancel->SetAlign( ::ui::object::UIObject::ALIGN_RIGHT | ::ui::object::UIObject::ALIGN_BOTTOM );
+	NEW( m_buttons.cancel, object::Button, SubClass( "ButtonOkCancel" ) );
+		m_buttons.cancel->SetAlign( object::UIObject::ALIGN_RIGHT | object::UIObject::ALIGN_BOTTOM );
 		m_buttons.cancel->SetRight( 12 );
 		m_buttons.cancel->SetBottom( 6 );
 		m_buttons.cancel->SetLabel( "NO" );
 		m_buttons.cancel->SetZIndex( 0.9f ); // TODO: hack
-		m_buttons.cancel->On( ::ui::UIEvent::EV_BUTTON_CLICK, EH( this ) {
+		m_buttons.cancel->On( UIEvent::EV_BUTTON_CLICK, EH( this ) {
 			Close();
 			return true;
 		});
@@ -56,7 +55,7 @@ void Confirmation::Create() {
 	
 	On( UIEvent::EV_KEY_DOWN, EH( this ) {
 		if ( !data->key.modifiers && data->key.code == UIEvent::K_ENTER ) {
-			Confirm();
+			Confirmed();
 			return true;
 		}
 		else {
@@ -65,7 +64,7 @@ void Confirmation::Create() {
 	});
 }
 
-void Confirmation::Destroy() {
+void Confirm::Destroy() {
 	
 	m_body->RemoveChild( m_label );
 	
@@ -74,10 +73,10 @@ void Confirmation::Destroy() {
 	
 	RemoveChild( m_body );
 	
-	::ui::object::Popup::Destroy();
+	object::Popup::Destroy();
 }
 
-void Confirmation::SetText( const std::string& text ) {
+void Confirm::SetText( const std::string& text ) {
 	if ( text != m_text ) {
 		m_text = text;
 		if ( m_label ) {
@@ -86,7 +85,7 @@ void Confirmation::SetText( const std::string& text ) {
 	}
 }
 
-void Confirmation::Confirm() {
+void Confirm::Confirmed() {
 	UIEvent::event_data_t d = {};
 	Trigger( UIEvent::EV_CONFIRM, &d );
 	Close();

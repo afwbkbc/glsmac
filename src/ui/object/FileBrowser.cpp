@@ -7,6 +7,7 @@ namespace object {
 
 void FileBrowser::SetDefaultDirectory( const std::string& default_directory ) {
 	ASSERT( !m_file_list, "can't change default directory after initialization" );
+	ASSERT( util::FS::IsAbsolutePath( default_directory ), "default directory must be absolute path" );
 	m_default_directory = default_directory;
 }
 
@@ -179,6 +180,8 @@ void FileBrowser::SelectCurrentItem() {
 }
 
 void FileBrowser::ChangeDirectory( std::string directory ) {
+	
+	ASSERT( util::FS::IsAbsolutePath( directory ), "directory must be absolute path" );
 	
 	// remove trailing slash
 	if ( !directory.empty() && directory[ directory.size() - 1 ] == util::FS::GetPathSeparator()[ 0 ] ) {

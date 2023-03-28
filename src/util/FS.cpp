@@ -3,6 +3,7 @@
 #include <sstream>
 #include <filesystem>
 #include <algorithm>
+#include <cstring>
 
 #include "FS.h"
 
@@ -45,6 +46,21 @@ namespace util {
 
 #endif
 	
+	bool FS::IsAbsolutePath( const std::string& path ) {
+		return
+#ifdef _WIN32
+			path.size() >= 3 &&
+			path[ 0 ] >= 'A' &&
+			path[ 0 ] <= 'Z' &&
+			path[ 1 ] == ':' &&
+			path[ 2 ] == PATH_SEPARATOR
+#else
+			!path.empty() &&
+			path[ 0 ] == '/'
+#endif
+		;
+	}
+	
 	const std::string FS::GetCurrentDirectory() {
 		return std::filesystem::current_path().string();
 	}
@@ -67,6 +83,28 @@ namespace util {
 		else {
 			return path.substr( pos + 1 );
 		}
+	}
+	
+	const std::string FS::GetFilteredPath( const std::string& path ) {
+		size_t pos = 0;
+#ifdef _WIN32
+		// TODO
+#else
+		if ( path == "." ) {
+			return "";
+		}
+		while ( pos + 1 < path.size() && path[ pos ] == '.' && path[ pos + 1 ] == '/' ) {
+			pos += 2;
+		}
+#endif
+		return pos ? path.substr( pos ) : path;
+	}
+	
+	const std::string FS::GetAbsolutePath( const std::string& path ) {
+		return IsAbsolutePath( path )
+			? path
+			: GetCurrentDirectory() + PATH_SEPARATOR + GetFilteredPath( path )
+		;
 	}
 	
 	const bool FS::Exists( const string& path ) {

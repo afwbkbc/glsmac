@@ -1,5 +1,6 @@
 SET(SRC ${SRC}
 
-	${PWD}/Confirmation.cpp
+	${PWD}/Error.cpp
+	${PWD}/Confirm.cpp
 	
 PARENT_SCOPE)

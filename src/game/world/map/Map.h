@@ -288,7 +288,9 @@ CLASS( Map, Serializable )
 	};
 	static const consts_t s_consts;
 	
+	const bool HasTiles() const;
 	void SetTiles( Tiles* tiles, bool generate_actors = true );
+	void UnsetTiles();
 	
 #ifdef DEBUG
 	std::vector<scene::actor::Instanced*> GetActors() const;
@@ -538,7 +540,7 @@ CLASS( Map, Serializable )
 	void FixNormals( const tiles_t& tiles );
 	
 	const tiles_t GetAllTiles() const;
-	Tiles* GetTilesPtr() const; // be very careful
+	const Tiles* GetTilesPtr() const;
 	
 	const std::string& GetFileName() const;
 	void SetFileName( const std::string& file_name );
@@ -617,6 +619,7 @@ private:
 	tile_state_t* m_current_ts = nullptr;
 	const Tile* m_current_tile = nullptr;
 
+	void FreeTileStates();
 };
 
 }

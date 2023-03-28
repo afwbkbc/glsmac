@@ -9,9 +9,9 @@
 namespace ui {
 namespace popup {
 
-CLASS( Confirmation, ::ui::object::Popup )
+CLASS( Confirm, object::Popup )
 
-	Confirmation( const std::string class_name = "Popup" );
+	Confirm( const std::string class_name = "Popup" );
 
 	void Create();
 	void Destroy();
@@ -24,13 +24,13 @@ private:
 	
 	Section* m_body = nullptr;
 	
-	::ui::object::Label* m_label = nullptr;
+	object::Label* m_label = nullptr;
 	struct {
-		::ui::object::Button* ok = nullptr;
-		::ui::object::Button* cancel = nullptr;
+		object::Button* ok = nullptr;
+		object::Button* cancel = nullptr;
 	} m_buttons;
 
-	void Confirm();
+	void Confirmed();
 
 };
 

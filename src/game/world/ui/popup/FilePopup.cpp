@@ -20,7 +20,7 @@ FilePopup::FilePopup(
 	: OkCancelPopup( world )
 	, m_title( title )
 	, m_file_mode( file_mode )
-	, m_default_directory( default_directory )
+	, m_default_directory( util::FS::GetAbsolutePath( default_directory ) )
 	, m_file_extension( file_extension )
 	, m_default_filename( default_filename )
 {
@@ -44,17 +44,35 @@ void FilePopup::Create() {
 		m_file_browser->SetDefaultFileName( m_default_filename );
 		m_file_browser->On( UIEvent::EV_SELECT, EH( this ) {
 			const auto& path = *data->value.text.ptr;
-			
-			if ( m_file_mode == FM_WRITE && util::FS::FileExists( path ) ) {
-				g_engine->GetUI()->Confirm(
-					"File " + util::FS::GetBaseName( path ) + " already exists! Overwrite?",
-					UH( this, path ) {
+			switch ( m_file_mode ) {
+				case FM_READ: {
+					if ( !util::FS::FileExists( path ) ) {
+						g_engine->GetUI()->Error(
+							"File " + util::FS::GetBaseName( path ) + " does not exist!"
+						);
+					}
+					else {
 						OnFileSelect( path );
 					}
-				);
-			}
-			else {
-				OnFileSelect( path );
+					break;
+				}
+				case FM_WRITE: {
+					if ( util::FS::FileExists( path ) ) {
+						g_engine->GetUI()->Confirm(
+							"File " + util::FS::GetBaseName( path ) + " already exists! Overwrite?",
+							UH( this, path ) {
+								OnFileSelect( path );
+							}
+						);
+					}
+					else {
+						OnFileSelect( path );
+					}
+					break;
+				}
+				default: {
+					ASSERT( false, "unknown file mode " + std::to_string( m_file_mode ) );
+				}
 			}
 			return true;
 		});
