@@ -55,7 +55,7 @@ void Loader::Start() {
 	
 	m_dots_timer.SetInterval( DOTS_CHANGE_INTERVAL );
 	
-	ui->AddIterativeObject( this, IH( this ) {
+	ui->AddIterativeObject( this, UH( this ) {
 		if ( !m_handlers.on_iterate( this ) ) {
 			Stop();
 		}

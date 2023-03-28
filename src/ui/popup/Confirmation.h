@@ -2,20 +2,16 @@
 
 #include "ui/object/Popup.h"
 
+#include "ui/object/Section.h"
 #include "ui/object/Label.h"
 #include "ui/object/Button.h"
 
-#include "../Section.h"
-
-namespace game {
-namespace world {
-class World;
 namespace ui {
 namespace popup {
 
 CLASS( Confirmation, ::ui::object::Popup )
 
-	Confirmation( World* world );
+	Confirmation( const std::string class_name = "Popup" );
 
 	void Create();
 	void Destroy();
@@ -23,7 +19,6 @@ CLASS( Confirmation, ::ui::object::Popup )
 	void SetText( const std::string& text );
 	
 private:
-	World* m_world = nullptr;
 	
 	std::string m_text = "";
 	
@@ -36,10 +31,8 @@ private:
 	} m_buttons;
 
 	void Confirm();
-	
+
 };
 
-}
-}
 }
 }

@@ -2,6 +2,8 @@
 
 #include "util/FS.h"
 
+#include "engine/Engine.h"
+
 namespace game {
 namespace world {
 namespace ui {
@@ -48,7 +50,18 @@ void FilePopup::Create() {
 		m_file_browser->SetDefaultFileName( m_default_filename );
 		m_file_browser->On( UIEvent::EV_SELECT, EH( this ) {
 			const auto& path = *data->value.text.ptr;
-			OnFileSelect( path );
+			
+			if ( m_file_mode == FM_WRITE && util::FS::FileExists( path ) ) {
+				g_engine->GetUI()->Confirm(
+					"File " + util::FS::GetBaseName( path ) + " already exists! Overwrite?",
+					UH( this, path ) {
+						OnFileSelect( path );
+					}
+				);
+			}
+			else {
+				OnFileSelect( path );
+			}
 			return true;
 		});
 	AddChild( m_file_browser );

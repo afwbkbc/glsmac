@@ -4,7 +4,6 @@
 
 #include "../Section.h"
 #include "ui/object/Surface.h"
-#include "ui/object/SoundEffect.h"
 
 #include "util/Scroller.h"
 
@@ -46,10 +45,6 @@ private:
 	util::Scroller< coord_t > m_slide;
 	bool m_is_closing = false;
 	
-	struct {
-		SoundEffect* slideup = nullptr;
-		SoundEffect* slidedown = nullptr;
-	} m_sounds;
 };
 
 }

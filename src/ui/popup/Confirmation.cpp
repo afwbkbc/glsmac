@@ -1,13 +1,10 @@
 #include "Confirmation.h"
 
-namespace game {
-namespace world {
 namespace ui {
 namespace popup {
 
-Confirmation::Confirmation( World* world )
-	: ::ui::object::Popup()
-	, m_world( world )
+Confirmation::Confirmation( const std::string class_name )
+	: ::ui::object::Popup( class_name )
 {
 	// TODO: determine size from text
 	SetWidth( 520 );
@@ -20,11 +17,11 @@ Confirmation::Confirmation( World* world )
 void Confirmation::Create() {
 	::ui::object::Popup::Create();
 	
-	NEW( m_body, Section, m_world, "", "WP" );
+	NEW( m_body, Section, SubClass( "Window" ) );
 		m_body->SetTitleText( "Confirmation" );
 	AddChild( m_body );
 	
-	NEW( m_label, ::ui::object::Label, "PopupText" );
+	NEW( m_label, ::ui::object::Label, SubClass( "Text" ) );
 		if ( !m_text.empty() ) {
 			m_label->SetText( m_text );
 		}
@@ -33,7 +30,7 @@ void Confirmation::Create() {
 	m_body->AddChild( m_label );
 	
 	// TODO: merge with OkCancelPopup ?
-	NEW( m_buttons.ok, ::ui::object::Button, "PopupButtonOkCancel" );
+	NEW( m_buttons.ok, ::ui::object::Button, SubClass( "ButtonOkCancel" ) );
 		m_buttons.ok->SetAlign( ::ui::object::UIObject::ALIGN_LEFT | ::ui::object::UIObject::ALIGN_BOTTOM );
 		m_buttons.ok->SetLeft( 12 );
 		m_buttons.ok->SetBottom( 6 );
@@ -45,7 +42,7 @@ void Confirmation::Create() {
 		});
 	m_body->AddChild( m_buttons.ok );
 
-	NEW( m_buttons.cancel, ::ui::object::Button, "PopupButtonOkCancel" );
+	NEW( m_buttons.cancel, ::ui::object::Button, SubClass( "ButtonOkCancel" ) );
 		m_buttons.cancel->SetAlign( ::ui::object::UIObject::ALIGN_RIGHT | ::ui::object::UIObject::ALIGN_BOTTOM );
 		m_buttons.cancel->SetRight( 12 );
 		m_buttons.cancel->SetBottom( 6 );
@@ -95,7 +92,5 @@ void Confirmation::Confirm() {
 	Close();
 }
 
-}
-}
 }
 }

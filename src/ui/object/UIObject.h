@@ -321,6 +321,7 @@ protected:
 	bool m_is_realign_needed = true;
 	
 	const std::string& GetStyleClass();
+	const std::string SubClass( const std::string& subclass );
 
 	coord_box_t m_margin = {};
 	coord_t m_overflow_margin = 0;

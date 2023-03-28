@@ -34,8 +34,8 @@ using namespace types;
 
 namespace ui {
 
-typedef std::function<void()> object_iterate_handler_t;
-#define IH( ... ) [ __VA_ARGS__ ] () -> void
+typedef std::function<void()> ui_handler_t;
+#define UH( ... ) [ __VA_ARGS__ ] () -> void
 	
 using namespace event;
 using namespace object;
@@ -78,7 +78,7 @@ CLASS( UI, base::Module )
 	
 	const theme::Style* GetStyle( const std::string& style_class ) const;
 	
-	void AddIterativeObject( void* object, const object_iterate_handler_t handler );
+	void AddIterativeObject( void* object, const ui_handler_t handler );
 	void RemoveIterativeObject( void* object );
 	
 	module::Loader* GetLoader() const;
@@ -97,6 +97,12 @@ CLASS( UI, base::Module )
 	void OpenPopup( Popup* popup );
 	void ClosePopup( Popup* popup, bool force = false );
 	void CloseLastPopup( bool force = false );
+	
+	// configure parts
+	void SetPopupClass( const std::string& popup_class );
+	
+	// popups
+	void Confirm( const std::string& text, const ui_handler_t on_confirm );
 	
 #ifdef DEBUG
 	void ShowDebugFrame( UIObject* object );
@@ -140,13 +146,17 @@ private:
 	
 	module::Loader* m_loader = nullptr;
 	
-	std::unordered_map< void*, object_iterate_handler_t > m_iterative_objects = {};
+	std::unordered_map< void*, ui_handler_t > m_iterative_objects = {};
 	std::vector< void* > m_iterative_objects_to_remove = {};
 	
 	const UIEventHandler* m_keydown_handler = nullptr;
 	
 	std::vector< Popup* > m_popups = {};
 	std::vector< Popup* > m_popups_close_queue = {};
+	
+	struct {
+		std::string popup = "";
+	} m_parts_classes = {};
 	
 #ifdef DEBUG	
 	Scene *m_debug_scene;

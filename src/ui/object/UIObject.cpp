@@ -986,6 +986,10 @@ const std::string& UIObject::GetStyleClass() {
 	return m_style_class;
 }
 
+const std::string UIObject::SubClass( const std::string& subclass ) {
+	return !m_style_class.empty() ? m_style_class + subclass : "";
+}
+
 void UIObject::BlockEvents() {
 	if ( !m_are_events_blocked ) {
 		//Log( "blocking events" );

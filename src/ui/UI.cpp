@@ -4,6 +4,8 @@
 
 #include "event/MouseMove.h"
 
+#include "popup/Confirmation.h"
+
 using namespace scene;
 using namespace types;
 
@@ -370,7 +372,7 @@ const theme::Style* UI::GetStyle( const std::string& style_class ) const {
 	return nullptr;
 }
 
-void UI::AddIterativeObject( void* object, const object_iterate_handler_t handler ) {
+void UI::AddIterativeObject( void* object, const ui_handler_t handler ) {
 	ASSERT( m_iterative_objects.find( object ) == m_iterative_objects.end(), "iterative object already exists" );
 	m_iterative_objects[ object ] = handler;
 }
@@ -433,6 +435,22 @@ void UI::ClosePopup( Popup* popup, bool force ) {
 void UI::CloseLastPopup( bool force ) {
 	ASSERT( !m_popups.empty(), "no popup to close" );
 	ClosePopup( m_popups.back(), force );
+}
+
+void UI::SetPopupClass( const std::string& popup_class ) {
+	if ( popup_class != m_parts_classes.popup ) {
+		m_parts_classes.popup = popup_class;
+	}
+}
+
+void UI::Confirm( const std::string& text, const ui_handler_t on_confirm ) {
+	NEWV( popup, popup::Confirmation, m_parts_classes.popup );
+		popup->SetText( text );
+		popup->On( UIEvent::EV_CONFIRM, EH( on_confirm ) {
+			on_confirm();
+			return true;
+		});
+	popup->Open();
 }
 
 #ifdef DEBUG
