@@ -288,11 +288,20 @@ CLASS( Map, Serializable )
 			const std::string default_map_extension = ".gsm";
 		} fs;
 		const std::unordered_map< GlobalSettings::map_parameter_t, Vec2< size_t > > map_sizes = {
+			// original SMAC sizes (1:1)
+			/*
 			{ GlobalSettings::MAP_TINY, { 48, 48 } },
 			{ GlobalSettings::MAP_SMALL, { 64, 64 } },
 			{ GlobalSettings::MAP_STANDARD, { 80, 80 } },
 			{ GlobalSettings::MAP_LARGE, { 100, 100 } },
 			{ GlobalSettings::MAP_HUGE, { 128, 128 } }
+			 */
+			// 2:1 sizes (better for minimap and solves horizontal repeat for screens up to 2:1)
+			{ GlobalSettings::MAP_TINY, { 68, 34 } },
+			{ GlobalSettings::MAP_SMALL, { 88, 44 } },
+			{ GlobalSettings::MAP_STANDARD, { 112, 56 } },
+			{ GlobalSettings::MAP_LARGE, { 140, 70 } },
+			{ GlobalSettings::MAP_HUGE, { 180, 90 } }
 		};
 	};
 	static const consts_t s_consts;
