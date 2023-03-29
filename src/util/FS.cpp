@@ -53,7 +53,7 @@ namespace util {
 			path[ 0 ] >= 'A' &&
 			path[ 0 ] <= 'Z' &&
 			path[ 1 ] == ':' &&
-			path[ 2 ] == PATH_SEPARATOR
+			path[ 2 ] == PATH_SEPARATOR[ 0 ]
 #else
 			!path.empty() &&
 			path[ 0 ] == '/'
