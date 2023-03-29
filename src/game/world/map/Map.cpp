@@ -179,6 +179,10 @@ Map::~Map() {
 	if ( m_tile_states ) {
 		FreeTileStates();
 	}
+	for ( auto& sprite : m_instanced_sprites ) {
+		m_scene->RemoveActor( sprite.second );
+		DELETE( sprite.second );
+	}
 }
 
 const bool Map::HasTiles() const {
@@ -466,6 +470,7 @@ void Map::InitTerrainActor() {
 		terrain->SetDataMesh( m_mesh_terrain_data );
 	
 	NEW( m_actors.terrain, actor::Instanced, terrain );
+		m_actors.terrain->AddInstance( {} ); // default instance
 	m_scene->AddActor( m_actors.terrain );
 }
 
@@ -793,29 +798,42 @@ Scene* Map::GetScene() const {
 	return m_scene;
 }
 
-scene::actor::Instanced* Map::GenerateTerrainSpriteActor( const std::string& name, const pcx_texture_coordinates_t& tex_coords ) const {
-	NEWV(
-		sprite,
-		scene::actor::Sprite,
-		name,
-		{
-			Map::s_consts.tile.scale.x,
-			Map::s_consts.tile.scale.y * Map::s_consts.sprite.y_scale
-		},
-		m_textures.source.ter1_pcx,
-		{
+scene::actor::Instanced* Map::GetTerrainSpriteActor( const std::string& name, const pcx_texture_coordinates_t& tex_coords ) {
+	
+	const auto key = name + " " + tex_coords.ToString();
+	
+	const auto& it = m_instanced_sprites.find( key );
+	if ( it == m_instanced_sprites.end() ) {
+		
+		NEWV(
+			sprite,
+			scene::actor::Sprite,
+			name,
 			{
-				(float) 1.0f / m_textures.source.ter1_pcx->m_width * ( tex_coords.x + 1 ),
-				(float) 1.0f / m_textures.source.ter1_pcx->m_height * ( tex_coords.y + 1 )
+				Map::s_consts.tile.scale.x,
+				Map::s_consts.tile.scale.y * Map::s_consts.sprite.y_scale
 			},
+			m_textures.source.ter1_pcx,
 			{
-				(float) 1.0f / m_textures.source.ter1_pcx->m_width * ( tex_coords.x + Map::s_consts.tc.ter1_pcx.dimensions.x - 4 ),
-				(float) 1.0f / m_textures.source.ter1_pcx->m_height * ( tex_coords.y + Map::s_consts.tc.ter1_pcx.dimensions.y - 4 )
+				{
+					(float) 1.0f / m_textures.source.ter1_pcx->m_width * ( tex_coords.x + 1 ),
+					(float) 1.0f / m_textures.source.ter1_pcx->m_height * ( tex_coords.y + 1 )
+				},
+				{
+					(float) 1.0f / m_textures.source.ter1_pcx->m_width * ( tex_coords.x + Map::s_consts.tc.ter1_pcx.dimensions.x - 4 ),
+					(float) 1.0f / m_textures.source.ter1_pcx->m_height * ( tex_coords.y + Map::s_consts.tc.ter1_pcx.dimensions.y - 4 )
+				}
 			}
-		}
-	);
-	NEWV( instanced, scene::actor::Instanced, sprite );
-	return instanced;
+		);
+		NEWV( instanced, scene::actor::Instanced, sprite );
+		instanced->SetZIndex( 0.5f ); // needs to be higher than map terrain z position
+		m_scene->AddActor( instanced );
+		m_instanced_sprites[ key ] = instanced;
+		return instanced;
+	}
+	else {
+		return it->second;
+	}
 }
 
 const size_t Map::GetWidth() const {
@@ -1148,7 +1166,7 @@ void Map::map_state_t::Unserialize( Buffer buf ) {
 	variables.texture_scaling = buf.ReadVec2f();
 }
 
-void Map::tile_state_t::Unserialize( const Map* map, Buffer buf ) {
+void Map::tile_state_t::Unserialize( Map* map, Buffer buf ) {
 	coord = buf.ReadVec2f();
 	tex_coord.x = buf.ReadFloat();
 	tex_coord.y = buf.ReadFloat();
@@ -1187,7 +1205,7 @@ void Map::tile_state_t::Unserialize( const Map* map, Buffer buf ) {
 	for ( size_t i = 0 ; i < sprites_count ; i++ ) {
 		sprite_t sprite;
 		sprite.tex_coords = buf.ReadVec2u();
-		sprite.actor = map->GenerateTerrainSpriteActor( buf.ReadString(), sprite.tex_coords );
+		sprite.actor = map->GetTerrainSpriteActor( buf.ReadString(), sprite.tex_coords );
 		sprite.actor->Unserialize( buf.ReadString() );
 		sprite.actor->GetSpriteActor()->Unserialize( buf.ReadString() );
 		map->m_scene->AddActor( sprite.actor );
@@ -1269,8 +1287,7 @@ void Map::FreeTileStates() {
 				ts->river_original = nullptr;
 			}
 			for ( auto& a : ts->sprites ) {
-				m_scene->RemoveActor( a.actor );
-				DELETE( a.actor );
+				a.actor->RemoveInstance( a.instance );
 			}
 		}
 	}

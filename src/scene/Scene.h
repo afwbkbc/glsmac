@@ -42,9 +42,9 @@ CLASS( Scene, base::Base )
 	void SetSkyboxTexture( types::Texture *skybox_texture );
 	types::Texture *GetSkyboxTexture();
 	
-	typedef std::vector< Vec3 > instances_t;
-	void SetInstances( const instances_t& instances );
-	const instances_t& GetInstances() const;
+	typedef std::vector< Vec3 > instance_positions_t;
+	void SetWorldInstancePositions( const instance_positions_t& world_instance_positions );
+	const instance_positions_t& GetWorldInstancePositions() const;
 	
 protected:
 	friend class scene::Camera;
@@ -59,7 +59,7 @@ protected:
 	std::unordered_set< Light* > m_lights = {};
 	types::Texture *m_skybox_texture = nullptr;
 	
-	instances_t m_instances = { { 0.0f, 0.0f, 0.0f } }; // only 1 instance by default
+	instance_positions_t m_world_instance_positions = { { 0.0f, 0.0f, 0.0f } }; // only 1 instance by default
 };
 
 } /* namespace scene */

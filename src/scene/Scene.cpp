@@ -55,16 +55,16 @@ types::Texture *Scene::GetSkyboxTexture() {
 	return m_skybox_texture;
 }
 
-void Scene::SetInstances( const instances_t& instances ) {
-	Log( "Setting " + std::to_string( instances.size() ) + " instances" );
-	m_instances = instances;
+void Scene::SetWorldInstancePositions( const instance_positions_t& world_instance_positions ) {
+	Log( "Setting " + std::to_string( world_instance_positions.size() ) + " world instances" );
+	m_world_instance_positions = world_instance_positions;
 	for ( auto& actor : m_actors ) {
 		actor->UpdatePosition();
 	}
 }
 
-const Scene::instances_t& Scene::GetInstances() const {
-	return m_instances;
+const Scene::instance_positions_t& Scene::GetWorldInstancePositions() const {
+	return m_world_instance_positions;
 }
 
 

@@ -10,8 +10,7 @@ void Sprites::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 	
 	// TODO: keep existing ones?
 	for ( auto& sprite : ts->sprites ) {
-		m_map->GetScene()->RemoveActor( sprite.actor );
-		DELETE( sprite.actor );
+		sprite.actor->RemoveInstance( sprite.instance );
 	}
 	ts->sprites.clear();
 	
@@ -105,18 +104,16 @@ void Sprites::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 void Sprites::GenerateSprite( const Tile* tile, Map::tile_state_t* ts, const std::string& name, const Map::pcx_texture_coordinates_t& tex_coords ) {
 	Map::tile_state_t::sprite_t sprite = {};
 	
-	sprite.tex_coords = tex_coords;
-	sprite.actor = m_map->GenerateTerrainSpriteActor( name, sprite.tex_coords );
-	
 	const auto& coords = tile->is_water_tile ? ts->layers[ Map::LAYER_WATER ].coords : ts->layers[ Map::LAYER_LAND ].coords;
 	
-	sprite.actor->SetPosition({
+	sprite.tex_coords = tex_coords;
+	sprite.actor = m_map->GetTerrainSpriteActor( name, sprite.tex_coords );
+	sprite.instance = sprite.actor->AddInstance({
 		coords.center.x,
 		- coords.center.y, // TODO: fix y inversion
 		coords.center.z
 	});
 	
-	m_map->GetScene()->AddActor( sprite.actor );
 	ts->sprites.push_back( sprite );
 }
 

@@ -33,15 +33,17 @@ CLASS( Actor, base::Base )
 	void UnlinkActor() {
 		m_actor = nullptr;
 	}
-	const Vec3& GetPosition() const;
-	void SetPosition( const Vec3& position );
+	const float GetZIndex() const;
+	void SetZIndex( const float z_index );
 	
 	virtual void OnWindowResize() {};
+	
+	
 	
 protected:
 	actor::Actor *m_actor;
 	
-	Vec3 m_position;
+	float m_z_index = 0.0f;
 	
 };
 

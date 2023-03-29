@@ -342,18 +342,25 @@ l_draw_begin:
 			}
 			else if ( m_actor->GetType() == scene::Actor::TYPE_INSTANCED_MESH ) {
 				auto* instanced = (scene::actor::Instanced*) m_actor;
-				scene::actor::Instanced::world_matrices_t matrices;
+				scene::actor::Instanced::matrices_t matrices;
 				if ( capture_request ) {
-					matrices = instanced->GenerateWorldMatrices( capture_request->camera );
+					instanced->GenerateWorldMatrices( &matrices, capture_request->camera );
 				}
 				else {
 					matrices = instanced->GetWorldMatrices();
 				}
-				glUniformMatrix4fv( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA
-					? sp_data->uniforms.world
-					: sp->uniforms.world
-				, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
-				glDrawElementsInstanced( GL_TRIANGLES, ibo_size, GL_UNSIGNED_INT, (void *)(0), matrices.size() );
+				const auto sz = matrices.size();
+				GLsizei i = 0;
+				GLsizei c;
+				for ( auto i = 0 ; i < sz ; i += OpenGL::MAX_INSTANCES ) {
+					c = std::min< size_t >( OpenGL::MAX_INSTANCES, sz - i );
+					glUniformMatrix4fv(
+						shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA
+							? sp_data->uniforms.world
+							: sp->uniforms.world
+						, c, GL_TRUE, (const GLfloat*)( matrices.data() + i ) );
+					glDrawElementsInstanced( GL_TRIANGLES, ibo_size, GL_UNSIGNED_INT, (void *)(0), c );
+				}
 			}
 			else {
 				ASSERT( false, "unknown actor type " + std::to_string( m_actor->GetType() ) );

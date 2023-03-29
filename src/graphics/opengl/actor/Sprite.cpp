@@ -102,9 +102,9 @@ scene::actor::Sprite* Sprite::GetSpriteActor() const {
 
 void Sprite::Draw( shader_program::ShaderProgram *shader_program, Camera *camera ) {
 
-	//Log( "Drawing" );
-	
 	auto* sprite_actor = GetSpriteActor();
+	
+	//Log( "Drawing" );
 	
 	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ibo );
@@ -153,8 +153,14 @@ void Sprite::Draw( shader_program::ShaderProgram *shader_program, Camera *camera
 			else if ( m_actor->GetType() == scene::Actor::TYPE_INSTANCED_SPRITE ) {
 				auto* instanced = (scene::actor::Instanced*) m_actor;
 				auto& matrices = instanced->GetWorldMatrices();
-				glUniformMatrix4fv( sp->uniforms.world, matrices.size(), GL_TRUE, (const GLfloat*)(matrices.data()));
-				glDrawElementsInstanced( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0), matrices.size() );
+				const auto sz = matrices.size();
+				GLsizei i = 0;
+				GLsizei c;
+				for ( auto i = 0 ; i < sz ; i += OpenGL::MAX_INSTANCES ) {
+					c = std::min< size_t >( OpenGL::MAX_INSTANCES, sz - i );
+					glUniformMatrix4fv( sp->uniforms.world, c, GL_TRUE, (const GLfloat*) ( matrices.data() + i ) );
+					glDrawElementsInstanced( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0), c );
+				}
 			}
 			else {
 				ASSERT( false, "unknown actor type " + std::to_string( m_actor->GetType() ) );

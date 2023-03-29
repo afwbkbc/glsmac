@@ -2,7 +2,7 @@
 
 using namespace scene;
 
-#include "engine/Engine.h"
+#include "graphics/opengl/OpenGL.h"
 
 namespace graphics {
 namespace opengl {
@@ -13,7 +13,7 @@ void OrthographicData::AddShaders() {
 \
 in vec3 aCoord; \
 in uint aData; \
-uniform mat4 uWorld[" + std::to_string( Graphics::MAX_WORLD_INSTANCES ) + "]; \
+uniform mat4 uWorld[" + std::to_string( OpenGL::MAX_INSTANCES ) + "]; \
 out float data; \
 \
 void main(void) { \

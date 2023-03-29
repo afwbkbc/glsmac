@@ -4,6 +4,7 @@
 #include "actor/Mesh.h"
 
 #include "scene/actor/Actor.h"
+#include "scene/actor/Instanced.h"
 
 #include "../Graphics.h"
 
@@ -38,7 +39,7 @@ void Scene::RemoveActor( base::ObjectLink *link ) {
 }
 
 void Scene::AddActorToZIndexSet( Actor* gl_actor ) {
-	const float zindex = gl_actor->GetPosition().z;
+	const float zindex = gl_actor->GetZIndex();
 	auto it = m_gl_actors_by_zindex.find( zindex );
 	if ( it == m_gl_actors_by_zindex.end() ) {
 		m_gl_actors_by_zindex[ zindex ] = {};
@@ -50,7 +51,7 @@ void Scene::AddActorToZIndexSet( Actor* gl_actor ) {
 }
 
 void Scene::RemoveActorFromZIndexSet( Actor* gl_actor ) {
-	const float zindex = gl_actor->GetPosition().z;
+	const float zindex = gl_actor->GetZIndex();
 	auto it = m_gl_actors_by_zindex.find( zindex );
 	ASSERT( it != m_gl_actors_by_zindex.end(), "zindex set not found" );
 	auto actor_it = find( it->second.begin(), it->second.end(), gl_actor );
@@ -78,12 +79,22 @@ void Scene::Update() {
 			bool mesh_reload_needed = gl_actor->MeshReloadNeeded();
 			bool texture_reload_needed = gl_actor->TextureReloadNeeded();
 			
-			// check if z index changed
-			auto& pos = gl_actor->GetActor()->GetPosition();
-			if ( gl_actor->GetPosition().z != pos.z ) {
-				// move to corrent zindex set
+			float z_index = 0.0f;
+			const auto* actor = gl_actor->GetActor();
+			if (
+				actor->GetType() != scene::actor::Actor::TYPE_INSTANCED_MESH &&
+				actor->GetType() != scene::actor::Actor::TYPE_INSTANCED_SPRITE
+			) {
+				// check if z index changed ( doesn't make sense for instanced actors )
+				z_index = actor->GetPosition().z;
+			}
+			else {
+				z_index = ((scene::actor::Instanced*)actor)->GetZIndex();
+			}
+			if ( gl_actor->GetZIndex() != z_index ) {
+				// move to current zindex set
 				RemoveActorFromZIndexSet( gl_actor );
-				gl_actor->SetPosition( pos );
+				gl_actor->SetZIndex( z_index );
 				AddActorToZIndexSet( gl_actor );
 			}
 			

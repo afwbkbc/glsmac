@@ -16,14 +16,14 @@ CLASS( Entity, types::Serializable )
 
 	// GetAngle(), SetAngle(), etc
 #define _XYZ_SETTER( _name ) \
-	const types::Vec3& Get##_name() const;\
-	const float Get##_name##X() const;\
-	const float Get##_name##Y() const;\
-	const float Get##_name##Z() const;\
-	void Set##_name( const types::Vec3 & value );\
-	void Set##_name##X( const float value );\
-	void Set##_name##Y( const float value );\
-	void Set##_name##Z( const float value );
+	virtual const types::Vec3& Get##_name() const;\
+	virtual const float Get##_name##X() const;\
+	virtual const float Get##_name##Y() const;\
+	virtual const float Get##_name##Z() const;\
+	virtual void Set##_name( const types::Vec3 & value );\
+	virtual void Set##_name##X( const float value );\
+	virtual void Set##_name##Y( const float value );\
+	virtual void Set##_name##Z( const float value );
 
 	_XYZ_SETTER( Position );
 	_XYZ_SETTER( Angle );

@@ -440,13 +440,14 @@ CLASS( Map, Serializable )
 		// bonus resources, supply pods and terraforming (except for roads/tubes)
 		typedef struct {
 			scene::actor::Instanced* actor;
+			scene::actor::Instanced::instance_id_t instance;
 			pcx_texture_coordinates_t tex_coords;
 		} sprite_t;
 		typedef std::vector< sprite_t > sprites_t;
 		sprites_t sprites;
 		
 		const Buffer Serialize() const;
-		void Unserialize( const Map* map, Buffer buf );
+		void Unserialize( Map* map, Buffer buf );
 		
 	};
 	
@@ -551,7 +552,7 @@ CLASS( Map, Serializable )
 	
 	Scene* GetScene() const;
 	
-	scene::actor::Instanced* GenerateTerrainSpriteActor( const std::string& name, const pcx_texture_coordinates_t& tex_coords ) const;
+	scene::actor::Instanced* GetTerrainSpriteActor( const std::string& name, const pcx_texture_coordinates_t& tex_coords );
 	
 	typedef std::vector< Tile* > tiles_t;
 	void LoadTiles( const tiles_t& tiles );
@@ -636,7 +637,10 @@ private:
 	
 	tile_state_t* m_current_ts = nullptr;
 	const Tile* m_current_tile = nullptr;
-
+	
+	// key -> actor
+	std::unordered_map< std::string, scene::actor::Instanced* > m_instanced_sprites = {};
+	
 	void FreeTileStates();
 };
 

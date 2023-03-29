@@ -2,7 +2,7 @@
 
 using namespace scene;
 
-#include "graphics/Graphics.h"
+#include "graphics/opengl/OpenGL.h"
 
 namespace graphics {
 namespace opengl {
@@ -16,7 +16,7 @@ in vec2 aTexCoord; \
 in vec4 aTintColor; \
 in vec3 aNormal; \
 uniform vec2 uPosition; \
-uniform mat4 uWorld[" + std::to_string( Graphics::MAX_WORLD_INSTANCES ) + "]; \
+uniform mat4 uWorld[" + std::to_string( OpenGL::MAX_INSTANCES ) + "]; \
 uniform uint uFlags; \
 out vec2 texpos; \
 out vec4 tintcolor; \
@@ -49,8 +49,8 @@ in vec4 tintcolor; \
 in vec3 fragpos; \
 in vec3 normal; \
 uniform sampler2D uTexture; \
-uniform vec3 uLightPos[" + std::to_string( Graphics::MAX_WORLD_LIGHTS ) + "]; \
-uniform vec4 uLightColor[" + std::to_string( Graphics::MAX_WORLD_LIGHTS ) + "]; \
+uniform vec3 uLightPos[" + std::to_string( OpenGL::MAX_WORLD_LIGHTS ) + "]; \
+uniform vec4 uLightColor[" + std::to_string( OpenGL::MAX_WORLD_LIGHTS ) + "]; \
 uniform uint uFlags; \
 uniform vec4 uTintColor; \
 uniform vec3 uAreaLimitsMin; \
@@ -72,14 +72,14 @@ void main(void) { \
 	} \
 	vec3 ambient = vec3( 0.0, 0.0, 0.0 ); \
 	vec3 diffuse = vec3( 0.0, 0.0, 0.0 ); \
-	" + S_For( "i", 0, Graphics::MAX_WORLD_LIGHTS, " \
+	" + S_For( "i", 0, OpenGL::MAX_WORLD_LIGHTS, " \
 		ambient += uLightColor[ i ].rgb * ( 1.0 - uLightColor[ i ].a ); \
 		vec3 lightdir = normalize( uLightPos[ i ] ); \
 		float diff = max( dot(normal, lightdir), 0.0 ); \
 		diffuse += diff * uLightColor[ i ].rgb * uLightColor[ i ].a; \
 	" ) + " \
-	ambient /= " + std::to_string( Graphics::MAX_WORLD_LIGHTS ) + "; \
-	diffuse /= " + std::to_string( Graphics::MAX_WORLD_LIGHTS ) + "; \
+	ambient /= " + std::to_string( OpenGL::MAX_WORLD_LIGHTS ) + "; \
+	diffuse /= " + std::to_string( OpenGL::MAX_WORLD_LIGHTS ) + "; \
 	vec4 tex = texture2D( uTexture, vec2( texpos.xy ) ); \
 	float gamma = 1.4; /* TODO: pass via uniform */ \
 	vec3 color = vec3( tex.r * tintcolor.r, tex.g * tintcolor.g, tex.b * tintcolor.b ); \

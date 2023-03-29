@@ -138,8 +138,6 @@ private:
 			util::Timer timer;
 			Vec2< float > speed = { 0, 0 };
 		} edge_scrolling;
-		bool is_rotating = false;
-		Vec2< float > last_rotate_position;
 		Vec2< float > last_mouse_position;
 		float key_zooming = 0;
 	} m_map_control = {};

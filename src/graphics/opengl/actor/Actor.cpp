@@ -7,15 +7,14 @@ namespace opengl {
 
 Actor::Actor( scene::actor::Actor *actor ) : m_actor( actor ) {
 	m_name = actor->GetLocalName();
-	m_position = actor->GetPosition();
 }
 
-const Vec3& Actor::GetPosition() const {
-	return m_position;
+const float Actor::GetZIndex() const {
+	return m_z_index;
 }
 
-void Actor::SetPosition( const Vec3& position ) {
-	m_position = position;
+void Actor::SetZIndex( const float z_index ) {
+	m_z_index = z_index;
 }
 
 Actor::~Actor() {

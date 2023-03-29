@@ -17,7 +17,6 @@ namespace graphics {
 
 CLASS( Graphics, base::Module )
 
-	static constexpr size_t MAX_WORLD_INSTANCES = 9; // not needed more than 3 in most cases but no harm from supporting extra
 	static constexpr size_t MAX_WORLD_LIGHTS = 2;
 
 	virtual ~Graphics();

@@ -346,13 +346,6 @@ void World::Start() {
 					m_map_control.last_drag_position = { m_clamp.x.Clamp( data->mouse.absolute.x ), m_clamp.y.Clamp( data->mouse.absolute.y ) };
 					break;
 				}
-#ifdef DEBUG
-				case UIEvent::M_MIDDLE: {
-					m_map_control.is_rotating = true;
-					m_map_control.last_rotate_position = { m_clamp.x.Clamp( data->mouse.absolute.x ), m_clamp.y.Clamp( data->mouse.absolute.y ) };
-					break;
-				}
-#endif
 			}
 		}
 		return true;
@@ -379,20 +372,6 @@ void World::Start() {
 			
 			m_map_control.last_drag_position = current_drag_position;
 		}
-#ifdef DEBUG
-		else if ( m_map_control.is_rotating ) {
-			Vec2<float> current_rotate_position = { m_clamp.x.Clamp( data->mouse.absolute.x ), m_clamp.y.Clamp( data->mouse.absolute.y ) };
-			Vec2<float> rotate = current_rotate_position - m_map_control.last_rotate_position;
-			
-			for (auto& actor : m_map->GetActors() ) {
-				auto newz = actor->GetAngleZ() + ( (float) rotate.x * MAP_ROTATE_SPEED );
-				auto newy = std::max( -0.5f, std::min( 0.5f, actor->GetAngleY() + ( (float) rotate.y * MAP_ROTATE_SPEED ) ) );
-				actor->SetAngleZ( newz );
-				actor->SetAngleY( newy );
-			}
-			m_map_control.last_rotate_position = current_rotate_position;
-		}
-#endif
 		else if ( !m_ui.bottom_bar->IsMouseDraggingMiniMap() ) {
 			const ssize_t edge_distance = m_viewport.is_fullscreen
 				? World::s_consts.map_scroll.static_scrolling.edge_distance_px.fullscreen
@@ -438,15 +417,6 @@ void World::Start() {
 				m_map_control.is_dragging = false;
 				break;
 			}
-#ifdef DEBUG
-			case UIEvent::M_MIDDLE: {
-				m_map_control.is_rotating = false;
-				for (auto& actor : m_map->GetActors() ) {
-					actor->SetAngle( { 0.0, 0.0, 0.0 } );
-				}
-				break;
-			}
-#endif
 		}
 		if ( m_is_editing_mode ) {
 			m_editing_draw_timer.Stop();
@@ -742,12 +712,17 @@ void World::UpdateMapInstances() {
 	
 	const float mhw = Map::s_consts.tile.scale.x * m_map->GetWidth() / 2;
 	
-	uint8_t instances_before_after = floor( m_viewport.aspect_ratio / ( (float) m_map->GetWidth() / m_map->GetHeight() ) / 2 ) + 1;
-	
-	// don't spawn more instances than graphics system can support
-	while ( instances_before_after * 2 + 1 > graphics::Graphics::MAX_WORLD_INSTANCES ) {
-		instances_before_after--;
-	}
+	uint8_t instances_before_after = floor(
+		m_viewport.aspect_ratio
+			/
+		(
+			(float) m_map->GetWidth()
+				/
+			m_map->GetHeight()
+		)
+			/
+		2
+	) + 1;
 	
 	for ( uint8_t i = instances_before_after ; i > 0 ; i-- ) {
 		instances.push_back( { -mhw * i, 0.0f, 0.0f } );
@@ -757,7 +732,7 @@ void World::UpdateMapInstances() {
 		instances.push_back( { +mhw * i, 0.0f, 0.0f } );
 	}
 	
-	m_world_scene->SetInstances( instances );
+	m_world_scene->SetWorldInstancePositions( instances );
 }
 
 void World::UpdateUICamera() {
@@ -916,6 +891,7 @@ void World::DeselectTile() {
 void World::AddActor( actor::Actor* actor ) {
 	ASSERT( m_actors_map.find( actor ) == m_actors_map.end(), "world actor already added" );
 	NEWV( instanced, scene::actor::Instanced, actor );
+		instanced->AddInstance( {} ); // default instance
 	m_world_scene->AddActor( instanced );
 	m_actors_map[ actor ] = instanced;
 }
