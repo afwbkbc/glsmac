@@ -24,6 +24,12 @@ void SoundEffect::SetAutoPlay( const bool autoplay ) {
 	}
 }
 
+void SoundEffect::SetAutoStop( const bool autostop ) {
+	if ( autostop != m_autostop ) {
+		m_autostop = autostop;
+	}
+}
+
 void SoundEffect::SetRepeatable( const bool repeatable ) {
 	if ( repeatable != m_repeatable ) {
 		m_repeatable = repeatable;
@@ -73,7 +79,7 @@ void SoundEffect::Pause() {
 
 void SoundEffect::Stop() {
 	for ( auto& actor : m_actors ) {
-		//actor->Stop();
+		actor->Stop();
 	}
 }
 
@@ -103,7 +109,9 @@ void SoundEffect::Iterate() {
 
 void SoundEffect::Destroy() {
 	for ( auto& actor : m_actors ) {
-		//actor->Stop(); // stop or not?
+		if ( m_autostop ) {
+			actor->Stop();
+		}
 		g_engine->GetAudio()->RemoveAndDeleteActor( actor );
 		// TODO: scene?
 		//RemoveActor( m_actor );
@@ -126,6 +134,9 @@ void SoundEffect::ApplyStyle() {
 		}
 		if ( Has( Style::A_SOUND_AUTOPLAY ) ) {
 			SetAutoPlay( true );
+		}
+		if ( Has( Style::A_SOUND_AUTOSTOP ) ) {
+			SetAutoStop( true );
 		}
 		if ( Has( Style::A_SOUND_REPEATABLE ) ) {
 			SetRepeatable( true );

@@ -10,6 +10,8 @@
 
 #include "map_generator/SimplePerlin.h"
 
+#include "ui/popup/PleaseDontGo.h"
+
 // TODO: move to settings
 #define MAP_ROTATE_SPEED 2.0f
 
@@ -266,15 +268,19 @@ void World::Start() {
 			}
 			
 			if ( data->key.code == UIEvent::K_ESCAPE ) {
+				if ( !g_engine->GetUI()->HasPopup() ) { // close all other popups first (including same one)
+					ConfirmExit( UH( this ) {
 #ifdef DEBUG
-				const auto* config = g_engine->GetConfig();
-				if ( config->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
-					g_engine->ShutDown();
-				}
-				else
+						const auto* config = g_engine->GetConfig();
+						if ( config->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
+							g_engine->ShutDown();
+						}
+						else
 #endif
-				{
-					ReturnToMainMenu();
+						{
+							ReturnToMainMenu();
+						}
+					});
 				}
 				return true;
 			}
@@ -840,6 +846,12 @@ void World::SaveMap( const std::string& path ) {
 	m_map->SetFileName( util::FS::GetBaseName( path ) );
 	m_ui.bottom_bar->UpdateMapFileName();
 	AddMessage( "Map saved to " + path );
+}
+
+void World::ConfirmExit( ::ui::ui_handler_t on_confirm ) {
+	NEWV( popup, ui::popup::PleaseDontGo, this, on_confirm );
+	m_map_control.edge_scrolling.timer.Stop();
+	popup->Open();
 }
 
 void World::AddMessage( const std::string& text ) {

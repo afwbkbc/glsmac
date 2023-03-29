@@ -91,7 +91,8 @@ CLASS( Style, base::Base )
 		// sounds
 		A_SOUND,
 		A_SOUND_VOLUME,
-		A_SOUND_AUTOPLAY,
+		A_SOUND_AUTOPLAY, // start playing when element is created
+		A_SOUND_AUTOSTOP, // stop playing when element is destroyed
 		A_SOUND_REPEATABLE,
 		A_SOUND_START_DELAY,
 		A_BUTTON_CLICK_SOUND,

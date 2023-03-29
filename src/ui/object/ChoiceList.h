@@ -14,6 +14,8 @@ CLASS( ChoiceList, UIContainer )
 	
 	ChoiceList( const std::string& class_name = "" );
 
+	void SetImmediateMode( const bool immediate_mode );
+	
 	void SetChoices( const choices_t& choices );
 	void SetValue( const std::string& value );
 	const std::string& GetValue() const;
@@ -35,9 +37,12 @@ protected:
 private:
 	void UpdateButtons();
 	
+	bool m_immediate_mode = true;
+	
 	choices_t m_choices = {};
+	const std::string m_empty_choice = "";
 	std::unordered_map< std::string, Button* > m_buttons = {};
-	size_t m_value = 0;
+	ssize_t m_value = -1;
 	std::unordered_map< Button*, size_t > m_button_values = {};
 	
 	void SetActiveButton( Button* button );
@@ -58,6 +63,8 @@ private:
 		Style::A_BUTTON_CLICK_SOUND,
 		Style::A_BUTTON_MOVE_SOUND,
 	};
+	
+	void SelectChoice();
 };
 
 } /* namespace object */

@@ -24,10 +24,10 @@ FilePopup::FilePopup(
 	, m_file_extension( file_extension )
 	, m_default_filename( default_filename )
 {
+	SetTitleText( m_title );
 	// TODO: load from styles?
 	SetWidth( 500 );
 	SetHeight( 600 );
-	SetTitleText( m_title );
 }
 
 void FilePopup::Create() {

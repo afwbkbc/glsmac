@@ -12,7 +12,7 @@ Popup::Popup( World* world )
 	: object::Popup( "WP" )
 	, m_world( world )
 {
-	//
+	SetAlign( ALIGN_HCENTER | ALIGN_BOTTOM );
 }
 
 void Popup::Create() {

@@ -20,12 +20,13 @@ void Multiplayer::Show() {
 	m_body->AddChild( m_section );
 	
 	NEW( m_choices, ChoiceList, "PopupButtonList" );
+		m_choices->SetImmediateMode( false );
 		m_choices->SetMargin( 3 );
 		m_choices->SetChoices({
 			"Simple Internet TCP/IP Connection",
 			"Hotseat/Play-by-Email",
 		});
-		m_choices->On( UIEvent::EV_BUTTON_DOUBLE_CLICK, EH( this ) {
+		m_choices->On( UIEvent::EV_SELECT, EH( this ) {
 			OnNext();
 			return true;
 		});

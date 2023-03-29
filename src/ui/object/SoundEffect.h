@@ -15,6 +15,7 @@ CLASS( SoundEffect, UIObject )
 	void SetSound( const types::Sound* sound );
 	void SetVolume( const float volume );
 	void SetAutoPlay( const bool autoplay );
+	void SetAutoStop( const bool autostop );
 	void SetRepeatable( const bool repeatable );
 	void SetStartDelay( const size_t start_delay );
 
@@ -34,6 +35,7 @@ protected:
 
 	float m_volume = 1.0;
 	bool m_autoplay = false;
+	bool m_autostop = false;
 	bool m_repeatable = false;
 	size_t m_start_delay = 0;
 	

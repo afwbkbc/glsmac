@@ -7,6 +7,13 @@ ChoiceList::ChoiceList( const std::string& class_name ) : UIContainer( class_nam
 	SetEventContexts( EC_KEYBOARD );
 }
 
+void ChoiceList::SetImmediateMode( const bool immediate_mode ) {
+	if ( m_immediate_mode != immediate_mode ) {
+		ASSERT( m_buttons.empty(), "can't change mode after initialization" );
+		m_immediate_mode = immediate_mode;
+	}
+}
+
 void ChoiceList::SetChoices( const choices_t& choices ) {
 	ASSERT( m_choices.empty(), "choices already set" );
 	
@@ -26,6 +33,7 @@ void ChoiceList::SetValue( const std::string& value ) {
 const std::string& ChoiceList::GetValue() const {
 	ASSERT( !m_choices.empty(), "choices are empty" );
 	ASSERT( m_value < m_choices.size(), "choices value overflow" );
+	ASSERT( m_value >= 0, "choices value not set" );
 	return m_choices[ m_value ];
 }
 
@@ -78,25 +86,34 @@ void ChoiceList::UpdateButtons() {
 					if ( !button->HasStyleModifier( Style::M_SELECTED ) ) {
 						SetActiveButton( button );
 					}
+					if ( m_immediate_mode ) {
+						SelectChoice();
+					}
 					return true;
 				});
 				button->On( UIEvent::EV_BUTTON_DOUBLE_CLICK, EH( this ) {
-					return Trigger( UIEvent::EV_BUTTON_DOUBLE_CLICK, data );
+					SelectChoice();
+					return true;
 				});
 			AddChild( button );
 			m_button_values[ button ] = value;
 			m_buttons[ choice ] = button;
 			value++;
 		}
-		SetValue( m_choices[0] ); // activate first by default
+		if ( !m_immediate_mode ) {
+			SetValue( m_choices[ 0 ] ); // activate first by default
+		}
 	}
 }
 
 bool ChoiceList::OnKeyDown( const UIEvent::event_data_t* data ) {
 	switch ( data->key.code ) {
 		case UIEvent::K_DOWN: {
-			if ( m_value < m_choices.size() - 1 ) {
+			if ( m_value < m_choices.size() - 2 ) {
 				SetValue( m_choices[ m_value + 1 ] );
+			}
+			else {
+				SetValue( m_choices.back() );
 			}
 			break;
 		}
@@ -104,6 +121,13 @@ bool ChoiceList::OnKeyDown( const UIEvent::event_data_t* data ) {
 			if ( m_value > 0 ) {
 				SetValue( m_choices[ m_value - 1 ] );
 			}
+			else {
+				SetValue( m_choices[ 0 ] );
+			}
+			break;
+		}
+		case UIEvent::K_ENTER: {
+			SelectChoice();
 			break;
 		}
 		default: {
@@ -136,6 +160,14 @@ void ChoiceList::SetActiveButton( Button* button ) {
 	}
 	ASSERT( it->second < m_choices.size(), "button value overflow" );
 	m_value = it->second;
+}
+
+void ChoiceList::SelectChoice() {
+	if ( m_value >= 0 ) {
+		UIEvent::event_data_t d = {};
+		d.value.text.ptr = &GetValue();
+		Trigger( UIEvent::EV_SELECT, &d );
+	}
 }
 
 }

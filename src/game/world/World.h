@@ -18,8 +18,8 @@
 #include "map/Map.h"
 #include "map_editor/MapEditor.h"
 
+#include "../../ui/UI.h"
 #include "ui/event/UIEventHandler.h"
-
 #include "ui/style/Theme.h"
 #include "ui/bottom_bar/BottomBar.h"
 
@@ -95,6 +95,8 @@ CLASS( World, base::Task )
 	void GenerateMap( types::Vec2< size_t > size );
 	void LoadMap( const std::string& path );
 	void SaveMap( const std::string& path );
+	
+	void ConfirmExit( ::ui::ui_handler_t on_confirm );
 	
 protected:
 

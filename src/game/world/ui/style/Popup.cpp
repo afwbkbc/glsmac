@@ -9,11 +9,14 @@ void Popup::AddStyles() {
 	
 	SetPrefix( "WP" );
 	
+	// general style
+	
 	AddStyle( "", SH() {
 		s->Set( Style::A_ALIGN, UIObject::ALIGN_HCENTER | UIObject::ALIGN_BOTTOM );
 		s->Set( Style::A_Z_INDEX, 0.7f );
 	});
 	
+	// TODO: multilevel inheritance
 	AddStyle( "SectionOuter", SH() {
 		s->Set( Style::A_BORDER_SIZE, 1 );
 		s->Set( Style::A_LEFT, -3 ); // TODO: why are gaps created without it?
@@ -87,6 +90,45 @@ void Popup::AddStyles() {
 		s->Set( Style::A_WIDTH, 8 );
 	});
 	
+	// specific popups
+	
+	AddStyle( "PleaseDontGoImage", SH() {
+		
+		// TODO: fix z index bugs
+		s->Set( Style::A_Z_INDEX, 0.6f );
+		
+		s->Set( Style::A_WIDTH, 200 );
+		s->Set( Style::A_HEIGHT, 120 );
+		s->Set( Style::A_LEFT, 8 );
+		s->Set( Style::A_TOP, 36 );
+		
+		s->SetTextureTC( Style::A_TEXTURE, "space_sm.pcx", Color::RGB( 100, 16, 156 ) );
+		
+	});
+	
+	AddStyle( "PleaseDontGoText", SH() {
+		
+		s->Set( Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_RIGHT );
+		
+		// TODO: fix z index bugs
+		s->Set( Style::A_Z_INDEX, 0.6f );
+		
+		s->Set( Style::A_HEIGHT, 32 );
+		s->Set( Style::A_RIGHT, 96 );
+		s->Set( Style::A_TOP, 80 );
+		
+		s->SetFont( Style::A_FONT, "arialn.ttf", 28 );
+		s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 92, 124, 188 ) );
+		
+	});
+	
+	AddStyle( "PleaseDontGoSound", SH() {
+		s->SetSound( Style::A_SOUND, "CPU please don't go.wav" );
+		s->Set( Style::A_SOUND_AUTOPLAY );
+		s->Set( Style::A_SOUND_AUTOSTOP );
+		//s->Set( Style::A_SOUND_START_DELAY, 60 );
+		s->Set( Style::A_SOUND_VOLUME, 0.5 );
+	});
 }
 
 }
