@@ -849,6 +849,12 @@ void World::SaveMap( const std::string& path ) {
 }
 
 void World::ConfirmExit( ::ui::ui_handler_t on_confirm ) {
+#ifdef DEBUG
+	if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
+		on_confirm();
+		return;
+	}
+#endif
 	NEWV( popup, ui::popup::PleaseDontGo, this, on_confirm );
 	m_map_control.edge_scrolling.timer.Stop();
 	popup->Open();

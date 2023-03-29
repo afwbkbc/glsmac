@@ -15,6 +15,10 @@ GameMenu::GameMenu( World* world )
 		m_world->ConfirmExit( UH( this ) {
 			m_world->ReturnToMainMenu();
 		});
+#ifdef DEBUG
+		if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART ) )
+			return false; // menu is already destroyed by now, can't do animation
+#endif
 		return true;
 	});
 	
@@ -22,6 +26,10 @@ GameMenu::GameMenu( World* world )
 		m_world->ConfirmExit( UH( this ) {
 			g_engine->ShutDown();
 		});
+#ifdef DEBUG
+		if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART ) )
+			return false; // menu is already destroyed by now, can't do animation
+#endif
 		return true;
 	});
 }
