@@ -13,11 +13,12 @@ void OrthographicData::AddShaders() {
 \
 in vec3 aCoord; \
 in uint aData; \
-uniform mat4 uWorld[" + std::to_string( OpenGL::MAX_INSTANCES ) + "]; \
+uniform mat4 uWorld; \
+uniform mat4 uInstances[" + std::to_string( OpenGL::MAX_INSTANCES ) + "]; \
 out float data; \
 \
 void main(void) { \
-	gl_Position = uWorld[ gl_InstanceID ] * vec4( aCoord, 1.0 ); \
+	gl_Position = uWorld * uInstances[ gl_InstanceID ] * vec4( aCoord, 1.0 ); \
 	data = aData; \
 } \
 \
@@ -38,6 +39,7 @@ void OrthographicData::Initialize() {
 	attributes.coord = GetAttributeLocation( "aCoord" );
 	attributes.data = GetAttributeLocation( "aData" );
 	uniforms.world = GetUniformLocation("uWorld");
+	uniforms.instances = GetUniformLocation("uInstances");
 };
 
 void OrthographicData::EnableAttributes() const {

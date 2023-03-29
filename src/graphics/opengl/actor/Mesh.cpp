@@ -325,6 +325,18 @@ l_draw_begin:
 			;
 			
 			// TODO: instanced capture_request ?
+			if ( !ignore_camera ) {
+				glUniformMatrix4fv(
+					shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA
+						? sp_data->uniforms.world
+						: sp->uniforms.world
+					, 1, GL_TRUE, (const GLfloat*) (
+						capture_request
+							? &( capture_request->camera->GetMatrix() )
+							: &( camera->GetMatrix() )
+						)
+					);
+			}
 			if ( ignore_camera || m_actor->GetType() == scene::Actor::TYPE_MESH ) {
 				types::Matrix44 matrix;
 				ASSERT( !capture_request, "non-instanced captures not implemented" );
@@ -335,8 +347,8 @@ l_draw_begin:
 					matrix = m_actor->GetWorldMatrix();
 				}
 				glUniformMatrix4fv( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA
-					? sp_data->uniforms.world
-					: sp->uniforms.world
+					? sp_data->uniforms.instances
+					: sp->uniforms.instances
 				, 1, GL_TRUE, (const GLfloat*)(&matrix));
 				glDrawElements( GL_TRIANGLES, ibo_size, GL_UNSIGNED_INT, (void *)(0) );
 			}
@@ -356,8 +368,8 @@ l_draw_begin:
 					c = std::min< size_t >( OpenGL::MAX_INSTANCES, sz - i );
 					glUniformMatrix4fv(
 						shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA
-							? sp_data->uniforms.world
-							: sp->uniforms.world
+							? sp_data->uniforms.instances
+							: sp->uniforms.instances
 						, c, GL_TRUE, (const GLfloat*)( matrices.data() + i ) );
 					glDrawElementsInstanced( GL_TRIANGLES, ibo_size, GL_UNSIGNED_INT, (void *)(0), c );
 				}

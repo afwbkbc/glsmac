@@ -81,14 +81,14 @@ void Instanced::GenerateWorldMatrices( matrices_t* out_matrices, scene::Camera* 
 			UpdateInstance( instance );
 		}
 		for ( auto& matrices : instance.matrices ) {
-			(*out_matrices)[ i ] = camera->GetMatrix() * matrices.matrix;
+			(*out_matrices)[ i ] = matrices.matrix;
 			i++;
 		}
 	}
 }
 
 void Instanced::UpdateWorldMatrix() {
-	if ( m_scene ) {
+	if ( m_scene && m_need_world_matrix_update ) {
 		auto* camera = m_scene->GetCamera();
 		if ( camera ) {
 			GenerateWorldMatrices( &m_world_matrices, camera );

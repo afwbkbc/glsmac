@@ -18,6 +18,7 @@ protected:
 
 	struct {
 		GLuint world;
+		GLuint instances;
 	} uniforms;
 
 	struct {

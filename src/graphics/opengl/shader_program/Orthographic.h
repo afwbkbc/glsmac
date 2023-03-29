@@ -22,6 +22,7 @@ protected:
 		GLuint position;
 		GLuint texture;
 		GLuint world;
+		GLuint instances;
 		GLuint light_pos;
 		GLuint light_color;
 		GLuint flags;

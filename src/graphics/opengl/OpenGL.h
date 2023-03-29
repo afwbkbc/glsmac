@@ -37,7 +37,7 @@ CLASS( OpenGL, Graphics )
 	// includes extra instances from map instancing
 	// limited by opengl uniform array size, maximum is around 256 so don't exceed it
 	// rendering will be split to multiple draw calls if number of instances is larger
-	static constexpr size_t MAX_INSTANCES = 128;
+	static constexpr size_t MAX_INSTANCES = 224;
 
 	OpenGL( const std::string title, const unsigned short window_width, const unsigned short window_height, const bool vsync, const bool fullscreen );
 	~OpenGL();

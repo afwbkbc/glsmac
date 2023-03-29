@@ -16,7 +16,8 @@ in vec2 aTexCoord; \
 in vec4 aTintColor; \
 in vec3 aNormal; \
 uniform vec2 uPosition; \
-uniform mat4 uWorld[" + std::to_string( OpenGL::MAX_INSTANCES ) + "]; \
+uniform mat4 uWorld; \
+uniform mat4 uInstances[" + std::to_string( OpenGL::MAX_INSTANCES ) + "]; \
 uniform uint uFlags; \
 out vec2 texpos; \
 out vec4 tintcolor; \
@@ -29,7 +30,7 @@ void main(void) { \
 		position = vec4( aCoord, 1.0 ); \
 	} \
 	else { \
-		position = uWorld[ gl_InstanceID ] * vec4( aCoord, 1.0 ); \
+		position = uWorld * uInstances[ gl_InstanceID ] * vec4( aCoord, 1.0 ); \
 	} \
 	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_2D_POSITION ) + " ) { \
 		position += vec4( uPosition, 0.0, 0.0 ); \
@@ -107,6 +108,7 @@ void Orthographic::Initialize() {
 	uniforms.light_pos = GetUniformLocation( "uLightPos" );
 	uniforms.light_color = GetUniformLocation( "uLightColor" );
 	uniforms.world = GetUniformLocation("uWorld");
+	uniforms.instances = GetUniformLocation("uInstances");
 	uniforms.flags = GetUniformLocation("uFlags");
 	uniforms.tint_color = GetUniformLocation("uTintColor");
 	uniforms.area_limits.min = GetUniformLocation( "uAreaLimitsMin" );

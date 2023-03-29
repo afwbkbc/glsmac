@@ -145,9 +145,11 @@ void Sprite::Draw( shader_program::ShaderProgram *shader_program, Camera *camera
 			
 			glDisable( GL_DEPTH_TEST );
 			
+			glUniformMatrix4fv( sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)&camera->GetMatrix() );
+			
 			if ( m_actor->GetType() == scene::Actor::TYPE_SPRITE ) {
 				types::Matrix44 matrix = m_actor->GetWorldMatrix();
-				glUniformMatrix4fv( sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)(&matrix));
+				glUniformMatrix4fv( sp->uniforms.instances, 1, GL_TRUE, (const GLfloat*)(&matrix));
 				glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0) );
 			}
 			else if ( m_actor->GetType() == scene::Actor::TYPE_INSTANCED_SPRITE ) {
@@ -158,7 +160,7 @@ void Sprite::Draw( shader_program::ShaderProgram *shader_program, Camera *camera
 				GLsizei c;
 				for ( auto i = 0 ; i < sz ; i += OpenGL::MAX_INSTANCES ) {
 					c = std::min< size_t >( OpenGL::MAX_INSTANCES, sz - i );
-					glUniformMatrix4fv( sp->uniforms.world, c, GL_TRUE, (const GLfloat*) ( matrices.data() + i ) );
+					glUniformMatrix4fv( sp->uniforms.instances, c, GL_TRUE, (const GLfloat*) ( matrices.data() + i ) );
 					glDrawElementsInstanced( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void *)(0), c );
 				}
 			}
