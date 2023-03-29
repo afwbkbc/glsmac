@@ -10,8 +10,6 @@
 
 #include "map_generator/SimplePerlin.h"
 
-//#include "map_generator/Test.h"
-
 // TODO: move to settings
 #define MAP_ROTATE_SPEED 2.0f
 
@@ -77,18 +75,6 @@ void World::Start() {
 	
 	NEW( m_map, Map, m_random, m_world_scene );
 	
-	Tiles* tiles = nullptr;
-	#ifdef DEBUG
-	if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAPSIZE ) ) {
-		const auto& map_size = config->GetQuickstartMapSize();
-		NEW( tiles, Tiles, map_size.x, map_size.y, m_random );
-	}
-	else
-	#endif
-	{
-		NEW( tiles, Tiles, 80, 40, m_random );
-	}
-	
 #ifdef DEBUG
 	// if crash happens - it's handy to have a seed to reproduce it
 	FS::WriteFile( MAP_SEED_FILENAME, m_random->GetStateString() );
@@ -99,7 +85,6 @@ void World::Start() {
 		const std::string& filename = config->GetQuickstartMapDump();
 		ASSERT( FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
 		Log( (std::string) "Loading map dump from " + filename );
-		m_map->SetTiles( tiles, false );
 		m_map->Unserialize( Buffer( FS::ReadFile( filename ) ) );
 	}
 	else
@@ -114,29 +99,23 @@ void World::Start() {
 #endif
 		{
 			if ( m_settings.global.map_type == GlobalSettings::MT_MAPFILE ) {
-				ASSERT( !m_settings.local.map_file.empty(), "loading map needed but map file not specified" );
+				ASSERT( !m_settings.local.map_file.empty(), "loading map requested but map file not specified" );
 				LoadMap( m_settings.local.map_file );
 			}
 			else {
-				map_generator::SimplePerlin generator;
-				//map_generator::Test generator;
+				GenerateMap(
 #ifdef DEBUG
-				//map_generator::SimpleRandom generator;
-				//map_generator::SimpleRandomNoLoops generator;
-				//map_generator::SimpleRandomNoPointers generator;
-				util::Timer timer;
-				timer.Start();
+					g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART_MAPSIZE )
+						?
+					g_engine->GetConfig()->GetQuickstartMapSize()
+						:
 #endif
-				generator.Generate( tiles, m_random->GetUInt( 0, UINT32_MAX - 1 ) );
-				m_map->SetTiles( tiles );
-#ifdef DEBUG
-				Log( "Map generation took " + std::to_string( timer.GetElapsed().count() ) + "ms" );
-				// if crash happens - it's handy to have a map file to reproduce it
-				if ( !config->HasDebugFlag( config::Config::DF_QUICKSTART_MAPFILE ) ) { // no point saving if we just loaded it
-					Log( (std::string) "Saving map to " + MAP_FILENAME );
-					FS::WriteFile( MAP_FILENAME, tiles->Serialize().ToString() );
-				}
-#endif
+					(
+						m_settings.global.map_size == GlobalSettings::MAP_CUSTOM
+							? Vec2< size_t >{ 80, 40 }
+							: map::Map::s_consts.map_sizes.at( m_settings.global.map_size )
+					)
+				);
 			}
 		}
 #ifdef DEBUG
@@ -806,6 +785,27 @@ const size_t World::GetViewportHeight() const {
 	return m_viewport.height;
 }
 
+void World::GenerateMap( const types::Vec2< size_t > size ) {
+	map_generator::SimplePerlin generator;
+#ifdef DEBUG
+	util::Timer timer;
+	timer.Start();
+#endif
+	Log( "Generating map of size " + size.ToString() );
+	Tiles* tiles = nullptr;
+	NEW( tiles, Tiles, m_random, size.x, size.y );
+	generator.Generate( tiles, m_random->GetUInt( 0, UINT32_MAX - 1 ) );
+#ifdef DEBUG
+	Log( "Map generation took " + std::to_string( timer.GetElapsed().count() ) + "ms" );
+	// if crash happens - it's handy to have a map file to reproduce it
+	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART_MAPFILE ) ) { // no point saving if we just loaded it
+		Log( (std::string) "Saving map to " + MAP_FILENAME );
+		FS::WriteFile( MAP_FILENAME, tiles->Serialize().ToString() );
+	}
+#endif
+	m_map->SetTiles( tiles );
+}
+
 void World::LoadMap( const std::string& path ) {
 	ASSERT( FS::FileExists( path ), "map file \"" + path + "\" not found" );
 	
@@ -814,8 +814,8 @@ void World::LoadMap( const std::string& path ) {
 		m_map->UnsetTiles();
 	}
 	
-	Log( (std::string) "Loading map from " + path );
-	NEWV( tiles, Tiles, 0, 0, m_random );
+	Log( "Loading map from " + path );
+	NEWV( tiles, Tiles, m_random );
 	tiles->Unserialize( Buffer( FS::ReadFile( path ) ) );
 	m_map->SetTiles( tiles );
 	if ( was_map_initialized ) {

@@ -185,16 +185,10 @@ const bool Map::HasTiles() const {
 	return m_tiles != nullptr;
 }
 
-void Map::SetTiles( Tiles* tiles, bool generate_actors ) {
+void Map::SetTiles( Tiles* tiles ) {
 	ASSERT( !m_tiles, "map tiles already set" );
 	m_tiles = tiles;
-	if ( generate_actors ) {
-		GenerateActors();
-	}
-	else {
-		// loaded from dump?
-		m_map_state.first_run = false;
-	}
+	GenerateActors();
 }
 
 void Map::UnsetTiles() {
@@ -1095,7 +1089,9 @@ const Buffer Map::tile_colors_t::Serialize() const {
 }
 
 void Map::Unserialize( Buffer buf ) {
-	ASSERT( m_tiles, "tiles not set, can't unserialize" );
+	if( !m_tiles ) {
+		NEW( m_tiles, Tiles, m_random );
+	}
 	
 	m_file_name = buf.ReadString();
 	m_last_directory = buf.ReadString();
@@ -1140,6 +1136,8 @@ void Map::Unserialize( Buffer buf ) {
 		{ 0.0f, 1.0f },
 		{ m_map_state.range.min.y, m_map_state.range.max.y }
 	});
+	
+	m_map_state.first_run = false;
 }
 
 void Map::map_state_t::Unserialize( Buffer buf ) {

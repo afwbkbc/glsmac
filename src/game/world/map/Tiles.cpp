@@ -11,10 +11,12 @@ namespace game {
 namespace world {
 namespace map {
 
-Tiles::Tiles( const uint32_t width, const uint32_t height, Random* random )
+Tiles::Tiles( Random* random, const uint32_t width, const uint32_t height )
 	: m_random( random )
 {
-	Resize( width, height );
+	if ( width || height ) {
+		Resize( width, height );
+	}
 }
 
 Tiles::~Tiles() {
@@ -24,6 +26,10 @@ Tiles::~Tiles() {
 }
 
 void Tiles::Resize( const uint32_t width, const uint32_t height ) {
+	ASSERT( width > 0, "can't resize to zero width" );
+	ASSERT( height > 0, "can't resize to zero height" );
+	ASSERT( !( width & 1 ), "can't resize to non-even width" );
+	ASSERT( !( height & 1 ), "can't resize to non-even height" );
 	
 	if ( width != m_width || height != m_height ) {
 		Log( "Initializing tiles ( " + std::to_string( width ) + " x " + std::to_string( height ) + " )" );
@@ -189,6 +195,7 @@ Tile* Tiles::At( const size_t x, const size_t y ) const {
 	ASSERT( x < m_width, "invalid x tile coordinate ( " + std::to_string( x ) + " >= " + std::to_string( m_width ) + " )" );
 	ASSERT( y < m_height, "invalid y tile coordinate ( " + std::to_string( y ) + " >= " + std::to_string( m_height ) + " )" );
 	ASSERT( ( x % 2 ) == ( y % 2 ), "tile coordinate axis oddity differs" );
+	ASSERT( m_data, "tiles not initialized" );
 	return (Tile*)( m_data + y * m_width + x / 2 );
 }
 
@@ -196,11 +203,13 @@ Tile::elevation_t* Tiles::TopVertexAt( const size_t x, const size_t y ) const {
 	ASSERT( x < m_width, "invalid top vertex x coordinate" );
 	ASSERT( y < 2, "invalid top vertex y coordinate" );
 	ASSERT( ( x % 2 ) == ( y % 2 ), "topvertexat tile coordinate axis oddity differs" );
+	ASSERT( m_top_vertex_row, "tiles not initialized" );
 	return (Tile::elevation_t*)( m_top_vertex_row + m_width * y + x );
 }
 
 Tile::elevation_t* Tiles::TopRightVertexAt( const size_t x ) const {
 	ASSERT( x < m_width, "invalid top right vertex x coordinate" );
+	ASSERT( m_top_right_vertex_row, "tiles not initialized" );
 	return (Tile::elevation_t*)( m_top_right_vertex_row + x );
 }
 
@@ -513,6 +522,7 @@ void Tiles::Unserialize( Buffer buf ) {
 	size_t width = buf.ReadInt();
 	size_t height = buf.ReadInt();
 	
+	m_width = m_height = 0;
 	Resize( width, height );
 	
 	for ( auto y = 0 ; y < m_height ; y++ ) {

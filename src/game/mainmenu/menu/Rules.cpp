@@ -6,7 +6,8 @@ namespace mainmenu {
 Rules::Rules( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "GAME RULES", {
 	{ "PLAY WITH STANDARD RULES", [this] () -> void {
 		m_mainmenu->m_settings.global.game_rules = game::GlobalSettings::GR_STANDARD;
-		MenuError();
+		// TODO: faction select
+		m_mainmenu->StartGame();
 	}},
 	{ "PLAY WITH CURRENT RULES", [this] () -> void {
 		m_mainmenu->m_settings.global.game_rules = game::GlobalSettings::GR_CURRENT;

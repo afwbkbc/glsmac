@@ -15,10 +15,10 @@ namespace map {
 
 CLASS( Tiles, Serializable )
 	
-	Tiles( const uint32_t width, const uint32_t height, Random* random );
+	Tiles( Random* random, const uint32_t width = 0, const uint32_t height = 0 );
 	~Tiles();
 	
-	// warning: will reset all tiles
+	// warning: this will reset all tiles
 	void Resize( const uint32_t width, const uint32_t height );
 	
 	const uint32_t GetWidth() const;

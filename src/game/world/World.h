@@ -92,6 +92,7 @@ CLASS( World, base::Task )
 	
 	void AddMessage( const std::string& text );
 	
+	void GenerateMap( types::Vec2< size_t > size );
 	void LoadMap( const std::string& path );
 	void SaveMap( const std::string& path );
 	

@@ -19,6 +19,8 @@
 #include "scene/actor/Mesh.h"
 #include "scene/actor/Instanced.h"
 
+#include "game/Settings.h"
+
 using namespace types;
 using namespace scene;
 
@@ -285,11 +287,18 @@ CLASS( Map, Serializable )
 			const std::string default_map_filename = "untitled";
 			const std::string default_map_extension = ".gsm";
 		} fs;
+		const std::unordered_map< GlobalSettings::map_parameter_t, Vec2< size_t > > map_sizes = {
+			{ GlobalSettings::MAP_TINY, { 48, 48 } },
+			{ GlobalSettings::MAP_SMALL, { 64, 64 } },
+			{ GlobalSettings::MAP_STANDARD, { 80, 80 } },
+			{ GlobalSettings::MAP_LARGE, { 100, 100 } },
+			{ GlobalSettings::MAP_HUGE, { 128, 128 } }
+		};
 	};
 	static const consts_t s_consts;
 	
 	const bool HasTiles() const;
-	void SetTiles( Tiles* tiles, bool generate_actors = true );
+	void SetTiles( Tiles* tiles );
 	void UnsetTiles();
 	
 #ifdef DEBUG

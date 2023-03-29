@@ -106,7 +106,7 @@ public:
 	const Buffer Serialize() const;
 	void Unserialize( Buffer data );
 };
-	
+
 CLASS( Settings, Serializable )
 	
 	GlobalSettings global;

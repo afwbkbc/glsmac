@@ -21,7 +21,7 @@ Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 		
 		// randomize settings
 		m_mainmenu->m_settings.global.map_type = game::GlobalSettings::MT_RANDOM;
-		m_mainmenu->m_settings.global.map_size = m_mainmenu->GetRandom()->GetUInt( 1, 5 );
+		m_mainmenu->m_settings.global.map_size = game::GlobalSettings::MAP_STANDARD;
 		m_mainmenu->m_settings.global.map_ocean = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
 		m_mainmenu->m_settings.global.map_erosive = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
 		m_mainmenu->m_settings.global.map_lifeforms = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
