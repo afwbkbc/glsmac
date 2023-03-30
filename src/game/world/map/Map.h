@@ -441,6 +441,7 @@ CLASS( Map, Serializable )
 		typedef struct {
 			scene::actor::Instanced* actor;
 			scene::actor::Instanced::instance_id_t instance;
+			std::string name;
 			pcx_texture_coordinates_t tex_coords;
 		} sprite_t;
 		typedef std::vector< sprite_t > sprites_t;
@@ -638,8 +639,12 @@ private:
 	tile_state_t* m_current_ts = nullptr;
 	const Tile* m_current_tile = nullptr;
 	
-	// key -> actor
-	std::unordered_map< std::string, scene::actor::Instanced* > m_instanced_sprites = {};
+	struct instanced_sprite_t {
+		std::string name;
+		pcx_texture_coordinates_t tex_coords;
+		scene::actor::Instanced* actor;
+	};
+	std::unordered_map< std::string, instanced_sprite_t > m_instanced_sprites = {};
 	
 	void FreeTileStates();
 };

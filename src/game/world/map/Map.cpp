@@ -180,8 +180,8 @@ Map::~Map() {
 		FreeTileStates();
 	}
 	for ( auto& sprite : m_instanced_sprites ) {
-		m_scene->RemoveActor( sprite.second );
-		DELETE( sprite.second );
+		m_scene->RemoveActor( sprite.second.actor );
+		DELETE( sprite.second.actor );
 	}
 }
 
@@ -805,6 +805,8 @@ scene::actor::Instanced* Map::GetTerrainSpriteActor( const std::string& name, co
 	const auto& it = m_instanced_sprites.find( key );
 	if ( it == m_instanced_sprites.end() ) {
 		
+		// Log( "Creating instanced sprite actor: " + key );
+		
 		NEWV(
 			sprite,
 			scene::actor::Sprite,
@@ -828,11 +830,15 @@ scene::actor::Instanced* Map::GetTerrainSpriteActor( const std::string& name, co
 		NEWV( instanced, scene::actor::Instanced, sprite );
 		instanced->SetZIndex( 0.5f ); // needs to be higher than map terrain z position
 		m_scene->AddActor( instanced );
-		m_instanced_sprites[ key ] = instanced;
+		m_instanced_sprites[ key ] = {
+			name,
+			tex_coords,
+			instanced
+		};
 		return instanced;
 	}
 	else {
-		return it->second;
+		return it->second.actor;
 	}
 }
 
@@ -942,6 +948,14 @@ const Buffer Map::Serialize() const {
 	buf.WriteString( m_file_name );
 	buf.WriteString( m_last_directory );
 	
+	buf.WriteInt( m_instanced_sprites.size() );
+	for ( auto& name_sprite : m_instanced_sprites ) {
+		const auto& sprite = name_sprite.second;
+		buf.WriteString( sprite.name );
+		buf.WriteVec2u( sprite.tex_coords );
+		buf.WriteString( sprite.actor->Serialize().ToString() );
+	}
+	
 	buf.WriteString( m_map_state.Serialize().ToString() );
 	
 	buf.WriteString( m_tiles->Serialize().ToString() );
@@ -1012,10 +1026,9 @@ const Buffer Map::tile_state_t::Serialize() const {
 			THROW( "sprite actor not set" );
 		}
 #endif
+		buf.WriteString( a.name );
 		buf.WriteVec2u( a.tex_coords );
-		buf.WriteString( a.actor->GetLocalName() );
-		buf.WriteString( a.actor->Serialize().ToString() );
-		buf.WriteString( a.actor->GetSpriteActor()->Serialize().ToString() );
+		buf.WriteInt( a.instance );
 	}
 	
 	return buf;
@@ -1113,6 +1126,15 @@ void Map::Unserialize( Buffer buf ) {
 	
 	m_file_name = buf.ReadString();
 	m_last_directory = buf.ReadString();
+
+	const size_t count = buf.ReadInt();
+	m_instanced_sprites.clear();
+	for ( size_t i = 0 ; i < count ; i++ ) {
+		const auto name = buf.ReadString();
+		const auto tex_coords = buf.ReadVec2u();
+		auto* actor = GetTerrainSpriteActor( name, tex_coords );
+		actor->Unserialize( buf.ReadString() );
+	}
 	
 	m_map_state.Unserialize( Buffer( buf.ReadString() ) );
 	
@@ -1204,12 +1226,11 @@ void Map::tile_state_t::Unserialize( Map* map, Buffer buf ) {
 	sprites.clear();
 	for ( size_t i = 0 ; i < sprites_count ; i++ ) {
 		sprite_t sprite;
+		sprite.name = buf.ReadString();
 		sprite.tex_coords = buf.ReadVec2u();
-		sprite.actor = map->GetTerrainSpriteActor( buf.ReadString(), sprite.tex_coords );
-		sprite.actor->Unserialize( buf.ReadString() );
-		sprite.actor->GetSpriteActor()->Unserialize( buf.ReadString() );
-		map->m_scene->AddActor( sprite.actor );
-		sprites.push_back( sprite );
+		sprite.actor = map->GetTerrainSpriteActor( sprite.name, sprite.tex_coords );
+		sprite.instance = buf.ReadInt();
+		sprites.push_back( sprite );	
 	}
 
 }

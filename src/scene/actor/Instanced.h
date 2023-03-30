@@ -57,6 +57,9 @@ CLASS( Instanced, Actor )
 	const float GetZIndex() const;
 	void SetZIndex( const float z_index );
 	
+	virtual const types::Buffer Serialize() const;
+	virtual void Unserialize( types::Buffer buf );
+	
 private:
 	Actor* m_actor = nullptr;
 

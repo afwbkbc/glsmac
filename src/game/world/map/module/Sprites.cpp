@@ -106,6 +106,7 @@ void Sprites::GenerateSprite( const Tile* tile, Map::tile_state_t* ts, const std
 	
 	const auto& coords = tile->is_water_tile ? ts->layers[ Map::LAYER_WATER ].coords : ts->layers[ Map::LAYER_LAND ].coords;
 	
+	sprite.name = name;
 	sprite.tex_coords = tex_coords;
 	sprite.actor = m_map->GetTerrainSpriteActor( name, sprite.tex_coords );
 	sprite.instance = sprite.actor->AddInstance({

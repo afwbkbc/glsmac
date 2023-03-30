@@ -180,5 +180,55 @@ void Instanced::SetZIndex( const float z_index ) {
 	m_z_index = z_index;
 }
 
+const types::Buffer Instanced::Serialize() const {
+	auto buf = Actor::Serialize();
+	
+	buf.WriteFloat( m_z_index );
+	
+	buf.WriteInt( m_instances.size() );
+	for ( auto& id_instance : m_instances ) {
+		buf.WriteInt( id_instance.first );
+		const auto& instance = id_instance.second;
+		buf.WriteVec3( instance.position );
+		buf.WriteVec3( instance.angle );
+	}
+	
+	buf.WriteInt( m_next_instance_id );
+	
+	buf.WriteString( m_actor->Serialize().ToString() );
+	
+	return buf;
+}
+
+void Instanced::Unserialize( types::Buffer buf ) {
+	Actor::Unserialize( buf );
+	
+	// HACK! TODO: refactor
+	buf.ReadVec3();
+	buf.ReadVec3();
+	buf.ReadInt();
+
+	m_z_index = buf.ReadFloat();
+	
+	const size_t count = buf.ReadInt();
+	m_instances.clear();
+	for ( size_t i = 0 ; i < count ; i++ ) {
+		const auto id = buf.ReadInt();
+		m_instances[ id ] = {
+			buf.ReadVec3(),
+			buf.ReadVec3(),
+			{},
+			true
+		};
+	}
+	
+	m_next_instance_id = buf.ReadInt();
+	
+	m_actor->Unserialize( buf.ReadString() );
+	
+	m_need_world_matrix_update = true;
+}
+
+
 }
 }

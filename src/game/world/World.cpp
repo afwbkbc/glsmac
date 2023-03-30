@@ -270,16 +270,7 @@ void World::Start() {
 			if ( data->key.code == UIEvent::K_ESCAPE ) {
 				if ( !g_engine->GetUI()->HasPopup() ) { // close all other popups first (including same one)
 					ConfirmExit( UH( this ) {
-#ifdef DEBUG
-						const auto* config = g_engine->GetConfig();
-						if ( config->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
-							g_engine->ShutDown();
-						}
-						else
-#endif
-						{
-							ReturnToMainMenu();
-						}
+						g_engine->ShutDown();
 					});
 				}
 				return true;
