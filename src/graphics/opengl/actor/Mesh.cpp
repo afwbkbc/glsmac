@@ -356,10 +356,10 @@ l_draw_begin:
 				auto* instanced = (scene::actor::Instanced*) m_actor;
 				scene::actor::Instanced::matrices_t matrices;
 				if ( capture_request ) {
-					instanced->GenerateWorldMatrices( &matrices, capture_request->camera );
+					instanced->GenerateInstanceMatrices( &matrices, capture_request->camera );
 				}
 				else {
-					matrices = instanced->GetWorldMatrices();
+					matrices = instanced->GetInstanceMatrices();
 				}
 				const auto sz = matrices.size();
 				GLsizei i = 0;

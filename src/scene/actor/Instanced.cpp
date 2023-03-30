@@ -54,20 +54,20 @@ _XYZ_SETTER( Position, position, UpdatePosition(); )
 #undef _XYZ_SETTER
 #undef _XYZ_ASSERT
 
-const Instanced::matrices_t& Instanced::GetWorldMatrices() {
+const Instanced::matrices_t& Instanced::GetInstanceMatrices() {
 	if ( m_need_world_matrix_update ) {
 		//Log( "Updating world matrices" );
 		UpdateWorldMatrix();
 	}
-	return m_world_matrices;
+	return m_instance_matrices;
 }
 
 types::Matrix44& Instanced::GetWorldMatrix() {
-	ASSERT( false, "use GetWorldMatrices() for instanced actors" );
+	ASSERT( false, "use GetInstanceMatrices() for instanced actors" );
 	return m_actor_matrices.world; // just to fix warning
 }
 
-void Instanced::GenerateWorldMatrices( matrices_t* out_matrices, scene::Camera* camera ) {
+void Instanced::GenerateInstanceMatrices( matrices_t* out_matrices, scene::Camera* camera ) {
 	const auto& world_instance_positions = m_scene->GetWorldInstancePositions();
 	out_matrices->resize( world_instance_positions.size() * m_instances.size() );
 	size_t i = 0;
@@ -91,13 +91,7 @@ void Instanced::UpdateWorldMatrix() {
 	if ( m_scene && m_need_world_matrix_update ) {
 		auto* camera = m_scene->GetCamera();
 		if ( camera ) {
-			GenerateWorldMatrices( &m_world_matrices, camera );
-			if ( IS_TESTING( this ) ) {
-				//Log( "WORLD MATRICES: " );
-				for ( auto& m : m_world_matrices ) {
-					Log( "  " + m.ToString() );
-				}
-			}
+			GenerateInstanceMatrices( &m_instance_matrices, camera );
 			m_need_world_matrix_update = false;
 		}
 	}

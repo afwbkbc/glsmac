@@ -154,7 +154,7 @@ void Sprite::Draw( shader_program::ShaderProgram *shader_program, Camera *camera
 			}
 			else if ( m_actor->GetType() == scene::Actor::TYPE_INSTANCED_SPRITE ) {
 				auto* instanced = (scene::actor::Instanced*) m_actor;
-				auto& matrices = instanced->GetWorldMatrices();
+				auto& matrices = instanced->GetInstanceMatrices();
 				const auto sz = matrices.size();
 				GLsizei i = 0;
 				GLsizei c;

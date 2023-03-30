@@ -37,9 +37,9 @@ CLASS( Instanced, Actor )
 #undef _XYZ_SETTER
 
 	typedef std::vector< types::Matrix44 > matrices_t;
-	const matrices_t& GetWorldMatrices();
+	const matrices_t& GetInstanceMatrices();
 	types::Matrix44 & GetWorldMatrix();
-	void GenerateWorldMatrices( matrices_t* out_matrices, scene::Camera* camera );
+	void GenerateInstanceMatrices( matrices_t* out_matrices, scene::Camera* camera );
 	
 	void UpdateWorldMatrix();
 	void UpdatePosition();
@@ -66,7 +66,7 @@ private:
 	// used for draw ordering
 	float m_z_index = 0.0f;
 	
-	matrices_t m_world_matrices = {};
+	matrices_t m_instance_matrices = {};
 	
 	struct instanced_matrices_t {
 		types::Matrix44 translate;
