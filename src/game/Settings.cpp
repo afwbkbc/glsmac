@@ -2,18 +2,37 @@
 
 namespace game {
 
+const Buffer MapSettings::Serialize() const {
+	Buffer buf;
+	
+	buf.WriteInt( type );
+	buf.WriteInt( size );
+	buf.WriteInt( custom_size.x );
+	buf.WriteInt( custom_size.y );
+	buf.WriteInt( ocean );
+	buf.WriteInt( erosive );
+	buf.WriteInt( lifeforms );
+	buf.WriteInt( clouds );
+	
+	return buf;
+}
+
+void MapSettings::Unserialize( Buffer buf ) {
+	type = (type_t) buf.ReadInt();
+	size = buf.ReadInt();
+	custom_size.x = buf.ReadInt();
+	custom_size.y = buf.ReadInt();
+	ocean = buf.ReadInt();
+	erosive = buf.ReadInt();
+	lifeforms = buf.ReadInt();
+	clouds = buf.ReadInt();
+}
+
 const Buffer GlobalSettings::Serialize() const {
 	Buffer buf;
 	
 	buf.WriteInt( game_mode );
-	buf.WriteInt( map_type );
-	buf.WriteInt( map_size );
-	buf.WriteInt( map_custom_size.width );
-	buf.WriteInt( map_custom_size.height );
-	buf.WriteInt( map_ocean );
-	buf.WriteInt( map_erosive );
-	buf.WriteInt( map_lifeforms );
-	buf.WriteInt( map_clouds );
+	buf.WriteString( map.Serialize().ToString() );
 	buf.WriteInt( difficulty );
 	buf.WriteInt( game_rules );
 	buf.WriteInt( network_type );
@@ -24,14 +43,7 @@ const Buffer GlobalSettings::Serialize() const {
 
 void GlobalSettings::Unserialize( Buffer buf ) {
 	game_mode = (game_mode_t) buf.ReadInt();
-	map_type = (map_type_t) buf.ReadInt();
-	map_size = buf.ReadInt();
-	map_custom_size.width = buf.ReadInt();
-	map_custom_size.height = buf.ReadInt();
-	map_ocean = buf.ReadInt();
-	map_erosive = buf.ReadInt();
-	map_lifeforms = buf.ReadInt();
-	map_clouds = buf.ReadInt();
+	map.Unserialize( buf.ReadString() );
 	difficulty = buf.ReadInt();
 	game_rules = (game_rules_t) buf.ReadInt();
 	network_type = (network_type_t) buf.ReadInt();

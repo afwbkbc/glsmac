@@ -28,7 +28,7 @@ namespace world {
 
 const World::consts_t World::s_consts = {};
 
-World::World( const Settings& settings )
+World::World( Settings& settings )
 	: m_settings( settings )
 {
 	
@@ -100,24 +100,12 @@ void World::Start() {
 		else
 #endif
 		{
-			if ( m_settings.global.map_type == GlobalSettings::MT_MAPFILE ) {
+			if ( m_settings.global.map.type == MapSettings::MT_MAPFILE ) {
 				ASSERT( !m_settings.local.map_file.empty(), "loading map requested but map file not specified" );
 				LoadMap( m_settings.local.map_file );
 			}
 			else {
-				GenerateMap(
-#ifdef DEBUG
-					g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART_MAPSIZE )
-						?
-					g_engine->GetConfig()->GetQuickstartMapSize()
-						:
-#endif
-					(
-						m_settings.global.map_size == GlobalSettings::MAP_CUSTOM
-							? Vec2< size_t >{ 80, 40 }
-							: map::Map::s_consts.map_sizes.at( m_settings.global.map_size )
-					)
-				);
+				GenerateMap();
 			}
 		}
 #ifdef DEBUG
@@ -757,20 +745,37 @@ const size_t World::GetViewportHeight() const {
 	return m_viewport.height;
 }
 
-void World::GenerateMap( const types::Vec2< size_t > size ) {
-	map_generator::SimplePerlin generator;
+void World::GenerateMap() {
+	map_generator::SimplePerlin generator( m_random );
+	Vec2< size_t > size = m_settings.global.map.size == MapSettings::MAP_CUSTOM
+		? m_settings.global.map.custom_size
+		: map::Map::s_consts.map_sizes.at( m_settings.global.map.size )
+	;
 #ifdef DEBUG
 	util::Timer timer;
 	timer.Start();
+	const auto* c = g_engine->GetConfig();
+	if ( c->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
+		if ( c->HasDebugFlag( config::Config::DF_QUICKSTART_MAPSIZE ) ) {
+			size = c->GetQuickstartMapSize();
+		}
+		m_settings.global.map.ocean = c->HasDebugFlag( config::Config::DF_QUICKSTART_MAPOCEAN )
+			? m_settings.global.map.ocean = c->GetQuickstartMapOcean()
+			: m_settings.global.map.ocean =m_random->GetUInt( 1, 3 )
+		;
+		m_settings.global.map.erosive = m_random->GetUInt( 1, 3 );
+		m_settings.global.map.lifeforms = m_random->GetUInt( 1, 3 );
+		m_settings.global.map.clouds = m_random->GetUInt( 1, 3 );
+	}
 #endif
 	Log( "Generating map of size " + size.ToString() );
 	Tiles* tiles = nullptr;
-	NEW( tiles, Tiles, m_random, size.x, size.y );
-	generator.Generate( tiles, m_random->GetUInt( 0, UINT32_MAX - 1 ) );
+	NEW( tiles, Tiles, size.x, size.y );
+	generator.Generate( tiles, m_settings.global.map );
 #ifdef DEBUG
 	Log( "Map generation took " + std::to_string( timer.GetElapsed().count() ) + "ms" );
 	// if crash happens - it's handy to have a map file to reproduce it
-	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART_MAPFILE ) ) { // no point saving if we just loaded it
+	if ( !c->HasDebugFlag( config::Config::DF_QUICKSTART_MAPFILE ) ) { // no point saving if we just loaded it
 		Log( (std::string) "Saving map to " + MAP_FILENAME );
 		FS::WriteFile( MAP_FILENAME, tiles->Serialize().ToString() );
 	}
@@ -787,7 +792,7 @@ void World::LoadMap( const std::string& path ) {
 	}
 	
 	Log( "Loading map from " + path );
-	NEWV( tiles, Tiles, m_random );
+	NEWV( tiles, Tiles );
 	tiles->Unserialize( Buffer( FS::ReadFile( path ) ) );
 	m_map->SetTiles( tiles );
 	if ( was_map_initialized ) {

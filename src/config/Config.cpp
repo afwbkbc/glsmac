@@ -107,6 +107,24 @@ Config::Config( const int argc, const char *argv[] )
 		}
 		m_debug_flags |= DF_QUICKSTART_MAPSIZE;
 	});
+	parser.AddRule( "quickstart-mapocean", "low|medium|high", "Generate map with specific ocean coverage", AH( this, f_error, s_quickstart_argument_missing ) {
+		if ( !HasDebugFlag( DF_QUICKSTART ) ) {
+			f_error( s_quickstart_argument_missing );
+		}
+		if ( value == "low" ) {
+			m_quickstart_mapocean = game::MapSettings::MAP_OCEAN_LOW;
+		}
+		else if ( value == "medium" ) {
+			m_quickstart_mapocean = game::MapSettings::MAP_OCEAN_MEDIUM;
+		}
+		else if ( value == "high" ) {
+			m_quickstart_mapocean = game::MapSettings::MAP_OCEAN_HIGH;
+		}
+		else {
+			f_error( "Invalid ocean value specified! Choices are: low, medium, high" );
+		}
+		m_debug_flags |= DF_QUICKSTART_MAPOCEAN;
+	});
 #endif
 	
 	try {
@@ -152,6 +170,9 @@ const std::string& Config::GetQuickstartMapFile() const {
 
 const types::Vec2< size_t >& Config::GetQuickstartMapSize() const {
 	return m_quickstart_mapsize;
+}
+const game::MapSettings::parameter_t Config::GetQuickstartMapOcean() const {
+	return m_quickstart_mapocean;
 }
 
 #endif

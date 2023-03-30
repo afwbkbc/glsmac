@@ -40,7 +40,7 @@ using namespace map;
 
 CLASS( World, base::Task )
 	
-	World( const Settings& settings );
+	World( Settings& settings );
 	~World();
 	
 	void Start();
@@ -92,7 +92,7 @@ CLASS( World, base::Task )
 	
 	void AddMessage( const std::string& text );
 	
-	void GenerateMap( types::Vec2< size_t > size );
+	void GenerateMap();
 	void LoadMap( const std::string& path );
 	void SaveMap( const std::string& path );
 	
@@ -105,7 +105,7 @@ private:
 	void SetCameraPosition( const Vec3 camera_position );
 	
 	// game settings (tmp)
-	const Settings m_settings;
+	Settings m_settings;
 	
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)
 	Random* m_random = nullptr;

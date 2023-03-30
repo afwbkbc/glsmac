@@ -1121,7 +1121,7 @@ const Buffer Map::tile_colors_t::Serialize() const {
 
 void Map::Unserialize( Buffer buf ) {
 	if( !m_tiles ) {
-		NEW( m_tiles, Tiles, m_random );
+		NEW( m_tiles, Tiles );
 	}
 	
 	m_file_name = buf.ReadString();

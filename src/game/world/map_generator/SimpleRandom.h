@@ -8,11 +8,13 @@ namespace map_generator {
 		
 CLASS( SimpleRandom, MapGenerator )
 	
-	void Generate( Tiles* tiles, size_t seed );
+	SimpleRandom( Random* random ) : MapGenerator( random ) {}
+	
+	void GenerateElevations( Tiles* tiles, const MapSettings& map_settings );
+	void GenerateDetails( Tiles* tiles, const MapSettings& map_settings );
 	
 };
 	
 }
 }
 }
-

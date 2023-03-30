@@ -7,6 +7,8 @@
 #include "util/Random.h"
 #include "types/Vec2.h"
 
+#include "game/Settings.h"
+
 namespace config {
 
 CLASS( Config, base::Module )
@@ -26,7 +28,8 @@ CLASS( Config, base::Module )
 		DF_QUICKSTART_SEED = 1 << 3,
 		DF_QUICKSTART_MAPDUMP = 1 << 4,
 		DF_QUICKSTART_MAPFILE = 1 << 5,
-		DF_QUICKSTART_MAPSIZE = 1 << 6
+		DF_QUICKSTART_MAPSIZE = 1 << 6,
+		DF_QUICKSTART_MAPOCEAN = 1 << 7
 	};
 #endif
 	
@@ -39,6 +42,7 @@ CLASS( Config, base::Module )
 	const std::string& GetQuickstartMapDump() const;
 	const std::string& GetQuickstartMapFile() const;
 	const types::Vec2< size_t >& GetQuickstartMapSize() const;
+	const game::MapSettings::parameter_t GetQuickstartMapOcean() const;
 #endif
 	
 private:
@@ -54,6 +58,7 @@ private:
 	std::string m_quickstart_mapdump = "";
 	std::string m_quickstart_mapfile = "";
 	types::Vec2< size_t > m_quickstart_mapsize = {};
+	game::MapSettings::parameter_t m_quickstart_mapocean = game::MapSettings::MAP_OCEAN_MEDIUM;
 #endif
 };
 
