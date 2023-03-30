@@ -28,7 +28,12 @@ namespace util {
 #ifdef _WIN32
 
 	const bool FS::IsWindowsDriveLabel( const std::string& directory ) {
-		return directory.size() == 2 && directory[1] == ':'; // C:, D:, ...
+		return
+			directory.size() == 2 &&
+			directory[0] >= 'A' &&
+			directory[0] <= 'Z' &&
+			directory[1] == ':' // C:, D:, ...
+		;
 		// todo: multiletter drives?
 	}
 	
@@ -49,11 +54,20 @@ namespace util {
 	bool FS::IsAbsolutePath( const std::string& path ) {
 		return
 #ifdef _WIN32
-			path.size() >= 3 &&
-			path[ 0 ] >= 'A' &&
-			path[ 0 ] <= 'Z' &&
-			path[ 1 ] == ':' &&
-			path[ 2 ] == PATH_SEPARATOR[ 0 ]
+			path == PATH_SEPARATOR || // the very root (without drive)
+			(
+				path.size() >= 2 &&
+				path[0] >= 'A' &&
+				path[0] <= 'Z' &&
+				path[1] == ':' &&
+				(
+					path.size() == 2 ||
+					(
+						path.size() >= 3 &&
+						path[ 2 ] == PATH_SEPARATOR[ 0 ]
+					)
+				)
+			)
 #else
 			!path.empty() &&
 			path[ 0 ] == '/'

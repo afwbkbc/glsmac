@@ -213,14 +213,15 @@ void FileBrowser::ChangeDirectory( std::string directory ) {
 	ASSERT( util::FS::IsAbsolutePath( directory ), "directory must be absolute path" );
 	
 	// remove trailing slash
-	if ( !directory.empty() && directory[ directory.size() - 1 ] == util::FS::GetPathSeparator()[ 0 ] ) {
+	const char sep = util::FS::GetPathSeparator()[ 0 ];
+	while ( !directory.empty() && directory[ directory.size() - 1 ] == sep ) {
 		directory.pop_back();
 	}
 	
 	if ( m_current_directory != directory ) {
 		m_current_directory = directory;
 	
-		//Log( "Changing directory to: " + m_current_directory );
+		Log( "Changing directory to: " + m_current_directory );
 		
 		m_file_list->Clear();
 		
@@ -229,10 +230,8 @@ void FileBrowser::ChangeDirectory( std::string directory ) {
 		std::vector< std::string > items;
 		uint8_t item_prefix_size = 1;
 #ifdef _WIN32
-		const auto& sep = util::FS::GetPathSeparator();
-		if ( m_current_directory == sep ) {
+		if ( m_current_directory.empty() ) {
 			items = util::FS::GetWindowsDrives();
-			m_current_directory = "";
 			item_prefix_size = 0;
 		}
 		else
@@ -289,18 +288,10 @@ void FileBrowser::SelectItem( std::string item ) {
 	
 	if ( item.empty() ) {
 		item = m_file_list->GetSelectedText();
+		m_input->SetValue( item );
 	}
 	
 	const std::string sep = util::FS::GetPathSeparator();
-/*#ifdef _WIN32
-	std::string path = ( m_current_directory.empty() && util::FS::IsWindowsDriveLabel(item) )
-		? item
-		: m_current_directory + sep + item
-	;
-#else
-	std::string path = m_current_directory + sep + item;
-#endif
-	*/
 	std::string path = GetSelectedFile();
 	
 	if ( item == util::FS::GetUpDirString() ) {
