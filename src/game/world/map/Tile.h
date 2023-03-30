@@ -135,6 +135,9 @@ class Tile { // not deriving from anything because tiles are initialized with ma
 	//   safe to call anytime
 	void Update();
 	
+	// reset to empty state
+	void Clear();
+	
 	const Buffer Serialize() const;
 	void Unserialize( Buffer data );
 };

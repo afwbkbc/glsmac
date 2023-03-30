@@ -181,6 +181,16 @@ void Tiles::Resize( const uint32_t width, const uint32_t height ) {
 	}
 }
 
+void Tiles::Clear() {
+	ASSERT( m_data, "tiles not initialized" );
+	
+	for ( auto y = 0 ; y < m_height ; y++ ) {
+		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
+			At( x, y )->Clear();
+		}
+	}
+}
+
 const uint32_t Tiles::GetWidth() const {
 	return m_width;
 }

@@ -26,6 +26,8 @@ void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings ) {
 	while ( need_generation ) {
 		need_generation = false;
 		
+		tiles->Clear();
+		
 		GenerateElevations( tiles, map_settings );
 	
 		FixExtremeSlopes( tiles );
@@ -101,37 +103,6 @@ void MapGenerator::FixExtremeSlopes( Tiles* tiles ) {
 	});
 	RemoveExtremeSlopes( tiles, abs( converter.Clamp( map::Map::s_consts.tile.maximum_allowed_slope_elevation ) ) );
 }
-
-/*
-bool MapGenerator::Finalize( size_t* seed ) {
-	
-	FixExtremeSlopes(); // in case map generator didn't call it
-	NormalizeElevationRange();
-	
-	float desired_land_amount = 0.75f;
-	float acceptable_inaccuracy = 0.01f; // will increase every try to prevent infinite loop
-	float MAXIMUM_ACCEPTABLE_INACCURACY = 0.1f; // map will be fully regenerated if acceptable_inaccuracy exceeds it
-	
-	// TODO: fix it
-	do {
-		SetLandAmount( desired_land_amount );
-		//NormalizeElevationRange();
-		FixTopBottomRows();
-		RemoveExtremeSlopes( Map::s_consts.tile.maximum_allowed_slope_elevation );
-		acceptable_inaccuracy *= 1.1f;
-		if ( acceptable_inaccuracy > MAXIMUM_ACCEPTABLE_INACCURACY ) {
-			Log( "Unable to achieve desired land amount of " + std::to_string( desired_land_amount ) + ", regenerating" );
-			*seed++; // TODO: better randomization?
-			return false; // tell map generator to generate again
-		}
-	} while ( fabs( GetLandAmount() - desired_land_amount ) > acceptable_inaccuracy );
-	
-	Log( "Final land amount: " + std::to_string( GetLandAmount() ) );
-	
-	m_is_finalized = true;
-	return true;
-}
-*/
 
 void MapGenerator::SetLandAmount( Tiles* tiles, const float amount ) {
 	

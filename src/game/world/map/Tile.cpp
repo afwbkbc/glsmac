@@ -18,6 +18,13 @@ void Tile::Update() {
 	is_water_tile = corners_in_water > 2;
 }
 
+void Tile::Clear() {
+	for ( auto& c : elevation.corners ) {
+		*c = 0;
+	}
+	moisture = rockiness = bonus = features = terraforming = is_water_tile = 0;
+}
+
 const Buffer Tile::Serialize() const {
 	Buffer buf;
 	
@@ -58,6 +65,7 @@ void Tile::Unserialize( Buffer buf ) {
 	features = buf.ReadInt();
 	terraforming = buf.ReadInt();
 	
+	Update();
 }
 
 }

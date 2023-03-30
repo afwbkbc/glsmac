@@ -21,6 +21,9 @@ CLASS( Tiles, Serializable )
 	// warning: this will reset all tiles
 	void Resize( const uint32_t width, const uint32_t height );
 	
+	// reset to empty state
+	void Clear();
+	
 	const uint32_t GetWidth() const;
 	const uint32_t GetHeight() const;
 	
@@ -52,8 +55,8 @@ CLASS( Tiles, Serializable )
 	void Unserialize( Buffer buf );
 	
 private:
-	uint32_t m_width;
-	uint32_t m_height;
+	uint32_t m_width = 0;
+	uint32_t m_height = 0;
 	
 	Tile::elevation_t* m_top_vertex_row = nullptr;
 	Tile::elevation_t* m_top_right_vertex_row = nullptr;

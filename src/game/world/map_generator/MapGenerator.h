@@ -34,7 +34,8 @@ CLASS( MapGenerator, base::Base )
 	
 	// if this is reached - it means we couldn't automatically modify map to acceptable state
 	// so mapgen will be told to regenerate again from scratch
-	static constexpr float MAXIMUM_ACCEPTABLE_INACCURACY = 0.1f;
+	// should be a bit larger than INITIAL_ACCEPTABLE_INACCURACY to reduce regenerations
+	static constexpr float MAXIMUM_ACCEPTABLE_INACCURACY = 0.2f;
 	
 	// if this is reached - then we assume mapgen is incapable to generate something that can be tuned into acceptable state
 	// so we give up and assert to prevent infinite loop
