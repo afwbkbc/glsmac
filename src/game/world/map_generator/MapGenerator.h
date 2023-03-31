@@ -56,6 +56,13 @@ CLASS( MapGenerator, base::Base )
 		{ MapSettings::MAP_EROSIVE_WEAK, 1.0f }, // 'weak'
 	};
 	
+	// 'native life forms'
+	const map_parameter_mappings_t TARGET_FUNGUS_AMOUNTS = {
+		{ MapSettings::MAP_LIFEFORMS_RARE, 0.25f }, // 'rare'
+		{ MapSettings::MAP_LIFEFORMS_AVERAGE, 0.5f }, // 'average'
+		{ MapSettings::MAP_LIFEFORMS_ABUNDANT, 0.75f }, // 'abundant'
+	};
+	
 	MapGenerator( Random* random );
 	
 	void Generate( Tiles* tiles, const MapSettings& map_settings );
@@ -83,8 +90,13 @@ private:
 	// normalizing and fixing
 	void SetLandAmount( Tiles* tiles, const float amount );
 	const float GetLandAmount( Tiles* tiles, Tile::elevation_t elevation_diff = 0.0f );
+	void SetFungusAmount( Tiles* tiles, const float amount );
+	const float GetFungusAmount( Tiles* tiles );
+	
+	// helpers
+	const std::vector< Tile* > GetTilesInRandomOrder( const Tiles* tiles );
 	void RaiseAllTilesBy( Tiles* tiles, Tile::elevation_t amount );
-	void MultiplyAllTilesBy( Tiles* tiles, float amount );
+	void ScaleAllTilesBy( Tiles* tiles, float amount );
 	const std::pair< Tile::elevation_t, Tile::elevation_t > GetElevationsRange( Tiles* tiles ) const;
 	void RemoveExtremeSlopes( Tiles* tiles, const Tile::elevation_t max_allowed_diff );
 	void NormalizeElevationRange( Tiles* tiles );

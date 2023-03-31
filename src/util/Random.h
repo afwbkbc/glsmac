@@ -33,6 +33,9 @@ CLASS( Random, Util )
 
 	const bool IsLucky( const value_t difficulty = 2 ); // 2 means 50/50 chance
 	
+	template< class ValueType >
+	void Shuffle( std::vector< ValueType >& vector );
+
 	const state_t GetState();
 	void SetState( const state_t& state );
 	const std::string GetStateString();

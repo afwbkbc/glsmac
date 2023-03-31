@@ -1,5 +1,3 @@
-#include <random>
-
 #include "MapGenerator.h"
 #include "util/Clamper.h"
 
@@ -60,9 +58,8 @@ void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings ) {
 		} while ( fabs( GetLandAmount( tiles ) - desired_land_amount ) > acceptable_inaccuracy );
 	}
 	
-	ASSERT( TARGET_EVELATION_MULTIPLIERS.find( map_settings.erosive ) != TARGET_EVELATION_MULTIPLIERS.end(), "unknown map erosive setting " + std::to_string( map_settings.erosive ) );
-	
 	// normalize erosive forces
+	ASSERT( TARGET_EVELATION_MULTIPLIERS.find( map_settings.erosive ) != TARGET_EVELATION_MULTIPLIERS.end(), "unknown map erosive setting " + std::to_string( map_settings.erosive ) );
 	const auto range = GetElevationsRange( tiles );
 	float target_elevation_multiplier = std::min< float >( 1.0f, (
 		fabs( std::min< float >(
@@ -71,8 +68,14 @@ void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings ) {
 		)) *
 		TARGET_EVELATION_MULTIPLIERS.at( map_settings.erosive )
 	));
+	ScaleAllTilesBy( tiles, target_elevation_multiplier );
 	
-	MultiplyAllTilesBy( tiles, target_elevation_multiplier );
+	GenerateDetails( tiles, map_settings );
+	
+	// normalize fungus amount
+	ASSERT( TARGET_FUNGUS_AMOUNTS.find( map_settings.lifeforms ) != TARGET_FUNGUS_AMOUNTS.end(), "unknown map lifeforms setting " + std::to_string( map_settings.lifeforms ) );
+	const auto desired_fungus_amount = TARGET_FUNGUS_AMOUNTS.at( map_settings.lifeforms );
+	SetFungusAmount( tiles, desired_fungus_amount );
 	
 	Log( "Final land amount: " + std::to_string( GetLandAmount( tiles ) ) );
 #ifdef DEBUG
@@ -81,8 +84,8 @@ void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings ) {
 		Log( "Final elevations range: " + std::to_string( range.first ) + " " + std::to_string( range.second ) );
 	}
 #endif
+	Log( "Final fungus amount: " + std::to_string( GetFungusAmount( tiles ) ) );
 	
-	GenerateDetails( tiles, map_settings );
 }
 
 void MapGenerator::SmoothTerrain( Tiles* tiles, const bool smooth_land, const bool smooth_sea ) {
@@ -174,7 +177,78 @@ const float MapGenerator::GetLandAmount( Tiles* tiles, Tile::elevation_t elevati
 			}
 		}
 	}
-	return (float) land_tiles / ( ( w * h ) / 2 ); // divide by 2 because of SMAC coordinate system (not every tile exists)
+	return (float) land_tiles / ( w * h / 2 );
+}
+
+void MapGenerator::SetFungusAmount( Tiles* tiles, const float amount ) {
+	
+	Tile* tile;
+	const auto w = tiles->GetWidth();
+	const auto h = tiles->GetHeight();
+	const auto sz = w * h / 2;
+	
+	std::vector< Tile* > with_fungus = {};
+	std::vector< Tile* > without_fungus = {};
+	
+	// to avoid reallocations
+	with_fungus.reserve( sz );
+	without_fungus.reserve( sz );
+	
+	for ( auto y = 0 ; y < h ; y++ ) {
+		for ( auto x = y & 1 ; x < w ; x += 2 ) {
+			tile = tiles->At( x, y );
+			if ( tile->features & Tile::F_XENOFUNGUS ) {
+				with_fungus.push_back( tile );
+			}
+			else {
+				without_fungus.push_back( tile );
+			}
+		}
+	}
+	const size_t desired_fungus_tiles_count = round( amount * sz );
+	if ( with_fungus.size() < desired_fungus_tiles_count ) {
+		const auto c = desired_fungus_tiles_count - with_fungus.size();
+		Log( "Adding fungus to " + std::to_string( c ) + " tiles" );
+		m_random->Shuffle( without_fungus );
+		for ( auto i = 0 ; i < c ; i++ ) {
+			without_fungus[ i ]->features |= Tile::F_XENOFUNGUS;
+		}
+	}
+	else if ( with_fungus.size() > desired_fungus_tiles_count ) {
+		const auto c = with_fungus.size() - desired_fungus_tiles_count;
+		Log( "Removing fungus from " + std::to_string( c ) + " tiles" );
+		m_random->Shuffle( with_fungus );
+		for ( auto i = 0 ; i < c ; i++ ) {
+			with_fungus[ i ]->features &= ~Tile::F_XENOFUNGUS;
+		}
+	}
+}
+
+const float MapGenerator::GetFungusAmount( Tiles* tiles ) {
+	size_t fungus_tiles = 0;
+	const auto w = tiles->GetWidth();
+	const auto h = tiles->GetHeight();
+	for ( auto y = 0 ; y < h ; y++ ) {
+		for ( auto x = y & 1 ; x < w ; x += 2 ) {
+			if ( tiles->At( x, y )->features & Tile::F_XENOFUNGUS ) {
+				fungus_tiles++;
+			}
+		}
+	}
+	return (float) fungus_tiles / ( w * h / 2 );
+}
+
+const std::vector< Tile* > MapGenerator::GetTilesInRandomOrder( const Tiles* tiles ) {
+	std::vector< Tile* > randomtiles;
+	const auto w = tiles->GetWidth();
+	const auto h = tiles->GetHeight();
+	for ( auto y = 0 ; y < h ; y++ ) {
+		for ( auto x = y & 1 ; x < w ; x += 2 ) {
+			randomtiles.push_back( tiles->At( x, y ) );
+		}
+	}
+	m_random->Shuffle( randomtiles );
+	return randomtiles;
 }
 
 void MapGenerator::RaiseAllTilesBy( Tiles* tiles, Tile::elevation_t amount ) {
@@ -182,15 +256,8 @@ void MapGenerator::RaiseAllTilesBy( Tiles* tiles, Tile::elevation_t amount ) {
 	const auto w = tiles->GetWidth();
 	const auto h = tiles->GetHeight();
 	Tile* tile;
-	// process in random order
-	std::vector< Tile* > randomtiles;
-	for ( auto y = 0 ; y < h ; y++ ) {
-		for ( auto x = y & 1 ; x < w ; x += 2 ) {
-			randomtiles.push_back( tiles->At( x, y ) );
-		}
-	}
-	std::mt19937 g( m_random->GetUInt( 0, UINT32_MAX - 1 ) );
-	std::shuffle( randomtiles.begin(), randomtiles.end(), g );
+	
+	const auto randomtiles = GetTilesInRandomOrder( tiles );
 	
 	for ( auto& tile : randomtiles ) {
 		*tile->elevation.center += amount;
@@ -212,7 +279,7 @@ void MapGenerator::RaiseAllTilesBy( Tiles* tiles, Tile::elevation_t amount ) {
 	}
 }
 
-void MapGenerator::MultiplyAllTilesBy( Tiles* tiles, float amount ) {
+void MapGenerator::ScaleAllTilesBy( Tiles* tiles, float amount ) {
 	Log( "Multiplying all tiles by " + std::to_string( amount ) );
 	const auto w = tiles->GetWidth();
 	const auto h = tiles->GetHeight();
@@ -269,13 +336,7 @@ void MapGenerator::RemoveExtremeSlopes( Tiles* tiles, const Tile::elevation_t ma
 	bool found = true;
 	size_t i;
 
-	// process in random order
-	std::vector< Tile* > randomtiles;
-	for ( auto y = 0 ; y < h ; y++ ) {
-		for ( auto x = y & 1 ; x < w ; x += 2 ) {
-			randomtiles.push_back( tiles->At( x, y ) );
-		}
-	}
+	auto randomtiles = GetTilesInRandomOrder( tiles );
 
 	Log( "Checking/fixing extreme slopes" );
 	
@@ -286,10 +347,7 @@ void MapGenerator::RemoveExtremeSlopes( Tiles* tiles, const Tile::elevation_t ma
 		elevation_fixby_div += elevation_fixby_div_change;
 		//Log( "Checking/fixing extreme slopes (pass " + std::to_string( ++pass ) + ")" );
 		found = false;
-		
-		std::mt19937 g( m_random->GetUInt( 0, UINT32_MAX - 1 ) );
-		std::shuffle( randomtiles.begin(), randomtiles.end(), g );
-	
+
 		// don't run in normal cycle because it can give terrain some straight edges, go in random order instead
 		// assume that on average we'll hit all tiles (but skipping some is no big deal)
 		for ( i = 0 ; i < randomtiles.size() ; i++ ) {
@@ -316,6 +374,10 @@ void MapGenerator::RemoveExtremeSlopes( Tiles* tiles, const Tile::elevation_t ma
 				tile->Update();
 			}
 		}
+		
+		if ( found ) {
+			m_random->Shuffle( randomtiles );
+		}
 	}
 }
 
@@ -328,15 +390,7 @@ void MapGenerator::NormalizeElevationRange( Tiles* tiles ) {
 		{ Tile::ELEVATION_MIN, Tile::ELEVATION_MAX }
 	});
 	
-	// process in random order
-	std::vector< Tile* > randomtiles;
-	for ( auto y = 0 ; y < h ; y++ ) {
-		for ( auto x = y & 1 ; x < w ; x += 2 ) {
-			randomtiles.push_back( tiles->At( x, y ) );
-		}
-	}
-	std::mt19937 g( m_random->GetUInt( 0, UINT32_MAX - 1 ) );
-	std::shuffle( randomtiles.begin(), randomtiles.end(), g );
+	auto randomtiles = GetTilesInRandomOrder( tiles );
 	
 	for ( auto& tile : randomtiles ) {
 		tile->elevation_data.bottom = converter.Clamp( tile->elevation_data.bottom );

@@ -1,4 +1,5 @@
 #include <random>
+#include <algorithm>
 #include <climits>
 
 #include "Random.h"
@@ -73,6 +74,12 @@ const bool Random::IsLucky( const value_t difficulty ) {
 	return value == 0;
 }
 
+template< class ValueType >
+void Random::Shuffle( std::vector< ValueType >& vector ) {
+	std::mt19937 g( GetUInt() );
+	std::shuffle( vector.begin(), vector.end(), g );
+}
+
 const Random::state_t Random::GetState() {
 	return m_state;
 }
@@ -117,3 +124,5 @@ const Random::state_t Random::GetStateFromString( std::string value ) {
 }
 
 }
+
+#include "RandomTpl.inc.cpp"
