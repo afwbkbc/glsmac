@@ -189,15 +189,19 @@ void Scrollbar::RealignSlider() {
 	const auto& slider_area = m_slider->GetObjectArea();
 	const auto& down_area = m_down->GetObjectArea();
 	
+	//Log( "Setting slider percentage " + std::to_string( m_percentage ) );
+	
 	m_slider->SetTop(
-		+ up_area.height + m_up->GetTop()
-		+ slider_area.height / (
-	
-			// TODO: why substracting up_area.height not needed here?
-			// TODO: what's 3 ?
-			area.height - down_area.height - m_down->GetBottom() - 3
-	
-		) * m_percentage
+		+ up_area.height
+		+ m_up->GetTop()
+		+ (
+			area.height
+			- up_area.height
+			- m_up->GetTop()
+			- down_area.height
+			- m_down->GetBottom()
+			- slider_area.height
+		) * m_percentage / 100.0f
 	);
 	//Log( "Slider top changed to " + std::to_string( m_slider->GetTop() ) );
 }

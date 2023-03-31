@@ -11,6 +11,7 @@ void ScrollView::Create() {
 	NEW( m_viewport, UIContainer );
 		m_viewport->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
 		m_viewport->SetMargin( m_border_size );
+		m_viewport->SetRight( 20 ); // to leave space for scrollbar // TODO: put to style
 		m_viewport->SetOverflow( UIObject::OVERFLOW_HIDDEN );
 	Panel::AddChild( m_viewport );
 	
@@ -52,6 +53,7 @@ void ScrollView::Create() {
 			}
 			return true;
 		});
+		m_scrollbar->SetZIndex( 0.7f ); // TODO: fix z index bugs
 	Panel::AddChild( m_scrollbar );
 	
 	if ( !m_to_add.empty() ) {
@@ -187,7 +189,7 @@ void ScrollView::SetHeight( const coord_t px ) {
 }
 
 void ScrollView::SetScroll( vertex_t px, const bool force ) {
-	if ( m_scroll != px || force ) {	
+	if ( m_scroll != px || force ) {
 		m_scroll = px;
 		const coord_box_t limits = GetScrollLimits();
 		if ( m_body ) {
@@ -212,8 +214,10 @@ void ScrollView::SetScroll( vertex_t px, const bool force ) {
 			const auto& area = GetInternalObjectArea();
 			const auto& body_area = m_body->GetObjectArea();
 			if ( body_area.height > area.height ) {
+				const float p = (float)m_scroll.y / ( limits.bottom - limits.top ) * 100.0f;
+				//Log( "Setting scrollbar to " + std::to_string( p ) );
+				m_scrollbar->SetPercentage( p );
 				m_scrollbar->Show();
-				m_scrollbar->SetPercentage( (float)m_scroll.y / ( limits.bottom - limits.top ) * 100.0f );
 			}
 			else {
 				m_scrollbar->Hide();
