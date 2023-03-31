@@ -11,30 +11,40 @@ namespace game {
 namespace mainmenu {
 
 PlanetSize::PlanetSize( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "SELECT SIZE OF PLANET", {
-	{ "TINY PLANET", [this] () -> void {
-		m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_TINY;
-		ChooseNext();
+	{ "TINY PLANET", {
+		CH( this ) {
+			m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_TINY;
+			ChooseNext();
+		}
 	}},
-	{ "SMALL PLANET", [this] () -> void {
-		m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_SMALL;
-		ChooseNext();
+	{ "SMALL PLANET", {
+		CH( this ) {
+			m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_SMALL;
+			ChooseNext();
+		}
 	}},
-	{ "STANDARD PLANET", [this] () -> void {
-		m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_STANDARD;
-		ChooseNext();
+	{ "STANDARD PLANET", {
+		CH( this ) {
+			m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_STANDARD;
+			ChooseNext();
+		}
 	}},
-	{ "LARGE PLANET", [this] () -> void {
-		m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_LARGE;
-		ChooseNext();
+	{ "LARGE PLANET", {
+		CH( this ) {
+			m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_LARGE;
+			ChooseNext();
+		}
 	}},
-	{ "HUGE PLANET", [this] () -> void {
-		m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_HUGE;
-		ChooseNext();
+	{ "HUGE PLANET", {
+		CH( this ) {
+			m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_HUGE;
+			ChooseNext();
+		}
 	}},
-	{ "CUSTOM SIZE", [this] () -> void {
-		MenuError();
-	}}
-}) {}
+	{ "CUSTOM SIZE", {} },
+}, 2 ) {
+	//
+}
 
 void PlanetSize::ChooseNext() {
 	SlidingMenu *menu;

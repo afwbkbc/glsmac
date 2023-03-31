@@ -7,6 +7,7 @@
 
 #include "ui/object/Surface.h"
 #include "ui/object/SoundEffect.h"
+#include "ui/object/Label.h"
 
 #include "scene/actor/Sound.h"
 
@@ -40,6 +41,10 @@ CLASS( MainMenu, base::Task )
 	void MenuError( const std::string& error_text );
 	void StartGame();
 	
+	void SetCustomizeMapPreview( const std::string& preview_filename );
+	const std::string& GetMapPreviewFilename() const;
+	void SetCustomizeMapMoons( const std::string& moons_filename );
+	
 	util::Random* GetRandom();
 	
 private:
@@ -49,17 +54,28 @@ private:
 	const UIEventHandler* m_mouse_handler = nullptr;
 	
 	Surface *m_background = nullptr;
+	Surface* m_customize_map_preview = nullptr;
+	Surface* m_customize_map_moons = nullptr;
+
+	std::string m_customize_map_preview_filename = "";
+	std::vector< std::string > m_customize_map_preview_history = {};
+	
+	std::string m_customize_map_moons_filename = "";
 	
 	MenuObject *m_menu_object = nullptr;
-	std::vector<MenuObject*> m_menu_history = {};
-	std::vector<std::string> m_choice_history = {};
+	std::vector< MenuObject* > m_menu_history = {};
+	std::vector< std::string > m_choice_history = {};
 	
 	MenuObject *m_menu_next = nullptr;
 	bool m_goback = false;
 	
 	SoundEffect* m_music = nullptr;
 	
+	Label* m_glsmac_logo = nullptr;
+	
 	util::Random m_random;
+	
+	void ResizeCustomizeMapPreview();
 
 };
 

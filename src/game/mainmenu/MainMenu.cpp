@@ -11,6 +11,8 @@
 #include "menu/Main.h"
 #include "menu/Error.h"
 
+#include "version.h"
+
 namespace game {
 namespace mainmenu {
 
@@ -24,6 +26,22 @@ void MainMenu::Start() {
 	NEW( m_background, Surface, "MainMenuBackground" );
 	ui->AddObject( m_background );
 
+	// preview image for 'customize map'
+	NEW( m_customize_map_preview, ui::object::Surface, "MainMenuCustomizeMapPreview" );
+		m_customize_map_preview->Hide();
+	ui->AddObject( m_customize_map_preview );
+	SetCustomizeMapPreview( "S2L2C2" ); // average preview by default
+	
+	NEW( m_customize_map_moons, ui::object::Surface, "MainMenuCustomizeMapMoons" );
+		m_customize_map_moons->Hide();
+	ui->AddObject( m_customize_map_moons );
+
+	ResizeCustomizeMapPreview();
+
+	NEW( m_glsmac_logo, ui::object::Label, "MainMenuGLSMACLogo" );
+		m_glsmac_logo->SetText( GLSMAC_VERSION_FULL );
+	ui->AddObject( m_glsmac_logo );
+	
 	m_mouse_handler = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_DOWN, EH( this ) {
 		// rightclick = back
 		if ( data->mouse.button == UIEvent::M_RIGHT && m_menu_object ) {
@@ -49,6 +67,7 @@ void MainMenu::Start() {
 		if ( m_menu_object ) {
 			m_menu_object->Align();
 		}
+		ResizeCustomizeMapPreview();
 	});
 	
 	NEWV( menu, Main, this );
@@ -59,6 +78,11 @@ void MainMenu::Iterate() {
 	if ( m_goback ) {
 		m_goback = false;
 		if ( !m_menu_history.empty() ) {
+			if ( !m_customize_map_preview_history.empty() ) {
+				m_customize_map_preview_filename = m_customize_map_preview_history.back();
+				m_customize_map_preview_history.pop_back();
+				SetCustomizeMapPreview( m_customize_map_preview_filename );
+			}
 			m_menu_object->Hide();
 			DELETE( m_menu_object );
 			m_menu_object = m_menu_history.back();
@@ -73,6 +97,7 @@ void MainMenu::Iterate() {
 	}
 	else if ( m_menu_next ) {
 		if ( m_menu_object ) {
+			m_customize_map_preview_history.push_back( m_customize_map_preview_filename );
 			m_choice_history.push_back( m_menu_object->GetChoice() );
 			m_menu_object->Hide();
 			m_menu_history.push_back( m_menu_object );
@@ -114,6 +139,10 @@ void MainMenu::Stop() {
 	ui->RemoveGlobalEventHandler( m_key_handler );
 	
 	ui->RemoveObject( m_background );
+	ui->RemoveObject( m_customize_map_preview );
+	ui->RemoveObject( m_customize_map_moons );
+	
+	ui->RemoveObject( m_glsmac_logo );
 	
 	ui->RemoveTheme( &m_theme );
 
@@ -140,8 +169,48 @@ void MainMenu::StartGame() {
 	g_engine->GetScheduler()->AddTask( task );
 }
 
+void MainMenu::SetCustomizeMapPreview( const std::string& preview_filename ) {
+	//Log( "Set customize map preview to " + preview_filename );
+	m_customize_map_preview_filename = preview_filename;
+	m_customize_map_preview->SetTexture( g_engine->GetTextureLoader()->LoadTexture( preview_filename + ".pcx" ) );
+	m_customize_map_preview->SetStretchTexture( true );
+	m_customize_map_preview->Show();
+}
+
+const std::string& MainMenu::GetMapPreviewFilename() const {
+	return m_customize_map_preview_filename;
+}
+
+void MainMenu::SetCustomizeMapMoons( const std::string& moons_filename ) {
+	if ( !moons_filename.empty() ) {
+		Log( "Set customize map moons to " + moons_filename );
+		m_customize_map_moons_filename = moons_filename;
+		m_customize_map_moons->SetTexture( g_engine->GetTextureLoader()->LoadTexture( moons_filename + ".pcx" ) );
+		m_customize_map_moons->SetStretchTexture( true );
+		m_customize_map_moons->Show();
+	}
+	else {
+		Log( "Hiding customize map moons" );
+		m_customize_map_moons->Hide();
+	}
+}
+
 util::Random* MainMenu::GetRandom() {
 	return &m_random;
+}
+
+void MainMenu::ResizeCustomizeMapPreview() {
+	const auto* g = g_engine->GetGraphics();
+	const auto w = g->GetViewportWidth();
+	const auto h = g->GetViewportHeight();
+	if ( m_customize_map_preview ) {
+		m_customize_map_preview->SetWidth( floor( 416.0f / 1024.0f * w ) );
+		m_customize_map_preview->SetHeight( floor( h ) );
+	}
+	if ( m_customize_map_moons ) {
+		m_customize_map_moons->SetWidth( floor( 450.0f / 1024.0f * w ) );
+		m_customize_map_moons->SetHeight( floor( 450.0f / 768.0f * h ) );
+	}
 }
 
 } /* namespace mainmenu */

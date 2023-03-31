@@ -12,12 +12,11 @@
 namespace game {
 namespace mainmenu {
 
+#define CH( ... ) [ __VA_ARGS__ ] () -> void
+
 CLASS( SlidingMenu, MenuObject )
 	
-	typedef std::function<void()> choice_handler_t;
-	typedef std::vector< std::pair< std::string, choice_handler_t > > choice_handlers_t;
-	
-	SlidingMenu( MainMenu *mainmenu, const std::string& title, const choice_handlers_t& choices );
+	SlidingMenu( MainMenu *mainmenu, const std::string& title, const MenuBlock::choices_t& choices, const size_t default_choice = 0 );
 	
 	void Show();
 	void Hide();
@@ -25,15 +24,20 @@ CLASS( SlidingMenu, MenuObject )
 	const std::string GetChoice() const;
 	void SetChoice( const std::string& choice );
 	
-	void Close();
+	virtual void Close();
 	bool MaybeClose();
 
+protected:
+	bool IsReadyToClose() const;
+	
 private:
-	const choice_handlers_t m_choices = {};
+	const MenuBlock::choices_t m_choices = {};
 	std::string m_choice = "";
+	const size_t m_default_choice = 0;
 
 	MenuBlock* m_menu_block = nullptr;
-	
+
+	const MenuBlock::choice_handlers_t& GetChoiceHandlers( const std::string& choice ) const;
 };
 	
 }

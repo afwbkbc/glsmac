@@ -16,13 +16,17 @@ MenuBlock::MenuBlock( SlidingMenu* menu )
 	SetEventContexts( EC_KEYBOARD );
 }
 
-void MenuBlock::AddItem(const std::string& text) {
+void MenuBlock::AddItem( const std::string& text, const choice_handlers_t& handlers ) {
 	m_selected_item_index = m_items.size();
-	m_items.push_back(text);
+	m_items.push_back( { text, handlers } );
 }
 
-void MenuBlock::AddTitle(const std::string& text) {
+void MenuBlock::AddTitle( const std::string& text ) {
 	m_title = text;
+}
+
+void MenuBlock::SelectItem( const size_t index ) {
+	m_selected_item_index = index;
 }
 
 const std::string MenuBlock::GetChoice() const {
@@ -35,9 +39,13 @@ const std::string MenuBlock::GetChoice() const {
 }
 
 void MenuBlock::SetChoice( const std::string& choice ) {
-	auto it = std::find( m_items.begin(), m_items.end(), choice );
-	ASSERT( it != m_items.end(), "choice not found" );
-	SetActiveItem( m_items.end() - it - 1 );
+	for ( auto i = 0 ; i < m_items.size() ; i++ ) {
+		if ( m_items[ i ].first == choice ) {
+			SetActiveItem( m_items.size() - i - 1 );
+			return;
+		}
+	}
+	ASSERT( false, "choice '" + choice + "' not found" );
 }
 
 bool MenuBlock::IsSliding() {
@@ -56,17 +64,18 @@ void MenuBlock::Create() {
 	ASSERT( !m_items.empty(), "items list empty" );
 	
 	// upside down because it's easier to position that way
-	for (size_t i = m_items.size() ; i > 0 ; i--) {
-		NEWV( item, MenuItem, this, m_items[i-1] );
-			item->SetBottom( m_menu_items.size() * 70 );
-			item->On( UIEvent::EV_MOUSE_MOVE, EH( this, i ) {
+	for ( size_t i = m_items.size() ; i > 0 ; i-- ) {
+		const auto& item = m_items[ i - 1 ];
+		NEWV( menu_item, MenuItem, this, item.first );
+			menu_item->SetBottom( m_menu_items.size() * 70 );
+			menu_item->On( UIEvent::EV_MOUSE_MOVE, EH( this, item, i ) {
 				SetActiveItem( m_items.size() - i );
-				return true;
+				return false;
 			});
-		m_menu_items.push_back( item );
-		AddChild( item );
+		m_menu_items.push_back( menu_item );
+		AddChild( menu_item );
 	}
-	if (!m_title.empty()) {
+	if ( !m_title.empty() ) {
 		NEWV( item, MenuItem, this, m_title, true );
 		item->SetBottom( m_menu_items.size() * 70 + 35 );
 		m_menu_items.push_back( item );
@@ -179,6 +188,10 @@ void MenuBlock::SetActiveItem( const size_t index ) {
 			}
 			m_selected_item = item;
 			m_selected_item_index = index;
+			const auto& i = m_items[ m_items.size() - index - 1 ];
+			if ( i.second.on_select ) {
+				i.second.on_select();
+			}
 		}
 	}
 }

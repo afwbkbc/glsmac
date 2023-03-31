@@ -157,7 +157,7 @@ void SDL2::FixTexture( Texture* texture ) const {
 			texture->SetPixel( v.x, v.y, texture->GetPixel( v.x + 1, v.y ) );
 		}
 	}
-}
+	}
 
 
 } /* namespace texture */

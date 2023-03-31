@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../SlidingMenu.h"
+#include "CustomizeMapMenu.h"
 
 namespace game {
 namespace mainmenu {
 	
-CLASS( Clouds, SlidingMenu )
+CLASS( Clouds, CustomizeMapMenu )
 	Clouds( MainMenu *mainmenu );
 };
 

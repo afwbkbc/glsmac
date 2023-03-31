@@ -1,11 +1,15 @@
 #pragma once
 
-#include "../SlidingMenu.h"
+#include <unordered_map>
+
+#include "CustomizeMapMenu.h"
+
+#include "ui/object/Surface.h"
 
 namespace game {
 namespace mainmenu {
 	
-CLASS( Ocean, SlidingMenu )
+CLASS( Ocean, CustomizeMapMenu )
 	Ocean( MainMenu *mainmenu );
 };
 

@@ -6,6 +6,7 @@ SET(SRC ${SRC}
 	${PWD}/LoadMapFile.cpp
 	${PWD}/Scenario.cpp
 	${PWD}/PlanetSize.cpp
+	${PWD}/CustomizeMapMenu.cpp
 	${PWD}/Ocean.cpp
 	${PWD}/Erosive.cpp
 	${PWD}/Lifeforms.cpp

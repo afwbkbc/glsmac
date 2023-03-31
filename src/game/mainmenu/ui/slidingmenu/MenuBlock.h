@@ -24,6 +24,14 @@ class SlidingMenu;
 CLASS(MenuBlock, UIContainer)
 	MenuBlock( SlidingMenu* menu );
 
+	// TODO: refactor
+	typedef std::function<void()> choice_handler_t;
+	struct choice_handlers_t {
+		choice_handler_t on_click = 0;
+		choice_handler_t on_select = 0;
+	};
+	typedef std::vector< std::pair< std::string, choice_handlers_t > > choices_t;
+	
 	// how much pixels to shift when fully closed
 	static constexpr coord_t MENU_CLOSED_POSITION = 400;
 	
@@ -34,8 +42,9 @@ CLASS(MenuBlock, UIContainer)
 	void Destroy();
 	void Iterate();
 	
-	void AddItem(const std::string& text);
-	void AddTitle(const std::string& text);
+	void AddItem( const std::string& text, const choice_handlers_t& handlers );
+	void AddTitle( const std::string& text );
+	void SelectItem( const size_t index );
 	
 	const std::string GetChoice() const;
 	void SetChoice( const std::string& choice );
@@ -50,7 +59,7 @@ protected:
 	
 	void SetActiveItem( const size_t index );
 	
-	std::vector<std::string> m_items = {};
+	choices_t m_items = {};
 	std::string m_title = "";
 	
 	SlidingMenu* m_menu = nullptr;

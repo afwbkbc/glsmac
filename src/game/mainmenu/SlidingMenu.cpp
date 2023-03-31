@@ -6,9 +6,10 @@
 namespace game {
 namespace mainmenu {
 
-SlidingMenu::SlidingMenu( MainMenu* mainmenu, const std::string& title, const choice_handlers_t& choices )
+SlidingMenu::SlidingMenu( MainMenu* mainmenu, const std::string& title, const MenuBlock::choices_t& choices, const size_t default_choice )
 	: MenuObject( mainmenu, title )
 	, m_choices ( choices )
+	, m_default_choice( default_choice )
 {
 	//
 }
@@ -16,34 +17,32 @@ SlidingMenu::SlidingMenu( MainMenu* mainmenu, const std::string& title, const ch
 void SlidingMenu::Show() {
 	ASSERT( !m_menu_block, "duplicate menu show" );
 	
-	std::vector< std::string > choice_texts = {};
-	for (auto& it : m_choices) {
-		choice_texts.push_back( it.first );
-	}
-
 	NEW( m_menu_block, MenuBlock, this );
-	for (auto& c : choice_texts) {
-		m_menu_block->AddItem(c);
+	for ( auto& c : m_choices ) {
+		m_menu_block->AddItem( c.first, c.second );
 	}
-	if (!m_title.empty()) {
+	if ( !m_title.empty() ) {
 		m_menu_block->AddTitle( m_title );
+	}
+	if ( m_default_choice ) {
+		m_menu_block->SelectItem( m_choices.size() - m_default_choice - 1 );
 	}
 	g_engine->GetUI()->AddObject( m_menu_block );
 }
 
 void SlidingMenu::Hide() {
 	ASSERT( m_menu_block, "hide without show" );
-	
 	g_engine->GetUI()->RemoveObject( m_menu_block );
 	m_menu_block = nullptr;
 }
 
 void SlidingMenu::OnItemClick( const std::string& choice ) {
-	for (auto& it : m_choices) {
-		if (it.first == choice) {
-			it.second();
-			return;
-		}
+	const auto& c = GetChoiceHandlers( choice );
+	if ( c.on_click ) {
+		c.on_click();
+	}
+	else {
+		MenuError();
 	}
 }
 
@@ -64,7 +63,7 @@ void SlidingMenu::SetChoice( const std::string& choice ) {
 }
 
 void SlidingMenu::Close() {
-	if ( !m_menu_block->IsSliding() ) {
+	if ( IsReadyToClose() ) {
 		m_menu_block->GoBack();
 	}
 }
@@ -72,6 +71,20 @@ void SlidingMenu::Close() {
 bool SlidingMenu::MaybeClose() {
 	Close();
 	return true;
+}
+
+bool SlidingMenu::IsReadyToClose() const {
+	return !m_menu_block->IsSliding();
+}
+
+const MenuBlock::choice_handlers_t& SlidingMenu::GetChoiceHandlers( const std::string& choice ) const {
+	for ( auto& it : m_choices ) {
+		if ( it.first == choice ) {
+			return it.second;
+		}
+	}
+	ASSERT( false, "choice '" + choice + "' does not exist" );
+	return m_choices.front().second;
 }
 
 }
