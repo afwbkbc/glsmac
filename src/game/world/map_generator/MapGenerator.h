@@ -63,6 +63,13 @@ CLASS( MapGenerator, base::Base )
 		{ MapSettings::MAP_LIFEFORMS_ABUNDANT, 0.75f }, // 'abundant'
 	};
 	
+	// 'select cloud cover'
+	const map_parameter_mappings_t TARGET_MOISTURE_AMOUNTS = {
+		{ MapSettings::MAP_CLOUDS_SPARSE, 0.25f }, // 'sparse'
+		{ MapSettings::MAP_CLOUDS_AVERAGE, 0.5f }, // 'average'
+		{ MapSettings::MAP_CLOUDS_DENSE, 0.75f }, // 'dense'
+	};
+	
 	MapGenerator( Random* random );
 	
 	void Generate( Tiles* tiles, const MapSettings& map_settings );
@@ -92,6 +99,9 @@ private:
 	const float GetLandAmount( Tiles* tiles, Tile::elevation_t elevation_diff = 0.0f );
 	void SetFungusAmount( Tiles* tiles, const float amount );
 	const float GetFungusAmount( Tiles* tiles );
+	void SetMoistureAmount( Tiles* tiles, const float amount );
+	const float GetMoistureAmount( Tiles* tiles );
+	void FixImpossibleThings( Tiles* tiles );
 	
 	// helpers
 	const std::vector< Tile* > GetTilesInRandomOrder( const Tiles* tiles );

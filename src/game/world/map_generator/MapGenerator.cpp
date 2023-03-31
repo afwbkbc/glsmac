@@ -77,6 +77,13 @@ void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings ) {
 	const auto desired_fungus_amount = TARGET_FUNGUS_AMOUNTS.at( map_settings.lifeforms );
 	SetFungusAmount( tiles, desired_fungus_amount );
 	
+	// normalize moisture amount
+	ASSERT( TARGET_MOISTURE_AMOUNTS.find( map_settings.clouds ) != TARGET_MOISTURE_AMOUNTS.end(), "unknown map clouds setting " + std::to_string( map_settings.clouds ) );
+	const auto desired_moisture_amount = TARGET_MOISTURE_AMOUNTS.at( map_settings.clouds );
+	SetMoistureAmount( tiles, desired_moisture_amount );
+	
+	FixImpossibleThings( tiles );
+	
 	Log( "Final land amount: " + std::to_string( GetLandAmount( tiles ) ) );
 #ifdef DEBUG
 	{
@@ -85,6 +92,7 @@ void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings ) {
 	}
 #endif
 	Log( "Final fungus amount: " + std::to_string( GetFungusAmount( tiles ) ) );
+	Log( "Final moisture amount: " + std::to_string( GetMoistureAmount( tiles ) ) );
 	
 }
 
@@ -236,6 +244,179 @@ const float MapGenerator::GetFungusAmount( Tiles* tiles ) {
 		}
 	}
 	return (float) fungus_tiles / ( w * h / 2 );
+}
+
+void MapGenerator::SetMoistureAmount( Tiles* tiles, const float amount ) {
+	Tile* tile;
+	const auto w = tiles->GetWidth();
+	const auto h = tiles->GetHeight();
+	const auto sz = w * h / 2;
+	
+	float moisture_amount = 0.0f;
+	std::vector< Tile* > arid_tiles = {};
+	std::vector< Tile* > moist_tiles = {};
+	std::vector< Tile* > rainy_tiles = {};
+	
+	// to avoid reallocations
+	arid_tiles.reserve( sz );
+	moist_tiles.reserve( sz );
+	rainy_tiles.reserve( sz );
+	
+	for ( auto y = 0 ; y < h ; y++ ) {
+		for ( auto x = y & 1 ; x < w ; x += 2 ) {
+			tile = tiles->At( x, y );
+			switch ( tile->moisture ) {
+				case Tile::M_ARID: {
+					arid_tiles.push_back( tile );
+					break;
+				}
+				case Tile::M_MOIST: {
+					moisture_amount += 0.5f;
+					moist_tiles.push_back( tile );
+					break;
+				}
+				case Tile::M_RAINY: {
+					moisture_amount += 1.0f;
+					rainy_tiles.push_back( tile );
+					break;
+				}
+				default: {
+					ASSERT( false, "unknown moisture value" );
+				}
+			}
+		}
+	}
+	
+	const float desired_moisture_amount = amount * sz;
+	if ( moisture_amount < desired_moisture_amount ) {
+		Log( "Adding moisture to " + std::to_string( desired_moisture_amount - moisture_amount ) + " tiles" ); // approximate
+		m_random->Shuffle( arid_tiles );
+		size_t i_arid = 0;
+		m_random->Shuffle( moist_tiles );
+		size_t i_moist = 0;
+		bool use_moist = false;
+		std::vector< Tile* > new_moist_tiles = {};
+		new_moist_tiles.reserve( arid_tiles.size() );
+		while ( moisture_amount < desired_moisture_amount ) {
+			
+			if ( i_arid < arid_tiles.size() && i_moist < moist_tiles.size() ) {
+				use_moist = m_random->GetBool();
+			}
+			else if ( i_arid < arid_tiles.size() ) {
+				use_moist = false;
+			}
+			else if ( i_moist < moist_tiles.size() ) {
+				use_moist = true;
+			}
+			else {
+				break; // exceeded
+			}
+			if ( use_moist ) {
+				moist_tiles[ i_moist++ ]->moisture = Tile::M_RAINY;
+			}
+			else {
+				arid_tiles[ i_arid ]->moisture = Tile::M_MOIST;
+				new_moist_tiles.push_back( arid_tiles[ i_arid ] ); // to make rainy later if needed
+				i_arid++;
+			}
+			moisture_amount += 0.5f;
+		}
+		if ( moisture_amount < desired_moisture_amount ) {
+			// use new moist tiles if still need to increase moisture
+			i_moist = 0;
+			while ( moisture_amount < desired_moisture_amount ) {
+				ASSERT( i_moist < new_moist_tiles.size(), "unable to add enough moisture" );
+				new_moist_tiles[ i_moist++ ]->moisture = Tile::M_RAINY;
+				moisture_amount += 0.5f;
+			}
+		}
+	}
+	else if ( moisture_amount > desired_moisture_amount ) {
+		Log( "Removing moisture from " + std::to_string( moisture_amount - desired_moisture_amount ) + " tiles" ); // approximate
+		m_random->Shuffle( rainy_tiles );
+		size_t i_rainy = 0;
+		m_random->Shuffle( moist_tiles );
+		size_t i_moist = 0;
+		bool use_moist = false;
+		std::vector< Tile* > new_moist_tiles = {};
+		new_moist_tiles.reserve( rainy_tiles.size() );
+		while ( moisture_amount > desired_moisture_amount ) {
+			
+			if ( i_rainy < rainy_tiles.size() && i_moist < moist_tiles.size() ) {
+				use_moist = m_random->GetBool();
+			}
+			else if ( i_rainy < rainy_tiles.size() ) {
+				use_moist = false;
+			}
+			else if ( i_moist < moist_tiles.size() ) {
+				use_moist = true;
+			}
+			else {
+				break; // exceeded
+			}
+			if ( use_moist ) {
+				moist_tiles[ i_moist++ ]->moisture = Tile::M_ARID;
+			}
+			else {
+				rainy_tiles[ i_rainy ]->moisture = Tile::M_MOIST;
+				new_moist_tiles.push_back( rainy_tiles[ i_rainy ] ); // to make arid later if needed
+				i_rainy++;
+			}
+			moisture_amount -= 0.5f;
+		}
+		if ( moisture_amount > desired_moisture_amount ) {
+			// use new moist tiles if still need to decrease moisture
+			i_moist = 0;
+			while ( moisture_amount > desired_moisture_amount ) {
+				ASSERT( i_moist < new_moist_tiles.size(), "unable to remove enough moisture" );
+				new_moist_tiles[ i_moist++ ]->moisture = Tile::M_ARID;
+				moisture_amount -= 0.5f;
+			}
+		}
+	}
+}
+
+const float MapGenerator::GetMoistureAmount( Tiles* tiles ) {
+	float moisture_amount = 0.0f;
+	const auto w = tiles->GetWidth();
+	const auto h = tiles->GetHeight();
+	for ( auto y = 0 ; y < h ; y++ ) {
+		for ( auto x = y & 1 ; x < w ; x += 2 ) {
+			switch ( tiles->At( x, y )->moisture ) {
+				case Tile::M_ARID: {
+					break;
+				}
+				case Tile::M_MOIST: {
+					moisture_amount += 0.5f;
+					break;
+				}
+				case Tile::M_RAINY: {
+					moisture_amount += 1.0f;
+					break;
+				}
+				default: {
+					ASSERT( false, "unknown moisture value" );
+				}
+			}
+		}
+	}
+	return moisture_amount / ( w * h / 2 );
+	
+}
+
+void MapGenerator::FixImpossibleThings( Tiles* tiles ) {
+	Tile* tile;
+	const auto w = tiles->GetWidth();
+	const auto h = tiles->GetHeight();
+	for ( auto y = 0 ; y < h ; y++ ) {
+		for ( auto x = y & 1 ; x < w ; x += 2 ) {
+			tile = tiles->At( x, y );
+			if ( tile->features & Tile::F_JUNGLE && tile->moisture != Tile::M_RAINY ) {
+				// jungle should only be on rainy tiles
+				tile->features &= ~Tile::F_JUNGLE;
+			}
+		}
+	}
 }
 
 const std::vector< Tile* > MapGenerator::GetTilesInRandomOrder( const Tiles* tiles ) {
