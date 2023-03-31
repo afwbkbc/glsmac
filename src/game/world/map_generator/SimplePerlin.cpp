@@ -11,12 +11,12 @@
 // higher values generate more interesting maps, at cost of longer map generation (isn't noticeable before 200 or so)
 #define PERLIN_PASSES 128
 
-#define RIVER_SPAWN_CHANCE_DIFFICULTY 16
-#define RIVER_STARTING_LENGTH_MIN 12
-#define RIVER_STARTING_LENGTH_MAX 36
+#define RIVER_SPAWN_CHANCE_DIFFICULTY 12
+#define RIVER_STARTING_LENGTH_MIN 8
+#define RIVER_STARTING_LENGTH_MAX 16
 #define RIVER_DIRECTION_CHANGE_CHANCE_DIFFICULTY 2
-#define RIVER_SPLIT_CHANCE_DIFFICULTY 8
-#define RIVER_JOIN_CHANCE_DIFFICULTY 8
+#define RIVER_SPLIT_CHANCE_DIFFICULTY 6
+#define RIVER_JOIN_CHANCE_DIFFICULTY 12
 
 #define RIVER_RANDOM_DIRECTION ( m_random->GetUInt( 0, ( tile->neighbours.size() - 1 ) ) )
 #define RIVER_RANDOM_DIRECTION_DIAGONAL ( m_random->GetUInt( 0, 1 ) * 2 - 1 )
