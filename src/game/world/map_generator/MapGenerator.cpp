@@ -33,6 +33,8 @@ void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings ) {
 		FixExtremeSlopes( tiles );
 		NormalizeElevationRange( tiles );
 	
+		// n	ormalize oceans
+		
 		ASSERT( MAXIMUM_ACCEPTABLE_INACCURACY >= INITIAL_ACCEPTABLE_INACCURACY, "maximum acceptable inaccuracy smaller than initial, that would cause infinite loop" );
 		
 		float acceptable_inaccuracy = INITIAL_ACCEPTABLE_INACCURACY;
@@ -57,7 +59,28 @@ void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings ) {
 			acceptable_inaccuracy *= ACCEPTABLE_INACCURACY_CHANGE;
 		} while ( fabs( GetLandAmount( tiles ) - desired_land_amount ) > acceptable_inaccuracy );
 	}
+	
+	ASSERT( TARGET_EVELATION_MULTIPLIERS.find( map_settings.erosive ) != TARGET_EVELATION_MULTIPLIERS.end(), "unknown map erosive setting " + std::to_string( map_settings.erosive ) );
+	
+	// normalize erosive forces
+	const auto range = GetElevationsRange( tiles );
+	float target_elevation_multiplier = std::min< float >( 1.0f, (
+		fabs( std::min< float >(
+			(float) Tile::ELEVATION_MIN / range.first,
+			(float) Tile::ELEVATION_MAX / range.second
+		)) *
+		TARGET_EVELATION_MULTIPLIERS.at( map_settings.erosive )
+	));
+	
+	MultiplyAllTilesBy( tiles, target_elevation_multiplier );
+	
 	Log( "Final land amount: " + std::to_string( GetLandAmount( tiles ) ) );
+#ifdef DEBUG
+	{
+		const auto range = GetElevationsRange( tiles );
+		Log( "Final elevations range: " + std::to_string( range.first ) + " " + std::to_string( range.second ) );
+	}
+#endif
 	
 	GenerateDetails( tiles, map_settings );
 }
@@ -189,6 +212,25 @@ void MapGenerator::RaiseAllTilesBy( Tiles* tiles, Tile::elevation_t amount ) {
 	}
 }
 
+void MapGenerator::MultiplyAllTilesBy( Tiles* tiles, float amount ) {
+	Log( "Multiplying all tiles by " + std::to_string( amount ) );
+	const auto w = tiles->GetWidth();
+	const auto h = tiles->GetHeight();
+	Tile* tile;
+	for ( auto y = 0 ; y < h ; y++ ) {
+		for ( auto x = y & 1 ; x < w ; x += 2 ) {
+			tile = tiles->At( x, y );
+			*tile->elevation.center *= amount;
+			*tile->elevation.bottom *= amount;
+		}
+	}
+	for ( auto y = 0 ; y < h ; y++ ) {
+		for ( auto x = y & 1 ; x < w ; x += 2 ) {
+			tiles->At( x, y )->Update();
+		}
+	}
+}
+
 const std::pair< Tile::elevation_t, Tile::elevation_t > MapGenerator::GetElevationsRange( Tiles* tiles ) const {
 	std::pair< Tile::elevation_t, Tile::elevation_t > result = { 0, 0 };
 	const auto w = tiles->GetWidth();
@@ -208,7 +250,7 @@ const std::pair< Tile::elevation_t, Tile::elevation_t > MapGenerator::GetElevati
 			}
 		}
 	}
-	Log( "Elevations range: min=" + std::to_string( result.first ) + " max=" + std::to_string( result.second ) );
+	//Log( "Elevations range: min=" + std::to_string( result.first ) + " max=" + std::to_string( result.second ) );
 	return result;
 }
 
@@ -235,12 +277,14 @@ void MapGenerator::RemoveExtremeSlopes( Tiles* tiles, const Tile::elevation_t ma
 		}
 	}
 
+	Log( "Checking/fixing extreme slopes" );
+	
 	while ( found ) {
 		if ( elevation_fixby < elevation_fixby_max ) {
 			elevation_fixby += elevation_fixby_change;
 		}
 		elevation_fixby_div += elevation_fixby_div_change;
-		Log( "Checking/fixing extreme slopes (pass " + std::to_string( ++pass ) + ")" );
+		//Log( "Checking/fixing extreme slopes (pass " + std::to_string( ++pass ) + ")" );
 		found = false;
 		
 		std::mt19937 g( m_random->GetUInt( 0, UINT32_MAX - 1 ) );

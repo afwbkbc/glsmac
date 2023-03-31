@@ -78,7 +78,7 @@ Config::Config( const int argc, const char *argv[] )
 			f_error( "Map dump file \"" + value + "\" not found!" );
 		}
 		m_quickstart_mapdump = value;
-		m_debug_flags |= DF_QUICKSTART_MAPDUMP;
+		m_debug_flags |= DF_QUICKSTART_MAP_DUMP;
 	});
 	parser.AddRule( "quickstart-mapfile", "MAP_FILE", "Load from existing map file (*.gsm)", AH( this, f_error, s_quickstart_argument_missing ) {
 		if ( !HasDebugFlag( DF_QUICKSTART ) ) {
@@ -88,7 +88,7 @@ Config::Config( const int argc, const char *argv[] )
 			f_error( "Map file \"" + value + "\" not found!" );
 		}
 		m_quickstart_mapfile = value;
-		m_debug_flags |= DF_QUICKSTART_MAPFILE;
+		m_debug_flags |= DF_QUICKSTART_MAP_FILE;
 	});
 	parser.AddRule( "quickstart-mapsize", "MAP_SIZE", "Generate map of specific size (WxH)", AH( this, f_error, s_quickstart_argument_missing ) {
 		if ( !HasDebugFlag( DF_QUICKSTART ) ) {
@@ -105,26 +105,50 @@ Config::Config( const int argc, const char *argv[] )
 		} catch ( std::invalid_argument& e ) {
 			f_error( s_invalid_format );
 		}
-		m_debug_flags |= DF_QUICKSTART_MAPSIZE;
+		m_debug_flags |= DF_QUICKSTART_MAP_SIZE;
 	});
-	parser.AddRule( "quickstart-mapocean", "low|medium|high", "Generate map with specific ocean coverage", AH( this, f_error, s_quickstart_argument_missing ) {
-		if ( !HasDebugFlag( DF_QUICKSTART ) ) {
-			f_error( s_quickstart_argument_missing );
-		}
-		if ( value == "low" ) {
-			m_quickstart_mapocean = game::MapSettings::MAP_OCEAN_LOW;
-		}
-		else if ( value == "medium" ) {
-			m_quickstart_mapocean = game::MapSettings::MAP_OCEAN_MEDIUM;
-		}
-		else if ( value == "high" ) {
-			m_quickstart_mapocean = game::MapSettings::MAP_OCEAN_HIGH;
-		}
-		else {
-			f_error( "Invalid ocean value specified! Choices are: low, medium, high" );
-		}
-		m_debug_flags |= DF_QUICKSTART_MAPOCEAN;
-	});
+	const auto f_add_map_parameter_option =
+		[ this, &parser, f_error, &s_quickstart_argument_missing ]
+		( const std::string& name, const std::vector< std::string >& values, const std::string& desc, debug_flag_t flag, game::MapSettings::parameter_t* out_param )
+	-> void {
+		ASSERT( values.size() == 3, "values size mismatch" );
+		parser.AddRule( name, values[ 0 ] + "|" + values[ 1 ] + "|" + values[ 2 ], "Generate map with specific " + desc + " setting",
+			AH( this, name, values, f_error, &s_quickstart_argument_missing, out_param, &desc, flag ) {
+				if ( !HasDebugFlag( DF_QUICKSTART ) ) {
+					f_error( s_quickstart_argument_missing );
+				}
+				if ( value == values[ 0 ] ) {
+					*out_param = 1;
+				}
+				else if ( value == values[ 1 ] ) {
+					*out_param = 2;
+				}
+				else if ( value == values[ 2 ] ) {
+					*out_param = 3;
+				}
+				else {
+					f_error( "Invalid --" + name + " value specified! Possible choices: " + values[ 0 ] + " " + values[ 1 ] + " " + values[ 2 ] );
+				}
+				m_debug_flags |= flag;
+			}
+		);
+	};
+	f_add_map_parameter_option(
+		"quickstart-map-ocean", { "low", "medium", "high" }, "ocean coverage",
+		DF_QUICKSTART_MAP_OCEAN, &m_quickstart_map_ocean
+	);
+	f_add_map_parameter_option(
+		"quickstart-map-erosive", { "strong", "average", "weak" }, "erosive forces",
+		DF_QUICKSTART_MAP_EROSIVE, &m_quickstart_map_erosive
+	);
+	f_add_map_parameter_option(
+		"quickstart-map-lifeforms", { "rare", "average", "abundant" }, "native lifeforms",
+		DF_QUICKSTART_MAP_LIFEFORMS, &m_quickstart_map_lifeforms
+	);
+	f_add_map_parameter_option(
+		"quickstart-map-clouds", { "sparse", "average", "dense" }, "cloud cover",
+		DF_QUICKSTART_MAP_CLOUDS, &m_quickstart_map_clouds
+	);
 #endif
 	
 	try {
@@ -172,8 +196,18 @@ const types::Vec2< size_t >& Config::GetQuickstartMapSize() const {
 	return m_quickstart_mapsize;
 }
 const game::MapSettings::parameter_t Config::GetQuickstartMapOcean() const {
-	return m_quickstart_mapocean;
+	return m_quickstart_map_ocean;
 }
+const game::MapSettings::parameter_t Config::GetQuickstartMapErosive() const {
+	return m_quickstart_map_erosive;
+}
+const game::MapSettings::parameter_t Config::GetQuickstartMapLifeforms() const {
+	return m_quickstart_map_lifeforms;
+}
+const game::MapSettings::parameter_t Config::GetQuickstartMapClouds() const {
+	return m_quickstart_map_clouds;
+}
+
 
 #endif
 

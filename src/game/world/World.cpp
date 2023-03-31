@@ -83,7 +83,7 @@ void World::Start() {
 #endif
 	
 #ifdef DEBUG
-	if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAPDUMP ) ) {
+	if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) {
 		const std::string& filename = config->GetQuickstartMapDump();
 		ASSERT( FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
 		Log( (std::string) "Loading map dump from " + filename );
@@ -93,7 +93,7 @@ void World::Start() {
 #endif
 	{
 #ifdef DEBUG
-		if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAPFILE ) ) {
+		if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) {
 			const std::string& filename = config->GetQuickstartMapFile();
 			LoadMap( filename );
 		}
@@ -110,7 +110,7 @@ void World::Start() {
 		}
 #ifdef DEBUG
 		// also handy to have dump of generated map
-		if ( !config->HasDebugFlag( config::Config::DF_QUICKSTART_MAPDUMP ) ) { // no point saving if we just loaded it
+		if ( !config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) { // no point saving if we just loaded it
 			Log( (std::string) "Saving map dump to " + MAP_DUMP_FILENAME );
 			FS::WriteFile( MAP_DUMP_FILENAME, m_map->Serialize().ToString() );
 		}
@@ -756,16 +756,25 @@ void World::GenerateMap() {
 	timer.Start();
 	const auto* c = g_engine->GetConfig();
 	if ( c->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
-		if ( c->HasDebugFlag( config::Config::DF_QUICKSTART_MAPSIZE ) ) {
+		if ( c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_SIZE ) ) {
 			size = c->GetQuickstartMapSize();
 		}
-		m_settings.global.map.ocean = c->HasDebugFlag( config::Config::DF_QUICKSTART_MAPOCEAN )
+		m_settings.global.map.ocean = c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_OCEAN )
 			? m_settings.global.map.ocean = c->GetQuickstartMapOcean()
 			: m_settings.global.map.ocean =m_random->GetUInt( 1, 3 )
 		;
-		m_settings.global.map.erosive = m_random->GetUInt( 1, 3 );
-		m_settings.global.map.lifeforms = m_random->GetUInt( 1, 3 );
-		m_settings.global.map.clouds = m_random->GetUInt( 1, 3 );
+		m_settings.global.map.erosive = c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_EROSIVE )
+			? m_settings.global.map.erosive = c->GetQuickstartMapErosive()
+			: m_settings.global.map.erosive =m_random->GetUInt( 1, 3 )
+		;
+		m_settings.global.map.lifeforms = c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_LIFEFORMS )
+			? m_settings.global.map.lifeforms = c->GetQuickstartMapLifeforms()
+			: m_settings.global.map.lifeforms =m_random->GetUInt( 1, 3 )
+		;
+		m_settings.global.map.clouds = c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_CLOUDS )
+			? m_settings.global.map.clouds = c->GetQuickstartMapClouds()
+			: m_settings.global.map.clouds =m_random->GetUInt( 1, 3 )
+		;
 	}
 #endif
 	Log( "Generating map of size " + size.ToString() );
@@ -775,7 +784,7 @@ void World::GenerateMap() {
 #ifdef DEBUG
 	Log( "Map generation took " + std::to_string( timer.GetElapsed().count() ) + "ms" );
 	// if crash happens - it's handy to have a map file to reproduce it
-	if ( !c->HasDebugFlag( config::Config::DF_QUICKSTART_MAPFILE ) ) { // no point saving if we just loaded it
+	if ( !c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) { // no point saving if we just loaded it
 		Log( (std::string) "Saving map to " + MAP_FILENAME );
 		FS::WriteFile( MAP_FILENAME, tiles->Serialize().ToString() );
 	}

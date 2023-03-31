@@ -20,16 +20,19 @@ CLASS( Config, base::Module )
 	};
 	
 #ifdef DEBUG
-	enum debug_flag_t : uint8_t {
+	enum debug_flag_t : uint16_t {
 		DF_NONE = 0,
 		DF_GDB = 1 << 0,
 		DF_MEMORYDEBUG = 1 << 1,
 		DF_QUICKSTART = 1 << 2,
 		DF_QUICKSTART_SEED = 1 << 3,
-		DF_QUICKSTART_MAPDUMP = 1 << 4,
-		DF_QUICKSTART_MAPFILE = 1 << 5,
-		DF_QUICKSTART_MAPSIZE = 1 << 6,
-		DF_QUICKSTART_MAPOCEAN = 1 << 7
+		DF_QUICKSTART_MAP_DUMP = 1 << 4,
+		DF_QUICKSTART_MAP_FILE = 1 << 5,
+		DF_QUICKSTART_MAP_SIZE = 1 << 6,
+		DF_QUICKSTART_MAP_OCEAN = 1 << 7,
+		DF_QUICKSTART_MAP_EROSIVE = 1 << 8,
+		DF_QUICKSTART_MAP_LIFEFORMS = 1 << 9,
+		DF_QUICKSTART_MAP_CLOUDS = 1 << 10
 	};
 #endif
 	
@@ -43,6 +46,9 @@ CLASS( Config, base::Module )
 	const std::string& GetQuickstartMapFile() const;
 	const types::Vec2< size_t >& GetQuickstartMapSize() const;
 	const game::MapSettings::parameter_t GetQuickstartMapOcean() const;
+	const game::MapSettings::parameter_t GetQuickstartMapErosive() const;
+	const game::MapSettings::parameter_t GetQuickstartMapLifeforms() const;
+	const game::MapSettings::parameter_t GetQuickstartMapClouds() const;
 #endif
 	
 private:
@@ -53,13 +59,17 @@ private:
 	
 	uint8_t m_launch_flags = LF_NONE;
 #ifdef DEBUG
-	uint8_t m_debug_flags = DF_NONE;
+	uint16_t m_debug_flags = DF_NONE;
 	util::Random::state_t m_quickstart_seed = {};
 	std::string m_quickstart_mapdump = "";
 	std::string m_quickstart_mapfile = "";
 	types::Vec2< size_t > m_quickstart_mapsize = {};
-	game::MapSettings::parameter_t m_quickstart_mapocean = game::MapSettings::MAP_OCEAN_MEDIUM;
+	game::MapSettings::parameter_t m_quickstart_map_ocean = game::MapSettings::MAP_OCEAN_MEDIUM;
+	game::MapSettings::parameter_t m_quickstart_map_erosive = game::MapSettings::MAP_EROSIVE_AVERAGE;
+	game::MapSettings::parameter_t m_quickstart_map_lifeforms = game::MapSettings::MAP_LIFEFORMS_AVERAGE;
+	game::MapSettings::parameter_t m_quickstart_map_clouds = game::MapSettings::MAP_CLOUDS_AVERAGE;
 #endif
 };
 
 } /* namespace config */
+
