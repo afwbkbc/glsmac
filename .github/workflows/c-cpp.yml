@@ -33,13 +33,13 @@ jobs:
     - name: make64
       run: make
     - name: pack64
-      run: tar zcvf GLSMAC-v0.1-${{ env.SHA }}-bin64.tar.gz bin/
+      run: tar zcvf GLSMAC-v0.2-${{ env.SHA }}-bin64.tar.gz bin/
     - name: publish
       uses: actions/upload-artifact@v3
       with:
         name: GLSMAC-ubuntu-bin
         path: |
-          ./GLSMAC-v0.1-${{ env.SHA }}-bin64.tar.gz
+          ./GLSMAC-v0.2-${{ env.SHA }}-bin64.tar.gz
     - uses: dev-drprasad/delete-older-releases@v0.2.0
       with:
         keep_latest: 4
@@ -52,8 +52,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: v0.1-${{ env.SHA }}
-        release_name: v0.1-${{ env.SHA }}
+        tag_name: v0.2-${{ env.SHA }}
+        release_name: v0.2-${{ env.SHA }}
         draft: false
         prerelease: false
     - name: Upload Release Asset 64
@@ -63,6 +63,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps     - name: upload
-        asset_path: ./GLSMAC-v0.1-${{ env.SHA }}-bin64.tar.gz
-        asset_name: GLSMAC-v0.1-${{ env.SHA }}-bin64.tar.gz
+        asset_path: ./GLSMAC-v0.2-${{ env.SHA }}-bin64.tar.gz
+        asset_name: GLSMAC-v0.2-${{ env.SHA }}-bin64.tar.gz
         asset_content_type: application/gzip
