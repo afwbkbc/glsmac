@@ -798,7 +798,7 @@ Scene* Map::GetScene() const {
 	return m_scene;
 }
 
-scene::actor::Instanced* Map::GetTerrainSpriteActor( const std::string& name, const pcx_texture_coordinates_t& tex_coords ) {
+scene::actor::Instanced* Map::GetTerrainSpriteActor( const std::string& name, const pcx_texture_coordinates_t& tex_coords, const float z_index ) {
 	
 	const auto key = name + " " + tex_coords.ToString();
 	
@@ -828,7 +828,7 @@ scene::actor::Instanced* Map::GetTerrainSpriteActor( const std::string& name, co
 			}
 		);
 		NEWV( instanced, scene::actor::Instanced, sprite );
-		instanced->SetZIndex( 0.5f ); // needs to be higher than map terrain z position
+		instanced->SetZIndex( z_index ); // needs to be higher than map terrain z position
 		m_scene->AddActor( instanced );
 		m_instanced_sprites[ key ] = {
 			name,

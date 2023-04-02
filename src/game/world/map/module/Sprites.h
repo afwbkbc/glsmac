@@ -12,7 +12,7 @@ CLASS( Sprites, Module )
 	void GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_state_t* ms );
 	
 private:
-	void GenerateSprite( const Tile* tile, Map::tile_state_t* ts, const std::string& name, const Map::pcx_texture_coordinates_t& tex_coords );
+	void GenerateSprite( const Tile* tile, Map::tile_state_t* ts, const std::string& name, const Map::pcx_texture_coordinates_t& tex_coords, const float z_index );
 	
 };
 	

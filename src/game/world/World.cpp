@@ -643,15 +643,17 @@ void World::UpdateCameraPosition() {
 		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + m_camera_position.z
 	});
 
-	const auto* ms = m_map->GetMapState();
+	if ( m_ui.bottom_bar ) {
+		const auto* ms = m_map->GetMapState();
 
-	m_ui.bottom_bar->SetMinimapSelection({
-		1.0f - ms->range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z / m_viewport.window_aspect_ratio ),
-		1.0f - ms->range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z / m_viewport.ratio.y / 0.707f )
-	}, {
-		2.0f / ( (float) ( m_map->GetWidth() ) * m_camera_position.z * m_viewport.window_aspect_ratio ),
-		2.0f / ( (float) ( m_map->GetHeight() ) * m_camera_position.z * m_viewport.ratio.y * 0.707f ),
-	});
+		m_ui.bottom_bar->SetMinimapSelection({
+			1.0f - ms->range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z / m_viewport.window_aspect_ratio ),
+			1.0f - ms->range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z / m_viewport.ratio.y / 0.707f )
+		}, {
+			2.0f / ( (float) ( m_map->GetWidth() ) * m_camera_position.z * m_viewport.window_aspect_ratio ),
+			2.0f / ( (float) ( m_map->GetHeight() ) * m_camera_position.z * m_viewport.ratio.y * 0.707f ),
+		});
+	}
 }
 
 void World::UpdateCameraScale() {
@@ -815,6 +817,8 @@ void World::LoadMap( const std::string& path ) {
 		m_ui.bottom_bar->UpdateMapFileName();
 	}
 	AddMessage( "Map loaded from " + path );
+	
+	UpdateCameraRange();
 }
 
 void World::SaveMap( const std::string& path ) {

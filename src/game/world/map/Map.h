@@ -553,7 +553,7 @@ CLASS( Map, Serializable )
 	
 	Scene* GetScene() const;
 	
-	scene::actor::Instanced* GetTerrainSpriteActor( const std::string& name, const pcx_texture_coordinates_t& tex_coords );
+	scene::actor::Instanced* GetTerrainSpriteActor( const std::string& name, const pcx_texture_coordinates_t& tex_coords, const float z_index = 0.5f );
 	
 	typedef std::vector< Tile* > tiles_t;
 	void LoadTiles( const tiles_t& tiles );

@@ -30,7 +30,7 @@ namespace opengl {
 namespace routine {
 	class Overlay;
 }
-	
+
 CLASS( OpenGL, Graphics )
 	
 	// maximum instances of same actor, more = faster rendering of same objects
@@ -39,7 +39,7 @@ CLASS( OpenGL, Graphics )
 	// rendering will be split to multiple draw calls if number of instances is larger
 	static constexpr size_t MAX_INSTANCES = 224;
 
-	static constexpr float VIEWPORT_MULTIPLIER = 0.5f; // larger size for internal viewport
+	static constexpr float VIEWPORT_MULTIPLIER = 1.0f; // larger size for internal viewport // TODO
 
 	OpenGL( const std::string title, const unsigned short window_width, const unsigned short window_height, const bool vsync, const bool fullscreen );
 	~OpenGL();

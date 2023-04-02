@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "Sprites.h"
 
 #include "scene/actor/Sprite.h"
@@ -14,8 +16,43 @@ void Sprites::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 	}
 	ts->sprites.clear();
 	
+	const std::vector< std::string > sprite_z_order = {
+		"Geothermal",
+		"Uranium",
+		
+		"NutrientBonusLand",
+		"NutrientBonusSea",
+		"EnergyBonusLand",
+		"EnergyBonusSea",
+		"MineralsBonusLand",
+		"MineralsBonusSea",
+		
+		"Condenser",
+		
+		"FarmLand",
+		"FarmSea",
+		"SolarLand",
+		"SolarSea",
+		"MineLand",
+		"MineSea",
+		
+		"ThermalBorehole",
+		"SoilEnricher",
+		"EchelonMirror",
+
+		"Monolith",
+		
+		"Airbase",
+		"Sensor",
+		"Bunker",
+
+		"UnityPodSea",
+		"UnityPodLand",
+	};
+	
 #define SPRITE( _name, _texture ) \
-	GenerateSprite( tile, ts, _name, Map::s_consts.tc.ter1_pcx._texture )
+	ASSERT( std::find( sprite_z_order.begin(), sprite_z_order.end(), _name ) != sprite_z_order.end(), "sprite '" _name "' not found in sprite z order" ); \
+	GenerateSprite( tile, ts, _name, Map::s_consts.tc.ter1_pcx._texture, 0.4f + 0.001f * ( std::find( sprite_z_order.begin(), sprite_z_order.end(), _name ) - sprite_z_order.begin() ) )
 	
 #define FEATURE_SPRITE( _feature, _name, _texture ) \
 	if ( tile->features & Tile::_feature ) { \
@@ -28,6 +65,8 @@ void Sprites::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 	}
 	
 	if ( tile->is_water_tile ) {
+		FEATURE_SPRITE( F_GEOTHERMAL, "Geothermal", geothermal[ 0 ] );
+		
 		switch ( tile->bonus ) {
 			case Tile::B_NUTRIENT: {
 				SPRITE( "NutrientBonusSea", nutrient_bonus_sea[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
@@ -45,8 +84,6 @@ void Sprites::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 				// nothing
 			}
 		}
-		FEATURE_SPRITE( F_GEOTHERMAL, "Geothermal", geothermal[ 0 ] );
-		FEATURE_SPRITE( F_UNITY_POD, "UnityPodSea", unity_pod_sea[ m_map->GetRandom()->GetUInt( 0, 2 ) ] );
 		
 		TERRAFORMING_SPRITE( T_FARM, "FarmSea", farm_sea[ 0 ] );
 		TERRAFORMING_SPRITE( T_SOLAR, "SolarSea", solar_sea[ 0 ] );
@@ -71,10 +108,10 @@ void Sprites::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 			}
 		}
 		FEATURE_SPRITE( F_URANIUM, "Uranium", uranium[ 0 ] );
-		FEATURE_SPRITE( F_UNITY_POD, "UnityPodLand", unity_pod_land[ m_map->GetRandom()->GetUInt( 0, 2 ) ] );
 
-		TERRAFORMING_SPRITE( T_SOLAR, "SolarLand", solar_land[ 0 ] );
 		TERRAFORMING_SPRITE( T_CONDENSER, "Condenser", condenser[ 0 ] );
+		
+		TERRAFORMING_SPRITE( T_SOLAR, "SolarLand", solar_land[ 0 ] );
 		
 		// TODO: select based on nutrients yields instead of moisture
 		TERRAFORMING_SPRITE( T_FARM, "FarmLand", farm_land[ tile->moisture ] );
@@ -85,15 +122,18 @@ void Sprites::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 		TERRAFORMING_SPRITE( T_BOREHOLE, "ThermalBorehole", borehole[ 0 ] );
 
 		TERRAFORMING_SPRITE( T_AIRBASE, "Airbase", airbase[ 0 ] );
+		
 	}
+	
+	FEATURE_SPRITE( F_MONOLITH, "Monolith", monolith[ 0 ] );
 	
 	TERRAFORMING_SPRITE( T_SENSOR, "Sensor", sensor[ 0 ] );
 	
 	if ( !tile->is_water_tile ) {
 		TERRAFORMING_SPRITE( T_BUNKER, "Bunker", bunker[ 0 ] );
 	}
-		
-	FEATURE_SPRITE( F_MONOLITH, "Monolith", monolith[ 0 ] );
+	
+	FEATURE_SPRITE( F_UNITY_POD, tile->is_water_tile ? "UnityPodLand" : "UnityPodSea", unity_pod_land[ m_map->GetRandom()->GetUInt( 0, 2 ) ] );
 	
 #undef FEATURE_SPRITE
 #undef TERRAFORMING_SPRITE
@@ -101,14 +141,14 @@ void Sprites::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 	
 }
 
-void Sprites::GenerateSprite( const Tile* tile, Map::tile_state_t* ts, const std::string& name, const Map::pcx_texture_coordinates_t& tex_coords ) {
+void Sprites::GenerateSprite( const Tile* tile, Map::tile_state_t* ts, const std::string& name, const Map::pcx_texture_coordinates_t& tex_coords, const float z_index ) {
 	Map::tile_state_t::sprite_t sprite = {};
 	
 	const auto& coords = tile->is_water_tile ? ts->layers[ Map::LAYER_WATER ].coords : ts->layers[ Map::LAYER_LAND ].coords;
 	
 	sprite.name = name;
 	sprite.tex_coords = tex_coords;
-	sprite.actor = m_map->GetTerrainSpriteActor( name, sprite.tex_coords );
+	sprite.actor = m_map->GetTerrainSpriteActor( name, sprite.tex_coords, z_index );
 	sprite.instance = sprite.actor->AddInstance({
 		coords.center.x,
 		- coords.center.y, // TODO: fix y inversion
