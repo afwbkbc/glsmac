@@ -133,7 +133,12 @@ void Sprites::GenerateTile( const Tile* tile, Map::tile_state_t* ts, Map::map_st
 		TERRAFORMING_SPRITE( T_BUNKER, "Bunker", bunker[ 0 ] );
 	}
 	
-	FEATURE_SPRITE( F_UNITY_POD, tile->is_water_tile ? "UnityPodLand" : "UnityPodSea", unity_pod_land[ m_map->GetRandom()->GetUInt( 0, 2 ) ] );
+	if ( !tile->is_water_tile ) {
+		FEATURE_SPRITE( F_UNITY_POD, "UnityPodLand", unity_pod_land[ m_map->GetRandom()->GetUInt( 0, 2 ) ] );
+	}
+	else {
+		FEATURE_SPRITE( F_UNITY_POD, "UnityPodSea", unity_pod_sea[ m_map->GetRandom()->GetUInt( 0, 2 ) ] );
+	}
 	
 #undef FEATURE_SPRITE
 #undef TERRAFORMING_SPRITE
