@@ -127,7 +127,7 @@ void BottomBar::Create() {
 		// don't let mouse events that weren't handled by child elements go through to map
 		if (
 			data->mouse.relative.x > 164 &&
-			data->mouse.relative.x < g_engine->GetGraphics()->GetViewportWidth() - 162 &&
+			data->mouse.relative.x < g_engine->GetGraphics()->GetWindowWidth() - 162 &&
 			data->mouse.relative.y <= 32
 		) {
 			// allow through transparent area at top

@@ -23,7 +23,7 @@ const float Graphics::GetAspectRatio() const {
 }
 
 void Graphics::OnWindowResize() {
-	m_aspect_ratio = (float) GetViewportWidth() / GetViewportHeight();
+	m_aspect_ratio = (float) GetViewportHeight() / GetViewportWidth();
 	for ( auto& object : m_on_resize_handlers_order ) {
 		ASSERT( m_on_resize_handlers.find( object ) != m_on_resize_handlers.end(), "resize handler not found but exists in order vector" );
 		m_on_resize_handlers.at( object )( m_aspect_ratio );

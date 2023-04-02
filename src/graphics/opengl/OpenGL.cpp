@@ -17,13 +17,13 @@
 namespace graphics {
 namespace opengl {
 
-OpenGL::OpenGL( const std::string title, const unsigned short viewport_width, const unsigned short viewport_height, const bool vsync, const bool fullscreen ) {
+OpenGL::OpenGL( const std::string title, const unsigned short window_width, const unsigned short window_height, const bool vsync, const bool fullscreen ) {
 	m_window = NULL;
 	m_gl_context = NULL;
 
 	m_options.title = title;
-	m_options.viewport_width = m_window_size.width = viewport_width;
-	m_options.viewport_height = m_window_size.height = viewport_height;
+	m_options.viewport_width = m_window_size.x = m_last_window_size.x = window_width;
+	m_options.viewport_height = m_window_size.y = m_last_window_size.y = window_height;
 	m_options.vsync = vsync;
 
 	m_aspect_ratio = (float) m_options.viewport_width / m_options.viewport_height;
@@ -134,7 +134,9 @@ void OpenGL::Start() {
 	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it )
 		(*it)->Start();
 
-	glViewport( 0, 0, m_options.viewport_width, m_options.viewport_height );
+	UpdateViewportSize( m_options.viewport_width, m_options.viewport_height );
+	
+	glViewport( 0, 0, m_viewport_size.x, m_viewport_size.y );
 	glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
 	glClearDepth( 1.0f );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -240,19 +242,29 @@ void OpenGL::RemoveScene( scene::Scene *scene ) {
 	ASSERT( removed, "no matching routine for scene [" + scene->GetName() + "]" );
 }
 
+const unsigned short OpenGL::GetWindowWidth() const {
+	return m_window_size.x;
+}
+
+const unsigned short OpenGL::GetWindowHeight() const {
+	return m_window_size.y;
+}
+	
 const unsigned short OpenGL::GetViewportWidth() const {
-	return m_options.viewport_width;
+	ASSERT( m_viewport_size.x > 0, "viewport width zero" );
+	return m_viewport_size.x;
 }
 
 const unsigned short OpenGL::GetViewportHeight() const {
-	return m_options.viewport_height;
+	ASSERT( m_viewport_size.y > 0, "viewport height zero" );
+	return m_viewport_size.y;
 }
 
 void OpenGL::OnWindowResize() {
 	Graphics::OnWindowResize();
 	
 	for ( auto& f : m_fbos ) {
-		f->Resize( m_options.viewport_width, m_options.viewport_height );
+		f->Resize( m_viewport_size.x, m_viewport_size.y );
 	}
 	
 	for ( auto& r : m_routines ) {
@@ -487,21 +499,19 @@ void OpenGL::DestroyFBO( FBO* fbo ) {
 	DELETE( fbo );
 }
 
+void OpenGL::ResizeWindow( const size_t width, const size_t height ) {
+	m_window_size.x = m_options.viewport_width;
+	m_window_size.y = m_options.viewport_height;
+	ResizeViewport( width, height );
+}
+
 void OpenGL::ResizeViewport( const size_t width, const size_t height ) {
 	
-	// I'm having weird texture tiling bugs at non-even window heights
-	// also don't let them go below 2 or something will assert/crash
-	m_options.viewport_width = ( width + 1 ) / 2 * 2;
-	m_options.viewport_height = ( height + 1 ) / 2 * 2;
+	UpdateViewportSize( width, height );
 	
-	if ( !m_is_fullscreen ) {
-		m_window_size.width = m_options.viewport_width;
-		m_window_size.height = m_options.viewport_height;
-	}
-	
-	Log( "Resizing viewport to " + std::to_string( m_options.viewport_width ) + "x" + std::to_string( m_options.viewport_height ) );
-	glViewport( 0, 0, m_options.viewport_width, m_options.viewport_height );
-	m_aspect_ratio = (float) m_options.viewport_height / m_options.viewport_width;
+	Log( "Resizing viewport to " + std::to_string( m_viewport_size.x ) + "x" + std::to_string( m_viewport_size.y ) );
+	glViewport( 0, 0, m_viewport_size.x, m_viewport_size.y );
+	m_aspect_ratio = (float) m_viewport_size.y / m_viewport_size.x;
 	OnWindowResize();
 	for ( auto routine = m_routines.begin() ; routine < m_routines.end() ; ++routine ) {
 		for ( auto scene = (*routine)->m_scenes.begin() ; scene < (*routine)->m_scenes.end() ; ++scene ) {
@@ -538,7 +548,9 @@ void OpenGL::SetFullscreen() {
 	//SDL_RaiseWindow( m_window );
 	SDL_SetWindowFullscreen( m_window, true );
 	SDL_SetWindowGrab( m_window, SDL_TRUE );
-			
+	
+	m_last_window_size = m_window_size;
+	
 	ResizeViewport( dm.w, dm.h );
 }
 
@@ -551,19 +563,28 @@ void OpenGL::SetWindowed() {
 	SDL_DisplayMode dm;
 	SDL_GetDesktopDisplayMode( 0, &dm );
 	
+	m_window_size = m_last_window_size;
+	
 	SDL_SetWindowFullscreen( m_window, false );
 	//SDL_SetWindowBordered( m_window, SDL_TRUE );
 	//SDL_SetWindowResizable( m_window, SDL_TRUE );
-	SDL_SetWindowSize( m_window, m_window_size.width, m_window_size.height );
-	SDL_SetWindowPosition( m_window, ( dm.w - m_window_size.width ) / 2, ( dm.h - m_window_size.height ) / 2 );
+	SDL_SetWindowSize( m_window, m_window_size.x, m_window_size.y );
+	SDL_SetWindowPosition( m_window, ( dm.w - m_window_size.x ) / 2, ( dm.h - m_window_size.y ) / 2 );
 	
 	SDL_SetWindowGrab( m_window, SDL_FALSE );
 	
-	ResizeViewport( m_window_size.width, m_window_size.height );
+	ResizeViewport( m_window_size.x, m_window_size.y );
 }
 
 void OpenGL::RedrawOverlay() {
 	m_routine_overlay->Redraw();
+}
+
+void OpenGL::UpdateViewportSize( const size_t width, const size_t height ) {
+	// I'm having weird texture tiling bugs at non-even window heights
+	// also don't let them go below 2 or something will assert/crash
+	m_viewport_size.x = ( width + 1 ) / 2 * 2;
+	m_viewport_size.y = ( height + 1 ) / 2 * 2;
 }
 
 } /* namespace opengl */

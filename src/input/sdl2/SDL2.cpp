@@ -48,7 +48,7 @@ void SDL2::Iterate() {
 			}
 			case SDL_WINDOWEVENT: {
 				if ( event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED ) {
-					g_engine->GetGraphics()->ResizeViewport( event.window.data1, event.window.data2 );
+					g_engine->GetGraphics()->ResizeWindow( event.window.data1, event.window.data2 );
 				}
 				break;
 			}

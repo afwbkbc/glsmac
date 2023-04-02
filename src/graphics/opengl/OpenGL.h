@@ -39,6 +39,8 @@ CLASS( OpenGL, Graphics )
 	// rendering will be split to multiple draw calls if number of instances is larger
 	static constexpr size_t MAX_INSTANCES = 224;
 
+	static constexpr float VIEWPORT_MULTIPLIER = 0.5f; // larger size for internal viewport
+
 	OpenGL( const std::string title, const unsigned short window_width, const unsigned short window_height, const bool vsync, const bool fullscreen );
 	~OpenGL();
 	void Start();
@@ -48,6 +50,8 @@ CLASS( OpenGL, Graphics )
 	void AddScene( scene::Scene *scene );
 	void RemoveScene( scene::Scene *scene );
 	
+	const unsigned short GetWindowWidth() const;
+	const unsigned short GetWindowHeight() const;
 	const unsigned short GetViewportWidth() const;
 	const unsigned short GetViewportHeight() const;
 	
@@ -77,10 +81,9 @@ protected:
 		unsigned short viewport_height;
 		bool vsync;
 	} m_options;
-	struct {
-		unsigned short width;
-		unsigned short height;
-	} m_window_size;
+	Vec2< unsigned short > m_window_size;
+	Vec2< unsigned short > m_last_window_size;
+	Vec2< unsigned short > m_viewport_size;
 	float m_aspect_ratio;
 	SDL_Window *m_window;
 	SDL_GLContext m_gl_context;
@@ -108,6 +111,8 @@ private:
 	std::unordered_set< FBO* > m_fbos = {};
 	
 	bool m_is_fullscreen = false;
+	
+	void UpdateViewportSize( const size_t width, const size_t height );
 };
 
 } /* namespace opengl */

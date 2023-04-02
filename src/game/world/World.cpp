@@ -565,7 +565,7 @@ void World::CenterAtCoordinatePercents( const Vec2< float > position_percents ) 
 	};
 	//Log( "Scrolling to percents " + position_percents.ToString() );
 	m_camera_position = {
-		GetFixedX( - position.x * m_camera_position.z / m_viewport.window_aspect_ratio ),
+		GetFixedX( - position.x * m_camera_position.z * m_viewport.window_aspect_ratio ),
 		- position.y * m_camera_position.z * m_viewport.ratio.y * 0.707f,
 		m_camera_position.z
 	};
@@ -638,7 +638,7 @@ void World::UpdateCameraPosition() {
 	}
 	
 	m_camera->SetPosition({
-		( 0.5f + m_camera_position.x ) * m_viewport.window_aspect_ratio,
+		( 0.5f + m_camera_position.x ) / m_viewport.window_aspect_ratio,
 		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + Map::s_consts.tile_scale_z * m_camera_position.z / 1.414f, // TODO: why 1.414?
 		( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + m_camera_position.z
 	});
@@ -646,10 +646,10 @@ void World::UpdateCameraPosition() {
 	const auto* ms = m_map->GetMapState();
 
 	m_ui.bottom_bar->SetMinimapSelection({
-		1.0f - ms->range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z * m_viewport.window_aspect_ratio ),
+		1.0f - ms->range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z / m_viewport.window_aspect_ratio ),
 		1.0f - ms->range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z / m_viewport.ratio.y / 0.707f )
 	}, {
-		2.0f / ( (float) ( m_map->GetWidth() ) * m_camera_position.z / m_viewport.window_aspect_ratio ),
+		2.0f / ( (float) ( m_map->GetWidth() ) * m_camera_position.z * m_viewport.window_aspect_ratio ),
 		2.0f / ( (float) ( m_map->GetHeight() ) * m_camera_position.z * m_viewport.ratio.y * 0.707f ),
 	});
 }
@@ -678,7 +678,7 @@ void World::UpdateCameraRange() {
 	
 	//Log( "Camera range change: Z=[" + to_string( m_camera_range.min.z ) + "," + to_string( m_camera_range.max.z ) + "] Y=[" + to_string( m_camera_range.min.y ) + "," + to_string( m_camera_range.max.y ) + "], z=" + to_string( m_camera_position.z ) );
 	
-	m_camera_range.max.x = ( m_map->GetWidth() ) * m_camera_position.z / m_viewport.window_aspect_ratio * 0.25f;
+	m_camera_range.max.x = ( m_map->GetWidth() ) * m_camera_position.z * m_viewport.window_aspect_ratio * 0.25f;
 	m_camera_range.min.x = -m_camera_range.max.x;
 	
 	UpdateCameraPosition();
@@ -911,7 +911,7 @@ void World::RemoveActor( actor::Actor* actor ) {
 
 const Vec2< float > World::GetTileWindowCoordinates( const Map::tile_state_t* ts ) {
 	return {
-		ts->coord.x / m_viewport.window_aspect_ratio * m_camera_position.z,
+		ts->coord.x * m_viewport.window_aspect_ratio * m_camera_position.z,
 		( ts->coord.y - std::max( 0.0f, Map::s_consts.clampers.elevation_to_vertex_z.Clamp( ts->elevations.center ) ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f
 	};
 }
