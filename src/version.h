@@ -6,7 +6,7 @@
 #define GLSMAC_LAST_COMMIT "???????"
 #endif
 
-#define GLSMAC_VERSION "v0.1"
+#define GLSMAC_VERSION "v0.2"
 
 #define GLSMAC_VERSION_FULL ( (std::string) "GLSMAC " + GLSMAC_VERSION + "-" + GLSMAC_LAST_COMMIT )
 #define GLSMAC_URL ( (std::string) "<https://github.com/afwbkbc/glsmac>" )
