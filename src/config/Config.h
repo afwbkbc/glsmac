@@ -17,7 +17,8 @@ CLASS( Config, base::Module )
 	enum launch_flag_t : uint8_t {
 		LF_NONE = 0,
 		LF_BENCHMARK = 1 << 0,
-		LF_NOSOUND = 1 << 1
+		LF_NOSOUND = 1 << 1,
+		LF_SKIPINTRO = 1 << 2
 	};
 	
 #ifdef DEBUG
