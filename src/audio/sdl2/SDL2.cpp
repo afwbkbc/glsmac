@@ -24,6 +24,11 @@ void SDL2_callback( void* userdata, Uint8* stream, int len ) {
 }
 
 void SDL2::Start() {
+	
+	if ( g_engine->GetConfig()->HasLaunchFlag( config::Config::LF_NOSOUND ) ) {
+		return;
+	}
+	
 	Log( "Initializing SDL2" );
 	
 	if ( SDL_Init( SDL_INIT_AUDIO ) ) {
