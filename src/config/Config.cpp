@@ -27,6 +27,9 @@ Config::Config( const int argc, const char *argv[] )
 	parser.AddRule( "benchmark", "Disable VSync and FPS limit, show FPS counter at top left corner", AH( this ) {
 		m_launch_flags |= LF_BENCHMARK;
 	});
+	parser.AddRule( "nosound", "Start without sound", AH( this ) {
+		m_launch_flags |= LF_NOSOUND;
+	});
 	parser.AddRule( "help", "Show this message", AH( this, &parser ) {
 		std::cout << parser.GetHelpString() << std::endl;
 		exit( EXIT_SUCCESS );
