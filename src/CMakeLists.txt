@@ -14,7 +14,7 @@ SUBDIR( scene )
 SUBDIR( ui )
 SUBDIR( engine )
 SUBDIR( rr )
-SUBDIR( game )
+SUBDIR( task )
 
 IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	SUBDIR( debug )

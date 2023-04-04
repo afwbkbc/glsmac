@@ -26,11 +26,11 @@
 #include "scheduler/Simple.h"
 #include "ui/Default.h"
 
-#include "game/common/Common.h"
+#include "task/common/Common.h"
 #if defined(DEBUG)
-#include "game/world/World.h"
+#include "task/game/Game.h"
 #endif
-#include "game/intro/Intro.h"
+#include "task/intro/Intro.h"
 
 #include "engine/Engine.h"
 
@@ -151,20 +151,20 @@ if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
 #endif
 		
 		// game common stuff
-		NEWV( task_common, game::Common );
+		NEWV( task_common, task::Common );
 		scheduler.AddTask( task_common );
 		
 		// game entry point
 		base::Task* task = nullptr;
 #ifdef DEBUG
 		if ( config.HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
-			game::Settings settings; // TODO: initialize randomly
-			NEW( task, game::world::World, settings );
+			task::Settings settings; // TODO: initialize randomly
+			NEW( task, task::game::Game, settings );
 		}
 		else
 #endif
 		{
-			NEW( task, game::intro::Intro );
+			NEW( task, task::intro::Intro );
 		}
 		
 		scheduler.AddTask( task );

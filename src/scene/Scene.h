@@ -59,7 +59,7 @@ protected:
 	std::unordered_set< Light* > m_lights = {};
 	types::Texture *m_skybox_texture = nullptr;
 	
-	instance_positions_t m_world_instance_positions = { { 0.0f, 0.0f, 0.0f } }; // only 1 instance by default
+	instance_positions_t m_game_instance_positions = { { 0.0f, 0.0f, 0.0f } }; // only 1 instance by default
 };
 
 } /* namespace scene */

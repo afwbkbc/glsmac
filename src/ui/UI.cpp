@@ -129,11 +129,11 @@ Scene *UI::GetTextScene() {
 }
 
 void UI::SetWorldUIMatrix( const types::Matrix44& matrix ) {
-	m_world_ui_matrix = matrix;
+	m_game_ui_matrix = matrix;
 }
 
 const types::Matrix44& UI::GetWorldUIMatrix() const {
-	return m_world_ui_matrix;
+	return m_game_ui_matrix;
 }
 
 const UI::coord_t UI::ClampX( const coord_t value ) const {

@@ -57,14 +57,14 @@ types::Texture *Scene::GetSkyboxTexture() {
 
 void Scene::SetWorldInstancePositions( const instance_positions_t& world_instance_positions ) {
 	Log( "Setting " + std::to_string( world_instance_positions.size() ) + " world instances" );
-	m_world_instance_positions = world_instance_positions;
+	m_game_instance_positions = world_instance_positions;
 	for ( auto& actor : m_actors ) {
 		actor->UpdatePosition();
 	}
 }
 
 const Scene::instance_positions_t& Scene::GetWorldInstancePositions() const {
-	return m_world_instance_positions;
+	return m_game_instance_positions;
 }
 
 
