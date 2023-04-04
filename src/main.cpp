@@ -31,6 +31,7 @@
 #include "task/game/Game.h"
 #endif
 #include "task/intro/Intro.h"
+#include "task/mainmenu/MainMenu.h"
 
 #include "engine/Engine.h"
 
@@ -163,7 +164,10 @@ if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
 		}
 		else
 #endif
-		{
+		if ( config.HasLaunchFlag( config::Config::LF_SKIPINTRO ) ) {
+			NEW( task, task::mainmenu::MainMenu );
+		}
+		else {
 			NEW( task, task::intro::Intro );
 		}
 		
