@@ -6,8 +6,8 @@
 #include "engine/Engine.h"
 
 // TODO: refactor, remove map dependency
-#include "game/world/map/Map.h"
-using namespace game::world::map;
+#include "task/game/map/Map.h"
+using namespace task::game::map;
 
 namespace types {
 

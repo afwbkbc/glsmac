@@ -131,7 +131,7 @@ private:
 	
 	bool m_is_redraw_needed = false;
 	
-	types::Matrix44 m_world_ui_matrix = {};
+	types::Matrix44 m_game_ui_matrix = {};
 
 	std::unordered_map< global_event_handler_order_t, UIObject::event_handlers_t > m_global_event_handlers = {};
 	void TriggerGlobalEventHandlers( global_event_handler_order_t order, UIEvent* event );
