@@ -2,7 +2,6 @@
 
 #include "Routine.h"
 
-//#include "../shader_progr../Game.h"
 #include "../shader_program/Orthographic.h"
 #include "../shader_program/OrthographicData.h"
 

@@ -500,25 +500,35 @@ void OpenGL::DestroyFBO( FBO* fbo ) {
 }
 
 void OpenGL::ResizeWindow( const size_t width, const size_t height ) {
-	m_window_size.x = m_options.viewport_width;
-	m_window_size.y = m_options.viewport_height;
-	ResizeViewport( width, height );
+	if (
+		m_window_size.x != width ||
+		m_window_size.y != height
+	) {
+		m_window_size.x = width;
+		m_window_size.y = height;
+		ResizeViewport( width, height );
+	}
 }
 
 void OpenGL::ResizeViewport( const size_t width, const size_t height ) {
 	
-	UpdateViewportSize( width, height );
-	
-	Log( "Resizing viewport to " + std::to_string( m_viewport_size.x ) + "x" + std::to_string( m_viewport_size.y ) );
-	glViewport( 0, 0, m_viewport_size.x, m_viewport_size.y );
-	m_aspect_ratio = (float) m_viewport_size.y / m_viewport_size.x;
-	OnWindowResize();
-	for ( auto routine = m_routines.begin() ; routine < m_routines.end() ; ++routine ) {
-		for ( auto scene = (*routine)->m_scenes.begin() ; scene < (*routine)->m_scenes.end() ; ++scene ) {
-			auto camera = (*scene)->GetCamera();
-			if ( camera ) {
-				camera->UpdateProjection();
-				camera->UpdateMatrix();
+	if (
+		m_viewport_size.x != ( width + 1 ) / 2 * 2 ||
+		m_viewport_size.y != ( height + 1 ) / 2 * 2
+	) {
+		UpdateViewportSize( width, height );
+
+		Log( "Resizing viewport to " + std::to_string( m_viewport_size.x ) + "x" + std::to_string( m_viewport_size.y ) );
+		glViewport( 0, 0, m_viewport_size.x, m_viewport_size.y );
+		m_aspect_ratio = (float) m_viewport_size.y / m_viewport_size.x;
+		OnWindowResize();
+		for ( auto routine = m_routines.begin() ; routine < m_routines.end() ; ++routine ) {
+			for ( auto scene = (*routine)->m_scenes.begin() ; scene < (*routine)->m_scenes.end() ; ++scene ) {
+				auto camera = (*scene)->GetCamera();
+				if ( camera ) {
+					camera->UpdateProjection();
+					camera->UpdateMatrix();
+				}
 			}
 		}
 	}
