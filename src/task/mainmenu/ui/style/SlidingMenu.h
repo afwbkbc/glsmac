@@ -6,7 +6,7 @@ namespace task {
 namespace mainmenu {
 namespace style {
 			
-CLASS( SlidingMenu, ui::theme::StyleSheet )
+CLASS( SlidingMenu, ::ui::theme::StyleSheet )
 
 	void AddStyles();
 };

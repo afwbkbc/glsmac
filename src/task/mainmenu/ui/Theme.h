@@ -9,7 +9,7 @@
 namespace task {
 namespace mainmenu {
 
-CLASS( Theme, ui::theme::Theme )
+CLASS( Theme, ::ui::theme::Theme )
 	Theme();
 
 protected:
