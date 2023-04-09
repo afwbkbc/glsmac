@@ -54,7 +54,8 @@ mt_id_t Network::MT_SendPacket( const Packet& packet, const size_t cid ) {
 	return MT_SendEvent( e );
 }
 
-const MT_Response Network::ProcessRequest( const MT_Request& request ) {
+const MT_Response Network::ProcessRequest( const MT_Request& request, MT_CANCELABLE ) {
+	// TODO: check if canceled
 	switch ( request.op ) {
 		case OP_SUCCESS: {
 			return Success();
@@ -64,7 +65,7 @@ const MT_Response Network::ProcessRequest( const MT_Request& request ) {
 				Log( "Existing connection detected, trying disconnect" );
 				MT_Request dcrequest;
 				dcrequest.op = OP_DISCONNECT;
-				auto dcres = ProcessRequest( dcrequest );
+				auto dcres = ProcessRequest( dcrequest, MT_C );
 				if ( dcres.result == R_ERROR ) {
 					return dcres;
 				}
@@ -141,6 +142,14 @@ const MT_Response Network::ProcessRequest( const MT_Request& request ) {
 	return Error();
 }
 
+void Network::DestroyRequest( const MT_Request& request ) {
+	
+}
+
+void Network::DestroyResponse( const MT_Response& response ) {
+	
+}
+	
 void Network::AddEvent( const Event& event ) {
 	m_events_out.push_back( event );
 }

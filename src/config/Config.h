@@ -7,7 +7,7 @@
 #include "util/Random.h"
 #include "types/Vec2.h"
 
-#include "task/Settings.h"
+#include "game/Settings.h"
 
 namespace config {
 

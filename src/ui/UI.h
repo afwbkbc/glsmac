@@ -27,13 +27,17 @@
 #include "object/Popup.h"
 #include "object/Surface.h"
 
-#include "module/Loader.h"
-
 using namespace scene;
 using namespace types;
 
 namespace ui {
 
+namespace module {
+	class Module;
+	class Error;
+	class Loader;
+}
+	
 typedef std::function<void()> ui_handler_t;
 #define UH( ... ) [ __VA_ARGS__ ] () -> void
 	
@@ -81,6 +85,7 @@ CLASS( UI, base::Module )
 	void AddIterativeObject( void* object, const ui_handler_t handler );
 	void RemoveIterativeObject( void* object );
 	
+	module::Error* GetError() const;
 	module::Loader* GetLoader() const;
 	
 	void BlockEvents();
@@ -112,6 +117,11 @@ CLASS( UI, base::Module )
 	void ResizeDebugFrame( const UIObject* object ) {}
 #endif
 	
+protected:
+	friend class module::Module;
+	void ActivateModule( module::Module* module );
+	void DeactivateModule( module::Module* module );
+	
 private:
 	object::Root m_root_object;
 
@@ -142,12 +152,13 @@ private:
 	void UpdateFocusableObjectsOrder();
 	void FocusNextObject();
 	
+	module::Module* m_active_module = nullptr;
+		
+	module::Error* m_error = nullptr;
 	module::Loader* m_loader = nullptr;
 	
 	std::unordered_map< void*, ui_handler_t > m_iterative_objects = {};
 	std::vector< void* > m_iterative_objects_to_remove = {};
-	
-	const UIEventHandler* m_keydown_handler = nullptr;
 	
 	std::vector< Popup* > m_popups = {};
 	std::vector< Popup* > m_popups_close_queue = {};
@@ -170,3 +181,6 @@ private:
 };
 
 } /* namespace ui */
+
+#include "module/Error.h"
+#include "module/Loader.h"

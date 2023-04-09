@@ -72,7 +72,9 @@ protected:
 	virtual MT_Response Disconnect() = 0;
 	virtual MT_Response DisconnectClient( const size_t cid ) = 0;
 	
-	const MT_Response ProcessRequest( const MT_Request& request );
+	const MT_Response ProcessRequest( const MT_Request& request, MT_CANCELABLE );
+	void DestroyRequest( const MT_Request& request );
+	void DestroyResponse( const MT_Response& response );
 	
 	const MT_Response Error( const std::string& errmsg = "" );
 	const MT_Response Success();

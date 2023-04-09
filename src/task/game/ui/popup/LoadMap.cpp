@@ -15,9 +15,9 @@ LoadMap::LoadMap( Game* game )
 		game,
 		"LOAD MAP",
 		FM_READ,
-		game->GetMap()->GetLastDirectory(),
-		map::Map::s_consts.fs.default_map_extension,
-		game->GetMap()->GetFileName()
+		game->GetMapLastDirectory(),
+		::game::map::s_consts.fs.default_map_extension,
+		game->GetMapFilename()
 	)
 {
 	
@@ -25,7 +25,6 @@ LoadMap::LoadMap( Game* game )
 
 void LoadMap::OnFileSelect( const std::string& path ) {
 	m_game->LoadMap( path );
-	Close();
 }
 
 }

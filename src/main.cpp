@@ -33,6 +33,8 @@
 #include "task/intro/Intro.h"
 #include "task/mainmenu/MainMenu.h"
 
+#include "game/Game.h"
+
 #include "engine/Engine.h"
 
 #include "version.h"
@@ -144,6 +146,8 @@ if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
 		
 		ui::Default ui;
 
+		game::Game game;
+		
 		scheduler::Simple scheduler;
 
 #ifdef DEBUG
@@ -160,7 +164,9 @@ if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
 #ifdef DEBUG
 		if ( config.HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
 			task::Settings settings; // TODO: initialize randomly
-			NEW( task, task::game::Game, settings );
+			NEW( task, task::game::Game, settings, 0, UH() {
+				g_engine->ShutDown();
+			});
 		}
 		else
 #endif
@@ -185,7 +191,8 @@ if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
 			&graphics,
 			&audio,
 			&network,
-			&ui
+			&ui,
+			&game
 		);
 
 		result = engine.Run(); 

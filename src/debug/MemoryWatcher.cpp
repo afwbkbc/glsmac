@@ -132,7 +132,7 @@ MemoryWatcher::~MemoryWatcher() {
 	}
 }
 
-void MemoryWatcher::New( const Base* object, const size_t size, const std::string& file, const size_t line ) {
+void MemoryWatcher::New( const void* object, const size_t size, const std::string& file, const size_t line ) {
 	if ( !m_memory_debug ) {
 		return;
 	}
@@ -144,8 +144,8 @@ void MemoryWatcher::New( const Base* object, const size_t size, const std::strin
 	m_allocated_objects[ object ] = {
 		object,
 		size,
-		object->GetName(),
-		object->GetClassName(),
+		"const void*", //object->GetName(), // do we need?
+		"const void*", //object->GetClassName(), // do we need?
 		source,
 	};
 	
@@ -157,7 +157,7 @@ void MemoryWatcher::New( const Base* object, const size_t size, const std::strin
 	//Log( "Allocated " + std::to_string( size ) + "b for " + object->GetNamespace() + " @" + source );
 }
 
-void MemoryWatcher::Delete( const Base* object, const std::string& file, const size_t line ) {
+void MemoryWatcher::Delete( const void* object, const std::string& file, const size_t line ) {
 	if ( !m_memory_debug ) {
 		return;
 	}

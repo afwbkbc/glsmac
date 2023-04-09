@@ -55,8 +55,11 @@ void PleaseDontGo::Destroy() {
 void PleaseDontGo::SelectChoice() {
 	if ( m_choices->GetValue() == "Yes, that's an order mister!" ) {
 		m_on_order();
+		CloseNow();
 	}
-	Close();
+	else {
+		Close();
+	}
 }
 
 }

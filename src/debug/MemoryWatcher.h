@@ -21,8 +21,8 @@ public:
 	~MemoryWatcher();
 
 	// memory stuff
-	void New( const Base* object, const size_t size, const std::string& file, const size_t line );
-	void Delete( const Base* object, const std::string& file, const size_t line );
+	void New( const void* object, const size_t size, const std::string& file, const size_t line );
+	void Delete( const void* object, const std::string& file, const size_t line );
 	void* Malloc( const size_t size, const std::string& file, const size_t line );
 	void* Realloc( void* ptr, const size_t size, const std::string& file, const size_t line );
 	unsigned char *Ptr( unsigned char* ptr, const size_t offset, const size_t size, const std::string& file, const size_t line  );

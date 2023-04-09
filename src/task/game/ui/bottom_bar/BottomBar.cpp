@@ -178,8 +178,8 @@ void BottomBar::Align() {
 	
 }
 
-void BottomBar::PreviewTile( const Map* map, const Map::tile_info_t& tile_info ) {
-	m_sections.tile_preview->PreviewTile( map, tile_info );
+void BottomBar::PreviewTile( const tile_data_t& tile_data ) {
+	m_sections.tile_preview->PreviewTile( tile_data );
 }
 
 void BottomBar::HideTilePreview() {

@@ -51,9 +51,11 @@ void Graphics::RemoveOnWindowResizeHandler( void* object ) {
 
 void Graphics::ToggleFullscreen() {
 	if ( IsFullscreen() ) {
+		Log( "Setting windowed" );
 		SetWindowed();
 	}
 	else {
+		Log( "Setting fullscreen" );
 		SetFullscreen();
 	}
 }
@@ -64,4 +66,12 @@ const size_t Graphics::GetFramesCountAndReset() {
 	return frames_count;
 }
 
+void Graphics::Lock() {
+	m_render_lock.lock();
+}
+
+void Graphics::Unlock() {
+	m_render_lock.unlock();
+}
+	
 }

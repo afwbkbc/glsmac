@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mutex>
+#include <atomic>
 #include <functional>
 #include <unordered_map>
 
@@ -8,42 +9,60 @@
 
 namespace base {
 
-typedef size_t mt_id_t;
+// used to check if request processing should continue or stop
+// and other similar cases
+typedef std::atomic< bool > mt_flag_t;
+
+// shortcuts
+
+// pass 'canceled' parameter
+#define MT_C canceled
+
+// add 'canceled' parameter
+#define MT_CANCELABLE const mt_flag_t& MT_C
+
+// 'return if canceled'
+#define MT_RETIF() \
+	if ( MT_C ) { \
+		return; \
+	}
+
+// 'return something if canceled'
+#define MT_RETIFV( _val ) \
+	if ( MT_C ) { \
+		return _val; \
+	}
 
 static std::mutex s_next_mt_id_mutex;
 static mt_id_t s_next_mt_id = 0;
 
+// requests and responses should be structs that contain operation type and unions of variables for every op type
+// if you need to pass something non-trivial - use raw pointers
+// recommended way to use raw pointers here:
+//   create/malloc objects when creating request, delete/free in target thread when processing it
+//   for response it's opposite - create/malloc when creating response, delete/free in original thread when reading response
+
 template< typename REQUEST_TYPE, typename RESPONSE_TYPE >
 class MTModule : public Module {
 public:
-		
+	
 	virtual void Iterate() {
 		mt_request_map_t requests = MT_GetRequests();
 		if ( !requests.empty() ) {
 			//Log( "MT Processing " + to_string( requests.size() ) + " requests" );
 			mt_response_map_t responses = {};
 			for ( auto& request : requests ) {
-				responses[ request.first ] = ProcessRequest( request.second );
+				ASSERT( !m_current_request_id, "m_current_request_id already set to something" );
+				m_mt_states_mutex.lock();
+				m_current_request_id = request.first;
+				m_is_canceled = false;
+				m_mt_states_mutex.unlock();
+				responses[ request.first ] = ProcessRequest( request.second, m_is_canceled );
+				m_current_request_id = 0;
 			}
 			MT_SetResponses( responses );
 		}
 	}
-	
-	void MT_Cancel( const mt_id_t mt_id ) {
-		m_mt_states_mutex.lock();
-		auto it = m_mt_states.find( mt_id );
-		ASSERT( it != m_mt_states.end(), "MT_Cancel() mt_id not found" );
-		if ( !it->second.is_executed && !it->second.is_processing ) {
-			//Log( "MT Request " + to_string( mt_id ) + " canceled" );
-			m_mt_states.erase( it );
-		}
-		m_mt_states_mutex.unlock();
-	}
-
-protected:
-	
-	// get request, return response
-	virtual const RESPONSE_TYPE ProcessRequest( const REQUEST_TYPE& request ) = 0;
 	
 	// use these to pass data from/to other threads
 	mt_id_t MT_CreateRequest( const REQUEST_TYPE& data ) {
@@ -68,21 +87,50 @@ protected:
 		ASSERT( it != m_mt_states.end(), "GetResponse() mt_id not found" );
 		if ( it->second.is_executed ) {
 			response = it->second.response;
+			DestroyRequest( it->second.request );
 			m_mt_states.erase( it );
 			//Log( "MT Request " + to_string( mt_id ) + " result returned" );
 		}
 		m_mt_states_mutex.unlock();
 
 		return response;
-	}		
+	}
 	
+	// TODO: better way?
+	void MT_DestroyResponse( const RESPONSE_TYPE& response ) {
+		DestroyResponse( response );
+	}
+	
+	void MT_Cancel( const mt_id_t mt_id ) {
+		m_mt_states_mutex.lock();
+		auto it = m_mt_states.find( mt_id );
+		ASSERT( it != m_mt_states.end(), "MT_Cancel() mt_id not found" );
+		if ( !it->second.is_executed && !it->second.is_processing ) {
+			//Log( "MT Request " + to_string( mt_id ) + " canceled" );
+			DestroyRequest( it->second.request );
+			DestroyResponse( it->second.response );
+			m_mt_states.erase( it );
+		}
+		if ( mt_id == m_current_request_id ) {
+			m_is_canceled = true;
+		}
+		m_mt_states_mutex.unlock();
+	}
+
+protected:
+	
+	// get request, return response
+	virtual const RESPONSE_TYPE ProcessRequest( const REQUEST_TYPE& request, MT_CANCELABLE ) = 0;
+	virtual void DestroyRequest( const REQUEST_TYPE& request ) = 0;
+	virtual void DestroyResponse( const RESPONSE_TYPE& response ) = 0;
+
 private:
 	
 	struct mt_state_t {
-		REQUEST_TYPE request;
-		bool is_processing;
-		bool is_executed;
-		RESPONSE_TYPE response;
+		REQUEST_TYPE request = {};
+		bool is_processing = false;
+		bool is_executed = false;
+		RESPONSE_TYPE response = {};
 	};
 	
 	typedef std::unordered_map<mt_id_t, REQUEST_TYPE> mt_request_map_t;
@@ -121,6 +169,8 @@ private:
 	std::mutex m_mt_states_mutex;
 	mt_states_t m_mt_states = {};
 	
+	mt_flag_t m_is_canceled = false;
+	std::atomic< mt_id_t > m_current_request_id = 0;
 };
 
 }

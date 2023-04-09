@@ -37,7 +37,7 @@ protected:
 private:
 	void RefreshUI();
 	
-	GlobalSettings m_settings_backup;
+	::game::GlobalSettings m_settings_backup = {};
 	
 	
 };

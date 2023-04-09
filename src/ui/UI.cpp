@@ -38,10 +38,14 @@ void UI::Start() {
 	m_clamp.y.SetOverflowAllowed( true );
 	m_clamp.y.SetInversed( true );
 	
-	if ( !m_loader ) {
-		NEW( m_loader, module::Loader );
+	if ( !m_error ) {
+		NEW( m_error, module::Error, this );
 	}
 
+	if ( !m_loader ) {
+		NEW( m_loader, module::Loader, this );
+	}
+	
 	g_engine->GetGraphics()->AddOnWindowResizeHandler( this, RH( this ) {
 #ifdef DEBUG
 		for (auto& it : m_debug_frames) {
@@ -52,15 +56,6 @@ void UI::Start() {
 		m_clamp.y.SetSrcRange( { 0.0, (float)g_engine->GetGraphics()->GetViewportHeight() } );
 		m_root_object.Realign();
 	});
-	
-	m_keydown_handler = AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this ) {
-		// only most global handlers here
-		if ( ( data->key.modifiers & UIEvent::KM_ALT ) && data->key.code == UIEvent::K_ENTER ) {
-			g_engine->GetGraphics()->ToggleFullscreen();
-			return true;
-		}
-		return false;
-	}, UI::GH_BEFORE );
 	
 #ifdef DEBUG
 	NEW( m_debug_scene, Scene, "UIDebug", SCENE_TYPE_SIMPLE2D );
@@ -80,15 +75,19 @@ void UI::Stop() {
 	DELETE( m_debug_scene );
 #endif
 	
-	RemoveGlobalEventHandler( m_keydown_handler );
-	
 	g_engine->GetGraphics()->RemoveOnWindowResizeHandler( this );
 	
+	if ( m_error ) {
+		DELETE( m_error );
+		m_error = nullptr;
+	}
+	
 	if ( m_loader ) {
-		m_loader->Stop();
 		DELETE( m_loader );
 		m_loader = nullptr;
 	}
+	
+	m_active_module = nullptr;
 	
 	g_engine->GetGraphics()->RemoveScene( m_shape_scene_simple2d );
 	DELETE( m_shape_scene_simple2d );
@@ -195,6 +194,29 @@ void UI::ProcessEvent( UIEvent* event ) {
 		// need to save last mouse position to be able to trigger mouseover/mouseout events for objects that will move/resize themselves later
 		m_last_mouse_position = { event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y };
 	}
+	
+	// toggle fullscreen
+	if (
+		event->m_type == UIEvent::EV_KEY_DOWN &&
+		( event->m_data.key.modifiers & UIEvent::KM_ALT ) &&
+		event->m_data.key.code == UIEvent::K_ENTER
+	) {
+		g_engine->GetGraphics()->ToggleFullscreen();
+		return;
+	}
+	
+	// modules block other ui when active
+	if (
+		m_active_module
+#ifdef DEBUG
+		&& ! ( event->m_type == UIEvent::EV_KEY_DOWN && event->m_data.key.code == UIEvent::K_GRAVE ) // debug overlay
+#endif
+	) {
+		m_active_module->ProcessEvent( event );
+		return;
+	}
+	
+	// other ui
 	
 	TriggerGlobalEventHandlers( GH_BEFORE, event );
 	
@@ -386,6 +408,11 @@ void UI::RemoveIterativeObject( void* object ) {
 	m_iterative_objects_to_remove.push_back( object ); // can't remove here because removal can be requested from within it's handler
 }
 
+module::Error* UI::GetError() const {
+	ASSERT( m_error, "error not set" );
+	return m_error;
+}
+
 module::Loader* UI::GetLoader() const {
 	ASSERT( m_loader, "loader not set" );
 	return m_loader;
@@ -509,5 +536,17 @@ void UI::ResizeDebugFrame( UIObject* object ) {
 }
 
 #endif
+
+void UI::ActivateModule( module::Module* module ) {
+	ASSERT( !m_active_module, "some module already active" );
+	m_active_module = module;
+	NEWV( event, MouseMove, m_last_mouse_position.x, m_last_mouse_position.y );
+	m_active_module->ProcessEvent( event );
+}
+
+void UI::DeactivateModule( module::Module* module ) {
+	ASSERT( m_active_module == module, "no module or different one is active" );
+	m_active_module = nullptr;
+}
 
 } /* namespace ui */

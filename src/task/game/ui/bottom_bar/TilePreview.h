@@ -2,14 +2,13 @@
 
 #include "BBSection.h"
 
+#include "../../Types.h"
+
 #include "ui/object/Mesh.h"
 #include "ui/object/Label.h"
 
-#include "../../map/Map.h"
-
 namespace task {
 namespace game {
-	using namespace map;
 namespace ui {
 
 CLASS( TilePreview, BBSection )
@@ -19,7 +18,7 @@ CLASS( TilePreview, BBSection )
 	void Create();
 	void Destroy();
 
-	void PreviewTile( const Map* map, const Map::tile_info_t& tile_info );
+	void PreviewTile( const tile_data_t& tile_data );
 	void HideTilePreview();
 	
 private:

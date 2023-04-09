@@ -8,7 +8,7 @@ namespace mainmenu {
 Ocean::Ocean( MainMenu *mainmenu ) : CustomizeMapMenu( mainmenu, "SELECT OCEAN COVERAGE", 1, {
 	{ "30-50% OF SURFACE", {
 		CH( this ) {
-			m_mainmenu->m_settings.global.map.ocean = task::MapSettings::MAP_OCEAN_LOW;
+			m_mainmenu->m_settings.global.map.ocean = game::MapSettings::MAP_OCEAN_LOW;
 			NEWV( menu, Erosive, m_mainmenu );
 			NextMenu( menu );
 		},
@@ -18,7 +18,7 @@ Ocean::Ocean( MainMenu *mainmenu ) : CustomizeMapMenu( mainmenu, "SELECT OCEAN C
 	}},
 	{ "50-70% OF SURFACE", {
 		CH( this ) {
-			m_mainmenu->m_settings.global.map.ocean = task::MapSettings::MAP_OCEAN_MEDIUM;
+			m_mainmenu->m_settings.global.map.ocean = game::MapSettings::MAP_OCEAN_MEDIUM;
 			NEWV( menu, Erosive, m_mainmenu );
 			NextMenu( menu );
 		},
@@ -28,7 +28,7 @@ Ocean::Ocean( MainMenu *mainmenu ) : CustomizeMapMenu( mainmenu, "SELECT OCEAN C
 	}},
 	{ "70-90% OF SURFACE", {
 		CH( this ) {
-			m_mainmenu->m_settings.global.map.ocean = task::MapSettings::MAP_OCEAN_HIGH;
+			m_mainmenu->m_settings.global.map.ocean = game::MapSettings::MAP_OCEAN_HIGH;
 			NEWV( menu, Erosive, m_mainmenu );
 			NextMenu( menu );
 		},

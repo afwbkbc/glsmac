@@ -52,6 +52,7 @@ CLASS( Instanced, Actor )
 	const instance_id_t AddInstance( const types::Vec3& position, const types::Vec3& angle = { 0.0f, 0.0f, 0.0f } );
 	void SetInstance( const instance_id_t instance_id, const types::Vec3& position, const types::Vec3& angle = { 0.0f, 0.0f, 0.0f } );
 	void RemoveInstance( const instance_id_t instance_id );
+	const bool HasInstance( const instance_id_t instance_id );
 	
 	// instanced actors don't have normal z position so need to keep global z index separately
 	const float GetZIndex() const;
