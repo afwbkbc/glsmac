@@ -71,7 +71,7 @@ void Lobby::Show() {
 		m_game_settings_section->SetHeight( 210 );
 	m_body->AddChild( m_game_settings_section );
 	
-	if ( m_mainmenu->m_settings.local.network_role == LocalSettings::NR_SERVER ) {
+	if ( m_mainmenu->m_settings.local.network_role == ::game::LocalSettings::NR_SERVER ) {
 		m_player_names = {
 			{ 0, m_mainmenu->m_settings.local.player_name }
 		};
@@ -121,7 +121,7 @@ void Lobby::Iterate() {
 					//Log( "EVENTS COUNT: " + to_string( result.events.size() ) );
 					for ( auto& event : result.events ) {
 						switch ( m_mainmenu->m_settings.local.network_role ) {
-							case LocalSettings::NR_CLIENT: {
+							case ::game::LocalSettings::NR_CLIENT: {
 								if ( event.cid ) {
 									break; // old event?
 								}
@@ -167,7 +167,7 @@ void Lobby::Iterate() {
 										break;
 									}
 									case Event::ET_DISCONNECT: {
-										if ( m_mainmenu->m_settings.local.network_role == LocalSettings::NR_CLIENT ) {
+										if ( m_mainmenu->m_settings.local.network_role == ::game::LocalSettings::NR_CLIENT ) {
 											m_mainmenu->m_settings.global = m_settings_backup;
 											GoBack();
 											MenuError( "Connection to server lost." );
@@ -180,7 +180,7 @@ void Lobby::Iterate() {
 								}
 								break;
 							}
-							case LocalSettings::NR_SERVER: {
+							case ::game::LocalSettings::NR_SERVER: {
 								if ( !event.cid ) {
 									break; // old event?
 								}
@@ -294,7 +294,7 @@ void Lobby::RefreshUI() {
 		m_player_labels[ name.first ] = label;
 	}
 	
-	if ( m_mainmenu->m_settings.local.network_role == LocalSettings::NR_SERVER ) {
+	if ( m_mainmenu->m_settings.local.network_role == ::game::LocalSettings::NR_SERVER ) {
 		// update UIs of others aswell
 		// TODO: optimize?
 		

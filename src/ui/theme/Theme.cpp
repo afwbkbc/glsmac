@@ -29,11 +29,12 @@ const Style* Theme::GetStyle( const std::string style_class ) const {
 }
 
 void Theme::Finalize() {
-	ASSERT( !m_is_finalized, "theme already finalized" );
-	for ( auto& style : m_styles_order ) {
-		m_styles.at( style )->Initialize();
+	if( !m_is_finalized ) {
+		for ( auto& style : m_styles_order ) {
+			m_styles.at( style )->Initialize();
+		}
+		m_is_finalized = true;
 	}
-	m_is_finalized = true;
 }
 
 }

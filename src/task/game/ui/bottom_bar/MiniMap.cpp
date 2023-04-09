@@ -106,7 +106,7 @@ void MiniMap::Create() {
 }
 
 void MiniMap::SetMinimapSelection( const Vec2< float > position_percents, const Vec2< float > zoom ) {
-
+	
 	Vec2< ssize_t > size = {
 		(ssize_t)round( (float) m_map_surface->GetWidth() * zoom.x ),
 		(ssize_t)round( (float) m_map_surface->GetHeight() * zoom.y )
@@ -149,6 +149,7 @@ void MiniMap::SetMinimapSelection( const Vec2< float > position_percents, const 
 		// redraw selection texture
 		// TODO: add 'lines' shader program and do it without texture
 		
+		//Log( "Setting minimap selection to " + position_percents.ToString() + " / " + zoom.ToString() );
 		//Log( "Redrawing selection texture ( size=" + size.ToString() + " top_left=" + top_left.ToString() + " )" );
 	
 		ClearMinimapSelection();

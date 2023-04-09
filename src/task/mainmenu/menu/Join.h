@@ -22,6 +22,7 @@ CLASS( Join, PopupMenu )
 	~Join();
 
 	void Show();
+	void Iterate();
 	void Hide();
 
 	void OnNext();

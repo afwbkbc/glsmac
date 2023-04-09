@@ -11,18 +11,19 @@ engine::Engine *g_engine = NULL;
 namespace engine {
 
 Engine::Engine(
-	config::Config *config,
-	error_handler::ErrorHandler *error_handler,
-	logger::Logger *logger,
-	loader::font::FontLoader *font_loader,
-	loader::texture::TextureLoader *texture_loader,
-	loader::sound::SoundLoader *sound_loader,
-	scheduler::Scheduler *scheduler,
-	input::Input *input,
-	graphics::Graphics *graphics,
-	audio::Audio *audio,
-	network::Network *network,
-	ui::UI *ui
+	config::Config* config,
+	error_handler::ErrorHandler* error_handler,
+	logger::Logger* logger,
+	loader::font::FontLoader* font_loader,
+	loader::texture::TextureLoader* texture_loader,
+	loader::sound::SoundLoader* sound_loader,
+	scheduler::Scheduler* scheduler,
+	input::Input* input,
+	graphics::Graphics* graphics,
+	audio::Audio* audio,
+	network::Network* network,
+	ui::UI* ui,
+	game::Game* game
 ) :
 	m_config( config ),
 	m_error_handler( error_handler),
@@ -35,7 +36,8 @@ Engine::Engine(
 	m_graphics( graphics ),
 	m_audio( audio ),
 	m_network( network ),
-	m_ui( ui )
+	m_ui( ui ),
+	m_game( game )
 {
 	ASSERT( g_engine == nullptr, "duplicate engine initialization" );
 
@@ -66,6 +68,11 @@ Engine::Engine(
 		t_network->SetIPS( 100 );
 		t_network->AddModule( m_network );
 	m_threads.push_back( t_network );
+	
+	NEWV( t_game, Thread, "GAME" );
+		t_game->SetIPS( g_max_fps );
+		t_game->AddModule( m_game );
+	m_threads.push_back( t_game );
 };
 
 Engine::~Engine()

@@ -2,8 +2,6 @@
 
 #include "engine/Engine.h"
 
-#include "types/ThreadCall.h"
-
 #include "Lobby.h"
 
 namespace task {
@@ -59,6 +57,33 @@ void Host::Show() {
 
 }
 
+void Host::Iterate() {
+	if ( m_mt_id ) {
+		auto* network = g_engine->GetNetwork();
+		auto result = network->MT_GetResult( m_mt_id );
+		if ( result.result != network::R_NONE ) {
+			g_engine->GetUI()->GetLoader()->Hide();
+			m_mt_id = 0;
+			switch ( result.result ) {
+				case network::R_ERROR: {
+					Show();
+					MenuError( result.message );
+					break;
+				}
+				case network::R_SUCCESS: {
+					Show();
+					NEWV( menu, Lobby, m_mainmenu );
+					NextMenu( menu );
+					break;
+				}
+				default: {
+					ASSERT( false, "unknown network result " + std::to_string( result.result ) );
+				}
+			} 
+		}
+	}
+}
+
 void Host::Hide() {	
 		m_section->RemoveChild( m_label_yourname );
 		m_section->RemoveChild( m_input_yourname );
@@ -84,10 +109,10 @@ void Host::SetChoice( const std::string& choice ) {
 
 void Host::OnNext() {
 	
-	auto* loader = g_engine->GetUI()->GetLoader();
+/*	auto* loader = g_engine->GetUI()->GetLoader();
 	if ( loader->IsRunning() ) {
 		return;
-	}
+	}*/
 
 	m_mainmenu->m_settings.local.player_name = m_input_yourname->GetValue();
 	m_mainmenu->m_settings.local.remote_address = "";
@@ -103,41 +128,14 @@ void Host::OnNext() {
 
 		auto* network = g_engine->GetNetwork();
 
-		loader->SetOnStart( LH( this, network ) {
-			m_mt_id = network->MT_Connect( network::CM_SERVER );
-			return true;
-		});
-		loader->SetOnIterate( LH( this, network ) {
-			loader->SetLoadingText( "Creating game" + loader->GetDots() );
-			auto result = network->MT_GetResult( m_mt_id );
-			if ( result.result != network::R_NONE ) {
-				switch ( result.result ) {
-					case network::R_ERROR: {
-						Show();
-						MenuError( result.message );
-						return false;
-					}
-					case network::R_SUCCESS: {
-						Show();
-						NEWV( menu, Lobby, m_mainmenu );
-						NextMenu( menu );
-						return false;
-					}
-					default: {
-						ASSERT( false, "unknown network result " + std::to_string( result.result ) );
-					}
-				} 
-			}
-			return true;
-		});
-		loader->SetOnStop( LH( this, network ) {
+		m_mt_id = network->MT_Connect( network::CM_SERVER );
+		
+		g_engine->GetUI()->GetLoader()->Show( "Creating game", LCH( this, network ) {
 			network->MT_Cancel( m_mt_id );
 			network->MT_Disconnect();
 			Show();
 			return true;
 		});
-		
-		loader->Start();
 
 		Hide();
 	}

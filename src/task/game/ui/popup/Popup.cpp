@@ -111,6 +111,12 @@ void Popup::SetTitleText( const std::string& title_text ) {
 	}
 }
 
+void Popup::CloseNow() {
+	m_slide.Stop();
+	m_is_closing = true;
+	Close();
+}
+
 }
 }
 }

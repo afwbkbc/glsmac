@@ -13,7 +13,7 @@
 
 #include "MenuObject.h"
 
-#include "task/Settings.h"
+#include "game/Settings.h"
 
 #include "ui/Theme.h"
 #include "util/Random.h"
@@ -34,7 +34,7 @@ CLASS( MainMenu, base::Task )
 	void Iterate();
 	void Stop();
 	
-	task::Settings m_settings = {};
+	::game::Settings m_settings = {};
 	
 	void ShowMenu( MenuObject* menu_object );
 	void GoBack();

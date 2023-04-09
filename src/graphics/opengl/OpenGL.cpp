@@ -187,6 +187,8 @@ void OpenGL::Stop() {
 }
 
 void OpenGL::Iterate() {
+	Lock();
+	
 	Graphics::Iterate();
 	
 	glEnable( GL_DEPTH_TEST );
@@ -198,7 +200,7 @@ void OpenGL::Iterate() {
 	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it ) {
 		(*it)->Iterate();
 	}
-
+	
 	glDisable( GL_DEPTH_TEST );
 	glDisable( GL_BLEND );
 
@@ -209,6 +211,8 @@ void OpenGL::Iterate() {
 		THROW( "OpenGL error occured in render loop, aborting" );
 	}
 	
+	Unlock();
+
 	DEBUG_STAT_INC( frames_rendered );
 }
 

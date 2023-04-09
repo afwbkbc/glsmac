@@ -89,12 +89,11 @@ void Toolbar::Create() {
 	}
 
 	// initialize
-	const auto* map = m_game->GetMap();
 	UpdateMapFileName();
 	m_tool_info.labels[ TI_MAP_SIZE ]->SetText( "Map Size: " +
-		std::to_string( map->GetWidth() ) +
+		std::to_string( m_game->GetMapWidth() ) +
 			"x" +
-		std::to_string( map->GetHeight() )
+		std::to_string( m_game->GetMapHeight() )
 	);
 	m_tool_info.labels[ TI_MODE ]->SetText( "PLAY mode (No Scroll Lock)" );
 	
@@ -150,16 +149,16 @@ void Toolbar::Align() {
 
 void Toolbar::UpdateMapFileName() {
 	ASSERT( m_tool_info.labels.find( TI_FILE ) != m_tool_info.labels.end(), "file line not found" );
-	m_tool_info.labels[ TI_FILE ]->SetText( "File: " + m_game->GetMap()->GetFileName() );
+	m_tool_info.labels[ TI_FILE ]->SetText( "File: " + m_game->GetMapFilename() );
 }
 
 void Toolbar::SelectTool( MapEditor::tool_type_t tool ) {
 	
-	if ( m_game->GetMapEditor()->GetActiveToolType() != tool ) {
+	if ( m_game->GetEditorTool() != tool ) {
 		
 		Log( "Selecting tool: " + m_tool_names.at( tool ) );
 		
-		m_game->GetMapEditor()->SelectTool( tool );
+		m_game->SetEditorTool( tool );
 
 		if ( m_active_tool_button ) {
 			m_active_tool_button->RemoveStyleModifier( Style::M_SELECTED );
@@ -178,11 +177,11 @@ void Toolbar::SelectTool( MapEditor::tool_type_t tool ) {
 
 void Toolbar::SelectBrush( MapEditor::brush_type_t brush ) {
 	
-	if ( m_game->GetMapEditor()->GetActiveBrushType() != brush ) {
+	if ( m_game->GetEditorBrush() != brush ) {
 		
 		Log( "Selecting brush: " + m_brush_names.at( brush ) );
 
-		m_game->GetMapEditor()->SelectBrush( brush );
+		m_game->SetEditorBrush( brush );
 		
 		if ( m_active_brush_button ) {
 			m_active_brush_button->RemoveStyleModifier( Style::M_SELECTED );

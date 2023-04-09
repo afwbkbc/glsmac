@@ -155,15 +155,21 @@ const Instanced::instance_id_t Instanced::AddInstance( const types::Vec3& positi
 }
 
 void Instanced::SetInstance( const instance_id_t instance_id, const types::Vec3& position, const types::Vec3& angle ) {
-	ASSERT( m_instances.find( instance_id ) != m_instances.end(), "instance " + std::to_string( instance_id ) + " not found" );
 	m_need_world_matrix_update = true;
 	m_instances[ instance_id ] = { position, angle, {}, true };
+	if ( m_next_instance_id <= instance_id ) {
+		m_next_instance_id = instance_id + 1;
+	}
 }
 
 void Instanced::RemoveInstance( const instance_id_t instance_id ) {
 	ASSERT( m_instances.find( instance_id ) != m_instances.end(), "instance " + std::to_string( instance_id ) + " not found" );
 	m_need_world_matrix_update = true;
 	m_instances.erase( instance_id );
+}
+
+const bool Instanced::HasInstance( const instance_id_t instance_id ) {
+	return m_instances.find( instance_id ) != m_instances.end();
 }
 
 const float Instanced::GetZIndex() const {

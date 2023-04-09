@@ -3,6 +3,7 @@
 #include <vector>
 #include <functional>
 #include <unordered_map>
+#include <mutex>
 
 #include "base/Module.h"
 
@@ -54,6 +55,9 @@ CLASS( Graphics, base::Module )
 	
 	const size_t GetFramesCountAndReset();
 	
+	void Lock();
+	void Unlock();
+	
 protected:
 	
 	// make sure to call this at initialization and after every resize
@@ -62,6 +66,8 @@ protected:
 	size_t m_frames_count = 0;
 	
 private:
+	std::mutex m_render_lock;
+	
 	float m_aspect_ratio = 0;
 	std::unordered_map< void*, on_resize_handler_t > m_on_resize_handlers = {};
 	std::vector< void* > m_on_resize_handlers_order = {};

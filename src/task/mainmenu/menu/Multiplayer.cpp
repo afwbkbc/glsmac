@@ -43,7 +43,7 @@ void Multiplayer::Hide() {
 void Multiplayer::OnNext() {
 	const auto value = m_choices->GetValue();
 	if ( value == "Simple Internet TCP/IP Connection" ) {
-		m_mainmenu->m_settings.global.network_type = GlobalSettings::NT_SIMPLETCP;
+		m_mainmenu->m_settings.global.network_type = game::GlobalSettings::NT_SIMPLETCP;
 		NEWV( menu, HostJoin, m_mainmenu );
 		NextMenu( menu );
 	}

@@ -2,7 +2,6 @@
 
 #include "engine/Engine.h"
 
-#include "task/game/map/Map.h"
 #include "util/FS.h"
 
 #include "Host.h"
@@ -33,8 +32,8 @@ void LoadMapFile::Show() {
 		m_file_browser->SetLeft( 6 );
 		m_file_browser->SetBottom( 8 );
 		m_file_browser->SetRight( 6 );
-		m_file_browser->SetDefaultDirectory( util::FS::GetAbsolutePath( task::game::map::Map::s_consts.fs.default_map_directory ) );
-		m_file_browser->SetFileExtension( task::game::map::Map::s_consts.fs.default_map_extension );
+		m_file_browser->SetDefaultDirectory( util::FS::GetAbsolutePath( ::game::map::s_consts.fs.default_map_directory ) );
+		m_file_browser->SetFileExtension( ::game::map::s_consts.fs.default_map_extension );
 		m_file_browser->On( UIEvent::EV_SELECT, EH( this ) {
 			const auto& path = m_file_browser->GetSelectedFile();
 			if ( !util::FS::FileExists( path ) ) {

@@ -12,6 +12,5 @@ SET(SRC ${SRC}
 	${PWD}/Texture.cpp
 	${PWD}/Sound.cpp
 	${PWD}/Packet.cpp
-	${PWD}/ThreadCall.cpp
 
 PARENT_SCOPE)

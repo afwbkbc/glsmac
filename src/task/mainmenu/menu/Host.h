@@ -22,6 +22,7 @@ CLASS( Host, PopupMenu )
 	~Host();
 
 	void Show();
+	void Iterate();
 	void Hide();
 
 	void OnNext();

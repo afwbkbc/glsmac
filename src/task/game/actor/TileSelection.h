@@ -2,7 +2,7 @@
 
 #include "Actor.h"
 
-#include "../map/Map.h"
+#include "game/map/TileState.h"
 
 #include "util/Timer.h"
 
@@ -11,7 +11,6 @@ using namespace util;
 
 namespace task {
 namespace game {
-
 namespace actor {
 
 CLASS( TileSelection, Actor )
@@ -21,7 +20,7 @@ CLASS( TileSelection, Actor )
 	static constexpr float GLOW_MAX = 1.0f;
 	static constexpr float GLOW_MIN = 0.25f;
 	
-	TileSelection( map::Map::tile_vertices_t coords );
+	TileSelection( ::game::map::TileState::tile_vertices_t coords );
 	
 	void Iterate();
 	

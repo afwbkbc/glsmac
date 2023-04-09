@@ -8,7 +8,7 @@ namespace mainmenu {
 Lifeforms::Lifeforms( MainMenu *mainmenu ) : CustomizeMapMenu( mainmenu, "NATIVE LIFE FORMS", 3, {
 	{ "RARE", {
 		CH( this ) {
-			m_mainmenu->m_settings.global.map.lifeforms = task::MapSettings::MAP_LIFEFORMS_RARE;
+			m_mainmenu->m_settings.global.map.lifeforms = game::MapSettings::MAP_LIFEFORMS_RARE;
 			NEWV( menu, Clouds, m_mainmenu );
 			NextMenu( menu );
 		},
@@ -18,7 +18,7 @@ Lifeforms::Lifeforms( MainMenu *mainmenu ) : CustomizeMapMenu( mainmenu, "NATIVE
 	}},
 	{ "AVERAGE", {
 		CH( this ) {
-			m_mainmenu->m_settings.global.map.lifeforms = task::MapSettings::MAP_LIFEFORMS_AVERAGE;
+			m_mainmenu->m_settings.global.map.lifeforms = game::MapSettings::MAP_LIFEFORMS_AVERAGE;
 			NEWV( menu, Clouds, m_mainmenu );
 			NextMenu( menu );
 		},
@@ -28,7 +28,7 @@ Lifeforms::Lifeforms( MainMenu *mainmenu ) : CustomizeMapMenu( mainmenu, "NATIVE
 	}},
 	{ "ABUNDANT", {
 		CH( this ) {
-			m_mainmenu->m_settings.global.map.lifeforms = task::MapSettings::MAP_LIFEFORMS_ABUNDANT;
+			m_mainmenu->m_settings.global.map.lifeforms = game::MapSettings::MAP_LIFEFORMS_ABUNDANT;
 			NEWV( menu, Clouds, m_mainmenu );
 			NextMenu( menu );
 		},

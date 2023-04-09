@@ -15,9 +15,9 @@ SaveMap::SaveMap( Game* game )
 		game,
 		"SAVE MAP",
 		FM_WRITE,
-		game->GetMap()->GetLastDirectory(),
-		map::Map::s_consts.fs.default_map_extension,
-		game->GetMap()->GetFileName()
+		game->GetMapLastDirectory(),
+		::game::map::s_consts.fs.default_map_extension,
+		game->GetMapFilename()
 	)
 {
 	
@@ -25,7 +25,6 @@ SaveMap::SaveMap( Game* game )
 
 void SaveMap::OnFileSelect( const std::string& path ) {
 	m_game->SaveMap( path );
-	Close();
 }
 
 }

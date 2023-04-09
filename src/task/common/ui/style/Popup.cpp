@@ -77,21 +77,6 @@ void Popup::AddStyles() {
 		s->Set( Style::A_HEIGHT, 22 );
 	});
 	
-	// TODO: multilevel includes
-	AddStyle( "Loader", {
-		"PopupFrame"
-	}, SH() {
-		s->SetFont( Style::A_HEADER_FONT, "arialnb.ttf", 18 );
-		s->Set( Style::A_HEADER_HEIGHT, 22 );
-		s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 109, 126, 178 ) );
-		s->SetFont( Style::A_FONT, "arialnb.ttf", 20 );
-	});
-	
-	AddStyle( "LoaderLabel", SH() {
-		s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 109, 126, 178 ) );
-		s->SetFont( Style::A_FONT, "arialnb.ttf", 20 );
-	});
-	
 	AddStyle( "PopupButton", SH() {
 		std::unordered_map< Style::attribute_type_t, std::vector< size_t > > textures = {};
 
@@ -153,17 +138,6 @@ void Popup::AddStyles() {
 		"PopupButton"
 	}, SH() {
 		s->Set( Style::A_WIDTH, 230 );
-		s->Set( Style::A_HEIGHT, 20 );
-
-		s->SetFont( Style::A_FONT, "arialnb.ttf", 18 );
-		s->SetSound( Style::A_BUTTON_CLICK_SOUND, "ok.wav" );
-		s->Set( Style::A_SOUND_VOLUME, 0.5 );
-	});
-	
-	AddStyle( "LoaderButton", {
-		"PopupButton"
-	}, SH() {
-		s->Set( Style::A_WIDTH, 234 );
 		s->Set( Style::A_HEIGHT, 20 );
 
 		s->SetFont( Style::A_FONT, "arialnb.ttf", 18 );
@@ -239,6 +213,33 @@ void Popup::AddStyles() {
 	AddStyle( "PopupFileListItemDirUp", { "PopupFileListItem" }, SH( tc ) {
 		s->SetTextureTC( Style::A_ITEM_ICON_TEXTURE, "Jackal.pcx", 35, 1, 50, 16, tc );
 	});
+	
+	// TODO: multilevel includes
+	AddStyle( "DefaultPopupFrame", {
+		"PopupFrame"
+	}, SH() {
+		s->SetFont( Style::A_HEADER_FONT, "arialnb.ttf", 18 );
+		s->Set( Style::A_HEADER_HEIGHT, 22 );
+		s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 109, 126, 178 ) );
+		s->SetFont( Style::A_FONT, "arialnb.ttf", 20 );
+	});
+	
+	AddStyle( "DefaultPopupLabel", SH() {
+		s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 109, 126, 178 ) );
+		s->SetFont( Style::A_FONT, "arialnb.ttf", 20 );
+	});
+	
+	AddStyle( "DefaultPopupButton", {
+		"PopupButton"
+	}, SH() {
+		s->Set( Style::A_WIDTH, 234 );
+		s->Set( Style::A_HEIGHT, 20 );
+
+		s->SetFont( Style::A_FONT, "arialnb.ttf", 18 );
+		s->SetSound( Style::A_BUTTON_CLICK_SOUND, "ok.wav" );
+		s->Set( Style::A_SOUND_VOLUME, 0.5 );
+	});
+	
 }
 
 }

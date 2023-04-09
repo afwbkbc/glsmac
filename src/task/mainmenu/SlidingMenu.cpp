@@ -1,6 +1,6 @@
 #include "SlidingMenu.h"
 
-#include "task/Settings.h"
+#include "game/Settings.h"
 #include "engine/Engine.h"
 
 namespace task {

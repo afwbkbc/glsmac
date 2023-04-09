@@ -6,8 +6,8 @@
 #include "engine/Engine.h"
 
 // TODO: refactor, remove map dependency
-#include "task/game/map/Map.h"
-using namespace task::game::map;
+#include "game/map/Consts.h"
+using namespace game::map;
 
 namespace types {
 
@@ -101,7 +101,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 		(uint8_t)( (float)( (_a) >> 24 & 0xff ) * (_alpha) + (float)( (_b) >> 24 & 0xff ) * ( 1.0f - (_alpha) ) ) << 24 \
 	)
 
-	#define COASTLINES_BORDER_RND ( (float)( perlin->Noise( x * 4, y * 4, 1.5f ) + 1.0f ) / 2 * Map::s_consts.coastlines.border_size )
+	#define COASTLINES_BORDER_RND ( (float)( perlin->Noise( x * 4, y * 4, 1.5f ) + 1.0f ) / 2 * s_consts.coastlines.border_size )
 			
 	// +1 because it's inclusive on both sides
 	// TODO: make non-inclusive
@@ -203,10 +203,10 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 		// consts
 		// TODO: pass from parameters somehow (need to refactor)
 		//const float pb = ( flags & AM_COASTLINE_BORDER ) ? 0.1f : 0;
-		const float pr = Map::s_consts.coastlines.perlin.range;// + ( ( flags & AM_PERLIN_WIDER ) ? 0.1f : 0 );
-		const float pf = Map::s_consts.coastlines.perlin.frequency;
-		const uint8_t pp = Map::s_consts.coastlines.perlin.passes;
-		const float pc = Map::s_consts.coastlines.perlin.cut;
+		const float pr = s_consts.coastlines.perlin.range;// + ( ( flags & AM_PERLIN_WIDER ) ? 0.1f : 0 );
+		const float pf = s_consts.coastlines.perlin.frequency;
+		const uint8_t pp = s_consts.coastlines.perlin.passes;
+		const float pc = s_consts.coastlines.perlin.cut;
 		
 		// perlin range (for cutting)
 		std::pair< size_t, size_t > prx = { 0, w };
@@ -267,8 +267,8 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 	if ( flags & AM_RANDOM_STRETCH ) {
 		ASSERT( rng, "no rng provided for random mirror" );
 		// randomize random ratio ranges (per-tile)
-		const float rmin = Map::s_consts.tile.random.texture_edge_stretch_min;
-		const float rmax = Map::s_consts.tile.random.texture_edge_stretch_max;
+		const float rmin = s_consts.tile.random.texture_edge_stretch_min;
+		const float rmax = s_consts.tile.random.texture_edge_stretch_max;
 		srx = {
 			rng->GetFloat( rmin, rmax ),
 			( flags & AM_RANDOM_STRETCH_SHRINK ) ? rng->GetFloat( rmin, rmax ) : 0.0f
@@ -358,15 +358,15 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 				float d = sqrt( pow( (float) dx - cx, 2 ) + pow( (float) dy - cy, 2 ) );
 				if ( flags & AM_COASTLINE_BORDER ) {
 					ASSERT( perlin, "perlin for coastline border not set" );
-					d = std::min( d, d - (float) sqrt( pow( COASTLINES_BORDER_RND, 2 ) * 2 ) + Map::s_consts.coastlines.border_size / 2 );
+					d = std::min( d, d - (float) sqrt( pow( COASTLINES_BORDER_RND, 2 ) * 2 ) + s_consts.coastlines.border_size / 2 );
 				}
 				if ( d > r ) {
 					is_pixel_needed = false;
 				}
 				if ( flags & AM_COASTLINE_BORDER ) {
-					if ( d >= r - Map::s_consts.coastlines.perlin.round_range ) {
+					if ( d >= r - s_consts.coastlines.perlin.round_range ) {
 						// TODO: fix for AM_INVERT
-						mix_color = Map::s_consts.coastlines.border_color.GetRGBA();
+						mix_color = s_consts.coastlines.border_color.GetRGBA();
 					}
 				}
 			}
@@ -439,7 +439,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 				
 				if ( perlin_need_border ) {
 					is_pixel_needed = true;
-					mix_color = Map::s_consts.coastlines.border_color.GetRGBA();
+					mix_color = s_consts.coastlines.border_color.GetRGBA();
 				}
 				
 			}
@@ -541,7 +541,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 						uint32_t pixel_color;
 						memcpy( &pixel_color, from, m_bpp );
 						if ( mix_color ) {
-							pixel_color = MIX_COLORS( mix_color, pixel_color, Map::s_consts.coastlines.border_alpha );
+							pixel_color = MIX_COLORS( mix_color, pixel_color, s_consts.coastlines.border_alpha );
 						}
 
 						uint32_t dst_pixel_color;
@@ -607,7 +607,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 						if ( mix_color ) {
 							uint32_t pixel_color;
 							memcpy( &pixel_color, from, m_bpp );
-							pixel_color = MIX_COLORS( mix_color, pixel_color, Map::s_consts.coastlines.border_alpha );
+							pixel_color = MIX_COLORS( mix_color, pixel_color, s_consts.coastlines.border_alpha );
 							memcpy( to, &pixel_color, m_bpp );
 						}
 						else {
@@ -621,7 +621,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 								uint32_t pixel_color;
 								memcpy( &pixel_color, from, m_bpp );
 								if ( mix_color ) {
-									pixel_color = MIX_COLORS( mix_color, pixel_color, Map::s_consts.coastlines.border_alpha );
+									pixel_color = MIX_COLORS( mix_color, pixel_color, s_consts.coastlines.border_alpha );
 								}
 								uint32_t dst_pixel_color;
 								memcpy( &dst_pixel_color, to, m_bpp );

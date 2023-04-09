@@ -8,117 +8,133 @@
 namespace ui {
 namespace module {
 
+Loader::Loader( UI* ui )
+	: Module( ui )
+{
+	//
+}
+
+Loader::~Loader() {
+	Hide();
+}
+
+void Loader::Show( const std::string& text, const loader_cancel_handler_t on_cancel ) {
+	ASSERT( !m_is_active, "loader already running" );
+	SetText( text );
+	m_on_cancel = on_cancel;
+	
+	Start();
+}
+
+void Loader::Hide() {
+	if ( m_is_active ) {
+		Stop();
+	}
+}
+
 void Loader::Start() {
 	
-	if ( m_is_iterating ) {
+	if ( m_is_active ) {
 		return; // already running
 	}
 	
-	m_is_iterating = true;
+	// TODO: check if started from main thread
 	
-	auto* ui = g_engine->GetUI();
+	bool is_cancelable = m_on_cancel != 0;
 	
-	ui->BlockEvents(); // don't allow anything else while loader is visible
+	m_ui->BlockEvents(); // don't allow anything else while loader is visible
 	
-	ASSERT( m_handlers.on_start, "on_start not set" );
-	ASSERT( m_handlers.on_iterate, "on_iterate not set" );
-	ASSERT( m_handlers.on_stop, "on_stop not set" );
-	
-	NEW( m_section, Section, "Loader" );
+	NEW( m_section, Section, "DefaultPopupFrame" );
 		m_section->SetTitleText( "PLEASE WAIT" );
 		m_section->SetAlign( UIObject::ALIGN_CENTER );
-		m_section->SetWidth( 500 );
+		m_section->SetWidth( 560 );
 		m_section->SetHeight( 150 );
 		m_section->SetZIndex( 0.9 );
-	ui->AddObject( m_section );
+	m_ui->AddObject( m_section );
 	
-	NEW( m_label, Label, "LoaderLabel" );
-		m_label->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
+	NEW( m_label, Label, "DefaultPopupLabel" );
+		m_label->SetAlign( UIObject::ALIGN_HCENTER | UIObject::ALIGN_TOP );
 		m_label->SetTop( 36 );
-		m_label->SetLeft( 80 );
 		m_label->SetText( m_loading_text );
 		m_label->ForwardStyleAttributesV({ Style::A_FONT, Style::A_TEXT_COLOR });
 	m_section->AddChild( m_label );
 	
-	NEW( m_button_cancel, Button, "LoaderButton" );
-			m_button_cancel->SetAlign( UIObject::ALIGN_BOTTOM | UIObject::ALIGN_HCENTER );
-			m_button_cancel->SetBottom( 15 );
-			m_button_cancel->SetLabel( "CANCEL" );
-			m_button_cancel->On( UIEvent::EV_BUTTON_CLICK, EH( this ) {
-				while ( !m_handlers.on_stop( this ) ) {
-					std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
-				}
-				Stop();
+	if ( is_cancelable ) {
+		NEW( m_button_cancel, Button, "DefaultPopupButton" );
+				m_button_cancel->SetAlign( UIObject::ALIGN_BOTTOM | UIObject::ALIGN_HCENTER );
+				m_button_cancel->SetBottom( 15 );
+				m_button_cancel->SetLabel( "CANCEL" );
+				m_button_cancel->On( UIEvent::EV_BUTTON_CLICK, EH( this ) {
+					Cancel();
+					return true;
+				});
+		m_section->AddChild( m_button_cancel );
+		m_section->On( UIEvent::EV_KEY_DOWN, EH( this ) {
+			if (
+				!data->key.modifiers &&
+				data->key.code == UIEvent::K_ESCAPE
+			) {
+				Cancel();
 				return true;
-			});
-	m_section->AddChild( m_button_cancel );
+			}
+			return true;
+		});
+	}
 	
 	m_dots_timer.SetInterval( DOTS_CHANGE_INTERVAL );
 	
-	ui->AddIterativeObject( this, UH( this ) {
-		if ( !m_handlers.on_iterate( this ) ) {
-			Stop();
+	m_ui->AddIterativeObject( this, UH( this ) {
+		if ( m_loading_text_change.is_changed ) {
+			std::lock_guard< std::mutex >( m_loading_text_change.mutex );
+			m_loading_text = m_loading_text_change.value;
+			m_loading_text_change.is_changed = false;
+		}
+		if ( m_label ) {
+			m_label->SetText( m_loading_text + GetDots() );
 		}
 	});
 	
-	if ( !m_handlers.on_start( this ) ) {
-		Stop();
-	}
-
+	Activate();
 }
 
 void Loader::Stop() {
-	if ( !m_is_iterating ) {
-		return; // already stopped
-	}
+	ASSERT( m_is_active, "loader not running" );
 	
-	m_is_iterating = false;
+	m_ui->UnblockEvents();
 	
-	auto* ui = g_engine->GetUI();
-	
-	ui->UnblockEvents();
-	
-	ui->RemoveIterativeObject( this );
+	m_ui->RemoveIterativeObject( this );
 	m_dots_timer.Stop();
 	
-	m_handlers.on_start = nullptr;
-	m_handlers.on_iterate = nullptr;
-	m_handlers.on_stop = nullptr;
+	m_section->RemoveChild( m_label );
+	m_label = nullptr;
 	
-		m_section->RemoveChild( m_label );
+	if ( m_button_cancel ) {
 		m_section->RemoveChild( m_button_cancel );
-	ui->RemoveObject( m_section );
+		m_button_cancel = nullptr;
+	}
+	
+	m_ui->RemoveObject( m_section );
+	m_section = nullptr;
 
+	m_on_cancel = 0;
+	
+	Deactivate();
 }
 
-const bool Loader::IsRunning() const {
-	return m_is_iterating;
+void Loader::Cancel() {
+	if ( !m_on_cancel || m_on_cancel() ) {
+		Stop();
+	}
+	else {
+		m_button_cancel->Hide();
+	}
 }
 
-void Loader::SetOnStart( const loading_handler_t handler ) {
-	ASSERT( !m_handlers.on_start, "on_start already set" );
-	ASSERT( !m_is_iterating, "can't set handlers on running loader" );
-	m_handlers.on_start = handler;
-}
-
-void Loader::SetOnIterate( const loading_handler_t handler ) {
-	ASSERT( !m_handlers.on_iterate, "on_iterate already set" );
-	ASSERT( !m_is_iterating, "can't set handlers on running loader" );
-	m_handlers.on_iterate = handler;
-}
-
-void Loader::SetOnStop( const loading_handler_t handler ) {
-	ASSERT( !m_handlers.on_stop, "on_cancel already set" );
-	ASSERT( !m_is_iterating, "can't set handlers on running loader" );
-	m_handlers.on_stop = handler;
-}
-
-void Loader::SetLoadingText( const std::string& loading_text ) {
-	if ( loading_text != m_loading_text ) {
-		m_loading_text = loading_text;
-		if ( m_label ) {
-			m_label->SetText( loading_text );
-		}
+void Loader::SetText( const std::string& loading_text ) {
+	std::lock_guard< std::mutex >( m_loading_text_change.mutex );
+	if ( loading_text != m_loading_text_change.value ) {
+		m_loading_text_change.value = loading_text;
+		m_loading_text_change.is_changed = true;
 	}
 }
 
@@ -129,7 +145,12 @@ const std::string Loader::GetDots() {
 			m_dots_count = 0;
 		}
 	}
-	return std::string( m_dots_count, '.' ) + std::string( ( MAX_DOTS - m_dots_count ) * 2, ' ' );
+	return std::string( m_dots_count, '.' ) + std::string( ( MAX_DOTS - m_dots_count ) * 4, ' ' );
+}
+
+void Loader::ProcessEvent( event::UIEvent* event ) {
+	ASSERT( m_section, "loader section not set" );
+	m_section->ProcessEvent( event );
 }
 
 }

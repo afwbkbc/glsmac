@@ -30,6 +30,8 @@ CLASS( Popup, ::ui::object::Popup )
 protected:
 	Game* m_game = nullptr;
 
+	void CloseNow();
+	
 private:
 	coord_t m_original_height = 0; // TODO: move to styles?
 	std::string m_title_text = "";

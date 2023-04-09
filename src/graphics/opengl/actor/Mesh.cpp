@@ -47,14 +47,15 @@ Mesh::~Mesh() {
 
 bool Mesh::MeshReloadNeeded() {
 	auto* actor = GetMeshActor();
-	bool data_mesh_reload_needed = DataMeshReloadNeeded();
-	size_t mesh_updated_counter = actor->GetMesh()->UpdatedCount();
+	auto* mesh = actor->GetMesh();
+	ASSERT( mesh, "actor has no mesh" );
+	size_t mesh_updated_counter = mesh->UpdatedCount();
 	if ( m_mesh_update_counter != mesh_updated_counter ) {
 		//Log( "Mesh reload needed ( " + std::to_string( m_mesh_update_counter ) + " != " + std::to_string( mesh_updated_counter ) + " )" );
 		m_mesh_update_counter = mesh_updated_counter;
 		return true;
 	}
-	return data_mesh_reload_needed;
+	return DataMeshReloadNeeded();
 }
 
 bool Mesh::DataMeshReloadNeeded() {

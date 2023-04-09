@@ -2,6 +2,8 @@
 
 #include "../UI.h"
 
+#include "../../Types.h"
+
 #include "ui/object/Surface.h"
 #include "ui/object/Section.h"
 #include "ui/object/Button.h"
@@ -21,8 +23,6 @@
 namespace task {
 namespace game {
 	
-using namespace map;
-
 namespace ui {
 	
 CLASS( BottomBar, UI )
@@ -33,7 +33,7 @@ CLASS( BottomBar, UI )
 	void Destroy();
 	void Align();
 	
-	void PreviewTile( const Map* map, const Map::tile_info_t& tile_info );
+	void PreviewTile( const tile_data_t& tile_data );
 	void HideTilePreview();
 	
 	void SetMinimapTexture( types::Texture* texture );

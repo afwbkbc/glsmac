@@ -38,7 +38,6 @@ public:
 		return Vec3( source.x, source.y, 0.0 );
 	};
 
-
 	bool operator==(const Vec3& rhs) const {
 	    return(this->x == rhs.x && this->y == rhs.y && this->z == rhs.z);
 	};

@@ -8,11 +8,12 @@
 #include "ui/object/SimpleButton.h"
 #include "BBSection.h"
 #include "ui/object/Label.h"
-#include "../../map_editor/MapEditor.h"
+#include "game/map_editor/MapEditor.h"
+
+using namespace game::map_editor;
 
 namespace task {
 namespace game {
-	using namespace map_editor;
 namespace ui {
 	
 CLASS( Toolbar, MiddleAreaPage )

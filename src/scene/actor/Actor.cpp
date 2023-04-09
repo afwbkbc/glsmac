@@ -1,6 +1,6 @@
-#include "graphics/Graphics.h"
-
 #include "Actor.h"
+
+#include "../Scene.h"
 
 namespace scene {
 namespace actor {
