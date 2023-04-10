@@ -47,10 +47,10 @@ CLASS( Config, base::Module )
 	const std::string& GetQuickstartMapDump() const;
 	const std::string& GetQuickstartMapFile() const;
 	const types::Vec2< size_t >& GetQuickstartMapSize() const;
-	const task::MapSettings::parameter_t GetQuickstartMapOcean() const;
-	const task::MapSettings::parameter_t GetQuickstartMapErosive() const;
-	const task::MapSettings::parameter_t GetQuickstartMapLifeforms() const;
-	const task::MapSettings::parameter_t GetQuickstartMapClouds() const;
+	const game::MapSettings::parameter_t GetQuickstartMapOcean() const;
+	const game::MapSettings::parameter_t GetQuickstartMapErosive() const;
+	const game::MapSettings::parameter_t GetQuickstartMapLifeforms() const;
+	const game::MapSettings::parameter_t GetQuickstartMapClouds() const;
 #endif
 	
 private:
@@ -66,10 +66,10 @@ private:
 	std::string m_quickstart_mapdump = "";
 	std::string m_quickstart_mapfile = "";
 	types::Vec2< size_t > m_quickstart_mapsize = {};
-	task::MapSettings::parameter_t m_quickstart_map_ocean = task::MapSettings::MAP_OCEAN_MEDIUM;
-	task::MapSettings::parameter_t m_quickstart_map_erosive = task::MapSettings::MAP_EROSIVE_AVERAGE;
-	task::MapSettings::parameter_t m_quickstart_map_lifeforms = task::MapSettings::MAP_LIFEFORMS_AVERAGE;
-	task::MapSettings::parameter_t m_quickstart_map_clouds = task::MapSettings::MAP_CLOUDS_AVERAGE;
+	game::MapSettings::parameter_t m_quickstart_map_ocean = game::MapSettings::MAP_OCEAN_MEDIUM;
+	game::MapSettings::parameter_t m_quickstart_map_erosive = game::MapSettings::MAP_EROSIVE_AVERAGE;
+	game::MapSettings::parameter_t m_quickstart_map_lifeforms = game::MapSettings::MAP_LIFEFORMS_AVERAGE;
+	game::MapSettings::parameter_t m_quickstart_map_clouds = game::MapSettings::MAP_CLOUDS_AVERAGE;
 #endif
 };
 
