@@ -163,7 +163,7 @@ if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
 		base::Task* task = nullptr;
 #ifdef DEBUG
 		if ( config.HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
-			task::Settings settings; // TODO: initialize randomly
+			game::Settings settings; // TODO: initialize randomly
 			NEW( task, task::game::Game, settings, 0, UH() {
 				g_engine->ShutDown();
 			});

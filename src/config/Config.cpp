@@ -9,6 +9,8 @@
 #include "util/ArgParser.h"
 #include "util/FS.h"
 
+#include "game/Settings.h"
+
 namespace config {
 
 Config::Config( const int argc, const char *argv[] )
@@ -115,7 +117,7 @@ Config::Config( const int argc, const char *argv[] )
 	});
 	const auto f_add_map_parameter_option =
 		[ this, &parser, f_error, &s_quickstart_argument_missing ]
-		( const std::string& name, const std::vector< std::string >& values, const std::string& desc, debug_flag_t flag, task::MapSettings::parameter_t* out_param )
+		( const std::string& name, const std::vector< std::string >& values, const std::string& desc, debug_flag_t flag, game::MapSettings::parameter_t* out_param )
 	-> void {
 		ASSERT( values.size() == 3, "values size mismatch" );
 		parser.AddRule( name, values[ 0 ] + "|" + values[ 1 ] + "|" + values[ 2 ], "Generate map with specific " + desc + " setting",
@@ -201,16 +203,16 @@ const std::string& Config::GetQuickstartMapFile() const {
 const types::Vec2< size_t >& Config::GetQuickstartMapSize() const {
 	return m_quickstart_mapsize;
 }
-const task::MapSettings::parameter_t Config::GetQuickstartMapOcean() const {
+const game::MapSettings::parameter_t Config::GetQuickstartMapOcean() const {
 	return m_quickstart_map_ocean;
 }
-const task::MapSettings::parameter_t Config::GetQuickstartMapErosive() const {
+const game::MapSettings::parameter_t Config::GetQuickstartMapErosive() const {
 	return m_quickstart_map_erosive;
 }
-const task::MapSettings::parameter_t Config::GetQuickstartMapLifeforms() const {
+const game::MapSettings::parameter_t Config::GetQuickstartMapLifeforms() const {
 	return m_quickstart_map_lifeforms;
 }
-const task::MapSettings::parameter_t Config::GetQuickstartMapClouds() const {
+const game::MapSettings::parameter_t Config::GetQuickstartMapClouds() const {
 	return m_quickstart_map_clouds;
 }
 
