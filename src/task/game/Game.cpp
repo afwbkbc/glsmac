@@ -81,11 +81,13 @@ void Game::Iterate() {
 	
 	auto* game = g_engine->GetGame();
 	auto* ui = g_engine->GetUI();
+	auto* config = g_engine->GetConfig();
 	
 	if ( m_mt_ids.init ) {
 		auto response = game->MT_GetResponse( m_mt_ids.init );
 		if ( response.result != ::game::R_NONE ) {
-			ui->GetLoader()->Hide();
+			auto* loader = ui->GetLoader();
+			loader->Hide();
 			m_mt_ids.init = 0;
 			
 			switch ( response.result ) {

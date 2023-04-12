@@ -28,6 +28,7 @@ CLASS( Loader, Module )
 	void Hide();
 	
 	void SetText( const std::string& loading_text ); // mt supported
+	void SetIsCancelable( const bool is_cancelable );
 	
 	void ProcessEvent( event::UIEvent* event );
 	
@@ -39,6 +40,8 @@ private:
 	void Cancel();
 	
 	const std::string GetDots();
+	
+	bool m_is_cancelable = true;
 	
 	// . -> .. -> ... animation
 	util::Timer m_dots_timer;

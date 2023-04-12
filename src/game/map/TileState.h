@@ -13,7 +13,9 @@ using namespace types;
 namespace game {
 namespace map {
 
-CLASS( TileState, Serializable )
+// do not extend any class because tile states are allocated with malloc
+class TileState {
+public:
 	
 	// coordinates in world
 	Vec2< float > coord;
@@ -148,7 +150,7 @@ CLASS( TileState, Serializable )
 	sprites_t sprites;
 
 	const Buffer Serialize() const;
-	void Unserialize( /*Map* map, */Buffer buf );
+	void Unserialize( Buffer buf );
 	
 };
 

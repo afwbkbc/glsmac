@@ -58,6 +58,21 @@ mt_id_t Game::MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::
 	return MT_CreateRequest( request );
 }
 
+#ifdef DEBUG
+#define x( _method, _op ) \
+	mt_id_t Game::_method( const std::string& path ) { \
+		ASSERT( !path.empty(), "dump path is empty" ); \
+		MT_Request request = {}; \
+		request.op = _op; \
+		NEW( request.data.dump.path, std::string ); \
+		*request.data.dump.path = path; \
+		return MT_CreateRequest( request ); \
+	}
+	x( MT_SaveDump, OP_SAVE_DUMP )
+	x( MT_LoadDump, OP_LOAD_DUMP )
+#undef x
+#endif
+
 void Game::Start() {
 	MTModule::Start();
 	
@@ -557,6 +572,8 @@ void Game::InitGame( MT_Response& response, const std::string& map_filename, MT_
 	
 	Log( "Game seed: " + m_random->GetStateString() );
 
+	auto* loader = g_engine->GetUI()->GetLoader();
+	
 	map::Map* old_map = nullptr;
 	if ( m_map ) {
 		old_map = m_map;
@@ -575,6 +592,8 @@ void Game::InitGame( MT_Response& response, const std::string& map_filename, MT_
 		const std::string& filename = config->GetQuickstartMapDump();
 		ASSERT( util::FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
 		Log( (std::string) "Loading map dump from " + filename );
+		loader->SetText( "Loading dump" );
+		loader->SetIsCancelable( false );
 		m_map->Unserialize( types::Buffer( util::FS::ReadFile( filename ) ) );
 		ec = map::Map::EC_NONE;
 	}
@@ -597,19 +616,11 @@ void Game::InitGame( MT_Response& response, const std::string& map_filename, MT_
 				ec = m_map->Generate( m_map_settings, MT_C );
 			}
 		}
-#ifdef DEBUG
-		// also handy to have dump of generated map
-		if ( !ec && !config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) { // no point saving if we just loaded it
-			Log( (std::string) "Saving map dump to " + map::s_consts.debug.lastdump_filename );
-			util::FS::WriteFile( map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
+		if ( !ec ) {
+			ec = m_map->Initialize( MT_C );
 		}
-#endif
 	}
 	
-	if ( !ec ) {
-		ec = m_map->Initialize( MT_C );
-	}
-
 
 	if ( !ec && canceled ) {
 		ec = map::Map::EC_ABORTED;
@@ -618,6 +629,15 @@ void Game::InitGame( MT_Response& response, const std::string& map_filename, MT_
 
 	if ( !ec ) {
 		
+#ifdef DEBUG
+		// also handy to have dump of generated map
+		if ( !ec && !config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) { // no point saving if we just loaded it
+			Log( (std::string) "Saving map dump to " + map::s_consts.debug.lastdump_filename );
+			loader->SetText( "Saving dump" );
+			loader->SetIsCancelable( false );
+			util::FS::WriteFile( map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
+		}
+#endif
 		response.result = R_SUCCESS;
 		
 		ASSERT( m_map, "map not set" );

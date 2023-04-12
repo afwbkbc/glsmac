@@ -158,14 +158,86 @@ Map::~Map() {
 }
 
 const Buffer Map::Serialize() const {
+	
 	Buffer buf;
 	
+	buf.WriteString( m_tiles->Serialize().ToString() );
+	buf.WriteString( m_map_state->Serialize().ToString() );
+	
+	buf.WriteString( m_meshes.terrain->Serialize().ToString() );
+	buf.WriteString( m_meshes.terrain_data->Serialize().ToString() );
+	
+	buf.WriteString( m_textures.terrain->Serialize().ToString() );
+	
+	buf.WriteInt( m_sprite_actors.size() );
+	for ( auto& it : m_sprite_actors ) {
+		buf.WriteString( it.second.Serialize().ToString() );
+		buf.WriteString( it.first );
+	}
+	buf.WriteInt( m_sprite_instances.size() );
+	for ( auto& it : m_sprite_instances ) {
+		buf.WriteString( it.second.first );
+		buf.WriteVec3( it.second.second );
+		buf.WriteInt( it.first );
+	}
+	buf.WriteInt( m_next_sprite_instance_id );
+	
+	return buf;
+}
+
+const Buffer Map::sprite_actor_t::Serialize() const {
+	Buffer buf;
+	
+	buf.WriteString( name );
+	buf.WriteVec2u( tex_coords );
+	buf.WriteFloat( z_index );
 	
 	return buf;
 }
 
 void Map::Unserialize( Buffer buf ) {
 	
+	ASSERT( !m_tiles, "tiles already set" );
+	NEW( m_tiles, Tiles );
+	m_tiles->Unserialize( buf.ReadString() );
+	
+	ASSERT( !m_map_state, "map state already set" );
+	NEW( m_map_state, MapState );
+	m_map_state->Unserialize( buf.ReadString() );
+	
+	InitTextureAndMesh();
+	m_meshes.terrain->Unserialize( buf.ReadString() );
+	m_meshes.terrain_data->Unserialize( buf.ReadString() );
+	m_textures.terrain->Unserialize( buf.ReadString() );
+	
+	size_t sz = buf.ReadInt();
+	m_sprite_actors.clear();
+	for ( auto i = 0 ; i < sz ; i++ ) {
+		sprite_actor_t actor;
+		actor.Unserialize( buf.ReadString() );
+		m_sprite_actors[ buf.ReadString() ] = actor;
+	}
+	
+	sz = buf.ReadInt();
+	m_sprite_instances.clear();
+	for ( auto i = 0 ; i < sz ; i++ ) {
+		m_sprite_instances[ buf.ReadInt() ] = {
+			buf.ReadString(),
+			buf.ReadVec3()
+		};
+	}
+	
+	m_next_sprite_instance_id = buf.ReadInt();
+	
+	m_sprite_actors_to_add.clear();
+	m_sprite_instances_to_remove.clear();
+	m_sprite_instances_to_add.clear();
+}
+
+void Map::sprite_actor_t::Unserialize( Buffer buf ) {
+	name = buf.ReadString();
+	tex_coords = buf.ReadVec2u();
+	z_index = buf.ReadFloat();
 }
 
 const std::string& Map::GetErrorString( const error_code_t& code ) {
@@ -189,7 +261,7 @@ Tile* Map::GetTile( const size_t x, const size_t y ) const {
 
 TileState* Map::GetTileState( const size_t x, const size_t y ) const {
 	ASSERT( m_map_state, "map state not set" );
-	return m_map_state->GetTileState( x, y );
+	return m_map_state->At( x, y );
 }
 
 TileState* Map::GetTileState( const Tile* tile ) const {
