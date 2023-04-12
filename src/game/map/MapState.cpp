@@ -90,12 +90,46 @@ void MapState::LinkTileStates( MT_CANCELABLE ) {
 	}
 }
 
-TileState* MapState::GetTileState( const size_t x, const size_t y ) const {
-	ASSERT( x < dimensions.x, "tile state x overflow" );
-	ASSERT( y < dimensions.y, "tile state y overflow" );
-	ASSERT( ( x % 2 ) == ( y % 2 ), "tile state axis oddity differs" );
-	return &m_tile_states[ y * dimensions.x + x / 2 ];
+const Buffer MapState::Serialize() const {
+	Buffer buf;
+	
+	buf.WriteBool( first_run );
+	buf.WriteVec2f( coord );
+	buf.WriteVec2u( dimensions );
+	
+	buf.WriteVec2f( variables.texture_scaling );
+	
+	for ( auto y = 0 ; y < dimensions.y ; y++ ) {
+		for ( auto x = y & 1 ; x < dimensions.x ; x += 2 ) {
+			const auto* ts = At( x, y );
+			const auto b = ts->Serialize();
+			const auto s = b.ToString();
+			buf.WriteString( s );
+		}
+	}
+	
+	return buf;
 }
 
+void MapState::Unserialize( Buffer buf ) {
+
+	first_run = buf.ReadBool();
+	coord = buf.ReadVec2f();
+	dimensions = buf.ReadVec2u();
+	
+	variables.texture_scaling = buf.ReadVec2f();
+	
+	MT_CANCELABLE = false;
+	LinkTileStates( MT_C );
+	
+	for ( auto y = 0 ; y < dimensions.y ; y++ ) {
+		for ( auto x = y & 1 ; x < dimensions.x ; x += 2 ) {
+			At( x, y )->Unserialize( buf.ReadString() );
+		}
+	}
+	
+	copy_from_after.clear();
+}
+	
 }
 }

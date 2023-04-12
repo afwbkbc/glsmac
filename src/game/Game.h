@@ -24,7 +24,11 @@ enum op_t {
 	OP_RESET,
 	OP_SELECT_TILE,
 	OP_SAVE_MAP,
-	OP_EDIT_MAP
+	OP_EDIT_MAP,
+#ifdef DEBUG
+	OP_SAVE_DUMP,
+	OP_LOAD_DUMP,
+#endif
 };
 
 enum result_t {
@@ -63,6 +67,11 @@ struct MT_Request {
 		struct {
 			std::string* path;
 		} save_map;
+#ifdef DEBUG
+		struct {
+			std::string* path;
+		} dump;
+#endif
 		struct {
 			size_t tile_x;
 			size_t tile_y;
@@ -169,6 +178,11 @@ CLASS( Game, MTModule )
 	
 	// perform edit operation on map tile(s)
 	mt_id_t MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::MapEditor::tool_type_t tool, map_editor::MapEditor::brush_type_t brush, map_editor::MapEditor::draw_mode_t draw_mode );
+	
+#ifdef DEBUG
+	mt_id_t MT_SaveDump( const std::string& path );
+	mt_id_t MT_LoadDump( const std::string& path );
+#endif
 	
 	void Start();
 	void Stop();

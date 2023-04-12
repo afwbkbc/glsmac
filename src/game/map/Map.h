@@ -103,6 +103,9 @@ CLASS( Map, types::Serializable )
 		std::string name = "";
 		Consts::pcx_texture_coordinates_t tex_coords = {};
 		float z_index = 0.5f;
+		
+		const Buffer Serialize() const;
+		void Unserialize( Buffer buf );
 	};
 	const std::string GetTerrainSpriteActor( const std::string& name, const Consts::pcx_texture_coordinates_t& tex_coords, const float z_index );
 	const size_t AddTerrainSpriteActorInstance( const std::string& key, const Vec3& coords );

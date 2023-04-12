@@ -43,8 +43,6 @@ CLASS( MapState, base::Base )
 	const Buffer Serialize() const;
 	void Unserialize( Buffer buf );
 	
-	TileState* GetTileState( const size_t x, const size_t y ) const;
-	
 private:
 	TileState* m_tile_states = nullptr;
 	

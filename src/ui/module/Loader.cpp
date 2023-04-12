@@ -40,7 +40,7 @@ void Loader::Start() {
 	
 	// TODO: check if started from main thread
 	
-	bool is_cancelable = m_on_cancel != 0;
+	m_is_cancelable = m_on_cancel != 0;
 	
 	m_ui->BlockEvents(); // don't allow anything else while loader is visible
 	
@@ -59,7 +59,7 @@ void Loader::Start() {
 		m_label->ForwardStyleAttributesV({ Style::A_FONT, Style::A_TEXT_COLOR });
 	m_section->AddChild( m_label );
 	
-	if ( is_cancelable ) {
+	if ( m_is_cancelable ) {
 		NEW( m_button_cancel, Button, "DefaultPopupButton" );
 				m_button_cancel->SetAlign( UIObject::ALIGN_BOTTOM | UIObject::ALIGN_HCENTER );
 				m_button_cancel->SetBottom( 15 );
@@ -74,7 +74,9 @@ void Loader::Start() {
 				!data->key.modifiers &&
 				data->key.code == UIEvent::K_ESCAPE
 			) {
-				Cancel();
+				if ( m_is_cancelable ) {
+					Cancel();
+				}
 				return true;
 			}
 			return true;
@@ -135,6 +137,19 @@ void Loader::SetText( const std::string& loading_text ) {
 	if ( loading_text != m_loading_text_change.value ) {
 		m_loading_text_change.value = loading_text;
 		m_loading_text_change.is_changed = true;
+	}
+}
+
+void Loader::SetIsCancelable( const bool is_cancelable ) {
+	if ( m_is_cancelable != is_cancelable ) {
+		m_is_cancelable = is_cancelable;
+		if ( m_is_cancelable ) {
+			ASSERT( m_button_cancel, "dynamic cancelable not implemented yet" );
+			m_button_cancel->Show();
+		}
+		else {
+			m_button_cancel->Hide();
+		}
 	}
 }
 
