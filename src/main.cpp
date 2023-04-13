@@ -140,7 +140,18 @@ if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
 		if ( config.HasLaunchFlag( config::Config::LF_BENCHMARK ) ) {
 			vsync = false;
 		}
-		graphics::opengl::OpenGL graphics( title, WINDOW_WIDTH, WINDOW_HEIGHT, vsync, START_FULLSCREEN );
+		types::Vec2< size_t > window_size;
+		if ( config.HasLaunchFlag( config::Config::LF_WINDOW_SIZE ) ) {
+			window_size = config.GetWindowSize();
+		}
+		else {
+			window_size = { WINDOW_WIDTH, WINDOW_HEIGHT };
+		}
+		bool start_fullscreen = START_FULLSCREEN;
+		if ( config.HasLaunchFlag( config::Config::LF_WINDOWED ) ) {
+			start_fullscreen = false;
+		}
+		graphics::opengl::OpenGL graphics( title, window_size.x, window_size.y, vsync, start_fullscreen );
 		audio::sdl2::SDL2 audio;
 		network::simpletcp::SimpleTCP network;
 		
