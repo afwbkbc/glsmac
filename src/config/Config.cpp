@@ -24,6 +24,22 @@ Config::Config( const int argc, const char *argv[] )
 		exit( EXIT_FAILURE );
 	};
 	
+	const auto f_parse_size = [ f_error ]( const std::string& value ) -> types::Vec2< size_t > {
+		const size_t pos = value.find( 'x' );
+		const std::string s_invalid_format = "Invalid size specified! Format is WIDTHxHEIGHT, for example: 80x40";
+		if ( pos == std::string::npos ) {
+			f_error( s_invalid_format );
+		}
+		types::Vec2< size_t > result = {};
+		try {
+			result.x = std::stoul( value.substr( 0, pos ) );
+			result.y = std::stoul( value.substr( pos + 1 ) );
+		} catch ( std::invalid_argument& e ) {
+			f_error( s_invalid_format );
+		}
+		return result;
+	};
+	
 	const std::string s_invalid_smac_directory = " is not valid SMAC directory!\n\tRun from SMAC directory or pass it with --smacpath argument";
 	
 	parser.AddRule( "benchmark", "Disable VSync and FPS limit, show FPS counter at top left corner", AH( this ) {
@@ -54,6 +70,16 @@ Config::Config( const int argc, const char *argv[] )
 				<< std::endl
 		;
 		exit( EXIT_SUCCESS );
+	});
+	parser.AddRule( "windowed", "Start in windowed mode", AH( this ) {
+		m_launch_flags |= LF_WINDOWED;
+	});
+	parser.AddRule( "window-size", "WINDOW_SIZE", "Size of window", AH( this, f_error, f_parse_size ) {
+		if ( !HasLaunchFlag( LF_WINDOWED ) ) {
+			f_error( "Window-related options can only be used after --windowed argument!" );
+		}
+		m_window_size = f_parse_size( value );
+		m_launch_flags |= LF_WINDOW_SIZE;
 	});
 
 #ifdef DEBUG
@@ -98,21 +124,11 @@ Config::Config( const int argc, const char *argv[] )
 		m_quickstart_mapfile = value;
 		m_debug_flags |= DF_QUICKSTART_MAP_FILE;
 	});
-	parser.AddRule( "quickstart-mapsize", "MAP_SIZE", "Generate map of specific size (WxH)", AH( this, f_error, s_quickstart_argument_missing ) {
+	parser.AddRule( "quickstart-mapsize", "MAP_SIZE", "Generate map of specific size (WxH)", AH( this, s_quickstart_argument_missing, f_parse_size ) {
 		if ( !HasDebugFlag( DF_QUICKSTART ) ) {
 			f_error( s_quickstart_argument_missing );
 		}
-		const size_t pos = value.find( 'x' );
-		const std::string s_invalid_format = "Invalid size specified! Format is WIDTHxHEIGHT, for example: 80x40";
-		if ( pos == std::string::npos ) {
-			f_error( s_invalid_format );
-		}
-		try {
-			m_quickstart_mapsize.x = std::stoul( value.substr( 0, pos ) );
-			m_quickstart_mapsize.y = std::stoul( value.substr( pos + 1 ) );
-		} catch ( std::invalid_argument& e ) {
-			f_error( s_invalid_format );
-		}
+		m_quickstart_mapsize = f_parse_size( value );
 		m_debug_flags |= DF_QUICKSTART_MAP_SIZE;
 	});
 	const auto f_add_map_parameter_option =
@@ -180,6 +196,10 @@ const std::string& Config::GetSMACPath() const {
 
 const bool Config::HasLaunchFlag( launch_flag_t flag ) const {
 	return m_launch_flags & flag;
+}
+
+const types::Vec2< size_t >& Config::GetWindowSize() const {
+	return m_window_size;
 }
 
 #ifdef DEBUG

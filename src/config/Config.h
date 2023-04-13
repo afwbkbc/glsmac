@@ -18,7 +18,9 @@ CLASS( Config, base::Module )
 		LF_NONE = 0,
 		LF_BENCHMARK = 1 << 0,
 		LF_NOSOUND = 1 << 1,
-		LF_SKIPINTRO = 1 << 2
+		LF_SKIPINTRO = 1 << 2,
+		LF_WINDOWED = 1 << 3,
+		LF_WINDOW_SIZE = 1 << 4
 	};
 	
 #ifdef DEBUG
@@ -41,6 +43,7 @@ CLASS( Config, base::Module )
 	const std::string& GetSMACPath() const;
 	
 	const bool HasLaunchFlag( const launch_flag_t flag ) const;
+	const types::Vec2< size_t >& GetWindowSize() const;
 #ifdef DEBUG
 	const bool HasDebugFlag( const debug_flag_t flag ) const;
 	const util::Random::state_t& GetQuickstartSeed() const;
@@ -60,6 +63,7 @@ private:
 	std::string m_smac_path = "";
 	
 	uint8_t m_launch_flags = LF_NONE;
+	types::Vec2< size_t > m_window_size = {};
 #ifdef DEBUG
 	uint16_t m_debug_flags = DF_NONE;
 	util::Random::state_t m_quickstart_seed = {};
