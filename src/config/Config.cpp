@@ -124,7 +124,7 @@ Config::Config( const int argc, const char *argv[] )
 		m_quickstart_mapfile = value;
 		m_debug_flags |= DF_QUICKSTART_MAP_FILE;
 	});
-	parser.AddRule( "quickstart-mapsize", "MAP_SIZE", "Generate map of specific size (WxH)", AH( this, s_quickstart_argument_missing, f_parse_size ) {
+	parser.AddRule( "quickstart-mapsize", "MAP_SIZE", "Generate map of specific size (WxH)", AH( this, s_quickstart_argument_missing, f_parse_size, f_error ) {
 		if ( !HasDebugFlag( DF_QUICKSTART ) ) {
 			f_error( s_quickstart_argument_missing );
 		}
