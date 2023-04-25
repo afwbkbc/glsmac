@@ -2,11 +2,24 @@
 
 #include "types/Serializable.h"
 
+// only default rules for now
+#include "rules/default/Default.h"
+
 using namespace types;
 
 namespace game {
 
 // includes
+	
+CLASS(PlayerSettings, Serializable )
+	enum role_t {
+		PR_HOST,
+		PR_PLAYER,
+	};
+	
+	std::string name = "";
+};
+	
 CLASS( MapSettings, Serializable )
 	typedef uint8_t parameter_t;
 	
@@ -50,7 +63,7 @@ CLASS( MapSettings, Serializable )
 	const Buffer Serialize() const;
 	void Unserialize( Buffer buf );
 };
-	
+
 // settings that are synced between players (host has authority)
 CLASS( GlobalSettings, Serializable )
 	typedef uint8_t parameter_t;	
@@ -72,12 +85,14 @@ CLASS( GlobalSettings, Serializable )
 	static constexpr parameter_t DIFFICULTY_TRANSCEND = 6;
 	parameter_t difficulty = DIFFICULTY_CITIZEN;
 	
-	enum game_rules_t {
+	enum game_rules_type_t {
 		GR_STANDARD,
 		GR_CURRENT,
 		GR_CUSTOM,
 	};
-	game_rules_t game_rules = GR_STANDARD;
+	game_rules_type_t game_rules_type = GR_STANDARD;
+	
+	rules::Default game_rules;
 	
 	enum network_type_t {
 		NT_NONE,

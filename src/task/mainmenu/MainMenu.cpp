@@ -7,7 +7,7 @@
 
 #include "task/game/Game.h"
 
-#include "menu/Lobby.h"
+#include "menu/lobby/Lobby.h"
 #include "menu/Main.h"
 #include "menu/Error.h"
 

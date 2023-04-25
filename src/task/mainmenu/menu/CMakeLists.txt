@@ -1,3 +1,5 @@
+SUBDIR( lobby )
+
 SET(SRC ${SRC}
 
 	${PWD}/Main.cpp
@@ -17,6 +19,5 @@ SET(SRC ${SRC}
 	${PWD}/HostJoin.cpp
 	${PWD}/Host.cpp
 	${PWD}/Join.cpp
-	${PWD}/Lobby.cpp
 
 PARENT_SCOPE)

@@ -1,5 +1,6 @@
 SUBDIR( map )
 SUBDIR( map_editor )
+SUBDIR( rules )
 
 SET(SRC ${SRC}
 
