@@ -9,10 +9,13 @@ using namespace network;
 
 namespace task {
 namespace mainmenu {
+namespace lobby {
 
 Lobby::Lobby( MainMenu* mainmenu ) : PopupMenu( mainmenu, "MULTIPLAYER SETUP" ) {
 	SetWidth( 800 );
 	SetHeight( 600 );
+	
+	m_mainmenu->m_settings.global.game_rules.Initialize();
 	
 	m_settings_backup = m_mainmenu->m_settings.global;
 }
@@ -23,14 +26,14 @@ void Lobby::Show() {
 	NEW( m_map_settings_section, Section, "PopupSection" );
 		m_map_settings_section->SetTitleText( " " ); // to have header created
 		m_map_settings_section->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
-		m_map_settings_section->SetWidth( 310 );
+		m_map_settings_section->SetWidth( 302 );
 		m_map_settings_section->SetHeight( 364 );
 	m_body->AddChild( m_map_settings_section );
 
-	NEW( m_players_section, Section, "PopupSection" );
+	NEW( m_players_section, PlayersSection, this );
 		m_players_section->SetTitleText( "PLAYERS" );
 		m_players_section->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_TOP );
-		m_players_section->SetWidth( 488 );
+		m_players_section->SetWidth( 496 );
 		m_players_section->SetHeight( 204 );
 	m_body->AddChild( m_players_section );
 	
@@ -38,7 +41,7 @@ void Lobby::Show() {
 		m_launch_button->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_BOTTOM );
 		m_launch_button->SetLeft( 8 );
 		m_launch_button->SetBottom( 4 );
-		m_launch_button->SetWidth( 236 );
+		m_launch_button->SetWidth( 234 );
 		m_launch_button->SetHeight( 22 );
 		m_launch_button->SetLabel( "LAUNCH GAME" );
 	m_players_section->AddChild( m_launch_button );
@@ -47,7 +50,7 @@ void Lobby::Show() {
 		m_cancel_button->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_BOTTOM );
 		m_cancel_button->SetRight( 8 );
 		m_cancel_button->SetBottom( 4 );
-		m_cancel_button->SetWidth( 236 );
+		m_cancel_button->SetWidth( 234 );
 		m_cancel_button->SetHeight( 22 );
 		m_cancel_button->SetLabel( "CANCEL" );
 		m_cancel_button->On( UIEvent::EV_BUTTON_CLICK, EH( this ) {
@@ -61,7 +64,7 @@ void Lobby::Show() {
 	NEW( m_chat_section, Section, "PopupSection" );
 		m_chat_section->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_TOP );
 		m_chat_section->SetTop( 200 );
-		m_chat_section->SetWidth( 488 );
+		m_chat_section->SetWidth( 496 );
 		m_chat_section->SetHeight( 164 );
 	m_body->AddChild( m_chat_section );
 
@@ -72,12 +75,12 @@ void Lobby::Show() {
 	m_body->AddChild( m_game_settings_section );
 	
 	if ( m_mainmenu->m_settings.local.network_role == ::game::LocalSettings::NR_SERVER ) {
-		m_player_names = {
+		m_players = {
 			{ 0, m_mainmenu->m_settings.local.player_name }
 		};
 	}
 	else {
-		m_player_names = {};
+		m_players = {};
 	}
 	
 	RefreshUI();
@@ -86,11 +89,6 @@ void Lobby::Show() {
 }
 
 void Lobby::Hide() {
-	
-	for ( auto& label : m_player_labels ) {
-		m_players_section->RemoveChild( label.second );
-	}
-	m_player_labels.clear();
 	
 	m_body->RemoveChild( m_map_settings_section );
 		m_players_section->RemoveChild( m_launch_button );
@@ -151,10 +149,10 @@ void Lobby::Iterate() {
 												}
 												case Packet::PT_PLAYERS: {
 													Log( "Got players list from server" );
-													m_player_names.clear();
+													m_players.clear();
 													size_t i = 0; // TODO: cids?
 													for ( auto& s : packet.data.vec ) {
-														m_player_names[ i++ ] = s;
+														m_players[ i++ ] = s;
 													}
 													RefreshUI();
 													break;
@@ -191,8 +189,8 @@ void Lobby::Iterate() {
 									}
 									case Event::ET_CLIENT_CONNECT: {
 										Log( std::to_string( event.cid ) + " connected" );
-										ASSERT( m_player_names.find( event.cid ) == m_player_names.end(), "player cid already in player names" );
-										m_player_names[ event.cid ] = ""; // to be queried
+										ASSERT( m_players.find( event.cid ) == m_players.end(), "player cid already in player names" );
+										m_players[ event.cid ] = ""; // to be queried
 										{
 											Packet packet;
 											packet.type = Packet::PT_REQUEST_AUTH; // ask to authenticate
@@ -202,9 +200,9 @@ void Lobby::Iterate() {
 									}
 									case Event::ET_CLIENT_DISCONNECT: {
 										Log( std::to_string( event.cid ) + " disconnected" );
-										auto it = m_player_names.find( event.cid );
-										if ( it != m_player_names.end() ) {
-											m_player_names.erase( it );
+										auto it = m_players.find( event.cid );
+										if ( it != m_players.end() ) {
+											m_players.erase( it );
 											RefreshUI();
 										}
 										break;
@@ -222,8 +220,8 @@ void Lobby::Iterate() {
 													Log( "Got authentication from " + std::to_string( event.cid ) + ": " + packet.data.str );
 													
 													// update name
-													ASSERT( m_player_names.find( event.cid ) != m_player_names.end(), "player cid not found" );
-													m_player_names[ event.cid ] = packet.data.str;
+													ASSERT( m_players.find( event.cid ) != m_players.end(), "player cid not found" );
+													m_players[ event.cid ] = packet.data.str;
 													
 													Log( "Sending global settings to " + std::to_string( event.cid ) );
 													Packet p;
@@ -272,27 +270,7 @@ bool Lobby::OnCancel() {
 void Lobby::RefreshUI() {
 	m_map_settings_section->SetTitleText( m_mainmenu->m_settings.global.game_name );
 	
-	// TODO: buttons etc
-	for ( auto& label : m_player_labels ) {
-		m_players_section->RemoveChild( label.second );
-	}
-	m_player_labels.clear();
-	for ( auto& name : m_player_names ) {
-		// TODO: styles etc
-		NEWV( label, Label );
-			label->SetText( name.second );
-			label->SetFont( g_engine->GetFontLoader()->LoadFont( "arialnb.ttf", 18 ) );
-			label->SetTextColor( Color::FromRGB(
-				m_mainmenu->GetRandom()->GetUInt( 100, 155 ),
-				m_mainmenu->GetRandom()->GetUInt( 100, 155 ),
-				m_mainmenu->GetRandom()->GetUInt( 100, 155 )
-			));
-			label->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
-			label->SetLeft( 10 );
-			label->SetTop( 6 + m_player_labels.size() * 22 );
-		m_players_section->AddChild( label );
-		m_player_labels[ name.first ] = label;
-	}
+	m_players_section->SetPlayers( m_players );
 	
 	if ( m_mainmenu->m_settings.local.network_role == ::game::LocalSettings::NR_SERVER ) {
 		// update UIs of others aswell
@@ -300,12 +278,12 @@ void Lobby::RefreshUI() {
 		
 		Packet p;
 		p.type = Packet::PT_PLAYERS;
-		for ( auto& it : m_player_names ) {
+		for ( auto& it : m_players ) {
 			p.data.vec.push_back( it.second );
 		}
 		
 		Log( "Sending player list to all players" );
-		for ( auto& it : m_player_names ) {
+		for ( auto& it : m_players ) {
 			if ( it.first != 0 ) { // don't send to self
 				g_engine->GetNetwork()->MT_SendPacket( p, it.first );
 			}
@@ -314,5 +292,6 @@ void Lobby::RefreshUI() {
 
 }
 
+}
 }
 }

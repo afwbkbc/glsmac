@@ -2,7 +2,7 @@
 
 #include "engine/Engine.h"
 
-#include "Lobby.h"
+#include "lobby/Lobby.h"
 
 namespace task {
 namespace mainmenu {
@@ -72,7 +72,7 @@ void Join::Iterate() {
 				}
 				case network::R_SUCCESS: {
 					Show();
-					NEWV( menu, Lobby, m_mainmenu );
+					NEWV( menu, lobby::Lobby, m_mainmenu );
 					NextMenu( menu );
 					break;
 				}

@@ -30,7 +30,7 @@ Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 			m_mainmenu->m_settings.global.map.lifeforms = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
 			m_mainmenu->m_settings.global.map.clouds = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
 			m_mainmenu->m_settings.global.difficulty = m_mainmenu->GetRandom()->GetUInt( 1, 6 ); // TODO: previous difficulty?
-			m_mainmenu->m_settings.global.game_rules = game::GlobalSettings::GR_STANDARD;
+			m_mainmenu->m_settings.global.game_rules_type = game::GlobalSettings::GR_STANDARD;
 
 			// start game
 			m_mainmenu->StartGame();
