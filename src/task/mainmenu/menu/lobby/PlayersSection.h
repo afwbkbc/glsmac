@@ -1,6 +1,6 @@
 #pragma once
 
-#include <unordered_map>
+#include <map>
 #include <string>
 
 #include "ui/object/Section.h"
@@ -21,7 +21,7 @@ CLASS( PlayersSection, Section )
 	void Create();
 	void Destroy();
 
-	typedef std::unordered_map< size_t, ::game::Player > players_t;
+	typedef std::map< size_t, ::game::Player > players_t;
 	void ClearPlayers();
 	void SetPlayers( const players_t& players );
 	
