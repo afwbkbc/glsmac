@@ -11,15 +11,6 @@ namespace game {
 
 // includes
 	
-CLASS(PlayerSettings, Serializable )
-	enum role_t {
-		PR_HOST,
-		PR_PLAYER,
-	};
-	
-	std::string name = "";
-};
-	
 CLASS( MapSettings, Serializable )
 	typedef uint8_t parameter_t;
 	

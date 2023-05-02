@@ -6,5 +6,6 @@ SET(SRC ${SRC}
 
 	${PWD}/Game.cpp
 	${PWD}/Settings.cpp
+	${PWD}/Player.cpp
 
 PARENT_SCOPE)

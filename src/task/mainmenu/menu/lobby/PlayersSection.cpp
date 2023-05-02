@@ -39,7 +39,7 @@ void PlayersSection::SetPlayers( const players_t& players ) {
 	for ( auto& player : players ) {
 		// TODO: styles etc
 		NEWV( label, Label );
-			label->SetText( player.second );
+			label->SetText( player.second.GetName() );
 			label->SetFont( g_engine->GetFontLoader()->LoadFont( "arialnb.ttf", 18 ) );
 			label->SetTextColor( Color::FromRGB( 192, 192, 192 ) );
 			label->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
