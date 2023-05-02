@@ -24,7 +24,7 @@ const Buffer Packet::Serialize() const {
 			break;
 		}
 		default: {
-			ASSERT(false, "unknown packet type " + std::to_string( type ));
+			//ASSERT(false, "unknown packet type " + std::to_string( type ));
 		}
 	}
 	
@@ -53,7 +53,7 @@ void Packet::Unserialize( Buffer buf ) {
 			break;
 		}
 		default: {
-			ASSERT(false, "unknown packet type " + std::to_string(type));
+			//ASSERT(false, "unknown packet type " + std::to_string(type));
 		}
 	}
 }

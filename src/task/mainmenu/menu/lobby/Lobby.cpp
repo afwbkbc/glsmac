@@ -76,7 +76,10 @@ void Lobby::Show() {
 	
 	if ( m_mainmenu->m_settings.local.network_role == ::game::LocalSettings::NR_SERVER ) {
 		m_players = {
-			{ 0, m_mainmenu->m_settings.local.player_name }
+			{ 0, ::game::Player{
+				m_mainmenu->m_settings.local.player_name,
+				::game::Player::PR_HOST
+			}}
 		};
 	}
 	else {
@@ -152,7 +155,7 @@ void Lobby::Iterate() {
 													m_players.clear();
 													size_t i = 0; // TODO: cids?
 													for ( auto& s : packet.data.vec ) {
-														m_players[ i++ ] = s;
+														m_players[ i++ ].Unserialize( s );
 													}
 													RefreshUI();
 													break;
@@ -190,7 +193,7 @@ void Lobby::Iterate() {
 									case Event::ET_CLIENT_CONNECT: {
 										Log( std::to_string( event.cid ) + " connected" );
 										ASSERT( m_players.find( event.cid ) == m_players.end(), "player cid already in player names" );
-										m_players[ event.cid ] = ""; // to be queried
+										m_players[ event.cid ] = {}; // to be queried
 										{
 											Packet packet;
 											packet.type = Packet::PT_REQUEST_AUTH; // ask to authenticate
@@ -221,7 +224,10 @@ void Lobby::Iterate() {
 													
 													// update name
 													ASSERT( m_players.find( event.cid ) != m_players.end(), "player cid not found" );
-													m_players[ event.cid ] = packet.data.str;
+													m_players[ event.cid ] = ::game::Player{
+														packet.data.str,
+														::game::Player::PR_PLAYER,
+													};
 													
 													Log( "Sending global settings to " + std::to_string( event.cid ) );
 													Packet p;
@@ -279,7 +285,7 @@ void Lobby::RefreshUI() {
 		Packet p;
 		p.type = Packet::PT_PLAYERS;
 		for ( auto& it : m_players ) {
-			p.data.vec.push_back( it.second );
+			p.data.vec.push_back( it.second.Serialize().ToString() );
 		}
 		
 		Log( "Sending player list to all players" );

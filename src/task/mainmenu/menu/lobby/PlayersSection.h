@@ -6,6 +6,8 @@
 #include "ui/object/Section.h"
 #include "ui/object/Label.h"
 
+#include "game/Player.h"
+
 namespace task {
 namespace mainmenu {
 namespace lobby {
@@ -19,7 +21,7 @@ CLASS( PlayersSection, Section )
 	void Create();
 	void Destroy();
 
-	typedef std::unordered_map< size_t, std::string > players_t;
+	typedef std::unordered_map< size_t, ::game::Player > players_t;
 	void ClearPlayers();
 	void SetPlayers( const players_t& players );
 	
