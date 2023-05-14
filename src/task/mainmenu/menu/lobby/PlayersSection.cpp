@@ -33,9 +33,7 @@ void PlayersSection::ClearPlayers() {
 }
 
 void PlayersSection::SetPlayers( const players_t& players ) {
-	
 	ClearPlayers();
-	
 	for ( auto& player : players ) {
 		// TODO: styles etc
 		NEWV( label, Label );
@@ -48,7 +46,6 @@ void PlayersSection::SetPlayers( const players_t& players ) {
 		AddChild( label );
 		m_player_labels[ player.first ] = label;
 	}
-	
 }
 
 }
