@@ -820,11 +820,15 @@ const UIObject::object_area_t UIObject::GetInternalObjectArea() {
 }
 
 bool UIObject::IsPointInside( const ssize_t x, const ssize_t y ) const {
+	const object_area_t object_area = HasEventContext( EC_PARENTAREA )
+		? m_parent_object->GetInternalObjectArea()
+		: m_object_area
+	;
 	return (
-		x > m_object_area.left &&
-		y > ( m_object_area.top ) &&
-		x <= m_object_area.right &&
-		y < (m_object_area.bottom )
+		x > object_area.left &&
+		y > object_area.top &&
+		x <= object_area.right &&
+		y < object_area.bottom
 	);
 }
 
@@ -935,7 +939,7 @@ bool UIObject::Trigger( const UIEvent::event_type_t type, const UIEvent::event_d
 	auto handlers = m_event_handlers.find( type );
 	if ( handlers != m_event_handlers.end() ) {
 		for ( auto& handler : handlers->second ) {
-			if ( handler.first->Execute( data ) ) {
+			if ( handler.first->Execute( type, data ) ) {
 				return true; // processed
 			}
 		}

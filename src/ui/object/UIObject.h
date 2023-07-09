@@ -211,6 +211,7 @@ CLASS( UIObject, base::Base )
 	static constexpr event_context_t EC_MOUSE = 1;
 	static constexpr event_context_t EC_MOUSEMOVE = 2; // separate because handling is very different
 	static constexpr event_context_t EC_KEYBOARD = 4;
+	static constexpr event_context_t EC_PARENTAREA = 8; // will use area of parent element instead of own on mouse events
 	
 	virtual void SetEventContexts( event_context_t contexts );
 	virtual void AddEventContexts( event_context_t contexts );

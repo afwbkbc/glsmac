@@ -11,13 +11,12 @@ namespace task {
 namespace mainmenu {
 namespace lobby {
 
-Lobby::Lobby( MainMenu* mainmenu ) : PopupMenu( mainmenu, "MULTIPLAYER SETUP" ) {
+Lobby::Lobby( MainMenu* mainmenu ): PopupMenu( mainmenu, "MULTIPLAYER SETUP" ) {
 	SetWidth( 800 );
 	SetHeight( 600 );
 	
-	m_mainmenu->m_settings.global.game_rules.Initialize();
-	
-	m_settings_backup = m_mainmenu->m_settings.global;
+	m_settings = m_mainmenu->m_settings;
+	m_settings.global.game_rules.Initialize();
 }
 
 void Lobby::Show() {
@@ -55,7 +54,6 @@ void Lobby::Show() {
 		m_cancel_button->SetLabel( "CANCEL" );
 		m_cancel_button->On( UIEvent::EV_BUTTON_CLICK, EH( this ) {
 			g_engine->GetNetwork()->MT_Disconnect();
-			m_mainmenu->m_settings.global = m_settings_backup;
 			GoBack();
 			return true;
 		});
@@ -169,7 +167,6 @@ void Lobby::Iterate() {
 									}
 									case Event::ET_DISCONNECT: {
 										if ( m_mainmenu->m_settings.local.network_role == ::game::LocalSettings::NR_CLIENT ) {
-											m_mainmenu->m_settings.global = m_settings_backup;
 											GoBack();
 											MenuError( "Connection to server lost." );
 										}
@@ -262,13 +259,14 @@ void Lobby::Iterate() {
 		}
 	}
 }
-	
+
+::game::Settings& Lobby::GetSettings() {
+	return m_settings;
+}
+
 bool Lobby::OnCancel() {
 	
 	g_engine->GetNetwork()->MT_Disconnect();
-	
-	// reset anything received from server
-	m_mainmenu->m_settings.global = m_settings_backup;
 	
 	return true;
 }

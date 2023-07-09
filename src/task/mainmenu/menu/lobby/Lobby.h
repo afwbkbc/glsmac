@@ -1,8 +1,9 @@
 #pragma once
 
 #include "../../PopupMenu.h"
-
 #include "ui/object/Section.h"
+
+#include "game/Settings.h"
 
 #include "base/MTModule.h"
 
@@ -20,6 +21,8 @@ CLASS( Lobby, PopupMenu )
 	void Hide();
 	void Iterate();
 
+	::game::Settings& GetSettings();
+	
 protected:
 
 	bool OnCancel();
@@ -36,11 +39,10 @@ protected:
 	
 	PlayersSection::players_t m_players = {};
 	
+	::game::Settings m_settings = {};
+	
 private:
 	void RefreshUI();
-	
-	::game::GlobalSettings m_settings_backup = {};
-	
 	
 };
 

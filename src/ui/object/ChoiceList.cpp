@@ -5,6 +5,10 @@ namespace object {
 
 ChoiceList::ChoiceList( const std::string& class_name ) : UIContainer( class_name ) {
 	SetEventContexts( EC_KEYBOARD );
+	
+	// TODO: move to styles
+	m_item_align.margin = 2;
+	m_item_align.height = 20;
 }
 
 void ChoiceList::SetImmediateMode( const bool immediate_mode ) {
@@ -56,13 +60,45 @@ void ChoiceList::Destroy() {
 	UIContainer::Destroy();
 }
 
+void ChoiceList::Align() {
+	UIContainer::Align();
+	
+	if ( !m_buttons.empty() ) {
+		size_t value = 0;
+		for ( auto& choice : m_choices ) {
+			auto* button = m_buttons.at( choice );
+			button->SetHeight( m_item_align.height );
+			button->SetTop( m_item_align.margin + ( m_item_align.height + m_item_align.margin ) * (value) );
+			value++;
+		}
+	}
+}
+
 /*void ChoiceList::OnChange( UIEventHandler::handler_function_t func ) {
 	On( UIEvent::EV_CHANGE, func );
 }*/
 
+
+void ChoiceList::SetItemMargin( const coord_t item_margin ) {
+	m_item_align.margin = item_margin;
+	Realign();
+}
+
+void ChoiceList::SetItemHeight( const coord_t item_height ) {
+	m_item_align.height = item_height;
+	Realign();
+}
+
 void ChoiceList::ApplyStyle() {
 	UIContainer::ApplyStyle();
 	
+	if ( Has( Style::A_ITEM_MARGIN ) ) {
+		SetItemMargin( Get( Style::A_ITEM_MARGIN ) );
+	}
+	
+	if ( Has( Style::A_ITEM_HEIGHT ) ) {
+		SetItemHeight( Get( Style::A_ITEM_HEIGHT ) );
+	}
 }
 
 void ChoiceList::UpdateButtons() {
@@ -79,8 +115,6 @@ void ChoiceList::UpdateButtons() {
 				button->SetTextAlign( ALIGN_LEFT | ALIGN_VCENTER );
 				button->SetLeft( 3 );
 				button->SetRight( 3 );
-				button->SetHeight( 20 );
-				button->SetTop( 2 + ( button->GetHeight() + 2 ) * (value) );
 				button->ForwardStyleAttributesV( m_forwarded_style_attributes );
 				button->On( UIEvent::EV_BUTTON_CLICK, EH( this, button ) {
 					if ( !button->HasStyleModifier( Style::M_SELECTED ) ) {
@@ -92,7 +126,9 @@ void ChoiceList::UpdateButtons() {
 					return true;
 				});
 				button->On( UIEvent::EV_BUTTON_DOUBLE_CLICK, EH( this ) {
-					SelectChoice();
+					if ( !m_immediate_mode ) {
+						SelectChoice();
+					}
 					return true;
 				});
 			AddChild( button );
@@ -100,6 +136,7 @@ void ChoiceList::UpdateButtons() {
 			m_buttons[ choice ] = button;
 			value++;
 		}
+		Realign();
 		if ( !m_immediate_mode ) {
 			SetValue( m_choices[ 0 ] ); // activate first by default
 		}

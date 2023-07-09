@@ -5,6 +5,7 @@
 #include "types/Serializable.h"
 
 #include "Faction.h"
+#include "DifficultyLevel.h"
 
 namespace game {
 namespace rules {
@@ -12,6 +13,7 @@ namespace rules {
 CLASS( Rules, types::Serializable )
 
 	std::map< size_t, Faction > m_factions;
+	std::map< size_t, DifficultyLevel > m_difficulty_levels;
 
 	void Initialize();
 

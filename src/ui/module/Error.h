@@ -17,7 +17,7 @@ CLASS( Error, Module )
 	Error( UI* ui );
 	~Error();
 	
-	void Show( const std::string& text, const ui_handler_t on_close );
+	void Show( const std::string& text, const ui_handler_t on_close = UH() {} );
 	void Hide();
 	
 	void SetText( const std::string& error_text );

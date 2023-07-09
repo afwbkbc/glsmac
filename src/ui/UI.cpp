@@ -180,7 +180,7 @@ void UI::TriggerGlobalEventHandlers( global_event_handler_order_t order, UIEvent
 		auto ghs2 = ghs1->second.find( event->m_type );
 		if ( ghs2 != ghs1->second.end() ) {
 			for ( auto& h : ghs2->second ) {
-				if ( h.first->Execute( &event->m_data ) ) {
+				if ( h.first->Execute( event->m_type, &event->m_data ) ) {
 					event->SetProcessed();
 					return;
 				}

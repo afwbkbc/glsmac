@@ -20,6 +20,8 @@ CLASS( Player, types::Serializable )
 	const bool IsInitialized() const;
 	const std::string& GetName() const;
 	
+	
+	
 	const types::Buffer Serialize() const;
 	void Unserialize( types::Buffer buf );
 	
