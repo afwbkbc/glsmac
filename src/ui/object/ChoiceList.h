@@ -22,8 +22,12 @@ CLASS( ChoiceList, UIContainer )
 
 	virtual void Create();
 	virtual void Destroy();
+	virtual void Align();
 	
 	//void OnChange( UIEventHandler::handler_function_t func );
+	
+	void SetItemMargin( const coord_t item_margin );
+	void SetItemHeight( const coord_t item_height );
 	
 protected:
 	virtual void ApplyStyle();
@@ -38,6 +42,11 @@ private:
 	void UpdateButtons();
 	
 	bool m_immediate_mode = true;
+	
+	struct {
+		coord_t margin = 0;
+		coord_t height = 0;
+	} m_item_align = {};
 	
 	choices_t m_choices = {};
 	const std::string m_empty_choice = "";
@@ -62,6 +71,7 @@ private:
 		Style::A_TEXT_ALIGN,
 		Style::A_BUTTON_CLICK_SOUND,
 		Style::A_BUTTON_MOVE_SOUND,
+		Style::A_BORDER_SIZE,
 	};
 	
 	void SelectChoice();

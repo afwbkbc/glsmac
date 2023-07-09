@@ -83,7 +83,7 @@ CLASS( GlobalSettings, Serializable )
 	};
 	game_rules_type_t game_rules_type = GR_STANDARD;
 	
-	rules::Default game_rules;
+	rules::Default game_rules; // TODO: custom rules
 	
 	enum network_type_t {
 		NT_NONE,

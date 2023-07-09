@@ -239,7 +239,55 @@ void Popup::AddStyles() {
 		s->SetSound( Style::A_BUTTON_CLICK_SOUND, "ok.wav" );
 		s->Set( Style::A_SOUND_VOLUME, 0.5 );
 	});
+
+	AddStyle( "PopupDropdown", {
+		"PopupFrame"
+	}, SH() {
+		s->Set( Style::A_HEIGHT, 24 );
+		s->SetFont( Style::A_FONT, "arialnb.ttf", 18 );
+		s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 255, 255, 255 ) );
+		s->Set( Style::A_TEXT_ALIGN, UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
+		s->Set( Style::A_TEXT_LEFT, 4 );
+		s->Set( Style::A_PADDING, 2 );
+
+	});
 	
+	AddStyle( "PopupDropdownOpenClose", SH() {
+		s->Set( Style::A_WIDTH, 7 );
+		s->Set( Style::A_HEIGHT, 13 );
+		s->Set( Style::A_ALIGN, Style::A_RIGHT );
+		s->Set( Style::A_TOP, 3 );
+		s->Set( Style::A_RIGHT, 3 );
+		
+		if ( s->Is( Style::M_ACTIVE ) ) {
+			s->SetTexture( Style::A_TEXTURE, "interface.pcx", 550, 537, 556, 549 );
+		}
+		else if ( s->Is( Style::M_HOVER ) ) {
+			s->SetTexture( Style::A_TEXTURE, "interface.pcx", 542, 537, 548, 549 );
+		}
+		else {
+			s->SetTexture( Style::A_TEXTURE, "interface.pcx", 534, 537, 540, 549 );
+		}
+	});
+	
+	AddStyle( "PopupDropdownChoices", SH() {
+		
+		s->Set( Style::A_ITEM_MARGIN, 0 );
+		s->Set( Style::A_ITEM_HEIGHT, 19 );
+		s->Set( Style::A_BORDER_SIZE, 0 );
+
+		s->SetFont( Style::A_FONT, "arialnb.ttf", 17 );
+		s->Set( Style::A_TEXT_ALIGN, UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
+		
+		if ( s->Is( Style::M_HOVER ) ) {
+			s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 53, 61, 115 ) );
+			s->SetTexture( Style::A_TEXTURE_BACK, "interface.pcx", 68, 169, 134, 188 );
+		}
+		else {
+			s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 176, 212, 235 ) );
+			s->SetTexture( Style::A_TEXTURE_BACK, "interface.pcx", 68, 127, 134, 146 );
+		}
+	});
 }
 
 }
