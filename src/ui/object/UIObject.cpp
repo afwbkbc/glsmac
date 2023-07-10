@@ -726,13 +726,13 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 		switch ( event->m_type ) {
 			case UIEvent::EV_MOUSE_MOVE: {
 				if ( HasEventContext( EC_MOUSEMOVE ) ) {
-					if ( IsPointInside( event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y ) ) {
+					if (
+						!event->IsMouseOverHappened() &&
+						IsPointInside( event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y )
+					) {
+						event->SetMouseOverHappened();
 						is_processed = Trigger( event->m_type, &event->m_data );
-						if (
-							!is_processed &&
-							!event->IsMouseOverHappened()
-						) {
-							event->SetMouseOverHappened();
+						if ( !is_processed ) {
 							if ( !( m_state & STATE_MOUSEOVER ) ) {
 								m_state |= STATE_MOUSEOVER;
 								AddStyleModifier( Style::M_HOVER );
