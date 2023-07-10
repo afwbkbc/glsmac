@@ -177,17 +177,21 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 	
 	bool is_processed = false;
 	if ( event->m_flags & UIEvent::EF_MOUSE ) {
-		for ( auto& c : m_child_objects ) {
+		// process in reverse order because later children overlap earlier ones
+		for ( auto c = m_child_objects.rbegin() ; c != m_child_objects.rend() ; c++ ) {
 			if (
 				( event->m_type == UIEvent::EV_MOUSE_MOVE ) || // mousemove needs to be sent to all objects for mouseout events to work
 				( // other events - only until handled and only to those actually under mouse pointer
 					!is_processed &&
-					c->IsPointInside( event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y )
+					(*c)->IsPointInside( event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y )
 				)
 			) {
 				NEWV( child_event, UIEvent, event );
-				c->ProcessEvent( child_event );
+				(*c)->ProcessEvent( child_event );
 				is_processed = child_event->IsProcessed();
+				if ( child_event->IsMouseOverHappened() ) {
+					event->SetMouseOverHappened(); // prevent duplicate mouseovers
+				}
 				DELETE( child_event );
 			}
 		}

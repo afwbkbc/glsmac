@@ -9,6 +9,7 @@ UIEvent::UIEvent( const UIEvent* other )
 	, m_flags( other->m_flags )
 	, m_data( other->m_data )
 	, m_is_processed( false )
+	, m_is_mouseover_happened( other->m_is_mouseover_happened )
 {
 	ASSERT( !other->IsProcessed(), "copying from processed event" );
 }
@@ -27,6 +28,14 @@ void UIEvent::SetProcessed() {
 
 const bool UIEvent::IsProcessed() const {
 	return m_is_processed;
+}
+
+void UIEvent::SetMouseOverHappened() {
+	m_is_mouseover_happened = true;
+}
+
+const bool UIEvent::IsMouseOverHappened() {
+	return m_is_mouseover_happened;
 }
 
 }

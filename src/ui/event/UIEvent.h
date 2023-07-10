@@ -106,6 +106,10 @@ CLASS( UIEvent, base::Base )
 	void SetProcessed();
 	const bool IsProcessed() const;
 	
+	// needed to avoid mouseover duplications on objects underneath front one
+	void SetMouseOverHappened();
+	const bool IsMouseOverHappened();
+	
 	// copy from other event
 	UIEvent( const UIEvent* other );
 	
@@ -115,6 +119,7 @@ protected:
 	
 private:
 	bool m_is_processed = false;
+	bool m_is_mouseover_happened = false;
 	
 };
 
