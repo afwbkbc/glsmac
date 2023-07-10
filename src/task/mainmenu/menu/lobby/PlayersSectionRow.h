@@ -15,14 +15,17 @@ class PlayersSection;
 	
 CLASS( PlayersSectionRow, UIContainer )
 
-	PlayersSectionRow( PlayersSection* parent, const ::game::Player& player, const std::string& class_name = "" );
+	PlayersSectionRow( PlayersSection* parent, const size_t cid, const ::game::Player& player, const std::string& class_name = "" );
 
 	void Create();
 	void Destroy();
 
+	void Update( const ::game::Player& player );
+	
 private:
 	PlayersSection* m_parent;
-	const ::game::Player m_player;
+	const size_t m_cid;
+	::game::Player m_player;
 
 	struct {
 		Dropdown* actions;

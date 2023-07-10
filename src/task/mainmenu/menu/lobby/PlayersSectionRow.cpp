@@ -6,9 +6,10 @@ namespace task {
 namespace mainmenu {
 namespace lobby {
 
-PlayersSectionRow::PlayersSectionRow( PlayersSection* parent, const ::game::Player& player, const std::string& class_name )
+PlayersSectionRow::PlayersSectionRow( PlayersSection* parent, const size_t cid, const ::game::Player& player, const std::string& class_name )
 	: UIContainer( class_name )
 	, m_parent( parent )
+	, m_cid( cid )
 	, m_player( player )
 {
 	//
@@ -19,14 +20,13 @@ void PlayersSectionRow::Create() {
 	
 	NEW( m_elements.actions, Dropdown, "PopupDropdown" );
 		m_elements.actions->SetMode( Dropdown::DM_MENU );
-		m_elements.actions->SetValue( m_player.GetName() );
-		m_elements.actions->SetChoices({
+		m_elements.actions->SetChoicesV({
 			"Customize faction",
 		});
 		m_elements.actions->SetLeft( 36 );
 		m_elements.actions->SetWidth( 178 );
 		m_elements.actions->On( UIEvent::EV_CHANGE, EH( this ) {
-			const auto& value = *(data->value.text.ptr);
+			const auto& value = *(data->value.change.text);
 			if ( value == "Customize faction" ) {
 				g_engine->GetUI()->GetError()->Show( "This feature is not available yet." );
 			}
@@ -38,27 +38,28 @@ void PlayersSectionRow::Create() {
 	AddChild( m_elements.actions );
 	
 	NEW( m_elements.faction, Dropdown, "PopupDropdown" );
-		m_elements.faction->SetChoices( m_parent->GetFactionChoices() );
-		m_elements.faction->SetValue( m_parent->GetFactionChoices().front() );
+		m_elements.faction->SetChoicesV( m_parent->GetFactionChoices() );
 		m_elements.faction->SetLeft( 218 );
 		m_elements.faction->SetWidth( 140 );
 		m_elements.faction->On( UIEvent::EV_CHANGE, EH( this ) {
-			Log( "SELECTED FACTION: " + *(data->value.text.ptr) );
+			Log( "SELECTED FACTION: " + *(data->value.change.text) + " (" + std::to_string( data->value.change.id ) + ")" );
+			
 			return true;
 		});
 	AddChild( m_elements.faction );
 	
 	NEW( m_elements.difficulty_level, Dropdown, "PopupDropdown" );
-		m_elements.difficulty_level->SetChoices( m_parent->GetDifficultyLevelChoices() );
+		m_elements.difficulty_level->SetChoicesV( m_parent->GetDifficultyLevelChoices() );
 		m_elements.difficulty_level->SetValue( m_parent->GetDifficultyLevelChoices().back() );
 		m_elements.difficulty_level->SetLeft( 360 );
 		m_elements.difficulty_level->SetWidth( 118 );
 		m_elements.difficulty_level->On( UIEvent::EV_CHANGE, EH( this ) {
-			Log( "SELECTED DIFFICULTY LEVEL: " + *(data->value.text.ptr) );
+			Log( "SELECTED DIFFICULTY LEVEL: " + *(data->value.change.text) + " (" + std::to_string( data->value.change.id ) + ")" );
 			return true;
 		});
 	AddChild( m_elements.difficulty_level );
 	
+	Update( m_player );
 }
 
 void PlayersSectionRow::Destroy() {
@@ -68,6 +69,16 @@ void PlayersSectionRow::Destroy() {
 	RemoveChild( m_elements.difficulty_level );
 	
 	UIContainer::Destroy();
+}
+
+void PlayersSectionRow::Update( const ::game::Player& player ) {
+	m_player = player;
+	if ( m_elements.actions ) {
+		m_elements.actions->SetValue( m_player.GetName() );
+	}
+	if ( m_elements.faction ) {
+		m_elements.faction->SetValue( m_player.GetFaction().m_name );
+	}
 }
 
 }

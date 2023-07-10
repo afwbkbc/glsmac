@@ -11,6 +11,11 @@ void Default::InitRules() {
 		
 		// SMAC
 		
+		{ 0, {
+			"Random",
+			Color::FromRGB( 255, 255, 255 )
+		} },
+		
 		{ 1, {
 			"Gaians",
 			Color::FromRGB( 16, 228, 0 )

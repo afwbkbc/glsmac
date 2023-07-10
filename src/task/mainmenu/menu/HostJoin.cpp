@@ -27,7 +27,7 @@ void HostJoin::Show() {
 	NEW( m_choices, ChoiceList, "PopupButtonList" );
 		m_choices->SetImmediateMode( false );
 		m_choices->SetMargin( 3 );
-		m_choices->SetChoices({
+		m_choices->SetChoicesV({
 			"Host new game",
 			"Join existing game",
 		});
@@ -47,7 +47,7 @@ void HostJoin::Hide() {
 }
 
 void HostJoin::OnNext() {
-	const auto value = m_choices->GetValue();
+	const auto value = m_choices->GetValueString();
 	MenuObject* menu = nullptr;
 	if ( value == "Host new game" ) {
 		m_mainmenu->m_settings.local.network_role = game::LocalSettings::NR_SERVER;
@@ -62,11 +62,11 @@ void HostJoin::OnNext() {
 }
 
 const std::string HostJoin::GetChoice() const {
-	return m_choices->GetValue();
+	return m_choices->GetValueString();
 }
 
 void HostJoin::SetChoice( const std::string& choice ) {
-	m_choices->SetValue( choice );
+	m_choices->SetValueString( choice );
 }
 
 

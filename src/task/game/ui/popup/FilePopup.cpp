@@ -43,7 +43,7 @@ void FilePopup::Create() {
 		m_file_browser->SetFileExtension( m_file_extension );
 		m_file_browser->SetDefaultFileName( m_default_filename );
 		m_file_browser->On( UIEvent::EV_SELECT, EH( this ) {
-			const auto& path = *data->value.text.ptr;
+			const auto& path = *data->value.change.text;
 			switch ( m_file_mode ) {
 				case FM_READ: {
 					if ( !util::FS::FileExists( path ) ) {

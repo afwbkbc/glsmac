@@ -23,6 +23,8 @@ CLASS( Lobby, PopupMenu )
 
 	::game::Settings& GetSettings();
 	
+	void UpdatePlayer( const size_t cid, const ::game::Player& player );
+	
 protected:
 
 	bool OnCancel();

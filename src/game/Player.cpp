@@ -8,9 +8,10 @@ Player::Player() {
 	//
 }
 
-Player::Player( const std::string& name, const role_t role )
+Player::Player( const std::string& name, const role_t role, const rules::Faction& faction )
 	: m_name( name )
 	, m_role( role )
+	, m_faction( faction )
 {
 	//
 }
@@ -21,6 +22,15 @@ const bool Player::IsInitialized() const {
 
 const std::string& Player::GetName() const {
 	return m_name;
+}
+
+void Player::SetFaction( const rules::Faction& faction ) {
+	// TODO: validate?
+	m_faction = faction;
+}
+
+const rules::Faction& Player::GetFaction() const {
+	return m_faction;
 }
 
 const Buffer Player::Serialize() const {

@@ -28,7 +28,7 @@ void PleaseDontGo::Create() {
 		m_choices->SetZIndex( 0.6f ); // TODO: fix z index bugs
 		m_choices->SetTop( 164 );
 		m_choices->SetMargin( 3 );
-		m_choices->SetChoices({
+		m_choices->SetChoicesV({
 			"Oops, no, wait!",
 			"Yes, that's an order mister!"
 		});
@@ -53,7 +53,7 @@ void PleaseDontGo::Destroy() {
 }
 
 void PleaseDontGo::SelectChoice() {
-	if ( m_choices->GetValue() == "Yes, that's an order mister!" ) {
+	if ( m_choices->GetValueString() == "Yes, that's an order mister!" ) {
 		m_on_order();
 		CloseNow();
 	}
