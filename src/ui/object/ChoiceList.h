@@ -1,5 +1,8 @@
 #pragma once
 
+#include <map>
+#include <vector>
+
 /* List with multiple selectable choices */
 
 #include "UIContainer.h"
@@ -10,15 +13,21 @@ namespace object {
 
 CLASS( ChoiceList, UIContainer )
 
-	typedef std::vector< std::string > choices_t;
+	typedef size_t value_t;
+	typedef std::vector< std::pair< value_t, std::string > > choices_t;
 	
 	ChoiceList( const std::string& class_name = "" );
 
 	void SetImmediateMode( const bool immediate_mode );
 	
 	void SetChoices( const choices_t& choices );
-	void SetValue( const std::string& value );
-	const std::string& GetValue() const;
+	void SetValue( const value_t value );
+	const value_t GetValue() const;
+	
+	// TODO: refactor and remove
+	void SetValueString( const std::string& choice );
+	const std::string& GetValueString() const;
+	void SetChoicesV( const std::vector< std::string >& labels );
 
 	virtual void Create();
 	virtual void Destroy();
@@ -48,10 +57,12 @@ private:
 		coord_t height = 0;
 	} m_item_align = {};
 	
-	choices_t m_choices = {};
+	std::vector< value_t > m_values = {};
+	std::map< value_t, std::string > m_labels = {};
 	const std::string m_empty_choice = "";
-	std::unordered_map< std::string, Button* > m_buttons = {};
+	std::unordered_map< value_t, Button* > m_buttons = {};
 	ssize_t m_value = -1;
+	size_t m_value_index = 0;
 	std::unordered_map< Button*, size_t > m_button_values = {};
 	
 	void SetActiveButton( Button* button );

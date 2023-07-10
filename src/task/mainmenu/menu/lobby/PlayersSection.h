@@ -27,6 +27,7 @@ CLASS( PlayersSection, Section )
 	typedef std::map< size_t, ::game::Player > players_t;
 	void ClearPlayers();
 	void SetPlayers( const players_t& players );
+	void UpdatePlayer( const size_t cid, const ::game::Player& player );
 	
 	Lobby* GetLobby();
 	const std::vector< std::string >& GetFactionChoices();

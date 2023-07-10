@@ -19,32 +19,65 @@ void ChoiceList::SetImmediateMode( const bool immediate_mode ) {
 }
 
 void ChoiceList::SetChoices( const choices_t& choices ) {
-	ASSERT( m_choices.empty(), "choices already set" );
+	ASSERT( m_values.empty(), "choices already set" );
 	
-	m_choices = choices;
+	m_values.clear();
+	m_labels.clear();
+	for ( auto& choice : choices ) {
+		m_values.push_back( choice.first );
+		m_labels[ choice.first ] = choice.second;
+	}
 	
 	if ( m_created ) {
 		UpdateButtons();
 	}
 }
 
-void ChoiceList::SetValue( const std::string& value ) {
+void ChoiceList::SetValue( const value_t value ) {
 	auto it = m_buttons.find( value );
 	ASSERT( it != m_buttons.end(), "value does not exist in choices" );
 	SetActiveButton( it->second );
+	const auto& value_index_it = std::find( m_values.begin(), m_values.end(), value );
+	ASSERT( value_index_it != m_values.end(), "value does not exist" );
+	m_value_index = value_index_it - m_values.begin();
 }
 
-const std::string& ChoiceList::GetValue() const {
-	ASSERT( !m_choices.empty(), "choices are empty" );
-	ASSERT( m_value < m_choices.size(), "choices value overflow" );
-	ASSERT( m_value >= 0, "choices value not set" );
-	return m_choices[ m_value ];
+const ChoiceList::value_t ChoiceList::GetValue() const {
+	ASSERT( !m_values.empty(), "choices are empty" );
+	ASSERT( m_labels.find( m_value ) != m_labels.end(), "choices value not found" );
+	return m_value;
+}
+
+void ChoiceList::SetValueString( const std::string& choice ) {
+	// ugh
+	bool found = false;
+	for ( const auto& label : m_labels ) {
+		if ( label.second == choice ) {
+			SetValue( label.first );
+			found = true;
+			break;
+		}
+	}
+	ASSERT( found, "choice '" + choice + "' not found" );
+}
+
+const std::string& ChoiceList::GetValueString() const {
+	return m_labels.at( GetValue() );
+}
+
+void ChoiceList::SetChoicesV( const std::vector< std::string >& labels ) {
+	choices_t choices = {};
+	size_t index = 1;
+	for ( auto& label : labels ) {
+		choices.push_back({ index++, label });
+	}
+	SetChoices( choices );
 }
 
 void ChoiceList::Create() {
 	UIContainer::Create();
 	
-	if ( m_buttons.empty() && !m_choices.empty() ) {
+	if ( m_buttons.empty() && !m_values.empty() ) {
 		UpdateButtons();
 	}
 	
@@ -65,7 +98,7 @@ void ChoiceList::Align() {
 	
 	if ( !m_buttons.empty() ) {
 		size_t value = 0;
-		for ( auto& choice : m_choices ) {
+		for ( auto& choice : m_values ) {
 			auto* button = m_buttons.at( choice );
 			button->SetHeight( m_item_align.height );
 			button->SetTop( m_item_align.margin - 1 + ( m_item_align.height + m_item_align.margin - 1 ) * (value) );
@@ -107,16 +140,18 @@ void ChoiceList::UpdateButtons() {
 			RemoveChild( button.second );
 		}
 		m_buttons.clear();
-		size_t value = 0;
-		for ( auto& choice : m_choices ) {
+		size_t value_index = 0;
+		for ( auto& value : m_values ) {
+			size_t value_index_local = value_index;
 			NEWV( button, Button );
-				button->SetLabel( choice );
+				button->SetLabel( m_labels.at( value ) );
 				button->SetAlign( ALIGN_TOP );
 				button->SetTextAlign( ALIGN_LEFT | ALIGN_VCENTER );
 				button->SetLeft( 3 );
 				button->SetRight( 3 );
 				button->ForwardStyleAttributesV( m_forwarded_style_attributes );
-				button->On( UIEvent::EV_BUTTON_CLICK, EH( this, button ) {
+				button->On( UIEvent::EV_BUTTON_CLICK, EH( this, button, value_index_local ) {
+					m_value_index = value_index_local;
 					if ( !button->HasStyleModifier( Style::M_SELECTED ) ) {
 						SetActiveButton( button );
 					}
@@ -133,12 +168,13 @@ void ChoiceList::UpdateButtons() {
 				});
 			AddChild( button );
 			m_button_values[ button ] = value;
-			m_buttons[ choice ] = button;
-			value++;
+			m_buttons[ value ] = button;
+			value_index++;
 		}
 		Realign();
 		if ( !m_immediate_mode ) {
-			SetValue( m_choices[ 0 ] ); // activate first by default
+			// activate first by default
+			SetValue( m_values[ 0 ] );
 		}
 	}
 }
@@ -146,21 +182,17 @@ void ChoiceList::UpdateButtons() {
 bool ChoiceList::OnKeyDown( const UIEvent::event_data_t* data ) {
 	switch ( data->key.code ) {
 		case UIEvent::K_DOWN: {
-			if ( m_value < m_choices.size() - 2 ) {
-				SetValue( m_choices[ m_value + 1 ] );
+			if ( m_value_index < m_values.size() - 1 ) {
+				m_value_index++;
 			}
-			else {
-				SetValue( m_choices.back() );
-			}
+			SetValue( m_values[ m_value_index ] );
 			break;
 		}
 		case UIEvent::K_UP: {
-			if ( m_value > 0 ) {
-				SetValue( m_choices[ m_value - 1 ] );
+			if ( m_value_index > 0 ) {
+				m_value_index--;
 			}
-			else {
-				SetValue( m_choices[ 0 ] );
-			}
+			SetValue( m_values[ m_value_index ] );
 			break;
 		}
 		case UIEvent::K_ENTER: {
@@ -175,12 +207,10 @@ bool ChoiceList::OnKeyDown( const UIEvent::event_data_t* data ) {
 }
 
 bool ChoiceList::OnKeyUp( const UIEvent::event_data_t* data ) {
-	//Log( "KEY UP" );
 	return true;
 }
 
 bool ChoiceList::OnKeyPress( const UIEvent::event_data_t* data ) {
-	//Log( "KEY PRESS" );
 	return true;
 }
 
@@ -195,14 +225,15 @@ void ChoiceList::SetActiveButton( Button* button ) {
 	if ( !button->HasStyleModifier( Style::M_SELECTED ) ) {
 		button->AddStyleModifier( Style::M_SELECTED );
 	}
-	ASSERT( it->second < m_choices.size(), "button value overflow" );
+	ASSERT( m_labels.find( it->second ) != m_labels.end(), "unknown button value" );
 	m_value = it->second;
 }
 
 void ChoiceList::SelectChoice() {
 	if ( m_value >= 0 ) {
 		UIEvent::event_data_t d = {};
-		d.value.text.ptr = &GetValue();
+		d.value.change.id = m_value;
+		d.value.change.text = &GetValueString();
 		Trigger( UIEvent::EV_SELECT, &d );
 	}
 }

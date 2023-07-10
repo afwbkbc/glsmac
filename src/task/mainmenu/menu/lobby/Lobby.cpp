@@ -72,11 +72,12 @@ void Lobby::Show() {
 		m_game_settings_section->SetHeight( 210 );
 	m_body->AddChild( m_game_settings_section );
 	
-	if ( m_mainmenu->m_settings.local.network_role == ::game::LocalSettings::NR_SERVER ) {
+	if ( m_settings.local.network_role == ::game::LocalSettings::NR_SERVER ) {
 		m_players = {
 			{ 0, ::game::Player{
-				m_mainmenu->m_settings.local.player_name,
-				::game::Player::PR_HOST
+				m_settings.local.player_name,
+				::game::Player::PR_HOST,
+				m_settings.global.game_rules.m_factions[ 0 ]
 			}}
 		};
 	}
@@ -224,6 +225,7 @@ void Lobby::Iterate() {
 													m_players[ event.cid ] = ::game::Player{
 														packet.data.str,
 														::game::Player::PR_PLAYER,
+														m_settings.global.game_rules.m_factions[ 0 ]
 													};
 													
 													Log( "Sending global settings to " + std::to_string( event.cid ) );
@@ -262,6 +264,12 @@ void Lobby::Iterate() {
 
 ::game::Settings& Lobby::GetSettings() {
 	return m_settings;
+}
+
+void Lobby::UpdatePlayer( const size_t cid, const ::game::Player& player ) {
+	ASSERT( m_players.find( cid ) != m_players.end(), "player to update not found" );
+	m_players[ cid ] = player;
+	m_players_section->UpdatePlayer( cid, player );
 }
 
 bool Lobby::OnCancel() {

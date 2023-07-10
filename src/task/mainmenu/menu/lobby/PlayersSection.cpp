@@ -36,15 +36,19 @@ void PlayersSection::SetPlayers( const players_t& players ) {
 	ClearPlayers();
 	size_t top = 0;
 	for ( auto& player : players ) {
-		
-		NEWV( player_row, PlayersSectionRow, this, player.second );
+		NEWV( player_row, PlayersSectionRow, this, player.first, player.second );
 			player_row->SetHeight( 20 );
 			player_row->SetTop( top + 1 );
 		AddChild( player_row );
 		m_player_rows[ player.first ] = player_row;
 		
+		
 		top += 22;
 	}
+}
+
+void PlayersSection::UpdatePlayer( const size_t cid, const ::game::Player& player ) {
+	m_player_rows.at( cid )->Update( player );
 }
 
 Lobby* PlayersSection::GetLobby() {
@@ -62,12 +66,12 @@ const std::vector< std::string >& PlayersSection::GetDifficultyLevelChoices() {
 void PlayersSection::ApplyRules() {
 	const auto& game_rules = m_lobby->GetSettings().global.game_rules;
 	
-	m_choices.factions = { "Random" };
+	m_choices.factions.clear();
 	for ( auto& faction : game_rules.m_factions ) {
 		m_choices.factions.push_back( faction.second.m_name );
 	}
 	
-	m_choices.difficulty_levels = {};
+	m_choices.difficulty_levels.clear();
 	for ( auto& difficulty : game_rules.m_difficulty_levels ) {
 		m_choices.difficulty_levels.push_back( difficulty.second.m_name );
 	}

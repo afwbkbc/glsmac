@@ -39,7 +39,7 @@ void FileBrowser::Create() {
 	NEW( m_file_list, TextView, "PopupFileList" );
 		m_file_list->SetType( TextView::TT_EXTENDED );
 		m_file_list->On( UIEvent::EV_CHANGE, EH( this ) {
-			const std::string v = data->value.text.ptr ? *data->value.text.ptr : "";
+			const std::string v = data->value.change.text ? *data->value.change.text : "";
 			m_input->SetHint( v );
 			if ( !m_is_typing ) {
 				m_input->SetValue( v != util::FS::GetUpDirString() ? v : "" );
@@ -47,8 +47,8 @@ void FileBrowser::Create() {
 			return true;
 		});
 		m_file_list->On( UIEvent::EV_SELECT, EH( this ) {
-			ASSERT( data->value.text.ptr, "null text ptr in select event data" );
-			SelectItem( *data->value.text.ptr );
+			ASSERT( data->value.change.text, "null text ptr in select event data" );
+			SelectItem( *data->value.change.text );
 			return true;
 		});
 	AddChild( m_file_list );
@@ -57,9 +57,9 @@ void FileBrowser::Create() {
 		m_input->SetZIndex( 0.8f ); // TODO: fix z index bugs
 		m_input->SetMaxLength( 128 ); // TODO: make scrollable horizontally when overflowed
 		m_input->On( UIEvent::EV_CHANGE, EH( this ) {
-			ASSERT( data->value.text.ptr, "input changed but test ptr is null" );
+			ASSERT( data->value.change.text, "input changed but test ptr is null" );
 			m_is_typing = true; // prevent input value change while typing
-			if ( m_file_list->SelectByMask( *data->value.text.ptr ) == m_input->GetValue().size() ) { // full match
+			if ( m_file_list->SelectByMask( *data->value.change.text ) == m_input->GetValue().size() ) { // full match
 				m_input->SetHint( m_file_list->GetSelectedText() );
 				m_input->SetValue( m_file_list->GetSelectedText().substr( 0, m_input->GetValue().size() ) ); // fix case
 			}
@@ -335,7 +335,7 @@ void FileBrowser::SelectItem( std::string item ) {
 			) {
 				//Log( "Selected file: " + path );
 				UIEvent::event_data_t data = {};
-				data.value.text.ptr = &path;
+				data.value.change.text = &path;
 				Trigger( UIEvent::EV_SELECT, &data );
 
 			}

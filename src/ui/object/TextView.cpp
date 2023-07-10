@@ -90,7 +90,7 @@ void TextView::Clear() {
 		if ( m_active_textline ) {
 			m_active_textline = nullptr;
 			UIEvent::event_data_t d = {};
-			d.value.text.ptr = nullptr;
+			d.value.change.text = nullptr;
 			Trigger( UIEvent::EV_CHANGE, &d );
 		}
 	}
@@ -300,7 +300,7 @@ void TextView::SelectItem( const index_t index ) {
 		ScrollToObjectMaybe( m_active_textline );
 		m_active_textline->AddStyleModifier( Style::M_SELECTED );
 		UIEvent::event_data_t d = {};
-		d.value.text.ptr = textline->GetTextPtr();
+		d.value.change.text = textline->GetTextPtr();
 		Trigger( UIEvent::EV_CHANGE, &d );
 	}
 }
@@ -337,7 +337,7 @@ void TextView::AddItem( const size_t index, const line_t& line ) {
 						}
 						if ( is_double_click ) {
 							UIEvent::event_data_t d = {};
-							d.value.text.ptr = textline->GetTextPtr();
+							d.value.change.text = textline->GetTextPtr();
 							Trigger( UIEvent::EV_SELECT, &d );
 						}
 						return true;
@@ -388,7 +388,7 @@ void TextView::RemoveItem( const size_t index ) {
 		m_current_index = -1;
 		m_active_textline = nullptr;
 		UIEvent::event_data_t d = {};
-		d.value.text.ptr = nullptr;
+		d.value.change.text = nullptr;
 		Trigger( UIEvent::EV_CHANGE, &d );
 	}
 	RemoveChild( item );

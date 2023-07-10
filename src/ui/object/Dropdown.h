@@ -24,6 +24,9 @@ CLASS( Dropdown, Panel )
 	void SetValue( const std::string& value );
 	void SetMode( const dropdown_mode_t mode );
 	
+	// TODO: refactor and remove
+	void SetChoicesV( const std::vector< std::string >& labels );
+	
 	void Create();
 	void Destroy();
 	void Align();

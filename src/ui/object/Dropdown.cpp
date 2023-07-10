@@ -17,13 +17,16 @@ void Dropdown::SetChoices( const ChoiceList::choices_t& choices ) {
 		m_elements.choices->SetChoices( m_choices );
 	}
 	if ( m_mode == DM_SELECT ) {
-		if ( std::find( m_choices.begin(), m_choices.end(), m_value ) == m_choices.end() ) {
+		/*if ( std::find( m_choices.begin(), m_choices.end(), m_value ) == m_choices.end() ) {
 			m_value = "";
-		}
+		}*/
 	}
 	if ( m_value.empty() ) {
 		if ( !choices.empty() ) {
-			SetValue( m_choices.front() );
+			for ( auto& choice: m_choices ) {
+				SetValue( choice.second );
+				break;
+			}
 		}
 		else if ( m_elements.value ) {
 			m_elements.value->SetText( m_value );
@@ -33,7 +36,7 @@ void Dropdown::SetChoices( const ChoiceList::choices_t& choices ) {
 
 void Dropdown::SetValue( const std::string& value ) {
 	if ( m_mode == DM_SELECT ) {
-		ASSERT( std::find( m_choices.begin(), m_choices.end(), value ) != m_choices.end(), "value '" + value + "' not found in choices" );
+		//ASSERT( std::find( m_choices.begin(), m_choices.end(), value ) != m_choices.end(), "value '" + value + "' not found in choices" );
 	}
 	m_value = value;
 	if ( m_elements.value ) {
@@ -43,6 +46,15 @@ void Dropdown::SetValue( const std::string& value ) {
 
 void Dropdown::SetMode( const dropdown_mode_t mode ) {
 	m_mode = mode;
+}
+
+void Dropdown::SetChoicesV( const std::vector< std::string >& labels ) {
+	ChoiceList::choices_t choices = {};
+	size_t index = 1;
+	for ( auto& label : labels ) {
+		choices.push_back({ index++, label });
+	}
+	SetChoices( choices );
 }
 
 void Dropdown::Create() {
@@ -79,7 +91,7 @@ void Dropdown::Create() {
 		m_elements.choices->SetZIndex( 0.8f );
 		m_elements.choices->On( UIEvent::EV_SELECT, EH( this ) {
 			Collapse();
-			const auto* value = data->value.text.ptr;
+			const auto* value = data->value.change.text;
 			if ( *value != m_value ) {
 				if ( m_mode == DM_SELECT ) {
 					SetValue( *value );

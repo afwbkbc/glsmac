@@ -116,7 +116,7 @@ void Input::UpdateValueLabel( const bool send_event ) {
 		m_value_label->SetText( m_value + m_cursor_blink_value );
 		if ( send_event ) {
 			UIEvent::event_data_t data = {};
-			data.value.text.ptr = &m_value;
+			data.value.change.text = &m_value;
 			Trigger( UIEvent::EV_CHANGE, &data );
 		}
 	}

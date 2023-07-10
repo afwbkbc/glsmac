@@ -6,6 +6,11 @@
 namespace task {
 namespace mainmenu {
 
+enum {
+	C_SIMPLE = 1,
+	C_HOTSEAT = 2,
+};
+
 Multiplayer::Multiplayer( MainMenu* mainmenu ) : PopupMenu( mainmenu, "MULTIPLAYER SETUP" ) {
 	SetWidth( 500 );
 	SetHeight( 150 );
@@ -23,8 +28,8 @@ void Multiplayer::Show() {
 		m_choices->SetImmediateMode( false );
 		m_choices->SetMargin( 3 );
 		m_choices->SetChoices({
-			"Simple Internet TCP/IP Connection",
-			"Hotseat/Play-by-Email",
+			{ C_SIMPLE, "Simple Internet TCP/IP Connection" },
+			{ C_HOTSEAT, "Hotseat/Play-by-Email" },
 		});
 		m_choices->On( UIEvent::EV_SELECT, EH( this ) {
 			OnNext();
@@ -42,7 +47,7 @@ void Multiplayer::Hide() {
 
 void Multiplayer::OnNext() {
 	const auto value = m_choices->GetValue();
-	if ( value == "Simple Internet TCP/IP Connection" ) {
+	if ( value == C_SIMPLE ) {
 		m_mainmenu->m_settings.global.network_type = game::GlobalSettings::NT_SIMPLETCP;
 		NEWV( menu, HostJoin, m_mainmenu );
 		NextMenu( menu );
@@ -53,11 +58,11 @@ void Multiplayer::OnNext() {
 }
 
 const std::string Multiplayer::GetChoice() const {
-	return m_choices->GetValue();
+	return m_choices->GetValueString();
 }
 
 void Multiplayer::SetChoice( const std::string& choice ) {
-	m_choices->SetValue( choice );
+	m_choices->SetValueString( choice );
 }
 
 }
