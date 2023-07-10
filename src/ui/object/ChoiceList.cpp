@@ -68,7 +68,7 @@ void ChoiceList::Align() {
 		for ( auto& choice : m_choices ) {
 			auto* button = m_buttons.at( choice );
 			button->SetHeight( m_item_align.height );
-			button->SetTop( m_item_align.margin + ( m_item_align.height + m_item_align.margin ) * (value) );
+			button->SetTop( m_item_align.margin - 1 + ( m_item_align.height + m_item_align.margin - 1 ) * (value) );
 			value++;
 		}
 	}

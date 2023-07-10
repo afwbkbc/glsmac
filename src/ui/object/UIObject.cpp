@@ -728,12 +728,18 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 				if ( HasEventContext( EC_MOUSEMOVE ) ) {
 					if ( IsPointInside( event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y ) ) {
 						is_processed = Trigger( event->m_type, &event->m_data );
-						if ( !is_processed && ( m_state & STATE_MOUSEOVER ) != STATE_MOUSEOVER ) {
-							m_state |= STATE_MOUSEOVER;
-							AddStyleModifier( Style::M_HOVER );
-							is_processed = Trigger( UIEvent::EV_MOUSE_OVER, &event->m_data );
-							if ( !is_processed ) {
-								is_processed = OnMouseOver( &event->m_data );
+						if (
+							!is_processed &&
+							!event->IsMouseOverHappened()
+						) {
+							event->SetMouseOverHappened();
+							if ( !( m_state & STATE_MOUSEOVER ) ) {
+								m_state |= STATE_MOUSEOVER;
+								AddStyleModifier( Style::M_HOVER );
+								is_processed = Trigger( UIEvent::EV_MOUSE_OVER, &event->m_data );
+								if ( !is_processed ) {
+									is_processed = OnMouseOver( &event->m_data );
+								}
 							}
 						}
 						else {
@@ -741,7 +747,7 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 						}
 					}
 					else {
-						if ( ( m_state & STATE_MOUSEOVER ) == STATE_MOUSEOVER ) {
+						if ( m_state & STATE_MOUSEOVER ) {
 							m_state &= ~STATE_MOUSEOVER;
 							RemoveStyleModifier( Style::M_HOVER );
 							is_processed = Trigger( UIEvent::EV_MOUSE_OUT, &event->m_data );
