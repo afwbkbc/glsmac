@@ -55,11 +55,11 @@ Lobby* PlayersSection::GetLobby() {
 	return m_lobby;
 }
 
-const std::vector< std::string >& PlayersSection::GetFactionChoices() {
+const ChoiceList::choices_t& PlayersSection::GetFactionChoices() {
 	return m_choices.factions;
 }
 
-const std::vector< std::string >& PlayersSection::GetDifficultyLevelChoices() {
+const ChoiceList::choices_t& PlayersSection::GetDifficultyLevelChoices() {
 	return m_choices.difficulty_levels;
 }
 
@@ -68,12 +68,12 @@ void PlayersSection::ApplyRules() {
 	
 	m_choices.factions.clear();
 	for ( auto& faction : game_rules.m_factions ) {
-		m_choices.factions.push_back( faction.second.m_name );
+		m_choices.factions.push_back({ faction.first, faction.second.m_name });
 	}
 	
 	m_choices.difficulty_levels.clear();
 	for ( auto& difficulty : game_rules.m_difficulty_levels ) {
-		m_choices.difficulty_levels.push_back( difficulty.second.m_name );
+		m_choices.difficulty_levels.push_back({ difficulty.first, difficulty.second.m_name });
 	}
 }
 
