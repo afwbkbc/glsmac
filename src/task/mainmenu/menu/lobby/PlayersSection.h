@@ -6,6 +6,7 @@
 
 #include "ui/object/Section.h"
 #include "ui/object/Label.h"
+#include "ui/object/ChoiceList.h"
 
 #include "game/rules/Rules.h"
 #include "game/Player.h"
@@ -30,8 +31,8 @@ CLASS( PlayersSection, Section )
 	void UpdatePlayer( const size_t cid, const ::game::Player& player );
 	
 	Lobby* GetLobby();
-	const std::vector< std::string >& GetFactionChoices();
-	const std::vector< std::string >& GetDifficultyLevelChoices();
+	const ChoiceList::choices_t& GetFactionChoices();
+	const ChoiceList::choices_t& GetDifficultyLevelChoices();
 	
 	void ApplyRules();
 	
@@ -42,8 +43,8 @@ private:
 
 	// some caches for player rows
 	struct {
-		std::vector< std::string > factions = {};
-		std::vector< std::string > difficulty_levels = {};
+		ChoiceList::choices_t factions = {};
+		ChoiceList::choices_t difficulty_levels = {};
 	} m_choices;
 
 };

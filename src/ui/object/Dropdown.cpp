@@ -57,6 +57,10 @@ void Dropdown::SetChoicesV( const std::vector< std::string >& labels ) {
 	SetChoices( choices );
 }
 
+void Dropdown::SetTextColor( const Color& color ) {
+	m_elements.value->SetTextColor( color );
+}
+
 void Dropdown::Create() {
 	Panel::Create();
 	

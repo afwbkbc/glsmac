@@ -26,11 +26,13 @@ CLASS( Dropdown, Panel )
 	
 	// TODO: refactor and remove
 	void SetChoicesV( const std::vector< std::string >& labels );
+
+	void SetTextColor( const Color& color );
 	
 	void Create();
 	void Destroy();
 	void Align();
-	
+		
 private:
 	
 	dropdown_mode_t m_mode = DM_SELECT;

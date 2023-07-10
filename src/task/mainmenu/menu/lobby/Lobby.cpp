@@ -267,9 +267,10 @@ void Lobby::Iterate() {
 }
 
 void Lobby::UpdatePlayer( const size_t cid, const ::game::Player& player ) {
+	Log( "Updating player (cid " + std::to_string( cid ) + " )" );
 	ASSERT( m_players.find( cid ) != m_players.end(), "player to update not found" );
 	m_players[ cid ] = player;
-	m_players_section->UpdatePlayer( cid, player );
+	m_players_section->UpdatePlayer( cid, player ); // TODO: broadcast
 }
 
 bool Lobby::OnCancel() {
