@@ -92,37 +92,25 @@ const MT_Response Network::ProcessRequest( const MT_Request& request, MT_CANCELA
 			break;
 		}
 		case OP_DISCONNECT: {
-			if ( m_current_connection_mode == CM_NONE ) {
-				return Success(); // already disconnected
+			if ( GetCurrentConnectionMode() != CM_NONE ) {
+				Event event;
+				event.type = Event::ET_DISCONNECT;
+				m_events_in.push_back( event );
+				ProcessEvents();
+				m_current_connection_mode = CM_NONE;
 			}
-			switch ( m_current_connection_mode ) {
-				case CM_SERVER: {
-					auto response = ListenStop();
-					if ( response.result == R_SUCCESS ) {
-						m_current_connection_mode = CM_NONE;
-					}
-					return response;
-				}
-				case CM_CLIENT: {
-					auto response = Disconnect();
-					if ( response.result == R_SUCCESS ) {
-						m_current_connection_mode = CM_NONE;
-					}
-					return response;
-				}
-				default: {
-					ASSERT( false, "invalid mode on disconnect" );
-				}
-			}
-			break;
+			return Success();
 		}
 		case OP_DISCONNECT_CLIENT: {
-			MT_Response response;
-			response.result = R_SUCCESS;
 			if ( m_current_connection_mode == CM_SERVER ) {
-				m_events_in.push_back( request.event );
+				Event event;
+				event.type = Event::ET_CLIENT_DISCONNECT;
+				event.cid = request.cid;
+				m_events_in.push_back( event );
+				ProcessEvents();
+				m_current_connection_mode = CM_NONE;
 			}
-			return response;
+			return Success();
 		}
 		case OP_GETEVENTS: {
 			MT_Response response;
@@ -162,8 +150,17 @@ events_t Network::GetEvents() {
 	return events;
 }
 
+const connection_mode_t Network::GetCurrentConnectionMode() const {
+	return m_current_connection_mode;
+}
+
 MT_Response Network::MT_GetResult( mt_id_t mt_id ) {
 	return MT_GetResponse( mt_id );
+}
+
+void Network::Iterate() {
+	MTModule::Iterate();
+	ProcessEvents();
 }
 
 const MT_Response Network::Error( const std::string& errmsg ) {

@@ -234,6 +234,10 @@ MT_Response SimpleTCP::DisconnectClient( const size_t cid ) {
 	return Error( "winsock not implemented yet" );
 #else
 
+	if ( GetCurrentConnectionMode() != CM_SERVER ) {
+		return Success();
+	}
+
 	auto it = m_server.client_sockets.find( cid );
 	if ( it != m_server.client_sockets.end() ) {
 		CloseSocket( it->second.fd, cid );
@@ -243,6 +247,69 @@ MT_Response SimpleTCP::DisconnectClient( const size_t cid ) {
 	}
 	return Success();
 #endif
+}
+
+void SimpleTCP::ProcessEvents() {
+	// process events
+	auto events = GetEvents();
+	for ( auto& event : events ) {
+		switch ( event.type ) {
+			case Event::ET_PACKET: {
+				Log( "Packet event ( cid = " + std::to_string( event.cid ) + " )" );
+				if ( event.cid ) { // presense of cid means we are server
+					m_tmp.tmpint = 0;
+					auto it = m_server.client_sockets.find( event.cid );
+					if ( it != m_server.client_sockets.end() ) { // if not found it may mean event is old so can be ignored
+						if ( !WriteToSocket( it->second.fd, event.data.packet_data ) ) {
+							CloseSocket( it->second.fd, it->first );
+							free( it->second.buffer.data1 );
+							free( it->second.buffer.data2 );
+							m_server.client_sockets.erase( it );
+						}
+					}
+				} else if ( m_client.socket.fd ) {
+					if ( !WriteToSocket( m_client.socket.fd, event.data.packet_data ) ) {
+						CloseSocket( m_client.socket.fd );
+						free( m_client.socket.buffer.data1 );
+						free( m_client.socket.buffer.data2 );
+						m_client.socket.fd = 0;
+					}
+				}
+				break;
+			}
+			case Event::ET_DISCONNECT: {
+				Log( "Disconnect event" );
+				switch ( GetCurrentConnectionMode() ) {
+					case CM_NONE: {
+						// not connected, nothing to do
+						break;
+					}
+					case CM_SERVER: {
+						auto response = ListenStop();
+						ASSERT( response.result == R_SUCCESS, "failed to stop listening" );
+						break;
+					}
+					case CM_CLIENT: {
+						auto response = Disconnect();
+						ASSERT( response.result == R_SUCCESS, "failed to disconnect" );
+						break;
+					}
+					default: {
+						ASSERT( false, "invalid mode on disconnect" );
+					}
+				}
+				break;
+			}
+			case Event::ET_CLIENT_DISCONNECT: {
+				Log( "Disconnect client event ( cid = " + std::to_string( event.cid ) + " )" );
+				ASSERT( DisconnectClient( event.cid ).result == R_SUCCESS, "failed to disconnect client" );
+				break;
+			}
+			default: {
+				// ignore for now
+			}
+		}
+	}
 }
 
 void SimpleTCP::Iterate() {
@@ -318,44 +385,6 @@ void SimpleTCP::Iterate() {
 		}
 	}
 	
-	// process events
-	auto events = GetEvents();
-	for ( auto& event : events ) {
-		switch ( event.type ) {
-			case Event::ET_PACKET: {
-				Log( "Packet event ( cid = " + std::to_string( event.cid ) + " )" );
-				if ( event.cid ) { // presense of cid means we are server
-					m_tmp.tmpint = 0;
-					auto it = m_server.client_sockets.find( event.cid );
-					if ( it != m_server.client_sockets.end() ) { // if not found it may mean event is old so can be ignored
-						if ( !WriteToSocket( it->second.fd, event.data.packet_data ) ) {
-							CloseSocket( it->second.fd, it->first );
-							free( it->second.buffer.data1 );
-							free( it->second.buffer.data2 );
-							m_server.client_sockets.erase( it );
-						}
-					}
-				}
-				else if ( m_client.socket.fd ) {
-					if ( !WriteToSocket( m_client.socket.fd, event.data.packet_data ) ) {
-						CloseSocket( m_client.socket.fd );
-						free( m_client.socket.buffer.data1 );
-						free( m_client.socket.buffer.data2 );
-						m_client.socket.fd = 0;
-					}
-				}
-				break;
-			}
-			case Event::ET_CLIENT_DISCONNECT: {
-				DisconnectClient( event.cid );
-				break;
-			}
-			default: {
-				// ignore for now
-			}
-		}
-	}
-	
 	// read from connection (client)
 	if ( m_client.socket.fd ) {
 		if ( !ReadFromSocket( m_client.socket ) ) {
@@ -388,10 +417,10 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket, const size_t cid )
 #else
 	// max allowed size to read
 	m_tmp.tmpint = ( BUFFER_SIZE - socket.buffer.len );
-	
-	// Log( "Reading up to " + to_string( m_tmp.tmpint ) + " bytes from " + to_string( socket.fd ) + " (buffer=" + to_string( (long int) socket.buffer.ptr ) + ")" );
+
+	//Log( "Reading up to " + std::to_string( m_tmp.tmpint ) + " bytes from " + std::to_string( socket.fd ) + " (buffer=" + std::to_string( (long int) socket.buffer.ptr ) + ", BUFFER_SIZE=" + std::to_string( BUFFER_SIZE ) + " buffer len = " + std::to_string( socket.buffer.len ) + ")" );
 	m_tmp.tmpint2 = recv( socket.fd, socket.buffer.ptr, m_tmp.tmpint, O_NONBLOCK );
-	
+
 	if ( m_tmp.tmpint2 < 0 ) {
 		if (errno == EAGAIN) {
 			// no pending data
@@ -404,7 +433,7 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket, const size_t cid )
 			return false;
 		}
 	}
-	
+
 	if ( m_tmp.tmpint2 == 0 ) {
 		// no pending data
 		if ( !MaybePing( socket, cid ) ) {
@@ -414,7 +443,7 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket, const size_t cid )
 	
 	if ( m_tmp.tmpint2 > 0 ) {
 		
-		//Log( "Read " + to_string( m_tmp.tmpint2 ) + " bytes into buffer " + to_string( (long int) socket.buffer.ptr ) + " (size=" + to_string( socket.buffer.len ) + ")" );
+		Log( "Read " + std::to_string( m_tmp.tmpint2 ) + " bytes into buffer " + std::to_string( (long int) socket.buffer.ptr ) + " (size=" + std::to_string( socket.buffer.len ) + ")" );
 		
 		socket.last_data_at = m_tmp.now;
 		socket.ping_needed = false;
@@ -442,11 +471,11 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket, const size_t cid )
 		m_tmp.tmpint2 = sizeof( m_tmp.tmpint ) + m_tmp.tmpint;
 		
 		if ( socket.buffer.len < m_tmp.tmpint2 ) {
-			//Log( "Buffer " + to_string( (long int) socket.buffer.data ) + " does not contain all data yet ( " + to_string( socket.buffer.len ) + " < " + to_string( m_tmp.tmpint2 ) + " )" );
+			//Log( "Buffer " + std::to_string( (long int) socket.buffer.data ) + " does not contain all data yet ( " + std::to_string( socket.buffer.len ) + " < " + std::to_string( m_tmp.tmpint2 ) + " )" );
 			return true;
 		}
 		else {
-			//Log( "Buffer " + to_string( (long int) socket.buffer.data ) + " contains enough data ( " + to_string( socket.buffer.len ) + " >= " + to_string( m_tmp.tmpint2 ) + " )" );
+			//Log( "Buffer " + std::to_string( (long int) socket.buffer.data ) + " contains enough data ( " + std::to_string( socket.buffer.len ) + " >= " + std::to_string( m_tmp.tmpint2 ) + " )" );
 		}
 		
 		//Log( "Processing buffer " + to_string( (long int) m_tmp.ptr ) + " ( size=" + to_string( m_tmp.tmpint2 ) + " )" );
@@ -461,7 +490,7 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket, const size_t cid )
 
 		{
 		
-			//Log( "Read packet (" + to_string( m_tmp.tmpint ) + " bytes)" );
+			//Log( "Read packet (" + std::to_string( m_tmp.tmpint ) + " bytes)" );
 			m_tmp.event.Clear();
 			m_tmp.event.type = Event::ET_PACKET;
 			m_tmp.event.data.packet_data = std::string( m_tmp.ptr, m_tmp.tmpint );
@@ -488,7 +517,7 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket, const size_t cid )
 			
 		}
 		
-		//Log( "Processed " + to_string( m_tmp.tmpint2 ) + " bytes" );
+		Log( "Processed " + std::to_string( m_tmp.tmpint2 ) + " bytes" );
 		
 		if ( m_tmp.tmpint2 > 0 ) {
 			ASSERT( socket.buffer.len >= m_tmp.tmpint2, "processed more than total" );
@@ -519,6 +548,7 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket, const size_t cid )
 }
 
 bool SimpleTCP::WriteToSocket( int fd, const std::string& data ) {
+	ASSERT( data.size() <= BUFFER_SIZE, "packet size overflow ( " + std::to_string( data.size() ) + " > " + std::to_string( BUFFER_SIZE ) + "), consider increasing BUFFER_SIZE" );
 #ifdef _WIN32
 	return false;
 #else

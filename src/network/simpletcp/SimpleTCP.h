@@ -23,7 +23,7 @@
 using namespace util;
 
 // should be sufficient to fit any packet
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 65536
 
 // seconds
 #define SEND_PING_AFTER 12
@@ -41,7 +41,7 @@ CLASS( SimpleTCP, Network )
 	void Start();
 	void Stop();
 	void Iterate();
-	
+
 protected:
 
 	MT_Response ListenStart();
@@ -49,7 +49,8 @@ protected:
 	MT_Response Connect( const std::string& remote_address );
 	MT_Response Disconnect();
 	MT_Response DisconnectClient( const size_t cid );
-	
+	void ProcessEvents();
+
 private:
 
 	const int32_t ptype_ping = Packet::PT_PING;
