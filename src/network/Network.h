@@ -64,13 +64,16 @@ CLASS( Network, MTModule )
 	
 	MT_Response MT_GetResult( mt_id_t mt_id );
 
+	void Iterate();
+
 protected:
-	
+
 	virtual MT_Response ListenStart() = 0;
 	virtual MT_Response ListenStop() = 0; 
 	virtual MT_Response Connect( const std::string& remote_address ) = 0;
 	virtual MT_Response Disconnect() = 0;
 	virtual MT_Response DisconnectClient( const size_t cid ) = 0;
+	virtual void ProcessEvents() = 0;
 	
 	const MT_Response ProcessRequest( const MT_Request& request, MT_CANCELABLE );
 	void DestroyRequest( const MT_Request& request );
@@ -83,10 +86,12 @@ protected:
 	
 	void AddEvent( const Event& event );
 	events_t GetEvents();
-	
+
+	const connection_mode_t GetCurrentConnectionMode() const;
+
 private:
 	connection_mode_t m_current_connection_mode = CM_NONE;
-	
+
 	events_t m_events_out = {}; // from network to other modules
 	events_t m_events_in = {}; // from other modules to network
 };
