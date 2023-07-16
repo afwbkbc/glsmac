@@ -22,3 +22,5 @@ _deps
 /tmp
 *.ninja*
 /maps
+/.idea
+
