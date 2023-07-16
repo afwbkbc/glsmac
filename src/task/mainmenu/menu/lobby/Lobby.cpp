@@ -19,7 +19,6 @@ Lobby::Lobby( MainMenu* mainmenu )
 	SetHeight( 600 );
 	
 	m_state.m_settings.global.game_rules.Initialize();
-	m_state.m_slots.Resize( 7 ); // TODO: make dynamic
 }
 
 void Lobby::Show() {
@@ -56,8 +55,7 @@ void Lobby::Show() {
 		m_cancel_button->SetHeight( 22 );
 		m_cancel_button->SetLabel( "CANCEL" );
 		m_cancel_button->On( UIEvent::EV_BUTTON_CLICK, EH( this ) {
-			g_engine->GetNetwork()->MT_Disconnect();
-			GoBack();
+			Disconnect();
 			return true;
 		});
 	m_players_section->AddChild( m_cancel_button );
@@ -77,6 +75,7 @@ void Lobby::Show() {
 	
 	if ( m_state.m_settings.local.network_role == ::game::LocalSettings::NR_SERVER ) {
 		ASSERT( !m_player, "player already set" );
+		m_state.m_slots.Resize( 3 ); // TODO: make dynamic
 		m_player = new ::game::Player{
 			m_state.m_settings.local.player_name,
 			::game::Player::PR_HOST,
@@ -158,9 +157,11 @@ void Lobby::Iterate() {
 													m_state.m_slots.Unserialize( packet.data.str );
 													for ( auto i = 0 ; i < m_state.m_slots.GetCount() ; i++ ) {
 														const auto& player = m_state.m_slots.GetSlot( i ).GetPlayer();
-														m_state.AddPlayer( player );
-														if ( i == m_slot ) {
-															m_player = player;
+														if ( player ) {
+															m_state.AddPlayer( player );
+															if ( i == m_slot ) {
+																m_player = player;
+															}
 														}
 													}
 													RefreshUI();
@@ -168,9 +169,7 @@ void Lobby::Iterate() {
 												}
 												case Packet::PT_KICK: {
 													Log( "Kicked by server: " + packet.data.str );
-													network->MT_Disconnect();
-													GoBack();
-													MenuError( packet.data.str );
+													Disconnect( packet.data.str );
 													break;
 												}
 												default: {
@@ -182,8 +181,7 @@ void Lobby::Iterate() {
 									}
 									case Event::ET_DISCONNECT: {
 										if ( m_state.m_settings.local.network_role == ::game::LocalSettings::NR_CLIENT ) {
-											GoBack();
-											MenuError( "Connection to server lost." );
+											Disconnect( "Connection to server lost." );
 										}
 										break;
 									}
@@ -219,6 +217,7 @@ void Lobby::Iterate() {
 										if ( it != m_state.GetCidSlots().end() ) {
 											m_state.RemoveCIDSlot( event.cid );
 											auto* player = m_state.m_slots.GetSlot( it->second ).GetPlayerAndClose();
+											ASSERT( player, "player in slot is null" );
 											m_state.RemovePlayer( player );
 											RefreshUI();
 										}
@@ -271,13 +270,24 @@ void Lobby::Iterate() {
 												m_state.AddCIDSlot( event.cid, slot_num );
 												m_state.m_slots.GetSlot( slot_num ).SetPlayer( player );
 
-												Log( "Sending global settings to " + std::to_string( event.cid ) );
-												Packet p;
-												p.type = Packet::PT_GLOBAL_SETTINGS;
-												p.data.str = m_state.m_settings.global.Serialize().ToString();
-												network->MT_SendPacket( p, event.cid );
+												{
+													Log( "Sending global settings to " + std::to_string( event.cid ) );
+													Packet p;
+													p.type = Packet::PT_GLOBAL_SETTINGS;
+													p.data.str = m_state.m_settings.global.Serialize().ToString();
+													network->MT_SendPacket( p, event.cid );
+												}
+												{
+													Log( "Sending players list to " + std::to_string( event.cid ) );
+													Packet p;
+													p.type = Packet::PT_PLAYERS;
+													p.data.num = slot_num;
+													p.data.str = m_state.m_slots.Serialize().ToString();
+													g_engine->GetNetwork()->MT_SendPacket( p, event.cid );
+												}
 
 												RefreshUI();
+
 												break;
 											}
 											default: {
@@ -331,20 +341,20 @@ void Lobby::RefreshUI() {
 		// update UIs of others aswell
 		// TODO: optimize?
 		
-		Packet p;
-		p.type = Packet::PT_PLAYERS;
-		p.data.str = m_state.m_slots.Serialize().ToString();
-
-		Log( "Sending player list to all players" );
-		for ( auto& it : m_state.GetCidSlots() ) {
-			if ( it.first == 0 ) {
-				continue; // don't send to self
-			}
-			p.data.num = it.second; // send slot num to every player
-			g_engine->GetNetwork()->MT_SendPacket( p, it.first );
-		}
 	}
 
+}
+
+void Lobby::Disconnect( const std::string& message ) {
+	if ( m_is_disconnecting ) {
+		return;
+	}
+	m_is_disconnecting = true;
+	g_engine->GetNetwork()->MT_Disconnect();
+	GoBack();
+	if ( !message.empty() ) {
+		MenuError( message );
+	}
 }
 
 }

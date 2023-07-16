@@ -40,9 +40,12 @@ protected:
 	mt_id_t m_getevents_mt_id = 0;
 	
 	::game::State m_state;
-	
+
 private:
 	void RefreshUI();
+
+	bool m_is_disconnecting = false; // to prevent double-disconnect in some cases
+	void Disconnect( const std::string& message = "" );
 
 	size_t m_slot = 0;
 	::game::Player* m_player = nullptr;

@@ -19,7 +19,7 @@ Player* Slot::GetPlayerAndClose() {
 	ASSERT( m_slot_state != SS_CLOSED, "attempted to close already closed slot" );
 	Player* result = m_player;
 	m_player = nullptr;
-	m_slot_state = SS_CLOSED;
+	m_slot_state = SS_OPEN;
 	return result;
 }
 
