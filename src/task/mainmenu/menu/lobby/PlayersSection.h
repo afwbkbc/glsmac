@@ -9,7 +9,7 @@
 #include "ui/object/ChoiceList.h"
 
 #include "game/rules/Rules.h"
-#include "game/Player.h"
+#include "game/Slot.h"
 
 namespace task {
 namespace mainmenu {
@@ -25,11 +25,16 @@ CLASS( PlayersSection, Section )
 	void Create();
 	void Destroy();
 
-	typedef std::map< size_t, ::game::Player > players_t;
+	//typedef std::map< size_t, ::game::Slot > slots_t;
+	
+	//void ClearSlots();
+	//void SetSlots( const size_t count );
+	void UpdateSlots( const std::vector< ::game::Slot >& slots );
+	/*
 	void ClearPlayers();
 	void SetPlayers( const players_t& players );
 	void UpdatePlayer( const size_t cid, const ::game::Player& player );
-	
+	*/
 	Lobby* GetLobby();
 	const ChoiceList::choices_t& GetFactionChoices();
 	const ChoiceList::choices_t& GetDifficultyLevelChoices();
@@ -38,8 +43,7 @@ CLASS( PlayersSection, Section )
 	
 private:
 	Lobby* m_lobby = nullptr;
-	std::unordered_map< size_t, PlayersSectionRow* > m_player_rows = {};
-	std::unordered_map< size_t, Label* > m_player_labels = {};
+	std::vector< PlayersSectionRow* > m_player_rows = {};
 
 	// some caches for player rows
 	struct {

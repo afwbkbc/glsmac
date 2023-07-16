@@ -50,7 +50,7 @@ mt_id_t Network::MT_SendPacket( const Packet& packet, const size_t cid ) {
 	e.cid = cid;
 	e.type = Event::ET_PACKET;
 	e.data.packet_data = packet.Serialize().ToString();
-	Log( "Sending packet (type=" + std::to_string( packet.type ) + ")" + ( cid ? " to client " + std::to_string( cid ) : "" ) );
+	Log( "Sending packet ( type = " + std::to_string( packet.type ) + " )" + ( cid ? " to client " + std::to_string( cid ) : "" ) );
 	return MT_SendEvent( e );
 }
 

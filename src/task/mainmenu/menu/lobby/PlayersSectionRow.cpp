@@ -6,11 +6,10 @@ namespace task {
 namespace mainmenu {
 namespace lobby {
 
-PlayersSectionRow::PlayersSectionRow( PlayersSection* parent, const size_t cid, const ::game::Player& player, const std::string& class_name )
+PlayersSectionRow::PlayersSectionRow( PlayersSection* parent, const ::game::Slot* slot, const std::string& class_name )
 	: UIContainer( class_name )
 	, m_parent( parent )
-	, m_cid( cid )
-	, m_player( player )
+	, m_slot( slot )
 {
 	//
 }
@@ -43,8 +42,8 @@ void PlayersSectionRow::Create() {
 		m_elements.faction->SetLeft( 218 );
 		m_elements.faction->SetWidth( 140 );
 		m_elements.faction->On( UIEvent::EV_CHANGE, EH( this ) {
-			m_player.SetFaction( m_parent->GetLobby()->GetSettings().global.game_rules.m_factions[ data->value.change.id ] );
-			m_parent->GetLobby()->UpdatePlayer( m_cid, m_player );
+			/*m_player.SetFaction( m_parent->GetLobby()->GetSettings().global.game_rules.m_factions[ data->value.change.id ] );
+			m_parent->GetLobby()->UpdatePlayer( m_cid, m_player );*/
 			return true;
 		});
 	AddChild( m_elements.faction );
@@ -60,7 +59,7 @@ void PlayersSectionRow::Create() {
 		});
 	AddChild( m_elements.difficulty_level );
 	
-	Update( m_player );
+	//Update( m_player );
 }
 
 void PlayersSectionRow::Destroy() {
@@ -71,7 +70,7 @@ void PlayersSectionRow::Destroy() {
 	
 	UIContainer::Destroy();
 }
-
+/*
 void PlayersSectionRow::Update( const ::game::Player& player ) {
 	m_player = player;
 	if ( m_elements.actions ) {
@@ -86,7 +85,7 @@ void PlayersSectionRow::Update( const ::game::Player& player ) {
 		m_elements.difficulty_level->SetTextColor( m_player.GetFaction().m_color );
 	}
 }
-
+*/
 }
 }
 }

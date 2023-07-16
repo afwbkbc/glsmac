@@ -23,4 +23,4 @@ _deps
 *.ninja*
 /maps
 /.idea
-
+/.cmake

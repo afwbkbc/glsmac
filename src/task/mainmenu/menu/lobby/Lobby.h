@@ -3,7 +3,7 @@
 #include "../../PopupMenu.h"
 #include "ui/object/Section.h"
 
-#include "game/Settings.h"
+#include "game/State.h"
 
 #include "base/MTModule.h"
 
@@ -39,13 +39,15 @@ protected:
 	
 	mt_id_t m_getevents_mt_id = 0;
 	
-	PlayersSection::players_t m_players = {};
-	
-	::game::Settings m_settings = {};
+	::game::State m_state;
 	
 private:
+	std::string m_disconnect_message = "Connection to server lost.";
+
 	void RefreshUI();
-	
+
+	size_t m_slot = 0;
+	::game::Player* m_player = nullptr;
 };
 
 }
