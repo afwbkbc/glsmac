@@ -3,6 +3,7 @@
 #include "ui/object/UIContainer.h"
 #include "ui/object/Dropdown.h"
 
+#include "game/Slot.h"
 #include "game/Player.h"
 
 using namespace ui::object;
@@ -15,17 +16,16 @@ class PlayersSection;
 	
 CLASS( PlayersSectionRow, UIContainer )
 
-	PlayersSectionRow( PlayersSection* parent, const size_t cid, const ::game::Player& player, const std::string& class_name = "" );
+	PlayersSectionRow( PlayersSection* parent, const ::game::Slot* slot, const std::string& class_name = "" );
 
 	void Create();
 	void Destroy();
 
-	void Update( const ::game::Player& player );
+	//void Update( const ::game::Player& player );
 	
 private:
 	PlayersSection* m_parent;
-	const size_t m_cid;
-	::game::Player m_player;
+	const ::game::Slot* m_slot;
 
 	struct {
 		Dropdown* actions;

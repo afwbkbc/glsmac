@@ -9,18 +9,20 @@ const Buffer Packet::Serialize() const {
 	
 	switch ( type ) {
 		case PT_AUTH: {
-			buf.WriteString( data.str );
+			buf.WriteString( data.str ); // player name
 			break;
 		}
 		case PT_GLOBAL_SETTINGS: {
-			buf.WriteString( data.str );
+			buf.WriteString( data.str ); // serialized settings
 			break;
 		}
 		case PT_PLAYERS: {
-			buf.WriteInt( data.vec.size() );
-			for ( auto& s : data.vec ) {
-				buf.WriteString( s );
-			}
+			buf.WriteInt( data.num ); // player slot num
+			buf.WriteString( data.str ); // serialized slots
+			break;
+		}
+		case PT_KICK: {
+			buf.WriteString( data.str ); // reason
 			break;
 		}
 		default: {
@@ -37,19 +39,20 @@ void Packet::Unserialize( Buffer buf ) {
 	
 	switch ( type ) {
 		case PT_AUTH: {
-			data.str = buf.ReadString();
+			data.str = buf.ReadString(); // player name
 			break;
 		}
 		case PT_GLOBAL_SETTINGS: {
-			data.str = buf.ReadString();
+			data.str = buf.ReadString(); // serialized settings
 			break;
 		}
 		case PT_PLAYERS: {
-			size_t count = buf.ReadInt();
-			data.vec.clear();
-			for ( size_t i = 0 ; i < count ; i++ ) {
-				data.vec.push_back( buf.ReadString() );
-			}
+			data.num = buf.ReadInt(); // player slot num
+			data.str = buf.ReadString(); // serialized slots
+			break;
+		}
+		case PT_KICK: {
+			data.str = buf.ReadString(); // reason
 			break;
 		}
 		default: {

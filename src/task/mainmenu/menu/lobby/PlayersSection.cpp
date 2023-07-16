@@ -20,11 +20,22 @@ void PlayersSection::Create() {
 
 void PlayersSection::Destroy() {
 	
-	ClearPlayers();
-	
+	//ClearSlots();
+
 	Section::Destroy();
 }
 
+void PlayersSection::UpdateSlots( const std::vector< ::game::Slot >& slots ) {
+	size_t slots_i = 0;
+	size_t rows_i = 0;
+	while ( slots_i++ < slots.size() && rows_i++ < m_player_rows.size() ) {
+		Log( "SLOTS_I = " + std::to_string( slots_i ) + " ROWS_I = " + std::to_string( rows_i ) );
+	}
+	
+}
+
+
+/*
 void PlayersSection::ClearPlayers() {
 	for ( auto& row : m_player_rows ) {
 		RemoveChild( row.second );
@@ -50,7 +61,7 @@ void PlayersSection::SetPlayers( const players_t& players ) {
 void PlayersSection::UpdatePlayer( const size_t cid, const ::game::Player& player ) {
 	m_player_rows.at( cid )->Update( player );
 }
-
+*/
 Lobby* PlayersSection::GetLobby() {
 	return m_lobby;
 }

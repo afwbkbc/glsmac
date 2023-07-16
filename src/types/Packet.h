@@ -16,6 +16,7 @@ CLASS( Packet, Serializable )
 		PT_PONG, // *->*
 		PT_GLOBAL_SETTINGS, // S->C
 		PT_PLAYERS, // S->C
+		PT_KICK, // S->C
 	};
 
 	packet_type_t type;
@@ -28,6 +29,7 @@ CLASS( Packet, Serializable )
 	} udata;
 	
 	struct {
+		size_t num;
 		std::string str;
 		std::vector< std::string > vec;
 	} data;
