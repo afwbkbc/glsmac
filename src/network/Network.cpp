@@ -117,10 +117,12 @@ const MT_Response Network::ProcessRequest( const MT_Request& request, MT_CANCELA
 			break;
 		}
 		case OP_DISCONNECT_CLIENT: {
-			if ( m_current_connection_mode != CM_SERVER ) {
-				return Success(); // not a server, nothing to do
+			MT_Response response;
+			response.result = R_SUCCESS;
+			if ( m_current_connection_mode == CM_SERVER ) {
+				m_events_in.push_back( request.event );
 			}
-			return DisconnectClient( request.cid );
+			return response;
 		}
 		case OP_GETEVENTS: {
 			MT_Response response;
