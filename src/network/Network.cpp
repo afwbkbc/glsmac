@@ -20,7 +20,7 @@ mt_id_t Network::MT_DisconnectClient( const size_t cid ) {
 	MT_Request request;
 	request.op = OP_DISCONNECT_CLIENT;
 	request.cid = cid;
-	return MT_CreateRequest( request );
+ 	return MT_CreateRequest( request );
 }
 
 mt_id_t Network::MT_GetEvents() {
@@ -70,6 +70,8 @@ const MT_Response Network::ProcessRequest( const MT_Request& request, MT_CANCELA
 					return dcres;
 				}
 			}
+			m_events_in.clear();
+			m_events_out.clear();
 			switch ( request.connect.mode ) {
 				case CM_SERVER: {
 					auto response = ListenStart();
@@ -108,7 +110,6 @@ const MT_Response Network::ProcessRequest( const MT_Request& request, MT_CANCELA
 				event.cid = request.cid;
 				m_events_in.push_back( event );
 				ProcessEvents();
-				m_current_connection_mode = CM_NONE;
 			}
 			return Success();
 		}

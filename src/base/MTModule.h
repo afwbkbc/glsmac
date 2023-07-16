@@ -3,7 +3,7 @@
 #include <mutex>
 #include <atomic>
 #include <functional>
-#include <unordered_map>
+#include <map>
 
 #include "Module.h"
 
@@ -133,8 +133,8 @@ private:
 		RESPONSE_TYPE response = {};
 	};
 	
-	typedef std::unordered_map<mt_id_t, REQUEST_TYPE> mt_request_map_t;
-	typedef std::unordered_map<mt_id_t, RESPONSE_TYPE> mt_response_map_t;
+	typedef std::map<mt_id_t, REQUEST_TYPE> mt_request_map_t;
+	typedef std::map<mt_id_t, RESPONSE_TYPE> mt_response_map_t;
 	
 	mt_request_map_t MT_GetRequests() {
 		mt_request_map_t result = {};
@@ -165,7 +165,7 @@ private:
 		}
 	}
 	
-	typedef std::unordered_map< mt_id_t, mt_state_t > mt_states_t;
+	typedef std::map< mt_id_t, mt_state_t > mt_states_t;
 	std::mutex m_mt_states_mutex;
 	mt_states_t m_mt_states = {};
 	
