@@ -346,6 +346,10 @@ void SimpleTCP::Iterate() {
 				}
 				break;
 			}
+			case Event::ET_CLIENT_DISCONNECT: {
+				DisconnectClient( event.cid );
+				break;
+			}
 			default: {
 				// ignore for now
 			}

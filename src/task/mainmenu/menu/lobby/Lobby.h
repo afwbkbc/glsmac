@@ -42,8 +42,6 @@ protected:
 	::game::State m_state;
 	
 private:
-	std::string m_disconnect_message = "Connection to server lost.";
-
 	void RefreshUI();
 
 	size_t m_slot = 0;

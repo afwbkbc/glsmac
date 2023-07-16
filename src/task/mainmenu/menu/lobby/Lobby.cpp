@@ -168,9 +168,9 @@ void Lobby::Iterate() {
 												}
 												case Packet::PT_KICK: {
 													Log( "Kicked by server: " + packet.data.str );
-													m_disconnect_message = packet.data.str;
 													network->MT_Disconnect();
 													GoBack();
+													MenuError( packet.data.str );
 													break;
 												}
 												default: {
@@ -183,7 +183,7 @@ void Lobby::Iterate() {
 									case Event::ET_DISCONNECT: {
 										if ( m_state.m_settings.local.network_role == ::game::LocalSettings::NR_CLIENT ) {
 											GoBack();
-											MenuError( m_disconnect_message );
+											MenuError( "Connection to server lost." );
 										}
 										break;
 									}
