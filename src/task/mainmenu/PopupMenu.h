@@ -43,7 +43,9 @@ protected:
 	Panel* m_body = nullptr; // child classes can add elements here
 	
 	void Resize();
-	
+
+	const bool IsShown() const;
+
 private:
 	Section* m_frame = nullptr;
 		Button* m_button_ok = nullptr;
@@ -52,6 +54,8 @@ private:
 	std::unordered_set< popup_flag_t > m_flags = {};
 	size_t m_width = 0;
 	size_t m_height = 0;
+
+	bool m_is_shown = false;
 	
 	bool HasFlag( const popup_flag_t flag ) const;
 };

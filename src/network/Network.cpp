@@ -3,6 +3,7 @@
 namespace network {
 
 mt_id_t Network::MT_Connect( const connection_mode_t connect_mode, const std::string& remote_address ) {
+	ASSERT( !( connect_mode == CM_CLIENT && remote_address.empty() ), "client connection without remote address" );
 	MT_Request request;
 	request.op = OP_CONNECT;
 	request.connect.mode = connect_mode;

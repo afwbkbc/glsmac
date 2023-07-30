@@ -1,13 +1,14 @@
 #include "Host.h"
 
 #include "engine/Engine.h"
+#include "game/connection/Server.h"
 
 #include "lobby/Lobby.h"
 
 namespace task {
 namespace mainmenu {
 
-Host::Host( MainMenu* mainmenu ) : PopupMenu( mainmenu, "HOST MULTIPLAYER GAME" ) {
+Host::Host( MainMenu* mainmenu ) : ConnectionPopupMenu( mainmenu, "HOST MULTIPLAYER GAME" ) {
 	SetWidth( 500 );
 	SetHeight( 148 );
 	SetFlags( { PF_HAS_OK, PF_HAS_CANCEL } );
@@ -57,34 +58,7 @@ void Host::Show() {
 
 }
 
-void Host::Iterate() {
-	if ( m_mt_id ) {
-		auto* network = g_engine->GetNetwork();
-		auto result = network->MT_GetResult( m_mt_id );
-		if ( result.result != network::R_NONE ) {
-			g_engine->GetUI()->GetLoader()->Hide();
-			m_mt_id = 0;
-			switch ( result.result ) {
-				case network::R_ERROR: {
-					Show();
-					MenuError( result.message );
-					break;
-				}
-				case network::R_SUCCESS: {
-					Show();
-					NEWV( menu, lobby::Lobby, m_mainmenu );
-					NextMenu( menu );
-					break;
-				}
-				default: {
-					ASSERT( false, "unknown network result " + std::to_string( result.result ) );
-				}
-			} 
-		}
-	}
-}
-
-void Host::Hide() {	
+void Host::Hide() {
 		m_section->RemoveChild( m_label_yourname );
 		m_section->RemoveChild( m_input_yourname );
 		m_section->RemoveChild( m_label_gamename );
@@ -109,11 +83,6 @@ void Host::SetChoice( const std::string& choice ) {
 
 void Host::OnNext() {
 	
-/*	auto* loader = g_engine->GetUI()->GetLoader();
-	if ( loader->IsRunning() ) {
-		return;
-	}*/
-
 	m_mainmenu->m_settings.local.player_name = m_input_yourname->GetValue();
 	m_mainmenu->m_settings.local.remote_address = "";
 	m_mainmenu->m_settings.global.game_name = m_input_gamename->GetValue();
@@ -125,19 +94,9 @@ void Host::OnNext() {
 		MenuError( "Player enter game name." );
 	}
 	else {
-
-		auto* network = g_engine->GetNetwork();
-
-		m_mt_id = network->MT_Connect( network::CM_SERVER );
-		
-		g_engine->GetUI()->GetLoader()->Show( "Creating game", LCH( this, network ) {
-			network->MT_Cancel( m_mt_id );
-			network->MT_Disconnect();
-			Show();
-			return true;
-		});
-
 		Hide();
+		NEWV( connection, ::game::connection::Server, &m_mainmenu->m_settings.local );
+		SetConnection( connection );
 	}
 
 }

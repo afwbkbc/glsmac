@@ -11,8 +11,13 @@ PopupMenu::PopupMenu( MainMenu *mainmenu, const std::string& title )
 	
 }
 
+const bool PopupMenu::IsShown() const {
+	return m_is_shown;
+}
+
 void PopupMenu::Show() {
-	
+
+	ASSERT( !m_is_shown, "popupmenu already shown" );
 	ASSERT( m_width > 0, "popupmenu width is zero" );
 	ASSERT( m_height > 0, "popupmenu height is zero" );
 	
@@ -99,10 +104,14 @@ void PopupMenu::Show() {
 			});
 		m_frame->AddChild( m_button_cancel );
 	}
+
+	m_is_shown = true;
 }
 
 void PopupMenu::Hide() {
-	
+
+	ASSERT( m_is_shown, "popupmenu already hidden" );
+
 	m_frame->RemoveChild( m_body );
 	
 	if ( HasFlag( PF_HAS_OK ) ) {
@@ -114,6 +123,8 @@ void PopupMenu::Hide() {
 	}
 	
 	g_engine->GetUI()->RemoveObject( m_frame );
+
+	m_is_shown = false;
 }
 
 void PopupMenu::SetFlags( const std::unordered_set< popup_flag_t > flags ) {

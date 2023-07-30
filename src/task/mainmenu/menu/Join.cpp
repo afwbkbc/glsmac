@@ -3,11 +3,12 @@
 #include "engine/Engine.h"
 
 #include "lobby/Lobby.h"
+#include "game/connection/Client.h"
 
 namespace task {
 namespace mainmenu {
 
-Join::Join( MainMenu* mainmenu ) : PopupMenu( mainmenu, "JOIN MULTIPLAYER GAME" ) {
+Join::Join( MainMenu* mainmenu ) : ConnectionPopupMenu( mainmenu, "JOIN MULTIPLAYER GAME" ) {
 	SetWidth( 500 );
 	SetHeight( 148 );
 	SetFlags( { PF_HAS_OK, PF_HAS_CANCEL } );
@@ -57,34 +58,7 @@ void Join::Show() {
 
 }
 
-void Join::Iterate() {
-	if ( m_mt_id ) {
-		auto* network = g_engine->GetNetwork();
-		auto result = network->MT_GetResult( m_mt_id );
-		if ( result.result != network::R_NONE ) {
-			g_engine->GetUI()->GetLoader()->Hide();
-			m_mt_id = 0;
-			switch ( result.result ) {
-				case network::R_ERROR: {
-					Show();
-					MenuError( result.message );
-					break;
-				}
-				case network::R_SUCCESS: {
-					Show();
-					NEWV( menu, lobby::Lobby, m_mainmenu );
-					NextMenu( menu );
-					break;
-				}
-				default: {
-					ASSERT( false, "unknown network result " + std::to_string( result.result ) );
-				}
-			}
-		}
-	}
-}
-
-void Join::Hide() {	
+void Join::Hide() {
 		m_section->RemoveChild( m_label_yourname );
 		m_section->RemoveChild( m_input_yourname );
 		m_section->RemoveChild( m_label_gameip );
@@ -124,19 +98,9 @@ void Join::OnNext() {
 		MenuError( "Player enter game IP." );
 	}
 	else {
-
-		auto* network = g_engine->GetNetwork();
-
-		m_mt_id = network->MT_Connect( network::CM_CLIENT, m_mainmenu->m_settings.local.remote_address );
-		
-		g_engine->GetUI()->GetLoader()->Show( "Connecting to " + m_mainmenu->m_settings.local.remote_address, LCH( this, network ) {
-			network->MT_Cancel( m_mt_id );
-			network->MT_Disconnect();
-			Show();
-			return true;
-		});
-
 		Hide();
+		NEWV( connection, ::game::connection::Client, &m_mainmenu->m_settings.local );
+		SetConnection( connection );
 	}
 
 }

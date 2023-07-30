@@ -10,6 +10,8 @@
 #include "Player.h"
 #include "Slots.h"
 
+#include "connection/Connection.h"
+
 namespace game {
 
 CLASS( State, base::Base )
@@ -29,10 +31,13 @@ CLASS( State, base::Base )
 
 	const std::unordered_map< size_t, size_t >& GetCidSlots() const;
 
+	void SetConnection(connection::Connection* connection);
+
 private:
 	std::unordered_set< Player* > m_players = {}; // persistent
 	std::unordered_map< size_t, size_t > m_cid_slots = {}; // volatile ( { cid, slot } )
 
+	connection::Connection* m_connection = nullptr;
 };
 
 }
