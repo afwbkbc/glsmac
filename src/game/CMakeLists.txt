@@ -1,6 +1,7 @@
 SUBDIR( map )
 SUBDIR( map_editor )
 SUBDIR( rules )
+SUBDIR( connection )
 
 SET(SRC ${SRC}
 
