@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cstdint>
+#include <unordered_set>
+#include <unordered_map>
+
 #include "base/Base.h"
 
 #include "Settings.h"

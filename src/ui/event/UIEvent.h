@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include "base/Base.h"
 
 namespace ui {
