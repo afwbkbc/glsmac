@@ -20,7 +20,7 @@ const bool Player::IsInitialized() const {
 	return m_is_initialized;
 }
 
-const std::string& Player::GetName() const {
+const std::string& Player::GetPlayerName() const {
 	return m_name;
 }
 

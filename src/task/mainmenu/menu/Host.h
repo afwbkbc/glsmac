@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "../PopupMenu.h"
+#include "ConnectionPopupMenu.h"
 
 #include "base/MTModule.h"
 
@@ -16,13 +16,12 @@ using namespace ui;
 	
 namespace mainmenu {
 
-CLASS( Host, PopupMenu )
+CLASS( Host, ConnectionPopupMenu )
 
 	Host( MainMenu* mainmenu );
 	~Host();
 
 	void Show();
-	void Iterate();
 	void Hide();
 
 	void OnNext();

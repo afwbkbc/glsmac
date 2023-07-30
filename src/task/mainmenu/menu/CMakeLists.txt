@@ -17,6 +17,7 @@ SET(SRC ${SRC}
 	${PWD}/Rules.cpp
 	${PWD}/Multiplayer.cpp
 	${PWD}/HostJoin.cpp
+	${PWD}/ConnectionPopupMenu.cpp
 	${PWD}/Host.cpp
 	${PWD}/Join.cpp
 

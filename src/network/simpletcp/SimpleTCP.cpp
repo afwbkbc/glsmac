@@ -108,6 +108,11 @@ MT_Response SimpleTCP::ListenStart() {
 		
 		ASSERT( m_server.listening_sockets.find( socket_data.fd ) == m_server.listening_sockets.end(), "duplicate listening socket id" );
 		m_server.listening_sockets[ socket_data.fd ] = socket_data;
+
+		m_tmp.event.Clear();
+		m_tmp.event.type = Event::ET_LISTEN;
+		m_tmp.event.cid = m_server.tmp.newfd;
+		AddEvent( m_tmp.event );
     }
 	
 	freeaddrinfo(res);

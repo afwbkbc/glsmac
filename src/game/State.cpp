@@ -15,13 +15,13 @@ State::~State() {
 }
 
 void State::AddPlayer( Player* player ) {
-	Log( "adding player: " + player->GetName() );
+	Log( "adding player: " + player->GetPlayerName() );
 	ASSERT( m_players.find( player ) == m_players.end(), "duplicate player add" );
 	m_players.insert( player );
 }
 
 void State::RemovePlayer( Player* player ) {
-	Log( "removing player: " + player->GetName() );
+	Log( "removing player: " + player->GetPlayerName() );
 #ifdef DEBUG
 	ASSERT( m_players.find( player ) != m_players.end(), "player not found" );
 	for ( auto& it : m_cid_slots ) {
@@ -50,6 +50,12 @@ void State::RemoveCIDSlot( const size_t cid ) {
 
 const std::unordered_map< size_t, size_t >& State::GetCidSlots() const {
 	return m_cid_slots;
+}
+
+void State::SetConnection( connection::Connection *connection ) {
+	ASSERT( !m_connection, "state connection already set" );
+	connection->SetState(this);
+	m_connection = connection;
 }
 
 }

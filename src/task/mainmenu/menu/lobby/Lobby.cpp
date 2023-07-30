@@ -1,8 +1,7 @@
 #include "Lobby.h"
 
 #include "engine/Engine.h"
-
-#include "types/Packet.h"
+#include "game/connection/Server.h"
 
 using namespace types;
 using namespace network;
@@ -11,14 +10,43 @@ namespace task {
 namespace mainmenu {
 namespace lobby {
 
-Lobby::Lobby( MainMenu* mainmenu )
+Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 	: PopupMenu( mainmenu, "MULTIPLAYER SETUP" )
+	, m_connection( connection )
 	, m_state( mainmenu->m_settings )
 {
+	ASSERT( m_connection, "connection is null" );
+
 	SetWidth( 800 );
 	SetHeight( 600 );
 	
 	m_state.m_settings.global.game_rules.Initialize();
+
+	m_connection->SetState( &m_state );
+	m_connection->m_on_error = [ this ] ( const std::string& message ) -> void {
+		MenuError( message );
+	};
+	m_connection->m_on_disconnect = [ this ] () -> void {
+		GoBack();
+	};
+
+	// TODO: partial updates
+	m_connection->m_on_global_settings_update = [ this ] () -> void {
+		RefreshUI();
+	};
+	m_connection->m_on_players_list_update = [ this ] () -> void {
+		RefreshUI();
+	};
+	m_connection->m_on_player_join = [ this ] ( game::Player* player ) -> void {
+		RefreshUI();
+	};
+	m_connection->m_on_player_leave = [ this ] ( game::Player* player ) -> void {
+		RefreshUI();
+	};
+}
+
+Lobby::~Lobby() {
+	DELETE( m_connection );
 }
 
 void Lobby::Show() {
@@ -55,7 +83,7 @@ void Lobby::Show() {
 		m_cancel_button->SetHeight( 22 );
 		m_cancel_button->SetLabel( "CANCEL" );
 		m_cancel_button->On( UIEvent::EV_BUTTON_CLICK, EH( this ) {
-			Disconnect();
+			m_connection->Disconnect();
 			return true;
 		});
 	m_players_section->AddChild( m_cancel_button );
@@ -72,24 +100,8 @@ void Lobby::Show() {
 		m_game_settings_section->SetAlign( UIObject::ALIGN_BOTTOM );
 		m_game_settings_section->SetHeight( 210 );
 	m_body->AddChild( m_game_settings_section );
-	
-	if ( m_state.m_settings.local.network_role == ::game::LocalSettings::NR_SERVER ) {
-		ASSERT( !m_player, "player already set" );
-		m_state.m_slots.Resize( 3 ); // TODO: make dynamic
-		m_player = new ::game::Player{
-			m_state.m_settings.local.player_name,
-			::game::Player::PR_HOST,
-			m_state.m_settings.global.game_rules.m_factions[ 0 ]
-		};
-		m_state.AddPlayer( m_player );
-		m_slot = 0; // host always has slot 0
-		m_state.AddCIDSlot( 0, m_slot );
-		m_state.m_slots.GetSlot( m_slot ).SetPlayer( m_player );
-	}
 
 	RefreshUI();
-	
-	m_getevents_mt_id = 0;
 }
 
 void Lobby::Hide() {
@@ -106,212 +118,8 @@ void Lobby::Hide() {
 
 void Lobby::Iterate() {
 	PopupMenu::Iterate();
-	
-	auto* network = g_engine->GetNetwork();
-	
-	if ( !m_getevents_mt_id ) {
-		m_getevents_mt_id = network->MT_GetEvents();
-	}
-	else {
-		auto result = network->MT_GetResult( m_getevents_mt_id );
-		if ( result.result != R_NONE ) {
-			if ( result.result == R_ERROR ) {
-				Log( "WARNING: error event received from network" );
-			}
-			else if ( result.result == R_SUCCESS ) {
-				if ( !result.events.empty() ) {
-					//Log( "EVENTS COUNT: " + to_string( result.events.size() ) );
-					for ( auto& event : result.events ) {
-						switch ( m_state.m_settings.local.network_role ) {
-							case ::game::LocalSettings::NR_CLIENT: {
-								if ( event.cid ) {
-									break; // old event?
-								}
-								switch ( event.type ) {
-									case Event::ET_CONNECT: {
-										
-										break;
-										}
-									case Event::ET_PACKET: {
-										if ( !event.data.packet_data.empty() ) {
-											Packet packet;
-											packet.Unserialize( Buffer( event.data.packet_data ) );
-											switch ( packet.type ) {
-												case Packet::PT_REQUEST_AUTH: {
-													Log( "Authenticating" );
-													Packet p;
-													p.type = Packet::PT_AUTH;
-													p.data.str = m_state.m_settings.local.player_name;
-													network->MT_SendPacket( p );
-													break;
-												}
-												case Packet::PT_GLOBAL_SETTINGS: {
-													Log( "Got global settings update from server" );
-													m_state.m_settings.global.Unserialize( Buffer( packet.data.str ) );
-													RefreshUI();
-													break;
-												}
-												case Packet::PT_PLAYERS: {
-													Log( "Got players list from server" );
-													m_slot = packet.data.num;
-													m_state.m_slots.Unserialize( packet.data.str );
-													for ( auto i = 0 ; i < m_state.m_slots.GetCount() ; i++ ) {
-														const auto& player = m_state.m_slots.GetSlot( i ).GetPlayer();
-														if ( player ) {
-															m_state.AddPlayer( player );
-															if ( i == m_slot ) {
-																m_player = player;
-															}
-														}
-													}
-													RefreshUI();
-													break;
-												}
-												case Packet::PT_KICK: {
-													Log( "Kicked by server: " + packet.data.str );
-													Disconnect( packet.data.str );
-													break;
-												}
-												default: {
-													Log( "WARNING: invalid packet type from server: " + std::to_string( packet.type ) );
-												}
-											}
-										}
-										break;
-									}
-									case Event::ET_DISCONNECT: {
-										if ( m_state.m_settings.local.network_role == ::game::LocalSettings::NR_CLIENT ) {
-											Disconnect( "Connection to server lost." );
-										}
-										break;
-									}
-									default: {
-										Log( "WARNING: invalid event type from server: " + std::to_string( event.type ) );
-									}
-								}
-								break;
-							}
-							case ::game::LocalSettings::NR_SERVER: {
-								if ( !event.cid ) {
-									break; // old event?
-								}
-								switch ( event.type ) {
-									case Event::ET_CONNECT: {
 
-										break;
-									}
-									case Event::ET_CLIENT_CONNECT: {
-										Log( std::to_string( event.cid ) + " connected" );
-										ASSERT( m_state.GetCidSlots().find( event.cid ) == m_state.GetCidSlots().end(), "player cid already in slots" );
-										//m_players[ event.cid ] = {}; // to be queried*/ // TODO
-										{
-											Packet packet;
-											packet.type = Packet::PT_REQUEST_AUTH; // ask to authenticate
-											network->MT_SendPacket( packet, event.cid );
-										}
-										break;
-									}
-									case Event::ET_CLIENT_DISCONNECT: {
-										Log( std::to_string( event.cid ) + " disconnected" );
-										auto it = m_state.GetCidSlots().find( event.cid );
-										if ( it != m_state.GetCidSlots().end() ) {
-											m_state.RemoveCIDSlot( event.cid );
-											auto* player = m_state.m_slots.GetSlot( it->second ).GetPlayerAndClose();
-											ASSERT( player, "player in slot is null" );
-											m_state.RemovePlayer( player );
-											RefreshUI();
-										}
-										break;
-									}
-									case Event::ET_PACKET: {
-										Packet packet;
-										packet.Unserialize( Buffer( event.data.packet_data ) );
-										switch ( packet.type ) {
-											case Packet::PT_AUTH: {
-												if ( packet.data.str.empty() ) {
-													Log( "Authentication from " + std::to_string( event.cid ) + " failed, disconnecting" );
-													network->MT_DisconnectClient( event.cid );
-													break;
-												}
-
-												Log( "Got authentication from " + std::to_string( event.cid ) + ": " + packet.data.str );
-
-												if ( m_state.GetCidSlots().find( event.cid ) != m_state.GetCidSlots().end() ) {
-													Log( "Duplicate uthentication from " + std::to_string( event.cid ) + ", disconnecting" );
-													network->MT_DisconnectClient( event.cid );
-													break;
-												}
-
-												// find free slot
-												size_t slot_num = 0; // 0 = 'not found'
-												for ( auto& slot : m_state.m_slots.GetSlots() ) {
-													if ( slot.GetState() == ::game::Slot::SS_OPEN ) {
-														break;
-													}
-													slot_num++;
-												}
-												if ( slot_num >= m_state.m_slots.GetCount() ) { // no available slots left
-													Log( "No free slots for player " + std::to_string( event.cid ) + " (" + packet.data.str + "), dropping" );
-													Packet p;
-													p.type = types::Packet::PT_KICK;
-													p.data.str = "Server is full!";
-													network->MT_SendPacket( p, event.cid );
-													network->MT_DisconnectClient( event.cid );
-													break;
-												}
-
-												auto* player = new ::game::Player{
-													packet.data.str,
-													::game::Player::PR_PLAYER,
-													m_state.m_settings.global.game_rules.m_factions[ 0 ]
-												};
-												m_state.AddPlayer( player );
-
-												m_state.AddCIDSlot( event.cid, slot_num );
-												m_state.m_slots.GetSlot( slot_num ).SetPlayer( player );
-
-												{
-													Log( "Sending global settings to " + std::to_string( event.cid ) );
-													Packet p;
-													p.type = Packet::PT_GLOBAL_SETTINGS;
-													p.data.str = m_state.m_settings.global.Serialize().ToString();
-													network->MT_SendPacket( p, event.cid );
-												}
-												{
-													Log( "Sending players list to " + std::to_string( event.cid ) );
-													Packet p;
-													p.type = Packet::PT_PLAYERS;
-													p.data.num = slot_num;
-													p.data.str = m_state.m_slots.Serialize().ToString();
-													g_engine->GetNetwork()->MT_SendPacket( p, event.cid );
-												}
-
-												RefreshUI();
-
-												break;
-											}
-											default: {
-												Log( "WARNING: invalid packet type from client " + std::to_string( event.cid ) + " : " + std::to_string( packet.type ) );
-											}
-										}
-										break;
-									}
-									default: {
-										Log( "WARNING: invalid event type from client " + std::to_string( event.cid ) + " : " + std::to_string( event.type ) );
-									}
-								}
-								break;
-							}
-							default: {
-								ASSERT(false, "unknown network role " + std::to_string(m_state.m_settings.local.network_role));
-							}
-						}
-					}
-				}
-			}
-			m_getevents_mt_id = 0;
-		}
-	}
+	m_connection->Iterate();
 }
 
 ::game::Settings& Lobby::GetSettings() {
@@ -326,13 +134,15 @@ void Lobby::UpdatePlayer( const size_t cid, const ::game::Player& player ) {
 }
 
 bool Lobby::OnCancel() {
-	
-	g_engine->GetNetwork()->MT_Disconnect();
-	
+	m_connection->Disconnect();
 	return true;
 }
 
 void Lobby::RefreshUI() {
+	if ( !IsShown() ) {
+		return;
+	}
+
 	m_map_settings_section->SetTitleText( m_state.m_settings.global.game_name );
 	
 	// m_players_section->SetPlayers( m_players ); // TODO
@@ -343,18 +153,6 @@ void Lobby::RefreshUI() {
 		
 	}
 
-}
-
-void Lobby::Disconnect( const std::string& message ) {
-	if ( m_is_disconnecting ) {
-		return;
-	}
-	m_is_disconnecting = true;
-	g_engine->GetNetwork()->MT_Disconnect();
-	GoBack();
-	if ( !message.empty() ) {
-		MenuError( message );
-	}
 }
 
 }
