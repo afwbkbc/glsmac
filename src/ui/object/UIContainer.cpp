@@ -178,7 +178,8 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 	bool is_processed = false;
 	if ( event->m_flags & UIEvent::EF_MOUSE ) {
 		// process in reverse order because later children overlap earlier ones
-		for ( auto c = m_child_objects.rbegin() ; c != m_child_objects.rend() ; c++ ) {
+		const auto child_objects = m_child_objects;
+		for ( auto c = child_objects.rbegin() ; c != child_objects.rend() ; c++ ) {
 			if (
 				( event->m_type == UIEvent::EV_MOUSE_MOVE ) || // mousemove needs to be sent to all objects for mouseout events to work
 				( // other events - only until handled and only to those actually under mouse pointer
