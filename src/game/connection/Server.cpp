@@ -20,18 +20,23 @@ void Server::ProcessEvent( const network::Event& event ) {
 		case Event::ET_LISTEN: {
 			ASSERT( !m_player, "player already set" );
 			Log( "Listening" );
-			m_state->m_slots.Resize( 3 ); // TODO: make dynamic
-			m_player = new ::game::Player{
+			m_state->m_slots.Resize( 7 ); // TODO: make dynamic?
+			if ( m_on_listen ) {
+				m_on_listen();
+			}
+			NEW( m_player, ::game::Player, {
 				m_state->m_settings.local.player_name,
 				::game::Player::PR_HOST,
-				m_state->m_settings.global.game_rules.m_factions[ 0 ]
-			};
+				m_state->m_settings.global.game_rules.m_factions[ 0 ],
+				m_state->m_settings.global.game_rules.m_difficulty_levels[ 6 ] // transcend by default
+			});
 			m_state->AddPlayer( m_player );
 			m_slot = 0; // host always has slot 0
 			m_state->AddCIDSlot( 0, m_slot );
-			m_state->m_slots.GetSlot( m_slot ).SetPlayer( m_player );
+			auto& slot = m_state->m_slots.GetSlot( m_slot );
+			slot.SetPlayer( m_player );
 			if ( m_on_player_join ) {
-				m_on_player_join( m_player );
+				m_on_player_join( m_slot, &slot, m_player );
 			}
 			break;
 		}
@@ -51,11 +56,12 @@ void Server::ProcessEvent( const network::Event& event ) {
 			auto it = m_state->GetCidSlots().find( event.cid );
 			if ( it != m_state->GetCidSlots().end() ) {
 				m_state->RemoveCIDSlot( event.cid );
-				auto* player = m_state->m_slots.GetSlot( it->second ).GetPlayerAndClose();
+				auto& slot = m_state->m_slots.GetSlot( it->second );
+				auto* player = slot.GetPlayerAndClose();
 				ASSERT( player, "player in slot is null" );
 				m_state->RemovePlayer( player );
 				if ( m_on_player_leave ) {
-					m_on_player_leave( player );
+					m_on_player_leave( it->second, &slot, player );
 				}
 			}
 			break;
@@ -93,15 +99,17 @@ void Server::ProcessEvent( const network::Event& event ) {
 						break;
 					}
 
-					auto* player = new ::game::Player{
+					NEWV( player, ::game::Player, {
 						packet.data.str,
 						::game::Player::PR_PLAYER,
-						m_state->m_settings.global.game_rules.m_factions[ 0 ]
-					};
+						m_state->m_settings.global.game_rules.m_factions[ 0 ],
+						m_state->m_settings.global.game_rules.m_difficulty_levels[ 6 ] // transcend by default
+					});
 					m_state->AddPlayer( player );
 
 					m_state->AddCIDSlot( event.cid, slot_num );
-					m_state->m_slots.GetSlot( slot_num ).SetPlayer( player );
+					auto& slot = m_state->m_slots.GetSlot( slot_num );
+					slot.SetPlayer( player );
 
 					{
 						Log( "Sending global settings to " + std::to_string( event.cid ) );
@@ -120,7 +128,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 					}
 
 					if ( m_on_player_join ) {
-						m_on_player_join( player );
+						m_on_player_join( slot_num, &slot, player );
 					}
 
 					break;

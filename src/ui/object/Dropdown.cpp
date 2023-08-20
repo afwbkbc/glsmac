@@ -32,6 +32,14 @@ void Dropdown::SetChoices( const ChoiceList::choices_t& choices ) {
 			m_elements.value->SetText( m_value );
 		}
 	}
+	if ( m_elements.open_close ) {
+		if ( m_choices.empty() ) {
+			m_elements.open_close->Hide();
+		}
+		else {
+			m_elements.open_close->Show();
+		}
+	}
 }
 
 void Dropdown::SetValue( const std::string& value ) {
@@ -86,6 +94,9 @@ void Dropdown::Create() {
 			}
 			return true;
 		});
+		if ( m_choices.empty() ) {
+			m_elements.open_close->Hide();
+		}
 	AddChild( m_elements.open_close );
 	
 	NEW( m_elements.choices, ChoiceList, GetStyleClass() + "Choices" );

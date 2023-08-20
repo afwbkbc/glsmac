@@ -2,7 +2,7 @@
 
 #include "types/Serializable.h"
 
-#include "Player.h"
+#include "game/Player.h"
 
 namespace game {
 

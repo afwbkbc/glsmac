@@ -18,6 +18,8 @@ Player* Slot::GetPlayer() const {
 Player* Slot::GetPlayerAndClose() {
 	ASSERT( m_slot_state != SS_CLOSED, "attempted to close already closed slot" );
 	Player* result = m_player;
+	ASSERT( m_player->GetSlot() == this, "player-slot connection broken" );
+	m_player->SetSlot( nullptr );
 	m_player = nullptr;
 	m_slot_state = SS_OPEN;
 	return result;
@@ -25,7 +27,9 @@ Player* Slot::GetPlayerAndClose() {
 
 void Slot::SetPlayer( Player* player ) {
 	ASSERT( m_slot_state == SS_OPEN, "attempted to set player to non-open slot" );
+	ASSERT( !player->GetSlot(), "attempted to set slot to player with non-empty slot" );
 	m_player = player;
+	player->SetSlot( this );
 	m_slot_state = SS_PLAYER;
 }
 
@@ -45,6 +49,7 @@ void Slot::Unserialize( types::Buffer buf ) {
 	if ( m_slot_state == SS_PLAYER ) {
 		m_player = new Player();
 		m_player->Unserialize( buf.ReadString() );
+		m_player->SetSlot( this );
 	}
 }
 

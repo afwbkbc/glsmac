@@ -27,6 +27,8 @@ CLASS( Lobby, PopupMenu )
 	
 	void UpdatePlayer( const size_t cid, const ::game::Player& player );
 	
+	const Connection* GetConnection() const;
+	
 protected:
 
 	bool OnCancel();

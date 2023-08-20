@@ -28,10 +28,10 @@ private:
 	const ::game::Slot* m_slot;
 
 	struct {
-		Dropdown* actions;
-		Dropdown* faction;
-		Dropdown* difficulty_level;
-	} m_elements;
+		Dropdown* actions = nullptr;
+		Dropdown* faction = nullptr;
+		Dropdown* difficulty_level = nullptr;
+	} m_elements = {};
 	
 };
 
