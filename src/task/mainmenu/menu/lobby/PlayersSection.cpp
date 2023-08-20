@@ -2,6 +2,8 @@
 
 #include "engine/Engine.h"
 
+#include "game/Slot.h"
+
 namespace task {
 namespace mainmenu {
 namespace lobby {
@@ -20,19 +22,37 @@ void PlayersSection::Create() {
 
 void PlayersSection::Destroy() {
 	
-	//ClearSlots();
+	for ( auto& row : m_slots ) {
+		RemoveChild( row );
+	}
 
 	Section::Destroy();
 }
 
-void PlayersSection::UpdateSlots( const std::vector< ::game::Slot >& slots ) {
+void PlayersSection::UpdateSlot( const size_t slot_num, const ::game::Slot* slot ) {
+	ASSERT( slot, "updateslot with null slot" );
+	ASSERT( slot_num <= m_slots.size(), "slot num overflow ( " + std::to_string( slot_num ) + " > " + std::to_string( m_slots.size() ) + " )" );
+	NEWV( row, PlayersSectionRow, this, slot );
+		row->SetHeight( 20 );
+		row->SetTop( 22 * slot_num + 1 );
+	if ( slot_num == m_slots.size() ) {
+		m_slots.push_back( row );
+	}
+	else {
+		RemoveChild( m_slots[ slot_num ] );
+		m_slots[ slot_num ] = row;
+	}
+	AddChild( row );
+}
+
+/*void PlayersSection::UpdateSlots( const std::vector< ::game::Slot >& slots ) {
 	size_t slots_i = 0;
 	size_t rows_i = 0;
 	while ( slots_i++ < slots.size() && rows_i++ < m_player_rows.size() ) {
 		Log( "SLOTS_I = " + std::to_string( slots_i ) + " ROWS_I = " + std::to_string( rows_i ) );
 	}
 	
-}
+}*/
 
 
 /*

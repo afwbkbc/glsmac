@@ -4,6 +4,7 @@
 #include "engine/Engine.h"
 #include "network/Network.h"
 #include "ui/module/Loader.h"
+#include "game/Slot.h"
 #include "game/Player.h"
 
 typedef std::function<bool()> connection_handler_t;
@@ -24,19 +25,24 @@ CLASS( Connection, base::Module )
 	std::function<void(const std::string &message)> m_on_error = 0;
 
 	// universal
-	std::function<void( Player* player )> m_on_player_join = 0;
-	std::function<void( Player* player )> m_on_player_leave = 0;
+	std::function<void( const size_t slot_num, const Slot* slot, const Player* player )> m_on_player_join = 0;
+	std::function<void( const size_t slot_num, const Slot* slot, const Player* player )> m_on_player_leave = 0;
 
 	// client-specific
 	std::function<void()> m_on_global_settings_update = 0;
 	std::function<void()> m_on_players_list_update = 0;
 
+	// server-specific
+	std::function<void()> m_on_listen = 0;
+	
 	void SetState( State* state );
 
 	void Connect();
 	void Disconnect( const std::string& message = "" );
 
 	void Iterate();
+	
+	const Player* GetPlayer() const;
 
 protected:
 	network::Network * const m_network = g_engine->GetNetwork();

@@ -5,9 +5,12 @@
 #include "types/Serializable.h"
 
 #include "game/rules/Faction.h"
+#include "game/rules/DifficultyLevel.h"
 
 namespace game {
 
+class Slot;
+	
 CLASS( Player, types::Serializable )
 	
 	enum role_t {
@@ -17,13 +20,21 @@ CLASS( Player, types::Serializable )
 	};
 	
 	Player();
-	Player( const std::string& name, const role_t role, const rules::Faction& faction );
+	Player( const std::string& name, const role_t role, const rules::Faction& faction, const rules::DifficultyLevel& difficulty_level );
 
 	const bool IsInitialized() const;
 	const std::string& GetPlayerName() const;
 	
 	void SetFaction( const rules::Faction& faction );
 	const rules::Faction& GetFaction() const;
+	
+	void SetDifficultyLevel( const rules::DifficultyLevel& difficulty_level );
+	const rules::DifficultyLevel& GetDifficultyLevel() const;
+	
+	void SetSlot( const Slot* slot );
+	const Slot* GetSlot() const;
+	
+	const role_t GetRole() const;
 	
 	const types::Buffer Serialize() const;
 	void Unserialize( types::Buffer buf );
@@ -32,9 +43,13 @@ private:
 	bool m_is_initialized = false;
 	std::string m_name = "";
 	role_t m_role = PR_NONE;
+	const Slot* m_slot = nullptr;
 	
 	rules::Faction m_faction = {};
+	rules::DifficultyLevel m_difficulty_level = {};
 	
 };
 
 }
+
+#include "game/Slot.h"

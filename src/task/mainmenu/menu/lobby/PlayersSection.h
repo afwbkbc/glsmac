@@ -2,7 +2,6 @@
 
 #include <map>
 #include <string>
-#include <vector>
 
 #include "ui/object/Section.h"
 #include "ui/object/Label.h"
@@ -25,16 +24,9 @@ CLASS( PlayersSection, Section )
 	void Create();
 	void Destroy();
 
-	//typedef std::map< size_t, ::game::Slot > slots_t;
+	void InitSlots( const std::vector< ::game::Slot >& slots );
+	void UpdateSlot( const size_t slot_num, const ::game::Slot* slot );
 	
-	//void ClearSlots();
-	//void SetSlots( const size_t count );
-	void UpdateSlots( const std::vector< ::game::Slot >& slots );
-	/*
-	void ClearPlayers();
-	void SetPlayers( const players_t& players );
-	void UpdatePlayer( const size_t cid, const ::game::Player& player );
-	*/
 	Lobby* GetLobby();
 	const ChoiceList::choices_t& GetFactionChoices();
 	const ChoiceList::choices_t& GetDifficultyLevelChoices();
@@ -43,7 +35,7 @@ CLASS( PlayersSection, Section )
 	
 private:
 	Lobby* m_lobby = nullptr;
-	std::vector< PlayersSectionRow* > m_player_rows = {};
+	std::vector< PlayersSectionRow* > m_slots = {};
 
 	// some caches for player rows
 	struct {

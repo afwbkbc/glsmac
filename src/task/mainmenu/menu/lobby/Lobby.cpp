@@ -30,18 +30,33 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 		GoBack();
 	};
 
-	// TODO: partial updates
+	m_connection->m_on_listen = [ this ] () -> void {
+		size_t slots_i = 0;
+		for ( auto& slot : m_state.m_slots.GetSlots() ) {
+			m_players_section->UpdateSlot( slots_i++, &slot );
+		}
+	};
 	m_connection->m_on_global_settings_update = [ this ] () -> void {
-		RefreshUI();
+		Log("ON GLOBAL SETTINGS UPDATE");
+		//RefreshUI();
 	};
 	m_connection->m_on_players_list_update = [ this ] () -> void {
-		RefreshUI();
+		Log("ON PLAYER LIST UPDATE");
+		//RefreshUI();
+		size_t slots_i = 0;
+		for ( auto& slot : m_state.m_slots.GetSlots() ) {
+			m_players_section->UpdateSlot( slots_i++, &slot );
+		}
 	};
-	m_connection->m_on_player_join = [ this ] ( game::Player* player ) -> void {
-		RefreshUI();
+	m_connection->m_on_player_join = [ this ] ( const size_t slot_num, const game::Slot* slot, const game::Player* player ) -> void {
+		Log("ON PLAYER JOIN: " + player->GetName());
+		m_players_section->UpdateSlot( slot_num, slot );
+		//RefreshUI();
 	};
-	m_connection->m_on_player_leave = [ this ] ( game::Player* player ) -> void {
-		RefreshUI();
+	m_connection->m_on_player_leave = [ this ] ( const size_t slot_num, const game::Slot* slot, const game::Player* player ) -> void {
+		Log("ON PLAYER LEAVE: " + player->GetName());
+		m_players_section->UpdateSlot( slot_num, slot );
+		//RefreshUI();
 	};
 }
 
@@ -63,7 +78,7 @@ void Lobby::Show() {
 		m_players_section->SetTitleText( "PLAYERS" );
 		m_players_section->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_TOP );
 		m_players_section->SetWidth( 496 );
-		m_players_section->SetHeight( 204 );
+		m_players_section->SetHeight( 212 );
 	m_body->AddChild( m_players_section );
 	
 	NEW( m_launch_button, Button, "PopupButtonOkCancel" ); // TODO: correct style
@@ -90,9 +105,9 @@ void Lobby::Show() {
 	
 	NEW( m_chat_section, Section, "PopupSection" );
 		m_chat_section->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_TOP );
-		m_chat_section->SetTop( 200 );
+		m_chat_section->SetTop( 208 );
 		m_chat_section->SetWidth( 496 );
-		m_chat_section->SetHeight( 164 );
+		m_chat_section->SetHeight( 156 );
 	m_body->AddChild( m_chat_section );
 
 	NEW( m_game_settings_section, Section, "PopupSection" );
@@ -101,7 +116,7 @@ void Lobby::Show() {
 		m_game_settings_section->SetHeight( 210 );
 	m_body->AddChild( m_game_settings_section );
 
-	RefreshUI();
+	//RefreshUI();
 }
 
 void Lobby::Hide() {
@@ -133,19 +148,23 @@ void Lobby::UpdatePlayer( const size_t cid, const ::game::Player& player ) {
 	m_players_section->UpdatePlayer( cid, player ); // TODO: broadcast*/ // TODO
 }
 
+const Connection* Lobby::GetConnection() const {
+	return m_connection;
+}
+
 bool Lobby::OnCancel() {
 	m_connection->Disconnect();
 	return true;
 }
 
-void Lobby::RefreshUI() {
+/*void Lobby::RefreshUI() {
 	if ( !IsShown() ) {
 		return;
 	}
 
 	m_map_settings_section->SetTitleText( m_state.m_settings.global.game_name );
 	
-	// m_players_section->SetPlayers( m_players ); // TODO
+	//m_players_section->SetPlayers( m_players );
 	
 	if ( m_state.m_settings.local.network_role == ::game::LocalSettings::NR_SERVER ) {
 		// update UIs of others aswell
@@ -153,7 +172,7 @@ void Lobby::RefreshUI() {
 		
 	}
 
-}
+}*/
 
 }
 }

@@ -122,9 +122,12 @@ void Connection::Iterate() {
 	}
 }
 
+const Player* Connection::GetPlayer() const {
+	return m_player;
+}
+
 void Connection::ProcessEvent( const network::Event& event ) {
 	ASSERT( m_state, "connection state not set" );
-
 }
 
 void Connection::Disconnect( const std::string& reason ) {
