@@ -94,6 +94,9 @@ void Host::OnNext() {
 		MenuError( "Player enter game name." );
 	}
 	else {
+		
+		m_mainmenu->m_settings.local.banned_addresses.clear(); // TODO: persist?
+		
 		Hide();
 		NEWV( connection, ::game::connection::Server, &m_mainmenu->m_settings.local );
 		SetConnection( connection );

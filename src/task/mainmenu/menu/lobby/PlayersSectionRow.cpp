@@ -96,11 +96,11 @@ void PlayersSectionRow::Create() {
 			else {
 				if ( am_i_host ) {
 					if ( value == "Kick" ) {
-						g_engine->GetUI()->GetError()->Show( "This feature is not available yet." );
+						m_parent->GetLobby()->KickFromSlot( m_slot_num );
 						return true;
 					}
 					if ( value == "Ban" ) {
-						g_engine->GetUI()->GetError()->Show( "This feature is not available yet." );
+						m_parent->GetLobby()->BanFromSlot( m_slot_num );
 						return true;
 					}
 				}

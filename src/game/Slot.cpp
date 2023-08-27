@@ -16,32 +16,50 @@ void Slot::Close() {
 	m_slot_state = SS_CLOSED;
 }
 
+void Slot::SetCloseAfterClear() {
+	ASSERT( m_slot_state == SS_PLAYER, "SetCloseAfterClear on non-player slot" );
+	m_close_after_clear = true;
+}
+
 Player* Slot::GetPlayer() const {
 	ASSERT( m_slot_state == SS_PLAYER, "attempted to get player from non-player slot" );
-	return m_player;
+	return m_player_data.player;
 }
 
 size_t Slot::GetCid() const {
 	ASSERT( m_slot_state == SS_PLAYER, "attempted to get cid from non-player slot" );
-	return m_cid;
+	return m_player_data.cid;
+}
+
+const std::string& Slot::GetRemoteAddress() const {
+	ASSERT( m_slot_state == SS_PLAYER, "attempted to get remote address from non-player slot" );
+	return m_player_data.remote_address;
 }
 
 Player* Slot::GetPlayerAndClose() {
 	ASSERT( m_slot_state != SS_CLOSED, "attempted to close already closed slot" );
-	Player* result = m_player;
-	ASSERT( m_player->GetSlot() == this, "player-slot connection broken" );
-	m_player->SetSlot( nullptr );
-	m_player = nullptr;
-	m_cid = 0;
-	m_slot_state = SS_OPEN;
+	Player* result = m_player_data.player;
+	ASSERT( m_player_data.player->GetSlot() == this, "player-slot connection broken" );
+	m_player_data.player->SetSlot( nullptr );
+	m_player_data.player = nullptr;
+	m_player_data.cid = 0;
+	m_player_data.remote_address = "";
+	if ( m_close_after_clear ) {
+		m_slot_state = SS_CLOSED;
+		m_close_after_clear = false;
+	}
+	else {
+		m_slot_state = SS_OPEN;
+	}
 	return result;
 }
 
-void Slot::SetPlayer( size_t cid, Player* player ) {
+void Slot::SetPlayer( Player* player, const size_t cid, const std::string& remote_address ) {
 	ASSERT( m_slot_state == SS_OPEN, "attempted to set player to non-open slot" );
 	ASSERT( !player->GetSlot(), "attempted to set slot to player with non-empty slot" );
-	m_player = player;
-	m_cid = cid;
+	m_player_data.player = player;
+	m_player_data.cid = cid;
+	m_player_data.remote_address = remote_address;
 	player->SetSlot( this );
 	m_slot_state = SS_PLAYER;
 }
@@ -51,8 +69,9 @@ const types::Buffer Slot::Serialize() const {
 
 	buf.WriteInt( m_slot_state );
 	if ( m_slot_state == SS_PLAYER ) {
-		buf.WriteString( m_player->Serialize().ToString() );
-		buf.WriteInt( m_cid );
+		buf.WriteString( m_player_data.player->Serialize().ToString() );
+		// not sending cid
+		// not sending remote address
 	}
 
 	return buf;
@@ -61,12 +80,11 @@ const types::Buffer Slot::Serialize() const {
 void Slot::Unserialize( types::Buffer buf ) {
 	m_slot_state = (slot_state_t) buf.ReadInt();
 	if ( m_slot_state == SS_PLAYER ) {
-		if ( !m_player ) {
-			m_player = new Player();
+		if ( !m_player_data.player ) {
+			m_player_data.player = new Player();
+			m_player_data.player->SetSlot( this );
 		}
-		m_player->Unserialize( buf.ReadString() );
-		m_player->SetSlot( this );
-		m_cid = buf.ReadInt();
+		m_player_data.player->Unserialize( buf.ReadString() );
 	}
 }
 

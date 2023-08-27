@@ -31,7 +31,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			m_slot = 0; // host always has slot 0
 			m_state->AddCIDSlot( 0, m_slot );
 			auto& slot = m_state->m_slots.GetSlot( m_slot );
-			slot.SetPlayer( 0, m_player ); // host always has cid 0
+			slot.SetPlayer( m_player, 0, event.data.remote_address ); // host always has cid 0
 			if ( m_on_listen ) {
 				m_on_listen();
 			}
@@ -43,6 +43,13 @@ void Server::ProcessEvent( const network::Event& event ) {
 		case Event::ET_CLIENT_CONNECT: {
 			Log( std::to_string( event.cid ) + " connected" );
 			ASSERT( m_state->GetCidSlots().find( event.cid ) == m_state->GetCidSlots().end(), "player cid already in slots" );
+			
+			const auto& banned = m_settings->banned_addresses;
+			if ( banned.find( event.data.remote_address ) != banned.end() ) {
+				Kick( event.cid, "You are banned" );
+				break;
+			}
+			
 			{
 				Packet packet;
 				packet.type = Packet::PT_REQUEST_AUTH; // ask to authenticate
@@ -66,9 +73,9 @@ void Server::ProcessEvent( const network::Event& event ) {
 			break;
 		}
 		case Event::ET_PACKET: {
-			Packet packet;
-			packet.Unserialize( Buffer( event.data.packet_data ) );
 			try {
+				Packet packet;
+				packet.Unserialize( Buffer( event.data.packet_data ) );
 				switch ( packet.type ) {
 					case Packet::PT_AUTH: {
 						if ( packet.data.str.empty() ) {
@@ -109,7 +116,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 
 						m_state->AddCIDSlot( event.cid, slot_num );
 						auto& slot = m_state->m_slots.GetSlot( slot_num );
-						slot.SetPlayer( event.cid, player );
+						slot.SetPlayer( player, event.cid, event.data.remote_address );
 
 						{
 							Log( "Sending global settings to " + std::to_string( event.cid ) );
@@ -158,8 +165,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			break;
 		}
 		case Event::ET_ERROR: {
-			Log( "Network protocol error (cid: " + std::to_string( event.cid ) + "): " + event.data.packet_data );
-			Kick( event.cid, "Network protocol error" );
+			Error( event.cid, event.data.packet_data );
 			break;
 		}
 		default: {
@@ -180,13 +186,20 @@ void Server::Broadcast( std::function< void( const size_t cid ) > callback ) {
 	}
 }
 
-void Server::Kick( const size_t cid, const std::string& reason = "" ) {
-	Log( "Kicking " + std::to_string( cid ) + ( !reason.empty() ? " (reason: " + reason + ")" : "" ) );
-	Packet p;
-	p.type = types::Packet::PT_KICK;
-	p.data.str = reason;
-	m_network->MT_SendPacket( p, cid );
-	m_network->MT_DisconnectClient( cid );
+void Server::KickFromSlot( const size_t slot_num, const std::string& reason ) {
+	ASSERT( slot_num < m_state->m_slots.GetSlots().size(), "slot index overflow" );
+	auto& slot = m_state->m_slots.GetSlot( slot_num );
+	ASSERT( slot.GetState() == Slot::SS_PLAYER, "kick on non-player slot" );
+	KickFromSlot( slot, reason );
+}
+
+void Server::BanFromSlot( const size_t slot_num, const std::string& reason ) {
+	ASSERT( slot_num < m_state->m_slots.GetSlots().size(), "slot index overflow" );
+	auto& slot = m_state->m_slots.GetSlot( slot_num );
+	ASSERT( slot.GetState() == Slot::SS_PLAYER, "ban on non-player slot" );
+	Log( "Banning address: " + slot.GetRemoteAddress() );
+	m_settings->banned_addresses.insert( slot.GetRemoteAddress() );
+	KickFromSlot( slot, reason );
 }
 
 void Server::UpdateSlot( const size_t slot_num, const Slot* slot ) {
@@ -200,8 +213,23 @@ void Server::UpdateSlot( const size_t slot_num, const Slot* slot ) {
 	});
 }
 
+void Server::Kick( const size_t cid, const std::string& reason = "" ) {
+	Log( "Kicking " + std::to_string( cid ) + ( !reason.empty() ? " (reason: " + reason + ")" : "" ) );
+	Packet p;
+	p.type = types::Packet::PT_KICK;
+	p.data.str = reason;
+	m_network->MT_SendPacket( p, cid );
+	m_network->MT_DisconnectClient( cid );
+}
+
+void Server::KickFromSlot( Slot& slot, const std::string& reason ) {
+	slot.SetCloseAfterClear();
+	Kick( slot.GetCid(), reason );
+}
+
 void Server::Error( const size_t cid, const std::string& reason ) {
-	Kick( cid, "Network error: " + reason );
+	Log( "Network protocol error (cid: " + std::to_string( cid ) + "): " + reason );
+	Kick( cid, "Network protocol error" );
 }
 
 }

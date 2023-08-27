@@ -26,6 +26,8 @@ CLASS( Lobby, PopupMenu )
 	::game::Settings& GetSettings();
 	
 	void UpdateSlot( const size_t slot_num, ::game::Slot* slot );
+	void KickFromSlot( const size_t slot_num );
+	void BanFromSlot( const size_t slot_num );
 	
 	const Connection* GetConnection() const;
 	

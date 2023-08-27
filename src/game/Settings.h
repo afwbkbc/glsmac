@@ -1,5 +1,8 @@
 #pragma once
 
+#include <set>
+#include <string>
+
 #include "types/Serializable.h"
 
 // only default rules for now
@@ -114,6 +117,8 @@ public:
 	std::string remote_address = "";
 	
 	std::string map_file = "";
+	
+	std::set< std::string > banned_addresses = {};
 	
 	const Buffer Serialize() const;
 	void Unserialize( Buffer buf );
