@@ -21,9 +21,6 @@ void Server::ProcessEvent( const network::Event& event ) {
 			ASSERT( !m_player, "player already set" );
 			Log( "Listening" );
 			m_state->m_slots.Resize( 7 ); // TODO: make dynamic?
-			if ( m_on_listen ) {
-				m_on_listen();
-			}
 			NEW( m_player, ::game::Player, {
 				m_state->m_settings.local.player_name,
 				::game::Player::PR_HOST,
@@ -35,6 +32,9 @@ void Server::ProcessEvent( const network::Event& event ) {
 			m_state->AddCIDSlot( 0, m_slot );
 			auto& slot = m_state->m_slots.GetSlot( m_slot );
 			slot.SetPlayer( 0, m_player ); // host always has cid 0
+			if ( m_on_listen ) {
+				m_on_listen();
+			}
 			if ( m_on_player_join ) {
 				m_on_player_join( m_slot, &slot, m_player );
 			}

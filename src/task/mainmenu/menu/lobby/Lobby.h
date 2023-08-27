@@ -25,7 +25,7 @@ CLASS( Lobby, PopupMenu )
 
 	::game::Settings& GetSettings();
 	
-	void UpdateSlot( const size_t slot_num, const ::game::Slot* slot );
+	void UpdateSlot( const size_t slot_num, ::game::Slot* slot );
 	
 	const Connection* GetConnection() const;
 	

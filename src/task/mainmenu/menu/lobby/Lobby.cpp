@@ -32,7 +32,7 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 
 	m_connection->m_on_listen = [ this ] () -> void {
 		size_t slots_i = 0;
-		for ( auto& slot : m_state.m_slots.GetSlots() ) {
+		for ( ::game::Slot& slot : m_state.m_slots.GetSlots() ) {
 			m_players_section->UpdateSlot( slots_i++, &slot );
 		}
 	};
@@ -46,13 +46,13 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 			m_players_section->UpdateSlot( slots_i++, &slot );
 		}
 	};
-	m_connection->m_on_player_join = [ this ] ( const size_t slot_num, const game::Slot* slot, const game::Player* player ) -> void {
+	m_connection->m_on_player_join = [ this ] ( const size_t slot_num, game::Slot* slot, const game::Player* player ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
 	};
-	m_connection->m_on_player_leave = [ this ] ( const size_t slot_num, const game::Slot* slot, const game::Player* player ) -> void {
+	m_connection->m_on_player_leave = [ this ] ( const size_t slot_num, game::Slot* slot, const game::Player* player ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
 	};
-	m_connection->m_on_slot_update = [ this ] ( const size_t slot_num, const game::Slot* slot ) -> void {
+	m_connection->m_on_slot_update = [ this ] ( const size_t slot_num, game::Slot* slot ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
 	};
 }
@@ -137,7 +137,7 @@ void Lobby::Iterate() {
 	return m_state.m_settings;
 }
 
-void Lobby::UpdateSlot( const size_t slot_num, const ::game::Slot* slot ) {
+void Lobby::UpdateSlot( const size_t slot_num, ::game::Slot* slot ) {
 	Log( "Updating slot " + slot->GetName() );
 	m_players_section->UpdateSlot( slot_num, slot );
 	m_connection->UpdateSlot( slot_num, slot );

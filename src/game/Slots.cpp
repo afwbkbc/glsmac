@@ -15,7 +15,7 @@ Slot& Slots::GetSlot( const size_t index ) {
 	return m_slots.at( index );
 }
 
-const std::vector< Slot >& Slots::GetSlots() const {
+std::vector< Slot >& Slots::GetSlots() {
 	return m_slots;
 }
 

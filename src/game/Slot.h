@@ -16,6 +16,7 @@ CLASS( Slot, types::Serializable )
 	const slot_state_t GetState() const;
 
 	void Open();
+	void Close();
 	Player* GetPlayer() const;
 	size_t GetCid() const;
 	Player* GetPlayerAndClose();

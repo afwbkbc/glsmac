@@ -26,9 +26,9 @@ CLASS( Connection, base::Module )
 	std::function<void(const std::string &message)> m_on_error = 0;
 
 	// universal
-	std::function<void( const size_t slot_num, const Slot* slot, const Player* player )> m_on_player_join = 0;
-	std::function<void( const size_t slot_num, const Slot* slot, const Player* player )> m_on_player_leave = 0;
-	std::function<void( const size_t slot_num, const game::Slot* slot )> m_on_slot_update = 0;
+	std::function<void( const size_t slot_num, Slot* slot, const Player* player )> m_on_player_join = 0;
+	std::function<void( const size_t slot_num, Slot* slot, const Player* player )> m_on_player_leave = 0;
+	std::function<void( const size_t slot_num, game::Slot* slot )> m_on_slot_update = 0;
 
 	// client-specific
 	std::function<void()> m_on_global_settings_update = 0;

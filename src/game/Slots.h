@@ -10,7 +10,7 @@ CLASS( Slots, types::Serializable )
 	const size_t GetCount() const;
 	void Resize( const size_t size );
 	Slot& GetSlot( const size_t index );
-	const std::vector< Slot >& GetSlots() const;
+	std::vector< Slot >& GetSlots();
 
 	const types::Buffer Serialize() const;
 	void Unserialize( types::Buffer buf );

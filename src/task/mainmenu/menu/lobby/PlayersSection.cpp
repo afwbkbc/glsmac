@@ -29,7 +29,7 @@ void PlayersSection::Destroy() {
 	Section::Destroy();
 }
 
-void PlayersSection::UpdateSlot( const size_t slot_num, const ::game::Slot* slot ) {
+void PlayersSection::UpdateSlot( const size_t slot_num, ::game::Slot* slot ) {
 	ASSERT( slot, "updateslot with null slot" );
 	ASSERT( slot_num <= m_slots.size(), "slot num overflow ( " + std::to_string( slot_num ) + " > " + std::to_string( m_slots.size() ) + " )" );
 	NEWV( row, PlayersSectionRow, this, slot_num, slot );
