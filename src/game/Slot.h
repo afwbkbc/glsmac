@@ -17,10 +17,12 @@ CLASS( Slot, types::Serializable )
 
 	void Open();
 	void Close();
+	void SetCloseAfterClear();
 	Player* GetPlayer() const;
 	size_t GetCid() const;
+	const std::string& GetRemoteAddress() const;
 	Player* GetPlayerAndClose();
-	void SetPlayer( size_t cid, Player* player );
+	void SetPlayer( Player* player, const size_t cid, const std::string& remote_address );
 
 	const types::Buffer Serialize() const;
 	void Unserialize( types::Buffer buf );
@@ -28,8 +30,12 @@ CLASS( Slot, types::Serializable )
 private:
 	
 	slot_state_t m_slot_state = SS_OPEN;
-	Player* m_player = nullptr;
-	size_t m_cid = 0;
+	bool m_close_after_clear = false;
+	struct {
+		Player* player = nullptr;
+		size_t cid = 0;
+		std::string remote_address = "";
+	} m_player_data = {};
 	
 };
 

@@ -143,6 +143,16 @@ void Lobby::UpdateSlot( const size_t slot_num, ::game::Slot* slot ) {
 	m_connection->UpdateSlot( slot_num, slot );
 }
 
+void Lobby::KickFromSlot( const size_t slot_num ) {
+	Log( "Kicking from slot " + std::to_string( slot_num ) );
+	((::game::connection::Server*)m_connection)->KickFromSlot( slot_num );
+}
+
+void Lobby::BanFromSlot( const size_t slot_num ) {
+	Log( "Banning from slot " + std::to_string( slot_num ) );
+	((::game::connection::Server*)m_connection)->BanFromSlot( slot_num );
+}
+
 const Connection* Lobby::GetConnection() const {
 	return m_connection;
 }
