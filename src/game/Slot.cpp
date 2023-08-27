@@ -11,6 +11,11 @@ void Slot::Open() {
 	m_slot_state = SS_OPEN;
 }
 
+void Slot::Close() {
+	ASSERT( m_slot_state == SS_OPEN, "attempted to close non-open slot" );
+	m_slot_state = SS_CLOSED;
+}
+
 Player* Slot::GetPlayer() const {
 	ASSERT( m_slot_state == SS_PLAYER, "attempted to get player from non-player slot" );
 	return m_player;

@@ -25,7 +25,7 @@ CLASS( PlayersSection, Section )
 	void Destroy();
 
 	void InitSlots( const std::vector< ::game::Slot >& slots );
-	void UpdateSlot( const size_t slot_num, const ::game::Slot* slot );
+	void UpdateSlot( const size_t slot_num, ::game::Slot* slot );
 	
 	Lobby* GetLobby();
 	const ChoiceList::choices_t& GetFactionChoices();
