@@ -43,7 +43,6 @@ void Server::ProcessEvent( const network::Event& event ) {
 		case Event::ET_CLIENT_CONNECT: {
 			Log( std::to_string( event.cid ) + " connected" );
 			ASSERT( m_state->GetCidSlots().find( event.cid ) == m_state->GetCidSlots().end(), "player cid already in slots" );
-			//m_players[ event.cid ] = {}; // to be queried* / // TODO
 			{
 				Packet packet;
 				packet.type = Packet::PT_REQUEST_AUTH; // ask to authenticate
@@ -69,89 +68,98 @@ void Server::ProcessEvent( const network::Event& event ) {
 		case Event::ET_PACKET: {
 			Packet packet;
 			packet.Unserialize( Buffer( event.data.packet_data ) );
-			switch ( packet.type ) {
-				case Packet::PT_AUTH: {
-					if ( packet.data.str.empty() ) {
-						Log( "Authentication from " + std::to_string( event.cid ) + " failed, disconnecting" );
-						m_network->MT_DisconnectClient( event.cid );
-						break;
-					}
-
-					Log( "Got authentication from " + std::to_string( event.cid ) + ": " + packet.data.str );
-
-					if ( m_state->GetCidSlots().find( event.cid ) != m_state->GetCidSlots().end() ) {
-						Log( "Duplicate uthentication from " + std::to_string( event.cid ) + ", disconnecting" );
-						m_network->MT_DisconnectClient( event.cid );
-						break;
-					}
-
-					// find free slot
-					size_t slot_num = 0; // 0 = 'not found'
-					for ( auto& slot : m_state->m_slots.GetSlots() ) {
-						if ( slot.GetState() == ::game::Slot::SS_OPEN ) {
+			try {
+				switch ( packet.type ) {
+					case Packet::PT_AUTH: {
+						if ( packet.data.str.empty() ) {
+							Log( "Authentication from " + std::to_string( event.cid ) + " failed, disconnecting" );
+							m_network->MT_DisconnectClient( event.cid );
 							break;
 						}
-						slot_num++;
-					}
-					if ( slot_num >= m_state->m_slots.GetCount() ) { // no available slots left
-						Log( "No free slots for player " + std::to_string( event.cid ) + " (" + packet.data.str + "), dropping" );
-						Kick( event.cid, "Server is full!" );
+
+						Log( "Got authentication from " + std::to_string( event.cid ) + ": " + packet.data.str );
+
+						if ( m_state->GetCidSlots().find( event.cid ) != m_state->GetCidSlots().end() ) {
+							Log( "Duplicate uthentication from " + std::to_string( event.cid ) + ", disconnecting" );
+							m_network->MT_DisconnectClient( event.cid );
+							break;
+						}
+
+						// find free slot
+						size_t slot_num = 0; // 0 = 'not found'
+						for ( auto& slot : m_state->m_slots.GetSlots() ) {
+							if ( slot.GetState() == ::game::Slot::SS_OPEN ) {
+								break;
+							}
+							slot_num++;
+						}
+						if ( slot_num >= m_state->m_slots.GetCount() ) { // no available slots left
+							Log( "No free slots for player " + std::to_string( event.cid ) + " (" + packet.data.str + "), dropping" );
+							Kick( event.cid, "Server is full!" );
+							break;
+						}
+
+						NEWV( player, ::game::Player, {
+							packet.data.str,
+							::game::Player::PR_PLAYER,
+							m_state->m_settings.global.game_rules.m_factions[ 0 ],
+							m_state->m_settings.global.game_rules.m_difficulty_levels[ 6 ] // transcend by default
+						});
+						m_state->AddPlayer( player );
+
+						m_state->AddCIDSlot( event.cid, slot_num );
+						auto& slot = m_state->m_slots.GetSlot( slot_num );
+						slot.SetPlayer( event.cid, player );
+
+						{
+							Log( "Sending global settings to " + std::to_string( event.cid ) );
+							Packet p;
+							p.type = Packet::PT_GLOBAL_SETTINGS;
+							p.data.str = m_state->m_settings.global.Serialize().ToString();
+							m_network->MT_SendPacket( p, event.cid );
+						}
+						{
+							Log( "Sending players list to " + std::to_string( event.cid ) );
+							Packet p;
+							p.type = Packet::PT_PLAYERS;
+							p.data.num = slot_num;
+							p.data.str = m_state->m_slots.Serialize().ToString();
+							g_engine->GetNetwork()->MT_SendPacket( p, event.cid );
+						}
+
+						if ( m_on_player_join ) {
+							m_on_player_join( slot_num, &slot, player );
+						}
+
 						break;
 					}
-
-					NEWV( player, ::game::Player, {
-						packet.data.str,
-						::game::Player::PR_PLAYER,
-						m_state->m_settings.global.game_rules.m_factions[ 0 ],
-						m_state->m_settings.global.game_rules.m_difficulty_levels[ 6 ] // transcend by default
-					});
-					m_state->AddPlayer( player );
-
-					m_state->AddCIDSlot( event.cid, slot_num );
-					auto& slot = m_state->m_slots.GetSlot( slot_num );
-					slot.SetPlayer( event.cid, player );
-
-					{
-						Log( "Sending global settings to " + std::to_string( event.cid ) );
-						Packet p;
-						p.type = Packet::PT_GLOBAL_SETTINGS;
-						p.data.str = m_state->m_settings.global.Serialize().ToString();
-						m_network->MT_SendPacket( p, event.cid );
-					}
-					{
-						Log( "Sending players list to " + std::to_string( event.cid ) );
-						Packet p;
-						p.type = Packet::PT_PLAYERS;
-						p.data.num = slot_num;
-						p.data.str = m_state->m_slots.Serialize().ToString();
-						g_engine->GetNetwork()->MT_SendPacket( p, event.cid );
-					}
-
-					if ( m_on_player_join ) {
-						m_on_player_join( slot_num, &slot, player );
-					}
-
-					break;
-				}
-				case Packet::PT_UPDATE_SLOT: {
-					Log( "Got slot update from " + std::to_string( event.cid ) );
-					const auto& slots = m_state->GetCidSlots();
-					const auto& it = slots.find( event.cid );
-					if ( it == slots.end() ) {
-						Error( event.cid, "slot index mismatch" );
+					case Packet::PT_UPDATE_SLOT: {
+						Log( "Got slot update from " + std::to_string( event.cid ) );
+						const auto& slots = m_state->GetCidSlots();
+						const auto& it = slots.find( event.cid );
+						if ( it == slots.end() ) {
+							Error( event.cid, "slot index mismatch" );
+							break;
+						}
+						auto& slot = m_state->m_slots.GetSlot( it->second );
+						slot.Unserialize( packet.data.str );
+						if ( m_on_slot_update ) {
+							m_on_slot_update( it->second, &slot );
+						}
 						break;
 					}
-					auto& slot = m_state->m_slots.GetSlot( it->second );
-					slot.Unserialize( packet.data.str );
-					if ( m_on_slot_update ) {
-						m_on_slot_update( it->second, &slot );
+					default: {
+						Log( "WARNING: invalid packet type from client " + std::to_string( event.cid ) + " : " + std::to_string( packet.type ) );
 					}
-					break;
 				}
-				default: {
-					Log( "WARNING: invalid packet type from client " + std::to_string( event.cid ) + " : " + std::to_string( packet.type ) );
-				}
+			} catch ( std::runtime_error& err ) {
+				Error( event.cid, err.what() );
 			}
+			break;
+		}
+		case Event::ET_ERROR: {
+			Log( "Network protocol error (cid: " + std::to_string( event.cid ) + "): " + event.data.packet_data );
+			Kick( event.cid, "Network protocol error" );
 			break;
 		}
 		default: {

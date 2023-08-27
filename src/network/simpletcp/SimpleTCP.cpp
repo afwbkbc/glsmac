@@ -202,6 +202,23 @@ MT_Response SimpleTCP::Connect( const std::string& remote_address ) {
 		}
     }
 	
+    if ( p->ai_family == AF_INET ) {
+        struct sockaddr_in *psai = (struct sockaddr_in*)p->ai_addr;
+        char ip[INET_ADDRSTRLEN];
+        if ( inet_ntop(p->ai_family, &(psai->sin_addr), ip, INET_ADDRSTRLEN) != NULL ) {
+            m_client.socket.remote_address = ip;
+        }
+    } else if ( p->ai_family == AF_INET6 ) {
+        struct sockaddr_in6 *psai = (struct sockaddr_in6*)p->ai_addr;
+        char ip[INET6_ADDRSTRLEN];
+        if ( inet_ntop(p->ai_family, &(psai->sin6_addr), ip, INET6_ADDRSTRLEN) != NULL ) {
+            m_client.socket.remote_address = ip;
+        }
+    }
+	else {
+		return Error( "Unsupported IP type: " + remote_address );
+	}
+	
 	m_client.socket.buffer.len = 0;
 	m_client.socket.buffer.data1 = (char*)malloc( BUFFER_SIZE );
 	m_client.socket.buffer.data2 = (char*)malloc( BUFFER_SIZE );
@@ -211,7 +228,7 @@ MT_Response SimpleTCP::Connect( const std::string& remote_address ) {
 	m_client.socket.ping_needed = false;
 	m_client.socket.pong_needed = false;
 	m_client.socket.ping_sent = false;
-	
+
 	Log( "Connection successful" );
 	
 	return Success();
@@ -494,29 +511,34 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket, const size_t cid )
 		m_tmp.ptr += sizeof( m_tmp.tmpint );
 
 		{
-		
 			//Log( "Read packet (" + std::to_string( m_tmp.tmpint ) + " bytes)" );
 			m_tmp.event.Clear();
-			m_tmp.event.type = Event::ET_PACKET;
-			m_tmp.event.data.packet_data = std::string( m_tmp.ptr, m_tmp.tmpint );
 			if ( cid ) {
 				m_tmp.event.cid = cid;
 			}
-
-			// quick hack to respond to pings without escalating events outside
-			// TODO: optimize
-			Packet p;
-			p.Unserialize( Buffer( m_tmp.event.data.packet_data ) );
-			if ( p.type == Packet::PT_PING ) {
-				Log( "Ping received" );
-				socket.pong_needed = true;
-			}
-			else if ( p.type == Packet::PT_PONG ) {
-				Log( "Pong received" );
-				socket.ping_sent = false;
-			}
-			else {
-				//Log( "Sending event" );
+			m_tmp.event.data.remote_address = socket.remote_address;
+			m_tmp.event.data.packet_data = std::string( m_tmp.ptr, m_tmp.tmpint );
+			try {
+				Packet p;
+				p.Unserialize( Buffer( m_tmp.event.data.packet_data ) );
+				// quick hack to respond to pings without escalating events outside
+				// TODO: refactor
+				if ( p.type == Packet::PT_PING ) {
+					Log( "Ping received" );
+					socket.pong_needed = true;
+				}
+				else if ( p.type == Packet::PT_PONG ) {
+					Log( "Pong received" );
+					socket.ping_sent = false;
+				}
+				else {
+					//Log( "Sending event" );
+					m_tmp.event.type = Event::ET_PACKET;
+					AddEvent( m_tmp.event );
+				}
+			} catch ( std::runtime_error& err ) {
+				m_tmp.event.type = Event::ET_ERROR;
+				m_tmp.event.data.packet_data = err.what();
 				AddEvent( m_tmp.event );
 			}
 			

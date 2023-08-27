@@ -8,6 +8,7 @@ CLASS( Event, base::Base )
 	
 	enum event_type_t {
 		ET_NONE,
+		ET_ERROR,
 		ET_LISTEN,
 		ET_CLIENT_CONNECT,
 		ET_DISCONNECT,
