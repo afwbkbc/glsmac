@@ -32,7 +32,7 @@ void PlayersSection::Destroy() {
 void PlayersSection::UpdateSlot( const size_t slot_num, const ::game::Slot* slot ) {
 	ASSERT( slot, "updateslot with null slot" );
 	ASSERT( slot_num <= m_slots.size(), "slot num overflow ( " + std::to_string( slot_num ) + " > " + std::to_string( m_slots.size() ) + " )" );
-	NEWV( row, PlayersSectionRow, this, slot );
+	NEWV( row, PlayersSectionRow, this, slot_num, slot );
 		row->SetHeight( 20 );
 		row->SetTop( 22 * slot_num + 1 );
 	if ( slot_num == m_slots.size() ) {
@@ -45,43 +45,6 @@ void PlayersSection::UpdateSlot( const size_t slot_num, const ::game::Slot* slot
 	AddChild( row );
 }
 
-/*void PlayersSection::UpdateSlots( const std::vector< ::game::Slot >& slots ) {
-	size_t slots_i = 0;
-	size_t rows_i = 0;
-	while ( slots_i++ < slots.size() && rows_i++ < m_player_rows.size() ) {
-		Log( "SLOTS_I = " + std::to_string( slots_i ) + " ROWS_I = " + std::to_string( rows_i ) );
-	}
-	
-}*/
-
-
-/*
-void PlayersSection::ClearPlayers() {
-	for ( auto& row : m_player_rows ) {
-		RemoveChild( row.second );
-	}
-	m_player_rows.clear();
-}
-
-void PlayersSection::SetPlayers( const players_t& players ) {
-	ClearPlayers();
-	size_t top = 0;
-	for ( auto& player : players ) {
-		NEWV( player_row, PlayersSectionRow, this, player.first, player.second );
-			player_row->SetHeight( 20 );
-			player_row->SetTop( top + 1 );
-		AddChild( player_row );
-		m_player_rows[ player.first ] = player_row;
-		
-		
-		top += 22;
-	}
-}
-
-void PlayersSection::UpdatePlayer( const size_t cid, const ::game::Player& player ) {
-	m_player_rows.at( cid )->Update( player );
-}
-*/
 Lobby* PlayersSection::GetLobby() {
 	return m_lobby;
 }

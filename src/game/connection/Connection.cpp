@@ -138,9 +138,10 @@ void Connection::Disconnect( const std::string& reason ) {
 		return;
 	}
 	if ( m_mt_ids.events ) {
-		m_network->MT_Cancel( m_mt_ids	.events );
+		m_network->MT_Cancel( m_mt_ids.events );
 		m_mt_ids.events = 0;
 	}
+	Log( "Disconnecting" + ( !reason.empty() ? " (reason: " + reason + ")" : "" ) );
 	m_mt_ids.disconnect = g_engine->GetNetwork()->MT_Disconnect();
 }
 

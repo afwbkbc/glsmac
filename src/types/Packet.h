@@ -16,6 +16,8 @@ CLASS( Packet, Serializable )
 		PT_PONG, // *->*
 		PT_GLOBAL_SETTINGS, // S->C
 		PT_PLAYERS, // S->C
+		PT_UPDATE_SLOT, // C->S
+		PT_SLOT_UPDATE, // S->C
 		PT_KICK, // S->C
 	};
 

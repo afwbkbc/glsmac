@@ -43,8 +43,9 @@ void Client::ProcessEvent( const Event& event ) {
 						m_slot = packet.data.num;
 						m_state->m_slots.Unserialize( packet.data.str );
 						for ( auto i = 0 ; i < m_state->m_slots.GetCount() ; i++ ) {
-							const auto& player = m_state->m_slots.GetSlot( i ).GetPlayer();
-							if ( player ) {
+							const auto& slot = m_state->m_slots.GetSlot( i );
+							if ( slot.GetState() == Slot::SS_PLAYER ) {
+								const auto& player = slot.GetPlayer();
 								m_state->AddPlayer( player );
 								if ( i == m_slot ) {
 									m_player = player;
@@ -53,6 +54,20 @@ void Client::ProcessEvent( const Event& event ) {
 						}
 						if ( m_on_players_list_update ) {
 							m_on_players_list_update();
+						}
+						break;
+					}
+					case Packet::PT_SLOT_UPDATE: {
+						const size_t slot_num = packet.data.num;
+						Log( "Got slot update from server (slot: " + std::to_string( slot_num ) + ")" );
+						if ( slot_num >= m_state->m_slots.GetSlots().size() ) {
+							Error( "slot index mismatch" );
+							return;
+						}
+						auto& slot = m_state->m_slots.GetSlot( slot_num );
+						slot.Unserialize( packet.data.str );
+						if ( m_on_slot_update ) {
+							m_on_slot_update( slot_num, &slot );
 						}
 						break;
 					}
@@ -76,6 +91,19 @@ void Client::ProcessEvent( const Event& event ) {
 			Log( "WARNING: invalid event type from server: " + std::to_string( event.type ) );
 		}
 	}
+}
+
+void Client::UpdateSlot( const size_t slot_num, const Slot* slot ) {
+	Log( "Sending slot update" );
+	Packet p;
+	p.type = Packet::PT_UPDATE_SLOT;
+	// not sending slot num because server knows it anyway
+	p.data.str = slot->Serialize().ToString();
+	m_network->MT_SendPacket( p );
+}
+
+void Client::Error( const std::string& reason ) {
+	Disconnect( "Network error: " + reason );
 }
 
 }

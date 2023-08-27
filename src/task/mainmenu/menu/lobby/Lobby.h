@@ -25,7 +25,7 @@ CLASS( Lobby, PopupMenu )
 
 	::game::Settings& GetSettings();
 	
-	void UpdatePlayer( const size_t cid, const ::game::Player& player );
+	void UpdateSlot( const size_t slot_num, const ::game::Slot* slot );
 	
 	const Connection* GetConnection() const;
 	
@@ -45,7 +45,6 @@ protected:
 private:
 	Connection* m_connection = nullptr;
 
-	void RefreshUI();
 };
 
 }

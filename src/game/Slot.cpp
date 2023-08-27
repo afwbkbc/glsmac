@@ -12,7 +12,13 @@ void Slot::Open() {
 }
 
 Player* Slot::GetPlayer() const {
+	ASSERT( m_slot_state == SS_PLAYER, "attempted to get player from non-player slot" );
 	return m_player;
+}
+
+size_t Slot::GetCid() const {
+	ASSERT( m_slot_state == SS_PLAYER, "attempted to get cid from non-player slot" );
+	return m_cid;
 }
 
 Player* Slot::GetPlayerAndClose() {
@@ -21,14 +27,16 @@ Player* Slot::GetPlayerAndClose() {
 	ASSERT( m_player->GetSlot() == this, "player-slot connection broken" );
 	m_player->SetSlot( nullptr );
 	m_player = nullptr;
+	m_cid = 0;
 	m_slot_state = SS_OPEN;
 	return result;
 }
 
-void Slot::SetPlayer( Player* player ) {
+void Slot::SetPlayer( size_t cid, Player* player ) {
 	ASSERT( m_slot_state == SS_OPEN, "attempted to set player to non-open slot" );
 	ASSERT( !player->GetSlot(), "attempted to set slot to player with non-empty slot" );
 	m_player = player;
+	m_cid = cid;
 	player->SetSlot( this );
 	m_slot_state = SS_PLAYER;
 }
@@ -39,6 +47,7 @@ const types::Buffer Slot::Serialize() const {
 	buf.WriteInt( m_slot_state );
 	if ( m_slot_state == SS_PLAYER ) {
 		buf.WriteString( m_player->Serialize().ToString() );
+		buf.WriteInt( m_cid );
 	}
 
 	return buf;
@@ -47,9 +56,12 @@ const types::Buffer Slot::Serialize() const {
 void Slot::Unserialize( types::Buffer buf ) {
 	m_slot_state = (slot_state_t) buf.ReadInt();
 	if ( m_slot_state == SS_PLAYER ) {
-		m_player = new Player();
+		if ( !m_player ) {
+			m_player = new Player();
+		}
 		m_player->Unserialize( buf.ReadString() );
 		m_player->SetSlot( this );
+		m_cid = buf.ReadInt();
 	}
 }
 
