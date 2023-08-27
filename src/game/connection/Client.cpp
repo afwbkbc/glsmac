@@ -83,6 +83,11 @@ void Client::ProcessEvent( const Event& event ) {
 			}
 			break;
 		}
+		case Event::ET_ERROR: {
+			Log( "Network protocol error: " + event.data.packet_data );
+			Disconnect( "Network protocol error" );
+			break;
+		}
 		case Event::ET_DISCONNECT: {
 			Disconnect( "Connection to server lost." );
 			break;
