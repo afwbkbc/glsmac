@@ -35,7 +35,7 @@ CLASS( State, base::Base )
 
 private:
 	std::unordered_set< Player* > m_players = {}; // persistent
-	std::unordered_map< size_t, size_t > m_cid_slots = {}; // volatile ( { cid, slot } )
+	std::unordered_map< size_t, size_t > m_cid_slots = {}; // volatile ( { cid, slot_num } )
 
 	connection::Connection* m_connection = nullptr;
 };

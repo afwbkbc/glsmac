@@ -37,26 +37,23 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 		}
 	};
 	m_connection->m_on_global_settings_update = [ this ] () -> void {
+		// TODO
 		Log("ON GLOBAL SETTINGS UPDATE");
-		//RefreshUI();
 	};
 	m_connection->m_on_players_list_update = [ this ] () -> void {
-		Log("ON PLAYER LIST UPDATE");
-		//RefreshUI();
 		size_t slots_i = 0;
 		for ( auto& slot : m_state.m_slots.GetSlots() ) {
 			m_players_section->UpdateSlot( slots_i++, &slot );
 		}
 	};
 	m_connection->m_on_player_join = [ this ] ( const size_t slot_num, const game::Slot* slot, const game::Player* player ) -> void {
-		Log("ON PLAYER JOIN: " + player->GetName());
 		m_players_section->UpdateSlot( slot_num, slot );
-		//RefreshUI();
 	};
 	m_connection->m_on_player_leave = [ this ] ( const size_t slot_num, const game::Slot* slot, const game::Player* player ) -> void {
-		Log("ON PLAYER LEAVE: " + player->GetName());
 		m_players_section->UpdateSlot( slot_num, slot );
-		//RefreshUI();
+	};
+	m_connection->m_on_slot_update = [ this ] ( const size_t slot_num, const game::Slot* slot ) -> void {
+		m_players_section->UpdateSlot( slot_num, slot );
 	};
 }
 
@@ -116,7 +113,6 @@ void Lobby::Show() {
 		m_game_settings_section->SetHeight( 210 );
 	m_body->AddChild( m_game_settings_section );
 
-	//RefreshUI();
 }
 
 void Lobby::Hide() {
@@ -141,11 +137,10 @@ void Lobby::Iterate() {
 	return m_state.m_settings;
 }
 
-void Lobby::UpdatePlayer( const size_t cid, const ::game::Player& player ) {
-	Log( "Updating player (cid " + std::to_string( cid ) + " )" );
-	/*ASSERT( m_players.find( cid ) != m_players.end(), "player to update not found" );
-	m_players[ cid ] = player;
-	m_players_section->UpdatePlayer( cid, player ); // TODO: broadcast*/ // TODO
+void Lobby::UpdateSlot( const size_t slot_num, const ::game::Slot* slot ) {
+	Log( "Updating slot " + slot->GetName() );
+	m_players_section->UpdateSlot( slot_num, slot );
+	m_connection->UpdateSlot( slot_num, slot );
 }
 
 const Connection* Lobby::GetConnection() const {
@@ -156,23 +151,6 @@ bool Lobby::OnCancel() {
 	m_connection->Disconnect();
 	return true;
 }
-
-/*void Lobby::RefreshUI() {
-	if ( !IsShown() ) {
-		return;
-	}
-
-	m_map_settings_section->SetTitleText( m_state.m_settings.global.game_name );
-	
-	//m_players_section->SetPlayers( m_players );
-	
-	if ( m_state.m_settings.local.network_role == ::game::LocalSettings::NR_SERVER ) {
-		// update UIs of others aswell
-		// TODO: optimize?
-		
-	}
-
-}*/
 
 }
 }

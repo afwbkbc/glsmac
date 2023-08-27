@@ -34,7 +34,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			m_slot = 0; // host always has slot 0
 			m_state->AddCIDSlot( 0, m_slot );
 			auto& slot = m_state->m_slots.GetSlot( m_slot );
-			slot.SetPlayer( m_player );
+			slot.SetPlayer( 0, m_player ); // host always has cid 0
 			if ( m_on_player_join ) {
 				m_on_player_join( m_slot, &slot, m_player );
 			}
@@ -109,7 +109,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 
 					m_state->AddCIDSlot( event.cid, slot_num );
 					auto& slot = m_state->m_slots.GetSlot( slot_num );
-					slot.SetPlayer( player );
+					slot.SetPlayer( event.cid, player );
 
 					{
 						Log( "Sending global settings to " + std::to_string( event.cid ) );
@@ -133,6 +133,21 @@ void Server::ProcessEvent( const network::Event& event ) {
 
 					break;
 				}
+				case Packet::PT_UPDATE_SLOT: {
+					Log( "Got slot update from " + std::to_string( event.cid ) );
+					const auto& slots = m_state->GetCidSlots();
+					const auto& it = slots.find( event.cid );
+					if ( it == slots.end() ) {
+						Error( event.cid, "slot index mismatch" );
+						break;
+					}
+					auto& slot = m_state->m_slots.GetSlot( it->second );
+					slot.Unserialize( packet.data.str );
+					if ( m_on_slot_update ) {
+						m_on_slot_update( it->second, &slot );
+					}
+					break;
+				}
 				default: {
 					Log( "WARNING: invalid packet type from client " + std::to_string( event.cid ) + " : " + std::to_string( packet.type ) );
 				}
@@ -146,12 +161,39 @@ void Server::ProcessEvent( const network::Event& event ) {
 
 }
 
-void Server::Kick( const size_t cid, const std::string& reason ) {
+void Server::Broadcast( std::function< void( const size_t cid ) > callback ) {
+	for ( const auto& slot : m_state->m_slots.GetSlots() ) {
+		if ( slot.GetState() == Slot::SS_PLAYER ) {
+			const auto cid = slot.GetCid();
+			if ( cid != 0 ) { // don't send to self
+				callback( cid );
+			}
+		}
+	}
+}
+
+void Server::Kick( const size_t cid, const std::string& reason = "" ) {
+	Log( "Kicking " + std::to_string( cid ) + ( !reason.empty() ? " (reason: " + reason + ")" : "" ) );
 	Packet p;
 	p.type = types::Packet::PT_KICK;
-	p.data.str = "Server is full!";
+	p.data.str = reason;
 	m_network->MT_SendPacket( p, cid );
 	m_network->MT_DisconnectClient( cid );
+}
+
+void Server::UpdateSlot( const size_t slot_num, const Slot* slot ) {
+	Broadcast( [ this, slot_num, slot ]( const size_t cid ) -> void {
+		Log( "Sending slot update to " + std::to_string( cid ) );
+		Packet p;
+		p.type = Packet::PT_SLOT_UPDATE;
+		p.data.num = slot_num;
+		p.data.str = slot->Serialize().ToString();
+		m_network->MT_SendPacket( p, cid );
+	});
+}
+
+void Server::Error( const size_t cid, const std::string& reason ) {
+	Kick( cid, "Network error: " + reason );
 }
 
 }

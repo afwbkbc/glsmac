@@ -6,9 +6,10 @@ namespace task {
 namespace mainmenu {
 namespace lobby {
 
-PlayersSectionRow::PlayersSectionRow( PlayersSection* parent, const ::game::Slot* slot, const std::string& class_name )
+PlayersSectionRow::PlayersSectionRow( PlayersSection* parent, const size_t slot_num, const ::game::Slot* slot, const std::string& class_name )
 	: UIContainer( class_name )
 	, m_parent( parent )
+	, m_slot_num( slot_num )
 	, m_slot( slot )
 {
 	//
@@ -37,25 +38,39 @@ void PlayersSectionRow::Create() {
 			ASSERT( player, "slot player is null" );
 			
 			const auto& rules = m_parent->GetLobby()->GetSettings().global.game_rules;
+
+			const auto* connection = m_parent->GetLobby()->GetConnection();
+			ASSERT( connection, "connection is null" );
+			
+			auto* me = connection->GetPlayer();
+			const bool is_it_me = m_slot->GetPlayer() == me;
+			const bool am_i_host = me->GetRole() == ::game::Player::PR_HOST;
+			
 			
 			NEW( m_elements.faction, Dropdown, "PopupDropdown" );
-				m_elements.faction->SetChoices( m_parent->GetFactionChoices() );
+				if ( is_it_me ) {
+					m_elements.faction->SetChoices( m_parent->GetFactionChoices() );
+				}
 				m_elements.faction->SetValue( player->GetFaction().m_name );
 				m_elements.faction->SetLeft( 218 );
 				m_elements.faction->SetWidth( 140 );
 				m_elements.faction->On( UIEvent::EV_CHANGE, EH( this, player, rules ) {
 					player->SetFaction( rules.m_factions.at( data->value.change.id ) );
+					m_parent->GetLobby()->UpdateSlot( m_slot_num, m_slot );
 					return true;
 				});
 			AddChild( m_elements.faction );
 
 			NEW( m_elements.difficulty_level, Dropdown, "PopupDropdown" );
-				m_elements.difficulty_level->SetChoices( m_parent->GetDifficultyLevelChoices() );
+				if ( is_it_me ) {
+					m_elements.difficulty_level->SetChoices( m_parent->GetDifficultyLevelChoices() );
+				}
 				m_elements.difficulty_level->SetValue( player->GetDifficultyLevel().m_name );
 				m_elements.difficulty_level->SetLeft( 360 );
 				m_elements.difficulty_level->SetWidth( 118 );
 				m_elements.difficulty_level->On( UIEvent::EV_CHANGE, EH( this, player, rules ) {
 					player->SetDifficultyLevel( rules.m_difficulty_levels.at( data->value.change.id ) );
+					m_parent->GetLobby()->UpdateSlot( m_slot_num, m_slot );
 					return true;
 				});
 			AddChild( m_elements.difficulty_level );
@@ -65,13 +80,6 @@ void PlayersSectionRow::Create() {
 			m_elements.faction->SetValue( player->GetFaction().m_name );
 			m_elements.faction->SetTextColor( player->GetFaction().m_color );
 			m_elements.difficulty_level->SetTextColor( player->GetFaction().m_color );
-			
-			const auto* connection = m_parent->GetLobby()->GetConnection();
-			ASSERT( connection, "connection is null" );
-			
-			auto* me = connection->GetPlayer();
-			const bool is_it_me = m_slot->GetPlayer() == me;
-			const bool am_i_host = me->GetRole() == ::game::Player::PR_HOST;
 			
 			std::vector< std::string > actions = {};
 			if ( is_it_me ) {

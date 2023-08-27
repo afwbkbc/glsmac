@@ -17,8 +17,17 @@ const Buffer Packet::Serialize() const {
 			break;
 		}
 		case PT_PLAYERS: {
-			buf.WriteInt( data.num ); // player slot num
+			buf.WriteInt( data.num ); // assigned slot num
 			buf.WriteString( data.str ); // serialized slots
+			break;
+		}
+		case PT_UPDATE_SLOT: {
+			buf.WriteString( data.str ); // serialized slot
+			break;
+		}
+		case PT_SLOT_UPDATE: {
+			buf.WriteInt( data.num ); // player slot num
+			buf.WriteString( data.str ); // serialized slot
 			break;
 		}
 		case PT_KICK: {
@@ -47,8 +56,17 @@ void Packet::Unserialize( Buffer buf ) {
 			break;
 		}
 		case PT_PLAYERS: {
-			data.num = buf.ReadInt(); // player slot num
+			data.num = buf.ReadInt(); // assigned slot num
 			data.str = buf.ReadString(); // serialized slots
+			break;
+		}
+		case PT_UPDATE_SLOT: {
+			data.str = buf.ReadString(); // serialized slot
+			break;
+		}
+		case PT_SLOT_UPDATE: {
+			data.num = buf.ReadInt(); // player slot num
+			data.str = buf.ReadString(); // serialized slot
 			break;
 		}
 		case PT_KICK: {

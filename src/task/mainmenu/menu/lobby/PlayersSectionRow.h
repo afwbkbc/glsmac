@@ -16,7 +16,7 @@ class PlayersSection;
 	
 CLASS( PlayersSectionRow, UIContainer )
 
-	PlayersSectionRow( PlayersSection* parent, const ::game::Slot* slot, const std::string& class_name = "" );
+	PlayersSectionRow( PlayersSection* parent, const size_t slot_num, const ::game::Slot* slot, const std::string& class_name = "" );
 
 	void Create();
 	void Destroy();
@@ -25,6 +25,7 @@ CLASS( PlayersSectionRow, UIContainer )
 	
 private:
 	PlayersSection* m_parent;
+	const size_t m_slot_num;
 	const ::game::Slot* m_slot;
 
 	struct {

@@ -9,9 +9,14 @@ CLASS( Client, Connection)
 
 	Client( LocalSettings* const settings );
 
+	void UpdateSlot( const size_t slot_num, const Slot* slot ) override;
+
 protected:
 	void ProcessEvent( const network::Event& event ) override;
 
+private:
+	void Error( const std::string& reason );
+	
 };
 
 }
