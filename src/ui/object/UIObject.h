@@ -25,6 +25,8 @@ using namespace actor;
 
 namespace ui {
 
+class UI;
+
 using namespace event;
 using namespace theme;
 
@@ -208,17 +210,24 @@ CLASS( UIObject, base::Base )
 	// bit flags
 	typedef uint8_t event_context_t;
 	static constexpr event_context_t EC_NONE = 0;
-	static constexpr event_context_t EC_MOUSE = 1;
-	static constexpr event_context_t EC_MOUSEMOVE = 2; // separate because handling is very different
-	static constexpr event_context_t EC_KEYBOARD = 4;
-	static constexpr event_context_t EC_PARENTAREA = 8; // will use area of parent element instead of own on mouse events
+	static constexpr event_context_t EC_MOUSE = 1 << 0;
+	static constexpr event_context_t EC_MOUSEMOVE = 1 << 1; // separate because handling is very different
+	static constexpr event_context_t EC_KEYBOARD = 1 << 2;
+	static constexpr event_context_t EC_PARENTAREA = 1 << 3; // will use area of parent element instead of own on mouse events
+	static constexpr event_context_t EC_OFFCLICK_AWARE = 1 << 4; // object will catch clicks outside of it
 	
 	virtual void SetEventContexts( event_context_t contexts );
 	virtual void AddEventContexts( event_context_t contexts );
+
+protected:
+	friend class UIContainer;
+	friend class ::ui::UI;
+
+	bool HasEventContext( event_context_t context ) const;
 	
 protected:
 	friend class UIContainer;
-	
+
 	// callbacks. true if event is processed (then it won't be sent further)
 	virtual bool OnMouseOver( const UIEvent::event_data_t* data ) { return true; };
 	virtual bool OnMouseOut( const UIEvent::event_data_t* data ) { return true; };
@@ -238,7 +247,6 @@ protected:
 
 	virtual void SetOverriddenEventContexts( event_context_t contexts );
 	virtual void AddOverriddenEventContexts( event_context_t contexts );
-	bool HasEventContext( event_context_t context ) const;
 	bool IsEventContextOverridden( event_context_t context ) const;
 	
 	UIContainer *m_parent_object = nullptr;

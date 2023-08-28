@@ -27,8 +27,7 @@ void PlayersSectionRow::Create() {
 	NEW( m_elements.actions, Dropdown, "PopupDropdown" );
 		m_elements.actions->SetLeft( 36 );
 		m_elements.actions->SetWidth( 178 );
-	AddChild( m_elements.actions );
-	
+
 	if ( m_slot->GetState() == ::game::Slot::SS_PLAYER ) {
 		m_elements.actions->SetMode( Dropdown::DM_MENU );
 		
@@ -37,13 +36,20 @@ void PlayersSectionRow::Create() {
 
 		const bool is_it_me = player == me;
 
+		if ( is_it_me ) {
+			ui::object::UIContainer::AddStyleModifier(Style::M_HIGHLIGHT);
+		}
+
 		const auto& rules = m_parent->GetLobby()->GetSettings().global.game_rules;
+
+		const auto& faction_color = player->GetFaction().m_color;
 
 		NEW( m_elements.faction, Dropdown, "PopupDropdown" );
 			if ( is_it_me ) {
 				m_elements.faction->SetChoices( m_parent->GetFactionChoices() );
 			}
 			m_elements.faction->SetValue( player->GetFaction().m_name );
+			m_elements.faction->SetTextColor( faction_color );
 			m_elements.faction->SetLeft( 218 );
 			m_elements.faction->SetWidth( 140 );
 			m_elements.faction->On( UIEvent::EV_CHANGE, EH( this, player, rules ) {
@@ -58,6 +64,7 @@ void PlayersSectionRow::Create() {
 				m_elements.difficulty_level->SetChoices( m_parent->GetDifficultyLevelChoices() );
 			}
 			m_elements.difficulty_level->SetValue( player->GetDifficultyLevel().m_name );
+			m_elements.difficulty_level->SetTextColor( faction_color );
 			m_elements.difficulty_level->SetLeft( 360 );
 			m_elements.difficulty_level->SetWidth( 118 );
 			m_elements.difficulty_level->On( UIEvent::EV_CHANGE, EH( this, player, rules ) {
@@ -66,12 +73,6 @@ void PlayersSectionRow::Create() {
 				return true;
 			});
 		AddChild( m_elements.difficulty_level );
-
-		m_elements.actions->SetValue( player->GetPlayerName() );
-		m_elements.actions->SetTextColor( player->GetFaction().m_color );
-		m_elements.faction->SetValue( player->GetFaction().m_name );
-		m_elements.faction->SetTextColor( player->GetFaction().m_color );
-		m_elements.difficulty_level->SetTextColor( player->GetFaction().m_color );
 
 		std::vector< std::string > actions = {};
 		if ( is_it_me ) {
@@ -108,6 +109,8 @@ void PlayersSectionRow::Create() {
 			ASSERT( false, "invalid selection" );
 			return false;
 		});
+		m_elements.actions->SetValue( player->GetPlayerName() );
+		m_elements.actions->SetTextColor( faction_color );
 
 	}
 	else {
@@ -140,7 +143,8 @@ void PlayersSectionRow::Create() {
 			return false;
 		});
 	}
-	
+	AddChild( m_elements.actions );
+
 }
 
 void PlayersSectionRow::Destroy() {

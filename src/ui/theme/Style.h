@@ -129,10 +129,11 @@ CLASS( Style, base::Base )
 	// bit flags
 	typedef uint8_t modifier_t;
 	static constexpr modifier_t M_NONE = 0;
-	static constexpr modifier_t M_HOVER = 1;
-	static constexpr modifier_t M_ACTIVE = 2;
-	static constexpr modifier_t M_SELECTED = 4; // also means "focused" (for inputs)
-	static constexpr modifier_t MODIFIER_MAX = 8;
+	static constexpr modifier_t M_HOVER = 1 << 0;
+	static constexpr modifier_t M_ACTIVE = 1 << 1;
+	static constexpr modifier_t M_SELECTED = 1 << 2; // also means "focused" (for inputs)
+	static constexpr modifier_t M_HIGHLIGHT = 1 << 3;
+	static constexpr modifier_t MODIFIER_MAX = 1 << 4;
 	
 	void SetStyleHandler( const style_handler_t style_handler );
 	

@@ -26,13 +26,24 @@ void Popup::AddStyles() {
 		
 		// frame
 		{
-			const std::unordered_map< Style::attribute_type_t, std::vector< size_t > > textures = {
-				{ Style::A_TEXTURE_BACK, { 86, 353, 109, 376 } },
-				{ Style::A_TEXTURE_LEFT, { 79, 431, 79, 454 } },
-				{ Style::A_TEXTURE_TOP, { 86, 307, 109, 307 } },
-				{ Style::A_TEXTURE_RIGHT, { 116, 431, 116, 454 } },
-				{ Style::A_TEXTURE_BOTTOM, { 86, 461, 109, 461 } },
-			};
+			const std::unordered_map< Style::attribute_type_t, std::vector< size_t > > textures = (
+				s->Is( Style::M_HIGHLIGHT ) ?
+					std::unordered_map< Style::attribute_type_t, std::vector< size_t > >{
+						{ Style::A_TEXTURE_BACK, { 86, 353, 109, 376 } },
+						{ Style::A_TEXTURE_LEFT, { 40, 626, 40, 649 } },
+						{ Style::A_TEXTURE_TOP, { 47, 619, 70, 619 } },
+						{ Style::A_TEXTURE_RIGHT, { 77, 626, 77, 649 } },
+						{ Style::A_TEXTURE_BOTTOM, { 47, 656, 70, 656 } },
+					}
+				:
+					std::unordered_map< Style::attribute_type_t, std::vector< size_t > >{
+						{ Style::A_TEXTURE_BACK, { 86, 353, 109, 376 } },
+						{ Style::A_TEXTURE_LEFT, { 79, 431, 79, 454 } },
+						{ Style::A_TEXTURE_TOP, { 86, 307, 109, 307 } },
+						{ Style::A_TEXTURE_RIGHT, { 116, 431, 116, 454 } },
+						{ Style::A_TEXTURE_BOTTOM, { 86, 461, 109, 461 } },
+					}
+			);
 			for ( auto& texture : textures ) {
 				s->SetTexture( texture.first, "interface.pcx", texture.second[0] , texture.second[1], texture.second[2], texture.second[3] );
 			}

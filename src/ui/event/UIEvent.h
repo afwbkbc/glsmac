@@ -25,7 +25,8 @@ CLASS( UIEvent, base::Base )
 		EV_CHANGE,
 		EV_SELECT,
 		EV_RESIZE,
-		EV_CONFIRM
+		EV_CONFIRM,
+		EV_OFFCLICK,
 	};
 	
 	// event flags

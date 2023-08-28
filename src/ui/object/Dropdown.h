@@ -36,7 +36,10 @@ CLASS( Dropdown, Panel )
 private:
 	
 	dropdown_mode_t m_mode = DM_SELECT;
-	
+
+	bool m_custom_text_color = false;
+	Color m_text_color = {};
+
 	const bool IsExpanded() const;
 	void Expand();
 	void Collapse();

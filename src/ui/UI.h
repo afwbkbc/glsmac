@@ -162,7 +162,9 @@ private:
 	
 	std::vector< Popup* > m_popups = {};
 	std::vector< Popup* > m_popups_close_queue = {};
-	
+
+	std::unordered_set< UIObject* > m_offclick_aware_objects = {};
+
 #ifdef DEBUG	
 	Scene *m_debug_scene;
 	
