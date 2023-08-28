@@ -24,7 +24,6 @@ CLASS( PlayersSection, Section )
 	void Create();
 	void Destroy();
 
-	void InitSlots( const std::vector< ::game::Slot >& slots );
 	void UpdateSlot( const size_t slot_num, ::game::Slot* slot );
 	
 	Lobby* GetLobby();

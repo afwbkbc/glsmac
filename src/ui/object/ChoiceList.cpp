@@ -105,6 +105,8 @@ void ChoiceList::Align() {
 			value++;
 		}
 	}
+	SetHeight( ( m_item_align.margin * 2 + m_item_align.height - 1 ) * m_values.size() + 1 );
+
 }
 
 /*void ChoiceList::OnChange( UIEventHandler::handler_function_t func ) {

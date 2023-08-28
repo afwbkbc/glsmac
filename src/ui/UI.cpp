@@ -102,8 +102,16 @@ void UI::Stop() {
 
 void UI::AddObject( object::UIObject *object ) {
 	m_root_object.AddChild( object );
+	if ( object->HasEventContext( UIObject::EC_OFFCLICK_AWARE ) ) {
+		ASSERT( m_offclick_aware_objects.find( object ) == m_offclick_aware_objects.end(), "double add to offlick aware objects" );
+		m_offclick_aware_objects.insert( object );
+	}
 }
 void UI::RemoveObject( object::UIObject *object ) {
+	if ( object->HasEventContext( UIObject::EC_OFFCLICK_AWARE ) ) {
+		ASSERT( m_offclick_aware_objects.find( object ) != m_offclick_aware_objects.end(), "offlick aware object not found" );
+		m_offclick_aware_objects.erase( object );
+	}
 	m_root_object.RemoveChild( object );
 }
 
@@ -215,7 +223,19 @@ void UI::ProcessEvent( UIEvent* event ) {
 		m_active_module->ProcessEvent( event );
 		return;
 	}
-	
+
+	if ( event->m_type == UIEvent::EV_MOUSE_DOWN ) {
+		// notify of offclicks
+		for ( auto& obj : m_offclick_aware_objects ) {
+			if ( obj->IsVisible() && !obj->IsPointInside(
+				event->m_data.mouse.absolute.x,
+				event->m_data.mouse.absolute.y
+			)) {
+				obj->Trigger( UIEvent::EV_OFFCLICK, &event->m_data );
+			}
+		}
+	}
+
 	// other ui
 	
 	TriggerGlobalEventHandlers( GH_BEFORE, event );

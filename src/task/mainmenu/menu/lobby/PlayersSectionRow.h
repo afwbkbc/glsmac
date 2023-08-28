@@ -21,8 +21,6 @@ CLASS( PlayersSectionRow, UIContainer )
 	void Create();
 	void Destroy();
 
-	//void Update( const ::game::Player& player );
-	
 private:
 	PlayersSection* m_parent;
 	const size_t m_slot_num;

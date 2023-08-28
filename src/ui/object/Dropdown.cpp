@@ -8,7 +8,7 @@ namespace ui {
 namespace object {
 
 Dropdown::Dropdown( const std::string& class_name ) : Panel( class_name ) {
-	
+
 }
 
 void Dropdown::SetChoices( const ChoiceList::choices_t& choices ) {
@@ -66,7 +66,11 @@ void Dropdown::SetChoicesV( const std::vector< std::string >& labels ) {
 }
 
 void Dropdown::SetTextColor( const Color& color ) {
-	m_elements.value->SetTextColor( color );
+	m_custom_text_color = true;
+	m_text_color = color;
+	if ( m_elements.value ) {
+		m_elements.value->SetTextColor( m_text_color );
+	}
 }
 
 void Dropdown::Create() {
@@ -76,10 +80,15 @@ void Dropdown::Create() {
 		m_elements.value->SetText( m_value );
 		m_elements.value->ForwardStyleAttributesV({
 			Style::A_FONT,
-			Style::A_TEXT_COLOR,
 			Style::A_TEXT_ALIGN,
 		});
 		m_elements.value->ForwardStyleAttribute( Style::A_TEXT_LEFT, Style::A_LEFT );
+		if ( m_custom_text_color ) {
+			m_elements.value->SetTextColor( m_text_color );
+		}
+		else {
+			m_elements.value->ForwardStyleAttribute( Style::A_TEXT_COLOR ); // TODO: global style overrides
+		}
 	AddChild( m_elements.value );
 	
 	NEW( m_elements.open_close, SimpleButton, GetStyleClass() + "OpenClose" );
@@ -115,7 +124,18 @@ void Dropdown::Create() {
 			}
 			return true;
 		});
+		m_elements.choices->AddEventContexts( UIObject::EC_OFFCLICK_AWARE );
+		m_elements.choices->On( UIEvent::EV_OFFCLICK, EH( this ) {
+			if ( !m_elements.value->IsPointInside( // prevent close-open because there will be mousedown event on value too
+				data->mouse.absolute.x,
+				data->mouse.absolute.y
+			)) {
+				Collapse();
+			}
+			return true;
+		});
 	g_engine->GetUI()->AddObject( m_elements.choices );
+
 }
 
 void Dropdown::Destroy() {
