@@ -138,7 +138,7 @@ void GameSettingsSection::Destroy() {
 }
 
 void GameSettingsSection::SetRow( const row_id_t row_id, const std::string& label, const size_t label_width, const ::ui::object::ChoiceList::choices_t& choices, const size_t choices_width ) {
-	NEWV( label_el, ::ui::object::Label, "PopupLabel" )
+	NEWV( label_el, ::ui::object::Label, "PopupLabel" );
 	label_el->SetText( label );
 	label_el->SetAlign( UIObject::ALIGN_LEFT );
 	label_el->SetLeft( 6 );
