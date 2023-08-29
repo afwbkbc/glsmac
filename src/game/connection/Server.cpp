@@ -35,6 +35,9 @@ void Server::ProcessEvent( const network::Event& event ) {
 			if ( m_on_listen ) {
 				m_on_listen();
 			}
+			if ( m_on_global_settings_update ) {
+				m_on_global_settings_update();
+			}
 			if ( m_on_player_join ) {
 				m_on_player_join( m_slot, &slot, m_player );
 			}

@@ -31,30 +31,26 @@ void MapSettings::Unserialize( Buffer buf ) {
 const Buffer GlobalSettings::Serialize() const {
 	Buffer buf;
 	
-	buf.WriteInt( game_mode );
 	buf.WriteString( map.Serialize().ToString() );
 	buf.WriteInt( difficulty );
-	buf.WriteInt( game_rules_type );
 	buf.WriteString( game_rules.Serialize().ToString() );
-	buf.WriteInt( network_type );
 	buf.WriteString( game_name );
 	
 	return buf;	
 }
 
 void GlobalSettings::Unserialize( Buffer buf ) {
-	game_mode = (game_mode_t) buf.ReadInt();
 	map.Unserialize( buf.ReadString() );
 	difficulty = buf.ReadInt();
-	game_rules_type = (game_rules_type_t) buf.ReadInt();
 	game_rules.Unserialize( buf.ReadString() );
-	network_type = (network_type_t) buf.ReadInt();
 	game_name = buf.ReadString();
 }
 
 const Buffer LocalSettings::Serialize() const {
 	Buffer buf;
-	
+
+	buf.WriteInt( game_mode );
+	buf.WriteInt( network_type );
 	buf.WriteInt( network_role );
 	buf.WriteString( player_name );
 	buf.WriteString( remote_address );
@@ -64,6 +60,8 @@ const Buffer LocalSettings::Serialize() const {
 }
 
 void LocalSettings::Unserialize( Buffer buf ) {
+	game_mode = (game_mode_t) buf.ReadInt();
+	network_type = (network_type_t) buf.ReadInt();
 	network_role = (network_role_t) buf.ReadInt();
 	player_name = buf.ReadString();
 	remote_address = buf.ReadString();

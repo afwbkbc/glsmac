@@ -3,7 +3,7 @@
 #include <map>
 #include <string>
 
-#include "ui/object/Section.h"
+#include "LobbySection.h"
 #include "ui/object/Label.h"
 #include "ui/object/ChoiceList.h"
 
@@ -14,26 +14,26 @@ namespace task {
 namespace mainmenu {
 namespace lobby {
 
-class PlayersSectionRow;
 class Lobby;
-	
-CLASS( PlayersSection, Section )
+
+class PlayersSectionRow;
+
+CLASS( PlayersSection, LobbySection )
 	
 	PlayersSection( Lobby* lobby );
 	
 	void Create();
+	void Align();
 	void Destroy();
 
 	void UpdateSlot( const size_t slot_num, ::game::Slot* slot );
 	
-	Lobby* GetLobby();
 	const ChoiceList::choices_t& GetFactionChoices();
 	const ChoiceList::choices_t& GetDifficultyLevelChoices();
 	
 	void ApplyRules();
 	
 private:
-	Lobby* m_lobby = nullptr;
 	std::vector< PlayersSectionRow* > m_slots = {};
 
 	// some caches for player rows

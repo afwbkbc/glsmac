@@ -9,15 +9,23 @@ namespace mainmenu {
 namespace lobby {
 
 PlayersSection::PlayersSection( Lobby* lobby )
-	: Section( "PopupSection" )
-	, m_lobby( lobby )
+	: LobbySection( lobby )
 {
 	ApplyRules();
+	SetTitleText( "PLAYERS" );
+	SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_TOP );
 }
 
 void PlayersSection::Create() {
 	Section::Create();
 	
+}
+
+void PlayersSection::Align() {
+	SetWidth( 496 );
+	SetHeight( 212 );
+
+	Section::Align();
 }
 
 void PlayersSection::Destroy() {
@@ -45,10 +53,6 @@ void PlayersSection::UpdateSlot( const size_t slot_num, ::game::Slot* slot ) {
 	AddChild( row );
 }
 
-Lobby* PlayersSection::GetLobby() {
-	return m_lobby;
-}
-
 const ChoiceList::choices_t& PlayersSection::GetFactionChoices() {
 	return m_choices.factions;
 }
@@ -58,7 +62,7 @@ const ChoiceList::choices_t& PlayersSection::GetDifficultyLevelChoices() {
 }
 
 void PlayersSection::ApplyRules() {
-	const auto& game_rules = m_lobby->GetSettings().global.game_rules;
+	const auto& game_rules = GetLobby()->GetSettings().global.game_rules;
 	
 	m_choices.factions.clear();
 	for ( auto& faction : game_rules.m_factions ) {
