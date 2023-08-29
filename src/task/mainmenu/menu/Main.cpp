@@ -13,14 +13,14 @@ namespace mainmenu {
 Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 	{ "START GAME", {
 		CH( this ) {
-			m_mainmenu->m_settings.global.game_mode = game::GlobalSettings::GM_SINGLEPLAYER;
+			m_mainmenu->m_settings.local.game_mode = game::LocalSettings::GM_SINGLEPLAYER;
 			NEWV( menu, StartGame, m_mainmenu );
 			NextMenu( menu );
 		}
 	}},
 	{ "QUICK START", {
 		CH( this ) {
-			m_mainmenu->m_settings.global.game_mode = game::GlobalSettings::GM_SINGLEPLAYER;
+			m_mainmenu->m_settings.local.game_mode = game::LocalSettings::GM_SINGLEPLAYER;
 
 			// randomize settings
 			m_mainmenu->m_settings.global.map.type = game::MapSettings::MT_RANDOM;
@@ -30,7 +30,6 @@ Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 			m_mainmenu->m_settings.global.map.lifeforms = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
 			m_mainmenu->m_settings.global.map.clouds = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
 			m_mainmenu->m_settings.global.difficulty = m_mainmenu->GetRandom()->GetUInt( 1, 6 ); // TODO: previous difficulty?
-			m_mainmenu->m_settings.global.game_rules_type = game::GlobalSettings::GR_STANDARD;
 
 			// start game
 			m_mainmenu->StartGame();
@@ -38,7 +37,7 @@ Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 	}},
 	{ "SCENARIO", {
 		CH( this ) {
-			m_mainmenu->m_settings.global.game_mode = game::GlobalSettings::GM_SCENARIO;
+			m_mainmenu->m_settings.local.game_mode = game::LocalSettings::GM_SCENARIO;
 			NEWV( menu, Scenario, m_mainmenu );
 			NextMenu( menu );
 		}
@@ -46,7 +45,7 @@ Main::Main( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "", {
 	{ "LOAD GAME", {} },
 	{ "MULTIPLAYER", {
 		CH( this ) {
-			m_mainmenu->m_settings.global.game_mode = game::GlobalSettings::GM_MULTIPLAYER;
+			m_mainmenu->m_settings.local.game_mode = game::LocalSettings::GM_MULTIPLAYER;
 			NEWV( menu, Multiplayer, m_mainmenu );
 			NextMenu( menu );
 		}

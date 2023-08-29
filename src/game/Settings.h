@@ -62,15 +62,9 @@ CLASS( MapSettings, Serializable )
 CLASS( GlobalSettings, Serializable )
 	typedef uint8_t parameter_t;	
 
-	enum game_mode_t {
-		GM_SINGLEPLAYER,
-		GM_MULTIPLAYER,
-		GM_SCENARIO,
-	};
-	game_mode_t game_mode = GM_SINGLEPLAYER;
-	
 	MapSettings map = {};
-	
+
+	// TODO: use difficulty levels from rules
 	static constexpr parameter_t DIFFICULTY_CITIZEN = 1;
 	static constexpr parameter_t DIFFICULTY_SPECIALIST = 2;
 	static constexpr parameter_t DIFFICULTY_TALENT= 3;
@@ -79,20 +73,9 @@ CLASS( GlobalSettings, Serializable )
 	static constexpr parameter_t DIFFICULTY_TRANSCEND = 6;
 	parameter_t difficulty = DIFFICULTY_CITIZEN;
 	
-	enum game_rules_type_t {
-		GR_STANDARD,
-		GR_CURRENT,
-		GR_CUSTOM,
-	};
-	game_rules_type_t game_rules_type = GR_STANDARD;
-	
 	rules::Default game_rules; // TODO: custom rules
-	
-	enum network_type_t {
-		NT_NONE,
-		NT_SIMPLETCP,
-	};
-	network_type_t network_type = NT_NONE;
+
+
 	
 	std::string game_name = "";
 	
@@ -105,14 +88,26 @@ CLASS( GlobalSettings, Serializable )
 // settings that aren't synced between players
 CLASS( LocalSettings, Serializable )
 public:
-	
+
+	enum game_mode_t {
+		GM_SINGLEPLAYER,
+		GM_MULTIPLAYER,
+		GM_SCENARIO,
+	};
+	game_mode_t game_mode = GM_SINGLEPLAYER;
+	enum network_type_t {
+		NT_NONE,
+		NT_SIMPLETCP,
+	};
+	network_type_t network_type = NT_NONE;
+
 	enum network_role_t {
 		NR_NONE,
 		NR_SERVER,
 		NR_CLIENT,
 	};
 	network_role_t network_role = NR_NONE;
-	
+
 	std::string player_name = "";
 	std::string remote_address = "";
 	

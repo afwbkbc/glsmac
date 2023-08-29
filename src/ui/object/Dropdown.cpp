@@ -126,7 +126,7 @@ void Dropdown::Create() {
 		});
 		m_elements.choices->AddEventContexts( UIObject::EC_OFFCLICK_AWARE );
 		m_elements.choices->On( UIEvent::EV_OFFCLICK, EH( this ) {
-			if ( !m_elements.value->IsPointInside( // prevent close-open because there will be mousedown event on value too
+			if ( !m_elements.open_close->IsPointInside( // prevent close-open because there will be mousedown event on value too
 				data->mouse.absolute.x,
 				data->mouse.absolute.y
 			)) {
@@ -159,7 +159,7 @@ void Dropdown::Align() {
 	if ( m_elements.choices ) {
 		m_elements.choices->SetTop( m_object_area.top + GetHeight() );
 		m_elements.choices->SetLeft( m_object_area.left );
-		m_elements.choices->SetWidth( GetWidth() );
+		m_elements.choices->SetWidth( m_object_area.width );
 	}
 }
 

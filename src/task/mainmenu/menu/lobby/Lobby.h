@@ -6,6 +6,7 @@
 #include "game/State.h"
 #include "game/connection/Connection.h"
 
+#include "GameSettingsSection.h"
 #include "PlayersSection.h"
 
 using namespace ::game::connection;
@@ -35,7 +36,7 @@ protected:
 
 	bool OnCancel();
 	
-	Section* m_map_settings_section = nullptr;
+	GameSettingsSection* m_map_settings_section = nullptr;
 	PlayersSection* m_players_section = nullptr;
 		Button* m_launch_button = nullptr;
 		Button* m_cancel_button = nullptr;

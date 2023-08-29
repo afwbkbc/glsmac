@@ -64,20 +64,12 @@ Lobby::~Lobby() {
 void Lobby::Show() {
 	PopupMenu::Show();
 	
-	NEW( m_map_settings_section, Section, "PopupSection" );
-		m_map_settings_section->SetTitleText( " " ); // to have header created
-		m_map_settings_section->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
-		m_map_settings_section->SetWidth( 302 );
-		m_map_settings_section->SetHeight( 364 );
+	NEW( m_map_settings_section, GameSettingsSection, this, &m_state.m_settings.global );
 	m_body->AddChild( m_map_settings_section );
 
 	NEW( m_players_section, PlayersSection, this );
-		m_players_section->SetTitleText( "PLAYERS" );
-		m_players_section->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_TOP );
-		m_players_section->SetWidth( 496 );
-		m_players_section->SetHeight( 212 );
 	m_body->AddChild( m_players_section );
-	
+
 	NEW( m_launch_button, Button, "PopupButtonOkCancel" ); // TODO: correct style
 		m_launch_button->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_BOTTOM );
 		m_launch_button->SetLeft( 8 );
