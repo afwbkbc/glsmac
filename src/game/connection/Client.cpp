@@ -109,6 +109,10 @@ void Client::UpdateSlot( const size_t slot_num, const Slot* slot ) {
 	m_network->MT_SendPacket( p );
 }
 
+void Client::UpdateGameSettings() {
+	// client can't change them
+}
+
 void Client::Error( const std::string& reason ) {
 	Log( "Network protocol error: " + reason );
 	Disconnect( "Network protocol error" );

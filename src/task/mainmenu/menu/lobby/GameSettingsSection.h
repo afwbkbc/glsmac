@@ -21,6 +21,8 @@ CLASS( GameSettingsSection, LobbySection )
 	void Align();
 	void Destroy();
 
+	void UpdateRows();
+
 private:
 
 	::game::GlobalSettings* m_game_settings = nullptr;
@@ -39,7 +41,8 @@ private:
 		RI_MAX,
 	};
 
-	void SetRow( const row_id_t row_id, const std::string& label, const size_t label_width, const ::ui::object::ChoiceList::choices_t& choices, const size_t choices_width );
+	void CreateRow( const row_id_t row_id, const std::string& label, const size_t label_width, const size_t choices_width );
+	void UpdateRow( const row_id_t row_id, const ::ui::object::ChoiceList::choices_t& choices, const std::string& default_choice );
 
 	typedef struct {
 		::ui::object::Label* label;

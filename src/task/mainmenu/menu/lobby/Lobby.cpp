@@ -19,8 +19,6 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 
 	SetWidth( 800 );
 	SetHeight( 600 );
-	
-	m_state.m_settings.global.game_rules.Initialize();
 
 	m_connection->SetState( &m_state );
 	m_connection->m_on_error = [ this ] ( const std::string& message ) -> void {
@@ -37,8 +35,8 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 		}
 	};
 	m_connection->m_on_global_settings_update = [ this ] () -> void {
-		// TODO
-		Log("ON GLOBAL SETTINGS UPDATE");
+		m_game_settings_section->UpdateRows();
+		m_players_section->UpdateSlots( m_state.m_slots.GetSlots() );
 	};
 	m_connection->m_on_players_list_update = [ this ] () -> void {
 		size_t slots_i = 0;
@@ -64,8 +62,8 @@ Lobby::~Lobby() {
 void Lobby::Show() {
 	PopupMenu::Show();
 	
-	NEW( m_map_settings_section, GameSettingsSection, this, &m_state.m_settings.global );
-	m_body->AddChild( m_map_settings_section );
+	NEW( m_game_settings_section, GameSettingsSection, this, &m_state.m_settings.global );
+	m_body->AddChild( m_game_settings_section );
 
 	NEW( m_players_section, PlayersSection, this );
 	m_body->AddChild( m_players_section );
@@ -99,22 +97,22 @@ void Lobby::Show() {
 		m_chat_section->SetHeight( 156 );
 	m_body->AddChild( m_chat_section );
 
-	NEW( m_game_settings_section, Section, "PopupSection" );
-		m_game_settings_section->SetTitleText( "CUSTOM GAME OPTIONS" );
-		m_game_settings_section->SetAlign( UIObject::ALIGN_BOTTOM );
-		m_game_settings_section->SetHeight( 210 );
-	m_body->AddChild( m_game_settings_section );
+	NEW( m_game_options_section, Section, "PopupSection" );
+		m_game_options_section->SetTitleText( "CUSTOM GAME OPTIONS" );
+		m_game_options_section->SetAlign( UIObject::ALIGN_BOTTOM );
+		m_game_options_section->SetHeight( 210 );
+	m_body->AddChild( m_game_options_section );
 
 }
 
 void Lobby::Hide() {
 	
-	m_body->RemoveChild( m_map_settings_section );
+	m_body->RemoveChild( m_game_settings_section );
 		m_players_section->RemoveChild( m_launch_button );
 		m_players_section->RemoveChild( m_cancel_button );
 	m_body->RemoveChild( m_players_section );
 	m_body->RemoveChild( m_chat_section );
-	m_body->RemoveChild( m_game_settings_section );
+	m_body->RemoveChild( m_game_options_section );
 	
 	PopupMenu::Hide();
 }
@@ -127,6 +125,12 @@ void Lobby::Iterate() {
 
 ::game::Settings& Lobby::GetSettings() {
 	return m_state.m_settings;
+}
+
+const ::game::Player* Lobby::GetPlayer() {
+	const auto *connection = GetConnection();
+	ASSERT( connection, "connection is null" );
+	return connection->GetPlayer();
 }
 
 void Lobby::UpdateSlot( const size_t slot_num, ::game::Slot* slot ) {
@@ -143,6 +147,10 @@ void Lobby::KickFromSlot( const size_t slot_num ) {
 void Lobby::BanFromSlot( const size_t slot_num ) {
 	Log( "Banning from slot " + std::to_string( slot_num ) );
 	((::game::connection::Server*)m_connection)->BanFromSlot( slot_num );
+}
+
+void Lobby::UpdateGameSettings() {
+	m_connection->UpdateGameSettings();
 }
 
 const Connection* Lobby::GetConnection() const {

@@ -7,6 +7,7 @@
 #include "ui/object/Label.h"
 #include "ui/object/ChoiceList.h"
 
+#include "game/Settings.h"
 #include "game/rules/Rules.h"
 #include "game/Slot.h"
 
@@ -27,12 +28,13 @@ CLASS( PlayersSection, LobbySection )
 	void Destroy();
 
 	void UpdateSlot( const size_t slot_num, ::game::Slot* slot );
+	void UpdateSlots( std::vector< ::game::Slot >& slots );
 	
 	const ChoiceList::choices_t& GetFactionChoices();
 	const ChoiceList::choices_t& GetDifficultyLevelChoices();
 	
 	void ApplyRules();
-	
+
 private:
 	std::vector< PlayersSectionRow* > m_slots = {};
 

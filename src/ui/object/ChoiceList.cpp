@@ -19,8 +19,15 @@ void ChoiceList::SetImmediateMode( const bool immediate_mode ) {
 }
 
 void ChoiceList::SetChoices( const choices_t& choices ) {
-	ASSERT( m_values.empty(), "choices already set" );
-	
+	bool wasSet = !m_values.empty();
+	std::string oldValue = (
+		wasSet &&
+		m_labels.find( m_value ) != m_labels.end()
+	)
+		? GetValueString()
+		: ""
+	;
+
 	m_values.clear();
 	m_labels.clear();
 	for ( auto& choice : choices ) {
@@ -30,6 +37,10 @@ void ChoiceList::SetChoices( const choices_t& choices ) {
 	
 	if ( m_created ) {
 		UpdateButtons();
+	}
+
+	if ( wasSet ) {
+		SetValueString( oldValue, true );
 	}
 }
 
@@ -48,7 +59,7 @@ const ChoiceList::value_t ChoiceList::GetValue() const {
 	return m_value;
 }
 
-void ChoiceList::SetValueString( const std::string& choice ) {
+void ChoiceList::SetValueString( const std::string& choice, bool allowMissing ) {
 	// ugh
 	bool found = false;
 	for ( const auto& label : m_labels ) {
@@ -58,7 +69,9 @@ void ChoiceList::SetValueString( const std::string& choice ) {
 			break;
 		}
 	}
-	ASSERT( found, "choice '" + choice + "' not found" );
+	if ( !allowMissing ) {
+		ASSERT( found, "choice '" + choice + "' not found" );
+	}
 }
 
 const std::string& ChoiceList::GetValueString() const {

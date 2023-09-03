@@ -25,10 +25,13 @@ CLASS( Lobby, PopupMenu )
 	void Iterate();
 
 	::game::Settings& GetSettings();
+	const ::game::Player* GetPlayer();
 	
 	void UpdateSlot( const size_t slot_num, ::game::Slot* slot );
 	void KickFromSlot( const size_t slot_num );
 	void BanFromSlot( const size_t slot_num );
+
+	void UpdateGameSettings();
 	
 	const Connection* GetConnection() const;
 	
@@ -36,13 +39,13 @@ protected:
 
 	bool OnCancel();
 	
-	GameSettingsSection* m_map_settings_section = nullptr;
+	GameSettingsSection* m_game_settings_section = nullptr;
 	PlayersSection* m_players_section = nullptr;
 		Button* m_launch_button = nullptr;
 		Button* m_cancel_button = nullptr;
 	Section* m_chat_section = nullptr;
-	Section* m_game_settings_section = nullptr;
-	
+	Section* m_game_options_section = nullptr;
+
 	::game::State m_state;
 
 private:
