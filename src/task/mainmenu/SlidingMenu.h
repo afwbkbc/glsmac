@@ -29,7 +29,7 @@ CLASS( SlidingMenu, MenuObject )
 
 protected:
 	bool IsReadyToClose() const;
-	
+
 private:
 	const MenuBlock::choices_t m_choices = {};
 	std::string m_choice = "";

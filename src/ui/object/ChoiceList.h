@@ -25,7 +25,7 @@ CLASS( ChoiceList, UIContainer )
 	const value_t GetValue() const;
 	
 	// TODO: refactor and remove
-	void SetValueString( const std::string& choice );
+	void SetValueString( const std::string& choice, bool allowMissing = false );
 	const std::string& GetValueString() const;
 	void SetChoicesV( const std::vector< std::string >& labels );
 

@@ -11,95 +11,101 @@ void Default::InitRules() {
 		
 		// SMAC
 		
-		{ 0, {
+		{ FT_RANDOM, {
 			"Random",
 			Color::FromRGB( 255, 255, 255 )
 		} },
 		
-		{ 1, {
+		{ FT_GAIANS, {
 			"Gaians",
 			Color::FromRGB( 16, 228, 0 )
 		} },
 		
-		{ 2, {
+		{ FT_HIVE, {
 			"Hive",
 			Color::FromRGB( 0, 97, 235 )
 		} },
 		
-		{ 3, {
+		{ FT_UNIVERSITY, {
 			"University",
 			Color::FromRGB( 216, 224, 235 )
 		} },
 		
-		{ 4, {
+		{ FT_MORGANITES, {
 			"Morganites",
 			Color::FromRGB( 255, 255, 0 )
 		} },
 		
-		{ 5, {
+		{ FT_SPARTANS, {
 			"Spartans",
 			Color::FromRGB( 137, 166, 166 )
 		} },
 		
-		{ 6, {
+		{ FT_BELIEVERS, {
 			"Believers",
 			Color::FromRGB( 224, 156, 28 )
 		} },
 		
-		{ 7, {
+		{ FT_PEACEKEEPERS, {
 			"Peacekeepers",
 			Color::FromRGB( 164, 176, 232 )
 		} },
 		
 		// SMACX
 		
-		{ 8, {
+		{ FT_CONSCIOUSNESS, {
 			"Consciousness",
 			Color::FromRGB( 44, 128, 104 )
 		} },
 		
-		{ 9, {
+		{ FT_PIRATES, {
 			"Pirates",
 			Color::FromRGB( 0, 255, 255 )
 		} },
 		
-		{ 10, {
+		{ FT_DRONES, {
 			"Drones",
 			Color::FromRGB( 173, 196, 192 )
 		} },
 		
-		{ 11, {
+		{ FT_ANGELS, {
 			"Angels",
 			Color::FromRGB( 103, 91, 181 )
 		} },
 		
-		{ 12, {
+		{ FT_PLANETCULT, {
 			"Planet Cult",
 			Color::FromRGB( 232, 84, 84 )
 		} },
 		
-		{ 13, {
+		{ FT_CARETAKERS, {
 			"Caretakers",
 			Color::FromRGB( 116, 156, 56 )
 		} },
 		
-		{ 14, {
+		{ FT_USURPERS, {
 			"Usurpers",
 			Color::FromRGB( 212, 208, 116 )
 		} },
 	};
-	
+
 	m_difficulty_levels = {
-		
-		{ 1, { "Citizen", -3 } },
-		{ 2, { "Specialist", -2 } },
-		{ 3, { "Talent", -1 } },
-		{ 4, { "Librarian", 0 } },
-		{ 5, { "Thinker", 1 } },
-		{ 6, { "Transcend", 2 } },
-		
+		{ DT_CITIZEN, { "Citizen", -3 } },
+		{ DT_SPECIALIST, { "Specialist", -2 } },
+		{ DT_TALENT, { "Talent", -1 } },
+		{ DT_LIBRARIAN, { "Librarian", 0 } },
+		{ DT_THINKER, { "Thinker", 1 } },
+		{ DT_TRANSCEND, { "Transcend", 2 } },
 	};
-	
+
+}
+
+const Faction& Default::GetDefaultFaction() const {
+	return m_factions.at( FT_RANDOM );
+}
+
+const DifficultyLevel& Default::GetDefaultDifficultyLevel() const {
+	return m_difficulty_levels.at( DT_TRANSCEND );
 }
 
 }

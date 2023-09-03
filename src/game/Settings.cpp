@@ -28,12 +28,17 @@ void MapSettings::Unserialize( Buffer buf ) {
 	clouds = buf.ReadInt();
 }
 
+void GlobalSettings::Initialize() {
+	game_rules.Initialize();
+	global_difficulty = game_rules.GetDefaultDifficultyLevel();
+}
+
 const Buffer GlobalSettings::Serialize() const {
 	Buffer buf;
 	
 	buf.WriteString( map.Serialize().ToString() );
-	buf.WriteInt( difficulty );
 	buf.WriteString( game_rules.Serialize().ToString() );
+	buf.WriteString( global_difficulty.Serialize().ToString() );
 	buf.WriteString( game_name );
 	
 	return buf;	
@@ -41,8 +46,8 @@ const Buffer GlobalSettings::Serialize() const {
 
 void GlobalSettings::Unserialize( Buffer buf ) {
 	map.Unserialize( buf.ReadString() );
-	difficulty = buf.ReadInt();
 	game_rules.Unserialize( buf.ReadString() );
+	global_difficulty.Unserialize( buf.ReadString() );
 	game_name = buf.ReadString();
 }
 

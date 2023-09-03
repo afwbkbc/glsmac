@@ -17,11 +17,8 @@ PlayersSectionRow::PlayersSectionRow( PlayersSection* parent, const size_t slot_
 
 void PlayersSectionRow::Create() {
 	UIContainer::Create();
-	
-	const auto* connection = m_parent->GetLobby()->GetConnection();
-	ASSERT( connection, "connection is null" );
 
-	auto* me = connection->GetPlayer();
+	auto* me = m_parent->GetLobby()->GetPlayer();
 	const bool am_i_host = me->GetRole() == ::game::Player::PR_HOST;
 
 	NEW( m_elements.actions, Dropdown, "PopupDropdown" );

@@ -47,7 +47,7 @@ CLASS( Connection, base::Module )
 	const Player* GetPlayer() const;
 
 	virtual void UpdateSlot( const size_t slot_num, const Slot* slot ) = 0;
-	
+	virtual void UpdateGameSettings() = 0;
 protected:
 	network::Network * const m_network = g_engine->GetNetwork();
 

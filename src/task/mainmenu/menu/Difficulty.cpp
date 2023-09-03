@@ -5,50 +5,41 @@
 namespace task {
 namespace mainmenu {
 
-Difficulty::Difficulty( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "PICK A DIFFICULTY LEVEL", {
-	{ "CITIZEN", {
-		CH( this ) {
-			m_mainmenu->m_settings.global.difficulty = game::GlobalSettings::DIFFICULTY_CITIZEN;
-			NEWV( menu, Rules, m_mainmenu );
-			NextMenu( menu );
+Difficulty::Difficulty( MainMenu *mainmenu )
+	: SlidingMenu( mainmenu, "PICK A DIFFICULTY LEVEL", GenerateChoices( mainmenu ), GetDefaultChoice( mainmenu ) )
+{
+	//
+}
+
+const MenuBlock::choices_t Difficulty::GenerateChoices( MainMenu *mainmenu ) {
+	MenuBlock::choices_t choices = {};
+	auto& rules = mainmenu->m_settings.global.game_rules;
+	for ( auto& it : rules.m_difficulty_levels ) {
+		auto name = it.second.m_name;
+		std::transform( name.begin(), name.end(), name.begin(), ::toupper );
+		choices.push_back({ name, {
+			CH( this, it, mainmenu ) {
+				mainmenu->m_settings.global.global_difficulty = it.second;
+				NEWV( menu, Rules, mainmenu );
+				NextMenu( menu );
+			}
+		}});
+	}
+	return choices;
+}
+
+const size_t Difficulty::GetDefaultChoice( MainMenu *mainmenu ) const {
+	auto& rules = mainmenu->m_settings.global.game_rules;
+	const auto& default_difficulty_level = rules.GetDefaultDifficultyLevel();
+	size_t choice_idx = 0;
+	for ( auto& it : rules.m_difficulty_levels ) {
+		if ( it.second.m_difficulty == default_difficulty_level.m_difficulty ) {
+			return choice_idx;
 		}
-	}},
-	{ "SPECIALIST", {
-		CH( this ) {
-			m_mainmenu->m_settings.global.difficulty = game::GlobalSettings::DIFFICULTY_SPECIALIST;
-			NEWV( menu, Rules, m_mainmenu );
-			NextMenu( menu );
-		}
-	}},
-	{ "TALENT", {
-		CH( this ) {
-			m_mainmenu->m_settings.global.difficulty = game::GlobalSettings::DIFFICULTY_TALENT;
-			NEWV( menu, Rules, m_mainmenu );
-			NextMenu( menu );
-		}
-	}},
-	{ "LIBRARIAN", {
-		CH( this ) {
-			m_mainmenu->m_settings.global.difficulty = game::GlobalSettings::DIFFICULTY_LIBRARIAN;
-			NEWV( menu, Rules, m_mainmenu );
-			NextMenu( menu );
-		}
-	}},
-	{ "THINKER", {
-		CH( this ) {
-			m_mainmenu->m_settings.global.difficulty = game::GlobalSettings::DIFFICULTY_THINKER;
-			NEWV( menu, Rules, m_mainmenu );
-			NextMenu( menu );
-		}
-	}},
-	{ "TRANSCEND", {
-		CH( this ) {
-			m_mainmenu->m_settings.global.difficulty = game::GlobalSettings::DIFFICULTY_TRANSCEND;
-			NEWV( menu, Rules, m_mainmenu );
-			NextMenu( menu );
-		}
-	}}
-}) {}
+		choice_idx++;
+	}
+	return 0;
+}
 
 }
 }

@@ -11,7 +11,6 @@ namespace lobby {
 PlayersSection::PlayersSection( Lobby* lobby )
 	: LobbySection( lobby )
 {
-	ApplyRules();
 	SetTitleText( "PLAYERS" );
 	SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_TOP );
 }
@@ -53,26 +52,31 @@ void PlayersSection::UpdateSlot( const size_t slot_num, ::game::Slot* slot ) {
 	AddChild( row );
 }
 
+void PlayersSection::UpdateSlots( std::vector< ::game::Slot >& slots ) {
+	const auto& game_rules = GetLobby()->GetSettings().global.game_rules;
+
+	m_choices.factions.clear();
+	for ( auto& faction : game_rules.m_factions ) {
+		m_choices.factions.push_back({ faction.first, faction.second.m_name });
+	}
+
+	m_choices.difficulty_levels.clear();
+	for ( auto& difficulty : game_rules.m_difficulty_levels ) {
+		m_choices.difficulty_levels.push_back({ difficulty.first, difficulty.second.m_name });
+	}
+
+	// TODO: more granular updates
+	for ( size_t i = 0 ; i < slots.size() ; i++ ) {
+		UpdateSlot( i, &(slots.at( i )) );
+	}
+}
+
 const ChoiceList::choices_t& PlayersSection::GetFactionChoices() {
 	return m_choices.factions;
 }
 
 const ChoiceList::choices_t& PlayersSection::GetDifficultyLevelChoices() {
 	return m_choices.difficulty_levels;
-}
-
-void PlayersSection::ApplyRules() {
-	const auto& game_rules = GetLobby()->GetSettings().global.game_rules;
-	
-	m_choices.factions.clear();
-	for ( auto& faction : game_rules.m_factions ) {
-		m_choices.factions.push_back({ faction.first, faction.second.m_name });
-	}
-	
-	m_choices.difficulty_levels.clear();
-	for ( auto& difficulty : game_rules.m_difficulty_levels ) {
-		m_choices.difficulty_levels.push_back({ difficulty.first, difficulty.second.m_name });
-	}
 }
 
 }

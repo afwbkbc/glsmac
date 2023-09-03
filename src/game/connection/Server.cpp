@@ -20,12 +20,14 @@ void Server::ProcessEvent( const network::Event& event ) {
 		case Event::ET_LISTEN: {
 			ASSERT( !m_player, "player already set" );
 			Log( "Listening" );
+			m_state->m_settings.global.Initialize();
 			m_state->m_slots.Resize( 7 ); // TODO: make dynamic?
+			const auto& rules = m_state->m_settings.global.game_rules;
 			NEW( m_player, ::game::Player, {
 				m_state->m_settings.local.player_name,
 				::game::Player::PR_HOST,
-				m_state->m_settings.global.game_rules.m_factions[ 0 ],
-				m_state->m_settings.global.game_rules.m_difficulty_levels[ 6 ] // transcend by default
+				rules.GetDefaultFaction(),
+				rules.GetDefaultDifficultyLevel(),
 			});
 			m_state->AddPlayer( m_player );
 			m_slot = 0; // host always has slot 0
@@ -109,11 +111,12 @@ void Server::ProcessEvent( const network::Event& event ) {
 							break;
 						}
 
+						const auto& rules = m_state->m_settings.global.game_rules;
 						NEWV( player, ::game::Player, {
 							packet.data.str,
 							::game::Player::PR_PLAYER,
-							m_state->m_settings.global.game_rules.m_factions[ 0 ],
-							m_state->m_settings.global.game_rules.m_difficulty_levels[ 6 ] // transcend by default
+							rules.GetDefaultFaction(),
+							rules.GetDefaultDifficultyLevel(),
 						});
 						m_state->AddPlayer( player );
 
@@ -122,13 +125,6 @@ void Server::ProcessEvent( const network::Event& event ) {
 						slot.SetPlayer( player, event.cid, event.data.remote_address );
 
 						{
-							Log( "Sending global settings to " + std::to_string( event.cid ) );
-							Packet p;
-							p.type = Packet::PT_GLOBAL_SETTINGS;
-							p.data.str = m_state->m_settings.global.Serialize().ToString();
-							m_network->MT_SendPacket( p, event.cid );
-						}
-						{
 							Log( "Sending players list to " + std::to_string( event.cid ) );
 							Packet p;
 							p.type = Packet::PT_PLAYERS;
@@ -136,6 +132,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 							p.data.str = m_state->m_slots.Serialize().ToString();
 							g_engine->GetNetwork()->MT_SendPacket( p, event.cid );
 						}
+						SendGlobalSettings( event.cid );
 
 						if ( m_on_player_join ) {
 							m_on_player_join( slot_num, &slot, player );
@@ -216,6 +213,12 @@ void Server::UpdateSlot( const size_t slot_num, const Slot* slot ) {
 	});
 }
 
+void Server::UpdateGameSettings() {
+	Broadcast( [ this ]( const size_t cid ) -> void {
+		SendGlobalSettings( cid );
+	});
+}
+
 void Server::Kick( const size_t cid, const std::string& reason = "" ) {
 	Log( "Kicking " + std::to_string( cid ) + ( !reason.empty() ? " (reason: " + reason + ")" : "" ) );
 	Packet p;
@@ -233,6 +236,14 @@ void Server::KickFromSlot( Slot& slot, const std::string& reason ) {
 void Server::Error( const size_t cid, const std::string& reason ) {
 	Log( "Network protocol error (cid: " + std::to_string( cid ) + "): " + reason );
 	Kick( cid, "Network protocol error" );
+}
+
+void Server::SendGlobalSettings( size_t cid ) {
+	Log( "Sending global settings to " + std::to_string( cid ) );
+	Packet p;
+	p.type = Packet::PT_GLOBAL_SETTINGS;
+	p.data.str = m_state->m_settings.global.Serialize().ToString();
+	m_network->MT_SendPacket( p, cid );
 }
 
 }

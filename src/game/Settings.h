@@ -60,22 +60,15 @@ CLASS( MapSettings, Serializable )
 
 // settings that are synced between players (host has authority)
 CLASS( GlobalSettings, Serializable )
+
+	void Initialize();
+
 	typedef uint8_t parameter_t;	
 
 	MapSettings map = {};
 
-	// TODO: use difficulty levels from rules
-	static constexpr parameter_t DIFFICULTY_CITIZEN = 1;
-	static constexpr parameter_t DIFFICULTY_SPECIALIST = 2;
-	static constexpr parameter_t DIFFICULTY_TALENT= 3;
-	static constexpr parameter_t DIFFICULTY_LIBRARIAN = 4;
-	static constexpr parameter_t DIFFICULTY_THINKER = 5;
-	static constexpr parameter_t DIFFICULTY_TRANSCEND = 6;
-	parameter_t difficulty = DIFFICULTY_CITIZEN;
-	
-	rules::Default game_rules; // TODO: custom rules
-
-
+	rules::Default game_rules = {}; // TODO: custom rules
+	rules::DifficultyLevel global_difficulty = {};
 	
 	std::string game_name = "";
 	
