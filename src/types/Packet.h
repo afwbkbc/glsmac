@@ -31,6 +31,7 @@ CLASS( Packet, Serializable )
 	} udata;
 	
 	struct {
+		bool boolean;
 		size_t num;
 		std::string str;
 		std::vector< std::string > vec;

@@ -43,11 +43,11 @@ const rules::DifficultyLevel& Player::GetDifficultyLevel() const {
 	return m_difficulty_level;
 }
 
-void Player::SetSlot( const Slot* slot ) {
+void Player::SetSlot( Slot* slot ) {
 	m_slot = slot;
 }
 
-const Slot* Player::GetSlot() const {
+Slot* Player::GetSlot() const {
 	return m_slot;
 }
 

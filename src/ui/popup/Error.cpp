@@ -7,7 +7,7 @@ Error::Error( const std::string class_name )
 	: object::Popup( class_name )
 {
 	// TODO: determine size from text
-	SetWidth( 440 );
+	SetWidth( 560 );
 	SetHeight( 120 );
 	
 	// TODO: fix z index bugs
@@ -41,13 +41,12 @@ void Error::Create() {
 	m_body->AddChild( m_ok_button );
 
 	On( UIEvent::EV_KEY_DOWN, EH( this ) {
-		if ( !data->key.modifiers && data->key.code == UIEvent::K_ENTER ) {
-			Close();
-			return true;
+		if ( !data->key.modifiers ) {
+			if ( data->key.code == UIEvent::K_ENTER || ( data->key.code == UIEvent::K_ESCAPE ) ) {
+				Close();
+			}
 		}
-		else {
-			return false;
-		}
+		return true;
 	});
 }
 

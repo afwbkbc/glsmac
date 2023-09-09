@@ -45,7 +45,7 @@ void Surface::Iterate() {
 
 void Surface::ApplyStyle() {
 	Mesh::ApplyStyle();
-	
+
 	if ( Has( Style::A_TEXTURE ) ) {
 		auto* texture = (Texture*)GetObject( Style::A_TEXTURE );
 		if ( texture ) {

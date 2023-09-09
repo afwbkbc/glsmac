@@ -27,7 +27,7 @@ void PlayersSectionRow::Create() {
 
 	if ( m_slot->GetState() == ::game::Slot::SS_PLAYER ) {
 		m_elements.actions->SetMode( Dropdown::DM_MENU );
-		
+
 		auto* player = m_slot->GetPlayer();
 		ASSERT( player, "slot player is null" );
 
@@ -41,6 +41,17 @@ void PlayersSectionRow::Create() {
 
 		const auto& faction_color = player->GetFaction().m_color;
 
+		if ( m_slot->IsReady() ) {
+			NEW( m_elements.ready, Surface );
+			m_elements.ready->SetWidth( 24 );
+			m_elements.ready->SetHeight( 16 );
+			m_elements.ready->SetLeft( 8 );
+			m_elements.ready->SetTop( 4 );
+			m_elements.ready->SetTexture( g_engine->GetTextureLoader()->GetColorTexture( faction_color ) );
+			m_elements.ready->SetStretchTexture( true );
+			AddChild( m_elements.ready );
+		}
+		
 		NEW( m_elements.faction, Dropdown, "PopupDropdown" );
 			if ( is_it_me ) {
 				m_elements.faction->SetChoices( m_parent->GetFactionChoices() );
@@ -145,7 +156,11 @@ void PlayersSectionRow::Create() {
 }
 
 void PlayersSectionRow::Destroy() {
-	
+
+	if ( m_elements.ready ) {
+		RemoveChild( m_elements.ready );
+	}
+
 	RemoveChild( m_elements.actions );
 	
 	if ( m_elements.faction ) {

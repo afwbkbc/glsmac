@@ -299,6 +299,7 @@ protected:
 	virtual void ReloadStyle();
 
 	void ApplyStyleIfNeeded();
+	void ApplyStyleIfNotLoaded();
 	
 	void ForwardStyleAttribute( const Style::attribute_type_t src_type, const Style::attribute_type_t dst_type, UIObject* child );
 	void ForwardStyleAttribute( const Style::attribute_type_t type, UIObject* child );

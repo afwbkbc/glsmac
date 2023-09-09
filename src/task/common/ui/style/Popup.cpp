@@ -299,6 +299,7 @@ void Popup::AddStyles() {
 			s->SetTexture( Style::A_TEXTURE_BACK, "interface.pcx", 68, 127, 134, 146 );
 		}
 	});
+
 }
 
 }
