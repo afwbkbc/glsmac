@@ -162,6 +162,14 @@ bool Lobby::OnCancel() {
 	return true;
 }
 
+void Lobby::LockInput() {
+	m_frame->Hide();
+}
+
+void Lobby::UnlockInput() {
+	m_frame->Show();
+}
+
 }
 }
 }

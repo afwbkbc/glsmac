@@ -120,6 +120,16 @@ namespace util {
 			: GetCurrentDirectory() + PATH_SEPARATOR + GetFilteredPath( path )
 		;
 	}
+
+	const std::string FS::GetExtension( const std::string& path ) {
+		const auto pos = path.rfind( '.' );
+		if ( pos == std::string::npos ) {
+			return "";
+		}
+		else {
+			return path.substr( pos );
+		}
+	}
 	
 	const bool FS::Exists( const string& path ) {
 		return std::filesystem::exists( path );

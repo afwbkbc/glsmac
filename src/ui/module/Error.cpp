@@ -43,7 +43,7 @@ void Error::Start() {
 	NEW( m_section, Section, "DefaultPopupFrame" );
 		m_section->SetTitleText( "ERROR" );
 		m_section->SetAlign( UIObject::ALIGN_CENTER );
-		m_section->SetWidth( 500 );
+		m_section->SetWidth( 560 );
 		m_section->SetHeight( 150 );
 		m_section->SetZIndex( 0.9 );
 	m_ui->AddObject( m_section );

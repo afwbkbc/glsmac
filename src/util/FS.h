@@ -24,6 +24,7 @@ CLASS( FS, Util )
 	static const std::string GetBaseName( const std::string& path );
 	static const std::string GetFilteredPath( const std::string& path );
 	static const std::string GetAbsolutePath( const std::string& path );
+	static const std::string GetExtension( const std::string& path );
 	
 	static const bool Exists( const std::string& path );
 	static const bool IsFile( const std::string& path );

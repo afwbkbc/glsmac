@@ -20,7 +20,7 @@ void FileBrowser::SetFileExtension( const std::string& file_extension ) {
 	m_file_extension = file_extension;
 }
 
-void FileBrowser::SetDefaultFileName( const std::string& default_filename ) {
+void FileBrowser::SetDefaultFilename( const std::string& default_filename ) {
 	ASSERT( !m_file_list, "can't change default filename after initialization" );
 	m_default_filename = default_filename;
 }
@@ -54,7 +54,7 @@ void FileBrowser::Create() {
 	AddChild( m_file_list );
 	
 	NEW( m_input, Input, "PopupFileListInput" );
-		m_input->SetZIndex( 0.8f ); // TODO: fix z index bugs
+		m_input->SetZIndex( 0.8f ); // TODO: fix z index bugs`
 		m_input->SetMaxLength( 128 ); // TODO: make scrollable horizontally when overflowed
 		m_input->On( UIEvent::EV_CHANGE, EH( this ) {
 			ASSERT( data->value.change.text, "input changed but test ptr is null" );
@@ -258,22 +258,8 @@ void FileBrowser::ChangeDirectory( std::string directory ) {
 		// files
 		for ( auto& item : items ) {
 			if ( util::FS::IsFile( item ) ) {
-				if ( !m_file_extension.empty() ) {
-					// show only files with matching extension
-					const auto pos = item.rfind( '.' );
-					if (
-						pos == std::string::npos ||
-						memcmp(
-							item.c_str() + pos,
-							m_file_extension.c_str(),
-							std::min< size_t >(
-								m_file_extension.size(),
-								item.size() - pos
-							)
-						) 
-					) {
-						continue; // wrong/missing extension
-					}
+				if ( !m_file_extension.empty() && util::FS::GetExtension( item ) != m_file_extension ) {
+					continue; // wrong/missing extension
 				}
 				m_file_list->AddLine( item.substr( m_current_directory.size() + item_prefix_size ), cls + "File" );
 			}
@@ -318,7 +304,7 @@ void FileBrowser::SelectItem( std::string item ) {
 			ChangeDirectory( path );
 		}
 		else {
-			if ( !m_file_extension.empty() && path.find( '.' ) == std::string::npos ) {
+			if ( !m_file_extension.empty() && util::FS::GetExtension( path ) == "" ) {
 				path += m_file_extension;
 			}
 			if (

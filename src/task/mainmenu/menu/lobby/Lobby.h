@@ -34,7 +34,10 @@ CLASS( Lobby, PopupMenu )
 	void UpdateGameSettings();
 	
 	const Connection* GetConnection() const;
-	
+
+	void LockInput();
+	void UnlockInput();
+
 protected:
 
 	bool OnCancel();

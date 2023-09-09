@@ -628,9 +628,16 @@ const Map::error_code_t Map::Load( const std::string& path ) {
 	
 	Log( "Loading map from " + path );
 	NEW( m_tiles, Tiles );
-	m_tiles->Unserialize( Buffer( FS::ReadFile( path ) ) );
+	try {
+		m_tiles->Unserialize( Buffer( FS::ReadFile( path ) ) );
+		return EC_NONE;
+	}
+	catch ( std::runtime_error& e ){
+		DELETE( m_tiles );
+		m_tiles = nullptr;
+		return EC_MAPFILE_FORMAT_ERROR;
+	}
 	
-	return EC_NONE;
 }
 
 const Map::error_code_t Map::Save( const std::string& path ) {

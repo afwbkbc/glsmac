@@ -125,7 +125,7 @@ void Dropdown::Create() {
 		m_elements.choices->On( UIEvent::EV_SELECT, EH( this ) {
 			Collapse();
 			const auto* value = data->value.change.text;
-			if ( *value != m_value ) {
+			if ( *value != m_value || m_mode == DM_MENU ) { // in menu mode allow to select same value again
 				if ( m_mode == DM_SELECT ) {
 					SetValue( *value );
 				}
