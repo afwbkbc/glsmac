@@ -510,12 +510,7 @@ void Game::DestroyRequest( const MT_Request& request ) {
 }
 
 void Game::DestroyResponse( const MT_Response& response ) {
-	if ( response.result == R_ERROR ) {
-		if ( response.data.error.error_text ) {
-			DELETE( response.data.error.error_text );
-		}
-	}
-	else {
+	if ( response.result == R_SUCCESS ){
 		switch ( response.op ) {
 			case OP_INIT: {
 				if ( response.data.init.terrain_texture ) {

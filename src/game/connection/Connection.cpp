@@ -122,6 +122,10 @@ void Connection::Iterate() {
 	}
 }
 
+const size_t Connection::GetSlotNum() const {
+	return m_slot;
+}
+
 const Player* Connection::GetPlayer() const {
 	return m_player;
 }

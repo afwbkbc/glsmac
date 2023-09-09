@@ -43,7 +43,7 @@ void LoadMapFile::Show() {
 			}
 			else {
 				ASSERT( util::FS::IsAbsolutePath( path ), "path must be absolute" );
-				m_mainmenu->m_settings.local.map_file = path;
+				m_mainmenu->m_settings.global.map.filename = path;
 				m_mainmenu->StartGame();
 			}
 			return true;
@@ -53,8 +53,6 @@ void LoadMapFile::Show() {
 
 void LoadMapFile::Align() {
 	PopupMenu::Align();
-	
-	const auto* g = g_engine->GetGraphics();
 	
 	SetWidth( 500 );
 	SetHeight( std::min< size_t >( 600, g_engine->GetGraphics()->GetViewportHeight() - 40 ) );

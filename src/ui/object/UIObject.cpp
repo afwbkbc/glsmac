@@ -83,7 +83,7 @@ void UIObject::Align() {
 }
 
 void UIObject::Draw() {
-	ApplyStyleIfNeeded();
+	ApplyStyleIfNotLoaded();
 	RealignMaybe();
 	Refresh();
 }
@@ -843,7 +843,7 @@ void UIObject::SetClass( const std::string& style_class ) {
 	ASSERT( !m_style_loaded, "style '" + m_style_class + "' already loaded" );
 	//Log("Setting style class '" + style_class + "'");
 	m_style_class = style_class;
-	ApplyStyleIfNeeded();
+	ApplyStyleIfNotLoaded();
 }
 
 #ifdef DEBUG
@@ -866,18 +866,22 @@ void UIObject::HideDebugFrame() {
 #endif
 
 void UIObject::ApplyStyleIfNeeded() {
-	if ( !m_style_loaded ) {
-		if ( !m_style_class.empty() || !m_parent_style_attributes.empty() || m_forward_all_style_attributes ) {
-			if ( !m_style && !m_style_class.empty() ) {
-				m_style = g_engine->GetUI()->GetStyle( m_style_class );
-			}
-			BlockRealigns();
-			m_is_applying_style = true;
-			ApplyStyle();
-			m_is_applying_style = false;
-			UnblockRealigns();
-			Realign();
+	if ( !m_style_class.empty() || !m_parent_style_attributes.empty() || m_forward_all_style_attributes ) {
+		if ( !m_style && !m_style_class.empty() ) {
+			m_style = g_engine->GetUI()->GetStyle( m_style_class );
 		}
+		BlockRealigns();
+		m_is_applying_style = true;
+		ApplyStyle();
+		m_is_applying_style = false;
+		UnblockRealigns();
+		Realign();
+	}
+}
+
+void UIObject::ApplyStyleIfNotLoaded() {
+	if ( !m_style_loaded ) {
+		ApplyStyleIfNeeded();
 		m_style_loaded = true;
 	}
 }
@@ -886,7 +890,7 @@ void UIObject::AddStyleModifier( const Style::modifier_t modifier ) {
 	ASSERT( !( m_style_modifiers & modifier ), "style modifier " + std::to_string( modifier ) + " already added" );
 	m_style_modifiers |= modifier;
 	m_is_applying_style = true;
-	ApplyStyle();
+	ApplyStyleIfNeeded();
 	m_is_applying_style = false;
 	Redraw();
 }
@@ -895,7 +899,7 @@ void UIObject::RemoveStyleModifier( const Style::modifier_t modifier ) {
 	ASSERT( (m_style_modifiers & modifier), "style modifier " + std::to_string( modifier ) + " already removed" );
 	m_style_modifiers &= ~modifier;
 	m_is_applying_style = true;
-	ApplyStyle();
+	ApplyStyleIfNeeded();
 	m_is_applying_style = false;
 	Redraw();
 }

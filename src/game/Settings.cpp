@@ -1,11 +1,14 @@
 #include "Settings.h"
 
+#include "util/FS.h"
+
 namespace game {
 
 const Buffer MapSettings::Serialize() const {
 	Buffer buf;
 	
 	buf.WriteInt( type );
+	buf.WriteString( util::FS::GetBaseName( filename ) ); // don't send full path for security reasons, nobody needs it anyway
 	buf.WriteInt( size );
 	buf.WriteInt( custom_size.x );
 	buf.WriteInt( custom_size.y );
@@ -19,6 +22,7 @@ const Buffer MapSettings::Serialize() const {
 
 void MapSettings::Unserialize( Buffer buf ) {
 	type = (type_t) buf.ReadInt();
+	filename = buf.ReadString();
 	size = buf.ReadInt();
 	custom_size.x = buf.ReadInt();
 	custom_size.y = buf.ReadInt();
@@ -59,8 +63,7 @@ const Buffer LocalSettings::Serialize() const {
 	buf.WriteInt( network_role );
 	buf.WriteString( player_name );
 	buf.WriteString( remote_address );
-	buf.WriteString( map_file );
-		
+
 	return buf;
 }
 
@@ -70,7 +73,6 @@ void LocalSettings::Unserialize( Buffer buf ) {
 	network_role = (network_role_t) buf.ReadInt();
 	player_name = buf.ReadString();
 	remote_address = buf.ReadString();
-	map_file = buf.ReadString();
 }
 
 

@@ -31,8 +31,8 @@ CLASS( Player, types::Serializable )
 	void SetDifficultyLevel( const rules::DifficultyLevel& difficulty_level );
 	const rules::DifficultyLevel& GetDifficultyLevel() const;
 	
-	void SetSlot( const Slot* slot );
-	const Slot* GetSlot() const;
+	void SetSlot( Slot* slot );
+	Slot* GetSlot() const;
 	
 	const role_t GetRole() const;
 	
@@ -43,7 +43,7 @@ private:
 	bool m_is_initialized = false;
 	std::string m_name = "";
 	role_t m_role = PR_NONE;
-	const Slot* m_slot = nullptr;
+	Slot* m_slot = nullptr;
 	
 	rules::Faction m_faction = {};
 	rules::DifficultyLevel m_difficulty_level = {};

@@ -18,11 +18,15 @@ CLASS( Slot, types::Serializable )
 	void Open();
 	void Close();
 	void SetCloseAfterClear();
-	Player* GetPlayer() const;
+
 	size_t GetCid() const;
 	const std::string& GetRemoteAddress() const;
+	const bool IsReady() const;
+
+	Player* GetPlayer() const;
 	Player* GetPlayerAndClose();
 	void SetPlayer( Player* player, const size_t cid, const std::string& remote_address );
+	void SetReady( const bool ready );
 
 	const types::Buffer Serialize() const;
 	void Unserialize( types::Buffer buf );
@@ -35,6 +39,7 @@ private:
 		Player* player = nullptr;
 		size_t cid = 0;
 		std::string remote_address = "";
+		bool ready = false;
 	} m_player_data = {};
 	
 };

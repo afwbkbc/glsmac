@@ -42,6 +42,15 @@ void Dropdown::SetChoices( const ChoiceList::choices_t& choices ) {
 	}
 }
 
+void Dropdown::SetValue( const ChoiceList::value_t value ) {
+	for ( const auto& it : m_choices ) {
+		if ( it.first == value ) {
+			SetValue( it.second );
+			return;
+		}
+	}
+}
+
 void Dropdown::SetValue( const std::string& value ) {
 	if ( m_mode == DM_SELECT ) {
 		//ASSERT( std::find( m_choices.begin(), m_choices.end(), value ) != m_choices.end(), "value '" + value + "' not found in choices" );
@@ -116,7 +125,7 @@ void Dropdown::Create() {
 		m_elements.choices->On( UIEvent::EV_SELECT, EH( this ) {
 			Collapse();
 			const auto* value = data->value.change.text;
-			if ( *value != m_value ) {
+			if ( *value != m_value || m_mode == DM_MENU ) { // in menu mode allow to select same value again
 				if ( m_mode == DM_SELECT ) {
 					SetValue( *value );
 				}

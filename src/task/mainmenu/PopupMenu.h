@@ -46,8 +46,9 @@ protected:
 
 	const bool IsShown() const;
 
-private:
 	Section* m_frame = nullptr;
+
+private:
 		Button* m_button_ok = nullptr;
 		Button* m_button_cancel = nullptr;
 	

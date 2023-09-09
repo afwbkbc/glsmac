@@ -34,14 +34,17 @@ CLASS( Lobby, PopupMenu )
 	void UpdateGameSettings();
 	
 	const Connection* GetConnection() const;
-	
+
+	void LockInput();
+	void UnlockInput();
+
 protected:
 
 	bool OnCancel();
 	
 	GameSettingsSection* m_game_settings_section = nullptr;
 	PlayersSection* m_players_section = nullptr;
-		Button* m_launch_button = nullptr;
+		Button* m_ready_button = nullptr;
 		Button* m_cancel_button = nullptr;
 	Section* m_chat_section = nullptr;
 	Section* m_game_options_section = nullptr;

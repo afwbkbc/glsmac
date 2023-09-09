@@ -21,6 +21,7 @@ CLASS( Dropdown, Panel )
 	Dropdown( const std::string& class_name );
 
 	void SetChoices( const ChoiceList::choices_t& choices );
+	void SetValue( const ChoiceList::value_t value );
 	void SetValue( const std::string& value );
 	void SetMode( const dropdown_mode_t mode );
 	

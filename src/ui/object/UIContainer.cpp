@@ -43,7 +43,7 @@ void UIContainer::Iterate() {
 }
 
 void UIContainer::CreateChild( UIObject *object ) {
-	object->ApplyStyleIfNeeded();
+	object->ApplyStyleIfNotLoaded();
 	object->Create();
 	object->AddStyleModifier( m_style_modifiers );
 	object->Realign();
@@ -90,7 +90,7 @@ void UIContainer::AddChild( UIObject *object ) {
 		}
 	}
 	if ( m_created ) {
-		ApplyStyleIfNeeded();
+		ApplyStyleIfNotLoaded();
 		CreateChild( object );
 		Refresh();
 	}
@@ -254,7 +254,8 @@ void UIContainer::ApplyStyle() {
 	
 	for ( auto& c : m_child_objects ) {
 		////c->ReloadStyle();
-		c->ApplyStyle(); // ???
+		c->ApplyStyleIfNeeded(); // ???
+		//c->ApplyStyleIfNotLoaded();
 	}
 }
 

@@ -12,7 +12,7 @@ namespace object {
 void TextView::Create() {
 	ScrollView::Create();
 	
-	ApplyStyleIfNeeded(); // TODO: move to UIContainer?
+	ApplyStyleIfNotLoaded(); // TODO: move to UIContainer?
 	
 	size_t index = 0;
 	for ( auto& line : m_lines ) {

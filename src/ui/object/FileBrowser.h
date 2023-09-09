@@ -21,7 +21,7 @@ CLASS( FileBrowser, UIContainer )
 	void SetFileExtension( const std::string& file_extension );
 	
 	// specify default file name (including extension)
-	void SetDefaultFileName( const std::string& default_filename );
+	void SetDefaultFilename( const std::string& default_filename );
 	
 	// whether to allow selecting existing files only, or any file
 	void SetExistingOnly( bool existing_only );

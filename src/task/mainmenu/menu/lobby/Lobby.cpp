@@ -68,14 +68,27 @@ void Lobby::Show() {
 	NEW( m_players_section, PlayersSection, this );
 	m_body->AddChild( m_players_section );
 
-	NEW( m_launch_button, Button, "PopupButtonOkCancel" ); // TODO: correct style
-		m_launch_button->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_BOTTOM );
-		m_launch_button->SetLeft( 8 );
-		m_launch_button->SetBottom( 4 );
-		m_launch_button->SetWidth( 234 );
-		m_launch_button->SetHeight( 22 );
-		m_launch_button->SetLabel( "LAUNCH GAME" );
-	m_players_section->AddChild( m_launch_button );
+	NEW( m_ready_button, Button, "PopupButtonOkCancel" ); // TODO: correct style
+		m_ready_button->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_BOTTOM );
+		m_ready_button->SetLeft( 8 );
+		m_ready_button->SetBottom( 4 );
+		m_ready_button->SetWidth( 234 );
+		m_ready_button->SetHeight( 22 );
+		m_ready_button->SetLabel( "READY" );
+		m_ready_button->On( UIEvent::EV_BUTTON_CLICK, EH( this ) {
+			auto* slot = GetPlayer()->GetSlot();
+			if ( !m_ready_button->HasStyleModifier( Style::M_SELECTED ) ) {
+				m_ready_button->AddStyleModifier( Style::M_SELECTED );
+				slot->SetReady( true );
+			}
+			else {
+				m_ready_button->RemoveStyleModifier( Style::M_SELECTED );
+				slot->SetReady( false );
+			}
+			UpdateSlot( m_connection->GetSlotNum(), slot );
+			return true;
+		});
+	m_players_section->AddChild( m_ready_button );
 	
 	NEW( m_cancel_button, Button, "PopupButtonOkCancel" ); // TODO: correct style
 		m_cancel_button->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_BOTTOM );
@@ -108,7 +121,7 @@ void Lobby::Show() {
 void Lobby::Hide() {
 	
 	m_body->RemoveChild( m_game_settings_section );
-		m_players_section->RemoveChild( m_launch_button );
+		m_players_section->RemoveChild( m_ready_button );
 		m_players_section->RemoveChild( m_cancel_button );
 	m_body->RemoveChild( m_players_section );
 	m_body->RemoveChild( m_chat_section );
@@ -160,6 +173,14 @@ const Connection* Lobby::GetConnection() const {
 bool Lobby::OnCancel() {
 	m_connection->Disconnect();
 	return true;
+}
+
+void Lobby::LockInput() {
+	m_frame->Hide();
+}
+
+void Lobby::UnlockInput() {
+	m_frame->Show();
 }
 
 }

@@ -23,7 +23,9 @@ CLASS( MapSettings, Serializable )
 		MT_MAPFILE,
 	};
 	type_t type = MT_RANDOM;
-	
+
+	std::string filename = "";
+
 	static constexpr parameter_t MAP_CUSTOM = 0;
 	static constexpr parameter_t MAP_TINY = 1;
 	static constexpr parameter_t MAP_SMALL = 2;
@@ -103,8 +105,6 @@ public:
 
 	std::string player_name = "";
 	std::string remote_address = "";
-	
-	std::string map_file = "";
 	
 	std::set< std::string > banned_addresses = {};
 	

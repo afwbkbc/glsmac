@@ -49,20 +49,20 @@ void Game::Start() {
 #ifdef DEBUG
 	if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) {
 		m_settings.global.map.type = ::game::MapSettings::MT_MAPFILE;
-		m_settings.local.map_file = config->GetQuickstartMapFile();
+		m_settings.global.map.filename = config->GetQuickstartMapFile();
 	}
 #endif
 	
 	if ( m_settings.global.map.type == ::game::MapSettings::MT_MAPFILE ) {
-		m_map_data.filename = util::FS::GetBaseName( m_settings.local.map_file );
-		m_map_data.last_directory = util::FS::GetDirName( m_settings.local.map_file );
+		m_map_data.filename = util::FS::GetBaseName( m_settings.global.map.filename );
+		m_map_data.last_directory = util::FS::GetDirName( m_settings.global.map.filename );
 	}
 	
 	ui->GetLoader()->Show( "Starting game", LCH( this ) {
 		CancelRequests();
 		return false;
 	});
-	m_mt_ids.init = game->MT_Init( m_settings.global.map, m_settings.global.map.type == ::game::MapSettings::MT_MAPFILE ? m_settings.local.map_file : "" );
+	m_mt_ids.init = game->MT_Init( m_settings.global.map, m_settings.global.map.type == ::game::MapSettings::MT_MAPFILE ? m_settings.global.map.filename : "" );
 }
 
 void Game::Stop() {
@@ -577,8 +577,8 @@ void Game::LoadMap( const std::string& path ) {
 		CancelRequests();
 		return false;
 	});
-	m_settings.local.map_file = path;
 	m_settings.global.map.type = ::game::MapSettings::MT_MAPFILE;
+	m_settings.global.map.filename = path;
 	m_map_data.filename = util::FS::GetBaseName( path );
 	m_map_data.last_directory = util::FS::GetDirName( path );	
 	if ( m_mt_ids.init ) {
