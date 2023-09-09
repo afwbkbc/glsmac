@@ -43,7 +43,8 @@ CLASS( Connection, base::Module )
 	void Disconnect( const std::string& message = "" );
 
 	void Iterate();
-	
+
+	const size_t GetSlotNum() const;
 	const Player* GetPlayer() const;
 
 	virtual void UpdateSlot( const size_t slot_num, const Slot* slot ) = 0;

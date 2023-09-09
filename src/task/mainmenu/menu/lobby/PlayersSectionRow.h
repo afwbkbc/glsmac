@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ui/object/Surface.h"
 #include "ui/object/UIContainer.h"
 #include "ui/object/Dropdown.h"
 
@@ -27,6 +28,7 @@ private:
 	::game::Slot* m_slot;
 
 	struct {
+		Surface* ready = nullptr;
 		Dropdown* actions = nullptr;
 		Dropdown* faction = nullptr;
 		Dropdown* difficulty_level = nullptr;
