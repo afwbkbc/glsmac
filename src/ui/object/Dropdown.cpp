@@ -42,6 +42,15 @@ void Dropdown::SetChoices( const ChoiceList::choices_t& choices ) {
 	}
 }
 
+void Dropdown::SetValue( const ChoiceList::value_t value ) {
+	for ( const auto& it : m_choices ) {
+		if ( it.first == value ) {
+			SetValue( it.second );
+			return;
+		}
+	}
+}
+
 void Dropdown::SetValue( const std::string& value ) {
 	if ( m_mode == DM_SELECT ) {
 		//ASSERT( std::find( m_choices.begin(), m_choices.end(), value ) != m_choices.end(), "value '" + value + "' not found in choices" );
