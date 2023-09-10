@@ -13,6 +13,7 @@ GameSettingsSection::GameSettingsSection( Lobby* lobby, ::game::GlobalSettings *
 	, m_game_settings( game_settings )
 {
 	SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
+	SetTitleText( " " ); // to have header created
 }
 
 void GameSettingsSection::Create() {
