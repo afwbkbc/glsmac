@@ -147,27 +147,40 @@ UIEvent::mouse_button_t SDL2::GetMouseButton( uint8_t sdl_mouse_button ) const {
 	}
 }
 
+// TODO: find something more cross-platform and portable
 char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 	char result = 0;
 	if ( ( modifiers & (~KMOD_LSHIFT) & (~KMOD_RSHIFT) & (~KMOD_NUM) & (~KMOD_CAPS) & (~KMOD_SCROLL) ) == 0 ) { // only shift or num/caps/scroll locks
 		bool is_shift = ( modifiers & KMOD_LSHIFT ) || ( modifiers & KMOD_RSHIFT );
 		bool is_caps = ( modifiers & KMOD_CAPS );
-		if ( code >= '0' && code <= '9' && !is_shift ) { // numbers
-			result = code;
-		}
-		else if ( !is_shift && (
+		if ( !is_shift && (
+			( code >= '0' && code <= '9' ) || // numbers
 			code == ' ' ||
 			code == '.' ||
 			code == '-' ||
-			code == ';'
+			code == '=' ||
+			code == ';' ||
+			code == '/'
 		)) {
 			result = code;
 		}
-		else if ( is_shift && code == '-' ) {
-			result = '_';
-		}
-		else if ( is_shift && code == ';' ) {
-			result = ':';
+		else if ( is_shift ) {
+			switch ( code ) {
+				case ':': result = ';'; break;
+				case '/': result = '?'; break;
+				case '1': result = '!'; break;
+				case '2': result = '@'; break;
+				case '3': result = '#'; break;
+				case '4': result = '$'; break;
+				case '5': result = '%'; break;
+				case '6': result = '^'; break;
+				case '7': result = '&'; break;
+				case '8': result = '*'; break;
+				case '9': result = '('; break;
+				case '0': result = ')'; break;
+				case '-': result = '_'; break;
+				case '=': result = '+'; break;
+			}
 		}
 		else if ( code >= 'a' && code <= 'z' ) { // letters
 			result = code;
@@ -181,7 +194,7 @@ char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 		return result;
 	}
 	else {
-		//Log( "Skipping unknown key code: " + to_string( code ) + " (modifiers: " + to_string( modifiers ) + ")" );
+		//Log( "Skipping unknown key code: " + std::to_string( code ) + " (modifiers: " + std::to_string( modifiers ) + ")" );
 		return 0;
 	}
 }

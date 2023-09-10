@@ -34,6 +34,10 @@ const Buffer Packet::Serialize() const {
 			buf.WriteString( data.str ); // reason
 			break;
 		}
+		case PT_MESSAGE: {
+			buf.WriteString( data.str ); // message
+			break;
+		}
 		default: {
 			//ASSERT(false, "unknown packet type " + std::to_string( type ));
 		}
@@ -71,6 +75,10 @@ void Packet::Unserialize( Buffer buf ) {
 		}
 		case PT_KICK: {
 			data.str = buf.ReadString(); // reason
+			break;
+		}
+		case PT_MESSAGE: {
+			data.str = buf.ReadString(); // message
 			break;
 		}
 		default: {

@@ -16,7 +16,7 @@ PlayersSection::PlayersSection( Lobby* lobby )
 }
 
 void PlayersSection::Create() {
-	Section::Create();
+	LobbySection::Create();
 	
 }
 
@@ -24,7 +24,7 @@ void PlayersSection::Align() {
 	SetWidth( 496 );
 	SetHeight( 212 );
 
-	Section::Align();
+	LobbySection::Align();
 }
 
 void PlayersSection::Destroy() {
@@ -33,7 +33,7 @@ void PlayersSection::Destroy() {
 		RemoveChild( row );
 	}
 
-	Section::Destroy();
+	LobbySection::Destroy();
 }
 
 void PlayersSection::UpdateSlot( const size_t slot_num, ::game::Slot* slot ) {

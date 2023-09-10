@@ -29,6 +29,7 @@ CLASS( Connection, base::Module )
 	std::function<void( const size_t slot_num, Slot* slot, const Player* player )> m_on_player_join = 0;
 	std::function<void( const size_t slot_num, Slot* slot, const Player* player )> m_on_player_leave = 0;
 	std::function<void( const size_t slot_num, game::Slot* slot )> m_on_slot_update = 0;
+	std::function<void( const std::string& message )> m_on_message = 0;
 
 	// client-specific
 	std::function<void()> m_on_global_settings_update = 0;
@@ -44,11 +45,14 @@ CLASS( Connection, base::Module )
 
 	void Iterate();
 
+	const bool IsServer() const;
+	const bool IsClient() const;
 	const size_t GetSlotNum() const;
 	const Player* GetPlayer() const;
 
 	virtual void UpdateSlot( const size_t slot_num, const Slot* slot ) = 0;
-	virtual void UpdateGameSettings() = 0;
+	virtual void Message( const std::string& message ) = 0;
+
 protected:
 	network::Network * const m_network = g_engine->GetNetwork();
 
