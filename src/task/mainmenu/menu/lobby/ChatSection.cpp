@@ -23,7 +23,7 @@ void ChatSection::Create() {
 		m_log->SetTop( 2 );
 	AddChild( m_log );
 
-	NEW( m_input, ::ui::object::Input, "PopupInput" )
+	NEW( m_input, ::ui::object::Input, "PopupInput" );
 		m_input->SetAlign( UIObject::ALIGN_BOTTOM );
 		m_input->SetHeight( 20 );
 		m_input->SetMaxLength( 40 ); // TODO: infinite length
