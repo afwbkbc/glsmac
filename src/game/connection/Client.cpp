@@ -76,6 +76,13 @@ void Client::ProcessEvent( const Event& event ) {
 							Disconnect( packet.data.str );
 							break;
 						}
+						case Packet::PT_MESSAGE: {
+							Log( "Got chat message: " + packet.data.str );
+							if ( m_on_message ) {
+								m_on_message( packet.data.str );
+							}
+							break;
+						}
 						default: {
 							Log( "WARNING: invalid packet type from server: " + std::to_string( packet.type ) );
 						}
@@ -109,8 +116,12 @@ void Client::UpdateSlot( const size_t slot_num, const Slot* slot ) {
 	m_network->MT_SendPacket( p );
 }
 
-void Client::UpdateGameSettings() {
-	// client can't change them
+void Client::Message( const std::string& message ) {
+	Log( "Sending chat message: " + message );
+	Packet p;
+	p.type = Packet::PT_MESSAGE;
+	p.data.str = message;
+	m_network->MT_SendPacket( p );
 }
 
 void Client::Error( const std::string& reason ) {

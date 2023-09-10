@@ -36,6 +36,7 @@ CLASS( ScrollView, Panel )
 	void SetScroll( vertex_t px, const bool force = false );
 	void SetScrollX( const coord_t px );
 	void SetScrollY( const coord_t px );
+	void ScrollToBottom();
 	
 	void SetScrollSpeed( const size_t scroll_speed );
 	

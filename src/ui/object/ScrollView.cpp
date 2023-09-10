@@ -234,6 +234,11 @@ void ScrollView::SetScrollY( const coord_t px ) {
 	SetScroll({ m_scroll.x, px });
 }
 
+void ScrollView::ScrollToBottom() {
+	const auto limits = GetScrollLimits();
+	SetScrollY( ( limits.bottom - limits.top ) );
+}
+
 void ScrollView::SetScrollSpeed( const size_t scroll_speed ) {
 	m_scroll_speed = scroll_speed;
 }

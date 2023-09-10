@@ -46,12 +46,18 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 	};
 	m_connection->m_on_player_join = [ this ] ( const size_t slot_num, game::Slot* slot, const game::Player* player ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
+		GlobalMessage( "Player \"" + player->GetPlayerName() + "\" joined." );
 	};
 	m_connection->m_on_player_leave = [ this ] ( const size_t slot_num, game::Slot* slot, const game::Player* player ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
+		GlobalMessage( "Player \"" + player->GetPlayerName() + "\" left." );
 	};
 	m_connection->m_on_slot_update = [ this ] ( const size_t slot_num, game::Slot* slot ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
+		ManageCountdown();
+	};
+	m_connection->m_on_message = [ this ] ( const std::string& message ) -> void {
+		m_chat_section->AddMessage( message );
 	};
 }
 
@@ -103,11 +109,7 @@ void Lobby::Show() {
 		});
 	m_players_section->AddChild( m_cancel_button );
 	
-	NEW( m_chat_section, Section, "PopupSection" );
-		m_chat_section->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_TOP );
-		m_chat_section->SetTop( 208 );
-		m_chat_section->SetWidth( 496 );
-		m_chat_section->SetHeight( 156 );
+	NEW( m_chat_section, ChatSection, this );
 	m_body->AddChild( m_chat_section );
 
 	NEW( m_game_options_section, Section, "PopupSection" );
@@ -134,6 +136,17 @@ void Lobby::Iterate() {
 	PopupMenu::Iterate();
 
 	m_connection->Iterate();
+
+	while ( m_countdown_timer.HasTicked() ) {
+		m_countdown--;
+		if ( m_countdown <= 0 ) {
+			m_countdown_timer.Stop();
+			Log( "START GAME" );
+			// TODO
+			m_connection->Disconnect();
+			GoBack();
+		}
+	}
 }
 
 ::game::Settings& Lobby::GetSettings() {
@@ -146,24 +159,44 @@ const ::game::Player* Lobby::GetPlayer() {
 	return connection->GetPlayer();
 }
 
+void Lobby::Message( const std::string& message ) {
+	Log( "Sending message: " + message );
+	m_connection->Message( message );
+}
+
 void Lobby::UpdateSlot( const size_t slot_num, ::game::Slot* slot ) {
 	Log( "Updating slot " + slot->GetName() );
 	m_players_section->UpdateSlot( slot_num, slot );
 	m_connection->UpdateSlot( slot_num, slot );
+	ManageCountdown();
 }
 
 void Lobby::KickFromSlot( const size_t slot_num ) {
-	Log( "Kicking from slot " + std::to_string( slot_num ) );
-	((::game::connection::Server*)m_connection)->KickFromSlot( slot_num );
+	if ( m_connection->IsServer() ) {
+		Log( "Kicking from slot " + std::to_string( slot_num ) );
+		((::game::connection::Server *)m_connection)->KickFromSlot( slot_num );
+	}
 }
 
 void Lobby::BanFromSlot( const size_t slot_num ) {
-	Log( "Banning from slot " + std::to_string( slot_num ) );
-	((::game::connection::Server*)m_connection)->BanFromSlot( slot_num );
+	if ( m_connection->IsServer() ) {
+		Log( "Banning from slot " + std::to_string( slot_num ) );
+		((::game::connection::Server *)m_connection)->BanFromSlot( slot_num );
+	}
 }
 
 void Lobby::UpdateGameSettings() {
-	m_connection->UpdateGameSettings();
+	if ( m_connection->IsServer() ) {
+		Log( "Updating game settings" );
+		((::game::connection::Server *)m_connection)->UpdateGameSettings();
+	}
+}
+
+void Lobby::GlobalMessage( const std::string& message ) {
+	if ( m_connection->IsServer() ) {
+		Log( "Sending global message: " + message );
+		((::game::connection::Server *)m_connection)->GlobalMessage( message );
+	}
 }
 
 const Connection* Lobby::GetConnection() const {
@@ -181,6 +214,26 @@ void Lobby::LockInput() {
 
 void Lobby::UnlockInput() {
 	m_frame->Show();
+}
+
+void Lobby::ManageCountdown() {
+	if ( m_connection->IsServer() ) {
+		bool is_everyone_ready = true;
+		for ( const auto &slot : m_state.m_slots.GetSlots() ) {
+			if ( !slot.IsReady() ) {
+				is_everyone_ready = false;
+				break;
+			}
+		}
+		if ( is_everyone_ready && !m_countdown_timer.IsRunning() ) {
+			GlobalMessage( "Everyone is ready. Starting game in " + std::to_string( COUNTDOWN_SECONDS ) + " seconds..." );
+			m_countdown = COUNTDOWN_SECONDS;
+			m_countdown_timer.SetInterval( 1000 );
+		} else if ( m_countdown_timer.IsRunning() && !is_everyone_ready ) {
+			GlobalMessage( "Somebody is not ready. Game start canceled." );
+			m_countdown_timer.Stop();
+		}
+	}
 }
 
 }

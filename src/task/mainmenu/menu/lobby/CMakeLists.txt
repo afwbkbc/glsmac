@@ -5,5 +5,6 @@ SET(SRC ${SRC}
 	${PWD}/GameSettingsSection.cpp
 	${PWD}/PlayersSection.cpp
 	${PWD}/PlayersSectionRow.cpp
+	${PWD}/ChatSection.cpp
 
 PARENT_SCOPE)

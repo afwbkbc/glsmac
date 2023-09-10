@@ -19,6 +19,7 @@ CLASS( Packet, Serializable )
 		PT_UPDATE_SLOT, // C->S
 		PT_SLOT_UPDATE, // S->C
 		PT_KICK, // S->C
+		PT_MESSAGE, // *->*
 	};
 
 	packet_type_t type;

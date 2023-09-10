@@ -16,7 +16,7 @@ GameSettingsSection::GameSettingsSection( Lobby* lobby, ::game::GlobalSettings *
 }
 
 void GameSettingsSection::Create() {
-	Section::Create();
+	LobbySection::Create();
 
 	ASSERT( m_element_rows.empty(), "element rows not empty" );
 	m_element_rows.resize(RI_MAX );
@@ -55,7 +55,7 @@ void GameSettingsSection::Align() {
 	SetWidth( 302 );
 	SetHeight( 364 );
 
-	Section::Align();
+	LobbySection::Align();
 }
 
 void GameSettingsSection::Destroy() {
@@ -71,7 +71,7 @@ void GameSettingsSection::Destroy() {
 
 	m_element_rows.clear();
 
-	Section::Destroy();
+	LobbySection::Destroy();
 }
 
 void GameSettingsSection::UpdateRows() {

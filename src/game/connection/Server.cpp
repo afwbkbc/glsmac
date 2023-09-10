@@ -155,6 +155,17 @@ void Server::ProcessEvent( const network::Event& event ) {
 						}
 						break;
 					}
+					case Packet::PT_MESSAGE: {
+						Log( "Got chat message from " + std::to_string( event.cid ) + ": " + packet.data.str );
+						const auto& slots = m_state->GetCidSlots();
+						const auto& it = slots.find( event.cid );
+						if ( it == slots.end() ) {
+							Error( event.cid, "slot index mismatch" );
+							break;
+						}
+						GlobalMessage( FormatChatMessage( m_state->m_slots.GetSlot( it->second ).GetPlayer(), packet.data.str ) );
+						break;
+					}
 					default: {
 						Log( "WARNING: invalid packet type from client " + std::to_string( event.cid ) + " : " + std::to_string( packet.type ) );
 					}
@@ -213,9 +224,25 @@ void Server::UpdateSlot( const size_t slot_num, const Slot* slot ) {
 	});
 }
 
+void Server::Message( const std::string& message ) {
+	GlobalMessage( FormatChatMessage( GetPlayer(), message ) );
+}
+
 void Server::UpdateGameSettings() {
 	Broadcast( [ this ]( const size_t cid ) -> void {
 		SendGlobalSettings( cid );
+	});
+}
+
+void Server::GlobalMessage( const std::string& message ) {
+	if ( m_on_message ) {
+		m_on_message( message );
+	}
+	Broadcast( [ this, message ]( const size_t cid ) -> void {
+		Packet p;
+		p.type = Packet::PT_MESSAGE;
+		p.data.str = message;
+		m_network->MT_SendPacket( p, cid );
 	});
 }
 
@@ -244,6 +271,10 @@ void Server::SendGlobalSettings( size_t cid ) {
 	p.type = Packet::PT_GLOBAL_SETTINGS;
 	p.data.str = m_state->m_settings.global.Serialize().ToString();
 	m_network->MT_SendPacket( p, cid );
+}
+
+const std::string Server::FormatChatMessage( const Player* player, const std::string& message ) const {
+	return "<" + player->GetPlayerName() + "> " + message;
 }
 
 }

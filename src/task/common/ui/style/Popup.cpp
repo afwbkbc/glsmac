@@ -170,7 +170,13 @@ void Popup::AddStyles() {
 		s->Set( Style::A_Z_INDEX, 0.7f );
 		s->SetColorTexture( Style::A_TEXTURE, Color( 0.0f, 0.0f, 0.0f, 0.5f ) );
 	});*/
-	
+
+	AddStyle( "PopupTextList", { "PopupText" }, SH() {
+		s->Set( Style::A_ITEM_HEIGHT, 17 ); // TODO: auto-size?
+		s->Set( Style::A_ITEM_MARGIN, 0 ); // TODO: fix alignment if non-zero
+		s->Set( Style::A_TEXT_ALIGN, UIObject::ALIGN_LEFT );
+	});
+
 	AddStyle( "PopupFileList", SH() {
 		s->Set( Style::A_RIGHT, 4 );
 		s->Set( Style::A_BOTTOM, 30 ); // to fit text input

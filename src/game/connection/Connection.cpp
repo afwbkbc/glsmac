@@ -122,6 +122,14 @@ void Connection::Iterate() {
 	}
 }
 
+const bool Connection::IsServer() const {
+	return m_connection_mode == network::CM_SERVER;
+}
+
+const bool Connection::IsClient() const {
+	return m_connection_mode == network::CM_CLIENT;
+}
+
 const size_t Connection::GetSlotNum() const {
 	return m_slot;
 }
