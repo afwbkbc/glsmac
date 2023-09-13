@@ -38,18 +38,18 @@ CLASS( SimpleTCP, Network )
 	
 	SimpleTCP();
 	
-	void Start();
-	void Stop();
-	void Iterate();
+	void Start() override;
+	void Stop() override;
+	void Iterate() override;
 
 protected:
 
-	MT_Response ListenStart();
-	MT_Response ListenStop();
-	MT_Response Connect( const std::string& remote_address );
-	MT_Response Disconnect();
-	MT_Response DisconnectClient( const size_t cid );
-	void ProcessEvents();
+	MT_Response ListenStart() override;
+	MT_Response ListenStop() override;
+	MT_Response Connect( const std::string& remote_address ) override;
+	MT_Response Disconnect() override;
+	MT_Response DisconnectClient( const size_t cid ) override;
+	void ProcessEvents() override;
 
 private:
 

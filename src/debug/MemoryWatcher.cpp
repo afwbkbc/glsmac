@@ -277,7 +277,7 @@ void MemoryWatcher::Free( void* ptr, const std::string& file, const size_t line 
 	const std::string source = file + ":" + std::to_string( line );
 	
 	auto it = m_allocated_memory.find( ptr );
-	ASSERT( it != m_allocated_memory.end(), "free on non-allocated object " + std::to_string( (long int)ptr ) + " detected @" + source );
+	ASSERT( it != m_allocated_memory.end(), "free on non-allocated object " + std::to_string( (long long)ptr ) + " detected @" + source );
 	
 	auto& obj = it->second;
 	

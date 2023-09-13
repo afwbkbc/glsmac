@@ -25,9 +25,9 @@ CLASS( SDL2, Input )
 	SDL2();
 	~SDL2();
 	
-	void Start();
-	void Stop();
-	void Iterate();
+	void Start() override;
+	void Stop() override;
+	void Iterate() override;
 	
 private:
 	

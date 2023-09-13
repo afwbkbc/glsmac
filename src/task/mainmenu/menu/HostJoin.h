@@ -20,13 +20,13 @@ CLASS( HostJoin, PopupMenu )
 	HostJoin( MainMenu* mainmenu );
 	~HostJoin();
 
-	void Show();
-	void Hide();
+	void Show() override;
+	void Hide() override;
 
-	void OnNext();
+	void OnNext() override;
 	
-	const std::string GetChoice() const;
-	void SetChoice( const std::string& choice );
+	const std::string GetChoice() const override;
+	void SetChoice( const std::string& choice ) override;
 
 private:
 	

@@ -12,18 +12,18 @@ CLASS( Surface, Mesh )
 
 	Surface( const std::string& class_name = "" );
 	
-	void SetTexture( types::Texture* texture );
+	void SetTexture( types::Texture* texture ) override;
 	void SetStretchTexture( const bool stretch_texture );
 	
-	virtual void Create();
-	virtual void Iterate();
-	virtual void Align();
+	virtual void Create() override;
+	virtual void Iterate() override;
+	virtual void Align() override;
 	
 protected:
 	
 	void Resize();
 	void ResizeNow();
-	virtual void ApplyStyle();
+	virtual void ApplyStyle() override;
 	
 	bool m_need_resize = false;
 	

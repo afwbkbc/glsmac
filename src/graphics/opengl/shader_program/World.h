@@ -35,10 +35,10 @@ protected:
 		GLint tex_coord;
 	} attributes;
 
-	void AddShaders();
-	void Initialize();
-	void EnableAttributes() const;
-	void DisableAttributes() const;
+	void AddShaders() override;
+	void Initialize() override;
+	void EnableAttributes() const override;
+	void DisableAttributes() const override;
 };
 
 } /* namespace shader_program */

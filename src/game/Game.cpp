@@ -161,6 +161,8 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 					x( TD_S, S )
 					x( TD_SW, SW )
 				#undef x
+				default:
+					ASSERT(false, "invalid tile direction");
 			};
 			
 			//Log( "Selecting tile at " + tile->coord.ToString() );
@@ -506,6 +508,9 @@ void Game::DestroyRequest( const MT_Request& request ) {
 			}
 			break;
 		}
+		default: {
+			// nothing to delete
+		}
 	}
 }
 
@@ -556,6 +561,9 @@ void Game::DestroyResponse( const MT_Response& response ) {
 					DELETE( response.data.edit_map.sprites.instances_to_add );
 				}
 				break;
+			}
+			default: {
+				// nothing to delete
 			}
 		}
 	}

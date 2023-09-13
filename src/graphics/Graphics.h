@@ -22,7 +22,7 @@ CLASS( Graphics, base::Module )
 
 	virtual ~Graphics();
 
-	virtual void Iterate();
+	virtual void Iterate() override;
 	
 	virtual void AddScene( scene::Scene *scene ) = 0;
 	virtual void RemoveScene( scene::Scene *scene ) = 0;

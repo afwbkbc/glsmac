@@ -14,15 +14,15 @@ namespace routine {
 CLASS( Overlay, Routine )
 	Overlay( OpenGL* opengl, shader_program::Simple2D *shader_program, shader_program::Font *shader_program_font );
 
-	void Start();
-	void Stop();
-	void Iterate();
+	void Start() override;
+	void Stop() override;
+	void Iterate() override;
 
-	opengl::Actor *AddCustomActor( scene::actor::Actor *actor );
+	opengl::Actor *AddCustomActor( scene::actor::Actor *actor ) override;
 	
 	void Redraw();
 	
-	bool SceneBelongs( const scene::Scene *scene ) const;
+	bool SceneBelongs( const scene::Scene *scene ) const override;
 
 protected:
 	

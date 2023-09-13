@@ -12,8 +12,8 @@ CLASS( TextLine, UIContainer )
 	
 	TextLine( const std::string& class_name = "" );
 	
-	void Create();
-	void Destroy();
+	void Create() override;
+	void Destroy() override;
 	
 	void SetText( const std::string& text );
 	

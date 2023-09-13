@@ -12,8 +12,8 @@ CLASS( Slots, types::Serializable )
 	Slot& GetSlot( const size_t index );
 	std::vector< Slot >& GetSlots();
 
-	const types::Buffer Serialize() const;
-	void Unserialize( types::Buffer buf );
+	const types::Buffer Serialize() const override;
+	void Unserialize( types::Buffer buf ) override;
 
 private:
 	std::vector< Slot > m_slots = {};

@@ -1,5 +1,7 @@
 #include "Difficulty.h"
 
+#include <algorithm>
+
 #include "Rules.h"
 
 namespace task {

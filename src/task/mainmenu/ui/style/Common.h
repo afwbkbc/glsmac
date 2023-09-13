@@ -7,7 +7,7 @@ namespace mainmenu {
 namespace style {
 			
 CLASS( Common, ::ui::theme::StyleSheet )
-	void AddStyles();
+	void AddStyles() override;
 };
 
 }

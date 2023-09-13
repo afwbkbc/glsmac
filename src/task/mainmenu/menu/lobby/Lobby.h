@@ -25,9 +25,9 @@ CLASS( Lobby, PopupMenu )
 	Lobby( MainMenu* mainmenu, Connection* connection );
 	virtual ~Lobby();
 
-	void Show();
-	void Hide();
-	void Iterate();
+	void Show() override;
+	void Hide() override;
+	void Iterate() override;
 
 	::game::Settings& GetSettings();
 	const ::game::Player* GetPlayer();
@@ -48,7 +48,7 @@ CLASS( Lobby, PopupMenu )
 
 protected:
 
-	bool OnCancel();
+	bool OnCancel() override;
 	
 	GameSettingsSection* m_game_settings_section = nullptr;
 	PlayersSection* m_players_section = nullptr;

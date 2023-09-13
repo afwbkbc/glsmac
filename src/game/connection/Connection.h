@@ -43,7 +43,7 @@ CLASS( Connection, base::Module )
 	void Connect();
 	void Disconnect( const std::string& message = "" );
 
-	void Iterate();
+	void Iterate() override;
 
 	const bool IsServer() const;
 	const bool IsClient() const;

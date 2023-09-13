@@ -43,8 +43,8 @@ CLASS( Entity, types::Serializable )
 		types::Matrix44 matrix;
 	};
 
-	virtual const types::Buffer Serialize() const;
-	virtual void Unserialize( types::Buffer buf );
+	virtual const types::Buffer Serialize() const override;
+	virtual void Unserialize( types::Buffer buf ) override;
 	
 	void Show();
 	void Hide();

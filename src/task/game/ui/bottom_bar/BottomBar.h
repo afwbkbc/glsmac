@@ -29,9 +29,9 @@ CLASS( BottomBar, UI )
 	
 	BottomBar( Game* game ) : UI( game, "BB" ) {}
 
-	void Create();
-	void Destroy();
-	void Align();
+	void Create() override;
+	void Destroy() override;
+	void Align() override;
 	
 	void PreviewTile( const tile_data_t& tile_data );
 	void HideTilePreview();

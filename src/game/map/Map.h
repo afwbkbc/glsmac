@@ -53,8 +53,8 @@ CLASS( Map, types::Serializable )
 	
 	const error_code_t Initialize( MT_CANCELABLE );
 	
-	const Buffer Serialize() const;
-	void Unserialize( Buffer buf );
+	const Buffer Serialize() const override;
+	void Unserialize( Buffer buf ) override;
 	
 	static const std::string& GetErrorString( const error_code_t& code );
 	

@@ -23,8 +23,8 @@ CLASS( ShaderProgram, base::Module )
 		return m_type;
 	}
 
-	void Start();
-	void Stop();
+	void Start() override;
+	void Stop() override;
 	void Enable();
 	void Disable();
 protected:

@@ -12,14 +12,14 @@ CLASS( Multiplayer, PopupMenu )
 		
 	Multiplayer( MainMenu* mainmenu );
 	
-	const std::string GetChoice() const;
-	void SetChoice( const std::string& choice );
+	const std::string GetChoice() const override;
+	void SetChoice( const std::string& choice ) override;
 	
 protected:
-	virtual void Show();
-	virtual void Hide();
+	virtual void Show() override;
+	virtual void Hide() override;
 	
-	void OnNext();
+	void OnNext() override;
 
 private:
 	

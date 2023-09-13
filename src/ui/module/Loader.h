@@ -30,7 +30,7 @@ CLASS( Loader, Module )
 	void SetText( const std::string& loading_text ); // mt supported
 	void SetIsCancelable( const bool is_cancelable );
 	
-	void ProcessEvent( event::UIEvent* event );
+	void ProcessEvent( event::UIEvent* event ) override;
 	
 private:
 	

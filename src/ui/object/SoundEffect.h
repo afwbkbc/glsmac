@@ -23,13 +23,13 @@ CLASS( SoundEffect, UIObject )
 	void Pause();
 	void Stop();
 	
-	void Create();
-	void Iterate();
-	void Destroy();
+	void Create() override;
+	void Iterate() override;
+	void Destroy() override;
 	
 protected:
 	
-	virtual void ApplyStyle();
+	virtual void ApplyStyle() override;
 	
 	const types::Sound* m_sound = nullptr;
 

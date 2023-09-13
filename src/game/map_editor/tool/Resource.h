@@ -12,7 +12,7 @@ CLASS( Resource, Tool )
 	
 	Resource( Game* game );
 	
-	const MapEditor::tiles_t Draw( map::Tile* tile, const MapEditor::draw_mode_t mode );
+	const MapEditor::tiles_t Draw( map::Tile* tile, const MapEditor::draw_mode_t mode ) override;
 	
 };
 	

@@ -31,7 +31,7 @@ CLASS( Render, Mesh )
 	
 	void CombineNormals( const std::vector< index_t >& indices );
 	
-	void Finalize();
+	void Finalize() override;
 	void UpdateNormals( const std::vector< surface_id_t >& surfaces );
 	void UpdateAllNormals();
 	

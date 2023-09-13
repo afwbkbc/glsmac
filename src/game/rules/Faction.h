@@ -17,8 +17,8 @@ CLASS( Faction, types::Serializable )
 	std::string m_name = "";
 	types::Color m_color = {};
 	
-	const types::Buffer Serialize() const;
-	void Unserialize( types::Buffer buf );
+	const types::Buffer Serialize() const override;
+	void Unserialize( types::Buffer buf ) override;
 };
 
 }

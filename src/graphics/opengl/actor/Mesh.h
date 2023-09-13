@@ -13,15 +13,15 @@ CLASS(Mesh, Actor)
 	Mesh( scene::actor::Actor *actor );
 	~Mesh();
 	
-	bool MeshReloadNeeded();
+	bool MeshReloadNeeded() override;
 	bool DataMeshReloadNeeded();
-	bool TextureReloadNeeded();
-	void LoadMesh();
-	void LoadTexture();
+	bool TextureReloadNeeded() override;
+	void LoadMesh() override;
+	void LoadTexture() override;
 	
-	void Draw( shader_program::ShaderProgram *shader_program, Camera *camera = nullptr );
+	void Draw( shader_program::ShaderProgram *shader_program, Camera *camera = nullptr ) override;
 	
-	void OnWindowResize();
+	void OnWindowResize() override;
 	
 protected:
 	

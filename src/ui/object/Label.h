@@ -23,13 +23,13 @@ CLASS( Label, UIObject )
 	const std::string& GetText() const;
 	const std::string* GetTextPtr() const; // be careful
 
-	void Create();
-	void Destroy();
-	void Align();
+	void Create() override;
+	void Destroy() override;
+	void Align() override;
 	
 protected:
 	
-	void ApplyStyle();
+	void ApplyStyle() override;
 	
 	Font *m_font = nullptr;
 	std::string m_text = "";

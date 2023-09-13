@@ -13,9 +13,9 @@ CLASS( ChatSection, LobbySection )
 
 	ChatSection( Lobby* lobby );
 
-	void Create();
-	void Align();
-	void Destroy();
+	void Create() override;
+	void Align() override;
+	void Destroy() override;
 
 	void AddMessage( const std::string& message );
 

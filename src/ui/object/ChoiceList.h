@@ -29,21 +29,19 @@ CLASS( ChoiceList, UIContainer )
 	const std::string& GetValueString() const;
 	void SetChoicesV( const std::vector< std::string >& labels );
 
-	virtual void Create();
-	virtual void Destroy();
-	virtual void Align();
-	
-	//void OnChange( UIEventHandler::handler_function_t func );
+	virtual void Create() override;
+	virtual void Destroy() override;
+	virtual void Align() override;
 	
 	void SetItemMargin( const coord_t item_margin );
 	void SetItemHeight( const coord_t item_height );
 	
 protected:
-	virtual void ApplyStyle();
+	virtual void ApplyStyle() override;
 	
-	bool OnKeyDown( const UIEvent::event_data_t* data );
-	bool OnKeyUp( const UIEvent::event_data_t* data );
-	bool OnKeyPress( const UIEvent::event_data_t* data );
+	bool OnKeyDown( const UIEvent::event_data_t* data ) override;
+	bool OnKeyUp( const UIEvent::event_data_t* data ) override;
+	bool OnKeyPress( const UIEvent::event_data_t* data ) override;
 	
 	
 	

@@ -27,8 +27,8 @@ CLASS( PopupMenu, MenuObject )
 		PF_HAS_CANCEL,
 	};
 	
-	virtual void Show();
-	virtual void Hide();
+	virtual void Show() override;
+	virtual void Hide() override;
 	
 	virtual void OnNext() {};
 	

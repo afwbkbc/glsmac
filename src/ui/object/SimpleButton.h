@@ -14,15 +14,15 @@ CLASS( SimpleButton, UIContainer )
 
 	SimpleButton( const std::string& class_name = "" );
 
-	void Create();
-	void Destroy();
+	void Create() override;
+	void Destroy() override;
 
 protected:
 	
-	bool OnMouseOver( const UIEvent::event_data_t* data );
-	bool OnMouseOut( const UIEvent::event_data_t* data );
-	bool OnMouseDown( const UIEvent::event_data_t* data );
-	bool OnMouseUp( const UIEvent::event_data_t* data );
+	bool OnMouseOver( const UIEvent::event_data_t* data ) override;
+	bool OnMouseOut( const UIEvent::event_data_t* data ) override;
+	bool OnMouseDown( const UIEvent::event_data_t* data ) override;
+	bool OnMouseUp( const UIEvent::event_data_t* data ) override;
 	
 	bool m_is_clicking = false; // mouseup at different position after mousedown is still counted as click, as long as it's inside button
 	

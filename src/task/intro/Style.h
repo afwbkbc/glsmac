@@ -6,7 +6,7 @@ namespace task {
 namespace intro {
 			
 CLASS( Style, ::ui::theme::StyleSheet )
-	void AddStyles();
+	void AddStyles() override;
 };
 
 }

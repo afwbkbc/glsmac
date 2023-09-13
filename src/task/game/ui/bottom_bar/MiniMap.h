@@ -17,8 +17,8 @@ CLASS( MiniMap, BBSection )
 
 	MiniMap( Game* game );
 	
-	void Create();
-	void Destroy();
+	void Create() override;
+	void Destroy() override;
 
 	void SetMinimapTexture( types::Texture* texture );
 	

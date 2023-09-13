@@ -12,8 +12,8 @@ CLASS( Section, UI )
 
 	Section( Game* game, const std::string class_name, const std::string section_class_prefix );
 	
-	void Create();
-	void Destroy();
+	void Create() override;
+	void Destroy() override;
 
 	void AddChild( UIObject *object );
 	void RemoveChild( UIObject *object );

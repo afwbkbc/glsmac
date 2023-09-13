@@ -38,7 +38,7 @@ CLASS( Actor, Entity )
 	virtual types::Matrix44 & GetWorldMatrix();
 
 	virtual void UpdateWorldMatrix();
-	virtual void UpdateMatrix();
+	virtual void UpdateMatrix() override;
 
 	void SetScene( Scene *scene );
 	Scene *GetScene();
@@ -60,8 +60,8 @@ CLASS( Actor, Entity )
 	void SetRenderFlags( const render_flag_t render_flags );
 	const render_flag_t GetRenderFlags() const;
 	
-	virtual const types::Buffer Serialize() const;
-	virtual void Unserialize( types::Buffer buf );
+	virtual const types::Buffer Serialize() const override;
+	virtual void Unserialize( types::Buffer buf ) override;
 	
 protected:
 	const type_t m_type;

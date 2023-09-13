@@ -51,9 +51,9 @@ CLASS( Game, base::Task )
 	Game( ::game::Settings& settings, ui_handler_t on_start = 0, ui_handler_t on_cancel = 0 );
 	~Game();
 	
-	void Start();
-	void Stop();
-	void Iterate();
+	void Start() override;
+	void Stop() override;
+	void Iterate() override;
 
 	struct consts_t {
 		const struct {

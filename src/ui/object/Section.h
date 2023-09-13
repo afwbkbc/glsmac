@@ -19,11 +19,11 @@ CLASS( Section, UIContainer )
 	virtual void AddChild( UIObject *object );
 	virtual void RemoveChild( UIObject *object );
 	
-	virtual void Create();
-	virtual void Destroy();
+	virtual void Create() override;
+	virtual void Destroy() override;
 
 protected:
-	void ApplyStyle();
+	void ApplyStyle() override;
 	
 	std::string m_title_text = "";
 	

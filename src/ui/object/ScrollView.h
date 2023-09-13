@@ -23,15 +23,15 @@ CLASS( ScrollView, Panel )
 	
 	ScrollView( const std::string& class_name = "" ) : Panel( class_name ) {}
 
-	virtual void Create();
-	virtual void Iterate();
-	virtual void Destroy();
+	virtual void Create() override;
+	virtual void Iterate() override;
+	virtual void Destroy() override;
 
 	void AddChild( UIObject* object );
 	void RemoveChild( UIObject* object );
 	
-	void SetWidth( const coord_t px );
-	void SetHeight( const coord_t px );
+	void SetWidth( const coord_t px ) override;
+	void SetHeight( const coord_t px ) override;
 	
 	void SetScroll( vertex_t px, const bool force = false );
 	void SetScrollX( const coord_t px );

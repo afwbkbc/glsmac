@@ -12,9 +12,9 @@ namespace task {
 namespace intro {
 
 CLASS( Intro, base::Task )
-	void Start();
-	void Stop();
-	void Iterate();
+	void Start() override;
+	void Stop() override;
+	void Iterate() override;
 	
 protected:
 	Theme m_theme;

@@ -43,36 +43,36 @@ CLASS( OpenGL, Graphics )
 
 	OpenGL( const std::string title, const unsigned short window_width, const unsigned short window_height, const bool vsync, const bool fullscreen );
 	~OpenGL();
-	void Start();
-	void Stop();
-	void Iterate();
+	void Start() override;
+	void Stop() override;
+	void Iterate() override;
 	
-	void AddScene( scene::Scene *scene );
-	void RemoveScene( scene::Scene *scene );
+	void AddScene( scene::Scene *scene ) override;
+	void RemoveScene( scene::Scene *scene ) override;
 	
-	const unsigned short GetWindowWidth() const;
-	const unsigned short GetWindowHeight() const;
-	const unsigned short GetViewportWidth() const;
-	const unsigned short GetViewportHeight() const;
+	const unsigned short GetWindowWidth() const override;
+	const unsigned short GetWindowHeight() const override;
+	const unsigned short GetViewportWidth() const override;
+	const unsigned short GetViewportHeight() const override;
 	
-	void LoadTexture( types::Texture* texture );
-	void UnloadTexture( const types::Texture* texture );
-	void EnableTexture( const types::Texture* texture );
-	void DisableTexture();
+	void LoadTexture( types::Texture* texture ) override;
+	void UnloadTexture( const types::Texture* texture ) override;
+	void EnableTexture( const types::Texture* texture ) override;
+	void DisableTexture() override;
 
 	FBO* CreateFBO();
 	void DestroyFBO( FBO* fbo );
 	
-	const bool IsFullscreen() const;
-	void SetFullscreen();
-	void SetWindowed();
+	const bool IsFullscreen() const override;
+	void SetFullscreen() override;
+	void SetWindowed() override;
 	
-	void RedrawOverlay();
+	void RedrawOverlay() override;
 	
-	const bool IsMouseLocked() const;
+	const bool IsMouseLocked() const override;
 	
 	void ResizeViewport( const size_t width, const size_t height );
-	void ResizeWindow( const size_t width, const size_t height );
+	void ResizeWindow( const size_t width, const size_t height ) override;
 	
 protected:
 	struct {
@@ -93,7 +93,7 @@ protected:
 	// some routines are special
 	routine::Overlay* m_routine_overlay = nullptr;
 	
-	void OnWindowResize();
+	void OnWindowResize() override;
 	
 private:
 	

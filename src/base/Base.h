@@ -48,10 +48,10 @@ private:
 
 #define CLASS_HEADER( _name, _parent ) \
 public: \
-	virtual const std::string GetNamespace() const { \
+	virtual const std::string GetNamespace() const override { \
 		return _parent::GetNamespace() + # _name + "::" ; \
 	} \
-	const std::string GetClassName() const { \
+	const std::string GetClassName() const override { \
 		return #_name; \
 	}
 

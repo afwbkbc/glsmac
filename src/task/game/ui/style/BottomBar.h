@@ -8,7 +8,7 @@ namespace ui {
 namespace style {
 
 CLASS( BottomBar, ::ui::theme::StyleSheet )
-	void AddStyles();
+	void AddStyles() override;
 };
 
 }

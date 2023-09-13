@@ -14,11 +14,11 @@ namespace scheduler {
 CLASS( Simple, Scheduler )
 	Simple();
 	virtual ~Simple();
-	void Start();
-	void Stop();
-	void Iterate();
-	void AddTask( Task *task );
-	void RemoveTask( Task *task );
+	void Start() override;
+	void Stop() override;
+	void Iterate() override;
+	void AddTask( Task *task ) override;
+	void RemoveTask( Task *task ) override;
 protected:
 #ifdef DEBUG
 	util::Timer m_timer;

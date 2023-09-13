@@ -22,11 +22,11 @@ CLASS( LoadMapFile, PopupMenu )
 	LoadMapFile( MainMenu* mainmenu );
 	~LoadMapFile();
 
-	void Show();
-	void Align();
-	void Hide();
+	void Show() override;
+	void Align() override;
+	void Hide() override;
 
-	void OnNext();
+	void OnNext() override;
 	
 private:
 	Section* m_section = nullptr;

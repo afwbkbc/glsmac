@@ -20,10 +20,10 @@ CLASS( Scrollbar, UIContainer )
 		, m_direction( direction )
 	{}
 	
-	void Create();
-	void Iterate();
-	void Align();
-	void Destroy();
+	void Create() override;
+	void Iterate() override;
+	void Align() override;
+	void Destroy() override;
 	
 	void SetPercentage( const float percentage );
 	const float GetPercentage() const;

@@ -11,8 +11,8 @@ CLASS( UnitsList, BBSection )
 
 	UnitsList( Game* game ) : BBSection( game, "UnitsList" ) {}
 	
-	void Create();
-	void Destroy();
+	void Create() override;
+	void Destroy() override;
 
 };
 	

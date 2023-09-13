@@ -10,7 +10,7 @@ CLASS( Prepare, Module )
 	
 	Prepare( Map* const map ) : Module( map ) {}
 	
-	void GenerateTile( const Tile* tile, TileState* ts, MapState* ms );
+	void GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) override;
 	
 };
 

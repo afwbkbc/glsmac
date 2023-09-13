@@ -12,10 +12,10 @@ CLASS( Error, PopupMenu )
 	Error( MainMenu* mainmenu, const std::string& error_text );
 	
 protected:
-	virtual void Show();
-	virtual void Hide();
+	virtual void Show() override;
+	virtual void Hide() override;
 	
-	virtual void OnNext();
+	virtual void OnNext() override;
 
 private:
 	const std::string m_error_text = "";

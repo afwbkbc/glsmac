@@ -20,9 +20,9 @@ CLASS( Toolbar, MiddleAreaPage )
 	
 	Toolbar( Game* game ) : MiddleAreaPage( game, "Toolbar" ) {}
 
-	void Create();
-	void Destroy();
-	void Align();
+	void Create() override;
+	void Destroy() override;
+	void Align() override;
 	
 	void UpdateMapFileName();
 	

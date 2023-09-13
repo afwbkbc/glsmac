@@ -15,8 +15,8 @@ CLASS( DifficultyLevel, types::Serializable )
 	std::string m_name = "";
 	int m_difficulty = 0;
 	
-	const types::Buffer Serialize() const;
-	void Unserialize( types::Buffer buf );
+	const types::Buffer Serialize() const override;
+	void Unserialize( types::Buffer buf ) override;
 };
 
 }

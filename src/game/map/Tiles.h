@@ -54,8 +54,8 @@ CLASS( Tiles, Serializable )
 	
 	const std::vector< Tile* > GetVector( MT_CANCELABLE ) const;
 	
-	const Buffer Serialize() const;
-	void Unserialize( Buffer buf );
+	const Buffer Serialize() const override;
+	void Unserialize( Buffer buf ) override;
 	
 private:
 	uint32_t m_width = 0;

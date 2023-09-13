@@ -36,8 +36,8 @@ CLASS( Player, types::Serializable )
 	
 	const role_t GetRole() const;
 	
-	const types::Buffer Serialize() const;
-	void Unserialize( types::Buffer buf );
+	const types::Buffer Serialize() const override;
+	void Unserialize( types::Buffer buf ) override;
 	
 private:
 	bool m_is_initialized = false;

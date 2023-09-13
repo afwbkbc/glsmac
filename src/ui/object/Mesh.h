@@ -23,8 +23,8 @@ CLASS( Mesh, UIObject )
 	
 	void SetTintColor( const types::Color color );
 	
-	virtual void Destroy();
-	virtual void Align();
+	virtual void Destroy() override;
+	virtual void Align() override;
 	
 	enum aspect_ratio_mode_t {
 		AM_NONE,

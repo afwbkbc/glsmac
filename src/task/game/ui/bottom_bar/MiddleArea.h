@@ -16,8 +16,8 @@ CLASS( MiddleArea, BBSection )
 	
 	MiddleArea( Game* game );
 
-	void Create();
-	void Destroy();
+	void Create() override;
+	void Destroy() override;
 	
 	void AddMessage( const std::string& text );
 	void UpdateMapFileName();

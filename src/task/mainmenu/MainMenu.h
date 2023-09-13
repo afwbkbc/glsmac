@@ -30,9 +30,9 @@ namespace task {
 namespace mainmenu {
 
 CLASS( MainMenu, base::Task )
-	void Start();
-	void Iterate();
-	void Stop();
+	void Start() override;
+	void Iterate() override;
+	void Stop() override;
 	
 	::game::Settings m_settings = {};
 	

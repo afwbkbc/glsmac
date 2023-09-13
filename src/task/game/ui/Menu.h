@@ -23,13 +23,13 @@ CLASS( Menu, UI )
 	Menu( Game* game, const uint8_t item_height = 18, const uint8_t margin = 4 );
 	~Menu();
 	
-	void Create();
-	void Iterate();
-	void Destroy();
-	void ProcessEvent( event::UIEvent* event );
+	void Create() override;
+	void Iterate() override;
+	void Destroy() override;
+	void ProcessEvent( event::UIEvent* event ) override;
 
-	void Show();
-	void Hide();
+	void Show() override;
+	void Hide() override;
 
 protected:
 	struct {

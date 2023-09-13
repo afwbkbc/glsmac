@@ -28,8 +28,8 @@ CLASS( Slot, types::Serializable )
 	void SetPlayer( Player* player, const size_t cid, const std::string& remote_address );
 	void SetReady( const bool ready );
 
-	const types::Buffer Serialize() const;
-	void Unserialize( types::Buffer buf );
+	const types::Buffer Serialize() const override;
+	void Unserialize( types::Buffer buf ) override;
 
 private:
 	

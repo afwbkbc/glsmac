@@ -11,7 +11,7 @@ CLASS( Coastlines1, Coastlines )
 	Coastlines1( Map* const map );
 	~Coastlines1();
 	
-	void GenerateTile( const Tile* tile, TileState* ts, MapState* ms );
+	void GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) override;
 	
 private:
 	util::Perlin* m_perlin = nullptr;

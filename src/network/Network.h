@@ -64,7 +64,7 @@ CLASS( Network, MTModule )
 	
 	MT_Response MT_GetResult( mt_id_t mt_id );
 
-	void Iterate();
+	void Iterate() override;
 
 protected:
 
@@ -75,9 +75,9 @@ protected:
 	virtual MT_Response DisconnectClient( const size_t cid ) = 0;
 	virtual void ProcessEvents() = 0;
 	
-	const MT_Response ProcessRequest( const MT_Request& request, MT_CANCELABLE );
-	void DestroyRequest( const MT_Request& request );
-	void DestroyResponse( const MT_Response& response );
+	const MT_Response ProcessRequest( const MT_Request& request, MT_CANCELABLE ) override;
+	void DestroyRequest( const MT_Request& request ) override;
+	void DestroyResponse( const MT_Response& response ) override;
 	
 	const MT_Response Error( const std::string& errmsg = "" );
 	const MT_Response Success();

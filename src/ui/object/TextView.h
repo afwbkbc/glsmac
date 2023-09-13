@@ -22,9 +22,9 @@ CLASS( TextView, ScrollView )
 	
 	TextView( const std::string& class_name = "" ) : ScrollView( class_name ) {}
 
-	void Create();
-	void Align();
-	void Destroy();
+	void Create() override;
+	void Align() override;
+	void Destroy() override;
 
 	void SetType( const textview_type_t type );
 	void SetLinesLimit( const size_t lines_limit );
@@ -50,7 +50,7 @@ CLASS( TextView, ScrollView )
 	size_t SelectByMask( std::string mask ); // returns number of matched characters
 	
 protected:
-	void ApplyStyle();
+	void ApplyStyle() override;
 	
 private:
 	

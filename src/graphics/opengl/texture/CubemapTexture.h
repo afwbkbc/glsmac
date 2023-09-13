@@ -7,7 +7,7 @@ namespace opengl {
 
 CLASS( CubemapTexture, Texture )
 	CubemapTexture( types::Texture *texture );
-	void Load();
+	void Load() override;
 };
 
 } /* namespace opengl */

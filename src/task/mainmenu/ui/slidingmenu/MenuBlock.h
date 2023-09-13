@@ -38,9 +38,9 @@ CLASS(MenuBlock, UIContainer)
 	// per ms
 	static constexpr size_t SLIDING_SPEED = 5;
 
-	void Create();
-	void Destroy();
-	void Iterate();
+	void Create() override;
+	void Destroy() override;
+	void Iterate() override;
 	
 	void AddItem( const std::string& text, const choice_handlers_t& handlers );
 	void AddTitle( const std::string& text );

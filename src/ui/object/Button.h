@@ -15,20 +15,20 @@ CLASS( Button, Panel )
 
 	Button( const std::string& class_name = "" );
 
-	virtual void Create();
-	virtual void Destroy();
+	virtual void Create() override;
+	virtual void Destroy() override;
 	
 	void SetLabel( const std::string& text );
 	const std::string& GetLabel() const;
 	void SetTextAlign( alignment_t alignment );
 
 protected:
-	virtual void ApplyStyle();
+	virtual void ApplyStyle() override;
 	
-	bool OnMouseOver( const UIEvent::event_data_t* data );
-	bool OnMouseOut( const UIEvent::event_data_t* data );
-	bool OnMouseDown( const UIEvent::event_data_t* data );
-	bool OnMouseUp( const UIEvent::event_data_t* data );
+	bool OnMouseOver( const UIEvent::event_data_t* data ) override;
+	bool OnMouseOut( const UIEvent::event_data_t* data ) override;
+	bool OnMouseDown( const UIEvent::event_data_t* data ) override;
+	bool OnMouseUp( const UIEvent::event_data_t* data ) override;
 	
 	std::string m_label_text = "";
 	alignment_t m_label_alignment = ALIGN_CENTER;

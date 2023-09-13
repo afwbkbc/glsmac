@@ -13,13 +13,13 @@ CLASS(Sprite, Actor)
 	Sprite( scene::actor::Actor *actor );
 	~Sprite();
 	
-	bool MeshReloadNeeded();
-	bool TextureReloadNeeded();
+	bool MeshReloadNeeded() override;
+	bool TextureReloadNeeded() override;
 	
-	void LoadMesh();
-	void LoadTexture();
+	void LoadMesh() override;
+	void LoadTexture() override;
 	
-	void Draw( shader_program::ShaderProgram *shader_program, Camera *camera = nullptr );
+	void Draw( shader_program::ShaderProgram *shader_program, Camera *camera = nullptr ) override;
 	
 protected:
 	

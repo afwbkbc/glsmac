@@ -30,9 +30,9 @@ CLASS( Dropdown, Panel )
 
 	void SetTextColor( const Color& color );
 	
-	void Create();
-	void Destroy();
-	void Align();
+	void Create() override;
+	void Destroy() override;
+	void Align() override;
 		
 private:
 	

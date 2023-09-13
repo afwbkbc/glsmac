@@ -38,8 +38,8 @@ CLASS( Packet, Serializable )
 		std::vector< std::string > vec;
 	} data;
 
-	const Buffer Serialize() const;
-	void Unserialize( Buffer buffer );
+	const Buffer Serialize() const override;
+	void Unserialize( Buffer buffer ) override;
 };
 
 }

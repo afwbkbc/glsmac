@@ -122,7 +122,7 @@ You may also just download binary releases from github, they are built for ubunt
 
 #### Visual Studio
 
-Building with Visual Studio is recommended for windows. You will need **git** and **Visual Studio 2022** installed. Use the Visual Studio Installer and click **modify**->**individual components** on Visual Studio 2022.
+Building with Visual Studio is recommended for windows. You will need **git** (for example, Git SCM) and **Visual Studio 2022** installed. Use the Visual Studio Installer, select **Desktop development with C++**. Then click **modify**->**individual components** on Visual Studio 2022.
 
 You will need to install the following `C++ CMake tools for windows`, `C++ Clang Compiler for windows`, `C++ Clang-cl`, `Windows 11 SDK (10.2.22621.0)`, `Windows Universal CRT SDK`, `Windows Universal C Runtime`.
 

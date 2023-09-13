@@ -7,7 +7,7 @@ namespace style {
 			
 CLASS( Popup, ui::theme::StyleSheet )
 
-	void AddStyles();
+	void AddStyles() override;
 };
 
 }

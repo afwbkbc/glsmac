@@ -139,8 +139,8 @@ CLASS( Texture, Serializable )
 	// supposed to be faster than AddFrom
 	unsigned char *CopyBitmap( const size_t x1, const size_t y1, const size_t x2, const size_t y2 );
 	
-	const Buffer Serialize() const;
-	void Unserialize( Buffer buf );
+	const Buffer Serialize() const override;
+	void Unserialize( Buffer buf ) override;
 	
 private:
 	size_t m_update_counter = 0;

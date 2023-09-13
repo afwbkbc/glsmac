@@ -17,9 +17,9 @@ CLASS( Input, Panel )
 
 	Input( const std::string& class_name = "" );
 
-	virtual void Create();
-	virtual void Iterate();
-	virtual void Destroy();
+	virtual void Create() override;
+	virtual void Iterate() override;
+	virtual void Destroy() override;
 	
 	void SetValue( const std::string& value );
 	const std::string& GetValue() const;
@@ -30,8 +30,8 @@ CLASS( Input, Panel )
 	
 	void Clear();
 	
-	void Focus();
-	void Defocus();
+	void Focus() override;
+	void Defocus() override;
 
 private:
 	
@@ -46,7 +46,7 @@ private:
 		};
 	} m_forwarded_style_attributes;
 	
-	bool OnKeyDown( const UIEvent::event_data_t* data );
+	bool OnKeyDown( const UIEvent::event_data_t* data ) override;
 	
 	std::string m_value = "";
 	size_t m_max_length = 0;

@@ -22,7 +22,7 @@ CLASS( TileSelection, Actor )
 	
 	TileSelection( ::game::map::TileState::tile_vertices_t coords );
 	
-	void Iterate();
+	void Iterate() override;
 	
 private:
 	Texture* m_texture = nullptr;

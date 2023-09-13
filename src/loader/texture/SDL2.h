@@ -11,12 +11,12 @@ namespace texture {
 CLASS( SDL2, TextureLoader )
 	virtual ~SDL2();
 	
-	void Start();
-	void Stop();
-	void Iterate();
+	void Start() override;
+	void Stop() override;
+	void Iterate() override;
 
-	Texture* LoadTexture( const std::string &name );
-	Texture* LoadTexture( const std::string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value = 1.0 );
+	Texture* LoadTexture( const std::string &name ) override;
+	Texture* LoadTexture( const std::string &name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value = 1.0 ) override;
 	
 protected:
 	// cache all textures for future use

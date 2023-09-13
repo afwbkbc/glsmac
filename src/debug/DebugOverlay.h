@@ -19,9 +19,9 @@ namespace debug {
 
 CLASS( DebugOverlay, base::Task )
 	
-	void Start();
-	void Stop();
-	void Iterate();
+	void Start() override;
+	void Stop() override;
+	void Iterate() override;
 
 	void Show();
 	void Hide();

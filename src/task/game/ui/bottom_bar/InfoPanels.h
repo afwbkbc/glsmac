@@ -18,9 +18,9 @@ CLASS( InfoPanels, MiddleAreaPage )
 
 	InfoPanels( Game* game ) : MiddleAreaPage( game, "InfoPanels" ) {}
 
-	void Create();
-	void Destroy();
-	void Align();
+	void Create() override;
+	void Destroy() override;
+	void Align() override;
 	
 protected:	
 	std::vector<InfoPanel*> m_panels = {};

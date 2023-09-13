@@ -18,7 +18,7 @@ CLASS( Text, Actor )
 	~Text();
 	
 	void Update( Font* font, const std::string& text, const float x, const float y );
-	void Draw( shader_program::ShaderProgram *shader_program, Camera *camera = nullptr );
+	void Draw( shader_program::ShaderProgram *shader_program, Camera *camera = nullptr ) override;
 	
 protected:
 

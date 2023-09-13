@@ -29,12 +29,12 @@ CLASS( SDL2, Audio )
 	SDL2();
 	~SDL2();
 	
-	void Start();
-	void Stop();
-	void Iterate();
+	void Start() override;
+	void Stop() override;
+	void Iterate() override;
 	
-	void AddActor( scene::actor::Sound *actor );
-	void RemoveActor( scene::actor::Sound *actor );
+	void AddActor( scene::actor::Sound *actor ) override;
+	void RemoveActor( scene::actor::Sound *actor ) override;
 	
 	void Mix( Uint8 *stream, int len );
 	

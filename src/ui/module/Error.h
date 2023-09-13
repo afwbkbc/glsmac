@@ -22,7 +22,7 @@ CLASS( Error, Module )
 	
 	void SetText( const std::string& error_text );
 	
-	void ProcessEvent( event::UIEvent* event );
+	void ProcessEvent( event::UIEvent* event ) override;
 	
 private:
 	

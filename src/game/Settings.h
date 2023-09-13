@@ -56,8 +56,8 @@ CLASS( MapSettings, Serializable )
 	static constexpr parameter_t MAP_CLOUDS_DENSE = 3;
 	parameter_t clouds = MAP_CLOUDS_AVERAGE;
 	
-	const Buffer Serialize() const;
-	void Unserialize( Buffer buf );
+	const Buffer Serialize() const override;
+	void Unserialize( Buffer buf ) override;
 };
 
 // settings that are synced between players (host has authority)
@@ -76,8 +76,8 @@ CLASS( GlobalSettings, Serializable )
 	
 	// TODO: custom rules struct
 	
-	const Buffer Serialize() const;
-	void Unserialize( Buffer buf );
+	const Buffer Serialize() const override;
+	void Unserialize( Buffer buf ) override;
 };
 
 // settings that aren't synced between players
@@ -108,8 +108,8 @@ public:
 	
 	std::set< std::string > banned_addresses = {};
 	
-	const Buffer Serialize() const;
-	void Unserialize( Buffer buf );
+	const Buffer Serialize() const override;
+	void Unserialize( Buffer buf ) override;
 };
 
 CLASS( Settings, Serializable )
@@ -117,8 +117,8 @@ CLASS( Settings, Serializable )
 	GlobalSettings global;
 	LocalSettings local;
 	
-	const Buffer Serialize() const;
-	void Unserialize( Buffer buf );
+	const Buffer Serialize() const override;
+	void Unserialize( Buffer buf ) override;
 };
 
 }

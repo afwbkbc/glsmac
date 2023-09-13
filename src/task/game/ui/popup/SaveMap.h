@@ -12,7 +12,7 @@ CLASS( SaveMap, FilePopup )
 	SaveMap( Game* game );
 	
 protected:
-	void OnFileSelect( const std::string& path );
+	void OnFileSelect( const std::string& path ) override;
 
 };
 

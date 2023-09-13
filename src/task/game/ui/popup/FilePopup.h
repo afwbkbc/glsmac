@@ -26,11 +26,11 @@ CLASS( FilePopup, OkCancelPopup )
 		const std::string& default_filename = ""
 	);
 	
-	void Create();
-	void Destroy();
+	void Create() override;
+	void Destroy() override;
 
 protected:
-	void OnOk();
+	void OnOk() override;
 	
 	virtual void OnFileSelect( const std::string& path ) {}
 	

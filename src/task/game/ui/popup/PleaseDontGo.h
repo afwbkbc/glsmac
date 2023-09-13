@@ -7,7 +7,7 @@
 #include "ui/object/ChoiceList.h"
 #include "ui/object/SoundEffect.h"
 
-#include "ui/UI.h"
+#include "../../../../ui/UI.h"
 
 namespace task {
 namespace game {
@@ -18,8 +18,8 @@ CLASS( PleaseDontGo, Popup )
 	
 	PleaseDontGo( Game* game, const ui_handler_t on_order );
 	
-	void Create();
-	void Destroy();
+	void Create() override;
+	void Destroy() override;
 
 private:
 	

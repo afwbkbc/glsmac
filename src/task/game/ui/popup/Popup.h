@@ -17,13 +17,13 @@ CLASS( Popup, ::ui::object::Popup )
 	
 	Popup( Game* game );
 	
-	void Create();
-	virtual void Align();
-	void Iterate();
-	void Destroy();
-	void ProcessEvent( event::UIEvent* event );
-	bool MaybeClose();
-	void SetHeight( const coord_t px );
+	void Create() override;
+	virtual void Align() override;
+	void Iterate() override;
+	void Destroy() override;
+	void ProcessEvent( event::UIEvent* event ) override;
+	bool MaybeClose() override;
+	void SetHeight( const coord_t px ) override;
 	
 	void SetTitleText( const std::string& title_text );
 	

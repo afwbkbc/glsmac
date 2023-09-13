@@ -13,8 +13,8 @@ CLASS( Confirm, object::Popup )
 
 	Confirm( const std::string class_name = "Popup" );
 
-	void Create();
-	void Destroy();
+	void Create() override;
+	void Destroy() override;
 
 	void SetText( const std::string& text );
 	

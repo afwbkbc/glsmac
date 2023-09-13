@@ -15,10 +15,10 @@ CLASS( Messages, MiddleAreaPage )
 	
 	Messages( Game* game ) : MiddleAreaPage( game, "Messages" ) {}
 
-	void Create();
-	void Iterate();
-	void Destroy();
-	void Align();
+	void Create() override;
+	void Iterate() override;
+	void Destroy() override;
+	void Align() override;
 	
 	void AddMessage( const std::string& text );
 	

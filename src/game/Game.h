@@ -184,18 +184,18 @@ CLASS( Game, MTModule )
 	mt_id_t MT_LoadDump( const std::string& path );
 #endif
 	
-	void Start();
-	void Stop();
-	void Iterate();
+	void Start() override;
+	void Stop() override;
+	void Iterate() override;
 
 	util::Random* GetRandom() const;
 	map::Map* GetMap() const;
 	
 protected:
 	
-	const MT_Response ProcessRequest( const MT_Request& request, MT_CANCELABLE );
-	void DestroyRequest( const MT_Request& request );
-	void DestroyResponse( const MT_Response& response );
+	const MT_Response ProcessRequest( const MT_Request& request, MT_CANCELABLE ) override;
+	void DestroyRequest( const MT_Request& request ) override;
+	void DestroyResponse( const MT_Response& response ) override;
 
 private:
 	

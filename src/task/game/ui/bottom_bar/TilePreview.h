@@ -15,8 +15,8 @@ CLASS( TilePreview, BBSection )
 
 	TilePreview( Game* game ) : BBSection( game, "TilePreview" ) {}
 	
-	void Create();
-	void Destroy();
+	void Create() override;
+	void Destroy() override;
 
 	void PreviewTile( const tile_data_t& tile_data );
 	void HideTilePreview();

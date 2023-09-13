@@ -10,7 +10,7 @@ CLASS( Cross, Brush )
 	
 	Cross( Game* game );
 	
-	const MapEditor::tiles_t Draw( map::Tile* center_tile );
+	const MapEditor::tiles_t Draw( map::Tile* center_tile ) override;
 	
 };
 	

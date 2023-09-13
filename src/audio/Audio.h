@@ -16,7 +16,7 @@ CLASS( Audio, base::Module )
 	virtual void AddActor( scene::actor::Sound *actor ) = 0;
 	virtual void RemoveActor( scene::actor::Sound *actor ) = 0;
 	
-	void Iterate();
+	void Iterate() override;
 	
 	// if sound is still playing - don't delete it until it finishes
 	void RemoveAndDeleteActor( scene::actor::Sound *actor );

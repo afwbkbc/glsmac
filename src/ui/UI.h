@@ -49,9 +49,9 @@ CLASS( UI, base::Module )
 	typedef float coord_t;
 	typedef Vec2<coord_t> vertex_t;
 	
-	void Start();
-	void Stop();
-	void Iterate();
+	void Start() override;
+	void Stop() override;
+	void Iterate() override;
 	
 	void AddObject( object::UIObject *object );
 	void RemoveObject( object::UIObject *object );

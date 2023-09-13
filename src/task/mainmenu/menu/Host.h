@@ -21,13 +21,13 @@ CLASS( Host, ConnectionPopupMenu )
 	Host( MainMenu* mainmenu );
 	~Host();
 
-	void Show();
-	void Hide();
+	void Show() override;
+	void Hide() override;
 
-	void OnNext();
+	void OnNext() override;
 	
-	const std::string GetChoice() const;
-	void SetChoice( const std::string& choice );
+	const std::string GetChoice() const override;
+	void SetChoice( const std::string& choice ) override;
 	
 private:
 	

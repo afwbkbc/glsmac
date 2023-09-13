@@ -19,9 +19,9 @@ CLASS( GameSettingsSection, LobbySection )
 
 	GameSettingsSection( Lobby* lobby, ::game::GlobalSettings* game_settings );
 
-	void Create();
-	void Align();
-	void Destroy();
+	void Create() override;
+	void Align() override;
+	void Destroy() override;
 
 	void UpdateRows();
 

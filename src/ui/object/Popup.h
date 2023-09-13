@@ -13,8 +13,8 @@ CLASS( Popup, UIContainer )
 	
 	Popup( const std::string& class_name = "Popup" );
 
-	void Create();
-	void Destroy();
+	void Create() override;
+	void Destroy() override;
 
 	// open or close popup
 	void Open();

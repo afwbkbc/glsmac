@@ -13,11 +13,11 @@ CLASS( FreeType, FontLoader )
 	
 	~FreeType();
 	
-	void Start();
-	void Stop();
-	void Iterate();
+	void Start() override;
+	void Stop() override;
+	void Iterate() override;
 
-	types::Font *LoadFont( const std::string &name, const unsigned char size );
+	types::Font *LoadFont( const std::string &name, const unsigned char size ) override;
 	
 protected:
 	FT_Library m_freetype;

@@ -11,8 +11,8 @@ CLASS( UnitPreview, BBSection )
 
 	UnitPreview( Game* game ) : BBSection( game, "UnitPreview" ) {}
 	
-	void Create();
-	void Destroy();
+	void Create() override;
+	void Destroy() override;
 
 };
 	

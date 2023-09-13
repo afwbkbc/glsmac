@@ -30,9 +30,9 @@ CLASS( InfoPanel, BBSection )
 	
 	InfoPanel( Game* game );
 	
-	void Create();
-	void Iterate();
-	void Destroy();
+	void Create() override;
+	void Iterate() override;
+	void Destroy() override;
 
 private:
 	info_type_t m_info_type = IT_NONE;

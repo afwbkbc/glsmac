@@ -22,14 +22,14 @@ CLASS( Instanced, Actor )
 	
 	// GetAngle(), SetAngle(), etc
 #define _XYZ_SETTER( _name ) \
-	const types::Vec3& Get##_name() const;\
-	const float Get##_name##X() const;\
-	const float Get##_name##Y() const;\
-	const float Get##_name##Z() const;\
-	void Set##_name( const types::Vec3 & value );\
-	void Set##_name##X( const float value );\
-	void Set##_name##Y( const float value );\
-	void Set##_name##Z( const float value );
+	const types::Vec3& Get##_name() const override;\
+	const float Get##_name##X() const override;\
+	const float Get##_name##Y() const override;\
+	const float Get##_name##Z() const override;\
+	void Set##_name( const types::Vec3 & value ) override;\
+	void Set##_name##X( const float value ) override;\
+	void Set##_name##Y( const float value ) override;\
+	void Set##_name##Z( const float value ) override;
 
 	_XYZ_SETTER( Position );
 	_XYZ_SETTER( Angle );
@@ -38,12 +38,12 @@ CLASS( Instanced, Actor )
 
 	typedef std::vector< types::Matrix44 > matrices_t;
 	const matrices_t& GetInstanceMatrices();
-	types::Matrix44 & GetWorldMatrix();
+	types::Matrix44 & GetWorldMatrix() override;
 	void GenerateInstanceMatrices( matrices_t* out_matrices, scene::Camera* camera );
 	
-	void UpdateWorldMatrix();
-	void UpdatePosition();
-	void UpdateMatrix();
+	void UpdateWorldMatrix() override;
+	void UpdatePosition() override;
+	void UpdateMatrix() override;
 	
 	Sprite* GetSpriteActor() const;
 	Mesh* GetMeshActor() const;
@@ -58,8 +58,8 @@ CLASS( Instanced, Actor )
 	const float GetZIndex() const;
 	void SetZIndex( const float z_index );
 	
-	virtual const types::Buffer Serialize() const;
-	virtual void Unserialize( types::Buffer buf );
+	virtual const types::Buffer Serialize() const override;
+	virtual void Unserialize( types::Buffer buf ) override;
 	
 private:
 	Actor* m_actor = nullptr;

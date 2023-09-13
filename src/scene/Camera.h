@@ -28,9 +28,9 @@ CLASS( Camera, Entity )
 	const float GetZFar() const;
 
 	void UpdateUpTarget();
-	void UpdateRotation();
+	void UpdateRotation() override;
 	void UpdateProjection();
-	void UpdateMatrix();
+	void UpdateMatrix() override;
 	
 	void SetCustomAspectRatio( const float aspect_ratio );
 	

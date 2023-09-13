@@ -212,6 +212,9 @@ void GameSettingsSection::CreateRow( const row_id_t row_id, const std::string& l
 			case RI_PLANET_CLOUDS:
 				m_game_settings->map.clouds = data->value.change.id;
 				break;
+			case RI_MAP_FILE:
+				// nothing to do yet because it will just open file browser
+				break;
 			case RI_MAX:
 				break;
 		}

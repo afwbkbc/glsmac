@@ -13,8 +13,8 @@ CLASS( Error, object::Popup )
 
 	Error( const std::string class_name = "Popup" );
 
-	void Create();
-	void Destroy();
+	void Create() override;
+	void Destroy() override;
 
 	void SetText( const std::string& text );
 	

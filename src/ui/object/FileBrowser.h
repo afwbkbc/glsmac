@@ -26,8 +26,8 @@ CLASS( FileBrowser, UIContainer )
 	// whether to allow selecting existing files only, or any file
 	void SetExistingOnly( bool existing_only );
 
-	void Create();
-	void Destroy();
+	void Create() override;
+	void Destroy() override;
 
 	const std::string& GetValue() const; // value typed in input
 	const std::string GetSelectedFile() const; // full path to specified file

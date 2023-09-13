@@ -19,11 +19,11 @@ CLASS( World, Routine )
 		shader_program::OrthographicData* data_shader_program
 	);
 
-	bool SceneBelongs( const scene::Scene *scene ) const;
+	bool SceneBelongs( const scene::Scene *scene ) const override;
 
-	void Start();
-	void Stop();
-	void Iterate();
+	void Start() override;
+	void Stop() override;
+	void Iterate() override;
 
 protected:
 	
