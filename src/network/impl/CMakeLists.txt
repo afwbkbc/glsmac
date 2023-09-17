@@ -1,0 +1,5 @@
+IF(WIN32)
+    SET(SRC ${SRC} ${PWD}/Windows.cpp PARENT_SCOPE)
+ELSE()
+    SET(SRC ${SRC} ${PWD}/Posix.cpp PARENT_SCOPE)
+ENDIF()
