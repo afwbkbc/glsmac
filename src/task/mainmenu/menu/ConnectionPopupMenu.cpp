@@ -27,9 +27,9 @@ void ConnectionPopupMenu::SetConnection( ::game::connection::Connection* connect
 		NextMenu( menu );
 	};
 	m_connection->m_on_error = [ this ] ( const std::string& message ) -> void {
+		Show();
 		DELETE( m_connection );
 		m_connection = nullptr;
-		Show();
 		MenuError( message );
 	};
 	m_connection->m_on_cancel = [ this ] () -> void {
