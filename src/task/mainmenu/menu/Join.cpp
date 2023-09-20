@@ -52,7 +52,7 @@ void Join::Show() {
 		m_input_gameip->SetLeft( 144 );
 		m_input_gameip->SetTop( 34 );
 		m_input_gameip->SetRight( 12 );
-		m_input_gameip->SetValue( "127.0.0.1" );
+		m_input_gameip->SetValue( m_last_ip );
 		m_input_gameip->SetMaxLength( 20 ); // TODO: determine by rendered width
 	m_section->AddChild( m_input_gameip );
 
@@ -83,11 +83,6 @@ void Join::SetChoice( const std::string& choice ) {
 
 void Join::OnNext() {
 	
-	/*auto* loader = g_engine->GetUI()->GetLoader();
-	if ( loader->IsRunning() ) {
-		return;
-	}*/
-
 	m_mainmenu->m_settings.local.player_name = m_input_yourname->GetValue();
 	m_mainmenu->m_settings.local.remote_address = m_input_gameip->GetValue();
 	
@@ -99,6 +94,7 @@ void Join::OnNext() {
 	}
 	else {
 		Hide();
+		m_last_ip = m_input_gameip->GetValue();
 		NEWV( connection, ::game::connection::Client, &m_mainmenu->m_settings.local );
 		SetConnection( connection );
 	}
