@@ -283,7 +283,7 @@ bool SimpleTCP::ReadFromSocket( Impl::remote_socket_data_t& socket, const size_t
 
 	if ( m_impl.m_tmp.tmpint2 > 0 ) {
 
-		Log( "Read " + std::to_string( m_impl.m_tmp.tmpint2 ) + " bytes into buffer " + std::to_string( (long int) socket.buffer.ptr ) + " (size=" + std::to_string( socket.buffer.len ) + ")" );
+		Log( "Read " + std::to_string( m_impl.m_tmp.tmpint2 ) + " bytes into buffer " + std::to_string( (long long) socket.buffer.ptr ) + " (size=" + std::to_string( socket.buffer.len ) + ")" );
 
 		socket.last_data_at = m_impl.m_tmp.now;
 		socket.ping_needed = false;

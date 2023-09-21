@@ -6,6 +6,13 @@
 #include "types/Packet.h"
 #include "impl/Impl.h"
 
+#ifdef _WIN32
+#define fd_t unsigned long long
+#else
+#define fd_t int
+#endif
+
+
 using namespace types;
 
 namespace network {
@@ -90,12 +97,12 @@ protected:
 
 			struct local_socket_data_t {
 				std::string local_address;
-				int fd;
+				fd_t fd;
 			};
 
 			struct remote_socket_data_t {
 				std::string remote_address;
-				int fd;
+				fd_t fd;
 				struct {
 					char* data1;
 					char* data2;
@@ -114,7 +121,7 @@ protected:
 				std::unordered_map< int, remote_socket_data_t > client_sockets;
 				struct {
 					void* client_addr;
-					int newfd;
+					fd_t newfd;
 					std::vector< int > to_remove;
 				} tmp;
 			} m_server = {};
@@ -124,14 +131,15 @@ protected:
 			} m_client = {};
 
 			Impl();
+			~Impl();
 			void Start();
 			void Stop();
 			std::string Listen(); // error or empty
 			std::string Connect( const std::string& remote_address ); // error or empty
 			std::string Accept( const int cid );
-			int Receive( const int fd, void *buf, const int len );
-			int Send( const int fd, const void *buf, const int len );
-			void Close( const int fd );
+			int Receive( const fd_t fd, void *buf, const int len );
+			int Send( const fd_t fd, const void *buf, const int len );
+			void Close( const fd_t fd );
 
 	};
 

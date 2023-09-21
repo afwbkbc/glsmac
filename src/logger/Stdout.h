@@ -12,7 +12,7 @@ CLASS( Stdout, Logger )
 	void Log( const std::string &text ) override;
 	std::mutex m_log_mutex;
 #else
-	void Log( const std::string &text ) {}
+	void Log( const std::string &text ) override {}
 #endif
 	
 };

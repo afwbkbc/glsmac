@@ -141,6 +141,7 @@ std::string Network::Impl::Connect(const std::string& remote_address) {
 		else {
 			close(m_client.socket.fd);
 			m_client.socket.fd = 0;
+			freeaddrinfo(p);
 			return ("Connection failed: " + std::to_string(errno));
 		}
 	}
@@ -160,8 +161,11 @@ std::string Network::Impl::Connect(const std::string& remote_address) {
 		}
 	}
 	else {
+		freeaddrinfo(p);
 		return ("Unsupported IP type: " + remote_address);
 	}
+
+	freeaddrinfo(p);
 
 	return "";
 }
@@ -201,16 +205,16 @@ std::string Network::Impl::Accept( const int cid ) {
 	return "";
 }
 
-int Network::Impl::Receive( const int fd, void *buf, const int len ) {
+int Network::Impl::Receive( const fd_t fd, void *buf, const int len ) {
 	return recv(  fd, buf, len, O_NONBLOCK );
 }
 
-int Network::Impl::Send( const int fd, const void *buf, const int len ) {
+int Network::Impl::Send( const fd_t fd, const void *buf, const int len ) {
 	ASSERT( len <= BUFFER_SIZE, "packet size overflow ( " + std::to_string( len ) + " > " + std::to_string( BUFFER_SIZE ) + "), consider increasing BUFFER_SIZE" );
 	return send( fd, buf, len, MSG_NOSIGNAL );
 }
 
-void Network::Impl::Close( const int fd ) {
+void Network::Impl::Close( const fd_t fd ) {
 	close( fd );
 }
 

@@ -93,8 +93,8 @@ void Join::OnNext() {
 		MenuError( "Player enter game IP." );
 	}
 	else {
-		Hide();
 		m_last_ip = m_input_gameip->GetValue();
+		Hide();
 		NEWV( connection, ::game::connection::Client, &m_mainmenu->m_settings.local );
 		SetConnection( connection );
 	}

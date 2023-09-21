@@ -94,8 +94,7 @@ void Connection::Iterate() {
 			}
 		}
 	}
-
-	if ( m_is_connected ) {
+	else if ( m_is_connected ) {
 		if ( !m_mt_ids.events ) {
 			m_mt_ids.events = m_network->MT_GetEvents();
 		}
@@ -154,7 +153,7 @@ void Connection::Disconnect( const std::string& reason ) {
 		m_mt_ids.events = 0;
 	}
 	Log( "Disconnecting" + ( !reason.empty() ? " (reason: " + reason + ")" : "" ) );
-	m_mt_ids.disconnect = g_engine->GetNetwork()->MT_Disconnect();
+	m_mt_ids.disconnect = m_network->MT_Disconnect();
 }
 
 
