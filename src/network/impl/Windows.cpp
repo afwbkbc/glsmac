@@ -30,6 +30,10 @@ const Network::Impl::ec_t Network::Impl::GetLastErrorCode() const {
 	return WSAGetLastError();
 }
 
+bool Network::Impl::IsSocketInvalid( const fd_t fd ) const {
+	return fd == INVALID_SOCKET;
+}
+
 void Network::Impl::ConfigureSocket( const fd_t socket ) const {
 	unsigned long l = 1;
 	ioctlsocket( socket, FIONBIO, &l );
@@ -52,11 +56,11 @@ void Network::Impl::CloseSocket( const fd_t socket ) const {
 	closesocket( socket );
 }
 
-int Network::Impl::Receive( const fd_t fd, void* buf, const int len ) {
+int Network::Impl::Receive( const fd_t fd, void* buf, const int len ) const {
 	return recv( fd, (char*)buf, len, 0 );
 }
 
-int Network::Impl::Send( const fd_t fd, const void* buf, const int len ) {
+int Network::Impl::Send( const fd_t fd, const void* buf, const int len ) const {
 	return send( fd, (const char*)buf, len, 0 );
 }
 

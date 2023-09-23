@@ -18,7 +18,7 @@
 namespace network {
 namespace simpletcp {
 
-static int sockaddr_in_size = sizeof( struct sockaddr_in );
+static socklen_t sockaddr_in_size = sizeof( struct sockaddr_in );
 
 SimpleTCP::SimpleTCP() : Network() {
 
@@ -87,14 +87,14 @@ MT_Response SimpleTCP::ListenStart() {
 		m_tmp.tmpint = bind( socket_data.fd, p->ai_addr, p->ai_addrlen );
 		if ( m_tmp.tmpint ) {
 			Log( "Failed to bind to listening socket on " + socket_data.local_address );
-			CloseSocket( socket_data.fd );
+			CloseSocket( socket_data.fd, 0, true );
 			continue;
 		}
 
 		m_tmp.tmpint = listen( socket_data.fd, GLSMAC_MAX_INCOMING_CONNECTIONS );
 		if ( m_tmp.tmpint == -1 ) {
 			Log( "Failed to listen on " + socket_data.local_address );
-			CloseSocket( socket_data.fd );
+			CloseSocket( socket_data.fd, 0, true );
 			continue;
 		}
 
@@ -165,21 +165,17 @@ MT_Response SimpleTCP::Connect( const std::string& remote_address, MT_CANCELABLE
 		return Error( "No addresses found" );
 	}
 
-	// Create a SOCKET for connecting to server
 	m_client.socket.fd = socket( p->ai_family, p->ai_socktype, p->ai_protocol );
-	if ( m_client.socket.fd == INVALID_SOCKET ) {
+	if ( m_impl.IsSocketInvalid( m_client.socket.fd ) ) {
 		freeaddrinfo( p );
 		m_client.socket.fd = 0;
-		return Error("Socket failed with error: " + std::to_string( WSAGetLastError() ));
+		return Error("Socket failed with error: " + m_impl.GetErrorMessage( m_impl.GetLastErrorCode() ) );
 	}
 
-	const auto shutdown = [ this, p ] {
-		CloseSocket( m_client.socket.fd );
+	const auto error = [ this, p ] ( const std::string& message ) -> const MT_Response {
+		CloseSocket( m_client.socket.fd, 0, true );
 		m_client.socket.fd = 0;
 		freeaddrinfo( p );
-	};
-	const auto error = [ this, p, shutdown ] ( const std::string& message ) -> const MT_Response {
-		shutdown();
 		return Error(message);
 	};
 
@@ -245,7 +241,7 @@ MT_Response SimpleTCP::Connect( const std::string& remote_address, MT_CANCELABLE
 MT_Response SimpleTCP::Disconnect() {
 
 	if ( m_client.socket.fd ) {
-		CloseSocket( m_client.socket.fd, true ); // no need to send event if disconnect was initiated by user
+		CloseSocket( m_client.socket.fd, 0, true ); // no need to send event if disconnect was initiated by user
 		free( m_client.socket.buffer.data1 );
 		free( m_client.socket.buffer.data2 );
 		m_client.socket.fd = 0;

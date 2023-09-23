@@ -4,6 +4,7 @@
 #include <atomic>
 #include <functional>
 #include <map>
+#include <thread>
 
 #include "Module.h"
 

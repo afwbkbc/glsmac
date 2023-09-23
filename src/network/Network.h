@@ -4,7 +4,6 @@
 
 #include "Event.h"
 #include "types/Packet.h"
-#include "impl/Impl.h"
 
 #ifdef _WIN32
 #include <WinSock2.h>
@@ -141,12 +140,13 @@ protected:
 
 			typedef int ec_t;
 			const ec_t GetLastErrorCode() const;
+			bool IsSocketInvalid( const fd_t fd ) const;
 			void ConfigureSocket( const fd_t socket ) const;
 			bool IsConnectionSucceeded( const ec_t ec ) const;
 			bool IsConnectionIdle( const ec_t ec ) const;
 			const std::string GetErrorMessage( const ec_t ec ) const;
-			int Receive( const fd_t fd, void* buf, const int len );
-			int Send( const fd_t fd, const void* buf, const int len );
+			int Receive( const fd_t fd, void* buf, const int len ) const;
+			int Send( const fd_t fd, const void* buf, const int len ) const;
 			void CloseSocket( const fd_t fd ) const;
 	};
 
