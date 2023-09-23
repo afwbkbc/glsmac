@@ -12,9 +12,6 @@
 
 namespace network {
 
-static unsigned int sockaddr_in_size = sizeof( struct sockaddr_in );
-
-
 Network::Impl::Impl() {
 	signal( SIGPIPE, SIG_IGN );
 }
@@ -51,7 +48,7 @@ bool Network::Impl::IsConnectionSucceeded( const ec_t ec ) const {
 }
 
 bool Network::Impl::IsConnectionIdle( const ec_t ec ) const {
-	return ec == EAGAIN || ec == EINPROGRESS;
+	return ec == EAGAIN || ec == EINPROGRESS || ec == EALREADY;
 }
 
 const std::string Network::Impl::GetErrorMessage( const ec_t ec ) const {
