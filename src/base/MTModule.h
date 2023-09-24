@@ -105,14 +105,22 @@ public:
 		m_mt_states_mutex.lock();
 		auto it = m_mt_states.find( mt_id );
 		ASSERT( it != m_mt_states.end(), "MT_Cancel() mt_id not found" );
-		if ( !it->second.is_executed && !it->second.is_processing ) {
+		if (mt_id == m_current_request_id) {
+			m_is_canceled = true;
+		}
+		if (!it->second.is_executed) {
+			if (it->second.is_processing) {
+				Log("Waiting for MT Request " + std::to_string(mt_id) + " to finish");
+				while (it->second.is_processing) {
+					m_mt_states_mutex.unlock();
+					std::this_thread::sleep_for(std::chrono::milliseconds(1));
+					m_mt_states_mutex.lock();
+				}
+			}
 			//Log( "MT Request " + to_string( mt_id ) + " canceled" );
 			DestroyRequest( it->second.request );
 			DestroyResponse( it->second.response );
 			m_mt_states.erase( it );
-		}
-		if ( mt_id == m_current_request_id ) {
-			m_is_canceled = true;
 		}
 		m_mt_states_mutex.unlock();
 	}

@@ -53,7 +53,7 @@ mt_id_t Network::MT_SendPacket( const Packet& packet, const size_t cid ) {
 	e.data.packet_data = packet.Serialize().ToString();
 	Log( "Sending packet ( type = " + std::to_string( packet.type ) + " )" + ( cid ? " to client " + std::to_string( cid ) : "" ) );
 	return MT_SendEvent( e );
-}
+} 
 
 const MT_Response Network::ProcessRequest( const MT_Request& request, MT_CANCELABLE ) {
 	// TODO: check if canceled
@@ -82,7 +82,7 @@ const MT_Response Network::ProcessRequest( const MT_Request& request, MT_CANCELA
 					return response;
 				}
 				case CM_CLIENT: {
-					auto response = Connect( request.connect.remote_address );
+					auto response = Connect( request.connect.remote_address, MT_C );
 					if ( response.result == R_SUCCESS ) {
 						m_current_connection_mode = request.connect.mode;
 					}
@@ -165,23 +165,35 @@ void Network::Iterate() {
 	ProcessEvents();
 }
 
-const MT_Response Network::Error( const std::string& errmsg ) {
+const MT_Response Network::Error( const std::string& errmsg ) const {
 	MT_Response response;
 	response.result = R_ERROR;
 	response.message = errmsg;
 	return response;
 }
 
-const MT_Response Network::Success() {
+const MT_Response Network::Success() const {
 	MT_Response response;
 	response.result = R_SUCCESS;
 	return response;
 }
 
+const MT_Response Network::Canceled() const {
+	MT_Response response;
+	response.result = R_CANCELED;
+	return response;
+}
 mt_id_t Network::MT_Success() {
 	MT_Request request;
 	request.op = OP_SUCCESS;
 	return MT_CreateRequest( request );
+}
+
+const fd_t Network::GetFdFromCid( const size_t cid ) const {
+	return cid < m_server.cid_to_fd.size()
+		? m_server.cid_to_fd[ cid ]
+		: 0
+	;
 }
 
 }

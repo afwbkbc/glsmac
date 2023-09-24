@@ -1,6 +1,7 @@
 #pragma once
 
 #ifdef _WIN32
+#undef UNICODE
 
 #ifdef VISUAL_STUDIO
 	#if !defined(ssize_t)

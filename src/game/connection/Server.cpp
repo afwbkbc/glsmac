@@ -46,7 +46,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			break;
 		}
 		case Event::ET_CLIENT_CONNECT: {
-			Log( std::to_string( event.cid ) + " connected" );
+			Log( "Client " + std::to_string(event.cid) + " connected");
 			ASSERT( m_state->GetCidSlots().find( event.cid ) == m_state->GetCidSlots().end(), "player cid already in slots" );
 			
 			const auto& banned = m_settings->banned_addresses;
@@ -63,16 +63,17 @@ void Server::ProcessEvent( const network::Event& event ) {
 			break;
 		}
 		case Event::ET_CLIENT_DISCONNECT: {
-			Log( std::to_string( event.cid ) + " disconnected" );
+			Log( "Client " + std::to_string(event.cid) + " disconnected");
 			auto it = m_state->GetCidSlots().find( event.cid );
 			if ( it != m_state->GetCidSlots().end() ) {
+				const auto slot_num = it->second;
 				m_state->RemoveCIDSlot( event.cid );
-				auto& slot = m_state->m_slots.GetSlot( it->second );
+				auto& slot = m_state->m_slots.GetSlot( slot_num );
 				auto* player = slot.GetPlayerAndClose();
 				ASSERT( player, "player in slot is null" );
 				m_state->RemovePlayer( player );
 				if ( m_on_player_leave ) {
-					m_on_player_leave( it->second, &slot, player );
+					m_on_player_leave( slot_num, &slot, player );
 				}
 			}
 			break;

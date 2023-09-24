@@ -104,7 +104,7 @@ public:
 	network_role_t network_role = NR_NONE;
 
 	std::string player_name = "";
-	std::string remote_address = "";
+	std::string remote_address = "127.0.0.1";
 	
 	std::set< std::string > banned_addresses = {};
 	

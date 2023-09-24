@@ -88,6 +88,10 @@ void Connection::Iterate() {
 					}
 					break;
 				}
+				case network::R_CANCELED: {
+					Log("Connection canceled");
+					break;
+				}
 				default: {
 					ASSERT( false, "unknown network result " + std::to_string( result.result ) );
 				}

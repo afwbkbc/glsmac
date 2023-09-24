@@ -31,8 +31,6 @@ CLASS( Join, ConnectionPopupMenu )
 	
 private:
 
-	std::string m_last_ip = "127.0.0.1";
-
 	Section* m_section = nullptr;
 	
 	Label* m_label_yourname = nullptr;
