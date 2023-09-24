@@ -17,7 +17,7 @@ protected:
 
 private:
 	void Error( const std::string& reason );
-	
+
 };
 
 }

@@ -15,10 +15,10 @@ CLASS( Intro, base::Task )
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;
-	
+
 protected:
 	Theme m_theme;
-	::ui::object::Surface *m_logo = nullptr;
+	::ui::object::Surface* m_logo = nullptr;
 	util::Timer m_timer;
 
 };

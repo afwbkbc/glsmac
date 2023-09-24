@@ -4,10 +4,9 @@ namespace task {
 namespace mainmenu {
 namespace lobby {
 
-LobbySection::LobbySection( Lobby *lobby )
+LobbySection::LobbySection( Lobby* lobby )
 	: Section( "PopupSection" )
-	, m_lobby( lobby )
-{
+	, m_lobby( lobby ) {
 	//
 }
 

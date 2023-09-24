@@ -4,9 +4,9 @@ namespace types {
 
 const Buffer Packet::Serialize() const {
 	Buffer buf;
-	
+
 	buf.WriteInt( type );
-	
+
 	switch ( type ) {
 		case PT_AUTH: {
 			buf.WriteString( data.str ); // player name
@@ -42,14 +42,14 @@ const Buffer Packet::Serialize() const {
 			//ASSERT(false, "unknown packet type " + std::to_string( type ));
 		}
 	}
-	
+
 	return buf;
 }
 
 void Packet::Unserialize( Buffer buf ) {
-	
-	type = ( packet_type_t ) buf.ReadInt();
-	
+
+	type = (packet_type_t)buf.ReadInt();
+
 	switch ( type ) {
 		case PT_AUTH: {
 			data.str = buf.ReadString(); // player name
@@ -86,6 +86,5 @@ void Packet::Unserialize( Buffer buf ) {
 		}
 	}
 }
-
 
 }

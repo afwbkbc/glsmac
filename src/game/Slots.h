@@ -17,7 +17,7 @@ CLASS( Slots, types::Serializable )
 
 private:
 	std::vector< Slot > m_slots = {};
-	
+
 };
 
 }

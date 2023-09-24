@@ -29,7 +29,7 @@ const Style* Theme::GetStyle( const std::string style_class ) const {
 }
 
 void Theme::Finalize() {
-	if( !m_is_finalized ) {
+	if ( !m_is_finalized ) {
 		for ( auto& style : m_styles_order ) {
 			m_styles.at( style )->Initialize();
 		}

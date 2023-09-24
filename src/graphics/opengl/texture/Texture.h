@@ -10,7 +10,7 @@ namespace graphics {
 namespace opengl {
 
 CLASS( Texture, base::Base )
-	Texture( types::Texture *texture );
+	Texture( types::Texture* texture );
 	~Texture();
 	virtual void Load();
 	virtual void Enable();
@@ -21,7 +21,7 @@ protected:
 
 	GLenum m_target = GL_TEXTURE_2D;
 
-	types::Texture *m_texture;
+	types::Texture* m_texture;
 
 	GLuint m_texture_obj;
 };

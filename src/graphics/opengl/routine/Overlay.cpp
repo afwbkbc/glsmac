@@ -6,11 +6,10 @@ namespace graphics {
 namespace opengl {
 namespace routine {
 
-Overlay::Overlay( OpenGL* opengl, shader_program::Simple2D *shader_program, shader_program::Font *shader_program_font )
+Overlay::Overlay( OpenGL* opengl, shader_program::Simple2D* shader_program, shader_program::Font* shader_program_font )
 	: Routine( opengl )
 	, m_shader_program( shader_program )
-	, m_shader_program_font( shader_program_font )
-{
+	, m_shader_program_font( shader_program_font ) {
 	//
 }
 
@@ -24,13 +23,14 @@ void Overlay::Stop() {
 
 void Overlay::Iterate() {
 
-	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it )
-		(*it)->Update();
+	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it ) {
+		( *it )->Update();
+	}
 
 	if ( m_is_redraw_needed ) {
-		
+
 		glDisable( GL_DEPTH_TEST );
-		
+
 		//Log( "Redrawing overlay" );
 		m_fbo->WriteBegin();
 		for ( auto& scene : m_gl_scenes ) {
@@ -46,20 +46,20 @@ void Overlay::Iterate() {
 			ASSERT( !glGetError(), "Overlay draw error" );
 		}
 		m_fbo->WriteEnd();
-		
+
 		glEnable( GL_DEPTH_TEST );
-	
+
 		m_is_redraw_needed = false;
 	}
-	
+
 	m_fbo->Draw( m_shader_program );
 }
 
-opengl::Actor *Overlay::AddCustomActor( scene::actor::Actor *actor ) {
+opengl::Actor* Overlay::AddCustomActor( scene::actor::Actor* actor ) {
 	auto actor_type = actor->GetType();
-	switch (actor_type) {
+	switch ( actor_type ) {
 		case scene::actor::Actor::TYPE_TEXT: {
-			auto *text_actor = (scene::actor::Text *)actor;
+			auto* text_actor = (scene::actor::Text*)actor;
 			NEWV( result, Text, text_actor, text_actor->GetFont() );
 			return result;
 		}
@@ -76,7 +76,7 @@ void Overlay::Redraw() {
 	}
 }
 
-bool Overlay::SceneBelongs( const scene::Scene *scene ) const {
+bool Overlay::SceneBelongs( const scene::Scene* scene ) const {
 	return scene->GetType() == scene::SCENE_TYPE_SIMPLE2D;
 }
 

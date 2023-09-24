@@ -9,15 +9,13 @@ UIEvent::UIEvent( const UIEvent* other )
 	, m_flags( other->m_flags )
 	, m_data( other->m_data )
 	, m_is_processed( false )
-	, m_is_mouseover_happened( other->m_is_mouseover_happened )
-{
+	, m_is_mouseover_happened( other->m_is_mouseover_happened ) {
 	ASSERT( !other->IsProcessed(), "copying from processed event" );
 }
 
 UIEvent::UIEvent( const event_type_t type )
 	: base::Base()
-	, m_type( type )
-{
+	, m_type( type ) {
 	//
 }
 

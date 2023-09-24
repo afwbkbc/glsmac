@@ -5,10 +5,9 @@
 namespace scene {
 namespace actor {
 
-Sound::Sound( const std::string &name, const types::Sound *sound )
+Sound::Sound( const std::string& name, const types::Sound* sound )
 	: Actor( TYPE_SOUND, name )
-	, m_sound( sound )
-{
+	, m_sound( sound ) {
 	Rewind();
 }
 
@@ -29,20 +28,20 @@ void Sound::Rewind() {
 }
 
 void Sound::GetNextBuffer( uint8_t* buffer, int len ) {
-	
+
 	ASSERT( len < m_sound->m_buffer_size, "buffer size is smaller than len" );
-	
+
 	if ( m_is_finished || !m_is_active ) {
 		memset( ptr( buffer, 0, len ), 0, len );
 		return;
 	}
-	
+
 	size_t newlen = 0;
 	if ( len + m_pos > m_sound->m_buffer_size ) {
 		newlen = m_sound->m_buffer_size - m_pos;
 		//if ( !m_is_repeatable ) { // need to test this first (maybe not needed at all)
-			memset( ptr( buffer, newlen, len - newlen ), 0, len - newlen );
-			Stop();
+		memset( ptr( buffer, newlen, len - newlen ), 0, len - newlen );
+		Stop();
 		//}
 		len = newlen;
 	}
@@ -55,7 +54,7 @@ void Sound::GetNextBuffer( uint8_t* buffer, int len ) {
 	m_pos += len;
 	if ( m_is_finished && m_is_repeatable ) {
 		Rewind();
-		
+
 		// need to test this first (maybe not needed at all)
 		//GetNextBuffer( ptr( buffer, newlen, len - newlen ), newlen );
 	}

@@ -16,7 +16,7 @@ CLASS( Server, Connection )
 	void GlobalMessage( const std::string& message );
 	void KickFromSlot( const size_t slot_num, const std::string& reason = "Kicked by host" );
 	void BanFromSlot( const size_t slot_num, const std::string& reason = "Banned by host" );
-	
+
 protected:
 	void ProcessEvent( const network::Event& event ) override;
 

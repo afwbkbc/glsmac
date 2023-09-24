@@ -15,7 +15,7 @@ namespace menu {
 CLASS( DebugMenu, Menu )
 
 	DebugMenu( Game* game );
-	
+
 };
 
 }

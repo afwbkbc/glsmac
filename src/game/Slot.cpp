@@ -93,7 +93,7 @@ const types::Buffer Slot::Serialize() const {
 }
 
 void Slot::Unserialize( types::Buffer buf ) {
-	m_slot_state = (slot_state_t) buf.ReadInt();
+	m_slot_state = (slot_state_t)buf.ReadInt();
 	if ( m_slot_state == SS_PLAYER ) {
 		if ( !m_player_data.player ) {
 			m_player_data.player = new Player();

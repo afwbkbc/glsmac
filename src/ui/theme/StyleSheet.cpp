@@ -22,6 +22,7 @@ void StyleSheet::AddStyle( const std::string& style_name, const Style::includes_
 	m_styles[ sn ] = style;
 	m_styles_order.push_back( sn );
 }
+
 void StyleSheet::AddStyle( const std::string& style_name, const Style::style_handler_t handler ) {
 	AddStyle( style_name, {}, handler );
 }

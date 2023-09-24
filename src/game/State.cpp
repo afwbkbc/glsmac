@@ -3,8 +3,7 @@
 namespace game {
 
 State::State( const Settings& settings )
-	: m_settings( settings )
-{
+	: m_settings( settings ) {
 	//
 }
 
@@ -34,10 +33,10 @@ void State::RemovePlayer( Player* player ) {
 void State::AddCIDSlot( const size_t cid, const size_t slot ) {
 	Log( "adding CID " + std::to_string( cid ) + " for slot " + std::to_string( slot ) );
 #ifdef DEBUG
-		ASSERT( m_cid_slots.find( cid ) == m_cid_slots.end(), "duplicate cid add" );
-		for ( auto& it : m_cid_slots ) {
-			ASSERT( it.second != slot, "slot " + std::to_string( slot ) + " already in cids" );
-		}
+	ASSERT( m_cid_slots.find( cid ) == m_cid_slots.end(), "duplicate cid add" );
+	for ( auto& it : m_cid_slots ) {
+		ASSERT( it.second != slot, "slot " + std::to_string( slot ) + " already in cids" );
+	}
 #endif
 	m_cid_slots[ cid ] = slot;
 }
@@ -52,9 +51,9 @@ const std::unordered_map< size_t, size_t >& State::GetCidSlots() const {
 	return m_cid_slots;
 }
 
-void State::SetConnection( connection::Connection *connection ) {
+void State::SetConnection( connection::Connection* connection ) {
 	ASSERT( !m_connection, "state connection already set" );
-	connection->SetState(this);
+	connection->SetState( this );
 	m_connection = connection;
 }
 

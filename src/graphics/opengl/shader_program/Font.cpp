@@ -5,7 +5,8 @@ namespace opengl {
 namespace shader_program {
 
 void Font::AddShaders() {
-	AddShader( GL_VERTEX_SHADER, "#version 330 \n\
+	AddShader(
+		GL_VERTEX_SHADER, "#version 330 \n\
 \
 in vec4 aCoord; \
 uniform uint uFlags; \
@@ -24,9 +25,11 @@ void main(void) { \
 	fragpos = coord; \
 } \
 \
-");
+"
+	);
 
-	AddShader( GL_FRAGMENT_SHADER, "#version 330 \n\
+	AddShader(
+		GL_FRAGMENT_SHADER, "#version 330 \n\
 \
 in vec2 texpos; \
 in vec2 fragpos; \
@@ -53,13 +56,14 @@ void main(void) { \
 	FragColor = vec4(1, 1, 1, texture2D(uTexture, texpos).r) * uColor; \
 } \
 \
-");
+"
+	);
 
 }
 
 void Font::Initialize() {
 	attributes.coord = GetAttributeLocation( "aCoord" );
-	uniforms.flags = GetUniformLocation("uFlags");
+	uniforms.flags = GetUniformLocation( "uFlags" );
 	uniforms.position = GetUniformLocation( "uPosition" );
 	uniforms.texture = GetUniformLocation( "uTexture" );
 	uniforms.color = GetUniformLocation( "uColor" );

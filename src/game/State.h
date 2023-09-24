@@ -15,7 +15,7 @@
 namespace game {
 
 CLASS( State, base::Base )
-	
+
 	State( const Settings& settings );
 	~State();
 
@@ -31,7 +31,7 @@ CLASS( State, base::Base )
 
 	const std::unordered_map< size_t, size_t >& GetCidSlots() const;
 
-	void SetConnection(connection::Connection* connection);
+	void SetConnection( connection::Connection* connection );
 
 private:
 	std::unordered_set< Player* > m_players = {}; // persistent

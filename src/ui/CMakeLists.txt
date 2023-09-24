@@ -4,8 +4,8 @@ SUBDIR( event )
 SUBDIR( module )
 SUBDIR( popup )
 
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/UI.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

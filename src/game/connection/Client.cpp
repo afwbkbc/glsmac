@@ -6,8 +6,7 @@ namespace game {
 namespace connection {
 
 Client::Client( LocalSettings* const settings )
-	: Connection( CM_CLIENT, settings )
-{
+	: Connection( CM_CLIENT, settings ) {
 	//
 }
 
@@ -88,7 +87,8 @@ void Client::ProcessEvent( const Event& event ) {
 						}
 					}
 				}
-			} catch ( std::runtime_error& err ) {
+			}
+			catch ( std::runtime_error& err ) {
 				Error( err.what() );
 			}
 			break;

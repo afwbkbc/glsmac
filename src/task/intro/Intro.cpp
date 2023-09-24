@@ -12,9 +12,9 @@ namespace task {
 namespace intro {
 
 void Intro::Start() {
-	
+
 	g_engine->GetUI()->AddTheme( &m_theme );
-	
+
 	NEW( m_logo, Surface, "IntroLogo" );
 	g_engine->GetUI()->AddObject( m_logo );
 
@@ -24,7 +24,7 @@ void Intro::Start() {
 
 void Intro::Stop() {
 	g_engine->GetUI()->RemoveObject( m_logo );
-	
+
 	g_engine->GetUI()->RemoveTheme( &m_theme );
 }
 

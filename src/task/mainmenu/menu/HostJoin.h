@@ -10,9 +10,9 @@
 #include "ui/object/ChoiceList.h"
 
 namespace task {
-	
+
 using namespace ui;
-	
+
 namespace mainmenu {
 
 CLASS( HostJoin, PopupMenu )
@@ -24,17 +24,17 @@ CLASS( HostJoin, PopupMenu )
 	void Hide() override;
 
 	void OnNext() override;
-	
+
 	const std::string GetChoice() const override;
 	void SetChoice( const std::string& choice ) override;
 
 private:
-	
+
 	Section* m_section = nullptr;
 	ChoiceList* m_choices = nullptr;
 
 	mt_id_t m_mt_id = 0;
 };
-	
+
 }
 }

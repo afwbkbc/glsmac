@@ -60,24 +60,27 @@ mt_id_t Game::MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::
 
 #ifdef DEBUG
 #define x( _method, _op ) \
-	mt_id_t Game::_method( const std::string& path ) { \
-		ASSERT( !path.empty(), "dump path is empty" ); \
-		MT_Request request = {}; \
-		request.op = _op; \
-		NEW( request.data.dump.path, std::string ); \
-		*request.data.dump.path = path; \
-		return MT_CreateRequest( request ); \
-	}
-	x( MT_SaveDump, OP_SAVE_DUMP )
-	x( MT_LoadDump, OP_LOAD_DUMP )
+    mt_id_t Game::_method( const std::string& path ) { \
+        ASSERT( !path.empty(), "dump path is empty" ); \
+        MT_Request request = {}; \
+        request.op = _op; \
+        NEW( request.data.dump.path, std::string ); \
+        *request.data.dump.path = path; \
+        return MT_CreateRequest( request ); \
+    }
+
+x( MT_SaveDump, OP_SAVE_DUMP )
+
+x( MT_LoadDump, OP_LOAD_DUMP )
+
 #undef x
 #endif
 
 void Game::Start() {
 	MTModule::Start();
-	
+
 	Log( "Starting thread" );
-	
+
 	NEW( m_random, util::Random );
 
 #ifdef DEBUG
@@ -86,7 +89,7 @@ void Game::Start() {
 		m_random->SetState( config->GetQuickstartSeed() );
 	}
 #endif
-	
+
 	// init map editor
 	NEW( m_map_editor, map_editor::MapEditor, this );
 
@@ -94,16 +97,16 @@ void Game::Start() {
 
 void Game::Stop() {
 	Log( "Stopping thread" );
-	
+
 	DELETE( m_map_editor );
 	m_map_editor = nullptr;
-	
+
 	MTModule::Stop();
 }
 
 void Game::Iterate() {
 	MTModule::Iterate();
-	
+
 }
 
 util::Random* Game::GetRandom() const {
@@ -117,12 +120,12 @@ map::Map* Game::GetMap() const {
 const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE ) {
 	MT_Response response = {};
 	response.op = request.op;
-	
+
 	switch ( request.op ) {
 		case OP_INIT: {
 			//Log( "Got init request" );
 			ASSERT( request.data.init.settings, "settings not set" );
-			m_map_settings = *(request.data.init.settings);
+			m_map_settings = *( request.data.init.settings );
 			InitGame( response, *request.data.init.path, MT_C );
 			break;
 		}
@@ -141,51 +144,54 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 		case OP_SELECT_TILE: {
 			ASSERT( m_map, "map not set" );
 			//Log( "Got tile select request [ " + std::to_string( request.data.select_tile.tile_x ) + " " + std::to_string( request.data.select_tile.tile_y ) + " ]" );
-			
+
 			auto* tile = m_map->GetTile( request.data.select_tile.tile_x, request.data.select_tile.tile_y );
 			auto* ts = m_map->GetTileState( request.data.select_tile.tile_x, request.data.select_tile.tile_y );
-			
+
 			switch ( request.data.select_tile.tile_direction ) {
-				#define x( _case, _ptr ) \
-					case _case: { \
-						tile = tile->_ptr; \
-						ts = ts->_ptr; \
-						break; \
-					}
-					x( TD_W, W )
-					x( TD_NW, NW )
-					x( TD_N, N )
-					x( TD_NE, NE )
-					x( TD_E, E )
-					x( TD_SE, SE )
-					x( TD_S, S )
-					x( TD_SW, SW )
-				#undef x
+#define x( _case, _ptr ) \
+                    case _case: { \
+                        tile = tile->_ptr; \
+                        ts = ts->_ptr; \
+                        break; \
+                    }
+				x( TD_W, W )
+				x( TD_NW, NW )
+				x( TD_N, N )
+				x( TD_NE, NE )
+				x( TD_E, E )
+				x( TD_SE, SE )
+				x( TD_S, S )
+				x( TD_SW, SW )
+#undef x
 				default:
-					ASSERT(false, "invalid tile direction");
+					break;
 			};
-			
+
 			//Log( "Selecting tile at " + tile->coord.ToString() );
-			
+
 			response.result = R_SUCCESS;
-			
+
 			response.data.select_tile.tile_x = tile->coord.x;
 			response.data.select_tile.tile_y = tile->coord.y;
-			
+
 			response.data.select_tile.coords.x = ts->coord.x;
 			response.data.select_tile.coords.y = ts->coord.y;
-			
+
 			response.data.select_tile.elevation.center = ts->elevations.center;
-			
-			map::TileState::tile_layer_type_t lt = ( tile->is_water_tile ? map::TileState::LAYER_WATER : map::TileState::LAYER_LAND );
+
+			map::TileState::tile_layer_type_t lt = ( tile->is_water_tile
+				? map::TileState::LAYER_WATER
+				: map::TileState::LAYER_LAND
+			);
 			const auto& layer = ts->layers[ lt ];
-			#define x( _k ) response.data.select_tile.selection_coords._k = layer.coords._k
-				x( center );
-				x( left );
-				x( top );
-				x( right );
-				x( bottom );
-			#undef x
+#define x( _k ) response.data.select_tile.selection_coords._k = layer.coords._k
+			x( center );
+			x( left );
+			x( top );
+			x( right );
+			x( bottom );
+#undef x
 
 			if ( !tile->is_water_tile && ts->is_coastline_corner ) {
 				if ( tile->W->is_water_tile ) {
@@ -201,26 +207,33 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 					response.data.select_tile.selection_coords.bottom = ts->layers[ map::TileState::LAYER_WATER ].coords.bottom;
 				}
 			}
-			
+
 			map::TileState::tile_vertices_t preview_coords = {};
-			
-			lt = ( ( tile->is_water_tile || ts->is_coastline_corner ) ? map::TileState::LAYER_WATER : map::TileState::LAYER_LAND );
-			#define x( _k ) preview_coords._k = layer.coords._k
-				x( center );
-				x( left );
-				x( top );
-				x( right );
-				x( bottom );
-			#undef x
+
+			lt = ( ( tile->is_water_tile || ts->is_coastline_corner )
+				? map::TileState::LAYER_WATER
+				: map::TileState::LAYER_LAND
+			);
+#define x( _k ) preview_coords._k = layer.coords._k
+			x( center );
+			x( left );
+			x( top );
+			x( right );
+			x( bottom );
+#undef x
 			// absolute coords to relative
-			#define x( _k ) preview_coords._k -= preview_coords.center
-				x( left );
-				x( top );
-				x( right );
-				x( bottom );
-			#undef x
-			preview_coords.center = { 0.0f, 0.0f, 0.0f };
-			
+#define x( _k ) preview_coords._k -= preview_coords.center
+			x( left );
+			x( top );
+			x( right );
+			x( bottom );
+#undef x
+			preview_coords.center = {
+				0.0f,
+				0.0f,
+				0.0f
+			};
+
 			std::vector< map::TileState::tile_layer_type_t > layers = {};
 			if ( tile->is_water_tile ) {
 				layers.push_back( map::TileState::LAYER_LAND );
@@ -238,15 +251,15 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 					layers.push_back( map::TileState::LAYER_LAND );
 				}
 			}
-			
+
 			// looks a bit too bright without lighting otherwise
 			const float tint_modifier = 0.7f;
-			
+
 			NEW( response.data.select_tile.preview_meshes, data_tile_meshes_t );
 			response.data.select_tile.preview_meshes->reserve( layers.size() );
 			for ( auto i = 0 ; i < layers.size() ; i++ ) {
 				const auto& lt = layers[ i ];
-				
+
 				NEWV( mesh, mesh::Render, 5, 4 );
 
 				auto& layer = ts->layers[ lt ];
@@ -255,26 +268,26 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 
 				//Log( "Coords = " + preview_coords.center.ToString() + " " + preview_coords.left.ToString() + " " + preview_coords.top.ToString() + " " + preview_coords.right.ToString() + " " + preview_coords.bottom.ToString() );
 
-				#define x( _k ) auto _k = mesh->AddVertex( preview_coords._k, layer.tex_coords._k, tint._k * tint_modifier )
-					x( center );
-					x( left );
-					x( top );
-					x( right );
-					x( bottom );
-				#undef x
+#define x( _k ) auto _k = mesh->AddVertex( preview_coords._k, layer.tex_coords._k, tint._k * tint_modifier )
+				x( center );
+				x( left );
+				x( top );
+				x( right );
+				x( bottom );
+#undef x
 
-				#define x( _a, _b, _c ) mesh->AddSurface( { _a, _b, _c } )
-					x( center, left, top );
-					x( center, top, right );
-					x( center, right, bottom );
-					x( center, bottom, left );
-				#undef x
+#define x( _a, _b, _c ) mesh->AddSurface( { _a, _b, _c } )
+				x( center, left, top );
+				x( center, top, right );
+				x( center, right, bottom );
+				x( center, bottom, left );
+#undef x
 
 				mesh->Finalize();
 
 				response.data.select_tile.preview_meshes->push_back( mesh );
 			}
-			
+
 			std::vector< std::string > info_lines;
 
 			auto e = *tile->elevation.center;
@@ -327,9 +340,9 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			}
 
 #define FEATURE( _feature, _line ) \
-			if ( tile->features & map::Tile::_feature ) { \
-				info_lines.push_back( _line ); \
-			}
+            if ( tile->features & map::Tile::_feature ) { \
+                info_lines.push_back( _line ); \
+            }
 
 			if ( tile->is_water_tile ) {
 				FEATURE( F_XENOFUNGUS, "Sea Fungus" )
@@ -368,11 +381,11 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			FEATURE( F_MONOLITH, "Monolith" )
 
 #undef FEATURE
-		
+
 #define TERRAFORMING( _terraforming, _line ) \
-			if ( tile->terraforming & map::Tile::_terraforming ) { \
-				info_lines.push_back( _line ); \
-			}
+            if ( tile->terraforming & map::Tile::_terraforming ) { \
+                info_lines.push_back( _line ); \
+            }
 
 			if ( tile->is_water_tile ) {
 				TERRAFORMING( T_FARM, "Kelp Farm" );
@@ -406,11 +419,14 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			std::string info_line = "";
 			std::string info_line_new = "";
 			constexpr size_t max_length = 16; // TODO: determine width from actual text because different symbols are different
-			
+
 			NEW( response.data.select_tile.preview_lines, std::vector< std::string > );
-			
+
 			for ( auto& line : info_lines ) {
-				info_line_new = info_line + ( info_line.empty() ? "" : ", " ) + line;
+				info_line_new = info_line + ( info_line.empty()
+					? ""
+					: ", "
+				) + line;
 				if ( info_line_new.size() > max_length ) {
 					response.data.select_tile.preview_lines->push_back( info_line );
 					info_line = line;
@@ -428,7 +444,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			for ( auto& s : ts->sprites ) {
 				response.data.select_tile.sprites->push_back( s.actor );
 			}
-			
+
 			// adaptive scroll if tile was selected with arrows
 			response.data.select_tile.scroll_adaptively = request.data.select_tile.tile_direction != TD_NONE;
 
@@ -450,27 +466,27 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 		}
 		case OP_EDIT_MAP: {
 			//Log( "got edit map request" );
-			
+
 			m_map_editor->SelectTool( request.data.edit_map.tool );
 			m_map_editor->SelectBrush( request.data.edit_map.brush );
 			const auto tiles_to_reload = m_map_editor->Draw( m_map->GetTile( request.data.edit_map.tile_x, request.data.edit_map.tile_y ), request.data.edit_map.draw_mode );
-			
+
 			if ( !tiles_to_reload.empty() ) {
 				auto* graphics = g_engine->GetGraphics();
-				
+
 				m_map->m_sprite_actors_to_add.clear();
 				m_map->m_sprite_instances_to_remove.clear();
 				m_map->m_sprite_instances_to_add.clear();
-				
+
 				graphics->Lock(); // needed to avoid tearing artifacts
 				m_map->LoadTiles( tiles_to_reload, MT_C );
 				m_map->FixNormals( tiles_to_reload, MT_C );
 				graphics->Unlock();
-				
+
 				typedef std::unordered_map< std::string, map::Map::sprite_actor_t > t1; // can't use comma in macro below
 				NEW( response.data.edit_map.sprites.actors_to_add, t1 );
 				*response.data.edit_map.sprites.actors_to_add = m_map->m_sprite_actors_to_add;
-				
+
 				typedef std::unordered_map< size_t, std::string > t2; // can't use comma in macro below
 				NEW( response.data.edit_map.sprites.instances_to_remove, t2 );
 				*response.data.edit_map.sprites.instances_to_remove = m_map->m_sprite_instances_to_remove;
@@ -479,7 +495,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 				NEW( response.data.edit_map.sprites.instances_to_add, t3 );
 				*response.data.edit_map.sprites.instances_to_add = m_map->m_sprite_instances_to_add;
 			}
-			
+
 			response.result = R_SUCCESS;
 			break;
 		}
@@ -487,7 +503,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			ASSERT( false, "unknown request op " + std::to_string( request.op ) );
 		}
 	}
-	
+
 	return response;
 }
 
@@ -515,7 +531,7 @@ void Game::DestroyRequest( const MT_Request& request ) {
 }
 
 void Game::DestroyResponse( const MT_Response& response ) {
-	if ( response.result == R_SUCCESS ){
+	if ( response.result == R_SUCCESS ) {
 		switch ( response.op ) {
 			case OP_INIT: {
 				if ( response.data.init.terrain_texture ) {
@@ -570,19 +586,19 @@ void Game::DestroyResponse( const MT_Response& response ) {
 }
 
 void Game::InitGame( MT_Response& response, const std::string& map_filename, MT_CANCELABLE ) {
-	
+
 	Log( "Initializing game" );
-	
+
 	Log( "Game seed: " + m_random->GetStateString() );
 
 	auto* loader = g_engine->GetUI()->GetLoader();
-	
+
 	map::Map* old_map = nullptr;
 	if ( m_map ) {
 		old_map = m_map;
 	}
 	NEW( m_map, map::Map, this );
-	
+
 #ifdef DEBUG
 	// if crash happens - it's handy to have a seed to reproduce it
 	util::FS::WriteFile( map::s_consts.debug.lastseed_filename, m_random->GetStateString() );
@@ -594,7 +610,7 @@ void Game::InitGame( MT_Response& response, const std::string& map_filename, MT_
 	if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) {
 		const std::string& filename = config->GetQuickstartMapDump();
 		ASSERT( util::FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
-		Log( (std::string) "Loading map dump from " + filename );
+		Log( (std::string)"Loading map dump from " + filename );
 		loader->SetText( "Loading dump" );
 		loader->SetIsCancelable( false );
 		m_map->Unserialize( types::Buffer( util::FS::ReadFile( filename ) ) );
@@ -623,51 +639,49 @@ void Game::InitGame( MT_Response& response, const std::string& map_filename, MT_
 			ec = m_map->Initialize( MT_C );
 		}
 	}
-	
 
 	if ( !ec && canceled ) {
 		ec = map::Map::EC_ABORTED;
 	}
-	
 
 	if ( !ec ) {
-		
+
 #ifdef DEBUG
 		// also handy to have dump of generated map
 		if ( !ec && !config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) { // no point saving if we just loaded it
-			Log( (std::string) "Saving map dump to " + map::s_consts.debug.lastdump_filename );
+			Log( (std::string)"Saving map dump to " + map::s_consts.debug.lastdump_filename );
 			loader->SetText( "Saving dump" );
 			loader->SetIsCancelable( false );
 			util::FS::WriteFile( map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
 		}
 #endif
 		response.result = R_SUCCESS;
-		
+
 		ASSERT( m_map, "map not set" );
-		
+
 		response.data.init.map_width = m_map->GetWidth();
 		response.data.init.map_height = m_map->GetHeight();
-		
+
 		ASSERT( m_map->m_textures.terrain, "map terrain texture not generated" );
 		response.data.init.terrain_texture = m_map->m_textures.terrain;
-		
+
 		ASSERT( m_map->m_meshes.terrain, "map terrain mesh not generated" );
 		response.data.init.terrain_mesh = m_map->m_meshes.terrain;
-		
+
 		ASSERT( m_map->m_meshes.terrain_data, "map terrain data mesh not generated" );
 		response.data.init.terrain_data_mesh = m_map->m_meshes.terrain_data;
-		
+
 		response.data.init.sprites.actors = &m_map->m_sprite_actors;
 		response.data.init.sprites.instances = &m_map->m_sprite_instances;
-		
+
 		if ( old_map ) {
 			Log( "Destroying old map state" );
 			DELETE( old_map );
 		}
 	}
-	
+
 	else {
-		
+
 		// need to delete these here because they weren't passed to main thread
 		if ( m_map->m_textures.terrain ) {
 			DELETE( m_map->m_textures.terrain );
@@ -681,7 +695,7 @@ void Game::InitGame( MT_Response& response, const std::string& map_filename, MT_
 			DELETE( m_map->m_meshes.terrain_data );
 			m_map->m_meshes.terrain_data = nullptr;
 		}
-		
+
 		ResetGame();
 		if ( ec == map::Map::EC_ABORTED ) {
 			response.result = R_ABORTED;

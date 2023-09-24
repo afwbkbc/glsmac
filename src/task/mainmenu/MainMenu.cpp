@@ -19,57 +19,63 @@ namespace mainmenu {
 void MainMenu::Start() {
 
 	auto* ui = g_engine->GetUI();
-	
+
 	ui->AddTheme( &m_theme );
-	
+
 	// background
 	NEW( m_background, Surface, "MainMenuBackground" );
 	ui->AddObject( m_background );
 
 	// preview image for 'customize map'
 	NEW( m_customize_map_preview, ui::object::Surface, "MainMenuCustomizeMapPreview" );
-		m_customize_map_preview->Hide();
+	m_customize_map_preview->Hide();
 	ui->AddObject( m_customize_map_preview );
 	SetCustomizeMapPreview( "S2L2C2" ); // average preview by default
-	
+
 	NEW( m_customize_map_moons, ui::object::Surface, "MainMenuCustomizeMapMoons" );
-		m_customize_map_moons->Hide();
+	m_customize_map_moons->Hide();
 	ui->AddObject( m_customize_map_moons );
 
 	ResizeCustomizeMapPreview();
 
 	NEW( m_glsmac_logo, ui::object::Label, "MainMenuGLSMACLogo" );
-		m_glsmac_logo->SetText( GLSMAC_VERSION_FULL );
+	m_glsmac_logo->SetText( GLSMAC_VERSION_FULL );
 	ui->AddObject( m_glsmac_logo );
-	
-	m_mouse_handler = ui->AddGlobalEventHandler( UIEvent::EV_MOUSE_DOWN, EH( this ) {
-		// rightclick = back
-		if ( data->mouse.button == UIEvent::M_RIGHT && m_menu_object ) {
-			if ( !m_menu_history.empty() ) { // don't exit game on right-click
-				return m_menu_object->MaybeClose(); // only sliding menus will close on right click
+
+	m_mouse_handler = ui->AddGlobalEventHandler(
+		UIEvent::EV_MOUSE_DOWN, EH( this ) {
+			// rightclick = back
+			if ( data->mouse.button == UIEvent::M_RIGHT && m_menu_object ) {
+				if ( !m_menu_history.empty() ) { // don't exit game on right-click
+					return m_menu_object->MaybeClose(); // only sliding menus will close on right click
+				}
 			}
-		}
-		return false;
-	}, UI::GH_BEFORE );
-	
-	m_key_handler = ui->AddGlobalEventHandler( UIEvent::EV_KEY_DOWN, EH( this ) {
-		// escape = back
-		if ( !data->key.modifiers && data->key.code == UIEvent::K_ESCAPE && m_menu_object ) {
-			return m_menu_object->MaybeClose(); // popups have their own escape handler
-		}
-		return false;
-	}, UI::GH_BEFORE );
+			return false;
+		}, UI::GH_BEFORE
+	);
+
+	m_key_handler = ui->AddGlobalEventHandler(
+		UIEvent::EV_KEY_DOWN, EH( this ) {
+			// escape = back
+			if ( !data->key.modifiers && data->key.code == UIEvent::K_ESCAPE && m_menu_object ) {
+				return m_menu_object->MaybeClose(); // popups have their own escape handler
+			}
+			return false;
+		}, UI::GH_BEFORE
+	);
 
 	NEW( m_music, SoundEffect, "MainMenuMusic" );
 	g_engine->GetUI()->AddObject( m_music );
-	
-	g_engine->GetGraphics()->AddOnWindowResizeHandler( this, RH( this ) {
-		if ( m_menu_object ) {
-			m_menu_object->Align();
+
+	g_engine->GetGraphics()->AddOnWindowResizeHandler(
+		this, RH( this ) {
+			if ( m_menu_object ) {
+				m_menu_object->Align();
+			}
+			ResizeCustomizeMapPreview();
 		}
-		ResizeCustomizeMapPreview();
-	});
-	
+	);
+
 	NEWV( menu, Main, this );
 	ShowMenu( menu );
 }
@@ -114,36 +120,36 @@ void MainMenu::Iterate() {
 }
 
 void MainMenu::Stop() {
-	
+
 	g_engine->GetGraphics()->RemoveOnWindowResizeHandler( this );
-	
+
 	if ( m_menu_object ) {
 		m_menu_object->Hide();
 		DELETE( m_menu_object );
-		
+
 	}
-	
-	for (auto& it : m_menu_history) {
+
+	for ( auto& it : m_menu_history ) {
 		DELETE( it );
 	}
-	
+
 	if ( m_menu_next ) {
 		DELETE( m_menu_next );
 	}
-	
+
 	g_engine->GetUI()->RemoveObject( m_music );
-	
+
 	auto* ui = g_engine->GetUI();
-	
+
 	ui->RemoveGlobalEventHandler( m_mouse_handler );
 	ui->RemoveGlobalEventHandler( m_key_handler );
-	
+
 	ui->RemoveObject( m_background );
 	ui->RemoveObject( m_customize_map_preview );
 	ui->RemoveObject( m_customize_map_moons );
-	
+
 	ui->RemoveObject( m_glsmac_logo );
-	
+
 	ui->RemoveTheme( &m_theme );
 
 }
@@ -168,7 +174,7 @@ void MainMenu::StartGame() {
 		g_engine->GetScheduler()->RemoveTask( this );
 	}, UH( this ) {
 		m_menu_object->MaybeClose();
-	});
+	} );
 	g_engine->GetScheduler()->AddTask( task );
 }
 

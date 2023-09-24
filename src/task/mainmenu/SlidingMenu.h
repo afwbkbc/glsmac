@@ -15,15 +15,15 @@ namespace mainmenu {
 #define CH( ... ) [ __VA_ARGS__ ] () -> void
 
 CLASS( SlidingMenu, MenuObject )
-	
-	SlidingMenu( MainMenu *mainmenu, const std::string& title, const MenuBlock::choices_t& choices, const size_t default_choice = 0 );
-	
+
+	SlidingMenu( MainMenu* mainmenu, const std::string& title, const MenuBlock::choices_t& choices, const size_t default_choice = 0 );
+
 	void Show() override;
 	void Hide() override;
 	void OnItemClick( const std::string& choice );
 	const std::string GetChoice() const override;
 	void SetChoice( const std::string& choice ) override;
-	
+
 	virtual void Close() override;
 	bool MaybeClose() override;
 
@@ -39,7 +39,7 @@ private:
 
 	const MenuBlock::choice_handlers_t& GetChoiceHandlers( const std::string& choice ) const;
 };
-	
+
 }
 }
 

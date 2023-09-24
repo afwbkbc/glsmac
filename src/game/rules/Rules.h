@@ -22,13 +22,13 @@ CLASS( Rules, types::Serializable )
 
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;
-	
+
 protected:
 	virtual void InitRules() = 0;
-	
+
 private:
 	bool m_is_initialized = false;
-	
+
 };
 
 }

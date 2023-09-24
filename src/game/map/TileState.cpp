@@ -5,7 +5,7 @@ namespace map {
 
 const Buffer TileState::Serialize() const {
 	Buffer buf;
-	
+
 	buf.WriteVec2f( coord );
 	buf.WriteFloat( tex_coord.x );
 	buf.WriteFloat( tex_coord.y );
@@ -33,7 +33,7 @@ const Buffer TileState::Serialize() const {
 	else {
 		buf.WriteBool( false );
 	}
-	
+
 	buf.WriteInt( sprites.size() );
 	for ( auto& a : sprites ) {
 		buf.WriteString( a.actor );
@@ -41,25 +41,25 @@ const Buffer TileState::Serialize() const {
 		buf.WriteString( a.name );
 		buf.WriteVec2u( a.tex_coords );
 	}
-	
+
 	return buf;
 }
 
 const Buffer TileState::tile_elevations_t::Serialize() const {
 	Buffer buf;
-	
+
 	buf.WriteInt( center );
 	buf.WriteInt( left );
 	buf.WriteInt( top );
 	buf.WriteInt( right );
 	buf.WriteInt( bottom );
-	
+
 	return buf;
 }
 
 const Buffer TileState::tile_layer_t::Serialize() const {
 	Buffer buf;
-	
+
 	buf.WriteString( coords.Serialize().ToString() );
 	buf.WriteString( indices.Serialize().ToString() );
 	buf.WriteString( surfaces.Serialize().ToString() );
@@ -67,66 +67,66 @@ const Buffer TileState::tile_layer_t::Serialize() const {
 	buf.WriteString( colors.Serialize().ToString() );
 	buf.WriteVec2f( texture_stretch );
 	buf.WriteBool( texture_stretch_at_edges );
-	
+
 	return buf;
 }
 
 const Buffer TileState::tile_vertices_t::Serialize() const {
 	Buffer buf;
-	
+
 	buf.WriteVec3( center );
 	buf.WriteVec3( left );
 	buf.WriteVec3( top );
 	buf.WriteVec3( right );
 	buf.WriteVec3( bottom );
-	
+
 	return buf;
 }
 
 const Buffer TileState::tile_indices_t::Serialize() const {
 	Buffer buf;
-	
+
 	buf.WriteInt( center );
 	buf.WriteInt( left );
 	buf.WriteInt( top );
 	buf.WriteInt( right );
 	buf.WriteInt( bottom );
-	
+
 	return buf;
 }
 
 const Buffer TileState::tile_surfaces_t::Serialize() const {
 	Buffer buf;
-	
+
 	buf.WriteInt( left_top );
 	buf.WriteInt( top_right );
 	buf.WriteInt( right_bottom );
 	buf.WriteInt( bottom_left );
-	
+
 	return buf;
 }
 
 const Buffer TileState::tile_tex_coords_t::Serialize() const {
 	Buffer buf;
-	
+
 	buf.WriteVec2f( center );
 	buf.WriteVec2f( left );
 	buf.WriteVec2f( top );
 	buf.WriteVec2f( right );
 	buf.WriteVec2f( bottom );
-	
+
 	return buf;
 }
 
 const Buffer TileState::tile_colors_t::Serialize() const {
 	Buffer buf;
-	
+
 	buf.WriteColor( center );
 	buf.WriteColor( left );
 	buf.WriteColor( top );
 	buf.WriteColor( right );
 	buf.WriteColor( bottom );
-	
+
 	return buf;
 }
 
@@ -143,7 +143,7 @@ void TileState::Unserialize( Buffer buf ) {
 		THROW( "LAYER_MAX mismatch" );
 	}
 	for ( auto i = 0 ; i < LAYER_MAX ; i++ ) {
-		layers[i].Unserialize( buf.ReadString() );
+		layers[ i ].Unserialize( buf.ReadString() );
 	}
 	overdraw_column.coords.Unserialize( buf.ReadString() );
 	overdraw_column.indices.Unserialize( buf.ReadString() );
@@ -152,10 +152,10 @@ void TileState::Unserialize( Buffer buf ) {
 	data_mesh.indices.Unserialize( buf.ReadString() );
 	has_water = buf.ReadBool();
 	is_coastline_corner = buf.ReadBool();
-	
+
 	const auto w = s_consts.tc.texture_pcx.dimensions.x;
 	const auto h = s_consts.tc.texture_pcx.dimensions.y;
-	
+
 	NEW( moisture_original, Texture, "MoistureOriginal", w, h );
 	moisture_original->Unserialize( buf.ReadString() );
 	const bool has_river_original = buf.ReadBool();
@@ -163,7 +163,7 @@ void TileState::Unserialize( Buffer buf ) {
 		NEW( river_original, Texture, "RiverOriginal", w, h );
 		river_original->Unserialize( buf.ReadString() );
 	}
-	
+
 	const size_t sprites_count = buf.ReadInt();
 	sprites.clear();
 	for ( size_t i = 0 ; i < sprites_count ; i++ ) {
@@ -172,7 +172,7 @@ void TileState::Unserialize( Buffer buf ) {
 		sprite.instance = buf.ReadInt();
 		sprite.name = buf.ReadString();
 		sprite.tex_coords = buf.ReadVec2u();
-		sprites.push_back( sprite );	
+		sprites.push_back( sprite );
 	}
 
 }

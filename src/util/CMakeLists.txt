@@ -1,4 +1,4 @@
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/Timer.cpp
 	${PWD}/SMACChecker.cpp
@@ -9,4 +9,4 @@ SET(SRC ${SRC}
 	${PWD}/Random.cpp
 	${PWD}/ArgParser.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

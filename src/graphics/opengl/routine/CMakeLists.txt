@@ -1,8 +1,8 @@
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/Routine.cpp
-		${PWD}/Overlay.cpp
-		${PWD}/Skybox.cpp
-		${PWD}/World.cpp
+	${PWD}/Overlay.cpp
+	${PWD}/Skybox.cpp
+	${PWD}/World.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

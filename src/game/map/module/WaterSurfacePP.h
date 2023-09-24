@@ -7,11 +7,12 @@ namespace map {
 namespace module {
 
 CLASS( WaterSurfacePP, Module )
-	
-	WaterSurfacePP( Map* const map ) : Module( map ) {}
-	
+
+	WaterSurfacePP( Map* const map )
+		: Module( map ) {}
+
 	void GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) override;
-	
+
 };
 
 }

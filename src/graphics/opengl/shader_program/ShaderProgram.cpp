@@ -31,13 +31,13 @@ void ShaderProgram::Start() {
 	glUseProgram( m_gl_shader_program );
 	Initialize();
 	glUseProgram( 0 );
-	
+
 	m_enabled = false;
 }
 
 void ShaderProgram::Stop() {
 
-	Log("Removing shaders");
+	Log( "Removing shaders" );
 
 	glDeleteProgram( m_gl_shader_program );
 
@@ -49,20 +49,20 @@ void ShaderProgram::AddShader( GLenum type, const std::string data ) {
 	ASSERT( gl_shader, "Error creating OpenGL shader!" );
 
 	const GLchar* p[1];
-	p[0] = data.c_str();
+	p[ 0 ] = data.c_str();
 	GLint Lengths[1];
-	Lengths[0]= data.size();
+	Lengths[ 0 ] = data.size();
 	glShaderSource( gl_shader, 1, p, Lengths );
 
 	glCompileShader( gl_shader );
 	GLint success;
 	glGetShaderiv( gl_shader, GL_COMPILE_STATUS, &success );
-	
+
 #ifdef DEBUG
 	if ( !success ) {
 		GLint info_log_length;
 		glGetShaderiv( gl_shader, GL_INFO_LOG_LENGTH, &info_log_length );
-		GLchar* str_info_log = (GLchar*) malloc( info_log_length + 1 );
+		GLchar* str_info_log = (GLchar*)malloc( info_log_length + 1 );
 		glGetShaderInfoLog( gl_shader, info_log_length, NULL, str_info_log );
 
 		THROW( "Error compiling shader! shader data: '" + data + "' ; shader error: '" + str_info_log + "'" );
@@ -102,7 +102,7 @@ void ShaderProgram::Enable() {
 void ShaderProgram::Disable() {
 	if ( m_enabled ) {
 
-		glUseProgram(0);
+		glUseProgram( 0 );
 
 		DisableAttributes();
 
@@ -110,7 +110,7 @@ void ShaderProgram::Disable() {
 	}
 }
 
-void ShaderProgram::BindAttribLocation( GLuint index,const std::string name ) {
+void ShaderProgram::BindAttribLocation( GLuint index, const std::string name ) {
 	glBindAttribLocation( m_gl_shader_program, index, name.c_str() );
 }
 

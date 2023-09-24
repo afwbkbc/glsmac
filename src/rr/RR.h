@@ -15,21 +15,21 @@ enum type_t {
 
 // Request-Response
 CLASS( RR, base::Base )
-	
+
 	const type_t GetType() const;
 	const bool IsProcessed() const;
 	void SetProcessed();
-	
+
 	RR() = delete;
 	virtual ~RR();
-	
+
 protected:
 	RR( const type_t type );
 
 private:
 	const type_t m_type = RR_NONE;
 	bool m_is_processed = false;
-	
+
 };
 
 typedef size_t id_t;

@@ -58,17 +58,23 @@ private:
 	} element_row_t;
 	std::vector< element_row_t > m_element_rows = {};
 
-	const std::vector< row_id_t > m_non_loadmap_rows = { RI_PLANET_SIZE, RI_PLANET_OCEAN, RI_PLANET_EROSIVE, RI_PLANET_LIFEFORMS, RI_PLANET_CLOUDS };
+	const std::vector< row_id_t > m_non_loadmap_rows = {
+		RI_PLANET_SIZE,
+		RI_PLANET_OCEAN,
+		RI_PLANET_EROSIVE,
+		RI_PLANET_LIFEFORMS,
+		RI_PLANET_CLOUDS
+	};
 	const std::vector< row_id_t > m_loadmap_rows = { RI_MAP_FILE };
 
 	void HideRows( const std::vector< row_id_t > row_ids );
 	void ShowRows( const std::vector< row_id_t > row_ids );
 
 	struct {
-		::ui::object::Section *section = nullptr;
-		::ui::object::FileBrowser *browser = nullptr;
-		::ui::object::Button *button_ok = nullptr;
-		::ui::object::Button *button_cancel = nullptr;
+		::ui::object::Section* section = nullptr;
+		::ui::object::FileBrowser* browser = nullptr;
+		::ui::object::Button* button_ok = nullptr;
+		::ui::object::Button* button_cancel = nullptr;
 	} m_load_map;
 };
 

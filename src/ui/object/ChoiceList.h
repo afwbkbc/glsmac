@@ -15,15 +15,15 @@ CLASS( ChoiceList, UIContainer )
 
 	typedef size_t value_t;
 	typedef std::vector< std::pair< value_t, std::string > > choices_t;
-	
+
 	ChoiceList( const std::string& class_name = "" );
 
 	void SetImmediateMode( const bool immediate_mode );
-	
+
 	void SetChoices( const choices_t& choices );
 	void SetValue( const value_t value );
 	const value_t GetValue() const;
-	
+
 	// TODO: refactor and remove
 	void SetValueString( const std::string& choice, bool allowMissing = false );
 	const std::string& GetValueString() const;
@@ -32,29 +32,27 @@ CLASS( ChoiceList, UIContainer )
 	virtual void Create() override;
 	virtual void Destroy() override;
 	virtual void Align() override;
-	
+
 	void SetItemMargin( const coord_t item_margin );
 	void SetItemHeight( const coord_t item_height );
-	
+
 protected:
 	virtual void ApplyStyle() override;
-	
+
 	bool OnKeyDown( const UIEvent::event_data_t* data ) override;
 	bool OnKeyUp( const UIEvent::event_data_t* data ) override;
 	bool OnKeyPress( const UIEvent::event_data_t* data ) override;
-	
-	
-	
+
 private:
 	void UpdateButtons();
-	
+
 	bool m_immediate_mode = true;
-	
+
 	struct {
 		coord_t margin = 0;
 		coord_t height = 0;
 	} m_item_align = {};
-	
+
 	std::vector< value_t > m_values = {};
 	std::map< value_t, std::string > m_labels = {};
 	const std::string m_empty_choice = "";
@@ -62,9 +60,9 @@ private:
 	ssize_t m_value = -1;
 	size_t m_value_index = 0;
 	std::unordered_map< Button*, size_t > m_button_values = {};
-	
+
 	void SetActiveButton( Button* button );
-	
+
 	const std::vector< Style::attribute_type_t > m_forwarded_style_attributes = {
 		Style::A_TEXTURE_BACK,
 		Style::A_TEXTURE_LEFT,
@@ -82,7 +80,7 @@ private:
 		Style::A_BUTTON_MOVE_SOUND,
 		Style::A_BORDER_SIZE,
 	};
-	
+
 	void SelectChoice();
 };
 

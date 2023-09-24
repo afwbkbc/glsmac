@@ -6,14 +6,16 @@ namespace graphics {
 namespace opengl {
 
 class Sprite;
+
 class Mesh;
 
 namespace shader_program {
 
 CLASS( Orthographic, ShaderProgram )
 
-	Orthographic() : ShaderProgram( TYPE_ORTHO ) {};
-	
+	Orthographic()
+		: ShaderProgram( TYPE_ORTHO ) {};
+
 protected:
 	friend class opengl::Sprite;
 	friend class opengl::Mesh;

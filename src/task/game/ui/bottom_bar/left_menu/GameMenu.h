@@ -13,7 +13,7 @@ namespace menu {
 CLASS( GameMenu, Menu )
 
 	GameMenu( Game* game );
-	
+
 };
 
 }

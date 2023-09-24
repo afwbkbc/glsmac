@@ -6,30 +6,29 @@ namespace ui {
 namespace object {
 
 Popup::Popup( const std::string& class_name )
-	: UIContainer( class_name )
-{
+	: UIContainer( class_name ) {
 	ASSERT( !class_name.empty(), "popup class name can't be empty" );
-	
+
 	SetAlign( ALIGN_CENTER );
 }
 
 void Popup::Create() {
 	UIContainer::Create();
-	
+
 	// TODO: fix blending
 	// TODO: maybe not needed?
 	/* NEW( m_background_locker, Surface, "PopupBackground" );
 	g_engine->GetUI()->AddObject( m_background_locker ); */
-	
-	auto *soundloader = g_engine->GetSoundLoader();
-		
+
+	auto* soundloader = g_engine->GetSoundLoader();
+
 	NEW( m_sounds.open, SoundEffect );
-		m_sounds.open->SetSound( soundloader->LoadSound( "menu up.wav" ) );
-		m_sounds.open->SetVolume( 0.4f );
+	m_sounds.open->SetSound( soundloader->LoadSound( "menu up.wav" ) );
+	m_sounds.open->SetVolume( 0.4f );
 	AddChild( m_sounds.open );
 	NEW( m_sounds.close, SoundEffect );
-		m_sounds.close->SetSound( soundloader->LoadSound( "menu down.wav" ) );
-		m_sounds.open->SetVolume( 0.6f );
+	m_sounds.close->SetSound( soundloader->LoadSound( "menu down.wav" ) );
+	m_sounds.open->SetVolume( 0.6f );
 	AddChild( m_sounds.close );
 
 	PlayOpenSound();
@@ -38,14 +37,14 @@ void Popup::Create() {
 void Popup::Destroy() {
 
 	PlayCloseSound();
-	
+
 	RemoveChild( m_sounds.open );
 	RemoveChild( m_sounds.close );
 
 	// TODO: fix blending
 	// TODO: maybe not needed?
 	//g_engine->GetUI()->RemoveObject( m_background_locker );
-	
+
 	UIContainer::Destroy();
 }
 

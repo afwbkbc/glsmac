@@ -7,20 +7,20 @@
 #include "types/Color.h"
 
 namespace types {
-	
+
 CLASS( Buffer, base::Base )
-	
+
 	static constexpr uint32_t BUFFER_ALLOC_CHUNK = 1024;
-	
+
 	typedef uint8_t data_t;
 	typedef uint8_t checksum_t;
-	
+
 	Buffer();
 	Buffer( const std::string& strval );
 	~Buffer();
-	
-	Buffer( Buffer& other);
-	
+
+	Buffer( Buffer& other );
+
 	data_t* data;
 	data_t* dw;
 	data_t* dr;
@@ -28,7 +28,7 @@ CLASS( Buffer, base::Base )
 	uint32_t lenw;
 	uint32_t lenr;
 	checksum_t checksum;
-	
+
 	void WriteBool( const bool val );
 	const bool ReadBool();
 	void WriteInt( const long long int val );
@@ -47,13 +47,13 @@ CLASS( Buffer, base::Base )
 	const Color ReadColor();
 	void WriteData( const void* data, const uint32_t len );
 	const void* ReadData( const uint32_t len );
-	
+
 	const std::string ToString() const;
-	
+
 private:
-	
+
 	enum type_t : uint8_t {
-		
+
 		T_NONE,
 		T_BOOL,
 		T_INT,
@@ -64,14 +64,14 @@ private:
 		T_VEC3,
 		T_COLOR,
 		T_DATA,
-		
+
 		T_MAX
 	};
-	
+
 	void WriteImpl( const type_t type, const char* s, const uint32_t sz );
 	char* ReadImpl( const type_t need_type, char* s, uint32_t* sz, const uint32_t need_sz = 0 );
 	void Alloc( uint32_t size );
-	
+
 };
 
 }

@@ -6,13 +6,14 @@ namespace graphics {
 namespace opengl {
 
 namespace routine {
-	class Skybox;
+class Skybox;
 }
 
 namespace shader_program {
 
 CLASS( Skybox, ShaderProgram )
-	Skybox() : ShaderProgram( TYPE_SKYBOX ) {};
+	Skybox()
+		: ShaderProgram( TYPE_SKYBOX ) {};
 protected:
 	friend class routine::Skybox;
 

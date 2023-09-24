@@ -22,8 +22,7 @@ FilePopup::FilePopup(
 	, m_file_mode( file_mode )
 	, m_default_directory( util::FS::GetAbsolutePath( default_directory ) )
 	, m_file_extension( file_extension )
-	, m_default_filename( default_filename )
-{
+	, m_default_filename( default_filename ) {
 	SetTitleText( m_title );
 	// TODO: load from styles?
 	SetWidth( 500 );
@@ -32,17 +31,18 @@ FilePopup::FilePopup(
 
 void FilePopup::Create() {
 	OkCancelPopup::Create();
-	
+
 	NEW( m_file_browser, ::ui::object::FileBrowser );
-		// TODO: determine position from style
-		m_file_browser->SetTop( 36 );
-		m_file_browser->SetLeft( 6 );
-		m_file_browser->SetBottom( 66 );
-		m_file_browser->SetRight( 6 );
-		m_file_browser->SetDefaultDirectory( m_default_directory );
-		m_file_browser->SetFileExtension( m_file_extension );
-		m_file_browser->SetDefaultFilename( m_default_filename );
-		m_file_browser->On( UIEvent::EV_SELECT, EH( this ) {
+	// TODO: determine position from style
+	m_file_browser->SetTop( 36 );
+	m_file_browser->SetLeft( 6 );
+	m_file_browser->SetBottom( 66 );
+	m_file_browser->SetRight( 6 );
+	m_file_browser->SetDefaultDirectory( m_default_directory );
+	m_file_browser->SetFileExtension( m_file_extension );
+	m_file_browser->SetDefaultFilename( m_default_filename );
+	m_file_browser->On(
+		UIEvent::EV_SELECT, EH( this ) {
 			const auto& path = *data->value.change.text;
 			switch ( m_file_mode ) {
 				case FM_READ: {
@@ -75,13 +75,14 @@ void FilePopup::Create() {
 				}
 			}
 			return true;
-		});
+		}
+	);
 	AddChild( m_file_browser );
 }
 
 void FilePopup::Destroy() {
 	RemoveChild( m_file_browser );
-	
+
 	OkCancelPopup::Destroy();
 }
 

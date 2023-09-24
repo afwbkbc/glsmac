@@ -1,7 +1,7 @@
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/Texture.cpp
 	${PWD}/FontTexture.cpp
-		${PWD}/CubemapTexture.cpp
+	${PWD}/CubemapTexture.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

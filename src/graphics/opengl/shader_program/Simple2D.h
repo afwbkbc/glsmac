@@ -6,12 +6,14 @@ namespace graphics {
 namespace opengl {
 
 class Mesh;
+
 class FBO;
 
 namespace shader_program {
 
 CLASS( Simple2D, ShaderProgram )
-	Simple2D() : ShaderProgram( TYPE_SIMPLE2D ) {};
+	Simple2D()
+		: ShaderProgram( TYPE_SIMPLE2D ) {};
 protected:
 	friend class opengl::Mesh;
 	friend class opengl::FBO;

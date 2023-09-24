@@ -4,9 +4,9 @@
 
 namespace task {
 namespace mainmenu {
-	
+
 CLASS( PlanetSize, SlidingMenu )
-	PlanetSize( MainMenu *mainmenu );	
+	PlanetSize( MainMenu* mainmenu );
 	void ChooseNext();
 };
 

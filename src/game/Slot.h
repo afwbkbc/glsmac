@@ -32,7 +32,7 @@ CLASS( Slot, types::Serializable )
 	void Unserialize( types::Buffer buf ) override;
 
 private:
-	
+
 	slot_state_t m_slot_state = SS_OPEN;
 	bool m_close_after_clear = false;
 	struct {
@@ -41,7 +41,7 @@ private:
 		std::string remote_address = "";
 		bool ready = false;
 	} m_player_data = {};
-	
+
 };
 
 }

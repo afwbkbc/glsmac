@@ -1,12 +1,15 @@
 #ifdef DEBUG
 
 #ifdef __linux__
+
 #include <unistd.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
+
 #endif
 
 #include <iostream>
+
 #endif
 
 #include <algorithm>
@@ -24,41 +27,38 @@ bool System::AreWeUnderGDB() {
 	int status;
 	int res;
 
-	if (pid == -1)
-	{
-		perror("fork");
+	if ( pid == -1 ) {
+		perror( "fork" );
 		std::cout << "WARNING: gdb check failed" << std::endl;
 		return false;
 	}
 
-	if (pid == 0)
-	{
+	if ( pid == 0 ) {
 		int ppid = getppid();
 
 		/* Child */
-		if (ptrace(PTRACE_ATTACH, ppid, NULL, NULL) == 0)
-		{
+		if ( ptrace( PTRACE_ATTACH, ppid, NULL, NULL ) == 0 ) {
 			/* Wait for the parent to stop and continue it */
-			waitpid(ppid, NULL, 0);
-			ptrace(PTRACE_CONT, NULL, NULL);
+			waitpid( ppid, NULL, 0 );
+			ptrace( PTRACE_CONT, NULL, NULL );
 
 			/* Detach */
-			ptrace(PTRACE_DETACH, getppid(), NULL, NULL);
+			ptrace( PTRACE_DETACH, getppid(), NULL, NULL );
 
 			/* We were the tracers, so gdb is not present */
 			res = false;
 		}
-		else
-		{
+		else {
 			/* Trace failed so GDB is present */
 			res = true;
 		}
-		exit(res);
+		exit( res );
 	}
-	else
-	{
-		waitpid(pid, &status, 0);
-		res = WEXITSTATUS(status) ? true : false;
+	else {
+		waitpid( pid, &status, 0 );
+		res = WEXITSTATUS( status )
+			? true
+			: false;
 	}
 	return res;
 
@@ -70,7 +70,7 @@ bool System::AreWeUnderGDB() {
 
 bool System::IsGDBAvailable() {
 #ifdef __linux__
-	return ( !system("which gdb > /dev/null 2>&1") );
+	return ( !system( "which gdb > /dev/null 2>&1" ) );
 #else
 	std::cout << "WARNING: gdb check skipped due to unsupported platform" << std::endl;
 	return false;
@@ -82,13 +82,13 @@ bool System::IsGDBAvailable() {
 std::vector< std::string > System::GetPossibleFilenames( const std::string& filename ) {
 	std::vector< std::string > result;
 	result.push_back( filename );
-	
+
 	std::string str = filename;
-	std::transform(str.begin(), str.end(),str.begin(), ::toupper);
+	std::transform( str.begin(), str.end(), str.begin(), ::toupper );
 	result.push_back( str );
-	std::transform(str.begin(), str.end(),str.begin(), ::tolower);
+	std::transform( str.begin(), str.end(), str.begin(), ::tolower );
 	result.push_back( str );
-	
+
 	return result;
 }
 

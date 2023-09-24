@@ -8,11 +8,11 @@
 
 namespace task {
 namespace mainmenu {
-	
+
 CLASS( CustomizeMapMenu, SlidingMenu )
-	
+
 	CustomizeMapMenu(
-		MainMenu *mainmenu,
+		MainMenu* mainmenu,
 		const std::string& title,
 		const uint8_t preview_filename_position,
 		const MenuBlock::choices_t& choices,
@@ -23,7 +23,7 @@ protected:
 	void SetPreviewVariant( const char variant );
 
 private:
-	
+
 	const uint8_t m_preview_filename_position = 0;
 
 };

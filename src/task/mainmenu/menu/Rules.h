@@ -4,9 +4,9 @@
 
 namespace task {
 namespace mainmenu {
-	
+
 CLASS( Rules, SlidingMenu )
-	Rules( MainMenu *mainmenu );
+	Rules( MainMenu* mainmenu );
 };
 
 }

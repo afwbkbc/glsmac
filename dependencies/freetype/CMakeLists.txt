@@ -1,16 +1,16 @@
-message(STATUS "Fetching freetype ...")
+MESSAGE( STATUS "Fetching freetype ..." )
 
-set(FT_DISABLE_ZLIB ON)
-set(FT_DISABLE_BZIP2 ON)
-set(FT_DISABLE_PNG ON)
-set(FT_DISABLE_HARFBUZZ ON)
-set(FT_DISABLE_BROTLI ON)
-set(SKIP_INSTALL_ALL ON)
+SET( FT_DISABLE_ZLIB ON )
+SET( FT_DISABLE_BZIP2 ON )
+SET( FT_DISABLE_PNG ON )
+SET( FT_DISABLE_HARFBUZZ ON )
+SET( FT_DISABLE_BROTLI ON )
+SET( SKIP_INSTALL_ALL ON )
 
-FetchContent_Declare(
-  freetype
-  GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype.git
-  GIT_TAG        VER-2-13-0
+FETCHCONTENT_DECLARE(
+	freetype
+	GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype.git
+	GIT_TAG VER-2-13-0
 )
 
-FetchContent_MakeAvailable(freetype)
+FETCHCONTENT_MAKEAVAILABLE( freetype )

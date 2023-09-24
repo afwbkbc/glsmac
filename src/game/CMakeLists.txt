@@ -3,7 +3,7 @@ SUBDIR( map_editor )
 SUBDIR( rules )
 SUBDIR( connection )
 
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/Game.cpp
 	${PWD}/State.cpp
@@ -12,4 +12,4 @@ SET(SRC ${SRC}
 	${PWD}/Slot.cpp
 	${PWD}/Slots.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

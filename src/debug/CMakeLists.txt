@@ -1,6 +1,6 @@
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/MemoryWatcher.cpp
 	${PWD}/DebugOverlay.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

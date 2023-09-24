@@ -8,9 +8,9 @@
 
 namespace task {
 namespace mainmenu {
-	
+
 CLASS( Ocean, CustomizeMapMenu )
-	Ocean( MainMenu *mainmenu );
+	Ocean( MainMenu* mainmenu );
 };
 
 }

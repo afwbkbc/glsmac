@@ -3,15 +3,14 @@
 namespace game {
 namespace connection {
 
-void Connection::SetState( game::State *state ) {
+void Connection::SetState( game::State* state ) {
 	ASSERT( !m_state, "connection state already set" );
 	m_state = state;
 }
 
 Connection::Connection( const network::connection_mode_t connection_mode, LocalSettings* const settings )
 	: m_connection_mode( connection_mode )
-	, m_settings( settings )
-{
+	, m_settings( settings ) {
 	//
 }
 
@@ -89,7 +88,7 @@ void Connection::Iterate() {
 					break;
 				}
 				case network::R_CANCELED: {
-					Log("Connection canceled");
+					Log( "Connection canceled" );
 					break;
 				}
 				default: {
@@ -156,11 +155,14 @@ void Connection::Disconnect( const std::string& reason ) {
 		m_network->MT_Cancel( m_mt_ids.events );
 		m_mt_ids.events = 0;
 	}
-	Log( "Disconnecting" + ( !reason.empty() ? " (reason: " + reason + ")" : "" ) );
+	Log(
+		"Disconnecting" + ( !reason.empty()
+			? " (reason: " + reason + ")"
+			: ""
+		)
+	);
 	m_mt_ids.disconnect = m_network->MT_Disconnect();
 }
-
-
 
 }
 }

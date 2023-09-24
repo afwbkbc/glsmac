@@ -1,6 +1,6 @@
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/MapGenerator.cpp
 	${PWD}/SimplePerlin.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

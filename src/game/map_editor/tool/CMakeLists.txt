@@ -1,4 +1,4 @@
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/Tool.cpp
 	${PWD}/Elevations.cpp
@@ -8,4 +8,4 @@ SET(SRC ${SRC}
 	${PWD}/Feature.cpp
 	${PWD}/Terraforming.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

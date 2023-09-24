@@ -10,7 +10,8 @@ class Text;
 namespace shader_program {
 
 CLASS( Font, ShaderProgram )
-	Font() : ShaderProgram( TYPE_FONT ) {};
+	Font()
+		: ShaderProgram( TYPE_FONT ) {};
 protected:
 	friend class opengl::Text;
 

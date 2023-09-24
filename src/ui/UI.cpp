@@ -21,23 +21,27 @@ void UI::Start() {
 	g_engine->GetGraphics()->AddScene( m_shape_scene_simple2d );
 	NEW( m_shape_scene_ortho, Scene, "UIScene::Ortho", SCENE_TYPE_ORTHO_UI );
 	g_engine->GetGraphics()->AddScene( m_shape_scene_ortho );
-	
+
 	m_root_object.Create();
 	m_root_object.UpdateObjectArea();
-	
-	m_clamp.x.SetRange({
-		{ 0.0, (float)g_engine->GetGraphics()->GetViewportWidth() },
-		{ -1.0, 1.0 }
-	});
+
+	m_clamp.x.SetRange(
+		{
+			{ 0.0,  (float)g_engine->GetGraphics()->GetViewportWidth() },
+			{ -1.0, 1.0 }
+		}
+	);
 	m_clamp.x.SetOverflowAllowed( true );
-	
-	m_clamp.y.SetRange({
-		{ 0.0, (float)g_engine->GetGraphics()->GetViewportHeight() },
-		{ -1.0, 1.0 }
-	});
+
+	m_clamp.y.SetRange(
+		{
+			{ 0.0,  (float)g_engine->GetGraphics()->GetViewportHeight() },
+			{ -1.0, 1.0 }
+		}
+	);
 	m_clamp.y.SetOverflowAllowed( true );
 	m_clamp.y.SetInversed( true );
-	
+
 	if ( !m_error ) {
 		NEW( m_error, module::Error, this );
 	}
@@ -45,21 +49,33 @@ void UI::Start() {
 	if ( !m_loader ) {
 		NEW( m_loader, module::Loader, this );
 	}
-	
-	g_engine->GetGraphics()->AddOnWindowResizeHandler( this, RH( this ) {
+
+	g_engine->GetGraphics()->AddOnWindowResizeHandler(
+		this, RH( this ) {
 #ifdef DEBUG
-		for (auto& it : m_debug_frames) {
-			ResizeDebugFrame( it.first, &it.second );
-		}
+			for ( auto& it : m_debug_frames ) {
+				ResizeDebugFrame( it.first, &it.second );
+			}
 #endif
-		m_clamp.x.SetSrcRange( { 0.0, (float)g_engine->GetGraphics()->GetViewportWidth() } );
-		m_clamp.y.SetSrcRange( { 0.0, (float)g_engine->GetGraphics()->GetViewportHeight() } );
-		m_root_object.Realign();
-	});
-	
+			m_clamp.x.SetSrcRange(
+				{
+					0.0,
+					(float)g_engine->GetGraphics()->GetViewportWidth()
+				}
+			);
+			m_clamp.y.SetSrcRange(
+				{
+					0.0,
+					(float)g_engine->GetGraphics()->GetViewportHeight()
+				}
+			);
+			m_root_object.Realign();
+		}
+	);
+
 #ifdef DEBUG
 	NEW( m_debug_scene, Scene, "UIDebug", SCENE_TYPE_SIMPLE2D );
-	g_engine->GetGraphics()->AddScene( m_debug_scene );	
+	g_engine->GetGraphics()->AddScene( m_debug_scene );
 #endif
 }
 
@@ -69,45 +85,46 @@ void UI::Stop() {
 	while ( HasPopup() ) {
 		CloseLastPopup( true );
 	}
-	
+
 #ifdef DEBUG
 	g_engine->GetGraphics()->RemoveScene( m_debug_scene );
 	DELETE( m_debug_scene );
 #endif
-	
+
 	g_engine->GetGraphics()->RemoveOnWindowResizeHandler( this );
-	
+
 	if ( m_error ) {
 		DELETE( m_error );
 		m_error = nullptr;
 	}
-	
+
 	if ( m_loader ) {
 		DELETE( m_loader );
 		m_loader = nullptr;
 	}
-	
+
 	m_active_module = nullptr;
-	
+
 	g_engine->GetGraphics()->RemoveScene( m_shape_scene_simple2d );
 	DELETE( m_shape_scene_simple2d );
 	g_engine->GetGraphics()->RemoveScene( m_shape_scene_ortho );
 	DELETE( m_shape_scene_ortho );
-	
+
 	ASSERT( m_focusable_objects.empty(), "some objects still remain focusable" );
 	ASSERT( m_focusable_objects_order.empty(), "some objects still remain in focusable order" );
-	
+
 	m_root_object.Destroy();
 }
 
-void UI::AddObject( object::UIObject *object ) {
+void UI::AddObject( object::UIObject* object ) {
 	m_root_object.AddChild( object );
 	if ( object->HasEventContext( UIObject::EC_OFFCLICK_AWARE ) ) {
 		ASSERT( m_offclick_aware_objects.find( object ) == m_offclick_aware_objects.end(), "double add to offlick aware objects" );
 		m_offclick_aware_objects.insert( object );
 	}
 }
-void UI::RemoveObject( object::UIObject *object ) {
+
+void UI::RemoveObject( object::UIObject* object ) {
 	if ( object->HasEventContext( UIObject::EC_OFFCLICK_AWARE ) ) {
 		ASSERT( m_offclick_aware_objects.find( object ) != m_offclick_aware_objects.end(), "offlick aware object not found" );
 		m_offclick_aware_objects.erase( object );
@@ -115,7 +132,7 @@ void UI::RemoveObject( object::UIObject *object ) {
 	m_root_object.RemoveChild( object );
 }
 
-Scene *UI::GetShapeScene( const types::mesh::Mesh* mesh ) {
+Scene* UI::GetShapeScene( const types::mesh::Mesh* mesh ) {
 	switch ( mesh->GetType() ) {
 		case types::mesh::Mesh::MT_SIMPLE: {
 			return m_shape_scene_simple2d;
@@ -131,7 +148,7 @@ Scene *UI::GetShapeScene( const types::mesh::Mesh* mesh ) {
 	return nullptr; // remove warning
 }
 
-Scene *UI::GetTextScene() {
+Scene* UI::GetTextScene() {
 	return m_shape_scene_simple2d;
 }
 
@@ -158,10 +175,10 @@ const UI::coord_t UI::UnclampX( const coord_t value ) const {
 const UI::coord_t UI::UnclampY( const coord_t value ) const {
 	return m_clamp.y.Unclamp( value );
 }
-	
+
 void UI::Iterate() {
 	m_root_object.Iterate();
-	
+
 	if ( !m_iterative_objects_to_remove.empty() ) {
 		for ( auto& remove_it : m_iterative_objects_to_remove ) {
 			auto it = m_iterative_objects.find( remove_it );
@@ -170,11 +187,11 @@ void UI::Iterate() {
 		}
 		m_iterative_objects_to_remove.clear();
 	}
-	
+
 	for ( auto& it : m_iterative_objects ) {
 		it.second();
 	}
-	
+
 	if ( m_is_redraw_needed ) {
 		//Log( "Redrawing UI" );
 		g_engine->GetGraphics()->RedrawOverlay();
@@ -200,26 +217,29 @@ void UI::TriggerGlobalEventHandlers( global_event_handler_order_t order, UIEvent
 void UI::ProcessEvent( UIEvent* event ) {
 	if ( event->m_type == UIEvent::EV_MOUSE_MOVE ) {
 		// need to save last mouse position to be able to trigger mouseover/mouseout events for objects that will move/resize themselves later
-		m_last_mouse_position = { event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y };
+		m_last_mouse_position = {
+			event->m_data.mouse.absolute.x,
+			event->m_data.mouse.absolute.y
+		};
 	}
-	
+
 	// toggle fullscreen
 	if (
 		event->m_type == UIEvent::EV_KEY_DOWN &&
-		( event->m_data.key.modifiers & UIEvent::KM_ALT ) &&
-		event->m_data.key.code == UIEvent::K_ENTER
-	) {
+			( event->m_data.key.modifiers & UIEvent::KM_ALT ) &&
+			event->m_data.key.code == UIEvent::K_ENTER
+		) {
 		g_engine->GetGraphics()->ToggleFullscreen();
 		return;
 	}
-	
+
 	// modules block other ui when active
 	if (
 		m_active_module
 #ifdef DEBUG
-		&& ! ( event->m_type == UIEvent::EV_KEY_DOWN && event->m_data.key.code == UIEvent::K_GRAVE ) // debug overlay
+			&& !( event->m_type == UIEvent::EV_KEY_DOWN && event->m_data.key.code == UIEvent::K_GRAVE ) // debug overlay
 #endif
-	) {
+		) {
 		m_active_module->ProcessEvent( event );
 		return;
 	}
@@ -230,28 +250,28 @@ void UI::ProcessEvent( UIEvent* event ) {
 			if ( obj->IsVisible() && !obj->IsPointInside(
 				event->m_data.mouse.absolute.x,
 				event->m_data.mouse.absolute.y
-			)) {
+			) ) {
 				obj->Trigger( UIEvent::EV_OFFCLICK, &event->m_data );
 			}
 		}
 	}
 
 	// other ui
-	
+
 	TriggerGlobalEventHandlers( GH_BEFORE, event );
-	
+
 	if ( event->m_type == UIEvent::EV_KEY_DOWN ) {
 		if (
 			m_focused_object &&
-			m_focusable_objects.size() > 1 &&
-			!event->m_data.key.modifiers &&
-			( event->m_data.key.code == UIEvent::K_TAB )
-		) {
+				m_focusable_objects.size() > 1 &&
+				!event->m_data.key.modifiers &&
+				( event->m_data.key.code == UIEvent::K_TAB )
+			) {
 			FocusNextObject();
 			event->SetProcessed();
 		}
 	}
-	
+
 	if ( !event->IsProcessed() ) {
 		if ( HasPopup() ) {
 			m_popups.back()->ProcessEvent( event );
@@ -260,12 +280,12 @@ void UI::ProcessEvent( UIEvent* event ) {
 			m_root_object.ProcessEvent( event );
 		}
 	}
-	
+
 	if ( !event->IsProcessed() ) {
 		if ( event->m_type == UIEvent::EV_KEY_DOWN ) {
 			if ( m_focused_object && !event->m_data.key.modifiers && (
 				( event->m_data.key.key ) || // ascii key
-				( event->m_data.key.code == UIEvent::K_BACKSPACE )
+					( event->m_data.key.code == UIEvent::K_BACKSPACE )
 			) ) {
 				m_focused_object->ProcessEvent( event );
 			}
@@ -295,10 +315,12 @@ const UIEventHandler* UI::AddGlobalEventHandler( const UIEvent::event_type_t typ
 		its->second[ type ] = {};
 		it = its->second.find( type );
 	}
-	it->second.push_back({
-		handler,
-		true
-	});
+	it->second.push_back(
+		{
+			handler,
+			true
+		}
+	);
 	return handler;
 }
 
@@ -362,7 +384,7 @@ void UI::RemoveFromFocusableObjects( UIObject* object ) {
 
 void UI::UpdateFocusableObjectsOrder() {
 	m_focusable_objects_order.clear();
-	
+
 	// TODO: tabindex property
 	for ( auto& object : m_focusable_objects ) {
 		m_focusable_objects_order.push_back( object );
@@ -387,11 +409,11 @@ void UI::FocusNextObject() {
 			return;
 		}
 	}
-	
+
 	// maybe focused object is last in list (in this case select_next will be true)
 	// so we need to rewind and focus first one in list
 	ASSERT( select_next, "currently focused object not found" );
-	FocusObject( m_focusable_objects_order[0] );
+	FocusObject( m_focusable_objects_order[ 0 ] );
 }
 
 void UI::FocusObject( UIObject* object ) {
@@ -466,9 +488,9 @@ void UI::ClosePopup( Popup* popup, bool force ) {
 			m_popups.pop_back();
 			while (
 				!m_popups_close_queue.empty() &&
-				!m_popups.empty() &&
-				m_popups_close_queue.back() == m_popups.back()
-			) {
+					!m_popups.empty() &&
+					m_popups_close_queue.back() == m_popups.back()
+				) {
 				// TODO: test properly
 				ClosePopup( m_popups_close_queue.back() );
 				m_popups_close_queue.pop_back();
@@ -487,40 +509,43 @@ void UI::CloseLastPopup( bool force ) {
 
 void UI::Error( const std::string& text ) {
 	NEWV( popup, popup::Error );
-		popup->SetText( text );
+	popup->SetText( text );
 	popup->Open();
 }
 
 void UI::Confirm( const std::string& text, const ui_handler_t on_confirm ) {
 	NEWV( popup, popup::Confirm );
-		popup->SetText( text );
-		popup->On( UIEvent::EV_CONFIRM, EH( on_confirm ) {
+	popup->SetText( text );
+	popup->On(
+		UIEvent::EV_CONFIRM, EH( on_confirm ) {
 			on_confirm();
 			return true;
-		});
+		}
+	);
 	popup->Open();
 }
 
 #ifdef DEBUG
+
 void UI::ShowDebugFrame( UIObject* object ) {
 	auto it = m_debug_frames.find( object );
 	if ( it == m_debug_frames.end() ) {
-		Log("Showing debug frame for " + object->GetName());
+		Log( "Showing debug frame for " + object->GetName() );
 		debug_frame_data_t data;
-		
+
 		// semi-transparent 1x1 texture with random color for every frame
 		NEW( data.texture, Texture, "DebugTexture", 1, 1 );
 		data.texture->SetPixel( 0, 0, Color::RGBA( rand() % 256, rand() % 256, rand() % 256, 160 ) );
-		
+
 		NEW( data.mesh, mesh::Rectangle );
-		
+
 		NEW( data.actor, actor::Mesh, "DebugFrame", data.mesh );
 		data.actor->SetTexture( data.texture );
-		
+
 		ResizeDebugFrame( object, &data );
-		
+
 		m_debug_scene->AddActor( data.actor );
-		
+
 		m_debug_frames[ object ] = data;
 	}
 }
@@ -528,7 +553,7 @@ void UI::ShowDebugFrame( UIObject* object ) {
 void UI::HideDebugFrame( UIObject* object ) {
 	auto it = m_debug_frames.find( object );
 	if ( it != m_debug_frames.end() ) {
-		Log("Hiding debug frame for " + object->GetName());
+		Log( "Hiding debug frame for " + object->GetName() );
 		m_debug_scene->RemoveActor( it->second.actor );
 		DELETE( it->second.actor );
 		DELETE( it->second.texture );
@@ -538,14 +563,16 @@ void UI::HideDebugFrame( UIObject* object ) {
 
 void UI::ResizeDebugFrame( UIObject* object, const debug_frame_data_t* data ) {
 	auto area = object->GetObjectArea();
-	data->mesh->SetCoords({
-		ClampX( area.left ),
-		ClampY( area.top )
-	},{
-		ClampX( area.right ),
-		ClampY( area.bottom )
-	}, -1.0 );
-	
+	data->mesh->SetCoords(
+		{
+			ClampX( area.left ),
+			ClampY( area.top )
+		}, {
+			ClampX( area.right ),
+			ClampY( area.bottom )
+		}, -1.0
+	);
+
 }
 
 void UI::ResizeDebugFrame( UIObject* object ) {

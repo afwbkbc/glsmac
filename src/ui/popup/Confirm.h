@@ -17,13 +17,13 @@ CLASS( Confirm, object::Popup )
 	void Destroy() override;
 
 	void SetText( const std::string& text );
-	
+
 private:
-	
+
 	std::string m_text = "";
-	
+
 	Section* m_body = nullptr;
-	
+
 	object::Label* m_label = nullptr;
 	struct {
 		object::Button* ok = nullptr;

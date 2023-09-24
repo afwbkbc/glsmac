@@ -27,13 +27,13 @@ void Tiles::Resize( const uint32_t width, const uint32_t height ) {
 	ASSERT( height > 0, "can't resize to zero height" );
 	ASSERT( !( width & 1 ), "can't resize to non-even width" );
 	ASSERT( !( height & 1 ), "can't resize to non-even height" );
-	
+
 	if ( width != m_width || height != m_height ) {
 		Log( "Initializing tiles ( " + std::to_string( width ) + " x " + std::to_string( height ) + " )" );
-		
+
 		m_width = width;
 		m_height = height;
-		
+
 		// warning: allocating objects without new (because it's faster), check this if any memory problems arise
 		if ( m_data ) {
 			free( m_data );
@@ -63,38 +63,42 @@ void Tiles::Resize( const uint32_t width, const uint32_t height ) {
 				tile = At( x, y );
 
 				// link to other tiles
-				tile->W = ( x >= 2 ) ? At( x - 2, y ) : At( m_width - 1 - ( 1 - ( y % 2 ) ), y );
+				tile->W = ( x >= 2 )
+					? At( x - 2, y )
+					: At( m_width - 1 - ( 1 - ( y % 2 ) ), y );
 				tile->NW = ( y >= 1 )
 					? ( ( x >= 1 )
 						? At( x - 1, y - 1 )
 						: At( m_width - 1, y - 1 )
 					)
-					: tile
-				;
-				tile->N = ( y >= 2 ) ? At( x, y - 2 ) : tile;
+					: tile;
+				tile->N = ( y >= 2 )
+					? At( x, y - 2 )
+					: tile;
 				tile->NE = ( y >= 1 )
 					? ( ( x < m_width - 1 )
 						? At( x + 1, y - 1 )
 						: At( 0, y - 1 )
 					)
-					: tile
-				;
-				tile->E = ( x < m_width - 2 ) ? At( x + 2, y ) : At( y % 2, y );
+					: tile;
+				tile->E = ( x < m_width - 2 )
+					? At( x + 2, y )
+					: At( y % 2, y );
 				tile->SE = ( y < m_height - 1 )
 					? ( ( x < m_width - 1 )
 						? At( x + 1, y + 1 )
 						: At( 0, y + 1 )
 					)
-					: tile
-				;
-				tile->S = ( y < m_height - 2 ) ? At( x, y + 2 ) : tile;
+					: tile;
+				tile->S = ( y < m_height - 2 )
+					? At( x, y + 2 )
+					: tile;
 				tile->SW = ( y < m_height - 1 )
 					? ( ( x >= 1 )
 						? At( x - 1, y + 1 )
 						: At( m_width - 1, y + 1 )
 					)
-					: tile
-				;
+					: tile;
 
 				tile->elevation.bottom = &tile->elevation_data.bottom;
 				tile->elevation.center = &tile->elevation_data.center;
@@ -104,7 +108,7 @@ void Tiles::Resize( const uint32_t width, const uint32_t height ) {
 				}
 				else if ( y > 0 ) {
 					ASSERT( x > 0, "x is zero while y isn't" );
-					tile->elevation.top = At( x - 1, y - 1)->elevation.right;
+					tile->elevation.top = At( x - 1, y - 1 )->elevation.right;
 				}
 				else {
 					tile->elevation.top = TopVertexAt( x, y );
@@ -124,7 +128,10 @@ void Tiles::Resize( const uint32_t width, const uint32_t height ) {
 
 			// link left edge to right edge and vice versa
 			if ( y % 2 ) {
-				At( m_width - 1, y )->elevation.right = ( y > 0 ? At( 0, y - 1 )->elevation.bottom : TopRightVertexAt( 0 ) );
+				At( m_width - 1, y )->elevation.right = ( y > 0
+					? At( 0, y - 1 )->elevation.bottom
+					: TopRightVertexAt( 0 )
+				);
 			}
 			At( y % 2, y )->elevation.left = At( m_width - 1 - ( 1 - ( y % 2 ) ), y )->elevation.right;
 
@@ -136,7 +143,7 @@ void Tiles::Resize( const uint32_t width, const uint32_t height ) {
 				tile = At( x, y );
 
 #ifdef DEBUG
-		// check that all pointers are linked to something
+				// check that all pointers are linked to something
 #define CHECKTILE( _what ) ASSERT( tile->_what, "tile " #_what " not linked at " + std::to_string( x ) + "x" + std::to_string( y ) );
 
 				CHECKTILE( W );
@@ -182,7 +189,7 @@ void Tiles::Resize( const uint32_t width, const uint32_t height ) {
 
 void Tiles::Clear() {
 	ASSERT( m_data, "tiles not initialized" );
-	
+
 	for ( auto y = 0 ; y < m_height ; y++ ) {
 		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 			At( x, y )->Clear();
@@ -197,7 +204,7 @@ const uint32_t Tiles::GetWidth() const {
 const uint32_t Tiles::GetHeight() const {
 	return m_height;
 }
-	
+
 Tile* Tiles::At( const size_t x, const size_t y ) const {
 	ASSERT( x < m_width, "invalid x tile coordinate ( " + std::to_string( x ) + " >= " + std::to_string( m_width ) + " )" );
 	ASSERT( y < m_height, "invalid y tile coordinate ( " + std::to_string( y ) + " >= " + std::to_string( m_height ) + " )" );
@@ -223,23 +230,23 @@ Tile::elevation_t* Tiles::TopRightVertexAt( const size_t x ) const {
 void Tiles::Validate( MT_CANCELABLE ) {
 	if ( !m_is_validated ) {
 		Log( "Validating map" );
-		
+
 		Tile* tile;
 		for ( auto y = 0 ; y < m_height ; y++ ) {
 			for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 				tile = At( x, y );
-				
+
 				if ( tile->moisture > Tile::M_RAINY ) {
 					Log( "tile moisture overflow ( " + std::to_string( tile->moisture ) + " > 3 ) at " + std::to_string( x ) + "x" + std::to_string( y ) );
 				}
 				if ( tile->rockiness > Tile::R_ROCKY ) {
 					Log( "tile rockiness overflow ( " + std::to_string( tile->rockiness ) + " > 3 ) at " + std::to_string( x ) + "x" + std::to_string( y ) );
 				}
-				
+
 				MT_RETIF();
 			}
 		}
-		
+
 		m_is_validated = true;
 	}
 }
@@ -257,7 +264,9 @@ void Tiles::FixTopBottomRows( Random* random ) {
 	Tile* tile;
 	Tile::elevation_t top_bottom_elevation;
 	for ( auto x = 0 ; x < m_width ; x++ ) {
-		top_bottom_elevation = random->GetBool() ? 1 : -1;
+		top_bottom_elevation = random->GetBool()
+			? 1
+			: -1;
 		if ( x % 2 == 0 ) {
 			tile = At( x, 0 );
 			*tile->elevation.left = *tile->elevation.right = top_bottom_elevation;
@@ -269,14 +278,14 @@ void Tiles::FixTopBottomRows( Random* random ) {
 			*tile->elevation.bottom = 0;
 		}
 	}
-	
+
 	for ( auto y = 0 ; y < m_height ; y++ ) {
 		if ( y > 1 || y < m_height - 2 ) {
 			continue;
 		}
 		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 			tile = At( x, y );
-			
+
 			tile->Update();
 		}
 	}
@@ -287,7 +296,7 @@ const std::vector< Tile* > Tiles::GetVector( MT_CANCELABLE ) const {
 	const size_t tiles_count = GetDataCount() / 2; // / 2 because SMAC coordinate system
 	tiles.reserve( tiles_count );
 	for ( size_t y = 0 ; y < m_height ; y++ ) {
-		for ( size_t x = y & 1 ; x < m_width ; x+= 2 ) {
+		for ( size_t x = y & 1 ; x < m_width ; x += 2 ) {
 			tiles.push_back( At( x, y ) );
 			MT_RETIFV( {} );
 		}
@@ -302,38 +311,38 @@ const Buffer Tiles::Serialize() const {
 
 	buf.WriteInt( m_width );
 	buf.WriteInt( m_height );
-	
+
 	for ( auto y = 0 ; y < m_height ; y++ ) {
 		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 			buf.WriteString( At( x, y )->Serialize().ToString() );
 		}
 	}
-	
+
 	buf.WriteBool( m_is_validated );
-	
+
 	return buf;
 }
 
 void Tiles::Unserialize( Buffer buf ) {
-	
+
 	size_t width = buf.ReadInt();
 	size_t height = buf.ReadInt();
-	
+
 	m_width = m_height = 0;
 	Resize( width, height );
-	
+
 	for ( auto y = 0 ; y < m_height ; y++ ) {
 		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 			At( x, y )->Unserialize( Buffer( buf.ReadString() ) );
 		}
 	}
-	
+
 	for ( auto y = 0 ; y < m_height ; y++ ) {
 		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
 			At( x, y )->Update();
 		}
 	}
-	
+
 }
 
 }

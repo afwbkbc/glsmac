@@ -6,8 +6,7 @@ namespace brush {
 
 Brush::Brush( Game* game, const MapEditor::brush_type_t type )
 	: m_game( game )
-	, m_type( type )
-{
+	, m_type( type ) {
 	//
 }
 

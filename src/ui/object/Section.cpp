@@ -2,11 +2,12 @@
 
 namespace ui {
 namespace object {
-	
-Section::Section( const std::string& class_name ) : UIContainer( class_name ) {
+
+Section::Section( const std::string& class_name )
+	: UIContainer( class_name ) {
 	//
 }
-	
+
 void Section::SetTitleText( const std::string& title_text ) {
 	if ( title_text != m_title_text ) {
 		m_title_text = title_text;
@@ -16,11 +17,11 @@ void Section::SetTitleText( const std::string& title_text ) {
 	}
 }
 
-void Section::AddChild( UIObject *object ) {
+void Section::AddChild( UIObject* object ) {
 	m_body->AddChild( object );
 }
 
-void Section::RemoveChild( UIObject *object ) {
+void Section::RemoveChild( UIObject* object ) {
 	m_body->RemoveChild( object );
 }
 
@@ -28,35 +29,37 @@ void Section::Create() {
 	UIContainer::Create();
 
 	NEW( m_frame, Panel );
-		m_frame->SetAlign( UIObject::ALIGN_CENTER );
-		m_frame->SetMargin( 3 );
-		m_frame->ForwardStyleAttributesM( m_forwarded_style_attributes );
+	m_frame->SetAlign( UIObject::ALIGN_CENTER );
+	m_frame->SetMargin( 3 );
+	m_frame->ForwardStyleAttributesM( m_forwarded_style_attributes );
 	UIContainer::AddChild( m_frame );
-	
+
 	if ( !m_title_text.empty() ) {
 		NEW( m_titlebar, Panel );
-			m_titlebar->SetAlign( UIObject::ALIGN_TOP );
-			m_titlebar->SetMargin({
+		m_titlebar->SetAlign( UIObject::ALIGN_TOP );
+		m_titlebar->SetMargin(
+			{
 				3, // left
 				3, // top
 				3, // right
 				-3 // bottom
-			});
-			m_titlebar->ForwardStyleAttributesM( m_forwarded_header_style_attributes );
+			}
+		);
+		m_titlebar->ForwardStyleAttributesM( m_forwarded_header_style_attributes );
 		m_frame->AddChild( m_titlebar );
 		NEW( m_titlelabel, Label );
-			m_titlelabel->SetText( m_title_text );
-			m_titlelabel->SetMargin( 2 );
-			m_titlelabel->ForwardStyleAttributesM( m_forwarded_header_label_style_attributes );
+		m_titlelabel->SetText( m_title_text );
+		m_titlelabel->SetMargin( 2 );
+		m_titlelabel->ForwardStyleAttributesM( m_forwarded_header_label_style_attributes );
 		m_titlebar->AddChild( m_titlelabel );
 	}
-	
+
 	NEW( m_body, Panel );
 	m_frame->AddChild( m_body );
 }
 
 void Section::Destroy() {
-	
+
 	m_frame->RemoveChild( m_body );
 	if ( m_titlebar ) {
 		m_titlebar->RemoveChild( m_titlelabel );
@@ -68,7 +71,7 @@ void Section::Destroy() {
 }
 
 void Section::ApplyStyle() {
-	
+
 	if ( m_body ) {
 		if ( Has( Style::A_HEADER_HEIGHT ) && !m_title_text.empty() ) {
 			m_body->SetTop( Get( Style::A_HEADER_HEIGHT ) + 2 );

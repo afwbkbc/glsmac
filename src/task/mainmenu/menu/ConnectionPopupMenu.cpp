@@ -5,9 +5,8 @@
 namespace task {
 namespace mainmenu {
 
-ConnectionPopupMenu::ConnectionPopupMenu( MainMenu *mainmenu, const std::string& title )
-	: PopupMenu( mainmenu, title )
-{
+ConnectionPopupMenu::ConnectionPopupMenu( MainMenu* mainmenu, const std::string& title )
+	: PopupMenu( mainmenu, title ) {
 	//
 }
 
@@ -20,19 +19,19 @@ void ConnectionPopupMenu::Iterate() {
 void ConnectionPopupMenu::SetConnection( ::game::connection::Connection* connection ) {
 	ASSERT( !m_connection, "connection already set" );
 	m_connection = connection;
-	m_connection->m_on_connect = [ this ] () -> void {
+	m_connection->m_on_connect = [ this ]() -> void {
 		Show();
 		NEWV( menu, lobby::Lobby, m_mainmenu, m_connection );
 		m_connection = nullptr;
 		NextMenu( menu );
 	};
-	m_connection->m_on_error = [ this ] ( const std::string& message ) -> void {
+	m_connection->m_on_error = [ this ]( const std::string& message ) -> void {
 		Show();
 		DELETE( m_connection );
 		m_connection = nullptr;
 		MenuError( message );
 	};
-	m_connection->m_on_cancel = [ this ] () -> void {
+	m_connection->m_on_cancel = [ this ]() -> void {
 		DELETE( m_connection );
 		m_connection = nullptr;
 		Show();

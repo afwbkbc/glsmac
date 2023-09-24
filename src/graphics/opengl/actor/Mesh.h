@@ -8,27 +8,27 @@
 namespace graphics {
 namespace opengl {
 
-CLASS(Mesh, Actor)
-	
-	Mesh( scene::actor::Actor *actor );
+CLASS( Mesh, Actor )
+
+	Mesh( scene::actor::Actor* actor );
 	~Mesh();
-	
+
 	bool MeshReloadNeeded() override;
 	bool DataMeshReloadNeeded();
 	bool TextureReloadNeeded() override;
 	void LoadMesh() override;
 	void LoadTexture() override;
-	
-	void Draw( shader_program::ShaderProgram *shader_program, Camera *camera = nullptr ) override;
-	
+
+	void Draw( shader_program::ShaderProgram* shader_program, Camera* camera = nullptr ) override;
+
 	void OnWindowResize() override;
-	
+
 protected:
-	
+
 	scene::actor::Mesh* GetMeshActor() const;
-	
+
 	void PrepareDataMesh();
-	
+
 	size_t m_mesh_update_counter = 0;
 	size_t m_data_mesh_update_counter = 0;
 	const types::Texture* m_last_texture = nullptr;
@@ -48,9 +48,9 @@ protected:
 		GLuint ibo_size = 0;
 		bool is_up_to_date = false; // reset on window resize or other events when it needs to be reloaded
 	} m_data = {};
-	
+
 	mesh::Data::data_t GetDataAt( const size_t x, const size_t y );
-	
+
 };
 
 } /* namespace opengl */

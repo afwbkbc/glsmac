@@ -7,7 +7,8 @@ namespace opengl {
 namespace shader_program {
 
 void World::AddShaders() {
-	AddShader( GL_VERTEX_SHADER, "#version 330 \n\
+	AddShader(
+		GL_VERTEX_SHADER, "#version 330 \n\
 \
 in vec3 aPosition; \
 in vec2 aTexCoord; \
@@ -22,9 +23,11 @@ void main() \
 	posw = vec3( gl_Position );\
 	TexCoord0 = vec2(aTexCoord); \
 } \
-");
+"
+	);
 
-	AddShader( GL_FRAGMENT_SHADER, "#version 330 \n\
+	AddShader(
+		GL_FRAGMENT_SHADER, "#version 330 \n\
 const vec3 uFogColor = vec3(1., 1., 1.);\
 uniform vec3 uCamPos;\
 in vec2 TexCoord0; \
@@ -51,22 +54,23 @@ void main() \
 	FragColor = vec4( mix( uLightA.Color * TexBaseColor * uLightA.Intensity, uLightA.Color * FogBaseColor, fogAmount ), 1.0 );\
 } \
 \
-");
+"
+	);
 }
 
 void World::Initialize() {
-	uniforms.world = GetUniformLocation("uWorld");
+	uniforms.world = GetUniformLocation( "uWorld" );
 	uniforms.light_color = GetUniformLocation( "uLightA.Color" );
 	uniforms.light_intensity = GetUniformLocation( "uLightA.Intensity" );
-	uniforms.campos = GetUniformLocation("uCamPos");
+	uniforms.campos = GetUniformLocation( "uCamPos" );
 	//mUSampler=GetUniformLocation("uSampler");
-	attributes.position = GetAttributeLocation("aPosition");
+	attributes.position = GetAttributeLocation( "aPosition" );
 //	attributes.tex_coord = GetAttributeLocation("aTexCoord");
 };
 
 void World::EnableAttributes() const {
 	glEnableVertexAttribArray( attributes.position );
-	glVertexAttribPointer( attributes.position, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)0 );
+	glVertexAttribPointer( attributes.position, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)0 );
 	//glEnableVertexAttribArray(mATexCoord);
 	//glVertexAttribPointer( mATexCoord, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)sizeof(OpenGLVec3));
 };
@@ -83,8 +87,8 @@ types::Matrix44 World::GetWorldMatrix() {
 
 	types::Vec3 target, up;
 	//CalculateTargetUp(angle,&target,&up);
-	types::Vec3 axis(0.0f,1.0f,0.0f);
-	types::Vec3 view(1.0f,0.0f,0.0f);
+	types::Vec3 axis( 0.0f, 1.0f, 0.0f );
+	types::Vec3 view( 1.0f, 0.0f, 0.0f );
 	view.Rotate( 45.0, axis );
 	view.Normalize();
 	axis = axis ^ view;
@@ -92,12 +96,12 @@ types::Matrix44 World::GetWorldMatrix() {
 	view.Rotate( 0.0, axis );
 	view.Normalize();
 
-	up=view;
-	target=view^axis;
+	up = view;
+	target = view ^ axis;
 
 	rotate_matrix.TransformCameraRotate( target, up );
 
-	translate_matrix.TransformTranslate( -0.0 , 2.0, -0.0 );
+	translate_matrix.TransformTranslate( -0.0, 2.0, -0.0 );
 
 	return projection_matrix * rotate_matrix * translate_matrix;
 }

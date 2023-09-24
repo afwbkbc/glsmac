@@ -7,11 +7,12 @@ namespace map {
 namespace module {
 
 CLASS( CalculateCoords, Module )
-	
-	CalculateCoords( Map* const map ) : Module( map ) {}
-	
+
+	CalculateCoords( Map* const map )
+		: Module( map ) {}
+
 	void GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) override;
-	
+
 };
 
 }

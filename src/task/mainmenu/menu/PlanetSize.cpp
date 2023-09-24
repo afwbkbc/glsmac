@@ -10,44 +10,57 @@
 namespace task {
 namespace mainmenu {
 
-PlanetSize::PlanetSize( MainMenu *mainmenu ) : SlidingMenu( mainmenu, "SELECT SIZE OF PLANET", {
-	{ "TINY PLANET", {
-		CH( this ) {
-			m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_TINY;
-			ChooseNext();
-		}
-	}},
-	{ "SMALL PLANET", {
-		CH( this ) {
-			m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_SMALL;
-			ChooseNext();
-		}
-	}},
-	{ "STANDARD PLANET", {
-		CH( this ) {
-			m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_STANDARD;
-			ChooseNext();
-		}
-	}},
-	{ "LARGE PLANET", {
-		CH( this ) {
-			m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_LARGE;
-			ChooseNext();
-		}
-	}},
-	{ "HUGE PLANET", {
-		CH( this ) {
-			m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_HUGE;
-			ChooseNext();
-		}
-	}},
-	{ "CUSTOM SIZE", {} },
-}, 2 ) {
+PlanetSize::PlanetSize( MainMenu* mainmenu )
+	: SlidingMenu(
+	mainmenu, "SELECT SIZE OF PLANET", {
+		{
+			"TINY PLANET",     {
+								   CH( this ) {
+									   m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_TINY;
+									   ChooseNext();
+								   }
+							   }
+		},
+		{
+			"SMALL PLANET",    {
+								   CH( this ) {
+									   m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_SMALL;
+									   ChooseNext();
+								   }
+							   }
+		},
+		{
+			"STANDARD PLANET", {
+								   CH( this ) {
+									   m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_STANDARD;
+									   ChooseNext();
+								   }
+							   }
+		},
+		{
+			"LARGE PLANET",    {
+								   CH( this ) {
+									   m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_LARGE;
+									   ChooseNext();
+								   }
+							   }
+		},
+		{
+			"HUGE PLANET",     {
+								   CH( this ) {
+									   m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_HUGE;
+									   ChooseNext();
+								   }
+							   }
+		},
+		{   "CUSTOM SIZE",     {} },
+	}, 2
+) {
 	//
 }
 
 void PlanetSize::ChooseNext() {
-	SlidingMenu *menu;
+	SlidingMenu* menu;
 	if ( m_mainmenu->m_settings.global.map.type == game::MapSettings::MT_CUSTOM ) {
 		NEW( menu, Ocean, m_mainmenu );
 	}

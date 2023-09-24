@@ -1,7 +1,7 @@
 SUBDIR( generator )
 SUBDIR( module )
 
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/Consts.cpp
 	${PWD}/Map.cpp
@@ -10,4 +10,4 @@ SET(SRC ${SRC}
 	${PWD}/MapState.cpp
 	${PWD}/TileState.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

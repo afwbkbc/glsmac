@@ -1,7 +1,7 @@
 SUBDIR( ui )
 
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/Common.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

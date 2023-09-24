@@ -8,7 +8,7 @@ namespace graphics {
 namespace opengl {
 
 namespace routine {
-	class World;
+class World;
 }
 
 class Mesh;
@@ -16,7 +16,8 @@ class Mesh;
 namespace shader_program {
 
 CLASS( World, ShaderProgram )
-	World() : ShaderProgram( TYPE_PERSP ) {};
+	World()
+		: ShaderProgram( TYPE_PERSP ) {};
 
 	types::Matrix44 GetWorldMatrix();
 protected:

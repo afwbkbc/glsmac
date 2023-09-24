@@ -20,48 +20,48 @@ CLASS( Input, Panel )
 	virtual void Create() override;
 	virtual void Iterate() override;
 	virtual void Destroy() override;
-	
+
 	void SetValue( const std::string& value );
 	const std::string& GetValue() const;
 	void SetMaxLength( const size_t max_length );
-	
+
 	void SetHint( const std::string& hint );
 	const std::string& GetHint() const;
-	
+
 	void Clear();
-	
+
 	void Focus() override;
 	void Defocus() override;
 
 private:
-	
+
 	struct {
 		const std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > value_label = {
-			{ Style::A_FONT, Style::A_FONT },
+			{ Style::A_FONT,       Style::A_FONT },
 			{ Style::A_TEXT_COLOR, Style::A_TEXT_COLOR },
 		};
 		const std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > hint_label = {
-			{ Style::A_FONT, Style::A_FONT },
+			{ Style::A_FONT,       Style::A_FONT },
 			{ Style::A_HINT_COLOR, Style::A_TEXT_COLOR },
 		};
 	} m_forwarded_style_attributes;
-	
+
 	bool OnKeyDown( const UIEvent::event_data_t* data ) override;
-	
+
 	std::string m_value = "";
 	size_t m_max_length = 0;
-	
+
 	std::string m_hint = "";
-	
+
 	Label* m_value_label = nullptr;
 	Label* m_hint_label = nullptr;
-	
+
 	std::string m_cursor_blink_value = " ";
 	util::Timer m_cursor_blink_timer;
-	
+
 	void UpdateValueLabel( const bool send_event = false );
 	void UpdateHintLabel();
-	
+
 };
 
 } /* namespace object */

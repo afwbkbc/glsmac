@@ -18,26 +18,26 @@ CLASS( Panel, UIContainer )
 	virtual void Create() override;
 	virtual void Destroy() override;
 	virtual void Align() override;
-	
+
 	void SetBorderWidth( const size_t border_width );
 	const size_t GetBorderSize() const;
-	
+
 protected:
-	
+
 	size_t m_border_size = 1;
-	
+
 	virtual void ApplyStyle() override;
-	
+
 	std::unordered_map< Style::attribute_type_t, Surface* > m_surfaces = {
-		{ Style::A_TEXTURE_BACK, nullptr },
-		{ Style::A_TEXTURE_LEFT, nullptr },
-		{ Style::A_TEXTURE_TOP, nullptr },
-		{ Style::A_TEXTURE_RIGHT, nullptr },
-		{ Style::A_TEXTURE_BOTTOM, nullptr },
-		{ Style::A_TEXTURE_LEFTTOP, nullptr },
-		{ Style::A_TEXTURE_RIGHTTOP, nullptr },
+		{ Style::A_TEXTURE_BACK,        nullptr },
+		{ Style::A_TEXTURE_LEFT,        nullptr },
+		{ Style::A_TEXTURE_TOP,         nullptr },
+		{ Style::A_TEXTURE_RIGHT,       nullptr },
+		{ Style::A_TEXTURE_BOTTOM,      nullptr },
+		{ Style::A_TEXTURE_LEFTTOP,     nullptr },
+		{ Style::A_TEXTURE_RIGHTTOP,    nullptr },
 		{ Style::A_TEXTURE_RIGHTBOTTOM, nullptr },
-		{ Style::A_TEXTURE_LEFTBOTTOM, nullptr },
+		{ Style::A_TEXTURE_LEFTBOTTOM,  nullptr },
 	};
 };
 

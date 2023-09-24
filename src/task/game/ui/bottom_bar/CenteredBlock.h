@@ -5,11 +5,12 @@
 namespace task {
 namespace game {
 namespace ui {
-	
+
 CLASS( CenteredBlock, ::ui::object::UIContainer )
-	
-	CenteredBlock() : ::ui::object::UIContainer( "BBCenteredBlock" ) {}
-	
+
+	CenteredBlock()
+		: ::ui::object::UIContainer( "BBCenteredBlock" ) {}
+
 };
 
 }

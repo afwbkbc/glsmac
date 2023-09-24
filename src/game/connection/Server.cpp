@@ -6,8 +6,7 @@ namespace game {
 namespace connection {
 
 Server::Server( LocalSettings* const settings )
-	: Connection( network::CM_SERVER, settings )
-{
+	: Connection( network::CM_SERVER, settings ) {
 	//
 }
 
@@ -28,7 +27,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 				::game::Player::PR_HOST,
 				rules.GetDefaultFaction(),
 				rules.GetDefaultDifficultyLevel(),
-			});
+			} );
 			m_state->AddPlayer( m_player );
 			m_slot = 0; // host always has slot 0
 			m_state->AddCIDSlot( 0, m_slot );
@@ -46,15 +45,15 @@ void Server::ProcessEvent( const network::Event& event ) {
 			break;
 		}
 		case Event::ET_CLIENT_CONNECT: {
-			Log( "Client " + std::to_string(event.cid) + " connected");
+			Log( "Client " + std::to_string( event.cid ) + " connected" );
 			ASSERT( m_state->GetCidSlots().find( event.cid ) == m_state->GetCidSlots().end(), "player cid already in slots" );
-			
+
 			const auto& banned = m_settings->banned_addresses;
 			if ( banned.find( event.data.remote_address ) != banned.end() ) {
 				Kick( event.cid, "You are banned" );
 				break;
 			}
-			
+
 			{
 				Packet packet;
 				packet.type = Packet::PT_REQUEST_AUTH; // ask to authenticate
@@ -63,7 +62,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			break;
 		}
 		case Event::ET_CLIENT_DISCONNECT: {
-			Log( "Client " + std::to_string(event.cid) + " disconnected");
+			Log( "Client " + std::to_string( event.cid ) + " disconnected" );
 			auto it = m_state->GetCidSlots().find( event.cid );
 			if ( it != m_state->GetCidSlots().end() ) {
 				const auto slot_num = it->second;
@@ -118,7 +117,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 							::game::Player::PR_PLAYER,
 							rules.GetDefaultFaction(),
 							rules.GetDefaultDifficultyLevel(),
-						});
+						} );
 						m_state->AddPlayer( player );
 
 						m_state->AddCIDSlot( event.cid, slot_num );
@@ -171,7 +170,8 @@ void Server::ProcessEvent( const network::Event& event ) {
 						Log( "WARNING: invalid packet type from client " + std::to_string( event.cid ) + " : " + std::to_string( packet.type ) );
 					}
 				}
-			} catch ( std::runtime_error& err ) {
+			}
+			catch ( std::runtime_error& err ) {
 				Error( event.cid, err.what() );
 			}
 			break;
@@ -215,14 +215,16 @@ void Server::BanFromSlot( const size_t slot_num, const std::string& reason ) {
 }
 
 void Server::UpdateSlot( const size_t slot_num, const Slot* slot ) {
-	Broadcast( [ this, slot_num, slot ]( const size_t cid ) -> void {
-		Log( "Sending slot update to " + std::to_string( cid ) );
-		Packet p;
-		p.type = Packet::PT_SLOT_UPDATE;
-		p.data.num = slot_num;
-		p.data.str = slot->Serialize().ToString();
-		m_network->MT_SendPacket( p, cid );
-	});
+	Broadcast(
+		[ this, slot_num, slot ]( const size_t cid ) -> void {
+			Log( "Sending slot update to " + std::to_string( cid ) );
+			Packet p;
+			p.type = Packet::PT_SLOT_UPDATE;
+			p.data.num = slot_num;
+			p.data.str = slot->Serialize().ToString();
+			m_network->MT_SendPacket( p, cid );
+		}
+	);
 }
 
 void Server::Message( const std::string& message ) {
@@ -230,25 +232,34 @@ void Server::Message( const std::string& message ) {
 }
 
 void Server::UpdateGameSettings() {
-	Broadcast( [ this ]( const size_t cid ) -> void {
-		SendGlobalSettings( cid );
-	});
+	Broadcast(
+		[ this ]( const size_t cid ) -> void {
+			SendGlobalSettings( cid );
+		}
+	);
 }
 
 void Server::GlobalMessage( const std::string& message ) {
 	if ( m_on_message ) {
 		m_on_message( message );
 	}
-	Broadcast( [ this, message ]( const size_t cid ) -> void {
-		Packet p;
-		p.type = Packet::PT_MESSAGE;
-		p.data.str = message;
-		m_network->MT_SendPacket( p, cid );
-	});
+	Broadcast(
+		[ this, message ]( const size_t cid ) -> void {
+			Packet p;
+			p.type = Packet::PT_MESSAGE;
+			p.data.str = message;
+			m_network->MT_SendPacket( p, cid );
+		}
+	);
 }
 
 void Server::Kick( const size_t cid, const std::string& reason = "" ) {
-	Log( "Kicking " + std::to_string( cid ) + ( !reason.empty() ? " (reason: " + reason + ")" : "" ) );
+	Log(
+		"Kicking " + std::to_string( cid ) + ( !reason.empty()
+			? " (reason: " + reason + ")"
+			: ""
+		)
+	);
 	Packet p;
 	p.type = types::Packet::PT_KICK;
 	p.data.str = reason;

@@ -7,7 +7,7 @@
 #include "game/Slot.h"
 #include "game/Player.h"
 
-typedef std::function<bool()> connection_handler_t;
+typedef std::function< bool() > connection_handler_t;
 #define CH( ... ) [ __VA_ARGS__ ] () -> void
 
 namespace game {
@@ -20,24 +20,24 @@ CLASS( Connection, base::Module )
 	virtual ~Connection();
 
 	// protocol
-	std::function<void()> m_on_connect = 0;
-	std::function<void()> m_on_cancel = 0;
-	std::function<void()> m_on_disconnect = 0;
-	std::function<void(const std::string &message)> m_on_error = 0;
+	std::function< void() > m_on_connect = 0;
+	std::function< void() > m_on_cancel = 0;
+	std::function< void() > m_on_disconnect = 0;
+	std::function< void( const std::string& message ) > m_on_error = 0;
 
 	// universal
-	std::function<void( const size_t slot_num, Slot* slot, const Player* player )> m_on_player_join = 0;
-	std::function<void( const size_t slot_num, Slot* slot, const Player* player )> m_on_player_leave = 0;
-	std::function<void( const size_t slot_num, game::Slot* slot )> m_on_slot_update = 0;
-	std::function<void( const std::string& message )> m_on_message = 0;
+	std::function< void( const size_t slot_num, Slot* slot, const Player* player ) > m_on_player_join = 0;
+	std::function< void( const size_t slot_num, Slot* slot, const Player* player ) > m_on_player_leave = 0;
+	std::function< void( const size_t slot_num, game::Slot* slot ) > m_on_slot_update = 0;
+	std::function< void( const std::string& message ) > m_on_message = 0;
 
 	// client-specific
-	std::function<void()> m_on_global_settings_update = 0;
-	std::function<void()> m_on_players_list_update = 0;
+	std::function< void() > m_on_global_settings_update = 0;
+	std::function< void() > m_on_players_list_update = 0;
 
 	// server-specific
-	std::function<void()> m_on_listen = 0;
-	
+	std::function< void() > m_on_listen = 0;
+
 	void SetState( State* state );
 
 	void Connect();
@@ -54,10 +54,10 @@ CLASS( Connection, base::Module )
 	virtual void Message( const std::string& message ) = 0;
 
 protected:
-	network::Network * const m_network = g_engine->GetNetwork();
+	network::Network* const m_network = g_engine->GetNetwork();
 
 	virtual void ProcessEvent( const network::Event& event );
-	
+
 	bool m_is_connected = false;
 
 	std::string m_disconnect_reason = "";

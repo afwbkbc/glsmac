@@ -1,4 +1,4 @@
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/Actor.cpp
 	${PWD}/Instanced.cpp
@@ -7,4 +7,4 @@ SET(SRC ${SRC}
 	${PWD}/Text.cpp
 	${PWD}/Sound.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

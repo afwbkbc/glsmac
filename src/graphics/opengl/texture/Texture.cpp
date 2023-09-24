@@ -5,9 +5,10 @@
 namespace graphics {
 namespace opengl {
 
-Texture::Texture( types::Texture *texture ) : m_texture( texture ) {
+Texture::Texture( types::Texture* texture )
+	: m_texture( texture ) {
 	m_name = texture->m_name;
-	
+
 	THROW( "deprecated" );
 }
 
@@ -46,7 +47,6 @@ void Texture::Disable() {
 	//glActiveTexture( 0 );
 	glBindTexture( m_target, 0 );
 }
-
 
 } /* namespace opengl */
 } /* namespace graphics */

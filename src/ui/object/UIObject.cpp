@@ -50,26 +50,26 @@ UIObject::~UIObject() {
 }
 
 void UIObject::Create() {
-	
+
 	DEBUG_STAT_INC( ui_elements_created );
 	DEBUG_STAT_INC( ui_elements_active );
-	
+
 	m_style_modifiers = Style::M_NONE;
-	
+
 	m_created = true;
 }
 
 void UIObject::Destroy() {
 	ASSERT( m_actors.empty(), "some actors still present on destruction" );
-	
+
 	HideDebugFrame();
-	
+
 	m_created = false;
 
 	if ( m_is_focusable ) {
 		g_engine->GetUI()->RemoveFromFocusableObjects( this );
 	}
-	
+
 	DEBUG_STAT_INC( ui_elements_destroyed );
 	DEBUG_STAT_DEC( ui_elements_active );
 }
@@ -88,11 +88,11 @@ void UIObject::Draw() {
 	Refresh();
 }
 
-UIObject *UIObject::GetParentObject() const {
+UIObject* UIObject::GetParentObject() const {
 	return m_parent_object;
 }
 
-void UIObject::SetParentObject( UIContainer *parent_object ) {
+void UIObject::SetParentObject( UIContainer* parent_object ) {
 	ASSERT( !m_parent_object, "parent object already set" );
 	m_parent_object = parent_object;
 	m_depth = m_parent_object->m_depth + 1;
@@ -111,7 +111,7 @@ void UIObject::SetZIndex( float z_index ) {
 void UIObject::SetAbsoluteZIndex( float absolute_z_index ) {
 	if ( absolute_z_index != m_absolute_z_index ) {
 		m_absolute_z_index = absolute_z_index;
-		for (auto& actor : m_actors) {
+		for ( auto& actor : m_actors ) {
 			actor->SetPositionZ( m_absolute_z_index );
 		}
 		Realign();
@@ -126,11 +126,11 @@ void UIObject::UpdateZIndex() {
 	SetAbsoluteZIndex( new_absolute_z_index );
 }
 
-scene::Scene *UIObject::GetSceneOfActor( const Actor *actor ) const {
-	scene::Scene *scene;
+scene::Scene* UIObject::GetSceneOfActor( const Actor* actor ) const {
+	scene::Scene* scene;
 	switch ( actor->GetType() ) {
 		case ( Actor::TYPE_MESH ):
-			scene = g_engine->GetUI()->GetShapeScene( ((actor::Mesh*)actor)->GetMesh() );
+			scene = g_engine->GetUI()->GetShapeScene( ( (actor::Mesh*)actor )->GetMesh() );
 			break;
 		case ( Actor::TYPE_TEXT ):
 			scene = g_engine->GetUI()->GetTextScene();
@@ -150,7 +150,7 @@ void UIObject::ApplyStyle() {
 	if ( !m_parent_style_attributes.empty() ) {
 		Log( "Using " + to_string( m_parent_style_attributes.size() ) + " forwarded style attributes from parent (modifiers: " + to_string( m_style_modifiers ) + ")" );
 	}*/
-	
+
 	if ( Has( Style::A_ALIGN ) ) {
 		SetAlign( Get( Style::A_ALIGN ) );
 	}
@@ -230,7 +230,9 @@ bool UIObject::Has( const Style::attribute_type_t attribute_type, const Style::m
 	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
 		return true;
 	}
-	const UIContainer* style_object = m_parent_style_object ? m_parent_style_object : m_parent_object;
+	const UIContainer* style_object = m_parent_style_object
+		? m_parent_style_object
+		: m_parent_object;
 	if ( m_forward_all_style_attributes ) {
 		ASSERT( style_object, "parent style attributes requested but parent is not set" );
 		return style_object->Has( attribute_type, style_modifiers );
@@ -242,6 +244,7 @@ bool UIObject::Has( const Style::attribute_type_t attribute_type, const Style::m
 	}
 	return false;
 }
+
 bool UIObject::Has( const Style::attribute_type_t attribute_type ) const {
 	return Has( attribute_type, m_style_modifiers );
 }
@@ -251,10 +254,13 @@ const float UIObject::Get( const Style::attribute_type_t attribute_type, const S
 	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
 		return m_style->Get( attribute_type, style_modifiers );
 	}
-	const UIContainer* style_object = m_parent_style_object ? m_parent_style_object : m_parent_object;
+	const UIContainer* style_object = m_parent_style_object
+		? m_parent_style_object
+		: m_parent_object;
 	ASSERT( style_object, "parent style attributes requested but parent is not set" );
 	return style_object->Get( GetParentAttribute( attribute_type ), style_modifiers );
 }
+
 const float UIObject::Get( const Style::attribute_type_t attribute_type ) const {
 	return Get( attribute_type, m_style_modifiers );
 }
@@ -264,10 +270,13 @@ const Color UIObject::GetColor( const Style::attribute_type_t attribute_type, co
 	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
 		return m_style->GetColor( attribute_type, style_modifiers );
 	}
-	const UIContainer* style_object = m_parent_style_object ? m_parent_style_object : m_parent_object;
+	const UIContainer* style_object = m_parent_style_object
+		? m_parent_style_object
+		: m_parent_object;
 	ASSERT( style_object, "parent style attributes requested but parent is not set" );
 	return style_object->GetColor( GetParentAttribute( attribute_type ), style_modifiers );
 }
+
 const Color UIObject::GetColor( const Style::attribute_type_t attribute_type ) const {
 	return GetColor( attribute_type, m_style_modifiers );
 }
@@ -277,10 +286,13 @@ const void* UIObject::GetObject( const Style::attribute_type_t attribute_type, c
 	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
 		return m_style->GetObject( attribute_type, style_modifiers );
 	}
-	const UIContainer* style_object = m_parent_style_object ? m_parent_style_object : m_parent_object;
+	const UIContainer* style_object = m_parent_style_object
+		? m_parent_style_object
+		: m_parent_object;
 	ASSERT( style_object, "parent style attributes requested but parent is not set" );
 	return style_object->GetObject( GetParentAttribute( attribute_type ), style_modifiers );
 }
+
 const void* UIObject::GetObject( const Style::attribute_type_t attribute_type ) const {
 	return GetObject( attribute_type, m_style_modifiers );
 }
@@ -331,7 +343,7 @@ const UIObject::coord_t UIObject::UnclampX( const coord_t value ) {
 const UIObject::coord_t UIObject::UnclampY( const coord_t value ) {
 	return g_engine->GetUI()->UnclampY( value );
 }
-	
+
 const UIObject::vertex_t UIObject::ClampXY( const vertex_t value ) {
 	return vertex_t( ClampX( value.x ), ClampY( value.y ) );
 }
@@ -359,7 +371,7 @@ bool UIObject::HasEventContext( event_context_t context ) const {
 bool UIObject::IsEventContextOverridden( event_context_t context ) const {
 	return ( m_overridden_event_contexts & context );
 }
-	
+
 void UIObject::RealignNow() {
 	if ( !m_are_realigns_blocked ) {
 		m_is_realign_needed = false;
@@ -379,8 +391,8 @@ void UIObject::RealignNow() {
 		const auto& object_area_new = GetObjectArea();
 		if (
 			round( object_area_old.width ) != round( object_area_new.width ) ||
-			round( object_area_old.height ) != round( object_area_new.height )
-		) {
+				round( object_area_old.height ) != round( object_area_new.height )
+			) {
 			UIEvent::event_data_t d = {};
 			Trigger( UIEvent::EV_RESIZE, &d );
 		}
@@ -422,7 +434,7 @@ const UIObject::coord_t UIObject::GetTop() const {
 const UIObject::coord_t UIObject::GetBottom() const {
 	return m_position.bottom;
 }
-	
+
 const UIObject::coord_t UIObject::GetWidth() const {
 	return m_size.width;
 }
@@ -433,8 +445,8 @@ const UIObject::coord_t UIObject::GetHeight() const {
 
 void UIObject::SetLeft( const coord_t px ) {
 	m_stick_bits |= STICK_LEFT;
-	if ( ! ( m_align & ALIGN_HCENTER ) ) {
-		m_align = ( m_align & (~ALIGN_RIGHT) ) | ALIGN_LEFT;
+	if ( !( m_align & ALIGN_HCENTER ) ) {
+		m_align = ( m_align & ( ~ALIGN_RIGHT ) ) | ALIGN_LEFT;
 	}
 	if ( m_stick_bits & STICK_RIGHT ) {
 		m_stick_bits &= ~( STICK_RIGHT | STICK_WIDTH );
@@ -447,8 +459,8 @@ void UIObject::SetLeft( const coord_t px ) {
 
 void UIObject::SetRight( const coord_t px ) {
 	m_stick_bits |= STICK_RIGHT;
-	if ( ! ( m_align & ALIGN_HCENTER ) ) {
-		m_align = ( m_align & (~ALIGN_LEFT) ) | ALIGN_RIGHT;
+	if ( !( m_align & ALIGN_HCENTER ) ) {
+		m_align = ( m_align & ( ~ALIGN_LEFT ) ) | ALIGN_RIGHT;
 	}
 	if ( m_stick_bits & STICK_LEFT ) {
 		m_stick_bits &= ~( STICK_LEFT | STICK_WIDTH );
@@ -461,8 +473,8 @@ void UIObject::SetRight( const coord_t px ) {
 
 void UIObject::SetTop( const coord_t px ) {
 	m_stick_bits |= STICK_TOP;
-	if ( ! ( m_align & ALIGN_VCENTER ) ) {
-		m_align = ( m_align & (~ALIGN_BOTTOM) ) | ALIGN_TOP;
+	if ( !( m_align & ALIGN_VCENTER ) ) {
+		m_align = ( m_align & ( ~ALIGN_BOTTOM ) ) | ALIGN_TOP;
 	}
 	if ( m_stick_bits & STICK_BOTTOM ) {
 		m_stick_bits &= ~( STICK_BOTTOM | STICK_HEIGHT );
@@ -475,8 +487,8 @@ void UIObject::SetTop( const coord_t px ) {
 
 void UIObject::SetBottom( const coord_t px ) {
 	m_stick_bits |= STICK_BOTTOM;
-	if ( ! ( m_align & ALIGN_VCENTER ) ) {
-		m_align = ( m_align & (~ALIGN_TOP) ) | ALIGN_BOTTOM;
+	if ( !( m_align & ALIGN_VCENTER ) ) {
+		m_align = ( m_align & ( ~ALIGN_TOP ) ) | ALIGN_BOTTOM;
 	}
 	if ( m_stick_bits & STICK_TOP ) {
 		m_stick_bits &= ~( STICK_TOP | STICK_HEIGHT );
@@ -495,7 +507,14 @@ void UIObject::SetMargin( const coord_box_t px ) {
 }
 
 void UIObject::SetMargin( const coord_t px ) {
-	SetMargin({ px, px, px, px });
+	SetMargin(
+		{
+			px,
+			px,
+			px,
+			px
+		}
+	);
 }
 
 const UIObject::coord_box_t& UIObject::GetMargin() const {
@@ -560,10 +579,12 @@ void UIObject::UpdateObjectArea() {
 				object_area.left = parent_center - m_size.width / 2;
 				object_area.right = parent_center + m_size.width / 2;
 			}
-			else if ( m_align & ALIGN_LEFT )
+			else if ( m_align & ALIGN_LEFT ) {
 				object_area.right = object_area.left + m_size.width;
-			else if ( m_align & ALIGN_RIGHT )
+			}
+			else if ( m_align & ALIGN_RIGHT ) {
 				object_area.left = object_area.right - m_size.width;
+			}
 		}
 		if ( m_stick_bits & STICK_HEIGHT ) {
 			if ( ( m_align & ALIGN_VCENTER ) == ALIGN_VCENTER ) {
@@ -571,21 +592,25 @@ void UIObject::UpdateObjectArea() {
 				object_area.top = parent_center - m_size.height / 2;
 				object_area.bottom = parent_center + m_size.height / 2;
 			}
-			else if ( m_align & ALIGN_TOP )
+			else if ( m_align & ALIGN_TOP ) {
 				object_area.bottom = object_area.top + m_size.height;
-			else if ( m_align & ALIGN_BOTTOM )
+			}
+			else if ( m_align & ALIGN_BOTTOM ) {
 				object_area.top = object_area.bottom - m_size.height;
+			}
 		}
-		if ( object_area.left > object_area.right )
+		if ( object_area.left > object_area.right ) {
 			object_area.left = object_area.right;
-		if ( object_area.top > object_area.bottom )
+		}
+		if ( object_area.top > object_area.bottom ) {
 			object_area.top = object_area.bottom;
-		
+		}
+
 		object_area.width = object_area.right - object_area.left;
 		object_area.height = object_area.bottom - object_area.top;
-		
+
 		if ( m_size.force_aspect_ratio ) {
-			float current_aspect_ratio = (float) object_area.height / object_area.width;
+			float current_aspect_ratio = (float)object_area.height / object_area.width;
 			if ( current_aspect_ratio > m_size.aspect_ratio ) {
 				float new_height = object_area.height * m_size.aspect_ratio / current_aspect_ratio;
 				if ( ( m_align & ALIGN_VCENTER ) == ALIGN_VCENTER ) {
@@ -624,7 +649,7 @@ void UIObject::UpdateObjectArea() {
 		object_area.width = object_area.right;
 		object_area.height = object_area.bottom;
 	}
-	
+
 	if ( m_margin ) {
 		if ( m_margin.left ) {
 			object_area.left += m_margin.left;
@@ -647,11 +672,11 @@ void UIObject::UpdateObjectArea() {
 		object_area.width = object_area.right - object_area.left;
 		object_area.height = object_area.bottom - object_area.top;
 	}
-	
+
 	if ( object_area != m_object_area ) {
-		
+
 		m_object_area = object_area;
-		
+
 		if ( m_created ) {
 			// process any mouseover/mouseout events
 			// mouse may not being moved, but if object area has changed - they should be able to fire too
@@ -659,7 +684,7 @@ void UIObject::UpdateObjectArea() {
 			if ( !IsEventContextOverridden( EC_MOUSEMOVE ) ) {
 				g_engine->GetUI()->SendMouseMoveEvent( this );
 			}
-			
+
 		}
 #ifdef DEBUG
 		// resize debug frame to match new area
@@ -672,10 +697,12 @@ void UIObject::UpdateObjectArea() {
 
 void UIObject::SetAlign( const alignment_t align ) {
 	m_align = align;
-	if ( ! ( m_align & ALIGN_HCENTER ) )
+	if ( !( m_align & ALIGN_HCENTER ) ) {
 		m_align |= ALIGN_LEFT;
-	if ( ! ( m_align & ALIGN_VCENTER ) )
+	}
+	if ( !( m_align & ALIGN_VCENTER ) ) {
 		m_align |= ALIGN_TOP;
+	}
 }
 
 void UIObject::SetHAlign( const alignment_t align ) {
@@ -702,34 +729,34 @@ const UIObject::overflow_t UIObject::GetOverflow() const {
 }
 
 void UIObject::ProcessEvent( UIEvent* event ) {
-	
+
 	if ( m_are_events_blocked || !m_is_actually_visible ) {
 		return;
 	}
-	
+
 	if ( event->m_flags & UIEvent::EF_MOUSE ) {
 		event->m_data.mouse.relative.x = event->m_data.mouse.absolute.x - m_object_area.left;
 		event->m_data.mouse.relative.y = event->m_data.mouse.absolute.y - m_object_area.top;
 	}
 
 	bool is_processed = false;
-	
+
 	if (
 		( event->m_type != UIEvent::EV_MOUSE_MOVE ) || // mouse move events are sent to all elements, but we need to process only those inside object area
-		( !m_parent_object ) // root object should be able to send mousemove to global handlers
-	) {
+			( !m_parent_object ) // root object should be able to send mousemove to global handlers
+		) {
 		is_processed = Trigger( event->m_type, &event->m_data );
 	}
-	
+
 	if ( !is_processed ) {
-		
+
 		switch ( event->m_type ) {
 			case UIEvent::EV_MOUSE_MOVE: {
 				if ( HasEventContext( EC_MOUSEMOVE ) ) {
 					if (
 						!event->IsMouseOverHappened() &&
-						IsPointInside( event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y )
-					) {
+							IsPointInside( event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y )
+						) {
 						event->SetMouseOverHappened();
 						is_processed = Trigger( event->m_type, &event->m_data );
 						if ( !is_processed ) {
@@ -777,12 +804,12 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 				}
 				break;
 			}
-			/*case UIEvent::EV_MOUSECLICK: {
-				if ( HasEventContext( EC_MOUSE ) ) {
-					is_processed = OnMouseClick( &event->m_data );
-				}
-				break;
-			}*/ // conflicts with button click, maybe not needed?
+				/*case UIEvent::EV_MOUSECLICK: {
+					if ( HasEventContext( EC_MOUSE ) ) {
+						is_processed = OnMouseClick( &event->m_data );
+					}
+					break;
+				}*/ // conflicts with button click, maybe not needed?
 			case UIEvent::EV_KEY_DOWN: {
 				if ( HasEventContext( EC_KEYBOARD ) || m_is_focused ) {
 					is_processed = OnKeyDown( &event->m_data );
@@ -806,14 +833,17 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 			}
 		}
 	}
-	
+
 	if ( is_processed ) {
 		event->SetProcessed();
 	}
 }
 
 UIObject::vertex_t UIObject::GetAreaPosition() const {
-	return { m_object_area.left, m_object_area.top };
+	return {
+		m_object_area.left,
+		m_object_area.top
+	};
 }
 
 const UIObject::object_area_t UIObject::GetObjectArea() {
@@ -828,13 +858,12 @@ const UIObject::object_area_t UIObject::GetInternalObjectArea() {
 bool UIObject::IsPointInside( const ssize_t x, const ssize_t y ) const {
 	const object_area_t object_area = HasEventContext( EC_PARENTAREA )
 		? m_parent_object->GetInternalObjectArea()
-		: m_object_area
-	;
+		: m_object_area;
 	return (
 		x > object_area.left &&
-		y > object_area.top &&
-		x <= object_area.right &&
-		y < object_area.bottom
+			y > object_area.top &&
+			x <= object_area.right &&
+			y < object_area.bottom
 	);
 }
 
@@ -847,6 +876,7 @@ void UIObject::SetClass( const std::string& style_class ) {
 }
 
 #ifdef DEBUG
+
 void UIObject::ShowDebugFrame() {
 	if ( !m_has_debug_frame ) {
 		if ( m_is_actually_visible ) {
@@ -896,7 +926,7 @@ void UIObject::AddStyleModifier( const Style::modifier_t modifier ) {
 }
 
 void UIObject::RemoveStyleModifier( const Style::modifier_t modifier ) {
-	ASSERT( (m_style_modifiers & modifier), "style modifier " + std::to_string( modifier ) + " already removed" );
+	ASSERT( ( m_style_modifiers & modifier ), "style modifier " + std::to_string( modifier ) + " already removed" );
 	m_style_modifiers &= ~modifier;
 	m_is_applying_style = true;
 	ApplyStyleIfNeeded();
@@ -905,7 +935,7 @@ void UIObject::RemoveStyleModifier( const Style::modifier_t modifier ) {
 }
 
 const bool UIObject::HasStyleModifier( const Style::modifier_t modifier ) const {
-	return ( (m_style_modifiers & modifier ) == modifier );
+	return ( ( m_style_modifiers & modifier ) == modifier );
 }
 
 const UIEventHandler* UIObject::On( const std::vector< UIEvent::event_type_t >& types, UIEventHandler::handler_function_t func ) {
@@ -917,10 +947,12 @@ const UIEventHandler* UIObject::On( const std::vector< UIEvent::event_type_t >& 
 			m_event_handlers[ type ] = {};
 			it = m_event_handlers.find( type );
 		}
-		it->second.push_back({
-			handler,
-			need_delete
-		});
+		it->second.push_back(
+			{
+				handler,
+				need_delete
+			}
+		);
 		need_delete = false;
 	}
 	return handler;
@@ -963,7 +995,9 @@ const Style::attribute_type_t UIObject::GetParentAttribute( const Style::attribu
 	}
 	auto it = m_parent_style_attributes.find( source_type );
 	ASSERT( it != m_parent_style_attributes.end(), "could not get attribute neither from style nor from parent attributes" );
-	ASSERT( m_parent_style_object ? m_parent_style_object : m_parent_object,  "parent is gone" );
+	ASSERT( m_parent_style_object
+		? m_parent_style_object
+		: m_parent_object, "parent is gone" );
 	return it->second;
 }
 
@@ -1001,7 +1035,9 @@ const std::string& UIObject::GetStyleClass() {
 }
 
 const std::string UIObject::SubClass( const std::string& subclass ) {
-	return !m_style_class.empty() ? m_style_class + subclass : "";
+	return !m_style_class.empty()
+		? m_style_class + subclass
+		: "";
 }
 
 void UIObject::BlockEvents() {
@@ -1163,8 +1199,8 @@ void UIObject::UpdateAreaLimits() {
 			m_area_limits.limits = { // TODO: better z?
 				0.0f,
 				0.0f,
-				(coord_t) g->GetViewportWidth(),
-				(coord_t) g->GetViewportHeight()
+				(coord_t)g->GetViewportWidth(),
+				(coord_t)g->GetViewportHeight()
 			};
 			for ( auto& source_object : m_area_limits.source_objects ) { // find the smallest box from all source objects
 				const auto area = source_object->GetInternalObjectArea();
@@ -1177,7 +1213,7 @@ void UIObject::UpdateAreaLimits() {
 			}
 		}
 		scene::actor::Mesh::area_limits_t limits = { // TODO: better z?
-			{ ClampX( m_area_limits.limits.left ), ClampY( m_area_limits.limits.top ), -1.0f },
+			{ ClampX( m_area_limits.limits.left ),  ClampY( m_area_limits.limits.top ),    -1.0f },
 			{ ClampX( m_area_limits.limits.right ), ClampY( m_area_limits.limits.bottom ), 1.0f }
 		};
 		//Log( "Setting area limits to " + limits.first.ToString() + " -> " + limits.second.ToString() );

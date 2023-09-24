@@ -3,9 +3,10 @@
 namespace ui {
 namespace object {
 
-ChoiceList::ChoiceList( const std::string& class_name ) : UIContainer( class_name ) {
+ChoiceList::ChoiceList( const std::string& class_name )
+	: UIContainer( class_name ) {
 	SetEventContexts( EC_KEYBOARD );
-	
+
 	// TODO: move to styles
 	m_item_align.margin = 2;
 	m_item_align.height = 20;
@@ -22,11 +23,10 @@ void ChoiceList::SetChoices( const choices_t& choices ) {
 	bool wasSet = !m_values.empty();
 	std::string oldValue = (
 		wasSet &&
-		m_labels.find( m_value ) != m_labels.end()
+			m_labels.find( m_value ) != m_labels.end()
 	)
 		? GetValueString()
-		: ""
-	;
+		: "";
 
 	m_values.clear();
 	m_labels.clear();
@@ -34,7 +34,7 @@ void ChoiceList::SetChoices( const choices_t& choices ) {
 		m_values.push_back( choice.first );
 		m_labels[ choice.first ] = choice.second;
 	}
-	
+
 	if ( m_created ) {
 		UpdateButtons();
 	}
@@ -82,39 +82,44 @@ void ChoiceList::SetChoicesV( const std::vector< std::string >& labels ) {
 	choices_t choices = {};
 	size_t index = 1;
 	for ( auto& label : labels ) {
-		choices.push_back({ index++, label });
+		choices.push_back(
+			{
+				index++,
+				label
+			}
+		);
 	}
 	SetChoices( choices );
 }
 
 void ChoiceList::Create() {
 	UIContainer::Create();
-	
+
 	if ( m_buttons.empty() && !m_values.empty() ) {
 		UpdateButtons();
 	}
-	
+
 }
 
 void ChoiceList::Destroy() {
-	
+
 	for ( auto& button : m_buttons ) {
 		RemoveChild( button.second );
 	}
 	m_buttons.clear();
-	
+
 	UIContainer::Destroy();
 }
 
 void ChoiceList::Align() {
 	UIContainer::Align();
-	
+
 	if ( !m_buttons.empty() ) {
 		size_t value = 0;
 		for ( auto& choice : m_values ) {
 			auto* button = m_buttons.at( choice );
 			button->SetHeight( m_item_align.height );
-			button->SetTop( m_item_align.margin - 1 + ( m_item_align.height + m_item_align.margin - 1 ) * (value) );
+			button->SetTop( m_item_align.margin - 1 + ( m_item_align.height + m_item_align.margin - 1 ) * ( value ) );
 			value++;
 		}
 	}
@@ -139,11 +144,11 @@ void ChoiceList::SetItemHeight( const coord_t item_height ) {
 
 void ChoiceList::ApplyStyle() {
 	UIContainer::ApplyStyle();
-	
+
 	if ( Has( Style::A_ITEM_MARGIN ) ) {
 		SetItemMargin( Get( Style::A_ITEM_MARGIN ) );
 	}
-	
+
 	if ( Has( Style::A_ITEM_HEIGHT ) ) {
 		SetItemHeight( Get( Style::A_ITEM_HEIGHT ) );
 	}
@@ -159,13 +164,14 @@ void ChoiceList::UpdateButtons() {
 		for ( auto& value : m_values ) {
 			size_t value_index_local = value_index;
 			NEWV( button, Button );
-				button->SetLabel( m_labels.at( value ) );
-				button->SetAlign( ALIGN_TOP );
-				button->SetTextAlign( ALIGN_LEFT | ALIGN_VCENTER );
-				button->SetLeft( 3 );
-				button->SetRight( 3 );
-				button->ForwardStyleAttributesV( m_forwarded_style_attributes );
-				button->On( UIEvent::EV_BUTTON_CLICK, EH( this, button, value_index_local ) {
+			button->SetLabel( m_labels.at( value ) );
+			button->SetAlign( ALIGN_TOP );
+			button->SetTextAlign( ALIGN_LEFT | ALIGN_VCENTER );
+			button->SetLeft( 3 );
+			button->SetRight( 3 );
+			button->ForwardStyleAttributesV( m_forwarded_style_attributes );
+			button->On(
+				UIEvent::EV_BUTTON_CLICK, EH( this, button, value_index_local ) {
 					m_value_index = value_index_local;
 					if ( !button->HasStyleModifier( Style::M_SELECTED ) ) {
 						SetActiveButton( button );
@@ -174,13 +180,16 @@ void ChoiceList::UpdateButtons() {
 						SelectChoice();
 					}
 					return true;
-				});
-				button->On( UIEvent::EV_BUTTON_DOUBLE_CLICK, EH( this ) {
+				}
+			);
+			button->On(
+				UIEvent::EV_BUTTON_DOUBLE_CLICK, EH( this ) {
 					if ( !m_immediate_mode ) {
 						SelectChoice();
 					}
 					return true;
-				});
+				}
+			);
 			AddChild( button );
 			m_button_values[ button ] = value;
 			m_buttons[ value ] = button;

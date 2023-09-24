@@ -15,29 +15,29 @@ namespace types {
 CLASS( Texture, Serializable )
 	Texture( const std::string& name, const size_t width, const size_t height );
 	virtual ~Texture();
-	
+
 	std::string m_name;
 	size_t m_width = 0;
 	size_t m_height = 0;
 	float m_aspect_ratio = 0;
 	unsigned char m_bpp = 0;
-	unsigned char *m_bitmap = nullptr;
+	unsigned char* m_bitmap = nullptr;
 	size_t m_bitmap_size = 0;
-	
+
 	bool m_is_tiled = false;
 
-	base::ObjectLink *m_graphics_object = nullptr;
-	
+	base::ObjectLink* m_graphics_object = nullptr;
+
 	void Resize( const size_t width, const size_t height );
-	
+
 	// these methods won't update counter because it would happen too often (and is bad for performance)
 	// call Update() manually after you're done
 	void SetPixel( const size_t x, const size_t y, const Color::rgba_t& rgba );
 	void SetPixel( const size_t x, const size_t y, const Color& color );
 	void SetPixelAlpha( const size_t x, const size_t y, const uint8_t alpha );
-	
+
 	const Color::rgba_t GetPixel( const size_t x, const size_t y ) const;
-	
+
 	// bitflags
 	typedef uint32_t add_flag_t;
 	static constexpr add_flag_t AM_DEFAULT = 0;
@@ -81,15 +81,15 @@ CLASS( Texture, Serializable )
 	static constexpr add_flag_t AM_RANDOM_STRETCH_SHUFFLE = 1 << 29; // shuffle more. also implies all other stretch flags
 	// other
 	static constexpr add_flag_t AM_KEEP_TRANSPARENCY = 1 << 30; // copy only where destination is not transparent
-	
+
 	typedef uint8_t rotate_t;
 	static constexpr rotate_t ROTATE_0 = 0;
 	static constexpr rotate_t ROTATE_90 = 1;
 	static constexpr rotate_t ROTATE_180 = 2;
 	static constexpr rotate_t ROTATE_270 = 3;
-	
+
 	void Erase( const size_t x1, const size_t y1, const size_t x2, const size_t y2 );
-	
+
 	/**
 	 * TODO: refactor this huge parameter list somehow!!!
 	 * 
@@ -107,27 +107,31 @@ CLASS( Texture, Serializable )
 	 * @param perlin - (optional) perlin generator for perlin-related flags
 	 */
 	void AddFrom( const types::Texture* source, add_flag_t flags, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x = 0, const size_t dest_y = 0, const rotate_t rotate = 0, const float alpha = 1.0f, util::Random* rng = nullptr, util::Perlin* perlin = nullptr );
-	
+
 	void Rotate();
 	void FlipV();
 	//void FlipH(); // TODO
-	void SetAlpha(const float alpha);
-	void SetContrast(const float contrast);
+	void SetAlpha( const float alpha );
+	void SetContrast( const float contrast );
 
 	static Texture* FromColor( const Color& color );
 
 	struct updated_area_t {
 		size_t left;
+
 		size_t top;
+
 		size_t right;
+
 		size_t bottom;
+
 		const std::string ToString() const {
 			return "[ " + std::to_string( left ) + "x" + std::to_string( top ) + " " + std::to_string( right ) + "x" + std::to_string( bottom ) + " ]";
 		}
 	};
 	typedef std::vector< updated_area_t > updated_areas_t;
 	updated_areas_t m_updated_areas = {};
-	
+
 	void Update( const updated_area_t updated_area );
 	void FullUpdate();
 	const size_t UpdatedCount() const;
@@ -137,11 +141,11 @@ CLASS( Texture, Serializable )
 	// allocates and returns copy of bitmap from specified area
 	// don't forget to free() it later
 	// supposed to be faster than AddFrom
-	unsigned char *CopyBitmap( const size_t x1, const size_t y1, const size_t x2, const size_t y2 );
-	
+	unsigned char* CopyBitmap( const size_t x1, const size_t y1, const size_t x2, const size_t y2 );
+
 	const Buffer Serialize() const override;
 	void Unserialize( Buffer buf ) override;
-	
+
 private:
 	size_t m_update_counter = 0;
 };

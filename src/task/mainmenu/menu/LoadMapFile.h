@@ -27,13 +27,13 @@ CLASS( LoadMapFile, PopupMenu )
 	void Hide() override;
 
 	void OnNext() override;
-	
+
 private:
 	Section* m_section = nullptr;
 	::ui::object::FileBrowser* m_file_browser = nullptr;
 
 	mt_id_t m_mt_id = 0;
 };
-	
+
 }
 }

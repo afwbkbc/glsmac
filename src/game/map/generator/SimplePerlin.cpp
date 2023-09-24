@@ -31,28 +31,33 @@ void SimplePerlin::GenerateElevations( Tiles* tiles, const game::MapSettings& ma
 
 	const auto w = tiles->GetWidth();
 	const auto h = tiles->GetHeight();
-	
+
 	Log( "Generating elevations ( " + std::to_string( w ) + " x " + std::to_string( h ) + " )" );
 
 	const auto seed = m_random->GetUInt();
-	
-	const float land_bias = 1.3f; // increase amount of land generated
-	util::Clamper<float> perlin_to_elevation({
-		{ -1.0f - land_bias, 1.0f },
-		{ MAPGEN_ELEVATION_MIN, MAPGEN_ELEVATION_MAX }
-	});
 
-	util::Clamper<float> perlin_to_value({ // to moisture or rockiness
-		{ -1.0f, 1.0f },
-		{ 1.0f, 3.0f }
-	});
+	const float land_bias = 1.3f; // increase amount of land generated
+	util::Clamper< float > perlin_to_elevation(
+		{
+			{ -1.0f - land_bias,    1.0f },
+			{ MAPGEN_ELEVATION_MIN, MAPGEN_ELEVATION_MAX }
+		}
+	);
+
+	util::Clamper< float > perlin_to_value(
+		{ // to moisture or rockiness
+			{ -1.0f, 1.0f },
+			{ 1.0f,  3.0f }
+		}
+	);
 
 	util::Perlin perlin( seed );
 
 	MT_RETIF();
-	
+
 	// process in random order
-	std::vector< Tile* > randomtiles = GetTilesInRandomOrder( tiles, MT_C ); MT_RETIF();
+	std::vector< Tile* > randomtiles = GetTilesInRandomOrder( tiles, MT_C );
+	MT_RETIF();
 
 	for ( auto& tile : randomtiles ) {
 
@@ -69,7 +74,7 @@ void SimplePerlin::GenerateElevations( Tiles* tiles, const game::MapSettings& ma
 		*tile->elevation.bottom = perlin_to_elevation.Clamp( PERLIN( tile->coord.x + 0.5f, tile->coord.y + 1.0f, z_elevation ) );
 
 		tile->Update();
-		
+
 		MT_RETIF();
 	}
 
@@ -120,13 +125,14 @@ void SimplePerlin::GenerateElevations( Tiles* tiles, const game::MapSettings& ma
 
 	for ( size_t i = 0 ; i < 8 ; i++ ) {
 		// smooth land 2 times, sea 8 times
-		SmoothTerrain( tiles, MT_C, ( i < 2 ), true ); MT_RETIF();
+		SmoothTerrain( tiles, MT_C, ( i < 2 ), true );
+		MT_RETIF();
 	}
 }
 
 void SimplePerlin::GenerateDetails( Tiles* tiles, const game::MapSettings& map_settings, MT_CANCELABLE ) {
 	Tile* tile;
-	
+
 	Log( "Generating details ( " + std::to_string( tiles->GetWidth() ) + " x " + std::to_string( tiles->GetHeight() ) + " )" );
 
 	// terrain-dependent features need to go after Finalize to make sure terrain elevations and properties won't change after
@@ -134,7 +140,7 @@ void SimplePerlin::GenerateDetails( Tiles* tiles, const game::MapSettings& map_s
 	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {
 		for ( auto x = y & 1 ; x < tiles->GetWidth() ; x += 2 ) {
 			tile = tiles->At( x, y );
-			
+
 			// add some rivers
 			if ( m_random->IsLucky( RIVER_SPAWN_CHANCE_DIFFICULTY ) ) {
 				GenerateRiver(
@@ -146,19 +152,19 @@ void SimplePerlin::GenerateDetails( Tiles* tiles, const game::MapSettings& map_s
 					MT_C
 				);
 			}
-			
+
 			// bonus resources
 			if ( m_random->IsLucky( RESOURCE_SPAWN_CHANCE_DIFFICULTY ) ) {
 				tile->bonus = m_random->GetUInt( Tile::B_NUTRIENT, Tile::B_MINERALS );
 			}
-			
+
 			MT_RETIF();
 		}
 	}
 }
 
 void SimplePerlin::GenerateRiver( Tiles* tiles, Tile* tile, uint8_t length, uint8_t direction, int8_t direction_diagonal, MT_CANCELABLE ) {
-	
+
 	if ( tile->features & Tile::F_RIVER ) {
 		// joined existing river
 		return;
@@ -167,15 +173,15 @@ void SimplePerlin::GenerateRiver( Tiles* tiles, Tile* tile, uint8_t length, uint
 		// reached water
 		return;
 	}
-	
+
 	MT_RETIF();
-	
+
 	tile->features |= Tile::F_RIVER;
-	
+
 	length--;
 	if ( length > 0 ) {
-		
-		if ( m_random->IsLucky( RIVER_DIRECTION_CHANGE_CHANCE_DIFFICULTY ) )  {
+
+		if ( m_random->IsLucky( RIVER_DIRECTION_CHANGE_CHANCE_DIFFICULTY ) ) {
 			if ( m_random->IsLucky() ) {
 				if ( direction < tile->neighbours.size() - 1 ) {
 					direction++;
@@ -193,7 +199,7 @@ void SimplePerlin::GenerateRiver( Tiles* tiles, Tile* tile, uint8_t length, uint
 				}
 			}
 		}
-		
+
 		int8_t real_direction;
 		if ( direction % 2 ) {
 			real_direction = direction;
@@ -212,9 +218,9 @@ void SimplePerlin::GenerateRiver( Tiles* tiles, Tile* tile, uint8_t length, uint
 		if ( !HasRiversNearby( tile, selected_tile ) || m_random->IsLucky( RIVER_JOIN_CHANCE_DIFFICULTY ) ) {
 			GenerateRiver( tiles, selected_tile, length, real_direction, direction_diagonal, MT_C );
 		}
-		
+
 		MT_RETIF();
-		
+
 		while ( m_random->IsLucky( RIVER_SPLIT_CHANCE_DIFFICULTY ) ) {
 			// split at 90 degrees angle
 			uint8_t child_direction = direction;
@@ -234,12 +240,12 @@ void SimplePerlin::GenerateRiver( Tiles* tiles, Tile* tile, uint8_t length, uint
 					child_direction = tile->neighbours.size() - child_direction - 1;
 				}
 			}
-			
+
 			selected_tile = tile->neighbours.at( child_direction );
 			if ( !HasRiversNearby( tile, selected_tile ) || m_random->IsLucky( RIVER_JOIN_CHANCE_DIFFICULTY ) ) {
 				GenerateRiver( tiles, selected_tile, length, child_direction, direction_diagonal * -1, MT_C );
 			}
-			
+
 			MT_RETIF();
 		}
 	}

@@ -7,8 +7,7 @@ namespace map_editor {
 namespace tool {
 
 Rockiness::Rockiness( Game* game )
-	: Tool( game, MapEditor::TT_ROCKINESS )
-{
+	: Tool( game, MapEditor::TT_ROCKINESS ) {
 	//
 }
 
@@ -25,7 +24,7 @@ const MapEditor::tiles_t Rockiness::Draw( map::Tile* tile, const MapEditor::draw
 		}
 		tile->rockiness++;
 	}
-	
+
 	// we need to reload surrounding tiles too because they need to blend correctly
 	return {
 		tile,
@@ -39,7 +38,7 @@ const MapEditor::tiles_t Rockiness::Draw( map::Tile* tile, const MapEditor::draw
 		tile->SW,
 	};
 }
-	
+
 }
 }
 }

@@ -1,5 +1,5 @@
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/Config.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

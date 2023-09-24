@@ -6,7 +6,7 @@ namespace map {
 MapState::~MapState() {
 	if ( m_tile_states ) {
 		for ( size_t y = 0 ; y < dimensions.y ; y++ ) {
-			for ( size_t x = y & 1 ; x < dimensions.x ; x+= 2 ) {
+			for ( size_t x = y & 1 ; x < dimensions.x ; x += 2 ) {
 
 				auto* ts = At( x, y );
 
@@ -36,7 +36,7 @@ TileState* MapState::At( const size_t x, const size_t y ) const {
 }
 
 void MapState::LinkTileStates( MT_CANCELABLE ) {
-	
+
 	ASSERT( !m_tile_states, "m_tile_states already set" );
 	{
 		size_t sz = sizeof( TileState ) * dimensions.y * dimensions.x;
@@ -45,45 +45,49 @@ void MapState::LinkTileStates( MT_CANCELABLE ) {
 	}
 
 	Log( "Linking tile states" );
-	
+
 	// link to each other via pointers
 	// TODO: refactor this and Tiles
 	for ( auto y = 0 ; y < dimensions.y ; y++ ) {
 		for ( auto x = y & 1 ; x < dimensions.x ; x += 2 ) {
 			auto* ts = At( x, y );
-			
-			ts->W = ( x >= 2 ) ? At( x - 2, y ) : At( dimensions.x - 1 - ( 1 - ( y % 2 ) ), y );
+
+			ts->W = ( x >= 2 )
+				? At( x - 2, y )
+				: At( dimensions.x - 1 - ( 1 - ( y % 2 ) ), y );
 			ts->NW = ( y >= 1 )
 				? ( ( x >= 1 )
 					? At( x - 1, y - 1 )
 					: At( dimensions.x - 1, y - 1 )
 				)
-				: ts
-			;
-			ts->N = ( y >= 2 ) ? At( x, y - 2 ) : ts;
+				: ts;
+			ts->N = ( y >= 2 )
+				? At( x, y - 2 )
+				: ts;
 			ts->NE = ( y >= 1 )
 				? ( ( x < dimensions.x - 1 )
 					? At( x + 1, y - 1 )
 					: At( 0, y - 1 )
 				)
-				: ts
-			;
-			ts->E = ( x < dimensions.x - 2 ) ? At( x + 2, y ) : At( y % 2, y );
+				: ts;
+			ts->E = ( x < dimensions.x - 2 )
+				? At( x + 2, y )
+				: At( y % 2, y );
 			ts->SE = ( y < dimensions.y - 1 )
 				? ( ( x < dimensions.x - 1 )
 					? At( x + 1, y + 1 )
 					: At( 0, y + 1 )
 				)
-				: ts
-			;
-			ts->S = ( y < dimensions.y - 2 ) ? At( x, y + 2 ) : ts;
+				: ts;
+			ts->S = ( y < dimensions.y - 2 )
+				? At( x, y + 2 )
+				: ts;
 			ts->SW = ( y < dimensions.y - 1 )
 				? ( ( x >= 1 )
 					? At( x - 1, y + 1 )
 					: At( dimensions.x - 1, y + 1 )
 				)
-				: ts
-			;
+				: ts;
 
 			MT_RETIF();
 		}
@@ -92,13 +96,13 @@ void MapState::LinkTileStates( MT_CANCELABLE ) {
 
 const Buffer MapState::Serialize() const {
 	Buffer buf;
-	
+
 	buf.WriteBool( first_run );
 	buf.WriteVec2f( coord );
 	buf.WriteVec2u( dimensions );
-	
+
 	buf.WriteVec2f( variables.texture_scaling );
-	
+
 	for ( auto y = 0 ; y < dimensions.y ; y++ ) {
 		for ( auto x = y & 1 ; x < dimensions.x ; x += 2 ) {
 			const auto* ts = At( x, y );
@@ -107,7 +111,7 @@ const Buffer MapState::Serialize() const {
 			buf.WriteString( s );
 		}
 	}
-	
+
 	return buf;
 }
 
@@ -116,20 +120,20 @@ void MapState::Unserialize( Buffer buf ) {
 	first_run = buf.ReadBool();
 	coord = buf.ReadVec2f();
 	dimensions = buf.ReadVec2u();
-	
+
 	variables.texture_scaling = buf.ReadVec2f();
-	
+
 	MT_CANCELABLE = false;
 	LinkTileStates( MT_C );
-	
+
 	for ( auto y = 0 ; y < dimensions.y ; y++ ) {
 		for ( auto x = y & 1 ; x < dimensions.x ; x += 2 ) {
 			At( x, y )->Unserialize( buf.ReadString() );
 		}
 	}
-	
+
 	copy_from_after.clear();
 }
-	
+
 }
 }

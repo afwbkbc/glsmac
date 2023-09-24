@@ -4,9 +4,9 @@
 
 namespace task {
 namespace mainmenu {
-	
+
 CLASS( Lifeforms, CustomizeMapMenu )
-	Lifeforms( MainMenu *mainmenu );
+	Lifeforms( MainMenu* mainmenu );
 };
 
 }

@@ -1,7 +1,7 @@
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/Style.cpp
 	${PWD}/Theme.cpp
 	${PWD}/Intro.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

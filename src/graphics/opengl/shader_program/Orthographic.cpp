@@ -9,7 +9,8 @@ namespace opengl {
 namespace shader_program {
 
 void Orthographic::AddShaders() {
-	AddShader( GL_VERTEX_SHADER, "#version 330 \n\
+	AddShader(
+		GL_VERTEX_SHADER, "#version 330 \n\
 \
 in vec3 aCoord; \
 in vec2 aTexCoord; \
@@ -42,8 +43,10 @@ void main(void) { \
 	normal = aNormal; \
 } \
 \
-");
-	AddShader( GL_FRAGMENT_SHADER, "#version 330 \n\
+"
+	);
+	AddShader(
+		GL_FRAGMENT_SHADER, "#version 330 \n\
 \
 in vec2 texpos; \
 in vec4 tintcolor; \
@@ -73,12 +76,14 @@ void main(void) { \
 	} \
 	vec3 ambient = vec3( 0.0, 0.0, 0.0 ); \
 	vec3 diffuse = vec3( 0.0, 0.0, 0.0 ); \
-	" + S_For( "i", 0, OpenGL::MAX_WORLD_LIGHTS, " \
+	" + S_For(
+			"i", 0, OpenGL::MAX_WORLD_LIGHTS, " \
 		ambient += uLightColor[ i ].rgb * ( 1.0 - uLightColor[ i ].a ); \
 		vec3 lightdir = normalize( uLightPos[ i ] ); \
 		float diff = max( dot(normal, lightdir), 0.0 ); \
 		diffuse += diff * uLightColor[ i ].rgb * uLightColor[ i ].a; \
-	" ) + " \
+	"
+		) + " \
 	ambient /= " + std::to_string( OpenGL::MAX_WORLD_LIGHTS ) + "; \
 	diffuse /= " + std::to_string( OpenGL::MAX_WORLD_LIGHTS ) + "; \
 	vec4 tex = texture2D( uTexture, vec2( texpos.xy ) ); \
@@ -95,7 +100,8 @@ void main(void) { \
 	FragColor = vec4( color * gamma, alpha ); \
 } \
 \
-");
+"
+	);
 }
 
 void Orthographic::Initialize() {
@@ -107,10 +113,10 @@ void Orthographic::Initialize() {
 	uniforms.texture = GetUniformLocation( "uTexture" );
 	uniforms.light_pos = GetUniformLocation( "uLightPos" );
 	uniforms.light_color = GetUniformLocation( "uLightColor" );
-	uniforms.world = GetUniformLocation("uWorld");
-	uniforms.instances = GetUniformLocation("uInstances");
-	uniforms.flags = GetUniformLocation("uFlags");
-	uniforms.tint_color = GetUniformLocation("uTintColor");
+	uniforms.world = GetUniformLocation( "uWorld" );
+	uniforms.instances = GetUniformLocation( "uInstances" );
+	uniforms.flags = GetUniformLocation( "uFlags" );
+	uniforms.tint_color = GetUniformLocation( "uTintColor" );
 	uniforms.area_limits.min = GetUniformLocation( "uAreaLimitsMin" );
 	uniforms.area_limits.max = GetUniformLocation( "uAreaLimitsMax" );
 };
@@ -120,16 +126,16 @@ void Orthographic::EnableAttributes() const {
 	const size_t vasz = types::mesh::Render::VERTEX_SIZE * tsz;
 	size_t vaofs = 0;
 	glEnableVertexAttribArray( attributes.coord );
-	glVertexAttribPointer( attributes.coord, types::mesh::Render::VERTEX_COORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	glVertexAttribPointer( attributes.coord, types::mesh::Render::VERTEX_COORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid*)vaofs );
 	vaofs += types::mesh::Render::VERTEX_COORD_SIZE * tsz;
 	glEnableVertexAttribArray( attributes.tex_coord );
-	glVertexAttribPointer( attributes.tex_coord, types::mesh::Render::VERTEX_TEXCOORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	glVertexAttribPointer( attributes.tex_coord, types::mesh::Render::VERTEX_TEXCOORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid*)vaofs );
 	vaofs += types::mesh::Render::VERTEX_TEXCOORD_SIZE * tsz;
 	glEnableVertexAttribArray( attributes.tint_color );
-	glVertexAttribPointer( attributes.tint_color, types::mesh::Render::VERTEX_TINT_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	glVertexAttribPointer( attributes.tint_color, types::mesh::Render::VERTEX_TINT_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid*)vaofs );
 	vaofs += types::mesh::Render::VERTEX_TINT_SIZE * tsz;
 	glEnableVertexAttribArray( attributes.normal );
-	glVertexAttribPointer( attributes.normal, types::mesh::Render::VERTEX_NORMAL_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	glVertexAttribPointer( attributes.normal, types::mesh::Render::VERTEX_NORMAL_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid*)vaofs );
 	vaofs += types::mesh::Render::VERTEX_NORMAL_SIZE * tsz;
 };
 

@@ -16,7 +16,7 @@ CLASS( LabelButton, SimpleButton )
 
 	void SetLabel( const std::string& text );
 	const std::string& GetLabel() const;
-	
+
 protected:
 	std::string m_label_text = "";
 	Label* m_label = nullptr;

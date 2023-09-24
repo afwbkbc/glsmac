@@ -12,7 +12,6 @@
 #define fd_t int
 #endif
 
-
 using namespace types;
 
 namespace network {
@@ -40,7 +39,7 @@ enum result_t {
 	R_CANCELED,
 };
 
-typedef std::vector<Event> events_t;
+typedef std::vector< Event > events_t;
 
 struct MT_Request {
 	op_t op;
@@ -59,6 +58,7 @@ struct MT_Response {
 };
 
 typedef base::MTModule< MT_Request, MT_Response > MTModule;
+
 CLASS( Network, MTModule )
 
 	mt_id_t MT_Connect( const connection_mode_t connect_mode, const std::string& remote_address = "" );
@@ -132,22 +132,22 @@ protected:
 	} m_client = {};
 
 	CLASS( Impl, base::Base )
-		public:
-			Impl();
-			~Impl();
-			void Start();
-			void Stop();
+	public:
+		Impl();
+		~Impl();
+		void Start();
+		void Stop();
 
-			typedef int ec_t;
-			const ec_t GetLastErrorCode() const;
-			bool IsSocketInvalid( const fd_t fd ) const;
-			void ConfigureSocket( const fd_t socket ) const;
-			bool IsConnectionSucceeded( const ec_t ec ) const;
-			bool IsConnectionIdle( const ec_t ec ) const;
-			const std::string GetErrorMessage( const ec_t ec ) const;
-			int Receive( const fd_t fd, void* buf, const int len ) const;
-			int Send( const fd_t fd, const void* buf, const int len ) const;
-			void CloseSocket( const fd_t fd ) const;
+		typedef int ec_t;
+		const ec_t GetLastErrorCode() const;
+		bool IsSocketInvalid( const fd_t fd ) const;
+		void ConfigureSocket( const fd_t socket ) const;
+		bool IsConnectionSucceeded( const ec_t ec ) const;
+		bool IsConnectionIdle( const ec_t ec ) const;
+		const std::string GetErrorMessage( const ec_t ec ) const;
+		int Receive( const fd_t fd, void* buf, const int len ) const;
+		int Send( const fd_t fd, const void* buf, const int len ) const;
+		void CloseSocket( const fd_t fd ) const;
 	};
 
 	Impl m_impl = {};

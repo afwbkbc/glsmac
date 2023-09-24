@@ -13,7 +13,7 @@ namespace menu {
 CLASS( EditMapMenu, Menu )
 
 	EditMapMenu( Game* game );
-	
+
 };
 
 }

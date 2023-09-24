@@ -1,4 +1,4 @@
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/Lobby.cpp
 	${PWD}/LobbySection.cpp
@@ -7,4 +7,4 @@ SET(SRC ${SRC}
 	${PWD}/PlayersSectionRow.cpp
 	${PWD}/ChatSection.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

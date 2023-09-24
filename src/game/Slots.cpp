@@ -40,5 +40,4 @@ void Slots::Unserialize( types::Buffer buf ) {
 	}
 }
 
-
 }

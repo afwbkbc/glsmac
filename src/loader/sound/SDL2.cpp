@@ -1,4 +1,5 @@
 #define SDL_MAIN_HANDLED 1
+
 #include <SDL.h>
 
 #include "SDL2.h"
@@ -16,27 +17,27 @@ SDL2::~SDL2() {
 	}
 }
 
-Sound* SDL2::LoadSound( const std::string &name ) {
-	
+Sound* SDL2::LoadSound( const std::string& name ) {
+
 	std::string font_key = name;
-	
+
 	sound_map_t::iterator it = m_sounds.find( font_key );
-	if (it != m_sounds.end()) {
+	if ( it != m_sounds.end() ) {
 		return it->second;
 	}
 	else {
-		
+
 		Log( "Loading sound \"" + name + "\"" );
 
 		NEWV( sound, Sound );
 		sound->m_name = name;
 
-		Uint8 *wav_buffer = nullptr; // buffer containing our audio file
+		Uint8* wav_buffer = nullptr; // buffer containing our audio file
 		Uint32 wav_length = 0; // length of our sample
 		SDL_AudioSpec wav_spec; // the specs of our piece of music
 
 		SDL_AudioSpec* ret = nullptr;
-		
+
 		auto dirs = util::System::GetPossibleFilenames( "fx" );
 		auto filenames = util::System::GetPossibleFilenames( name );
 		for ( auto& dir : dirs ) {
@@ -66,10 +67,10 @@ Sound* SDL2::LoadSound( const std::string &name ) {
 		sound->m_spec.silence = wav_spec.silence;
 		sound->m_spec.size = wav_spec.size;
 
-		SDL_FreeWAV(wav_buffer);
+		SDL_FreeWAV( wav_buffer );
 
-		m_sounds[font_key] = sound;
-		
+		m_sounds[ font_key ] = sound;
+
 		return sound;
 	}
 }

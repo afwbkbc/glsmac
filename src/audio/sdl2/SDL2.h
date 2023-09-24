@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #define SDL_MAIN_HANDLED 1
+
 #include <SDL_audio.h>
 
 #include <mutex>
@@ -28,24 +29,24 @@ namespace sdl2 {
 CLASS( SDL2, Audio )
 	SDL2();
 	~SDL2();
-	
+
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;
-	
-	void AddActor( scene::actor::Sound *actor ) override;
-	void RemoveActor( scene::actor::Sound *actor ) override;
-	
-	void Mix( Uint8 *stream, int len );
-	
+
+	void AddActor( scene::actor::Sound* actor ) override;
+	void RemoveActor( scene::actor::Sound* actor ) override;
+
+	void Mix( Uint8* stream, int len );
+
 protected:
-	
+
 private:
 	bool m_is_sound_enabled = false;
-	
+
 	std::mutex m_actors_mutex;
 	std::unordered_map< scene::actor::Sound*, sdl2::Sound* > m_actors = {};
-	
+
 	size_t m_buffer_length = 0;
 	size_t m_buffer_size = 0;
 	size_t m_mix_buffer_size = 0;

@@ -12,8 +12,7 @@ Player::Player( const std::string& name, const role_t role, const rules::Faction
 	: m_name( name )
 	, m_role( role )
 	, m_faction( faction )
-	, m_difficulty_level( difficulty_level )
-{
+	, m_difficulty_level( difficulty_level ) {
 	//
 }
 
@@ -57,23 +56,22 @@ const Player::role_t Player::GetRole() const {
 
 const Buffer Player::Serialize() const {
 	Buffer buf;
-	
+
 	buf.WriteString( m_name );
 	buf.WriteInt( m_role );
 	buf.WriteString( m_faction.Serialize().ToString() );
 	buf.WriteString( m_difficulty_level.Serialize().ToString() );
-	
+
 	return buf;
 }
 
 void Player::Unserialize( Buffer buf ) {
-	
+
 	m_name = buf.ReadString();
 	m_role = (role_t)buf.ReadInt();
 	m_faction.Unserialize( buf.ReadString() );
 	m_difficulty_level.Unserialize( buf.ReadString() );
-	
-}
 
+}
 
 }

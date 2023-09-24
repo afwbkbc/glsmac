@@ -11,8 +11,9 @@ namespace shader_program {
 
 CLASS( OrthographicData, ShaderProgram )
 
-	OrthographicData() : ShaderProgram( TYPE_ORTHO_DATA ) {};
-	
+	OrthographicData()
+		: ShaderProgram( TYPE_ORTHO_DATA ) {};
+
 protected:
 	friend class opengl::Mesh;
 
@@ -30,7 +31,7 @@ protected:
 	void Initialize() override;
 	void EnableAttributes() const override;
 	void DisableAttributes() const override;
-	
+
 };
 
 } /* namespace shader_program */

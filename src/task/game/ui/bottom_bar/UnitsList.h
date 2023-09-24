@@ -9,13 +9,14 @@ namespace ui {
 
 CLASS( UnitsList, BBSection )
 
-	UnitsList( Game* game ) : BBSection( game, "UnitsList" ) {}
-	
+	UnitsList( Game* game )
+		: BBSection( game, "UnitsList" ) {}
+
 	void Create() override;
 	void Destroy() override;
 
 };
-	
+
 }
 }
 }

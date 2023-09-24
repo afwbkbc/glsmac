@@ -11,7 +11,7 @@ CLASS( Theme, ::ui::theme::Theme )
 	Theme();
 
 protected:
-	
+
 private:
 	Style m_style;
 };

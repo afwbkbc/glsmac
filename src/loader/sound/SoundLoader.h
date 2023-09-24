@@ -10,7 +10,7 @@ namespace loader {
 namespace sound {
 
 CLASS( SoundLoader, Loader )
-	virtual types::Sound* LoadSound( const std::string &name ) = 0;
+	virtual types::Sound* LoadSound( const std::string& name ) = 0;
 };
 
 } /* namespace sound */

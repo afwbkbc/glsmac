@@ -9,13 +9,12 @@ namespace opengl {
 namespace routine {
 
 Routine::Routine( OpenGL* opengl )
-	: m_opengl( opengl )
-{
+	: m_opengl( opengl ) {
 	//
 }
 
-bool Routine::AddScene( scene::Scene *scene ) {
-	if ( SceneBelongs( scene )) {
+bool Routine::AddScene( scene::Scene* scene ) {
+	if ( SceneBelongs( scene ) ) {
 		ASSERT( std::find( m_scenes.begin(), m_scenes.end(), scene ) == m_scenes.end(), "duplicate scene add" );
 
 		m_scenes.push_back( scene );
@@ -24,15 +23,15 @@ bool Routine::AddScene( scene::Scene *scene ) {
 
 		m_gl_scenes.push_back( gl_scene );
 
-		Log("Scene [" + scene->GetName() + "] added");
+		Log( "Scene [" + scene->GetName() + "] added" );
 
 		return true;
 	}
 	return false;
 }
 
-bool Routine::RemoveScene( scene::Scene *scene ) {
-	if ( SceneBelongs( scene )) {
+bool Routine::RemoveScene( scene::Scene* scene ) {
+	if ( SceneBelongs( scene ) ) {
 		auto it = std::find( m_scenes.begin(), m_scenes.end(), scene );
 		if ( it < m_scenes.end() ) {
 
@@ -44,7 +43,7 @@ bool Routine::RemoveScene( scene::Scene *scene ) {
 			DELETE( *gl_scene_index );
 			m_gl_scenes.erase( gl_scene_index, gl_scene_index + 1 );
 
-			Log("Scene [" + scene->GetName() + "] removed");
+			Log( "Scene [" + scene->GetName() + "] removed" );
 
 			return true;
 		}

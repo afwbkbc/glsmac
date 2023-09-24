@@ -10,29 +10,28 @@ namespace popup {
 
 Popup::Popup( Game* game )
 	: object::Popup( "WP" )
-	, m_game( game )
-{
+	, m_game( game ) {
 	SetAlign( ALIGN_HCENTER | ALIGN_BOTTOM );
 }
 
 void Popup::Create() {
 	object::Popup::Create();
-	
+
 	NEW( m_body, Section, m_game, "", "WP" );
 	if ( !m_title_text.empty() ) {
 		m_body->SetTitleText( m_title_text );
 	}
 	AddChild( m_body );
-	
-	#define x( _k, _n ) {\
-		NEW( m_side_frames._k, object::Surface, "WP" _n "Frame" ); \
-		AddChild( m_side_frames._k ); \
-	}
-		x( left_left, "LeftLeft" );
-		x( left_right, "LeftRight" );
-		x( right_right, "RightRight" );
-		x( right_left, "RightLeft" );
-	#undef x
+
+#define x( _k, _n ) {\
+        NEW( m_side_frames._k, object::Surface, "WP" _n "Frame" ); \
+        AddChild( m_side_frames._k ); \
+    }
+	x( left_left, "LeftLeft" );
+	x( left_right, "LeftRight" );
+	x( right_right, "RightRight" );
+	x( right_left, "RightLeft" );
+#undef x
 
 	// slide up
 	const auto start_at = m_game->GetBottomBarMiddleHeight() - GetHeight();
@@ -41,7 +40,7 @@ void Popup::Create() {
 }
 
 void Popup::Align() {
-	
+
 	// don't let popup top go outside of window
 	// TODO: add 'max_height' to styles
 	object::Popup::SetHeight( std::min< coord_t >( m_original_height, m_game->GetViewportHeight() ) );
@@ -51,7 +50,7 @@ void Popup::Align() {
 
 void Popup::Iterate() {
 	object::Popup::Iterate();
-	
+
 	bool has_ticked = false;
 	while ( m_slide.HasTicked() ) {
 		has_ticked = true;
@@ -65,14 +64,14 @@ void Popup::Iterate() {
 
 void Popup::Destroy() {
 	RemoveChild( m_body );
-	
-	#define x( _k ) RemoveChild( m_side_frames._k )
-		x( left_left );
-		x( left_right );
-		x( right_right );
-		x( right_left );
-	#undef x
-	
+
+#define x( _k ) RemoveChild( m_side_frames._k )
+	x( left_left );
+	x( left_right );
+	x( right_right );
+	x( right_left );
+#undef x
+
 	object::Popup::Destroy();
 }
 

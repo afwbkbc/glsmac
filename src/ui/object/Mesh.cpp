@@ -9,8 +9,7 @@ namespace ui {
 namespace object {
 
 Mesh::Mesh( const std::string& class_name )
-	: UIObject( class_name )
-{
+	: UIObject( class_name ) {
 	//
 }
 
@@ -32,10 +31,10 @@ void Mesh::SetMesh( const types::mesh::Mesh* mesh ) {
 		}
 		NEW( m_mesh, types::mesh::Mesh, *m_original_mesh ); // copy
 		NEW( m_actor, scene::actor::Mesh, cls, m_mesh );
-			UpdateRenderFlags();
-			if ( m_texture ) {
-				m_actor->SetTexture( m_texture );
-			}
+		UpdateRenderFlags();
+		if ( m_texture ) {
+			m_actor->SetTexture( m_texture );
+		}
 		AddActor( m_actor );
 	}
 }
@@ -90,14 +89,14 @@ void Mesh::Destroy() {
 
 void Mesh::Align() {
 	UIObject::Align();
-	
+
 	auto c = m_original_mesh->GetVertexCount();
-	
+
 	Vec3 coord = {};
 	Vec2< coord_t > tex_coord = {};
-	
+
 	coord_t mesh_left, mesh_top, mesh_right, mesh_bottom;
-	
+
 	for ( types::mesh::Mesh::index_t i = 0 ; i < c ; i++ ) {
 		m_original_mesh->GetVertexCoord( i, &coord );
 		if ( i == 0 || coord.x < mesh_left ) {
@@ -113,23 +112,23 @@ void Mesh::Align() {
 			mesh_top = coord.y;
 		}
 	}
-	
+
 	bool is_render_mesh = m_mesh->GetType() == types::mesh::Mesh::MT_RENDER;
-	
+
 	if ( is_render_mesh ) {
 		// for render meshes y is inversed for some reason, TODO: investigate
 		auto tmp = mesh_bottom;
 		mesh_bottom = mesh_top;
 		mesh_top = tmp;
-		
+
 		if ( m_aspect_ratio_mode != AM_NONE ) {
-			
+
 			float ws = mesh_right - mesh_left;
 			float hs = mesh_bottom - mesh_top;
 			float as = hs / ws;
 			float wd = m_object_area.width;
 			float hd = m_object_area.height;
-			float ad = hd / wd; 
+			float ad = hd / wd;
 
 			if ( as != ad ) {
 				if ( m_aspect_ratio_mode == AM_SCALE_WIDTH ) {
@@ -153,12 +152,12 @@ void Mesh::Align() {
 
 	m_actor->SetPositionX( ClampX( m_object_area.left ) + 1.0f );
 	m_actor->SetPositionY( ClampY( m_object_area.top ) - 1.0f );
-	
+
 	bool need_resize = false;
 	if ( // TODO: make object areas ints?
 		round( m_last_object_area.width ) != round( m_object_area.width ) ||
-		round( m_last_object_area.height ) != round( m_object_area.height )
-	) {
+			round( m_last_object_area.height ) != round( m_object_area.height )
+		) {
 		//Log( "Resizing because object area has changed ( " + std::to_string( m_last_object_area.width ) + " != " + std::to_string( m_object_area.width ) + " || " + std::to_string( m_last_object_area.height ) + " != " + std::to_string( m_object_area.height ) + " )" );
 		m_last_object_area = m_object_area;
 		need_resize = true;
@@ -191,7 +190,7 @@ void Mesh::Align() {
 		m_last_margin = m_margin;
 		need_resize = true;
 	}
-	auto *g = g_engine->GetGraphics();
+	auto* g = g_engine->GetGraphics();
 	Vec2< size_t > viewport_size = {
 		g->GetViewportWidth(),
 		g->GetViewportHeight()
@@ -203,43 +202,47 @@ void Mesh::Align() {
 	}
 
 	if ( need_resize ) {
-		
-		 // SLOW! Do this only when absolutely needed
-		
+
+		// SLOW! Do this only when absolutely needed
+
 		struct {
-			util::Clamper<coord_t> x;
-			util::Clamper<coord_t> y;
+			util::Clamper< coord_t > x;
+			util::Clamper< coord_t > y;
 		} object_area_to_mesh_coords;
-		
-		object_area_to_mesh_coords.x.SetRange({
-			{ UnclampX( mesh_left ), UnclampX( mesh_right ) },
-			{ 0.0f, m_object_area.width }
-		});
-		object_area_to_mesh_coords.y.SetRange({
-			{ UnclampY( mesh_top ), UnclampY( mesh_bottom ) },
-			{ 0.0f, m_object_area.height }
-		});
-		
+
+		object_area_to_mesh_coords.x.SetRange(
+			{
+				{ UnclampX( mesh_left ), UnclampX( mesh_right ) },
+				{ 0.0f,                  m_object_area.width }
+			}
+		);
+		object_area_to_mesh_coords.y.SetRange(
+			{
+				{ UnclampY( mesh_top ), UnclampY( mesh_bottom ) },
+				{ 0.0f,                 m_object_area.height }
+			}
+		);
+
 		for ( types::mesh::Mesh::index_t i = 0 ; i < c ; i++ ) {
 			m_original_mesh->GetVertexCoord( i, &coord );
 
 			coord.x = ClampX( object_area_to_mesh_coords.x.Clamp( UnclampX( coord.x ) ) );
 			coord.y = ClampY( object_area_to_mesh_coords.y.Clamp( UnclampY( coord.y ) ) );
-			
+
 			m_mesh->SetVertexCoord( i, coord );
 
 			ASSERT( m_mesh->GetType() == m_original_mesh->GetType(), "mesh and original mesh have different types" );
 			switch ( m_mesh->GetType() ) {
 				case types::mesh::Mesh::MT_SIMPLE: {
-					auto *from = (types::mesh::Simple*) m_original_mesh;
-					auto *to = (types::mesh::Simple*) m_mesh;
+					auto* from = (types::mesh::Simple*)m_original_mesh;
+					auto* to = (types::mesh::Simple*)m_mesh;
 					from->GetVertexTexCoord( i, &tex_coord );
 					to->SetVertexTexCoord( i, tex_coord );
 					break;
 				}
 				case types::mesh::Mesh::MT_RENDER: {
-					auto *from = (types::mesh::Render*) m_original_mesh;
-					auto *to = (types::mesh::Render*) m_mesh;
+					auto* from = (types::mesh::Render*)m_original_mesh;
+					auto* to = (types::mesh::Render*)m_mesh;
 					from->GetVertexTexCoord( i, &tex_coord );
 					to->SetVertexTexCoord( i, tex_coord );
 					break;
@@ -263,9 +266,9 @@ void Mesh::UpdateRenderFlags() {
 	if ( m_actor ) {
 		m_actor->SetRenderFlags(
 			scene::actor::Actor::RF_IGNORE_CAMERA |
-			scene::actor::Actor::RF_IGNORE_LIGHTING |
-			scene::actor::Actor::RF_IGNORE_DEPTH |
-			scene::actor::Actor::RF_USE_2D_POSITION
+				scene::actor::Actor::RF_IGNORE_LIGHTING |
+				scene::actor::Actor::RF_IGNORE_DEPTH |
+				scene::actor::Actor::RF_USE_2D_POSITION
 		);
 		if ( m_tint_color.enabled ) {
 			m_actor->SetTintColor( m_tint_color.color );

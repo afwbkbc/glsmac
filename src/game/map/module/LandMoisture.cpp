@@ -5,19 +5,19 @@ namespace map {
 namespace module {
 
 void LandMoisture::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) {
-	
+
 	const auto w = s_consts.tc.texture_pcx.dimensions.x;
 	const auto h = s_consts.tc.texture_pcx.dimensions.y;
-	
+
 	Consts::pcx_texture_coordinates_t tc = {};
 	uint8_t rotate = 0;
-	
+
 	if ( !ts->moisture_original ) {
 		NEW( ts->moisture_original, Texture, "MoistureOriginal", w, h );
 	}
 
 	auto add_flags = Texture::AM_DEFAULT;
-	
+
 	switch ( tile->moisture ) {
 		case Tile::M_NONE: {
 			// invisible tile (for dev/test purposes)
@@ -46,7 +46,7 @@ void LandMoisture::GenerateTile( const Tile* tile, TileState* ts, MapState* ms )
 		default:
 			ASSERT( false, "invalid moisture value" );
 	}
-	
+
 	m_map->GetTexture( ts->moisture_original, tc, add_flags, rotate );
 }
 

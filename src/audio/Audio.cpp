@@ -11,7 +11,7 @@ Audio::~Audio() {
 	}
 }
 
-void Audio::RemoveAndDeleteActor( scene::actor::Sound *actor ) {
+void Audio::RemoveAndDeleteActor( scene::actor::Sound* actor ) {
 	if ( actor->IsReadyToBeDeleted() ) {
 		RemoveActor( actor );
 		DELETE( actor );

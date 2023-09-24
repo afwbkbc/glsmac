@@ -12,7 +12,7 @@
 
 namespace task {
 namespace game {
-	
+
 struct tile_data_t {
 	bool is_set = false;
 	Vec2< size_t > tile_position = {};

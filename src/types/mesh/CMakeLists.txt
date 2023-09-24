@@ -1,4 +1,4 @@
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/Mesh.cpp
 	${PWD}/Simple.cpp
@@ -6,4 +6,4 @@ SET(SRC ${SRC}
 	${PWD}/Data.cpp
 	${PWD}/Rectangle.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

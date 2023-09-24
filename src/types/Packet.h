@@ -7,7 +7,7 @@
 namespace types {
 
 CLASS( Packet, Serializable )
-	
+
 	enum packet_type_t {
 		PT_NONE, // -
 		PT_REQUEST_AUTH, // S->C
@@ -23,14 +23,14 @@ CLASS( Packet, Serializable )
 	};
 
 	packet_type_t type;
-	
+
 	union {
 		time_t time;
 		struct {
 			size_t id;
 		} ping;
 	} udata;
-	
+
 	struct {
 		bool boolean;
 		size_t num;

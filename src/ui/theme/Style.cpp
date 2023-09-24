@@ -9,11 +9,10 @@ namespace theme {
 
 Style::Style( const std::string& style_name, const StyleSheet* stylesheet )
 	: m_style_name( style_name )
-	, m_stylesheet( stylesheet )
-{
+	, m_stylesheet( stylesheet ) {
 	//
 }
-	
+
 void Style::Initialize() {
 	ASSERT( !m_is_initialized, "style already initialized" );
 	m_is_initialized = true;
@@ -31,7 +30,7 @@ void Style::Set( const attribute_type_t attribute_type ) {
 #ifdef DEBUG
 	CheckSet( attribute_type );
 #endif
-	(*m_attributes_ptr)[ attribute_type ].is_set = true;
+	( *m_attributes_ptr )[ attribute_type ].is_set = true;
 }
 
 void Style::Set( const attribute_type_t attribute_type, const float value ) {
@@ -39,7 +38,7 @@ void Style::Set( const attribute_type_t attribute_type, const float value ) {
 	CheckSet( attribute_type );
 #endif
 	Set( attribute_type );
-	(*m_attributes_ptr)[ attribute_type ].value.scalar = value;
+	( *m_attributes_ptr )[ attribute_type ].value.scalar = value;
 }
 
 void Style::SetColor( const attribute_type_t attribute_type, const Color& value ) {
@@ -47,7 +46,7 @@ void Style::SetColor( const attribute_type_t attribute_type, const Color& value 
 	CheckSet( attribute_type );
 #endif
 	Set( attribute_type );
-	(*m_attributes_ptr)[ attribute_type ].value.color = value;
+	( *m_attributes_ptr )[ attribute_type ].value.color = value;
 }
 
 void Style::SetObject( const attribute_type_t attribute_type, const void* ptr ) {
@@ -55,7 +54,7 @@ void Style::SetObject( const attribute_type_t attribute_type, const void* ptr ) 
 	CheckSet( attribute_type );
 #endif
 	Set( attribute_type );
-	(*m_attributes_ptr)[ attribute_type ].value.ptr = ptr;
+	( *m_attributes_ptr )[ attribute_type ].value.ptr = ptr;
 }
 
 void Style::SetTexture( const attribute_type_t attribute_type, const std::string& name ) {
@@ -82,7 +81,7 @@ void Style::SetColorTexture( const attribute_type_t attribute_type, const Color&
 	SetObject( attribute_type, g_engine->GetTextureLoader()->GetColorTexture( color ) );
 }
 
-void Style::SetFont( const attribute_type_t attribute_type, const std::string &name, const unsigned char size ) {
+void Style::SetFont( const attribute_type_t attribute_type, const std::string& name, const unsigned char size ) {
 	SetObject( attribute_type, g_engine->GetFontLoader()->LoadFont( name, size ) );
 }
 
@@ -140,11 +139,11 @@ void Style::SetIncludes( const includes_t& includes ) {
 void Style::SetStyleForInclude( attributes_t* attributes_ptr, const modifier_t modifiers ) {
 	attributes_t* attributes_ptr_old = m_attributes_ptr;
 	const modifier_t modifiers_old = m_modifiers;
-	
+
 	m_attributes_ptr = attributes_ptr;
 	m_modifiers = modifiers;
 	SetStyle();
-	
+
 	m_modifiers = modifiers_old;
 	m_attributes_ptr = attributes_ptr_old;
 }
@@ -168,7 +167,7 @@ void Style::PrepareAttributes( const modifier_t modifiers ) {
 	SetAttributesPtr( &m_attributes[ modifiers ] );
 	if ( !m_includes.empty() ) {
 		ASSERT( m_stylesheet, "include needed but stylesheet not set" );
-		for (auto& include : m_includes) {
+		for ( auto& include : m_includes ) {
 			auto* style = m_stylesheet->GetStylePtr( include );
 			style->SetStyleForInclude( m_attributes_ptr, m_modifiers );
 		}
@@ -178,16 +177,18 @@ void Style::PrepareAttributes( const modifier_t modifiers ) {
 }
 
 #ifdef DEBUG
+
 void Style::CheckSet( const attribute_type_t attribute_type ) const {
 	ASSERT( m_is_initialized, "style '" + GetStyleName() + "' not initialized" );
 	ASSERT( m_attributes_ptr, "attributes ptr not set" );
-	ASSERT( !(*m_attributes_ptr)[ attribute_type ].is_set, "style attribute '" + std::to_string( attribute_type ) + "' in style '" + GetStyleName() + "' already set" );
+	ASSERT( !( *m_attributes_ptr )[ attribute_type ].is_set, "style attribute '" + std::to_string( attribute_type ) + "' in style '" + GetStyleName() + "' already set" );
 }
 
 void Style::CheckGet( const attribute_type_t attribute_type, const modifier_t modifiers ) const {
 	ASSERT( m_is_initialized, "style '" + GetStyleName() + "' not initialized" );
 	ASSERT( m_attributes[ modifiers ][ attribute_type ].is_set, "style attribute not set" );
 }
+
 #endif
 
 }

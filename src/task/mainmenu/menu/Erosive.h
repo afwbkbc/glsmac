@@ -4,15 +4,15 @@
 
 namespace task {
 namespace mainmenu {
-	
+
 CLASS( Erosive, SlidingMenu )
-	Erosive( MainMenu *mainmenu );
+	Erosive( MainMenu* mainmenu );
 
 	void Close() override;
 
 private:
 	void SetMoonsVariant( const char variant );
-	
+
 };
 
 }

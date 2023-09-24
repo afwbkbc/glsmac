@@ -3,6 +3,7 @@
 #ifdef _WIN32
 #include <ws2tcpip.h>
 #else
+
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -11,6 +12,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
+
 #endif
 
 #include "SimpleTCP.h"
@@ -20,7 +22,8 @@ namespace simpletcp {
 
 static socklen_t sockaddr_in_size = sizeof( struct sockaddr_in );
 
-SimpleTCP::SimpleTCP() : Network() {
+SimpleTCP::SimpleTCP()
+	: Network() {
 
 }
 
@@ -37,7 +40,7 @@ MT_Response SimpleTCP::ListenStart() {
 
 	ASSERT( m_server.listening_sockets.empty(), "some connection socket(s) already active" );
 
-	Log( (std::string) "Starting server on port " + std::to_string( GLSMAC_PORT ) );
+	Log( (std::string)"Starting server on port " + std::to_string( GLSMAC_PORT ) );
 
 	addrinfo hints, * res, * p;
 	memset( &hints, 0, sizeof( hints ) );
@@ -52,9 +55,9 @@ MT_Response SimpleTCP::ListenStart() {
 	}
 
 	unsigned int addr_i = 0;
-	char ip_str[ INET6_ADDRSTRLEN ];
+	char ip_str[INET6_ADDRSTRLEN];
 
-	for ( p = res; p != nullptr; p = p->ai_next ) {
+	for ( p = res ; p != nullptr ; p = p->ai_next ) {
 		void* addr;
 		std::string ip_ver;
 
@@ -113,7 +116,7 @@ MT_Response SimpleTCP::ListenStart() {
 	m_tmp.event.Clear();
 	m_tmp.event.type = Event::ET_LISTEN;
 	m_tmp.event.cid = 0; // server always has cid 0
-	AddEvent(m_tmp.event);
+	AddEvent( m_tmp.event );
 
 	Log( "Server started" );
 
@@ -147,7 +150,7 @@ MT_Response SimpleTCP::Connect( const std::string& remote_address, MT_CANCELABLE
 
 	ASSERT( m_client.socket.fd == 0, "connection socket already active" );
 
-	Log((std::string)"Connecting to " + remote_address + " port " + std::to_string( GLSMAC_PORT) );
+	Log( (std::string)"Connecting to " + remote_address + " port " + std::to_string( GLSMAC_PORT ) );
 
 	addrinfo hints, * p;
 	memset( &hints, 0, sizeof( hints ) );
@@ -169,14 +172,14 @@ MT_Response SimpleTCP::Connect( const std::string& remote_address, MT_CANCELABLE
 	if ( m_impl.IsSocketInvalid( m_client.socket.fd ) ) {
 		freeaddrinfo( p );
 		m_client.socket.fd = 0;
-		return Error("Socket failed with error: " + m_impl.GetErrorMessage( m_impl.GetLastErrorCode() ) );
+		return Error( "Socket failed with error: " + m_impl.GetErrorMessage( m_impl.GetLastErrorCode() ) );
 	}
 
-	const auto error = [ this, p ] ( const std::string& message ) -> const MT_Response {
+	const auto error = [ this, p ]( const std::string& message ) -> const MT_Response {
 		CloseSocket( m_client.socket.fd, 0, true );
 		m_client.socket.fd = 0;
 		freeaddrinfo( p );
-		return Error(message);
+		return Error( message );
 	};
 
 	m_impl.ConfigureSocket( m_client.socket.fd );
@@ -207,14 +210,14 @@ MT_Response SimpleTCP::Connect( const std::string& remote_address, MT_CANCELABLE
 
 	if ( p->ai_family == AF_INET ) {
 		struct sockaddr_in* psai = (struct sockaddr_in*)p->ai_addr;
-		char ip[ INET_ADDRSTRLEN ];
+		char ip[INET_ADDRSTRLEN];
 		if ( inet_ntop( p->ai_family, &( psai->sin_addr ), ip, INET_ADDRSTRLEN ) != NULL ) {
 			m_client.socket.remote_address = ip;
 		}
 	}
 	else if ( p->ai_family == AF_INET6 ) {
 		struct sockaddr_in6* psai = (struct sockaddr_in6*)p->ai_addr;
-		char ip[ INET6_ADDRSTRLEN ];
+		char ip[INET6_ADDRSTRLEN];
 		if ( inet_ntop( p->ai_family, &( psai->sin6_addr ), ip, INET6_ADDRSTRLEN ) != NULL ) {
 			m_client.socket.remote_address = ip;
 		}
@@ -289,7 +292,8 @@ void SimpleTCP::ProcessEvents() {
 							m_server.client_sockets.erase( it );
 						}
 					}
-				} else if ( m_client.socket.fd ) {
+				}
+				else if ( m_client.socket.fd ) {
 					if ( !WriteToSocket( m_client.socket.fd, event.data.packet_data ) ) {
 						CloseSocket( m_client.socket.fd );
 						free( m_client.socket.buffer.data1 );
@@ -370,7 +374,7 @@ void SimpleTCP::Iterate() {
 				if ( m_server.cid_to_fd.empty() ) {
 					m_server.cid_to_fd.push_back( 0 ); // reserve zero cid for server
 				}
-				for ( data.cid = 1; data.cid < m_server.cid_to_fd.size(); data.cid++ ) {
+				for ( data.cid = 1 ; data.cid < m_server.cid_to_fd.size() ; data.cid++ ) {
 					if ( m_server.cid_to_fd[ data.cid ] == 0 ) {
 						// free cid found
 						m_server.cid_to_fd[ data.cid ] = data.fd;
@@ -392,13 +396,13 @@ void SimpleTCP::Iterate() {
 				m_tmp.event.data.remote_address = data.remote_address;
 				m_tmp.event.cid = data.cid;
 
-				AddEvent(m_tmp.event);
+				AddEvent( m_tmp.event );
 			}
 		}
 	}
 
 	// process pings
-	for ( auto it = m_server.client_sockets.begin(); it != m_server.client_sockets.end() ; ) {
+	for ( auto it = m_server.client_sockets.begin() ; it != m_server.client_sockets.end() ; ) {
 		if ( !MaybePingDo( it->second ) ) {
 			CloseClientSocket( it->second );
 			m_server.client_sockets.erase( it++ );
@@ -427,7 +431,7 @@ void SimpleTCP::Iterate() {
 	}
 
 	// read from connections (server)
-	for ( auto it = m_server.client_sockets.begin(); it != m_server.client_sockets.end() ; ) {
+	for ( auto it = m_server.client_sockets.begin() ; it != m_server.client_sockets.end() ; ) {
 		if ( !ReadFromSocket( it->second ) ) {
 			CloseClientSocket( it->second );
 			m_server.client_sockets.erase( it++ );
@@ -469,7 +473,7 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket ) {
 
 	if ( m_tmp.tmpint2 > 0 ) {
 
-		Log( "Read " + std::to_string( m_tmp.tmpint2 ) + " bytes into buffer " + std::to_string( (long long) socket.buffer.ptr ) + " (size=" + std::to_string( socket.buffer.len ) + ")" );
+		Log( "Read " + std::to_string( m_tmp.tmpint2 ) + " bytes into buffer " + std::to_string( (long long)socket.buffer.ptr ) + " (size=" + std::to_string( socket.buffer.len ) + ")" );
 
 		socket.last_data_at = m_tmp.now;
 		socket.ping_needed = false;
@@ -538,7 +542,8 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket ) {
 					m_tmp.event.type = Event::ET_PACKET;
 					AddEvent( m_tmp.event );
 				}
-			} catch ( std::runtime_error& err ) {
+			}
+			catch ( std::runtime_error& err ) {
 				m_tmp.event.type = Event::ET_ERROR;
 				m_tmp.event.data.packet_data = err.what();
 				AddEvent( m_tmp.event );
@@ -593,8 +598,7 @@ bool SimpleTCP::WriteToSocket( int fd, const std::string& data ) {
 	// send data
 	m_tmp.tmpint = m_impl.Send( fd, data.data(), data.size() );
 	if ( m_tmp.tmpint2 <= 0 ) {
-		if (errno == EAGAIN)
-		{
+		if ( errno == EAGAIN ) {
 			return true; // no data but connection is alive
 		}
 		Log( "Error writing data to socket" );

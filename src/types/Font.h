@@ -23,17 +23,20 @@ CLASS( Font, base::Base )
 		unsigned int height; // bitmap.rows;
 		int left; // bitmap_left;
 		int top; // bitmap_top;
-		unsigned char *data;
+		unsigned char* data;
 	};
 
 	std::string m_name = "";
 	bitmap_t m_symbols[128] = {};
-	dimensions_t m_dimensions = { 0.0, 0.0 };
+	dimensions_t m_dimensions = {
+		0.0,
+		0.0
+	};
 
-	base::ObjectLink *m_graphics_object = nullptr;
-	
-	size_t GetTextWidth(const char* text) const;
-	size_t GetTextHeight(const char* text) const;
+	base::ObjectLink* m_graphics_object = nullptr;
+
+	size_t GetTextWidth( const char* text ) const;
+	size_t GetTextHeight( const char* text ) const;
 
 };
 

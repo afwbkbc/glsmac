@@ -58,13 +58,13 @@ CLASS( UIObject, base::Base )
 	typedef float coord_t;
 	typedef Vec2< coord_t > vertex_t;
 
-	UIObject *GetParentObject() const;
-	void SetParentObject( UIContainer *parent_object );
-	
+	UIObject* GetParentObject() const;
+	void SetParentObject( UIContainer* parent_object );
+
 	virtual void RealignNow(); // slow, use only if up-to-date state is needed immediately
 	void Realign(); // use in all other cases
 	virtual void RealignMaybe(); // realign only if needed, to be called from UI
-	
+
 	virtual void Redraw();
 	void UpdateObjectArea();
 
@@ -85,22 +85,27 @@ CLASS( UIObject, base::Base )
 	const coord_t GetBottom() const;
 	const coord_t GetWidth() const;
 	const coord_t GetHeight() const;
-	
+
 	virtual void SetZIndex( float z_index );
 	void UpdateZIndex();
 	void SetLeft( const coord_t px );
 	void SetRight( const coord_t px );
 	void SetTop( const coord_t px );
 	void SetBottom( const coord_t px );
-	
+
 	struct coord_box_t {
 		coord_t left;
+
 		coord_t top;
+
 		coord_t right;
+
 		coord_t bottom;
-		bool operator != ( const coord_box_t& other ) const {
+
+		bool operator!=( const coord_box_t& other ) const {
 			return memcmp( this, &other, sizeof( other ) ) != 0;
 		}
+
 		operator bool() const {
 			return left || top || right || bottom;
 		}
@@ -110,7 +115,7 @@ CLASS( UIObject, base::Base )
 	void SetMargin( const coord_box_t px );
 	void SetMargin( const coord_t px );
 	const coord_box_t& GetMargin() const;
-	
+
 	void SetOverflowMargin( const coord_t px );
 	virtual void SetWidth( const coord_t px );
 	virtual void SetHeight( const coord_t px );
@@ -122,81 +127,89 @@ CLASS( UIObject, base::Base )
 
 	const float GetZIndex() const;
 	const overflow_t GetOverflow() const;
-	
+
 	enum event_type_t : uint8_t {
 		EV_MOUSEOVER,
 		EV_MOUSEOUT,
 	};
-	
+
 	virtual void ProcessEvent( event::UIEvent* event );
-	
+
 	struct object_area_t {
 		coord_t left;
+
 		coord_t right;
+
 		coord_t top;
+
 		coord_t bottom;
+
 		coord_t width;
+
 		coord_t height;
-		bool operator != ( const object_area_t& other ) const {
+
+		bool operator!=( const object_area_t& other ) const {
 			return memcmp( this, &other, sizeof( other ) ) != 0;
 		}
 	};
-	
+
 	vertex_t GetAreaPosition() const;
 	virtual const object_area_t GetObjectArea();
 	virtual const object_area_t GetInternalObjectArea(); // for UIContainer
 	bool IsPointInside( const ssize_t x, const ssize_t y ) const;
-	
+
 	void SetClass( const std::string& style );
-	
+
 #ifdef DEBUG
+
 	void ShowDebugFrame();
 	void HideDebugFrame();
+
 #else
 	void ShowDebugFrame() {}
 	void HideDebugFrame() {}
 #endif
-	
+
 	void SetParentStyleObject( const UIContainer* object );
 	void ForwardStyleAttribute( const Style::attribute_type_t src_type, const Style::attribute_type_t dst_type );
 	void ForwardStyleAttribute( const Style::attribute_type_t type );
 	void ForwardStyleAttributesV( const std::vector< Style::attribute_type_t > type );
 	void ForwardStyleAttributesM( const std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > types );
 	void ForwardAllStyleAttributes();
-	
+
 	virtual void AddStyleModifier( const Style::modifier_t modifier );
 	virtual void RemoveStyleModifier( const Style::modifier_t modifier );
 	const bool HasStyleModifier( const Style::modifier_t modifier ) const;
-	
+
 	const UIEventHandler* On( const std::vector< UIEvent::event_type_t >& types, UIEventHandler::handler_function_t func );
 	const UIEventHandler* On( const UIEvent::event_type_t type, UIEventHandler::handler_function_t func );
 	void Off( const UIEventHandler* handler );
 	bool Trigger( const UIEvent::event_type_t type, const UIEvent::event_data_t* data );
-	
+
 	virtual void BlockEvents();
 	virtual void UnblockEvents();
-	
+
 	void SetFocusable( bool is_focusable );
-	
+
 	void Select();
 	void Deselect();
-	
+
 	virtual void Focus();
 	virtual void Defocus();
-	
+
 	virtual void Show();
 	virtual void ShowActors();
 	virtual void Hide();
 	virtual void HideActors();
 	const bool IsVisible() const;
-	
+
 	virtual void SetAreaLimits( const coord_box_t limits );
 	virtual void SetAreaLimitsMaybe( const coord_box_t limits ); // sets limits if not limited by object(s)
 	virtual void SetAreaLimitsByObject( UIObject* source_object ); // make sure source object lives longer than this one!
 	void AddAreaLimitsChild( UIObject* child_object );
 	void RemoveAreaLimitsChild( UIObject* child_object );
 	virtual void ClearAreaLimits();
-	
+
 	typedef std::unordered_map<
 		UIEvent::event_type_t,
 		std::vector<
@@ -206,7 +219,7 @@ CLASS( UIObject, base::Base )
 			>
 		>
 	> event_handlers_t;
-	
+
 	// bit flags
 	typedef uint8_t event_context_t;
 	static constexpr event_context_t EC_NONE = 0;
@@ -215,7 +228,7 @@ CLASS( UIObject, base::Base )
 	static constexpr event_context_t EC_KEYBOARD = 1 << 2;
 	static constexpr event_context_t EC_PARENTAREA = 1 << 3; // will use area of parent element instead of own on mouse events
 	static constexpr event_context_t EC_OFFCLICK_AWARE = 1 << 4; // object will catch clicks outside of it
-	
+
 	virtual void SetEventContexts( event_context_t contexts );
 	virtual void AddEventContexts( event_context_t contexts );
 
@@ -224,7 +237,7 @@ protected:
 	friend class ::ui::UI;
 
 	bool HasEventContext( event_context_t context ) const;
-	
+
 protected:
 	friend class UIContainer;
 
@@ -237,29 +250,29 @@ protected:
 	virtual bool OnKeyDown( const UIEvent::event_data_t* data ) { return true; };
 	virtual bool OnKeyUp( const UIEvent::event_data_t* data ) { return true; };
 	virtual bool OnKeyPress( const UIEvent::event_data_t* data ) { return true; };
-	
+
 	const coord_t ClampX( const coord_t value );
 	const coord_t ClampY( const coord_t value );
 	const vertex_t ClampXY( const vertex_t value );
-	
+
 	const coord_t UnclampX( const coord_t value );
 	const coord_t UnclampY( const coord_t value );
 
 	virtual void SetOverriddenEventContexts( event_context_t contexts );
 	virtual void AddOverriddenEventContexts( event_context_t contexts );
 	bool IsEventContextOverridden( event_context_t context ) const;
-	
-	UIContainer *m_parent_object = nullptr;
 
-	std::vector<Actor*> m_actors = {};
+	UIContainer* m_parent_object = nullptr;
+
+	std::vector< Actor* > m_actors = {};
 
 	size_t m_depth = 0;
 	float m_z_index = 0.5f;
-	
+
 	float m_absolute_z_index = 0.0f;
 
 	object_area_t m_object_area = {};
-	
+
 	bool m_created = false;
 	overflow_t m_overflow = OVERFLOW_VISIBLE;
 
@@ -286,24 +299,24 @@ protected:
 		coord_t aspect_ratio;
 		bool force_aspect_ratio = false;
 	} m_size = {};
-	
+
 	typedef uint8_t state_t;
 	const static state_t STATE_NONE = 0;
 	const static state_t STATE_MOUSEOVER = 1;
 	state_t m_state = STATE_NONE;
-	
-	scene::Scene *GetSceneOfActor( const Actor *actor ) const;
-	
+
+	scene::Scene* GetSceneOfActor( const Actor* actor ) const;
+
 	void IgnoreStyleAttribute( const Style::attribute_type_t type );
 	virtual void ApplyStyle();
 	virtual void ReloadStyle();
 
 	void ApplyStyleIfNeeded();
 	void ApplyStyleIfNotLoaded();
-	
+
 	void ForwardStyleAttribute( const Style::attribute_type_t src_type, const Style::attribute_type_t dst_type, UIObject* child );
 	void ForwardStyleAttribute( const Style::attribute_type_t type, UIObject* child );
-	
+
 	bool Has( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const;
 	bool Has( const Style::attribute_type_t attribute_type ) const;
 	const float Get( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const;
@@ -312,51 +325,53 @@ protected:
 	const Color GetColor( const Style::attribute_type_t attribute_type ) const;
 	const void* GetObject( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const;
 	const void* GetObject( const Style::attribute_type_t attribute_type ) const;
-	
+
 #ifdef DEBUG
+
 	void CheckStylePtr() const;
-	bool m_has_debug_frame = false;	
+	bool m_has_debug_frame = false;
+
 #endif
-	
+
 	typedef std::unordered_set< UIEvent::event_type_t > events_t;
-	
+
 	void ListenToEvent( const UIEvent::event_type_t event );
 	void ListenToEvents( const events_t& events );
-	
+
 	const std::string GetStyleModifiersString() const;
-	
+
 	void BlockRealigns();
 	void UnblockRealigns();
-	
+
 	bool m_is_realign_needed = true;
-	
+
 	const std::string& GetStyleClass();
 	const std::string SubClass( const std::string& subclass );
 
 	coord_box_t m_margin = {};
 	coord_t m_overflow_margin = 0;
-	
+
 	// redraws overlay
 	void Refresh();
-	
+
 private:
-	
+
 	bool m_is_focusable = false;
 	bool m_is_focused = false;
-	
+
 	bool m_is_visible = true;
 	bool m_is_actually_visible = true;
-	
+
 	void SetAbsoluteZIndex( float z_index );
-	
+
 	bool m_are_realigns_blocked = false;
 	bool m_are_events_blocked = false;
-	
+
 	event_context_t m_event_contexts = EC_NONE;
 	event_context_t m_overridden_event_contexts = EC_NONE; // if parent captures any context - children can't have it until parent releases it
-	
+
 	events_t m_events_to_listen = {};
-	
+
 	bool m_is_applying_style = false;
 	std::string m_style_class = "";
 	bool m_style_loaded = false; // will load on first draw
@@ -365,11 +380,11 @@ private:
 	std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_parent_style_attributes = {};
 	bool m_forward_all_style_attributes = false;
 	std::unordered_set< Style::attribute_type_t > m_ignore_style_attributes = {};
-	
+
 	const Style::attribute_type_t GetParentAttribute( const Style::attribute_type_t source_type ) const;
-	
+
 	Style::modifier_t m_style_modifiers = Style::M_NONE;
-	
+
 	event_handlers_t m_event_handlers = {};
 
 	struct {
@@ -379,7 +394,7 @@ private:
 		coord_box_t limits;
 	} m_area_limits = {};
 	void UpdateAreaLimits();
-	
+
 };
 
 } /* namespace object */

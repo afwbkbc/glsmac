@@ -7,8 +7,7 @@ namespace map_editor {
 namespace tool {
 
 Moisture::Moisture( Game* game )
-	: Tool( game, MapEditor::TT_MOISTURE )
-{
+	: Tool( game, MapEditor::TT_MOISTURE ) {
 	//
 }
 
@@ -25,7 +24,7 @@ const MapEditor::tiles_t Moisture::Draw( map::Tile* tile, const MapEditor::draw_
 		}
 		tile->moisture++;
 	}
-	
+
 	// we need to reload surrounding tiles too because they need to blend correctly
 	return {
 		tile,
@@ -39,7 +38,7 @@ const MapEditor::tiles_t Moisture::Draw( map::Tile* tile, const MapEditor::draw_
 		tile->SW,
 	};
 }
-	
+
 }
 }
 }

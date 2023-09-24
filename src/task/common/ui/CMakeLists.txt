@@ -1,7 +1,7 @@
 SUBDIR( style )
 
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/FPSCounter.cpp
-	
-PARENT_SCOPE)
+
+	PARENT_SCOPE )
