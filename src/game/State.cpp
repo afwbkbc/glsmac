@@ -2,8 +2,7 @@
 
 namespace game {
 
-State::State( const Settings& settings )
-	: m_settings( settings ) {
+State::State() {
 	//
 }
 

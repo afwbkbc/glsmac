@@ -68,8 +68,6 @@ CLASS( GlobalSettings, Serializable )
 
 	void Initialize();
 
-	typedef uint8_t parameter_t;
-
 	MapSettings map = {};
 
 	rules::Default game_rules = {}; // TODO: custom rules

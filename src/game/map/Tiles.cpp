@@ -1,11 +1,9 @@
 #include <cstring>
-#include <algorithm>
 #include <random>
 
 #include "Tiles.h"
 
 #include "util/Clamper.h"
-#include "Map.h"
 
 namespace game {
 namespace map {

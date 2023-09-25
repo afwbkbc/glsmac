@@ -39,10 +39,6 @@ protected:
 	void ProcessEvents() override;
 
 private:
-
-	const int32_t ptype_ping = Packet::PT_PING;
-
-private:
 	// true on success, false on error
 	bool ReadFromSocket( remote_socket_data_t& socket );
 	bool WriteToSocket( int fd, const std::string& data );

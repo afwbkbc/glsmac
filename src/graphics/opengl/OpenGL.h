@@ -85,7 +85,6 @@ protected:
 	Vec2< unsigned short > m_window_size;
 	Vec2< unsigned short > m_last_window_size;
 	Vec2< unsigned short > m_viewport_size;
-	float m_aspect_ratio;
 	SDL_Window* m_window;
 	SDL_GLContext m_gl_context;
 	std::vector< shader_program::ShaderProgram* > m_shader_programs;
@@ -105,7 +104,6 @@ private:
 	typedef std::unordered_map< const types::Texture*, texture_data_t > m_textures_map;
 	m_textures_map m_textures = {};
 	GLuint m_no_texture = 0;
-	GLuint next_texture_obj_id = 0;
 
 	std::unordered_map< uint8_t, Vec2< ssize_t > > m_active_mousedowns = {};
 

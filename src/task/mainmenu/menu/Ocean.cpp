@@ -11,7 +11,7 @@ Ocean::Ocean( MainMenu* mainmenu )
 		{
 			"30-50% OF SURFACE", {
 									 CH( this ) {
-										 m_mainmenu->m_settings.global.map.ocean = game::MapSettings::MAP_OCEAN_LOW;
+										 m_mainmenu->m_state.m_settings.global.map.ocean = game::MapSettings::MAP_OCEAN_LOW;
 										 NEWV( menu, Erosive, m_mainmenu );
 										 NextMenu( menu );
 									 },
@@ -23,7 +23,7 @@ Ocean::Ocean( MainMenu* mainmenu )
 		{
 			"50-70% OF SURFACE", {
 									 CH( this ) {
-										 m_mainmenu->m_settings.global.map.ocean = game::MapSettings::MAP_OCEAN_MEDIUM;
+										 m_mainmenu->m_state.m_settings.global.map.ocean = game::MapSettings::MAP_OCEAN_MEDIUM;
 										 NEWV( menu, Erosive, m_mainmenu );
 										 NextMenu( menu );
 									 },
@@ -35,7 +35,7 @@ Ocean::Ocean( MainMenu* mainmenu )
 		{
 			"70-90% OF SURFACE", {
 									 CH( this ) {
-										 m_mainmenu->m_settings.global.map.ocean = game::MapSettings::MAP_OCEAN_HIGH;
+										 m_mainmenu->m_state.m_settings.global.map.ocean = game::MapSettings::MAP_OCEAN_HIGH;
 										 NEWV( menu, Erosive, m_mainmenu );
 										 NextMenu( menu );
 									 },

@@ -1,6 +1,5 @@
 #include <cmath>
 #include <cstdint>
-#include <iostream>
 
 #include "Matrix44.h"
 

@@ -42,12 +42,10 @@ protected:
 	Font* m_stats_font = nullptr;
 
 #define D( _stat ) Label* m_##_stats_label_##_stat = nullptr;
-
 	DEBUG_STATS;
 #undef D
 
 	std::vector< Label* > m_memory_stats_labels = {};
-
 	void ActivateLabel( Label* label, const size_t left, const size_t top );
 
 private:

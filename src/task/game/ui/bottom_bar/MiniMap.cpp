@@ -47,18 +47,6 @@ void MiniMap::Create() {
 		}
 	);
 	m_map_surface->On(
-		UIEvent::EV_MOUSE_OVER, EH( this, f_scrollto ) {
-			m_is_mouse_over = true;
-			return false;
-		}
-	);
-	m_map_surface->On(
-		UIEvent::EV_MOUSE_OUT, EH( this, f_scrollto ) {
-			m_is_mouse_over = false;
-			return false;
-		}
-	);
-	m_map_surface->On(
 		UIEvent::EV_MOUSE_MOVE, EH( this, f_scrollto ) {
 			if ( m_is_dragging ) {
 				f_scrollto(

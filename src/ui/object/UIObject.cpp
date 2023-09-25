@@ -3,7 +3,6 @@
 #include "UIObject.h"
 
 #include "engine/Engine.h"
-#include "../UI.h"
 
 namespace ui {
 

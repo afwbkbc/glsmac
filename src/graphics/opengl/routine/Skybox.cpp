@@ -3,7 +3,6 @@
 #include "Skybox.h"
 
 #include "engine/Engine.h"
-#include "types/Matrix44.h"
 #include "../texture/CubemapTexture.h"
 
 namespace graphics {

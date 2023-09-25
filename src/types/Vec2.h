@@ -52,7 +52,6 @@ public:
 	}
 
 	DATATYPE x;
-
 	DATATYPE y;
 
 	const std::string ToString() const {

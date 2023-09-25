@@ -6,8 +6,6 @@
 #include "scene/actor/Actor.h"
 #include "scene/actor/Instanced.h"
 
-#include "../Graphics.h"
-
 namespace graphics {
 namespace opengl {
 

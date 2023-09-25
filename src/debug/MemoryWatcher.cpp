@@ -5,9 +5,6 @@
 #include <algorithm>
 #include <string>
 #include <sstream>
-#include <thread>
-#include <chrono>
-#include <cstring>
 
 #include "MemoryWatcher.h"
 

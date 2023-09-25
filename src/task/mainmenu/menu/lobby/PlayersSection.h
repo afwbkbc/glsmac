@@ -33,8 +33,6 @@ CLASS( PlayersSection, LobbySection )
 	const ChoiceList::choices_t& GetFactionChoices();
 	const ChoiceList::choices_t& GetDifficultyLevelChoices();
 
-	void ApplyRules();
-
 private:
 	std::vector< PlayersSectionRow* > m_slots = {};
 

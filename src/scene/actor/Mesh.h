@@ -53,7 +53,6 @@ CLASS2( Mesh, Actor, RRAware )
 protected:
 	const mesh::Mesh* m_mesh = nullptr;
 	Texture* m_texture = nullptr;
-	const bool m_is_texture_tiled = false;
 
 	Color m_tint_color = {
 		1.0f,

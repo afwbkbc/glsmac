@@ -1,7 +1,5 @@
 #include "CustomizeMapMenu.h"
 
-#include "Erosive.h"
-
 namespace task {
 namespace mainmenu {
 

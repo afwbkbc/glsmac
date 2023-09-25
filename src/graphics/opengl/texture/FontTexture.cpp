@@ -1,11 +1,4 @@
-#include <cmath>
-
 #include "FontTexture.h"
-
-#include "types/Vec22.h"
-#include "engine/Engine.h"
-
-static float tmpy = 0;
 
 namespace graphics {
 namespace opengl {

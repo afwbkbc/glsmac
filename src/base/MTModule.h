@@ -130,9 +130,7 @@ protected:
 
 	// get request, return response
 	virtual const RESPONSE_TYPE ProcessRequest( const REQUEST_TYPE& request, MT_CANCELABLE ) = 0;
-
 	virtual void DestroyRequest( const REQUEST_TYPE& request ) = 0;
-
 	virtual void DestroyResponse( const RESPONSE_TYPE& response ) = 0;
 
 private:
@@ -143,9 +141,7 @@ private:
 		bool is_executed = false;
 		RESPONSE_TYPE response = {};
 	};
-
 	typedef std::map< mt_id_t, REQUEST_TYPE > mt_request_map_t;
-
 	typedef std::map< mt_id_t, RESPONSE_TYPE > mt_response_map_t;
 
 	mt_request_map_t MT_GetRequests() {
@@ -178,13 +174,9 @@ private:
 	}
 
 	typedef std::map< mt_id_t, mt_state_t > mt_states_t;
-
 	std::mutex m_mt_states_mutex;
-
 	mt_states_t m_mt_states = {};
-
 	mt_flag_t m_is_canceled = false;
-
 	std::atomic< mt_id_t > m_current_request_id = 0;
 };
 

@@ -39,7 +39,6 @@ private:
 	Label* m_label_gameip = nullptr;
 	Input* m_input_gameip = nullptr;
 
-	mt_id_t m_mt_id = 0;
 };
 
 }

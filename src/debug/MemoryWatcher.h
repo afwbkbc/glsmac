@@ -23,58 +23,33 @@ public:
 
 	// memory stuff
 	void New( const void* object, const size_t size, const std::string& file, const size_t line );
-
 	void Delete( const void* object, const std::string& file, const size_t line );
-
 	void* Malloc( const size_t size, const std::string& file, const size_t line );
-
 	void* Realloc( void* ptr, const size_t size, const std::string& file, const size_t line );
-
 	unsigned char* Ptr( unsigned char* ptr, const size_t offset, const size_t size, const std::string& file, const size_t line );
-
 	void Free( void* ptr, const std::string& file, const size_t line );
 
 	// opengl stuff
 	void GLGenBuffers( GLsizei n, GLuint* buffers, const std::string& file, const size_t line );
-
 	void GLBindBuffer( GLenum target, GLuint buffer, const std::string& file, const size_t line );
-
 	void GLBufferData( GLenum target, GLsizeiptr size, const void* data, GLenum usage, const std::string& file, const size_t line );
-
 	void GLDeleteBuffers( GLsizei n, const GLuint* buffers, const std::string& file, const size_t line );
-
 	void GLGenTextures( GLsizei n, GLuint* textures, const std::string& file, const size_t line );
-
 	void GLBindTexture( GLenum target, GLuint texture, const std::string& file, const size_t line );
-
 	void GLTexImage2D( GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void* pixels, const std::string& file, const size_t line );
-
 	void GLTexSubImage2D( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void* pixels, const std::string& file, const size_t line );
-
 	void GLDeleteTextures( GLsizei n, GLuint* textures, const std::string& file, const size_t line );
-
 	void GLGenFramebuffers( GLsizei n, GLuint* buffers, const std::string& file, const size_t line );
-
 	void GLBindFramebuffer( GLenum target, GLuint buffer, const std::string& file, const size_t line );
-
 	void GLFramebufferTexture2D( GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, const std::string& file, const size_t line );
-
 	void GLDeleteFramebuffers( GLsizei n, const GLuint* buffers, const std::string& file, const size_t line );
-
 	GLuint GLCreateProgram( const std::string& file, const size_t line );
-
 	void GLLinkProgram( GLuint program, const std::string& file, const size_t line );
-
 	void GLValidateProgram( GLuint program, const std::string& file, const size_t line );
-
 	void GLUseProgram( GLuint program, const std::string& file, const size_t line );
-
 	void GLDeleteProgram( GLuint program, const std::string& file, const size_t line );
-
 	void GLDrawElements( GLenum mode, GLsizei count, GLenum type, const void* indices, const std::string& file, const size_t line );
-
 	void GLDrawElementsInstanced( GLenum mode, GLsizei count, GLenum type, const void* indices, GLsizei primcount, const std::string& file, const size_t line );
-
 	void GLDrawArrays( GLenum mode, GLint first, GLsizei count, const std::string& file, const size_t line );
 
 	struct statistics_item_t {
@@ -84,16 +59,12 @@ public:
 	};
 
 	typedef std::unordered_map< std::string, statistics_item_t > statistics_t;
-
 	typedef std::vector< statistics_item_t > statistics_result_t;
-
 	const statistics_result_t GetLargestMemoryConsumerClasses( size_t count = 10 );
 
 private:
 	const bool m_memory_debug = false;
-
 	std::mutex m_mutex;
-
 	void Log( const std::string& text );
 
 	struct object_info_t {

@@ -22,13 +22,13 @@ CLASS( UIContainer, UIObject )
 	virtual void RealignNow() override;
 	virtual void Redraw() override;
 
-	void UpdateZIndex();
+	void UpdateZIndex() override;
 
 	// for now this only affects OVERFLOW_HIDDEN frame
 	void SetPadding( const coord_t px );
 	const coord_t GetPadding() const;
 
-	void SetOverflow( const overflow_t overflow );
+	void SetOverflow( const overflow_t overflow ) override;
 	void ProcessEvent( event::UIEvent* event ) override;
 
 	virtual const object_area_t GetInternalObjectArea() override;
@@ -74,7 +74,6 @@ private:
 
 	void GrowFromObject( UIObject* object );
 
-	void ShrinkToObject( UIObject* object );
 	void ShrinkToFit();
 
 };

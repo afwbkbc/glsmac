@@ -37,7 +37,6 @@ CLASS( Scene, base::Base )
 	}
 	void SetCamera( Camera* camera );
 	Camera* GetCamera() const;
-	void SetSimple2DCamera();
 	void AddLight( Light* light );
 	std::unordered_set< Light* >* GetLights();
 	void SetSkyboxTexture( types::Texture* skybox_texture );

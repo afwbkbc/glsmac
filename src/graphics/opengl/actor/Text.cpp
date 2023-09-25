@@ -1,6 +1,5 @@
 #include "Text.h"
 
-#include "../shader_program/Font.h"
 #include "engine/Engine.h"
 
 using namespace types;

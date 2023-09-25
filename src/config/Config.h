@@ -60,9 +60,6 @@ CLASS( Config, base::Module )
 #endif
 
 private:
-	const int m_argc = 0;
-	const char** const m_argv = nullptr;
-
 	std::string m_smac_path = "";
 
 	uint8_t m_launch_flags = LF_NONE;

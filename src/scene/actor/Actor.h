@@ -14,8 +14,6 @@ namespace actor {
 CLASS( Actor, Entity )
 
 	typedef float coord_t;
-	typedef types::Vec2< coord_t > vec2_t;
-	typedef types::Vec3 vec3_t;
 
 	// normal type must be always followed by it's INSTANCED_ type, see Instanced.cpp
 	enum type_t {

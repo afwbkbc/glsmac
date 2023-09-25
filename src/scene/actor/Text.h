@@ -36,8 +36,6 @@ CLASS( Text, Actor )
 
 protected:
 
-	void UpdateText();
-
 	types::Font* m_font = nullptr;
 	std::string m_text = "";
 	types::Color m_color = {

@@ -39,7 +39,6 @@ protected:
 	std::chrono::milliseconds m_elapsed = std::chrono::milliseconds::zero();
 	std::chrono::milliseconds m_target = std::chrono::milliseconds::zero();
 	std::chrono::milliseconds m_interval = std::chrono::milliseconds::zero();
-	size_t m_ticks = 0;
 
 };
 

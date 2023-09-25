@@ -1,7 +1,5 @@
 #include "Loader.h"
 
-#include "engine/Engine.h"
-
 #define MAX_DOTS 3
 #define DOTS_CHANGE_INTERVAL 200
 

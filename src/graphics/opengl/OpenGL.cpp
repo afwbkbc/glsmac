@@ -1,5 +1,3 @@
-#include <climits>
-
 #include "OpenGL.h"
 
 #include "engine/Engine.h"
@@ -7,8 +5,6 @@
 #include "shader_program/Simple2D.h"
 #include "shader_program/Orthographic.h"
 #include "shader_program/Font.h"
-#include "shader_program/Skybox.h"
-#include "shader_program/World.h"
 
 #include "routine/Overlay.h"
 #include "routine/Skybox.h"
@@ -25,8 +21,6 @@ OpenGL::OpenGL( const std::string title, const unsigned short window_width, cons
 	m_options.viewport_width = m_window_size.x = m_last_window_size.x = window_width;
 	m_options.viewport_height = m_window_size.y = m_last_window_size.y = window_height;
 	m_options.vsync = vsync;
-
-	m_aspect_ratio = (float)m_options.viewport_width / m_options.viewport_height;
 
 	m_is_fullscreen = fullscreen;
 
@@ -541,7 +535,6 @@ void OpenGL::ResizeViewport( const size_t width, const size_t height ) {
 
 		Log( "Resizing viewport to " + std::to_string( m_viewport_size.x ) + "x" + std::to_string( m_viewport_size.y ) );
 		glViewport( 0, 0, m_viewport_size.x, m_viewport_size.y );
-		m_aspect_ratio = (float)m_viewport_size.y / m_viewport_size.x;
 		OnWindowResize();
 		for ( auto routine = m_routines.begin() ; routine < m_routines.end() ; ++routine ) {
 			for ( auto scene = ( *routine )->m_scenes.begin() ; scene < ( *routine )->m_scenes.end() ; ++scene ) {

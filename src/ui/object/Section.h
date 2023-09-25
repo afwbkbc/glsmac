@@ -16,8 +16,8 @@ CLASS( Section, UIContainer )
 
 	void SetTitleText( const std::string& title_text );
 
-	virtual void AddChild( UIObject* object );
-	virtual void RemoveChild( UIObject* object );
+	void AddChild( UIObject* object );
+	void RemoveChild( UIObject* object );
 
 	virtual void Create() override;
 	virtual void Destroy() override;

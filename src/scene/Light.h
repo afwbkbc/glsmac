@@ -22,7 +22,6 @@ CLASS( Light, Entity )
 	const Color& GetColor() const;
 
 private:
-	const light_type_t m_light_type;
 
 	Color m_color = {
 		1.0f,

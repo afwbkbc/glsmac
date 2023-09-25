@@ -2,8 +2,6 @@
 
 #include "MapEditor.h"
 
-#include "types/Vec2.h"
-
 #include "../map/Tile.h"
 
 #include "brush/Dot.h"

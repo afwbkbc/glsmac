@@ -1,7 +1,5 @@
 #include <vector>
 #include <string>
-#include <iostream>
-#include <fcntl.h>
 
 #ifndef _WIN32
 

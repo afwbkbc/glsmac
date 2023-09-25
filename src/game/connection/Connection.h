@@ -7,9 +7,6 @@
 #include "game/Slot.h"
 #include "game/Player.h"
 
-typedef std::function< bool() > connection_handler_t;
-#define CH( ... ) [ __VA_ARGS__ ] () -> void
-
 namespace game {
 class State;
 namespace connection {

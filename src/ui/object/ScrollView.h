@@ -13,14 +13,6 @@ namespace object {
 
 CLASS( ScrollView, Panel )
 
-	struct consts_t {
-		const struct {
-			const uint16_t scroll_time_ms = 100;
-			const uint16_t scroll_step_ms = 2;
-			const uint8_t scroll_steps = scroll_time_ms / scroll_step_ms;
-		} smooth_scrolling;
-	};
-
 	ScrollView( const std::string& class_name = "" )
 		: Panel( class_name ) {}
 

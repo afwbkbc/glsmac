@@ -62,7 +62,6 @@ Engine::Engine(
 	t_main->AddModule( m_ui );
 	t_main->AddModule( m_scheduler );
 	m_threads.push_back( t_main );
-	m_main_thread = t_main;
 
 	NEWV( t_network, Thread, "NETWORK" );
 	t_network->SetIPS( 100 );

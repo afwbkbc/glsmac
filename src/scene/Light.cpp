@@ -2,8 +2,7 @@
 
 namespace scene {
 
-Light::Light( const light_type_t light_type )
-	: m_light_type( light_type ) {
+Light::Light( const light_type_t light_type ) {
 	//
 }
 

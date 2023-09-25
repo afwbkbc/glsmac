@@ -1,7 +1,5 @@
 #include "RR.h"
 
-#include "GetData.h"
-
 namespace rr {
 
 RR::RR( const type_t type )

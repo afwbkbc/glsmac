@@ -1,7 +1,5 @@
 #include "CubemapTexture.h"
 
-#include "graphics/Graphics.h"
-
 namespace graphics {
 namespace opengl {
 

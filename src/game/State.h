@@ -16,8 +16,8 @@ namespace game {
 
 CLASS( State, base::Base )
 
-	State( const Settings& settings );
-	~State();
+	State();
+	virtual ~State();
 
 	Settings m_settings = {};
 	Slots m_slots = {};

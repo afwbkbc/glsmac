@@ -27,7 +27,6 @@ CLASS( Buffer, base::Base )
 	uint32_t allocated_len;
 	uint32_t lenw;
 	uint32_t lenr;
-	checksum_t checksum;
 
 	void WriteBool( const bool val );
 	const bool ReadBool();

@@ -17,13 +17,12 @@ CLASS( Texture, base::Base )
 	virtual void Disable();
 	virtual void Unload();
 protected:
-	bool m_loaded = false;
-
-	GLenum m_target = GL_TEXTURE_2D;
 
 	types::Texture* m_texture;
 
+	GLenum m_target = GL_TEXTURE_2D;
 	GLuint m_texture_obj;
+
 };
 
 } /* namespace opengl */

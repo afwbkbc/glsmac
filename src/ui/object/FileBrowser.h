@@ -30,7 +30,6 @@ CLASS( FileBrowser, UIContainer )
 	void Create() override;
 	void Destroy() override;
 
-	const std::string& GetValue() const; // value typed in input
 	const std::string GetSelectedFile() const; // full path to specified file
 
 	void SelectCurrentValue(); // ask for EV_SELECT event with current input value

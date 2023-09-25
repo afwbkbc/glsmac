@@ -57,7 +57,6 @@ struct MT_Request {
 	union {
 		struct {
 			MapSettings* settings;
-			std::string* path;
 		} init;
 		struct {
 			size_t tile_x;
@@ -85,9 +84,7 @@ struct MT_Request {
 // can't use types::Vec* because only simple structs can be used in union
 struct vec3_t {
 	float x;
-
 	float y;
-
 	float z;
 
 	vec3_t operator=( const Vec3& source ) {
@@ -170,7 +167,7 @@ CLASS( Game, MTModule )
 	mt_id_t MT_Ping();
 
 	// initialize map and other things in game thread
-	mt_id_t MT_Init( const MapSettings& settings, const std::string& map_filename = "" );
+	mt_id_t MT_Init( const MapSettings& settings );
 
 	// initialize map and other things in game thread
 	mt_id_t MT_Reset();
@@ -206,7 +203,7 @@ protected:
 
 private:
 
-	void InitGame( MT_Response& response, const std::string& map_filename, MT_CANCELABLE );
+	void InitGame( MT_Response& response, MT_CANCELABLE );
 	void ResetGame();
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)

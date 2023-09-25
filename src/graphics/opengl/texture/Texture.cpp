@@ -1,7 +1,5 @@
 #include "Texture.h"
 
-#include "graphics/Graphics.h"
-
 namespace graphics {
 namespace opengl {
 

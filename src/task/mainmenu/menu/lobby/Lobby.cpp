@@ -13,7 +13,7 @@ namespace lobby {
 Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 	: PopupMenu( mainmenu, "MULTIPLAYER SETUP" )
 	, m_connection( connection )
-	, m_state( mainmenu->m_settings ) {
+	, m_state( mainmenu->m_state ) {
 	ASSERT( m_connection, "connection is null" );
 
 	SetWidth( 800 );
@@ -144,10 +144,13 @@ void Lobby::Iterate() {
 		m_countdown--;
 		if ( m_countdown <= 0 ) {
 			m_countdown_timer.Stop();
-			Log( "START GAME" );
-			// TODO
+
+			Log( "Starting game" );
+/*			m_mainmenu->m_state = m_state;
+			m_mainmenu->StartGame();*/
 			m_connection->Disconnect();
 			GoBack();
+
 		}
 	}
 }

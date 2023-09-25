@@ -43,8 +43,6 @@ private:
 
 	bool m_is_opened = false;
 
-	Surface* m_background_locker = nullptr;
-
 };
 
 }

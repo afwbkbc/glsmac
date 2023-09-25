@@ -4,13 +4,10 @@
 #include <ws2tcpip.h>
 #else
 
-#include <fcntl.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <unistd.h>
-#include <signal.h>
 #include <string.h>
 
 #endif

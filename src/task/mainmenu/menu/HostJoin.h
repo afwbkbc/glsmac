@@ -33,7 +33,6 @@ private:
 	Section* m_section = nullptr;
 	ChoiceList* m_choices = nullptr;
 
-	mt_id_t m_mt_id = 0;
 };
 
 }

@@ -13,9 +13,7 @@
 
 namespace config {
 
-Config::Config( const int argc, const char* argv[] )
-	: m_argc( argc )
-	, m_argv( argv ) {
+Config::Config( const int argc, const char* argv[] ) {
 	util::ArgParser parser( argc, argv );
 
 	const auto f_error = [ &parser ]( const std::string& error ) -> void {

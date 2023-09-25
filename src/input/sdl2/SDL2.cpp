@@ -6,10 +6,8 @@
 #include "ui/event/MouseDown.h"
 #include "ui/event/MouseUp.h"
 #include "ui/event/MouseScroll.h"
-#include "ui/event/ButtonClick.h"
 #include "ui/event/KeyDown.h"
 #include "ui/event/KeyUp.h"
-#include "ui/event/KeyPress.h"
 
 #if ( !SDL_VERSION_ATLEAST( 2, 0, 18 ) )
 #define KMOD_SCROLL 0x8000 // workaround for ancient systems

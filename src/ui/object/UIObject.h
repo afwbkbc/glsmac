@@ -87,7 +87,7 @@ CLASS( UIObject, base::Base )
 	const coord_t GetHeight() const;
 
 	virtual void SetZIndex( float z_index );
-	void UpdateZIndex();
+	virtual void UpdateZIndex();
 	void SetLeft( const coord_t px );
 	void SetRight( const coord_t px );
 	void SetTop( const coord_t px );
@@ -95,11 +95,8 @@ CLASS( UIObject, base::Base )
 
 	struct coord_box_t {
 		coord_t left;
-
 		coord_t top;
-
 		coord_t right;
-
 		coord_t bottom;
 
 		bool operator!=( const coord_box_t& other ) const {
@@ -123,7 +120,7 @@ CLASS( UIObject, base::Base )
 	void SetAlign( const alignment_t alignment );
 	void SetHAlign( const alignment_t alignment );
 	void SetVAlign( const alignment_t alignment );
-	void SetOverflow( const overflow_t overflow );
+	virtual void SetOverflow( const overflow_t overflow );
 
 	const float GetZIndex() const;
 	const overflow_t GetOverflow() const;
@@ -137,15 +134,10 @@ CLASS( UIObject, base::Base )
 
 	struct object_area_t {
 		coord_t left;
-
 		coord_t right;
-
 		coord_t top;
-
 		coord_t bottom;
-
 		coord_t width;
-
 		coord_t height;
 
 		bool operator!=( const object_area_t& other ) const {

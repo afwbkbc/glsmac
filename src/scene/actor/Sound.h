@@ -15,8 +15,6 @@ CLASS( Sound, Actor )
 	Sound( const std::string& name, const types::Sound* sound );
 	~Sound();
 
-	const unsigned char* GetBuffer( const size_t pos, const size_t len );
-
 	const types::Sound* GetSound() const;
 
 	void SetRepeatable( const bool repeatable );
@@ -39,6 +37,7 @@ CLASS( Sound, Actor )
 
 	void Rewind();
 	void GetNextBuffer( uint8_t* buffer, int len );
+	
 private:
 	const types::Sound* m_sound = nullptr;
 

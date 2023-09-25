@@ -12,6 +12,7 @@ using namespace base;
 namespace scheduler {
 
 CLASS( Simple, Scheduler )
+
 	Simple();
 	virtual ~Simple();
 	void Start() override;
@@ -19,11 +20,11 @@ CLASS( Simple, Scheduler )
 	void Iterate() override;
 	void AddTask( Task* task ) override;
 	void RemoveTask( Task* task ) override;
+	
 protected:
+
 #ifdef DEBUG
-
 	util::Timer m_timer;
-
 #endif
 
 	std::vector< Task* > m_tasks = {};

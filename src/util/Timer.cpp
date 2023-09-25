@@ -1,5 +1,3 @@
-#include <ctime>
-
 #include "Timer.h"
 
 namespace util {

@@ -1,7 +1,5 @@
 #include "Overlay.h"
 
-#include "../actor/Text.h"
-
 namespace graphics {
 namespace opengl {
 namespace routine {

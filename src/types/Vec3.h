@@ -12,14 +12,12 @@ namespace types {
 
 class Vec3 {
 public:
+
 	DATATYPE x = 0.0f;
-
 	DATATYPE y = 0.0f;
-
 	DATATYPE z = 0.0f;
 
 	Vec3() {}
-
 	~Vec3() {}
 
 	Vec3( DATATYPE x, DATATYPE y, DATATYPE z ) {

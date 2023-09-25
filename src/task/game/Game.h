@@ -138,7 +138,6 @@ private:
 
 	ui_handler_t m_on_start;
 	ui_handler_t m_on_cancel;
-	const base::Task* m_old_task = nullptr;
 
 	void SetCameraPosition( const Vec3 camera_position );
 

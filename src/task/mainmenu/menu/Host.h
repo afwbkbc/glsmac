@@ -39,9 +39,6 @@ private:
 	Label* m_label_gamename = nullptr;
 	Input* m_input_gamename = nullptr;
 
-	mt_id_t m_mt_id = 0;
-
-	bool m_test = false;
 };
 
 }

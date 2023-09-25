@@ -1,6 +1,4 @@
-#include <ctime>
 #include <cmath>
-#include <algorithm>
 
 #include "SimplePerlin.h"
 

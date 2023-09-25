@@ -13,13 +13,11 @@ mt_id_t Game::MT_Ping() {
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Game::MT_Init( const MapSettings& settings, const std::string& map_filename ) {
+mt_id_t Game::MT_Init( const MapSettings& settings ) {
 	MT_Request request = {};
 	request.op = OP_INIT;
 	NEW( request.data.init.settings, MapSettings );
 	*request.data.init.settings = settings;
-	NEW( request.data.init.path, std::string );
-	*request.data.init.path = map_filename;
 	return MT_CreateRequest( request );
 }
 
@@ -126,7 +124,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			//Log( "Got init request" );
 			ASSERT( request.data.init.settings, "settings not set" );
 			m_map_settings = *( request.data.init.settings );
-			InitGame( response, *request.data.init.path, MT_C );
+			InitGame( response, MT_C );
 			break;
 		}
 		case OP_RESET: {
@@ -513,9 +511,6 @@ void Game::DestroyRequest( const MT_Request& request ) {
 			if ( request.data.init.settings ) {
 				DELETE( request.data.init.settings );
 			}
-			if ( request.data.init.path ) {
-				DELETE( request.data.init.path );
-			}
 			break;
 		}
 		case OP_SAVE_MAP: {
@@ -585,7 +580,7 @@ void Game::DestroyResponse( const MT_Response& response ) {
 	}
 }
 
-void Game::InitGame( MT_Response& response, const std::string& map_filename, MT_CANCELABLE ) {
+void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 	Log( "Initializing game" );
 
@@ -628,8 +623,8 @@ void Game::InitGame( MT_Response& response, const std::string& map_filename, MT_
 #endif
 		{
 			if ( m_map_settings.type == MapSettings::MT_MAPFILE ) {
-				ASSERT( !map_filename.empty(), "loading map requested but map file not specified" );
-				ec = m_map->Load( map_filename );
+				ASSERT( !m_map_settings.filename.empty(), "loading map requested but map file not specified" );
+				ec = m_map->Load( m_map_settings.filename );
 			}
 			else {
 				ec = m_map->Generate( m_map_settings, MT_C );

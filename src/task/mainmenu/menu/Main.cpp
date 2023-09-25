@@ -16,8 +16,8 @@ Main::Main( MainMenu* mainmenu )
 		{
 			"START GAME",   {
 								CH( this ) {
-									m_mainmenu->m_settings.local.game_mode = game::LocalSettings::GM_SINGLEPLAYER;
-									m_mainmenu->m_settings.global.Initialize();
+									m_mainmenu->m_state.m_settings.local.game_mode = game::LocalSettings::GM_SINGLEPLAYER;
+									m_mainmenu->m_state.m_settings.global.Initialize();
 									NEWV( menu, StartGame, m_mainmenu );
 									NextMenu( menu );
 								}
@@ -26,18 +26,18 @@ Main::Main( MainMenu* mainmenu )
 		{
 			"QUICK START",  {
 								CH( this ) {
-									m_mainmenu->m_settings.local.game_mode = game::LocalSettings::GM_SINGLEPLAYER;
+									m_mainmenu->m_state.m_settings.local.game_mode = game::LocalSettings::GM_SINGLEPLAYER;
 
 									// randomize settings
-									m_mainmenu->m_settings.global.Initialize();
-									m_mainmenu->m_settings.global.map.type = game::MapSettings::MT_RANDOM;
-									m_mainmenu->m_settings.global.map.size = game::MapSettings::MAP_STANDARD;
-									m_mainmenu->m_settings.global.map.ocean = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
-									m_mainmenu->m_settings.global.map.erosive = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
-									m_mainmenu->m_settings.global.map.lifeforms = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
-									m_mainmenu->m_settings.global.map.clouds = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
+									m_mainmenu->m_state.m_settings.global.Initialize();
+									m_mainmenu->m_state.m_settings.global.map.type = game::MapSettings::MT_RANDOM;
+									m_mainmenu->m_state.m_settings.global.map.size = game::MapSettings::MAP_STANDARD;
+									m_mainmenu->m_state.m_settings.global.map.ocean = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
+									m_mainmenu->m_state.m_settings.global.map.erosive = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
+									m_mainmenu->m_state.m_settings.global.map.lifeforms = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
+									m_mainmenu->m_state.m_settings.global.map.clouds = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
 									// TODO: previous rules and difficulty
-									m_mainmenu->m_settings.global.global_difficulty = m_mainmenu->m_settings.global.game_rules.GetDefaultDifficultyLevel();
+									m_mainmenu->m_state.m_settings.global.global_difficulty = m_mainmenu->m_state.m_settings.global.game_rules.GetDefaultDifficultyLevel();
 
 									// start game
 									m_mainmenu->StartGame();
@@ -47,7 +47,7 @@ Main::Main( MainMenu* mainmenu )
 		{
 			"SCENARIO",     {
 								CH( this ) {
-									m_mainmenu->m_settings.local.game_mode = game::LocalSettings::GM_SCENARIO;
+									m_mainmenu->m_state.m_settings.local.game_mode = game::LocalSettings::GM_SCENARIO;
 									NEWV( menu, Scenario, m_mainmenu );
 									NextMenu( menu );
 								}
@@ -57,7 +57,7 @@ Main::Main( MainMenu* mainmenu )
 		{
 			"MULTIPLAYER",  {
 								CH( this ) {
-									m_mainmenu->m_settings.local.game_mode = game::LocalSettings::GM_MULTIPLAYER;
+									m_mainmenu->m_state.m_settings.local.game_mode = game::LocalSettings::GM_MULTIPLAYER;
 									NEWV( menu, Multiplayer, m_mainmenu );
 									NextMenu( menu );
 								}

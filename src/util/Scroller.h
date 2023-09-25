@@ -61,8 +61,6 @@ private:
 
 	util::Timer m_timer;
 
-	float m_scroll_speed;
-
 	POSITION_TYPE m_position;
 	POSITION_TYPE m_step;
 	POSITION_TYPE m_target_position;

@@ -1,5 +1,3 @@
-#include <cmath>
-
 #include "Intro.h"
 
 #include "task/mainmenu/MainMenu.h"

@@ -36,7 +36,6 @@ CLASS( Thread, Base )
 
 	const std::string& GetThreadName() const;
 
-	void SetCommand( const thread_command_t command );
 protected:
 	const std::string m_thread_name = "";
 

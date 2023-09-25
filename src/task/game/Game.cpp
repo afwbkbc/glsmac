@@ -6,9 +6,6 @@
 #include "util/FS.h"
 #include "ui/popup/PleaseDontGo.h"
 
-// TODO: move to settings
-#define MAP_ROTATE_SPEED 2.0f
-
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
 namespace task {
@@ -24,7 +21,9 @@ Game::Game( ::game::Settings& settings, ui_handler_t on_start, ui_handler_t on_c
 }
 
 Game::~Game() {
-	Stop();
+	if ( m_is_initialized ) {
+		Log( "WARNING: game task destroyed while still running" );
+	}
 }
 
 void Game::Start() {
@@ -65,11 +64,7 @@ void Game::Start() {
 			return false;
 		}
 	);
-	m_mt_ids.init = game->MT_Init(
-		m_settings.global.map, m_settings.global.map.type == ::game::MapSettings::MT_MAPFILE
-			? m_settings.global.map.filename
-			: ""
-	);
+	m_mt_ids.init = game->MT_Init( m_settings.global.map );
 }
 
 void Game::Stop() {
@@ -636,7 +631,7 @@ void Game::LoadMap( const std::string& path ) {
 	if ( m_mt_ids.init ) {
 		game->MT_Cancel( m_mt_ids.init );
 	}
-	m_mt_ids.init = game->MT_Init( m_settings.global.map, path );
+	m_mt_ids.init = game->MT_Init( m_settings.global.map );
 }
 
 void Game::SaveMap( const std::string& path ) {

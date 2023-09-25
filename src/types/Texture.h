@@ -118,11 +118,8 @@ CLASS( Texture, Serializable )
 
 	struct updated_area_t {
 		size_t left;
-
 		size_t top;
-
 		size_t right;
-
 		size_t bottom;
 
 		const std::string ToString() const {

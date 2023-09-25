@@ -170,7 +170,7 @@ void MainMenu::MenuError( const std::string& error_text ) {
 }
 
 void MainMenu::StartGame() {
-	NEWV( task, task::game::Game, m_settings, UH( this ) {
+	NEWV( task, task::game::Game, m_state.m_settings, UH( this ) {
 		g_engine->GetScheduler()->RemoveTask( this );
 	}, UH( this ) {
 		m_menu_object->MaybeClose();

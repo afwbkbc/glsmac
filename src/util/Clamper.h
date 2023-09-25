@@ -9,7 +9,6 @@ CLASS( Clamper, Util )
 
 	struct range_t {
 		DATATYPE min = 0;
-
 		DATATYPE max = 0;
 
 		bool operator!=( const range_t& other ) const {
@@ -21,7 +20,6 @@ CLASS( Clamper, Util )
 	};
 	struct ranges_t {
 		range_t src = {};
-
 		range_t dst = {};
 
 		bool operator!=( const ranges_t& other ) const {

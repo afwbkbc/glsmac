@@ -49,7 +49,6 @@ using namespace object;
 CLASS( UI, base::Module )
 
 	typedef float coord_t;
-	typedef Vec2< coord_t > vertex_t;
 
 	void Start() override;
 	void Stop() override;
