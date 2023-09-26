@@ -2,6 +2,11 @@
 
 namespace types {
 
+Packet::Packet( const packet_type_t type )
+	: type( type ) {
+
+}
+
 const Buffer Packet::Serialize() const {
 	Buffer buf;
 
@@ -38,6 +43,16 @@ const Buffer Packet::Serialize() const {
 			buf.WriteString( data.str ); // message
 			break;
 		}
+		case PT_TILES: {
+			buf.WriteBool( data.boolean ); // is map ready?
+			if ( !data.boolean ) {
+				buf.WriteBool( data.num ); // percents done
+			}
+			else {
+				buf.WriteString( data.str ); // serialized tiles
+			}
+			break;
+		}
 		default: {
 			//ASSERT(false, "unknown packet type " + std::to_string( type ));
 		}
@@ -47,6 +62,8 @@ const Buffer Packet::Serialize() const {
 }
 
 void Packet::Unserialize( Buffer buf ) {
+
+	ASSERT( type == PT_NONE, "unserializing into existing packet" );
 
 	type = (packet_type_t)buf.ReadInt();
 
@@ -79,6 +96,16 @@ void Packet::Unserialize( Buffer buf ) {
 		}
 		case PT_MESSAGE: {
 			data.str = buf.ReadString(); // message
+			break;
+		}
+		case PT_TILES: {
+			data.boolean = buf.ReadBool(); // is map ready?
+			if ( !data.boolean ) {
+				data.num = buf.ReadBool(); // percents done
+			}
+			else {
+				data.str = buf.ReadString(); // serialized tiles
+			}
 			break;
 		}
 		default: {

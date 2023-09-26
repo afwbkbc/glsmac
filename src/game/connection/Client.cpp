@@ -19,13 +19,12 @@ void Client::ProcessEvent( const Event& event ) {
 		case Event::ET_PACKET: {
 			try {
 				if ( !event.data.packet_data.empty() ) {
-					Packet packet;
+					Packet packet( Packet::PT_NONE );
 					packet.Unserialize( Buffer( event.data.packet_data ) );
 					switch ( packet.type ) {
 						case Packet::PT_REQUEST_AUTH: {
 							Log( "Authenticating" );
-							Packet p;
-							p.type = Packet::PT_AUTH;
+							Packet p( Packet::PT_AUTH );
 							p.data.str = m_settings->player_name;
 							m_network->MT_SendPacket( p );
 							break;
@@ -82,6 +81,15 @@ void Client::ProcessEvent( const Event& event ) {
 							}
 							break;
 						}
+						case Packet::PT_TILES: {
+							if ( !packet.data.boolean ) {
+								Log( "Got map generation percentage: " + std::to_string( packet.data.num ) );
+							}
+							else {
+								Log( "Got map tiles" );
+							}
+							break;
+						}
 						default: {
 							Log( "WARNING: invalid packet type from server: " + std::to_string( packet.type ) );
 						}
@@ -109,8 +117,7 @@ void Client::ProcessEvent( const Event& event ) {
 
 void Client::UpdateSlot( const size_t slot_num, const Slot* slot ) {
 	Log( "Sending slot update" );
-	Packet p;
-	p.type = Packet::PT_UPDATE_SLOT;
+	Packet p( Packet::PT_UPDATE_SLOT );
 	// not sending slot num because server knows it anyway
 	p.data.str = slot->Serialize().ToString();
 	m_network->MT_SendPacket( p );
@@ -118,8 +125,7 @@ void Client::UpdateSlot( const size_t slot_num, const Slot* slot ) {
 
 void Client::Message( const std::string& message ) {
 	Log( "Sending chat message: " + message );
-	Packet p;
-	p.type = Packet::PT_MESSAGE;
+	Packet p( Packet::PT_MESSAGE );
 	p.data.str = message;
 	m_network->MT_SendPacket( p );
 }

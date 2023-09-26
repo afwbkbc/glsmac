@@ -181,6 +181,7 @@ void MainMenu::StartGame() {
 		m_state = nullptr; // state belongs to game task now
 		g_engine->GetScheduler()->RemoveTask( this );
 	}, UH( this ) {
+		m_state->Reset();
 		m_menu_object->MaybeClose();
 	} );
 	g_engine->GetScheduler()->AddTask( task );

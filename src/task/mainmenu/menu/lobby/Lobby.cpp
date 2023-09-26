@@ -106,7 +106,7 @@ void Lobby::Show() {
 	m_cancel_button->SetLabel( "CANCEL" );
 	m_cancel_button->On(
 		UIEvent::EV_BUTTON_CLICK, EH( this ) {
-			m_state->Disconnect();
+			m_connection->Disconnect();
 			return true;
 		}
 	);
@@ -132,6 +132,10 @@ void Lobby::Hide() {
 	m_body->RemoveChild( m_chat_section );
 	m_body->RemoveChild( m_game_options_section );
 
+	if ( m_state ) {
+		m_state->Reset();
+	}
+
 	PopupMenu::Hide();
 }
 
@@ -146,6 +150,10 @@ void Lobby::Iterate() {
 			m_countdown_timer.Stop();
 
 			Log( "Starting game" );
+
+			( (::game::connection::Server*)m_connection )->SendMapGenerationPercentage( 0 );
+
+			m_state = nullptr; // detach state
 
 			m_mainmenu->StartGame();
 			GoBack();

@@ -24,9 +24,6 @@ Game::~Game() {
 	if ( m_is_initialized ) {
 		Log( "WARNING: game task destroyed while still running" );
 	}
-	if ( m_state ) {
-		DELETE( m_state );
-	}
 }
 
 void Game::Start() {
@@ -74,12 +71,17 @@ void Game::Stop() {
 
 	if ( m_is_initialized ) {
 		Deinitialize();
+
+		// main menu will create new state
+		DELETE( m_state );
+		m_state = nullptr;
 	}
 
 	if ( m_random ) {
 		DELETE( m_random );
 		m_random = nullptr;
 	}
+
 }
 
 void Game::Iterate() {
@@ -1191,6 +1193,7 @@ void Game::Deinitialize() {
 	m_textures.terrain = nullptr;
 
 	m_is_initialized = false;
+
 }
 
 void Game::AddMessage( const std::string& text ) {

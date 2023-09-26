@@ -17,6 +17,8 @@ CLASS( Server, Connection )
 	void KickFromSlot( const size_t slot_num, const std::string& reason = "Kicked by host" );
 	void BanFromSlot( const size_t slot_num, const std::string& reason = "Banned by host" );
 
+	void SendMapGenerationPercentage( const size_t percentage );
+
 protected:
 	void ProcessEvent( const network::Event& event ) override;
 

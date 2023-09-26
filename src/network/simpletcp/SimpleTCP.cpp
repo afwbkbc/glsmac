@@ -522,7 +522,7 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket ) {
 			m_tmp.event.data.remote_address = socket.remote_address;
 			m_tmp.event.data.packet_data = std::string( m_tmp.ptr, m_tmp.tmpint );
 			try {
-				Packet p;
+				Packet p( Packet::PT_NONE );
 				p.Unserialize( Buffer( m_tmp.event.data.packet_data ) );
 				// quick hack to respond to pings without escalating events outside
 				// TODO: refactor
@@ -627,16 +627,14 @@ bool SimpleTCP::MaybePingDo( remote_socket_data_t& socket ) {
 
 	if ( socket.ping_needed && !socket.ping_sent ) {
 		Log( "Sending ping to " + std::to_string( socket.fd ) + " (cid " + std::to_string( socket.cid ) + ")" );
-		Packet packet;
-		packet.type = Packet::PT_PING;
+		Packet packet( Packet::PT_PING );
 		std::string data = packet.Serialize().ToString();
 		socket.ping_sent = true;
 		return WriteToSocket( socket.fd, data );
 	}
 	if ( socket.pong_needed ) {
 		Log( "Ping received, sending pong to " + std::to_string( socket.fd ) + " (cid " + std::to_string( socket.cid ) + ")" );
-		Packet packet;
-		packet.type = Packet::PT_PONG;
+		Packet packet( Packet::PT_PONG );
 		socket.pong_needed = false;
 		std::string data = packet.Serialize().ToString();
 		return WriteToSocket( socket.fd, data );

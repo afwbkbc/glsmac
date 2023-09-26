@@ -11,6 +11,7 @@ CLASS( Slots, types::Serializable )
 	void Resize( const size_t size );
 	Slot& GetSlot( const size_t index );
 	std::vector< Slot >& GetSlots();
+	void Clear();
 
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;

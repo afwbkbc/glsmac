@@ -169,7 +169,7 @@ void Connection::Disconnect( const std::string& reason ) {
 		m_disconnect_reason = reason;
 	}
 	if ( m_mt_ids.disconnect ) {
-		return;
+		return; // already disconnecting
 	}
 	if ( m_mt_ids.events ) {
 		m_network->MT_Cancel( m_mt_ids.events );

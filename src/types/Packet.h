@@ -8,7 +8,7 @@ namespace types {
 
 CLASS( Packet, Serializable )
 
-	enum packet_type_t {
+	enum packet_type_t : uint8_t {
 		PT_NONE, // -
 		PT_REQUEST_AUTH, // S->C
 		PT_AUTH, // C->S
@@ -20,7 +20,10 @@ CLASS( Packet, Serializable )
 		PT_SLOT_UPDATE, // S->C
 		PT_KICK, // S->C
 		PT_MESSAGE, // *->*
+		PT_TILES, // S->C
 	};
+
+	Packet( const packet_type_t type );
 
 	packet_type_t type;
 

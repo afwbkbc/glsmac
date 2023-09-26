@@ -87,7 +87,6 @@ void Host::SetChoice( const std::string& choice ) {
 void Host::OnNext() {
 
 	m_mainmenu->m_state->m_settings.local.player_name = m_input_yourname->GetValue();
-	m_mainmenu->m_state->m_settings.local.remote_address = "";
 	m_mainmenu->m_state->m_settings.global.game_name = m_input_gamename->GetValue();
 
 	if ( m_mainmenu->m_state->m_settings.local.player_name.empty() ) {

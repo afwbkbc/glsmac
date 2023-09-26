@@ -55,8 +55,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			}
 
 			{
-				Packet packet;
-				packet.type = Packet::PT_REQUEST_AUTH; // ask to authenticate
+				Packet packet( Packet::PT_REQUEST_AUTH ); // ask to authenticate
 				m_network->MT_SendPacket( packet, event.cid );
 			}
 			break;
@@ -79,7 +78,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 		}
 		case Event::ET_PACKET: {
 			try {
-				Packet packet;
+				Packet packet( Packet::PT_NONE );
 				packet.Unserialize( Buffer( event.data.packet_data ) );
 				switch ( packet.type ) {
 					case Packet::PT_AUTH: {
@@ -126,8 +125,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 
 						{
 							Log( "Sending players list to " + std::to_string( event.cid ) );
-							Packet p;
-							p.type = Packet::PT_PLAYERS;
+							Packet p( Packet::PT_PLAYERS );
 							p.data.num = slot_num;
 							p.data.str = m_state->m_slots.Serialize().ToString();
 							g_engine->GetNetwork()->MT_SendPacket( p, event.cid );
@@ -214,12 +212,23 @@ void Server::BanFromSlot( const size_t slot_num, const std::string& reason ) {
 	KickFromSlot( slot, reason );
 }
 
+void Server::SendMapGenerationPercentage( const size_t percentage ) {
+	Broadcast(
+		[ this, percentage ]( const size_t cid ) -> void {
+			Log( "Seding map generation percentage (" + std::to_string( percentage ) + "%) to " + std::to_string( cid ) );
+			Packet p( Packet::PT_TILES );
+			p.data.boolean = false;
+			p.data.num = percentage;
+			m_network->MT_SendPacket( p, cid );
+		}
+	);
+}
+
 void Server::UpdateSlot( const size_t slot_num, const Slot* slot ) {
 	Broadcast(
 		[ this, slot_num, slot ]( const size_t cid ) -> void {
 			Log( "Sending slot update to " + std::to_string( cid ) );
-			Packet p;
-			p.type = Packet::PT_SLOT_UPDATE;
+			Packet p( Packet::PT_SLOT_UPDATE );
 			p.data.num = slot_num;
 			p.data.str = slot->Serialize().ToString();
 			m_network->MT_SendPacket( p, cid );
@@ -245,8 +254,7 @@ void Server::GlobalMessage( const std::string& message ) {
 	}
 	Broadcast(
 		[ this, message ]( const size_t cid ) -> void {
-			Packet p;
-			p.type = Packet::PT_MESSAGE;
+			Packet p( Packet::PT_MESSAGE );
 			p.data.str = message;
 			m_network->MT_SendPacket( p, cid );
 		}
@@ -260,8 +268,7 @@ void Server::Kick( const size_t cid, const std::string& reason = "" ) {
 			: ""
 		)
 	);
-	Packet p;
-	p.type = types::Packet::PT_KICK;
+	Packet p( Packet::PT_KICK );
 	p.data.str = reason;
 	m_network->MT_SendPacket( p, cid );
 	m_network->MT_DisconnectClient( cid );
@@ -279,8 +286,7 @@ void Server::Error( const size_t cid, const std::string& reason ) {
 
 void Server::SendGlobalSettings( size_t cid ) {
 	Log( "Sending global settings to " + std::to_string( cid ) );
-	Packet p;
-	p.type = Packet::PT_GLOBAL_SETTINGS;
+	Packet p( Packet::PT_GLOBAL_SETTINGS );
 	p.data.str = m_state->m_settings.global.Serialize().ToString();
 	m_network->MT_SendPacket( p, cid );
 }
@@ -290,4 +296,5 @@ const std::string Server::FormatChatMessage( const Player* player, const std::st
 }
 
 }
+
 }

@@ -35,7 +35,7 @@ CLASS( State, base::Base )
 
 	void SetConnection( connection::Connection* connection );
 	connection::Connection* GetConnection() const;
-	void Disconnect();
+	void Reset();
 	void DetachConnection();
 
 private:
