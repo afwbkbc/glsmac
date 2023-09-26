@@ -40,7 +40,7 @@ void Host::Show() {
 	m_input_yourname->SetLeft( 144 );
 	m_input_yourname->SetTop( 5 );
 	m_input_yourname->SetRight( 12 );
-	m_input_yourname->SetValue( m_mainmenu->m_state.m_settings.local.player_name );
+	m_input_yourname->SetValue( m_mainmenu->m_state->m_settings.local.player_name );
 	m_input_yourname->SetMaxLength( 20 ); // TODO: determine by rendered width
 	m_section->AddChild( m_input_yourname );
 
@@ -56,7 +56,7 @@ void Host::Show() {
 	m_input_gamename->SetLeft( 144 );
 	m_input_gamename->SetTop( 34 );
 	m_input_gamename->SetRight( 12 );
-	m_input_gamename->SetValue( m_mainmenu->m_state.m_settings.global.game_name );
+	m_input_gamename->SetValue( m_mainmenu->m_state->m_settings.global.game_name );
 	m_input_gamename->SetMaxLength( 20 ); // TODO: determine by rendered width
 	m_section->AddChild( m_input_gamename );
 
@@ -86,22 +86,22 @@ void Host::SetChoice( const std::string& choice ) {
 
 void Host::OnNext() {
 
-	m_mainmenu->m_state.m_settings.local.player_name = m_input_yourname->GetValue();
-	m_mainmenu->m_state.m_settings.local.remote_address = "";
-	m_mainmenu->m_state.m_settings.global.game_name = m_input_gamename->GetValue();
+	m_mainmenu->m_state->m_settings.local.player_name = m_input_yourname->GetValue();
+	m_mainmenu->m_state->m_settings.local.remote_address = "";
+	m_mainmenu->m_state->m_settings.global.game_name = m_input_gamename->GetValue();
 
-	if ( m_mainmenu->m_state.m_settings.local.player_name.empty() ) {
+	if ( m_mainmenu->m_state->m_settings.local.player_name.empty() ) {
 		MenuError( "Please enter your name." );
 	}
-	else if ( m_mainmenu->m_state.m_settings.global.game_name.empty() ) {
+	else if ( m_mainmenu->m_state->m_settings.global.game_name.empty() ) {
 		MenuError( "Player enter game name." );
 	}
 	else {
 
-		m_mainmenu->m_state.m_settings.local.banned_addresses.clear(); // TODO: persist?
+		m_mainmenu->m_state->m_settings.local.banned_addresses.clear(); // TODO: persist?
 
 		Hide();
-		NEWV( connection, ::game::connection::Server, &m_mainmenu->m_state.m_settings.local );
+		NEWV( connection, ::game::connection::Server, &m_mainmenu->m_state->m_settings.local );
 		SetConnection( connection );
 	}
 

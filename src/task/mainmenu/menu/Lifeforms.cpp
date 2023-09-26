@@ -11,7 +11,7 @@ Lifeforms::Lifeforms( MainMenu* mainmenu )
 		{
 			"RARE",     {
 							CH( this ) {
-								m_mainmenu->m_state.m_settings.global.map.lifeforms = game::MapSettings::MAP_LIFEFORMS_RARE;
+								m_mainmenu->m_state->m_settings.global.map.lifeforms = game::MapSettings::MAP_LIFEFORMS_RARE;
 								NEWV( menu, Clouds, m_mainmenu );
 								NextMenu( menu );
 							},
@@ -23,7 +23,7 @@ Lifeforms::Lifeforms( MainMenu* mainmenu )
 		{
 			"AVERAGE",  {
 							CH( this ) {
-								m_mainmenu->m_state.m_settings.global.map.lifeforms = game::MapSettings::MAP_LIFEFORMS_AVERAGE;
+								m_mainmenu->m_state->m_settings.global.map.lifeforms = game::MapSettings::MAP_LIFEFORMS_AVERAGE;
 								NEWV( menu, Clouds, m_mainmenu );
 								NextMenu( menu );
 							},
@@ -35,7 +35,7 @@ Lifeforms::Lifeforms( MainMenu* mainmenu )
 		{
 			"ABUNDANT", {
 							CH( this ) {
-								m_mainmenu->m_state.m_settings.global.map.lifeforms = game::MapSettings::MAP_LIFEFORMS_ABUNDANT;
+								m_mainmenu->m_state->m_settings.global.map.lifeforms = game::MapSettings::MAP_LIFEFORMS_ABUNDANT;
 								NEWV( menu, Clouds, m_mainmenu );
 								NextMenu( menu );
 							},

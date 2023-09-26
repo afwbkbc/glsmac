@@ -7,8 +7,20 @@ State::State() {
 }
 
 State::~State() {
+	if ( m_connection ) {
+		if ( m_connection->IsConnected() ) {
+			m_connection->Disconnect();
+		}
+		DELETE( m_connection );
+	}
 	for ( auto& player : m_players ) {
 		DELETE( player );
+	}
+}
+
+void State::Iterate() {
+	if ( m_connection ) {
+		m_connection->Iterate();
 	}
 }
 
@@ -54,6 +66,22 @@ void State::SetConnection( connection::Connection* connection ) {
 	ASSERT( !m_connection, "state connection already set" );
 	connection->SetState( this );
 	m_connection = connection;
+}
+
+connection::Connection* State::GetConnection() const {
+	return m_connection;
+}
+
+void State::Disconnect() {
+	ASSERT( m_connection, "state connection not set" );
+	if ( m_connection->IsConnected() ) {
+		m_connection->Disconnect();
+	}
+}
+
+void State::DetachConnection() {
+	ASSERT( m_connection, "state connection not set" );
+	m_connection = nullptr;
 }
 
 }

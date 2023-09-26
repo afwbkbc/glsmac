@@ -17,6 +17,8 @@ namespace task {
 namespace mainmenu {
 
 void MainMenu::Start() {
+	ASSERT( !m_state, "mainmenu state already set" );
+	NEW( m_state, ::game::State );
 
 	auto* ui = g_engine->GetUI();
 
@@ -121,6 +123,11 @@ void MainMenu::Iterate() {
 
 void MainMenu::Stop() {
 
+	if ( m_state ) {
+		DELETE( m_state );
+		m_state = nullptr;
+	}
+
 	g_engine->GetGraphics()->RemoveOnWindowResizeHandler( this );
 
 	if ( m_menu_object ) {
@@ -170,7 +177,8 @@ void MainMenu::MenuError( const std::string& error_text ) {
 }
 
 void MainMenu::StartGame() {
-	NEWV( task, task::game::Game, m_state.m_settings, UH( this ) {
+	NEWV( task, task::game::Game, m_state, UH( this ) {
+		m_state = nullptr; // state belongs to game task now
 		g_engine->GetScheduler()->RemoveTask( this );
 	}, UH( this ) {
 		m_menu_object->MaybeClose();

@@ -57,7 +57,7 @@ protected:
 	ChatSection* m_chat_section = nullptr;
 	Section* m_game_options_section = nullptr;
 
-	::game::State m_state;
+	::game::State* m_state = nullptr;
 
 private:
 	Connection* m_connection = nullptr;

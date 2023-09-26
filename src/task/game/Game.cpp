@@ -13,8 +13,8 @@ namespace game {
 
 const Game::consts_t Game::s_consts = {};
 
-Game::Game( ::game::Settings& settings, ui_handler_t on_start, ui_handler_t on_cancel )
-	: m_settings( settings )
+Game::Game( ::game::State* state, ui_handler_t on_start, ui_handler_t on_cancel )
+	: m_state( state )
 	, m_on_start( on_start )
 	, m_on_cancel( on_cancel ) {
 
@@ -23,6 +23,9 @@ Game::Game( ::game::Settings& settings, ui_handler_t on_start, ui_handler_t on_c
 Game::~Game() {
 	if ( m_is_initialized ) {
 		Log( "WARNING: game task destroyed while still running" );
+	}
+	if ( m_state ) {
+		DELETE( m_state );
 	}
 }
 
@@ -48,14 +51,14 @@ void Game::Start() {
 
 #ifdef DEBUG
 	if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) {
-		m_settings.global.map.type = ::game::MapSettings::MT_MAPFILE;
-		m_settings.global.map.filename = config->GetQuickstartMapFile();
+		m_state->m_settings.global.map.type = ::game::MapSettings::MT_MAPFILE;
+		m_state->m_settings.global.map.filename = config->GetQuickstartMapFile();
 	}
 #endif
 
-	if ( m_settings.global.map.type == ::game::MapSettings::MT_MAPFILE ) {
-		m_map_data.filename = util::FS::GetBaseName( m_settings.global.map.filename );
-		m_map_data.last_directory = util::FS::GetDirName( m_settings.global.map.filename );
+	if ( m_state->m_settings.global.map.type == ::game::MapSettings::MT_MAPFILE ) {
+		m_map_data.filename = util::FS::GetBaseName( m_state->m_settings.global.map.filename );
+		m_map_data.last_directory = util::FS::GetDirName( m_state->m_settings.global.map.filename );
 	}
 
 	ui->GetLoader()->Show(
@@ -64,7 +67,7 @@ void Game::Start() {
 			return false;
 		}
 	);
-	m_mt_ids.init = game->MT_Init( m_settings.global.map );
+	m_mt_ids.init = game->MT_Init( m_state->m_settings.global.map );
 }
 
 void Game::Stop() {
@@ -624,14 +627,14 @@ void Game::LoadMap( const std::string& path ) {
 			return false;
 		}
 	);
-	m_settings.global.map.type = ::game::MapSettings::MT_MAPFILE;
-	m_settings.global.map.filename = path;
+	m_state->m_settings.global.map.type = ::game::MapSettings::MT_MAPFILE;
+	m_state->m_settings.global.map.filename = path;
 	m_map_data.filename = util::FS::GetBaseName( path );
 	m_map_data.last_directory = util::FS::GetDirName( path );
 	if ( m_mt_ids.init ) {
 		game->MT_Cancel( m_mt_ids.init );
 	}
-	m_mt_ids.init = game->MT_Init( m_settings.global.map );
+	m_mt_ids.init = game->MT_Init( m_state->m_settings.global.map );
 }
 
 void Game::SaveMap( const std::string& path ) {

@@ -14,7 +14,7 @@ StartGame::StartGame( MainMenu* mainmenu )
 		{
 			"MAKE RANDOM MAP",      {
 										CH( this ) {
-											m_mainmenu->m_state.m_settings.global.map.type = game::MapSettings::MT_RANDOM;
+											m_mainmenu->m_state->m_settings.global.map.type = game::MapSettings::MT_RANDOM;
 											NEWV( menu, PlanetSize, m_mainmenu );
 											NextMenu( menu );
 										}
@@ -23,7 +23,7 @@ StartGame::StartGame( MainMenu* mainmenu )
 		{
 			"CUSTOMIZE RANDOM MAP", {
 										CH( this ) {
-											m_mainmenu->m_state.m_settings.global.map.type = game::MapSettings::MT_CUSTOM;
+											m_mainmenu->m_state->m_settings.global.map.type = game::MapSettings::MT_CUSTOM;
 											NEWV( menu, PlanetSize, m_mainmenu );
 											NextMenu( menu );
 										}
@@ -32,7 +32,7 @@ StartGame::StartGame( MainMenu* mainmenu )
 		{
 			"THE MAP OF PLANET",    {
 										CH( this ) {
-											m_mainmenu->m_state.m_settings.global.map.type = game::MapSettings::MT_MAPFILE;
+											m_mainmenu->m_state->m_settings.global.map.type = game::MapSettings::MT_MAPFILE;
 											MenuError();
 										}
 									}
@@ -40,7 +40,7 @@ StartGame::StartGame( MainMenu* mainmenu )
 		{
 			"HUGE MAP OF PLANET",   {
 										CH( this ) {
-											m_mainmenu->m_state.m_settings.global.map.type = game::MapSettings::MT_MAPFILE;
+											m_mainmenu->m_state->m_settings.global.map.type = game::MapSettings::MT_MAPFILE;
 											MenuError();
 										}
 									}
@@ -48,7 +48,7 @@ StartGame::StartGame( MainMenu* mainmenu )
 		{
 			"LOAD MAP FILE",        {
 										CH( this ) {
-											m_mainmenu->m_state.m_settings.global.map.type = game::MapSettings::MT_MAPFILE;
+											m_mainmenu->m_state->m_settings.global.map.type = game::MapSettings::MT_MAPFILE;
 											NEWV( menu, LoadMapFile, m_mainmenu );
 											NextMenu( menu );
 										}

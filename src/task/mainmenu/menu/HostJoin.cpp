@@ -60,12 +60,12 @@ void HostJoin::OnNext() {
 	const auto value = m_choices->GetValueString();
 	MenuObject* menu = nullptr;
 	if ( value == "Host new game" ) {
-		m_mainmenu->m_state.m_settings.local.network_role = game::LocalSettings::NR_SERVER;
+		m_mainmenu->m_state->m_settings.local.network_role = game::LocalSettings::NR_SERVER;
 		NEW( menu, Host, m_mainmenu );
 		NextMenu( menu );
 	}
 	else {
-		m_mainmenu->m_state.m_settings.local.network_role = game::LocalSettings::NR_CLIENT;
+		m_mainmenu->m_state->m_settings.local.network_role = game::LocalSettings::NR_CLIENT;
 		NEW( menu, Join, m_mainmenu );
 		NextMenu( menu );
 	}

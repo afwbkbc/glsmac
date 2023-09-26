@@ -14,7 +14,7 @@ Difficulty::Difficulty( MainMenu* mainmenu )
 
 const MenuBlock::choices_t Difficulty::GenerateChoices( MainMenu* mainmenu ) {
 	MenuBlock::choices_t choices = {};
-	auto& rules = mainmenu->m_state.m_settings.global.game_rules;
+	auto& rules = mainmenu->m_state->m_settings.global.game_rules;
 	for ( auto& it : rules.m_difficulty_levels ) {
 		auto name = it.second.m_name;
 		std::transform( name.begin(), name.end(), name.begin(), ::toupper );
@@ -23,7 +23,7 @@ const MenuBlock::choices_t Difficulty::GenerateChoices( MainMenu* mainmenu ) {
 				name,
 				{
 					CH( this, it, mainmenu ) {
-						mainmenu->m_state.m_settings.global.global_difficulty = it.second;
+						mainmenu->m_state->m_settings.global.global_difficulty = it.second;
 						NEWV( menu, Rules, mainmenu );
 						NextMenu( menu );
 					}
@@ -35,7 +35,7 @@ const MenuBlock::choices_t Difficulty::GenerateChoices( MainMenu* mainmenu ) {
 }
 
 const size_t Difficulty::GetDefaultChoice( MainMenu* mainmenu ) const {
-	auto& rules = mainmenu->m_state.m_settings.global.game_rules;
+	auto& rules = mainmenu->m_state->m_settings.global.game_rules;
 	const auto& default_difficulty_level = rules.GetDefaultDifficultyLevel();
 	size_t choice_idx = 0;
 	for ( auto& it : rules.m_difficulty_levels ) {

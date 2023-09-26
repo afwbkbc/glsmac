@@ -34,7 +34,7 @@ CLASS( MainMenu, base::Task )
 	void Iterate() override;
 	void Stop() override;
 
-	::game::State m_state = {};
+	::game::State* m_state = nullptr;
 
 	void ShowMenu( MenuObject* menu_object );
 	void GoBack();

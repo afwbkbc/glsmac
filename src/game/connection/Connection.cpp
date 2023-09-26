@@ -4,8 +4,24 @@ namespace game {
 namespace connection {
 
 void Connection::SetState( game::State* state ) {
-	ASSERT( !m_state, "connection state already set" );
+	if ( m_state ) {
+		m_state->DetachConnection();
+	}
 	m_state = state;
+}
+
+void Connection::ClearCallbacks() {
+	m_on_connect = nullptr;
+	m_on_cancel = nullptr;
+	m_on_disconnect = nullptr;
+	m_on_error = nullptr;
+	m_on_player_join = nullptr;
+	m_on_player_leave = nullptr;
+	m_on_slot_update = nullptr;
+	m_on_message = nullptr;
+	m_on_global_settings_update = nullptr;
+	m_on_players_list_update = nullptr;
+	m_on_listen = nullptr;
 }
 
 Connection::Connection( const network::connection_mode_t connection_mode, LocalSettings* const settings )
@@ -122,6 +138,10 @@ void Connection::Iterate() {
 			}
 		}
 	}
+}
+
+const bool Connection::IsConnected() const {
+	return m_connection_mode != network::CM_NONE;
 }
 
 const bool Connection::IsServer() const {

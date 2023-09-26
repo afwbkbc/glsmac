@@ -190,8 +190,8 @@ int main( const int argc, const char* argv[] ) {
 		base::Task* task = nullptr;
 #ifdef DEBUG
 		if ( config.HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
-			game::Settings settings; // TODO: initialize randomly
-			NEW( task, task::game::Game, settings, 0, UH() {
+			NEWV( state, game::State ); // TODO: initialize settings randomly
+			NEW( task, task::game::Game, state, 0, UH() {
 				g_engine->ShutDown();
 			} );
 		}

@@ -9,7 +9,7 @@
 
 #include "base/MTModule.h"
 
-#include "game/Settings.h"
+#include "game/State.h"
 
 #include "scene/Scene.h"
 #include "scene/actor/Instanced.h"
@@ -48,7 +48,7 @@ namespace game {
 
 CLASS( Game, base::Task )
 
-	Game( ::game::Settings& settings, ui_handler_t on_start = 0, ui_handler_t on_cancel = 0 );
+	Game( ::game::State* state, ui_handler_t on_start = 0, ui_handler_t on_cancel = 0 );
 	~Game();
 
 	void Start() override;
@@ -141,7 +141,7 @@ private:
 
 	void SetCameraPosition( const Vec3 camera_position );
 
-	::game::Settings m_settings = {};
+	::game::State* m_state = nullptr;
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)
 	Random* m_random = nullptr;

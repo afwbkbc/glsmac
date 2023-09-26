@@ -17,31 +17,33 @@ CLASS( Connection, base::Module )
 	virtual ~Connection();
 
 	// protocol
-	std::function< void() > m_on_connect = 0;
-	std::function< void() > m_on_cancel = 0;
-	std::function< void() > m_on_disconnect = 0;
-	std::function< void( const std::string& message ) > m_on_error = 0;
+	std::function< void() > m_on_connect = nullptr;
+	std::function< void() > m_on_cancel = nullptr;
+	std::function< void() > m_on_disconnect = nullptr;
+	std::function< void( const std::string& message ) > m_on_error = nullptr;
 
 	// universal
-	std::function< void( const size_t slot_num, Slot* slot, const Player* player ) > m_on_player_join = 0;
-	std::function< void( const size_t slot_num, Slot* slot, const Player* player ) > m_on_player_leave = 0;
-	std::function< void( const size_t slot_num, game::Slot* slot ) > m_on_slot_update = 0;
-	std::function< void( const std::string& message ) > m_on_message = 0;
+	std::function< void( const size_t slot_num, Slot* slot, const Player* player ) > m_on_player_join = nullptr;
+	std::function< void( const size_t slot_num, Slot* slot, const Player* player ) > m_on_player_leave = nullptr;
+	std::function< void( const size_t slot_num, game::Slot* slot ) > m_on_slot_update = nullptr;
+	std::function< void( const std::string& message ) > m_on_message = nullptr;
 
 	// client-specific
-	std::function< void() > m_on_global_settings_update = 0;
-	std::function< void() > m_on_players_list_update = 0;
+	std::function< void() > m_on_global_settings_update = nullptr;
+	std::function< void() > m_on_players_list_update = nullptr;
 
 	// server-specific
-	std::function< void() > m_on_listen = 0;
+	std::function< void() > m_on_listen = nullptr;
 
 	void SetState( State* state );
+	void ClearCallbacks();
 
 	void Connect();
 	void Disconnect( const std::string& message = "" );
 
 	void Iterate() override;
 
+	const bool IsConnected() const;
 	const bool IsServer() const;
 	const bool IsClient() const;
 	const size_t GetSlotNum() const;

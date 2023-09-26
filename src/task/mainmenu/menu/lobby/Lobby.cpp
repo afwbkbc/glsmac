@@ -12,62 +12,62 @@ namespace lobby {
 
 Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 	: PopupMenu( mainmenu, "MULTIPLAYER SETUP" )
-	, m_connection( connection )
 	, m_state( mainmenu->m_state ) {
-	ASSERT( m_connection, "connection is null" );
+	ASSERT( connection, "connection is null" );
 
 	SetWidth( 800 );
 	SetHeight( 600 );
 
-	m_connection->SetState( &m_state );
-	m_connection->m_on_error = [ this ]( const std::string& message ) -> void {
+	connection->ClearCallbacks();
+	connection->m_on_error = [ this ]( const std::string& message ) -> void {
 		MenuError( message );
 	};
-	m_connection->m_on_disconnect = [ this ]() -> void {
+	connection->m_on_disconnect = [ this ]() -> void {
 		GoBack();
 	};
-
-	m_connection->m_on_listen = [ this ]() -> void {
+	connection->m_on_listen = [ this ]() -> void {
 		size_t slots_i = 0;
-		for ( ::game::Slot& slot : m_state.m_slots.GetSlots() ) {
+		for ( ::game::Slot& slot : m_state->m_slots.GetSlots() ) {
 			m_players_section->UpdateSlot( slots_i++, &slot );
 		}
 	};
-	m_connection->m_on_global_settings_update = [ this ]() -> void {
+	connection->m_on_global_settings_update = [ this ]() -> void {
 		m_game_settings_section->UpdateRows();
-		m_players_section->UpdateSlots( m_state.m_slots.GetSlots() );
+		m_players_section->UpdateSlots( m_state->m_slots.GetSlots() );
 	};
-	m_connection->m_on_players_list_update = [ this ]() -> void {
+	connection->m_on_players_list_update = [ this ]() -> void {
 		size_t slots_i = 0;
-		for ( auto& slot : m_state.m_slots.GetSlots() ) {
+		for ( auto& slot : m_state->m_slots.GetSlots() ) {
 			m_players_section->UpdateSlot( slots_i++, &slot );
 		}
 	};
-	m_connection->m_on_player_join = [ this ]( const size_t slot_num, game::Slot* slot, const game::Player* player ) -> void {
+	connection->m_on_player_join = [ this ]( const size_t slot_num, game::Slot* slot, const game::Player* player ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
 		GlobalMessage( "Player \"" + player->GetPlayerName() + "\" joined." );
 	};
-	m_connection->m_on_player_leave = [ this ]( const size_t slot_num, game::Slot* slot, const game::Player* player ) -> void {
+	connection->m_on_player_leave = [ this ]( const size_t slot_num, game::Slot* slot, const game::Player* player ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
 		GlobalMessage( "Player \"" + player->GetPlayerName() + "\" left." );
 	};
-	m_connection->m_on_slot_update = [ this ]( const size_t slot_num, game::Slot* slot ) -> void {
+	connection->m_on_slot_update = [ this ]( const size_t slot_num, game::Slot* slot ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
 		ManageCountdown();
 	};
-	m_connection->m_on_message = [ this ]( const std::string& message ) -> void {
+	connection->m_on_message = [ this ]( const std::string& message ) -> void {
 		m_chat_section->AddMessage( message );
 	};
+
+	m_connection = connection; // shortcut
+	m_state->SetConnection( m_connection );
 }
 
 Lobby::~Lobby() {
-	DELETE( m_connection );
 }
 
 void Lobby::Show() {
 	PopupMenu::Show();
 
-	NEW( m_game_settings_section, GameSettingsSection, this, &m_state.m_settings.global );
+	NEW( m_game_settings_section, GameSettingsSection, this, &m_state->m_settings.global );
 	m_body->AddChild( m_game_settings_section );
 
 	NEW( m_players_section, PlayersSection, this );
@@ -91,7 +91,7 @@ void Lobby::Show() {
 				m_ready_button->RemoveStyleModifier( Style::M_SELECTED );
 				slot->SetReady( false );
 			}
-			UpdateSlot( m_connection->GetSlotNum(), slot );
+			UpdateSlot( m_state->GetConnection()->GetSlotNum(), slot );
 			return true;
 		}
 	);
@@ -106,7 +106,7 @@ void Lobby::Show() {
 	m_cancel_button->SetLabel( "CANCEL" );
 	m_cancel_button->On(
 		UIEvent::EV_BUTTON_CLICK, EH( this ) {
-			m_connection->Disconnect();
+			m_state->Disconnect();
 			return true;
 		}
 	);
@@ -138,7 +138,7 @@ void Lobby::Hide() {
 void Lobby::Iterate() {
 	PopupMenu::Iterate();
 
-	m_connection->Iterate();
+	m_state->Iterate();
 
 	while ( m_countdown_timer.HasTicked() ) {
 		m_countdown--;
@@ -146,9 +146,8 @@ void Lobby::Iterate() {
 			m_countdown_timer.Stop();
 
 			Log( "Starting game" );
-/*			m_mainmenu->m_state = m_state;
-			m_mainmenu->StartGame();*/
-			m_connection->Disconnect();
+
+			m_mainmenu->StartGame();
 			GoBack();
 
 		}
@@ -156,7 +155,7 @@ void Lobby::Iterate() {
 }
 
 ::game::Settings& Lobby::GetSettings() {
-	return m_state.m_settings;
+	return m_state->m_settings;
 }
 
 const ::game::Player* Lobby::GetPlayer() {
@@ -225,7 +224,7 @@ void Lobby::UnlockInput() {
 void Lobby::ManageCountdown() {
 	if ( m_connection->IsServer() ) {
 		bool is_everyone_ready = true;
-		for ( const auto& slot : m_state.m_slots.GetSlots() ) {
+		for ( const auto& slot : m_state->m_slots.GetSlots() ) {
 			if ( !slot.IsReady() ) {
 				is_everyone_ready = false;
 				break;

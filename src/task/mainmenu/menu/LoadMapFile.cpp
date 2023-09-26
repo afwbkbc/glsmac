@@ -45,7 +45,7 @@ void LoadMapFile::Show() {
 			}
 			else {
 				ASSERT( util::FS::IsAbsolutePath( path ), "path must be absolute" );
-				m_mainmenu->m_state.m_settings.global.map.filename = path;
+				m_mainmenu->m_state->m_settings.global.map.filename = path;
 				m_mainmenu->StartGame();
 			}
 			return true;
@@ -74,12 +74,12 @@ void LoadMapFile::OnNext() {
 /*	const auto value = m_choices->GetValue();
 	MenuObject* menu = nullptr;
 	if ( value == "Host new game" ) {
-		m_mainmenu->m_state.m_settings.local.network_role = LocalSettings::NR_SERVER;
+		m_mainmenu->m_state->m_settings.local.network_role = LocalSettings::NR_SERVER;
 		NEW( menu, Host, m_mainmenu );
 		NextMenu( menu );
 	}
 	else {
-		m_mainmenu->m_state.m_settings.local.network_role = LocalSettings::NR_CLIENT;
+		m_mainmenu->m_state->m_settings.local.network_role = LocalSettings::NR_CLIENT;
 		NEW( menu, Join, m_mainmenu );
 		NextMenu( menu );
 	}*/
