@@ -1,5 +1,7 @@
 #include "Font.h"
 
+#include <cstdint>
+
 namespace types {
 
 Font::~Font() {
