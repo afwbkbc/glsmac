@@ -97,6 +97,10 @@ CLASS( Game, base::Task )
 	util::Random* GetRandom() const;
 
 	void CloseMenus();
+
+	typedef std::function< void() > f_exit_game;
+	f_exit_game m_on_game_exit = nullptr;
+	void ExitGame( const f_exit_game on_game_exit );
 	void ReturnToMainMenu();
 
 	const size_t GetBottomBarMiddleHeight() const;
@@ -306,6 +310,7 @@ private:
 	struct {
 		mt_id_t ping = 0;
 		mt_id_t init = 0;
+		mt_id_t get_map_data = 0;
 		mt_id_t reset = 0;
 		mt_id_t select_tile = 0;
 		mt_id_t save_map = 0;
@@ -324,6 +329,7 @@ private:
 	std::unordered_map< std::string, instanced_sprite_t > m_instanced_sprites = {};
 
 	void CancelRequests();
+	void CancelGame();
 };
 
 }

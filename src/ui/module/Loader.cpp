@@ -16,10 +16,8 @@ Loader::~Loader() {
 }
 
 void Loader::Show( const std::string& text, const loader_cancel_handler_t on_cancel ) {
-	ASSERT( !m_is_active, "loader already running" );
 	SetText( text );
 	m_on_cancel = on_cancel;
-
 	Start();
 }
 

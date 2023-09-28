@@ -19,7 +19,11 @@ GameMenu::GameMenu( Game* game )
 			"Start New Game", MH( this ) {
 				m_game->ConfirmExit(
 					UH( this ) {
-						m_game->ReturnToMainMenu();
+						m_game->ExitGame(
+							[ this ]() -> void {
+								m_game->ReturnToMainMenu();
+							}
+						);
 					}
 				);
 #ifdef DEBUG

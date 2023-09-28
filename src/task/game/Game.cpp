@@ -46,25 +46,27 @@ void Game::Start() {
 	auto* game = g_engine->GetGame();
 	auto* config = g_engine->GetConfig();
 
+	if ( m_state->IsMaster() ) {
 #ifdef DEBUG
-	if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) {
-		m_state->m_settings.global.map.type = ::game::MapSettings::MT_MAPFILE;
-		m_state->m_settings.global.map.filename = config->GetQuickstartMapFile();
-	}
+		if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) {
+			m_state->m_settings.global.map.type = ::game::MapSettings::MT_MAPFILE;
+			m_state->m_settings.global.map.filename = config->GetQuickstartMapFile();
+		}
 #endif
 
-	if ( m_state->m_settings.global.map.type == ::game::MapSettings::MT_MAPFILE ) {
-		m_map_data.filename = util::FS::GetBaseName( m_state->m_settings.global.map.filename );
-		m_map_data.last_directory = util::FS::GetDirName( m_state->m_settings.global.map.filename );
+		if ( m_state->m_settings.global.map.type == ::game::MapSettings::MT_MAPFILE ) {
+			m_map_data.filename = util::FS::GetBaseName( m_state->m_settings.global.map.filename );
+			m_map_data.last_directory = util::FS::GetDirName( m_state->m_settings.global.map.filename );
+		}
 	}
 
 	ui->GetLoader()->Show(
 		"Starting game", LCH( this ) {
-			CancelRequests();
+			CancelGame();
 			return false;
 		}
 	);
-	m_mt_ids.init = game->MT_Init( m_state->m_settings.global.map );
+	m_mt_ids.init = game->MT_Init( m_state );
 }
 
 void Game::Stop() {
@@ -90,40 +92,64 @@ void Game::Iterate() {
 	auto* ui = g_engine->GetUI();
 	auto* config = g_engine->GetConfig();
 
+	const auto f_handle_nonsuccess_init = [ this, ui ]( const ::game::MT_Response& response ) -> void {
+		switch ( response.result ) {
+			case ::game::R_ABORTED: {
+				CancelGame();
+				break;
+			}
+			case ::game::R_ERROR: {
+				const std::string error_text = *response.data.error.error_text;
+				ui->GetError()->Show(
+					error_text, UH( this ) {
+						CancelGame();
+					}
+				);
+				break;
+			}
+			default: {
+				ASSERT( false, "unknown response result " + std::to_string( response.result ) );
+			}
+		}
+	};
+
 	if ( m_mt_ids.init ) {
 		auto response = game->MT_GetResponse( m_mt_ids.init );
 		if ( response.result != ::game::R_NONE ) {
-			auto* loader = ui->GetLoader();
-			loader->Hide();
 			m_mt_ids.init = 0;
+			if ( response.result == ::game::R_SUCCESS ) {
+				// get map data to display it
+				m_mt_ids.get_map_data = game->MT_GetMapData();
+			}
+			else {
+				f_handle_nonsuccess_init( response );
+			}
+		}
+		game->MT_DestroyResponse( response );
+	}
+	else if ( m_mt_ids.get_map_data ) {
+		auto response = game->MT_GetResponse( m_mt_ids.get_map_data );
+		if ( response.result != ::game::R_NONE ) {
+			if ( response.result == ::game::R_PENDING ) {
+				// still initializing, try later
+				m_mt_ids.get_map_data = game->MT_GetMapData();
+			}
+			else {
+				auto* loader = ui->GetLoader();
+				loader->Hide();
+				m_mt_ids.get_map_data = 0;
 
-			switch ( response.result ) {
-				case ::game::R_ABORTED: {
-					if ( m_on_cancel ) {
-						m_on_cancel();
-					}
-					break;
-				}
-				case ::game::R_ERROR: {
-					ui->GetError()->Show(
-						*response.data.error.error_text, UH( this ) {
-							if ( m_on_cancel ) {
-								m_on_cancel();
-							}
-						}
-					);
-					break;
-				}
-				case ::game::R_SUCCESS: {
+				if ( response.result == ::game::R_SUCCESS ) {
 					// at this point starting continues in this thread so is not cancelable anymore
 					if ( m_on_start ) {
 						m_on_start();
+						m_on_start = nullptr;
 					}
 
 					UpdateMapData(
 						{
-							response.data.init.map_width,
-							response.data.init.map_height
+							response.data.get_map_data->map_width,
+							response.data.get_map_data->map_height
 						}
 					);
 
@@ -132,29 +158,24 @@ void Game::Iterate() {
 					}
 
 					Initialize(
-						response.data.init.terrain_texture,
-						response.data.init.terrain_mesh,
-						response.data.init.terrain_data_mesh,
-						*response.data.init.sprites.actors,
-						*response.data.init.sprites.instances
+						response.data.get_map_data->terrain_texture,
+						response.data.get_map_data->terrain_mesh,
+						response.data.get_map_data->terrain_data_mesh,
+						*response.data.get_map_data->sprites.actors,
+						*response.data.get_map_data->sprites.instances
 					);
-					response.data.init.terrain_texture = nullptr;
-					response.data.init.terrain_mesh = nullptr;
-					response.data.init.terrain_data_mesh = nullptr;
+					response.data.get_map_data->terrain_texture = nullptr;
+					response.data.get_map_data->terrain_mesh = nullptr;
+					response.data.get_map_data->terrain_data_mesh = nullptr;
 
 					UpdateCameraRange();
 					UpdateMapInstances();
 					UpdateMinimap();
-					break;
 				}
-				default: {
-					ASSERT( false, "unknown response result " + std::to_string( response.result ) );
+				else {
+					f_handle_nonsuccess_init( response );
 				}
 			}
-
-			// these callbacks should only execute once
-			m_on_cancel = 0;
-			m_on_start = 0;
 
 			game->MT_DestroyResponse( response );
 		}
@@ -167,9 +188,10 @@ void Game::Iterate() {
 
 			switch ( response.result ) {
 				case ::game::R_SUCCESS: {
-					NEWV( task, task::mainmenu::MainMenu );
-					g_engine->GetScheduler()->RemoveTask( this );
-					g_engine->GetScheduler()->AddTask( task );
+					ASSERT( m_on_game_exit, "game exit handler not set" );
+					const auto on_game_exit = m_on_game_exit;
+					m_on_game_exit = nullptr;
+					on_game_exit();
 					break;
 				}
 				default: {
@@ -184,10 +206,7 @@ void Game::Iterate() {
 			ui->GetLoader()->Hide();
 			m_mt_ids.ping = 0;
 			ASSERT( response.result == ::game::R_SUCCESS, "ping not successful" );
-			if ( m_on_cancel ) {
-				m_on_cancel();
-				m_on_cancel = 0;
-			}
+			CancelGame();
 		}
 	}
 	else if ( m_mt_ids.save_map ) {
@@ -602,14 +621,6 @@ void Game::UpdateUICamera() {
 	}*/
 }
 
-void Game::ReturnToMainMenu() {
-	auto* ui = g_engine->GetUI();
-	auto* game = g_engine->GetGame();
-
-	ui->GetLoader()->Show( "Exiting game" );
-	m_mt_ids.reset = game->MT_Reset();
-}
-
 const size_t Game::GetBottomBarMiddleHeight() const {
 	ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
 	return m_ui.bottom_bar->GetMiddleHeight();
@@ -636,7 +647,11 @@ void Game::LoadMap( const std::string& path ) {
 	if ( m_mt_ids.init ) {
 		game->MT_Cancel( m_mt_ids.init );
 	}
-	m_mt_ids.init = game->MT_Init( m_state->m_settings.global.map );
+	if ( m_mt_ids.get_map_data ) {
+		game->MT_Cancel( m_mt_ids.get_map_data );
+		m_mt_ids.get_map_data = 0;
+	}
+	m_mt_ids.init = game->MT_Init( m_state );
 }
 
 void Game::SaveMap( const std::string& path ) {
@@ -645,6 +660,7 @@ void Game::SaveMap( const std::string& path ) {
 	g_engine->GetUI()->GetLoader()->Show( "Saving game" );
 	if ( m_mt_ids.save_map ) {
 		game->MT_Cancel( m_mt_ids.save_map );
+
 	}
 	m_mt_ids.save_map = game->MT_SaveMap( path );
 }
@@ -887,7 +903,11 @@ void Game::Initialize(
 					if ( !g_engine->GetUI()->HasPopup() ) { // close all other popups first (including same one)
 						ConfirmExit(
 							UH( this ) {
-								g_engine->ShutDown();
+								ExitGame(
+									[]() -> void {
+										g_engine->ShutDown();
+									}
+								);
 							}
 						);
 					}
@@ -1589,19 +1609,53 @@ void Game::CloseMenus() {
 	}
 }
 
+void Game::ExitGame( const f_exit_game on_game_exit ) {
+	auto* ui = g_engine->GetUI();
+	auto* game = g_engine->GetGame();
+	ui->GetLoader()->Show( "Exiting game" );
+	m_on_game_exit = on_game_exit;
+	CancelRequests();
+	if ( !m_mt_ids.reset ) {
+		m_mt_ids.reset = game->MT_Reset();
+	}
+}
+
 void Game::CancelRequests() {
 	auto* game = g_engine->GetGame();
 	if ( m_mt_ids.init ) {
 		game->MT_Cancel( m_mt_ids.init );
 		m_mt_ids.init = 0;
+		// WHY?
 		ASSERT( !m_mt_ids.ping, "ping already active" );
 		g_engine->GetUI()->GetLoader()->SetText( "Canceling" );
 		m_mt_ids.ping = game->MT_Ping();
+	}
+	if ( m_mt_ids.get_map_data ) {
+		game->MT_Cancel( m_mt_ids.get_map_data );
+		m_mt_ids.get_map_data = 0;
 	}
 	if ( m_mt_ids.reset ) {
 		game->MT_Cancel( m_mt_ids.reset );
 		m_mt_ids.reset = 0;
 	}
+	// TODO: cancel other requests?
+}
+
+void Game::CancelGame() {
+	ExitGame(
+		[ this ]() -> void {
+			if ( m_on_cancel ) {
+				m_on_cancel();
+				m_on_cancel = nullptr;
+			}
+		}
+	);
+}
+
+void Game::ReturnToMainMenu() {
+	NEWV( task, task::mainmenu::MainMenu );
+	g_engine->GetScheduler()->RemoveTask( this );
+	g_engine->GetScheduler()->AddTask( task );
 }
 
 }

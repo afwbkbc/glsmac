@@ -11,37 +11,45 @@ namespace game {
 class State;
 namespace connection {
 
+class Client;
+
+class Server;
+
 CLASS( Connection, base::Module )
+
+	enum game_state_t {
+		GS_NONE,
+		GS_START_GAME,
+		GS_INIT_MAP,
+	};
 
 	Connection( const network::connection_mode_t connection_mode, LocalSettings* const settings );
 	virtual ~Connection();
 
-	// protocol
 	std::function< void() > m_on_connect = nullptr;
 	std::function< void() > m_on_cancel = nullptr;
 	std::function< void() > m_on_disconnect = nullptr;
 	std::function< void( const std::string& message ) > m_on_error = nullptr;
 
-	// universal
+	std::function< void() > m_on_global_settings_update = nullptr;
 	std::function< void( const size_t slot_num, Slot* slot, const Player* player ) > m_on_player_join = nullptr;
 	std::function< void( const size_t slot_num, Slot* slot, const Player* player ) > m_on_player_leave = nullptr;
 	std::function< void( const size_t slot_num, game::Slot* slot ) > m_on_slot_update = nullptr;
 	std::function< void( const std::string& message ) > m_on_message = nullptr;
 
-	// client-specific
-	std::function< void() > m_on_global_settings_update = nullptr;
-	std::function< void() > m_on_players_list_update = nullptr;
-
-	// server-specific
-	std::function< void() > m_on_listen = nullptr;
-
 	void SetState( State* state );
-	void ClearCallbacks();
+
+	virtual void ResetHandlers();
 
 	void Connect();
 	void Disconnect( const std::string& message = "" );
 
 	void Iterate() override;
+
+	Client* AsClient() const; // for client-specific calls
+	void IfClient( std::function< void( Client* client ) > cb ); // call cb if client
+	Server* AsServer() const; // for server-specific calls
+	void IfServer( std::function< void( Server* server ) > cb ); // call cb if server
 
 	const bool IsConnected() const;
 	const bool IsServer() const;
@@ -81,3 +89,5 @@ private:
 }
 
 #include "game/State.h"
+#include "Client.h"
+#include "Server.h"

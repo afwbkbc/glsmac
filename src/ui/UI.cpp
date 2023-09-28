@@ -182,8 +182,9 @@ void UI::Iterate() {
 	if ( !m_iterative_objects_to_remove.empty() ) {
 		for ( auto& remove_it : m_iterative_objects_to_remove ) {
 			auto it = m_iterative_objects.find( remove_it );
-			ASSERT( it != m_iterative_objects.end(), "iterative object to be removed not found" );
-			m_iterative_objects.erase( it );
+			if ( it != m_iterative_objects.end() ) {
+				m_iterative_objects.erase( it );
+			}
 		}
 		m_iterative_objects_to_remove.clear();
 	}
@@ -438,7 +439,6 @@ const theme::Style* UI::GetStyle( const std::string& style_class ) const {
 }
 
 void UI::AddIterativeObject( void* object, const ui_handler_t handler ) {
-	ASSERT( m_iterative_objects.find( object ) == m_iterative_objects.end(), "iterative object already exists" );
 	m_iterative_objects[ object ] = handler;
 }
 
@@ -446,7 +446,6 @@ void UI::RemoveIterativeObject( void* object ) {
 	ASSERT( find( m_iterative_objects_to_remove.begin(), m_iterative_objects_to_remove.end(), object ) == m_iterative_objects_to_remove.end(),
 		"iterative object already in removal queue"
 	);
-	ASSERT( m_iterative_objects.find( object ) != m_iterative_objects.end(), "iterative object not found" );
 	m_iterative_objects_to_remove.push_back( object ); // can't remove here because removal can be requested from within it's handler
 }
 

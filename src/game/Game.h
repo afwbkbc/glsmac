@@ -13,14 +13,18 @@
 #include "types/mesh/Render.h"
 #include "types/mesh/Data.h"
 
-#include "game/Settings.h"
-
 namespace game {
+
+class State;
+namespace connection {
+class Connection;
+}
 
 enum op_t {
 	OP_NONE,
 	OP_PING,
 	OP_INIT,
+	OP_GET_MAP_DATA,
 	OP_RESET,
 	OP_SELECT_TILE,
 	OP_SAVE_MAP,
@@ -36,6 +40,7 @@ enum result_t {
 	R_SUCCESS,
 	R_ABORTED,
 	R_ERROR,
+	R_PENDING,
 };
 
 typedef std::vector< types::mesh::Render* > data_tile_meshes_t;
@@ -56,7 +61,7 @@ struct MT_Request {
 	op_t op;
 	union {
 		struct {
-			MapSettings* settings;
+			State* state;
 		} init;
 		struct {
 			size_t tile_x;
@@ -114,22 +119,37 @@ struct vertices_t {
 	vec3_t bottom;
 };
 
+struct response_map_data_t {
+	size_t map_width;
+	size_t map_height;
+	types::Texture* terrain_texture;
+	types::mesh::Render* terrain_mesh;
+	types::mesh::Data* terrain_data_mesh;
+	std::string* path;
+	struct {
+		std::unordered_map< std::string, map::Map::sprite_actor_t >* actors;
+		std::unordered_map< size_t, std::pair< std::string, Vec3 > >* instances;
+	} sprites;
+	~response_map_data_t() {
+		if ( terrain_texture ) {
+			DELETE( terrain_texture );
+		}
+		if ( terrain_mesh ) {
+			DELETE( terrain_mesh );
+		}
+		if ( terrain_data_mesh ) {
+			DELETE( terrain_data_mesh );
+		}
+	};
+};
+
 struct MT_Response {
 	op_t op;
 	result_t result;
 	union {
 		struct {
-			size_t map_width;
-			size_t map_height;
-			types::Texture* terrain_texture;
-			types::mesh::Render* terrain_mesh;
-			types::mesh::Data* terrain_data_mesh;
-			std::string* path;
-			struct {
-				std::unordered_map< std::string, map::Map::sprite_actor_t >* actors;
-				std::unordered_map< size_t, std::pair< std::string, Vec3 > >* instances;
-			} sprites;
 		} init;
+		response_map_data_t* get_map_data;
 		struct {
 			const std::string* error_text;
 		} error;
@@ -166,10 +186,13 @@ CLASS( Game, MTModule )
 	// returns success as soon as this thread is ready (not busy with previous requests)
 	mt_id_t MT_Ping();
 
-	// initialize map and other things in game thread
-	mt_id_t MT_Init( const MapSettings& settings );
+	// initialize map and other things
+	mt_id_t MT_Init( State* state );
 
-	// initialize map and other things in game thread
+	// get map data for display
+	mt_id_t MT_GetMapData();
+
+	// deinitialize everything
 	mt_id_t MT_Reset();
 
 	// returns some data about tile
@@ -203,12 +226,18 @@ protected:
 
 private:
 
+	bool m_is_initializing = false;
+	std::string m_initialization_error = "";
+
+	response_map_data_t* m_response_map_data = nullptr;
+
 	void InitGame( MT_Response& response, MT_CANCELABLE );
 	void ResetGame();
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)
 	util::Random* m_random = nullptr;
-	MapSettings m_map_settings = {};
+	State* m_state = nullptr;
+	connection::Connection* m_connection = nullptr;
 
 	map::Map* m_map = nullptr;
 	map_editor::MapEditor* m_map_editor = nullptr;

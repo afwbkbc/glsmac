@@ -24,6 +24,9 @@ CLASS( State, base::Base )
 
 	void Iterate();
 
+	bool IsMaster() const;
+	bool IsSlave() const;
+
 	void AddPlayer( Player* player );
 	void RemovePlayer( Player* player );
 

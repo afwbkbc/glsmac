@@ -20,6 +20,7 @@ CLASS( Packet, Serializable )
 		PT_SLOT_UPDATE, // S->C
 		PT_KICK, // S->C
 		PT_MESSAGE, // *->*
+		PT_GAME_STATE_CHANGE, // S->C
 		PT_TILES, // S->C
 	};
 

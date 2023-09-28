@@ -212,10 +212,21 @@ void Server::BanFromSlot( const size_t slot_num, const std::string& reason ) {
 	KickFromSlot( slot, reason );
 }
 
+void Server::ChangeGameState( const game_state_t game_state ) {
+	Broadcast(
+		[ this, game_state ]( const size_t cid ) -> void {
+			Log( "Sending game state change (" + std::to_string( game_state ) + ") to " + std::to_string( cid ) );
+			Packet p( Packet::PT_GAME_STATE_CHANGE );
+			p.data.num = game_state;
+			m_network->MT_SendPacket( p, cid );
+		}
+	);
+}
+
 void Server::SendMapGenerationPercentage( const size_t percentage ) {
 	Broadcast(
 		[ this, percentage ]( const size_t cid ) -> void {
-			Log( "Seding map generation percentage (" + std::to_string( percentage ) + "%) to " + std::to_string( cid ) );
+			Log( "Sending map generation percentage (" + std::to_string( percentage ) + "%) to " + std::to_string( cid ) );
 			Packet p( Packet::PT_TILES );
 			p.data.boolean = false;
 			p.data.num = percentage;
@@ -238,6 +249,11 @@ void Server::UpdateSlot( const size_t slot_num, const Slot* slot ) {
 
 void Server::Message( const std::string& message ) {
 	GlobalMessage( FormatChatMessage( GetPlayer(), message ) );
+}
+
+void Server::ResetHandlers() {
+	Connection::ResetHandlers();
+	m_on_listen = nullptr;
 }
 
 void Server::UpdateGameSettings() {

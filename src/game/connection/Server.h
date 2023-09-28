@@ -9,14 +9,19 @@ CLASS( Server, Connection )
 
 	Server( LocalSettings* const settings );
 
+	std::function< void() > m_on_listen = nullptr;
+
 	void UpdateSlot( const size_t slot_num, const Slot* slot ) override;
 	void Message( const std::string& message ) override;
+
+	void ResetHandlers() override;
 
 	void UpdateGameSettings();
 	void GlobalMessage( const std::string& message );
 	void KickFromSlot( const size_t slot_num, const std::string& reason = "Kicked by host" );
 	void BanFromSlot( const size_t slot_num, const std::string& reason = "Banned by host" );
 
+	void ChangeGameState( const game_state_t game_state );
 	void SendMapGenerationPercentage( const size_t percentage );
 
 protected:

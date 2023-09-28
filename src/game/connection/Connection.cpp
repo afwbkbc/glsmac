@@ -10,7 +10,7 @@ void Connection::SetState( game::State* state ) {
 	m_state = state;
 }
 
-void Connection::ClearCallbacks() {
+void Connection::ResetHandlers() {
 	m_on_connect = nullptr;
 	m_on_cancel = nullptr;
 	m_on_disconnect = nullptr;
@@ -20,8 +20,6 @@ void Connection::ClearCallbacks() {
 	m_on_slot_update = nullptr;
 	m_on_message = nullptr;
 	m_on_global_settings_update = nullptr;
-	m_on_players_list_update = nullptr;
-	m_on_listen = nullptr;
 }
 
 Connection::Connection( const network::connection_mode_t connection_mode, LocalSettings* const settings )
@@ -137,6 +135,28 @@ void Connection::Iterate() {
 				}
 			}
 		}
+	}
+}
+
+Client* Connection::AsClient() const {
+	ASSERT( IsClient(), "not client connection" );
+	return (Client*)this;
+}
+
+void Connection::IfClient( std::function< void( Client* ) > cb ) {
+	if ( IsClient() ) {
+		cb( (Client*)this );
+	}
+}
+
+Server* Connection::AsServer() const {
+	ASSERT( IsServer(), "not server connection" );
+	return (Server*)this;
+}
+
+void Connection::IfServer( std::function< void( Server* ) > cb ) {
+	if ( IsServer() ) {
+		cb( (Server*)this );
 	}
 }
 

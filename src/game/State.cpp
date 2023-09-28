@@ -16,6 +16,14 @@ void State::Iterate() {
 	}
 }
 
+bool State::IsMaster() const {
+	return !m_connection || m_connection->IsServer();
+}
+
+bool State::IsSlave() const {
+	return m_connection && m_connection->IsClient();
+}
+
 void State::AddPlayer( Player* player ) {
 	Log( "adding player: " + player->GetPlayerName() );
 	ASSERT( m_players.find( player ) == m_players.end(), "duplicate player add" );

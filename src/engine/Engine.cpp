@@ -146,6 +146,9 @@ int Engine::Run() {
 }
 
 void Engine::ShutDown() {
+
+	// TODO: shutdown hooks
+	
 	m_is_shutting_down = true;
 }
 

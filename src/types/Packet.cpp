@@ -43,6 +43,10 @@ const Buffer Packet::Serialize() const {
 			buf.WriteString( data.str ); // message
 			break;
 		}
+		case PT_GAME_STATE_CHANGE: {
+			buf.WriteInt( data.num ); // game state
+			break;
+		}
 		case PT_TILES: {
 			buf.WriteBool( data.boolean ); // is map ready?
 			if ( !data.boolean ) {
@@ -96,6 +100,10 @@ void Packet::Unserialize( Buffer buf ) {
 		}
 		case PT_MESSAGE: {
 			data.str = buf.ReadString(); // message
+			break;
+		}
+		case PT_GAME_STATE_CHANGE: {
+			data.num = buf.ReadInt(); // game state
 			break;
 		}
 		case PT_TILES: {

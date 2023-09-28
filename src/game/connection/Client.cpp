@@ -81,6 +81,13 @@ void Client::ProcessEvent( const Event& event ) {
 							}
 							break;
 						}
+						case Packet::PT_GAME_STATE_CHANGE: {
+							Log( "Got game state change: " + std::to_string( packet.data.num ) );
+							if ( m_on_game_state_change ) {
+								m_on_game_state_change( (game_state_t)packet.data.num );
+							}
+							break;
+						}
 						case Packet::PT_TILES: {
 							if ( !packet.data.boolean ) {
 								Log( "Got map generation percentage: " + std::to_string( packet.data.num ) );
@@ -128,6 +135,11 @@ void Client::Message( const std::string& message ) {
 	Packet p( Packet::PT_MESSAGE );
 	p.data.str = message;
 	m_network->MT_SendPacket( p );
+}
+
+void Client::ResetHandlers() {
+	Connection::ResetHandlers();
+	m_on_players_list_update = nullptr;
 }
 
 void Client::Error( const std::string& reason ) {

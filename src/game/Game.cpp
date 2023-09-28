@@ -5,6 +5,10 @@
 #include "util/FS.h"
 #include "types/Buffer.h"
 
+#include "game/State.h"
+
+using namespace game::connection;
+
 namespace game {
 
 mt_id_t Game::MT_Ping() {
@@ -13,11 +17,16 @@ mt_id_t Game::MT_Ping() {
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Game::MT_Init( const MapSettings& settings ) {
+mt_id_t Game::MT_Init( State* state ) {
 	MT_Request request = {};
 	request.op = OP_INIT;
-	NEW( request.data.init.settings, MapSettings );
-	*request.data.init.settings = settings;
+	request.data.init.state = state;
+	return MT_CreateRequest( request );
+}
+
+mt_id_t Game::MT_GetMapData() {
+	MT_Request request = {};
+	request.op = OP_GET_MAP_DATA;
 	return MT_CreateRequest( request );
 }
 
@@ -105,6 +114,9 @@ void Game::Stop() {
 void Game::Iterate() {
 	MTModule::Iterate();
 
+	if ( m_connection ) {
+		m_connection->Iterate();
+	}
 }
 
 util::Random* Game::GetRandom() const {
@@ -122,14 +134,29 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 	switch ( request.op ) {
 		case OP_INIT: {
 			//Log( "Got init request" );
-			ASSERT( request.data.init.settings, "settings not set" );
-			m_map_settings = *( request.data.init.settings );
+			ASSERT( request.data.init.state, "state not set" );
+			m_state = request.data.init.state;
 			InitGame( response, MT_C );
+			break;
+		}
+		case OP_GET_MAP_DATA: {
+			//Log( "Got get-map-data request" );
+			if ( m_is_initializing ) {
+				response.result = R_PENDING;
+			}
+			else if ( m_response_map_data ) {
+				response.result = R_SUCCESS;
+				response.data.get_map_data = m_response_map_data;
+				m_response_map_data = nullptr;
+			}
+			else {
+				response.result = R_ERROR;
+				NEW( response.data.error.error_text, std::string, m_initialization_error );
+			}
 			break;
 		}
 		case OP_RESET: {
 			//Log( "Got reset request" );
-			ASSERT( m_map, "map not created" );
 			ResetGame();
 			response.result = R_SUCCESS;
 			break;
@@ -507,12 +534,6 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 
 void Game::DestroyRequest( const MT_Request& request ) {
 	switch ( request.op ) {
-		case OP_INIT: {
-			if ( request.data.init.settings ) {
-				DELETE( request.data.init.settings );
-			}
-			break;
-		}
 		case OP_SAVE_MAP: {
 			if ( request.data.save_map.path ) {
 				DELETE( request.data.save_map.path );
@@ -528,15 +549,9 @@ void Game::DestroyRequest( const MT_Request& request ) {
 void Game::DestroyResponse( const MT_Response& response ) {
 	if ( response.result == R_SUCCESS ) {
 		switch ( response.op ) {
-			case OP_INIT: {
-				if ( response.data.init.terrain_texture ) {
-					DELETE( response.data.init.terrain_texture );
-				}
-				if ( response.data.init.terrain_mesh ) {
-					DELETE( response.data.init.terrain_mesh );
-				}
-				if ( response.data.init.terrain_data_mesh ) {
-					DELETE( response.data.init.terrain_data_mesh );
+			case OP_GET_MAP_DATA: {
+				if ( response.data.get_map_data ) {
+					DELETE( response.data.get_map_data );
 				}
 				break;
 			}
@@ -582,134 +597,193 @@ void Game::DestroyResponse( const MT_Response& response ) {
 
 void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
+	ASSERT( !m_is_initializing, "game already initializing" );
+
+	m_is_initializing = true;
+
 	Log( "Initializing game" );
 
-	Log( "Game seed: " + m_random->GetStateString() );
+	m_connection = m_state->GetConnection();
+	if ( m_connection ) {
 
-	auto* loader = g_engine->GetUI()->GetLoader();
+		m_connection->ResetHandlers();
 
-	map::Map* old_map = nullptr;
-	if ( m_map ) {
-		old_map = m_map;
+		m_connection->IfServer(
+			[ this ]( Server* connection ) -> void {
+				connection->m_on_player_leave = [ this ]( const size_t slot_num, Slot* slot, const Player* player ) -> void {
+					Log( "Player " + player->GetPlayerName() + " left the game." );
+				};
+			}
+		);
+
+		m_connection->IfClient(
+			[ this ]( Client* connection ) -> void {
+				connection->m_on_disconnect = [ this ]() -> void {
+					Log( "Server disconnected" );
+					if ( m_is_initializing ) {
+						m_initialization_error = "Lost connection to server";
+						m_is_initializing = false;
+					}
+					else {
+						Log( "RETURN TO MAIN MENU" );
+					}
+				};
+			}
+		);
+
 	}
-	NEW( m_map, map::Map, this );
+
+	if ( m_state->IsMaster() ) {
+		// generate map
+
+		Log( "Game seed: " + m_random->GetStateString() );
+
+		auto* loader = g_engine->GetUI()->GetLoader();
+
+		map::Map* old_map = nullptr;
+		if ( m_map ) {
+			old_map = m_map;
+		}
+		NEW( m_map, map::Map, this );
 
 #ifdef DEBUG
-	// if crash happens - it's handy to have a seed to reproduce it
-	util::FS::WriteFile( map::s_consts.debug.lastseed_filename, m_random->GetStateString() );
+		// if crash happens - it's handy to have a seed to reproduce it
+		util::FS::WriteFile( map::s_consts.debug.lastseed_filename, m_random->GetStateString() );
 #endif
 
-	map::Map::error_code_t ec = map::Map::EC_UNKNOWN;
+		map::Map::error_code_t ec = map::Map::EC_UNKNOWN;
 #ifdef DEBUG
-	const auto* config = g_engine->GetConfig();
-	if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) {
-		const std::string& filename = config->GetQuickstartMapDump();
-		ASSERT( util::FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
-		Log( (std::string)"Loading map dump from " + filename );
-		loader->SetText( "Loading dump" );
-		loader->SetIsCancelable( false );
-		m_map->Unserialize( types::Buffer( util::FS::ReadFile( filename ) ) );
-		ec = map::Map::EC_NONE;
-	}
-	else
-#endif
-	{
-#ifdef DEBUG
-		if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) {
-			const std::string& filename = config->GetQuickstartMapFile();
-			ec = m_map->Load( filename );
+		const auto* config = g_engine->GetConfig();
+		if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) {
+			const std::string& filename = config->GetQuickstartMapDump();
+			ASSERT( util::FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
+			Log( (std::string)"Loading map dump from " + filename );
+			loader->SetText( "Loading dump" );
+			loader->SetIsCancelable( false );
+			m_map->Unserialize( types::Buffer( util::FS::ReadFile( filename ) ) );
+			ec = map::Map::EC_NONE;
 		}
 		else
 #endif
 		{
-			if ( m_map_settings.type == MapSettings::MT_MAPFILE ) {
-				ASSERT( !m_map_settings.filename.empty(), "loading map requested but map file not specified" );
-				ec = m_map->Load( m_map_settings.filename );
+#ifdef DEBUG
+			if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) {
+				const std::string& filename = config->GetQuickstartMapFile();
+				ec = m_map->Load( filename );
 			}
-			else {
-				ec = m_map->Generate( m_map_settings, MT_C );
+			else
+#endif
+			{
+				const auto& map_settings = m_state->m_settings.global.map;
+				if ( map_settings.type == MapSettings::MT_MAPFILE ) {
+					ASSERT( !map_settings.filename.empty(), "loading map requested but map file not specified" );
+					ec = m_map->Load( map_settings.filename );
+				}
+				else {
+					ec = m_map->Generate( map_settings, MT_C );
+				}
+			}
+			if ( !ec ) {
+				ec = m_map->Initialize( MT_C );
 			}
 		}
+
+		if ( !ec && canceled ) {
+			ec = map::Map::EC_ABORTED;
+		}
+
 		if ( !ec ) {
-			ec = m_map->Initialize( MT_C );
-		}
-	}
-
-	if ( !ec && canceled ) {
-		ec = map::Map::EC_ABORTED;
-	}
-
-	if ( !ec ) {
 
 #ifdef DEBUG
-		// also handy to have dump of generated map
-		if ( !ec && !config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) { // no point saving if we just loaded it
-			Log( (std::string)"Saving map dump to " + map::s_consts.debug.lastdump_filename );
-			loader->SetText( "Saving dump" );
-			loader->SetIsCancelable( false );
-			util::FS::WriteFile( map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
-		}
+			// also handy to have dump of generated map
+			if ( !ec && !config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) { // no point saving if we just loaded it
+				Log( (std::string)"Saving map dump to " + map::s_consts.debug.lastdump_filename );
+				loader->SetText( "Saving dump" );
+				loader->SetIsCancelable( false );
+				util::FS::WriteFile( map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
+			}
 #endif
-		response.result = R_SUCCESS;
+			response.result = R_SUCCESS;
 
-		ASSERT( m_map, "map not set" );
+			ASSERT( m_map, "map not set" );
 
-		response.data.init.map_width = m_map->GetWidth();
-		response.data.init.map_height = m_map->GetHeight();
+			NEW( m_response_map_data, response_map_data_t );
 
-		ASSERT( m_map->m_textures.terrain, "map terrain texture not generated" );
-		response.data.init.terrain_texture = m_map->m_textures.terrain;
+			m_response_map_data->map_width = m_map->GetWidth();
+			m_response_map_data->map_height = m_map->GetHeight();
 
-		ASSERT( m_map->m_meshes.terrain, "map terrain mesh not generated" );
-		response.data.init.terrain_mesh = m_map->m_meshes.terrain;
+			ASSERT( m_map->m_textures.terrain, "map terrain texture not generated" );
+			m_response_map_data->terrain_texture = m_map->m_textures.terrain;
 
-		ASSERT( m_map->m_meshes.terrain_data, "map terrain data mesh not generated" );
-		response.data.init.terrain_data_mesh = m_map->m_meshes.terrain_data;
+			ASSERT( m_map->m_meshes.terrain, "map terrain mesh not generated" );
+			m_response_map_data->terrain_mesh = m_map->m_meshes.terrain;
 
-		response.data.init.sprites.actors = &m_map->m_sprite_actors;
-		response.data.init.sprites.instances = &m_map->m_sprite_instances;
+			ASSERT( m_map->m_meshes.terrain_data, "map terrain data mesh not generated" );
+			m_response_map_data->terrain_data_mesh = m_map->m_meshes.terrain_data;
 
-		if ( old_map ) {
-			Log( "Destroying old map state" );
-			DELETE( old_map );
-		}
-	}
+			m_response_map_data->sprites.actors = &m_map->m_sprite_actors;
+			m_response_map_data->sprites.instances = &m_map->m_sprite_instances;
 
-	else {
-
-		// need to delete these here because they weren't passed to main thread
-		if ( m_map->m_textures.terrain ) {
-			DELETE( m_map->m_textures.terrain );
-			m_map->m_textures.terrain = nullptr;
-		}
-		if ( m_map->m_meshes.terrain ) {
-			DELETE( m_map->m_meshes.terrain );
-			m_map->m_meshes.terrain = nullptr;
-		}
-		if ( m_map->m_meshes.terrain_data ) {
-			DELETE( m_map->m_meshes.terrain_data );
-			m_map->m_meshes.terrain_data = nullptr;
+			if ( old_map ) {
+				Log( "Destroying old map state" );
+				DELETE( old_map );
+			}
 		}
 
-		ResetGame();
-		if ( ec == map::Map::EC_ABORTED ) {
-			response.result = R_ABORTED;
-		}
 		else {
-			response.result = R_ERROR;
-			response.data.error.error_text = &( map::Map::GetErrorString( ec ) );
+
+			// need to delete these here because they weren't passed to main thread
+			if ( m_map->m_textures.terrain ) {
+				DELETE( m_map->m_textures.terrain );
+				m_map->m_textures.terrain = nullptr;
+			}
+			if ( m_map->m_meshes.terrain ) {
+				DELETE( m_map->m_meshes.terrain );
+				m_map->m_meshes.terrain = nullptr;
+			}
+			if ( m_map->m_meshes.terrain_data ) {
+				DELETE( m_map->m_meshes.terrain_data );
+				m_map->m_meshes.terrain_data = nullptr;
+			}
+
+			ResetGame();
+			if ( ec == map::Map::EC_ABORTED ) {
+				response.result = R_ABORTED;
+			}
+			else {
+				response.result = R_ERROR;
+				response.data.error.error_text = &( map::Map::GetErrorString( ec ) );
+			}
+			if ( old_map ) {
+				Log( "Restoring old map state" );
+				m_map = old_map; // restore old state // TODO: test
+			}
 		}
-		if ( old_map ) {
-			Log( "Restoring old map state" );
-			m_map = old_map; // restore old state // TODO: test
-		}
+
+		m_is_initializing = false;
+	}
+	else {
+		// download map from server
+
+		response.result = R_SUCCESS;
 	}
 }
 
 void Game::ResetGame() {
-	Log( "Reseting map" );
-	DELETE( m_map );
-	m_map = nullptr;
+	if ( m_is_initializing ) {
+		// TODO: do something?
+		m_is_initializing = false;
+	}
+	if ( m_map ) {
+		Log( "Resetting map" );
+		DELETE( m_map );
+		m_map = nullptr;
+	}
+	if ( m_state ) {
+		// ui thread will reset state as needed
+		m_state = nullptr;
+		m_connection = nullptr;
+	}
 }
 
 }

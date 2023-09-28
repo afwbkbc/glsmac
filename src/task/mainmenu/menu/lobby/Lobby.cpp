@@ -6,6 +6,8 @@
 using namespace types;
 using namespace network;
 
+using namespace ::game::connection;
+
 namespace task {
 namespace mainmenu {
 namespace lobby {
@@ -18,28 +20,16 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 	SetWidth( 800 );
 	SetHeight( 600 );
 
-	connection->ClearCallbacks();
+	connection->ResetHandlers();
 	connection->m_on_error = [ this ]( const std::string& message ) -> void {
 		MenuError( message );
 	};
 	connection->m_on_disconnect = [ this ]() -> void {
 		GoBack();
 	};
-	connection->m_on_listen = [ this ]() -> void {
-		size_t slots_i = 0;
-		for ( ::game::Slot& slot : m_state->m_slots.GetSlots() ) {
-			m_players_section->UpdateSlot( slots_i++, &slot );
-		}
-	};
 	connection->m_on_global_settings_update = [ this ]() -> void {
 		m_game_settings_section->UpdateRows();
 		m_players_section->UpdateSlots( m_state->m_slots.GetSlots() );
-	};
-	connection->m_on_players_list_update = [ this ]() -> void {
-		size_t slots_i = 0;
-		for ( auto& slot : m_state->m_slots.GetSlots() ) {
-			m_players_section->UpdateSlot( slots_i++, &slot );
-		}
 	};
 	connection->m_on_player_join = [ this ]( const size_t slot_num, game::Slot* slot, const game::Player* player ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
@@ -57,6 +47,42 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 		m_chat_section->AddMessage( message );
 	};
 
+	connection->IfServer(
+		[ this ]( Server* connection ) -> void {
+			connection->m_on_listen = [ this ]() -> void {
+				size_t slots_i = 0;
+				for ( ::game::Slot& slot : m_state->m_slots.GetSlots() ) {
+					m_players_section->UpdateSlot( slots_i++, &slot );
+				}
+			};
+		}
+	);
+
+	connection->IfClient(
+		[ this ]( Client* connection ) -> void {
+			connection->m_on_players_list_update = [ this ]() -> void {
+				size_t slots_i = 0;
+				for ( auto& slot : m_state->m_slots.GetSlots() ) {
+					m_players_section->UpdateSlot( slots_i++, &slot );
+				}
+			};
+			connection->m_on_game_state_change = [ this ]( const Connection::game_state_t state ) -> void {
+				if ( state == Connection::GS_START_GAME ) {
+					// server tells us to start the game
+
+					// detach state because game thread will own it now
+					m_state = nullptr;
+
+					// switch to game task
+					m_mainmenu->StartGame();
+					GoBack();
+				}
+				else {
+					ASSERT( false, "unexpected game state" );
+				}
+			};
+		}
+	);
 	m_connection = connection; // shortcut
 	m_state->SetConnection( m_connection );
 }
@@ -151,10 +177,13 @@ void Lobby::Iterate() {
 
 			Log( "Starting game" );
 
-			( (::game::connection::Server*)m_connection )->SendMapGenerationPercentage( 0 );
+			// notify clients of game start
+			( (Server*)m_connection )->ChangeGameState( Server::GS_START_GAME );
 
-			m_state = nullptr; // detach state
+			// detach state because game thread will own it now
+			m_state = nullptr;
 
+			// switch to game task
 			m_mainmenu->StartGame();
 			GoBack();
 
@@ -187,28 +216,28 @@ void Lobby::UpdateSlot( const size_t slot_num, ::game::Slot* slot ) {
 void Lobby::KickFromSlot( const size_t slot_num ) {
 	if ( m_connection->IsServer() ) {
 		Log( "Kicking from slot " + std::to_string( slot_num ) );
-		( (::game::connection::Server*)m_connection )->KickFromSlot( slot_num );
+		( (Server*)m_connection )->KickFromSlot( slot_num );
 	}
 }
 
 void Lobby::BanFromSlot( const size_t slot_num ) {
 	if ( m_connection->IsServer() ) {
 		Log( "Banning from slot " + std::to_string( slot_num ) );
-		( (::game::connection::Server*)m_connection )->BanFromSlot( slot_num );
+		( (Server*)m_connection )->BanFromSlot( slot_num );
 	}
 }
 
 void Lobby::UpdateGameSettings() {
 	if ( m_connection->IsServer() ) {
 		Log( "Updating game settings" );
-		( (::game::connection::Server*)m_connection )->UpdateGameSettings();
+		( (Server*)m_connection )->UpdateGameSettings();
 	}
 }
 
 void Lobby::GlobalMessage( const std::string& message ) {
 	if ( m_connection->IsServer() ) {
 		Log( "Sending global message: " + message );
-		( (::game::connection::Server*)m_connection )->GlobalMessage( message );
+		( (Server*)m_connection )->GlobalMessage( message );
 	}
 }
 
