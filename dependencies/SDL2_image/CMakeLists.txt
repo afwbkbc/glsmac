@@ -1,6 +1,7 @@
 MESSAGE( STATUS "Fetching SDL_image..." )
 
 SET( SDL2IMAGE_INSTALL OFF )
+SET( SDL2IMAGE_SAMPLES OFF )
 
 FETCHCONTENT_DECLARE( sdl_image
 	GIT_REPOSITORY https://github.com/libsdl-org/SDL_image
@@ -8,5 +9,3 @@ FETCHCONTENT_DECLARE( sdl_image
 	)
 
 FETCHCONTENT_MAKEAVAILABLE( sdl_image )
-
- 
