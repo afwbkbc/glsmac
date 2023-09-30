@@ -33,11 +33,13 @@ using namespace types;
 namespace ui {
 
 namespace module {
+
 class Module;
 
 class Error;
 
 class Loader;
+
 }
 
 typedef std::function< void() > ui_handler_t;
@@ -86,8 +88,15 @@ CLASS( UI, base::Module )
 	void AddIterativeObject( void* object, const ui_handler_t handler );
 	void RemoveIterativeObject( void* object );
 
-	module::Error* GetError() const;
-	module::Loader* GetLoader() const;
+	// no direct access to ui modules because they may have been already destroyed while other thread tries to call them
+
+	void ShowError( const std::string& text, const ui_handler_t on_close = UH() {} ) const;
+	void HideError() const;
+
+	typedef std::function< bool() > loader_cancel_handler_t;
+	void ShowLoader( const std::string& text, const loader_cancel_handler_t on_cancel = 0 ) const;
+	void SetLoaderText( const std::string& text, bool is_cancelable = true ) const;
+	void HideLoader() const;
 
 	void BlockEvents();
 	void UnblockEvents();

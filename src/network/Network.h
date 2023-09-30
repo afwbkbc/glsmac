@@ -171,6 +171,7 @@ protected:
 
 	void AddEvent( const Event& event );
 	events_t GetEvents();
+	void InvalidateEventsForDisconnectedClient( const size_t cid );
 
 	const connection_mode_t GetCurrentConnectionMode() const;
 

@@ -746,7 +746,7 @@ void Map::InitTextureAndMesh() {
 void Map::ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles, MT_CANCELABLE ) {
 	ASSERT( m_map_state, "map state not set" );
 
-	auto* loader = g_engine->GetUI()->GetLoader();
+	auto* ui = g_engine->GetUI();
 
 	// small optimization to avoid reallocations
 	const size_t percent_len = 2;
@@ -782,7 +782,7 @@ void Map::ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles, MT
 						sp = std::string( percent_len - sp.size(), ' ' ) + sp;
 					}
 					loading_text.replace( percent_pos, sp.size(), sp.c_str() );
-					loader->SetText( loading_text );
+					ui->SetLoaderText( loading_text );
 				}
 
 				MT_RETIF();
@@ -811,7 +811,7 @@ void Map::LoadTiles( const tiles_t& tiles, MT_CANCELABLE ) {
 void Map::FixNormals( const tiles_t& tiles, MT_CANCELABLE ) {
 	Log( "Fixing normals" );
 
-	g_engine->GetUI()->GetLoader()->SetText( "Fixing normals" );
+	g_engine->GetUI()->SetLoaderText( "Fixing normals" );
 
 	std::vector< types::mesh::Mesh::surface_id_t > surfaces = {};
 

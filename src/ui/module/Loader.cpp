@@ -12,6 +12,9 @@ Loader::Loader( UI* ui )
 }
 
 Loader::~Loader() {
+	if ( m_is_cancelable && m_on_cancel ) {
+		m_on_cancel();
+	}
 	Hide();
 }
 

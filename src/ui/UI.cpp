@@ -449,14 +449,35 @@ void UI::RemoveIterativeObject( void* object ) {
 	m_iterative_objects_to_remove.push_back( object ); // can't remove here because removal can be requested from within it's handler
 }
 
-module::Error* UI::GetError() const {
-	ASSERT( m_error, "error not set" );
-	return m_error;
+void UI::ShowError( const std::string& text, const ui_handler_t on_close ) const {
+	if ( m_error ) {
+		m_error->Show( text, on_close );
+	}
 }
 
-module::Loader* UI::GetLoader() const {
-	ASSERT( m_loader, "loader not set" );
-	return m_loader;
+void UI::HideError() const {
+	if ( m_error ) {
+		m_error->Hide();
+	}
+}
+
+void UI::ShowLoader( const std::string& text, const module::loader_cancel_handler_t on_cancel ) const {
+	if ( m_loader ) {
+		m_loader->Show( text, on_cancel );
+	}
+}
+
+void UI::SetLoaderText( const std::string& text, bool is_cancelable ) const {
+	if ( m_loader ) {
+		m_loader->SetText( text );
+		m_loader->SetIsCancelable( is_cancelable );
+	}
+}
+
+void UI::HideLoader() const {
+	if ( m_loader ) {
+		m_loader->Hide();
+	}
 }
 
 void UI::BlockEvents() {

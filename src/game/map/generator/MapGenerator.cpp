@@ -17,7 +17,7 @@ void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings, MT_C
 	ASSERT( TARGET_LAND_AMOUNTS.find( map_settings.ocean ) != TARGET_LAND_AMOUNTS.end(), "unknown map ocean setting " + std::to_string( map_settings.ocean ) );
 	float desired_land_amount = TARGET_LAND_AMOUNTS.at( map_settings.ocean );
 
-	auto* loader = g_engine->GetUI()->GetLoader();
+	auto* ui = g_engine->GetUI();
 
 	bool need_generation = true;
 	size_t regenerations_asked = 0;
@@ -27,11 +27,11 @@ void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings, MT_C
 		tiles->Clear();
 		MT_RETIF();
 
-		loader->SetText( "Generating elevations" );
+		ui->SetLoaderText( "Generating elevations" );
 		GenerateElevations( tiles, map_settings, MT_C );
 		MT_RETIF();
 
-		loader->SetText( "Normalizing elevations" );
+		ui->SetLoaderText( "Normalizing elevations" );
 		FixExtremeSlopes( tiles, MT_C );
 		MT_RETIF();
 		NormalizeElevationRange( tiles, MT_C );
@@ -43,7 +43,7 @@ void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings, MT_C
 
 		float acceptable_inaccuracy = INITIAL_ACCEPTABLE_INACCURACY;
 
-		loader->SetText( "Normalizing land amount" );
+		ui->SetLoaderText( "Normalizing land amount" );
 		do {
 			if ( acceptable_inaccuracy > MAXIMUM_ACCEPTABLE_INACCURACY ) {
 				regenerations_asked++;
@@ -71,7 +71,7 @@ void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings, MT_C
 		MT_RETIF();
 	}
 
-	loader->SetText( "Normalizing erosive forces" );
+	ui->SetLoaderText( "Normalizing erosive forces" );
 	// normalize erosive forces
 	ASSERT( TARGET_EVELATION_MULTIPLIERS.find( map_settings.erosive ) != TARGET_EVELATION_MULTIPLIERS.end(), "unknown map erosive setting " + std::to_string( map_settings.erosive ) );
 	const auto range = GetElevationsRange( tiles, MT_C );
@@ -93,21 +93,21 @@ void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings, MT_C
 	GenerateDetails( tiles, map_settings, MT_C );
 	MT_RETIF();
 
-	loader->SetText( "Normalizing fungus amount" );
+	ui->SetLoaderText( "Normalizing fungus amount" );
 	// normalize fungus amount
 	ASSERT( TARGET_FUNGUS_AMOUNTS.find( map_settings.lifeforms ) != TARGET_FUNGUS_AMOUNTS.end(), "unknown map lifeforms setting " + std::to_string( map_settings.lifeforms ) );
 	const auto desired_fungus_amount = TARGET_FUNGUS_AMOUNTS.at( map_settings.lifeforms );
 	SetFungusAmount( tiles, desired_fungus_amount, MT_C );
 	MT_RETIF();
 
-	loader->SetText( "Normalizing moisture amount" );
+	ui->SetLoaderText( "Normalizing moisture amount" );
 	// normalize moisture amount
 	ASSERT( TARGET_MOISTURE_AMOUNTS.find( map_settings.clouds ) != TARGET_MOISTURE_AMOUNTS.end(), "unknown map clouds setting " + std::to_string( map_settings.clouds ) );
 	const auto desired_moisture_amount = TARGET_MOISTURE_AMOUNTS.at( map_settings.clouds );
 	SetMoistureAmount( tiles, desired_moisture_amount, MT_C );
 	MT_RETIF();
 
-	loader->SetText( "Fixing impossible tiles" );
+	ui->SetLoaderText( "Fixing impossible tiles" );
 	FixImpossibleThings( tiles, MT_C );
 	MT_RETIF();
 
@@ -122,7 +122,7 @@ void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings, MT_C
 	Log( "Final fungus amount: " + std::to_string( GetFungusAmount( tiles, MT_C ) ) );
 	Log( "Final moisture amount: " + std::to_string( GetMoistureAmount( tiles, MT_C ) ) );
 
-	loader->SetText( "Map generation complete" );
+	ui->SetLoaderText( "Map generation complete" );
 }
 
 void MapGenerator::SmoothTerrain( Tiles* tiles, MT_CANCELABLE, const bool smooth_land, const bool smooth_sea ) {
@@ -165,7 +165,7 @@ void MapGenerator::FixExtremeSlopes( Tiles* tiles, MT_CANCELABLE ) {
 	MT_RETIF();
 	util::Clamper< Tile::elevation_t > converter(
 		{
-			{ Tile::ELEVATION_MIN, Tile::ELEVATION_MAX },
+			{ Tile::ELEVATION_MIN,    Tile::ELEVATION_MAX },
 			{ elevations_range.first, elevations_range.second }
 		}
 	);

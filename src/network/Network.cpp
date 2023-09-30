@@ -157,6 +157,25 @@ events_t Network::GetEvents() {
 	return events;
 }
 
+void Network::InvalidateEventsForDisconnectedClient( const size_t cid ) {
+	ASSERT( cid != 0, "can't invalidate cid 0" );
+	events_t events_new = {};
+	bool disconnect_event_kept = false;
+	for ( auto& event : m_events_out ) {
+		if ( !disconnect_event_kept && event.type == Event::ET_CLIENT_DISCONNECT ) {
+			disconnect_event_kept = true;
+		}
+		else if ( event.cid == cid ) {
+			continue;
+		}
+		events_new.push_back( event );
+	}
+	if ( m_events_out.size() != events_new.size() ) {
+		Log( "Invalidated " + std::to_string( m_events_out.size() - events_new.size() ) + " events for cid " + std::to_string( cid ) );
+	}
+	m_events_out = events_new;
+}
+
 const connection_mode_t Network::GetCurrentConnectionMode() const {
 	return m_current_connection_mode;
 }

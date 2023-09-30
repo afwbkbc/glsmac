@@ -102,7 +102,7 @@ void PlayersSectionRow::Create() {
 				const auto& value = *( data->value.change.text );
 				if ( is_it_me ) {
 					if ( value == "Customize faction" ) {
-						g_engine->GetUI()->GetError()->Show( "This feature is not available yet." );
+						g_engine->GetUI()->ShowError( "This feature is not available yet." );
 						return true;
 					}
 				}

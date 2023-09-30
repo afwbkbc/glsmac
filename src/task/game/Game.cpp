@@ -60,7 +60,7 @@ void Game::Start() {
 		}
 	}
 
-	ui->GetLoader()->Show(
+	ui->ShowLoader(
 		"Starting game", LCH( this ) {
 			CancelGame();
 			return false;
@@ -100,7 +100,7 @@ void Game::Iterate() {
 			}
 			case ::game::R_ERROR: {
 				const std::string error_text = *response.data.error.error_text;
-				ui->GetError()->Show(
+				ui->ShowError(
 					error_text, UH( this ) {
 						CancelGame();
 					}
@@ -135,8 +135,7 @@ void Game::Iterate() {
 				m_mt_ids.get_map_data = game->MT_GetMapData();
 			}
 			else {
-				auto* loader = ui->GetLoader();
-				loader->Hide();
+				ui->HideLoader();
 				m_mt_ids.get_map_data = 0;
 
 				if ( response.result == ::game::R_SUCCESS ) {
@@ -183,7 +182,7 @@ void Game::Iterate() {
 	else if ( m_mt_ids.reset ) {
 		auto response = game->MT_GetResponse( m_mt_ids.reset );
 		if ( response.result != ::game::R_NONE ) {
-			ui->GetLoader()->Hide();
+			ui->HideLoader();
 			m_mt_ids.reset = 0;
 
 			switch ( response.result ) {
@@ -203,7 +202,7 @@ void Game::Iterate() {
 	else if ( m_mt_ids.ping ) {
 		auto response = game->MT_GetResponse( m_mt_ids.ping );
 		if ( response.result != ::game::R_NONE ) {
-			ui->GetLoader()->Hide();
+			ui->HideLoader();
 			m_mt_ids.ping = 0;
 			ASSERT( response.result == ::game::R_SUCCESS, "ping not successful" );
 			CancelGame();
@@ -212,7 +211,7 @@ void Game::Iterate() {
 	else if ( m_mt_ids.save_map ) {
 		auto response = game->MT_GetResponse( m_mt_ids.save_map );
 		if ( response.result != ::game::R_NONE ) {
-			ui->GetLoader()->Hide();
+			ui->HideLoader();
 			m_mt_ids.save_map = 0;
 			if ( ui->HasPopup() ) {
 				ui->CloseLastPopup();
@@ -223,7 +222,7 @@ void Game::Iterate() {
 				m_ui.bottom_bar->UpdateMapFileName();
 			}
 			else {
-				ui->GetError()->Show(
+				ui->ShowError(
 					"Map saving failed.", UH( this ) {
 
 					}
@@ -634,7 +633,7 @@ void Game::LoadMap( const std::string& path ) {
 	ASSERT( FS::FileExists( path ), "map file \"" + path + "\" not found" );
 
 	auto* game = g_engine->GetGame();
-	g_engine->GetUI()->GetLoader()->Show(
+	g_engine->GetUI()->ShowLoader(
 		"Loading game", LCH( this ) {
 			CancelRequests();
 			return false;
@@ -657,7 +656,7 @@ void Game::LoadMap( const std::string& path ) {
 void Game::SaveMap( const std::string& path ) {
 
 	auto* game = g_engine->GetGame();
-	g_engine->GetUI()->GetLoader()->Show( "Saving game" );
+	g_engine->GetUI()->ShowLoader( "Saving game" );
 	if ( m_mt_ids.save_map ) {
 		game->MT_Cancel( m_mt_ids.save_map );
 
@@ -1612,7 +1611,7 @@ void Game::CloseMenus() {
 void Game::ExitGame( const f_exit_game on_game_exit ) {
 	auto* ui = g_engine->GetUI();
 	auto* game = g_engine->GetGame();
-	ui->GetLoader()->Show( "Exiting game" );
+	ui->ShowLoader( "Exiting game" );
 	m_on_game_exit = on_game_exit;
 	CancelRequests();
 	if ( !m_mt_ids.reset ) {
@@ -1627,7 +1626,7 @@ void Game::CancelRequests() {
 		m_mt_ids.init = 0;
 		// WHY?
 		ASSERT( !m_mt_ids.ping, "ping already active" );
-		g_engine->GetUI()->GetLoader()->SetText( "Canceling" );
+		g_engine->GetUI()->SetLoaderText( "Canceling" );
 		m_mt_ids.ping = game->MT_Ping();
 	}
 	if ( m_mt_ids.get_map_data ) {

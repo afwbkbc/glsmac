@@ -12,6 +12,9 @@ Error::Error( UI* ui )
 }
 
 Error::~Error() {
+	if ( m_on_close ) {
+		m_on_close();
+	}
 	Hide();
 }
 

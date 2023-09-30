@@ -638,7 +638,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 		Log( "Game seed: " + m_random->GetStateString() );
 
-		auto* loader = g_engine->GetUI()->GetLoader();
+		auto* ui = g_engine->GetUI();
 
 		map::Map* old_map = nullptr;
 		if ( m_map ) {
@@ -658,8 +658,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			const std::string& filename = config->GetQuickstartMapDump();
 			ASSERT( util::FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
 			Log( (std::string)"Loading map dump from " + filename );
-			loader->SetText( "Loading dump" );
-			loader->SetIsCancelable( false );
+			ui->SetLoaderText( "Loading dump", false );
 			m_map->Unserialize( types::Buffer( util::FS::ReadFile( filename ) ) );
 			ec = map::Map::EC_NONE;
 		}
@@ -698,8 +697,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			// also handy to have dump of generated map
 			if ( !ec && !config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) { // no point saving if we just loaded it
 				Log( (std::string)"Saving map dump to " + map::s_consts.debug.lastdump_filename );
-				loader->SetText( "Saving dump" );
-				loader->SetIsCancelable( false );
+				ui->SetLoaderText( "Saving dump", false );
 				util::FS::WriteFile( map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
 			}
 #endif

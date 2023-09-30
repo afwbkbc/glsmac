@@ -29,8 +29,19 @@ void SimpleTCP::Start() {
 }
 
 void SimpleTCP::Stop() {
+	switch ( GetCurrentConnectionMode() ) {
+		case CM_CLIENT: {
+			Disconnect();
+			break;
+		}
+		case CM_SERVER: {
+			ListenStop();
+			break;
+		}
+		default: {
+		}
+	}
 	m_impl.Stop();
-	ASSERT( m_server.listening_sockets.empty(), "some connection(s) still active when destroying network" );
 }
 
 MT_Response SimpleTCP::ListenStart() {
@@ -663,10 +674,12 @@ void SimpleTCP::CloseSocket( int fd, size_t cid, bool skip_event ) {
 
 void SimpleTCP::CloseClientSocket( const remote_socket_data_t& socket ) {
 	ASSERT( GetCurrentConnectionMode() == CM_SERVER, "can't close client socket as non-server" );
+	ASSERT( socket.cid != 0, "client socket can't have cid 0" );
 	Log( "Closing connection to " + socket.remote_address + " ( cid " + std::to_string( socket.cid ) + " )" );
 	CloseSocket( socket.fd, socket.cid );
 	free( socket.buffer.data1 );
 	free( socket.buffer.data2 );
+	InvalidateEventsForDisconnectedClient( socket.cid );
 	m_server.cid_to_fd[ socket.cid ] = 0;
 }
 

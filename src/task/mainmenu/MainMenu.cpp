@@ -123,11 +123,6 @@ void MainMenu::Iterate() {
 
 void MainMenu::Stop() {
 
-	if ( m_state ) {
-		DELETE( m_state );
-		m_state = nullptr;
-	}
-
 	g_engine->GetGraphics()->RemoveOnWindowResizeHandler( this );
 
 	if ( m_menu_object ) {
@@ -142,6 +137,11 @@ void MainMenu::Stop() {
 
 	if ( m_menu_next ) {
 		DELETE( m_menu_next );
+	}
+
+	if ( m_state ) {
+		DELETE( m_state );
+		m_state = nullptr;
 	}
 
 	g_engine->GetUI()->RemoveObject( m_music );

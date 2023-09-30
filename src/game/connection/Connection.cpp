@@ -45,7 +45,7 @@ void Connection::Connect() {
 
 	m_mt_ids.connect = m_network->MT_Connect( m_connection_mode, m_settings->remote_address );
 
-	g_engine->GetUI()->GetLoader()->Show(
+	g_engine->GetUI()->ShowLoader(
 		m_connection_mode == network::CM_SERVER
 			? "Creating game"
 			: "Connecting to " + m_settings->remote_address,
@@ -84,7 +84,7 @@ void Connection::Iterate() {
 		auto result = m_network->MT_GetResult( m_mt_ids.connect );
 		if ( result.result != network::R_NONE ) {
 			m_mt_ids.connect = 0;
-			g_engine->GetUI()->GetLoader()->Hide();
+			g_engine->GetUI()->HideLoader();
 			switch ( result.result ) {
 				case network::R_ERROR: {
 					Log( "Connection error: " + result.message );
