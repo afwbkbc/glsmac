@@ -73,10 +73,6 @@ void Game::Stop() {
 
 	if ( m_is_initialized ) {
 		Deinitialize();
-
-		// main menu will create new state
-		DELETE( m_state );
-		m_state = nullptr;
 	}
 
 	if ( m_random ) {
@@ -84,6 +80,11 @@ void Game::Stop() {
 		m_random = nullptr;
 	}
 
+	if ( m_state ) {
+		// main menu has state copied
+		DELETE( m_state );
+		m_state = nullptr;
+	}
 }
 
 void Game::Iterate() {

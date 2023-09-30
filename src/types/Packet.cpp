@@ -43,7 +43,7 @@ const Buffer Packet::Serialize() const {
 			buf.WriteString( data.str ); // message
 			break;
 		}
-		case PT_GAME_STATE_CHANGE: {
+		case PT_GAME_STATE: {
 			buf.WriteInt( data.num ); // game state
 			break;
 		}
@@ -102,7 +102,7 @@ void Packet::Unserialize( Buffer buf ) {
 			data.str = buf.ReadString(); // message
 			break;
 		}
-		case PT_GAME_STATE_CHANGE: {
+		case PT_GAME_STATE: {
 			data.num = buf.ReadInt(); // game state
 			break;
 		}

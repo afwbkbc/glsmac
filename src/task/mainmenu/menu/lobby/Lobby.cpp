@@ -55,6 +55,7 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 					m_players_section->UpdateSlot( slots_i++, &slot );
 				}
 			};
+			connection->SetGameState( Connection::GS_LOBBY );
 		}
 	);
 
@@ -66,9 +67,12 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 					m_players_section->UpdateSlot( slots_i++, &slot );
 				}
 			};
-			connection->m_on_game_state_change = [ this ]( const Connection::game_state_t state ) -> void {
-				if ( state == Connection::GS_START_GAME ) {
-					// server tells us to start the game
+			connection->m_on_game_state_change = [ this, connection ]( const Connection::game_state_t state ) -> void {
+				if ( state == Connection::GS_INITIALIZING ) {
+					// server tells us to change state
+
+					// cleanup for next state
+					connection->ResetHandlers();
 
 					// detach state because game thread will own it now
 					m_state = nullptr;
@@ -84,7 +88,6 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 		}
 	);
 	m_connection = connection; // shortcut
-	m_state->SetConnection( m_connection );
 }
 
 Lobby::~Lobby() {
@@ -168,7 +171,9 @@ void Lobby::Hide() {
 void Lobby::Iterate() {
 	PopupMenu::Iterate();
 
-	m_state->Iterate();
+	if ( m_state ) {
+		m_state->Iterate();
+	}
 
 	while ( m_countdown_timer.HasTicked() ) {
 		m_countdown--;
@@ -177,8 +182,8 @@ void Lobby::Iterate() {
 
 			Log( "Starting game" );
 
-			// notify clients of game start
-			( (Server*)m_connection )->ChangeGameState( Server::GS_START_GAME );
+			// notify clients of initialization
+			( (Server*)m_connection )->SetGameState( Server::GS_INITIALIZING );
 
 			// detach state because game thread will own it now
 			m_state = nullptr;

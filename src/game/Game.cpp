@@ -682,9 +682,11 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					ec = m_map->Generate( map_settings, MT_C );
 				}
 			}
+
 			if ( !ec ) {
 				ec = m_map->Initialize( MT_C );
 			}
+
 		}
 
 		if ( !ec && canceled ) {

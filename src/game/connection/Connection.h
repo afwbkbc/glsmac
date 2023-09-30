@@ -19,8 +19,9 @@ CLASS( Connection, base::Module )
 
 	enum game_state_t {
 		GS_NONE,
-		GS_START_GAME,
-		GS_INIT_MAP,
+		GS_LOBBY,
+		GS_INITIALIZING,
+		GS_RUNNING,
 	};
 
 	Connection( const network::connection_mode_t connection_mode, LocalSettings* const settings );
@@ -72,6 +73,8 @@ protected:
 	State* m_state = nullptr;
 
 protected:
+	game_state_t m_game_state = GS_NONE;
+
 	size_t m_slot = 0;
 	::game::Player* m_player = nullptr;
 

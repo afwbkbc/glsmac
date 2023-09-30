@@ -22,12 +22,14 @@ void Server::ProcessEvent( const network::Event& event ) {
 			m_state->m_settings.global.Initialize();
 			m_state->m_slots.Resize( 7 ); // TODO: make dynamic?
 			const auto& rules = m_state->m_settings.global.game_rules;
-			NEW( m_player, ::game::Player, {
+			NEW(
+				m_player, ::game::Player, {
 				m_state->m_settings.local.player_name,
 				::game::Player::PR_HOST,
 				rules.GetDefaultFaction(),
 				rules.GetDefaultDifficultyLevel(),
-			} );
+			}
+			);
 			m_state->AddPlayer( m_player );
 			m_slot = 0; // host always has slot 0
 			m_state->AddCIDSlot( 0, m_slot );
@@ -91,7 +93,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 						Log( "Got authentication from " + std::to_string( event.cid ) + ": " + packet.data.str );
 
 						if ( m_state->GetCidSlots().find( event.cid ) != m_state->GetCidSlots().end() ) {
-							Log( "Duplicate uthentication from " + std::to_string( event.cid ) + ", disconnecting" );
+							Log( "Duplicate authentication from " + std::to_string( event.cid ) + ", disconnecting" );
 							m_network->MT_DisconnectClient( event.cid );
 							break;
 						}
@@ -111,18 +113,21 @@ void Server::ProcessEvent( const network::Event& event ) {
 						}
 
 						const auto& rules = m_state->m_settings.global.game_rules;
-						NEWV( player, ::game::Player, {
+						NEWV(
+							player, ::game::Player, {
 							packet.data.str,
 							::game::Player::PR_PLAYER,
 							rules.GetDefaultFaction(),
 							rules.GetDefaultDifficultyLevel(),
-						} );
+						}
+						);
 						m_state->AddPlayer( player );
 
 						m_state->AddCIDSlot( event.cid, slot_num );
 						auto& slot = m_state->m_slots.GetSlot( slot_num );
 						slot.SetPlayer( player, event.cid, event.data.remote_address );
 
+						SendGameState( event.cid );
 						{
 							Log( "Sending players list to " + std::to_string( event.cid ) );
 							Packet p( Packet::PT_PLAYERS );
@@ -212,13 +217,11 @@ void Server::BanFromSlot( const size_t slot_num, const std::string& reason ) {
 	KickFromSlot( slot, reason );
 }
 
-void Server::ChangeGameState( const game_state_t game_state ) {
+void Server::SetGameState( const game_state_t game_state ) {
+	m_game_state = game_state;
 	Broadcast(
-		[ this, game_state ]( const size_t cid ) -> void {
-			Log( "Sending game state change (" + std::to_string( game_state ) + ") to " + std::to_string( cid ) );
-			Packet p( Packet::PT_GAME_STATE_CHANGE );
-			p.data.num = game_state;
-			m_network->MT_SendPacket( p, cid );
+		[ this ]( const size_t cid ) -> void {
+			SendGameState( cid );
 		}
 	);
 }
@@ -304,6 +307,13 @@ void Server::SendGlobalSettings( size_t cid ) {
 	Log( "Sending global settings to " + std::to_string( cid ) );
 	Packet p( Packet::PT_GLOBAL_SETTINGS );
 	p.data.str = m_state->m_settings.global.Serialize().ToString();
+	m_network->MT_SendPacket( p, cid );
+}
+
+void Server::SendGameState( const size_t cid ) {
+	Log( "Sending game state change (" + std::to_string( m_game_state ) + ") to " + std::to_string( cid ) );
+	Packet p( Packet::PT_GAME_STATE );
+	p.data.num = m_game_state;
 	m_network->MT_SendPacket( p, cid );
 }
 

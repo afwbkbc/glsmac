@@ -81,10 +81,13 @@ void Client::ProcessEvent( const Event& event ) {
 							}
 							break;
 						}
-						case Packet::PT_GAME_STATE_CHANGE: {
-							Log( "Got game state change: " + std::to_string( packet.data.num ) );
-							if ( m_on_game_state_change ) {
-								m_on_game_state_change( (game_state_t)packet.data.num );
+						case Packet::PT_GAME_STATE: {
+							Log( "Got game state: " + std::to_string( packet.data.num ) );
+							if ( packet.data.num != m_game_state ) {
+								m_game_state = (game_state_t)packet.data.num;
+								if ( m_on_game_state_change ) {
+									m_on_game_state_change( m_game_state );
+								}
 							}
 							break;
 						}

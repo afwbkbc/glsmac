@@ -16,9 +16,6 @@ CLASS( ConnectionPopupMenu, PopupMenu )
 protected:
 	void SetConnection( ::game::connection::Connection* connection );
 
-private:
-	::game::connection::Connection* m_connection = nullptr;
-
 };
 
 }

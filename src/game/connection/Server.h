@@ -21,7 +21,7 @@ CLASS( Server, Connection )
 	void KickFromSlot( const size_t slot_num, const std::string& reason = "Kicked by host" );
 	void BanFromSlot( const size_t slot_num, const std::string& reason = "Banned by host" );
 
-	void ChangeGameState( const game_state_t game_state );
+	void SetGameState( const game_state_t game_state );
 	void SendMapGenerationPercentage( const size_t percentage );
 
 protected:
@@ -32,7 +32,8 @@ private:
 	void Kick( const size_t cid, const std::string& reason );
 	void KickFromSlot( Slot& slot, const std::string& reason );
 	void Error( const size_t cid, const std::string& reason );
-	void SendGlobalSettings( size_t cid );
+	void SendGlobalSettings( const size_t cid );
+	void SendGameState( const size_t cid );
 	const std::string FormatChatMessage( const Player* player, const std::string& message ) const;
 };
 

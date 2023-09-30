@@ -20,6 +20,10 @@ void Connection::ResetHandlers() {
 	m_on_slot_update = nullptr;
 	m_on_message = nullptr;
 	m_on_global_settings_update = nullptr;
+	if ( m_mt_ids.events ) {
+		m_network->MT_Cancel( m_mt_ids.events );
+		m_mt_ids.events = 0;
+	}
 }
 
 Connection::Connection( const network::connection_mode_t connection_mode, LocalSettings* const settings )
@@ -40,6 +44,8 @@ Connection::~Connection() {
 void Connection::Connect() {
 	ASSERT( !m_is_connected, "already connected" );
 	ASSERT( !m_mt_ids.connect, "connection already in progress" );
+
+	m_game_state = GS_NONE;
 
 	Log( "connecting..." );
 
@@ -69,6 +75,7 @@ void Connection::Iterate() {
 		if ( result.result != network::R_NONE ) {
 			m_mt_ids.disconnect = 0;
 			m_is_connected = false;
+			m_game_state = GS_NONE;
 			Log( "Connection closed" );
 			if ( m_on_disconnect ) {
 				m_on_disconnect();
