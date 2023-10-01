@@ -10,6 +10,7 @@ Rules::Rules( MainMenu* mainmenu )
 			"PLAY WITH STANDARD RULES", {
 											CH( this ) {
 												// TODO: faction select
+												m_mainmenu->InitSinglePlayer();
 												m_mainmenu->StartGame();
 											}
 										}
@@ -18,6 +19,7 @@ Rules::Rules( MainMenu* mainmenu )
 			"PLAY WITH CURRENT RULES",  {
 											CH( this ) {
 												// TODO: previous rules load
+												m_mainmenu->InitSinglePlayer();
 												m_mainmenu->StartGame();
 											}
 										}

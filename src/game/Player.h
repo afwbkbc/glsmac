@@ -15,6 +15,7 @@ CLASS( Player, types::Serializable )
 
 	enum role_t {
 		PR_NONE,
+		PR_SINGLE,
 		PR_HOST,
 		PR_PLAYER,
 	};
@@ -42,7 +43,9 @@ CLASS( Player, types::Serializable )
 private:
 	bool m_is_initialized = false;
 	std::string m_name = "";
+
 	role_t m_role = PR_NONE;
+
 	Slot* m_slot = nullptr;
 
 	rules::Faction m_faction = {};

@@ -46,6 +46,7 @@ void LoadMapFile::Show() {
 			else {
 				ASSERT( util::FS::IsAbsolutePath( path ), "path must be absolute" );
 				m_mainmenu->m_state->m_settings.global.map.filename = path;
+				m_mainmenu->InitSinglePlayer();
 				m_mainmenu->StartGame();
 			}
 			return true;

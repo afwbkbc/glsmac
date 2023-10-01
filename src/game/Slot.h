@@ -15,18 +15,24 @@ CLASS( Slot, types::Serializable )
 	};
 	const slot_state_t GetState() const;
 
+	typedef uint8_t player_flag_t;
+	static const player_flag_t PF_NONE = 0;
+	static const player_flag_t PF_READY = 1 << 0;
+	static const player_flag_t PF_MAP_DOWNLOADED = 1 << 1;
+
 	void Open();
 	void Close();
 	void SetCloseAfterClear();
 
 	size_t GetCid() const;
 	const std::string& GetRemoteAddress() const;
-	const bool IsReady() const;
+	void SetPlayerFlag( const player_flag_t flag );
+	const bool HasPlayerFlag( const player_flag_t flag ) const;
+	void UnsetPlayerFlag( const player_flag_t flag );
 
 	Player* GetPlayer() const;
 	Player* GetPlayerAndClose();
 	void SetPlayer( Player* player, const size_t cid, const std::string& remote_address );
-	void SetReady( const bool ready );
 
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;
@@ -39,7 +45,7 @@ private:
 		Player* player = nullptr;
 		size_t cid = 0;
 		std::string remote_address = "";
-		bool ready = false;
+		player_flag_t flags = PF_NONE;
 	} m_player_data = {};
 
 };

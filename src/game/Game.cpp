@@ -31,6 +31,7 @@ mt_id_t Game::MT_GetMapData() {
 }
 
 mt_id_t Game::MT_Reset() {
+	m_init_cancel = true; // stop initialization in Iterate()
 	MT_Request request = {};
 	request.op = OP_RESET;
 	return MT_CreateRequest( request );
@@ -88,6 +89,9 @@ void Game::Start() {
 
 	Log( "Starting thread" );
 
+	m_game_state = GS_NONE;
+	m_init_cancel = false;
+
 	NEW( m_random, util::Random );
 
 #ifdef DEBUG
@@ -114,9 +118,117 @@ void Game::Stop() {
 void Game::Iterate() {
 	MTModule::Iterate();
 
-	if ( m_connection ) {
-		m_connection->Iterate();
+	if ( m_state ) {
+		m_state->Iterate();
 	}
+
+	if ( m_game_state == GS_INITIALIZING ) {
+		auto* ui = g_engine->GetUI();
+
+		bool ready = true;
+#ifdef DEBUG
+		static std::string waiting_for_players_old = "";
+		std::string waiting_for_players = "";
+#endif
+		for ( const auto& slot : m_state->m_slots.GetSlots() ) {
+			if ( slot.GetState() == Slot::SS_PLAYER && !slot.HasPlayerFlag( Slot::PF_MAP_DOWNLOADED ) ) {
+				ready = false;
+#ifdef DEBUG
+				waiting_for_players += " " + slot.GetPlayer()->GetPlayerName();
+#else
+				break;
+#endif
+			}
+		}
+
+#ifdef DEBUG
+		if ( waiting_for_players != waiting_for_players_old ) {
+			waiting_for_players_old = waiting_for_players;
+			if ( !ready ) {
+				Log( "Waiting for players:" + waiting_for_players );
+			}
+		}
+#endif
+
+		if ( ready ) {
+
+			auto ec = m_map->Initialize( m_init_cancel );
+			if ( !ec && m_init_cancel ) {
+				ec = map::Map::EC_ABORTED;
+			}
+
+			if ( !ec ) {
+
+#ifdef DEBUG
+				const auto* config = g_engine->GetConfig();
+				// also handy to have dump of generated map
+				if ( !ec && !config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) { // no point saving if we just loaded it
+					Log( (std::string)"Saving map dump to " + map::s_consts.debug.lastdump_filename );
+					ui->SetLoaderText( "Saving dump", false );
+					//// util::FS::WriteFile( map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
+				}
+#endif
+
+				ASSERT( m_map, "map not set" );
+
+				NEW( m_response_map_data, response_map_data_t );
+
+				m_response_map_data->map_width = m_map->GetWidth();
+				m_response_map_data->map_height = m_map->GetHeight();
+
+				ASSERT( m_map->m_textures.terrain, "map terrain texture not generated" );
+				m_response_map_data->terrain_texture = m_map->m_textures.terrain;
+
+				ASSERT( m_map->m_meshes.terrain, "map terrain mesh not generated" );
+				m_response_map_data->terrain_mesh = m_map->m_meshes.terrain;
+
+				ASSERT( m_map->m_meshes.terrain_data, "map terrain data mesh not generated" );
+				m_response_map_data->terrain_data_mesh = m_map->m_meshes.terrain_data;
+
+				m_response_map_data->sprites.actors = &m_map->m_sprite_actors;
+				m_response_map_data->sprites.instances = &m_map->m_sprite_instances;
+
+				if ( m_old_map ) {
+					Log( "Destroying old map state" );
+					DELETE( m_old_map );
+					m_old_map = nullptr;
+				}
+
+				m_game_state = GS_RUNNING;
+			}
+			else {
+
+				// need to delete these here because they weren't passed to main thread
+				if ( m_map->m_textures.terrain ) {
+					DELETE( m_map->m_textures.terrain );
+					m_map->m_textures.terrain = nullptr;
+				}
+				if ( m_map->m_meshes.terrain ) {
+					DELETE( m_map->m_meshes.terrain );
+					m_map->m_meshes.terrain = nullptr;
+				}
+				if ( m_map->m_meshes.terrain_data ) {
+					DELETE( m_map->m_meshes.terrain_data );
+					m_map->m_meshes.terrain_data = nullptr;
+				}
+
+				ResetGame();
+				m_initialization_error = map::Map::GetErrorString( ec );
+
+				if ( m_old_map ) {
+					Log( "Restoring old map state" );
+					DELETE( m_map );
+					m_map = m_old_map; // restore old state // TODO: test
+				}
+
+				if ( m_connection ) {
+					m_connection->Disconnect( "Failed to initialize game" );
+				}
+
+			}
+		}
+	}
+
 }
 
 util::Random* Game::GetRandom() const {
@@ -141,13 +253,16 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 		}
 		case OP_GET_MAP_DATA: {
 			//Log( "Got get-map-data request" );
-			if ( m_is_initializing ) {
+			if ( m_game_state != GS_RUNNING ) {
 				response.result = R_PENDING;
 			}
 			else if ( m_response_map_data ) {
 				response.result = R_SUCCESS;
 				response.data.get_map_data = m_response_map_data;
 				m_response_map_data = nullptr;
+			}
+			else if ( m_init_cancel ) {
+				response.result = R_ABORTED;
 			}
 			else {
 				response.result = R_ERROR;
@@ -597,22 +712,26 @@ void Game::DestroyResponse( const MT_Response& response ) {
 
 void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
-	ASSERT( !m_is_initializing, "game already initializing" );
-
-	m_is_initializing = true;
+	ASSERT( m_game_state == GS_NONE, "game already initializing" );
 
 	Log( "Initializing game" );
 
+	m_game_state = GS_PREPARING_MAP;
+
 	m_connection = m_state->GetConnection();
+
 	if ( m_connection ) {
 
-		m_connection->ResetHandlers();
+		m_slot_num = m_connection->GetSlotNum();
 
+		m_connection->ResetHandlers();
 		m_connection->IfServer(
 			[ this ]( Server* connection ) -> void {
 				connection->m_on_player_leave = [ this ]( const size_t slot_num, Slot* slot, const Player* player ) -> void {
 					Log( "Player " + player->GetPlayerName() + " left the game." );
 				};
+
+				connection->SetGameState( Connection::GS_INITIALIZING );
 			}
 		);
 
@@ -620,29 +739,34 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			[ this ]( Client* connection ) -> void {
 				connection->m_on_disconnect = [ this ]() -> void {
 					Log( "Server disconnected" );
-					if ( m_is_initializing ) {
+					if ( m_game_state != GS_RUNNING ) {
 						m_initialization_error = "Lost connection to server";
-						m_is_initializing = false;
 					}
 					else {
-						Log( "RETURN TO MAIN MENU" );
+						Log( "TODO: RETURN TO MAIN MENU" );
 					}
 				};
 			}
 		);
 
 	}
+	else {
+		m_slot_num = 0;
+	}
+	m_player = m_state->m_slots.GetSlot( m_slot_num ).GetPlayer();
+	m_slot = m_player->GetSlot();
+
+	auto* ui = g_engine->GetUI();
 
 	if ( m_state->IsMaster() ) {
 		// generate map
 
 		Log( "Game seed: " + m_random->GetStateString() );
 
-		auto* ui = g_engine->GetUI();
-
-		map::Map* old_map = nullptr;
+		ASSERT( !m_old_map, "old map not null" );
+		m_old_map = nullptr;
 		if ( m_map ) {
-			old_map = m_map;
+			m_old_map = m_map;
 		}
 		NEW( m_map, map::Map, this );
 
@@ -654,7 +778,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		map::Map::error_code_t ec = map::Map::EC_UNKNOWN;
 #ifdef DEBUG
 		const auto* config = g_engine->GetConfig();
-		if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) {
+		if ( !m_connection && config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) {
 			const std::string& filename = config->GetQuickstartMapDump();
 			ASSERT( util::FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
 			Log( (std::string)"Loading map dump from " + filename );
@@ -666,7 +790,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 #endif
 		{
 #ifdef DEBUG
-			if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) {
+			if ( !m_connection && config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) {
 				const std::string& filename = config->GetQuickstartMapFile();
 				ec = m_map->Load( filename );
 			}
@@ -683,10 +807,6 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				}
 			}
 
-			if ( !ec ) {
-				ec = m_map->Initialize( MT_C );
-			}
-
 		}
 
 		if ( !ec && canceled ) {
@@ -694,91 +814,64 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		}
 
 		if ( !ec ) {
+			m_slot->SetPlayerFlag( Slot::PF_MAP_DOWNLOADED ); // map was generated locally
 
-#ifdef DEBUG
-			// also handy to have dump of generated map
-			if ( !ec && !config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) { // no point saving if we just loaded it
-				Log( (std::string)"Saving map dump to " + map::s_consts.debug.lastdump_filename );
-				ui->SetLoaderText( "Saving dump", false );
-				util::FS::WriteFile( map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
+			if ( m_connection ) {
+				m_connection->IfServer(
+					[ this ]( Server* connection ) -> void {
+						connection->SetGameState( Connection::GS_RUNNING ); // allow clients to download map
+					}
+				);
+				m_connection->UpdateSlot( m_slot_num, m_slot );
 			}
-#endif
+
+			ui->SetLoaderText( "Waiting for players" );
+			m_game_state = GS_INITIALIZING;
 			response.result = R_SUCCESS;
-
-			ASSERT( m_map, "map not set" );
-
-			NEW( m_response_map_data, response_map_data_t );
-
-			m_response_map_data->map_width = m_map->GetWidth();
-			m_response_map_data->map_height = m_map->GetHeight();
-
-			ASSERT( m_map->m_textures.terrain, "map terrain texture not generated" );
-			m_response_map_data->terrain_texture = m_map->m_textures.terrain;
-
-			ASSERT( m_map->m_meshes.terrain, "map terrain mesh not generated" );
-			m_response_map_data->terrain_mesh = m_map->m_meshes.terrain;
-
-			ASSERT( m_map->m_meshes.terrain_data, "map terrain data mesh not generated" );
-			m_response_map_data->terrain_data_mesh = m_map->m_meshes.terrain_data;
-
-			m_response_map_data->sprites.actors = &m_map->m_sprite_actors;
-			m_response_map_data->sprites.instances = &m_map->m_sprite_instances;
-
-			if ( old_map ) {
-				Log( "Destroying old map state" );
-				DELETE( old_map );
-			}
 		}
 
-		else {
-
-			// need to delete these here because they weren't passed to main thread
-			if ( m_map->m_textures.terrain ) {
-				DELETE( m_map->m_textures.terrain );
-				m_map->m_textures.terrain = nullptr;
-			}
-			if ( m_map->m_meshes.terrain ) {
-				DELETE( m_map->m_meshes.terrain );
-				m_map->m_meshes.terrain = nullptr;
-			}
-			if ( m_map->m_meshes.terrain_data ) {
-				DELETE( m_map->m_meshes.terrain_data );
-				m_map->m_meshes.terrain_data = nullptr;
-			}
-
-			ResetGame();
-			if ( ec == map::Map::EC_ABORTED ) {
-				response.result = R_ABORTED;
-			}
-			else {
-				response.result = R_ERROR;
-				response.data.error.error_text = &( map::Map::GetErrorString( ec ) );
-			}
-			if ( old_map ) {
-				Log( "Restoring old map state" );
-				m_map = old_map; // restore old state // TODO: test
-			}
-		}
-
-		m_is_initializing = false;
 	}
 	else {
-		// download map from server
+		m_connection->IfClient(
+			[ this, &response, ui ]( Client* connection ) -> void {
 
-		response.result = R_SUCCESS;
+				// wait for server to initialize
+				ui->SetLoaderText( "Waiting for server" );
+
+				connection->m_on_game_state_change = [ this, connection, ui ]( const Connection::game_state_t state ) -> void {
+					if ( state == Connection::GS_RUNNING ) {
+
+						// download map from server
+
+						ui->SetLoaderText( "Downloading map" );
+					}
+					else {
+						ASSERT( false, "unexpected game state: " + std::to_string( state ) );
+					}
+				};
+
+				response.result = R_SUCCESS;
+			}
+		);
 	}
 }
 
 void Game::ResetGame() {
-	if ( m_is_initializing ) {
+	if ( m_game_state != GS_NONE ) {
 		// TODO: do something?
-		m_is_initializing = false;
+		m_game_state = GS_NONE;
 	}
+	m_init_cancel = false;
+	m_player = nullptr;
+	m_slot_num = 0;
+	m_slot = nullptr;
+
 	if ( m_map ) {
 		Log( "Resetting map" );
 		DELETE( m_map );
 		m_map = nullptr;
 	}
+
 	if ( m_state ) {
 		// ui thread will reset state as needed
 		m_state = nullptr;

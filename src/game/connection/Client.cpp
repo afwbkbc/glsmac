@@ -91,15 +91,6 @@ void Client::ProcessEvent( const Event& event ) {
 							}
 							break;
 						}
-						case Packet::PT_TILES: {
-							if ( !packet.data.boolean ) {
-								Log( "Got map generation percentage: " + std::to_string( packet.data.num ) );
-							}
-							else {
-								Log( "Got map tiles" );
-							}
-							break;
-						}
 						default: {
 							Log( "WARNING: invalid packet type from server: " + std::to_string( packet.type ) );
 						}
@@ -143,6 +134,7 @@ void Client::Message( const std::string& message ) {
 void Client::ResetHandlers() {
 	Connection::ResetHandlers();
 	m_on_players_list_update = nullptr;
+	m_on_game_state_change = nullptr;
 }
 
 void Client::Error( const std::string& reason ) {

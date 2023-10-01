@@ -21,7 +21,8 @@ CLASS( Packet, Serializable )
 		PT_KICK, // S->C
 		PT_MESSAGE, // *->*
 		PT_GAME_STATE, // S->C
-		PT_TILES, // S->C
+		PT_GET_MAP, // C->S
+		PT_MAP, // S->C
 	};
 
 	Packet( const packet_type_t type );

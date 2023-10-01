@@ -22,7 +22,6 @@ CLASS( Server, Connection )
 	void BanFromSlot( const size_t slot_num, const std::string& reason = "Banned by host" );
 
 	void SetGameState( const game_state_t game_state );
-	void SendMapGenerationPercentage( const size_t percentage );
 
 protected:
 	void ProcessEvent( const network::Event& event ) override;
@@ -34,6 +33,7 @@ private:
 	void Error( const size_t cid, const std::string& reason );
 	void SendGlobalSettings( const size_t cid );
 	void SendGameState( const size_t cid );
+	void SendSlotUpdate( const size_t slot_num, const Slot* slot, size_t skip_cid = 0 );
 	const std::string FormatChatMessage( const Player* player, const std::string& message ) const;
 };
 

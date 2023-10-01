@@ -72,6 +72,9 @@ void Server::ProcessEvent( const network::Event& event ) {
 				auto* player = slot.GetPlayerAndClose();
 				ASSERT( player, "player in slot is null" );
 				m_state->RemovePlayer( player );
+
+				SendSlotUpdate( slot_num, &slot, event.cid ); // notify others
+
 				if ( m_on_player_leave ) {
 					m_on_player_leave( slot_num, &slot, player );
 				}
@@ -137,6 +140,8 @@ void Server::ProcessEvent( const network::Event& event ) {
 						}
 						SendGlobalSettings( event.cid );
 
+						SendSlotUpdate( slot_num, &slot, event.cid ); // notify others
+
 						if ( m_on_player_join ) {
 							m_on_player_join( slot_num, &slot, player );
 						}
@@ -153,6 +158,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 						}
 						auto& slot = m_state->m_slots.GetSlot( it->second );
 						slot.Unserialize( packet.data.str );
+						SendSlotUpdate( it->second, &slot, event.cid ); // notify others
 						if ( m_on_slot_update ) {
 							m_on_slot_update( it->second, &slot );
 						}
@@ -226,28 +232,8 @@ void Server::SetGameState( const game_state_t game_state ) {
 	);
 }
 
-void Server::SendMapGenerationPercentage( const size_t percentage ) {
-	Broadcast(
-		[ this, percentage ]( const size_t cid ) -> void {
-			Log( "Sending map generation percentage (" + std::to_string( percentage ) + "%) to " + std::to_string( cid ) );
-			Packet p( Packet::PT_TILES );
-			p.data.boolean = false;
-			p.data.num = percentage;
-			m_network->MT_SendPacket( p, cid );
-		}
-	);
-}
-
 void Server::UpdateSlot( const size_t slot_num, const Slot* slot ) {
-	Broadcast(
-		[ this, slot_num, slot ]( const size_t cid ) -> void {
-			Log( "Sending slot update to " + std::to_string( cid ) );
-			Packet p( Packet::PT_SLOT_UPDATE );
-			p.data.num = slot_num;
-			p.data.str = slot->Serialize().ToString();
-			m_network->MT_SendPacket( p, cid );
-		}
-	);
+	SendSlotUpdate( slot_num, slot );
 }
 
 void Server::Message( const std::string& message ) {
@@ -315,6 +301,20 @@ void Server::SendGameState( const size_t cid ) {
 	Packet p( Packet::PT_GAME_STATE );
 	p.data.num = m_game_state;
 	m_network->MT_SendPacket( p, cid );
+}
+
+void Server::SendSlotUpdate( const size_t slot_num, const Slot* slot, size_t skip_cid ) {
+	Broadcast(
+		[ this, slot_num, slot, skip_cid ]( const size_t cid ) -> void {
+			if ( cid != skip_cid ) {
+				Log( "Sending slot update to " + std::to_string( cid ) );
+				Packet p( Packet::PT_SLOT_UPDATE );
+				p.data.num = slot_num;
+				p.data.str = slot->Serialize().ToString();
+				m_network->MT_SendPacket( p, cid );
+			}
+		}
+	);
 }
 
 const std::string Server::FormatChatMessage( const Player* player, const std::string& message ) const {

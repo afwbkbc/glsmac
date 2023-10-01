@@ -175,6 +175,23 @@ void MainMenu::MenuError( const std::string& error_text ) {
 	ShowMenu( menu );
 }
 
+void MainMenu::InitSinglePlayer() {
+	m_state->m_slots.Resize( 7 ); // TODO: make dynamic?
+	const auto& rules = m_state->m_settings.global.game_rules;
+	NEWV( player, ::game::Player, {
+		"Player",
+		::game::Player::PR_SINGLE,
+		rules.GetDefaultFaction(), // TODO: make configurable
+		rules.GetDefaultDifficultyLevel(), // TODO: make configurable
+	} );
+	m_state->AddPlayer( player );
+	size_t slot_num = 0; // player always has slot 0
+	m_state->AddCIDSlot( 0, slot_num ); // for consistency
+	auto& slot = m_state->m_slots.GetSlot( slot_num );
+	slot.SetPlayer( player, 0, "" );
+	slot.SetPlayerFlag( ::game::Slot::PF_READY );
+}
+
 void MainMenu::StartGame() {
 	// real state belongs to game task now
 	// save it as backup, then make temporary shallow copy (no connection, players etc)

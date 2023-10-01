@@ -39,6 +39,7 @@ CLASS( MainMenu, base::Task )
 	void ShowMenu( MenuObject* menu_object );
 	void GoBack();
 	void MenuError( const std::string& error_text );
+	void InitSinglePlayer();
 	void StartGame();
 
 	void SetCustomizeMapPreview( const std::string& preview_filename );

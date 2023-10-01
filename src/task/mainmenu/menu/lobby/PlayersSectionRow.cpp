@@ -40,7 +40,7 @@ void PlayersSectionRow::Create() {
 
 		const auto& faction_color = player->GetFaction().m_color;
 
-		if ( m_slot->IsReady() ) {
+		if ( m_slot->HasPlayerFlag( ::game::Slot::PF_READY ) ) {
 			NEW( m_elements.ready, Surface );
 			m_elements.ready->SetWidth( 24 );
 			m_elements.ready->SetHeight( 16 );

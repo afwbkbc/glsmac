@@ -36,13 +36,19 @@ const std::string& Slot::GetRemoteAddress() const {
 	return m_player_data.remote_address;
 }
 
-const bool Slot::IsReady() const {
-	if ( m_slot_state == SS_PLAYER ) {
-		return m_player_data.ready;
-	}
-	else {
-		return true;
-	}
+void Slot::SetPlayerFlag( const player_flag_t flag ) {
+	ASSERT( m_slot_state == SS_PLAYER, "attempted to set player flag on non-player slot" );
+	m_player_data.flags |= flag;
+}
+
+const bool Slot::HasPlayerFlag( const player_flag_t flag ) const {
+	ASSERT( m_slot_state == SS_PLAYER, "attempted to get player flag on non-player slot" );
+	return m_player_data.flags & flag;
+}
+
+void Slot::UnsetPlayerFlag( const player_flag_t flag ) {
+	ASSERT( m_slot_state == SS_PLAYER, "attempted to unset player flag on non-player slot" );
+	m_player_data.flags &= ~flag;
 }
 
 Player* Slot::GetPlayerAndClose() {
@@ -73,11 +79,6 @@ void Slot::SetPlayer( Player* player, const size_t cid, const std::string& remot
 	m_slot_state = SS_PLAYER;
 }
 
-void Slot::SetReady( const bool ready ) {
-	ASSERT( m_slot_state == SS_PLAYER, "attempted to change ready status on non-player slot" );
-	m_player_data.ready = ready;
-}
-
 const types::Buffer Slot::Serialize() const {
 	types::Buffer buf;
 
@@ -86,7 +87,7 @@ const types::Buffer Slot::Serialize() const {
 		buf.WriteString( m_player_data.player->Serialize().ToString() );
 		// not sending cid
 		// not sending remote address
-		buf.WriteBool( m_player_data.ready );
+		buf.WriteInt( m_player_data.flags );
 	}
 
 	return buf;
@@ -100,7 +101,7 @@ void Slot::Unserialize( types::Buffer buf ) {
 			m_player_data.player->SetSlot( this );
 		}
 		m_player_data.player->Unserialize( buf.ReadString() );
-		m_player_data.ready = buf.ReadBool();
+		m_player_data.flags = buf.ReadInt();
 	}
 }
 

@@ -12,6 +12,7 @@
 #include "types/Texture.h"
 #include "types/mesh/Render.h"
 #include "types/mesh/Data.h"
+#include "Slot.h"
 
 namespace game {
 
@@ -226,8 +227,19 @@ protected:
 
 private:
 
-	bool m_is_initializing = false;
+	enum game_state_t {
+		GS_NONE,
+		GS_PREPARING_MAP,
+		GS_INITIALIZING,
+		GS_RUNNING,
+	};
+	game_state_t m_game_state = GS_NONE;
+	mt_flag_t m_init_cancel = false;
 	std::string m_initialization_error = "";
+
+	const Player* m_player = nullptr;
+	size_t m_slot_num = 0;
+	Slot* m_slot = nullptr;
 
 	response_map_data_t* m_response_map_data = nullptr;
 
@@ -240,6 +252,7 @@ private:
 	connection::Connection* m_connection = nullptr;
 
 	map::Map* m_map = nullptr;
+	map::Map* m_old_map = nullptr; // to restore state, for example if loading of another map failed
 	map_editor::MapEditor* m_map_editor = nullptr;
 
 };

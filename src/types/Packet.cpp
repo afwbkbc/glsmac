@@ -47,14 +47,8 @@ const Buffer Packet::Serialize() const {
 			buf.WriteInt( data.num ); // game state
 			break;
 		}
-		case PT_TILES: {
-			buf.WriteBool( data.boolean ); // is map ready?
-			if ( !data.boolean ) {
-				buf.WriteBool( data.num ); // percents done
-			}
-			else {
-				buf.WriteString( data.str ); // serialized tiles
-			}
+		case PT_GET_MAP: {
+			// no data
 			break;
 		}
 		default: {
@@ -106,14 +100,8 @@ void Packet::Unserialize( Buffer buf ) {
 			data.num = buf.ReadInt(); // game state
 			break;
 		}
-		case PT_TILES: {
-			data.boolean = buf.ReadBool(); // is map ready?
-			if ( !data.boolean ) {
-				data.num = buf.ReadBool(); // percents done
-			}
-			else {
-				data.str = buf.ReadString(); // serialized tiles
-			}
+		case PT_GET_MAP: {
+			// no data
 			break;
 		}
 		default: {

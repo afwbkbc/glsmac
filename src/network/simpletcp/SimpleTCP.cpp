@@ -292,6 +292,7 @@ void SimpleTCP::ProcessEvents() {
 					}
 					m_tmp.tmpint = 0;
 					const auto fd = GetFdFromCid( event.cid );
+					// TODO: fix race conditions between Connection::Iterate() and Server::Broadcast()
 					ASSERT( fd, "event fd not found for cid " + std::to_string( event.cid ) );
 					auto it = m_server.client_sockets.find( fd );
 					if ( it != m_server.client_sockets.end() ) { // if not found it may mean event is old so can be ignored

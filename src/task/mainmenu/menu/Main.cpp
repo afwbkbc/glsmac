@@ -40,6 +40,7 @@ Main::Main( MainMenu* mainmenu )
 									m_mainmenu->m_state->m_settings.global.global_difficulty = m_mainmenu->m_state->m_settings.global.game_rules.GetDefaultDifficultyLevel();
 
 									// start game
+									m_mainmenu->InitSinglePlayer();
 									m_mainmenu->StartGame();
 								}
 							}

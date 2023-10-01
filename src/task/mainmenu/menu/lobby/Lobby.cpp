@@ -79,10 +79,10 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 
 					// switch to game task
 					m_mainmenu->StartGame();
-					GoBack();
+					GoBack(); // show previous menu if canceled
 				}
 				else {
-					ASSERT( false, "unexpected game state" );
+					ASSERT( false, "unexpected game state" + std::to_string( state ) );
 				}
 			};
 		}
@@ -114,11 +114,11 @@ void Lobby::Show() {
 			auto* slot = GetPlayer()->GetSlot();
 			if ( !m_ready_button->HasStyleModifier( Style::M_SELECTED ) ) {
 				m_ready_button->AddStyleModifier( Style::M_SELECTED );
-				slot->SetReady( true );
+				slot->SetPlayerFlag( ::game::Slot::PF_READY );
 			}
 			else {
 				m_ready_button->RemoveStyleModifier( Style::M_SELECTED );
-				slot->SetReady( false );
+				slot->UnsetPlayerFlag( ::game::Slot::PF_READY );
 			}
 			UpdateSlot( m_state->GetConnection()->GetSlotNum(), slot );
 			return true;
@@ -182,15 +182,12 @@ void Lobby::Iterate() {
 
 			Log( "Starting game" );
 
-			// notify clients of initialization
-			( (Server*)m_connection )->SetGameState( Server::GS_INITIALIZING );
-
 			// detach state because game thread will own it now
 			m_state = nullptr;
 
 			// switch to game task
 			m_mainmenu->StartGame();
-			GoBack();
+			GoBack(); // show previous menu if canceled
 
 		}
 	}
@@ -267,7 +264,7 @@ void Lobby::ManageCountdown() {
 	if ( m_connection->IsServer() ) {
 		bool is_everyone_ready = true;
 		for ( const auto& slot : m_state->m_slots.GetSlots() ) {
-			if ( !slot.IsReady() ) {
+			if ( slot.GetState() == game::Slot::SS_PLAYER && !slot.HasPlayerFlag( ::game::Slot::PF_READY ) ) {
 				is_everyone_ready = false;
 				break;
 			}
