@@ -59,6 +59,7 @@ Player* Slot::GetPlayerAndClose() {
 	m_player_data.player = nullptr;
 	m_player_data.cid = 0;
 	m_player_data.remote_address = "";
+	m_player_data.flags = PF_NONE;
 	if ( m_close_after_clear ) {
 		m_slot_state = SS_CLOSED;
 		m_close_after_clear = false;
