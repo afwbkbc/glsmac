@@ -4,17 +4,18 @@
 
 #include "util/FS.h"
 
-#include "Host.h"
-#include "Join.h"
-
 namespace task {
 namespace mainmenu {
 
 LoadMapFile::LoadMapFile( MainMenu* mainmenu )
-	: PopupMenu( mainmenu, "LOAD MAP" )
-{
+	: PopupMenu( mainmenu, "LOAD MAP" ) {
 	Align();
-	SetFlags( { PF_HAS_OK, PF_HAS_CANCEL } );
+	SetFlags(
+		{
+			PF_HAS_OK,
+			PF_HAS_CANCEL
+		}
+	);
 }
 
 LoadMapFile::~LoadMapFile() {
@@ -22,19 +23,20 @@ LoadMapFile::~LoadMapFile() {
 
 void LoadMapFile::Show() {
 	PopupMenu::Show();
-	
+
 	NEW( m_section, Section, "PopupSection" );
 	m_body->AddChild( m_section );
-	
+
 	NEW( m_file_browser, ::ui::object::FileBrowser );
-		// TODO: determine position from style
-		m_file_browser->SetTop( 8 );
-		m_file_browser->SetLeft( 6 );
-		m_file_browser->SetBottom( 8 );
-		m_file_browser->SetRight( 6 );
-		m_file_browser->SetDefaultDirectory( util::FS::GetAbsolutePath( ::game::map::s_consts.fs.default_map_directory ) );
-		m_file_browser->SetFileExtension( ::game::map::s_consts.fs.default_map_extension );
-		m_file_browser->On( UIEvent::EV_SELECT, EH( this ) {
+	// TODO: determine position from style
+	m_file_browser->SetTop( 8 );
+	m_file_browser->SetLeft( 6 );
+	m_file_browser->SetBottom( 8 );
+	m_file_browser->SetRight( 6 );
+	m_file_browser->SetDefaultDirectory( util::FS::GetAbsolutePath( ::game::map::s_consts.fs.default_map_directory ) );
+	m_file_browser->SetFileExtension( ::game::map::s_consts.fs.default_map_extension );
+	m_file_browser->On(
+		UIEvent::EV_SELECT, EH( this ) {
 			const auto& path = m_file_browser->GetSelectedFile();
 			if ( !util::FS::FileExists( path ) ) {
 				g_engine->GetUI()->Error(
@@ -43,27 +45,29 @@ void LoadMapFile::Show() {
 			}
 			else {
 				ASSERT( util::FS::IsAbsolutePath( path ), "path must be absolute" );
-				m_mainmenu->m_settings.global.map.filename = path;
+				m_mainmenu->m_state->m_settings.global.map.filename = path;
+				m_mainmenu->InitSinglePlayer();
 				m_mainmenu->StartGame();
 			}
 			return true;
-		});
+		}
+	);
 	m_section->AddChild( m_file_browser );
 }
 
 void LoadMapFile::Align() {
 	PopupMenu::Align();
-	
+
 	SetWidth( 500 );
 	SetHeight( std::min< size_t >( 600, g_engine->GetGraphics()->GetViewportHeight() - 40 ) );
-	
+
 	Resize();
 }
 
 void LoadMapFile::Hide() {
-		m_section->RemoveChild( m_file_browser );
+	m_section->RemoveChild( m_file_browser );
 	m_body->RemoveChild( m_section );
-	
+
 	PopupMenu::Hide();
 }
 
@@ -71,12 +75,12 @@ void LoadMapFile::OnNext() {
 /*	const auto value = m_choices->GetValue();
 	MenuObject* menu = nullptr;
 	if ( value == "Host new game" ) {
-		m_mainmenu->m_settings.local.network_role = LocalSettings::NR_SERVER;
+		m_mainmenu->m_state->m_settings.local.network_role = LocalSettings::NR_SERVER;
 		NEW( menu, Host, m_mainmenu );
 		NextMenu( menu );
 	}
 	else {
-		m_mainmenu->m_settings.local.network_role = LocalSettings::NR_CLIENT;
+		m_mainmenu->m_state->m_settings.local.network_role = LocalSettings::NR_CLIENT;
 		NEW( menu, Join, m_mainmenu );
 		NextMenu( menu );
 	}*/

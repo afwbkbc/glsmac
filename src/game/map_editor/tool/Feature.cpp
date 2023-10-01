@@ -8,14 +8,13 @@ namespace tool {
 
 Feature::Feature( Game* game, const MapEditor::tool_type_t type, const map::Tile::feature_t feature )
 	: Tool( game, type )
-	, m_feature( feature )
-{
+	, m_feature( feature ) {
 	//
 }
 
 const MapEditor::tiles_t Feature::Draw( map::Tile* tile, const MapEditor::draw_mode_t mode ) {
 	if ( mode == MapEditor::DM_DEC ) {
-		if ( ! ( tile->features & m_feature ) ) {
+		if ( !( tile->features & m_feature ) ) {
 			return {}; // already unset
 		}
 		tile->features &= ~m_feature;
@@ -26,7 +25,7 @@ const MapEditor::tiles_t Feature::Draw( map::Tile* tile, const MapEditor::draw_m
 		}
 		tile->features |= m_feature;
 	}
-	
+
 	// some features will alter surrounding tiles, others won't
 	if ( m_feature & ( map::Tile::F_JUNGLE | map::Tile::F_RIVER | map::Tile::F_XENOFUNGUS ) ) {
 		return {

@@ -1,6 +1,6 @@
 SUBDIR( lobby )
 
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/Main.cpp
 	${PWD}/Error.cpp
@@ -21,4 +21,4 @@ SET(SRC ${SRC}
 	${PWD}/Host.cpp
 	${PWD}/Join.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

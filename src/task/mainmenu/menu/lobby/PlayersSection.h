@@ -20,20 +20,18 @@ class Lobby;
 class PlayersSectionRow;
 
 CLASS( PlayersSection, LobbySection )
-	
+
 	PlayersSection( Lobby* lobby );
-	
-	void Create();
-	void Align();
-	void Destroy();
+
+	void Create() override;
+	void Align() override;
+	void Destroy() override;
 
 	void UpdateSlot( const size_t slot_num, ::game::Slot* slot );
 	void UpdateSlots( std::vector< ::game::Slot >& slots );
-	
+
 	const ChoiceList::choices_t& GetFactionChoices();
 	const ChoiceList::choices_t& GetDifficultyLevelChoices();
-	
-	void ApplyRules();
 
 private:
 	std::vector< PlayersSectionRow* > m_slots = {};

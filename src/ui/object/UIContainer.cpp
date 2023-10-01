@@ -11,8 +11,7 @@ using namespace event;
 namespace object {
 
 UIContainer::UIContainer( const std::string& class_name )
-	: UIObject( class_name )
-{
+	: UIObject( class_name ) {
 	//
 }
 
@@ -28,21 +27,21 @@ void UIContainer::Destroy() {
 	for ( auto& child : m_child_objects ) {
 		DestroyChild( child );
 	}
-	
+
 	ASSERT( m_child_objects.empty(), "some children still alive upon parent destruction!" );
-	
+
 	UIObject::Destroy();
 }
 
 void UIContainer::Iterate() {
 	UIObject::Iterate();
-	
+
 	for ( auto& child : m_child_objects ) {
 		child->Iterate();
 	}
 }
 
-void UIContainer::CreateChild( UIObject *object ) {
+void UIContainer::CreateChild( UIObject* object ) {
 	object->ApplyStyleIfNotLoaded();
 	object->Create();
 	object->AddStyleModifier( m_style_modifiers );
@@ -55,7 +54,7 @@ void UIContainer::CreateChild( UIObject *object ) {
 
 }
 
-void UIContainer::DestroyChild( UIObject *object ) {
+void UIContainer::DestroyChild( UIObject* object ) {
 	if ( m_created ) {
 		object->DisableActors();
 		object->Destroy();
@@ -63,8 +62,8 @@ void UIContainer::DestroyChild( UIObject *object ) {
 	DELETE( object );
 }
 
-void UIContainer::AddChild( UIObject *object ) {
-	ASSERT( !object->GetParentObject(),"non-free UIObject insertion" );
+void UIContainer::AddChild( UIObject* object ) {
+	ASSERT( !object->GetParentObject(), "non-free UIObject insertion" );
 	ASSERT( find( m_child_objects.begin(), m_child_objects.end(), object ) == m_child_objects.end(), "duplicate UIObject insertion" );
 	//Log( "Adding child " + object->GetName() );
 	m_child_objects.push_back( object );
@@ -75,7 +74,7 @@ void UIContainer::AddChild( UIObject *object ) {
 	}
 	else if (
 		m_overflow == OVERFLOW_HIDDEN
-	) {
+		) {
 		Log( "Setting overflow limits for " + object->GetName() );
 		object->SetAreaLimitsByObject( this );
 	}
@@ -96,7 +95,7 @@ void UIContainer::AddChild( UIObject *object ) {
 	}
 }
 
-void UIContainer::RemoveChild( UIObject *object ) {
+void UIContainer::RemoveChild( UIObject* object ) {
 	auto it = find( m_child_objects.begin(), m_child_objects.end(), object );
 	ASSERT( it != m_child_objects.end(), "UIObject to be removed not found" );
 	//Log( "Removing child " + object->GetName() );
@@ -110,8 +109,8 @@ void UIContainer::RemoveChild( UIObject *object ) {
 
 void UIContainer::UpdateZIndex() {
 	UIObject::UpdateZIndex();
-	
-	for ( auto &child : m_child_objects ){
+
+	for ( auto& child : m_child_objects ) {
 		child->UpdateZIndex();
 	}
 }
@@ -133,7 +132,7 @@ const UIObject::coord_t UIContainer::GetPadding() const {
 
 void UIContainer::RealignNow() {
 	UIObject::RealignNow();
-	
+
 	if ( !m_are_realigns_blocked ) {
 		for ( auto& child : m_child_objects ) {
 			child->RealignNow();
@@ -143,7 +142,7 @@ void UIContainer::RealignNow() {
 
 void UIContainer::Redraw() {
 	UIObject::Redraw();
-	
+
 	for ( auto& child : m_child_objects ) {
 		child->Redraw();
 	}
@@ -151,7 +150,7 @@ void UIContainer::Redraw() {
 
 void UIContainer::SetOverflow( const overflow_t overflow ) {
 	m_overflow = overflow;
-	
+
 	if ( m_overflow == OVERFLOW_HIDDEN ) {
 		for ( auto& child : m_child_objects ) {
 			if ( child->GetOverflow() != OVERFLOW_VISIBLE_ALWAYS ) {
@@ -159,14 +158,14 @@ void UIContainer::SetOverflow( const overflow_t overflow ) {
 			}
 		}
 	}
-	
+
 	for ( auto& child : m_child_objects ) {
 		child->Realign();
 	}
 }
 
 void UIContainer::ProcessEvent( UIEvent* event ) {
-	
+
 	if ( !( event->m_flags & UIEvent::EF_MOUSE ) ) {
 		// non-mouse events are processed by parent before children
 		UIObject::ProcessEvent( event );
@@ -174,7 +173,7 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 			return;
 		}
 	}
-	
+
 	bool is_processed = false;
 	if ( event->m_flags & UIEvent::EF_MOUSE ) {
 		// process in reverse order because later children overlap earlier ones
@@ -182,13 +181,13 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 		for ( auto c = child_objects.rbegin() ; c != child_objects.rend() ; c++ ) {
 			if (
 				( event->m_type == UIEvent::EV_MOUSE_MOVE ) || // mousemove needs to be sent to all objects for mouseout events to work
-				( // other events - only until handled and only to those actually under mouse pointer
-					!is_processed &&
-					(*c)->IsPointInside( event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y )
-				)
-			) {
+					( // other events - only until handled and only to those actually under mouse pointer
+						!is_processed &&
+							( *c )->IsPointInside( event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y )
+					)
+				) {
 				NEWV( child_event, UIEvent, event );
-				(*c)->ProcessEvent( child_event );
+				( *c )->ProcessEvent( child_event );
 				is_processed = child_event->IsProcessed();
 				if ( child_event->IsMouseOverHappened() ) {
 					event->SetMouseOverHappened(); // prevent duplicate mouseovers
@@ -200,8 +199,8 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 	if ( is_processed ) {
 		event->SetProcessed();
 	}
-	
-	if (( event->m_flags & UIEvent::EF_KEYBOARD ) == UIEvent::EF_KEYBOARD ) {
+
+	if ( ( event->m_flags & UIEvent::EF_KEYBOARD ) == UIEvent::EF_KEYBOARD ) {
 		// TODO: send only to focused/active element
 		for ( auto& c : m_child_objects ) {
 			NEWV( child_event, UIEvent, event );
@@ -219,8 +218,8 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 		// mouse events are processed by children before parent
 		if (
 			( event->m_type == UIEvent::EV_MOUSE_MOVE ) || // mousemove needs to be sent to all objects for mouseout events to work
-			!event->IsProcessed()
-		) {
+				!event->IsProcessed()
+			) {
 			UIObject::ProcessEvent( event );
 		}
 	}
@@ -247,11 +246,11 @@ const UIObject::object_area_t UIContainer::GetInternalObjectArea() {
 
 void UIContainer::ApplyStyle() {
 	UIObject::ApplyStyle();
-	
+
 	if ( Has( Style::A_PADDING ) ) {
 		SetPadding( Get( Style::A_PADDING ) );
 	}
-	
+
 	for ( auto& c : m_child_objects ) {
 		////c->ReloadStyle();
 		c->ApplyStyleIfNeeded(); // ???
@@ -262,7 +261,7 @@ void UIContainer::ApplyStyle() {
 void UIContainer::ReloadStyle() {
 	if ( m_style_loaded ) {
 		UIObject::ReloadStyle();
-		
+
 		for ( auto& c : m_child_objects ) {
 			c->ReloadStyle();
 		}
@@ -271,7 +270,7 @@ void UIContainer::ReloadStyle() {
 
 void UIContainer::SetEventContexts( event_context_t contexts ) {
 	UIObject::SetEventContexts( contexts );
-	
+
 	for ( auto& c : m_child_objects ) {
 		c->SetOverriddenEventContexts( contexts );
 	}
@@ -279,7 +278,7 @@ void UIContainer::SetEventContexts( event_context_t contexts ) {
 
 void UIContainer::AddEventContexts( event_context_t contexts ) {
 	UIObject::AddEventContexts( contexts );
-	
+
 	for ( auto& c : m_child_objects ) {
 		c->AddOverriddenEventContexts( contexts );
 	}
@@ -287,7 +286,7 @@ void UIContainer::AddEventContexts( event_context_t contexts ) {
 
 void UIContainer::SetOverriddenEventContexts( event_context_t contexts ) {
 	UIObject::SetOverriddenEventContexts( contexts );
-	
+
 	for ( auto& c : m_child_objects ) {
 		c->SetOverriddenEventContexts( contexts );
 	}
@@ -295,7 +294,7 @@ void UIContainer::SetOverriddenEventContexts( event_context_t contexts ) {
 
 void UIContainer::AddOverriddenEventContexts( event_context_t contexts ) {
 	UIObject::AddOverriddenEventContexts( contexts );
-	
+
 	for ( auto& c : m_child_objects ) {
 		c->AddOverriddenEventContexts( contexts );
 	}
@@ -303,7 +302,7 @@ void UIContainer::AddOverriddenEventContexts( event_context_t contexts ) {
 
 void UIContainer::AddStyleModifier( const Style::modifier_t modifier ) {
 	UIObject::AddStyleModifier( modifier );
-	
+
 	for ( auto& c : m_child_objects ) {
 		if ( !c->HasStyleModifier( modifier ) ) {
 			c->AddStyleModifier( modifier );
@@ -313,7 +312,7 @@ void UIContainer::AddStyleModifier( const Style::modifier_t modifier ) {
 
 void UIContainer::RemoveStyleModifier( const Style::modifier_t modifier ) {
 	UIObject::RemoveStyleModifier( modifier );
-	
+
 	for ( auto& c : m_child_objects ) {
 		if ( c->HasStyleModifier( modifier ) ) {
 			c->RemoveStyleModifier( modifier );
@@ -323,7 +322,7 @@ void UIContainer::RemoveStyleModifier( const Style::modifier_t modifier ) {
 
 void UIContainer::SetAreaLimits( const coord_box_t limits ) {
 	UIObject::SetAreaLimits( limits );
-	
+
 	for ( auto& c : m_child_objects ) {
 		c->SetAreaLimits( limits );
 	}
@@ -349,7 +348,7 @@ void UIContainer::SetAreaLimitsByObject( UIObject* source_object ) {
 
 void UIContainer::ClearAreaLimits() {
 	UIObject::ClearAreaLimits();
-	
+
 	for ( auto& c : m_child_objects ) {
 		c->ClearAreaLimits();
 	}
@@ -357,7 +356,7 @@ void UIContainer::ClearAreaLimits() {
 
 void UIContainer::BlockEvents() {
 	UIObject::BlockEvents();
-	
+
 	for ( auto& c : m_child_objects ) {
 		c->BlockEvents();
 	}
@@ -389,7 +388,7 @@ void UIContainer::HideActors() {
 	}
 }
 
-void UIContainer::GrowFromObjectMaybe( UIObject *object ) {
+void UIContainer::GrowFromObjectMaybe( UIObject* object ) {
 	if ( m_overflow == OVERFLOW_GROW ) {
 		GrowFromObject( object );
 	}
@@ -403,7 +402,7 @@ void UIContainer::ShrinkToFitMaybe() {
 
 void UIContainer::UpdateAreaLimits() {
 	UIObject::UpdateAreaLimits();
-	
+
 	for ( auto& c : m_child_objects ) {
 		c->UpdateAreaLimits();
 	}
@@ -411,14 +410,14 @@ void UIContainer::UpdateAreaLimits() {
 
 const std::string UIContainer::Subclass( const std::string& class_name ) const {
 	//if (m_style_class.empty()) {
-		return "";
+	return "";
 	/*}
 	else {
 		return m_style_class + class_name;
 	}*/
 }
 
-void UIContainer::GrowFromObject( UIObject *object ) {
+void UIContainer::GrowFromObject( UIObject* object ) {
 	const auto& margin = object->GetMargin();
 	const coord_t need_width = object->GetLeft() + object->GetWidth() + object->GetRight() + margin.left + margin.right;
 	if ( need_width > GetWidth() ) {
@@ -433,7 +432,10 @@ void UIContainer::GrowFromObject( UIObject *object ) {
 }
 
 void UIContainer::ShrinkToFit() {
-	Vec2< coord_t > shrink_to = { 0.0f, 0.0f };
+	Vec2< coord_t > shrink_to = {
+		0.0f,
+		0.0f
+	};
 	for ( auto& object : m_child_objects ) {
 		const auto& margin = object->GetMargin();
 		shrink_to.x = std::max< coord_t >( shrink_to.x, object->GetLeft() + object->GetWidth() + object->GetRight() + margin.left + margin.right );

@@ -21,7 +21,7 @@ mt_id_t Network::MT_DisconnectClient( const size_t cid ) {
 	MT_Request request;
 	request.op = OP_DISCONNECT_CLIENT;
 	request.cid = cid;
- 	return MT_CreateRequest( request );
+	return MT_CreateRequest( request );
 }
 
 mt_id_t Network::MT_GetEvents() {
@@ -42,16 +42,21 @@ mt_id_t Network::MT_SendPacket( const Packet& packet, const size_t cid ) {
 		// maybe old event, nothing to do
 		return MT_Success();
 	}
-	ASSERT( 
+	ASSERT(
 		( m_current_connection_mode == CM_SERVER && cid ) ||
-		( m_current_connection_mode == CM_CLIENT && !cid ),
+			( m_current_connection_mode == CM_CLIENT && !cid ),
 		"unexpected cid value for connection mode"
 	);
 	Event e;
 	e.cid = cid;
 	e.type = Event::ET_PACKET;
 	e.data.packet_data = packet.Serialize().ToString();
-	Log( "Sending packet ( type = " + std::to_string( packet.type ) + " )" + ( cid ? " to client " + std::to_string( cid ) : "" ) );
+	Log(
+		"Sending packet ( type = " + std::to_string( packet.type ) + " )" + ( cid
+			? " to client " + std::to_string( cid )
+			: ""
+		)
+	);
 	return MT_SendEvent( e );
 }
 
@@ -82,7 +87,7 @@ const MT_Response Network::ProcessRequest( const MT_Request& request, MT_CANCELA
 					return response;
 				}
 				case CM_CLIENT: {
-					auto response = Connect( request.connect.remote_address );
+					auto response = Connect( request.connect.remote_address, MT_C );
 					if ( response.result == R_SUCCESS ) {
 						m_current_connection_mode = request.connect.mode;
 					}
@@ -135,13 +140,13 @@ const MT_Response Network::ProcessRequest( const MT_Request& request, MT_CANCELA
 }
 
 void Network::DestroyRequest( const MT_Request& request ) {
-	
+
 }
 
 void Network::DestroyResponse( const MT_Response& response ) {
-	
+
 }
-	
+
 void Network::AddEvent( const Event& event ) {
 	m_events_out.push_back( event );
 }
@@ -150,6 +155,25 @@ events_t Network::GetEvents() {
 	events_t events = m_events_in;
 	m_events_in.clear();
 	return events;
+}
+
+void Network::InvalidateEventsForDisconnectedClient( const size_t cid ) {
+	ASSERT( cid != 0, "can't invalidate cid 0" );
+	events_t events_new = {};
+	bool disconnect_event_kept = false;
+	for ( auto& event : m_events_out ) {
+		if ( !disconnect_event_kept && event.type == Event::ET_CLIENT_DISCONNECT ) {
+			disconnect_event_kept = true;
+		}
+		else if ( event.cid == cid ) {
+			continue;
+		}
+		events_new.push_back( event );
+	}
+	if ( m_events_out.size() != events_new.size() ) {
+		Log( "Invalidated " + std::to_string( m_events_out.size() - events_new.size() ) + " events for cid " + std::to_string( cid ) );
+	}
+	m_events_out = events_new;
 }
 
 const connection_mode_t Network::GetCurrentConnectionMode() const {
@@ -165,16 +189,22 @@ void Network::Iterate() {
 	ProcessEvents();
 }
 
-const MT_Response Network::Error( const std::string& errmsg ) {
+const MT_Response Network::Error( const std::string& errmsg ) const {
 	MT_Response response;
 	response.result = R_ERROR;
 	response.message = errmsg;
 	return response;
 }
 
-const MT_Response Network::Success() {
+const MT_Response Network::Success() const {
 	MT_Response response;
 	response.result = R_SUCCESS;
+	return response;
+}
+
+const MT_Response Network::Canceled() const {
+	MT_Response response;
+	response.result = R_CANCELED;
 	return response;
 }
 
@@ -182,6 +212,12 @@ mt_id_t Network::MT_Success() {
 	MT_Request request;
 	request.op = OP_SUCCESS;
 	return MT_CreateRequest( request );
+}
+
+const fd_t Network::GetFdFromCid( const size_t cid ) const {
+	return cid < m_server.cid_to_fd.size()
+		? m_server.cid_to_fd[ cid ]
+		: 0;
 }
 
 }

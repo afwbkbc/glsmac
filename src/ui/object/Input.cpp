@@ -8,32 +8,33 @@
 namespace ui {
 namespace object {
 
-Input::Input( const std::string& class_name ) : Panel( class_name ) {
+Input::Input( const std::string& class_name )
+	: Panel( class_name ) {
 	SetEventContexts( EC_MOUSE | EC_MOUSEMOVE );
 }
 
 void Input::Create() {
 	Panel::Create();
-	
+
 	NEW( m_value_label, Label );
-		m_value_label->SetText( m_value );
-		m_value_label->SetMargin( 5 ); // TODO: align properly
-		m_value_label->ForwardStyleAttributesM( m_forwarded_style_attributes.value_label );
-		m_value_label->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_BOTTOM );
+	m_value_label->SetText( m_value );
+	m_value_label->SetMargin( 5 ); // TODO: align properly
+	m_value_label->ForwardStyleAttributesM( m_forwarded_style_attributes.value_label );
+	m_value_label->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_BOTTOM );
 	AddChild( m_value_label );
-	
+
 	if ( !m_hint.empty() ) {
 		UpdateHintLabel();
 	}
-	
+
 	SetFocusable( true );
-	
+
 	m_cursor_blink_value = " ";
 }
 
 void Input::Iterate() {
 	Panel::Iterate();
-	
+
 	if ( m_cursor_blink_timer.HasTicked() ) {
 		if ( m_cursor_blink_value == " " ) {
 			m_cursor_blink_value = CURSOR_BLINK_SYMBOL;
@@ -47,15 +48,15 @@ void Input::Iterate() {
 
 void Input::Destroy() {
 	m_cursor_blink_timer.Stop();
-	
+
 	RemoveChild( m_value_label );
 	m_value_label = nullptr;
-	
+
 	if ( m_hint_label ) {
 		RemoveChild( m_hint_label );
 		m_hint_label = nullptr;
 	}
-	
+
 	Panel::Destroy();
 }
 
@@ -125,9 +126,9 @@ void Input::UpdateValueLabel( const bool send_event ) {
 void Input::UpdateHintLabel() {
 	if ( !m_hint_label ) {
 		NEW( m_hint_label, Label );
-			m_hint_label->SetMargin( 5 ); // TODO: align properly
-			m_hint_label->ForwardStyleAttributesM( m_forwarded_style_attributes.hint_label );
-			m_hint_label->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_BOTTOM );
+		m_hint_label->SetMargin( 5 ); // TODO: align properly
+		m_hint_label->ForwardStyleAttributesM( m_forwarded_style_attributes.hint_label );
+		m_hint_label->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_BOTTOM );
 		AddChild( m_hint_label );
 	}
 	m_hint_label->SetText( m_hint );
@@ -135,15 +136,15 @@ void Input::UpdateHintLabel() {
 
 void Input::Focus() {
 	Panel::Focus();
-	
+
 	m_cursor_blink_value = CURSOR_BLINK_SYMBOL;
 	UpdateValueLabel();
-	m_cursor_blink_timer.SetInterval( CURSOR_BLINK_INTERVAL );	
+	m_cursor_blink_timer.SetInterval( CURSOR_BLINK_INTERVAL );
 }
 
 void Input::Defocus() {
 	Panel::Defocus();
-	
+
 	m_cursor_blink_timer.Stop();
 	m_cursor_blink_value = " ";
 	UpdateValueLabel();

@@ -8,8 +8,9 @@ namespace module {
 
 class Coastlines : public Module {
 public:
-	Coastlines( Map* const map ) : Module( map ) {}
-	
+	Coastlines( Map* const map )
+		: Module( map ) {}
+
 protected:
 	struct coastline_corner_t {
 		size_t msx = 0;

@@ -7,8 +7,7 @@ MenuItem::MenuItem( MenuBlock* menu, const std::string& text, const bool is_titl
 	: UIContainer( "SlidingMenuItem" )
 	, m_menu( menu )
 	, m_text( text )
-	, m_is_title( is_title )
-{
+	, m_is_title( is_title ) {
 	SetEventContexts( EC_MOUSE | EC_MOUSEMOVE );
 }
 
@@ -16,12 +15,12 @@ void MenuItem::Create() {
 	UIContainer::Create();
 
 	m_parts.clear();
-	
+
 #define ADDPART( _part ) \
-	{ \
-		NEWV( part, Surface, _part ); \
-		m_parts.push_back( part ); \
-	}
+    { \
+        NEWV( part, Surface, _part ); \
+        m_parts.push_back( part ); \
+    }
 	ADDPART( "SlidingMenuItemBody" );
 	ADDPART( "SlidingMenuItemLeft" );
 	ADDPART( "SlidingMenuItemRight" );
@@ -29,25 +28,29 @@ void MenuItem::Create() {
 	ADDPART( "SlidingMenuItemUpperTop" );
 	ADDPART( "SlidingMenuItemBottom" );
 #undef ADDPART
-	
-	for (auto& part : m_parts) {
+
+	for ( auto& part : m_parts ) {
 		AddChild( part );
 	}
-	
+
 	NEW( m_label, Label );
 	m_label->SetText( m_text );
-	m_label->SetClass( m_is_title ? "SlidingMenuTitleText" : "SlidingMenuButtonText" );
-	AddChild(m_label);
+	m_label->SetClass(
+		m_is_title
+			? "SlidingMenuTitleText"
+			: "SlidingMenuButtonText"
+	);
+	AddChild( m_label );
 }
 
 void MenuItem::Destroy() {
-	for (auto& part : m_parts) {
+	for ( auto& part : m_parts ) {
 		RemoveChild( part );
 	};
 	m_parts.clear();
-	
-	RemoveChild(m_label);
-	
+
+	RemoveChild( m_label );
+
 	UIContainer::Destroy();
 }
 

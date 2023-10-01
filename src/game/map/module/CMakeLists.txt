@@ -1,4 +1,4 @@
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/Module.cpp
 	${PWD}/Prepare.cpp
@@ -13,4 +13,4 @@ SET(SRC ${SRC}
 	${PWD}/Sprites.cpp
 	${PWD}/Finalize.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

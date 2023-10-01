@@ -5,7 +5,8 @@ using namespace types;
 namespace graphics {
 namespace opengl {
 
-Actor::Actor( scene::actor::Actor *actor ) : m_actor( actor ) {
+Actor::Actor( scene::actor::Actor* actor )
+	: m_actor( actor ) {
 	m_name = actor->GetLocalName();
 }
 

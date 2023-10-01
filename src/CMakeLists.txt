@@ -17,12 +17,12 @@ SUBDIR( engine )
 SUBDIR( rr )
 SUBDIR( task )
 
-IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
 	SUBDIR( debug )
-ENDIF()
+ENDIF ()
 
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/main.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

@@ -7,9 +7,9 @@
 
 namespace game {
 namespace map {
-	
+
 CLASS( MapState, base::Base )
-	
+
 	~MapState();
 
 	struct copy_from_after_t {
@@ -24,7 +24,7 @@ CLASS( MapState, base::Base )
 		float alpha;
 		util::Perlin* perlin = nullptr;
 	};
-	
+
 	bool first_run;
 	Vec2< float > coord;
 	Vec2< uint32_t > dimensions;
@@ -35,17 +35,17 @@ CLASS( MapState, base::Base )
 
 	const Texture* terrain_texture;
 	const Texture* ter1_pcx;
-	
+
 	TileState* At( const size_t x, const size_t y ) const;
 
 	void LinkTileStates( MT_CANCELABLE );
-	
+
 	const Buffer Serialize() const;
 	void Unserialize( Buffer buf );
-	
+
 private:
 	TileState* m_tile_states = nullptr;
-	
+
 };
 
 }

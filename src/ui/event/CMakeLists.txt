@@ -1,6 +1,6 @@
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/UIEvent.cpp
 	${PWD}/UIEventHandler.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

@@ -6,10 +6,9 @@
 namespace scene {
 namespace actor {
 
-Mesh::Mesh( const std::string &name, const mesh::Mesh *mesh, const type_t type )
+Mesh::Mesh( const std::string& name, const mesh::Mesh* mesh, const type_t type )
 	: Actor( type, name )
-	, m_mesh( mesh )
-{
+	, m_mesh( mesh ) {
 	//
 }
 
@@ -27,7 +26,7 @@ void Mesh::SetMesh( const mesh::Mesh* mesh ) {
 	m_mesh = mesh;
 }
 
-const mesh::Mesh *Mesh::GetMesh() const {
+const mesh::Mesh* Mesh::GetMesh() const {
 	ASSERT( m_mesh, "mesh not set" );
 	return m_mesh;
 }
@@ -69,27 +68,33 @@ rr::id_t Mesh::GetDataAt( const size_t screen_x, const size_t screen_inverse_y )
 Mesh::data_response_t Mesh::GetDataResponse( const rr::id_t request_id ) {
 	auto* r = RR_GetResponse< rr::GetData >( request_id );
 	if ( r ) {
-		data_response_t result = { true, r->data };
+		data_response_t result = {
+			true,
+			r->data
+		};
 		//Log( "Data request " + std::to_string( id ) + " completed" );
 		DELETE( r );
 		return result;
 	}
 	else {
-		return { false, std::nullopt };
+		return {
+			false,
+			std::nullopt
+		};
 	}
 }
 
 void Mesh::CancelDataRequest( const rr::id_t request_id ) {
 	//Log( "Canceling data request " + std::to_string( id ) );
-	RR_Cancel<rr::GetData>( request_id );
+	RR_Cancel< rr::GetData >( request_id );
 }
 
 rr::id_t Mesh::CaptureToTexture( scene::Camera* camera, const Vec2< size_t > texture_dimensions ) {
 	Log( "Requesting capture-to-texture" );
 	NEWV( request, rr::Capture );
-		request->camera = camera;
-		request->texture_width = texture_dimensions.x;
-		request->texture_height = texture_dimensions.y;
+	request->camera = camera;
+	request->texture_width = texture_dimensions.x;
+	request->texture_height = texture_dimensions.y;
 	return RR_Send( request );
 }
 

@@ -6,12 +6,12 @@
 #include "scene/actor/Actor.h"
 #include "scene/actor/Instanced.h"
 
-#include "../Graphics.h"
-
 namespace graphics {
 namespace opengl {
 
-Scene::Scene( scene::Scene *scene, routine::Routine *routine ) : m_scene( scene ), m_routine( routine ) {
+Scene::Scene( scene::Scene* scene, routine::Routine* routine )
+	: m_scene( scene )
+	, m_routine( routine ) {
 	m_name = scene->GetLocalName();
 }
 
@@ -22,15 +22,15 @@ Scene::~Scene() {
 
 }
 
-void Scene::RemoveActor( base::ObjectLink *link ) {
-	auto *gl_actor = link->GetDstObject<Actor>();
+void Scene::RemoveActor( base::ObjectLink* link ) {
+	auto* gl_actor = link->GetDstObject< Actor >();
 	if ( link->Removed() ) {
 		// already removed on other side
 		gl_actor->UnlinkActor();
 	}
 	else {
 		// unlink from our side
-		link->GetSrcObject<scene::actor::Actor>()->m_graphics_object = NULL;
+		link->GetSrcObject< scene::actor::Actor >()->m_graphics_object = NULL;
 	}
 	gl_actor->UnloadMesh();
 	gl_actor->UnloadTexture();
@@ -61,13 +61,13 @@ void Scene::RemoveActorFromZIndexSet( Actor* gl_actor ) {
 }
 
 void Scene::Update() {
-	base::ObjectLink *obj;
+	base::ObjectLink* obj;
 
 	for ( auto it = m_gl_actors.begin() ; it < m_gl_actors.end() ; ++it ) {
-		Actor *gl_actor = (*it)->GetDstObject<Actor>();
-		if ( (*it)->Removed() ) {
+		Actor* gl_actor = ( *it )->GetDstObject< Actor >();
+		if ( ( *it )->Removed() ) {
 			// remove missing actors
-			
+
 			RemoveActorFromZIndexSet( gl_actor );
 			RemoveActor( *it );
 			m_gl_actors.erase( it, it + 1 );
@@ -75,21 +75,21 @@ void Scene::Update() {
 		}
 		else {
 			// reload actors when needed
-			
+
 			bool mesh_reload_needed = gl_actor->MeshReloadNeeded();
 			bool texture_reload_needed = gl_actor->TextureReloadNeeded();
-			
+
 			float z_index = 0.0f;
 			const auto* actor = gl_actor->GetActor();
 			if (
 				actor->GetType() != scene::actor::Actor::TYPE_INSTANCED_MESH &&
-				actor->GetType() != scene::actor::Actor::TYPE_INSTANCED_SPRITE
-			) {
+					actor->GetType() != scene::actor::Actor::TYPE_INSTANCED_SPRITE
+				) {
 				// check if z index changed ( doesn't make sense for instanced actors )
 				z_index = actor->GetPosition().z;
 			}
 			else {
-				z_index = ((scene::actor::Instanced*)actor)->GetZIndex();
+				z_index = ( (scene::actor::Instanced*)actor )->GetZIndex();
 			}
 			if ( gl_actor->GetZIndex() != z_index ) {
 				// move to current zindex set
@@ -97,7 +97,7 @@ void Scene::Update() {
 				gl_actor->SetZIndex( z_index );
 				AddActorToZIndexSet( gl_actor );
 			}
-			
+
 			if ( mesh_reload_needed ) {
 				gl_actor->UnloadMesh();
 				gl_actor->LoadMesh();
@@ -112,21 +112,21 @@ void Scene::Update() {
 	// add new actors
 	auto* actors = GetScene()->GetActors();
 	for ( auto it = actors->begin() ; it < actors->end() ; it++ ) {
-		obj = (*it)->m_graphics_object;
+		obj = ( *it )->m_graphics_object;
 		if ( obj == NULL ) {
 
-			Actor *gl_actor = NULL;
+			Actor* gl_actor = NULL;
 
-			auto actor_type = (*it)->GetType();
-			switch (actor_type) {
+			auto actor_type = ( *it )->GetType();
+			switch ( actor_type ) {
 				case scene::actor::Actor::TYPE_SPRITE:
 				case scene::actor::Actor::TYPE_INSTANCED_SPRITE: {
-					NEW( gl_actor, Sprite, (scene::actor::Sprite *)*it );
+					NEW( gl_actor, Sprite, (scene::actor::Sprite*)*it );
 					break;
 				}
 				case scene::actor::Actor::TYPE_MESH:
 				case scene::actor::Actor::TYPE_INSTANCED_MESH: {
-					NEW( gl_actor, Mesh, (scene::actor::Mesh *)*it );
+					NEW( gl_actor, Mesh, (scene::actor::Mesh*)*it );
 					break;
 				}
 				default: {
@@ -137,17 +137,17 @@ void Scene::Update() {
 			if ( gl_actor ) {
 				gl_actor->LoadMesh();
 				gl_actor->LoadTexture();
-				NEW( obj, base::ObjectLink, (*it), gl_actor );
+				NEW( obj, base::ObjectLink, ( *it ), gl_actor );
 				m_gl_actors.push_back( obj );
 				AddActorToZIndexSet( gl_actor ); // TODO: only Simple2D
-				(*it)->m_graphics_object = obj;
+				( *it )->m_graphics_object = obj;
 			}
 		}
 	}
 
 #ifdef DEBUG
 	size_t gl_actors_by_zindex_count = 0;
-	for (auto& actors : m_gl_actors_by_zindex) {
+	for ( auto& actors : m_gl_actors_by_zindex ) {
 		gl_actors_by_zindex_count += actors.second.size();
 	}
 	if ( gl_actors_by_zindex_count != m_gl_actors.size() ) {
@@ -156,8 +156,8 @@ void Scene::Update() {
 #endif
 }
 
-void Scene::Draw( shader_program::ShaderProgram *shader_program, shader_program::ShaderProgram *other_shader_program ) {
-	
+void Scene::Draw( shader_program::ShaderProgram* shader_program, shader_program::ShaderProgram* other_shader_program ) {
+
 #ifdef DEBUG
 	float last_zindex = -9999999;
 	std::string zindex_sequence = "";
@@ -171,7 +171,7 @@ void Scene::Draw( shader_program::ShaderProgram *shader_program, shader_program:
 		}
 		last_zindex = zindex;
 #endif
-		
+
 		for ( auto& actor : actors.second ) {
 			if ( actor->GetActor()->IsVisible() ) {
 				// TODO: refactor
@@ -185,12 +185,12 @@ void Scene::Draw( shader_program::ShaderProgram *shader_program, shader_program:
 			}
 		}
 	}
-	
+
 }
 
 void Scene::OnWindowResize() {
 	for ( auto& link : m_gl_actors ) {
-		auto *gl_actor = link->GetDstObject<Actor>();
+		auto* gl_actor = link->GetDstObject< Actor >();
 		gl_actor->OnWindowResize();
 	}
 }

@@ -4,9 +4,9 @@
 namespace ui {
 namespace object {
 
-SoundEffect::SoundEffect( const std::string& class_name ) : UIObject( class_name )
-{
-	
+SoundEffect::SoundEffect( const std::string& class_name )
+	: UIObject( class_name ) {
+
 }
 
 void SoundEffect::SetSound( const types::Sound* sound ) {
@@ -61,10 +61,10 @@ void SoundEffect::Play() {
 	if ( m_sound && m_created ) {
 		//Log( "Creating sound actor" );
 		NEWV( actor, scene::actor::Sound, "UI::SoundEffect", m_sound );
-			actor->SetRepeatable( m_repeatable );
-			actor->SetStartDelay( m_start_delay );
-			actor->SetVolume( m_volume );
-			actor->SetAutoPlay( m_autoplay );
+		actor->SetRepeatable( m_repeatable );
+		actor->SetStartDelay( m_start_delay );
+		actor->SetVolume( m_volume );
+		actor->SetAutoPlay( m_autoplay );
 		g_engine->GetAudio()->AddActor( actor );
 		m_actors.push_back( actor );
 		actor->Play();
@@ -85,7 +85,7 @@ void SoundEffect::Stop() {
 
 void SoundEffect::Create() {
 	UIObject::Create();
-	
+
 	if ( m_autoplay && m_actors.empty() ) {
 		Play();
 	}
@@ -93,7 +93,7 @@ void SoundEffect::Create() {
 
 void SoundEffect::Iterate() {
 	UIObject::Iterate();
-	
+
 	std::vector< actor::Sound* > active_actors = {};
 	for ( auto& actor : m_actors ) {
 		if ( actor->IsFinished() ) {
@@ -117,13 +117,13 @@ void SoundEffect::Destroy() {
 		//RemoveActor( m_actor );
 	}
 	m_actors.clear();
-	
+
 	UIObject::Destroy();
 }
 
 void SoundEffect::ApplyStyle() {
 	UIObject::ApplyStyle();
-	
+
 	if ( Has( Style::A_SOUND ) ) {
 		const auto* sound = (types::Sound*)GetObject( Style::A_SOUND );
 		if ( sound ) {
@@ -144,12 +144,12 @@ void SoundEffect::ApplyStyle() {
 		if ( Has( Style::A_SOUND_START_DELAY ) ) {
 			SetStartDelay( Get( Style::A_SOUND_START_DELAY ) );
 		}
-		
+
 		if ( m_autoplay && m_actors.empty() ) {
 			Play();
 		}
 	}
-	
+
 }
 
 }

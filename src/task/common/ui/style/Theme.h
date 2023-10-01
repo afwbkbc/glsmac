@@ -8,12 +8,12 @@
 
 namespace task {
 namespace style {
-	
+
 CLASS( Theme, ui::theme::Theme )
 	Theme();
 
 protected:
-	
+
 	struct {
 		Common common;
 		Popup popup_menu;

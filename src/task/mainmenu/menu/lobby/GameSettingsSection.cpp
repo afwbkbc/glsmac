@@ -8,20 +8,20 @@ namespace task {
 namespace mainmenu {
 namespace lobby {
 
-GameSettingsSection::GameSettingsSection( Lobby* lobby, ::game::GlobalSettings *game_settings )
+GameSettingsSection::GameSettingsSection( Lobby* lobby, ::game::GlobalSettings* game_settings )
 	: LobbySection( lobby )
-	, m_game_settings( game_settings )
-{
+	, m_game_settings( game_settings ) {
 	SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
+	SetTitleText( " " ); // to have header created
 }
 
 void GameSettingsSection::Create() {
-	Section::Create();
+	LobbySection::Create();
 
 	ASSERT( m_element_rows.empty(), "element rows not empty" );
-	m_element_rows.resize(RI_MAX );
+	m_element_rows.resize( RI_MAX );
 
-	CreateRow( RI_DIFFICULTY_LEVEL,"Global Difficulty Level", 162, 120 );
+	CreateRow( RI_DIFFICULTY_LEVEL, "Global Difficulty Level", 162, 120 );
 	CreateRow( RI_TIME_CONTROLS, "Time Controls", 108, 90 );
 	CreateRow( RI_MAP_TYPE, "Type of Game", 106, 140 );
 	CreateRow( RI_PLANET_SIZE, "Planet Size", 106, 140 );
@@ -55,7 +55,7 @@ void GameSettingsSection::Align() {
 	SetWidth( 302 );
 	SetHeight( 364 );
 
-	Section::Align();
+	LobbySection::Align();
 }
 
 void GameSettingsSection::Destroy() {
@@ -71,7 +71,7 @@ void GameSettingsSection::Destroy() {
 
 	m_element_rows.clear();
 
-	Section::Destroy();
+	LobbySection::Destroy();
 }
 
 void GameSettingsSection::UpdateRows() {
@@ -90,15 +90,26 @@ void GameSettingsSection::UpdateRows() {
 		if ( m_game_settings->global_difficulty.m_name == it.second.m_name ) {
 			current_difficulty_level = it.first;
 		}
-		difficulty_levels.push_back({ it.first, it.second.m_name });
+		difficulty_levels.push_back(
+			{
+				it.first,
+				it.second.m_name
+			}
+		);
 	}
-	UpdateRow( RI_DIFFICULTY_LEVEL,
+	UpdateRow(
+		RI_DIFFICULTY_LEVEL,
 		difficulty_levels,
 		current_difficulty_level
 	);
-	UpdateRow( RI_TIME_CONTROLS, {
-		{ 0, "None" },
-	}, 0 );
+	UpdateRow(
+		RI_TIME_CONTROLS, {
+			{
+				0,
+				"None"
+			},
+		}, 0
+	);
 
 	ChoiceList::value_t game_type = 0;
 	switch ( m_game_settings->map.type ) {
@@ -119,47 +130,63 @@ void GameSettingsSection::UpdateRows() {
 			ASSERT( false, "unknown map type" );
 	}
 
-	UpdateRow( RI_MAP_TYPE, {
-		{ 0, "Random Map" },
-		{ 1, "Load Map"}
-	}, game_type );
+	UpdateRow(
+		RI_MAP_TYPE, {
+			{ 0, "Random Map" },
+			{ 1, "Load Map" }
+		}, game_type
+	);
 
-	UpdateRow( RI_PLANET_SIZE, {
-		{ ::game::MapSettings::MAP_TINY, "Tiny Planet" },
-		{ ::game::MapSettings::MAP_SMALL, "Small Planet" },
-		{ ::game::MapSettings::MAP_STANDARD, "Standard Planet" },
-		{ ::game::MapSettings::MAP_LARGE, "Large Planet" },
-		{ ::game::MapSettings::MAP_HUGE, "Huge Planet" },
-	}, m_game_settings->map.size );
+	UpdateRow(
+		RI_PLANET_SIZE, {
+			{ ::game::MapSettings::MAP_TINY,     "Tiny Planet" },
+			{ ::game::MapSettings::MAP_SMALL,    "Small Planet" },
+			{ ::game::MapSettings::MAP_STANDARD, "Standard Planet" },
+			{ ::game::MapSettings::MAP_LARGE,    "Large Planet" },
+			{ ::game::MapSettings::MAP_HUGE,     "Huge Planet" },
+		}, m_game_settings->map.size
+	);
 
-	UpdateRow( RI_PLANET_OCEAN, {
-		{ ::game::MapSettings::MAP_OCEAN_LOW, "30-50% of Surface" },
-		{ ::game::MapSettings::MAP_OCEAN_MEDIUM, "50-70% of Surface" },
-		{ ::game::MapSettings::MAP_OCEAN_HIGH, "70-90% of Surface" },
-	}, m_game_settings->map.ocean );
+	UpdateRow(
+		RI_PLANET_OCEAN, {
+			{ ::game::MapSettings::MAP_OCEAN_LOW,    "30-50% of Surface" },
+			{ ::game::MapSettings::MAP_OCEAN_MEDIUM, "50-70% of Surface" },
+			{ ::game::MapSettings::MAP_OCEAN_HIGH,   "70-90% of Surface" },
+		}, m_game_settings->map.ocean
+	);
 
-	UpdateRow( RI_PLANET_EROSIVE, {
-		{ 1, "Strong" },
-		{ 2, "Average" },
-		{ 3, "Weak" },
-	}, m_game_settings->map.erosive );
+	UpdateRow(
+		RI_PLANET_EROSIVE, {
+			{ 1, "Strong" },
+			{ 2, "Average" },
+			{ 3, "Weak" },
+		}, m_game_settings->map.erosive
+	);
 
-	UpdateRow( RI_PLANET_LIFEFORMS, {
-		{ 1, "Rare" },
-		{ 2, "Average" },
-		{ 3, "Abundant" },
-	}, m_game_settings->map.lifeforms );
+	UpdateRow(
+		RI_PLANET_LIFEFORMS, {
+			{ 1, "Rare" },
+			{ 2, "Average" },
+			{ 3, "Abundant" },
+		}, m_game_settings->map.lifeforms
+	);
 
-	UpdateRow( RI_PLANET_CLOUDS, {
-		{ 1, "Sparse" },
-		{ 2, "Average" },
-		{ 3, "Dense" },
-	}, m_game_settings->map.clouds );
+	UpdateRow(
+		RI_PLANET_CLOUDS, {
+			{ 1, "Sparse" },
+			{ 2, "Average" },
+			{ 3, "Dense" },
+		}, m_game_settings->map.clouds
+	);
 
-	UpdateRow( RI_MAP_FILE, {
-		{ 0, util::FS::GetBaseName( m_game_settings->map.filename ) },
-	}, 0 );
-
+	UpdateRow(
+		RI_MAP_FILE, {
+			{
+				0,
+				util::FS::GetBaseName( m_game_settings->map.filename )
+			},
+		}, 0
+	);
 
 }
 
@@ -174,51 +201,59 @@ void GameSettingsSection::CreateRow( const row_id_t row_id, const std::string& l
 	choices_el->SetAlign( UIObject::ALIGN_LEFT );
 	choices_el->SetLeft( label_width );
 	choices_el->SetWidth( choices_width );
-	choices_el->On( UIEvent::EV_CHANGE, EH( this, choices_el, row_id ) {
-		const auto& game_rules = m_game_settings->game_rules;
-		switch ( row_id ) {
-			case RI_DIFFICULTY_LEVEL:
-				m_game_settings->global_difficulty = game_rules.m_difficulty_levels.at( data->value.change.id );
-				break;
-			case RI_TIME_CONTROLS:
-				break;
-			case RI_SPACE_1:
-				break;
-			case RI_MAP_TYPE:
-				if ( data->value.change.id == 1 ) { // "load map"
-					//choices_el->SetValue( 0 ); // keep "random map" until map is actually selected
-					ShowLoadMap();
-				}
-				else { // "random map"
-					m_game_settings->map.type = game::MapSettings::MT_RANDOM;
-					m_game_settings->map.filename = "";
-					UpdateRows();
-					GetLobby()->UpdateGameSettings();
-				}
-				break;
-			case RI_PLANET_SIZE:
-				m_game_settings->map.size = data->value.change.id;
-				break;
-			case RI_PLANET_OCEAN:
-				m_game_settings->map.ocean = data->value.change.id;
-				break;
-			case RI_PLANET_EROSIVE:
-				m_game_settings->map.erosive = data->value.change.id;
-				break;
-			case RI_PLANET_LIFEFORMS:
-				m_game_settings->map.lifeforms = data->value.change.id;
-				break;
-			case RI_PLANET_CLOUDS:
-				m_game_settings->map.clouds = data->value.change.id;
-				break;
-			case RI_MAX:
-				break;
+	choices_el->On(
+		UIEvent::EV_CHANGE, EH( this, choices_el, row_id ) {
+			const auto& game_rules = m_game_settings->game_rules;
+			switch ( row_id ) {
+				case RI_DIFFICULTY_LEVEL:
+					m_game_settings->global_difficulty = game_rules.m_difficulty_levels.at( data->value.change.id );
+					break;
+				case RI_TIME_CONTROLS:
+					break;
+				case RI_SPACE_1:
+					break;
+				case RI_MAP_TYPE:
+					if ( data->value.change.id == 1 ) { // "load map"
+						//choices_el->SetValue( 0 ); // keep "random map" until map is actually selected
+						ShowLoadMap();
+					}
+					else { // "random map"
+						m_game_settings->map.type = game::MapSettings::MT_RANDOM;
+						m_game_settings->map.filename = "";
+						UpdateRows();
+						GetLobby()->UpdateGameSettings();
+					}
+					break;
+				case RI_PLANET_SIZE:
+					m_game_settings->map.size = data->value.change.id;
+					break;
+				case RI_PLANET_OCEAN:
+					m_game_settings->map.ocean = data->value.change.id;
+					break;
+				case RI_PLANET_EROSIVE:
+					m_game_settings->map.erosive = data->value.change.id;
+					break;
+				case RI_PLANET_LIFEFORMS:
+					m_game_settings->map.lifeforms = data->value.change.id;
+					break;
+				case RI_PLANET_CLOUDS:
+					m_game_settings->map.clouds = data->value.change.id;
+					break;
+				case RI_MAP_FILE:
+					// nothing to do yet because it will just open file browser
+					break;
+				case RI_MAX:
+					break;
+			}
+			GetLobby()->UpdateGameSettings();
+			return true;
 		}
-		GetLobby()->UpdateGameSettings();
-		return true;
-	});
+	);
 	m_body->AddChild( choices_el );
-	m_element_rows[ row_id ] = { label_el, choices_el };
+	m_element_rows[ row_id ] = {
+		label_el,
+		choices_el
+	};
 }
 
 void GameSettingsSection::UpdateRow( const row_id_t row_id, const ::ui::object::ChoiceList::choices_t& choices, const ChoiceList::value_t default_choice ) {
@@ -257,35 +292,38 @@ void GameSettingsSection::ShowLoadMap() {
 	GetLobby()->LockInput();
 
 	NEW( m_load_map.section, Section, "PopupSection" );
-		m_load_map.section->SetTitleText( "LOAD MAP" );
-		m_load_map.section->SetHeight( 520 );
-		m_load_map.section->SetWidth( 450 );
-		m_load_map.section->SetZIndex( 0.7f );
-		m_load_map.section->SetAlign( ::ui::object::UIObject::ALIGN_CENTER );
-		m_load_map.section->On( UIEvent::EV_KEY_DOWN, EH( this ) {
+	m_load_map.section->SetTitleText( "LOAD MAP" );
+	m_load_map.section->SetHeight( 520 );
+	m_load_map.section->SetWidth( 450 );
+	m_load_map.section->SetZIndex( 0.7f );
+	m_load_map.section->SetAlign( ::ui::object::UIObject::ALIGN_CENTER );
+	m_load_map.section->On(
+		UIEvent::EV_KEY_DOWN, EH( this ) {
 			if ( data->key.code == UIEvent::K_ESCAPE ) {
 				return m_load_map.button_cancel->Trigger( UIEvent::EV_BUTTON_CLICK, data );
 			}
 			return false;
-		});
+		}
+	);
 	g_engine->GetUI()->AddObject( m_load_map.section );
 
 	NEW( m_load_map.browser, ::ui::object::FileBrowser );
 	// TODO: determine position from style
-		m_load_map.browser->SetTop( 4 );
-		m_load_map.browser->SetLeft( 4 );
-		m_load_map.browser->SetRight( 4 );
-		m_load_map.browser->SetBottom( 36 );
-		const auto& filename = m_game_settings->map.filename;
-		if ( !filename.empty() ) {
-			m_load_map.browser->SetDefaultDirectory( util::FS::GetDirName( filename ) );
-			m_load_map.browser->SetDefaultFilename( util::FS::GetBaseName( filename ) );
-		}
-		else {
-			m_load_map.browser->SetDefaultDirectory( util::FS::GetAbsolutePath( ::game::map::s_consts.fs.default_map_directory ) );
-		}
-		m_load_map.browser->SetFileExtension( ::game::map::s_consts.fs.default_map_extension );
-		m_load_map.browser->On( UIEvent::EV_SELECT, EH( this ) {
+	m_load_map.browser->SetTop( 4 );
+	m_load_map.browser->SetLeft( 4 );
+	m_load_map.browser->SetRight( 4 );
+	m_load_map.browser->SetBottom( 36 );
+	const auto& filename = m_game_settings->map.filename;
+	if ( !filename.empty() ) {
+		m_load_map.browser->SetDefaultDirectory( util::FS::GetDirName( filename ) );
+		m_load_map.browser->SetDefaultFilename( util::FS::GetBaseName( filename ) );
+	}
+	else {
+		m_load_map.browser->SetDefaultDirectory( util::FS::GetAbsolutePath( ::game::map::s_consts.fs.default_map_directory ) );
+	}
+	m_load_map.browser->SetFileExtension( ::game::map::s_consts.fs.default_map_extension );
+	m_load_map.browser->On(
+		UIEvent::EV_SELECT, EH( this ) {
 			const auto& path = m_load_map.browser->GetSelectedFile();
 			if ( !util::FS::FileExists( path ) ) {
 				g_engine->GetUI()->Error(
@@ -301,32 +339,37 @@ void GameSettingsSection::ShowLoadMap() {
 				HideLoadMap();
 			}
 			return true;
-		});
+		}
+	);
 	m_load_map.section->AddChild( m_load_map.browser );
 	NEW( m_load_map.button_ok, ::ui::object::Button, "PopupButtonOkCancel" );
-		m_load_map.button_ok->SetAlign( ::ui::object::UIObject::ALIGN_BOTTOM | ::ui::object::UIObject::ALIGN_LEFT );
-		m_load_map.button_ok->SetBottom( 8 );
-		m_load_map.button_ok->SetLeft( 12 );
-		m_load_map.button_ok->SetWidth( 206 );
-		m_load_map.button_ok->SetLabel( "OK" );
-		m_load_map.button_ok->On( UIEvent::EV_BUTTON_CLICK, EH( this ) {
+	m_load_map.button_ok->SetAlign( ::ui::object::UIObject::ALIGN_BOTTOM | ::ui::object::UIObject::ALIGN_LEFT );
+	m_load_map.button_ok->SetBottom( 8 );
+	m_load_map.button_ok->SetLeft( 12 );
+	m_load_map.button_ok->SetWidth( 206 );
+	m_load_map.button_ok->SetLabel( "OK" );
+	m_load_map.button_ok->On(
+		UIEvent::EV_BUTTON_CLICK, EH( this ) {
 			UIEvent::event_data_t newdata = {};
 			newdata.key.code = UIEvent::K_ENTER;
 			return m_load_map.browser->Trigger( ui::event::UIEvent::EV_KEY_DOWN, &newdata );
-		});
+		}
+	);
 
 	m_load_map.section->AddChild( m_load_map.button_ok );
 
 	NEW( m_load_map.button_cancel, ::ui::object::Button, "PopupButtonOkCancel" );
-		m_load_map.button_cancel->SetAlign( ::ui::object::UIObject::ALIGN_BOTTOM | ::ui::object::UIObject::ALIGN_RIGHT );
-		m_load_map.button_cancel->SetBottom( 8 );
-		m_load_map.button_cancel->SetRight( 12 );
-		m_load_map.button_cancel->SetWidth( 206 );
-		m_load_map.button_cancel->SetLabel( "CANCEL" );
-		m_load_map.button_cancel->On( UIEvent::EV_BUTTON_CLICK, EH( this ) {
+	m_load_map.button_cancel->SetAlign( ::ui::object::UIObject::ALIGN_BOTTOM | ::ui::object::UIObject::ALIGN_RIGHT );
+	m_load_map.button_cancel->SetBottom( 8 );
+	m_load_map.button_cancel->SetRight( 12 );
+	m_load_map.button_cancel->SetWidth( 206 );
+	m_load_map.button_cancel->SetLabel( "CANCEL" );
+	m_load_map.button_cancel->On(
+		UIEvent::EV_BUTTON_CLICK, EH( this ) {
 			HideLoadMap();
 			return true;
-		});
+		}
+	);
 	m_load_map.section->AddChild( m_load_map.button_cancel );
 
 }
@@ -344,7 +387,6 @@ void GameSettingsSection::HideLoadMap() {
 		GetLobby()->UnlockInput();
 	}
 }
-
 
 }
 }

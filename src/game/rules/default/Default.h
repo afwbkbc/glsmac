@@ -7,11 +7,11 @@ namespace rules {
 
 CLASS( Default, Rules )
 
-	const Faction& GetDefaultFaction() const;
-	const DifficultyLevel& GetDefaultDifficultyLevel() const;
+	const Faction& GetDefaultFaction() const override;
+	const DifficultyLevel& GetDefaultDifficultyLevel() const override;
 
 protected:
-	void InitRules();
+	void InitRules() override;
 
 private:
 

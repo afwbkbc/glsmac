@@ -8,10 +8,10 @@ namespace loader {
 namespace sound {
 
 CLASS( SDL2, SoundLoader )
-	
+
 	virtual ~SDL2();
-	
-	types::Sound* LoadSound( const std::string &name );
+
+	types::Sound* LoadSound( const std::string& name ) override;
 
 private:
 	// cache all sounds for future use

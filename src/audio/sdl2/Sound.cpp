@@ -5,15 +5,13 @@
 namespace audio {
 namespace sdl2 {
 
-
 Sound::Sound( scene::actor::Sound* actor )
-	: m_actor( actor )
-{
-	
+	: m_actor( actor ) {
+
 }
 
 Sound::~Sound() {
-	
+
 }
 
 const bool Sound::IsActive() {

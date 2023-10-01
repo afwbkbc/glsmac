@@ -1,6 +1,6 @@
 SUBDIR( mesh )
 
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/Buffer.cpp
 	${PWD}/Packet.cpp
@@ -13,4 +13,4 @@ SET(SRC ${SRC}
 	${PWD}/Sound.cpp
 	${PWD}/Packet.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

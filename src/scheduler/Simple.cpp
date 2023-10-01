@@ -19,8 +19,8 @@ Simple::~Simple() {
 void Simple::Start() {
 	m_active = true;
 	for ( auto it = m_tasks.begin() ; it < m_tasks.end() ; it++ ) {
-		Log( "Starting task [" + (*it)->GetName() + "]" );
-		(*it)->Start();
+		Log( "Starting task [" + ( *it )->GetName() + "]" );
+		( *it )->Start();
 	}
 #ifdef DEBUG
 	m_timer.SetInterval( 1000 );
@@ -29,8 +29,8 @@ void Simple::Start() {
 
 void Simple::Stop() {
 	for ( auto it = m_tasks.begin() ; it < m_tasks.end() ; it++ ) {
-		Log( "Stopping task [" + (*it)->GetName() + "]" );
-		(*it)->Stop();
+		Log( "Stopping task [" + ( *it )->GetName() + "]" );
+		( *it )->Stop();
 	}
 	m_active = false;
 }
@@ -38,19 +38,20 @@ void Simple::Stop() {
 void Simple::Iterate() {
 	for ( auto& task : m_tasks_toadd ) {
 		Log( "Adding task " + task->GetName() );
-		AddTask(task);
+		AddTask( task );
 	}
 	m_tasks_toadd.clear();
 	m_iterating = true;
-	for ( auto it = m_tasks.begin() ; it < m_tasks.end() ; it++ )
-		(*it)->Iterate();
+	for ( auto it = m_tasks.begin() ; it < m_tasks.end() ; it++ ) {
+		( *it )->Iterate();
+	}
 	m_iterating = false;
 	for ( auto& task : m_tasks_toremove ) {
 		Log( "Removing task " + task->GetName() );
-		RemoveTask(task);
+		RemoveTask( task );
 	}
 	m_tasks_toremove.clear();
-	
+
 #ifdef DEBUG
 	if ( m_timer.HasTicked() ) {
 		DEBUG_STAT_INC( seconds_passed );
@@ -58,9 +59,9 @@ void Simple::Iterate() {
 #endif
 }
 
-void Simple::AddTask( Task *task ) {
-	if (m_iterating) {
-		m_tasks_toadd.push_back(task);
+void Simple::AddTask( Task* task ) {
+	if ( m_iterating ) {
+		m_tasks_toadd.push_back( task );
 	}
 	else {
 		m_tasks.push_back( task );
@@ -71,9 +72,9 @@ void Simple::AddTask( Task *task ) {
 	}
 }
 
-void Simple::RemoveTask( Task *task ) {
-	if (m_iterating) {
-		m_tasks_toremove.push_back(task);
+void Simple::RemoveTask( Task* task ) {
+	if ( m_iterating ) {
+		m_tasks_toremove.push_back( task );
 	}
 	else {
 		auto it = std::find( m_tasks.begin(), m_tasks.end(), task );

@@ -11,9 +11,9 @@ namespace object {
 
 void TextView::Create() {
 	ScrollView::Create();
-	
+
 	ApplyStyleIfNotLoaded(); // TODO: move to UIContainer?
-	
+
 	size_t index = 0;
 	for ( auto& line : m_lines ) {
 		AddItem( index, line );
@@ -23,7 +23,7 @@ void TextView::Create() {
 
 void TextView::Align() {
 	ScrollView::Align();
-	
+
 	m_item_align.width = m_object_area.width - m_item_align.margin;
 	if ( m_type == TT_SIMPLE ) {
 		m_item_align.width -= m_item_align.left + m_item_align.right;
@@ -33,12 +33,12 @@ void TextView::Align() {
 		AlignItem( item, total_height );
 		total_height += item->GetHeight();
 	}
-	
+
 }
 
 void TextView::Destroy() {
 	Clear();
-	
+
 	ScrollView::Destroy();
 }
 
@@ -82,7 +82,7 @@ void TextView::Clear() {
 	}
 	m_items.clear();
 	m_lines.clear();
-	
+
 	if ( m_type == TT_EXTENDED ) {
 		m_lines_indices.clear();
 		m_lines_indices_ci.clear();
@@ -99,10 +99,12 @@ void TextView::Clear() {
 void TextView::AddLine( const std::string& text, const std::string& line_class ) {
 	ASSERT( line_class.empty() || m_type == TT_EXTENDED, "can't assign line class for simple text view" );
 	const index_t index = m_lines.size();
-	m_lines.push_back({
-		text,
-		line_class
-	});
+	m_lines.push_back(
+		{
+			text,
+			line_class
+		}
+	);
 	if ( m_type == TT_EXTENDED ) {
 		m_lines_indices[ text ] = index;
 		std::string text_ci = text;
@@ -231,14 +233,14 @@ size_t TextView::SelectByMask( std::string mask ) {
 	for ( auto& line_index : m_lines_indices_ci ) {
 		const std::string& value = line_index.first;
 		//Log( "Comparing " + mask + " to " + value );
-		
+
 		// TODO: optimize?
-		
+
 		if ( match_size && memcmp( mask.c_str(), value.c_str(), match_size ) ) {
 			// beginning doesn't match already, can't be candidate
 			continue;
 		}
-			
+
 		for ( i = match_size ; i < value.size() ; i++ ) {
 			if ( mask[ i ] != value[ i ] ) {
 				break;
@@ -247,7 +249,7 @@ size_t TextView::SelectByMask( std::string mask ) {
 		if ( i == match_size ) {
 			continue;
 		}
-		
+
 		best_candidate = line_index.second;
 		match_size = i;
 		if ( i == value.size() && i == mask.size() ) {
@@ -267,7 +269,7 @@ size_t TextView::SelectByMask( std::string mask ) {
 
 void TextView::ApplyStyle() {
 	ScrollView::ApplyStyle();
-	
+
 	if ( Has( Style::A_ITEM_WIDTH ) ) {
 		ASSERT( false, "A_ITEM_WIDTH not implemented yet" );
 		SetItemWidth( Get( Style::A_ITEM_WIDTH ) );
@@ -287,10 +289,10 @@ void TextView::SelectItem( const index_t index ) {
 	ASSERT( m_type == TT_EXTENDED, "can only select line in extended text view" );
 	ASSERT( index >= 0, "index can't be negative" );
 	ASSERT( index < m_items.size(), "index overflow" );
-	
-	auto* textline = (TextLine*) m_items[ index ];
+
+	auto* textline = (TextLine*)m_items[ index ];
 	ASSERT( textline, "textline is null" );
-	
+
 	if ( m_active_textline != textline ) {
 		if ( m_active_textline ) {
 			m_active_textline->RemoveStyleModifier( Style::M_SELECTED );
@@ -311,14 +313,15 @@ void TextView::AddItem( const size_t index, const line_t& line ) {
 	switch ( m_type ) {
 		case TT_SIMPLE: {
 			NEWV( label, Label );
-				label->SetText( line.text );
+			label->SetText( line.text );
 			item = label;
 			break;
 		}
 		case TT_EXTENDED: {
 			NEWV( textline, TextLine, line.line_class );
-				textline->SetText( line.text );
-				textline->On( UIEvent::EV_MOUSE_DOWN, EH( this, index, textline ) {
+			textline->SetText( line.text );
+			textline->On(
+				UIEvent::EV_MOUSE_DOWN, EH( this, index, textline ) {
 					if ( data->mouse.button == UIEvent::M_LEFT ) {
 						bool is_double_click = false;
 						if ( m_active_textline == textline && m_maybe_doubleclick ) {
@@ -343,7 +346,8 @@ void TextView::AddItem( const size_t index, const line_t& line ) {
 						return true;
 					}
 					return false;
-				});
+				}
+			);
 			item = textline;
 			item->ForwardStyleAttributesV( m_forwarded_style_attributes_ext );
 			break;
@@ -353,9 +357,10 @@ void TextView::AddItem( const size_t index, const line_t& line ) {
 		}
 	}
 	item->ForwardStyleAttributesV( m_forwarded_style_attributes );
-	AlignItem( item, !m_items.empty()
-		? m_items.back()->GetTop() + m_items.back()->GetHeight() + m_item_align.margin
-		: 0
+	AlignItem(
+		item, !m_items.empty()
+			? m_items.back()->GetTop() + m_items.back()->GetHeight() + m_item_align.margin
+			: 0
 	);
 	AddChild( item );
 	m_items.push_back( item );

@@ -6,9 +6,9 @@ namespace task {
 namespace game {
 namespace ui {
 namespace style {
-			
+
 CLASS( Style, ::ui::theme::StyleSheet )
-	void AddStyles();
+	void AddStyles() override;
 };
 
 }

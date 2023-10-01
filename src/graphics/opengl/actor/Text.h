@@ -11,15 +11,15 @@ namespace graphics {
 namespace opengl {
 
 class FontTexture;
-	
+
 CLASS( Text, Actor )
 
-	Text( scene::actor::Text *actor, Font* font );
+	Text( scene::actor::Text* actor, Font* font );
 	~Text();
-	
+
 	void Update( Font* font, const std::string& text, const float x, const float y );
-	void Draw( shader_program::ShaderProgram *shader_program, Camera *camera = nullptr );
-	
+	void Draw( shader_program::ShaderProgram* shader_program, Camera* camera = nullptr ) override;
+
 protected:
 
 	struct vertex_t {
@@ -34,16 +34,22 @@ protected:
 		vertex_t v3;
 		vertex_t v4;
 	};
-	Vec2< float > m_coords = { 0, 0 };
+	Vec2< float > m_coords = {
+		0,
+		0
+	};
 
 	GLuint m_vbo = 0;
 	size_t m_boxes_count = 0;
 
-	Font *m_font = nullptr;
+	Font* m_font = nullptr;
 	std::string m_text = "";
-	Vec2< size_t > m_last_window_size = { 0, 0 };
-	
-	FontTexture *m_texture = nullptr;
+	Vec2< size_t > m_last_window_size = {
+		0,
+		0
+	};
+
+	FontTexture* m_texture = nullptr;
 };
 
 } /* namespace opengl */

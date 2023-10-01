@@ -5,18 +5,18 @@ namespace map {
 namespace module {
 
 void LandSurface::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) {
-	
+
 	ASSERT( ts->moisture_original, "moisture original texture not set" );
-	
+
 	m_map->SetTexture( TileState::LAYER_LAND, ts->moisture_original, Texture::AM_DEFAULT );
-	
+
 	// blend a bit from rainy to non-rainy and vice versa
 	for ( auto& t : tile->neighbours ) {
 		if ( !t->is_water_tile && ( t->moisture == Tile::M_RAINY ) != ( tile->moisture == Tile::M_RAINY ) ) {
-			
+
 			// TODO: add pointer connection between tile and tile_state_t?
 			auto src = m_map->GetTileState( t->coord.x, t->coord.y )->moisture_original;
-			
+
 			Texture::add_flag_t add_flags = Texture::AM_DEFAULT;
 
 			if ( t == tile->NW ) {
@@ -43,7 +43,7 @@ void LandSurface::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) 
 			else if ( t == tile->W ) {
 				add_flags = Texture::AM_GRADIENT_BOTTOM | Texture::AM_GRADIENT_LEFT;
 			}
-			
+
 			if ( add_flags & ( Texture::AM_GRADIENT_LEFT | Texture::AM_GRADIENT_RIGHT ) ) {
 				add_flags |= Texture::AM_MIRROR_X;
 			}
@@ -52,31 +52,32 @@ void LandSurface::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) 
 			}
 
 			ASSERT( add_flags != Texture::AM_DEFAULT, "could not determine moisture add flags" );
-			
-			m_map->SetTexture( TileState::LAYER_LAND, src,
+
+			m_map->SetTexture(
+				TileState::LAYER_LAND, src,
 				add_flags |
-				Texture::AM_MERGE |
-				Texture::AM_GRADIENT_TIGHTER |
-				Texture::AM_RANDOM_STRETCH
-			, 0, 0.72f );
+					Texture::AM_MERGE |
+					Texture::AM_GRADIENT_TIGHTER |
+					Texture::AM_RANDOM_STRETCH, 0, 0.72f
+			);
 		}
 	}
-	
+
 	// add underwater color
 	if ( tile->is_water_tile ) {
-		#define x( _k ) ts->layers[ TileState::LAYER_LAND ].colors._k = s_consts.underwater_tint;
-			x( center );
-			x( left );
-			x( top );
-			x( right );
-			x( bottom );
-		#undef x
+#define x( _k ) ts->layers[ TileState::LAYER_LAND ].colors._k = s_consts.underwater_tint;
+		x( center );
+		x( left );
+		x( top );
+		x( right );
+		x( bottom );
+#undef x
 	}
-	
+
 	// add map details
 	// order is important (textures are drawn on top of previous ones)
-	
-	if ( tile->features	& Tile::F_DUNES ) {
+
+	if ( tile->features & Tile::F_DUNES ) {
 		m_map->AddTexture(
 			TileState::LAYER_LAND,
 			s_consts.tc.texture_pcx.dunes[ 0 ],
@@ -84,7 +85,7 @@ void LandSurface::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) 
 			0
 		);
 	}
-	
+
 	switch ( tile->rockiness ) {
 		case Tile::R_NONE:
 		case Tile::R_FLAT: {
@@ -112,8 +113,8 @@ void LandSurface::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) 
 		default:
 			ASSERT( false, "invalid rockiness value" );
 	}
-	
-	if ( tile->features	& Tile::F_JUNGLE ) {
+
+	if ( tile->features & Tile::F_JUNGLE ) {
 		auto txinfo = m_map->GetTileTextureInfo( Map::TVT_TILES, tile, Map::TG_FEATURE, Tile::F_JUNGLE );
 		m_map->AddTexture(
 			TileState::LAYER_LAND,
@@ -122,9 +123,9 @@ void LandSurface::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) 
 			txinfo.rotate_direction
 		);
 	}
-	
+
 	if ( !tile->is_water_tile ) {
-		
+
 		if ( tile->terraforming & Tile::T_FARM || tile->terraforming & Tile::T_SOIL_ENRICHER ) {
 			// TODO: select based on nutrients yields instead of moisture
 			m_map->AddTexture(
@@ -134,7 +135,7 @@ void LandSurface::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) 
 				RandomRotate()
 			);
 		}
-		
+
 		if ( tile->terraforming & Tile::T_FOREST ) {
 			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_RIVERS_FORESTS, tile, Map::TG_TERRAFORMING, Tile::T_FOREST );
 			auto& tc = s_consts.tc.texture_pcx.forest[ txinfo.texture_variant ];
@@ -146,7 +147,7 @@ void LandSurface::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) 
 				txinfo.rotate_direction
 			);
 		}
-		
+
 		if ( tile->features & Tile::F_XENOFUNGUS ) {
 			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_TILES, tile, Map::TG_FEATURE, Tile::F_XENOFUNGUS );
 			m_map->AddTexture(
@@ -181,36 +182,39 @@ void LandSurface::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) 
 				m_map->GetTexture( ts->river_original, tc, add_flags, txinfo.rotate_direction );
 			}
 		}
-		
-		for ( const auto& t : { Tile::T_ROAD, Tile::T_MAG_TUBE } ) {
+
+		for ( const auto& t : {
+			Tile::T_ROAD,
+			Tile::T_MAG_TUBE
+		} ) {
 			if ( tile->terraforming & t ) {
 				std::vector< uint8_t > road_variants = {};
 				road_variants.reserve( 9 ); // to minimize reallocations
 
-				#define x( _side, _variant ) { \
-					if ( tile->_side->terraforming & t ) \
-						road_variants.push_back( _variant ); \
-					}
-					x( NE, 1 );
-					x( E, 2 );
-					x( SE, 3 );
-					x( S, 4 );
-					x( SW, 5 );
-					x( W, 6 );
-					x( NW, 7 );
-					x( N, 8 );
-				#undef x
+#define x( _side, _variant ) { \
+                    if ( tile->_side->terraforming & t ) \
+                        road_variants.push_back( _variant ); \
+                    }
+				x( NE, 1 );
+				x( E, 2 );
+				x( SE, 3 );
+				x( S, 4 );
+				x( SW, 5 );
+				x( W, 6 );
+				x( NW, 7 );
+				x( N, 8 );
+#undef x
 
-				if ( road_variants.empty() )
+				if ( road_variants.empty() ) {
 					road_variants.push_back( 0 );
+				}
 
 				for ( auto& variant : road_variants ) {
 					m_map->AddTexture(
 						TileState::LAYER_LAND,
 						t == Tile::T_ROAD
 							? s_consts.tc.texture_pcx.road[ variant ]
-							: s_consts.tc.texture_pcx.mag_tube[ variant ]
-						,
+							: s_consts.tc.texture_pcx.mag_tube[ variant ],
 						Texture::AM_MERGE,
 						0
 					);

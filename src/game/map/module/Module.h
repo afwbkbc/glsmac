@@ -12,17 +12,17 @@ namespace map {
 namespace module {
 
 CLASS( Module, base::Base )
-	
+
 	Module( Map* const map );
 
 	virtual void GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) = 0;
-	
+
 protected:
 	Map* const m_map;
-	
+
 	const uint8_t RandomRotate() const;
 };
-	
+
 }
 }
 }

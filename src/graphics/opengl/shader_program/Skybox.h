@@ -6,13 +6,14 @@ namespace graphics {
 namespace opengl {
 
 namespace routine {
-	class Skybox;
+class Skybox;
 }
 
 namespace shader_program {
 
 CLASS( Skybox, ShaderProgram )
-	Skybox() : ShaderProgram( TYPE_SKYBOX ) {};
+	Skybox()
+		: ShaderProgram( TYPE_SKYBOX ) {};
 protected:
 	friend class routine::Skybox;
 
@@ -25,10 +26,10 @@ protected:
 		GLint vertex;
 	} attributes;
 
-	void AddShaders();
-	void Initialize();
-	void EnableAttributes() const;
-	void DisableAttributes() const;
+	void AddShaders() override;
+	void Initialize() override;
+	void EnableAttributes() const override;
+	void DisableAttributes() const override;
 };
 
 } /* namespace shader_program */

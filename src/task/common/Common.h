@@ -8,15 +8,15 @@
 namespace task {
 
 CLASS( Common, base::Task )
-	void Start();
-	void Stop();
-	void Iterate();
-	
+	void Start() override;
+	void Stop() override;
+	void Iterate() override;
+
 protected:
 	task::style::Theme m_theme;
 
-	ui::FPSCounter *m_fps_counter = nullptr;
-	
+	ui::FPSCounter* m_fps_counter = nullptr;
+
 };
 
 }

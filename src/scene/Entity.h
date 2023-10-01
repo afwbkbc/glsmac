@@ -11,31 +11,31 @@
 namespace scene {
 
 CLASS( Entity, types::Serializable )
-		
+
 	Entity();
 
 	// GetAngle(), SetAngle(), etc
 #define _XYZ_SETTER( _name ) \
-	virtual const types::Vec3& Get##_name() const;\
-	virtual const float Get##_name##X() const;\
-	virtual const float Get##_name##Y() const;\
-	virtual const float Get##_name##Z() const;\
-	virtual void Set##_name( const types::Vec3 & value );\
-	virtual void Set##_name##X( const float value );\
-	virtual void Set##_name##Y( const float value );\
-	virtual void Set##_name##Z( const float value );
+    virtual const types::Vec3& Get##_name() const;\
+    virtual const float Get##_name##X() const;\
+    virtual const float Get##_name##Y() const;\
+    virtual const float Get##_name##Z() const;\
+    virtual void Set##_name( const types::Vec3 & value );\
+    virtual void Set##_name##X( const float value );\
+    virtual void Set##_name##Y( const float value );\
+    virtual void Set##_name##Z( const float value );
 
 	_XYZ_SETTER( Position );
 	_XYZ_SETTER( Angle );
 
 #undef _XYZ_SETTER
 
-	types::Matrix44 & GetMatrix();
+	types::Matrix44& GetMatrix();
 
 	virtual void UpdatePosition();
 	virtual void UpdateRotation();
 	virtual void UpdateMatrix();
-	
+
 	struct matrices_t {
 		types::Matrix44 rotate;
 		types::Matrix44 translate;
@@ -43,19 +43,27 @@ CLASS( Entity, types::Serializable )
 		types::Matrix44 matrix;
 	};
 
-	virtual const types::Buffer Serialize() const;
-	virtual void Unserialize( types::Buffer buf );
-	
+	virtual const types::Buffer Serialize() const override;
+	virtual void Unserialize( types::Buffer buf ) override;
+
 	void Show();
 	void Hide();
 	const bool IsVisible() const;
-	
+
 protected:
-	types::Vec3 m_position = { 0.0, 0.0, 0.0 };
-	types::Vec3 m_angle = { 0.0, 0.0, 0.0 };
+	types::Vec3 m_position = {
+		0.0,
+		0.0,
+		0.0
+	};
+	types::Vec3 m_angle = {
+		0.0,
+		0.0,
+		0.0
+	};
 
 	matrices_t m_matrices = {};
-	
+
 	bool m_is_visible = true;
 
 };

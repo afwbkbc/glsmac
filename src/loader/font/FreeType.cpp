@@ -24,18 +24,18 @@ void FreeType::Iterate() {
 
 }
 
-types::Font *FreeType::LoadFont( const std::string &name, const unsigned char size ) {
-	
-	std::string font_key = name + ":" + std::to_string(size);
-	
+types::Font* FreeType::LoadFont( const std::string& name, const unsigned char size ) {
+
+	std::string font_key = name + ":" + std::to_string( size );
+
 	font_map_t::iterator it = m_fonts.find( font_key );
-	if (it != m_fonts.end()) {
+	if ( it != m_fonts.end() ) {
 		return it->second;
 	}
 	else {
 		int res = 0;
-		
-		Log( "Loading font \"" + font_key + "\"");
+
+		Log( "Loading font \"" + font_key + "\"" );
 
 		NEWV( font, types::Font );
 		font->m_name = name;
@@ -48,21 +48,21 @@ types::Font *FreeType::LoadFont( const std::string &name, const unsigned char si
 				break;
 			}
 		}
-		
+
 		ASSERT( !res, "Unable to load font \"" + name + "\"" );
 		FT_Set_Pixel_Sizes( ftface, 0, size );
 
 		font->m_dimensions.width = font->m_dimensions.height = 0;
 
 		FT_GlyphSlot g = ftface->glyph;
-		types::Font::bitmap_t *bitmap;
+		types::Font::bitmap_t* bitmap;
 		int sz;
 
-		for (int i=32;i<128;i++) { // only ascii for now
+		for ( int i = 32 ; i < 128 ; i++ ) { // only ascii for now
 			res = FT_Load_Char( ftface, i, FT_LOAD_RENDER );
 			ASSERT( !res, "Font \"" + name + "\" bitmap loading failed" );
 
-			bitmap = &font->m_symbols[i];
+			bitmap = &font->m_symbols[ i ];
 
 			bitmap->ax = g->advance.x >> 6;
 			bitmap->ay = g->advance.y >> 6;
@@ -72,7 +72,7 @@ types::Font *FreeType::LoadFont( const std::string &name, const unsigned char si
 			bitmap->top = g->bitmap_top;
 			sz = bitmap->width * bitmap->height;
 			if ( sz > 0 ) {
-				bitmap->data = (unsigned char*) malloc( sz );
+				bitmap->data = (unsigned char*)malloc( sz );
 				memcpy( ptr( bitmap->data, 0, sz ), g->bitmap.buffer, sz );
 			}
 			else {
@@ -85,10 +85,10 @@ types::Font *FreeType::LoadFont( const std::string &name, const unsigned char si
 
 		FT_Done_Face( ftface );
 
-		m_fonts[font_key] = font;
-		
+		m_fonts[ font_key ] = font;
+
 		DEBUG_STAT_INC( fonts_loaded );
-		
+
 		return font;
 	}
 }

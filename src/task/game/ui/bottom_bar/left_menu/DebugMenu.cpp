@@ -11,8 +11,7 @@ namespace ui {
 namespace menu {
 
 DebugMenu::DebugMenu( Game* game )
-	: Menu( game )
-{
+	: Menu( game ) {
 	AddItem( "Save Dump..." );
 	AddItem( "Load Dump..." );
 }

@@ -13,8 +13,7 @@ World::World(
 	: Routine( opengl )
 	, m_scene_type( scene_type )
 	, m_shader_program( shader_program )
-	, m_data_shader_program( data_shader_program )
-{
+	, m_data_shader_program( data_shader_program ) {
 	//
 }
 
@@ -27,14 +26,14 @@ void World::Stop() {
 }
 
 void World::Iterate() {
-	
+
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it ) {
-		(*it)->Update();
+		( *it )->Update();
 	}
-	
+
 	glClear( GL_DEPTH_BUFFER_BIT );
-	
-	glEnable(GL_CULL_FACE);
+
+	glEnable( GL_CULL_FACE );
 /*
     glEnable( GL_FOG );
     glHint( GL_FOG_HINT, GL_NICEST );
@@ -47,27 +46,27 @@ void World::Iterate() {
     glFogi( GL_FOG_COORD_SRC, GL_FOG_COORD );
     //glFogi( GL_FOG_COORD_SRC, GL_FRAGMENT_DEPTH );
 */
-	
-    glCullFace(GL_FRONT);
-	
+
+	glCullFace( GL_FRONT );
+
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it ) {
-		(*it)->Draw( m_shader_program );
+		( *it )->Draw( m_shader_program );
 		ASSERT( !glGetError(), "World draw error" );
 	}
 
 /*
 	glDisable( GL_FOG );
 */
-	glDisable(GL_CULL_FACE);
-	
+	glDisable( GL_CULL_FACE );
+
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it ) {
-		(*it)->Draw( m_data_shader_program );
+		( *it )->Draw( m_data_shader_program );
 		ASSERT( !glGetError(), "World data draw error" );
 	}
 
 }
 
-bool World::SceneBelongs( const scene::Scene *scene ) const {
+bool World::SceneBelongs( const scene::Scene* scene ) const {
 	//return scene->GetType() == scene::SCENE_TYPE_PERSP; // TODO: support both
 	return scene->GetType() == m_scene_type;
 }

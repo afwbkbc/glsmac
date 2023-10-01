@@ -5,7 +5,8 @@ namespace opengl {
 namespace shader_program {
 
 void Simple2D::AddShaders() {
-	AddShader( GL_VERTEX_SHADER, "#version 330 \n\
+	AddShader(
+		GL_VERTEX_SHADER, "#version 330 \n\
 \
 in vec3 aCoord; \
 in vec2 aTexCoord; \
@@ -24,9 +25,11 @@ void main(void) { \
 	fragpos = coord; \
 } \
 \
-");
+"
+	);
 
-	AddShader( GL_FRAGMENT_SHADER, "#version 330 \n\
+	AddShader(
+		GL_FRAGMENT_SHADER, "#version 330 \n\
 \
 in vec2 texpos; \
 in vec3 fragpos; \
@@ -52,14 +55,15 @@ void main(void) { \
 	FragColor = vec4(texture2D(uTexture, vec2(texpos.xy))); \
 } \
 \
-");
+"
+	);
 
 }
 
 void Simple2D::Initialize() {
 	attributes.tex_coord = GetAttributeLocation( "aTexCoord" );
 	attributes.coord = GetAttributeLocation( "aCoord" );
-	uniforms.flags = GetUniformLocation("uFlags");
+	uniforms.flags = GetUniformLocation( "uFlags" );
 	uniforms.position = GetUniformLocation( "uPosition" );
 	uniforms.texture = GetUniformLocation( "uTexture" );
 	uniforms.area_limits.min = GetUniformLocation( "uAreaLimitsMin" );
@@ -71,10 +75,10 @@ void Simple2D::EnableAttributes() const {
 	const size_t vasz = types::mesh::Simple::VERTEX_SIZE * tsz;
 	size_t vaofs = 0;
 	glEnableVertexAttribArray( attributes.coord );
-	glVertexAttribPointer( attributes.coord, types::mesh::Simple::VERTEX_COORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	glVertexAttribPointer( attributes.coord, types::mesh::Simple::VERTEX_COORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid*)vaofs );
 	vaofs += types::mesh::Simple::VERTEX_COORD_SIZE * tsz;
 	glEnableVertexAttribArray( attributes.tex_coord );
-	glVertexAttribPointer( attributes.tex_coord, types::mesh::Simple::VERTEX_TEXCOORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid *)vaofs );
+	glVertexAttribPointer( attributes.tex_coord, types::mesh::Simple::VERTEX_TEXCOORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid*)vaofs );
 	vaofs += types::mesh::Simple::VERTEX_TEXCOORD_SIZE * tsz;
 };
 

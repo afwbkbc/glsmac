@@ -6,7 +6,7 @@ namespace game {
 
 const Buffer MapSettings::Serialize() const {
 	Buffer buf;
-	
+
 	buf.WriteInt( type );
 	buf.WriteString( util::FS::GetBaseName( filename ) ); // don't send full path for security reasons, nobody needs it anyway
 	buf.WriteInt( size );
@@ -16,12 +16,12 @@ const Buffer MapSettings::Serialize() const {
 	buf.WriteInt( erosive );
 	buf.WriteInt( lifeforms );
 	buf.WriteInt( clouds );
-	
+
 	return buf;
 }
 
 void MapSettings::Unserialize( Buffer buf ) {
-	type = (type_t) buf.ReadInt();
+	type = (type_t)buf.ReadInt();
 	filename = buf.ReadString();
 	size = buf.ReadInt();
 	custom_size.x = buf.ReadInt();
@@ -39,13 +39,13 @@ void GlobalSettings::Initialize() {
 
 const Buffer GlobalSettings::Serialize() const {
 	Buffer buf;
-	
+
 	buf.WriteString( map.Serialize().ToString() );
 	buf.WriteString( game_rules.Serialize().ToString() );
 	buf.WriteString( global_difficulty.Serialize().ToString() );
 	buf.WriteString( game_name );
-	
-	return buf;	
+
+	return buf;
 }
 
 void GlobalSettings::Unserialize( Buffer buf ) {
@@ -68,20 +68,19 @@ const Buffer LocalSettings::Serialize() const {
 }
 
 void LocalSettings::Unserialize( Buffer buf ) {
-	game_mode = (game_mode_t) buf.ReadInt();
-	network_type = (network_type_t) buf.ReadInt();
-	network_role = (network_role_t) buf.ReadInt();
+	game_mode = (game_mode_t)buf.ReadInt();
+	network_type = (network_type_t)buf.ReadInt();
+	network_role = (network_role_t)buf.ReadInt();
 	player_name = buf.ReadString();
 	remote_address = buf.ReadString();
 }
 
-
 const Buffer Settings::Serialize() const {
 	Buffer buf;
-	
+
 	buf.WriteString( global.Serialize().ToString() );
 	buf.WriteString( local.Serialize().ToString() );
-	
+
 	return buf;
 }
 

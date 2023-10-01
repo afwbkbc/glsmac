@@ -15,29 +15,29 @@ void InfoPanels::Destroy() {
 		RemoveChild( panel );
 	}
 	m_panels.clear();
-	
+
 	MiddleAreaPage::Destroy();
 }
 
 void InfoPanels::Align() {
 	MiddleAreaPage::Align();
-	
+
 	// determine number of info panels from available width
 	const auto w = m_object_area.width;
 	const size_t panels_count = floor( w / s_min_info_panel_width );
 	const size_t panel_width = floor( w / panels_count );
-	
+
 	// delete excessive panels
 	while ( m_panels.size() > panels_count ) {
 		RemoveChild( m_panels.back() );
 		m_panels.pop_back();
 	}
-	
+
 	// add missing panels
 	while ( m_panels.size() < panels_count ) {
 		NEWV( panel, InfoPanel, m_game );
-			panel->SetTop( m_info_panel_margin.y );
-			panel->SetBottom( m_info_panel_margin.y );
+		panel->SetTop( m_info_panel_margin.y );
+		panel->SetBottom( m_info_panel_margin.y );
 		AddChild( panel );
 		m_panels.push_back( panel );
 	}
@@ -49,7 +49,7 @@ void InfoPanels::Align() {
 		panel->SetLeft( left + m_info_panel_margin.x );
 		left += panel_width;
 	}
-	
+
 }
 
 }

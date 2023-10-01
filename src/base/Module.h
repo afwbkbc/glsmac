@@ -17,6 +17,6 @@ public:
 	virtual void Iterate() {}
 };
 
-typedef std::vector<base::Module *> modules_t;
+typedef std::vector< base::Module* > modules_t;
 
 } /* namespace base */

@@ -12,7 +12,7 @@ void Rules::Initialize() {
 
 const types::Buffer Rules::Serialize() const {
 	types::Buffer buf;
-	
+
 	buf.WriteInt( m_factions.size() );
 	for ( auto& faction : m_factions ) {
 		buf.WriteInt( faction.first );
@@ -29,7 +29,7 @@ const types::Buffer Rules::Serialize() const {
 }
 
 void Rules::Unserialize( types::Buffer buf ) {
-	
+
 	m_factions.clear();
 	const size_t factions_count = buf.ReadInt();
 	for ( size_t i = 0 ; i < factions_count ; i++ ) {
@@ -45,7 +45,7 @@ void Rules::Unserialize( types::Buffer buf ) {
 	}
 
 	m_is_initialized = true;
-	
+
 }
 
 }

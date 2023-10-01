@@ -1,6 +1,6 @@
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/Common.cpp
 	${PWD}/SlidingMenu.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

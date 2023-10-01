@@ -2,11 +2,16 @@
 
 namespace types {
 
+Packet::Packet( const packet_type_t type )
+	: type( type ) {
+
+}
+
 const Buffer Packet::Serialize() const {
 	Buffer buf;
-	
+
 	buf.WriteInt( type );
-	
+
 	switch ( type ) {
 		case PT_AUTH: {
 			buf.WriteString( data.str ); // player name
@@ -34,18 +39,32 @@ const Buffer Packet::Serialize() const {
 			buf.WriteString( data.str ); // reason
 			break;
 		}
+		case PT_MESSAGE: {
+			buf.WriteString( data.str ); // message
+			break;
+		}
+		case PT_GAME_STATE: {
+			buf.WriteInt( data.num ); // game state
+			break;
+		}
+		case PT_GET_MAP: {
+			// no data
+			break;
+		}
 		default: {
 			//ASSERT(false, "unknown packet type " + std::to_string( type ));
 		}
 	}
-	
+
 	return buf;
 }
 
 void Packet::Unserialize( Buffer buf ) {
-	
-	type = ( packet_type_t ) buf.ReadInt();
-	
+
+	ASSERT( type == PT_NONE, "unserializing into existing packet" );
+
+	type = (packet_type_t)buf.ReadInt();
+
 	switch ( type ) {
 		case PT_AUTH: {
 			data.str = buf.ReadString(); // player name
@@ -73,11 +92,22 @@ void Packet::Unserialize( Buffer buf ) {
 			data.str = buf.ReadString(); // reason
 			break;
 		}
+		case PT_MESSAGE: {
+			data.str = buf.ReadString(); // message
+			break;
+		}
+		case PT_GAME_STATE: {
+			data.num = buf.ReadInt(); // game state
+			break;
+		}
+		case PT_GET_MAP: {
+			// no data
+			break;
+		}
 		default: {
 			//ASSERT(false, "unknown packet type " + std::to_string(type));
 		}
 	}
 }
-
 
 }

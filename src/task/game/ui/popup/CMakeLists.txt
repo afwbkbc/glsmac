@@ -1,4 +1,4 @@
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/Popup.cpp
 	${PWD}/OkCancelPopup.cpp
@@ -7,4 +7,4 @@ SET(SRC ${SRC}
 	${PWD}/SaveMap.cpp
 	${PWD}/LoadMap.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

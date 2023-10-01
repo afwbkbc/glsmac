@@ -3,11 +3,10 @@
 namespace task {
 namespace mainmenu {
 
-MenuObject::MenuObject( MainMenu *mainmenu, const std::string& title )
+MenuObject::MenuObject( MainMenu* mainmenu, const std::string& title )
 	: base::Base()
 	, m_mainmenu( mainmenu )
-	, m_title( title )
-{
+	, m_title( title ) {
 	//
 }
 

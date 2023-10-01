@@ -1,12 +1,20 @@
-message(STATUS "Fetching SDL_image...")
+MESSAGE( STATUS "Fetching SDL_image..." )
 
-set(SDL2IMAGE_INSTALL OFF)
+SET( SDL2IMAGE_INSTALL OFF )
+SET( SDL2IMAGE_SAMPLES OFF )
 
-FetchContent_Declare(sdl_image
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL_image
-    GIT_TAG release-2.6.3
-)
+SET( SDL2IMAGE_LBM OFF )
+SET( SDL2IMAGE_PNM OFF )
+SET( SDL2IMAGE_QOI OFF )
+SET( SDL2IMAGE_SVG OFF )
+SET( SDL2IMAGE_TGA OFF )
+SET( SDL2IMAGE_XCF OFF )
+SET( SDL2IMAGE_XPM OFF )
+SET( SDL2IMAGE_XV OFF )
 
-FetchContent_MakeAvailable(sdl_image)
+FETCHCONTENT_DECLARE( sdl_image
+	GIT_REPOSITORY https://github.com/libsdl-org/SDL_image
+	GIT_TAG release-2.6.3
+	)
 
- 
+FETCHCONTENT_MAKEAVAILABLE( sdl_image )

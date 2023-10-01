@@ -6,26 +6,24 @@
 #include "ui/event/MouseDown.h"
 #include "ui/event/MouseUp.h"
 #include "ui/event/MouseScroll.h"
-#include "ui/event/ButtonClick.h"
 #include "ui/event/KeyDown.h"
 #include "ui/event/KeyUp.h"
-#include "ui/event/KeyPress.h"
 
-#if ( !SDL_VERSION_ATLEAST(2,0,18) )
-	#define KMOD_SCROLL 0x8000 // workaround for ancient systems
+#if ( !SDL_VERSION_ATLEAST( 2, 0, 18 ) )
+#define KMOD_SCROLL 0x8000 // workaround for ancient systems
 #endif
 
 namespace input {
 namespace sdl2 {
 
 SDL2::SDL2() {
-	
+
 }
 
 SDL2::~SDL2() {
-	
+
 }
-	
+
 void SDL2::Start() {
 	Log( "Initializing SDL2" );
 	SDL_Init( SDL_INIT_EVENTS );
@@ -41,7 +39,7 @@ void SDL2::Iterate() {
 	SDL_Event event;
 
 	while ( SDL_PollEvent( &event ) ) {
-		switch( event.type ) {
+		switch ( event.type ) {
 			case SDL_QUIT: {
 				g_engine->ShutDown();
 				break;
@@ -72,7 +70,10 @@ void SDL2::Iterate() {
 				ASSERT( m_active_mousedowns.find( event.button.button ) == m_active_mousedowns.end(),
 					"duplicate mousedown (button=" + std::to_string( event.button.button ) + ")"
 				);
-				m_active_mousedowns[ event.button.button ] = { event.motion.x, event.motion.y };
+				m_active_mousedowns[ event.button.button ] = {
+					event.motion.x,
+					event.motion.y
+				};
 				DELETE( ui_event );
 				break;
 			}
@@ -123,7 +124,7 @@ void SDL2::Iterate() {
 				}
 				break;
 			}
-			// TODO: keypress?
+				// TODO: keypress?
 		}
 	}
 
@@ -147,27 +148,68 @@ UIEvent::mouse_button_t SDL2::GetMouseButton( uint8_t sdl_mouse_button ) const {
 	}
 }
 
+// TODO: find something more cross-platform and portable
 char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 	char result = 0;
-	if ( ( modifiers & (~KMOD_LSHIFT) & (~KMOD_RSHIFT) & (~KMOD_NUM) & (~KMOD_CAPS) & (~KMOD_SCROLL) ) == 0 ) { // only shift or num/caps/scroll locks
+	if ( ( modifiers & ( ~KMOD_LSHIFT ) & ( ~KMOD_RSHIFT ) & ( ~KMOD_NUM ) & ( ~KMOD_CAPS ) & ( ~KMOD_SCROLL ) ) == 0 ) { // only shift or num/caps/scroll locks
 		bool is_shift = ( modifiers & KMOD_LSHIFT ) || ( modifiers & KMOD_RSHIFT );
 		bool is_caps = ( modifiers & KMOD_CAPS );
-		if ( code >= '0' && code <= '9' && !is_shift ) { // numbers
+		if ( !is_shift && (
+			( code >= '0' && code <= '9' ) || // numbers
+				code == ' ' ||
+				code == '.' ||
+				code == '-' ||
+				code == '=' ||
+				code == ';' ||
+				code == '/'
+		) ) {
 			result = code;
 		}
-		else if ( !is_shift && (
-			code == ' ' ||
-			code == '.' ||
-			code == '-' ||
-			code == ';'
-		)) {
-			result = code;
-		}
-		else if ( is_shift && code == '-' ) {
-			result = '_';
-		}
-		else if ( is_shift && code == ';' ) {
-			result = ':';
+		else if ( is_shift ) {
+			switch ( code ) {
+				case ':':
+					result = ';';
+					break;
+				case '/':
+					result = '?';
+					break;
+				case '1':
+					result = '!';
+					break;
+				case '2':
+					result = '@';
+					break;
+				case '3':
+					result = '#';
+					break;
+				case '4':
+					result = '$';
+					break;
+				case '5':
+					result = '%';
+					break;
+				case '6':
+					result = '^';
+					break;
+				case '7':
+					result = '&';
+					break;
+				case '8':
+					result = '*';
+					break;
+				case '9':
+					result = '(';
+					break;
+				case '0':
+					result = ')';
+					break;
+				case '-':
+					result = '_';
+					break;
+				case '=':
+					result = '+';
+					break;
+			}
 		}
 		else if ( code >= 'a' && code <= 'z' ) { // letters
 			result = code;
@@ -181,7 +223,7 @@ char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 		return result;
 	}
 	else {
-		//Log( "Skipping unknown key code: " + to_string( code ) + " (modifiers: " + to_string( modifiers ) + ")" );
+		//Log( "Skipping unknown key code: " + std::to_string( code ) + " (modifiers: " + std::to_string( modifiers ) + ")" );
 		return 0;
 	}
 }
@@ -265,19 +307,19 @@ UIEvent::key_code_t SDL2::GetScanCode( SDL_Scancode code, SDL_Keymod modifiers )
 
 UIEvent::key_modifier_t SDL2::GetModifiers( SDL_Keymod modifiers ) const {
 	UIEvent::key_modifier_t result = UIEvent::KM_NONE;
-	
-	if ( ( modifiers & KMOD_LSHIFT ) || ( modifiers & KMOD_RSHIFT) ) {
+
+	if ( ( modifiers & KMOD_LSHIFT ) || ( modifiers & KMOD_RSHIFT ) ) {
 		result |= UIEvent::KM_SHIFT;
 	}
-	
-	if ( ( modifiers & KMOD_LCTRL ) || ( modifiers & KMOD_RCTRL) ) {
+
+	if ( ( modifiers & KMOD_LCTRL ) || ( modifiers & KMOD_RCTRL ) ) {
 		result |= UIEvent::KM_CTRL;
 	}
-	
-	if ( ( modifiers & KMOD_LALT ) || ( modifiers & KMOD_RALT) ) {
+
+	if ( ( modifiers & KMOD_LALT ) || ( modifiers & KMOD_RALT ) ) {
 		result |= UIEvent::KM_ALT;
 	}
-	
+
 	return result;
 }
 

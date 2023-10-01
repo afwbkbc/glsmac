@@ -6,14 +6,16 @@ namespace graphics {
 namespace opengl {
 
 class Sprite;
+
 class Mesh;
 
 namespace shader_program {
 
 CLASS( Orthographic, ShaderProgram )
 
-	Orthographic() : ShaderProgram( TYPE_ORTHO ) {};
-	
+	Orthographic()
+		: ShaderProgram( TYPE_ORTHO ) {};
+
 protected:
 	friend class opengl::Sprite;
 	friend class opengl::Mesh;
@@ -40,10 +42,10 @@ protected:
 		GLuint normal;
 	} attributes;
 
-	void AddShaders();
-	void Initialize();
-	void EnableAttributes() const;
-	void DisableAttributes() const;
+	void AddShaders() override;
+	void Initialize() override;
+	void EnableAttributes() const override;
+	void DisableAttributes() const override;
 };
 
 } /* namespace shader_program */

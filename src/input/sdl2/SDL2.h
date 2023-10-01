@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #define SDL_MAIN_HANDLED 1
+
 #include <SDL.h>
 
 #include "../Input.h"
@@ -24,22 +25,25 @@ namespace sdl2 {
 CLASS( SDL2, Input )
 	SDL2();
 	~SDL2();
-	
-	void Start();
-	void Stop();
-	void Iterate();
-	
+
+	void Start() override;
+	void Stop() override;
+	void Iterate() override;
+
 private:
-	
-	Vec2< Sint32 > m_last_mouse_position = { 0, 0 };
-	
+
+	Vec2 <Sint32> m_last_mouse_position = {
+		0,
+		0
+	};
+
 	UIEvent::mouse_button_t GetMouseButton( uint8_t sdl_mouse_button ) const;
 	char GetKeyCode( SDL_Keycode sdl_key_code, SDL_Keymod modifiers ) const;
 	UIEvent::key_code_t GetScanCode( SDL_Scancode code, SDL_Keymod modifiers ) const;
 	UIEvent::key_modifier_t GetModifiers( SDL_Keymod modifiers ) const;
-	
-	std::unordered_map< uint8_t, Vec2< ssize_t > > m_active_mousedowns;
-	
+
+	std::unordered_map< uint8_t, Vec2 < ssize_t > > m_active_mousedowns;
+
 };
 
 } /* namespace sdl2 */

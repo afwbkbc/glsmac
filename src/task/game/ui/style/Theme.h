@@ -15,7 +15,7 @@ CLASS( Theme, ::ui::theme::Theme )
 	Theme();
 
 protected:
-	
+
 	struct {
 		Style style;
 		BottomBar bottom_bar;

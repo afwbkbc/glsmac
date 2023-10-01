@@ -27,28 +27,30 @@ CLASS( Thread, Base )
 	void SetIPS( const float ips ) {
 		m_ips = ips;
 	}
-	void AddModule( base::Module *module ) {
+	void AddModule( base::Module* module ) {
 		m_modules.push_back( module );
 	}
 	void T_Start();
 	bool T_IsRunning();
 	void T_Stop();
-	
+
 	const std::string& GetThreadName() const;
-	
-	void SetCommand( const thread_command_t command );
+
 protected:
 	const std::string m_thread_name = "";
-	
+
 	void Run();
 	std::thread* m_thread = nullptr;
-	
-	std::atomic<thread_state_t> m_state = STATE_INACTIVE;
-	std::atomic<thread_command_t> m_command = COMMAND_NONE;
+
+	std::atomic< thread_state_t > m_state = STATE_INACTIVE;
+	std::atomic< thread_command_t > m_command = COMMAND_NONE;
 	base::modules_t m_modules = {};
 	float m_ips = 10;
+
 #ifdef DEBUG
+
 	size_t m_icounter;
+
 #endif
 };
 

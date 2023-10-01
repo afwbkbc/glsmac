@@ -5,8 +5,7 @@ namespace game {
 namespace actor {
 
 Actor::Actor( const std::string& name )
-	: scene::actor::Mesh( name )
-{
+	: scene::actor::Mesh( name ) {
 	//
 }
 

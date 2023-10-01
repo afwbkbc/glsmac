@@ -6,8 +6,7 @@ namespace game {
 namespace connection {
 
 Client::Client( LocalSettings* const settings )
-	: Connection( CM_CLIENT, settings )
-{
+	: Connection( CM_CLIENT, settings ) {
 	//
 }
 
@@ -20,13 +19,12 @@ void Client::ProcessEvent( const Event& event ) {
 		case Event::ET_PACKET: {
 			try {
 				if ( !event.data.packet_data.empty() ) {
-					Packet packet;
+					Packet packet( Packet::PT_NONE );
 					packet.Unserialize( Buffer( event.data.packet_data ) );
 					switch ( packet.type ) {
 						case Packet::PT_REQUEST_AUTH: {
 							Log( "Authenticating" );
-							Packet p;
-							p.type = Packet::PT_AUTH;
+							Packet p( Packet::PT_AUTH );
 							p.data.str = m_settings->player_name;
 							m_network->MT_SendPacket( p );
 							break;
@@ -76,12 +74,30 @@ void Client::ProcessEvent( const Event& event ) {
 							Disconnect( packet.data.str );
 							break;
 						}
+						case Packet::PT_MESSAGE: {
+							Log( "Got chat message: " + packet.data.str );
+							if ( m_on_message ) {
+								m_on_message( packet.data.str );
+							}
+							break;
+						}
+						case Packet::PT_GAME_STATE: {
+							Log( "Got game state: " + std::to_string( packet.data.num ) );
+							if ( packet.data.num != m_game_state ) {
+								m_game_state = (game_state_t)packet.data.num;
+								if ( m_on_game_state_change ) {
+									m_on_game_state_change( m_game_state );
+								}
+							}
+							break;
+						}
 						default: {
 							Log( "WARNING: invalid packet type from server: " + std::to_string( packet.type ) );
 						}
 					}
 				}
-			} catch ( std::runtime_error& err ) {
+			}
+			catch ( std::runtime_error& err ) {
 				Error( err.what() );
 			}
 			break;
@@ -102,15 +118,23 @@ void Client::ProcessEvent( const Event& event ) {
 
 void Client::UpdateSlot( const size_t slot_num, const Slot* slot ) {
 	Log( "Sending slot update" );
-	Packet p;
-	p.type = Packet::PT_UPDATE_SLOT;
+	Packet p( Packet::PT_UPDATE_SLOT );
 	// not sending slot num because server knows it anyway
 	p.data.str = slot->Serialize().ToString();
 	m_network->MT_SendPacket( p );
 }
 
-void Client::UpdateGameSettings() {
-	// client can't change them
+void Client::Message( const std::string& message ) {
+	Log( "Sending chat message: " + message );
+	Packet p( Packet::PT_MESSAGE );
+	p.data.str = message;
+	m_network->MT_SendPacket( p );
+}
+
+void Client::ResetHandlers() {
+	Connection::ResetHandlers();
+	m_on_players_list_update = nullptr;
+	m_on_game_state_change = nullptr;
 }
 
 void Client::Error( const std::string& reason ) {

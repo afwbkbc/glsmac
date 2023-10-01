@@ -12,15 +12,14 @@ namespace popup {
 
 LoadMap::LoadMap( Game* game )
 	: FilePopup(
-		game,
-		"LOAD MAP",
-		FM_READ,
-		game->GetMapLastDirectory(),
-		::game::map::s_consts.fs.default_map_extension,
-		game->GetMapFilename()
-	)
-{
-	
+	game,
+	"LOAD MAP",
+	FM_READ,
+	game->GetMapLastDirectory(),
+	::game::map::s_consts.fs.default_map_extension,
+	game->GetMapFilename()
+) {
+
 }
 
 void LoadMap::OnFileSelect( const std::string& path ) {

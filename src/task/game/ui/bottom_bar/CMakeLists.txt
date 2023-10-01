@@ -1,6 +1,6 @@
 SUBDIR( left_menu )
 
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/BottomBar.cpp
 	${PWD}/UnitPreview.cpp
@@ -14,4 +14,4 @@ SET(SRC ${SRC}
 	${PWD}/UnitsList.cpp
 	${PWD}/MiniMap.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

@@ -7,11 +7,12 @@ namespace map {
 namespace module {
 
 CLASS( LandSurface, Module )
-	
-	LandSurface( Map* const map ) : Module( map ) {}
-	
-	void GenerateTile( const Tile* tile, TileState* ts, MapState* ms );
-	
+
+	LandSurface( Map* const map )
+		: Module( map ) {}
+
+	void GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) override;
+
 };
 
 }

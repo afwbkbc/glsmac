@@ -19,6 +19,10 @@ std::vector< Slot >& Slots::GetSlots() {
 	return m_slots;
 }
 
+void Slots::Clear() {
+	m_slots.clear();
+}
+
 const types::Buffer Slots::Serialize() const {
 	types::Buffer buf;
 
@@ -39,6 +43,5 @@ void Slots::Unserialize( types::Buffer buf ) {
 		slot.Unserialize( buf.ReadString() );
 	}
 }
-
 
 }

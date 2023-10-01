@@ -15,13 +15,13 @@ namespace opengl {
 
 CLASS( FontTexture, base::Base )
 
-	FontTexture( types::Font *font );
+	FontTexture( types::Font* font );
 	~FontTexture();
 
 	// ascii only for now
 	float m_tx[128];
 	float m_ty[128];
-	
+
 	GLuint m_texture;
 };
 

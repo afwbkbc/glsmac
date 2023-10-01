@@ -4,9 +4,9 @@
 
 namespace task {
 namespace mainmenu {
-	
+
 CLASS( StartGame, SlidingMenu )
-	StartGame( MainMenu *mainmenu );
+	StartGame( MainMenu* mainmenu );
 };
 
 }

@@ -8,11 +8,11 @@ namespace ui {
 namespace popup {
 
 CLASS( LoadMap, FilePopup )
-	
+
 	LoadMap( Game* game );
-	
+
 protected:
-	void OnFileSelect( const std::string& path );
+	void OnFileSelect( const std::string& path ) override;
 
 };
 

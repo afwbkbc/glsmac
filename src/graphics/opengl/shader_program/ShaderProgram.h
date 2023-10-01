@@ -18,13 +18,14 @@ CLASS( ShaderProgram, base::Module )
 		TYPE_PERSP,
 		TYPE_SKYBOX,
 	};
-	ShaderProgram( const type_t type ) : m_type( type ) {};
+	ShaderProgram( const type_t type )
+		: m_type( type ) {};
 	const type_t GetType() const {
 		return m_type;
 	}
 
-	void Start();
-	void Stop();
+	void Start() override;
+	void Stop() override;
 	void Enable();
 	void Disable();
 protected:
@@ -38,15 +39,15 @@ protected:
 	void AddShader( GLenum type, const std::string data );
 	GLint GetUniformLocation( const std::string name );
 	GLint GetAttributeLocation( const std::string name );
-	void BindAttribLocation( GLuint index,const std::string name );
+	void BindAttribLocation( GLuint index, const std::string name );
 
 	bool m_enabled = false;
 	GLuint m_gl_shader_program = 0;
-	
+
 	// shader helpers
 	const std::string S_HasFlag( const std::string& var, const GLuint flag ) const;
 	const std::string S_For( const std::string& iterator, const size_t begin, const size_t end, const std::string& body ) const;
-	
+
 };
 
 } /* namespace shader_program */

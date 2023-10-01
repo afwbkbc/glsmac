@@ -14,13 +14,13 @@ namespace mainmenu {
 namespace lobby {
 
 class PlayersSection;
-	
+
 CLASS( PlayersSectionRow, UIContainer )
 
 	PlayersSectionRow( PlayersSection* parent, const size_t slot_num, ::game::Slot* slot, const std::string& class_name = "" );
 
-	void Create();
-	void Destroy();
+	void Create() override;
+	void Destroy() override;
 
 private:
 	PlayersSection* m_parent;
@@ -33,7 +33,7 @@ private:
 		Dropdown* faction = nullptr;
 		Dropdown* difficulty_level = nullptr;
 	} m_elements = {};
-	
+
 };
 
 }

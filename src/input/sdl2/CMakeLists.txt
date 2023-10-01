@@ -1,5 +1,5 @@
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/SDL2.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

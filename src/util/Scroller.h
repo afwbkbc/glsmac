@@ -9,11 +9,11 @@ namespace util {
 
 template< class POSITION_TYPE >
 CLASS( Scroller, util::Util )
-	
+
 	static constexpr uint16_t scroll_time_ms = 100;
 	static constexpr uint16_t scroll_step_ms = 10;
 	static constexpr uint8_t scroll_steps = scroll_time_ms / scroll_step_ms;
-	
+
 	void Scroll( const POSITION_TYPE& from, const POSITION_TYPE& to ) {
 		if ( IsRunning() ) {
 			Stop();
@@ -49,7 +49,7 @@ CLASS( Scroller, util::Util )
 
 		return ticked;
 	}
-	
+
 	const POSITION_TYPE& GetPosition() const {
 		return m_position;
 	}
@@ -58,11 +58,9 @@ CLASS( Scroller, util::Util )
 	}
 
 private:
-	
+
 	util::Timer m_timer;
 
-	float m_scroll_speed;
-	
 	POSITION_TYPE m_position;
 	POSITION_TYPE m_step;
 	POSITION_TYPE m_target_position;

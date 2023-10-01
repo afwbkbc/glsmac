@@ -6,18 +6,18 @@
 
 namespace task {
 namespace ui {
-			
+
 CLASS( FPSCounter, ::ui::object::Label )
-	
+
 	FPSCounter();
-	
-	void Create();
-	void Iterate();
-	void Destroy();
-	
+
+	void Create() override;
+	void Iterate() override;
+	void Destroy() override;
+
 private:
 	util::Timer m_timer;
-	
+
 };
 
 }

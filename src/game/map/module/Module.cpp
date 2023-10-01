@@ -3,11 +3,10 @@
 namespace game {
 namespace map {
 namespace module {
-	
+
 Module::Module( Map* map )
-	: m_map( map )
-{
-	
+	: m_map( map ) {
+
 }
 
 const uint8_t Module::RandomRotate() const {

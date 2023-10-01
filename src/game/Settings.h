@@ -13,10 +13,10 @@ using namespace types;
 namespace game {
 
 // includes
-	
+
 CLASS( MapSettings, Serializable )
 	typedef uint8_t parameter_t;
-	
+
 	enum type_t {
 		MT_RANDOM,
 		MT_CUSTOM,
@@ -32,32 +32,35 @@ CLASS( MapSettings, Serializable )
 	static constexpr parameter_t MAP_STANDARD = 3;
 	static constexpr parameter_t MAP_LARGE = 4;
 	static constexpr parameter_t MAP_HUGE = 5;
-	
+
 	parameter_t size = MAP_STANDARD;
-	Vec2< size_t > custom_size = { 80, 40 };
-	
+	Vec2 <size_t> custom_size = {
+		80,
+		40
+	};
+
 	static constexpr parameter_t MAP_OCEAN_LOW = 1;
 	static constexpr parameter_t MAP_OCEAN_MEDIUM = 2;
 	static constexpr parameter_t MAP_OCEAN_HIGH = 3;
 	parameter_t ocean = MAP_OCEAN_MEDIUM;
-	
+
 	static constexpr parameter_t MAP_EROSIVE_STRONG = 1;
 	static constexpr parameter_t MAP_EROSIVE_AVERAGE = 2;
 	static constexpr parameter_t MAP_EROSIVE_WEAK = 3;
 	parameter_t erosive = MAP_EROSIVE_AVERAGE;
-	
+
 	static constexpr parameter_t MAP_LIFEFORMS_RARE = 1;
 	static constexpr parameter_t MAP_LIFEFORMS_AVERAGE = 2;
 	static constexpr parameter_t MAP_LIFEFORMS_ABUNDANT = 3;
 	parameter_t lifeforms = MAP_LIFEFORMS_AVERAGE;
-	
+
 	static constexpr parameter_t MAP_CLOUDS_SPARSE = 1;
 	static constexpr parameter_t MAP_CLOUDS_AVERAGE = 2;
 	static constexpr parameter_t MAP_CLOUDS_DENSE = 3;
 	parameter_t clouds = MAP_CLOUDS_AVERAGE;
-	
-	const Buffer Serialize() const;
-	void Unserialize( Buffer buf );
+
+	const Buffer Serialize() const override;
+	void Unserialize( Buffer buf ) override;
 };
 
 // settings that are synced between players (host has authority)
@@ -65,19 +68,17 @@ CLASS( GlobalSettings, Serializable )
 
 	void Initialize();
 
-	typedef uint8_t parameter_t;	
-
 	MapSettings map = {};
 
 	rules::Default game_rules = {}; // TODO: custom rules
 	rules::DifficultyLevel global_difficulty = {};
-	
+
 	std::string game_name = "";
-	
+
 	// TODO: custom rules struct
-	
-	const Buffer Serialize() const;
-	void Unserialize( Buffer buf );
+
+	const Buffer Serialize() const override;
+	void Unserialize( Buffer buf ) override;
 };
 
 // settings that aren't synced between players
@@ -104,21 +105,21 @@ public:
 	network_role_t network_role = NR_NONE;
 
 	std::string player_name = "";
-	std::string remote_address = "";
-	
+	std::string remote_address = "127.0.0.1";
+
 	std::set< std::string > banned_addresses = {};
-	
-	const Buffer Serialize() const;
-	void Unserialize( Buffer buf );
+
+	const Buffer Serialize() const override;
+	void Unserialize( Buffer buf ) override;
 };
 
 CLASS( Settings, Serializable )
-	
+
 	GlobalSettings global;
 	LocalSettings local;
-	
-	const Buffer Serialize() const;
-	void Unserialize( Buffer buf );
+
+	const Buffer Serialize() const override;
+	void Unserialize( Buffer buf ) override;
 };
 
 }

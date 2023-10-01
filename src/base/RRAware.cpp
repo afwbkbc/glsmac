@@ -61,6 +61,7 @@ const bool RRAware::RR_HasRequests() {
 
 // make sure to add every rr type here
 INSTANTIATE( rr::GetData )
+
 INSTANTIATE( rr::Capture )
 
 }

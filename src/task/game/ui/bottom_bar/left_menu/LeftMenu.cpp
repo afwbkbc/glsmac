@@ -3,8 +3,11 @@
 // submenus
 #include "GameMenu.h"
 #include "EditMapMenu.h"
+
 #ifdef DEBUG
+
 #include "DebugMenu.h"
+
 #endif
 
 namespace task {
@@ -13,18 +16,17 @@ namespace ui {
 namespace menu {
 
 LeftMenu::LeftMenu( Game* game )
-	: Menu( game )
-{
-	#define x( _n, _m ) { \
-		NEWV( menu, _m, m_game ); \
-		AddSubMenu( _n, menu ); \
-	}
-		x( "GAME", GameMenu );
-		x( "EDIT MAP", EditMapMenu );
+	: Menu( game ) {
+#define x( _n, _m ) { \
+        NEWV( menu, _m, m_game ); \
+        AddSubMenu( _n, menu ); \
+    }
+	x( "GAME", GameMenu );
+	x( "EDIT MAP", EditMapMenu );
 #ifdef DEBUG
-		x( "DEBUG", DebugMenu );
+	x( "DEBUG", DebugMenu );
 #endif
-	#undef x
+#undef x
 
 	m_config.use_slide_animation = true;
 }

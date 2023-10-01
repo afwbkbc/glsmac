@@ -7,8 +7,7 @@ namespace map_editor {
 namespace tool {
 
 Resource::Resource( Game* game )
-	: Tool( game, MapEditor::TT_RESOURCES )
-{
+	: Tool( game, MapEditor::TT_RESOURCES ) {
 	//
 }
 
@@ -28,7 +27,7 @@ const MapEditor::tiles_t Resource::Draw( map::Tile* tile, const MapEditor::draw_
 			tile->bonus++;
 		}
 	}
-	
+
 	return { tile };
 }
 

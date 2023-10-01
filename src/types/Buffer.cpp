@@ -29,7 +29,7 @@ Buffer::~Buffer() {
 	}
 }
 
-Buffer::Buffer( Buffer& other) {
+Buffer::Buffer( Buffer& other ) {
 	allocated_len = other.allocated_len;
 	lenw = other.lenw;
 	lenr = other.lenr;
@@ -54,7 +54,7 @@ void Buffer::Alloc( uint32_t size ) {
 			//Log( "Reallocating " + to_string( allocated_len ) + " bytes" );
 			data = (data_t*)realloc( data, allocated_len );
 		}
-		else { 
+		else {
 			//Log( "Allocating " + to_string( allocated_len ) + " bytes" );
 			data = (data_t*)malloc( allocated_len );
 		}
@@ -69,17 +69,19 @@ void Buffer::WriteImpl( type_t type, const char* s, const uint32_t sz ) {
 	ASSERT( type > T_NONE && type < T_MAX, "invalid buffer write type " + std::to_string( type ) );
 	//Log( "Writing " + to_string( sz ) + " bytes (type=" + to_string( type ) + ")" );
 	checksum_t c = 0;
-	Alloc( sizeof(type) + sizeof(sz) + sz + sizeof(c) );
-	memcpy( dw, &type, sizeof( type ) ); dw += sizeof( type );
-	memcpy( dw, &sz, sizeof( sz ) ); dw += sizeof( sz );
-	
-	for (uint32_t i = 0 ; i < sz ; i++ ) {
-		c ^= (*(dw++) = *(s++));
+	Alloc( sizeof( type ) + sizeof( sz ) + sz + sizeof( c ) );
+	memcpy( dw, &type, sizeof( type ) );
+	dw += sizeof( type );
+	memcpy( dw, &sz, sizeof( sz ) );
+	dw += sizeof( sz );
+
+	for ( uint32_t i = 0 ; i < sz ; i++ ) {
+		c ^= ( *( dw++ ) = *( s++ ) );
 	}
-	
+
 	//Log( "Writing checksum (" + to_string( c ) + ")" );
-	*(dw++) = c;
-	
+	*( dw++ ) = c;
+
 	ASSERT( dw - data == lenw, "buffer write bytes count mismatch ( " + std::to_string( dw - data ) + " != " + std::to_string( lenw ) + " )" );
 	//Log( "Written successfully" );
 }
@@ -90,7 +92,8 @@ char* Buffer::ReadImpl( type_t need_type, char* s, uint32_t* sz, const uint32_t 
 	if ( lenw < lenr + sizeof( type ) + sizeof( *sz ) ) {
 		THROW( "buffer ends prematurely (while reading header)" );
 	}
-	memcpy( &type, dr, sizeof( type ) ); dr += sizeof( type );
+	memcpy( &type, dr, sizeof( type ) );
+	dr += sizeof( type );
 	if ( type != need_type ) {
 		THROW( "unexpected type on buffer read ( " + std::to_string( need_type ) + " != " + std::to_string( type ) + " )" );
 	}
@@ -105,30 +108,32 @@ char* Buffer::ReadImpl( type_t need_type, char* s, uint32_t* sz, const uint32_t 
 		THROW( "buffer ends prematurely (while reading data)" );
 	}
 	//Log( "Reading " + std::to_string( *sz ) + " bytes (type=" + std::to_string( type ) + ")" );
-	
+
 	if ( s == nullptr && *sz > 0 ) {
 		s = (char*)malloc( *sz );
 	}
-	
+
 	char* s_ptr = s;
-	
+
 	for ( uint32_t i = 0 ; i < *sz ; i++ ) {
-		need_c ^= (*(s_ptr++) = *(dr++));
+		need_c ^= ( *( s_ptr++ ) = *( dr++ ) );
 	}
-	
+
 	//Log( "Checking checksum (" + to_string( need_c ) + ")" );
-	checksum_t c = *(dr++);
+	checksum_t c = *( dr++ );
 	if ( need_c != c ) {
 		THROW( "buffer read checksum mismatch ( " + std::to_string( need_c ) + " != " + std::to_string( c ) + " )" );
 	}
 	ASSERT( dr - data == lenr, "buffer read bytes count mismatch ( " + std::to_string( dr - data ) + " != " + std::to_string( lenr ) + " )" );
 	//Log( "Read successfully" );
-	
+
 	return s;
 }
 
 void Buffer::WriteBool( const bool val ) {
-	const uint8_t bval = val ? 1 : 0;
+	const uint8_t bval = val
+		? 1
+		: 0;
 	WriteImpl( T_BOOL, (const char*)&bval, sizeof( bval ) );
 }
 
@@ -167,7 +172,7 @@ void Buffer::WriteString( const std::string& val ) {
 
 const std::string Buffer::ReadString() {
 	uint32_t sz = 0;
-	char *res_data = ReadImpl( T_STRING, nullptr, &sz );
+	char* res_data = ReadImpl( T_STRING, nullptr, &sz );
 	if ( sz > 0 ) {
 		std::string result = std::string( res_data, sz );
 		free( res_data );
@@ -183,7 +188,10 @@ void Buffer::WriteVec2u( const Vec2< uint32_t > val ) {
 }
 
 const Vec2< uint32_t > Buffer::ReadVec2u() {
-	Vec2< uint32_t > val = { 0, 0 };
+	Vec2< uint32_t > val = {
+		0,
+		0
+	};
 	uint32_t sz = 0;
 	ReadImpl( T_VEC2U, (char*)&val, &sz, sizeof( val ) );
 	return val;
@@ -194,7 +202,10 @@ void Buffer::WriteVec2f( const Vec2< float > val ) {
 }
 
 const Vec2< float > Buffer::ReadVec2f() {
-	Vec2< float > val = { 0, 0 };
+	Vec2< float > val = {
+		0,
+		0
+	};
 	uint32_t sz = 0;
 	ReadImpl( T_VEC2F, (char*)&val, &sz, sizeof( val ) );
 	return val;
@@ -234,7 +245,9 @@ const void* Buffer::ReadData( const uint32_t len ) {
 }
 
 const std::string Buffer::ToString() const {
-	return data ? std::string( (const char*)data, lenw ) : "";
+	return data
+		? std::string( (const char*)data, lenw )
+		: "";
 }
 
 }

@@ -5,44 +5,46 @@
 namespace ui {
 namespace object {
 
-Button::Button( const std::string& class_name ) : Panel( class_name ) {
+Button::Button( const std::string& class_name )
+	: Panel( class_name ) {
 	SetEventContexts( EC_MOUSE | EC_MOUSEMOVE );
 }
 
 void Button::Create() {
 	Panel::Create();
-	
+
 	NEW( m_label, Label );
-		m_label->SetText( m_label_text );
-		m_label->SetMargin( 3 );
-		m_label->ForwardStyleAttributesV({
+	m_label->SetText( m_label_text );
+	m_label->SetMargin( 3 );
+	m_label->ForwardStyleAttributesV(
+		{
 			Style::A_FONT,
 			Style::A_TEXT_COLOR,
-		});
-		m_label->ForwardStyleAttribute( Style::A_TEXT_ALIGN, Style::A_ALIGN );
+		}
+	);
+	m_label->ForwardStyleAttribute( Style::A_TEXT_ALIGN, Style::A_ALIGN );
 	AddChild( m_label );
-	
+
 	NEW( m_click_sound, SoundEffect );
-		m_click_sound->ForwardStyleAttribute( Style::A_BUTTON_CLICK_SOUND, Style::A_SOUND );
-		m_click_sound->ForwardStyleAttribute( Style::A_SOUND_VOLUME );
+	m_click_sound->ForwardStyleAttribute( Style::A_BUTTON_CLICK_SOUND, Style::A_SOUND );
+	m_click_sound->ForwardStyleAttribute( Style::A_SOUND_VOLUME );
 	AddChild( m_click_sound );
-	
+
 	NEW( m_move_sound, SoundEffect );
-		m_move_sound->ForwardStyleAttribute( Style::A_BUTTON_MOVE_SOUND, Style::A_SOUND );
-		m_move_sound->ForwardStyleAttribute( Style::A_SOUND_VOLUME );
+	m_move_sound->ForwardStyleAttribute( Style::A_BUTTON_MOVE_SOUND, Style::A_SOUND );
+	m_move_sound->ForwardStyleAttribute( Style::A_SOUND_VOLUME );
 	AddChild( m_move_sound );
 }
 
 void Button::Destroy() {
 	RemoveChild( m_label );
 	m_label = nullptr;
-	
+
 	RemoveChild( m_click_sound );
 	RemoveChild( m_move_sound );
-	
+
 	Panel::Destroy();
 }
-
 
 void Button::SetLabel( const std::string& text ) {
 	if ( text != m_label_text ) {
@@ -68,7 +70,7 @@ void Button::SetTextAlign( UIObject::alignment_t alignment ) {
 
 void Button::ApplyStyle() {
 	Panel::ApplyStyle();
-	
+
 }
 
 bool Button::OnMouseOver( const UIEvent::event_data_t* data ) {
@@ -121,7 +123,6 @@ bool Button::OnMouseUp( const UIEvent::event_data_t* data ) {
 	}
 	return false;
 }
-
 
 }
 }

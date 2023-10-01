@@ -16,7 +16,7 @@ CLASS( InfoPanel, BBSection )
 
 	static constexpr size_t s_character_frequency_ms = 100;
 	static constexpr size_t s_wait_after_print = 10000;
-	
+
 	// TODO: load from styles?
 	static constexpr size_t s_label_height = 15;
 	static constexpr size_t s_padding = 5;
@@ -24,19 +24,19 @@ CLASS( InfoPanel, BBSection )
 	enum info_type_t {
 		IT_NONE,
 		IT_MISSION_STATS,
-	
+
 		IT_MAX
 	};
-	
+
 	InfoPanel( Game* game );
-	
-	void Create();
-	void Iterate();
-	void Destroy();
+
+	void Create() override;
+	void Iterate() override;
+	void Destroy() override;
 
 private:
 	info_type_t m_info_type = IT_NONE;
-	
+
 	void Restart();
 
 	std::vector< std::string > m_lines = {};

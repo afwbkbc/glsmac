@@ -7,13 +7,13 @@ namespace map_editor {
 namespace brush {
 
 CLASS( Dot, Brush )
-	
+
 	Dot( Game* game );
-	
-	const MapEditor::tiles_t Draw( map::Tile* center_tile );
-	
+
+	const MapEditor::tiles_t Draw( map::Tile* center_tile ) override;
+
 };
-	
+
 }
 }
 }

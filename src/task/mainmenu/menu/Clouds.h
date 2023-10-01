@@ -4,9 +4,9 @@
 
 namespace task {
 namespace mainmenu {
-	
+
 CLASS( Clouds, CustomizeMapMenu )
-	Clouds( MainMenu *mainmenu );
+	Clouds( MainMenu* mainmenu );
 };
 
 }

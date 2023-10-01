@@ -11,7 +11,7 @@ namespace object {
 #include "types/Color.h"
 
 CLASS( Surface, UIObject )
-	void SetColor( const types::Color &color) {
+	void SetColor( const types::Color& color ) {
 		m_colors.text = color;
 		Redraw();
 	}

@@ -2,10 +2,9 @@
 
 namespace ui {
 namespace module {
-		
+
 Module::Module( UI* ui )
-	: m_ui( ui )
-{
+	: m_ui( ui ) {
 	//
 }
 

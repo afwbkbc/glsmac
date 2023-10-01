@@ -1,8 +1,8 @@
 SUBDIR( brush )
 SUBDIR( tool )
 
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/MapEditor.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

@@ -16,9 +16,10 @@ namespace map {
 // do not extend any class because tile states are allocated with malloc
 class TileState {
 public:
-	
+
 	// coordinates in world
 	Vec2< float > coord;
+
 	struct {
 		float x;
 		float y;
@@ -39,7 +40,7 @@ public:
 	TileState* SW;
 
 	// tile data
-	
+
 	// order is important (it defines rendering order)
 	enum tile_layer_type_t {
 		LAYER_LAND, // land tiles, includes edge-smoothed moisture textures
@@ -68,7 +69,7 @@ public:
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
 	};
-	
+
 	struct tile_surfaces_t {
 		types::mesh::Mesh::surface_id_t left_top;
 		types::mesh::Mesh::surface_id_t top_right;
@@ -77,7 +78,7 @@ public:
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
 	};
-	
+
 	struct tile_tex_coords_t {
 		Vec2< float > center;
 		Vec2< float > left;
@@ -87,7 +88,7 @@ public:
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
 	};
-	
+
 	struct tile_colors_t {
 		Color center;
 		Color left;
@@ -97,7 +98,7 @@ public:
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
 	};
-	
+
 	struct tile_layer_t {
 		tile_vertices_t coords;
 		tile_indices_t indices;
@@ -106,11 +107,10 @@ public:
 		tile_colors_t colors;
 		Vec2< mesh::Mesh::coord_t > texture_stretch; // each tile has only one 'own' stretch value (for bottom vertex), others are copied from neighbours
 		bool texture_stretch_at_edges;
-		
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
 	};
-	
+
 	struct tile_elevations_t {
 		Tile::elevation_t center;
 		Tile::elevation_t left;
@@ -120,9 +120,11 @@ public:
 		const Buffer Serialize() const;
 		void Unserialize( Buffer buf );
 	};
-	
+
 	tile_elevations_t elevations;
-	tile_layer_t layers[ LAYER_MAX ];
+
+	tile_layer_t layers[LAYER_MAX];
+
 	struct {
 		tile_vertices_t coords;
 		tile_indices_t indices;
@@ -136,6 +138,7 @@ public:
 	// visual traits
 	bool has_water;
 	bool is_coastline_corner;
+
 	Texture* moisture_original;
 	Texture* river_original;
 
@@ -146,12 +149,13 @@ public:
 		std::string name;
 		Consts::pcx_texture_coordinates_t tex_coords;
 	} sprite_t;
+
 	typedef std::vector< sprite_t > sprites_t;
+
 	sprites_t sprites;
 
 	const Buffer Serialize() const;
 	void Unserialize( Buffer buf );
-	
 };
 
 }

@@ -6,8 +6,7 @@ namespace tool {
 
 Tool::Tool( Game* game, const MapEditor::tool_type_t type )
 	: m_game( game )
-	, m_type( type )
-{
+	, m_type( type ) {
 	//
 }
 

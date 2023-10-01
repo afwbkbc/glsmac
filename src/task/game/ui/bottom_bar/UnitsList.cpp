@@ -8,11 +8,11 @@ namespace ui {
 
 void UnitsList::Create() {
 	BBSection::Create();
-	
+
 }
 
 void UnitsList::Destroy() {
-	
+
 	BBSection::Destroy();
 }
 

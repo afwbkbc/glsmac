@@ -15,12 +15,17 @@
 namespace game {
 
 CLASS( State, base::Base )
-	
-	State( const Settings& settings );
-	~State();
+
+	State();
+	virtual ~State();
 
 	Settings m_settings = {};
 	Slots m_slots = {};
+
+	void Iterate();
+
+	bool IsMaster() const;
+	bool IsSlave() const;
 
 	void AddPlayer( Player* player );
 	void RemovePlayer( Player* player );
@@ -31,7 +36,10 @@ CLASS( State, base::Base )
 
 	const std::unordered_map< size_t, size_t >& GetCidSlots() const;
 
-	void SetConnection(connection::Connection* connection);
+	void SetConnection( connection::Connection* connection );
+	connection::Connection* GetConnection() const;
+	void Reset();
+	void DetachConnection();
 
 private:
 	std::unordered_set< Player* > m_players = {}; // persistent

@@ -32,6 +32,7 @@ extern const size_t g_max_fps;
 namespace engine {
 
 CLASS( Engine, base::Base );
+
 	Engine(
 		config::Config* config,
 		error_handler::ErrorHandler* error_handler,
@@ -47,8 +48,8 @@ CLASS( Engine, base::Base );
 		ui::UI* ui,
 		game::Game* game
 	);
-	~Engine();
 
+	~Engine();
 	int Run();
 	void ShutDown();
 
@@ -67,10 +68,9 @@ CLASS( Engine, base::Base );
 
 protected:
 
-	std::atomic<bool> m_is_shutting_down = false;
-	
-	std::vector<Thread*> m_threads = {};
-	Thread* m_main_thread = nullptr;
+	std::atomic< bool > m_is_shutting_down = false;
+
+	std::vector< Thread* > m_threads = {};
 
 	config::Config* const m_config = nullptr;
 	error_handler::ErrorHandler* m_error_handler = nullptr;
@@ -85,12 +85,9 @@ protected:
 	network::Network* m_network = nullptr;
 	ui::UI* m_ui = nullptr;
 	game::Game* m_game = nullptr;
-	
-#ifdef DEBUG
-	bool m_is_debug_mode = false;
-#endif
+
 };
 
 } /* namespace engine */
 
-extern engine::Engine *g_engine;
+extern engine::Engine* g_engine;

@@ -1,4 +1,4 @@
-SET(SRC ${SRC}
+SET( SRC ${SRC}
 
 	${PWD}/UIObject.cpp
 	${PWD}/UIContainer.cpp
@@ -21,4 +21,4 @@ SET(SRC ${SRC}
 	${PWD}/Popup.cpp
 	${PWD}/SoundEffect.cpp
 
-PARENT_SCOPE)
+	PARENT_SCOPE )

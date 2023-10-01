@@ -13,17 +13,17 @@ CLASS( Confirm, object::Popup )
 
 	Confirm( const std::string class_name = "Popup" );
 
-	void Create();
-	void Destroy();
+	void Create() override;
+	void Destroy() override;
 
 	void SetText( const std::string& text );
-	
+
 private:
-	
+
 	std::string m_text = "";
-	
+
 	Section* m_body = nullptr;
-	
+
 	object::Label* m_label = nullptr;
 	struct {
 		object::Button* ok = nullptr;

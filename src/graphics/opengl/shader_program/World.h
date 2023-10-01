@@ -8,7 +8,7 @@ namespace graphics {
 namespace opengl {
 
 namespace routine {
-	class World;
+class World;
 }
 
 class Mesh;
@@ -16,7 +16,8 @@ class Mesh;
 namespace shader_program {
 
 CLASS( World, ShaderProgram )
-	World() : ShaderProgram( TYPE_PERSP ) {};
+	World()
+		: ShaderProgram( TYPE_PERSP ) {};
 
 	types::Matrix44 GetWorldMatrix();
 protected:
@@ -35,10 +36,10 @@ protected:
 		GLint tex_coord;
 	} attributes;
 
-	void AddShaders();
-	void Initialize();
-	void EnableAttributes() const;
-	void DisableAttributes() const;
+	void AddShaders() override;
+	void Initialize() override;
+	void EnableAttributes() const override;
+	void DisableAttributes() const override;
 };
 
 } /* namespace shader_program */

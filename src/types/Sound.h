@@ -12,10 +12,10 @@ namespace types {
 CLASS( Sound, base::Base )
 
 	~Sound();
-	
+
 	unsigned char* m_buffer = nullptr;
 	size_t m_buffer_size = 0;
-	
+
 	// based on SDL_AudioSpec so some adapting maybe needed for other sound loaders / audio modules
 	struct {
 		size_t freq; // samples per sec
@@ -26,8 +26,8 @@ CLASS( Sound, base::Base )
 		uint16_t padding; // necessary for some compile environment
 		uint32_t size; // audio buffer size (bytes)
 	} m_spec;
-	
-	std::string m_name = "";	
+
+	std::string m_name = "";
 };
 
 }

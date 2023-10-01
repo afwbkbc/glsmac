@@ -14,10 +14,8 @@ namespace actor {
 CLASS( Actor, Entity )
 
 	typedef float coord_t;
-	typedef types::Vec2<coord_t> vec2_t;
-	typedef types::Vec3 vec3_t;
 
-	 // normal type must be always followed by it's INSTANCED_ type, see Instanced.cpp
+	// normal type must be always followed by it's INSTANCED_ type, see Instanced.cpp
 	enum type_t {
 		TYPE_SPRITE,
 		TYPE_INSTANCED_SPRITE,
@@ -27,27 +25,27 @@ CLASS( Actor, Entity )
 		TYPE_SOUND,
 	};
 
-	Actor( const type_t type, const std::string &name );
+	Actor( const type_t type, const std::string& name );
 	virtual ~Actor();
 	const type_t GetType() const {
 		return m_type;
 	}
 
-	base::ObjectLink *m_graphics_object = NULL;
+	base::ObjectLink* m_graphics_object = NULL;
 
-	virtual types::Matrix44 & GetWorldMatrix();
+	virtual types::Matrix44& GetWorldMatrix();
 
 	virtual void UpdateWorldMatrix();
-	virtual void UpdateMatrix();
+	virtual void UpdateMatrix() override;
 
-	void SetScene( Scene *scene );
-	Scene *GetScene();
-	
+	void SetScene( Scene* scene );
+	Scene* GetScene();
+
 	typedef std::pair< types::Vec3, types::Vec3 > area_limits_t;
 	void SetAreaLimits( const area_limits_t limits );
 	void RemoveAreaLimits();
 	const area_limits_t& GetAreaLimits() const;
-	
+
 	typedef uint32_t render_flag_t;
 	static constexpr render_flag_t RF_NONE = 0;
 	static constexpr render_flag_t RF_USE_TINT = 1 << 0;
@@ -56,27 +54,27 @@ CLASS( Actor, Entity )
 	static constexpr render_flag_t RF_IGNORE_DEPTH = 1 << 3;
 	static constexpr render_flag_t RF_USE_AREA_LIMITS = 1 << 4;
 	static constexpr render_flag_t RF_USE_2D_POSITION = 1 << 5;
-	
+
 	void SetRenderFlags( const render_flag_t render_flags );
 	const render_flag_t GetRenderFlags() const;
-	
-	virtual const types::Buffer Serialize() const;
-	virtual void Unserialize( types::Buffer buf );
-	
+
+	virtual const types::Buffer Serialize() const override;
+	virtual void Unserialize( types::Buffer buf ) override;
+
 protected:
 	const type_t m_type;
 
 	struct {
 		types::Matrix44 world;
 	} m_actor_matrices;
-	
+
 	bool m_need_world_matrix_update = true;
 
-	Scene *m_scene = NULL;
+	Scene* m_scene = NULL;
 
 	render_flag_t m_render_flags = RF_NONE;
 	area_limits_t m_area_limits = {};
-	
+
 };
 
 } /* namespace actor */

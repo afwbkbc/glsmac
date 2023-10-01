@@ -9,15 +9,12 @@ namespace mainmenu {
 
 CLASS( ConnectionPopupMenu, PopupMenu )
 
-	ConnectionPopupMenu( MainMenu *mainmenu, const std::string& title );
+	ConnectionPopupMenu( MainMenu* mainmenu, const std::string& title );
 
-	void Iterate();
+	void Iterate() override;
 
 protected:
 	void SetConnection( ::game::connection::Connection* connection );
-
-private:
-	::game::connection::Connection* m_connection = nullptr;
 
 };
 

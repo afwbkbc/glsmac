@@ -3,17 +3,15 @@
 #include "Skybox.h"
 
 #include "engine/Engine.h"
-#include "types/Matrix44.h"
 #include "../texture/CubemapTexture.h"
 
 namespace graphics {
 namespace opengl {
 namespace routine {
 
-Skybox::Skybox( OpenGL* opengl, shader_program::Skybox *shader_program )
+Skybox::Skybox( OpenGL* opengl, shader_program::Skybox* shader_program )
 	: Routine( opengl )
-	, m_shader_program( shader_program )
-{
+	, m_shader_program( shader_program ) {
 	//
 }
 
@@ -52,32 +50,66 @@ void Skybox::Start() {
 */
 	// load vertices
 	GLfloat cube_vertices[] = {
-		-1.0,  1.0,  1.0,
-		-1.0, -1.0,  1.0,
-		1.0, -1.0,  1.0,
-		1.0,  1.0,  1.0,
-		-1.0,  1.0, -1.0,
-		-1.0, -1.0, -1.0,
-		1.0, -1.0, -1.0,
-		1.0,  1.0, -1.0,
+		-1.0,
+		1.0,
+		1.0,
+		-1.0,
+		-1.0,
+		1.0,
+		1.0,
+		-1.0,
+		1.0,
+		1.0,
+		1.0,
+		1.0,
+		-1.0,
+		1.0,
+		-1.0,
+		-1.0,
+		-1.0,
+		-1.0,
+		1.0,
+		-1.0,
+		-1.0,
+		1.0,
+		1.0,
+		-1.0,
 	};
 
 	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
-	glBufferData( GL_ARRAY_BUFFER, sizeof(cube_vertices), cube_vertices, GL_STATIC_DRAW );
+	glBufferData( GL_ARRAY_BUFFER, sizeof( cube_vertices ), cube_vertices, GL_STATIC_DRAW );
 	GLushort cube_indices[] = {
-		0, 1, 2, 3,
-		3, 2, 6, 7,
-		7, 6, 5, 4,
-		4, 5, 1, 0,
-		0, 3, 7, 4,
-		2, 1, 5, 6,
+		0,
+		1,
+		2,
+		3,
+		3,
+		2,
+		6,
+		7,
+		7,
+		6,
+		5,
+		4,
+		4,
+		5,
+		1,
+		0,
+		0,
+		3,
+		7,
+		4,
+		2,
+		1,
+		5,
+		6,
 	};
 
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ibo );
-	glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_indices), cube_indices, GL_STATIC_DRAW );
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof( cube_indices ), cube_indices, GL_STATIC_DRAW );
 
-	m_ibo_size = sizeof(cube_indices) / sizeof(GLushort);
-	
+	m_ibo_size = sizeof( cube_indices ) / sizeof( GLushort );
+
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 }
@@ -93,22 +125,24 @@ void Skybox::Stop() {
 
 	glDeleteBuffers( 1, &m_ibo );
 	glDeleteBuffers( 1, &m_vbo );
-	
+
 }
 
-void Skybox::RemoveTexture( base::ObjectLink *link ) {
-	if ( !link->Removed() )
-		link->GetSrcObject<types::Texture>()->m_graphics_object = NULL;
-	auto *gl_texture = link->GetDstObject<Texture>();
+void Skybox::RemoveTexture( base::ObjectLink* link ) {
+	if ( !link->Removed() ) {
+		link->GetSrcObject< types::Texture >()->m_graphics_object = NULL;
+	}
+	auto* gl_texture = link->GetDstObject< Texture >();
 	gl_texture->Unload();
 	DELETE( gl_texture );
 	DELETE( link );
 }
 
-void Skybox::OnSceneRemove( Scene *scene ) {
-	auto *skybox_texture = scene->GetSkyboxTextureObj();
-	if ( skybox_texture )
+void Skybox::OnSceneRemove( Scene* scene ) {
+	auto* skybox_texture = scene->GetSkyboxTextureObj();
+	if ( skybox_texture ) {
 		RemoveTexture( skybox_texture );
+	}
 }
 
 void Skybox::Iterate() {
@@ -116,31 +150,31 @@ void Skybox::Iterate() {
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it ) {
 
 		// remove missing skybox texture
-		auto *skybox_texture_obj = (*it)->GetSkyboxTextureObj();
+		auto* skybox_texture_obj = ( *it )->GetSkyboxTextureObj();
 		if ( skybox_texture_obj && skybox_texture_obj->Removed() ) {
-			RemoveTexture(  skybox_texture_obj );
-			(*it)->SetSkyboxTextureObj( NULL );
+			RemoveTexture( skybox_texture_obj );
+			( *it )->SetSkyboxTextureObj( NULL );
 			skybox_texture_obj = NULL;
 		}
 
 		// create skybox texture
 		if ( !skybox_texture_obj ) {
-			auto *texture = (*it)->GetScene()->GetSkyboxTexture();
+			auto* texture = ( *it )->GetScene()->GetSkyboxTexture();
 			if ( texture ) {
 				NEWV( gl_texture, CubemapTexture, texture );
 				NEWV( obj, base::ObjectLink, texture, gl_texture );
 				texture->m_graphics_object = obj;
-				(*it)->SetSkyboxTextureObj( obj );
+				( *it )->SetSkyboxTextureObj( obj );
 				gl_texture->Load();
 			}
 		}
 	}
 
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it ) {
-		auto *camera = (*it)->GetScene()->GetCamera();
+		auto* camera = ( *it )->GetScene()->GetCamera();
 		if ( camera ) {
 
-			auto *texture = (*it)->GetSkyboxTexture();
+			auto* texture = ( *it )->GetSkyboxTexture();
 			if ( texture ) {
 
 				glEnable( GL_CULL_FACE );
@@ -178,7 +212,7 @@ void Skybox::Iterate() {
 
 }
 
-bool Skybox::SceneBelongs( const scene::Scene *scene ) const {
+bool Skybox::SceneBelongs( const scene::Scene* scene ) const {
 	return scene->GetType() == scene::SCENE_TYPE_PERSP;
 }
 

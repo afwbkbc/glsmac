@@ -8,20 +8,19 @@ namespace game {
 namespace ui {
 
 InfoPanel::InfoPanel( Game* game )
-	: BBSection( game, "MiddleAreaInfoPanel" )
-{
+	: BBSection( game, "MiddleAreaInfoPanel" ) {
 	m_config.no_outer_border = true;
 }
 
 void InfoPanel::Create() {
 	BBSection::Create();
-	
+
 	Restart();
 }
 
 void InfoPanel::Iterate() {
 	BBSection::Iterate();
-	
+
 	while ( m_timer.HasTicked() ) {
 		ASSERT( m_line_index <= m_lines.size(), "line index lines overflow" );
 		if ( m_line_index == m_lines.size() ) {
@@ -57,7 +56,7 @@ void InfoPanel::Destroy() {
 	for ( auto& label : m_labels ) {
 		RemoveChild( label );
 	}
-	
+
 	BBSection::Destroy();
 }
 
@@ -69,11 +68,11 @@ void InfoPanel::Restart() {
 		RemoveChild( label );
 	}
 	m_labels.clear();
-	
-	m_info_type = (info_type_t) m_game->GetRandom()->GetUInt( IT_NONE + 1, IT_MAX - 1 );
-	
+
+	m_info_type = (info_type_t)m_game->GetRandom()->GetUInt( IT_NONE + 1, IT_MAX - 1 );
+
 	// TODO: multicolor labels
-	
+
 	switch ( m_info_type ) {
 		case IT_MISSION_STATS: {
 			m_lines = {
@@ -89,7 +88,7 @@ void InfoPanel::Restart() {
 			ASSERT( false, "unknown info type " + std::to_string( m_info_type ) );
 		}
 	}
-	
+
 	m_timer.SetInterval( s_character_frequency_ms );
 }
 

@@ -8,8 +8,7 @@ namespace scene {
 
 Camera::Camera( const camera_type_t camera_type )
 	: Entity()
-	, m_camera_type( camera_type )
-{
+	, m_camera_type( camera_type ) {
 	//m_inverse_vector.Set( -1.0f, -1.0f, 1.0f );
 	m_inverse_vector.Set( 1.0f, 1.0f, 1.0f );
 	//m_matrices.scale.TransformScale( 1.0, -1.0, -1.0 );
@@ -17,7 +16,13 @@ Camera::Camera( const camera_type_t camera_type )
 	m_angle.Set( ANGLE_CENTER, ANGLE_CENTER, ANGLE_CENTER );
 
 	SetFov( m_fov );
-	SetScale( { 1.0f, 1.0f, 1.0f } );
+	SetScale(
+		{
+			1.0f,
+			1.0f,
+			1.0f
+		}
+	);
 
 	UpdateProjection();
 	UpdateRotation();
@@ -37,7 +42,7 @@ const types::Vec3& Camera::GetScale() const {
 	return m_scale;
 }
 
-void Camera::SetScene( Scene *scene ) {
+void Camera::SetScene( Scene* scene ) {
 	ASSERT( m_scene == NULL || scene == NULL, "duplicate scene set" );
 	m_scene = scene;
 }
@@ -76,8 +81,9 @@ void Camera::UpdateMatrix() {
 	Entity::UpdateMatrix();
 	m_matrices.matrix = m_camera_matrices.projection * m_matrices.matrix;
 	if ( m_scene ) {
-		for ( auto it = m_scene->m_actors.begin() ; it < m_scene->m_actors.end() ; ++it )
-			(*it)->UpdateWorldMatrix();
+		for ( auto it = m_scene->m_actors.begin() ; it < m_scene->m_actors.end() ; ++it ) {
+			( *it )->UpdateWorldMatrix();
+		}
 	}
 }
 
@@ -108,8 +114,8 @@ const float Camera::GetZFar() const {
 }
 
 void Camera::UpdateUpTarget() {
-	types::Vec3 axis( 0.0f, 1.0f, 0.0f);
-	types::Vec3 view( 1.0f, 0.0f, 0.0f);
+	types::Vec3 axis( 0.0f, 1.0f, 0.0f );
+	types::Vec3 view( 1.0f, 0.0f, 0.0f );
 	view.Rotate( m_angle.x, axis );
 	view.Normalize();
 	axis = axis ^ view;

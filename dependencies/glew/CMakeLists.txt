@@ -1,21 +1,21 @@
 #GLEW <- DO NOT REMOVE; NEEDED FOR A TEST
 
-cmake_minimum_required(VERSION 3.4)
+CMAKE_MINIMUM_REQUIRED( VERSION 3.4 )
 
-project(fetch_content)
+PROJECT( fetch_content )
 
-message(STATUS "Fetching GLEW ...")
+MESSAGE( STATUS "Fetching GLEW ..." )
 
-include(FetchContent)
-FetchContent_Declare(
-  glew
-  GIT_REPOSITORY https://github.com/Perlmint/glew-cmake.git
-  GIT_TAG        origin/master
+INCLUDE( FetchContent )
+FETCHCONTENT_DECLARE(
+	glew
+	GIT_REPOSITORY https://github.com/Perlmint/glew-cmake.git
+	GIT_TAG origin/master
 )
 
-FetchContent_GetProperties(glew)
-if(NOT glew_POPULATED)
-  FetchContent_Populate(glew)
+FETCHCONTENT_GETPROPERTIES( glew )
+IF ( NOT glew_POPULATED )
+	FETCHCONTENT_POPULATE( glew )
 
-  add_subdirectory(${glew_SOURCE_DIR} ${glew_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif()
+	ADD_SUBDIRECTORY( ${glew_SOURCE_DIR} ${glew_BINARY_DIR} EXCLUDE_FROM_ALL )
+ENDIF ()

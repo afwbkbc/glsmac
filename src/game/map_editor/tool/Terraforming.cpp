@@ -8,14 +8,13 @@ namespace tool {
 
 Terraforming::Terraforming( Game* game, const MapEditor::tool_type_t type, const map::Tile::terraforming_t terraforming )
 	: Tool( game, type )
-	, m_terraforming( terraforming )
-{
+	, m_terraforming( terraforming ) {
 	//
 }
 
 const MapEditor::tiles_t Terraforming::Draw( map::Tile* tile, const MapEditor::draw_mode_t mode ) {
 	if ( mode == MapEditor::DM_DEC ) {
-		if ( ! ( tile->terraforming & m_terraforming ) ) {
+		if ( !( tile->terraforming & m_terraforming ) ) {
 			return {}; // already unset
 		}
 		tile->terraforming &= ~m_terraforming;
@@ -26,7 +25,7 @@ const MapEditor::tiles_t Terraforming::Draw( map::Tile* tile, const MapEditor::d
 		}
 		tile->terraforming |= m_terraforming;
 	}
-	
+
 	// some terraforming types will alter surrounding tiles, others won't
 	if ( m_terraforming & ( map::Tile::T_FOREST | map::Tile::T_FARM | map::Tile::T_SOIL_ENRICHER | map::Tile::T_ROAD | map::Tile::T_MAG_TUBE ) ) {
 		return {

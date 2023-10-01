@@ -6,9 +6,8 @@ namespace ui {
 
 UI::UI( Game* game, const std::string& class_name )
 	: UIContainer( class_name )
-	, m_game( game )
-{
-	
+	, m_game( game ) {
+
 }
 
 }

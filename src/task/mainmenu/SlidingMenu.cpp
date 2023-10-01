@@ -8,15 +8,14 @@ namespace mainmenu {
 
 SlidingMenu::SlidingMenu( MainMenu* mainmenu, const std::string& title, const MenuBlock::choices_t& choices, const size_t default_choice )
 	: MenuObject( mainmenu, title )
-	, m_choices ( choices )
-	, m_default_choice( default_choice )
-{
+	, m_choices( choices )
+	, m_default_choice( default_choice ) {
 	//
 }
 
 void SlidingMenu::Show() {
 	ASSERT( !m_menu_block, "duplicate menu show" );
-	
+
 	NEW( m_menu_block, MenuBlock, this );
 	for ( auto& c : m_choices ) {
 		m_menu_block->AddItem( c.first, c.second );
