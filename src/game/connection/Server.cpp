@@ -73,6 +73,12 @@ void Server::ProcessEvent( const network::Event& event ) {
 				ASSERT( player, "player in slot is null" );
 				m_state->RemovePlayer( player );
 
+				// cleanup
+				const auto& map_data_it = m_map_data.find( event.cid );
+				if ( map_data_it != m_map_data.end() ) {
+					m_map_data.erase( map_data_it );
+				}
+
 				SendSlotUpdate( slot_num, &slot, event.cid ); // notify others
 
 				if ( m_on_player_leave ) {
@@ -175,6 +181,60 @@ void Server::ProcessEvent( const network::Event& event ) {
 						GlobalMessage( FormatChatMessage( m_state->m_slots.GetSlot( it->second ).GetPlayer(), packet.data.str ) );
 						break;
 					}
+					case Packet::PT_GET_MAP_HEADER: {
+						Log( "Got map header request from " + std::to_string( event.cid ) );
+						Packet p( types::Packet::PT_MAP_HEADER );
+						if ( m_on_map_request ) {
+							m_map_data[ event.cid ] = map_data_t{ // override previous request
+								0,
+								m_on_map_request()
+							};
+							p.data.num = m_map_data.at( event.cid ).serialized_tiles.size();
+						}
+						else {
+							// no handler set - no map to return
+							Log( "WARNING: map requested but no map handler was set, sending empty header" );
+							p.data.num = 0;
+						}
+						m_network->MT_SendPacket( p, event.cid );
+						break;
+					}
+					case Packet::PT_GET_MAP_CHUNK: {
+						Log( "Got map chunk request from " + std::to_string( event.cid ) + " ( offset=" + std::to_string( packet.udata.map.offset ) + " size=" + std::to_string( packet.udata.map.size ) + " )" );
+						const auto& it = m_map_data.find( event.cid );
+						const size_t end = packet.udata.map.offset + packet.udata.map.size;
+						if ( it == m_map_data.end() ) {
+							Error( event.cid, "map download not initialized" );
+						}
+						else if ( end > it->second.serialized_tiles.size() ) {
+							Error( event.cid, "map request overflow ( " + std::to_string( packet.udata.map.offset ) + " + " + std::to_string( packet.udata.map.size ) + " >= " + std::to_string( it->second.serialized_tiles.size() ) + " )" );
+						}
+						else if ( packet.udata.map.offset != it->second.next_expected_offset ) {
+							Error( event.cid, "inconsistent map download offset ( " + std::to_string( packet.udata.map.offset ) + " != " + std::to_string( it->second.next_expected_offset ) + " )" );
+						}
+						else if (
+							packet.udata.map.size != MAP_DOWNLOAD_CHUNK_SIZE &&
+								end != it->second.serialized_tiles.size() // last chunk can be smaller
+							) {
+							Error( event.cid, "inconsistent map download size ( " );
+						}
+						else {
+							Packet p( Packet::PT_MAP_CHUNK );
+							p.udata.map.offset = packet.udata.map.offset;
+							p.udata.map.size = packet.udata.map.size;
+							p.data.str = it->second.serialized_tiles.substr( packet.udata.map.offset, packet.udata.map.size );
+							m_network->MT_SendPacket( p, event.cid );
+							if ( end < it->second.serialized_tiles.size() ) {
+								it->second.next_expected_offset = end;
+							}
+							else {
+								// map was sent fully, can free memory now
+								Log( "Map was sent successfully to " + std::to_string( event.cid ) + ", cleaning up" );
+								m_map_data.erase( it );
+							}
+						}
+						break;
+					}
 					default: {
 						Log( "WARNING: invalid packet type from client " + std::to_string( event.cid ) + " : " + std::to_string( packet.type ) );
 					}
@@ -243,6 +303,7 @@ void Server::Message( const std::string& message ) {
 void Server::ResetHandlers() {
 	Connection::ResetHandlers();
 	m_on_listen = nullptr;
+	m_on_map_request = nullptr;
 }
 
 void Server::UpdateGameSettings() {

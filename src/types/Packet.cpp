@@ -47,8 +47,23 @@ const Buffer Packet::Serialize() const {
 			buf.WriteInt( data.num ); // game state
 			break;
 		}
-		case PT_GET_MAP: {
+		case PT_GET_MAP_HEADER: {
 			// no data
+			break;
+		}
+		case PT_MAP_HEADER: {
+			buf.WriteInt( data.num ); // total size of serialized data
+			break;
+		}
+		case PT_GET_MAP_CHUNK: {
+			buf.WriteInt( udata.map.offset );
+			buf.WriteInt( udata.map.size );
+			break;
+		}
+		case PT_MAP_CHUNK: {
+			buf.WriteInt( udata.map.offset );
+			buf.WriteInt( udata.map.size );
+			buf.WriteString( data.str ); // serialized tiles part
 			break;
 		}
 		default: {
@@ -100,8 +115,23 @@ void Packet::Unserialize( Buffer buf ) {
 			data.num = buf.ReadInt(); // game state
 			break;
 		}
-		case PT_GET_MAP: {
+		case PT_GET_MAP_HEADER: {
 			// no data
+			break;
+		}
+		case PT_MAP_HEADER: {
+			data.num = buf.ReadInt(); // total size of serialized data
+			break;
+		}
+		case PT_GET_MAP_CHUNK: {
+			udata.map.offset = buf.ReadInt();
+			udata.map.size = buf.ReadInt();
+			break;
+		}
+		case PT_MAP_CHUNK: {
+			udata.map.offset = buf.ReadInt();
+			udata.map.size = buf.ReadInt();
+			data.str = buf.ReadString(); // serialized tiles part
 			break;
 		}
 		default: {

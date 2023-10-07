@@ -62,6 +62,8 @@ CLASS( Connection, base::Module )
 	virtual void Message( const std::string& message ) = 0;
 
 protected:
+	const int MAP_DOWNLOAD_CHUNK_SIZE = 16384;
+
 	network::Network* const m_network = g_engine->GetNetwork();
 
 	virtual void ProcessEvent( const network::Event& event );

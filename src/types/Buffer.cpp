@@ -29,12 +29,13 @@ Buffer::~Buffer() {
 	}
 }
 
-Buffer::Buffer( Buffer& other ) {
+Buffer::Buffer( const Buffer& other ) {
 	allocated_len = other.allocated_len;
 	lenw = other.lenw;
 	lenr = other.lenr;
 	if ( other.data ) {
-		data = (data_t*)malloc( lenw );
+		data_t* newptr = (data_t*)malloc( lenw );
+		data = newptr;
 		memcpy( ptr( data, 0, lenw ), ptr( other.data, 0, other.lenw ), lenw );
 	}
 	else {

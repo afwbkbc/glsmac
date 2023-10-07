@@ -19,7 +19,7 @@ CLASS( Buffer, base::Base )
 	Buffer( const std::string& strval );
 	~Buffer();
 
-	Buffer( Buffer& other );
+	Buffer( const Buffer& other );
 
 	data_t* data;
 	data_t* dw;

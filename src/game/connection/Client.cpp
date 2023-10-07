@@ -1,5 +1,7 @@
 #include "Client.h"
 
+#include <algorithm>
+
 using namespace network;
 
 namespace game {
@@ -91,6 +93,62 @@ void Client::ProcessEvent( const Event& event ) {
 							}
 							break;
 						}
+						case Packet::PT_MAP_HEADER: {
+							Log( "Got map data header" );
+							if ( !m_map_download_state.is_downloading ) {
+								Error( "map header received while not downloading" );
+							}
+							if ( packet.data.num == 0 ) {
+								Log( "No map received from server" );
+								Disconnect( "No map received from server" );
+							}
+							else {
+								m_map_download_state.total_size = packet.data.num;
+								Log( "Allocating map buffer (" + std::to_string( m_map_download_state.total_size ) + " bytes)" );
+								m_map_download_state.buffer.reserve( m_map_download_state.total_size );
+								RequestNextMapChunk();
+							}
+							break;
+						}
+						case Packet::PT_MAP_CHUNK: {
+							Log( "Got map chunk ( offset=" + std::to_string( packet.udata.map.offset ) + " size=" + std::to_string( packet.udata.map.size ) + " )" );
+							const size_t end = packet.udata.map.offset + packet.udata.map.size;
+							if ( !m_map_download_state.is_downloading ) {
+								Error( "map chunk received while not downloading" );
+							}
+							else if ( end > m_map_download_state.total_size ) {
+								Error( "map chunk overflow ( " + std::to_string( packet.udata.map.offset ) + " + " + std::to_string( packet.udata.map.size ) + " >= " + std::to_string( m_map_download_state.total_size ) + " )" );
+							}
+							else if ( packet.udata.map.offset != m_map_download_state.downloaded_size ) {
+								Error( "inconsistent map chunk offset ( " + std::to_string( packet.udata.map.offset ) + " != " + std::to_string( m_map_download_state.downloaded_size ) + " )" );
+							}
+							else if (
+								packet.udata.map.size != MAP_DOWNLOAD_CHUNK_SIZE &&
+									end != m_map_download_state.total_size // last chunk can be smaller
+								) {
+								Error( "inconsistent map chunk size ( " );
+							}
+							else {
+								ASSERT( packet.data.str.size() == packet.udata.map.size, "map download buffer size mismatch" );
+								m_map_download_state.buffer.append( packet.data.str );
+								if ( end < m_map_download_state.total_size ) {
+									if ( m_on_map_progress ) {
+										m_on_map_progress( (float)m_map_download_state.downloaded_size / m_map_download_state.total_size );
+									}
+									m_map_download_state.downloaded_size = end;
+									RequestNextMapChunk();
+								}
+								else {
+									Log( "Map downloaded successfully" );
+									if ( m_on_map_data ) {
+										m_on_map_data( m_map_download_state.buffer );
+									}
+									m_map_download_state.buffer.clear();
+									m_map_download_state.is_downloading = false;
+								}
+							}
+							break;
+						}
 						default: {
 							Log( "WARNING: invalid packet type from server: " + std::to_string( packet.type ) );
 						}
@@ -131,15 +189,38 @@ void Client::Message( const std::string& message ) {
 	m_network->MT_SendPacket( p );
 }
 
+void Client::GetMap() {
+	Log( "Requesting map from server" );
+	ASSERT( !m_map_download_state.is_downloading, "map already being downloaded" );
+	ASSERT( m_on_map_data, "map download requested but m_on_map_data is not set" );
+	m_map_download_state.is_downloading = true;
+	Packet p( Packet::PT_GET_MAP_HEADER );
+	m_network->MT_SendPacket( p );
+}
+
 void Client::ResetHandlers() {
 	Connection::ResetHandlers();
 	m_on_players_list_update = nullptr;
 	m_on_game_state_change = nullptr;
+	m_on_map_progress = nullptr;
+	m_on_map_data = nullptr;
 }
 
 void Client::Error( const std::string& reason ) {
 	Log( "Network protocol error: " + reason );
 	Disconnect( "Network protocol error" );
+}
+
+void Client::RequestNextMapChunk() {
+	ASSERT( m_map_download_state.is_downloading, "map download not initialized" );
+	ASSERT( m_map_download_state.buffer.size() == m_map_download_state.downloaded_size, "map buffer size mismatch" );
+	ASSERT( m_map_download_state.downloaded_size < m_map_download_state.total_size, "map already downloaded" );
+	const size_t size = std::min( MAP_DOWNLOAD_CHUNK_SIZE, m_map_download_state.total_size - m_map_download_state.downloaded_size );
+	Log( "Requesting map chunk ( offset=" + std::to_string( m_map_download_state.downloaded_size ) + " size=" + std::to_string( size ) + " )" );
+	Packet p( Packet::PT_GET_MAP_CHUNK );
+	p.udata.map.offset = m_map_download_state.downloaded_size;
+	p.udata.map.size = size;
+	m_network->MT_SendPacket( p );
 }
 
 }
