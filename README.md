@@ -120,11 +120,13 @@ FreeBSD: `pkg install pkgconf cmake sdl2 sdl2_image glew ossp-uuid yaml-cpp`
 
 Fedora: `dnf install cmake make automake gcc gcc-c++ freetype-devel SDL2-devel SDL2_image-devel glew-devel uuid-devel yaml-cpp-devel`
 
+OpenSUSE: `zypper install -t pattern devel_basis && zypper install cmake-full freetype2-devel SDL2-devel SDL2_image-devel glew-devel uuid-devel yaml-cpp-devel`
+
 It is highly recommended to build project using CMake and make (ninja works too) instead of adding .cpp and .h files manually to IDE (don't report bugs if you try the latter).
 
 It is recommended to build in separate directory. For example: `cmake -S . -B build` (remove build directory when you'll want a clean build for some reason).
 
-For release build (default): `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release make`
+For release build (default): `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && make -C build`
 
 For debug build: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug && make -C build`
 
