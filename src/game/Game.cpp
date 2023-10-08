@@ -173,9 +173,9 @@ void Game::Iterate() {
 				const auto* config = g_engine->GetConfig();
 				// also handy to have dump of generated map
 				if ( !ec && !config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) { // no point saving if we just loaded it
-					Log( (std::string)"Saving map dump to " + map::s_consts.debug.lastdump_filename );
+					Log( (std::string)"Saving map dump to " + config->GetDebugPath() + map::s_consts.debug.lastdump_filename );
 					ui->SetLoaderText( "Saving dump", false );
-					util::FS::WriteFile( map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
+					util::FS::WriteFile( config->GetDebugPath() + map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
 				}
 #endif
 
@@ -800,13 +800,15 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		NEW( m_map, map::Map, this );
 
 #ifdef DEBUG
+		const auto* config = g_engine->GetConfig();
+
 		// if crash happens - it's handy to have a seed to reproduce it
-		util::FS::WriteFile( map::s_consts.debug.lastseed_filename, m_random->GetStateString() );
+		util::FS::WriteFile( config->GetDebugPath() + map::s_consts.debug.lastseed_filename, m_random->GetStateString() );
 #endif
 
 		map::Map::error_code_t ec = map::Map::EC_UNKNOWN;
+
 #ifdef DEBUG
-		const auto* config = g_engine->GetConfig();
 		if ( !m_connection && config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) {
 			const std::string& filename = config->GetQuickstartMapDump();
 			ASSERT( util::FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );

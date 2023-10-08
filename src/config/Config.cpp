@@ -57,12 +57,17 @@ Config::Config( const int argc, const char* argv[] ) {
 		}
 	);
 	parser.AddRule(
+		"prefix", "Path to store GLSMAC data in (default: " + DEFAULT_GLSMAC_PREFIX + ")", AH( this ) {
+			m_prefix = value + "/";
+		}
+	);
+	parser.AddRule(
 		"skipintro", "Skip intro", AH( this ) {
 			m_launch_flags |= LF_SKIPINTRO;
 		}
 	);
 	parser.AddRule(
-		"smacpath", "SMAC_PATH", "Specify path to SMAC directory (must contain expansion too)", AH( this, f_error, s_invalid_smac_directory ) {
+		"smacpath", "SMAC_PATH", "Specify path to SMAC directory (must contain SMACX too)", AH( this, f_error, s_invalid_smac_directory ) {
 			if ( !util::SMACChecker::IsSMACDirectory( value ) ) {
 				f_error( (std::string)value + s_invalid_smac_directory );
 			}
@@ -234,6 +239,24 @@ Config::Config( const int argc, const char* argv[] ) {
 		m_smac_path = "./";
 	}
 
+}
+
+const std::string Config::GetEnv( const std::string& var ) const {
+	const char* val = std::getenv( var.c_str() );
+	if ( val == nullptr ) { // invalid to assign nullptr to std::string
+		return "";
+	}
+	else {
+		return val;
+	}
+}
+
+const std::string& Config::GetPrefix() const {
+	return m_prefix;
+}
+
+const std::string Config::GetDebugPath() const {
+	return m_prefix + "debug/";
 }
 
 const std::string& Config::GetSMACPath() const {

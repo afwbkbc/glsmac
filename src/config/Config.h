@@ -40,7 +40,13 @@ CLASS( Config, base::Module )
 	};
 #endif
 
+	const std::string GetEnv( const std::string& var ) const;
+
+	const std::string& GetPrefix() const;
 	const std::string& GetSMACPath() const;
+#ifdef DEBUG
+	const std::string GetDebugPath() const; // to store debug stuff like dumps
+#endif
 
 	const bool HasLaunchFlag( const launch_flag_t flag ) const;
 	const types::Vec2< size_t >& GetWindowSize() const;
@@ -60,6 +66,10 @@ CLASS( Config, base::Module )
 #endif
 
 private:
+
+	const std::string DEFAULT_GLSMAC_PREFIX = GetEnv( "HOME" ) + "/.local/share/glsmac";
+
+	std::string m_prefix = DEFAULT_GLSMAC_PREFIX + "/";
 	std::string m_smac_path = "";
 
 	uint8_t m_launch_flags = LF_NONE;

@@ -8,6 +8,8 @@
 // only default rules for now
 #include "rules/default/Default.h"
 
+#include "Account.h"
+
 using namespace types;
 
 namespace game {
@@ -84,6 +86,8 @@ CLASS( GlobalSettings, Serializable )
 // settings that aren't synced between players
 CLASS( LocalSettings, Serializable )
 public:
+
+	Account account;
 
 	enum game_mode_t {
 		GM_SINGLEPLAYER,

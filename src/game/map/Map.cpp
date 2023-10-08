@@ -626,8 +626,8 @@ const Map::error_code_t Map::Generate(
 	Log( "Map generation took " + std::to_string( timer.GetElapsed().count() ) + "ms" );
 	// if crash happens - it's handy to have a map file to reproduce it
 	if ( !c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) { // no point saving if we just loaded it
-		Log( (std::string)"Saving map to " + s_consts.debug.lastmap_filename );
-		FS::WriteFile( s_consts.debug.lastmap_filename, m_tiles->Serialize().ToString() );
+		Log( (std::string)"Saving map to " + c->GetDebugPath() + s_consts.debug.lastmap_filename );
+		FS::WriteFile( c->GetDebugPath() + s_consts.debug.lastmap_filename, m_tiles->Serialize().ToString() );
 	}
 #endif
 

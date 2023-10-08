@@ -13,6 +13,12 @@ using namespace std;
 #define PATH_SEPARATOR "/"
 #endif
 
+#ifdef DEBUG
+#define Log( _text ) std::cout << "<Util::FS> " << (_text) << std::endl
+#else
+#define Log( _text )
+#endif
+
 namespace util {
 
 const std::string FS::GetPathSeparator() {
@@ -152,7 +158,8 @@ const bool FS::DirectoryExists( const string& path ) {
 
 void FS::CreateDirectoryIfNotExists( const string& path ) {
 	if ( !DirectoryExists( path ) ) {
-		std::filesystem::create_directory( path );
+		Log( "Creating directory: " + path );
+		std::filesystem::create_directories( path );
 	}
 }
 
@@ -165,6 +172,8 @@ std::vector< std::string > FS::ListDirectory( const std::string& directory, cons
 #endif
 	std::vector< std::string > result = {};
 
+	Log( "Reading directory: " + directory );
+
 	try {
 
 #ifdef _WIN32
@@ -174,6 +183,7 @@ std::vector< std::string > FS::ListDirectory( const std::string& directory, cons
 			directory += PATH_SEPARATOR;
 		}
 #endif
+
 		std::vector< std::filesystem::path > items;
 		std::copy(
 			std::filesystem::directory_iterator(
@@ -209,6 +219,7 @@ std::vector< std::string > FS::ListDirectory( const std::string& directory, cons
 }
 
 const string FS::ReadFile( const string& path ) {
+	Log( "Reading file: " + path );
 	ASSERT_NOLOG( FileExists( path ), "file \"" + path + "\" does not exist or is not a file" );
 	stringstream data;
 	ifstream in( path, std::ios_base::binary );
@@ -218,6 +229,7 @@ const string FS::ReadFile( const string& path ) {
 }
 
 const void FS::WriteFile( const string& path, const string& data ) {
+	Log( "Writing file: " + path );
 	ofstream out( path, std::ios_base::binary );
 	out << data;
 	out.close();

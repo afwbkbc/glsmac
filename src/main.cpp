@@ -119,8 +119,9 @@ int main( const int argc, const char* argv[] ) {
 	debug::MemoryWatcher memory_watcher( config.HasDebugFlag( config::Config::DF_MEMORYDEBUG ) );
 #endif
 
+	FS::CreateDirectoryIfNotExists( config.GetPrefix() );
 #ifdef DEBUG
-	FS::CreateDirectoryIfNotExists( "./tmp" ); // to store debug stuff like dumps
+	FS::CreateDirectoryIfNotExists( config.GetDebugPath() );
 #endif
 
 	int result = EXIT_FAILURE;
