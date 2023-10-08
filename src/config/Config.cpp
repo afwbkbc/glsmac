@@ -1,13 +1,13 @@
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
 
 #include "Config.h"
 
 #include "version.h"
 
-#include "util/SMACChecker.h"
 #include "util/ArgParser.h"
 #include "util/FS.h"
+#include "util/SMACChecker.h"
 
 #include "game/Settings.h"
 
@@ -17,7 +17,11 @@ Config::Config( const int argc, const char* argv[] ) {
 	util::ArgParser parser( argc, argv );
 
 	const auto f_error = [ &parser ]( const std::string& error ) -> void {
-		std::cout << std::endl << "ERROR: " << error << std::endl << std::endl << parser.GetUnknownArgumentNote() << std::endl << std::endl;
+		std::cout << std::endl
+			<< "ERROR: " << error << std::endl
+			<< std::endl
+			<< parser.GetUnknownArgumentNote() << std::endl
+			<< std::endl;
 		exit( EXIT_FAILURE );
 	};
 
@@ -165,8 +169,7 @@ Config::Config( const int argc, const char* argv[] ) {
 		}
 	);
 	const auto f_add_map_parameter_option =
-		[ this, &parser, f_error, &s_quickstart_argument_missing ]
-			( const std::string& name, const std::vector< std::string >& values, const std::string& desc, debug_flag_t flag, game::MapSettings::parameter_t* out_param )
+		[ this, &parser, f_error, &s_quickstart_argument_missing ]( const std::string& name, const std::vector< std::string >& values, const std::string& desc, debug_flag_t flag, game::MapSettings::parameter_t* out_param )
 			-> void {
 			ASSERT( values.size() == 3, "values size mismatch" );
 			parser.AddRule(
@@ -238,7 +241,6 @@ Config::Config( const int argc, const char* argv[] ) {
 		}
 		m_smac_path = "./";
 	}
-
 }
 
 const std::string Config::GetEnv( const std::string& var ) const {
@@ -255,9 +257,11 @@ const std::string& Config::GetPrefix() const {
 	return m_prefix;
 }
 
+#ifdef DEBUG
 const std::string Config::GetDebugPath() const {
 	return m_prefix + "debug/";
 }
+#endif
 
 const std::string& Config::GetSMACPath() const {
 	return m_smac_path;

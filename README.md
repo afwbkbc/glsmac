@@ -105,14 +105,18 @@ You will need CMake and following libraries (-dev packages if applicable):
 - GL
 - GLU
 - GLEW
-- yaml-cpp
 - uuid-ossp
+- yaml-cpp
 
-Ubuntu/Debian/Mint: sudo apt install cmake build-essential libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev
+Gentoo: `emerge cmake libsdl2 sdl2-image freetype glu glew ossp-uuid yaml-cpp`
 
-Gentoo: `sudo emerge cmake libsdl2 sdl2-image freetype glu glew yaml-cpp ossp-uuid`
+Ubuntu: `apt install cmake build-essential libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev`
 
-FreeBSD: install ports: devel/cmake, devel/sdl20 (with PTHREADS, X11 and OPENGL and some sound option like OSS if you want sound), graphics/sdl2_image, print/freetype2 and graphics/glew
+ArchLinux: `pacman -Syu cmake base-devel freetype2 sdl2 sdl2_image glew yaml-cpp` (you'll need to install `ossp-uuid` manually because it's not in repos)
+
+FreeBSD: `pkg install pkgconf cmake sdl2 sdl2_image glew ossp-uuid yaml-cpp`
+
+Fedora: `dnf install cmake make automake gcc gcc-c++ freetype-devel SDL2-devel SDL2_image-devel glew-devel uuid-devel yaml-cpp-devel`
 
 It is highly recommended to build project using cmake and make instead of adding .cpp and .h files manually to IDE.
 

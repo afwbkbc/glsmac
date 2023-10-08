@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_map>
+
 #include "game/Settings.h"
 
 #include "Tile.h"
@@ -518,9 +520,9 @@ struct Consts {
 		const std::string lastdump_filename = "lastmap.gsmd";
 	} debug;
 #endif
-
 };
 extern Consts s_consts;
 
 }
+
 }
