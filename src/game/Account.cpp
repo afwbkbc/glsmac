@@ -54,7 +54,7 @@ const std::string Account::GetPath() const {
 }
 
 void Account::Create() {
-	m_gsid = UUID::GenerateRandom();
+	m_gsid = UUID::Generate();
 	Log( "Creating local account " + m_gsid );
 	Save();
 }
