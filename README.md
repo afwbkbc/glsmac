@@ -97,7 +97,7 @@ Other platforms/toolchains weren't tested but you can try and please report resu
 
 ### Linux / FreeBSD
 
-You will need CMake and following libraries (-dev packages if applicable):
+You will need CMake and following libraries (unless you build with `-DVENDORED_DEPENDENCIES`):
 
 - FreeType
 - SDL2
@@ -120,17 +120,23 @@ Fedora: `dnf install cmake make automake gcc gcc-c++ freetype-devel SDL2-devel S
 
 It is highly recommended to build project using cmake and make instead of adding .cpp and .h files manually to IDE.
 
-For release build: cmake . -DCMAKE_BUILD_TYPE=Release && make
+It is recommended to build in separate directory. For example: `cmake -S . -B build` (remove build directory when you'll want a clean build for some reason).
 
-For debug build: cmake -DCMAKE_BUILD_TYPE=Debug . && make
+For release build (default): `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release make`
 
-For portable build (binary that can be executed on different machines): cmake . -DCMAKE_BUILD_TYPE=Portable64 && make ( use Portable32 for 32-bit )
+For debug build: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug && make -C build`
 
-For same build as before (or Release if it's first build): cmake . && make
+For portable build (binary that can be executed on different machines): `cmake -S . -B build -DCMAKE_BUILD_TYPE=Portable64 && make -C build` ( or `Portable32` for 32-bit )
 
-Add -j parameter to make to speed up if you have multiple cores, i.e. "make -j9" for 8
+For same build as before (or Release if it's first build): `cmake -S . -B build && make -C build`
 
-You may also just download binary releases from github, they are built for ubuntu but will run on most linux distros (only 64-bit for now).
+Add -j parameter to make to speed up if you have multiple cores, i.e. `make -C build -j9` for 8 cores.
+
+Optionally, add `-DVENDORED_DEPENDENCIES=YES` to cmake parameters to download and build all required libraries, instead of using system-installed ones. By default this is enabled on Windows and disabled on other OSes. You can't disable it on Windows.
+
+Optionally, use `VERBOSE=1 make -C build` to see actual compiling/linking commands (useful when build fails)
+
+You can also just download binary releases from github, they are built for ubuntu but will run on most linux distros (only 64-bit for now). Windows and other binaries coming soon :)
 
 ### Windows
 

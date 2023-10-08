@@ -1,10 +1,15 @@
 MESSAGE( STATUS "Fetching yaml-cpp..." )
 
+# TODO: determine those automatically?
+SET( YAML_CPP_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/../../_deps/yaml_cpp-build" )
+
 SET( YAML_BUILD_SHARED_LIBS OFF )
 
 FETCHCONTENT_DECLARE( YAML_CPP
 	GIT_REPOSITORY https://github.com/jbeder/yaml-cpp
 	GIT_TAG 0.8.0
-)
+	)
 
 FETCHCONTENT_MAKEAVAILABLE( YAML_CPP )
+
+SET( YAML_CPP_LINK_OPTIONS "-L${YAML_CPP_BINARY_DIR}" PARENT_SCOPE )
