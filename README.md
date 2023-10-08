@@ -97,7 +97,9 @@ Other platforms/toolchains weren't tested but you can try and please report resu
 
 ### Linux / FreeBSD
 
-You will need CMake and following libraries (unless you build with `-DVENDORED_DEPENDENCIES`):
+You will need CMake and working compiler (gcc or clang).
+
+You will also need following libraries (unless you build with `-DVENDORED_DEPENDENCIES=YES`):
 
 - FreeType
 - SDL2
@@ -118,7 +120,7 @@ FreeBSD: `pkg install pkgconf cmake sdl2 sdl2_image glew ossp-uuid yaml-cpp`
 
 Fedora: `dnf install cmake make automake gcc gcc-c++ freetype-devel SDL2-devel SDL2_image-devel glew-devel uuid-devel yaml-cpp-devel`
 
-It is highly recommended to build project using cmake and make instead of adding .cpp and .h files manually to IDE.
+It is highly recommended to build project using CMake and make (ninja works too) instead of adding .cpp and .h files manually to IDE (don't report bugs if you try the latter).
 
 It is recommended to build in separate directory. For example: `cmake -S . -B build` (remove build directory when you'll want a clean build for some reason).
 
