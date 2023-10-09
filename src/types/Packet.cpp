@@ -14,7 +14,8 @@ const Buffer Packet::Serialize() const {
 
 	switch ( type ) {
 		case PT_AUTH: {
-			buf.WriteString( data.str ); // player name
+			buf.WriteString( data.vec[ 0 ] ); // gsid
+			buf.WriteString( data.vec[ 1 ] ); // player name
 			break;
 		}
 		case PT_GLOBAL_SETTINGS: {
@@ -82,7 +83,10 @@ void Packet::Unserialize( Buffer buf ) {
 
 	switch ( type ) {
 		case PT_AUTH: {
-			data.str = buf.ReadString(); // player name
+			data.vec = {
+				buf.ReadString(), // gsid
+				buf.ReadString(), // player name
+			};
 			break;
 		}
 		case PT_GLOBAL_SETTINGS: {

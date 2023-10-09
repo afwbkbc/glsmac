@@ -34,6 +34,10 @@ CLASS( Slot, types::Serializable )
 	Player* GetPlayerAndClose();
 	void SetPlayer( Player* player, const size_t cid, const std::string& remote_address );
 
+	const std::string& GetLinkedGSID() const;
+	void SetLinkedGSID( const std::string& gsid );
+	void UnsetLinkedGSID();
+
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;
 
@@ -47,7 +51,7 @@ private:
 		std::string remote_address = "";
 		player_flag_t flags = PF_NONE;
 	} m_player_data = {};
-
+	std::string m_linked_gsid = "";
 };
 
 }

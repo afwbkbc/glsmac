@@ -23,18 +23,18 @@ void Server::ProcessEvent( const network::Event& event ) {
 			m_state->m_slots.Resize( 7 ); // TODO: make dynamic?
 			const auto& rules = m_state->m_settings.global.game_rules;
 			NEW(
-				m_player, ::game::Player, {
+				m_player, ::game::Player,
 				m_state->m_settings.local.player_name,
 				::game::Player::PR_HOST,
 				rules.GetDefaultFaction(),
-				rules.GetDefaultDifficultyLevel(),
-			}
+				rules.GetDefaultDifficultyLevel()
 			);
 			m_state->AddPlayer( m_player );
 			m_slot = 0; // host always has slot 0
 			m_state->AddCIDSlot( 0, m_slot );
 			auto& slot = m_state->m_slots.GetSlot( m_slot );
 			slot.SetPlayer( m_player, 0, event.data.remote_address ); // host always has cid 0
+			slot.SetLinkedGSID( m_state->m_settings.local.account.GetGSID() );
 			if ( m_on_listen ) {
 				m_on_listen();
 			}
@@ -79,11 +79,18 @@ void Server::ProcessEvent( const network::Event& event ) {
 					m_map_data.erase( map_data_it );
 				}
 
+				ASSERT( m_game_state != GS_NONE, "player disconnected but game state is not set" );
+				if ( m_game_state == GS_LOBBY ) {
+					// free slot for next player
+					slot.UnsetLinkedGSID();
+				}
+
 				SendSlotUpdate( slot_num, &slot, event.cid ); // notify others
 
 				if ( m_on_player_leave ) {
 					m_on_player_leave( slot_num, &slot, player );
 				}
+				DELETE( player );
 			}
 			break;
 		}
@@ -93,48 +100,84 @@ void Server::ProcessEvent( const network::Event& event ) {
 				packet.Unserialize( Buffer( event.data.packet_data ) );
 				switch ( packet.type ) {
 					case Packet::PT_AUTH: {
-						if ( packet.data.str.empty() ) {
-							Log( "Authentication from " + std::to_string( event.cid ) + " failed, disconnecting" );
+						ASSERT( packet.data.vec.size() == 2, "unexpected vec size of PT_AUTH" );
+						const std::string& gsid = packet.data.vec[ 0 ];
+						const std::string& player_name = packet.data.vec[ 1 ];
+						if ( gsid.empty() || player_name.empty() ) {
+							Log( "Authentication from cid " + std::to_string( event.cid ) + " failed, disconnecting" );
 							m_network->MT_DisconnectClient( event.cid );
 							break;
 						}
-
-						Log( "Got authentication from " + std::to_string( event.cid ) + ": " + packet.data.str );
 
 						if ( m_state->GetCidSlots().find( event.cid ) != m_state->GetCidSlots().end() ) {
-							Log( "Duplicate authentication from " + std::to_string( event.cid ) + ", disconnecting" );
+							Log( "Duplicate authentication from cid " + std::to_string( event.cid ) + ", disconnecting" );
 							m_network->MT_DisconnectClient( event.cid );
 							break;
 						}
 
-						// find free slot
-						size_t slot_num = 0; // 0 = 'not found'
+						Log( "Got authentication from " + gsid + " (cid " + std::to_string( event.cid ) + ") as '" + player_name + "'" );
+						ASSERT( m_game_state != GS_NONE, "player connected but game state not set" );
+
+						// TODO: implementing 'load game' from lobby will need extra gsid logic
+
+						// check if not already in game
+						bool is_already_in_game = false;
 						for ( auto& slot : m_state->m_slots.GetSlots() ) {
-							if ( slot.GetState() == ::game::Slot::SS_OPEN ) {
+							if ( slot.GetLinkedGSID() == gsid ) {
+								is_already_in_game = true;
 								break;
 							}
-							slot_num++;
 						}
-						if ( slot_num >= m_state->m_slots.GetCount() ) { // no available slots left
-							Log( "No free slots for player " + std::to_string( event.cid ) + " (" + packet.data.str + "), dropping" );
-							Kick( event.cid, "Server is full!" );
+						if ( is_already_in_game ) {
+							Log( "Duplicate connection from " + gsid + ", disconnecting" );
+							Kick( event.cid, "You are already in this game" );
 							break;
+						}
+
+						size_t slot_num = 0;
+						if ( m_game_state == GS_LOBBY ) {
+							// on lobby stage everyone can connect and occupy first free slot
+							for ( auto& slot : m_state->m_slots.GetSlots() ) {
+								if ( slot.GetState() == ::game::Slot::SS_OPEN ) {
+									break;
+								}
+								slot_num++;
+							}
+							if ( slot_num >= m_state->m_slots.GetCount() ) { // no available slots left
+								Log( "No free slots for player " + gsid + " (" + player_name + "), rejecting" );
+								Kick( event.cid, "Server is full!" );
+								break;
+							}
+						}
+						else {
+							// once game is started - only players that are linked to slots by gsids can join to their slots
+							for ( auto& slot : m_state->m_slots.GetSlots() ) {
+								if ( slot.GetState() == ::game::Slot::SS_OPEN && slot.GetLinkedGSID() == gsid ) {
+									break;
+								}
+								slot_num++;
+							}
+							if ( slot_num >= m_state->m_slots.GetCount() ) { // no available slots left
+								Log( "No linked slot found for player " + gsid + " (" + player_name + "), rejecting" );
+								Kick( event.cid, "You do not belong to this game." );
+								break;
+							}
 						}
 
 						const auto& rules = m_state->m_settings.global.game_rules;
 						NEWV(
-							player, ::game::Player, {
-							packet.data.str,
+							player, ::game::Player,
+							player_name,
 							::game::Player::PR_PLAYER,
 							rules.GetDefaultFaction(),
-							rules.GetDefaultDifficultyLevel(),
-						}
+							rules.GetDefaultDifficultyLevel()
 						);
 						m_state->AddPlayer( player );
 
 						m_state->AddCIDSlot( event.cid, slot_num );
 						auto& slot = m_state->m_slots.GetSlot( slot_num );
 						slot.SetPlayer( player, event.cid, event.data.remote_address );
+						slot.SetLinkedGSID( gsid );
 
 						SendGameState( event.cid );
 						{

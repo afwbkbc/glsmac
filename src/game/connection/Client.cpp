@@ -27,7 +27,10 @@ void Client::ProcessEvent( const Event& event ) {
 						case Packet::PT_REQUEST_AUTH: {
 							Log( "Authenticating" );
 							Packet p( Packet::PT_AUTH );
-							p.data.str = m_settings->player_name;
+							p.data.vec = {
+								m_settings->account.GetGSID(),
+								m_settings->player_name,
+							};
 							m_network->MT_SendPacket( p );
 							break;
 						}
