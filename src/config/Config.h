@@ -67,7 +67,13 @@ CLASS( Config, base::Module )
 
 private:
 
-	const std::string DEFAULT_GLSMAC_PREFIX = GetEnv( "HOME" ) + "/.local/share/glsmac";
+	const std::string DEFAULT_GLSMAC_PREFIX =
+#ifdef _WIN32
+	GetEnv( "APPDATA" ) + "/GLSMAC"
+#else
+	GetEnv( "HOME" ) + "/.local/share/glsmac"
+#endif
+	;
 
 	std::string m_prefix = DEFAULT_GLSMAC_PREFIX + "/";
 	std::string m_smac_path = "";
