@@ -16,7 +16,7 @@ CustomizeMapMenu::CustomizeMapMenu(
 }
 
 void CustomizeMapMenu::SetPreviewVariant( const char variant ) {
-	std::string preview = m_mainmenu->GetMapPreviewFilename();
+	std::string preview = m_mainmenu->RequestMapPreviewFilename();
 	preview[ m_preview_filename_position ] = variant;
 	m_mainmenu->SetCustomizeMapPreview( preview );
 }

@@ -102,9 +102,9 @@ void Toolbar::Create() {
 	UpdateMapFileName();
 	m_tool_info.labels[ TI_MAP_SIZE ]->SetText(
 		"Map Size: " +
-			std::to_string( m_game->GetMapWidth() ) +
+			std::to_string( m_game->RequestMapWidth() ) +
 			"x" +
-			std::to_string( m_game->GetMapHeight() )
+			std::to_string( m_game->RequestMapHeight() )
 	);
 	m_tool_info.labels[ TI_MODE ]->SetText( "PLAY mode (No Scroll Lock)" );
 
@@ -160,7 +160,7 @@ void Toolbar::Align() {
 
 void Toolbar::UpdateMapFileName() {
 	ASSERT( m_tool_info.labels.find( TI_FILE ) != m_tool_info.labels.end(), "file line not found" );
-	m_tool_info.labels[ TI_FILE ]->SetText( "File: " + m_game->GetMapFilename() );
+	m_tool_info.labels[ TI_FILE ]->SetText( "File: " + m_game->RequestMapFilename() );
 }
 
 void Toolbar::SelectTool( MapEditor::tool_type_t tool ) {

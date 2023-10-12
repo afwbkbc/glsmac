@@ -192,7 +192,11 @@ void Client::Message( const std::string& message ) {
 	m_network->MT_SendPacket( p );
 }
 
-void Client::GetMap() {
+const Connection::game_state_t Client::GetGameState() const {
+	return m_game_state;
+}
+
+void Client::RequestMap() {
 	Log( "Requesting map from server" );
 	ASSERT( !m_map_download_state.is_downloading, "map already being downloaded" );
 	ASSERT( m_on_map_data, "map download requested but m_on_map_data is not set" );

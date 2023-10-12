@@ -81,10 +81,10 @@ CLASS( Game, base::Task )
 	};
 	static const consts_t s_consts;
 
-	const size_t GetMapWidth() const;
-	const size_t GetMapHeight() const;
-	const std::string& GetMapFilename() const;
-	const std::string& GetMapLastDirectory() const;
+	const size_t RequestMapWidth() const;
+	const size_t RequestMapHeight() const;
+	const std::string& RequestMapFilename() const;
+	const std::string& RequestMapLastDirectory() const;
 
 	scene::actor::Instanced* GetTerrainSpriteActor( const std::string& name, const ::game::map::Consts::pcx_texture_coordinates_t& tex_coords, const float z_index );
 	scene::actor::Instanced* GetTerrainSpriteActorByKey( const std::string& key ); // actor must already exist

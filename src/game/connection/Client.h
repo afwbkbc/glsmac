@@ -16,7 +16,9 @@ CLASS( Client, Connection )
 
 	void UpdateSlot( const size_t slot_num, const Slot* slot ) override;
 	void Message( const std::string& message ) override;
-	void GetMap();
+
+	const game_state_t GetGameState() const;
+	void RequestMap();
 
 	void ResetHandlers() override;
 

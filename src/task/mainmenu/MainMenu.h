@@ -43,7 +43,7 @@ CLASS( MainMenu, base::Task )
 	void StartGame();
 
 	void SetCustomizeMapPreview( const std::string& preview_filename );
-	const std::string& GetMapPreviewFilename() const;
+	const std::string& RequestMapPreviewFilename() const;
 	void SetCustomizeMapMoons( const std::string& moons_filename );
 
 	util::Random* GetRandom();

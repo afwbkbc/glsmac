@@ -123,7 +123,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 						// check if not already in game
 						bool is_already_in_game = false;
 						for ( auto& slot : m_state->m_slots.GetSlots() ) {
-							if ( slot.GetLinkedGSID() == gsid ) {
+							if ( slot.GetLinkedGSID() == gsid && slot.GetState() == Slot::SS_PLAYER ) {
 								is_already_in_game = true;
 								break;
 							}
@@ -177,8 +177,10 @@ void Server::ProcessEvent( const network::Event& event ) {
 						m_state->AddCIDSlot( event.cid, slot_num );
 						auto& slot = m_state->m_slots.GetSlot( slot_num );
 						slot.SetPlayer( player, event.cid, event.data.remote_address );
-						slot.SetLinkedGSID( gsid );
-
+						if ( m_game_state == GS_LOBBY ) {
+							// link slot to player
+							slot.SetLinkedGSID( gsid );
+						}
 						SendGameState( event.cid );
 						{
 							Log( "Sending players list to " + std::to_string( event.cid ) );

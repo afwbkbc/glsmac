@@ -154,7 +154,13 @@ char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 	if ( ( modifiers & ( ~KMOD_LSHIFT ) & ( ~KMOD_RSHIFT ) & ( ~KMOD_NUM ) & ( ~KMOD_CAPS ) & ( ~KMOD_SCROLL ) ) == 0 ) { // only shift or num/caps/scroll locks
 		bool is_shift = ( modifiers & KMOD_LSHIFT ) || ( modifiers & KMOD_RSHIFT );
 		bool is_caps = ( modifiers & KMOD_CAPS );
-		if ( !is_shift && (
+		if ( code >= 'a' && code <= 'z' ) { // letters
+			result = code;
+			if ( is_shift ^ is_caps ) {
+				result -= 32;
+			}
+		}
+		else if ( !is_shift && (
 			( code >= '0' && code <= '9' ) || // numbers
 				code == ' ' ||
 				code == '.' ||
@@ -209,12 +215,6 @@ char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 				case '=':
 					result = '+';
 					break;
-			}
-		}
-		else if ( code >= 'a' && code <= 'z' ) { // letters
-			result = code;
-			if ( is_shift ^ is_caps ) {
-				result -= 32;
 			}
 		}
 	}

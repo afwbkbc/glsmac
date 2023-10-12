@@ -61,7 +61,7 @@ Config::Config( const int argc, const char* argv[] ) {
 		}
 	);
 	parser.AddRule(
-		"prefix", "Path to store GLSMAC data in (default: " + DEFAULT_GLSMAC_PREFIX + ")", AH( this ) {
+		"prefix", "GLSMAC_PREFIX", "Path to store GLSMAC data in (default: " + DEFAULT_GLSMAC_PREFIX + ")", AH( this ) {
 			m_prefix = value + "/";
 		}
 	);
@@ -108,6 +108,11 @@ Config::Config( const int argc, const char* argv[] ) {
 	parser.AddRule(
 		"gdb", "Try to start within gdb (on supported platforms)", AH( this ) {
 			m_debug_flags |= DF_GDB;
+		}
+	);
+	parser.AddRule(
+		"mapdump", "Save map dump upon loading map", AH( this ) {
+			m_debug_flags |= DF_MAPDUMP;
 		}
 	);
 	parser.AddRule(

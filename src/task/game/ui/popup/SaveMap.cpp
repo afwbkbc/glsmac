@@ -15,9 +15,9 @@ SaveMap::SaveMap( Game* game )
 	game,
 	"SAVE MAP",
 	FM_WRITE,
-	game->GetMapLastDirectory(),
+	game->RequestMapLastDirectory(),
 	::game::map::s_consts.fs.default_map_extension,
-	game->GetMapFilename()
+	game->RequestMapFilename()
 ) {
 
 }

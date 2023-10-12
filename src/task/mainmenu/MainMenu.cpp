@@ -218,7 +218,7 @@ void MainMenu::SetCustomizeMapPreview( const std::string& preview_filename ) {
 	m_customize_map_preview->Show();
 }
 
-const std::string& MainMenu::GetMapPreviewFilename() const {
+const std::string& MainMenu::RequestMapPreviewFilename() const {
 	return m_customize_map_preview_filename;
 }
 

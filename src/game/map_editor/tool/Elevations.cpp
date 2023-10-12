@@ -14,7 +14,7 @@ Elevations::Elevations( Game* game )
 const MapEditor::tiles_t Elevations::Draw( map::Tile* tile, const MapEditor::draw_mode_t mode ) {
 	MapEditor::tiles_t tiles_to_reload = {};
 
-	if ( tile->coord.y > 1 && tile->coord.y < m_game->GetMap()->GetHeight() - 2 ) { // editing poles will screw things up
+	if ( tile->coord.y > 1 && tile->coord.y < m_game->RequestMap()->GetHeight() - 2 ) { // editing poles will screw things up
 
 		map::Tile::elevation_t elevation, change;
 
