@@ -120,7 +120,7 @@ void Game::Iterate() {
 			m_mt_ids.init = 0;
 			if ( response.result == ::game::R_SUCCESS ) {
 				// get map data to display it
-				m_mt_ids.get_map_data = game->MT_RequestMapData();
+				m_mt_ids.get_map_data = game->MT_GetMapData();
 			}
 			else {
 				f_handle_nonsuccess_init( response );
@@ -133,7 +133,7 @@ void Game::Iterate() {
 		if ( response.result != ::game::R_NONE ) {
 			if ( response.result == ::game::R_PENDING ) {
 				// still initializing, try later
-				m_mt_ids.get_map_data = game->MT_RequestMapData();
+				m_mt_ids.get_map_data = game->MT_GetMapData();
 			}
 			else {
 				ui->HideLoader();
@@ -347,19 +347,19 @@ void Game::Iterate() {
 	}
 }
 
-const size_t Game::RequestMapWidth() const {
+const size_t Game::GetMapWidth() const {
 	return m_map_data.width;
 }
 
-const size_t Game::RequestMapHeight() const {
+const size_t Game::GetMapHeight() const {
 	return m_map_data.height;
 }
 
-const std::string& Game::RequestMapFilename() const {
+const std::string& Game::GetMapFilename() const {
 	return m_map_data.filename;
 }
 
-const std::string& Game::RequestMapLastDirectory() const {
+const std::string& Game::GetMapLastDirectory() const {
 	return m_map_data.last_directory;
 }
 

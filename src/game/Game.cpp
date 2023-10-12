@@ -24,7 +24,7 @@ mt_id_t Game::MT_Init( State* state ) {
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Game::MT_RequestMapData() {
+mt_id_t Game::MT_GetMapData() {
 	MT_Request request = {};
 	request.op = OP_GET_MAP_DATA;
 	return MT_CreateRequest( request );
@@ -249,7 +249,7 @@ util::Random* Game::GetRandom() const {
 	return m_random;
 }
 
-map::Map* Game::RequestMap() const {
+map::Map* Game::GetMap() const {
 	return m_map;
 }
 

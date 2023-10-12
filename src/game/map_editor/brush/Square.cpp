@@ -14,7 +14,7 @@ Square::Square( Game* game, const MapEditor::brush_type_t type, const uint16_t w
 }
 
 const MapEditor::tiles_t Square::Draw( map::Tile* center_tile ) {
-	const auto* map = m_game->RequestMap()->GetTilesPtr();
+	const auto* map = m_game->GetMap()->GetTilesPtr();
 	MapEditor::tiles_t tiles = {};
 	tiles.reserve( m_width * m_width );
 	// order is important, start with sides and move towards center for greatest effect

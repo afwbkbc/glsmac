@@ -83,7 +83,7 @@ CLASS( Map, types::Serializable )
 	Tile* GetTile( const size_t x, const size_t y ) const;
 	TileState* GetTileState( const size_t x, const size_t y ) const;
 	TileState* GetTileState( const Tile* tile ) const;
-	const MapState* RequestMapState() const;
+	const MapState* GetMapState() const;
 	void ClearTexture();
 	void AddTexture( const TileState::TileState::tile_layer_type_t tile_layer, const Consts::pcx_texture_coordinates_t& tc, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha = 1.0f, util::Perlin* perlin = nullptr );
 	void CopyTextureFromLayer( const TileState::tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const TileState::tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha = 1.0f, util::Perlin* perlin = nullptr );

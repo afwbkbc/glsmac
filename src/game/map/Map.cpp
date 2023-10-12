@@ -287,7 +287,7 @@ TileState* Map::GetTileState( const Tile* tile ) const {
 	return GetTileState( tile->coord.x, tile->coord.y );
 }
 
-const MapState* Map::RequestMapState() const {
+const MapState* Map::GetMapState() const {
 	ASSERT( m_map_state, "map state not set" );
 	return m_map_state;
 }

@@ -191,7 +191,7 @@ CLASS( Game, MTModule )
 	mt_id_t MT_Init( State* state );
 
 	// get map data for display
-	mt_id_t MT_RequestMapData();
+	mt_id_t MT_GetMapData();
 
 	// deinitialize everything
 	mt_id_t MT_Reset();
@@ -217,7 +217,7 @@ CLASS( Game, MTModule )
 	void Iterate() override;
 
 	util::Random* GetRandom() const;
-	map::Map* RequestMap() const;
+	map::Map* GetMap() const;
 
 protected:
 
