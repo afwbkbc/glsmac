@@ -64,6 +64,7 @@ void ConnectionPopupMenu::SetConnection( ::game::connection::Connection* connect
 		const std::string text = message;
 		DELETE( connection );
 		m_mainmenu->m_state->DetachConnection();
+		m_mainmenu->m_state->Reset();
 		Show();
 		//connection = nullptr;
 		MenuError( text );
@@ -71,6 +72,7 @@ void ConnectionPopupMenu::SetConnection( ::game::connection::Connection* connect
 	connection->m_on_cancel = [ this, connection ]() -> void {
 		DELETE( connection );
 		m_mainmenu->m_state->DetachConnection();
+		m_mainmenu->m_state->Reset();
 		//connection = nullptr;
 		Show();
 	};

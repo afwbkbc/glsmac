@@ -36,6 +36,14 @@ const Buffer Packet::Serialize() const {
 			buf.WriteString( data.str ); // serialized slot
 			break;
 		}
+		case PT_UPDATE_FLAGS: {
+			buf.WriteInt( udata.flags.flags );
+			break;
+		}
+		case PT_FLAGS_UPDATE: {
+			buf.WriteInt( udata.flags.slot_num );
+			buf.WriteInt( udata.flags.flags );
+		}
 		case PT_KICK: {
 			buf.WriteString( data.str ); // reason
 			break;
@@ -105,6 +113,15 @@ void Packet::Unserialize( Buffer buf ) {
 		case PT_SLOT_UPDATE: {
 			data.num = buf.ReadInt(); // player slot num
 			data.str = buf.ReadString(); // serialized slot
+			break;
+		}
+		case PT_UPDATE_FLAGS: {
+			udata.flags.flags = buf.ReadInt();
+			break;
+		}
+		case PT_FLAGS_UPDATE: {
+			udata.flags.slot_num = buf.ReadInt();
+			udata.flags.flags = buf.ReadInt();
 			break;
 		}
 		case PT_KICK: {

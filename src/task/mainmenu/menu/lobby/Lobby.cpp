@@ -39,7 +39,7 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 		m_players_section->UpdateSlot( slot_num, slot );
 		GlobalMessage( "Player \"" + player->GetPlayerName() + "\" left." );
 	};
-	connection->m_on_slot_update = [ this ]( const size_t slot_num, game::Slot* slot ) -> void {
+	connection->m_on_slot_update = [ this ]( const size_t slot_num, game::Slot* slot, const bool only_flags ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
 		if ( slot_num == this->m_connection->GetSlotNum() ) {
 			const bool is_ready = slot->HasPlayerFlag( ::game::Slot::PF_READY );
@@ -147,7 +147,7 @@ void Lobby::Show() {
 			else {
 				slot->UnsetPlayerFlag( ::game::Slot::PF_READY );
 			}
-			UpdateSlot( m_state->GetConnection()->GetSlotNum(), slot );
+			UpdateSlot( m_state->GetConnection()->GetSlotNum(), slot, true );
 			return true;
 		}
 	);
@@ -235,10 +235,15 @@ void Lobby::Message( const std::string& message ) {
 	m_connection->Message( message );
 }
 
-void Lobby::UpdateSlot( const size_t slot_num, ::game::Slot* slot ) {
-	Log( "Updating slot " + slot->GetName() );
+void Lobby::UpdateSlot( const size_t slot_num, ::game::Slot* slot, const bool only_flags ) {
+	if ( only_flags ) {
+		Log( "Updating slot " + slot->GetName() );
+	}
+	else {
+		Log( "Updating flags for slot " + slot->GetName() );
+	}
 	m_players_section->UpdateSlot( slot_num, slot );
-	m_connection->UpdateSlot( slot_num, slot );
+	m_connection->UpdateSlot( slot_num, slot, only_flags );
 	ManageCountdown();
 }
 

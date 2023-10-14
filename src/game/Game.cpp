@@ -157,7 +157,7 @@ void Game::Iterate() {
 		else {
 			// notify server of successful download and complete initialization
 			m_slot->SetPlayerFlag( Slot::PF_MAP_DOWNLOADED );
-			m_connection->UpdateSlot( m_slot_num, m_slot );
+			m_connection->UpdateSlot( m_slot_num, m_slot, true );
 		}
 
 		if ( ready ) {
@@ -850,14 +850,13 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 		if ( !ec ) {
 			m_slot->SetPlayerFlag( Slot::PF_MAP_DOWNLOADED ); // map was generated locally
-
 			if ( m_connection ) {
 				m_connection->IfServer(
 					[ this ]( Server* connection ) -> void {
 						connection->SetGameState( Connection::GS_RUNNING ); // allow clients to download map
 					}
 				);
-				m_connection->UpdateSlot( m_slot_num, m_slot );
+				m_connection->UpdateSlot( m_slot_num, m_slot, true );
 			}
 
 			ui->SetLoaderText( "Waiting for players" );

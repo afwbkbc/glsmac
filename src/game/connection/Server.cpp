@@ -207,8 +207,8 @@ void Server::ProcessEvent( const network::Event& event ) {
 
 						break;
 					}
-					case Packet::PT_UPDATE_SLOT: {
-						Log( "Got slot update from " + std::to_string( event.cid ) );
+					case Packet::PT_UPDATE_SLOT:
+					case Packet::PT_UPDATE_FLAGS: {
 						const auto& slots = m_state->GetCidSlots();
 						const auto& it = slots.find( event.cid );
 						if ( it == slots.end() ) {
@@ -220,15 +220,24 @@ void Server::ProcessEvent( const network::Event& event ) {
 							Error( event.cid, "slot state mismatch" );
 							break;
 						}
-						const bool wasReady = slot.HasPlayerFlag( Slot::PF_READY );
-						slot.Unserialize( packet.data.str );
-						if ( wasReady && slot.HasPlayerFlag( Slot::PF_READY ) ) {
-							Error( event.cid, "slot update while ready" );
-							break;
+						const bool only_flags = packet.type == Packet::PT_UPDATE_FLAGS;
+						if ( only_flags ) {
+							Log( "Got flags update from " + std::to_string( event.cid ) );
+							slot.SetPlayerFlags( packet.udata.flags.flags );
+							SendFlagsUpdate( it->second, &slot, event.cid ); // notify others
 						}
-						SendSlotUpdate( it->second, &slot, event.cid ); // notify others
+						else {
+							Log( "Got slot update from " + std::to_string( event.cid ) );
+							const bool wasReady = slot.HasPlayerFlag( Slot::PF_READY );
+							slot.Unserialize( packet.data.str );
+							if ( wasReady && slot.HasPlayerFlag( Slot::PF_READY ) ) {
+								Error( event.cid, "slot update while ready" );
+								break;
+							}
+							SendSlotUpdate( it->second, &slot, event.cid ); // notify others
+						}
 						if ( m_on_slot_update ) {
-							m_on_slot_update( it->second, &slot );
+							m_on_slot_update( it->second, &slot, only_flags );
 						}
 						break;
 					}
@@ -354,11 +363,16 @@ void Server::SetGameState( const game_state_t game_state ) {
 	);
 }
 
-void Server::UpdateSlot( const size_t slot_num, Slot* slot ) {
+void Server::UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flags ) {
 	if ( m_on_slot_update ) {
-		m_on_slot_update( slot_num, slot );
+		m_on_slot_update( slot_num, slot, only_flags );
 	}
-	SendSlotUpdate( slot_num, slot );
+	if ( only_flags ) {
+		SendFlagsUpdate( slot_num, slot );
+	}
+	else {
+		SendSlotUpdate( slot_num, slot );
+	}
 }
 
 void Server::Message( const std::string& message ) {
@@ -443,6 +457,20 @@ void Server::SendSlotUpdate( const size_t slot_num, const Slot* slot, network::c
 	);
 }
 
+void Server::SendFlagsUpdate( const size_t slot_num, const Slot* slot, network::cid_t skip_cid ) {
+	Broadcast(
+		[ this, slot_num, slot, skip_cid ]( const network::cid_t cid ) -> void {
+			if ( cid != skip_cid ) {
+				Log( "Sending flags update to " + std::to_string( cid ) );
+				Packet p( Packet::PT_FLAGS_UPDATE );
+				p.udata.flags.slot_num = slot_num;
+				p.udata.flags.flags = slot->GetPlayerFlags();
+				m_network->MT_SendPacket( p, cid );
+			}
+		}
+	);
+}
+
 const std::string Server::FormatChatMessage( const Player* player, const std::string& message ) const {
 	return "<" + player->GetPlayerName() + "> " + message;
 }
@@ -456,9 +484,9 @@ void Server::ClearReadyFlags() {
 		if ( slot.GetState() == Slot::SS_PLAYER && slot.HasPlayerFlag( Slot::PF_READY ) ) {
 			Log( "Clearing 'ready' flag of " + slot.GetPlayer()->GetPlayerName() );
 			slot.UnsetPlayerFlag( Slot::PF_READY );
-			UpdateSlot( num, &slot );
+			UpdateSlot( num, &slot, true );
 			if ( m_on_slot_update ) {
-				m_on_slot_update( num, &slot );
+				m_on_slot_update( num, &slot, true );
 			}
 		}
 	}

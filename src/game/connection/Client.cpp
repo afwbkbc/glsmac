@@ -37,14 +37,36 @@ void Client::ProcessEvent( const Event& event ) {
 						case Packet::PT_GLOBAL_SETTINGS: {
 							Log( "Got global settings update from server" );
 							const auto& host_slot = m_state->m_slots.GetSlot( 0 );
-							if ( host_slot.HasPlayerFlag( Slot::PF_READY ) ) {
-								Error( "host updated settings while ready" );
-								break;
+							bool ok = true;
+							switch ( m_game_state ) {
+								case Connection::GS_LOBBY: {
+									if ( host_slot.HasPlayerFlag( Slot::PF_READY ) ) {
+										Error( "host updated settings while ready" );
+										ok = false;
+									}
+									break;
+								}
+								case Connection::GS_INITIALIZING:
+								case Connection::GS_RUNNING: {
+									if ( m_are_global_settings_received ) {
+										Error( "duplicate global settings update" );
+										ok = false;
+									}
+									break;
+								}
+								default: {
+									Error( "unexpected global settings update for this state" );
+									ok = false;
+								}
+							}
+							if ( !ok ) {
+								break; // something went wrong
 							}
 							m_state->m_settings.global.Unserialize( Buffer( packet.data.str ) );
 							if ( m_on_global_settings_update ) {
 								m_on_global_settings_update();
 							}
+							m_are_global_settings_received = true;
 							break;
 						}
 						case Packet::PT_PLAYERS: {
@@ -66,33 +88,43 @@ void Client::ProcessEvent( const Event& event ) {
 							}
 							break;
 						}
-						case Packet::PT_SLOT_UPDATE: {
-							const size_t slot_num = packet.data.num;
-							Log( "Got slot update from server (slot: " + std::to_string( slot_num ) + ")" );
+						case Packet::PT_SLOT_UPDATE:
+						case Packet::PT_FLAGS_UPDATE: {
+							const bool only_flags = packet.type == Packet::PT_FLAGS_UPDATE;
+							const size_t slot_num = only_flags
+								? packet.udata.flags.slot_num
+								: packet.data.num;
 							if ( slot_num >= m_state->m_slots.GetSlots().size() ) {
 								Error( "slot index mismatch" );
 								return;
 							}
 							auto& slot = m_state->m_slots.GetSlot( slot_num );
-							const bool wasReady = slot.GetState() == Slot::SS_PLAYER
-								? slot.HasPlayerFlag( Slot::PF_READY ) // check readyness of player
-								: m_state->m_slots.GetSlot( 0 ).HasPlayerFlag( Slot::PF_READY ) // check readyness of host
-							;
-							slot.Unserialize( packet.data.str );
-							if ( slot.GetState() == Slot::SS_PLAYER ) {
-								if ( wasReady && slot.HasPlayerFlag( Slot::PF_READY ) ) {
-									Error( "player updated slot while ready" );
-									break;
-								}
+							if ( only_flags ) {
+								Log( "Got flags update from server (slot: " + std::to_string( slot_num ) + ")" );
+								slot.SetPlayerFlags( packet.udata.flags.flags );
 							}
 							else {
-								if ( wasReady ) {
-									Error( "host updated slot while ready" );
-									break;
+								Log( "Got slot update from server (slot: " + std::to_string( slot_num ) + ")" );
+								const bool wasReady = slot.GetState() == Slot::SS_PLAYER
+									? slot.HasPlayerFlag( Slot::PF_READY ) // check readyness of player
+									: m_state->m_slots.GetSlot( 0 ).HasPlayerFlag( Slot::PF_READY ) // check readyness of host
+								;
+								slot.Unserialize( packet.data.str );
+								if ( slot.GetState() == Slot::SS_PLAYER ) {
+									if ( wasReady && slot.HasPlayerFlag( Slot::PF_READY ) ) {
+										Error( "player updated slot while ready" );
+										break;
+									}
+								}
+								else {
+									if ( wasReady ) {
+										Error( "host updated slot while ready" );
+										break;
+									}
 								}
 							}
 							if ( m_on_slot_update ) {
-								m_on_slot_update( slot_num, &slot );
+								m_on_slot_update( slot_num, &slot, only_flags );
 							}
 							break;
 						}
@@ -198,12 +230,21 @@ void Client::ProcessEvent( const Event& event ) {
 	}
 }
 
-void Client::UpdateSlot( const size_t slot_num, Slot* slot ) {
-	Log( "Sending slot update" );
-	Packet p( Packet::PT_UPDATE_SLOT );
-	// not sending slot num because server knows it anyway
-	p.data.str = slot->Serialize().ToString();
-	m_network->MT_SendPacket( p );
+void Client::UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flags ) {
+	if ( only_flags ) {
+		Log( "Sending flags update" );
+		Packet p( Packet::PT_UPDATE_FLAGS );
+		// not sending slot num because server knows it anyway
+		p.udata.flags.flags = slot->GetPlayerFlags();
+		m_network->MT_SendPacket( p );
+	}
+	else {
+		Log( "Sending slot update" );
+		Packet p( Packet::PT_UPDATE_SLOT );
+		// not sending slot num because server knows it anyway
+		p.data.str = slot->Serialize().ToString();
+		m_network->MT_SendPacket( p );
+	}
 }
 
 void Client::Message( const std::string& message ) {

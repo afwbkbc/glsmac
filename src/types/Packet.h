@@ -18,6 +18,8 @@ CLASS( Packet, Serializable )
 		PT_PLAYERS, // S->C
 		PT_UPDATE_SLOT, // C->S
 		PT_SLOT_UPDATE, // S->C
+		PT_UPDATE_FLAGS, // C->S
+		PT_FLAGS_UPDATE, // S->C
 		PT_KICK, // S->C
 		PT_MESSAGE, // *->*
 		PT_GAME_STATE, // S->C
@@ -36,6 +38,10 @@ CLASS( Packet, Serializable )
 		struct {
 			size_t id;
 		} ping;
+		struct {
+			size_t slot_num;
+			size_t flags;
+		} flags;
 		struct {
 			size_t offset;
 			size_t size;

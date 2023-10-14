@@ -15,7 +15,7 @@ CLASS( Server, Connection )
 	std::function< void() > m_on_listen = nullptr;
 	std::function< const std::string() > m_on_map_request = nullptr; // return serialized Tiles
 
-	void UpdateSlot( const size_t slot_num, Slot* slot ) override;
+	void UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flags = false ) override;
 	void Message( const std::string& message ) override;
 
 	void ResetHandlers() override;
@@ -38,6 +38,7 @@ private:
 	void SendGlobalSettings( const network::cid_t cid );
 	void SendGameState( const network::cid_t cid );
 	void SendSlotUpdate( const size_t slot_num, const Slot* slot, network::cid_t skip_cid = 0 );
+	void SendFlagsUpdate( const size_t slot_num, const Slot* slot, network::cid_t skip_cid = 0 );
 	const std::string FormatChatMessage( const Player* player, const std::string& message ) const;
 
 	struct map_data_t {

@@ -39,6 +39,9 @@ CLASS( Slot, types::Serializable )
 	void SetLinkedGSID( const std::string& gsid );
 	void UnsetLinkedGSID();
 
+	const player_flag_t GetPlayerFlags() const;
+	void SetPlayerFlags( const player_flag_t flags );
+
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;
 

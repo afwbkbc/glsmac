@@ -97,6 +97,16 @@ void Slot::UnsetLinkedGSID() {
 	m_linked_gsid.clear();
 }
 
+const Slot::player_flag_t Slot::GetPlayerFlags() const {
+	ASSERT( m_slot_state == SS_PLAYER, "attempted to get player flags from non-player slot" );
+	return m_player_data.flags;
+}
+
+void Slot::SetPlayerFlags( const player_flag_t flags ) {
+	ASSERT( m_slot_state == SS_PLAYER, "attempted to set player flags to non-player slot" );
+	m_player_data.flags = flags;
+}
+
 const types::Buffer Slot::Serialize() const {
 	types::Buffer buf;
 
