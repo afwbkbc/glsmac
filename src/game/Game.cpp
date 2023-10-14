@@ -253,6 +253,11 @@ map::Map* Game::GetMap() const {
 	return m_map;
 }
 
+State* Game::GetState() const {
+	ASSERT( m_state, "state not set" );
+	return m_state;
+}
+
 const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE ) {
 	MT_Response response = {};
 	response.op = request.op;
@@ -732,7 +737,8 @@ void Game::DestroyResponse( const MT_Response& response ) {
 
 void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
-	ASSERT( m_game_state == GS_NONE, "game already initializing" );
+	ASSERT( !m_connection || m_game_state == GS_NONE, "multiplayer game already initializing or running" );
+	ASSERT( m_game_state == GS_NONE || m_game_state == GS_RUNNING, "game still initializing" );
 
 	Log( "Initializing game" );
 

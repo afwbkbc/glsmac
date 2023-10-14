@@ -19,13 +19,15 @@ EditMapMenu::EditMapMenu( Game* game )
 			return true;
 		}
 	);
-	AddItem(
+
+	// TODO: broken
+	/*AddItem(
 		"Load Map...", MH( this ) {
 			NEWV( popup, popup::LoadMap, m_game );
 			popup->Open();
 			return true;
 		}
-	);
+	);*/
 }
 
 }

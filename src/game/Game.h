@@ -218,6 +218,7 @@ CLASS( Game, MTModule )
 
 	util::Random* GetRandom() const;
 	map::Map* GetMap() const;
+	State* GetState() const;
 
 protected:
 
