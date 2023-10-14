@@ -34,7 +34,7 @@ CLASS( Lobby, PopupMenu )
 
 	void Message( const std::string& message );
 
-	void UpdateSlot( const size_t slot_num, ::game::Slot* slot );
+	void UpdateSlot( const size_t slot_num, ::game::Slot* slot, const bool only_flags = false );
 	void KickFromSlot( const size_t slot_num );
 	void BanFromSlot( const size_t slot_num );
 	void GlobalMessage( const std::string& message );

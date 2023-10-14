@@ -35,7 +35,7 @@ CLASS( Connection, base::Module )
 	std::function< void() > m_on_global_settings_update = nullptr;
 	std::function< void( const size_t slot_num, Slot* slot, const Player* player ) > m_on_player_join = nullptr;
 	std::function< void( const size_t slot_num, Slot* slot, const Player* player ) > m_on_player_leave = nullptr;
-	std::function< void( const size_t slot_num, game::Slot* slot ) > m_on_slot_update = nullptr;
+	std::function< void( const size_t slot_num, game::Slot* slot, bool only_flags ) > m_on_slot_update = nullptr;
 	std::function< void( const std::string& message ) > m_on_message = nullptr;
 
 	void SetState( State* state );
@@ -58,10 +58,12 @@ CLASS( Connection, base::Module )
 	const size_t GetSlotNum() const;
 	const Player* GetPlayer() const;
 
-	virtual void UpdateSlot( const size_t slot_num, const Slot* slot ) = 0;
+	virtual void UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flags = false ) = 0;
 	virtual void Message( const std::string& message ) = 0;
 
 protected:
+	const int MAP_DOWNLOAD_CHUNK_SIZE = 16384;
+
 	network::Network* const m_network = g_engine->GetNetwork();
 
 	virtual void ProcessEvent( const network::Event& event );

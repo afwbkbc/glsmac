@@ -133,9 +133,11 @@ void MainMenu::Stop() {
 	for ( auto& it : m_menu_history ) {
 		DELETE( it );
 	}
+	m_menu_history.clear();
 
 	if ( m_menu_next ) {
 		DELETE( m_menu_next );
+		m_menu_next = nullptr;
 	}
 
 	if ( m_state ) {
@@ -178,8 +180,9 @@ void MainMenu::MenuError( const std::string& error_text ) {
 void MainMenu::InitSinglePlayer() {
 	m_state->m_slots.Resize( 7 ); // TODO: make dynamic?
 	const auto& rules = m_state->m_settings.global.game_rules;
+	m_state->m_settings.local.player_name = "Player";
 	NEWV( player, ::game::Player, {
-		"Player",
+		m_state->m_settings.local.player_name,
 		::game::Player::PR_SINGLE,
 		rules.GetDefaultFaction(), // TODO: make configurable
 		rules.GetDefaultDifficultyLevel(), // TODO: make configurable

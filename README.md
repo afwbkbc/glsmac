@@ -1,4 +1,5 @@
 # GLSMAC
+
 Unofficial open-source OpenGL/SDL2 reimplementation of Sid Meier's Alpha Centauri ( + Alien Crossfire ).
 
 ![github-preview-min](https://user-images.githubusercontent.com/7736265/227072592-0acc91e6-d3b4-46d2-98f6-0ba4e430328f.png)
@@ -96,27 +97,50 @@ Other platforms/toolchains weren't tested but you can try and please report resu
 
 ### Linux / FreeBSD
 
-You will need CMake and following libraries (-dev versions): FreeType2, SDL2, SDL_image, GL, GLU, GLEW
+You will need CMake and working compiler (gcc or clang).
 
-Ubuntu/Debian/Mint: sudo apt install cmake build-essential libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev
+You will also need following libraries (unless you build with `-DVENDORED_DEPENDENCIES=YES`):
 
-Gentoo: sudo emerge cmake libsdl2 sdl2-image freetype glu glew
+- FreeType
+- SDL2
+- SDL2_image
+- GL
+- GLU
+- GLEW
+- uuid-ossp
+- yaml-cpp
 
-FreeBSD: install ports: devel/cmake, devel/sdl20 (with PTHREADS, X11 and OPENGL and some sound option like OSS if you want sound), graphics/sdl2_image, print/freetype2 and graphics/glew
+Gentoo: `emerge cmake libsdl2 sdl2-image freetype glu glew ossp-uuid yaml-cpp`
 
-It is highly recommended to build project using cmake and make instead of adding .cpp and .h files manually to IDE.
+Ubuntu: `apt install cmake build-essential libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev`
 
-For release build: cmake . -DCMAKE_BUILD_TYPE=Release && make
+ArchLinux: `pacman -Syu cmake base-devel freetype2 sdl2 sdl2_image glew yaml-cpp` (you'll need to install `ossp-uuid` manually because it's not in repos)
 
-For debug build: cmake -DCMAKE_BUILD_TYPE=Debug . && make
+FreeBSD: `pkg install pkgconf cmake sdl2 sdl2_image glew ossp-uuid yaml-cpp`
 
-For portable build (binary that can be executed on different machines): cmake . -DCMAKE_BUILD_TYPE=Portable64 && make ( use Portable32 for 32-bit )
+Fedora: `dnf install cmake make automake gcc gcc-c++ freetype-devel SDL2-devel SDL2_image-devel glew-devel uuid-devel yaml-cpp-devel`
 
-For same build as before (or Release if it's first build): cmake . && make
+OpenSUSE: `zypper install -t pattern devel_basis && zypper install cmake-full freetype2-devel SDL2-devel SDL2_image-devel glew-devel uuid-devel yaml-cpp-devel`
 
-Add -j parameter to make to speed up if you have multiple cores, i.e. "make -j9" for 8
+It is highly recommended to build project using CMake and make (ninja works too) instead of adding .cpp and .h files manually to IDE (don't report bugs if you try the latter).
 
-You may also just download binary releases from github, they are built for ubuntu but will run on most linux distros (only 64-bit for now).
+It is recommended to build in separate directory. For example: `cmake -S . -B build` (remove build directory when you'll want a clean build for some reason).
+
+For release build (default): `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && make -C build`
+
+For debug build: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug && make -C build`
+
+For portable build (binary that can be executed on different machines): `cmake -S . -B build -DCMAKE_BUILD_TYPE=Portable64 && make -C build` ( or `Portable32` for 32-bit )
+
+For same build as before (or Release if it's first build): `cmake -S . -B build && make -C build`
+
+Add -j parameter to make to speed up if you have multiple cores, i.e. `make -C build -j9` for 8 cores.
+
+Optionally, add `-DVENDORED_DEPENDENCIES=YES` to cmake parameters to download and build all required libraries, instead of using system-installed ones. By default this is enabled on Windows and disabled on other OSes. You can't disable it on Windows.
+
+Optionally, use `VERBOSE=1 make -C build` to see actual compiling/linking commands (useful when build fails)
+
+You can also just download binary releases from github, they are built for ubuntu but will run on most linux distros (only 64-bit for now). Windows and other binaries coming soon :)
 
 ### Windows
 
@@ -208,7 +232,7 @@ Emphasis on graphics is average, that means I try to make it look modern and not
 
 ##### Art upscaling
 
-SMAC art is 256-color and sounds are of 22khz mono quality. Maybe it's possible to upscale them and improve quality in runtime. Voice can be generated with something like https://beta.elevenlabs.io/ 
+SMAC art is 256-color and sounds are of 22khz mono quality. Maybe it's possible to upscale them and improve quality in runtime. Voice can be generated with something like https://beta.elevenlabs.io/
 
 ##### Replays
 
@@ -220,7 +244,7 @@ JavaScript wrappers for easy creation and modification of game logic. Upon start
 
 Maybe other languages too, I just like JS the most 🙂 (as scripting language).
 
-JavaScript engine needs to be built in a way so that it won't block main game, even if he puts things like while (true) {} or fork bombs - then game will just show message that script is frozen and will propose to kill it (if script freezes inside game - game will end and user is back to main menu, so buggy mods won't be very playable but won't cause harm). Special care will need to be taken to prevent any possible buffer overflows and other exploits. 
+JavaScript engine needs to be built in a way so that it won't block main game, even if he puts things like while (true) {} or fork bombs - then game will just show message that script is frozen and will propose to kill it (if script freezes inside game - game will end and user is back to main menu, so buggy mods won't be very playable but won't cause harm). Special care will need to be taken to prevent any possible buffer overflows and other exploits.
 
 ##### Custom factions
 
@@ -228,7 +252,7 @@ Faction editor will be built into game - at faction choosing screen there will b
 
 He will be able to use either default art, some new premade arts or upload his own custom art for faction.
 
-However I think there should be some moderation on his art, just to make sure it's not something NSFW or just random pixels in place of bases, or just full-transparent images. So reasonable way would be like this - he uploads new art to his faction, tests it (maybe there will be some 'preview' where he's put into actual game and can play it a bit), then once he's done he saves it and there's status like 'pending approval'. Faction will be immediately available for single player, but multiplayer only after me or some moderator checks it and approves if it looks okay (and game host will also need to enable 'allow custom factions' in rules). 
+However I think there should be some moderation on his art, just to make sure it's not something NSFW or just random pixels in place of bases, or just full-transparent images. So reasonable way would be like this - he uploads new art to his faction, tests it (maybe there will be some 'preview' where he's put into actual game and can play it a bit), then once he's done he saves it and there's status like 'pending approval'. Faction will be immediately available for single player, but multiplayer only after me or some moderator checks it and approves if it looks okay (and game host will also need to enable 'allow custom factions' in rules).
 
 ##### Random factions
 
@@ -236,18 +260,18 @@ Another cool way to add variety. At faction selection screen there will be 'rand
 
 - faction stats, traits etc, are randomized
 - faction names, texts and quotes are randomized with random text generators (but should be realistic enough)
-- portrait will be generated by some 'AI face generator' tool, there are some available already.  They generate realistic photos of people that don't actually exist.
--  images of buildings will be generated too in some way
+- portrait will be generated by some 'AI face generator' tool, there are some available already. They generate realistic photos of people that don't actually exist.
+- images of buildings will be generated too in some way
 
 He will see generated faction, if doesn't like it - he can press Randomize again and new one will be made. He can save it if he liked it. He can also select 'random' for one or several (or all) AIs. In multiplayer games host will have option 'Allow random races' so he disallow them if he doesn't like it.
 
 ##### Voice chat
 
-If enabled in settings, during multiplayer games players will be able to talk in voice. It will be either always-on or integrated with diplomacy (i.e. voice will work while diplomacy window is open to another player), or maybe voice channels will be always-on but only for those with Pact status (so if it's 2v2 then each team will have separate voice channel). Most likely it will be configurable per-game. 
+If enabled in settings, during multiplayer games players will be able to talk in voice. It will be either always-on or integrated with diplomacy (i.e. voice will work while diplomacy window is open to another player), or maybe voice channels will be always-on but only for those with Pact status (so if it's 2v2 then each team will have separate voice channel). Most likely it will be configurable per-game.
 
 ##### Game browser
 
-Unlike in original SMAC, after pressing "JOIN" in Multiplayer player will see game browser with games hosted by others. There will be new ones (not started yet) and those he played before. So he can just click and join, also he can add specific players to friends to see their games before others, and other stuff like this. Of course there will be 'join by IP' button too just in case (i.e. if master server is down). 
+Unlike in original SMAC, after pressing "JOIN" in Multiplayer player will see game browser with games hosted by others. There will be new ones (not started yet) and those he played before. So he can just click and join, also he can add specific players to friends to see their games before others, and other stuff like this. Of course there will be 'join by IP' button too just in case (i.e. if master server is down).
 
 #### AI vs AI mode
 
@@ -256,23 +280,23 @@ Allow players to code their own AIs (most likely in JavaScript), then host or jo
 Actually it's better to just let GLSMAC open network or local port and communicate via it's special AI API with whatever connects - then user can code AI in any language, f.e. in C for speed reasons, maybe even run it on separate powerful server.
 AI-vs-AI mode will also be available as 'single player' where player can test his AIs vs each other, either different AIs or same one (maybe even make it learn by playing many games fast).
 
-Also maybe it should be allowed for player to join as AI to any games (unless host disabled 'Allow remote AIs' in options). 
+Also maybe it should be allowed for player to join as AI to any games (unless host disabled 'Allow remote AIs' in options).
 
 ##### MMR system
 
-If GLSMAC becomes popular enough - there may be 'Rated' mode added that will keep track of player ratings. It will be separate page in game browser. Also maybe some kind of matchmaking for new games. In rated mode there will be certain limitations, such as having default game rules (or maybe several choices of rules), unlike in normal mode where everything goes (as long as it can sync between players). 
+If GLSMAC becomes popular enough - there may be 'Rated' mode added that will keep track of player ratings. It will be separate page in game browser. Also maybe some kind of matchmaking for new games. In rated mode there will be certain limitations, such as having default game rules (or maybe several choices of rules), unlike in normal mode where everything goes (as long as it can sync between players).
 
 ##### Open-source art
 
-Remodel and redraw everything under open-source license, then ship with GLSMAC as complete game (support for original SMAC art will stay if somebody needs). Also replace all sprites with 3D models, for example mind worms, bases. 
+Remodel and redraw everything under open-source license, then ship with GLSMAC as complete game (support for original SMAC art will stay if somebody needs). Also replace all sprites with 3D models, for example mind worms, bases.
 
 ##### Long-turns mode
 
-Master server may host 'long-turns' games (games with very slow turns, like once per day). It will work like login->turn->logout. Not entirely sure it's needed but I know people play some games like that, i.e. freeorion. If demand is there it can be done. 
+Master server may host 'long-turns' games (games with very slow turns, like once per day). It will work like login->turn->logout. Not entirely sure it's needed but I know people play some games like that, i.e. freeorion. If demand is there it can be done.
 
 ##### Mobile client
 
-Modern smartphones are more than capable of running game like SMAC. In fact, I played it (multiplayer) on Lenovo K900 through wine some day (had some kind of debian installed on top of android, then X and wine inside), and FPS was fine. Making UI will be challenge but it's possible. 
+Modern smartphones are more than capable of running game like SMAC. In fact, I played it (multiplayer) on Lenovo K900 through wine some day (had some kind of debian installed on top of android, then X and wine inside), and FPS was fine. Making UI will be challenge but it's possible.
 
 ##### Network modes
 
@@ -293,7 +317,7 @@ Cons:
 - puts a higher load on host's PC (if his PC is slow - game may lag between turns)
 - if host has slow internet connection - game will lag
 - host can cheat (maphack, spawning items for himself) and others can't even check it (so not eligible for rated mode)
-- host can lose saves 
+- host can lose saves
 
 ##### 2) master-server : player "host" will configure game, but it will be physically hosted on my server(s). Host won't have special permissions once game is started.
 
@@ -310,7 +334,7 @@ Cons:
 - depends on server being up (risk of downtime will be low though)
 - if player is too far physically from master server - he can have some lag
 - if too many games will need to be hosted at same time - there can be queues or server(s) can become overloaded
-- players won't have local saves (unless maybe there will be option to switch to server-clients mode, in this case saves will be downloaded to new host) 
+- players won't have local saves (unless maybe there will be option to switch to server-clients mode, in this case saves will be downloaded to new host)
 
 ##### 3) servers-servers : every player is game server, game processing is split between evenly and with some redundancy
 
@@ -328,7 +352,7 @@ Cons:
 - exposes IPs of all players to each other
 - any player can use maphack (and others won't know)
 - somewhat harder to implement
-- may be unstable and prone to bugs, at least at first 
+- may be unstable and prone to bugs, at least at first
 
 ##### 4) cross-hosting : every player online will partially host some other game of other players. in turn, his game will also be hosted by someone else. coordination will be p2p similar to torrents, master server only as backup when p2p fails for some reason
 
@@ -373,13 +397,13 @@ Root technology will add special terraforming module (named maybe Space-Time Man
 
 ##### RTS mode
 
-A mode without turns but with constant flow of time. It will have added features like key bindings, mass selects, that are present in existing RTS like Starcraft, so that it would be possible to manage all stuff fast enough. Players may also need to resort to automation of cities (and maybe units) once their empires grow big, and manually control only the most critical areas (i.e. areas near enemy). Units' movement won't be based on tiles, it will be smooth (cities and terraforming still based on tiles). Attack range will stay fixed (as distance between adjactent tiles, more only for artilleries). Air units will automatically fly to nearest base once out of fuel. 
+A mode without turns but with constant flow of time. It will have added features like key bindings, mass selects, that are present in existing RTS like Starcraft, so that it would be possible to manage all stuff fast enough. Players may also need to resort to automation of cities (and maybe units) once their empires grow big, and manually control only the most critical areas (i.e. areas near enemy). Units' movement won't be based on tiles, it will be smooth (cities and terraforming still based on tiles). Attack range will stay fixed (as distance between adjactent tiles, more only for artilleries). Air units will automatically fly to nearest base once out of fuel.
 
 ##### Playable planet
 
 Just had an idea to make Planet a playable side. It would be with completely different gameplay, for example there will be (obviously) no bases, buildings or typical units, instead it will be possible to build fungal towers, spawn worms and more advanced lifeforms, spread fungus. There will be unique resource types which are gained from good ecology, but depleted when ecology worsens (both locally and globally). So there will be incentive to attack the most industry-polluting cities first. Fungus will also need to spread to act as resource transfer aswell so worms will need to be created to slowdown terraforming.
 
-In theory there can be multiple Planet 'factions' aswell, then both players would fight each other for resources and space for fungus (or maybe unite?). 
+In theory there can be multiple Planet 'factions' aswell, then both players would fight each other for resources and space for fungus (or maybe unite?).
 
 ##### Multiple planets
 

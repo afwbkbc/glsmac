@@ -27,20 +27,27 @@ CLASS( Config, base::Module )
 	enum debug_flag_t : uint16_t {
 		DF_NONE = 0,
 		DF_GDB = 1 << 0,
-		DF_MEMORYDEBUG = 1 << 1,
-		DF_QUICKSTART = 1 << 2,
-		DF_QUICKSTART_SEED = 1 << 3,
-		DF_QUICKSTART_MAP_DUMP = 1 << 4,
-		DF_QUICKSTART_MAP_FILE = 1 << 5,
-		DF_QUICKSTART_MAP_SIZE = 1 << 6,
-		DF_QUICKSTART_MAP_OCEAN = 1 << 7,
-		DF_QUICKSTART_MAP_EROSIVE = 1 << 8,
-		DF_QUICKSTART_MAP_LIFEFORMS = 1 << 9,
-		DF_QUICKSTART_MAP_CLOUDS = 1 << 10
+		DF_MAPDUMP = 1 << 1,
+		DF_MEMORYDEBUG = 1 << 2,
+		DF_QUICKSTART = 1 << 3,
+		DF_QUICKSTART_SEED = 1 << 4,
+		DF_QUICKSTART_MAP_DUMP = 1 << 5,
+		DF_QUICKSTART_MAP_FILE = 1 << 6,
+		DF_QUICKSTART_MAP_SIZE = 1 << 7,
+		DF_QUICKSTART_MAP_OCEAN = 1 << 8,
+		DF_QUICKSTART_MAP_EROSIVE = 1 << 9,
+		DF_QUICKSTART_MAP_LIFEFORMS = 1 << 10,
+		DF_QUICKSTART_MAP_CLOUDS = 1 << 11,
 	};
 #endif
 
+	const std::string GetEnv( const std::string& var ) const;
+
+	const std::string& GetPrefix() const;
 	const std::string& GetSMACPath() const;
+#ifdef DEBUG
+	const std::string GetDebugPath() const; // to store debug stuff like dumps
+#endif
 
 	const bool HasLaunchFlag( const launch_flag_t flag ) const;
 	const types::Vec2< size_t >& GetWindowSize() const;
@@ -60,6 +67,16 @@ CLASS( Config, base::Module )
 #endif
 
 private:
+
+	const std::string DEFAULT_GLSMAC_PREFIX =
+#ifdef _WIN32
+		GetEnv( "APPDATA" ) + "/GLSMAC"
+#else
+		GetEnv( "HOME" ) + "/.local/share/glsmac"
+#endif
+	;
+
+	std::string m_prefix = DEFAULT_GLSMAC_PREFIX + "/";
 	std::string m_smac_path = "";
 
 	uint8_t m_launch_flags = LF_NONE;

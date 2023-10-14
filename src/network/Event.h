@@ -2,6 +2,8 @@
 
 #include "base/Base.h"
 
+#include "network/types.h"
+
 namespace network {
 
 CLASS( Event, base::Base )
@@ -16,7 +18,7 @@ CLASS( Event, base::Base )
 		ET_PACKET,
 	};
 
-	size_t cid = 0; // 'client id', linked to network connection (usually to socket fd)
+	network::cid_t cid = 0; // 'client id', linked to network connection (usually to socket fd)
 
 	event_type_t type = ET_NONE;
 	struct {

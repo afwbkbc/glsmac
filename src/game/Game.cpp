@@ -123,32 +123,42 @@ void Game::Iterate() {
 	}
 
 	if ( m_game_state == GS_INITIALIZING ) {
+
 		auto* ui = g_engine->GetUI();
 
 		bool ready = true;
-#ifdef DEBUG
-		static std::string waiting_for_players_old = "";
-		std::string waiting_for_players = "";
-#endif
-		for ( const auto& slot : m_state->m_slots.GetSlots() ) {
-			if ( slot.GetState() == Slot::SS_PLAYER && !slot.HasPlayerFlag( Slot::PF_MAP_DOWNLOADED ) ) {
-				ready = false;
-#ifdef DEBUG
-				waiting_for_players += " " + slot.GetPlayer()->GetPlayerName();
-#else
-				break;
-#endif
-			}
-		}
+
+		if ( m_state->IsMaster() ) {
 
 #ifdef DEBUG
-		if ( waiting_for_players != waiting_for_players_old ) {
-			waiting_for_players_old = waiting_for_players;
-			if ( !ready ) {
-				Log( "Waiting for players:" + waiting_for_players );
-			}
-		}
+			static std::string waiting_for_players_old = "";
+			std::string waiting_for_players = "";
 #endif
+			for ( const auto& slot : m_state->m_slots.GetSlots() ) {
+				if ( slot.GetState() == Slot::SS_PLAYER && !slot.HasPlayerFlag( Slot::PF_MAP_DOWNLOADED ) ) {
+					ready = false;
+#ifdef DEBUG
+					waiting_for_players += " " + slot.GetPlayer()->GetPlayerName();
+#else
+					break;
+#endif
+				}
+			}
+
+#ifdef DEBUG
+			if ( waiting_for_players != waiting_for_players_old ) {
+				waiting_for_players_old = waiting_for_players;
+				if ( !ready ) {
+					Log( "Waiting for players:" + waiting_for_players );
+				}
+			}
+#endif
+		}
+		else {
+			// notify server of successful download and complete initialization
+			m_slot->SetPlayerFlag( Slot::PF_MAP_DOWNLOADED );
+			m_connection->UpdateSlot( m_slot_num, m_slot, true );
+		}
 
 		if ( ready ) {
 
@@ -162,10 +172,14 @@ void Game::Iterate() {
 #ifdef DEBUG
 				const auto* config = g_engine->GetConfig();
 				// also handy to have dump of generated map
-				if ( !ec && !config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) { // no point saving if we just loaded it
-					Log( (std::string)"Saving map dump to " + map::s_consts.debug.lastdump_filename );
+				if (
+					!ec &&
+						config->HasDebugFlag( config::Config::DF_MAPDUMP ) &&
+						!config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) // no point saving if we just loaded it
+					) {
+					Log( (std::string)"Saving map dump to " + config->GetDebugPath() + map::s_consts.debug.lastdump_filename );
 					ui->SetLoaderText( "Saving dump", false );
-					//// util::FS::WriteFile( map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
+					util::FS::WriteFile( config->GetDebugPath() + map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
 				}
 #endif
 
@@ -254,7 +268,13 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 		case OP_GET_MAP_DATA: {
 			//Log( "Got get-map-data request" );
 			if ( m_game_state != GS_RUNNING ) {
-				response.result = R_PENDING;
+				if ( m_initialization_error.empty() ) {
+					response.result = R_PENDING;
+				}
+				else {
+					response.result = R_ERROR;
+					NEW( response.data.error.error_text, std::string, m_initialization_error );
+				}
 			}
 			else if ( m_response_map_data ) {
 				response.result = R_SUCCESS;
@@ -592,7 +612,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 		}
 		case OP_SAVE_MAP: {
 			//Log( "got save map request" );
-			const auto ec = m_map->Save( *request.data.save_map.path );
+			const auto ec = m_map->SaveToFile( *request.data.save_map.path );
 			if ( ec ) {
 				response.result = R_ERROR;
 				response.data.error.error_text = &( map::Map::GetErrorString( ec ) );
@@ -717,6 +737,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	Log( "Initializing game" );
 
 	m_game_state = GS_PREPARING_MAP;
+	m_initialization_error = "";
 
 	m_connection = m_state->GetConnection();
 
@@ -731,6 +752,15 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					Log( "Player " + player->GetPlayerName() + " left the game." );
 				};
 
+				connection->m_on_map_request = [ this ]() -> const std::string {
+					if ( !m_map ) {
+						// map not generated yet
+						return "";
+					}
+					Log( "Snapshotting map for download" );
+					return m_map->SaveToBuffer().ToString();
+				};
+
 				connection->SetGameState( Connection::GS_INITIALIZING );
 			}
 		);
@@ -743,8 +773,11 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 						m_initialization_error = "Lost connection to server";
 					}
 					else {
-						Log( "TODO: RETURN TO MAIN MENU" );
+						// TODO: return to main menu
 					}
+				};
+				connection->m_on_error = [ this ]( const std::string& reason ) -> void {
+					m_initialization_error = reason;
 				};
 			}
 		);
@@ -771,13 +804,15 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		NEW( m_map, map::Map, this );
 
 #ifdef DEBUG
+		const auto* config = g_engine->GetConfig();
+
 		// if crash happens - it's handy to have a seed to reproduce it
-		util::FS::WriteFile( map::s_consts.debug.lastseed_filename, m_random->GetStateString() );
+		util::FS::WriteFile( config->GetDebugPath() + map::s_consts.debug.lastseed_filename, m_random->GetStateString() );
 #endif
 
 		map::Map::error_code_t ec = map::Map::EC_UNKNOWN;
+
 #ifdef DEBUG
-		const auto* config = g_engine->GetConfig();
 		if ( !m_connection && config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) {
 			const std::string& filename = config->GetQuickstartMapDump();
 			ASSERT( util::FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
@@ -792,7 +827,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 #ifdef DEBUG
 			if ( !m_connection && config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) {
 				const std::string& filename = config->GetQuickstartMapFile();
-				ec = m_map->Load( filename );
+				ec = m_map->LoadFromFile( filename );
 			}
 			else
 #endif
@@ -800,7 +835,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				const auto& map_settings = m_state->m_settings.global.map;
 				if ( map_settings.type == MapSettings::MT_MAPFILE ) {
 					ASSERT( !map_settings.filename.empty(), "loading map requested but map file not specified" );
-					ec = m_map->Load( map_settings.filename );
+					ec = m_map->LoadFromFile( map_settings.filename );
 				}
 				else {
 					ec = m_map->Generate( map_settings, MT_C );
@@ -815,14 +850,13 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 		if ( !ec ) {
 			m_slot->SetPlayerFlag( Slot::PF_MAP_DOWNLOADED ); // map was generated locally
-
 			if ( m_connection ) {
 				m_connection->IfServer(
 					[ this ]( Server* connection ) -> void {
 						connection->SetGameState( Connection::GS_RUNNING ); // allow clients to download map
 					}
 				);
-				m_connection->UpdateSlot( m_slot_num, m_slot );
+				m_connection->UpdateSlot( m_slot_num, m_slot, true );
 			}
 
 			ui->SetLoaderText( "Waiting for players" );
@@ -838,18 +872,45 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				// wait for server to initialize
 				ui->SetLoaderText( "Waiting for server" );
 
-				connection->m_on_game_state_change = [ this, connection, ui ]( const Connection::game_state_t state ) -> void {
-					if ( state == Connection::GS_RUNNING ) {
+				//connection->m_on_game_state_change = [ this, connection, ui ]( const Connection::game_state_t state ) -> void {
+				const auto f_download_map = [ this, ui, connection ] {
 
-						// download map from server
+					ui->SetLoaderText( "Downloading map" );
 
-						ui->SetLoaderText( "Downloading map" );
-					}
-					else {
-						ASSERT( false, "unexpected game state: " + std::to_string( state ) );
-					}
+					connection->m_on_map_progress = [ ui ]( const float progress ) -> void {
+						ui->SetLoaderText( "Downloading map:  " + std::to_string( (size_t)std::round( progress * 100 ) ) + "%" );
+					};
+					connection->m_on_map_data = [ this, connection ]( const std::string serialized_tiles ) -> void {
+						connection->m_on_map_data = nullptr;
+						connection->m_on_map_progress = nullptr;
+						Log( "Unpacking map" );
+						NEW( m_map, map::Map, this );
+						const auto ec = m_map->LoadFromBuffer( serialized_tiles );
+						if ( ec == map::Map::EC_NONE ) {
+							m_game_state = GS_INITIALIZING;
+						}
+						else {
+							Log( "WARNING: failed to unpack map (code=" + std::to_string( ec ) + ")" );
+							connection->Disconnect( "Map format mismatch" );
+						}
+					};
+					connection->RequestMap();
 				};
-
+				if ( connection->GetGameState() == Connection::GS_RUNNING ) {
+					// server already initialized
+					f_download_map();
+				}
+				else {
+					// wait for server to initialize
+					connection->m_on_game_state_change = [ this, f_download_map ]( const Connection::game_state_t state ) -> void {
+						if ( state == Connection::GS_RUNNING ) {
+							f_download_map();
+						}
+						else {
+							ASSERT( false, "unexpected game state: " + std::to_string( state ) );
+						}
+					};
+				}
 				response.result = R_SUCCESS;
 			}
 		);

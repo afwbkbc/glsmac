@@ -20,8 +20,13 @@ CLASS( Player, types::Serializable )
 		PR_PLAYER,
 	};
 
-	Player();
-	Player( const std::string& name, const role_t role, const rules::Faction& faction, const rules::DifficultyLevel& difficulty_level );
+	Player( types::Buffer buf );
+	Player(
+		const std::string& name,
+		const role_t role,
+		const rules::Faction& faction,
+		const rules::DifficultyLevel& difficulty_level
+	);
 
 	const bool IsInitialized() const;
 	const std::string& GetPlayerName() const;
@@ -42,8 +47,8 @@ CLASS( Player, types::Serializable )
 
 private:
 	bool m_is_initialized = false;
-	std::string m_name = "";
 
+	std::string m_name = "";
 	role_t m_role = PR_NONE;
 
 	Slot* m_slot = nullptr;

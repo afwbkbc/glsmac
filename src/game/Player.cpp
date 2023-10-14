@@ -4,11 +4,16 @@ using namespace types;
 
 namespace game {
 
-Player::Player() {
-	//
+Player::Player( Buffer buf ) {
+	Player::Unserialize( buf );
 }
 
-Player::Player( const std::string& name, const role_t role, const rules::Faction& faction, const rules::DifficultyLevel& difficulty_level )
+Player::Player(
+	const std::string& name,
+	const role_t role,
+	const rules::Faction& faction,
+	const rules::DifficultyLevel& difficulty_level
+)
 	: m_name( name )
 	, m_role( role )
 	, m_faction( faction )

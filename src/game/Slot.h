@@ -3,6 +3,7 @@
 #include "types/Serializable.h"
 
 #include "game/Player.h"
+#include "network/Network.h"
 
 namespace game {
 
@@ -24,7 +25,7 @@ CLASS( Slot, types::Serializable )
 	void Close();
 	void SetCloseAfterClear();
 
-	size_t GetCid() const;
+	const network::cid_t GetCid() const;
 	const std::string& GetRemoteAddress() const;
 	void SetPlayerFlag( const player_flag_t flag );
 	const bool HasPlayerFlag( const player_flag_t flag ) const;
@@ -32,7 +33,14 @@ CLASS( Slot, types::Serializable )
 
 	Player* GetPlayer() const;
 	Player* GetPlayerAndClose();
-	void SetPlayer( Player* player, const size_t cid, const std::string& remote_address );
+	void SetPlayer( Player* player, const network::cid_t cid, const std::string& remote_address );
+
+	const std::string& GetLinkedGSID() const;
+	void SetLinkedGSID( const std::string& gsid );
+	void UnsetLinkedGSID();
+
+	const player_flag_t GetPlayerFlags() const;
+	void SetPlayerFlags( const player_flag_t flags );
 
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;
@@ -43,11 +51,11 @@ private:
 	bool m_close_after_clear = false;
 	struct {
 		Player* player = nullptr;
-		size_t cid = 0;
+		network::cid_t cid = 0;
 		std::string remote_address = "";
 		player_flag_t flags = PF_NONE;
 	} m_player_data = {};
-
+	std::string m_linked_gsid = "";
 };
 
 }

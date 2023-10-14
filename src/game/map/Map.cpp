@@ -626,25 +626,21 @@ const Map::error_code_t Map::Generate(
 	Log( "Map generation took " + std::to_string( timer.GetElapsed().count() ) + "ms" );
 	// if crash happens - it's handy to have a map file to reproduce it
 	if ( !c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) { // no point saving if we just loaded it
-		Log( (std::string)"Saving map to " + s_consts.debug.lastmap_filename );
-		FS::WriteFile( s_consts.debug.lastmap_filename, m_tiles->Serialize().ToString() );
+		Log( (std::string)"Saving map to " + c->GetDebugPath() + s_consts.debug.lastmap_filename );
+		FS::WriteFile( c->GetDebugPath() + s_consts.debug.lastmap_filename, m_tiles->Serialize().ToString() );
 	}
 #endif
 
 	return EC_NONE;
 }
 
-const Map::error_code_t Map::Load( const std::string& path ) {
-	ASSERT( FS::FileExists( path ), "map file \"" + path + "\" not found" );
-
+const Map::error_code_t Map::LoadFromBuffer( Buffer buffer ) {
 	if ( m_tiles ) {
 		DELETE( m_tiles );
 	}
-
-	Log( "Loading map from " + path );
 	NEW( m_tiles, Tiles );
 	try {
-		m_tiles->Unserialize( Buffer( FS::ReadFile( path ) ) );
+		m_tiles->Unserialize( buffer );
 		return EC_NONE;
 	}
 	catch ( std::runtime_error& e ) {
@@ -652,14 +648,28 @@ const Map::error_code_t Map::Load( const std::string& path ) {
 		m_tiles = nullptr;
 		return EC_MAPFILE_FORMAT_ERROR;
 	}
-
 }
 
-const Map::error_code_t Map::Save( const std::string& path ) {
+const Map::error_code_t Map::LoadFromFile( const std::string& path ) {
+	ASSERT( FS::FileExists( path ), "map file \"" + path + "\" not found" );
 
-	FS::WriteFile( path, m_tiles->Serialize().ToString() );
+	Log( "Loading map from " + path );
+	return LoadFromBuffer( FS::ReadFile( path ) );
+}
 
-	return EC_NONE;
+const Buffer Map::SaveToBuffer() const {
+	return m_tiles->Serialize();
+}
+
+const Map::error_code_t Map::SaveToFile( const std::string& path ) const {
+	try {
+		Buffer buffer = SaveToBuffer();
+		FS::WriteFile( path, buffer.ToString() );
+		return EC_NONE;
+	}
+	catch ( std::runtime_error& e ) {
+		return EC_MAPFILE_FORMAT_ERROR;
+	}
 }
 
 const Map::error_code_t Map::Initialize( MT_CANCELABLE ) {

@@ -17,7 +17,7 @@ mt_id_t Network::MT_Disconnect() {
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Network::MT_DisconnectClient( const size_t cid ) {
+mt_id_t Network::MT_DisconnectClient( const network::cid_t cid ) {
 	MT_Request request;
 	request.op = OP_DISCONNECT_CLIENT;
 	request.cid = cid;
@@ -37,7 +37,7 @@ mt_id_t Network::MT_SendEvent( const Event& event ) {
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Network::MT_SendPacket( const Packet& packet, const size_t cid ) {
+mt_id_t Network::MT_SendPacket( const Packet& packet, const network::cid_t cid ) {
 	if ( m_current_connection_mode == CM_NONE ) {
 		// maybe old event, nothing to do
 		return MT_Success();
@@ -157,7 +157,7 @@ events_t Network::GetEvents() {
 	return events;
 }
 
-void Network::InvalidateEventsForDisconnectedClient( const size_t cid ) {
+void Network::InvalidateEventsForDisconnectedClient( const network::cid_t cid ) {
 	ASSERT( cid != 0, "can't invalidate cid 0" );
 	events_t events_new = {};
 	bool disconnect_event_kept = false;
@@ -214,10 +214,14 @@ mt_id_t Network::MT_Success() {
 	return MT_CreateRequest( request );
 }
 
-const fd_t Network::GetFdFromCid( const size_t cid ) const {
-	return cid < m_server.cid_to_fd.size()
-		? m_server.cid_to_fd[ cid ]
-		: 0;
+const fd_t Network::GetFdFromCid( const network::cid_t cid ) const {
+	const auto& it = m_server.cid_to_fd.find( cid );
+	if ( it == m_server.cid_to_fd.end() ) {
+		return 0;
+	}
+	else {
+		return it->second;
+	}
 }
 
 }

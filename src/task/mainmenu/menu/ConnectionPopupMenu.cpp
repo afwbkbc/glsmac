@@ -40,14 +40,16 @@ void ConnectionPopupMenu::SetConnection( ::game::connection::Connection* connect
 						NextMenu( menu );
 						break;
 					}
-					case Connection::GS_INITIALIZING: {
-						// TODO
-						connection->m_on_error( "Game is already starting" );
-						break;
-					}
 					case Connection::GS_RUNNING: {
-						// TODO
-						connection->m_on_error( "Game has already been started" );
+						Log( "Game is already running, trying to join" );
+
+						connection->m_on_global_settings_update = [ this ]() -> void {
+							Log( "Got global settings packet" );
+							Show();
+							m_mainmenu->StartGame();
+							GoBack(); // show previous menu if canceled
+						};
+
 						break;
 					}
 					default: {
@@ -59,15 +61,18 @@ void ConnectionPopupMenu::SetConnection( ::game::connection::Connection* connect
 		}
 	};
 	connection->m_on_error = [ this, connection ]( const std::string& message ) -> void {
-		Show();
+		const std::string text = message;
 		DELETE( connection );
 		m_mainmenu->m_state->DetachConnection();
+		m_mainmenu->m_state->Reset();
+		Show();
 		//connection = nullptr;
-		MenuError( message );
+		MenuError( text );
 	};
 	connection->m_on_cancel = [ this, connection ]() -> void {
 		DELETE( connection );
 		m_mainmenu->m_state->DetachConnection();
+		m_mainmenu->m_state->Reset();
 		//connection = nullptr;
 		Show();
 	};

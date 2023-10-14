@@ -50,8 +50,10 @@ CLASS( Map, types::Serializable )
 #endif
 		, MT_CANCELABLE
 	);
-	const error_code_t Load( const std::string& path );
-	const error_code_t Save( const std::string& path );
+	const error_code_t LoadFromBuffer( Buffer buffer );
+	const error_code_t LoadFromFile( const std::string& path );
+	const Buffer SaveToBuffer() const;
+	const error_code_t SaveToFile( const std::string& path ) const;
 
 	const error_code_t Initialize( MT_CANCELABLE );
 

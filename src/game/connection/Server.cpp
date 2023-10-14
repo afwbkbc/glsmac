@@ -23,18 +23,18 @@ void Server::ProcessEvent( const network::Event& event ) {
 			m_state->m_slots.Resize( 7 ); // TODO: make dynamic?
 			const auto& rules = m_state->m_settings.global.game_rules;
 			NEW(
-				m_player, ::game::Player, {
+				m_player, ::game::Player,
 				m_state->m_settings.local.player_name,
 				::game::Player::PR_HOST,
 				rules.GetDefaultFaction(),
-				rules.GetDefaultDifficultyLevel(),
-			}
+				rules.GetDefaultDifficultyLevel()
 			);
 			m_state->AddPlayer( m_player );
 			m_slot = 0; // host always has slot 0
 			m_state->AddCIDSlot( 0, m_slot );
 			auto& slot = m_state->m_slots.GetSlot( m_slot );
 			slot.SetPlayer( m_player, 0, event.data.remote_address ); // host always has cid 0
+			slot.SetLinkedGSID( m_state->m_settings.local.account.GetGSID() );
 			if ( m_on_listen ) {
 				m_on_listen();
 			}
@@ -73,11 +73,28 @@ void Server::ProcessEvent( const network::Event& event ) {
 				ASSERT( player, "player in slot is null" );
 				m_state->RemovePlayer( player );
 
+				// cleanup
+				const auto& map_data_it = m_map_data.find( event.cid );
+				if ( map_data_it != m_map_data.end() ) {
+					m_map_data.erase( map_data_it );
+				}
+
+				ASSERT( m_game_state != GS_NONE, "player disconnected but game state is not set" );
+				if ( m_game_state == GS_LOBBY ) {
+					// free slot for next player
+					slot.UnsetLinkedGSID();
+				}
+
 				SendSlotUpdate( slot_num, &slot, event.cid ); // notify others
+
+				if ( m_game_state == GS_LOBBY ) {
+					ClearReadyFlags();
+				}
 
 				if ( m_on_player_leave ) {
 					m_on_player_leave( slot_num, &slot, player );
 				}
+				DELETE( player );
 			}
 			break;
 		}
@@ -87,49 +104,91 @@ void Server::ProcessEvent( const network::Event& event ) {
 				packet.Unserialize( Buffer( event.data.packet_data ) );
 				switch ( packet.type ) {
 					case Packet::PT_AUTH: {
-						if ( packet.data.str.empty() ) {
-							Log( "Authentication from " + std::to_string( event.cid ) + " failed, disconnecting" );
+						ASSERT( packet.data.vec.size() == 2, "unexpected vec size of PT_AUTH" );
+						const std::string& gsid = packet.data.vec[ 0 ];
+						const std::string& player_name = packet.data.vec[ 1 ];
+						if ( gsid.empty() || player_name.empty() ) {
+							Log( "Authentication from cid " + std::to_string( event.cid ) + " failed, disconnecting" );
 							m_network->MT_DisconnectClient( event.cid );
 							break;
 						}
-
-						Log( "Got authentication from " + std::to_string( event.cid ) + ": " + packet.data.str );
 
 						if ( m_state->GetCidSlots().find( event.cid ) != m_state->GetCidSlots().end() ) {
-							Log( "Duplicate authentication from " + std::to_string( event.cid ) + ", disconnecting" );
+							Log( "Duplicate authentication from cid " + std::to_string( event.cid ) + ", disconnecting" );
 							m_network->MT_DisconnectClient( event.cid );
 							break;
 						}
 
-						// find free slot
-						size_t slot_num = 0; // 0 = 'not found'
+						Log( "Got authentication from " + gsid + " (cid " + std::to_string( event.cid ) + ") as '" + player_name + "'" );
+						ASSERT( m_game_state != GS_NONE, "player connected but game state not set" );
+
+						// TODO: implementing 'load game' from lobby will need extra gsid logic
+
+						// check if not already in game
+						bool is_already_in_game = false;
 						for ( auto& slot : m_state->m_slots.GetSlots() ) {
-							if ( slot.GetState() == ::game::Slot::SS_OPEN ) {
+							if ( slot.GetLinkedGSID() == gsid && slot.GetState() == Slot::SS_PLAYER ) {
+								is_already_in_game = true;
 								break;
 							}
-							slot_num++;
 						}
-						if ( slot_num >= m_state->m_slots.GetCount() ) { // no available slots left
-							Log( "No free slots for player " + std::to_string( event.cid ) + " (" + packet.data.str + "), dropping" );
-							Kick( event.cid, "Server is full!" );
+						if ( is_already_in_game ) {
+							Log( "Duplicate connection from " + gsid + ", disconnecting" );
+							Kick( event.cid, "You are already in this game" );
 							break;
+						}
+
+						size_t slot_num = 0;
+						if ( m_game_state == GS_LOBBY ) {
+							// on lobby stage everyone can connect and occupy first free slot
+							for ( auto& slot : m_state->m_slots.GetSlots() ) {
+								if ( slot.GetState() == ::game::Slot::SS_OPEN ) {
+									break;
+								}
+								slot_num++;
+							}
+							if ( slot_num >= m_state->m_slots.GetCount() ) { // no available slots left
+								Log( "No free slots for player " + gsid + " (" + player_name + "), rejecting" );
+								Kick( event.cid, "Server is full!" );
+								break;
+							}
+						}
+						else {
+							// once game is started - only players that are linked to slots by gsids can join to their slots
+							for ( auto& slot : m_state->m_slots.GetSlots() ) {
+								if ( slot.GetState() == ::game::Slot::SS_OPEN && slot.GetLinkedGSID() == gsid ) {
+									break;
+								}
+								slot_num++;
+							}
+							if ( slot_num >= m_state->m_slots.GetCount() ) { // no available slots left
+								Log( "No linked slot found for player " + gsid + " (" + player_name + "), rejecting" );
+								Kick( event.cid, "You do not belong to this game." );
+								break;
+							}
+						}
+
+						if ( m_game_state == GS_LOBBY ) {
+							ClearReadyFlags();
 						}
 
 						const auto& rules = m_state->m_settings.global.game_rules;
 						NEWV(
-							player, ::game::Player, {
-							packet.data.str,
+							player, ::game::Player,
+							player_name,
 							::game::Player::PR_PLAYER,
 							rules.GetDefaultFaction(),
-							rules.GetDefaultDifficultyLevel(),
-						}
+							rules.GetDefaultDifficultyLevel()
 						);
 						m_state->AddPlayer( player );
 
 						m_state->AddCIDSlot( event.cid, slot_num );
 						auto& slot = m_state->m_slots.GetSlot( slot_num );
 						slot.SetPlayer( player, event.cid, event.data.remote_address );
-
+						if ( m_game_state == GS_LOBBY ) {
+							// link slot to player
+							slot.SetLinkedGSID( gsid );
+						}
 						SendGameState( event.cid );
 						{
 							Log( "Sending players list to " + std::to_string( event.cid ) );
@@ -148,8 +207,8 @@ void Server::ProcessEvent( const network::Event& event ) {
 
 						break;
 					}
-					case Packet::PT_UPDATE_SLOT: {
-						Log( "Got slot update from " + std::to_string( event.cid ) );
+					case Packet::PT_UPDATE_SLOT:
+					case Packet::PT_UPDATE_FLAGS: {
 						const auto& slots = m_state->GetCidSlots();
 						const auto& it = slots.find( event.cid );
 						if ( it == slots.end() ) {
@@ -157,10 +216,28 @@ void Server::ProcessEvent( const network::Event& event ) {
 							break;
 						}
 						auto& slot = m_state->m_slots.GetSlot( it->second );
-						slot.Unserialize( packet.data.str );
-						SendSlotUpdate( it->second, &slot, event.cid ); // notify others
+						if ( slot.GetState() != Slot::SS_PLAYER ) {
+							Error( event.cid, "slot state mismatch" );
+							break;
+						}
+						const bool only_flags = packet.type == Packet::PT_UPDATE_FLAGS;
+						if ( only_flags ) {
+							Log( "Got flags update from " + std::to_string( event.cid ) );
+							slot.SetPlayerFlags( packet.udata.flags.flags );
+							SendFlagsUpdate( it->second, &slot, event.cid ); // notify others
+						}
+						else {
+							Log( "Got slot update from " + std::to_string( event.cid ) );
+							const bool wasReady = slot.HasPlayerFlag( Slot::PF_READY );
+							slot.Unserialize( packet.data.str );
+							if ( wasReady && slot.HasPlayerFlag( Slot::PF_READY ) ) {
+								Error( event.cid, "slot update while ready" );
+								break;
+							}
+							SendSlotUpdate( it->second, &slot, event.cid ); // notify others
+						}
 						if ( m_on_slot_update ) {
-							m_on_slot_update( it->second, &slot );
+							m_on_slot_update( it->second, &slot, only_flags );
 						}
 						break;
 					}
@@ -173,6 +250,60 @@ void Server::ProcessEvent( const network::Event& event ) {
 							break;
 						}
 						GlobalMessage( FormatChatMessage( m_state->m_slots.GetSlot( it->second ).GetPlayer(), packet.data.str ) );
+						break;
+					}
+					case Packet::PT_GET_MAP_HEADER: {
+						Log( "Got map header request from " + std::to_string( event.cid ) );
+						Packet p( types::Packet::PT_MAP_HEADER );
+						if ( m_on_map_request ) {
+							m_map_data[ event.cid ] = map_data_t{ // override previous request
+								0,
+								m_on_map_request()
+							};
+							p.data.num = m_map_data.at( event.cid ).serialized_tiles.size();
+						}
+						else {
+							// no handler set - no map to return
+							Log( "WARNING: map requested but no map handler was set, sending empty header" );
+							p.data.num = 0;
+						}
+						m_network->MT_SendPacket( p, event.cid );
+						break;
+					}
+					case Packet::PT_GET_MAP_CHUNK: {
+						Log( "Got map chunk request from " + std::to_string( event.cid ) + " ( offset=" + std::to_string( packet.udata.map.offset ) + " size=" + std::to_string( packet.udata.map.size ) + " )" );
+						const auto& it = m_map_data.find( event.cid );
+						const size_t end = packet.udata.map.offset + packet.udata.map.size;
+						if ( it == m_map_data.end() ) {
+							Error( event.cid, "map download not initialized" );
+						}
+						else if ( end > it->second.serialized_tiles.size() ) {
+							Error( event.cid, "map request overflow ( " + std::to_string( packet.udata.map.offset ) + " + " + std::to_string( packet.udata.map.size ) + " >= " + std::to_string( it->second.serialized_tiles.size() ) + " )" );
+						}
+						else if ( packet.udata.map.offset != it->second.next_expected_offset ) {
+							Error( event.cid, "inconsistent map download offset ( " + std::to_string( packet.udata.map.offset ) + " != " + std::to_string( it->second.next_expected_offset ) + " )" );
+						}
+						else if (
+							packet.udata.map.size != MAP_DOWNLOAD_CHUNK_SIZE &&
+								end != it->second.serialized_tiles.size() // last chunk can be smaller
+							) {
+							Error( event.cid, "inconsistent map download size ( " );
+						}
+						else {
+							Packet p( Packet::PT_MAP_CHUNK );
+							p.udata.map.offset = packet.udata.map.offset;
+							p.udata.map.size = packet.udata.map.size;
+							p.data.str = it->second.serialized_tiles.substr( packet.udata.map.offset, packet.udata.map.size );
+							m_network->MT_SendPacket( p, event.cid );
+							if ( end < it->second.serialized_tiles.size() ) {
+								it->second.next_expected_offset = end;
+							}
+							else {
+								// map was sent fully, can free memory now
+								Log( "Map was sent successfully to " + std::to_string( event.cid ) + ", cleaning up" );
+								m_map_data.erase( it );
+							}
+						}
 						break;
 					}
 					default: {
@@ -196,7 +327,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 
 }
 
-void Server::Broadcast( std::function< void( const size_t cid ) > callback ) {
+void Server::Broadcast( std::function< void( const network::cid_t cid ) > callback ) {
 	for ( const auto& slot : m_state->m_slots.GetSlots() ) {
 		if ( slot.GetState() == Slot::SS_PLAYER ) {
 			const auto cid = slot.GetCid();
@@ -226,14 +357,22 @@ void Server::BanFromSlot( const size_t slot_num, const std::string& reason ) {
 void Server::SetGameState( const game_state_t game_state ) {
 	m_game_state = game_state;
 	Broadcast(
-		[ this ]( const size_t cid ) -> void {
+		[ this ]( const network::cid_t cid ) -> void {
 			SendGameState( cid );
 		}
 	);
 }
 
-void Server::UpdateSlot( const size_t slot_num, const Slot* slot ) {
-	SendSlotUpdate( slot_num, slot );
+void Server::UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flags ) {
+	if ( m_on_slot_update ) {
+		m_on_slot_update( slot_num, slot, only_flags );
+	}
+	if ( only_flags ) {
+		SendFlagsUpdate( slot_num, slot );
+	}
+	else {
+		SendSlotUpdate( slot_num, slot );
+	}
 }
 
 void Server::Message( const std::string& message ) {
@@ -243,11 +382,12 @@ void Server::Message( const std::string& message ) {
 void Server::ResetHandlers() {
 	Connection::ResetHandlers();
 	m_on_listen = nullptr;
+	m_on_map_request = nullptr;
 }
 
 void Server::UpdateGameSettings() {
 	Broadcast(
-		[ this ]( const size_t cid ) -> void {
+		[ this ]( const network::cid_t cid ) -> void {
 			SendGlobalSettings( cid );
 		}
 	);
@@ -258,7 +398,7 @@ void Server::GlobalMessage( const std::string& message ) {
 		m_on_message( message );
 	}
 	Broadcast(
-		[ this, message ]( const size_t cid ) -> void {
+		[ this, message ]( const network::cid_t cid ) -> void {
 			Packet p( Packet::PT_MESSAGE );
 			p.data.str = message;
 			m_network->MT_SendPacket( p, cid );
@@ -266,7 +406,7 @@ void Server::GlobalMessage( const std::string& message ) {
 	);
 }
 
-void Server::Kick( const size_t cid, const std::string& reason = "" ) {
+void Server::Kick( const network::cid_t cid, const std::string& reason = "" ) {
 	Log(
 		"Kicking " + std::to_string( cid ) + ( !reason.empty()
 			? " (reason: " + reason + ")"
@@ -284,28 +424,28 @@ void Server::KickFromSlot( Slot& slot, const std::string& reason ) {
 	Kick( slot.GetCid(), reason );
 }
 
-void Server::Error( const size_t cid, const std::string& reason ) {
+void Server::Error( const network::cid_t cid, const std::string& reason ) {
 	Log( "Network protocol error (cid: " + std::to_string( cid ) + "): " + reason );
 	Kick( cid, "Network protocol error" );
 }
 
-void Server::SendGlobalSettings( size_t cid ) {
+void Server::SendGlobalSettings( network::cid_t cid ) {
 	Log( "Sending global settings to " + std::to_string( cid ) );
 	Packet p( Packet::PT_GLOBAL_SETTINGS );
 	p.data.str = m_state->m_settings.global.Serialize().ToString();
 	m_network->MT_SendPacket( p, cid );
 }
 
-void Server::SendGameState( const size_t cid ) {
+void Server::SendGameState( const network::cid_t cid ) {
 	Log( "Sending game state change (" + std::to_string( m_game_state ) + ") to " + std::to_string( cid ) );
 	Packet p( Packet::PT_GAME_STATE );
 	p.data.num = m_game_state;
 	m_network->MT_SendPacket( p, cid );
 }
 
-void Server::SendSlotUpdate( const size_t slot_num, const Slot* slot, size_t skip_cid ) {
+void Server::SendSlotUpdate( const size_t slot_num, const Slot* slot, network::cid_t skip_cid ) {
 	Broadcast(
-		[ this, slot_num, slot, skip_cid ]( const size_t cid ) -> void {
+		[ this, slot_num, slot, skip_cid ]( const network::cid_t cid ) -> void {
 			if ( cid != skip_cid ) {
 				Log( "Sending slot update to " + std::to_string( cid ) );
 				Packet p( Packet::PT_SLOT_UPDATE );
@@ -317,8 +457,39 @@ void Server::SendSlotUpdate( const size_t slot_num, const Slot* slot, size_t ski
 	);
 }
 
+void Server::SendFlagsUpdate( const size_t slot_num, const Slot* slot, network::cid_t skip_cid ) {
+	Broadcast(
+		[ this, slot_num, slot, skip_cid ]( const network::cid_t cid ) -> void {
+			if ( cid != skip_cid ) {
+				Log( "Sending flags update to " + std::to_string( cid ) );
+				Packet p( Packet::PT_FLAGS_UPDATE );
+				p.udata.flags.slot_num = slot_num;
+				p.udata.flags.flags = slot->GetPlayerFlags();
+				m_network->MT_SendPacket( p, cid );
+			}
+		}
+	);
+}
+
 const std::string Server::FormatChatMessage( const Player* player, const std::string& message ) const {
 	return "<" + player->GetPlayerName() + "> " + message;
+}
+
+void Server::ClearReadyFlags() {
+	ASSERT( m_game_state, "unexpected game state" );
+	// clear readyness of everyone when new player joins or leaves
+	auto& slots = m_state->m_slots.GetSlots();
+	for ( size_t num = 0 ; num < slots.size() ; num++ ) {
+		auto& slot = slots.at( num );
+		if ( slot.GetState() == Slot::SS_PLAYER && slot.HasPlayerFlag( Slot::PF_READY ) ) {
+			Log( "Clearing 'ready' flag of " + slot.GetPlayer()->GetPlayerName() );
+			slot.UnsetPlayerFlag( Slot::PF_READY );
+			UpdateSlot( num, &slot, true );
+			if ( m_on_slot_update ) {
+				m_on_slot_update( num, &slot, true );
+			}
+		}
+	}
 }
 
 }

@@ -18,11 +18,15 @@ CLASS( Packet, Serializable )
 		PT_PLAYERS, // S->C
 		PT_UPDATE_SLOT, // C->S
 		PT_SLOT_UPDATE, // S->C
+		PT_UPDATE_FLAGS, // C->S
+		PT_FLAGS_UPDATE, // S->C
 		PT_KICK, // S->C
 		PT_MESSAGE, // *->*
 		PT_GAME_STATE, // S->C
-		PT_GET_MAP, // C->S
-		PT_MAP, // S->C
+		PT_GET_MAP_HEADER, // C->S
+		PT_MAP_HEADER, // S->C
+		PT_GET_MAP_CHUNK, // C->S
+		PT_MAP_CHUNK, // S->C
 	};
 
 	Packet( const packet_type_t type );
@@ -34,8 +38,17 @@ CLASS( Packet, Serializable )
 		struct {
 			size_t id;
 		} ping;
+		struct {
+			size_t slot_num;
+			size_t flags;
+		} flags;
+		struct {
+			size_t offset;
+			size_t size;
+		} map;
 	} udata;
 
+	// TODO: move this into udata
 	struct {
 		bool boolean;
 		size_t num;

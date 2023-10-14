@@ -14,7 +14,8 @@ const Buffer Packet::Serialize() const {
 
 	switch ( type ) {
 		case PT_AUTH: {
-			buf.WriteString( data.str ); // player name
+			buf.WriteString( data.vec[ 0 ] ); // gsid
+			buf.WriteString( data.vec[ 1 ] ); // player name
 			break;
 		}
 		case PT_GLOBAL_SETTINGS: {
@@ -35,6 +36,14 @@ const Buffer Packet::Serialize() const {
 			buf.WriteString( data.str ); // serialized slot
 			break;
 		}
+		case PT_UPDATE_FLAGS: {
+			buf.WriteInt( udata.flags.flags );
+			break;
+		}
+		case PT_FLAGS_UPDATE: {
+			buf.WriteInt( udata.flags.slot_num );
+			buf.WriteInt( udata.flags.flags );
+		}
 		case PT_KICK: {
 			buf.WriteString( data.str ); // reason
 			break;
@@ -47,8 +56,23 @@ const Buffer Packet::Serialize() const {
 			buf.WriteInt( data.num ); // game state
 			break;
 		}
-		case PT_GET_MAP: {
+		case PT_GET_MAP_HEADER: {
 			// no data
+			break;
+		}
+		case PT_MAP_HEADER: {
+			buf.WriteInt( data.num ); // total size of serialized data
+			break;
+		}
+		case PT_GET_MAP_CHUNK: {
+			buf.WriteInt( udata.map.offset );
+			buf.WriteInt( udata.map.size );
+			break;
+		}
+		case PT_MAP_CHUNK: {
+			buf.WriteInt( udata.map.offset );
+			buf.WriteInt( udata.map.size );
+			buf.WriteString( data.str ); // serialized tiles part
 			break;
 		}
 		default: {
@@ -67,7 +91,10 @@ void Packet::Unserialize( Buffer buf ) {
 
 	switch ( type ) {
 		case PT_AUTH: {
-			data.str = buf.ReadString(); // player name
+			data.vec = {
+				buf.ReadString(), // gsid
+				buf.ReadString(), // player name
+			};
 			break;
 		}
 		case PT_GLOBAL_SETTINGS: {
@@ -88,6 +115,15 @@ void Packet::Unserialize( Buffer buf ) {
 			data.str = buf.ReadString(); // serialized slot
 			break;
 		}
+		case PT_UPDATE_FLAGS: {
+			udata.flags.flags = buf.ReadInt();
+			break;
+		}
+		case PT_FLAGS_UPDATE: {
+			udata.flags.slot_num = buf.ReadInt();
+			udata.flags.flags = buf.ReadInt();
+			break;
+		}
 		case PT_KICK: {
 			data.str = buf.ReadString(); // reason
 			break;
@@ -100,8 +136,23 @@ void Packet::Unserialize( Buffer buf ) {
 			data.num = buf.ReadInt(); // game state
 			break;
 		}
-		case PT_GET_MAP: {
+		case PT_GET_MAP_HEADER: {
 			// no data
+			break;
+		}
+		case PT_MAP_HEADER: {
+			data.num = buf.ReadInt(); // total size of serialized data
+			break;
+		}
+		case PT_GET_MAP_CHUNK: {
+			udata.map.offset = buf.ReadInt();
+			udata.map.size = buf.ReadInt();
+			break;
+		}
+		case PT_MAP_CHUNK: {
+			udata.map.offset = buf.ReadInt();
+			udata.map.size = buf.ReadInt();
+			data.str = buf.ReadString(); // serialized tiles part
 			break;
 		}
 		default: {

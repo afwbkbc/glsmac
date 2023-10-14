@@ -41,7 +41,7 @@ void Join::Show() {
 	m_input_yourname->SetLeft( 144 );
 	m_input_yourname->SetTop( 5 );
 	m_input_yourname->SetRight( 12 );
-	m_input_yourname->SetValue( m_mainmenu->m_state->m_settings.local.player_name );
+	m_input_yourname->SetValue( m_mainmenu->m_state->m_settings.local.account.GetLastPlayerName() );
 	m_input_yourname->SetMaxLength( 20 ); // TODO: determine by rendered width
 	m_section->AddChild( m_input_yourname );
 
@@ -57,7 +57,7 @@ void Join::Show() {
 	m_input_gameip->SetLeft( 144 );
 	m_input_gameip->SetTop( 34 );
 	m_input_gameip->SetRight( 12 );
-	m_input_gameip->SetValue( m_mainmenu->m_state->m_settings.local.remote_address );
+	m_input_gameip->SetValue( m_mainmenu->m_state->m_settings.local.account.GetLastRemoteAddress() );
 	m_input_gameip->SetMaxLength( 20 ); // TODO: determine by rendered width
 	m_section->AddChild( m_input_gameip );
 
@@ -97,6 +97,10 @@ void Join::OnNext() {
 		MenuError( "Player enter game IP." );
 	}
 	else {
+
+		m_mainmenu->m_state->m_settings.local.account.SetLastPlayerName( m_mainmenu->m_state->m_settings.local.player_name );
+		m_mainmenu->m_state->m_settings.local.account.SetLastRemoteAddress( m_mainmenu->m_state->m_settings.local.remote_address );
+
 		Hide();
 		NEWV( connection, ::game::connection::Client, &m_mainmenu->m_state->m_settings.local );
 		SetConnection( connection );

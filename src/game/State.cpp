@@ -41,7 +41,7 @@ void State::RemovePlayer( Player* player ) {
 	m_players.erase( player );
 }
 
-void State::AddCIDSlot( const size_t cid, const size_t slot ) {
+void State::AddCIDSlot( const network::cid_t cid, const size_t slot ) {
 	Log( "adding CID " + std::to_string( cid ) + " for slot " + std::to_string( slot ) );
 #ifdef DEBUG
 	ASSERT( m_cid_slots.find( cid ) == m_cid_slots.end(), "duplicate cid add" );
@@ -52,13 +52,13 @@ void State::AddCIDSlot( const size_t cid, const size_t slot ) {
 	m_cid_slots[ cid ] = slot;
 }
 
-void State::RemoveCIDSlot( const size_t cid ) {
+void State::RemoveCIDSlot( const network::cid_t cid ) {
 	Log( "removing CID " + std::to_string( cid ) );
 	ASSERT( m_cid_slots.find( cid ) != m_cid_slots.end(), "cid not found" );
 	m_cid_slots.erase( cid );
 }
 
-const std::unordered_map< size_t, size_t >& State::GetCidSlots() const {
+const std::unordered_map< network::cid_t, size_t >& State::GetCidSlots() const {
 	return m_cid_slots;
 }
 

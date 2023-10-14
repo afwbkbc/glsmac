@@ -1,5 +1,8 @@
 #pragma once
 
+#include <unordered_map>
+#include <string>
+
 #include "Connection.h"
 
 namespace game {
@@ -10,8 +13,9 @@ CLASS( Server, Connection )
 	Server( LocalSettings* const settings );
 
 	std::function< void() > m_on_listen = nullptr;
+	std::function< const std::string() > m_on_map_request = nullptr; // return serialized Tiles
 
-	void UpdateSlot( const size_t slot_num, const Slot* slot ) override;
+	void UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flags = false ) override;
 	void Message( const std::string& message ) override;
 
 	void ResetHandlers() override;
@@ -27,14 +31,23 @@ protected:
 	void ProcessEvent( const network::Event& event ) override;
 
 private:
-	void Broadcast( std::function< void( const size_t cid ) > callback );
-	void Kick( const size_t cid, const std::string& reason );
+	void Broadcast( std::function< void( const network::cid_t cid ) > callback );
+	void Kick( const network::cid_t cid, const std::string& reason );
 	void KickFromSlot( Slot& slot, const std::string& reason );
-	void Error( const size_t cid, const std::string& reason );
-	void SendGlobalSettings( const size_t cid );
-	void SendGameState( const size_t cid );
-	void SendSlotUpdate( const size_t slot_num, const Slot* slot, size_t skip_cid = 0 );
+	void Error( const network::cid_t cid, const std::string& reason );
+	void SendGlobalSettings( const network::cid_t cid );
+	void SendGameState( const network::cid_t cid );
+	void SendSlotUpdate( const size_t slot_num, const Slot* slot, network::cid_t skip_cid = 0 );
+	void SendFlagsUpdate( const size_t slot_num, const Slot* slot, network::cid_t skip_cid = 0 );
 	const std::string FormatChatMessage( const Player* player, const std::string& message ) const;
+
+	struct map_data_t {
+		size_t next_expected_offset = 0; // for extra consistency checks
+		std::string serialized_tiles = "";
+	};
+	std::unordered_map< network::cid_t, map_data_t > m_map_data = {}; // cid -> serialized tiles
+
+	void ClearReadyFlags();
 };
 
 }

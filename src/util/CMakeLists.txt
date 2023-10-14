@@ -7,6 +7,7 @@ SET( SRC ${SRC}
 	${PWD}/Perlin.cpp
 	${PWD}/FS.cpp
 	${PWD}/Random.cpp
+	${PWD}/UUID.cpp
 	${PWD}/ArgParser.cpp
 
 	PARENT_SCOPE )

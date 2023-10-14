@@ -39,8 +39,37 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 		m_players_section->UpdateSlot( slot_num, slot );
 		GlobalMessage( "Player \"" + player->GetPlayerName() + "\" left." );
 	};
-	connection->m_on_slot_update = [ this ]( const size_t slot_num, game::Slot* slot ) -> void {
+	connection->m_on_slot_update = [ this ]( const size_t slot_num, game::Slot* slot, const bool only_flags ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
+		if ( slot_num == this->m_connection->GetSlotNum() ) {
+			const bool is_ready = slot->HasPlayerFlag( ::game::Slot::PF_READY );
+
+			// update 'ready' button to match
+			if ( is_ready && !m_ready_button->HasStyleModifier( Style::M_SELECTED ) ) {
+				m_ready_button->AddStyleModifier( Style::M_SELECTED );
+			}
+			else if ( !is_ready && m_ready_button->HasStyleModifier( Style::M_SELECTED ) ) {
+				m_ready_button->RemoveStyleModifier( Style::M_SELECTED );
+			}
+
+			if ( slot->GetPlayer()->GetRole() == ::game::Player::PR_HOST ) {
+				// lock/unlock game settings
+				if ( is_ready ) {
+					m_game_settings_section->Lock();
+				}
+				else {
+					m_game_settings_section->Unlock();
+				}
+				// lock/unlock non-player slots
+				auto& slots = m_state->m_slots.GetSlots();
+				for ( size_t num = 0 ; num < slots.size() ; num++ ) {
+					auto& s = slots.at( num );
+					if ( s.GetState() != ::game::Slot::SS_PLAYER ) {
+						m_players_section->UpdateSlot( num, &s );
+					}
+				}
+			}
+		}
 		ManageCountdown();
 	};
 	connection->m_on_message = [ this ]( const std::string& message ) -> void {
@@ -112,15 +141,13 @@ void Lobby::Show() {
 	m_ready_button->On(
 		UIEvent::EV_BUTTON_CLICK, EH( this ) {
 			auto* slot = GetPlayer()->GetSlot();
-			if ( !m_ready_button->HasStyleModifier( Style::M_SELECTED ) ) {
-				m_ready_button->AddStyleModifier( Style::M_SELECTED );
+			if ( !slot->HasPlayerFlag( ::game::Slot::PF_READY ) ) {
 				slot->SetPlayerFlag( ::game::Slot::PF_READY );
 			}
 			else {
-				m_ready_button->RemoveStyleModifier( Style::M_SELECTED );
 				slot->UnsetPlayerFlag( ::game::Slot::PF_READY );
 			}
-			UpdateSlot( m_state->GetConnection()->GetSlotNum(), slot );
+			UpdateSlot( m_state->GetConnection()->GetSlotNum(), slot, true );
 			return true;
 		}
 	);
@@ -208,10 +235,15 @@ void Lobby::Message( const std::string& message ) {
 	m_connection->Message( message );
 }
 
-void Lobby::UpdateSlot( const size_t slot_num, ::game::Slot* slot ) {
-	Log( "Updating slot " + slot->GetName() );
+void Lobby::UpdateSlot( const size_t slot_num, ::game::Slot* slot, const bool only_flags ) {
+	if ( only_flags ) {
+		Log( "Updating slot " + slot->GetName() );
+	}
+	else {
+		Log( "Updating flags for slot " + slot->GetName() );
+	}
 	m_players_section->UpdateSlot( slot_num, slot );
-	m_connection->UpdateSlot( slot_num, slot );
+	m_connection->UpdateSlot( slot_num, slot, only_flags );
 	ManageCountdown();
 }
 

@@ -23,9 +23,15 @@ CLASS( GameSettingsSection, LobbySection )
 	void Align() override;
 	void Destroy() override;
 
+	void Lock();
+	void Unlock();
+
 	void UpdateRows();
 
 private:
+
+	bool m_is_locked = false;
+	const bool IsLocked() const;
 
 	void ShowLoadMap();
 	void HideLoadMap();

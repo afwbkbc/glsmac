@@ -26,7 +26,7 @@ Player* Slot::GetPlayer() const {
 	return m_player_data.player;
 }
 
-size_t Slot::GetCid() const {
+const network::cid_t Slot::GetCid() const {
 	ASSERT( m_slot_state == SS_PLAYER, "attempted to get cid from non-player slot" );
 	return m_player_data.cid;
 }
@@ -70,7 +70,7 @@ Player* Slot::GetPlayerAndClose() {
 	return result;
 }
 
-void Slot::SetPlayer( Player* player, const size_t cid, const std::string& remote_address ) {
+void Slot::SetPlayer( Player* player, const network::cid_t cid, const std::string& remote_address ) {
 	ASSERT( m_slot_state == SS_OPEN, "attempted to set player to non-open slot" );
 	ASSERT( !player->GetSlot(), "attempted to set slot to player with non-empty slot" );
 	m_player_data.player = player;
@@ -78,6 +78,33 @@ void Slot::SetPlayer( Player* player, const size_t cid, const std::string& remot
 	m_player_data.remote_address = remote_address;
 	player->SetSlot( this );
 	m_slot_state = SS_PLAYER;
+}
+
+const std::string& Slot::GetLinkedGSID() const {
+	return m_linked_gsid;
+}
+
+void Slot::SetLinkedGSID( const std::string& gsid ) {
+	ASSERT( m_linked_gsid.empty(), "linked gsid already set" );
+	ASSERT( !gsid.empty(), "linked gsid is empty" );
+	Log( "Linking GSID: " + gsid );
+	m_linked_gsid = gsid;
+}
+
+void Slot::UnsetLinkedGSID() {
+	ASSERT( !m_linked_gsid.empty(), "linked gsid not set" );
+	Log( "Unlinking GSID: " + m_linked_gsid );
+	m_linked_gsid.clear();
+}
+
+const Slot::player_flag_t Slot::GetPlayerFlags() const {
+	ASSERT( m_slot_state == SS_PLAYER, "attempted to get player flags from non-player slot" );
+	return m_player_data.flags;
+}
+
+void Slot::SetPlayerFlags( const player_flag_t flags ) {
+	ASSERT( m_slot_state == SS_PLAYER, "attempted to set player flags to non-player slot" );
+	m_player_data.flags = flags;
 }
 
 const types::Buffer Slot::Serialize() const {
@@ -90,6 +117,7 @@ const types::Buffer Slot::Serialize() const {
 		// not sending remote address
 		buf.WriteInt( m_player_data.flags );
 	}
+	buf.WriteString( m_linked_gsid );
 
 	return buf;
 }
@@ -98,12 +126,15 @@ void Slot::Unserialize( types::Buffer buf ) {
 	m_slot_state = (slot_state_t)buf.ReadInt();
 	if ( m_slot_state == SS_PLAYER ) {
 		if ( !m_player_data.player ) {
-			m_player_data.player = new Player();
+			m_player_data.player = new Player( buf.ReadString() );
 			m_player_data.player->SetSlot( this );
 		}
-		m_player_data.player->Unserialize( buf.ReadString() );
+		else {
+			m_player_data.player->Unserialize( buf.ReadString() );
+		}
 		m_player_data.flags = buf.ReadInt();
 	}
+	m_linked_gsid = buf.ReadString();
 }
 
 }

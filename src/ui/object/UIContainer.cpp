@@ -252,7 +252,7 @@ void UIContainer::ApplyStyle() {
 	}
 
 	for ( auto& c : m_child_objects ) {
-		////c->ReloadStyle();
+		//c->ReloadStyle();
 		c->ApplyStyleIfNeeded(); // ???
 		//c->ApplyStyleIfNotLoaded();
 	}

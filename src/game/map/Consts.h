@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_map>
+
 #include "game/Settings.h"
 
 #include "Tile.h"
@@ -513,14 +515,14 @@ struct Consts {
 	};
 #ifdef DEBUG
 	const struct {
-		const std::string lastseed_filename = "./tmp/lastmap.seed";
-		const std::string lastmap_filename = "./tmp/lastmap.gsm";
-		const std::string lastdump_filename = "./tmp/lastmap.gsmd";
+		const std::string lastseed_filename = "lastmap.seed";
+		const std::string lastmap_filename = "lastmap.gsm";
+		const std::string lastdump_filename = "lastmap.gsmd";
 	} debug;
 #endif
-
 };
 extern Consts s_consts;
 
 }
+
 }
