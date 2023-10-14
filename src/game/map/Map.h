@@ -32,7 +32,7 @@ class Finalize;
 
 CLASS( Map, types::Serializable )
 
-	Map( const Game* game );
+	Map( Game* game );
 	~Map();
 
 	enum error_code_t {
@@ -145,8 +145,9 @@ private:
 	std::unordered_map< size_t, std::pair< std::string, Vec3 > > m_sprite_instances_to_add = {};
 
 private:
+	const int ITERATE_STATE_EVERY_N_TILES = 64;
 
-	const Game* m_game = nullptr;
+	Game* m_game = nullptr;
 
 	Tiles* m_tiles = nullptr;
 	MapState* m_map_state = nullptr;

@@ -253,6 +253,11 @@ map::Map* Game::GetMap() const {
 	return m_map;
 }
 
+State* Game::GetState() const {
+	ASSERT( m_state, "state not set" );
+	return m_state;
+}
+
 const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE ) {
 	MT_Response response = {};
 	response.op = request.op;
