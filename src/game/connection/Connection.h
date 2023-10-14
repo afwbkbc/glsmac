@@ -58,7 +58,7 @@ CLASS( Connection, base::Module )
 	const size_t GetSlotNum() const;
 	const Player* GetPlayer() const;
 
-	virtual void UpdateSlot( const size_t slot_num, const Slot* slot ) = 0;
+	virtual void UpdateSlot( const size_t slot_num, Slot* slot ) = 0;
 	virtual void Message( const std::string& message ) = 0;
 
 protected:

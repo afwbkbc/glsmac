@@ -19,18 +19,21 @@ void PlayersSectionRow::Create() {
 
 	auto* me = m_parent->GetLobby()->GetPlayer();
 	const bool am_i_host = me->GetRole() == ::game::Player::PR_HOST;
+	const bool am_i_ready = me->GetSlot()->HasPlayerFlag( ::game::Slot::PF_READY );
 
 	NEW( m_elements.actions, Dropdown, "PopupDropdown" );
 	m_elements.actions->SetLeft( 36 );
 	m_elements.actions->SetWidth( 178 );
 
 	if ( m_slot->GetState() == ::game::Slot::SS_PLAYER ) {
-		m_elements.actions->SetMode( Dropdown::DM_MENU );
 
 		auto* player = m_slot->GetPlayer();
 		ASSERT( player, "slot player is null" );
-
 		const bool is_it_me = player == me;
+		const bool is_it_ready = m_slot->HasPlayerFlag( ::game::Slot::PF_READY );
+		const bool allowed_to_change = is_it_me && !am_i_ready;
+
+		m_elements.actions->SetMode( Dropdown::DM_MENU );
 
 		if ( is_it_me ) {
 			ui::object::UIContainer::AddStyleModifier( Style::M_HIGHLIGHT );
@@ -40,7 +43,7 @@ void PlayersSectionRow::Create() {
 
 		const auto& faction_color = player->GetFaction().m_color;
 
-		if ( m_slot->HasPlayerFlag( ::game::Slot::PF_READY ) ) {
+		if ( is_it_ready ) {
 			NEW( m_elements.ready, Surface );
 			m_elements.ready->SetWidth( 24 );
 			m_elements.ready->SetHeight( 16 );
@@ -52,7 +55,7 @@ void PlayersSectionRow::Create() {
 		}
 
 		NEW( m_elements.faction, Dropdown, "PopupDropdown" );
-		if ( is_it_me ) {
+		if ( allowed_to_change ) {
 			m_elements.faction->SetChoices( m_parent->GetFactionChoices() );
 		}
 		m_elements.faction->SetValue( player->GetFaction().m_name );
@@ -69,7 +72,7 @@ void PlayersSectionRow::Create() {
 		AddChild( m_elements.faction );
 
 		NEW( m_elements.difficulty_level, Dropdown, "PopupDropdown" );
-		if ( is_it_me ) {
+		if ( allowed_to_change ) {
 			m_elements.difficulty_level->SetChoices( m_parent->GetDifficultyLevelChoices() );
 		}
 		m_elements.difficulty_level->SetValue( player->GetDifficultyLevel().m_name );
@@ -86,50 +89,51 @@ void PlayersSectionRow::Create() {
 		AddChild( m_elements.difficulty_level );
 
 		std::vector< std::string > actions = {};
-		if ( is_it_me ) {
-			actions.push_back( "Customize faction" );
-		}
-		else {
-			if ( am_i_host ) {
+		if ( allowed_to_change ) {
+			if ( is_it_me ) {
+				actions.push_back( "Customize faction" );
+			}
+			else if ( am_i_host ) {
 				actions.push_back( "Kick" );
 				actions.push_back( "Ban" );
 			}
+			m_elements.actions->SetChoicesV( actions );
+			m_elements.actions->On(
+				UIEvent::EV_CHANGE, EH( this, is_it_me, am_i_host ) {
+					const auto& value = *( data->value.change.text );
+					if ( is_it_me ) {
+						if ( value == "Customize faction" ) {
+							g_engine->GetUI()->ShowError( "This feature is not available yet." );
+							return true;
+						}
+					}
+					else {
+						if ( am_i_host ) {
+							if ( value == "Kick" ) {
+								m_parent->GetLobby()->KickFromSlot( m_slot_num );
+								return true;
+							}
+							if ( value == "Ban" ) {
+								m_parent->GetLobby()->BanFromSlot( m_slot_num );
+								return true;
+							}
+						}
+					}
+					ASSERT( false, "invalid selection" );
+					return false;
+				}
+			);
 		}
-
-		m_elements.actions->SetChoicesV( actions );
-		m_elements.actions->On(
-			UIEvent::EV_CHANGE, EH( this, is_it_me, am_i_host ) {
-				const auto& value = *( data->value.change.text );
-				if ( is_it_me ) {
-					if ( value == "Customize faction" ) {
-						g_engine->GetUI()->ShowError( "This feature is not available yet." );
-						return true;
-					}
-				}
-				else {
-					if ( am_i_host ) {
-						if ( value == "Kick" ) {
-							m_parent->GetLobby()->KickFromSlot( m_slot_num );
-							return true;
-						}
-						if ( value == "Ban" ) {
-							m_parent->GetLobby()->BanFromSlot( m_slot_num );
-							return true;
-						}
-					}
-				}
-				ASSERT( false, "invalid selection" );
-				return false;
-			}
-		);
 		m_elements.actions->SetValue( player->GetPlayerName() );
 		m_elements.actions->SetTextColor( faction_color );
 
 	}
 	else {
+		const bool allowed_to_change = am_i_host && !am_i_ready;
+
 		m_elements.actions->SetMode( Dropdown::DM_SELECT );
 
-		if ( am_i_host ) {
+		if ( allowed_to_change ) {
 			m_elements.actions->SetChoicesV(
 				{
 					"Open",

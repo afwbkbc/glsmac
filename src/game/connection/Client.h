@@ -14,7 +14,7 @@ CLASS( Client, Connection )
 	std::function< void( const float progress ) > m_on_map_progress = nullptr; // progress is from 0.0f to 1.0f
 	std::function< void( const std::string serialized_tiles ) > m_on_map_data = nullptr;
 
-	void UpdateSlot( const size_t slot_num, const Slot* slot ) override;
+	void UpdateSlot( const size_t slot_num, Slot* slot ) override;
 	void Message( const std::string& message ) override;
 
 	const game_state_t GetGameState() const;

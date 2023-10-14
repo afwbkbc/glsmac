@@ -36,6 +36,11 @@ void Client::ProcessEvent( const Event& event ) {
 						}
 						case Packet::PT_GLOBAL_SETTINGS: {
 							Log( "Got global settings update from server" );
+							const auto& host_slot = m_state->m_slots.GetSlot( 0 );
+							if ( host_slot.HasPlayerFlag( Slot::PF_READY ) ) {
+								Error( "host updated settings while ready" );
+								break;
+							}
 							m_state->m_settings.global.Unserialize( Buffer( packet.data.str ) );
 							if ( m_on_global_settings_update ) {
 								m_on_global_settings_update();
@@ -69,7 +74,23 @@ void Client::ProcessEvent( const Event& event ) {
 								return;
 							}
 							auto& slot = m_state->m_slots.GetSlot( slot_num );
+							const bool wasReady = slot.GetState() == Slot::SS_PLAYER
+								? slot.HasPlayerFlag( Slot::PF_READY ) // check readyness of player
+								: m_state->m_slots.GetSlot( 0 ).HasPlayerFlag( Slot::PF_READY ) // check readyness of host
+							;
 							slot.Unserialize( packet.data.str );
+							if ( slot.GetState() == Slot::SS_PLAYER ) {
+								if ( wasReady && slot.HasPlayerFlag( Slot::PF_READY ) ) {
+									Error( "player updated slot while ready" );
+									break;
+								}
+							}
+							else {
+								if ( wasReady ) {
+									Error( "host updated slot while ready" );
+									break;
+								}
+							}
 							if ( m_on_slot_update ) {
 								m_on_slot_update( slot_num, &slot );
 							}
@@ -177,7 +198,7 @@ void Client::ProcessEvent( const Event& event ) {
 	}
 }
 
-void Client::UpdateSlot( const size_t slot_num, const Slot* slot ) {
+void Client::UpdateSlot( const size_t slot_num, Slot* slot ) {
 	Log( "Sending slot update" );
 	Packet p( Packet::PT_UPDATE_SLOT );
 	// not sending slot num because server knows it anyway

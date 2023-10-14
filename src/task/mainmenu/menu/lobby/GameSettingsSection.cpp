@@ -74,6 +74,24 @@ void GameSettingsSection::Destroy() {
 	LobbySection::Destroy();
 }
 
+void GameSettingsSection::Lock() {
+	if ( !m_is_locked ) {
+		ASSERT( GetLobby()->GetPlayer()->GetRole() == ::game::Player::PR_HOST, "settings can only be locked for host" );
+		Log( "Locking game settings" );
+		m_is_locked = true;
+		UpdateRows();
+	}
+}
+
+void GameSettingsSection::Unlock() {
+	if ( m_is_locked ) {
+		ASSERT( GetLobby()->GetPlayer()->GetRole() == ::game::Player::PR_HOST, "settings can only be unlocked for host" );
+		Log( "Unlocking game settings" );
+		m_is_locked = false;
+		UpdateRows();
+	}
+}
+
 void GameSettingsSection::UpdateRows() {
 
 	ASSERT( !m_element_rows.empty(), "element rows are empty" );
@@ -187,7 +205,10 @@ void GameSettingsSection::UpdateRows() {
 			},
 		}, 0
 	);
+}
 
+const bool GameSettingsSection::IsLocked() const {
+	return m_is_locked || GetLobby()->GetPlayer()->GetRole() != ::game::Player::PR_HOST; // always locked for non-host
 }
 
 void GameSettingsSection::CreateRow( const row_id_t row_id, const std::string& label, const size_t label_width, const size_t choices_width ) {
@@ -258,11 +279,12 @@ void GameSettingsSection::CreateRow( const row_id_t row_id, const std::string& l
 
 void GameSettingsSection::UpdateRow( const row_id_t row_id, const ::ui::object::ChoiceList::choices_t& choices, const ChoiceList::value_t default_choice ) {
 	const auto& row = m_element_rows.at( row_id );
-	if ( GetLobby()->GetPlayer()->GetRole() == ::game::Player::PR_HOST && row_id != RI_MAP_FILE ) {
+	if ( !IsLocked() && row_id != RI_MAP_FILE ) {
 		row.choices->SetChoices( choices );
 		row.choices->SetValue( default_choice );
 	}
 	else {
+		row.choices->SetChoices( {} );
 		for ( const auto& it : choices ) {
 			if ( it.first == default_choice ) {
 				row.choices->SetValue( it.second );

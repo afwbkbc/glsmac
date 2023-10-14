@@ -15,7 +15,7 @@ CLASS( Server, Connection )
 	std::function< void() > m_on_listen = nullptr;
 	std::function< const std::string() > m_on_map_request = nullptr; // return serialized Tiles
 
-	void UpdateSlot( const size_t slot_num, const Slot* slot ) override;
+	void UpdateSlot( const size_t slot_num, Slot* slot ) override;
 	void Message( const std::string& message ) override;
 
 	void ResetHandlers() override;
@@ -46,7 +46,7 @@ private:
 	};
 	std::unordered_map< size_t, map_data_t > m_map_data = {}; // cid -> serialized tiles
 
-
+	void ClearReadyFlags();
 };
 
 }

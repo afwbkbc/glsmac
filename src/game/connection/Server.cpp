@@ -87,6 +87,10 @@ void Server::ProcessEvent( const network::Event& event ) {
 
 				SendSlotUpdate( slot_num, &slot, event.cid ); // notify others
 
+				if ( m_game_state == GS_LOBBY ) {
+					ClearReadyFlags();
+				}
+
 				if ( m_on_player_leave ) {
 					m_on_player_leave( slot_num, &slot, player );
 				}
@@ -164,6 +168,10 @@ void Server::ProcessEvent( const network::Event& event ) {
 							}
 						}
 
+						if ( m_game_state == GS_LOBBY ) {
+							ClearReadyFlags();
+						}
+
 						const auto& rules = m_state->m_settings.global.game_rules;
 						NEWV(
 							player, ::game::Player,
@@ -208,7 +216,16 @@ void Server::ProcessEvent( const network::Event& event ) {
 							break;
 						}
 						auto& slot = m_state->m_slots.GetSlot( it->second );
+						if ( slot.GetState() != Slot::SS_PLAYER ) {
+							Error( event.cid, "slot state mismatch" );
+							break;
+						}
+						const bool wasReady = slot.HasPlayerFlag( Slot::PF_READY );
 						slot.Unserialize( packet.data.str );
+						if ( wasReady && slot.HasPlayerFlag( Slot::PF_READY ) ) {
+							Error( event.cid, "slot update while ready" );
+							break;
+						}
 						SendSlotUpdate( it->second, &slot, event.cid ); // notify others
 						if ( m_on_slot_update ) {
 							m_on_slot_update( it->second, &slot );
@@ -337,7 +354,10 @@ void Server::SetGameState( const game_state_t game_state ) {
 	);
 }
 
-void Server::UpdateSlot( const size_t slot_num, const Slot* slot ) {
+void Server::UpdateSlot( const size_t slot_num, Slot* slot ) {
+	if ( m_on_slot_update ) {
+		m_on_slot_update( slot_num, slot );
+	}
 	SendSlotUpdate( slot_num, slot );
 }
 
@@ -425,6 +445,23 @@ void Server::SendSlotUpdate( const size_t slot_num, const Slot* slot, size_t ski
 
 const std::string Server::FormatChatMessage( const Player* player, const std::string& message ) const {
 	return "<" + player->GetPlayerName() + "> " + message;
+}
+
+void Server::ClearReadyFlags() {
+	ASSERT( m_game_state, "unexpected game state" );
+	// clear readyness of everyone when new player joins or leaves
+	auto& slots = m_state->m_slots.GetSlots();
+	for ( size_t num = 0 ; num < slots.size() ; num++ ) {
+		auto& slot = slots.at( num );
+		if ( slot.GetState() == Slot::SS_PLAYER && slot.HasPlayerFlag( Slot::PF_READY ) ) {
+			Log( "Clearing 'ready' flag of " + slot.GetPlayer()->GetPlayerName() );
+			slot.UnsetPlayerFlag( Slot::PF_READY );
+			UpdateSlot( num, &slot );
+			if ( m_on_slot_update ) {
+				m_on_slot_update( num, &slot );
+			}
+		}
+	}
 }
 
 }
