@@ -4,13 +4,7 @@
 
 #include "Event.h"
 #include "types/Packet.h"
-
-#ifdef _WIN32
-#include <WinSock2.h>
-#define fd_t SOCKET
-#else
-#define fd_t int
-#endif
+#include "types.h"
 
 using namespace types;
 
@@ -47,7 +41,7 @@ struct MT_Request {
 		connection_mode_t mode;
 		std::string remote_address;
 	} connect;
-	size_t cid;
+	cid_t cid;
 	Event event;
 };
 
@@ -63,12 +57,12 @@ CLASS( Network, MTModule )
 
 	mt_id_t MT_Connect( const connection_mode_t connect_mode, const std::string& remote_address = "" );
 	mt_id_t MT_Disconnect();
-	mt_id_t MT_DisconnectClient( const size_t cid );
+	mt_id_t MT_DisconnectClient( const cid_t cid );
 
 	mt_id_t MT_GetEvents();
 	mt_id_t MT_SendEvent( const Event& event );
 
-	mt_id_t MT_SendPacket( const Packet& packet, const size_t cid = 0 );
+	mt_id_t MT_SendPacket( const Packet& packet, const cid_t cid = 0 );
 
 	MT_Response MT_GetResult( mt_id_t mt_id );
 
@@ -100,35 +94,36 @@ protected:
 	};
 
 	struct remote_socket_data_t {
-		std::string remote_address;
-		fd_t fd;
-		size_t cid;
+		std::string remote_address = "";
+		fd_t fd = 0;
+		cid_t cid = 0;
 		struct {
-			char* data1;
-			char* data2;
-			char* data;
-			char* ptr;
-			size_t len;
-		} buffer;
-		time_t last_data_at;
-		bool ping_needed;
-		bool ping_sent;
-		bool pong_needed;
+			char* data1 = nullptr;
+			char* data2 = nullptr;
+			char* data = nullptr;
+			char* ptr = nullptr;
+			size_t len = 0;
+		} buffer = {};
+		time_t last_data_at = 0;
+		bool ping_needed = false;
+		bool ping_sent = false;
+		bool pong_needed = false;
 	};
 
 	struct {
-		std::unordered_map< fd_t, local_socket_data_t > listening_sockets;
-		std::unordered_map< fd_t, remote_socket_data_t > client_sockets;
-		std::vector< fd_t > cid_to_fd;
+		std::unordered_map< fd_t, local_socket_data_t > listening_sockets = {};
+		std::unordered_map< fd_t, remote_socket_data_t > client_sockets = {};
+		std::unordered_map< cid_t, fd_t > cid_to_fd = {};
+		cid_t next_cid = 1; // 0 is reserved for server
 		struct {
-			void* client_addr;
-			fd_t newfd;
-			std::vector< int > to_remove;
-		} tmp;
+			void* client_addr = nullptr;
+			fd_t newfd = 0;
+			std::vector< int > to_remove = {};
+		} tmp = {};
 	} m_server = {};
 
 	struct {
-		remote_socket_data_t socket;
+		remote_socket_data_t socket = {};
 	} m_client = {};
 
 	CLASS( Impl, base::Base )
@@ -156,7 +151,7 @@ protected:
 	virtual MT_Response ListenStop() = 0;
 	virtual MT_Response Connect( const std::string& remote_address, MT_CANCELABLE ) = 0;
 	virtual MT_Response Disconnect() = 0;
-	virtual MT_Response DisconnectClient( const size_t cid ) = 0;
+	virtual MT_Response DisconnectClient( const cid_t cid ) = 0;
 	virtual void ProcessEvents() = 0;
 
 	const MT_Response ProcessRequest( const MT_Request& request, MT_CANCELABLE ) override;
@@ -171,11 +166,11 @@ protected:
 
 	void AddEvent( const Event& event );
 	events_t GetEvents();
-	void InvalidateEventsForDisconnectedClient( const size_t cid );
+	void InvalidateEventsForDisconnectedClient( const cid_t cid );
 
 	const connection_mode_t GetCurrentConnectionMode() const;
 
-	const fd_t GetFdFromCid( const size_t cid ) const;
+	const fd_t GetFdFromCid( const cid_t cid ) const;
 
 private:
 	connection_mode_t m_current_connection_mode = CM_NONE;

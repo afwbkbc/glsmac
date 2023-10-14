@@ -15,7 +15,7 @@ Client::Client( LocalSettings* const settings )
 void Client::ProcessEvent( const Event& event ) {
 	Connection::ProcessEvent( event );
 
-	ASSERT( !event.cid, "client connection received event with cid" );
+	ASSERT( !event.cid, "client connection received event with non-zero cid" );
 
 	switch ( event.type ) {
 		case Event::ET_PACKET: {

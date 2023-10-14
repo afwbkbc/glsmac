@@ -261,7 +261,7 @@ MT_Response SimpleTCP::Disconnect() {
 	return Success();
 }
 
-MT_Response SimpleTCP::DisconnectClient( const size_t cid ) {
+MT_Response SimpleTCP::DisconnectClient( const network::cid_t cid ) {
 
 	if ( GetCurrentConnectionMode() != CM_SERVER ) {
 		Log( "WARNING: DisconnectClient() on non-server" );
@@ -292,8 +292,10 @@ void SimpleTCP::ProcessEvents() {
 					}
 					m_tmp.tmpint = 0;
 					const auto fd = GetFdFromCid( event.cid );
-					// TODO: fix race conditions between Connection::Iterate() and Server::Broadcast()
-					ASSERT( fd, "event fd not found for cid " + std::to_string( event.cid ) );
+					if ( !fd ) {
+						// socket already disconnected, nowhere to write
+						break;
+					}
 					auto it = m_server.client_sockets.find( fd );
 					if ( it != m_server.client_sockets.end() ) { // if not found it may mean event is old so can be ignored
 						if ( !WriteToSocket( it->second.fd, event.data.packet_data ) ) {
@@ -379,21 +381,11 @@ void SimpleTCP::Iterate() {
 				data.ping_needed = false;
 				data.pong_needed = false;
 				data.ping_sent = false;
-				// find free cid
-				if ( m_server.cid_to_fd.empty() ) {
-					m_server.cid_to_fd.push_back( 0 ); // reserve zero cid for server
+				if ( m_server.next_cid == UINT32_MAX ) {
+					m_server.next_cid = 1;
 				}
-				for ( data.cid = 1 ; data.cid < m_server.cid_to_fd.size() ; data.cid++ ) {
-					if ( m_server.cid_to_fd[ data.cid ] == 0 ) {
-						// free cid found
-						m_server.cid_to_fd[ data.cid ] = data.fd;
-						break;
-					}
-				}
-				if ( data.cid == m_server.cid_to_fd.size() ) {
-					// no free cid found, append to the end
-					m_server.cid_to_fd.push_back( data.fd );
-				}
+				data.cid = m_server.next_cid++;
+				m_server.cid_to_fd[ data.cid ] = data.fd;
 
 				ASSERT( m_server.client_sockets.find( data.fd ) == m_server.client_sockets.end(), "client socket already added" );
 				m_server.client_sockets[ data.fd ] = data;
@@ -655,7 +647,7 @@ bool SimpleTCP::MaybePingDo( remote_socket_data_t& socket ) {
 	return true;
 }
 
-void SimpleTCP::CloseSocket( int fd, size_t cid, bool skip_event ) {
+void SimpleTCP::CloseSocket( int fd, cid_t cid, bool skip_event ) {
 	Log( "Closing socket " + std::to_string( fd ) );
 	uint32_t bye = 0;
 	m_impl.Send( fd, &bye, sizeof( bye ) );
@@ -681,7 +673,7 @@ void SimpleTCP::CloseClientSocket( const remote_socket_data_t& socket ) {
 	free( socket.buffer.data1 );
 	free( socket.buffer.data2 );
 	InvalidateEventsForDisconnectedClient( socket.cid );
-	m_server.cid_to_fd[ socket.cid ] = 0;
+	m_server.cid_to_fd.erase( socket.cid );
 }
 
 }

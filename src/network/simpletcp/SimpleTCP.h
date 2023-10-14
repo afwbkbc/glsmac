@@ -35,7 +35,7 @@ protected:
 	MT_Response ListenStop() override;
 	MT_Response Connect( const std::string& remote_address, MT_CANCELABLE ) override;
 	MT_Response Disconnect() override;
-	MT_Response DisconnectClient( const size_t cid ) override;
+	MT_Response DisconnectClient( const network::cid_t cid ) override;
 	void ProcessEvents() override;
 
 private:
@@ -44,7 +44,7 @@ private:
 	bool WriteToSocket( int fd, const std::string& data );
 	bool MaybePing( remote_socket_data_t& socket );
 	bool MaybePingDo( remote_socket_data_t& socket );
-	void CloseSocket( int fd, size_t cid = 0, bool skip_event = false );
+	void CloseSocket( int fd, network::cid_t cid = 0, bool skip_event = false );
 	void CloseClientSocket( const remote_socket_data_t& socket );
 
 };

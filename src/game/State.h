@@ -12,6 +12,8 @@
 
 #include "connection/Connection.h"
 
+#include "network/types.h"
+
 namespace game {
 
 CLASS( State, base::Base )
@@ -31,10 +33,10 @@ CLASS( State, base::Base )
 	void RemovePlayer( Player* player );
 
 	// used only on host
-	void AddCIDSlot( const size_t cid, const size_t slot );
-	void RemoveCIDSlot( const size_t cid );
+	void AddCIDSlot( const network::cid_t cid, const size_t slot );
+	void RemoveCIDSlot( const network::cid_t cid );
 
-	const std::unordered_map< size_t, size_t >& GetCidSlots() const;
+	const std::unordered_map< network::cid_t, size_t >& GetCidSlots() const;
 
 	void SetConnection( connection::Connection* connection );
 	connection::Connection* GetConnection() const;
@@ -43,7 +45,7 @@ CLASS( State, base::Base )
 
 private:
 	std::unordered_set< Player* > m_players = {}; // persistent
-	std::unordered_map< size_t, size_t > m_cid_slots = {}; // volatile ( { cid, slot_num } )
+	std::unordered_map< network::cid_t, size_t > m_cid_slots = {}; // volatile ( { cid, slot_num } )
 
 	connection::Connection* m_connection = nullptr;
 };

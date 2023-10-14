@@ -26,7 +26,7 @@ Player* Slot::GetPlayer() const {
 	return m_player_data.player;
 }
 
-size_t Slot::GetCid() const {
+const network::cid_t Slot::GetCid() const {
 	ASSERT( m_slot_state == SS_PLAYER, "attempted to get cid from non-player slot" );
 	return m_player_data.cid;
 }
@@ -70,7 +70,7 @@ Player* Slot::GetPlayerAndClose() {
 	return result;
 }
 
-void Slot::SetPlayer( Player* player, const size_t cid, const std::string& remote_address ) {
+void Slot::SetPlayer( Player* player, const network::cid_t cid, const std::string& remote_address ) {
 	ASSERT( m_slot_state == SS_OPEN, "attempted to set player to non-open slot" );
 	ASSERT( !player->GetSlot(), "attempted to set slot to player with non-empty slot" );
 	m_player_data.player = player;

@@ -318,7 +318,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 
 }
 
-void Server::Broadcast( std::function< void( const size_t cid ) > callback ) {
+void Server::Broadcast( std::function< void( const network::cid_t cid ) > callback ) {
 	for ( const auto& slot : m_state->m_slots.GetSlots() ) {
 		if ( slot.GetState() == Slot::SS_PLAYER ) {
 			const auto cid = slot.GetCid();
@@ -348,7 +348,7 @@ void Server::BanFromSlot( const size_t slot_num, const std::string& reason ) {
 void Server::SetGameState( const game_state_t game_state ) {
 	m_game_state = game_state;
 	Broadcast(
-		[ this ]( const size_t cid ) -> void {
+		[ this ]( const network::cid_t cid ) -> void {
 			SendGameState( cid );
 		}
 	);
@@ -373,7 +373,7 @@ void Server::ResetHandlers() {
 
 void Server::UpdateGameSettings() {
 	Broadcast(
-		[ this ]( const size_t cid ) -> void {
+		[ this ]( const network::cid_t cid ) -> void {
 			SendGlobalSettings( cid );
 		}
 	);
@@ -384,7 +384,7 @@ void Server::GlobalMessage( const std::string& message ) {
 		m_on_message( message );
 	}
 	Broadcast(
-		[ this, message ]( const size_t cid ) -> void {
+		[ this, message ]( const network::cid_t cid ) -> void {
 			Packet p( Packet::PT_MESSAGE );
 			p.data.str = message;
 			m_network->MT_SendPacket( p, cid );
@@ -392,7 +392,7 @@ void Server::GlobalMessage( const std::string& message ) {
 	);
 }
 
-void Server::Kick( const size_t cid, const std::string& reason = "" ) {
+void Server::Kick( const network::cid_t cid, const std::string& reason = "" ) {
 	Log(
 		"Kicking " + std::to_string( cid ) + ( !reason.empty()
 			? " (reason: " + reason + ")"
@@ -410,28 +410,28 @@ void Server::KickFromSlot( Slot& slot, const std::string& reason ) {
 	Kick( slot.GetCid(), reason );
 }
 
-void Server::Error( const size_t cid, const std::string& reason ) {
+void Server::Error( const network::cid_t cid, const std::string& reason ) {
 	Log( "Network protocol error (cid: " + std::to_string( cid ) + "): " + reason );
 	Kick( cid, "Network protocol error" );
 }
 
-void Server::SendGlobalSettings( size_t cid ) {
+void Server::SendGlobalSettings( network::cid_t cid ) {
 	Log( "Sending global settings to " + std::to_string( cid ) );
 	Packet p( Packet::PT_GLOBAL_SETTINGS );
 	p.data.str = m_state->m_settings.global.Serialize().ToString();
 	m_network->MT_SendPacket( p, cid );
 }
 
-void Server::SendGameState( const size_t cid ) {
+void Server::SendGameState( const network::cid_t cid ) {
 	Log( "Sending game state change (" + std::to_string( m_game_state ) + ") to " + std::to_string( cid ) );
 	Packet p( Packet::PT_GAME_STATE );
 	p.data.num = m_game_state;
 	m_network->MT_SendPacket( p, cid );
 }
 
-void Server::SendSlotUpdate( const size_t slot_num, const Slot* slot, size_t skip_cid ) {
+void Server::SendSlotUpdate( const size_t slot_num, const Slot* slot, network::cid_t skip_cid ) {
 	Broadcast(
-		[ this, slot_num, slot, skip_cid ]( const size_t cid ) -> void {
+		[ this, slot_num, slot, skip_cid ]( const network::cid_t cid ) -> void {
 			if ( cid != skip_cid ) {
 				Log( "Sending slot update to " + std::to_string( cid ) );
 				Packet p( Packet::PT_SLOT_UPDATE );
