@@ -23,11 +23,7 @@ jobs:
     - name: install_dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install libfreetype-dev
-        sudo apt-get install libsdl2-dev
-        sudo apt-get install libsdl2-image-dev
-        sudo apt-get install libglu-dev
-        sudo apt-get install libglew-dev
+        sudo apt-get install libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev
     - name: cmake64
       run: cmake -DCMAKE_BUILD_TYPE=Portable64 .
     - name: make64
