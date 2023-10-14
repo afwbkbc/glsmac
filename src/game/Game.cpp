@@ -737,7 +737,8 @@ void Game::DestroyResponse( const MT_Response& response ) {
 
 void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
-	ASSERT( m_game_state == GS_NONE, "game already initializing" );
+	ASSERT( !m_connection || m_game_state == GS_NONE, "multiplayer game already initializing or running" );
+	ASSERT( m_game_state == GS_NONE || m_game_state == GS_RUNNING, "game still initializing" );
 
 	Log( "Initializing game" );
 

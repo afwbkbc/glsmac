@@ -24,7 +24,8 @@ LeftMenu::LeftMenu( Game* game )
 	x( "GAME", GameMenu );
 	x( "EDIT MAP", EditMapMenu );
 #ifdef DEBUG
-	x( "DEBUG", DebugMenu );
+	// TODO: unfinished
+	//x( "DEBUG", DebugMenu );
 #endif
 #undef x
 

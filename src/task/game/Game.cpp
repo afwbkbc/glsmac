@@ -635,7 +635,7 @@ void Game::LoadMap( const std::string& path ) {
 
 	auto* game = g_engine->GetGame();
 	g_engine->GetUI()->ShowLoader(
-		"Loading game", LCH( this ) {
+		"Loading map", LCH( this ) {
 			CancelRequests();
 			return false;
 		}
