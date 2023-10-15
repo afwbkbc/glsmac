@@ -39,9 +39,12 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 		m_players_section->UpdateSlot( slot_num, slot );
 		GlobalMessage( "Player \"" + player->GetPlayerName() + "\" left." );
 	};
-	connection->m_on_slot_update = [ this ]( const size_t slot_num, game::Slot* slot, const bool only_flags ) -> void {
+	connection->m_on_slot_update = [ this ]( const size_t slot_num, game::Slot* slot ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
-		if ( slot_num == this->m_connection->GetSlotNum() ) {
+	};
+	connection->m_on_flags_update = [ this ]( const size_t slot_num, game::Slot* slot, const game::Slot::player_flag_t old_flags, const game::Slot::player_flag_t new_flags ) -> void {
+		if ( slot_num == m_connection->GetSlotNum() ) {
+
 			const bool is_ready = slot->HasPlayerFlag( ::game::Slot::PF_READY );
 
 			// update 'ready' button to match
@@ -70,6 +73,7 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 				}
 			}
 		}
+		m_players_section->UpdateSlot( slot_num, slot );
 		ManageCountdown();
 	};
 	connection->m_on_message = [ this ]( const std::string& message ) -> void {

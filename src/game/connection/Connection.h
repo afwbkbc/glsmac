@@ -35,7 +35,8 @@ CLASS( Connection, base::Module )
 	std::function< void() > m_on_global_settings_update = nullptr;
 	std::function< void( const size_t slot_num, Slot* slot, const Player* player ) > m_on_player_join = nullptr;
 	std::function< void( const size_t slot_num, Slot* slot, const Player* player ) > m_on_player_leave = nullptr;
-	std::function< void( const size_t slot_num, game::Slot* slot, bool only_flags ) > m_on_slot_update = nullptr;
+	std::function< void( const size_t slot_num, game::Slot* slot ) > m_on_slot_update = nullptr;
+	std::function< void( const size_t slot_num, game::Slot* slot, const Slot::player_flag_t old_flags, const Slot::player_flag_t new_flags ) > m_on_flags_update = nullptr;
 	std::function< void( const std::string& message ) > m_on_message = nullptr;
 
 	void SetState( State* state );

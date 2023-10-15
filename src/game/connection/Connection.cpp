@@ -18,6 +18,7 @@ void Connection::ResetHandlers() {
 	m_on_player_join = nullptr;
 	m_on_player_leave = nullptr;
 	m_on_slot_update = nullptr;
+	m_on_flags_update = nullptr;
 	m_on_message = nullptr;
 	m_on_global_settings_update = nullptr;
 	if ( m_mt_ids.events ) {

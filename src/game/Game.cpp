@@ -801,12 +801,11 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					// actual join will happen after he downloads and initializes map
 				};
 
-				connection->m_on_slot_update = [ this, connection ]( const size_t slot_num, game::Slot* slot, const bool only_flags ) -> void {
-					ASSERT( only_flags, "unexpected slot update during game" );
-					if ( slot->HasPlayerFlag( Slot::PF_GAME_INITIALIZED ) ) {
+				connection->m_on_flags_update = [ this, connection ]( const size_t slot_num, Slot* slot, const Slot::player_flag_t old_flags, const Slot::player_flag_t new_flags ) -> void {
+					if ( !( old_flags & Slot::PF_GAME_INITIALIZED ) && ( new_flags & Slot::PF_GAME_INITIALIZED ) ) {
 						const auto* player = slot->GetPlayer();
 						Log( player->GetFullName() + " joined the game." );
-						connection->GlobalMessage( "Player " + player->GetFullName() + " joined the game." );
+						connection->GlobalMessage( player->GetFullName() + " joined the game." );
 					}
 				};
 

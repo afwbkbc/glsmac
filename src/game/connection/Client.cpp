@@ -99,6 +99,9 @@ void Client::ProcessEvent( const network::Event& event ) {
 								return;
 							}
 							auto& slot = m_state->m_slots.GetSlot( slot_num );
+							const auto old_flags = slot.GetState() == Slot::SS_PLAYER
+								? slot.GetPlayerFlags()
+								: 0;
 							if ( only_flags ) {
 								Log( "Got flags update from server (slot: " + std::to_string( slot_num ) + ")" );
 								slot.SetPlayerFlags( packet.udata.flags.flags );
@@ -123,8 +126,13 @@ void Client::ProcessEvent( const network::Event& event ) {
 									}
 								}
 							}
-							if ( m_on_slot_update ) {
-								m_on_slot_update( slot_num, &slot, only_flags );
+							if ( !only_flags ) {
+								if ( m_on_slot_update ) {
+									m_on_slot_update( slot_num, &slot );
+								}
+							}
+							if ( m_on_flags_update ) {
+								m_on_flags_update( slot_num, &slot, old_flags, slot.GetPlayerFlags() );
 							}
 							break;
 						}
