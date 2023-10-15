@@ -315,6 +315,7 @@ private:
 		mt_id_t select_tile = 0;
 		mt_id_t save_map = 0;
 		mt_id_t edit_map = 0;
+		mt_id_t get_events = 0;
 #ifdef DEBUG
 		mt_id_t save_dump = 0;
 		// init will be used for loading dump

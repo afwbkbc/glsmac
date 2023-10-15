@@ -66,6 +66,12 @@ mt_id_t Game::MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::
 	return MT_CreateRequest( request );
 }
 
+mt_id_t Game::MT_GetEvents() {
+	MT_Request request = {};
+	request.op = OP_GET_EVENTS;
+	return MT_CreateRequest( request );
+}
+
 #ifdef DEBUG
 #define x( _method, _op ) \
     mt_id_t Game::_method( const std::string& path ) { \
@@ -92,6 +98,9 @@ void Game::Start() {
 	m_game_state = GS_NONE;
 	m_init_cancel = false;
 
+	ASSERT( !m_pending_events, "game events already set" );
+	NEW( m_pending_events, game_events_t );
+
 	NEW( m_random, util::Random );
 
 #ifdef DEBUG
@@ -111,6 +120,10 @@ void Game::Stop() {
 
 	DELETE( m_map_editor );
 	m_map_editor = nullptr;
+
+	ASSERT( m_pending_events, "game events not set" );
+	DELETE( m_pending_events );
+	m_pending_events = nullptr;
 
 	MTModule::Stop();
 }
@@ -155,7 +168,7 @@ void Game::Iterate() {
 #endif
 		}
 		else {
-			// notify server of successful download and complete initialization
+			// notify server of successful download and continue initialization
 			m_slot->SetPlayerFlag( Slot::PF_MAP_DOWNLOADED );
 			m_connection->UpdateSlot( m_slot_num, m_slot, true );
 		}
@@ -208,6 +221,11 @@ void Game::Iterate() {
 					m_old_map = nullptr;
 				}
 
+				// notify server of successful initialization
+				m_slot->SetPlayerFlag( Slot::PF_GAME_INITIALIZED );
+				m_connection->UpdateSlot( m_slot_num, m_slot, true );
+
+				// run main loop
 				m_game_state = GS_RUNNING;
 			}
 			else {
@@ -664,6 +682,19 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			response.result = R_SUCCESS;
 			break;
 		}
+		case OP_GET_EVENTS: {
+			//Log( "got events request" );
+			if ( !m_pending_events->empty() ) {
+				Log( "sending " + std::to_string( m_pending_events->size() ) + " events to frontend" );
+				response.data.get_events.events = m_pending_events; // will be destroyed in DestroyResponse
+				NEW( m_pending_events, game_events_t ); // reset
+			}
+			else {
+				response.data.get_events.events = nullptr;
+			}
+			response.result = R_SUCCESS;
+			break;
+		}
 		default: {
 			ASSERT( false, "unknown request op " + std::to_string( request.op ) );
 		}
@@ -728,6 +759,12 @@ void Game::DestroyResponse( const MT_Response& response ) {
 				}
 				break;
 			}
+			case OP_GET_EVENTS: {
+				if ( response.data.get_events.events ) {
+					DELETE( response.data.get_events.events );
+				}
+				break;
+			}
 			default: {
 				// nothing to delete
 			}
@@ -742,6 +779,9 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 	Log( "Initializing game" );
 
+	ASSERT( m_pending_events, "pending events not set" );
+	m_pending_events->clear();
+
 	m_game_state = GS_PREPARING_MAP;
 	m_initialization_error = "";
 
@@ -754,8 +794,25 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		m_connection->ResetHandlers();
 		m_connection->IfServer(
 			[ this ]( Server* connection ) -> void {
-				connection->m_on_player_leave = [ this ]( const size_t slot_num, Slot* slot, const Player* player ) -> void {
-					Log( "Player " + player->GetPlayerName() + " left the game." );
+
+				connection->m_on_player_join = [ this, connection ]( const size_t slot_num, Slot* slot, const Player* player ) -> void {
+					Log( "Player " + player->GetFullName() + " is connecting..." );
+					connection->GlobalMessage( "Connection from " + player->GetFullName() + "..." );
+					// actual join will happen after he downloads and initializes map
+				};
+
+				connection->m_on_slot_update = [ this, connection ]( const size_t slot_num, game::Slot* slot, const bool only_flags ) -> void {
+					ASSERT( only_flags, "unexpected slot update during game" );
+					if ( slot->HasPlayerFlag( Slot::PF_GAME_INITIALIZED ) ) {
+						const auto* player = slot->GetPlayer();
+						Log( player->GetFullName() + " joined the game." );
+						connection->GlobalMessage( "Player " + player->GetFullName() + " joined the game." );
+					}
+				};
+
+				connection->m_on_player_leave = [ this, connection ]( const size_t slot_num, Slot* slot, const Player* player ) -> void {
+					Log( "Player " + player->GetFullName() + " left the game." );
+					connection->GlobalMessage( player->GetFullName() + " left the game." );
 				};
 
 				connection->m_on_map_request = [ this ]() -> const std::string {
@@ -938,6 +995,9 @@ void Game::ResetGame() {
 		DELETE( m_map );
 		m_map = nullptr;
 	}
+
+	ASSERT( m_pending_events, "pending events not set" );
+	m_pending_events->clear();
 
 	if ( m_state ) {
 		// ui thread will reset state as needed

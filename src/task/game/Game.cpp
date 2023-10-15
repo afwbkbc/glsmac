@@ -277,6 +277,26 @@ void Game::Iterate() {
 		}
 	}
 
+	// poll game thread for events
+	if ( m_mt_ids.get_events ) {
+		auto response = game->MT_GetResponse( m_mt_ids.get_events );
+		if ( response.result != ::game::R_NONE ) {
+			ASSERT( response.result == ::game::R_SUCCESS, "unexpected game events response" );
+			const auto* events = response.data.get_events.events;
+			if ( events ) {
+				Log( "got " + std::to_string( events->size() ) + " game events" );
+
+				////
+
+			}
+			game->MT_DestroyResponse( response );
+			m_mt_ids.get_events = game->MT_GetEvents();
+		}
+	}
+	else {
+		m_mt_ids.get_events = game->MT_GetEvents();
+	}
+
 	if ( m_is_initialized ) {
 
 		if ( m_editing_draw_timer.HasTicked() ) {
@@ -343,7 +363,6 @@ void Game::Iterate() {
 		for ( auto& actor : m_actors_map ) {
 			actor.first->Iterate();
 		}
-
 	}
 }
 
@@ -1637,6 +1656,10 @@ void Game::CancelRequests() {
 	if ( m_mt_ids.reset ) {
 		game->MT_Cancel( m_mt_ids.reset );
 		m_mt_ids.reset = 0;
+	}
+	if ( m_mt_ids.get_events ) {
+		game->MT_Cancel( m_mt_ids.get_events );
+		m_mt_ids.get_events = 0;
 	}
 	// TODO: cancel other requests?
 }

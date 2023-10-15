@@ -13,6 +13,7 @@
 #include "types/mesh/Render.h"
 #include "types/mesh/Data.h"
 #include "Slot.h"
+#include "Event.h"
 
 namespace game {
 
@@ -30,6 +31,7 @@ enum op_t {
 	OP_SELECT_TILE,
 	OP_SAVE_MAP,
 	OP_EDIT_MAP,
+	OP_GET_EVENTS,
 #ifdef DEBUG
 	OP_SAVE_DUMP,
 	OP_LOAD_DUMP,
@@ -177,6 +179,9 @@ struct MT_Response {
 				std::unordered_map< size_t, std::pair< std::string, Vec3 > >* instances_to_add;
 			} sprites;
 		} edit_map;
+		struct {
+			game_events_t* events;
+		} get_events;
 	} data;
 };
 
@@ -204,6 +209,9 @@ CLASS( Game, MTModule )
 
 	// perform edit operation on map tile(s)
 	mt_id_t MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::MapEditor::tool_type_t tool, map_editor::MapEditor::brush_type_t brush, map_editor::MapEditor::draw_mode_t draw_mode );
+
+	// get all pending game events (will be cleared after)
+	mt_id_t MT_GetEvents();
 
 #ifdef DEBUG
 
@@ -243,6 +251,8 @@ private:
 	Slot* m_slot = nullptr;
 
 	response_map_data_t* m_response_map_data = nullptr;
+
+	game_events_t* m_pending_events = nullptr;
 
 	void InitGame( MT_Response& response, MT_CANCELABLE );
 	void ResetGame();

@@ -13,10 +13,10 @@ Server::Server( LocalSettings* const settings )
 void Server::ProcessEvent( const network::Event& event ) {
 	Connection::ProcessEvent( event );
 
-	ASSERT( event.cid || event.type == Event::ET_LISTEN, "server connection received event without cid" );
+	ASSERT( event.cid || event.type == network::Event::ET_LISTEN, "server connection received event without cid" );
 
 	switch ( event.type ) {
-		case Event::ET_LISTEN: {
+		case network::Event::ET_LISTEN: {
 			ASSERT( !m_player, "player already set" );
 			Log( "Listening" );
 			m_state->m_settings.global.Initialize();
@@ -46,7 +46,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			}
 			break;
 		}
-		case Event::ET_CLIENT_CONNECT: {
+		case network::Event::ET_CLIENT_CONNECT: {
 			Log( "Client " + std::to_string( event.cid ) + " connected" );
 			ASSERT( m_state->GetCidSlots().find( event.cid ) == m_state->GetCidSlots().end(), "player cid already in slots" );
 
@@ -62,7 +62,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			}
 			break;
 		}
-		case Event::ET_CLIENT_DISCONNECT: {
+		case network::Event::ET_CLIENT_DISCONNECT: {
 			Log( "Client " + std::to_string( event.cid ) + " disconnected" );
 			auto it = m_state->GetCidSlots().find( event.cid );
 			if ( it != m_state->GetCidSlots().end() ) {
@@ -98,7 +98,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			}
 			break;
 		}
-		case Event::ET_PACKET: {
+		case network::Event::ET_PACKET: {
 			try {
 				Packet packet( Packet::PT_NONE );
 				packet.Unserialize( Buffer( event.data.packet_data ) );
@@ -316,7 +316,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			}
 			break;
 		}
-		case Event::ET_ERROR: {
+		case network::Event::ET_ERROR: {
 			Error( event.cid, event.data.packet_data );
 			break;
 		}

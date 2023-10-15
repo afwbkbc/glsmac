@@ -30,6 +30,7 @@ CLASS( Player, types::Serializable )
 
 	const bool IsInitialized() const;
 	const std::string& GetPlayerName() const;
+	const std::string GetFullName() const;
 
 	void SetFaction( const rules::Faction& faction );
 	const rules::Faction& GetFaction() const;

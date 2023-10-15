@@ -12,13 +12,13 @@ Client::Client( LocalSettings* const settings )
 	//
 }
 
-void Client::ProcessEvent( const Event& event ) {
+void Client::ProcessEvent( const network::Event& event ) {
 	Connection::ProcessEvent( event );
 
 	ASSERT( !event.cid, "client connection received event with non-zero cid" );
 
 	switch ( event.type ) {
-		case Event::ET_PACKET: {
+		case network::Event::ET_PACKET: {
 			try {
 				if ( !event.data.packet_data.empty() ) {
 					Packet packet( Packet::PT_NONE );
@@ -216,11 +216,11 @@ void Client::ProcessEvent( const Event& event ) {
 			}
 			break;
 		}
-		case Event::ET_ERROR: {
+		case network::Event::ET_ERROR: {
 			Error( event.data.packet_data );
 			break;
 		}
-		case Event::ET_DISCONNECT: {
+		case network::Event::ET_DISCONNECT: {
 			Disconnect( "Connection to server lost." );
 			break;
 		}
