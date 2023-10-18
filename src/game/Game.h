@@ -253,6 +253,7 @@ private:
 	response_map_data_t* m_response_map_data = nullptr;
 
 	game_events_t* m_pending_events = nullptr;
+	void AddEvent( const Event& event );
 
 	void InitGame( MT_Response& response, MT_CANCELABLE );
 	void ResetGame();

@@ -31,6 +31,7 @@
 
 #include "actor/TileSelection.h"
 #include "game/Game.h"
+#include "game/Event.h"
 
 #include "game/map/Consts.h"
 #include "game/map_editor/MapEditor.h"
@@ -101,7 +102,7 @@ CLASS( Game, base::Task )
 	typedef std::function< void() > f_exit_game;
 	f_exit_game m_on_game_exit = nullptr;
 	void ExitGame( const f_exit_game on_game_exit );
-	void ReturnToMainMenu();
+	void ReturnToMainMenu( const std::string reason = "" );
 
 	const size_t GetBottomBarMiddleHeight() const;
 	const size_t GetViewportHeight() const;
@@ -129,6 +130,8 @@ private:
 	::game::map_editor::MapEditor::brush_type_t m_editor_brush = ::game::map_editor::MapEditor::BT_NONE;
 
 	void UpdateMapData( const types::Vec2< size_t >& map_size );
+
+	void ProcessEvent( const ::game::Event& event );
 
 	bool m_is_initialized = false;
 	void Initialize(

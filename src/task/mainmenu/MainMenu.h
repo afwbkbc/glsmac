@@ -41,6 +41,7 @@ CLASS( MainMenu, base::Task )
 	void MenuError( const std::string& error_text );
 	void InitSinglePlayer();
 	void StartGame();
+	void ShowErrorOnStart( const std::string& error );
 
 	void SetCustomizeMapPreview( const std::string& preview_filename );
 	const std::string& GetMapPreviewFilename() const;
@@ -75,6 +76,8 @@ private:
 	Label* m_glsmac_logo = nullptr;
 
 	util::Random m_random;
+
+	std::string m_show_error_on_start = "";
 
 	void ResizeCustomizeMapPreview();
 

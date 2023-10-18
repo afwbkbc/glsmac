@@ -125,6 +125,12 @@ void Game::Stop() {
 	DELETE( m_pending_events );
 	m_pending_events = nullptr;
 
+	if ( m_state ) {
+		DELETE( m_state );
+		m_state = nullptr;
+		m_connection = nullptr;
+	}
+
 	MTModule::Stop();
 }
 
@@ -772,6 +778,11 @@ void Game::DestroyResponse( const MT_Response& response ) {
 	}
 }
 
+void Game::AddEvent( const Event& event ) {
+	Log( "Sending event (type=" + std::to_string( event.type ) + ")" );
+	m_pending_events->push_back( event );
+}
+
 void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 	ASSERT( !m_connection || m_game_state == GS_NONE, "multiplayer game already initializing or running" );
@@ -829,16 +840,21 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 		m_connection->IfClient(
 			[ this ]( Client* connection ) -> void {
-				connection->m_on_disconnect = [ this ]() -> void {
+				connection->m_on_disconnect = [ this, connection ]() -> void {
 					Log( "Server disconnected" );
+					DELETE( connection );
+					m_state->DetachConnection();
+					m_connection = nullptr;
 					if ( m_game_state != GS_RUNNING ) {
 						m_initialization_error = "Lost connection to server";
 					}
 					else {
-						// TODO: return to main menu
+						auto e = Event( Event::ET_QUIT );
+						NEW( e.data.quit.reason, std::string, "Lost connection to server" );
+						AddEvent( e );
 					}
 				};
-				connection->m_on_error = [ this ]( const std::string& reason ) -> void {
+				connection->m_on_error = [ this, connection ]( const std::string& reason ) -> void {
 					m_initialization_error = reason;
 				};
 			}
@@ -1001,6 +1017,9 @@ void Game::ResetGame() {
 	if ( m_state ) {
 		// ui thread will reset state as needed
 		m_state = nullptr;
+		if ( m_connection ) {
+			m_connection->ResetHandlers();
+		}
 		m_connection = nullptr;
 	}
 }

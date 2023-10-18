@@ -282,15 +282,22 @@ void Game::Iterate() {
 		auto response = game->MT_GetResponse( m_mt_ids.get_events );
 		if ( response.result != ::game::R_NONE ) {
 			ASSERT( response.result == ::game::R_SUCCESS, "unexpected game events response" );
+			m_mt_ids.get_events = 0;
 			const auto* events = response.data.get_events.events;
 			if ( events ) {
 				Log( "got " + std::to_string( events->size() ) + " game events" );
 
-				////
-
+				for ( const auto& event : *events ) {
+					ProcessEvent( event );
+					if ( m_on_game_exit ) {
+						break; // exiting game
+					}
+				}
 			}
 			game->MT_DestroyResponse( response );
-			m_mt_ids.get_events = game->MT_GetEvents();
+			if ( !m_on_game_exit ) {
+				m_mt_ids.get_events = game->MT_GetEvents();
+			}
 		}
 	}
 	else {
@@ -718,6 +725,27 @@ void Game::SetEditorBrush( ::game::map_editor::MapEditor::brush_type_t editor_br
 
 const ::game::map_editor::MapEditor::brush_type_t Game::GetEditorBrush() const {
 	return m_editor_brush;
+}
+
+void Game::ProcessEvent( const ::game::Event& event ) {
+	Log( "Received event (type=" + std::to_string( event.type ) + ")" );
+	switch ( event.type ) {
+		case ::game::Event::ET_QUIT: {
+			ExitGame(
+				[ this, event ]() -> void {
+					ReturnToMainMenu(
+						event.data.quit.reason
+							? *event.data.quit.reason
+							: ""
+					);
+				}
+			);
+			break;
+		}
+		default: {
+			ASSERT( false, "unexpected event type: " + std::to_string( event.type ) );
+		}
+	}
 }
 
 void Game::UpdateMapData( const types::Vec2< size_t >& map_size ) {
@@ -1679,8 +1707,11 @@ void Game::CancelGame() {
 	);
 }
 
-void Game::ReturnToMainMenu() {
+void Game::ReturnToMainMenu( const std::string reason ) {
 	NEWV( task, task::mainmenu::MainMenu );
+	if ( !reason.empty() ) {
+		task->ShowErrorOnStart( reason );
+	}
 	g_engine->GetScheduler()->RemoveTask( this );
 	g_engine->GetScheduler()->AddTask( task );
 }

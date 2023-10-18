@@ -118,6 +118,10 @@ void MainMenu::Iterate() {
 		if ( m_menu_object ) {
 			m_menu_object->Iterate();
 		}
+		if ( !m_show_error_on_start.empty() ) {
+			MenuError( m_show_error_on_start );
+			m_show_error_on_start.clear();
+		}
 	}
 }
 
@@ -208,6 +212,11 @@ void MainMenu::StartGame() {
 		m_menu_object->MaybeClose();
 	} );
 	g_engine->GetScheduler()->AddTask( task );
+}
+
+void MainMenu::ShowErrorOnStart( const std::string& error ) {
+	ASSERT( m_show_error_on_start.empty(), "m_show_error_on_start already set" );
+	m_show_error_on_start = error;
 }
 
 void MainMenu::SetCustomizeMapPreview( const std::string& preview_filename ) {

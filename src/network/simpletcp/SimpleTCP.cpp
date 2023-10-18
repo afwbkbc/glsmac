@@ -198,6 +198,9 @@ MT_Response SimpleTCP::Connect( const std::string& remote_address, MT_CANCELABLE
 
 		if ( MT_C ) {
 			// canceled by user
+			CloseSocket( m_client.socket.fd, 0, true );
+			m_client.socket.fd = 0;
+			freeaddrinfo( p );
 			return Canceled();
 		}
 
