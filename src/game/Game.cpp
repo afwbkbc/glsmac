@@ -229,7 +229,9 @@ void Game::Iterate() {
 
 				// notify server of successful initialization
 				m_slot->SetPlayerFlag( Slot::PF_GAME_INITIALIZED );
-				m_connection->UpdateSlot( m_slot_num, m_slot, true );
+				if ( m_connection ) {
+					m_connection->UpdateSlot( m_slot_num, m_slot, true );
+				}
 
 				// run main loop
 				m_game_state = GS_RUNNING;
