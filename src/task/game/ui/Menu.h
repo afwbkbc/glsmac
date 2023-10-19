@@ -20,7 +20,7 @@ namespace ui {
 
 CLASS( Menu, UI )
 
-	Menu( Game* game, const uint8_t item_height = 18, const uint8_t margin = 4 );
+	Menu( Game* game, const std::string& class_name, const uint8_t item_height = 18, const uint8_t margin = 4 );
 	~Menu();
 
 	void Create() override;

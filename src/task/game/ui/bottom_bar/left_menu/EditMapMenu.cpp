@@ -11,7 +11,7 @@ namespace ui {
 namespace menu {
 
 EditMapMenu::EditMapMenu( Game* game )
-	: Menu( game ) {
+	: Menu( game, "BBLeftMenu" ) {
 	AddItem(
 		"Save Map...", MH( this ) {
 			NEWV( popup, popup::SaveMap, m_game );

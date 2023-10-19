@@ -1,4 +1,5 @@
 SUBDIR( left_menu )
+SUBDIR( right_menu )
 
 SET( SRC ${SRC}
 

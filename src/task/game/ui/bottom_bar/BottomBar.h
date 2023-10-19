@@ -19,6 +19,7 @@
 
 // side menus
 #include "left_menu/LeftMenu.h"
+#include "right_menu/RightMenu.h"
 
 namespace task {
 namespace game {
@@ -73,6 +74,7 @@ private:
 
 	struct {
 		menu::LeftMenu* left = nullptr;
+		menu::RightMenu* right = nullptr;
 	} m_side_menus = {};
 
 	struct {

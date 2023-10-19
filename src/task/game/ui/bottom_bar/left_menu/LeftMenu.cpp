@@ -16,7 +16,7 @@ namespace ui {
 namespace menu {
 
 LeftMenu::LeftMenu( Game* game )
-	: Menu( game ) {
+	: Menu( game, "BBLeftMenu" ) {
 #define x( _n, _m ) { \
         NEWV( menu, _m, m_game ); \
         AddSubMenu( _n, menu ); \

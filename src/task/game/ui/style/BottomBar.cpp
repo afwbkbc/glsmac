@@ -621,17 +621,27 @@ void BottomBar::AddStyles() {
 
 	AddStyle(
 		"MenuFrame", SH() {
-			s->Set( ::Style::A_WIDTH, 139 );
-			s->Set( ::Style::A_HEIGHT, 5 );
 			s->Set( ::Style::A_Z_INDEX, 0.3f ); // TODO: why doesn't it work correctly without?
+		}
+	);
+
+	AddStyle(
+		"LeftMenuTopFrame", { "MenuFrame" }, SH() {
+			s->Set( ::Style::A_HEIGHT, 5 );
+			s->Set( ::Style::A_WIDTH, 139 );
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP );
+			s->Set( ::Style::A_TOP, -4 );
 			s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx", 0, 0, 138, 4, Color::RGB( 100, 16, 156 ) );
 		}
 	);
 
 	AddStyle(
-		"MenuTopFrame", { "MenuFrame" }, SH() {
-			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP );
-			s->Set( ::Style::A_TOP, -4 );
+		"RightMenuTopFrame", { "MenuFrame" }, SH() {
+			s->Set( ::Style::A_HEIGHT, 6 );
+			s->Set( ::Style::A_WIDTH, 139 );
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_RIGHT );
+			s->Set( ::Style::A_TOP, -5 );
+			s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx", 885, 1, 1023, 6, Color::RGB( 100, 16, 156 ) );
 		}
 	);
 
@@ -665,6 +675,12 @@ void BottomBar::AddStyles() {
 	AddStyle(
 		"LeftMenu", { "Menu" }, SH() {
 			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_LEFT );
+		}
+	);
+
+	AddStyle(
+		"RightMenu", { "Menu" }, SH() {
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_RIGHT );
 		}
 	);
 }

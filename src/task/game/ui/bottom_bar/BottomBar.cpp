@@ -90,6 +90,23 @@ void BottomBar::Create() {
 	NEW( m_buttons.commlink, Button, "BBButtonCommlink" );
 	m_buttons.commlink->SetAlign( UIObject::ALIGN_TOP | UIObject::ALIGN_RIGHT );
 	m_buttons.commlink->SetLabel( "COMMLINK" );
+	m_buttons.commlink->On(
+		UIEvent::EV_BUTTON_CLICK, EH( this ) {
+			if ( m_side_menus.right->IsVisible() ) {
+				if ( m_buttons.commlink->HasStyleModifier( Style::M_SELECTED ) ) {
+					m_buttons.commlink->RemoveStyleModifier( Style::M_SELECTED );
+				}
+				m_side_menus.right->Hide();
+			}
+			else {
+				if ( !m_buttons.commlink->HasStyleModifier( Style::M_SELECTED ) ) {
+					m_buttons.commlink->AddStyleModifier( Style::M_SELECTED );
+				}
+				m_side_menus.right->Show();
+			}
+			return true;
+		}
+	);
 	AddChild( m_buttons.commlink );
 
 	// sections
@@ -114,10 +131,15 @@ void BottomBar::Create() {
 
 	// side menus
 	auto* ui = g_engine->GetUI();
-	// adding to UI because they need to catch clicks outside of bottom bar
+
+	// adding those to UI because they need to catch clicks outside of bottom bar
 	NEW( m_side_menus.left, menu::LeftMenu, m_game );
 	m_side_menus.left->SetBottom( GetHeight() - 1 ); // - 1 because there's 1 transparent pixel we need to cover
 	ui->AddObject( m_side_menus.left );
+
+	NEW( m_side_menus.right, menu::RightMenu, m_game );
+	m_side_menus.right->SetBottom( GetHeight() - 2 ); // - 2 because there's 2 transparent pixels we need to cover
+	ui->AddObject( m_side_menus.right );
 
 	// other
 
@@ -167,6 +189,7 @@ void BottomBar::Destroy() {
 
 	auto* ui = g_engine->GetUI();
 	ui->RemoveObject( m_side_menus.left );
+	ui->RemoveObject( m_side_menus.right );
 
 	if ( m_textures.minimap ) {
 		DELETE( m_textures.minimap );
@@ -221,6 +244,10 @@ void BottomBar::CloseMenus() {
 	if ( m_buttons.menu->HasStyleModifier( Style::M_SELECTED ) ) {
 		m_buttons.menu->RemoveStyleModifier( Style::M_SELECTED );
 		m_side_menus.left->Hide();
+	}
+	if ( m_buttons.commlink->HasStyleModifier( Style::M_SELECTED ) ) {
+		m_buttons.commlink->RemoveStyleModifier( Style::M_SELECTED );
+		m_side_menus.right->Hide();
 	}
 }
 

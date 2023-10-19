@@ -7,8 +7,8 @@ namespace task {
 namespace game {
 namespace ui {
 
-Menu::Menu( Game* game, const uint8_t item_height, const uint8_t margin )
-	: UI( game, "BBLeftMenu" )
+Menu::Menu( Game* game, const std::string& class_name, const uint8_t item_height, const uint8_t margin )
+	: UI( game, class_name )
 	, m_item_height( item_height )
 	, m_margin( margin ) {
 	Hide(); // closed by default
@@ -30,7 +30,7 @@ void Menu::Create() {
 	NEW( m_background, ::ui::object::Surface, "BBMenuBackground" );
 	AddChild( m_background );
 
-	NEW( m_frames.top, ::ui::object::Surface, "BBMenuTopFrame" );
+	NEW( m_frames.top, ::ui::object::Surface, SubClass( "TopFrame" ) );
 	AddChild( m_frames.top );
 
 	NEW( m_frames.bottom, ::ui::object::Surface, "BBMenuBottomFrame" );
