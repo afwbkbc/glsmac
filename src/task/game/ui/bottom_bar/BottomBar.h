@@ -10,6 +10,10 @@
 
 #include "types/Texture.h"
 
+// message label
+#include "ui/object/Label.h"
+#include "util/Timer.h"
+
 // sections
 #include "UnitPreview.h"
 #include "TilePreview.h"
@@ -32,6 +36,7 @@ CLASS( BottomBar, UI )
 		: UI( game, "BB" ) {}
 
 	void Create() override;
+	void Iterate() override;
 	void Destroy() override;
 	void Align() override;
 
@@ -63,6 +68,9 @@ private:
 		Button* menu = nullptr;
 		Button* commlink = nullptr;
 	} m_buttons = {};
+
+	Label* m_message_label = nullptr;
+	util::Timer m_message_label_clear_timer;
 
 	struct {
 		UnitPreview* unit_preview = nullptr;

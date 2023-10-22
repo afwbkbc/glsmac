@@ -109,6 +109,11 @@ void BottomBar::Create() {
 	);
 	AddChild( m_buttons.commlink );
 
+	// message label
+
+	NEW( m_message_label, Label, "BBMessageLabel" );
+	AddChild( m_message_label );
+
 	// sections
 
 	NEW( m_sections.unit_preview, UnitPreview, m_game );
@@ -165,13 +170,25 @@ void BottomBar::Create() {
 	);
 }
 
+void BottomBar::Iterate() {
+	UI::Iterate();
+
+	if ( m_message_label_clear_timer.HasTicked() ) {
+		m_message_label->SetText( "" );
+	}
+}
+
 void BottomBar::Destroy() {
+
+	m_message_label_clear_timer.Stop();
 
 	Off( m_mouse_blocker );
 	m_mouse_blocker = nullptr;
 
 	RemoveChild( m_buttons.menu );
 	RemoveChild( m_buttons.commlink );
+
+	RemoveChild( m_message_label );
 
 	for ( auto& b : m_backgrounds ) {
 		RemoveChild( b );
@@ -260,6 +277,8 @@ const size_t BottomBar::GetMiddleHeight() const {
 }
 
 void BottomBar::AddMessage( const std::string& text ) {
+	m_message_label->SetText( text );
+	m_message_label_clear_timer.SetTimeout( 4000 );
 	m_sections.middle_area->AddMessage( text );
 }
 

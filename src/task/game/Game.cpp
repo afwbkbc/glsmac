@@ -128,7 +128,7 @@ void Game::Iterate() {
 		}
 		game->MT_DestroyResponse( response );
 	}
-	else if ( m_mt_ids.get_map_data ) {
+	if ( m_mt_ids.get_map_data ) {
 		auto response = game->MT_GetResponse( m_mt_ids.get_map_data );
 		if ( response.result != ::game::R_NONE ) {
 			if ( response.result == ::game::R_PENDING ) {
@@ -180,7 +180,7 @@ void Game::Iterate() {
 			game->MT_DestroyResponse( response );
 		}
 	}
-	else if ( m_mt_ids.reset ) {
+	if ( m_mt_ids.reset ) {
 		auto response = game->MT_GetResponse( m_mt_ids.reset );
 		if ( response.result != ::game::R_NONE ) {
 			ui->HideLoader();
@@ -200,7 +200,7 @@ void Game::Iterate() {
 			}
 		}
 	}
-	else if ( m_mt_ids.ping ) {
+	if ( m_mt_ids.ping ) {
 		auto response = game->MT_GetResponse( m_mt_ids.ping );
 		if ( response.result != ::game::R_NONE ) {
 			ui->HideLoader();
@@ -209,7 +209,7 @@ void Game::Iterate() {
 			CancelGame();
 		}
 	}
-	else if ( m_mt_ids.save_map ) {
+	if ( m_mt_ids.save_map ) {
 		auto response = game->MT_GetResponse( m_mt_ids.save_map );
 		if ( response.result != ::game::R_NONE ) {
 			ui->HideLoader();
@@ -232,7 +232,7 @@ void Game::Iterate() {
 			game->MT_DestroyResponse( response );
 		}
 	}
-	else if ( m_mt_ids.edit_map ) {
+	if ( m_mt_ids.edit_map ) {
 		auto response = game->MT_GetResponse( m_mt_ids.edit_map );
 		if ( response.result != ::game::R_NONE ) {
 			m_mt_ids.edit_map = 0;
@@ -274,6 +274,13 @@ void Game::Iterate() {
 			result.instances_to_remove = *response.data.select_tile.instances_to_remove;
 			result.instances_to_add = *response.data.select_tile.instances_to_add;
 			*/
+		}
+	}
+	if ( m_mt_ids.chat ) {
+		auto response = game->MT_GetResponse( m_mt_ids.chat );
+		if ( response.result != ::game::R_NONE ) {
+			ASSERT( response.result == ::game::R_SUCCESS, "failed to send chat message to game thread" );
+			m_mt_ids.chat = 0;
 		}
 	}
 
@@ -740,6 +747,10 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 					);
 				}
 			);
+			break;
+		}
+		case ::game::Event::ET_GLOBAL_MESSAGE: {
+			AddMessage( *event.data.global_message.message );
 			break;
 		}
 		default: {
@@ -1267,6 +1278,11 @@ void Game::AddMessage( const std::string& text ) {
 	if ( m_ui.bottom_bar ) {
 		m_ui.bottom_bar->AddMessage( text );
 	}
+}
+
+void Game::SendChatMessage( const std::string& text ) {
+	ASSERT( !m_mt_ids.chat, "previous chat request still pending" );
+	m_mt_ids.chat = g_engine->GetGame()->MT_Chat( text );
 }
 
 void Game::SelectTileAtPoint( const size_t x, const size_t y ) {

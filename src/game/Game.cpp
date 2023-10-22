@@ -24,6 +24,13 @@ mt_id_t Game::MT_Init( State* state ) {
 	return MT_CreateRequest( request );
 }
 
+mt_id_t Game::MT_Chat( const std::string& message ) {
+	MT_Request request = {};
+	request.op = OP_CHAT;
+	NEW( request.data.save_map.path, std::string, message );
+	return MT_CreateRequest( request );
+}
+
 mt_id_t Game::MT_GetMapData() {
 	MT_Request request = {};
 	request.op = OP_GET_MAP_DATA;
@@ -690,6 +697,21 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			response.result = R_SUCCESS;
 			break;
 		}
+		case OP_CHAT: {
+			Log( "got chat message request: " + *request.data.chat.message );
+
+			if ( m_connection ) {
+				m_connection->Message( *request.data.chat.message );
+			}
+			else {
+				auto e = Event( Event::ET_GLOBAL_MESSAGE );
+				NEW( e.data.global_message.message, std::string, "<" + m_player->GetPlayerName() + "> " + *request.data.chat.message );
+				AddEvent( e );
+			}
+
+			response.result = R_SUCCESS;
+			break;
+		}
 		case OP_GET_EVENTS: {
 			//Log( "got events request" );
 			if ( !m_pending_events->empty() ) {
@@ -716,6 +738,12 @@ void Game::DestroyRequest( const MT_Request& request ) {
 		case OP_SAVE_MAP: {
 			if ( request.data.save_map.path ) {
 				DELETE( request.data.save_map.path );
+			}
+			break;
+		}
+		case OP_CHAT: {
+			if ( request.data.chat.message ) {
+				DELETE( request.data.chat.message );
 			}
 			break;
 		}
@@ -861,6 +889,12 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				};
 			}
 		);
+
+		m_connection->m_on_message = [ this ]( const std::string& message ) -> void {
+			auto e = Event( Event::ET_GLOBAL_MESSAGE );
+			NEW( e.data.global_message.message, std::string, message );
+			AddEvent( e );
+		};
 
 	}
 	else {

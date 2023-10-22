@@ -11,6 +11,7 @@ public:
 	enum event_type_t {
 		ET_NONE,
 		ET_QUIT,
+		ET_GLOBAL_MESSAGE,
 	};
 	Event( const event_type_t type );
 	Event( const Event& other );
@@ -22,6 +23,9 @@ public:
 		struct {
 			std::string* reason;
 		} quit;
+		struct {
+			std::string* message;
+		} global_message;
 	} data;
 };
 

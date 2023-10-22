@@ -655,7 +655,6 @@ void BottomBar::AddStyles() {
 	AddStyle(
 		"MenuButton", SH() {
 			s->SetFont( ::Style::A_FONT, "arialnb.ttf", 17 );
-			s->Set( Style::A_TEXT_ALIGN, UIObject::ALIGN_LEFT | UIObject::ALIGN_VCENTER );
 			s->Set( Style::A_TEXT_LEFT, 4 );
 			if ( s->Is( ::Style::M_ACTIVE ) || s->Is( ::Style::M_SELECTED ) ) {
 				s->SetTexture( ::Style::A_TEXTURE, "console_x2_a.pcx", 1, 249, 106, 258 );
@@ -673,6 +672,18 @@ void BottomBar::AddStyles() {
 	);
 
 	AddStyle(
+		"LeftMenuButton", { "MenuButton" }, SH() {
+			s->Set( Style::A_TEXT_ALIGN, UIObject::ALIGN_LEFT | UIObject::ALIGN_VCENTER );
+		}
+	);
+
+	AddStyle(
+		"RightMenuButton", { "MenuButton" }, SH() {
+			s->Set( Style::A_TEXT_ALIGN, UIObject::ALIGN_RIGHT | UIObject::ALIGN_VCENTER );
+		}
+	);
+
+	AddStyle(
 		"LeftMenu", { "Menu" }, SH() {
 			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_LEFT );
 		}
@@ -681,6 +692,17 @@ void BottomBar::AddStyles() {
 	AddStyle(
 		"RightMenu", { "Menu" }, SH() {
 			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_RIGHT );
+		}
+	);
+
+	AddStyle(
+		"MessageLabel", SH() {
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
+			s->Set( ::Style::A_LEFT, 228 );
+			s->Set( ::Style::A_TOP, 10 );
+			s->Set( ::Style::A_HEIGHT, 20 );
+			s->SetFont( ::Style::A_FONT, "arialnb.ttf", 18 );
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 232, 212, 140 ) );
 		}
 	);
 }

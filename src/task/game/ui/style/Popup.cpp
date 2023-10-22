@@ -33,22 +33,27 @@ void Popup::AddStyles() {
 	);
 
 	AddStyle(
-		"SectionInner", SH() {
-			s->Set( Style::A_BORDER_SIZE, 3 );
+		"Frame", SH() {
+			s->Set( ::Style::A_BORDER_SIZE, 3 );
+			s->SetTexture( ::Style::A_TEXTURE_LEFT, "interface.pcx", 1, 275, 3, 298 );
+			s->SetTexture( ::Style::A_TEXTURE_LEFTTOP, "interface.pcx", 1, 268, 3, 270 );
+			s->SetTexture( ::Style::A_TEXTURE_TOP, "interface.pcx", 8, 268, 31, 270 );
+			s->SetTexture( ::Style::A_TEXTURE_RIGHTTOP, "interface.pcx", 36, 268, 38, 270 );
+			s->SetTexture( ::Style::A_TEXTURE_RIGHT, "interface.pcx", 36, 275, 38, 298 );
+			s->SetTexture( ::Style::A_TEXTURE_RIGHTBOTTOM, "interface.pcx", 36, 303, 38, 305 );
+			s->SetTexture( ::Style::A_TEXTURE_BOTTOM, "interface.pcx", 8, 303, 31, 305 );
+			s->SetTexture( ::Style::A_TEXTURE_LEFTBOTTOM, "interface.pcx", 1, 303, 3, 305 );
+			s->SetTexture( ::Style::A_TEXTURE_BACK, "interface.pcx", 86, 548, 109, 571 );
+			s->Set( Style::A_Z_INDEX, 0.6f );
+		}
+	);
+
+	AddStyle(
+		"SectionInner", { "Frame" }, SH() {
 			s->Set( Style::A_LEFT, 1 );
 			s->Set( Style::A_TOP, 1 );
 			s->Set( Style::A_RIGHT, 1 );
 			s->Set( Style::A_BOTTOM, 1 );
-
-			s->SetTexture( Style::A_TEXTURE_LEFT, "interface.pcx", 1, 275, 3, 298 );
-			s->SetTexture( Style::A_TEXTURE_LEFTTOP, "interface.pcx", 1, 268, 3, 270 );
-			s->SetTexture( Style::A_TEXTURE_TOP, "interface.pcx", 8, 268, 31, 270 );
-			s->SetTexture( Style::A_TEXTURE_RIGHTTOP, "interface.pcx", 36, 268, 38, 270 );
-			s->SetTexture( Style::A_TEXTURE_RIGHT, "interface.pcx", 36, 275, 38, 298 );
-			s->SetTexture( Style::A_TEXTURE_RIGHTBOTTOM, "interface.pcx", 36, 303, 38, 305 );
-			s->SetTexture( Style::A_TEXTURE_BOTTOM, "interface.pcx", 8, 303, 31, 305 );
-			s->SetTexture( Style::A_TEXTURE_LEFTBOTTOM, "interface.pcx", 1, 303, 3, 305 );
-			s->SetTexture( Style::A_TEXTURE_BACK, "interface.pcx", 86, 548, 109, 571 );
 
 			s->SetFont( Style::A_HEADER_FONT, "arialnb.ttf", 18 );
 			s->Set( Style::A_HEADER_HEIGHT, 22 );
@@ -151,6 +156,16 @@ void Popup::AddStyles() {
 			s->Set( Style::A_SOUND_AUTOSTOP );
 			//s->Set( Style::A_SOUND_START_DELAY, 60 );
 			s->Set( Style::A_SOUND_VOLUME, 0.5 );
+		}
+	);
+
+	AddStyle(
+		"Label", SH() {
+			s->SetFont( Style::A_FONT, "arialn.ttf", 18 );
+			s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 120, 164, 212 ) );
+			s->Set( Style::A_HEIGHT, 18 );
+			s->Set( Style::A_ALIGN, UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
+			s->Set( Style::A_Z_INDEX, 0.6f );
 		}
 	);
 }

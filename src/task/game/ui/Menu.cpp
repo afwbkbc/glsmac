@@ -38,7 +38,7 @@ void Menu::Create() {
 
 	size_t top = m_margin;
 	for ( auto& item : m_menu_items ) {
-		NEWV( button, ::ui::object::LabelButton, "BBMenuButton" );
+		NEWV( button, ::ui::object::LabelButton, SubClass( "Button" ) );
 		button->SetHeight( m_item_height );
 		button->SetTop( top );
 		button->SetLabel( item.label );

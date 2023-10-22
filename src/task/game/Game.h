@@ -108,6 +108,7 @@ CLASS( Game, base::Task )
 	const size_t GetViewportHeight() const;
 
 	void AddMessage( const std::string& text );
+	void SendChatMessage( const std::string& text );
 
 	void LoadMap( const std::string& path );
 	void SaveMap( const std::string& path );
@@ -318,6 +319,7 @@ private:
 		mt_id_t select_tile = 0;
 		mt_id_t save_map = 0;
 		mt_id_t edit_map = 0;
+		mt_id_t chat = 0;
 		mt_id_t get_events = 0;
 #ifdef DEBUG
 		mt_id_t save_dump = 0;

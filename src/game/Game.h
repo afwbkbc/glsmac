@@ -31,6 +31,7 @@ enum op_t {
 	OP_SELECT_TILE,
 	OP_SAVE_MAP,
 	OP_EDIT_MAP,
+	OP_CHAT,
 	OP_GET_EVENTS,
 #ifdef DEBUG
 	OP_SAVE_DUMP,
@@ -74,6 +75,9 @@ struct MT_Request {
 		struct {
 			std::string* path;
 		} save_map;
+		struct {
+			std::string* message;
+		} chat;
 #ifdef DEBUG
 		struct {
 			std::string* path;
@@ -194,6 +198,9 @@ CLASS( Game, MTModule )
 
 	// initialize map and other things
 	mt_id_t MT_Init( State* state );
+
+	// send chat message
+	mt_id_t MT_Chat( const std::string& message );
 
 	// get map data for display
 	mt_id_t MT_GetMapData();
