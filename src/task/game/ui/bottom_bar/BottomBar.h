@@ -27,7 +27,7 @@
 
 namespace task {
 namespace game {
-
+class Game;
 namespace ui {
 
 CLASS( BottomBar, UI )

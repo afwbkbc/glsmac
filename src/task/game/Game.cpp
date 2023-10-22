@@ -16,7 +16,8 @@ const Game::consts_t Game::s_consts = {};
 Game::Game( ::game::State* state, ui_handler_t on_start, ui_handler_t on_cancel )
 	: m_state( state )
 	, m_on_start( on_start )
-	, m_on_cancel( on_cancel ) {
+	, m_on_cancel( on_cancel )
+	, m_is_map_editing_allowed( state->GetConnection() == nullptr ) { // singleplayer only
 
 }
 
@@ -209,71 +210,73 @@ void Game::Iterate() {
 			CancelGame();
 		}
 	}
-	if ( m_mt_ids.save_map ) {
-		auto response = game->MT_GetResponse( m_mt_ids.save_map );
-		if ( response.result != ::game::R_NONE ) {
-			ui->HideLoader();
-			m_mt_ids.save_map = 0;
-			if ( ui->HasPopup() ) {
-				ui->CloseLastPopup();
-			}
-			if ( response.result == ::game::R_SUCCESS ) {
-				m_map_data.last_directory = util::FS::GetDirName( *response.data.save_map.path );
-				m_map_data.filename = util::FS::GetBaseName( *response.data.save_map.path );
-				m_ui.bottom_bar->UpdateMapFileName();
-			}
-			else {
-				ui->ShowError(
-					"Map saving failed.", UH( this ) {
+	if ( m_is_map_editing_allowed ) {
+		if ( m_mt_ids.save_map ) {
+			auto response = game->MT_GetResponse( m_mt_ids.save_map );
+			if ( response.result != ::game::R_NONE ) {
+				ui->HideLoader();
+				m_mt_ids.save_map = 0;
+				if ( ui->HasPopup() ) {
+					ui->CloseLastPopup();
+				}
+				if ( response.result == ::game::R_SUCCESS ) {
+					m_map_data.last_directory = util::FS::GetDirName( *response.data.save_map.path );
+					m_map_data.filename = util::FS::GetBaseName( *response.data.save_map.path );
+					m_ui.bottom_bar->UpdateMapFileName();
+				}
+				else {
+					ui->ShowError(
+						"Map saving failed.", UH( this ) {
 
-					}
-				);
+						}
+					);
+				}
+				game->MT_DestroyResponse( response );
 			}
-			game->MT_DestroyResponse( response );
 		}
-	}
-	if ( m_mt_ids.edit_map ) {
-		auto response = game->MT_GetResponse( m_mt_ids.edit_map );
-		if ( response.result != ::game::R_NONE ) {
-			m_mt_ids.edit_map = 0;
+		if ( m_mt_ids.edit_map ) {
+			auto response = game->MT_GetResponse( m_mt_ids.edit_map );
+			if ( response.result != ::game::R_NONE ) {
+				m_mt_ids.edit_map = 0;
 
-			ASSERT( response.result == ::game::R_SUCCESS, "edit map unsuccessful" );
+				ASSERT( response.result == ::game::R_SUCCESS, "edit map unsuccessful" );
 
-			// add missing things, remove unneeded things
-			if ( response.data.edit_map.sprites.actors_to_add ) {
-				Log( "Need to add " + std::to_string( response.data.edit_map.sprites.actors_to_add->size() ) + " actors" );
-				for ( auto& a : *response.data.edit_map.sprites.actors_to_add ) {
-					const auto& actor = a.second;
-					GetTerrainSpriteActor( actor.name, actor.tex_coords, actor.z_index );
+				// add missing things, remove unneeded things
+				if ( response.data.edit_map.sprites.actors_to_add ) {
+					Log( "Need to add " + std::to_string( response.data.edit_map.sprites.actors_to_add->size() ) + " actors" );
+					for ( auto& a : *response.data.edit_map.sprites.actors_to_add ) {
+						const auto& actor = a.second;
+						GetTerrainSpriteActor( actor.name, actor.tex_coords, actor.z_index );
+					}
 				}
-			}
 
-			if ( response.data.edit_map.sprites.instances_to_remove ) {
-				Log( "Need to remove " + std::to_string( response.data.edit_map.sprites.instances_to_remove->size() ) + " instances" );
-				for ( auto& i : *response.data.edit_map.sprites.instances_to_remove ) {
-					auto* actor = GetTerrainSpriteActorByKey( i.second );
-					ASSERT( actor, "sprite actor not found" );
-					ASSERT( actor->HasInstance( i.first ), "actor instance not found" );
-					actor->RemoveInstance( i.first );
+				if ( response.data.edit_map.sprites.instances_to_remove ) {
+					Log( "Need to remove " + std::to_string( response.data.edit_map.sprites.instances_to_remove->size() ) + " instances" );
+					for ( auto& i : *response.data.edit_map.sprites.instances_to_remove ) {
+						auto* actor = GetTerrainSpriteActorByKey( i.second );
+						ASSERT( actor, "sprite actor not found" );
+						ASSERT( actor->HasInstance( i.first ), "actor instance not found" );
+						actor->RemoveInstance( i.first );
+					}
 				}
-			}
 
-			if ( response.data.edit_map.sprites.instances_to_add ) {
-				Log( "Need to add " + std::to_string( response.data.edit_map.sprites.instances_to_add->size() ) + " instances" );
-				for ( auto& i : *response.data.edit_map.sprites.instances_to_add ) {
-					const auto& instance = i.second;
-					auto* actor = GetTerrainSpriteActorByKey( instance.first );
-					ASSERT( actor, "sprite actor not found" );
-					ASSERT( !actor->HasInstance( i.first ), "actor instance already exists" );
-					actor->SetInstance( i.first, instance.second );
+				if ( response.data.edit_map.sprites.instances_to_add ) {
+					Log( "Need to add " + std::to_string( response.data.edit_map.sprites.instances_to_add->size() ) + " instances" );
+					for ( auto& i : *response.data.edit_map.sprites.instances_to_add ) {
+						const auto& instance = i.second;
+						auto* actor = GetTerrainSpriteActorByKey( instance.first );
+						ASSERT( actor, "sprite actor not found" );
+						ASSERT( !actor->HasInstance( i.first ), "actor instance already exists" );
+						actor->SetInstance( i.first, instance.second );
+					}
 				}
-			}
 
-			/*
-			result.sprites_to_add = *response.data.select_tile.sprites_to_add;
-			result.instances_to_remove = *response.data.select_tile.instances_to_remove;
-			result.instances_to_add = *response.data.select_tile.instances_to_add;
-			*/
+				/*
+				result.sprites_to_add = *response.data.select_tile.sprites_to_add;
+				result.instances_to_remove = *response.data.select_tile.instances_to_remove;
+				result.instances_to_add = *response.data.select_tile.instances_to_add;
+				*/
+			}
 		}
 	}
 	if ( m_mt_ids.chat ) {
@@ -313,7 +316,7 @@ void Game::Iterate() {
 
 	if ( m_is_initialized ) {
 
-		if ( m_editing_draw_timer.HasTicked() ) {
+		if ( m_is_map_editing_allowed && m_editing_draw_timer.HasTicked() ) {
 			if ( m_is_editing_mode && !IsTileAtRequestPending() ) {
 				SelectTileAtPoint( m_map_control.last_mouse_position.x, m_map_control.last_mouse_position.y ); // async
 			}
@@ -327,7 +330,7 @@ void Game::Iterate() {
 
 		const auto tile_data = GetTileAtCoordsResult();
 		if ( tile_data.is_set ) {
-			if ( m_is_editing_mode ) {
+			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
 				if ( !m_mt_ids.edit_map ) { // TODO: need to queue?
 					m_mt_ids.edit_map = game->MT_EditMap( tile_data.tile_position, m_editor_tool, m_editor_brush, m_editor_draw_mode );
 				}
@@ -378,6 +381,10 @@ void Game::Iterate() {
 			actor.first->Iterate();
 		}
 	}
+}
+
+const bool Game::IsMapEditingAllowed() const {
+	return m_is_map_editing_allowed;
 }
 
 const size_t Game::GetMapWidth() const {
@@ -715,22 +722,26 @@ types::Texture* Game::GetTerrainTexture() const {
 }
 
 void Game::SetEditorTool( ::game::map_editor::MapEditor::tool_type_t editor_tool ) {
+	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
 	if ( m_editor_tool != editor_tool ) {
 		m_editor_tool = editor_tool;
 	}
 }
 
 const ::game::map_editor::MapEditor::tool_type_t Game::GetEditorTool() const {
+	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
 	return m_editor_tool;
 }
 
 void Game::SetEditorBrush( ::game::map_editor::MapEditor::brush_type_t editor_brush ) {
+	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
 	if ( m_editor_brush != editor_brush ) {
 		m_editor_brush = editor_brush;
 	}
 }
 
 const ::game::map_editor::MapEditor::brush_type_t Game::GetEditorBrush() const {
+	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
 	return m_editor_brush;
 }
 
@@ -972,7 +983,7 @@ void Game::Initialize(
 					return true;
 				}
 			}
-			else if ( data->key.code == UIEvent::K_CTRL ) {
+			else if ( m_is_map_editing_allowed && data->key.code == UIEvent::K_CTRL ) {
 				m_is_editing_mode = true;
 			}
 
@@ -988,7 +999,7 @@ void Game::Initialize(
 					m_scroller.Stop();
 				}
 			}
-			else if ( data->key.code == UIEvent::K_CTRL ) {
+			else if ( m_is_map_editing_allowed && data->key.code == UIEvent::K_CTRL ) {
 				m_is_editing_mode = false;
 				m_editing_draw_timer.Stop();
 				m_editor_draw_mode = ::game::map_editor::MapEditor::DM_NONE;
@@ -1003,7 +1014,7 @@ void Game::Initialize(
 				return false;
 			}
 
-			if ( m_is_editing_mode ) {
+			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
 				switch ( data->mouse.button ) {
 					case UIEvent::M_LEFT: {
 						m_editor_draw_mode = ::game::map_editor::MapEditor::DM_INC;
@@ -1114,7 +1125,7 @@ void Game::Initialize(
 					break;
 				}
 			}
-			if ( m_is_editing_mode ) {
+			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
 				m_editing_draw_timer.Stop();
 				m_editor_draw_mode = ::game::map_editor::MapEditor::DM_NONE;
 			}

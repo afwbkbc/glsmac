@@ -1,5 +1,7 @@
 #include "MiddleArea.h"
 
+#include "../../Game.h"
+
 namespace task {
 namespace game {
 namespace ui {
@@ -27,18 +29,20 @@ void MiddleArea::Create() {
 	);
 	AddChild( m_buttons.messages );
 
-	NEW( m_buttons.toolbar, ::ui::Button, buttonclass );
-	m_buttons.toolbar->SetLabel( "T" );
-	m_buttons.toolbar->SetTop( 27 );
-	m_buttons.toolbar->SetHeight( 37 );
-	m_buttons.toolbar->On(
-		UIEvent::EV_BUTTON_CLICK, EH( this ) {
-			SwitchPage( m_buttons.toolbar, m_pages.toolbar );
-			return true;
-		}
-	);
-	AddChild( m_buttons.toolbar );
-
+	if ( m_game->IsMapEditingAllowed() ) {
+		NEW( m_buttons.toolbar, ::ui::Button, buttonclass );
+		m_buttons.toolbar->SetLabel( "T" );
+		m_buttons.toolbar->SetTop( 27 );
+		m_buttons.toolbar->SetHeight( 37 );
+		m_buttons.toolbar->On(
+			UIEvent::EV_BUTTON_CLICK, EH( this ) {
+				SwitchPage( m_buttons.toolbar, m_pages.toolbar );
+				return true;
+			}
+		);
+		AddChild( m_buttons.toolbar );
+	}
+	
 	NEW( m_buttons.info_panels, ::ui::Button, buttonclass );
 	m_buttons.info_panels->SetLabel( "I" );
 	m_buttons.info_panels->SetTop( 69 );
@@ -56,15 +60,22 @@ void MiddleArea::Create() {
 	m_pages.messages->Hide();
 	AddChild( m_pages.messages );
 
-	NEW( m_pages.toolbar, Toolbar, m_game );
-	m_pages.toolbar->Hide();
-	AddChild( m_pages.toolbar );
+	if ( m_game->IsMapEditingAllowed() ) {
+		NEW( m_pages.toolbar, Toolbar, m_game );
+		m_pages.toolbar->Hide();
+		AddChild( m_pages.toolbar );
+	}
 
 	NEW( m_pages.info_panels, InfoPanels, m_game );
 	m_pages.info_panels->Hide();
 	AddChild( m_pages.info_panels );
 
-	SwitchPage( m_buttons.toolbar, m_pages.toolbar );
+	if ( m_buttons.toolbar ) {
+		SwitchPage( m_buttons.toolbar, m_pages.toolbar );
+	}
+	else {
+		SwitchPage( m_buttons.messages, m_pages.messages );
+	}
 }
 
 void MiddleArea::Destroy() {
@@ -72,12 +83,16 @@ void MiddleArea::Destroy() {
 	// buttons
 
 	RemoveChild( m_buttons.messages );
-	RemoveChild( m_buttons.toolbar );
+	if ( m_buttons.toolbar ) {
+		RemoveChild( m_buttons.toolbar );
+	}
 	RemoveChild( m_buttons.info_panels );
 
 	// panels
 	RemoveChild( m_pages.messages );
-	RemoveChild( m_pages.toolbar );
+	if ( m_pages.toolbar ) {
+		RemoveChild( m_pages.toolbar );
+	}
 	RemoveChild( m_pages.info_panels );
 
 	BBSection::Destroy();

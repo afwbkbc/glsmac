@@ -56,6 +56,8 @@ CLASS( Game, base::Task )
 	void Stop() override;
 	void Iterate() override;
 
+	const bool IsMapEditingAllowed() const;
+
 	struct consts_t {
 		const struct {
 			const struct {
@@ -246,6 +248,8 @@ private:
 				util::FS::GetPathSeparator() +
 				::game::map::s_consts.fs.default_map_directory;
 	};
+
+	const bool m_is_map_editing_allowed = false;
 
 	tile_data_t m_selected_tile_data = {};
 	map_data_t m_map_data = {};
