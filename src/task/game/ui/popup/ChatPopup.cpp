@@ -17,7 +17,7 @@ ChatPopup::ChatPopup( Game* game )
 void ChatPopup::Create() {
 	OkCancelPopup::Create();
 
-	NEW( m_message_section, ::ui::object::Section, SubClass( "Frame" ) );
+	NEW( m_message_section, ::ui::object::Section, SubClass( "InnerFrame" ) );
 	m_message_section->SetAlign( UIObject::ALIGN_TOP );
 	m_message_section->SetLeft( 6 );
 	m_message_section->SetRight( 6 );

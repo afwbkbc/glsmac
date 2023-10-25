@@ -44,6 +44,11 @@ void Popup::AddStyles() {
 			s->SetTexture( ::Style::A_TEXTURE_BOTTOM, "interface.pcx", 8, 303, 31, 305 );
 			s->SetTexture( ::Style::A_TEXTURE_LEFTBOTTOM, "interface.pcx", 1, 303, 3, 305 );
 			s->SetTexture( ::Style::A_TEXTURE_BACK, "interface.pcx", 86, 548, 109, 571 );
+		}
+	);
+
+	AddStyle(
+		"InnerFrame", { "Frame" }, SH() {
 			s->Set( Style::A_Z_INDEX, 0.6f );
 		}
 	);
