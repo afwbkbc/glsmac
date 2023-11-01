@@ -70,6 +70,7 @@ protected:
 	virtual void ProcessEvent( const network::Event& event );
 
 	bool m_is_connected = false;
+	bool m_is_canceled = false; // canceled by user
 
 	std::string m_disconnect_reason = "";
 	LocalSettings* m_settings = nullptr;

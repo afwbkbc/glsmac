@@ -210,6 +210,7 @@ void MainMenu::StartGame() {
 		g_engine->GetScheduler()->RemoveTask( this );
 	}, UH( this, real_state ) {
 		m_menu_object->MaybeClose();
+		//m_state->Reset();
 	} );
 	g_engine->GetScheduler()->AddTask( task );
 }

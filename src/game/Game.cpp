@@ -871,7 +871,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		m_connection->IfClient(
 			[ this ]( Client* connection ) -> void {
 				connection->m_on_disconnect = [ this, connection ]() -> void {
-					Log( "Server disconnected" );
+					Log( "Connection lost" );
 					DELETE( connection );
 					m_state->DetachConnection();
 					m_connection = nullptr;
@@ -986,7 +986,6 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				// wait for server to initialize
 				ui->SetLoaderText( "Waiting for server" );
 
-				//connection->m_on_game_state_change = [ this, connection, ui ]( const Connection::game_state_t state ) -> void {
 				const auto f_download_map = [ this, ui, connection ] {
 
 					ui->SetLoaderText( "Downloading map" );

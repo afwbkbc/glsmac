@@ -46,6 +46,8 @@ void Connection::Connect() {
 	ASSERT( !m_is_connected, "already connected" );
 	ASSERT( !m_mt_ids.connect, "connection already in progress" );
 
+	m_is_canceled = false;
+
 	m_game_state = GS_NONE;
 
 	Log( "connecting..." );
@@ -60,7 +62,9 @@ void Connection::Connect() {
 			ASSERT( m_mt_ids.connect, "connect mt id is zero" );
 			m_network->MT_Cancel( m_mt_ids.connect );
 			m_mt_ids.connect = 0;
+			m_is_canceled = true;
 			m_mt_ids.disconnect = m_network->MT_Disconnect();
+
 			return true;
 		}
 	);
@@ -79,12 +83,13 @@ void Connection::Iterate() {
 					m_on_disconnect();
 				}
 			}
-			else {
+			if ( m_is_canceled ) {
 				if ( m_on_cancel ) {
 					m_on_cancel();
 				}
 			}
 			m_is_connected = false;
+			m_is_canceled = false;
 			if ( !m_disconnect_reason.empty() && m_on_error ) {
 				m_on_error( m_disconnect_reason );
 				m_disconnect_reason.clear();
