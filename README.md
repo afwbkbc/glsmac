@@ -40,7 +40,7 @@ Once I replicate original game, I'll focus on other things, such as: larger maps
 
 ### Current Version:
 
-# v0.2+
+# v0.3+
 
 ### Roadmap
 
