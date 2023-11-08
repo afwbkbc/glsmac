@@ -10,6 +10,10 @@
 
 #include "types/Texture.h"
 
+// message label
+#include "ui/object/Label.h"
+#include "util/Timer.h"
+
 // sections
 #include "UnitPreview.h"
 #include "TilePreview.h"
@@ -19,10 +23,11 @@
 
 // side menus
 #include "left_menu/LeftMenu.h"
+#include "right_menu/RightMenu.h"
 
 namespace task {
 namespace game {
-
+class Game;
 namespace ui {
 
 CLASS( BottomBar, UI )
@@ -31,6 +36,7 @@ CLASS( BottomBar, UI )
 		: UI( game, "BB" ) {}
 
 	void Create() override;
+	void Iterate() override;
 	void Destroy() override;
 	void Align() override;
 
@@ -63,6 +69,9 @@ private:
 		Button* commlink = nullptr;
 	} m_buttons = {};
 
+	Label* m_message_label = nullptr;
+	util::Timer m_message_label_clear_timer;
+
 	struct {
 		UnitPreview* unit_preview = nullptr;
 		TilePreview* tile_preview = nullptr;
@@ -73,6 +82,7 @@ private:
 
 	struct {
 		menu::LeftMenu* left = nullptr;
+		menu::RightMenu* right = nullptr;
 	} m_side_menus = {};
 
 	struct {

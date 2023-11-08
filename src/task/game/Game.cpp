@@ -16,7 +16,8 @@ const Game::consts_t Game::s_consts = {};
 Game::Game( ::game::State* state, ui_handler_t on_start, ui_handler_t on_cancel )
 	: m_state( state )
 	, m_on_start( on_start )
-	, m_on_cancel( on_cancel ) {
+	, m_on_cancel( on_cancel )
+	, m_is_map_editing_allowed( state->GetConnection() == nullptr ) { // singleplayer only
 
 }
 
@@ -128,7 +129,7 @@ void Game::Iterate() {
 		}
 		game->MT_DestroyResponse( response );
 	}
-	else if ( m_mt_ids.get_map_data ) {
+	if ( m_mt_ids.get_map_data ) {
 		auto response = game->MT_GetResponse( m_mt_ids.get_map_data );
 		if ( response.result != ::game::R_NONE ) {
 			if ( response.result == ::game::R_PENDING ) {
@@ -180,7 +181,7 @@ void Game::Iterate() {
 			game->MT_DestroyResponse( response );
 		}
 	}
-	else if ( m_mt_ids.reset ) {
+	if ( m_mt_ids.reset ) {
 		auto response = game->MT_GetResponse( m_mt_ids.reset );
 		if ( response.result != ::game::R_NONE ) {
 			ui->HideLoader();
@@ -200,7 +201,7 @@ void Game::Iterate() {
 			}
 		}
 	}
-	else if ( m_mt_ids.ping ) {
+	if ( m_mt_ids.ping ) {
 		auto response = game->MT_GetResponse( m_mt_ids.ping );
 		if ( response.result != ::game::R_NONE ) {
 			ui->HideLoader();
@@ -209,77 +210,113 @@ void Game::Iterate() {
 			CancelGame();
 		}
 	}
-	else if ( m_mt_ids.save_map ) {
-		auto response = game->MT_GetResponse( m_mt_ids.save_map );
-		if ( response.result != ::game::R_NONE ) {
-			ui->HideLoader();
-			m_mt_ids.save_map = 0;
-			if ( ui->HasPopup() ) {
-				ui->CloseLastPopup();
-			}
-			if ( response.result == ::game::R_SUCCESS ) {
-				m_map_data.last_directory = util::FS::GetDirName( *response.data.save_map.path );
-				m_map_data.filename = util::FS::GetBaseName( *response.data.save_map.path );
-				m_ui.bottom_bar->UpdateMapFileName();
-			}
-			else {
-				ui->ShowError(
-					"Map saving failed.", UH( this ) {
+	if ( m_is_map_editing_allowed ) {
+		if ( m_mt_ids.save_map ) {
+			auto response = game->MT_GetResponse( m_mt_ids.save_map );
+			if ( response.result != ::game::R_NONE ) {
+				ui->HideLoader();
+				m_mt_ids.save_map = 0;
+				if ( ui->HasPopup() ) {
+					ui->CloseLastPopup();
+				}
+				if ( response.result == ::game::R_SUCCESS ) {
+					m_map_data.last_directory = util::FS::GetDirName( *response.data.save_map.path );
+					m_map_data.filename = util::FS::GetBaseName( *response.data.save_map.path );
+					m_ui.bottom_bar->UpdateMapFileName();
+				}
+				else {
+					ui->ShowError(
+						"Map saving failed.", UH( this ) {
 
-					}
-				);
+						}
+					);
+				}
+				game->MT_DestroyResponse( response );
 			}
-			game->MT_DestroyResponse( response );
+		}
+		if ( m_mt_ids.edit_map ) {
+			auto response = game->MT_GetResponse( m_mt_ids.edit_map );
+			if ( response.result != ::game::R_NONE ) {
+				m_mt_ids.edit_map = 0;
+
+				ASSERT( response.result == ::game::R_SUCCESS, "edit map unsuccessful" );
+
+				// add missing things, remove unneeded things
+				if ( response.data.edit_map.sprites.actors_to_add ) {
+					Log( "Need to add " + std::to_string( response.data.edit_map.sprites.actors_to_add->size() ) + " actors" );
+					for ( auto& a : *response.data.edit_map.sprites.actors_to_add ) {
+						const auto& actor = a.second;
+						GetTerrainSpriteActor( actor.name, actor.tex_coords, actor.z_index );
+					}
+				}
+
+				if ( response.data.edit_map.sprites.instances_to_remove ) {
+					Log( "Need to remove " + std::to_string( response.data.edit_map.sprites.instances_to_remove->size() ) + " instances" );
+					for ( auto& i : *response.data.edit_map.sprites.instances_to_remove ) {
+						auto* actor = GetTerrainSpriteActorByKey( i.second );
+						ASSERT( actor, "sprite actor not found" );
+						ASSERT( actor->HasInstance( i.first ), "actor instance not found" );
+						actor->RemoveInstance( i.first );
+					}
+				}
+
+				if ( response.data.edit_map.sprites.instances_to_add ) {
+					Log( "Need to add " + std::to_string( response.data.edit_map.sprites.instances_to_add->size() ) + " instances" );
+					for ( auto& i : *response.data.edit_map.sprites.instances_to_add ) {
+						const auto& instance = i.second;
+						auto* actor = GetTerrainSpriteActorByKey( instance.first );
+						ASSERT( actor, "sprite actor not found" );
+						ASSERT( !actor->HasInstance( i.first ), "actor instance already exists" );
+						actor->SetInstance( i.first, instance.second );
+					}
+				}
+
+				/*
+				result.sprites_to_add = *response.data.select_tile.sprites_to_add;
+				result.instances_to_remove = *response.data.select_tile.instances_to_remove;
+				result.instances_to_add = *response.data.select_tile.instances_to_add;
+				*/
+			}
 		}
 	}
-	else if ( m_mt_ids.edit_map ) {
-		auto response = game->MT_GetResponse( m_mt_ids.edit_map );
+	if ( m_mt_ids.chat ) {
+		auto response = game->MT_GetResponse( m_mt_ids.chat );
 		if ( response.result != ::game::R_NONE ) {
-			m_mt_ids.edit_map = 0;
-
-			ASSERT( response.result == ::game::R_SUCCESS, "edit map unsuccessful" );
-
-			// add missing things, remove unneeded things
-			if ( response.data.edit_map.sprites.actors_to_add ) {
-				Log( "Need to add " + std::to_string( response.data.edit_map.sprites.actors_to_add->size() ) + " actors" );
-				for ( auto& a : *response.data.edit_map.sprites.actors_to_add ) {
-					const auto& actor = a.second;
-					GetTerrainSpriteActor( actor.name, actor.tex_coords, actor.z_index );
-				}
-			}
-
-			if ( response.data.edit_map.sprites.instances_to_remove ) {
-				Log( "Need to remove " + std::to_string( response.data.edit_map.sprites.instances_to_remove->size() ) + " instances" );
-				for ( auto& i : *response.data.edit_map.sprites.instances_to_remove ) {
-					auto* actor = GetTerrainSpriteActorByKey( i.second );
-					ASSERT( actor, "sprite actor not found" );
-					ASSERT( actor->HasInstance( i.first ), "actor instance not found" );
-					actor->RemoveInstance( i.first );
-				}
-			}
-
-			if ( response.data.edit_map.sprites.instances_to_add ) {
-				Log( "Need to add " + std::to_string( response.data.edit_map.sprites.instances_to_add->size() ) + " instances" );
-				for ( auto& i : *response.data.edit_map.sprites.instances_to_add ) {
-					const auto& instance = i.second;
-					auto* actor = GetTerrainSpriteActorByKey( instance.first );
-					ASSERT( actor, "sprite actor not found" );
-					ASSERT( !actor->HasInstance( i.first ), "actor instance already exists" );
-					actor->SetInstance( i.first, instance.second );
-				}
-			}
-
-			/*
-			result.sprites_to_add = *response.data.select_tile.sprites_to_add;
-			result.instances_to_remove = *response.data.select_tile.instances_to_remove;
-			result.instances_to_add = *response.data.select_tile.instances_to_add;
-			*/
+			ASSERT( response.result == ::game::R_SUCCESS, "failed to send chat message to game thread" );
+			m_mt_ids.chat = 0;
 		}
+	}
+
+	// poll game thread for events
+	if ( m_mt_ids.get_events ) {
+		auto response = game->MT_GetResponse( m_mt_ids.get_events );
+		if ( response.result != ::game::R_NONE ) {
+			ASSERT( response.result == ::game::R_SUCCESS, "unexpected game events response" );
+			m_mt_ids.get_events = 0;
+			const auto* events = response.data.get_events.events;
+			if ( events ) {
+				Log( "got " + std::to_string( events->size() ) + " game events" );
+
+				for ( const auto& event : *events ) {
+					ProcessEvent( event );
+					if ( m_on_game_exit ) {
+						break; // exiting game
+					}
+				}
+			}
+			game->MT_DestroyResponse( response );
+			if ( !m_on_game_exit ) {
+				m_mt_ids.get_events = game->MT_GetEvents();
+			}
+		}
+	}
+	else {
+		m_mt_ids.get_events = game->MT_GetEvents();
 	}
 
 	if ( m_is_initialized ) {
 
-		if ( m_editing_draw_timer.HasTicked() ) {
+		if ( m_is_map_editing_allowed && m_editing_draw_timer.HasTicked() ) {
 			if ( m_is_editing_mode && !IsTileAtRequestPending() ) {
 				SelectTileAtPoint( m_map_control.last_mouse_position.x, m_map_control.last_mouse_position.y ); // async
 			}
@@ -293,7 +330,7 @@ void Game::Iterate() {
 
 		const auto tile_data = GetTileAtCoordsResult();
 		if ( tile_data.is_set ) {
-			if ( m_is_editing_mode ) {
+			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
 				if ( !m_mt_ids.edit_map ) { // TODO: need to queue?
 					m_mt_ids.edit_map = game->MT_EditMap( tile_data.tile_position, m_editor_tool, m_editor_brush, m_editor_draw_mode );
 				}
@@ -343,8 +380,11 @@ void Game::Iterate() {
 		for ( auto& actor : m_actors_map ) {
 			actor.first->Iterate();
 		}
-
 	}
+}
+
+const bool Game::IsMapEditingAllowed() const {
+	return m_is_map_editing_allowed;
 }
 
 const size_t Game::GetMapWidth() const {
@@ -682,23 +722,52 @@ types::Texture* Game::GetTerrainTexture() const {
 }
 
 void Game::SetEditorTool( ::game::map_editor::MapEditor::tool_type_t editor_tool ) {
+	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
 	if ( m_editor_tool != editor_tool ) {
 		m_editor_tool = editor_tool;
 	}
 }
 
 const ::game::map_editor::MapEditor::tool_type_t Game::GetEditorTool() const {
+	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
 	return m_editor_tool;
 }
 
 void Game::SetEditorBrush( ::game::map_editor::MapEditor::brush_type_t editor_brush ) {
+	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
 	if ( m_editor_brush != editor_brush ) {
 		m_editor_brush = editor_brush;
 	}
 }
 
 const ::game::map_editor::MapEditor::brush_type_t Game::GetEditorBrush() const {
+	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
 	return m_editor_brush;
+}
+
+void Game::ProcessEvent( const ::game::Event& event ) {
+	Log( "Received event (type=" + std::to_string( event.type ) + ")" );
+	switch ( event.type ) {
+		case ::game::Event::ET_QUIT: {
+			ExitGame(
+				[ this, event ]() -> void {
+					ReturnToMainMenu(
+						event.data.quit.reason
+							? *event.data.quit.reason
+							: ""
+					);
+				}
+			);
+			break;
+		}
+		case ::game::Event::ET_GLOBAL_MESSAGE: {
+			AddMessage( *event.data.global_message.message );
+			break;
+		}
+		default: {
+			ASSERT( false, "unexpected event type: " + std::to_string( event.type ) );
+		}
+	}
 }
 
 void Game::UpdateMapData( const types::Vec2< size_t >& map_size ) {
@@ -914,7 +983,7 @@ void Game::Initialize(
 					return true;
 				}
 			}
-			else if ( data->key.code == UIEvent::K_CTRL ) {
+			else if ( m_is_map_editing_allowed && data->key.code == UIEvent::K_CTRL ) {
 				m_is_editing_mode = true;
 			}
 
@@ -930,7 +999,7 @@ void Game::Initialize(
 					m_scroller.Stop();
 				}
 			}
-			else if ( data->key.code == UIEvent::K_CTRL ) {
+			else if ( m_is_map_editing_allowed && data->key.code == UIEvent::K_CTRL ) {
 				m_is_editing_mode = false;
 				m_editing_draw_timer.Stop();
 				m_editor_draw_mode = ::game::map_editor::MapEditor::DM_NONE;
@@ -945,7 +1014,7 @@ void Game::Initialize(
 				return false;
 			}
 
-			if ( m_is_editing_mode ) {
+			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
 				switch ( data->mouse.button ) {
 					case UIEvent::M_LEFT: {
 						m_editor_draw_mode = ::game::map_editor::MapEditor::DM_INC;
@@ -1056,7 +1125,7 @@ void Game::Initialize(
 					break;
 				}
 			}
-			if ( m_is_editing_mode ) {
+			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
 				m_editing_draw_timer.Stop();
 				m_editor_draw_mode = ::game::map_editor::MapEditor::DM_NONE;
 			}
@@ -1220,6 +1289,11 @@ void Game::AddMessage( const std::string& text ) {
 	if ( m_ui.bottom_bar ) {
 		m_ui.bottom_bar->AddMessage( text );
 	}
+}
+
+void Game::SendChatMessage( const std::string& text ) {
+	ASSERT( !m_mt_ids.chat, "previous chat request still pending" );
+	m_mt_ids.chat = g_engine->GetGame()->MT_Chat( text );
 }
 
 void Game::SelectTileAtPoint( const size_t x, const size_t y ) {
@@ -1638,6 +1712,10 @@ void Game::CancelRequests() {
 		game->MT_Cancel( m_mt_ids.reset );
 		m_mt_ids.reset = 0;
 	}
+	if ( m_mt_ids.get_events ) {
+		game->MT_Cancel( m_mt_ids.get_events );
+		m_mt_ids.get_events = 0;
+	}
 	// TODO: cancel other requests?
 }
 
@@ -1652,12 +1730,16 @@ void Game::CancelGame() {
 				m_on_cancel();
 				m_on_cancel = nullptr;
 			}
+			g_engine->GetScheduler()->RemoveTask( this );
 		}
 	);
 }
 
-void Game::ReturnToMainMenu() {
+void Game::ReturnToMainMenu( const std::string reason ) {
 	NEWV( task, task::mainmenu::MainMenu );
+	if ( !reason.empty() ) {
+		task->ShowErrorOnStart( reason );
+	}
 	g_engine->GetScheduler()->RemoveTask( this );
 	g_engine->GetScheduler()->AddTask( task );
 }

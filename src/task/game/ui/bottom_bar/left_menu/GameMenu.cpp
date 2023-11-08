@@ -9,7 +9,7 @@ namespace ui {
 namespace menu {
 
 GameMenu::GameMenu( Game* game )
-	: Menu( game ) {
+	: Menu( game, "BBLeftMenu" ) {
 
 #ifdef DEBUG
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART ) )

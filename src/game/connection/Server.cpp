@@ -13,10 +13,10 @@ Server::Server( LocalSettings* const settings )
 void Server::ProcessEvent( const network::Event& event ) {
 	Connection::ProcessEvent( event );
 
-	ASSERT( event.cid || event.type == Event::ET_LISTEN, "server connection received event without cid" );
+	ASSERT( event.cid || event.type == network::Event::ET_LISTEN, "server connection received event without cid" );
 
 	switch ( event.type ) {
-		case Event::ET_LISTEN: {
+		case network::Event::ET_LISTEN: {
 			ASSERT( !m_player, "player already set" );
 			Log( "Listening" );
 			m_state->m_settings.global.Initialize();
@@ -46,7 +46,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			}
 			break;
 		}
-		case Event::ET_CLIENT_CONNECT: {
+		case network::Event::ET_CLIENT_CONNECT: {
 			Log( "Client " + std::to_string( event.cid ) + " connected" );
 			ASSERT( m_state->GetCidSlots().find( event.cid ) == m_state->GetCidSlots().end(), "player cid already in slots" );
 
@@ -62,7 +62,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			}
 			break;
 		}
-		case Event::ET_CLIENT_DISCONNECT: {
+		case network::Event::ET_CLIENT_DISCONNECT: {
 			Log( "Client " + std::to_string( event.cid ) + " disconnected" );
 			auto it = m_state->GetCidSlots().find( event.cid );
 			if ( it != m_state->GetCidSlots().end() ) {
@@ -98,7 +98,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			}
 			break;
 		}
-		case Event::ET_PACKET: {
+		case network::Event::ET_PACKET: {
 			try {
 				Packet packet( Packet::PT_NONE );
 				packet.Unserialize( Buffer( event.data.packet_data ) );
@@ -221,6 +221,9 @@ void Server::ProcessEvent( const network::Event& event ) {
 							break;
 						}
 						const bool only_flags = packet.type == Packet::PT_UPDATE_FLAGS;
+						const auto old_flags = slot.GetState() == Slot::SS_PLAYER
+							? slot.GetPlayerFlags()
+							: 0;
 						if ( only_flags ) {
 							Log( "Got flags update from " + std::to_string( event.cid ) );
 							slot.SetPlayerFlags( packet.udata.flags.flags );
@@ -236,8 +239,13 @@ void Server::ProcessEvent( const network::Event& event ) {
 							}
 							SendSlotUpdate( it->second, &slot, event.cid ); // notify others
 						}
-						if ( m_on_slot_update ) {
-							m_on_slot_update( it->second, &slot, only_flags );
+						if ( !only_flags ) {
+							if ( m_on_slot_update ) {
+								m_on_slot_update( it->second, &slot );
+							}
+						}
+						if ( m_on_flags_update ) {
+							m_on_flags_update( it->second, &slot, old_flags, slot.GetPlayerFlags() );
 						}
 						break;
 					}
@@ -316,7 +324,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			}
 			break;
 		}
-		case Event::ET_ERROR: {
+		case network::Event::ET_ERROR: {
 			Error( event.cid, event.data.packet_data );
 			break;
 		}
@@ -364,14 +372,17 @@ void Server::SetGameState( const game_state_t game_state ) {
 }
 
 void Server::UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flags ) {
-	if ( m_on_slot_update ) {
-		m_on_slot_update( slot_num, slot, only_flags );
+	if ( !only_flags ) {
+		if ( m_on_slot_update ) {
+			m_on_slot_update( slot_num, slot );
+		}
+		SendSlotUpdate( slot_num, slot );
+	}
+	if ( m_on_flags_update ) {
+		m_on_flags_update( slot_num, slot, slot->GetPlayerFlags(), slot->GetPlayerFlags() ); // TODO: old flags?
 	}
 	if ( only_flags ) {
 		SendFlagsUpdate( slot_num, slot );
-	}
-	else {
-		SendSlotUpdate( slot_num, slot );
 	}
 }
 
@@ -483,10 +494,11 @@ void Server::ClearReadyFlags() {
 		auto& slot = slots.at( num );
 		if ( slot.GetState() == Slot::SS_PLAYER && slot.HasPlayerFlag( Slot::PF_READY ) ) {
 			Log( "Clearing 'ready' flag of " + slot.GetPlayer()->GetPlayerName() );
+			const auto old_flags = slot.GetPlayerFlags();
 			slot.UnsetPlayerFlag( Slot::PF_READY );
 			UpdateSlot( num, &slot, true );
-			if ( m_on_slot_update ) {
-				m_on_slot_update( num, &slot, true );
+			if ( m_on_flags_update ) {
+				m_on_flags_update( num, &slot, old_flags, slot.GetPlayerFlags() );
 			}
 		}
 	}

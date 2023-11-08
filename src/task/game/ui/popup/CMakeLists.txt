@@ -6,5 +6,6 @@ SET( SRC ${SRC}
 	${PWD}/FilePopup.cpp
 	${PWD}/SaveMap.cpp
 	${PWD}/LoadMap.cpp
+	${PWD}/ChatPopup.cpp
 
 	PARENT_SCOPE )

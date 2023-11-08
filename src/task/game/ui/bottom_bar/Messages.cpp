@@ -2,6 +2,8 @@
 
 #include "engine/Engine.h"
 
+#include "../../Game.h"
+
 namespace task {
 namespace game {
 namespace ui {
@@ -20,7 +22,9 @@ void Messages::Create() {
 	}*/
 
 	// tmp
-	m_messages_list->AddLine( "Scenario Editor ACTIVATED." );
+	if ( m_game->IsMapEditingAllowed() ) {
+		m_messages_list->AddLine( "Scenario Editor ACTIVATED." );
+	}
 }
 
 void Messages::Iterate() {

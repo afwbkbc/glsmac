@@ -12,13 +12,13 @@ Client::Client( LocalSettings* const settings )
 	//
 }
 
-void Client::ProcessEvent( const Event& event ) {
+void Client::ProcessEvent( const network::Event& event ) {
 	Connection::ProcessEvent( event );
 
 	ASSERT( !event.cid, "client connection received event with non-zero cid" );
 
 	switch ( event.type ) {
-		case Event::ET_PACKET: {
+		case network::Event::ET_PACKET: {
 			try {
 				if ( !event.data.packet_data.empty() ) {
 					Packet packet( Packet::PT_NONE );
@@ -99,6 +99,9 @@ void Client::ProcessEvent( const Event& event ) {
 								return;
 							}
 							auto& slot = m_state->m_slots.GetSlot( slot_num );
+							const auto old_flags = slot.GetState() == Slot::SS_PLAYER
+								? slot.GetPlayerFlags()
+								: 0;
 							if ( only_flags ) {
 								Log( "Got flags update from server (slot: " + std::to_string( slot_num ) + ")" );
 								slot.SetPlayerFlags( packet.udata.flags.flags );
@@ -123,8 +126,13 @@ void Client::ProcessEvent( const Event& event ) {
 									}
 								}
 							}
-							if ( m_on_slot_update ) {
-								m_on_slot_update( slot_num, &slot, only_flags );
+							if ( !only_flags ) {
+								if ( m_on_slot_update ) {
+									m_on_slot_update( slot_num, &slot );
+								}
+							}
+							if ( m_on_flags_update ) {
+								m_on_flags_update( slot_num, &slot, old_flags, slot.GetPlayerFlags() );
 							}
 							break;
 						}
@@ -216,11 +224,11 @@ void Client::ProcessEvent( const Event& event ) {
 			}
 			break;
 		}
-		case Event::ET_ERROR: {
+		case network::Event::ET_ERROR: {
 			Error( event.data.packet_data );
 			break;
 		}
-		case Event::ET_DISCONNECT: {
+		case network::Event::ET_DISCONNECT: {
 			Disconnect( "Connection to server lost." );
 			break;
 		}

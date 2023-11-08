@@ -1,5 +1,7 @@
 #include "LeftMenu.h"
 
+#include "../../../Game.h"
+
 // submenus
 #include "GameMenu.h"
 #include "EditMapMenu.h"
@@ -16,13 +18,15 @@ namespace ui {
 namespace menu {
 
 LeftMenu::LeftMenu( Game* game )
-	: Menu( game ) {
+	: Menu( game, "BBLeftMenu" ) {
 #define x( _n, _m ) { \
         NEWV( menu, _m, m_game ); \
         AddSubMenu( _n, menu ); \
     }
 	x( "GAME", GameMenu );
-	x( "EDIT MAP", EditMapMenu );
+	if ( m_game->IsMapEditingAllowed() ) {
+		x( "EDIT MAP", EditMapMenu );
+	}
 #ifdef DEBUG
 	// TODO: unfinished
 	//x( "DEBUG", DebugMenu );

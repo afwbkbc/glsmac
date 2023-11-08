@@ -31,6 +31,7 @@
 
 #include "actor/TileSelection.h"
 #include "game/Game.h"
+#include "game/Event.h"
 
 #include "game/map/Consts.h"
 #include "game/map_editor/MapEditor.h"
@@ -54,6 +55,8 @@ CLASS( Game, base::Task )
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;
+
+	const bool IsMapEditingAllowed() const;
 
 	struct consts_t {
 		const struct {
@@ -101,12 +104,13 @@ CLASS( Game, base::Task )
 	typedef std::function< void() > f_exit_game;
 	f_exit_game m_on_game_exit = nullptr;
 	void ExitGame( const f_exit_game on_game_exit );
-	void ReturnToMainMenu();
+	void ReturnToMainMenu( const std::string reason = "" );
 
 	const size_t GetBottomBarMiddleHeight() const;
 	const size_t GetViewportHeight() const;
 
 	void AddMessage( const std::string& text );
+	void SendChatMessage( const std::string& text );
 
 	void LoadMap( const std::string& path );
 	void SaveMap( const std::string& path );
@@ -129,6 +133,8 @@ private:
 	::game::map_editor::MapEditor::brush_type_t m_editor_brush = ::game::map_editor::MapEditor::BT_NONE;
 
 	void UpdateMapData( const types::Vec2< size_t >& map_size );
+
+	void ProcessEvent( const ::game::Event& event );
 
 	bool m_is_initialized = false;
 	void Initialize(
@@ -243,6 +249,8 @@ private:
 				::game::map::s_consts.fs.default_map_directory;
 	};
 
+	const bool m_is_map_editing_allowed = false;
+
 	tile_data_t m_selected_tile_data = {};
 	map_data_t m_map_data = {};
 
@@ -315,6 +323,8 @@ private:
 		mt_id_t select_tile = 0;
 		mt_id_t save_map = 0;
 		mt_id_t edit_map = 0;
+		mt_id_t chat = 0;
+		mt_id_t get_events = 0;
 #ifdef DEBUG
 		mt_id_t save_dump = 0;
 		// init will be used for loading dump

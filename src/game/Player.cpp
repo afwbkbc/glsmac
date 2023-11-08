@@ -29,6 +29,10 @@ const std::string& Player::GetPlayerName() const {
 	return m_name;
 }
 
+const std::string Player::GetFullName() const {
+	return GetPlayerName() + " (" + GetFaction().m_name + ")";
+}
+
 void Player::SetFaction( const rules::Faction& faction ) {
 	// TODO: validate?
 	m_faction = faction;

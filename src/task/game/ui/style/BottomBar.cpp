@@ -621,17 +621,27 @@ void BottomBar::AddStyles() {
 
 	AddStyle(
 		"MenuFrame", SH() {
-			s->Set( ::Style::A_WIDTH, 139 );
-			s->Set( ::Style::A_HEIGHT, 5 );
 			s->Set( ::Style::A_Z_INDEX, 0.3f ); // TODO: why doesn't it work correctly without?
+		}
+	);
+
+	AddStyle(
+		"LeftMenuTopFrame", { "MenuFrame" }, SH() {
+			s->Set( ::Style::A_HEIGHT, 5 );
+			s->Set( ::Style::A_WIDTH, 139 );
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP );
+			s->Set( ::Style::A_TOP, -4 );
 			s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx", 0, 0, 138, 4, Color::RGB( 100, 16, 156 ) );
 		}
 	);
 
 	AddStyle(
-		"MenuTopFrame", { "MenuFrame" }, SH() {
-			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP );
-			s->Set( ::Style::A_TOP, -4 );
+		"RightMenuTopFrame", { "MenuFrame" }, SH() {
+			s->Set( ::Style::A_HEIGHT, 6 );
+			s->Set( ::Style::A_WIDTH, 139 );
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_RIGHT );
+			s->Set( ::Style::A_TOP, -5 );
+			s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx", 885, 1, 1023, 6, Color::RGB( 100, 16, 156 ) );
 		}
 	);
 
@@ -645,7 +655,6 @@ void BottomBar::AddStyles() {
 	AddStyle(
 		"MenuButton", SH() {
 			s->SetFont( ::Style::A_FONT, "arialnb.ttf", 17 );
-			s->Set( Style::A_TEXT_ALIGN, UIObject::ALIGN_LEFT | UIObject::ALIGN_VCENTER );
 			s->Set( Style::A_TEXT_LEFT, 4 );
 			if ( s->Is( ::Style::M_ACTIVE ) || s->Is( ::Style::M_SELECTED ) ) {
 				s->SetTexture( ::Style::A_TEXTURE, "console_x2_a.pcx", 1, 249, 106, 258 );
@@ -663,8 +672,37 @@ void BottomBar::AddStyles() {
 	);
 
 	AddStyle(
+		"LeftMenuButton", { "MenuButton" }, SH() {
+			s->Set( Style::A_TEXT_ALIGN, UIObject::ALIGN_LEFT | UIObject::ALIGN_VCENTER );
+		}
+	);
+
+	AddStyle(
+		"RightMenuButton", { "MenuButton" }, SH() {
+			s->Set( Style::A_TEXT_ALIGN, UIObject::ALIGN_RIGHT | UIObject::ALIGN_VCENTER );
+		}
+	);
+
+	AddStyle(
 		"LeftMenu", { "Menu" }, SH() {
 			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_LEFT );
+		}
+	);
+
+	AddStyle(
+		"RightMenu", { "Menu" }, SH() {
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_RIGHT );
+		}
+	);
+
+	AddStyle(
+		"MessageLabel", SH() {
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
+			s->Set( ::Style::A_LEFT, 228 );
+			s->Set( ::Style::A_TOP, 10 );
+			s->Set( ::Style::A_HEIGHT, 20 );
+			s->SetFont( ::Style::A_FONT, "arialnb.ttf", 18 );
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 232, 212, 140 ) );
 		}
 	);
 }

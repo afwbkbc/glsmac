@@ -18,6 +18,7 @@ void Connection::ResetHandlers() {
 	m_on_player_join = nullptr;
 	m_on_player_leave = nullptr;
 	m_on_slot_update = nullptr;
+	m_on_flags_update = nullptr;
 	m_on_message = nullptr;
 	m_on_global_settings_update = nullptr;
 	if ( m_mt_ids.events ) {
@@ -45,6 +46,8 @@ void Connection::Connect() {
 	ASSERT( !m_is_connected, "already connected" );
 	ASSERT( !m_mt_ids.connect, "connection already in progress" );
 
+	m_is_canceled = false;
+
 	m_game_state = GS_NONE;
 
 	Log( "connecting..." );
@@ -59,10 +62,9 @@ void Connection::Connect() {
 			ASSERT( m_mt_ids.connect, "connect mt id is zero" );
 			m_network->MT_Cancel( m_mt_ids.connect );
 			m_mt_ids.connect = 0;
-			m_network->MT_Disconnect();
-			if ( m_on_cancel ) {
-				m_on_cancel();
-			}
+			m_is_canceled = true;
+			m_mt_ids.disconnect = m_network->MT_Disconnect();
+
 			return true;
 		}
 	);
@@ -74,12 +76,20 @@ void Connection::Iterate() {
 		auto result = m_network->MT_GetResult( m_mt_ids.disconnect );
 		if ( result.result != network::R_NONE ) {
 			m_mt_ids.disconnect = 0;
-			m_is_connected = false;
 			m_game_state = GS_NONE;
 			Log( "Connection closed" );
-			if ( m_on_disconnect ) {
-				m_on_disconnect();
+			if ( m_is_connected ) {
+				if ( m_on_disconnect ) {
+					m_on_disconnect();
+				}
 			}
+			if ( m_is_canceled ) {
+				if ( m_on_cancel ) {
+					m_on_cancel();
+				}
+			}
+			m_is_connected = false;
+			m_is_canceled = false;
 			if ( !m_disconnect_reason.empty() && m_on_error ) {
 				m_on_error( m_disconnect_reason );
 				m_disconnect_reason.clear();
