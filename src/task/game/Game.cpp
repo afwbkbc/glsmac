@@ -1730,6 +1730,7 @@ void Game::CancelGame() {
 				m_on_cancel();
 				m_on_cancel = nullptr;
 			}
+			g_engine->GetScheduler()->RemoveTask( this );
 		}
 	);
 }
