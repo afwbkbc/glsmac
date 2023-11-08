@@ -12,53 +12,53 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: benjlevesque/short-sha@v2.1
-      id: short-sha
-      with:
-        length: 7
-    - run: echo $SHA
-      env:
-        SHA: ${{ steps.short-sha.outputs.sha }}
-    - name: install_dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev
-    - name: cmake64
-      run: cmake -DCMAKE_BUILD_TYPE=Portable64 .
-    - name: make64
-      run: make
-    - name: pack64
-      run: tar zcvf GLSMAC-v0.2-${{ env.SHA }}-bin64.tar.gz bin/
-    - name: publish
-      uses: actions/upload-artifact@v3
-      with:
-        name: GLSMAC-ubuntu-bin
-        path: |
-          ./GLSMAC-v0.2-${{ env.SHA }}-bin64.tar.gz
-    - uses: dev-drprasad/delete-older-releases@v0.2.0
-      with:
-        keep_latest: 4
-        delete_tags: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: v0.2-${{ env.SHA }}
-        release_name: v0.2-${{ env.SHA }}
-        draft: false
-        prerelease: false
-    - name: Upload Release Asset 64
-      id: upload-release-asset-64 
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps     - name: upload
-        asset_path: ./GLSMAC-v0.2-${{ env.SHA }}-bin64.tar.gz
-        asset_name: GLSMAC-v0.2-${{ env.SHA }}-bin64.tar.gz
-        asset_content_type: application/gzip
+      - uses: actions/checkout@v3
+      - uses: benjlevesque/short-sha@v2.1
+        id: short-sha
+        with:
+          length: 7
+      - run: echo $SHA
+        env:
+          SHA: ${{ steps.short-sha.outputs.sha }}
+      - name: install_dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev
+      - name: cmake64
+        run: cmake -DCMAKE_BUILD_TYPE=Portable64 .
+      - name: make64
+        run: make
+      - name: pack64
+        run: tar zcvf GLSMAC-v0.3-${{ env.SHA }}-bin64.tar.gz bin/
+      - name: publish
+        uses: actions/upload-artifact@v3
+        with:
+          name: GLSMAC-ubuntu-bin
+          path: |
+            ./GLSMAC-v0.3-${{ env.SHA }}-bin64.tar.gz
+      - uses: dev-drprasad/delete-older-releases@v0.2.0
+        with:
+          keep_latest: 4
+          delete_tags: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v0.3-${{ env.SHA }}
+          release_name: v0.3-${{ env.SHA }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset 64
+        id: upload-release-asset-64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps     - name: upload
+          asset_path: ./GLSMAC-v0.3-${{ env.SHA }}-bin64.tar.gz
+          asset_name: GLSMAC-v0.3-${{ env.SHA }}-bin64.tar.gz
+          asset_content_type: application/gzip
