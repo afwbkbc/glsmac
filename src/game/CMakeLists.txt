@@ -2,6 +2,7 @@ SUBDIR( map )
 SUBDIR( map_editor )
 SUBDIR( rules )
 SUBDIR( connection )
+SUBDIR( world )
 
 SET( SRC ${SRC}
 

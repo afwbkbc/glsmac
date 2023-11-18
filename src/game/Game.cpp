@@ -240,6 +240,11 @@ void Game::Iterate() {
 					m_connection->UpdateSlot( m_slot_num, m_slot, true );
 				}
 
+				// start world
+				ASSERT( !m_world, "world already initialized" );
+				NEW( m_world, world::World );
+				m_world->Start();
+
 				// run main loop
 				m_game_state = GS_RUNNING;
 			}
@@ -275,7 +280,10 @@ void Game::Iterate() {
 			}
 		}
 	}
-
+	else if ( m_game_state == GS_RUNNING ) {
+		ASSERT( m_world, "world not initialized" );
+		m_world->Iterate();
+	}
 }
 
 util::Random* Game::GetRandom() const {
@@ -1031,6 +1039,12 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 }
 
 void Game::ResetGame() {
+	if ( m_world ) {
+		m_world->Stop();
+		DELETE( m_world );
+		m_world = nullptr;
+	}
+
 	if ( m_game_state != GS_NONE ) {
 		// TODO: do something?
 		m_game_state = GS_NONE;
