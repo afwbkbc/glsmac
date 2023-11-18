@@ -24,3 +24,5 @@ _deps
 /maps
 /.idea
 /.cmake
+/cmake-build-debug
+/GLSMAC.cbp
