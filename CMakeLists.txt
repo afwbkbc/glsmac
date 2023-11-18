@@ -7,7 +7,8 @@ SET( CMAKE_MODULE_PATH "." )
 
 SET( EXECUTABLE_OUTPUT_PATH "bin" )
 
-SET( SRC "" )
+SET( SRC ""
+	src/graphics/null/Null.cpp )
 SET( PWD "." )
 
 ADD_CUSTOM_TARGET( glsmac_version )

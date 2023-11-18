@@ -15,6 +15,8 @@
 #include "Slot.h"
 #include "Event.h"
 
+#include "world/World.h"
+
 namespace game {
 
 class State;
@@ -273,6 +275,8 @@ private:
 	map::Map* m_map = nullptr;
 	map::Map* m_old_map = nullptr; // to restore state, for example if loading of another map failed
 	map_editor::MapEditor* m_map_editor = nullptr;
+
+	world::World* m_world = nullptr;
 
 };
 

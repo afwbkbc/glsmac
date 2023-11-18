@@ -1,3 +1,4 @@
+SUBDIR( null )
 SUBDIR( opengl )
 
 SET( SRC ${SRC}

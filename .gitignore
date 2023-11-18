@@ -26,3 +26,4 @@ _deps
 /.cmake
 /cmake-build-debug
 /GLSMAC.cbp
+GLSMAC.core
