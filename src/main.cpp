@@ -20,10 +20,20 @@
 
 #include "logger/Stdout.h"
 
+#ifdef DEBUG
+
+#include "graphics/Null.h"
+#include "loader/font/Null.h"
+#include "loader/texture/Null.h"
+#include "loader/sound/Null.h"
+#include "input/Null.h"
+#include "audio/Null.h"
+
+#endif
+
 #include "loader/font/FreeType.h"
 #include "loader/texture/SDL2.h"
 #include "loader/sound/SDL2.h"
-
 #include "input/sdl2/SDL2.h"
 #include "graphics/opengl/OpenGL.h"
 #include "audio/sdl2/SDL2.h"
@@ -36,6 +46,7 @@
 
 #if defined(DEBUG)
 
+#include "task/worldtests/WorldTests.h"
 #include "task/game/Game.h"
 
 #endif
@@ -136,94 +147,130 @@ int main( const int argc, const char* argv[] ) {
 		error_handler::Stdout error_handler;
 #endif
 
-		loader::font::FreeType font_loader;
-
-		loader::texture::SDL2 texture_loader;
-		texture_loader.SetTransparentColor( types::Color::RGBA( 255, 0, 255, 255 ) );
-
-		loader::sound::SDL2 sound_loader;
-
 		auto title = GLSMAC_VERSION_FULL;
 #ifdef DEBUG
 		title += "-debug";
 #elif PORTABLE
 		title += "-portable";
 #endif
-		input::sdl2::SDL2 input;
-		bool vsync = VSYNC;
-		if ( config.HasLaunchFlag( config::Config::LF_BENCHMARK ) ) {
-			vsync = false;
-		}
-		types::Vec2< size_t > window_size;
-		if ( config.HasLaunchFlag( config::Config::LF_WINDOW_SIZE ) ) {
-			window_size = config.GetWindowSize();
-		}
-		else {
-			window_size = {
-				WINDOW_WIDTH,
-				WINDOW_HEIGHT
-			};
-		}
-		bool start_fullscreen = START_FULLSCREEN;
-		if ( config.HasLaunchFlag( config::Config::LF_WINDOWED ) ) {
-			start_fullscreen = false;
-		}
-		graphics::opengl::OpenGL graphics( title, window_size.x, window_size.y, vsync, start_fullscreen );
-		audio::sdl2::SDL2 audio;
+
 		network::simpletcp::SimpleTCP network;
-
 		ui::Default ui;
-
-		game::Game game;
-
 		scheduler::Simple scheduler;
 
 #ifdef DEBUG
-		NEWV( debug_overlay, debug::DebugOverlay );
-		scheduler.AddTask( debug_overlay );
-#endif
+		if ( config.HasDebugFlag( config::Config::DF_WORLD_TESTS ) ) {
 
-		// game common stuff
-		NEWV( task_common, task::Common );
-		scheduler.AddTask( task_common );
+			loader::font::Null font_loader;
+			loader::texture::Null texture_loader;
+			loader::sound::Null sound_loader;
+			input::Null input;
+			graphics::Null graphics;
+			audio::Null audio;
 
-		// game entry point
-		base::Task* task = nullptr;
-#ifdef DEBUG
-		if ( config.HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
-			NEWV( state, game::State ); // TODO: initialize settings randomly
-			NEW( task, task::game::Game, state, 0, UH() {
-				g_engine->ShutDown();
-			} );
+			NEWV( task, task::worldtests::WorldTests );
+			scheduler.AddTask( task );
+
+			engine::Engine engine(
+				&config,
+				&error_handler,
+				&logger,
+				&font_loader,
+				&texture_loader,
+				&sound_loader,
+				&scheduler,
+				&input,
+				&graphics,
+				&audio,
+				&network,
+				&ui,
+				nullptr
+			);
+
+			result = engine.Run();
 		}
 		else
 #endif
-		if ( config.HasLaunchFlag( config::Config::LF_SKIPINTRO ) ) {
-			NEW( task, task::mainmenu::MainMenu );
+		{
+			game::Game game;
+
+			loader::font::FreeType font_loader;
+
+			loader::texture::SDL2 texture_loader;
+			texture_loader.SetTransparentColor( types::Color::RGBA( 255, 0, 255, 255 ) );
+
+			loader::sound::SDL2 sound_loader;
+
+			input::sdl2::SDL2 input;
+			bool vsync = VSYNC;
+			if ( config.HasLaunchFlag( config::Config::LF_BENCHMARK ) ) {
+				vsync = false;
+			}
+			types::Vec2< size_t > window_size;
+			if ( config.HasLaunchFlag( config::Config::LF_WINDOW_SIZE ) ) {
+				window_size = config.GetWindowSize();
+			}
+			else {
+				window_size = {
+					WINDOW_WIDTH,
+					WINDOW_HEIGHT
+				};
+			}
+			bool start_fullscreen = START_FULLSCREEN;
+			if ( config.HasLaunchFlag( config::Config::LF_WINDOWED ) ) {
+				start_fullscreen = false;
+			}
+
+			graphics::opengl::OpenGL graphics( title, window_size.x, window_size.y, vsync, start_fullscreen );
+			audio::sdl2::SDL2 audio;
+
+#ifdef DEBUG
+			NEWV( debug_overlay, debug::DebugOverlay );
+			scheduler.AddTask( debug_overlay );
+#endif
+
+			// game common stuff
+			NEWV( task_common, task::Common );
+			scheduler.AddTask( task_common );
+
+			// game entry point
+			base::Task* task = nullptr;
+#ifdef DEBUG
+			if ( config.HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
+				NEWV( state, game::State ); // TODO: initialize settings randomly
+				NEW( task, task::game::Game, state, 0, UH() {
+					g_engine->ShutDown();
+				} );
+			}
+			else
+#endif
+			if ( config.HasLaunchFlag( config::Config::LF_SKIPINTRO ) ) {
+				NEW( task, task::mainmenu::MainMenu );
+			}
+			else {
+				NEW( task, task::intro::Intro );
+			}
+
+			scheduler.AddTask( task );
+
+			engine::Engine engine(
+				&config,
+				&error_handler,
+				&logger,
+				&font_loader,
+				&texture_loader,
+				&sound_loader,
+				&scheduler,
+				&input,
+				&graphics,
+				&audio,
+				&network,
+				&ui,
+				&game
+			);
+
+			result = engine.Run();
 		}
-		else {
-			NEW( task, task::intro::Intro );
-		}
-
-		scheduler.AddTask( task );
-
-		engine::Engine engine(
-			&config,
-			&error_handler,
-			&logger,
-			&font_loader,
-			&texture_loader,
-			&sound_loader,
-			&scheduler,
-			&input,
-			&graphics,
-			&audio,
-			&network,
-			&ui,
-			&game
-		);
-
-		result = engine.Run();
 	}
 
 	return result;

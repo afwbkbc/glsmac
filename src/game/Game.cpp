@@ -275,7 +275,9 @@ void Game::Iterate() {
 			}
 		}
 	}
-
+	else if ( m_game_state == GS_RUNNING ) {
+		// TODO: iterate world
+	}
 }
 
 util::Random* Game::GetRandom() const {
@@ -1031,6 +1033,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 }
 
 void Game::ResetGame() {
+	
 	if ( m_game_state != GS_NONE ) {
 		// TODO: do something?
 		m_game_state = GS_NONE;

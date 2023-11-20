@@ -231,6 +231,11 @@ Config::Config( const int argc, const char* argv[] ) {
 		}, "cloud cover",
 		DF_QUICKSTART_MAP_CLOUDS, &m_quickstart_map_clouds
 	);
+	parser.AddRule(
+		"world-tests", "Run world tests and exit", AH( this ) {
+			m_debug_flags |= DF_WORLD_TESTS;
+		}
+	);
 #endif
 
 	try {
@@ -240,11 +245,16 @@ Config::Config( const int argc, const char* argv[] ) {
 		f_error( e.what() );
 	}
 
-	if ( m_smac_path.empty() ) {
-		if ( !util::SMACChecker::IsSMACDirectory( "." ) ) {
-			f_error( "This" + s_invalid_smac_directory );
+#ifdef DEBUG
+	if ( !( m_debug_flags & DF_WORLD_TESTS ) )
+#endif
+	{
+		if ( m_smac_path.empty() ) {
+			if ( !util::SMACChecker::IsSMACDirectory( "." ) ) {
+				f_error( "This" + s_invalid_smac_directory );
+			}
+			m_smac_path = "./";
 		}
-		m_smac_path = "./";
 	}
 }
 
@@ -263,9 +273,11 @@ const std::string& Config::GetPrefix() const {
 }
 
 #ifdef DEBUG
+
 const std::string Config::GetDebugPath() const {
 	return m_prefix + "debug/";
 }
+
 #endif
 
 const std::string& Config::GetSMACPath() const {

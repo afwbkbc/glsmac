@@ -16,6 +16,7 @@ SUBDIR( ui )
 SUBDIR( engine )
 SUBDIR( rr )
 SUBDIR( task )
+SUBDIR( world )
 
 IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
 	SUBDIR( debug )

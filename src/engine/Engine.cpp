@@ -68,10 +68,12 @@ Engine::Engine(
 	t_network->AddModule( m_network );
 	m_threads.push_back( t_network );
 
-	NEWV( t_game, Thread, "GAME" );
-	t_game->SetIPS( g_max_fps );
-	t_game->AddModule( m_game );
-	m_threads.push_back( t_game );
+	if ( m_game ) {
+		NEWV( t_game, Thread, "GAME" );
+		t_game->SetIPS( g_max_fps );
+		t_game->AddModule( m_game );
+		m_threads.push_back( t_game );
+	}
 };
 
 Engine::~Engine() {

@@ -1,0 +1,13 @@
+SUBDIR( runnable )
+
+SET( SRC ${SRC}
+
+	PARENT_SCOPE )
+
+IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+	SET( SRC ${SRC}
+
+		${PWD}/Tests.cpp
+
+		PARENT_SCOPE )
+ENDIF ()
