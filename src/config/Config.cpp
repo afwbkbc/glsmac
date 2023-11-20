@@ -232,7 +232,7 @@ Config::Config( const int argc, const char* argv[] ) {
 		DF_QUICKSTART_MAP_CLOUDS, &m_quickstart_map_clouds
 	);
 	parser.AddRule(
-		"world-tests", "Run world tests and exit", AH( this ) {
+		"gse-tests", "Run GSE tests and exit", AH( this ) {
 			m_debug_flags |= DF_WORLD_TESTS;
 		}
 	);

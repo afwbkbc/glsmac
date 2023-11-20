@@ -1,9 +1,10 @@
 SUBDIR( runnable )
+SUBDIR( builtin )
 
 SET( SRC ${SRC}
 
-	${PWD}/World.cpp
-	${PWD}/Exceptions.cpp
+	${PWD}/GSE.cpp
+	${PWD}/Exception.cpp
 
 	)
 

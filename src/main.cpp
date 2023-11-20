@@ -46,7 +46,7 @@
 
 #if defined(DEBUG)
 
-#include "task/worldtests/WorldTests.h"
+#include "task/gsetests/GSETests.h"
 #include "task/game/Game.h"
 
 #endif
@@ -168,7 +168,7 @@ int main( const int argc, const char* argv[] ) {
 			graphics::Null graphics;
 			audio::Null audio;
 
-			NEWV( task, task::worldtests::WorldTests );
+			NEWV( task, task::gsetests::GSETests );
 			scheduler.AddTask( task );
 
 			engine::Engine engine(

@@ -2,12 +2,12 @@
 
 #include "Runnable.h"
 
-namespace world {
+namespace gse {
 namespace runnable {
 
 class Native : public Runnable {
 public:
-	
+
 };
 
 }

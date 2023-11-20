@@ -1,18 +1,21 @@
-#include "World.h"
+#include "GSE.h"
 
-namespace world {
+#include "builtin/Builtins.h"
 
-World::World() {
+namespace gse {
 
+GSE::GSE() {
+	NEWV( builtins, builtin::Builtins );
+	AddModule( "_", builtins );
 }
 
-World::~World() {
+GSE::~GSE() {
 	for ( auto& it : m_modules ) {
 		DELETE( it.second );
 	}
 }
 
-void World::AddModule( const std::string& path, runnable::Runnable* module ) {
+void GSE::AddModule( const std::string& path, runnable::Runnable* module ) {
 	if ( m_modules.find( path ) != m_modules.end() ) {
 		throw Exception( "module path '" + path + "' already taken" );
 	}
@@ -21,8 +24,8 @@ void World::AddModule( const std::string& path, runnable::Runnable* module ) {
 	m_modules_order.push_back( path );
 }
 
-void World::Run() {
-	Log( "World started" );
+void GSE::Run() {
+	Log( "GSE started" );
 
 	// execute all modules in loading order
 	for ( auto& i : m_modules_order ) {
@@ -32,7 +35,7 @@ void World::Run() {
 		it->second->Run();
 	}
 
-	Log( "World finished" );
+	Log( "GSE finished" );
 }
 
 }

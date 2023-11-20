@@ -1,43 +1,43 @@
 #include "Tests.h"
 
-namespace world {
+namespace gse {
 
-void AddTests( task::worldtests::WorldTests* task ) {
+void AddTests( task::gsetests::GSETests* task ) {
 
 	task->AddTest(
 		"test if tests work",
-		WT() {
+		GT() {
 			return "";
 		}
 	);
 
 	task->AddTest(
 		"test if modules get assigned and run correctly",
-		WT() {
+		GT() {
 
 			static std::string modules_run_order = "";
 
-			class TestModuleX : public world::runnable::Runnable {
+			class TestModuleX : public runnable::Runnable {
 				void Run() override {
 					modules_run_order += 'X';
 				}
 			};
 			NEWV( test_module_x, TestModuleX );
-			class TestModuleY : public world::runnable::Runnable {
+			class TestModuleY : public runnable::Runnable {
 				void Run() override {
 					modules_run_order += 'Y';
 				}
 			};
 			NEWV( test_module_y, TestModuleY );
 
-			world.AddModule( "test_module_y", test_module_y );
-			world.AddModule( "test_module_x", test_module_x );
+			gse.AddModule( "test_module_y", test_module_y );
+			gse.AddModule( "test_module_x", test_module_x );
 
-			world.Run();
+			gse.Run();
 
-			WT_ASSERT( modules_run_order == "YX", "wrong modules order" );
+			GT_ASSERT( modules_run_order == "YX", "wrong modules order" );
 
-			WT_OK();
+			GT_OK();
 		}
 	);
 }

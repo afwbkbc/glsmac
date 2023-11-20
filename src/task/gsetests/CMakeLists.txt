@@ -1,5 +1,5 @@
 SET( SRC ${SRC}
 
-	${PWD}/WorldTests.cpp
+	${PWD}/GSETests.cpp
 
 	PARENT_SCOPE )

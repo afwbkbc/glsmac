@@ -4,7 +4,7 @@ SUBDIR( mainmenu )
 SUBDIR( game )
 
 IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
-	SUBDIR( worldtests )
+	SUBDIR( gsetests )
 ENDIF ()
 
 SET( SRC ${SRC}

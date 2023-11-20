@@ -1,6 +1,6 @@
-#include "Exceptions.h"
+#include "Exception.h"
 
-namespace world {
+namespace gse {
 
 Exception::Exception( const std::string& errmsg )
 	: std::runtime_error( errmsg ) {

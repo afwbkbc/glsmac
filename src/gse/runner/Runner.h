@@ -2,7 +2,7 @@
 
 #include "base/Module.h"
 
-namespace world {
+namespace gse {
 namespace runner {
 
 CLASS( Runner, base::Base )

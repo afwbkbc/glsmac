@@ -1,18 +1,18 @@
-#include "WorldTests.h"
+#include "GSETests.h"
 
-#include "world/World.h"
-#include "world/Tests.h"
+#include "gse/GSE.h"
+#include "gse/Tests.h"
 #include "engine/Engine.h"
 
 namespace task {
-namespace worldtests {
+namespace gsetests {
 
-void WorldTests::Start() {
+void GSETests::Start() {
 	Log( "Loading tests" );
-	world::AddTests( this );
+	gse::AddTests( this );
 }
 
-void WorldTests::Stop() {
+void GSETests::Stop() {
 	if ( m_stats.failed == 0 ) {
 		Log( "All tests passed." );
 	}
@@ -24,12 +24,12 @@ void WorldTests::Stop() {
 	m_stats.failed = 0;
 }
 
-void WorldTests::Iterate() {
+void GSETests::Iterate() {
 	if ( current_test_index < m_tests.size() ) {
-		world::World world;
+		gse::GSE gse;
 		const auto& it = m_tests[ current_test_index++ ];
 		Log( it.first + "..." );
-		const auto errmsg = it.second( world );
+		const auto errmsg = it.second( gse );
 		if ( errmsg.empty() ) {
 			m_stats.passed++;
 			Log( "      ... OK" );
@@ -45,7 +45,7 @@ void WorldTests::Iterate() {
 	}
 }
 
-void WorldTests::AddTest( const std::string& name, const world_test_t test ) {
+void GSETests::AddTest( const std::string& name, const gse_test_t test ) {
 	m_tests.push_back(
 		{
 			name,

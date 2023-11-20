@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace world {
+namespace gse {
 
 class Exception : public std::runtime_error {
 public:
