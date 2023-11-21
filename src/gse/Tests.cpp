@@ -18,14 +18,16 @@ void AddTests( task::gsetests::GSETests* task ) {
 			static std::string modules_run_order = "";
 
 			class TestModuleX : public runnable::Runnable {
-				void Run() override {
+				type::Type& Run( GSE* gse ) override {
 					modules_run_order += 'X';
+					return nullptr;
 				}
 			};
 			NEWV( test_module_x, TestModuleX );
 			class TestModuleY : public runnable::Runnable {
-				void Run() override {
+				type::Type& Run( GSE* gse ) override {
 					modules_run_order += 'Y';
+					return nullptr;
 				}
 			};
 			NEWV( test_module_y, TestModuleY );

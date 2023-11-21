@@ -7,7 +7,12 @@ SET( CMAKE_MODULE_PATH "." )
 
 SET( EXECUTABLE_OUTPUT_PATH "bin" )
 
-SET( SRC "" )
+SET( SRC ""
+	src/gse/type/Type.h
+	src/gse/type/Bool.h
+	src/gse/type/Object.cpp
+	src/gse/type/Object.h
+	src/gse/type/Type.cpp )
 SET( PWD "." )
 
 ADD_CUSTOM_TARGET( glsmac_version )
@@ -30,7 +35,7 @@ ENDFUNCTION( SUBDIR )
 SUBDIR( src )
 ADD_EXECUTABLE( ${PROJECT_NAME}
 	${SRC}
-	)
+)
 
 IF ( NOT WIN32 )
 	TARGET_COMPILE_DEFINITIONS( ${PROJECT_NAME} PRIVATE TMP_LAST_COMMIT_H_GENERATED=1 )
@@ -73,11 +78,11 @@ ENDIF ()
 FIND_LIBRARY( LIBCPP_LIBRARY NAMES libc++.so libc++.a )
 IF ( LIBCPP_LIBRARY )
 	TARGET_LINK_LIBRARIES( ${PROJECT_NAME} -lc++ )
-ENDIF()
+ENDIF ()
 FIND_LIBRARY( LIBM_LIBRARY NAMES libm.so libm.a )
 IF ( LIBM_LIBRARY )
 	TARGET_LINK_LIBRARIES( ${PROJECT_NAME} -lm )
-ENDIF()
+ENDIF ()
 
 IF ( VENDORED_DEPENDENCIES )
 	ADD_SUBDIRECTORY( dependencies )
@@ -95,11 +100,11 @@ IF ( VENDORED_DEPENDENCIES )
 		"${glew_SOURCE_DIR}/include"
 		"${OSSP_UUID_INCLUDE_DIR}"
 		"${YAML_CPP_SOURCE_DIR}/include"
-		)
+	)
 	TARGET_LINK_OPTIONS( ${PROJECT_NAME} PUBLIC
 		"${OSSP_UUID_LINK_OPTIONS}"
 		"${YAML_CPP_LINK_OPTIONS}"
-		)
+	)
 ELSE ()
 	INCLUDE( FindPkgConfig )
 

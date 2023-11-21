@@ -6,7 +6,7 @@ namespace gse {
 namespace builtin {
 
 class Builtins : public runnable::Native {
-	void Run() override;
+	type::Type& Run( GSE* gse ) override;
 };
 
 }
