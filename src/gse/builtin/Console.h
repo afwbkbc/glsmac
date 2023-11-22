@@ -6,7 +6,7 @@ namespace gse {
 namespace builtin {
 
 class Console : public runnable::Native {
-	void Run() override;
+	Value Run( GSE* gse ) override;
 };
 
 }

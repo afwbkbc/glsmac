@@ -32,10 +32,16 @@ void GSE::Run() {
 		auto it = m_modules.find( i );
 		ASSERT( it != m_modules.end(), "required module missing: " + i );
 		Log( "Executing module: " + it->first );
-		it->second->Run();
+		it->second->Run( this );
 	}
 
 	Log( "GSE finished" );
+}
+
+void GSE::RegisterGlobal( const std::string& identifier, Value variable ) {
+	ASSERT( m_globals.find( identifier ) == m_globals.end(), "duplicate global registration: " + identifier );
+	m_globals.insert_or_assign( identifier, variable );
+	Log( "Registered global method: " + identifier );
 }
 
 }
