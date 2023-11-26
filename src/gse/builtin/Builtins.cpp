@@ -1,10 +1,13 @@
 #include "Builtins.h"
 
+#include "gse/type/Null.h"
+
 namespace gse {
 namespace builtin {
 
-void Builtins::Run() {
+Value Builtins::Run( GSE* gse ) {
 
+	return VALUE( Null );
 }
 
 }

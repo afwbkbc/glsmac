@@ -11,7 +11,7 @@
 namespace task {
 namespace gsetests {
 
-typedef std::function< std::string( gse::GSE & gse ) > gse_test_t;
+typedef std::function< std::string( gse::GSE& gse ) > gse_test_t;
 #define GT( ... ) [ __VA_ARGS__ ]( gse::GSE & gse ) -> std::string
 
 #define GT_OK() {\
@@ -19,12 +19,12 @@ typedef std::function< std::string( gse::GSE & gse ) > gse_test_t;
 }
 
 #define GT_FAIL( _text ) {\
-    return (std::string)__FILE__ + ":" + std::to_string(__LINE__) + ": " + _text;\
+    return (std::string)__FILE__ + ":" + std::to_string(__LINE__) + ": " + ( _text );\
 }
 
 #define GT_ASSERT( _condition, _text ) {\
     if ( !( _condition ) ) {\
-        GT_FAIL( "assertion failed [ " # _condition " ] " + _text);\
+        GT_FAIL( (std::string) "assertion failed [ " # _condition " ] " + ( _text ) );\
     }\
 }
 

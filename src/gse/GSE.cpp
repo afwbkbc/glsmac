@@ -2,6 +2,8 @@
 
 #include "builtin/Builtins.h"
 
+#include "type/Undefined.h"
+
 namespace gse {
 
 GSE::GSE() {
@@ -32,10 +34,28 @@ void GSE::Run() {
 		auto it = m_modules.find( i );
 		ASSERT( it != m_modules.end(), "required module missing: " + i );
 		Log( "Executing module: " + it->first );
-		it->second->Run();
+		it->second->Run( this );
 	}
 
 	Log( "GSE finished" );
+}
+
+void GSE::SetGlobal( const std::string& identifier, Value variable ) {
+	ASSERT( m_globals.find( identifier ) == m_globals.end(), "duplicate global: " + identifier );
+	Log( "Set global: " + identifier );
+	m_globals.insert_or_assign( identifier, variable );
+}
+
+const static Value s_undefined_value = VALUE( Undefined );
+const Value& GSE::GetGlobal( const std::string& identifier ) {
+	Log( "Get global: " + identifier );
+	const auto& it = m_globals.find( identifier );
+	if ( it != m_globals.end() ) {
+		return it->second;
+	}
+	else {
+		return s_undefined_value;
+	}
 }
 
 }
