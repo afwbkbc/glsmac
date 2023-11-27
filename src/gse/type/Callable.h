@@ -7,12 +7,12 @@ namespace gse {
 class GSE;
 namespace runnable {
 
-class Runnable : public type::Type {
+class Callable : public type::Type {
 public:
-	Runnable()
+	Callable()
 		: type::Type( type::Type::T_CALLABLE ) {}
 
-	virtual ~Runnable() {}
+	virtual ~Callable() {}
 
 	virtual Value Run( GSE* gse ) = 0;
 

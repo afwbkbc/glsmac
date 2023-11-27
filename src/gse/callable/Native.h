@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Runnable.h"
+#include "gse/type/Callable.h"
 
 namespace gse {
 namespace runnable {
 
-class Native : public Runnable {
+class Native : public Callable {
 public:
 
 };

@@ -7,12 +7,7 @@ SET( CMAKE_MODULE_PATH "." )
 
 SET( EXECUTABLE_OUTPUT_PATH "bin" )
 
-SET( SRC ""
-	src/gse/type/Type.h
-	src/gse/type/Bool.h
-	src/gse/type/Object.cpp
-	src/gse/type/Object.h
-	src/gse/type/Type.cpp )
+SET( SRC "" )
 SET( PWD "." )
 
 ADD_CUSTOM_TARGET( glsmac_version )
