@@ -3,9 +3,9 @@
 #include "gse/type/Callable.h"
 
 namespace gse {
-namespace runnable {
+namespace callable {
 
-class Native : public Callable {
+class Native : public type::Callable {
 public:
 
 };

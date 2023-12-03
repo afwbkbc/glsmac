@@ -5,7 +5,7 @@
 namespace gse {
 namespace type {
 
-static Value s_null = VALUE( Null );
+static Value s_null = VALUE( type::Null );
 
 const Value& Object::Get( const key_t& key ) const {
 	const auto& it = m_properties.find( key );

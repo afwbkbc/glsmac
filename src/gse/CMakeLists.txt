@@ -1,5 +1,5 @@
 SUBDIR( type )
-SUBDIR( runnable )
+SUBDIR( callable )
 SUBDIR( builtin )
 
 SET( SRC ${SRC}

@@ -6,7 +6,7 @@
 
 namespace gse {
 
-#define VALUE( _type, ... ) Value( std::make_shared<type::_type>( __VA_ARGS__ ) )
+#define VALUE( _type, ... ) Value( std::make_shared<_type>( __VA_ARGS__ ) )
 
 class Value {
 public:

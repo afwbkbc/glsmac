@@ -17,7 +17,7 @@ GSE::~GSE() {
 	}
 }
 
-void GSE::AddModule( const std::string& path, runnable::Runnable* module ) {
+void GSE::AddModule( const std::string& path, type::Callable* module ) {
 	if ( m_modules.find( path ) != m_modules.end() ) {
 		throw Exception( "module path '" + path + "' already taken" );
 	}
@@ -34,7 +34,7 @@ void GSE::Run() {
 		auto it = m_modules.find( i );
 		ASSERT( it != m_modules.end(), "required module missing: " + i );
 		Log( "Executing module: " + it->first );
-		it->second->Run( this );
+		it->second->Run( this, {} );
 	}
 
 	Log( "GSE finished" );
@@ -46,7 +46,7 @@ void GSE::SetGlobal( const std::string& identifier, Value variable ) {
 	m_globals.insert_or_assign( identifier, variable );
 }
 
-const static Value s_undefined_value = VALUE( Undefined );
+const static Value s_undefined_value = VALUE( type::Undefined );
 const Value& GSE::GetGlobal( const std::string& identifier ) {
 	Log( "Get global: " + identifier );
 	const auto& it = m_globals.find( identifier );
