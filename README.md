@@ -144,6 +144,17 @@ Optionally, use `VERBOSE=1 make -C build` to see actual compiling/linking comman
 
 You can also just download binary releases from github, they are built for ubuntu but will run on most linux distros (only 64-bit for now). Windows and other binaries coming soon :)
 
+### Mac
+
+In order to build version for Mac you need:
+
+- XCode from AppStore (mostly for development tools)
+- Install Homebrew package manager from https://brew.sh or using `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` command
+- Install git as there can old version `brew install git`
+- Install cmake `brew install git`
+- Get repo to your machine `git clone https://github.com/afwbkbc/glsmac.git`
+- `cmake -S . -B build -DVENDORED_DEPENDENCIES=YES -DCMAKE_BUILD_TYPE=Debug && make -C build`
+
 ### Windows
 
 #### Visual Studio
