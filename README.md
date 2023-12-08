@@ -144,6 +144,19 @@ Optionally, use `VERBOSE=1 make -C build` to see actual compiling/linking comman
 
 You can also just download binary releases from github, they are built for ubuntu but will run on most linux distros (only 64-bit for now). Windows and other binaries coming soon :)
 
+### Apple/Mac
+
+In order to build it on Mac install XCode from AppStore - it is free, no Apple Development Program is required. Then install the following dependencies:
+
+- Brew as a package manager from https://brew.sh
+- `brew install cmake PkgConfig sdl2 sdl2_image ossp-uuid glew yaml-cpp freetype`
+- In case of missing packages just install it using brew.
+
+Package `ossp-uuid` is visible as `uuid`. Additionally we must link with OpenGL framework (dependency added to make file)
+Then we can follow with build commands as for Linux versions: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug  && make -C build`
+
+Game is build correctly however there are problems related to OpenGL currently which crashes the game.
+
 ### Windows
 
 #### Visual Studio
