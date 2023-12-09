@@ -11,10 +11,13 @@ namespace type {
 
 class Callable : public type::Type {
 public:
+
+	static const type_t GetType() { return Type::T_CALLABLE; }
+
 	typedef const std::vector< Value > function_arguments_t;
 
 	Callable()
-		: type::Type( type::Type::T_CALLABLE ) {}
+		: type::Type( GetType() ) {}
 
 	virtual ~Callable() {}
 

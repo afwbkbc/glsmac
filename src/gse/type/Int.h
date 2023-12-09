@@ -9,8 +9,11 @@ namespace type {
 
 class Int : public Type {
 public:
+
+	static const type_t GetType() { return Type::T_INT; }
+
 	Int( const int32_t initial_value )
-		: Type( Type::T_INT )
+		: Type( GetType() )
 		, value( initial_value ) {}
 
 	int32_t value;

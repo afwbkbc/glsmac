@@ -11,25 +11,18 @@ namespace type {
 
 class Object : public Type {
 public:
+
+	static const type_t GetType() { return Type::T_OBJECT; }
+
 	typedef std::string key_t; // keep it simple for now
+	typedef std::map< key_t, Value > properties_t;
 
-	Object( const std::string& class_name )
-		: Type( Type::T_OBJECT )
-		, class_name( class_name ) {}
-
-	const std::string class_name;
-
-	Object( const Object& other )
-		: Object( other.class_name ) {
-		m_properties = other.m_properties;
-	}
+	Object( properties_t initial_value = {} );
 
 	const Value& Get( const key_t& key ) const;
-
 	void Set( const key_t& key, const Value& value );
 
-private:
-	std::map< key_t, Value > m_properties = {};
+	properties_t value = {};
 };
 
 }

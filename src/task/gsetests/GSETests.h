@@ -22,9 +22,9 @@ typedef std::function< std::string( gse::GSE& gse ) > gse_test_t;
     return (std::string)__FILE__ + ":" + std::to_string(__LINE__) + ": " + ( _text );\
 }
 
-#define GT_ASSERT( _condition, _text ) {\
+#define GT_ASSERT( _condition, ... ) {\
     if ( !( _condition ) ) {\
-        GT_FAIL( (std::string) "assertion failed [ " # _condition " ] " + ( _text ) );\
+        GT_FAIL( (std::string) "assertion failed [ " # _condition " ] " __VA_ARGS__ );\
     }\
 }
 

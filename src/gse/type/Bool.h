@@ -7,8 +7,11 @@ namespace type {
 
 class Bool : public Type {
 public:
+
+	static const type_t GetType() { return Type::T_BOOL; }
+
 	Bool( const bool initial_value )
-		: Type( Type::T_BOOL )
+		: Type( GetType() )
 		, value( initial_value ) {
 	}
 
