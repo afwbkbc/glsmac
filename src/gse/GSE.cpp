@@ -1,5 +1,7 @@
 #include "GSE.h"
 
+#include "parser/GJS.h"
+
 #include "builtin/Builtins.h"
 
 #include "type/Undefined.h"
@@ -7,6 +9,10 @@
 namespace gse {
 
 GSE::GSE() {
+
+	NEWV( gjs, parser::GJS );
+	AddParser( gjs );
+
 	NEWV( builtins, builtin::Builtins );
 	AddModule( "_", builtins );
 }
@@ -14,6 +20,9 @@ GSE::GSE() {
 GSE::~GSE() {
 	for ( auto& it : m_modules ) {
 		DELETE( it.second );
+	}
+	for ( auto& it : m_parsers ) {
+		DELETE( it );
 	}
 }
 
@@ -56,6 +65,15 @@ const Value& GSE::GetGlobal( const std::string& identifier ) {
 	else {
 		return s_undefined_value;
 	}
+}
+
+void GSE::AddParser( parser::Parser* parser ) {
+	for ( const auto& it : parser->GetSupportedExtensions() ) {
+		ASSERT( m_extensions.find( it ) == m_extensions.end(), "multiple parsers found for extension: " + it );
+		Log( "Using parser " + parser->GetParserName() + " for extension '" + it + "'" );
+		m_extensions.insert_or_assign( it, parser );
+	}
+	m_parsers.push_back( parser );
 }
 
 }

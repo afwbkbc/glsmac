@@ -1,0 +1,5 @@
+SET( SRC ${SRC}
+
+	${PWD}/GJS.cpp
+
+	PARENT_SCOPE )

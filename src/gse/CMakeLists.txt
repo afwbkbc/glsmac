@@ -1,6 +1,11 @@
 SUBDIR( type )
 SUBDIR( callable )
+SUBDIR( parser )
 SUBDIR( builtin )
+
+IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+	SUBDIR( tests )
+ENDIF ()
 
 SET( SRC ${SRC}
 

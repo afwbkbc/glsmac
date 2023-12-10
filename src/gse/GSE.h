@@ -12,6 +12,10 @@
 
 namespace gse {
 
+namespace parser {
+class Parser;
+}
+
 CLASS( GSE, base::Base )
 	GSE();
 	virtual ~GSE();
@@ -25,6 +29,11 @@ CLASS( GSE, base::Base )
 
 private:
 
+	void AddParser( parser::Parser* parser );
+
+	std::vector< parser::Parser* > m_parsers = {};
+	std::unordered_map< std::string, parser::Parser* > m_extensions = {};
+
 	std::unordered_map< std::string, type::Callable* > m_modules = {};
 	std::vector< std::string > m_modules_order = {};
 	std::map< std::string, Value > m_globals = {};
@@ -32,3 +41,5 @@ private:
 };
 
 }
+
+#include "parser/Parser.h"

@@ -7,7 +7,7 @@
 
 namespace gse {
 
-#define VALUE( _type, ... ) Value( std::make_shared<_type>( __VA_ARGS__ ) )
+#define VALUE( _type, ... ) gse::Value( std::make_shared<_type>( __VA_ARGS__ ) )
 #ifdef DEBUG
 #define VALUE_DATA( _type, _var ) ( _var.Get()->type == _type::GetType() ? ((_type*)_var.Get()) : THROW( "invalid GSE value type (expected " + type::Type::GetTypeString( _type::GetType() ) + ", got " + type::Type::GetTypeString( _var.Get()->type ) + ")" ) )
 #else
@@ -24,6 +24,8 @@ public:
 	~Value();
 
 	const type::Type* Get() const;
+	const std::string ToString() const;
+	const bool operator==( const Value& other ) const;
 
 private:
 	std::shared_ptr< type::Type > m_data;
