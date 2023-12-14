@@ -10,11 +10,10 @@
 #include "gse/type/Callable.h"
 #include "Exception.h"
 
-namespace gse {
+#include "parser/ParserFactory.h"
+#include "program/Program.h"
 
-namespace parser {
-class Parser;
-}
+namespace gse {
 
 CLASS( GSE, base::Base )
 	GSE();
@@ -29,10 +28,7 @@ CLASS( GSE, base::Base )
 
 private:
 
-	void AddParser( parser::Parser* parser );
-
-	std::vector< parser::Parser* > m_parsers = {};
-	std::unordered_map< std::string, parser::Parser* > m_extensions = {};
+	parser::ParserFactory m_parser_factory;
 
 	std::unordered_map< std::string, type::Callable* > m_modules = {};
 	std::vector< std::string > m_modules_order = {};
