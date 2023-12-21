@@ -13,7 +13,9 @@ public:
 		T_NULL,
 		T_BOOL,
 		T_INT,
+		T_FLOAT,
 		T_STRING,
+		T_TUPLE,
 		T_OBJECT,
 		T_CALLABLE,
 	};

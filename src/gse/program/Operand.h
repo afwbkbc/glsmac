@@ -19,7 +19,8 @@ public:
 	};
 
 	Operand( const operand_type_t type )
-		: type( type ) {}
+		: Element( ET_OPERAND )
+		, type( type ) {}
 
 	const operand_type_t type;
 

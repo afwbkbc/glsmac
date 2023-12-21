@@ -10,12 +10,19 @@ namespace program {
 class Statement : public Element {
 public:
 	Statement( const Expression* body )
-		: body( body ) {}
+		: Element( ET_STATEMENT )
+		, body( body ) {}
 
 	const Expression* body;
 
 	~Statement() {
 		delete body;
+	}
+
+	const std::string ToString( const size_t depth ) const override {
+		return Formatted( "Statement(", depth ) +
+			body->ToString( depth + 1 ) +
+			Formatted( ")", depth );
 	}
 };
 

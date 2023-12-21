@@ -11,7 +11,7 @@ namespace program {
 
 class Expression : public Operand {
 public:
-	Expression( const Operand* a, const Operator* op = new Operator( Operator::OT_NOOP ), const Operand* b = new Nothing() )
+	Expression( const Operand* a, const Operator* op = nullptr, const Operand* b = nullptr )
 		: Operand( OT_EXPRESSION )
 		, a( a )
 		, op( op )
@@ -22,9 +22,33 @@ public:
 	const Operand* b;
 
 	~Expression() {
-		delete a;
-		delete op;
-		delete b;
+		if ( a ) {
+			delete a;
+		}
+		if ( op ) {
+			delete op;
+		}
+		if ( b ) {
+			delete b;
+		}
+	}
+
+	const std::string ToString( const size_t depth ) const override {
+		return
+			Formatted( "Expression(", depth ) +
+				( a == nullptr
+					? ""
+					: a->ToString( depth + 1 )
+				) +
+				( op == nullptr
+					? ""
+					: op->ToString( depth + 1 )
+				) +
+				( b == nullptr
+					? ""
+					: b->ToString( depth + 1 )
+				) +
+				Formatted( ")", depth );
 	}
 };
 

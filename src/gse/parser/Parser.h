@@ -7,6 +7,7 @@
 #include "gse/program/Program.h"
 #include "gse/program/Scope.h"
 #include "gse/program/Statement.h"
+#include "gse/program/Object.h"
 
 namespace gse {
 namespace parser {
@@ -29,8 +30,7 @@ protected:
 	class SourceElement {
 	public:
 		enum element_type_t {
-			ET_LINE_COMMENT,
-			ET_MULTILINE_COMMENT,
+			ET_COMMENT,
 			ET_IDENTIFIER,
 			ET_OPERATOR,
 			ET_CONTROL,
@@ -39,20 +39,21 @@ protected:
 		SourceElement( const element_type_t type )
 			: m_type( type ) {}
 		const element_type_t m_type;
+		virtual const std::string ToString() const = 0;
 	};
+	typedef std::vector< SourceElement* > source_elements_t;
 
 	class Comment : public SourceElement {
 	public:
 		Comment( bool is_multiline, const std::string& text )
-			: SourceElement(
-			is_multiline
-				? ET_MULTILINE_COMMENT
-				: ET_LINE_COMMENT
-		)
+			: SourceElement( ET_COMMENT )
 			, m_is_multiline( is_multiline )
 			, m_text( text ) {}
 		const bool m_is_multiline;
 		const std::string m_text;
+		virtual const std::string ToString() const {
+			return "comment{ " + m_text + " }";
+		}
 	};
 
 	class Identifier : public SourceElement {
@@ -63,6 +64,9 @@ protected:
 			, m_identifier_type( identifier_type ) {}
 		const std::string m_name;
 		const uint8_t m_identifier_type;
+		virtual const std::string ToString() const {
+			return "identifier{ " + m_name + " }";
+		}
 	};
 
 	class Operator : public SourceElement {
@@ -71,6 +75,9 @@ protected:
 			: SourceElement( ET_OPERATOR )
 			, m_op( op ) {}
 		const std::string m_op;
+		virtual const std::string ToString() const {
+			return "operator{ " + m_op + " }";
+		};
 	};
 
 	class Control : public SourceElement {
@@ -79,10 +86,20 @@ protected:
 			CT_FLOW_DELIMITER,
 			CT_DATA_DELIMITER,
 		};
-		Control( const control_type_t type )
+		Control( const control_type_t control_type )
 			: SourceElement( ET_CONTROL )
-			, m_type( type ) {};
-		const control_type_t m_type;
+			, m_control_type( control_type ) {};
+		const control_type_t m_control_type;
+		virtual const std::string ToString() const {
+			switch ( m_control_type ) {
+				case CT_FLOW_DELIMITER:
+					return "control{ ; }";
+				case CT_DATA_DELIMITER:
+					return "control{ , }";
+				default:
+					ASSERT_NOLOG( false, "unexpected control type: " + std::to_string( m_control_type ) );
+			}
+		}
 	};
 
 	class Block : public SourceElement {
@@ -97,14 +114,24 @@ protected:
 			, m_block_side( block_side ) {}
 		const block_side_t m_block_side;
 		const uint8_t m_block_type;
+		virtual const std::string ToString() const {
+			switch ( m_block_side ) {
+				case BS_BEGIN:
+					return "block_open{ " + std::to_string( m_block_type ) + " }";
+				case BS_END:
+					return "block_close{ " + std::to_string( m_block_type ) + " }";
+				default:
+					ASSERT_NOLOG( false, "unexpected block side: " + std::to_string( m_block_side ) );
+			}
+		}
 	};
 
-	virtual void GetElements( std::vector< SourceElement* >& elements ) = 0;
-	virtual const program::Program* GetProgram( const std::vector< SourceElement* >& elements ) = 0;
+	virtual void GetElements( source_elements_t& elements ) = 0;
+	virtual const program::Program* GetProgram( const source_elements_t& elements ) = 0;
 
 	const char get() const; // get character at current position
 	const bool eof() const; // returns true if source is parsed to the end
-	
+
 	// read and until end character encountered
 	const std::string read_until_char( char chr, bool consume );
 	// read until any of end characters encountered

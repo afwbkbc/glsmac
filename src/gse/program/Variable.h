@@ -15,6 +15,10 @@ public:
 		, name( name ) {}
 
 	const std::string name;
+
+	const std::string ToString( const size_t depth ) const override {
+		return Formatted( "Variable( " + name + " )", depth );
+	}
 };
 
 }

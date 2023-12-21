@@ -13,7 +13,7 @@ Parser::Parser( const std::string& source )
 }
 
 const program::Program* Parser::Parse() {
-	std::vector< SourceElement* > elements = {};
+	source_elements_t elements = {};
 	GetElements( elements );
 	const auto* program = GetProgram( elements );
 	for ( auto& it : elements ) {
@@ -84,10 +84,11 @@ const std::string Parser::read_until_char( char chr, bool consume ) {
 	while ( m_ptr < m_end - 1 && *m_ptr != chr ) {
 		m_ptr++;
 	}
+	const char* end_ptr = m_ptr;
 	if ( consume ) {
 		m_ptr++;
 	}
-	return std::string( begin_ptr, m_ptr );
+	return std::string( begin_ptr, end_ptr );
 }
 
 const std::string Parser::read_until_char_any( const char* chrs, bool consume ) {
@@ -133,13 +134,14 @@ const std::string Parser::read_until_sequence( const char* sequence, bool consum
 		}
 		m_ptr++;
 	}
+	const char* end_ptr = m_ptr;
 	if ( consume ) {
 		m_ptr += ( end - sequence );
 	}
 	if ( m_ptr >= m_end ) {
 		m_ptr = m_end - 1;
 	}
-	return std::string( begin_ptr, m_ptr );
+	return std::string( begin_ptr, end_ptr );
 }
 
 const std::string Parser::read_while_char_any( const char* chrs ) {

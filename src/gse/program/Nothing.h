@@ -13,6 +13,10 @@ public:
 	Nothing()
 		: Operand( OT_NOTHING ) {}
 
+	const std::string ToString( const size_t depth ) const override {
+		return Formatted( "Nothing()", depth );
+	}
+
 };
 
 }

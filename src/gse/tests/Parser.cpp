@@ -9,7 +9,6 @@
 #include "gse/program/Statement.h"
 #include "gse/program/Expression.h"
 #include "gse/program/Operator.h"
-#include "gse/program/Nothing.h"
 #include "gse/program/Value.h"
 #include "gse/program/Variable.h"
 #include "gse/program/Object.h"
@@ -39,8 +38,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 				new Statement(
 					new Expression(
 						new Variable( "a" ),
-						new Operator( Operator::OT_INC ),
-						new Nothing()
+						new Operator( Operator::OT_INC )
 					)
 				),
 				new Statement(
@@ -68,8 +66,8 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 								new Statement(
 									new Expression(
 										new Variable( "a" ),
-										new Operator( Operator::OT_INCBY ),
-										new program::Value( VALUE( type::Int, 15 ) )
+										new Operator( Operator::OT_INC_BY ),
+										new program::Value( VALUE( type::Int, 10 ) )
 									)
 								)
 							}
@@ -97,7 +95,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 								{
 									new Statement(
 										new Expression(
-											new Nothing(),
+											nullptr,
 											new Operator( Operator::OT_RETURN ),
 											new Expression(
 												new Expression(
@@ -129,7 +127,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 								{
 									new Statement(
 										new Expression(
-											new Nothing(),
+											nullptr,
 											new Operator( Operator::OT_RETURN ),
 											new Expression(
 												new Expression(
@@ -162,7 +160,9 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 							{
 								{
 									"propertyString",
-									new program::Value( VALUE( type::String, "STRING" ) )
+									new Expression(
+										new program::Value( VALUE( type::String, "STRING" ) )
+									)
 								},
 								{
 									"propertyInt1",
@@ -178,7 +178,9 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 								},
 								{
 									"propertyInt2",
-									new program::Value( VALUE( type::Int, 222 ) )
+									new Expression(
+										new program::Value( VALUE( type::Int, 222 ) )
+									)
 								}
 							}
 						)
@@ -222,7 +224,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 										new Operator( Operator::OT_CHILD ),
 										new Variable( "propertyInt" )
 									),
-									new Operator( Operator::OT_EQUALS ),
+									new Operator( Operator::OT_EQ ),
 									new program::Value( VALUE( type::Int, 348 ) )
 								)
 							}
@@ -238,8 +240,12 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 								new Variable( "log" )
 							),
 							{
-								new Variable( "testobj1" ),
-								new Variable( "testobj2" ),
+								new Expression(
+									new Variable( "testobj1" )
+								),
+								new Expression(
+									new Variable( "testobj2" )
+								),
 							}
 						)
 					)
@@ -253,7 +259,9 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 								new Variable( "log" )
 							),
 							{
-								new program::Value( VALUE( type::String, "bye!" ) ),
+								new Expression(
+									new program::Value( VALUE( type::String, "bye!" ) )
+								)
 							}
 						)
 					)
@@ -325,47 +333,65 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			&function,
 			&call
 		) {
-			GT_ASSERT( a->type == b->type, "operands have different types ( " + std::to_string( a->type ) + " != " + std::to_string( b->type ) + " )" );
-			switch ( a->type ) {
-				case Operand::OT_NOTHING: {
-					break;
-				}
-				case Operand::OT_VALUE: {
-					VALIDATE( value, (program::Value*)a, (program::Value*)b );
-					break;
-				}
-				case Operand::OT_VARIABLE: {
-					VALIDATE( variable, (Variable*)a, (Variable*)b );
-					break;
-				}
-				case Operand::OT_OBJECT: {
-					VALIDATE( object, (Object*)a, (Object*)b );
-					break;
-				}
-				case Operand::OT_SCOPE: {
-					VALIDATE( scope, (Scope*)a, (Scope*)b );
-					break;
-				}
-				case Operand::OT_EXPRESSION: {
-					VALIDATE( expression, (Expression*)a, (Expression*)b );
-					break;
-				}
-				case Operand::OT_FUNCTION: {
-					VALIDATE( function, (Function*)a, (Function*)b );
-					break;
-				}
-				case Operand::OT_CALL: {
-					VALIDATE( call, (Call*)a, (Call*)b );
-					break;
-				}
-				default: {
-					GT_ASSERT( false, "unknown operand type: " + std::to_string( a->type ) );
+			GT_ASSERT( ( a == nullptr ) == ( b == nullptr ), "operands have different null states ( " + ( a == nullptr
+				? "null"
+				: "not null"
+			) + " != " + ( b == nullptr
+				? "null"
+				: "not null"
+			) + " )" );
+			if ( a && b ) {
+				GT_ASSERT( a->type == b->type, "operands have different types ( " + std::to_string( a->type ) + " != " + std::to_string( b->type ) + " )" );
+				switch ( a->type ) {
+					case Operand::OT_NOTHING: {
+						break;
+					}
+					case Operand::OT_VALUE: {
+						VALIDATE( value, (program::Value*)a, (program::Value*)b );
+						break;
+					}
+					case Operand::OT_VARIABLE: {
+						VALIDATE( variable, (Variable*)a, (Variable*)b );
+						break;
+					}
+					case Operand::OT_OBJECT: {
+						VALIDATE( object, (Object*)a, (Object*)b );
+						break;
+					}
+					case Operand::OT_SCOPE: {
+						VALIDATE( scope, (Scope*)a, (Scope*)b );
+						break;
+					}
+					case Operand::OT_EXPRESSION: {
+						VALIDATE( expression, (Expression*)a, (Expression*)b );
+						break;
+					}
+					case Operand::OT_FUNCTION: {
+						VALIDATE( function, (Function*)a, (Function*)b );
+						break;
+					}
+					case Operand::OT_CALL: {
+						VALIDATE( call, (Call*)a, (Call*)b );
+						break;
+					}
+					default: {
+						GT_ASSERT( false, "unknown operand type: " + std::to_string( a->type ) );
+					}
 				}
 			}
 			GT_OK();
 		};
 		const auto operatr = VALIDATOR( Operator ) {
-			GT_ASSERT( a->op == b->op, "operators are different ( " + std::to_string( a->op ) + " != " + std::to_string( b->op ) + " )" );
+			GT_ASSERT( ( a == nullptr ) == ( b == nullptr ), "operators have different null states ( " + ( a == nullptr
+				? "null"
+				: "not null"
+			) + " != " + ( b == nullptr
+				? "null"
+				: "not null"
+			) + " )" );
+			if ( a && b ) {
+				GT_ASSERT( a->op == b->op, "operators are different ( " + std::to_string( a->op ) + " != " + std::to_string( b->op ) + " )" );
+			}
 			GT_OK();
 		};
 		expression = VALIDATOR( Expression, &errmsg, &operand, &operatr ) {
