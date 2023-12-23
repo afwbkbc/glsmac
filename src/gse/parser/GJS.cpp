@@ -165,14 +165,14 @@ const program::Statement* GJS::GetStatement( const source_elements_t::const_iter
 	return new program::Statement( GetExpression( begin, end ) );
 }
 
-const program::Expression* GJS::GetExpression( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
+const program::Expression* GJS::GetExpression( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, const bool is_inside_object ) {
 	ELS( "GetExpression" )
 	// resolve elements, unpack scopes
 	typedef std::vector< const Element* > elements_t;
 	elements_t elements = {};
-	source_elements_t::const_iterator it, it_end, it_next, it_tmp;
+	source_elements_t::const_iterator it = begin, it_end, it_next, it_tmp;
 	uint8_t t;
-	for ( it = begin ; it != end ; it++ ) {
+	while ( it != end ) {
 		switch ( ( *it )->m_type ) {
 			case SourceElement::ET_COMMENT: {
 				// nothing
@@ -182,21 +182,21 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 
 				// check for child dereferences
 				it_tmp = it + 1;
-				if ( begin + 3 != end ) { // don't group trivial expressions
-					while ( it_tmp != end ) {
-						if (
-							( *it_tmp )->m_type != SourceElement::ET_OPERATOR ||
-								( (Operator*)( *it_tmp ) )->m_op != "."
-							) {
-							break;
-						}
-						it_tmp++;
-						ASSERT( ( *it_tmp )->m_type == SourceElement::ET_IDENTIFIER &&
-							( ( Identifier * )( *it_tmp ) )->m_identifier_type == IDENTIFIER_VARIABLE, "expected property name" );
-						it_tmp++;
+				while ( it_tmp != end ) {
+					LogElement( "  ", *it_tmp );
+					if (
+						( *it_tmp )->m_type != SourceElement::ET_OPERATOR ||
+							( (Operator*)( *it_tmp ) )->m_op != "."
+						) {
+						break;
 					}
+					it_tmp++;
+					ASSERT( it_tmp != end &&
+						( *it_tmp )->m_type == SourceElement::ET_IDENTIFIER &&
+						( ( Identifier * )( *it_tmp ) )->m_identifier_type == IDENTIFIER_VARIABLE, "expected property name" );
+					it_tmp++;
 				}
-				if ( it_tmp == it + 1 ) {
+				if ( it_tmp == it + 1 || it_tmp == end ) {
 					// no child dereferences, treat as single operand
 					elements.push_back( GetOperand( ( Identifier * )( *it ) ) );
 				}
@@ -221,8 +221,8 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 				it_end = GetBracketsEnd( it, end );
 				switch ( t ) {
 					case BLOCK_CURLY_BRACKETS: {
-						// either scope of object
-						if ( it == begin ) {
+						// either scope or object
+						if ( !is_inside_object && it == begin ) {
 							// scope
 							elements.push_back( GetScope( it + 1, it_end ) );
 						}
@@ -233,8 +233,22 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 						break;
 					}
 					case BLOCK_ROUND_BRACKETS: {
-						// either function or call
+						// expression, function or call
 						if (
+							(
+								( it == begin ) ||
+									( ( *( it - 1 ) )->m_type == SourceElement::ET_OPERATOR )
+							) &&
+								(
+									( it_end + 1 == end ) ||
+										( ( *( it_end + 1 ) )->m_type != SourceElement::ET_OPERATOR ) ||
+										( (Operator*)*( it_end + 1 ) )->m_op != "=>"
+								)
+							) {
+							// expression
+							elements.push_back( GetExpression( it + 1, it_end ) );
+						}
+						else if (
 							it_end != end &&
 								( it_next = it_end + 1 ) != end &&
 								( *it_next )->m_type == SourceElement::ET_OPERATOR &&
@@ -327,6 +341,9 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 			default: {
 				ASSERT( false, "unexpected expression element type: " + std::to_string( ( *it )->m_type ) );
 			}
+		}
+		if ( it != end ) {
+			it++;
 		}
 	}
 
@@ -442,8 +459,8 @@ const program::Object* GJS::GetObject( const source_elements_t::const_iterator& 
 	ELS( "GetObject" );
 	std::unordered_map< std::string, const Expression* > properties = {};
 	Identifier* identifier;
-	source_elements_t::const_iterator it, it_end;
-	for ( it = begin ; it != end ; it++ ) {
+	source_elements_t::const_iterator it = begin, it_end;
+	while ( it != end ) {
 		ASSERT( ( *it )->m_type == SourceElement::ET_IDENTIFIER, "expected property key" );
 		identifier = ( Identifier * ) * ( it++ );
 		ASSERT( it != end, "unexpected object close" );
@@ -456,21 +473,20 @@ const program::Object* GJS::GetObject( const source_elements_t::const_iterator& 
 		for ( it_end = it ; it_end != end ; it_end++ ) {
 			if ( ( *it_end )->m_type == SourceElement::ET_BLOCK ) {
 				it_end = GetBracketsEnd( it_end, end );
-				if ( it_end != end ) {
-					it_end++;
-				}
 			}
 			else if (
-				( *it_end )->m_type == SourceElement::ET_CONTROL
-				) {
+				( *it_end )->m_type == SourceElement::ET_CONTROL ) {
 				ASSERT( ( ( Control * ) * it_end )->m_control_type == Control::CT_DATA_DELIMITER, "unexpected control symbol" );
 				break;
 			}
 		}
 		ASSERT( it_end != it, "expected property expression" );
 		ASSERT( properties.find( identifier->m_name ) == properties.end(), "duplicate property key: " + identifier->m_name );
-		properties.insert_or_assign( identifier->m_name, GetExpression( it, it_end ) );
+		properties.insert_or_assign( identifier->m_name, GetExpression( it, it_end, true ) );
 		it = it_end;
+		if ( it != end ) {
+			it++;
+		}
 	}
 	return new program::Object( properties );
 }
@@ -500,7 +516,9 @@ const GJS::source_elements_t::const_iterator GJS::GetBracketsEnd( const source_e
 				break;
 			}
 		}
-		it++;
+		if ( it != end ) {
+			it++;
+		}
 	}
 	ASSERT( brackets.empty(), "matching closing block not found" );
 	return it;

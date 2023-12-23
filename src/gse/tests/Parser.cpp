@@ -48,7 +48,26 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 						new Expression(
 							new Variable( "a" ),
 							new Operator( Operator::OT_ADD ),
-							new program::Value( VALUE( type::Int, 2 ) )
+							new Expression(
+								new program::Value( VALUE( type::Int, 2 ) ),
+								new Operator( Operator::OT_MULT ),
+								new program::Value( VALUE( type::Int, 4 ) )
+							)
+						)
+					)
+				),
+				new Statement(
+					new Expression(
+						new Variable( "c" ),
+						new Operator( Operator::OT_ASSIGN ),
+						new Expression(
+							new Expression(
+								new Variable( "a" ),
+								new Operator( Operator::OT_ADD ),
+								new program::Value( VALUE( type::Int, 2 ) )
+							),
+							new Operator( Operator::OT_MULT ),
+							new program::Value( VALUE( type::Int, 4 ) )
 						)
 					)
 				),
@@ -188,6 +207,40 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 				),
 				new Statement(
 					new Expression(
+						new Variable( "testobj3" ),
+						new Operator( Operator::OT_ASSIGN ),
+						new Object(
+							{
+								{
+									"child1",
+									new Expression(
+										new Object(
+											{
+												{
+													"child2",
+													new Expression(
+														new Object(
+															{
+																{
+																	"value",
+																	new Expression(
+																		new program::Value( VALUE( type::String, "CHILD VALUE" ) )
+																	)
+																}
+															}
+														)
+													)
+												}
+											}
+										)
+									)
+								}
+							}
+						)
+					)
+				),
+				new Statement(
+					new Expression(
 						new Expression(
 							new Variable( "testobj1" ),
 							new Operator( Operator::OT_CHILD ),
@@ -220,12 +273,42 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 							{
 								new Expression(
 									new Expression(
+										new Expression(
+											new Variable( "testobj3" ),
+											new Operator( Operator::OT_CHILD ),
+											new Variable( "child1" )
+										),
+										new Operator( Operator::OT_CHILD ),
+										new Variable( "child2" )
+									),
+									new Operator( Operator::OT_CHILD ),
+									new Variable( "value" )
+								)
+							}
+						)
+					)
+				),
+				new Statement(
+					new Expression(
+						new Call(
+							new Expression(
+								new Variable( "console" ),
+								new Operator( Operator::OT_CHILD ),
+								new Variable( "log" )
+							),
+							{
+								new Expression(
+									new Expression(
 										new Variable( "testobj1" ),
 										new Operator( Operator::OT_CHILD ),
 										new Variable( "propertyInt" )
 									),
 									new Operator( Operator::OT_EQ ),
-									new program::Value( VALUE( type::Int, 348 ) )
+									new Expression(
+										new program::Value( VALUE( type::Int, 332 ) ),
+										new Operator( Operator::OT_ADD ),
+										new Variable( "c" )
+									)
 								)
 							}
 						)
@@ -428,7 +511,8 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 				"\n"
 				"a = 5;\n"
 				"a++;\n"
-				"b = a + 2;\n"
+				"b = a + 2 * 4;\n"
+				"c=(a+2)*4;\n"
 				"{\n"
 				"	a = 15;\n"
 				"	a += 10;\n"
@@ -456,9 +540,17 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 				"	propertyInt1: 111 + a + b,\n"
 				"	propertyInt2: 222,\n"
 				"};\n"
+				"testobj3 = {\n"
+				"  child1: {\n"
+				"    child2: {\n"
+				"      value: 'CHILD VALUE'\n"
+				"    }\n"
+				"  },\n"
+				"};\n"
 				"testobj1.propertyInt = testobj2.propertyInt1 + testobj2.propertyInt2;\n"
 				"\n"
-				"console.log(testobj1.propertyInt == 348); console.log(testobj1, testobj2);\n"
+				"console.log(testobj3.child1.child2.value);\n"
+				"console.log(testobj1.propertyInt == 332 + c); console.log(testobj1, testobj2);\n"
 				"\n"
 				"console.log('bye!');\n"
 			);
