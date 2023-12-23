@@ -217,7 +217,7 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 			}
 			case SourceElement::ET_BLOCK: {
 				ASSERT( ( ( Block * )( *it ) )->m_block_side == Block::BS_BEGIN, "unexpected block side: " + std::to_string( ( ( Block * )( *it ) )->m_block_side ) );
-				t = (( Block * )( *it ))->m_block_type;
+				t = ( ( Block * )( *it ) )->m_block_type;
 				it_end = GetBracketsEnd( it, end );
 				switch ( t ) {
 					case BLOCK_CURLY_BRACKETS: {
@@ -237,13 +237,13 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 						if (
 							it_end != end &&
 								( it_next = it_end + 1 ) != end &&
-								(*it_next)->m_type == SourceElement::ET_OPERATOR &&
-								((Operator*)*(it_next++))->m_op == "=>" &&
-								(it_next != end ) &&
-								(*it_next)->m_type == SourceElement::ET_BLOCK &&
-								((Block*)*it_next)->m_block_type == BLOCK_CURLY_BRACKETS &&
-								((Block*)*it_next)->m_block_side == Block::BS_BEGIN
-								) {
+								( *it_next )->m_type == SourceElement::ET_OPERATOR &&
+								( (Operator*)*( it_next++ ) )->m_op == "=>" &&
+								( it_next != end ) &&
+								( *it_next )->m_type == SourceElement::ET_BLOCK &&
+								( ( Block * ) * it_next )->m_block_type == BLOCK_CURLY_BRACKETS &&
+								( ( Block * ) * it_next )->m_block_side == Block::BS_BEGIN
+							) {
 							// function
 							std::vector< Variable* > parameters = {};
 							if ( it_end != it + 1 ) {
@@ -276,7 +276,7 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 								ASSERT( !expect_var, "expected variable, got nothing" );
 							}
 							it_end = GetBracketsEnd( it_next, end );
-							elements.push_back(new program::Function( parameters, GetScope( it_next + 1, it_end ) ) );
+							elements.push_back( new program::Function( parameters, GetScope( it_next + 1, it_end ) ) );
 						}
 						else {
 							// call
@@ -294,22 +294,26 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 								it_tmp = it_next;
 								while ( it_tmp != it_end ) {
 									if (
-										(*it_tmp)->m_type == SourceElement::ET_CONTROL &&
-											((Control*)(*it_tmp))->m_control_type == Control::CT_DATA_DELIMITER
+										( *it_tmp )->m_type == SourceElement::ET_CONTROL &&
+											( ( Control * )( *it_tmp ) )->m_control_type == Control::CT_DATA_DELIMITER
 										) {
 										break;
 									}
 									it_tmp++;
 								}
-								arguments.push_back( GetExpression(it_next, it_tmp) );
+								arguments.push_back( GetExpression( it_next, it_tmp ) );
 								it_next = it_tmp;
 								if ( it_next != it_end ) {
 									it_next++;
 								}
 							}
-							elements.push_back(new Call(operand->type == Operand::OT_EXPRESSION
-								? (Expression*)operand
-								: new Expression( operand ), arguments));
+							elements.push_back(
+								new Call(
+									operand->type == Operand::OT_EXPRESSION
+										? (Expression*)operand
+										: new Expression( operand ), arguments
+								)
+							);
 						}
 						break;
 					}
@@ -327,13 +331,13 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 	}
 
 	// split by operator priority
-	const std::function< program::Operand* (const elements_t::const_iterator&, const elements_t::const_iterator&)> get_operand = [ this, &get_operand, &elements ](
+	const std::function< program::Operand*( const elements_t::const_iterator&, const elements_t::const_iterator& ) > get_operand = [ this, &get_operand, &elements ](
 		const elements_t::const_iterator& begin,
 		const elements_t::const_iterator& end
 	) -> program::Operand* {
 		if ( begin + 1 == end ) {
 			// only one operand present, wrap if needed and return
-			ASSERT( (*begin)->m_element_type == Element::ET_OPERAND, "operand expected here" );
+			ASSERT( ( *begin )->m_element_type == Element::ET_OPERAND, "operand expected here" );
 			return (program::Operand*)*begin;
 		}
 		// find most important operator
@@ -343,8 +347,8 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 		const operator_info_t* info;
 		operator_link_t link;
 		for ( auto it = begin ; it != end ; it++ ) {
-			if ( (*it)->m_element_type == Element::ET_OPERATOR ) {
-				op = (program::Operator*)(*it);
+			if ( ( *it )->m_element_type == Element::ET_OPERATOR ) {
+				op = (program::Operator*)( *it );
 				info = &OPERATOR_INFO.at( op->op );
 				if ( info->priority <= last_priority ) {
 					last_priority = info->priority;
@@ -355,8 +359,8 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 		}
 		ASSERT( split_it != end, "could not find operator to split at" );
 
-		bool has_a = split_it > begin && (*( split_it - 1 ))->m_element_type == Element::ET_OPERAND;
-		bool has_b = split_it + 1 != end && (*(split_it + 1 ))->m_element_type == Element::ET_OPERAND;
+		bool has_a = split_it > begin && ( *( split_it - 1 ) )->m_element_type == Element::ET_OPERAND;
+		bool has_b = split_it + 1 != end && ( *( split_it + 1 ) )->m_element_type == Element::ET_OPERAND;
 
 		switch ( link ) {
 			case OL_LEFT: {
@@ -378,7 +382,7 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 				if ( has_a && !has_b ) {
 					return new program::Expression( get_operand( begin, split_it ), (program::Operator*)*split_it );
 				}
-				else if ( !has_a && has_b ){
+				else if ( !has_a && has_b ) {
 					return new program::Expression( nullptr, (program::Operator*)*split_it, get_operand( split_it + 1, end ) );
 				}
 				else {
@@ -386,15 +390,14 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 				}
 			}
 			default:
-				ASSERT( false, "unexpected operator link type: " +std::to_string( link ) );
+				ASSERT( false, "unexpected operator link type: " + std::to_string( link ) );
 		}
 	};
 
 	const auto* operand = get_operand( elements.begin(), elements.end() );
 	return operand->type == program::Operand::OT_EXPRESSION
 		? (Expression*)operand
-		: new Expression( operand )
-		;
+		: new Expression( operand );
 }
 
 const program::Operand* GJS::GetOperand( const Identifier* element ) {
@@ -441,26 +444,26 @@ const program::Object* GJS::GetObject( const source_elements_t::const_iterator& 
 	Identifier* identifier;
 	source_elements_t::const_iterator it, it_end;
 	for ( it = begin ; it != end ; it++ ) {
-		ASSERT( (*it)->m_type == SourceElement::ET_IDENTIFIER, "expected property key" );
-		identifier = (Identifier*)*(it++);
+		ASSERT( ( *it )->m_type == SourceElement::ET_IDENTIFIER, "expected property key" );
+		identifier = ( Identifier * ) * ( it++ );
 		ASSERT( it != end, "unexpected object close" );
 		ASSERT( identifier->m_identifier_type == IDENTIFIER_VARIABLE, "expected property key name" );
-		ASSERT((*it)->m_type == SourceElement::ET_OPERATOR, "expected property delimiter");
-		ASSERT(((Operator*)(*(it++)))->m_op == ":", "expected ':'");
+		ASSERT( ( *it )->m_type == SourceElement::ET_OPERATOR, "expected property delimiter" );
+		ASSERT( ( (Operator*)( *( it++ ) ) )->m_op == ":", "expected ':'" );
 		ASSERT( it != end, "unexpected object close" );
 
 		// find property expression end
 		for ( it_end = it ; it_end != end ; it_end++ ) {
-			if ( (*it_end)->m_type == SourceElement::ET_BLOCK ) {
+			if ( ( *it_end )->m_type == SourceElement::ET_BLOCK ) {
 				it_end = GetBracketsEnd( it_end, end );
 				if ( it_end != end ) {
 					it_end++;
 				}
 			}
 			else if (
-				(*it_end)->m_type == SourceElement::ET_CONTROL
-			) {
-				ASSERT( ((Control*)*it_end)->m_control_type == Control::CT_DATA_DELIMITER, "unexpected control symbol" );
+				( *it_end )->m_type == SourceElement::ET_CONTROL
+				) {
+				ASSERT( ( ( Control * ) * it_end )->m_control_type == Control::CT_DATA_DELIMITER, "unexpected control symbol" );
 				break;
 			}
 		}
@@ -473,13 +476,13 @@ const program::Object* GJS::GetObject( const source_elements_t::const_iterator& 
 }
 
 const GJS::source_elements_t::const_iterator GJS::GetBracketsEnd( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
-	ASSERT( (*begin)->m_type == SourceElement::ET_BLOCK, "expected opening bracket" );
+	ASSERT( ( *begin )->m_type == SourceElement::ET_BLOCK, "expected opening bracket" );
 	std::stack< uint8_t > brackets = {};
 	source_elements_t::const_iterator it = begin;
-	Block* block = (Block*)*begin;
+	Block* block = ( Block * ) * begin;
 	ASSERT( block->m_block_side == Block::BS_BEGIN, "expected opening bracket" );
 	while ( it != end ) {
-		if ( (*it)->m_type == SourceElement::ET_BLOCK ) {
+		if ( ( *it )->m_type == SourceElement::ET_BLOCK ) {
 			block = ( Block * )( *it );
 			switch ( block->m_block_side ) {
 				case Block::BS_BEGIN: {
