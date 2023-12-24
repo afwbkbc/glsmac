@@ -22,6 +22,8 @@ public:
 	const Value& Get( const key_t& key ) const;
 	void Set( const key_t& key, const Value& value );
 
+	const Value GetRef( const key_t& key );
+
 	properties_t value = {};
 };
 

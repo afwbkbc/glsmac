@@ -43,7 +43,7 @@ public:
 
 	const operator_type_t op;
 
-	const std::string ToString( const size_t depth ) const override {
+	const std::string ToString( const size_t depth = 0 ) const override {
 		const auto it = m_op_labels.find( op );
 		ASSERT_NOLOG( it != m_op_labels.end(), "op label not found: " + std::to_string( op ) );
 		return Formatted( "Operator( " + it->second + " )", depth );

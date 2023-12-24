@@ -14,7 +14,7 @@ public:
 
 	static const type_t GetType() { return Type::T_CALLABLE; }
 
-	typedef const std::vector< Value > function_arguments_t;
+	typedef std::vector< Value > function_arguments_t;
 
 	Callable()
 		: type::Type( GetType() ) {}

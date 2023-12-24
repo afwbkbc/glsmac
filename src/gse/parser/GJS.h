@@ -6,6 +6,8 @@
 
 #include "Parser.h"
 
+#include "gse/program/Variable.h"
+
 namespace gse {
 namespace parser {
 
@@ -22,7 +24,7 @@ private:
 	const program::Scope* GetScope( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 	const program::Statement* GetStatement( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 	const program::Expression* GetExpression( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, const bool is_inside_object = false );
-	const program::Operand* GetOperand( const Identifier* element );
+	const program::Operand* GetOperand( const Identifier* element, program::Variable::variable_hints_t* next_var_hints = nullptr );
 	const program::Operator* GetOperator( const Operator* element );
 	const program::Object* GetObject( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 
@@ -46,8 +48,18 @@ private:
 		BLOCK_CURLY_BRACKETS,
 	};
 
-	const std::unordered_set< std::string > OPERATOR_KEYWORDS = {
+	const std::unordered_set< std::string > KEYWORDS = {
 		"return",
+		"let",
+	};
+
+	const std::unordered_map< std::string, program::Variable::variable_hints_t > MODIFIER_OPERATORS = {
+		{
+			{
+				"let",
+				program::Variable::VH_CREATE,
+			}
+		}
 	};
 
 	const std::unordered_map< std::string, program::Operator::operator_type_t > OPERATOR_NAMES = {

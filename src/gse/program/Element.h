@@ -32,7 +32,10 @@ public:
 
 protected:
 	const std::string Formatted( const std::string& text, const size_t depth ) const {
-		return std::string( TOSTRING_PREFIX_SIZE * depth, ' ' ) + text + "\n";
+		return std::string( TOSTRING_PREFIX_SIZE * depth, ' ' ) + text + ( depth > 0
+			? "\n"
+			: ""
+		);
 	}
 
 private:

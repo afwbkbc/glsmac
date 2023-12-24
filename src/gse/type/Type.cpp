@@ -5,8 +5,10 @@
 #include "Null.h"
 #include "Bool.h"
 #include "Int.h"
+#include "Float.h"
 #include "String.h"
 #include "Object.h"
+#include "ObjectRef.h"
 
 namespace gse {
 namespace type {
@@ -21,12 +23,16 @@ const std::string Type::GetTypeString( const type_t type ) {
 			return "bool";
 		case T_INT:
 			return "int";
+		case T_FLOAT:
+			return "float";
 		case T_STRING:
 			return "string";
 		case T_OBJECT:
 			return "object";
 		case T_CALLABLE:
 			return "callable";
+		case T_OBJECTREF:
+			return "objectref";
 		default:
 			return "unknown";
 	}
@@ -42,6 +48,8 @@ const std::string Type::ToString() const {
 			return "bool{" + std::to_string( ( (Bool*)this )->value ) + "}";
 		case T_INT:
 			return "int{" + std::to_string( ( (Int*)this )->value ) + "}";
+		case T_FLOAT:
+			return "float{" + std::to_string( ( (Float*)this )->value ) + "}";
 		case T_STRING:
 			return "string{" + ( (String*)this )->value + "}";
 		case T_OBJECT: {
@@ -63,8 +71,12 @@ const std::string Type::ToString() const {
 		}
 		case T_CALLABLE:
 			return "callable"; // TODO
+		case T_OBJECTREF: {
+			const auto* that = (ObjectRef*)this;
+			return "objectref{" + std::to_string( (long)that->object ) + "," + that->key + "}";
+		}
 		default:
-			return "unknown";
+			return "unknown{" + std::to_string( type ) + "}";
 	}
 }
 

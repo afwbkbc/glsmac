@@ -15,9 +15,9 @@ public:
 		T_INT,
 		T_FLOAT,
 		T_STRING,
-		T_TUPLE,
 		T_OBJECT,
 		T_CALLABLE,
+		T_OBJECTREF,
 	};
 
 	static const std::string GetTypeString( const type_t type );

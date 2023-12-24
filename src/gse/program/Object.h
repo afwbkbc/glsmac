@@ -11,12 +11,13 @@ namespace program {
 
 class Object : public Operand {
 public:
+	typedef std::unordered_map< std::string, const Expression* > properties_t;
 
-	Object( const std::unordered_map< std::string, const Expression* >& properties )
+	Object( const properties_t& properties )
 		: Operand( OT_OBJECT )
 		, properties( properties ) {}
 
-	const std::unordered_map< std::string, const Expression* > properties;
+	const properties_t properties;
 
 	~Object() {
 		for ( auto& it : properties ) {
@@ -24,7 +25,7 @@ public:
 		}
 	}
 
-	const std::string ToString( const size_t depth ) const override {
+	const std::string ToString( const size_t depth = 0 ) const override {
 		std::string result = Formatted( "Object( ", depth );
 		for ( const auto& it : properties ) {
 			result +=

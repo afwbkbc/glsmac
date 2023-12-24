@@ -1,9 +1,7 @@
 #include "GSE.h"
 
+#include "gse/Tests.h"
 #include "gse/type/Int.h"
-#include "gse/type/String.h"
-#include "gse/type/Object.h"
-
 #include "gse/program/Program.h"
 #include "gse/program/Scope.h"
 #include "gse/program/Statement.h"
@@ -14,7 +12,6 @@
 #include "gse/program/Object.h"
 #include "gse/program/Function.h"
 #include "gse/program/Call.h"
-
 #include "gse/parser/GJS.h"
 
 namespace gse {
@@ -24,336 +21,9 @@ using namespace program;
 
 void AddParserTests( task::gsetests::GSETests* task ) {
 
-	// we will compare parsers' outputs to this program
-	static const Program reference_program(
-		new Scope(
-			{
-				new Statement(
-					new Expression(
-						new Variable( "a" ),
-						new Operator( Operator::OT_ASSIGN ),
-						new program::Value( VALUE( type::Int, 5 ) )
-					)
-				),
-				new Statement(
-					new Expression(
-						new Variable( "a" ),
-						new Operator( Operator::OT_INC )
-					)
-				),
-				new Statement(
-					new Expression(
-						new Variable( "b" ),
-						new Operator( Operator::OT_ASSIGN ),
-						new Expression(
-							new Variable( "a" ),
-							new Operator( Operator::OT_ADD ),
-							new Expression(
-								new program::Value( VALUE( type::Int, 2 ) ),
-								new Operator( Operator::OT_MULT ),
-								new program::Value( VALUE( type::Int, 4 ) )
-							)
-						)
-					)
-				),
-				new Statement(
-					new Expression(
-						new Variable( "c" ),
-						new Operator( Operator::OT_ASSIGN ),
-						new Expression(
-							new Expression(
-								new Variable( "a" ),
-								new Operator( Operator::OT_ADD ),
-								new program::Value( VALUE( type::Int, 2 ) )
-							),
-							new Operator( Operator::OT_MULT ),
-							new program::Value( VALUE( type::Int, 4 ) )
-						)
-					)
-				),
-				new Statement(
-					new Expression(
-						new Scope(
-							{
-								new Statement(
-									new Expression(
-										new Variable( "a" ),
-										new Operator( Operator::OT_ASSIGN ),
-										new program::Value( VALUE( type::Int, 15 ) )
-									)
-								),
-								new Statement(
-									new Expression(
-										new Variable( "a" ),
-										new Operator( Operator::OT_INC_BY ),
-										new program::Value( VALUE( type::Int, 10 ) )
-									)
-								)
-							}
-						)
-					)
-				),
-				new Statement(
-					new Expression(
-						new Variable( "c" ),
-						new Operator( Operator::OT_ASSIGN ),
-						new program::Value( VALUE( type::Int, 123 ) )
-					)
-				),
-				new Statement(
-					new Expression(
-						new Variable( "testmethod1" ),
-						new Operator( Operator::OT_ASSIGN ),
-						new Function(
-							{
-								new Variable( "a" ),
-								new Variable( "b" ),
-								new Variable( "c" )
-							},
-							new Scope(
-								{
-									new Statement(
-										new Expression(
-											nullptr,
-											new Operator( Operator::OT_RETURN ),
-											new Expression(
-												new Expression(
-													new Variable( "a" ),
-													new Operator( Operator::OT_ADD ),
-													new Variable( "b" )
-												),
-												new Operator( Operator::OT_ADD ),
-												new Variable( "c" )
-											)
-										)
-									)
-								}
-							)
-						)
-					)
-				),
-				new Statement(
-					new Expression(
-						new Variable( "testmethod2" ),
-						new Operator( Operator::OT_ASSIGN ),
-						new Function(
-							{
-								new Variable( "a" ),
-								new Variable( "b" ),
-								new Variable( "c" )
-							},
-							new Scope(
-								{
-									new Statement(
-										new Expression(
-											nullptr,
-											new Operator( Operator::OT_RETURN ),
-											new Expression(
-												new Expression(
-													new Variable( "a" ),
-													new Operator( Operator::OT_ADD ),
-													new Variable( "b" )
-												),
-												new Operator( Operator::OT_SUB ),
-												new Variable( "c" )
-											)
-										)
-									)
-								}
-							)
-						)
-					)
-				),
-				new Statement(
-					new Expression(
-						new Variable( "testobj1" ),
-						new Operator( Operator::OT_ASSIGN ),
-						new Object( {} )
-					)
-				),
-				new Statement(
-					new Expression(
-						new Variable( "testobj2" ),
-						new Operator( Operator::OT_ASSIGN ),
-						new Object(
-							{
-								{
-									"propertyString",
-									new Expression(
-										new program::Value( VALUE( type::String, "STRING" ) )
-									)
-								},
-								{
-									"propertyInt1",
-									new Expression(
-										new Expression(
-											new program::Value( VALUE( type::Int, 111 ) ),
-											new Operator( Operator::OT_ADD ),
-											new Variable( "a" )
-										),
-										new Operator( Operator::OT_ADD ),
-										new Variable( "b" )
-									)
-								},
-								{
-									"propertyInt2",
-									new Expression(
-										new program::Value( VALUE( type::Int, 222 ) )
-									)
-								}
-							}
-						)
-					)
-				),
-				new Statement(
-					new Expression(
-						new Variable( "testobj3" ),
-						new Operator( Operator::OT_ASSIGN ),
-						new Object(
-							{
-								{
-									"child1",
-									new Expression(
-										new Object(
-											{
-												{
-													"child2",
-													new Expression(
-														new Object(
-															{
-																{
-																	"value",
-																	new Expression(
-																		new program::Value( VALUE( type::String, "CHILD VALUE" ) )
-																	)
-																}
-															}
-														)
-													)
-												}
-											}
-										)
-									)
-								}
-							}
-						)
-					)
-				),
-				new Statement(
-					new Expression(
-						new Expression(
-							new Variable( "testobj1" ),
-							new Operator( Operator::OT_CHILD ),
-							new Variable( "propertyInt" )
-						),
-						new Operator( Operator::OT_ASSIGN ),
-						new Expression(
-							new Expression(
-								new Variable( "testobj2" ),
-								new Operator( Operator::OT_CHILD ),
-								new Variable( "propertyInt1" )
-							),
-							new Operator( Operator::OT_ADD ),
-							new Expression(
-								new Variable( "testobj2" ),
-								new Operator( Operator::OT_CHILD ),
-								new Variable( "propertyInt2" )
-							)
-						)
-					)
-				),
-				new Statement(
-					new Expression(
-						new Call(
-							new Expression(
-								new Variable( "console" ),
-								new Operator( Operator::OT_CHILD ),
-								new Variable( "log" )
-							),
-							{
-								new Expression(
-									new Expression(
-										new Expression(
-											new Variable( "testobj3" ),
-											new Operator( Operator::OT_CHILD ),
-											new Variable( "child1" )
-										),
-										new Operator( Operator::OT_CHILD ),
-										new Variable( "child2" )
-									),
-									new Operator( Operator::OT_CHILD ),
-									new Variable( "value" )
-								)
-							}
-						)
-					)
-				),
-				new Statement(
-					new Expression(
-						new Call(
-							new Expression(
-								new Variable( "console" ),
-								new Operator( Operator::OT_CHILD ),
-								new Variable( "log" )
-							),
-							{
-								new Expression(
-									new Expression(
-										new Variable( "testobj1" ),
-										new Operator( Operator::OT_CHILD ),
-										new Variable( "propertyInt" )
-									),
-									new Operator( Operator::OT_EQ ),
-									new Expression(
-										new program::Value( VALUE( type::Int, 332 ) ),
-										new Operator( Operator::OT_ADD ),
-										new Variable( "c" )
-									)
-								)
-							}
-						)
-					)
-				),
-				new Statement(
-					new Expression(
-						new Call(
-							new Expression(
-								new Variable( "console" ),
-								new Operator( Operator::OT_CHILD ),
-								new Variable( "log" )
-							),
-							{
-								new Expression(
-									new Variable( "testobj1" )
-								),
-								new Expression(
-									new Variable( "testobj2" )
-								),
-							}
-						)
-					)
-				),
-				new Statement(
-					new Expression(
-						new Call(
-							new Expression(
-								new Variable( "console" ),
-								new Operator( Operator::OT_CHILD ),
-								new Variable( "log" )
-							),
-							{
-								new Expression(
-									new program::Value( VALUE( type::String, "bye!" ) )
-								)
-							}
-						)
-					)
-				),
-			}
-		)
-	);
+	const Program* reference_program = GetTestProgram();
 
-	static const auto validate_program = []( const Program* program ) -> std::string {
+	const auto validate_program = [ reference_program ]( const Program* program ) -> std::string {
 		GT_ASSERT( program != nullptr, "parser returned null program" );
 
 #define VALIDATOR( _type, ... ) [ __VA_ARGS__ ]( const _type* a, const _type* b ) -> std::string
@@ -375,6 +45,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 
 		const auto variable = VALIDATOR( Variable ) {
 			GT_ASSERT( a->name == b->name, "variables names differ ( \"" + a->name + "\" != \"" + b->name + "\" )" );
+			GT_ASSERT( a->hints == b->hints, "variables hints differ ( \"" + std::to_string( a->hints ) + "\" != \"" + std::to_string( b->hints ) + "\" )" );
 			GT_OK();
 		};
 
@@ -495,7 +166,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			GT_OK();
 		};
 
-		VALIDATE( scope, reference_program.body, program->body );
+		VALIDATE( scope, reference_program->body, program->body );
 
 #undef VALIDATOR
 #undef VALIDATE
@@ -504,24 +175,24 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 
 	task->AddTest(
 		"test if GJS parser produces valid output",
-		GT() {
+		GT( validate_program ) {
 			parser::GJS parser(
 				""
 				"// test script\n"
 				"\n"
-				"a = 5;\n"
+				"let a = 5;\n"
 				"a++;\n"
-				"b = a + 2 * 4;\n"
-				"c=(a+2)*4;\n"
+				"let b = a + 2 * 4;\n"
+				"let c=(a+2)*4;\n"
 				"{\n"
 				"	a = 15;\n"
 				"	a += 10;\n"
 				"};\n"
 				"c = 123;\n"
 				"\n"
-				"testmethod1 = (a, b, c) => { return a + b + c; };\n"
+				"let testmethod1 = (a, b, c) => { return a + b + c; };\n"
 				"\n"
-				"testmethod2 = (a, b, c) => {\n"
+				"let testmethod2 = (a, b, c) => {\n"
 				"	/*\n"
 				"		this method is a bit different\n"
 				"	*/\n"
@@ -534,13 +205,13 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 				"	;\n"
 				"};\n"
 				"\n"
-				"testobj1 = {};\n"
-				"testobj2 = {\n"
+				"let testobj1 = {};\n"
+				"let testobj2 = {\n"
 				"	propertyString: 'STRING',\n"
 				"	propertyInt1: 111 + a + b,\n"
 				"	propertyInt2: 222,\n"
 				"};\n"
-				"testobj3 = {\n"
+				"let testobj3 = {\n"
 				"  child1: {\n"
 				"    child2: {\n"
 				"      value: 'CHILD VALUE'\n"

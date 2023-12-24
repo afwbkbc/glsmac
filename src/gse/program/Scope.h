@@ -23,7 +23,7 @@ public:
 		}
 	}
 
-	const std::string ToString( const size_t depth ) const override {
+	const std::string ToString( const size_t depth = 0 ) const override {
 		std::string result = Formatted( "Scope(", depth );
 		for ( const auto& it : body ) {
 			result += it->ToString( depth + 1 );

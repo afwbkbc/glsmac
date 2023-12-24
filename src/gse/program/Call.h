@@ -25,7 +25,7 @@ public:
 		}
 	}
 
-	const std::string ToString( const size_t depth ) const override {
+	const std::string ToString( const size_t depth = 0 ) const override {
 		std::string args = "";
 		for ( const auto& it : arguments ) {
 			args += it->ToString( depth + 2 );

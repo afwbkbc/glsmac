@@ -28,7 +28,7 @@ public:
 		delete body;
 	}
 
-	const std::string ToString( const size_t depth ) const override {
+	const std::string ToString( const size_t depth = 0 ) const override {
 		std::string params = "";
 		for ( const auto& it : parameters ) {
 			params += it->ToString( depth + 2 );

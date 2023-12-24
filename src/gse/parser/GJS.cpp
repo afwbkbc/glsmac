@@ -43,7 +43,7 @@ void GJS::GetElements( source_elements_t& elements ) {
 		}
 		else if ( match_char_any( CHARS_NAMES.c_str(), false ) ) {
 			const auto value = read_while_char_any( CHARS_NAMES_C.c_str() );
-			if ( OPERATOR_KEYWORDS.find( value ) != OPERATOR_KEYWORDS.end() ) {
+			if ( KEYWORDS.find( value ) != KEYWORDS.end() ) {
 				elements.push_back( new Operator( value ) );
 			}
 			else {
@@ -172,6 +172,8 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 	elements_t elements = {};
 	source_elements_t::const_iterator it = begin, it_end, it_next, it_tmp;
 	uint8_t t;
+	bool var_hints_allowed = true;
+	Variable::variable_hints_t next_var_hints = Variable::VH_NONE;
 	while ( it != end ) {
 		switch ( ( *it )->m_type ) {
 			case SourceElement::ET_COMMENT: {
@@ -179,7 +181,7 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 				break;
 			}
 			case SourceElement::ET_IDENTIFIER: {
-
+				var_hints_allowed = false;
 				// check for child dereferences
 				it_tmp = it + 1;
 				while ( it_tmp != end ) {
@@ -198,17 +200,27 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 				}
 				if ( it_tmp == it + 1 || it_tmp == end ) {
 					// no child dereferences, treat as single operand
-					elements.push_back( GetOperand( ( Identifier * )( *it ) ) );
+					elements.push_back( GetOperand( ( Identifier * )( *it ), &next_var_hints ) );
 				}
 				else {
 					// child dereference, group it into expression
+					ASSERT( next_var_hints == Variable::VH_NONE, "variable modifier can't be used with properties" );
 					elements.push_back( GetExpression( it, it_tmp ) );
 					it = it_tmp - 1;
 				}
 				break;
 			}
 			case SourceElement::ET_OPERATOR: {
-				elements.push_back( GetOperator( (Operator*)( *it ) ) );
+				const auto mod_it = MODIFIER_OPERATORS.find( ( (Operator*)( *it ) )->m_op );
+				if ( mod_it != MODIFIER_OPERATORS.end() ) {
+					ASSERT( next_var_hints == Variable::VH_NONE, "multiple variable hints" );
+					ASSERT( var_hints_allowed, "variable hints are not allowed here" );
+					next_var_hints = mod_it->second;
+				}
+				else {
+					elements.push_back( GetOperator( (Operator*)( *it ) ) );
+					var_hints_allowed = false;
+				}
 				break;
 			}
 			case SourceElement::ET_CONTROL: {
@@ -216,6 +228,7 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 				break;
 			}
 			case SourceElement::ET_BLOCK: {
+				var_hints_allowed = false;
 				ASSERT( ( ( Block * )( *it ) )->m_block_side == Block::BS_BEGIN, "unexpected block side: " + std::to_string( ( ( Block * )( *it ) )->m_block_side ) );
 				t = ( ( Block * )( *it ) )->m_block_type;
 				it_end = GetBracketsEnd( it, end );
@@ -342,11 +355,13 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 				ASSERT( false, "unexpected expression element type: " + std::to_string( ( *it )->m_type ) );
 			}
 		}
+		if ( !var_hints_allowed ) {
+			ASSERT( next_var_hints == Variable::VH_NONE, "variable name required after modifier" );
+		}
 		if ( it != end ) {
 			it++;
 		}
 	}
-
 	// split by operator priority
 	const std::function< program::Operand*( const elements_t::const_iterator&, const elements_t::const_iterator& ) > get_operand = [ this, &get_operand, &elements ](
 		const elements_t::const_iterator& begin,
@@ -417,11 +432,16 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 		: new Expression( operand );
 }
 
-const program::Operand* GJS::GetOperand( const Identifier* element ) {
+const program::Operand* GJS::GetOperand( const Identifier* element, program::Variable::variable_hints_t* next_var_hints ) {
 	EL( "GetOperand" )
 	switch ( element->m_identifier_type ) {
 		case IDENTIFIER_VARIABLE: {
-			return new Variable( element->m_name );
+			program::Variable::variable_hints_t hints = Variable::VH_NONE;
+			if ( next_var_hints ) {
+				hints = *next_var_hints;
+				*next_var_hints = Variable::VH_NONE;
+			}
+			return new Variable( element->m_name, hints );
 		}
 		case IDENTIFIER_NUMBER: {
 			try {

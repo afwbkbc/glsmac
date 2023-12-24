@@ -18,7 +18,7 @@ public:
 
 	const gse::Value value;
 
-	const std::string ToString( const size_t depth ) const override {
+	const std::string ToString( const size_t depth = 0 ) const override {
 		return Formatted( "Value( " + value.ToString() + " )", depth );
 	}
 };
