@@ -8,7 +8,7 @@
 
 namespace gse {
 
-Value::Value( const std::shared_ptr <type::Type> data )
+Value::Value( const std::shared_ptr< type::Type > data )
 	: m_data( data ) {
 	// nothing
 }
@@ -25,8 +25,16 @@ const std::string Value::ToString() const {
 	return m_data->ToString();
 }
 
-const bool Value::operator==( const Value& other ) const {
-	return *m_data == *other.m_data;
+#define OP( _op ) \
+const bool Value::operator _op( const Value& other ) const { \
+    return *m_data _op *other.m_data; \
 }
+OP( == )
+OP( != )
+OP( < )
+OP( > )
+OP( <= )
+OP( >= )
+#undef OP
 
 }

@@ -56,4 +56,18 @@ void Context::PopScope() {
 	m_scopes.pop_back();
 }
 
+Context* const Context::CreateFunctionScope(
+	const std::vector< std::string > parameters,
+	const type::Callable::function_arguments_t& arguments
+) const {
+	ASSERT( parameters.size() == arguments.size(), "expected " + std::to_string( parameters.size() ) + " arguments, found " + std::to_string( arguments.size() ) );
+	auto* result = new Context();
+	result->m_scopes[ 0 ]->m_variables = m_scopes[ 0 ]->m_variables; // functions have access to parent variables but nothing else
+	result->PushScope(); // functions can have local variables
+	for ( size_t i = 0 ; i < parameters.size() ; i++ ) { // inject passed arguments
+		result->CreateVariable( parameters[ i ], arguments[ i ] );
+	}
+	return result;
+}
+
 }

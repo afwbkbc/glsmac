@@ -41,11 +41,14 @@ const std::string Type::GetTypeString( const type_t type ) {
 const std::string Type::ToString() const {
 	switch ( type ) {
 		case T_UNDEFINED:
-			return "undefined";
+			return "undefined{}";
 		case T_NULL:
-			return "null";
+			return "null{}";
 		case T_BOOL:
-			return "bool{" + std::to_string( ( (Bool*)this )->value ) + "}";
+			return "bool{" + (std::string)( ( (Bool*)this )->value
+				? "true"
+				: "false"
+			) + "}";
 		case T_INT:
 			return "int{" + std::to_string( ( (Int*)this )->value ) + "}";
 		case T_FLOAT:
@@ -70,7 +73,7 @@ const std::string Type::ToString() const {
 			return str;
 		}
 		case T_CALLABLE:
-			return "callable"; // TODO
+			return "callable{}"; // TODO
 		case T_OBJECTREF: {
 			const auto* that = (ObjectRef*)this;
 			return "objectref{" + std::to_string( (long)that->object ) + "," + that->key + "}";
@@ -80,9 +83,64 @@ const std::string Type::ToString() const {
 	}
 }
 
+#define DEFAULT_COMPARE( _op ) \
+        case T_BOOL: \
+            return ( (Bool*)this )->value _op ( (Bool*)&other )->value; \
+        case T_INT: \
+            return ( (Int*)this )->value _op ( (Int*)&other )->value; \
+        case T_FLOAT: \
+            return ( (Float*)this )->value _op ( (Float*)&other )->value; \
+        case T_STRING: \
+            return ( (String*)this )->value _op ( (String*)&other )->value; \
+        default: \
+            ASSERT_NOLOG( false, "operator " #_op " not implemented for type " + std::to_string( type ) );
+#define DEFAULT_COMPARE_NE( _op ) \
+    if ( type != other.type ) { \
+        ASSERT_NOLOG( false, "can't compare type " + std::to_string( type ) + " to type " + std::to_string( other.type ) + " using operator " #_op ); \
+    } \
+    switch ( type ) { \
+        case T_UNDEFINED: \
+            return false; \
+        case T_NULL: \
+            return false; \
+        DEFAULT_COMPARE( _op ) \
+    }
+
 const bool Type::operator==( const Type& other ) const {
-	return ToString() == other.ToString(); // TODO: better checks
+	if ( type != other.type ) {
+		return false;
+	}
+	switch ( type ) {
+		case T_UNDEFINED:
+			return true;
+		case T_NULL:
+			return true;
+		DEFAULT_COMPARE( == )
+	}
 }
+
+const bool Type::operator!=( const Type& other ) const {
+	return !operator==( other );
+}
+
+const bool Type::operator<( const Type& other ) const {
+	DEFAULT_COMPARE_NE( < )
+}
+
+const bool Type::operator>( const Type& other ) const {
+	DEFAULT_COMPARE_NE( > )
+}
+
+const bool Type::operator<=( const Type& other ) const {
+	DEFAULT_COMPARE_NE( <= )
+}
+
+const bool Type::operator>=( const Type& other ) const {
+	DEFAULT_COMPARE_NE( >= )
+}
+
+#undef DEFAULT_COMPARE
+#undef DEFAULT_COMPARE_NE
 
 }
 }

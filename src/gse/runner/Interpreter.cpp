@@ -22,28 +22,46 @@ using namespace type;
 
 namespace runner {
 
-void Interpreter::Execute( Context* ctx, const program::Program* program ) const {
-	ExecuteScope( ctx, program->body );
+const gse::Value Interpreter::Execute( Context* ctx, const program::Program* program ) const {
+	return ExecuteScope( ctx, program->body );
 }
 
-void Interpreter::ExecuteScope( Context* ctx, const program::Scope* scope ) const {
+const gse::Value Interpreter::ExecuteScope( Context* ctx, const program::Scope* scope ) const {
+	gse::Value result = VALUE( Undefined );
 	for ( const auto& it : scope->body ) {
-		ExecuteStatement( ctx, it );
+		result = ExecuteStatement( ctx, it );
+		if ( result.Get()->type != Type::T_UNDEFINED ) {
+			// got return statement
+			break;
+		}
 	}
+	return result;
 }
 
-void Interpreter::ExecuteStatement( Context* ctx, const program::Statement* statement ) const {
-	EvaluateExpression( ctx, statement->body );
+const gse::Value Interpreter::ExecuteStatement( Context* ctx, const program::Statement* statement ) const {
+	bool returnflag = false;
+	const auto result = EvaluateExpression( ctx, statement->body, &returnflag );
+	if ( returnflag ) {
+		return result;
+	}
+	return VALUE( Undefined );
 }
 
-const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::Expression* expression ) const {
+const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::Expression* expression, bool* returnflag ) const {
 	if ( !expression->op ) {
 		ASSERT( !expression->b, "expression has second operand but no operator" );
 		ASSERT( expression->a, "expression is empty" );
 		return EvaluateOperand( ctx, expression->a );
 	}
 	switch ( expression->op->op ) {
-		//OT_RETURN,
+		case Operator::OT_RETURN: {
+			ASSERT( returnflag, "return keyword not allowed here" );
+			ASSERT( !*returnflag, "already returning" );
+			ASSERT( !expression->a, "unexpected left operand before return" );
+			ASSERT( expression->b, "return value or expression expected" );
+			*returnflag = true;
+			return Deref( EvaluateOperand( ctx, expression->b ) );
+		}
 		case Operator::OT_ASSIGN: {
 			ASSERT( expression->a, "missing assignment target" );
 			const auto result = EvaluateOperand( ctx, expression->b );
@@ -72,20 +90,32 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 			}
 			return result;
 		}
-			/*OT_NOT,*/
-		case Operator::OT_EQ: {
-			return VALUE( Bool,
-				Deref( EvaluateOperand( ctx, expression->a ) ) ==
-					Deref( EvaluateOperand( ctx, expression->b ) )
-			);
+		case Operator::OT_NOT: {
+			ASSERT( !expression->a, "unary not may not have left operand" );
+			return VALUE( Bool, !EvaluateBool( ctx, expression->b ) );
 		}
-			/*OT_NE,
-			OT_LT,
-			OT_LTE,
-			OT_GT,
-			OT_GTE,
-			OT_AND,
-			OT_OR,*/
+#define CMP_OP( _op ) { \
+        return VALUE( Bool, \
+            Deref( EvaluateOperand( ctx, expression->a ) ) _op \
+                Deref( EvaluateOperand( ctx, expression->b ) ) \
+            ); \
+}
+		case Operator::OT_EQ: CMP_OP( == )
+		case Operator::OT_NE: CMP_OP( != )
+		case Operator::OT_LT: CMP_OP( < )
+		case Operator::OT_LTE: CMP_OP( <= )
+		case Operator::OT_GT: CMP_OP( > )
+		case Operator::OT_GTE: CMP_OP( >= )
+#undef CMP_OP
+#define CMP_BOOL( _op ) { \
+        return VALUE( Bool, \
+            EvaluateBool( ctx, expression->a ) _op \
+                EvaluateBool( ctx, expression->b ) \
+            ); \
+}
+		case Operator::OT_AND: CMP_BOOL( && )
+		case Operator::OT_OR: CMP_BOOL( || )
+#undef CMP_BOOL
 #define MATH_OP_BEGIN( _op ) \
             const auto av = Deref( EvaluateOperand( ctx, expression->a ) ); \
             const auto bv = Deref( EvaluateOperand( ctx, expression->b ) ); \
@@ -266,7 +296,12 @@ const gse::Value Interpreter::EvaluateOperand( Context* ctx, const program::Oper
 		}
 		case Operand::OT_FUNCTION: {
 			const auto* func = (program::Function*)operand;
-			return VALUE( Function, new program::Program( func->body ) );
+			std::vector< std::string > parameters = {};
+			for ( const auto& it : func->parameters ) {
+				ASSERT( it->hints == Variable::VH_NONE, "function parameters can't have modifiers" );
+				parameters.push_back( it->name );
+			}
+			return VALUE( Function, this, ctx, parameters, new program::Program( func->body ) );
 		}
 		case Operand::OT_CALL: {
 			const auto* call = (program::Call*)operand;
@@ -290,9 +325,15 @@ const gse::Value Interpreter::EvaluateOperand( Context* ctx, const program::Oper
 }
 
 const std::string& Interpreter::EvaluateString( Context* ctx, const program::Operand* operand ) const {
-	const auto result = EvaluateOperand( ctx, operand );
+	const auto result = Deref( EvaluateOperand( ctx, operand ) );
 	ASSERT( result.Get()->type == Type::T_STRING, "expected string, found " + result.ToString() );
 	return ( (String*)result.Get() )->value;
+}
+
+const bool Interpreter::EvaluateBool( Context* ctx, const program::Operand* operand ) const {
+	const auto result = Deref( EvaluateOperand( ctx, operand ) );
+	ASSERT( result.Get()->type == Type::T_BOOL, "expected bool, found " + result.ToString() );
+	return ( (Bool*)result.Get() )->value;
 }
 
 const program::Variable* Interpreter::EvaluateVariable( Context* ctx, const program::Operand* operand ) const {
@@ -323,13 +364,24 @@ void Interpreter::WriteByRef( const gse::Value& ref, const gse::Value& value ) c
 	r->object->Set( r->key, value );
 }
 
-Interpreter::Function::Function( const program::Program* program )
-	: program( program ) {
+Interpreter::Function::Function(
+	const Interpreter* runner,
+	Context const* parent_context,
+	const std::vector< std::string >& parameters,
+	const program::Program* const program
+)
+	: runner( runner )
+	, parent_context( parent_context )
+	, parameters( parameters )
+	, program( program ) {
 	// nothing
 }
 
-gse::Value Interpreter::Function::Run( GSE* gse, const Callable::function_arguments_t arguments ) {
-	ASSERT_NOLOG( false, "functions not implemented" );
+gse::Value Interpreter::Function::Run( GSE* gse, const Callable::function_arguments_t& arguments ) {
+	auto* ctx = parent_context->CreateFunctionScope( parameters, arguments );
+	const auto result = runner->Execute( ctx, program );
+	delete ctx;
+	return result;
 }
 
 }

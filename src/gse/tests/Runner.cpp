@@ -21,43 +21,57 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 	const Program* test_program = GetTestProgram();
 
 	// to test execution output
-	class ConsoleLog : public type::Callable {
+	class ConsoleLogMock : public type::Callable {
 	public:
-		Value Run( GSE* gse, const Callable::function_arguments_t arguments ) override {
+		Value Run( GSE* gse, const Callable::function_arguments_t& arguments ) override {
+			std::string line = "";
 			for ( const auto& it : arguments ) {
+				if ( !line.empty() ) {
+					line += " ";
+				}
 				const auto* arg = it.Get();
 				switch ( arg->type ) {
 					case Type::T_INT: {
-						output += std::to_string( ( (type::Int*)arg )->value );
+						line += std::to_string( ( (type::Int*)arg )->value );
 						break;
 					}
 					case Type::T_FLOAT: {
-						output += std::to_string( ( (type::Float*)arg )->value );
+						line += std::to_string( ( (type::Float*)arg )->value );
 						break;
 					}
 					case Type::T_STRING: {
-						output += ( (type::String*)arg )->value;
+						line += ( (type::String*)arg )->value;
 						break;
 					}
 					default: {
-						output += arg->ToString();
+						line += arg->ToString();
 					}
 				}
-				output += "\n";
 			}
+			output += line + "\n";
 			return VALUE( type::Undefined );
 		}
 		std::string output = "";
 	};
 
-	const std::string expected_output = "CHILD VALUE\n"
-										"bool{0}\n"
-										"object{propertyInt=int{372}}\n"
-										"object{propertyInt1=int{150},propertyInt2=int{222},propertyString=string{STRING}}\n"
+	const std::string expected_output = "null{}\n"
+										"bool{true}\n"
+										"bool{true} bool{false}\n"
+										"bool{true} bool{true} bool{true} bool{false}\n"
+										"bool{true} bool{false}\n"
+										"bool{false} bool{true} bool{true} bool{true}\n"
+										"bool{false} bool{true} bool{false} bool{true}\n"
+										"bool{true} bool{false} bool{true} bool{true}\n"
+										"bool{true}\n"
+										"45 -61\n"
+										"52 10\n"
+										"CHILD VALUE\n"
+										"bool{true}\n"
+										"object{propertyInt=int{372}} object{propertyInt1=int{150},propertyInt2=int{222},propertyString=string{STRING}}\n"
 										"bye!\n";
 
 #define VALIDATE() { \
-    const std::string actual_output = ( (ConsoleLog*)console_log.Get() )->output; \
+    const std::string actual_output = ( (ConsoleLogMock*)console_log_mock.Get() )->output; \
     GT_ASSERT( actual_output == expected_output ); \
 }
 	task->AddTest(
@@ -69,11 +83,11 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 			Context context;
 
 			// add some mocks
-			const auto console_log = VALUE( ConsoleLog );
+			const auto console_log_mock = VALUE( ConsoleLogMock );
 			type::Object::properties_t console_properties = {
 				{
 					"log",
-					console_log
+					console_log_mock
 				}
 			};
 			const auto console = VALUE( type::Object, console_properties );

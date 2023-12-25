@@ -185,7 +185,6 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 				// check for child dereferences
 				it_tmp = it + 1;
 				while ( it_tmp != end ) {
-					LogElement( "  ", *it_tmp );
 					if (
 						( *it_tmp )->m_type != SourceElement::ET_OPERATOR ||
 							( (Operator*)( *it_tmp ) )->m_op != "."
@@ -213,12 +212,26 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 			case SourceElement::ET_OPERATOR: {
 				const auto mod_it = MODIFIER_OPERATORS.find( ( (Operator*)( *it ) )->m_op );
 				if ( mod_it != MODIFIER_OPERATORS.end() ) {
+					ASSERT(
+						it + 1 != end &&
+							( *( it + 1 ) )->m_type == SourceElement::ET_IDENTIFIER &&
+							( ( Identifier * ) * ( it + 1 ) )->m_identifier_type == IDENTIFIER_VARIABLE &&
+							it + 2 != end &&
+							( *( it + 2 ) )->m_type == SourceElement::ET_OPERATOR &&
+							( (Operator*)*( it + 2 ) )->m_op == "=" &&
+							it + 3 != end, "expected variable and assignment operator after assignment modifier" );
 					ASSERT( next_var_hints == Variable::VH_NONE, "multiple variable hints" );
 					ASSERT( var_hints_allowed, "variable hints are not allowed here" );
 					next_var_hints = mod_it->second;
 				}
 				else {
-					elements.push_back( GetOperator( (Operator*)( *it ) ) );
+					const auto predef_it = PREDEF_OPERATORS.find( ( (Operator*)( *it ) )->m_op );
+					if ( predef_it != PREDEF_OPERATORS.end() ) {
+						elements.push_back( new program::Value( predef_it->second ) );
+					}
+					else {
+						elements.push_back( GetOperator( (Operator*)( *it ) ) );
+					}
 					var_hints_allowed = false;
 				}
 				break;
@@ -320,13 +333,22 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 							while ( it_next != it_end ) {
 								it_tmp = it_next;
 								while ( it_tmp != it_end ) {
+									if ( ( *it_tmp )->m_type == SourceElement::ET_BLOCK ) {
+										it_tmp = GetBracketsEnd( it_tmp, it_end );
+										if ( it_tmp != it_end ) {
+											it_tmp++;
+										}
+									}
 									if (
 										( *it_tmp )->m_type == SourceElement::ET_CONTROL &&
 											( ( Control * )( *it_tmp ) )->m_control_type == Control::CT_DATA_DELIMITER
 										) {
+
 										break;
 									}
-									it_tmp++;
+									if ( it_tmp != it_end ) {
+										it_tmp++;
+									}
 								}
 								arguments.push_back( GetExpression( it_next, it_tmp ) );
 								it_next = it_tmp;
@@ -391,8 +413,8 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 		}
 		ASSERT( split_it != end, "could not find operator to split at" );
 
-		bool has_a = split_it > begin && ( *( split_it - 1 ) )->m_element_type == Element::ET_OPERAND;
-		bool has_b = split_it + 1 != end && ( *( split_it + 1 ) )->m_element_type == Element::ET_OPERAND;
+		bool has_a = split_it > begin;
+		bool has_b = split_it + 1 != end;
 
 		switch ( link ) {
 			case OL_LEFT: {

@@ -10,7 +10,7 @@ namespace runner {
 
 CLASS( Runner, base::Base )
 
-	virtual void Execute( Context* ctx, const program::Program* program ) const = 0;
+	virtual const Value Execute( Context* ctx, const program::Program* program ) const = 0;
 
 };
 

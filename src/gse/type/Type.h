@@ -22,7 +22,15 @@ public:
 
 	static const std::string GetTypeString( const type_t type );
 	const std::string ToString() const;
-	const bool operator==( const Type& other ) const;
+	
+#define OP( _op ) const bool operator _op( const Type& other ) const;
+	OP( == )
+	OP( != )
+	OP( < )
+	OP( > )
+	OP( <= )
+	OP( >= )
+#undef OP
 
 	const type_t type;
 

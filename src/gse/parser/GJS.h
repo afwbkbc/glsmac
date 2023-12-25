@@ -8,6 +8,10 @@
 
 #include "gse/program/Variable.h"
 
+#include "gse/Value.h"
+#include "gse/type/Bool.h"
+#include "gse/type/Null.h"
+
 namespace gse {
 namespace parser {
 
@@ -31,7 +35,7 @@ private:
 	const std::string CHARS_WHITESPACE = CHARS_EOLN + "	 ";
 	const std::string CHARS_NAMES = CHARS_LETTERS + "_";
 	const std::string CHARS_NAMES_C = CHARS_NAMES + CHARS_NUMBERS;
-	const std::string CHARS_OPERATORS = "=+-:<>*/.";
+	const std::string CHARS_OPERATORS = "=+-:<>*/.!&|";
 	const std::string CHARS_OPERATORS_C = CHARS_OPERATORS + ".";
 	const std::string CHARS_QUOTES = "'\"";
 	const std::string CHARS_DELIMITERS = ";,{}()[]";
@@ -51,6 +55,9 @@ private:
 	const std::unordered_set< std::string > KEYWORDS = {
 		"return",
 		"let",
+		"true",
+		"false",
+		"null",
 	};
 
 	const std::unordered_map< std::string, program::Variable::variable_hints_t > MODIFIER_OPERATORS = {
@@ -59,6 +66,21 @@ private:
 				"let",
 				program::Variable::VH_CREATE,
 			}
+		}
+	};
+
+	const std::unordered_map< std::string, gse::Value > PREDEF_OPERATORS = {
+		{
+			"true",
+			VALUE( type::Bool, true ),
+		},
+		{
+			"false",
+			VALUE( type::Bool, false ),
+		},
+		{
+			"null",
+			VALUE( type::Null ),
 		}
 	};
 

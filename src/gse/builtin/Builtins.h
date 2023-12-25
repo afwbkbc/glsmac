@@ -6,7 +6,7 @@ namespace gse {
 namespace builtin {
 
 class Builtins : public callable::Native {
-	Value Run( GSE* gse, const Callable::function_arguments_t arguments ) override;
+	Value Run( GSE* gse, const Callable::function_arguments_t& arguments ) override;
 };
 
 }

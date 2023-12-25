@@ -13,7 +13,7 @@ namespace tests {
 void AddGSETests( task::gsetests::GSETests* task ) {
 
 	class Sum : public type::Callable {
-		Value Run( GSE* gse, const Callable::function_arguments_t arguments ) override {
+		Value Run( GSE* gse, const Callable::function_arguments_t& arguments ) override {
 			int32_t result = 0;
 			for ( const auto& it : arguments ) {
 				const auto arg = it.Get();
@@ -38,7 +38,7 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 			static std::string modules_run_order = "";
 
 			class TestModuleY : public type::Callable {
-				Value Run( GSE* gse, const Callable::function_arguments_t arguments ) override {
+				Value Run( GSE* gse, const Callable::function_arguments_t& arguments ) override {
 					modules_run_order += 'Y';
 					return VALUE( type::Null );
 				}
@@ -47,7 +47,7 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 			gse.AddModule( "test_module_y", test_module_y );
 
 			class TestModuleX : public type::Callable {
-				Value Run( GSE* gse, const Callable::function_arguments_t arguments ) override {
+				Value Run( GSE* gse, const Callable::function_arguments_t& arguments ) override {
 					modules_run_order += 'X';
 					return VALUE( type::Null );
 				}
@@ -67,7 +67,7 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 		"test if variables are written and read correctly",
 		GT() {
 			class SetVariables : public type::Callable {
-				Value Run( GSE* gse, const Callable::function_arguments_t arguments ) override {
+				Value Run( GSE* gse, const Callable::function_arguments_t& arguments ) override {
 					gse->SetGlobal( "testvar_null", VALUE( type::Null ) );
 					gse->SetGlobal( "testvar_bool_first", VALUE( type::Bool, true ) );
 					gse->SetGlobal( "testvar_bool_second", VALUE( type::Bool, false ) );
@@ -86,7 +86,7 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 			static std::string errmsg = "";
 			class CheckVariables : public type::Callable {
 			public:
-				Value Run( GSE* gse, const Callable::function_arguments_t arguments ) override {
+				Value Run( GSE* gse, const Callable::function_arguments_t& arguments ) override {
 					const auto validate = [ gse ]() -> std::string {
 						const type::Type* t;
 
@@ -136,13 +136,13 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 			class SetMethods : public type::Callable {
 
 				class TestMethod : public type::Callable {
-					Value Run( GSE* gse, const Callable::function_arguments_t arguments ) override {
+					Value Run( GSE* gse, const Callable::function_arguments_t& arguments ) override {
 						wasTestMethodCalled = true;
 						return VALUE( type::Null );
 					}
 				};
 
-				Value Run( GSE* gse, const Callable::function_arguments_t arguments ) override {
+				Value Run( GSE* gse, const Callable::function_arguments_t& arguments ) override {
 					gse->SetGlobal( "test_method", VALUE( TestMethod ) );
 					gse->SetGlobal( "sum", VALUE( Sum ) );
 					return VALUE( type::Null );
@@ -205,7 +205,7 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 		"test if variables are assigned and reassigned correctly",
 		GT() {
 			class SetVariables : public type::Callable {
-				Value Run( GSE* gse, const Callable::function_arguments_t arguments ) override {
+				Value Run( GSE* gse, const Callable::function_arguments_t& arguments ) override {
 
 					auto val1 = VALUE( type::Int, 1 );
 					auto val2 = VALUE( type::Int, VALUE_GET( type::Int, val1 ) + 1 );

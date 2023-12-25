@@ -5,7 +5,7 @@
 namespace gse {
 namespace builtin {
 
-Value Builtins::Run( GSE* gse, const Callable::function_arguments_t arguments ) {
+Value Builtins::Run( GSE* gse, const Callable::function_arguments_t& arguments ) {
 
 	return VALUE( type::Null );
 }

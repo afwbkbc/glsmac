@@ -21,7 +21,7 @@ public:
 
 	virtual ~Callable() {}
 
-	virtual Value Run( GSE* gse, const Callable::function_arguments_t arguments ) = 0;
+	virtual Value Run( GSE* gse, const Callable::function_arguments_t& arguments ) = 0;
 
 };
 

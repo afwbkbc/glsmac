@@ -25,7 +25,15 @@ public:
 
 	const type::Type* Get() const;
 	const std::string ToString() const;
-	const bool operator==( const Value& other ) const;
+
+#define OP( _op ) const bool operator _op( const Value& other ) const;
+	OP( == )
+	OP( != )
+	OP( < )
+	OP( > )
+	OP( <= )
+	OP( >= )
+#undef OP
 
 private:
 	std::shared_ptr< type::Type > m_data;
