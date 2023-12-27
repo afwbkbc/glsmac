@@ -35,6 +35,9 @@ public:
 		OT_DIV_BY,
 		OT_MOD_BY,
 		OT_CHILD,
+		OT_AT,
+		OT_APPEND,
+		OT_RANGE,
 	};
 
 	Operator( const operator_type_t op )
@@ -150,6 +153,18 @@ private:
 		{
 			OT_CHILD,
 			"CHILD"
+		},
+		{
+			OT_AT,
+			"AT"
+		},
+		{
+			OT_APPEND,
+			"APPEND"
+		},
+		{
+			OT_RANGE,
+			"RANGE"
 		},
 	};
 };

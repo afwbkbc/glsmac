@@ -15,14 +15,18 @@ public:
 		T_INT,
 		T_FLOAT,
 		T_STRING,
+		T_ARRAY,
 		T_OBJECT,
 		T_CALLABLE,
+		T_ARRAYREF,
+		T_ARRAYRANGEREF,
 		T_OBJECTREF,
+		T_RANGE,
 	};
 
 	static const std::string GetTypeString( const type_t type );
 	const std::string ToString() const;
-	
+
 #define OP( _op ) const bool operator _op( const Type& other ) const;
 	OP( == )
 	OP( != )

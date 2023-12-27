@@ -9,6 +9,7 @@
 
 #include "gse/program/Variable.h"
 #include "gse/program/Value.h"
+#include "gse/program/Array.h"
 #include "gse/program/Object.h"
 #include "gse/program/Function.h"
 #include "gse/program/Call.h"
@@ -165,7 +166,7 @@ const program::Statement* GJS::GetStatement( const source_elements_t::const_iter
 	return new program::Statement( GetExpression( begin, end ) );
 }
 
-const program::Expression* GJS::GetExpression( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, const bool is_inside_object ) {
+const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, const bool is_inside_object ) {
 	ELS( "GetExpression" )
 	// resolve elements, unpack scopes
 	typedef std::vector< const Element* > elements_t;
@@ -204,7 +205,7 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 				else {
 					// child dereference, group it into expression
 					ASSERT( next_var_hints == Variable::VH_NONE, "variable modifier can't be used with properties" );
-					elements.push_back( GetExpression( it, it_tmp ) );
+					elements.push_back( GetExpressionOrOperand( it, it_tmp ) );
 					it = it_tmp - 1;
 				}
 				break;
@@ -366,6 +367,41 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 						}
 						break;
 					}
+					case BLOCK_SQUARE_BRACKETS: {
+						// either array operator or array definition
+						ASSERT( it != begin, "array syntax unexpected here" );
+						switch ( (*( it - 1 ))->m_type ) {
+							case SourceElement::ET_IDENTIFIER: {
+								// array operator
+								if (
+									it_end != end &&
+									it + 1 == it_end &&
+									it_end + 1 != end &&
+									(*(it_end + 1))->m_type == SourceElement::ET_OPERATOR &&
+									((Operator*)(*(it_end + 1)))->m_op == "="
+								) {
+									// 'append' operator ( []= )
+									elements.push_back( new program::Operator( program::Operator::OT_APPEND ) );
+									it_end++;
+								}
+								else {
+									// 'at' operator ( [i] )
+									elements.push_back( new program::Operator( program::Operator::OT_AT ) );
+									elements.push_back( GetExpressionOrOperand( it + 1, it_end ) );
+								}
+								break;
+							}
+							case SourceElement::ET_OPERATOR: {
+								// array definition
+								elements.push_back( GetArray( it + 1, it_end ) );
+								break;
+							}
+							default: {
+								ASSERT( false, "unexpected element type" );
+							}
+						}
+						break;
+					}
 					default: {
 						ASSERT( false, "unexpected block type: " + std::to_string( t ) );
 					}
@@ -431,24 +467,25 @@ const program::Expression* GJS::GetExpression( const source_elements_t::const_it
 				return new program::Expression( get_operand( begin, split_it ), (program::Operator*)*split_it, get_operand( split_it + 1, end ) );
 			}
 			case OL_ANY: {
-				ASSERT( has_a || has_b, "both left and right operands are missing" );
 				ASSERT( !has_a || !has_b, "both left and right operands are present" );
-				if ( has_a && !has_b ) {
-					return new program::Expression( get_operand( begin, split_it ), (program::Operator*)*split_it );
-				}
-				else if ( !has_a && has_b ) {
-					return new program::Expression( nullptr, (program::Operator*)*split_it, get_operand( split_it + 1, end ) );
-				}
-				else {
-					ASSERT( false, "?" );
-				}
+			case OL_ANY_OR_BOTH:
+				ASSERT( has_a || has_b, "both left and right operands are missing" );
+				return new program::Expression(
+					has_a ? get_operand( begin, split_it ) : nullptr,
+					(program::Operator*)*split_it,
+					has_b ? get_operand( split_it + 1, end ) : nullptr
+				);
 			}
 			default:
 				ASSERT( false, "unexpected operator link type: " + std::to_string( link ) );
 		}
 	};
 
-	const auto* operand = get_operand( elements.begin(), elements.end() );
+	return get_operand( elements.begin(), elements.end() );
+}
+
+const program::Expression* GJS::GetExpression( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, const bool is_inside_object ) {
+	const auto* operand = GetExpressionOrOperand( begin, end, is_inside_object );
 	return operand->type == program::Operand::OT_EXPRESSION
 		? (Expression*)operand
 		: new Expression( operand );
@@ -495,6 +532,33 @@ const program::Operator* GJS::GetOperator( const Operator* element ) {
 	const auto it = OPERATOR_NAMES.find( element->m_op );
 	ASSERT( it != OPERATOR_NAMES.end(), "operator name not found: " + element->m_op );
 	return new program::Operator( it->second );
+}
+
+const program::Array* GJS::GetArray( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
+	ELS( "GetArray" );
+	std::vector< const Expression* > elements = {};
+	Identifier* identifier;
+	source_elements_t::const_iterator it = begin, it_end;
+	while ( it != end ) {
+		// find element expression end
+		for ( it_end = it ; it_end != end ; it_end++ ) {
+			if ( ( *it_end )->m_type == SourceElement::ET_BLOCK ) {
+				it_end = GetBracketsEnd( it_end, end );
+			}
+			else if (
+				( *it_end )->m_type == SourceElement::ET_CONTROL ) {
+				ASSERT( ( ( Control * ) * it_end )->m_control_type == Control::CT_DATA_DELIMITER, "unexpected control symbol" );
+				break;
+			}
+		}
+		ASSERT( it_end != it, "expected element expression" );
+		elements.push_back( GetExpression( it, it_end, true ) );
+		it = it_end;
+		if ( it != end ) {
+			it++;
+		}
+	}
+	return new program::Array( elements );
 }
 
 const program::Object* GJS::GetObject( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {

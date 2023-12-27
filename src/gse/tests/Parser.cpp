@@ -9,6 +9,7 @@
 #include "gse/program/Operator.h"
 #include "gse/program/Value.h"
 #include "gse/program/Variable.h"
+#include "gse/program/Array.h"
 #include "gse/program/Object.h"
 #include "gse/program/Function.h"
 #include "gse/program/Call.h"
@@ -49,7 +50,17 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			GT_OK();
 		};
 
-		const auto object = VALIDATOR( Object, &errmsg, &operand ) {
+		const auto array = VALIDATOR( Array, &errmsg, &expression ) {
+			GT_ASSERT( a->elements.size() == b->elements.size(), "arrays have different sizes ( " + std::to_string( a->elements.size() ) + " != " + std::to_string( b->elements.size() ) + " )" );
+
+			for ( size_t i = 0 ; i < a->elements.size() ; i++ ) {
+				VALIDATE( expression, a->elements[ i ], b->elements[ i ] );
+			}
+
+			GT_OK();
+		};
+
+		const auto object = VALIDATOR( Object, &errmsg, &expression ) {
 			for ( const auto& it : a->properties ) {
 				GT_ASSERT( b->properties.find( it.first ) != b->properties.end(), "property \"" + it.first + "\" exists in A but not B" );
 			}
@@ -57,7 +68,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 				GT_ASSERT( a->properties.find( it.first ) != a->properties.end(), "property \"" + it.first + "\" exists in B but not A" );
 			}
 			for ( const auto& it : a->properties ) {
-				VALIDATE( operand, it.second, b->properties.at( it.first ) );
+				VALIDATE( expression, it.second, b->properties.at( it.first ) );
 			}
 			GT_OK();
 		};
@@ -81,6 +92,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			&errmsg,
 			&value,
 			&variable,
+			&array,
 			&object,
 			&scope,
 			&expression,
@@ -89,13 +101,13 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 		) {
 			GT_ASSERT( ( a == nullptr ) == ( b == nullptr ), "operands have different null states ( " + ( a == nullptr
 				? "null"
-				: "not null"
+				: a->ToString()
 			) + " != " + ( b == nullptr
 				? "null"
-				: "not null"
+				: b->ToString()
 			) + " )" );
 			if ( a && b ) {
-				GT_ASSERT( a->type == b->type, "operands have different types ( " + std::to_string( a->type ) + " != " + std::to_string( b->type ) + " )" );
+				GT_ASSERT( a->type == b->type, "operands have different types ( " + a->ToString() + " != " + b->ToString() + " )" );
 				switch ( a->type ) {
 					case Operand::OT_NOTHING: {
 						break;
@@ -106,6 +118,10 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 					}
 					case Operand::OT_VARIABLE: {
 						VALIDATE( variable, (Variable*)a, (Variable*)b );
+						break;
+					}
+					case Operand::OT_ARRAY: {
+						VALIDATE( array, (Array*)a, (Array*)b );
 						break;
 					}
 					case Operand::OT_OBJECT: {
@@ -138,10 +154,10 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 		const auto operatr = VALIDATOR( Operator ) {
 			GT_ASSERT( ( a == nullptr ) == ( b == nullptr ), "operators have different null states ( " + ( a == nullptr
 				? "null"
-				: "not null"
+				: a->ToString()
 			) + " != " + ( b == nullptr
 				? "null"
-				: "not null"
+				: b->ToString()
 			) + " )" );
 			if ( a && b ) {
 				GT_ASSERT( a->op == b->op, "operators are different ( " + std::to_string( a->op ) + " != " + std::to_string( b->op ) + " )" );
@@ -206,6 +222,17 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 				"	;\n"
 				"};\n"
 				"\n"
+				"let testarr1 = [];\n"
+				"let testarr2 = [ 3, 'TEST', {\n"
+				"  key1: 'value1',\n"
+				"  key2: 'value2',\n"
+				"} ];\n"
+				"testarr1 []= 'first';\n"
+				"testarr1 []= 'second';\n"
+				"testarr1 []= 1 + 2 + 3;\n"
+				"testarr1 += testarr2;\n"
+				"testarr1 []= testarr2;\n"
+				"\n"
 				"let testobj1 = {};\n"
 				"let testobj2 = {\n"
 				"	propertyString: 'STRING',\n"
@@ -237,12 +264,17 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 				"console.log(testmethod1(11, b, 20), testmethod2(a, b, c));\n"
 				"let testmethod = testmethod1;\n"
 				"console.log( testmethod( 1, testmethod( 2, testmethod( 3, 3, 3 ), testmethod( 4, 4, 4 ) ), testmethod( 5, 5, testmethod( 6, 6, 6 )) ), 10 );\n"
+				"console.log( testarr1 ); console.log( testarr2 );\n"
+				"console.log( testarr1[0] ); console.log( testarr1[1] ); console.log( testarr1[0:1] );\n"
+				"console.log( testarr1[5:] ); console.log( testarr1[:3] );\n"
+				"console.log( testarr1[4:5] + testarr1[2:3] );\n"
 				"console.log(testobj3.child1.child2.value);\n"
 				"console.log(testobj1.propertyInt == 272 + c); console.log(testobj1, testobj2);\n"
 				"\n"
 				"console.log('bye!');\n"
 			);
 			const auto* program = parser.Parse();
+			//GT_FAIL( program->ToString() );
 			const auto result = validate_program( program );
 			if ( program ) {
 				DELETE( program );

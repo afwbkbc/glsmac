@@ -1,7 +1,5 @@
 #include "Object.h"
-
 #include "Undefined.h"
-
 #include "ObjectRef.h"
 
 #include "String.h"
@@ -22,8 +20,8 @@ const Value& Object::Get( const key_t& key ) const {
 		: it->second;
 }
 
-void Object::Set( const key_t& key, const Value& value ) {
-	this->value.insert_or_assign( key, value );
+void Object::Set( const key_t& key, const Value& new_value ) {
+	value.insert_or_assign( key, new_value );
 }
 
 const Value Object::GetRef( const key_t& key ) {

@@ -40,13 +40,15 @@ private:
 	const Value ExecuteStatement( Context* ctx, const program::Statement* statement ) const;
 	const Value EvaluateExpression( Context* ctx, const program::Expression* expression, bool* returnflag = nullptr ) const;
 	const Value EvaluateOperand( Context* ctx, const program::Operand* operand ) const;
-	const std::string& EvaluateString( Context* ctx, const program::Operand* operand ) const;
+	const std::string EvaluateString( Context* ctx, const program::Operand* operand ) const;
+	const Value EvaluateRange( Context* ctx, const program::Operand* operand, const bool only_index = false ) const;
 	const bool EvaluateBool( Context* ctx, const program::Operand* operand ) const;
 	const program::Variable* EvaluateVariable( Context* ctx, const program::Operand* operand ) const;
 	const std::string EvaluateVarName( Context* ctx, const program::Operand* operand ) const;
 
-	const Value& Deref( const Value& value ) const;
+	const Value Deref( const Value& value ) const;
 	void WriteByRef( const gse::Value& ref, const gse::Value& value ) const;
+	const size_t GetIndex( const gse::Value& value ) const;
 
 };
 

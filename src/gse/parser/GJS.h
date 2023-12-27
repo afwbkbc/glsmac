@@ -7,6 +7,7 @@
 #include "Parser.h"
 
 #include "gse/program/Variable.h"
+#include "gse/program/Array.h"
 
 #include "gse/Value.h"
 #include "gse/type/Bool.h"
@@ -27,15 +28,17 @@ private:
 
 	const program::Scope* GetScope( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 	const program::Statement* GetStatement( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
+	const program::Operand* GetExpressionOrOperand( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, const bool is_inside_object = false );
 	const program::Expression* GetExpression( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, const bool is_inside_object = false );
 	const program::Operand* GetOperand( const Identifier* element, program::Variable::variable_hints_t* next_var_hints = nullptr );
 	const program::Operator* GetOperator( const Operator* element );
+	const program::Array* GetArray( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 	const program::Object* GetObject( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 
 	const std::string CHARS_WHITESPACE = CHARS_EOLN + "	 ";
 	const std::string CHARS_NAMES = CHARS_LETTERS + "_";
 	const std::string CHARS_NAMES_C = CHARS_NAMES + CHARS_NUMBERS;
-	const std::string CHARS_OPERATORS = "=+-:<>*/.!&|";
+	const std::string CHARS_OPERATORS = "=+-:<>*/.!&|:";
 	const std::string CHARS_OPERATORS_C = CHARS_OPERATORS + ".";
 	const std::string CHARS_QUOTES = "'\"";
 	const std::string CHARS_DELIMITERS = ";,{}()[]";
@@ -181,7 +184,18 @@ private:
 			".",
 			program::Operator::OT_CHILD
 		},
-
+		{
+			"[]",
+			program::Operator::OT_AT
+		},
+		{
+			"[]=",
+			program::Operator::OT_APPEND
+		},
+		{
+			":",
+			program::Operator::OT_RANGE
+		},
 	};
 
 	enum operator_link_t {
@@ -189,6 +203,7 @@ private:
 		OL_RIGHT,
 		OL_ANY,
 		OL_BOTH,
+		OL_ANY_OR_BOTH,
 	};
 	struct operator_info_t {
 		uint8_t priority;
@@ -363,6 +378,27 @@ private:
 				OL_BOTH
 			}
 		},
+		{
+			program::Operator::OT_AT,
+			{
+				18,
+				OL_BOTH
+			}
+		},
+		{
+			program::Operator::OT_APPEND,
+			{
+				2,
+				OL_BOTH
+			}
+		},
+		{
+			program::Operator::OT_RANGE,
+			{
+				3,
+				OL_ANY_OR_BOTH
+			}
+		}
 	};
 
 	const source_elements_t::const_iterator GetBracketsEnd( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );

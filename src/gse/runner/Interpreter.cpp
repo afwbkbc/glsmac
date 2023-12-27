@@ -4,6 +4,7 @@
 #include "gse/program/Variable.h"
 #include "gse/program/Function.h"
 #include "gse/program/Call.h"
+#include "gse/program/Array.h"
 
 #include "gse/type/Type.h"
 #include "gse/type/Undefined.h"
@@ -11,9 +12,13 @@
 #include "gse/type/Int.h"
 #include "gse/type/Float.h"
 #include "gse/type/String.h"
+#include "gse/type/Array.h"
 #include "gse/type/Object.h"
+#include "gse/type/ArrayRef.h"
+#include "gse/type/ArrayRangeRef.h"
 #include "gse/type/ObjectRef.h"
 #include "gse/type/Callable.h"
+#include "gse/type/Range.h"
 
 namespace gse {
 
@@ -140,6 +145,11 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 			MATH_OP_BEGIN_F( + )
 				case Type::T_STRING:
 					return VALUE( String, ( (String*)a )->value + ( (String*)b )->value );
+				case Type::T_ARRAY: {
+					type::Array::elements_t elements = ( (type::Array*)a )->value;
+					elements.insert( elements.end(), ( (type::Array*)b )->value.begin(), ( (type::Array*)b )->value.end() );
+					return VALUE( type::Array, elements );
+				}
 			MATH_OP_END()
 		}
 		case Operator::OT_SUB: {
@@ -220,6 +230,12 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 					result = VALUE( String, ( (String*)a )->value + ( (String*)b )->value );
 					break;
 				}
+				case Type::T_ARRAY: {
+					type::Array::elements_t elements = ( (type::Array*)a )->value;
+					elements.insert( elements.end(), ( (type::Array*)b )->value.begin(), ( (type::Array*)b )->value.end() );
+					result = VALUE( type::Array, elements );
+					break;
+				}
 			MATH_OP_END()
 		}
 		case Operator::OT_DEC_BY: {
@@ -262,6 +278,97 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 				}
 			}
 		}
+		case Operator::OT_AT: {
+			ASSERT( expression->a, "parent array expected" );
+
+			std::optional< size_t > index, from, to;
+			const auto valv = EvaluateRange( ctx, expression->b );
+			const auto* val = valv.Get();
+			switch ( val->type ) {
+				case Type::T_INT: {
+					index = ( (type::Int*)val )->value;
+					from = std::nullopt;
+					to = std::nullopt;
+					break;
+				}
+				case Type::T_RANGE: {
+					const auto* range = (type::Range*)val;
+					index = std::nullopt;
+					from = range->from;
+					to = range->to;
+					break;
+				}
+				default:
+					ASSERT( false, "unexpected index type: " + val->ToString() );
+			}
+			switch ( expression->a->type ) {
+				case Operand::OT_VARIABLE: {
+					const auto arrv = ctx->GetVariable( ( (Variable*)expression->a )->name );
+					const auto* arr = arrv.Get();
+					ASSERT( arr->type == Type::T_ARRAY, "parent is not array: " + arr->ToString() );
+					if ( index.has_value() ) {
+						return ( (type::Array*)arr )->GetRef( index.value() );
+					}
+					else {
+						return ( (type::Array*)arr )->GetRangeRef( from, to );
+					}
+				}
+				case Operand::OT_EXPRESSION: {
+					const auto refv = EvaluateExpression( ctx, (Expression*)expression->a );
+					const auto* ref = refv.Get();
+					switch ( ref->type ) {
+						case Type::T_ARRAYREF: {
+							const auto* r = (ArrayRef*)refv.Get();
+							const auto arrv = r->array->Get( r->index );
+							const auto* arr = arrv.Get();
+							ASSERT( arr->type == Type::T_ARRAY, "parent is not array: " + arr->ToString() );
+							if ( index.has_value() ) {
+								return ( (type::Array*)arr )->GetRef( index.value() );
+							}
+							else {
+								return ( (type::Array*)arr )->GetRangeRef( from, to );
+							}
+						}
+						case Type::T_ARRAYRANGEREF: {
+							ASSERT( false, "TODO: T_ARRAYRANGEREF" );
+						}
+						default:
+							ASSERT( false, "unexpected expression result: " + ref->ToString() );
+					}
+				}
+				default: {
+					ASSERT( false, "parent is not array: " + expression->a->ToString() );
+				}
+			}
+		}
+		case Operator::OT_APPEND: {
+			const auto arrv = ctx->GetVariable( ( (program::Variable*)expression->a )->name );
+			const auto* arr = arrv.Get();
+			ASSERT( arr->type == Type::T_ARRAY, "left operand is not array" );
+			const auto value = EvaluateOperand( ctx, expression->b );
+			( (type::Array*)arr )->Append( value );
+			return value;
+		}
+		case Operator::OT_RANGE: {
+
+			std::optional< size_t > from = std::nullopt;
+			std::optional< size_t > to = std::nullopt;
+
+			if ( expression->a ) {
+				const auto fromv = EvaluateRange( ctx, expression->a, true );
+				const auto* fromr = fromv.Get();
+				ASSERT( fromr->type == Type::T_INT, "int expected here" );
+				from = ( (type::Int*)fromr )->value;
+			}
+			if ( expression->b ) {
+				const auto tov = EvaluateRange( ctx, expression->b, true );
+				const auto* tor = tov.Get();
+				ASSERT( tor->type == Type::T_INT, "int expected here" );
+				to = ( (type::Int*)tor )->value;
+			}
+
+			return VALUE( Range, from, to );
+		}
 		default: {
 			ASSERT( false, "operator " + expression->op->ToString() + " not implemented" );
 		}
@@ -276,6 +383,14 @@ const gse::Value Interpreter::EvaluateOperand( Context* ctx, const program::Oper
 		}
 		case Operand::OT_VARIABLE: {
 			return ctx->GetVariable( ( (program::Variable*)operand )->name );
+		}
+		case Operand::OT_ARRAY: {
+			auto* arr = (program::Array*)operand;
+			type::Array::elements_t elements;
+			for ( const auto& it : arr->elements ) {
+				elements.push_back( EvaluateExpression( ctx, it ) );
+			}
+			return VALUE( type::Array, elements );
 		}
 		case Operand::OT_OBJECT: {
 			type::Object::properties_t properties = {};
@@ -324,10 +439,46 @@ const gse::Value Interpreter::EvaluateOperand( Context* ctx, const program::Oper
 	}
 }
 
-const std::string& Interpreter::EvaluateString( Context* ctx, const program::Operand* operand ) const {
+const std::string Interpreter::EvaluateString( Context* ctx, const program::Operand* operand ) const {
 	const auto result = Deref( EvaluateOperand( ctx, operand ) );
 	ASSERT( result.Get()->type == Type::T_STRING, "expected string, found " + result.ToString() );
 	return ( (String*)result.Get() )->value;
+}
+
+const gse::Value Interpreter::EvaluateRange( Context* ctx, const program::Operand* operand, const bool only_index ) const {
+	ASSERT( operand, "index operand missing" );
+	const auto get_index = []( const gse::Value& value ) -> size_t {
+		const auto* val = value.Get();
+		ASSERT_NOLOG( val->type == Type::T_INT, "index must be integer" );
+		ASSERT_NOLOG( ( (type::Int*)val )->value >= 0, "index must not be negative" );
+		return ( (type::Int*)val )->value;
+	};
+	switch ( operand->type ) {
+		case Operand::OT_VALUE: {
+			return VALUE( type::Int, get_index( ( (program::Value*)operand )->value ) );
+		}
+		case Operand::OT_VARIABLE: {
+			return VALUE( type::Int, get_index( ctx->GetVariable( ( (Variable*)operand )->name ) ) );
+		}
+		case Operand::OT_EXPRESSION: {
+			const auto result = Deref( EvaluateExpression( ctx, (Expression*)operand ) );
+			switch ( result.Get()->type ) {
+				case Type::T_INT: {
+					return VALUE( type::Int, get_index( result ) );
+				}
+				case Type::T_RANGE: {
+					ASSERT( !only_index, "range not allowed here" );
+					const auto* range = (type::Range*)result.Get();
+					return VALUE( type::Range, range->from, range->to );
+				}
+				default:
+					ASSERT( false, "unexpected index expression result type: " + result.ToString() );
+			}
+		}
+		default: {
+			ASSERT( false, "unexpected index type: " + operand->ToString() );
+		}
+	}
 }
 
 const bool Interpreter::EvaluateBool( Context* ctx, const program::Operand* operand ) const {
@@ -347,8 +498,16 @@ const std::string Interpreter::EvaluateVarName( Context* ctx, const program::Ope
 	return var->name;
 }
 
-const gse::Value& Interpreter::Deref( const gse::Value& value ) const {
+const gse::Value Interpreter::Deref( const gse::Value& value ) const {
 	switch ( value.Get()->type ) {
+		case Type::T_ARRAYREF: {
+			const auto* ref = (ArrayRef*)value.Get();
+			return ref->array->Get( ref->index );
+		}
+		case Type::T_ARRAYRANGEREF: {
+			const auto* ref = (ArrayRangeRef*)value.Get();
+			return ref->array->GetSubArray( ref->from, ref->to );
+		}
 		case Type::T_OBJECTREF: {
 			const auto* ref = (ObjectRef*)value.Get();
 			return ref->object->Get( ref->key );
