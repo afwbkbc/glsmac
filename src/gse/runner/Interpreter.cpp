@@ -69,8 +69,7 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 		}
 		case Operator::OT_ASSIGN: {
 			ASSERT( expression->a, "missing assignment target" );
-			const auto result = EvaluateOperand( ctx, expression->b );
-			//const auto* var = EvaluateVariable( ctx, expression->a );
+			auto result = Deref( EvaluateOperand( ctx, expression->b ) ).Clone(); // for now always copy on assignment
 			switch ( expression->a->type ) {
 				case Operand::OT_VARIABLE: {
 					const auto* var = (Variable*)expression->a;
@@ -518,9 +517,25 @@ const gse::Value Interpreter::Deref( const gse::Value& value ) const {
 }
 
 void Interpreter::WriteByRef( const gse::Value& ref, const gse::Value& value ) const {
-	ASSERT_NOLOG( ref.Get()->type == Type::T_OBJECTREF, "reference expected, found " + ref.ToString() );
-	const auto* r = (ObjectRef*)ref.Get();
-	r->object->Set( r->key, value );
+	switch ( ref.Get()->type ) {
+		case Type::T_OBJECTREF: {
+			const auto* r = (ObjectRef*)ref.Get();
+			r->object->Set( r->key, value );
+			break;
+		}
+		case Type::T_ARRAYREF: {
+			const auto* r = (ArrayRef*)ref.Get();
+			r->array->Set( r->index, value );
+			break;
+		}
+		case Type::T_ARRAYRANGEREF: {
+			const auto* r = (ArrayRangeRef*)ref.Get();
+			r->array->SetSubArray( r->from, r->to, value );
+			break;
+		}
+		default:
+			ASSERT_NOLOG( false, "reference expected, found " + ref.ToString() );
+	}
 }
 
 Interpreter::Function::Function(

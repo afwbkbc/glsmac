@@ -40,7 +40,7 @@ private:
 	const std::string CHARS_NAMES_C = CHARS_NAMES + CHARS_NUMBERS;
 	const std::string CHARS_OPERATORS = "=+-:<>*/.!&|:";
 	const std::string CHARS_OPERATORS_C = CHARS_OPERATORS + ".";
-	const std::string CHARS_QUOTES = "'\"";
+	const std::string CHARS_QUOTES = "'";
 	const std::string CHARS_DELIMITERS = ";,{}()[]";
 
 	enum identifier_type_t : uint8_t {

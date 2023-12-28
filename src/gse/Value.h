@@ -26,6 +26,8 @@ public:
 	const type::Type* Get() const;
 	const std::string ToString() const;
 
+	const Value Clone() const;
+
 #define OP( _op ) const bool operator _op( const Value& other ) const;
 	OP( == )
 	OP( != )

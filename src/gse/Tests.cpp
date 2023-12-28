@@ -13,6 +13,7 @@
 #include "gse/type/Int.h"
 #include "gse/type/String.h"
 #include "gse/type/Null.h"
+#include "gse/type/Range.h"
 
 namespace gse {
 
@@ -278,6 +279,146 @@ const Program* GetTestProgram() {
 						new Variable( "testarr1" ),
 						new Operator( Operator::OT_APPEND ),
 						new Variable( "testarr2" )
+					)
+				),
+				new Statement(
+					new Expression(
+						new Variable( "testarr3", Variable::VH_CREATE ),
+						new Operator( Operator::OT_ASSIGN ),
+						new Variable( "testarr1" )
+					)
+				),
+				new Statement(
+					new Expression(
+						new Expression(
+							new Variable( "testarr3" ),
+							new Operator( Operator::OT_AT ),
+							new program::Value( VALUE( type::Int, 1 ) )
+						),
+						new Operator( Operator::OT_ASSIGN ),
+						new program::Value( VALUE( type::String, "SECOND" ) )
+					)
+				),
+				new Statement(
+					new Expression(
+						new Expression(
+							new Variable( "testarr3" ),
+							new Operator( Operator::OT_AT ),
+							new Expression(
+								new Call(
+									new Expression(
+										new Variable( "testmethod2" )
+									),
+									{
+										{
+											new Expression(
+												new Variable( "a" )
+											),
+											new Expression(
+												new Variable( "b" )
+											),
+											new Expression(
+												new Variable( "c" )
+											)
+										}
+									}
+								),
+								new Operator( Operator::OT_ADD ),
+								new program::Value( VALUE( type::Int, 61 ) )
+							)
+						),
+						new Operator( Operator::OT_ASSIGN ),
+						new program::Value( VALUE( type::String, "FIRST" ) )
+					)
+				),
+				new Statement(
+					new Expression(
+						new Expression(
+							new Variable( "testarr3" ),
+							new Operator( Operator::OT_AT ),
+							new Expression(
+								new program::Value( VALUE( type::Int, 2 ) ),
+								new Operator( Operator::OT_RANGE ),
+								new program::Value( VALUE( type::Int, 5 ) )
+							)
+						),
+						new Operator( Operator::OT_ASSIGN ),
+						new Expression(
+							new Expression(
+								new Variable( "testarr1" ),
+								new Operator( Operator::OT_AT ),
+								new Expression(
+									new program::Value( VALUE( type::Int, 0 ) ),
+									new Operator( Operator::OT_RANGE ),
+									new program::Value( VALUE( type::Int, 1 ) )
+								)
+							),
+							new Operator( Operator::OT_ADD ),
+							new Expression(
+								new Variable( "testarr2" ),
+								new Operator( Operator::OT_AT ),
+								new Expression(
+									new program::Value( VALUE( type::Int, 0 ) ),
+									new Operator( Operator::OT_RANGE ),
+									new program::Value( VALUE( type::Int, 1 ) )
+								)
+							)
+						)
+					)
+				),
+				new Statement(
+					new Expression(
+						new Variable( "testarr4", Variable::VH_CREATE ),
+						new Operator( Operator::OT_ASSIGN ),
+						new Expression(
+							new Variable( "testarr3" ),
+							new Operator( Operator::OT_AT ),
+							new Expression(
+								nullptr,
+								new Operator( Operator::OT_RANGE ),
+								new program::Value( VALUE( type::Int, 3 ) )
+							)
+						)
+					)
+				),
+				new Statement(
+					new Expression(
+						new Expression(
+							new Variable( "testarr4" ),
+							new Operator( Operator::OT_AT ),
+							new Expression(
+								new Expression(
+									new Expression(
+										new Variable( "c" ),
+										new Operator( Operator::OT_ADD ),
+										new program::Value( VALUE( type::Int, 1 ) )
+									),
+									new Operator( Operator::OT_SUB ),
+									new program::Value( VALUE( type::Int, 100 ) )
+								),
+								new Operator( Operator::OT_RANGE ),
+								new Expression(
+									new Expression(
+										new Variable( "c" ),
+										new Operator( Operator::OT_SUB ),
+										new program::Value( VALUE( type::Int, 100 ) )
+									),
+									new Operator( Operator::OT_ADD ),
+									new program::Value( VALUE( type::Int, 2 ) )
+								)
+							)
+						),
+						new Operator( Operator::OT_ASSIGN ),
+						new Array(
+							{
+								new Expression(
+									new program::Value( VALUE( type::String, "new first" ) )
+								),
+								new Expression(
+									new program::Value( VALUE( type::String, "new second" ) )
+								)
+							}
+						)
 					)
 				),
 				new Statement(
@@ -742,6 +883,20 @@ const Program* GetTestProgram() {
 					{
 						new Expression(
 							new Variable( "testarr2" )
+						)
+					}
+				),
+				console_log(
+					{
+						new Expression(
+							new Variable( "testarr3" )
+						)
+					}
+				),
+				console_log(
+					{
+						new Expression(
+							new Variable( "testarr4" )
 						)
 					}
 				),

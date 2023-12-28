@@ -67,6 +67,8 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 										"52 10\n"
 										"array{string{first},string{second},int{6},int{3},string{TEST},object{key1=string{value1},key2=string{value2}},array{int{3},string{TEST},object{key1=string{value1},key2=string{value2}}}}\n"
 										"array{int{3},string{TEST},object{key1=string{value1},key2=string{value2}}}\n"
+										"array{string{FIRST},string{SECOND},string{first},string{second},int{3},string{TEST},array{int{3},string{TEST},object{key1=string{value1},key2=string{value2}}}}\n"
+										"array{string{FIRST},string{new first},string{new second},string{second}}\n"
 										"first\n"
 										"second\n"
 										"array{string{first},string{second}}\n"
@@ -80,7 +82,7 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 
 #define VALIDATE() { \
     const std::string actual_output = ( (ConsoleLogMock*)console_log_mock.Get() )->output; \
-    GT_ASSERT( actual_output == expected_output ); \
+    GT_ASSERT( actual_output == expected_output, "" + actual_output ); \
 }
 	task->AddTest(
 		"test if interpreter executes programs correctly",
