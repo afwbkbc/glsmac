@@ -8,39 +8,30 @@
 namespace gse {
 namespace program {
 
-class If : public Conditional {
+class While : public Conditional {
 public:
 
-	If( const Expression* condition, const Scope* body, const Conditional* els = nullptr )
-		: Conditional( CT_IF )
+	While( const Expression* condition, const Scope* body )
+		: Conditional( CT_WHILE )
 		, condition( condition )
-		, body( body )
-		, els( els ) {}
+		, body( body ) {}
 
 	const Expression* condition;
 	const Scope* body;
-	const Conditional* els;
 
-	~If() {
+	~While() {
 		delete condition;
 		delete body;
-		if ( els ) {
-			delete els;
-		}
 	}
 
 	const std::string ToString( const size_t depth = 0 ) const override {
-		return Formatted( "If(", depth ) +
+		return Formatted( "While(", depth ) +
 			Formatted( "Condition(", depth + 1 ) +
 			condition->ToString( depth + 2 ) +
 			Formatted( ")", depth + 1 ) +
 			Formatted( "Body(", depth + 1 ) +
 			body->ToString( depth + 2 ) +
 			Formatted( ")", depth + 1 ) +
-			( els
-				? els->ToString( depth + 1 )
-				: ""
-			) +
 			Formatted( ")", depth );
 	}
 };

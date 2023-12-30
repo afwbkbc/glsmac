@@ -69,15 +69,19 @@ private:
 	const std::unordered_map< std::string, Parser::Conditional::conditional_type_t > CONTROL_KEYWORDS = {
 		{
 			"if",
-			Parser::Conditional::CT_IF,
+			Parser::Conditional::CT_IF
 		},
 		{
 			"elseif",
-			Parser::Conditional::CT_ELSEIF,
+			Parser::Conditional::CT_ELSEIF
 		},
 		{
 			"else",
-			Parser::Conditional::CT_ELSE,
+			Parser::Conditional::CT_ELSE
+		},
+		{
+			"while",
+			Parser::Conditional::CT_WHILE
 		},
 	};
 

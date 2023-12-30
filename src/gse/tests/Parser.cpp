@@ -17,6 +17,7 @@
 #include "gse/program/If.h"
 #include "gse/program/ElseIf.h"
 #include "gse/program/Else.h"
+#include "gse/program/While.h"
 #include "gse/parser/GJS.h"
 
 namespace gse {
@@ -195,6 +196,11 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 					VALIDATE( scope, ( (Else*)a )->body, ( (Else*)b )->body );
 					break;
 				}
+				case Conditional::CT_WHILE: {
+					VALIDATE( expression, ( (While*)a )->condition, ( (While*)b )->condition );
+					VALIDATE( scope, ( (While*)a )->body, ( (While*)b )->body );
+					break;
+				}
 				default: {
 					GT_ASSERT( false, "unknown conditional type: " + std::to_string( a->conditional_type ) );
 				}
@@ -344,6 +350,12 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 				"  console.log( 'FAIL' );\n"
 				"};\n"
 				"\n"
+				"let i = 0;\n"
+				"while ( i++ < 5 ) {\n"
+				"  console.log(i);\n"
+				"};\n"
+				"\n"
+				";;;\n"
 				"console.log('bye!');\n"
 			);
 			const auto* program = parser.Parse();

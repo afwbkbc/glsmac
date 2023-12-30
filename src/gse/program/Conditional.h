@@ -10,7 +10,8 @@ public:
 	enum conditional_type_t {
 		CT_IF,
 		CT_ELSEIF,
-		CT_ELSE
+		CT_ELSE,
+		CT_WHILE,
 	};
 
 	Conditional( const conditional_type_t conditional_type )

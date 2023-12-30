@@ -16,6 +16,7 @@
 #include "gse/program/If.h"
 #include "gse/program/ElseIf.h"
 #include "gse/program/Else.h"
+#include "gse/program/While.h"
 
 namespace gse {
 namespace parser {
@@ -211,7 +212,10 @@ const program::Conditional* GJS::GetConditional( const source_elements_t::const_
 
 	const program::Conditional* els = nullptr;
 	if ( it != end ) {
-		ASSERT( conditional->m_conditional_type != Conditional::CT_ELSE, "else block can't have continuation" );
+		ASSERT(
+			conditional->m_conditional_type == Conditional::CT_IF ||
+				conditional->m_conditional_type == Conditional::CT_ELSEIF
+		, "unexpected code after conditional block" );
 		els = GetConditional( it, end );
 	}
 
@@ -222,6 +226,8 @@ const program::Conditional* GJS::GetConditional( const source_elements_t::const_
 			return new program::ElseIf( condition, body, els );
 		case Conditional::CT_ELSE:
 			return new program::Else( body );
+		case Conditional::CT_WHILE:
+			return new program::While( condition, body );
 		default:
 			ASSERT( false, "unexpected conditional type: " + conditional->ToString() );
 	}

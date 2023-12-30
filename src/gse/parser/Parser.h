@@ -111,6 +111,7 @@ protected:
 			CT_IF,
 			CT_ELSEIF,
 			CT_ELSE,
+			CT_WHILE,
 		};
 		Conditional( const conditional_type_t conditional_type )
 			: SourceElement( ET_CONDITIONAL )
@@ -128,6 +129,8 @@ protected:
 					return "conditional{ elseif }";
 				case CT_ELSE:
 					return "conditional{ else }";
+				case CT_WHILE:
+					return "conditional{ while }";
 				default:
 					ASSERT_NOLOG( false, "unexpected conditional type: " + std::to_string( m_conditional_type ) );
 			}

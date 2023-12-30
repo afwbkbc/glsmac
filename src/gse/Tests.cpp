@@ -12,6 +12,7 @@
 #include "gse/program/If.h"
 #include "gse/program/ElseIf.h"
 #include "gse/program/Else.h"
+#include "gse/program/While.h"
 #include "gse/type/Bool.h"
 #include "gse/type/Int.h"
 #include "gse/type/String.h"
@@ -1166,6 +1167,34 @@ const Program* GetTestProgram() {
 								)
 							)
 						)
+					)
+				),
+				new Statement(
+					new Expression(
+						new Variable( "i", Variable::VH_CREATE ),
+						new Operator( Operator::OT_ASSIGN ),
+						new program::Value( VALUE( type::Int, 0 ) )
+					)
+				),
+				new While(
+					new Expression(
+						new Expression(
+							new Variable( "i" ),
+							new Operator( Operator::OT_INC )
+						),
+						new Operator( Operator::OT_LT ),
+						new program::Value( VALUE( type::Int, 5 ) )
+					),
+					new Scope(
+						{
+							console_log(
+								{
+									new Expression(
+										new Variable( "i" )
+									)
+								}
+							)
+						}
 					)
 				),
 				console_log(

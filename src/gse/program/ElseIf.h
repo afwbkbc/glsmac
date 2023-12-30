@@ -37,6 +37,10 @@ public:
 			Formatted( "Body(", depth + 1 ) +
 			body->ToString( depth + 2 ) +
 			Formatted( ")", depth + 1 ) +
+			( els
+				? els->ToString( depth + 1 )
+				: ""
+			) +
 			Formatted( ")", depth );
 	}
 };
