@@ -9,6 +9,9 @@
 #include "gse/program/Function.h"
 #include "gse/program/Call.h"
 #include "gse/program/Array.h"
+#include "gse/program/If.h"
+#include "gse/program/ElseIf.h"
+#include "gse/program/Else.h"
 #include "gse/type/Bool.h"
 #include "gse/type/Int.h"
 #include "gse/type/String.h"
@@ -1025,6 +1028,145 @@ const Program* GetTestProgram() {
 							new Variable( "testobj2" )
 						),
 					}
+				),
+				new If(
+					new Expression(
+						new Variable( "a" ),
+						new Operator( Operator::OT_GT ),
+						new Variable( "b" )
+					),
+					new Scope(
+						{
+							console_log(
+								{
+									new Expression(
+										new program::Value( VALUE( type::String, "YES" ) )
+									)
+								}
+							)
+						}
+					),
+					new Else(
+						new Scope(
+							{
+								console_log(
+									{
+										new Expression(
+											new program::Value( VALUE( type::String, "NO" ) )
+										)
+									}
+								)
+							}
+						)
+					)
+				),
+				new If(
+					new Expression(
+						new Variable( "b" ),
+						new Operator( Operator::OT_GT ),
+						new Variable( "a" )
+					),
+					new Scope(
+						{
+							console_log(
+								{
+									new Expression(
+										new program::Value( VALUE( type::String, "YES" ) )
+									)
+								}
+							)
+						}
+					),
+					new Else(
+						new Scope(
+							{
+								console_log(
+									{
+										new Expression(
+											new program::Value( VALUE( type::String, "NO" ) )
+										)
+									}
+								)
+							}
+						)
+					)
+				),
+				new If(
+					new Expression(
+						new program::Value( VALUE( type::Bool, false ) )
+					),
+					new Scope(
+						{
+							console_log(
+								{
+									new Expression(
+										new program::Value( VALUE( type::String, "FALSE" ) )
+									)
+								}
+							)
+						}
+					)
+				),
+				new If(
+					new Expression(
+						new program::Value( VALUE( type::Bool, false ) )
+					),
+					new Scope(
+						{
+							console_log(
+								{
+									new Expression(
+										new program::Value( VALUE( type::String, "FAIL" ) )
+									)
+								}
+							)
+						}
+					),
+					new ElseIf(
+						new Expression(
+							new program::Value( VALUE( type::Bool, false ) )
+						),
+						new Scope(
+							{
+								console_log(
+									{
+										new Expression(
+											new program::Value( VALUE( type::String, "FAIL" ) )
+										)
+									}
+								)
+							}
+						),
+						new ElseIf(
+							new Expression(
+								new program::Value( VALUE( type::Bool, true ) )
+							),
+							new Scope(
+								{
+									console_log(
+										{
+											new Expression(
+												new program::Value( VALUE( type::String, "OK" ) )
+											)
+										}
+									)
+								}
+							),
+							new Else(
+								new Scope(
+									{
+										console_log(
+											{
+												new Expression(
+													new program::Value( VALUE( type::String, "FAIL" ) )
+												)
+											}
+										)
+									}
+								)
+							)
+						)
+					)
 				),
 				console_log(
 					{

@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "Operand.h"
-#include "Statement.h"
+#include "Control.h"
 
 namespace gse {
 namespace program {
@@ -11,11 +11,11 @@ namespace program {
 class Scope : public Operand {
 public:
 
-	Scope( const std::vector< const Statement* >& body )
+	Scope( const std::vector< const Control* >& body )
 		: Operand( OT_SCOPE )
 		, body( body ) {}
 
-	const std::vector< const Statement* > body;
+	const std::vector< const Control* > body;
 
 	~Scope() {
 		for ( auto& it : body ) {

@@ -7,19 +7,10 @@ namespace program {
 
 class Element {
 public:
-
 	enum element_type_t {
-		ET_NOTHING,
-		ET_VALUE,
-		ET_VARIABLE,
-		ET_EXPRESSION,
 		ET_OPERAND,
 		ET_OPERATOR,
-		ET_OBJECT,
-		ET_FUNCTION,
-		ET_CALL,
-		ET_SCOPE,
-		ET_STATEMENT,
+		ET_CONDITIONAL,
 	};
 	Element( const element_type_t element_type )
 		: m_element_type( element_type ) {}

@@ -1,16 +1,16 @@
 #pragma once
 
-#include "Element.h"
+#include "Control.h"
 
 #include "Expression.h"
 
 namespace gse {
 namespace program {
 
-class Statement : public Element {
+class Statement : public Control {
 public:
 	Statement( const Expression* body )
-		: Element( ET_STATEMENT )
+		: Control( CT_STATEMENT )
 		, body( body ) {}
 
 	const Expression* body;

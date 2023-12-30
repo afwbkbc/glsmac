@@ -13,6 +13,9 @@
 #include "gse/program/Object.h"
 #include "gse/program/Function.h"
 #include "gse/program/Call.h"
+#include "gse/program/If.h"
+#include "gse/program/ElseIf.h"
+#include "gse/program/Else.h"
 
 namespace gse {
 namespace parser {
@@ -44,7 +47,11 @@ void GJS::GetElements( source_elements_t& elements ) {
 		}
 		else if ( match_char_any( CHARS_NAMES.c_str(), false ) ) {
 			const auto value = read_while_char_any( CHARS_NAMES_C.c_str() );
-			if ( KEYWORDS.find( value ) != KEYWORDS.end() ) {
+			const auto& control_it = CONTROL_KEYWORDS.find( value );
+			if ( control_it != CONTROL_KEYWORDS.end() ) {
+				elements.push_back( new Conditional( control_it->second ) );
+			}
+			else if ( KEYWORDS.find( value ) != KEYWORDS.end() ) {
 				elements.push_back( new Operator( value ) );
 			}
 			else {
@@ -57,11 +64,11 @@ void GJS::GetElements( source_elements_t& elements ) {
 		else if ( ( c = match_char_any( CHARS_DELIMITERS.c_str(), true ) ) ) {
 			switch ( c ) {
 				case ';': {
-					elements.push_back( new Control( Control::CT_FLOW_DELIMITER ) );
+					elements.push_back( new Delimiter( Delimiter::DT_FLOW ) );
 					break;
 				}
 				case ',': {
-					elements.push_back( new Control( Control::CT_DATA_DELIMITER ) );
+					elements.push_back( new Delimiter( Delimiter::DT_DATA ) );
 					break;
 				}
 				case '(': {
@@ -115,7 +122,7 @@ const program::Program* GJS::GetProgram( const source_elements_t& elements ) {
 
 const program::Scope* GJS::GetScope( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
 	ELS( "GetScope" )
-	std::vector< const Statement* > body = {};
+	std::vector< const program::Control* > body = {};
 	auto it = begin;
 	source_elements_t::const_iterator it_end;
 	std::stack< uint8_t > brackets = {};
@@ -141,11 +148,11 @@ const program::Scope* GJS::GetScope( const source_elements_t::const_iterator& be
 			}
 			else if (
 				brackets.empty() &&
-					( *it_end )->m_type == SourceElement::ET_CONTROL &&
-					( ( Control * )( *it_end ) )->m_control_type == Control::CT_FLOW_DELIMITER
+					( *it_end )->m_type == SourceElement::ET_DELIMITER &&
+					( ( Delimiter * )( *it_end ) )->m_delimiter_type == Delimiter::DT_FLOW
 				) {
 				if ( it != it_end ) {
-					body.push_back( GetStatement( it, it_end ) );
+					body.push_back( GetControl( it, it_end ) );
 				}
 				break;
 			}
@@ -161,12 +168,71 @@ const program::Scope* GJS::GetScope( const source_elements_t::const_iterator& be
 	return new program::Scope( body );
 }
 
-const program::Statement* GJS::GetStatement( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
-	ELS( "GetStatement" );
-	return new program::Statement( GetExpression( begin, end ) );
+const program::Control* GJS::GetControl( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
+	ELS( "GetControl" );
+	ASSERT( begin != end, "no elements inside" );
+	if ( ( *begin )->m_type == SourceElement::ET_CONDITIONAL ) {
+		return GetConditional( begin, end );
+	}
+	else {
+		return GetStatement( begin, end );
+	}
 }
 
-const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, const bool is_inside_object ) {
+const program::Conditional* GJS::GetConditional( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
+	ELS( "GetConditional" );
+	ASSERT( ( *begin )->m_type == SourceElement::ET_CONDITIONAL, "conditional expected here" );
+	Conditional* conditional = (Conditional*)( *begin );
+	source_elements_t::const_iterator it = begin + 1, it_end;
+	const program::Expression* condition = nullptr;
+	if ( conditional->has_condition ) {
+		ASSERT(
+			it != end &&
+				( *it )->m_type == SourceElement::ET_BLOCK &&
+				( ( Block * )( *it ) )->m_block_side == Block::BS_BEGIN &&
+				( ( Block * )( *it ) )->m_block_type == BLOCK_ROUND_BRACKETS, "expected ( here " );
+		it_end = GetBracketsEnd( it, end );
+		condition = GetExpression( it + 1, it_end );
+		ASSERT( it_end != end, "expected { here" );
+		it = it_end + 1;
+	}
+	ASSERT(
+		it != end &&
+			( *it )->m_type == SourceElement::ET_BLOCK &&
+			( ( Block * )( *it ) )->m_block_side == Block::BS_BEGIN &&
+			( ( Block * )( *it ) )->m_block_type == BLOCK_CURLY_BRACKETS, "expected { here" );
+	it_end = GetBracketsEnd( it, end );
+	const auto* body = GetScope( it + 1, it_end );
+
+	it = it_end;
+	if ( it != end ) {
+		it++;
+	}
+
+	const program::Conditional* els = nullptr;
+	if ( it != end ) {
+		ASSERT( conditional->m_conditional_type != Conditional::CT_ELSE, "else block can't have continuation" );
+		els = GetConditional( it, end );
+	}
+
+	switch ( conditional->m_conditional_type ) {
+		case Conditional::CT_IF:
+			return new program::If( condition, body, els );
+		case Conditional::CT_ELSEIF:
+			return new program::ElseIf( condition, body, els );
+		case Conditional::CT_ELSE:
+			return new program::Else( body );
+		default:
+			ASSERT( false, "unexpected conditional type: " + conditional->ToString() );
+	}
+}
+
+const program::Statement* GJS::GetStatement( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
+	ELS( "GetStatement" );
+	return new program::Statement( GetExpression( begin, end, true ) );
+}
+
+const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, bool is_scope_expected ) {
 	ELS( "GetExpression" )
 	// resolve elements, unpack scopes
 	typedef std::vector< const Element* > elements_t;
@@ -175,6 +241,7 @@ const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::co
 	uint8_t t;
 	bool var_hints_allowed = true;
 	Variable::variable_hints_t next_var_hints = Variable::VH_NONE;
+	const Expression* condition;
 	while ( it != end ) {
 		switch ( ( *it )->m_type ) {
 			case SourceElement::ET_COMMENT: {
@@ -183,6 +250,7 @@ const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::co
 			}
 			case SourceElement::ET_IDENTIFIER: {
 				var_hints_allowed = false;
+				is_scope_expected = false;
 				// check for child dereferences
 				it_tmp = it + 1;
 				while ( it_tmp != end ) {
@@ -211,7 +279,9 @@ const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::co
 				break;
 			}
 			case SourceElement::ET_OPERATOR: {
-				const auto mod_it = MODIFIER_OPERATORS.find( ( (Operator*)( *it ) )->m_op );
+				const auto& op = ( (Operator*)( *it ) )->m_op;
+				is_scope_expected = false;
+				const auto mod_it = MODIFIER_OPERATORS.find( op );
 				if ( mod_it != MODIFIER_OPERATORS.end() ) {
 					ASSERT(
 						it + 1 != end &&
@@ -224,20 +294,19 @@ const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::co
 					ASSERT( next_var_hints == Variable::VH_NONE, "multiple variable hints" );
 					ASSERT( var_hints_allowed, "variable hints are not allowed here" );
 					next_var_hints = mod_it->second;
+					break;
+				}
+				const auto predef_it = PREDEF_OPERATORS.find( op );
+				if ( predef_it != PREDEF_OPERATORS.end() ) {
+					elements.push_back( new program::Value( predef_it->second ) );
 				}
 				else {
-					const auto predef_it = PREDEF_OPERATORS.find( ( (Operator*)( *it ) )->m_op );
-					if ( predef_it != PREDEF_OPERATORS.end() ) {
-						elements.push_back( new program::Value( predef_it->second ) );
-					}
-					else {
-						elements.push_back( GetOperator( (Operator*)( *it ) ) );
-					}
-					var_hints_allowed = false;
+					elements.push_back( GetOperator( (Operator*)( *it ) ) );
 				}
+				var_hints_allowed = false;
 				break;
 			}
-			case SourceElement::ET_CONTROL: {
+			case SourceElement::ET_CONDITIONAL: {
 				ASSERT( false, "unexpected control" );
 				break;
 			}
@@ -249,7 +318,7 @@ const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::co
 				switch ( t ) {
 					case BLOCK_CURLY_BRACKETS: {
 						// either scope or object
-						if ( !is_inside_object && it == begin ) {
+						if ( is_scope_expected ) {
 							// scope
 							elements.push_back( GetScope( it + 1, it_end ) );
 						}
@@ -303,8 +372,8 @@ const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::co
 									}
 									else {
 										if (
-											( *it_tmp )->m_type == SourceElement::ET_CONTROL &&
-												( ( Control * ) * it_tmp )->m_control_type == Control::CT_DATA_DELIMITER
+											( *it_tmp )->m_type == SourceElement::ET_DELIMITER &&
+												( ( Delimiter * ) * it_tmp )->m_delimiter_type == Delimiter::DT_DATA
 											) {
 											// nothing
 										}
@@ -341,8 +410,8 @@ const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::co
 										}
 									}
 									if (
-										( *it_tmp )->m_type == SourceElement::ET_CONTROL &&
-											( ( Control * )( *it_tmp ) )->m_control_type == Control::CT_DATA_DELIMITER
+										( *it_tmp )->m_type == SourceElement::ET_DELIMITER &&
+											( ( Delimiter * )( *it_tmp ) )->m_delimiter_type == Delimiter::DT_DATA
 										) {
 
 										break;
@@ -370,16 +439,16 @@ const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::co
 					case BLOCK_SQUARE_BRACKETS: {
 						// either array operator or array definition
 						ASSERT( it != begin, "array syntax unexpected here" );
-						switch ( (*( it - 1 ))->m_type ) {
+						switch ( ( *( it - 1 ) )->m_type ) {
 							case SourceElement::ET_IDENTIFIER: {
 								// array operator
 								if (
 									it_end != end &&
-									it + 1 == it_end &&
-									it_end + 1 != end &&
-									(*(it_end + 1))->m_type == SourceElement::ET_OPERATOR &&
-									((Operator*)(*(it_end + 1)))->m_op == "="
-								) {
+										it + 1 == it_end &&
+										it_end + 1 != end &&
+										( *( it_end + 1 ) )->m_type == SourceElement::ET_OPERATOR &&
+										( (Operator*)( *( it_end + 1 ) ) )->m_op == "="
+									) {
 									// 'append' operator ( []= )
 									elements.push_back( new program::Operator( program::Operator::OT_APPEND ) );
 									it_end++;
@@ -421,7 +490,15 @@ const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::co
 		}
 	}
 	// split by operator priority
-	const std::function< program::Operand*( const elements_t::const_iterator&, const elements_t::const_iterator& ) > get_operand = [ this, &get_operand, &elements ](
+	const std::function<
+		program::Operand*(
+			const elements_t::const_iterator&,
+			const elements_t::const_iterator&
+		)
+	> get_operand = [
+		this,
+		&get_operand
+	](
 		const elements_t::const_iterator& begin,
 		const elements_t::const_iterator& end
 	) -> program::Operand* {
@@ -468,12 +545,16 @@ const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::co
 			}
 			case OL_ANY: {
 				ASSERT( !has_a || !has_b, "both left and right operands are present" );
-			case OL_ANY_OR_BOTH:
-				ASSERT( has_a || has_b, "both left and right operands are missing" );
+				case OL_ANY_OR_BOTH:
+					ASSERT( has_a || has_b, "both left and right operands are missing" );
 				return new program::Expression(
-					has_a ? get_operand( begin, split_it ) : nullptr,
+					has_a
+						? get_operand( begin, split_it )
+						: nullptr,
 					(program::Operator*)*split_it,
-					has_b ? get_operand( split_it + 1, end ) : nullptr
+					has_b
+						? get_operand( split_it + 1, end )
+						: nullptr
 				);
 			}
 			default:
@@ -484,8 +565,8 @@ const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::co
 	return get_operand( elements.begin(), elements.end() );
 }
 
-const program::Expression* GJS::GetExpression( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, const bool is_inside_object ) {
-	const auto* operand = GetExpressionOrOperand( begin, end, is_inside_object );
+const program::Expression* GJS::GetExpression( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, const bool is_scope_expected ) {
+	const auto* operand = GetExpressionOrOperand( begin, end, is_scope_expected );
 	return operand->type == program::Operand::OT_EXPRESSION
 		? (Expression*)operand
 		: new Expression( operand );
@@ -546,13 +627,13 @@ const program::Array* GJS::GetArray( const source_elements_t::const_iterator& be
 				it_end = GetBracketsEnd( it_end, end );
 			}
 			else if (
-				( *it_end )->m_type == SourceElement::ET_CONTROL ) {
-				ASSERT( ( ( Control * ) * it_end )->m_control_type == Control::CT_DATA_DELIMITER, "unexpected control symbol" );
+				( *it_end )->m_type == SourceElement::ET_DELIMITER ) {
+				ASSERT( ( ( Delimiter * ) * it_end )->m_delimiter_type == Delimiter::DT_DATA, "unexpected delimiter type: " + ( *it_end )->ToString() );
 				break;
 			}
 		}
 		ASSERT( it_end != it, "expected element expression" );
-		elements.push_back( GetExpression( it, it_end, true ) );
+		elements.push_back( GetExpression( it, it_end ) );
 		it = it_end;
 		if ( it != end ) {
 			it++;
@@ -581,14 +662,14 @@ const program::Object* GJS::GetObject( const source_elements_t::const_iterator& 
 				it_end = GetBracketsEnd( it_end, end );
 			}
 			else if (
-				( *it_end )->m_type == SourceElement::ET_CONTROL ) {
-				ASSERT( ( ( Control * ) * it_end )->m_control_type == Control::CT_DATA_DELIMITER, "unexpected control symbol" );
+				( *it_end )->m_type == SourceElement::ET_DELIMITER ) {
+				ASSERT( ( ( Delimiter * ) * it_end )->m_delimiter_type == Delimiter::DT_DATA, "unexpected delimiter type: " + ( *it_end )->ToString() );
 				break;
 			}
 		}
 		ASSERT( it_end != it, "expected property expression" );
 		ASSERT( properties.find( identifier->m_name ) == properties.end(), "duplicate property key: " + identifier->m_name );
-		properties.insert_or_assign( identifier->m_name, GetExpression( it, it_end, true ) );
+		properties.insert_or_assign( identifier->m_name, GetExpression( it, it_end ) );
 		it = it_end;
 		if ( it != end ) {
 			it++;
@@ -633,15 +714,15 @@ const GJS::source_elements_t::const_iterator GJS::GetBracketsEnd( const source_e
 #ifdef DEBUG
 
 void GJS::LogElement( const std::string& prefix, const SourceElement* element ) const {
-	//Log( prefix + element->ToString() );
+	Log( prefix + element->ToString() );
 }
 
 void GJS::LogElements( const std::string& label, const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) const {
-	/*Log( label + "(" );
+	Log( label + "(" );
 	for ( auto it = begin ; it != end ; it++ ) {
 		LogElement( "    ", *it );
 	}
-	Log( ")" );*/
+	Log( ")" );
 }
 
 #endif

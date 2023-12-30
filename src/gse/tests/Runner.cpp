@@ -78,11 +78,14 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 										"CHILD VALUE\n"
 										"bool{true}\n"
 										"object{propertyInt=int{372}} object{propertyInt1=int{150},propertyInt2=int{222},propertyString=string{STRING}}\n"
+										"YES\n"
+										"NO\n"
+										"OK\n"
 										"bye!\n";
 
 #define VALIDATE() { \
     const std::string actual_output = ( (ConsoleLogMock*)console_log_mock.Get() )->output; \
-    GT_ASSERT( actual_output == expected_output, "" + actual_output ); \
+    GT_ASSERT( actual_output == expected_output, ", actual output:\n" + actual_output ); \
 }
 	task->AddTest(
 		"test if interpreter executes programs correctly",

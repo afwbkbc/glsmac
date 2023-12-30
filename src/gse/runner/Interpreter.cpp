@@ -5,6 +5,9 @@
 #include "gse/program/Function.h"
 #include "gse/program/Call.h"
 #include "gse/program/Array.h"
+#include "gse/program/If.h"
+#include "gse/program/ElseIf.h"
+#include "gse/program/Else.h"
 
 #include "gse/type/Type.h"
 #include "gse/type/Undefined.h"
@@ -34,7 +37,18 @@ const gse::Value Interpreter::Execute( Context* ctx, const program::Program* pro
 const gse::Value Interpreter::ExecuteScope( Context* ctx, const program::Scope* scope ) const {
 	gse::Value result = VALUE( Undefined );
 	for ( const auto& it : scope->body ) {
-		result = ExecuteStatement( ctx, it );
+		switch ( it->control_type ) {
+			case program::Control::CT_STATEMENT: {
+				result = ExecuteStatement( ctx, (program::Statement*)it );
+				break;
+			}
+			case program::Control::CT_CONDITIONAL: {
+				result = ExecuteConditional( ctx, (program::Conditional*)it );
+				break;
+			}
+			default:
+				ASSERT( false, "unexpected control type: " + it->ToString() );
+		}
 		if ( result.Get()->type != Type::T_UNDEFINED ) {
 			// got return statement
 			break;
@@ -50,6 +64,47 @@ const gse::Value Interpreter::ExecuteStatement( Context* ctx, const program::Sta
 		return result;
 	}
 	return VALUE( Undefined );
+}
+
+const gse::Value Interpreter::ExecuteConditional( Context* ctx, const program::Conditional* conditional, bool is_nested ) const {
+	switch ( conditional->conditional_type ) {
+		case program::Conditional::CT_IF: {
+			const auto* c = (program::If*)conditional;
+			const auto result = EvaluateExpression( ctx, c->condition );
+			ASSERT( result.Get()->type == Type::T_BOOL, "result of expression is not bool" );
+			if ( ( (Bool*)result.Get() )->value ) {
+				return ExecuteScope( ctx, c->body );
+			}
+			else if ( c->els ) {
+				return ExecuteConditional( ctx, c->els, true );
+			}
+			else {
+				return VALUE( type::Undefined );
+			}
+		}
+		case program::Conditional::CT_ELSEIF: {
+			ASSERT( is_nested, "elseif without if" );
+			const auto* c = (program::ElseIf*)conditional;
+			const auto result = EvaluateExpression( ctx, c->condition );
+			ASSERT( result.Get()->type == Type::T_BOOL, "result of expression is not bool" );
+			if ( ( (Bool*)result.Get() )->value ) {
+				return ExecuteScope( ctx, c->body );
+			}
+			else if ( c->els ) {
+				return ExecuteConditional( ctx, c->els, true );
+			}
+			else {
+				return VALUE( type::Undefined );
+			}
+		}
+		case program::Conditional::CT_ELSE: {
+			ASSERT( is_nested, "else without if" );
+			const auto* c = (program::Else*)conditional;
+			return ExecuteScope( ctx, c->body );
+		}
+		default:
+			ASSERT( false, "unexpected conditional type: " + conditional->ToString() );
+	}
 }
 
 const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::Expression* expression, bool* returnflag ) const {

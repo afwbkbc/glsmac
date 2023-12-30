@@ -17,6 +17,7 @@ public:
 		OT_EXPRESSION,
 		OT_FUNCTION,
 		OT_CALL,
+		OT_IF,
 	};
 
 	Operand( const operand_type_t type )

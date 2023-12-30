@@ -33,7 +33,8 @@ protected:
 			ET_COMMENT,
 			ET_IDENTIFIER,
 			ET_OPERATOR,
-			ET_CONTROL,
+			ET_DELIMITER,
+			ET_CONDITIONAL,
 			ET_BLOCK,
 		};
 		SourceElement( const element_type_t type )
@@ -80,24 +81,55 @@ protected:
 		};
 	};
 
-	class Control : public SourceElement {
+	class Delimiter : public SourceElement {
 	public:
-		enum control_type_t {
-			CT_FLOW_DELIMITER,
-			CT_DATA_DELIMITER,
+		enum delimiter_type_t {
+			DT_FLOW,
+			DT_DATA,
 		};
-		Control( const control_type_t control_type )
-			: SourceElement( ET_CONTROL )
-			, m_control_type( control_type ) {};
-		const control_type_t m_control_type;
+		Delimiter( const delimiter_type_t delimiter_type )
+			: SourceElement( ET_DELIMITER )
+			, m_delimiter_type( delimiter_type ) {};
+
+		const delimiter_type_t m_delimiter_type;
+
 		virtual const std::string ToString() const {
-			switch ( m_control_type ) {
-				case CT_FLOW_DELIMITER:
-					return "control{ ; }";
-				case CT_DATA_DELIMITER:
-					return "control{ , }";
+			switch ( m_delimiter_type ) {
+				case DT_FLOW:
+					return "delimiter{ ; }";
+				case DT_DATA:
+					return "delimiter{ , }";
 				default:
-					ASSERT_NOLOG( false, "unexpected control type: " + std::to_string( m_control_type ) );
+					ASSERT_NOLOG( false, "unexpected delimiter type: " + std::to_string( m_delimiter_type ) );
+			}
+		}
+	};
+
+	class Conditional : public SourceElement {
+	public:
+		enum conditional_type_t {
+			CT_IF,
+			CT_ELSEIF,
+			CT_ELSE,
+		};
+		Conditional( const conditional_type_t conditional_type )
+			: SourceElement( ET_CONDITIONAL )
+			, m_conditional_type( conditional_type )
+			, has_condition( conditional_type != CT_ELSE ) {};
+
+		const conditional_type_t m_conditional_type;
+		const bool has_condition;
+
+		virtual const std::string ToString() const {
+			switch ( m_conditional_type ) {
+				case CT_IF:
+					return "conditional{ if }";
+				case CT_ELSEIF:
+					return "conditional{ elseif }";
+				case CT_ELSE:
+					return "conditional{ else }";
+				default:
+					ASSERT_NOLOG( false, "unexpected conditional type: " + std::to_string( m_conditional_type ) );
 			}
 		}
 	};

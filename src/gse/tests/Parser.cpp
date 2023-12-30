@@ -5,6 +5,7 @@
 #include "gse/program/Program.h"
 #include "gse/program/Scope.h"
 #include "gse/program/Statement.h"
+#include "gse/program/Conditional.h"
 #include "gse/program/Expression.h"
 #include "gse/program/Operator.h"
 #include "gse/program/Value.h"
@@ -13,6 +14,9 @@
 #include "gse/program/Object.h"
 #include "gse/program/Function.h"
 #include "gse/program/Call.h"
+#include "gse/program/If.h"
+#include "gse/program/ElseIf.h"
+#include "gse/program/Else.h"
 #include "gse/parser/GJS.h"
 
 namespace gse {
@@ -174,10 +178,50 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			VALIDATE( expression, a->body, b->body );
 			GT_OK();
 		};
-		scope = VALIDATOR( Scope, &errmsg, &statement ) {
+		const auto conditional = VALIDATOR( Conditional, &errmsg, &expression, &scope ) {
+			GT_ASSERT( a->conditional_type == b->conditional_type, "conditionals have different types ( " + a->ToString() + " != " + b->ToString() + " )" );
+			switch ( a->conditional_type ) {
+				case Conditional::CT_IF: {
+					VALIDATE( expression, ( (If*)a )->condition, ( (If*)b )->condition );
+					VALIDATE( scope, ( (If*)a )->body, ( (If*)b )->body );
+					break;
+				}
+				case Conditional::CT_ELSEIF: {
+					VALIDATE( expression, ( (ElseIf*)a )->condition, ( (ElseIf*)b )->condition );
+					VALIDATE( scope, ( (ElseIf*)a )->body, ( (ElseIf*)b )->body );
+					break;
+				}
+				case Conditional::CT_ELSE: {
+					VALIDATE( scope, ( (Else*)a )->body, ( (Else*)b )->body );
+					break;
+				}
+				default: {
+					GT_ASSERT( false, "unknown conditional type: " + std::to_string( a->conditional_type ) );
+				}
+			}
+			GT_OK();
+		};
+		const auto control = VALIDATOR( Control, &errmsg, &statement, &conditional ) {
+			GT_ASSERT( a->control_type == b->control_type, "controls have different types ( " + a->ToString() + " != " + b->ToString() + " )" );
+			switch ( a->control_type ) {
+				case Control::CT_CONDITIONAL: {
+					VALIDATE( conditional, (Conditional*)a, (Conditional*)b );
+					break;
+				}
+				case Control::CT_STATEMENT: {
+					VALIDATE( statement, (Statement*)a, (Statement*)b );
+					break;
+				}
+				default: {
+					GT_ASSERT( false, "unknown control type: " + std::to_string( a->control_type ) );
+				}
+			}
+			GT_OK();
+		};
+		scope = VALIDATOR( Scope, &errmsg, &control ) {
 			GT_ASSERT( a->body.size() == b->body.size(), "scope sizes differ ( " + std::to_string( a->body.size() ) + " != " + std::to_string( b->body.size() ) + " )" );
 			for ( size_t i = 0 ; i < a->body.size() ; i++ ) {
-				VALIDATE( statement, a->body[ i ], b->body[ i ] );
+				VALIDATE( control, a->body[ i ], b->body[ i ] );
 			}
 			GT_OK();
 		};
@@ -276,6 +320,29 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 				"console.log( testarr1[4:5] + testarr1[2:3] );\n"
 				"console.log(testobj3.child1.child2.value);\n"
 				"console.log(testobj1.propertyInt == 272 + c); console.log(testobj1, testobj2);\n"
+				"\n"
+				"if ( a > b ) {\n"
+				"  console.log( 'YES' );\n"
+				"}\n"
+				"else {\n"
+				"  console.log( 'NO' );\n"
+				"};\n"
+				"if ( b > a ) {\n"
+				"  console.log( 'YES' );\n"
+				"}\n"
+				"else {\n"
+				"  console.log( 'NO' );\n"
+				"};\n"
+				"if ( false ) { console.log( 'FALSE' ); };\n"
+				"if ( false ) {\n"
+				"  console.log('FAIL');\n"
+				"} elseif ( false ) {\n"
+				"  console.log( 'FAIL' );\n"
+				"} elseif ( true ) {\n"
+				"  console.log( 'OK' );\n"
+				"} else {\n"
+				"  console.log( 'FAIL' );\n"
+				"};\n"
 				"\n"
 				"console.log('bye!');\n"
 			);

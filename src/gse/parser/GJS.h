@@ -8,6 +8,7 @@
 
 #include "gse/program/Variable.h"
 #include "gse/program/Array.h"
+#include "gse/program/Conditional.h"
 
 #include "gse/Value.h"
 #include "gse/type/Bool.h"
@@ -27,9 +28,11 @@ protected:
 private:
 
 	const program::Scope* GetScope( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
+	const program::Control* GetControl( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
+	const program::Conditional* GetConditional( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 	const program::Statement* GetStatement( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
-	const program::Operand* GetExpressionOrOperand( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, const bool is_inside_object = false );
-	const program::Expression* GetExpression( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, const bool is_inside_object = false );
+	const program::Operand* GetExpressionOrOperand( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, bool is_scope_expected = false );
+	const program::Expression* GetExpression( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, const bool is_scope_expected = false );
 	const program::Operand* GetOperand( const Identifier* element, program::Variable::variable_hints_t* next_var_hints = nullptr );
 	const program::Operator* GetOperator( const Operator* element );
 	const program::Array* GetArray( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
@@ -61,6 +64,21 @@ private:
 		"true",
 		"false",
 		"null",
+	};
+
+	const std::unordered_map< std::string, Parser::Conditional::conditional_type_t > CONTROL_KEYWORDS = {
+		{
+			"if",
+			Parser::Conditional::CT_IF,
+		},
+		{
+			"elseif",
+			Parser::Conditional::CT_ELSEIF,
+		},
+		{
+			"else",
+			Parser::Conditional::CT_ELSE,
+		},
 	};
 
 	const std::unordered_map< std::string, program::Variable::variable_hints_t > MODIFIER_OPERATORS = {
