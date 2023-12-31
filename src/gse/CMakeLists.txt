@@ -12,7 +12,6 @@ SET( SRC ${SRC}
 
 	${PWD}/GSE.cpp
 	${PWD}/Value.cpp
-	${PWD}/Exception.cpp
 	${PWD}/Context.cpp
 
 	)

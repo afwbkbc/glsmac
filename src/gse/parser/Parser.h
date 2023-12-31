@@ -112,11 +112,17 @@ protected:
 			CT_ELSEIF,
 			CT_ELSE,
 			CT_WHILE,
+			CT_TRY,
+			CT_CATCH,
 		};
 		Conditional( const conditional_type_t conditional_type )
 			: SourceElement( ET_CONDITIONAL )
 			, m_conditional_type( conditional_type )
-			, has_condition( conditional_type != CT_ELSE ) {};
+			, has_condition(
+				conditional_type == CT_IF ||
+					conditional_type == CT_ELSEIF ||
+					conditional_type == CT_WHILE
+			) {};
 
 		const conditional_type_t m_conditional_type;
 		const bool has_condition;
@@ -131,6 +137,10 @@ protected:
 					return "conditional{ else }";
 				case CT_WHILE:
 					return "conditional{ while }";
+				case CT_TRY:
+					return "conditional{ try }";
+				case CT_CATCH:
+					return "conditional{ catch }";
 				default:
 					ASSERT_NOLOG( false, "unexpected conditional type: " + std::to_string( m_conditional_type ) );
 			}

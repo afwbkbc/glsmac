@@ -13,6 +13,8 @@
 #include "gse/program/ElseIf.h"
 #include "gse/program/Else.h"
 #include "gse/program/While.h"
+#include "gse/program/Try.h"
+#include "gse/program/Catch.h"
 #include "gse/type/Bool.h"
 #include "gse/type/Int.h"
 #include "gse/type/String.h"
@@ -1195,6 +1197,116 @@ const Program* GetTestProgram() {
 								}
 							)
 						}
+					)
+				),
+				new Try(
+					new Scope(
+						{
+							console_log(
+								{
+									new Expression(
+										new program::Value( VALUE( type::String, "BEFORE EXCEPTION" ) )
+									)
+								}
+							),
+							new Statement(
+								new Expression(
+									nullptr,
+									new Operator( Operator::OT_THROW ),
+									new Call(
+										new Expression(
+											new Variable( "TestError" )
+										),
+										{
+											new Expression(
+												new program::Value( VALUE( type::String, "something happened" ) )
+											)
+										}
+									)
+								)
+							),
+							console_log(
+								{
+									new Expression(
+										new program::Value( VALUE( type::String, "AFTER EXCEPTION" ) )
+									)
+								}
+							),
+						}
+					),
+					new Catch(
+						new Object(
+							{
+								{
+									"UnknownError",
+									new Expression(
+										new Function(
+											{
+												new Variable( "e" )
+											}, new Scope(
+												{
+													console_log(
+														{
+															new Expression(
+																new program::Value( VALUE( type::String, "shouldnt catch this" ) )
+															)
+														}
+													)
+												}
+											)
+										)
+									)
+								},
+								{
+									"TestError",
+									new Expression(
+										new Function(
+											{
+												new Variable( "e" )
+											}, new Scope(
+												{
+													console_log(
+														{
+															new Expression(
+																new Expression(
+																	new Expression(
+																		new program::Value( VALUE( type::String, "CAUGHT " ) ),
+																		new Operator( Operator::OT_ADD ),
+																		new Expression(
+																			new Variable( "e" ),
+																			new Operator( Operator::OT_CHILD ),
+																			new Variable( "type" )
+																		)
+																	),
+																	new Operator( Operator::OT_ADD ),
+																	new program::Value( VALUE( type::String, " : " ) )
+																),
+																new Operator( Operator::OT_ADD ),
+																new Expression(
+																	new Variable( "e" ),
+																	new Operator( Operator::OT_CHILD ),
+																	new Variable( "reason" )
+																)
+															)
+														}
+													),
+													console_log(
+														{
+															new Expression(
+																new Variable( "e" ),
+																new Operator( Operator::OT_CHILD ),
+																new Variable( "backtrace" )
+															)
+														}
+													)
+												}
+											)
+										)
+									)
+								}
+
+							}
+						)
 					)
 				),
 				console_log(

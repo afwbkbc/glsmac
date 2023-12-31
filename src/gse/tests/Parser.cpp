@@ -18,6 +18,8 @@
 #include "gse/program/ElseIf.h"
 #include "gse/program/Else.h"
 #include "gse/program/While.h"
+#include "gse/program/Try.h"
+#include "gse/program/Catch.h"
 #include "gse/parser/GJS.h"
 
 namespace gse {
@@ -179,7 +181,19 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			VALIDATE( expression, a->body, b->body );
 			GT_OK();
 		};
-		const auto conditional = VALIDATOR( Conditional, &errmsg, &expression, &scope ) {
+		const std::function<
+			std::string(
+				const Conditional* a,
+				const Conditional* b
+			)
+		> conditional = VALIDATOR(
+			Conditional,
+			&errmsg,
+			&expression,
+			&scope,
+			&conditional,
+			&object
+		) {
 			GT_ASSERT( a->conditional_type == b->conditional_type, "conditionals have different types ( " + a->ToString() + " != " + b->ToString() + " )" );
 			switch ( a->conditional_type ) {
 				case Conditional::CT_IF: {
@@ -199,6 +213,15 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 				case Conditional::CT_WHILE: {
 					VALIDATE( expression, ( (While*)a )->condition, ( (While*)b )->condition );
 					VALIDATE( scope, ( (While*)a )->body, ( (While*)b )->body );
+					break;
+				}
+				case Conditional::CT_TRY: {
+					VALIDATE( scope, ( (Try*)a )->body, ( (Try*)b )->body );
+					VALIDATE( conditional, ( (Try*)a )->handlers, ( (Try*)b )->handlers );
+					break;
+				}
+				case Conditional::CT_CATCH: {
+					VALIDATE( object, ( (Catch*)a )->handlers, ( (Catch*)b )->handlers );
 					break;
 				}
 				default: {
@@ -355,11 +378,25 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 				"  console.log(i);\n"
 				"};\n"
 				"\n"
+				"try {\n"
+				"  console.log( 'BEFORE EXCEPTION' ); // should be printed\n"
+				"  throw TestError('something happened');\n"
+				"  console.log( 'AFTER EXCEPTION' ); // should not be printed\n"
+				"}\n"
+				"catch {\n"
+				"  UnknownError: (e) => {\n"
+				"    console.log('shouldnt catch this');\n"
+				"  },\n"
+				"  TestError: (e) => {\n"
+				"    console.log('CAUGHT ' + e.type + ' : ' + e.reason);\n"
+				"    console.log(e.backtrace);\n"
+				"  }\n"
+				"};\n"
+				"\n"
 				";;;\n"
 				"console.log('bye!');\n"
 			);
 			const auto* program = parser.Parse();
-			//GT_FAIL( program->ToString() );
 			const auto result = validate_program( program );
 			if ( program ) {
 				DELETE( program );

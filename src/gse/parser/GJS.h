@@ -60,6 +60,7 @@ private:
 
 	const std::unordered_set< std::string > KEYWORDS = {
 		"return",
+		"throw",
 		"let",
 		"true",
 		"false",
@@ -83,6 +84,14 @@ private:
 			"while",
 			Parser::Conditional::CT_WHILE
 		},
+		{
+			"try",
+			Parser::Conditional::CT_TRY
+		},
+		{
+			"catch",
+			Parser::Conditional::CT_CATCH
+		}
 	};
 
 	const std::unordered_map< std::string, program::Variable::variable_hints_t > MODIFIER_OPERATORS = {
@@ -113,6 +122,10 @@ private:
 		{
 			"return",
 			program::Operator::OT_RETURN
+		},
+		{
+			"throw",
+			program::Operator::OT_THROW
 		},
 		{
 			"=",
@@ -234,6 +247,13 @@ private:
 	const std::unordered_map< const program::Operator::operator_type_t, const operator_info_t > OPERATOR_INFO = {
 		{
 			program::Operator::OT_RETURN,
+			{
+				1,
+				OL_RIGHT
+			}
+		},
+		{
+			program::Operator::OT_THROW,
 			{
 				1,
 				OL_RIGHT

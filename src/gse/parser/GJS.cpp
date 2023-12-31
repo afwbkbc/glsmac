@@ -17,6 +17,7 @@
 #include "gse/program/ElseIf.h"
 #include "gse/program/Else.h"
 #include "gse/program/While.h"
+#include "gse/program/Try.h"
 
 namespace gse {
 namespace parser {
@@ -210,24 +211,37 @@ const program::Conditional* GJS::GetConditional( const source_elements_t::const_
 		it++;
 	}
 
-	const program::Conditional* els = nullptr;
-	if ( it != end ) {
-		ASSERT(
-			conditional->m_conditional_type == Conditional::CT_IF ||
-				conditional->m_conditional_type == Conditional::CT_ELSEIF
-		, "unexpected code after conditional block" );
-		els = GetConditional( it, end );
-	}
-
 	switch ( conditional->m_conditional_type ) {
 		case Conditional::CT_IF:
-			return new program::If( condition, body, els );
-		case Conditional::CT_ELSEIF:
-			return new program::ElseIf( condition, body, els );
+		case Conditional::CT_ELSEIF: {
+			const program::Conditional* els = nullptr;
+			if ( it != end ) {
+				els = GetConditional( it, end );
+				it++;
+			}
+			if ( conditional->m_conditional_type == Conditional::CT_IF ) {
+				return new program::If( condition, body, els );
+			}
+			else {
+				return new program::ElseIf( condition, body, els );
+			}
+		}
 		case Conditional::CT_ELSE:
 			return new program::Else( body );
 		case Conditional::CT_WHILE:
 			return new program::While( condition, body );
+		case Conditional::CT_TRY: {
+			ASSERT(
+				it != end &&
+					( *it )->m_type == SourceElement::ET_CONDITIONAL &&
+					( (Conditional*)( *it ) )->m_conditional_type == Conditional::CT_CATCH &&
+					it + 1 != end &&
+					( *( it + 1 ) )->m_type == SourceElement::ET_BLOCK &&
+					( ( Block * )( *( it + 1 ) ) )->m_block_side == Block::BS_BEGIN &&
+					( ( Block * )( *( it + 1 ) ) )->m_block_type == BLOCK_CURLY_BRACKETS, "try block without catch block" );
+			it_end = GetBracketsEnd( it + 1, end );
+			return new program::Try( body, new program::Catch( GetObject( it + 2, it_end ) ) );
+		}
 		default:
 			ASSERT( false, "unexpected conditional type: " + conditional->ToString() );
 	}

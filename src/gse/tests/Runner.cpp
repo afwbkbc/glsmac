@@ -86,6 +86,9 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 										"3\n"
 										"4\n"
 										"5\n"
+										"BEFORE EXCEPTION\n"
+										"CAUGHT TestError : something happened\n"
+										"array{}\n" // TODO: backtrace
 										"bye!\n";
 
 #define VALIDATE() { \

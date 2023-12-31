@@ -12,6 +12,8 @@ public:
 		CT_ELSEIF,
 		CT_ELSE,
 		CT_WHILE,
+		CT_TRY,
+		CT_CATCH,
 	};
 
 	Conditional( const conditional_type_t conditional_type )

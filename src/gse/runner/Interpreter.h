@@ -37,9 +37,9 @@ private:
 		const program::Program* const program;
 	};
 
-	const Value ExecuteScope( Context* ctx, const program::Scope* scope ) const;
-	const Value ExecuteStatement( Context* ctx, const program::Statement* statement ) const;
-	const gse::Value ExecuteConditional( Context* ctx, const program::Conditional* conditional, bool is_nested = false ) const;
+	const Value EvaluateScope( Context* ctx, const program::Scope* scope ) const;
+	const Value EvaluateStatement( Context* ctx, const program::Statement* statement ) const;
+	const gse::Value EvaluateConditional( Context* ctx, const program::Conditional* conditional, bool is_nested = false ) const;
 	const Value EvaluateExpression( Context* ctx, const program::Expression* expression, bool* returnflag = nullptr ) const;
 	const Value EvaluateOperand( Context* ctx, const program::Operand* operand ) const;
 	const std::string EvaluateString( Context* ctx, const program::Operand* operand ) const;

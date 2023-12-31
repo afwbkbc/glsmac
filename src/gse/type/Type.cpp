@@ -13,6 +13,7 @@
 #include "ArrayRangeRef.h"
 #include "ObjectRef.h"
 #include "Range.h"
+#include "Exception.h"
 
 namespace gse {
 namespace type {

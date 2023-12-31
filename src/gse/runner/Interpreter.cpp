@@ -9,6 +9,8 @@
 #include "gse/program/ElseIf.h"
 #include "gse/program/Else.h"
 #include "gse/program/While.h"
+#include "gse/program/Try.h"
+#include "gse/program/Catch.h"
 
 #include "gse/type/Type.h"
 #include "gse/type/Undefined.h"
@@ -23,6 +25,7 @@
 #include "gse/type/ObjectRef.h"
 #include "gse/type/Callable.h"
 #include "gse/type/Range.h"
+#include "gse/type/Exception.h"
 
 namespace gse {
 
@@ -32,19 +35,19 @@ using namespace type;
 namespace runner {
 
 const gse::Value Interpreter::Execute( Context* ctx, const program::Program* program ) const {
-	return ExecuteScope( ctx, program->body );
+	return EvaluateScope( ctx, program->body );
 }
 
-const gse::Value Interpreter::ExecuteScope( Context* ctx, const program::Scope* scope ) const {
+const gse::Value Interpreter::EvaluateScope( Context* ctx, const program::Scope* scope ) const {
 	gse::Value result = VALUE( Undefined );
 	for ( const auto& it : scope->body ) {
 		switch ( it->control_type ) {
 			case program::Control::CT_STATEMENT: {
-				result = ExecuteStatement( ctx, (program::Statement*)it );
+				result = EvaluateStatement( ctx, (program::Statement*)it );
 				break;
 			}
 			case program::Control::CT_CONDITIONAL: {
-				result = ExecuteConditional( ctx, (program::Conditional*)it );
+				result = EvaluateConditional( ctx, (program::Conditional*)it );
 				break;
 			}
 			default:
@@ -58,7 +61,7 @@ const gse::Value Interpreter::ExecuteScope( Context* ctx, const program::Scope* 
 	return result;
 }
 
-const gse::Value Interpreter::ExecuteStatement( Context* ctx, const program::Statement* statement ) const {
+const gse::Value Interpreter::EvaluateStatement( Context* ctx, const program::Statement* statement ) const {
 	bool returnflag = false;
 	const auto result = EvaluateExpression( ctx, statement->body, &returnflag );
 	if ( returnflag ) {
@@ -67,15 +70,15 @@ const gse::Value Interpreter::ExecuteStatement( Context* ctx, const program::Sta
 	return VALUE( Undefined );
 }
 
-const gse::Value Interpreter::ExecuteConditional( Context* ctx, const program::Conditional* conditional, bool is_nested ) const {
+const gse::Value Interpreter::EvaluateConditional( Context* ctx, const program::Conditional* conditional, bool is_nested ) const {
 	switch ( conditional->conditional_type ) {
 		case program::Conditional::CT_IF: {
 			const auto* c = (program::If*)conditional;
 			if ( EvaluateBool( ctx, c->condition ) ) {
-				return ExecuteScope( ctx, c->body );
+				return EvaluateScope( ctx, c->body );
 			}
 			else if ( c->els ) {
-				return ExecuteConditional( ctx, c->els, true );
+				return EvaluateConditional( ctx, c->els, true );
 			}
 			else {
 				return VALUE( type::Undefined );
@@ -85,10 +88,10 @@ const gse::Value Interpreter::ExecuteConditional( Context* ctx, const program::C
 			ASSERT( is_nested, "elseif without if" );
 			const auto* c = (program::ElseIf*)conditional;
 			if ( EvaluateBool( ctx, c->condition ) ) {
-				return ExecuteScope( ctx, c->body );
+				return EvaluateScope( ctx, c->body );
 			}
 			else if ( c->els ) {
-				return ExecuteConditional( ctx, c->els, true );
+				return EvaluateConditional( ctx, c->els, true );
 			}
 			else {
 				return VALUE( type::Undefined );
@@ -97,18 +100,40 @@ const gse::Value Interpreter::ExecuteConditional( Context* ctx, const program::C
 		case program::Conditional::CT_ELSE: {
 			ASSERT( is_nested, "else without if" );
 			const auto* c = (program::Else*)conditional;
-			return ExecuteScope( ctx, c->body );
+			return EvaluateScope( ctx, c->body );
 		}
 		case program::Conditional::CT_WHILE: {
 			const auto* c = (program::While*)conditional;
 			gse::Value result = VALUE( type::Undefined );
 			while ( EvaluateBool( ctx, c->condition ) ) {
-				result = ExecuteScope( ctx, c->body );
+				result = EvaluateScope( ctx, c->body );
 				if ( result.Get()->type != Type::T_UNDEFINED ) {
 					break;
 				}
 			}
 			return result;
+		}
+		case program::Conditional::CT_TRY: {
+			const auto* c = (program::Try*)conditional;
+			try {
+				return EvaluateScope( ctx, c->body );
+			}
+			catch ( const gse::Exception& e ) {
+				const auto* h = c->handlers->handlers;
+				const auto& it = h->properties.find( e.class_name );
+				if ( it != h->properties.end() ) {
+					const auto f = EvaluateExpression( ctx, it->second );
+					ASSERT( f.Get()->type == Type::T_CALLABLE, "invalid error handler type" );
+					return ( (Function*)f.Get() )->Run(
+						nullptr, {
+							VALUE( type::Exception, e )
+						}
+					);
+				}
+				else {
+					throw e;
+				}
+			}
 		}
 		default:
 			ASSERT( false, "unexpected conditional type: " + conditional->ToString() );
@@ -129,6 +154,20 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 			ASSERT( expression->b, "return value or expression expected" );
 			*returnflag = true;
 			return Deref( EvaluateOperand( ctx, expression->b ) );
+		}
+		case Operator::OT_THROW: {
+			ASSERT( !expression->a, "unexpected left operand before throw" );
+			ASSERT( expression->b, "error definition expected" );
+			const auto* e = (program::Call*)expression->b; // it's not a call but it looks like a call
+			ASSERT( e->callable->a &&
+				e->callable->a->type == Operand::OT_VARIABLE &&
+				!e->callable->op &&
+				!e->callable->b &&
+				e->arguments.size() == 1, "invalid error definition" );
+			const auto reason = EvaluateExpression( ctx, e->arguments[ 0 ] );
+			ASSERT( reason.Get()->type == Type::T_STRING, "error reason is not string: " + reason.ToString() );
+			throw gse::Exception( ( (program::Variable*)e->callable->a )->name, ( (type::String*)reason.Get() )->value );
+			// TODO: record backtrace, pop scopes
 		}
 		case Operator::OT_ASSIGN: {
 			ASSERT( expression->a, "missing assignment target" );
@@ -464,7 +503,7 @@ const gse::Value Interpreter::EvaluateOperand( Context* ctx, const program::Oper
 		}
 		case Operand::OT_SCOPE: {
 			ctx->PushScope();
-			ExecuteScope( ctx, (program::Scope*)operand );
+			EvaluateScope( ctx, (program::Scope*)operand );
 			ctx->PopScope();
 			return VALUE( Undefined );
 		}

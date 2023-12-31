@@ -12,6 +12,7 @@ public:
 	enum operator_type_t {
 		OT_NOOP,
 		OT_RETURN,
+		OT_THROW,
 		OT_ASSIGN,
 		OT_NOT,
 		OT_EQ,
@@ -61,6 +62,10 @@ private:
 		{
 			OT_RETURN,
 			"RETURN"
+		},
+		{
+			OT_THROW,
+			"THROW"
 		},
 		{
 			OT_ASSIGN,
