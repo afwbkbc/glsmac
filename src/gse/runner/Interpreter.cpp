@@ -115,6 +115,7 @@ const gse::Value Interpreter::EvaluateConditional( Context* ctx, const program::
 		}
 		case program::Conditional::CT_TRY: {
 			const auto* c = (program::Try*)conditional;
+			const auto initial_scope_depth = ctx->GetScopeDepth();
 			try {
 				return EvaluateScope( ctx, c->body );
 			}
@@ -124,6 +125,9 @@ const gse::Value Interpreter::EvaluateConditional( Context* ctx, const program::
 				if ( it != h->properties.end() ) {
 					const auto f = EvaluateExpression( ctx, it->second );
 					ASSERT( f.Get()->type == Type::T_CALLABLE, "invalid error handler type" );
+					for ( size_t scope_depth = ctx->GetScopeDepth() ; scope_depth > initial_scope_depth ; scope_depth-- ) {
+						ctx->PopScope(); // cleanup
+					}
 					return ( (Function*)f.Get() )->Run(
 						nullptr, {
 							VALUE( type::Exception, e )
@@ -167,7 +171,7 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 			const auto reason = EvaluateExpression( ctx, e->arguments[ 0 ] );
 			ASSERT( reason.Get()->type == Type::T_STRING, "error reason is not string: " + reason.ToString() );
 			throw gse::Exception( ( (program::Variable*)e->callable->a )->name, ( (type::String*)reason.Get() )->value );
-			// TODO: record backtrace, pop scopes
+			// TODO: record backtrace
 		}
 		case Operator::OT_ASSIGN: {
 			ASSERT( expression->a, "missing assignment target" );

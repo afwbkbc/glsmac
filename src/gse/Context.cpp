@@ -56,6 +56,10 @@ void Context::PopScope() {
 	m_scopes.pop_back();
 }
 
+const size_t Context::GetScopeDepth() const {
+	return m_scopes.size();
+}
+
 Context* const Context::CreateFunctionScope(
 	const std::vector< std::string > parameters,
 	const type::Callable::function_arguments_t& arguments

@@ -21,6 +21,7 @@ CLASS( Context, base::Base )
 	void UpdateVariable( const std::string& name, const Value& value );
 	void PushScope();
 	void PopScope();
+	const size_t GetScopeDepth() const;
 
 	Context* const CreateFunctionScope(
 		const std::vector< std::string > parameters,
