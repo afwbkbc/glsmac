@@ -40,8 +40,150 @@ void AddTests( task::gsetests::GSETests* task ) {
 
 }
 
-const Program* GetTestProgram( const std::string& filename ) {
+const std::string& GetTestFilename() {
+	const static std::string filename = "test.gjs";
+	return filename;
+}
 
+const std::string& GetTestSource() {
+	const static std::string source = ""
+									  "// test script\n"
+									  "\n"
+									  "let a = 5;\n"
+									  "a++;\n"
+									  "let b = a + 2 * 4;\n"
+									  "let c=(a+2)*4;\n"
+									  "{\n"
+									  "	a = 15;\n"
+									  "	a += 10;\n"
+									  "};\n"
+									  "c = 123;\n"
+									  "c -= 23;\n"
+									  "\n"
+									  "let testmethod1 = (a, b, c) => { return a + b + c; };\n"
+									  "\n"
+									  "let testmethod2 = (a, b, c) => {\n"
+									  "	/*\n"
+									  "		this method is a bit different\n"
+									  "	*/\n"
+									  "	return\n"
+									  "		a\n"
+									  "			+\n"
+									  "		b\n"
+									  "			-\n"
+									  "		c\n"
+									  "	;\n"
+									  "};\n"
+									  "\n"
+									  "let testarr1 = [];\n"
+									  "let testarr2 = [ 3, 'TEST', {\n"
+									  "  key1: 'value1',\n"
+									  "  key2: 'value2',\n"
+									  "} ];\n"
+									  "testarr1 []= 'first';\n"
+									  "testarr1 []= 'second';\n"
+									  "testarr1 []= 1 + 2 + 3;\n"
+									  "testarr1 += testarr2;\n"
+									  "testarr1 []= testarr2;\n"
+									  "let testarr3 = testarr1;\n"
+									  "testarr3[1] = 'SECOND';\n"
+									  "testarr3[ testmethod2(a, b, c) + 61 ] = 'FIRST';\n"
+									  "testarr3[2:5] = testarr1[0:1] + testarr2[0:1];\n"
+									  "let testarr4 = testarr3[:3];\n"
+									  "testarr4[ c + 1 - 100 : c - 100 + 2 ] = [ 'new first', 'new second' ];\n"
+									  "\n"
+									  "let testobj1 = {};\n"
+									  "let testobj2 = {\n"
+									  "	propertyString: 'STRING',\n"
+									  "	propertyInt1: 111 + a + b,\n"
+									  "	propertyInt2: 222,\n"
+									  "};\n"
+									  "let testobj3 = {\n"
+									  "  child1: {\n"
+									  "    child2: {\n"
+									  "      value: 'CHILD VALUE'\n"
+									  "    }\n"
+									  "  },\n"
+									  "};\n"
+									  "testobj1.propertyInt = testobj2.propertyInt1 + testobj2.propertyInt2;\n"
+									  "\n"
+									  "let d = null;\n"
+									  "let x = a > b;\n"
+									  "\n"
+									  "console.log( d );\n"
+									  "console.log( d == null );\n"
+									  "console.log( x, x == b > c );\n"
+									  "\n"
+									  "console.log( a != b, b != c, c != a, a != a );\n"
+									  "console.log( a > b, b > c );\n"
+									  "console.log( b >= a, a >= 2, c <= 200, a <= 200 );\n"
+									  "console.log( 10 < 10, 10 <= 10, a < a, a <= a );\n"
+									  "console.log( true && true, true && false, true || true, true || false );\n"
+									  "console.log( (( 5 > 10 ) && ( 2 > 1 )) || (( 5 <= 10 ) && !( 5 > 35 ) && ( 100 >= 20 )) );\n"
+									  "console.log(testmethod1(11, b, 20), testmethod2(a, b, c));\n"
+									  "let testmethod = testmethod1;\n"
+									  "console.log( testmethod( 1, testmethod( 2, testmethod( 3, 3, 3 ), testmethod( 4, 4, 4 ) ), testmethod( 5, 5, testmethod( 6, 6, 6 )) ), 10 );\n"
+									  "console.log( testarr1 ); console.log( testarr2 ); console.log( testarr3 ); console.log( testarr4 );\n"
+									  "console.log( testarr1[0] ); console.log( testarr1[1] ); console.log( testarr1[0:1] );\n"
+									  "console.log( testarr1[5:] ); console.log( testarr1[:3] );\n"
+									  "console.log( testarr1[4:5] + testarr1[2:3] );\n"
+									  "console.log(testobj3.child1.child2.value);\n"
+									  "console.log(testobj1.propertyInt == 272 + c); console.log(testobj1, testobj2);\n"
+									  "\n"
+									  "if ( a > b ) {\n"
+									  "  console.log( 'YES' );\n"
+									  "}\n"
+									  "else {\n"
+									  "  console.log( 'NO' );\n"
+									  "};\n"
+									  "if ( b > a ) {\n"
+									  "  console.log( 'YES' );\n"
+									  "}\n"
+									  "else {\n"
+									  "  console.log( 'NO' );\n"
+									  "};\n"
+									  "if ( false ) { console.log( 'FALSE' ); };\n"
+									  "if ( false ) {\n"
+									  "  console.log('FAIL');\n"
+									  "} elseif ( false ) {\n"
+									  "  console.log( 'FAIL' );\n"
+									  "} elseif ( true ) {\n"
+									  "  console.log( 'OK' );\n"
+									  "} else {\n"
+									  "  console.log( 'FAIL' );\n"
+									  "};\n"
+									  "\n"
+									  "let i = 0;\n"
+									  "while ( i++ < 5 ) {\n"
+									  "  console.log(i);\n"
+									  "};\n"
+									  "\n"
+									  "try {\n"
+									  "  console.log( 'BEFORE EXCEPTION' ); // should be printed\n"
+									  "  let failfunc = () => {\n"
+									  "    console.log('failfunc');\n"
+									  "    throw TestError('something happened');\n"
+									  "  };\n"
+									  "  failfunc();\n"
+									  "  console.log( 'AFTER EXCEPTION' ); // should not be printed\n"
+									  "}\n"
+									  "catch {\n"
+									  "  UnknownError: (e) => {\n"
+									  "    console.log('shouldnt catch this');\n"
+									  "  },\n"
+									  "  TestError: (e) => {\n"
+									  "    console.log('CAUGHT ' + e.type + ' : ' + e.reason);\n"
+									  "    console.log(e.backtrace);\n"
+									  "  }\n"
+									  "};\n"
+									  "\n"
+									  ";;;\n"
+									  "console.log('bye!');\n";
+	return source;
+}
+
+const Program* GetTestProgram() {
+	const auto& filename = GetTestFilename();
 // TODO: other parsers will need different values here
 #define SI( _fromline, _fromcol, _toline, _tocol ) { \
     filename, \
@@ -77,9 +219,9 @@ const Program* GetTestProgram( const std::string& filename ) {
 		);
 	};
 
-	return new Program(
+	static const auto* program = new Program(
 		new Scope(
-			SI( 1, 1, 128, 21 ),
+			SI( 1, 1, 132, 21 ),
 			{
 				new Statement(
 					SI( 1, 1, 3, 10 ),
@@ -1526,9 +1668,9 @@ const Program* GetTestProgram( const std::string& filename ) {
 					)
 				),
 				new Try(
-					SI( 112, 1, 116, 2 ),
+					SI( 112, 1, 120, 2 ),
 					new Scope(
-						SI( 113, 3, 115, 61 ),
+						SI( 113, 3, 119, 61 ),
 						{
 							console_log(
 								113, 3,
@@ -1540,59 +1682,99 @@ const Program* GetTestProgram( const std::string& filename ) {
 								}
 							),
 							new Statement(
-								SI( 113, 38, 114, 40 ),
+								SI( 113, 38, 117, 4 ),
 								new Expression(
-									SI( 114, 3, 114, 40 ),
-									nullptr,
-									new Operator( SI( 114, 3, 114, 8 ), Operator::OT_THROW ),
+									SI( 114, 7, 117, 4 ),
+									new Variable( SI( 114, 7, 114, 15 ), "failfunc", Variable::VH_CREATE ),
+									new Operator( SI( 114, 16, 114, 17 ), Operator::OT_ASSIGN ),
+									new Function(
+										SI( 114, 18, 117, 4 ),
+										{},
+										new Scope(
+											SI( 115, 5, 116, 43 ),
+											{
+												console_log(
+													115, 5,
+													{
+														new Expression(
+															SI( 115, 17, 115, 27 ),
+															new program::Value( SI( 115, 17, 115, 27 ), VALUE( type::String, "failfunc" ) )
+														),
+													}
+												),
+												new Statement(
+													SI( 116, 5, 116, 42 ),
+													new Expression(
+														SI( 116, 5, 116, 42 ),
+														nullptr,
+														new Operator( SI( 116, 5, 116, 10 ), Operator::OT_THROW ),
+														new Call(
+															SI( 116, 11, 116, 42 ),
+															new Expression(
+																SI( 116, 11, 116, 20 ),
+																new Variable( SI( 116, 11, 116, 20 ), "TestError" )
+															),
+															{
+																new Expression(
+																	SI( 116, 21, 116, 41 ),
+																	new program::Value( SI( 116, 21, 116, 41 ), VALUE( type::String, "something happened" ) )
+																)
+															}
+														)
+													)
+												),
+											}
+										)
+									)
+								)
+							),
+							new Statement(
+								SI( 118, 3, 118, 13 ),
+								new Expression(
+									SI( 118, 3, 118, 13 ),
 									new Call(
-										SI( 114, 9, 114, 40 ),
+										SI( 118, 3, 118, 13 ),
 										new Expression(
-											SI( 114, 9, 114, 18 ),
-											new Variable( SI( 114, 9, 114, 18 ), "TestError" )
+											SI( 118, 3, 118, 11 ),
+											new Variable( SI( 118, 3, 118, 11 ), "failfunc" )
 										),
-										{
-											new Expression(
-												SI( 114, 19, 114, 39 ),
-												new program::Value( SI( 114, 19, 114, 39 ), VALUE( type::String, "something happened" ) )
-											)
-										}
+										{}
 									)
 								)
 							),
 							console_log(
-								115, 3,
+								119, 3,
 								{
 									new Expression(
-										SI( 115, 16, 115, 33 ),
-										new program::Value( SI( 115, 16, 115, 33 ), VALUE( type::String, "AFTER EXCEPTION" ) )
+										SI( 119, 16, 119, 33 ),
+										new program::Value( SI( 119, 16, 119, 33 ), VALUE( type::String, "AFTER EXCEPTION" ) )
 									)
 								}
 							),
 						}
 					),
 					new Catch(
-						SI( 117, 1, 125, 2 ),
+						SI( 121, 1, 129, 2 ),
 						new Object(
-							SI( 117, 7, 125, 2 ),
+							SI( 121, 7, 129, 2 ),
 							{
 								{
 									"UnknownError",
 									new Expression(
-										SI( 118, 17, 120, 4 ),
+										SI( 122, 17, 124, 4 ),
 										new Function(
-											SI( 118, 17, 120, 4 ),
+											SI( 122, 17, 124, 4 ),
 											{
-												new Variable( SI( 118, 18, 118, 19 ), "e" )
+												new Variable( SI( 122, 18, 122, 19 ), "e" )
 											}, new Scope(
-												SI( 119, 5, 119, 40 ),
+												SI( 123, 5, 123, 40 ),
 												{
 													console_log(
-														119, 5,
+														123, 5,
 														{
 															new Expression(
-																SI( 119, 17, 119, 38 ),
-																new program::Value( SI( 119, 17, 119, 38 ), VALUE( type::String, "shouldnt catch this" ) )
+																SI( 123, 17, 123, 38 ),
+																new program::Value( SI( 123, 17, 123, 38 ), VALUE( type::String, "shouldnt catch this" ) )
 															)
 														}
 													)
@@ -1604,53 +1786,53 @@ const Program* GetTestProgram( const std::string& filename ) {
 								{
 									"TestError",
 									new Expression(
-										SI( 121, 14, 124, 4 ),
+										SI( 125, 14, 128, 4 ),
 										new Function(
-											SI( 121, 14, 124, 4 ),
+											SI( 125, 14, 128, 4 ),
 											{
-												new Variable( SI( 121, 15, 121, 16 ), "e" )
+												new Variable( SI( 125, 15, 125, 16 ), "e" )
 											}, new Scope(
-												SI( 122, 5, 123, 30 ),
+												SI( 126, 5, 127, 30 ),
 												{
 													console_log(
-														122, 5,
+														126, 5,
 														{
 															new Expression(
-																SI( 122, 17, 122, 54 ),
+																SI( 126, 17, 126, 54 ),
 																new Expression(
-																	SI( 122, 17, 122, 43 ),
+																	SI( 126, 17, 126, 43 ),
 																	new Expression(
-																		SI( 122, 17, 122, 35 ),
-																		new program::Value( SI( 122, 17, 122, 26 ), VALUE( type::String, "CAUGHT " ) ),
-																		new Operator( SI( 122, 27, 122, 28 ), Operator::OT_ADD ),
+																		SI( 126, 17, 126, 35 ),
+																		new program::Value( SI( 126, 17, 126, 26 ), VALUE( type::String, "CAUGHT " ) ),
+																		new Operator( SI( 126, 27, 126, 28 ), Operator::OT_ADD ),
 																		new Expression(
-																			SI( 122, 29, 122, 35 ),
-																			new Variable( SI( 122, 29, 122, 30 ), "e" ),
-																			new Operator( SI( 122, 30, 122, 31 ), Operator::OT_CHILD ),
-																			new Variable( SI( 122, 31, 122, 35 ), "type" )
+																			SI( 126, 29, 126, 35 ),
+																			new Variable( SI( 126, 29, 126, 30 ), "e" ),
+																			new Operator( SI( 126, 30, 126, 31 ), Operator::OT_CHILD ),
+																			new Variable( SI( 126, 31, 126, 35 ), "type" )
 																		)
 																	),
-																	new Operator( SI( 122, 36, 122, 37 ), Operator::OT_ADD ),
-																	new program::Value( SI( 122, 38, 122, 43 ), VALUE( type::String, " : " ) )
+																	new Operator( SI( 126, 36, 126, 37 ), Operator::OT_ADD ),
+																	new program::Value( SI( 126, 38, 126, 43 ), VALUE( type::String, " : " ) )
 																),
-																new Operator( SI( 122, 44, 122, 45 ), Operator::OT_ADD ),
+																new Operator( SI( 126, 44, 126, 45 ), Operator::OT_ADD ),
 																new Expression(
-																	SI( 122, 46, 122, 54 ),
-																	new Variable( SI( 122, 46, 122, 47 ), "e" ),
-																	new Operator( SI( 122, 47, 122, 48 ), Operator::OT_CHILD ),
-																	new Variable( SI( 122, 48, 122, 54 ), "reason" )
+																	SI( 126, 46, 126, 54 ),
+																	new Variable( SI( 126, 46, 126, 47 ), "e" ),
+																	new Operator( SI( 126, 47, 126, 48 ), Operator::OT_CHILD ),
+																	new Variable( SI( 126, 48, 126, 54 ), "reason" )
 																)
 															)
 														}
 													),
 													console_log(
-														123, 5,
+														127, 5,
 														{
 															new Expression(
-																SI( 123, 17, 123, 28 ),
-																new Variable( SI( 123, 17, 123, 18 ), "e" ),
-																new Operator( SI( 123, 18, 123, 19 ), Operator::OT_CHILD ),
-																new Variable( SI( 123, 19, 123, 28 ), "backtrace" )
+																SI( 127, 17, 127, 28 ),
+																new Variable( SI( 127, 17, 127, 18 ), "e" ),
+																new Operator( SI( 127, 18, 127, 19 ), Operator::OT_CHILD ),
+																new Variable( SI( 127, 19, 127, 28 ), "backtrace" )
 															)
 														}
 													)
@@ -1665,17 +1847,18 @@ const Program* GetTestProgram( const std::string& filename ) {
 					)
 				),
 				console_log(
-					128, 1,
+					132, 1,
 					{
 						new Expression(
-							SI( 128, 13, 128, 19 ),
-							new program::Value( SI( 128, 13, 128, 19 ), VALUE( type::String, "bye!" ) )
+							SI( 132, 13, 132, 19 ),
+							new program::Value( SI( 132, 13, 132, 19 ), VALUE( type::String, "bye!" ) )
 						)
 					}
 				),
 			}
 		)
 	);
+	return program;
 }
 
 }

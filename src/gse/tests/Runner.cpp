@@ -1,5 +1,7 @@
 #include "GSE.h"
 
+#include <sstream>
+
 #include "gse/Tests.h"
 #include "gse/Context.h"
 
@@ -18,7 +20,7 @@ using namespace program;
 
 void AddRunnerTests( task::gsetests::GSETests* task ) {
 
-	const Program* test_program = GetTestProgram( "test.gjs" );
+	const Program* test_program = GetTestProgram();
 
 	// to test execution output
 	class ConsoleLogMock : public type::Callable {
@@ -87,8 +89,9 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 										"4\n"
 										"5\n"
 										"BEFORE EXCEPTION\n"
+										"failfunc\n"
 										"CAUGHT TestError : something happened\n"
-										"array{}\n" // TODO: backtrace
+										"array{string{		at test.gjs:116:     throw TestError('something happened');},string{		at test.gjs:118:   failfunc();}}\n"
 										"bye!\n";
 
 #define VALIDATE() { \
@@ -101,7 +104,13 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 
 			runner::Interpreter interpreter;
 
-			Context context;
+			Context::source_lines_t source_lines = {};
+			auto ss = std::stringstream{ GetTestSource() };
+			for ( std::string line ; std::getline( ss, line, '\n' ) ; ) {
+				source_lines.push_back( line );
+			}
+
+			Context context( nullptr, &source_lines );
 
 			// add some mocks
 			const auto console_log_mock = VALUE( ConsoleLogMock );

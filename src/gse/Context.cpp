@@ -2,7 +2,9 @@
 
 namespace gse {
 
-Context::Context() {
+Context::Context( const Context* parent_context, const source_lines_t* source_lines )
+	: m_parent_context( parent_context )
+	, m_source_lines( source_lines ) {
 	m_scopes.push_back( new Scope() ); // global scope
 }
 
@@ -60,12 +62,30 @@ const size_t Context::GetScopeDepth() const {
 	return m_scopes.size();
 }
 
+const Context* Context::GetParentContext() const {
+	return m_parent_context;
+}
+
+void Context::SetSI( const si_t& si ) {
+	m_si = si;
+}
+
+const si_t& Context::GetSI() const {
+	return m_si;
+}
+
+const std::string Context::GetSourceLine( const size_t line_num ) const {
+	ASSERT( line_num > 0 && line_num <= m_source_lines->size(), "source line overflow" );
+	return m_source_lines->at( line_num - 1 );
+}
+
 Context* const Context::CreateFunctionScope(
+	const std::string& function_name,
 	const std::vector< std::string > parameters,
 	const type::Callable::function_arguments_t& arguments
 ) const {
 	ASSERT( parameters.size() == arguments.size(), "expected " + std::to_string( parameters.size() ) + " arguments, found " + std::to_string( arguments.size() ) );
-	auto* result = new Context();
+	auto* result = new Context( this, m_source_lines );
 	result->m_scopes[ 0 ]->m_variables = m_scopes[ 0 ]->m_variables; // functions have access to parent variables but nothing else
 	result->PushScope(); // functions can have local variables
 	for ( size_t i = 0 ; i < parameters.size() ; i++ ) { // inject passed arguments

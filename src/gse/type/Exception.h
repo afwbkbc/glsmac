@@ -25,16 +25,15 @@ public:
 				"reason",
 				VALUE( type::String, exception.reason )
 			},
-			{
-				"backtrace",
-				VALUE( type::Array, type::Array::elements_t{} )
-			}
 		}
-	) {}
+	) {
+		type::Array::elements_t bt = {};
+		for ( const auto& it : exception.backtrace ) {
+			bt.push_back( VALUE( type::String, it ) );
+		}
+		value.insert_or_assign( "backtrace", VALUE( type::Array, bt ) );
+	}
 
-	//, exception( exception ) {}
-
-	//const gse::Exception exception;
 };
 
 }

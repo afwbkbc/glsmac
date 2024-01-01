@@ -22,7 +22,7 @@ GSE::~GSE() {
 
 void GSE::AddModule( const std::string& path, type::Callable* module ) {
 	if ( m_modules.find( path ) != m_modules.end() ) {
-		throw Exception( "GSE_InternalError", "module path '" + path + "' already taken" );
+		throw Exception( "GSE_InternalError", "module path '" + path + "' already taken", {} ); // ?
 	}
 	Log( "Adding module: " + path );
 	m_modules[ path ] = module;

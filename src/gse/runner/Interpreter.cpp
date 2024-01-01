@@ -170,8 +170,19 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 				e->arguments.size() == 1, "invalid error definition" );
 			const auto reason = EvaluateExpression( ctx, e->arguments[ 0 ] );
 			ASSERT( reason.Get()->type == Type::T_STRING, "error reason is not string: " + reason.ToString() );
-			throw gse::Exception( ( (program::Variable*)e->callable->a )->name, ( (type::String*)reason.Get() )->value );
-			// TODO: record backtrace
+
+			auto si = expression->op->m_si;
+#define FORMAT_SI() "		at " + si.file + ":" + std::to_string( si.from.line ) + ": " + ctx->GetSourceLine( si.from.line )
+			std::vector< std::string > backtrace = { FORMAT_SI() };
+			const auto* c = ctx->GetParentContext();
+			while ( c ) {
+				si = c->GetSI();
+				backtrace.push_back( FORMAT_SI() );
+				c = c->GetParentContext();
+			}
+#undef FORMAT_SI
+
+			throw gse::Exception( ( (program::Variable*)e->callable->a )->name, ( (type::String*)reason.Get() )->value, backtrace );
 		}
 		case Operator::OT_ASSIGN: {
 			ASSERT( expression->a, "missing assignment target" );
@@ -532,6 +543,7 @@ const gse::Value Interpreter::EvaluateOperand( Context* ctx, const program::Oper
 					for ( const auto& it : call->arguments ) {
 						arguments.push_back( Deref( EvaluateExpression( ctx, it ) ) );
 					}
+					ctx->SetSI( call->m_si ); // for backtraces
 					return ( (Callable*)callable.Get() )->Run( nullptr, arguments );
 				}
 				default:
@@ -658,7 +670,7 @@ Interpreter::Function::Function(
 }
 
 gse::Value Interpreter::Function::Run( GSE* gse, const Callable::function_arguments_t& arguments ) {
-	auto* ctx = parent_context->CreateFunctionScope( parameters, arguments );
+	auto* ctx = parent_context->CreateFunctionScope( "<function>", parameters, arguments );
 	const auto result = runner->Execute( ctx, program );
 	delete ctx;
 	return result;

@@ -472,7 +472,7 @@ const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::co
 									{
 										element->m_si.file,
 										element->m_si.from,
-										( *it_tmp )->m_si.to
+										( *it_end )->m_si.to
 									},
 									operand->type == Operand::OT_EXPRESSION
 										? (Expression*)operand
