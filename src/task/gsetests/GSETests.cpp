@@ -1,7 +1,7 @@
 #include "GSETests.h"
 
 #include "gse/GSE.h"
-#include "gse/Tests.h"
+#include "gse/tests/Tests.h"
 #include "engine/Engine.h"
 
 namespace task {
@@ -9,7 +9,7 @@ namespace gsetests {
 
 void GSETests::Start() {
 	Log( "Loading tests" );
-	gse::AddTests( this );
+	gse::tests::AddTests( this );
 }
 
 void GSETests::Stop() {

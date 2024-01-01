@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-#include "gse/Tests.h"
+#include "Tests.h"
 #include "gse/Context.h"
 
 #include "gse/type/Undefined.h"
@@ -20,7 +20,7 @@ using namespace program;
 
 void AddRunnerTests( task::gsetests::GSETests* task ) {
 
-	const Program* test_program = GetTestProgram();
+	const auto& test_program = GetTestProgram();
 
 	// to test execution output
 	class ConsoleLogMock : public type::Callable {
@@ -56,43 +56,7 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 		std::string output = "";
 	};
 
-	const std::string expected_output = "null{}\n"
-										"bool{true}\n"
-										"bool{true} bool{false}\n"
-										"bool{true} bool{true} bool{true} bool{false}\n"
-										"bool{true} bool{false}\n"
-										"bool{false} bool{true} bool{true} bool{true}\n"
-										"bool{false} bool{true} bool{false} bool{true}\n"
-										"bool{true} bool{false} bool{true} bool{true}\n"
-										"bool{true}\n"
-										"45 -61\n"
-										"52 10\n"
-										"array{string{first},string{second},int{6},int{3},string{TEST},object{key1:string{value1},key2:string{value2}},array{int{3},string{TEST},object{key1:string{value1},key2:string{value2}}}}\n"
-										"array{int{3},string{TEST},object{key1:string{value1},key2:string{value2}}}\n"
-										"array{string{FIRST},string{SECOND},string{first},string{second},int{3},string{TEST},array{int{3},string{TEST},object{key1:string{value1},key2:string{value2}}}}\n"
-										"array{string{FIRST},string{new first},string{new second},string{second}}\n"
-										"first\n"
-										"second\n"
-										"array{string{first},string{second}}\n"
-										"array{object{key1:string{value1},key2:string{value2}},array{int{3},string{TEST},object{key1:string{value1},key2:string{value2}}}}\n"
-										"array{string{first},string{second},int{6},int{3}}\n"
-										"array{string{TEST},object{key1:string{value1},key2:string{value2}},int{6},int{3}}\n"
-										"CHILD VALUE\n"
-										"bool{true}\n"
-										"object{propertyInt:int{372}} object{propertyInt1:int{150},propertyInt2:int{222},propertyString:string{STRING}}\n"
-										"YES\n"
-										"NO\n"
-										"OK\n"
-										"1\n"
-										"2\n"
-										"3\n"
-										"4\n"
-										"5\n"
-										"BEFORE EXCEPTION\n"
-										"failfunc\n"
-										"CAUGHT TestError : something happened\n"
-										"array{string{		at test.gjs:116:     throw TestError('something happened');},string{		at test.gjs:118:   failfunc();}}\n"
-										"bye!\n";
+	const std::string expected_output = GetExpectedResult();
 
 #define VALIDATE() { \
     const std::string actual_output = ( (ConsoleLogMock*)console_log_mock.Get() )->output; \

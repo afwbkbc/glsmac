@@ -1,8 +1,8 @@
 #include "Tests.h"
 
-#include "tests/GSE.h"
-#include "tests/Parser.h"
-#include "tests/Runner.h"
+#include "GSE.h"
+#include "Parser.h"
+#include "Runner.h"
 
 #include "gse/program/Variable.h"
 #include "gse/program/Value.h"
@@ -22,6 +22,7 @@
 #include "gse/type/Range.h"
 
 namespace gse {
+namespace tests {
 
 using namespace program;
 
@@ -1861,4 +1862,46 @@ const Program* GetTestProgram() {
 	return program;
 }
 
+const std::string& GetExpectedResult() {
+	const static std::string result = "null{}\n"
+									  "bool{true}\n"
+									  "bool{true} bool{false}\n"
+									  "bool{true} bool{true} bool{true} bool{false}\n"
+									  "bool{true} bool{false}\n"
+									  "bool{false} bool{true} bool{true} bool{true}\n"
+									  "bool{false} bool{true} bool{false} bool{true}\n"
+									  "bool{true} bool{false} bool{true} bool{true}\n"
+									  "bool{true}\n"
+									  "45 -61\n"
+									  "52 10\n"
+									  "array{string{first},string{second},int{6},int{3},string{TEST},object{key1:string{value1},key2:string{value2}},array{int{3},string{TEST},object{key1:string{value1},key2:string{value2}}}}\n"
+									  "array{int{3},string{TEST},object{key1:string{value1},key2:string{value2}}}\n"
+									  "array{string{FIRST},string{SECOND},string{first},string{second},int{3},string{TEST},array{int{3},string{TEST},object{key1:string{value1},key2:string{value2}}}}\n"
+									  "array{string{FIRST},string{new first},string{new second},string{second}}\n"
+									  "first\n"
+									  "second\n"
+									  "array{string{first},string{second}}\n"
+									  "array{object{key1:string{value1},key2:string{value2}},array{int{3},string{TEST},object{key1:string{value1},key2:string{value2}}}}\n"
+									  "array{string{first},string{second},int{6},int{3}}\n"
+									  "array{string{TEST},object{key1:string{value1},key2:string{value2}},int{6},int{3}}\n"
+									  "CHILD VALUE\n"
+									  "bool{true}\n"
+									  "object{propertyInt:int{372}} object{propertyInt1:int{150},propertyInt2:int{222},propertyString:string{STRING}}\n"
+									  "YES\n"
+									  "NO\n"
+									  "OK\n"
+									  "1\n"
+									  "2\n"
+									  "3\n"
+									  "4\n"
+									  "5\n"
+									  "BEFORE EXCEPTION\n"
+									  "failfunc\n"
+									  "CAUGHT TestError : something happened\n"
+									  "array{string{		at test.gjs:116:     throw TestError('something happened');},string{		at test.gjs:118:   failfunc();}}\n"
+									  "bye!\n";
+	return result;
+}
+
+}
 }

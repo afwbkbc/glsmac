@@ -1,4 +1,4 @@
-#include "gse/Tests.h"
+#include "Tests.h"
 #include "gse/type/Int.h"
 #include "gse/program/Program.h"
 #include "gse/program/Scope.h"
@@ -27,7 +27,7 @@ using namespace program;
 
 void AddParserTests( task::gsetests::GSETests* task ) {
 
-	const Program* reference_program = GetTestProgram();
+	const auto& reference_program = GetTestProgram();
 
 	const auto validate_program = [ reference_program ]( const Program* program ) -> std::string {
 		GT_ASSERT( program != nullptr, "parser returned null program" );
