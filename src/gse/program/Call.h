@@ -30,7 +30,7 @@ public:
 		for ( const auto& it : arguments ) {
 			args += it->ToString( depth + 2 );
 		}
-		return Formatted( "Call(", depth ) +
+		return Formatted( "Call" + m_si.ToString() + "(", depth ) +
 			Formatted( "Callable(", depth + 1 ) +
 			callable->ToString( depth + 2 ) +
 			Formatted( ")", depth + 1 ) +

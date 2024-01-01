@@ -35,7 +35,7 @@ public:
 
 	const std::string ToString( const size_t depth = 0 ) const override {
 		return
-			Formatted( "Expression(", depth ) +
+			Formatted( "Expression" + m_si.ToString() + "(", depth ) +
 				( a == nullptr
 					? ""
 					: a->ToString( depth + 1 )

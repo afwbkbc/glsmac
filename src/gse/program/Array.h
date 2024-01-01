@@ -25,7 +25,7 @@ public:
 	}
 
 	const std::string ToString( const size_t depth = 0 ) const override {
-		std::string result = Formatted( "Array( ", depth );
+		std::string result = Formatted( "Array" + m_si.ToString() + "( ", depth );
 		for ( const auto& it : elements ) {
 			result += Formatted( it->ToString(), depth + 1 );
 		}

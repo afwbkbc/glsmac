@@ -78,7 +78,7 @@ void GJS::GetElements( source_elements_t& elements ) {
 			si = get_si( begin, get_si_pos() );
 			switch ( c ) {
 				case ';': {
-					elements.push_back( new Delimiter( Delimiter::DT_FLOW, si ) );
+					elements.push_back( new Delimiter( Delimiter::DT_CODE, si ) );
 					break;
 				}
 				case ',': {
@@ -171,7 +171,7 @@ const program::Scope* GJS::GetScope( const source_elements_t::const_iterator& be
 			else if (
 				brackets.empty() &&
 					( *it_end )->m_type == SourceElement::ET_DELIMITER &&
-					( ( Delimiter * )( *it_end ) )->m_delimiter_type == Delimiter::DT_FLOW
+					( ( Delimiter * )( *it_end ) )->m_delimiter_type == Delimiter::DT_CODE
 				) {
 				if ( it != it_end ) {
 					body.push_back( GetControl( it, it_end ) );

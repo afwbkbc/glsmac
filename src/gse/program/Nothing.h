@@ -14,7 +14,7 @@ public:
 		: Operand( si, OT_NOTHING ) {}
 
 	const std::string ToString( const size_t depth = 0 ) const override {
-		return Formatted( "Nothing()", depth );
+		return Formatted( "Nothing" + m_si.ToString() + "()", depth );
 	}
 
 };

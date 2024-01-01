@@ -24,7 +24,7 @@ public:
 	const variable_hints_t hints;
 
 	const std::string ToString( const size_t depth = 0 ) const override {
-		return Formatted( "Variable( " + name + " )", depth );
+		return Formatted( "Variable" + m_si.ToString() + "( " + name + " )", depth );
 	}
 };
 

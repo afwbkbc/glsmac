@@ -22,7 +22,7 @@ public:
 	}
 
 	const std::string ToString( const size_t depth = 0 ) const override {
-		return Formatted( "Else(", depth ) +
+		return Formatted( "Else" + m_si.ToString() + "(", depth ) +
 			Formatted( "Body(", depth + 1 ) +
 			body->ToString( depth + 2 ) +
 			Formatted( ")", depth + 1 ) +

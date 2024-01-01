@@ -13,6 +13,9 @@ struct si_t {
 	};
 	pos_t from;
 	pos_t to;
+	const std::string ToString() const {
+		return "[" + file + ":" + std::to_string( from.line ) + ":" + std::to_string( from.col ) + "]";
+	}
 };
 
 namespace program {
@@ -36,7 +39,7 @@ public:
 	virtual const std::string ToString( const size_t depth = 0 ) const = 0;
 
 protected:
-	
+
 	const std::string Formatted( const std::string& text, const size_t depth ) const {
 		return std::string( TOSTRING_PREFIX_SIZE * depth, ' ' ) + text + ( depth > 0
 			? "\n"

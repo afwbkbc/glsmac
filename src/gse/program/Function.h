@@ -33,7 +33,7 @@ public:
 		for ( const auto& it : parameters ) {
 			params += it->ToString( depth + 2 );
 		}
-		return Formatted( "Function(", depth ) +
+		return Formatted( "Function" + m_si.ToString() + "(", depth ) +
 			Formatted( "Parameters(", depth + 1 ) +
 			params +
 			Formatted( ")", depth + 1 ) +

@@ -30,7 +30,7 @@ public:
 	}
 
 	const std::string ToString( const size_t depth = 0 ) const override {
-		return Formatted( "ElseIf(", depth ) +
+		return Formatted( "ElseIf" + m_si.ToString() + "(", depth ) +
 			Formatted( "Condition(", depth + 1 ) +
 			condition->ToString( depth + 2 ) +
 			Formatted( ")", depth + 1 ) +

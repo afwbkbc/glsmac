@@ -57,7 +57,7 @@ protected:
 		const bool m_is_multiline;
 		const std::string m_text;
 		virtual const std::string ToString() const {
-			return "comment{ " + m_text + " }";
+			return m_si.ToString() + "comment{" + m_text + "}";
 		}
 	};
 
@@ -70,7 +70,7 @@ protected:
 		const std::string m_name;
 		const uint8_t m_identifier_type;
 		virtual const std::string ToString() const {
-			return "identifier{ " + m_name + " }";
+			return m_si.ToString() + "identifier{" + m_name + "}";
 		}
 	};
 
@@ -81,14 +81,14 @@ protected:
 			, m_op( op ) {}
 		const std::string m_op;
 		virtual const std::string ToString() const {
-			return "operator{ " + m_op + " }";
+			return m_si.ToString() + "operator{" + m_op + "}";
 		};
 	};
 
 	class Delimiter : public SourceElement {
 	public:
 		enum delimiter_type_t {
-			DT_FLOW,
+			DT_CODE,
 			DT_DATA,
 		};
 		Delimiter( const delimiter_type_t delimiter_type, const si_t& si )
@@ -99,10 +99,10 @@ protected:
 
 		virtual const std::string ToString() const {
 			switch ( m_delimiter_type ) {
-				case DT_FLOW:
-					return "delimiter{ ; }";
+				case DT_CODE:
+					return m_si.ToString() + "delimiter{code}";
 				case DT_DATA:
-					return "delimiter{ , }";
+					return m_si.ToString() + "delimiter{data}";
 				default:
 					ASSERT_NOLOG( false, "unexpected delimiter type: " + std::to_string( m_delimiter_type ) );
 			}
@@ -134,17 +134,17 @@ protected:
 		virtual const std::string ToString() const {
 			switch ( m_conditional_type ) {
 				case CT_IF:
-					return "conditional{ if }";
+					return m_si.ToString() + "conditional{if}";
 				case CT_ELSEIF:
-					return "conditional{ elseif }";
+					return m_si.ToString() + "conditional{elseif}";
 				case CT_ELSE:
-					return "conditional{ else }";
+					return m_si.ToString() + "conditional{else}";
 				case CT_WHILE:
-					return "conditional{ while }";
+					return m_si.ToString() + "conditional{while}";
 				case CT_TRY:
-					return "conditional{ try }";
+					return m_si.ToString() + "conditional{try}";
 				case CT_CATCH:
-					return "conditional{ catch }";
+					return m_si.ToString() + "conditional{catch}";
 				default:
 					ASSERT_NOLOG( false, "unexpected conditional type: " + std::to_string( m_conditional_type ) );
 			}
@@ -166,9 +166,9 @@ protected:
 		virtual const std::string ToString() const {
 			switch ( m_block_side ) {
 				case BS_BEGIN:
-					return "block_open{ " + std::to_string( m_block_type ) + " }";
+					return m_si.ToString() + "block_open{" + std::to_string( m_block_type ) + "}";
 				case BS_END:
-					return "block_close{ " + std::to_string( m_block_type ) + " }";
+					return m_si.ToString() + "block_close{" + std::to_string( m_block_type ) + "}";
 				default:
 					ASSERT_NOLOG( false, "unexpected block side: " + std::to_string( m_block_side ) );
 			}

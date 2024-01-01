@@ -21,7 +21,7 @@ public:
 	}
 
 	const std::string ToString( const size_t depth = 0 ) const override {
-		return Formatted( "Catch(", depth ) +
+		return Formatted( "Catch" + m_si.ToString() + "(", depth ) +
 			Formatted( "Handlers(", depth + 1 ) +
 			handlers->ToString( depth + 2 ) +
 			Formatted( ")", depth + 1 ) +

@@ -26,7 +26,7 @@ public:
 	}
 
 	const std::string ToString( const size_t depth = 0 ) const override {
-		std::string result = Formatted( "Object( ", depth );
+		std::string result = Formatted( "Object" + m_si.ToString() + "( ", depth );
 		for ( const auto& it : properties ) {
 			result +=
 				Formatted( it.first + ":", depth + 1 ) +

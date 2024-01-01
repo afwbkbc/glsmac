@@ -95,7 +95,7 @@ const std::string Type::ToString() const {
 				else {
 					str.append( "," );
 				}
-				str.append( it.first + "=" + it.second.ToString() );
+				str.append( it.first + ":" + it.second.ToString() );
 			}
 			str.append( "}" );
 			return str;
