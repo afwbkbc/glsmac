@@ -11,8 +11,8 @@ namespace program {
 class Try : public Conditional {
 public:
 
-	Try( const Scope* body, const Catch* handlers )
-		: Conditional( CT_TRY )
+	Try( const si_t& si, const Scope* body, const Catch* handlers )
+		: Conditional( si, CT_TRY )
 		, body( body )
 		, handlers( handlers ) {}
 

@@ -9,8 +9,8 @@ namespace program {
 
 class Statement : public Control {
 public:
-	Statement( const Expression* body )
-		: Control( CT_STATEMENT )
+	Statement( const si_t& si, const Expression* body )
+		: Control( si, CT_STATEMENT )
 		, body( body ) {}
 
 	const Expression* body;

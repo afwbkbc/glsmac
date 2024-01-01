@@ -13,8 +13,8 @@ class Object : public Operand {
 public:
 	typedef std::unordered_map< std::string, const Expression* > properties_t;
 
-	Object( const properties_t& properties )
-		: Operand( OT_OBJECT )
+	Object( const si_t& si, const properties_t& properties )
+		: Operand( si, OT_OBJECT )
 		, properties( properties ) {}
 
 	const properties_t properties;

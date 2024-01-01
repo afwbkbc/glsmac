@@ -24,7 +24,7 @@ typedef std::function< std::string( gse::GSE& gse ) > gse_test_t;
 
 #define GT_ASSERT( _condition, ... ) {\
     if ( !( _condition ) ) {\
-        GT_FAIL( (std::string) "assertion failed [ " # _condition " ] " __VA_ARGS__ );\
+        GT_FAIL( (std::string) "assertion failed [ " # _condition " ]: " __VA_ARGS__ );\
     }\
 }
 

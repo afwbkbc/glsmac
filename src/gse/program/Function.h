@@ -13,8 +13,8 @@ namespace program {
 class Function : public Operand {
 public:
 
-	Function( const std::vector< Variable* >& parameters, const Scope* body )
-		: Operand( OT_FUNCTION )
+	Function( const si_t& si, const std::vector< Variable* >& parameters, const Scope* body )
+		: Operand( si, OT_FUNCTION )
 		, parameters( parameters )
 		, body( body ) {}
 

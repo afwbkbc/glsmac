@@ -20,8 +20,8 @@ public:
 		OT_IF,
 	};
 
-	Operand( const operand_type_t type )
-		: Element( ET_OPERAND )
+	Operand( const si_t& si, const operand_type_t type )
+		: Element( si, ET_OPERAND )
 		, type( type ) {}
 
 	const operand_type_t type;

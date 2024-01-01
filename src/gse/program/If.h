@@ -11,8 +11,8 @@ namespace program {
 class If : public Conditional {
 public:
 
-	If( const Expression* condition, const Scope* body, const Conditional* els = nullptr )
-		: Conditional( CT_IF )
+	If( const si_t& si, const Expression* condition, const Scope* body, const Conditional* els = nullptr )
+		: Conditional( si, CT_IF )
 		, condition( condition )
 		, body( body )
 		, els( els ) {}

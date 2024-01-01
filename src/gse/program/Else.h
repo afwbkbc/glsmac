@@ -11,8 +11,8 @@ namespace program {
 class Else : public Conditional {
 public:
 
-	Else( const Scope* body )
-		: Conditional( CT_ELSE )
+	Else( const si_t& si, const Scope* body )
+		: Conditional( si, CT_ELSE )
 		, body( body ) {}
 
 	const Scope* body;

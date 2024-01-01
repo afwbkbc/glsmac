@@ -11,8 +11,8 @@ namespace program {
 class While : public Conditional {
 public:
 
-	While( const Expression* condition, const Scope* body )
-		: Conditional( CT_WHILE )
+	While( const si_t& si, const Expression* condition, const Scope* body )
+		: Conditional( si, CT_WHILE )
 		, condition( condition )
 		, body( body ) {}
 

@@ -10,8 +10,8 @@ namespace program {
 class Call : public Operand {
 public:
 
-	Call( const Expression* callable, const std::vector< const Expression* >& arguments )
-		: Operand( OT_CALL )
+	Call( const si_t& si, const Expression* callable, const std::vector< const Expression* >& arguments )
+		: Operand( si, OT_CALL )
 		, callable( callable )
 		, arguments( arguments ) {}
 

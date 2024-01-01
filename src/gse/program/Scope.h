@@ -11,8 +11,8 @@ namespace program {
 class Scope : public Operand {
 public:
 
-	Scope( const std::vector< const Control* >& body )
-		: Operand( OT_SCOPE )
+	Scope( const si_t& si, const std::vector< const Control* >& body )
+		: Operand( si, OT_SCOPE )
 		, body( body ) {}
 
 	const std::vector< const Control* > body;

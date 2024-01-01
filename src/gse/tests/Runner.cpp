@@ -18,7 +18,7 @@ using namespace program;
 
 void AddRunnerTests( task::gsetests::GSETests* task ) {
 
-	const Program* test_program = GetTestProgram();
+	const Program* test_program = GetTestProgram( "test.gjs" );
 
 	// to test execution output
 	class ConsoleLogMock : public type::Callable {

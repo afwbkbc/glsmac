@@ -5,11 +5,15 @@
 namespace gse {
 namespace parser {
 
-Parser::Parser( const std::string& source )
+Parser::Parser( const std::string& filename, const std::string& source )
 	: m_source( source )
+	, m_filename( filename )
 	, m_begin( m_source.c_str() )
 	, m_end( m_source.c_str() + m_source.size() ) {
 	m_ptr = m_begin;
+	// more common to count source line:col from 1 than from 0
+	m_si_pos.line = 1;
+	m_si_pos.col = 1;
 }
 
 const program::Program* Parser::Parse() {
@@ -38,7 +42,7 @@ const bool Parser::match_char( const char chr, bool consume ) {
 	else {
 		if ( *m_ptr == chr ) {
 			if ( consume ) {
-				m_ptr++;
+				move();
 			}
 			return true;
 		}
@@ -54,7 +58,7 @@ const char Parser::match_char_any( const char* chrs, bool consume ) {
 		for ( const char* p = chrs ; *p ; p++ ) {
 			if ( *m_ptr == *p ) {
 				if ( consume ) {
-					m_ptr++;
+					move();
 				}
 				return *p;
 			}
@@ -71,7 +75,7 @@ const bool Parser::match_sequence( const char* sequence, bool consume ) {
 	else {
 		if ( !memcmp( m_ptr, sequence, len ) ) {
 			if ( consume ) {
-				m_ptr += len;
+				move_by( len );
 			}
 			return true;
 		}
@@ -79,14 +83,26 @@ const bool Parser::match_sequence( const char* sequence, bool consume ) {
 	}
 }
 
+const si_t::pos_t& Parser::get_si_pos() const {
+	return m_si_pos;
+}
+
+const si_t Parser::get_si( const si_t::pos_t& begin, const si_t::pos_t& end ) const {
+	return {
+		m_filename,
+		begin,
+		end
+	};
+}
+
 const std::string Parser::read_until_char( char chr, bool consume ) {
 	const char* begin_ptr = m_ptr;
 	while ( m_ptr < m_end - 1 && *m_ptr != chr ) {
-		m_ptr++;
+		move();
 	}
 	const char* end_ptr = m_ptr;
 	if ( consume ) {
-		m_ptr++;
+		move();
 	}
 	return std::string( begin_ptr, end_ptr );
 }
@@ -103,13 +119,10 @@ const std::string Parser::read_until_char_any( const char* chrs, bool consume ) 
 		if ( *p ) {
 			break;
 		}
-		m_ptr++;
+		move();
 	}
-	if ( consume ) {
-		m_ptr++;
-	}
-	if ( m_ptr == m_end ) {
-		m_ptr--;
+	if ( consume && m_ptr != m_end - 1 ) {
+		move();
 	}
 	return std::string( begin_ptr, m_ptr );
 }
@@ -132,14 +145,11 @@ const std::string Parser::read_until_sequence( const char* sequence, bool consum
 		if ( p2 == end ) {
 			break;
 		}
-		m_ptr++;
+		move();
 	}
 	const char* end_ptr = m_ptr;
 	if ( consume ) {
-		m_ptr += ( end - sequence );
-	}
-	if ( m_ptr >= m_end ) {
-		m_ptr = m_end - 1;
+		move_by( std::min( end - sequence, m_end - m_ptr - 1 ) );
 	}
 	return std::string( begin_ptr, end_ptr );
 }
@@ -161,7 +171,24 @@ void Parser::skip_while_char_any( const char* chrs ) {
 		if ( !*p ) {
 			break;
 		}
-		m_ptr++;
+		move();
+	}
+}
+
+inline void Parser::move() {
+	if ( *m_ptr == '\n' ) {
+		m_si_pos.line++;
+		m_si_pos.col = 1;
+	}
+	else {
+		m_si_pos.col++;
+	}
+	m_ptr++;
+}
+
+inline void Parser::move_by( const size_t len ) {
+	for ( size_t i = 0 ; i < len ; i++ ) {
+		move();
 	}
 }
 

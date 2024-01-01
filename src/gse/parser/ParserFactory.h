@@ -9,7 +9,7 @@ namespace parser {
 
 CLASS( ParserFactory, base::Base )
 
-	Parser* GetParser( const std::string& extension, const std::string& source );
+	Parser* GetParser( const std::string& filename, const std::string& source );
 
 };
 

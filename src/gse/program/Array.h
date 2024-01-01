@@ -12,8 +12,8 @@ class Array : public Operand {
 public:
 	typedef std::vector< const Expression* > elements_t;
 
-	Array( const elements_t& elements )
-		: Operand( OT_ARRAY )
+	Array( const si_t& si, const elements_t& elements )
+		: Operand( si, OT_ARRAY )
 		, elements( elements ) {}
 
 	const elements_t elements;

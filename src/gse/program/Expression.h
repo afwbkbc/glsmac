@@ -11,8 +11,8 @@ namespace program {
 
 class Expression : public Operand {
 public:
-	Expression( const Operand* a, const Operator* op = nullptr, const Operand* b = nullptr )
-		: Operand( OT_EXPRESSION )
+	Expression( const si_t& si, const Operand* a, const Operator* op = nullptr, const Operand* b = nullptr )
+		: Operand( si, OT_EXPRESSION )
 		, a( a )
 		, op( op )
 		, b( b ) {}

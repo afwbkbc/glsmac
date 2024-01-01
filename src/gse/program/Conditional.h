@@ -16,8 +16,8 @@ public:
 		CT_CATCH,
 	};
 
-	Conditional( const conditional_type_t conditional_type )
-		: Control( CT_CONDITIONAL )
+	Conditional( const si_t& si, const conditional_type_t conditional_type )
+		: Control( si, CT_CONDITIONAL )
 		, conditional_type( conditional_type ) {}
 
 	const conditional_type_t conditional_type;

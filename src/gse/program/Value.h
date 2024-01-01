@@ -12,8 +12,8 @@ namespace program {
 class Value : public Operand {
 public:
 
-	Value( const gse::Value& value )
-		: Operand( OT_VALUE )
+	Value( const si_t& si, const gse::Value& value )
+		: Operand( si, OT_VALUE )
 		, value( value ) {}
 
 	const gse::Value value;

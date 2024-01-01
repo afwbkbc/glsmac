@@ -10,8 +10,8 @@ namespace program {
 class Catch : public Conditional {
 public:
 
-	Catch( const Object* handlers )
-		: Conditional( CT_CATCH )
+	Catch( const si_t& si, const Object* handlers )
+		: Conditional( si, CT_CATCH )
 		, handlers( handlers ) {}
 
 	const Object* handlers;

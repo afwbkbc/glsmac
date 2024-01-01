@@ -19,13 +19,15 @@ namespace parser {
 
 CLASS( GJS, Parser )
 
-	GJS( const std::string& source );
+	GJS( const std::string& filename, const std::string& source );
 
 protected:
 	void GetElements( source_elements_t& elements ) override;
 	const program::Program* GetProgram( const source_elements_t& elements ) override;
 
 private:
+
+	const si_t GetSI( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 
 	const program::Scope* GetScope( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 	const program::Control* GetControl( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );

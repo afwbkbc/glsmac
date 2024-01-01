@@ -14,7 +14,8 @@ namespace parser {
 
 CLASS( Parser, base::Base )
 
-	Parser( const std::string& source );
+	Parser( const std::string& filename, const std::string& source );
+	virtual ~Parser() = default;
 
 	const program::Program* Parse();
 
@@ -37,17 +38,20 @@ protected:
 			ET_CONDITIONAL,
 			ET_BLOCK,
 		};
-		SourceElement( const element_type_t type )
-			: m_type( type ) {}
+		SourceElement( const element_type_t type, const si_t& si )
+			: m_type( type )
+			, m_si( si ) {}
+		virtual ~SourceElement() = default;
 		const element_type_t m_type;
+		const si_t m_si;
 		virtual const std::string ToString() const = 0;
 	};
 	typedef std::vector< SourceElement* > source_elements_t;
 
 	class Comment : public SourceElement {
 	public:
-		Comment( bool is_multiline, const std::string& text )
-			: SourceElement( ET_COMMENT )
+		Comment( bool is_multiline, const std::string& text, const si_t& si )
+			: SourceElement( ET_COMMENT, si )
 			, m_is_multiline( is_multiline )
 			, m_text( text ) {}
 		const bool m_is_multiline;
@@ -59,8 +63,8 @@ protected:
 
 	class Identifier : public SourceElement {
 	public:
-		Identifier( const std::string& name, const uint8_t identifier_type )
-			: SourceElement( ET_IDENTIFIER )
+		Identifier( const std::string& name, const uint8_t identifier_type, const si_t& si )
+			: SourceElement( ET_IDENTIFIER, si )
 			, m_name( name )
 			, m_identifier_type( identifier_type ) {}
 		const std::string m_name;
@@ -72,8 +76,8 @@ protected:
 
 	class Operator : public SourceElement {
 	public:
-		Operator( const std::string& op )
-			: SourceElement( ET_OPERATOR )
+		Operator( const std::string& op, const si_t& si )
+			: SourceElement( ET_OPERATOR, si )
 			, m_op( op ) {}
 		const std::string m_op;
 		virtual const std::string ToString() const {
@@ -87,8 +91,8 @@ protected:
 			DT_FLOW,
 			DT_DATA,
 		};
-		Delimiter( const delimiter_type_t delimiter_type )
-			: SourceElement( ET_DELIMITER )
+		Delimiter( const delimiter_type_t delimiter_type, const si_t& si )
+			: SourceElement( ET_DELIMITER, si )
 			, m_delimiter_type( delimiter_type ) {};
 
 		const delimiter_type_t m_delimiter_type;
@@ -115,8 +119,8 @@ protected:
 			CT_TRY,
 			CT_CATCH,
 		};
-		Conditional( const conditional_type_t conditional_type )
-			: SourceElement( ET_CONDITIONAL )
+		Conditional( const conditional_type_t conditional_type, const si_t& si )
+			: SourceElement( ET_CONDITIONAL, si )
 			, m_conditional_type( conditional_type )
 			, has_condition(
 				conditional_type == CT_IF ||
@@ -153,8 +157,8 @@ protected:
 			BS_BEGIN,
 			BS_END,
 		};
-		Block( const uint8_t block_type, const block_side_t block_side )
-			: SourceElement( ET_BLOCK )
+		Block( const uint8_t block_type, const block_side_t block_side, const si_t& si )
+			: SourceElement( ET_BLOCK, si )
 			, m_block_type( block_type )
 			, m_block_side( block_side ) {}
 		const block_side_t m_block_side;
@@ -195,13 +199,22 @@ protected:
 	// check if sequence occurs at current position
 	const bool match_sequence( const char* sequence, bool consume );
 
+	// returns last recorded source info
+	const si_t::pos_t& get_si_pos() const;
+	const si_t get_si( const si_t::pos_t& begin, const si_t::pos_t& end ) const;
+
 private:
 	const std::string m_source;
+	const std::string m_filename;
 
 	const char* const m_begin;
 	const char* const m_end;
 	const char* m_ptr = nullptr;
 
+	si_t::pos_t m_si_pos = {};
+
+	inline void move();
+	inline void move_by( const size_t len = 1 );
 };
 
 }

@@ -11,8 +11,8 @@ namespace program {
 class ElseIf : public Conditional {
 public:
 
-	ElseIf( const Expression* condition, const Scope* body, const Conditional* els = nullptr )
-		: Conditional( CT_ELSEIF )
+	ElseIf( const si_t& si, const Expression* condition, const Scope* body, const Conditional* els = nullptr )
+		: Conditional( si, CT_ELSEIF )
 		, condition( condition )
 		, body( body )
 		, els( els ) {}

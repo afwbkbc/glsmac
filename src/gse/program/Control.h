@@ -13,8 +13,8 @@ public:
 		CT_STATEMENT,
 		CT_CONDITIONAL,
 	};
-	Control( const control_type_t control_type )
-		: Element( ET_CONDITIONAL )
+	Control( const si_t& si, const control_type_t control_type )
+		: Element( si, ET_CONDITIONAL )
 		, control_type( control_type ) {}
 
 	const control_type_t control_type;

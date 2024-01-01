@@ -41,8 +41,8 @@ public:
 		OT_RANGE,
 	};
 
-	Operator( const operator_type_t op )
-		: Element( ET_OPERATOR )
+	Operator( const si_t& si, const operator_type_t op )
+		: Element( si, ET_OPERATOR )
 		, op( op ) {}
 
 	const operator_type_t op;

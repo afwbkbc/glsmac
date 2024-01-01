@@ -7,6 +7,6 @@
 namespace gse {
 
 void AddTests( task::gsetests::GSETests* task );
-const program::Program* GetTestProgram();
+const program::Program* GetTestProgram( const std::string& filename );
 
 }
