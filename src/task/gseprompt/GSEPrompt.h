@@ -4,6 +4,7 @@
 
 #include "gse/GSE.h"
 #include "gse/Context.h"
+#include "gse/runner/Runner.h"
 #include "gse/program/Program.h"
 
 #include "util/Timer.h"
@@ -27,6 +28,7 @@ private:
 		nullptr,
 		{}
 	};
+	const gse::runner::Runner* m_runner;
 
 	util::Timer m_startup_timer;
 
