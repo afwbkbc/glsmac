@@ -112,8 +112,9 @@ namespace debug {
 
 MemoryWatcher* g_memory_watcher = nullptr;
 
-MemoryWatcher::MemoryWatcher( const bool memory_debug )
-	: m_memory_debug( memory_debug ) {
+MemoryWatcher::MemoryWatcher( const bool memory_debug, const bool is_quiet )
+	: m_memory_debug( memory_debug )
+	, m_is_quiet( is_quiet ) {
 	ASSERT( !g_memory_watcher, "duplicate MemoryWatcher instantiation" );
 	g_memory_watcher = this;
 }
@@ -125,11 +126,11 @@ MemoryWatcher::~MemoryWatcher() {
 	bool any_leaks = false;
 #define CHECK_LEAKS( _where ) \
     if ( !_where.empty() ) { \
-        Log( "WARNING: " + std::to_string( _where.size() ) + " objects were never freed (possible memory leaks?):" ); \
+        Log( "WARNING: " + std::to_string( _where.size() ) + " objects were never freed (possible memory leaks?):", true ); \
         for (auto& o : _where) { \
             std::stringstream ptrstr; \
             ptrstr << o.first; \
-            Log( "    (" + ptrstr.str() + ") @" + o.second.source ); \
+            Log( "    (" + ptrstr.str() + ") @" + o.second.source, true ); \
         } \
         any_leaks = true; \
     }
@@ -1069,13 +1070,15 @@ const MemoryWatcher::statistics_result_t MemoryWatcher::GetLargestMemoryConsumer
 	return result;
 }
 
-void MemoryWatcher::Log( const std::string& text ) {
-	g_debug_stats._mutex.lock();
-	if ( !g_debug_stats._readonly ) { // don't spam from debug overlay
-		std::cout << "<MemoryWatcher> " << text << std::endl;
-		fflush( stdout );
+void MemoryWatcher::Log( const std::string& text, const bool is_important ) {
+	if ( !m_is_quiet || is_important ) {
+		g_debug_stats._mutex.lock();
+		if ( !g_debug_stats._readonly ) { // don't spam from debug overlay
+			std::cout << "<MemoryWatcher> " << text << std::endl;
+			fflush( stdout );
+		}
+		g_debug_stats._mutex.unlock();
 	}
-	g_debug_stats._mutex.unlock();
 }
 
 }

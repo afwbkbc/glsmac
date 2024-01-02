@@ -9,7 +9,8 @@ namespace task {
 namespace gseprompt {
 
 GSEPrompt::GSEPrompt( const std::string& syntax )
-	: m_syntax( syntax ) {
+	: m_syntax( syntax )
+	, m_is_tty( isatty( fileno( stdin ) ) ) {
 
 }
 
@@ -27,26 +28,40 @@ void GSEPrompt::Stop() {
 	m_programs.clear();
 	delete m_runner;
 	m_runner = nullptr;
+	m_input.clear();
 }
 
 void GSEPrompt::Iterate() {
 	if ( m_startup_timer.HasTicked() ) {
 		m_runner = m_gse.GetRunner();
+		m_is_running = true;
+		if ( m_is_tty ) {
+			std::cout << std::endl;
+		}
 		PrintPrompt();
 	}
-	if ( !m_startup_timer.IsRunning() ) {
+	if ( m_is_running ) {
 		FD_ZERO( &rfds );
 		FD_SET( 0, &rfds );
 		retval = select( 1, &rfds, NULL, NULL, &tv );
 		ASSERT( retval != -1, "select() failed" );
 		if ( retval ) {
 			if ( !fgets( buff, sizeof( buff ), stdin ) ) {
-				std::cout << std::endl << std::endl;
+				m_is_running = false;
+				if ( m_is_tty ) {
+					std::cout << std::endl << std::endl;
+				}
+				else {
+					ProcessInput();
+				}
 				g_engine->ShutDown();
 				return;
 			}
 			if ( buff[ 0 ] != '\n' ) {
-				ProcessInput( buff );
+				m_input += buff;
+				if ( m_is_tty ) {
+					ProcessInput();
+				}
 			}
 			PrintPrompt();
 		}
@@ -54,11 +69,13 @@ void GSEPrompt::Iterate() {
 }
 
 void GSEPrompt::PrintPrompt() {
-	std::cout << std::endl << m_syntax << "> " << std::flush;
+	if ( m_is_tty ) {
+		std::cout << m_syntax << "> " << std::flush;
+	}
 }
 
-void GSEPrompt::ProcessInput( const char* input ) {
-	std::string source = std::string( input ) + ";"; // hack
+void GSEPrompt::ProcessInput() {
+	std::string source = m_input + ";"; // hack
 
 	auto* parser = m_gse.GetParser( "input." + m_syntax, source );
 
@@ -71,6 +88,9 @@ void GSEPrompt::ProcessInput( const char* input ) {
 	catch ( std::runtime_error& e ) {
 		std::cout << "ERROR: " << e.what() << std::endl;
 	}
+	if ( m_is_tty ) {
+		std::cout << std::endl;
+	}
 
 	DELETE( parser );
 	if ( program ) {
@@ -80,6 +100,7 @@ void GSEPrompt::ProcessInput( const char* input ) {
 		m_programs.push_back( program );
 	}
 
+	m_input.clear();
 }
 
 }

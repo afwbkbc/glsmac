@@ -21,7 +21,11 @@ CLASS( GSEPrompt, base::Task )
 	void Iterate() override;
 
 private:
+	bool m_is_running = false;
+
 	const std::string m_syntax;
+
+	const bool m_is_tty;
 
 	gse::GSE m_gse;
 	gse::Context m_gse_context = {
@@ -39,8 +43,10 @@ private:
 	int retval, len;
 	char buff[255] = { 0 };
 
+	std::string m_input = "";
+
 	void PrintPrompt();
-	void ProcessInput( const char* input );
+	void ProcessInput();
 
 	std::vector< const gse::program::Program* > m_programs = {};
 

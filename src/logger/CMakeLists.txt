@@ -1,5 +1,9 @@
-SET( SRC ${SRC}
+IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
 
-	${PWD}/Stdout.cpp
+	SET( SRC ${SRC}
 
-	PARENT_SCOPE )
+		${PWD}/Stdout.cpp
+
+		PARENT_SCOPE )
+
+ENDIF ()

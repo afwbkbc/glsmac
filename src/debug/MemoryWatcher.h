@@ -17,7 +17,7 @@ namespace debug {
 
 class MemoryWatcher {
 public:
-	MemoryWatcher( const bool memory_debug = false );
+	MemoryWatcher( const bool memory_debug = false, const bool is_quiet = false );
 
 	~MemoryWatcher();
 
@@ -64,8 +64,9 @@ public:
 
 private:
 	const bool m_memory_debug = false;
+	const bool m_is_quiet = false;
 	std::mutex m_mutex;
-	void Log( const std::string& text );
+	void Log( const std::string& text, const bool is_important = false );
 
 	struct object_info_t {
 		const void* ptr = nullptr;

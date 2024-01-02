@@ -22,6 +22,7 @@
 
 #ifdef DEBUG
 
+#include "logger/Noop.h"
 #include "graphics/Null.h"
 #include "loader/font/Null.h"
 #include "loader/texture/Null.h"
@@ -128,7 +129,7 @@ int main( const int argc, const char* argv[] ) {
 		cout << "WARNING: gdb check skipped due to unsupported platform" << endl;
 #endif
 	}
-	debug::MemoryWatcher memory_watcher( config.HasDebugFlag( config::Config::DF_MEMORYDEBUG ) );
+	debug::MemoryWatcher memory_watcher( config.HasDebugFlag( config::Config::DF_MEMORYDEBUG ), config.HasDebugFlag( config::Config::DF_QUIET ) );
 #endif
 
 	FS::CreateDirectoryIfNotExists( config.GetPrefix() );
@@ -139,7 +140,18 @@ int main( const int argc, const char* argv[] ) {
 	int result = EXIT_FAILURE;
 
 	// logger needs to be outside of scope to be destroyed last
-	logger::Stdout logger;
+
+#ifdef DEBUG
+	logger::Logger* logger;
+	if ( config.HasDebugFlag( config::Config::DF_QUIET ) ) {
+		NEW( logger, logger::Noop );
+	}
+	else {
+		NEW( logger, logger::Stdout );
+	}
+#else
+	NEWV( logger, logger::Noop );
+#endif
 	{
 
 #ifdef _WIN32
@@ -181,7 +193,7 @@ int main( const int argc, const char* argv[] ) {
 			engine::Engine engine(
 				&config,
 				&error_handler,
-				&logger,
+				logger,
 				&font_loader,
 				&texture_loader,
 				&sound_loader,
@@ -263,7 +275,7 @@ int main( const int argc, const char* argv[] ) {
 			engine::Engine engine(
 				&config,
 				&error_handler,
-				&logger,
+				logger,
 				&font_loader,
 				&texture_loader,
 				&sound_loader,
@@ -279,6 +291,7 @@ int main( const int argc, const char* argv[] ) {
 			result = engine.Run();
 		}
 	}
+	DELETE( logger );
 
 	return result;
 }
