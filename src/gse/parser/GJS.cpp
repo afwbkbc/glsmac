@@ -124,7 +124,7 @@ void GJS::GetElements( source_elements_t& elements ) {
 #define EL( _label ) LogElement( _label ": ", element );
 #else
 #define ELS( _label )
-#define EL()
+#define EL( _label )
 #endif
 
 const program::Program* GJS::GetProgram( const source_elements_t& elements ) {

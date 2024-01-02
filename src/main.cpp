@@ -18,11 +18,11 @@
 
 #endif
 
-#include "logger/Stdout.h"
+#include "logger/Noop.h"
 
 #ifdef DEBUG
 
-#include "logger/Noop.h"
+#include "logger/Stdout.h"
 #include "graphics/Null.h"
 #include "loader/font/Null.h"
 #include "loader/texture/Null.h"
