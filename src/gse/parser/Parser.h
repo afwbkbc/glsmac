@@ -104,7 +104,7 @@ protected:
 				case DT_DATA:
 					return m_si.ToString() + "delimiter{data}";
 				default:
-					ASSERT_NOLOG( false, "unexpected delimiter type: " + std::to_string( m_delimiter_type ) );
+					THROW( "unexpected delimiter type: " + std::to_string( m_delimiter_type ) );
 			}
 		}
 	};
@@ -146,7 +146,7 @@ protected:
 				case CT_CATCH:
 					return m_si.ToString() + "conditional{catch}";
 				default:
-					ASSERT_NOLOG( false, "unexpected conditional type: " + std::to_string( m_conditional_type ) );
+					THROW( "unexpected conditional type: " + std::to_string( m_conditional_type ) );
 			}
 		}
 	};
@@ -170,7 +170,7 @@ protected:
 				case BS_END:
 					return m_si.ToString() + "block_close{" + std::to_string( m_block_type ) + "}";
 				default:
-					ASSERT_NOLOG( false, "unexpected block side: " + std::to_string( m_block_side ) );
+					THROW( "unexpected block side: " + std::to_string( m_block_side ) );
 			}
 		}
 	};

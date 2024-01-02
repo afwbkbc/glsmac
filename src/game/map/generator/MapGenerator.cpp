@@ -322,7 +322,7 @@ void MapGenerator::SetMoistureAmount( Tiles* tiles, const float amount, MT_CANCE
 					break;
 				}
 				default: {
-					ASSERT( false, "unknown moisture value" );
+					THROW( "unknown moisture value" );
 				}
 			}
 			MT_RETIF();
@@ -445,7 +445,7 @@ const float MapGenerator::GetMoistureAmount( Tiles* tiles, MT_CANCELABLE ) {
 					break;
 				}
 				default: {
-					ASSERT( false, "unknown moisture value" );
+					THROW( "unknown moisture value" );
 				}
 			}
 

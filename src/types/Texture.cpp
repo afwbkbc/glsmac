@@ -343,7 +343,7 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 					break;
 				}
 				default: {
-					ASSERT( false, "invalid rotate value " + std::to_string( rotate ) );
+					THROW( "invalid rotate value " + std::to_string( rotate ) );
 				}
 			}
 

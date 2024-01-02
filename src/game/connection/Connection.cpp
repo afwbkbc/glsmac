@@ -123,7 +123,7 @@ void Connection::Iterate() {
 					break;
 				}
 				default: {
-					ASSERT( false, "unknown network result " + std::to_string( result.result ) );
+					THROW( "unknown network result " + std::to_string( result.result ) );
 				}
 			}
 		}

@@ -111,7 +111,7 @@ void LandSurface::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) 
 			break;
 		}
 		default:
-			ASSERT( false, "invalid rockiness value" );
+			THROW( "invalid rockiness value" );
 	}
 
 	if ( tile->features & Tile::F_JUNGLE ) {

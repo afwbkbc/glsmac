@@ -71,7 +71,7 @@ void FilePopup::Create() {
 					break;
 				}
 				default: {
-					ASSERT( false, "unknown file mode " + std::to_string( m_file_mode ) );
+					THROW( "unknown file mode " + std::to_string( m_file_mode ) );
 				}
 			}
 			return true;
@@ -97,7 +97,7 @@ void FilePopup::OnOk() {
 			break;
 		}
 		default: {
-			ASSERT( false, "unknown file mode " + std::to_string( m_file_mode ) );
+			THROW( "unknown file mode " + std::to_string( m_file_mode ) );
 		}
 	}
 }

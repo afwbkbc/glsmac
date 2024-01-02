@@ -115,7 +115,7 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 					GoBack(); // show previous menu if canceled
 				}
 				else {
-					ASSERT( false, "unexpected game state" + std::to_string( state ) );
+					THROW( "unexpected game state" + std::to_string( state ) );
 				}
 			};
 		}

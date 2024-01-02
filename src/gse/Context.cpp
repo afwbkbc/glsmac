@@ -23,7 +23,7 @@ const Value Context::GetVariable( const std::string& name ) {
 			return it->second;
 		}
 	}
-	ASSERT( false, "variable '" + name + "' not found" );
+	THROW( "variable '" + name + "' not found" );
 }
 
 void Context::CreateVariable( const std::string& name, const Value& value ) {
@@ -43,7 +43,7 @@ void Context::UpdateVariable( const std::string& name, const Value& value ) {
 			return;
 		}
 	}
-	ASSERT( false, "variable '" + name + "' not found" );
+	THROW( "variable '" + name + "' not found" );
 }
 
 void Context::PushScope() {

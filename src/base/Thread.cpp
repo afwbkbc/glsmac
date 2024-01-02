@@ -131,7 +131,7 @@ void Thread::Run() {
 				m_state = STATE_STOPPING;
 				break;
 			default:
-				ASSERT( false, "unknown thread command " + to_string( m_command ) );
+				THROW( "unknown thread command " + to_string( m_command ) );
 		}
 	}
 

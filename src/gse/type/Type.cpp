@@ -149,10 +149,10 @@ const std::string Type::ToString() const {
         case T_STRING: \
             return ( (String*)this )->value _op ( (String*)&other )->value; \
         default: \
-            ASSERT_NOLOG( false, "operator " #_op " not implemented for type " + std::to_string( type ) );
+            THROW( "operator " #_op " not implemented for type " + std::to_string( type ) );
 #define DEFAULT_COMPARE_NE( _op ) \
     if ( type != other.type ) { \
-        ASSERT_NOLOG( false, "can't compare type " + std::to_string( type ) + " to type " + std::to_string( other.type ) + " using operator " #_op ); \
+        THROW( "can't compare type " + std::to_string( type ) + " to type " + std::to_string( other.type ) + " using operator " #_op ); \
     } \
     switch ( type ) { \
         case T_UNDEFINED: \

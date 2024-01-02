@@ -85,7 +85,7 @@ void InfoPanel::Restart() {
 			break;
 		}
 		default: {
-			ASSERT( false, "unknown info type " + std::to_string( m_info_type ) );
+			THROW( "unknown info type " + std::to_string( m_info_type ) );
 		}
 	}
 

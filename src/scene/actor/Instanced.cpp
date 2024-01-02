@@ -16,7 +16,7 @@ Instanced::~Instanced() {
 	DELETE( m_actor );
 }
 
-#define _XYZ_ASSERT() ASSERT( false, "use AddInstance()/SetInstance()/RemoveInstance() for instanced actors" )
+#define _XYZ_ASSERT() THROW( "use AddInstance()/SetInstance()/RemoveInstance() for instanced actors" )
 #define _XYZ_SETTER( _name, _var, _updates ) \
 const types::Vec3& Instanced::Get##_name() const {\
     _XYZ_ASSERT(); \
@@ -63,7 +63,7 @@ const Instanced::matrices_t& Instanced::GetInstanceMatrices() {
 }
 
 types::Matrix44& Instanced::GetWorldMatrix() {
-	ASSERT( false, "use GetInstanceMatrices() for instanced actors" );
+	THROW( "use GetInstanceMatrices() for instanced actors" );
 	return m_actor_matrices.world; // just to fix warning
 }
 

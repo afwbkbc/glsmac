@@ -94,7 +94,7 @@ const MT_Response Network::ProcessRequest( const MT_Request& request, MT_CANCELA
 					return response;
 				}
 				default: {
-					ASSERT( false, "invalid mode on connect" );
+					THROW( "invalid mode on connect" );
 				}
 			}
 			break;
@@ -133,7 +133,7 @@ const MT_Response Network::ProcessRequest( const MT_Request& request, MT_CANCELA
 			return response;
 		}
 		default: {
-			ASSERT( false, "unknown network request " + std::to_string( request.op ) );
+			THROW( "unknown network request " + std::to_string( request.op ) );
 		}
 	}
 	return Error();

@@ -119,7 +119,7 @@ void PlayersSectionRow::Create() {
 							}
 						}
 					}
-					ASSERT( false, "invalid selection" );
+					THROW( "invalid selection" );
 					return false;
 				}
 			);
@@ -162,7 +162,7 @@ void PlayersSectionRow::Create() {
 						return true;
 					}
 				}
-				ASSERT( false, "invalid selection" );
+				THROW( "invalid selection" );
 				return false;
 			}
 		);

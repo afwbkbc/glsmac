@@ -271,7 +271,7 @@ void TextView::ApplyStyle() {
 	ScrollView::ApplyStyle();
 
 	if ( Has( Style::A_ITEM_WIDTH ) ) {
-		ASSERT( false, "A_ITEM_WIDTH not implemented yet" );
+		THROW( "A_ITEM_WIDTH not implemented yet" );
 		SetItemWidth( Get( Style::A_ITEM_WIDTH ) );
 	}
 	if ( Has( Style::A_ITEM_HEIGHT ) ) {

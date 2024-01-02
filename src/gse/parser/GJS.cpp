@@ -110,11 +110,11 @@ void GJS::GetElements( source_elements_t& elements ) {
 					break;
 				}
 				default:
-					ASSERT( false, (std::string)"unexpected delimiter: " + c );
+					THROW( (std::string)"unexpected delimiter: " + c );
 			}
 		}
 		else {
-			ASSERT( false, (std::string)"unexpected character: " + get() + " (" + std::to_string( get() ) + ")" );
+			THROW( (std::string)"unexpected character: " + get() + " (" + std::to_string( get() ) + ")" );
 		}
 	}
 }
@@ -162,7 +162,7 @@ const program::Scope* GJS::GetScope( const source_elements_t::const_iterator& be
 						break;
 					}
 					default: {
-						ASSERT( false, "unexpected block side: " + std::to_string( ( ( Block * )( *it_end ) )->m_block_side ) );
+						THROW( "unexpected block side: " + std::to_string( ( ( Block * )( *it_end ) )->m_block_side ) );
 					}
 				}
 			}
@@ -262,7 +262,7 @@ const program::Conditional* GJS::GetConditional( const source_elements_t::const_
 			return new program::Try( GetSI( begin, it ), body, new program::Catch( GetSI( it, it_end + 1 ), GetObject( it + 2, it_end ) ) );
 		}
 		default:
-			ASSERT( false, "unexpected conditional type: " + conditional->ToString() );
+			THROW( "unexpected conditional type: " + conditional->ToString() );
 	}
 }
 
@@ -346,7 +346,7 @@ const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::co
 				break;
 			}
 			case SourceElement::ET_CONDITIONAL: {
-				ASSERT( false, "unexpected control" );
+				THROW( "unexpected control" );
 				break;
 			}
 			case SourceElement::ET_BLOCK: {
@@ -406,7 +406,7 @@ const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::co
 											parameters.push_back( new Variable( ( *it_tmp )->m_si, ( ( Identifier * )( *it_tmp ) )->m_name ) );
 										}
 										else {
-											ASSERT( false, "expected variable, got something else" );
+											THROW( "expected variable, got something else" );
 										}
 									}
 									else {
@@ -417,7 +417,7 @@ const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::co
 											// nothing
 										}
 										else {
-											ASSERT( false, "expected comma, got something else" );
+											THROW( "expected comma, got something else" );
 										}
 									}
 									expect_var = !expect_var;
@@ -511,20 +511,20 @@ const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::co
 								break;
 							}
 							default: {
-								ASSERT( false, "unexpected element type" );
+								THROW( "unexpected element type" );
 							}
 						}
 						break;
 					}
 					default: {
-						ASSERT( false, "unexpected block type: " + std::to_string( t ) );
+						THROW( "unexpected block type: " + std::to_string( t ) );
 					}
 				}
 				it = it_end;
 				break;
 			}
 			default: {
-				ASSERT( false, "unexpected expression element type: " + std::to_string( ( *it )->m_type ) );
+				THROW( "unexpected expression element type: " + std::to_string( ( *it )->m_type ) );
 			}
 		}
 		if ( !var_hints_allowed ) {
@@ -643,7 +643,7 @@ const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::co
 				);
 			}
 			default:
-				ASSERT( false, "unexpected operator link type: " + std::to_string( link ) );
+				THROW( "unexpected operator link type: " + std::to_string( link ) );
 		}
 	};
 
@@ -681,7 +681,7 @@ const program::Operand* GJS::GetOperand( const Identifier* element, program::Var
 					return new program::Value( element->m_si, VALUE( type::Float, f ) );
 				}
 				catch ( std::logic_error const& ex ) {
-					ASSERT( false, "value is not a number: " + element->m_name );
+					THROW( "value is not a number: " + element->m_name );
 				}
 			}
 		}
@@ -689,7 +689,7 @@ const program::Operand* GJS::GetOperand( const Identifier* element, program::Var
 			return new program::Value( element->m_si, VALUE( type::String, element->m_name ) );
 		}
 		default:
-			ASSERT( false, "unexpected identifier type: " + std::to_string( element->m_identifier_type ) );
+			THROW( "unexpected identifier type: " + std::to_string( element->m_identifier_type ) );
 	}
 }
 

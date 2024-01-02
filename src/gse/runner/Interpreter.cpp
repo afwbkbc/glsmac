@@ -51,7 +51,7 @@ const gse::Value Interpreter::EvaluateScope( Context* ctx, const program::Scope*
 				break;
 			}
 			default:
-				ASSERT( false, "unexpected control type: " + it->ToString() );
+				THROW( "unexpected control type: " + it->ToString() );
 		}
 		if ( result.Get()->type != Type::T_UNDEFINED ) {
 			// got return statement
@@ -140,7 +140,7 @@ const gse::Value Interpreter::EvaluateConditional( Context* ctx, const program::
 			}
 		}
 		default:
-			ASSERT( false, "unexpected conditional type: " + conditional->ToString() );
+			THROW( "unexpected conditional type: " + conditional->ToString() );
 	}
 }
 
@@ -206,7 +206,7 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 					break;
 				}
 				default: {
-					ASSERT( false, "unexpected assignment target: " + expression->a->ToString() );
+					THROW( "unexpected assignment target: " + expression->a->ToString() );
 				}
 			}
 			return result;
@@ -252,7 +252,7 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
                 return VALUE( Float, ( (Float*)a )->value _op ( (Float*)b )->value );
 #define MATH_OP_END() \
                 default: \
-                    ASSERT( false, "operation not supported for operands of type: " + std::to_string( a->type ) ); \
+                    THROW( "operation not supported for operands of type: " + std::to_string( a->type ) ); \
             }
 #define MATH_OP( _op ) \
         MATH_OP_BEGIN_F( _op ) \
@@ -303,7 +303,7 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
             return result; \
         } \
         else { \
-            ASSERT( false, "operands not found" ); \
+            THROW( "operands not found" ); \
         }
 		case Operator::OT_INC: {
 			MATH_OP( + )
@@ -333,7 +333,7 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
             }
 #define MATH_OP_END() \
             default: \
-                ASSERT( false, "operation not supported for operands of type: " + std::to_string( a->type ) ); \
+                THROW( "operation not supported for operands of type: " + std::to_string( a->type ) ); \
         } \
         ctx->UpdateVariable( varname, result ); \
         return result;
@@ -390,7 +390,7 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 					return ( (type::Object*)objv.Get() )->GetRef( childname );
 				}
 				default: {
-					ASSERT( false, "parent is not object: " + expression->a->ToString() );
+					THROW( "parent is not object: " + expression->a->ToString() );
 				}
 			}
 		}
@@ -415,7 +415,7 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 					break;
 				}
 				default:
-					ASSERT( false, "unexpected index type: " + val->ToString() );
+					THROW( "unexpected index type: " + val->ToString() );
 			}
 			switch ( expression->a->type ) {
 				case Operand::OT_VARIABLE: {
@@ -446,14 +446,14 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 							}
 						}
 						case Type::T_ARRAYRANGEREF: {
-							ASSERT( false, "TODO: T_ARRAYRANGEREF" );
+							THROW( "TODO: T_ARRAYRANGEREF" );
 						}
 						default:
-							ASSERT( false, "unexpected expression result: " + ref->ToString() );
+							THROW( "unexpected expression result: " + ref->ToString() );
 					}
 				}
 				default: {
-					ASSERT( false, "parent is not array: " + expression->a->ToString() );
+					THROW( "parent is not array: " + expression->a->ToString() );
 				}
 			}
 		}
@@ -486,7 +486,7 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 			return VALUE( Range, from, to );
 		}
 		default: {
-			ASSERT( false, "operator " + expression->op->ToString() + " not implemented" );
+			THROW( "operator " + expression->op->ToString() + " not implemented" );
 		}
 	}
 }
@@ -547,11 +547,11 @@ const gse::Value Interpreter::EvaluateOperand( Context* ctx, const program::Oper
 					return ( (Callable*)callable.Get() )->Run( nullptr, arguments );
 				}
 				default:
-					ASSERT( false, "callable expected, found: " + callable.ToString() );
+					THROW( "callable expected, found: " + callable.ToString() );
 			}
 		}
 		default: {
-			ASSERT( false, "operand " + operand->ToString() + " not implemented" );
+			THROW( "operand " + operand->ToString() + " not implemented" );
 		}
 	}
 }
@@ -589,11 +589,11 @@ const gse::Value Interpreter::EvaluateRange( Context* ctx, const program::Operan
 					return VALUE( type::Range, range->from, range->to );
 				}
 				default:
-					ASSERT( false, "unexpected index expression result type: " + result.ToString() );
+					THROW( "unexpected index expression result type: " + result.ToString() );
 			}
 		}
 		default: {
-			ASSERT( false, "unexpected index type: " + operand->ToString() );
+			THROW( "unexpected index type: " + operand->ToString() );
 		}
 	}
 }
@@ -652,7 +652,7 @@ void Interpreter::WriteByRef( const gse::Value& ref, const gse::Value& value ) c
 			break;
 		}
 		default:
-			ASSERT_NOLOG( false, "reference expected, found " + ref.ToString() );
+			THROW( "reference expected, found " + ref.ToString() );
 	}
 }
 

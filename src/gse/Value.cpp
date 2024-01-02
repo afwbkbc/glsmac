@@ -67,15 +67,15 @@ const Value Value::Clone() const {
 		case type::Type::T_CALLABLE:
 			return *this;
 		case type::Type::T_ARRAYREF:
-			ASSERT_NOLOG( false, "refs are not supposed to be cloned" );
+			THROW( "refs are not supposed to be cloned" );
 		case type::Type::T_ARRAYRANGEREF:
-			ASSERT_NOLOG( false, "refs are not supposed to be cloned" );
+			THROW( "refs are not supposed to be cloned" );
 		case type::Type::T_OBJECTREF:
-			ASSERT_NOLOG( false, "refs are not supposed to be cloned" );
+			THROW( "refs are not supposed to be cloned" );
 		case type::Type::T_RANGE:
-			ASSERT_NOLOG( false, "ranges are not supposed to be cloned" );
+			THROW( "ranges are not supposed to be cloned" );
 		default: {
-			ASSERT_NOLOG( false, "unsupported value type: " + ToString() );
+			THROW( "unsupported value type: " + ToString() );
 		}
 	}
 }

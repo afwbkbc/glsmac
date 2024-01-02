@@ -38,7 +38,7 @@ void Overlay::Iterate() {
 					break;
 				}
 				default: {
-					ASSERT( false, "unknown scene type " + std::to_string( scene->GetScene()->GetType() ) );
+					THROW( "unknown scene type " + std::to_string( scene->GetScene()->GetType() ) );
 				}
 			}
 			ASSERT( !glGetError(), "Overlay draw error" );
@@ -62,7 +62,7 @@ opengl::Actor* Overlay::AddCustomActor( scene::actor::Actor* actor ) {
 			return result;
 		}
 		default: {
-			ASSERT( false, "unknown actor type " + std::to_string( actor_type ) );
+			THROW( "unknown actor type " + std::to_string( actor_type ) );
 		}
 	}
 	return NULL;

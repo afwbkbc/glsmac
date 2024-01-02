@@ -170,7 +170,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 						break;
 					}
 					default: {
-						GT_ASSERT( false, "unknown operand type: " + std::to_string( a->type ) );
+						GT_FAIL( "unknown operand type: " + std::to_string( a->type ) );
 					}
 				}
 			}
@@ -248,7 +248,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 					break;
 				}
 				default: {
-					GT_ASSERT( false, "unknown conditional type: " + std::to_string( a->conditional_type ) );
+					GT_FAIL( "unknown conditional type: " + std::to_string( a->conditional_type ) );
 				}
 			}
 			GT_OK();
@@ -266,7 +266,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 					break;
 				}
 				default: {
-					GT_ASSERT( false, "unknown control type: " + std::to_string( a->control_type ) );
+					GT_FAIL( "unknown control type: " + std::to_string( a->control_type ) );
 				}
 			}
 			GT_OK();

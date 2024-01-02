@@ -728,7 +728,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			break;
 		}
 		default: {
-			ASSERT( false, "unknown request op " + std::to_string( request.op ) );
+			THROW( "unknown request op " + std::to_string( request.op ) );
 		}
 	}
 
@@ -1022,7 +1022,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 							f_download_map();
 						}
 						else {
-							ASSERT( false, "unexpected game state: " + std::to_string( state ) );
+							THROW( "unexpected game state: " + std::to_string( state ) );
 						}
 					};
 				}

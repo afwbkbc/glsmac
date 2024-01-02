@@ -620,7 +620,7 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 			break;
 		}
 		default:
-			ASSERT( false, "glTexImage2D unknown internal format " + std::to_string( internalformat ) + " @" + source );
+			THROW( "glTexImage2D unknown internal format " + std::to_string( internalformat ) + " @" + source );
 	}
 	switch ( format ) {
 		case GL_RED: {
@@ -640,7 +640,7 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 			break;
 		}
 		default:
-			ASSERT( false, "glTexImage2D unknown format " + std::to_string( format ) + " @" + source );
+			THROW( "glTexImage2D unknown format " + std::to_string( format ) + " @" + source );
 	}
 	ASSERT( internalbpp == bpp,
 		"glTexImage2D internal bpp (" + std::to_string( internalbpp ) + ") differs from bpp (" + std::to_string( bpp ) + ") @" + source
@@ -686,7 +686,7 @@ void MemoryWatcher::GLTexSubImage2D( GLenum target, GLint level, GLint xoffset, 
 			break;
 		}
 		default:
-			ASSERT( false, "glTexImage2D unknown format " + std::to_string( format ) + " @" + source );
+			THROW( "glTexImage2D unknown format " + std::to_string( format ) + " @" + source );
 	}
 
 	DEBUG_STAT_INC( opengl_textures_updates );
