@@ -49,7 +49,7 @@ void MenuBlock::SetChoice( const std::string& choice ) {
 			return;
 		}
 	}
-	ASSERT( false, "choice '" + choice + "' not found" );
+	THROW( "choice '" + choice + "' not found" );
 }
 
 bool MenuBlock::IsSliding() {

@@ -135,7 +135,7 @@ scene::actor::Mesh* Mesh::GetMeshActor() const {
 			break;
 		}
 		default: {
-			ASSERT( false, "unknown actor type " + std::to_string( m_actor->GetType() ) );
+			THROW( "unknown actor type " + std::to_string( m_actor->GetType() ) );
 			return nullptr;
 		}
 	}
@@ -315,7 +315,7 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, Camera* camera )
 					break;
 				}
 				default: {
-					ASSERT( false, "unknown shader program type " + std::to_string( shader_program->GetType() ) );
+					THROW( "unknown shader program type " + std::to_string( shader_program->GetType() ) );
 				}
 			}
 
@@ -379,7 +379,7 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, Camera* camera )
 				}
 			}
 			else {
-				ASSERT( false, "unknown actor type " + std::to_string( m_actor->GetType() ) );
+				THROW( "unknown actor type " + std::to_string( m_actor->GetType() ) );
 			}
 
 			if ( flags & actor::Actor::RF_IGNORE_DEPTH ) {
@@ -391,13 +391,13 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, Camera* camera )
 		case ( shader_program::ShaderProgram::TYPE_PERSP ): {
 
 			// TODO
-			ASSERT( false, "perspective projection not implemented yet" );
+			THROW( "perspective projection not implemented yet" );
 
 			break;
 
 		}
 		default: {
-			ASSERT( false, "shader program type " + std::to_string( shader_program->GetType() ) + " not implemented" );
+			THROW( "shader program type " + std::to_string( shader_program->GetType() ) + " not implemented" );
 		}
 	}
 

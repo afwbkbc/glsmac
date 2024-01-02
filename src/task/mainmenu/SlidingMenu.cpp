@@ -82,7 +82,7 @@ const MenuBlock::choice_handlers_t& SlidingMenu::GetChoiceHandlers( const std::s
 			return it.second;
 		}
 	}
-	ASSERT( false, "choice '" + choice + "' does not exist" );
+	THROW( "choice '" + choice + "' does not exist" );
 	return m_choices.front().second;
 }
 

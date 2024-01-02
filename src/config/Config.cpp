@@ -231,6 +231,21 @@ Config::Config( const int argc, const char* argv[] ) {
 		}, "cloud cover",
 		DF_QUICKSTART_MAP_CLOUDS, &m_quickstart_map_clouds
 	);
+	parser.AddRule(
+		"quiet", "Do not output debug logs to console", AH( this ) {
+			m_debug_flags |= DF_QUIET;
+		}
+	);
+	parser.AddRule(
+		"gse-prompt-gjs", "Open interactive GJS prompt", AH( this ) {
+			m_debug_flags |= DF_GSE_ONLY | DF_GSE_PROMPT_GJS;
+		}
+	);
+	parser.AddRule(
+		"gse-tests", "Run GSE tests and exit", AH( this ) {
+			m_debug_flags |= DF_GSE_ONLY | DF_GSE_TESTS;
+		}
+	);
 #endif
 
 	try {
@@ -240,11 +255,16 @@ Config::Config( const int argc, const char* argv[] ) {
 		f_error( e.what() );
 	}
 
-	if ( m_smac_path.empty() ) {
-		if ( !util::SMACChecker::IsSMACDirectory( "." ) ) {
-			f_error( "This" + s_invalid_smac_directory );
+#ifdef DEBUG
+	if ( !( m_debug_flags & DF_GSE_ONLY ) )
+#endif
+	{
+		if ( m_smac_path.empty() ) {
+			if ( !util::SMACChecker::IsSMACDirectory( "." ) ) {
+				f_error( "This" + s_invalid_smac_directory );
+			}
+			m_smac_path = "./";
 		}
-		m_smac_path = "./";
 	}
 }
 
@@ -263,9 +283,11 @@ const std::string& Config::GetPrefix() const {
 }
 
 #ifdef DEBUG
+
 const std::string Config::GetDebugPath() const {
 	return m_prefix + "debug/";
 }
+
 #endif
 
 const std::string& Config::GetSMACPath() const {

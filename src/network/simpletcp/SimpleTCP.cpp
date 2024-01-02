@@ -335,7 +335,7 @@ void SimpleTCP::ProcessEvents() {
 						break;
 					}
 					default: {
-						ASSERT( false, "invalid mode on disconnect" );
+						THROW( "invalid mode on disconnect" );
 					}
 				}
 				break;
@@ -580,7 +580,7 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket ) {
 		return true;
 
 	}
-	ASSERT( false, "?" );
+	THROW( "?" );
 	return false;
 }
 

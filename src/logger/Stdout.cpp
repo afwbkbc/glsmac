@@ -4,8 +4,6 @@
 
 namespace logger {
 
-#ifdef DEBUG
-
 void Stdout::Log( const std::string& text ) {
 	g_debug_stats._mutex.lock();
 	if ( !g_debug_stats._readonly ) { // don't spam from debug overlay
@@ -17,6 +15,4 @@ void Stdout::Log( const std::string& text ) {
 	g_debug_stats._mutex.unlock();
 }
 
-#endif
-
-} /* namespace logger */
+}

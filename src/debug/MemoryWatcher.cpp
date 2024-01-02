@@ -112,8 +112,9 @@ namespace debug {
 
 MemoryWatcher* g_memory_watcher = nullptr;
 
-MemoryWatcher::MemoryWatcher( const bool memory_debug )
-	: m_memory_debug( memory_debug ) {
+MemoryWatcher::MemoryWatcher( const bool memory_debug, const bool is_quiet )
+	: m_memory_debug( memory_debug )
+	, m_is_quiet( is_quiet ) {
 	ASSERT( !g_memory_watcher, "duplicate MemoryWatcher instantiation" );
 	g_memory_watcher = this;
 }
@@ -125,11 +126,11 @@ MemoryWatcher::~MemoryWatcher() {
 	bool any_leaks = false;
 #define CHECK_LEAKS( _where ) \
     if ( !_where.empty() ) { \
-        Log( "WARNING: " + std::to_string( _where.size() ) + " objects were never freed (possible memory leaks?):" ); \
+        Log( "WARNING: " + std::to_string( _where.size() ) + " objects were never freed (possible memory leaks?):", true ); \
         for (auto& o : _where) { \
             std::stringstream ptrstr; \
             ptrstr << o.first; \
-            Log( "    (" + ptrstr.str() + ") @" + o.second.source ); \
+            Log( "    (" + ptrstr.str() + ") @" + o.second.source, true ); \
         } \
         any_leaks = true; \
     }
@@ -619,7 +620,7 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 			break;
 		}
 		default:
-			ASSERT( false, "glTexImage2D unknown internal format " + std::to_string( internalformat ) + " @" + source );
+			THROW( "glTexImage2D unknown internal format " + std::to_string( internalformat ) + " @" + source );
 	}
 	switch ( format ) {
 		case GL_RED: {
@@ -639,7 +640,7 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 			break;
 		}
 		default:
-			ASSERT( false, "glTexImage2D unknown format " + std::to_string( format ) + " @" + source );
+			THROW( "glTexImage2D unknown format " + std::to_string( format ) + " @" + source );
 	}
 	ASSERT( internalbpp == bpp,
 		"glTexImage2D internal bpp (" + std::to_string( internalbpp ) + ") differs from bpp (" + std::to_string( bpp ) + ") @" + source
@@ -685,7 +686,7 @@ void MemoryWatcher::GLTexSubImage2D( GLenum target, GLint level, GLint xoffset, 
 			break;
 		}
 		default:
-			ASSERT( false, "glTexImage2D unknown format " + std::to_string( format ) + " @" + source );
+			THROW( "glTexImage2D unknown format " + std::to_string( format ) + " @" + source );
 	}
 
 	DEBUG_STAT_INC( opengl_textures_updates );
@@ -1069,13 +1070,15 @@ const MemoryWatcher::statistics_result_t MemoryWatcher::GetLargestMemoryConsumer
 	return result;
 }
 
-void MemoryWatcher::Log( const std::string& text ) {
-	g_debug_stats._mutex.lock();
-	if ( !g_debug_stats._readonly ) { // don't spam from debug overlay
-		std::cout << "<MemoryWatcher> " << text << std::endl;
-		fflush( stdout );
+void MemoryWatcher::Log( const std::string& text, const bool is_important ) {
+	if ( !m_is_quiet || is_important ) {
+		g_debug_stats._mutex.lock();
+		if ( !g_debug_stats._readonly ) { // don't spam from debug overlay
+			std::cout << "<MemoryWatcher> " << text << std::endl;
+			fflush( stdout );
+		}
+		g_debug_stats._mutex.unlock();
 	}
-	g_debug_stats._mutex.unlock();
 }
 
 }

@@ -110,7 +110,7 @@ void Game::Iterate() {
 				break;
 			}
 			default: {
-				ASSERT( false, "unknown response result " + std::to_string( response.result ) );
+				THROW( "unknown response result " + std::to_string( response.result ) );
 			}
 		}
 	};
@@ -196,7 +196,7 @@ void Game::Iterate() {
 					break;
 				}
 				default: {
-					ASSERT( false, "unknown response result " + std::to_string( response.result ) );
+					THROW( "unknown response result " + std::to_string( response.result ) );
 				}
 			}
 		}
@@ -765,7 +765,7 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 			break;
 		}
 		default: {
-			ASSERT( false, "unexpected event type: " + std::to_string( event.type ) );
+			THROW( "unexpected event type: " + std::to_string( event.type ) );
 		}
 	}
 }

@@ -144,7 +144,7 @@ void Mesh::Align() {
 					mesh_top = c - hs;
 				}
 				else {
-					ASSERT( false, "unknown aspect ratio mode " + std::to_string( m_aspect_ratio_mode ) );
+					THROW( "unknown aspect ratio mode " + std::to_string( m_aspect_ratio_mode ) );
 				}
 			}
 		}
@@ -248,7 +248,7 @@ void Mesh::Align() {
 					break;
 				}
 				default: {
-					ASSERT( false, "unknown mesh type " + std::to_string( m_mesh->GetType() ) );
+					THROW( "unknown mesh type " + std::to_string( m_mesh->GetType() ) );
 				}
 			}
 		}

@@ -44,7 +44,7 @@ void LandMoisture::GenerateTile( const Tile* tile, TileState* ts, MapState* ms )
 			break;
 		}
 		default:
-			ASSERT( false, "invalid moisture value" );
+			THROW( "invalid moisture value" );
 	}
 
 	m_map->GetTexture( ts->moisture_original, tc, add_flags, rotate );

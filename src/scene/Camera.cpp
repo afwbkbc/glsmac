@@ -67,7 +67,7 @@ void Camera::UpdateProjection() {
 			break;
 		}
 		default: {
-			ASSERT( false, "invalid camera type" );
+			THROW( "invalid camera type" );
 		}
 	}
 }

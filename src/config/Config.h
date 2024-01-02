@@ -38,6 +38,10 @@ CLASS( Config, base::Module )
 		DF_QUICKSTART_MAP_EROSIVE = 1 << 9,
 		DF_QUICKSTART_MAP_LIFEFORMS = 1 << 10,
 		DF_QUICKSTART_MAP_CLOUDS = 1 << 11,
+		DF_QUIET = 1 << 12,
+		DF_GSE_ONLY = 1 << 13,
+		DF_GSE_TESTS = 1 << 14,
+		DF_GSE_PROMPT_GJS = 1 << 15,
 	};
 #endif
 
@@ -45,7 +49,9 @@ CLASS( Config, base::Module )
 
 	const std::string& GetPrefix() const;
 	const std::string& GetSMACPath() const;
+
 #ifdef DEBUG
+
 	const std::string GetDebugPath() const; // to store debug stuff like dumps
 #endif
 

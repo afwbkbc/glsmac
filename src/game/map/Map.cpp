@@ -468,7 +468,7 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_t
 					break;
 				}
 				default: {
-					ASSERT( false, "invalid tile grouping criteria" );
+					THROW( "invalid tile grouping criteria" );
 				}
 			}
 		}
@@ -506,7 +506,7 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_t
 		info.rotate_direction = it->second[ GetRandom()->GetUInt( 0, it->second.size() - 1 ) ] / 2;
 	}
 	else {
-		ASSERT( false, "could not find texture variant" );
+		THROW( "could not find texture variant" );
 	}
 
 	info.texture_flags = Texture::AM_DEFAULT;

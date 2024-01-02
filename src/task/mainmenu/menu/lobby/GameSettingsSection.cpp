@@ -145,7 +145,7 @@ void GameSettingsSection::UpdateRows() {
 			break;
 		}
 		default:
-			ASSERT( false, "unknown map type" );
+			THROW( "unknown map type" );
 	}
 
 	UpdateRow(

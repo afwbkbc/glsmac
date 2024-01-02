@@ -141,10 +141,10 @@ Scene* UI::GetShapeScene( const types::mesh::Mesh* mesh ) {
 			return m_shape_scene_ortho;
 		}
 		default: {
-			ASSERT( false, "unknown mesh type " + std::to_string( mesh->GetType() ) );
+			THROW( "unknown mesh type " + std::to_string( mesh->GetType() ) );
 		}
 	}
-	ASSERT( false, "unsupported shape mesh type" );
+	THROW( "unsupported shape mesh type" );
 	return nullptr; // remove warning
 }
 
@@ -342,7 +342,7 @@ void UI::RemoveGlobalEventHandler( const UIEventHandler* handler ) {
 			}
 		}
 	}
-	ASSERT( false, "handler not found" );
+	THROW( "handler not found" );
 }
 
 void UI::AddTheme( theme::Theme* theme ) {
@@ -434,7 +434,7 @@ const theme::Style* UI::GetStyle( const std::string& style_class ) const {
 			return style;
 		}
 	}
-	ASSERT( false, "style '" + style_class + "' does not exist" );
+	THROW( "style '" + style_class + "' does not exist" );
 	return nullptr;
 }
 

@@ -275,7 +275,9 @@ void Game::Iterate() {
 			}
 		}
 	}
-
+	else if ( m_game_state == GS_RUNNING ) {
+		// TODO: iterate GSE
+	}
 }
 
 util::Random* Game::GetRandom() const {
@@ -726,7 +728,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			break;
 		}
 		default: {
-			ASSERT( false, "unknown request op " + std::to_string( request.op ) );
+			THROW( "unknown request op " + std::to_string( request.op ) );
 		}
 	}
 
@@ -1020,7 +1022,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 							f_download_map();
 						}
 						else {
-							ASSERT( false, "unexpected game state: " + std::to_string( state ) );
+							THROW( "unexpected game state: " + std::to_string( state ) );
 						}
 					};
 				}
@@ -1031,6 +1033,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 }
 
 void Game::ResetGame() {
+
 	if ( m_game_state != GS_NONE ) {
 		// TODO: do something?
 		m_game_state = GS_NONE;
