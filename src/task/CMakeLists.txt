@@ -4,6 +4,7 @@ SUBDIR( mainmenu )
 SUBDIR( game )
 
 IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+	SUBDIR( gseprompt )
 	SUBDIR( gsetests )
 ENDIF ()
 

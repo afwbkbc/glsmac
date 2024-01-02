@@ -2,10 +2,11 @@
 
 #include "base/Base.h"
 
-#include "gse/Context.h"
+#include "gse/Value.h"
 #include "gse/program/Program.h"
 
 namespace gse {
+class Context;
 namespace runner {
 
 CLASS( Runner, base::Base )
@@ -16,3 +17,5 @@ CLASS( Runner, base::Base )
 
 }
 }
+
+#include "gse/Context.h"

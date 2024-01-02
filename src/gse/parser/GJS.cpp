@@ -128,8 +128,6 @@ void GJS::GetElements( source_elements_t& elements ) {
 #endif
 
 const program::Program* GJS::GetProgram( const source_elements_t& elements ) {
-	// TODO
-
 	NEWV( program, program::Program, GetScope( elements.begin(), elements.end() ) );
 	return program;
 }

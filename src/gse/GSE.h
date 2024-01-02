@@ -10,14 +10,24 @@
 #include "gse/type/Callable.h"
 #include "Exception.h"
 
-#include "parser/ParserFactory.h"
 #include "program/Program.h"
 
 namespace gse {
 
+namespace parser {
+class Parser;
+}
+
+namespace runner {
+class Runner;
+}
+
 CLASS( GSE, base::Base )
 	GSE();
 	virtual ~GSE();
+
+	parser::Parser* GetParser( const std::string& filename, const std::string& source ) const;
+	const runner::Runner* GetRunner() const;
 
 	void AddModule( const std::string& path, type::Callable* module );
 
@@ -28,8 +38,6 @@ CLASS( GSE, base::Base )
 
 private:
 
-	parser::ParserFactory m_parser_factory;
-
 	std::unordered_map< std::string, type::Callable* > m_modules = {};
 	std::vector< std::string > m_modules_order = {};
 	std::map< std::string, Value > m_globals = {};
@@ -39,3 +47,4 @@ private:
 }
 
 #include "parser/Parser.h"
+#include "runner/Runner.h"

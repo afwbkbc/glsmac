@@ -232,8 +232,18 @@ Config::Config( const int argc, const char* argv[] ) {
 		DF_QUICKSTART_MAP_CLOUDS, &m_quickstart_map_clouds
 	);
 	parser.AddRule(
+		"quiet", "Do not output debug logs to console", AH( this ) {
+			m_debug_flags |= DF_QUIET;
+		}
+	);
+	parser.AddRule(
+		"gse-prompt-gjs", "Open interactive GJS prompt", AH( this ) {
+			m_debug_flags |= DF_GSE_ONLY | DF_GSE_PROMPT_GJS;
+		}
+	);
+	parser.AddRule(
 		"gse-tests", "Run GSE tests and exit", AH( this ) {
-			m_debug_flags |= DF_WORLD_TESTS;
+			m_debug_flags |= DF_GSE_ONLY | DF_GSE_TESTS;
 		}
 	);
 #endif
@@ -246,7 +256,7 @@ Config::Config( const int argc, const char* argv[] ) {
 	}
 
 #ifdef DEBUG
-	if ( !( m_debug_flags & DF_WORLD_TESTS ) )
+	if ( !( m_debug_flags & DF_GSE_ONLY ) )
 #endif
 	{
 		if ( m_smac_path.empty() ) {

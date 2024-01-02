@@ -46,6 +46,7 @@
 
 #if defined(DEBUG)
 
+#include "task/gseprompt/GSEPrompt.h"
 #include "task/gsetests/GSETests.h"
 #include "task/game/Game.h"
 
@@ -159,7 +160,7 @@ int main( const int argc, const char* argv[] ) {
 		scheduler::Simple scheduler;
 
 #ifdef DEBUG
-		if ( config.HasDebugFlag( config::Config::DF_WORLD_TESTS ) ) {
+		if ( config.HasDebugFlag( config::Config::DF_GSE_ONLY ) ) {
 
 			loader::font::Null font_loader;
 			loader::texture::Null texture_loader;
@@ -168,8 +169,14 @@ int main( const int argc, const char* argv[] ) {
 			graphics::Null graphics;
 			audio::Null audio;
 
-			NEWV( task, task::gsetests::GSETests );
-			scheduler.AddTask( task );
+			if ( config.HasDebugFlag( config::Config::DF_GSE_TESTS ) ) {
+				NEWV( task, task::gsetests::GSETests );
+				scheduler.AddTask( task );
+			}
+			else if ( config.HasDebugFlag( config::Config::DF_GSE_PROMPT_GJS ) ) {
+				NEWV( task, task::gseprompt::GSEPrompt, "gjs" );
+				scheduler.AddTask( task );
+			}
 
 			engine::Engine engine(
 				&config,
