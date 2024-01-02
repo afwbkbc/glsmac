@@ -7,8 +7,6 @@
 #include "gse/runner/Runner.h"
 #include "gse/program/Program.h"
 
-#include "util/Timer.h"
-
 namespace task {
 namespace gseprompt {
 
@@ -33,8 +31,6 @@ private:
 		{}
 	};
 	const gse::runner::Runner* m_runner;
-
-	util::Timer m_startup_timer;
 
 	fd_set fds;
 	int maxfd;

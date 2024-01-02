@@ -17,7 +17,12 @@ GSEPrompt::GSEPrompt( const std::string& syntax )
 void GSEPrompt::Start() {
 	Log( "Starting GSE prompt (syntax: " + m_syntax + ")" );
 
-	m_startup_timer.SetTimeout( 100 ); // wait for other things to initialize
+	m_runner = m_gse.GetRunner();
+	m_is_running = true;
+	if ( m_is_tty ) {
+		std::cout << std::endl;
+	}
+	PrintPrompt();
 }
 
 void GSEPrompt::Stop() {
@@ -32,14 +37,6 @@ void GSEPrompt::Stop() {
 }
 
 void GSEPrompt::Iterate() {
-	if ( m_startup_timer.HasTicked() ) {
-		m_runner = m_gse.GetRunner();
-		m_is_running = true;
-		if ( m_is_tty ) {
-			std::cout << std::endl;
-		}
-		PrintPrompt();
-	}
 	if ( m_is_running ) {
 		FD_ZERO( &rfds );
 		FD_SET( 0, &rfds );
