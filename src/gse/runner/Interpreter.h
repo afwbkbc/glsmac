@@ -9,6 +9,7 @@
 
 #include "gse/program/Variable.h"
 #include "gse/program/Conditional.h"
+#include "gse/program/Statement.h"
 
 #include "gse/type/Callable.h"
 
@@ -29,7 +30,7 @@ private:
 			const std::vector< std::string >& parameters,
 			const program::Program* const program
 		);
-		Value Run( GSE* gse, const Callable::function_arguments_t& arguments ) override;
+		Value Run( const Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) override;
 	private:
 		const Interpreter* runner;
 		Context const* parent_context;

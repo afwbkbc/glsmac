@@ -9,5 +9,6 @@ SET( SRC ${SRC}
 	${PWD}/Random.cpp
 	${PWD}/UUID.cpp
 	${PWD}/ArgParser.cpp
+	${PWD}/String.cpp
 
 	PARENT_SCOPE )

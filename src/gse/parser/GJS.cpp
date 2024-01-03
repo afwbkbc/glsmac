@@ -24,8 +24,8 @@ namespace parser {
 
 using namespace program;
 
-GJS::GJS( const std::string& filename, const std::string& source )
-	: Parser( filename, source ) {
+GJS::GJS( const std::string& filename, const std::string& source, const size_t initial_line_num )
+	: Parser( filename, source, initial_line_num ) {
 
 }
 

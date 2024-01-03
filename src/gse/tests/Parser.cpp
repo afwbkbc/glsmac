@@ -290,7 +290,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 	task->AddTest(
 		"test if GJS parser produces valid output",
 		GT( validate_program ) {
-			parser::GJS parser( GetTestFilename(), GetTestSource() );
+			parser::GJS parser( GetTestFilename(), GetTestSource(), 1 );
 			const auto* program = parser.Parse();
 			const auto result = validate_program( program );
 			if ( program ) {

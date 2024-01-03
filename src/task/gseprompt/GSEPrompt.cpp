@@ -3,7 +3,9 @@
 #include <unistd.h>
 #include <iostream>
 
+#include "gse/Exception.h"
 #include "engine/Engine.h"
+#include "util/String.h"
 
 namespace task {
 namespace gseprompt {
@@ -54,12 +56,24 @@ void GSEPrompt::Iterate() {
 				g_engine->ShutDown();
 				return;
 			}
-			if ( buff[ 0 ] != '\n' ) {
+			if ( !m_is_tty || buff[ 0 ] != '\n' ) {
+				if ( m_is_tty ) {
+					char* end = buff + strlen( buff ) - 1;
+					ASSERT( *end == '\n', "eol expected here" );
+					if ( end > buff && ( *( end - 1 ) ) != ';' ) {
+						*end = ';';
+					}
+					else {
+						*end = '\0';
+					}
+				}
 				m_input += buff;
 				if ( m_is_tty ) {
+					m_gse_context.AddSourceLine( buff );
 					ProcessInput();
 				}
 			}
+			m_gse_context.AddSourceLines( util::String::SplitToLines( m_input ) );
 			PrintPrompt();
 		}
 	}
@@ -72,20 +86,59 @@ void GSEPrompt::PrintPrompt() {
 }
 
 void GSEPrompt::ProcessInput() {
-	std::string source = m_input + ";"; // hack
+	std::string source = m_input;
 
-	auto* parser = m_gse.GetParser( "input." + m_syntax, source );
+	if ( m_is_tty ) {
+		m_lines_count++;
+	}
+
+	auto* parser = m_gse.GetParser(
+		"input." + m_syntax, source, m_is_tty
+			? m_lines_count
+			: 1
+	);
 
 	const gse::program::Program* program = nullptr;
+	gse::Context* context = nullptr;
 	try {
 		program = parser->Parse();
-		const auto result = m_runner->Execute( &m_gse_context, program );
+		if ( m_is_tty ) {
+			const gse::si_t si = {
+				"",
+				{
+					m_lines_count,
+					1
+				},
+				{
+					m_lines_count,
+					1
+				}
+			};
+			context = m_gse_context.ForkContext( si, {}, {} );
+		}
+		else {
+			context = &m_gse_context;
+		}
+		const auto result = m_runner->Execute( context, program );
+		if ( m_is_tty ) {
+			context->JoinContext( &m_gse_context );
+		}
 		std::cout << result.ToString() << std::endl;
 	}
+	catch ( gse::Exception& e ) {
+		std::cout << "Unhandled exception (" + e.class_name + "): " << e.reason << std::endl;
+		const auto backtrace = e.GetBacktraceAndCleanup( context );
+		for ( const auto& it : backtrace ) {
+			std::cout << it << std::endl;
+		}
+	}
 	catch ( std::runtime_error& e ) {
-		std::cout << "ERROR: " << e.what() << std::endl;
+		std::cout << "Internal error: " << e.what() << std::endl;
 	}
 	if ( m_is_tty ) {
+		if ( context ) {
+			delete context;
+		}
 		std::cout << std::endl;
 	}
 

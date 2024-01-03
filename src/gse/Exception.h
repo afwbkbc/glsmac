@@ -3,21 +3,35 @@
 #include <stdexcept>
 #include <vector>
 
+#include "program/Element.h"
+
 namespace gse {
+
+class Context;
 
 class Exception : public std::runtime_error {
 public:
 
-	Exception( const std::string& class_name, const std::string& reason, const std::vector< std::string >& backtrace )
+	typedef std::vector< std::string > backtrace_t;
+
+	Exception( const std::string& class_name, const std::string& reason, const gse::Context* context, const si_t& si )
 		: std::runtime_error( "[" + class_name + "] " + reason )
 		, class_name( class_name )
 		, reason( reason )
-		, backtrace( backtrace ) {}
+		, context( context )
+		, si( si ) {}
 
 	const std::string class_name;
 	const std::string reason;
-	const std::vector< std::string > backtrace;
+	const Context* context;
+	const si_t si;
+
+	bool contexts_freed = false;
+
+	const backtrace_t GetBacktraceAndCleanup( const Context* const current_ctx );
 
 };
 
 }
+
+#include "Context.h"

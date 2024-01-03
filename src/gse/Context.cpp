@@ -2,9 +2,10 @@
 
 namespace gse {
 
-Context::Context( const Context* parent_context, const source_lines_t* source_lines )
+Context::Context( const Context* parent_context, const source_lines_t& source_lines, const si_t& si )
 	: m_parent_context( parent_context )
-	, m_source_lines( source_lines ) {
+	, m_source_lines( source_lines )
+	, m_si( si ) {
 	m_scopes.push_back( new Scope() ); // global scope
 }
 
@@ -33,7 +34,7 @@ void Context::CreateVariable( const std::string& name, const Value& value ) {
 	scope->m_variables.insert_or_assign( name, value );
 }
 
-void Context::UpdateVariable( const std::string& name, const Value& value ) {
+void Context::UpdateVariable( const std::string& name, const Value& value, bool create_if_missing ) {
 	Log( "UpdateVariable( " + name + ", " + value.ToString() + " )" );
 	Scope::variables_t::iterator it;
 	for ( auto scope = m_scopes.rbegin() ; scope != m_scopes.rend() ; scope++ ) {
@@ -43,7 +44,12 @@ void Context::UpdateVariable( const std::string& name, const Value& value ) {
 			return;
 		}
 	}
-	THROW( "variable '" + name + "' not found" );
+	if ( create_if_missing ) {
+		CreateVariable( name, value );
+	}
+	else {
+		THROW( "variable '" + name + "' not found" );
+	}
 }
 
 void Context::PushScope() {
@@ -66,32 +72,51 @@ const Context* Context::GetParentContext() const {
 	return m_parent_context;
 }
 
-void Context::SetSI( const si_t& si ) {
-	m_si = si;
-}
-
 const si_t& Context::GetSI() const {
 	return m_si;
 }
 
-const std::string Context::GetSourceLine( const size_t line_num ) const {
-	ASSERT( line_num > 0 && line_num <= m_source_lines->size(), "source line overflow" );
-	return m_source_lines->at( line_num - 1 );
+void Context::AddSourceLine( const std::string& source_line ) {
+	m_source_lines.push_back( source_line );
 }
 
-Context* const Context::CreateFunctionScope(
-	const std::string& function_name,
+void Context::AddSourceLines( const source_lines_t& source_lines ) {
+	m_source_lines.insert( m_source_lines.begin(), source_lines.begin(), source_lines.end() );
+}
+
+const std::string Context::GetSourceLine( const size_t line_num ) const {
+	if ( !( line_num > 0 && line_num <= m_source_lines.size() ) ) {
+		return "<overflow>";
+	}
+	ASSERT( line_num > 0 && line_num <= m_source_lines.size(), "source line overflow" );
+	return m_source_lines.at( line_num - 1 );
+}
+
+const Context::source_lines_t& Context::GetSourceLines() const {
+	return m_source_lines;
+}
+
+Context* const Context::ForkContext(
+	const si_t& call_si,
 	const std::vector< std::string > parameters,
 	const type::Callable::function_arguments_t& arguments
 ) const {
 	ASSERT( parameters.size() == arguments.size(), "expected " + std::to_string( parameters.size() ) + " arguments, found " + std::to_string( arguments.size() ) );
-	auto* result = new Context( this, m_source_lines );
+	auto* result = new Context( this, m_source_lines, call_si );
 	result->m_scopes[ 0 ]->m_variables = m_scopes[ 0 ]->m_variables; // functions have access to parent variables but nothing else
 	result->PushScope(); // functions can have local variables
 	for ( size_t i = 0 ; i < parameters.size() ; i++ ) { // inject passed arguments
 		result->CreateVariable( parameters[ i ], arguments[ i ] );
 	}
 	return result;
+}
+
+void Context::JoinContext( Context* const other ) const {
+	for ( const auto& scope : m_scopes ) {
+		for ( const auto& it : scope->m_variables ) {
+			other->UpdateVariable( it.first, it.second, true );
+		}
+	}
 }
 
 }

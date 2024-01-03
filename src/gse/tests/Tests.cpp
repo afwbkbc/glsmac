@@ -1898,7 +1898,7 @@ const std::string& GetExpectedResult() {
 									  "BEFORE EXCEPTION\n"
 									  "failfunc\n"
 									  "CAUGHT TestError : something happened\n"
-									  "array{string{		at test.gjs:116:     throw TestError('something happened');},string{		at test.gjs:118:   failfunc();}}\n"
+									  "array{string{\tat test.gjs:116: throw TestError('something happened');},string{\tat test.gjs:118: failfunc();}}\n"
 									  "bye!\n";
 	return result;
 }

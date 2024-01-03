@@ -5,14 +5,13 @@
 namespace gse {
 namespace parser {
 
-Parser::Parser( const std::string& filename, const std::string& source )
+Parser::Parser( const std::string& filename, const std::string& source, const size_t initial_line_num )
 	: m_source( source )
 	, m_filename( filename )
 	, m_begin( m_source.c_str() )
 	, m_end( m_source.c_str() + m_source.size() ) {
 	m_ptr = m_begin;
-	// more common to count source line:col from 1 than from 0
-	m_si_pos.line = 1;
+	m_si_pos.line = initial_line_num;
 	m_si_pos.col = 1;
 }
 

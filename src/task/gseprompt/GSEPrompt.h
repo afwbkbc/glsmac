@@ -28,6 +28,7 @@ private:
 	gse::GSE m_gse;
 	gse::Context m_gse_context = {
 		nullptr,
+		{},
 		{}
 	};
 	const gse::runner::Runner* m_runner;
@@ -39,6 +40,7 @@ private:
 	int retval, len;
 	char buff[255] = { 0 };
 
+	size_t m_lines_count = 0;
 	std::string m_input = "";
 
 	void PrintPrompt();

@@ -15,7 +15,7 @@ namespace parser {
 
 CLASS( Parser, base::Base )
 
-	Parser( const std::string& filename, const std::string& source );
+	Parser( const std::string& filename, const std::string& source, const size_t initial_line_num );
 	virtual ~Parser() = default;
 
 	const program::Program* Parse();
