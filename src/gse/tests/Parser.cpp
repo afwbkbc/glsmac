@@ -18,7 +18,7 @@
 #include "gse/program/While.h"
 #include "gse/program/Try.h"
 #include "gse/program/Catch.h"
-#include "gse/parser/GJS.h"
+#include "gse/parser/JS.h"
 
 namespace gse {
 namespace tests {
@@ -288,9 +288,9 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 	};
 
 	task->AddTest(
-		"test if GJS parser produces valid output",
+		"test if JS parser produces valid output",
 		GT( validate_program ) {
-			parser::GJS parser( GetTestFilename(), GetTestSource(), 1 );
+			parser::JS parser( GetTestFilename(), GetTestSource(), 1 );
 			const auto* program = parser.Parse();
 			const auto result = validate_program( program );
 			if ( program ) {

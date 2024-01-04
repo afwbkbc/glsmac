@@ -1,4 +1,4 @@
-#include "GJS.h"
+#include "JS.h"
 
 #include <stack>
 #include <functional>
@@ -24,12 +24,12 @@ namespace parser {
 
 using namespace program;
 
-GJS::GJS( const std::string& filename, const std::string& source, const size_t initial_line_num )
+JS::JS( const std::string& filename, const std::string& source, const size_t initial_line_num )
 	: Parser( filename, source, initial_line_num ) {
 
 }
 
-void GJS::GetElements( source_elements_t& elements ) {
+void JS::GetElements( source_elements_t& elements ) {
 	char c;
 	si_t::pos_t begin;
 	si_t si;
@@ -127,12 +127,12 @@ void GJS::GetElements( source_elements_t& elements ) {
 #define EL( _label )
 #endif
 
-const program::Program* GJS::GetProgram( const source_elements_t& elements ) {
+const program::Program* JS::GetProgram( const source_elements_t& elements ) {
 	NEWV( program, program::Program, GetScope( elements.begin(), elements.end() ) );
 	return program;
 }
 
-const si_t GJS::GetSI( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
+const si_t JS::GetSI( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
 	return {
 		( *begin )->m_si.file,
 		( *begin )->m_si.from,
@@ -140,7 +140,7 @@ const si_t GJS::GetSI( const source_elements_t::const_iterator& begin, const sou
 	};
 }
 
-const program::Scope* GJS::GetScope( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
+const program::Scope* JS::GetScope( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
 	ELS( "GetScope" )
 	std::vector< const program::Control* > body = {};
 	auto it = begin;
@@ -188,7 +188,7 @@ const program::Scope* GJS::GetScope( const source_elements_t::const_iterator& be
 	return new program::Scope( GetSI( begin, end ), body );
 }
 
-const program::Control* GJS::GetControl( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
+const program::Control* JS::GetControl( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
 	ELS( "GetControl" );
 	ASSERT( begin != end, "no elements inside" );
 	if ( ( *begin )->m_type == SourceElement::ET_CONDITIONAL ) {
@@ -199,7 +199,7 @@ const program::Control* GJS::GetControl( const source_elements_t::const_iterator
 	}
 }
 
-const program::Conditional* GJS::GetConditional( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
+const program::Conditional* JS::GetConditional( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
 	ELS( "GetConditional" );
 	ASSERT( ( *begin )->m_type == SourceElement::ET_CONDITIONAL, "conditional expected here" );
 	Conditional* conditional = (Conditional*)( *begin );
@@ -266,12 +266,12 @@ const program::Conditional* GJS::GetConditional( const source_elements_t::const_
 	}
 }
 
-const program::Statement* GJS::GetStatement( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
+const program::Statement* JS::GetStatement( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
 	ELS( "GetStatement" );
 	return new program::Statement( GetSI( begin, end ), GetExpression( begin, end, true ) );
 }
 
-const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, bool is_scope_expected ) {
+const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, bool is_scope_expected ) {
 	ELS( "GetExpression" )
 	// resolve elements, unpack scopes
 	typedef std::vector< const Element* > elements_t;
@@ -650,14 +650,14 @@ const program::Operand* GJS::GetExpressionOrOperand( const source_elements_t::co
 	return get_operand( elements.begin(), elements.end() );
 }
 
-const program::Expression* GJS::GetExpression( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, const bool is_scope_expected ) {
+const program::Expression* JS::GetExpression( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, const bool is_scope_expected ) {
 	const auto* operand = GetExpressionOrOperand( begin, end, is_scope_expected );
 	return operand->type == program::Operand::OT_EXPRESSION
 		? (Expression*)operand
 		: new Expression( operand->m_si, operand );
 }
 
-const program::Operand* GJS::GetOperand( const Identifier* element, program::Variable::variable_hints_t* next_var_hints ) {
+const program::Operand* JS::GetOperand( const Identifier* element, program::Variable::variable_hints_t* next_var_hints ) {
 	EL( "GetOperand" )
 	switch ( element->m_identifier_type ) {
 		case IDENTIFIER_VARIABLE: {
@@ -693,14 +693,14 @@ const program::Operand* GJS::GetOperand( const Identifier* element, program::Var
 	}
 }
 
-const program::Operator* GJS::GetOperator( const Operator* element ) {
+const program::Operator* JS::GetOperator( const Operator* element ) {
 	EL( "GetOperator" )
 	const auto it = OPERATOR_NAMES.find( element->m_op );
 	ASSERT( it != OPERATOR_NAMES.end(), "operator name not found: " + element->m_op );
 	return new program::Operator( element->m_si, it->second );
 }
 
-const program::Array* GJS::GetArray( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
+const program::Array* JS::GetArray( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
 	ELS( "GetArray" );
 	std::vector< const Expression* > elements = {};
 	source_elements_t::const_iterator it = begin, it_end;
@@ -726,7 +726,7 @@ const program::Array* GJS::GetArray( const source_elements_t::const_iterator& be
 	return new program::Array( GetSI( begin - 1, end + 1 ), elements );
 }
 
-const program::Object* GJS::GetObject( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
+const program::Object* JS::GetObject( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
 	ELS( "GetObject" );
 	std::unordered_map< std::string, const Expression* > properties = {};
 	Identifier* identifier;
@@ -762,7 +762,7 @@ const program::Object* GJS::GetObject( const source_elements_t::const_iterator& 
 	return new program::Object( GetSI( begin - 1, end + 1 ), properties );
 }
 
-const GJS::source_elements_t::const_iterator GJS::GetBracketsEnd( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
+const JS::source_elements_t::const_iterator JS::GetBracketsEnd( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
 	ASSERT( ( *begin )->m_type == SourceElement::ET_BLOCK, "expected opening bracket" );
 	std::stack< uint8_t > brackets = {};
 	source_elements_t::const_iterator it = begin;
@@ -797,11 +797,11 @@ const GJS::source_elements_t::const_iterator GJS::GetBracketsEnd( const source_e
 
 #ifdef DEBUG
 
-void GJS::LogElement( const std::string& prefix, const SourceElement* element ) const {
+void JS::LogElement( const std::string& prefix, const SourceElement* element ) const {
 	Log( prefix + element->ToString() );
 }
 
-void GJS::LogElements( const std::string& label, const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) const {
+void JS::LogElements( const std::string& label, const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) const {
 	Log( label + "(" );
 	for ( auto it = begin ; it != end ; it++ ) {
 		LogElement( "    ", *it );

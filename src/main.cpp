@@ -185,8 +185,8 @@ int main( const int argc, const char* argv[] ) {
 				NEWV( task, task::gsetests::GSETests );
 				scheduler.AddTask( task );
 			}
-			else if ( config.HasDebugFlag( config::Config::DF_GSE_PROMPT_GJS ) ) {
-				NEWV( task, task::gseprompt::GSEPrompt, "gjs" );
+			else if ( config.HasDebugFlag( config::Config::DF_GSE_PROMPT_JS ) ) {
+				NEWV( task, task::gseprompt::GSEPrompt, "js" );
 				scheduler.AddTask( task );
 			}
 

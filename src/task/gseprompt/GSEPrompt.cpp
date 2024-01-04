@@ -93,7 +93,7 @@ void GSEPrompt::ProcessInput() {
 	}
 
 	auto* parser = m_gse.GetParser(
-		"input." + m_syntax, source, m_is_tty
+		"<STDIN>.gls." + m_syntax, source, m_is_tty
 			? m_lines_count
 			: 1
 	);

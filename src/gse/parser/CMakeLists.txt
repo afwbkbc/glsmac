@@ -1,6 +1,6 @@
 SET( SRC ${SRC}
 
 	${PWD}/Parser.cpp
-	${PWD}/GJS.cpp
+	${PWD}/JS.cpp
 
 	PARENT_SCOPE )

@@ -41,7 +41,7 @@ CLASS( Config, base::Module )
 		DF_QUIET = 1 << 12,
 		DF_GSE_ONLY = 1 << 13,
 		DF_GSE_TESTS = 1 << 14,
-		DF_GSE_PROMPT_GJS = 1 << 15,
+		DF_GSE_PROMPT_JS = 1 << 15,
 	};
 #endif
 

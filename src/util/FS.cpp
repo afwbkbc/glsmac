@@ -13,6 +13,8 @@ using namespace std;
 #define PATH_SEPARATOR "/"
 #endif
 
+#define EXTENSION_SEPARATOR '.'
+
 #ifdef DEBUG
 #define Log( _text ) std::cout << "<Util::FS> " << (_text) << std::endl
 #else
@@ -111,7 +113,7 @@ const std::string FS::GetFilteredPath( const std::string& path ) {
 	if ( path == "." ) {
 		return "";
 	}
-	while ( pos + 1 < path.size() && path[ pos ] == '.' && path[ pos + 1 ] == '/' ) {
+	while ( pos + 1 < path.size() && path[ pos ] == EXTENSION_SEPARATOR && path[ pos + 1 ] == '/' ) {
 		pos += 2;
 	}
 #endif
@@ -127,13 +129,24 @@ const std::string FS::GetAbsolutePath( const std::string& path ) {
 }
 
 const std::string FS::GetExtension( const std::string& path ) {
-	const auto pos = path.rfind( '.' );
+	const auto pos = path.rfind( EXTENSION_SEPARATOR );
 	if ( pos == std::string::npos ) {
 		return "";
 	}
 	else {
 		return path.substr( pos );
 	}
+}
+
+const std::vector< std::string > FS::GetExtensions( const std::string& path ) {
+	std::vector< std::string > result = {};
+	size_t pos, last_pos = path.size();
+	while ( ( pos = path.rfind( EXTENSION_SEPARATOR, last_pos - 1 ) ) != std::string::npos ) {
+		result.push_back( path.substr( pos, last_pos - pos ) );
+		last_pos = pos;
+	}
+	std::reverse( result.begin(), result.end() );
+	return result;
 }
 
 const bool FS::Exists( const string& path ) {

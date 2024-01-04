@@ -1,6 +1,6 @@
 #include "GSE.h"
 
-#include "parser/GJS.h"
+#include "parser/JS.h"
 #include "runner/Interpreter.h"
 #include "util/FS.h"
 
@@ -24,11 +24,12 @@ GSE::~GSE() {
 
 parser::Parser* GSE::GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num ) const {
 	parser::Parser* parser = nullptr;
-	const auto extension = util::FS::GetExtension( filename );
-	if ( extension == ".gjs" ) {
-		NEW( parser, parser::GJS, filename, source, initial_line_num );
+	const auto extensions = util::FS::GetExtensions( filename );
+	ASSERT( extensions.size() == 2 && extensions[ 0 ] == ".gls", "unsupported file name ( " + filename + "), expected: *.gls.*" );
+	if ( extensions[ 1 ] == ".js" ) {
+		NEW( parser, parser::JS, filename, source, initial_line_num );
 	}
-	ASSERT( parser, "could not find parser for '" + extension + "' extension" );
+	ASSERT( parser, "could not find parser for '.gls" + extensions[ 1 ] + "' extension" );
 	return parser;
 }
 
