@@ -27,6 +27,8 @@
 #include "gse/type/Range.h"
 #include "gse/type/Exception.h"
 
+#include "util/String.h"
+
 namespace gse {
 
 using namespace program;
@@ -115,22 +117,21 @@ const gse::Value Interpreter::EvaluateConditional( Context* ctx, const program::
 		}
 		case program::Conditional::CT_TRY: {
 			const auto* c = (program::Try*)conditional;
-			const auto initial_scope_depth = ctx->GetScopeDepth();
 			try {
 				return EvaluateScope( ctx, c->body );
 			}
-			catch ( const gse::Exception& e ) {
+			catch ( gse::Exception& e ) {
 				const auto* h = c->handlers->handlers;
 				const auto& it = h->properties.find( e.class_name );
 				if ( it != h->properties.end() ) {
 					const auto f = EvaluateExpression( ctx, it->second );
 					ASSERT( f.Get()->type == Type::T_CALLABLE, "invalid error handler type" );
-					for ( size_t scope_depth = ctx->GetScopeDepth() ; scope_depth > initial_scope_depth ; scope_depth-- ) {
-						ctx->PopScope(); // cleanup
-					}
+
 					return ( (Function*)f.Get() )->Run(
-						nullptr, {
-							VALUE( type::Exception, e )
+						ctx,
+						it->second->m_si,
+						{
+							VALUE( type::Exception, e, e.GetBacktraceAndCleanup( ctx ) )
 						}
 					);
 				}
@@ -161,7 +162,7 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 		}
 		case Operator::OT_THROW: {
 			ASSERT( !expression->a, "unexpected left operand before throw" );
-			ASSERT( expression->b, "error definition expected" );
+			ASSERT( expression->b && expression->b->type == Operand::OT_CALL, "error definition expected" );
 			const auto* e = (program::Call*)expression->b; // it's not a call but it looks like a call
 			ASSERT( e->callable->a &&
 				e->callable->a->type == Operand::OT_VARIABLE &&
@@ -171,18 +172,12 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 			const auto reason = EvaluateExpression( ctx, e->arguments[ 0 ] );
 			ASSERT( reason.Get()->type == Type::T_STRING, "error reason is not string: " + reason.ToString() );
 
-			auto si = expression->op->m_si;
-#define FORMAT_SI() "		at " + si.file + ":" + std::to_string( si.from.line ) + ": " + ctx->GetSourceLine( si.from.line )
-			std::vector< std::string > backtrace = { FORMAT_SI() };
-			const auto* c = ctx->GetParentContext();
-			while ( c ) {
-				si = c->GetSI();
-				backtrace.push_back( FORMAT_SI() );
-				c = c->GetParentContext();
-			}
-#undef FORMAT_SI
-
-			throw gse::Exception( ( (program::Variable*)e->callable->a )->name, ( (type::String*)reason.Get() )->value, backtrace );
+			throw gse::Exception(
+				( (program::Variable*)e->callable->a )->name,
+				( (type::String*)reason.Get() )->value,
+				ctx,
+				expression->op->m_si
+			);
 		}
 		case Operator::OT_ASSIGN: {
 			ASSERT( expression->a, "missing assignment target" );
@@ -434,7 +429,7 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 					const auto* ref = refv.Get();
 					switch ( ref->type ) {
 						case Type::T_ARRAYREF: {
-							const auto* r = (ArrayRef*)refv.Get();
+							const auto* r = (ArrayRef*)ref;
 							const auto arrv = r->array->Get( r->index );
 							const auto* arr = arrv.Get();
 							ASSERT( arr->type == Type::T_ARRAY, "parent is not array: " + arr->ToString() );
@@ -447,6 +442,18 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 						}
 						case Type::T_ARRAYRANGEREF: {
 							THROW( "TODO: T_ARRAYRANGEREF" );
+						}
+						case Type::T_OBJECTREF: {
+							// let a = {k:'v'}; return a.k[0];
+							const auto arrv = Deref( refv );
+							const auto* arr = arrv.Get();
+							ASSERT( arr->type == Type::T_ARRAY, "parent is not array: " + arr->ToString() );
+							if ( index.has_value() ) {
+								return ( (type::Array*)arr )->GetRef( index.value() );
+							}
+							else {
+								return ( (type::Array*)arr )->GetRangeRef( from, to );
+							}
 						}
 						default:
 							THROW( "unexpected expression result: " + ref->ToString() );
@@ -543,8 +550,7 @@ const gse::Value Interpreter::EvaluateOperand( Context* ctx, const program::Oper
 					for ( const auto& it : call->arguments ) {
 						arguments.push_back( Deref( EvaluateExpression( ctx, it ) ) );
 					}
-					ctx->SetSI( call->m_si ); // for backtraces
-					return ( (Callable*)callable.Get() )->Run( nullptr, arguments );
+					return ( (Callable*)callable.Get() )->Run( ctx, call->m_si, arguments );
 				}
 				default:
 					THROW( "callable expected, found: " + callable.ToString() );
@@ -669,10 +675,10 @@ Interpreter::Function::Function(
 	// nothing
 }
 
-gse::Value Interpreter::Function::Run( GSE* gse, const Callable::function_arguments_t& arguments ) {
-	auto* ctx = parent_context->CreateFunctionScope( "<function>", parameters, arguments );
-	const auto result = runner->Execute( ctx, program );
-	delete ctx;
+gse::Value Interpreter::Function::Run( const Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) {
+	auto* funcctx = ctx->ForkContext( call_si, parameters, arguments );
+	const auto result = runner->Execute( funcctx, program );
+	delete funcctx;
 	return result;
 }
 

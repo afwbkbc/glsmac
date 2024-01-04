@@ -237,8 +237,8 @@ Config::Config( const int argc, const char* argv[] ) {
 		}
 	);
 	parser.AddRule(
-		"gse-prompt-gjs", "Open interactive GJS prompt", AH( this ) {
-			m_debug_flags |= DF_GSE_ONLY | DF_GSE_PROMPT_GJS;
+		"gse-prompt-js", "Open interactive JS prompt", AH( this ) {
+			m_debug_flags |= DF_GSE_ONLY | DF_GSE_PROMPT_JS;
 		}
 	);
 	parser.AddRule(

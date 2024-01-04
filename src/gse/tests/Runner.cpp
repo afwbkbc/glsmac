@@ -1,8 +1,7 @@
 #include "GSE.h"
 
-#include <sstream>
-
 #include "Tests.h"
+
 #include "gse/Context.h"
 
 #include "gse/type/Undefined.h"
@@ -12,6 +11,8 @@
 #include "gse/type/Object.h"
 
 #include "gse/runner/Interpreter.h"
+
+#include "util/String.h"
 
 namespace gse {
 namespace tests {
@@ -25,7 +26,7 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 	// to test execution output
 	class ConsoleLogMock : public type::Callable {
 	public:
-		Value Run( GSE* gse, const Callable::function_arguments_t& arguments ) override {
+		Value Run( const Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) override {
 			std::string line = "";
 			for ( const auto& it : arguments ) {
 				if ( !line.empty() ) {
@@ -68,13 +69,7 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 
 			runner::Interpreter interpreter;
 
-			Context::source_lines_t source_lines = {};
-			auto ss = std::stringstream{ GetTestSource() };
-			for ( std::string line ; std::getline( ss, line, '\n' ) ; ) {
-				source_lines.push_back( line );
-			}
-
-			Context context( nullptr, &source_lines );
+			Context context( nullptr, util::String::SplitToLines( GetTestSource() ), {} );
 
 			// add some mocks
 			const auto console_log_mock = VALUE( ConsoleLogMock );

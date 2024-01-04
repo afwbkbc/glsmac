@@ -42,7 +42,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 }
 
 const std::string& GetTestFilename() {
-	const static std::string filename = "test.gjs";
+	const static std::string filename = "<TEST>.gls.js";
 	return filename;
 }
 
@@ -1898,7 +1898,7 @@ const std::string& GetExpectedResult() {
 									  "BEFORE EXCEPTION\n"
 									  "failfunc\n"
 									  "CAUGHT TestError : something happened\n"
-									  "array{string{		at test.gjs:116:     throw TestError('something happened');},string{		at test.gjs:118:   failfunc();}}\n"
+									  "array{string{\tat <TEST>.gls.js:116: throw TestError('something happened');},string{\tat <TEST>.gls.js:118: failfunc();}}\n"
 									  "bye!\n";
 	return result;
 }

@@ -14,7 +14,7 @@ namespace type {
 class Exception : public Object {
 public:
 
-	Exception( const gse::Exception& exception )
+	Exception( const gse::Exception& exception, const std::vector< std::string >& backtrace )
 		: Object(
 		{
 			{
@@ -28,7 +28,7 @@ public:
 		}
 	) {
 		type::Array::elements_t bt = {};
-		for ( const auto& it : exception.backtrace ) {
+		for ( const auto& it : backtrace ) {
 			bt.push_back( VALUE( type::String, it ) );
 		}
 		value.insert_or_assign( "backtrace", VALUE( type::Array, bt ) );

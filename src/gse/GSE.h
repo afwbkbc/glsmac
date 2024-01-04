@@ -26,7 +26,7 @@ CLASS( GSE, base::Base )
 	GSE();
 	virtual ~GSE();
 
-	parser::Parser* GetParser( const std::string& filename, const std::string& source ) const;
+	parser::Parser* GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num = 1 ) const;
 	const runner::Runner* GetRunner() const;
 
 	void AddModule( const std::string& path, type::Callable* module );

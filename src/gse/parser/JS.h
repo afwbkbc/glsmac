@@ -17,9 +17,9 @@
 namespace gse {
 namespace parser {
 
-CLASS( GJS, Parser )
+CLASS( JS, Parser )
 
-	GJS( const std::string& filename, const std::string& source );
+	JS( const std::string& filename, const std::string& source, const size_t initial_line_num );
 
 protected:
 	void GetElements( source_elements_t& elements ) override;

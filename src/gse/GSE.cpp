@@ -1,6 +1,6 @@
 #include "GSE.h"
 
-#include "parser/GJS.h"
+#include "parser/JS.h"
 #include "runner/Interpreter.h"
 #include "util/FS.h"
 
@@ -22,13 +22,14 @@ GSE::~GSE() {
 	}
 }
 
-parser::Parser* GSE::GetParser( const std::string& filename, const std::string& source ) const {
+parser::Parser* GSE::GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num ) const {
 	parser::Parser* parser = nullptr;
-	const auto extension = util::FS::GetExtension( filename );
-	if ( extension == ".gjs" ) {
-		NEW( parser, parser::GJS, filename, source );
+	const auto extensions = util::FS::GetExtensions( filename );
+	ASSERT( extensions.size() == 2 && extensions[ 0 ] == ".gls", "unsupported file name ( " + filename + "), expected: *.gls.*" );
+	if ( extensions[ 1 ] == ".js" ) {
+		NEW( parser, parser::JS, filename, source, initial_line_num );
 	}
-	ASSERT( parser, "could not find parser for '" + extension + "' extension" );
+	ASSERT( parser, "could not find parser for '.gls" + extensions[ 1 ] + "' extension" );
 	return parser;
 }
 
@@ -39,7 +40,7 @@ const runner::Runner* GSE::GetRunner() const {
 
 void GSE::AddModule( const std::string& path, type::Callable* module ) {
 	if ( m_modules.find( path ) != m_modules.end() ) {
-		throw Exception( "GSE_InternalError", "module path '" + path + "' already taken", {} ); // ?
+		throw Exception( "GSE_InternalError", "module path '" + path + "' already taken", nullptr, {} ); // ?
 	}
 	Log( "Adding module: " + path );
 	m_modules[ path ] = module;
@@ -54,7 +55,9 @@ void GSE::Run() {
 		auto it = m_modules.find( i );
 		ASSERT( it != m_modules.end(), "required module missing: " + i );
 		Log( "Executing module: " + it->first );
-		it->second->Run( this, {} );
+		Context context( nullptr, {}, {} );
+		it->second->Run( &context, {}, {} );
+		// TODO: cleanup context properly or don't
 	}
 
 	Log( "GSE finished" );
