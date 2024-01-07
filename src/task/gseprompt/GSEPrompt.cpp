@@ -123,7 +123,7 @@ void GSEPrompt::ProcessInput() {
 		if ( m_is_tty ) {
 			context->JoinContext( &m_gse_context );
 		}
-		std::cout << result.ToString() << std::endl;
+		std::cout << result.Dump() << std::endl;
 	}
 	catch ( gse::Exception& e ) {
 		std::cout << "Unhandled exception (" + e.class_name + "): " << e.reason << std::endl;

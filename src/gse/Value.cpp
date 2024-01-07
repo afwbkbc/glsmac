@@ -34,6 +34,10 @@ const std::string Value::ToString() const {
 	return m_data->ToString();
 }
 
+const std::string Value::Dump() const {
+	return m_data->Dump();
+}
+
 const Value Value::Clone() const {
 	switch ( m_data.get()->type ) {
 		case type::Type::T_UNDEFINED:

@@ -54,6 +54,82 @@ const std::string Type::GetTypeString( const type_t type ) {
 const std::string Type::ToString() const {
 	switch ( type ) {
 		case T_UNDEFINED:
+			return "undefined";
+		case T_NULL:
+			return "null";
+		case T_BOOL:
+			return ( (Bool*)this )->value
+				? "true"
+				: "false";
+		case T_INT:
+			return std::to_string( ( (Int*)this )->value );
+		case T_FLOAT:
+			return std::to_string( ( (Float*)this )->value );
+		case T_STRING:
+			return ( (String*)this )->value;
+		case T_ARRAY: {
+			std::string str = "";
+			str.append( "[ " );
+			bool first = true;
+			for ( const auto& it : ( (Array*)this )->value ) {
+				if ( first ) {
+					first = false;
+				}
+				else {
+					str.append( ", " );
+				}
+				str.append( it.ToString() );
+			}
+			str.append( " ]" );
+			return str;
+		}
+		case T_OBJECT: {
+			std::string str = "";
+			str.append( "{ " );
+			bool first = true;
+			for ( const auto& it : ( (Object*)this )->value ) {
+				if ( first ) {
+					first = false;
+				}
+				else {
+					str.append( ", " );
+				}
+				str.append( it.first + ": " + it.second.ToString() );
+			}
+			str.append( " }" );
+			return str;
+		}
+		case T_CALLABLE:
+			return "callable"; // TODO
+		case T_ARRAYREF: {
+			THROW( "arrayref is not intented to be printed" );
+		}
+		case T_ARRAYRANGEREF: {
+			THROW( "arrayrangeref is not intented to be printed" );
+		}
+		case T_OBJECTREF: {
+			THROW( "objectref is not intented to be printed" );
+		}
+		case T_RANGE: {
+			const auto* that = (Range*)this;
+			return "[" + (
+				that->from
+					? std::to_string( *that->from )
+					: ""
+			) + ":" + (
+				that->to
+					? std::to_string( *that->to )
+					: ""
+			) + "]";
+		}
+		default:
+			THROW( "unknown is not intented to be printed" );
+	}
+}
+
+const std::string Type::Dump() const {
+	switch ( type ) {
+		case T_UNDEFINED:
 			return "undefined{}";
 		case T_NULL:
 			return "null{}";
@@ -79,7 +155,7 @@ const std::string Type::ToString() const {
 				else {
 					str.append( "," );
 				}
-				str.append( it.ToString() );
+				str.append( it.Get()->Dump() );
 			}
 			str.append( "}" );
 			return str;
@@ -95,7 +171,7 @@ const std::string Type::ToString() const {
 				else {
 					str.append( "," );
 				}
-				str.append( it.first + ":" + it.second.ToString() );
+				str.append( it.first + ":" + it.second.Get()->Dump() );
 			}
 			str.append( "}" );
 			return str;

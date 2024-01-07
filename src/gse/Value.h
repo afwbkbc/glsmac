@@ -25,6 +25,7 @@ public:
 
 	const type::Type* Get() const;
 	const std::string ToString() const;
+	const std::string Dump() const;
 
 	const Value Clone() const;
 
