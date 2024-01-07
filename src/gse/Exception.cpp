@@ -20,4 +20,20 @@ const Exception::backtrace_t Exception::GetBacktraceAndCleanup( const Context* c
 	return backtrace;
 }
 
+const std::string Exception::ToStringAndCleanup() {
+	std::string result = "Unhandled exception (" + class_name + "): " + reason + "\n";
+	const auto backtrace = GetBacktraceAndCleanup( context );
+	bool is_first = true;
+	for ( const auto& it : backtrace ) {
+		if ( is_first ) {
+			is_first = false;
+		}
+		else {
+			result += "\n";
+		}
+		result += it;
+	}
+	return result;
+}
+
 }

@@ -675,9 +675,10 @@ Interpreter::Function::Function(
 	// nothing
 }
 
-gse::Value Interpreter::Function::Run( const Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) {
+gse::Value Interpreter::Function::Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) {
 	auto* funcctx = ctx->ForkContext( call_si, parameters, arguments );
 	const auto result = runner->Execute( funcctx, program );
+	//funcctx->JoinContext( ctx );
 	delete funcctx;
 	return result;
 }

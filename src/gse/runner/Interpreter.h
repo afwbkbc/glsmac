@@ -30,7 +30,7 @@ private:
 			const std::vector< std::string >& parameters,
 			const program::Program* const program
 		);
-		Value Run( const Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) override;
+		Value Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) override;
 	private:
 		const Interpreter* runner;
 		Context const* parent_context;

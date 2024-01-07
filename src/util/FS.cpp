@@ -142,6 +142,9 @@ const std::vector< std::string > FS::GetExtensions( const std::string& path ) {
 	std::vector< std::string > result = {};
 	size_t pos, last_pos = path.size();
 	while ( ( pos = path.rfind( EXTENSION_SEPARATOR, last_pos - 1 ) ) != std::string::npos ) {
+		if ( path.rfind( PATH_SEPARATOR, last_pos - 1 ) > pos ) {
+			break;
+		}
 		result.push_back( path.substr( pos, last_pos - pos ) );
 		last_pos = pos;
 	}
@@ -171,7 +174,7 @@ const bool FS::DirectoryExists( const string& path ) {
 
 void FS::CreateDirectoryIfNotExists( const string& path ) {
 	if ( !DirectoryExists( path ) ) {
-		Log( "Creating directory: " + path );
+		//Log( "Creating directory: " + path );
 		std::filesystem::create_directories( path );
 	}
 }
@@ -185,7 +188,7 @@ std::vector< std::string > FS::ListDirectory( const std::string& directory, cons
 #endif
 	std::vector< std::string > result = {};
 
-	Log( "Reading directory: " + directory );
+	//Log( "Reading directory: " + directory );
 
 	try {
 
@@ -232,7 +235,7 @@ std::vector< std::string > FS::ListDirectory( const std::string& directory, cons
 }
 
 const string FS::ReadFile( const string& path ) {
-	Log( "Reading file: " + path );
+	//Log( "Reading file: " + path );
 	ASSERT_NOLOG( FileExists( path ), "file \"" + path + "\" does not exist or is not a file" );
 	stringstream data;
 	ifstream in( path, std::ios_base::binary );
@@ -242,7 +245,7 @@ const string FS::ReadFile( const string& path ) {
 }
 
 const void FS::WriteFile( const string& path, const string& data ) {
-	Log( "Writing file: " + path );
+	//Log( "Writing file: " + path );
 	ofstream out( path, std::ios_base::binary );
 	out << data;
 	out.close();

@@ -133,11 +133,16 @@ const program::Program* JS::GetProgram( const source_elements_t& elements ) {
 }
 
 const si_t JS::GetSI( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
-	return {
-		( *begin )->m_si.file,
-		( *begin )->m_si.from,
-		( ( *( end - 1 ) )->m_si.to )
-	};
+	if ( begin == end ) {
+		return {};
+	}
+	else {
+		return {
+			( *begin )->m_si.file,
+			( *begin )->m_si.from,
+			( ( *( end - 1 ) )->m_si.to )
+		};
+	}
 }
 
 const program::Scope* JS::GetScope( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
