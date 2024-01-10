@@ -18,7 +18,12 @@ Context::~Context() {
 const Value Context::GetVariable( const std::string& name ) {
 	Log( "GetVariable( " + name + " )" );
 	Scope::variables_t::const_iterator it;
+	Scope::ref_contexts_t::const_iterator ref_it;
 	for ( auto scope = m_scopes.rbegin() ; scope != m_scopes.rend() ; scope++ ) {
+		ref_it = ( *scope )->m_ref_contexts.find( name );
+		if ( ref_it != ( *scope )->m_ref_contexts.end() ) {
+			return ref_it->second->GetVariable( name );
+		}
 		it = ( *scope )->m_variables.find( name );
 		if ( it != ( *scope )->m_variables.end() ) {
 			return it->second;
@@ -37,7 +42,13 @@ void Context::CreateVariable( const std::string& name, const Value& value ) {
 void Context::UpdateVariable( const std::string& name, const Value& value, bool create_if_missing ) {
 	Log( "UpdateVariable( " + name + ", " + value.ToString() + " )" );
 	Scope::variables_t::iterator it;
+	Scope::ref_contexts_t::iterator ref_it;
 	for ( auto scope = m_scopes.rbegin() ; scope != m_scopes.rend() ; scope++ ) {
+		ref_it = ( *scope )->m_ref_contexts.find( name );
+		if ( ref_it != ( *scope )->m_ref_contexts.end() ) {
+			ref_it->second->UpdateVariable( name, value );
+			return;
+		}
 		it = ( *scope )->m_variables.find( name );
 		if ( it != ( *scope )->m_variables.end() ) {
 			it->second = value;
@@ -100,11 +111,15 @@ Context* const Context::ForkContext(
 	const si_t& call_si,
 	const std::vector< std::string > parameters,
 	const type::Callable::function_arguments_t& arguments
-) const {
+) {
 	ASSERT( parameters.size() == arguments.size(), "expected " + std::to_string( parameters.size() ) + " arguments, found " + std::to_string( arguments.size() ) );
 	auto* result = new Context( this, m_source_lines, call_si );
-	result->m_scopes[ 0 ]->m_variables = m_scopes[ 0 ]->m_variables; // functions have access to parent variables but nothing else
-	result->PushScope(); // functions can have local variables
+	// functions have access to parent variables
+	for ( auto& it : m_scopes[ 0 ]->m_variables ) {
+		result->m_scopes[ 0 ]->m_variables.insert_or_assign( it.first, it.second );
+		result->m_scopes[ 0 ]->m_ref_contexts.insert_or_assign( it.first, this );
+	}
+	result->PushScope(); // functions can have local variables too
 	for ( size_t i = 0 ; i < parameters.size() ; i++ ) { // inject passed arguments
 		result->CreateVariable( parameters[ i ], arguments[ i ] );
 	}

@@ -25,7 +25,7 @@ GSE::~GSE() {
 parser::Parser* GSE::GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num ) const {
 	parser::Parser* parser = nullptr;
 	const auto extensions = util::FS::GetExtensions( filename );
-	ASSERT( extensions.size() == 2 && extensions[ 0 ] == ".gls", "unsupported file name ( " + filename + "), expected: *.gls.*" );
+	ASSERT( extensions.size() == 2 && extensions[ 0 ] == ".gls", "unsupported file name ( " + filename + " ), expected: *.gls.*" );
 	if ( extensions[ 1 ] == ".js" ) {
 		NEW( parser, parser::JS, filename, source, initial_line_num );
 	}

@@ -24,7 +24,7 @@ CLASS( Config, base::Module )
 	};
 
 #ifdef DEBUG
-	enum debug_flag_t : uint16_t {
+	enum debug_flag_t : uint32_t {
 		DF_NONE = 0,
 		DF_GDB = 1 << 0,
 		DF_MAPDUMP = 1 << 1,
@@ -41,7 +41,8 @@ CLASS( Config, base::Module )
 		DF_QUIET = 1 << 12,
 		DF_GSE_ONLY = 1 << 13,
 		DF_GSE_TESTS = 1 << 14,
-		DF_GSE_PROMPT_JS = 1 << 15,
+		DF_GSE_TESTS_SCRIPT = 1 << 15,
+		DF_GSE_PROMPT_JS = 1 << 16,
 	};
 #endif
 
@@ -69,6 +70,7 @@ CLASS( Config, base::Module )
 	const game::MapSettings::parameter_t GetQuickstartMapErosive() const;
 	const game::MapSettings::parameter_t GetQuickstartMapLifeforms() const;
 	const game::MapSettings::parameter_t GetQuickstartMapClouds() const;
+	const std::string& GetGSETestsScript() const;
 
 #endif
 
@@ -99,6 +101,8 @@ private:
 	game::MapSettings::parameter_t m_quickstart_map_erosive = game::MapSettings::MAP_EROSIVE_AVERAGE;
 	game::MapSettings::parameter_t m_quickstart_map_lifeforms = game::MapSettings::MAP_LIFEFORMS_AVERAGE;
 	game::MapSettings::parameter_t m_quickstart_map_clouds = game::MapSettings::MAP_CLOUDS_AVERAGE;
+
+	std::string m_gse_tests_script = "";
 
 #endif
 };

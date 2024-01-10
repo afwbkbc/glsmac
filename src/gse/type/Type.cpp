@@ -101,15 +101,10 @@ const std::string Type::ToString() const {
 		}
 		case T_CALLABLE:
 			return "callable"; // TODO
-		case T_ARRAYREF: {
-			THROW( "arrayref is not intented to be printed" );
-		}
-		case T_ARRAYRANGEREF: {
-			THROW( "arrayrangeref is not intented to be printed" );
-		}
-		case T_OBJECTREF: {
-			THROW( "objectref is not intented to be printed" );
-		}
+		case T_ARRAYREF:
+		case T_ARRAYRANGEREF:
+		case T_OBJECTREF:
+			THROW( "refs are not intended to be printed" );
 		case T_RANGE: {
 			const auto* that = (Range*)this;
 			return "[" + (

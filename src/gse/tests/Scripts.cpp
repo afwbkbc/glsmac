@@ -28,7 +28,10 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 		}
 	);
 
-	const auto scripts = util::FS::ListDirectory( tests_path, true );
+	const auto* c = g_engine->GetConfig();
+	const auto scripts = c->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT )
+		? std::vector< std::string >{ c->GetGSETestsScript() }
+		: util::FS::ListDirectory( tests_path, true );
 	for ( const auto& script : scripts ) {
 		task->AddTest(
 			"testing " + script,

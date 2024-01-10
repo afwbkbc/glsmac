@@ -38,7 +38,7 @@ CLASS( Context, base::Base )
 		const si_t& call_si,
 		const std::vector< std::string > parameters,
 		const type::Callable::function_arguments_t& arguments
-	) const;
+	);
 	void JoinContext( Context* const other ) const;
 
 private:
@@ -52,7 +52,8 @@ private:
 	public:
 		typedef std::unordered_map< std::string, Value > variables_t;
 		variables_t m_variables = {};
-
+		typedef std::unordered_map< std::string, Context* > ref_contexts_t;
+		ref_contexts_t m_ref_contexts = {};
 	};
 	std::vector< Scope* > m_scopes = {};
 

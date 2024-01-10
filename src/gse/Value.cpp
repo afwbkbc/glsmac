@@ -71,9 +71,7 @@ const Value Value::Clone() const {
 		case type::Type::T_CALLABLE:
 			return *this;
 		case type::Type::T_ARRAYREF:
-			THROW( "refs are not supposed to be cloned" );
 		case type::Type::T_ARRAYRANGEREF:
-			THROW( "refs are not supposed to be cloned" );
 		case type::Type::T_OBJECTREF:
 			THROW( "refs are not supposed to be cloned" );
 		case type::Type::T_RANGE:
