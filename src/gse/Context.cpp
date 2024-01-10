@@ -6,54 +6,42 @@ Context::Context( const Context* parent_context, const source_lines_t& source_li
 	: m_parent_context( parent_context )
 	, m_source_lines( source_lines )
 	, m_si( si ) {
-	m_scopes.push_back( new Scope() ); // global scope
 }
 
 Context::~Context() {
-	for ( const auto& it : m_scopes ) {
-		delete it;
-	}
+
 }
 
 const Value Context::GetVariable( const std::string& name ) {
 	Log( "GetVariable( " + name + " )" );
-	Scope::variables_t::const_iterator it;
-	Scope::ref_contexts_t::const_iterator ref_it;
-	for ( auto scope = m_scopes.rbegin() ; scope != m_scopes.rend() ; scope++ ) {
-		ref_it = ( *scope )->m_ref_contexts.find( name );
-		if ( ref_it != ( *scope )->m_ref_contexts.end() ) {
-			return ref_it->second->GetVariable( name );
-		}
-		it = ( *scope )->m_variables.find( name );
-		if ( it != ( *scope )->m_variables.end() ) {
-			return it->second;
-		}
+	const auto it = m_variables.find( name );
+	if ( it != m_variables.end() ) {
+		return it->second;
+	}
+	const auto ref_it = m_ref_contexts.find( name );
+	if ( ref_it != m_ref_contexts.end() ) {
+		return ref_it->second->GetVariable( name );
 	}
 	THROW( "variable '" + name + "' not found" );
 }
 
 void Context::CreateVariable( const std::string& name, const Value& value ) {
 	Log( "CreateVariable( " + name + ", " + value.ToString() + " )" );
-	auto* scope = m_scopes.back();
-	ASSERT( scope->m_variables.find( name ) == scope->m_variables.end(), "variable '" + name + "' already exists" );
-	scope->m_variables.insert_or_assign( name, value );
+	ASSERT( m_variables.find( name ) == m_variables.end(), "variable '" + name + "' already exists" );
+	m_variables.insert_or_assign( name, value );
 }
 
 void Context::UpdateVariable( const std::string& name, const Value& value, bool create_if_missing ) {
 	Log( "UpdateVariable( " + name + ", " + value.ToString() + " )" );
-	Scope::variables_t::iterator it;
-	Scope::ref_contexts_t::iterator ref_it;
-	for ( auto scope = m_scopes.rbegin() ; scope != m_scopes.rend() ; scope++ ) {
-		ref_it = ( *scope )->m_ref_contexts.find( name );
-		if ( ref_it != ( *scope )->m_ref_contexts.end() ) {
-			ref_it->second->UpdateVariable( name, value );
-			return;
-		}
-		it = ( *scope )->m_variables.find( name );
-		if ( it != ( *scope )->m_variables.end() ) {
-			it->second = value;
-			return;
-		}
+	const auto it = m_variables.find( name );
+	if ( it != m_variables.end() ) {
+		it->second = value;
+		return;
+	}
+	const auto ref_it = m_ref_contexts.find( name );
+	if ( ref_it != m_ref_contexts.end() ) {
+		ref_it->second->UpdateVariable( name, value );
+		return;
 	}
 	if ( create_if_missing ) {
 		CreateVariable( name, value );
@@ -61,22 +49,6 @@ void Context::UpdateVariable( const std::string& name, const Value& value, bool 
 	else {
 		THROW( "variable '" + name + "' not found" );
 	}
-}
-
-void Context::PushScope() {
-	Log( "PushScope()" );
-	m_scopes.push_back( new Scope() );
-}
-
-void Context::PopScope() {
-	Log( "PopScope()" );
-	ASSERT( m_scopes.size() > 1, "attempted to destroy global scope" );
-	delete m_scopes.back();
-	m_scopes.pop_back();
-}
-
-const size_t Context::GetScopeDepth() const {
-	return m_scopes.size();
 }
 
 const Context* Context::GetParentContext() const {
@@ -113,13 +85,11 @@ Context* const Context::ForkContext(
 	const type::Callable::function_arguments_t& arguments
 ) {
 	ASSERT( parameters.size() == arguments.size(), "expected " + std::to_string( parameters.size() ) + " arguments, found " + std::to_string( arguments.size() ) );
-	auto* result = new Context( this, m_source_lines, call_si );
+	NEWV( result, Context, this, m_source_lines, call_si );
 	// functions have access to parent variables
-	for ( auto& it : m_scopes[ 0 ]->m_variables ) {
-		result->m_scopes[ 0 ]->m_variables.insert_or_assign( it.first, it.second );
-		result->m_scopes[ 0 ]->m_ref_contexts.insert_or_assign( it.first, this );
+	for ( auto& it : m_variables ) {
+		result->m_ref_contexts.insert_or_assign( it.first, this );
 	}
-	result->PushScope(); // functions can have local variables too
 	for ( size_t i = 0 ; i < parameters.size() ; i++ ) { // inject passed arguments
 		result->CreateVariable( parameters[ i ], arguments[ i ] );
 	}
@@ -127,10 +97,8 @@ Context* const Context::ForkContext(
 }
 
 void Context::JoinContext( Context* const other ) const {
-	for ( const auto& scope : m_scopes ) {
-		for ( const auto& it : scope->m_variables ) {
-			other->UpdateVariable( it.first, it.second, true );
-		}
+	for ( const auto& it : m_variables ) {
+		other->UpdateVariable( it.first, it.second, true );
 	}
 }
 

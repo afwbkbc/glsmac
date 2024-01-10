@@ -524,9 +524,9 @@ const gse::Value Interpreter::EvaluateOperand( Context* ctx, const program::Oper
 			return VALUE( type::Object, properties );
 		}
 		case Operand::OT_SCOPE: {
-			ctx->PushScope();
-			EvaluateScope( ctx, (program::Scope*)operand );
-			ctx->PopScope();
+			const auto subctx = ctx->ForkContext( operand->m_si );
+			EvaluateScope( subctx, (program::Scope*)operand );
+			DELETE( subctx );
 			return VALUE( Undefined );
 		}
 		case Operand::OT_EXPRESSION: {
