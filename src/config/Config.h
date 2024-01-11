@@ -92,7 +92,7 @@ private:
 
 #ifdef DEBUG
 
-	uint16_t m_debug_flags = DF_NONE;
+	uint32_t m_debug_flags = DF_NONE;
 	util::Random::state_t m_quickstart_seed = {};
 	std::string m_quickstart_mapdump = "";
 	std::string m_quickstart_mapfile = "";

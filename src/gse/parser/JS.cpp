@@ -170,29 +170,29 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 				}
 			}
 			if ( brackets.empty() ) {
-					if (
-						( *it)->m_type == SourceElement::ET_BLOCK &&
-							( (Block *)( *it))->m_block_type == BLOCK_CURLY_BRACKETS &&
-							( (Block *)( *it))->m_block_side == Block::BS_BEGIN &&
+				if (
+					( *it )->m_type == SourceElement::ET_BLOCK &&
+						( ( Block * )( *it ) )->m_block_type == BLOCK_CURLY_BRACKETS &&
+						( ( Block * )( *it ) )->m_block_side == Block::BS_BEGIN &&
 						( *it_end )->m_type == SourceElement::ET_BLOCK &&
-							( (Block *)( *it_end))->m_block_type == BLOCK_CURLY_BRACKETS &&
-							( (Block *)( *it_end))->m_block_side == Block::BS_END &&
-							it_end != end &&
-							it_end + 1 != end &&
-							(*(it_end + 1))->m_type != SourceElement::ET_CONDITIONAL
+						( ( Block * )( *it_end ) )->m_block_type == BLOCK_CURLY_BRACKETS &&
+						( ( Block * )( *it_end ) )->m_block_side == Block::BS_END &&
+						it_end != end &&
+						it_end + 1 != end &&
+						( *( it_end + 1 ) )->m_type != SourceElement::ET_CONDITIONAL
 					) {
-						body.push_back( GetControl( it, it_end + 1 ) );
-						break;
-					}
-					else if (
-						( *it_end )->m_type == SourceElement::ET_DELIMITER &&
+					body.push_back( GetControl( it, it_end + 1 ) );
+					break;
+				}
+				else if (
+					( *it_end )->m_type == SourceElement::ET_DELIMITER &&
 						( ( Delimiter * )( *it_end ) )->m_delimiter_type == Delimiter::DT_CODE
 					) {
-						if ( it != it_end ) {
-							body.push_back( GetControl( it, it_end ) );
-						}
-						break;
+					if ( it != it_end ) {
+						body.push_back( GetControl( it, it_end ) );
 					}
+					break;
+				}
 			}
 			if ( it_end != end ) {
 				it_end++;
