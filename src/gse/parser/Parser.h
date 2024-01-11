@@ -191,9 +191,12 @@ protected:
 	// check if sequence occurs at current position
 	const bool match_sequence( const char* sequence, bool consume );
 
+	// check next coming char and does not modify current position
+	const char check_char_any( const char* chrs );
+
 	// returns last recorded source info
 	const si_t::pos_t& get_si_pos() const;
-	const si_t get_si( const si_t::pos_t& begin, const si_t::pos_t& end ) const;
+	const si_t make_si( const si_t::pos_t& begin, const si_t::pos_t& end ) const;
 
 private:
 	const std::string m_source;

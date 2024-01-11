@@ -45,18 +45,18 @@ void JS::GetElements( source_elements_t& elements ) {
 		}
 		else if ( ( c = match_char_any( CHARS_QUOTES.c_str(), true ) ) ) {
 			value = read_until_char( c, true );
-			elements.push_back( new Identifier( value, IDENTIFIER_STRING, get_si( begin, get_si_pos() ) ) );
+			elements.push_back( new Identifier( value, IDENTIFIER_STRING, make_si( begin, get_si_pos() ) ) );
 		}
 		else if ( match_char_any( CHARS_WHITESPACE.c_str(), true ) ) {
 			skip_while_char_any( CHARS_WHITESPACE.c_str() );
 		}
 		else if ( match_char_any( CHARS_NUMBERS.c_str(), false ) ) {
 			value = read_while_char_any( CHARS_NUMBERS_C.c_str() );
-			elements.push_back( new Identifier( value, IDENTIFIER_NUMBER, get_si( begin, get_si_pos() ) ) );
+			elements.push_back( new Identifier( value, IDENTIFIER_NUMBER, make_si( begin, get_si_pos() ) ) );
 		}
 		else if ( match_char_any( CHARS_NAMES.c_str(), false ) ) {
 			value = read_while_char_any( CHARS_NAMES_C.c_str() );
-			si = get_si( begin, get_si_pos() );
+			si = make_si( begin, get_si_pos() );
 			control_it = CONTROL_KEYWORDS.find( value );
 			if ( control_it != CONTROL_KEYWORDS.end() ) {
 				elements.push_back( new Conditional( control_it->second, si ) );
@@ -70,10 +70,22 @@ void JS::GetElements( source_elements_t& elements ) {
 		}
 		else if ( match_char_any( CHARS_OPERATORS.c_str(), false ) ) {
 			value = read_while_char_any( CHARS_OPERATORS.c_str() );
-			elements.push_back( new Operator( value, get_si( begin, get_si_pos() ) ) );
+			si = make_si( begin, get_si_pos() );
+			if (
+				( value == "-" || value == "+" ) &&
+					check_char_any( CHARS_NUMBERS.c_str() ) &&
+					( elements.empty() || elements.back()->m_type == SourceElement::ET_OPERATOR )
+				) {
+				// negative number
+				value += read_while_char_any( CHARS_NUMBERS_C.c_str() );
+				elements.push_back( new Identifier( value, IDENTIFIER_NUMBER, si ) );
+			}
+			else {
+				elements.push_back( new Operator( value, si ) );
+			}
 		}
 		else if ( ( c = match_char_any( CHARS_DELIMITERS.c_str(), true ) ) ) {
-			si = get_si( begin, get_si_pos() );
+			si = make_si( begin, get_si_pos() );
 			switch ( c ) {
 				case ';': {
 					elements.push_back( new Delimiter( Delimiter::DT_CODE, si ) );

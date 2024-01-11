@@ -242,6 +242,38 @@ const bool Type::operator==( const Type& other ) const {
 			return true;
 		case T_NULL:
 			return true;
+		case T_ARRAY: {
+			const auto& a = ( (const Array*)this )->value;
+			const auto& b = ( (const Array*)&other )->value;
+			if ( a.size() != b.size() ) {
+				return false;
+			}
+			else {
+				for ( size_t i = 0 ; i < a.size() ; i++ ) {
+					if ( !( a[ i ] == b[ i ] ) ) {
+						return false;
+					}
+				}
+				return true;
+			}
+		}
+		case T_OBJECT: {
+			const auto& a = ( (const Object*)this )->value;
+			const auto& b = ( (const Object*)&other )->value;
+			if ( a.size() != b.size() ) {
+				return false;
+			}
+			Object::properties_t::const_iterator it_b;
+			for ( const auto& it : a ) {
+				if (
+					( it_b = b.find( it.first ) ) == b.end() ||
+						!( it_b->second == it.second )
+					) {
+					return false;
+				}
+			}
+			return true;
+		}
 		DEFAULT_COMPARE( == )
 	}
 }

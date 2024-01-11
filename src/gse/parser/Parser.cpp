@@ -82,11 +82,25 @@ const bool Parser::match_sequence( const char* sequence, bool consume ) {
 	}
 }
 
+const char Parser::check_char_any( const char* chrs ) {
+	if ( m_ptr == m_end ) {
+		return 0;
+	}
+	else {
+		for ( const char* p = chrs ; *p ; p++ ) {
+			if ( *m_ptr == *p ) {
+				return *p;
+			}
+		}
+		return 0;
+	}
+}
+
 const si_t::pos_t& Parser::get_si_pos() const {
 	return m_si_pos;
 }
 
-const si_t Parser::get_si( const si_t::pos_t& begin, const si_t::pos_t& end ) const {
+const si_t Parser::make_si( const si_t::pos_t& begin, const si_t::pos_t& end ) const {
 	return {
 		m_filename,
 		begin,
@@ -193,7 +207,6 @@ void Parser::skip_until_char_any( const char* chrs, bool consume ) {
 }
 
 void Parser::skip_until_sequence( const char* sequence, bool consume ) {
-	const char* begin_ptr = m_ptr;
 	const char* end = strchr( sequence, 0 );
 	const char* p1;
 	const char* p2;
