@@ -101,10 +101,18 @@ const std::string Type::ToString() const {
 		}
 		case T_CALLABLE:
 			return "callable"; // TODO
-		case T_ARRAYREF:
-		case T_ARRAYRANGEREF:
-		case T_OBJECTREF:
-			THROW( "refs are not intended to be printed" );
+		case T_ARRAYREF: {
+			const auto* that = (ArrayRef*)this;
+			return that->array->Get( that->index ).ToString();
+		}
+		case T_ARRAYRANGEREF: {
+			const auto* that = (ArrayRangeRef*)this;
+			return that->array->GetSubArray( that->from, that->to ).ToString();
+		}
+		case T_OBJECTREF: {
+			const auto* that = (ObjectRef*)this;
+			return that->object->Get( that->key ).ToString();
+		}
 		case T_RANGE: {
 			const auto* that = (Range*)this;
 			return "[" + (
@@ -210,6 +218,24 @@ const std::string Type::Dump() const {
 	}
 }
 
+const Type* Type::Deref() const {
+	switch ( type ) {
+		case T_ARRAYREF: {
+			const auto* that = (ArrayRef*)this;
+			return that->array->Get( that->index ).Get();
+		}
+		case T_ARRAYRANGEREF: {
+			THROW( "deref of array range refs not supported here" );
+		}
+		case T_OBJECTREF: {
+			const auto* that = (ObjectRef*)this;
+			return that->object->Get( that->key ).Get();
+		}
+		default:
+			return this;
+	}
+}
+
 #define DEFAULT_COMPARE( _op ) \
         case T_BOOL: \
             return ( (Bool*)this )->value _op ( (Bool*)&other )->value; \
@@ -250,7 +276,7 @@ const bool Type::operator==( const Type& other ) const {
 			}
 			else {
 				for ( size_t i = 0 ; i < a.size() ; i++ ) {
-					if ( !( a[ i ] == b[ i ] ) ) {
+					if ( ( *a[ i ].Get()->Deref() != *b[ i ].Get()->Deref() ) ) {
 						return false;
 					}
 				}
@@ -267,7 +293,7 @@ const bool Type::operator==( const Type& other ) const {
 			for ( const auto& it : a ) {
 				if (
 					( it_b = b.find( it.first ) ) == b.end() ||
-						!( it_b->second == it.second )
+						( *it_b->second.Get()->Deref() != *it.second.Get()->Deref() )
 					) {
 					return false;
 				}

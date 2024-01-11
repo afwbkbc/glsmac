@@ -84,7 +84,7 @@ const Value Value::Clone() const {
 
 #define OP( _op ) \
 const bool Value::operator _op( const Value& other ) const { \
-    return *m_data _op *other.m_data; \
+    return *m_data->Deref() _op *other.m_data->Deref(); \
 }
 OP( == )
 OP( != )

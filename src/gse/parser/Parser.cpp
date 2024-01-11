@@ -96,22 +96,18 @@ const char Parser::check_char_any( const char* chrs ) {
 	}
 }
 
-const si_t::pos_t& Parser::get_si_pos() const {
-	return m_si_pos;
-}
-
-const si_t Parser::make_si( const si_t::pos_t& begin, const si_t::pos_t& end ) const {
-	return {
-		m_filename,
-		begin,
-		end
-	};
-}
-
-const std::string Parser::read_until_char( char chr, bool consume ) {
+const std::string Parser::read_until_char( char chr, bool consume, bool handle_backslashes ) {
 	const char* begin_ptr = m_ptr;
 	while ( m_ptr < m_end - 1 && *m_ptr != chr ) {
 		move();
+		if (
+			handle_backslashes &&
+				*m_ptr == chr &&
+				m_ptr != begin_ptr &&
+				*( m_ptr - 1 ) == '\\'
+			) {
+			move();
+		}
 	}
 	const char* end_ptr = m_ptr;
 	if ( consume ) {
@@ -228,6 +224,48 @@ void Parser::skip_until_sequence( const char* sequence, bool consume ) {
 	if ( consume ) {
 		move_by( std::min( end - sequence, m_end - m_ptr - 1 ) );
 	}
+}
+
+const si_t::pos_t& Parser::get_si_pos() const {
+	return m_si_pos;
+}
+
+const si_t Parser::make_si( const si_t::pos_t& begin, const si_t::pos_t& end ) const {
+	return {
+		m_filename,
+		begin,
+		end
+	};
+}
+
+const std::string Parser::unpack_backslashes( const std::string& source ) const {
+	std::string result;
+	result.reserve( source.length() );
+	size_t last_pos = 0;
+	size_t pos = 0;
+	char c;
+	while ( ( pos = source.find( '\\', last_pos ) ) != std::string::npos && pos != source.size() - 1 ) {
+		result += source.substr( last_pos, ( pos++ ) - last_pos );
+		c = source[ pos ];
+		switch ( c ) {
+			case 't': {
+				result += '\t';
+				break;
+			}
+			case 'n': {
+				result += '\n';
+				break;
+			}
+			default: {
+				result += c;
+			}
+		}
+		last_pos = pos + 1;
+	}
+	if ( last_pos < source.size() ) {
+		result += source.substr( last_pos );
+	}
+	return result;
 }
 
 inline void Parser::move() {

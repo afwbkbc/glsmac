@@ -319,9 +319,9 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 #undef MATH_OP
 #define MATH_OP_BEGIN( _op ) \
         const auto varname = EvaluateVarName( ctx, expression->a ); \
-        const auto av = ctx->GetVariable( varname, &expression->a->m_si ); \
+        const auto av = Deref( ctx->GetVariable( varname, &expression->a->m_si ) ); \
+        const auto bv = Deref( EvaluateOperand( ctx, expression->b ) ); \
         const auto* a = av.Get(); \
-        const auto bv = EvaluateOperand( ctx, expression->b ); \
         const auto* b = bv.Get(); \
         ASSERT( a->type == b->type, "operands have different types" ); \
         gse::Value result = VALUE( Undefined ); \
@@ -357,6 +357,16 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 					result = VALUE( type::Array, elements );
 					break;
 				}
+				case Type::T_OBJECT: {
+					type::Object::properties_t properties = ( (type::Object*)a )->value;
+					for ( const auto& it : ( (type::Object*)b )->value ) {
+						if ( properties.find( it.first ) != properties.end() ) {
+							THROW( "duplicate property found in both objects: " + it.first );
+						}
+						properties.insert_or_assign( it.first, it.second );
+					}
+					return VALUE( type::Object, properties );
+				}
 			MATH_OP_END()
 		}
 		case Operator::OT_DEC_BY: {
@@ -387,12 +397,10 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 					return ( (type::Object*)obj )->GetRef( childname );
 				}
 				case Operand::OT_EXPRESSION: {
-					const auto refv = EvaluateExpression( ctx, (Expression*)expression->a );
-					ASSERT( refv.Get()->type == Type::T_OBJECTREF, "parent is not reference: " + refv.ToString() );
-					const auto* ref = (ObjectRef*)refv.Get();
-					const auto objv = ref->object->Get( ref->key );
-					ASSERT( objv.Get()->type == Type::T_OBJECT, "parent is not object: " + objv.ToString() );
-					return ( (type::Object*)objv.Get() )->GetRef( childname );
+					const auto objv = Deref( EvaluateExpression( ctx, (Expression*)expression->a ) );
+					const auto* obj = objv.Get();
+					ASSERT( obj->type == Type::T_OBJECT, "parent is not object: " + objv.ToString() );
+					return ( (type::Object*)obj )->GetRef( childname );
 				}
 				default: {
 					THROW( "parent is not object: " + expression->a->ToString() );
@@ -454,7 +462,6 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 							THROW( "TODO: T_ARRAYRANGEREF" );
 						}
 						case Type::T_OBJECTREF: {
-							// let a = {k:'v'}; return a.k[0];
 							const auto arrv = Deref( refv );
 							const auto* arr = arrv.Get();
 							ASSERT( arr->type == Type::T_ARRAY, "parent is not array: " + arr->ToString() );

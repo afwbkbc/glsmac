@@ -37,7 +37,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 		task->AddTest(
 			"testing " + script,
 			GT( task, script ) {
-				
+
 				gse::parser::Parser* parser = nullptr;
 				const gse::runner::Runner* runner = nullptr;
 				const gse::program::Program* program = nullptr;
@@ -48,7 +48,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 					const auto source = util::FS::ReadFile( script );
 					parser = gse.GetParser( script, source );
 					NEW( context, gse::Context, nullptr, util::String::SplitToLines( source ), {} );
-					mocks::AddMocks( context );
+					mocks::AddMocks( context, { script } );
 					program = parser->Parse();
 					runner = gse.GetRunner();
 					runner->Execute( context, program );

@@ -12,11 +12,15 @@ namespace gse {
 namespace tests {
 namespace mocks {
 
-void Test::AddMocks( gse::Context* ctx ) {
+void Test::AddMocks( gse::Context* ctx, const test_info_t& test_info ) {
 	type::Object::properties_t mocks = {
 		{
 			"assert",
 			VALUE( Assert )
+		},
+		{
+			"get_script_path",
+			VALUE( GetScriptPath, test_info.script_path )
 		}
 	};
 	ctx->CreateVariable( "test", VALUE( type::Object, mocks ), nullptr );
@@ -37,6 +41,15 @@ Value Test::Assert::Run( Context* ctx, const si_t& call_si, const Callable::func
 		throw gse::Exception( "TestError", "assertion failed: " + reason, ctx, call_si );
 	}
 	return VALUE( type::Undefined );
+}
+
+Test::GetScriptPath::GetScriptPath( const std::string& path )
+	: m_path( path ) {
+
+}
+
+Value Test::GetScriptPath::Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) {
+	return VALUE( type::String, m_path );
 }
 
 }

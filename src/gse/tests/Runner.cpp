@@ -38,7 +38,7 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 			runner::Interpreter interpreter;
 
 			Context context( nullptr, util::String::SplitToLines( GetTestSource() ), {} );
-			mocks::AddMocks( &context );
+			mocks::AddMocks( &context, {} );
 
 			interpreter.Execute( &context, test_program );
 

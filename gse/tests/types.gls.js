@@ -89,20 +89,23 @@ test.assert( testmethod2(a, b, c) == -61 );
 let testmethod = testmethod1;
 test.assert( testmethod( 1, testmethod( 2, testmethod( 3, 3, 3 ), testmethod( 4, 4, 4 ) ), testmethod( 5, 5, testmethod( 6, 6, 6 )) ) == 52 );
 
-test.assert( testarr1[0] == 'first');
-test.assert( testarr1[1] == 'second');
-test.assert( testarr1[2] == 6);
-test.assert( testarr1[3] == 3);
-test.assert( testarr1[4] == 'TEST');
+test.assert( testarr1[0] == 'first' );
+test.assert( testarr1[1] == 'second' );
+test.assert( testarr1[2] == 6 );
+test.assert( testarr1[3] == 3 );
+test.assert( testarr1[4] == 'TEST' );
+test.assert( testarr1[5].key1 == 'value1' );
+test.assert( testarr1[5].key2 == 'value2' );
 
 let o = testarr1[5];
-test.assert( o.key1 == 'value1');
-test.assert( o.key2 == 'value2');
+test.assert( o.key1 == 'value1' );
+test.assert( o.key2 == 'value2' );
 
 test.assert( testarr1[6] == testarr2 );
 
 test.assert( testarr2[0] == 3 );
 test.assert( testarr2[1] == 'TEST' );
+
 test.assert( testarr2[2] == o );
 
 test.assert( testarr3[0] == 'FIRST' );
@@ -119,9 +122,10 @@ test.assert( testarr4[2] == 'new second' );
 test.assert( testarr4[3] == 'second' );
 
 test.assert( testarr1[0:1] == [ 'first', 'second' ] );
-console.log( testarr1[5:] ); // TODO
-console.log( testarr1[:3] ); // TODO
-console.log( testarr1[4:5] + testarr1[2:3] ); // TODO
+
+test.assert( testarr1[5:] == [ testarr1[5], testarr1[6] ] );
+test.assert( testarr1[:3] == [ testarr1[0], testarr1[1] ] + testarr1[2:3] );
+test.assert( testarr1[4:5] + testarr1[2:3] == [ testarr1[4], testarr1[5], testarr1[2], testarr1[3] ] );
 test.assert(testobj3.child1.child2.value == 'CHILD VALUE');
 test.assert(testobj1.propertyInt == 272 + c);
 test.assert(testobj1 == { propertyInt: 372 } );
@@ -181,10 +185,16 @@ catch {
   },
   TestError: (e) => {
     arr []= 'CAUGHT ' + e.type + ' : ' + e.reason;
-    //arr += e.backtrace; // TODO
+    arr += e.backtrace;
   }
 };
 
-test.assert( arr == [ 'BEFORE EXCEPTION', 'failfunc', 'CAUGHT TestError : something happened' ] );
+test.assert( arr == [
+    'BEFORE EXCEPTION',
+    'failfunc',
+    'CAUGHT TestError : something happened',
+    '\tat ' + test.get_script_path() + ':177: throw TestError(\'something happened\');',
+    '\tat ' + test.get_script_path() + ':179: failfunc();'
+] );
 
 ;;;

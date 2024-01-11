@@ -170,7 +170,7 @@ protected:
 	const bool eof() const; // returns true if source is parsed to the end
 
 	// read and until end character encountered
-	const std::string read_until_char( char chr, bool consume );
+	const std::string read_until_char( char chr, bool consume, bool handle_backslashes = false );
 	// read until any of end characters encountered
 	const std::string read_until_char_any( const char* chrs, bool consume );
 	// read until end sequence encountered
@@ -196,7 +196,11 @@ protected:
 
 	// returns last recorded source info
 	const si_t::pos_t& get_si_pos() const;
+
+	// creates si object with provided position
 	const si_t make_si( const si_t::pos_t& begin, const si_t::pos_t& end ) const;
+
+	const std::string unpack_backslashes( const std::string& source ) const;
 
 private:
 	const std::string m_source;

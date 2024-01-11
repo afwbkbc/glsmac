@@ -27,6 +27,7 @@ public:
 	static const std::string GetTypeString( const type_t type );
 	const std::string ToString() const;
 	const std::string Dump() const;
+	const Type* Deref() const;
 
 #define OP( _op ) const bool operator _op( const Type& other ) const;
 	OP( == )

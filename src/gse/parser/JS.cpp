@@ -44,7 +44,7 @@ void JS::GetElements( source_elements_t& elements ) {
 			skip_until_sequence( "*/", true );
 		}
 		else if ( ( c = match_char_any( CHARS_QUOTES.c_str(), true ) ) ) {
-			value = read_until_char( c, true );
+			value = unpack_backslashes( read_until_char( c, true, true ) );
 			elements.push_back( new Identifier( value, IDENTIFIER_STRING, make_si( begin, get_si_pos() ) ) );
 		}
 		else if ( match_char_any( CHARS_WHITESPACE.c_str(), true ) ) {
@@ -515,36 +515,42 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 					}
 					case BLOCK_SQUARE_BRACKETS: {
 						// either array operator or array definition
-						ASSERT( it != begin, "array syntax unexpected here" );
-						switch ( ( *( it - 1 ) )->m_type ) {
-							case SourceElement::ET_IDENTIFIER: {
-								// array operator
-								if (
-									it_end != end &&
-										it + 1 == it_end &&
-										it_end + 1 != end &&
-										( *( it_end + 1 ) )->m_type == SourceElement::ET_OPERATOR &&
-										( (Operator*)( *( it_end + 1 ) ) )->m_op == "="
-									) {
-									// 'append' operator ( []= )
-									ASSERT( it + 2 != end, "value expected after append operator" );
-									elements.push_back( new program::Operator( GetSI( it, it_end + 2 ), program::Operator::OT_APPEND ) );
-									it_end++;
+						//ASSERT( it != begin, "array syntax unexpected here" );
+						if ( it == begin ) {
+							// array definition (because it starts at beginning)
+							elements.push_back( GetArray( it + 1, it_end ) );
+						}
+						else {
+							switch ( ( *( it - 1 ) )->m_type ) {
+								case SourceElement::ET_IDENTIFIER: {
+									// array operator
+									if (
+										it_end != end &&
+											it + 1 == it_end &&
+											it_end + 1 != end &&
+											( *( it_end + 1 ) )->m_type == SourceElement::ET_OPERATOR &&
+											( (Operator*)( *( it_end + 1 ) ) )->m_op == "="
+										) {
+										// 'append' operator ( []= )
+										ASSERT( it + 2 != end, "value expected after append operator" );
+										elements.push_back( new program::Operator( GetSI( it, it_end + 2 ), program::Operator::OT_APPEND ) );
+										it_end++;
+									}
+									else {
+										// 'at' operator ( [i] )
+										elements.push_back( new program::Operator( GetSI( it, it_end + 1 ), program::Operator::OT_AT ) );
+										elements.push_back( GetExpressionOrOperand( it + 1, it_end ) );
+									}
+									break;
 								}
-								else {
-									// 'at' operator ( [i] )
-									elements.push_back( new program::Operator( GetSI( it, it_end + 1 ), program::Operator::OT_AT ) );
-									elements.push_back( GetExpressionOrOperand( it + 1, it_end ) );
+								case SourceElement::ET_OPERATOR: {
+									// array definition
+									elements.push_back( GetArray( it + 1, it_end ) );
+									break;
 								}
-								break;
-							}
-							case SourceElement::ET_OPERATOR: {
-								// array definition
-								elements.push_back( GetArray( it + 1, it_end ) );
-								break;
-							}
-							default: {
-								THROW( "unexpected element type" );
+								default: {
+									THROW( "unexpected element type before array: " + (*( it - 1 ))->ToString() );
+								}
 							}
 						}
 						break;
