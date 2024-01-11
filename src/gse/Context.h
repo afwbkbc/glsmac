@@ -19,9 +19,9 @@ CLASS( Context, base::Base )
 	Context( const Context* parent_context, const source_lines_t& source_lines, const si_t& si );
 	~Context();
 
-	const Value GetVariable( const std::string& name );
-	void CreateVariable( const std::string& name, const Value& value );
-	void UpdateVariable( const std::string& name, const Value& value, bool create_if_missing = false );
+	const Value GetVariable( const std::string& name, const si_t* si );
+	void CreateVariable( const std::string& name, const Value& value, const si_t* si );
+	void UpdateVariable( const std::string& name, const Value& value, const si_t* si );
 	const Context* GetParentContext() const;
 
 	const si_t& GetSI() const;

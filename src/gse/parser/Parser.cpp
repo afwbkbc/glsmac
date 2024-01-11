@@ -174,6 +174,49 @@ void Parser::skip_while_char_any( const char* chrs ) {
 	}
 }
 
+void Parser::skip_until_char_any( const char* chrs, bool consume ) {
+	const char* p;
+	while ( m_ptr < m_end - 1 ) {
+		for ( p = chrs ; *p ; p++ ) {
+			if ( *m_ptr == *p ) {
+				break;
+			}
+		}
+		if ( *p ) {
+			if ( consume ) {
+				move();
+			}
+			break;
+		}
+		move();
+	}
+}
+
+void Parser::skip_until_sequence( const char* sequence, bool consume ) {
+	const char* begin_ptr = m_ptr;
+	const char* end = strchr( sequence, 0 );
+	const char* p1;
+	const char* p2;
+	while ( m_ptr < m_end ) {
+		p1 = m_ptr;
+		p2 = sequence;
+		while ( p1 < m_end && p2 < end ) {
+			if ( *p1 != *p2 ) {
+				break;
+			}
+			p1++;
+			p2++;
+		}
+		if ( p2 == end ) {
+			break;
+		}
+		move();
+	}
+	if ( consume ) {
+		move_by( std::min( end - sequence, m_end - m_ptr - 1 ) );
+	}
+}
+
 inline void Parser::move() {
 	if ( *m_ptr == '\n' ) {
 		m_si_pos.line++;

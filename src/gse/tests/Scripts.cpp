@@ -18,17 +18,18 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 
 	const std::string tests_path = "./" TEST_SCRIPTS_PATH;
 
-	task->AddTest(
-		"check if " + tests_path + " directory exists",
-		GT( tests_path ) {
-			if ( !util::FS::DirectoryExists( tests_path ) ) {
-				GT_FAIL( "directory " + tests_path + " does not exist" );
-			}
-			GT_OK();
-		}
-	);
-
 	const auto* c = g_engine->GetConfig();
+	if ( !c->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		task->AddTest(
+			"check if " + tests_path + " directory exists",
+			GT( tests_path ) {
+				if ( !util::FS::DirectoryExists( tests_path ) ) {
+					GT_FAIL( "directory " + tests_path + " does not exist" );
+				}
+				GT_OK();
+			}
+		);
+	}
 	const auto scripts = c->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT )
 		? std::vector< std::string >{ c->GetGSETestsScript() }
 		: util::FS::ListDirectory( tests_path, true );
@@ -36,7 +37,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 		task->AddTest(
 			"testing " + script,
 			GT( task, script ) {
-
+				
 				gse::parser::Parser* parser = nullptr;
 				const gse::runner::Runner* runner = nullptr;
 				const gse::program::Program* program = nullptr;

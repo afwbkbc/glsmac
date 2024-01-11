@@ -5,6 +5,8 @@
 #include "Runner.h"
 #include "Scripts.h"
 
+#include "engine/Engine.h"
+
 #include "gse/program/Variable.h"
 #include "gse/program/Value.h"
 #include "gse/program/Function.h"
@@ -29,16 +31,17 @@ using namespace program;
 
 void AddTests( task::gsetests::GSETests* task ) {
 
-	task->AddTest(
-		"test if tests work",
-		GT() {
-			GT_OK();
-		}
-	);
-
-	tests::AddGSETests( task );
-	tests::AddParserTests( task );
-	tests::AddRunnerTests( task );
+	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		task->AddTest(
+			"test if tests work",
+			GT() {
+				GT_OK();
+			}
+		);
+		tests::AddGSETests( task );
+		tests::AddParserTests( task );
+		tests::AddRunnerTests( task );
+	}
 	tests::AddScriptsTests( task );
 
 }
@@ -224,10 +227,10 @@ const Program* GetTestProgram() {
 
 	static const auto* program = new Program(
 		new Scope(
-			SI( 1, 1, 132, 21 ),
+			SI( 3, 1, 132, 21 ),
 			{
 				new Statement(
-					SI( 1, 1, 3, 10 ),
+					SI( 3, 1, 3, 10 ),
 					new Expression(
 						SI( 3, 5, 3, 10 ),
 						new Variable( SI( 3, 5, 3, 6 ), "a", Variable::VH_CREATE ),
@@ -382,10 +385,10 @@ const Program* GetTestProgram() {
 								new Variable( SI( 16, 26, 16, 27 ), "c" )
 							},
 							new Scope(
-								SI( 17, 2, 26, 3 ),
+								SI( 20, 2, 26, 3 ),
 								{
 									new Statement(
-										SI( 17, 2, 25, 4 ),
+										SI( 20, 2, 25, 4 ),
 										new Expression(
 											SI( 20, 2, 25, 4 ),
 											nullptr,
@@ -1673,7 +1676,7 @@ const Program* GetTestProgram() {
 				new Try(
 					SI( 112, 1, 120, 2 ),
 					new Scope(
-						SI( 113, 3, 119, 61 ),
+						SI( 113, 3, 119, 36 ),
 						{
 							console_log(
 								113, 3,
@@ -1685,7 +1688,7 @@ const Program* GetTestProgram() {
 								}
 							),
 							new Statement(
-								SI( 113, 38, 117, 4 ),
+								SI( 114, 3, 117, 4 ),
 								new Expression(
 									SI( 114, 7, 117, 4 ),
 									new Variable( SI( 114, 7, 114, 15 ), "failfunc", Variable::VH_CREATE ),

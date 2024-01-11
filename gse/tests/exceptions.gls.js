@@ -1,6 +1,7 @@
 // this should do nothing
 test.assert(true, 'true is false');
 
+let was_caught = false;
 try {
 
     // this should do nothing aswell
@@ -11,10 +12,17 @@ try {
 
 } catch {
     TestError: (e) => {
-        return null; // test successful
+        was_caught = true;
     }
 }
-;
+test.assert(was_caught, 'exception was not caught');
 
-// check if assertion was caught (otherwise either assert or try..catch doesn't work correctly)
-test.assert(false, 'exception was not caught');
+was_caught = false;
+try {
+    non_existent_var = 1;
+} catch {
+    ReferenceError: (e) => {
+        was_caught = true;
+    }
+}
+test.assert(was_caught, 'exception was not caught');

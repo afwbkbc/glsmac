@@ -43,7 +43,7 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 			interpreter.Execute( &context, test_program );
 
 			// ugh
-			const auto& console = context.GetVariable( "console" );
+			const auto& console = context.GetVariable( "console", nullptr );
 			GT_ASSERT( console.Get()->type == type::Type::T_OBJECT, "console mock mismatch" );
 			const auto& log = ( (type::Object*)console.Get() )->Get( "log" );
 			GT_ASSERT( log.Get()->type == type::Type::T_CALLABLE, "console.log mock mismatch" );

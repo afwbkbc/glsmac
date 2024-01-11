@@ -14,9 +14,13 @@ void Console::AddMocks( gse::Context* ctx ) {
 		{
 			"log",
 			VALUE( Log )
+		},
+		{
+			"dump",
+			VALUE( Dump )
 		}
 	};
-	ctx->CreateVariable( "console", VALUE( type::Object, mocks ) );
+	ctx->CreateVariable( "console", VALUE( type::Object, mocks ), nullptr );
 }
 
 const std::string& Console::GetLogsOf( const type::Callable* const console_log_object ) {

@@ -6,6 +6,7 @@
 #include "gse/type/Undefined.h"
 
 #include "gse/Exception.h"
+#include "gse/tests/Tests.h"
 
 namespace gse {
 namespace tests {
@@ -18,7 +19,7 @@ void Test::AddMocks( gse::Context* ctx ) {
 			VALUE( Assert )
 		}
 	};
-	ctx->CreateVariable( "test", VALUE( type::Object, mocks ) );
+	ctx->CreateVariable( "test", VALUE( type::Object, mocks ), nullptr );
 }
 
 Value Test::Assert::Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) {
