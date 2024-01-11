@@ -19,12 +19,9 @@ CLASS( Context, base::Base )
 	Context( const Context* parent_context, const source_lines_t& source_lines, const si_t& si );
 	~Context();
 
-	const Value GetVariable( const std::string& name );
-	void CreateVariable( const std::string& name, const Value& value );
-	void UpdateVariable( const std::string& name, const Value& value, bool create_if_missing = false );
-	void PushScope();
-	void PopScope();
-	const size_t GetScopeDepth() const;
+	const Value GetVariable( const std::string& name, const si_t* si );
+	void CreateVariable( const std::string& name, const Value& value, const si_t* si );
+	void UpdateVariable( const std::string& name, const Value& value, const si_t* si );
 	const Context* GetParentContext() const;
 
 	const si_t& GetSI() const;
@@ -36,9 +33,9 @@ CLASS( Context, base::Base )
 
 	Context* const ForkContext(
 		const si_t& call_si,
-		const std::vector< std::string > parameters,
-		const type::Callable::function_arguments_t& arguments
-	) const;
+		const std::vector< std::string > parameters = {},
+		const type::Callable::function_arguments_t& arguments = {}
+	);
 	void JoinContext( Context* const other ) const;
 
 private:
@@ -48,13 +45,10 @@ private:
 
 	const si_t m_si = {};
 
-	class Scope {
-	public:
-		typedef std::unordered_map< std::string, Value > variables_t;
-		variables_t m_variables = {};
-
-	};
-	std::vector< Scope* > m_scopes = {};
+	typedef std::unordered_map< std::string, Value > variables_t;
+	variables_t m_variables = {};
+	typedef std::unordered_map< std::string, Context* > ref_contexts_t;
+	ref_contexts_t m_ref_contexts = {};
 
 };
 

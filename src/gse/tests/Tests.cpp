@@ -3,6 +3,9 @@
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
+#include "Scripts.h"
+
+#include "engine/Engine.h"
 
 #include "gse/program/Variable.h"
 #include "gse/program/Value.h"
@@ -28,16 +31,18 @@ using namespace program;
 
 void AddTests( task::gsetests::GSETests* task ) {
 
-	task->AddTest(
-		"test if tests work",
-		GT() {
-			GT_OK();
-		}
-	);
-
-	tests::AddGSETests( task );
-	tests::AddParserTests( task );
-	tests::AddRunnerTests( task );
+	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		task->AddTest(
+			"test if tests work",
+			GT() {
+				GT_OK();
+			}
+		);
+		tests::AddGSETests( task );
+		tests::AddParserTests( task );
+		tests::AddRunnerTests( task );
+	}
+	tests::AddScriptsTests( task );
 
 }
 
@@ -222,10 +227,10 @@ const Program* GetTestProgram() {
 
 	static const auto* program = new Program(
 		new Scope(
-			SI( 1, 1, 132, 21 ),
+			SI( 3, 1, 132, 21 ),
 			{
 				new Statement(
-					SI( 1, 1, 3, 10 ),
+					SI( 3, 1, 3, 10 ),
 					new Expression(
 						SI( 3, 5, 3, 10 ),
 						new Variable( SI( 3, 5, 3, 6 ), "a", Variable::VH_CREATE ),
@@ -380,10 +385,10 @@ const Program* GetTestProgram() {
 								new Variable( SI( 16, 26, 16, 27 ), "c" )
 							},
 							new Scope(
-								SI( 17, 2, 26, 3 ),
+								SI( 20, 2, 26, 3 ),
 								{
 									new Statement(
-										SI( 17, 2, 25, 4 ),
+										SI( 20, 2, 25, 4 ),
 										new Expression(
 											SI( 20, 2, 25, 4 ),
 											nullptr,
@@ -1671,7 +1676,7 @@ const Program* GetTestProgram() {
 				new Try(
 					SI( 112, 1, 120, 2 ),
 					new Scope(
-						SI( 113, 3, 119, 61 ),
+						SI( 113, 3, 119, 36 ),
 						{
 							console_log(
 								113, 3,
@@ -1683,7 +1688,7 @@ const Program* GetTestProgram() {
 								}
 							),
 							new Statement(
-								SI( 113, 38, 117, 4 ),
+								SI( 114, 3, 117, 4 ),
 								new Expression(
 									SI( 114, 7, 117, 4 ),
 									new Variable( SI( 114, 7, 114, 15 ), "failfunc", Variable::VH_CREATE ),
@@ -1863,30 +1868,30 @@ const Program* GetTestProgram() {
 }
 
 const std::string& GetExpectedResult() {
-	const static std::string result = "null{}\n"
-									  "bool{true}\n"
-									  "bool{true} bool{false}\n"
-									  "bool{true} bool{true} bool{true} bool{false}\n"
-									  "bool{true} bool{false}\n"
-									  "bool{false} bool{true} bool{true} bool{true}\n"
-									  "bool{false} bool{true} bool{false} bool{true}\n"
-									  "bool{true} bool{false} bool{true} bool{true}\n"
-									  "bool{true}\n"
+	const static std::string result = "null\n"
+									  "true\n"
+									  "true false\n"
+									  "true true true false\n"
+									  "true false\n"
+									  "false true true true\n"
+									  "false true false true\n"
+									  "true false true true\n"
+									  "true\n"
 									  "45 -61\n"
 									  "52 10\n"
-									  "array{string{first},string{second},int{6},int{3},string{TEST},object{key1:string{value1},key2:string{value2}},array{int{3},string{TEST},object{key1:string{value1},key2:string{value2}}}}\n"
-									  "array{int{3},string{TEST},object{key1:string{value1},key2:string{value2}}}\n"
-									  "array{string{FIRST},string{SECOND},string{first},string{second},int{3},string{TEST},array{int{3},string{TEST},object{key1:string{value1},key2:string{value2}}}}\n"
-									  "array{string{FIRST},string{new first},string{new second},string{second}}\n"
+									  "[ first, second, 6, 3, TEST, { key1: value1, key2: value2 }, [ 3, TEST, { key1: value1, key2: value2 } ] ]\n"
+									  "[ 3, TEST, { key1: value1, key2: value2 } ]\n"
+									  "[ FIRST, SECOND, first, second, 3, TEST, [ 3, TEST, { key1: value1, key2: value2 } ] ]\n"
+									  "[ FIRST, new first, new second, second ]\n"
 									  "first\n"
 									  "second\n"
-									  "array{string{first},string{second}}\n"
-									  "array{object{key1:string{value1},key2:string{value2}},array{int{3},string{TEST},object{key1:string{value1},key2:string{value2}}}}\n"
-									  "array{string{first},string{second},int{6},int{3}}\n"
-									  "array{string{TEST},object{key1:string{value1},key2:string{value2}},int{6},int{3}}\n"
+									  "[ first, second ]\n"
+									  "[ { key1: value1, key2: value2 }, [ 3, TEST, { key1: value1, key2: value2 } ] ]\n"
+									  "[ first, second, 6, 3 ]\n"
+									  "[ TEST, { key1: value1, key2: value2 }, 6, 3 ]\n"
 									  "CHILD VALUE\n"
-									  "bool{true}\n"
-									  "object{propertyInt:int{372}} object{propertyInt1:int{150},propertyInt2:int{222},propertyString:string{STRING}}\n"
+									  "true\n"
+									  "{ propertyInt: 372 } { propertyInt1: 150, propertyInt2: 222, propertyString: STRING }\n"
 									  "YES\n"
 									  "NO\n"
 									  "OK\n"
@@ -1898,7 +1903,7 @@ const std::string& GetExpectedResult() {
 									  "BEFORE EXCEPTION\n"
 									  "failfunc\n"
 									  "CAUGHT TestError : something happened\n"
-									  "array{string{\tat <TEST>.gls.js:116: throw TestError('something happened');},string{\tat <TEST>.gls.js:118: failfunc();}}\n"
+									  "[ \tat <TEST>.gls.js:116: throw TestError('something happened');, \tat <TEST>.gls.js:118: failfunc(); ]\n"
 									  "bye!\n";
 	return result;
 }

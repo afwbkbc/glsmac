@@ -246,6 +246,16 @@ Config::Config( const int argc, const char* argv[] ) {
 			m_debug_flags |= DF_GSE_ONLY | DF_GSE_TESTS;
 		}
 	);
+	parser.AddRule(
+		"gse-tests-script", "SCRIPT_PATH", "Run only specific GSE test script", AH( this, f_error ) {
+			if ( !HasDebugFlag( DF_GSE_TESTS ) ) {
+				f_error( "Gse-tests-related options can only be used after --gse-tests!" );
+			}
+			m_debug_flags |= DF_GSE_TESTS_SCRIPT;
+			m_gse_tests_script = value;
+		}
+	);
+
 #endif
 
 	try {
@@ -338,6 +348,10 @@ const game::MapSettings::parameter_t Config::GetQuickstartMapLifeforms() const {
 
 const game::MapSettings::parameter_t Config::GetQuickstartMapClouds() const {
 	return m_quickstart_map_clouds;
+}
+
+const std::string& Config::GetGSETestsScript() const {
+	return m_gse_tests_script;
 }
 
 #endif

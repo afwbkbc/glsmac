@@ -34,6 +34,10 @@ const std::string Value::ToString() const {
 	return m_data->ToString();
 }
 
+const std::string Value::Dump() const {
+	return m_data->Dump();
+}
+
 const Value Value::Clone() const {
 	switch ( m_data.get()->type ) {
 		case type::Type::T_UNDEFINED:
@@ -67,9 +71,7 @@ const Value Value::Clone() const {
 		case type::Type::T_CALLABLE:
 			return *this;
 		case type::Type::T_ARRAYREF:
-			THROW( "refs are not supposed to be cloned" );
 		case type::Type::T_ARRAYRANGEREF:
-			THROW( "refs are not supposed to be cloned" );
 		case type::Type::T_OBJECTREF:
 			THROW( "refs are not supposed to be cloned" );
 		case type::Type::T_RANGE:

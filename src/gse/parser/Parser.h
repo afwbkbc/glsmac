@@ -49,19 +49,6 @@ protected:
 	};
 	typedef std::vector< SourceElement* > source_elements_t;
 
-	class Comment : public SourceElement {
-	public:
-		Comment( bool is_multiline, const std::string& text, const si_t& si )
-			: SourceElement( ET_COMMENT, si )
-			, m_is_multiline( is_multiline )
-			, m_text( text ) {}
-		const bool m_is_multiline;
-		const std::string m_text;
-		virtual const std::string ToString() const {
-			return m_si.ToString() + "comment{" + m_text + "}";
-		}
-	};
-
 	class Identifier : public SourceElement {
 	public:
 		Identifier( const std::string& name, const uint8_t identifier_type, const si_t& si )
@@ -192,6 +179,10 @@ protected:
 	const std::string read_while_char_any( const char* chrs );
 	// skip while any of characters match
 	void skip_while_char_any( const char* chrs );
+	// skip until any of characters match
+	void skip_until_char_any( const char* chrs, bool consume );
+	// skip until end sequence encountered
+	void skip_until_sequence( const char* sequence, bool consume );
 
 	// check if character occurs at current position
 	const bool match_char( const char chr, bool consume );

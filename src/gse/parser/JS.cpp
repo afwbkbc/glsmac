@@ -38,12 +38,10 @@ void JS::GetElements( source_elements_t& elements ) {
 	while ( !eof() ) {
 		begin = get_si_pos();
 		if ( match_sequence( "//", true ) ) {
-			value = read_until_char_any( CHARS_EOLN.c_str(), false );
-			elements.push_back( new Comment( false, value, get_si( begin, get_si_pos() ) ) );
+			skip_until_char_any( CHARS_EOLN.c_str(), true );
 		}
 		else if ( match_sequence( "/*", true ) ) {
-			value = read_until_sequence( "*/", true );
-			elements.push_back( new Comment( true, value, get_si( begin, get_si_pos() ) ) );
+			skip_until_sequence( "*/", true );
 		}
 		else if ( ( c = match_char_any( CHARS_QUOTES.c_str(), true ) ) ) {
 			value = read_until_char( c, true );
@@ -133,11 +131,16 @@ const program::Program* JS::GetProgram( const source_elements_t& elements ) {
 }
 
 const si_t JS::GetSI( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
-	return {
-		( *begin )->m_si.file,
-		( *begin )->m_si.from,
-		( ( *( end - 1 ) )->m_si.to )
-	};
+	if ( begin == end ) {
+		return {};
+	}
+	else {
+		return {
+			( *begin )->m_si.file,
+			( *begin )->m_si.from,
+			( ( *( end - 1 ) )->m_si.to )
+		};
+	}
 }
 
 const program::Scope* JS::GetScope( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
@@ -166,19 +169,37 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 					}
 				}
 			}
-			else if (
-				brackets.empty() &&
-					( *it_end )->m_type == SourceElement::ET_DELIMITER &&
-					( ( Delimiter * )( *it_end ) )->m_delimiter_type == Delimiter::DT_CODE
-				) {
-				if ( it != it_end ) {
-					body.push_back( GetControl( it, it_end ) );
+			if ( brackets.empty() ) {
+				if (
+					( *it )->m_type == SourceElement::ET_BLOCK &&
+						( ( Block * )( *it ) )->m_block_type == BLOCK_CURLY_BRACKETS &&
+						( ( Block * )( *it ) )->m_block_side == Block::BS_BEGIN &&
+						( *it_end )->m_type == SourceElement::ET_BLOCK &&
+						( ( Block * )( *it_end ) )->m_block_type == BLOCK_CURLY_BRACKETS &&
+						( ( Block * )( *it_end ) )->m_block_side == Block::BS_END &&
+						it_end != end &&
+						it_end + 1 != end &&
+						( *( it_end + 1 ) )->m_type != SourceElement::ET_CONDITIONAL
+					) {
+					body.push_back( GetControl( it, it_end + 1 ) );
+					break;
 				}
-				break;
+				else if (
+					( *it_end )->m_type == SourceElement::ET_DELIMITER &&
+						( ( Delimiter * )( *it_end ) )->m_delimiter_type == Delimiter::DT_CODE
+					) {
+					if ( it != it_end ) {
+						body.push_back( GetControl( it, it_end ) );
+					}
+					break;
+				}
 			}
 			if ( it_end != end ) {
 				it_end++;
 			}
+		}
+		if ( it_end == end ) {
+			body.push_back( GetControl( it, it_end ) );
 		}
 		it = it_end;
 		if ( it != end ) {

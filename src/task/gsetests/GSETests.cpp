@@ -1,5 +1,7 @@
 #include "GSETests.h"
 
+#include <iostream> // not using Log() everywhere because important stuff should be printed with --quiet too
+
 #include "gse/GSE.h"
 #include "gse/tests/Tests.h"
 #include "engine/Engine.h"
@@ -14,10 +16,10 @@ void GSETests::Start() {
 
 void GSETests::Stop() {
 	if ( m_stats.failed == 0 ) {
-		Log( "All tests passed." );
+		LogTest( "All tests passed." );
 	}
 	else {
-		Log( "Testing complete, passed: " + std::to_string( m_stats.passed ) + ", failed: " + std::to_string( m_stats.failed ) );
+		LogTest( "Testing complete, passed: " + std::to_string( m_stats.passed ) + ", failed: " + std::to_string( m_stats.failed ) );
 	}
 	m_tests.clear();
 	m_stats.passed = 0;
@@ -28,15 +30,14 @@ void GSETests::Iterate() {
 	if ( current_test_index < m_tests.size() ) {
 		gse::GSE gse;
 		const auto& it = m_tests[ current_test_index++ ];
-		Log( it.first + "..." );
+		LogTest( "  " + it.first + "..." );
 		const auto errmsg = it.second( gse );
 		if ( errmsg.empty() ) {
 			m_stats.passed++;
-			Log( "      ... OK" );
 		}
 		else {
 			m_stats.failed++;
-			Log( "      ... " + errmsg );
+			LogTest( "    !!! TEST FAILED: " + errmsg );
 		}
 	}
 	else if ( current_test_index == m_tests.size() ) {
@@ -52,6 +53,15 @@ void GSETests::AddTest( const std::string& name, const gse_test_t test ) {
 			test
 		}
 	);
+}
+
+void GSETests::LogTest( const std::string& text, bool is_debug ) {
+	if ( is_debug ) {
+		Log( text );
+	}
+	else {
+		std::cout << text << std::endl;
+	}
 }
 
 }

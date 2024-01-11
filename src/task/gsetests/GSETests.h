@@ -14,6 +14,12 @@ namespace gsetests {
 typedef std::function< std::string( gse::GSE& gse ) > gse_test_t;
 #define GT( ... ) [ __VA_ARGS__ ]( gse::GSE & gse ) -> std::string
 
+#include <iostream>
+
+#define GT_LOG( _text ) { \
+    task->LogTest( _text );\
+}
+
 #define GT_OK() {\
     return "";\
 }
@@ -34,6 +40,7 @@ CLASS( GSETests, base::Task )
 	void Iterate() override;
 
 	void AddTest( const std::string& name, const gse_test_t test );
+	void LogTest( const std::string& text, bool is_debug = false );
 
 private:
 	size_t current_test_index = 0;
@@ -45,5 +52,4 @@ private:
 	} m_stats = {};
 };
 
-}
-}
+} }

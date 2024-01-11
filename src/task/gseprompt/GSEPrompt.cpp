@@ -123,14 +123,10 @@ void GSEPrompt::ProcessInput() {
 		if ( m_is_tty ) {
 			context->JoinContext( &m_gse_context );
 		}
-		std::cout << result.ToString() << std::endl;
+		std::cout << result.Dump() << std::endl;
 	}
 	catch ( gse::Exception& e ) {
-		std::cout << "Unhandled exception (" + e.class_name + "): " << e.reason << std::endl;
-		const auto backtrace = e.GetBacktraceAndCleanup( context );
-		for ( const auto& it : backtrace ) {
-			std::cout << it << std::endl;
-		}
+		std::cout << e.ToStringAndCleanup() << std::endl;
 	}
 	catch ( std::runtime_error& e ) {
 		std::cout << "Internal error: " << e.what() << std::endl;

@@ -30,6 +30,8 @@ public:
 
 	const backtrace_t GetBacktraceAndCleanup( const Context* const current_ctx );
 
+	const std::string ToStringAndCleanup();
+
 };
 
 }

@@ -1,71 +1,52 @@
 #include "Context.h"
 
+#include "Exception.h"
+
 namespace gse {
 
 Context::Context( const Context* parent_context, const source_lines_t& source_lines, const si_t& si )
 	: m_parent_context( parent_context )
 	, m_source_lines( source_lines )
 	, m_si( si ) {
-	m_scopes.push_back( new Scope() ); // global scope
 }
 
 Context::~Context() {
-	for ( const auto& it : m_scopes ) {
-		delete it;
-	}
+
 }
 
-const Value Context::GetVariable( const std::string& name ) {
-	Log( "GetVariable( " + name + " )" );
-	Scope::variables_t::const_iterator it;
-	for ( auto scope = m_scopes.rbegin() ; scope != m_scopes.rend() ; scope++ ) {
-		it = ( *scope )->m_variables.find( name );
-		if ( it != ( *scope )->m_variables.end() ) {
-			return it->second;
-		}
+const Value Context::GetVariable( const std::string& name, const si_t* si ) {
+	const auto it = m_variables.find( name );
+	if ( it != m_variables.end() ) {
+		Log( "GetVariable( " + name + " )" );
+		return it->second;
+	}
+	const auto ref_it = m_ref_contexts.find( name );
+	if ( ref_it != m_ref_contexts.end() ) {
+		return ref_it->second->GetVariable( name, si );
 	}
 	THROW( "variable '" + name + "' not found" );
 }
 
-void Context::CreateVariable( const std::string& name, const Value& value ) {
+void Context::CreateVariable( const std::string& name, const Value& value, const si_t* si ) {
+	ASSERT( m_variables.find( name ) == m_variables.end(), "variable '" + name + "' already exists" );
 	Log( "CreateVariable( " + name + ", " + value.ToString() + " )" );
-	auto* scope = m_scopes.back();
-	ASSERT( scope->m_variables.find( name ) == scope->m_variables.end(), "variable '" + name + "' already exists" );
-	scope->m_variables.insert_or_assign( name, value );
+	m_variables.insert_or_assign( name, value );
 }
 
-void Context::UpdateVariable( const std::string& name, const Value& value, bool create_if_missing ) {
-	Log( "UpdateVariable( " + name + ", " + value.ToString() + " )" );
-	Scope::variables_t::iterator it;
-	for ( auto scope = m_scopes.rbegin() ; scope != m_scopes.rend() ; scope++ ) {
-		it = ( *scope )->m_variables.find( name );
-		if ( it != ( *scope )->m_variables.end() ) {
-			it->second = value;
-			return;
-		}
+void Context::UpdateVariable( const std::string& name, const Value& value, const si_t* si ) {
+	const auto it = m_variables.find( name );
+	if ( it != m_variables.end() ) {
+		Log( "UpdateVariable( " + name + ", " + value.ToString() + " )" );
+		it->second = value;
+		return;
 	}
-	if ( create_if_missing ) {
-		CreateVariable( name, value );
+	const auto ref_it = m_ref_contexts.find( name );
+	if ( ref_it != m_ref_contexts.end() ) {
+		ref_it->second->UpdateVariable( name, value, si );
+		return;
 	}
-	else {
-		THROW( "variable '" + name + "' not found" );
-	}
-}
-
-void Context::PushScope() {
-	Log( "PushScope()" );
-	m_scopes.push_back( new Scope() );
-}
-
-void Context::PopScope() {
-	Log( "PopScope()" );
-	ASSERT( m_scopes.size() > 1, "attempted to destroy global scope" );
-	delete m_scopes.back();
-	m_scopes.pop_back();
-}
-
-const size_t Context::GetScopeDepth() const {
-	return m_scopes.size();
+	throw Exception( "ReferenceError", "Variable '" + name + "' is not defined", this, *si );
+	THROW( "variable '" + name + "' not found" );
 }
 
 const Context* Context::GetParentContext() const {
@@ -100,22 +81,25 @@ Context* const Context::ForkContext(
 	const si_t& call_si,
 	const std::vector< std::string > parameters,
 	const type::Callable::function_arguments_t& arguments
-) const {
+) {
 	ASSERT( parameters.size() == arguments.size(), "expected " + std::to_string( parameters.size() ) + " arguments, found " + std::to_string( arguments.size() ) );
-	auto* result = new Context( this, m_source_lines, call_si );
-	result->m_scopes[ 0 ]->m_variables = m_scopes[ 0 ]->m_variables; // functions have access to parent variables but nothing else
-	result->PushScope(); // functions can have local variables
+	NEWV( result, Context, this, m_source_lines, call_si );
+	// functions have access to parent variables
+	for ( auto& it : m_ref_contexts ) {
+		result->m_ref_contexts.insert_or_assign( it.first, it.second );
+	}
+	for ( auto& it : m_variables ) {
+		result->m_ref_contexts.insert_or_assign( it.first, this );
+	}
 	for ( size_t i = 0 ; i < parameters.size() ; i++ ) { // inject passed arguments
-		result->CreateVariable( parameters[ i ], arguments[ i ] );
+		result->CreateVariable( parameters[ i ], arguments[ i ], &call_si );
 	}
 	return result;
 }
 
 void Context::JoinContext( Context* const other ) const {
-	for ( const auto& scope : m_scopes ) {
-		for ( const auto& it : scope->m_variables ) {
-			other->UpdateVariable( it.first, it.second, true );
-		}
+	for ( const auto& it : m_variables ) {
+		other->m_variables.insert_or_assign( it.first, it.second );
 	}
 }
 
