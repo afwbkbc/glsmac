@@ -10,10 +10,6 @@
 #include "type/String.h"
 #include "type/Array.h"
 #include "type/Object.h"
-#include "type/ArrayRef.h"
-#include "type/ArrayRangeRef.h"
-#include "type/ObjectRef.h"
-#include "type/Range.h"
 
 namespace gse {
 

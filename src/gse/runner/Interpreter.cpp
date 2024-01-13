@@ -53,7 +53,7 @@ const gse::Value Interpreter::EvaluateScope( Context* ctx, const program::Scope*
 				break;
 			}
 			default:
-				THROW( "unexpected control type: " + it->ToString() );
+				THROW( "unexpected control type: " + it->Dump() );
 		}
 		if ( result.Get()->type != Type::T_UNDEFINED ) {
 			// got return statement
@@ -144,7 +144,7 @@ const gse::Value Interpreter::EvaluateConditional( Context* ctx, const program::
 			}
 		}
 		default:
-			THROW( "unexpected conditional type: " + conditional->ToString() );
+			THROW( "unexpected conditional type: " + conditional->Dump() );
 	}
 }
 
@@ -203,9 +203,8 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 					WriteByRef( target, result );
 					break;
 				}
-				default: {
-					THROW( "unexpected assignment target: " + expression->a->ToString() );
-				}
+				default:
+					throw gse::Exception( EC.INVALID_ASSIGNMENT, (std::string)"Can't assign " + result.ToString() + " to " + expression->a->ToString(), ctx, expression->a->m_si );
 			}
 			return result;
 		}
@@ -250,7 +249,7 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
                 return VALUE( Float, ( (Float*)a )->value _op ( (Float*)b )->value );
 #define MATH_OP_END() \
                 default: \
-                    THROW( "operation not supported for operands of type: " + std::to_string( a->type ) ); \
+                    throw gse::Exception( EC.OPERATOR_NOT_SUPPORTED, "Operator " + expression->op->ToString() + " is not supported between " + a->ToString() + " and " + b->ToString(), ctx, expression->op->m_si ); \
             }
 #define MATH_OP( _op ) \
         MATH_OP_BEGIN_F( _op ) \
@@ -268,7 +267,7 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 					type::Object::properties_t properties = ( (type::Object*)a )->value;
 					for ( const auto& it : ( (type::Object*)b )->value ) {
 						if ( properties.find( it.first ) != properties.end() ) {
-							THROW( "duplicate property found in both objects: " + it.first );
+							throw gse::Exception( EC.OPERATION_FAILED, "Can't concatenate objects - duplicate key found: " + it.first, ctx, expression->op->m_si );
 						}
 						properties.insert_or_assign( it.first, it.second );
 					}
@@ -364,7 +363,7 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 					type::Object::properties_t properties = ( (type::Object*)a )->value;
 					for ( const auto& it : ( (type::Object*)b )->value ) {
 						if ( properties.find( it.first ) != properties.end() ) {
-							THROW( "duplicate property found in both objects: " + it.first );
+							throw gse::Exception( EC.OPERATION_FAILED, "Can't append object - duplicate key found: " + it.first, ctx, expression->op->m_si );
 						}
 						properties.insert_or_assign( it.first, it.second );
 					}
@@ -513,7 +512,7 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 			return VALUE( Range, from, to );
 		}
 		default: {
-			THROW( "operator " + expression->op->ToString() + " not implemented" );
+			THROW( "operator " + expression->op->Dump() + " not implemented" );
 		}
 	}
 }

@@ -9,6 +9,15 @@ namespace gse {
 
 class Context;
 
+struct exception_ec_t {
+	const std::string PARSE_ERROR;
+	const std::string VAR_NOT_DEFINED;
+	const std::string INVALID_ASSIGNMENT;
+	const std::string OPERATOR_NOT_SUPPORTED;
+	const std::string OPERATION_FAILED;
+};
+extern const exception_ec_t EC;
+
 class Exception : public std::runtime_error {
 public:
 

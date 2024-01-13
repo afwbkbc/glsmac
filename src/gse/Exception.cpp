@@ -4,12 +4,20 @@
 
 namespace gse {
 
+const exception_ec_t EC = {
+	"GSEParseError",
+	"GSEVarNotDefined",
+	"GSEInvalidAssignment",
+	"GSEOperatorNotSupported",
+	"GSEOperationFailed",
+};
+
 const Exception::backtrace_t Exception::GetBacktraceAndCleanup( const Context* const current_ctx ) {
 	ASSERT_NOLOG( !contexts_freed, "contexts already freed" );
 	const Context* ctx = context, * pt;
-#define FORMAT_SI( _si ) "\tat " + (_si).file + ":" + std::to_string( (_si).from.line ) + ": " + util::String::TrimCopy( ctx->GetSourceLine( (_si).from.line ) )
+#define FORMAT_SI( _si ) "\tat " + (_si).file + ":" + std::to_string( (_si).from.line ) + ": " + util::String::TrimCopy( ctx ? ctx->GetSourceLine( (_si).from.line ) : "" )
 	backtrace_t backtrace = { FORMAT_SI( si ) };
-	while ( ctx != current_ctx ) {
+	while ( ctx && ctx != current_ctx ) {
 		backtrace.push_back( FORMAT_SI( ctx->GetSI() ) );
 		pt = ctx->GetParentContext();
 		delete ctx;

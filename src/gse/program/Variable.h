@@ -23,7 +23,10 @@ public:
 	const std::string name;
 	const variable_hints_t hints;
 
-	const std::string ToString( const size_t depth = 0 ) const override {
+	const std::string ToString() const override {
+		return name;
+	}
+	const std::string Dump( const size_t depth = 0 ) const override {
 		return Formatted( "Variable" + m_si.ToString() + "( " + name + " )", depth );
 	}
 };

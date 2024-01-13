@@ -177,13 +177,15 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			GT_OK();
 		};
 		const auto operatr = VALIDATOR( Operator, &errmsg, &si ) {
-			GT_ASSERT( ( a == nullptr ) == ( b == nullptr ), "operators have different null states ( " + ( a == nullptr
-				? "null"
-				: a->ToString()
-			) + " != " + ( b == nullptr
-				? "null"
-				: b->ToString()
-			) + " )" );
+			GT_ASSERT(
+				( a == nullptr ) == ( b == nullptr ), "operators have different null states ( " + ( a == nullptr
+					? "null"
+					: a->Dump()
+				) + " != " + ( b == nullptr
+					? "null"
+					: b->Dump()
+				) + " )"
+			);
 			if ( a && b ) {
 				VALIDATE( si, a->m_si, b->m_si );
 				GT_ASSERT( a->op == b->op, "operators are different ( " + std::to_string( a->op ) + " != " + std::to_string( b->op ) + " )" );
@@ -217,7 +219,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			&si
 		) {
 			VALIDATE( si, a->m_si, b->m_si );
-			GT_ASSERT( a->conditional_type == b->conditional_type, "conditionals have different types ( " + a->ToString() + " != " + b->ToString() + " )" );
+			GT_ASSERT( a->conditional_type == b->conditional_type, "conditionals have different types ( " + a->Dump() + " != " + b->Dump() + " )" );
 			switch ( a->conditional_type ) {
 				case Conditional::CT_IF: {
 					VALIDATE( expression, ( (If*)a )->condition, ( (If*)b )->condition );
@@ -255,7 +257,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 		};
 		const auto control = VALIDATOR( Control, &errmsg, &statement, &conditional, &si ) {
 			VALIDATE( si, a->m_si, b->m_si );
-			GT_ASSERT( a->control_type == b->control_type, "controls have different types ( " + a->ToString() + " != " + b->ToString() + " )" );
+			GT_ASSERT( a->control_type == b->control_type, "controls have different types ( " + a->Dump() + " != " + b->Dump() + " )" );
 			switch ( a->control_type ) {
 				case Control::CT_CONDITIONAL: {
 					VALIDATE( conditional, (Conditional*)a, (Conditional*)b );

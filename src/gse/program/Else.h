@@ -21,10 +21,10 @@ public:
 		delete body;
 	}
 
-	const std::string ToString( const size_t depth = 0 ) const override {
+	const std::string Dump( const size_t depth = 0 ) const override {
 		return Formatted( "Else" + m_si.ToString() + "(", depth ) +
 			Formatted( "Body(", depth + 1 ) +
-			body->ToString( depth + 2 ) +
+			body->Dump( depth + 2 ) +
 			Formatted( ")", depth + 1 ) +
 			Formatted( ")", depth );
 	}

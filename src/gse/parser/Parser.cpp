@@ -98,7 +98,7 @@ const char Parser::check_char_any( const char* chrs ) {
 
 const std::string Parser::read_until_char( char chr, bool consume, bool handle_backslashes ) {
 	const char* begin_ptr = m_ptr;
-	while ( m_ptr < m_end - 1 && *m_ptr != chr ) {
+	while ( m_ptr < m_end && *m_ptr != chr ) {
 		move();
 		if (
 			handle_backslashes &&
@@ -110,7 +110,7 @@ const std::string Parser::read_until_char( char chr, bool consume, bool handle_b
 		}
 	}
 	const char* end_ptr = m_ptr;
-	if ( consume ) {
+	if ( consume && m_ptr < m_end ) {
 		move();
 	}
 	return std::string( begin_ptr, end_ptr );
@@ -119,7 +119,7 @@ const std::string Parser::read_until_char( char chr, bool consume, bool handle_b
 const std::string Parser::read_until_char_any( const char* chrs, bool consume ) {
 	const char* begin_ptr = m_ptr;
 	const char* p;
-	while ( m_ptr < m_end - 1 ) {
+	while ( m_ptr < m_end ) {
 		for ( p = chrs ; *p ; p++ ) {
 			if ( *m_ptr == *p ) {
 				break;
@@ -130,7 +130,7 @@ const std::string Parser::read_until_char_any( const char* chrs, bool consume ) 
 		}
 		move();
 	}
-	if ( consume && m_ptr != m_end - 1 ) {
+	if ( consume && m_ptr < m_end ) {
 		move();
 	}
 	return std::string( begin_ptr, m_ptr );
@@ -138,27 +138,28 @@ const std::string Parser::read_until_char_any( const char* chrs, bool consume ) 
 
 const std::string Parser::read_until_sequence( const char* sequence, bool consume ) {
 	const char* begin_ptr = m_ptr;
-	const char* end = strchr( sequence, 0 );
+	const char* seq_end = strchr( sequence, 0 );
 	const char* p1;
 	const char* p2;
-	while ( m_ptr < m_end ) {
+	const char* end = m_end - ( seq_end - sequence );
+	while ( m_ptr < end ) {
 		p1 = m_ptr;
 		p2 = sequence;
-		while ( p1 < m_end && p2 < end ) {
+		while ( p2 < seq_end ) {
 			if ( *p1 != *p2 ) {
 				break;
 			}
 			p1++;
 			p2++;
 		}
-		if ( p2 == end ) {
+		if ( p2 == seq_end ) {
 			break;
 		}
 		move();
 	}
 	const char* end_ptr = m_ptr;
-	if ( consume ) {
-		move_by( std::min( end - sequence, m_end - m_ptr - 1 ) );
+	if ( consume && m_ptr < end ) {
+		move_by( std::min( seq_end - sequence, m_end - m_ptr - 1 ) );
 	}
 	return std::string( begin_ptr, end_ptr );
 }
@@ -171,7 +172,7 @@ const std::string Parser::read_while_char_any( const char* chrs ) {
 
 void Parser::skip_while_char_any( const char* chrs ) {
 	const char* p;
-	while ( m_ptr < m_end - 1 ) {
+	while ( m_ptr < m_end ) {
 		for ( p = chrs ; *p ; p++ ) {
 			if ( *m_ptr == *p ) {
 				break;
@@ -203,26 +204,27 @@ void Parser::skip_until_char_any( const char* chrs, bool consume ) {
 }
 
 void Parser::skip_until_sequence( const char* sequence, bool consume ) {
-	const char* end = strchr( sequence, 0 );
+	const char* seq_end = strchr( sequence, 0 );
 	const char* p1;
 	const char* p2;
-	while ( m_ptr < m_end ) {
+	const char* end = m_end - ( seq_end - sequence );
+	while ( m_ptr < end ) {
 		p1 = m_ptr;
 		p2 = sequence;
-		while ( p1 < m_end && p2 < end ) {
+		while ( p2 < seq_end ) {
 			if ( *p1 != *p2 ) {
 				break;
 			}
 			p1++;
 			p2++;
 		}
-		if ( p2 == end ) {
+		if ( p2 == seq_end ) {
 			break;
 		}
 		move();
 	}
-	if ( consume ) {
-		move_by( std::min( end - sequence, m_end - m_ptr - 1 ) );
+	if ( consume && m_ptr < end ) {
+		move_by( std::min( seq_end - sequence, m_end - m_ptr - 1 ) );
 	}
 }
 
