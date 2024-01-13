@@ -122,7 +122,10 @@ const gse::Value Interpreter::EvaluateConditional( Context* ctx, const program::
 			}
 			catch ( gse::Exception& e ) {
 				const auto* h = c->handlers->handlers;
-				const auto& it = h->properties.find( e.class_name );
+				auto it = h->properties.find( e.class_name );
+				if ( it == h->properties.end() ) {
+					it = h->properties.find( "" ); // check for default handler too
+				}
 				if ( it != h->properties.end() ) {
 					const auto f = EvaluateExpression( ctx, it->second );
 					ASSERT( f.Get()->type == Type::T_CALLABLE, "invalid error handler type" );

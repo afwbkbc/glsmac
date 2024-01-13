@@ -17,12 +17,28 @@ try {
 }
 test.assert(was_caught, 'exception was not caught');
 
-was_caught = false;
-try {
-    non_existent_var = 1;
-} catch {
-    ReferenceError: (e) => {
-        was_caught = true;
-    }
+{
+    let expected_type = '';
+    let was_caught = false;
+    let testcatch = (t, f) => {
+        expected_type = t;
+        was_caught = false;
+        try {
+            f();
+        } catch {
+            : (e) => { // default handler
+                test.assert(e.type == expected_type, 'expected:' + expected_type + ' got:' + e.type);
+                was_caught = true;
+            }
+        }
+        test.assert(was_caught, 'expected:' + expected_type + ' got nothing');
+    };
+
+    testcatch('TestError', () => {
+        test.assert(false);
+    });
+    testcatch('ReferenceError', () => {
+        non_existent_var = 5;
+    });
+
 }
-test.assert(was_caught, 'exception was not caught');

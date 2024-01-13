@@ -191,7 +191,13 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 						( ( Block * )( *it_end ) )->m_block_side == Block::BS_END &&
 						it_end != end &&
 						it_end + 1 != end &&
-						( *( it_end + 1 ) )->m_type != SourceElement::ET_CONDITIONAL
+						!(
+							( *( it_end + 1 ) )->m_type == SourceElement::ET_CONDITIONAL && (
+								( (Conditional*)*( it_end + 1 ) )->m_conditional_type == Conditional::CT_CATCH ||
+									( (Conditional*)*( it_end + 1 ) )->m_conditional_type == Conditional::CT_ELSEIF ||
+									( (Conditional*)*( it_end + 1 ) )->m_conditional_type == Conditional::CT_ELSE
+							)
+						)
 					) {
 					body.push_back( GetControl( it, it_end + 1 ) );
 					break;
@@ -770,11 +776,20 @@ const program::Object* JS::GetObject( const source_elements_t::const_iterator& b
 	std::unordered_map< std::string, const Expression* > properties = {};
 	Identifier* identifier;
 	source_elements_t::const_iterator it = begin, it_end;
+	std::string property_key;
 	while ( it != end ) {
-		ASSERT( ( *it )->m_type == SourceElement::ET_IDENTIFIER, "expected property key" );
-		identifier = ( Identifier * ) * ( it++ );
+		if ( ( *it )->m_type == SourceElement::ET_OPERATOR && ((Operator*)(*it))->m_op == ":" ) {
+			// empty key
+			property_key = "";
+		}
+		else {
+			// non-empty key
+			ASSERT( ( *it )->m_type == SourceElement::ET_IDENTIFIER, "expected property key, got: " + ( *it )->ToString() );
+			identifier = ( Identifier * ) * ( it++ );
+			ASSERT( identifier->m_identifier_type == IDENTIFIER_VARIABLE, "expected property key name" );
+			property_key = identifier->m_name;
+		}
 		ASSERT( it != end, "unexpected object close" );
-		ASSERT( identifier->m_identifier_type == IDENTIFIER_VARIABLE, "expected property key name" );
 		ASSERT( ( *it )->m_type == SourceElement::ET_OPERATOR, "expected property delimiter" );
 		ASSERT( ( (Operator*)( *( it++ ) ) )->m_op == ":", "expected ':'" );
 		ASSERT( it != end, "unexpected object close" );
@@ -791,8 +806,8 @@ const program::Object* JS::GetObject( const source_elements_t::const_iterator& b
 			}
 		}
 		ASSERT( it_end != it, "expected property expression" );
-		ASSERT( properties.find( identifier->m_name ) == properties.end(), "duplicate property key: " + identifier->m_name );
-		properties.insert_or_assign( identifier->m_name, GetExpression( it, it_end ) );
+		ASSERT( properties.find( property_key ) == properties.end(), "duplicate property key: " + property_key );
+		properties.insert_or_assign( property_key, GetExpression( it, it_end ) );
 		it = it_end;
 		if ( it != end ) {
 			it++;
