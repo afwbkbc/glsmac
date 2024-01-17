@@ -76,7 +76,13 @@ void JS::GetElements( source_elements_t& elements ) {
 			if (
 				( value == "-" || value == "+" ) &&
 					check_char_any( CHARS_NUMBERS.c_str() ) &&
-					( elements.empty() || elements.back()->m_type == SourceElement::ET_OPERATOR )
+					( elements.empty() ||
+						elements.back()->m_type == SourceElement::ET_OPERATOR ||
+						(
+							elements.back()->m_type == SourceElement::ET_BLOCK &&
+								( (Block*)elements.back() )->m_block_side == Block::BS_BEGIN
+						)
+					)
 				) {
 				// negative number
 				value += read_while_char_any( CHARS_NUMBERS_C.c_str() );
@@ -122,7 +128,7 @@ void JS::GetElements( source_elements_t& elements ) {
 					break;
 				}
 				default:
-					THROW((std::string)"Unexpected delimiter: '" + c + "'" );
+					THROW( (std::string)"Unexpected delimiter: '" + c + "'" );
 			}
 		}
 		else {
@@ -193,7 +199,7 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 						( *it_end )->m_type == SourceElement::ET_BLOCK &&
 						( ( Block * )( *it_end ) )->m_block_type == BLOCK_CURLY_BRACKETS &&
 						( ( Block * )( *it_end ) )->m_block_side == Block::BS_END &&
-						!IsObject(it + 1, it_end)
+						!IsObject( it + 1, it_end )
 /*						it_end + 1 != end &&
 						!(
 							( *( it_end + 1 ) )->m_type == SourceElement::ET_CONDITIONAL && (
@@ -202,7 +208,7 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 									( (Conditional*)*( it_end + 1 ) )->m_conditional_type == Conditional::CT_ELSE
 							)
 						)*/
-						//!IsObject(it, it_end)
+					//!IsObject(it, it_end)
 					) {
 					body.push_back( GetControl( it, it_end + 1 ) );
 					break;
@@ -255,11 +261,16 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 				( *it )->m_type != SourceElement::ET_BLOCK ||
 				( ( Block * )( *it ) )->m_block_side != Block::BS_BEGIN ||
 				( ( Block * )( *it ) )->m_block_type != BLOCK_ROUND_BRACKETS ) {
-			throw gse::Exception( EC.PARSE_ERROR, "Expected (" + (it == end ? " here" : ", got: " + (*it)->ToString() ), nullptr, (*begin)->m_si );
+			throw gse::Exception(
+				EC.PARSE_ERROR, "Expected (" + ( it == end
+					? " here"
+					: ", got: " + ( *it )->ToString()
+				), nullptr, ( *begin )->m_si
+			);
 		}
 		it_end = GetBracketsEnd( it, end );
 		condition = GetExpression( it + 1, it_end );
-		ASSERT( it_end != end , "expected {, got EOF" );
+		ASSERT( it_end != end, "expected {, got EOF" );
 		it = it_end + 1;
 	}
 	if (
@@ -267,7 +278,12 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 			( *it )->m_type != SourceElement::ET_BLOCK ||
 			( ( Block * )( *it ) )->m_block_side != Block::BS_BEGIN ||
 			( ( Block * )( *it ) )->m_block_type != BLOCK_CURLY_BRACKETS ) {
-		throw gse::Exception( EC.PARSE_ERROR, "Expected {" + ( it == end ? " here" : ", got: " + (*it)->ToString()), nullptr, (*begin)->m_si );
+		throw gse::Exception(
+			EC.PARSE_ERROR, "Expected {" + ( it == end
+				? " here"
+				: ", got: " + ( *it )->ToString()
+			), nullptr, ( *begin )->m_si
+		);
 	}
 	it_end = GetBracketsEnd( it, end );
 	const auto* body = GetScope( it + 1, it_end );
@@ -305,11 +321,19 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 					it + 1 == end ||
 					( *( it + 1 ) )->m_type != SourceElement::ET_BLOCK ||
 					( ( Block * )( *( it + 1 ) ) )->m_block_side != Block::BS_BEGIN ||
-					( ( Block * )( *( it + 1 ) ) )->m_block_type != BLOCK_CURLY_BRACKETS) {
-				throw gse::Exception( EC.PARSE_ERROR, "Expected catch block" + (it == end ? " here" : ", got: " + (*it)->ToString() ), nullptr, (*(it - 1))->m_si );
+					( ( Block * )( *( it + 1 ) ) )->m_block_type != BLOCK_CURLY_BRACKETS ) {
+				throw gse::Exception(
+					EC.PARSE_ERROR, "Expected catch block" + ( it == end
+						? " here"
+						: ", got: " + ( *it )->ToString()
+					), nullptr, ( *( it - 1 ) )->m_si
+				);
 			}
 			it_end = GetBracketsEnd( it + 1, end );
 			return new program::Try( GetSI( begin, it ), body, new program::Catch( GetSI( it, it_end + 1 ), GetObject( it + 2, it_end ) ) );
+		}
+		case Conditional::CT_CATCH: {
+			throw gse::Exception( EC.PARSE_ERROR, "Unexpected catch without try", nullptr, conditional->m_si );
 		}
 		default:
 			THROW( "unexpected conditional type: " + conditional->ToString() );
@@ -351,8 +375,13 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 					it_tmp++;
 					if ( it_tmp == end ||
 						( *it_tmp )->m_type != SourceElement::ET_IDENTIFIER ||
-						( ( Identifier * )( *it_tmp ) )->m_identifier_type != IDENTIFIER_VARIABLE) {
-						throw gse::Exception( EC.PARSE_ERROR, "Expected property name" + (it_tmp == end ? " here" : ", got: " + (*(it_tmp))->ToString() ), nullptr, (*it)->m_si );
+						( ( Identifier * )( *it_tmp ) )->m_identifier_type != IDENTIFIER_VARIABLE ) {
+						throw gse::Exception(
+							EC.PARSE_ERROR, "Expected property name" + ( it_tmp == end
+								? " here"
+								: ", got: " + ( *( it_tmp ) )->ToString()
+							), nullptr, ( *it )->m_si
+						);
 					}
 					it_tmp++;
 				}
@@ -375,21 +404,31 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 					if ( it + 1 == end ||
 						( *( it + 1 ) )->m_type != SourceElement::ET_IDENTIFIER ||
 						( ( Identifier * ) * ( it + 1 ) )->m_identifier_type != IDENTIFIER_VARIABLE
-					) {
-						throw gse::Exception( EC.PARSE_ERROR, "Expected variable name" + ( it + 1 == end ? " after " + mod_it->first : ", got: " + (*(it + 1))->ToString()), nullptr, (*it)->m_si );
+						) {
+						throw gse::Exception(
+							EC.PARSE_ERROR, "Expected variable name" + ( it + 1 == end
+								? " after " + mod_it->first
+								: ", got: " + ( *( it + 1 ) )->ToString()
+							), nullptr, ( *it )->m_si
+						);
 					}
 					if ( it + 2 == end ||
 						( *( it + 2 ) )->m_type != SourceElement::ET_OPERATOR ||
 						( (Operator*)*( it + 2 ) )->m_op != "="
-					) {
-						throw gse::Exception( EC.PARSE_ERROR, "Expected =" + ( it + 2 == end ? " after variable name" : ", got: " + (*(it + 2))->ToString()), nullptr, (*(it + 1))->m_si );
+						) {
+						throw gse::Exception(
+							EC.PARSE_ERROR, "Expected =" + ( it + 2 == end
+								? " after variable name"
+								: ", got: " + ( *( it + 2 ) )->ToString()
+							), nullptr, ( *( it + 1 ) )->m_si
+						);
 					}
 					if ( it + 3 == end ) {
-						throw gse::Exception( EC.PARSE_ERROR, "Expected value after =", nullptr, (*(it + 2))->m_si );
+						throw gse::Exception( EC.PARSE_ERROR, "Expected value after =", nullptr, ( *( it + 2 ) )->m_si );
 					}
 					ASSERT( next_var_hints == Variable::VH_NONE, "multiple variable hints" );
 					if ( !var_hints_allowed ) {
-						throw gse::Exception( EC.PARSE_ERROR, "Unexpected keyword: " + mod_it->first, nullptr, (*it)->m_si);
+						throw gse::Exception( EC.PARSE_ERROR, "Unexpected keyword: " + mod_it->first, nullptr, ( *it )->m_si );
 					}
 					next_var_hints = mod_it->second;
 					break;
@@ -405,7 +444,7 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 				break;
 			}
 			case SourceElement::ET_CONDITIONAL: {
-				throw gse::Exception( EC.PARSE_ERROR, "Unexpected keyword: " + (*it)->ToString() + "", nullptr, (*it)->m_si );
+				throw gse::Exception( EC.PARSE_ERROR, "Unexpected keyword: " + ( *it )->ToString() + "", nullptr, ( *it )->m_si );
 			}
 			case SourceElement::ET_BLOCK: {
 				var_hints_allowed = false;
@@ -440,7 +479,7 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 							) {
 							// expression
 							if ( it + 1 == it_end ) {
-								throw gse::Exception( EC.PARSE_ERROR, "Expected expression, got: " + (*it_end)->ToString(), nullptr, (*it_end)->m_si);
+								throw gse::Exception( EC.PARSE_ERROR, "Expected expression, got: " + ( *it_end )->ToString(), nullptr, ( *it_end )->m_si );
 							}
 							elements.push_back( GetExpression( it + 1, it_end ) );
 						}
@@ -467,7 +506,7 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 											parameters.push_back( new Variable( ( *it_tmp )->m_si, ( ( Identifier * )( *it_tmp ) )->m_name ) );
 										}
 										else {
-											throw gse::Exception( EC.PARSE_ERROR, "Expected argument, found: " + (*it_tmp)->ToString() + "", nullptr, (*it_tmp)->m_si );
+											throw gse::Exception( EC.PARSE_ERROR, "Expected argument, found: " + ( *it_tmp )->ToString() + "", nullptr, ( *it_tmp )->m_si );
 										}
 									}
 									else {
@@ -478,7 +517,7 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 											// nothing
 										}
 										else {
-											throw gse::Exception( EC.PARSE_ERROR, "Expected argument separator, found: " + (*it_tmp)->ToString() + "", nullptr, (*it_tmp)->m_si );
+											throw gse::Exception( EC.PARSE_ERROR, "Expected argument separator, found: " + ( *it_tmp )->ToString() + "", nullptr, ( *it_tmp )->m_si );
 										}
 									}
 									expect_var = !expect_var;
@@ -490,7 +529,9 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 						}
 						else {
 							// call
-							ASSERT( !elements.empty(), "expected callable, found nothing" );
+							if ( elements.empty() ) {
+								throw gse::Exception( EC.PARSE_ERROR, "Expected { after =>", nullptr, ( *it )->m_si );
+							}
 
 							auto* element = elements.back(); // use last element as callable
 							ASSERT( element->m_element_type == Element::ET_OPERAND, "callable is not operand" );
@@ -505,19 +546,15 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 								while ( it_tmp != it_end ) {
 									if ( ( *it_tmp )->m_type == SourceElement::ET_BLOCK ) {
 										it_tmp = GetBracketsEnd( it_tmp, it_end );
-										if ( it_tmp != it_end ) {
-											it_tmp++;
-										}
+									}
+									if ( it_tmp != it_end ) {
+										it_tmp++;
 									}
 									if (
 										( *it_tmp )->m_type == SourceElement::ET_DELIMITER &&
 											( ( Delimiter * )( *it_tmp ) )->m_delimiter_type == Delimiter::DT_DATA
 										) {
-
 										break;
-									}
-									if ( it_tmp != it_end ) {
-										it_tmp++;
 									}
 								}
 								arguments.push_back( GetExpression( it_next, it_tmp ) );
@@ -549,7 +586,13 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 						}
 						else {
 							switch ( ( *( it - 1 ) )->m_type ) {
-								case SourceElement::ET_IDENTIFIER: {
+								case SourceElement::ET_OPERATOR: {
+									// array definition
+									elements.push_back( GetArray( it + 1, it_end ) );
+									break;
+								}
+								default: {
+									//case SourceElement::ET_IDENTIFIER: {
 									// array operator
 									if (
 										it_end != end &&
@@ -570,14 +613,9 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 									}
 									break;
 								}
-								case SourceElement::ET_OPERATOR: {
-									// array definition
-									elements.push_back( GetArray( it + 1, it_end ) );
-									break;
-								}
-								default: {
-									THROW( "unexpected element type before array: " + (*( it - 1 ))->ToString() );
-								}
+									/*default: {
+										THROW( "unexpected element type before array: " + (*( it - 1 ))->ToString() );
+									}*/
 							}
 						}
 						break;
@@ -590,7 +628,7 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 				break;
 			}
 			default:
-				throw gse::Exception( EC.PARSE_ERROR, "Unexpected: " + (*it)->ToString() + "", nullptr, (*it)->m_si );
+				throw gse::Exception( EC.PARSE_ERROR, "Unexpected: " + ( *it )->ToString() + "", nullptr, ( *it )->m_si );
 		}
 		if ( !var_hints_allowed ) {
 			ASSERT( next_var_hints == Variable::VH_NONE, "variable name required after modifier" );
@@ -616,8 +654,8 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 		if ( begin + 1 == end ) {
 			// only one operand present, wrap if needed and return
 			if ( ( *begin )->m_element_type != Element::ET_OPERAND ) {
-				throw gse::Exception( EC.PARSE_ERROR, "Unexpected: " + (*begin)->ToString(), nullptr, (*begin)->m_si );
-				}
+				throw gse::Exception( EC.PARSE_ERROR, "Unexpected: " + ( *begin )->ToString(), nullptr, ( *begin )->m_si );
+			}
 			return (program::Operand*)*begin;
 		}
 		// find most important operator
@@ -640,7 +678,7 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 			}
 		}
 		if ( split_it == end ) {
-			throw gse::Exception( EC.PARSE_ERROR, "Could not parse expression (operator missing?)", nullptr, (*begin)->m_si );
+			throw gse::Exception( EC.PARSE_ERROR, "Could not parse expression (operator missing?)", nullptr, ( *begin )->m_si );
 		}
 
 		bool has_a = split_it > begin;
@@ -676,33 +714,39 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 		switch ( link ) {
 			case OL_LEFT: {
 				if ( !has_a ) {
-					throw gse::Exception( EC.PARSE_ERROR, "Left operand missing for operator: " + (*split_it)->ToString(), nullptr, (*split_it)->m_si );
+					throw gse::Exception( EC.PARSE_ERROR, "Left operand missing for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
+				}
+				if ( has_b ) {
+					throw gse::Exception( EC.PARSE_ERROR, "Right operand unexpected for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
 				}
 				return new program::Expression( si, get_operand( begin, split_it ), (program::Operator*)*split_it );
 			}
 			case OL_RIGHT: {
 				if ( !has_b ) {
-					throw gse::Exception( EC.PARSE_ERROR, "Right operand missing for operator: " + (*split_it)->ToString(), nullptr, (*split_it)->m_si );
+					throw gse::Exception( EC.PARSE_ERROR, "Right operand missing for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
+				}
+				if ( has_a ) {
+					throw gse::Exception( EC.PARSE_ERROR, "Left operand unexpected for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
 				}
 				return new program::Expression( si, nullptr, (program::Operator*)*split_it, get_operand( split_it + 1, end ) );
 			}
 			case OL_BOTH: {
 				if ( !has_a ) {
-					throw gse::Exception( EC.PARSE_ERROR, "Left operand missing for operator: " + (*split_it)->ToString(), nullptr, (*split_it)->m_si );
+					throw gse::Exception( EC.PARSE_ERROR, "Left operand missing for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
 				}
 				if ( !has_b ) {
-					throw gse::Exception( EC.PARSE_ERROR, "Right operand missing for operator: " + (*split_it)->ToString(), nullptr, (*split_it)->m_si );
+					throw gse::Exception( EC.PARSE_ERROR, "Right operand missing for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
 				}
 				return new program::Expression( si, get_operand( begin, split_it ), (program::Operator*)*split_it, get_operand( split_it + 1, end ) );
 			}
 			case OL_ANY: {
 				if ( has_a && has_b ) {
-					throw gse::Exception( EC.PARSE_ERROR, "Either left or right operand is expected, both found, for operator: " + (*split_it)->ToString(), nullptr, (*split_it)->m_si );
+					throw gse::Exception( EC.PARSE_ERROR, "Either left or right operand is expected, both found, for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
 				}
-			case OL_ANY_OR_BOTH:
-				if ( !has_a && !has_b ) {
-					throw gse::Exception( EC.PARSE_ERROR, "Neither left nor right operand is found, for operator: " + (*split_it)->ToString(), nullptr, (*split_it)->m_si );
-				}
+				case OL_ANY_OR_BOTH:
+					if ( !has_a && !has_b ) {
+						throw gse::Exception( EC.PARSE_ERROR, "Neither left nor right operand is found, for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
+					}
 				return new program::Expression(
 					si,
 					has_a
@@ -785,13 +829,13 @@ const program::Array* JS::GetArray( const source_elements_t::const_iterator& beg
 			else if (
 				( *it_end )->m_type == SourceElement::ET_DELIMITER ) {
 				if ( ( ( Delimiter * ) * it_end )->m_delimiter_type != Delimiter::DT_DATA ) {
-					throw gse::Exception( EC.PARSE_ERROR, "Expected: , got: " + (*it_end)->ToString(), nullptr, (*it_end)->m_si );
+					throw gse::Exception( EC.PARSE_ERROR, "Expected: , got: " + ( *it_end )->ToString(), nullptr, ( *it_end )->m_si );
 				}
 				break;
 			}
 		}
 		if ( it_end == it ) {
-			throw gse::Exception( EC.PARSE_ERROR, "Expected array element, got: " + (*it_end)->ToString(), nullptr, (*it_end)->m_si );
+			throw gse::Exception( EC.PARSE_ERROR, "Expected array element, got: " + ( *it_end )->ToString(), nullptr, ( *it_end )->m_si );
 		}
 		elements.push_back( GetExpression( it, it_end ) );
 		it = it_end;
@@ -809,32 +853,37 @@ const program::Object* JS::GetObject( const source_elements_t::const_iterator& b
 	source_elements_t::const_iterator it = begin, it_end;
 	std::string property_key;
 	while ( it != end ) {
-		if ( ( *it )->m_type == SourceElement::ET_OPERATOR && ((Operator*)(*it))->m_op == ":" ) {
+		if ( ( *it )->m_type == SourceElement::ET_OPERATOR && ( (Operator*)( *it ) )->m_op == ":" ) {
 			// empty key
 			property_key = "";
 		}
 		else {
 			// non-empty key
-			identifier = ( Identifier * ) *it;
+			identifier = ( Identifier * ) * it;
 			if (
 				( *it )->m_type != SourceElement::ET_IDENTIFIER ||
-				identifier->m_identifier_type != IDENTIFIER_VARIABLE
+					identifier->m_identifier_type != IDENTIFIER_VARIABLE
 				) {
-				throw gse::Exception( EC.PARSE_ERROR, "Expected property key, got: " + (*it)->ToString(), nullptr, (*it)->m_si );
+				throw gse::Exception( EC.PARSE_ERROR, "Expected property key, got: " + ( *it )->ToString(), nullptr, ( *it )->m_si );
 			}
 			property_key = identifier->m_name;
 			it++;
 		}
 		if (
 			it == end ||
-			( *it )->m_type != SourceElement::ET_OPERATOR ||
-			( (Operator*)( *it ) )->m_op != ":"
+				( *it )->m_type != SourceElement::ET_OPERATOR ||
+				( (Operator*)( *it ) )->m_op != ":"
 			) {
-			throw gse::Exception( EC.PARSE_ERROR, "Expected :" + (it == end ? " after property key" : ", got: " + (*it)->ToString()), nullptr, (*(it - 1))->m_si );
+			throw gse::Exception(
+				EC.PARSE_ERROR, "Expected :" + ( it == end
+					? " after property key"
+					: ", got: " + ( *it )->ToString()
+				), nullptr, ( *( it - 1 ) )->m_si
+			);
 		}
 		it++;
 		if ( it == end ) {
-			throw gse::Exception( EC.PARSE_ERROR, "Expected property value after :", nullptr, (*(it - 1))->m_si );
+			throw gse::Exception( EC.PARSE_ERROR, "Expected property value after :", nullptr, ( *( it - 1 ) )->m_si );
 		}
 
 		// find property expression end
@@ -845,13 +894,13 @@ const program::Object* JS::GetObject( const source_elements_t::const_iterator& b
 			else if (
 				( *it_end )->m_type == SourceElement::ET_DELIMITER ) {
 				if ( ( ( Delimiter * ) * it_end )->m_delimiter_type != Delimiter::DT_DATA ) {
-					throw gse::Exception( EC.PARSE_ERROR, "Expected: , got: " + (*it_end)->ToString(), nullptr, (*it_end)->m_si );
-					}
+					throw gse::Exception( EC.PARSE_ERROR, "Expected: , got: " + ( *it_end )->ToString(), nullptr, ( *it_end )->m_si );
+				}
 				break;
 			}
 		}
 		if ( properties.find( property_key ) != properties.end() ) {
-			throw gse::Exception( EC.PARSE_ERROR, "Duplicate property key: " + property_key, nullptr, (*it_end)->m_si );
+			throw gse::Exception( EC.PARSE_ERROR, "Duplicate property key: " + property_key, nullptr, ( *it_end )->m_si );
 		}
 		properties.insert_or_assign( property_key, GetExpression( it, it_end ) );
 		it = it_end;
@@ -868,6 +917,9 @@ const JS::source_elements_t::const_iterator JS::GetBracketsEnd( const source_ele
 	source_elements_t::const_iterator it = begin;
 	Block* block = ( Block * ) * begin;
 	const auto& info = block->m_block_info;
+	if ( block->m_block_side != Block::BS_BEGIN ) {
+		int a = 5;
+	}
 	ASSERT( block->m_block_side == Block::BS_BEGIN, "expected opening bracket" );
 	while ( it != end ) {
 		if ( ( *it )->m_type == SourceElement::ET_BLOCK ) {
@@ -894,7 +946,7 @@ const JS::source_elements_t::const_iterator JS::GetBracketsEnd( const source_ele
 		}
 	}
 	if ( it == end ) {
-		throw gse::Exception( EC.PARSE_ERROR, (std::string)"Unclosed block: " + info.close_char + " not found", nullptr, (*begin)->m_si );
+		throw gse::Exception( EC.PARSE_ERROR, (std::string)"Unclosed block: " + info.close_char + " not found", nullptr, ( *begin )->m_si );
 	}
 	return it;
 }
@@ -902,9 +954,9 @@ const JS::source_elements_t::const_iterator JS::GetBracketsEnd( const source_ele
 const bool JS::IsObject( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) const {
 	return
 		begin == end || (
-		begin + 1 != end &&
-			(*(begin + 1))->m_type == SourceElement::ET_OPERATOR &&
-			((Operator*)(*(begin + 1)))->m_op == ":"
+			begin + 1 != end &&
+				( *( begin + 1 ) )->m_type == SourceElement::ET_OPERATOR &&
+				( (Operator*)( *( begin + 1 ) ) )->m_op == ":"
 		);
 }
 

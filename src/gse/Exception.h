@@ -11,10 +11,13 @@ class Context;
 
 struct exception_ec_t {
 	const std::string PARSE_ERROR;
-	const std::string VAR_NOT_DEFINED;
+	const std::string TYPE_ERROR;
+	const std::string REFERENCE_ERROR;
 	const std::string INVALID_ASSIGNMENT;
-	const std::string OPERATOR_NOT_SUPPORTED;
+	const std::string OPERATION_NOT_SUPPORTED;
 	const std::string OPERATION_FAILED;
+	const std::string INVALID_DEREFERENCE;
+	const std::string INVALID_CALL;
 };
 extern const exception_ec_t EC;
 

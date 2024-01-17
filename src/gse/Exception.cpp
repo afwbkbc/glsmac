@@ -6,10 +6,13 @@ namespace gse {
 
 const exception_ec_t EC = {
 	"GSEParseError",
-	"GSEVarNotDefined",
+	"GSETypeError",
+	"GSEReferenceError",
 	"GSEInvalidAssignment",
-	"GSEOperatorNotSupported",
+	"GSEOperationNotSupported",
 	"GSEOperationFailed",
+	"GSEInvalidDereference",
+	"GSEInvalidCall",
 };
 
 const Exception::backtrace_t Exception::GetBacktraceAndCleanup( const Context* const current_ctx ) {

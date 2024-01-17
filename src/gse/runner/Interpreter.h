@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <string>
+#include <optional>
 
 #include "Runner.h"
 
@@ -12,6 +13,7 @@
 #include "gse/program/Statement.h"
 
 #include "gse/type/Callable.h"
+#include "gse/type/Array.h"
 
 namespace gse {
 namespace runner {
@@ -49,9 +51,9 @@ private:
 	const program::Variable* EvaluateVariable( Context* ctx, const program::Operand* operand ) const;
 	const std::string EvaluateVarName( Context* ctx, const program::Operand* operand ) const;
 
-	const Value Deref( const Value& value ) const;
-	void WriteByRef( const gse::Value& ref, const gse::Value& value ) const;
-	const size_t GetIndex( const gse::Value& value ) const;
+	const Value Deref( Context* ctx, const si_t& si, const Value& value ) const;
+	void WriteByRef( const Context* ctx, const si_t& si, const gse::Value& ref, const gse::Value& value ) const;
+	void ValidateRange( const Context* ctx, const si_t& si, const type::Array* array, const std::optional< size_t > from, const std::optional< size_t > to ) const;
 
 };
 

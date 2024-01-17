@@ -24,7 +24,7 @@ const Value Context::GetVariable( const std::string& name, const si_t* si ) {
 	if ( ref_it != m_ref_contexts.end() ) {
 		return ref_it->second->GetVariable( name, si );
 	}
-	throw Exception( EC.VAR_NOT_DEFINED, "Variable '" + name + "' is not defined", this, *si );
+	throw Exception( EC.REFERENCE_ERROR, "Variable '" + name + "' is not defined", this, *si );
 }
 
 void Context::CreateVariable( const std::string& name, const Value& value, const si_t* si ) {
@@ -45,7 +45,7 @@ void Context::UpdateVariable( const std::string& name, const Value& value, const
 		ref_it->second->UpdateVariable( name, value, si );
 		return;
 	}
-	throw Exception( EC.VAR_NOT_DEFINED, "Variable '" + name + "' is not defined", this, *si );
+	throw Exception( EC.REFERENCE_ERROR, "Variable '" + name + "' is not defined", this, *si );
 }
 
 const Context* Context::GetParentContext() const {

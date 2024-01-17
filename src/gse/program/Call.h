@@ -25,6 +25,17 @@ public:
 		}
 	}
 
+	const std::string ToString() const override {
+		std::string args = "";
+		for ( const auto& it : arguments ) {
+			if ( !args.empty() ) {
+				args += ", ";
+			}
+			args += it->ToString();
+		}
+		return callable->ToString() + "( " + args + " )";
+	}
+
 	const std::string Dump( const size_t depth = 0 ) const override {
 		std::string args = "";
 		for ( const auto& it : arguments ) {

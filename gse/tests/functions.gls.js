@@ -20,3 +20,5 @@ let lambda3 = (f1, f2) => {
     return f1(f2, 1, 2);
 };
 test.assert(lambda3(lambda2, lambda1) == 292);
+
+test.assert( (a, b, c) => { return a + b + c; }( 1, 2, 3 ) == 6 );
