@@ -144,4 +144,11 @@ testcatch('GSEInvalidCall', () => {
 testcatch('GSEInvalidCall', () => {
     (2 + 2)();
 });
-
+testcatch( 'GSEInvalidCall', () => {
+    const a = () => {};
+    a(1, 2, 3);
+});
+testcatch( 'GSEInvalidCall', () => {
+    const a = (a,b,c) => {};
+    a(1);
+});

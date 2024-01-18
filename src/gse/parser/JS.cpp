@@ -787,7 +787,7 @@ const program::Operand* JS::GetOperand( const Identifier* element, program::Vari
 		case IDENTIFIER_NUMBER: {
 			try {
 				// maybe it's int?
-				const auto v = std::stoi( element->m_name.c_str() );
+				const auto v = std::stol( element->m_name.c_str() );
 				return new program::Value( element->m_si, VALUE( type::Int, v ) );
 			}
 			catch ( std::logic_error const& ex ) {

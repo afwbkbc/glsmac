@@ -104,7 +104,9 @@ Context* const Context::ForkContext(
 	const std::vector< std::string > parameters,
 	const type::Callable::function_arguments_t& arguments
 ) {
-	ASSERT( parameters.size() == arguments.size(), "expected " + std::to_string( parameters.size() ) + " arguments, found " + std::to_string( arguments.size() ) );
+	if ( parameters.size() != arguments.size() ) {
+		throw Exception( EC.INVALID_CALL, "Expected " + std::to_string( parameters.size() ) + " arguments, found " + std::to_string( arguments.size() ), this, call_si );
+	}
 	NEWV( result, Context, this, m_source_lines, call_si );
 	// functions have access to parent variables
 	for ( auto& it : m_ref_contexts ) {

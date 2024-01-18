@@ -26,6 +26,11 @@ private:
 		const std::string m_path;
 	};
 
+	class GetCurrentTimeNano : public type::Callable {
+	public:
+		Value Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) override;
+	};
+
 };
 
 }

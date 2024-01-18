@@ -14,7 +14,7 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 
 	class Sum : public type::Callable {
 		Value Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) override {
-			int32_t result = 0;
+			int64_t result = 0;
 			for ( const auto& it : arguments ) {
 				const auto arg = it.Get();
 				switch ( arg->type ) {

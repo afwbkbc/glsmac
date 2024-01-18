@@ -249,7 +249,7 @@ const Type* Type::Deref() const {
             THROW( "operator " #_op " not implemented for type " + std::to_string( type ) );
 #define DEFAULT_COMPARE_NE( _op ) \
     if ( type != other.type ) { \
-        THROW( "can't compare type " + std::to_string( type ) + " to type " + std::to_string( other.type ) + " using operator " #_op ); \
+        THROW( "can't compare type " + GetTypeString( type ) + " to type " + GetTypeString( other.type ) + " using operator " #_op ); \
     } \
     switch ( type ) { \
         case T_UNDEFINED: \

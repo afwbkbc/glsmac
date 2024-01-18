@@ -5,6 +5,8 @@
 #include "gse/type/Object.h"
 #include "gse/type/Undefined.h"
 
+#include "logger/Stdout.h"
+
 namespace gse {
 namespace tests {
 namespace mocks {
@@ -18,7 +20,15 @@ void Console::AddMocks( gse::Context* ctx ) {
 		{
 			"dump",
 			VALUE( Dump )
-		}
+		},
+		{
+			"global_mute",
+			VALUE( GlobalMute )
+		},
+		{
+			"global_unmute",
+			VALUE( GlobalMute )
+		},
 	};
 	ctx->CreateVariable( "console", VALUE( type::Object, mocks ), nullptr );
 }
@@ -53,6 +63,16 @@ const std::string& Console::Log::GetOutput() const {
 
 Value Console::Dump::Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) {
 	std::cout << "    " << call_si.ToString() << " " << ArgumentsToString( arguments, true ) << std::endl;
+	return VALUE( type::Undefined );
+}
+
+Value Console::GlobalMute::Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) {
+	logger::g_is_muted = true;
+	return VALUE( type::Undefined );
+}
+
+Value Console::GlobalUnmute::Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) {
+	logger::g_is_muted = false;
 	return VALUE( type::Undefined );
 }
 

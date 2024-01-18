@@ -34,6 +34,16 @@ private:
 		Value Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) override;
 	};
 
+	class GlobalMute : public Loggable {
+	public:
+		Value Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) override;
+	};
+
+	class GlobalUnmute : public Loggable {
+	public:
+		Value Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) override;
+	};
+
 };
 
 }
