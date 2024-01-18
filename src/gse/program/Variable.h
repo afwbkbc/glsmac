@@ -12,7 +12,8 @@ public:
 
 	enum variable_hints_t : uint8_t {
 		VH_NONE,
-		VH_CREATE,
+		VH_CREATE_VAR,
+		VH_CREATE_CONST,
 	};
 
 	Variable( const si_t& si, const std::string& name, const variable_hints_t hints = VH_NONE )

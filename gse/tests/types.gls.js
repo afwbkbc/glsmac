@@ -2,6 +2,8 @@
 
 let a = 5;
 a++;
+const a_const = 6;
+test.assert(a == a_const);
 let b = a + 2 * 4;
 let c=(a+2)*4;
 {
@@ -193,8 +195,8 @@ test.assert( arr == [
     'BEFORE EXCEPTION',
     'failfunc',
     'CAUGHT TestError : something happened',
-    '\tat ' + test.get_script_path() + ':177: throw TestError(\'something happened\');',
-    '\tat ' + test.get_script_path() + ':179: failfunc();'
+    '\tat ' + test.get_script_path() + ':179: throw TestError(\'something happened\');',
+    '\tat ' + test.get_script_path() + ':181: failfunc();'
 ] );
 
 ;;;

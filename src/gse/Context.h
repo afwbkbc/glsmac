@@ -21,6 +21,7 @@ CLASS( Context, base::Base )
 
 	const Value GetVariable( const std::string& name, const si_t* si );
 	void CreateVariable( const std::string& name, const Value& value, const si_t* si );
+	void CreateConst( const std::string& name, const Value& value, const si_t* si );
 	void UpdateVariable( const std::string& name, const Value& value, const si_t* si );
 	const Context* GetParentContext() const;
 
@@ -45,7 +46,11 @@ private:
 
 	const si_t m_si = {};
 
-	typedef std::unordered_map< std::string, Value > variables_t;
+	struct var_info_t {
+		Value value;
+		bool is_const;
+	};
+	typedef std::unordered_map< std::string, var_info_t > variables_t;
 	variables_t m_variables = {};
 	typedef std::unordered_map< std::string, Context* > ref_contexts_t;
 	ref_contexts_t m_ref_contexts = {};

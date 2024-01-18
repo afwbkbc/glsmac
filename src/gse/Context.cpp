@@ -18,7 +18,7 @@ const Value Context::GetVariable( const std::string& name, const si_t* si ) {
 	const auto it = m_variables.find( name );
 	if ( it != m_variables.end() ) {
 		Log( "GetVariable( " + name + " )" );
-		return it->second;
+		return it->second.value;
 	}
 	const auto ref_it = m_ref_contexts.find( name );
 	if ( ref_it != m_ref_contexts.end() ) {
@@ -28,16 +28,39 @@ const Value Context::GetVariable( const std::string& name, const si_t* si ) {
 }
 
 void Context::CreateVariable( const std::string& name, const Value& value, const si_t* si ) {
-	ASSERT( m_variables.find( name ) == m_variables.end(), "variable '" + name + "' already exists" );
+	if ( m_variables.find( name ) != m_variables.end() ) {
+		throw Exception( EC.INVALID_ASSIGNMENT, "Variable '" + name + "' already exists", this, *si );
+	}
 	Log( "CreateVariable( " + name + ", " + value.ToString() + " )" );
-	m_variables.insert_or_assign( name, value );
+	m_variables.insert_or_assign(
+		name, var_info_t{
+			value,
+			false
+		}
+	);
+}
+
+void Context::CreateConst( const std::string& name, const Value& value, const si_t* si ) {
+	if ( m_variables.find( name ) != m_variables.end() ) {
+		throw Exception( EC.INVALID_ASSIGNMENT, "Variable '" + name + "' already exists", this, *si );
+	}
+	Log( "CreateConst( " + name + ", " + value.ToString() + " )" );
+	m_variables.insert_or_assign(
+		name, var_info_t{
+			value,
+			true
+		}
+	);
 }
 
 void Context::UpdateVariable( const std::string& name, const Value& value, const si_t* si ) {
 	const auto it = m_variables.find( name );
 	if ( it != m_variables.end() ) {
+		if ( it->second.is_const ) {
+			throw Exception( EC.INVALID_ASSIGNMENT, "Can't change value of const '" + name + "'", this, *si );
+		}
 		Log( "UpdateVariable( " + name + ", " + value.ToString() + " )" );
-		it->second = value;
+		it->second.value = value;
 		return;
 	}
 	const auto ref_it = m_ref_contexts.find( name );

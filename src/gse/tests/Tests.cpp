@@ -233,7 +233,7 @@ const Program* GetTestProgram() {
 					SI( 3, 1, 3, 10 ),
 					new Expression(
 						SI( 3, 5, 3, 10 ),
-						new Variable( SI( 3, 5, 3, 6 ), "a", Variable::VH_CREATE ),
+						new Variable( SI( 3, 5, 3, 6 ), "a", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 3, 7, 3, 8 ), Operator::OT_ASSIGN ),
 						new program::Value( SI( 3, 9, 3, 10 ), VALUE( type::Int, 5 ) )
 					)
@@ -250,7 +250,7 @@ const Program* GetTestProgram() {
 					SI( 5, 1, 5, 18 ),
 					new Expression(
 						SI( 5, 5, 5, 18 ),
-						new Variable( SI( 5, 5, 5, 6 ), "b", Variable::VH_CREATE ),
+						new Variable( SI( 5, 5, 5, 6 ), "b", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 5, 7, 5, 8 ), Operator::OT_ASSIGN ),
 						new Expression(
 							SI( 5, 9, 5, 18 ),
@@ -269,7 +269,7 @@ const Program* GetTestProgram() {
 					SI( 6, 1, 6, 14 ),
 					new Expression(
 						SI( 6, 5, 6, 14 ),
-						new Variable( SI( 6, 5, 6, 6 ), "c", Variable::VH_CREATE ),
+						new Variable( SI( 6, 5, 6, 6 ), "c", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 6, 6, 6, 7 ), Operator::OT_ASSIGN ),
 						new Expression(
 							SI( 6, 8, 6, 14 ),
@@ -335,7 +335,7 @@ const Program* GetTestProgram() {
 					SI( 14, 1, 14, 53 ),
 					new Expression(
 						SI( 14, 5, 14, 53 ),
-						new Variable( SI( 14, 5, 14, 16 ), "testmethod1", Variable::VH_CREATE ),
+						new Variable( SI( 14, 5, 14, 16 ), "testmethod1", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 14, 17, 14, 18 ), Operator::OT_ASSIGN ),
 						new Function(
 							SI( 14, 19, 14, 53 ),
@@ -375,7 +375,7 @@ const Program* GetTestProgram() {
 					SI( 16, 1, 27, 2 ),
 					new Expression(
 						SI( 16, 5, 27, 2 ),
-						new Variable( SI( 16, 5, 16, 16 ), "testmethod2", Variable::VH_CREATE ),
+						new Variable( SI( 16, 5, 16, 16 ), "testmethod2", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 16, 17, 16, 18 ), Operator::OT_ASSIGN ),
 						new Function(
 							SI( 16, 19, 27, 2 ),
@@ -415,7 +415,7 @@ const Program* GetTestProgram() {
 					SI( 29, 1, 29, 18 ),
 					new Expression(
 						SI( 29, 5, 29, 18 ),
-						new Variable( SI( 29, 5, 29, 13 ), "testarr1", Variable::VH_CREATE ),
+						new Variable( SI( 29, 5, 29, 13 ), "testarr1", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 29, 14, 29, 15 ), Operator::OT_ASSIGN ),
 						new Array( SI( 29, 16, 29, 18 ), {} )
 					)
@@ -424,7 +424,7 @@ const Program* GetTestProgram() {
 					SI( 30, 1, 33, 4 ),
 					new Expression(
 						SI( 30, 5, 33, 4 ),
-						new Variable( SI( 30, 5, 30, 13 ), "testarr2", Variable::VH_CREATE ),
+						new Variable( SI( 30, 5, 30, 13 ), "testarr2", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 30, 14, 30, 15 ), Operator::OT_ASSIGN ),
 						new Array(
 							SI( 30, 16, 33, 4 ),
@@ -522,7 +522,7 @@ const Program* GetTestProgram() {
 					SI( 39, 1, 39, 24 ),
 					new Expression(
 						SI( 39, 5, 39, 24 ),
-						new Variable( SI( 39, 5, 39, 13 ), "testarr3", Variable::VH_CREATE ),
+						new Variable( SI( 39, 5, 39, 13 ), "testarr3", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 39, 14, 39, 15 ), Operator::OT_ASSIGN ),
 						new Variable( SI( 39, 16, 39, 24 ), "testarr1" )
 					)
@@ -630,7 +630,7 @@ const Program* GetTestProgram() {
 					SI( 43, 1, 43, 28 ),
 					new Expression(
 						SI( 43, 5, 43, 28 ),
-						new Variable( SI( 43, 5, 43, 13 ), "testarr4", Variable::VH_CREATE ),
+						new Variable( SI( 43, 5, 43, 13 ), "testarr4", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 43, 14, 43, 15 ), Operator::OT_ASSIGN ),
 						new Expression(
 							SI( 43, 16, 43, 28 ),
@@ -700,7 +700,7 @@ const Program* GetTestProgram() {
 					SI( 46, 1, 46, 18 ),
 					new Expression(
 						SI( 46, 5, 46, 18 ),
-						new Variable( SI( 46, 5, 46, 13 ), "testobj1", Variable::VH_CREATE ),
+						new Variable( SI( 46, 5, 46, 13 ), "testobj1", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 46, 14, 46, 15 ), Operator::OT_ASSIGN ),
 						new Object( SI( 46, 16, 46, 18 ), {} )
 					)
@@ -709,7 +709,7 @@ const Program* GetTestProgram() {
 					SI( 47, 1, 51, 2 ),
 					new Expression(
 						SI( 47, 5, 51, 2 ),
-						new Variable( SI( 47, 5, 47, 13 ), "testobj2", Variable::VH_CREATE ),
+						new Variable( SI( 47, 5, 47, 13 ), "testobj2", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 47, 14, 47, 15 ), Operator::OT_ASSIGN ),
 						new Object(
 							SI( 47, 16, 51, 2 ),
@@ -750,7 +750,7 @@ const Program* GetTestProgram() {
 					SI( 52, 1, 58, 2 ),
 					new Expression(
 						SI( 52, 5, 58, 2 ),
-						new Variable( SI( 52, 5, 52, 13 ), "testobj3", Variable::VH_CREATE ),
+						new Variable( SI( 52, 5, 52, 13 ), "testobj3", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 52, 14, 52, 15 ), Operator::OT_ASSIGN ),
 						new Object(
 							SI( 52, 16, 58, 2 ),
@@ -821,7 +821,7 @@ const Program* GetTestProgram() {
 					SI( 61, 1, 61, 13 ),
 					new Expression(
 						SI( 61, 5, 61, 13 ),
-						new Variable( SI( 61, 5, 61, 6 ), "d", Variable::VH_CREATE ),
+						new Variable( SI( 61, 5, 61, 6 ), "d", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 61, 7, 61, 8 ), Operator::OT_ASSIGN ),
 						new program::Value( SI( 61, 9, 61, 13 ), VALUE( type::Null ) )
 					)
@@ -830,7 +830,7 @@ const Program* GetTestProgram() {
 					SI( 62, 1, 62, 14 ),
 					new Expression(
 						SI( 62, 5, 62, 14 ),
-						new Variable( SI( 62, 5, 62, 6 ), "x", Variable::VH_CREATE ),
+						new Variable( SI( 62, 5, 62, 6 ), "x", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 62, 7, 62, 8 ), Operator::OT_ASSIGN ),
 						new Expression(
 							SI( 62, 9, 62, 14 ),
@@ -1126,7 +1126,7 @@ const Program* GetTestProgram() {
 					SI( 75, 1, 75, 29 ),
 					new Expression(
 						SI( 75, 5, 75, 29 ),
-						new Variable( SI( 75, 5, 75, 15 ), "testmethod", Variable::VH_CREATE ),
+						new Variable( SI( 75, 5, 75, 15 ), "testmethod", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 75, 16, 75, 17 ), Operator::OT_ASSIGN ),
 						new Variable( SI( 75, 18, 75, 29 ), "testmethod1" )
 					)
@@ -1641,7 +1641,7 @@ const Program* GetTestProgram() {
 					SI( 107, 1, 107, 10 ),
 					new Expression(
 						SI( 107, 5, 107, 10 ),
-						new Variable( SI( 107, 5, 107, 6 ), "i", Variable::VH_CREATE ),
+						new Variable( SI( 107, 5, 107, 6 ), "i", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 107, 7, 107, 8 ), Operator::OT_ASSIGN ),
 						new program::Value( SI( 107, 9, 107, 10 ), VALUE( type::Int, 0 ) )
 					)
@@ -1691,7 +1691,7 @@ const Program* GetTestProgram() {
 								SI( 114, 3, 117, 4 ),
 								new Expression(
 									SI( 114, 7, 117, 4 ),
-									new Variable( SI( 114, 7, 114, 15 ), "failfunc", Variable::VH_CREATE ),
+									new Variable( SI( 114, 7, 114, 15 ), "failfunc", Variable::VH_CREATE_VAR ),
 									new Operator( SI( 114, 16, 114, 17 ), Operator::OT_ASSIGN ),
 									new Function(
 										SI( 114, 18, 117, 4 ),

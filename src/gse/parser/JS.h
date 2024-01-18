@@ -84,6 +84,7 @@ private:
 		"return",
 		"throw",
 		"let",
+		"const",
 		"true",
 		"false",
 		"null",
@@ -120,8 +121,12 @@ private:
 		{
 			{
 				"let",
-				program::Variable::VH_CREATE,
-			}
+				program::Variable::VH_CREATE_VAR,
+			},
+			{
+				"const",
+				program::Variable::VH_CREATE_CONST,
+			},
 		}
 	};
 

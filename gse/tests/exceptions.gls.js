@@ -67,6 +67,14 @@ testcatch('GSEInvalidAssignment', () => {
     }
     = 5
 });
+testcatch( 'GSEInvalidAssignment', () => {
+    let var = 1;
+    let var = 2;
+});
+testcatch( 'GSEInvalidAssignment', () => {
+    const a = 1;
+    a++;
+});
 testcatch('GSEOperationNotSupported', () => {
     'asd' - 'qwe'
 });
