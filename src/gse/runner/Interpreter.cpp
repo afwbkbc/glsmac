@@ -41,15 +41,16 @@ const gse::Value Interpreter::Execute( Context* ctx, const program::Program* pro
 }
 
 const gse::Value Interpreter::EvaluateScope( Context* ctx, const program::Scope* scope ) const {
+	const auto subctx = ctx->ForkContext( scope->m_si );
 	gse::Value result = VALUE( Undefined );
 	for ( const auto& it : scope->body ) {
 		switch ( it->control_type ) {
 			case program::Control::CT_STATEMENT: {
-				result = EvaluateStatement( ctx, (program::Statement*)it );
+				result = EvaluateStatement( subctx, (program::Statement*)it );
 				break;
 			}
 			case program::Control::CT_CONDITIONAL: {
-				result = EvaluateConditional( ctx, (program::Conditional*)it );
+				result = EvaluateConditional( subctx, (program::Conditional*)it );
 				break;
 			}
 			default:
@@ -60,6 +61,7 @@ const gse::Value Interpreter::EvaluateScope( Context* ctx, const program::Scope*
 			break;
 		}
 	}
+	DELETE( subctx );
 	return result;
 }
 
@@ -631,10 +633,7 @@ const gse::Value Interpreter::EvaluateOperand( Context* ctx, const program::Oper
 			return VALUE( type::Object, properties );
 		}
 		case Operand::OT_SCOPE: {
-			const auto subctx = ctx->ForkContext( operand->m_si );
-			EvaluateScope( subctx, (program::Scope*)operand );
-			DELETE( subctx );
-			return VALUE( Undefined );
+			return EvaluateScope( ctx, (program::Scope*)operand );
 		}
 		case Operand::OT_EXPRESSION: {
 			return EvaluateExpression( ctx, ( (program::Expression*)operand ) );

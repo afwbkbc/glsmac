@@ -8,7 +8,7 @@ const timeof = (label, f) => {
     console.global_unmute();
     if (label != '') {
         console.log(label, ':', ns, 'ns');
-    }; // TODO: don't stop after }
+    }
     return ns;
 };
 
@@ -56,11 +56,24 @@ test.assert(timeof('defining and calling function 100000 times', () => {
     }
 }) < 10000000000);
 
-test.assert(timeof('creating variable 100000 times', () => {
+test.assert(timeof('creating scope and variable 100000 times', () => {
     idx = 0;
-    while ( idx++ < 100000 ) { // TODO: fork context here
-        {
-            let v = 0;
-        }
+    while ( idx++ < 100000 ) {
+        let v = 0;
+    }
+}) < 5000000000);
+
+const recursivefunc = (x, times) => {
+    if ( times == 0 ) {
+        return x;
+    }
+    else {
+        return recursivefunc( x + 1, times - 1 );
+    }
+};
+test.assert(timeof('calling recursive function 100 times with depth 1000', () => {
+    idx = 0;
+    while ( idx++ < 100 ) {
+        recursivefunc(0, 1000);
     }
 }) < 15000000000);

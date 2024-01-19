@@ -9,7 +9,7 @@ let c=(a+2)*4;
 {
 	a = 15;
 	a += 10;
-};
+}
 c = 123;
 c -= 23;
 
@@ -152,7 +152,7 @@ else {
 };
 test.assert( !yes_or_no );
 
-if ( false ) { test.assert(false); };
+if ( false ) { test.assert(false); }
 if ( false ) {
   test.assert(false);
 } elseif ( false ) {
@@ -161,14 +161,14 @@ if ( false ) {
   yes_or_no = true;
 } else {
   test.assert(false);
-};
+}
 test.assert( yes_or_no );
 
 let arr = [];
 let i = 0;
 while ( i++ < 5 ) {
   arr []= i;
-};
+}
 test.assert( arr == [1, 2, 3, 4, 5] );
 
 arr = [];

@@ -192,23 +192,23 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 			}
 			if ( brackets.empty() ) {
 				if (
-					( *it )->m_type == SourceElement::ET_BLOCK &&
-						( ( Block * )( *it ) )->m_block_type == BLOCK_CURLY_BRACKETS &&
-						( ( Block * )( *it ) )->m_block_side == Block::BS_BEGIN &&
-						it_end != end &&
-						( *it_end )->m_type == SourceElement::ET_BLOCK &&
+					it_end != end &&
+						(
+							(
+								( *it )->m_type == SourceElement::ET_BLOCK &&
+									( ( Block * )( *it ) )->m_block_type == BLOCK_CURLY_BRACKETS &&
+									( ( Block * )( *it ) )->m_block_side == Block::BS_BEGIN
+							) || (
+								( *it )->m_type == SourceElement::ET_CONDITIONAL &&
+									it_end + 1 != end &&
+									( *( it_end + 1 ) )->m_type != SourceElement::ET_CONDITIONAL
+							)
+						)
+						&&
+							( *it_end )->m_type == SourceElement::ET_BLOCK &&
 						( ( Block * )( *it_end ) )->m_block_type == BLOCK_CURLY_BRACKETS &&
 						( ( Block * )( *it_end ) )->m_block_side == Block::BS_END &&
 						!IsObject( it + 1, it_end )
-/*						it_end + 1 != end &&
-						!(
-							( *( it_end + 1 ) )->m_type == SourceElement::ET_CONDITIONAL && (
-								( (Conditional*)*( it_end + 1 ) )->m_conditional_type == Conditional::CT_CATCH ||
-									( (Conditional*)*( it_end + 1 ) )->m_conditional_type == Conditional::CT_ELSEIF ||
-									( (Conditional*)*( it_end + 1 ) )->m_conditional_type == Conditional::CT_ELSE
-							)
-						)*/
-					//!IsObject(it, it_end)
 					) {
 					body.push_back( GetControl( it, it_end + 1 ) );
 					break;
@@ -678,7 +678,7 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 			}
 		}
 		if ( split_it == end ) {
-			throw gse::Exception( EC.PARSE_ERROR, "Could not parse expression (operator missing?)", nullptr, ( *begin )->m_si );
+			throw gse::Exception( EC.PARSE_ERROR, "Could not parse expression (forgot ; or operator?)", nullptr, ( *begin )->m_si );
 		}
 
 		bool has_a = split_it > begin;
