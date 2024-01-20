@@ -41,7 +41,7 @@ const gse::Value Interpreter::Execute( Context* ctx, const program::Program* pro
 }
 
 const gse::Value Interpreter::EvaluateScope( Context* ctx, const program::Scope* scope ) const {
-	const auto subctx = ctx->ForkContext( scope->m_si );
+	const auto subctx = ctx->ForkContext( scope->m_si, false );
 	gse::Value result = VALUE( Undefined );
 	for ( const auto& it : scope->body ) {
 		switch ( it->control_type ) {
@@ -813,7 +813,7 @@ Interpreter::Function::Function(
 }
 
 gse::Value Interpreter::Function::Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) {
-	auto* funcctx = ctx->ForkContext( call_si, parameters, arguments );
+	auto* funcctx = ctx->ForkContext( call_si, true, parameters, arguments );
 	const auto result = runner->Execute( funcctx, program );
 	//funcctx->JoinContext( ctx );
 	DELETE( funcctx );

@@ -16,7 +16,7 @@ CLASS( Context, base::Base )
 
 	typedef std::vector< std::string > source_lines_t;
 
-	Context( const Context* parent_context, const source_lines_t& source_lines, const si_t& si );
+	Context( const Context* parent_context, const source_lines_t& source_lines, const si_t& si, const bool is_traceable = true );
 	~Context();
 
 	const Value GetVariable( const std::string& name, const si_t* si );
@@ -26,6 +26,7 @@ CLASS( Context, base::Base )
 	const Context* GetParentContext() const;
 
 	const si_t& GetSI() const;
+	const bool IsTraceable() const;
 
 	void AddSourceLine( const std::string& source_line );
 	void AddSourceLines( const source_lines_t& source_lines );
@@ -34,6 +35,7 @@ CLASS( Context, base::Base )
 
 	Context* const ForkContext(
 		const si_t& call_si,
+		const bool is_traceable,
 		const std::vector< std::string > parameters = {},
 		const type::Callable::function_arguments_t& arguments = {}
 	);
@@ -45,6 +47,7 @@ private:
 	source_lines_t m_source_lines;
 
 	const si_t m_si = {};
+	const bool m_is_traceable;
 
 	struct var_info_t {
 		Value value;

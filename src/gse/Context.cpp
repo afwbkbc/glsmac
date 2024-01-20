@@ -4,10 +4,11 @@
 
 namespace gse {
 
-Context::Context( const Context* parent_context, const source_lines_t& source_lines, const si_t& si )
+Context::Context( const Context* parent_context, const source_lines_t& source_lines, const si_t& si, const bool is_traceable )
 	: m_parent_context( parent_context )
 	, m_source_lines( source_lines )
-	, m_si( si ) {
+	, m_si( si )
+	, m_is_traceable( is_traceable ) {
 }
 
 Context::~Context() {
@@ -79,6 +80,10 @@ const si_t& Context::GetSI() const {
 	return m_si;
 }
 
+const bool Context::IsTraceable() const {
+	return m_is_traceable;
+}
+
 void Context::AddSourceLine( const std::string& source_line ) {
 	m_source_lines.push_back( source_line );
 }
@@ -101,13 +106,14 @@ const Context::source_lines_t& Context::GetSourceLines() const {
 
 Context* const Context::ForkContext(
 	const si_t& call_si,
+	const bool is_traceable,
 	const std::vector< std::string > parameters,
 	const type::Callable::function_arguments_t& arguments
 ) {
 	if ( parameters.size() != arguments.size() ) {
 		throw Exception( EC.INVALID_CALL, "Expected " + std::to_string( parameters.size() ) + " arguments, found " + std::to_string( arguments.size() ), this, call_si );
 	}
-	NEWV( result, Context, this, m_source_lines, call_si );
+	NEWV( result, Context, this, m_source_lines, call_si, is_traceable );
 	// functions have access to parent variables
 	for ( auto& it : m_ref_contexts ) {
 		result->m_ref_contexts.insert_or_assign( it.first, it.second );
