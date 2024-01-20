@@ -5,59 +5,61 @@
 #include <unordered_map>
 #include <vector>
 
-#include "base/Base.h"
-
 #include "Value.h"
 #include "type/Callable.h"
 
 namespace gse {
 
-CLASS( Context, base::Base )
+class GSE;
 
-	typedef std::vector< std::string > source_lines_t;
+class ChildContext;
 
-	Context( const Context* parent_context, const source_lines_t& source_lines, const si_t& si, const bool is_traceable = true );
-	~Context();
+class Context {
+protected:
+	struct var_info_t {
+		Value value;
+		bool is_const;
+	};
+	struct script_info_t {
+		const std::string path;
+		const std::string file;
+		const std::string directory;
+	};
 
+public:
+	Context( GSE* gse )
+		: m_gse( gse ) {}
+	virtual ~Context() = default;
+
+	GSE* GetGSE() const;
+
+	const bool HasVariable( const std::string& name );
 	const Value GetVariable( const std::string& name, const si_t* si );
+	void SetVariable( const std::string& name, const var_info_t& var_info );
 	void CreateVariable( const std::string& name, const Value& value, const si_t* si );
 	void CreateConst( const std::string& name, const Value& value, const si_t* si );
 	void UpdateVariable( const std::string& name, const Value& value, const si_t* si );
-	const Context* GetParentContext() const;
 
-	const si_t& GetSI() const;
-	const bool IsTraceable() const;
-
-	void AddSourceLine( const std::string& source_line );
-	void AddSourceLines( const source_lines_t& source_lines );
-	const std::string GetSourceLine( const size_t line_num ) const;
-	const source_lines_t& GetSourceLines() const;
-
-	Context* const ForkContext(
+	ChildContext* const ForkContext(
 		const si_t& call_si,
 		const bool is_traceable,
 		const std::vector< std::string > parameters = {},
 		const type::Callable::function_arguments_t& arguments = {}
 	);
-	void JoinContext( Context* const other ) const;
 
-private:
+	virtual const Context* GetParentContext() const = 0;
+	virtual const bool IsTraceable() const = 0;
+	virtual const std::string& GetSourceLine( const size_t line_num ) const = 0;
+	virtual const si_t& GetSI() const = 0;
+	virtual const script_info_t& GetScriptInfo() const = 0;
 
-	const Context* m_parent_context;
-	source_lines_t m_source_lines;
+protected:
+	GSE* m_gse;
 
-	const si_t m_si = {};
-	const bool m_is_traceable;
-
-	struct var_info_t {
-		Value value;
-		bool is_const;
-	};
 	typedef std::unordered_map< std::string, var_info_t > variables_t;
 	variables_t m_variables = {};
 	typedef std::unordered_map< std::string, Context* > ref_contexts_t;
 	ref_contexts_t m_ref_contexts = {};
-
 };
 
 }

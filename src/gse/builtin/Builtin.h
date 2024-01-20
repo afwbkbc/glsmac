@@ -2,7 +2,7 @@
 
 #include "gse/callable/Native.h"
 
-#include "gse/Context.h"
+#include "gse/ChildContext.h"
 
 namespace gse {
 namespace builtin {

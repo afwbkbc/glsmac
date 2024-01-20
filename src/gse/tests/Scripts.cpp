@@ -44,13 +44,13 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 				gse::parser::Parser* parser = nullptr;
 				const gse::runner::Runner* runner = nullptr;
 				const gse::program::Program* program = nullptr;
-				gse::Context* context = nullptr;
+				gse::GlobalContext* context = nullptr;
 
 				std::string last_error = "";
 				try {
 					const auto source = util::FS::ReadFile( script );
 					parser = gse.GetParser( script, source );
-					context = gse.CreateGlobalContext( source );
+					context = gse.CreateGlobalContext( script );
 					mocks::AddMocks( context, { script } );
 					program = parser->Parse();
 					runner = gse.GetRunner();

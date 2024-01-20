@@ -13,6 +13,7 @@ const exception_ec_t EC = {
 	"GSEOperationFailed",
 	"GSEInvalidDereference",
 	"GSEInvalidCall",
+	"GSELoaderError",
 };
 
 const Exception::backtrace_t Exception::GetBacktraceAndCleanup( const Context* const current_ctx ) {

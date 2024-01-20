@@ -18,4 +18,4 @@ CLASS( Runner, base::Base )
 }
 }
 
-#include "gse/Context.h"
+#include "gse/ChildContext.h"

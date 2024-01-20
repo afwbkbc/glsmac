@@ -152,3 +152,6 @@ testcatch( 'GSEInvalidCall', () => {
     const a = (a,b,c) => {};
     a(1);
 });
+testcatch( 'GSELoaderError', () => {
+    include( './non_existent_include' );
+});

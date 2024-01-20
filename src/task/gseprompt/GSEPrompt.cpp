@@ -16,6 +16,10 @@ GSEPrompt::GSEPrompt( const std::string& syntax )
 
 }
 
+GSEPrompt::~GSEPrompt() noexcept {
+	delete m_gse_context;
+}
+
 void GSEPrompt::Start() {
 	Log( "Starting GSE prompt (syntax: " + m_syntax + ")" );
 
@@ -69,11 +73,11 @@ void GSEPrompt::Iterate() {
 				}
 				m_input += buff;
 				if ( m_is_tty ) {
-					m_gse_context.AddSourceLine( buff );
+					m_gse_context->AddSourceLine( buff );
 					ProcessInput();
 				}
 			}
-			m_gse_context.AddSourceLines( util::String::SplitToLines( m_input ) );
+			m_gse_context->AddSourceLines( util::String::SplitToLines( m_input ) );
 			PrintPrompt();
 		}
 	}
@@ -114,14 +118,14 @@ void GSEPrompt::ProcessInput() {
 					1
 				}
 			};
-			context = m_gse_context.ForkContext( si, {}, {} );
+			context = m_gse_context->ForkContext( si, {}, {} );
 		}
 		else {
-			context = &m_gse_context;
+			context = m_gse_context;
 		}
 		const auto result = m_runner->Execute( context, program );
 		if ( m_is_tty ) {
-			context->JoinContext( &m_gse_context );
+			( (gse::ChildContext*)context )->JoinContext();
 		}
 		std::cout << result.Dump() << std::endl;
 	}

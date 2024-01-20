@@ -24,7 +24,7 @@ public:
 		T_RANGE,
 	};
 
-	static const std::string GetTypeString( const type_t type );
+	static const std::string& GetTypeString( const type_t type );
 	const std::string ToString() const;
 	const std::string Dump() const;
 	const Type* Deref() const;

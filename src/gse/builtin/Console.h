@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "gse/Context.h"
+#include "gse/ChildContext.h"
 
 #include "Builtin.h"
 
@@ -12,7 +12,7 @@ namespace builtin {
 class Console : public Builtin {
 public:
 	void AddToContext( gse::Context* ctx ) const override;
- 
+
 #ifdef DEBUG
 	void CaptureStart() const;
 	const std::string& CaptureStopGet() const;

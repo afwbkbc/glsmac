@@ -2,7 +2,7 @@
 
 #include "Tests.h"
 
-#include "gse/Context.h"
+#include "gse/ChildContext.h"
 
 #include "gse/type/Undefined.h"
 #include "gse/type/Int.h"
@@ -36,7 +36,8 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 
 			runner::Interpreter interpreter;
 
-			Context* context = gse.CreateGlobalContext( GetTestSource() );
+			GlobalContext* context = gse.CreateGlobalContext();
+			context->AddSourceLines( util::String::SplitToLines( GetTestSource() ) );
 			mocks::AddMocks( context, {} );
 
 			gse.LogCaptureStart();

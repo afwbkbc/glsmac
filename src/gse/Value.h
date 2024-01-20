@@ -24,6 +24,7 @@ public:
 	~Value();
 
 	const type::Type* Get() const;
+	const std::string& GetTypeString() const;
 	const std::string ToString() const;
 	const std::string Dump() const;
 

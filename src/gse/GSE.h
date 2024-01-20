@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <unordered_set>
 #include <map>
 #include <vector>
 
@@ -13,6 +14,8 @@
 #include "gse/builtin/Builtins.h"
 
 namespace gse {
+
+class GlobalContext;
 
 namespace parser {
 class Parser;
@@ -29,11 +32,12 @@ CLASS( GSE, base::Base )
 	parser::Parser* GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num = 1 ) const;
 	const runner::Runner* GetRunner() const;
 
-	Context* CreateGlobalContext( const std::string& source ) const;
+	GlobalContext* CreateGlobalContext( const std::string& source_path = "" );
 
 	void AddModule( const std::string& path, type::Callable* module );
 
 	void Run();
+	const Value GetInclude( Context* ctx, const si_t& si, const std::string& path );
 
 	void SetGlobal( const std::string& identifier, Value variable );
 	const Value& GetGlobal( const std::string& identifier );
@@ -45,11 +49,23 @@ CLASS( GSE, base::Base )
 
 private:
 
+	const std::unordered_set< std::string > m_supported_extensions = {
+		".gls.js",
+	};
+
 	std::unordered_map< std::string, type::Callable* > m_modules = {};
 	std::vector< std::string > m_modules_order = {};
 	std::map< std::string, Value > m_globals = {};
 
 	const builtin::Builtins m_builtins = {};
+
+	struct include_cache_t {
+		Value result;
+		// TODO: why can't we delete these two upon getting result?
+		const program::Program* program;
+		const runner::Runner* runner;
+	};
+	std::unordered_map< std::string, include_cache_t > m_include_cache = {};
 
 };
 

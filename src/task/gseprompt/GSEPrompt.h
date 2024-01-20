@@ -3,7 +3,7 @@
 #include "base/Task.h"
 
 #include "gse/GSE.h"
-#include "gse/Context.h"
+#include "gse/GlobalContext.h"
 #include "gse/runner/Runner.h"
 #include "gse/program/Program.h"
 
@@ -13,6 +13,7 @@ namespace gseprompt {
 CLASS( GSEPrompt, base::Task )
 
 	GSEPrompt( const std::string& syntax );
+	~GSEPrompt();
 
 	void Start() override;
 	void Stop() override;
@@ -26,11 +27,7 @@ private:
 	const bool m_is_tty;
 
 	gse::GSE m_gse;
-	gse::Context m_gse_context = {
-		nullptr,
-		{},
-		{}
-	};
+	gse::GlobalContext* m_gse_context = m_gse.CreateGlobalContext();
 	const gse::runner::Runner* m_runner;
 
 	fd_set fds;

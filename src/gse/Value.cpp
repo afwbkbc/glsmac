@@ -26,6 +26,10 @@ const type::Type* Value::Get() const {
 	return m_data.get();
 }
 
+const std::string& Value::GetTypeString() const {
+	return m_data.get()->GetTypeString( m_data.get()->type );
+}
+
 const std::string Value::ToString() const {
 	return m_data->ToString();
 }

@@ -1,5 +1,7 @@
 #include "Native.h"
 
+#include "gse/Exception.h"
+
 namespace gse {
 namespace callable {
 

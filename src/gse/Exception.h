@@ -18,6 +18,7 @@ struct exception_ec_t {
 	const std::string OPERATION_FAILED;
 	const std::string INVALID_DEREFERENCE;
 	const std::string INVALID_CALL;
+	const std::string LOADER_ERROR;
 };
 extern const exception_ec_t EC;
 
@@ -48,4 +49,4 @@ public:
 
 }
 
-#include "Context.h"
+#include "ChildContext.h"

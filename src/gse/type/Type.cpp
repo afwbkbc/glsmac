@@ -18,36 +18,50 @@
 namespace gse {
 namespace type {
 
-const std::string Type::GetTypeString( const type_t type ) {
+static const std::string s_t_undefined = "Undefined";
+static const std::string s_t_null = "Null";
+static const std::string s_t_bool = "Bool";
+static const std::string s_t_int = "Int";
+static const std::string s_t_float = "Float";
+static const std::string s_t_string = "String";
+static const std::string s_t_array = "Array";
+static const std::string s_t_object = "Object";
+static const std::string s_t_callable = "Callable";
+static const std::string s_t_arrayref = "Arrayref";
+static const std::string s_t_arrayrangeref = "Arrayrangeref";
+static const std::string s_t_objectref = "Objectref";
+static const std::string s_t_range = "Range";
+static const std::string s_t_unknown = "Unknown";
+const std::string& Type::GetTypeString( const type_t type ) {
 	switch ( type ) {
 		case T_UNDEFINED:
-			return "undefined";
+			return s_t_undefined;
 		case T_NULL:
-			return "null";
+			return s_t_null;
 		case T_BOOL:
-			return "bool";
+			return s_t_bool;
 		case T_INT:
-			return "int";
+			return s_t_int;
 		case T_FLOAT:
-			return "float";
+			return s_t_float;
 		case T_STRING:
-			return "string";
+			return s_t_string;
 		case T_ARRAY:
-			return "array";
+			return s_t_array;
 		case T_OBJECT:
-			return "object";
+			return s_t_object;
 		case T_CALLABLE:
-			return "callable";
+			return s_t_callable;
 		case T_ARRAYREF:
-			return "arrayref";
+			return s_t_arrayref;
 		case T_ARRAYRANGEREF:
-			return "arrayrangeref";
+			return s_t_arrayrangeref;
 		case T_OBJECTREF:
-			return "objectref";
+			return s_t_objectref;
 		case T_RANGE:
-			return "range";
+			return s_t_range;
 		default:
-			return "unknown";
+			return s_t_unknown;
 	}
 }
 
@@ -246,7 +260,7 @@ const Type* Type::Deref() const {
         case T_STRING: \
             return ( (String*)this )->value _op ( (String*)&other )->value; \
         default: \
-            THROW( "operator " #_op " not implemented for type " + std::to_string( type ) );
+            THROW( "operator " #_op " not implemented for type " + GetTypeString( type ) );
 #define DEFAULT_COMPARE_NE( _op ) \
     if ( type != other.type ) { \
         THROW( "can't compare type " + GetTypeString( type ) + " to type " + GetTypeString( other.type ) + " using operator " #_op ); \

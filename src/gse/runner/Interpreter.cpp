@@ -801,12 +801,12 @@ void Interpreter::ValidateRange( const Context* ctx, const si_t& si, const type:
 
 Interpreter::Function::Function(
 	const Interpreter* runner,
-	Context const* parent_context,
+	Context const* context,
 	const std::vector< std::string >& parameters,
 	const program::Program* const program
 )
 	: runner( runner )
-	, parent_context( parent_context )
+	, context( context )
 	, parameters( parameters )
 	, program( program ) {
 	// nothing
@@ -815,7 +815,6 @@ Interpreter::Function::Function(
 gse::Value Interpreter::Function::Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) {
 	auto* funcctx = ctx->ForkContext( call_si, true, parameters, arguments );
 	const auto result = runner->Execute( funcctx, program );
-	//funcctx->JoinContext( ctx );
 	DELETE( funcctx );
 	return result;
 }
