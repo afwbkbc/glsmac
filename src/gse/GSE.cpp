@@ -3,8 +3,7 @@
 #include "parser/JS.h"
 #include "runner/Interpreter.h"
 #include "util/FS.h"
-
-#include "builtin/Builtins.h"
+#include "util/String.h"
 
 #include "type/Undefined.h"
 
@@ -12,8 +11,6 @@ namespace gse {
 
 GSE::GSE() {
 
-	NEWV( builtins, builtin::Builtins );
-	AddModule( "_", builtins );
 }
 
 GSE::~GSE() {
@@ -36,6 +33,12 @@ parser::Parser* GSE::GetParser( const std::string& filename, const std::string& 
 const runner::Runner* GSE::GetRunner() const {
 	NEWV( runner, runner::Interpreter );
 	return runner;
+}
+
+Context* GSE::CreateGlobalContext( const std::string& source ) const {
+	NEWV( context, gse::Context, nullptr, util::String::SplitToLines( source ), {} );
+	m_builtins.AddToContext( context );
+	return context;
 }
 
 void GSE::AddModule( const std::string& path, type::Callable* module ) {

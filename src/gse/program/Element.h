@@ -26,6 +26,7 @@ public:
 		ET_OPERAND,
 		ET_OPERATOR,
 		ET_CONDITIONAL,
+		ET_INCLUDE,
 	};
 	Element( const si_t& si, const element_type_t element_type )
 		: m_si( si )

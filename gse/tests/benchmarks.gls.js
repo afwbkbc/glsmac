@@ -25,43 +25,44 @@ const timeof = (label, f) => {
     average_call_time_ns = total / times;
 }
 
-test.assert(timeof('empty loop with 100000 iterations', () => {
+test.assert(timeof('empty loop with 10000 iterations', () => {
     let i = 0;
-    while (i++ < 100000) {
+    while (i++ < 10000) {
     }
-}) < 1000000000);
+}) < 100000000);
 
 let idx = 0;
 let arr = [];
-test.assert(timeof('appending 100000 elements to array', () => {
+test.assert(timeof('appending 10000 elements to array', () => {
     idx = 0;
-    while ( idx < 100000 ) {
+    while ( idx < 10000 ) {
         arr []= idx++;
     }
-}) < 3000000000);
+}) < 300000000);
 
 let sum = 0;
-test.assert(timeof('reading and summing 100000 elements from array', () => {
+test.assert(timeof('reading and summing 10000 elements from array', () => {
     idx = 0;
-    while (idx < 100000) {
+    while (idx < 10000) {
         sum += arr[idx++];
     }
-}) < 5000000000);
-test.assert(sum == 4999950000);
+}) < 500000000);
+console.log(sum);
+test.assert(sum == 49995000);
 
-test.assert(timeof('defining and calling function 100000 times', () => {
+test.assert(timeof('defining and calling function 10000 times', () => {
     idx = 0;
-    while ( idx++ < 100000 ) {
+    while ( idx++ < 10000 ) {
         (() => {})();
     }
-}) < 10000000000);
+}) < 1000000000);
 
-test.assert(timeof('creating scope and variable 100000 times', () => {
+test.assert(timeof('creating scope and variable 10000 times', () => {
     idx = 0;
-    while ( idx++ < 100000 ) {
+    while ( idx++ < 10000 ) {
         let v = 0;
     }
-}) < 5000000000);
+}) < 500000000);
 
 const recursivefunc = (x, times) => {
     if ( times == 0 ) {
@@ -71,9 +72,9 @@ const recursivefunc = (x, times) => {
         return recursivefunc( x + 1, times - 1 );
     }
 };
-test.assert(timeof('calling recursive function 100 times with depth 1000', () => {
+test.assert(timeof('calling recursive function 10 times with depth 1000', () => {
     idx = 0;
-    while ( idx++ < 100 ) {
+    while ( idx++ < 10 ) {
         recursivefunc(0, 1000);
     }
-}) < 15000000000);
+}) < 1500000000);

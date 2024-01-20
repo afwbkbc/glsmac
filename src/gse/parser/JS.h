@@ -13,6 +13,7 @@
 #include "gse/Value.h"
 #include "gse/type/Bool.h"
 #include "gse/type/Null.h"
+#include "gse/type/Undefined.h"
 
 namespace gse {
 namespace parser {
@@ -88,6 +89,7 @@ private:
 		"true",
 		"false",
 		"null",
+		"undefined",
 	};
 
 	const std::unordered_map< std::string, Parser::Conditional::conditional_type_t > CONTROL_KEYWORDS = {
@@ -142,7 +144,11 @@ private:
 		{
 			"null",
 			VALUE( type::Null ),
-		}
+		},
+		{
+			"undefined",
+			VALUE( type::Undefined ),
+		},
 	};
 
 	const std::unordered_map< std::string, program::Operator::operator_type_t > OPERATOR_NAMES = {

@@ -34,6 +34,9 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 		? std::vector< std::string >{ c->GetGSETestsScript() }
 		: util::FS::ListDirectory( tests_path, true );
 	for ( const auto& script : scripts ) {
+		if ( script.substr( 0, tests_path.size() + 2 ) == tests_path + "/_" ) {
+			continue; // these should not be tested directly (i.e. includes)
+		}
 		task->AddTest(
 			"testing " + script,
 			GT( task, script ) {
@@ -47,7 +50,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 				try {
 					const auto source = util::FS::ReadFile( script );
 					parser = gse.GetParser( script, source );
-					NEW( context, gse::Context, nullptr, util::String::SplitToLines( source ), {} );
+					context = gse.CreateGlobalContext( source );
 					mocks::AddMocks( context, { script } );
 					program = parser->Parse();
 					runner = gse.GetRunner();

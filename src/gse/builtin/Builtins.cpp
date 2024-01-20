@@ -5,9 +5,9 @@
 namespace gse {
 namespace builtin {
 
-Value Builtins::Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) {
-
-	return VALUE( type::Null );
+void Builtins::AddToContext( gse::Context* ctx ) const {
+	m_include.AddToContext( ctx );
+	m_console.AddToContext( ctx );
 }
 
 }

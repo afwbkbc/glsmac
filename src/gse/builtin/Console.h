@@ -1,12 +1,26 @@
 #pragma once
 
-#include "gse/callable/Native.h"
+#include <string>
+
+#include "gse/Context.h"
+
+#include "Builtin.h"
 
 namespace gse {
 namespace builtin {
 
-class Console : public callable::Native {
-	Value Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) override;
+class Console : public Builtin {
+public:
+	void AddToContext( gse::Context* ctx ) const override;
+ 
+#ifdef DEBUG
+	void CaptureStart() const;
+	const std::string& CaptureStopGet() const;
+#endif
+
+private:
+	const std::string ArgumentsToString( const std::vector< Value >& arguments, bool use_dump ) const;
+
 };
 
 }
