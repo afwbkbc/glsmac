@@ -5,12 +5,10 @@
 #include "gse/ChildContext.h"
 
 namespace gse {
-namespace builtin {
 
-class Builtin {
+class Bindings {
 public:
 	virtual void AddToContext( gse::Context* ctx ) const = 0;
 };
 
-}
 }

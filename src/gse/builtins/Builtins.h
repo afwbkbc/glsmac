@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Builtin.h"
+#include "gse/Bindings.h"
 
 #include "gse/ChildContext.h"
 
@@ -8,9 +8,9 @@
 #include "Include.h"
 
 namespace gse {
-namespace builtin {
+namespace builtins {
 
-class Builtins : public Builtin {
+class Builtins : public Bindings {
 public:
 	void AddToContext( gse::Context* ctx ) const override;
 

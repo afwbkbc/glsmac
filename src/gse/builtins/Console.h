@@ -4,12 +4,12 @@
 
 #include "gse/ChildContext.h"
 
-#include "Builtin.h"
+#include "gse/Bindings.h"
 
 namespace gse {
-namespace builtin {
+namespace builtins {
 
-class Console : public Builtin {
+class Console : public Bindings {
 public:
 	void AddToContext( gse::Context* ctx ) const override;
 

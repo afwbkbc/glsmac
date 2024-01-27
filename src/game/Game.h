@@ -15,6 +15,10 @@
 #include "Slot.h"
 #include "Event.h"
 
+#include "gse/GSE.h"
+#include "gse/GlobalContext.h"
+#include "Bindings.h"
+
 namespace game {
 
 class State;
@@ -242,6 +246,10 @@ protected:
 	void DestroyResponse( const MT_Response& response ) override;
 
 private:
+	friend class Bindings;
+	void Message( const std::string& text );
+
+private:
 
 	enum game_state_t {
 		GS_NONE,
@@ -273,6 +281,18 @@ private:
 	map::Map* m_map = nullptr;
 	map::Map* m_old_map = nullptr; // to restore state, for example if loading of another map failed
 	map_editor::MapEditor* m_map_editor = nullptr;
+
+	const std::string m_entry_script = util::FS::GeneratePath(
+		{
+			"gse", // directory is expected to be in working dir
+			"default", // only 'default' mod for now
+			"main" // script name (extension is applied automatically)
+		}
+	);
+
+	gse::GSE* m_gse = nullptr;
+	gse::GlobalContext* m_gse_context = nullptr;
+	Bindings* m_bindings = nullptr;
 
 };
 

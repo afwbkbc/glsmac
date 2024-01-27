@@ -31,6 +31,17 @@ const std::string FS::GetUpDirString() {
 	return "..";
 }
 
+const std::string FS::GeneratePath( const std::vector< std::string >& parts ) {
+	std::string result = "";
+	for ( const auto& part : parts ) {
+		if ( !result.empty() ) {
+			result += PATH_SEPARATOR;
+		}
+		result += part;
+	}
+	return result;
+}
+
 #ifdef _WIN32
 
 const bool FS::IsWindowsDriveLabel( const std::string& directory ) {

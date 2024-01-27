@@ -1,9 +1,7 @@
 #include "Builtins.h"
 
-#include "gse/type/Null.h"
-
 namespace gse {
-namespace builtin {
+namespace builtins {
 
 void Builtins::AddToContext( gse::Context* ctx ) const {
 	m_include.AddToContext( ctx );

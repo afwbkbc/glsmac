@@ -963,15 +963,15 @@ const bool JS::IsObject( const source_elements_t::const_iterator& begin, const s
 #ifdef DEBUG
 
 void JS::LogElement( const std::string& prefix, const SourceElement* element ) const {
-	Log( prefix + element->Dump() );
+	//Log( prefix + element->Dump() );
 }
 
 void JS::LogElements( const std::string& label, const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) const {
-	Log( label + "(" );
+	/*Log( label + "(" );
 	for ( auto it = begin ; it != end ; it++ ) {
 		LogElement( "    ", *it );
 	}
-	Log( ")" );
+	Log( ")" );*/
 }
 
 #endif

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Builtin.h"
+#include "gse/Bindings.h"
 
 namespace gse {
-namespace builtin {
+namespace builtins {
 
-class Include : public Builtin {
+class Include : public Bindings {
 public:
 	void AddToContext( gse::Context* ctx ) const override;
 };

@@ -1725,10 +1725,11 @@ void Game::CancelRequests() {
 void Game::CancelGame() {
 	ExitGame(
 		[ this ]() -> void {
-			ASSERT( m_state, "state not set" );
-			auto* connection = m_state->GetConnection();
-			if ( connection && connection->IsConnected() ) {
-				connection->Disconnect();
+			if ( m_state ) {
+				auto* connection = m_state->GetConnection();
+				if ( connection && connection->IsConnected() ) {
+					connection->Disconnect();
+				}
 			}
 			if ( m_on_cancel ) {
 				m_on_cancel();

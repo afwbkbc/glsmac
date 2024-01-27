@@ -6,7 +6,7 @@
 #include "util/FS.h"
 
 namespace gse {
-namespace builtin {
+namespace builtins {
 
 void Include::AddToContext( gse::Context* ctx ) const {
 	ctx->CreateVariable( "include", NATIVE_CALL() {

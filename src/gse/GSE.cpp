@@ -7,17 +7,19 @@
 #include "type/Undefined.h"
 
 #include "util/FS.h"
-#include "util/String.h"
 
 namespace gse {
 
 GSE::GSE() {
-
+	m_bindings.push_back( &m_builtins );
 }
 
 GSE::~GSE() {
 	for ( auto& it : m_modules ) {
 		DELETE( it.second );
+	}
+	for ( auto& it : m_include_cache ) {
+		it.second.Cleanup();
 	}
 }
 
@@ -37,9 +39,15 @@ const runner::Runner* GSE::GetRunner() const {
 	return runner;
 }
 
+void GSE::AddBindings( Bindings* bindings ) {
+	m_bindings.push_back( bindings );
+}
+
 GlobalContext* GSE::CreateGlobalContext( const std::string& source_path ) {
 	NEWV( context, gse::GlobalContext, this, source_path );
-	m_builtins.AddToContext( context );
+	for ( const auto& it : m_bindings ) {
+		it->AddToContext( context );
+	}
 	return context;
 }
 
@@ -107,13 +115,12 @@ const Value GSE::GetInclude( Context* ctx, const si_t& si, const std::string& pa
 		m_include_cache.insert_or_assign( path, cache );
 		return cache.result;
 	}
+	catch ( gse::Exception& e ) {
+		cache.Cleanup();
+		throw e;
+	}
 	catch ( std::runtime_error& e ) {
-		if ( cache.program ) {
-			DELETE( cache.program );
-		}
-		if ( cache.runner ) {
-			DELETE( cache.runner );
-		}
+		cache.Cleanup();
 		throw e;
 	}
 }
@@ -133,6 +140,19 @@ const Value& GSE::GetGlobal( const std::string& identifier ) {
 	}
 	else {
 		return s_undefined_value;
+	}
+}
+
+void GSE::include_cache_t::Cleanup() {
+	{
+		if ( program ) {
+			DELETE( program );
+			program = nullptr;
+		}
+		if ( runner ) {
+			DELETE( runner );
+			runner = nullptr;
+		}
 	}
 }
 

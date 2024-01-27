@@ -13,5 +13,6 @@ SET( SRC ${SRC}
 	${PWD}/Slot.cpp
 	${PWD}/Slots.cpp
 	${PWD}/Event.cpp
+	${PWD}/Bindings.cpp
 
 	PARENT_SCOPE )

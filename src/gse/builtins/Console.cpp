@@ -8,7 +8,7 @@
 #include "logger/Stdout.h"
 
 namespace gse {
-namespace builtin {
+namespace builtins {
 
 void Console::AddToContext( gse::Context* ctx ) const {
 

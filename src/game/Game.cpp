@@ -125,6 +125,19 @@ void Game::Start() {
 void Game::Stop() {
 	Log( "Stopping thread" );
 
+	if ( m_gse_context ) {
+		DELETE( m_gse_context );
+		m_gse_context = nullptr;
+	}
+	if ( m_bindings ) {
+		DELETE( m_bindings );
+		m_bindings = nullptr;
+	}
+	if ( m_gse ) {
+		DELETE( m_gse );
+		m_gse = nullptr;
+	}
+
 	DELETE( m_map_editor );
 	m_map_editor = nullptr;
 
@@ -193,6 +206,35 @@ void Game::Iterate() {
 				ec = map::Map::EC_ABORTED;
 			}
 
+			const auto& f_init_failed = [ this ]( const std::string& error_text ) {
+				// need to delete these here because they weren't passed to main thread
+				if ( m_map->m_textures.terrain ) {
+					DELETE( m_map->m_textures.terrain );
+					m_map->m_textures.terrain = nullptr;
+				}
+				if ( m_map->m_meshes.terrain ) {
+					DELETE( m_map->m_meshes.terrain );
+					m_map->m_meshes.terrain = nullptr;
+				}
+				if ( m_map->m_meshes.terrain_data ) {
+					DELETE( m_map->m_meshes.terrain_data );
+					m_map->m_meshes.terrain_data = nullptr;
+				}
+
+				ResetGame();
+				m_initialization_error = error_text;
+
+				if ( m_old_map ) {
+					Log( "Restoring old map state" );
+					DELETE( m_map );
+					m_map = m_old_map; // restore old state // TODO: test
+				}
+
+				if ( m_connection ) {
+					m_connection->Disconnect( "Failed to initialize game" );
+				}
+			};
+
 			if ( !ec ) {
 
 #ifdef DEBUG
@@ -240,38 +282,28 @@ void Game::Iterate() {
 					m_connection->UpdateSlot( m_slot_num, m_slot, true );
 				}
 
-				// run main loop
-				m_game_state = GS_RUNNING;
+				// init gse
+				ASSERT( !m_gse, "gse already set" );
+				NEW( m_gse, gse::GSE );
+				NEW( m_bindings, Bindings, this );
+				m_gse->AddBindings( m_bindings );
+				m_gse_context = m_gse->CreateGlobalContext();
+
+				// run main gse entrypoint
+				try {
+					m_gse->GetInclude( m_gse_context, gse::si_t{ "" }, m_entry_script );
+					// start main loop
+					m_game_state = GS_RUNNING;
+
+				}
+				catch ( gse::Exception& e ) {
+					Log( (std::string)"Initialization failed: " + e.ToStringAndCleanup() );
+					f_init_failed( e.what() );
+				}
+
 			}
 			else {
-
-				// need to delete these here because they weren't passed to main thread
-				if ( m_map->m_textures.terrain ) {
-					DELETE( m_map->m_textures.terrain );
-					m_map->m_textures.terrain = nullptr;
-				}
-				if ( m_map->m_meshes.terrain ) {
-					DELETE( m_map->m_meshes.terrain );
-					m_map->m_meshes.terrain = nullptr;
-				}
-				if ( m_map->m_meshes.terrain_data ) {
-					DELETE( m_map->m_meshes.terrain_data );
-					m_map->m_meshes.terrain_data = nullptr;
-				}
-
-				ResetGame();
-				m_initialization_error = map::Map::GetErrorString( ec );
-
-				if ( m_old_map ) {
-					Log( "Restoring old map state" );
-					DELETE( m_map );
-					m_map = m_old_map; // restore old state // TODO: test
-				}
-
-				if ( m_connection ) {
-					m_connection->Disconnect( "Failed to initialize game" );
-				}
-
+				f_init_failed( map::Map::GetErrorString( ec ) );
 			}
 		}
 	}
@@ -706,9 +738,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 				m_connection->Message( *request.data.chat.message );
 			}
 			else {
-				auto e = Event( Event::ET_GLOBAL_MESSAGE );
-				NEW( e.data.global_message.message, std::string, "<" + m_player->GetPlayerName() + "> " + *request.data.chat.message );
-				AddEvent( e );
+				Message( "<" + m_player->GetPlayerName() + "> " + *request.data.chat.message );
 			}
 
 			response.result = R_SUCCESS;
@@ -808,6 +838,12 @@ void Game::DestroyResponse( const MT_Response& response ) {
 			}
 		}
 	}
+}
+
+void Game::Message( const std::string& text ) {
+	auto e = Event( Event::ET_GLOBAL_MESSAGE );
+	NEW( e.data.global_message.message, std::string, text );
+	AddEvent( e );
 }
 
 void Game::AddEvent( const Event& event ) {
@@ -1051,6 +1087,19 @@ void Game::ResetGame() {
 
 	ASSERT( m_pending_events, "pending events not set" );
 	m_pending_events->clear();
+
+	if ( m_gse_context ) {
+		DELETE( m_gse_context );
+		m_gse_context = nullptr;
+	}
+	if ( m_bindings ) {
+		DELETE( m_bindings );
+		m_bindings = nullptr;
+	}
+	if ( m_gse ) {
+		DELETE( m_gse );
+		m_gse = nullptr;
+	}
 
 	if ( m_state ) {
 		// ui thread will reset state as needed

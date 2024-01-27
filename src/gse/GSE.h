@@ -11,7 +11,8 @@
 #include "gse/type/Callable.h"
 #include "Exception.h"
 #include "program/Program.h"
-#include "gse/builtin/Builtins.h"
+#include "builtins/Builtins.h"
+#include "Bindings.h"
 
 namespace gse {
 
@@ -31,6 +32,8 @@ CLASS( GSE, base::Base )
 
 	parser::Parser* GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num = 1 ) const;
 	const runner::Runner* GetRunner() const;
+
+	void AddBindings( Bindings* bindings );
 
 	GlobalContext* CreateGlobalContext( const std::string& source_path = "" );
 
@@ -57,13 +60,15 @@ private:
 	std::vector< std::string > m_modules_order = {};
 	std::map< std::string, Value > m_globals = {};
 
-	const builtin::Builtins m_builtins = {};
+	std::vector< Bindings* > m_bindings = {};
+	builtins::Builtins m_builtins = {};
 
 	struct include_cache_t {
 		Value result;
 		// TODO: why can't we delete these two upon getting result?
 		const program::Program* program;
 		const runner::Runner* runner;
+		void Cleanup();
 	};
 	std::unordered_map< std::string, include_cache_t > m_include_cache = {};
 

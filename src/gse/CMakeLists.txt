@@ -2,7 +2,7 @@ SUBDIR( type )
 SUBDIR( callable )
 SUBDIR( parser )
 SUBDIR( runner )
-SUBDIR( builtin )
+SUBDIR( builtins )
 
 IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
 	SUBDIR( tests )
