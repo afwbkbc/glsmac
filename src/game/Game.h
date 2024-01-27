@@ -238,6 +238,7 @@ CLASS( Game, MTModule )
 	util::Random* GetRandom() const;
 	map::Map* GetMap() const;
 	State* GetState() const;
+	const Player* GetPlayer() const;
 
 protected:
 
@@ -248,6 +249,7 @@ protected:
 private:
 	friend class Bindings;
 	void Message( const std::string& text );
+	void Quit();
 
 private:
 

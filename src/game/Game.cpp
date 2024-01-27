@@ -325,6 +325,16 @@ State* Game::GetState() const {
 	return m_state;
 }
 
+const Player* Game::GetPlayer() const {
+	ASSERT( m_state, "state not set" );
+	if ( m_connection ) {
+		return m_connection->GetPlayer();
+	}
+	else {
+		return m_state->m_slots.GetSlot( 0 ).GetPlayer();
+	}
+}
+
 const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE ) {
 	MT_Response response = {};
 	response.op = request.op;
@@ -846,6 +856,12 @@ void Game::Message( const std::string& text ) {
 	AddEvent( e );
 }
 
+void Game::Quit() {
+	auto e = Event( Event::ET_QUIT );
+	NEW( e.data.quit.reason, std::string, "Lost connection to server" );
+	AddEvent( e );
+}
+
 void Game::AddEvent( const Event& event ) {
 	Log( "Sending event (type=" + std::to_string( event.type ) + ")" );
 	m_pending_events->push_back( event );
@@ -917,9 +933,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 						m_initialization_error = "Lost connection to server";
 					}
 					else {
-						auto e = Event( Event::ET_QUIT );
-						NEW( e.data.quit.reason, std::string, "Lost connection to server" );
-						AddEvent( e );
+						Quit();
 					}
 				};
 				connection->m_on_error = [ this, connection ]( const std::string& reason ) -> void {

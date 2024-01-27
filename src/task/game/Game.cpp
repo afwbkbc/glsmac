@@ -754,11 +754,16 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 		case ::game::Event::ET_QUIT: {
 			ExitGame(
 				[ this, event ]() -> void {
-					ReturnToMainMenu(
-						event.data.quit.reason
-							? *event.data.quit.reason
-							: ""
-					);
+					if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
+						g_engine->ShutDown();
+					}
+					else {
+						ReturnToMainMenu(
+							event.data.quit.reason
+								? *event.data.quit.reason
+								: ""
+						);
+					}
 				}
 			);
 			break;
