@@ -120,6 +120,8 @@ void Game::Iterate() {
 		if ( response.result != ::game::R_NONE ) {
 			m_mt_ids.init = 0;
 			if ( response.result == ::game::R_SUCCESS ) {
+				// game thread will manage state from now on
+				m_state = nullptr;
 				// get map data to display it
 				m_mt_ids.get_map_data = game->MT_GetMapData();
 			}
@@ -680,6 +682,7 @@ void Game::LoadMap( const std::string& path ) {
 			return false;
 		}
 	);
+	ASSERT( m_state, "state not set" );
 	m_state->m_settings.global.map.type = ::game::MapSettings::MT_MAPFILE;
 	m_state->m_settings.global.map.filename = path;
 	m_map_data.filename = util::FS::GetBaseName( path );
@@ -1722,6 +1725,7 @@ void Game::CancelRequests() {
 void Game::CancelGame() {
 	ExitGame(
 		[ this ]() -> void {
+			ASSERT( m_state, "state not set" );
 			auto* connection = m_state->GetConnection();
 			if ( connection && connection->IsConnected() ) {
 				connection->Disconnect();
