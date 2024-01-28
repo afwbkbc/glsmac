@@ -14,6 +14,7 @@
 #include "types/mesh/Data.h"
 #include "Slot.h"
 #include "Event.h"
+#include "Turn.h"
 
 #include "gse/GSE.h"
 #include "gse/GlobalContext.h"

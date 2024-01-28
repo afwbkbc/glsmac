@@ -10,7 +10,7 @@
 namespace gse {
 namespace builtins {
 
-void Console::AddToContext( gse::Context* ctx ) const {
+void Console::AddToContext( gse::Context* ctx ) {
 
 	type::Object::properties_t properties = {
 		{

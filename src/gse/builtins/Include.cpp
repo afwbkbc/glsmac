@@ -8,7 +8,7 @@
 namespace gse {
 namespace builtins {
 
-void Include::AddToContext( gse::Context* ctx ) const {
+void Include::AddToContext( gse::Context* ctx ) {
 	ctx->CreateVariable( "include", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GETVALUE( path, 0, String );

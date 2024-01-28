@@ -17,7 +17,7 @@ Bindings::Bindings( Game* game )
 	: m_game( game ) {
 }
 
-void Bindings::AddToContext( gse::Context* ctx ) const {
+void Bindings::AddToContext( gse::Context* ctx ) {
 	type::Object::properties_t methods = {
 		{
 			"message",
@@ -37,11 +37,25 @@ void Bindings::AddToContext( gse::Context* ctx ) const {
 			})
 		},
 		{
-			"player",
-			GetPlayer( m_game->GetPlayer() )
-		}
+			"get_player",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				return GetPlayer( m_game->GetPlayer() );
+			})
+		},
+		{
+			"on_turn",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETPTR( cb, 0 );
+				N_CHECKTYPE( cb, 0, Callable );
+				SetCallback( CS_ONTURN, (type::Callable*)cb, ctx, call_si );
+				//((type::Callable*)cb)->Run( ctx, {}, { VALUE( type::String, "TEST" ) } );
+				return VALUE( type::Undefined );
+			})
+		},
 	};
-	ctx->CreateVariable( "game", VALUE( type::Object, methods ), nullptr );
+	ctx->CreateConst( "game", VALUE( type::Object, methods ), nullptr );
 }
 
 const Value Bindings::GetPlayer( const Player* player ) const {
@@ -80,9 +94,25 @@ const gse::Value Bindings::GetDifficulty( const rules::DifficultyLevel* difficul
 		},
 		{
 			"value", VALUE( type::Int, difficulty->m_difficulty ),
-		}
+		},
 	};
 	return VALUE( type::Object, properties );
+}
+
+const gse::Value Bindings::GetTurn( const Turn* turn ) const {
+	const type::Object::properties_t properties = {
+		{
+			"year", VALUE( type::Int, turn->GetYear() ),
+		},
+	};
+	return VALUE( type::Object, properties );
+}
+
+void Bindings::SetCallback( const callback_slot_t slot, const gse::type::Callable* callback, const gse::Context* context, const si_t& si ) {
+	if ( m_callbacks.find( slot ) != m_callbacks.end() ) {
+		throw gse::Exception( EC.GAME_API_ERROR, "Callback slot already in use", context, si );
+	}
+	m_callbacks.insert_or_assign( slot, callback );
 }
 
 }

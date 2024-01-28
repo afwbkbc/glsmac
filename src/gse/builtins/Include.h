@@ -7,7 +7,7 @@ namespace builtins {
 
 class Include : public Bindings {
 public:
-	void AddToContext( gse::Context* ctx ) const override;
+	void AddToContext( gse::Context* ctx ) override;
 };
 
 }

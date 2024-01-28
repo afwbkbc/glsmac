@@ -1,5 +1,12 @@
-game.message('Hello, world!');
+game.on_turn((turn) => {
+    console.log('TURN');
+    console.log(turn);
+    game.message('Hello, world!');
+});
 
-console.log(game.player);
+let player = game.get_player();
+console.log('PLAYER');
+console.log(player);
+console.dump(player);
 
-game.exit();
+//game.exit();

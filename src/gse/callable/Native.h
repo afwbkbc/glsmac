@@ -16,12 +16,17 @@ namespace callable {
 #define N_GET( _var, _index ) \
     ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
     const auto& _var = arguments.at( _index );
+#define N_GETPTR( _var, _index ) \
+    ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
+    const auto* _var = arguments.at( _index ).Get();
+#define N_CHECKTYPE( _var, _index, _type ) \
+    if ( _var->type != gse::type::_type::GetType() ) { \
+        throw gse::Exception( EC.INVALID_CALL, "Argument " + std::to_string( _index ) + " is expected to be " + #_type + ", found: " + _var->GetTypeString( _var->type ), ctx, call_si ); \
+    }
 #define N_GETVALUE( _var, _index, _type ) \
     ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
     arg = arguments.at( _index ).Get(); \
-    if ( arg->type != gse::type::_type::GetType() ) { \
-        throw gse::Exception( EC.INVALID_CALL, "Argument " + std::to_string( _index ) + " is expected to be " + #_type + ", found: " + arg->GetTypeString( arg->type ), ctx, call_si );\
-    } \
+    N_CHECKTYPE( arg, _index, _type ); \
     const auto& _var = ((gse::type::_type*)arg)->value;
 
 class Native : public type::Callable {

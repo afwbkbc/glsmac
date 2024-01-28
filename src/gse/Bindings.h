@@ -8,7 +8,7 @@ namespace gse {
 
 class Bindings {
 public:
-	virtual void AddToContext( gse::Context* ctx ) const = 0;
+	virtual void AddToContext( gse::Context* ctx ) = 0;
 };
 
 }

@@ -10,6 +10,7 @@ SET( SRC ${SRC}
 	${PWD}/Settings.cpp
 	${PWD}/Account.cpp
 	${PWD}/Player.cpp
+	${PWD}/Turn.cpp
 	${PWD}/Slot.cpp
 	${PWD}/Slots.cpp
 	${PWD}/Event.cpp

@@ -12,7 +12,7 @@ namespace builtins {
 
 class Builtins : public Bindings {
 public:
-	void AddToContext( gse::Context* ctx ) const override;
+	void AddToContext( gse::Context* ctx ) override;
 
 #ifdef DEBUG
 	void LogCaptureStart() const { m_console.CaptureStart(); }
@@ -20,8 +20,8 @@ public:
 #endif
 
 private:
-	const Include m_include = {};
-	const Console m_console = {};
+	Include m_include = {};
+	Console m_console = {};
 
 };
 
