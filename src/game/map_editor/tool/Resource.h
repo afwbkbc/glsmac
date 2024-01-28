@@ -2,7 +2,7 @@
 
 #include "Tool.h"
 
-#include "game/map/Tile.h"
+#include "game/world/Tile.h"
 
 namespace game {
 namespace map_editor {
@@ -12,7 +12,7 @@ CLASS( Resource, Tool )
 
 	Resource( Game* game );
 
-	const MapEditor::tiles_t Draw( map::Tile* tile, const MapEditor::draw_mode_t mode ) override;
+	const MapEditor::tiles_t Draw( world::Tile* tile, const MapEditor::draw_mode_t mode ) override;
 
 };
 

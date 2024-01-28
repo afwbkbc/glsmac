@@ -1,7 +1,7 @@
-#include "game/map/Tile.h"
+#include "game/world/Tile.h"
 
 namespace util {
 
-template void Random::Shuffle< game::map::Tile* >( std::vector< game::map::Tile* >& vector );
+template void Random::Shuffle< game::world::Tile* >( std::vector< game::world::Tile* >& vector );
 
 }

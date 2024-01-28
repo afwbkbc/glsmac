@@ -5,8 +5,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "game/map/Map.h"
-#include "game/map/TileState.h"
+#include "game/world/World.h"
+#include "game/world/TileState.h"
 #include "types/Vec3.h"
 #include "types/mesh/Render.h"
 
@@ -17,7 +17,7 @@ struct tile_data_t {
 	bool is_set = false;
 	Vec2< size_t > tile_position = {};
 	Vec3 coords = {};
-	::game::map::TileState::tile_vertices_t selection_coords = {};
+	::game::world::TileState::tile_vertices_t selection_coords = {};
 	std::vector< types::mesh::Render* > preview_meshes = {};
 	std::vector< std::string > preview_lines = {};
 	std::vector< std::string > sprites = {};

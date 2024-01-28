@@ -5,7 +5,7 @@
 
 #include "base/MTModule.h"
 
-#include "map/Map.h"
+#include "game/world/World.h"
 #include "map_editor/MapEditor.h"
 
 #include "util/Random.h"
@@ -139,7 +139,7 @@ struct response_map_data_t {
 	types::mesh::Data* terrain_data_mesh;
 	std::string* path;
 	struct {
-		std::unordered_map< std::string, map::Map::sprite_actor_t >* actors;
+		std::unordered_map< std::string, world::World::sprite_actor_t >* actors;
 		std::unordered_map< size_t, std::pair< std::string, Vec3 > >* instances;
 	} sprites;
 	~response_map_data_t() {
@@ -170,7 +170,7 @@ struct MT_Response {
 			size_t tile_y;
 			vec2_t coords;
 			struct {
-				map::Tile::elevation_t center;
+				world::Tile::elevation_t center;
 			} elevation;
 			vertices_t selection_coords;
 			data_tile_meshes_t* preview_meshes;
@@ -183,7 +183,7 @@ struct MT_Response {
 		} save_map;
 		struct {
 			struct {
-				std::unordered_map< std::string, map::Map::sprite_actor_t >* actors_to_add;
+				std::unordered_map< std::string, world::World::sprite_actor_t >* actors_to_add;
 				std::unordered_map< size_t, std::string >* instances_to_remove;
 				std::unordered_map< size_t, std::pair< std::string, Vec3 > >* instances_to_add;
 			} sprites;
@@ -237,7 +237,7 @@ CLASS( Game, MTModule )
 	void Iterate() override;
 
 	util::Random* GetRandom() const;
-	map::Map* GetMap() const;
+	world::World* GetWorld() const;
 	State* GetState() const;
 	const Player* GetPlayer() const;
 
@@ -281,8 +281,8 @@ private:
 	State* m_state = nullptr;
 	connection::Connection* m_connection = nullptr;
 
-	map::Map* m_map = nullptr;
-	map::Map* m_old_map = nullptr; // to restore state, for example if loading of another map failed
+	world::World* m_world = nullptr;
+	world::World* m_old_world = nullptr; // to restore state, for example if loading of another map failed
 	map_editor::MapEditor* m_map_editor = nullptr;
 
 	const std::string m_entry_script = util::FS::GeneratePath(

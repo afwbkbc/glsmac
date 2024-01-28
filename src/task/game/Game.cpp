@@ -405,7 +405,7 @@ const std::string& Game::GetMapLastDirectory() const {
 	return m_map_data.last_directory;
 }
 
-scene::actor::Instanced* Game::GetTerrainSpriteActor( const std::string& name, const ::game::map::Consts::pcx_texture_coordinates_t& tex_coords, const float z_index ) {
+scene::actor::Instanced* Game::GetTerrainSpriteActor( const std::string& name, const ::game::world::Consts::pcx_texture_coordinates_t& tex_coords, const float z_index ) {
 
 	const auto key = name + " " + tex_coords.ToString();
 
@@ -419,8 +419,8 @@ scene::actor::Instanced* Game::GetTerrainSpriteActor( const std::string& name, c
 			scene::actor::Sprite,
 			name,
 			{
-				::game::map::s_consts.tile.scale.x,
-				::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
+				::game::world::s_consts.tile.scale.x,
+				::game::world::s_consts.tile.scale.y * ::game::world::s_consts.sprite.y_scale
 			},
 			m_textures.source.ter1_pcx,
 			{
@@ -429,8 +429,8 @@ scene::actor::Instanced* Game::GetTerrainSpriteActor( const std::string& name, c
 					(float)1.0f / m_textures.source.ter1_pcx->m_height * ( tex_coords.y + 1 )
 				},
 				{
-					(float)1.0f / m_textures.source.ter1_pcx->m_width * ( tex_coords.x + ::game::map::s_consts.tc.ter1_pcx.dimensions.x - 4 ),
-					(float)1.0f / m_textures.source.ter1_pcx->m_height * ( tex_coords.y + ::game::map::s_consts.tc.ter1_pcx.dimensions.y - 4 )
+					(float)1.0f / m_textures.source.ter1_pcx->m_width * ( tex_coords.x + ::game::world::s_consts.tc.ter1_pcx.dimensions.x - 4 ),
+					(float)1.0f / m_textures.source.ter1_pcx->m_height * ( tex_coords.y + ::game::world::s_consts.tc.ter1_pcx.dimensions.y - 4 )
 				}
 			}
 		);
@@ -546,7 +546,7 @@ void Game::UpdateCameraPosition() {
 	m_camera->SetPosition(
 		{
 			( 0.5f + m_camera_position.x ) / m_viewport.window_aspect_ratio,
-			( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + ::game::map::s_consts.tile.scale.z * m_camera_position.z / 1.414f, // TODO: why 1.414?
+			( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + ::game::world::s_consts.tile.scale.z * m_camera_position.z / 1.414f, // TODO: why 1.414?
 			( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + m_camera_position.z
 		}
 	);
@@ -606,7 +606,7 @@ void Game::UpdateMapInstances() {
 	// needed for horizontal scrolling
 	std::vector< Vec3 > instances;
 
-	const float mhw = ::game::map::s_consts.tile.scale.x * m_map_data.width / 2;
+	const float mhw = ::game::world::s_consts.tile.scale.x * m_map_data.width / 2;
 
 	uint8_t instances_before_after = floor(
 		m_viewport.aspect_ratio
@@ -782,23 +782,23 @@ void Game::UpdateMapData( const types::Vec2< size_t >& map_size ) {
 	m_map_data.width = map_size.x;
 	m_map_data.height = map_size.y;
 	m_map_data.range.min = {
-		-(float)( m_map_data.width - 1 ) * ::game::map::s_consts.tile.radius.x / 2,
-		-(float)( m_map_data.height - 1 ) * ::game::map::s_consts.tile.radius.y / 2,
+		-(float)( m_map_data.width - 1 ) * ::game::world::s_consts.tile.radius.x / 2,
+		-(float)( m_map_data.height - 1 ) * ::game::world::s_consts.tile.radius.y / 2,
 	};
 	m_map_data.range.max = {
-		(float)( m_map_data.width - 1 ) * ::game::map::s_consts.tile.radius.x / 2,
-		(float)( m_map_data.height - 1 ) * ::game::map::s_consts.tile.radius.y / 2,
+		(float)( m_map_data.width - 1 ) * ::game::world::s_consts.tile.radius.x / 2,
+		(float)( m_map_data.height - 1 ) * ::game::world::s_consts.tile.radius.y / 2,
 	};
 	m_map_data.range.percent_to_absolute.x.SetRange(
 		{
-			{ 0.0f,                                                         1.0f },
-			{ m_map_data.range.min.x - ::game::map::s_consts.tile.radius.x, m_map_data.range.max.x + ::game::map::s_consts.tile.radius.x }
+			{ 0.0f,                                                           1.0f },
+			{ m_map_data.range.min.x - ::game::world::s_consts.tile.radius.x, m_map_data.range.max.x + ::game::world::s_consts.tile.radius.x }
 		}
 	);
 	m_map_data.range.percent_to_absolute.y.SetRange(
 		{
-			{ 0.0f,                                                         1.0f },
-			{ m_map_data.range.min.y - ::game::map::s_consts.tile.radius.y, m_map_data.range.max.y + ::game::map::s_consts.tile.radius.y }
+			{ 0.0f,                                                           1.0f },
+			{ m_map_data.range.min.y - ::game::world::s_consts.tile.radius.y, m_map_data.range.max.y + ::game::world::s_consts.tile.radius.y }
 		}
 	);
 }
@@ -807,7 +807,7 @@ void Game::Initialize(
 	types::Texture* terrain_texture,
 	types::mesh::Render* terrain_mesh,
 	types::mesh::Data* terrain_data_mesh,
-	const std::unordered_map< std::string, ::game::map::Map::sprite_actor_t >& sprite_actors,
+	const std::unordered_map< std::string, ::game::world::World::sprite_actor_t >& sprite_actors,
 	const std::unordered_map< size_t, std::pair< std::string, Vec3 > >& sprite_instances
 ) {
 	ASSERT( !m_is_initialized, "already initialized" );
@@ -876,8 +876,8 @@ void Game::Initialize(
 	ASSERT( !m_actors.terrain, "terrain actor already set" );
 	NEWV( terrain_actor, scene::actor::Mesh, "MapTerrain", terrain_mesh );
 	terrain_actor->SetTexture( m_textures.terrain );
-	terrain_actor->SetPosition( ::game::map::s_consts.map_position );
-	terrain_actor->SetAngle( ::game::map::s_consts.map_rotation );
+	terrain_actor->SetPosition( ::game::world::s_consts.map_position );
+	terrain_actor->SetAngle( ::game::world::s_consts.map_rotation );
 	terrain_actor->SetDataMesh( terrain_data_mesh );
 	NEW( m_actors.terrain, scene::actor::Instanced, terrain_actor );
 	m_actors.terrain->AddInstance( {} ); // default instance
@@ -1385,8 +1385,8 @@ void Game::ScrollToTile( const tile_data_t& tile_data ) {
 
 		// tile size
 		Vec2< float > ts = {
-			::game::map::s_consts.tile.scale.x * m_camera_position.z,
-			::game::map::s_consts.tile.scale.y * m_camera_position.z
+			::game::world::s_consts.tile.scale.x * m_camera_position.z,
+			::game::world::s_consts.tile.scale.y * m_camera_position.z
 		};
 		// edge size
 		Vec2< float > es = {
@@ -1517,7 +1517,7 @@ tile_data_t Game::GetTileAtCoordsResult() {
 			result.coords = {
 				response.data.select_tile.coords.x,
 				response.data.select_tile.coords.y,
-				::game::map::s_consts.tile.elevation_to_vertex_z.Clamp( response.data.select_tile.elevation.center )
+				::game::world::s_consts.tile.elevation_to_vertex_z.Clamp( response.data.select_tile.elevation.center )
 			};
 
 #define xx( _k, _kk ) result.selection_coords._k._kk = response.data.select_tile.selection_coords._k._kk
@@ -1590,8 +1590,8 @@ void Game::UpdateMinimap() {
 	mm.x *= scale.x;
 	mm.y *= scale.y;
 
-	const float sx = (float)mm.x / (float)m_map_data.width / (float)::game::map::s_consts.tc.texture_pcx.dimensions.x;
-	const float sy = (float)mm.y / (float)m_map_data.height / (float)::game::map::s_consts.tc.texture_pcx.dimensions.y;
+	const float sx = (float)mm.x / (float)m_map_data.width / (float)::game::world::s_consts.tc.texture_pcx.dimensions.x;
+	const float sy = (float)mm.y / (float)m_map_data.height / (float)::game::world::s_consts.tc.texture_pcx.dimensions.y;
 	const float sz = ( sx + sy ) / 2;
 	const float ss = ( (float)mm.y / (float)m_viewport.window_height );
 	const float sxy = (float)scale.x / scale.y;

@@ -9,7 +9,7 @@ Dot::Dot( Game* game )
 	//
 }
 
-const MapEditor::tiles_t Dot::Draw( map::Tile* center_tile ) {
+const MapEditor::tiles_t Dot::Draw( world::Tile* center_tile ) {
 	return {
 		center_tile
 	};

@@ -18,7 +18,7 @@ CLASS( Tool, base::Base )
 	const MapEditor::tool_type_t GetType() const;
 
 	// return tiles that were drawn on and need reload
-	virtual const MapEditor::tiles_t Draw( map::Tile* tile, const MapEditor::draw_mode_t mode ) = 0;
+	virtual const MapEditor::tiles_t Draw( world::Tile* tile, const MapEditor::draw_mode_t mode ) = 0;
 
 protected:
 	const Game* m_game = nullptr;

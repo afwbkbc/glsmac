@@ -111,11 +111,6 @@ Config::Config( const int argc, const char* argv[] ) {
 		}
 	);
 	parser.AddRule(
-		"mapdump", "Save map dump upon loading map", AH( this ) {
-			m_debug_flags |= DF_MAPDUMP;
-		}
-	);
-	parser.AddRule(
 		"memorydebug", "Add extra memory checks and tracking (slow!)", AH( this ) {
 			m_debug_flags |= DF_MEMORYDEBUG;
 		}
@@ -123,6 +118,11 @@ Config::Config( const int argc, const char* argv[] ) {
 	parser.AddRule(
 		"quickstart", "Skip intro and main menu and generate/load map directly", AH( this ) {
 			m_debug_flags |= DF_QUICKSTART;
+		}
+	);
+	parser.AddRule(
+		"worlddump", "Save world dump after game init", AH( this ) {
+			m_debug_flags |= DF_WORLDDUMP;
 		}
 	);
 	const std::string s_quickstart_argument_missing = "Quickstart-related options can only be used after --quickstart argument!";
@@ -138,18 +138,6 @@ Config::Config( const int argc, const char* argv[] ) {
 				f_error( "Invalid seed format! Seed must contain four numbers separated by colon, for example: 1651011033:1377505029:3019448108:3247278135" );
 			}
 			m_debug_flags |= DF_QUICKSTART_SEED;
-		}
-	);
-	parser.AddRule(
-		"quickstart-mapdump", "MAP_DUMP_FILE", "Load from existing map dump file (*.gsmd)", AH( this, f_error, s_quickstart_argument_missing ) {
-			if ( !HasDebugFlag( DF_QUICKSTART ) ) {
-				f_error( s_quickstart_argument_missing );
-			}
-			if ( !util::FS::FileExists( value ) ) {
-				f_error( "Map dump file \"" + value + "\" not found!" );
-			}
-			m_quickstart_mapdump = value;
-			m_debug_flags |= DF_QUICKSTART_MAP_DUMP;
 		}
 	);
 	parser.AddRule(
@@ -230,6 +218,18 @@ Config::Config( const int argc, const char* argv[] ) {
 			"dense"
 		}, "cloud cover",
 		DF_QUICKSTART_MAP_CLOUDS, &m_quickstart_map_clouds
+	);
+	parser.AddRule(
+		"quickstart-worlddump", "WORLD_DUMP_FILE", "Load from existing world dump file (*.gswd)", AH( this, f_error, s_quickstart_argument_missing ) {
+			if ( !HasDebugFlag( DF_QUICKSTART ) ) {
+				f_error( s_quickstart_argument_missing );
+			}
+			if ( !util::FS::FileExists( value ) ) {
+				f_error( "World dump file \"" + value + "\" not found!" );
+			}
+			m_quickstart_worlddump = value;
+			m_debug_flags |= DF_QUICKSTART_WORLD_DUMP;
+		}
 	);
 	parser.AddRule(
 		"quiet", "Do not output debug logs to console", AH( this ) {
@@ -322,8 +322,8 @@ const util::Random::state_t& Config::GetQuickstartSeed() const {
 	return m_quickstart_seed;
 }
 
-const std::string& Config::GetQuickstartMapDump() const {
-	return m_quickstart_mapdump;
+const std::string& Config::GetQuickstartWorldDump() const {
+	return m_quickstart_worlddump;
 }
 
 const std::string& Config::GetQuickstartMapFile() const {

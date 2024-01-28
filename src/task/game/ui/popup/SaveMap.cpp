@@ -16,7 +16,7 @@ SaveMap::SaveMap( Game* game )
 	"SAVE MAP",
 	FM_WRITE,
 	game->GetMapLastDirectory(),
-	::game::map::s_consts.fs.default_map_extension,
+	::game::world::s_consts.fs.default_map_extension,
 	game->GetMapFilename()
 ) {
 

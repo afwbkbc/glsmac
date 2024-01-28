@@ -18,7 +18,7 @@ CLASS( Brush, base::Base )
 	const MapEditor::brush_type_t GetType() const;
 
 	// return tiles that need to be drawn
-	virtual const MapEditor::tiles_t Draw( map::Tile* center_tile ) = 0;
+	virtual const MapEditor::tiles_t Draw( world::Tile* center_tile ) = 0;
 
 protected:
 	const Game* m_game = nullptr;

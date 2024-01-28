@@ -1,4 +1,4 @@
-SUBDIR( map )
+SUBDIR( world )
 SUBDIR( map_editor )
 SUBDIR( rules )
 SUBDIR( connection )

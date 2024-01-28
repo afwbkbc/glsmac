@@ -11,15 +11,15 @@ Rockiness::Rockiness( Game* game )
 	//
 }
 
-const MapEditor::tiles_t Rockiness::Draw( map::Tile* tile, const MapEditor::draw_mode_t mode ) {
+const MapEditor::tiles_t Rockiness::Draw( world::Tile* tile, const MapEditor::draw_mode_t mode ) {
 	if ( mode == MapEditor::DM_DEC ) {
-		if ( tile->rockiness <= map::Tile::R_FLAT ) {
+		if ( tile->rockiness <= world::Tile::R_FLAT ) {
 			return {}; // can't decrease further
 		}
 		tile->rockiness--;
 	}
 	else if ( mode == MapEditor::DM_INC ) {
-		if ( tile->rockiness >= map::Tile::R_ROCKY ) {
+		if ( tile->rockiness >= world::Tile::R_ROCKY ) {
 			return {}; // can't increase further
 		}
 		tile->rockiness++;

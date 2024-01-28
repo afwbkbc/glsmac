@@ -11,36 +11,36 @@ Elevations::Elevations( Game* game )
 	//
 }
 
-const MapEditor::tiles_t Elevations::Draw( map::Tile* tile, const MapEditor::draw_mode_t mode ) {
+const MapEditor::tiles_t Elevations::Draw( world::Tile* tile, const MapEditor::draw_mode_t mode ) {
 	MapEditor::tiles_t tiles_to_reload = {};
 
-	if ( tile->coord.y > 1 && tile->coord.y < m_game->GetMap()->GetHeight() - 2 ) { // editing poles will screw things up
+	if ( tile->coord.y > 1 && tile->coord.y < m_game->GetWorld()->GetHeight() - 2 ) { // editing poles will screw things up
 
-		map::Tile::elevation_t elevation, change;
+		world::Tile::elevation_t elevation, change;
 
 		// prevent extreme slopes
-		const auto el = map::s_consts.tile.maximum_allowed_slope_elevation;
+		const auto el = world::s_consts.tile.maximum_allowed_slope_elevation;
 		const auto f_change_corner =
 			[ this, &tile, &mode, &elevation, &change, &el ]
-				( map::Tile::elevation_t* corner )
+				( world::Tile::elevation_t* corner )
 				-> void {
 				elevation = *corner;
-				change = (map::Tile::elevation_t)m_game->GetRandom()->GetUInt( elevation_change_min, elevation_change_max );
+				change = (world::Tile::elevation_t)m_game->GetRandom()->GetUInt( elevation_change_min, elevation_change_max );
 				if ( mode == MapEditor::DM_DEC ) {
-					elevation = std::max< map::Tile::elevation_t >( map::Tile::ELEVATION_MIN, elevation - change );
+					elevation = std::max< world::Tile::elevation_t >( world::Tile::ELEVATION_MIN, elevation - change );
 				}
 				else if ( mode == MapEditor::DM_INC ) {
-					elevation = std::min< map::Tile::elevation_t >( map::Tile::ELEVATION_MAX, elevation + change );
+					elevation = std::min< world::Tile::elevation_t >( world::Tile::ELEVATION_MAX, elevation + change );
 				}
 				for ( auto& n : tile->neighbours ) {
-					elevation = std::min< map::Tile::elevation_t >( elevation, *n->elevation.center + el );
-					elevation = std::max< map::Tile::elevation_t >( elevation, *n->elevation.center - el );
+					elevation = std::min< world::Tile::elevation_t >( elevation, *n->elevation.center + el );
+					elevation = std::max< world::Tile::elevation_t >( elevation, *n->elevation.center - el );
 				}
 				if ( mode == MapEditor::DM_DEC ) {
-					*corner = std::min< map::Tile::elevation_t >( *corner, elevation );
+					*corner = std::min< world::Tile::elevation_t >( *corner, elevation );
 				}
 				else if ( mode == MapEditor::DM_INC ) {
-					*corner = std::max< map::Tile::elevation_t >( *corner, elevation );
+					*corner = std::max< world::Tile::elevation_t >( *corner, elevation );
 				}
 			};
 

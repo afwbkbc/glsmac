@@ -341,9 +341,9 @@ void GameSettingsSection::ShowLoadMap() {
 		m_load_map.browser->SetDefaultFilename( util::FS::GetBaseName( filename ) );
 	}
 	else {
-		m_load_map.browser->SetDefaultDirectory( util::FS::GetAbsolutePath( ::game::map::s_consts.fs.default_map_directory ) );
+		m_load_map.browser->SetDefaultDirectory( util::FS::GetAbsolutePath( ::game::world::s_consts.fs.default_map_directory ) );
 	}
-	m_load_map.browser->SetFileExtension( ::game::map::s_consts.fs.default_map_extension );
+	m_load_map.browser->SetFileExtension( ::game::world::s_consts.fs.default_map_extension );
 	m_load_map.browser->On(
 		UIEvent::EV_SELECT, EH( this ) {
 			const auto& path = m_load_map.browser->GetSelectedFile();
