@@ -4,7 +4,6 @@ SUBDIR( module )
 SET( SRC ${SRC}
 
 	${PWD}/Consts.cpp
-	${PWD}/Turn.cpp
 	${PWD}/Map.cpp
 	${PWD}/Tiles.cpp
 	${PWD}/Tile.cpp

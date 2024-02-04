@@ -4,7 +4,7 @@
 
 #include "gse/Bindings.h"
 #include "Player.h"
-#include "game/world/Turn.h"
+//#include "Turn.h"
 #include "rules/Faction.h"
 #include "rules/DifficultyLevel.h"
 

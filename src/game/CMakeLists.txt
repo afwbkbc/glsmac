@@ -12,6 +12,7 @@ SET( SRC ${SRC}
 	${PWD}/Player.cpp
 	${PWD}/Slot.cpp
 	${PWD}/Slots.cpp
+	${PWD}/Turn.cpp
 	${PWD}/Event.cpp
 	${PWD}/Bindings.cpp
 

@@ -16,7 +16,7 @@
 #include "types/mesh/Render.h"
 #include "types/mesh/Data.h"
 
-#include "Turn.h"
+#include "game/Turn.h"
 
 using namespace types;
 

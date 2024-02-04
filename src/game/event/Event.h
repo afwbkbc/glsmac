@@ -3,19 +3,17 @@
 #include "types/Serializable.h"
 
 namespace game {
-namespace world {
-class World;
+class Game;
 namespace event {
 
 class Event : public types::Serializable {
 public:
 	enum event_type_t {
-		
+
 	};
 
-	virtual void Apply( World* world ) = 0;
+	virtual void Apply( Game* game ) = 0;
 };
 
-}
 }
 }
