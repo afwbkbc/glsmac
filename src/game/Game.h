@@ -276,6 +276,8 @@ private:
 	void InitGame( MT_Response& response, MT_CANCELABLE );
 	void ResetGame();
 
+	void NextTurn( Turn* turn );
+
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)
 	util::Random* m_random = nullptr;
 	State* m_state = nullptr;
@@ -285,17 +287,9 @@ private:
 	map::Map* m_old_map = nullptr; // to restore state, for example if loading of another map failed
 	map_editor::MapEditor* m_map_editor = nullptr;
 
-	const std::string m_entry_script = util::FS::GeneratePath(
-		{
-			"gse", // directory is expected to be in working dir
-			"default", // only 'default' mod for now
-			"main" // script name (extension is appended automatically)
-		}
-	);
-
-	gse::GSE* m_gse = nullptr;
-	gse::GlobalContext* m_gse_context = nullptr;
 	Bindings* m_bindings = nullptr;
+
+	Turn* m_current_turn = nullptr;
 
 };
 

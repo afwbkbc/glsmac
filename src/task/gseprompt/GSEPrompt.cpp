@@ -24,6 +24,8 @@ void GSEPrompt::Start() {
 	Log( "Starting GSE prompt (syntax: " + m_syntax + ")" );
 
 	m_runner = m_gse.GetRunner();
+	m_gse_context = m_gse.CreateGlobalContext();
+	m_gse_context->IncRefs();
 	m_is_running = true;
 	if ( m_is_tty ) {
 		std::cout << std::endl;
@@ -37,6 +39,8 @@ void GSEPrompt::Stop() {
 		delete ( it );
 	}
 	m_programs.clear();
+	m_gse_context->DecRefs();
+	m_gse_context = nullptr;
 	delete m_runner;
 	m_runner = nullptr;
 	m_input.clear();
@@ -119,6 +123,7 @@ void GSEPrompt::ProcessInput() {
 				}
 			};
 			context = m_gse_context->ForkContext( si, {}, {} );
+			context->IncRefs();
 		}
 		else {
 			context = m_gse_context;
@@ -137,7 +142,7 @@ void GSEPrompt::ProcessInput() {
 	}
 	if ( m_is_tty ) {
 		if ( context ) {
-			delete context;
+			context->DecRefs();
 		}
 		std::cout << std::endl;
 	}

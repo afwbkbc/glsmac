@@ -51,6 +51,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 					const auto source = util::FS::ReadFile( script );
 					parser = gse.GetParser( script, source );
 					context = gse.CreateGlobalContext( script );
+					context->IncRefs();
 					mocks::AddMocks( context, { script } );
 					program = parser->Parse();
 					runner = gse.GetRunner();
@@ -64,7 +65,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 				};
 
 				if ( context ) {
-					DELETE( context );
+					context->DecRefs();
 				}
 				if ( program ) {
 					DELETE( program );

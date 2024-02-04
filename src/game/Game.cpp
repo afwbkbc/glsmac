@@ -125,31 +125,16 @@ void Game::Start() {
 void Game::Stop() {
 	Log( "Stopping thread" );
 
-	if ( m_gse_context ) {
-		DELETE( m_gse_context );
-		m_gse_context = nullptr;
-	}
-	if ( m_bindings ) {
-		DELETE( m_bindings );
-		m_bindings = nullptr;
-	}
-	if ( m_gse ) {
-		DELETE( m_gse );
-		m_gse = nullptr;
-	}
-
-	DELETE( m_map_editor );
-	m_map_editor = nullptr;
-
-	ASSERT( m_pending_events, "game events not set" );
-	DELETE( m_pending_events );
-	m_pending_events = nullptr;
-
 	if ( m_state ) {
 		DELETE( m_state );
 		m_state = nullptr;
 		m_connection = nullptr;
 	}
+
+	ResetGame();
+
+	DELETE( m_map_editor );
+	m_map_editor = nullptr;
 
 	MTModule::Stop();
 }
@@ -283,15 +268,13 @@ void Game::Iterate() {
 				}
 
 				// init gse
-				ASSERT( !m_gse, "gse already set" );
-				NEW( m_gse, gse::GSE );
+				ASSERT( !m_bindings, "bindings already set" );
 				NEW( m_bindings, Bindings, this );
-				m_gse->AddBindings( m_bindings );
-				m_gse_context = m_gse->CreateGlobalContext();
 
 				// run main gse entrypoint
 				try {
-					m_gse->GetInclude( m_gse_context, gse::si_t{ "" }, m_entry_script );
+					m_bindings->RunMain();
+
 					// start main loop
 					m_game_state = GS_RUNNING;
 
@@ -301,6 +284,9 @@ void Game::Iterate() {
 					f_init_failed( e.what() );
 				}
 
+				if ( m_game_state == GS_RUNNING ) {
+					m_bindings->Call( Bindings::CS_ONSTART );
+				}
 			}
 			else {
 				f_init_failed( map::Map::GetErrorString( ec ) );
@@ -1102,17 +1088,14 @@ void Game::ResetGame() {
 	ASSERT( m_pending_events, "pending events not set" );
 	m_pending_events->clear();
 
-	if ( m_gse_context ) {
-		DELETE( m_gse_context );
-		m_gse_context = nullptr;
-	}
 	if ( m_bindings ) {
 		DELETE( m_bindings );
 		m_bindings = nullptr;
 	}
-	if ( m_gse ) {
-		DELETE( m_gse );
-		m_gse = nullptr;
+
+	if ( m_current_turn ) {
+		DELETE( m_current_turn );
+		m_current_turn = nullptr;
 	}
 
 	if ( m_state ) {
@@ -1123,6 +1106,18 @@ void Game::ResetGame() {
 		}
 		m_connection = nullptr;
 	}
+}
+
+void Game::NextTurn( Turn* turn ) {
+	if ( m_current_turn ) {
+		Log( "turn " + std::to_string( m_current_turn->GetYear() ) + " finished" );
+
+		// TODO: do something?
+		DELETE( m_current_turn );
+	}
+
+	m_current_turn = turn;
+	Log( "turn " + std::to_string( m_current_turn->GetYear() ) + " started" );
 }
 
 }

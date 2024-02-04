@@ -94,24 +94,26 @@ const Value GSE::GetInclude( Context* ctx, const si_t& si, const std::string& pa
 		throw gse::Exception( EC.LOADER_ERROR, "Could not find script for include '" + path + "'", ctx, si );
 	}
 	const auto source = util::FS::ReadFile( full_path );
-	auto* context = CreateGlobalContext( full_path );
-#ifdef DEBUG
-	// copy mocks
-	if ( ctx->HasVariable( "test" ) ) {
-		context->CreateVariable( "test", ctx->GetVariable( "test", &si ), &si );
-	}
-#endif
 	include_cache_t cache = {
 		VALUE( type::Undefined ),
+		nullptr,
 		nullptr,
 		nullptr
 	};
 	try {
+		cache.context = CreateGlobalContext( full_path );
+		cache.context->IncRefs();
+#ifdef DEBUG
+		// copy mocks
+		if ( ctx->HasVariable( "test" ) ) {
+			cache.context->CreateVariable( "test", ctx->GetVariable( "test", &si ), &si );
+		}
+#endif
 		const auto parser = GetParser( full_path, source );
 		cache.program = parser->Parse();
 		DELETE( parser );
 		cache.runner = GetRunner();
-		cache.result = cache.runner->Execute( context, cache.program );
+		cache.result = cache.runner->Execute( cache.context, cache.program );
 		m_include_cache.insert_or_assign( path, cache );
 		return cache.result;
 	}
@@ -145,6 +147,10 @@ const Value& GSE::GetGlobal( const std::string& identifier ) {
 
 void GSE::include_cache_t::Cleanup() {
 	{
+		if ( context ) {
+			context->DecRefs();
+			context = nullptr;
+		}
 		if ( program ) {
 			DELETE( program );
 			program = nullptr;

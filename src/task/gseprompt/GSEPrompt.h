@@ -27,7 +27,7 @@ private:
 	const bool m_is_tty;
 
 	gse::GSE m_gse;
-	gse::GlobalContext* m_gse_context = m_gse.CreateGlobalContext();
+	gse::GlobalContext* m_gse_context = nullptr;
 	const gse::runner::Runner* m_runner;
 
 	fd_set fds;

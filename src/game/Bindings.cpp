@@ -15,9 +15,27 @@ namespace game {
 
 Bindings::Bindings( Game* game )
 	: m_game( game ) {
+	NEW( m_gse, gse::GSE );
+	m_gse->AddBindings( this );
+	m_gse_context = m_gse->CreateGlobalContext();
+	m_gse_context->IncRefs();
+}
+
+Bindings::~Bindings() {
+	m_gse_context->DecRefs();
+	DELETE( m_gse );
 }
 
 void Bindings::AddToContext( gse::Context* ctx ) {
+
+#define CALLBACK( _type ) NATIVE_CALL( this ) { \
+		N_EXPECT_ARGS( 1 ); \
+		N_GET( cb, 0 ); \
+		N_CHECKTYPE( cb.Get(), 0, Callable ); \
+		SetCallback( _type, cb, ctx, call_si ); \
+		return VALUE( type::Undefined ); \
+	})
+
 	type::Object::properties_t methods = {
 		{
 			"message",
@@ -44,18 +62,24 @@ void Bindings::AddToContext( gse::Context* ctx ) {
 			})
 		},
 		{
-			"on_turn",
-			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 1 );
-				N_GETPTR( cb, 0 );
-				N_CHECKTYPE( cb, 0, Callable );
-				SetCallback( CS_ONTURN, (type::Callable*)cb, ctx, call_si );
-				//((type::Callable*)cb)->Run( ctx, {}, { VALUE( type::String, "TEST" ) } );
-				return VALUE( type::Undefined );
-			})
+			"on_start", CALLBACK( CS_ONSTART )
+		},
+		{
+			"on_turn", CALLBACK( CS_ONTURN )
 		},
 	};
 	ctx->CreateConst( "game", VALUE( type::Object, methods ), nullptr );
+}
+
+void Bindings::RunMain() {
+	m_gse->GetInclude( m_gse_context, m_si_internal, m_entry_script );
+}
+
+void Bindings::Call( const callback_slot_t slot, const callback_arguments_t* arguments ) {
+	const auto& it = m_callbacks.find( slot );
+	if ( it != m_callbacks.end() ) {
+		((gse::type::Callable*)it->second.Get())->Run( m_gse_context, m_si_internal, arguments ? *arguments : m_no_arguments );
+	}
 }
 
 const Value Bindings::GetPlayer( const Player* player ) const {
@@ -108,7 +132,7 @@ const gse::Value Bindings::GetDifficulty( const rules::DifficultyLevel* difficul
 	return VALUE( type::Object, properties );
 }*/
 
-void Bindings::SetCallback( const callback_slot_t slot, const gse::type::Callable* callback, const gse::Context* context, const si_t& si ) {
+void Bindings::SetCallback( const callback_slot_t slot, const gse::Value& callback, const gse::Context* context, const si_t& si ) {
 	if ( m_callbacks.find( slot ) != m_callbacks.end() ) {
 		throw gse::Exception( EC.GAME_API_ERROR, "Callback slot already in use", context, si );
 	}

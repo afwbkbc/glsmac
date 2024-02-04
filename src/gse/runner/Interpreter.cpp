@@ -42,6 +42,8 @@ const gse::Value Interpreter::Execute( Context* ctx, const program::Program* pro
 
 const gse::Value Interpreter::EvaluateScope( Context* ctx, const program::Scope* scope ) const {
 	const auto subctx = ctx->ForkContext( scope->m_si, false );
+	subctx->IncRefs();
+
 	gse::Value result = VALUE( Undefined );
 	for ( const auto& it : scope->body ) {
 		switch ( it->control_type ) {
@@ -61,7 +63,7 @@ const gse::Value Interpreter::EvaluateScope( Context* ctx, const program::Scope*
 			break;
 		}
 	}
-	DELETE( subctx );
+	subctx->DecRefs();
 	return result;
 }
 
@@ -801,7 +803,7 @@ void Interpreter::ValidateRange( const Context* ctx, const si_t& si, const type:
 
 Interpreter::Function::Function(
 	const Interpreter* runner,
-	Context const* context,
+	Context* context,
 	const std::vector< std::string >& parameters,
 	const program::Program* const program
 )
@@ -809,13 +811,18 @@ Interpreter::Function::Function(
 	, context( context )
 	, parameters( parameters )
 	, program( program ) {
-	// nothing
+	context->IncRefs();
+}
+
+Interpreter::Function::~Function() {
+	context->DecRefs();
 }
 
 gse::Value Interpreter::Function::Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) {
-	auto* funcctx = ctx->ForkContext( call_si, true, parameters, arguments );
-	const auto result = runner->Execute( funcctx, program );
-	DELETE( funcctx );
+	auto* subctx = context->ForkContext( call_si, true, parameters, arguments );
+	subctx->IncRefs();
+	const auto result = runner->Execute( subctx, program );
+	subctx->DecRefs();
 	return result;
 }
 

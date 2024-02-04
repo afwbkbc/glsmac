@@ -8,6 +8,17 @@ GSE* Context::GetGSE() const {
 	return m_gse;
 }
 
+void Context::IncRefs() {
+	m_refs++;
+}
+
+void Context::DecRefs() {
+	ASSERT_NOLOG( m_refs > 0, "refs not positive" );
+	if ( !--m_refs ) {
+		DELETE( this );
+	}
+}
+
 const bool Context::HasVariable( const std::string& name ) {
 	const auto it = m_variables.find( name );
 	if ( it != m_variables.end() ) {

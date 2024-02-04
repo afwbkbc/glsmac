@@ -33,6 +33,9 @@ public:
 
 	GSE* GetGSE() const;
 
+	void IncRefs();
+	void DecRefs();
+
 	const bool HasVariable( const std::string& name );
 	const Value GetVariable( const std::string& name, const si_t* si );
 	void SetVariable( const std::string& name, const var_info_t& var_info );
@@ -55,6 +58,7 @@ public:
 
 protected:
 	GSE* m_gse;
+	size_t m_refs = 0;
 
 	typedef std::unordered_map< std::string, var_info_t > variables_t;
 	variables_t m_variables = {};

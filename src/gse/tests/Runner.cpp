@@ -37,6 +37,7 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 			runner::Interpreter interpreter;
 
 			GlobalContext* context = gse.CreateGlobalContext();
+			context->IncRefs();
 			context->AddSourceLines( util::String::SplitToLines( GetTestSource() ) );
 			mocks::AddMocks( context, {} );
 
@@ -46,7 +47,7 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 
 			VALIDATE();
 
-			DELETE( context );
+			context->DecRefs();
 
 			GT_OK();
 		}

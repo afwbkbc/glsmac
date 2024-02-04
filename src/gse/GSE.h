@@ -65,6 +65,7 @@ private:
 
 	struct include_cache_t {
 		Value result;
+		Context* context;
 		// TODO: why can't we delete these two upon getting result?
 		const program::Program* program;
 		const runner::Runner* runner;

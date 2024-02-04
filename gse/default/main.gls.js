@@ -1,12 +1,7 @@
-game.on_turn((turn) => {
-    console.log('TURN');
-    console.log(turn);
-    game.message('Hello, world!');
+const rules = include('rules');
+
+game.on_start(() => {
+
+    game.message('Game started');
 });
 
-let player = game.get_player();
-console.log('PLAYER');
-console.log(player);
-console.dump(player);
-
-//game.exit();

@@ -28,14 +28,15 @@ private:
 	public:
 		Function(
 			const Interpreter* runner,
-			Context const* context,
+			Context* context,
 			const std::vector< std::string >& parameters,
 			const program::Program* const program
 		);
+		~Function();
 		Value Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) override;
 	private:
 		const Interpreter* runner;
-		Context const* context;
+		Context* context;
 		const std::vector< std::string > parameters;
 		const program::Program* const program;
 	};
