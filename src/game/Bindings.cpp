@@ -132,7 +132,7 @@ const gse::Value Bindings::GetDifficulty( const rules::DifficultyLevel* difficul
 	return VALUE( type::Object, properties );
 }*/
 
-void Bindings::SetCallback( const callback_slot_t slot, const gse::Value& callback, const gse::Context* context, const si_t& si ) {
+void Bindings::SetCallback( const callback_slot_t slot, const gse::Value& callback, gse::Context* context, const si_t& si ) {
 	if ( m_callbacks.find( slot ) != m_callbacks.end() ) {
 		throw gse::Exception( EC.GAME_API_ERROR, "Callback slot already in use", context, si );
 	}

@@ -34,7 +34,7 @@ parser::Parser* GSE::GetParser( const std::string& filename, const std::string& 
 	return parser;
 }
 
-const runner::Runner* GSE::GetRunner() const {
+runner::Runner* GSE::GetRunner() const {
 	NEWV( runner, runner::Interpreter );
 	return runner;
 }

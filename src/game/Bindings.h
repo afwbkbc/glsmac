@@ -51,7 +51,7 @@ private:
 	);
 	gse::GSE* m_gse = nullptr;
 	gse::GlobalContext* m_gse_context = nullptr;
-	void SetCallback( const callback_slot_t slot, const gse::Value& callback, const gse::Context* context, const gse::si_t& si );
+	void SetCallback( const callback_slot_t slot, const gse::Value& callback, gse::Context* context, const gse::si_t& si );
 };
 
 }

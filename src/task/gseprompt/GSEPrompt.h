@@ -28,7 +28,7 @@ private:
 
 	gse::GSE m_gse;
 	gse::GlobalContext* m_gse_context = nullptr;
-	const gse::runner::Runner* m_runner;
+	gse::runner::Runner* m_runner;
 
 	fd_set fds;
 	int maxfd;

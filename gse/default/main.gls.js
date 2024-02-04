@@ -4,4 +4,3 @@ game.on_start(() => {
 
     game.message('Game started');
 });
-

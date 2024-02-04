@@ -24,6 +24,9 @@ void GSEPrompt::Start() {
 	Log( "Starting GSE prompt (syntax: " + m_syntax + ")" );
 
 	m_runner = m_gse.GetRunner();
+	if ( m_is_tty ) {
+		m_runner->EnableScopeContextJoins();
+	}
 	m_gse_context = m_gse.CreateGlobalContext();
 	m_gse_context->IncRefs();
 	m_is_running = true;
@@ -122,7 +125,7 @@ void GSEPrompt::ProcessInput() {
 					1
 				}
 			};
-			context = m_gse_context->ForkContext( si, {}, {} );
+			context = m_gse_context->ForkContext( nullptr, si, {}, {} );
 			context->IncRefs();
 		}
 		else {
@@ -136,6 +139,7 @@ void GSEPrompt::ProcessInput() {
 	}
 	catch ( gse::Exception& e ) {
 		std::cout << e.ToStringAndCleanup() << std::endl;
+		context = nullptr;
 	}
 	catch ( std::runtime_error& e ) {
 		std::cout << "Internal error: " << e.what() << std::endl;

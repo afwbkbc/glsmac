@@ -174,9 +174,15 @@ test.assert( arr == [1, 2, 3, 4, 5] );
 arr = [];
 try {
   arr []= 'BEFORE EXCEPTION'; // should be printed
+  let realfailfunc = () => {
+      arr []= 'failfunc2';
+      {
+          throw TestError('something happened');
+      }
+  };
   let failfunc = () => {
     arr []= 'failfunc';
-    throw TestError('something happened');
+    realfailfunc();
   };
   failfunc();
   arr []= 'AFTER EXCEPTION'; // should not be printed
@@ -190,12 +196,15 @@ catch {
     arr += e.backtrace;
   }
 };
+console.log(arr);
 test.assert( arr == [
     'BEFORE EXCEPTION',
     'failfunc',
+    'failfunc2',
     'CAUGHT TestError : something happened',
-    '\tat ' + test.get_script_path() + ':179: throw TestError(\'something happened\');',
-    '\tat ' + test.get_script_path() + ':181: failfunc();'
+    '\tat ' + test.get_script_path() + ':180: throw TestError(\'something happened\');',
+    '\tat ' + test.get_script_path() + ':185: realfailfunc();',
+    '\tat ' + test.get_script_path() + ':187: failfunc();'
 ] );
 
 ;;;

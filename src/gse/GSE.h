@@ -31,7 +31,7 @@ CLASS( GSE, base::Base )
 	virtual ~GSE();
 
 	parser::Parser* GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num = 1 ) const;
-	const runner::Runner* GetRunner() const;
+	runner::Runner* GetRunner() const;
 
 	void AddBindings( Bindings* bindings );
 

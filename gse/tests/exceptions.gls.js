@@ -1,4 +1,5 @@
 // this should do nothing
+
 test.assert(true, 'true is false');
 
 let was_caught = false;

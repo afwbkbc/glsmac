@@ -59,6 +59,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 				}
 				catch ( gse::Exception& e ) {
 					last_error = e.ToStringAndCleanup();
+					context = nullptr;
 				}
 				catch ( std::runtime_error const& e ) {
 					last_error = (std::string)"Internal error: " + e.what();

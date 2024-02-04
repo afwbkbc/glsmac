@@ -44,13 +44,15 @@ public:
 	void UpdateVariable( const std::string& name, const Value& value, const si_t* si );
 
 	ChildContext* const ForkContext(
+		Context* caller_context,
 		const si_t& call_si,
 		const bool is_traceable,
 		const std::vector< std::string > parameters = {},
 		const type::Callable::function_arguments_t& arguments = {}
 	);
 
-	virtual const Context* GetParentContext() const = 0;
+	virtual Context* GetParentContext() const = 0;
+	virtual Context* GetCallerContext() const = 0;
 	virtual const bool IsTraceable() const = 0;
 	virtual const std::string& GetSourceLine( const size_t line_num ) const = 0;
 	virtual const si_t& GetSI() const = 0;

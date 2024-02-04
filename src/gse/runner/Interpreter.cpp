@@ -41,7 +41,7 @@ const gse::Value Interpreter::Execute( Context* ctx, const program::Program* pro
 }
 
 const gse::Value Interpreter::EvaluateScope( Context* ctx, const program::Scope* scope ) const {
-	const auto subctx = ctx->ForkContext( scope->m_si, false );
+	const auto subctx = ctx->ForkContext( ctx, scope->m_si, false );
 	subctx->IncRefs();
 
 	gse::Value result = VALUE( Undefined );
@@ -63,6 +63,13 @@ const gse::Value Interpreter::EvaluateScope( Context* ctx, const program::Scope*
 			break;
 		}
 	}
+
+#ifdef DEBUG
+	if ( m_are_scope_context_joins_enabled ) {
+		subctx->JoinContext();
+	}
+#endif
+
 	subctx->DecRefs();
 	return result;
 }
@@ -143,13 +150,15 @@ const gse::Value Interpreter::EvaluateConditional( Context* ctx, const program::
 						throw gse::Exception( EC.PARSE_ERROR, "Expected catch block, found: " + f.ToString(), ctx, it->second->m_si );
 					}
 
-					return ( (Function*)f.Get() )->Run(
+					auto* func = (Function*)f.Get();
+					const auto result = func->Run(
 						ctx,
 						it->second->m_si,
 						{
 							VALUE( type::Exception, e, e.GetBacktraceAndCleanup( ctx ) )
 						}
 					);
+					return result;
 				}
 				else {
 					throw e;
@@ -759,7 +768,7 @@ const gse::Value Interpreter::Deref( Context* ctx, const si_t& si, const gse::Va
 	}
 }
 
-void Interpreter::WriteByRef( const Context* ctx, const si_t& si, const gse::Value& ref, const gse::Value& value ) const {
+void Interpreter::WriteByRef( Context* ctx, const si_t& si, const gse::Value& ref, const gse::Value& value ) const {
 	switch ( ref.Get()->type ) {
 		case Type::T_OBJECTREF: {
 			const auto* r = (ObjectRef*)ref.Get();
@@ -782,7 +791,7 @@ void Interpreter::WriteByRef( const Context* ctx, const si_t& si, const gse::Val
 	}
 }
 
-void Interpreter::ValidateRange( const Context* ctx, const si_t& si, const type::Array* array, const std::optional< size_t > from, const std::optional< size_t > to ) const {
+void Interpreter::ValidateRange( Context* ctx, const si_t& si, const type::Array* array, const std::optional< size_t > from, const std::optional< size_t > to ) const {
 	const auto& max = array->value.size() - 1;
 	if ( from.has_value() ) {
 		if ( from.value() > max ) {
@@ -819,10 +828,12 @@ Interpreter::Function::~Function() {
 }
 
 gse::Value Interpreter::Function::Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) {
-	auto* subctx = context->ForkContext( call_si, true, parameters, arguments );
+	ctx->IncRefs();
+	auto* subctx = context->ForkContext( ctx, call_si, true, parameters, arguments );
 	subctx->IncRefs();
 	const auto result = runner->Execute( subctx, program );
 	subctx->DecRefs();
+	ctx->DecRefs();
 	return result;
 }
 

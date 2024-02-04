@@ -20,7 +20,11 @@ GlobalContext::GlobalContext( GSE* gse, const std::string& source_path )
 			: util::String::SplitToLines( util::FS::ReadFile( source_path ) )
 	) {}
 
-const Context* GlobalContext::GetParentContext() const {
+Context* GlobalContext::GetParentContext() const {
+	return nullptr;
+}
+
+Context* GlobalContext::GetCallerContext() const {
 	return nullptr;
 }
 

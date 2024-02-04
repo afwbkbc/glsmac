@@ -21,7 +21,8 @@ public:
 
 	GlobalContext( GSE* gse, const std::string& source_path );
 
-	const Context* GetParentContext() const override;
+	Context* GetParentContext() const override;
+	Context* GetCallerContext() const override;
 	const bool IsTraceable() const override;
 	const std::string& GetSourceLine( const size_t line_num ) const override;
 	const si_t& GetSI() const override;

@@ -53,8 +53,8 @@ private:
 	const std::string EvaluateVarName( Context* ctx, const program::Operand* operand ) const;
 
 	const Value Deref( Context* ctx, const si_t& si, const Value& value ) const;
-	void WriteByRef( const Context* ctx, const si_t& si, const gse::Value& ref, const gse::Value& value ) const;
-	void ValidateRange( const Context* ctx, const si_t& si, const type::Array* array, const std::optional< size_t > from, const std::optional< size_t > to ) const;
+	void WriteByRef( Context* ctx, const si_t& si, const gse::Value& ref, const gse::Value& value ) const;
+	void ValidateRange( Context* ctx, const si_t& si, const type::Array* array, const std::optional< size_t > from, const std::optional< size_t > to ) const;
 
 };
 

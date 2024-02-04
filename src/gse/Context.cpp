@@ -89,6 +89,7 @@ void Context::UpdateVariable( const std::string& name, const Value& value, const
 }
 
 ChildContext* const Context::ForkContext(
+	Context* caller_context,
 	const si_t& call_si,
 	const bool is_traceable,
 	const std::vector< std::string > parameters,
@@ -97,7 +98,7 @@ ChildContext* const Context::ForkContext(
 	if ( parameters.size() != arguments.size() ) {
 		throw Exception( EC.INVALID_CALL, "Expected " + std::to_string( parameters.size() ) + " arguments, found " + std::to_string( arguments.size() ), this, call_si );
 	}
-	NEWV( result, ChildContext, m_gse, *this, call_si, is_traceable );
+	NEWV( result, ChildContext, m_gse, this, caller_context, call_si, is_traceable );
 	// functions have access to parent variables
 	for ( auto& it : m_ref_contexts ) {
 		result->m_ref_contexts.insert_or_assign( it.first, it.second );
