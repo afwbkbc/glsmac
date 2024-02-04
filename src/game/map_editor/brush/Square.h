@@ -12,7 +12,7 @@ CLASS( Square, Brush )
 
 	Square( Game* game, const MapEditor::brush_type_t type, const uint16_t width );
 
-	const MapEditor::tiles_t Draw( world::Tile* center_tile ) override;
+	const MapEditor::tiles_t Draw( map::Tile* center_tile ) override;
 
 private:
 	const uint16_t m_width = 1;

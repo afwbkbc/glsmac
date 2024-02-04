@@ -201,33 +201,33 @@ void Game::Iterate() {
 
 		if ( ready ) {
 
-			auto ec = m_world->Initialize( m_init_cancel );
+			auto ec = m_map->Initialize( m_init_cancel );
 			if ( !ec && m_init_cancel ) {
-				ec = world::World::EC_ABORTED;
+				ec = map::Map::EC_ABORTED;
 			}
 
 			const auto& f_init_failed = [ this ]( const std::string& error_text ) {
 				// need to delete these here because they weren't passed to main thread
-				if ( m_world->m_textures.terrain ) {
-					DELETE( m_world->m_textures.terrain );
-					m_world->m_textures.terrain = nullptr;
+				if ( m_map->m_textures.terrain ) {
+					DELETE( m_map->m_textures.terrain );
+					m_map->m_textures.terrain = nullptr;
 				}
-				if ( m_world->m_meshes.terrain ) {
-					DELETE( m_world->m_meshes.terrain );
-					m_world->m_meshes.terrain = nullptr;
+				if ( m_map->m_meshes.terrain ) {
+					DELETE( m_map->m_meshes.terrain );
+					m_map->m_meshes.terrain = nullptr;
 				}
-				if ( m_world->m_meshes.terrain_data ) {
-					DELETE( m_world->m_meshes.terrain_data );
-					m_world->m_meshes.terrain_data = nullptr;
+				if ( m_map->m_meshes.terrain_data ) {
+					DELETE( m_map->m_meshes.terrain_data );
+					m_map->m_meshes.terrain_data = nullptr;
 				}
 
 				ResetGame();
 				m_initialization_error = error_text;
 
-				if ( m_old_world ) {
+				if ( m_old_map ) {
 					Log( "Restoring old map state" );
-					DELETE( m_world );
-					m_world = m_old_world; // restore old state // TODO: test
+					DELETE( m_map );
+					m_map = m_old_map; // restore old state // TODO: test
 				}
 
 				if ( m_connection ) {
@@ -242,38 +242,38 @@ void Game::Iterate() {
 				// also handy to have dump of generated map
 				if (
 					!ec &&
-						config->HasDebugFlag( config::Config::DF_WORLDDUMP ) &&
-						!config->HasDebugFlag( config::Config::DF_QUICKSTART_WORLD_DUMP ) // no point saving if we just loaded it
+						config->HasDebugFlag( config::Config::DF_MAPDUMP ) &&
+						!config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) // no point saving if we just loaded it
 					) {
-					Log( (std::string)"Saving world dump to " + config->GetDebugPath() + world::s_consts.debug.lastdump_filename );
+					Log( (std::string)"Saving map dump to " + config->GetDebugPath() + map::s_consts.debug.lastdump_filename );
 					ui->SetLoaderText( "Saving dump", false );
-					util::FS::WriteFile( config->GetDebugPath() + world::s_consts.debug.lastdump_filename, m_world->Serialize().ToString() );
+					util::FS::WriteFile( config->GetDebugPath() + map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
 				}
 #endif
 
-				ASSERT( m_world, "world not set" );
+				ASSERT( m_map, "map not set" );
 
 				NEW( m_response_map_data, response_map_data_t );
 
-				m_response_map_data->map_width = m_world->GetWidth();
-				m_response_map_data->map_height = m_world->GetHeight();
+				m_response_map_data->map_width = m_map->GetWidth();
+				m_response_map_data->map_height = m_map->GetHeight();
 
-				ASSERT( m_world->m_textures.terrain, "map terrain texture not generated" );
-				m_response_map_data->terrain_texture = m_world->m_textures.terrain;
+				ASSERT( m_map->m_textures.terrain, "map terrain texture not generated" );
+				m_response_map_data->terrain_texture = m_map->m_textures.terrain;
 
-				ASSERT( m_world->m_meshes.terrain, "map terrain mesh not generated" );
-				m_response_map_data->terrain_mesh = m_world->m_meshes.terrain;
+				ASSERT( m_map->m_meshes.terrain, "map terrain mesh not generated" );
+				m_response_map_data->terrain_mesh = m_map->m_meshes.terrain;
 
-				ASSERT( m_world->m_meshes.terrain_data, "map terrain data mesh not generated" );
-				m_response_map_data->terrain_data_mesh = m_world->m_meshes.terrain_data;
+				ASSERT( m_map->m_meshes.terrain_data, "map terrain data mesh not generated" );
+				m_response_map_data->terrain_data_mesh = m_map->m_meshes.terrain_data;
 
-				m_response_map_data->sprites.actors = &m_world->m_sprite_actors;
-				m_response_map_data->sprites.instances = &m_world->m_sprite_instances;
+				m_response_map_data->sprites.actors = &m_map->m_sprite_actors;
+				m_response_map_data->sprites.instances = &m_map->m_sprite_instances;
 
-				if ( m_old_world ) {
+				if ( m_old_map ) {
 					Log( "Destroying old map state" );
-					DELETE( m_old_world );
-					m_old_world = nullptr;
+					DELETE( m_old_map );
+					m_old_map = nullptr;
 				}
 
 				// notify server of successful initialization
@@ -303,7 +303,7 @@ void Game::Iterate() {
 
 			}
 			else {
-				f_init_failed( world::World::GetErrorString( ec ) );
+				f_init_failed( map::Map::GetErrorString( ec ) );
 			}
 		}
 	}
@@ -316,8 +316,8 @@ util::Random* Game::GetRandom() const {
 	return m_random;
 }
 
-world::World* Game::GetWorld() const {
-	return m_world;
+map::Map* Game::GetMap() const {
+	return m_map;
 }
 
 State* Game::GetState() const {
@@ -384,11 +384,11 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			break;
 		}
 		case OP_SELECT_TILE: {
-			ASSERT( m_world, "map not set" );
+			ASSERT( m_map, "map not set" );
 			//Log( "Got tile select request [ " + std::to_string( request.data.select_tile.tile_x ) + " " + std::to_string( request.data.select_tile.tile_y ) + " ]" );
 
-			auto* tile = m_world->GetTile( request.data.select_tile.tile_x, request.data.select_tile.tile_y );
-			auto* ts = m_world->GetTileState( request.data.select_tile.tile_x, request.data.select_tile.tile_y );
+			auto* tile = m_map->GetTile( request.data.select_tile.tile_x, request.data.select_tile.tile_y );
+			auto* ts = m_map->GetTileState( request.data.select_tile.tile_x, request.data.select_tile.tile_y );
 
 			switch ( request.data.select_tile.tile_direction ) {
 #define x( _case, _ptr ) \
@@ -422,9 +422,9 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 
 			response.data.select_tile.elevation.center = ts->elevations.center;
 
-			world::TileState::tile_layer_type_t lt = ( tile->is_water_tile
-				? world::TileState::LAYER_WATER
-				: world::TileState::LAYER_LAND
+			map::TileState::tile_layer_type_t lt = ( tile->is_water_tile
+				? map::TileState::LAYER_WATER
+				: map::TileState::LAYER_LAND
 			);
 			const auto& layer = ts->layers[ lt ];
 #define x( _k ) response.data.select_tile.selection_coords._k = layer.coords._k
@@ -437,24 +437,24 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 
 			if ( !tile->is_water_tile && ts->is_coastline_corner ) {
 				if ( tile->W->is_water_tile ) {
-					response.data.select_tile.selection_coords.left = ts->layers[ world::TileState::LAYER_WATER ].coords.left;
+					response.data.select_tile.selection_coords.left = ts->layers[ map::TileState::LAYER_WATER ].coords.left;
 				}
 				if ( tile->N->is_water_tile ) {
-					response.data.select_tile.selection_coords.top = ts->layers[ world::TileState::LAYER_WATER ].coords.top;
+					response.data.select_tile.selection_coords.top = ts->layers[ map::TileState::LAYER_WATER ].coords.top;
 				}
 				if ( tile->E->is_water_tile ) {
-					response.data.select_tile.selection_coords.right = ts->layers[ world::TileState::LAYER_WATER ].coords.right;
+					response.data.select_tile.selection_coords.right = ts->layers[ map::TileState::LAYER_WATER ].coords.right;
 				}
 				if ( tile->S->is_water_tile ) {
-					response.data.select_tile.selection_coords.bottom = ts->layers[ world::TileState::LAYER_WATER ].coords.bottom;
+					response.data.select_tile.selection_coords.bottom = ts->layers[ map::TileState::LAYER_WATER ].coords.bottom;
 				}
 			}
 
-			world::TileState::tile_vertices_t preview_coords = {};
+			map::TileState::tile_vertices_t preview_coords = {};
 
 			lt = ( ( tile->is_water_tile || ts->is_coastline_corner )
-				? world::TileState::LAYER_WATER
-				: world::TileState::LAYER_LAND
+				? map::TileState::LAYER_WATER
+				: map::TileState::LAYER_LAND
 			);
 #define x( _k ) preview_coords._k = layer.coords._k
 			x( center );
@@ -476,21 +476,21 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 				0.0f
 			};
 
-			std::vector< world::TileState::tile_layer_type_t > layers = {};
+			std::vector< map::TileState::tile_layer_type_t > layers = {};
 			if ( tile->is_water_tile ) {
-				layers.push_back( world::TileState::LAYER_LAND );
-				layers.push_back( world::TileState::LAYER_WATER_SURFACE );
-				layers.push_back( world::TileState::LAYER_WATER_SURFACE_EXTRA ); // TODO: only near coastlines?
-				layers.push_back( world::TileState::LAYER_WATER );
+				layers.push_back( map::TileState::LAYER_LAND );
+				layers.push_back( map::TileState::LAYER_WATER_SURFACE );
+				layers.push_back( map::TileState::LAYER_WATER_SURFACE_EXTRA ); // TODO: only near coastlines?
+				layers.push_back( map::TileState::LAYER_WATER );
 			}
 			else {
 				if ( ts->is_coastline_corner ) {
-					layers.push_back( world::TileState::LAYER_WATER_SURFACE );
-					layers.push_back( world::TileState::LAYER_WATER_SURFACE_EXTRA );
-					layers.push_back( world::TileState::LAYER_WATER );
+					layers.push_back( map::TileState::LAYER_WATER_SURFACE );
+					layers.push_back( map::TileState::LAYER_WATER_SURFACE_EXTRA );
+					layers.push_back( map::TileState::LAYER_WATER );
 				}
 				else {
-					layers.push_back( world::TileState::LAYER_LAND );
+					layers.push_back( map::TileState::LAYER_LAND );
 				}
 			}
 
@@ -534,10 +534,10 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 
 			auto e = *tile->elevation.center;
 			if ( tile->is_water_tile ) {
-				if ( e < world::Tile::ELEVATION_LEVEL_TRENCH ) {
+				if ( e < map::Tile::ELEVATION_LEVEL_TRENCH ) {
 					info_lines.push_back( "Ocean Trench" );
 				}
-				else if ( e < world::Tile::ELEVATION_LEVEL_OCEAN ) {
+				else if ( e < map::Tile::ELEVATION_LEVEL_OCEAN ) {
 					info_lines.push_back( "Ocean" );
 				}
 				else {
@@ -549,30 +549,30 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 				info_lines.push_back( "Elev: " + std::to_string( e ) + "m" );
 				std::string tilestr = "";
 				switch ( tile->rockiness ) {
-					case world::Tile::R_FLAT: {
+					case map::Tile::R_FLAT: {
 						tilestr += "Flat";
 						break;
 					}
-					case world::Tile::R_ROLLING: {
+					case map::Tile::R_ROLLING: {
 						tilestr += "Rolling";
 						break;
 					}
-					case world::Tile::R_ROCKY: {
+					case map::Tile::R_ROCKY: {
 						tilestr += "Rocky";
 						break;
 					}
 				}
 				tilestr += " & ";
 				switch ( tile->moisture ) {
-					case world::Tile::M_ARID: {
+					case map::Tile::M_ARID: {
 						tilestr += "Arid";
 						break;
 					}
-					case world::Tile::M_MOIST: {
+					case map::Tile::M_MOIST: {
 						tilestr += "Moist";
 						break;
 					}
-					case world::Tile::M_RAINY: {
+					case map::Tile::M_RAINY: {
 						tilestr += "Rainy";
 						break;
 					}
@@ -582,7 +582,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			}
 
 #define FEATURE( _feature, _line ) \
-            if ( tile->features & world::Tile::_feature ) { \
+            if ( tile->features & map::Tile::_feature ) { \
                 info_lines.push_back( _line ); \
             }
 
@@ -594,15 +594,15 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			}
 
 			switch ( tile->bonus ) {
-				case world::Tile::B_NUTRIENT: {
+				case map::Tile::B_NUTRIENT: {
 					info_lines.push_back( "Nutrient bonus" );
 					break;
 				}
-				case world::Tile::B_ENERGY: {
+				case map::Tile::B_ENERGY: {
 					info_lines.push_back( "Energy bonus" );
 					break;
 				}
-				case world::Tile::B_MINERALS: {
+				case map::Tile::B_MINERALS: {
 					info_lines.push_back( "Minerals bonus" );
 					break;
 				}
@@ -625,7 +625,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 #undef FEATURE
 
 #define TERRAFORMING( _terraforming, _line ) \
-            if ( tile->terraforming & world::Tile::_terraforming ) { \
+            if ( tile->terraforming & map::Tile::_terraforming ) { \
                 info_lines.push_back( _line ); \
             }
 
@@ -694,10 +694,10 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 		}
 		case OP_SAVE_MAP: {
 			//Log( "got save map request" );
-			const auto ec = m_world->SaveToFile( *request.data.save_map.path );
+			const auto ec = m_map->SaveToFile( *request.data.save_map.path );
 			if ( ec ) {
 				response.result = R_ERROR;
-				response.data.error.error_text = &( world::World::GetErrorString( ec ) );
+				response.data.error.error_text = &( map::Map::GetErrorString( ec ) );
 			}
 			else {
 				response.result = R_SUCCESS;
@@ -711,31 +711,31 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 
 			m_map_editor->SelectTool( request.data.edit_map.tool );
 			m_map_editor->SelectBrush( request.data.edit_map.brush );
-			const auto tiles_to_reload = m_map_editor->Draw( m_world->GetTile( request.data.edit_map.tile_x, request.data.edit_map.tile_y ), request.data.edit_map.draw_mode );
+			const auto tiles_to_reload = m_map_editor->Draw( m_map->GetTile( request.data.edit_map.tile_x, request.data.edit_map.tile_y ), request.data.edit_map.draw_mode );
 
 			if ( !tiles_to_reload.empty() ) {
 				auto* graphics = g_engine->GetGraphics();
 
-				m_world->m_sprite_actors_to_add.clear();
-				m_world->m_sprite_instances_to_remove.clear();
-				m_world->m_sprite_instances_to_add.clear();
+				m_map->m_sprite_actors_to_add.clear();
+				m_map->m_sprite_instances_to_remove.clear();
+				m_map->m_sprite_instances_to_add.clear();
 
 				graphics->Lock(); // needed to avoid tearing artifacts
-				m_world->LoadTiles( tiles_to_reload, MT_C );
-				m_world->FixNormals( tiles_to_reload, MT_C );
+				m_map->LoadTiles( tiles_to_reload, MT_C );
+				m_map->FixNormals( tiles_to_reload, MT_C );
 				graphics->Unlock();
 
-				typedef std::unordered_map< std::string, world::World::sprite_actor_t > t1; // can't use comma in macro below
+				typedef std::unordered_map< std::string, map::Map::sprite_actor_t > t1; // can't use comma in macro below
 				NEW( response.data.edit_map.sprites.actors_to_add, t1 );
-				*response.data.edit_map.sprites.actors_to_add = m_world->m_sprite_actors_to_add;
+				*response.data.edit_map.sprites.actors_to_add = m_map->m_sprite_actors_to_add;
 
 				typedef std::unordered_map< size_t, std::string > t2; // can't use comma in macro below
 				NEW( response.data.edit_map.sprites.instances_to_remove, t2 );
-				*response.data.edit_map.sprites.instances_to_remove = m_world->m_sprite_instances_to_remove;
+				*response.data.edit_map.sprites.instances_to_remove = m_map->m_sprite_instances_to_remove;
 
 				typedef std::unordered_map< size_t, std::pair< std::string, Vec3 > > t3; // can't use comma in macro below
 				NEW( response.data.edit_map.sprites.instances_to_add, t3 );
-				*response.data.edit_map.sprites.instances_to_add = m_world->m_sprite_instances_to_add;
+				*response.data.edit_map.sprites.instances_to_add = m_map->m_sprite_instances_to_add;
 			}
 
 			response.result = R_SUCCESS;
@@ -910,12 +910,12 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				};
 
 				connection->m_on_map_request = [ this ]() -> const std::string {
-					if ( !m_world ) {
+					if ( !m_map ) {
 						// map not generated yet
 						return "";
 					}
 					Log( "Snapshotting map for download" );
-					return m_world->SaveToBuffer().ToString();
+					return m_map->SaveToBuffer().ToString();
 				};
 
 				connection->SetGameState( Connection::GS_INITIALIZING );
@@ -962,30 +962,30 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 		Log( "Game seed: " + m_random->GetStateString() );
 
-		ASSERT( !m_old_world, "old world not null" );
-		m_old_world = nullptr;
-		if ( m_world ) {
-			m_old_world = m_world;
+		ASSERT( !m_old_map, "old map not null" );
+		m_old_map = nullptr;
+		if ( m_map ) {
+			m_old_map = m_map;
 		}
-		NEW( m_world, world::World, this );
+		NEW( m_map, map::Map, this );
 
 #ifdef DEBUG
 		const auto* config = g_engine->GetConfig();
 
 		// if crash happens - it's handy to have a seed to reproduce it
-		util::FS::WriteFile( config->GetDebugPath() + world::s_consts.debug.lastseed_filename, m_random->GetStateString() );
+		util::FS::WriteFile( config->GetDebugPath() + map::s_consts.debug.lastseed_filename, m_random->GetStateString() );
 #endif
 
-		world::World::error_code_t ec = world::World::EC_UNKNOWN;
+		map::Map::error_code_t ec = map::Map::EC_UNKNOWN;
 
 #ifdef DEBUG
-		if ( !m_connection && config->HasDebugFlag( config::Config::DF_QUICKSTART_WORLD_DUMP ) ) {
-			const std::string& filename = config->GetQuickstartWorldDump();
-			ASSERT( util::FS::FileExists( filename ), "world dump file \"" + filename + "\" not found" );
-			Log( (std::string)"Loading world dump from " + filename );
+		if ( !m_connection && config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) {
+			const std::string& filename = config->GetQuickstartMapDump();
+			ASSERT( util::FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
+			Log( (std::string)"Loading map dump from " + filename );
 			ui->SetLoaderText( "Loading dump", false );
-			m_world->Unserialize( types::Buffer( util::FS::ReadFile( filename ) ) );
-			ec = world::World::EC_NONE;
+			m_map->Unserialize( types::Buffer( util::FS::ReadFile( filename ) ) );
+			ec = map::Map::EC_NONE;
 		}
 		else
 #endif
@@ -993,7 +993,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 #ifdef DEBUG
 			if ( !m_connection && config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) {
 				const std::string& filename = config->GetQuickstartMapFile();
-				ec = m_world->LoadFromFile( filename );
+				ec = m_map->LoadFromFile( filename );
 			}
 			else
 #endif
@@ -1001,17 +1001,17 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				const auto& map_settings = m_state->m_settings.global.map;
 				if ( map_settings.type == MapSettings::MT_MAPFILE ) {
 					ASSERT( !map_settings.filename.empty(), "loading map requested but map file not specified" );
-					ec = m_world->LoadFromFile( map_settings.filename );
+					ec = m_map->LoadFromFile( map_settings.filename );
 				}
 				else {
-					ec = m_world->Generate( map_settings, MT_C );
+					ec = m_map->Generate( map_settings, MT_C );
 				}
 			}
 
 		}
 
 		if ( !ec && canceled ) {
-			ec = world::World::EC_ABORTED;
+			ec = map::Map::EC_ABORTED;
 		}
 
 		if ( !ec ) {
@@ -1049,9 +1049,9 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 						connection->m_on_map_data = nullptr;
 						connection->m_on_map_progress = nullptr;
 						Log( "Unpacking map" );
-						NEW( m_world, world::World, this );
-						const auto ec = m_world->LoadFromBuffer( serialized_tiles );
-						if ( ec == world::World::EC_NONE ) {
+						NEW( m_map, map::Map, this );
+						const auto ec = m_map->LoadFromBuffer( serialized_tiles );
+						if ( ec == map::Map::EC_NONE ) {
 							m_game_state = GS_INITIALIZING;
 						}
 						else {
@@ -1093,10 +1093,10 @@ void Game::ResetGame() {
 	m_slot_num = 0;
 	m_slot = nullptr;
 
-	if ( m_world ) {
-		Log( "Resetting world" );
-		DELETE( m_world );
-		m_world = nullptr;
+	if ( m_map ) {
+		Log( "Resetting map" );
+		DELETE( m_map );
+		m_map = nullptr;
 	}
 
 	ASSERT( m_pending_events, "pending events not set" );

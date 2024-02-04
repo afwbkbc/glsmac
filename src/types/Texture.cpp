@@ -6,9 +6,9 @@
 #include "engine/Engine.h"
 
 // TODO: refactor, remove map dependency
-#include "game/world/Consts.h"
+#include "game/map/Consts.h"
 
-using namespace game::world;
+using namespace game::map;
 
 namespace types {
 

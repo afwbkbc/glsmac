@@ -2,7 +2,7 @@
 
 #include "MapEditor.h"
 
-#include "../world/Tile.h"
+#include "../map/Tile.h"
 
 #include "brush/Dot.h"
 #include "brush/Cross.h"
@@ -35,7 +35,7 @@ MapEditor::MapEditor( Game* game )
 
 	NEW( m_tools[ TT_RESOURCES ], tool::Resource, m_game );
 
-#define x( _tt, _f ) NEW( m_tools[ _tt ], tool::Feature, m_game, _tt, world::Tile::_f )
+#define x( _tt, _f ) NEW( m_tools[ _tt ], tool::Feature, m_game, _tt, map::Tile::_f )
 	x( TT_MONOLITH, F_MONOLITH );
 	x( TT_FUNGUS, F_XENOFUNGUS );
 	x( TT_JUNGLE, F_JUNGLE );
@@ -46,7 +46,7 @@ MapEditor::MapEditor( Game* game )
 	x( TT_UNITY_PODS, F_UNITY_POD );
 #undef x
 
-#define x( _tt, _t ) NEW( m_tools[ _tt ], tool::Terraforming, m_game, _tt, world::Tile::_t )
+#define x( _tt, _t ) NEW( m_tools[ _tt ], tool::Terraforming, m_game, _tt, map::Tile::_t )
 	x( TT_FOREST, T_FOREST );
 	x( TT_FARM, T_FARM );
 	x( TT_SOLAR_COLLECTOR, T_SOLAR );
@@ -74,7 +74,7 @@ const bool MapEditor::IsEnabled() const {
 	return true;
 }
 
-const MapEditor::tiles_t MapEditor::Draw( world::Tile* tile, const draw_mode_t mode ) {
+const MapEditor::tiles_t MapEditor::Draw( map::Tile* tile, const draw_mode_t mode ) {
 	if ( IsEnabled() && mode != DM_NONE && m_active_tool && m_active_brush ) {
 		Log( "Drawing at " + tile->coord.ToString() + " with brush " + std::to_string( GetActiveBrushType() ) + " tool " + std::to_string( GetActiveToolType() ) );
 		tiles_t tiles_to_reload = {};
@@ -145,7 +145,7 @@ const MapEditor::brush_type_t MapEditor::GetActiveBrushType() const {
 }
 
 const MapEditor::tiles_t MapEditor::GetUniqueTiles( const tiles_t& tiles ) const {
-	std::unordered_set< world::Tile* > added_tiles = {};
+	std::unordered_set< map::Tile* > added_tiles = {};
 	added_tiles.reserve( tiles.size() );
 	tiles_t result = {};
 	result.reserve( tiles.size() );

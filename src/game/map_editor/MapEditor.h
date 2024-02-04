@@ -7,7 +7,7 @@
 
 namespace game {
 class Game;
-namespace world {
+namespace map {
 class Tile;
 }
 
@@ -88,8 +88,8 @@ CLASS( MapEditor, base::Base )
 		DM_INC // add / increase intensity
 	};
 
-	typedef std::vector< world::Tile* > tiles_t;
-	const tiles_t Draw( world::Tile* tile, const draw_mode_t mode ); // returns tiles that need reload
+	typedef std::vector< map::Tile* > tiles_t;
+	const tiles_t Draw( map::Tile* tile, const draw_mode_t mode ); // returns tiles that need reload
 
 private:
 	Game* m_game = nullptr;

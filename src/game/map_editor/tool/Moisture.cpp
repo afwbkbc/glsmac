@@ -11,15 +11,15 @@ Moisture::Moisture( Game* game )
 	//
 }
 
-const MapEditor::tiles_t Moisture::Draw( world::Tile* tile, const MapEditor::draw_mode_t mode ) {
+const MapEditor::tiles_t Moisture::Draw( map::Tile* tile, const MapEditor::draw_mode_t mode ) {
 	if ( mode == MapEditor::DM_DEC ) {
-		if ( tile->moisture <= world::Tile::M_ARID ) {
+		if ( tile->moisture <= map::Tile::M_ARID ) {
 			return {}; // can't decrease further
 		}
 		tile->moisture--;
 	}
 	else if ( mode == MapEditor::DM_INC ) {
-		if ( tile->moisture >= world::Tile::M_RAINY ) {
+		if ( tile->moisture >= map::Tile::M_RAINY ) {
 			return {}; // can't increase further
 		}
 		tile->moisture++;

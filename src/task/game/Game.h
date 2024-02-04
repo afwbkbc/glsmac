@@ -33,7 +33,7 @@
 #include "game/Game.h"
 #include "game/Event.h"
 
-#include "game/world/Consts.h"
+#include "game/map/Consts.h"
 #include "game/map_editor/MapEditor.h"
 
 using namespace ui;
@@ -89,7 +89,7 @@ CLASS( Game, base::Task )
 	const std::string& GetMapFilename() const;
 	const std::string& GetMapLastDirectory() const;
 
-	scene::actor::Instanced* GetTerrainSpriteActor( const std::string& name, const ::game::world::Consts::pcx_texture_coordinates_t& tex_coords, const float z_index );
+	scene::actor::Instanced* GetTerrainSpriteActor( const std::string& name, const ::game::map::Consts::pcx_texture_coordinates_t& tex_coords, const float z_index );
 	scene::actor::Instanced* GetTerrainSpriteActorByKey( const std::string& key ); // actor must already exist
 
 	void CenterAtCoordinatePercents( const Vec2< float > position_percents );
@@ -141,7 +141,7 @@ private:
 		types::Texture* terrain_texture,
 		types::mesh::Render* terrain_mesh,
 		types::mesh::Data* terrain_data_mesh,
-		const std::unordered_map< std::string, ::game::world::World::sprite_actor_t >& sprite_actors,
+		const std::unordered_map< std::string, ::game::map::Map::sprite_actor_t >& sprite_actors,
 		const std::unordered_map< size_t, std::pair< std::string, Vec3 > >& sprite_instances
 	);
 	void Deinitialize();
@@ -241,12 +241,12 @@ private:
 			} percent_to_absolute;
 		} range;
 		std::string filename =
-			::game::world::s_consts.fs.default_map_filename +
-				::game::world::s_consts.fs.default_map_extension;
+			::game::map::s_consts.fs.default_map_filename +
+				::game::map::s_consts.fs.default_map_extension;
 		std::string last_directory =
 			util::FS::GetCurrentDirectory() +
 				util::FS::GetPathSeparator() +
-				::game::world::s_consts.fs.default_map_directory;
+				::game::map::s_consts.fs.default_map_directory;
 	};
 
 	const bool m_is_map_editing_allowed = false;
@@ -333,7 +333,7 @@ private:
 
 	struct instanced_sprite_t {
 		std::string name;
-		::game::world::Consts::pcx_texture_coordinates_t tex_coords;
+		::game::map::Consts::pcx_texture_coordinates_t tex_coords;
 		scene::actor::Instanced* actor;
 	};
 	std::unordered_map< std::string, instanced_sprite_t > m_instanced_sprites = {};

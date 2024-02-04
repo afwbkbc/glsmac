@@ -16,7 +16,7 @@ LoadMap::LoadMap( Game* game )
 	"LOAD MAP",
 	FM_READ,
 	game->GetMapLastDirectory(),
-	::game::world::s_consts.fs.default_map_extension,
+	::game::map::s_consts.fs.default_map_extension,
 	game->GetMapFilename()
 ) {
 

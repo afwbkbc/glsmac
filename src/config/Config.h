@@ -27,11 +27,11 @@ CLASS( Config, base::Module )
 	enum debug_flag_t : uint32_t {
 		DF_NONE = 0,
 		DF_GDB = 1 << 0,
-		DF_WORLDDUMP = 1 << 1,
+		DF_MAPDUMP = 1 << 1,
 		DF_MEMORYDEBUG = 1 << 2,
 		DF_QUICKSTART = 1 << 3,
 		DF_QUICKSTART_SEED = 1 << 4,
-		DF_QUICKSTART_WORLD_DUMP = 1 << 5,
+		DF_QUICKSTART_MAP_DUMP = 1 << 5,
 		DF_QUICKSTART_MAP_FILE = 1 << 6,
 		DF_QUICKSTART_MAP_SIZE = 1 << 7,
 		DF_QUICKSTART_MAP_OCEAN = 1 << 8,
@@ -63,7 +63,7 @@ CLASS( Config, base::Module )
 
 	const bool HasDebugFlag( const debug_flag_t flag ) const;
 	const util::Random::state_t& GetQuickstartSeed() const;
-	const std::string& GetQuickstartWorldDump() const;
+	const std::string& GetQuickstartMapDump() const;
 	const std::string& GetQuickstartMapFile() const;
 	const types::Vec2< size_t >& GetQuickstartMapSize() const;
 	const game::MapSettings::parameter_t GetQuickstartMapOcean() const;
@@ -94,7 +94,7 @@ private:
 
 	uint32_t m_debug_flags = DF_NONE;
 	util::Random::state_t m_quickstart_seed = {};
-	std::string m_quickstart_worlddump = "";
+	std::string m_quickstart_mapdump = "";
 	std::string m_quickstart_mapfile = "";
 	types::Vec2< size_t > m_quickstart_mapsize = {};
 	game::MapSettings::parameter_t m_quickstart_map_ocean = game::MapSettings::MAP_OCEAN_MEDIUM;

@@ -1,6 +1,6 @@
 #include "Square.h"
 
-#include "../../world/Tile.h"
+#include "../../map/Tile.h"
 #include "../../Game.h"
 
 namespace game {
@@ -13,8 +13,8 @@ Square::Square( Game* game, const MapEditor::brush_type_t type, const uint16_t w
 	//
 }
 
-const MapEditor::tiles_t Square::Draw( world::Tile* center_tile ) {
-	const auto* map = m_game->GetWorld()->GetTilesPtr();
+const MapEditor::tiles_t Square::Draw( map::Tile* center_tile ) {
+	const auto* map = m_game->GetMap()->GetTilesPtr();
 	MapEditor::tiles_t tiles = {};
 	tiles.reserve( m_width * m_width );
 	// order is important, start with sides and move towards center for greatest effect
