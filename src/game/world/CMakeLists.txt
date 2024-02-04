@@ -5,6 +5,7 @@ SET( SRC ${SRC}
 
 	${PWD}/Consts.cpp
 	${PWD}/World.cpp
+	${PWD}/Turn.cpp
 	${PWD}/Tiles.cpp
 	${PWD}/Tile.cpp
 	${PWD}/MapState.cpp

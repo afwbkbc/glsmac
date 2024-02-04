@@ -14,7 +14,7 @@
 #include "types/mesh/Data.h"
 #include "Slot.h"
 #include "Event.h"
-#include "Turn.h"
+#include "game/world/Turn.h"
 
 #include "gse/GSE.h"
 #include "gse/GlobalContext.h"
@@ -289,7 +289,7 @@ private:
 		{
 			"gse", // directory is expected to be in working dir
 			"default", // only 'default' mod for now
-			"main" // script name (extension is applied automatically)
+			"main" // script name (extension is appended automatically)
 		}
 	);
 

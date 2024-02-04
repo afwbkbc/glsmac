@@ -99,14 +99,14 @@ const gse::Value Bindings::GetDifficulty( const rules::DifficultyLevel* difficul
 	return VALUE( type::Object, properties );
 }
 
-const gse::Value Bindings::GetTurn( const Turn* turn ) const {
+/*const gse::Value Bindings::GetTurn( const Turn* turn ) const {
 	const type::Object::properties_t properties = {
 		{
 			"year", VALUE( type::Int, turn->GetYear() ),
 		},
 	};
 	return VALUE( type::Object, properties );
-}
+}*/
 
 void Bindings::SetCallback( const callback_slot_t slot, const gse::type::Callable* callback, const gse::Context* context, const si_t& si ) {
 	if ( m_callbacks.find( slot ) != m_callbacks.end() ) {
