@@ -140,7 +140,7 @@ const std::string Type::ToString() const {
 			) + "]";
 		}
 		default:
-			THROW( "unknown is not intented to be printed" );
+			THROW( "unknown is not intended to be printed" );
 	}
 }
 

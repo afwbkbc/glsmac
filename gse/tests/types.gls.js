@@ -207,4 +207,11 @@ test.assert( arr == [
     '\tat ' + test.get_script_path() + ':187: failfunc();'
 ] );
 
+test.assert( #to_string(2 + 3) + ' (five)' == '5 (five)' );
+test.assert( #to_string( #to_float( #to_string( #to_int( '1' + '2') + 55 ) + '1' ) ) == '671.000000' );
+test.assert( #to_int( #to_string(2 + 3) + '2' ) * 123 == 6396 );
+
+test.assert( #to_string('string') == 'string' );
+test.assert( #to_int( 123 ) == 123 );
+
 ;;;

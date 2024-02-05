@@ -156,3 +156,9 @@ testcatch( 'GSEInvalidCall', () => {
 testcatch( 'GSELoaderError', () => {
     include( './non_existent_include' );
 });
+testcatch( 'GSEConversionError', () => {
+    #to_int('asd');
+});
+testcatch( 'GSEConversionError', () => {
+    #to_float('asd');
+});

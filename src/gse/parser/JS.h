@@ -42,8 +42,8 @@ private:
 	const program::Object* GetObject( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 
 	const std::string CHARS_WHITESPACE = CHARS_EOLN + "	 ";
-	const std::string CHARS_NAMES = CHARS_LETTERS + "_";
-	const std::string CHARS_NAMES_C = CHARS_NAMES + CHARS_NUMBERS;
+	const std::string CHARS_NAMES = CHARS_LETTERS + "_#";
+	const std::string CHARS_NAMES_C = CHARS_LETTERS + CHARS_NUMBERS + "_";
 	const std::string CHARS_OPERATORS = "=+-:.<>*/!&|%";
 	const std::string CHARS_QUOTES = "'";
 	const std::string CHARS_DELIMITERS = ";,{}()[]";

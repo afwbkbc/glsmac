@@ -6,6 +6,7 @@
 
 #include "Console.h"
 #include "Include.h"
+#include "Conversions.h"
 
 namespace gse {
 namespace builtins {
@@ -22,6 +23,7 @@ public:
 private:
 	Include m_include = {};
 	Console m_console = {};
+	Conversions m_conversions = {};
 
 };
 

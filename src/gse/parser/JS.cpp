@@ -56,8 +56,8 @@ void JS::GetElements( source_elements_t& elements ) {
 			value = read_while_char_any( CHARS_NUMBERS_C.c_str() );
 			elements.push_back( new Identifier( value, IDENTIFIER_NUMBER, make_si( begin, get_si_pos() ) ) );
 		}
-		else if ( match_char_any( CHARS_NAMES.c_str(), false ) ) {
-			value = read_while_char_any( CHARS_NAMES_C.c_str() );
+		else if ( ( c = match_char_any( CHARS_NAMES.c_str(), true ) ) ) {
+			value = c + read_while_char_any( CHARS_NAMES_C.c_str() );
 			si = make_si( begin, get_si_pos() );
 			control_it = CONTROL_KEYWORDS.find( value );
 			if ( control_it != CONTROL_KEYWORDS.end() ) {
