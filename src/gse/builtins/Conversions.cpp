@@ -5,8 +5,6 @@
 #include "gse/type/Float.h"
 #include "gse/type/String.h"
 
-#include "util/FS.h"
-
 namespace gse {
 namespace builtins {
 

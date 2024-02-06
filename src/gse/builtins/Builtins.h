@@ -4,6 +4,7 @@
 
 #include "gse/ChildContext.h"
 
+#include "Common.h"
 #include "Console.h"
 #include "Include.h"
 #include "Conversions.h"
@@ -21,6 +22,7 @@ public:
 #endif
 
 private:
+	Common m_common = {};
 	Include m_include = {};
 	Console m_console = {};
 	Conversions m_conversions = {};

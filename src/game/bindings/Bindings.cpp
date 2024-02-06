@@ -6,12 +6,11 @@
 #include "gse/type/Int.h"
 #include "gse/type/Object.h"
 #include "gse/type/Callable.h"
-#include "gse/callable/Native.h"
-#include "gse/type/Undefined.h"
 
 using namespace gse;
 
 namespace game {
+namespace bindings {
 
 Bindings::Bindings( Game* game )
 	: m_game( game ) {
@@ -19,56 +18,32 @@ Bindings::Bindings( Game* game )
 	m_gse->AddBindings( this );
 	m_gse_context = m_gse->CreateGlobalContext();
 	m_gse_context->IncRefs();
+
+#define B( _name ) new BINDING( _name )( this )
+	m_bindings = {
+		B( message ),
+		B( exit ),
+		B( define_unit ),
+		B( spawn_unit ),
+		B( on_start ),
+	};
+#undef B
 }
 
 Bindings::~Bindings() {
+	for ( auto& it : m_bindings ) {
+		delete it;
+	}
 	m_gse_context->DecRefs();
 	DELETE( m_gse );
 }
 
 void Bindings::AddToContext( gse::Context* ctx ) {
-
-#define CALLBACK( _type ) NATIVE_CALL( this ) { \
-		N_EXPECT_ARGS( 1 ); \
-		N_GET( cb, 0 ); \
-		N_CHECKTYPE( cb.Get(), 0, Callable ); \
-		SetCallback( _type, cb, ctx, call_si ); \
-		return VALUE( type::Undefined ); \
-	})
-
-	type::Object::properties_t methods = {
-		{
-			"message",
-			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 1 );
-				N_GETVALUE( text, 0, String );
-				m_game->Message( text );
-				return VALUE( type::Undefined );
-			})
-		},
-		{
-			"exit",
-			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 0 );
-				m_game->Quit();
-				return VALUE( type::Undefined );
-			})
-		},
-		{
-			"get_player",
-			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 0 );
-				return GetPlayer( m_game->GetPlayer() );
-			})
-		},
-		{
-			"on_start", CALLBACK( CS_ONSTART )
-		},
-		{
-			"on_turn", CALLBACK( CS_ONTURN )
-		},
-	};
-	ctx->CreateConst( "game", VALUE( type::Object, methods ), nullptr );
+	type::Object::properties_t methods = {};
+	for ( auto& it : m_bindings ) {
+		it->Add( methods );
+	}
+	ctx->CreateBuiltin( "game", VALUE( type::Object, methods ) );
 }
 
 void Bindings::RunMain() {
@@ -78,24 +53,36 @@ void Bindings::RunMain() {
 void Bindings::Call( const callback_slot_t slot, const callback_arguments_t* arguments ) {
 	const auto& it = m_callbacks.find( slot );
 	if ( it != m_callbacks.end() ) {
-		((gse::type::Callable*)it->second.Get())->Run( m_gse_context, m_si_internal, arguments ? *arguments : m_no_arguments );
+		( (gse::type::Callable*)it->second.Get() )->Run(
+			m_gse_context, m_si_internal, arguments
+				? *arguments
+				: m_no_arguments
+		);
 	}
+}
+
+Game* Bindings::GetGame() const {
+	return m_game;
 }
 
 const Value Bindings::GetPlayer( const Player* player ) const {
 	const type::Object::properties_t properties = {
 		{
 			{
-				"name",VALUE( type::String, player->GetPlayerName() ),
+				"name",
+				VALUE( type::String, player->GetPlayerName() ),
 			},
 			{
-				"full_name", VALUE( type::String, player->GetFullName() ),
+				"full_name",
+				VALUE( type::String, player->GetFullName() ),
 			},
 			{
-				"faction", GetFaction( &player->GetFaction() ),
+				"faction",
+				GetFaction( &player->GetFaction() ),
 			},
 			{
-				"difficulty",GetDifficulty( &player->GetDifficultyLevel() )
+				"difficulty",
+				GetDifficulty( &player->GetDifficultyLevel() )
 			},
 		}
 	};
@@ -105,7 +92,8 @@ const Value Bindings::GetPlayer( const Player* player ) const {
 const gse::Value Bindings::GetFaction( const rules::Faction* faction ) const {
 	const type::Object::properties_t properties = {
 		{
-			"name", VALUE( type::String, faction->m_name ),
+			"name",
+			VALUE( type::String, faction->m_name ),
 		}
 	};
 	return VALUE( type::Object, properties );
@@ -114,7 +102,7 @@ const gse::Value Bindings::GetFaction( const rules::Faction* faction ) const {
 const gse::Value Bindings::GetDifficulty( const rules::DifficultyLevel* difficulty ) const {
 	const type::Object::properties_t properties = {
 		{
-			"name",VALUE( type::String, difficulty->m_name ),
+			"name",  VALUE( type::String, difficulty->m_name ),
 		},
 		{
 			"value", VALUE( type::Int, difficulty->m_difficulty ),
@@ -123,15 +111,6 @@ const gse::Value Bindings::GetDifficulty( const rules::DifficultyLevel* difficul
 	return VALUE( type::Object, properties );
 }
 
-/*const gse::Value Bindings::GetTurn( const Turn* turn ) const {
-	const type::Object::properties_t properties = {
-		{
-			"year", VALUE( type::Int, turn->GetYear() ),
-		},
-	};
-	return VALUE( type::Object, properties );
-}*/
-
 void Bindings::SetCallback( const callback_slot_t slot, const gse::Value& callback, gse::Context* context, const si_t& si ) {
 	if ( m_callbacks.find( slot ) != m_callbacks.end() ) {
 		throw gse::Exception( EC.GAME_API_ERROR, "Callback slot already in use", context, si );
@@ -139,4 +118,5 @@ void Bindings::SetCallback( const callback_slot_t slot, const gse::Value& callba
 	m_callbacks.insert_or_assign( slot, callback );
 }
 
+}
 }

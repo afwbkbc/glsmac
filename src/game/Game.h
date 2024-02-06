@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <map>
 #include <vector>
 
 #include "base/MTModule.h"
@@ -18,13 +19,21 @@
 
 #include "gse/GSE.h"
 #include "gse/GlobalContext.h"
-#include "Bindings.h"
+#include "game/bindings/Bindings.h"
+
+#include "unit/Def.h"
+#include "unit/Unit.h"
+#include "event/Event.h"
 
 namespace game {
 
 class State;
 namespace connection {
 class Connection;
+}
+
+namespace bindings {
+class Binding;
 }
 
 enum op_t {
@@ -247,12 +256,19 @@ protected:
 	void DestroyRequest( const MT_Request& request ) override;
 	void DestroyResponse( const MT_Response& response ) override;
 
-private:
-	friend class Bindings;
+public:
+	// for bindings etc
 	void Message( const std::string& text );
 	void Quit();
+	void AddUnitDef( const std::string& name, const unit::Def* def, gse::Context* ctx, const gse::si_t& si );
+	const unit::Def* GetUnitDef( const std::string& name ) const;
+	void AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& si );
+	void SpawnUnit( unit::Unit* unit );
 
 private:
+
+	std::unordered_map< std::string, const unit::Def* > m_unit_defs = {};
+	std::map< size_t, unit::Unit* > m_units = {};
 
 	enum game_state_t {
 		GS_NONE,
@@ -276,7 +292,7 @@ private:
 	void InitGame( MT_Response& response, MT_CANCELABLE );
 	void ResetGame();
 
-	void NextTurn( Turn* turn );
+	void NextTurn();
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)
 	util::Random* m_random = nullptr;
@@ -287,7 +303,7 @@ private:
 	map::Map* m_old_map = nullptr; // to restore state, for example if loading of another map failed
 	map_editor::MapEditor* m_map_editor = nullptr;
 
-	Bindings* m_bindings = nullptr;
+	bindings::Bindings* m_bindings = nullptr;
 
 	Turn* m_current_turn = nullptr;
 

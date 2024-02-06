@@ -2,13 +2,19 @@
 
 namespace game {
 
-Turn::Turn( const size_t year )
-	: m_year( year ) {
-
+Turn::Turn( const size_t id )
+	: m_id( id ) {
+	//
 }
 
-const size_t Turn::GetYear() const {
-	return m_year;
+Turn::~Turn() {
+	for ( auto& it : m_events ) {
+		delete it;
+	}
+}
+
+const size_t Turn::GetId() const {
+	return m_id;
 }
 
 void Turn::AddEvent( const event::Event* event ) {

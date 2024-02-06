@@ -8,6 +8,7 @@
 #include "game/State.h"
 
 using namespace game::connection;
+using namespace game::bindings;
 
 namespace game {
 
@@ -285,6 +286,8 @@ void Game::Iterate() {
 				}
 
 				if ( m_game_state == GS_RUNNING ) {
+					ASSERT( !m_current_turn, "turn is already initialized" );
+					NextTurn();
 					m_bindings->Call( Bindings::CS_ONSTART );
 				}
 			}
@@ -848,6 +851,37 @@ void Game::Quit() {
 	AddEvent( e );
 }
 
+void Game::AddUnitDef( const std::string& name, const unit::Def* def, gse::Context* ctx, const gse::si_t& si ) {
+	if ( m_unit_defs.find( name ) != m_unit_defs.end() ) {
+		delete def;
+		throw gse::Exception( gse::EC.GAME_API_ERROR, "Unit definition '" + name + "' already exists", ctx, si );
+	}
+	m_unit_defs.insert_or_assign( name, def );
+	Log( "Added unit def '" + name + "'" );
+}
+
+const unit::Def* Game::GetUnitDef( const std::string& name ) const {
+	const auto& it = m_unit_defs.find( name );
+	if ( it != m_unit_defs.end() ) {
+		return it->second;
+	}
+	else {
+		return nullptr;
+	}
+}
+
+void Game::AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& si ) {
+	ASSERT( m_current_turn, "turn not initialized" );
+	event->Apply( this );
+	m_current_turn->AddEvent( event );
+}
+
+void Game::SpawnUnit( unit::Unit* unit ) {
+	ASSERT( m_units.find( unit->GetId() ) == m_units.end(), "duplicate unit id" );
+	m_units.insert_or_assign( unit->GetId(), unit );
+	Log( "Spawned unit ('" + unit->GetDef()->GetName() + "') at [ " + std::to_string( unit->GetPosX() ) + " " + std::to_string( unit->GetPosY() ) + " ]" );
+}
+
 void Game::AddEvent( const Event& event ) {
 	Log( "Sending event (type=" + std::to_string( event.type ) + ")" );
 	m_pending_events->push_back( event );
@@ -1079,6 +1113,15 @@ void Game::ResetGame() {
 	m_slot_num = 0;
 	m_slot = nullptr;
 
+	for ( auto& it : m_units ) {
+		delete it.second;
+	}
+	m_units.clear();
+	for ( auto& it : m_unit_defs ) {
+		delete it.second;
+	}
+	m_unit_defs.clear();
+
 	if ( m_map ) {
 		Log( "Resetting map" );
 		DELETE( m_map );
@@ -1108,16 +1151,19 @@ void Game::ResetGame() {
 	}
 }
 
-void Game::NextTurn( Turn* turn ) {
+void Game::NextTurn() {
+	size_t turn_id = 1;
 	if ( m_current_turn ) {
-		Log( "turn " + std::to_string( m_current_turn->GetYear() ) + " finished" );
+		Log( "turn " + std::to_string( m_current_turn->GetId() ) + " finished" );
+
+		turn_id = m_current_turn->GetId() + 1;
 
 		// TODO: do something?
 		DELETE( m_current_turn );
 	}
 
-	m_current_turn = turn;
-	Log( "turn " + std::to_string( m_current_turn->GetYear() ) + " started" );
+	NEW( m_current_turn, Turn, turn_id );
+	Log( "turn " + std::to_string( m_current_turn->GetId() ) + " started" );
 }
 
 }

@@ -2,6 +2,9 @@ SUBDIR( map )
 SUBDIR( map_editor )
 SUBDIR( rules )
 SUBDIR( connection )
+SUBDIR( unit )
+SUBDIR( bindings )
+SUBDIR( event )
 
 SET( SRC ${SRC}
 
@@ -14,6 +17,5 @@ SET( SRC ${SRC}
 	${PWD}/Slots.cpp
 	${PWD}/Turn.cpp
 	${PWD}/Event.cpp
-	${PWD}/Bindings.cpp
 
 	PARENT_SCOPE )
