@@ -113,7 +113,9 @@ const Value GSE::GetInclude( Context* ctx, const si_t& si, const std::string& pa
 		cache.program = parser->Parse();
 		DELETE( parser );
 		cache.runner = GetRunner();
+		cache.context->IncRefs();
 		cache.result = cache.runner->Execute( cache.context, cache.program );
+		cache.context->DecRefs();
 		m_include_cache.insert_or_assign( path, cache );
 		return cache.result;
 	}
