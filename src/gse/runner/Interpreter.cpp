@@ -223,6 +223,9 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 			switch ( expression->a->type ) {
 				case Operand::OT_VARIABLE: {
 					const auto* var = (Variable*)expression->a;
+					if ( var->name[ 0 ] == '#' ) {
+						throw gse::Exception( EC.INVALID_ASSIGNMENT, "Can't assign to builtin: " + var->name, ctx, var->m_si );
+					}
 					if ( var->hints & Variable::VH_CREATE_VAR ) {
 						ctx->CreateVariable( var->name, result, &expression->a->m_si );
 					}
