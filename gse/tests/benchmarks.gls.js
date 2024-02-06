@@ -1,13 +1,13 @@
 // measure duration of something in nanoseconds
 let average_call_time_ns = 0;
 const timeof = (label, f) => {
-    console.global_mute();
+    #global_mute();
     const begin = test.get_current_time_nano();
     f();
     const ns = test.get_current_time_nano() - begin - average_call_time_ns;
-    console.global_unmute();
+    #global_unmute();
     if (label != '') {
-        console.log(label, ':', ns, 'ns');
+        #print(label, ':', ns, 'ns');
     }
     return ns;
 };
@@ -47,7 +47,7 @@ test.assert(timeof('reading and summing 10000 elements from array', () => {
         sum += arr[idx++];
     }
 }) < 500000000);
-console.log(sum);
+#print(sum);
 test.assert(sum == 49995000);
 
 test.assert(timeof('defining and calling function 10000 times', () => {

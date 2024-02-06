@@ -1,4 +1,4 @@
-const rules = include('rules');
+const rules = #include('rules');
 
 game.on_start(() => {
 

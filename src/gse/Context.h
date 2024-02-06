@@ -42,6 +42,7 @@ public:
 	void CreateVariable( const std::string& name, const Value& value, const si_t* si );
 	void CreateConst( const std::string& name, const Value& value, const si_t* si );
 	void UpdateVariable( const std::string& name, const Value& value, const si_t* si );
+	void CreateBuiltin( const std::string& name, const Value& value );
 
 	ChildContext* const ForkContext(
 		Context* caller_context,

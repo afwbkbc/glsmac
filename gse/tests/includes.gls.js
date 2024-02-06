@@ -1,16 +1,16 @@
 test.global_set('includes_executed', []);
 
 // should be executed only once and cached
-include('./_include1');
-include('./_include1');
-include('./_include1');
+#include('./_include1');
+#include('./_include1');
+#include('./_include1');
 
-let module2 = include('./_include2');
-let module1 = include('./_include1');
+let module2 = #include('./_include2');
+let module1 = #include('./_include1');
 test.assert(module1.id != module2.id);
 // TODO: calls should have priority over .
-test.assert(module1.id == (include('./_include1')).id);
-test.assert(module1.id != (include('./_include2')).id);
+test.assert(module1.id == (#include('./_include1')).id);
+test.assert(module1.id != (#include('./_include2')).id);
 
 module1.set_var('asdasd');
 test.assert(test.global_get('include_var') == 'include_1_asdasd');

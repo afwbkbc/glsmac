@@ -18,9 +18,6 @@ public:
 	const std::string& CaptureStopGet() const;
 #endif
 
-private:
-	const std::string ArgumentsToString( const std::vector< Value >& arguments, bool use_dump ) const;
-
 };
 
 }

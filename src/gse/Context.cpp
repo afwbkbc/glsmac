@@ -88,6 +88,10 @@ void Context::UpdateVariable( const std::string& name, const Value& value, const
 	throw Exception( EC.REFERENCE_ERROR, "Variable '" + name + "' is not defined", this, *si );
 }
 
+void Context::CreateBuiltin( const std::string& name, const Value& value ) {
+	CreateConst( "#" + name, value, nullptr );
+}
+
 ChildContext* const Context::ForkContext(
 	Context* caller_context,
 	const si_t& call_si,

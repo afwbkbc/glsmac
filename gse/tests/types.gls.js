@@ -196,7 +196,6 @@ catch {
     arr += e.backtrace;
   }
 };
-console.log(arr);
 test.assert( arr == [
     'BEFORE EXCEPTION',
     'failfunc',
