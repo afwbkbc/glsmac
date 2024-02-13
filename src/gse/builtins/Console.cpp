@@ -1,5 +1,7 @@
 #include "Console.h"
 
+#include <iostream>
+
 #include "gse/callable/Native.h"
 
 #include "gse/type/Object.h"

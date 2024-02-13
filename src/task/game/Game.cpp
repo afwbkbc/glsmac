@@ -824,10 +824,13 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 	const auto f_exit = [ this, &event ]() -> void {
 		ExitGame(
 			[ this, event ]() -> void {
+#ifdef DEBUG
 				if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
 					g_engine->ShutDown();
 				}
-				else {
+				else
+#endif
+				{
 					ReturnToMainMenu(
 						event.data.quit.reason
 							? *event.data.quit.reason

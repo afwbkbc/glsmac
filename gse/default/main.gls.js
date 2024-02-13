@@ -16,13 +16,15 @@ while (i < #size(units)) {
                 if (#game.random.get_int(0, 1) == 1) {
                     let tile = #game.map.get_tile(x, y);
                     if (tile.is_land) {
-                        if (#game.random.get_int(0, 1) == 1) {
+                        if (#game.random.get_int(0, 2) != 1) {
                             #game.units.spawn('MindWorms', tile);
                         } else {
                             #game.units.spawn('SporeLauncher', tile);
                         }
                     } else {
-                        #game.units.spawn('SeaLurk', tile);
+                        if (#game.random.get_int(0, 1) == 1) {
+                            #game.units.spawn('SeaLurk', tile);
+                        }
                     }
                 }
             }
