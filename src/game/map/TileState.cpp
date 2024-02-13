@@ -3,6 +3,18 @@
 namespace game {
 namespace map {
 
+TileState::~TileState() {
+	if ( moisture_original ) {
+		DELETE( moisture_original );
+	}
+	if ( river_original ) {
+		DELETE( river_original );
+	}
+/*	for ( auto& a : ts->sprites ) {
+		a.actor->RemoveInstance( a.instance );
+	}*/
+}
+
 const Buffer TileState::Serialize() const {
 	Buffer buf;
 

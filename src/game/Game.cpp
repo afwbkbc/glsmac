@@ -287,8 +287,11 @@ void Game::Iterate() {
 
 				if ( m_game_state == GS_RUNNING ) {
 					ASSERT( !m_current_turn, "turn is already initialized" );
-					NextTurn();
-					m_bindings->Call( Bindings::CS_ONSTART );
+
+					if ( m_state->IsMaster() ) {
+						NextTurn();
+						m_bindings->Call( Bindings::CS_ONSTART );
+					}
 				}
 			}
 			else {
@@ -1171,6 +1174,7 @@ void Game::ResetGame() {
 		// ui thread will reset state as needed
 		m_state = nullptr;
 		if ( m_connection ) {
+			m_connection->Disconnect();
 			m_connection->ResetHandlers();
 		}
 		m_connection = nullptr;

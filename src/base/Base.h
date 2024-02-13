@@ -22,7 +22,7 @@ namespace base {
 class Base {
 public:
 	Base();
-	virtual ~Base();
+	virtual ~Base() = default;
 
 	virtual const std::string GetNamespace() const;
 	const std::string GetName() const;

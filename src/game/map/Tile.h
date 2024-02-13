@@ -34,12 +34,12 @@ public:
 	// when reading or writing elevation - work only with values, make sure to not modify pointers themselves!
 	// pointers are set only once by Tiles and are not to be changed after
 	struct {
-		elevation_t* center;
-		elevation_t* left;
-		elevation_t* top;
-		elevation_t* right;
-		elevation_t* bottom;
-		std::vector< elevation_t* > corners; // for more convenient iteration, contains left, top, right and bottom pointers
+		elevation_t* center = nullptr;
+		elevation_t* left = nullptr;
+		elevation_t* top = nullptr;
+		elevation_t* right = nullptr;
+		elevation_t* bottom = nullptr;
+		std::vector< elevation_t* > corners = {}; // for more convenient iteration, contains left, top, right and bottom pointers
 	} elevation;
 
 	struct { // moved to separate structure to allow main structure to have only pointers, for consistency
@@ -50,15 +50,15 @@ public:
 	// links to adjactent tiles ( west, north, east, south and combinations )
 	// will be linked to itself if tile is at north or south map edge
 	// never modify these pointers, work only with values
-	Tile* W;
-	Tile* NW;
-	Tile* N;
-	Tile* NE;
-	Tile* E;
-	Tile* SE;
-	Tile* S;
-	Tile* SW;
-	std::vector< Tile* > neighbours; // for more convenient iteration, contains all neighbouring tiles
+	Tile* W = nullptr;
+	Tile* NW = nullptr;
+	Tile* N = nullptr;
+	Tile* NE = nullptr;
+	Tile* E = nullptr;
+	Tile* SE = nullptr;
+	Tile* S = nullptr;
+	Tile* SW = nullptr;
+	std::vector< Tile* > neighbours = {}; // for more convenient iteration, contains all neighbouring tiles
 
 	// dynamic parameters, do not modify them manually
 	bool is_water_tile = false;
