@@ -15,7 +15,7 @@ while (i < #size(units)) {
             if (x % 2 == y % 2) {
                 let tile = #game.map.get_tile(x, y);
                 if (tile.is_land) {
-                    #game.units.spawn('MINDWORMS', tilez);
+                    #game.units.spawn('MINDWORMS', tile);
                 }
             }
             x++;
