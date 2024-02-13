@@ -17,8 +17,8 @@ public:
 		delete body;
 	}
 
-	const std::string ToString() const {
-		return "Program(\n" + body->ToString( 1 ) + ")\n";
+	const std::string Dump() const {
+		return "Program(\n" + body->Dump( 1 ) + ")\n";
 	}
 
 };

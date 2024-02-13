@@ -33,20 +33,39 @@ public:
 		}
 	}
 
-	const std::string ToString( const size_t depth = 0 ) const override {
+	const std::string ToString() const override {
+		std::string result = "";
+		if ( a ) {
+			result += a->ToString();
+		}
+		if ( op ) {
+			if ( !result.empty() ) {
+				result += " ";
+			}
+			result += op->ToString();
+		}
+		if ( b ) {
+			if ( !result.empty() ) {
+				result += " ";
+			}
+			result += b->ToString();
+		}
+		return result;
+	}
+	const std::string Dump( const size_t depth = 0 ) const override {
 		return
 			Formatted( "Expression" + m_si.ToString() + "(", depth ) +
 				( a == nullptr
 					? ""
-					: a->ToString( depth + 1 )
+					: a->Dump( depth + 1 )
 				) +
 				( op == nullptr
 					? ""
-					: op->ToString( depth + 1 )
+					: op->Dump( depth + 1 )
 				) +
 				( b == nullptr
 					? ""
-					: b->ToString( depth + 1 )
+					: b->Dump( depth + 1 )
 				) +
 				Formatted( ")", depth );
 	}

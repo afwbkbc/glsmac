@@ -16,7 +16,7 @@ public:
 		: Type( GetType() )
 		, value( initial_value ) {}
 
-	int32_t value;
+	float value;
 
 	Float( const Float& other )
 		: Float( other.value ) {}

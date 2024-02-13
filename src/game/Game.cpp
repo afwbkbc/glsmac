@@ -8,6 +8,7 @@
 #include "game/State.h"
 
 using namespace game::connection;
+using namespace game::bindings;
 
 namespace game {
 
@@ -125,18 +126,16 @@ void Game::Start() {
 void Game::Stop() {
 	Log( "Stopping thread" );
 
-	DELETE( m_map_editor );
-	m_map_editor = nullptr;
-
-	ASSERT( m_pending_events, "game events not set" );
-	DELETE( m_pending_events );
-	m_pending_events = nullptr;
-
 	if ( m_state ) {
 		DELETE( m_state );
 		m_state = nullptr;
 		m_connection = nullptr;
 	}
+
+	ResetGame();
+
+	DELETE( m_map_editor );
+	m_map_editor = nullptr;
 
 	MTModule::Stop();
 }
@@ -193,6 +192,35 @@ void Game::Iterate() {
 				ec = map::Map::EC_ABORTED;
 			}
 
+			const auto& f_init_failed = [ this ]( const std::string& error_text ) {
+				// need to delete these here because they weren't passed to main thread
+				if ( m_map->m_textures.terrain ) {
+					DELETE( m_map->m_textures.terrain );
+					m_map->m_textures.terrain = nullptr;
+				}
+				if ( m_map->m_meshes.terrain ) {
+					DELETE( m_map->m_meshes.terrain );
+					m_map->m_meshes.terrain = nullptr;
+				}
+				if ( m_map->m_meshes.terrain_data ) {
+					DELETE( m_map->m_meshes.terrain_data );
+					m_map->m_meshes.terrain_data = nullptr;
+				}
+
+				ResetGame();
+				m_initialization_error = error_text;
+
+				if ( m_old_map ) {
+					Log( "Restoring old map state" );
+					DELETE( m_map );
+					m_map = m_old_map; // restore old state // TODO: test
+				}
+
+				if ( m_connection ) {
+					m_connection->Disconnect( "Failed to initialize game" );
+				}
+			};
+
 			if ( !ec ) {
 
 #ifdef DEBUG
@@ -240,38 +268,31 @@ void Game::Iterate() {
 					m_connection->UpdateSlot( m_slot_num, m_slot, true );
 				}
 
-				// run main loop
-				m_game_state = GS_RUNNING;
+				// init gse
+				ASSERT( !m_bindings, "bindings already set" );
+				NEW( m_bindings, Bindings, this );
+
+				// run main gse entrypoint
+				try {
+					m_bindings->RunMain();
+
+					// start main loop
+					m_game_state = GS_RUNNING;
+
+				}
+				catch ( gse::Exception& e ) {
+					Log( (std::string)"Initialization failed: " + e.ToStringAndCleanup() );
+					f_init_failed( e.what() );
+				}
+
+				if ( m_game_state == GS_RUNNING ) {
+					ASSERT( !m_current_turn, "turn is already initialized" );
+					NextTurn();
+					m_bindings->Call( Bindings::CS_ONSTART );
+				}
 			}
 			else {
-
-				// need to delete these here because they weren't passed to main thread
-				if ( m_map->m_textures.terrain ) {
-					DELETE( m_map->m_textures.terrain );
-					m_map->m_textures.terrain = nullptr;
-				}
-				if ( m_map->m_meshes.terrain ) {
-					DELETE( m_map->m_meshes.terrain );
-					m_map->m_meshes.terrain = nullptr;
-				}
-				if ( m_map->m_meshes.terrain_data ) {
-					DELETE( m_map->m_meshes.terrain_data );
-					m_map->m_meshes.terrain_data = nullptr;
-				}
-
-				ResetGame();
-				m_initialization_error = map::Map::GetErrorString( ec );
-
-				if ( m_old_map ) {
-					Log( "Restoring old map state" );
-					DELETE( m_map );
-					m_map = m_old_map; // restore old state // TODO: test
-				}
-
-				if ( m_connection ) {
-					m_connection->Disconnect( "Failed to initialize game" );
-				}
-
+				f_init_failed( map::Map::GetErrorString( ec ) );
 			}
 		}
 	}
@@ -291,6 +312,16 @@ map::Map* Game::GetMap() const {
 State* Game::GetState() const {
 	ASSERT( m_state, "state not set" );
 	return m_state;
+}
+
+const Player* Game::GetPlayer() const {
+	ASSERT( m_state, "state not set" );
+	if ( m_connection ) {
+		return m_connection->GetPlayer();
+	}
+	else {
+		return m_state->m_slots.GetSlot( 0 ).GetPlayer();
+	}
 }
 
 const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE ) {
@@ -706,9 +737,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 				m_connection->Message( *request.data.chat.message );
 			}
 			else {
-				auto e = Event( Event::ET_GLOBAL_MESSAGE );
-				NEW( e.data.global_message.message, std::string, "<" + m_player->GetPlayerName() + "> " + *request.data.chat.message );
-				AddEvent( e );
+				Message( "<" + m_player->GetPlayerName() + "> " + *request.data.chat.message );
 			}
 
 			response.result = R_SUCCESS;
@@ -810,6 +839,75 @@ void Game::DestroyResponse( const MT_Response& response ) {
 	}
 }
 
+void Game::Message( const std::string& text ) {
+	auto e = Event( Event::ET_GLOBAL_MESSAGE );
+	NEW( e.data.global_message.message, std::string, text );
+	AddEvent( e );
+}
+
+void Game::Quit( const std::string& reason ) {
+	auto e = Event( Event::ET_QUIT );
+	NEW( e.data.quit.reason, std::string, "Lost connection to server" );
+	AddEvent( e );
+}
+
+void Game::OnGSEError( gse::Exception& err ) {
+	auto e = Event( Event::ET_ERROR );
+	NEW( e.data.error.what, std::string, (std::string)"Script error: " + err.what() );
+	NEW( e.data.error.stacktrace, std::string, err.ToStringAndCleanup() );
+	AddEvent( e );
+}
+
+void Game::AddUnitDef( const std::string& name, const unit::Def* def, gse::Context* ctx, const gse::si_t& si ) {
+	if ( m_unit_defs.find( name ) != m_unit_defs.end() ) {
+		delete def;
+		throw gse::Exception( gse::EC.GAME_ERROR, "Unit definition '" + name + "' already exists", ctx, si );
+	}
+	m_unit_defs.insert_or_assign( name, def );
+	Log( "Added unit def '" + name + "'" );
+}
+
+const unit::Def* Game::GetUnitDef( const std::string& name ) const {
+	const auto& it = m_unit_defs.find( name );
+	if ( it != m_unit_defs.end() ) {
+		return it->second;
+	}
+	else {
+		return nullptr;
+	}
+}
+
+void Game::AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& si ) {
+	ASSERT( m_current_turn, "turn not initialized" );
+	event->Apply( this );
+	m_current_turn->AddEvent( event );
+}
+
+void Game::SpawnUnit( unit::Unit* unit ) {
+	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
+	Log( "Spawning unit ('" + unit->m_def->m_name + "') at [ " + std::to_string( unit->m_pos_x ) + " " + std::to_string( unit->m_pos_y ) + " ]" );
+	m_units.insert_or_assign( unit->m_id, unit );
+	const auto* tile = m_map->GetTile( unit->m_pos_x, unit->m_pos_y );
+	const auto* ts = m_map->GetTileState( tile );
+	// notify frontend
+	auto e = Event( Event::ET_SPAWN_UNIT );
+	NEW( e.data.spawn_unit.serialized_unit, std::string, unit::Unit::Serialize( unit ).ToString() );
+	const auto l = tile->is_water_tile
+		? map::TileState::LAYER_WATER
+		: map::TileState::LAYER_LAND;
+	const auto c = unit->m_def->GetSpawnCoords(
+		ts->coord.x,
+		ts->coord.y,
+		ts->layers[ l ].coords
+	);
+	e.data.spawn_unit.coords = {
+		c.x,
+		-c.y,
+		c.z
+	};
+	AddEvent( e );
+}
+
 void Game::AddEvent( const Event& event ) {
 	Log( "Sending event (type=" + std::to_string( event.type ) + ")" );
 	m_pending_events->push_back( event );
@@ -881,9 +979,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 						m_initialization_error = "Lost connection to server";
 					}
 					else {
-						auto e = Event( Event::ET_QUIT );
-						NEW( e.data.quit.reason, std::string, "Lost connection to server" );
-						AddEvent( e );
+						Quit( "Lost connection to server" );
 					}
 				};
 				connection->m_on_error = [ this, connection ]( const std::string& reason ) -> void {
@@ -1043,6 +1139,15 @@ void Game::ResetGame() {
 	m_slot_num = 0;
 	m_slot = nullptr;
 
+	for ( auto& it : m_units ) {
+		delete it.second;
+	}
+	m_units.clear();
+	for ( auto& it : m_unit_defs ) {
+		delete it.second;
+	}
+	m_unit_defs.clear();
+
 	if ( m_map ) {
 		Log( "Resetting map" );
 		DELETE( m_map );
@@ -1052,6 +1157,16 @@ void Game::ResetGame() {
 	ASSERT( m_pending_events, "pending events not set" );
 	m_pending_events->clear();
 
+	if ( m_bindings ) {
+		DELETE( m_bindings );
+		m_bindings = nullptr;
+	}
+
+	if ( m_current_turn ) {
+		DELETE( m_current_turn );
+		m_current_turn = nullptr;
+	}
+
 	if ( m_state ) {
 		// ui thread will reset state as needed
 		m_state = nullptr;
@@ -1060,6 +1175,21 @@ void Game::ResetGame() {
 		}
 		m_connection = nullptr;
 	}
+}
+
+void Game::NextTurn() {
+	size_t turn_id = 1;
+	if ( m_current_turn ) {
+		Log( "turn " + std::to_string( m_current_turn->GetId() ) + " finished" );
+
+		turn_id = m_current_turn->GetId() + 1;
+
+		// TODO: do something?
+		DELETE( m_current_turn );
+	}
+
+	NEW( m_current_turn, Turn, turn_id );
+	Log( "turn " + std::to_string( m_current_turn->GetId() ) + " started" );
 }
 
 }

@@ -11,6 +11,7 @@ CLASS( FS, Util )
 
 	static const std::string GetPathSeparator();
 	static const std::string GetUpDirString();
+	static const std::string GeneratePath( const std::vector< std::string >& parts );
 
 #ifdef _WIN32
 	static const bool IsWindowsDriveLabel( const std::string& directory );

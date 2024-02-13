@@ -2,12 +2,14 @@
 
 let a = 5;
 a++;
+const a_const = 6;
+test.assert(a == a_const);
 let b = a + 2 * 4;
 let c=(a+2)*4;
 {
 	a = 15;
 	a += 10;
-};
+}
 c = 123;
 c -= 23;
 
@@ -61,72 +63,154 @@ testobj1.propertyInt = testobj2.propertyInt1 + testobj2.propertyInt2;
 let d = null;
 let x = a > b;
 
-console.log( d );
-console.log( d == null );
-console.log( x, x == b > c );
+test.assert(d == null);
+test.assert( x );
+test.assert( x != b > c );
+test.assert( a != b );
+test.assert( b != c );
+test.assert( c != a );
+test.assert( a == a );
+test.assert( a > b );
+test.assert( !(b > c) );
+test.assert( !(b >= a) );
+test.assert( a >= 2 );
+test.assert( c <= 200 );
+test.assert( a <= 200 );
+test.assert( !(10 < 10) );
+test.assert( 10 <= 10 );
+test.assert( !(a < a) );
+test.assert( a <= a );
+test.assert( true && true );
+test.assert( !(true && false) );
+test.assert( true || true );
+test.assert( true || false );
+test.assert( (( 5 > 10 ) && ( 2 > 1 )) || (( 5 <= 10 ) && !( 5 > 35 ) && ( 100 >= 20 )) );
+test.assert( testmethod1(11, b, 20) == 45 );
+test.assert( testmethod2(a, b, c) == -61 );
 
-console.log( a != b, b != c, c != a, a != a );
-console.log( a > b, b > c );
-console.log( b >= a, a >= 2, c <= 200, a <= 200 );
-console.log( 10 < 10, 10 <= 10, a < a, a <= a );
-console.log( true && true, true && false, true || true, true || false );
-console.log( (( 5 > 10 ) && ( 2 > 1 )) || (( 5 <= 10 ) && !( 5 > 35 ) && ( 100 >= 20 )) );
-console.log(testmethod1(11, b, 20), testmethod2(a, b, c));
 let testmethod = testmethod1;
-console.log( testmethod( 1, testmethod( 2, testmethod( 3, 3, 3 ), testmethod( 4, 4, 4 ) ), testmethod( 5, 5, testmethod( 6, 6, 6 )) ), 10 );
-console.log( testarr1 ); console.log( testarr2 ); console.log( testarr3 ); console.log( testarr4 );
-console.log( testarr1[0] ); console.log( testarr1[1] ); console.log( testarr1[0:1] );
-console.log( testarr1[5:] ); console.log( testarr1[:3] );
-console.log( testarr1[4:5] + testarr1[2:3] );
-console.log(testobj3.child1.child2.value);
-console.log(testobj1.propertyInt == 272 + c); console.log(testobj1, testobj2);
+test.assert( testmethod( 1, testmethod( 2, testmethod( 3, 3, 3 ), testmethod( 4, 4, 4 ) ), testmethod( 5, 5, testmethod( 6, 6, 6 )) ) == 52 );
 
+test.assert( testarr1[0] == 'first' );
+test.assert( testarr1[1] == 'second' );
+test.assert( testarr1[2] == 6 );
+test.assert( testarr1[3] == 3 );
+test.assert( testarr1[4] == 'TEST' );
+test.assert( testarr1[5].key1 == 'value1' );
+test.assert( testarr1[5].key2 == 'value2' );
+
+let o = testarr1[5];
+test.assert( o.key1 == 'value1' );
+test.assert( o.key2 == 'value2' );
+
+test.assert( testarr1[6] == testarr2 );
+
+test.assert( testarr2[0] == 3 );
+test.assert( testarr2[1] == 'TEST' );
+
+test.assert( testarr2[2] == o );
+
+test.assert( testarr3[0] == 'FIRST' );
+test.assert( testarr3[1] == 'SECOND' );
+test.assert( testarr3[2] == 'first' );
+test.assert( testarr3[3] == 'second' );
+test.assert( testarr3[4] == 3 );
+test.assert( testarr3[5] == 'TEST' );
+test.assert( testarr3[6] == testarr2 );
+
+test.assert( testarr4[0] == 'FIRST' );
+test.assert( testarr4[1] == 'new first' );
+test.assert( testarr4[2] == 'new second' );
+test.assert( testarr4[3] == 'second' );
+
+test.assert( testarr1[0:1] == [ 'first', 'second' ] );
+
+test.assert( testarr1[5:] == [ testarr1[5], testarr1[6] ] );
+test.assert( testarr1[:3] == [ testarr1[0], testarr1[1] ] + testarr1[2:3] );
+test.assert( testarr1[4:5] + testarr1[2:3] == [ testarr1[4], testarr1[5], testarr1[2], testarr1[3] ] );
+test.assert(testobj3.child1.child2.value == 'CHILD VALUE');
+test.assert(testobj1.propertyInt == 272 + c);
+test.assert(testobj1 == { propertyInt: 372 } );
+test.assert(testobj2.propertyInt1 == 150 );
+test.assert(testobj2.propertyInt2 == 222 );
+test.assert(testobj2.propertyString == 'STRING' );
+
+let yes_or_no = false;
 if ( a > b ) {
-  console.log( 'YES' );
+  yes_or_no = true;
 }
 else {
-  console.log( 'NO' );
+  yes_or_no = false;
 };
-if ( b > a ) {
-  console.log( 'YES' );
-}
-else {
-  console.log( 'NO' );
-};
-if ( false ) { console.log( 'FALSE' ); };
-if ( false ) {
-  console.log('FAIL');
-} elseif ( false ) {
-  console.log( 'FAIL' );
-} elseif ( true ) {
-  console.log( 'OK' );
-} else {
-  console.log( 'FAIL' );
-};
+test.assert( yes_or_no );
 
+if ( b > a ) {
+  yes_or_no = true;
+}
+else {
+  yes_or_no = false;
+};
+test.assert( !yes_or_no );
+
+if ( false ) { test.assert(false); }
+if ( false ) {
+  test.assert(false);
+} elseif ( false ) {
+  test.assert(false);
+} elseif ( true ) {
+  yes_or_no = true;
+} else {
+  test.assert(false);
+}
+test.assert( yes_or_no );
+
+let arr = [];
 let i = 0;
 while ( i++ < 5 ) {
-  console.log(i);
-};
+  arr []= i;
+}
+test.assert( arr == [1, 2, 3, 4, 5] );
 
+arr = [];
 try {
-  console.log( 'BEFORE EXCEPTION' ); // should be printed
+  arr []= 'BEFORE EXCEPTION'; // should be printed
+  let realfailfunc = () => {
+      arr []= 'failfunc2';
+      {
+          throw TestError('something happened');
+      }
+  };
   let failfunc = () => {
-    console.log('failfunc');
-    throw TestError('something happened');
+    arr []= 'failfunc';
+    realfailfunc();
   };
   failfunc();
-  console.log( 'AFTER EXCEPTION' ); // should not be printed
+  arr []= 'AFTER EXCEPTION'; // should not be printed
 }
 catch {
   UnknownError: (e) => {
-    console.log('shouldnt catch this');
+    arr []= 'shouldnt catch this';
   },
   TestError: (e) => {
-    console.log('CAUGHT ' + e.type + ' : ' + e.reason);
-    console.log(e.backtrace);
+    arr []= 'CAUGHT ' + e.type + ' : ' + e.reason;
+    arr += e.backtrace;
   }
 };
+test.assert( arr == [
+    'BEFORE EXCEPTION',
+    'failfunc',
+    'failfunc2',
+    'CAUGHT TestError : something happened',
+    '\tat ' + test.get_script_path() + ':180: throw TestError(\'something happened\');',
+    '\tat ' + test.get_script_path() + ':185: realfailfunc();',
+    '\tat ' + test.get_script_path() + ':187: failfunc();'
+] );
+
+test.assert( #to_string(2 + 3) + ' (five)' == '5 (five)' );
+test.assert( #to_string( #to_float( #to_string( #to_int( '1' + '2') + 55 ) + '1' ) ) == '671.000000' );
+test.assert( #to_int( #to_string(2 + 3) + '2' ) * 123 == 6396 );
+
+test.assert( #to_string('string') == 'string' );
+test.assert( #to_int( 123 ) == 123 );
 
 ;;;
-console.log('bye!');;

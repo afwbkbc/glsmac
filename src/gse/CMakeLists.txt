@@ -2,7 +2,7 @@ SUBDIR( type )
 SUBDIR( callable )
 SUBDIR( parser )
 SUBDIR( runner )
-SUBDIR( builtin )
+SUBDIR( builtins )
 
 IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
 	SUBDIR( tests )
@@ -13,6 +13,8 @@ SET( SRC ${SRC}
 	${PWD}/GSE.cpp
 	${PWD}/Value.cpp
 	${PWD}/Context.cpp
+	${PWD}/ChildContext.cpp
+	${PWD}/GlobalContext.cpp
 	${PWD}/Exception.cpp
 
 	)

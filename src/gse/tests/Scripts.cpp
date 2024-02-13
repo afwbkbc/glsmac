@@ -34,34 +34,39 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 		? std::vector< std::string >{ c->GetGSETestsScript() }
 		: util::FS::ListDirectory( tests_path, true );
 	for ( const auto& script : scripts ) {
+		if ( script.substr( 0, tests_path.size() + 2 ) == tests_path + "/_" ) {
+			continue; // these should not be tested directly (i.e. includes)
+		}
 		task->AddTest(
 			"testing " + script,
 			GT( task, script ) {
-				
+
 				gse::parser::Parser* parser = nullptr;
 				const gse::runner::Runner* runner = nullptr;
 				const gse::program::Program* program = nullptr;
-				gse::Context* context = nullptr;
+				gse::GlobalContext* context = nullptr;
 
 				std::string last_error = "";
 				try {
 					const auto source = util::FS::ReadFile( script );
 					parser = gse.GetParser( script, source );
-					NEW( context, gse::Context, nullptr, util::String::SplitToLines( source ), {} );
-					mocks::AddMocks( context );
+					context = gse.CreateGlobalContext( script );
+					context->IncRefs();
+					mocks::AddMocks( context, { script } );
 					program = parser->Parse();
 					runner = gse.GetRunner();
 					runner->Execute( context, program );
 				}
 				catch ( gse::Exception& e ) {
 					last_error = e.ToStringAndCleanup();
+					context = nullptr;
 				}
 				catch ( std::runtime_error const& e ) {
 					last_error = (std::string)"Internal error: " + e.what();
 				};
 
 				if ( context ) {
-					DELETE( context );
+					context->DecRefs();
 				}
 				if ( program ) {
 					DELETE( program );

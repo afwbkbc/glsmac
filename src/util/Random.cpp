@@ -46,10 +46,17 @@ const bool Random::GetBool() {
 }
 
 const uint32_t Random::GetUInt( const uint32_t min, const uint32_t max ) {
-	ASSERT( max >= min, "GetUInt max larger than min" );
+	ASSERT( max >= min, "GetUInt min larger than max" );
 
 	value_t value = Generate();
-	return min + value % ( max + 1 - min );
+
+	return min + value % ( max - min + 1 );
+}
+
+const int64_t Random::GetInt64( int64_t min, int64_t max ) {
+	ASSERT( max >= min, "GetInt64 min larger than max" );
+
+	return min + llabs( (int64_t)( ( (uint64_t)GetUInt() << 32 ) | GetUInt() ) ) % ( max - min + 1 );
 }
 
 #define FLOAT_RANGE_MAX 100.0f

@@ -31,6 +31,7 @@ CLASS( Random, Util )
 
 	const bool GetBool();
 	const uint32_t GetUInt( const uint32_t min = 0, const uint32_t max = UINT32_MAX - 1 );
+	const int64_t GetInt64( int64_t min = INT64_MIN, int64_t = INT64_MAX - 1 );
 	const float GetFloat( const float min = 0.0f, const float max = 1.0f );
 
 	const bool IsLucky( const value_t difficulty = 2 ); // 2 means 50/50 chance

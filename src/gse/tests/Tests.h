@@ -7,6 +7,10 @@
 namespace gse {
 namespace tests {
 
+struct test_info_t {
+	std::string script_path;
+};
+
 void AddTests( task::gsetests::GSETests* task );
 
 const std::string& GetTestFilename();

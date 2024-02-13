@@ -25,14 +25,25 @@ public:
 		}
 	}
 
-	const std::string ToString( const size_t depth = 0 ) const override {
+	const std::string ToString() const override {
 		std::string args = "";
 		for ( const auto& it : arguments ) {
-			args += it->ToString( depth + 2 );
+			if ( !args.empty() ) {
+				args += ", ";
+			}
+			args += it->ToString();
+		}
+		return callable->ToString() + "( " + args + " )";
+	}
+
+	const std::string Dump( const size_t depth = 0 ) const override {
+		std::string args = "";
+		for ( const auto& it : arguments ) {
+			args += it->Dump( depth + 2 );
 		}
 		return Formatted( "Call" + m_si.ToString() + "(", depth ) +
 			Formatted( "Callable(", depth + 1 ) +
-			callable->ToString( depth + 2 ) +
+			callable->Dump( depth + 2 ) +
 			Formatted( ")", depth + 1 ) +
 			Formatted( "Arguments(", depth + 1 ) +
 			args +

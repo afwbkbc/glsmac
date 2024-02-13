@@ -138,7 +138,7 @@ CLASS( Texture, Serializable )
 	// allocates and returns copy of bitmap from specified area
 	// don't forget to free() it later
 	// supposed to be faster than AddFrom
-	unsigned char* CopyBitmap( const size_t x1, const size_t y1, const size_t x2, const size_t y2 );
+	unsigned char* CopyBitmap( const size_t x1, const size_t y1, const size_t x2, const size_t y2 ) const;
 
 	const Buffer Serialize() const override;
 	void Unserialize( Buffer buf ) override;

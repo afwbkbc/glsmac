@@ -16,10 +16,19 @@ GSEPrompt::GSEPrompt( const std::string& syntax )
 
 }
 
+GSEPrompt::~GSEPrompt() noexcept {
+	delete m_gse_context;
+}
+
 void GSEPrompt::Start() {
 	Log( "Starting GSE prompt (syntax: " + m_syntax + ")" );
 
 	m_runner = m_gse.GetRunner();
+	if ( m_is_tty ) {
+		m_runner->EnableScopeContextJoins();
+	}
+	m_gse_context = m_gse.CreateGlobalContext();
+	m_gse_context->IncRefs();
 	m_is_running = true;
 	if ( m_is_tty ) {
 		std::cout << std::endl;
@@ -33,6 +42,8 @@ void GSEPrompt::Stop() {
 		delete ( it );
 	}
 	m_programs.clear();
+	m_gse_context->DecRefs();
+	m_gse_context = nullptr;
 	delete m_runner;
 	m_runner = nullptr;
 	m_input.clear();
@@ -69,11 +80,11 @@ void GSEPrompt::Iterate() {
 				}
 				m_input += buff;
 				if ( m_is_tty ) {
-					m_gse_context.AddSourceLine( buff );
+					m_gse_context->AddSourceLine( buff );
 					ProcessInput();
 				}
 			}
-			m_gse_context.AddSourceLines( util::String::SplitToLines( m_input ) );
+			m_gse_context->AddSourceLines( util::String::SplitToLines( m_input ) );
 			PrintPrompt();
 		}
 	}
@@ -114,26 +125,28 @@ void GSEPrompt::ProcessInput() {
 					1
 				}
 			};
-			context = m_gse_context.ForkContext( si, {}, {} );
+			context = m_gse_context->ForkContext( nullptr, si, {}, {} );
+			context->IncRefs();
 		}
 		else {
-			context = &m_gse_context;
+			context = m_gse_context;
 		}
 		const auto result = m_runner->Execute( context, program );
 		if ( m_is_tty ) {
-			context->JoinContext( &m_gse_context );
+			( (gse::ChildContext*)context )->JoinContext();
 		}
 		std::cout << result.Dump() << std::endl;
 	}
 	catch ( gse::Exception& e ) {
 		std::cout << e.ToStringAndCleanup() << std::endl;
+		context = nullptr;
 	}
 	catch ( std::runtime_error& e ) {
 		std::cout << "Internal error: " << e.what() << std::endl;
 	}
 	if ( m_is_tty ) {
 		if ( context ) {
-			delete context;
+			context->DecRefs();
 		}
 		std::cout << std::endl;
 	}

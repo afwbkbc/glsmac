@@ -22,11 +22,11 @@ struct Consts {
 	const struct {
 		const struct {
 
-			const Vec2< size_t > dimensions = {
+			const Vec2< uint32_t > dimensions = {
 				56,
 				56
 			};
-			const Vec2< size_t > radius = dimensions / (size_t)2;
+			const Vec2< uint32_t > radius = dimensions / (uint32_t)2;
 
 			const pcx_texture_coordinates_t water[2] = {
 				{ 280, 79 },
@@ -222,7 +222,7 @@ struct Consts {
 		} texture_pcx;
 		const struct {
 
-			const Vec2< size_t > dimensions = {
+			const Vec2< uint32_t > dimensions = {
 				100,
 				62
 			};

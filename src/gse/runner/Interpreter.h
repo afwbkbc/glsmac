@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <string>
+#include <optional>
 
 #include "Runner.h"
 
@@ -12,6 +13,7 @@
 #include "gse/program/Statement.h"
 
 #include "gse/type/Callable.h"
+#include "gse/type/Array.h"
 
 namespace gse {
 namespace runner {
@@ -26,14 +28,15 @@ private:
 	public:
 		Function(
 			const Interpreter* runner,
-			Context const* parent_context,
+			Context* context,
 			const std::vector< std::string >& parameters,
 			const program::Program* const program
 		);
+		~Function();
 		Value Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) override;
 	private:
 		const Interpreter* runner;
-		Context const* parent_context;
+		Context* context;
 		const std::vector< std::string > parameters;
 		const program::Program* const program;
 	};
@@ -49,9 +52,9 @@ private:
 	const program::Variable* EvaluateVariable( Context* ctx, const program::Operand* operand ) const;
 	const std::string EvaluateVarName( Context* ctx, const program::Operand* operand ) const;
 
-	const Value Deref( const Value& value ) const;
-	void WriteByRef( const gse::Value& ref, const gse::Value& value ) const;
-	const size_t GetIndex( const gse::Value& value ) const;
+	const Value Deref( Context* ctx, const si_t& si, const Value& value ) const;
+	void WriteByRef( Context* ctx, const si_t& si, const gse::Value& ref, const gse::Value& value ) const;
+	void ValidateRange( Context* ctx, const si_t& si, const type::Array* array, const std::optional< size_t > from, const std::optional< size_t > to ) const;
 
 };
 

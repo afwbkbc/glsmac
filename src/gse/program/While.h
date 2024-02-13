@@ -24,13 +24,13 @@ public:
 		delete body;
 	}
 
-	const std::string ToString( const size_t depth = 0 ) const override {
+	const std::string Dump( const size_t depth = 0 ) const override {
 		return Formatted( "While" + m_si.ToString() + "(", depth ) +
 			Formatted( "Condition(", depth + 1 ) +
-			condition->ToString( depth + 2 ) +
+			condition->Dump( depth + 2 ) +
 			Formatted( ")", depth + 1 ) +
 			Formatted( "Body(", depth + 1 ) +
-			body->ToString( depth + 2 ) +
+			body->Dump( depth + 2 ) +
 			Formatted( ")", depth + 1 ) +
 			Formatted( ")", depth );
 	}

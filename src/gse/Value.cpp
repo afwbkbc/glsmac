@@ -10,10 +10,6 @@
 #include "type/String.h"
 #include "type/Array.h"
 #include "type/Object.h"
-#include "type/ArrayRef.h"
-#include "type/ArrayRangeRef.h"
-#include "type/ObjectRef.h"
-#include "type/Range.h"
 
 namespace gse {
 
@@ -28,6 +24,10 @@ Value::~Value() {
 
 const type::Type* Value::Get() const {
 	return m_data.get();
+}
+
+const std::string& Value::GetTypeString() const {
+	return m_data.get()->GetTypeString( m_data.get()->type );
 }
 
 const std::string Value::ToString() const {
@@ -66,7 +66,7 @@ const Value Value::Clone() const {
 			for ( const auto& it : obj->value ) {
 				properties.insert_or_assign( it.first, it.second.Clone() );
 			}
-			return VALUE( type::Object, properties );
+			return VALUE( type::Object, properties, obj->object_class );
 		}
 		case type::Type::T_CALLABLE:
 			return *this;
@@ -84,7 +84,7 @@ const Value Value::Clone() const {
 
 #define OP( _op ) \
 const bool Value::operator _op( const Value& other ) const { \
-    return *m_data _op *other.m_data; \
+    return *m_data->Deref() _op *other.m_data->Deref(); \
 }
 OP( == )
 OP( != )
