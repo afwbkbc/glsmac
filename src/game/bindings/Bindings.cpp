@@ -23,6 +23,7 @@ Bindings::Bindings( Game* game )
 	m_bindings = {
 		B( message ),
 		B( exit ),
+		B( random ),
 		B( on_start ),
 		B( units ),
 		B( map ),

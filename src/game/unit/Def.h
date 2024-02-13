@@ -1,8 +1,10 @@
 #pragma once
 
+#include <string>
+
 #include "types/Buffer.h"
 
-#include <string>
+#include "game/map/TileState.h"
 
 namespace game {
 namespace unit {
@@ -18,6 +20,8 @@ public:
 
 	const def_type_t m_type;
 	const std::string m_name;
+
+	virtual const types::Vec3 GetSpawnCoords( const float tile_x, const float tile_y, const map::TileState::tile_vertices_t& tile_coords ) const = 0;
 
 	static const types::Buffer Serialize( const Def* def );
 	static Def* Unserialize( types::Buffer& buf );

@@ -27,19 +27,19 @@ BINDING_IMPL( map ) {
 				N_GETVALUE( x, 0, Int );
 				N_GETVALUE( y, 1, Int );
 				if ( x >= w ) {
-					ERROR( "X coordinate exceeds map width ( " + std::to_string( x ) + " >= " + std::to_string( w ) + " )" );
+					ERROR( gse::EC.INVALID_CALL, "X coordinate exceeds map width ( " + std::to_string( x ) + " >= " + std::to_string( w ) + " )" );
 				}
 				if ( y >= h ) {
-					ERROR( "Y coordinate exceeds map height ( " + std::to_string( y ) + " >= " + std::to_string( h ) + " )" );
+					ERROR( gse::EC.INVALID_CALL, "Y coordinate exceeds map height ( " + std::to_string( y ) + " >= " + std::to_string( h ) + " )" );
 				}
 				if ( x < 0 ) {
-					ERROR( "X coordinate can't be negative ( " + std::to_string( x ) + " < 0" );
+					ERROR( gse::EC.INVALID_CALL, "X coordinate can't be negative ( " + std::to_string( x ) + " < 0" );
 				}
 				if ( y < 0 ) {
-					ERROR( "Y coordinate can't be negative ( " + std::to_string( y ) + " < 0" );
+					ERROR( gse::EC.INVALID_CALL, "Y coordinate can't be negative ( " + std::to_string( y ) + " < 0" );
 				}
 				if ( x % 2 != y % 2 ) {
-					ERROR( "Coordinates axis oddity differs ( " + std::to_string( x ) + " % 2 != " + std::to_string( y ) + " % 2 )" );
+					ERROR( gse::EC.INVALID_CALL, "Coordinates axis oddity differs ( " + std::to_string( x ) + " % 2 != " + std::to_string( y ) + " % 2 )" );
 				}
 				const auto* tile = m->GetTile( x, y );
 				const gse::type::Object::properties_t properties = {

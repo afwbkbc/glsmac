@@ -13,13 +13,22 @@ while (i < #size(units)) {
         let x = 0;
         while (x < #game.map.width) {
             if (x % 2 == y % 2) {
-                let tile = #game.map.get_tile(x, y);
-                if (tile.is_land) {
-                    #game.units.spawn('MINDWORMS', tile);
+                if (#game.random.get_int(0, 1) == 1) {
+                    let tile = #game.map.get_tile(x, y);
+                    if (tile.is_land) {
+                        if (#game.random.get_int(0, 1) == 1) {
+                            #game.units.spawn('MindWorms', tile);
+                        } else {
+                            #game.units.spawn('SporeLauncher', tile);
+                        }
+                    } else {
+                        #game.units.spawn('SeaLurk', tile);
+                    }
                 }
             }
             x++;
         }
         y++;
     }
+    //#game.units.spawn('MINDWORMS', #game.map.get_tile(0, 0));
 });

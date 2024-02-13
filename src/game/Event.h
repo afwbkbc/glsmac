@@ -13,6 +13,7 @@ public:
 	enum event_type_t {
 		ET_NONE,
 		ET_QUIT,
+		ET_ERROR,
 		ET_GLOBAL_MESSAGE,
 		ET_SPAWN_UNIT,
 	};
@@ -26,6 +27,10 @@ public:
 		struct {
 			std::string* reason;
 		} quit;
+		struct {
+			std::string* what;
+			std::string* stacktrace;
+		} error;
 		struct {
 			std::string* message;
 		} global_message;

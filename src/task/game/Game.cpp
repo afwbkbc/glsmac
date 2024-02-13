@@ -241,14 +241,24 @@ void Game::Iterate() {
 					Log( "Need to add " + std::to_string( response.data.edit_map.sprites.actors_to_add->size() ) + " actors" );
 					for ( auto& a : *response.data.edit_map.sprites.actors_to_add ) {
 						const auto& actor = a.second;
-						GetSpriteActor( actor.name, "ter1.pcx", actor.tex_coords, ::game::map::s_consts.tc.ter1_pcx.dimensions, actor.z_index );
+						GetInstancedSprite(
+							actor.name,
+							"ter1.pcx",
+							actor.tex_coords,
+							::game::map::s_consts.tc.ter1_pcx.dimensions,
+							{ // TODO
+								::game::map::s_consts.tc.ter1_pcx.dimensions.x / 2,
+								::game::map::s_consts.tc.ter1_pcx.dimensions.y / 2
+							},
+							actor.z_index
+						);
 					}
 				}
 
 				if ( response.data.edit_map.sprites.instances_to_remove ) {
 					Log( "Need to remove " + std::to_string( response.data.edit_map.sprites.instances_to_remove->size() ) + " instances" );
 					for ( auto& i : *response.data.edit_map.sprites.instances_to_remove ) {
-						auto* actor = GetSpriteActorByKey( i.second );
+						auto* actor = GetInstancedSpriteByKey( i.second ).actor;
 						ASSERT( actor, "sprite actor not found" );
 						ASSERT( actor->HasInstance( i.first ), "actor instance not found" );
 						actor->RemoveInstance( i.first );
@@ -259,18 +269,12 @@ void Game::Iterate() {
 					Log( "Need to add " + std::to_string( response.data.edit_map.sprites.instances_to_add->size() ) + " instances" );
 					for ( auto& i : *response.data.edit_map.sprites.instances_to_add ) {
 						const auto& instance = i.second;
-						auto* actor = GetSpriteActorByKey( instance.first );
+						auto* actor = GetInstancedSpriteByKey( instance.first ).actor;
 						ASSERT( actor, "sprite actor not found" );
 						ASSERT( !actor->HasInstance( i.first ), "actor instance already exists" );
 						actor->SetInstance( i.first, instance.second );
 					}
 				}
-
-				/*
-				result.sprites_to_add = *response.data.select_tile.sprites_to_add;
-				result.instances_to_remove = *response.data.select_tile.instances_to_remove;
-				result.instances_to_add = *response.data.select_tile.instances_to_add;
-				*/
 			}
 		}
 	}
@@ -408,7 +412,7 @@ types::Texture* Game::GetSourceTexture( const std::string& name ) {
 			Color::RGB( 152, 24, 228 ), // remove transparency color
 			Color::RGB( 100, 16, 156 ), // remove second transparency color
 			Color::RGB( 24, 184, 228 ), // remove frame
-			Color::RGB( 253, 189, 118 ) // remove drawn shadows too (we'll have our own)
+			Color::RGB( 253, 189, 118 ), // remove drawn shadows too (we'll have our own)
 		}
 	);
 	ASSERT( texture, "texture not loaded" );
@@ -416,7 +420,14 @@ types::Texture* Game::GetSourceTexture( const std::string& name ) {
 	return texture;
 }
 
-scene::actor::Instanced* Game::GetSpriteActor( const std::string& name, const std::string& tex_file, const ::game::map::Consts::pcx_texture_coordinates_t& xy, const ::game::map::Consts::pcx_texture_coordinates_t& wh, const float z_index ) {
+Game::instanced_sprite_t& Game::GetInstancedSprite(
+	const std::string& name,
+	const std::string& tex_file,
+	const ::game::map::Consts::pcx_texture_coordinates_t& xy,
+	const ::game::map::Consts::pcx_texture_coordinates_t& wh,
+	const ::game::map::Consts::pcx_texture_coordinates_t& cxy,
+	const float z_index
+) {
 
 	const auto key = name + " " + tex_file + " " + xy.ToString() + " " + wh.ToString();
 
@@ -454,19 +465,20 @@ scene::actor::Instanced* Game::GetSpriteActor( const std::string& name, const st
 			name,
 			xy,
 			wh,
+			cxy,
 			instanced
 		};
-		return instanced;
+		return m_instanced_sprites.at( key );
 	}
 	else {
-		return it->second.actor;
+		return it->second;
 	}
 }
 
-scene::actor::Instanced* Game::GetSpriteActorByKey( const std::string& key ) {
+Game::instanced_sprite_t& Game::GetInstancedSpriteByKey( const std::string& key ) {
 	const auto& it = m_instanced_sprites.find( key );
 	ASSERT( it != m_instanced_sprites.end(), "sprite actor '" + key + "' not found" );
-	return it->second.actor;
+	return it->second;
 }
 
 void Game::CenterAtCoordinatePercents( const Vec2< float > position_percents ) {
@@ -770,7 +782,7 @@ void Game::SpawnUnit( const ::game::unit::Unit* unit, const float x, const float
 				case ::game::unit::Render::RT_SPRITE: {
 					const auto* render = (::game::unit::SpriteRender*)def->m_render;
 
-					auto* actor = GetSpriteActor(
+					auto& sprite = GetInstancedSprite(
 						"Unit_" + def->m_name, render->m_file, {
 							render->m_x,
 							render->m_y,
@@ -778,10 +790,15 @@ void Game::SpawnUnit( const ::game::unit::Unit* unit, const float x, const float
 						{
 							render->m_w,
 							render->m_h,
-						}, 0.5f
+						},
+						{
+							render->m_cx,
+							render->m_cy,
+						},
+						0.5f
 					);
-					static size_t id = 1;
-					actor->SetInstance(
+					static size_t id = 1; // TODO
+					sprite.actor->SetInstance(
 						id++, {
 							x,
 							y,
@@ -804,23 +821,34 @@ void Game::SpawnUnit( const ::game::unit::Unit* unit, const float x, const float
 
 void Game::ProcessEvent( const ::game::Event& event ) {
 	Log( "Received event (type=" + std::to_string( event.type ) + ")" );
+	const auto f_exit = [ this, &event ]() -> void {
+		ExitGame(
+			[ this, event ]() -> void {
+				if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
+					g_engine->ShutDown();
+				}
+				else {
+					ReturnToMainMenu(
+						event.data.quit.reason
+							? *event.data.quit.reason
+							: ""
+					);
+				}
+			}
+		);
+	};
 	switch ( event.type ) {
 		case ::game::Event::ET_QUIT: {
-			ExitGame(
-				[ this, event ]() -> void {
-					if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
-						g_engine->ShutDown();
-					}
-					else {
-						ReturnToMainMenu(
-							event.data.quit.reason
-								? *event.data.quit.reason
-								: ""
-						);
-					}
+			f_exit();
+			break;
+		}
+		case ::game::Event::ET_ERROR: {
+			Log( *event.data.error.stacktrace );
+			g_engine->GetUI()->ShowError(
+				*event.data.error.what, UH( f_exit ) {
+					f_exit();
 				}
 			);
-			break;
 		}
 		case ::game::Event::ET_GLOBAL_MESSAGE: {
 			AddMessage( *event.data.global_message.message );
@@ -949,10 +977,20 @@ void Game::Initialize(
 	Log( "Sprites count: " + std::to_string( sprite_actors.size() ) );
 	Log( "Sprites instances: " + std::to_string( sprite_instances.size() ) );
 	for ( auto& a : sprite_actors ) {
-		GetSpriteActor( a.second.name, "ter1.pcx", a.second.tex_coords, ::game::map::s_consts.tc.ter1_pcx.dimensions, a.second.z_index );
+		GetInstancedSprite(
+			a.second.name,
+			"ter1.pcx",
+			a.second.tex_coords,
+			::game::map::s_consts.tc.ter1_pcx.dimensions,
+			{
+				::game::map::s_consts.tc.ter1_pcx.dimensions.x / 2,
+				::game::map::s_consts.tc.ter1_pcx.dimensions.y / 2
+			},
+			a.second.z_index
+		);
 	}
 	for ( auto& instance : sprite_instances ) {
-		auto* actor = GetSpriteActorByKey( instance.second.first );
+		auto* actor = GetInstancedSpriteByKey( instance.second.first ).actor;
 		ASSERT( actor, "sprite actor not found" );
 		ASSERT( !actor->HasInstance( instance.first ), "actor instance already exists" );
 		actor->SetInstance( instance.first, instance.second.second );

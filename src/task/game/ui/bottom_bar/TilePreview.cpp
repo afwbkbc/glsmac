@@ -55,7 +55,7 @@ void TilePreview::PreviewTile( const tile_data_t& tile_data ) {
 
 	// copy sprites from tile
 	for ( auto& s : tile_data.sprites ) {
-		auto* actor = m_game->GetSpriteActorByKey( s );
+		auto* actor = m_game->GetInstancedSpriteByKey( s ).actor;
 		auto sprite = actor->GetSpriteActor();
 		auto mesh = sprite->GenerateMesh();
 		NEWV( sprite_preview, object::Mesh, "BBTilePreviewSprite" );

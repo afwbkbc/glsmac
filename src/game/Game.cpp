@@ -851,9 +851,11 @@ void Game::Quit( const std::string& reason ) {
 	AddEvent( e );
 }
 
-void Game::OnGSEError( gse::Exception& e ) {
-	Log( e.ToStringAndCleanup() );
-	Quit( (std::string)"GSE error: " + e.what() );
+void Game::OnGSEError( gse::Exception& err ) {
+	auto e = Event( Event::ET_ERROR );
+	NEW( e.data.error.what, std::string, (std::string)"Script error: " + err.what() );
+	NEW( e.data.error.stacktrace, std::string, err.ToStringAndCleanup() );
+	AddEvent( e );
 }
 
 void Game::AddUnitDef( const std::string& name, const unit::Def* def, gse::Context* ctx, const gse::si_t& si ) {
@@ -893,11 +895,14 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 	const auto l = tile->is_water_tile
 		? map::TileState::LAYER_WATER
 		: map::TileState::LAYER_LAND;
-	const auto& t = ts->layers[ l ].coords.top;
-	const auto& c = ts->layers[ l ].coords.center;
+	const auto c = unit->m_def->GetSpawnCoords(
+		ts->coord.x,
+		ts->coord.y,
+		ts->layers[ l ].coords
+	);
 	e.data.spawn_unit.coords = {
 		c.x,
-		-( c.y + t.y ) / 2, // huh?
+		-c.y,
 		c.z
 	};
 	AddEvent( e );

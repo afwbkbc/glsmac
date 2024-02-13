@@ -14,6 +14,8 @@ public:
 
 	const Render* m_render;
 
+	const types::Vec3 GetSpawnCoords( const float tile_x, const float tile_y, const map::TileState::tile_vertices_t& tile_coords ) const override;
+
 private:
 	friend class Def;
 

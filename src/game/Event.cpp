@@ -18,6 +18,11 @@ Event::Event( const Event& other )
 			NEW( data.quit.reason, std::string, *other.data.quit.reason );
 			break;
 		}
+		case ET_ERROR: {
+			NEW( data.error.what, std::string, *other.data.error.what );
+			NEW( data.error.stacktrace, std::string, *other.data.error.stacktrace );
+			break;
+		}
 		case ET_GLOBAL_MESSAGE: {
 			NEW( data.global_message.message, std::string, *other.data.global_message.message );
 			break;
@@ -37,6 +42,11 @@ Event::~Event() {
 	switch ( type ) {
 		case ET_QUIT: {
 			DELETE( data.quit.reason );
+			break;
+		}
+		case ET_ERROR: {
+			DELETE( data.error.what );
+			DELETE( data.error.stacktrace );
 			break;
 		}
 		case ET_GLOBAL_MESSAGE: {

@@ -29,19 +29,21 @@ BINDING_IMPL( units ) {
 						N_GETPROP( render_def, sprite_y, "y", Int );
 						N_GETPROP( render_def, sprite_w, "w", Int );
 						N_GETPROP( render_def, sprite_h, "h", Int );
+						N_GETPROP( render_def, sprite_cx, "cx", Int );
+						N_GETPROP( render_def, sprite_cy, "cy", Int );
 						m_game->AddUnitDef( name,
 							new unit::StaticDef(
 								name,
-								new unit::SpriteRender( sprite_file, sprite_x, sprite_y, sprite_w, sprite_h )
+								new unit::SpriteRender( sprite_file, sprite_x, sprite_y, sprite_w, sprite_h, sprite_cx, sprite_cy )
 							),
 							ctx, call_si );
 					}
 					else {
-						ERROR( "Unsupported render type: " + render_type );
+						ERROR( gse::EC.GAME_ERROR, "Unsupported render type: " + render_type );
 					}
 				}
 				else {
-					ERROR( "Unsupported unit type: " + unit_type );
+					ERROR( gse::EC.GAME_ERROR, "Unsupported unit type: " + unit_type );
 				}
 				return VALUE( gse::type::Undefined );
 			})

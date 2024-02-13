@@ -90,8 +90,23 @@ CLASS( Game, base::Task )
 	const std::string& GetMapLastDirectory() const;
 
 	types::Texture* GetSourceTexture( const std::string& name );
-	scene::actor::Instanced* GetSpriteActor( const std::string& name, const std::string& tex_file, const ::game::map::Consts::pcx_texture_coordinates_t& xy, const ::game::map::Consts::pcx_texture_coordinates_t& wh, const float z_index );
-	scene::actor::Instanced* GetSpriteActorByKey( const std::string& key ); // actor must already exist
+
+	struct instanced_sprite_t {
+		std::string name;
+		::game::map::Consts::pcx_texture_coordinates_t xy;
+		::game::map::Consts::pcx_texture_coordinates_t wh;
+		::game::map::Consts::pcx_texture_coordinates_t cxy;
+		scene::actor::Instanced* actor;
+	};
+	instanced_sprite_t& GetInstancedSprite(
+		const std::string& name,
+		const std::string& tex_file,
+		const ::game::map::Consts::pcx_texture_coordinates_t& xy,
+		const ::game::map::Consts::pcx_texture_coordinates_t& wh,
+		const ::game::map::Consts::pcx_texture_coordinates_t& cxy,
+		const float z_index
+	);
+	instanced_sprite_t& GetInstancedSpriteByKey( const std::string& key ); // actor must already exist
 
 	void CenterAtCoordinatePercents( const Vec2< float > position_percents );
 
@@ -334,12 +349,6 @@ private:
 #endif
 	} m_mt_ids = {};
 
-	struct instanced_sprite_t {
-		std::string name;
-		::game::map::Consts::pcx_texture_coordinates_t xy;
-		::game::map::Consts::pcx_texture_coordinates_t wh;
-		scene::actor::Instanced* actor;
-	};
 	std::unordered_map< std::string, instanced_sprite_t > m_instanced_sprites = {};
 
 	void CancelRequests();

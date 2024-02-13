@@ -46,7 +46,7 @@ protected:
 #define BINDING_IMPL( _name ) \
     gse::Value BINDING( _name )::Get()
 
-#define ERROR( _text ) throw gse::Exception( gse::EC.GAME_ERROR, _text, ctx, call_si );
+#define ERROR( _type, _text ) throw gse::Exception( _type, _text, ctx, call_si );
 
 #define CALLBACK( _type ) NATIVE_CALL( this ) { \
     N_EXPECT_ARGS( 1 ); \
@@ -65,6 +65,8 @@ namespace bindings {
 BINDING_DEF( message )
 
 BINDING_DEF( exit )
+
+BINDING_DEF( random )
 
 BINDING_DEF( on_start )
 

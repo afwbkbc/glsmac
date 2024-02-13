@@ -4,6 +4,7 @@ SET( SRC ${SRC}
 	${PWD}/Binding.cpp
 	${PWD}/Message.cpp
 	${PWD}/Exit.cpp
+	${PWD}/Random.cpp
 	${PWD}/OnStart.cpp
 	${PWD}/Units.cpp
 	${PWD}/Map.cpp
