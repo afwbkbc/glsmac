@@ -89,8 +89,9 @@ CLASS( Game, base::Task )
 	const std::string& GetMapFilename() const;
 	const std::string& GetMapLastDirectory() const;
 
-	scene::actor::Instanced* GetTerrainSpriteActor( const std::string& name, const ::game::map::Consts::pcx_texture_coordinates_t& tex_coords, const float z_index );
-	scene::actor::Instanced* GetTerrainSpriteActorByKey( const std::string& key ); // actor must already exist
+	types::Texture* GetSourceTexture( const std::string& name );
+	scene::actor::Instanced* GetSpriteActor( const std::string& name, const std::string& tex_file, const ::game::map::Consts::pcx_texture_coordinates_t& xy, const ::game::map::Consts::pcx_texture_coordinates_t& wh, const float z_index );
+	scene::actor::Instanced* GetSpriteActorByKey( const std::string& key ); // actor must already exist
 
 	void CenterAtCoordinatePercents( const Vec2< float > position_percents );
 
@@ -129,10 +130,14 @@ protected:
 
 private:
 
+	const std::string TERRAIN_SOURCE_PCX = "ter1.pcx";
+
 	::game::map_editor::MapEditor::tool_type_t m_editor_tool = ::game::map_editor::MapEditor::TT_NONE;
 	::game::map_editor::MapEditor::brush_type_t m_editor_brush = ::game::map_editor::MapEditor::BT_NONE;
 
 	void UpdateMapData( const types::Vec2< size_t >& map_size );
+
+	void SpawnUnit( const ::game::unit::Unit* unit, const float x, const float y, const float z );
 
 	void ProcessEvent( const ::game::Event& event );
 
@@ -269,9 +274,7 @@ private:
 	void DeselectTile();
 
 	struct {
-		struct {
-			types::Texture* ter1_pcx = nullptr;
-		} source;
+		std::unordered_map< std::string, types::Texture* > source;
 		types::Texture* terrain = nullptr;
 	} m_textures;
 
@@ -333,7 +336,8 @@ private:
 
 	struct instanced_sprite_t {
 		std::string name;
-		::game::map::Consts::pcx_texture_coordinates_t tex_coords;
+		::game::map::Consts::pcx_texture_coordinates_t xy;
+		::game::map::Consts::pcx_texture_coordinates_t wh;
 		scene::actor::Instanced* actor;
 	};
 	std::unordered_map< std::string, instanced_sprite_t > m_instanced_sprites = {};

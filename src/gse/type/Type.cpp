@@ -98,10 +98,11 @@ const std::string Type::ToString() const {
 			return str;
 		}
 		case T_OBJECT: {
+			const auto* obj = (Object*)this;
 			std::string str = "";
-			str.append( "{ " );
+			str.append( Object::GetClassString( obj->object_class ) + "{ " );
 			bool first = true;
-			for ( const auto& it : ( (Object*)this )->value ) {
+			for ( const auto& it : obj->value ) {
 				if ( first ) {
 					first = false;
 				}
@@ -178,10 +179,11 @@ const std::string Type::Dump() const {
 			return str;
 		}
 		case T_OBJECT: {
+			const auto* obj = (Object*)this;
 			std::string str = "";
-			str.append( "object{" );
+			str.append( "object" + Object::GetClassString( obj->object_class ) + "{" );
 			bool first = true;
-			for ( const auto& it : ( (Object*)this )->value ) {
+			for ( const auto& it : obj->value ) {
 				if ( first ) {
 					first = false;
 				}
@@ -298,8 +300,13 @@ const bool Type::operator==( const Type& other ) const {
 			}
 		}
 		case T_OBJECT: {
-			const auto& a = ( (const Object*)this )->value;
-			const auto& b = ( (const Object*)&other )->value;
+			const auto* obj_a = (const Object*)this;
+			const auto* obj_b = (const Object*)&other;
+			if ( obj_a->object_class != obj_b->object_class ) {
+				return false;
+			}
+			const auto& a = obj_a->value;
+			const auto& b = obj_b->value;
 			if ( a.size() != b.size() ) {
 				return false;
 			}

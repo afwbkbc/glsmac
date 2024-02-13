@@ -23,9 +23,9 @@ Bindings::Bindings( Game* game )
 	m_bindings = {
 		B( message ),
 		B( exit ),
-		B( define_unit ),
-		B( spawn_unit ),
 		B( on_start ),
+		B( units ),
+		B( map ),
 	};
 #undef B
 }
@@ -53,11 +53,16 @@ void Bindings::RunMain() {
 void Bindings::Call( const callback_slot_t slot, const callback_arguments_t* arguments ) {
 	const auto& it = m_callbacks.find( slot );
 	if ( it != m_callbacks.end() ) {
-		( (gse::type::Callable*)it->second.Get() )->Run(
-			m_gse_context, m_si_internal, arguments
-				? *arguments
-				: m_no_arguments
-		);
+		try {
+			( (gse::type::Callable*)it->second.Get() )->Run(
+				m_gse_context, m_si_internal, arguments
+					? *arguments
+					: m_no_arguments
+			);
+		}
+		catch ( gse::Exception& e ) {
+			m_game->OnGSEError( e );
+		}
 	}
 }
 
@@ -113,7 +118,7 @@ const gse::Value Bindings::GetDifficulty( const rules::DifficultyLevel* difficul
 
 void Bindings::SetCallback( const callback_slot_t slot, const gse::Value& callback, gse::Context* context, const si_t& si ) {
 	if ( m_callbacks.find( slot ) != m_callbacks.end() ) {
-		throw gse::Exception( EC.GAME_API_ERROR, "Callback slot already in use", context, si );
+		throw gse::Exception( EC.GAME_ERROR, "Callback slot already in use", context, si );
 	}
 	m_callbacks.insert_or_assign( slot, callback );
 }

@@ -9,17 +9,16 @@ namespace unit {
 
 class StaticDef : public Def {
 public:
+	StaticDef( const std::string& name, const Render* render );
+	~StaticDef();
 
-	StaticDef( const std::string& name, const Render* render )
-		: Def( name )
-		, m_render( render ) {}
-
-	~StaticDef() {
-		delete m_render;
-	}
+	const Render* m_render;
 
 private:
-	const Render* m_render;
+	friend class Def;
+
+	static void Serialize( types::Buffer& buf, const StaticDef* def );
+	static StaticDef* Unserialize( types::Buffer& buf, const std::string& name );
 
 };
 

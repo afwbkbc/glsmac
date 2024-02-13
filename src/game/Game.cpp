@@ -845,16 +845,21 @@ void Game::Message( const std::string& text ) {
 	AddEvent( e );
 }
 
-void Game::Quit() {
+void Game::Quit( const std::string& reason ) {
 	auto e = Event( Event::ET_QUIT );
 	NEW( e.data.quit.reason, std::string, "Lost connection to server" );
 	AddEvent( e );
 }
 
+void Game::OnGSEError( gse::Exception& e ) {
+	Log( e.ToStringAndCleanup() );
+	Quit( (std::string)"GSE error: " + e.what() );
+}
+
 void Game::AddUnitDef( const std::string& name, const unit::Def* def, gse::Context* ctx, const gse::si_t& si ) {
 	if ( m_unit_defs.find( name ) != m_unit_defs.end() ) {
 		delete def;
-		throw gse::Exception( gse::EC.GAME_API_ERROR, "Unit definition '" + name + "' already exists", ctx, si );
+		throw gse::Exception( gse::EC.GAME_ERROR, "Unit definition '" + name + "' already exists", ctx, si );
 	}
 	m_unit_defs.insert_or_assign( name, def );
 	Log( "Added unit def '" + name + "'" );
@@ -877,9 +882,25 @@ void Game::AddGameEvent( const event::Event* event, gse::Context* ctx, const gse
 }
 
 void Game::SpawnUnit( unit::Unit* unit ) {
-	ASSERT( m_units.find( unit->GetId() ) == m_units.end(), "duplicate unit id" );
-	m_units.insert_or_assign( unit->GetId(), unit );
-	Log( "Spawned unit ('" + unit->GetDef()->GetName() + "') at [ " + std::to_string( unit->GetPosX() ) + " " + std::to_string( unit->GetPosY() ) + " ]" );
+	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
+	Log( "Spawning unit ('" + unit->m_def->m_name + "') at [ " + std::to_string( unit->m_pos_x ) + " " + std::to_string( unit->m_pos_y ) + " ]" );
+	m_units.insert_or_assign( unit->m_id, unit );
+	const auto* tile = m_map->GetTile( unit->m_pos_x, unit->m_pos_y );
+	const auto* ts = m_map->GetTileState( tile );
+	// notify frontend
+	auto e = Event( Event::ET_SPAWN_UNIT );
+	NEW( e.data.spawn_unit.serialized_unit, std::string, unit::Unit::Serialize( unit ).ToString() );
+	const auto l = tile->is_water_tile
+		? map::TileState::LAYER_WATER
+		: map::TileState::LAYER_LAND;
+	const auto& t = ts->layers[ l ].coords.top;
+	const auto& c = ts->layers[ l ].coords.center;
+	e.data.spawn_unit.coords = {
+		c.x,
+		-( c.y + t.y ) / 2, // huh?
+		c.z
+	};
+	AddEvent( e );
 }
 
 void Game::AddEvent( const Event& event ) {
@@ -953,7 +974,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 						m_initialization_error = "Lost connection to server";
 					}
 					else {
-						Quit();
+						Quit( "Lost connection to server" );
 					}
 				};
 				connection->m_on_error = [ this, connection ]( const std::string& reason ) -> void {

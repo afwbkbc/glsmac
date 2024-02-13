@@ -6,6 +6,10 @@
 #include "util/FS.h"
 #include "ui/popup/PleaseDontGo.h"
 
+#include "game/unit/Unit.h"
+#include "game/unit/StaticDef.h"
+#include "game/unit/SpriteRender.h"
+
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
 namespace task {
@@ -28,17 +32,6 @@ Game::~Game() {
 }
 
 void Game::Start() {
-
-	if ( !m_textures.source.ter1_pcx ) {
-		m_textures.source.ter1_pcx = g_engine->GetTextureLoader()->LoadTextureTCs(
-			"ter1.pcx", {
-				Color::RGB( 152, 24, 228 ), // remove transparency color
-				Color::RGB( 100, 16, 156 ), // remove second transparency color
-				Color::RGB( 24, 184, 228 ), // remove frame
-				Color::RGB( 253, 189, 118 ) // remove drawn shadows too (we'll have our own)
-			}
-		);
-	}
 
 	// note: game thread has it's own random, this one is mostly for UI and small things
 	NEW( m_random, util::Random );
@@ -248,14 +241,14 @@ void Game::Iterate() {
 					Log( "Need to add " + std::to_string( response.data.edit_map.sprites.actors_to_add->size() ) + " actors" );
 					for ( auto& a : *response.data.edit_map.sprites.actors_to_add ) {
 						const auto& actor = a.second;
-						GetTerrainSpriteActor( actor.name, actor.tex_coords, actor.z_index );
+						GetSpriteActor( actor.name, "ter1.pcx", actor.tex_coords, ::game::map::s_consts.tc.ter1_pcx.dimensions, actor.z_index );
 					}
 				}
 
 				if ( response.data.edit_map.sprites.instances_to_remove ) {
 					Log( "Need to remove " + std::to_string( response.data.edit_map.sprites.instances_to_remove->size() ) + " instances" );
 					for ( auto& i : *response.data.edit_map.sprites.instances_to_remove ) {
-						auto* actor = GetTerrainSpriteActorByKey( i.second );
+						auto* actor = GetSpriteActorByKey( i.second );
 						ASSERT( actor, "sprite actor not found" );
 						ASSERT( actor->HasInstance( i.first ), "actor instance not found" );
 						actor->RemoveInstance( i.first );
@@ -266,7 +259,7 @@ void Game::Iterate() {
 					Log( "Need to add " + std::to_string( response.data.edit_map.sprites.instances_to_add->size() ) + " instances" );
 					for ( auto& i : *response.data.edit_map.sprites.instances_to_add ) {
 						const auto& instance = i.second;
-						auto* actor = GetTerrainSpriteActorByKey( instance.first );
+						auto* actor = GetSpriteActorByKey( instance.first );
 						ASSERT( actor, "sprite actor not found" );
 						ASSERT( !actor->HasInstance( i.first ), "actor instance already exists" );
 						actor->SetInstance( i.first, instance.second );
@@ -405,14 +398,34 @@ const std::string& Game::GetMapLastDirectory() const {
 	return m_map_data.last_directory;
 }
 
-scene::actor::Instanced* Game::GetTerrainSpriteActor( const std::string& name, const ::game::map::Consts::pcx_texture_coordinates_t& tex_coords, const float z_index ) {
+types::Texture* Game::GetSourceTexture( const std::string& name ) {
+	const auto it = m_textures.source.find( name );
+	if ( it != m_textures.source.end() ) {
+		return it->second;
+	}
+	auto* texture = g_engine->GetTextureLoader()->LoadTextureTCs(
+		name, {
+			Color::RGB( 152, 24, 228 ), // remove transparency color
+			Color::RGB( 100, 16, 156 ), // remove second transparency color
+			Color::RGB( 24, 184, 228 ), // remove frame
+			Color::RGB( 253, 189, 118 ) // remove drawn shadows too (we'll have our own)
+		}
+	);
+	ASSERT( texture, "texture not loaded" );
+	m_textures.source.insert_or_assign( name, texture );
+	return texture;
+}
 
-	const auto key = name + " " + tex_coords.ToString();
+scene::actor::Instanced* Game::GetSpriteActor( const std::string& name, const std::string& tex_file, const ::game::map::Consts::pcx_texture_coordinates_t& xy, const ::game::map::Consts::pcx_texture_coordinates_t& wh, const float z_index ) {
+
+	const auto key = name + " " + tex_file + " " + xy.ToString() + " " + wh.ToString();
 
 	const auto& it = m_instanced_sprites.find( key );
 	if ( it == m_instanced_sprites.end() ) {
 
 		Log( "Creating instanced sprite actor: " + key );
+
+		auto* pcx = GetSourceTexture( tex_file );
 
 		NEWV(
 			sprite,
@@ -422,15 +435,15 @@ scene::actor::Instanced* Game::GetTerrainSpriteActor( const std::string& name, c
 				::game::map::s_consts.tile.scale.x,
 				::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
 			},
-			m_textures.source.ter1_pcx,
+			pcx,
 			{
 				{
-					(float)1.0f / m_textures.source.ter1_pcx->m_width * ( tex_coords.x + 1 ),
-					(float)1.0f / m_textures.source.ter1_pcx->m_height * ( tex_coords.y + 1 )
+					(float)1.0f / pcx->m_width * ( xy.x + 1 ),
+					(float)1.0f / pcx->m_height * ( xy.y + 1 )
 				},
 				{
-					(float)1.0f / m_textures.source.ter1_pcx->m_width * ( tex_coords.x + ::game::map::s_consts.tc.ter1_pcx.dimensions.x - 4 ),
-					(float)1.0f / m_textures.source.ter1_pcx->m_height * ( tex_coords.y + ::game::map::s_consts.tc.ter1_pcx.dimensions.y - 4 )
+					(float)1.0f / pcx->m_width * ( xy.x + wh.x - 4 ),
+					(float)1.0f / pcx->m_height * ( xy.y + wh.y - 4 )
 				}
 			}
 		);
@@ -439,7 +452,8 @@ scene::actor::Instanced* Game::GetTerrainSpriteActor( const std::string& name, c
 		m_world_scene->AddActor( instanced );
 		m_instanced_sprites[ key ] = {
 			name,
-			tex_coords,
+			xy,
+			wh,
 			instanced
 		};
 		return instanced;
@@ -449,7 +463,7 @@ scene::actor::Instanced* Game::GetTerrainSpriteActor( const std::string& name, c
 	}
 }
 
-scene::actor::Instanced* Game::GetTerrainSpriteActorByKey( const std::string& key ) {
+scene::actor::Instanced* Game::GetSpriteActorByKey( const std::string& key ) {
 	const auto& it = m_instanced_sprites.find( key );
 	ASSERT( it != m_instanced_sprites.end(), "sprite actor '" + key + "' not found" );
 	return it->second.actor;
@@ -748,6 +762,46 @@ const ::game::map_editor::MapEditor::brush_type_t Game::GetEditorBrush() const {
 	return m_editor_brush;
 }
 
+void Game::SpawnUnit( const ::game::unit::Unit* unit, const float x, const float y, const float z ) {
+	switch ( unit->m_def->m_type ) {
+		case ::game::unit::Def::DT_STATIC: {
+			const auto* def = (::game::unit::StaticDef*)unit->m_def;
+			switch ( def->m_render->m_type ) {
+				case ::game::unit::Render::RT_SPRITE: {
+					const auto* render = (::game::unit::SpriteRender*)def->m_render;
+
+					auto* actor = GetSpriteActor(
+						"Unit_" + def->m_name, render->m_file, {
+							render->m_x,
+							render->m_y,
+						},
+						{
+							render->m_w,
+							render->m_h,
+						}, 0.5f
+					);
+					static size_t id = 1;
+					actor->SetInstance(
+						id++, {
+							x,
+							y,
+							z
+						}
+					);
+
+					break;
+				}
+				default:
+					THROW( "unknown unit render type: " + std::to_string( def->m_render->m_type ) );
+			}
+			break;
+		}
+		default:
+			THROW( "unknown unit def type: " + std::to_string( unit->m_def->m_type ) );
+	}
+	//Log( "SPAWNED " + unit->GetDef()->GetName() + " at " + std::to_string( unit->GetPosX() ) + "x" + std::to_string( unit->GetPosY() ) );
+}
+
 void Game::ProcessEvent( const ::game::Event& event ) {
 	Log( "Received event (type=" + std::to_string( event.type ) + ")" );
 	switch ( event.type ) {
@@ -770,6 +824,15 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 		}
 		case ::game::Event::ET_GLOBAL_MESSAGE: {
 			AddMessage( *event.data.global_message.message );
+			break;
+		}
+		case ::game::Event::ET_SPAWN_UNIT: {
+			types::Buffer buf( *event.data.spawn_unit.serialized_unit );
+			const auto* unit = ::game::unit::Unit::Unserialize( buf );
+			const auto c = event.data.spawn_unit.coords;
+			SpawnUnit( unit, c.x, c.y, c.z );
+			delete unit->m_def;
+			delete unit;
 			break;
 		}
 		default: {
@@ -886,10 +949,10 @@ void Game::Initialize(
 	Log( "Sprites count: " + std::to_string( sprite_actors.size() ) );
 	Log( "Sprites instances: " + std::to_string( sprite_instances.size() ) );
 	for ( auto& a : sprite_actors ) {
-		GetTerrainSpriteActor( a.second.name, a.second.tex_coords, a.second.z_index );
+		GetSpriteActor( a.second.name, "ter1.pcx", a.second.tex_coords, ::game::map::s_consts.tc.ter1_pcx.dimensions, a.second.z_index );
 	}
 	for ( auto& instance : sprite_instances ) {
-		auto* actor = GetTerrainSpriteActorByKey( instance.second.first );
+		auto* actor = GetSpriteActorByKey( instance.second.first );
 		ASSERT( actor, "sprite actor not found" );
 		ASSERT( !actor->HasInstance( instance.first ), "actor instance already exists" );
 		actor->SetInstance( instance.first, instance.second.second );

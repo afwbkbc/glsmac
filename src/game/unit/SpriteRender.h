@@ -9,19 +9,20 @@ namespace unit {
 
 class SpriteRender : public Render {
 public:
-	SpriteRender( const std::string& file, const size_t x, const size_t y, const size_t w, const size_t h )
-		: m_file( file )
-		, m_x( x )
-		, m_y( y )
-		, m_w( w )
-		, m_h( h ) {}
+	SpriteRender( const std::string& file, const uint32_t x, const uint32_t y, const uint32_t w, const uint32_t h );
+
+	const std::string m_file;
+	const uint32_t m_x;
+	const uint32_t m_y;
+	const uint32_t m_w;
+	const uint32_t m_h;
 
 private:
-	const std::string m_file;
-	const size_t m_x;
-	const size_t m_y;
-	const size_t m_w;
-	const size_t m_h;
+	friend class Render;
+
+	static void Serialize( types::Buffer& buf, const SpriteRender* render );
+	static SpriteRender* Unserialize( types::Buffer& buf );
+
 };
 
 }

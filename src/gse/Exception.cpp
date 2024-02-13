@@ -15,7 +15,7 @@ const exception_ec_t EC = {
 	"GSEInvalidCall",
 	"GSELoaderError",
 	"GSEConversionError",
-	"GSEGameAPIError",
+	"GSEGameError",
 };
 
 const Exception::backtrace_t Exception::GetBacktraceAndCleanup( const Context* const current_ctx ) {

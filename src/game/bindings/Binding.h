@@ -46,7 +46,7 @@ protected:
 #define BINDING_IMPL( _name ) \
     gse::Value BINDING( _name )::Get()
 
-#define ERROR( _text ) throw gse::Exception( gse::EC.GAME_API_ERROR, _text, ctx, call_si );
+#define ERROR( _text ) throw gse::Exception( gse::EC.GAME_ERROR, _text, ctx, call_si );
 
 #define CALLBACK( _type ) NATIVE_CALL( this ) { \
     N_EXPECT_ARGS( 1 ); \
@@ -66,11 +66,11 @@ BINDING_DEF( message )
 
 BINDING_DEF( exit )
 
-BINDING_DEF( define_unit )
-
-BINDING_DEF( spawn_unit )
-
 BINDING_DEF( on_start )
+
+BINDING_DEF( units )
+
+BINDING_DEF( map )
 
 }
 }

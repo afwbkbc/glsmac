@@ -11,12 +11,19 @@ namespace callable {
 #define NATIVE_CALL( ... ) VALUE( gse::callable::Native, [ __VA_ARGS__ ]( gse::Context* ctx, const gse::si_t& call_si, const gse::type::Callable::function_arguments_t& arguments ) -> gse::Value
 
 // TODO: refactor these
+#define N_ARGS \
+    const gse::type::Type* arg; \
+    gse::type::Object::properties_t::const_iterator obj_it;
 #define N_EXPECT_ARGS( _count ) \
     if ( arguments.size() != _count ) { \
         throw gse::Exception( gse::EC.INVALID_CALL, "Expected " + std::to_string( _count ) + " arguments, found " + std::to_string( arguments.size() ), ctx, call_si ); \
     } \
-    const gse::type::Type* arg; \
-    gse::type::Object::properties_t::const_iterator obj_it;
+    N_ARGS
+#define N_EXPECT_ARGS_MIN_MAX( _min, _max ) \
+    if ( arguments.size() < _min || arguments.size() > _max ) { \
+        throw gse::Exception( gse::EC.INVALID_CALL, "Expected " + std::to_string( _min ) + " to " + std::to_string( _max ) + " arguments, found " + std::to_string( arguments.size() ), ctx, call_si ); \
+    } \
+    N_ARGS
 #define N_GET( _var, _index ) \
     ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
     const auto& _var = arguments.at( _index );
@@ -32,6 +39,14 @@ namespace callable {
     arg = arguments.at( _index ).Get(); \
     N_CHECKTYPE( arg, _index, _type ); \
     const auto& _var = ((gse::type::_type*)arg)->value;
+#define N_GETOBJECT( _var, _index, _class ) \
+    ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
+    arg = arguments.at( _index ).Get(); \
+    N_CHECKTYPE( arg, _index, Object ); \
+    if ( ((gse::type::Object*)arg)->object_class != gse::type::Object::_class ) { \
+        throw gse::Exception( gse::EC.INVALID_CALL, "Argument " + std::to_string( _index ) + " is expected to be object of class " + gse::type::Object::GetClassString( gse::type::Object::_class ) + ", found class: " + gse::type::Object::GetClassString( ((gse::type::Object*)arg)->object_class ), ctx, call_si ); \
+    } \
+    const auto& _var = ((gse::type::Object*)arg)->value;
 #define N_GETPROP( _obj, _var, _key, _type ) \
     obj_it = _obj.find( _key ); \
     if ( obj_it == _obj.end() ) { \

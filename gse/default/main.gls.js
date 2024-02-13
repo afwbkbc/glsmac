@@ -3,10 +3,23 @@ const units = #include('units');
 
 let i = 0;
 while (i < #size(units)) {
-    #game.define_unit(units[i][0], units[i][1]);
+    #game.units.define(units[i][0], units[i][1]);
     i++;
 }
 
 #game.on_start(() => {
-    #game.spawn_unit('MINDWORMS', 5, 5);
+    let y = 0;
+    while (y < #game.map.height) {
+        let x = 0;
+        while (x < #game.map.width) {
+            if (x % 2 == y % 2) {
+                let tile = #game.map.get_tile(x, y);
+                if (tile.is_land) {
+                    #game.units.spawn('MINDWORMS', tilez);
+                }
+            }
+            x++;
+        }
+        y++;
+    }
 });

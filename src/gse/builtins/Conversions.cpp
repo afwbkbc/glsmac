@@ -18,6 +18,12 @@ void Conversions::AddToContext( gse::Context* ctx ) {
 		return VALUE( type::String, v.ToString() );
 	} ) );
 
+	ctx->CreateBuiltin( "to_dump", NATIVE_CALL() {
+		N_EXPECT_ARGS( 1 );
+		N_GET( v, 0 );
+		return VALUE( type::String, v.Dump() );
+	} ) );
+
 	ctx->CreateBuiltin( "to_int", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GETPTR( v, 0 );

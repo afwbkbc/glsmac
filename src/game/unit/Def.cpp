@@ -1,15 +1,40 @@
 #include "Def.h"
 
+#include "StaticDef.h"
+
 namespace game {
 namespace unit {
 
-Def::Def( const std::string& name )
-	: m_name( name ) {
+Def::Def( const def_type_t type, const std::string& name )
+	: m_type( type )
+	, m_name( name ) {
 	//
 }
 
-const std::string& Def::GetName() const {
-	return m_name;
+const types::Buffer Def::Serialize( const Def* def ) {
+	types::Buffer buf;
+	buf.WriteString( def->m_name );
+	buf.WriteInt( def->m_type );
+	switch ( def->m_type ) {
+		case DT_STATIC: {
+			StaticDef::Serialize( buf, (StaticDef*)def );
+			break;
+		}
+		default:
+			THROW( "unknown def type on write: " + std::to_string( def->m_type ) );
+	}
+	return buf;
+}
+
+Def* Def::Unserialize( types::Buffer& buf ) {
+	const auto name = buf.ReadString();
+	const auto type = (def_type_t)buf.ReadInt();
+	switch ( type ) {
+		case DT_STATIC:
+			return StaticDef::Unserialize( buf, name );
+		default:
+			THROW( "unknown def type on read: " + std::to_string( type ) );
+	}
 }
 
 }

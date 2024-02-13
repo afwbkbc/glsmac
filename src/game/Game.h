@@ -259,7 +259,8 @@ protected:
 public:
 	// for bindings etc
 	void Message( const std::string& text );
-	void Quit();
+	void Quit( const std::string& reason );
+	void OnGSEError( gse::Exception& e );
 	void AddUnitDef( const std::string& name, const unit::Def* def, gse::Context* ctx, const gse::si_t& si );
 	const unit::Def* GetUnitDef( const std::string& name ) const;
 	void AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& si );

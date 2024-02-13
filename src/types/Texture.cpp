@@ -802,7 +802,7 @@ void Texture::ClearUpdatedAreas() {
 	m_updated_areas.clear();
 }
 
-unsigned char* Texture::CopyBitmap( const size_t x1, const size_t y1, const size_t x2, const size_t y2 ) {
+unsigned char* Texture::CopyBitmap( const size_t x1, const size_t y1, const size_t x2, const size_t y2 ) const {
 
 	ASSERT( x1 < x2, "x1 must be smaller than x2" );
 	ASSERT( y1 < y2, "y1 must be smaller than y2" );

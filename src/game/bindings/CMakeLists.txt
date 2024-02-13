@@ -4,8 +4,8 @@ SET( SRC ${SRC}
 	${PWD}/Binding.cpp
 	${PWD}/Message.cpp
 	${PWD}/Exit.cpp
-	${PWD}/DefineUnit.cpp
-	${PWD}/SpawnUnit.cpp
 	${PWD}/OnStart.cpp
+	${PWD}/Units.cpp
+	${PWD}/Map.cpp
 
 	PARENT_SCOPE )
