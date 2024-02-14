@@ -13,6 +13,7 @@ public:
 	static const size_t GetNextId();
 
 	Unit( const size_t id, const Def* def, const size_t pos_x, const size_t pos_y );
+	virtual ~Unit() = default;
 
 	const size_t m_id;
 	const Def* m_def;

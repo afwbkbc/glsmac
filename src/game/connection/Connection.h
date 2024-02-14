@@ -28,9 +28,11 @@ CLASS( Connection, base::Module )
 	virtual ~Connection();
 
 	std::function< void() > m_on_connect = nullptr;
-	std::function< void() > m_on_cancel = nullptr;
-	std::function< void() > m_on_disconnect = nullptr;
-	std::function< void( const std::string& message ) > m_on_error = nullptr;
+
+	// return true if connection should be destroyed afterwards
+	std::function< bool() > m_on_cancel = nullptr;
+	std::function< bool() > m_on_disconnect = nullptr;
+	std::function< bool( const std::string& message ) > m_on_error = nullptr;
 
 	std::function< void() > m_on_global_settings_update = nullptr;
 	std::function< void( const size_t slot_num, Slot* slot, const Player* player ) > m_on_player_join = nullptr;

@@ -76,9 +76,9 @@ void State::Reset() {
 	if ( m_connection ) {
 		if ( m_connection->IsConnected() ) {
 			auto* connection = m_connection;
-			m_connection->m_on_disconnect = [ connection ]() -> void {
+			m_connection->m_on_disconnect = [ connection ]() -> bool {
 				// TODO: do this synchronously?
-				DELETE( connection );
+				return true;
 			};
 			m_connection->Disconnect();
 		}

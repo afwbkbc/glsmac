@@ -973,9 +973,8 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 		m_connection->IfClient(
 			[ this ]( Client* connection ) -> void {
-				connection->m_on_disconnect = [ this, connection ]() -> void {
+				connection->m_on_disconnect = [ this, connection ]() -> bool {
 					Log( "Connection lost" );
-					DELETE( connection );
 					m_state->DetachConnection();
 					m_connection = nullptr;
 					if ( m_game_state != GS_RUNNING ) {
@@ -984,9 +983,11 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					else {
 						Quit( "Lost connection to server" );
 					}
+					return true;
 				};
-				connection->m_on_error = [ this, connection ]( const std::string& reason ) -> void {
+				connection->m_on_error = [ this, connection ]( const std::string& reason ) -> bool {
 					m_initialization_error = reason;
+					return true;
 				};
 			}
 		);

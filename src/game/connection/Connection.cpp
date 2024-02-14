@@ -73,6 +73,7 @@ void Connection::Connect() {
 void Connection::Iterate() {
 
 	if ( m_mt_ids.disconnect ) {
+		bool should_delete = false;
 		auto result = m_network->MT_GetResult( m_mt_ids.disconnect );
 		if ( result.result != network::R_NONE ) {
 			m_mt_ids.disconnect = 0;
@@ -80,20 +81,24 @@ void Connection::Iterate() {
 			Log( "Connection closed" );
 			if ( m_is_connected ) {
 				if ( m_on_disconnect ) {
-					m_on_disconnect();
+					should_delete |= m_on_disconnect();
 				}
 			}
 			if ( m_is_canceled ) {
 				if ( m_on_cancel ) {
-					m_on_cancel();
+					should_delete |= m_on_cancel();
 				}
 			}
 			m_is_connected = false;
 			m_is_canceled = false;
 			if ( !m_disconnect_reason.empty() && m_on_error ) {
-				m_on_error( m_disconnect_reason );
+				should_delete |= m_on_error( m_disconnect_reason );
 				m_disconnect_reason.clear();
 			}
+		}
+		if ( should_delete ) {
+			DELETE( this );
+			return;
 		}
 	}
 
@@ -106,7 +111,10 @@ void Connection::Iterate() {
 				case network::R_ERROR: {
 					Log( "Connection error: " + result.message );
 					if ( m_on_error ) {
-						m_on_error( result.message );
+						if ( m_on_error( result.message ) ) {
+							DELETE( this );
+							return;
+						}
 					}
 					break;
 				}
@@ -139,7 +147,10 @@ void Connection::Iterate() {
 				if ( result.result == network::R_ERROR ) {
 					Log( "received error event" );
 					if ( m_on_error ) {
-						m_on_error( result.message );
+						if ( m_on_error( result.message ) ) {
+							DELETE( this );
+							return;
+						}
 					}
 				}
 				else if ( result.result == network::R_SUCCESS ) {

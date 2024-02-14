@@ -60,20 +60,19 @@ void ConnectionPopupMenu::SetConnection( ::game::connection::Connection* connect
 			};
 		}
 	};
-	connection->m_on_error = [ this, connection ]( const std::string& message ) -> void {
+	connection->m_on_error = [ this, connection ]( const std::string& message ) -> bool {
 		Show();
-		const std::string text = message;
-		DELETE( connection );
+		MenuError( message );
 		m_mainmenu->m_state->DetachConnection();
 		m_mainmenu->m_state->Reset();
+		return true;
 		//connection = nullptr;
-		MenuError( text );
 	};
-	connection->m_on_cancel = [ this, connection ]() -> void {
+	connection->m_on_cancel = [ this, connection ]() -> bool {
 		Show();
-		DELETE( connection );
 		m_mainmenu->m_state->DetachConnection();
 		m_mainmenu->m_state->Reset();
+		return true;
 		//connection = nullptr;
 	};
 	connection->Connect();

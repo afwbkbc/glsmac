@@ -17,6 +17,7 @@ public:
 	};
 
 	Def( const def_type_t type, const std::string& name );
+	virtual ~Def() = default;
 
 	const def_type_t m_type;
 	const std::string m_name;
