@@ -2,6 +2,9 @@
 
 #include "StaticDef.h"
 
+#include "gse/type/Object.h"
+#include "gse/type/String.h"
+
 namespace game {
 namespace unit {
 
@@ -35,6 +38,20 @@ Def* Def::Unserialize( types::Buffer& buf ) {
 		default:
 			THROW( "unknown def type on read: " + std::to_string( type ) );
 	}
+}
+
+const gse::Value Def::ToGSEObject() const {
+	const gse::type::Object::properties_t properties = {
+		{
+			"name",
+			VALUE( gse::type::String, m_name )
+		},
+		{
+			"type",
+			VALUE( gse::type::String, "static" ) // TODO
+		},
+	};
+	return VALUE( gse::type::Object, properties, gse::type::Object::CLASS_UNITDEF );
 }
 
 }

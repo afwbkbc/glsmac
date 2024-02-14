@@ -20,7 +20,7 @@ class Server;
 
 CLASS( Connection, base::Module )
 
-	enum game_state_t {
+	enum game_state_t : uint8_t {
 		GS_NONE,
 		GS_LOBBY,
 		GS_INITIALIZING,

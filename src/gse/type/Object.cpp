@@ -24,7 +24,15 @@ static const std::unordered_map< Object::object_class_t, std::string > s_object_
 	{
 		Object::CLASS_TILE,
 		"#tile"
-	}
+	},
+	{
+		Object::CLASS_UNIT,
+		"#unit"
+	},
+	{
+		Object::CLASS_UNITDEF,
+		"#unitdef"
+	},
 };
 const std::string& Object::GetClassString( const object_class_t object_class ) {
 	const auto& it = s_object_class_str.find( object_class );

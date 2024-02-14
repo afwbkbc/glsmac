@@ -68,7 +68,7 @@ BINDING_DEF( exit )
 
 BINDING_DEF( random )
 
-BINDING_DEF( on_start )
+BINDING_DEF( on )
 
 BINDING_DEF( units )
 

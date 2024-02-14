@@ -24,7 +24,7 @@ Bindings::Bindings( Game* game )
 		B( message ),
 		B( exit ),
 		B( random ),
-		B( on_start ),
+		B( on ),
 		B( units ),
 		B( map ),
 	};
@@ -51,15 +51,11 @@ void Bindings::RunMain() {
 	m_gse->GetInclude( m_gse_context, m_si_internal, m_entry_script );
 }
 
-void Bindings::Call( const callback_slot_t slot, const callback_arguments_t* arguments ) {
+void Bindings::Call( const callback_slot_t slot, const callback_arguments_t& arguments ) {
 	const auto& it = m_callbacks.find( slot );
 	if ( it != m_callbacks.end() ) {
 		try {
-			( (gse::type::Callable*)it->second.Get() )->Run(
-				m_gse_context, m_si_internal, arguments
-					? *arguments
-					: m_no_arguments
-			);
+			( (gse::type::Callable*)it->second.Get() )->Run( m_gse_context, m_si_internal, arguments );
 		}
 		catch ( gse::Exception& e ) {
 			m_game->OnGSEError( e );

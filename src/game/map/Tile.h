@@ -7,6 +7,8 @@
 #include "types/Serializable.h"
 #include "types/Vec2.h"
 
+#include "gse/Value.h"
+
 using namespace types;
 
 namespace game {
@@ -134,8 +136,9 @@ public:
 	void Clear();
 
 	const Buffer Serialize() const;
-
 	void Unserialize( Buffer data );
+
+	const gse::Value ToGSEObject() const;
 };
 
 }

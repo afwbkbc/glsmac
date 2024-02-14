@@ -297,7 +297,7 @@ void Game::Iterate() {
 					m_unprocessed_events.clear();
 
 					if ( m_state->IsMaster() ) {
-						m_bindings->Call( Bindings::CS_ONSTART );
+						m_bindings->Call( Bindings::CS_ON_START );
 					}
 				}
 			}
@@ -898,6 +898,7 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
 	Log( "Spawning unit ('" + unit->m_def->m_name + "') at [ " + std::to_string( unit->m_pos_x ) + " " + std::to_string( unit->m_pos_y ) + " ]" );
 	m_units.insert_or_assign( unit->m_id, unit );
+	m_bindings->Call( Bindings::CS_ON_SPAWN_UNIT, { unit->ToGSEObject() } );
 	const auto* tile = m_map->GetTile( unit->m_pos_x, unit->m_pos_y );
 	const auto* ts = m_map->GetTileState( tile );
 	// notify frontend

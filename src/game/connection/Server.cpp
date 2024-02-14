@@ -482,7 +482,7 @@ void Server::SendGlobalSettings( network::cid_t cid ) {
 void Server::SendGameState( const network::cid_t cid ) {
 	Log( "Sending game state change (" + std::to_string( m_game_state ) + ") to " + std::to_string( cid ) );
 	Packet p( Packet::PT_GAME_STATE );
-	p.data.num = m_game_state;
+	p.udata.game_state.state = m_game_state;
 	m_network->MT_SendPacket( p, cid );
 }
 

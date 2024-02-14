@@ -6,6 +6,8 @@
 
 #include "game/map/TileState.h"
 
+#include "gse/Value.h"
+
 namespace game {
 namespace unit {
 
@@ -26,6 +28,8 @@ public:
 
 	static const types::Buffer Serialize( const Def* def );
 	static Def* Unserialize( types::Buffer& buf );
+
+	const gse::Value ToGSEObject() const;
 
 private:
 };

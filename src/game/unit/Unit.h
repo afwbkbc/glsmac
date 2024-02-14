@@ -4,6 +4,8 @@
 
 #include "Def.h"
 
+#include "gse/Value.h"
+
 namespace game {
 namespace unit {
 
@@ -24,6 +26,7 @@ public:
 	static const types::Buffer Serialize( const Unit* unit );
 	static Unit* Unserialize( types::Buffer& buf );
 
+	const gse::Value ToGSEObject() const;
 };
 
 }

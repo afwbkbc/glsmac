@@ -53,7 +53,7 @@ const Buffer Packet::Serialize() const {
 			break;
 		}
 		case PT_GAME_STATE: {
-			buf.WriteInt( data.num ); // game state
+			buf.WriteInt( udata.game_state.state );
 			break;
 		}
 		case PT_GET_MAP_HEADER: {
@@ -137,7 +137,7 @@ void Packet::Unserialize( Buffer buf ) {
 			break;
 		}
 		case PT_GAME_STATE: {
-			data.num = buf.ReadInt(); // game state
+			udata.game_state.state = buf.ReadInt();
 			break;
 		}
 		case PT_GET_MAP_HEADER: {

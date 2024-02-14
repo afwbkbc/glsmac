@@ -7,7 +7,7 @@ while (i < #size(units)) {
     i++;
 }
 
-#game.on_start(() => {
+#game.on.start(() => {
     let y = 0;
     while (y < #game.map.height) {
         let x = 0;
@@ -32,4 +32,8 @@ while (i < #size(units)) {
         }
         y++;
     }
+});
+
+#game.on.spawn_unit((unit) => {
+    #game.message('UNIT SPAWNED: ' + #to_string(unit));
 });

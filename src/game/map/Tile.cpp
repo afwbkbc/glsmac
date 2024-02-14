@@ -1,5 +1,9 @@
 #include "Tile.h"
 
+#include "gse/type/Object.h"
+#include "gse/type/Int.h"
+#include "gse/type/Bool.h"
+
 namespace game {
 namespace map {
 
@@ -67,6 +71,28 @@ void Tile::Unserialize( Buffer buf ) {
 	terraforming = buf.ReadInt();
 
 	Update();
+}
+
+const gse::Value Tile::ToGSEObject() const {
+	const gse::type::Object::properties_t properties = {
+		{
+			"x",
+			VALUE( gse::type::Int, coord.x )
+		},
+		{
+			"y",
+			VALUE( gse::type::Int, coord.y )
+		},
+		{
+			"is_water",
+			VALUE( gse::type::Bool, is_water_tile )
+		},
+		{
+			"is_land",
+			VALUE( gse::type::Bool, !is_water_tile )
+		}
+	};
+	return VALUE( gse::type::Object, properties, gse::type::Object::CLASS_TILE );
 }
 
 }

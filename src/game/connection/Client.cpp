@@ -149,8 +149,8 @@ void Client::ProcessEvent( const network::Event& event ) {
 						}
 						case Packet::PT_GAME_STATE: {
 							Log( "Got game state: " + std::to_string( packet.data.num ) );
-							if ( packet.data.num != m_game_state ) {
-								m_game_state = (game_state_t)packet.data.num;
+							if ( packet.udata.game_state.state != m_game_state ) {
+								m_game_state = (game_state_t)packet.udata.game_state.state;
 								if ( m_on_game_state_change ) {
 									m_on_game_state_change( m_game_state );
 								}

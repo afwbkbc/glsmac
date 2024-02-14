@@ -1,5 +1,8 @@
 #include "Unit.h"
 
+#include "gse/type/Object.h"
+#include "gse/type/Int.h"
+
 namespace game {
 namespace unit {
 
@@ -34,6 +37,28 @@ Unit* Unit::Unserialize( types::Buffer& buf ) {
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
 	return new Unit( id, def, pos_x, pos_y );
+}
+
+const gse::Value Unit::ToGSEObject() const {
+	const gse::type::Object::properties_t properties = {
+		{
+			"id",
+			VALUE( gse::type::Int, m_id )
+		},
+		{
+			"def",
+			m_def->ToGSEObject()
+		},
+		{
+			"x",
+			VALUE( gse::type::Int, m_pos_x )
+		},
+		{
+			"y",
+			VALUE( gse::type::Int, m_pos_y )
+		},
+	};
+	return VALUE( gse::type::Object, properties, gse::type::Object::CLASS_UNIT );
 }
 
 }

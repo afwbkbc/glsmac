@@ -19,6 +19,8 @@ public:
 		CLASS_NONE,
 		CLASS_EXCEPTION,
 		CLASS_TILE,
+		CLASS_UNIT,
+		CLASS_UNITDEF,
 	};
 	static const std::string& GetClassString( const object_class_t object_class );
 

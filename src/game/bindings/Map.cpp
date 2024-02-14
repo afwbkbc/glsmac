@@ -2,7 +2,6 @@
 
 #include "gse/type/Object.h"
 #include "gse/type/Int.h"
-#include "gse/type/Bool.h"
 
 namespace game {
 namespace bindings {
@@ -39,26 +38,9 @@ BINDING_IMPL( map ) {
 					ERROR( gse::EC.INVALID_CALL, "Y coordinate can't be negative ( " + std::to_string( y ) + " < 0" );
 				}
 				if ( x % 2 != y % 2 ) {
-					ERROR( gse::EC.INVALID_CALL, "Coordinates axis oddity differs ( " + std::to_string( x ) + " % 2 != " + std::to_string( y ) + " % 2 )" );
+					ERROR( gse::EC.INVALID_CALL, "X and Y oddity differs ( " + std::to_string( x ) + " % 2 != " + std::to_string( y ) + " % 2 )" );
 				}
-				const auto* tile = m->GetTile( x, y );
-				const gse::type::Object::properties_t properties = {
-					{
-						"x",
-						VALUE( gse::type::Int, tile->coord.x ),
-					},
-					{
-						"y",
-						VALUE( gse::type::Int, tile->coord.y ),
-					},
-					{
-						"is_water", VALUE( gse::type::Bool, tile->is_water_tile ),
-					},
-					{
-						"is_land", VALUE( gse::type::Bool, !tile->is_water_tile ),
-					}
-				};
-				return VALUE( gse::type::Object, properties, gse::type::Object::CLASS_TILE );
+				return m->GetTile( x, y )->ToGSEObject();
 			}),
 		}
 	};

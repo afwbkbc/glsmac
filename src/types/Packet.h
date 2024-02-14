@@ -44,6 +44,9 @@ CLASS( Packet, Serializable )
 			size_t flags;
 		} flags;
 		struct {
+			uint8_t state;
+		} game_state;
+		struct {
 			size_t offset;
 			size_t size;
 		} map;
