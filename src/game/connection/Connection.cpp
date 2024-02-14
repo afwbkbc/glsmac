@@ -40,6 +40,7 @@ Connection::~Connection() {
 	if ( m_mt_ids.events ) {
 		m_network->MT_Cancel( m_mt_ids.events );
 	}
+	ClearPending();
 }
 
 void Connection::Connect() {
@@ -163,6 +164,7 @@ void Connection::Iterate() {
 				}
 			}
 		}
+		ProcessPending();
 	}
 }
 
@@ -186,6 +188,14 @@ void Connection::IfServer( std::function< void( Server* ) > cb ) {
 	if ( IsServer() ) {
 		cb( (Server*)this );
 	}
+}
+
+void Connection::SendGameEvent( const game::event::Event* event ) {
+	if ( m_pending_game_events.size() >= PENDING_GAME_EVENTS_LIMIT ) {
+		SendGameEvents( m_pending_game_events );
+		m_pending_game_events.clear();
+	}
+	m_pending_game_events.push_back( event );
 }
 
 const bool Connection::IsConnected() const {
@@ -229,7 +239,21 @@ void Connection::Disconnect( const std::string& reason ) {
 			: ""
 		)
 	);
+	ClearPending();
 	m_mt_ids.disconnect = m_network->MT_Disconnect();
+}
+
+void Connection::ProcessPending() {
+	if ( !m_pending_game_events.empty() ) {
+		SendGameEvents( m_pending_game_events );
+	}
+	m_pending_game_events.clear();
+}
+
+void Connection::ClearPending() {
+	for ( auto& it : m_pending_game_events ) {
+		delete it;
+	}
 }
 
 }

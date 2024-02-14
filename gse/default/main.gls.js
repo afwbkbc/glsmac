@@ -32,5 +32,4 @@ while (i < #size(units)) {
         }
         y++;
     }
-    //#game.units.spawn('MINDWORMS', #game.map.get_tile(0, 0));
 });

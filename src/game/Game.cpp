@@ -283,7 +283,6 @@ void Game::Iterate() {
 
 					// start main loop
 					m_game_state = GS_RUNNING;
-
 				}
 				catch ( gse::Exception& e ) {
 					Log( (std::string)"Initialization failed: " + e.ToStringAndCleanup() );

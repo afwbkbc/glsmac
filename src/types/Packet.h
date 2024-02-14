@@ -27,7 +27,7 @@ CLASS( Packet, Serializable )
 		PT_MAP_HEADER, // S->C
 		PT_GET_MAP_CHUNK, // C->S
 		PT_MAP_CHUNK, // S->
-		PT_GAME_EVENT, // *->*
+		PT_GAME_EVENTS, // *->*
 	};
 
 	Packet( const packet_type_t type );

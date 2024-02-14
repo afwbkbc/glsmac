@@ -75,8 +75,8 @@ const Buffer Packet::Serialize() const {
 			buf.WriteString( data.str ); // serialized tiles part
 			break;
 		}
-		case PT_GAME_EVENT: {
-			buf.WriteString( data.str ); // serialized game event
+		case PT_GAME_EVENTS: {
+			buf.WriteString( data.str ); // serialized game events
 			break;
 		}
 		default: {
@@ -159,8 +159,8 @@ void Packet::Unserialize( Buffer buf ) {
 			data.str = buf.ReadString(); // serialized tiles part
 			break;
 		}
-		case PT_GAME_EVENT: {
-			data.str = buf.ReadString(); // serialized game event
+		case PT_GAME_EVENTS: {
+			data.str = buf.ReadString(); // serialized game events
 			break;
 		}
 		default: {

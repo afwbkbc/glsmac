@@ -35,5 +35,23 @@ Event* Event::Unserialize( types::Buffer& buf ) {
 
 }
 
+const types::Buffer Event::SerializeMultiple( const std::vector< const Event* >& events ) {
+	types::Buffer buf;
+	buf.WriteInt( events.size() );
+	for ( const auto& event : events ) {
+		buf.WriteString( game::event::Event::Serialize( event ).ToString() );
+	}
+	const auto serialized_events = buf.ToString();
+	return buf;
+}
+
+void Event::UnserializeMultiple( types::Buffer& buf, std::vector< const Event* >& events_out ) {
+	const auto count = buf.ReadInt();
+	for ( auto i = 0 ; i < count ; i++ ) {
+		auto event_buf = types::Buffer( buf.ReadString() );
+		events_out.push_back( game::event::Event::Unserialize( event_buf ) );
+	}
+}
+
 }
 }
