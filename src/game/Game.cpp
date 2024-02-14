@@ -272,9 +272,14 @@ void Game::Iterate() {
 				ASSERT( !m_bindings, "bindings already set" );
 				NEW( m_bindings, Bindings, this );
 
-				// run main gse entrypoint
+				ASSERT( !m_current_turn, "turn is already initialized" );
+
 				try {
+					// run main gse entrypoint
 					m_bindings->RunMain();
+
+					// start initial turn
+					NextTurn();
 
 					// start main loop
 					m_game_state = GS_RUNNING;
@@ -286,10 +291,13 @@ void Game::Iterate() {
 				}
 
 				if ( m_game_state == GS_RUNNING ) {
-					ASSERT( !m_current_turn, "turn is already initialized" );
+
+					for ( auto& it : m_unprocessed_events ) {
+						ProcessGameEvent( it );
+					}
+					m_unprocessed_events.clear();
 
 					if ( m_state->IsMaster() ) {
-						NextTurn();
 						m_bindings->Call( Bindings::CS_ONSTART );
 					}
 				}
@@ -737,7 +745,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			Log( "got chat message request: " + *request.data.chat.message );
 
 			if ( m_connection ) {
-				m_connection->Message( *request.data.chat.message );
+				m_connection->SendMessage( *request.data.chat.message );
 			}
 			else {
 				Message( "<" + m_player->GetPlayerName() + "> " + *request.data.chat.message );
@@ -881,9 +889,10 @@ const unit::Def* Game::GetUnitDef( const std::string& name ) const {
 }
 
 void Game::AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& si ) {
-	ASSERT( m_current_turn, "turn not initialized" );
-	event->Apply( this );
-	m_current_turn->AddEvent( event );
+	ProcessGameEvent( event );
+	if ( m_connection ) {
+		m_connection->SendGameEvent( event );
+	}
 }
 
 void Game::SpawnUnit( unit::Unit* unit ) {
@@ -909,6 +918,12 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 		c.z
 	};
 	AddEvent( e );
+}
+
+void Game::ProcessGameEvent( const event::Event* event ) {
+	ASSERT( m_current_turn, "turn not initialized" );
+	event->Apply( this );
+	m_current_turn->AddEvent( event );
 }
 
 void Game::AddEvent( const Event& event ) {
@@ -973,7 +988,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 		m_connection->IfClient(
 			[ this ]( Client* connection ) -> void {
-				connection->m_on_disconnect = [ this, connection ]() -> bool {
+				connection->m_on_disconnect = [ this ]() -> bool {
 					Log( "Connection lost" );
 					m_state->DetachConnection();
 					m_connection = nullptr;
@@ -985,7 +1000,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					}
 					return true;
 				};
-				connection->m_on_error = [ this, connection ]( const std::string& reason ) -> bool {
+				connection->m_on_error = [ this ]( const std::string& reason ) -> bool {
 					m_initialization_error = reason;
 					return true;
 				};
@@ -996,6 +1011,15 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			auto e = Event( Event::ET_GLOBAL_MESSAGE );
 			NEW( e.data.global_message.message, std::string, message );
 			AddEvent( e );
+		};
+
+		m_connection->m_on_game_event = [ this ]( const event::Event* event ) -> void {
+			if ( m_game_state == GS_RUNNING ) {
+				ProcessGameEvent( event );
+			}
+			else {
+				m_unprocessed_events.push_back( event );
+			}
 		};
 
 	}
@@ -1142,6 +1166,11 @@ void Game::ResetGame() {
 	m_player = nullptr;
 	m_slot_num = 0;
 	m_slot = nullptr;
+
+	for ( auto& it : m_unprocessed_events ) {
+		delete it;
+	}
+	m_unprocessed_events.clear();
 
 	for ( auto& it : m_units ) {
 		delete it.second;

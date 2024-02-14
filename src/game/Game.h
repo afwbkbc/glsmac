@@ -268,6 +268,8 @@ public:
 
 private:
 
+	void ProcessGameEvent( const event::Event* event );
+
 	std::unordered_map< std::string, const unit::Def* > m_unit_defs = {};
 	std::map< size_t, unit::Unit* > m_units = {};
 
@@ -306,6 +308,7 @@ private:
 
 	bindings::Bindings* m_bindings = nullptr;
 
+	std::vector< const game::event::Event* > m_unprocessed_events = {};
 	Turn* m_current_turn = nullptr;
 
 };

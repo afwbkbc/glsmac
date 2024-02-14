@@ -11,8 +11,11 @@ public:
 
 	void Apply( game::Game* game ) const override;
 
-	const types::Buffer Serialize() const override;
-	void Unserialize( types::Buffer buf ) override;
+private:
+	friend class Event;
+
+	static void Serialize( types::Buffer& buf, const SpawnUnit* event );
+	static SpawnUnit* Unserialize( types::Buffer& buf );
 
 private:
 	std::string m_unit_def;

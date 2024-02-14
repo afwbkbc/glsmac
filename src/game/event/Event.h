@@ -1,23 +1,28 @@
 #pragma once
 
-#include "types/Serializable.h"
+#include "types/Buffer.h"
 
 namespace game {
 class Game;
 namespace event {
 
-CLASS( Event, types::Serializable )
+class Event {
 public:
 	enum event_type_t {
 		ET_SPAWN_UNIT,
 	};
 
-	Event( const event_type_t event_type );
+	Event( const event_type_t type );
+	virtual ~Event() = default;
+
+	static const types::Buffer Serialize( const Event* event );
+	static Event* Unserialize( types::Buffer& buf );
+
+	const event_type_t m_type;
 
 	virtual void Apply( Game* game ) const = 0;
 
 protected:
-	const event_type_t m_event_type;
 };
 
 }

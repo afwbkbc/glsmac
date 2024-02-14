@@ -15,7 +15,8 @@ CLASS( Client, Connection )
 	std::function< void( const std::string serialized_tiles ) > m_on_map_data = nullptr;
 
 	void UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flags = false ) override;
-	void Message( const std::string& message ) override;
+	void SendMessage( const std::string& message ) override;
+	void SendGameEvent( const game::event::Event* event ) override;
 
 	const game_state_t GetGameState() const;
 	void RequestMap();

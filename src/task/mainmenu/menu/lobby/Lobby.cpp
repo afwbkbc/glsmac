@@ -239,7 +239,7 @@ const ::game::Player* Lobby::GetPlayer() {
 
 void Lobby::Message( const std::string& message ) {
 	Log( "Sending message: " + message );
-	m_connection->Message( message );
+	m_connection->SendMessage( message );
 }
 
 void Lobby::UpdateSlot( const size_t slot_num, ::game::Slot* slot, const bool only_flags ) {

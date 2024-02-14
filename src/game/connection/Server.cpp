@@ -314,6 +314,26 @@ void Server::ProcessEvent( const network::Event& event ) {
 						}
 						break;
 					}
+					case Packet::PT_GAME_EVENT: {
+						Log( "Got game event packet" );
+						if ( m_on_game_event ) {
+							auto buf = Buffer( packet.data.str );
+							const auto* game_event = game::event::Event::Unserialize( buf );
+							m_on_game_event( game_event );
+						}
+						else {
+							Log( "WARNING: game event handler not set" );
+						}
+						// relay to other clients
+						Broadcast(
+							[ this, packet, event ]( const network::cid_t cid ) -> void {
+								if ( cid != event.cid ) { // don't send back
+									SendGameEventTo( packet.data.str, cid );
+								}
+							}
+						);
+						break;
+					}
 					default: {
 						Log( "WARNING: invalid packet type from client " + std::to_string( event.cid ) + " : " + std::to_string( packet.type ) );
 					}
@@ -386,8 +406,18 @@ void Server::UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flag
 	}
 }
 
-void Server::Message( const std::string& message ) {
+void Server::SendMessage( const std::string& message ) {
 	GlobalMessage( FormatChatMessage( GetPlayer(), message ) );
+}
+
+void Server::SendGameEvent( const game::event::Event* event ) {
+	Log( "Sending game event" );
+	const auto serialized_event = game::event::Event::Serialize( event ).ToString();
+	Broadcast(
+		[ this, serialized_event ]( const network::cid_t cid ) -> void {
+			SendGameEventTo( serialized_event, cid );
+		}
+	);
 }
 
 void Server::ResetHandlers() {
@@ -484,6 +514,12 @@ void Server::SendFlagsUpdate( const size_t slot_num, const Slot* slot, network::
 
 const std::string Server::FormatChatMessage( const Player* player, const std::string& message ) const {
 	return "<" + player->GetPlayerName() + "> " + message;
+}
+
+void Server::SendGameEventTo( const std::string& serialized_event, const network::cid_t cid ) {
+	Packet p( Packet::PT_GAME_EVENT );
+	p.data.str = serialized_event;
+	m_network->MT_SendPacket( p, cid );
 }
 
 void Server::ClearReadyFlags() {

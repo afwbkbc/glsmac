@@ -1,7 +1,6 @@
 #include "SpawnUnit.h"
 
 #include "../Game.h"
-#include "../unit/Unit.h"
 
 namespace game {
 namespace event {
@@ -16,7 +15,7 @@ SpawnUnit::SpawnUnit( const std::string& unit_def, const size_t pos_x, const siz
 
 void SpawnUnit::Apply( game::Game* game ) const {
 	const auto* def = game->GetUnitDef( m_unit_def );
-	ASSERT( def, "unit def '" + m_unit_def + "' not found" );
+	ASSERT_NOLOG( def, "unit def '" + m_unit_def + "' not found" );
 	game->SpawnUnit(
 		new unit::Unit(
 			unit::Unit::GetNextId(),
@@ -27,24 +26,17 @@ void SpawnUnit::Apply( game::Game* game ) const {
 	);
 }
 
-const types::Buffer SpawnUnit::Serialize() const {
-	types::Buffer buf;
-
-	buf.WriteInt( m_event_type );
-	buf.WriteString( m_unit_def );
-	buf.WriteInt( m_pos_x );
-	buf.WriteInt( m_pos_y );
-
-	return buf;
+void SpawnUnit::Serialize( types::Buffer& buf, const SpawnUnit* event ) {
+	buf.WriteString( event->m_unit_def );
+	buf.WriteInt( event->m_pos_x );
+	buf.WriteInt( event->m_pos_y );
 }
 
-void SpawnUnit::Unserialize( types::Buffer buf ) {
-
-	ASSERT( buf.ReadInt() == m_event_type, "event type mismatch" );
-	m_unit_def = buf.ReadString();
-	m_pos_x = buf.ReadInt();
-	m_pos_y = buf.ReadInt();
-
+SpawnUnit* SpawnUnit::Unserialize( types::Buffer& buf ) {
+	const auto unit_def = buf.ReadString();
+	const auto pos_x = buf.ReadInt();
+	const auto pos_y = buf.ReadInt();
+	return new SpawnUnit( unit_def, pos_x, pos_y );
 }
 
 }

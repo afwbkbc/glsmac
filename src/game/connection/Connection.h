@@ -6,6 +6,7 @@
 #include "ui/module/Loader.h"
 #include "game/Slot.h"
 #include "game/Player.h"
+#include "game/event/Event.h"
 
 namespace game {
 class State;
@@ -40,6 +41,7 @@ CLASS( Connection, base::Module )
 	std::function< void( const size_t slot_num, game::Slot* slot ) > m_on_slot_update = nullptr;
 	std::function< void( const size_t slot_num, game::Slot* slot, const Slot::player_flag_t old_flags, const Slot::player_flag_t new_flags ) > m_on_flags_update = nullptr;
 	std::function< void( const std::string& message ) > m_on_message = nullptr;
+	std::function< void( const game::event::Event* event ) > m_on_game_event = nullptr;
 
 	void SetState( State* state );
 
@@ -62,7 +64,8 @@ CLASS( Connection, base::Module )
 	const Player* GetPlayer() const;
 
 	virtual void UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flags = false ) = 0;
-	virtual void Message( const std::string& message ) = 0;
+	virtual void SendMessage( const std::string& message ) = 0;
+	virtual void SendGameEvent( const game::event::Event* event ) = 0;
 
 protected:
 	const int MAP_DOWNLOAD_CHUNK_SIZE = 16384;

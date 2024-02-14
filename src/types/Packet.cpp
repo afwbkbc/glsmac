@@ -75,6 +75,10 @@ const Buffer Packet::Serialize() const {
 			buf.WriteString( data.str ); // serialized tiles part
 			break;
 		}
+		case PT_GAME_EVENT: {
+			buf.WriteString( data.str ); // serialized game event
+			break;
+		}
 		default: {
 			//ASSERT(false, "unknown packet type " + std::to_string( type ));
 		}
@@ -153,6 +157,10 @@ void Packet::Unserialize( Buffer buf ) {
 			udata.map.offset = buf.ReadInt();
 			udata.map.size = buf.ReadInt();
 			data.str = buf.ReadString(); // serialized tiles part
+			break;
+		}
+		case PT_GAME_EVENT: {
+			data.str = buf.ReadString(); // serialized game event
 			break;
 		}
 		default: {

@@ -213,6 +213,18 @@ void Client::ProcessEvent( const network::Event& event ) {
 							}
 							break;
 						}
+						case Packet::PT_GAME_EVENT: {
+							Log( "Got game event packet" );
+							if ( m_on_game_event ) {
+								auto buf = Buffer( packet.data.str );
+								const auto* game_event = game::event::Event::Unserialize( buf );
+								m_on_game_event( game_event );
+							}
+							else {
+								Log( "WARNING: game event handler not set" );
+							}
+							break;
+						}
 						default: {
 							Log( "WARNING: invalid packet type from server: " + std::to_string( packet.type ) );
 						}
@@ -255,10 +267,17 @@ void Client::UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flag
 	}
 }
 
-void Client::Message( const std::string& message ) {
+void Client::SendMessage( const std::string& message ) {
 	Log( "Sending chat message: " + message );
 	Packet p( Packet::PT_MESSAGE );
 	p.data.str = message;
+	m_network->MT_SendPacket( p );
+}
+
+void Client::SendGameEvent( const game::event::Event* event ) {
+	Log( "Sending game event" );
+	Packet p( Packet::PT_GAME_EVENT );
+	p.data.str = game::event::Event::Serialize( event ).ToString();
 	m_network->MT_SendPacket( p );
 }
 
