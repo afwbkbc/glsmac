@@ -201,7 +201,13 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 							) || (
 								( *it )->m_type == SourceElement::ET_CONDITIONAL &&
 									it_end + 1 != end &&
-									( *( it_end + 1 ) )->m_type != SourceElement::ET_CONDITIONAL
+									(
+										( *( it_end + 1 ) )->m_type != SourceElement::ET_CONDITIONAL || (
+											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_ELSE &&
+											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_ELSEIF &&
+											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_CATCH
+										)
+									)
 							)
 						)
 						&&
