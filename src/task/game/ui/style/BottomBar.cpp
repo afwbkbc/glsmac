@@ -534,7 +534,7 @@ void BottomBar::AddStyles() {
 	);
 
 	AddStyle(
-		"MinimapTurnCompleteButton", SH() {
+		"TurnCompleteButton", SH() {
 
 			const auto f_buttonstyle = [ &s ]( const size_t ox, const size_t oy ) -> void {
 				const std::string t = "console_x2_a.pcx";
@@ -574,6 +574,13 @@ void BottomBar::AddStyles() {
 
 			s->SetSound( ::Style::A_BUTTON_CLICK_SOUND, "ok.wav" );
 			s->Set( ::Style::A_SOUND_VOLUME, 0.5f );
+		}
+	);
+	AddStyle(
+		"TurnCompleteSound", SH() {
+			s->SetSound( Style::A_SOUND, "cpu turn complete.wav" );
+			s->Set( Style::A_SOUND_AUTOSTOP );
+			s->Set( Style::A_SOUND_VOLUME, 0.5f );
 		}
 	);
 

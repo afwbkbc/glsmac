@@ -34,6 +34,7 @@ void main(void) { \
 in vec2 texpos; \
 in vec3 fragpos; \
 uniform uint uFlags; \
+uniform vec4 uTintColor; \
 uniform sampler2D uTexture; \
 uniform vec3 uAreaLimitsMin; \
 uniform vec3 uAreaLimitsMax; \
@@ -52,7 +53,11 @@ void main(void) { \
 			return; \
 		} \
 	} \
-	FragColor = vec4(texture2D(uTexture, vec2(texpos.xy))); \
+	vec4 color = vec4(texture2D(uTexture, vec2(texpos.xy))); \
+	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_TINT ) + " ) { \
+		color *= uTintColor; \
+	} \
+	FragColor = color; \
 } \
 \
 "
@@ -64,6 +69,7 @@ void Simple2D::Initialize() {
 	attributes.tex_coord = GetAttributeLocation( "aTexCoord" );
 	attributes.coord = GetAttributeLocation( "aCoord" );
 	uniforms.flags = GetUniformLocation( "uFlags" );
+	uniforms.tint_color = GetUniformLocation( "uTintColor" );
 	uniforms.position = GetUniformLocation( "uPosition" );
 	uniforms.texture = GetUniformLocation( "uTexture" );
 	uniforms.area_limits.min = GetUniformLocation( "uAreaLimitsMin" );

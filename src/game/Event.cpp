@@ -27,6 +27,10 @@ Event::Event( const Event& other )
 			NEW( data.global_message.message, std::string, *other.data.global_message.message );
 			break;
 		}
+		case ET_TURN_COMPLETE_STATUS: {
+			data.turn_complete_status.is_turn_complete = other.data.turn_complete_status.is_turn_complete;
+			break;
+		}
 		case ET_UNIT_SPAWN: {
 			NEW( data.unit_spawn.serialized_unit, std::string, *other.data.unit_spawn.serialized_unit );
 			data.unit_spawn.coords = other.data.unit_spawn.coords;

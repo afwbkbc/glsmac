@@ -15,6 +15,7 @@ public:
 		ET_QUIT,
 		ET_ERROR,
 		ET_GLOBAL_MESSAGE,
+		ET_TURN_COMPLETE_STATUS,
 		ET_UNIT_SPAWN,
 		ET_UNIT_DESPAWN,
 	};
@@ -35,6 +36,9 @@ public:
 		struct {
 			std::string* message;
 		} global_message;
+		struct {
+			bool is_turn_complete;
+		} turn_complete_status;
 		struct {
 			std::string* serialized_unit;
 			struct {

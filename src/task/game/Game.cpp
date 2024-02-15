@@ -903,6 +903,11 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 			AddMessage( *event.data.global_message.message );
 			break;
 		}
+		case ::game::Event::ET_TURN_COMPLETE_STATUS: {
+			ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
+			m_ui.bottom_bar->SetTurnCompleteStatus( event.data.turn_complete_status.is_turn_complete );
+			break;
+		}
 		case ::game::Event::ET_UNIT_SPAWN: {
 			types::Buffer buf( *event.data.unit_spawn.serialized_unit );
 			const auto* unit = ::game::unit::Unit::Unserialize( buf );

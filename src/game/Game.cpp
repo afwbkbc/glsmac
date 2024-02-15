@@ -303,6 +303,8 @@ void Game::Iterate() {
 					if ( m_state->IsMaster() ) {
 						m_bindings->Call( Bindings::CS_ON_START );
 					}
+
+					CheckTurnComplete();
 				}
 			}
 			else {
@@ -311,7 +313,7 @@ void Game::Iterate() {
 		}
 	}
 	else if ( m_game_state == GS_RUNNING ) {
-		// TODO: iterate GSE
+		// TODO: iterate GSE?
 	}
 }
 
@@ -906,6 +908,11 @@ void Game::DefineUnit( const unit::Def* def ) {
 }
 
 void Game::SpawnUnit( unit::Unit* unit ) {
+	if ( m_game_state != GS_RUNNING ) {
+		m_unprocessed_units.push_back( unit );
+		return;
+	}
+
 	Log( "Spawning unit ('" + unit->m_def->m_name + "') at [ " + std::to_string( unit->m_pos_x ) + " " + std::to_string( unit->m_pos_y ) + " ]" );
 
 	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
@@ -1005,7 +1012,7 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto unit_id = buf.ReadInt();
 		auto b = Buffer( buf.ReadString() );
-		m_unprocessed_units.push_back( unit::Unit::Unserialize( b ) );
+		SpawnUnit( unit::Unit::Unserialize( b ) );
 	}
 	unit::Unit::SetNextId( buf.ReadInt() );
 	Log( "Restored next unit id: " + std::to_string( unit::Unit::GetNextId() ) );
@@ -1310,6 +1317,7 @@ void Game::ResetGame() {
 		DELETE( m_current_turn );
 		m_current_turn = nullptr;
 	}
+	m_is_turn_complete = false;
 
 	if ( m_state ) {
 		// ui thread will reset state as needed
@@ -1335,6 +1343,21 @@ void Game::NextTurn() {
 
 	NEW( m_current_turn, Turn, turn_id );
 	Log( "turn " + std::to_string( m_current_turn->GetId() ) + " started" );
+}
+
+void Game::CheckTurnComplete() {
+	bool is_turn_complete = false;
+
+	// TODO: check if any units should be moved
+	is_turn_complete = true;
+
+	if ( m_is_turn_complete != is_turn_complete ) {
+		m_is_turn_complete = is_turn_complete;
+		Log( "Sending turn complete status: " + std::to_string( m_is_turn_complete ) );
+		auto e = Event( Event::ET_TURN_COMPLETE_STATUS );
+		e.data.turn_complete_status.is_turn_complete = m_is_turn_complete;
+		AddEvent( e );
+	}
 }
 
 }

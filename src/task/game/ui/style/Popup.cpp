@@ -159,8 +159,7 @@ void Popup::AddStyles() {
 			s->SetSound( Style::A_SOUND, "CPU please don't go.wav" );
 			s->Set( Style::A_SOUND_AUTOPLAY );
 			s->Set( Style::A_SOUND_AUTOSTOP );
-			//s->Set( Style::A_SOUND_START_DELAY, 60 );
-			s->Set( Style::A_SOUND_VOLUME, 0.5 );
+			s->Set( Style::A_SOUND_VOLUME, 0.5f );
 		}
 	);
 

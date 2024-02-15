@@ -317,6 +317,9 @@ private:
 
 	Turn* m_current_turn = nullptr;
 
+	bool m_is_turn_complete = false;
+	void CheckTurnComplete();
+
 };
 
 }

@@ -21,7 +21,8 @@ CLASS( Mesh, UIObject )
 	virtual void SetTexture( types::Texture* texture );
 	void ClearTexture();
 
-	void SetTintColor( const types::Color color );
+	void SetTintColor( const types::Color& color );
+	void SetTintAlpha( const float alpha );
 
 	virtual void Destroy() override;
 	virtual void Align() override;

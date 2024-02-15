@@ -261,6 +261,9 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, Camera* camera )
 		case ( shader_program::ShaderProgram::TYPE_SIMPLE2D ) : {
 			auto* sp = (shader_program::Simple2D*)shader_program;
 			glUniform1ui( sp->uniforms.flags, flags );
+			if ( flags & actor::Actor::RF_USE_TINT ) {
+				glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&mesh_actor->GetTintColor() );
+			}
 			if ( flags & actor::Actor::RF_USE_AREA_LIMITS ) {
 				const auto& limits = mesh_actor->GetAreaLimits();
 				glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
