@@ -9,10 +9,13 @@ class SpawnUnit : public Event {
 public:
 	SpawnUnit( const std::string& unit_def, const size_t pos_x, const size_t pos_y );
 
-	void Apply( game::Game* game ) const override;
+	const gse::Value Apply( game::Game* game ) const override;
 
-	const types::Buffer Serialize() const override;
-	void Unserialize( types::Buffer buf ) override;
+private:
+	friend class Event;
+
+	static void Serialize( types::Buffer& buf, const SpawnUnit* event );
+	static SpawnUnit* Unserialize( types::Buffer& buf );
 
 private:
 	std::string m_unit_def;

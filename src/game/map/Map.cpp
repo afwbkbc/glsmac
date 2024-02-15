@@ -276,12 +276,12 @@ const std::string& Map::GetErrorString( const error_code_t& code ) {
 
 Tile* Map::GetTile( const size_t x, const size_t y ) const {
 	ASSERT( m_tiles, "tiles not set" );
-	return m_tiles->At( x, y );
+	return &m_tiles->At( x, y );
 }
 
 TileState* Map::GetTileState( const size_t x, const size_t y ) const {
 	ASSERT( m_map_state, "map state not set" );
-	return m_map_state->At( x, y );
+	return &m_map_state->At( x, y );
 }
 
 TileState* Map::GetTileState( const Tile* tile ) const {
@@ -616,6 +616,7 @@ const Map::error_code_t Map::Generate(
 	}
 #endif
 	Log( "Generating map of size " + size.ToString() );
+	ASSERT( !m_tiles, "tiles already set" );
 	NEW( m_tiles, Tiles, size.x, size.y );
 	generator.Generate( m_tiles, map_settings, MT_C );
 	if ( canceled ) {

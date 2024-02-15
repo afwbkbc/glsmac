@@ -19,6 +19,8 @@ public:
 		CLASS_NONE,
 		CLASS_EXCEPTION,
 		CLASS_TILE,
+		CLASS_UNIT,
+		CLASS_UNITDEF,
 	};
 	static const std::string& GetClassString( const object_class_t object_class );
 
@@ -27,15 +29,16 @@ public:
 	typedef std::string key_t; // keep it simple for now
 	typedef std::map< key_t, Value > properties_t;
 
-	Object( properties_t initial_value = {}, const object_class_t object_class = CLASS_NONE );
+	Object( properties_t initial_value = {}, const object_class_t object_class = CLASS_NONE, const void* wrapptr = nullptr );
 
 	const Value& Get( const key_t& key ) const;
 	void Set( const key_t& key, const Value& value );
 
 	const Value GetRef( const key_t& key );
 
-	properties_t value = {};
+	properties_t value;
 	const object_class_t object_class;
+	const void* wrapptr;
 
 };
 

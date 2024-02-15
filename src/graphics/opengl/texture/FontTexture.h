@@ -22,7 +22,7 @@ CLASS( FontTexture, base::Base )
 	float m_tx[128];
 	float m_ty[128];
 
-	GLuint m_texture;
+	GLuint m_texture = 0;
 };
 
 } /* namespace opengl */

@@ -727,10 +727,10 @@ void MemoryWatcher::GLDeleteTextures( GLsizei n, GLuint* textures, const std::st
 		m_opengl.textures_framebuffers.erase( it2 );
 	}
 
-	m_opengl.textures.erase( it );
-
 	DEBUG_STAT_CHANGE_BY( opengl_textures_size, -it->second.size );
 	DEBUG_STAT_DEC( opengl_textures_count );
+
+	m_opengl.textures.erase( it );
 
 	glDeleteTextures_real( n, textures );
 }

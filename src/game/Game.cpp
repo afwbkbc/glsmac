@@ -272,13 +272,17 @@ void Game::Iterate() {
 				ASSERT( !m_bindings, "bindings already set" );
 				NEW( m_bindings, Bindings, this );
 
-				// run main gse entrypoint
+				ASSERT( !m_current_turn, "turn is already initialized" );
+
 				try {
+					// run main gse entrypoint
 					m_bindings->RunMain();
+
+					// start initial turn
+					NextTurn();
 
 					// start main loop
 					m_game_state = GS_RUNNING;
-
 				}
 				catch ( gse::Exception& e ) {
 					Log( (std::string)"Initialization failed: " + e.ToStringAndCleanup() );
@@ -286,9 +290,15 @@ void Game::Iterate() {
 				}
 
 				if ( m_game_state == GS_RUNNING ) {
-					ASSERT( !m_current_turn, "turn is already initialized" );
-					NextTurn();
-					m_bindings->Call( Bindings::CS_ONSTART );
+
+					for ( auto& it : m_unprocessed_events ) {
+						ProcessGameEvent( it );
+					}
+					m_unprocessed_events.clear();
+
+					if ( m_state->IsMaster() ) {
+						m_bindings->Call( Bindings::CS_ON_START );
+					}
 				}
 			}
 			else {
@@ -734,7 +744,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			Log( "got chat message request: " + *request.data.chat.message );
 
 			if ( m_connection ) {
-				m_connection->Message( *request.data.chat.message );
+				m_connection->SendMessage( *request.data.chat.message );
 			}
 			else {
 				Message( "<" + m_player->GetPlayerName() + "> " + *request.data.chat.message );
@@ -877,21 +887,30 @@ const unit::Def* Game::GetUnitDef( const std::string& name ) const {
 	}
 }
 
-void Game::AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& si ) {
-	ASSERT( m_current_turn, "turn not initialized" );
-	event->Apply( this );
-	m_current_turn->AddEvent( event );
+const gse::Value Game::AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& si ) {
+	if ( m_connection ) {
+		m_connection->SendGameEvent( event );
+	}
+	const auto result = ProcessGameEvent( event );
+	return result;
 }
 
 void Game::SpawnUnit( unit::Unit* unit ) {
 	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
 	Log( "Spawning unit ('" + unit->m_def->m_name + "') at [ " + std::to_string( unit->m_pos_x ) + " " + std::to_string( unit->m_pos_y ) + " ]" );
-	m_units.insert_or_assign( unit->m_id, unit );
-	const auto* tile = m_map->GetTile( unit->m_pos_x, unit->m_pos_y );
+
+	auto* tile = m_map->GetTile( unit->m_pos_x, unit->m_pos_y );
 	const auto* ts = m_map->GetTileState( tile );
+
+	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
+	m_units.insert_or_assign( unit->m_id, unit );
+	unit->m_tile = tile;
+	ASSERT( tile->units.find( unit->m_id ) == tile->units.end(), "duplicate unit id in tile" );
+	tile->units.insert_or_assign( unit->m_id, unit );
+
 	// notify frontend
-	auto e = Event( Event::ET_SPAWN_UNIT );
-	NEW( e.data.spawn_unit.serialized_unit, std::string, unit::Unit::Serialize( unit ).ToString() );
+	auto e = Event( Event::ET_UNIT_SPAWN );
+	NEW( e.data.unit_spawn.serialized_unit, std::string, unit::Unit::Serialize( unit ).ToString() );
 	const auto l = tile->is_water_tile
 		? map::TileState::LAYER_WATER
 		: map::TileState::LAYER_LAND;
@@ -900,12 +919,46 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 		ts->coord.y,
 		ts->layers[ l ].coords
 	);
-	e.data.spawn_unit.coords = {
+	e.data.unit_spawn.coords = {
 		c.x,
 		-c.y,
 		c.z
 	};
 	AddEvent( e );
+
+	if ( m_state->IsMaster() ) {
+		m_bindings->Call( Bindings::CS_ON_SPAWN_UNIT, { unit->Wrap() } );
+	}
+}
+
+void Game::DespawnUnit( const size_t unit_id ) {
+	const auto& it = m_units.find( unit_id );
+	ASSERT( it != m_units.end(), "unit id not found" );
+	auto* unit = it->second;
+
+	auto e = Event( Event::ET_UNIT_DESPAWN );
+	e.data.unit_despawn.unit_id = unit_id;
+	AddEvent( e );
+
+	ASSERT( unit->m_tile, "unit tile not assigned" );
+	auto* tile = unit->m_tile;
+	const auto& tile_it = tile->units.find( unit->m_id );
+	ASSERT( tile_it != tile->units.end(), "unit id not found in tile" );
+	tile->units.erase( tile_it );
+
+	m_units.erase( it );
+
+	if ( m_state->IsMaster() ) {
+		m_bindings->Call( Bindings::CS_ON_DESPAWN_UNIT, { unit->Wrap() } );
+	}
+
+	delete unit;
+}
+
+const gse::Value Game::ProcessGameEvent( const event::Event* event ) {
+	ASSERT( m_current_turn, "turn not initialized" );
+	m_current_turn->AddEvent( event );
+	return event->Apply( this );
 }
 
 void Game::AddEvent( const Event& event ) {
@@ -970,9 +1023,8 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 		m_connection->IfClient(
 			[ this ]( Client* connection ) -> void {
-				connection->m_on_disconnect = [ this, connection ]() -> void {
+				connection->m_on_disconnect = [ this ]() -> bool {
 					Log( "Connection lost" );
-					DELETE( connection );
 					m_state->DetachConnection();
 					m_connection = nullptr;
 					if ( m_game_state != GS_RUNNING ) {
@@ -981,9 +1033,11 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					else {
 						Quit( "Lost connection to server" );
 					}
+					return true;
 				};
-				connection->m_on_error = [ this, connection ]( const std::string& reason ) -> void {
+				connection->m_on_error = [ this ]( const std::string& reason ) -> bool {
 					m_initialization_error = reason;
+					return true;
 				};
 			}
 		);
@@ -992,6 +1046,15 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			auto e = Event( Event::ET_GLOBAL_MESSAGE );
 			NEW( e.data.global_message.message, std::string, message );
 			AddEvent( e );
+		};
+
+		m_connection->m_on_game_event = [ this ]( const event::Event* event ) -> void {
+			if ( m_game_state == GS_RUNNING ) {
+				ProcessGameEvent( event );
+			}
+			else {
+				m_unprocessed_events.push_back( event );
+			}
 		};
 
 	}
@@ -1139,6 +1202,11 @@ void Game::ResetGame() {
 	m_slot_num = 0;
 	m_slot = nullptr;
 
+	for ( auto& it : m_unprocessed_events ) {
+		delete it;
+	}
+	m_unprocessed_events.clear();
+
 	for ( auto& it : m_units ) {
 		delete it.second;
 	}
@@ -1171,6 +1239,7 @@ void Game::ResetGame() {
 		// ui thread will reset state as needed
 		m_state = nullptr;
 		if ( m_connection ) {
+			m_connection->Disconnect();
 			m_connection->ResetHandlers();
 		}
 		m_connection = nullptr;

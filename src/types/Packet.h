@@ -26,7 +26,8 @@ CLASS( Packet, Serializable )
 		PT_GET_MAP_HEADER, // C->S
 		PT_MAP_HEADER, // S->C
 		PT_GET_MAP_CHUNK, // C->S
-		PT_MAP_CHUNK, // S->C
+		PT_MAP_CHUNK, // S->
+		PT_GAME_EVENTS, // *->*
 	};
 
 	Packet( const packet_type_t type );
@@ -42,6 +43,9 @@ CLASS( Packet, Serializable )
 			size_t slot_num;
 			size_t flags;
 		} flags;
+		struct {
+			uint8_t state;
+		} game_state;
 		struct {
 			size_t offset;
 			size_t size;

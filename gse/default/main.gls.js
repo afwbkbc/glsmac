@@ -7,7 +7,7 @@ while (i < #size(units)) {
     i++;
 }
 
-#game.on_start(() => {
+#game.on.start(() => {
     let y = 0;
     while (y < #game.map.height) {
         let x = 0;
@@ -15,15 +15,16 @@ while (i < #size(units)) {
             if (x % 2 == y % 2) {
                 if (#game.random.get_int(0, 1) == 1) {
                     let tile = #game.map.get_tile(x, y);
+                    let unit = null;
                     if (tile.is_land) {
                         if (#game.random.get_int(0, 2) != 1) {
-                            #game.units.spawn('MindWorms', tile);
+                            unit = #game.units.spawn('MindWorms', tile);
                         } else {
-                            #game.units.spawn('SporeLauncher', tile);
+                            unit = #game.units.spawn('SporeLauncher', tile);
                         }
                     } else {
                         if (#game.random.get_int(0, 1) == 1) {
-                            #game.units.spawn('SeaLurk', tile);
+                            unit = #game.units.spawn('SeaLurk', tile);
                         }
                     }
                 }
@@ -32,5 +33,33 @@ while (i < #size(units)) {
         }
         y++;
     }
-    //#game.units.spawn('MINDWORMS', #game.map.get_tile(0, 0));
+});
+
+#game.on.spawn_unit((unit) => {
+    let def = unit.get_def();
+    if (def.name != 'MindWorms') {
+        let tile = unit.get_tile();
+        let neighbours = [tile.get_W(), tile.get_NW(), tile.get_N(), tile.get_NE(), tile.get_E(), tile.get_SE(), tile.get_S(), tile.get_SW()];
+        let i = 0;
+        let sz = #size(neighbours);
+        let nearby_units_count = 0;
+        while (i < sz) {
+            let neighbour = neighbours[i];
+            if (!#is_empty(neighbour.get_units())) {
+                nearby_units_count++;
+            }
+            i++;
+        }
+        if (nearby_units_count > 2) {
+            #game.units.despawn(unit);
+        }
+    }
+});
+
+#game.on.despawn_unit((unit) => {
+    let def = unit.get_def();
+    #print(#to_string(def));
+    if (def.name == 'SporeLauncher') {
+        #game.units.spawn('MindWorms', unit.get_tile());
+    }
 });

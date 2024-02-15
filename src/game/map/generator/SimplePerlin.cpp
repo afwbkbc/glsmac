@@ -78,7 +78,7 @@ void SimplePerlin::GenerateElevations( Tiles* tiles, const game::MapSettings& ma
 
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
-			tile = tiles->At( x, y );
+			tile = &tiles->At( x, y );
 
 			const float z_rocks = m_random->GetFloat( 0.0f, 1.0f );
 			const float z_moisture = m_random->GetFloat( 0.0f, 1.0f );
@@ -137,7 +137,7 @@ void SimplePerlin::GenerateDetails( Tiles* tiles, const game::MapSettings& map_s
 	// TODO: split generation into 2 methods
 	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {
 		for ( auto x = y & 1 ; x < tiles->GetWidth() ; x += 2 ) {
-			tile = tiles->At( x, y );
+			tile = &tiles->At( x, y );
 
 			// add some rivers
 			if ( m_random->IsLucky( RIVER_SPAWN_CHANCE_DIFFICULTY ) ) {

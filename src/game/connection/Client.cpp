@@ -149,8 +149,8 @@ void Client::ProcessEvent( const network::Event& event ) {
 						}
 						case Packet::PT_GAME_STATE: {
 							Log( "Got game state: " + std::to_string( packet.data.num ) );
-							if ( packet.data.num != m_game_state ) {
-								m_game_state = (game_state_t)packet.data.num;
+							if ( packet.udata.game_state.state != m_game_state ) {
+								m_game_state = (game_state_t)packet.udata.game_state.state;
 								if ( m_on_game_state_change ) {
 									m_on_game_state_change( m_game_state );
 								}
@@ -213,6 +213,21 @@ void Client::ProcessEvent( const network::Event& event ) {
 							}
 							break;
 						}
+						case Packet::PT_GAME_EVENTS: {
+							Log( "Got game events packet" );
+							if ( m_on_game_event ) {
+								auto buf = Buffer( packet.data.str );
+								std::vector< const game::event::Event* > game_events = {};
+								game::event::Event::UnserializeMultiple( buf, game_events );
+								for ( const auto& game_event : game_events ) {
+									m_on_game_event( game_event );
+								}
+							}
+							else {
+								Log( "WARNING: game event handler not set" );
+							}
+							break;
+						}
 						default: {
 							Log( "WARNING: invalid packet type from server: " + std::to_string( packet.type ) );
 						}
@@ -238,6 +253,13 @@ void Client::ProcessEvent( const network::Event& event ) {
 	}
 }
 
+void Client::SendGameEvents( const game_events_t& game_events ) {
+	Log( "Sending " + std::to_string( game_events.size() ) + " game events" );
+	Packet p( Packet::PT_GAME_EVENTS );
+	p.data.str = game::event::Event::SerializeMultiple( game_events ).ToString();
+	m_network->MT_SendPacket( p );
+}
+
 void Client::UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flags ) {
 	if ( only_flags ) {
 		Log( "Sending flags update" );
@@ -255,7 +277,7 @@ void Client::UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flag
 	}
 }
 
-void Client::Message( const std::string& message ) {
+void Client::SendMessage( const std::string& message ) {
 	Log( "Sending chat message: " + message );
 	Packet p( Packet::PT_MESSAGE );
 	p.data.str = message;

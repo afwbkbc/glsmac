@@ -141,8 +141,6 @@ CLASS( Game, base::Task )
 	void SetEditorBrush( ::game::map_editor::MapEditor::brush_type_t editor_brush );
 	const ::game::map_editor::MapEditor::brush_type_t GetEditorBrush() const;
 
-protected:
-
 private:
 
 	const std::string TERRAIN_SOURCE_PCX = "ter1.pcx";
@@ -153,6 +151,7 @@ private:
 	void UpdateMapData( const types::Vec2< size_t >& map_size );
 
 	void SpawnUnit( const ::game::unit::Unit* unit, const float x, const float y, const float z );
+	void DespawnUnit( const size_t unit_id );
 
 	void ProcessEvent( const ::game::Event& event );
 
@@ -348,6 +347,25 @@ private:
 		// init will be used for loading dump
 #endif
 	} m_mt_ids = {};
+
+	struct unitdef_state_t {
+		struct {
+			bool is_sprite;
+			union {
+				struct {
+					Game::instanced_sprite_t* instanced_sprite = nullptr;
+					size_t next_instance_id = 1;
+				} sprite;
+			};
+		} render;
+	};
+	std::unordered_map< std::string, unitdef_state_t > m_unitdef_states = {};
+
+	struct unit_state_t {
+		unitdef_state_t* def = nullptr;
+		size_t instance_id = 0;
+	};
+	std::unordered_map< size_t, unit_state_t > m_unit_states = {};
 
 	std::unordered_map< std::string, instanced_sprite_t > m_instanced_sprites = {};
 

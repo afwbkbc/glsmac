@@ -6,6 +6,8 @@
 
 #include "game/map/TileState.h"
 
+#include "gse/Value.h"
+
 namespace game {
 namespace unit {
 
@@ -17,6 +19,7 @@ public:
 	};
 
 	Def( const def_type_t type, const std::string& name );
+	virtual ~Def() = default;
 
 	const def_type_t m_type;
 	const std::string m_name;
@@ -26,7 +29,7 @@ public:
 	static const types::Buffer Serialize( const Def* def );
 	static Def* Unserialize( types::Buffer& buf );
 
-private:
+	WRAPDEFS( Def );
 };
 
 }

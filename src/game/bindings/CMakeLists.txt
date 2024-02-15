@@ -5,7 +5,7 @@ SET( SRC ${SRC}
 	${PWD}/Message.cpp
 	${PWD}/Exit.cpp
 	${PWD}/Random.cpp
-	${PWD}/OnStart.cpp
+	${PWD}/On.cpp
 	${PWD}/Units.cpp
 	${PWD}/Map.cpp
 

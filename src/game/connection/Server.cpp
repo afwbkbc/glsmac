@@ -314,6 +314,29 @@ void Server::ProcessEvent( const network::Event& event ) {
 						}
 						break;
 					}
+					case Packet::PT_GAME_EVENTS: {
+						Log( "Got game events packet" );
+						if ( m_on_game_event ) {
+							auto buf = Buffer( packet.data.str );
+							std::vector< const game::event::Event* > game_events = {};
+							game::event::Event::UnserializeMultiple( buf, game_events );
+							for ( const auto& game_event : game_events ) {
+								m_on_game_event( game_event );
+							}
+						}
+						else {
+							Log( "WARNING: game event handler not set" );
+						}
+						// relay to other clients
+						Broadcast(
+							[ this, packet, event ]( const network::cid_t cid ) -> void {
+								if ( cid != event.cid ) { // don't send back
+									SendGameEventsTo( packet.data.str, cid );
+								}
+							}
+						);
+						break;
+					}
 					default: {
 						Log( "WARNING: invalid packet type from client " + std::to_string( event.cid ) + " : " + std::to_string( packet.type ) );
 					}
@@ -332,7 +355,16 @@ void Server::ProcessEvent( const network::Event& event ) {
 			Log( "WARNING: invalid event type from client " + std::to_string( event.cid ) + " : " + std::to_string( event.type ) );
 		}
 	}
+}
 
+void Server::SendGameEvents( const game_events_t& game_events ) {
+	Log( "Sending " + std::to_string( game_events.size() ) + " game events" );
+	const auto serialized_events = game::event::Event::SerializeMultiple( game_events ).ToString();
+	Broadcast(
+		[ this, serialized_events ]( const network::cid_t cid ) -> void {
+			SendGameEventsTo( serialized_events, cid );
+		}
+	);
 }
 
 void Server::Broadcast( std::function< void( const network::cid_t cid ) > callback ) {
@@ -386,7 +418,7 @@ void Server::UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flag
 	}
 }
 
-void Server::Message( const std::string& message ) {
+void Server::SendMessage( const std::string& message ) {
 	GlobalMessage( FormatChatMessage( GetPlayer(), message ) );
 }
 
@@ -450,7 +482,7 @@ void Server::SendGlobalSettings( network::cid_t cid ) {
 void Server::SendGameState( const network::cid_t cid ) {
 	Log( "Sending game state change (" + std::to_string( m_game_state ) + ") to " + std::to_string( cid ) );
 	Packet p( Packet::PT_GAME_STATE );
-	p.data.num = m_game_state;
+	p.udata.game_state.state = m_game_state;
 	m_network->MT_SendPacket( p, cid );
 }
 
@@ -484,6 +516,12 @@ void Server::SendFlagsUpdate( const size_t slot_num, const Slot* slot, network::
 
 const std::string Server::FormatChatMessage( const Player* player, const std::string& message ) const {
 	return "<" + player->GetPlayerName() + "> " + message;
+}
+
+void Server::SendGameEventsTo( const std::string& serialized_events, const network::cid_t cid ) {
+	Packet p( Packet::PT_GAME_EVENTS );
+	p.data.str = serialized_events;
+	m_network->MT_SendPacket( p, cid );
 }
 
 void Server::ClearReadyFlags() {

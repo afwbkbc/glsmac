@@ -151,7 +151,7 @@ const std::string FS::GetExtension( const std::string& path ) {
 
 const std::vector< std::string > FS::GetExtensions( const std::string& path ) {
 	std::vector< std::string > result = {};
-	size_t pos, last_pos, path_pos = path.size();
+	size_t pos, path_pos, last_pos = path.size();
 	while ( ( pos = path.rfind( EXTENSION_SEPARATOR, last_pos - 1 ) ) != std::string::npos ) {
 		path_pos = path.rfind( PATH_SEPARATOR, last_pos - 1 );
 		if ( path_pos != std::string::npos && path_pos > pos ) {

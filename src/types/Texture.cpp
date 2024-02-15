@@ -136,7 +136,9 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 
 	// for perlin borders
 	size_t perlin_maxx[h];
+	memset( &perlin_maxx, 0, sizeof( perlin_maxx ) );
 	size_t perlin_maxy[w];
+	memset( &perlin_maxy, 0, sizeof( perlin_maxy ) );
 
 	if (
 		( flags & AM_ROUND_LEFT ) ||

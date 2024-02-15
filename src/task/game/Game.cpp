@@ -775,52 +775,98 @@ const ::game::map_editor::MapEditor::brush_type_t Game::GetEditorBrush() const {
 }
 
 void Game::SpawnUnit( const ::game::unit::Unit* unit, const float x, const float y, const float z ) {
-	switch ( unit->m_def->m_type ) {
-		case ::game::unit::Def::DT_STATIC: {
-			const auto* def = (::game::unit::StaticDef*)unit->m_def;
-			switch ( def->m_render->m_type ) {
-				case ::game::unit::Render::RT_SPRITE: {
-					const auto* render = (::game::unit::SpriteRender*)def->m_render;
 
-					auto& sprite = GetInstancedSprite(
-						"Unit_" + def->m_name, render->m_file, {
-							render->m_x,
-							render->m_y,
-						},
-						{
-							render->m_w,
-							render->m_h,
-						},
-						{
-							render->m_cx,
-							render->m_cy,
-						},
-						0.5f
-					);
-					static size_t id = 1; // TODO
-					sprite.actor->SetInstance(
-						id++, {
-							x,
-							y,
-							z
-						}
-					);
+	// unitdef
+	auto unitdef_it = m_unitdef_states.find( unit->m_def->m_name );
+	if ( unitdef_it == m_unitdef_states.end() ) {
+		Log( "Initializing unitdef state: " + unit->m_def->m_name );
+		unitdef_state_t unitdef_state = {};
+		switch ( unit->m_def->m_type ) {
+			case ::game::unit::Def::DT_STATIC: {
+				const auto* def = (::game::unit::StaticDef*)unit->m_def;
+				switch ( def->m_render->m_type ) {
 
-					break;
+					case ::game::unit::Render::RT_SPRITE: {
+						const auto* render = (::game::unit::SpriteRender*)def->m_render;
+
+						unitdef_state.render.is_sprite = true;
+						unitdef_state.render.sprite.instanced_sprite = &GetInstancedSprite(
+							"Unit_" + def->m_name, render->m_file, {
+								render->m_x,
+								render->m_y,
+							},
+							{
+								render->m_w,
+								render->m_h,
+							},
+							{
+								render->m_cx,
+								render->m_cy,
+							},
+							0.5f
+						);
+
+						break;
+					}
+					default:
+						THROW( "unknown unit render type: " + std::to_string( def->m_render->m_type ) );
 				}
-				default:
-					THROW( "unknown unit render type: " + std::to_string( def->m_render->m_type ) );
+				break;
 			}
-			break;
+			default:
+				THROW( "unknown unit def type: " + std::to_string( unit->m_def->m_type ) );
 		}
-		default:
-			THROW( "unknown unit def type: " + std::to_string( unit->m_def->m_type ) );
+		unitdef_it = m_unitdef_states.insert(
+			{
+				unit->m_def->m_name,
+				unitdef_state
+			}
+		).first;
 	}
-	//Log( "SPAWNED " + unit->GetDef()->GetName() + " at " + std::to_string( unit->GetPosX() ) + "x" + std::to_string( unit->GetPosY() ) );
+	auto& unitdef_state = unitdef_it->second;
+
+	// unit
+	ASSERT( m_unit_states.find( unit->m_id ) == m_unit_states.end(), "unit id already exists" );
+	unit_state_t unit_state = {
+		&unitdef_state,
+	};
+	if ( unitdef_state.render.is_sprite ) {
+		unit_state.instance_id = unitdef_state.render.sprite.next_instance_id++;
+		unitdef_state.render.sprite.instanced_sprite->actor->SetInstance(
+			unit_state.instance_id, {
+				x,
+				y,
+				z
+			}
+		);
+	}
+	else {
+		THROW( "only sprite units are supported for now" );
+	}
+	m_unit_states.insert(
+		{
+			unit->m_id,
+			unit_state
+		}
+	);
+}
+
+void Game::DespawnUnit( const size_t unit_id ) {
+	const auto& it = m_unit_states.find( unit_id );
+	ASSERT( it != m_unit_states.end(), "unit id not found" );
+	const auto& unit_state = it->second;
+	const auto& unitdef_state = unit_state.def;
+	if ( unitdef_state->render.is_sprite ) {
+		unitdef_state->render.sprite.instanced_sprite->actor->RemoveInstance( unit_state.instance_id );
+	}
+	else {
+		THROW( "only sprite units are supported for now" );
+	}
+	m_unit_states.erase( it );
 }
 
 void Game::ProcessEvent( const ::game::Event& event ) {
-	Log( "Received event (type=" + std::to_string( event.type ) + ")" );
+	//Log( "Received event (type=" + std::to_string( event.type ) + ")" ); // spammy
 	const auto f_exit = [ this, &event ]() -> void {
 		ExitGame(
 			[ this, event ]() -> void {
@@ -857,13 +903,17 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 			AddMessage( *event.data.global_message.message );
 			break;
 		}
-		case ::game::Event::ET_SPAWN_UNIT: {
-			types::Buffer buf( *event.data.spawn_unit.serialized_unit );
+		case ::game::Event::ET_UNIT_SPAWN: {
+			types::Buffer buf( *event.data.unit_spawn.serialized_unit );
 			const auto* unit = ::game::unit::Unit::Unserialize( buf );
-			const auto c = event.data.spawn_unit.coords;
+			const auto c = event.data.unit_spawn.coords;
 			SpawnUnit( unit, c.x, c.y, c.z );
 			delete unit->m_def;
 			delete unit;
+			break;
+		}
+		case ::game::Event::ET_UNIT_DESPAWN: {
+			DespawnUnit( event.data.unit_despawn.unit_id );
 			break;
 		}
 		default: {

@@ -17,6 +17,27 @@ namespace gse {
 #define VALUE_SET( _type, _var, _value ) { VALUE_DATA( _type, _var )->value = _value; }
 #define VALUE_CLONE( _type, _var ) VALUE( _type, VALUE_GET( _type, _var ) )
 
+#define WRAPDEFS( _type ) \
+    static const gse::type::Object::object_class_t WRAP_CLASS; \
+    const gse::Value Wrap() const; \
+    static _type* Unwrap( const gse::Value& value );
+#define WRAPIMPL_BEGIN( _type, _class ) \
+const gse::type::Object::object_class_t _type::WRAP_CLASS = gse::type::Object::_class; \
+const gse::Value _type::Wrap() const {  \
+    const gse::type::Object::properties_t properties = {
+
+#define WRAPIMPL_END( _type ) \
+    }; \
+    return VALUE( gse::type::Object, properties, WRAP_CLASS, this ); \
+} \
+_type* _type::Unwrap( const gse::Value& value ) { \
+    ASSERT_NOLOG( value.Get()->type == gse::type::Type::T_OBJECT, "can't unwrap non-object: " + value.Dump() ); \
+    const auto* obj = (gse::type::Object*)value.Get(); \
+    ASSERT_NOLOG( obj->object_class == WRAP_CLASS, "can't unwrap object of different class ( " + gse::type::Object::GetClassString( obj->object_class ) + " != " + gse::type::Object::GetClassString( WRAP_CLASS ) + " )" ); \
+    ASSERT_NOLOG( obj->wrapptr, "can't unwrap object without internal link" ); \
+    return (_type*)obj->wrapptr; \
+}
+
 class Value {
 public:
 	Value() = delete;

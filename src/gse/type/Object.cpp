@@ -24,7 +24,15 @@ static const std::unordered_map< Object::object_class_t, std::string > s_object_
 	{
 		Object::CLASS_TILE,
 		"#tile"
-	}
+	},
+	{
+		Object::CLASS_UNIT,
+		"#unit"
+	},
+	{
+		Object::CLASS_UNITDEF,
+		"#unitdef"
+	},
 };
 const std::string& Object::GetClassString( const object_class_t object_class ) {
 	const auto& it = s_object_class_str.find( object_class );
@@ -32,10 +40,11 @@ const std::string& Object::GetClassString( const object_class_t object_class ) {
 	return it->second;
 }
 
-Object::Object( properties_t initial_value, const object_class_t object_class )
+Object::Object( properties_t initial_value, const object_class_t object_class, const void* wrapptr )
 	: Type( GetType() )
 	, value( initial_value )
-	, object_class( object_class ) {}
+	, object_class( object_class )
+	, wrapptr( wrapptr ) {}
 
 const Value& Object::Get( const key_t& key ) const {
 	const auto& it = value.find( key );

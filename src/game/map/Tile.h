@@ -3,20 +3,29 @@
 #include <cstdint>
 #include <functional>
 #include <vector>
+#include <map>
 
 #include "types/Serializable.h"
 #include "types/Vec2.h"
 
+#include "gse/Value.h"
+#include "gse/type/Object.h"
+
 using namespace types;
 
 namespace game {
+
+namespace unit {
+class Unit;
+}
+
 namespace map {
 
 // WARNING: for now everything is public (because it's not clear what should be hidden from what)
 //   you can read any properties you need
 //   but be careful modifying anything, some things are only to be modified within Tile::Update() to keep consistent state
 // Some day this class will be refactored with access isolation and getters/setters
-class Tile { // not deriving from anything because tiles are initialized with malloc (without new) so vtable would get screwed
+class Tile {
 public:
 
 	// map coordinates
@@ -34,12 +43,12 @@ public:
 	// when reading or writing elevation - work only with values, make sure to not modify pointers themselves!
 	// pointers are set only once by Tiles and are not to be changed after
 	struct {
-		elevation_t* center;
-		elevation_t* left;
-		elevation_t* top;
-		elevation_t* right;
-		elevation_t* bottom;
-		std::vector< elevation_t* > corners; // for more convenient iteration, contains left, top, right and bottom pointers
+		elevation_t* center = nullptr;
+		elevation_t* left = nullptr;
+		elevation_t* top = nullptr;
+		elevation_t* right = nullptr;
+		elevation_t* bottom = nullptr;
+		std::vector< elevation_t* > corners = {}; // for more convenient iteration, contains left, top, right and bottom pointers
 	} elevation;
 
 	struct { // moved to separate structure to allow main structure to have only pointers, for consistency
@@ -50,15 +59,15 @@ public:
 	// links to adjactent tiles ( west, north, east, south and combinations )
 	// will be linked to itself if tile is at north or south map edge
 	// never modify these pointers, work only with values
-	Tile* W;
-	Tile* NW;
-	Tile* N;
-	Tile* NE;
-	Tile* E;
-	Tile* SE;
-	Tile* S;
-	Tile* SW;
-	std::vector< Tile* > neighbours; // for more convenient iteration, contains all neighbouring tiles
+	Tile* W = nullptr;
+	Tile* NW = nullptr;
+	Tile* N = nullptr;
+	Tile* NE = nullptr;
+	Tile* E = nullptr;
+	Tile* SE = nullptr;
+	Tile* S = nullptr;
+	Tile* SW = nullptr;
+	std::vector< Tile* > neighbours = {}; // for more convenient iteration, contains all neighbouring tiles
 
 	// dynamic parameters, do not modify them manually
 	bool is_water_tile = false;
@@ -125,6 +134,9 @@ public:
 	static constexpr terraforming_t T_AIRBASE = 1 << 12;
 	terraforming_t terraforming;
 
+	// units (id -> unit)
+	std::map< size_t, unit::Unit* > units = {};
+
 	// WARNING: make sure to call this after changing something in tile
 	//   it recalculates dynamic properties and solves inconsistencies
 	//   safe to call anytime
@@ -134,8 +146,9 @@ public:
 	void Clear();
 
 	const Buffer Serialize() const;
-
 	void Unserialize( Buffer data );
+
+	WRAPDEFS( Tile );
 };
 
 }

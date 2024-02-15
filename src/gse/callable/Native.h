@@ -39,6 +39,17 @@ namespace callable {
     arg = arguments.at( _index ).Get(); \
     N_CHECKTYPE( arg, _index, _type ); \
     const auto& _var = ((gse::type::_type*)arg)->value;
+#define N_GETOBJ( _var, _index, _class ) \
+    ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
+    arg = arguments.at( _index ).Get(); \
+    N_CHECKTYPE( arg, _index, Object ); \
+    if ( ((gse::type::Object*)arg)->object_class != _class ) { \
+        throw gse::Exception( gse::EC.INVALID_CALL, "Argument " + std::to_string( _index ) + " is expected to be object of class " + gse::type::Object::GetClassString( _class ) + ", found class: " + gse::type::Object::GetClassString( ((gse::type::Object*)arg)->object_class ), ctx, call_si ); \
+    } \
+    const auto& _var = arguments.at( _index );
+#define N_UNWRAP( _var, _index, _type ) \
+    N_GETOBJ( obj, _index, _type::WRAP_CLASS ); \
+    const auto* _var = _type::Unwrap( obj );
 #define N_GETOBJECT( _var, _index, _class ) \
     ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
     arg = arguments.at( _index ).Get(); \

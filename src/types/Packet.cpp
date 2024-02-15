@@ -53,7 +53,7 @@ const Buffer Packet::Serialize() const {
 			break;
 		}
 		case PT_GAME_STATE: {
-			buf.WriteInt( data.num ); // game state
+			buf.WriteInt( udata.game_state.state );
 			break;
 		}
 		case PT_GET_MAP_HEADER: {
@@ -73,6 +73,10 @@ const Buffer Packet::Serialize() const {
 			buf.WriteInt( udata.map.offset );
 			buf.WriteInt( udata.map.size );
 			buf.WriteString( data.str ); // serialized tiles part
+			break;
+		}
+		case PT_GAME_EVENTS: {
+			buf.WriteString( data.str ); // serialized game events
 			break;
 		}
 		default: {
@@ -133,7 +137,7 @@ void Packet::Unserialize( Buffer buf ) {
 			break;
 		}
 		case PT_GAME_STATE: {
-			data.num = buf.ReadInt(); // game state
+			udata.game_state.state = buf.ReadInt();
 			break;
 		}
 		case PT_GET_MAP_HEADER: {
@@ -153,6 +157,10 @@ void Packet::Unserialize( Buffer buf ) {
 			udata.map.offset = buf.ReadInt();
 			udata.map.size = buf.ReadInt();
 			data.str = buf.ReadString(); // serialized tiles part
+			break;
+		}
+		case PT_GAME_EVENTS: {
+			data.str = buf.ReadString(); // serialized game events
 			break;
 		}
 		default: {

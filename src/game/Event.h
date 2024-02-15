@@ -15,7 +15,8 @@ public:
 		ET_QUIT,
 		ET_ERROR,
 		ET_GLOBAL_MESSAGE,
-		ET_SPAWN_UNIT,
+		ET_UNIT_SPAWN,
+		ET_UNIT_DESPAWN,
 	};
 	Event( const event_type_t type );
 	Event( const Event& other );
@@ -41,7 +42,10 @@ public:
 				float y;
 				float z;
 			} coords;
-		} spawn_unit;
+		} unit_spawn;
+		struct {
+			size_t unit_id;
+		} unit_despawn;
 	} data;
 };
 

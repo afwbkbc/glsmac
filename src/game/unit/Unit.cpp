@@ -1,5 +1,9 @@
 #include "Unit.h"
 
+#include "gse/type/Object.h"
+#include "gse/type/Int.h"
+#include "gse/callable/Native.h"
+
 namespace game {
 namespace unit {
 
@@ -35,6 +39,33 @@ Unit* Unit::Unserialize( types::Buffer& buf ) {
 	const auto pos_y = buf.ReadInt();
 	return new Unit( id, def, pos_x, pos_y );
 }
+
+WRAPIMPL_BEGIN( Unit, CLASS_UNIT )
+	{
+		"id",
+		VALUE( gse::type::Int, m_id )
+	},
+	{
+		"x",
+		VALUE( gse::type::Int, m_pos_x )
+	},
+	{
+		"y",
+		VALUE( gse::type::Int, m_pos_y )
+	},
+	{
+		"get_def",
+		NATIVE_CALL( this ) {
+			return m_def->Wrap();
+		})
+	},
+	{
+		"get_tile",
+		NATIVE_CALL( this ) {
+			return m_tile->Wrap();
+		})
+	}
+WRAPIMPL_END( Unit )
 
 }
 }

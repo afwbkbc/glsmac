@@ -2,6 +2,8 @@
 
 #include "base/Base.h"
 
+#include <vector>
+
 #include "TileState.h"
 #include "base/MTModule.h"
 
@@ -36,7 +38,8 @@ CLASS( MapState, base::Base )
 	const Texture* terrain_texture;
 	const Texture* ter1_pcx;
 
-	TileState* At( const size_t x, const size_t y ) const;
+	TileState& At( const size_t x, const size_t y );
+	const TileState& AtConst( const size_t x, const size_t y ) const;
 
 	void LinkTileStates( MT_CANCELABLE );
 
@@ -44,7 +47,7 @@ CLASS( MapState, base::Base )
 	void Unserialize( Buffer buf );
 
 private:
-	TileState* m_tile_states = nullptr;
+	std::vector< TileState > m_tile_states = {};
 
 };
 

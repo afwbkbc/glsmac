@@ -115,7 +115,7 @@ const std::string Type::ToString() const {
 			return str;
 		}
 		case T_CALLABLE:
-			return "callable"; // TODO
+			return "()";
 		case T_ARRAYREF: {
 			const auto* that = (ArrayRef*)this;
 			return that->array->Get( that->index ).ToString();
