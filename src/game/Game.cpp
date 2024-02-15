@@ -888,23 +888,29 @@ const unit::Def* Game::GetUnitDef( const std::string& name ) const {
 }
 
 const gse::Value Game::AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& si ) {
-	const auto result = ProcessGameEvent( event );
 	if ( m_connection ) {
 		m_connection->SendGameEvent( event );
 	}
+	const auto result = ProcessGameEvent( event );
 	return result;
 }
 
 void Game::SpawnUnit( unit::Unit* unit ) {
 	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
 	Log( "Spawning unit ('" + unit->m_def->m_name + "') at [ " + std::to_string( unit->m_pos_x ) + " " + std::to_string( unit->m_pos_y ) + " ]" );
-	m_units.insert_or_assign( unit->m_id, unit );
-	m_bindings->Call( Bindings::CS_ON_SPAWN_UNIT, { unit->Wrap() } );
-	const auto* tile = m_map->GetTile( unit->m_pos_x, unit->m_pos_y );
+
+	auto* tile = m_map->GetTile( unit->m_pos_x, unit->m_pos_y );
 	const auto* ts = m_map->GetTileState( tile );
+
+	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
+	m_units.insert_or_assign( unit->m_id, unit );
+	unit->m_tile = tile;
+	ASSERT( tile->units.find( unit->m_id ) == tile->units.end(), "duplicate unit id in tile" );
+	tile->units.insert_or_assign( unit->m_id, unit );
+
 	// notify frontend
-	auto e = Event( Event::ET_SPAWN_UNIT );
-	NEW( e.data.spawn_unit.serialized_unit, std::string, unit::Unit::Serialize( unit ).ToString() );
+	auto e = Event( Event::ET_UNIT_SPAWN );
+	NEW( e.data.unit_spawn.serialized_unit, std::string, unit::Unit::Serialize( unit ).ToString() );
 	const auto l = tile->is_water_tile
 		? map::TileState::LAYER_WATER
 		: map::TileState::LAYER_LAND;
@@ -913,12 +919,40 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 		ts->coord.y,
 		ts->layers[ l ].coords
 	);
-	e.data.spawn_unit.coords = {
+	e.data.unit_spawn.coords = {
 		c.x,
 		-c.y,
 		c.z
 	};
 	AddEvent( e );
+
+	if ( m_state->IsMaster() ) {
+		m_bindings->Call( Bindings::CS_ON_SPAWN_UNIT, { unit->Wrap() } );
+	}
+}
+
+void Game::DespawnUnit( const size_t unit_id ) {
+	const auto& it = m_units.find( unit_id );
+	ASSERT( it != m_units.end(), "unit id not found" );
+	auto* unit = it->second;
+
+	auto e = Event( Event::ET_UNIT_DESPAWN );
+	e.data.unit_despawn.unit_id = unit_id;
+	AddEvent( e );
+
+	ASSERT( unit->m_tile, "unit tile not assigned" );
+	auto* tile = unit->m_tile;
+	const auto& tile_it = tile->units.find( unit->m_id );
+	ASSERT( tile_it != tile->units.end(), "unit id not found in tile" );
+	tile->units.erase( tile_it );
+
+	m_units.erase( it );
+
+	if ( m_state->IsMaster() ) {
+		m_bindings->Call( Bindings::CS_ON_DESPAWN_UNIT, { unit->Wrap() } );
+	}
+
+	delete unit;
 }
 
 const gse::Value Game::ProcessGameEvent( const event::Event* event ) {

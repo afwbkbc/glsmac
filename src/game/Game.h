@@ -265,6 +265,7 @@ public:
 	const unit::Def* GetUnitDef( const std::string& name ) const;
 	const gse::Value AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& si );
 	void SpawnUnit( unit::Unit* unit );
+	void DespawnUnit( const size_t unit_id );
 
 private:
 

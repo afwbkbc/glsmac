@@ -6,7 +6,7 @@ namespace game {
 namespace event {
 
 SpawnUnit::SpawnUnit( const std::string& unit_def, const size_t pos_x, const size_t pos_y )
-	: Event( ET_SPAWN_UNIT )
+	: Event( ET_UNIT_SPAWN )
 	, m_unit_def( unit_def )
 	, m_pos_x( pos_x )
 	, m_pos_y( pos_y ) {

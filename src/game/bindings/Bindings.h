@@ -29,6 +29,7 @@ public:
 	enum callback_slot_t {
 		CS_ON_START,
 		CS_ON_SPAWN_UNIT,
+		CS_ON_DESPAWN_UNIT,
 	};
 	typedef std::vector< gse::Value > callback_arguments_t;
 	void Call( const callback_slot_t slot, const callback_arguments_t& arguments = {} );

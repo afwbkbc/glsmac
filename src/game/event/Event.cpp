@@ -1,6 +1,7 @@
 #include "Event.h"
 
 #include "SpawnUnit.h"
+#include "DespawnUnit.h"
 
 namespace game {
 namespace event {
@@ -14,8 +15,12 @@ const types::Buffer Event::Serialize( const Event* event ) {
 	types::Buffer buf;
 	buf.WriteInt( event->m_type );
 	switch ( event->m_type ) {
-		case ET_SPAWN_UNIT: {
+		case ET_UNIT_SPAWN: {
 			SpawnUnit::Serialize( buf, (SpawnUnit*)event );
+			break;
+		}
+		case ET_UNIT_DESPAWN: {
+			DespawnUnit::Serialize( buf, (DespawnUnit*)event );
 			break;
 		}
 		default:
@@ -27,8 +32,10 @@ const types::Buffer Event::Serialize( const Event* event ) {
 Event* Event::Unserialize( types::Buffer& buf ) {
 	const auto type = buf.ReadInt();
 	switch ( type ) {
-		case ET_SPAWN_UNIT:
+		case ET_UNIT_SPAWN:
 			return SpawnUnit::Unserialize( buf );
+		case ET_UNIT_DESPAWN:
+			return DespawnUnit::Unserialize( buf );
 		default:
 			THROW( "unknown event type on read: " + std::to_string( type ) );
 	}

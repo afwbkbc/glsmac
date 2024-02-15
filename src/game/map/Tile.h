@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <functional>
 #include <vector>
+#include <map>
 
 #include "types/Serializable.h"
 #include "types/Vec2.h"
@@ -13,6 +14,11 @@
 using namespace types;
 
 namespace game {
+
+namespace unit {
+class Unit;
+}
+
 namespace map {
 
 // WARNING: for now everything is public (because it's not clear what should be hidden from what)
@@ -127,6 +133,9 @@ public:
 	static constexpr terraforming_t T_BUNKER = 1 << 11;
 	static constexpr terraforming_t T_AIRBASE = 1 << 12;
 	terraforming_t terraforming;
+
+	// units (id -> unit)
+	std::map< size_t, unit::Unit* > units = {};
 
 	// WARNING: make sure to call this after changing something in tile
 	//   it recalculates dynamic properties and solves inconsistencies

@@ -27,9 +27,13 @@ Event::Event( const Event& other )
 			NEW( data.global_message.message, std::string, *other.data.global_message.message );
 			break;
 		}
-		case ET_SPAWN_UNIT: {
-			NEW( data.spawn_unit.serialized_unit, std::string, *other.data.spawn_unit.serialized_unit );
-			data.spawn_unit.coords = other.data.spawn_unit.coords;
+		case ET_UNIT_SPAWN: {
+			NEW( data.unit_spawn.serialized_unit, std::string, *other.data.unit_spawn.serialized_unit );
+			data.unit_spawn.coords = other.data.unit_spawn.coords;
+			break;
+		}
+		case ET_UNIT_DESPAWN: {
+			data.unit_despawn.unit_id = other.data.unit_despawn.unit_id;
 			break;
 		}
 		default: {
@@ -53,8 +57,8 @@ Event::~Event() {
 			DELETE( data.global_message.message );
 			break;
 		}
-		case ET_SPAWN_UNIT: {
-			DELETE( data.spawn_unit.serialized_unit );
+		case ET_UNIT_SPAWN: {
+			DELETE( data.unit_spawn.serialized_unit );
 			break;
 		}
 		default: {

@@ -11,7 +11,8 @@ namespace event {
 class Event {
 public:
 	enum event_type_t {
-		ET_SPAWN_UNIT,
+		ET_UNIT_SPAWN,
+		ET_UNIT_DESPAWN,
 	};
 
 	Event( const event_type_t type );

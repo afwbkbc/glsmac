@@ -4,9 +4,11 @@
 #include "gse/type/String.h"
 #include "gse/type/Int.h"
 
-#include "../event/SpawnUnit.h"
 #include "game/unit/StaticDef.h"
 #include "game/unit/SpriteRender.h"
+
+#include "../event/SpawnUnit.h"
+#include "../event/DespawnUnit.h"
 
 namespace game {
 namespace bindings {
@@ -56,7 +58,15 @@ BINDING_IMPL( units ) {
 				N_UNWRAP( tile, 1, map::Tile );
 				return m_game->AddGameEvent( new event::SpawnUnit( def, tile->coord.x, tile->coord.y ), ctx, call_si );
 			})
-		}
+		},
+		{
+			"despawn",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_UNWRAP( unit, 0, unit::Unit );
+				return m_game->AddGameEvent( new event::DespawnUnit( unit->m_id ), ctx, call_si );
+			})
+		},
 	};
 	return VALUE( gse::type::Object, properties );
 }

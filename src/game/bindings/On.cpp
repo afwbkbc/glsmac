@@ -15,6 +15,10 @@ BINDING_IMPL( on ) {
 			"spawn_unit",
 			CALLBACK( Bindings::CS_ON_SPAWN_UNIT )
 		},
+		{
+			"despawn_unit",
+			CALLBACK( Bindings::CS_ON_DESPAWN_UNIT )
+		},
 	};
 	return VALUE( gse::type::Object, properties );
 }

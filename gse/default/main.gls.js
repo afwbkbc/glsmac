@@ -3,8 +3,7 @@ const units = #include('units');
 
 let i = 0;
 while (i < #size(units)) {
-    let def = #game.units.define(units[i][0], units[i][1]);
-    #print('DEFINED UNIT: ' + #to_string(def));
+    #game.units.define(units[i][0], units[i][1]);
     i++;
 }
 
@@ -37,5 +36,30 @@ while (i < #size(units)) {
 });
 
 #game.on.spawn_unit((unit) => {
-    #game.message('UNIT SPAWNED: ' + #to_string(unit));
+    let def = unit.get_def();
+    if (def.name != 'SeaLurk') {
+        let tile = unit.get_tile();
+        let neighbours = [tile.get_W(), tile.get_NW(), tile.get_N(), tile.get_NE(), tile.get_E(), tile.get_SE(), tile.get_S(), tile.get_SW()];
+        let i = 0;
+        let sz = #size(neighbours);
+        let nearby_units_count = 0;
+        while (i < sz) {
+            let neighbour = neighbours[i];
+            if (!#is_empty(neighbour.get_units())) {
+                nearby_units_count++;
+            }
+            i++;
+        }
+        if (nearby_units_count > 2) {
+            #game.units.despawn(unit);
+        }
+    }
+});
+
+#game.on.despawn_unit((unit) => {
+    let def = unit.get_def();
+    #print(#to_string(def));
+    if (def.name == 'SporeLauncher') {
+        #game.units.spawn('SeaLurk', unit.get_tile());
+    }
 });

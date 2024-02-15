@@ -3,6 +3,9 @@
 #include "gse/type/Object.h"
 #include "gse/type/Int.h"
 #include "gse/type/Bool.h"
+#include "gse/callable/Native.h"
+
+#include "game/unit/Unit.h"
 
 namespace game {
 namespace map {
@@ -73,6 +76,12 @@ void Tile::Unserialize( Buffer buf ) {
 	Update();
 }
 
+#define GETN( _n ) \
+{ \
+	"get_" #_n, \
+	NATIVE_CALL( this ) { return _n->Wrap(); } ) \
+}
+
 WRAPIMPL_BEGIN( Tile, CLASS_TILE )
 	{
 		"x",
@@ -89,6 +98,24 @@ WRAPIMPL_BEGIN( Tile, CLASS_TILE )
 	{
 		"is_land",
 		VALUE( gse::type::Bool, !is_water_tile )
+	},
+	GETN( W ),
+	GETN( NW ),
+	GETN( N ),
+	GETN( NE ),
+	GETN( E ),
+	GETN( SE ),
+	GETN( S ),
+	GETN( SW ),
+	{
+		"get_units",
+		NATIVE_CALL( this ) {
+			gse::type::Object::properties_t result = {};
+			for ( auto& it : units ) {
+				result.insert_or_assign( std::to_string( it.second->m_id ), it.second->Wrap() );
+			}
+			return VALUE( gse::type::Object, result );
+		} )
 	}
 WRAPIMPL_END( Tile )
 
