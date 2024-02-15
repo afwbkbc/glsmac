@@ -22,3 +22,23 @@ let lambda3 = (f1, f2) => {
 test.assert(lambda3(lambda2, lambda1) == 292);
 
 test.assert( (a, b, c) => { return a + b + c; }( 1, 2, 3 ) == 6 );
+
+let arr_of_func_objs = [
+    {
+        v: () => {
+            return 'A';
+        }
+    },
+    {
+        v: () => {
+            return 'B';
+        }
+    },
+];
+test.assert(arr_of_func_objs[0].v() == 'A');
+test.assert(arr_of_func_objs[1].v() == 'B');
+
+let f = () => {
+    return 'Y'
+};
+test.assert('X' + f() == 'XY');

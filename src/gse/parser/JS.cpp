@@ -361,6 +361,132 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 	bool var_hints_allowed = true;
 	Variable::variable_hints_t next_var_hints = Variable::VH_NONE;
 	const Expression* condition;
+
+	// split by operator priority
+	const std::function<
+		program::Operand*(
+			const elements_t::const_iterator&,
+			const elements_t::const_iterator&
+		)
+	> get_operand = [
+		this,
+		&get_operand
+	](
+		const elements_t::const_iterator& begin,
+		const elements_t::const_iterator& end
+	) -> program::Operand* {
+		if ( begin + 1 == end ) {
+			// only one operand present, wrap if needed and return
+			if ( ( *begin )->m_element_type != Element::ET_OPERAND ) {
+				throw gse::Exception( EC.PARSE_ERROR, "Unexpected: " + ( *begin )->ToString(), nullptr, ( *begin )->m_si );
+			}
+			return (program::Operand*)*begin;
+		}
+		// find most important operator
+		const program::Operator* op;
+		uint8_t last_priority = 255;
+		elements_t::const_iterator split_it = end;
+		const operator_info_t* info;
+		operator_link_t link;
+		const Element* el;
+		for ( auto it = begin ; it != end ; it++ ) {
+			el = *it;
+			if ( el->m_element_type == Element::ET_OPERATOR ) {
+				op = (program::Operator*)( *it );
+				info = &OPERATOR_INFO.at( op->op );
+				if ( info->priority <= last_priority ) {
+					last_priority = info->priority;
+					split_it = it;
+					link = info->link;
+				}
+			}
+		}
+		if ( split_it == end ) {
+			throw gse::Exception( EC.PARSE_ERROR, "Could not parse expression (forgot ; or operator?)", nullptr, ( *begin )->m_si );
+		}
+
+		bool has_a = split_it > begin;
+		bool has_b = split_it + 1 != end;
+
+		si_t si = ( *split_it )->m_si;
+
+		for ( auto it = begin ; it != end ; it++ ) {
+			el = *it;
+			if (
+				it < split_it &&
+					(
+						el->m_si.from.line < si.from.line ||
+							(
+								el->m_si.from.line == si.from.line &&
+									el->m_si.from.col < si.from.col
+							)
+					)
+				) {
+				si.from = el->m_si.from;
+			}
+			if (
+				it > split_it &&
+					( el->m_si.to.line > si.to.line ||
+						(
+							el->m_si.to.line == si.to.line &&
+								el->m_si.to.col > si.to.col
+						)
+					) ) {
+				si.to = el->m_si.to;
+			}
+		}
+		switch ( link ) {
+			case OL_LEFT: {
+				if ( !has_a ) {
+					throw gse::Exception( EC.PARSE_ERROR, "Left operand missing for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
+				}
+				if ( has_b ) {
+					throw gse::Exception( EC.PARSE_ERROR, "Right operand unexpected for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
+				}
+				return new program::Expression( si, get_operand( begin, split_it ), (program::Operator*)*split_it );
+			}
+			case OL_RIGHT: {
+				if ( !has_b ) {
+					throw gse::Exception( EC.PARSE_ERROR, "Right operand missing for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
+				}
+				if ( has_a ) {
+					throw gse::Exception( EC.PARSE_ERROR, "Left operand unexpected for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
+				}
+				return new program::Expression( si, nullptr, (program::Operator*)*split_it, get_operand( split_it + 1, end ) );
+			}
+			case OL_BOTH: {
+				if ( !has_a ) {
+					throw gse::Exception( EC.PARSE_ERROR, "Left operand missing for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
+				}
+				if ( !has_b ) {
+					throw gse::Exception( EC.PARSE_ERROR, "Right operand missing for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
+				}
+				return new program::Expression( si, get_operand( begin, split_it ), (program::Operator*)*split_it, get_operand( split_it + 1, end ) );
+			}
+			case OL_ANY: {
+				if ( has_a && has_b ) {
+					throw gse::Exception( EC.PARSE_ERROR, "Either left or right operand is expected, both found, for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
+				}
+				case OL_ANY_OR_BOTH:
+					if ( !has_a && !has_b ) {
+						throw gse::Exception( EC.PARSE_ERROR, "Neither left nor right operand is found, for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
+					}
+				return new program::Expression(
+					si,
+					has_a
+						? get_operand( begin, split_it )
+						: nullptr,
+					(program::Operator*)*split_it,
+					has_b
+						? get_operand( split_it + 1, end )
+						: nullptr
+				);
+			}
+			default:
+				THROW( "unexpected operator link type: " + std::to_string( link ) );
+		}
+	};
+
 	while ( it != end ) {
 		switch ( ( *it )->m_type ) {
 			case SourceElement::ET_COMMENT: {
@@ -539,10 +665,24 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 								throw gse::Exception( EC.PARSE_ERROR, "Expected { after =>", nullptr, ( *it )->m_si );
 							}
 
-							auto* element = elements.back(); // use last element as callable
-							ASSERT( element->m_element_type == Element::ET_OPERAND, "callable is not operand" );
-							auto* operand = (Operand*)element;
-							elements.pop_back();
+							// combine last child/at chain before using it as callable
+							auto callable_begin = elements.end();
+							while ( callable_begin != elements.begin() ) {
+								callable_begin--;
+								if (
+									(*callable_begin)->m_element_type != Element::ET_OPERAND && (
+										(*callable_begin)->m_element_type != Element::ET_OPERATOR || (
+											((program::Operator*)(*callable_begin))->op != program::Operator::OT_CHILD &&
+												((program::Operator*)(*callable_begin))->op != program::Operator::OT_AT
+										)
+									)
+								) {
+									callable_begin++;
+									break;
+								}
+							}
+							const auto* expr = (Expression*)get_operand( callable_begin, elements.end() );
+							elements.erase( callable_begin, elements.end() );
 
 							std::vector< const Expression* > arguments = {};
 							it_end = GetBracketsEnd( it, end );
@@ -572,13 +712,14 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 							elements.push_back(
 								new Call(
 									{
-										element->m_si.file,
-										element->m_si.from,
+										expr->m_si.file,
+										expr->m_si.from,
 										( *it_end )->m_si.to
 									},
-									operand->type == Operand::OT_EXPRESSION
-										? (Expression*)operand
-										: new Expression( operand->m_si, operand ), arguments
+									expr->type == Operand::OT_EXPRESSION
+										? (Expression*)expr
+										: new Expression( expr->m_si, expr ),
+									arguments
 								)
 							);
 						}
@@ -643,131 +784,6 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 			it++;
 		}
 	}
-
-	// split by operator priority
-	const std::function<
-		program::Operand*(
-			const elements_t::const_iterator&,
-			const elements_t::const_iterator&
-		)
-	> get_operand = [
-		this,
-		&get_operand
-	](
-		const elements_t::const_iterator& begin,
-		const elements_t::const_iterator& end
-	) -> program::Operand* {
-		if ( begin + 1 == end ) {
-			// only one operand present, wrap if needed and return
-			if ( ( *begin )->m_element_type != Element::ET_OPERAND ) {
-				throw gse::Exception( EC.PARSE_ERROR, "Unexpected: " + ( *begin )->ToString(), nullptr, ( *begin )->m_si );
-			}
-			return (program::Operand*)*begin;
-		}
-		// find most important operator
-		const program::Operator* op;
-		uint8_t last_priority = 255;
-		elements_t::const_iterator split_it = end;
-		const operator_info_t* info;
-		operator_link_t link;
-		const Element* el;
-		for ( auto it = begin ; it != end ; it++ ) {
-			el = *it;
-			if ( el->m_element_type == Element::ET_OPERATOR ) {
-				op = (program::Operator*)( *it );
-				info = &OPERATOR_INFO.at( op->op );
-				if ( info->priority <= last_priority ) {
-					last_priority = info->priority;
-					split_it = it;
-					link = info->link;
-				}
-			}
-		}
-		if ( split_it == end ) {
-			throw gse::Exception( EC.PARSE_ERROR, "Could not parse expression (forgot ; or operator?)", nullptr, ( *begin )->m_si );
-		}
-
-		bool has_a = split_it > begin;
-		bool has_b = split_it + 1 != end;
-
-		si_t si = ( *split_it )->m_si;
-
-		for ( auto it = begin ; it != end ; it++ ) {
-			el = *it;
-			if (
-				it < split_it &&
-					(
-						el->m_si.from.line < si.from.line ||
-							(
-								el->m_si.from.line == si.from.line &&
-									el->m_si.from.col < si.from.col
-							)
-					)
-				) {
-				si.from = el->m_si.from;
-			}
-			if (
-				it > split_it &&
-					( el->m_si.to.line > si.to.line ||
-						(
-							el->m_si.to.line == si.to.line &&
-								el->m_si.to.col > si.to.col
-						)
-					) ) {
-				si.to = el->m_si.to;
-			}
-		}
-		switch ( link ) {
-			case OL_LEFT: {
-				if ( !has_a ) {
-					throw gse::Exception( EC.PARSE_ERROR, "Left operand missing for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
-				}
-				if ( has_b ) {
-					throw gse::Exception( EC.PARSE_ERROR, "Right operand unexpected for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
-				}
-				return new program::Expression( si, get_operand( begin, split_it ), (program::Operator*)*split_it );
-			}
-			case OL_RIGHT: {
-				if ( !has_b ) {
-					throw gse::Exception( EC.PARSE_ERROR, "Right operand missing for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
-				}
-				if ( has_a ) {
-					throw gse::Exception( EC.PARSE_ERROR, "Left operand unexpected for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
-				}
-				return new program::Expression( si, nullptr, (program::Operator*)*split_it, get_operand( split_it + 1, end ) );
-			}
-			case OL_BOTH: {
-				if ( !has_a ) {
-					throw gse::Exception( EC.PARSE_ERROR, "Left operand missing for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
-				}
-				if ( !has_b ) {
-					throw gse::Exception( EC.PARSE_ERROR, "Right operand missing for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
-				}
-				return new program::Expression( si, get_operand( begin, split_it ), (program::Operator*)*split_it, get_operand( split_it + 1, end ) );
-			}
-			case OL_ANY: {
-				if ( has_a && has_b ) {
-					throw gse::Exception( EC.PARSE_ERROR, "Either left or right operand is expected, both found, for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
-				}
-				case OL_ANY_OR_BOTH:
-					if ( !has_a && !has_b ) {
-						throw gse::Exception( EC.PARSE_ERROR, "Neither left nor right operand is found, for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si );
-					}
-				return new program::Expression(
-					si,
-					has_a
-						? get_operand( begin, split_it )
-						: nullptr,
-					(program::Operator*)*split_it,
-					has_b
-						? get_operand( split_it + 1, end )
-						: nullptr
-				);
-			}
-			default:
-				THROW( "unexpected operator link type: " + std::to_string( link ) );
-		}
-	};
 
 	return get_operand( elements.begin(), elements.end() );
 }

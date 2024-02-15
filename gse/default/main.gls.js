@@ -44,8 +44,7 @@ while (i < #size(units)) {
         let sz = #size(neighbours);
         let nearby_units_count = 0;
         while (i < sz) {
-            let neighbour = neighbours[i];
-            if (!#is_empty(neighbour.get_units())) {
+            if (!#is_empty(neighbours[i].get_units())) {
                 nearby_units_count++;
             }
             i++;
@@ -57,9 +56,7 @@ while (i < #size(units)) {
 });
 
 #game.on.despawn_unit((unit) => {
-    let def = unit.get_def();
-    #print(#to_string(def));
-    if (def.name == 'SporeLauncher') {
+    if (unit.get_def() == 'SporeLauncher') {
         #game.units.spawn('MindWorms', unit.get_tile());
     }
 });
