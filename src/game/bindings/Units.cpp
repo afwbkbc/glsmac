@@ -31,12 +31,12 @@ BINDING_IMPL( units ) {
 						N_GETPROP( render_def, sprite_h, "h", Int );
 						N_GETPROP( render_def, sprite_cx, "cx", Int );
 						N_GETPROP( render_def, sprite_cy, "cy", Int );
-						m_game->AddUnitDef( name,
-							new unit::StaticDef(
-								name,
-								new unit::SpriteRender( sprite_file, sprite_x, sprite_y, sprite_w, sprite_h, sprite_cx, sprite_cy )
-							),
-							ctx, call_si );
+						const auto* def = new unit::StaticDef(
+							name,
+							new unit::SpriteRender( sprite_file, sprite_x, sprite_y, sprite_w, sprite_h, sprite_cx, sprite_cy )
+						);
+						m_game->AddUnitDef( name, def, ctx, call_si );
+						return def->Wrap();
 					}
 					else {
 						ERROR( gse::EC.GAME_ERROR, "Unsupported render type: " + render_type );
@@ -53,11 +53,8 @@ BINDING_IMPL( units ) {
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( def, 0, String );
-				N_GETOBJECT( tile, 1, CLASS_TILE );
-				N_GETPROP( tile, pos_x, "x", Int );
-				N_GETPROP( tile, pos_y, "y", Int );
-				m_game->AddGameEvent( new event::SpawnUnit( def, pos_x, pos_y ), ctx, call_si );
-				return VALUE( gse::type::Undefined );
+				N_UNWRAP( tile, 1, map::Tile );
+				return m_game->AddGameEvent( new event::SpawnUnit( def, tile->coord.x, tile->coord.y ), ctx, call_si );
 			})
 		}
 	};

@@ -887,18 +887,19 @@ const unit::Def* Game::GetUnitDef( const std::string& name ) const {
 	}
 }
 
-void Game::AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& si ) {
-	ProcessGameEvent( event );
+const gse::Value Game::AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& si ) {
+	const auto result = ProcessGameEvent( event );
 	if ( m_connection ) {
 		m_connection->SendGameEvent( event );
 	}
+	return result;
 }
 
 void Game::SpawnUnit( unit::Unit* unit ) {
 	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
 	Log( "Spawning unit ('" + unit->m_def->m_name + "') at [ " + std::to_string( unit->m_pos_x ) + " " + std::to_string( unit->m_pos_y ) + " ]" );
 	m_units.insert_or_assign( unit->m_id, unit );
-	m_bindings->Call( Bindings::CS_ON_SPAWN_UNIT, { unit->ToGSEObject() } );
+	m_bindings->Call( Bindings::CS_ON_SPAWN_UNIT, { unit->Wrap() } );
 	const auto* tile = m_map->GetTile( unit->m_pos_x, unit->m_pos_y );
 	const auto* ts = m_map->GetTileState( tile );
 	// notify frontend
@@ -920,10 +921,10 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 	AddEvent( e );
 }
 
-void Game::ProcessGameEvent( const event::Event* event ) {
+const gse::Value Game::ProcessGameEvent( const event::Event* event ) {
 	ASSERT( m_current_turn, "turn not initialized" );
-	event->Apply( this );
 	m_current_turn->AddEvent( event );
+	return event->Apply( this );
 }
 
 void Game::AddEvent( const Event& event ) {

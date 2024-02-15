@@ -263,12 +263,12 @@ public:
 	void OnGSEError( gse::Exception& e );
 	void AddUnitDef( const std::string& name, const unit::Def* def, gse::Context* ctx, const gse::si_t& si );
 	const unit::Def* GetUnitDef( const std::string& name ) const;
-	void AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& si );
+	const gse::Value AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& si );
 	void SpawnUnit( unit::Unit* unit );
 
 private:
 
-	void ProcessGameEvent( const event::Event* event );
+	const gse::Value ProcessGameEvent( const event::Event* event );
 
 	std::unordered_map< std::string, const unit::Def* > m_unit_defs = {};
 	std::map< size_t, unit::Unit* > m_units = {};

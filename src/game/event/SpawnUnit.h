@@ -9,7 +9,7 @@ class SpawnUnit : public Event {
 public:
 	SpawnUnit( const std::string& unit_def, const size_t pos_x, const size_t pos_y );
 
-	void Apply( game::Game* game ) const override;
+	const gse::Value Apply( game::Game* game ) const override;
 
 private:
 	friend class Event;

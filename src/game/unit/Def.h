@@ -29,9 +29,7 @@ public:
 	static const types::Buffer Serialize( const Def* def );
 	static Def* Unserialize( types::Buffer& buf );
 
-	const gse::Value ToGSEObject() const;
-
-private:
+	WRAPDEFS( Def );
 };
 
 }

@@ -8,6 +8,7 @@
 #include "types/Vec2.h"
 
 #include "gse/Value.h"
+#include "gse/type/Object.h"
 
 using namespace types;
 
@@ -18,7 +19,7 @@ namespace map {
 //   you can read any properties you need
 //   but be careful modifying anything, some things are only to be modified within Tile::Update() to keep consistent state
 // Some day this class will be refactored with access isolation and getters/setters
-class Tile { // not deriving from anything because tiles are initialized with malloc (without new) so vtable would get screwed
+class Tile {
 public:
 
 	// map coordinates
@@ -138,7 +139,7 @@ public:
 	const Buffer Serialize() const;
 	void Unserialize( Buffer data );
 
-	const gse::Value ToGSEObject() const;
+	WRAPDEFS( Tile );
 };
 
 }

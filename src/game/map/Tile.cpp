@@ -73,27 +73,24 @@ void Tile::Unserialize( Buffer buf ) {
 	Update();
 }
 
-const gse::Value Tile::ToGSEObject() const {
-	const gse::type::Object::properties_t properties = {
-		{
-			"x",
-			VALUE( gse::type::Int, coord.x )
-		},
-		{
-			"y",
-			VALUE( gse::type::Int, coord.y )
-		},
-		{
-			"is_water",
-			VALUE( gse::type::Bool, is_water_tile )
-		},
-		{
-			"is_land",
-			VALUE( gse::type::Bool, !is_water_tile )
-		}
-	};
-	return VALUE( gse::type::Object, properties, gse::type::Object::CLASS_TILE );
-}
+WRAPIMPL_BEGIN( Tile, CLASS_TILE )
+	{
+		"x",
+		VALUE( gse::type::Int, coord.x )
+	},
+	{
+		"y",
+		VALUE( gse::type::Int, coord.y )
+	},
+	{
+		"is_water",
+		VALUE( gse::type::Bool, is_water_tile )
+	},
+	{
+		"is_land",
+		VALUE( gse::type::Bool, !is_water_tile )
+	}
+WRAPIMPL_END( Tile )
 
 }
 }

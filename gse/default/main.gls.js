@@ -3,7 +3,8 @@ const units = #include('units');
 
 let i = 0;
 while (i < #size(units)) {
-    #game.units.define(units[i][0], units[i][1]);
+    let def = #game.units.define(units[i][0], units[i][1]);
+    #print('DEFINED UNIT: ' + #to_string(def));
     i++;
 }
 
@@ -15,15 +16,16 @@ while (i < #size(units)) {
             if (x % 2 == y % 2) {
                 if (#game.random.get_int(0, 1) == 1) {
                     let tile = #game.map.get_tile(x, y);
+                    let unit = null;
                     if (tile.is_land) {
                         if (#game.random.get_int(0, 2) != 1) {
-                            #game.units.spawn('MindWorms', tile);
+                            unit = #game.units.spawn('MindWorms', tile);
                         } else {
-                            #game.units.spawn('SporeLauncher', tile);
+                            unit = #game.units.spawn('SporeLauncher', tile);
                         }
                     } else {
                         if (#game.random.get_int(0, 1) == 1) {
-                            #game.units.spawn('SeaLurk', tile);
+                            unit = #game.units.spawn('SeaLurk', tile);
                         }
                     }
                 }

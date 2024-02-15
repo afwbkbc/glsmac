@@ -40,10 +40,11 @@ const std::string& Object::GetClassString( const object_class_t object_class ) {
 	return it->second;
 }
 
-Object::Object( properties_t initial_value, const object_class_t object_class )
+Object::Object( properties_t initial_value, const object_class_t object_class, const void* wrapptr )
 	: Type( GetType() )
 	, value( initial_value )
-	, object_class( object_class ) {}
+	, object_class( object_class )
+	, wrapptr( wrapptr ) {}
 
 const Value& Object::Get( const key_t& key ) const {
 	const auto& it = value.find( key );

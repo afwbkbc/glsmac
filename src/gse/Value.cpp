@@ -66,7 +66,7 @@ const Value Value::Clone() const {
 			for ( const auto& it : obj->value ) {
 				properties.insert_or_assign( it.first, it.second.Clone() );
 			}
-			return VALUE( type::Object, properties, obj->object_class );
+			return VALUE( type::Object, properties, obj->object_class, obj->wrapptr );
 		}
 		case type::Type::T_CALLABLE:
 			return *this;

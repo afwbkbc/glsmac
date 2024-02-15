@@ -2,6 +2,8 @@
 
 #include "types/Buffer.h"
 
+#include "gse/Value.h"
+
 namespace game {
 class Game;
 namespace event {
@@ -23,7 +25,7 @@ public:
 
 	const event_type_t m_type;
 
-	virtual void Apply( Game* game ) const = 0;
+	virtual const gse::Value Apply( Game* game ) const = 0;
 
 protected:
 };

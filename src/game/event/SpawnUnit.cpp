@@ -13,17 +13,19 @@ SpawnUnit::SpawnUnit( const std::string& unit_def, const size_t pos_x, const siz
 	//
 }
 
-void SpawnUnit::Apply( game::Game* game ) const {
+const gse::Value SpawnUnit::Apply( game::Game* game ) const {
 	const auto* def = game->GetUnitDef( m_unit_def );
 	ASSERT_NOLOG( def, "unit def '" + m_unit_def + "' not found" );
-	game->SpawnUnit(
-		new unit::Unit(
-			unit::Unit::GetNextId(),
-			def,
-			m_pos_x,
-			m_pos_y
-		)
+	auto* unit = new unit::Unit(
+		unit::Unit::GetNextId(),
+		def,
+		m_pos_x,
+		m_pos_y
 	);
+	game->SpawnUnit(
+		unit
+	);
+	return unit->Wrap();
 }
 
 void SpawnUnit::Serialize( types::Buffer& buf, const SpawnUnit* event ) {

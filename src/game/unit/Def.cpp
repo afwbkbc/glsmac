@@ -40,19 +40,16 @@ Def* Def::Unserialize( types::Buffer& buf ) {
 	}
 }
 
-const gse::Value Def::ToGSEObject() const {
-	const gse::type::Object::properties_t properties = {
-		{
-			"name",
-			VALUE( gse::type::String, m_name )
-		},
-		{
-			"type",
-			VALUE( gse::type::String, "static" ) // TODO
-		},
-	};
-	return VALUE( gse::type::Object, properties, gse::type::Object::CLASS_UNITDEF );
-}
+WRAPIMPL_BEGIN( Def, CLASS_UNITDEF )
+			{
+				"name",
+				VALUE( gse::type::String, m_name )
+			},
+			{
+				"type",
+				VALUE( gse::type::String, "static" ) // TODO
+			},
+WRAPIMPL_END( Def )
 
 }
 }

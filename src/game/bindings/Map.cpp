@@ -40,7 +40,7 @@ BINDING_IMPL( map ) {
 				if ( x % 2 != y % 2 ) {
 					ERROR( gse::EC.INVALID_CALL, "X and Y oddity differs ( " + std::to_string( x ) + " % 2 != " + std::to_string( y ) + " % 2 )" );
 				}
-				return m->GetTile( x, y )->ToGSEObject();
+				return m->GetTile( x, y )->Wrap();
 			}),
 		}
 	};

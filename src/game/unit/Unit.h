@@ -22,11 +22,12 @@ public:
 
 	size_t m_pos_x;
 	size_t m_pos_y;
+	const map::Tile* m_tile = nullptr;
 
 	static const types::Buffer Serialize( const Unit* unit );
 	static Unit* Unserialize( types::Buffer& buf );
 
-	const gse::Value ToGSEObject() const;
+	WRAPDEFS( Unit );
 };
 
 }
