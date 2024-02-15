@@ -1,5 +1,6 @@
 #include "Event.h"
 
+#include "DefineUnit.h"
 #include "SpawnUnit.h"
 #include "DespawnUnit.h"
 
@@ -15,6 +16,10 @@ const types::Buffer Event::Serialize( const Event* event ) {
 	types::Buffer buf;
 	buf.WriteInt( event->m_type );
 	switch ( event->m_type ) {
+		case ET_UNIT_DEFINE: {
+			DefineUnit::Serialize( buf, (DefineUnit*)event );
+			break;
+		}
 		case ET_UNIT_SPAWN: {
 			SpawnUnit::Serialize( buf, (SpawnUnit*)event );
 			break;
@@ -32,6 +37,8 @@ const types::Buffer Event::Serialize( const Event* event ) {
 Event* Event::Unserialize( types::Buffer& buf ) {
 	const auto type = buf.ReadInt();
 	switch ( type ) {
+		case ET_UNIT_DEFINE:
+			return DefineUnit::Unserialize( buf );
 		case ET_UNIT_SPAWN:
 			return SpawnUnit::Unserialize( buf );
 		case ET_UNIT_DESPAWN:

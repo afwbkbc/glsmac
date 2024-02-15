@@ -1,13 +1,14 @@
-const rules = #include('rules');
-const units = #include('units');
-
-let i = 0;
-while (i < #size(units)) {
-    #game.units.define(units[i][0], units[i][1]);
-    i++;
-}
-
 #game.on.start(() => {
+
+    const rules = #include('rules');
+    const units = #include('units');
+
+    let i = 0;
+    while (i < #size(units)) {
+        #game.units.define(units[i][0], units[i][1]);
+        i++;
+    }
+
     let y = 0;
     while (y < #game.map.height) {
         let x = 0;

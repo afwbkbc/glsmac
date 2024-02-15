@@ -264,6 +264,7 @@ public:
 	void AddUnitDef( const std::string& name, const unit::Def* def, gse::Context* ctx, const gse::si_t& si );
 	const unit::Def* GetUnitDef( const std::string& name ) const;
 	const gse::Value AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& si );
+	void DefineUnit( const unit::Def* def );
 	void SpawnUnit( unit::Unit* unit );
 	void DespawnUnit( const size_t unit_id );
 
@@ -273,6 +274,8 @@ private:
 
 	std::unordered_map< std::string, const unit::Def* > m_unit_defs = {};
 	std::map< size_t, unit::Unit* > m_units = {};
+	void SerializeUnits( types::Buffer& buf ) const;
+	void UnserializeUnits( types::Buffer& buf );
 
 	enum game_state_t {
 		GS_NONE,
@@ -310,6 +313,8 @@ private:
 	bindings::Bindings* m_bindings = nullptr;
 
 	std::vector< const game::event::Event* > m_unprocessed_events = {};
+	std::vector< unit::Unit* > m_unprocessed_units = {};
+
 	Turn* m_current_turn = nullptr;
 
 };

@@ -74,9 +74,9 @@ void Server::ProcessEvent( const network::Event& event ) {
 				m_state->RemovePlayer( player );
 
 				// cleanup
-				const auto& map_data_it = m_map_data.find( event.cid );
-				if ( map_data_it != m_map_data.end() ) {
-					m_map_data.erase( map_data_it );
+				const auto& download_data_it = m_download_data.find( event.cid );
+				if ( download_data_it != m_download_data.end() ) {
+					m_download_data.erase( download_data_it );
 				}
 
 				ASSERT( m_game_state != GS_NONE, "player disconnected but game state is not set" );
@@ -260,56 +260,56 @@ void Server::ProcessEvent( const network::Event& event ) {
 						GlobalMessage( FormatChatMessage( m_state->m_slots.GetSlot( it->second ).GetPlayer(), packet.data.str ) );
 						break;
 					}
-					case Packet::PT_GET_MAP_HEADER: {
-						Log( "Got map header request from " + std::to_string( event.cid ) );
-						Packet p( types::Packet::PT_MAP_HEADER );
-						if ( m_on_map_request ) {
-							m_map_data[ event.cid ] = map_data_t{ // override previous request
+					case Packet::PT_DOWNLOAD_REQUEST: {
+						Log( "Got download request from " + std::to_string( event.cid ) );
+						Packet p( types::Packet::PT_DOWNLOAD_RESPONSE );
+						if ( m_on_download_request ) {
+							m_download_data[ event.cid ] = download_data_t{ // override previous request
 								0,
-								m_on_map_request()
+								m_on_download_request()
 							};
-							p.data.num = m_map_data.at( event.cid ).serialized_tiles.size();
+							p.data.num = m_download_data.at( event.cid ).serialized_snapshot.size();
 						}
 						else {
-							// no handler set - no map to return
-							Log( "WARNING: map requested but no map handler was set, sending empty header" );
+							// no handler set - no data to return
+							Log( "WARNING: download requested but no download handler was set, sending empty header" );
 							p.data.num = 0;
 						}
 						m_network->MT_SendPacket( p, event.cid );
 						break;
 					}
-					case Packet::PT_GET_MAP_CHUNK: {
-						Log( "Got map chunk request from " + std::to_string( event.cid ) + " ( offset=" + std::to_string( packet.udata.map.offset ) + " size=" + std::to_string( packet.udata.map.size ) + " )" );
-						const auto& it = m_map_data.find( event.cid );
-						const size_t end = packet.udata.map.offset + packet.udata.map.size;
-						if ( it == m_map_data.end() ) {
-							Error( event.cid, "map download not initialized" );
+					case Packet::PT_DOWNLOAD_NEXT_CHUNK_REQUEST: {
+						Log( "Got next chunk request from " + std::to_string( event.cid ) + " ( offset=" + std::to_string( packet.udata.download.offset ) + " size=" + std::to_string( packet.udata.download.size ) + " )" );
+						const auto& it = m_download_data.find( event.cid );
+						const size_t end = packet.udata.download.offset + packet.udata.download.size;
+						if ( it == m_download_data.end() ) {
+							Error( event.cid, "download not initialized" );
 						}
-						else if ( end > it->second.serialized_tiles.size() ) {
-							Error( event.cid, "map request overflow ( " + std::to_string( packet.udata.map.offset ) + " + " + std::to_string( packet.udata.map.size ) + " >= " + std::to_string( it->second.serialized_tiles.size() ) + " )" );
+						else if ( end > it->second.serialized_snapshot.size() ) {
+							Error( event.cid, "download offset overflow ( " + std::to_string( packet.udata.download.offset ) + " + " + std::to_string( packet.udata.download.size ) + " >= " + std::to_string( it->second.serialized_snapshot.size() ) + " )" );
 						}
-						else if ( packet.udata.map.offset != it->second.next_expected_offset ) {
-							Error( event.cid, "inconsistent map download offset ( " + std::to_string( packet.udata.map.offset ) + " != " + std::to_string( it->second.next_expected_offset ) + " )" );
+						else if ( packet.udata.download.offset != it->second.next_expected_offset ) {
+							Error( event.cid, "inconsistent download offset ( " + std::to_string( packet.udata.download.offset ) + " != " + std::to_string( it->second.next_expected_offset ) + " )" );
 						}
 						else if (
-							packet.udata.map.size != MAP_DOWNLOAD_CHUNK_SIZE &&
-								end != it->second.serialized_tiles.size() // last chunk can be smaller
+							packet.udata.download.size != DOWNLOAD_CHUNK_SIZE &&
+								end != it->second.serialized_snapshot.size() // last chunk can be smaller
 							) {
-							Error( event.cid, "inconsistent map download size ( " );
+							Error( event.cid, "inconsistent download size ( " );
 						}
 						else {
-							Packet p( Packet::PT_MAP_CHUNK );
-							p.udata.map.offset = packet.udata.map.offset;
-							p.udata.map.size = packet.udata.map.size;
-							p.data.str = it->second.serialized_tiles.substr( packet.udata.map.offset, packet.udata.map.size );
+							Packet p( Packet::PT_DOWNLOAD_NEXT_CHUNK_RESPONSE );
+							p.udata.download.offset = packet.udata.download.offset;
+							p.udata.download.size = packet.udata.download.size;
+							p.data.str = it->second.serialized_snapshot.substr( packet.udata.download.offset, packet.udata.download.size );
 							m_network->MT_SendPacket( p, event.cid );
-							if ( end < it->second.serialized_tiles.size() ) {
+							if ( end < it->second.serialized_snapshot.size() ) {
 								it->second.next_expected_offset = end;
 							}
 							else {
-								// map was sent fully, can free memory now
-								Log( "Map was sent successfully to " + std::to_string( event.cid ) + ", cleaning up" );
-								m_map_data.erase( it );
+								// snapshot was sent fully, can free memory now
+								Log( "Snapshot was sent successfully to " + std::to_string( event.cid ) + ", cleaning up" );
+								m_download_data.erase( it );
 							}
 						}
 						break;
@@ -425,7 +425,7 @@ void Server::SendMessage( const std::string& message ) {
 void Server::ResetHandlers() {
 	Connection::ResetHandlers();
 	m_on_listen = nullptr;
-	m_on_map_request = nullptr;
+	m_on_download_request = nullptr;
 }
 
 void Server::UpdateGameSettings() {

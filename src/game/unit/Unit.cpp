@@ -11,6 +11,9 @@ static size_t next_id = 1;
 const size_t Unit::GetNextId() {
 	return next_id;
 }
+const void Unit::SetNextId( const size_t id ) {
+	next_id = id;
+}
 
 Unit::Unit( const size_t id, const Def* def, const size_t pos_x, const size_t pos_y )
 	: m_id( id )

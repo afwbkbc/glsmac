@@ -23,10 +23,10 @@ CLASS( Packet, Serializable )
 		PT_KICK, // S->C
 		PT_MESSAGE, // *->*
 		PT_GAME_STATE, // S->C
-		PT_GET_MAP_HEADER, // C->S
-		PT_MAP_HEADER, // S->C
-		PT_GET_MAP_CHUNK, // C->S
-		PT_MAP_CHUNK, // S->
+		PT_DOWNLOAD_REQUEST, // C->S
+		PT_DOWNLOAD_RESPONSE, // S->C
+		PT_DOWNLOAD_NEXT_CHUNK_REQUEST, // C->S
+		PT_DOWNLOAD_NEXT_CHUNK_RESPONSE, // S->C
 		PT_GAME_EVENTS, // *->*
 	};
 
@@ -49,7 +49,7 @@ CLASS( Packet, Serializable )
 		struct {
 			size_t offset;
 			size_t size;
-		} map;
+		} download;
 	} udata;
 
 	// TODO: move this into udata

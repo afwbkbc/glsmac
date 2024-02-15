@@ -291,6 +291,10 @@ void Game::Iterate() {
 
 				if ( m_game_state == GS_RUNNING ) {
 
+					for ( auto& it : m_unprocessed_units ) {
+						SpawnUnit( it );
+					}
+					m_unprocessed_units.clear();
 					for ( auto& it : m_unprocessed_events ) {
 						ProcessGameEvent( it );
 					}
@@ -873,8 +877,7 @@ void Game::AddUnitDef( const std::string& name, const unit::Def* def, gse::Conte
 		delete def;
 		throw gse::Exception( gse::EC.GAME_ERROR, "Unit definition '" + name + "' already exists", ctx, si );
 	}
-	m_unit_defs.insert_or_assign( name, def );
-	Log( "Added unit def '" + name + "'" );
+	DefineUnit( def );
 }
 
 const unit::Def* Game::GetUnitDef( const std::string& name ) const {
@@ -891,13 +894,21 @@ const gse::Value Game::AddGameEvent( const event::Event* event, gse::Context* ct
 	if ( m_connection ) {
 		m_connection->SendGameEvent( event );
 	}
-	const auto result = ProcessGameEvent( event );
-	return result;
+	return ProcessGameEvent( event );
+}
+
+void Game::DefineUnit( const unit::Def* def ) {
+	Log( "Defining unit ('" + def->m_name + "')" );
+
+	ASSERT( m_unit_defs.find( def->m_name ) == m_unit_defs.end(), "Unit definition '" + def->m_name + "' already exists" );
+
+	m_unit_defs.insert_or_assign( def->m_name, def );
 }
 
 void Game::SpawnUnit( unit::Unit* unit ) {
-	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
 	Log( "Spawning unit ('" + unit->m_def->m_name + "') at [ " + std::to_string( unit->m_pos_x ) + " " + std::to_string( unit->m_pos_y ) + " ]" );
+
+	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
 
 	auto* tile = m_map->GetTile( unit->m_pos_x, unit->m_pos_y );
 	const auto* ts = m_map->GetTileState( tile );
@@ -961,6 +972,45 @@ const gse::Value Game::ProcessGameEvent( const event::Event* event ) {
 	return event->Apply( this );
 }
 
+void Game::SerializeUnits( types::Buffer& buf ) const {
+	Log( "Serializing " + std::to_string( m_unit_defs.size() ) + " unit defs" );
+	buf.WriteInt( m_unit_defs.size() );
+	for ( const auto& it : m_unit_defs ) {
+		buf.WriteString( it.first );
+		buf.WriteString( unit::Def::Serialize( it.second ).ToString() );
+	}
+	buf.WriteInt( m_units.size() );
+	Log( "Serializing " + std::to_string( m_units.size() ) + " units" );
+	for ( const auto& it : m_units ) {
+		buf.WriteInt( it.first );
+		buf.WriteString( unit::Unit::Serialize( it.second ).ToString() );
+	}
+	buf.WriteInt( unit::Unit::GetNextId() );
+	Log( "Saved next unit id: " + std::to_string( unit::Unit::GetNextId() ) );
+}
+
+void Game::UnserializeUnits( types::Buffer& buf ) {
+	ASSERT( m_unit_defs.empty(), "unit defs not empty" );
+	ASSERT( m_units.empty(), "units not empty" );
+	size_t sz = buf.ReadInt();
+	Log( "Unserializing " + std::to_string( sz ) + " unit defs" );
+	for ( size_t i = 0 ; i < sz ; i++ ) {
+		const auto name = buf.ReadString();
+		auto b = Buffer( buf.ReadString() );
+		DefineUnit( unit::Def::Unserialize( b ) );
+	}
+	sz = buf.ReadInt();
+	Log( "Unserializing " + std::to_string( sz ) + " units" );
+	ASSERT( m_unprocessed_units.empty(), "unprocessed units not empty" );
+	for ( size_t i = 0 ; i < sz ; i++ ) {
+		const auto unit_id = buf.ReadInt();
+		auto b = Buffer( buf.ReadString() );
+		m_unprocessed_units.push_back( unit::Unit::Unserialize( b ) );
+	}
+	unit::Unit::SetNextId( buf.ReadInt() );
+	Log( "Restored next unit id: " + std::to_string( unit::Unit::GetNextId() ) );
+}
+
 void Game::AddEvent( const Event& event ) {
 	Log( "Sending event (type=" + std::to_string( event.type ) + ")" );
 	m_pending_events->push_back( event );
@@ -1008,13 +1058,25 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					connection->GlobalMessage( player->GetFullName() + " left the game." );
 				};
 
-				connection->m_on_map_request = [ this ]() -> const std::string {
+				connection->m_on_download_request = [ this ]() -> const std::string {
 					if ( !m_map ) {
 						// map not generated yet
 						return "";
 					}
-					Log( "Snapshotting map for download" );
-					return m_map->SaveToBuffer().ToString();
+					Log( "Preparing snapshot for download" );
+					types::Buffer buf;
+
+					// map
+					m_map->SaveToBuffer( buf );
+
+					// units
+					{
+						types::Buffer b;
+						SerializeUnits( b );
+						buf.WriteString( b.ToString() );
+					}
+
+					return buf.ToString();
 				};
 
 				connection->SetGameState( Connection::GS_INITIALIZING );
@@ -1149,26 +1211,35 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 				const auto f_download_map = [ this, ui, connection ] {
 
-					ui->SetLoaderText( "Downloading map" );
+					ui->SetLoaderText( "Downloading world snapshot" );
 
-					connection->m_on_map_progress = [ ui ]( const float progress ) -> void {
-						ui->SetLoaderText( "Downloading map:  " + std::to_string( (size_t)std::round( progress * 100 ) ) + "%" );
+					connection->m_on_download_progress = [ ui ]( const float progress ) -> void {
+						ui->SetLoaderText( "Downloading world snapshot:  " + std::to_string( (size_t)std::round( progress * 100 ) ) + "%" );
 					};
-					connection->m_on_map_data = [ this, connection ]( const std::string serialized_tiles ) -> void {
-						connection->m_on_map_data = nullptr;
-						connection->m_on_map_progress = nullptr;
-						Log( "Unpacking map" );
+					connection->m_on_download_complete = [ this, connection ]( const std::string serialized_snapshot ) -> void {
+						connection->m_on_download_complete = nullptr;
+						connection->m_on_download_progress = nullptr;
+						Log( "Unpacking world snapshot" );
+						auto buf = types::Buffer( serialized_snapshot );
+
+						// map
+						auto b = types::Buffer( buf.ReadString() );
 						NEW( m_map, map::Map, this );
-						const auto ec = m_map->LoadFromBuffer( serialized_tiles );
+						const auto ec = m_map->LoadFromBuffer( b );
 						if ( ec == map::Map::EC_NONE ) {
+
+							// units
+							auto b = types::Buffer( buf.ReadString() );
+							UnserializeUnits( b );
+
 							m_game_state = GS_INITIALIZING;
 						}
 						else {
-							Log( "WARNING: failed to unpack map (code=" + std::to_string( ec ) + ")" );
-							connection->Disconnect( "Map format mismatch" );
+							Log( "WARNING: failed to unpack world snapshot (code=" + std::to_string( ec ) + ")" );
+							connection->Disconnect( "Snapshot format mismatch" );
 						}
 					};
-					connection->RequestMap();
+					connection->RequestDownload();
 				};
 				if ( connection->GetGameState() == Connection::GS_RUNNING ) {
 					// server already initialized
@@ -1201,6 +1272,11 @@ void Game::ResetGame() {
 	m_player = nullptr;
 	m_slot_num = 0;
 	m_slot = nullptr;
+
+	for ( auto& it : m_unprocessed_units ) {
+		delete it;
+	}
+	m_unprocessed_units.clear();
 
 	for ( auto& it : m_unprocessed_events ) {
 		delete it;
