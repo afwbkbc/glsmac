@@ -13,7 +13,7 @@ CLASS( Server, Connection )
 	Server( LocalSettings* const settings );
 
 	std::function< void() > m_on_listen = nullptr;
-	std::function< const std::string() > m_on_map_request = nullptr; // return serialized Tiles
+	std::function< const std::string() > m_on_download_request = nullptr; // return serialized snapshot of world
 
 	void UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flags = false ) override;
 	void SendMessage( const std::string& message ) override;
@@ -43,11 +43,11 @@ private:
 	const std::string FormatChatMessage( const Player* player, const std::string& message ) const;
 	void SendGameEventsTo( const std::string& serialized_events, const network::cid_t cid );
 
-	struct map_data_t {
+	struct download_data_t {
 		size_t next_expected_offset = 0; // for extra consistency checks
-		std::string serialized_tiles = "";
+		std::string serialized_snapshot = "";
 	};
-	std::unordered_map< network::cid_t, map_data_t > m_map_data = {}; // cid -> serialized tiles
+	std::unordered_map< network::cid_t, download_data_t > m_download_data = {}; // cid -> serialized snapshot of world
 
 	void ClearReadyFlags();
 };

@@ -637,7 +637,7 @@ const Map::error_code_t Map::Generate(
 	return EC_NONE;
 }
 
-const Map::error_code_t Map::LoadFromBuffer( Buffer buffer ) {
+const Map::error_code_t Map::LoadFromBuffer( Buffer& buffer ) {
 	if ( m_tiles ) {
 		DELETE( m_tiles );
 	}
@@ -647,6 +647,7 @@ const Map::error_code_t Map::LoadFromBuffer( Buffer buffer ) {
 		return EC_NONE;
 	}
 	catch ( std::runtime_error& e ) {
+		Log( e.what() );
 		DELETE( m_tiles );
 		m_tiles = nullptr;
 		return EC_MAPFILE_FORMAT_ERROR;
@@ -657,17 +658,17 @@ const Map::error_code_t Map::LoadFromFile( const std::string& path ) {
 	ASSERT( FS::FileExists( path ), "map file \"" + path + "\" not found" );
 
 	Log( "Loading map from " + path );
-	return LoadFromBuffer( FS::ReadFile( path ) );
+	auto b = types::Buffer( FS::ReadFile( path ) );
+	return LoadFromBuffer( b );
 }
 
-const Buffer Map::SaveToBuffer() const {
-	return m_tiles->Serialize();
+void Map::SaveToBuffer( Buffer& buffer ) const {
+	buffer.WriteString( m_tiles->Serialize().ToString() );
 }
 
 const Map::error_code_t Map::SaveToFile( const std::string& path ) const {
 	try {
-		Buffer buffer = SaveToBuffer();
-		FS::WriteFile( path, buffer.ToString() );
+		FS::WriteFile( path, m_tiles->Serialize().ToString() );
 		return EC_NONE;
 	}
 	catch ( std::runtime_error& e ) {

@@ -13,6 +13,7 @@ class Unit {
 public:
 
 	static const size_t GetNextId();
+	static const void SetNextId( const size_t id );
 
 	Unit( const size_t id, const Def* def, const size_t pos_x, const size_t pos_y );
 	virtual ~Unit() = default;

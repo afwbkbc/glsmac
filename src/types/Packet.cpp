@@ -56,23 +56,23 @@ const Buffer Packet::Serialize() const {
 			buf.WriteInt( udata.game_state.state );
 			break;
 		}
-		case PT_GET_MAP_HEADER: {
+		case PT_DOWNLOAD_REQUEST: {
 			// no data
 			break;
 		}
-		case PT_MAP_HEADER: {
+		case PT_DOWNLOAD_RESPONSE: {
 			buf.WriteInt( data.num ); // total size of serialized data
 			break;
 		}
-		case PT_GET_MAP_CHUNK: {
-			buf.WriteInt( udata.map.offset );
-			buf.WriteInt( udata.map.size );
+		case PT_DOWNLOAD_NEXT_CHUNK_REQUEST: {
+			buf.WriteInt( udata.download.offset );
+			buf.WriteInt( udata.download.size );
 			break;
 		}
-		case PT_MAP_CHUNK: {
-			buf.WriteInt( udata.map.offset );
-			buf.WriteInt( udata.map.size );
-			buf.WriteString( data.str ); // serialized tiles part
+		case PT_DOWNLOAD_NEXT_CHUNK_RESPONSE: {
+			buf.WriteInt( udata.download.offset );
+			buf.WriteInt( udata.download.size );
+			buf.WriteString( data.str ); // serialized chunk
 			break;
 		}
 		case PT_GAME_EVENTS: {
@@ -140,23 +140,23 @@ void Packet::Unserialize( Buffer buf ) {
 			udata.game_state.state = buf.ReadInt();
 			break;
 		}
-		case PT_GET_MAP_HEADER: {
+		case PT_DOWNLOAD_REQUEST: {
 			// no data
 			break;
 		}
-		case PT_MAP_HEADER: {
+		case PT_DOWNLOAD_RESPONSE: {
 			data.num = buf.ReadInt(); // total size of serialized data
 			break;
 		}
-		case PT_GET_MAP_CHUNK: {
-			udata.map.offset = buf.ReadInt();
-			udata.map.size = buf.ReadInt();
+		case PT_DOWNLOAD_NEXT_CHUNK_REQUEST: {
+			udata.download.offset = buf.ReadInt();
+			udata.download.size = buf.ReadInt();
 			break;
 		}
-		case PT_MAP_CHUNK: {
-			udata.map.offset = buf.ReadInt();
-			udata.map.size = buf.ReadInt();
-			data.str = buf.ReadString(); // serialized tiles part
+		case PT_DOWNLOAD_NEXT_CHUNK_RESPONSE: {
+			udata.download.offset = buf.ReadInt();
+			udata.download.size = buf.ReadInt();
+			data.str = buf.ReadString(); // serialized chunk
 			break;
 		}
 		case PT_GAME_EVENTS: {

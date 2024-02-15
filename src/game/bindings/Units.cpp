@@ -7,8 +7,9 @@
 #include "game/unit/StaticDef.h"
 #include "game/unit/SpriteRender.h"
 
-#include "../event/SpawnUnit.h"
-#include "../event/DespawnUnit.h"
+#include "game/event/DefineUnit.h"
+#include "game/event/SpawnUnit.h"
+#include "game/event/DespawnUnit.h"
 
 namespace game {
 namespace bindings {
@@ -37,8 +38,7 @@ BINDING_IMPL( units ) {
 							name,
 							new unit::SpriteRender( sprite_file, sprite_x, sprite_y, sprite_w, sprite_h, sprite_cx, sprite_cy )
 						);
-						m_game->AddUnitDef( name, def, ctx, call_si );
-						return def->Wrap();
+						return m_game->AddGameEvent( new event::DefineUnit( def ), ctx, call_si );
 					}
 					else {
 						ERROR( gse::EC.GAME_ERROR, "Unsupported render type: " + render_type );
@@ -54,9 +54,9 @@ BINDING_IMPL( units ) {
 			"spawn",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 2 );
-				N_GETVALUE( def, 0, String );
+				N_GETVALUE( def_name, 0, String );
 				N_UNWRAP( tile, 1, map::Tile );
-				return m_game->AddGameEvent( new event::SpawnUnit( def, tile->coord.x, tile->coord.y ), ctx, call_si );
+				return m_game->AddGameEvent( new event::SpawnUnit( def_name, tile->coord.x, tile->coord.y ), ctx, call_si );
 			})
 		},
 		{
