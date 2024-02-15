@@ -37,7 +37,7 @@ while (i < #size(units)) {
 
 #game.on.spawn_unit((unit) => {
     let def = unit.get_def();
-    if (def.name != 'SeaLurk') {
+    if (def.name != 'MindWorms') {
         let tile = unit.get_tile();
         let neighbours = [tile.get_W(), tile.get_NW(), tile.get_N(), tile.get_NE(), tile.get_E(), tile.get_SE(), tile.get_S(), tile.get_SW()];
         let i = 0;
@@ -60,6 +60,6 @@ while (i < #size(units)) {
     let def = unit.get_def();
     #print(#to_string(def));
     if (def.name == 'SporeLauncher') {
-        #game.units.spawn('SeaLurk', unit.get_tile());
+        #game.units.spawn('MindWorms', unit.get_tile());
     }
 });
