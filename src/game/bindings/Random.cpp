@@ -17,7 +17,7 @@ BINDING_IMPL( random ) {
 				if ( max < min ) {
 					ERROR( gse::EC.INVALID_CALL, "Maximum value is smaller than minimum ( " + std::to_string( max ) + " < " + std::to_string( min ) + " )" );
 				}
-				return VALUE( gse::type::Int, m_game->GetRandom()->GetInt64( min, max ) );
+				return VALUE( gse::type::Int, GAME->GetRandom()->GetInt64( min, max ) );
 			})
 		}
 	};

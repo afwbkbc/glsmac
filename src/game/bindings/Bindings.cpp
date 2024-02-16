@@ -7,13 +7,15 @@
 #include "gse/type/Object.h"
 #include "gse/type/Callable.h"
 
+#include "game/State.h"
+
 using namespace gse;
 
 namespace game {
 namespace bindings {
 
-Bindings::Bindings( Game* game )
-	: m_game( game ) {
+Bindings::Bindings( State* state )
+	: m_state( state ) {
 	NEW( m_gse, gse::GSE );
 	m_gse->AddBindings( this );
 	m_gse_context = m_gse->CreateGlobalContext();
@@ -58,13 +60,22 @@ void Bindings::Call( const callback_slot_t slot, const callback_arguments_t& arg
 			( (gse::type::Callable*)it->second.Get() )->Run( m_gse_context, m_si_internal, arguments );
 		}
 		catch ( gse::Exception& e ) {
-			m_game->OnGSEError( e );
+			ASSERT_NOLOG( m_state->m_on_gse_error, "state gse error handler not set" );
+			m_state->m_on_gse_error( e );
 		}
 	}
 }
 
-Game* Bindings::GetGame() const {
-	return m_game;
+State* Bindings::GetState() const {
+	return m_state;
+}
+
+Game* Bindings::GetGame( gse::Context* ctx, const si_t& call_si ) const {
+	auto* game = m_state->GetGame();
+	if ( !game ) {
+		ERROR( EC.GAME_ERROR, "Game not started yet" );
+	}
+	return game;
 }
 
 const Value Bindings::GetPlayer( const Player* player ) const {

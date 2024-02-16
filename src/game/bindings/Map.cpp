@@ -7,24 +7,30 @@ namespace game {
 namespace bindings {
 
 BINDING_IMPL( map ) {
-	const auto* m = m_game->GetMap();
-	const auto w = m->GetWidth();
-	const auto h = m->GetHeight();
 	const gse::type::Object::properties_t properties = {
 		{
-			"width",
-			VALUE( gse::type::Int, w ),
+			"get_width",
+			NATIVE_CALL( this ) {
+				const auto* m = GAME->GetMap();
+				return VALUE( gse::type::Int, m->GetWidth() );
+			})
 		},
 		{
-			"height",
-			VALUE( gse::type::Int, h ),
+			"get_height",
+			NATIVE_CALL( this ) {
+				const auto* m = GAME->GetMap();
+				return VALUE( gse::type::Int, m->GetHeight() );
+			})
 		},
 		{
 			"get_tile",
-			NATIVE_CALL( m, w, h ) {
+			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( x, 0, Int );
 				N_GETVALUE( y, 1, Int );
+				const auto* m = GAME->GetMap();
+				const auto w = m->GetWidth();
+				const auto h = m->GetHeight();
 				if ( x >= w ) {
 					ERROR( gse::EC.INVALID_CALL, "X coordinate exceeds map width ( " + std::to_string( x ) + " >= " + std::to_string( w ) + " )" );
 				}

@@ -16,6 +16,9 @@ Main::Main( MainMenu* mainmenu )
 		{
 			"START GAME",   {
 								CH( this ) {
+
+									m_mainmenu->m_state->Configure();
+
 									m_mainmenu->m_state->m_settings.local.game_mode = game::LocalSettings::GM_SINGLEPLAYER;
 									m_mainmenu->m_state->m_settings.global.Initialize();
 									NEWV( menu, StartGame, m_mainmenu );
@@ -26,6 +29,9 @@ Main::Main( MainMenu* mainmenu )
 		{
 			"QUICK START",  {
 								CH( this ) {
+
+									m_mainmenu->m_state->Configure();
+
 									m_mainmenu->m_state->m_settings.local.game_mode = game::LocalSettings::GM_SINGLEPLAYER;
 
 									// randomize settings

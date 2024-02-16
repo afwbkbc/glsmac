@@ -19,7 +19,6 @@
 
 #include "gse/GSE.h"
 #include "gse/GlobalContext.h"
-#include "game/bindings/Bindings.h"
 
 #include "unit/Def.h"
 #include "unit/Unit.h"
@@ -261,9 +260,8 @@ public:
 	void Message( const std::string& text );
 	void Quit( const std::string& reason );
 	void OnGSEError( gse::Exception& e );
-	void AddUnitDef( const std::string& name, const unit::Def* def, gse::Context* ctx, const gse::si_t& si );
 	const unit::Def* GetUnitDef( const std::string& name ) const;
-	const gse::Value AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& si );
+	const gse::Value AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& call_si );
 	void DefineUnit( const unit::Def* def );
 	void SpawnUnit( unit::Unit* unit );
 	void DespawnUnit( const size_t unit_id );
@@ -309,8 +307,6 @@ private:
 	map::Map* m_map = nullptr;
 	map::Map* m_old_map = nullptr; // to restore state, for example if loading of another map failed
 	map_editor::MapEditor* m_map_editor = nullptr;
-
-	bindings::Bindings* m_bindings = nullptr;
 
 	std::vector< const game::event::Event* > m_unprocessed_events = {};
 	std::vector< unit::Unit* > m_unprocessed_units = {};

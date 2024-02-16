@@ -1,18 +1,29 @@
-#game.on.start(() => {
+#game.on.configure(() => {
+
+    #print('CONFIGURE');
 
     const rules = #include('rules');
-    const units = #include('units');
 
+    // TODO
+
+});
+
+#game.on.start(() => {
+
+    const units = #include('units');
     let i = 0;
-    while (i < #size(units)) {
+    let sz = #size(units);
+    while (i < sz) {
         #game.units.define(units[i][0], units[i][1]);
         i++;
     }
 
     let y = 0;
-    while (y < #game.map.height) {
+    let w = #game.map.get_width();
+    let h = #game.map.get_height();
+    while (y < h) {
         let x = 0;
-        while (x < #game.map.width) {
+        while (x < w) {
             if (x % 2 == y % 2) {
                 if (#game.random.get_int(0, 1) == 1) {
                     let tile = #game.map.get_tile(x, y);
@@ -41,9 +52,9 @@
     if (def.name != 'MindWorms') {
         let tile = unit.get_tile();
         let neighbours = [tile.get_W(), tile.get_NW(), tile.get_N(), tile.get_NE(), tile.get_E(), tile.get_SE(), tile.get_S(), tile.get_SW()];
+        let nearby_units_count = 0;
         let i = 0;
         let sz = #size(neighbours);
-        let nearby_units_count = 0;
         while (i < sz) {
             if (!#is_empty(neighbours[i].get_units())) {
                 nearby_units_count++;

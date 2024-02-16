@@ -2,12 +2,31 @@
 
 namespace game {
 
-State::State() {
-	//
+State::State()
+	: m_bindings( new bindings::Bindings( this ) ) {
+	m_bindings->RunMain();
 }
 
 State::~State() {
 	Reset();
+	delete m_bindings;
+}
+
+void State::SetGame( Game* game ) {
+	ASSERT( !m_game, "game already set" );
+	m_game = game;
+	m_on_gse_error = [ this ]( gse::Exception& e ) -> void {
+		m_game->OnGSEError( e );
+	};
+}
+
+void State::UnsetGame() {
+	m_game = nullptr;
+	m_on_gse_error = nullptr;
+}
+
+Game* State::GetGame() const {
+	return m_game;
 }
 
 void State::Iterate() {
@@ -72,6 +91,13 @@ connection::Connection* State::GetConnection() const {
 	return m_connection;
 }
 
+void State::Configure() {
+
+	// TODO: reset stuff
+
+	m_bindings->Call( ::game::bindings::Bindings::CS_ON_CONFIGURE );
+}
+
 void State::Reset() {
 	if ( m_connection ) {
 		if ( m_connection->IsConnected() ) {
@@ -90,6 +116,8 @@ void State::Reset() {
 	m_players.clear();
 	m_slots.Clear();
 	m_cid_slots.clear();
+	m_game = nullptr;
+	m_on_gse_error = nullptr;
 }
 
 void State::DetachConnection() {

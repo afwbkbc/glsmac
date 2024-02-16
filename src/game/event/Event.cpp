@@ -46,7 +46,6 @@ Event* Event::Unserialize( types::Buffer& buf ) {
 		default:
 			THROW( "unknown event type on read: " + std::to_string( type ) );
 	}
-
 }
 
 const types::Buffer Event::SerializeMultiple( const std::vector< const Event* >& events ) {

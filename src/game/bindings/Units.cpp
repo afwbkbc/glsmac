@@ -38,7 +38,7 @@ BINDING_IMPL( units ) {
 							name,
 							new unit::SpriteRender( sprite_file, sprite_x, sprite_y, sprite_w, sprite_h, sprite_cx, sprite_cy )
 						);
-						return m_game->AddGameEvent( new event::DefineUnit( def ), ctx, call_si );
+						return GAME->AddGameEvent( new event::DefineUnit( def ), ctx, call_si );
 					}
 					else {
 						ERROR( gse::EC.GAME_ERROR, "Unsupported render type: " + render_type );
@@ -56,7 +56,7 @@ BINDING_IMPL( units ) {
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( def_name, 0, String );
 				N_UNWRAP( tile, 1, map::Tile );
-				return m_game->AddGameEvent( new event::SpawnUnit( def_name, tile->coord.x, tile->coord.y ), ctx, call_si );
+				return GAME->AddGameEvent( new event::SpawnUnit( def_name, tile->coord.x, tile->coord.y ), ctx, call_si );
 			})
 		},
 		{
@@ -64,7 +64,7 @@ BINDING_IMPL( units ) {
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
 				N_UNWRAP( unit, 0, unit::Unit );
-				return m_game->AddGameEvent( new event::DespawnUnit( unit->m_id ), ctx, call_si );
+				return GAME->AddGameEvent( new event::DespawnUnit( unit->m_id ), ctx, call_si );
 			})
 		},
 	};

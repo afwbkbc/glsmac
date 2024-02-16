@@ -268,16 +268,9 @@ void Game::Iterate() {
 					m_connection->UpdateSlot( m_slot_num, m_slot, true );
 				}
 
-				// init gse
-				ASSERT( !m_bindings, "bindings already set" );
-				NEW( m_bindings, Bindings, this );
-
 				ASSERT( !m_current_turn, "turn is already initialized" );
 
 				try {
-					// run main gse entrypoint
-					m_bindings->RunMain();
-
 					// start initial turn
 					NextTurn();
 
@@ -301,7 +294,7 @@ void Game::Iterate() {
 					m_unprocessed_events.clear();
 
 					if ( m_state->IsMaster() ) {
-						m_bindings->Call( Bindings::CS_ON_START );
+						m_state->m_bindings->Call( Bindings::CS_ON_START );
 					}
 
 					CheckTurnComplete();
@@ -349,6 +342,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			//Log( "Got init request" );
 			ASSERT( request.data.init.state, "state not set" );
 			m_state = request.data.init.state;
+			m_state->SetGame( this );
 			InitGame( response, MT_C );
 			break;
 		}
@@ -874,14 +868,6 @@ void Game::OnGSEError( gse::Exception& err ) {
 	AddEvent( e );
 }
 
-void Game::AddUnitDef( const std::string& name, const unit::Def* def, gse::Context* ctx, const gse::si_t& si ) {
-	if ( m_unit_defs.find( name ) != m_unit_defs.end() ) {
-		delete def;
-		throw gse::Exception( gse::EC.GAME_ERROR, "Unit definition '" + name + "' already exists", ctx, si );
-	}
-	DefineUnit( def );
-}
-
 const unit::Def* Game::GetUnitDef( const std::string& name ) const {
 	const auto& it = m_unit_defs.find( name );
 	if ( it != m_unit_defs.end() ) {
@@ -892,11 +878,16 @@ const unit::Def* Game::GetUnitDef( const std::string& name ) const {
 	}
 }
 
-const gse::Value Game::AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& si ) {
+const gse::Value Game::AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& call_si ) {
 	if ( m_connection ) {
 		m_connection->SendGameEvent( event );
 	}
-	return ProcessGameEvent( event );
+	try {
+		return ProcessGameEvent( event );
+	}
+	catch ( std::runtime_error& err ) {
+		ERROR( gse::EC.GAME_ERROR, err.what() );
+	}
 }
 
 void Game::DefineUnit( const unit::Def* def ) {
@@ -945,7 +936,7 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 	AddEvent( e );
 
 	if ( m_state->IsMaster() ) {
-		m_bindings->Call( Bindings::CS_ON_SPAWN_UNIT, { unit->Wrap() } );
+		m_state->m_bindings->Call( Bindings::CS_ON_SPAWN_UNIT, { unit->Wrap() } );
 	}
 }
 
@@ -967,7 +958,7 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	m_units.erase( it );
 
 	if ( m_state->IsMaster() ) {
-		m_bindings->Call( Bindings::CS_ON_DESPAWN_UNIT, { unit->Wrap() } );
+		m_state->m_bindings->Call( Bindings::CS_ON_DESPAWN_UNIT, { unit->Wrap() } );
 	}
 
 	delete unit;
@@ -1308,11 +1299,6 @@ void Game::ResetGame() {
 	ASSERT( m_pending_events, "pending events not set" );
 	m_pending_events->clear();
 
-	if ( m_bindings ) {
-		DELETE( m_bindings );
-		m_bindings = nullptr;
-	}
-
 	if ( m_current_turn ) {
 		DELETE( m_current_turn );
 		m_current_turn = nullptr;
@@ -1321,6 +1307,7 @@ void Game::ResetGame() {
 
 	if ( m_state ) {
 		// ui thread will reset state as needed
+		m_state->UnsetGame();
 		m_state = nullptr;
 		if ( m_connection ) {
 			m_connection->Disconnect();

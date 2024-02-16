@@ -1,12 +1,13 @@
 #include "Binding.h"
 
+#include "game/State.h"
+
 namespace game {
 namespace bindings {
 
 Binding::Binding( const std::string& name, Bindings* bindings )
 	: m_name( name )
-	, m_bindings( bindings )
-	, m_game( bindings->GetGame() ) {
+	, m_bindings( bindings ) {
 	//
 }
 

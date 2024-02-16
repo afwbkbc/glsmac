@@ -2,6 +2,8 @@
 
 #include "../Game.h"
 
+#include "gse/type/Undefined.h"
+
 namespace game {
 namespace event {
 
