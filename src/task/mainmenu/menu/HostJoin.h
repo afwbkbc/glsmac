@@ -31,7 +31,7 @@ CLASS( HostJoin, PopupMenu )
 private:
 
 	Section* m_section = nullptr;
-	ChoiceList* m_choices = nullptr;
+	NumChoiceList* m_choices = nullptr;
 
 };
 

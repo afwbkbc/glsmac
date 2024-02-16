@@ -12,10 +12,11 @@ namespace rules {
 
 CLASS( Rules, types::Serializable )
 
-	std::map< size_t, Faction > m_factions;
+	typedef std::unordered_map< std::string, Faction > factions_t;
+
+	factions_t m_factions;
 	std::map< size_t, DifficultyLevel > m_difficulty_levels;
 
-	virtual const Faction& GetDefaultFaction() const = 0;
 	virtual const DifficultyLevel& GetDefaultDifficultyLevel() const = 0;
 
 	void Initialize();

@@ -4,17 +4,23 @@ using namespace types;
 
 namespace game {
 
-Player::Player( Buffer buf ) {
+// builtin
+const rules::Faction Player::RANDOM_FACTION( "RANDOM", "Random", types::Color( 1.0f, 1.0f, 1.0f ) );
+
+Player::Player( const rules::Rules& rules, Buffer buf )
+	: m_rules( rules ) {
 	Player::Unserialize( buf );
 }
 
 Player::Player(
+	const rules::Rules& rules,
 	const std::string& name,
 	const role_t role,
 	const rules::Faction& faction,
 	const rules::DifficultyLevel& difficulty_level
 )
-	: m_name( name )
+	: m_rules( rules )
+	, m_name( name )
 	, m_role( role )
 	, m_faction( faction )
 	, m_difficulty_level( difficulty_level ) {

@@ -49,7 +49,9 @@ WRAPIMPL_BEGIN( Def, CLASS_UNITDEF )
 				"type",
 				VALUE( gse::type::String, "static" ) // TODO
 			},
-WRAPIMPL_END( Def )
+WRAPIMPL_END_PTR( Def )
+
+UNWRAPIMPL_PTR( Def )
 
 }
 }

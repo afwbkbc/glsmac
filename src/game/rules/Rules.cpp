@@ -15,7 +15,7 @@ const types::Buffer Rules::Serialize() const {
 
 	buf.WriteInt( m_factions.size() );
 	for ( auto& faction : m_factions ) {
-		buf.WriteInt( faction.first );
+		buf.WriteString( faction.first );
 		buf.WriteString( faction.second.Serialize().ToString() );
 	}
 
@@ -33,7 +33,7 @@ void Rules::Unserialize( types::Buffer buf ) {
 	m_factions.clear();
 	const size_t factions_count = buf.ReadInt();
 	for ( size_t i = 0 ; i < factions_count ; i++ ) {
-		const size_t faction_id = buf.ReadInt();
+		const auto faction_id = buf.ReadString();
 		m_factions[ faction_id ].Unserialize( buf.ReadString() );
 	}
 

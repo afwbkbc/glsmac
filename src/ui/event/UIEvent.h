@@ -96,7 +96,8 @@ CLASS( UIEvent, base::Base )
 				float percentage;
 			} scroll;
 			struct {
-				size_t id;
+				size_t id_num;
+				const std::string* id_str;
 				const std::string* text;
 			} change;
 		} value;

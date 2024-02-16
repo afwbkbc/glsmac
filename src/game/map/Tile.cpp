@@ -117,7 +117,9 @@ WRAPIMPL_BEGIN( Tile, CLASS_TILE )
 			return VALUE( gse::type::Object, result );
 		} )
 	}
-WRAPIMPL_END( Tile )
+WRAPIMPL_END_PTR( Tile )
+
+UNWRAPIMPL_PTR( Tile )
 
 }
 }

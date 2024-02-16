@@ -27,6 +27,7 @@ Bindings::Bindings( State* state )
 		B( exit ),
 		B( random ),
 		B( on ),
+		B( factions ),
 		B( units ),
 		B( map ),
 	};
@@ -60,8 +61,12 @@ void Bindings::Call( const callback_slot_t slot, const callback_arguments_t& arg
 			( (gse::type::Callable*)it->second.Get() )->Run( m_gse_context, m_si_internal, arguments );
 		}
 		catch ( gse::Exception& e ) {
-			ASSERT_NOLOG( m_state->m_on_gse_error, "state gse error handler not set" );
-			m_state->m_on_gse_error( e );
+			if ( m_state->m_on_gse_error ) {
+				m_state->m_on_gse_error( e );
+			}
+			else {
+				throw std::runtime_error( e.ToStringAndCleanup() );
+			}
 		}
 	}
 }
@@ -76,52 +81,6 @@ Game* Bindings::GetGame( gse::Context* ctx, const si_t& call_si ) const {
 		ERROR( EC.GAME_ERROR, "Game not started yet" );
 	}
 	return game;
-}
-
-const Value Bindings::GetPlayer( const Player* player ) const {
-	const type::Object::properties_t properties = {
-		{
-			{
-				"name",
-				VALUE( type::String, player->GetPlayerName() ),
-			},
-			{
-				"full_name",
-				VALUE( type::String, player->GetFullName() ),
-			},
-			{
-				"faction",
-				GetFaction( &player->GetFaction() ),
-			},
-			{
-				"difficulty",
-				GetDifficulty( &player->GetDifficultyLevel() )
-			},
-		}
-	};
-	return VALUE( type::Object, properties );
-}
-
-const gse::Value Bindings::GetFaction( const rules::Faction* faction ) const {
-	const type::Object::properties_t properties = {
-		{
-			"name",
-			VALUE( type::String, faction->m_name ),
-		}
-	};
-	return VALUE( type::Object, properties );
-}
-
-const gse::Value Bindings::GetDifficulty( const rules::DifficultyLevel* difficulty ) const {
-	const type::Object::properties_t properties = {
-		{
-			"name",  VALUE( type::String, difficulty->m_name ),
-		},
-		{
-			"value", VALUE( type::Int, difficulty->m_difficulty ),
-		},
-	};
-	return VALUE( type::Object, properties );
 }
 
 void Bindings::SetCallback( const callback_slot_t slot, const gse::Value& callback, gse::Context* context, const si_t& si ) {

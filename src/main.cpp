@@ -278,9 +278,10 @@ int main( const int argc, const char* argv[] ) {
 				const auto& rules = state->m_settings.global.game_rules;
 				NEWV(
 					player, ::game::Player,
+					rules,
 					"Player",
 					::game::Player::PR_HOST,
-					rules.GetDefaultFaction(),
+					::game::Player::RANDOM_FACTION,
 					rules.GetDefaultDifficultyLevel()
 				);
 				state->AddPlayer( player );

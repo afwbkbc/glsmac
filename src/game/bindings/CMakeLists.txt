@@ -6,6 +6,7 @@ SET( SRC ${SRC}
 	${PWD}/Exit.cpp
 	${PWD}/Random.cpp
 	${PWD}/On.cpp
+	${PWD}/Factions.cpp
 	${PWD}/Units.cpp
 	${PWD}/Map.cpp
 

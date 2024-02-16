@@ -29,9 +29,9 @@ private:
 
 	struct {
 		Surface* ready = nullptr;
-		Dropdown* actions = nullptr;
-		Dropdown* faction = nullptr;
-		Dropdown* difficulty_level = nullptr;
+		NumDropdown* actions = nullptr;
+		AssocDropdown* faction = nullptr;
+		NumDropdown* difficulty_level = nullptr;
 	} m_elements = {};
 
 };

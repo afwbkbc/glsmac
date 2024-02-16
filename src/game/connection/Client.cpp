@@ -34,6 +34,25 @@ void Client::ProcessEvent( const network::Event& event ) {
 							m_network->MT_SendPacket( p );
 							break;
 						}
+						case Packet::PT_PLAYERS: {
+							Log( "Got players list from server" );
+							m_slot = packet.data.num;
+							m_state->m_slots.Unserialize( packet.data.str );
+							for ( auto i = 0 ; i < m_state->m_slots.GetCount() ; i++ ) {
+								const auto& slot = m_state->m_slots.GetSlot( i );
+								if ( slot.GetState() == Slot::SS_PLAYER ) {
+									const auto& player = slot.GetPlayer();
+									m_state->AddPlayer( player );
+									if ( i == m_slot ) {
+										m_player = player;
+									}
+								}
+							}
+							if ( m_on_players_list_update ) {
+								m_on_players_list_update();
+							}
+							break;
+						}
 						case Packet::PT_GLOBAL_SETTINGS: {
 							Log( "Got global settings update from server" );
 							const auto& host_slot = m_state->m_slots.GetSlot( 0 );
@@ -67,25 +86,6 @@ void Client::ProcessEvent( const network::Event& event ) {
 								m_on_global_settings_update();
 							}
 							m_are_global_settings_received = true;
-							break;
-						}
-						case Packet::PT_PLAYERS: {
-							Log( "Got players list from server" );
-							m_slot = packet.data.num;
-							m_state->m_slots.Unserialize( packet.data.str );
-							for ( auto i = 0 ; i < m_state->m_slots.GetCount() ; i++ ) {
-								const auto& slot = m_state->m_slots.GetSlot( i );
-								if ( slot.GetState() == Slot::SS_PLAYER ) {
-									const auto& player = slot.GetPlayer();
-									m_state->AddPlayer( player );
-									if ( i == m_slot ) {
-										m_player = player;
-									}
-								}
-							}
-							if ( m_on_players_list_update ) {
-								m_on_players_list_update();
-							}
 							break;
 						}
 						case Packet::PT_SLOT_UPDATE:

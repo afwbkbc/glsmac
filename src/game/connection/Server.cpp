@@ -24,9 +24,10 @@ void Server::ProcessEvent( const network::Event& event ) {
 			const auto& rules = m_state->m_settings.global.game_rules;
 			NEW(
 				m_player, ::game::Player,
+				rules,
 				m_state->m_settings.local.player_name,
 				::game::Player::PR_HOST,
-				rules.GetDefaultFaction(),
+				::game::Player::RANDOM_FACTION,
 				rules.GetDefaultDifficultyLevel()
 			);
 			m_state->AddPlayer( m_player );
@@ -175,9 +176,10 @@ void Server::ProcessEvent( const network::Event& event ) {
 						const auto& rules = m_state->m_settings.global.game_rules;
 						NEWV(
 							player, ::game::Player,
+							rules,
 							player_name,
 							::game::Player::PR_PLAYER,
-							rules.GetDefaultFaction(),
+							::game::Player::RANDOM_FACTION,
 							rules.GetDefaultDifficultyLevel()
 						);
 						m_state->AddPlayer( player );

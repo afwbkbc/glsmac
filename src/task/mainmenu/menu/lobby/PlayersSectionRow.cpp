@@ -21,7 +21,7 @@ void PlayersSectionRow::Create() {
 	const bool am_i_host = me->GetRole() == ::game::Player::PR_HOST;
 	const bool am_i_ready = me->GetSlot()->HasPlayerFlag( ::game::Slot::PF_READY );
 
-	NEW( m_elements.actions, Dropdown, "PopupDropdown" );
+	NEW( m_elements.actions, NumDropdown, "PopupDropdown" );
 	m_elements.actions->SetLeft( 36 );
 	m_elements.actions->SetWidth( 178 );
 
@@ -33,7 +33,7 @@ void PlayersSectionRow::Create() {
 		const bool is_it_ready = m_slot->HasPlayerFlag( ::game::Slot::PF_READY );
 		const bool allowed_to_change = is_it_me && !am_i_ready;
 
-		m_elements.actions->SetMode( Dropdown::DM_MENU );
+		m_elements.actions->SetMode( NumDropdown::DM_MENU );
 
 		if ( is_it_me ) {
 			ui::object::UIContainer::AddStyleModifier( Style::M_HIGHLIGHT );
@@ -41,7 +41,7 @@ void PlayersSectionRow::Create() {
 
 		const auto& rules = m_parent->GetLobby()->GetSettings().global.game_rules;
 
-		const auto& faction_color = player->GetFaction().m_color;
+		const auto& faction = player->GetFaction();
 
 		if ( is_it_ready ) {
 			NEW( m_elements.ready, Surface );
@@ -49,39 +49,43 @@ void PlayersSectionRow::Create() {
 			m_elements.ready->SetHeight( 16 );
 			m_elements.ready->SetLeft( 8 );
 			m_elements.ready->SetTop( 4 );
-			m_elements.ready->SetTexture( g_engine->GetTextureLoader()->GetColorTexture( faction_color ) );
+			m_elements.ready->SetTexture( g_engine->GetTextureLoader()->GetColorTexture( faction.m_color ) );
 			m_elements.ready->SetStretchTexture( true );
 			AddChild( m_elements.ready );
 		}
 
-		NEW( m_elements.faction, Dropdown, "PopupDropdown" );
+		NEW( m_elements.faction, AssocDropdown, "PopupDropdown" );
 		if ( allowed_to_change ) {
 			m_elements.faction->SetChoices( m_parent->GetFactionChoices() );
+			m_elements.faction->SetValueByKey( faction.m_id );
 		}
-		m_elements.faction->SetValue( player->GetFaction().m_name );
-		m_elements.faction->SetTextColor( faction_color );
+		else {
+			m_elements.faction->SetValue( faction.m_name );
+		}
+		m_elements.faction->SetTextColor( faction.m_color );
 		m_elements.faction->SetLeft( 218 );
 		m_elements.faction->SetWidth( 140 );
 		m_elements.faction->On(
 			UIEvent::EV_CHANGE, EH( this, player, rules ) {
-				player->SetFaction( rules.m_factions.at( data->value.change.id ) );
+				ASSERT( rules.m_factions.find( *data->value.change.id_str ) != rules.m_factions.end(), "faction not found: " + *data->value.change.id_str );
+				player->SetFaction( rules.m_factions.at( *data->value.change.id_str ) );
 				m_parent->GetLobby()->UpdateSlot( m_slot_num, m_slot );
 				return true;
 			}
 		);
 		AddChild( m_elements.faction );
 
-		NEW( m_elements.difficulty_level, Dropdown, "PopupDropdown" );
+		NEW( m_elements.difficulty_level, NumDropdown, "PopupDropdown" );
 		if ( allowed_to_change ) {
 			m_elements.difficulty_level->SetChoices( m_parent->GetDifficultyLevelChoices() );
 		}
 		m_elements.difficulty_level->SetValue( player->GetDifficultyLevel().m_name );
-		m_elements.difficulty_level->SetTextColor( faction_color );
+		m_elements.difficulty_level->SetTextColor( faction.m_color );
 		m_elements.difficulty_level->SetLeft( 360 );
 		m_elements.difficulty_level->SetWidth( 118 );
 		m_elements.difficulty_level->On(
 			UIEvent::EV_CHANGE, EH( this, player, rules ) {
-				player->SetDifficultyLevel( rules.m_difficulty_levels.at( data->value.change.id ) );
+				player->SetDifficultyLevel( rules.m_difficulty_levels.at( data->value.change.id_num ) );
 				m_parent->GetLobby()->UpdateSlot( m_slot_num, m_slot );
 				return true;
 			}
@@ -125,13 +129,13 @@ void PlayersSectionRow::Create() {
 			);
 		}
 		m_elements.actions->SetValue( player->GetPlayerName() );
-		m_elements.actions->SetTextColor( faction_color );
+		m_elements.actions->SetTextColor( faction.m_color );
 
 	}
 	else {
 		const bool allowed_to_change = am_i_host && !am_i_ready;
 
-		m_elements.actions->SetMode( Dropdown::DM_SELECT );
+		m_elements.actions->SetMode( NumDropdown::DM_SELECT );
 
 		if ( allowed_to_change ) {
 			m_elements.actions->SetChoicesV(

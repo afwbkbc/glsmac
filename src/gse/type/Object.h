@@ -18,6 +18,7 @@ public:
 	enum object_class_t {
 		CLASS_NONE,
 		CLASS_EXCEPTION,
+		CLASS_COLOR,
 		CLASS_TILE,
 		CLASS_UNIT,
 		CLASS_UNITDEF,

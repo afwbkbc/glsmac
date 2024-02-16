@@ -52,11 +52,6 @@ private:
 
 	State* m_state = nullptr;
 
-	const gse::Value GetPlayer( const Player* player ) const;
-	const gse::Value GetFaction( const rules::Faction* faction ) const;
-	const gse::Value GetDifficulty( const rules::DifficultyLevel* difficulty ) const;
-	//const gse::Value GetTurn( const Turn* turn ) const;
-
 	const std::string m_entry_script = util::FS::GeneratePath(
 		{
 			"gse", // directory is expected to be in working dir

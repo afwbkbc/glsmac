@@ -74,6 +74,8 @@ BINDING_DEF( random )
 
 BINDING_DEF( on )
 
+BINDING_DEF( factions )
+
 BINDING_DEF( units )
 
 BINDING_DEF( map )

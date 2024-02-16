@@ -28,7 +28,7 @@ public:
 	static const types::Buffer Serialize( const Unit* unit );
 	static Unit* Unserialize( types::Buffer& buf );
 
-	WRAPDEFS( Unit );
+	WRAPDEFS_PTR( Unit );
 };
 
 }

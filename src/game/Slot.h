@@ -7,7 +7,11 @@
 
 namespace game {
 
+class State;
+
 CLASS( Slot, types::Serializable )
+
+	Slot( const State* state );
 
 	enum slot_state_t {
 		SS_CLOSED,
@@ -47,6 +51,8 @@ CLASS( Slot, types::Serializable )
 	void Unserialize( types::Buffer buf ) override;
 
 private:
+
+	const State* m_state;
 
 	slot_state_t m_slot_state = SS_OPEN;
 	bool m_close_after_clear = false;

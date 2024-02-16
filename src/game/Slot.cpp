@@ -1,6 +1,13 @@
 #include "Slot.h"
 
+#include "State.h"
+
 namespace game {
+
+Slot::Slot( const State* state )
+	: m_state( state ) {
+
+}
 
 const Slot::slot_state_t Slot::GetState() const {
 	return m_slot_state;
@@ -126,7 +133,7 @@ void Slot::Unserialize( types::Buffer buf ) {
 	m_slot_state = (slot_state_t)buf.ReadInt();
 	if ( m_slot_state == SS_PLAYER ) {
 		if ( !m_player_data.player ) {
-			m_player_data.player = new Player( buf.ReadString() );
+			m_player_data.player = new Player( m_state->m_settings.global.game_rules, buf.ReadString() );
 			m_player_data.player->SetSlot( this );
 		}
 		else {

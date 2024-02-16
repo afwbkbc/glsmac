@@ -30,7 +30,7 @@ void Multiplayer::Show() {
 	m_section->SetTitleText( "Select a service..." );
 	m_body->AddChild( m_section );
 
-	NEW( m_choices, ChoiceList, "PopupButtonList" );
+	NEW( m_choices, NumChoiceList, "PopupButtonList" );
 	m_choices->SetImmediateMode( false );
 	m_choices->SetMargin( 3 );
 	m_choices->SetChoices(

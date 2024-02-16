@@ -2,12 +2,22 @@
 
 namespace game {
 
+Slots::Slots( const State* state )
+	: m_state( state ) {
+
+}
+
 const size_t Slots::GetCount() const {
 	return m_slots.size();
 }
 
 void Slots::Resize( const size_t size ) {
-	m_slots.resize( size );
+	if ( m_slots.size() > size ) {
+		m_slots.erase( m_slots.begin() + size, m_slots.end() );
+	}
+	while ( m_slots.size() < size ) {
+		m_slots.push_back( { m_state } );
+	}
 }
 
 Slot& Slots::GetSlot( const size_t index ) {

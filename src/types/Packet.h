@@ -14,8 +14,9 @@ CLASS( Packet, Serializable )
 		PT_AUTH, // C->S
 		PT_PING, // *->*
 		PT_PONG, // *->*
-		PT_GLOBAL_SETTINGS, // S->C
+
 		PT_PLAYERS, // S->C
+		PT_GLOBAL_SETTINGS, // S->C
 		PT_UPDATE_SLOT, // C->S
 		PT_SLOT_UPDATE, // S->C
 		PT_UPDATE_FLAGS, // C->S

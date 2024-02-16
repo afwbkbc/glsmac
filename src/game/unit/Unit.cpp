@@ -68,7 +68,9 @@ WRAPIMPL_BEGIN( Unit, CLASS_UNIT )
 			return m_tile->Wrap();
 		})
 	}
-WRAPIMPL_END( Unit )
+WRAPIMPL_END_PTR( Unit )
+
+UNWRAPIMPL_PTR( Unit )
 
 }
 }

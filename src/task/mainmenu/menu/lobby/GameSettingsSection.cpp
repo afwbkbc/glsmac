@@ -44,7 +44,7 @@ void GameSettingsSection::Create() {
 	}
 
 	// to allow selecting Load Map repeatedly
-	m_element_rows[ RI_MAP_TYPE ].choices->SetMode( Dropdown::DM_MENU );
+	m_element_rows[ RI_MAP_TYPE ].choices->SetMode( NumDropdown::DM_MENU );
 
 	// these two are paginated based on "Random Map"/"Load Map" choice
 	m_element_rows[ RI_MAP_FILE ].label->SetTop( m_element_rows[ RI_PLANET_SIZE ].label->GetTop() );
@@ -102,8 +102,8 @@ void GameSettingsSection::UpdateRows() {
 
 	const auto& game_rules = m_game_settings->game_rules;
 
-	::ui::object::ChoiceList::choices_t difficulty_levels = {};
-	ChoiceList::value_t current_difficulty_level = 0;
+	::ui::object::NumChoiceList::choices_t difficulty_levels = {};
+	NumChoiceList::value_t current_difficulty_level = 0;
 	for ( auto& it : game_rules.m_difficulty_levels ) {
 		if ( m_game_settings->global_difficulty.m_name == it.second.m_name ) {
 			current_difficulty_level = it.first;
@@ -129,7 +129,7 @@ void GameSettingsSection::UpdateRows() {
 		}, 0
 	);
 
-	ChoiceList::value_t game_type = 0;
+	NumChoiceList::value_t game_type = 0;
 	switch ( m_game_settings->map.type ) {
 		case game::MapSettings::MT_RANDOM:
 		case game::MapSettings::MT_CUSTOM: {
@@ -218,7 +218,7 @@ void GameSettingsSection::CreateRow( const row_id_t row_id, const std::string& l
 	label_el->SetLeft( 6 );
 	label_el->SetWidth( label_width );
 	m_body->AddChild( label_el );
-	NEWV( choices_el, ::ui::object::Dropdown, "PopupDropdown" );
+	NEWV( choices_el, ::ui::object::NumDropdown, "PopupDropdown" );
 	choices_el->SetAlign( UIObject::ALIGN_LEFT );
 	choices_el->SetLeft( label_width );
 	choices_el->SetWidth( choices_width );
@@ -227,14 +227,14 @@ void GameSettingsSection::CreateRow( const row_id_t row_id, const std::string& l
 			const auto& game_rules = m_game_settings->game_rules;
 			switch ( row_id ) {
 				case RI_DIFFICULTY_LEVEL:
-					m_game_settings->global_difficulty = game_rules.m_difficulty_levels.at( data->value.change.id );
+					m_game_settings->global_difficulty = game_rules.m_difficulty_levels.at( data->value.change.id_num );
 					break;
 				case RI_TIME_CONTROLS:
 					break;
 				case RI_SPACE_1:
 					break;
 				case RI_MAP_TYPE:
-					if ( data->value.change.id == 1 ) { // "load map"
+					if ( data->value.change.id_num == 1 ) { // "load map"
 						//choices_el->SetValue( 0 ); // keep "random map" until map is actually selected
 						ShowLoadMap();
 					}
@@ -246,19 +246,19 @@ void GameSettingsSection::CreateRow( const row_id_t row_id, const std::string& l
 					}
 					break;
 				case RI_PLANET_SIZE:
-					m_game_settings->map.size = data->value.change.id;
+					m_game_settings->map.size = data->value.change.id_num;
 					break;
 				case RI_PLANET_OCEAN:
-					m_game_settings->map.ocean = data->value.change.id;
+					m_game_settings->map.ocean = data->value.change.id_num;
 					break;
 				case RI_PLANET_EROSIVE:
-					m_game_settings->map.erosive = data->value.change.id;
+					m_game_settings->map.erosive = data->value.change.id_num;
 					break;
 				case RI_PLANET_LIFEFORMS:
-					m_game_settings->map.lifeforms = data->value.change.id;
+					m_game_settings->map.lifeforms = data->value.change.id_num;
 					break;
 				case RI_PLANET_CLOUDS:
-					m_game_settings->map.clouds = data->value.change.id;
+					m_game_settings->map.clouds = data->value.change.id_num;
 					break;
 				case RI_MAP_FILE:
 					// nothing to do yet because it will just open file browser
@@ -277,11 +277,11 @@ void GameSettingsSection::CreateRow( const row_id_t row_id, const std::string& l
 	};
 }
 
-void GameSettingsSection::UpdateRow( const row_id_t row_id, const ::ui::object::ChoiceList::choices_t& choices, const ChoiceList::value_t default_choice ) {
+void GameSettingsSection::UpdateRow( const row_id_t row_id, const ::ui::object::NumChoiceList::choices_t& choices, const NumChoiceList::value_t default_choice ) {
 	const auto& row = m_element_rows.at( row_id );
 	if ( !IsLocked() && row_id != RI_MAP_FILE ) {
 		row.choices->SetChoices( choices );
-		row.choices->SetValue( default_choice );
+		row.choices->SetValueByKey( default_choice );
 	}
 	else {
 		row.choices->SetChoices( {} );

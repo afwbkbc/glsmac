@@ -2,8 +2,16 @@
 
     #print('CONFIGURE');
 
-    const rules = #include('rules');
+    const factions = #include('factions');
+    #print(#to_string(factions));
+    let i = 0;
+    let sz = #size(factions);
+    while (i < sz) {
+        #game.factions.define(factions[i][0], factions[i][1]);
+        i++;
+    }
 
+    const rules = #include('rules');
     // TODO
 
 });

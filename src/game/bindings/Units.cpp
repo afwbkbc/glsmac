@@ -22,18 +22,18 @@ BINDING_IMPL( units ) {
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( name, 0, String );
 				N_GETVALUE( unit_def, 1, Object );
-				N_GETPROP( unit_def, unit_type, "type", String );
+				N_GETPROP( unit_type, unit_def, "type", String );
 				if ( unit_type == "static" ) {
-					N_GETPROP( unit_def, render_def, "render", Object );
-					N_GETPROP( render_def, render_type, "type", String );
+					N_GETPROP( render_def, unit_def, "render", Object );
+					N_GETPROP( render_type, render_def, "type", String );
 					if ( render_type == "sprite" ) {
-						N_GETPROP( render_def, sprite_file, "file", String );
-						N_GETPROP( render_def, sprite_x, "x", Int );
-						N_GETPROP( render_def, sprite_y, "y", Int );
-						N_GETPROP( render_def, sprite_w, "w", Int );
-						N_GETPROP( render_def, sprite_h, "h", Int );
-						N_GETPROP( render_def, sprite_cx, "cx", Int );
-						N_GETPROP( render_def, sprite_cy, "cy", Int );
+						N_GETPROP( sprite_file, render_def, "file", String );
+						N_GETPROP( sprite_x, render_def, "x", Int );
+						N_GETPROP( sprite_y, render_def, "y", Int );
+						N_GETPROP( sprite_w, render_def, "w", Int );
+						N_GETPROP( sprite_h, render_def, "h", Int );
+						N_GETPROP( sprite_cx, render_def, "cx", Int );
+						N_GETPROP( sprite_cy, render_def, "cy", Int );
 						const auto* def = new unit::StaticDef(
 							name,
 							new unit::SpriteRender( sprite_file, sprite_x, sprite_y, sprite_w, sprite_h, sprite_cx, sprite_cy )

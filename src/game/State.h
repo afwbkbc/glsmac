@@ -30,7 +30,7 @@ CLASS( State, base::Base )
 	Game* GetGame() const;
 
 	Settings m_settings = {};
-	Slots m_slots = {};
+	Slots m_slots = { this };
 
 	bindings::Bindings* const m_bindings = nullptr;
 

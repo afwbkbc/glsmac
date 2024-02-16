@@ -22,6 +22,10 @@ static const std::unordered_map< Object::object_class_t, std::string > s_object_
 		"#exception"
 	},
 	{
+		Object::CLASS_COLOR,
+		"#color"
+	},
+	{
 		Object::CLASS_TILE,
 		"#tile"
 	},

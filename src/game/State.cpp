@@ -93,9 +93,14 @@ connection::Connection* State::GetConnection() const {
 
 void State::Configure() {
 
-	// TODO: reset stuff
+	// reset
+	m_settings.global.game_rules.m_factions.clear();
 
+	// configure
 	m_bindings->Call( ::game::bindings::Bindings::CS_ON_CONFIGURE );
+
+	// check
+	ASSERT( !m_settings.global.game_rules.m_factions.empty(), "no factions were defined" );
 }
 
 void State::Reset() {

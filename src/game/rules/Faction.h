@@ -12,8 +12,9 @@ namespace rules {
 CLASS( Faction, types::Serializable )
 
 	Faction();
-	Faction( const std::string& name, const types::Color& color );
+	Faction( const std::string& id, const std::string& name, const types::Color& color );
 
+	std::string m_id = "";
 	std::string m_name = "";
 	types::Color m_color = {};
 

@@ -55,10 +55,17 @@ void PlayersSection::UpdateSlots( std::vector< ::game::Slot >& slots ) {
 	const auto& game_rules = GetLobby()->GetSettings().global.game_rules;
 
 	m_choices.factions.clear();
+	const auto& random_faction = ::game::Player::RANDOM_FACTION;
+	m_choices.factions.push_back(
+		{
+			random_faction.m_id,
+			random_faction.m_name
+		}
+	);
 	for ( auto& faction : game_rules.m_factions ) {
 		m_choices.factions.push_back(
 			{
-				faction.first,
+				faction.second.m_id,
 				faction.second.m_name
 			}
 		);
@@ -80,11 +87,11 @@ void PlayersSection::UpdateSlots( std::vector< ::game::Slot >& slots ) {
 	}
 }
 
-const ChoiceList::choices_t& PlayersSection::GetFactionChoices() {
+const AssocChoiceList::choices_t& PlayersSection::GetFactionChoices() {
 	return m_choices.factions;
 }
 
-const ChoiceList::choices_t& PlayersSection::GetDifficultyLevelChoices() {
+const NumChoiceList::choices_t& PlayersSection::GetDifficultyLevelChoices() {
 	return m_choices.difficulty_levels;
 }
 

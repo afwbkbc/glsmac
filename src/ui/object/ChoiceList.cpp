@@ -3,7 +3,8 @@
 namespace ui {
 namespace object {
 
-ChoiceList::ChoiceList( const std::string& class_name )
+template< typename KEY_TYPE >
+ChoiceList< KEY_TYPE >::ChoiceList( const std::string& class_name )
 	: UIContainer( class_name ) {
 	SetEventContexts( EC_KEYBOARD );
 
@@ -12,14 +13,16 @@ ChoiceList::ChoiceList( const std::string& class_name )
 	m_item_align.height = 20;
 }
 
-void ChoiceList::SetImmediateMode( const bool immediate_mode ) {
+template< typename KEY_TYPE >
+void ChoiceList< KEY_TYPE >::SetImmediateMode( const bool immediate_mode ) {
 	if ( m_immediate_mode != immediate_mode ) {
 		ASSERT( m_buttons.empty(), "can't change mode after initialization" );
 		m_immediate_mode = immediate_mode;
 	}
 }
 
-void ChoiceList::SetChoices( const choices_t& choices ) {
+template< typename KEY_TYPE >
+void ChoiceList< KEY_TYPE >::SetChoices( const choices_t& choices ) {
 	bool wasSet = !m_values.empty();
 	std::string oldValue = (
 		wasSet &&
@@ -44,7 +47,8 @@ void ChoiceList::SetChoices( const choices_t& choices ) {
 	}
 }
 
-void ChoiceList::SetValue( const value_t value ) {
+template< typename KEY_TYPE >
+void ChoiceList< KEY_TYPE >::SetValue( const value_t value ) {
 	auto it = m_buttons.find( value );
 	ASSERT( it != m_buttons.end(), "value does not exist in choices" );
 	SetActiveButton( it->second );
@@ -53,13 +57,15 @@ void ChoiceList::SetValue( const value_t value ) {
 	m_value_index = value_index_it - m_values.begin();
 }
 
-const ChoiceList::value_t ChoiceList::GetValue() const {
+template< typename KEY_TYPE >
+const typename ChoiceList< KEY_TYPE >::value_t ChoiceList< KEY_TYPE >::GetValue() const {
 	ASSERT( !m_values.empty(), "choices are empty" );
 	ASSERT( m_labels.find( m_value ) != m_labels.end(), "choices value not found" );
 	return m_value;
 }
 
-void ChoiceList::SetValueString( const std::string& choice, bool allowMissing ) {
+template< typename KEY_TYPE >
+void ChoiceList< KEY_TYPE >::SetValueString( const std::string& choice, bool allowMissing ) {
 	// ugh
 	bool found = false;
 	for ( const auto& label : m_labels ) {
@@ -74,11 +80,13 @@ void ChoiceList::SetValueString( const std::string& choice, bool allowMissing ) 
 	}
 }
 
-const std::string& ChoiceList::GetValueString() const {
+template< typename KEY_TYPE >
+const std::string& ChoiceList< KEY_TYPE >::GetValueString() const {
 	return m_labels.at( GetValue() );
 }
 
-void ChoiceList::SetChoicesV( const std::vector< std::string >& labels ) {
+template<>
+void ChoiceList< size_t >::SetChoicesV( const std::vector< std::string >& labels ) {
 	choices_t choices = {};
 	size_t index = 1;
 	for ( auto& label : labels ) {
@@ -91,8 +99,13 @@ void ChoiceList::SetChoicesV( const std::vector< std::string >& labels ) {
 	}
 	SetChoices( choices );
 }
+template<>
+void ChoiceList< std::string >::SetChoicesV( const std::vector< std::string >& labels ) {
+	THROW( "SetChoicesV not implemented for AssocChoiceList" );
+}
 
-void ChoiceList::Create() {
+template< typename KEY_TYPE >
+void ChoiceList< KEY_TYPE >::Create() {
 	UIContainer::Create();
 
 	if ( m_buttons.empty() && !m_values.empty() ) {
@@ -101,7 +114,8 @@ void ChoiceList::Create() {
 
 }
 
-void ChoiceList::Destroy() {
+template< typename KEY_TYPE >
+void ChoiceList< KEY_TYPE >::Destroy() {
 
 	for ( auto& button : m_buttons ) {
 		RemoveChild( button.second );
@@ -111,7 +125,8 @@ void ChoiceList::Destroy() {
 	UIContainer::Destroy();
 }
 
-void ChoiceList::Align() {
+template< typename KEY_TYPE >
+void ChoiceList< KEY_TYPE >::Align() {
 	UIContainer::Align();
 
 	if ( !m_buttons.empty() ) {
@@ -127,22 +142,25 @@ void ChoiceList::Align() {
 
 }
 
-/*void ChoiceList::OnChange( UIEventHandler::handler_function_t func ) {
+/*template< typename KEY_TYPE >
+void ChoiceList< KEY_TYPE >::OnChange( UIEventHandler::handler_function_t func ) {
 	On( UIEvent::EV_CHANGE, func );
 }*/
 
-
-void ChoiceList::SetItemMargin( const coord_t item_margin ) {
+template< typename KEY_TYPE >
+void ChoiceList< KEY_TYPE >::SetItemMargin( const coord_t item_margin ) {
 	m_item_align.margin = item_margin;
 	Realign();
 }
 
-void ChoiceList::SetItemHeight( const coord_t item_height ) {
+template< typename KEY_TYPE >
+void ChoiceList< KEY_TYPE >::SetItemHeight( const coord_t item_height ) {
 	m_item_align.height = item_height;
 	Realign();
 }
 
-void ChoiceList::ApplyStyle() {
+template< typename KEY_TYPE >
+void ChoiceList< KEY_TYPE >::ApplyStyle() {
 	UIContainer::ApplyStyle();
 
 	if ( Has( Style::A_ITEM_MARGIN ) ) {
@@ -154,7 +172,8 @@ void ChoiceList::ApplyStyle() {
 	}
 }
 
-void ChoiceList::UpdateButtons() {
+template< typename KEY_TYPE >
+void ChoiceList< KEY_TYPE >::UpdateButtons() {
 	if ( m_created ) {
 		for ( auto& button : m_buttons ) {
 			RemoveChild( button.second );
@@ -203,7 +222,8 @@ void ChoiceList::UpdateButtons() {
 	}
 }
 
-bool ChoiceList::OnKeyDown( const UIEvent::event_data_t* data ) {
+template< typename KEY_TYPE >
+bool ChoiceList< KEY_TYPE >::OnKeyDown( const UIEvent::event_data_t* data ) {
 	switch ( data->key.code ) {
 		case UIEvent::K_DOWN: {
 			if ( m_value_index < m_values.size() - 1 ) {
@@ -230,15 +250,18 @@ bool ChoiceList::OnKeyDown( const UIEvent::event_data_t* data ) {
 	return true;
 }
 
-bool ChoiceList::OnKeyUp( const UIEvent::event_data_t* data ) {
+template< typename KEY_TYPE >
+bool ChoiceList< KEY_TYPE >::OnKeyUp( const UIEvent::event_data_t* data ) {
 	return true;
 }
 
-bool ChoiceList::OnKeyPress( const UIEvent::event_data_t* data ) {
+template< typename KEY_TYPE >
+bool ChoiceList< KEY_TYPE >::OnKeyPress( const UIEvent::event_data_t* data ) {
 	return true;
 }
 
-void ChoiceList::SetActiveButton( Button* button ) {
+template< typename KEY_TYPE >
+void ChoiceList< KEY_TYPE >::SetActiveButton( Button* button ) {
 	auto it = m_button_values.find( button );
 	ASSERT( it != m_button_values.end(), "button not in buttons list" );
 	for ( auto& b : m_buttons ) {
@@ -253,14 +276,26 @@ void ChoiceList::SetActiveButton( Button* button ) {
 	m_value = it->second;
 }
 
-void ChoiceList::SelectChoice() {
-	if ( m_value >= 0 ) {
-		UIEvent::event_data_t d = {};
-		d.value.change.id = m_value;
-		d.value.change.text = &GetValueString();
-		Trigger( UIEvent::EV_SELECT, &d );
-	}
+template<>
+void ChoiceList< size_t >::SelectChoice() {
+	UIEvent::event_data_t d = {};
+	d.value.change.id_num = m_value;
+	d.value.change.text = &GetValueString();
+	Trigger( UIEvent::EV_SELECT, &d );
 }
+
+template<>
+void ChoiceList< std::string >::SelectChoice() {
+	UIEvent::event_data_t d = {};
+	d.value.change.id_str = &m_value;
+	d.value.change.text = &GetValueString();
+	Trigger( UIEvent::EV_SELECT, &d );
+}
+
+template
+class ChoiceList< size_t >; // NumChoiceList
+template
+class ChoiceList< std::string >; // AssocChoiceList
 
 }
 }

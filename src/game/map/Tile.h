@@ -148,7 +148,7 @@ public:
 	const Buffer Serialize() const;
 	void Unserialize( Buffer data );
 
-	WRAPDEFS( Tile );
+	WRAPDEFS_PTR( Tile );
 };
 
 }
