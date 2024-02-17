@@ -777,6 +777,20 @@ const ::game::map_editor::MapEditor::brush_type_t Game::GetEditorBrush() const {
 	return m_editor_brush;
 }
 
+void Game::DefineSlot( const size_t slot_index, const types::Color& color ) {
+	auto slot_it = m_slot_states.find( slot_index );
+	if ( slot_it == m_slot_states.end() ) {
+		Log( "Initializing slot state: " + std::to_string( slot_index ) );
+		slot_it = m_slot_states.insert(
+			{
+				slot_index,
+				{}
+			}
+		).first;
+	}
+	slot_it->second.color = color;
+}
+
 void Game::DefineUnit( const ::game::unit::Def* unitdef ) {
 	auto unitdef_it = m_unitdef_states.find( unitdef->m_name );
 	ASSERT( unitdef_it == m_unitdef_states.end(), "unit def already exists" );
@@ -829,14 +843,16 @@ void Game::DefineUnit( const ::game::unit::Def* unitdef ) {
 	);
 }
 
-void Game::SpawnUnit( const size_t unit_id, const std::string& unitdef_name, const float x, const float y, const float z ) {
+void Game::SpawnUnit( const size_t unit_id, const std::string& unitdef_name, const size_t slot_index, const float x, const float y, const float z ) {
 
 	ASSERT( m_unitdef_states.find( unitdef_name ) != m_unitdef_states.end(), "unitdef not found" );
+	ASSERT( m_slot_states.find( slot_index ) != m_slot_states.end(), "slot not found" );
 	ASSERT( m_unit_states.find( unit_id ) == m_unit_states.end(), "unit id already exists" );
 
 	auto& unitdef_state = m_unitdef_states.at( unitdef_name );
 	unit_state_t unit_state = {
 		&unitdef_state,
+		&m_slot_states.at( slot_index )
 	};
 
 	ASSERT( unitdef_state.m_type == ::game::unit::Def::DT_STATIC, "only static unitdefs are supported for now" );
@@ -915,6 +931,13 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 			m_ui.bottom_bar->SetTurnCompleteStatus( event.data.turn_complete_status.is_turn_complete );
 			break;
 		}
+		case ::game::Event::ET_SLOT_DEFINE: {
+			for ( const auto& d : *event.data.slot_define.slotdefs ) {
+				const auto& c = d.color;
+				DefineSlot( d.slot_index, types::Color( c.r, c.g, c.b, c.a ) );
+			}
+			break;
+		}
 		case ::game::Event::ET_UNIT_DEFINE: {
 			types::Buffer buf( *event.data.unit_define.serialized_unitdef );
 			const auto* unitdef = ::game::unit::Def::Unserialize( buf );
@@ -925,7 +948,7 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 		case ::game::Event::ET_UNIT_SPAWN: {
 			const auto& d = event.data.unit_spawn;
 			const auto& c = d.coords;
-			SpawnUnit( d.unit_id, *d.unitdef_name, c.x, c.y, c.z );
+			SpawnUnit( d.unit_id, *d.unitdef_name, d.slot_index, c.x, c.y, c.z );
 			break;
 		}
 		case ::game::Event::ET_UNIT_DESPAWN: {

@@ -268,6 +268,34 @@ void Game::Iterate() {
 					m_connection->UpdateSlot( m_slot_num, m_slot, true );
 				}
 
+				// notify frontend
+				const auto& slots = m_state->m_slots.GetSlots();
+				auto* slot_defines = new Event::slot_defines_t();
+				for ( const auto& slot : slots ) {
+					if ( slot.GetState() == Slot::SS_OPEN || slot.GetState() == Slot::SS_CLOSED ) {
+						continue;
+					}
+					ASSERT( slot.GetState() == Slot::SS_PLAYER, "unknown slot state: " + std::to_string( slot.GetState() ) );
+					const auto* player = slot.GetPlayer();
+					ASSERT( player, "slot player not set" );
+					const auto& faction = player->GetFaction();
+					const auto& c = faction.m_color.value;
+					slot_defines->push_back(
+						Event::slot_define_t{
+							slot.GetIndex(),
+							{
+								c.red,
+								c.green,
+								c.blue,
+								c.alpha
+							}
+						}
+					);
+				}
+				auto e = Event( Event::ET_SLOT_DEFINE );
+				e.data.slot_define.slotdefs = slot_defines;
+				AddEvent( e );
+
 				ASSERT( !m_current_turn, "turn is already initialized" );
 
 				try {
@@ -928,6 +956,7 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 	auto e = Event( Event::ET_UNIT_SPAWN );
 	e.data.unit_spawn.unit_id = unit->m_id;
 	NEW( e.data.unit_spawn.unitdef_name, std::string, unit->m_def->m_name );
+	e.data.unit_spawn.slot_index = unit->m_owner->GetIndex();
 	const auto l = tile->is_water_tile
 		? map::TileState::LAYER_WATER
 		: map::TileState::LAYER_LAND;
@@ -1068,11 +1097,6 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			m_connection->AsServer()->SendPlayersList();
 		}
 
-	}
-	else {
-		if ( m_connection ) {
-
-		}
 	}
 
 	if ( m_connection ) {

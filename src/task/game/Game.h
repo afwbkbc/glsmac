@@ -150,8 +150,9 @@ private:
 
 	void UpdateMapData( const types::Vec2< size_t >& map_size );
 
+	void DefineSlot( const size_t slot_index, const types::Color& color );
 	void DefineUnit( const ::game::unit::Def* unitdef );
-	void SpawnUnit( const size_t unit_id, const std::string& unitdef_name, const float x, const float y, const float z );
+	void SpawnUnit( const size_t unit_id, const std::string& unitdef_name, const size_t slot_index, const float x, const float y, const float z );
 	void DespawnUnit( const size_t unit_id );
 
 	void ProcessEvent( const ::game::Event& event );
@@ -349,6 +350,11 @@ private:
 #endif
 	} m_mt_ids = {};
 
+	struct slot_state_t {
+		types::Color color;
+	};
+	std::unordered_map< size_t, slot_state_t > m_slot_states = {};
+
 	struct unitdef_state_t {
 		::game::unit::Def::def_type_t m_type;
 		union {
@@ -369,6 +375,7 @@ private:
 
 	struct unit_state_t {
 		unitdef_state_t* def = nullptr;
+		slot_state_t* slot = nullptr;
 		size_t instance_id = 0;
 	};
 	std::unordered_map< size_t, unit_state_t > m_unit_states = {};
