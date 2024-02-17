@@ -8,7 +8,6 @@
 #include "util/FS.h"
 #include "ui/popup/PleaseDontGo.h"
 
-#include "game/unit/Unit.h"
 #include "game/unit/StaticDef.h"
 #include "game/unit/SpriteRender.h"
 
@@ -18,6 +17,11 @@ namespace task {
 namespace game {
 
 const Game::consts_t Game::s_consts = {};
+
+const float Game::unitbadge_def_t::SCALE_X = 0.25f;
+const float Game::unitbadge_def_t::SCALE_Y = 0.5f;
+const float Game::unitbadge_def_t::OFFSET_X = -0.25f;
+const float Game::unitbadge_def_t::OFFSET_Y = -0.5f;
 
 Game::Game( ::game::State* state, ui_handler_t on_start, ui_handler_t on_cancel )
 	: m_state( state )
@@ -250,8 +254,12 @@ void Game::Iterate() {
 							actor.tex_coords,
 							::game::map::s_consts.tc.ter1_pcx.dimensions,
 							{ // TODO
-								::game::map::s_consts.tc.ter1_pcx.dimensions.x / 2,
-								::game::map::s_consts.tc.ter1_pcx.dimensions.y / 2
+								::game::map::s_consts.tc.ter1_pcx.dimensions.x / 2 - 5,
+								::game::map::s_consts.tc.ter1_pcx.dimensions.y / 2 - 5
+							},
+							{
+								::game::map::s_consts.tile.scale.x,
+								::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
 							},
 							actor.z_index
 						);
@@ -416,6 +424,7 @@ types::Texture* Game::GetSourceTexture( const std::string& name ) {
 			Color::RGB( 100, 16, 156 ), // remove second transparency color
 			Color::RGB( 24, 184, 228 ), // remove frame
 			Color::RGB( 253, 189, 118 ), // remove drawn shadows too (we'll have our own)
+			Color::RGB( 124, 124, 124 ), // remove badges background // TODO: use per-file transparency selection
 		}
 	);
 	ASSERT( texture, "texture not loaded" );
@@ -426,13 +435,14 @@ types::Texture* Game::GetSourceTexture( const std::string& name ) {
 Game::instanced_sprite_t& Game::GetInstancedSprite(
 	const std::string& name,
 	const std::string& tex_file,
-	const ::game::map::Consts::pcx_texture_coordinates_t& xy,
-	const ::game::map::Consts::pcx_texture_coordinates_t& wh,
-	const ::game::map::Consts::pcx_texture_coordinates_t& cxy,
+	const ::game::map::Consts::pcx_texture_coordinates_t& src_xy,
+	const ::game::map::Consts::pcx_texture_coordinates_t& src_wh,
+	const ::game::map::Consts::pcx_texture_coordinates_t& src_cxy,
+	const types::Vec2< float > dst_xy,
 	const float z_index
 ) {
 
-	const auto key = name + " " + tex_file + " " + xy.ToString() + " " + wh.ToString();
+	const auto key = name + " " + tex_file + " " + src_xy.ToString() + " " + src_wh.ToString();
 
 	const auto& it = m_instanced_sprites.find( key );
 	if ( it == m_instanced_sprites.end() ) {
@@ -446,18 +456,18 @@ Game::instanced_sprite_t& Game::GetInstancedSprite(
 			scene::actor::Sprite,
 			name,
 			{
-				::game::map::s_consts.tile.scale.x,
-				::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
+				dst_xy.x,
+				dst_xy.y
 			},
 			pcx,
 			{
 				{
-					(float)1.0f / pcx->m_width * ( xy.x + 1 ),
-					(float)1.0f / pcx->m_height * ( xy.y + 1 )
+					(float)1.0f / pcx->m_width * ( src_xy.x ),
+					(float)1.0f / pcx->m_height * ( src_xy.y )
 				},
 				{
-					(float)1.0f / pcx->m_width * ( xy.x + wh.x - 4 ),
-					(float)1.0f / pcx->m_height * ( xy.y + wh.y - 4 )
+					(float)1.0f / pcx->m_width * ( src_xy.x + src_wh.x ),
+					(float)1.0f / pcx->m_height * ( src_xy.y + src_wh.y )
 				}
 			}
 		);
@@ -466,9 +476,9 @@ Game::instanced_sprite_t& Game::GetInstancedSprite(
 		m_world_scene->AddActor( instanced );
 		m_instanced_sprites[ key ] = {
 			name,
-			xy,
-			wh,
-			cxy,
+			src_xy,
+			src_wh,
+			src_cxy,
 			instanced
 		};
 		return m_instanced_sprites.at( key );
@@ -822,6 +832,10 @@ void Game::DefineUnit( const ::game::unit::Def* unitdef ) {
 							render->m_cx,
 							render->m_cy,
 						},
+						{
+							::game::map::s_consts.tile.scale.x,
+							::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
+						},
 						0.5f
 					);
 
@@ -858,6 +872,7 @@ void Game::SpawnUnit( const size_t unit_id, const std::string& unitdef_name, con
 	ASSERT( unitdef_state.m_type == ::game::unit::Def::DT_STATIC, "only static unitdefs are supported for now" );
 	ASSERT( unitdef_state.static_.render.is_sprite, "only sprite unitdefs are supported for now" );
 
+	// add render
 	unit_state.instance_id = unitdef_state.static_.render.sprite.next_instance_id++;
 	unitdef_state.static_.render.sprite.instanced_sprite->actor->SetInstance(
 		unit_state.instance_id, {
@@ -866,12 +881,26 @@ void Game::SpawnUnit( const size_t unit_id, const std::string& unitdef_name, con
 			z
 		}
 	);
+
+	// add badge render
+	unit_state.badge_def = &m_unitbadge_default; // TODO: variations
+	unit_state.badge_instance_id = unit_state.badge_def->next_instance_id++;
+	unit_state.badge_def->instanced_sprite->actor->SetInstance(
+		unit_state.badge_instance_id, {
+			x + ::game::map::s_consts.tile.scale.x * unitbadge_def_t::OFFSET_X,
+			y - ::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale * unitbadge_def_t::OFFSET_Y,
+			z
+		}
+	);
+
+	// save
 	m_unit_states.insert(
 		{
 			unit_id,
 			unit_state
 		}
 	);
+
 }
 
 void Game::DespawnUnit( const size_t unit_id ) {
@@ -885,6 +914,7 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	ASSERT( unitdef_state->static_.render.is_sprite, "only sprite unitdefs are supported for now" );
 
 	unitdef_state->static_.render.sprite.instanced_sprite->actor->RemoveInstance( unit_state.instance_id );
+	unit_state.badge_def->instanced_sprite->actor->RemoveInstance( unit_state.badge_instance_id );
 	m_unit_states.erase( it );
 }
 
@@ -1075,8 +1105,12 @@ void Game::Initialize(
 			a.second.tex_coords,
 			::game::map::s_consts.tc.ter1_pcx.dimensions,
 			{
-				::game::map::s_consts.tc.ter1_pcx.dimensions.x / 2,
-				::game::map::s_consts.tc.ter1_pcx.dimensions.y / 2
+				::game::map::s_consts.tc.ter1_pcx.dimensions.x / 2 - 5,
+				::game::map::s_consts.tc.ter1_pcx.dimensions.y / 2 - 5
+			},
+			{
+				::game::map::s_consts.tile.scale.x,
+				::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
 			},
 			a.second.z_index
 		);
@@ -1087,6 +1121,28 @@ void Game::Initialize(
 		ASSERT( !actor->HasInstance( instance.first ), "actor instance already exists" );
 		actor->SetInstance( instance.first, instance.second.second );
 	}
+
+	// Predefined sprites
+	// TODO: variations
+	m_unitbadge_default.instanced_sprite = &GetInstancedSprite(
+		"Badge_DEFAULT", "flags.pcx", {
+			49,
+			63,
+		},
+		{
+			23,
+			30,
+		},
+		{
+			61,
+			78,
+		},
+		{
+			::game::map::s_consts.tile.scale.x * unitbadge_def_t::SCALE_X,
+			::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale * unitbadge_def_t::SCALE_Y
+		},
+		0.52f
+	);
 
 	// UI
 	ui->AddTheme( &m_ui.theme );

@@ -223,8 +223,8 @@ struct Consts {
 		const struct {
 
 			const Vec2< uint32_t > dimensions = {
-				100,
-				62
+				95,
+				57
 			};
 
 			// some coordinates were altered to fix alignment

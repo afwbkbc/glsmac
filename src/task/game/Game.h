@@ -101,9 +101,10 @@ CLASS( Game, base::Task )
 	instanced_sprite_t& GetInstancedSprite(
 		const std::string& name,
 		const std::string& tex_file,
-		const ::game::map::Consts::pcx_texture_coordinates_t& xy,
-		const ::game::map::Consts::pcx_texture_coordinates_t& wh,
-		const ::game::map::Consts::pcx_texture_coordinates_t& cxy,
+		const ::game::map::Consts::pcx_texture_coordinates_t& src_xy,
+		const ::game::map::Consts::pcx_texture_coordinates_t& src_wh,
+		const ::game::map::Consts::pcx_texture_coordinates_t& src_cxy,
+		const types::Vec2< float > dst_xy,
 		const float z_index
 	);
 	instanced_sprite_t& GetInstancedSpriteByKey( const std::string& key ); // actor must already exist
@@ -373,10 +374,23 @@ private:
 	};
 	std::unordered_map< std::string, unitdef_state_t > m_unitdef_states = {};
 
+	struct unitbadge_def_t {
+		static const float SCALE_X;
+		static const float SCALE_Y;
+		static const float OFFSET_X;
+		static const float OFFSET_Y;
+		Game::instanced_sprite_t* instanced_sprite = nullptr;
+		size_t next_instance_id = 1;
+		size_t instance_id;
+	};
+	unitbadge_def_t m_unitbadge_default = {}; // TODO: variations
+
 	struct unit_state_t {
 		unitdef_state_t* def = nullptr;
 		slot_state_t* slot = nullptr;
 		size_t instance_id = 0;
+		unitbadge_def_t* badge_def = nullptr;
+		size_t badge_instance_id = 0;
 	};
 	std::unordered_map< size_t, unit_state_t > m_unit_states = {};
 
@@ -384,6 +398,7 @@ private:
 
 	void CancelRequests();
 	void CancelGame();
+
 };
 
 }
