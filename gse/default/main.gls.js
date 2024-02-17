@@ -90,7 +90,6 @@ let get_random_player = () => {
 });
 
 #game.on.despawn_unit((unit) => {
-    #print(unit.get_owner());
     if (unit.get_def() == 'SporeLauncher') {
         #game.units.spawn('MindWorms', get_random_player(), unit.get_tile());
     }

@@ -275,6 +275,8 @@ int main( const int argc, const char* argv[] ) {
 			if ( config.HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
 				NEWV( state, game::State ); // TODO: initialize settings randomly
 				state->m_settings.global.game_rules.Initialize();
+				state->InitBindings();
+				state->Configure();
 				const auto& rules = state->m_settings.global.game_rules;
 				NEWV(
 					player, ::game::Player,
