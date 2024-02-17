@@ -15,8 +15,13 @@ void Slots::Resize( const size_t size ) {
 	if ( m_slots.size() > size ) {
 		m_slots.erase( m_slots.begin() + size, m_slots.end() );
 	}
-	while ( m_slots.size() < size ) {
-		m_slots.push_back( { m_state } );
+	for ( size_t i = m_slots.size() ; i < size ; i++ ) {
+		m_slots.push_back(
+			{
+				i,
+				m_state
+			}
+		);
 	}
 }
 

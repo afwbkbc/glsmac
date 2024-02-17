@@ -913,7 +913,7 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 		}
 		case ::game::Event::ET_UNIT_SPAWN: {
 			types::Buffer buf( *event.data.unit_spawn.serialized_unit );
-			const auto* unit = ::game::unit::Unit::Unserialize( buf );
+			const auto* unit = ::game::unit::Unit::Unserialize( buf, nullptr );
 			const auto c = event.data.unit_spawn.coords;
 			SpawnUnit( unit, c.x, c.y, c.z );
 			delete unit->m_def;

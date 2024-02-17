@@ -53,10 +53,11 @@ BINDING_IMPL( units ) {
 		{
 			"spawn",
 			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 2 );
+				N_EXPECT_ARGS( 3 );
 				N_GETVALUE( def_name, 0, String );
-				N_UNWRAP( tile, 1, map::Tile );
-				return GAME->AddGameEvent( new event::SpawnUnit( def_name, tile->coord.x, tile->coord.y ), ctx, call_si );
+				N_UNWRAP( owner, 1, Slot );
+				N_UNWRAP( tile, 2, map::Tile );
+				return GAME->AddGameEvent( new event::SpawnUnit( def_name, owner->GetIndex(), tile->coord.x, tile->coord.y ), ctx, call_si );
 			})
 		},
 		{

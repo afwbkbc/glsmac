@@ -906,11 +906,11 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 		return;
 	}
 
-	Log( "Spawning unit ('" + unit->m_def->m_name + "') at [ " + std::to_string( unit->m_pos_x ) + " " + std::to_string( unit->m_pos_y ) + " ]" );
+	Log( "Spawning unit #" + std::to_string( unit->m_id ) + " ('" + unit->m_def->m_name + "') at " + unit->m_tile->ToString() );
 
 	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
 
-	auto* tile = m_map->GetTile( unit->m_pos_x, unit->m_pos_y );
+	auto* tile = unit->m_tile;
 	const auto* ts = m_map->GetTileState( tile );
 
 	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
@@ -943,9 +943,12 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 }
 
 void Game::DespawnUnit( const size_t unit_id ) {
+
 	const auto& it = m_units.find( unit_id );
 	ASSERT( it != m_units.end(), "unit id not found" );
 	auto* unit = it->second;
+
+	Log( "Despawning unit #" + std::to_string( unit->m_id ) + " ('" + unit->m_def->m_name + "') at " + unit->m_tile->ToString() );
 
 	auto e = Event( Event::ET_UNIT_DESPAWN );
 	e.data.unit_despawn.unit_id = unit_id;
@@ -1005,7 +1008,7 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto unit_id = buf.ReadInt();
 		auto b = Buffer( buf.ReadString() );
-		SpawnUnit( unit::Unit::Unserialize( b ) );
+		SpawnUnit( unit::Unit::Unserialize( b, this ) );
 	}
 	unit::Unit::SetNextId( buf.ReadInt() );
 	Log( "Restored next unit id: " + std::to_string( unit::Unit::GetNextId() ) );

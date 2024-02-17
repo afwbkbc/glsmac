@@ -7,8 +7,9 @@
 
 namespace game {
 
-Slot::Slot( const State* state )
-	: m_state( state ) {
+Slot::Slot( const size_t index, const State* state )
+	: m_index( index )
+	, m_state( state ) {
 
 }
 
@@ -34,6 +35,10 @@ void Slot::SetCloseAfterClear() {
 Player* Slot::GetPlayer() const {
 	ASSERT( m_slot_state == SS_PLAYER, "attempted to get player from non-player slot" );
 	return m_player_data.player;
+}
+
+const size_t Slot::GetIndex() const {
+	return m_index;
 }
 
 const network::cid_t Slot::GetCid() const {

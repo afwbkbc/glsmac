@@ -6,7 +6,15 @@
 
 #include "gse/Value.h"
 
+#include "game/map/Tile.h"
+#include "game/Slot.h"
+
 namespace game {
+
+class Game;
+
+class Slot;
+
 namespace unit {
 
 class Unit {
@@ -15,18 +23,16 @@ public:
 	static const size_t GetNextId();
 	static const void SetNextId( const size_t id );
 
-	Unit( const size_t id, const Def* def, const size_t pos_x, const size_t pos_y );
+	Unit( const size_t id, const Def* def, Slot* owner, map::Tile* tile );
 	virtual ~Unit() = default;
 
 	const size_t m_id;
 	const Def* m_def;
-
-	size_t m_pos_x;
-	size_t m_pos_y;
+	Slot* m_owner;
 	map::Tile* m_tile = nullptr;
 
 	static const types::Buffer Serialize( const Unit* unit );
-	static Unit* Unserialize( types::Buffer& buf );
+	static Unit* Unserialize( types::Buffer& buf, const Game* game );
 
 	WRAPDEFS_PTR( Unit );
 };

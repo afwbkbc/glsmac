@@ -4,6 +4,9 @@
 #include "gse/type/Int.h"
 #include "gse/callable/Native.h"
 
+#include "game/Game.h"
+#include "game/State.h"
+
 namespace game {
 namespace unit {
 
@@ -15,11 +18,11 @@ const void Unit::SetNextId( const size_t id ) {
 	next_id = id;
 }
 
-Unit::Unit( const size_t id, const Def* def, const size_t pos_x, const size_t pos_y )
+Unit::Unit( const size_t id, const Def* def, Slot* owner, map::Tile* tile )
 	: m_id( id )
 	, m_def( def )
-	, m_pos_x( pos_x )
-	, m_pos_y( pos_y ) {
+	, m_owner( owner )
+	, m_tile( tile ) {
 	if ( next_id <= id ) {
 		next_id = id + 1;
 	}
@@ -29,18 +32,21 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 	types::Buffer buf;
 	buf.WriteInt( unit->m_id );
 	buf.WriteString( Def::Serialize( unit->m_def ).ToString() );
-	buf.WriteInt( unit->m_pos_x );
-	buf.WriteInt( unit->m_pos_y );
+	buf.WriteInt( unit->m_owner->GetIndex() );
+	buf.WriteInt( unit->m_tile->coord.x );
+	buf.WriteInt( unit->m_tile->coord.y );
 	return buf;
 }
 
-Unit* Unit::Unserialize( types::Buffer& buf ) {
+Unit* Unit::Unserialize( types::Buffer& buf, const Game* game ) {
 	const auto id = buf.ReadInt();
 	auto defbuf = types::Buffer( buf.ReadString() );
 	const auto* def = Def::Unserialize( defbuf );
+	auto* slot = game ? &game->GetState()->m_slots.GetSlot( buf.ReadInt() ) : nullptr;
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
-	return new Unit( id, def, pos_x, pos_y );
+	auto* tile = game ? game->GetMap()->GetTile( pos_x, pos_y ) : nullptr;
+	return new Unit( id, def, slot, tile );
 }
 
 WRAPIMPL_BEGIN( Unit, CLASS_UNIT )
@@ -50,17 +56,15 @@ WRAPIMPL_BEGIN( Unit, CLASS_UNIT )
 			VALUE( gse::type::Int, m_id )
 		},
 		{
-			"x",
-			VALUE( gse::type::Int, m_pos_x )
-		},
-		{
-			"y",
-			VALUE( gse::type::Int, m_pos_y )
-		},
-		{
 			"get_def",
 			NATIVE_CALL( this ) {
 				return m_def->Wrap();
+			})
+		},
+		{
+			"get_owner",
+			NATIVE_CALL( this ) {
+				return m_owner->Wrap();
 			})
 		},
 		{

@@ -15,7 +15,8 @@ namespace callable {
 #define N_ARGS \
     const gse::type::Type* arg; \
     gse::type::Object::properties_t::const_iterator obj_it; \
-    auto getprop_val = VALUE( gse::type::Undefined );
+    auto getprop_val = VALUE( gse::type::Undefined ); \
+    auto obj_val = VALUE( gse::type::Undefined );
 #define N_EXPECT_ARGS( _count ) \
     if ( arguments.size() != _count ) { \
         throw gse::Exception( gse::EC.INVALID_CALL, "Expected " + std::to_string( _count ) + " arguments, found " + std::to_string( arguments.size() ), ctx, call_si ); \
@@ -41,17 +42,17 @@ namespace callable {
     arg = arguments.at( _index ).Get(); \
     N_CHECKTYPE( arg, _index, _type ); \
     const auto& _var = ((gse::type::_type*)arg)->value;
-#define N_GETOBJ( _var, _index, _class ) \
+#define N_GETOBJ( _index, _class ) \
     ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
     arg = arguments.at( _index ).Get(); \
     N_CHECKTYPE( arg, _index, Object ); \
     if ( ((gse::type::Object*)arg)->object_class != _class ) { \
         throw gse::Exception( gse::EC.INVALID_CALL, "Argument " + std::to_string( _index ) + " is expected to be object of class " + gse::type::Object::GetClassString( _class ) + ", found class: " + gse::type::Object::GetClassString( ((gse::type::Object*)arg)->object_class ), ctx, call_si ); \
     } \
-    const auto& _var = arguments.at( _index );
+    obj_val = arguments.at( _index );
 #define N_UNWRAP( _var, _index, _type ) \
-    N_GETOBJ( obj, _index, _type::WRAP_CLASS ); \
-    const auto* _var = _type::Unwrap( obj );
+    N_GETOBJ( _index, _type::WRAP_CLASS ); \
+    const auto* _var = _type::Unwrap( obj_val );
 #define N_CHECK_OBJECT_CLASS( _var, _class ) \
     if ( ((gse::type::Object*)_var)->object_class != _class ) { \
         throw gse::Exception( gse::EC.INVALID_CALL, "Value is expected to be object of class " + gse::type::Object::GetClassString( _class ) + ", found class: " + gse::type::Object::GetClassString( ((gse::type::Object*)_var)->object_class ), ctx, call_si ); \

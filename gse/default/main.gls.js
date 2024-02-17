@@ -13,7 +13,18 @@
 
 });
 
+// will be populated on start
+let players = [];
+let players_sz = 0;
+let get_random_player = () => {
+    return players[(#game.random.get_int(0, players_sz - 1))];
+};
+
 #game.on.start(() => {
+
+    // init players
+    players = #game.players.get_all();
+    players_sz = #size(players);
 
     const units = #include('units');
     let i = 0;
@@ -31,17 +42,18 @@
         while (x < w) {
             if (x % 2 == y % 2) {
                 if (#game.random.get_int(0, 1) == 1) {
+                    let owner = get_random_player();
                     let tile = #game.map.get_tile(x, y);
                     let unit = null;
                     if (tile.is_land) {
                         if (#game.random.get_int(0, 2) != 1) {
-                            unit = #game.units.spawn('MindWorms', tile);
+                            unit = #game.units.spawn('MindWorms', owner, tile);
                         } else {
-                            unit = #game.units.spawn('SporeLauncher', tile);
+                            unit = #game.units.spawn('SporeLauncher', owner, tile);
                         }
                     } else {
                         if (#game.random.get_int(0, 1) == 1) {
-                            unit = #game.units.spawn('SeaLurk', tile);
+                            unit = #game.units.spawn('SeaLurk', owner, tile);
                         }
                     }
                 }
@@ -78,7 +90,8 @@
 });
 
 #game.on.despawn_unit((unit) => {
+    #print(unit.get_owner());
     if (unit.get_def() == 'SporeLauncher') {
-        #game.units.spawn('MindWorms', unit.get_tile());
+        #game.units.spawn('MindWorms', get_random_player(), unit.get_tile());
     }
 });

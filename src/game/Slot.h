@@ -13,7 +13,7 @@ class State;
 
 CLASS( Slot, types::Serializable )
 
-	Slot( const State* state );
+	Slot( const size_t index, const State* state );
 
 	enum slot_state_t {
 		SS_CLOSED,
@@ -32,6 +32,7 @@ CLASS( Slot, types::Serializable )
 	void Close();
 	void SetCloseAfterClear();
 
+	const size_t GetIndex() const;
 	const network::cid_t GetCid() const;
 	const std::string& GetRemoteAddress() const;
 	void SetPlayerFlag( const player_flag_t flag );
@@ -53,9 +54,10 @@ CLASS( Slot, types::Serializable )
 	void Unserialize( types::Buffer buf ) override;
 
 	WRAPDEFS_PTR( Slot );
-	
+
 private:
 
+	size_t m_index;
 	const State* m_state;
 
 	slot_state_t m_slot_state = SS_OPEN;

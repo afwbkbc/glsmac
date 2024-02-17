@@ -76,6 +76,10 @@ void Tile::Unserialize( Buffer buf ) {
 	Update();
 }
 
+const std::string Tile::ToString() const {
+	return "@[ " + std::to_string( coord.x ) + " " + std::to_string( coord.y ) + " ]";
+}
+
 #define GETN( _n ) \
 { \
 	"get_" #_n, \
