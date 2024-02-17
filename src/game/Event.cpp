@@ -31,8 +31,13 @@ Event::Event( const Event& other )
 			data.turn_complete_status.is_turn_complete = other.data.turn_complete_status.is_turn_complete;
 			break;
 		}
+		case ET_UNIT_DEFINE: {
+			NEW( data.unit_define.serialized_unitdef, std::string, *other.data.unit_define.serialized_unitdef );
+			break;
+		}
 		case ET_UNIT_SPAWN: {
-			NEW( data.unit_spawn.serialized_unit, std::string, *other.data.unit_spawn.serialized_unit );
+			data.unit_spawn.unit_id = other.data.unit_spawn.unit_id;
+			NEW( data.unit_spawn.unitdef_name, std::string, *other.data.unit_spawn.unitdef_name );
 			data.unit_spawn.coords = other.data.unit_spawn.coords;
 			break;
 		}
@@ -61,8 +66,12 @@ Event::~Event() {
 			DELETE( data.global_message.message );
 			break;
 		}
+		case ET_UNIT_DEFINE: {
+			DELETE( data.unit_define.serialized_unitdef );
+			break;
+		}
 		case ET_UNIT_SPAWN: {
-			DELETE( data.unit_spawn.serialized_unit );
+			DELETE( data.unit_spawn.unitdef_name );
 			break;
 		}
 		default: {

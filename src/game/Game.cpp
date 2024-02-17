@@ -898,6 +898,11 @@ void Game::DefineUnit( const unit::Def* def ) {
 	ASSERT( m_unit_defs.find( def->m_name ) == m_unit_defs.end(), "Unit definition '" + def->m_name + "' already exists" );
 
 	m_unit_defs.insert_or_assign( def->m_name, def );
+
+	// notify frontend
+	auto e = Event( Event::ET_UNIT_DEFINE );
+	NEW( e.data.unit_define.serialized_unitdef, std::string, unit::Def::Serialize( def ).ToString() );
+	AddEvent( e );
 }
 
 void Game::SpawnUnit( unit::Unit* unit ) {
@@ -921,7 +926,8 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 
 	// notify frontend
 	auto e = Event( Event::ET_UNIT_SPAWN );
-	NEW( e.data.unit_spawn.serialized_unit, std::string, unit::Unit::Serialize( unit ).ToString() );
+	e.data.unit_spawn.unit_id = unit->m_id;
+	NEW( e.data.unit_spawn.unitdef_name, std::string, unit->m_def->m_name );
 	const auto l = tile->is_water_tile
 		? map::TileState::LAYER_WATER
 		: map::TileState::LAYER_LAND;

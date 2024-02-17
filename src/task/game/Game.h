@@ -150,7 +150,8 @@ private:
 
 	void UpdateMapData( const types::Vec2< size_t >& map_size );
 
-	void SpawnUnit( const ::game::unit::Unit* unit, const float x, const float y, const float z );
+	void DefineUnit( const ::game::unit::Def* unitdef );
+	void SpawnUnit( const size_t unit_id, const std::string& unitdef_name, const float x, const float y, const float z );
 	void DespawnUnit( const size_t unit_id );
 
 	void ProcessEvent( const ::game::Event& event );
@@ -349,15 +350,20 @@ private:
 	} m_mt_ids = {};
 
 	struct unitdef_state_t {
-		struct {
-			bool is_sprite;
-			union {
+		::game::unit::Def::def_type_t m_type;
+		union {
+			struct {
 				struct {
-					Game::instanced_sprite_t* instanced_sprite = nullptr;
-					size_t next_instance_id = 1;
-				} sprite;
-			};
-		} render;
+					bool is_sprite;
+					union {
+						struct {
+							Game::instanced_sprite_t* instanced_sprite = nullptr;
+							size_t next_instance_id = 1;
+						} sprite;
+					};
+				} render;
+			} static_;
+		};
 	};
 	std::unordered_map< std::string, unitdef_state_t > m_unitdef_states = {};
 

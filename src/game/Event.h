@@ -16,6 +16,7 @@ public:
 		ET_ERROR,
 		ET_GLOBAL_MESSAGE,
 		ET_TURN_COMPLETE_STATUS,
+		ET_UNIT_DEFINE,
 		ET_UNIT_SPAWN,
 		ET_UNIT_DESPAWN,
 	};
@@ -27,20 +28,24 @@ public:
 
 	union {
 		struct {
-			std::string* reason;
+			const std::string* reason;
 		} quit;
 		struct {
-			std::string* what;
-			std::string* stacktrace;
+			const std::string* what;
+			const std::string* stacktrace;
 		} error;
 		struct {
-			std::string* message;
+			const std::string* message;
 		} global_message;
 		struct {
 			bool is_turn_complete;
 		} turn_complete_status;
 		struct {
-			std::string* serialized_unit;
+			const std::string* serialized_unitdef;
+		} unit_define;
+		struct {
+			size_t unit_id;
+			const std::string* unitdef_name;
 			struct {
 				float x;
 				float y;
