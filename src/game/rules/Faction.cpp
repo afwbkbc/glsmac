@@ -1,5 +1,7 @@
 #include "Faction.h"
 
+#include "gse/type/String.h"
+
 namespace game {
 namespace rules {
 
@@ -31,6 +33,25 @@ void Faction::Unserialize( types::Buffer buf ) {
 	m_color = buf.ReadColor();
 
 }
+
+WRAPIMPL_BEGIN( Faction, CLASS_FACTION )
+	WRAPIMPL_PROPS {
+		{
+			"id",
+			VALUE( gse::type::String, m_id )
+		},
+		{
+			"name",
+			VALUE( gse::type::String, m_name )
+		},
+		{
+			"color",
+			m_color.Wrap()
+		},
+	};
+WRAPIMPL_END_PTR( Faction )
+
+UNWRAPIMPL_PTR( Faction )
 
 }
 }

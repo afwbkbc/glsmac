@@ -6,6 +6,8 @@
 
 #include "types/Color.h"
 
+#include "gse/Value.h"
+
 namespace game {
 namespace rules {
 
@@ -20,6 +22,8 @@ CLASS( Faction, types::Serializable )
 
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;
+
+	WRAPDEFS_PTR( Faction )
 };
 
 }

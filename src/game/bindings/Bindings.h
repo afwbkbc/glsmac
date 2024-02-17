@@ -31,6 +31,7 @@ public:
 	enum callback_slot_t {
 		CS_ON_CONFIGURE,
 		CS_ON_START,
+		CS_ON_TURN,
 		CS_ON_SPAWN_UNIT,
 		CS_ON_DESPAWN_UNIT,
 	};

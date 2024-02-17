@@ -27,6 +27,7 @@ Bindings::Bindings( State* state )
 		B( exit ),
 		B( random ),
 		B( on ),
+		B( players ),
 		B( factions ),
 		B( units ),
 		B( map ),

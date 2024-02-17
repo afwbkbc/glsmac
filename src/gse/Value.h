@@ -27,14 +27,12 @@ namespace gse {
     static _type Unwrap( const gse::Value& value );
 #define WRAPIMPL_BEGIN( _type, _class ) \
 const gse::type::Object::object_class_t _type::WRAP_CLASS = gse::type::Object::_class; \
-const gse::Value _type::Wrap() const {  \
-    const gse::type::Object::properties_t properties = {
+const gse::Value _type::Wrap() const {
+#define WRAPIMPL_PROPS const gse::type::Object::properties_t properties =
 #define WRAPIMPL_END_PTR( _type ) \
-    }; \
     return VALUE( gse::type::Object, properties, WRAP_CLASS, this ); \
 }
 #define WRAPIMPL_END_NOPTR( _type ) \
-    }; \
     return VALUE( gse::type::Object, properties, WRAP_CLASS ); \
 }
 

@@ -1,5 +1,7 @@
 #include "Game.h"
 
+#include <algorithm>
+
 #include "engine/Engine.h"
 #include "../mainmenu/MainMenu.h"
 #include "graphics/Graphics.h"
@@ -52,6 +54,7 @@ void Game::Start() {
 			m_map_data.filename = util::FS::GetBaseName( m_state->m_settings.global.map.filename );
 			m_map_data.last_directory = util::FS::GetDirName( m_state->m_settings.global.map.filename );
 		}
+
 	}
 
 	ui->ShowLoader(

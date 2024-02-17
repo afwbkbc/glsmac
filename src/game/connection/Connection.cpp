@@ -52,7 +52,7 @@ void Connection::Connect() {
 
 	m_game_state = GS_NONE;
 
-	Log( "connecting..." );
+	Log( "Connecting..." );
 
 	m_mt_ids.connect = m_network->MT_Connect( m_connection_mode, m_settings->remote_address );
 

@@ -272,7 +272,7 @@ void Game::Iterate() {
 
 				try {
 					// start initial turn
-					NextTurn();
+					NEW( m_current_turn, Turn, 0 );
 
 					// start main loop
 					m_game_state = GS_RUNNING;
@@ -297,7 +297,6 @@ void Game::Iterate() {
 						m_state->m_bindings->Call( Bindings::CS_ON_START );
 					}
 
-					CheckTurnComplete();
 				}
 			}
 			else {
@@ -306,7 +305,10 @@ void Game::Iterate() {
 		}
 	}
 	else if ( m_game_state == GS_RUNNING ) {
-		// TODO: iterate GSE?
+		if ( !m_current_turn->GetId() ) {
+			// start first turn
+			NextTurn();
+		}
 	}
 }
 
@@ -1010,7 +1012,7 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 }
 
 void Game::AddEvent( const Event& event ) {
-	Log( "Sending event (type=" + std::to_string( event.type ) + ")" );
+	//Log( "Sending event (type=" + std::to_string( event.type ) + ")" ); // spammy
 	m_pending_events->push_back( event );
 }
 
@@ -1028,6 +1030,41 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	m_initialization_error = "";
 
 	m_connection = m_state->GetConnection();
+
+	if ( m_state->IsMaster() ) {
+
+		// assign random factions to players
+		const auto& factions = m_state->m_settings.global.game_rules.m_factions;
+		std::vector< std::string > m_available_factions = {};
+		const auto& slots = m_state->m_slots.GetSlots();
+		for ( const auto& slot : slots ) {
+			if ( slot.GetState() == ::game::Slot::SS_PLAYER ) {
+				auto* player = slot.GetPlayer();
+				ASSERT( player, "player not set" );
+				if ( player->GetFaction().m_id == ::game::Player::RANDOM_FACTION.m_id ) {
+					if ( m_available_factions.empty() ) {
+						// (re)load factions list
+						for ( const auto& it : factions ) {
+							m_available_factions.push_back( it.first );
+						}
+						ASSERT( !m_available_factions.empty(), "no factions found" );
+					}
+					const std::vector< std::string >::iterator it = m_available_factions.begin() + m_random->GetUInt( 0, m_available_factions.size() - 1 );
+					player->SetFaction( factions.at( *it ) );
+					m_available_factions.erase( it );
+				}
+			}
+		}
+		if ( m_connection ) {
+			m_connection->AsServer()->SendPlayersList();
+		}
+
+	}
+	else {
+		if ( m_connection ) {
+
+		}
+	}
 
 	if ( m_connection ) {
 
@@ -1318,18 +1355,20 @@ void Game::ResetGame() {
 }
 
 void Game::NextTurn() {
-	size_t turn_id = 1;
-	if ( m_current_turn ) {
+	ASSERT( m_current_turn, "turn not set" );
+
+	const auto last_turn_id = m_current_turn->GetId();
+	if ( last_turn_id ) {
 		Log( "turn " + std::to_string( m_current_turn->GetId() ) + " finished" );
-
-		turn_id = m_current_turn->GetId() + 1;
-
 		// TODO: do something?
-		DELETE( m_current_turn );
 	}
 
-	NEW( m_current_turn, Turn, turn_id );
+	DELETE( m_current_turn );
+
+	NEW( m_current_turn, Turn, last_turn_id + 1 );
 	Log( "turn " + std::to_string( m_current_turn->GetId() ) + " started" );
+
+	m_state->m_bindings->Call( Bindings::CS_ON_TURN );
 }
 
 void Game::CheckTurnComplete() {

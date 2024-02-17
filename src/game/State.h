@@ -32,7 +32,7 @@ CLASS( State, base::Base )
 	Settings m_settings = {};
 	Slots m_slots = { this };
 
-	bindings::Bindings* const m_bindings = nullptr;
+	bindings::Bindings* m_bindings = nullptr;
 
 	std::function< void( gse::Exception& ) > m_on_gse_error = nullptr;
 
@@ -52,6 +52,7 @@ CLASS( State, base::Base )
 
 	void SetConnection( connection::Connection* connection );
 	connection::Connection* GetConnection() const;
+	void InitBindings();
 	void Configure();
 	void Reset();
 	void DetachConnection();

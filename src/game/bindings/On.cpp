@@ -11,6 +11,7 @@ BINDING_IMPL( on ) {
 	const gse::type::Object::properties_t properties = {
 		ON( "configure", CS_ON_CONFIGURE ),
 		ON( "start", CS_ON_START ),
+		ON( "turn", CS_ON_TURN ),
 		ON( "spawn_unit", CS_ON_SPAWN_UNIT ),
 		ON( "despawn_unit", CS_ON_DESPAWN_UNIT ),
 	};

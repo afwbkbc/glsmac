@@ -2,14 +2,15 @@
 
 namespace game {
 
-State::State()
-	: m_bindings( new bindings::Bindings( this ) ) {
-	m_bindings->RunMain();
+State::State() {
+
 }
 
 State::~State() {
 	Reset();
-	delete m_bindings;
+	if ( m_bindings ) {
+		delete m_bindings;
+	}
 }
 
 void State::SetGame( Game* game ) {
@@ -91,7 +92,18 @@ connection::Connection* State::GetConnection() const {
 	return m_connection;
 }
 
+void State::InitBindings() {
+	if ( !m_bindings ) {
+		Log( "Initializing bindings" );
+		m_bindings = new bindings::Bindings( this );
+		m_bindings->RunMain();
+	}
+}
+
 void State::Configure() {
+	ASSERT( m_bindings, "bindings not initialized" );
+
+	Log( "Configuring state" );
 
 	// reset
 	m_settings.global.game_rules.m_factions.clear();

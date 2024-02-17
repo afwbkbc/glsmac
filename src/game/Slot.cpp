@@ -2,6 +2,9 @@
 
 #include "State.h"
 
+#include "gse/type/String.h"
+#include "gse/type/Int.h"
+
 namespace game {
 
 Slot::Slot( const State* state )
@@ -143,5 +146,30 @@ void Slot::Unserialize( types::Buffer buf ) {
 	}
 	m_linked_gsid = buf.ReadString();
 }
+
+WRAPIMPL_BEGIN( Slot, CLASS_PLAYER )
+	ASSERT_NOLOG( m_slot_state == SS_PLAYER, "only player slots can be wrapped for now" );
+	const auto* player = m_player_data.player;
+	WRAPIMPL_PROPS {
+		{
+			"id",
+			VALUE( gse::type::Int, m_player_data.cid )
+		},
+		{
+			"type",
+			VALUE( gse::type::String, "human" )
+		},
+		{
+			"name",
+			VALUE( gse::type::String, player->GetPlayerName() )
+		},
+		{
+			"faction",
+			player->GetFaction().Wrap()
+		},
+	};
+WRAPIMPL_END_PTR( Slot )
+
+UNWRAPIMPL_PTR( Slot )
 
 }

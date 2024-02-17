@@ -83,40 +83,42 @@ void Tile::Unserialize( Buffer buf ) {
 }
 
 WRAPIMPL_BEGIN( Tile, CLASS_TILE )
-	{
-		"x",
-		VALUE( gse::type::Int, coord.x )
-	},
-	{
-		"y",
-		VALUE( gse::type::Int, coord.y )
-	},
-	{
-		"is_water",
-		VALUE( gse::type::Bool, is_water_tile )
-	},
-	{
-		"is_land",
-		VALUE( gse::type::Bool, !is_water_tile )
-	},
-	GETN( W ),
-	GETN( NW ),
-	GETN( N ),
-	GETN( NE ),
-	GETN( E ),
-	GETN( SE ),
-	GETN( S ),
-	GETN( SW ),
-	{
-		"get_units",
-		NATIVE_CALL( this ) {
-			gse::type::Object::properties_t result = {};
-			for ( auto& it : units ) {
-				result.insert_or_assign( std::to_string( it.second->m_id ), it.second->Wrap() );
-			}
-			return VALUE( gse::type::Object, result );
-		} )
-	}
+	WRAPIMPL_PROPS {
+		{
+			"x",
+			VALUE( gse::type::Int, coord.x )
+		},
+		{
+			"y",
+			VALUE( gse::type::Int, coord.y )
+		},
+		{
+			"is_water",
+			VALUE( gse::type::Bool, is_water_tile )
+		},
+		{
+			"is_land",
+			VALUE( gse::type::Bool, !is_water_tile )
+		},
+		GETN( W ),
+		GETN( NW ),
+		GETN( N ),
+		GETN( NE ),
+		GETN( E ),
+		GETN( SE ),
+		GETN( S ),
+		GETN( SW ),
+		{
+			"get_units",
+			NATIVE_CALL( this ) {
+				gse::type::Object::properties_t result = {};
+				for ( auto& it : units ) {
+					result.insert_or_assign( std::to_string( it.second->m_id ), it.second->Wrap() );
+				}
+				return VALUE( gse::type::Object, result );
+			} )
+		}
+	};
 WRAPIMPL_END_PTR( Tile )
 
 UNWRAPIMPL_PTR( Tile )

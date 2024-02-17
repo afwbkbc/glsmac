@@ -5,6 +5,8 @@
 #include "game/Player.h"
 #include "network/Network.h"
 
+#include "gse/Value.h"
+
 namespace game {
 
 class State;
@@ -50,6 +52,8 @@ CLASS( Slot, types::Serializable )
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;
 
+	WRAPDEFS_PTR( Slot );
+	
 private:
 
 	const State* m_state;

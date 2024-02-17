@@ -44,30 +44,32 @@ Unit* Unit::Unserialize( types::Buffer& buf ) {
 }
 
 WRAPIMPL_BEGIN( Unit, CLASS_UNIT )
-	{
-		"id",
-		VALUE( gse::type::Int, m_id )
-	},
-	{
-		"x",
-		VALUE( gse::type::Int, m_pos_x )
-	},
-	{
-		"y",
-		VALUE( gse::type::Int, m_pos_y )
-	},
-	{
-		"get_def",
-		NATIVE_CALL( this ) {
-			return m_def->Wrap();
-		})
-	},
-	{
-		"get_tile",
-		NATIVE_CALL( this ) {
-			return m_tile->Wrap();
-		})
-	}
+	WRAPIMPL_PROPS {
+		{
+			"id",
+			VALUE( gse::type::Int, m_id )
+		},
+		{
+			"x",
+			VALUE( gse::type::Int, m_pos_x )
+		},
+		{
+			"y",
+			VALUE( gse::type::Int, m_pos_y )
+		},
+		{
+			"get_def",
+			NATIVE_CALL( this ) {
+				return m_def->Wrap();
+			})
+		},
+		{
+			"get_tile",
+			NATIVE_CALL( this ) {
+				return m_tile->Wrap();
+			})
+		}
+	};
 WRAPIMPL_END_PTR( Unit )
 
 UNWRAPIMPL_PTR( Unit )

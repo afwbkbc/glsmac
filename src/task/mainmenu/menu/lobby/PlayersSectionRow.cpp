@@ -67,8 +67,14 @@ void PlayersSectionRow::Create() {
 		m_elements.faction->SetWidth( 140 );
 		m_elements.faction->On(
 			UIEvent::EV_CHANGE, EH( this, player, rules ) {
-				ASSERT( rules.m_factions.find( *data->value.change.id_str ) != rules.m_factions.end(), "faction not found: " + *data->value.change.id_str );
-				player->SetFaction( rules.m_factions.at( *data->value.change.id_str ) );
+				const auto& faction_id = *data->value.change.id_str;
+				if ( faction_id == ::game::Player::RANDOM_FACTION.m_id ) {
+					player->SetFaction( ::game::Player::RANDOM_FACTION );
+				}
+				else {
+					ASSERT( rules.m_factions.find( faction_id ) != rules.m_factions.end(), "faction not found: " + faction_id );
+					player->SetFaction( rules.m_factions.at( faction_id ) );
+				}
 				m_parent->GetLobby()->UpdateSlot( m_slot_num, m_slot );
 				return true;
 			}

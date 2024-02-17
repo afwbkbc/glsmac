@@ -36,7 +36,14 @@ void Client::ProcessEvent( const network::Event& event ) {
 						}
 						case Packet::PT_PLAYERS: {
 							Log( "Got players list from server" );
-							m_slot = packet.data.num;
+							if ( packet.data.num ) {
+								// initial players list
+								m_slot = packet.data.num;
+							}
+							else {
+								// players list update (i.e. after resolving random players )
+								m_state->m_slots.Clear();
+							}
 							m_state->m_slots.Unserialize( packet.data.str );
 							for ( auto i = 0 ; i < m_state->m_slots.GetCount() ; i++ ) {
 								const auto& slot = m_state->m_slots.GetSlot( i );

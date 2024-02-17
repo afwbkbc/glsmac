@@ -17,6 +17,7 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 	, m_state( mainmenu->m_state ) {
 	ASSERT( connection, "connection is null" );
 
+	m_state->InitBindings();
 	if ( m_state->IsMaster() ) {
 		m_state->Configure();
 	} // slave will receive config from master

@@ -1,9 +1,6 @@
 #game.on.configure(() => {
 
-    #print('CONFIGURE');
-
     const factions = #include('factions');
-    #print(#to_string(factions));
     let i = 0;
     let sz = #size(factions);
     while (i < sz) {
@@ -53,6 +50,11 @@
         }
         y++;
     }
+});
+
+#game.on.turn(() => {
+    #print('NEW TURN');
+    #print('PLAYERS: ' + #to_string(#game.players.get_all()));
 });
 
 #game.on.spawn_unit((unit) => {

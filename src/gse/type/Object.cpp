@@ -30,12 +30,20 @@ static const std::unordered_map< Object::object_class_t, std::string > s_object_
 		"#tile"
 	},
 	{
-		Object::CLASS_UNIT,
-		"#unit"
+		Object::CLASS_PLAYER,
+		"#player"
+	},
+	{
+		Object::CLASS_FACTION,
+		"#faction"
 	},
 	{
 		Object::CLASS_UNITDEF,
 		"#unitdef"
+	},
+	{
+		Object::CLASS_UNIT,
+		"#unit"
 	},
 };
 const std::string& Object::GetClassString( const object_class_t object_class ) {

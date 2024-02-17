@@ -112,22 +112,24 @@ const std::string Color::ToString() const {
 }
 
 WRAPIMPL_BEGIN( Color, CLASS_COLOR )
-			{
-				"r",
-				VALUE( gse::type::Float, value.red )
-			},
-			{
-				"g",
-				VALUE( gse::type::Float, value.green )
-			},
-			{
-				"b",
-				VALUE( gse::type::Float, value.blue )
-			},
-			{
-				"a",
-				VALUE( gse::type::Float, value.alpha )
-			},
+	WRAPIMPL_PROPS {
+		{
+			"r",
+			VALUE( gse::type::Float, value.red )
+		},
+		{
+			"g",
+			VALUE( gse::type::Float, value.green )
+		},
+		{
+			"b",
+			VALUE( gse::type::Float, value.blue )
+		},
+		{
+			"a",
+			VALUE( gse::type::Float, value.alpha )
+		},
+	};
 WRAPIMPL_END_NOPTR( Color )
 
 UNWRAPIMPL_NOPTR_BEGIN( Color )
