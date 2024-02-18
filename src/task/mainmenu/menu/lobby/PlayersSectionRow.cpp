@@ -43,13 +43,17 @@ void PlayersSectionRow::Create() {
 
 		const auto& faction = player->GetFaction();
 
+		const auto faction_color = faction.m_id == ::game::Player::RANDOM_FACTION.m_id
+			? types::Color( 1.0f, 1.0f, 1.0f )
+			: faction.m_colors.text;
+
 		if ( is_it_ready ) {
 			NEW( m_elements.ready, Surface );
 			m_elements.ready->SetWidth( 24 );
 			m_elements.ready->SetHeight( 16 );
 			m_elements.ready->SetLeft( 8 );
 			m_elements.ready->SetTop( 4 );
-			m_elements.ready->SetTexture( g_engine->GetTextureLoader()->GetColorTexture( faction.m_color ) );
+			m_elements.ready->SetTexture( g_engine->GetTextureLoader()->GetColorTexture( faction_color ) );
 			m_elements.ready->SetStretchTexture( true );
 			AddChild( m_elements.ready );
 		}
@@ -62,7 +66,7 @@ void PlayersSectionRow::Create() {
 		else {
 			m_elements.faction->SetValue( faction.m_name );
 		}
-		m_elements.faction->SetTextColor( faction.m_color );
+		m_elements.faction->SetTextColor( faction_color );
 		m_elements.faction->SetLeft( 218 );
 		m_elements.faction->SetWidth( 140 );
 		m_elements.faction->On(
@@ -86,7 +90,7 @@ void PlayersSectionRow::Create() {
 			m_elements.difficulty_level->SetChoices( m_parent->GetDifficultyLevelChoices() );
 		}
 		m_elements.difficulty_level->SetValue( player->GetDifficultyLevel().m_name );
-		m_elements.difficulty_level->SetTextColor( faction.m_color );
+		m_elements.difficulty_level->SetTextColor( faction_color );
 		m_elements.difficulty_level->SetLeft( 360 );
 		m_elements.difficulty_level->SetWidth( 118 );
 		m_elements.difficulty_level->On(
@@ -135,7 +139,7 @@ void PlayersSectionRow::Create() {
 			);
 		}
 		m_elements.actions->SetValue( player->GetPlayerName() );
-		m_elements.actions->SetTextColor( faction.m_color );
+		m_elements.actions->SetTextColor( faction_color );
 
 	}
 	else {

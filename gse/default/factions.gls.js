@@ -3,60 +3,88 @@ return [
     // SMAC
     ['GAIANS', {
         name: 'Gaians',
-        color: #to_color(16, 228, 0)
+        files: {
+            pcx: 'Gaians.pcx'
+        }
     }],
     ['HIVE', {
         name: 'Hive',
-        color: #to_color(0, 97, 235)
+        files: {
+            pcx: 'hive.pcx'
+        }
     }],
     ['UNIVERSITY', {
         name: 'University',
-        color: #to_color(216, 224, 235)
+        files: {
+            pcx: 'univ.pcx'
+        }
     }],
     ['MORGANITES', {
         name: 'Morganites',
-        color: #to_color(255, 255, 0)
+        files: {
+            pcx: 'morgan.pcx'
+        }
     }],
     ['SPARTANS', {
         name: 'Spartans',
-        color: #to_color(137, 166, 166)
+        files: {
+            pcx: 'spartans.pcx'
+        }
     }],
     ['BELIEVERS', {
         name: 'Believers',
-        color: #to_color(224, 156, 28)
+        files: {
+            pcx: 'believe.pcx'
+        }
     }],
     ['PEACEKEEPERS', {
         name: 'Peacekeepers',
-        color: #to_color(164, 176, 232)
+        files: {
+            pcx: 'peace.pcx'
+        }
     }],
 
     // SMACX
     ['CONSCIOUSNESS', {
         name: 'Consciousness',
-        color: #to_color(44, 128, 104)
+        files: {
+            pcx: 'cyborg.pcx'
+        }
     }],
     ['PIRATES', {
         name: 'Pirates',
-        color: #to_color(0, 255, 255)
+        files: {
+            pcx: 'pirates.pcx'
+        }
     }],
     ['DRONES', {
         name: 'Drones',
-        color: #to_color(173, 196, 192)
+        files: {
+            pcx: 'drone.pcx'
+        }
     }],
     ['ANGELS', {
         name: 'Angels',
-        color: #to_color(103, 91, 181)
+        files: {
+            pcx: 'angels.pcx'
+        }
     }],
     ['PLANETCULT', {
         name: 'Planet Cult',
-        color: #to_color(232, 84, 84)
+        files: {
+            pcx: 'fungboy.pcx'
+        }
     }],
     ['CARETAKERS', {
         name: 'Caretakers',
-        color: #to_color(116, 156, 56)
+        files: {
+            pcx: 'caretake.pcx'
+        }
     }],
     ['USURPERS', {
         name: 'Usurpers',
-        color: #to_color(212, 208, 116)
+        files: {
+            pcx: 'usurper.pcx'
+        }
     }],
 ];

@@ -14,16 +14,23 @@ namespace rules {
 CLASS( Faction, types::Serializable )
 
 	Faction();
-	Faction( const std::string& id, const std::string& name, const types::Color& color );
+	Faction( const std::string& id, const std::string& name );
 
 	std::string m_id = "";
 	std::string m_name = "";
-	types::Color m_color = {};
+
+	struct {
+		types::Color text = {};
+		types::Color border = {};
+	} m_colors = {};
+
+	void ImportPCX( const std::string& pcx_file );
 
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;
 
 	WRAPDEFS_PTR( Faction )
+
 };
 
 }

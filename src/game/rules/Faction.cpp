@@ -2,6 +2,8 @@
 
 #include "gse/type/String.h"
 
+#include "engine/Engine.h"
+
 namespace game {
 namespace rules {
 
@@ -9,11 +11,16 @@ Faction::Faction() {
 	//
 }
 
-Faction::Faction( const std::string& id, const std::string& name, const types::Color& color )
+Faction::Faction( const std::string& id, const std::string& name )
 	: m_id( id )
-	, m_name( name )
-	, m_color( color ) {
+	, m_name( name ) {
 	//
+}
+
+void Faction::ImportPCX( const std::string& pcx_file ) {
+	const auto* texture = g_engine->GetTextureLoader()->LoadTexture( pcx_file );
+	m_colors.text = types::Color::FromRGBA( texture->GetPixel( 5, 755 ) );
+	m_colors.border = types::Color::FromRGBA( texture->GetPixel( 162, 750 ) );
 }
 
 const types::Buffer Faction::Serialize() const {
@@ -21,7 +28,8 @@ const types::Buffer Faction::Serialize() const {
 
 	buf.WriteString( m_id );
 	buf.WriteString( m_name );
-	buf.WriteColor( m_color );
+	buf.WriteColor( m_colors.text );
+	buf.WriteColor( m_colors.border );
 
 	return buf;
 }
@@ -30,11 +38,22 @@ void Faction::Unserialize( types::Buffer buf ) {
 
 	m_id = buf.ReadString();
 	m_name = buf.ReadString();
-	m_color = buf.ReadColor();
+	m_colors.text = buf.ReadColor();
+	m_colors.border = buf.ReadColor();
 
 }
 
 WRAPIMPL_BEGIN( Faction, CLASS_FACTION )
+	gse::type::Object::properties_t color_obj = {
+		{
+			"text",
+			m_colors.text.Wrap()
+		},
+		{
+			"border",
+			m_colors.border.Wrap()
+		}
+	};
 	WRAPIMPL_PROPS {
 		{
 			"id",
@@ -45,8 +64,8 @@ WRAPIMPL_BEGIN( Faction, CLASS_FACTION )
 			VALUE( gse::type::String, m_name )
 		},
 		{
-			"color",
-			m_color.Wrap()
+			"colors",
+			VALUE( gse::type::Object, color_obj )
 		},
 	};
 WRAPIMPL_END_PTR( Faction )

@@ -5,7 +5,10 @@ using namespace types;
 namespace game {
 
 // builtin
-const rules::Faction Player::RANDOM_FACTION( "RANDOM", "Random", types::Color( 1.0f, 1.0f, 1.0f ) );
+const rules::Faction Player::RANDOM_FACTION{
+	"RANDOM",
+	"Random"
+};
 
 Player::Player( const rules::Rules& rules, Buffer buf )
 	: m_rules( rules ) {

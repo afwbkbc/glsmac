@@ -66,7 +66,7 @@ namespace callable {
 #define N_GETPROP_VAL( _obj, _key, _type ) \
     obj_it = _obj.find( _key ); \
     if ( obj_it == _obj.end() ) { \
-        throw gse::Exception( gse::EC.INVALID_CALL, (std::string)"Property " + _key + " is expected but not found", ctx, call_si ); \
+        throw gse::Exception( gse::EC.INVALID_CALL, (std::string)"Property '" + _key + "' is expected but not found", ctx, call_si ); \
     } \
     getprop_val = obj_it->second;
 #define N_GETPROP_ARG( _obj, _key, _type ) \

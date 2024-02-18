@@ -881,7 +881,7 @@ void Game::DefineSlot( const size_t slot_index, const types::Color& color ) {
 				},
 				{ // greyed out
 					types::Color::RGB( 125, 0, 0 ),
-					types::Color( c.red / 2, c.green / 2, c.blue / 2 ).GetRGBA()
+					types::Color( ( 0.5f + c.red / 2 ) / 2, ( 0.5f + c.green / 2 ) / 2, ( 0.5f + c.blue / 2 ) / 2 ).GetRGBA()
 				}
 			}
 		);

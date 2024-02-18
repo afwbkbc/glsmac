@@ -18,14 +18,16 @@ BINDING_IMPL( factions ) {
 			NATIVE_CALL( this, &factions ) {
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( id, 0, String );
-				N_GETVALUE( faction_def, 1, Object );
-				N_GETPROP( name, faction_def, "name", String );
-				N_GETPROP_UNWRAP( color, faction_def, "color", types::Color );
 				if ( factions.find( id ) != factions.end() ) {
 					ERROR( gse::EC.GAME_ERROR, "Faction '" + id + "' already exists" );
 				}
-				const auto* faction = new rules::Faction( id, name, color );
-				factions.insert({ id, rules::Faction{ id, name, color } });
+				N_GETVALUE( faction_def, 1, Object );
+				N_GETPROP( name, faction_def, "name", String );
+				N_GETPROP( files, faction_def, "files", Object );
+				N_GETPROP( pcx_file, files, "pcx", String );
+				rules::Faction faction = { id, name };
+				faction.ImportPCX( pcx_file );
+				factions.insert({ id, faction });
 				return VALUE( gse::type::Undefined );
 			})
 		},

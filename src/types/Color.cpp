@@ -79,10 +79,10 @@ const Color::rgba_t Color::GetRGBA() const {
 
 Color Color::FromRGBA( const rgba_t rgba ) {
 	return {
-		(channel_t)( ( rgba ) & 0xff ),
-		(channel_t)( ( rgba >> 8 ) & 0xff ),
-		(channel_t)( ( rgba >> 16 ) & 0xff ),
-		(channel_t)( ( rgba >> 24 ) & 0xff )
+		(channel_t)( ( rgba ) & 0xff ) / 256,
+		(channel_t)( ( rgba >> 8 ) & 0xff ) / 256,
+		(channel_t)( ( rgba >> 16 ) & 0xff ) / 256,
+		(channel_t)( ( rgba >> 24 ) & 0xff ) / 256
 	};
 }
 

@@ -7,8 +7,6 @@
 #include "gse/GlobalContext.h"
 #include "gse/type/Callable.h"
 #include "game/Player.h"
-#include "game/rules/Faction.h"
-#include "game/rules/DifficultyLevel.h"
 
 #include "Binding.h"
 

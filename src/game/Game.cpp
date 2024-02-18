@@ -279,7 +279,7 @@ void Game::Iterate() {
 					const auto* player = slot.GetPlayer();
 					ASSERT( player, "slot player not set" );
 					const auto& faction = player->GetFaction();
-					const auto& c = faction.m_color.value;
+					const auto& c = faction.m_colors.border.value;
 					slot_defines->push_back(
 						Event::slot_define_t{
 							slot.GetIndex(),
