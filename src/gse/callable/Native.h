@@ -87,17 +87,19 @@ namespace callable {
     N_GETPROP_ARG( _obj, _key, Object ); \
     N_CHECK_OBJECT_CLASS( arg, gse::type::Object::_class ); \
     const auto& _var = ((gse::type::Object*)arg)->value;
-#define N_GETPROP_OPTBOOL( _var, _obj, _key ) \
-    bool _var = false; \
+#define N_GETPROP_OPT( _vartype, _var, _obj, _key, _type, _default ) \
+    _vartype _var = _default; \
     obj_it = _obj.find( _key ); \
     if ( obj_it != _obj.end() ) { \
         getprop_val = obj_it->second; \
         arg = getprop_val.Get(); \
-        if ( arg->type != gse::type::Type::T_BOOL ) { \
-            throw gse::Exception( gse::EC.INVALID_CALL, (std::string)"Property '" + _key + "' is expected to be bool, found: " + arg->GetTypeString( arg->type ), ctx, call_si ); \
+        if ( arg->type != gse::type::_type::GetType() ) { \
+            throw gse::Exception( gse::EC.INVALID_CALL, (std::string)"Property '" + _key + "' is expected to be " + #_type + ", found: " + arg->GetTypeString( arg->type ), ctx, call_si ); \
         } \
-        _var = ((gse::type::Bool*)arg)->value; \
+        _var = ((gse::type::_type*)arg)->value; \
     }
+#define N_GETPROP_OPT_BOOL( _var, _obj, _key ) N_GETPROP_OPT( bool, _var, _obj, _key, Bool, false )
+#define N_GETPROP_OPT_INT( _var, _obj, _key ) N_GETPROP_OPT( int64_t, _var, _obj, _key, Int, 0 )
 
 class Native : public type::Callable {
 public:

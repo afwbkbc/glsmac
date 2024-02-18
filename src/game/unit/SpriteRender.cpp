@@ -3,7 +3,16 @@
 namespace game {
 namespace unit {
 
-SpriteRender::SpriteRender( const std::string& file, const uint32_t x, const uint32_t y, const uint32_t w, const uint32_t h, const uint32_t cx, const uint32_t cy )
+SpriteRender::SpriteRender(
+	const std::string& file,
+	const uint32_t x,
+	const uint32_t y,
+	const uint32_t w,
+	const uint32_t h,
+	const uint32_t cx,
+	const uint32_t cy,
+	const uint32_t morale_based_xshift
+)
 	: Render( RT_SPRITE )
 	, m_file( file )
 	, m_x( x )
@@ -13,7 +22,8 @@ SpriteRender::SpriteRender( const std::string& file, const uint32_t x, const uin
 	, m_cx( cx )
 	, m_cy( cy )
 	, m_cshift_x( (float)( cx - x ) / w * 2 - 1.0f )
-	, m_cshift_y( (float)( cy - y ) / h * 2 - 1.0f ) {
+	, m_cshift_y( (float)( cy - y ) / h * 2 - 1.0f )
+	, m_morale_based_xshift( morale_based_xshift ) {
 	//
 }
 
@@ -47,6 +57,7 @@ void SpriteRender::Serialize( types::Buffer& buf, const SpriteRender* render ) {
 	buf.WriteInt( render->m_h );
 	buf.WriteInt( render->m_cx );
 	buf.WriteInt( render->m_cy );
+	buf.WriteInt( render->m_morale_based_xshift );
 }
 
 SpriteRender* SpriteRender::Unserialize( types::Buffer& buf ) {
@@ -57,7 +68,8 @@ SpriteRender* SpriteRender::Unserialize( types::Buffer& buf ) {
 	const auto h = buf.ReadInt();
 	const auto cx = buf.ReadInt();
 	const auto cy = buf.ReadInt();
-	return new SpriteRender( file, x, y, w, h, cx, cy );
+	const auto morale_based_xshift = buf.ReadInt();
+	return new SpriteRender( file, x, y, w, h, cx, cy, morale_based_xshift );
 }
 
 }

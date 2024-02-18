@@ -31,7 +31,7 @@ BINDING_IMPL( factions ) {
 				N_GETPROP( pcx_file, files, "pcx", String );
 				faction.ImportPCX( pcx_file );
 
-				N_GETPROP_OPTBOOL( is_progenitor, faction_def, "is_progenitor")
+				N_GETPROP_OPT_BOOL( is_progenitor, faction_def, "is_progenitor")
 				if ( is_progenitor ) {
 					faction.m_flags |= rules::Faction::FF_PROGENITOR;
 				}

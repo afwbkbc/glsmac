@@ -925,26 +925,61 @@ void Game::DefineUnit( const ::game::unit::Def* unitdef ) {
 					const auto* render = (::game::unit::SpriteRender*)def->m_render;
 
 					unitdef_state.static_.render.is_sprite = true;
-					unitdef_state.static_.render.sprite.instanced_sprite = &GetInstancedSprite(
-						"Unit_" + def->m_name, GetSourceTexture( render->m_file ), {
-							render->m_x,
-							render->m_y,
-						},
-						{
-							render->m_w,
-							render->m_h,
-						},
-						{
-							render->m_cx,
-							render->m_cy,
-						},
-						{
-							::game::map::s_consts.tile.scale.x,
-							::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
-						},
-						0.5f
-					);
 
+					const auto name = "Unit_" + def->m_name;
+					auto* texture = GetSourceTexture( render->m_file );
+					const ::game::map::Consts::pcx_texture_coordinates_t& src_wh = {
+						render->m_w,
+						render->m_h,
+					};
+					const Vec2< float >& dst_wh = {
+						::game::map::s_consts.tile.scale.x,
+						::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
+					};
+					const auto zindex = 0.5f;
+
+					unitdef_state.static_.render.morale_based_xshift = render->m_morale_based_xshift;
+					if ( unitdef_state.static_.render.morale_based_xshift ) {
+						NEW( unitdef_state.static_.render.morale_based_sprites, morale_based_sprite_states_t );
+						for ( ::game::unit::Unit::morale_t morale = ::game::unit::Unit::MORALE_MIN ; morale <= ::game::unit::Unit::MORALE_MAX ; morale++ ) {
+							const uint32_t xshift = unitdef_state.static_.render.morale_based_xshift * ( morale - ::game::unit::Unit::MORALE_MIN );
+							unitdef_state.static_.render.morale_based_sprites->insert(
+								{
+									morale,
+									{
+										&GetInstancedSprite(
+											name + "_" + std::to_string( morale ), texture, {
+												render->m_x + xshift,
+												render->m_y,
+											},
+											src_wh,
+											{
+												render->m_cx + xshift,
+												render->m_cy,
+											},
+											dst_wh,
+											zindex
+										),
+									}
+								}
+							);
+						}
+					}
+					else {
+						unitdef_state.static_.render.sprite.instanced_sprite = &GetInstancedSprite(
+							name, texture, {
+								render->m_x,
+								render->m_y,
+							},
+							src_wh,
+							{
+								render->m_cx,
+								render->m_cy,
+							},
+							dst_wh,
+							zindex
+						);
+					}
 					break;
 				}
 				default:
@@ -994,8 +1029,11 @@ void Game::SpawnUnit(
 	unit_state.health = health;
 
 	// add render
-	unit_state.render.instance_id = unitdef_state.static_.render.sprite.next_instance_id++;
-	unitdef_state.static_.render.sprite.instanced_sprite->actor->SetInstance(
+	auto& sprite = unitdef_state.static_.render.morale_based_xshift
+		? unitdef_state.static_.render.morale_based_sprites->at( unit_state.morale )
+		: unitdef_state.static_.render.sprite;
+	unit_state.render.instance_id = sprite.next_instance_id++;
+	sprite.instanced_sprite->actor->SetInstance(
 		unit_state.render.instance_id, {
 			x,
 			y,
@@ -1047,7 +1085,10 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	ASSERT( unitdef_state->m_type == ::game::unit::Def::DT_STATIC, "only static unitdefs are supported for now" );
 	ASSERT( unitdef_state->static_.render.is_sprite, "only sprite unitdefs are supported for now" );
 
-	unitdef_state->static_.render.sprite.instanced_sprite->actor->RemoveInstance( unit_state.render.instance_id );
+	auto& sprite = unitdef_state->static_.render.morale_based_xshift
+		? unitdef_state->static_.render.morale_based_sprites->at( unit_state.morale )
+		: unitdef_state->static_.render.sprite;
+	sprite.instanced_sprite->actor->RemoveInstance( unit_state.render.instance_id );
 	unit_state.render.badge_def->instanced_sprite->actor->RemoveInstance( unit_state.render.badge_instance_id );
 	unit_state.render.badge_healthbar_def->instanced_sprite->actor->RemoveInstance( unit_state.render.badge_healthbar_instance_id );
 
@@ -1720,6 +1761,15 @@ void Game::Deinitialize() {
 		DELETE( it.second );
 	}
 	m_textures.repainted_source.clear();
+
+	for ( auto& it : m_unitdef_states ) {
+		if ( it.second.m_type == ::game::unit::Def::DT_STATIC ) {
+			if ( it.second.static_.render.morale_based_xshift ) {
+				DELETE( it.second.static_.render.morale_based_sprites );
+			}
+		}
+	}
+	m_unitdef_states.clear();
 
 	for ( auto& it : m_actors_map ) {
 		m_world_scene->RemoveActor( it.second );

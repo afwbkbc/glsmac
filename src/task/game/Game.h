@@ -386,17 +386,23 @@ private:
 #endif
 	} m_mt_ids = {};
 
+	struct sprite_state_t {
+		Game::instanced_sprite_t* instanced_sprite = nullptr;
+		size_t next_instance_id = 1;
+	};
+
+	typedef std::unordered_map< ::game::unit::Unit::morale_t, sprite_state_t > morale_based_sprite_states_t;
+
 	struct unitdef_state_t {
 		::game::unit::Def::def_type_t m_type;
 		union {
 			struct {
 				struct {
 					bool is_sprite;
+					uint32_t morale_based_xshift;
 					union {
-						struct {
-							Game::instanced_sprite_t* instanced_sprite = nullptr;
-							size_t next_instance_id = 1;
-						} sprite;
+						sprite_state_t sprite;
+						morale_based_sprite_states_t* morale_based_sprites;
 					};
 				} render;
 			} static_;
@@ -411,23 +417,15 @@ private:
 	const badge_type_t BT_DEFAULT = 1 << 1;
 	const badge_type_t BT_PROGENITOR = 0 << 1;
 	typedef std::unordered_map< badge_type_t, unitbadge_spritemap_t > unitbadge_spritemaps_t;
-	struct unitbadge_subdef_t {
-		Game::instanced_sprite_t* instanced_sprite = nullptr;
-		size_t next_instance_id = 1;
-	};
 	struct unitbadge_def_t {
-		unitbadge_subdef_t normal;
-		unitbadge_subdef_t greyedout;
+		sprite_state_t normal;
+		sprite_state_t greyedout;
 	};
 	typedef std::unordered_map< ::game::unit::Unit::morale_t, unitbadge_def_t > unitbadge_defs_t;
 	unitbadge_spritemaps_t m_unitbadge_sprites = {};
 
-	struct unitbadge_healthbar_def_t {
-		Game::instanced_sprite_t* instanced_sprite = nullptr;
-		size_t next_instance_id = 1;
-	};
 	std::vector< types::Texture* > m_healthbar_textures = {};
-	std::vector< unitbadge_healthbar_def_t > m_healthbar_sprites = {};
+	std::vector< sprite_state_t > m_healthbar_sprites = {};
 
 	struct slot_state_t {
 		types::Color color = {};
@@ -440,9 +438,9 @@ private:
 		slot_state_t* slot = nullptr;
 		struct {
 			size_t instance_id = 0;
-			unitbadge_subdef_t* badge_def = nullptr;
+			sprite_state_t* badge_def = nullptr;
 			size_t badge_instance_id = 0;
-			unitbadge_healthbar_def_t* badge_healthbar_def = nullptr;
+			sprite_state_t* badge_healthbar_def = nullptr;
 			size_t badge_healthbar_instance_id = 0;
 		} render;
 		bool is_active = false;

@@ -57,7 +57,11 @@ let random_health = () => {
                         if (#game.random.get_int(0, 2) != 1) {
                             unit = #game.units.spawn('MindWorms', owner, tile, random_morale(), random_health());
                         } else {
-                            unit = #game.units.spawn('SporeLauncher', owner, tile, random_morale(), random_health());
+                            if (#game.random.get_int(0, 1) == 0) {
+                                unit = #game.units.spawn('FungalTower', owner, tile, random_morale(), random_health());
+                            } else {
+                                unit = #game.units.spawn('SporeLauncher', owner, tile, random_morale(), random_health());
+                            }
                         }
                     } else {
                         if (#game.random.get_int(0, 1) == 1) {

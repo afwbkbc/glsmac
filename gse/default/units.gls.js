@@ -1,36 +1,20 @@
+let native_lifeform = (name, base_y) => {
+    return [name, {
+        type: 'static',
+        render: {
+            type: 'sprite',
+            file: 'Units.pcx',
+            x: 2, y: base_y,
+            w: 100, h: 75,
+            cx: 53, cy: base_y + 51,
+            morale_based_xshift: 102
+        },
+    }];
+};
+
 return [
-
-    ['MindWorms', {
-        type: 'static',
-        render: {
-            type: 'sprite',
-            file: 'Units.pcx',
-            x: 206, y: 233,
-            w: 100, h: 75,
-            cx: 257, cy: 284,
-        },
-    }],
-
-    ['SeaLurk', {
-        type: 'static',
-        render: {
-            type: 'sprite',
-            file: 'Units.pcx',
-            x: 104, y: 310,
-            w: 100, h: 75,
-            cx: 155, cy: 353,
-        },
-    }],
-
-    ['SporeLauncher', {
-        type: 'static',
-        render: {
-            type: 'sprite',
-            file: 'Units.pcx',
-            x: 308, y: 387,
-            w: 100, h: 75,
-            cx: 359, cy: 438,
-        }
-    }]
-
+    native_lifeform('FungalTower', 79),
+    native_lifeform('MindWorms', 233),
+    native_lifeform('SeaLurk', 310),
+    native_lifeform('SporeLauncher', 387),
 ];

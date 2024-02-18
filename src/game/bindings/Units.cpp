@@ -52,9 +52,10 @@ BINDING_IMPL( units ) {
 						N_GETPROP( sprite_h, render_def, "h", Int );
 						N_GETPROP( sprite_cx, render_def, "cx", Int );
 						N_GETPROP( sprite_cy, render_def, "cy", Int );
+						N_GETPROP_OPT_INT( sprite_morale_based_xshift, render_def, "morale_based_xshift" );
 						const auto* def = new unit::StaticDef(
 							name,
-							new unit::SpriteRender( sprite_file, sprite_x, sprite_y, sprite_w, sprite_h, sprite_cx, sprite_cy )
+							new unit::SpriteRender( sprite_file, sprite_x, sprite_y, sprite_w, sprite_h, sprite_cx, sprite_cy, sprite_morale_based_xshift )
 						);
 						return GAME->AddGameEvent( new event::DefineUnit( def ), ctx, call_si );
 					}
