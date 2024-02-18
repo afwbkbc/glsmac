@@ -7,19 +7,19 @@
 #include "gse/GlobalContext.h"
 #include "gse/type/Callable.h"
 #include "game/Player.h"
-#include "game/rules/Faction.h"
-#include "game/rules/DifficultyLevel.h"
 
 #include "Binding.h"
 
 namespace game {
 class Game;
 
+class State;
+
 namespace bindings {
 
 class Bindings : public gse::Bindings {
 public:
-	Bindings( Game* game );
+	Bindings( State* state );
 	~Bindings();
 
 	void AddToContext( gse::Context* ctx ) override;
@@ -27,15 +27,17 @@ public:
 	void RunMain();
 
 	enum callback_slot_t {
+		CS_ON_CONFIGURE,
 		CS_ON_START,
+		CS_ON_TURN,
 		CS_ON_SPAWN_UNIT,
 		CS_ON_DESPAWN_UNIT,
 	};
 	typedef std::vector< gse::Value > callback_arguments_t;
 	void Call( const callback_slot_t slot, const callback_arguments_t& arguments = {} );
 
-	// for bindings
-	Game* GetGame() const;
+	State* GetState() const;
+	Game* GetGame( gse::Context* ctx, const gse::si_t& call_si ) const;
 	void SetCallback( const callback_slot_t slot, const gse::Value& callback, gse::Context* context, const gse::si_t& si );
 
 private:
@@ -47,12 +49,7 @@ private:
 
 	std::unordered_map< callback_slot_t, gse::Value > m_callbacks = {};
 
-	Game* m_game;
-
-	const gse::Value GetPlayer( const Player* player ) const;
-	const gse::Value GetFaction( const rules::Faction* faction ) const;
-	const gse::Value GetDifficulty( const rules::DifficultyLevel* difficulty ) const;
-	//const gse::Value GetTurn( const Turn* turn ) const;
+	State* m_state = nullptr;
 
 	const std::string m_entry_script = util::FS::GeneratePath(
 		{

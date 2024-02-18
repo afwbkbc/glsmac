@@ -134,6 +134,9 @@ void BottomBar::Create() {
 	}
 	AddChild( m_sections.mini_map );
 
+	NEW( m_sections.turn_complete_button, TurnCompleteButton );
+	m_sections.mini_map->AddChild( m_sections.turn_complete_button );
+
 	// side menus
 	auto* ui = g_engine->GetUI();
 
@@ -201,8 +204,9 @@ void BottomBar::Destroy() {
 	RemoveChild( m_sections.unit_preview );
 	RemoveChild( m_sections.tile_preview );
 	RemoveChild( m_sections.middle_area );
-	RemoveChild( m_sections.mini_map );
 	RemoveChild( m_sections.units_list );
+	m_sections.mini_map->RemoveChild( m_sections.turn_complete_button );
+	RemoveChild( m_sections.mini_map );
 
 	auto* ui = g_engine->GetUI();
 	ui->RemoveObject( m_side_menus.left );
@@ -284,6 +288,10 @@ void BottomBar::AddMessage( const std::string& text ) {
 
 void BottomBar::UpdateMapFileName() {
 	m_sections.middle_area->UpdateMapFileName();
+}
+
+void BottomBar::SetTurnCompleteStatus( const bool is_turn_complete ) {
+	m_sections.turn_complete_button->SetTurnCompleteStatus( is_turn_complete );
 }
 
 }

@@ -19,6 +19,7 @@
 #include "TilePreview.h"
 #include "MiddleArea.h"
 #include "UnitsList.h"
+#include "TurnCompleteButton.h"
 #include "MiniMap.h"
 
 // side menus
@@ -55,6 +56,8 @@ CLASS( BottomBar, UI )
 	void AddMessage( const std::string& text );
 	void UpdateMapFileName();
 
+	void SetTurnCompleteStatus( const bool is_turn_complete );
+
 private:
 	struct {
 		Surface* left = nullptr;
@@ -77,6 +80,7 @@ private:
 		TilePreview* tile_preview = nullptr;
 		MiddleArea* middle_area = nullptr;
 		UnitsList* units_list = nullptr;
+		TurnCompleteButton* turn_complete_button = nullptr;
 		MiniMap* mini_map = nullptr;
 	} m_sections = {};
 

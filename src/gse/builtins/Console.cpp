@@ -4,7 +4,6 @@
 
 #include "gse/callable/Native.h"
 
-#include "gse/type/Object.h"
 #include "gse/type/Undefined.h"
 
 #include "logger/Stdout.h"

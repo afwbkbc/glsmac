@@ -3,11 +3,31 @@
 namespace game {
 
 State::State() {
-	//
+
 }
 
 State::~State() {
 	Reset();
+	if ( m_bindings ) {
+		delete m_bindings;
+	}
+}
+
+void State::SetGame( Game* game ) {
+	ASSERT( !m_game, "game already set" );
+	m_game = game;
+	m_on_gse_error = [ this ]( gse::Exception& e ) -> void {
+		m_game->OnGSEError( e );
+	};
+}
+
+void State::UnsetGame() {
+	m_game = nullptr;
+	m_on_gse_error = nullptr;
+}
+
+Game* State::GetGame() const {
+	return m_game;
 }
 
 void State::Iterate() {
@@ -72,6 +92,41 @@ connection::Connection* State::GetConnection() const {
 	return m_connection;
 }
 
+void State::InitBindings() {
+	if ( !m_bindings ) {
+		Log( "Initializing bindings" );
+		m_bindings = new bindings::Bindings( this );
+		try {
+			m_bindings->RunMain();
+		}
+		catch ( gse::Exception& err ) {
+			if ( m_game ) {
+				m_game->OnGSEError( err );
+			}
+			else {
+				throw std::runtime_error( err.ToStringAndCleanup() );
+			}
+		}
+	}
+}
+
+void State::Configure() {
+	ASSERT( m_bindings, "bindings not initialized" );
+
+	Log( "Configuring state" );
+
+	// reset
+	m_settings.global.game_rules.m_factions.clear();
+	m_settings.global.game_rules.m_factions_order.clear();
+
+	// configure
+	m_bindings->Call( ::game::bindings::Bindings::CS_ON_CONFIGURE );
+
+	// check
+	ASSERT( !m_settings.global.game_rules.m_factions.empty(), "no factions were defined" );
+	ASSERT( m_settings.global.game_rules.m_factions_order.size() == m_settings.global.game_rules.m_factions.size(), "factions order size mismatch" );
+}
+
 void State::Reset() {
 	if ( m_connection ) {
 		if ( m_connection->IsConnected() ) {
@@ -90,6 +145,8 @@ void State::Reset() {
 	m_players.clear();
 	m_slots.Clear();
 	m_cid_slots.clear();
+	m_game = nullptr;
+	m_on_gse_error = nullptr;
 }
 
 void State::DetachConnection() {

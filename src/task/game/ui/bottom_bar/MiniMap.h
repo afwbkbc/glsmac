@@ -2,7 +2,6 @@
 
 #include "BBSection.h"
 
-#include "ui/object/Button.h"
 #include "ui/object/Mesh.h"
 #include "ui/object/Section.h"
 #include "ui/object/Label.h"
@@ -40,8 +39,6 @@ private:
 		const UIEventHandler* mouse_up = nullptr;
 		const UIEventHandler* mouse_move = nullptr;
 	} m_handlers;
-
-	object::Button* m_turn_complete_button = nullptr;
 
 	object::Mesh* m_map_surface = nullptr;
 	object::Mesh* m_map_selection = nullptr;

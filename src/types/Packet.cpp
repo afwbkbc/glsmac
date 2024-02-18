@@ -18,13 +18,13 @@ const Buffer Packet::Serialize() const {
 			buf.WriteString( data.vec[ 1 ] ); // player name
 			break;
 		}
-		case PT_GLOBAL_SETTINGS: {
-			buf.WriteString( data.str ); // serialized settings
-			break;
-		}
 		case PT_PLAYERS: {
 			buf.WriteInt( data.num ); // assigned slot num
 			buf.WriteString( data.str ); // serialized slots
+			break;
+		}
+		case PT_GLOBAL_SETTINGS: {
+			buf.WriteString( data.str ); // serialized settings
 			break;
 		}
 		case PT_UPDATE_SLOT: {
@@ -101,13 +101,13 @@ void Packet::Unserialize( Buffer buf ) {
 			};
 			break;
 		}
-		case PT_GLOBAL_SETTINGS: {
-			data.str = buf.ReadString(); // serialized settings
-			break;
-		}
 		case PT_PLAYERS: {
 			data.num = buf.ReadInt(); // assigned slot num
 			data.str = buf.ReadString(); // serialized slots
+			break;
+		}
+		case PT_GLOBAL_SETTINGS: {
+			data.str = buf.ReadString(); // serialized settings
 			break;
 		}
 		case PT_UPDATE_SLOT: {

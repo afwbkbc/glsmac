@@ -9,6 +9,8 @@
 
 namespace game {
 class Game;
+
+class State;
 namespace bindings {
 
 class Bindings;
@@ -26,7 +28,7 @@ protected:
 
 	const std::string m_name;
 	Bindings* m_bindings;
-	Game* m_game;
+
 };
 
 }
@@ -45,6 +47,8 @@ protected:
 
 #define BINDING_IMPL( _name ) \
     gse::Value BINDING( _name )::Get()
+
+#define GAME m_bindings->GetGame( ctx, call_si )
 
 #define ERROR( _type, _text ) throw gse::Exception( _type, _text, ctx, call_si );
 
@@ -69,6 +73,10 @@ BINDING_DEF( exit )
 BINDING_DEF( random )
 
 BINDING_DEF( on )
+
+BINDING_DEF( players )
+
+BINDING_DEF( factions )
 
 BINDING_DEF( units )
 

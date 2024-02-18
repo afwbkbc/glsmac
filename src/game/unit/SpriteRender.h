@@ -9,7 +9,16 @@ namespace unit {
 
 class SpriteRender : public Render {
 public:
-	SpriteRender( const std::string& file, const uint32_t x, const uint32_t y, const uint32_t w, const uint32_t h, const uint32_t cx, const uint32_t cy );
+	SpriteRender(
+		const std::string& file,
+		const uint32_t x,
+		const uint32_t y,
+		const uint32_t w,
+		const uint32_t h,
+		const uint32_t cx,
+		const uint32_t cy,
+		const uint32_t morale_based_xshift
+	);
 
 	const std::string m_file;
 	const uint32_t m_x;
@@ -18,6 +27,7 @@ public:
 	const uint32_t m_h;
 	const uint32_t m_cx;
 	const uint32_t m_cy;
+	const uint32_t m_morale_based_xshift;
 	const float m_cshift_x;
 	const float m_cshift_y;
 

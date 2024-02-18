@@ -131,7 +131,7 @@ void Popup::AddStyles() {
 			s->Set( Style::A_LEFT, 8 );
 			s->Set( Style::A_TOP, 36 );
 
-			s->SetTextureTC( Style::A_TEXTURE, "space_sm.pcx", Color::RGB( 100, 16, 156 ) );
+			s->SetTexture( Style::A_TEXTURE, "space_sm.pcx" );
 
 		}
 	);
@@ -159,8 +159,7 @@ void Popup::AddStyles() {
 			s->SetSound( Style::A_SOUND, "CPU please don't go.wav" );
 			s->Set( Style::A_SOUND_AUTOPLAY );
 			s->Set( Style::A_SOUND_AUTOSTOP );
-			//s->Set( Style::A_SOUND_START_DELAY, 60 );
-			s->Set( Style::A_SOUND_VOLUME, 0.5 );
+			s->Set( Style::A_SOUND_VOLUME, 0.5f );
 		}
 	);
 

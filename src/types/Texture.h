@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "types/Serializable.h"
 
@@ -13,14 +14,15 @@
 namespace types {
 
 CLASS( Texture, Serializable )
+	Texture();
 	Texture( const std::string& name, const size_t width, const size_t height );
 	virtual ~Texture();
 
-	std::string m_name;
+	std::string m_name = "";
 	size_t m_width = 0;
 	size_t m_height = 0;
 	float m_aspect_ratio = 0;
-	unsigned char m_bpp = 0;
+	unsigned char m_bpp = 4; // always RGBA format
 	unsigned char* m_bitmap = nullptr;
 	size_t m_bitmap_size = 0;
 
@@ -28,6 +30,7 @@ CLASS( Texture, Serializable )
 
 	base::ObjectLink* m_graphics_object = nullptr;
 
+	const bool IsEmpty() const;
 	void Resize( const size_t width, const size_t height );
 
 	// these methods won't update counter because it would happen too often (and is bad for performance)
@@ -107,6 +110,11 @@ CLASS( Texture, Serializable )
 	 * @param perlin - (optional) perlin generator for perlin-related flags
 	 */
 	void AddFrom( const types::Texture* source, add_flag_t flags, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x = 0, const size_t dest_y = 0, const rotate_t rotate = 0, const float alpha = 1.0f, util::Random* rng = nullptr, util::Perlin* perlin = nullptr );
+
+	void Fill( const size_t x1, const size_t y1, const size_t x2, const size_t y2, const types::Color& color );
+
+	typedef std::unordered_map< types::Color::rgba_t, types::Color::rgba_t > repaint_rules_t;
+	void RepaintFrom( const types::Texture* original, const repaint_rules_t& rules );
 
 	void Rotate();
 	void FlipV();

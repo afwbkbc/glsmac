@@ -4,6 +4,8 @@
 
 #include "gse/type/Callable.h"
 #include "gse/type/Object.h"
+#include "gse/type/Undefined.h"
+#include "gse/type/Bool.h"
 
 namespace gse {
 namespace callable {
@@ -13,7 +15,9 @@ namespace callable {
 // TODO: refactor these
 #define N_ARGS \
     const gse::type::Type* arg; \
-    gse::type::Object::properties_t::const_iterator obj_it;
+    gse::type::Object::properties_t::const_iterator obj_it; \
+    auto getprop_val = VALUE( gse::type::Undefined ); \
+    auto obj_val = VALUE( gse::type::Undefined );
 #define N_EXPECT_ARGS( _count ) \
     if ( arguments.size() != _count ) { \
         throw gse::Exception( gse::EC.INVALID_CALL, "Expected " + std::to_string( _count ) + " arguments, found " + std::to_string( arguments.size() ), ctx, call_si ); \
@@ -39,35 +43,63 @@ namespace callable {
     arg = arguments.at( _index ).Get(); \
     N_CHECKTYPE( arg, _index, _type ); \
     const auto& _var = ((gse::type::_type*)arg)->value;
-#define N_GETOBJ( _var, _index, _class ) \
+#define N_GETOBJ( _index, _class ) \
     ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
     arg = arguments.at( _index ).Get(); \
     N_CHECKTYPE( arg, _index, Object ); \
     if ( ((gse::type::Object*)arg)->object_class != _class ) { \
         throw gse::Exception( gse::EC.INVALID_CALL, "Argument " + std::to_string( _index ) + " is expected to be object of class " + gse::type::Object::GetClassString( _class ) + ", found class: " + gse::type::Object::GetClassString( ((gse::type::Object*)arg)->object_class ), ctx, call_si ); \
     } \
-    const auto& _var = arguments.at( _index );
+    obj_val = arguments.at( _index );
 #define N_UNWRAP( _var, _index, _type ) \
-    N_GETOBJ( obj, _index, _type::WRAP_CLASS ); \
-    const auto* _var = _type::Unwrap( obj );
+    N_GETOBJ( _index, _type::WRAP_CLASS ); \
+    const auto* _var = _type::Unwrap( obj_val );
+#define N_CHECK_OBJECT_CLASS( _var, _class ) \
+    if ( ((gse::type::Object*)_var)->object_class != _class ) { \
+        throw gse::Exception( gse::EC.INVALID_CALL, "Value is expected to be object of class " + gse::type::Object::GetClassString( _class ) + ", found class: " + gse::type::Object::GetClassString( ((gse::type::Object*)_var)->object_class ), ctx, call_si ); \
+    }
 #define N_GETOBJECT( _var, _index, _class ) \
     ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
     arg = arguments.at( _index ).Get(); \
     N_CHECKTYPE( arg, _index, Object ); \
-    if ( ((gse::type::Object*)arg)->object_class != gse::type::Object::_class ) { \
-        throw gse::Exception( gse::EC.INVALID_CALL, "Argument " + std::to_string( _index ) + " is expected to be object of class " + gse::type::Object::GetClassString( gse::type::Object::_class ) + ", found class: " + gse::type::Object::GetClassString( ((gse::type::Object*)arg)->object_class ), ctx, call_si ); \
-    } \
+    N_CHECK_OBJECT_CLASS( arg, _class ); \
     const auto& _var = ((gse::type::Object*)arg)->value;
-#define N_GETPROP( _obj, _var, _key, _type ) \
+#define N_GETPROP_VAL( _obj, _key, _type ) \
     obj_it = _obj.find( _key ); \
     if ( obj_it == _obj.end() ) { \
-        throw gse::Exception( gse::EC.INVALID_CALL, (std::string)"Property " + _key + " is expected but not found", ctx, call_si ); \
+        throw gse::Exception( gse::EC.INVALID_CALL, (std::string)"Property '" + _key + "' is expected but not found", ctx, call_si ); \
     } \
-    arg = obj_it->second.Get(); \
+    getprop_val = obj_it->second;
+#define N_GETPROP_ARG( _obj, _key, _type ) \
+    N_GETPROP_VAL( _obj, _key, _type ); \
+    arg = getprop_val.Get(); \
     if ( arg->type != gse::type::_type::GetType() ) { \
         throw gse::Exception( gse::EC.INVALID_CALL, (std::string)"Property '" + _key + "' is expected to be " + #_type + ", found: " + arg->GetTypeString( arg->type ), ctx, call_si ); \
-    } \
+    }
+#define N_GETPROP_UNWRAP( _var, _obj, _key, _type ) \
+    N_GETPROP_VAL( _obj, _key, Object ); \
+    N_CHECK_OBJECT_CLASS( getprop_val.Get(), _type::WRAP_CLASS ); \
+    const auto _var = _type::Unwrap( getprop_val );
+#define N_GETPROP( _var, _obj, _key, _type ) \
+    N_GETPROP_ARG( _obj, _key, _type ); \
     const auto& _var = ((gse::type::_type*)arg)->value;
+#define N_GETPROP_OBJECT( _var, _obj, _key, _class ) \
+    N_GETPROP_ARG( _obj, _key, Object ); \
+    N_CHECK_OBJECT_CLASS( arg, gse::type::Object::_class ); \
+    const auto& _var = ((gse::type::Object*)arg)->value;
+#define N_GETPROP_OPT( _vartype, _var, _obj, _key, _type, _default ) \
+    _vartype _var = _default; \
+    obj_it = _obj.find( _key ); \
+    if ( obj_it != _obj.end() ) { \
+        getprop_val = obj_it->second; \
+        arg = getprop_val.Get(); \
+        if ( arg->type != gse::type::_type::GetType() ) { \
+            throw gse::Exception( gse::EC.INVALID_CALL, (std::string)"Property '" + _key + "' is expected to be " + #_type + ", found: " + arg->GetTypeString( arg->type ), ctx, call_si ); \
+        } \
+        _var = ((gse::type::_type*)arg)->value; \
+    }
+#define N_GETPROP_OPT_BOOL( _var, _obj, _key ) N_GETPROP_OPT( bool, _var, _obj, _key, Bool, false )
+#define N_GETPROP_OPT_INT( _var, _obj, _key ) N_GETPROP_OPT( int64_t, _var, _obj, _key, Int, 0 )
 
 class Native : public type::Callable {
 public:

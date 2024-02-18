@@ -15,23 +15,22 @@ void Scrollbars::AddStyles() {
 
 	AddStyle(
 		"VerticalThick", { "Vertical" }, SH() {
-			const auto tc = Color::RGB( 152, 24, 228 );
 			s->Set( Style::A_WIDTH, 18 );
 
 			if ( s->Is( Style::M_ACTIVE ) ) {
-				s->SetTextureTC( Style::A_TEXTURE_TOP, "Icons.pcx", 157, 4, 174, 21, tc );
-				s->SetTextureTC( Style::A_TEXTURE_CENTER, "Icons.pcx", 104, 101, 121, 118, tc, TextureLoader::LT_CONTRAST, 2.0f );
-				s->SetTextureTC( Style::A_TEXTURE_BOTTOM, "Icons.pcx", 157, 29, 174, 46, tc );
+				s->SetTexture( Style::A_TEXTURE_TOP, "Icons.pcx", 157, 4, 174, 21 );
+				s->SetTexture( Style::A_TEXTURE_CENTER, "Icons.pcx", 104, 101, 121, 118, TextureLoader::LT_CONTRAST, 2.0f );
+				s->SetTexture( Style::A_TEXTURE_BOTTOM, "Icons.pcx", 157, 29, 174, 46 );
 			}
 			else if ( s->Is( Style::M_HOVER ) ) {
-				s->SetTextureTC( Style::A_TEXTURE_TOP, "Icons.pcx", 132, 4, 149, 21, tc );
-				s->SetTextureTC( Style::A_TEXTURE_CENTER, "Icons.pcx", 104, 101, 121, 118, tc, TextureLoader::LT_CONTRAST, 1.5f );
-				s->SetTextureTC( Style::A_TEXTURE_BOTTOM, "Icons.pcx", 132, 29, 149, 46, tc );
+				s->SetTexture( Style::A_TEXTURE_TOP, "Icons.pcx", 132, 4, 149, 21 );
+				s->SetTexture( Style::A_TEXTURE_CENTER, "Icons.pcx", 104, 101, 121, 118, TextureLoader::LT_CONTRAST, 1.5f );
+				s->SetTexture( Style::A_TEXTURE_BOTTOM, "Icons.pcx", 132, 29, 149, 46 );
 			}
 			else {
-				s->SetTextureTC( Style::A_TEXTURE_TOP, "Icons.pcx", 107, 4, 124, 21, tc );
-				s->SetTextureTC( Style::A_TEXTURE_CENTER, "Icons.pcx", 104, 101, 121, 118, tc );
-				s->SetTextureTC( Style::A_TEXTURE_BOTTOM, "Icons.pcx", 107, 29, 124, 46, tc );
+				s->SetTexture( Style::A_TEXTURE_TOP, "Icons.pcx", 107, 4, 124, 21 );
+				s->SetTexture( Style::A_TEXTURE_CENTER, "Icons.pcx", 104, 101, 121, 118 );
+				s->SetTexture( Style::A_TEXTURE_BOTTOM, "Icons.pcx", 107, 29, 124, 46 );
 			}
 		}
 	);

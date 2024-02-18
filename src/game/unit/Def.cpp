@@ -41,15 +41,19 @@ Def* Def::Unserialize( types::Buffer& buf ) {
 }
 
 WRAPIMPL_BEGIN( Def, CLASS_UNITDEF )
-			{
-				"name",
-				VALUE( gse::type::String, m_name )
-			},
-			{
-				"type",
-				VALUE( gse::type::String, "static" ) // TODO
-			},
-WRAPIMPL_END( Def )
+	WRAPIMPL_PROPS {
+		{
+			"name",
+			VALUE( gse::type::String, m_name )
+		},
+		{
+			"type",
+			VALUE( gse::type::String, "static" ) // TODO
+		},
+	};
+WRAPIMPL_END_PTR( Def )
+
+UNWRAPIMPL_PTR( Def )
 
 }
 }

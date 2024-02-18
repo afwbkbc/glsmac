@@ -18,9 +18,12 @@ public:
 	enum object_class_t {
 		CLASS_NONE,
 		CLASS_EXCEPTION,
+		CLASS_COLOR,
 		CLASS_TILE,
-		CLASS_UNIT,
+		CLASS_PLAYER,
+		CLASS_FACTION,
 		CLASS_UNITDEF,
+		CLASS_UNIT,
 	};
 	static const std::string& GetClassString( const object_class_t object_class );
 

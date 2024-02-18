@@ -24,9 +24,10 @@ void Server::ProcessEvent( const network::Event& event ) {
 			const auto& rules = m_state->m_settings.global.game_rules;
 			NEW(
 				m_player, ::game::Player,
+				rules,
 				m_state->m_settings.local.player_name,
 				::game::Player::PR_HOST,
-				rules.GetDefaultFaction(),
+				::game::Player::RANDOM_FACTION,
 				rules.GetDefaultDifficultyLevel()
 			);
 			m_state->AddPlayer( m_player );
@@ -175,9 +176,10 @@ void Server::ProcessEvent( const network::Event& event ) {
 						const auto& rules = m_state->m_settings.global.game_rules;
 						NEWV(
 							player, ::game::Player,
+							rules,
 							player_name,
 							::game::Player::PR_PLAYER,
-							rules.GetDefaultFaction(),
+							::game::Player::RANDOM_FACTION,
 							rules.GetDefaultDifficultyLevel()
 						);
 						m_state->AddPlayer( player );
@@ -190,13 +192,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 							slot.SetLinkedGSID( gsid );
 						}
 						SendGameState( event.cid );
-						{
-							Log( "Sending players list to " + std::to_string( event.cid ) );
-							Packet p( Packet::PT_PLAYERS );
-							p.data.num = slot_num;
-							p.data.str = m_state->m_slots.Serialize().ToString();
-							g_engine->GetNetwork()->MT_SendPacket( p, event.cid );
-						}
+						SendPlayersList( event.cid, slot_num );
 						SendGlobalSettings( event.cid );
 
 						SendSlotUpdate( slot_num, &slot, event.cid ); // notify others
@@ -403,6 +399,14 @@ void Server::SetGameState( const game_state_t game_state ) {
 	);
 }
 
+void Server::SendPlayersList() {
+	Broadcast(
+		[ this ]( const network::cid_t cid ) -> void {
+			SendPlayersList( cid );
+		}
+	);
+}
+
 void Server::UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flags ) {
 	if ( !only_flags ) {
 		if ( m_on_slot_update ) {
@@ -484,6 +488,14 @@ void Server::SendGameState( const network::cid_t cid ) {
 	Packet p( Packet::PT_GAME_STATE );
 	p.udata.game_state.state = m_game_state;
 	m_network->MT_SendPacket( p, cid );
+}
+
+void Server::SendPlayersList( const network::cid_t cid, const size_t slot_num ) {
+	Log( "Sending players list to " + std::to_string( cid ) );
+	Packet p( Packet::PT_PLAYERS );
+	p.data.num = slot_num;
+	p.data.str = m_state->m_slots.Serialize().ToString();
+	g_engine->GetNetwork()->MT_SendPacket( p, cid );
 }
 
 void Server::SendSlotUpdate( const size_t slot_num, const Slot* slot, network::cid_t skip_cid ) {

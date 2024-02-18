@@ -83,15 +83,8 @@ Map::Map( Game* game )
 	);
 
 	// main source textures
-	m_textures.source.texture_pcx = g_engine->GetTextureLoader()->LoadTextureTC( "texture.pcx", Color::RGB( 125, 0, 128 ) );
-	m_textures.source.ter1_pcx = g_engine->GetTextureLoader()->LoadTextureTCs(
-		"ter1.pcx", {
-			Color::RGB( 152, 24, 228 ), // remove transparency color
-			Color::RGB( 100, 16, 156 ), // remove second transparency color
-			Color::RGB( 24, 184, 228 ), // remove frame
-			Color::RGB( 253, 189, 118 ) // remove drawn shadows too (we'll have our own)
-		}
-	);
+	m_textures.source.texture_pcx = g_engine->GetTextureLoader()->LoadTexture( "texture.pcx" );
+	m_textures.source.ter1_pcx = g_engine->GetTextureLoader()->LoadTexture( "ter1.pcx" );
 
 	// add map modules
 	//   order of passes is important
@@ -546,19 +539,29 @@ Tiles* Map::GetTilesPtr() const {
 }
 
 const std::string Map::GetTerrainSpriteActor( const std::string& name, const Consts::pcx_texture_coordinates_t& tex_coords, const float z_index ) {
-	const auto key = name + " ter1.pcx " + tex_coords.ToString() + " " + ::game::map::s_consts.tc.ter1_pcx.dimensions.ToString();
+	const auto key = "Terrain_" + name + " " + tex_coords.ToString() + " " + ::game::map::s_consts.tc.ter1_pcx.dimensions.ToString();
 
-	const auto& it = m_sprite_actors.find( key );
+	auto it = m_sprite_actors.find( key );
 	if ( it == m_sprite_actors.end() ) {
-		m_sprite_actors[ key ] = {
-			name,
-			tex_coords,
-			z_index
-		};
+		it = m_sprite_actors.insert(
+			{
+				key,
+				{
+					name,
+					tex_coords,
+					z_index
+				}
+			}
+		).first;
 	}
 
 	if ( m_sprite_actors_to_add.find( key ) == m_sprite_actors_to_add.end() ) {
-		m_sprite_actors_to_add[ key ] = m_sprite_actors.at( key );
+		m_sprite_actors_to_add.insert(
+			{
+				key,
+				it->second
+			}
+		);
 	}
 
 	return key;
@@ -566,18 +569,28 @@ const std::string Map::GetTerrainSpriteActor( const std::string& name, const Con
 
 const size_t Map::AddTerrainSpriteActorInstance( const std::string& key, const Vec3& coords ) {
 	ASSERT( m_sprite_actors.find( key ) != m_sprite_actors.end(), "actor not found" );
-	m_sprite_instances[ m_next_sprite_instance_id ] = {
-		key,
-		coords
-	};
-	m_sprite_instances_to_add[ m_next_sprite_instance_id ] = m_sprite_instances.at( m_next_sprite_instance_id );
+	const auto it = m_sprite_instances.insert(
+		{
+			m_next_sprite_instance_id,
+			{
+				key,
+				coords
+			}
+		}
+	).first->second;
+	m_sprite_instances_to_add[ m_next_sprite_instance_id ] = it;
 	return m_next_sprite_instance_id++;
 }
 
 void Map::RemoveTerrainSpriteActorInstance( const std::string& key, const size_t instance_id ) {
 	ASSERT( m_sprite_actors.find( key ) != m_sprite_actors.end(), "actor not found" );
 	ASSERT( m_sprite_instances_to_remove.find( instance_id ) == m_sprite_instances_to_remove.end(), "instance already pending removal" );
-	m_sprite_instances_to_remove[ instance_id ] = key;
+	m_sprite_instances_to_remove.insert(
+		{
+			instance_id,
+			key
+		}
+	);
 }
 
 const Map::error_code_t Map::Generate(

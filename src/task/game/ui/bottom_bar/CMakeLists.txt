@@ -14,5 +14,6 @@ SET( SRC ${SRC}
 	${PWD}/InfoPanel.cpp
 	${PWD}/UnitsList.cpp
 	${PWD}/MiniMap.cpp
+	${PWD}/TurnCompleteButton.cpp
 
 	PARENT_SCOPE )

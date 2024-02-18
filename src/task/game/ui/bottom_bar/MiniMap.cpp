@@ -15,10 +15,6 @@ MiniMap::MiniMap( Game* game )
 void MiniMap::Create() {
 	BBSection::Create();
 
-	NEW( m_turn_complete_button, object::Button, "BBMinimapTurnCompleteButton" );
-	m_turn_complete_button->SetLabel( "TURN COMPLETE" );
-	AddChild( m_turn_complete_button );
-
 	NEW( m_map_surface, object::Mesh, "BBMinimapImage" );
 	m_map_surface->SetMesh( types::mesh::Render::Rectangle() );
 	if ( m_texture ) {
@@ -243,8 +239,6 @@ const bool MiniMap::IsMouseDragging() const {
 void MiniMap::Destroy() {
 
 	ClearMinimapSelection();
-
-	RemoveChild( m_turn_complete_button );
 
 	auto* ui = g_engine->GetUI();
 	ui->RemoveGlobalEventHandler( m_handlers.mouse_move );

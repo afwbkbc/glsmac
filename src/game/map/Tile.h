@@ -148,7 +148,9 @@ public:
 	const Buffer Serialize() const;
 	void Unserialize( Buffer data );
 
-	WRAPDEFS( Tile );
+	const std::string ToString() const;
+
+	WRAPDEFS_PTR( Tile );
 };
 
 }

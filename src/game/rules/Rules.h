@@ -1,6 +1,7 @@
 #pragma once
 
-#include <map>
+#include <unordered_map>
+#include <vector>
 
 #include "types/Serializable.h"
 
@@ -12,10 +13,12 @@ namespace rules {
 
 CLASS( Rules, types::Serializable )
 
-	std::map< size_t, Faction > m_factions;
+	typedef std::unordered_map< std::string, Faction > factions_t;
+
+	factions_t m_factions = {};
+	std::vector< std::string > m_factions_order = {};
 	std::map< size_t, DifficultyLevel > m_difficulty_levels;
 
-	virtual const Faction& GetDefaultFaction() const = 0;
 	virtual const DifficultyLevel& GetDefaultDifficultyLevel() const = 0;
 
 	void Initialize();

@@ -29,7 +29,7 @@ public:
 	static const types::Buffer Serialize( const Def* def );
 	static Def* Unserialize( types::Buffer& buf );
 
-	WRAPDEFS( Def );
+	WRAPDEFS_PTR( Def );
 };
 
 }

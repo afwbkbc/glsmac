@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "types/Buffer.h"
 
 #include "gse/Value.h"

@@ -7,12 +7,14 @@
 namespace ui {
 namespace object {
 
-Dropdown::Dropdown( const std::string& class_name )
+template< typename KEY_TYPE >
+Dropdown< KEY_TYPE >::Dropdown( const std::string& class_name )
 	: Panel( class_name ) {
 
 }
 
-void Dropdown::SetChoices( const ChoiceList::choices_t& choices ) {
+template< typename KEY_TYPE >
+void Dropdown< KEY_TYPE >::SetChoices( const typename ChoiceList< KEY_TYPE >::choices_t& choices ) {
 	m_choices = choices;
 	if ( m_elements.choices ) {
 		m_elements.choices->SetChoices( m_choices );
@@ -43,7 +45,8 @@ void Dropdown::SetChoices( const ChoiceList::choices_t& choices ) {
 	}
 }
 
-void Dropdown::SetValue( const ChoiceList::value_t value ) {
+template< typename KEY_TYPE >
+void Dropdown< KEY_TYPE >::SetValueByKey( const typename ChoiceList< KEY_TYPE >::value_t value ) {
 	for ( const auto& it : m_choices ) {
 		if ( it.first == value ) {
 			SetValue( it.second );
@@ -52,7 +55,8 @@ void Dropdown::SetValue( const ChoiceList::value_t value ) {
 	}
 }
 
-void Dropdown::SetValue( const std::string& value ) {
+template< typename KEY_TYPE >
+void Dropdown< KEY_TYPE >::SetValue( const std::string& value ) {
 	if ( m_mode == DM_SELECT ) {
 		//ASSERT( std::find( m_choices.begin(), m_choices.end(), value ) != m_choices.end(), "value '" + value + "' not found in choices" );
 	}
@@ -62,12 +66,14 @@ void Dropdown::SetValue( const std::string& value ) {
 	}
 }
 
-void Dropdown::SetMode( const dropdown_mode_t mode ) {
+template< typename KEY_TYPE >
+void Dropdown< KEY_TYPE >::SetMode( const dropdown_mode_t mode ) {
 	m_mode = mode;
 }
 
-void Dropdown::SetChoicesV( const std::vector< std::string >& labels ) {
-	ChoiceList::choices_t choices = {};
+template<>
+void Dropdown< size_t >::SetChoicesV( const std::vector< std::string >& labels ) {
+	NumChoiceList::choices_t choices = {};
 	size_t index = 1;
 	for ( auto& label : labels ) {
 		choices.push_back(
@@ -79,8 +85,13 @@ void Dropdown::SetChoicesV( const std::vector< std::string >& labels ) {
 	}
 	SetChoices( choices );
 }
+template<>
+void Dropdown< std::string >::SetChoicesV( const std::vector< std::string >& labels ) {
+	THROW( "SetChoicesV not implemented for AssocDropdown" );
+}
 
-void Dropdown::SetTextColor( const Color& color ) {
+template< typename KEY_TYPE >
+void Dropdown< KEY_TYPE >::SetTextColor( const Color& color ) {
 	m_custom_text_color = true;
 	m_text_color = color;
 	if ( m_elements.value ) {
@@ -88,7 +99,8 @@ void Dropdown::SetTextColor( const Color& color ) {
 	}
 }
 
-void Dropdown::Create() {
+template< typename KEY_TYPE >
+void Dropdown< KEY_TYPE >::Create() {
 	Panel::Create();
 
 	NEW( m_elements.value, Label );
@@ -127,7 +139,7 @@ void Dropdown::Create() {
 	}
 	AddChild( m_elements.open_close );
 
-	NEW( m_elements.choices, ChoiceList, GetStyleClass() + "Choices" );
+	NEW( m_elements.choices, ChoiceList< KEY_TYPE >, GetStyleClass() + "Choices" );
 	m_elements.choices->Hide();
 	m_elements.choices->SetImmediateMode( true );
 	m_elements.choices->SetChoices( m_choices );
@@ -161,7 +173,8 @@ void Dropdown::Create() {
 
 }
 
-void Dropdown::Destroy() {
+template< typename KEY_TYPE >
+void Dropdown< KEY_TYPE >::Destroy() {
 
 	RemoveChild( m_elements.value );
 	RemoveChild( m_elements.open_close );
@@ -171,7 +184,8 @@ void Dropdown::Destroy() {
 	Panel::Destroy();
 }
 
-void Dropdown::Align() {
+template< typename KEY_TYPE >
+void Dropdown< KEY_TYPE >::Align() {
 	Panel::Align();
 
 	if ( m_elements.value ) {
@@ -186,19 +200,27 @@ void Dropdown::Align() {
 	}
 }
 
-const bool Dropdown::IsExpanded() const {
+template< typename KEY_TYPE >
+const bool Dropdown< KEY_TYPE >::IsExpanded() const {
 	return m_elements.open_close->HasStyleModifier( Style::M_ACTIVE );
 }
 
-void Dropdown::Expand() {
+template< typename KEY_TYPE >
+void Dropdown< KEY_TYPE >::Expand() {
 	m_elements.open_close->AddStyleModifier( Style::M_ACTIVE );
 	m_elements.choices->Show();
 }
 
-void Dropdown::Collapse() {
+template< typename KEY_TYPE >
+void Dropdown< KEY_TYPE >::Collapse() {
 	m_elements.choices->Hide();
 	m_elements.open_close->RemoveStyleModifier( Style::M_ACTIVE );
 }
+
+template
+class Dropdown< size_t >; // NumDropdown
+template
+class Dropdown< std::string >; // AssocDropdown
 
 }
 }

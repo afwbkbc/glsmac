@@ -10,9 +10,11 @@ BINDING_IMPL( exit ) {
 		N_EXPECT_ARGS_MIN_MAX( 0, 1 );
 		if ( arguments.size() == 1 ) {
 			N_GETVALUE( reason, 0, String );
-			m_game->Quit( reason );
+			GAME->Quit( reason );
 		}
-		m_game->Quit( "Script exited" );
+		else {
+			GAME->Quit( "Script exited" );
+		}
 		return VALUE( gse::type::Undefined );
 	});
 }

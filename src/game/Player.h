@@ -4,14 +4,15 @@
 
 #include "types/Serializable.h"
 
-#include "game/rules/Faction.h"
-#include "game/rules/DifficultyLevel.h"
+#include "game/rules/Rules.h"
 
 namespace game {
 
 class Slot;
 
 CLASS( Player, types::Serializable )
+
+	const static rules::Faction RANDOM_FACTION;
 
 	enum role_t {
 		PR_NONE,
@@ -20,8 +21,9 @@ CLASS( Player, types::Serializable )
 		PR_PLAYER,
 	};
 
-	Player( types::Buffer buf );
+	Player( const rules::Rules& rules, types::Buffer buf );
 	Player(
+		const rules::Rules& rules,
 		const std::string& name,
 		const role_t role,
 		const rules::Faction& faction,
@@ -47,6 +49,9 @@ CLASS( Player, types::Serializable )
 	void Unserialize( types::Buffer buf ) override;
 
 private:
+
+	const rules::Rules& m_rules;
+
 	bool m_is_initialized = false;
 
 	std::string m_name = "";
@@ -54,7 +59,7 @@ private:
 
 	Slot* m_slot = nullptr;
 
-	rules::Faction m_faction = {};
+	rules::Faction m_faction = RANDOM_FACTION;
 	rules::DifficultyLevel m_difficulty_level = {};
 
 };

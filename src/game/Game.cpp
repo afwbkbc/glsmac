@@ -268,18 +268,40 @@ void Game::Iterate() {
 					m_connection->UpdateSlot( m_slot_num, m_slot, true );
 				}
 
-				// init gse
-				ASSERT( !m_bindings, "bindings already set" );
-				NEW( m_bindings, Bindings, this );
+				// notify frontend
+				const auto& slots = m_state->m_slots.GetSlots();
+				auto* slot_defines = new Event::slot_defines_t();
+				for ( const auto& slot : slots ) {
+					if ( slot.GetState() == Slot::SS_OPEN || slot.GetState() == Slot::SS_CLOSED ) {
+						continue;
+					}
+					ASSERT( slot.GetState() == Slot::SS_PLAYER, "unknown slot state: " + std::to_string( slot.GetState() ) );
+					const auto* player = slot.GetPlayer();
+					ASSERT( player, "slot player not set" );
+					const auto& faction = player->GetFaction();
+					const auto& c = faction.m_colors.border.value;
+					slot_defines->push_back(
+						Event::slot_define_t{
+							slot.GetIndex(),
+							{
+								c.red,
+								c.green,
+								c.blue,
+								c.alpha
+							},
+							( faction.m_flags & rules::Faction::FF_PROGENITOR ) != 0
+						}
+					);
+				}
+				auto e = Event( Event::ET_SLOT_DEFINE );
+				e.data.slot_define.slotdefs = slot_defines;
+				AddEvent( e );
 
 				ASSERT( !m_current_turn, "turn is already initialized" );
 
 				try {
-					// run main gse entrypoint
-					m_bindings->RunMain();
-
 					// start initial turn
-					NextTurn();
+					NEW( m_current_turn, Turn, 0 );
 
 					// start main loop
 					m_game_state = GS_RUNNING;
@@ -301,8 +323,9 @@ void Game::Iterate() {
 					m_unprocessed_events.clear();
 
 					if ( m_state->IsMaster() ) {
-						m_bindings->Call( Bindings::CS_ON_START );
+						m_state->m_bindings->Call( Bindings::CS_ON_START );
 					}
+
 				}
 			}
 			else {
@@ -311,7 +334,10 @@ void Game::Iterate() {
 		}
 	}
 	else if ( m_game_state == GS_RUNNING ) {
-		// TODO: iterate GSE
+		if ( !m_current_turn->GetId() ) {
+			// start first turn
+			NextTurn();
+		}
 	}
 }
 
@@ -347,6 +373,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			//Log( "Got init request" );
 			ASSERT( request.data.init.state, "state not set" );
 			m_state = request.data.init.state;
+			m_state->SetGame( this );
 			InitGame( response, MT_C );
 			break;
 		}
@@ -872,14 +899,6 @@ void Game::OnGSEError( gse::Exception& err ) {
 	AddEvent( e );
 }
 
-void Game::AddUnitDef( const std::string& name, const unit::Def* def, gse::Context* ctx, const gse::si_t& si ) {
-	if ( m_unit_defs.find( name ) != m_unit_defs.end() ) {
-		delete def;
-		throw gse::Exception( gse::EC.GAME_ERROR, "Unit definition '" + name + "' already exists", ctx, si );
-	}
-	DefineUnit( def );
-}
-
 const unit::Def* Game::GetUnitDef( const std::string& name ) const {
 	const auto& it = m_unit_defs.find( name );
 	if ( it != m_unit_defs.end() ) {
@@ -890,11 +909,16 @@ const unit::Def* Game::GetUnitDef( const std::string& name ) const {
 	}
 }
 
-const gse::Value Game::AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& si ) {
+const gse::Value Game::AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& call_si ) {
 	if ( m_connection ) {
 		m_connection->SendGameEvent( event );
 	}
-	return ProcessGameEvent( event );
+	try {
+		return ProcessGameEvent( event );
+	}
+	catch ( std::runtime_error& err ) {
+		ERROR( gse::EC.GAME_ERROR, err.what() );
+	}
 }
 
 void Game::DefineUnit( const unit::Def* def ) {
@@ -903,14 +927,24 @@ void Game::DefineUnit( const unit::Def* def ) {
 	ASSERT( m_unit_defs.find( def->m_name ) == m_unit_defs.end(), "Unit definition '" + def->m_name + "' already exists" );
 
 	m_unit_defs.insert_or_assign( def->m_name, def );
+
+	// notify frontend
+	auto e = Event( Event::ET_UNIT_DEFINE );
+	NEW( e.data.unit_define.serialized_unitdef, std::string, unit::Def::Serialize( def ).ToString() );
+	AddEvent( e );
 }
 
 void Game::SpawnUnit( unit::Unit* unit ) {
-	Log( "Spawning unit ('" + unit->m_def->m_name + "') at [ " + std::to_string( unit->m_pos_x ) + " " + std::to_string( unit->m_pos_y ) + " ]" );
+	if ( m_game_state != GS_RUNNING ) {
+		m_unprocessed_units.push_back( unit );
+		return;
+	}
+
+	Log( "Spawning unit #" + std::to_string( unit->m_id ) + " ('" + unit->m_def->m_name + "') at " + unit->m_tile->ToString() );
 
 	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
 
-	auto* tile = m_map->GetTile( unit->m_pos_x, unit->m_pos_y );
+	auto* tile = unit->m_tile;
 	const auto* ts = m_map->GetTileState( tile );
 
 	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
@@ -921,7 +955,9 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 
 	// notify frontend
 	auto e = Event( Event::ET_UNIT_SPAWN );
-	NEW( e.data.unit_spawn.serialized_unit, std::string, unit::Unit::Serialize( unit ).ToString() );
+	e.data.unit_spawn.unit_id = unit->m_id;
+	NEW( e.data.unit_spawn.unitdef_name, std::string, unit->m_def->m_name );
+	e.data.unit_spawn.slot_index = unit->m_owner->GetIndex();
 	const auto l = tile->is_water_tile
 		? map::TileState::LAYER_WATER
 		: map::TileState::LAYER_LAND;
@@ -935,17 +971,27 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 		-c.y,
 		c.z
 	};
+
+	// temporary logic for testing - all own units are active, all foreign aren't
+	e.data.unit_spawn.is_active = unit->m_owner == GetPlayer()->GetSlot();
+
+	e.data.unit_spawn.morale = unit->m_morale;
+	e.data.unit_spawn.health = unit->m_health;
+
 	AddEvent( e );
 
 	if ( m_state->IsMaster() ) {
-		m_bindings->Call( Bindings::CS_ON_SPAWN_UNIT, { unit->Wrap() } );
+		m_state->m_bindings->Call( Bindings::CS_ON_SPAWN_UNIT, { unit->Wrap() } );
 	}
 }
 
 void Game::DespawnUnit( const size_t unit_id ) {
+
 	const auto& it = m_units.find( unit_id );
 	ASSERT( it != m_units.end(), "unit id not found" );
 	auto* unit = it->second;
+
+	Log( "Despawning unit #" + std::to_string( unit->m_id ) + " ('" + unit->m_def->m_name + "') at " + unit->m_tile->ToString() );
 
 	auto e = Event( Event::ET_UNIT_DESPAWN );
 	e.data.unit_despawn.unit_id = unit_id;
@@ -960,7 +1006,7 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	m_units.erase( it );
 
 	if ( m_state->IsMaster() ) {
-		m_bindings->Call( Bindings::CS_ON_DESPAWN_UNIT, { unit->Wrap() } );
+		m_state->m_bindings->Call( Bindings::CS_ON_DESPAWN_UNIT, { unit->Wrap() } );
 	}
 
 	delete unit;
@@ -1005,14 +1051,14 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto unit_id = buf.ReadInt();
 		auto b = Buffer( buf.ReadString() );
-		m_unprocessed_units.push_back( unit::Unit::Unserialize( b ) );
+		SpawnUnit( unit::Unit::Unserialize( b, this ) );
 	}
 	unit::Unit::SetNextId( buf.ReadInt() );
 	Log( "Restored next unit id: " + std::to_string( unit::Unit::GetNextId() ) );
 }
 
 void Game::AddEvent( const Event& event ) {
-	Log( "Sending event (type=" + std::to_string( event.type ) + ")" );
+	//Log( "Sending event (type=" + std::to_string( event.type ) + ")" ); // spammy
 	m_pending_events->push_back( event );
 }
 
@@ -1030,6 +1076,36 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	m_initialization_error = "";
 
 	m_connection = m_state->GetConnection();
+
+	if ( m_state->IsMaster() ) {
+
+		// assign random factions to players
+		const auto& factions = m_state->m_settings.global.game_rules.m_factions;
+		std::vector< std::string > m_available_factions = {};
+		const auto& slots = m_state->m_slots.GetSlots();
+		for ( const auto& slot : slots ) {
+			if ( slot.GetState() == ::game::Slot::SS_PLAYER ) {
+				auto* player = slot.GetPlayer();
+				ASSERT( player, "player not set" );
+				if ( player->GetFaction().m_id == ::game::Player::RANDOM_FACTION.m_id ) {
+					if ( m_available_factions.empty() ) {
+						// (re)load factions list
+						for ( const auto& it : factions ) {
+							m_available_factions.push_back( it.first );
+						}
+						ASSERT( !m_available_factions.empty(), "no factions found" );
+					}
+					const std::vector< std::string >::iterator it = m_available_factions.begin() + m_random->GetUInt( 0, m_available_factions.size() - 1 );
+					player->SetFaction( factions.at( *it ) );
+					m_available_factions.erase( it );
+				}
+			}
+		}
+		if ( m_connection ) {
+			m_connection->AsServer()->SendPlayersList();
+		}
+
+	}
 
 	if ( m_connection ) {
 
@@ -1301,18 +1377,15 @@ void Game::ResetGame() {
 	ASSERT( m_pending_events, "pending events not set" );
 	m_pending_events->clear();
 
-	if ( m_bindings ) {
-		DELETE( m_bindings );
-		m_bindings = nullptr;
-	}
-
 	if ( m_current_turn ) {
 		DELETE( m_current_turn );
 		m_current_turn = nullptr;
 	}
+	m_is_turn_complete = false;
 
 	if ( m_state ) {
 		// ui thread will reset state as needed
+		m_state->UnsetGame();
 		m_state = nullptr;
 		if ( m_connection ) {
 			m_connection->Disconnect();
@@ -1323,18 +1396,35 @@ void Game::ResetGame() {
 }
 
 void Game::NextTurn() {
-	size_t turn_id = 1;
-	if ( m_current_turn ) {
+	ASSERT( m_current_turn, "turn not set" );
+
+	const auto last_turn_id = m_current_turn->GetId();
+	if ( last_turn_id ) {
 		Log( "turn " + std::to_string( m_current_turn->GetId() ) + " finished" );
-
-		turn_id = m_current_turn->GetId() + 1;
-
 		// TODO: do something?
-		DELETE( m_current_turn );
 	}
 
-	NEW( m_current_turn, Turn, turn_id );
+	DELETE( m_current_turn );
+
+	NEW( m_current_turn, Turn, last_turn_id + 1 );
 	Log( "turn " + std::to_string( m_current_turn->GetId() ) + " started" );
+
+	m_state->m_bindings->Call( Bindings::CS_ON_TURN );
+}
+
+void Game::CheckTurnComplete() {
+	bool is_turn_complete = false;
+
+	// TODO: check if any units should be moved
+	is_turn_complete = true;
+
+	if ( m_is_turn_complete != is_turn_complete ) {
+		m_is_turn_complete = is_turn_complete;
+		Log( "Sending turn complete status: " + std::to_string( m_is_turn_complete ) );
+		auto e = Event( Event::ET_TURN_COMPLETE_STATUS );
+		e.data.turn_complete_status.is_turn_complete = m_is_turn_complete;
+		AddEvent( e );
+	}
 }
 
 }

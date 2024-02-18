@@ -27,7 +27,7 @@ private:
 
 	::ui::object::Surface* m_image = nullptr;
 	::ui::object::Label* m_text = nullptr;
-	::ui::object::ChoiceList* m_choices = nullptr;
+	::ui::object::NumChoiceList* m_choices = nullptr;
 	::ui::object::SoundEffect* m_sound = nullptr;
 
 	void SelectChoice();
