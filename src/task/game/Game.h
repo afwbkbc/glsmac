@@ -108,6 +108,7 @@ CLASS( Game, base::Task )
 		const float z_index
 	);
 	instanced_sprite_t& GetInstancedSpriteByKey( const std::string& key ); // actor must already exist
+	instanced_sprite_t& GetTerrainInstancedSprite( const ::game::map::Map::sprite_actor_t& actor );
 
 	void CenterAtCoordinatePercents( const Vec2< float > position_percents );
 

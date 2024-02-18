@@ -155,11 +155,16 @@ void Sprites::GenerateSprite( const Tile* tile, TileState* ts, const std::string
 	sprite.name = name;
 	sprite.tex_coords = tex_coords;
 	sprite.actor = m_map->GetTerrainSpriteActor( name, sprite.tex_coords, z_index );
+	const types::Vec3 center = {
+		( coords.left.x + coords.right.x ) / 2,
+		( coords.top.y + coords.bottom.y ) / 2,
+		( coords.left.z + coords.top.z + coords.right.z + coords.bottom.z ) / 4
+	};
 	sprite.instance = m_map->AddTerrainSpriteActorInstance(
 		sprite.actor, {
-			coords.center.x,
-			-coords.center.y, // TODO: fix y inversion
-			coords.center.z
+			center.x,
+			-center.y, // TODO: fix y inversion
+			center.z
 		}
 	);
 

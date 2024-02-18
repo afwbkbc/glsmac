@@ -247,22 +247,7 @@ void Game::Iterate() {
 				if ( response.data.edit_map.sprites.actors_to_add ) {
 					Log( "Need to add " + std::to_string( response.data.edit_map.sprites.actors_to_add->size() ) + " actors" );
 					for ( auto& a : *response.data.edit_map.sprites.actors_to_add ) {
-						const auto& actor = a.second;
-						GetInstancedSprite(
-							actor.name,
-							"ter1.pcx",
-							actor.tex_coords,
-							::game::map::s_consts.tc.ter1_pcx.dimensions,
-							{ // TODO
-								::game::map::s_consts.tc.ter1_pcx.dimensions.x / 2 - 5,
-								::game::map::s_consts.tc.ter1_pcx.dimensions.y / 2 - 5
-							},
-							{
-								::game::map::s_consts.tile.scale.x,
-								::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
-							},
-							actor.z_index
-						);
+						GetTerrainInstancedSprite( a.second );
 					}
 				}
 
@@ -438,7 +423,7 @@ Game::instanced_sprite_t& Game::GetInstancedSprite(
 	const ::game::map::Consts::pcx_texture_coordinates_t& src_xy,
 	const ::game::map::Consts::pcx_texture_coordinates_t& src_wh,
 	const ::game::map::Consts::pcx_texture_coordinates_t& src_cxy,
-	const types::Vec2< float > dst_xy,
+	const types::Vec2< float > dst_wh,
 	const float z_index
 ) {
 
@@ -456,8 +441,8 @@ Game::instanced_sprite_t& Game::GetInstancedSprite(
 			scene::actor::Sprite,
 			name,
 			{
-				dst_xy.x,
-				dst_xy.y
+				dst_wh.x,
+				dst_wh.y
 			},
 			pcx,
 			{
@@ -474,14 +459,18 @@ Game::instanced_sprite_t& Game::GetInstancedSprite(
 		NEWV( instanced, scene::actor::Instanced, sprite );
 		instanced->SetZIndex( z_index ); // needs to be higher than map terrain z position
 		m_world_scene->AddActor( instanced );
-		m_instanced_sprites[ key ] = {
-			name,
-			src_xy,
-			src_wh,
-			src_cxy,
-			instanced
-		};
-		return m_instanced_sprites.at( key );
+		return m_instanced_sprites.insert(
+			{
+				key,
+				{
+					name,
+					src_xy,
+					src_wh,
+					src_cxy,
+					instanced
+				}
+			}
+		).first->second;
 	}
 	else {
 		return it->second;
@@ -492,6 +481,24 @@ Game::instanced_sprite_t& Game::GetInstancedSpriteByKey( const std::string& key 
 	const auto& it = m_instanced_sprites.find( key );
 	ASSERT( it != m_instanced_sprites.end(), "sprite actor '" + key + "' not found" );
 	return it->second;
+}
+
+Game::instanced_sprite_t& Game::GetTerrainInstancedSprite( const ::game::map::Map::sprite_actor_t& actor ) {
+	return GetInstancedSprite(
+		"Terrain_" + actor.name,
+		"ter1.pcx",
+		actor.tex_coords,
+		::game::map::s_consts.tc.ter1_pcx.dimensions,
+		{
+			actor.tex_coords.x + ::game::map::s_consts.tc.ter1_pcx.center.x,
+			actor.tex_coords.y + ::game::map::s_consts.tc.ter1_pcx.center.y
+		},
+		{
+			::game::map::s_consts.tile.scale.x,
+			::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
+		},
+		actor.z_index
+	);
 }
 
 void Game::CenterAtCoordinatePercents( const Vec2< float > position_percents ) {
@@ -1099,21 +1106,7 @@ void Game::Initialize(
 	Log( "Sprites count: " + std::to_string( sprite_actors.size() ) );
 	Log( "Sprites instances: " + std::to_string( sprite_instances.size() ) );
 	for ( auto& a : sprite_actors ) {
-		GetInstancedSprite(
-			a.second.name,
-			"ter1.pcx",
-			a.second.tex_coords,
-			::game::map::s_consts.tc.ter1_pcx.dimensions,
-			{
-				::game::map::s_consts.tc.ter1_pcx.dimensions.x / 2 - 5,
-				::game::map::s_consts.tc.ter1_pcx.dimensions.y / 2 - 5
-			},
-			{
-				::game::map::s_consts.tile.scale.x,
-				::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
-			},
-			a.second.z_index
-		);
+		GetTerrainInstancedSprite( a.second );
 	}
 	for ( auto& instance : sprite_instances ) {
 		auto* actor = GetInstancedSpriteByKey( instance.second.first ).actor;
