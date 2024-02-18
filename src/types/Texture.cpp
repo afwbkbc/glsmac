@@ -102,11 +102,25 @@ void Texture::Erase( const size_t x1, const size_t y1, const size_t x2, const si
 	);
 }
 
-void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x, const size_t dest_y, const rotate_t rotate, const float alpha, util::Random* rng, util::Perlin* perlin ) {
-	ASSERT( dest_x + ( x2 - x1 ) < m_width, "destination x overflow ( " + std::to_string( dest_x + ( x2 - x1 ) ) + " >= " + std::to_string( m_width ) + " )" );
-	ASSERT( dest_y + ( y2 - y1 ) < m_height, "destination y overflow (" + std::to_string( dest_y + ( y2 - y1 ) ) + " >= " + std::to_string( m_height ) + " )" );
+void Texture::Fill( const size_t x1, const size_t y1, const size_t x2, const size_t y2, const types::Color& color ) {
 	ASSERT( x2 >= x1, "invalid source x size ( " + std::to_string( x2 ) + " < " + std::to_string( x1 ) + " )" );
 	ASSERT( y2 >= y1, "invalid source y size ( " + std::to_string( y2 ) + " < " + std::to_string( y1 ) + " )" );
+	ASSERT( x2 < m_width, "x overflow ( " + std::to_string( x2 ) + " >= " + std::to_string( m_width ) + " )" );
+	ASSERT( y2 < m_height, "y overflow ( " + std::to_string( y2 ) + " >= " + std::to_string( m_height ) + " )" );
+
+	const uint32_t rgba = color.GetRGBA();
+	for ( auto y = y1 ; y <= y2 ; y++ ) {
+		for ( auto x = x1 ; x <= x2 ; x++ ) {
+			memcpy( ptr( m_bitmap, ( y * m_width + x ) * m_bpp, sizeof( rgba ) ), &rgba, sizeof( rgba ) );
+		}
+	}
+}
+
+void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x, const size_t dest_y, const rotate_t rotate, const float alpha, util::Random* rng, util::Perlin* perlin ) {
+	ASSERT( x2 >= x1, "invalid source x size ( " + std::to_string( x2 ) + " < " + std::to_string( x1 ) + " )" );
+	ASSERT( y2 >= y1, "invalid source y size ( " + std::to_string( y2 ) + " < " + std::to_string( y1 ) + " )" );
+	ASSERT( dest_x + ( x2 - x1 ) < m_width, "destination x overflow ( " + std::to_string( dest_x + ( x2 - x1 ) ) + " >= " + std::to_string( m_width ) + " )" );
+	ASSERT( dest_y + ( y2 - y1 ) < m_height, "destination y overflow (" + std::to_string( dest_y + ( y2 - y1 ) ) + " >= " + std::to_string( m_height ) + " )" );
 	ASSERT( alpha >= 0, "invalid alpha value ( " + std::to_string( alpha ) + " < 0 )" );
 	ASSERT( alpha <= 1, "invalid alpha value ( " + std::to_string( alpha ) + " > 1 )" );
 

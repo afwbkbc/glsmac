@@ -110,6 +110,8 @@ CLASS( Texture, Serializable )
 	 */
 	void AddFrom( const types::Texture* source, add_flag_t flags, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x = 0, const size_t dest_y = 0, const rotate_t rotate = 0, const float alpha = 1.0f, util::Random* rng = nullptr, util::Perlin* perlin = nullptr );
 
+	void Fill( const size_t x1, const size_t y1, const size_t x2, const size_t y2, const types::Color& color );
+
 	typedef std::unordered_map< types::Color::rgba_t, types::Color::rgba_t > repaint_rules_t;
 	void RepaintFrom( const types::Texture* original, const repaint_rules_t& rules );
 

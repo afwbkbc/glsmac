@@ -86,6 +86,13 @@ CLASS( Game, base::Task )
 			const float scale_y = 0.5f;
 			const float offset_x = -0.25f;
 			const float offset_y = -0.5;
+			const struct {
+				const uint8_t resolution = 10;
+				const float scale_x = 0.04f;
+				const float scale_y = 0.36f;
+				const float offset_x = -0.292f;
+				const float offset_y = -0.476f;
+			} healthbars;
 		} badges;
 	};
 	static const consts_t s_consts;
@@ -109,7 +116,7 @@ CLASS( Game, base::Task )
 	};
 	instanced_sprite_t& GetInstancedSprite(
 		const std::string& name,
-		const std::string& tex_file,
+		types::Texture* texture,
 		const ::game::map::Consts::pcx_texture_coordinates_t& src_xy,
 		const ::game::map::Consts::pcx_texture_coordinates_t& src_wh,
 		const ::game::map::Consts::pcx_texture_coordinates_t& src_cxy,
@@ -415,6 +422,13 @@ private:
 	typedef std::unordered_map< ::game::unit::Unit::morale_t, unitbadge_def_t > unitbadge_defs_t;
 	unitbadge_spritemaps_t m_unitbadge_sprites = {};
 
+	struct unitbadge_healthbar_def_t {
+		Game::instanced_sprite_t* instanced_sprite = nullptr;
+		size_t next_instance_id = 1;
+	};
+	std::vector< types::Texture* > m_healthbar_textures = {};
+	std::vector< unitbadge_healthbar_def_t > m_healthbar_sprites = {};
+
 	struct slot_state_t {
 		types::Color color = {};
 		unitbadge_defs_t badges = {};
@@ -428,6 +442,8 @@ private:
 			size_t instance_id = 0;
 			unitbadge_subdef_t* badge_def = nullptr;
 			size_t badge_instance_id = 0;
+			unitbadge_healthbar_def_t* badge_healthbar_def = nullptr;
+			size_t badge_healthbar_instance_id = 0;
 		} render;
 		bool is_active = false;
 		::game::unit::Unit::morale_t morale = 0;

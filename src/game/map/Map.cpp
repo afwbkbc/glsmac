@@ -539,7 +539,7 @@ Tiles* Map::GetTilesPtr() const {
 }
 
 const std::string Map::GetTerrainSpriteActor( const std::string& name, const Consts::pcx_texture_coordinates_t& tex_coords, const float z_index ) {
-	const auto key = "Terrain_" + name + " ter1.pcx " + tex_coords.ToString() + " " + ::game::map::s_consts.tc.ter1_pcx.dimensions.ToString();
+	const auto key = "Terrain_" + name + " " + tex_coords.ToString() + " " + ::game::map::s_consts.tc.ter1_pcx.dimensions.ToString();
 
 	auto it = m_sprite_actors.find( key );
 	if ( it == m_sprite_actors.end() ) {

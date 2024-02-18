@@ -427,7 +427,7 @@ types::Texture* Game::GetRepaintedSourceTexture( const std::string& name, const 
 
 Game::instanced_sprite_t& Game::GetInstancedSprite(
 	const std::string& name,
-	const std::string& tex_file,
+	types::Texture* texture,
 	const ::game::map::Consts::pcx_texture_coordinates_t& src_xy,
 	const ::game::map::Consts::pcx_texture_coordinates_t& src_wh,
 	const ::game::map::Consts::pcx_texture_coordinates_t& src_cxy,
@@ -435,14 +435,12 @@ Game::instanced_sprite_t& Game::GetInstancedSprite(
 	const float z_index
 ) {
 
-	const auto key = name + " " + tex_file + " " + src_xy.ToString() + " " + src_wh.ToString();
+	const auto key = name + " " + src_xy.ToString() + " " + src_wh.ToString();
 
 	auto it = m_instanced_sprites.find( key );
 	if ( it == m_instanced_sprites.end() ) {
 
 		Log( "Creating instanced sprite: " + key );
-
-		auto* texture = GetSourceTexture( tex_file );
 
 		NEWV(
 			sprite,
@@ -493,7 +491,7 @@ Game::instanced_sprite_t& Game::GetInstancedSpriteByKey( const std::string& key 
 Game::instanced_sprite_t& Game::GetTerrainInstancedSprite( const ::game::map::Map::sprite_actor_t& actor ) {
 	return GetInstancedSprite(
 		"Terrain_" + actor.name,
-		"ter1.pcx",
+		GetSourceTexture( "ter1.pcx" ),
 		actor.tex_coords,
 		::game::map::s_consts.tc.ter1_pcx.dimensions,
 		{
@@ -928,7 +926,7 @@ void Game::DefineUnit( const ::game::unit::Def* unitdef ) {
 
 					unitdef_state.static_.render.is_sprite = true;
 					unitdef_state.static_.render.sprite.instanced_sprite = &GetInstancedSprite(
-						"Unit_" + def->m_name, render->m_file, {
+						"Unit_" + def->m_name, GetSourceTexture( render->m_file ), {
 							render->m_x,
 							render->m_y,
 						},
@@ -1009,12 +1007,22 @@ void Game::SpawnUnit(
 	unit_state.render.badge_def = unit_state.is_active
 		? &slot_state.badges.at( unit_state.morale ).normal
 		: &slot_state.badges.at( unit_state.morale ).greyedout;
-
 	unit_state.render.badge_instance_id = unit_state.render.badge_def->next_instance_id++;
 	unit_state.render.badge_def->instanced_sprite->actor->SetInstance(
 		unit_state.render.badge_instance_id, {
 			x + ::game::map::s_consts.tile.scale.x * s_consts.badges.offset_x,
-			y - ::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale * s_consts.badges.offset_y,
+			y - ::game::map::s_consts.tile.scale.y * s_consts.badges.offset_y * ::game::map::s_consts.sprite.y_scale,
+			z
+		}
+	);
+
+	// add healthbar render
+	unit_state.render.badge_healthbar_def = &m_healthbar_sprites.at( floor( unit_state.health * s_consts.badges.healthbars.resolution ) );
+	unit_state.render.badge_healthbar_instance_id = unit_state.render.badge_healthbar_def->next_instance_id++;
+	unit_state.render.badge_healthbar_def->instanced_sprite->actor->SetInstance(
+		unit_state.render.badge_healthbar_instance_id, {
+			x + ::game::map::s_consts.tile.scale.x * s_consts.badges.healthbars.offset_x,
+			y - ::game::map::s_consts.tile.scale.y * s_consts.badges.healthbars.offset_y * ::game::map::s_consts.sprite.y_scale,
 			z
 		}
 	);
@@ -1041,6 +1049,7 @@ void Game::DespawnUnit( const size_t unit_id ) {
 
 	unitdef_state->static_.render.sprite.instanced_sprite->actor->RemoveInstance( unit_state.render.instance_id );
 	unit_state.render.badge_def->instanced_sprite->actor->RemoveInstance( unit_state.render.badge_instance_id );
+	unit_state.render.badge_healthbar_def->instanced_sprite->actor->RemoveInstance( unit_state.render.badge_healthbar_instance_id );
 
 	m_unit_states.erase( it );
 }
@@ -1241,20 +1250,27 @@ void Game::Initialize(
 		const uint8_t w = 23;
 		const uint8_t h = 30;
 		const uint8_t margin = 1;
-		const std::string& pcx_file = "flags.pcx";
+		auto* texture = GetSourceTexture( "flags.pcx" );
+		const types::Color transparent( 0.0f, 0.0f, 0.0f, 0.0f );
 		uint32_t x, y;
 		for ( auto badge_type = BT_PROGENITOR ; badge_type <= BT_DEFAULT ; badge_type++ ) {
 			for ( auto badge_mode = BT_NORMAL ; badge_mode <= BT_GREYEDOUT ; badge_mode++ ) {
 				const uint8_t row = badge_type | badge_mode;
 				auto& spritemap = m_unitbadge_sprites[ row ];
 				for ( auto morale = ::game::unit::Unit::MORALE_MIN ; morale <= ::game::unit::Unit::MORALE_MAX ; morale++ ) {
-					x = morale * ( w + margin ) + margin;
+					x = ( morale - ::game::unit::Unit::MORALE_MIN ) * ( w + margin ) + margin;
 					y = row * ( h + margin ) + margin;
+
+					// cut holes for healthbars
+					texture->Fill( x + 6, y + 6, x + 7, y + 26, transparent );
+
 					spritemap.insert(
 						{
 							morale,
 							&GetInstancedSprite(
-								"Badge_" + std::to_string( badge_type ) + "_" + std::to_string( badge_mode ), pcx_file, {
+								"Badge_" + std::to_string( badge_type ) + "_" + std::to_string( badge_mode ),
+								texture,
+								{
 									x,
 									y,
 								},
@@ -1268,14 +1284,63 @@ void Game::Initialize(
 								},
 								{
 									::game::map::s_consts.tile.scale.x * s_consts.badges.scale_x,
-									::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale * s_consts.badges.scale_y
+									::game::map::s_consts.tile.scale.y * s_consts.badges.scale_y * ::game::map::s_consts.sprite.y_scale
 								},
-								0.52f
+								0.6f
 							)
 						}
 					);
 				}
 			}
+		}
+	}
+	{
+		// load healthbar sprites
+		ASSERT( m_healthbar_textures.empty(), "healthbar textures already initialized" );
+		ASSERT( m_healthbar_sprites.empty(), "healthbar sprites already initialized" );
+
+		const auto res = s_consts.badges.healthbars.resolution;
+
+		const float stepval = 1.0f / ( res );
+		types::Color black( 0.0f, 0.0f, 0.0f );
+		types::Color color( 1.0f - stepval / 2, stepval / 2, 0.0f );
+
+		m_healthbar_textures.reserve( res );
+		m_healthbar_sprites.resize( res );
+		for ( auto step = 0 ; step < res ; step++ ) {
+
+			// generate healthbar texture
+			auto* texture = new types::Texture( "HealthBar_" + std::to_string( step ), 1, res );
+
+			texture->Fill( 0, 0, 0, step, color );
+			if ( step < res - 1 ) {
+				texture->Fill( 0, step + 1, 0, res - 1, black );
+			}
+
+			m_healthbar_textures.push_back( texture );
+			m_healthbar_sprites.at( step ).instanced_sprite = &GetInstancedSprite(
+				"Badge_Healthbar_" + std::to_string( step ),
+				texture,
+				{
+					0,
+					0,
+				},
+				{
+					1,
+					res,
+				},
+				{
+					0,
+					0,
+				},
+				{
+					::game::map::s_consts.tile.scale.x * s_consts.badges.healthbars.scale_x,
+					::game::map::s_consts.tile.scale.y * s_consts.badges.healthbars.scale_y * ::game::map::s_consts.sprite.y_scale
+				},
+				0.525f
+			);
+			color.value.red -= stepval;
+			color.value.green += stepval;
 		}
 	}
 
@@ -1643,6 +1708,11 @@ void Game::Deinitialize() {
 		DELETE( m_textures.terrain );
 		m_textures.terrain = nullptr;
 	}
+
+	for ( const auto& texture : m_healthbar_textures ) {
+		delete texture;
+	}
+	m_healthbar_textures.clear();
 
 	m_slot_states.clear();
 
