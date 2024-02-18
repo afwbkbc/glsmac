@@ -976,6 +976,8 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 	e.data.unit_spawn.is_active = unit->m_owner == GetPlayer()->GetSlot();
 
 	e.data.unit_spawn.morale = unit->m_morale;
+	e.data.unit_spawn.health = unit->m_health;
+
 	AddEvent( e );
 
 	if ( m_state->IsMaster() ) {

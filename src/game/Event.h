@@ -71,6 +71,7 @@ public:
 			} coords;
 			bool is_active;
 			unit::Unit::morale_t morale;
+			unit::Unit::health_t health;
 		} unit_spawn;
 		struct {
 			size_t unit_id;

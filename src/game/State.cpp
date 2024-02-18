@@ -96,7 +96,17 @@ void State::InitBindings() {
 	if ( !m_bindings ) {
 		Log( "Initializing bindings" );
 		m_bindings = new bindings::Bindings( this );
-		m_bindings->RunMain();
+		try {
+			m_bindings->RunMain();
+		}
+		catch ( gse::Exception& err ) {
+			if ( m_game ) {
+				m_game->OnGSEError( err );
+			}
+			else {
+				throw std::runtime_error( err.ToStringAndCleanup() );
+			}
+		}
 	}
 }
 

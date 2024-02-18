@@ -178,7 +178,8 @@ private:
 		const float y,
 		const float z,
 		const bool is_active,
-		const ::game::unit::Unit::morale_t morale
+		const ::game::unit::Unit::morale_t morale,
+		const ::game::unit::Unit::health_t health
 	);
 	void DespawnUnit( const size_t unit_id );
 
@@ -430,6 +431,7 @@ private:
 		} render;
 		bool is_active = false;
 		::game::unit::Unit::morale_t morale = 0;
+		::game::unit::Unit::health_t health = 0;
 	};
 	std::unordered_map< size_t, unit_state_t > m_unit_states = {};
 

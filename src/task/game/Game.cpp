@@ -973,7 +973,8 @@ void Game::SpawnUnit(
 	const float y,
 	const float z,
 	const bool is_active,
-	const ::game::unit::Unit::morale_t morale
+	const ::game::unit::Unit::morale_t morale,
+	const ::game::unit::Unit::health_t health
 ) {
 
 	ASSERT( m_unitdef_states.find( unitdef_name ) != m_unitdef_states.end(), "unitdef not found" );
@@ -992,6 +993,7 @@ void Game::SpawnUnit(
 
 	unit_state.is_active = is_active;
 	unit_state.morale = morale;
+	unit_state.health = health;
 
 	// add render
 	unit_state.render.instance_id = unitdef_state.static_.render.sprite.next_instance_id++;
@@ -1103,7 +1105,7 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 		case ::game::Event::ET_UNIT_SPAWN: {
 			const auto& d = event.data.unit_spawn;
 			const auto& c = d.coords;
-			SpawnUnit( d.unit_id, *d.unitdef_name, d.slot_index, c.x, c.y, c.z, d.is_active, d.morale );
+			SpawnUnit( d.unit_id, *d.unitdef_name, d.slot_index, c.x, c.y, c.z, d.is_active, d.morale, d.health );
 			break;
 		}
 		case ::game::Event::ET_UNIT_DESPAWN: {

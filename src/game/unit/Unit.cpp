@@ -2,6 +2,7 @@
 
 #include "gse/type/Object.h"
 #include "gse/type/Int.h"
+#include "gse/type/Float.h"
 #include "gse/callable/Native.h"
 
 #include "game/Game.h"
@@ -14,6 +15,9 @@ namespace unit {
 const Unit::morale_t Unit::MORALE_MIN = 1;
 const Unit::morale_t Unit::MORALE_MAX = 7;
 
+const Unit::health_t Unit::HEALTH_MIN = 0.0f;
+const Unit::health_t Unit::HEALTH_MAX = 1.0f;
+
 static size_t next_id = 1;
 const size_t Unit::GetNextId() {
 	return next_id;
@@ -22,12 +26,13 @@ const void Unit::SetNextId( const size_t id ) {
 	next_id = id;
 }
 
-Unit::Unit( const size_t id, const Def* def, Slot* owner, map::Tile* tile, const morale_t morale )
+Unit::Unit( const size_t id, const Def* def, Slot* owner, map::Tile* tile, const morale_t morale, const health_t health )
 	: m_id( id )
 	, m_def( def )
 	, m_owner( owner )
 	, m_tile( tile )
-	, m_morale( morale ) {
+	, m_morale( morale )
+	, m_health( health ) {
 	if ( next_id <= id ) {
 		next_id = id + 1;
 	}
@@ -67,6 +72,7 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 	buf.WriteInt( unit->m_tile->coord.x );
 	buf.WriteInt( unit->m_tile->coord.y );
 	buf.WriteInt( unit->m_morale );
+	buf.WriteFloat( unit->m_health );
 	return buf;
 }
 
@@ -79,7 +85,8 @@ Unit* Unit::Unserialize( types::Buffer& buf, const Game* game ) {
 	const auto pos_y = buf.ReadInt();
 	auto* tile = game ? game->GetMap()->GetTile( pos_x, pos_y ) : nullptr;
 	const auto morale = (morale_t)buf.ReadInt();
-	return new Unit( id, def, slot, tile, morale );
+	const auto health = (health_t)buf.ReadFloat();
+	return new Unit( id, def, slot, tile, morale, health );
 }
 
 WRAPIMPL_BEGIN( Unit, CLASS_UNIT )
@@ -91,6 +98,10 @@ WRAPIMPL_BEGIN( Unit, CLASS_UNIT )
 		{
 			"morale",
 			VALUE( gse::type::Int, m_morale )
+		},
+		{
+			"health",
+			VALUE( gse::type::Float, m_health )
 		},
 		{
 			"get_def",

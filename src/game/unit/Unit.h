@@ -27,7 +27,18 @@ public:
 	static const morale_t MORALE_MIN;
 	static const morale_t MORALE_MAX;
 
-	Unit( const size_t id, const Def* def, Slot* owner, map::Tile* tile, const morale_t morale );
+	typedef float health_t;
+	static const health_t HEALTH_MIN;
+	static const health_t HEALTH_MAX;
+
+	Unit(
+		const size_t id,
+		const Def* def,
+		Slot* owner,
+		map::Tile* tile,
+		const morale_t morale,
+		const health_t health
+	);
 	virtual ~Unit() = default;
 
 	const size_t m_id;
@@ -36,6 +47,7 @@ public:
 	map::Tile* m_tile = nullptr;
 
 	morale_t m_morale;
+	health_t m_health;
 	const std::string& GetMoraleString() const;
 
 	static const types::Buffer Serialize( const Unit* unit );

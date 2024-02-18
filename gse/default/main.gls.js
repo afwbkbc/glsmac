@@ -24,6 +24,10 @@ let random_morale = () => {
     return #game.random.get_int(1, 7); // TODO: get some constants from api
 };
 
+let random_health = () => {
+    return #game.random.get_float(#to_float(0), #to_float(1));
+};
+
 #game.on.start(() => {
 
     // init players
@@ -51,13 +55,13 @@ let random_morale = () => {
                     let unit = null;
                     if (tile.is_land) {
                         if (#game.random.get_int(0, 2) != 1) {
-                            unit = #game.units.spawn('MindWorms', owner, tile, random_morale());
+                            unit = #game.units.spawn('MindWorms', owner, tile, random_morale(), random_health());
                         } else {
-                            unit = #game.units.spawn('SporeLauncher', owner, tile, random_morale());
+                            unit = #game.units.spawn('SporeLauncher', owner, tile, random_morale(), random_health());
                         }
                     } else {
                         if (#game.random.get_int(0, 1) == 1) {
-                            unit = #game.units.spawn('SeaLurk', owner, tile, random_morale());
+                            unit = #game.units.spawn('SeaLurk', owner, tile, random_morale(), random_health());
                         }
                     }
                 }
@@ -95,6 +99,6 @@ let random_morale = () => {
 
 #game.on.despawn_unit((unit) => {
     if (unit.get_def() == 'SporeLauncher') {
-        #game.units.spawn('MindWorms', random_player(), unit.get_tile(), random_morale());
+        #game.units.spawn('MindWorms', random_player(), unit.get_tile(), random_morale(), random_health());
     }
 });

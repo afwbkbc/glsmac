@@ -46,6 +46,7 @@ Event::Event( const Event& other )
 			data.unit_spawn.coords = other.data.unit_spawn.coords;
 			data.unit_spawn.is_active = other.data.unit_spawn.is_active;
 			data.unit_spawn.morale = other.data.unit_spawn.morale;
+			data.unit_spawn.health = other.data.unit_spawn.health;
 			break;
 		}
 		case ET_UNIT_DESPAWN: {

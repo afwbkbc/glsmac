@@ -3,6 +3,7 @@
 #include "gse/type/Object.h"
 #include "gse/type/String.h"
 #include "gse/type/Int.h"
+#include "gse/type/Float.h"
 
 #include "game/unit/StaticDef.h"
 #include "game/unit/SpriteRender.h"
@@ -19,6 +20,16 @@ const unit::Unit::morale_t GetMorale( const int64_t& morale, gse::Context* ctx, 
 		ERROR( gse::EC.INVALID_CALL, "Invalid morale value: " + std::to_string( morale ) + " (should be between " + std::to_string( unit::Unit::MORALE_MIN ) + " and " + std::to_string( unit::Unit::MORALE_MAX ) + ", inclusive)" );
 	}
 	return (unit::Unit::morale_t)morale;
+}
+
+const unit::Unit::health_t GetHealth( const float health, gse::Context* ctx, const gse::si_t& call_si ) {
+	if ( health < unit::Unit::HEALTH_MIN || health > unit::Unit::HEALTH_MAX ) {
+		ERROR( gse::EC.INVALID_CALL, "Invalid health value: " + std::to_string( health ) + " (should be between " + std::to_string( unit::Unit::HEALTH_MIN ) + " and " + std::to_string( unit::Unit::HEALTH_MAX ) + ", inclusive)" );
+	}
+	if ( health == 0 ) {
+		ERROR( gse::EC.INVALID_CALL, "Invalid health value: " + std::to_string( health ) + " (you can't spawn a dead unit)" );
+	}
+	return (unit::Unit::health_t)health;
 }
 
 BINDING_IMPL( units ) {
@@ -60,17 +71,19 @@ BINDING_IMPL( units ) {
 		{
 			"spawn",
 			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 4 );
+				N_EXPECT_ARGS( 5 );
 				N_GETVALUE( def_name, 0, String );
 				N_UNWRAP( owner, 1, Slot );
 				N_UNWRAP( tile, 2, map::Tile );
 				N_GETVALUE( morale, 3, Int );
+				N_GETVALUE( health, 4, Float );
 				return GAME->AddGameEvent( new event::SpawnUnit(
 					def_name,
 					owner->GetIndex(),
 					tile->coord.x,
 					tile->coord.y,
-					GetMorale( morale, ctx, call_si )
+					GetMorale( morale, ctx, call_si ),
+					GetHealth( health, ctx, call_si )
 				), ctx, call_si );
 			})
 		},
