@@ -107,12 +107,14 @@ void State::Configure() {
 
 	// reset
 	m_settings.global.game_rules.m_factions.clear();
+	m_settings.global.game_rules.m_factions_order.clear();
 
 	// configure
 	m_bindings->Call( ::game::bindings::Bindings::CS_ON_CONFIGURE );
 
 	// check
 	ASSERT( !m_settings.global.game_rules.m_factions.empty(), "no factions were defined" );
+	ASSERT( m_settings.global.game_rules.m_factions_order.size() == m_settings.global.game_rules.m_factions.size(), "factions order size mismatch" );
 }
 
 void State::Reset() {

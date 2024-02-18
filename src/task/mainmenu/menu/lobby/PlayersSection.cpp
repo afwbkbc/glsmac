@@ -62,11 +62,13 @@ void PlayersSection::UpdateSlots( std::vector< ::game::Slot >& slots ) {
 			random_faction.m_name
 		}
 	);
-	for ( auto& faction : game_rules.m_factions ) {
+	for ( auto& id : game_rules.m_factions_order ) {
+		ASSERT( game_rules.m_factions.find( id ) != game_rules.m_factions.end(), "faction not found: " + id );
+		const auto& faction = game_rules.m_factions.at( id );
 		m_choices.factions.push_back(
 			{
-				faction.second.m_id,
-				faction.second.m_name
+				id,
+				faction.m_name
 			}
 		);
 	}

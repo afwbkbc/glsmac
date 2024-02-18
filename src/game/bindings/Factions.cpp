@@ -12,10 +12,11 @@ namespace bindings {
 
 BINDING_IMPL( factions ) {
 	auto& factions = m_bindings->GetState()->m_settings.global.game_rules.m_factions;
+	auto& factions_order = m_bindings->GetState()->m_settings.global.game_rules.m_factions_order;
 	const gse::type::Object::properties_t properties = {
 		{
 			"define",
-			NATIVE_CALL( this, &factions ) {
+			NATIVE_CALL( this, &factions, &factions_order ) {
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( id, 0, String );
 				if ( factions.find( id ) != factions.end() ) {
@@ -28,6 +29,7 @@ BINDING_IMPL( factions ) {
 				rules::Faction faction = { id, name };
 				faction.ImportPCX( pcx_file );
 				factions.insert({ id, faction });
+				factions_order.push_back( id );
 				return VALUE( gse::type::Undefined );
 			})
 		},

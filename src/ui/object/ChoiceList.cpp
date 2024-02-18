@@ -35,7 +35,7 @@ void ChoiceList< KEY_TYPE >::SetChoices( const choices_t& choices ) {
 	m_labels.clear();
 	for ( auto& choice : choices ) {
 		m_values.push_back( choice.first );
-		m_labels[ choice.first ] = choice.second;
+		m_labels.insert( choice );
 	}
 
 	if ( m_created ) {

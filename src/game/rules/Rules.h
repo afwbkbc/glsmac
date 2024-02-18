@@ -14,7 +14,8 @@ CLASS( Rules, types::Serializable )
 
 	typedef std::unordered_map< std::string, Faction > factions_t;
 
-	factions_t m_factions;
+	factions_t m_factions = {};
+	std::vector< std::string > m_factions_order = {};
 	std::map< size_t, DifficultyLevel > m_difficulty_levels;
 
 	virtual const DifficultyLevel& GetDefaultDifficultyLevel() const = 0;
