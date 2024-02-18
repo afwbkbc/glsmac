@@ -91,7 +91,10 @@ CLASS( Game, base::Task )
 
 	types::Texture* GetSourceTexture( const std::string& name );
 
+	types::Texture* GetRepaintedSourceTexture( const std::string& name, const types::Texture* original, const types::Texture::repaint_rules_t& rules );
+
 	struct instanced_sprite_t {
+		std::string key;
 		std::string name;
 		::game::map::Consts::pcx_texture_coordinates_t xy;
 		::game::map::Consts::pcx_texture_coordinates_t wh;
@@ -109,6 +112,9 @@ CLASS( Game, base::Task )
 	);
 	instanced_sprite_t& GetInstancedSpriteByKey( const std::string& key ); // actor must already exist
 	instanced_sprite_t& GetTerrainInstancedSprite( const ::game::map::Map::sprite_actor_t& actor );
+	instanced_sprite_t* GetRepaintedInstancedSprite( const std::string& name, const instanced_sprite_t& original, const types::Texture::repaint_rules_t& rules );
+
+	void RemoveInstancedSpriteByKey( const std::string& key );
 
 	void CenterAtCoordinatePercents( const Vec2< float > position_percents );
 
@@ -293,6 +299,7 @@ private:
 
 	struct {
 		std::unordered_map< std::string, types::Texture* > source;
+		std::unordered_map< std::string, types::Texture* > repainted_source;
 		types::Texture* terrain = nullptr;
 	} m_textures;
 
@@ -352,11 +359,6 @@ private:
 #endif
 	} m_mt_ids = {};
 
-	struct slot_state_t {
-		types::Color color;
-	};
-	std::unordered_map< size_t, slot_state_t > m_slot_states = {};
-
 	struct unitdef_state_t {
 		::game::unit::Def::def_type_t m_type;
 		union {
@@ -382,9 +384,14 @@ private:
 		static const float OFFSET_Y;
 		Game::instanced_sprite_t* instanced_sprite = nullptr;
 		size_t next_instance_id = 1;
-		size_t instance_id;
 	};
 	unitbadge_def_t m_unitbadge_default = {}; // TODO: variations
+
+	struct slot_state_t {
+		types::Color color;
+		unitbadge_def_t badge;
+	};
+	std::unordered_map< size_t, slot_state_t > m_slot_states = {};
 
 	struct unit_state_t {
 		unitdef_state_t* def = nullptr;

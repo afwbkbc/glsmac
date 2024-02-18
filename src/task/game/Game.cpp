@@ -405,7 +405,28 @@ types::Texture* Game::GetSourceTexture( const std::string& name ) {
 	}
 	auto* texture = g_engine->GetTextureLoader()->LoadTexture( name );
 	ASSERT( texture, "texture not loaded" );
-	m_textures.source.insert_or_assign( name, texture );
+	m_textures.source.insert(
+		{
+			name,
+			texture
+		}
+	);
+	return texture;
+}
+
+types::Texture* Game::GetRepaintedSourceTexture( const std::string& name, const types::Texture* original, const types::Texture::repaint_rules_t& rules ) {
+	const auto it = m_textures.repainted_source.find( name );
+	if ( it != m_textures.repainted_source.end() ) {
+		return it->second;
+	}
+	NEWV( texture, types::Texture, original->m_name, original->m_width, original->m_height );
+	texture->RepaintFrom( original, rules );
+	m_textures.repainted_source.insert(
+		{
+			name,
+			texture
+		}
+	);
 	return texture;
 }
 
@@ -421,12 +442,12 @@ Game::instanced_sprite_t& Game::GetInstancedSprite(
 
 	const auto key = name + " " + tex_file + " " + src_xy.ToString() + " " + src_wh.ToString();
 
-	const auto& it = m_instanced_sprites.find( key );
+	auto it = m_instanced_sprites.find( key );
 	if ( it == m_instanced_sprites.end() ) {
 
-		Log( "Creating instanced sprite actor: " + key );
+		Log( "Creating instanced sprite: " + key );
 
-		auto* pcx = GetSourceTexture( tex_file );
+		auto* texture = GetSourceTexture( tex_file );
 
 		NEWV(
 			sprite,
@@ -436,25 +457,26 @@ Game::instanced_sprite_t& Game::GetInstancedSprite(
 				dst_wh.x,
 				dst_wh.y
 			},
-			pcx,
+			texture,
 			{
 				{
-					(float)1.0f / pcx->m_width * ( src_xy.x ),
-					(float)1.0f / pcx->m_height * ( src_xy.y )
+					(float)1.0f / texture->m_width * ( src_xy.x ),
+					(float)1.0f / texture->m_height * ( src_xy.y )
 				},
 				{
-					(float)1.0f / pcx->m_width * ( src_xy.x + src_wh.x ),
-					(float)1.0f / pcx->m_height * ( src_xy.y + src_wh.y )
+					(float)1.0f / texture->m_width * ( src_xy.x + src_wh.x ),
+					(float)1.0f / texture->m_height * ( src_xy.y + src_wh.y )
 				}
 			}
 		);
 		NEWV( instanced, scene::actor::Instanced, sprite );
 		instanced->SetZIndex( z_index ); // needs to be higher than map terrain z position
 		m_world_scene->AddActor( instanced );
-		return m_instanced_sprites.insert(
+		it = m_instanced_sprites.insert(
 			{
 				key,
 				{
+					key,
 					name,
 					src_xy,
 					src_wh,
@@ -462,11 +484,9 @@ Game::instanced_sprite_t& Game::GetInstancedSprite(
 					instanced
 				}
 			}
-		).first->second;
+		).first;
 	}
-	else {
-		return it->second;
-	}
+	return it->second;
 }
 
 Game::instanced_sprite_t& Game::GetInstancedSpriteByKey( const std::string& key ) {
@@ -491,6 +511,55 @@ Game::instanced_sprite_t& Game::GetTerrainInstancedSprite( const ::game::map::Ma
 		},
 		actor.z_index
 	);
+}
+
+Game::instanced_sprite_t* Game::GetRepaintedInstancedSprite( const std::string& name, const Game::instanced_sprite_t& original, const types::Texture::repaint_rules_t& rules ) {
+	const auto& key = name;
+
+	auto it = m_instanced_sprites.find( key );
+	if ( it == m_instanced_sprites.end() ) {
+
+		Log( "Creating repainted instanced sprite: " + key );
+
+		const auto* original_sprite = original.actor->GetSpriteActor();
+		auto* texture = GetRepaintedSourceTexture( name, original_sprite->GetTexture(), rules );
+
+		NEWV(
+			sprite,
+			scene::actor::Sprite,
+			name,
+			original_sprite->GetDimensions(),
+			texture,
+			original_sprite->GetTexCoords()
+		);
+		NEWV( instanced, scene::actor::Instanced, sprite );
+		instanced->SetZIndex( original.actor->GetZIndex() );
+		m_world_scene->AddActor( instanced );
+		it = m_instanced_sprites.insert(
+			{
+				key,
+				{
+					key,
+					name,
+					original.xy,
+					original.wh,
+					original.cxy,
+					instanced
+				}
+			}
+		).first;
+
+	}
+	return &it->second;
+}
+
+void Game::RemoveInstancedSpriteByKey( const std::string& key ) {
+	const auto& it = m_instanced_sprites.find( key );
+	ASSERT( it != m_instanced_sprites.end(), "instanced sprite not found: " + key );
+	Log( "Removing instanced sprite: " + key );
+	const auto& sprite = it->second;
+	m_world_scene->RemoveActor( sprite.actor );
+	m_instanced_sprites.erase( it );
 }
 
 void Game::CenterAtCoordinatePercents( const Vec2< float > position_percents ) {
@@ -797,7 +866,28 @@ void Game::DefineSlot( const size_t slot_index, const types::Color& color ) {
 			}
 		).first;
 	}
-	slot_it->second.color = color;
+	auto& slot = slot_it->second;
+	if ( slot.color != color || !slot.badge.instanced_sprite ) {
+		const auto badges_key = "Badges-" + std::to_string( slot_index );
+		if ( slot.badge.instanced_sprite ) {
+			RemoveInstancedSpriteByKey( badges_key );
+		}
+		const auto& c = color.value;
+		slot.badge.instanced_sprite = GetRepaintedInstancedSprite(
+			badges_key, *m_unitbadge_default.instanced_sprite, {
+				{ // active
+					types::Color::RGB( 252, 0, 0 ),
+					types::Color( c.red, c.green, c.blue ).GetRGBA()
+				},
+				{ // greyed out
+					types::Color::RGB( 125, 0, 0 ),
+					types::Color( c.red / 2, c.green / 2, c.blue / 2 ).GetRGBA()
+				}
+			}
+		);
+		slot.badge.next_instance_id = 1;
+	}
+	slot.color = color;
 }
 
 void Game::DefineUnit( const ::game::unit::Def* unitdef ) {
@@ -863,9 +953,10 @@ void Game::SpawnUnit( const size_t unit_id, const std::string& unitdef_name, con
 	ASSERT( m_unit_states.find( unit_id ) == m_unit_states.end(), "unit id already exists" );
 
 	auto& unitdef_state = m_unitdef_states.at( unitdef_name );
+	auto& slot_state = m_slot_states.at( slot_index );
 	unit_state_t unit_state = {
 		&unitdef_state,
-		&m_slot_states.at( slot_index )
+		&slot_state
 	};
 
 	ASSERT( unitdef_state.m_type == ::game::unit::Def::DT_STATIC, "only static unitdefs are supported for now" );
@@ -882,7 +973,8 @@ void Game::SpawnUnit( const size_t unit_id, const std::string& unitdef_name, con
 	);
 
 	// add badge render
-	unit_state.badge_def = &m_unitbadge_default; // TODO: variations
+	unit_state.badge_def = &slot_state.badge; // TODO: variations
+
 	unit_state.badge_instance_id = unit_state.badge_def->next_instance_id++;
 	unit_state.badge_def->instanced_sprite->actor->SetInstance(
 		unit_state.badge_instance_id, {
@@ -1110,7 +1202,7 @@ void Game::Initialize(
 	// Predefined sprites
 	// TODO: variations
 	m_unitbadge_default.instanced_sprite = &GetInstancedSprite(
-		"Badge_DEFAULT", "flags.pcx", {
+		"Badges", "flags.pcx", {
 			49,
 			63,
 		},
@@ -1491,7 +1583,15 @@ void Game::Deinitialize() {
 
 	if ( m_textures.terrain ) {
 		DELETE( m_textures.terrain );
+		m_textures.terrain = nullptr;
 	}
+
+	m_slot_states.clear();
+
+	for ( const auto& it : m_textures.repainted_source ) {
+		DELETE( it.second );
+	}
+	m_textures.repainted_source.clear();
 
 	for ( auto& it : m_actors_map ) {
 		m_world_scene->RemoveActor( it.second );

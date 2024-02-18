@@ -12,10 +12,12 @@ using namespace game::map;
 
 namespace types {
 
+Texture::Texture() {
+	// nothing
+}
+
 Texture::Texture( const std::string& name, const size_t width, const size_t height )
 	: m_name( name ) {
-	m_bpp = 4; // always RGBA format
-
 	if ( width > 0 && height > 0 ) {
 		Resize( width, height );
 	}
@@ -31,6 +33,10 @@ Texture::~Texture() {
 	if ( m_graphics_object ) {
 		m_graphics_object->Remove();
 	}
+}
+
+const bool Texture::IsEmpty() const {
+	return m_width == 0 && m_height == 0;
 }
 
 void Texture::Resize( const size_t width, const size_t height ) {
@@ -699,6 +705,28 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 			dest_y + h - 1
 		}
 	);
+}
+
+void Texture::RepaintFrom( const types::Texture* original, const repaint_rules_t& rules ) {
+	ASSERT( m_width == original->m_width, "repaint width mismatch" );
+	ASSERT( m_height == original->m_height, "repaint width mismatch" );
+	ASSERT( m_bpp == original->m_bpp, "repaint bpp mismatch" );
+	ASSERT( m_bitmap, "bitmap not set" );
+	ASSERT( original->m_bitmap, "original bitmap not set" );
+
+	uint32_t rgba;
+	repaint_rules_t::const_iterator rule_it;
+	for ( size_t y = 0 ; y < m_height ; y++ ) {
+		for ( size_t x = 0 ; x < m_width ; x++ ) {
+			const auto idx = ( y * m_width + x ) * m_bpp;
+			memcpy( &rgba, ptr( original->m_bitmap, idx, m_bpp ), m_bpp );
+			if ( ( rule_it = rules.find( rgba ) ) != rules.end() ) {
+				rgba = rule_it->second;
+			}
+			memcpy( ptr( m_bitmap, idx, m_bpp ), &rgba, m_bpp );
+		}
+	}
+
 }
 
 void Texture::Rotate() {
