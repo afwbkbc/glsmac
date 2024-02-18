@@ -216,7 +216,6 @@ int main( const int argc, const char* argv[] ) {
 			loader::font::FreeType font_loader;
 
 			loader::texture::SDL2 texture_loader;
-			texture_loader.SetTransparentColor( types::Color::RGBA( 255, 0, 255, 255 ) );
 
 			loader::sound::SDL2 sound_loader;
 

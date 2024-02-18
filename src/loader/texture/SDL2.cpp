@@ -28,7 +28,7 @@ void SDL2::Iterate() {
 
 }
 
-Texture* SDL2::LoadTexture( const std::string& name ) {
+Texture* SDL2::LoadTextureImpl( const std::string& name ) {
 
 	texture_map_t::iterator it = m_textures.find( name );
 	if ( it != m_textures.end() ) {
@@ -74,7 +74,7 @@ Texture* SDL2::LoadTexture( const std::string& name ) {
 
 }
 
-Texture* SDL2::LoadTexture( const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
+Texture* SDL2::LoadTextureImpl( const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
 	ASSERT( x1 <= x2, "LoadTexture x overflow ( " + std::to_string( x1 ) + " > " + std::to_string( x2 ) + " )" );
 	ASSERT( y1 <= y2, "LoadTexture y overflow ( " + std::to_string( y1 ) + " > " + std::to_string( y2 ) + " )" );
 
@@ -125,7 +125,7 @@ Texture* SDL2::LoadTexture( const std::string& name, const size_t x1, const size
 }
 
 void SDL2::FixTransparency( Texture* texture ) const {
-	if ( m_is_transparent_color_set ) {
+	if ( !m_transparent_colors.empty() ) {
 		void* at = nullptr;
 		for ( size_t i = 0 ; i < texture->m_bitmap_size ; i += texture->m_bpp ) {
 			at = ptr( texture->m_bitmap, i, texture->m_bpp );

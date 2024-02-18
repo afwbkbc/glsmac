@@ -83,15 +83,8 @@ Map::Map( Game* game )
 	);
 
 	// main source textures
-	m_textures.source.texture_pcx = g_engine->GetTextureLoader()->LoadTextureTC( "texture.pcx", Color::RGB( 125, 0, 128 ) );
-	m_textures.source.ter1_pcx = g_engine->GetTextureLoader()->LoadTextureTCs(
-		"ter1.pcx", {
-			Color::RGB( 152, 24, 228 ), // remove transparency color
-			Color::RGB( 100, 16, 156 ), // remove second transparency color
-			Color::RGB( 24, 184, 228 ), // remove frame
-			Color::RGB( 253, 189, 118 ) // remove drawn shadows too (we'll have our own)
-		}
-	);
+	m_textures.source.texture_pcx = g_engine->GetTextureLoader()->LoadTexture( "texture.pcx" );
+	m_textures.source.ter1_pcx = g_engine->GetTextureLoader()->LoadTexture( "ter1.pcx" );
 
 	// add map modules
 	//   order of passes is important

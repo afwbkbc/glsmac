@@ -403,15 +403,7 @@ types::Texture* Game::GetSourceTexture( const std::string& name ) {
 	if ( it != m_textures.source.end() ) {
 		return it->second;
 	}
-	auto* texture = g_engine->GetTextureLoader()->LoadTextureTCs(
-		name, {
-			Color::RGB( 152, 24, 228 ), // remove transparency color
-			Color::RGB( 100, 16, 156 ), // remove second transparency color
-			Color::RGB( 24, 184, 228 ), // remove frame
-			Color::RGB( 253, 189, 118 ), // remove drawn shadows too (we'll have our own)
-			Color::RGB( 124, 124, 124 ), // remove badges background // TODO: use per-file transparency selection
-		}
-	);
+	auto* texture = g_engine->GetTextureLoader()->LoadTexture( name );
 	ASSERT( texture, "texture not loaded" );
 	m_textures.source.insert_or_assign( name, texture );
 	return texture;

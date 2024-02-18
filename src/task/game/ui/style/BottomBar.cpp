@@ -29,7 +29,7 @@ void BottomBar::AddStyles() {
 		"FrameLeft", { "Frame" }, SH() {
 			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_LEFT );
 			s->Set( ::Style::A_WIDTH, 356 );
-			s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx", 0, 0, 356, 256, Color::RGB( 100, 16, 156 ) );
+			s->SetTexture( ::Style::A_TEXTURE, "console2_A.pcx", 0, 0, 356, 256 );
 		}
 	);
 
@@ -38,7 +38,7 @@ void BottomBar::AddStyles() {
 			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM );
 			s->Set( ::Style::A_LEFT, 356 );
 			s->Set( ::Style::A_RIGHT, 520 );
-			s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx", 357, 0, ( 1024 - 521 ), 256, Color::RGB( 100, 16, 156 ) );
+			s->SetTexture( ::Style::A_TEXTURE, "console2_A.pcx", 357, 0, ( 1024 - 521 ), 256 );
 		}
 	);
 
@@ -46,7 +46,7 @@ void BottomBar::AddStyles() {
 		"FrameRight", { "Frame" }, SH() {
 			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_RIGHT );
 			s->Set( ::Style::A_WIDTH, 520 );
-			s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx", ( 1024 - 520 ), 0, 1023, 256, Color::RGB( 100, 16, 156 ) );
+			s->SetTexture( ::Style::A_TEXTURE, "console2_A.pcx", ( 1024 - 520 ), 0, 1023, 256 );
 		}
 	);
 
@@ -638,7 +638,7 @@ void BottomBar::AddStyles() {
 			s->Set( ::Style::A_WIDTH, 139 );
 			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP );
 			s->Set( ::Style::A_TOP, -4 );
-			s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx", 0, 0, 138, 4, Color::RGB( 100, 16, 156 ) );
+			s->SetTexture( ::Style::A_TEXTURE, "console2_A.pcx", 0, 0, 138, 4 );
 		}
 	);
 
@@ -648,7 +648,7 @@ void BottomBar::AddStyles() {
 			s->Set( ::Style::A_WIDTH, 139 );
 			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_RIGHT );
 			s->Set( ::Style::A_TOP, -5 );
-			s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx", 885, 1, 1023, 6, Color::RGB( 100, 16, 156 ) );
+			s->SetTexture( ::Style::A_TEXTURE, "console2_A.pcx", 885, 1, 1023, 6 );
 		}
 	);
 

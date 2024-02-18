@@ -131,7 +131,7 @@ void Popup::AddStyles() {
 			s->Set( Style::A_LEFT, 8 );
 			s->Set( Style::A_TOP, 36 );
 
-			s->SetTextureTC( Style::A_TEXTURE, "space_sm.pcx", Color::RGB( 100, 16, 156 ) );
+			s->SetTexture( Style::A_TEXTURE, "space_sm.pcx" );
 
 		}
 	);
