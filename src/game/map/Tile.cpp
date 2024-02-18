@@ -1,6 +1,7 @@
 #include "Tile.h"
 
 #include "gse/type/Object.h"
+#include "gse/type/Array.h"
 #include "gse/type/Int.h"
 #include "gse/type/Bool.h"
 #include "gse/callable/Native.h"
@@ -104,6 +105,10 @@ WRAPIMPL_BEGIN( Tile, CLASS_TILE )
 			"is_land",
 			VALUE( gse::type::Bool, !is_water_tile )
 		},
+		{
+			"has_fungus",
+			VALUE( gse::type::Bool, ( features & F_XENOFUNGUS ) == F_XENOFUNGUS )
+		},
 		GETN( W ),
 		GETN( NW ),
 		GETN( N ),
@@ -113,8 +118,20 @@ WRAPIMPL_BEGIN( Tile, CLASS_TILE )
 		GETN( S ),
 		GETN( SW ),
 		{
+			"get_surrounding_tiles",
+			NATIVE_CALL( this ) {
+				N_ARGS( 0 );
+				gse::type::Array::elements_t result = {};
+				for ( const auto& n : neighbours ) {
+					result.push_back( n->Wrap() );
+				}
+				return VALUE( gse::type::Array, result );
+			})
+		},
+		{
 			"get_units",
 			NATIVE_CALL( this ) {
+				N_ARGS( 0 );
 				gse::type::Object::properties_t result = {};
 				for ( auto& it : units ) {
 					result.insert_or_assign( std::to_string( it.second->m_id ), it.second->Wrap() );
