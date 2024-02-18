@@ -81,6 +81,12 @@ CLASS( Game, base::Task )
 		const struct {
 			const size_t draw_frequency_ms = 60; // TODO: this value doesn't seem realistic, why?
 		} map_editing;
+		const struct {
+			const float scale_x = 0.25f;
+			const float scale_y = 0.5f;
+			const float offset_x = -0.25f;
+			const float offset_y = -0.5;
+		} badges;
 	};
 	static const consts_t s_consts;
 
@@ -158,9 +164,22 @@ private:
 
 	void UpdateMapData( const types::Vec2< size_t >& map_size );
 
-	void DefineSlot( const size_t slot_index, const types::Color& color );
+	void DefineSlot(
+		const size_t slot_index,
+		const types::Color& color,
+		const bool is_progenitor
+	);
 	void DefineUnit( const ::game::unit::Def* unitdef );
-	void SpawnUnit( const size_t unit_id, const std::string& unitdef_name, const size_t slot_index, const float x, const float y, const float z );
+	void SpawnUnit(
+		const size_t unit_id,
+		const std::string& unitdef_name,
+		const size_t slot_index,
+		const float x,
+		const float y,
+		const float z,
+		const bool is_active,
+		const ::game::unit::Unit::morale_t morale
+	);
 	void DespawnUnit( const size_t unit_id );
 
 	void ProcessEvent( const ::game::Event& event );
@@ -377,28 +396,40 @@ private:
 	};
 	std::unordered_map< std::string, unitdef_state_t > m_unitdef_states = {};
 
-	struct unitbadge_def_t {
-		static const float SCALE_X;
-		static const float SCALE_Y;
-		static const float OFFSET_X;
-		static const float OFFSET_Y;
+	typedef std::unordered_map< ::game::unit::Unit::morale_t, Game::instanced_sprite_t* > unitbadge_spritemap_t;
+	typedef uint8_t badge_type_t;
+	const badge_type_t BT_NORMAL = 0 << 0;
+	const badge_type_t BT_GREYEDOUT = 1 << 0;
+	const badge_type_t BT_DEFAULT = 1 << 1;
+	const badge_type_t BT_PROGENITOR = 0 << 1;
+	typedef std::unordered_map< badge_type_t, unitbadge_spritemap_t > unitbadge_spritemaps_t;
+	struct unitbadge_subdef_t {
 		Game::instanced_sprite_t* instanced_sprite = nullptr;
 		size_t next_instance_id = 1;
 	};
-	unitbadge_def_t m_unitbadge_default = {}; // TODO: variations
+	struct unitbadge_def_t {
+		unitbadge_subdef_t normal;
+		unitbadge_subdef_t greyedout;
+	};
+	typedef std::unordered_map< ::game::unit::Unit::morale_t, unitbadge_def_t > unitbadge_defs_t;
+	unitbadge_spritemaps_t m_unitbadge_sprites = {};
 
 	struct slot_state_t {
-		types::Color color;
-		unitbadge_def_t badge;
+		types::Color color = {};
+		unitbadge_defs_t badges = {};
 	};
 	std::unordered_map< size_t, slot_state_t > m_slot_states = {};
 
 	struct unit_state_t {
 		unitdef_state_t* def = nullptr;
 		slot_state_t* slot = nullptr;
-		size_t instance_id = 0;
-		unitbadge_def_t* badge_def = nullptr;
-		size_t badge_instance_id = 0;
+		struct {
+			size_t instance_id = 0;
+			unitbadge_subdef_t* badge_def = nullptr;
+			size_t badge_instance_id = 0;
+		} render;
+		bool is_active = false;
+		::game::unit::Unit::morale_t morale = 0;
 	};
 	std::unordered_map< size_t, unit_state_t > m_unit_states = {};
 

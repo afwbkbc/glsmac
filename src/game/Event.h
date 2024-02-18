@@ -36,6 +36,7 @@ public:
 			float b;
 			float a;
 		} color;
+		bool is_progenitor;
 	};
 	typedef std::vector< slot_define_t > slot_defines_t;
 
@@ -68,6 +69,8 @@ public:
 				float y;
 				float z;
 			} coords;
+			bool is_active;
+			unit::Unit::morale_t morale;
 		} unit_spawn;
 		struct {
 			size_t unit_id;

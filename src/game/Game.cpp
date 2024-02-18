@@ -288,7 +288,8 @@ void Game::Iterate() {
 								c.green,
 								c.blue,
 								c.alpha
-							}
+							},
+							( faction.m_flags & rules::Faction::FF_PROGENITOR ) != 0
 						}
 					);
 				}
@@ -970,6 +971,11 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 		-c.y,
 		c.z
 	};
+
+	// temporary logic for testing - all own units are active, all foreign aren't
+	e.data.unit_spawn.is_active = unit->m_owner == GetPlayer()->GetSlot();
+
+	e.data.unit_spawn.morale = unit->m_morale;
 	AddEvent( e );
 
 	if ( m_state->IsMaster() ) {

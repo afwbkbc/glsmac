@@ -24,10 +24,17 @@ BINDING_IMPL( factions ) {
 				}
 				N_GETVALUE( faction_def, 1, Object );
 				N_GETPROP( name, faction_def, "name", String );
+
+				rules::Faction faction = { id, name };
+
 				N_GETPROP( files, faction_def, "files", Object );
 				N_GETPROP( pcx_file, files, "pcx", String );
-				rules::Faction faction = { id, name };
 				faction.ImportPCX( pcx_file );
+
+				N_GETPROP_OPTBOOL( is_progenitor, faction_def, "is_progenitor")
+				if ( is_progenitor ) {
+					faction.m_flags |= rules::Faction::FF_PROGENITOR;
+				}
 				factions.insert({ id, faction });
 				factions_order.push_back( id );
 				return VALUE( gse::type::Undefined );

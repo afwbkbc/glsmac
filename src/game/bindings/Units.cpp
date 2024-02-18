@@ -14,6 +14,13 @@
 namespace game {
 namespace bindings {
 
+const unit::Unit::morale_t GetMorale( const int64_t& morale, gse::Context* ctx, const gse::si_t& call_si ) {
+	if ( morale < unit::Unit::MORALE_MIN || morale > unit::Unit::MORALE_MAX ) {
+		ERROR( gse::EC.INVALID_CALL, "Invalid morale value: " + std::to_string( morale ) + " (should be between " + std::to_string( unit::Unit::MORALE_MIN ) + " and " + std::to_string( unit::Unit::MORALE_MAX ) + ", inclusive)" );
+	}
+	return (unit::Unit::morale_t)morale;
+}
+
 BINDING_IMPL( units ) {
 	const gse::type::Object::properties_t properties = {
 		{
@@ -53,11 +60,18 @@ BINDING_IMPL( units ) {
 		{
 			"spawn",
 			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 3 );
+				N_EXPECT_ARGS( 4 );
 				N_GETVALUE( def_name, 0, String );
 				N_UNWRAP( owner, 1, Slot );
 				N_UNWRAP( tile, 2, map::Tile );
-				return GAME->AddGameEvent( new event::SpawnUnit( def_name, owner->GetIndex(), tile->coord.x, tile->coord.y ), ctx, call_si );
+				N_GETVALUE( morale, 3, Int );
+				return GAME->AddGameEvent( new event::SpawnUnit(
+					def_name,
+					owner->GetIndex(),
+					tile->coord.x,
+					tile->coord.y,
+					GetMorale( morale, ctx, call_si )
+				), ctx, call_si );
 			})
 		},
 		{

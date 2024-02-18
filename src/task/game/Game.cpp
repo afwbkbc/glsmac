@@ -18,11 +18,6 @@ namespace game {
 
 const Game::consts_t Game::s_consts = {};
 
-const float Game::unitbadge_def_t::SCALE_X = 0.25f;
-const float Game::unitbadge_def_t::SCALE_Y = 0.5f;
-const float Game::unitbadge_def_t::OFFSET_X = -0.25f;
-const float Game::unitbadge_def_t::OFFSET_Y = -0.5f;
-
 Game::Game( ::game::State* state, ui_handler_t on_start, ui_handler_t on_cancel )
 	: m_state( state )
 	, m_on_start( on_start )
@@ -855,7 +850,11 @@ const ::game::map_editor::MapEditor::brush_type_t Game::GetEditorBrush() const {
 	return m_editor_brush;
 }
 
-void Game::DefineSlot( const size_t slot_index, const types::Color& color ) {
+void Game::DefineSlot(
+	const size_t slot_index,
+	const types::Color& color,
+	const bool is_progenitor
+) {
 	auto slot_it = m_slot_states.find( slot_index );
 	if ( slot_it == m_slot_states.end() ) {
 		Log( "Initializing slot state: " + std::to_string( slot_index ) );
@@ -867,25 +866,45 @@ void Game::DefineSlot( const size_t slot_index, const types::Color& color ) {
 		).first;
 	}
 	auto& slot = slot_it->second;
-	if ( slot.color != color || !slot.badge.instanced_sprite ) {
-		const auto badges_key = "Badges-" + std::to_string( slot_index );
-		if ( slot.badge.instanced_sprite ) {
-			RemoveInstancedSpriteByKey( badges_key );
-		}
+	if ( slot.color != color || slot.badges.empty() ) {
+		const auto badges_key = "Badge_" + std::to_string( slot_index );
 		const auto& c = color.value;
-		slot.badge.instanced_sprite = GetRepaintedInstancedSprite(
-			badges_key, *m_unitbadge_default.instanced_sprite, {
-				{ // active
-					types::Color::RGB( 252, 0, 0 ),
-					types::Color( c.red, c.green, c.blue ).GetRGBA()
-				},
-				{ // greyed out
-					types::Color::RGB( 125, 0, 0 ),
-					types::Color( ( 0.5f + c.red / 2 ) / 2, ( 0.5f + c.green / 2 ) / 2, ( 0.5f + c.blue / 2 ) / 2 ).GetRGBA()
-				}
+		const types::Texture::repaint_rules_t& rules = {
+			{ // active
+				types::Color::RGB( 252, 0, 0 ),
+				types::Color( c.red, c.green, c.blue ).GetRGBA()
+			},
+			{ // greyed out
+				types::Color::RGB( 125, 0, 0 ),
+				types::Color( ( 0.5f + c.red / 2 ) / 2, ( 0.5f + c.green / 2 ) / 2, ( 0.5f + c.blue / 2 ) / 2 ).GetRGBA()
 			}
-		);
-		slot.badge.next_instance_id = 1;
+		};
+		if ( !slot.badges.empty() ) {
+			for ( const auto& it : slot.badges ) {
+				const auto& badgedef = it.second;
+				RemoveInstancedSpriteByKey( badgedef.normal.instanced_sprite->key );
+				RemoveInstancedSpriteByKey( badgedef.greyedout.instanced_sprite->key );
+			}
+			slot.badges.clear();
+		}
+		const badge_type_t badge_type = is_progenitor
+			? BT_PROGENITOR
+			: BT_DEFAULT;
+		for ( auto morale = ::game::unit::Unit::MORALE_MIN ; morale <= ::game::unit::Unit::MORALE_MAX ; morale++ ) {
+			auto& badgedef = slot.badges[ morale ];
+			badgedef.normal.instanced_sprite = GetRepaintedInstancedSprite(
+				badges_key + "_" + std::to_string( morale ) + "_NORMAL",
+				*m_unitbadge_sprites.at( badge_type | BT_NORMAL ).at( morale ),
+				rules
+			);
+			badgedef.normal.next_instance_id = 1;
+			badgedef.greyedout.instanced_sprite = GetRepaintedInstancedSprite(
+				badges_key + "_" + std::to_string( morale ) + "_GREYEDOUT",
+				*m_unitbadge_sprites.at( badge_type | BT_GREYEDOUT ).at( morale ),
+				rules
+			);
+			badgedef.greyedout.next_instance_id = 1;
+		}
 	}
 	slot.color = color;
 }
@@ -946,7 +965,16 @@ void Game::DefineUnit( const ::game::unit::Def* unitdef ) {
 	);
 }
 
-void Game::SpawnUnit( const size_t unit_id, const std::string& unitdef_name, const size_t slot_index, const float x, const float y, const float z ) {
+void Game::SpawnUnit(
+	const size_t unit_id,
+	const std::string& unitdef_name,
+	const size_t slot_index,
+	const float x,
+	const float y,
+	const float z,
+	const bool is_active,
+	const ::game::unit::Unit::morale_t morale
+) {
 
 	ASSERT( m_unitdef_states.find( unitdef_name ) != m_unitdef_states.end(), "unitdef not found" );
 	ASSERT( m_slot_states.find( slot_index ) != m_slot_states.end(), "slot not found" );
@@ -962,10 +990,13 @@ void Game::SpawnUnit( const size_t unit_id, const std::string& unitdef_name, con
 	ASSERT( unitdef_state.m_type == ::game::unit::Def::DT_STATIC, "only static unitdefs are supported for now" );
 	ASSERT( unitdef_state.static_.render.is_sprite, "only sprite unitdefs are supported for now" );
 
+	unit_state.is_active = is_active;
+	unit_state.morale = morale;
+
 	// add render
-	unit_state.instance_id = unitdef_state.static_.render.sprite.next_instance_id++;
+	unit_state.render.instance_id = unitdef_state.static_.render.sprite.next_instance_id++;
 	unitdef_state.static_.render.sprite.instanced_sprite->actor->SetInstance(
-		unit_state.instance_id, {
+		unit_state.render.instance_id, {
 			x,
 			y,
 			z
@@ -973,13 +1004,15 @@ void Game::SpawnUnit( const size_t unit_id, const std::string& unitdef_name, con
 	);
 
 	// add badge render
-	unit_state.badge_def = &slot_state.badge; // TODO: variations
+	unit_state.render.badge_def = unit_state.is_active
+		? &slot_state.badges.at( unit_state.morale ).normal
+		: &slot_state.badges.at( unit_state.morale ).greyedout;
 
-	unit_state.badge_instance_id = unit_state.badge_def->next_instance_id++;
-	unit_state.badge_def->instanced_sprite->actor->SetInstance(
-		unit_state.badge_instance_id, {
-			x + ::game::map::s_consts.tile.scale.x * unitbadge_def_t::OFFSET_X,
-			y - ::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale * unitbadge_def_t::OFFSET_Y,
+	unit_state.render.badge_instance_id = unit_state.render.badge_def->next_instance_id++;
+	unit_state.render.badge_def->instanced_sprite->actor->SetInstance(
+		unit_state.render.badge_instance_id, {
+			x + ::game::map::s_consts.tile.scale.x * s_consts.badges.offset_x,
+			y - ::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale * s_consts.badges.offset_y,
 			z
 		}
 	);
@@ -1004,8 +1037,9 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	ASSERT( unitdef_state->m_type == ::game::unit::Def::DT_STATIC, "only static unitdefs are supported for now" );
 	ASSERT( unitdef_state->static_.render.is_sprite, "only sprite unitdefs are supported for now" );
 
-	unitdef_state->static_.render.sprite.instanced_sprite->actor->RemoveInstance( unit_state.instance_id );
-	unit_state.badge_def->instanced_sprite->actor->RemoveInstance( unit_state.badge_instance_id );
+	unitdef_state->static_.render.sprite.instanced_sprite->actor->RemoveInstance( unit_state.render.instance_id );
+	unit_state.render.badge_def->instanced_sprite->actor->RemoveInstance( unit_state.render.badge_instance_id );
+
 	m_unit_states.erase( it );
 }
 
@@ -1055,7 +1089,7 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 		case ::game::Event::ET_SLOT_DEFINE: {
 			for ( const auto& d : *event.data.slot_define.slotdefs ) {
 				const auto& c = d.color;
-				DefineSlot( d.slot_index, types::Color( c.r, c.g, c.b, c.a ) );
+				DefineSlot( d.slot_index, types::Color( c.r, c.g, c.b, c.a ), d.is_progenitor );
 			}
 			break;
 		}
@@ -1069,7 +1103,7 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 		case ::game::Event::ET_UNIT_SPAWN: {
 			const auto& d = event.data.unit_spawn;
 			const auto& c = d.coords;
-			SpawnUnit( d.unit_id, *d.unitdef_name, d.slot_index, c.x, c.y, c.z );
+			SpawnUnit( d.unit_id, *d.unitdef_name, d.slot_index, c.x, c.y, c.z, d.is_active, d.morale );
 			break;
 		}
 		case ::game::Event::ET_UNIT_DESPAWN: {
@@ -1199,27 +1233,49 @@ void Game::Initialize(
 		actor->SetInstance( instance.first, instance.second.second );
 	}
 
-	// Predefined sprites
-	// TODO: variations
-	m_unitbadge_default.instanced_sprite = &GetInstancedSprite(
-		"Badges", "flags.pcx", {
-			49,
-			63,
-		},
-		{
-			23,
-			30,
-		},
-		{
-			61,
-			78,
-		},
-		{
-			::game::map::s_consts.tile.scale.x * unitbadge_def_t::SCALE_X,
-			::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale * unitbadge_def_t::SCALE_Y
-		},
-		0.52f
-	);
+	{
+		// load badge sprites
+		ASSERT( m_unitbadge_sprites.empty(), "badge sprites already initialized" );
+		const uint8_t w = 23;
+		const uint8_t h = 30;
+		const uint8_t margin = 1;
+		const std::string& pcx_file = "flags.pcx";
+		uint32_t x, y;
+		for ( auto badge_type = BT_PROGENITOR ; badge_type <= BT_DEFAULT ; badge_type++ ) {
+			for ( auto badge_mode = BT_NORMAL ; badge_mode <= BT_GREYEDOUT ; badge_mode++ ) {
+				const uint8_t row = badge_type | badge_mode;
+				auto& spritemap = m_unitbadge_sprites[ row ];
+				for ( auto morale = ::game::unit::Unit::MORALE_MIN ; morale <= ::game::unit::Unit::MORALE_MAX ; morale++ ) {
+					x = morale * ( w + margin ) + margin;
+					y = row * ( h + margin ) + margin;
+					spritemap.insert(
+						{
+							morale,
+							&GetInstancedSprite(
+								"Badge_" + std::to_string( badge_type ) + "_" + std::to_string( badge_mode ), pcx_file, {
+									x,
+									y,
+								},
+								{
+									w,
+									h,
+								},
+								{
+									x + w / 2,
+									y + h / 2,
+								},
+								{
+									::game::map::s_consts.tile.scale.x * s_consts.badges.scale_x,
+									::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale * s_consts.badges.scale_y
+								},
+								0.52f
+							)
+						}
+					);
+				}
+			}
+		}
+	}
 
 	// UI
 	ui->AddTheme( &m_ui.theme );

@@ -44,6 +44,8 @@ Event::Event( const Event& other )
 			NEW( data.unit_spawn.unitdef_name, std::string, *other.data.unit_spawn.unitdef_name );
 			data.unit_spawn.slot_index = other.data.unit_spawn.slot_index;
 			data.unit_spawn.coords = other.data.unit_spawn.coords;
+			data.unit_spawn.is_active = other.data.unit_spawn.is_active;
+			data.unit_spawn.morale = other.data.unit_spawn.morale;
 			break;
 		}
 		case ET_UNIT_DESPAWN: {

@@ -6,12 +6,13 @@
 namespace game {
 namespace event {
 
-SpawnUnit::SpawnUnit( const std::string& unit_def, const size_t owner_index, const size_t pos_x, const size_t pos_y )
+SpawnUnit::SpawnUnit( const std::string& unit_def, const size_t owner_index, const size_t pos_x, const size_t pos_y, const unit::Unit::morale_t morale )
 	: Event( ET_UNIT_SPAWN )
 	, m_unit_def( unit_def )
 	, m_owner_index( owner_index )
 	, m_pos_x( pos_x )
-	, m_pos_y( pos_y ) {
+	, m_pos_y( pos_y )
+	, m_morale( morale ) {
 	//
 }
 
@@ -24,7 +25,8 @@ const gse::Value SpawnUnit::Apply( game::Game* game ) const {
 		unit::Unit::GetNextId(),
 		def,
 		&owner,
-		tile
+		tile,
+		m_morale
 	);
 	game->SpawnUnit(
 		unit
@@ -37,6 +39,7 @@ void SpawnUnit::Serialize( types::Buffer& buf, const SpawnUnit* event ) {
 	buf.WriteInt( event->m_owner_index );
 	buf.WriteInt( event->m_pos_x );
 	buf.WriteInt( event->m_pos_y );
+	buf.WriteInt( event->m_morale );
 }
 
 SpawnUnit* SpawnUnit::Unserialize( types::Buffer& buf ) {
@@ -44,7 +47,8 @@ SpawnUnit* SpawnUnit::Unserialize( types::Buffer& buf ) {
 	const auto owner_index = buf.ReadInt();
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
-	return new SpawnUnit( unit_def, owner_index, pos_x, pos_y );
+	const auto morale = (unit::Unit::morale_t)buf.ReadInt();
+	return new SpawnUnit( unit_def, owner_index, pos_x, pos_y, morale );
 }
 
 }

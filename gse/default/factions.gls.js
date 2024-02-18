@@ -79,12 +79,14 @@ return [
         name: 'Caretakers',
         files: {
             pcx: 'caretake.pcx'
-        }
+        },
+        is_progenitor: true
     }],
     ['USURPERS', {
         name: 'Usurpers',
         files: {
             pcx: 'usurper.pcx'
-        }
+        },
+        is_progenitor: true
     }],
 ];

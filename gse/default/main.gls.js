@@ -16,8 +16,12 @@
 // will be populated on start
 let players = [];
 let players_sz = 0;
-let get_random_player = () => {
+let random_player = () => {
     return players[(#game.random.get_int(0, players_sz - 1))];
+};
+
+let random_morale = () => {
+    return #game.random.get_int(1, 7); // TODO: get some constants from api
 };
 
 #game.on.start(() => {
@@ -42,18 +46,18 @@ let get_random_player = () => {
         while (x < w) {
             if (x % 2 == y % 2) {
                 if (#game.random.get_int(0, 1) == 1) {
-                    let owner = get_random_player();
+                    let owner = random_player();
                     let tile = #game.map.get_tile(x, y);
                     let unit = null;
                     if (tile.is_land) {
                         if (#game.random.get_int(0, 2) != 1) {
-                            unit = #game.units.spawn('MindWorms', owner, tile);
+                            unit = #game.units.spawn('MindWorms', owner, tile, random_morale());
                         } else {
-                            unit = #game.units.spawn('SporeLauncher', owner, tile);
+                            unit = #game.units.spawn('SporeLauncher', owner, tile, random_morale());
                         }
                     } else {
                         if (#game.random.get_int(0, 1) == 1) {
-                            unit = #game.units.spawn('SeaLurk', owner, tile);
+                            unit = #game.units.spawn('SeaLurk', owner, tile, random_morale());
                         }
                     }
                 }
@@ -91,6 +95,6 @@ let get_random_player = () => {
 
 #game.on.despawn_unit((unit) => {
     if (unit.get_def() == 'SporeLauncher') {
-        #game.units.spawn('MindWorms', get_random_player(), unit.get_tile());
+        #game.units.spawn('MindWorms', random_player(), unit.get_tile(), random_morale());
     }
 });

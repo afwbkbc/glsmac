@@ -5,6 +5,7 @@
 #include "gse/type/Callable.h"
 #include "gse/type/Object.h"
 #include "gse/type/Undefined.h"
+#include "gse/type/Bool.h"
 
 namespace gse {
 namespace callable {
@@ -86,6 +87,17 @@ namespace callable {
     N_GETPROP_ARG( _obj, _key, Object ); \
     N_CHECK_OBJECT_CLASS( arg, gse::type::Object::_class ); \
     const auto& _var = ((gse::type::Object*)arg)->value;
+#define N_GETPROP_OPTBOOL( _var, _obj, _key ) \
+    bool _var = false; \
+    obj_it = _obj.find( _key ); \
+    if ( obj_it != _obj.end() ) { \
+        getprop_val = obj_it->second; \
+        arg = getprop_val.Get(); \
+        if ( arg->type != gse::type::Type::T_BOOL ) { \
+            throw gse::Exception( gse::EC.INVALID_CALL, (std::string)"Property '" + _key + "' is expected to be bool, found: " + arg->GetTypeString( arg->type ), ctx, call_si ); \
+        } \
+        _var = ((gse::type::Bool*)arg)->value; \
+    }
 
 class Native : public type::Callable {
 public:
