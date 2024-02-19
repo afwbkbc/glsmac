@@ -185,6 +185,7 @@ struct MT_Response {
 			std::vector< std::string >* preview_lines;
 			bool scroll_adaptively;
 			std::vector< std::string >* sprites;
+			std::vector< size_t >* unit_ids;
 		} select_tile;
 		struct {
 			std::string* path;

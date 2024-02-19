@@ -15,7 +15,9 @@ Rectangle::Rectangle( const Vec2< Mesh::coord_t >& top_left, const Vec2< Mesh::c
 	SetCoords( top_left, bottom_right, z );
 }
 
-void Rectangle::SetCoords( const Vec2< Mesh::coord_t >& top_left, const Vec2< Mesh::coord_t >& bottom_right, const Vec2< size_t >& tx, const coord_t z ) {
+// TODO: refactor these
+
+void Rectangle::SetCoordsTiled( const Vec2< Mesh::coord_t >& top_left, const Vec2< Mesh::coord_t >& bottom_right, const Vec2< size_t >& tx, const coord_t z ) {
 	const float rectwidth = ( bottom_right.x - top_left.x ) / 2;
 	const float rectheight = ( top_left.y - bottom_right.y ) / 2;
 	const float texwidth = (float)tx.x / g_engine->GetGraphics()->GetViewportWidth();
@@ -61,6 +63,80 @@ void Rectangle::SetCoords( const Vec2< Mesh::coord_t >& top_left, const Vec2< Me
 		}, {
 			0,
 			sy
+		}
+	);
+	SetSurface(
+		0, {
+			0,
+			3,
+			2
+		}
+	);
+	SetSurface(
+		1, {
+			0,
+			1,
+			2
+		}
+	);
+	Update();
+
+}
+
+void Rectangle::SetCoords(
+	const Vec2< Mesh::coord_t >& top_left,
+	const Vec2< Mesh::coord_t >& bottom_right,
+	const Vec2< uint32_t >& tx_top_left,
+	const Vec2< uint32_t >& tx_bottom_right,
+	const coord_t z
+) {
+	const float meshwidth = (float)( bottom_right.x - top_left.x ) * g_engine->GetGraphics()->GetViewportWidth();
+	const float meshheight = (float)( bottom_right.y - top_left.y ) * g_engine->GetGraphics()->GetViewportHeight();
+	const float texwidth = (float)( tx_bottom_right.x - tx_top_left.x ) / 2;
+	const float texheight = (float)( tx_bottom_right.y - tx_top_left.y ) / 2;
+	const float x1 = (float)tx_top_left.x / meshwidth;
+	const float y1 = (float)tx_bottom_right.y / meshheight;
+	const float x2 = (float)tx_bottom_right.x / meshwidth;
+	const float y2 = (float)tx_top_left.y / meshheight;
+
+	SetVertex(
+		0, {
+			top_left.x,
+			top_left.y,
+			z
+		}, {
+			x1,
+			y1
+		}
+	);
+	SetVertex(
+		1, {
+			bottom_right.x,
+			top_left.y,
+			z
+		}, {
+			x2,
+			y1
+		}
+	);
+	SetVertex(
+		2, {
+			bottom_right.x,
+			bottom_right.y,
+			z
+		}, {
+			x2,
+			y2
+		}
+	);
+	SetVertex(
+		3, {
+			top_left.x,
+			bottom_right.y,
+			z
+		}, {
+			x1,
+			y2
 		}
 	);
 	SetSurface(

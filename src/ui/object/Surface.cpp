@@ -128,7 +128,8 @@ void Surface::ResizeNow() {
 			//Log( "Resizing surface to " + size.ToString() );
 
 			if ( m_texture && !m_surface_stretch_texture ) {
-				m_background_mesh->SetCoords(
+
+				m_background_mesh->SetCoordsTiled(
 					pos, size, {
 						m_texture->m_width,
 						m_texture->m_height

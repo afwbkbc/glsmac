@@ -52,31 +52,34 @@ let random_health = () => {
                 if (#game.random.get_int(0, 1) == 1) {
                     let owner = random_player();
                     let tile = #game.map.get_tile(x, y);
-                    let unit = null;
-                    if (tile.is_land) {
-                        if (#game.random.get_int(0, 2) != 1) {
-                            unit = #game.units.spawn('MindWorms', owner, tile, random_morale(), random_health());
-                        } else {
-                            if (tile.has_fungus && #game.random.get_int(0, 1) == 0) {
-                                // morale depends on count of fungus tiles around
-                                let morale = 1;
-                                let neighbours = tile.get_surrounding_tiles();
-                                let sz = #size(neighbours);
-                                let i = 0;
-                                while (morale < 7 && i < sz) {
-                                    if (neighbours[i].has_fungus) {
-                                        morale++;
-                                    }
-                                    i++;
-                                }
-                                unit = #game.units.spawn('FungalTower', owner, tile, morale, random_health());
+                    let units_count = #game.random.get_int(1, 3);
+                    let i = 0;
+                    while (i++ < units_count) {
+                        if (tile.is_land) {
+                            if (#game.random.get_int(0, 2) != 1) {
+                                #game.units.spawn('MindWorms', owner, tile, random_morale(), random_health());
                             } else {
-                                unit = #game.units.spawn('SporeLauncher', owner, tile, random_morale(), random_health());
+                                if (tile.has_fungus && #game.random.get_int(0, 1) == 0) {
+                                    // morale depends on count of fungus tiles around
+                                    let morale = 1;
+                                    let neighbours = tile.get_surrounding_tiles();
+                                    let sz = #size(neighbours);
+                                    let i = 0;
+                                    while (morale < 7 && i < sz) {
+                                        if (neighbours[i].has_fungus) {
+                                            morale++;
+                                        }
+                                        i++;
+                                    }
+                                    #game.units.spawn('FungalTower', owner, tile, morale, random_health());
+                                } else {
+                                    #game.units.spawn('SporeLauncher', owner, tile, random_morale(), random_health());
+                                }
                             }
-                        }
-                    } else {
-                        if (#game.random.get_int(0, 1) == 1) {
-                            unit = #game.units.spawn('SeaLurk', owner, tile, random_morale(), random_health());
+                        } else {
+                            if (#game.random.get_int(0, 1) == 1) {
+                                #game.units.spawn('SeaLurk', owner, tile, random_morale(), random_health());
+                            }
                         }
                     }
                 }

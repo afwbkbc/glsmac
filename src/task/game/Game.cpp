@@ -2021,6 +2021,51 @@ tile_data_t Game::GetTileAtCoordsResult() {
 
 			result.scroll_adaptively = response.data.select_tile.scroll_adaptively;
 
+			for ( const auto& unit_id : *response.data.select_tile.unit_ids ) {
+				ASSERT( m_unit_states.find( unit_id ) != m_unit_states.end(), "unit id not found" );
+				const auto& unit_state = m_unit_states.at( unit_id );
+
+				types::mesh::Rectangle* mesh = nullptr;
+				types::Texture* texture = nullptr;
+
+				const auto& def = unit_state.def;
+				ASSERT ( def->m_type == ::game::unit::Def::DT_STATIC, "only static units are supported for now" );
+				const auto& render = def->static_.render;
+				ASSERT( render.is_sprite, "only sprite units are supported for now" );
+				const auto& sprite_state = render.morale_based_xshift
+					? render.morale_based_sprites->at( unit_state.morale )
+					: render.sprite;
+
+				NEW( mesh, types::mesh::Rectangle );
+				mesh->SetCoords(
+					{
+						0.0f,
+						0.0f
+					},
+					{
+						1.0f,
+						1.0f
+					},
+					{
+						sprite_state.instanced_sprite->xy.x,
+						sprite_state.instanced_sprite->xy.y
+					},
+					{
+						sprite_state.instanced_sprite->xy.x + sprite_state.instanced_sprite->wh.x,
+						sprite_state.instanced_sprite->xy.y + sprite_state.instanced_sprite->wh.y
+					},
+					0.8f
+				);
+				texture = sprite_state.instanced_sprite->actor->GetSpriteActor()->GetTexture();
+
+				result.units.push_back(
+					{
+						mesh,
+						texture,
+					}
+				);
+			}
+
 			return result;
 		}
 	}

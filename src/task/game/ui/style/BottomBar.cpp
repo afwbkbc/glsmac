@@ -521,6 +521,23 @@ void BottomBar::AddStyles() {
 		}
 	);
 
+	AddStyle(
+		"UnitsListItem", SH() {
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_LEFT );
+			s->Set( ::Style::A_TOP, 0 );
+			s->Set( ::Style::A_BOTTOM, 0 );
+			s->Set( ::Style::A_WIDTH, 65 );
+		}
+	);
+
+	AddStyle(
+		"UnitsListPreviewImage", SH() {
+			s->Set( ::Style::A_TOP, -3 );
+			s->Set( ::Style::A_WIDTH, 64 );
+			s->Set( ::Style::A_HEIGHT, 38 );
+		}
+	);
+
 	// minimap
 
 	AddStyle(

@@ -18,7 +18,7 @@
 #include "UnitPreview.h"
 #include "TilePreview.h"
 #include "MiddleArea.h"
-#include "UnitsList.h"
+#include "task/game/ui/bottom_bar/units_list/UnitsList.h"
 #include "TurnCompleteButton.h"
 #include "MiniMap.h"
 

@@ -227,6 +227,7 @@ void BottomBar::Align() {
 
 void BottomBar::PreviewTile( const tile_data_t& tile_data ) {
 	m_sections.tile_preview->PreviewTile( tile_data );
+	m_sections.units_list->ListUnits( tile_data.units );
 }
 
 void BottomBar::HideTilePreview() {
