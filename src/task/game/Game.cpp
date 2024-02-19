@@ -1014,65 +1014,27 @@ void Game::SpawnUnit(
 	ASSERT( m_slot_states.find( slot_index ) != m_slot_states.end(), "slot not found" );
 	ASSERT( m_unit_states.find( unit_id ) == m_unit_states.end(), "unit id already exists" );
 
-	auto& unitdef_state = m_unitdef_states.at( unitdef_name );
-	auto& slot_state = m_slot_states.at( slot_index );
-	unit_state_t unit_state = {
-		&unitdef_state,
-		&slot_state
-	};
-
-	ASSERT( unitdef_state.m_type == ::game::unit::Def::DT_STATIC, "only static unitdefs are supported for now" );
-	ASSERT( unitdef_state.static_.render.is_sprite, "only sprite unitdefs are supported for now" );
-
-	unit_state.is_active = is_active;
-	unit_state.morale = morale;
-	unit_state.health = health;
-
-	// add render
-	auto& sprite = unitdef_state.static_.render.morale_based_xshift
-		? unitdef_state.static_.render.morale_based_sprites->at( unit_state.morale )
-		: unitdef_state.static_.render.sprite;
-	unit_state.render.instance_id = sprite.next_instance_id++;
-	sprite.instanced_sprite->actor->SetInstance(
-		unit_state.render.instance_id, {
-			x,
-			y,
-			z
-		}
-	);
-
-	// add badge render
-	unit_state.render.badge_def = unit_state.is_active
-		? &slot_state.badges.at( unit_state.morale ).normal
-		: &slot_state.badges.at( unit_state.morale ).greyedout;
-	unit_state.render.badge_instance_id = unit_state.render.badge_def->next_instance_id++;
-	unit_state.render.badge_def->instanced_sprite->actor->SetInstance(
-		unit_state.render.badge_instance_id, {
-			x + ::game::map::s_consts.tile.scale.x * s_consts.badges.offset_x,
-			y - ::game::map::s_consts.tile.scale.y * s_consts.badges.offset_y * ::game::map::s_consts.sprite.y_scale,
-			z
-		}
-	);
-
-	// add healthbar render
-	unit_state.render.badge_healthbar_def = &m_healthbar_sprites.at( floor( unit_state.health * s_consts.badges.healthbars.resolution ) );
-	unit_state.render.badge_healthbar_instance_id = unit_state.render.badge_healthbar_def->next_instance_id++;
-	unit_state.render.badge_healthbar_def->instanced_sprite->actor->SetInstance(
-		unit_state.render.badge_healthbar_instance_id, {
-			x + ::game::map::s_consts.tile.scale.x * s_consts.badges.healthbars.offset_x,
-			y - ::game::map::s_consts.tile.scale.y * s_consts.badges.healthbars.offset_y * ::game::map::s_consts.sprite.y_scale,
-			z
-		}
-	);
-
-	// save
-	m_unit_states.insert(
+	auto& unit_state = m_unit_states.insert(
 		{
 			unit_id,
-			unit_state
+			{
+				unit_id,
+				&m_unitdef_states.at( unitdef_name ),
+				&m_slot_states.at( slot_index ),
+				{},
+				{
+					x,
+					y,
+					z
+				},
+				is_active,
+				morale,
+				health
+			}
 		}
-	);
+	).first->second;
 
+	UpdateUnit( unit_state, UUF_ALL );
 }
 
 void Game::DespawnUnit( const size_t unit_id ) {
@@ -2264,6 +2226,54 @@ void Game::ReturnToMainMenu( const std::string reason ) {
 	}
 	g_engine->GetScheduler()->RemoveTask( this );
 	g_engine->GetScheduler()->AddTask( task );
+}
+
+void Game::UpdateUnit( unit_state_t& unit_state, const unit_update_flags_t flags ) {
+
+	auto* unitdef_state = unit_state.def;
+	auto* slot_state = unit_state.slot;
+	const auto& c = unit_state.coords;
+
+	ASSERT( unitdef_state->m_type == ::game::unit::Def::DT_STATIC, "only static unitdefs are supported for now" );
+	ASSERT( unitdef_state->static_.render.is_sprite, "only sprite unitdefs are supported for now" );
+
+	// add render
+	auto& sprite = unitdef_state->static_.render.morale_based_xshift
+		? unitdef_state->static_.render.morale_based_sprites->at( unit_state.morale )
+		: unitdef_state->static_.render.sprite;
+	unit_state.render.instance_id = sprite.next_instance_id++;
+	sprite.instanced_sprite->actor->SetInstance(
+		unit_state.render.instance_id, {
+			c.x,
+			c.y,
+			c.z
+		}
+	);
+
+	// add badge render
+	unit_state.render.badge_def = unit_state.is_active
+		? &slot_state->badges.at( unit_state.morale ).normal
+		: &slot_state->badges.at( unit_state.morale ).greyedout;
+	unit_state.render.badge_instance_id = unit_state.render.badge_def->next_instance_id++;
+	unit_state.render.badge_def->instanced_sprite->actor->SetInstance(
+		unit_state.render.badge_instance_id, {
+			c.x + ::game::map::s_consts.tile.scale.x * s_consts.badges.offset_x,
+			c.y - ::game::map::s_consts.tile.scale.y * s_consts.badges.offset_y * ::game::map::s_consts.sprite.y_scale,
+			c.z
+		}
+	);
+
+	// add healthbar render
+	unit_state.render.badge_healthbar_def = &m_healthbar_sprites.at( floor( unit_state.health * s_consts.badges.healthbars.resolution ) );
+	unit_state.render.badge_healthbar_instance_id = unit_state.render.badge_healthbar_def->next_instance_id++;
+	unit_state.render.badge_healthbar_def->instanced_sprite->actor->SetInstance(
+		unit_state.render.badge_healthbar_instance_id, {
+			c.x + ::game::map::s_consts.tile.scale.x * s_consts.badges.healthbars.offset_x,
+			c.y - ::game::map::s_consts.tile.scale.y * s_consts.badges.healthbars.offset_y * ::game::map::s_consts.sprite.y_scale,
+			c.z
+		}
+	);
+
 }
 
 }

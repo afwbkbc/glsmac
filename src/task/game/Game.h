@@ -434,6 +434,7 @@ private:
 	std::unordered_map< size_t, slot_state_t > m_slot_states = {};
 
 	struct unit_state_t {
+		size_t unit_id = 0;
 		unitdef_state_t* def = nullptr;
 		slot_state_t* slot = nullptr;
 		struct {
@@ -443,6 +444,7 @@ private:
 			sprite_state_t* badge_healthbar_def = nullptr;
 			size_t badge_healthbar_instance_id = 0;
 		} render;
+		Vec3 coords = {};
 		bool is_active = false;
 		::game::unit::Unit::morale_t morale = 0;
 		::game::unit::Unit::health_t health = 0;
@@ -453,6 +455,15 @@ private:
 
 	void CancelRequests();
 	void CancelGame();
+
+	enum unit_update_flags_t : uint8_t {
+		UUF_NONE = 0,
+		UUF_POSITION = 1 << 0,
+		UUF_MORALE = 1 << 1,
+		UUF_HEALTH = 1 << 2,
+		UUF_ALL = 0xff,
+	};
+	void UpdateUnit( unit_state_t& unit_state, const unit_update_flags_t flags );
 
 };
 
