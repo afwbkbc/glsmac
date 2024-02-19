@@ -13,9 +13,16 @@
 namespace task {
 namespace game {
 
+struct meshtex_t {
+	types::mesh::Mesh* mesh = nullptr;
+	types::Texture* texture = nullptr;
+};
+
 struct unit_data_t {
-	types::mesh::Mesh* preview_mesh = nullptr;
-	types::Texture* preview_texture = nullptr;
+	meshtex_t unit;
+	meshtex_t badge;
+	meshtex_t healthbar;
+	std::string short_power_label;
 };
 
 struct tile_data_t {

@@ -14,15 +14,33 @@ UnitsListItem::UnitsListItem( Game* game, const unit_data_t* unit_data )
 void UnitsListItem::Create() {
 	Section::Create();
 
-	NEW( m_preview, object::Mesh, "BBUnitsListPreviewImage" );
-	m_preview->SetMesh( m_unit_data->preview_mesh );
-	m_preview->SetTexture( m_unit_data->preview_texture );
-	Section::AddChild( m_preview );
+#define X( _key, _class ) \
+    NEW( m_sprites._key, object::Mesh, "BBUnitsListPreview" _class ); \
+    m_sprites._key->SetMesh( m_unit_data->_key.mesh ); \
+    m_sprites._key->SetTexture( m_unit_data->_key.texture ); \
+    Section::AddChild( m_sprites._key );
+
+	// order is important
+	X( unit, "Unit" );
+	X( healthbar, "Healthbar" );
+	X( badge, "Badge" );
+
+#undef X
+
+	NEW( m_label, ::ui::object::Label, "BBUnitsListPreviewLabel" );
+	m_label->SetTop( 0 );
+	m_label->SetText( m_unit_data->short_power_label );
+
+	AddChild( m_label );
 }
 
 void UnitsListItem::Destroy() {
 
-	RemoveChild( m_preview );
+	RemoveChild( m_sprites.unit );
+	RemoveChild( m_sprites.healthbar );
+	RemoveChild( m_sprites.badge );
+
+	RemoveChild( m_label );
 
 	Section::Destroy();
 }

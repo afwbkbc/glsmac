@@ -86,18 +86,17 @@ void Rectangle::SetCoordsTiled( const Vec2< Mesh::coord_t >& top_left, const Vec
 void Rectangle::SetCoords(
 	const Vec2< Mesh::coord_t >& top_left,
 	const Vec2< Mesh::coord_t >& bottom_right,
-	const Vec2< uint32_t >& tx_top_left,
-	const Vec2< uint32_t >& tx_bottom_right,
+	const Vec2< size_t >& tx_top_left,
+	const Vec2< size_t >& tx_bottom_right,
+	const Vec2< size_t >& tx_wh,
 	const coord_t z
 ) {
-	const float meshwidth = (float)( bottom_right.x - top_left.x ) * g_engine->GetGraphics()->GetViewportWidth();
-	const float meshheight = (float)( bottom_right.y - top_left.y ) * g_engine->GetGraphics()->GetViewportHeight();
-	const float texwidth = (float)( tx_bottom_right.x - tx_top_left.x ) / 2;
-	const float texheight = (float)( tx_bottom_right.y - tx_top_left.y ) / 2;
-	const float x1 = (float)tx_top_left.x / meshwidth;
-	const float y1 = (float)tx_bottom_right.y / meshheight;
-	const float x2 = (float)tx_bottom_right.x / meshwidth;
-	const float y2 = (float)tx_top_left.y / meshheight;
+	const float tx = tx_wh.x + 1;
+	const float ty = tx_wh.y + 1;
+	const float x1 = (float)tx_top_left.x / tx;
+	const float y1 = (float)tx_bottom_right.y / ty;
+	const float x2 = (float)tx_bottom_right.x / tx;
+	const float y2 = (float)tx_top_left.y / ty;
 
 	SetVertex(
 		0, {

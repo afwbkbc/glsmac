@@ -4,6 +4,8 @@
 
 #include "task/game/Types.h"
 
+#include "ui/object/Label.h"
+
 namespace task {
 namespace game {
 namespace ui {
@@ -17,7 +19,13 @@ CLASS( UnitsListItem, Section )
 
 private:
 	const unit_data_t* m_unit_data;
-	object::Mesh* m_preview = nullptr;
+
+	struct {
+		object::Mesh* unit = nullptr;
+		object::Mesh* badge = nullptr;
+		object::Mesh* healthbar = nullptr;
+	} m_sprites;
+	::ui::object::Label* m_label = nullptr;
 
 };
 

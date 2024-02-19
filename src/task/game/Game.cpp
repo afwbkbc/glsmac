@@ -11,6 +11,8 @@
 #include "game/unit/StaticDef.h"
 #include "game/unit/SpriteRender.h"
 
+#include "Types.h"
+
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
 namespace task {
@@ -912,8 +914,10 @@ void Game::DefineUnit( const ::game::unit::Def* unitdef ) {
 	ASSERT( unitdef_it == m_unitdef_states.end(), "unit def already exists" );
 
 	Log( "Initializing unitdef state: " + unitdef->m_name );
-	unitdef_state_t unitdef_state = {};
-	unitdef_state.m_type = unitdef->m_type;
+	unitdef_state_t unitdef_state = {
+		unitdef->m_name,
+		unitdef->m_type,
+	};
 
 	switch ( unitdef->m_type ) {
 		case ::game::unit::Def::DT_STATIC: {
@@ -2036,32 +2040,56 @@ tile_data_t Game::GetTileAtCoordsResult() {
 					? render.morale_based_sprites->at( unit_state.morale )
 					: render.sprite;
 
-				NEW( mesh, types::mesh::Rectangle );
-				mesh->SetCoords(
-					{
-						0.0f,
-						0.0f
-					},
-					{
-						1.0f,
-						1.0f
-					},
-					{
-						sprite_state.instanced_sprite->xy.x,
-						sprite_state.instanced_sprite->xy.y
-					},
-					{
-						sprite_state.instanced_sprite->xy.x + sprite_state.instanced_sprite->wh.x,
-						sprite_state.instanced_sprite->xy.y + sprite_state.instanced_sprite->wh.y
-					},
-					0.8f
-				);
-				texture = sprite_state.instanced_sprite->actor->GetSpriteActor()->GetTexture();
+				const auto& f_meshtex = []( const Game::instanced_sprite_t* sprite ) -> meshtex_t {
+					auto* texture = sprite->actor->GetSpriteActor()->GetTexture();
+					NEWV( mesh, types::mesh::Rectangle );
+					mesh->SetCoords(
+						{
+							0.0f,
+							0.0f
+						},
+						{
+							1.0f,
+							1.0f
+						},
+						{
+							sprite->xy.x,
+							sprite->xy.y
+						},
+						{
+							sprite->xy.x + sprite->wh.x,
+							sprite->xy.y + sprite->wh.y
+						},
+						{
+							texture->m_width,
+							texture->m_height
+						},
+						0.8f
+					);
+					return {
+						mesh,
+						texture,
+					};
+				};
+
+				// TODO: put real numbers
+				std::string short_power_label = "? - ? - ";
+				if ( def->m_id == "SeaLurk" ) {
+					short_power_label += "4";
+				}
+				else if ( def->m_id == "FungalTower" ) {
+					short_power_label += "0";
+				}
+				else {
+					short_power_label += "1";
+				}
 
 				result.units.push_back(
 					{
-						mesh,
-						texture,
+						f_meshtex( sprite_state.instanced_sprite ),
+						f_meshtex( unit_state.render.badge_def->instanced_sprite ),
+						f_meshtex( unit_state.render.badge_healthbar_def->instanced_sprite ),
+						short_power_label
 					}
 				);
 			}

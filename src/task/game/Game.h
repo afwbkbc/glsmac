@@ -394,6 +394,7 @@ private:
 	typedef std::unordered_map< ::game::unit::Unit::morale_t, sprite_state_t > morale_based_sprite_states_t;
 
 	struct unitdef_state_t {
+		std::string m_id;
 		::game::unit::Def::def_type_t m_type;
 		union {
 			struct {
