@@ -45,8 +45,13 @@ Config::Config( const int argc, const char* argv[] ) {
 	const std::string s_invalid_smac_directory = " is not valid SMAC directory!\n\tRun from SMAC directory or pass it with --smacpath argument";
 
 	parser.AddRule(
-		"benchmark", "Disable VSync and FPS limit, show FPS counter at top left corner", AH( this ) {
+		"benchmark", "Disable VSync and FPS limit", AH( this ) {
 			m_launch_flags |= LF_BENCHMARK;
+		}
+	);
+	parser.AddRule(
+		"showfps", "Show FPS counter at top left corner", AH( this ) {
+			m_launch_flags |= LF_SHOWFPS;
 		}
 	);
 	parser.AddRule(
