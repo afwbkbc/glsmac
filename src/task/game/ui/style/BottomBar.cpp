@@ -151,6 +151,60 @@ void BottomBar::AddStyles() {
 		}
 	);
 
+	AddStyle(
+		"UnitPreviewUnit", SH() {
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_HCENTER );
+			s->Set( ::Style::A_TOP, 12 );
+			s->Set( ::Style::A_WIDTH, 100 ); // 80
+			s->Set( ::Style::A_HEIGHT, 75 ); // 60 // 48
+		}
+	);
+	AddStyle(
+		"UnitPreviewBadge", SH() {
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+			s->Set( ::Style::A_LEFT, 6 );
+			s->Set( ::Style::A_TOP, 6 );
+			s->Set( ::Style::A_WIDTH, 23 );
+			s->Set( ::Style::A_HEIGHT, 30 );
+		}
+	);
+	AddStyle(
+		"UnitPreviewHealthbar", SH() {
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+			s->Set( ::Style::A_LEFT, 12 );
+			s->Set( ::Style::A_TOP, 12 );
+			s->Set( ::Style::A_WIDTH, 3 );
+			s->Set( ::Style::A_HEIGHT, 22 );
+		}
+	);
+	AddStyle(
+		"UnitPreviewLabel", SH() {
+			s->SetFont( ::Style::A_FONT, "arialn.ttf", 14 );
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 116, 156, 56 ) );
+			s->Set( ::Style::A_HEIGHT, 17 );
+			s->Set( ::Style::A_WIDTH, 131 );
+		}
+	);
+	AddStyle(
+		"UnitPreviewLabelHeader", SH() {
+			s->SetFont( ::Style::A_FONT, "arialnb.ttf", 16 );
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 116, 156, 56 ) );
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_HCENTER );
+			s->Set( ::Style::A_HEIGHT, 17 );
+		}
+	);
+	AddStyle(
+		"UnitPreviewLabelLeft", { "UnitPreviewLabel" }, SH() {
+			s->Set( ::Style::A_LEFT, 6 );
+			s->Set( ::Style::A_TEXT_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+		}
+	);
+	AddStyle(
+		"UnitPreviewLabelCenter", { "UnitPreviewLabel" }, SH() {
+			s->Set( ::Style::A_TEXT_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_HCENTER );
+		}
+	);
+
 	// tile preview
 
 	AddStyle(

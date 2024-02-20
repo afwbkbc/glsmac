@@ -38,8 +38,9 @@ BINDING_IMPL( units ) {
 			"define",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 2 );
-				N_GETVALUE( name, 0, String );
+				N_GETVALUE( id, 0, String );
 				N_GETVALUE( unit_def, 1, Object );
+				N_GETPROP( name, unit_def, "name", String );
 				N_GETPROP( unit_type, unit_def, "type", String );
 				if ( unit_type == "static" ) {
 					N_GETPROP( render_def, unit_def, "render", Object );
@@ -54,6 +55,7 @@ BINDING_IMPL( units ) {
 						N_GETPROP( sprite_cy, render_def, "cy", Int );
 						N_GETPROP_OPT_INT( sprite_morale_based_xshift, render_def, "morale_based_xshift" );
 						const auto* def = new unit::StaticDef(
+							id,
 							name,
 							new unit::SpriteRender( sprite_file, sprite_x, sprite_y, sprite_w, sprite_h, sprite_cx, sprite_cy, sprite_morale_based_xshift )
 						);

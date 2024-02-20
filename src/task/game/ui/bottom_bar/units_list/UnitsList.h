@@ -4,9 +4,8 @@
 
 #include "task/game/ui/bottom_bar/BBSection.h"
 #include "ui/object/Section.h"
-
 #include "task/game/Types.h"
-
+#include "../UnitPreview.h"
 #include "UnitsListItem.h"
 
 namespace task {
@@ -15,8 +14,7 @@ namespace ui {
 
 CLASS( UnitsList, BBSection )
 
-	UnitsList( Game* game )
-		: BBSection( game, "UnitsList" ) {}
+	UnitsList( Game* game, UnitPreview* unit_preview );
 
 	void Create() override;
 	void Destroy() override;
@@ -25,6 +23,7 @@ CLASS( UnitsList, BBSection )
 	void ListUnits( const std::vector< unit_data_t >& units );
 
 private:
+	UnitPreview* m_unit_preview;
 	std::vector< UnitsListItem* > m_items = {};
 
 };

@@ -1,5 +1,6 @@
-let native_lifeform = (name, base_y) => {
-    return [name, {
+let native_lifeform = (id, name, base_y) => {
+    return [id, {
+        name: name,
         type: 'static',
         render: {
             type: 'sprite',
@@ -13,8 +14,8 @@ let native_lifeform = (name, base_y) => {
 };
 
 return [
-    native_lifeform('FungalTower', 79),
-    native_lifeform('MindWorms', 233),
-    native_lifeform('SeaLurk', 310),
-    native_lifeform('SporeLauncher', 387),
+    native_lifeform('FungalTower', 'Fungal Tower', 79),
+    native_lifeform('MindWorms', 'Mind Worms', 233),
+    native_lifeform('SeaLurk', 'Sea Lurk', 310),
+    native_lifeform('SporeLauncher', 'Spore Launcher', 387),
 ];

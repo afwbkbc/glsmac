@@ -8,14 +8,16 @@
 namespace game {
 namespace unit {
 
-Def::Def( const def_type_t type, const std::string& name )
-	: m_type( type )
+Def::Def( const std::string& id, const def_type_t type, const std::string& name )
+	: m_id( id )
+	, m_type( type )
 	, m_name( name ) {
 	//
 }
 
 const types::Buffer Def::Serialize( const Def* def ) {
 	types::Buffer buf;
+	buf.WriteString( def->m_id );
 	buf.WriteString( def->m_name );
 	buf.WriteInt( def->m_type );
 	switch ( def->m_type ) {
@@ -30,11 +32,12 @@ const types::Buffer Def::Serialize( const Def* def ) {
 }
 
 Def* Def::Unserialize( types::Buffer& buf ) {
+	const auto id = buf.ReadString();
 	const auto name = buf.ReadString();
 	const auto type = (def_type_t)buf.ReadInt();
 	switch ( type ) {
 		case DT_STATIC:
-			return StaticDef::Unserialize( buf, name );
+			return StaticDef::Unserialize( buf, id, name );
 		default:
 			THROW( "unknown def type on read: " + std::to_string( type ) );
 	}

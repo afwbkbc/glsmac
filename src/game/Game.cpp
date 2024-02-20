@@ -930,11 +930,11 @@ const gse::Value Game::AddGameEvent( const event::Event* event, gse::Context* ct
 }
 
 void Game::DefineUnit( const unit::Def* def ) {
-	Log( "Defining unit ('" + def->m_name + "')" );
+	Log( "Defining unit ('" + def->m_id + "')" );
 
-	ASSERT( m_unit_defs.find( def->m_name ) == m_unit_defs.end(), "Unit definition '" + def->m_name + "' already exists" );
+	ASSERT( m_unit_defs.find( def->m_id ) == m_unit_defs.end(), "Unit definition '" + def->m_id + "' already exists" );
 
-	m_unit_defs.insert_or_assign( def->m_name, def );
+	m_unit_defs.insert_or_assign( def->m_id, def );
 
 	// notify frontend
 	auto e = Event( Event::ET_UNIT_DEFINE );
@@ -948,7 +948,7 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 		return;
 	}
 
-	Log( "Spawning unit #" + std::to_string( unit->m_id ) + " ('" + unit->m_def->m_name + "') at " + unit->m_tile->ToString() );
+	Log( "Spawning unit #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->m_tile->ToString() );
 
 	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
 
@@ -964,7 +964,7 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 	// notify frontend
 	auto e = Event( Event::ET_UNIT_SPAWN );
 	e.data.unit_spawn.unit_id = unit->m_id;
-	NEW( e.data.unit_spawn.unitdef_name, std::string, unit->m_def->m_name );
+	NEW( e.data.unit_spawn.unitdef_id, std::string, unit->m_def->m_id );
 	e.data.unit_spawn.slot_index = unit->m_owner->GetIndex();
 	const auto l = tile->is_water_tile
 		? map::TileState::LAYER_WATER
@@ -1003,7 +1003,7 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	ASSERT( it != m_units.end(), "unit id not found" );
 	auto* unit = it->second;
 
-	Log( "Despawning unit #" + std::to_string( unit->m_id ) + " ('" + unit->m_def->m_name + "') at " + unit->m_tile->ToString() );
+	Log( "Despawning unit #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->m_tile->ToString() );
 
 	auto e = Event( Event::ET_UNIT_DESPAWN );
 	e.data.unit_despawn.unit_id = unit_id;

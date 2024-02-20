@@ -48,7 +48,8 @@ public:
 
 	morale_t m_morale;
 	health_t m_health;
-	const std::string& GetMoraleString() const;
+
+	static const std::string& GetMoraleString( const morale_t morale );
 
 	static const types::Buffer Serialize( const Unit* unit );
 	static Unit* Unserialize( types::Buffer& buf, const Game* game );

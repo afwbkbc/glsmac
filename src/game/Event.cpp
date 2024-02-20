@@ -41,7 +41,7 @@ Event::Event( const Event& other )
 		}
 		case ET_UNIT_SPAWN: {
 			data.unit_spawn.unit_id = other.data.unit_spawn.unit_id;
-			NEW( data.unit_spawn.unitdef_name, std::string, *other.data.unit_spawn.unitdef_name );
+			NEW( data.unit_spawn.unitdef_id, std::string, *other.data.unit_spawn.unitdef_id );
 			data.unit_spawn.slot_index = other.data.unit_spawn.slot_index;
 			data.unit_spawn.tile_coords = other.data.unit_spawn.tile_coords;
 			data.unit_spawn.render_coords = other.data.unit_spawn.render_coords;
@@ -84,7 +84,7 @@ Event::~Event() {
 			break;
 		}
 		case ET_UNIT_SPAWN: {
-			DELETE( data.unit_spawn.unitdef_name );
+			DELETE( data.unit_spawn.unitdef_id );
 			break;
 		}
 		default: {

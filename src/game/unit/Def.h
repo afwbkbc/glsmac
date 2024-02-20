@@ -18,9 +18,10 @@ public:
 		DT_STATIC,
 	};
 
-	Def( const def_type_t type, const std::string& name );
+	Def( const std::string& id, const def_type_t type, const std::string& name );
 	virtual ~Def() = default;
 
+	const std::string m_id;
 	const def_type_t m_type;
 	const std::string m_name;
 

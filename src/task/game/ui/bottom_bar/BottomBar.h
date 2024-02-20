@@ -44,6 +44,9 @@ CLASS( BottomBar, UI )
 	void PreviewTile( const tile_data_t& tile_data );
 	void HideTilePreview();
 
+	void PreviewUnit( const unit_data_t& unit_data );
+	void HideUnitPreview();
+
 	void SetMinimapTexture( types::Texture* texture );
 	const Vec2< size_t > GetMinimapDimensions() const;
 	void SetMinimapSelection( const Vec2< float > position_percents, const Vec2< float > zoom );

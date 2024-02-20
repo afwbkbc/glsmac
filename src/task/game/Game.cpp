@@ -918,11 +918,12 @@ void Game::DefineSlot(
 }
 
 void Game::DefineUnit( const ::game::unit::Def* unitdef ) {
-	auto unitdef_it = m_unitdef_states.find( unitdef->m_name );
+	auto unitdef_it = m_unitdef_states.find( unitdef->m_id );
 	ASSERT( unitdef_it == m_unitdef_states.end(), "unit def already exists" );
 
-	Log( "Initializing unitdef state: " + unitdef->m_name );
+	Log( "Initializing unitdef state: " + unitdef->m_id );
 	unitdef_state_t unitdef_state = {
+		unitdef->m_id,
 		unitdef->m_name,
 		unitdef->m_type,
 	};
@@ -938,7 +939,7 @@ void Game::DefineUnit( const ::game::unit::Def* unitdef ) {
 
 					unitdef_state.static_.render.is_sprite = true;
 
-					const auto name = "Unit_" + def->m_name;
+					const auto name = "Unit_" + def->m_id;
 					auto* texture = GetSourceTexture( render->m_file );
 					const ::game::map::Consts::pcx_texture_coordinates_t& src_wh = {
 						render->m_w,
@@ -1004,7 +1005,7 @@ void Game::DefineUnit( const ::game::unit::Def* unitdef ) {
 	}
 	m_unitdef_states.insert(
 		{
-			unitdef->m_name,
+			unitdef->m_id,
 			unitdef_state
 		}
 	);
@@ -1012,7 +1013,7 @@ void Game::DefineUnit( const ::game::unit::Def* unitdef ) {
 
 void Game::SpawnUnit(
 	const size_t unit_id,
-	const std::string& unitdef_name,
+	const std::string& unitdef_id,
 	const size_t slot_index,
 	const Vec2< size_t >& tile_coords,
 	const Vec3& render_coords,
@@ -1021,7 +1022,7 @@ void Game::SpawnUnit(
 	const ::game::unit::Unit::health_t health
 ) {
 
-	ASSERT( m_unitdef_states.find( unitdef_name ) != m_unitdef_states.end(), "unitdef not found" );
+	ASSERT( m_unitdef_states.find( unitdef_id ) != m_unitdef_states.end(), "unitdef not found" );
 	ASSERT( m_slot_states.find( slot_index ) != m_slot_states.end(), "slot not found" );
 	ASSERT( m_unit_states.find( unit_id ) == m_unit_states.end(), "unit id already exists" );
 
@@ -1031,7 +1032,7 @@ void Game::SpawnUnit(
 			unit_id,
 			{
 				unit_id,
-				&m_unitdef_states.at( unitdef_name ),
+				&m_unitdef_states.at( unitdef_id ),
 				&slot_state,
 				&GetTileState( tile_coords.x, tile_coords.y ),
 				{
@@ -1152,7 +1153,7 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 			const auto& rc = d.render_coords;
 			SpawnUnit(
 				d.unit_id,
-				*d.unitdef_name,
+				*d.unitdef_id,
 				d.slot_index,
 				{
 					tc.x,
@@ -2197,7 +2198,9 @@ tile_data_t Game::GetTileAtCoordsResult() {
 						f_meshtex( sprite_state.instanced_sprite ),
 						f_meshtex( unit_state.render.unit.badge.def->instanced_sprite ),
 						f_meshtex( unit_state.render.unit.badge.healthbar.def->instanced_sprite ),
-						short_power_label
+						def->m_name,
+						short_power_label,
+						::game::unit::Unit::GetMoraleString( unit_state.morale )
 					}
 				);
 			}

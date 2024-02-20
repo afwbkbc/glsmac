@@ -38,30 +38,32 @@ Unit::Unit( const size_t id, const Def* def, Slot* owner, map::Tile* tile, const
 	}
 }
 
+// TODO: set these from gse
 typedef const std::unordered_map< Unit::morale_t, std::string > morale_strings_t;
 const morale_strings_t s_morale_strings_native = {
-/*	{ Unit::M_VERYGREEN, "Hatchling" },
-	{ Unit::M_GREEN, "Larval Mass" },
-	{ Unit::M_DISCIPLINED, "Pre-Boil" },
-	{ Unit::M_HARDENED, "Boil" },
-	{ Unit::M_VETERAN, "Mature Boil" },
-	{ Unit::M_COMMANDO, "Great Boil" },
-	{ Unit::M_ELITE, "Demon Boil" },*/
+	{ 1, "Hatchling" },
+	{ 2, "Larval Mass" },
+	{ 3, "Pre-Boil" },
+	{ 4, "Boil" },
+	{ 5, "Mature Boil" },
+	{ 6, "Great Boil" },
+	{ 7, "Demon Boil" },
 };
 const morale_strings_t s_morale_strings_nonnative = {
-/*	{ Unit::M_VERYGREEN, "Very green" },
-	{ Unit::M_GREEN, "Green" },
-	{ Unit::M_DISCIPLINED, "Disciplined" },
-	{ Unit::M_HARDENED, "Hardened" },
-	{ Unit::M_VETERAN, "Veteran" },
-	{ Unit::M_COMMANDO, "Commando" },
-	{ Unit::M_ELITE, "Elite" },*/
+	{ 1, "Very green" },
+	{ 2, "Green" },
+	{ 3, "Disciplined" },
+	{ 4, "Hardened" },
+	{ 5, "Veteran" },
+	{ 6, "Commando" },
+	{ 7, "Elite" },
 };
-const std::string& Unit::GetMoraleString() const {
+
+const std::string& Unit::GetMoraleString( const morale_t morale ) {
 	const bool is_native = true; // TODO: non-native units
 	const auto& morale_strings = is_native ? s_morale_strings_native : s_morale_strings_nonnative;
-	ASSERT_NOLOG( morale_strings.find( m_morale ) != morale_strings.end(), "unknown morale type: " + std::to_string( m_morale ) );
-	return morale_strings.at( m_morale );
+	ASSERT_NOLOG( morale_strings.find( morale ) != morale_strings.end(), "unknown morale type: " + std::to_string( morale ) );
+	return morale_strings.at( morale );
 }
 
 const types::Buffer Unit::Serialize( const Unit* unit ) {

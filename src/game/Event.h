@@ -62,7 +62,7 @@ public:
 		} unit_define;
 		struct {
 			size_t unit_id;
-			const std::string* unitdef_name;
+			const std::string* unitdef_id;
 			size_t slot_index;
 			struct {
 				size_t x;

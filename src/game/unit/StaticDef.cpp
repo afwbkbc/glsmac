@@ -3,8 +3,8 @@
 namespace game {
 namespace unit {
 
-StaticDef::StaticDef( const std::string& name, const Render* render )
-	: Def( DT_STATIC, name )
+StaticDef::StaticDef( const std::string& id, const std::string& name, const Render* render )
+	: Def( id, DT_STATIC, name )
 	, m_render( render ) {}
 
 StaticDef::~StaticDef() {
@@ -19,8 +19,8 @@ void StaticDef::Serialize( types::Buffer& buf, const StaticDef* def ) {
 	Render::Serialize( buf, def->m_render );
 }
 
-StaticDef* StaticDef::Unserialize( types::Buffer& buf, const std::string& name ) {
-	return new StaticDef( name, Render::Unserialize( buf ) );
+StaticDef* StaticDef::Unserialize( types::Buffer& buf, const std::string& id, const std::string& name ) {
+	return new StaticDef( id, name, Render::Unserialize( buf ) );
 }
 
 }

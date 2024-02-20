@@ -429,6 +429,7 @@ private:
 
 	struct unitdef_state_t {
 		std::string m_id;
+		std::string m_name;
 		::game::unit::Def::def_type_t m_type;
 		union {
 			struct {
