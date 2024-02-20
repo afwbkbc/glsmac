@@ -82,17 +82,37 @@ CLASS( Game, base::Task )
 			const size_t draw_frequency_ms = 60; // TODO: this value doesn't seem realistic, why?
 		} map_editing;
 		const struct {
-			const float scale_x = 0.25f;
-			const float scale_y = 0.5f;
-			const float offset_x = -0.25f;
-			const float offset_y = -0.5;
+			const Vec2< float > scale = {
+				0.25f,
+				0.5f
+			};
+			const Vec2< float > offset = {
+				-0.25f,
+				-0.5
+			};
 			const struct {
 				const uint8_t resolution = 25;
-				const float scale_x = 0.04f;
-				const float scale_y = 0.36f;
-				const float offset_x = -0.292f;
-				const float offset_y = -0.476f;
+				const Vec2< float > scale = {
+					0.04f,
+					0.36f
+				};
+				const Vec2< float > offset = {
+					-0.292f,
+					-0.476f
+				};
 			} healthbars;
+			struct {
+				const uint8_t max_per_tile = 10;
+				const Vec2< float > scale = {
+					0.0326f,
+					0.283f
+				};
+				const Vec2< float > offset = {
+					-0.11f,
+					-0.54f
+				};
+				const float step_x = 0.032f;
+			} fake_badges;
 		} badges;
 	};
 	static const consts_t s_consts;

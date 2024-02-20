@@ -1346,8 +1346,8 @@ void Game::Initialize(
 							y + h / 2,
 						},
 						{
-							::game::map::s_consts.tile.scale.x * s_consts.badges.scale_x,
-							::game::map::s_consts.tile.scale.y * s_consts.badges.scale_y * ::game::map::s_consts.sprite.y_scale
+							::game::map::s_consts.tile.scale.x * s_consts.badges.scale.x,
+							::game::map::s_consts.tile.scale.y * s_consts.badges.scale.y * ::game::map::s_consts.sprite.y_scale
 						},
 						0.55f
 					);
@@ -1381,8 +1381,8 @@ void Game::Initialize(
 				12,
 			},
 			{
-				::game::map::s_consts.tile.scale.x * 0.0326f,
-				::game::map::s_consts.tile.scale.y * 0.283f * ::game::map::s_consts.sprite.y_scale
+				::game::map::s_consts.tile.scale.x * s_consts.badges.fake_badges.scale.x,
+				::game::map::s_consts.tile.scale.y * s_consts.badges.fake_badges.scale.y * ::game::map::s_consts.sprite.y_scale
 			},
 			0.52f
 		);
@@ -1426,8 +1426,8 @@ void Game::Initialize(
 					0,
 				},
 				{
-					::game::map::s_consts.tile.scale.x * s_consts.badges.healthbars.scale_x,
-					::game::map::s_consts.tile.scale.y * s_consts.badges.healthbars.scale_y * ::game::map::s_consts.sprite.y_scale
+					::game::map::s_consts.tile.scale.x * s_consts.badges.healthbars.scale.x,
+					::game::map::s_consts.tile.scale.y * s_consts.badges.healthbars.scale.y * ::game::map::s_consts.sprite.y_scale
 				},
 				0.54f
 			);
@@ -2439,8 +2439,8 @@ void Game::RenderUnit( unit_state_t& unit_state ) {
 	unit_state.render.unit.badge.instance_id = unit_state.render.unit.badge.def->next_instance_id++;
 	unit_state.render.unit.badge.def->instanced_sprite->actor->SetInstance(
 		unit_state.render.unit.badge.instance_id, {
-			c.x + ::game::map::s_consts.tile.scale.x * s_consts.badges.offset_x,
-			c.y - ::game::map::s_consts.tile.scale.y * s_consts.badges.offset_y * ::game::map::s_consts.sprite.y_scale,
+			c.x + ::game::map::s_consts.tile.scale.x * s_consts.badges.offset.x,
+			c.y - ::game::map::s_consts.tile.scale.y * s_consts.badges.offset.y * ::game::map::s_consts.sprite.y_scale,
 			c.z
 		}
 	);
@@ -2449,8 +2449,8 @@ void Game::RenderUnit( unit_state_t& unit_state ) {
 	unit_state.render.unit.badge.healthbar.instance_id = unit_state.render.unit.badge.healthbar.def->next_instance_id++;
 	unit_state.render.unit.badge.healthbar.def->instanced_sprite->actor->SetInstance(
 		unit_state.render.unit.badge.healthbar.instance_id, {
-			c.x + ::game::map::s_consts.tile.scale.x * s_consts.badges.healthbars.offset_x,
-			c.y - ::game::map::s_consts.tile.scale.y * s_consts.badges.healthbars.offset_y * ::game::map::s_consts.sprite.y_scale,
+			c.x + ::game::map::s_consts.tile.scale.x * s_consts.badges.healthbars.offset.x,
+			c.y - ::game::map::s_consts.tile.scale.y * s_consts.badges.healthbars.offset.y * ::game::map::s_consts.sprite.y_scale,
 			c.z
 		}
 	);
@@ -2471,8 +2471,8 @@ void Game::RenderUnitFakeBadge( unit_state_t& unit_state, const size_t offset ) 
 	unit_state.render.fake_badge.instance_id = slot_state->fake_badge.next_instance_id++;
 	slot_state->fake_badge.instanced_sprite->actor->SetInstance(
 		unit_state.render.fake_badge.instance_id, {
-			c.x + ::game::map::s_consts.tile.scale.x * ( -0.11f ) + 0.0322f * offset,
-			c.y - ::game::map::s_consts.tile.scale.y * ( -0.54f ) * ::game::map::s_consts.sprite.y_scale,
+			c.x + ::game::map::s_consts.tile.scale.x * s_consts.badges.fake_badges.offset.x + s_consts.badges.fake_badges.step_x * offset,
+			c.y - ::game::map::s_consts.tile.scale.y * s_consts.badges.fake_badges.offset.y * ::game::map::s_consts.sprite.y_scale,
 			c.z
 		}
 	);
@@ -2581,8 +2581,6 @@ void Game::RenderTile( tile_state_t& tile_state ) {
 		const auto units_order = GetUnitsOrder( tile_state.units );
 		ASSERT( !units_order.empty(), "units order is empty" );
 
-		size_t max_fake_badges = 7;
-
 		// for now just keep most important unit rendered
 		const auto most_important_unit_id = units_order.front();
 
@@ -2601,7 +2599,7 @@ void Game::RenderTile( tile_state_t& tile_state ) {
 				// render fake badge
 				tile_state.render.currently_rendered_fake_badges.push_back( unit );
 				fake_badges.push_back( unit );
-				if ( fake_badge_idx++ > max_fake_badges ) {
+				if ( fake_badge_idx++ > s_consts.badges.fake_badges.max_per_tile ) {
 					break;
 				}
 			}
