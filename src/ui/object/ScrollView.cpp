@@ -5,13 +5,21 @@
 namespace ui {
 namespace object {
 
+ScrollView::ScrollView( const scrollview_type_t type, const std::string& class_name )
+	: Panel( class_name )
+	, m_type( type ) {
+	//
+}
+
 void ScrollView::Create() {
 	Panel::Create();
 
 	NEW( m_viewport, UIContainer );
 	m_viewport->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
 	m_viewport->SetMargin( m_border_size );
-	m_viewport->SetRight( 20 ); // to leave space for scrollbar // TODO: put to style
+	if ( m_type == ST_VERTICAL ) {
+		m_viewport->SetRight( 20 ); // to leave space for scrollbar // TODO: put to style
+	}
 	m_viewport->SetOverflow( UIObject::OVERFLOW_HIDDEN );
 	Panel::AddChild( m_viewport );
 
@@ -30,37 +38,50 @@ void ScrollView::Create() {
 	m_viewport->AddChild( m_body );
 
 	const auto f_handle_mouse_scroll = [ this ]( const UIEvent::event_data_t* data ) -> void {
-		ScrollTo( m_scroll.y - (coord_t)data->mouse.scroll_y * m_scroll_speed );
+		switch ( m_type ) {
+			case ST_VERTICAL: {
+				ScrollTo( m_scroll.y - (coord_t)data->mouse.scroll_y * m_scroll_speed );
+				break;
+			}
+			case ST_HORIZONTAL_INLINE: {
+				ScrollTo( m_scroll.x - (coord_t)data->mouse.scroll_y * m_scroll_speed );
+				break;
+			}
+			default:
+				THROW( "unknown scroll type: " + std::to_string( m_type ) );
+		}
 		if ( m_is_sticky ) {
 			m_need_stickyness = true;
 		}
 	};
 
-	NEW( m_scrollbar, Scrollbar, Scrollbar::SD_VERTICAL, "ScrollbarVerticalThick" );
-	m_scrollbar->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_VCENTER );
-	m_scrollbar->SetTop( m_border_size + 1 );
-	m_scrollbar->SetRight( m_border_size + 1 );
-	m_scrollbar->SetBottom( m_border_size + 1 );
-	m_scrollbar->On(
-		UIEvent::EV_MOUSE_SCROLL, EH( this, f_handle_mouse_scroll ) {
-			f_handle_mouse_scroll( data );
-			return true;
-		}
-	);
-	m_scrollbar->On(
-		UIEvent::EV_CHANGE, EH( this ) {
-			if ( data->value.scroll.is_scrolling ) {
-				const auto limits = GetScrollLimits();
-				SetScrollY( ( limits.bottom - limits.top ) * data->value.scroll.percentage / 100.0f );
+	if ( m_type == ST_VERTICAL ) {
+		NEW( m_scrollbar, Scrollbar, Scrollbar::SD_VERTICAL, "ScrollbarVerticalThick" );
+		m_scrollbar->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_VCENTER );
+		m_scrollbar->SetTop( m_border_size + 1 );
+		m_scrollbar->SetRight( m_border_size + 1 );
+		m_scrollbar->SetBottom( m_border_size + 1 );
+		m_scrollbar->On(
+			UIEvent::EV_MOUSE_SCROLL, EH( this, f_handle_mouse_scroll ) {
+				f_handle_mouse_scroll( data );
+				return true;
 			}
-			else if ( m_is_sticky ) {
-				m_need_stickyness = true;
+		);
+		m_scrollbar->On(
+			UIEvent::EV_CHANGE, EH( this ) {
+				if ( data->value.scroll.is_scrolling ) {
+					const auto limits = GetScrollLimits();
+					SetScrollY( ( limits.bottom - limits.top ) * data->value.scroll.percentage / 100.0f );
+				}
+				else if ( m_is_sticky ) {
+					m_need_stickyness = true;
+				}
+				return true;
 			}
-			return true;
-		}
-	);
-	m_scrollbar->SetZIndex( 0.7f ); // TODO: fix z index bugs
-	Panel::AddChild( m_scrollbar );
+		);
+		m_scrollbar->SetZIndex( 0.7f ); // TODO: fix z index bugs
+		Panel::AddChild( m_scrollbar );
+	}
 
 	if ( !m_to_add.empty() ) {
 		for ( auto& child : m_to_add ) {
@@ -109,7 +130,18 @@ void ScrollView::Create() {
 				if ( m_is_dragging ) {
 					m_is_dragging = false;
 					if ( m_is_sticky ) {
-						m_scroller.Scroll( m_scroll.y, (ssize_t)round( m_scroll.y + m_scroll_speed / 2.0f ) / (ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed );
+						switch ( m_type ) {
+							case ST_VERTICAL: {
+								m_scroller.Scroll( m_scroll.y, (ssize_t)round( m_scroll.y + m_scroll_speed / 2.0f ) / (ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed );
+								break;
+							}
+							case ST_HORIZONTAL_INLINE: {
+								m_scroller.Scroll( m_scroll.x, (ssize_t)round( m_scroll.x + m_scroll_speed / 2.0f ) / (ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed );
+								break;
+							}
+							default:
+								THROW( "unknown scroll type: " + std::to_string( m_type ) );
+						}
 						// TODO: fix strange 'bounce' at bottom
 					}
 				}
@@ -133,16 +165,44 @@ void ScrollView::Iterate() {
 
 	if ( !m_scroller.IsRunning() && m_need_stickyness ) {
 		m_need_stickyness = false;
-		m_scroller.Scroll(
-			m_scroll.y,
-			(ssize_t)round( m_scroll.y + m_scroll_speed / 2.0f )
-				/
-					(ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed
-		);
+		switch ( m_type ) {
+			case ST_VERTICAL: {
+				m_scroller.Scroll(
+					m_scroll.y,
+					(ssize_t)round( m_scroll.y + m_scroll_speed / 2.0f )
+						/
+							(ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed
+				);
+				break;
+			}
+			case ST_HORIZONTAL_INLINE: {
+				m_scroller.Scroll(
+					m_scroll.x,
+					(ssize_t)round( m_scroll.x + m_scroll_speed / 2.0f )
+						/
+							(ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed
+				);
+				break;
+			}
+			default:
+				THROW( "unknown scroll type: " + std::to_string( m_type ) );
+		}
 	}
 
 	while ( m_scroller.HasTicked() ) {
-		SetScrollY( m_scroller.GetPosition() );
+		switch ( m_type ) {
+			case ST_VERTICAL: {
+				SetScrollY( m_scroller.GetPosition() );
+				break;
+			}
+			case ST_HORIZONTAL_INLINE: {
+				SetScrollX( m_scroller.GetPosition() );
+				break;
+			}
+			default:
+				THROW( "unknown scroll type: " + std::to_string( m_type ) );
+
+		}
 	}
 }
 
@@ -159,7 +219,9 @@ void ScrollView::Destroy() {
 		m_to_remove.clear();
 	}
 
-	Panel::RemoveChild( m_scrollbar );
+	if ( m_scrollbar ) {
+		Panel::RemoveChild( m_scrollbar );
+	}
 
 	m_viewport->RemoveChild( m_body );
 	Panel::RemoveChild( m_viewport );
@@ -257,13 +319,28 @@ void ScrollView::SetScrollY( const coord_t px ) {
 	);
 }
 
-void ScrollView::ScrollToBottom() {
+void ScrollView::ScrollToEnd() {
 	const auto limits = GetScrollLimits();
-	SetScrollY( ( limits.bottom - limits.top ) );
+	switch ( m_type ) {
+		case ST_VERTICAL: {
+			SetScrollY( ( limits.bottom - limits.top ) );
+			break;
+		}
+		case ST_HORIZONTAL_INLINE: {
+			SetScrollX( ( limits.right - limits.left ) );
+			break;
+		}
+		default:
+			THROW( "unknown scroll type: " + std::to_string( m_type ) );
+	}
 }
 
 void ScrollView::SetScrollSpeed( const size_t scroll_speed ) {
 	m_scroll_speed = scroll_speed;
+}
+
+void ScrollView::SetSticky( const bool sticky ) {
+	m_is_sticky = sticky;
 }
 
 void ScrollView::SetInternalWidth( const coord_t px ) {
@@ -281,17 +358,37 @@ void ScrollView::SetInternalHeight( const coord_t px ) {
 }
 
 void ScrollView::ScrollToObjectMaybe( UIObject* object ) {
-	if ( object->GetTop() < m_scroll.y ) {
-		SetScrollY( object->GetTop() );
-	}
-	else {
-		const auto area = GetInternalObjectArea();
-		const auto& object_area = object->GetObjectArea();
-		const auto h = m_scroll.y + area.height;
-		const auto oh = object->GetTop() + object_area.height + 2; // TODO: why +2 ?
-		if ( oh > h ) {
-			SetScrollY( oh - area.height );
+	const auto area = GetInternalObjectArea();
+	const auto& object_area = object->GetObjectArea();
+	switch ( m_type ) {
+		case ST_VERTICAL: {
+			if ( object->GetTop() < m_scroll.y ) {
+				SetScrollY( object->GetTop() );
+			}
+			else {
+				const auto h = m_scroll.y + area.height;
+				const auto oh = object->GetTop() + object_area.height + 2; // TODO: why +2 ?
+				if ( oh > h ) {
+					SetScrollY( oh - area.height );
+				}
+			}
+			break;
 		}
+		case ST_HORIZONTAL_INLINE: {
+			if ( object->GetLeft() < m_scroll.x ) {
+				SetScrollX( object->GetLeft() );
+			}
+			else {
+				const auto w = m_scroll.x + area.width;
+				const auto ow = object->GetLeft() + object_area.width + 2; // TODO: why +2 ?
+				if ( ow > w ) {
+					SetScrollX( ow - area.width );
+				}
+			}
+			break;
+		}
+		default:
+			THROW( "unknown scroll type: " + std::to_string( m_type ) );
 	}
 }
 
@@ -318,9 +415,24 @@ const UIObject::coord_box_t ScrollView::GetScrollLimits() {
 }
 
 void ScrollView::ScrollTo( float target ) {
-	const float source = m_scroller.IsRunning()
-		? m_scroller.GetTargetPosition()
-		: m_scroll.y;
+	float source;
+	if ( m_scroller.IsRunning() ) {
+		source = m_scroller.GetTargetPosition();
+	}
+	else {
+		switch ( m_type ) {
+			case ST_VERTICAL: {
+				source = m_scroll.y;
+				break;
+			}
+			case ST_HORIZONTAL_INLINE: {
+				source = m_scroll.x;
+				break;
+			}
+			default:
+				THROW( "unknown scroll type: " + std::to_string( m_type ) );
+		}
+	}
 	m_scroller.Scroll( source, target );
 };
 
@@ -328,12 +440,25 @@ void ScrollView::AddChildToBody( UIObject* child ) {
 	//child->SetOverflowMargin( m_border_size );
 	child->SetParentStyleObject( this );
 	m_body->AddChild( child );
-	FixScrollY();
+	if ( m_type == ST_VERTICAL ) {
+		FixScrollY();
+	}
 }
 
 void ScrollView::RemoveChildFromBody( UIObject* child ) {
 	m_body->RemoveChild( child );
-	FixScrollY();
+	if ( m_type == ST_VERTICAL ) {
+		FixScrollY();
+	}
+}
+
+void ScrollView::FixScrollX() {
+	const auto limits = GetScrollLimits();
+	float scroll_x = ( limits.right - limits.left ) * m_scrollbar->GetPercentage() / 100.0f;
+	//if ( m_is_sticky ) {
+	//scroll_y = (ssize_t)round( scroll_y ) / (ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed;
+	//}
+	SetScrollX( scroll_x );
 }
 
 void ScrollView::FixScrollY() {

@@ -581,6 +581,7 @@ void BottomBar::AddStyles() {
 			s->Set( ::Style::A_TOP, 0 );
 			s->Set( ::Style::A_BOTTOM, 0 );
 			s->Set( ::Style::A_WIDTH, 70 );
+			s->Set( ::Style::A_HEIGHT, 44 );
 		}
 	);
 

@@ -54,11 +54,11 @@ let random_health = () => {
                 if (#game.random.get_int(0, 1) == 1) {
                     let owner = random_player();
                     let tile = #game.map.get_tile(x, y);
-                    let units_count = #game.random.get_int(1, 3);
+                    let units_count = #game.random.get_int(1, 4);
                     if (#game.random.get_int(0, 1) == 0) {
-                        units_count += #game.random.get_int(0, 3);
+                        units_count += #game.random.get_int(0, 4);
                         if (#game.random.get_int(0, 1) == 0) {
-                            units_count += #game.random.get_int(0, 3);
+                            units_count += #game.random.get_int(0, 4);
                         }
                     }
                     let i = 0;

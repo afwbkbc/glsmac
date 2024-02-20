@@ -13,8 +13,12 @@ namespace object {
 
 CLASS( ScrollView, Panel )
 
-	ScrollView( const std::string& class_name = "" )
-		: Panel( class_name ) {}
+	enum scrollview_type_t {
+		ST_VERTICAL,
+		ST_HORIZONTAL_INLINE,
+	};
+
+	ScrollView( const scrollview_type_t type, const std::string& class_name = "" );
 
 	virtual void Create() override;
 	virtual void Iterate() override;
@@ -29,9 +33,10 @@ CLASS( ScrollView, Panel )
 	void SetScroll( vertex_t px, const bool force = false );
 	void SetScrollX( const coord_t px );
 	void SetScrollY( const coord_t px );
-	void ScrollToBottom();
+	void ScrollToEnd();
 
 	void SetScrollSpeed( const size_t scroll_speed );
+	void SetSticky( const bool sticky );
 
 	void SetInternalWidth( const coord_t px );
 	void SetInternalHeight( const coord_t px );
@@ -40,6 +45,8 @@ protected:
 	void ScrollToObjectMaybe( UIObject* object );
 
 private:
+
+	const scrollview_type_t m_type;
 
 	size_t m_scroll_speed = 17;
 	bool m_is_sticky = true;
@@ -82,6 +89,7 @@ private:
 
 	void AddChildToBody( UIObject* child );
 	void RemoveChildFromBody( UIObject* child );
+	void FixScrollX();
 	void FixScrollY();
 
 };

@@ -62,7 +62,7 @@ void ChatSection::Destroy() {
 void ChatSection::AddMessage( const std::string& message ) {
 	if ( m_log ) {
 		m_log->AddLine( message );
-		m_log->ScrollToBottom();
+		m_log->ScrollToEnd();
 	}
 }
 

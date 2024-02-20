@@ -23,19 +23,27 @@ void UnitsList::Destroy() {
 }
 
 void UnitsList::ClearUnits() {
-	for ( const auto& item : m_items ) {
-		RemoveChild( item );
+	if ( m_body ) {
+		for ( const auto& item : m_items ) {
+			m_body->RemoveChild( item );
+		}
+		m_items.clear();
+		RemoveChild( m_body );
+		m_body = nullptr;
 	}
-	m_items.clear();
 }
 
 void UnitsList::ListUnits( const std::vector< unit_data_t >& units ) {
 	ClearUnits();
+	NEW( m_body, ::ui::object::ScrollView, ::ui::object::ScrollView::ST_HORIZONTAL_INLINE );
+	m_body->SetSticky( false );
+	m_body->SetScrollSpeed( 32 );
+	AddChild( m_body );
 	size_t left = 0;
 	for ( const auto& unit : units ) {
 		NEWV( item, UnitsListItem, m_game, m_unit_preview, unit );
 		item->SetLeft( left );
-		AddChild( item );
+		m_body->AddChild( item );
 		m_items.push_back( item );
 		left += item->GetWidth();
 	}
