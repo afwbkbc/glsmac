@@ -65,10 +65,14 @@ public:
 			const std::string* unitdef_name;
 			size_t slot_index;
 			struct {
+				size_t x;
+				size_t y;
+			} tile_coords;
+			struct {
 				float x;
 				float y;
 				float z;
-			} coords;
+			} render_coords;
 			bool is_active;
 			unit::Unit::morale_t morale;
 			unit::Unit::health_t health;

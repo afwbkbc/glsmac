@@ -974,7 +974,11 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 		ts->coord.y,
 		ts->layers[ l ].coords
 	);
-	e.data.unit_spawn.coords = {
+	e.data.unit_spawn.tile_coords = {
+		tile->coord.x,
+		tile->coord.y
+	};
+	e.data.unit_spawn.render_coords = {
 		c.x,
 		-c.y,
 		c.z

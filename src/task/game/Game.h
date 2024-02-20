@@ -87,7 +87,7 @@ CLASS( Game, base::Task )
 			const float offset_x = -0.25f;
 			const float offset_y = -0.5;
 			const struct {
-				const uint8_t resolution = 10;
+				const uint8_t resolution = 25;
 				const float scale_x = 0.04f;
 				const float scale_y = 0.36f;
 				const float offset_x = -0.292f;
@@ -181,9 +181,8 @@ private:
 		const size_t unit_id,
 		const std::string& unitdef_name,
 		const size_t slot_index,
-		const float x,
-		const float y,
-		const float z,
+		const Vec2< size_t >& tile_coords,
+		const Vec3& render_coords,
 		const bool is_active,
 		const ::game::unit::Unit::morale_t morale,
 		const ::game::unit::Unit::health_t health
@@ -386,6 +385,18 @@ private:
 #endif
 	} m_mt_ids = {};
 
+	struct unit_state_t;
+	typedef std::unordered_map< size_t, unit_state_t* > unit_states_t;
+	struct tile_state_t {
+		struct {
+			size_t x = 0;
+			size_t y = 0;
+		} coords;
+		unit_state_t* currently_rendered_unit = nullptr;
+		unit_states_t units = {};
+	};
+	std::vector< tile_state_t > m_tile_states = {};
+
 	struct sprite_state_t {
 		Game::instanced_sprite_t* instanced_sprite = nullptr;
 		size_t next_instance_id = 1;
@@ -438,14 +449,16 @@ private:
 		size_t unit_id = 0;
 		unitdef_state_t* def = nullptr;
 		slot_state_t* slot = nullptr;
+		tile_state_t* tile = nullptr;
 		struct {
+			bool is_rendered = false;
+			Vec3 coords = {};
 			size_t instance_id = 0;
 			sprite_state_t* badge_def = nullptr;
 			size_t badge_instance_id = 0;
 			sprite_state_t* badge_healthbar_def = nullptr;
 			size_t badge_healthbar_instance_id = 0;
 		} render;
-		Vec3 coords = {};
 		bool is_active = false;
 		::game::unit::Unit::morale_t morale = 0;
 		::game::unit::Unit::health_t health = 0;
@@ -464,7 +477,15 @@ private:
 		UUF_HEALTH = 1 << 2,
 		UUF_ALL = 0xff,
 	};
-	void UpdateUnit( unit_state_t& unit_state, const unit_update_flags_t flags );
+
+	void RenderUnit( unit_state_t& unit_state );
+	void UnrenderUnit( unit_state_t& unit_state );
+
+	std::vector< size_t > GetUnitsOrder( const unit_states_t& units ) const;
+
+	void RenderTile( tile_state_t& tile_state );
+
+	tile_state_t& GetTileState( const size_t x, const size_t y );
 
 };
 
