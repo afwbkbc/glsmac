@@ -394,7 +394,7 @@ private:
 		} coords;
 		struct {
 			unit_state_t* currently_rendered_unit = nullptr;
-			std::vector< unit_state_t* > currently_rendered_orphan_badges = {};
+			std::vector< unit_state_t* > currently_rendered_fake_badges = {};
 		} render;
 		unit_states_t units = {};
 	};
@@ -438,6 +438,7 @@ private:
 	};
 	typedef std::unordered_map< ::game::unit::Unit::morale_t, unitbadge_def_t > unitbadge_defs_t;
 	unitbadge_spritemaps_t m_unitbadge_sprites = {};
+	Game::instanced_sprite_t* m_fake_badge = nullptr;
 
 	std::vector< types::Texture* > m_healthbar_textures = {};
 	std::vector< sprite_state_t > m_healthbar_sprites = {};
@@ -445,6 +446,7 @@ private:
 	struct slot_state_t {
 		types::Color color = {};
 		unitbadge_defs_t badges = {};
+		sprite_state_t fake_badge = {};
 	};
 	std::unordered_map< size_t, slot_state_t > m_slot_states = {};
 
@@ -458,17 +460,19 @@ private:
 			struct {
 				bool is_rendered = false;
 				size_t instance_id = 0;
+				struct {
+					sprite_state_t* def = nullptr;
+					size_t instance_id = 0;
+					struct {
+						sprite_state_t* def = nullptr;
+						size_t instance_id = 0;
+					} healthbar;
+				} badge;
 			} unit;
 			struct {
 				bool is_rendered = false;
-				sprite_state_t* def = nullptr;
 				size_t instance_id = 0;
-				struct {
-					bool is_rendered = false;
-					sprite_state_t* def = nullptr;
-					size_t instance_id = 0;
-				} healthbar;
-			} badge;
+			} fake_badge;
 		} render;
 		bool is_active = false;
 		::game::unit::Unit::morale_t morale = 0;
@@ -490,9 +494,9 @@ private:
 	};
 
 	void RenderUnit( unit_state_t& unit_state );
-	void RenderUnitBadge( unit_state_t& unit_state, const float offset_x, const float offset_z );
+	void RenderUnitFakeBadge( unit_state_t& unit_state, const size_t offset );
 	void UnrenderUnit( unit_state_t& unit_state );
-	void UnrenderUnitBadge( unit_state_t& unit_state );
+	void UnrenderUnitFakeBadge( unit_state_t& unit_state );
 
 	std::vector< size_t > GetUnitsOrder( const unit_states_t& units ) const;
 
