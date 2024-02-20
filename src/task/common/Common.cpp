@@ -11,7 +11,7 @@ void Common::Start() {
 
 	ui->AddTheme( &m_theme );
 
-	if ( g_engine->GetConfig()->HasLaunchFlag( config::Config::LF_BENCHMARK ) ) {
+	if ( g_engine->GetConfig()->HasLaunchFlag( config::Config::LF_SHOWFPS ) ) {
 		NEW( m_fps_counter, ui::FPSCounter );
 
 		ui->AddObject( m_fps_counter );

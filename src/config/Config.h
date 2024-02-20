@@ -17,10 +17,11 @@ CLASS( Config, base::Module )
 	enum launch_flag_t : uint8_t {
 		LF_NONE = 0,
 		LF_BENCHMARK = 1 << 0,
-		LF_NOSOUND = 1 << 1,
-		LF_SKIPINTRO = 1 << 2,
-		LF_WINDOWED = 1 << 3,
-		LF_WINDOW_SIZE = 1 << 4
+		LF_SHOWFPS = 1 << 1,
+		LF_NOSOUND = 1 << 2,
+		LF_SKIPINTRO = 1 << 3,
+		LF_WINDOWED = 1 << 4,
+		LF_WINDOW_SIZE = 1 << 5
 	};
 
 #ifdef DEBUG

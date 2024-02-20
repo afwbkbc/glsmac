@@ -13,6 +13,18 @@
 namespace task {
 namespace game {
 
+struct meshtex_t {
+	types::mesh::Mesh* mesh = nullptr;
+	types::Texture* texture = nullptr;
+};
+
+struct unit_data_t {
+	meshtex_t unit;
+	meshtex_t badge;
+	meshtex_t healthbar;
+	std::string short_power_label;
+};
+
 struct tile_data_t {
 	bool is_set = false;
 	Vec2< size_t > tile_position = {};
@@ -22,6 +34,7 @@ struct tile_data_t {
 	std::vector< std::string > preview_lines = {};
 	std::vector< std::string > sprites = {};
 	bool scroll_adaptively = false;
+	std::vector< unit_data_t > units = {};
 };
 
 }

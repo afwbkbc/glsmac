@@ -521,6 +521,47 @@ void BottomBar::AddStyles() {
 		}
 	);
 
+	AddStyle(
+		"UnitsListItem", SH() {
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_LEFT );
+			s->Set( ::Style::A_TOP, 0 );
+			s->Set( ::Style::A_BOTTOM, 0 );
+			s->Set( ::Style::A_WIDTH, 70 );
+		}
+	);
+
+	AddStyle(
+		"UnitsListPreviewUnit", SH() {
+			s->Set( ::Style::A_LEFT, 6 );
+			s->Set( ::Style::A_TOP, -6 );
+			s->Set( ::Style::A_WIDTH, 60 );
+			s->Set( ::Style::A_HEIGHT, 36 );
+		}
+	);
+	AddStyle(
+		"UnitsListPreviewBadge", SH() {
+			s->Set( ::Style::A_LEFT, 0 );
+			s->Set( ::Style::A_TOP, -3 );
+			s->Set( ::Style::A_WIDTH, 20 );
+			s->Set( ::Style::A_HEIGHT, 26 );
+		}
+	);
+	AddStyle(
+		"UnitsListPreviewHealthbar", SH() {
+			s->Set( ::Style::A_LEFT, 5 );
+			s->Set( ::Style::A_TOP, 2 );
+			s->Set( ::Style::A_WIDTH, 3 );
+			s->Set( ::Style::A_HEIGHT, 20 );
+		}
+	);
+	AddStyle(
+		"UnitsListPreviewLabel", SH() {
+			s->SetFont( ::Style::A_FONT, "arialnb.ttf", 12 );
+			s->Set( ::Style::A_TEXT_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_HCENTER );
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 235, 235, 235 ) );
+		}
+	);
+
 	// minimap
 
 	AddStyle(

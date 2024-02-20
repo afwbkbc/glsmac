@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <unordered_map>
+#include <map>
 
 #include "Actor.h"
 
@@ -95,7 +95,7 @@ private:
 	} instance_t;
 
 	instance_id_t m_next_instance_id = 0;
-	std::unordered_map< instance_id_t, instance_t > m_instances = {};
+	std::map< instance_id_t, instance_t > m_instances = {};
 
 	const scene::Scene::instance_positions_t* GetWorldInstancePositions();
 

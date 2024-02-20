@@ -54,6 +54,7 @@ CLASS( Actor, Entity )
 	static constexpr render_flag_t RF_IGNORE_DEPTH = 1 << 3;
 	static constexpr render_flag_t RF_USE_AREA_LIMITS = 1 << 4;
 	static constexpr render_flag_t RF_USE_2D_POSITION = 1 << 5;
+	static constexpr render_flag_t RF_SPRITES_DEPTH = 1 << 6;
 
 	void SetRenderFlags( const render_flag_t render_flags );
 	const render_flag_t GetRenderFlags() const;

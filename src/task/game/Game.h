@@ -82,17 +82,37 @@ CLASS( Game, base::Task )
 			const size_t draw_frequency_ms = 60; // TODO: this value doesn't seem realistic, why?
 		} map_editing;
 		const struct {
-			const float scale_x = 0.25f;
-			const float scale_y = 0.5f;
-			const float offset_x = -0.25f;
-			const float offset_y = -0.5;
+			const Vec2< float > scale = {
+				0.25f,
+				0.5f
+			};
+			const Vec2< float > offset = {
+				-0.25f,
+				-0.5
+			};
 			const struct {
-				const uint8_t resolution = 10;
-				const float scale_x = 0.04f;
-				const float scale_y = 0.36f;
-				const float offset_x = -0.292f;
-				const float offset_y = -0.476f;
+				const uint8_t resolution = 25;
+				const Vec2< float > scale = {
+					0.04f,
+					0.36f
+				};
+				const Vec2< float > offset = {
+					-0.292f,
+					-0.476f
+				};
 			} healthbars;
+			struct {
+				const uint8_t max_per_tile = 10;
+				const Vec2< float > scale = {
+					0.0326f,
+					0.283f
+				};
+				const Vec2< float > offset = {
+					-0.11f,
+					-0.54f
+				};
+				const float step_x = 0.032f;
+			} fake_badges;
 		} badges;
 	};
 	static const consts_t s_consts;
@@ -181,9 +201,8 @@ private:
 		const size_t unit_id,
 		const std::string& unitdef_name,
 		const size_t slot_index,
-		const float x,
-		const float y,
-		const float z,
+		const Vec2< size_t >& tile_coords,
+		const Vec3& render_coords,
 		const bool is_active,
 		const ::game::unit::Unit::morale_t morale,
 		const ::game::unit::Unit::health_t health
@@ -386,6 +405,21 @@ private:
 #endif
 	} m_mt_ids = {};
 
+	struct unit_state_t;
+	typedef std::unordered_map< size_t, unit_state_t* > unit_states_t;
+	struct tile_state_t {
+		struct {
+			size_t x = 0;
+			size_t y = 0;
+		} coords;
+		struct {
+			unit_state_t* currently_rendered_unit = nullptr;
+			std::vector< unit_state_t* > currently_rendered_fake_badges = {};
+		} render;
+		unit_states_t units = {};
+	};
+	std::vector< tile_state_t > m_tile_states = {};
+
 	struct sprite_state_t {
 		Game::instanced_sprite_t* instanced_sprite = nullptr;
 		size_t next_instance_id = 1;
@@ -394,6 +428,7 @@ private:
 	typedef std::unordered_map< ::game::unit::Unit::morale_t, sprite_state_t > morale_based_sprite_states_t;
 
 	struct unitdef_state_t {
+		std::string m_id;
 		::game::unit::Def::def_type_t m_type;
 		union {
 			struct {
@@ -423,6 +458,7 @@ private:
 	};
 	typedef std::unordered_map< ::game::unit::Unit::morale_t, unitbadge_def_t > unitbadge_defs_t;
 	unitbadge_spritemaps_t m_unitbadge_sprites = {};
+	Game::instanced_sprite_t* m_fake_badge = nullptr;
 
 	std::vector< types::Texture* > m_healthbar_textures = {};
 	std::vector< sprite_state_t > m_healthbar_sprites = {};
@@ -430,18 +466,33 @@ private:
 	struct slot_state_t {
 		types::Color color = {};
 		unitbadge_defs_t badges = {};
+		sprite_state_t fake_badge = {};
 	};
 	std::unordered_map< size_t, slot_state_t > m_slot_states = {};
 
 	struct unit_state_t {
+		size_t unit_id = 0;
 		unitdef_state_t* def = nullptr;
 		slot_state_t* slot = nullptr;
+		tile_state_t* tile = nullptr;
 		struct {
-			size_t instance_id = 0;
-			sprite_state_t* badge_def = nullptr;
-			size_t badge_instance_id = 0;
-			sprite_state_t* badge_healthbar_def = nullptr;
-			size_t badge_healthbar_instance_id = 0;
+			Vec3 coords = {};
+			struct {
+				bool is_rendered = false;
+				size_t instance_id = 0;
+				struct {
+					sprite_state_t* def = nullptr;
+					size_t instance_id = 0;
+					struct {
+						sprite_state_t* def = nullptr;
+						size_t instance_id = 0;
+					} healthbar;
+				} badge;
+			} unit;
+			struct {
+				bool is_rendered = false;
+				size_t instance_id = 0;
+			} fake_badge;
 		} render;
 		bool is_active = false;
 		::game::unit::Unit::morale_t morale = 0;
@@ -453,6 +504,25 @@ private:
 
 	void CancelRequests();
 	void CancelGame();
+
+	enum unit_update_flags_t : uint8_t {
+		UUF_NONE = 0,
+		UUF_POSITION = 1 << 0,
+		UUF_MORALE = 1 << 1,
+		UUF_HEALTH = 1 << 2,
+		UUF_ALL = 0xff,
+	};
+
+	void RenderUnit( unit_state_t& unit_state );
+	void RenderUnitFakeBadge( unit_state_t& unit_state, const size_t offset );
+	void UnrenderUnit( unit_state_t& unit_state );
+	void UnrenderUnitFakeBadge( unit_state_t& unit_state );
+
+	std::vector< size_t > GetUnitsOrder( const unit_states_t& units ) const;
+
+	void RenderTile( tile_state_t& tile_state );
+
+	tile_state_t& GetTileState( const size_t x, const size_t y );
 
 };
 

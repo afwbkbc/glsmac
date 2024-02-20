@@ -720,6 +720,11 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			// adaptive scroll if tile was selected with arrows
 			response.data.select_tile.scroll_adaptively = request.data.select_tile.tile_direction != TD_NONE;
 
+			NEW( response.data.select_tile.unit_ids, std::vector< size_t > );
+			for ( const auto& it : tile->units ) {
+				response.data.select_tile.unit_ids->push_back( it.first );
+			}
+
 			break;
 		}
 		case OP_SAVE_MAP: {
@@ -847,6 +852,9 @@ void Game::DestroyResponse( const MT_Response& response ) {
 				if ( response.data.select_tile.sprites ) {
 					DELETE( response.data.select_tile.sprites );
 				}
+				if ( response.data.select_tile.unit_ids ) {
+					DELETE( response.data.select_tile.unit_ids );
+				}
 				break;
 			}
 			case OP_SAVE_MAP: {
@@ -966,7 +974,11 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 		ts->coord.y,
 		ts->layers[ l ].coords
 	);
-	e.data.unit_spawn.coords = {
+	e.data.unit_spawn.tile_coords = {
+		tile->coord.x,
+		tile->coord.y
+	};
+	e.data.unit_spawn.render_coords = {
 		c.x,
 		-c.y,
 		c.z
