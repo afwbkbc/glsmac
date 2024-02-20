@@ -143,7 +143,9 @@ void Sprite::Draw( shader_program::ShaderProgram* shader_program, Camera* camera
 				glUniform4fv( sp->uniforms.light_color, lights->size(), (const GLfloat*)light_color );
 			}
 
-			glDisable( GL_DEPTH_TEST );
+			if ( !( flags & actor::Actor::RF_SPRITES_DEPTH ) ) {
+				glDisable( GL_DEPTH_TEST );
+			}
 
 			glUniformMatrix4fv( sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)&camera->GetMatrix() );
 
@@ -168,7 +170,9 @@ void Sprite::Draw( shader_program::ShaderProgram* shader_program, Camera* camera
 				THROW( "unknown actor type " + std::to_string( m_actor->GetType() ) );
 			}
 
-			glEnable( GL_DEPTH_TEST );
+			if ( !( flags & actor::Actor::RF_SPRITES_DEPTH ) ) {
+				glEnable( GL_DEPTH_TEST );
+			}
 
 			break;
 		}

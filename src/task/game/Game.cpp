@@ -528,6 +528,7 @@ Game::instanced_sprite_t* Game::GetRepaintedInstancedSprite( const std::string& 
 			texture,
 			original_sprite->GetTexCoords()
 		);
+		sprite->SetRenderFlags( original_sprite->GetRenderFlags() );
 		NEWV( instanced, scene::actor::Instanced, sprite );
 		instanced->SetZIndex( original.actor->GetZIndex() );
 		m_world_scene->AddActor( instanced );
@@ -1028,19 +1029,27 @@ void Game::SpawnUnit(
 				&slot_state,
 				&GetTileState( tile_coords.x, tile_coords.y ),
 				{
-					false,
 					{
 						render_coords.x,
 						render_coords.y,
 						render_coords.z
 					},
-					0,
-					is_active
-						? &slot_state.badges.at( morale ).normal
-						: &slot_state.badges.at( morale ).greyedout,
-					0,
-					&m_healthbar_sprites.at( floor( health * s_consts.badges.healthbars.resolution ) ),
-					0
+					{
+						false,
+						0,
+					},
+					{
+						false,
+						is_active
+							? &slot_state.badges.at( morale ).normal
+							: &slot_state.badges.at( morale ).greyedout,
+						0,
+						{
+							false,
+							&m_healthbar_sprites.at( floor( health * s_consts.badges.healthbars.resolution ) ),
+							0
+						}
+					}
 				},
 				is_active,
 				morale,
@@ -1317,30 +1326,33 @@ void Game::Initialize(
 					// cut holes for healthbars
 					texture->Fill( x + 6, y + 6, x + 7, y + 26, transparent );
 
+					auto* sprite = &GetInstancedSprite(
+						"Badge_" + std::to_string( badge_type ) + "_" + std::to_string( badge_mode ),
+						texture,
+						{
+							x,
+							y,
+						},
+						{
+							w,
+							h,
+						},
+						{
+							x + w / 2,
+							y + h / 2,
+						},
+						{
+							::game::map::s_consts.tile.scale.x * s_consts.badges.scale_x,
+							::game::map::s_consts.tile.scale.y * s_consts.badges.scale_y * ::game::map::s_consts.sprite.y_scale
+						},
+						0.55f
+					);
+					sprite->actor->GetSpriteActor()->SetRenderFlags( actor::Actor::RF_SPRITES_DEPTH );
+
 					spritemap.insert(
 						{
 							morale,
-							&GetInstancedSprite(
-								"Badge_" + std::to_string( badge_type ) + "_" + std::to_string( badge_mode ),
-								texture,
-								{
-									x,
-									y,
-								},
-								{
-									w,
-									h,
-								},
-								{
-									x + w / 2,
-									y + h / 2,
-								},
-								{
-									::game::map::s_consts.tile.scale.x * s_consts.badges.scale_x,
-									::game::map::s_consts.tile.scale.y * s_consts.badges.scale_y * ::game::map::s_consts.sprite.y_scale
-								},
-								0.6f
-							)
+							sprite
 						}
 					);
 				}
@@ -1370,8 +1382,7 @@ void Game::Initialize(
 				texture->Fill( 0, step + 1, 0, res - 1, black );
 			}
 
-			m_healthbar_textures.push_back( texture );
-			m_healthbar_sprites.at( step ).instanced_sprite = &GetInstancedSprite(
+			auto* sprite = &GetInstancedSprite(
 				"Badge_Healthbar_" + std::to_string( step ),
 				texture,
 				{
@@ -1390,8 +1401,12 @@ void Game::Initialize(
 					::game::map::s_consts.tile.scale.x * s_consts.badges.healthbars.scale_x,
 					::game::map::s_consts.tile.scale.y * s_consts.badges.healthbars.scale_y * ::game::map::s_consts.sprite.y_scale
 				},
-				0.525f
+				0.54f
 			);
+			sprite->actor->GetSpriteActor()->SetRenderFlags( actor::Actor::RF_SPRITES_DEPTH );
+
+			m_healthbar_textures.push_back( texture );
+			m_healthbar_sprites.at( step ).instanced_sprite = sprite;
 			color.value.red -= stepval;
 			color.value.green += stepval;
 		}
@@ -2152,8 +2167,8 @@ tile_data_t Game::GetTileAtCoordsResult() {
 				result.units.push_back(
 					{
 						f_meshtex( sprite_state.instanced_sprite ),
-						f_meshtex( unit_state.render.badge_def->instanced_sprite ),
-						f_meshtex( unit_state.render.badge_healthbar_def->instanced_sprite ),
+						f_meshtex( unit_state.render.badge.def->instanced_sprite ),
+						f_meshtex( unit_state.render.badge.healthbar.def->instanced_sprite ),
 						short_power_label
 					}
 				);
@@ -2370,7 +2385,7 @@ void Game::RenderUnit( unit_state_t& unit_state ) {
 
 	Log( "Rendering unit " + std::to_string( unit_state.unit_id ) );
 
-	ASSERT( !unit_state.render.is_rendered, "already rendered" );
+	ASSERT( !unit_state.render.unit.is_rendered, "already rendered" );
 
 	auto* unitdef_state = unit_state.def;
 	auto* slot_state = unit_state.slot;
@@ -2379,48 +2394,64 @@ void Game::RenderUnit( unit_state_t& unit_state ) {
 	ASSERT( unitdef_state->m_type == ::game::unit::Def::DT_STATIC, "only static unitdefs are supported for now" );
 	ASSERT( unitdef_state->static_.render.is_sprite, "only sprite unitdefs are supported for now" );
 
-	// add render
 	auto& sprite = unitdef_state->static_.render.morale_based_xshift
 		? unitdef_state->static_.render.morale_based_sprites->at( unit_state.morale )
 		: unitdef_state->static_.render.sprite;
-	unit_state.render.instance_id = sprite.next_instance_id++;
+	unit_state.render.unit.instance_id = sprite.next_instance_id++;
 	sprite.instanced_sprite->actor->SetInstance(
-		unit_state.render.instance_id, {
+		unit_state.render.unit.instance_id, {
 			c.x,
 			c.y,
 			c.z
 		}
 	);
 
-	// add badge render
-	unit_state.render.badge_instance_id = unit_state.render.badge_def->next_instance_id++;
-	unit_state.render.badge_def->instanced_sprite->actor->SetInstance(
-		unit_state.render.badge_instance_id, {
-			c.x + ::game::map::s_consts.tile.scale.x * s_consts.badges.offset_x,
-			c.y - ::game::map::s_consts.tile.scale.y * s_consts.badges.offset_y * ::game::map::s_consts.sprite.y_scale,
-			c.z
+	unit_state.render.unit.is_rendered = true;
+}
+
+void Game::RenderUnitBadge( unit_state_t& unit_state, const float offset_x, const float offset_z ) {
+
+	Log( "Rendering unit badge " + std::to_string( unit_state.unit_id ) );
+
+	ASSERT( !unit_state.render.badge.is_rendered, "unit badge already rendered" );
+
+	const auto& c = unit_state.render.coords;
+
+	const float z_bump = 1.0f + offset_z;
+	const float z_bump_healthbar = z_bump - 0.05f;
+
+	unit_state.render.badge.instance_id = unit_state.render.badge.def->next_instance_id++;
+	unit_state.render.badge.def->instanced_sprite->actor->SetInstance(
+		unit_state.render.badge.instance_id, {
+			c.x + ::game::map::s_consts.tile.scale.x * s_consts.badges.offset_x + offset_x,
+			c.y - ::game::map::s_consts.tile.scale.y * s_consts.badges.offset_y * ::game::map::s_consts.sprite.y_scale - z_bump,
+			c.z + z_bump
 		}
 	);
+	unit_state.render.badge.is_rendered = true;
 
-	// add healthbar render
-	unit_state.render.badge_healthbar_instance_id = unit_state.render.badge_healthbar_def->next_instance_id++;
-	unit_state.render.badge_healthbar_def->instanced_sprite->actor->SetInstance(
-		unit_state.render.badge_healthbar_instance_id, {
-			c.x + ::game::map::s_consts.tile.scale.x * s_consts.badges.healthbars.offset_x,
-			c.y - ::game::map::s_consts.tile.scale.y * s_consts.badges.healthbars.offset_y * ::game::map::s_consts.sprite.y_scale,
-			c.z
-		}
-	);
+	if ( offset_x == 0 ) { // only main badge should have healthbar
+		ASSERT( !unit_state.render.badge.healthbar.is_rendered, "unit badge healthbar already rendered" );
+		unit_state.render.badge.healthbar.instance_id = unit_state.render.badge.healthbar.def->next_instance_id++;
+		unit_state.render.badge.healthbar.def->instanced_sprite->actor->SetInstance(
+			unit_state.render.badge.healthbar.instance_id, {
+				c.x + ::game::map::s_consts.tile.scale.x * s_consts.badges.healthbars.offset_x + offset_x,
+				c.y - ::game::map::s_consts.tile.scale.y * s_consts.badges.healthbars.offset_y * ::game::map::s_consts.sprite.y_scale - z_bump_healthbar,
+				c.z + z_bump_healthbar
+			}
+		);
+		unit_state.render.badge.healthbar.is_rendered = true;
+	}
 
-	unit_state.render.is_rendered = true;
 }
 
 void Game::UnrenderUnit( unit_state_t& unit_state ) {
-	ASSERT( unit_state.render.is_rendered, "not rendered" );
-
-	const auto& unitdef_state = unit_state.def;
 
 	Log( "Unrendering unit " + std::to_string( unit_state.unit_id ) );
+
+	ASSERT( unit_state.render.unit.is_rendered, "unit not rendered" );
+
+	const auto& unitdef_state = unit_state.def;
 
 	ASSERT( unitdef_state->m_type == ::game::unit::Def::DT_STATIC, "only static unitdefs are supported for now" );
 	ASSERT( unitdef_state->static_.render.is_sprite, "only sprite unitdefs are supported for now" );
@@ -2428,11 +2459,25 @@ void Game::UnrenderUnit( unit_state_t& unit_state ) {
 	auto& sprite = unitdef_state->static_.render.morale_based_xshift
 		? unitdef_state->static_.render.morale_based_sprites->at( unit_state.morale )
 		: unitdef_state->static_.render.sprite;
-	sprite.instanced_sprite->actor->RemoveInstance( unit_state.render.instance_id );
-	unit_state.render.badge_def->instanced_sprite->actor->RemoveInstance( unit_state.render.badge_instance_id );
-	unit_state.render.badge_healthbar_def->instanced_sprite->actor->RemoveInstance( unit_state.render.badge_healthbar_instance_id );
+	sprite.instanced_sprite->actor->RemoveInstance( unit_state.render.unit.instance_id );
 
-	unit_state.render.is_rendered = false;
+	unit_state.render.unit.is_rendered = false;
+}
+
+void Game::UnrenderUnitBadge( unit_state_t& unit_state ) {
+
+	Log( "Unrendering unit badge " + std::to_string( unit_state.unit_id ) );
+
+	ASSERT( unit_state.render.badge.is_rendered, "unit badge not rendered" );
+
+	unit_state.render.badge.def->instanced_sprite->actor->RemoveInstance( unit_state.render.badge.instance_id );
+
+	unit_state.render.badge.is_rendered = false;
+
+	if ( unit_state.render.badge.healthbar.is_rendered ) {
+		unit_state.render.badge.healthbar.def->instanced_sprite->actor->RemoveInstance( unit_state.render.badge.healthbar.instance_id );
+		unit_state.render.badge.healthbar.is_rendered = false;
+	}
 }
 
 std::vector< size_t > Game::GetUnitsOrder( const unit_states_t& units ) const {
@@ -2482,22 +2527,58 @@ void Game::RenderTile( tile_state_t& tile_state ) {
 
 	Log( "Rendering tile [" + std::to_string( tile_state.coords.x ) + "," + std::to_string( tile_state.coords.y ) + "]" );
 
-	if ( tile_state.currently_rendered_unit ) {
-		UnrenderUnit( *tile_state.currently_rendered_unit );
+	// unrender unit
+	if ( tile_state.render.currently_rendered_unit ) {
+		UnrenderUnit( *tile_state.render.currently_rendered_unit );
+		UnrenderUnitBadge( *tile_state.render.currently_rendered_unit );
 	}
+	tile_state.render.currently_rendered_unit = nullptr;
+
+	// unrender orphan badges
+	for ( const auto& unit : tile_state.render.currently_rendered_orphan_badges ) {
+		UnrenderUnitBadge( *unit );
+	}
+	tile_state.render.currently_rendered_orphan_badges.clear();
 
 	if ( !tile_state.units.empty() ) {
 		const auto units_order = GetUnitsOrder( tile_state.units );
 		ASSERT( !units_order.empty(), "units order is empty" );
 
+		size_t max_orphan_badges = 7;
+
 		// for now just keep most important unit rendered
 		const auto most_important_unit_id = units_order.front();
 
-		tile_state.currently_rendered_unit = tile_state.units.at( most_important_unit_id );
-		RenderUnit( *tile_state.currently_rendered_unit );
-	}
-	else {
-		tile_state.currently_rendered_unit = nullptr;
+		// also display badges from stacked units that are not visible themselves
+		ASSERT( tile_state.render.currently_rendered_orphan_badges.empty(), "orphan badges already rendered" );
+		size_t orphan_badge_idx = 1;
+		std::vector< unit_state_t* > badges = {};
+		for ( const auto& unit_id : units_order ) {
+			const auto& unit = tile_state.units.at( unit_id );
+			if ( unit_id == most_important_unit_id ) {
+				// render full unit
+				tile_state.render.currently_rendered_unit = unit;
+				RenderUnit( *tile_state.render.currently_rendered_unit );
+				badges.push_back( unit );
+			}
+			else {
+				// render unit badge in the background
+				tile_state.render.currently_rendered_orphan_badges.push_back( unit );
+				badges.push_back( unit );
+				if ( orphan_badge_idx++ > max_orphan_badges ) {
+					break;
+				}
+			}
+		}
+		size_t idx;
+		for ( size_t i = 0 ; i < badges.size() ; i++ ) { // order is important
+			idx = badges.size() - i - 1;
+			RenderUnitBadge(
+				*badges.at( idx ),
+				0.03f * idx,
+				0.2f * i
+			);
+		}
 	}
 }
 

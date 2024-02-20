@@ -55,6 +55,12 @@ let random_health = () => {
                     let owner = random_player();
                     let tile = #game.map.get_tile(x, y);
                     let units_count = #game.random.get_int(1, 3);
+                    if (#game.random.get_int(0, 1) == 0) {
+                        units_count += #game.random.get_int(0, 3);
+                        if (#game.random.get_int(0, 1) == 0) {
+                            units_count += #game.random.get_int(0, 3);
+                        }
+                    }
                     let i = 0;
                     while (i++ < units_count) {
                         if (tile.is_land) {

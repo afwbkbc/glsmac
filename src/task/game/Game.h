@@ -392,7 +392,10 @@ private:
 			size_t x = 0;
 			size_t y = 0;
 		} coords;
-		unit_state_t* currently_rendered_unit = nullptr;
+		struct {
+			unit_state_t* currently_rendered_unit = nullptr;
+			std::vector< unit_state_t* > currently_rendered_orphan_badges = {};
+		} render;
 		unit_states_t units = {};
 	};
 	std::vector< tile_state_t > m_tile_states = {};
@@ -451,13 +454,21 @@ private:
 		slot_state_t* slot = nullptr;
 		tile_state_t* tile = nullptr;
 		struct {
-			bool is_rendered = false;
 			Vec3 coords = {};
-			size_t instance_id = 0;
-			sprite_state_t* badge_def = nullptr;
-			size_t badge_instance_id = 0;
-			sprite_state_t* badge_healthbar_def = nullptr;
-			size_t badge_healthbar_instance_id = 0;
+			struct {
+				bool is_rendered = false;
+				size_t instance_id = 0;
+			} unit;
+			struct {
+				bool is_rendered = false;
+				sprite_state_t* def = nullptr;
+				size_t instance_id = 0;
+				struct {
+					bool is_rendered = false;
+					sprite_state_t* def = nullptr;
+					size_t instance_id = 0;
+				} healthbar;
+			} badge;
 		} render;
 		bool is_active = false;
 		::game::unit::Unit::morale_t morale = 0;
@@ -479,7 +490,9 @@ private:
 	};
 
 	void RenderUnit( unit_state_t& unit_state );
+	void RenderUnitBadge( unit_state_t& unit_state, const float offset_x, const float offset_z );
 	void UnrenderUnit( unit_state_t& unit_state );
+	void UnrenderUnitBadge( unit_state_t& unit_state );
 
 	std::vector< size_t > GetUnitsOrder( const unit_states_t& units ) const;
 
