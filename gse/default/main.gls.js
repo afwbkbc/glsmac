@@ -42,6 +42,8 @@ let random_health = () => {
         i++;
     }
 
+    let units_spawned = 0;
+
     let y = 0;
     let w = #game.map.get_width();
     let h = #game.map.get_height();
@@ -58,6 +60,7 @@ let random_health = () => {
                         if (tile.is_land) {
                             if (#game.random.get_int(0, 2) != 1) {
                                 #game.units.spawn('MindWorms', owner, tile, random_morale(), random_health());
+                                units_spawned++;
                             } else {
                                 if (tile.has_fungus && #game.random.get_int(0, 1) == 0) {
                                     // morale depends on count of fungus tiles around
@@ -72,13 +75,16 @@ let random_health = () => {
                                         i++;
                                     }
                                     #game.units.spawn('FungalTower', owner, tile, morale, random_health());
+                                    units_spawned++;
                                 } else {
                                     #game.units.spawn('SporeLauncher', owner, tile, random_morale(), random_health());
+                                    units_spawned++;
                                 }
                             }
                         } else {
                             if (#game.random.get_int(0, 1) == 1) {
                                 #game.units.spawn('SeaLurk', owner, tile, random_morale(), random_health());
+                                units_spawned++;
                             }
                         }
                     }
@@ -88,6 +94,7 @@ let random_health = () => {
         }
         y++;
     }
+    #game.message('Total units spawned: ' + #to_string(units_spawned));
 });
 
 #game.on.turn(() => {
