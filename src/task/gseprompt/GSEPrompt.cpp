@@ -1,6 +1,11 @@
 #include "GSEPrompt.h"
 
+#ifdef _WIN32
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
+
 #include <iostream>
 
 #include "gse/Exception.h"
@@ -12,7 +17,7 @@ namespace gseprompt {
 
 GSEPrompt::GSEPrompt( const std::string& syntax )
 	: m_syntax( syntax )
-	, m_is_tty( isatty( fileno( stdin ) ) ) {
+	, m_is_tty( _isatty( _fileno( stdin ) ) ) {
 
 }
 

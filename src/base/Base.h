@@ -2,6 +2,8 @@
 
 #ifdef _WIN32
 #include "env/Win32.h"
+#else
+#include "env/Posix.h"
 #endif
 
 #include <string>

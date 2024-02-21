@@ -180,11 +180,11 @@ const std::string Type::Dump() const {
 			return "callable{}"; // TODO
 		case T_ARRAYREF: {
 			const auto* that = (ArrayRef*)this;
-			return "arrayref{" + std::to_string( (long)that->array ) + "," + std::to_string( that->index ) + +"}";
+			return "arrayref{" + std::to_string( (ptr_int_t)that->array ) + "," + std::to_string( that->index ) + +"}";
 		}
 		case T_ARRAYRANGEREF: {
 			const auto* that = (ArrayRangeRef*)this;
-			return "arrayrangeref{" + std::to_string( (long)that->array ) + "," + (
+			return "arrayrangeref{" + std::to_string( (ptr_int_t)that->array ) + "," + (
 				that->from.has_value()
 					? std::to_string( that->from.value() )
 					: ""
@@ -196,7 +196,7 @@ const std::string Type::Dump() const {
 		}
 		case T_OBJECTREF: {
 			const auto* that = (ObjectRef*)this;
-			return "objectref{" + std::to_string( (long)that->object ) + "," + that->key + "}";
+			return "objectref{" + std::to_string( (ptr_int_t)that->object ) + "," + that->key + "}";
 		}
 		case T_RANGE: {
 			const auto* that = (Range*)this;
