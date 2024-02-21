@@ -28,4 +28,8 @@ typedef long long ptr_int_t;
 #undef RGB
 #undef DELETE
 
+// more collisions
+#undef ERROR
+#undef CALLBACK
+
 #endif

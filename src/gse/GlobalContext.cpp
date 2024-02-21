@@ -3,6 +3,8 @@
 #include "util/FS.h"
 #include "util/String.h"
 
+#include "gse/GSE.h"
+
 namespace gse {
 
 GlobalContext::GlobalContext( GSE* gse, const std::string& source_path )
@@ -10,14 +12,14 @@ GlobalContext::GlobalContext( GSE* gse, const std::string& source_path )
 	, m_script_info(
 		{
 			source_path,
-			util::FS::GetBaseName( source_path ),
-			util::FS::GetDirName( source_path ),
+			util::FS::GetBaseName( source_path, GSE::PATH_SEPARATOR ),
+			util::FS::GetDirName( source_path, GSE::PATH_SEPARATOR ),
 		}
 	)
 	, m_source_lines(
 		source_path.empty()
 			? source_lines_t{}
-			: util::String::SplitToLines( util::FS::ReadFile( source_path ) )
+			: util::String::SplitToLines( util::FS::ReadFile( source_path, GSE::PATH_SEPARATOR ) )
 	) {}
 
 Context* GlobalContext::GetParentContext() const {

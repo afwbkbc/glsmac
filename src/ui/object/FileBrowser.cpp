@@ -160,7 +160,7 @@ void FileBrowser::Create() {
 
 	m_selection_stack.clear();
 	size_t oldpos = 0, pos = 0;
-	const auto sep = util::FS::GetPathSeparator();
+	const auto sep = util::FS::PATH_SEPARATOR;
 	while ( ( pos = m_default_directory.find( sep, oldpos ) ) != std::string::npos ) {
 		m_selection_stack.push_back( m_default_directory.substr( oldpos, pos - oldpos ) );
 		//Log( "Path part: " + m_selection_stack.back() );
@@ -185,7 +185,7 @@ void FileBrowser::Destroy() {
 }
 
 const std::string FileBrowser::GetSelectedFile() const {
-	const auto sep = util::FS::GetPathSeparator();
+	const auto sep = util::FS::PATH_SEPARATOR;
 	const auto& value = m_input->GetValue();
 	return
 #ifdef _WIN32
@@ -203,7 +203,7 @@ void FileBrowser::SelectCurrentValue() {
 }
 
 void FileBrowser::SelectCurrentValueOrItem() {
-	const auto sep = util::FS::GetPathSeparator();
+	const auto sep = util::FS::PATH_SEPARATOR;
 #ifdef _WIN32
 	if ( !m_current_directory.empty() )
 #endif
@@ -227,7 +227,7 @@ void FileBrowser::ChangeDirectory( std::string directory ) {
 	ASSERT( util::FS::IsAbsolutePath( directory ), "directory must be absolute path" );
 
 	// remove trailing slash
-	const char sep = util::FS::GetPathSeparator()[ 0 ];
+	const char sep = util::FS::PATH_SEPARATOR;
 	while ( !directory.empty() && directory[ directory.size() - 1 ] == sep ) {
 		directory.pop_back();
 	}
@@ -291,14 +291,14 @@ void FileBrowser::SelectItem( std::string item ) {
 		m_input->SetValue( item );
 	}
 
-	const std::string sep = util::FS::GetPathSeparator();
+	const auto sep = util::FS::PATH_SEPARATOR;
 	std::string path = GetSelectedFile();
 
 	if ( item == util::FS::GetUpDirString() ) {
 		//Log( "Selected directory up" );
 		const auto pos = m_current_directory.rfind( sep );
 		if ( pos == std::string::npos ) {
-			ChangeDirectory( sep );
+			ChangeDirectory( std::string( 1, sep ) );
 		}
 		else {
 			ChangeDirectory( m_current_directory.substr( 0, pos ) );

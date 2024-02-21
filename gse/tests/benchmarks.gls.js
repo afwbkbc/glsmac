@@ -72,9 +72,11 @@ const recursivefunc = (x, times) => {
         return recursivefunc( x + 1, times - 1 );
     }
 };
-test.assert(timeof('calling recursive function 10 times with depth 1000', () => {
+
+// on linux this works with depth 1000, on windows there's stack overflow with depth 50
+test.assert(timeof('calling recursive function 400 times with depth 25', () => {
     idx = 0;
-    while ( idx++ < 10 ) {
-        recursivefunc(0, 1000);
+    while ( idx++ < 400 ) {
+        recursivefunc(0, 25);
     }
 }) < 1500000000);

@@ -21,7 +21,7 @@ GSEPrompt::GSEPrompt( const std::string& syntax )
 
 }
 
-GSEPrompt::~GSEPrompt() noexcept {
+GSEPrompt::~GSEPrompt() {
 	delete m_gse_context;
 }
 

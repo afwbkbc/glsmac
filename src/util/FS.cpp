@@ -7,14 +7,6 @@
 
 using namespace std;
 
-#ifdef _WIN32
-#define PATH_SEPARATOR "\\"
-#else
-#define PATH_SEPARATOR "/"
-#endif
-
-#define EXTENSION_SEPARATOR '.'
-
 #ifdef DEBUG
 #define Log( _text ) std::cout << "<Util::FS> " << (_text) << std::endl
 #else
@@ -23,19 +15,47 @@ using namespace std;
 
 namespace util {
 
-const std::string FS::GetPathSeparator() {
-	return PATH_SEPARATOR;
+const char FS::PATH_SEPARATOR =
+#ifdef _WIN32
+	'\\'
+#else
+	'/'
+#endif
+	;
+
+const char FS::EXTENSION_SEPARATOR = '.';
+
+const std::string FS::NormalizePath( const std::string& path, const char path_separator ) {
+	if ( path_separator == PATH_SEPARATOR ) {
+		return path;
+	}
+	else {
+		std::string result = path;
+		std::replace( result.begin(), result.end(), path_separator, PATH_SEPARATOR );
+		return result;
+	}
+}
+
+const std::string FS::ConvertPath( const std::string& path, const char path_separator ) {
+	if ( path_separator == PATH_SEPARATOR ) {
+		return path;
+	}
+	else {
+		std::string result = path;
+		std::replace( result.begin(), result.end(), PATH_SEPARATOR, path_separator );
+		return result;
+	}
 }
 
 const std::string FS::GetUpDirString() {
 	return "..";
 }
 
-const std::string FS::GeneratePath( const std::vector< std::string >& parts ) {
+const std::string FS::GeneratePath( const std::vector< std::string >& parts, const char path_separator ) {
 	std::string result = "";
 	for ( const auto& part : parts ) {
 		if ( !result.empty() ) {
-			result += PATH_SEPARATOR;
+			result += path_separator;
 		}
 		result += part;
 	}
@@ -68,10 +88,13 @@ const std::vector< std::string > FS::GetWindowsDrives() {
 
 #endif
 
-bool FS::IsAbsolutePath( const std::string& path ) {
+bool FS::IsAbsolutePath( const std::string& path, const char path_separator ) {
 	return
 #ifdef _WIN32
-		path == PATH_SEPARATOR || // the very root (without drive)
+		(  // the very root (without drive)
+			path.size() == 1 &&
+			path[0] == path_separator
+		) ||
 		(
 			path.size() >= 2 &&
 			path[0] >= 'A' &&
@@ -81,7 +104,7 @@ bool FS::IsAbsolutePath( const std::string& path ) {
 				path.size() == 2 ||
 				(
 					path.size() >= 3 &&
-					path[ 2 ] == PATH_SEPARATOR[ 0 ]
+					path[ 2 ] == path_separator
 				)
 			)
 		)
@@ -92,12 +115,12 @@ bool FS::IsAbsolutePath( const std::string& path ) {
 		;
 }
 
-const std::string FS::GetCurrentDirectory() {
-	return std::filesystem::current_path().string();
+const std::string FS::GetCurrentDirectory( const char path_separator ) {
+	return ConvertPath( std::filesystem::current_path().string(), path_separator );
 }
 
-const std::string FS::GetDirName( const std::string& path ) {
-	const auto pos = path.rfind( PATH_SEPARATOR );
+const std::string FS::GetDirName( const std::string& path, const char path_separator ) {
+	const auto pos = path.rfind( path_separator );
 	if ( pos == std::string::npos ) {
 		return "";
 	}
@@ -106,8 +129,8 @@ const std::string FS::GetDirName( const std::string& path ) {
 	}
 }
 
-const std::string FS::GetBaseName( const std::string& path ) {
-	const auto pos = path.rfind( PATH_SEPARATOR );
+const std::string FS::GetBaseName( const std::string& path, const char path_separator ) {
+	const auto pos = path.rfind( path_separator );
 	if ( pos == std::string::npos ) {
 		return path;
 	}
@@ -116,44 +139,44 @@ const std::string FS::GetBaseName( const std::string& path ) {
 	}
 }
 
-const std::string FS::GetFilteredPath( const std::string& path ) {
+const std::string FS::GetFilteredPath( const std::string& path, const char path_separator ) {
 	size_t pos = 0;
-#ifdef _WIN32
-	// TODO
-#else
 	if ( path == "." ) {
 		return "";
 	}
-	while ( pos + 1 < path.size() && path[ pos ] == EXTENSION_SEPARATOR && path[ pos + 1 ] == '/' ) {
+	while ( pos + 1 < path.size() && path[ pos ] == EXTENSION_SEPARATOR && path[ pos + 1 ] == path_separator ) {
 		pos += 2;
 	}
-#endif
 	return pos
 		? path.substr( pos )
 		: path;
 }
 
-const std::string FS::GetAbsolutePath( const std::string& path ) {
+const std::string FS::GetAbsolutePath( const std::string& path, const char path_separator ) {
 	return IsAbsolutePath( path )
 		? path
-		: GetCurrentDirectory() + PATH_SEPARATOR + GetFilteredPath( path );
+		: GetCurrentDirectory() + path_separator + GetFilteredPath( path );
 }
 
-const std::string FS::GetExtension( const std::string& path ) {
+const std::string FS::GetExtension( const std::string& path, const char path_separator ) {
 	const auto pos = path.rfind( EXTENSION_SEPARATOR );
 	if ( pos == std::string::npos ) {
 		return "";
 	}
 	else {
+		const auto pathsep_pos = path.rfind( path_separator );
+		if ( pathsep_pos > pos ) {
+			return "";
+		}
 		return path.substr( pos );
 	}
 }
 
-const std::vector< std::string > FS::GetExtensions( const std::string& path ) {
+const std::vector< std::string > FS::GetExtensions( const std::string& path, const char path_separator ) {
 	std::vector< std::string > result = {};
 	size_t pos, path_pos, last_pos = path.size();
 	while ( ( pos = path.rfind( EXTENSION_SEPARATOR, last_pos - 1 ) ) != std::string::npos ) {
-		path_pos = path.rfind( PATH_SEPARATOR, last_pos - 1 );
+		path_pos = path.rfind( path_separator, last_pos - 1 );
 		if ( path_pos != std::string::npos && path_pos > pos ) {
 			break;
 		}
@@ -164,35 +187,35 @@ const std::vector< std::string > FS::GetExtensions( const std::string& path ) {
 	return result;
 }
 
-const bool FS::Exists( const string& path ) {
-	return std::filesystem::exists( path );
+const bool FS::Exists( const string& path, const char path_separator ) {
+	return std::filesystem::exists( NormalizePath( path, path_separator ) );
 }
 
-const bool FS::IsFile( const string& path ) {
-	return std::filesystem::is_regular_file( path );
+const bool FS::IsFile( const string& path, const char path_separator ) {
+	return std::filesystem::is_regular_file( NormalizePath( path, path_separator ) );
 }
 
-const bool FS::FileExists( const string& path ) {
-	return Exists( path ) && IsFile( path );
+const bool FS::FileExists( const string& path, const char path_separator ) {
+	return Exists( path, path_separator ) && IsFile( path, path_separator );
 }
 
-const bool FS::IsDirectory( const string& path ) {
-	return std::filesystem::is_directory( path );
+const bool FS::IsDirectory( const string& path, const char path_separator ) {
+	return std::filesystem::is_directory( NormalizePath( path, path_separator ) );
 }
 
-const bool FS::DirectoryExists( const string& path ) {
-	return Exists( path ) && IsDirectory( path );
+const bool FS::DirectoryExists( const string& path, const char path_separator ) {
+	return Exists( path, path_separator ) && IsDirectory( path, path_separator );
 }
 
-void FS::CreateDirectoryIfNotExists( const string& path ) {
-	if ( !DirectoryExists( path ) ) {
+void FS::CreateDirectoryIfNotExists( const string& path, const char path_separator ) {
+	if ( !DirectoryExists( path, path_separator ) ) {
 		//Log( "Creating directory: " + path );
-		std::filesystem::create_directories( path );
+		std::filesystem::create_directories( NormalizePath( path, path_separator ) );
 	}
 }
 
 #ifdef _WIN32
-std::vector< std::string > FS::ListDirectory( std::string directory, const bool return_absolute_paths ) {
+std::vector< std::string > FS::ListDirectory( std::string directory, const bool return_absolute_paths, const char path_separator ) {
 	ASSERT_NOLOG( !directory.empty(), "directory is empty" );
 #else
 
@@ -205,10 +228,9 @@ std::vector< std::string > FS::ListDirectory( const std::string& directory, cons
 	try {
 
 #ifdef _WIN32
-		ASSERT_NOLOG( directory.find(':') != std::string::npos, "invalid windows path '" + directory + "' (must contain a colon)" );
 		const bool is_windows_drive_label = IsWindowsDriveLabel( directory );
 		if ( is_windows_drive_label ) {
-			directory += PATH_SEPARATOR;
+			directory += path_separator;
 		}
 #endif
 
@@ -217,7 +239,7 @@ std::vector< std::string > FS::ListDirectory( const std::string& directory, cons
 			std::filesystem::directory_iterator(
 				!directory.empty()
 					? directory
-					: PATH_SEPARATOR
+					: std::string( 1, path_separator )
 			),
 			std::filesystem::directory_iterator(),
 			std::back_inserter( items )
@@ -226,15 +248,15 @@ std::vector< std::string > FS::ListDirectory( const std::string& directory, cons
 
 		for ( const auto& item : items ) {
 			const auto item_str = item.string();
-			const uint8_t prefix_len = directory[ directory.size() - 1 ] == PATH_SEPARATOR[ 0 ]
+			const uint8_t prefix_len = directory[ directory.size() - 1 ] == path_separator
 				? 0
 				: 1;
 			ASSERT_NOLOG( item_str.substr( 0, directory.size() ) == directory, "unexpected path in directory list results: " + item_str );
-			result.push_back(
+			result.push_back( ConvertPath(
 				return_absolute_paths
 					? item_str
 					: item_str.substr( directory.size() + prefix_len )
-			);
+			, path_separator ) );
 		}
 	}
 	catch ( std::filesystem::filesystem_error& e ) {
@@ -246,19 +268,19 @@ std::vector< std::string > FS::ListDirectory( const std::string& directory, cons
 	return result;
 }
 
-const string FS::ReadFile( const string& path ) {
+const string FS::ReadFile( const string& path, const char path_separator ) {
 	//Log( "Reading file: " + path );
-	ASSERT_NOLOG( FileExists( path ), "file \"" + path + "\" does not exist or is not a file" );
+	ASSERT_NOLOG( FileExists( path, path_separator ), "file \"" + path + "\" does not exist or is not a file" );
 	stringstream data;
-	ifstream in( path, std::ios_base::binary );
+	ifstream in( NormalizePath( path, path_separator ), std::ios_base::binary );
 	while ( data << in.rdbuf() ) {}
 	in.close();
 	return data.str();
 }
 
-const void FS::WriteFile( const string& path, const string& data ) {
+const void FS::WriteFile( const string& path, const string& data, const char path_separator ) {
 	//Log( "Writing file: " + path );
-	ofstream out( path, std::ios_base::binary );
+	ofstream out( NormalizePath( path, path_separator ), std::ios_base::binary );
 	out << data;
 	out.close();
 }
