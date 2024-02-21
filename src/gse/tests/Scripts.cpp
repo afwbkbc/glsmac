@@ -16,14 +16,18 @@ using namespace program;
 
 void AddScriptsTests( task::gsetests::GSETests* task ) {
 
-	const std::string tests_path = "./" TEST_SCRIPTS_PATH;
+	const std::string tests_path = util::FS::GeneratePath({
+		".",
+		"gse",
+		"tests",
+	}, GSE::PATH_SEPARATOR );
 
 	const auto* c = g_engine->GetConfig();
 	if ( !c->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
 		task->AddTest(
 			"check if " + tests_path + " directory exists",
 			GT( tests_path ) {
-				if ( !util::FS::DirectoryExists( tests_path ) ) {
+				if ( !util::FS::DirectoryExists( tests_path, GSE::PATH_SEPARATOR ) ) {
 					GT_FAIL( "directory " + tests_path + " does not exist" );
 				}
 				GT_OK();
@@ -32,9 +36,9 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 	}
 	const auto scripts = c->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT )
 		? std::vector< std::string >{ c->GetGSETestsScript() }
-		: util::FS::ListDirectory( tests_path, true );
+		: util::FS::ListDirectory( tests_path, true, GSE::PATH_SEPARATOR );
 	for ( const auto& script : scripts ) {
-		if ( script.substr( 0, tests_path.size() + 2 ) == tests_path + "/_" ) {
+		if ( script.substr( 0, tests_path.size() + 2 ) == tests_path + GSE::PATH_SEPARATOR + "_" ) {
 			continue; // these should not be tested directly (i.e. includes)
 		}
 		task->AddTest(
@@ -48,7 +52,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 
 				std::string last_error = "";
 				try {
-					const auto source = util::FS::ReadFile( script );
+					const auto source = util::FS::ReadFile( script, GSE::PATH_SEPARATOR );
 					parser = gse.GetParser( script, source );
 					context = gse.CreateGlobalContext( script );
 					context->IncRefs();

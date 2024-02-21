@@ -10,6 +10,9 @@
 
 namespace gse {
 
+// scripts must be cross-platform
+const char GSE::PATH_SEPARATOR = '/';
+
 GSE::GSE() {
 	m_bindings.push_back( &m_builtins );
 }
@@ -25,7 +28,7 @@ GSE::~GSE() {
 
 parser::Parser* GSE::GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num ) const {
 	parser::Parser* parser = nullptr;
-	const auto extensions = util::FS::GetExtensions( filename );
+	const auto extensions = util::FS::GetExtensions( filename, PATH_SEPARATOR );
 	ASSERT( extensions.size() == 2 && extensions[ 0 ] == ".gls", "unsupported file name ( " + filename + " ), expected: *.gls.*" );
 	if ( extensions[ 1 ] == ".js" ) {
 		NEW( parser, parser::JS, filename, source, initial_line_num );
@@ -83,7 +86,7 @@ const Value GSE::GetInclude( Context* ctx, const si_t& si, const std::string& pa
 	}
 	std::string full_path = "";
 	for ( const auto& it : m_supported_extensions ) {
-		if ( util::FS::FileExists( path + it ) ) {
+		if ( util::FS::FileExists( path + it, PATH_SEPARATOR ) ) {
 			if ( !full_path.empty() ) {
 				throw gse::Exception( EC.LOADER_ERROR, "Multiple candidates found for include '" + path + "': '" + std::string( full_path ) + "', '" + path + it + "', ...", ctx, si );
 			}
@@ -93,7 +96,7 @@ const Value GSE::GetInclude( Context* ctx, const si_t& si, const std::string& pa
 	if ( full_path.empty() ) {
 		throw gse::Exception( EC.LOADER_ERROR, "Could not find script for include '" + path + "'", ctx, si );
 	}
-	const auto source = util::FS::ReadFile( full_path );
+	const auto source = util::FS::ReadFile( full_path, PATH_SEPARATOR );
 	include_cache_t cache = {
 		VALUE( type::Undefined ),
 		nullptr,

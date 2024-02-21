@@ -277,7 +277,7 @@ private:
 		uint8_t priority;
 		operator_link_t link;
 	};
-	const std::unordered_map< const program::Operator::operator_type_t, const operator_info_t > OPERATOR_INFO = {
+	const std::unordered_map< program::Operator::operator_type_t, const operator_info_t > OPERATOR_INFO = {
 		{
 			program::Operator::OT_RETURN,
 			{

@@ -1,6 +1,13 @@
 #include "GSEPrompt.h"
 
+#ifdef _WIN32
+#include <io.h>
+#define isatty _isatty
+#define fileno _fileno
+#else
 #include <unistd.h>
+#endif
+
 #include <iostream>
 
 #include "gse/Exception.h"
@@ -16,7 +23,7 @@ GSEPrompt::GSEPrompt( const std::string& syntax )
 
 }
 
-GSEPrompt::~GSEPrompt() noexcept {
+GSEPrompt::~GSEPrompt() {
 	delete m_gse_context;
 }
 

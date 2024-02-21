@@ -171,8 +171,9 @@ void AddGSETests( task::gsetests::GSETests* task ) {
     auto* method = (type::Callable*)value;
 
 #define GETRESULT( _args, _expected_type, _cast_type ) \
-    auto* resultv = method->Run( nullptr, {}, _args ).Get(); \
-    GT_ASSERT( resultv->type == _expected_type, "wrong result type" ); \
+    auto resultvalue = method->Run( nullptr, {}, _args ); \
+    auto* resultv = resultvalue.Get(); \
+	GT_ASSERT( resultv->type == _expected_type, "wrong result type ( " + std::to_string( resultv->type ) + " != " + std::to_string( _expected_type ) + " )" ); \
     auto* result = (_cast_type*)resultv;
 
 #define CHECKRESULT( _args, _expected_type, _cast_type, _expected_value ) \

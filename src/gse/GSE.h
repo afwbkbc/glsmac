@@ -30,6 +30,8 @@ CLASS( GSE, base::Base )
 	GSE();
 	virtual ~GSE();
 
+	static const char PATH_SEPARATOR;
+
 	parser::Parser* GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num = 1 ) const;
 	runner::Runner* GetRunner() const;
 

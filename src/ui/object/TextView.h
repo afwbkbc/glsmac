@@ -21,7 +21,7 @@ CLASS( TextView, ScrollView )
 	};
 
 	TextView( const std::string& class_name = "" )
-		: ScrollView( class_name ) {}
+		: ScrollView( ST_VERTICAL, class_name ) {}
 
 	void Create() override;
 	void Align() override;

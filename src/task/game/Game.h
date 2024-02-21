@@ -320,7 +320,7 @@ private:
 				::game::map::s_consts.fs.default_map_extension;
 		std::string last_directory =
 			util::FS::GetCurrentDirectory() +
-				util::FS::GetPathSeparator() +
+				util::FS::PATH_SEPARATOR +
 				::game::map::s_consts.fs.default_map_directory;
 	};
 

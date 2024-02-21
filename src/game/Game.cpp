@@ -323,6 +323,7 @@ void Game::Iterate() {
 					m_unprocessed_events.clear();
 
 					if ( m_state->IsMaster() ) {
+						g_engine->GetUI()->SetLoaderText( "Starting game...", false );
 						m_state->m_bindings->Call( Bindings::CS_ON_START );
 					}
 
