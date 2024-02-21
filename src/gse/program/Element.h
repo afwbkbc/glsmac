@@ -36,15 +36,15 @@ public:
 
 	virtual ~Element() = default;
 
-	virtual const std::string ToString( const size_t depth = 0 ) const = 0;
+	virtual const std::string ToString() const {
+		THROW( "ToString() not implemented for element: " + Dump() );
+	}
+	virtual const std::string Dump( const size_t depth = 0 ) const = 0;
 
 protected:
 
 	const std::string Formatted( const std::string& text, const size_t depth ) const {
-		return std::string( TOSTRING_PREFIX_SIZE * depth, ' ' ) + text + ( depth > 0
-			? "\n"
-			: ""
-		);
+		return std::string( TOSTRING_PREFIX_SIZE * depth, ' ' ) + text + "\n";
 	}
 
 private:

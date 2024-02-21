@@ -68,9 +68,15 @@ void Mesh::ClearTexture() {
 	}
 }
 
-void Mesh::SetTintColor( const types::Color color ) {
+void Mesh::SetTintColor( const types::Color& color ) {
 	m_tint_color.enabled = true;
 	m_tint_color.color = color;
+	UpdateRenderFlags();
+}
+
+void Mesh::SetTintAlpha( const float alpha ) {
+	m_tint_color.enabled = true;
+	m_tint_color.color = Color( 1.0f, 1.0f, 1.0f, alpha );
 	UpdateRenderFlags();
 }
 
@@ -273,6 +279,7 @@ void Mesh::UpdateRenderFlags() {
 		if ( m_tint_color.enabled ) {
 			m_actor->SetTintColor( m_tint_color.color );
 		}
+		Refresh();
 	}
 }
 

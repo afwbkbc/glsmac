@@ -4,6 +4,9 @@
 #include <cstdint>
 #include <cstring>
 
+#include "gse/Value.h"
+#include "gse/type/Object.h"
+
 namespace types {
 
 class Color {
@@ -41,12 +44,14 @@ public:
 
 	const rgba_t GetRGBA() const;
 	static Color FromRGBA( const rgba_t rgba );
-	static Color FromRGBA( const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha );
+	static Color FromRGBA( const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha = 255 );
 	static Color FromRGB( const uint8_t red, const uint8_t green, const uint8_t blue );
 	static rgba_t RGBA( const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha );
 	static rgba_t RGB( const uint8_t red, const uint8_t green, const uint8_t blue );
 
 	const std::string ToString() const;
+
+	WRAPDEFS_NOPTR( Color );
 };
 
 } /* namespace types */

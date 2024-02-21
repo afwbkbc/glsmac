@@ -17,6 +17,8 @@ namespace map {
 class TileState {
 public:
 
+	~TileState();
+
 	// coordinates in world
 	Vec2< float > coord;
 
@@ -139,8 +141,8 @@ public:
 	bool has_water;
 	bool is_coastline_corner;
 
-	Texture* moisture_original;
-	Texture* river_original;
+	Texture* moisture_original = nullptr;
+	Texture* river_original = nullptr;
 
 	// bonus resources, supply pods and terraforming (except for roads/tubes)
 	typedef struct {

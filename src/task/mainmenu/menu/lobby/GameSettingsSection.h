@@ -56,11 +56,11 @@ private:
 
 	void CreateRow( const row_id_t row_id, const std::string& label, const size_t label_width, const size_t choices_width );
 
-	void UpdateRow( const row_id_t row_id, const ::ui::object::ChoiceList::choices_t& choices, const ::ui::object::ChoiceList::value_t default_choice );
+	void UpdateRow( const row_id_t row_id, const ::ui::object::NumChoiceList::choices_t& choices, const ::ui::object::NumChoiceList::value_t default_choice );
 
 	typedef struct {
 		::ui::object::Label* label;
-		::ui::object::Dropdown* choices;
+		::ui::object::NumDropdown* choices;
 	} element_row_t;
 	std::vector< element_row_t > m_element_rows = {};
 

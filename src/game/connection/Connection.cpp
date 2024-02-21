@@ -21,6 +21,7 @@ void Connection::ResetHandlers() {
 	m_on_flags_update = nullptr;
 	m_on_message = nullptr;
 	m_on_global_settings_update = nullptr;
+	m_on_game_event = nullptr;
 	if ( m_mt_ids.events ) {
 		m_network->MT_Cancel( m_mt_ids.events );
 		m_mt_ids.events = 0;
@@ -40,6 +41,7 @@ Connection::~Connection() {
 	if ( m_mt_ids.events ) {
 		m_network->MT_Cancel( m_mt_ids.events );
 	}
+	ClearPending();
 }
 
 void Connection::Connect() {
@@ -50,7 +52,7 @@ void Connection::Connect() {
 
 	m_game_state = GS_NONE;
 
-	Log( "connecting..." );
+	Log( "Connecting..." );
 
 	m_mt_ids.connect = m_network->MT_Connect( m_connection_mode, m_settings->remote_address );
 
@@ -73,6 +75,7 @@ void Connection::Connect() {
 void Connection::Iterate() {
 
 	if ( m_mt_ids.disconnect ) {
+		bool should_delete = false;
 		auto result = m_network->MT_GetResult( m_mt_ids.disconnect );
 		if ( result.result != network::R_NONE ) {
 			m_mt_ids.disconnect = 0;
@@ -80,20 +83,24 @@ void Connection::Iterate() {
 			Log( "Connection closed" );
 			if ( m_is_connected ) {
 				if ( m_on_disconnect ) {
-					m_on_disconnect();
+					should_delete |= m_on_disconnect();
 				}
 			}
 			if ( m_is_canceled ) {
 				if ( m_on_cancel ) {
-					m_on_cancel();
+					should_delete |= m_on_cancel();
 				}
 			}
 			m_is_connected = false;
 			m_is_canceled = false;
 			if ( !m_disconnect_reason.empty() && m_on_error ) {
-				m_on_error( m_disconnect_reason );
+				should_delete |= m_on_error( m_disconnect_reason );
 				m_disconnect_reason.clear();
 			}
+		}
+		if ( should_delete ) {
+			DELETE( this );
+			return;
 		}
 	}
 
@@ -106,7 +113,10 @@ void Connection::Iterate() {
 				case network::R_ERROR: {
 					Log( "Connection error: " + result.message );
 					if ( m_on_error ) {
-						m_on_error( result.message );
+						if ( m_on_error( result.message ) ) {
+							DELETE( this );
+							return;
+						}
 					}
 					break;
 				}
@@ -139,7 +149,10 @@ void Connection::Iterate() {
 				if ( result.result == network::R_ERROR ) {
 					Log( "received error event" );
 					if ( m_on_error ) {
-						m_on_error( result.message );
+						if ( m_on_error( result.message ) ) {
+							DELETE( this );
+							return;
+						}
 					}
 				}
 				else if ( result.result == network::R_SUCCESS ) {
@@ -152,6 +165,7 @@ void Connection::Iterate() {
 				}
 			}
 		}
+		ProcessPending();
 	}
 }
 
@@ -175,6 +189,14 @@ void Connection::IfServer( std::function< void( Server* ) > cb ) {
 	if ( IsServer() ) {
 		cb( (Server*)this );
 	}
+}
+
+void Connection::SendGameEvent( const game::event::Event* event ) {
+	if ( m_pending_game_events.size() >= PENDING_GAME_EVENTS_LIMIT ) {
+		SendGameEvents( m_pending_game_events );
+		m_pending_game_events.clear();
+	}
+	m_pending_game_events.push_back( event );
 }
 
 const bool Connection::IsConnected() const {
@@ -218,7 +240,21 @@ void Connection::Disconnect( const std::string& reason ) {
 			: ""
 		)
 	);
+	ClearPending();
 	m_mt_ids.disconnect = m_network->MT_Disconnect();
+}
+
+void Connection::ProcessPending() {
+	if ( !m_pending_game_events.empty() ) {
+		SendGameEvents( m_pending_game_events );
+	}
+	m_pending_game_events.clear();
+}
+
+void Connection::ClearPending() {
+	for ( auto& it : m_pending_game_events ) {
+		delete it;
+	}
 }
 
 }

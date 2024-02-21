@@ -17,15 +17,22 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 	, m_state( mainmenu->m_state ) {
 	ASSERT( connection, "connection is null" );
 
+	m_state->InitBindings();
+	if ( m_state->IsMaster() ) {
+		m_state->Configure();
+	} // slave will receive config from master
+
 	SetWidth( 800 );
 	SetHeight( 600 );
 
 	connection->ResetHandlers();
-	connection->m_on_error = [ this ]( const std::string& message ) -> void {
+	connection->m_on_error = [ this ]( const std::string& message ) -> bool {
 		MenuError( message );
+		return false; // rly?
 	};
-	connection->m_on_disconnect = [ this ]() -> void {
+	connection->m_on_disconnect = [ this ]() -> bool {
 		GoBack();
+		return false; // rly?
 	};
 	connection->m_on_global_settings_update = [ this ]() -> void {
 		m_game_settings_section->UpdateRows();
@@ -144,6 +151,7 @@ void Lobby::Show() {
 	m_ready_button->SetLabel( "READY" );
 	m_ready_button->On(
 		UIEvent::EV_BUTTON_CLICK, EH( this ) {
+			ASSERT( m_connection, "connection not set" );
 			auto* slot = GetPlayer()->GetSlot();
 			if ( !slot->HasPlayerFlag( ::game::Slot::PF_READY ) ) {
 				slot->SetPlayerFlag( ::game::Slot::PF_READY );
@@ -151,7 +159,7 @@ void Lobby::Show() {
 			else {
 				slot->UnsetPlayerFlag( ::game::Slot::PF_READY );
 			}
-			UpdateSlot( m_state->GetConnection()->GetSlotNum(), slot, true );
+			UpdateSlot( m_connection->GetSlotNum(), slot, true );
 			return true;
 		}
 	);
@@ -236,7 +244,7 @@ const ::game::Player* Lobby::GetPlayer() {
 
 void Lobby::Message( const std::string& message ) {
 	Log( "Sending message: " + message );
-	m_connection->Message( message );
+	m_connection->SendMessage( message );
 }
 
 void Lobby::UpdateSlot( const size_t slot_num, ::game::Slot* slot, const bool only_flags ) {

@@ -1,5 +1,13 @@
 #include "Tile.h"
 
+#include "gse/type/Object.h"
+#include "gse/type/Array.h"
+#include "gse/type/Int.h"
+#include "gse/type/Bool.h"
+#include "gse/callable/Native.h"
+
+#include "game/unit/Unit.h"
+
 namespace game {
 namespace map {
 
@@ -68,6 +76,73 @@ void Tile::Unserialize( Buffer buf ) {
 
 	Update();
 }
+
+const std::string Tile::ToString() const {
+	return "@[ " + std::to_string( coord.x ) + " " + std::to_string( coord.y ) + " ]";
+}
+
+#define GETN( _n ) \
+{ \
+	"get_" #_n, \
+	NATIVE_CALL( this ) { return _n->Wrap(); } ) \
+}
+
+WRAPIMPL_BEGIN( Tile, CLASS_TILE )
+	WRAPIMPL_PROPS {
+		{
+			"x",
+			VALUE( gse::type::Int, coord.x )
+		},
+		{
+			"y",
+			VALUE( gse::type::Int, coord.y )
+		},
+		{
+			"is_water",
+			VALUE( gse::type::Bool, is_water_tile )
+		},
+		{
+			"is_land",
+			VALUE( gse::type::Bool, !is_water_tile )
+		},
+		{
+			"has_fungus",
+			VALUE( gse::type::Bool, ( features & F_XENOFUNGUS ) == F_XENOFUNGUS )
+		},
+		GETN( W ),
+		GETN( NW ),
+		GETN( N ),
+		GETN( NE ),
+		GETN( E ),
+		GETN( SE ),
+		GETN( S ),
+		GETN( SW ),
+		{
+			"get_surrounding_tiles",
+			NATIVE_CALL( this ) {
+				N_ARGS( 0 );
+				gse::type::Array::elements_t result = {};
+				for ( const auto& n : neighbours ) {
+					result.push_back( n->Wrap() );
+				}
+				return VALUE( gse::type::Array, result );
+			})
+		},
+		{
+			"get_units",
+			NATIVE_CALL( this ) {
+				N_ARGS( 0 );
+				gse::type::Object::properties_t result = {};
+				for ( auto& it : units ) {
+					result.insert_or_assign( std::to_string( it.second->m_id ), it.second->Wrap() );
+				}
+				return VALUE( gse::type::Object, result );
+			} )
+		}
+	};
+WRAPIMPL_END_PTR( Tile )
+
+UNWRAPIMPL_PTR( Tile )
 
 }
 }

@@ -10,6 +10,8 @@ namespace types {
 class Serializable : public base::Base {
 public:
 
+	virtual ~Serializable() = default;
+
 	virtual const Buffer Serialize() const = 0;
 
 	virtual void Unserialize( Buffer buffer ) = 0;

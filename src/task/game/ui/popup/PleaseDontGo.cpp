@@ -23,7 +23,7 @@ void PleaseDontGo::Create() {
 	m_text->SetText( "Do you really want to quit?" );
 	AddChild( m_text );
 
-	NEW( m_choices, ::ui::object::ChoiceList, "PopupButtonList" );
+	NEW( m_choices, ::ui::object::NumChoiceList, "PopupButtonList" );
 	m_choices->SetZIndex( 0.6f ); // TODO: fix z index bugs
 	m_choices->SetTop( 164 );
 	m_choices->SetMargin( 3 );

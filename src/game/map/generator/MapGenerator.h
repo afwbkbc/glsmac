@@ -84,7 +84,7 @@ protected:
 	Random* const m_random = 0;
 
 	// get vector with all tiles in random order
-	const std::vector< Tile* > GetTilesInRandomOrder( const Tiles* tiles, MT_CANCELABLE );
+	const std::vector< Tile* > GetTilesInRandomOrder( Tiles* tiles, MT_CANCELABLE );
 
 	// make terrain a bit smoother
 	void SmoothTerrain( Tiles* tiles, MT_CANCELABLE, const bool smooth_land = true, const bool smooth_sea = true );

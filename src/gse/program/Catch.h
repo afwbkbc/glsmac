@@ -20,10 +20,10 @@ public:
 		delete handlers;
 	}
 
-	const std::string ToString( const size_t depth = 0 ) const override {
+	const std::string Dump( const size_t depth = 0 ) const override {
 		return Formatted( "Catch" + m_si.ToString() + "(", depth ) +
 			Formatted( "Handlers(", depth + 1 ) +
-			handlers->ToString( depth + 2 ) +
+			handlers->Dump( depth + 2 ) +
 			Formatted( ")", depth + 1 ) +
 			Formatted( ")", depth );
 	}

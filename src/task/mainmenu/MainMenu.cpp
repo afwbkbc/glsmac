@@ -185,12 +185,13 @@ void MainMenu::InitSinglePlayer() {
 	m_state->m_slots.Resize( 7 ); // TODO: make dynamic?
 	const auto& rules = m_state->m_settings.global.game_rules;
 	m_state->m_settings.local.player_name = "Player";
-	NEWV( player, ::game::Player, {
+	NEWV( player, ::game::Player,
+		rules,
 		m_state->m_settings.local.player_name,
 		::game::Player::PR_SINGLE,
-		rules.GetDefaultFaction(), // TODO: make configurable
-		rules.GetDefaultDifficultyLevel(), // TODO: make configurable
-	} );
+		::game::Player::RANDOM_FACTION,
+		rules.GetDefaultDifficultyLevel() // TODO: make configurable
+	);
 	m_state->AddPlayer( player );
 	size_t slot_num = 0; // player always has slot 0
 	m_state->AddCIDSlot( 0, slot_num ); // for consistency

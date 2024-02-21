@@ -13,7 +13,7 @@ public:
 	Nothing( const si_t& si )
 		: Operand( si, OT_NOTHING ) {}
 
-	const std::string ToString( const size_t depth = 0 ) const override {
+	const std::string Dump( const size_t depth = 0 ) const override {
 		return Formatted( "Nothing" + m_si.ToString() + "()", depth );
 	}
 

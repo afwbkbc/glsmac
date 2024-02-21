@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <map>
 #include <vector>
 
 #include "base/MTModule.h"
@@ -14,12 +15,24 @@
 #include "types/mesh/Data.h"
 #include "Slot.h"
 #include "Event.h"
+#include "Turn.h"
+
+#include "gse/GSE.h"
+#include "gse/GlobalContext.h"
+
+#include "unit/Def.h"
+#include "unit/Unit.h"
+#include "event/Event.h"
 
 namespace game {
 
 class State;
 namespace connection {
 class Connection;
+}
+
+namespace bindings {
+class Binding;
 }
 
 enum op_t {
@@ -172,6 +185,7 @@ struct MT_Response {
 			std::vector< std::string >* preview_lines;
 			bool scroll_adaptively;
 			std::vector< std::string >* sprites;
+			std::vector< size_t >* unit_ids;
 		} select_tile;
 		struct {
 			std::string* path;
@@ -234,6 +248,7 @@ CLASS( Game, MTModule )
 	util::Random* GetRandom() const;
 	map::Map* GetMap() const;
 	State* GetState() const;
+	const Player* GetPlayer() const;
 
 protected:
 
@@ -241,7 +256,25 @@ protected:
 	void DestroyRequest( const MT_Request& request ) override;
 	void DestroyResponse( const MT_Response& response ) override;
 
+public:
+	// for bindings etc
+	void Message( const std::string& text );
+	void Quit( const std::string& reason );
+	void OnGSEError( gse::Exception& e );
+	const unit::Def* GetUnitDef( const std::string& name ) const;
+	const gse::Value AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& call_si );
+	void DefineUnit( const unit::Def* def );
+	void SpawnUnit( unit::Unit* unit );
+	void DespawnUnit( const size_t unit_id );
+
 private:
+
+	const gse::Value ProcessGameEvent( const event::Event* event );
+
+	std::unordered_map< std::string, const unit::Def* > m_unit_defs = {};
+	std::map< size_t, unit::Unit* > m_units = {};
+	void SerializeUnits( types::Buffer& buf ) const;
+	void UnserializeUnits( types::Buffer& buf );
 
 	enum game_state_t {
 		GS_NONE,
@@ -265,6 +298,8 @@ private:
 	void InitGame( MT_Response& response, MT_CANCELABLE );
 	void ResetGame();
 
+	void NextTurn();
+
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)
 	util::Random* m_random = nullptr;
 	State* m_state = nullptr;
@@ -273,6 +308,14 @@ private:
 	map::Map* m_map = nullptr;
 	map::Map* m_old_map = nullptr; // to restore state, for example if loading of another map failed
 	map_editor::MapEditor* m_map_editor = nullptr;
+
+	std::vector< const game::event::Event* > m_unprocessed_events = {};
+	std::vector< unit::Unit* > m_unprocessed_units = {};
+
+	Turn* m_current_turn = nullptr;
+
+	bool m_is_turn_complete = false;
+	void CheckTurnComplete();
 
 };
 

@@ -30,16 +30,16 @@ CLASS( PlayersSection, LobbySection )
 	void UpdateSlot( const size_t slot_num, ::game::Slot* slot );
 	void UpdateSlots( std::vector< ::game::Slot >& slots );
 
-	const ChoiceList::choices_t& GetFactionChoices();
-	const ChoiceList::choices_t& GetDifficultyLevelChoices();
+	const AssocChoiceList::choices_t& GetFactionChoices();
+	const NumChoiceList::choices_t& GetDifficultyLevelChoices();
 
 private:
 	std::vector< PlayersSectionRow* > m_slots = {};
 
 	// some caches for player rows
 	struct {
-		ChoiceList::choices_t factions = {};
-		ChoiceList::choices_t difficulty_levels = {};
+		AssocChoiceList::choices_t factions = {};
+		NumChoiceList::choices_t difficulty_levels = {};
 	} m_choices;
 
 };

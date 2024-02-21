@@ -12,10 +12,12 @@ using namespace game::map;
 
 namespace types {
 
+Texture::Texture() {
+	// nothing
+}
+
 Texture::Texture( const std::string& name, const size_t width, const size_t height )
 	: m_name( name ) {
-	m_bpp = 4; // always RGBA format
-
 	if ( width > 0 && height > 0 ) {
 		Resize( width, height );
 	}
@@ -31,6 +33,10 @@ Texture::~Texture() {
 	if ( m_graphics_object ) {
 		m_graphics_object->Remove();
 	}
+}
+
+const bool Texture::IsEmpty() const {
+	return m_width == 0 && m_height == 0;
 }
 
 void Texture::Resize( const size_t width, const size_t height ) {
@@ -96,11 +102,25 @@ void Texture::Erase( const size_t x1, const size_t y1, const size_t x2, const si
 	);
 }
 
-void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x, const size_t dest_y, const rotate_t rotate, const float alpha, util::Random* rng, util::Perlin* perlin ) {
-	ASSERT( dest_x + ( x2 - x1 ) < m_width, "destination x overflow ( " + std::to_string( dest_x + ( x2 - x1 ) ) + " >= " + std::to_string( m_width ) + " )" );
-	ASSERT( dest_y + ( y2 - y1 ) < m_height, "destination y overflow (" + std::to_string( dest_y + ( y2 - y1 ) ) + " >= " + std::to_string( m_height ) + " )" );
+void Texture::Fill( const size_t x1, const size_t y1, const size_t x2, const size_t y2, const types::Color& color ) {
 	ASSERT( x2 >= x1, "invalid source x size ( " + std::to_string( x2 ) + " < " + std::to_string( x1 ) + " )" );
 	ASSERT( y2 >= y1, "invalid source y size ( " + std::to_string( y2 ) + " < " + std::to_string( y1 ) + " )" );
+	ASSERT( x2 < m_width, "x overflow ( " + std::to_string( x2 ) + " >= " + std::to_string( m_width ) + " )" );
+	ASSERT( y2 < m_height, "y overflow ( " + std::to_string( y2 ) + " >= " + std::to_string( m_height ) + " )" );
+
+	const uint32_t rgba = color.GetRGBA();
+	for ( auto y = y1 ; y <= y2 ; y++ ) {
+		for ( auto x = x1 ; x <= x2 ; x++ ) {
+			memcpy( ptr( m_bitmap, ( y * m_width + x ) * m_bpp, sizeof( rgba ) ), &rgba, sizeof( rgba ) );
+		}
+	}
+}
+
+void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x, const size_t dest_y, const rotate_t rotate, const float alpha, util::Random* rng, util::Perlin* perlin ) {
+	ASSERT( x2 >= x1, "invalid source x size ( " + std::to_string( x2 ) + " < " + std::to_string( x1 ) + " )" );
+	ASSERT( y2 >= y1, "invalid source y size ( " + std::to_string( y2 ) + " < " + std::to_string( y1 ) + " )" );
+	ASSERT( dest_x + ( x2 - x1 ) < m_width, "destination x overflow ( " + std::to_string( dest_x + ( x2 - x1 ) ) + " >= " + std::to_string( m_width ) + " )" );
+	ASSERT( dest_y + ( y2 - y1 ) < m_height, "destination y overflow (" + std::to_string( dest_y + ( y2 - y1 ) ) + " >= " + std::to_string( m_height ) + " )" );
 	ASSERT( alpha >= 0, "invalid alpha value ( " + std::to_string( alpha ) + " < 0 )" );
 	ASSERT( alpha <= 1, "invalid alpha value ( " + std::to_string( alpha ) + " > 1 )" );
 
@@ -136,7 +156,9 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 
 	// for perlin borders
 	size_t perlin_maxx[h];
+	memset( &perlin_maxx, 0, sizeof( perlin_maxx ) );
 	size_t perlin_maxy[w];
+	memset( &perlin_maxy, 0, sizeof( perlin_maxy ) );
 
 	if (
 		( flags & AM_ROUND_LEFT ) ||
@@ -699,6 +721,28 @@ void Texture::AddFrom( const types::Texture* source, add_flag_t flags, const siz
 	);
 }
 
+void Texture::RepaintFrom( const types::Texture* original, const repaint_rules_t& rules ) {
+	ASSERT( m_width == original->m_width, "repaint width mismatch" );
+	ASSERT( m_height == original->m_height, "repaint width mismatch" );
+	ASSERT( m_bpp == original->m_bpp, "repaint bpp mismatch" );
+	ASSERT( m_bitmap, "bitmap not set" );
+	ASSERT( original->m_bitmap, "original bitmap not set" );
+
+	uint32_t rgba;
+	repaint_rules_t::const_iterator rule_it;
+	for ( size_t y = 0 ; y < m_height ; y++ ) {
+		for ( size_t x = 0 ; x < m_width ; x++ ) {
+			const auto idx = ( y * m_width + x ) * m_bpp;
+			memcpy( &rgba, ptr( original->m_bitmap, idx, m_bpp ), m_bpp );
+			if ( ( rule_it = rules.find( rgba ) ) != rules.end() ) {
+				rgba = rule_it->second;
+			}
+			memcpy( ptr( m_bitmap, idx, m_bpp ), &rgba, m_bpp );
+		}
+	}
+
+}
+
 void Texture::Rotate() {
 	unsigned char* new_bitmap = (unsigned char*)malloc( m_bitmap_size );
 
@@ -802,7 +846,7 @@ void Texture::ClearUpdatedAreas() {
 	m_updated_areas.clear();
 }
 
-unsigned char* Texture::CopyBitmap( const size_t x1, const size_t y1, const size_t x2, const size_t y2 ) {
+unsigned char* Texture::CopyBitmap( const size_t x1, const size_t y1, const size_t x2, const size_t y2 ) const {
 
 	ASSERT( x1 < x2, "x1 must be smaller than x2" );
 	ASSERT( y1 < y2, "y1 must be smaller than y2" );

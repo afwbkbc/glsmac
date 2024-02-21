@@ -29,7 +29,7 @@ void BottomBar::AddStyles() {
 		"FrameLeft", { "Frame" }, SH() {
 			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_LEFT );
 			s->Set( ::Style::A_WIDTH, 356 );
-			s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx", 0, 0, 356, 256, Color::RGB( 100, 16, 156 ) );
+			s->SetTexture( ::Style::A_TEXTURE, "console2_A.pcx", 0, 0, 356, 256 );
 		}
 	);
 
@@ -38,7 +38,7 @@ void BottomBar::AddStyles() {
 			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM );
 			s->Set( ::Style::A_LEFT, 356 );
 			s->Set( ::Style::A_RIGHT, 520 );
-			s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx", 357, 0, ( 1024 - 521 ), 256, Color::RGB( 100, 16, 156 ) );
+			s->SetTexture( ::Style::A_TEXTURE, "console2_A.pcx", 357, 0, ( 1024 - 521 ), 256 );
 		}
 	);
 
@@ -46,7 +46,7 @@ void BottomBar::AddStyles() {
 		"FrameRight", { "Frame" }, SH() {
 			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_RIGHT );
 			s->Set( ::Style::A_WIDTH, 520 );
-			s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx", ( 1024 - 520 ), 0, 1023, 256, Color::RGB( 100, 16, 156 ) );
+			s->SetTexture( ::Style::A_TEXTURE, "console2_A.pcx", ( 1024 - 520 ), 0, 1023, 256 );
 		}
 	);
 
@@ -148,6 +148,60 @@ void BottomBar::AddStyles() {
 			s->Set( ::Style::A_BOTTOM, 6 );
 			s->Set( ::Style::A_LEFT, 5 );
 			s->Set( ::Style::A_WIDTH, 133 );
+		}
+	);
+
+	AddStyle(
+		"UnitPreviewUnit", SH() {
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_HCENTER );
+			s->Set( ::Style::A_TOP, 12 );
+			s->Set( ::Style::A_WIDTH, 100 ); // 80
+			s->Set( ::Style::A_HEIGHT, 75 ); // 60 // 48
+		}
+	);
+	AddStyle(
+		"UnitPreviewBadge", SH() {
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+			s->Set( ::Style::A_LEFT, 6 );
+			s->Set( ::Style::A_TOP, 6 );
+			s->Set( ::Style::A_WIDTH, 23 );
+			s->Set( ::Style::A_HEIGHT, 30 );
+		}
+	);
+	AddStyle(
+		"UnitPreviewHealthbar", SH() {
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+			s->Set( ::Style::A_LEFT, 12 );
+			s->Set( ::Style::A_TOP, 12 );
+			s->Set( ::Style::A_WIDTH, 3 );
+			s->Set( ::Style::A_HEIGHT, 22 );
+		}
+	);
+	AddStyle(
+		"UnitPreviewLabel", SH() {
+			s->SetFont( ::Style::A_FONT, "arialn.ttf", 14 );
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 116, 156, 56 ) );
+			s->Set( ::Style::A_HEIGHT, 17 );
+			s->Set( ::Style::A_WIDTH, 131 );
+		}
+	);
+	AddStyle(
+		"UnitPreviewLabelHeader", SH() {
+			s->SetFont( ::Style::A_FONT, "arialnb.ttf", 16 );
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 116, 156, 56 ) );
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_HCENTER );
+			s->Set( ::Style::A_HEIGHT, 17 );
+		}
+	);
+	AddStyle(
+		"UnitPreviewLabelLeft", { "UnitPreviewLabel" }, SH() {
+			s->Set( ::Style::A_LEFT, 6 );
+			s->Set( ::Style::A_TEXT_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+		}
+	);
+	AddStyle(
+		"UnitPreviewLabelCenter", { "UnitPreviewLabel" }, SH() {
+			s->Set( ::Style::A_TEXT_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_HCENTER );
 		}
 	);
 
@@ -521,6 +575,48 @@ void BottomBar::AddStyles() {
 		}
 	);
 
+	AddStyle(
+		"UnitsListItem", SH() {
+			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_LEFT );
+			s->Set( ::Style::A_TOP, 0 );
+			s->Set( ::Style::A_BOTTOM, 0 );
+			s->Set( ::Style::A_WIDTH, 70 );
+			s->Set( ::Style::A_HEIGHT, 44 );
+		}
+	);
+
+	AddStyle(
+		"UnitsListPreviewUnit", SH() {
+			s->Set( ::Style::A_LEFT, 6 );
+			s->Set( ::Style::A_TOP, -6 );
+			s->Set( ::Style::A_WIDTH, 60 );
+			s->Set( ::Style::A_HEIGHT, 36 );
+		}
+	);
+	AddStyle(
+		"UnitsListPreviewBadge", SH() {
+			s->Set( ::Style::A_LEFT, 0 );
+			s->Set( ::Style::A_TOP, -3 );
+			s->Set( ::Style::A_WIDTH, 20 );
+			s->Set( ::Style::A_HEIGHT, 26 );
+		}
+	);
+	AddStyle(
+		"UnitsListPreviewHealthbar", SH() {
+			s->Set( ::Style::A_LEFT, 5 );
+			s->Set( ::Style::A_TOP, 2 );
+			s->Set( ::Style::A_WIDTH, 3 );
+			s->Set( ::Style::A_HEIGHT, 20 );
+		}
+	);
+	AddStyle(
+		"UnitsListPreviewLabel", SH() {
+			s->SetFont( ::Style::A_FONT, "arialnb.ttf", 12 );
+			s->Set( ::Style::A_TEXT_ALIGN, UIObject::ALIGN_BOTTOM | UIObject::ALIGN_HCENTER );
+			s->SetColor( ::Style::A_TEXT_COLOR, Color::FromRGB( 235, 235, 235 ) );
+		}
+	);
+
 	// minimap
 
 	AddStyle(
@@ -534,7 +630,7 @@ void BottomBar::AddStyles() {
 	);
 
 	AddStyle(
-		"MinimapTurnCompleteButton", SH() {
+		"TurnCompleteButton", SH() {
 
 			const auto f_buttonstyle = [ &s ]( const size_t ox, const size_t oy ) -> void {
 				const std::string t = "console_x2_a.pcx";
@@ -574,6 +670,13 @@ void BottomBar::AddStyles() {
 
 			s->SetSound( ::Style::A_BUTTON_CLICK_SOUND, "ok.wav" );
 			s->Set( ::Style::A_SOUND_VOLUME, 0.5f );
+		}
+	);
+	AddStyle(
+		"TurnCompleteSound", SH() {
+			s->SetSound( Style::A_SOUND, "cpu turn complete.wav" );
+			s->Set( Style::A_SOUND_AUTOSTOP );
+			s->Set( Style::A_SOUND_VOLUME, 0.5f );
 		}
 	);
 
@@ -631,7 +734,7 @@ void BottomBar::AddStyles() {
 			s->Set( ::Style::A_WIDTH, 139 );
 			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP );
 			s->Set( ::Style::A_TOP, -4 );
-			s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx", 0, 0, 138, 4, Color::RGB( 100, 16, 156 ) );
+			s->SetTexture( ::Style::A_TEXTURE, "console2_A.pcx", 0, 0, 138, 4 );
 		}
 	);
 
@@ -641,7 +744,7 @@ void BottomBar::AddStyles() {
 			s->Set( ::Style::A_WIDTH, 139 );
 			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_TOP | UIObject::ALIGN_RIGHT );
 			s->Set( ::Style::A_TOP, -5 );
-			s->SetTextureTC( ::Style::A_TEXTURE, "console2_A.pcx", 885, 1, 1023, 6, Color::RGB( 100, 16, 156 ) );
+			s->SetTexture( ::Style::A_TEXTURE, "console2_A.pcx", 885, 1, 1023, 6 );
 		}
 	);
 

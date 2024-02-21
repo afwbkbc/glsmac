@@ -1,5 +1,6 @@
 SUBDIR( left_menu )
 SUBDIR( right_menu )
+SUBDIR( units_list )
 
 SET( SRC ${SRC}
 
@@ -12,7 +13,7 @@ SET( SRC ${SRC}
 	${PWD}/Toolbar.cpp
 	${PWD}/InfoPanels.cpp
 	${PWD}/InfoPanel.cpp
-	${PWD}/UnitsList.cpp
 	${PWD}/MiniMap.cpp
+	${PWD}/TurnCompleteButton.cpp
 
 	PARENT_SCOPE )

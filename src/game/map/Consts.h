@@ -16,17 +16,17 @@ namespace map {
 
 struct Consts {
 
-	// coordinates of textures (x1 and y1) in texture.pcx
+	// coordinates of textures (x1 and y1) in pcx file
 	typedef Vec2< uint32_t > pcx_texture_coordinates_t;
 
 	const struct {
 		const struct {
 
-			const Vec2< size_t > dimensions = {
+			const Vec2< uint32_t > dimensions = {
 				56,
 				56
 			};
-			const Vec2< size_t > radius = dimensions / (size_t)2;
+			const Vec2< uint32_t > radius = dimensions / (uint32_t)2;
 
 			const pcx_texture_coordinates_t water[2] = {
 				{ 280, 79 },
@@ -222,19 +222,20 @@ struct Consts {
 		} texture_pcx;
 		const struct {
 
-			const Vec2< size_t > dimensions = {
+			const Vec2< uint32_t > dimensions = {
 				100,
 				62
 			};
+			const Vec2< uint32_t > center = {
+				50,
+				25
+			};
 
-			// some coordinates were altered to fix alignment
 			const pcx_texture_coordinates_t nutrient_bonus_sea[2] = {
-				//{ 4, 257 }, { 106, 257 },
 				{ 1,   253 },
-				{ 103, 253 },
+				{ 102, 253 },
 			};
 			const pcx_texture_coordinates_t nutrient_bonus_land[2] = {
-				//{ 207, 257 }, { 308, 257 },
 				{ 203, 253 },
 				{ 304, 253 },
 			};
@@ -245,7 +246,6 @@ struct Consts {
 			const pcx_texture_coordinates_t minerals_bonus_land[2] = {
 				{ 203, 316 },
 				{ 304, 316 },
-				//{ 203, 316 }, { 304, 316 },
 			};
 			const pcx_texture_coordinates_t energy_bonus_sea[2] = {
 				{ 1,   379 },

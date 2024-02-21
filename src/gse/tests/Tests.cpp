@@ -5,6 +5,8 @@
 #include "Runner.h"
 #include "Scripts.h"
 
+#include "engine/Engine.h"
+
 #include "gse/program/Variable.h"
 #include "gse/program/Value.h"
 #include "gse/program/Function.h"
@@ -29,16 +31,17 @@ using namespace program;
 
 void AddTests( task::gsetests::GSETests* task ) {
 
-	task->AddTest(
-		"test if tests work",
-		GT() {
-			GT_OK();
-		}
-	);
-
-	tests::AddGSETests( task );
-	tests::AddParserTests( task );
-	tests::AddRunnerTests( task );
+	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		task->AddTest(
+			"test if tests work",
+			GT() {
+				GT_OK();
+			}
+		);
+		tests::AddGSETests( task );
+		tests::AddParserTests( task );
+		tests::AddRunnerTests( task );
+	}
 	tests::AddScriptsTests( task );
 
 }
@@ -113,75 +116,75 @@ const std::string& GetTestSource() {
 									  "let d = null;\n"
 									  "let x = a > b;\n"
 									  "\n"
-									  "console.log( d );\n"
-									  "console.log( d == null );\n"
-									  "console.log( x, x == b > c );\n"
+									  "     #print( d );\n"
+									  "     #print( d == null );\n"
+									  "     #print( x, x == b > c );\n"
 									  "\n"
-									  "console.log( a != b, b != c, c != a, a != a );\n"
-									  "console.log( a > b, b > c );\n"
-									  "console.log( b >= a, a >= 2, c <= 200, a <= 200 );\n"
-									  "console.log( 10 < 10, 10 <= 10, a < a, a <= a );\n"
-									  "console.log( true && true, true && false, true || true, true || false );\n"
-									  "console.log( (( 5 > 10 ) && ( 2 > 1 )) || (( 5 <= 10 ) && !( 5 > 35 ) && ( 100 >= 20 )) );\n"
-									  "console.log(testmethod1(11, b, 20), testmethod2(a, b, c));\n"
+									  "     #print( a != b, b != c, c != a, a != a );\n"
+									  "     #print( a > b, b > c );\n"
+									  "     #print( b >= a, a >= 2, c <= 200, a <= 200 );\n"
+									  "     #print( 10 < 10, 10 <= 10, a < a, a <= a );\n"
+									  "     #print( true && true, true && false, true || true, true || false );\n"
+									  "     #print( (( 5 > 10 ) && ( 2 > 1 )) || (( 5 <= 10 ) && !( 5 > 35 ) && ( 100 >= 20 )) );\n"
+									  "     #print(testmethod1(11, b, 20), testmethod2(a, b, c));\n"
 									  "let testmethod = testmethod1;\n"
-									  "console.log( testmethod( 1, testmethod( 2, testmethod( 3, 3, 3 ), testmethod( 4, 4, 4 ) ), testmethod( 5, 5, testmethod( 6, 6, 6 )) ), 10 );\n"
-									  "console.log( testarr1 ); console.log( testarr2 ); console.log( testarr3 ); console.log( testarr4 );\n"
-									  "console.log( testarr1[0] ); console.log( testarr1[1] ); console.log( testarr1[0:1] );\n"
-									  "console.log( testarr1[5:] ); console.log( testarr1[:3] );\n"
-									  "console.log( testarr1[4:5] + testarr1[2:3] );\n"
-									  "console.log(testobj3.child1.child2.value);\n"
-									  "console.log(testobj1.propertyInt == 272 + c); console.log(testobj1, testobj2);\n"
+									  "     #print( testmethod( 1, testmethod( 2, testmethod( 3, 3, 3 ), testmethod( 4, 4, 4 ) ), testmethod( 5, 5, testmethod( 6, 6, 6 )) ), 10 );\n"
+									  "     #print( testarr1 );      #print( testarr2 );      #print( testarr3 );      #print( testarr4 );\n"
+									  "     #print( testarr1[0] );      #print( testarr1[1] );      #print( testarr1[0:1] );\n"
+									  "     #print( testarr1[5:] );      #print( testarr1[:3] );\n"
+									  "     #print( testarr1[4:5] + testarr1[2:3] );\n"
+									  "     #print(testobj3.child1.child2.value);\n"
+									  "     #print(testobj1.propertyInt == 272 + c);      #print(testobj1, testobj2);\n"
 									  "\n"
 									  "if ( a > b ) {\n"
-									  "  console.log( 'YES' );\n"
+									  "       #print( 'YES' );\n"
 									  "}\n"
 									  "else {\n"
-									  "  console.log( 'NO' );\n"
+									  "       #print( 'NO' );\n"
 									  "};\n"
 									  "if ( b > a ) {\n"
-									  "  console.log( 'YES' );\n"
+									  "       #print( 'YES' );\n"
 									  "}\n"
 									  "else {\n"
-									  "  console.log( 'NO' );\n"
+									  "       #print( 'NO' );\n"
 									  "};\n"
-									  "if ( false ) { console.log( 'FALSE' ); };\n"
+									  "if ( false ) {      #print( 'FALSE' ); };\n"
 									  "if ( false ) {\n"
-									  "  console.log('FAIL');\n"
+									  "       #print('FAIL');\n"
 									  "} elseif ( false ) {\n"
-									  "  console.log( 'FAIL' );\n"
+									  "       #print( 'FAIL' );\n"
 									  "} elseif ( true ) {\n"
-									  "  console.log( 'OK' );\n"
+									  "       #print( 'OK' );\n"
 									  "} else {\n"
-									  "  console.log( 'FAIL' );\n"
+									  "       #print( 'FAIL' );\n"
 									  "};\n"
 									  "\n"
 									  "let i = 0;\n"
 									  "while ( i++ < 5 ) {\n"
-									  "  console.log(i);\n"
+									  "       #print(i);\n"
 									  "};\n"
 									  "\n"
 									  "try {\n"
-									  "  console.log( 'BEFORE EXCEPTION' ); // should be printed\n"
+									  "       #print( 'BEFORE EXCEPTION' ); // should be printed\n"
 									  "  let failfunc = () => {\n"
-									  "    console.log('failfunc');\n"
+									  "         #print('failfunc');\n"
 									  "    throw TestError('something happened');\n"
 									  "  };\n"
 									  "  failfunc();\n"
-									  "  console.log( 'AFTER EXCEPTION' ); // should not be printed\n"
+									  "       #print( 'AFTER EXCEPTION' ); // should not be printed\n"
 									  "}\n"
 									  "catch {\n"
 									  "  UnknownError: (e) => {\n"
-									  "    console.log('shouldnt catch this');\n"
+									  "         #print('shouldnt catch this');\n"
 									  "  },\n"
 									  "  TestError: (e) => {\n"
-									  "    console.log('CAUGHT ' + e.type + ' : ' + e.reason);\n"
-									  "    console.log(e.backtrace);\n"
+									  "         #print('CAUGHT ' + e.type + ' : ' + e.reason);\n"
+									  "         #print(e.backtrace);\n"
 									  "  }\n"
 									  "};\n"
 									  "\n"
 									  ";;;\n"
-									  "console.log('bye!');\n";
+									  "     #print('bye!');\n";
 	return source;
 }
 
@@ -203,7 +206,7 @@ const Program* GetTestProgram() {
 // skip validation in some places
 #define SI_SKIP() { "", { 0, 0 }, { 0, 0 } }
 
-	const auto console_log = [ &filename ]( const size_t line, size_t col_begin, const std::vector< const Expression* >& arguments ) -> Statement* {
+	const auto print = [ &filename ]( const size_t line, size_t col_begin, const std::vector< const Expression* >& arguments ) -> Statement* {
 		return new Statement(
 			SI_SKIP(),
 			new Expression(
@@ -211,10 +214,8 @@ const Program* GetTestProgram() {
 				new Call(
 					SI_SKIP(),
 					new Expression(
-						SI( line, col_begin, line, col_begin + 11 ),
-						new Variable( SI( line, col_begin, line, col_begin + 7 ), "console" ),
-						new Operator( SI( line, col_begin + 7, line, col_begin + 8 ), Operator::OT_CHILD ),
-						new Variable( SI( line, col_begin + 8, line, col_begin + 11 ), "log" )
+						SI( line, col_begin, line, col_begin + 6 ),
+						new Variable( SI( line, col_begin, line, col_begin + 6 ), "#print" )
 					),
 					arguments
 				)
@@ -224,13 +225,13 @@ const Program* GetTestProgram() {
 
 	static const auto* program = new Program(
 		new Scope(
-			SI( 1, 1, 132, 21 ),
+			SI( 3, 1, 132, 21 ),
 			{
 				new Statement(
-					SI( 1, 1, 3, 10 ),
+					SI( 3, 1, 3, 10 ),
 					new Expression(
 						SI( 3, 5, 3, 10 ),
-						new Variable( SI( 3, 5, 3, 6 ), "a", Variable::VH_CREATE ),
+						new Variable( SI( 3, 5, 3, 6 ), "a", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 3, 7, 3, 8 ), Operator::OT_ASSIGN ),
 						new program::Value( SI( 3, 9, 3, 10 ), VALUE( type::Int, 5 ) )
 					)
@@ -247,7 +248,7 @@ const Program* GetTestProgram() {
 					SI( 5, 1, 5, 18 ),
 					new Expression(
 						SI( 5, 5, 5, 18 ),
-						new Variable( SI( 5, 5, 5, 6 ), "b", Variable::VH_CREATE ),
+						new Variable( SI( 5, 5, 5, 6 ), "b", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 5, 7, 5, 8 ), Operator::OT_ASSIGN ),
 						new Expression(
 							SI( 5, 9, 5, 18 ),
@@ -266,7 +267,7 @@ const Program* GetTestProgram() {
 					SI( 6, 1, 6, 14 ),
 					new Expression(
 						SI( 6, 5, 6, 14 ),
-						new Variable( SI( 6, 5, 6, 6 ), "c", Variable::VH_CREATE ),
+						new Variable( SI( 6, 5, 6, 6 ), "c", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 6, 6, 6, 7 ), Operator::OT_ASSIGN ),
 						new Expression(
 							SI( 6, 8, 6, 14 ),
@@ -332,7 +333,7 @@ const Program* GetTestProgram() {
 					SI( 14, 1, 14, 53 ),
 					new Expression(
 						SI( 14, 5, 14, 53 ),
-						new Variable( SI( 14, 5, 14, 16 ), "testmethod1", Variable::VH_CREATE ),
+						new Variable( SI( 14, 5, 14, 16 ), "testmethod1", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 14, 17, 14, 18 ), Operator::OT_ASSIGN ),
 						new Function(
 							SI( 14, 19, 14, 53 ),
@@ -372,7 +373,7 @@ const Program* GetTestProgram() {
 					SI( 16, 1, 27, 2 ),
 					new Expression(
 						SI( 16, 5, 27, 2 ),
-						new Variable( SI( 16, 5, 16, 16 ), "testmethod2", Variable::VH_CREATE ),
+						new Variable( SI( 16, 5, 16, 16 ), "testmethod2", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 16, 17, 16, 18 ), Operator::OT_ASSIGN ),
 						new Function(
 							SI( 16, 19, 27, 2 ),
@@ -382,10 +383,10 @@ const Program* GetTestProgram() {
 								new Variable( SI( 16, 26, 16, 27 ), "c" )
 							},
 							new Scope(
-								SI( 17, 2, 26, 3 ),
+								SI( 20, 2, 26, 3 ),
 								{
 									new Statement(
-										SI( 17, 2, 25, 4 ),
+										SI( 20, 2, 25, 4 ),
 										new Expression(
 											SI( 20, 2, 25, 4 ),
 											nullptr,
@@ -412,7 +413,7 @@ const Program* GetTestProgram() {
 					SI( 29, 1, 29, 18 ),
 					new Expression(
 						SI( 29, 5, 29, 18 ),
-						new Variable( SI( 29, 5, 29, 13 ), "testarr1", Variable::VH_CREATE ),
+						new Variable( SI( 29, 5, 29, 13 ), "testarr1", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 29, 14, 29, 15 ), Operator::OT_ASSIGN ),
 						new Array( SI( 29, 16, 29, 18 ), {} )
 					)
@@ -421,7 +422,7 @@ const Program* GetTestProgram() {
 					SI( 30, 1, 33, 4 ),
 					new Expression(
 						SI( 30, 5, 33, 4 ),
-						new Variable( SI( 30, 5, 30, 13 ), "testarr2", Variable::VH_CREATE ),
+						new Variable( SI( 30, 5, 30, 13 ), "testarr2", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 30, 14, 30, 15 ), Operator::OT_ASSIGN ),
 						new Array(
 							SI( 30, 16, 33, 4 ),
@@ -519,7 +520,7 @@ const Program* GetTestProgram() {
 					SI( 39, 1, 39, 24 ),
 					new Expression(
 						SI( 39, 5, 39, 24 ),
-						new Variable( SI( 39, 5, 39, 13 ), "testarr3", Variable::VH_CREATE ),
+						new Variable( SI( 39, 5, 39, 13 ), "testarr3", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 39, 14, 39, 15 ), Operator::OT_ASSIGN ),
 						new Variable( SI( 39, 16, 39, 24 ), "testarr1" )
 					)
@@ -627,7 +628,7 @@ const Program* GetTestProgram() {
 					SI( 43, 1, 43, 28 ),
 					new Expression(
 						SI( 43, 5, 43, 28 ),
-						new Variable( SI( 43, 5, 43, 13 ), "testarr4", Variable::VH_CREATE ),
+						new Variable( SI( 43, 5, 43, 13 ), "testarr4", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 43, 14, 43, 15 ), Operator::OT_ASSIGN ),
 						new Expression(
 							SI( 43, 16, 43, 28 ),
@@ -697,7 +698,7 @@ const Program* GetTestProgram() {
 					SI( 46, 1, 46, 18 ),
 					new Expression(
 						SI( 46, 5, 46, 18 ),
-						new Variable( SI( 46, 5, 46, 13 ), "testobj1", Variable::VH_CREATE ),
+						new Variable( SI( 46, 5, 46, 13 ), "testobj1", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 46, 14, 46, 15 ), Operator::OT_ASSIGN ),
 						new Object( SI( 46, 16, 46, 18 ), {} )
 					)
@@ -706,7 +707,7 @@ const Program* GetTestProgram() {
 					SI( 47, 1, 51, 2 ),
 					new Expression(
 						SI( 47, 5, 51, 2 ),
-						new Variable( SI( 47, 5, 47, 13 ), "testobj2", Variable::VH_CREATE ),
+						new Variable( SI( 47, 5, 47, 13 ), "testobj2", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 47, 14, 47, 15 ), Operator::OT_ASSIGN ),
 						new Object(
 							SI( 47, 16, 51, 2 ),
@@ -747,7 +748,7 @@ const Program* GetTestProgram() {
 					SI( 52, 1, 58, 2 ),
 					new Expression(
 						SI( 52, 5, 58, 2 ),
-						new Variable( SI( 52, 5, 52, 13 ), "testobj3", Variable::VH_CREATE ),
+						new Variable( SI( 52, 5, 52, 13 ), "testobj3", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 52, 14, 52, 15 ), Operator::OT_ASSIGN ),
 						new Object(
 							SI( 52, 16, 58, 2 ),
@@ -818,7 +819,7 @@ const Program* GetTestProgram() {
 					SI( 61, 1, 61, 13 ),
 					new Expression(
 						SI( 61, 5, 61, 13 ),
-						new Variable( SI( 61, 5, 61, 6 ), "d", Variable::VH_CREATE ),
+						new Variable( SI( 61, 5, 61, 6 ), "d", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 61, 7, 61, 8 ), Operator::OT_ASSIGN ),
 						new program::Value( SI( 61, 9, 61, 13 ), VALUE( type::Null ) )
 					)
@@ -827,7 +828,7 @@ const Program* GetTestProgram() {
 					SI( 62, 1, 62, 14 ),
 					new Expression(
 						SI( 62, 5, 62, 14 ),
-						new Variable( SI( 62, 5, 62, 6 ), "x", Variable::VH_CREATE ),
+						new Variable( SI( 62, 5, 62, 6 ), "x", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 62, 7, 62, 8 ), Operator::OT_ASSIGN ),
 						new Expression(
 							SI( 62, 9, 62, 14 ),
@@ -837,8 +838,8 @@ const Program* GetTestProgram() {
 						)
 					)
 				),
-				console_log(
-					64, 1,
+				print(
+					64, 6,
 					{
 						new Expression(
 							SI( 64, 14, 64, 15 ),
@@ -846,8 +847,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					65, 1,
+				print(
+					65, 6,
 					{
 						new Expression(
 							SI( 65, 14, 65, 23 ),
@@ -857,8 +858,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					66, 1,
+				print(
+					66, 6,
 					{
 						new Expression(
 							SI( 66, 14, 66, 15 ),
@@ -877,8 +878,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					68, 1,
+				print(
+					68, 6,
 					{
 						new Expression(
 							SI( 68, 14, 68, 20 ),
@@ -906,8 +907,8 @@ const Program* GetTestProgram() {
 						),
 					}
 				),
-				console_log(
-					69, 1,
+				print(
+					69, 6,
 					{
 						new Expression(
 							SI( 69, 14, 69, 19 ),
@@ -923,8 +924,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					70, 1,
+				print(
+					70, 6,
 					{
 						new Expression(
 							SI( 70, 14, 70, 20 ),
@@ -952,8 +953,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					71, 1,
+				print(
+					71, 6,
 					{
 						new Expression(
 							SI( 71, 14, 71, 21 ),
@@ -981,8 +982,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					72, 1,
+				print(
+					72, 6,
 					{
 						new Expression(
 							SI( 72, 14, 72, 26 ),
@@ -1010,8 +1011,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					73, 1,
+				print(
+					73, 6,
 					{
 						new Expression(
 							SI( 73, 17, 73, 85 ),
@@ -1066,8 +1067,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					74, 1,
+				print(
+					74, 6,
 					{
 						new Expression(
 							SI( 74, 13, 74, 35 ),
@@ -1123,13 +1124,13 @@ const Program* GetTestProgram() {
 					SI( 75, 1, 75, 29 ),
 					new Expression(
 						SI( 75, 5, 75, 29 ),
-						new Variable( SI( 75, 5, 75, 15 ), "testmethod", Variable::VH_CREATE ),
+						new Variable( SI( 75, 5, 75, 15 ), "testmethod", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 75, 16, 75, 17 ), Operator::OT_ASSIGN ),
 						new Variable( SI( 75, 18, 75, 29 ), "testmethod1" )
 					)
 				),
-				console_log(
-					76, 1,
+				print(
+					76, 6,
 					{
 						new Expression(
 							SI( 76, 14, 76, 134 ),
@@ -1261,8 +1262,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					77, 1,
+				print(
+					77, 6,
 					{
 						new Expression(
 							SI( 77, 14, 77, 22 ),
@@ -1270,8 +1271,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					77, 26,
+				print(
+					77, 31,
 					{
 						new Expression(
 							SI( 77, 39, 77, 47 ),
@@ -1279,8 +1280,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					77, 51,
+				print(
+					77, 56,
 					{
 						new Expression(
 							SI( 77, 64, 77, 72 ),
@@ -1288,8 +1289,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					77, 76,
+				print(
+					77, 81,
 					{
 						new Expression(
 							SI( 77, 89, 77, 97 ),
@@ -1297,8 +1298,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					78, 1,
+				print(
+					78, 6,
 					{
 						new Expression(
 							SI( 78, 14, 78, 25 ),
@@ -1308,8 +1309,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					78, 29,
+				print(
+					78, 34,
 					{
 						new Expression(
 							SI( 78, 42, 78, 53 ),
@@ -1319,8 +1320,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					78, 57,
+				print(
+					78, 62,
 					{
 						new Expression(
 							SI( 78, 70, 78, 83 ),
@@ -1335,8 +1336,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					79, 1,
+				print(
+					79, 6,
 					{
 						new Expression(
 							SI( 79, 14, 79, 26 ),
@@ -1351,8 +1352,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					79, 30,
+				print(
+					79, 35,
 					{
 						new Expression(
 							SI( 79, 43, 79, 55 ),
@@ -1367,8 +1368,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					80, 1,
+				print(
+					80, 6,
 					{
 						new Expression(
 							SI( 80, 14, 80, 43 ),
@@ -1398,8 +1399,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					81, 1,
+				print(
+					81, 6,
 					{
 						new Expression(
 							SI( 81, 13, 81, 41 ),
@@ -1419,8 +1420,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					82, 1,
+				print(
+					82, 6,
 					{
 						new Expression(
 							SI( 82, 13, 82, 44 ),
@@ -1440,8 +1441,8 @@ const Program* GetTestProgram() {
 						)
 					}
 				),
-				console_log(
-					82, 47,
+				print(
+					82, 52,
 					{
 						new Expression(
 							SI( 82, 59, 82, 67 ),
@@ -1462,10 +1463,10 @@ const Program* GetTestProgram() {
 						new Variable( SI( 84, 10, 84, 11 ), "b" )
 					),
 					new Scope(
-						SI( 85, 3, 85, 24 ),
+						SI( 85, 8, 85, 24 ),
 						{
-							console_log(
-								85, 3,
+							print(
+								85, 8,
 								{
 									new Expression(
 										SI( 85, 16, 85, 21 ),
@@ -1480,8 +1481,8 @@ const Program* GetTestProgram() {
 						new Scope(
 							SI( 88, 3, 88, 23 ),
 							{
-								console_log(
-									88, 3,
+								print(
+									88, 8,
 									{
 										new Expression(
 											SI( 88, 16, 88, 20 ),
@@ -1502,10 +1503,10 @@ const Program* GetTestProgram() {
 						new Variable( SI( 90, 10, 90, 11 ), "a" )
 					),
 					new Scope(
-						SI( 91, 3, 91, 24 ),
+						SI( 91, 8, 91, 24 ),
 						{
-							console_log(
-								91, 3,
+							print(
+								91, 8,
 								{
 									new Expression(
 										SI( 91, 16, 91, 21 ),
@@ -1520,8 +1521,8 @@ const Program* GetTestProgram() {
 						new Scope(
 							SI( 94, 3, 94, 23 ),
 							{
-								console_log(
-									94, 3,
+								print(
+									94, 8,
 									{
 										new Expression(
 											SI( 94, 16, 94, 20 ),
@@ -1540,10 +1541,10 @@ const Program* GetTestProgram() {
 						new program::Value( SI( 96, 6, 96, 11 ), VALUE( type::Bool, false ) )
 					),
 					new Scope(
-						SI( 96, 16, 96, 39 ),
+						SI( 96, 21, 96, 39 ),
 						{
-							console_log(
-								96, 16,
+							print(
+								96, 21,
 								{
 									new Expression(
 										SI( 96, 29, 96, 36 ),
@@ -1561,10 +1562,10 @@ const Program* GetTestProgram() {
 						new program::Value( SI( 97, 6, 97, 11 ), VALUE( type::Bool, false ) )
 					),
 					new Scope(
-						SI( 98, 3, 98, 23 ),
+						SI( 98, 8, 98, 23 ),
 						{
-							console_log(
-								98, 3,
+							print(
+								98, 8,
 								{
 									new Expression(
 										SI( 98, 15, 98, 21 ),
@@ -1583,8 +1584,8 @@ const Program* GetTestProgram() {
 						new Scope(
 							SI( 100, 3, 100, 25 ),
 							{
-								console_log(
-									100, 3,
+								print(
+									100, 8,
 									{
 										new Expression(
 											SI( 100, 16, 100, 22 ),
@@ -1603,8 +1604,8 @@ const Program* GetTestProgram() {
 							new Scope(
 								SI( 102, 3, 102, 23 ),
 								{
-									console_log(
-										102, 3,
+									print(
+										102, 8,
 										{
 											new Expression(
 												SI( 102, 16, 102, 20 ),
@@ -1619,8 +1620,8 @@ const Program* GetTestProgram() {
 								new Scope(
 									SI( 104, 3, 104, 25 ),
 									{
-										console_log(
-											104, 3,
+										print(
+											104, 8,
 											{
 												new Expression(
 													SI( 104, 16, 104, 22 ),
@@ -1638,7 +1639,7 @@ const Program* GetTestProgram() {
 					SI( 107, 1, 107, 10 ),
 					new Expression(
 						SI( 107, 5, 107, 10 ),
-						new Variable( SI( 107, 5, 107, 6 ), "i", Variable::VH_CREATE ),
+						new Variable( SI( 107, 5, 107, 6 ), "i", Variable::VH_CREATE_VAR ),
 						new Operator( SI( 107, 7, 107, 8 ), Operator::OT_ASSIGN ),
 						new program::Value( SI( 107, 9, 107, 10 ), VALUE( type::Int, 0 ) )
 					)
@@ -1656,10 +1657,10 @@ const Program* GetTestProgram() {
 						new program::Value( SI( 108, 15, 108, 16 ), VALUE( type::Int, 5 ) )
 					),
 					new Scope(
-						SI( 109, 3, 109, 18 ),
+						SI( 109, 8, 109, 18 ),
 						{
-							console_log(
-								109, 3,
+							print(
+								109, 8,
 								{
 									new Expression(
 										SI( 109, 15, 109, 16 ),
@@ -1673,10 +1674,10 @@ const Program* GetTestProgram() {
 				new Try(
 					SI( 112, 1, 120, 2 ),
 					new Scope(
-						SI( 113, 3, 119, 61 ),
+						SI( 113, 8, 119, 36 ),
 						{
-							console_log(
-								113, 3,
+							print(
+								113, 8,
 								{
 									new Expression(
 										SI( 113, 16, 113, 34 ),
@@ -1685,19 +1686,19 @@ const Program* GetTestProgram() {
 								}
 							),
 							new Statement(
-								SI( 113, 38, 117, 4 ),
+								SI( 114, 3, 117, 4 ),
 								new Expression(
 									SI( 114, 7, 117, 4 ),
-									new Variable( SI( 114, 7, 114, 15 ), "failfunc", Variable::VH_CREATE ),
+									new Variable( SI( 114, 7, 114, 15 ), "failfunc", Variable::VH_CREATE_VAR ),
 									new Operator( SI( 114, 16, 114, 17 ), Operator::OT_ASSIGN ),
 									new Function(
 										SI( 114, 18, 117, 4 ),
 										{},
 										new Scope(
-											SI( 115, 5, 116, 43 ),
+											SI( 115, 10, 116, 43 ),
 											{
-												console_log(
-													115, 5,
+												print(
+													115, 10,
 													{
 														new Expression(
 															SI( 115, 17, 115, 27 ),
@@ -1745,8 +1746,8 @@ const Program* GetTestProgram() {
 									)
 								)
 							),
-							console_log(
-								119, 3,
+							print(
+								119, 8,
 								{
 									new Expression(
 										SI( 119, 16, 119, 33 ),
@@ -1770,10 +1771,10 @@ const Program* GetTestProgram() {
 											{
 												new Variable( SI( 122, 18, 122, 19 ), "e" )
 											}, new Scope(
-												SI( 123, 5, 123, 40 ),
+												SI( 123, 10, 123, 40 ),
 												{
-													console_log(
-														123, 5,
+													print(
+														123, 10,
 														{
 															new Expression(
 																SI( 123, 17, 123, 38 ),
@@ -1795,10 +1796,10 @@ const Program* GetTestProgram() {
 											{
 												new Variable( SI( 125, 15, 125, 16 ), "e" )
 											}, new Scope(
-												SI( 126, 5, 127, 30 ),
+												SI( 126, 10, 127, 30 ),
 												{
-													console_log(
-														126, 5,
+													print(
+														126, 10,
 														{
 															new Expression(
 																SI( 126, 17, 126, 54 ),
@@ -1828,8 +1829,8 @@ const Program* GetTestProgram() {
 															)
 														}
 													),
-													console_log(
-														127, 5,
+													print(
+														127, 10,
 														{
 															new Expression(
 																SI( 127, 17, 127, 28 ),
@@ -1844,13 +1845,12 @@ const Program* GetTestProgram() {
 										)
 									)
 								}
-
 							}
 						)
 					)
 				),
-				console_log(
-					132, 1,
+				print(
+					132, 6,
 					{
 						new Expression(
 							SI( 132, 13, 132, 19 ),

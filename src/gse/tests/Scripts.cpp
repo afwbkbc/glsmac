@@ -18,18 +18,25 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 
 	const std::string tests_path = "./" TEST_SCRIPTS_PATH;
 
-	task->AddTest(
-		"check if " + tests_path + " directory exists",
-		GT( tests_path ) {
-			if ( !util::FS::DirectoryExists( tests_path ) ) {
-				GT_FAIL( "directory " + tests_path + " does not exist" );
+	const auto* c = g_engine->GetConfig();
+	if ( !c->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		task->AddTest(
+			"check if " + tests_path + " directory exists",
+			GT( tests_path ) {
+				if ( !util::FS::DirectoryExists( tests_path ) ) {
+					GT_FAIL( "directory " + tests_path + " does not exist" );
+				}
+				GT_OK();
 			}
-			GT_OK();
-		}
-	);
-
-	const auto scripts = util::FS::ListDirectory( tests_path, true );
+		);
+	}
+	const auto scripts = c->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT )
+		? std::vector< std::string >{ c->GetGSETestsScript() }
+		: util::FS::ListDirectory( tests_path, true );
 	for ( const auto& script : scripts ) {
+		if ( script.substr( 0, tests_path.size() + 2 ) == tests_path + "/_" ) {
+			continue; // these should not be tested directly (i.e. includes)
+		}
 		task->AddTest(
 			"testing " + script,
 			GT( task, script ) {
@@ -37,27 +44,29 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 				gse::parser::Parser* parser = nullptr;
 				const gse::runner::Runner* runner = nullptr;
 				const gse::program::Program* program = nullptr;
-				gse::Context* context = nullptr;
+				gse::GlobalContext* context = nullptr;
 
 				std::string last_error = "";
 				try {
 					const auto source = util::FS::ReadFile( script );
 					parser = gse.GetParser( script, source );
-					NEW( context, gse::Context, nullptr, util::String::SplitToLines( source ), {} );
-					mocks::AddMocks( context );
+					context = gse.CreateGlobalContext( script );
+					context->IncRefs();
+					mocks::AddMocks( context, { script } );
 					program = parser->Parse();
 					runner = gse.GetRunner();
 					runner->Execute( context, program );
 				}
 				catch ( gse::Exception& e ) {
 					last_error = e.ToStringAndCleanup();
+					context = nullptr;
 				}
 				catch ( std::runtime_error const& e ) {
 					last_error = (std::string)"Internal error: " + e.what();
 				};
 
 				if ( context ) {
-					DELETE( context );
+					context->DecRefs();
 				}
 				if ( program ) {
 					DELETE( program );

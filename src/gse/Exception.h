@@ -9,12 +9,28 @@ namespace gse {
 
 class Context;
 
+struct exception_ec_t {
+	const std::string PARSE_ERROR;
+	const std::string TYPE_ERROR;
+	const std::string REFERENCE_ERROR;
+	const std::string INVALID_ASSIGNMENT;
+	const std::string OPERATION_NOT_SUPPORTED;
+	const std::string OPERATION_FAILED;
+	const std::string INVALID_DEREFERENCE;
+	const std::string INVALID_CALL;
+	const std::string LOADER_ERROR;
+	const std::string CONVERSION_ERROR;
+	const std::string GAME_ERROR;
+	const std::string MAP_ERROR;
+};
+extern const exception_ec_t EC;
+
 class Exception : public std::runtime_error {
 public:
 
 	typedef std::vector< std::string > backtrace_t;
 
-	Exception( const std::string& class_name, const std::string& reason, const gse::Context* context, const si_t& si )
+	Exception( const std::string& class_name, const std::string& reason, gse::Context* context, const si_t& si )
 		: std::runtime_error( "[" + class_name + "] " + reason )
 		, class_name( class_name )
 		, reason( reason )
@@ -23,7 +39,7 @@ public:
 
 	const std::string class_name;
 	const std::string reason;
-	const Context* context;
+	Context* context;
 	const si_t si;
 
 	bool contexts_freed = false;
@@ -36,4 +52,4 @@ public:
 
 }
 
-#include "Context.h"
+#include "ChildContext.h"

@@ -31,6 +31,17 @@ const std::string FS::GetUpDirString() {
 	return "..";
 }
 
+const std::string FS::GeneratePath( const std::vector< std::string >& parts ) {
+	std::string result = "";
+	for ( const auto& part : parts ) {
+		if ( !result.empty() ) {
+			result += PATH_SEPARATOR;
+		}
+		result += part;
+	}
+	return result;
+}
+
 #ifdef _WIN32
 
 const bool FS::IsWindowsDriveLabel( const std::string& directory ) {
@@ -140,9 +151,10 @@ const std::string FS::GetExtension( const std::string& path ) {
 
 const std::vector< std::string > FS::GetExtensions( const std::string& path ) {
 	std::vector< std::string > result = {};
-	size_t pos, last_pos = path.size();
+	size_t pos, path_pos, last_pos = path.size();
 	while ( ( pos = path.rfind( EXTENSION_SEPARATOR, last_pos - 1 ) ) != std::string::npos ) {
-		if ( path.rfind( PATH_SEPARATOR, last_pos - 1 ) > pos ) {
+		path_pos = path.rfind( PATH_SEPARATOR, last_pos - 1 );
+		if ( path_pos != std::string::npos && path_pos > pos ) {
 			break;
 		}
 		result.push_back( path.substr( pos, last_pos - pos ) );

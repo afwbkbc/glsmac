@@ -2,7 +2,7 @@
 
 #include "Tests.h"
 
-#include "gse/Context.h"
+#include "gse/ChildContext.h"
 
 #include "gse/type/Undefined.h"
 #include "gse/type/Int.h"
@@ -13,7 +13,6 @@
 #include "gse/runner/Interpreter.h"
 
 #include "mocks/Mocks.h"
-#include "mocks/Console.h"
 
 #include "util/String.h"
 
@@ -37,19 +36,18 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 
 			runner::Interpreter interpreter;
 
-			Context context( nullptr, util::String::SplitToLines( GetTestSource() ), {} );
-			mocks::AddMocks( &context );
+			GlobalContext* context = gse.CreateGlobalContext();
+			context->IncRefs();
+			context->AddSourceLines( util::String::SplitToLines( GetTestSource() ) );
+			mocks::AddMocks( context, {} );
 
-			interpreter.Execute( &context, test_program );
-
-			// ugh
-			const auto& console = context.GetVariable( "console" );
-			GT_ASSERT( console.Get()->type == type::Type::T_OBJECT, "console mock mismatch" );
-			const auto& log = ( (type::Object*)console.Get() )->Get( "log" );
-			GT_ASSERT( log.Get()->type == type::Type::T_CALLABLE, "console.log mock mismatch" );
-			const auto actual_output = mocks::Console::GetLogsOf( (type::Callable*)log.Get() );
+			gse.LogCaptureStart();
+			interpreter.Execute( context, test_program );
+			const auto actual_output = gse.LogCaptureStopGet();
 
 			VALIDATE();
+
+			context->DecRefs();
 
 			GT_OK();
 		}

@@ -20,6 +20,7 @@ protected:
 
 	struct {
 		GLuint flags;
+		GLuint tint_color;
 		GLuint position;
 		GLuint texture;
 		struct {

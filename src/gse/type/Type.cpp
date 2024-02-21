@@ -18,36 +18,50 @@
 namespace gse {
 namespace type {
 
-const std::string Type::GetTypeString( const type_t type ) {
+static const std::string s_t_undefined = "Undefined";
+static const std::string s_t_null = "Null";
+static const std::string s_t_bool = "Bool";
+static const std::string s_t_int = "Int";
+static const std::string s_t_float = "Float";
+static const std::string s_t_string = "String";
+static const std::string s_t_array = "Array";
+static const std::string s_t_object = "Object";
+static const std::string s_t_callable = "Callable";
+static const std::string s_t_arrayref = "Arrayref";
+static const std::string s_t_arrayrangeref = "Arrayrangeref";
+static const std::string s_t_objectref = "Objectref";
+static const std::string s_t_range = "Range";
+static const std::string s_t_unknown = "Unknown";
+const std::string& Type::GetTypeString( const type_t type ) {
 	switch ( type ) {
 		case T_UNDEFINED:
-			return "undefined";
+			return s_t_undefined;
 		case T_NULL:
-			return "null";
+			return s_t_null;
 		case T_BOOL:
-			return "bool";
+			return s_t_bool;
 		case T_INT:
-			return "int";
+			return s_t_int;
 		case T_FLOAT:
-			return "float";
+			return s_t_float;
 		case T_STRING:
-			return "string";
+			return s_t_string;
 		case T_ARRAY:
-			return "array";
+			return s_t_array;
 		case T_OBJECT:
-			return "object";
+			return s_t_object;
 		case T_CALLABLE:
-			return "callable";
+			return s_t_callable;
 		case T_ARRAYREF:
-			return "arrayref";
+			return s_t_arrayref;
 		case T_ARRAYRANGEREF:
-			return "arrayrangeref";
+			return s_t_arrayrangeref;
 		case T_OBJECTREF:
-			return "objectref";
+			return s_t_objectref;
 		case T_RANGE:
-			return "range";
+			return s_t_range;
 		default:
-			return "unknown";
+			return s_t_unknown;
 	}
 }
 
@@ -84,10 +98,11 @@ const std::string Type::ToString() const {
 			return str;
 		}
 		case T_OBJECT: {
+			const auto* obj = (Object*)this;
 			std::string str = "";
-			str.append( "{ " );
+			str.append( Object::GetClassString( obj->object_class ) + "{ " );
 			bool first = true;
-			for ( const auto& it : ( (Object*)this )->value ) {
+			for ( const auto& it : obj->value ) {
 				if ( first ) {
 					first = false;
 				}
@@ -100,15 +115,18 @@ const std::string Type::ToString() const {
 			return str;
 		}
 		case T_CALLABLE:
-			return "callable"; // TODO
+			return "()";
 		case T_ARRAYREF: {
-			THROW( "arrayref is not intented to be printed" );
+			const auto* that = (ArrayRef*)this;
+			return that->array->Get( that->index ).ToString();
 		}
 		case T_ARRAYRANGEREF: {
-			THROW( "arrayrangeref is not intented to be printed" );
+			const auto* that = (ArrayRangeRef*)this;
+			return that->array->GetSubArray( that->from, that->to ).ToString();
 		}
 		case T_OBJECTREF: {
-			THROW( "objectref is not intented to be printed" );
+			const auto* that = (ObjectRef*)this;
+			return that->object->Get( that->key ).ToString();
 		}
 		case T_RANGE: {
 			const auto* that = (Range*)this;
@@ -123,7 +141,7 @@ const std::string Type::ToString() const {
 			) + "]";
 		}
 		default:
-			THROW( "unknown is not intented to be printed" );
+			THROW( "unknown is not intended to be printed" );
 	}
 }
 
@@ -161,10 +179,11 @@ const std::string Type::Dump() const {
 			return str;
 		}
 		case T_OBJECT: {
+			const auto* obj = (Object*)this;
 			std::string str = "";
-			str.append( "object{" );
+			str.append( "object" + Object::GetClassString( obj->object_class ) + "{" );
 			bool first = true;
-			for ( const auto& it : ( (Object*)this )->value ) {
+			for ( const auto& it : obj->value ) {
 				if ( first ) {
 					first = false;
 				}
@@ -215,6 +234,24 @@ const std::string Type::Dump() const {
 	}
 }
 
+const Type* Type::Deref() const {
+	switch ( type ) {
+		case T_ARRAYREF: {
+			const auto* that = (ArrayRef*)this;
+			return that->array->Get( that->index ).Get();
+		}
+		case T_ARRAYRANGEREF: {
+			THROW( "deref of array range refs not supported here" );
+		}
+		case T_OBJECTREF: {
+			const auto* that = (ObjectRef*)this;
+			return that->object->Get( that->key ).Get();
+		}
+		default:
+			return this;
+	}
+}
+
 #define DEFAULT_COMPARE( _op ) \
         case T_BOOL: \
             return ( (Bool*)this )->value _op ( (Bool*)&other )->value; \
@@ -225,10 +262,10 @@ const std::string Type::Dump() const {
         case T_STRING: \
             return ( (String*)this )->value _op ( (String*)&other )->value; \
         default: \
-            THROW( "operator " #_op " not implemented for type " + std::to_string( type ) );
+            THROW( "operator " #_op " not implemented for type " + GetTypeString( type ) );
 #define DEFAULT_COMPARE_NE( _op ) \
     if ( type != other.type ) { \
-        THROW( "can't compare type " + std::to_string( type ) + " to type " + std::to_string( other.type ) + " using operator " #_op ); \
+        THROW( "can't compare type " + GetTypeString( type ) + " to type " + GetTypeString( other.type ) + " using operator " #_op ); \
     } \
     switch ( type ) { \
         case T_UNDEFINED: \
@@ -247,6 +284,43 @@ const bool Type::operator==( const Type& other ) const {
 			return true;
 		case T_NULL:
 			return true;
+		case T_ARRAY: {
+			const auto& a = ( (const Array*)this )->value;
+			const auto& b = ( (const Array*)&other )->value;
+			if ( a.size() != b.size() ) {
+				return false;
+			}
+			else {
+				for ( size_t i = 0 ; i < a.size() ; i++ ) {
+					if ( ( *a[ i ].Get()->Deref() != *b[ i ].Get()->Deref() ) ) {
+						return false;
+					}
+				}
+				return true;
+			}
+		}
+		case T_OBJECT: {
+			const auto* obj_a = (const Object*)this;
+			const auto* obj_b = (const Object*)&other;
+			if ( obj_a->object_class != obj_b->object_class ) {
+				return false;
+			}
+			const auto& a = obj_a->value;
+			const auto& b = obj_b->value;
+			if ( a.size() != b.size() ) {
+				return false;
+			}
+			Object::properties_t::const_iterator it_b;
+			for ( const auto& it : a ) {
+				if (
+					( it_b = b.find( it.first ) ) == b.end() ||
+						( *it_b->second.Get()->Deref() != *it.second.Get()->Deref() )
+					) {
+					return false;
+				}
+			}
+			return true;
+		}
 		DEFAULT_COMPARE( == )
 	}
 }

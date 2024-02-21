@@ -81,6 +81,39 @@ CLASS( Game, base::Task )
 		const struct {
 			const size_t draw_frequency_ms = 60; // TODO: this value doesn't seem realistic, why?
 		} map_editing;
+		const struct {
+			const Vec2< float > scale = {
+				0.25f,
+				0.5f
+			};
+			const Vec2< float > offset = {
+				-0.25f,
+				-0.5
+			};
+			const struct {
+				const uint8_t resolution = 25;
+				const Vec2< float > scale = {
+					0.04f,
+					0.36f
+				};
+				const Vec2< float > offset = {
+					-0.292f,
+					-0.476f
+				};
+			} healthbars;
+			struct {
+				const uint8_t max_per_tile = 10;
+				const Vec2< float > scale = {
+					0.0326f,
+					0.283f
+				};
+				const Vec2< float > offset = {
+					-0.11f,
+					-0.54f
+				};
+				const float step_x = 0.032f;
+			} fake_badges;
+		} badges;
 	};
 	static const consts_t s_consts;
 
@@ -89,8 +122,32 @@ CLASS( Game, base::Task )
 	const std::string& GetMapFilename() const;
 	const std::string& GetMapLastDirectory() const;
 
-	scene::actor::Instanced* GetTerrainSpriteActor( const std::string& name, const ::game::map::Consts::pcx_texture_coordinates_t& tex_coords, const float z_index );
-	scene::actor::Instanced* GetTerrainSpriteActorByKey( const std::string& key ); // actor must already exist
+	types::Texture* GetSourceTexture( const std::string& name );
+
+	types::Texture* GetRepaintedSourceTexture( const std::string& name, const types::Texture* original, const types::Texture::repaint_rules_t& rules );
+
+	struct instanced_sprite_t {
+		std::string key;
+		std::string name;
+		::game::map::Consts::pcx_texture_coordinates_t xy;
+		::game::map::Consts::pcx_texture_coordinates_t wh;
+		::game::map::Consts::pcx_texture_coordinates_t cxy;
+		scene::actor::Instanced* actor;
+	};
+	instanced_sprite_t& GetInstancedSprite(
+		const std::string& name,
+		types::Texture* texture,
+		const ::game::map::Consts::pcx_texture_coordinates_t& src_xy,
+		const ::game::map::Consts::pcx_texture_coordinates_t& src_wh,
+		const ::game::map::Consts::pcx_texture_coordinates_t& src_cxy,
+		const types::Vec2< float > dst_xy,
+		const float z_index
+	);
+	instanced_sprite_t& GetInstancedSpriteByKey( const std::string& key ); // actor must already exist
+	instanced_sprite_t& GetTerrainInstancedSprite( const ::game::map::Map::sprite_actor_t& actor );
+	instanced_sprite_t* GetRepaintedInstancedSprite( const std::string& name, const instanced_sprite_t& original, const types::Texture::repaint_rules_t& rules );
+
+	void RemoveInstancedSpriteByKey( const std::string& key );
 
 	void CenterAtCoordinatePercents( const Vec2< float > position_percents );
 
@@ -125,14 +182,32 @@ CLASS( Game, base::Task )
 	void SetEditorBrush( ::game::map_editor::MapEditor::brush_type_t editor_brush );
 	const ::game::map_editor::MapEditor::brush_type_t GetEditorBrush() const;
 
-protected:
-
 private:
+
+	const std::string TERRAIN_SOURCE_PCX = "ter1.pcx";
 
 	::game::map_editor::MapEditor::tool_type_t m_editor_tool = ::game::map_editor::MapEditor::TT_NONE;
 	::game::map_editor::MapEditor::brush_type_t m_editor_brush = ::game::map_editor::MapEditor::BT_NONE;
 
 	void UpdateMapData( const types::Vec2< size_t >& map_size );
+
+	void DefineSlot(
+		const size_t slot_index,
+		const types::Color& color,
+		const bool is_progenitor
+	);
+	void DefineUnit( const ::game::unit::Def* unitdef );
+	void SpawnUnit(
+		const size_t unit_id,
+		const std::string& unitdef_name,
+		const size_t slot_index,
+		const Vec2< size_t >& tile_coords,
+		const Vec3& render_coords,
+		const bool is_active,
+		const ::game::unit::Unit::morale_t morale,
+		const ::game::unit::Unit::health_t health
+	);
+	void DespawnUnit( const size_t unit_id );
 
 	void ProcessEvent( const ::game::Event& event );
 
@@ -269,9 +344,8 @@ private:
 	void DeselectTile();
 
 	struct {
-		struct {
-			types::Texture* ter1_pcx = nullptr;
-		} source;
+		std::unordered_map< std::string, types::Texture* > source;
+		std::unordered_map< std::string, types::Texture* > repainted_source;
 		types::Texture* terrain = nullptr;
 	} m_textures;
 
@@ -331,15 +405,126 @@ private:
 #endif
 	} m_mt_ids = {};
 
-	struct instanced_sprite_t {
-		std::string name;
-		::game::map::Consts::pcx_texture_coordinates_t tex_coords;
-		scene::actor::Instanced* actor;
+	struct unit_state_t;
+	typedef std::unordered_map< size_t, unit_state_t* > unit_states_t;
+	struct tile_state_t {
+		struct {
+			size_t x = 0;
+			size_t y = 0;
+		} coords;
+		struct {
+			unit_state_t* currently_rendered_unit = nullptr;
+			std::vector< unit_state_t* > currently_rendered_fake_badges = {};
+		} render;
+		unit_states_t units = {};
 	};
+	std::vector< tile_state_t > m_tile_states = {};
+
+	struct sprite_state_t {
+		Game::instanced_sprite_t* instanced_sprite = nullptr;
+		size_t next_instance_id = 1;
+	};
+
+	typedef std::unordered_map< ::game::unit::Unit::morale_t, sprite_state_t > morale_based_sprite_states_t;
+
+	struct unitdef_state_t {
+		std::string m_id;
+		std::string m_name;
+		::game::unit::Def::def_type_t m_type;
+		union {
+			struct {
+				struct {
+					bool is_sprite;
+					uint32_t morale_based_xshift;
+					union {
+						sprite_state_t sprite;
+						morale_based_sprite_states_t* morale_based_sprites;
+					};
+				} render;
+			} static_;
+		};
+	};
+	std::unordered_map< std::string, unitdef_state_t > m_unitdef_states = {};
+
+	typedef std::unordered_map< ::game::unit::Unit::morale_t, Game::instanced_sprite_t* > unitbadge_spritemap_t;
+	typedef uint8_t badge_type_t;
+	const badge_type_t BT_NORMAL = 0 << 0;
+	const badge_type_t BT_GREYEDOUT = 1 << 0;
+	const badge_type_t BT_DEFAULT = 1 << 1;
+	const badge_type_t BT_PROGENITOR = 0 << 1;
+	typedef std::unordered_map< badge_type_t, unitbadge_spritemap_t > unitbadge_spritemaps_t;
+	struct unitbadge_def_t {
+		sprite_state_t normal;
+		sprite_state_t greyedout;
+	};
+	typedef std::unordered_map< ::game::unit::Unit::morale_t, unitbadge_def_t > unitbadge_defs_t;
+	unitbadge_spritemaps_t m_unitbadge_sprites = {};
+	Game::instanced_sprite_t* m_fake_badge = nullptr;
+
+	std::vector< types::Texture* > m_healthbar_textures = {};
+	std::vector< sprite_state_t > m_healthbar_sprites = {};
+
+	struct slot_state_t {
+		types::Color color = {};
+		unitbadge_defs_t badges = {};
+		sprite_state_t fake_badge = {};
+	};
+	std::unordered_map< size_t, slot_state_t > m_slot_states = {};
+
+	struct unit_state_t {
+		size_t unit_id = 0;
+		unitdef_state_t* def = nullptr;
+		slot_state_t* slot = nullptr;
+		tile_state_t* tile = nullptr;
+		struct {
+			Vec3 coords = {};
+			struct {
+				bool is_rendered = false;
+				size_t instance_id = 0;
+				struct {
+					sprite_state_t* def = nullptr;
+					size_t instance_id = 0;
+					struct {
+						sprite_state_t* def = nullptr;
+						size_t instance_id = 0;
+					} healthbar;
+				} badge;
+			} unit;
+			struct {
+				bool is_rendered = false;
+				size_t instance_id = 0;
+			} fake_badge;
+		} render;
+		bool is_active = false;
+		::game::unit::Unit::morale_t morale = 0;
+		::game::unit::Unit::health_t health = 0;
+	};
+	std::unordered_map< size_t, unit_state_t > m_unit_states = {};
+
 	std::unordered_map< std::string, instanced_sprite_t > m_instanced_sprites = {};
 
 	void CancelRequests();
 	void CancelGame();
+
+	enum unit_update_flags_t : uint8_t {
+		UUF_NONE = 0,
+		UUF_POSITION = 1 << 0,
+		UUF_MORALE = 1 << 1,
+		UUF_HEALTH = 1 << 2,
+		UUF_ALL = 0xff,
+	};
+
+	void RenderUnit( unit_state_t& unit_state );
+	void RenderUnitFakeBadge( unit_state_t& unit_state, const size_t offset );
+	void UnrenderUnit( unit_state_t& unit_state );
+	void UnrenderUnitFakeBadge( unit_state_t& unit_state );
+
+	std::vector< size_t > GetUnitsOrder( const unit_states_t& units ) const;
+
+	void RenderTile( tile_state_t& tile_state );
+
+	tile_state_t& GetTileState( const size_t x, const size_t y );
+
 };
 
 }

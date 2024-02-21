@@ -16,6 +16,8 @@
 #include "types/mesh/Render.h"
 #include "types/mesh/Data.h"
 
+#include "game/Turn.h"
+
 using namespace types;
 
 namespace game {
@@ -50,9 +52,9 @@ CLASS( Map, types::Serializable )
 #endif
 		, MT_CANCELABLE
 	);
-	const error_code_t LoadFromBuffer( Buffer buffer );
+	const error_code_t LoadFromBuffer( Buffer& buffer );
 	const error_code_t LoadFromFile( const std::string& path );
-	const Buffer SaveToBuffer() const;
+	void SaveToBuffer( Buffer& buffer ) const;
 	const error_code_t SaveToFile( const std::string& path ) const;
 
 	const error_code_t Initialize( MT_CANCELABLE );

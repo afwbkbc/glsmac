@@ -135,7 +135,7 @@ void MapGenerator::SmoothTerrain( Tiles* tiles, MT_CANCELABLE, const bool smooth
 	uint8_t i;
 	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {
 		for ( auto x = y & 1 ; x < tiles->GetWidth() ; x += 2 ) {
-			tile = tiles->At( x, y );
+			tile = &tiles->At( x, y );
 
 			tile->Update();
 
@@ -216,7 +216,7 @@ const float MapGenerator::GetLandAmount( Tiles* tiles, MT_CANCELABLE, Tile::elev
 	const auto h = tiles->GetHeight();
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
-			if ( *tiles->At( x, y )->elevation.center > -elevation_diff ) {
+			if ( *tiles->AtConst( x, y ).elevation.center > -elevation_diff ) {
 				land_tiles++;
 			}
 			MT_RETIFV( 0.0f );
@@ -241,7 +241,7 @@ void MapGenerator::SetFungusAmount( Tiles* tiles, const float amount, MT_CANCELA
 
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
-			tile = tiles->At( x, y );
+			tile = &tiles->At( x, y );
 			if ( tile->features & Tile::F_XENOFUNGUS ) {
 				with_fungus.push_back( tile );
 			}
@@ -278,7 +278,7 @@ const float MapGenerator::GetFungusAmount( Tiles* tiles, MT_CANCELABLE ) {
 	const auto h = tiles->GetHeight();
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
-			if ( tiles->At( x, y )->features & Tile::F_XENOFUNGUS ) {
+			if ( tiles->At( x, y ).features & Tile::F_XENOFUNGUS ) {
 				fungus_tiles++;
 			}
 			MT_RETIFV( 0.0f );
@@ -305,7 +305,7 @@ void MapGenerator::SetMoistureAmount( Tiles* tiles, const float amount, MT_CANCE
 
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
-			tile = tiles->At( x, y );
+			tile = &tiles->At( x, y );
 			switch ( tile->moisture ) {
 				case Tile::M_ARID: {
 					arid_tiles.push_back( tile );
@@ -432,7 +432,7 @@ const float MapGenerator::GetMoistureAmount( Tiles* tiles, MT_CANCELABLE ) {
 	const auto h = tiles->GetHeight();
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
-			switch ( tiles->At( x, y )->moisture ) {
+			switch ( tiles->AtConst( x, y ).moisture ) {
 				case Tile::M_ARID: {
 					break;
 				}
@@ -462,7 +462,7 @@ void MapGenerator::FixImpossibleThings( Tiles* tiles, MT_CANCELABLE ) {
 	const auto h = tiles->GetHeight();
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
-			tile = tiles->At( x, y );
+			tile = &tiles->At( x, y );
 			if ( tile->features & Tile::F_JUNGLE && tile->moisture != Tile::M_RAINY ) {
 				// jungle should only be on rainy tiles
 				tile->features &= ~Tile::F_JUNGLE;
@@ -472,13 +472,13 @@ void MapGenerator::FixImpossibleThings( Tiles* tiles, MT_CANCELABLE ) {
 	}
 }
 
-const std::vector< Tile* > MapGenerator::GetTilesInRandomOrder( const Tiles* tiles, MT_CANCELABLE ) {
+const std::vector< Tile* > MapGenerator::GetTilesInRandomOrder( Tiles* tiles, MT_CANCELABLE ) {
 	std::vector< Tile* > randomtiles;
 	const auto w = tiles->GetWidth();
 	const auto h = tiles->GetHeight();
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
-			randomtiles.push_back( tiles->At( x, y ) );
+			randomtiles.push_back( &tiles->At( x, y ) );
 			MT_RETIFV( {} );
 		}
 	}
@@ -512,7 +512,7 @@ void MapGenerator::RaiseAllTilesBy( Tiles* tiles, Tile::elevation_t amount, MT_C
 	}
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
-			tiles->At( x, y )->Update();
+			tiles->At( x, y ).Update();
 			MT_RETIF();
 		}
 	}
@@ -525,7 +525,7 @@ void MapGenerator::ScaleAllTilesBy( Tiles* tiles, float amount, MT_CANCELABLE ) 
 	Tile* tile;
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
-			tile = tiles->At( x, y );
+			tile = &tiles->At( x, y );
 			*tile->elevation.center *= amount;
 			*tile->elevation.bottom *= amount;
 			MT_RETIF();
@@ -533,7 +533,7 @@ void MapGenerator::ScaleAllTilesBy( Tiles* tiles, float amount, MT_CANCELABLE ) 
 	}
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
-			tiles->At( x, y )->Update();
+			tiles->At( x, y ).Update();
 			MT_RETIF();
 		}
 	}
@@ -546,11 +546,11 @@ const std::pair< Tile::elevation_t, Tile::elevation_t > MapGenerator::GetElevati
 	};
 	const auto w = tiles->GetWidth();
 	const auto h = tiles->GetHeight();
-	Tile* tile;
+	const Tile* tile;
 	// determine min and max elevations from generated tiles
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
-			tile = tiles->At( x, y );
+			tile = &tiles->AtConst( x, y );
 			for ( auto& c : tile->elevation.corners ) {
 				if ( *c < result.first ) {
 					result.first = *c;

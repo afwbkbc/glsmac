@@ -30,7 +30,7 @@ void HostJoin::Show() {
 	m_section->SetTitleText( "Would you like to host a new game or join an existing one?" );
 	m_body->AddChild( m_section );
 
-	NEW( m_choices, ChoiceList, "PopupButtonList" );
+	NEW( m_choices, NumChoiceList, "PopupButtonList" );
 	m_choices->SetImmediateMode( false );
 	m_choices->SetMargin( 3 );
 	m_choices->SetChoicesV(

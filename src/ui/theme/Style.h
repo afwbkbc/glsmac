@@ -109,7 +109,7 @@ CLASS( Style, base::Base )
 		A_HEADER_TEXTURE_TOP,
 		A_HEADER_TEXTURE_RIGHT,
 		A_HEADER_TEXTURE_BOTTOM,
-		
+
 		// lists etc
 		A_ITEM_WIDTH,
 		A_ITEM_HEIGHT,
@@ -141,10 +141,7 @@ CLASS( Style, base::Base )
 	void SetObject( const attribute_type_t attribute_type, const void* value );
 	// convenience setters // TODO: improve SetTexture* API
 	void SetTexture( const attribute_type_t attribute_type, const std::string& name );
-	void SetTextureTC( const attribute_type_t attribute_type, const std::string& name, const Color::rgba_t transparent_color );
 	void SetTexture( const attribute_type_t attribute_type, const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = TextureLoader::LT_NONE, const float value = 1.0 );
-	void SetTextureTC( const attribute_type_t attribute_type, const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const Color::rgba_t transparent_color, const uint8_t flags = TextureLoader::LT_NONE, const float value = 1.0 );
-	void SetTextureTCs( const attribute_type_t attribute_type, const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const TextureLoader::transparent_colors_t& transparent_colors, const uint8_t flags = TextureLoader::LT_NONE, const float value = 1.0 );
 	void SetColorTexture( const attribute_type_t attribute_type, const Color& color );
 	void SetFont( const attribute_type_t attribute_type, const std::string& name, const unsigned char size );
 	void SetSound( const attribute_type_t attribute_type, const std::string& name );

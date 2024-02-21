@@ -14,8 +14,9 @@ CLASS( Packet, Serializable )
 		PT_AUTH, // C->S
 		PT_PING, // *->*
 		PT_PONG, // *->*
-		PT_GLOBAL_SETTINGS, // S->C
+
 		PT_PLAYERS, // S->C
+		PT_GLOBAL_SETTINGS, // S->C
 		PT_UPDATE_SLOT, // C->S
 		PT_SLOT_UPDATE, // S->C
 		PT_UPDATE_FLAGS, // C->S
@@ -23,10 +24,11 @@ CLASS( Packet, Serializable )
 		PT_KICK, // S->C
 		PT_MESSAGE, // *->*
 		PT_GAME_STATE, // S->C
-		PT_GET_MAP_HEADER, // C->S
-		PT_MAP_HEADER, // S->C
-		PT_GET_MAP_CHUNK, // C->S
-		PT_MAP_CHUNK, // S->C
+		PT_DOWNLOAD_REQUEST, // C->S
+		PT_DOWNLOAD_RESPONSE, // S->C
+		PT_DOWNLOAD_NEXT_CHUNK_REQUEST, // C->S
+		PT_DOWNLOAD_NEXT_CHUNK_RESPONSE, // S->C
+		PT_GAME_EVENTS, // *->*
 	};
 
 	Packet( const packet_type_t type );
@@ -43,9 +45,12 @@ CLASS( Packet, Serializable )
 			size_t flags;
 		} flags;
 		struct {
+			uint8_t state;
+		} game_state;
+		struct {
 			size_t offset;
 			size_t size;
-		} map;
+		} download;
 	} udata;
 
 	// TODO: move this into udata

@@ -11,9 +11,10 @@
 namespace ui {
 namespace object {
 
+template< typename KEY_TYPE = size_t >
 CLASS( ChoiceList, UIContainer )
+	typedef KEY_TYPE value_t;
 
-	typedef size_t value_t;
 	typedef std::vector< std::pair< value_t, std::string > > choices_t;
 
 	ChoiceList( const std::string& class_name = "" );
@@ -57,9 +58,9 @@ private:
 	std::map< value_t, std::string > m_labels = {};
 	const std::string m_empty_choice = "";
 	std::unordered_map< value_t, Button* > m_buttons = {};
-	ssize_t m_value = -1;
+	value_t m_value = {};
 	size_t m_value_index = 0;
-	std::unordered_map< Button*, size_t > m_button_values = {};
+	std::unordered_map< Button*, value_t > m_button_values = {};
 
 	void SetActiveButton( Button* button );
 
@@ -83,6 +84,9 @@ private:
 
 	void SelectChoice();
 };
+
+typedef ChoiceList< size_t > NumChoiceList;
+typedef ChoiceList< std::string > AssocChoiceList;
 
 } /* namespace object */
 } /* namespace ui */

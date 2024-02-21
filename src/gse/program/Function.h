@@ -28,17 +28,27 @@ public:
 		delete body;
 	}
 
-	const std::string ToString( const size_t depth = 0 ) const override {
+	const std::string ToString() const override {
 		std::string params = "";
 		for ( const auto& it : parameters ) {
-			params += it->ToString( depth + 2 );
+			if ( !params.empty() ) {
+				params += ", ";
+			}
+			params += it->ToString();
+		}
+		return "( " + params + " ) => " + body->ToString();
+	}
+	const std::string Dump( const size_t depth = 0 ) const override {
+		std::string params = "";
+		for ( const auto& it : parameters ) {
+			params += it->Dump( depth + 2 );
 		}
 		return Formatted( "Function" + m_si.ToString() + "(", depth ) +
 			Formatted( "Parameters(", depth + 1 ) +
 			params +
 			Formatted( ")", depth + 1 ) +
 			Formatted( "Body(", depth + 1 ) +
-			body->ToString( depth + 2 ) +
+			body->Dump( depth + 2 ) +
 			Formatted( ")", depth + 1 ) +
 			Formatted( ")", depth );
 	}

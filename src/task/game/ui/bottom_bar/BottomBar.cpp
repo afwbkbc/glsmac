@@ -125,7 +125,7 @@ void BottomBar::Create() {
 	NEW( m_sections.middle_area, MiddleArea, m_game );
 	AddChild( m_sections.middle_area );
 
-	NEW( m_sections.units_list, UnitsList, m_game );
+	NEW( m_sections.units_list, UnitsList, m_game, m_sections.unit_preview );
 	AddChild( m_sections.units_list );
 
 	NEW( m_sections.mini_map, MiniMap, m_game );
@@ -133,6 +133,9 @@ void BottomBar::Create() {
 		m_sections.mini_map->SetMinimapTexture( m_textures.minimap );
 	}
 	AddChild( m_sections.mini_map );
+
+	NEW( m_sections.turn_complete_button, TurnCompleteButton );
+	m_sections.mini_map->AddChild( m_sections.turn_complete_button );
 
 	// side menus
 	auto* ui = g_engine->GetUI();
@@ -201,8 +204,9 @@ void BottomBar::Destroy() {
 	RemoveChild( m_sections.unit_preview );
 	RemoveChild( m_sections.tile_preview );
 	RemoveChild( m_sections.middle_area );
-	RemoveChild( m_sections.mini_map );
 	RemoveChild( m_sections.units_list );
+	m_sections.mini_map->RemoveChild( m_sections.turn_complete_button );
+	RemoveChild( m_sections.mini_map );
 
 	auto* ui = g_engine->GetUI();
 	ui->RemoveObject( m_side_menus.left );
@@ -223,10 +227,19 @@ void BottomBar::Align() {
 
 void BottomBar::PreviewTile( const tile_data_t& tile_data ) {
 	m_sections.tile_preview->PreviewTile( tile_data );
+	m_sections.units_list->ListUnits( tile_data.units );
 }
 
 void BottomBar::HideTilePreview() {
 	m_sections.tile_preview->HideTilePreview();
+}
+
+void BottomBar::PreviewUnit( const unit_data_t& unit_data ) {
+	m_sections.unit_preview->PreviewUnit( &unit_data );
+}
+
+void BottomBar::HideUnitPreview() {
+	m_sections.unit_preview->HideUnitPreview();
 }
 
 void BottomBar::SetMinimapTexture( types::Texture* texture ) {
@@ -284,6 +297,10 @@ void BottomBar::AddMessage( const std::string& text ) {
 
 void BottomBar::UpdateMapFileName() {
 	m_sections.middle_area->UpdateMapFileName();
+}
+
+void BottomBar::SetTurnCompleteStatus( const bool is_turn_complete ) {
+	m_sections.turn_complete_button->SetTurnCompleteStatus( is_turn_complete );
 }
 
 }

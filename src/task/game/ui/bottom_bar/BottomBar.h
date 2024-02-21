@@ -18,7 +18,8 @@
 #include "UnitPreview.h"
 #include "TilePreview.h"
 #include "MiddleArea.h"
-#include "UnitsList.h"
+#include "task/game/ui/bottom_bar/units_list/UnitsList.h"
+#include "TurnCompleteButton.h"
 #include "MiniMap.h"
 
 // side menus
@@ -43,6 +44,9 @@ CLASS( BottomBar, UI )
 	void PreviewTile( const tile_data_t& tile_data );
 	void HideTilePreview();
 
+	void PreviewUnit( const unit_data_t& unit_data );
+	void HideUnitPreview();
+
 	void SetMinimapTexture( types::Texture* texture );
 	const Vec2< size_t > GetMinimapDimensions() const;
 	void SetMinimapSelection( const Vec2< float > position_percents, const Vec2< float > zoom );
@@ -54,6 +58,8 @@ CLASS( BottomBar, UI )
 
 	void AddMessage( const std::string& text );
 	void UpdateMapFileName();
+
+	void SetTurnCompleteStatus( const bool is_turn_complete );
 
 private:
 	struct {
@@ -77,6 +83,7 @@ private:
 		TilePreview* tile_preview = nullptr;
 		MiddleArea* middle_area = nullptr;
 		UnitsList* units_list = nullptr;
+		TurnCompleteButton* turn_complete_button = nullptr;
 		MiniMap* mini_map = nullptr;
 	} m_sections = {};
 

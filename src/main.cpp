@@ -216,7 +216,6 @@ int main( const int argc, const char* argv[] ) {
 			loader::font::FreeType font_loader;
 
 			loader::texture::SDL2 texture_loader;
-			texture_loader.SetTransparentColor( types::Color::RGBA( 255, 0, 255, 255 ) );
 
 			loader::sound::SDL2 sound_loader;
 
@@ -254,23 +253,6 @@ int main( const int argc, const char* argv[] ) {
 
 			// game entry point
 			base::Task* task = nullptr;
-#ifdef DEBUG
-			if ( config.HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
-				NEWV( state, game::State ); // TODO: initialize settings randomly
-				NEW( task, task::game::Game, state, 0, UH() {
-					g_engine->ShutDown();
-				} );
-			}
-			else
-#endif
-			if ( config.HasLaunchFlag( config::Config::LF_SKIPINTRO ) ) {
-				NEW( task, task::mainmenu::MainMenu );
-			}
-			else {
-				NEW( task, task::intro::Intro );
-			}
-
-			scheduler.AddTask( task );
 
 			engine::Engine engine(
 				&config,
@@ -287,6 +269,42 @@ int main( const int argc, const char* argv[] ) {
 				&ui,
 				&game
 			);
+
+#ifdef DEBUG
+			if ( config.HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
+				NEWV( state, game::State ); // TODO: initialize settings randomly
+				state->m_settings.global.game_rules.Initialize();
+				state->InitBindings();
+				state->Configure();
+				const auto& rules = state->m_settings.global.game_rules;
+				NEWV(
+					player, ::game::Player,
+					rules,
+					"Player",
+					::game::Player::PR_HOST,
+					::game::Player::RANDOM_FACTION,
+					rules.GetDefaultDifficultyLevel()
+				);
+				state->AddPlayer( player );
+				state->AddCIDSlot( 0, 0 );
+				state->m_slots.Resize( 1 );
+				auto& slot = state->m_slots.GetSlot( 0 );
+				slot.SetPlayer( player, 0, "" );
+				slot.SetLinkedGSID( state->m_settings.local.account.GetGSID() );
+				NEW( task, task::game::Game, state, 0, UH() {
+					g_engine->ShutDown();
+				} );
+			}
+			else
+#endif
+			if ( config.HasLaunchFlag( config::Config::LF_SKIPINTRO ) ) {
+				NEW( task, task::mainmenu::MainMenu );
+			}
+			else {
+				NEW( task, task::intro::Intro );
+			}
+
+			scheduler.AddTask( task );
 
 			result = engine.Run();
 		}

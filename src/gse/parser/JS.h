@@ -13,6 +13,7 @@
 #include "gse/Value.h"
 #include "gse/type/Bool.h"
 #include "gse/type/Null.h"
+#include "gse/type/Undefined.h"
 
 namespace gse {
 namespace parser {
@@ -33,18 +34,17 @@ private:
 	const program::Control* GetControl( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 	const program::Conditional* GetConditional( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 	const program::Statement* GetStatement( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
-	const program::Operand* GetExpressionOrOperand( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, bool is_scope_expected = false );
-	const program::Expression* GetExpression( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, const bool is_scope_expected = false );
+	const program::Operand* GetExpressionOrOperand( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
+	const program::Expression* GetExpression( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 	const program::Operand* GetOperand( const Identifier* element, program::Variable::variable_hints_t* next_var_hints = nullptr );
 	const program::Operator* GetOperator( const Operator* element );
 	const program::Array* GetArray( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 	const program::Object* GetObject( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 
 	const std::string CHARS_WHITESPACE = CHARS_EOLN + "	 ";
-	const std::string CHARS_NAMES = CHARS_LETTERS + "_";
-	const std::string CHARS_NAMES_C = CHARS_NAMES + CHARS_NUMBERS;
-	const std::string CHARS_OPERATORS = "=+-:<>*/.!&|:";
-	const std::string CHARS_OPERATORS_C = CHARS_OPERATORS + ".";
+	const std::string CHARS_NAMES = CHARS_LETTERS + "_#";
+	const std::string CHARS_NAMES_C = CHARS_LETTERS + CHARS_NUMBERS + "_";
+	const std::string CHARS_OPERATORS = "=+-:.<>*/!&|%";
 	const std::string CHARS_QUOTES = "'";
 	const std::string CHARS_DELIMITERS = ";,{}()[]";
 
@@ -59,14 +59,37 @@ private:
 		BLOCK_SQUARE_BRACKETS,
 		BLOCK_CURLY_BRACKETS,
 	};
+	struct block_info_t {
+		Block::block_info_t BLOCK_ROUND_BRACKETS;
+		Block::block_info_t BLOCK_SQUARE_BRACKETS;
+		Block::block_info_t BLOCK_CURLY_BRACKETS;
+	} block_info = {
+		{
+			BLOCK_ROUND_BRACKETS,
+			'(',
+			')'
+		},
+		{
+			BLOCK_SQUARE_BRACKETS,
+			'[',
+			']'
+		},
+		{
+			BLOCK_CURLY_BRACKETS,
+			'{',
+			'}'
+		},
+	};
 
 	const std::unordered_set< std::string > KEYWORDS = {
 		"return",
 		"throw",
 		"let",
+		"const",
 		"true",
 		"false",
 		"null",
+		"undefined",
 	};
 
 	const std::unordered_map< std::string, Parser::Conditional::conditional_type_t > CONTROL_KEYWORDS = {
@@ -100,8 +123,12 @@ private:
 		{
 			{
 				"let",
-				program::Variable::VH_CREATE,
-			}
+				program::Variable::VH_CREATE_VAR,
+			},
+			{
+				"const",
+				program::Variable::VH_CREATE_CONST,
+			},
 		}
 	};
 
@@ -117,7 +144,11 @@ private:
 		{
 			"null",
 			VALUE( type::Null ),
-		}
+		},
+		{
+			"undefined",
+			VALUE( type::Undefined ),
+		},
 	};
 
 	const std::unordered_map< std::string, program::Operator::operator_type_t > OPERATOR_NAMES = {
@@ -445,7 +476,8 @@ private:
 		}
 	};
 
-	const source_elements_t::const_iterator GetBracketsEnd( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
+	const source_elements_t::const_iterator GetBracketsEnd( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) const;
+	const bool IsObject( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) const;
 
 #ifdef DEBUG
 	void LogElement( const std::string& prefix, const SourceElement* element ) const;

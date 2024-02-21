@@ -25,7 +25,8 @@ public:
 				"reason",
 				VALUE( type::String, exception.reason )
 			},
-		}
+		},
+		Object::CLASS_EXCEPTION
 	) {
 		type::Array::elements_t bt = {};
 		for ( const auto& it : backtrace ) {

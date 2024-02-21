@@ -19,7 +19,7 @@ Error::~Error() {
 }
 
 void Error::Show( const std::string& text, const ui_handler_t on_close ) {
-	ASSERT( !m_is_active, "error already visible" );
+	//ASSERT( !m_is_active, "error already visible" );
 	SetText( text );
 	m_on_close = on_close;
 

@@ -4,15 +4,19 @@
 
 namespace logger {
 
+std::atomic< bool > g_is_muted = false;
+
 void Stdout::Log( const std::string& text ) {
-	g_debug_stats._mutex.lock();
-	if ( !g_debug_stats._readonly ) { // don't spam from debug overlay
-		m_log_mutex.lock();
-		printf( "%s\n", text.c_str() );
-		fflush( stdout ); // we want to flush to have everything printed in case of crash
-		m_log_mutex.unlock();
+	if ( !g_is_muted ) {
+		g_debug_stats._mutex.lock();
+		if ( !g_debug_stats._readonly ) { // don't spam from debug overlay
+			m_log_mutex.lock();
+			printf( "%s\n", text.c_str() );
+			fflush( stdout ); // we want to flush to have everything printed in case of crash
+			m_log_mutex.unlock();
+		}
+		g_debug_stats._mutex.unlock();
 	}
-	g_debug_stats._mutex.unlock();
 }
 
 }

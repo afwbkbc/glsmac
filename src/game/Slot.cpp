@@ -1,6 +1,17 @@
 #include "Slot.h"
 
+#include "State.h"
+
+#include "gse/type/String.h"
+#include "gse/type/Int.h"
+
 namespace game {
+
+Slot::Slot( const size_t index, const State* state )
+	: m_index( index )
+	, m_state( state ) {
+
+}
 
 const Slot::slot_state_t Slot::GetState() const {
 	return m_slot_state;
@@ -24,6 +35,10 @@ void Slot::SetCloseAfterClear() {
 Player* Slot::GetPlayer() const {
 	ASSERT( m_slot_state == SS_PLAYER, "attempted to get player from non-player slot" );
 	return m_player_data.player;
+}
+
+const size_t Slot::GetIndex() const {
+	return m_index;
 }
 
 const network::cid_t Slot::GetCid() const {
@@ -126,7 +141,7 @@ void Slot::Unserialize( types::Buffer buf ) {
 	m_slot_state = (slot_state_t)buf.ReadInt();
 	if ( m_slot_state == SS_PLAYER ) {
 		if ( !m_player_data.player ) {
-			m_player_data.player = new Player( buf.ReadString() );
+			m_player_data.player = new Player( m_state->m_settings.global.game_rules, buf.ReadString() );
 			m_player_data.player->SetSlot( this );
 		}
 		else {
@@ -136,5 +151,30 @@ void Slot::Unserialize( types::Buffer buf ) {
 	}
 	m_linked_gsid = buf.ReadString();
 }
+
+WRAPIMPL_BEGIN( Slot, CLASS_PLAYER )
+	ASSERT_NOLOG( m_slot_state == SS_PLAYER, "only player slots can be wrapped for now" );
+	const auto* player = m_player_data.player;
+	WRAPIMPL_PROPS {
+		{
+			"id",
+			VALUE( gse::type::Int, m_player_data.cid )
+		},
+		{
+			"type",
+			VALUE( gse::type::String, "human" )
+		},
+		{
+			"name",
+			VALUE( gse::type::String, player->GetPlayerName() )
+		},
+		{
+			"faction",
+			player->GetFaction().Wrap()
+		},
+	};
+WRAPIMPL_END_PTR( Slot )
+
+UNWRAPIMPL_PTR( Slot )
 
 }

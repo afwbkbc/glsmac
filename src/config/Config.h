@@ -17,14 +17,15 @@ CLASS( Config, base::Module )
 	enum launch_flag_t : uint8_t {
 		LF_NONE = 0,
 		LF_BENCHMARK = 1 << 0,
-		LF_NOSOUND = 1 << 1,
-		LF_SKIPINTRO = 1 << 2,
-		LF_WINDOWED = 1 << 3,
-		LF_WINDOW_SIZE = 1 << 4
+		LF_SHOWFPS = 1 << 1,
+		LF_NOSOUND = 1 << 2,
+		LF_SKIPINTRO = 1 << 3,
+		LF_WINDOWED = 1 << 4,
+		LF_WINDOW_SIZE = 1 << 5
 	};
 
 #ifdef DEBUG
-	enum debug_flag_t : uint16_t {
+	enum debug_flag_t : uint32_t {
 		DF_NONE = 0,
 		DF_GDB = 1 << 0,
 		DF_MAPDUMP = 1 << 1,
@@ -41,7 +42,8 @@ CLASS( Config, base::Module )
 		DF_QUIET = 1 << 12,
 		DF_GSE_ONLY = 1 << 13,
 		DF_GSE_TESTS = 1 << 14,
-		DF_GSE_PROMPT_JS = 1 << 15,
+		DF_GSE_TESTS_SCRIPT = 1 << 15,
+		DF_GSE_PROMPT_JS = 1 << 16,
 	};
 #endif
 
@@ -69,6 +71,7 @@ CLASS( Config, base::Module )
 	const game::MapSettings::parameter_t GetQuickstartMapErosive() const;
 	const game::MapSettings::parameter_t GetQuickstartMapLifeforms() const;
 	const game::MapSettings::parameter_t GetQuickstartMapClouds() const;
+	const std::string& GetGSETestsScript() const;
 
 #endif
 
@@ -90,7 +93,7 @@ private:
 
 #ifdef DEBUG
 
-	uint16_t m_debug_flags = DF_NONE;
+	uint32_t m_debug_flags = DF_NONE;
 	util::Random::state_t m_quickstart_seed = {};
 	std::string m_quickstart_mapdump = "";
 	std::string m_quickstart_mapfile = "";
@@ -99,6 +102,8 @@ private:
 	game::MapSettings::parameter_t m_quickstart_map_erosive = game::MapSettings::MAP_EROSIVE_AVERAGE;
 	game::MapSettings::parameter_t m_quickstart_map_lifeforms = game::MapSettings::MAP_LIFEFORMS_AVERAGE;
 	game::MapSettings::parameter_t m_quickstart_map_clouds = game::MapSettings::MAP_CLOUDS_AVERAGE;
+
+	std::string m_gse_tests_script = "";
 
 #endif
 };

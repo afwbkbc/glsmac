@@ -17,10 +17,6 @@ Base::Base()
 	//
 }
 
-Base::~Base() {
-	//
-};
-
 const std::string Base::GetNamespace() const {
 	return "";
 }

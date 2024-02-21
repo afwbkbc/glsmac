@@ -11,6 +11,7 @@ namespace object {
 
 /* Extendable dropdown with selection */
 
+template< typename KEY_TYPE >
 CLASS( Dropdown, Panel )
 
 	enum dropdown_mode_t {
@@ -20,8 +21,8 @@ CLASS( Dropdown, Panel )
 
 	Dropdown( const std::string& class_name );
 
-	void SetChoices( const ChoiceList::choices_t& choices );
-	void SetValue( const ChoiceList::value_t value );
+	void SetChoices( const typename ChoiceList< KEY_TYPE >::choices_t& choices );
+	void SetValueByKey( const typename ChoiceList< KEY_TYPE >::value_t value );
 	void SetValue( const std::string& value );
 	void SetMode( const dropdown_mode_t mode );
 
@@ -48,13 +49,16 @@ private:
 	struct {
 		Label* value = nullptr;
 		SimpleButton* open_close = nullptr;
-		ChoiceList* choices = nullptr;
+		ChoiceList< KEY_TYPE >* choices = nullptr;
 	} m_elements;
 
-	ChoiceList::choices_t m_choices = {};
+	typename ChoiceList< KEY_TYPE >::choices_t m_choices = {};
 	std::string m_value = "";
 
 };
+
+typedef Dropdown< size_t > NumDropdown;
+typedef Dropdown< std::string > AssocDropdown;
 
 }
 }
