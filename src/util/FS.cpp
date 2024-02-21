@@ -219,7 +219,7 @@ std::vector< std::string > FS::ListDirectory( std::string directory, const bool 
 	ASSERT_NOLOG( !directory.empty(), "directory is empty" );
 #else
 
-std::vector< std::string > FS::ListDirectory( const std::string& directory, const bool return_absolute_paths ) {
+std::vector< std::string > FS::ListDirectory( const std::string& directory, const bool return_absolute_paths, const char path_separator ) {
 #endif
 	std::vector< std::string > result = {};
 

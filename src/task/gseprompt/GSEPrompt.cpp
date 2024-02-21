@@ -2,6 +2,8 @@
 
 #ifdef _WIN32
 #include <io.h>
+#define isatty _isatty
+#define fileno _fileno
 #else
 #include <unistd.h>
 #endif
@@ -17,7 +19,7 @@ namespace gseprompt {
 
 GSEPrompt::GSEPrompt( const std::string& syntax )
 	: m_syntax( syntax )
-	, m_is_tty( _isatty( _fileno( stdin ) ) ) {
+	, m_is_tty( isatty( fileno( stdin ) ) ) {
 
 }
 
