@@ -46,6 +46,12 @@ static const std::unordered_map< std::string, TextureLoader::transparent_colors_
 		}
 	},
 	{
+		"console_x.pcx",
+		{
+			s_tc_pink,
+		}
+	},
+	{
 		"console2_A.pcx",
 		{
 			s_tc_darkpurple,

@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #include "util/FS.h"
+#include "gse/GSE.h"
 #include "gse/Bindings.h"
 #include "gse/GlobalContext.h"
 #include "gse/type/Callable.h"
@@ -51,13 +52,12 @@ private:
 
 	State* m_state = nullptr;
 
-	const std::string m_entry_script = util::FS::GeneratePath(
-		{
+	const std::string m_entry_script = util::FS::GeneratePath( {
 			"gse", // directory is expected to be in working dir
 			"default", // only 'default' mod for now
 			"main" // script name (extension is appended automatically)
-		}
-	);
+	}, gse::GSE::PATH_SEPARATOR );
+
 	gse::GSE* m_gse = nullptr;
 	gse::GlobalContext* m_gse_context = nullptr;
 };
