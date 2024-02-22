@@ -753,7 +753,8 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 			case UIEvent::EV_MOUSE_MOVE: {
 				if ( HasEventContext( EC_MOUSEMOVE ) ) {
 					if (
-						!event->IsMouseOverHappened() &&
+						!event->m_data.mouse.is_outside_parent &&
+							!event->IsMouseOverHappened() &&
 							IsPointInside( event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y )
 						) {
 						event->SetMouseOverHappened();
@@ -789,11 +790,13 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 				break;
 			}
 			case UIEvent::EV_MOUSE_DOWN: {
-				if ( m_is_focusable && !m_is_focused ) {
-					g_engine->GetUI()->FocusObject( this );
-				}
-				if ( HasEventContext( EC_MOUSE ) ) {
-					is_processed = OnMouseDown( &event->m_data );
+				if ( !event->m_data.mouse.is_outside_parent ) {
+					if ( m_is_focusable && !m_is_focused ) {
+						g_engine->GetUI()->FocusObject( this );
+					}
+					if ( HasEventContext( EC_MOUSE ) ) {
+						is_processed = OnMouseDown( &event->m_data );
+					}
 				}
 				break;
 			}

@@ -24,8 +24,10 @@ void UnitsList::Destroy() {
 
 void UnitsList::ClearUnits() {
 	if ( m_body ) {
-		for ( const auto& item : m_items ) {
-			m_body->RemoveChild( item );
+		m_unit_preview->HideUnitPreview();
+		m_selected_unit = nullptr;
+		for ( const auto& it : m_items ) {
+			m_body->RemoveChild( it.second );
 		}
 		m_items.clear();
 		RemoveChild( m_body );
@@ -36,16 +38,58 @@ void UnitsList::ClearUnits() {
 void UnitsList::ListUnits( const std::vector< unit_data_t >& units ) {
 	ClearUnits();
 	NEW( m_body, ::ui::object::ScrollView, ::ui::object::ScrollView::ST_HORIZONTAL_INLINE );
-	m_body->SetSticky( false );
 	m_body->SetScrollSpeed( 70 );
 	AddChild( m_body );
-	size_t left = 0;
+	float left = 0;
+	const unit_data_t* selected_unit = nullptr;
 	for ( const auto& unit : units ) {
-		NEWV( item, UnitsListItem, m_game, m_unit_preview, unit );
+		NEWV( item, UnitsListItem, m_game, this, unit );
 		item->SetLeft( left );
 		m_body->AddChild( item );
-		m_items.push_back( item );
+		if ( m_items.empty() ) {
+			// auto-select first unit
+			selected_unit = &item->GetUnit();
+		}
+		m_items.insert(
+			{
+				unit.id,
+				item
+			}
+		);
 		left += item->GetWidth();
+	}
+	if ( selected_unit ) {
+		SelectUnit( selected_unit );
+		m_unit_preview->PreviewUnit( selected_unit );
+	}
+}
+
+void UnitsList::PreviewUnit( const unit_data_t& unit ) const {
+	m_unit_preview->PreviewUnit( &unit );
+}
+
+void UnitsList::HideUnitPreview( const unit_data_t& unit ) const {
+	if ( &unit != m_selected_unit ) {
+		if ( m_selected_unit ) {
+			m_unit_preview->PreviewUnit( m_selected_unit );
+		}
+		else {
+			m_unit_preview->HideUnitPreview( &unit );
+		}
+	}
+}
+
+void UnitsList::SelectUnit( const unit_data_t* unit ) {
+	if ( unit != m_selected_unit ) {
+		m_selected_unit = unit;
+		for ( auto& it : m_items ) {
+			if ( it.first == unit->id ) {
+				it.second->SelectUnit();
+			}
+			else {
+				it.second->DeselectUnit();
+			}
+		}
 	}
 }
 

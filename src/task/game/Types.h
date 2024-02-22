@@ -19,6 +19,7 @@ struct meshtex_t {
 };
 
 struct unit_data_t {
+	size_t id;
 	meshtex_t unit;
 	meshtex_t badge;
 	meshtex_t healthbar;

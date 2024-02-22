@@ -176,6 +176,12 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 
 	bool is_processed = false;
 	if ( event->m_flags & UIEvent::EF_MOUSE ) {
+		const bool is_outside =
+			event->m_data.mouse.is_outside_parent || ( // check parent state, if any
+				m_overflow == OVERFLOW_HIDDEN && // only useful for overflow-hidden elements
+					!IsPointInside( event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y )
+			);
+
 		// process in reverse order because later children overlap earlier ones
 		const auto child_objects = m_child_objects;
 		for ( auto c = child_objects.rbegin() ; c != child_objects.rend() ; c++ ) {
@@ -187,6 +193,7 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 					)
 				) {
 				NEWV( child_event, UIEvent, event );
+				child_event->m_data.mouse.is_outside_parent = is_outside;
 				( *c )->ProcessEvent( child_event );
 				is_processed = child_event->IsProcessed();
 				if ( child_event->IsMouseOverHappened() ) {

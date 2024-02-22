@@ -10,15 +10,23 @@ namespace task {
 namespace game {
 namespace ui {
 
+class UnitsList;
+
 CLASS( UnitsListItem, Section )
 
-	UnitsListItem( Game* game, UnitPreview* unit_preview, const unit_data_t& unit_data );
+	UnitsListItem( Game* game, UnitsList* units_list, const unit_data_t& unit_data );
 
 	void Create() override;
 	void Destroy() override;
 
 private:
-	UnitPreview* m_unit_preview;
+	friend class UnitsList;
+	void SelectUnit();
+	void DeselectUnit();
+	const unit_data_t& GetUnit() const;
+
+private:
+	UnitsList* m_units_list;
 	const unit_data_t m_unit_data;
 
 	struct sprite_t {
@@ -32,6 +40,7 @@ private:
 	} m_sprites;
 	::ui::object::Label* m_label = nullptr;
 
+	::ui::object::Panel* m_selection_frame = nullptr;
 };
 
 }

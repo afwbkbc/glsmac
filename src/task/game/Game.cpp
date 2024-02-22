@@ -2195,6 +2195,7 @@ tile_data_t Game::GetTileAtCoordsResult() {
 
 				result.units.push_back(
 					{
+						unit_state.unit_id,
 						f_meshtex( sprite_state.instanced_sprite ),
 						f_meshtex( unit_state.render.unit.badge.def->instanced_sprite ),
 						f_meshtex( unit_state.render.unit.badge.healthbar.def->instanced_sprite ),

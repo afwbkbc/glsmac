@@ -24,12 +24,16 @@ CLASS( UnitsList, BBSection )
 	void ListUnits( const std::vector< unit_data_t >& units );
 
 private:
+	friend class UnitsListItem;
+	void PreviewUnit( const unit_data_t& unit ) const;
+	void HideUnitPreview( const unit_data_t& unit ) const;
+	void SelectUnit( const unit_data_t* unit );
 
+private:
 	::ui::object::ScrollView* m_body = nullptr;
-
 	UnitPreview* m_unit_preview;
-	std::vector< UnitsListItem* > m_items = {};
-
+	std::unordered_map< size_t, UnitsListItem* > m_items = {};
+	const unit_data_t* m_selected_unit = nullptr;
 };
 
 }

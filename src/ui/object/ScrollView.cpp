@@ -27,6 +27,7 @@ void ScrollView::Create() {
 		m_viewport->SetRight( 17 );
 	}
 	m_viewport->SetOverflow( UIObject::OVERFLOW_HIDDEN );
+
 	Panel::AddChild( m_viewport );
 
 	Vec2< float > body_size = {
@@ -355,8 +356,8 @@ void ScrollView::SetScroll( vertex_t px, const bool force ) {
 		m_scroll = px;
 		const coord_box_t limits = GetScrollLimits();
 		if ( m_body ) {
-			if ( m_scroll.x > limits.right ) {
-				m_scroll.x = limits.right;
+			if ( m_scroll.x > limits.right + 1 ) { // TODO: why +1 is needed?
+				m_scroll.x = limits.right + 1;
 			}
 			if ( m_scroll.x < limits.left ) {
 				m_scroll.x = limits.left;
