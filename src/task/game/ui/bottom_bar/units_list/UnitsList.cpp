@@ -37,7 +37,7 @@ void UnitsList::ListUnits( const std::vector< unit_data_t >& units ) {
 	ClearUnits();
 	NEW( m_body, ::ui::object::ScrollView, ::ui::object::ScrollView::ST_HORIZONTAL_INLINE );
 	m_body->SetSticky( false );
-	m_body->SetScrollSpeed( 32 );
+	m_body->SetScrollSpeed( 70 );
 	AddChild( m_body );
 	size_t left = 0;
 	for ( const auto& unit : units ) {

@@ -55,10 +55,10 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 			const bool is_ready = slot->HasPlayerFlag( ::game::Slot::PF_READY );
 
 			// update 'ready' button to match
-			if ( is_ready && !m_ready_button->HasStyleModifier( Style::M_SELECTED ) ) {
+			if ( is_ready ) {
 				m_ready_button->AddStyleModifier( Style::M_SELECTED );
 			}
-			else if ( !is_ready && m_ready_button->HasStyleModifier( Style::M_SELECTED ) ) {
+			else if ( !is_ready ) {
 				m_ready_button->RemoveStyleModifier( Style::M_SELECTED );
 			}
 

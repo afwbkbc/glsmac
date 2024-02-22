@@ -188,12 +188,10 @@ void MenuBlock::SetActiveItem( const size_t index ) {
 		ASSERT( index < m_menu_items.size(), "invalid item index" );
 		auto* item = m_menu_items[ index ];
 		if ( item != m_selected_item ) {
-			if ( m_selected_item && m_selected_item->HasStyleModifier( Style::M_SELECTED ) ) {
+			if ( m_selected_item ) {
 				m_selected_item->RemoveStyleModifier( Style::M_SELECTED );
 			}
-			if ( !item->HasStyleModifier( Style::M_SELECTED ) ) {
-				item->AddStyleModifier( Style::M_SELECTED );
-			}
+			item->AddStyleModifier( Style::M_SELECTED );
 			m_selected_item = item;
 			m_selected_item_index = index;
 			const auto& i = m_items[ m_items.size() - index - 1 ];

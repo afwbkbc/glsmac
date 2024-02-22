@@ -7,6 +7,7 @@
 #include "util/Scroller.h"
 
 #include "Scrollbar.h"
+#include "SimpleButton.h"
 
 namespace ui {
 namespace object {
@@ -51,7 +52,14 @@ private:
 	size_t m_scroll_speed = 17;
 	bool m_is_sticky = true;
 
-	Scrollbar* m_scrollbar = nullptr;
+	struct {
+		Scrollbar* scrollbar = nullptr;
+	} m_vertical;
+
+	struct {
+		SimpleButton* left_arrow = nullptr;
+		SimpleButton* right_arrow = nullptr;
+	} m_horizontal_inline;
 
 	vertex_t m_internal_size = {
 		0,
@@ -72,6 +80,13 @@ private:
 	util::Scroller< float > m_scroller;
 	bool m_need_stickyness = false;
 
+	enum scroll_direction_t {
+		SD_NONE,
+		SD_LEFT,
+		SD_RIGHT
+	};
+	scroll_direction_t m_scroll_direction = SD_NONE;
+
 	UIContainer* m_viewport = nullptr;
 	Panel* m_body = nullptr;
 
@@ -89,7 +104,6 @@ private:
 
 	void AddChildToBody( UIObject* child );
 	void RemoveChildFromBody( UIObject* child );
-	void FixScrollX();
 	void FixScrollY();
 
 };

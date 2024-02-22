@@ -304,9 +304,7 @@ void UIContainer::AddStyleModifier( const Style::modifier_t modifier ) {
 	UIObject::AddStyleModifier( modifier );
 
 	for ( auto& c : m_child_objects ) {
-		if ( !c->HasStyleModifier( modifier ) ) {
-			c->AddStyleModifier( modifier );
-		}
+		c->AddStyleModifier( modifier );
 	}
 }
 
@@ -314,9 +312,7 @@ void UIContainer::RemoveStyleModifier( const Style::modifier_t modifier ) {
 	UIObject::RemoveStyleModifier( modifier );
 
 	for ( auto& c : m_child_objects ) {
-		if ( c->HasStyleModifier( modifier ) ) {
-			c->RemoveStyleModifier( modifier );
-		}
+		c->RemoveStyleModifier( modifier );
 	}
 }
 

@@ -71,15 +71,11 @@ void BottomBar::Create() {
 	m_buttons.menu->On(
 		UIEvent::EV_BUTTON_CLICK, EH( this ) {
 			if ( m_side_menus.left->IsVisible() ) {
-				if ( m_buttons.menu->HasStyleModifier( Style::M_SELECTED ) ) {
-					m_buttons.menu->RemoveStyleModifier( Style::M_SELECTED );
-				}
+				m_buttons.menu->RemoveStyleModifier( Style::M_SELECTED );
 				m_side_menus.left->Hide();
 			}
 			else {
-				if ( !m_buttons.menu->HasStyleModifier( Style::M_SELECTED ) ) {
-					m_buttons.menu->AddStyleModifier( Style::M_SELECTED );
-				}
+				m_buttons.menu->AddStyleModifier( Style::M_SELECTED );
 				m_side_menus.left->Show();
 			}
 			return true;
@@ -93,15 +89,11 @@ void BottomBar::Create() {
 	m_buttons.commlink->On(
 		UIEvent::EV_BUTTON_CLICK, EH( this ) {
 			if ( m_side_menus.right->IsVisible() ) {
-				if ( m_buttons.commlink->HasStyleModifier( Style::M_SELECTED ) ) {
-					m_buttons.commlink->RemoveStyleModifier( Style::M_SELECTED );
-				}
+				m_buttons.commlink->RemoveStyleModifier( Style::M_SELECTED );
 				m_side_menus.right->Hide();
 			}
 			else {
-				if ( !m_buttons.commlink->HasStyleModifier( Style::M_SELECTED ) ) {
-					m_buttons.commlink->AddStyleModifier( Style::M_SELECTED );
-				}
+				m_buttons.commlink->AddStyleModifier( Style::M_SELECTED );
 				m_side_menus.right->Show();
 			}
 			return true;

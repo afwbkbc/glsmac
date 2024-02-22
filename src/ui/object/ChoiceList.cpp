@@ -265,13 +265,11 @@ void ChoiceList< KEY_TYPE >::SetActiveButton( Button* button ) {
 	auto it = m_button_values.find( button );
 	ASSERT( it != m_button_values.end(), "button not in buttons list" );
 	for ( auto& b : m_buttons ) {
-		if ( b.second != button && b.second->HasStyleModifier( Style::M_SELECTED ) ) {
+		if ( b.second != button ) {
 			b.second->RemoveStyleModifier( Style::M_SELECTED );
 		}
 	}
-	if ( !button->HasStyleModifier( Style::M_SELECTED ) ) {
-		button->AddStyleModifier( Style::M_SELECTED );
-	}
+	button->AddStyleModifier( Style::M_SELECTED );
 	ASSERT( m_labels.find( it->second ) != m_labels.end(), "unknown button value" );
 	m_value = it->second;
 }

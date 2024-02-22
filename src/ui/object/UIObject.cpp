@@ -916,21 +916,23 @@ void UIObject::ApplyStyleIfNotLoaded() {
 }
 
 void UIObject::AddStyleModifier( const Style::modifier_t modifier ) {
-	ASSERT( !( m_style_modifiers & modifier ), "style modifier " + std::to_string( modifier ) + " already added" );
-	m_style_modifiers |= modifier;
-	m_is_applying_style = true;
-	ApplyStyleIfNeeded();
-	m_is_applying_style = false;
-	Redraw();
+	if ( !( m_style_modifiers & modifier ) ) {
+		m_style_modifiers |= modifier;
+		m_is_applying_style = true;
+		ApplyStyleIfNeeded();
+		m_is_applying_style = false;
+		Redraw();
+	}
 }
 
 void UIObject::RemoveStyleModifier( const Style::modifier_t modifier ) {
-	ASSERT( ( m_style_modifiers & modifier ), "style modifier " + std::to_string( modifier ) + " already removed" );
-	m_style_modifiers &= ~modifier;
-	m_is_applying_style = true;
-	ApplyStyleIfNeeded();
-	m_is_applying_style = false;
-	Redraw();
+	if ( m_style_modifiers & modifier ) {
+		m_style_modifiers &= ~modifier;
+		m_is_applying_style = true;
+		ApplyStyleIfNeeded();
+		m_is_applying_style = false;
+		Redraw();
+	}
 }
 
 const bool UIObject::HasStyleModifier( const Style::modifier_t modifier ) const {
