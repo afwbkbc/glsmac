@@ -1,8 +1,8 @@
 #pragma once
 
-#include <stdexcept>
 #include <vector>
 
+#include "types/Exception.h"
 #include "program/Element.h"
 
 namespace gse {
@@ -22,16 +22,17 @@ struct exception_ec_t {
 	const std::string CONVERSION_ERROR;
 	const std::string GAME_ERROR;
 	const std::string MAP_ERROR;
+	const std::string INVALID_EVENT;
 };
 extern const exception_ec_t EC;
 
-class Exception : public std::runtime_error {
+class Exception : public types::Exception {
 public:
 
 	typedef std::vector< std::string > backtrace_t;
 
 	Exception( const std::string& class_name, const std::string& reason, gse::Context* context, const si_t& si )
-		: std::runtime_error( "[" + class_name + "] " + reason )
+		: types::Exception( class_name, reason )
 		, class_name( class_name )
 		, reason( reason )
 		, context( context )

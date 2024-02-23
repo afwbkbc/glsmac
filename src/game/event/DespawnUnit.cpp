@@ -7,10 +7,17 @@
 namespace game {
 namespace event {
 
-DespawnUnit::DespawnUnit( const size_t unit_id )
-	: Event( ET_UNIT_DESPAWN )
+DespawnUnit::DespawnUnit( const size_t initiator_slot, const size_t unit_id )
+	: Event( initiator_slot, ET_UNIT_DESPAWN )
 	, m_unit_id( unit_id ) {
 	//
+}
+
+const std::string* DespawnUnit::Validate( const Game* game ) const {
+	if ( m_initiator_slot != 0 ) {
+		return new std::string( "Only master is allowed to despawn units" );
+	}
+	return nullptr;
 }
 
 const gse::Value DespawnUnit::Apply( game::Game* game ) const {
@@ -18,13 +25,19 @@ const gse::Value DespawnUnit::Apply( game::Game* game ) const {
 	return VALUE( gse::type::Undefined );
 }
 
+TS_BEGIN( DespawnUnit )
+		TS_FUNC_BEGIN( "DespawnUnit" ) +
+			TS_FUNC_ARG_NUM( "unit_id", m_unit_id ) +
+		TS_FUNC_END()
+TS_END()
+
 void DespawnUnit::Serialize( types::Buffer& buf, const DespawnUnit* event ) {
 	buf.WriteInt( event->m_unit_id );
 }
 
-DespawnUnit* DespawnUnit::Unserialize( types::Buffer& buf ) {
+DespawnUnit* DespawnUnit::Unserialize( types::Buffer& buf, const size_t initiator_slot ) {
 	const auto unit_id = buf.ReadInt();
-	return new DespawnUnit( unit_id );
+	return new DespawnUnit( initiator_slot, unit_id );
 }
 
 }

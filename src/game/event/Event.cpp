@@ -7,13 +7,15 @@
 namespace game {
 namespace event {
 
-Event::Event( const event_type_t type )
-	: m_type( type ) {
+Event::Event( const size_t initiator_slot, const event_type_t type )
+	: m_initiator_slot( initiator_slot )
+	, m_type( type ) {
 	//
 }
 
 const types::Buffer Event::Serialize( const Event* event ) {
 	types::Buffer buf;
+	buf.WriteInt( event->m_initiator_slot );
 	buf.WriteInt( event->m_type );
 	switch ( event->m_type ) {
 		case ET_UNIT_DEFINE: {
@@ -35,20 +37,29 @@ const types::Buffer Event::Serialize( const Event* event ) {
 }
 
 Event* Event::Unserialize( types::Buffer& buf ) {
+	const auto initiator_slot = buf.ReadInt();
 	const auto type = buf.ReadInt();
+	Event* result = nullptr;
 	switch ( type ) {
-		case ET_UNIT_DEFINE:
-			return DefineUnit::Unserialize( buf );
-		case ET_UNIT_SPAWN:
-			return SpawnUnit::Unserialize( buf );
-		case ET_UNIT_DESPAWN:
-			return DespawnUnit::Unserialize( buf );
+		case ET_UNIT_DEFINE: {
+			result = DefineUnit::Unserialize( buf, initiator_slot );
+			break;
+		}
+		case ET_UNIT_SPAWN: {
+			result = SpawnUnit::Unserialize( buf, initiator_slot );
+			break;
+		}
+		case ET_UNIT_DESPAWN: {
+			result = DespawnUnit::Unserialize( buf, initiator_slot );
+			break;
+		}
 		default:
 			THROW( "unknown event type on read: " + std::to_string( type ) );
 	}
+	return result;
 }
 
-const types::Buffer Event::SerializeMultiple( const std::vector< const Event* >& events ) {
+const types::Buffer Event::SerializeMultiple( const std::vector< Event* >& events ) {
 	types::Buffer buf;
 	buf.WriteInt( events.size() );
 	for ( const auto& event : events ) {
@@ -58,7 +69,7 @@ const types::Buffer Event::SerializeMultiple( const std::vector< const Event* >&
 	return buf;
 }
 
-void Event::UnserializeMultiple( types::Buffer& buf, std::vector< const Event* >& events_out ) {
+void Event::UnserializeMultiple( types::Buffer& buf, std::vector< Event* >& events_out ) {
 	const auto count = buf.ReadInt();
 	for ( auto i = 0 ; i < count ; i++ ) {
 		auto event_buf = types::Buffer( buf.ReadString() );

@@ -205,6 +205,11 @@ struct MT_Response {
 
 typedef base::MTModule< MT_Request, MT_Response > MTModule;
 
+class InvalidEvent : public Exception {
+public:
+	InvalidEvent( const std::string& reason, const event::Event* event );
+};
+
 CLASS( Game, MTModule )
 
 	// returns success as soon as this thread is ready (not busy with previous requests)
@@ -249,6 +254,7 @@ CLASS( Game, MTModule )
 	map::Map* GetMap() const;
 	State* GetState() const;
 	const Player* GetPlayer() const;
+	const size_t GetInitiatorSlot() const;
 
 protected:
 
@@ -262,14 +268,15 @@ public:
 	void Quit( const std::string& reason );
 	void OnGSEError( gse::Exception& e );
 	const unit::Def* GetUnitDef( const std::string& name ) const;
-	const gse::Value AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& call_si );
+	const gse::Value AddGameEvent( event::Event* event, gse::Context* ctx, const gse::si_t& call_si );
 	void DefineUnit( const unit::Def* def );
 	void SpawnUnit( unit::Unit* unit );
 	void DespawnUnit( const size_t unit_id );
 
 private:
 
-	const gse::Value ProcessGameEvent( const event::Event* event );
+	void ValidateGameEvent( event::Event* event ) const;
+	const gse::Value ProcessGameEvent( event::Event* event );
 
 	std::unordered_map< std::string, const unit::Def* > m_unit_defs = {};
 	std::map< size_t, unit::Unit* > m_units = {};
@@ -309,7 +316,7 @@ private:
 	map::Map* m_old_map = nullptr; // to restore state, for example if loading of another map failed
 	map_editor::MapEditor* m_map_editor = nullptr;
 
-	std::vector< const game::event::Event* > m_unprocessed_events = {};
+	std::vector< game::event::Event* > m_unprocessed_events = {};
 	std::vector< unit::Unit* > m_unprocessed_units = {};
 
 	Turn* m_current_turn = nullptr;

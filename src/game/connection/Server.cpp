@@ -2,6 +2,8 @@
 
 using namespace network;
 
+#include "game/Game.h"
+
 namespace game {
 namespace connection {
 
@@ -312,25 +314,38 @@ void Server::ProcessEvent( const network::Event& event ) {
 					}
 					case Packet::PT_GAME_EVENTS: {
 						Log( "Got game events packet" );
-						if ( m_on_game_event ) {
-							auto buf = Buffer( packet.data.str );
-							std::vector< const game::event::Event* > game_events = {};
-							game::event::Event::UnserializeMultiple( buf, game_events );
-							for ( const auto& game_event : game_events ) {
+						ASSERT( m_on_game_event, "m_on_game_event is not set" );
+						auto buf = Buffer( packet.data.str );
+						std::vector< game::event::Event* > game_events = {};
+						game::event::Event::UnserializeMultiple( buf, game_events );
+						const auto slot = m_state->GetCidSlots().at( event.cid );
+						bool ok = true;
+						for ( const auto& game_event : game_events ) {
+							if ( game_event->m_initiator_slot != slot ) {
+								Log( "Event slot mismatch from " + std::to_string( event.cid ) + " ( " + std::to_string( game_event->m_initiator_slot ) + " != " + std::to_string( slot ) + " )" );
+								ok = false;
+								break;
+							}
+							try {
 								m_on_game_event( game_event );
 							}
+							catch ( const game::InvalidEvent& e ) {
+								Log( "Invalid event received from " + std::to_string( event.cid ) );
+								Log( e.what() );
+								ok = false;
+								break;
+							}
 						}
-						else {
-							Log( "WARNING: game event handler not set" );
-						}
-						// relay to other clients
-						Broadcast(
-							[ this, packet, event ]( const network::cid_t cid ) -> void {
-								if ( cid != event.cid ) { // don't send back
+						if ( ok ) {
+							Broadcast(
+								[ this, packet, event ]( const network::cid_t cid ) -> void {
 									SendGameEventsTo( packet.data.str, cid );
 								}
-							}
-						);
+							);
+						}
+						else {
+							Kick( event.cid, "Event validation failed" );
+						}
 						break;
 					}
 					default: {

@@ -26,6 +26,7 @@ public:
 	const std::string m_name;
 
 	virtual const types::Vec3 GetSpawnCoords( const float tile_x, const float tile_y, const map::TileState::tile_vertices_t& tile_coords ) const = 0;
+	virtual const std::string ToString( const std::string& prefix = "" ) const = 0;
 
 	static const types::Buffer Serialize( const Def* def );
 	static Def* Unserialize( types::Buffer& buf );

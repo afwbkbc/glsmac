@@ -59,7 +59,8 @@ BINDING_IMPL( units ) {
 							name,
 							new unit::SpriteRender( sprite_file, sprite_x, sprite_y, sprite_w, sprite_h, sprite_cx, sprite_cy, sprite_morale_based_xshift )
 						);
-						return GAME->AddGameEvent( new event::DefineUnit( def ), ctx, call_si );
+						auto* game = GAME;
+						return game->AddGameEvent( new event::DefineUnit( game->GetInitiatorSlot(), def ), ctx, call_si );
 					}
 					else {
 						ERROR( gse::EC.GAME_ERROR, "Unsupported render type: " + render_type );
@@ -80,7 +81,9 @@ BINDING_IMPL( units ) {
 				N_UNWRAP( tile, 2, map::Tile );
 				N_GETVALUE( morale, 3, Int );
 				N_GETVALUE( health, 4, Float );
-				return GAME->AddGameEvent( new event::SpawnUnit(
+				auto* game = GAME;
+				return game->AddGameEvent( new event::SpawnUnit(
+					game->GetInitiatorSlot(),
 					def_name,
 					owner->GetIndex(),
 					tile->coord.x,
@@ -95,7 +98,8 @@ BINDING_IMPL( units ) {
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
 				N_UNWRAP( unit, 0, unit::Unit );
-				return GAME->AddGameEvent( new event::DespawnUnit( unit->m_id ), ctx, call_si );
+				auto* game = GAME;
+				return game->AddGameEvent( new event::DespawnUnit( game->GetInitiatorSlot(), unit->m_id ), ctx, call_si );
 			})
 		},
 	};

@@ -3,7 +3,9 @@
 #ifdef _WIN32
 #include "env/Win32.h"
 #else
+
 #include "env/Posix.h"
+
 #endif
 
 #include <string>
@@ -18,6 +20,36 @@
 #else
 #include "env/Release.h"
 #endif
+
+// used in multiline ToString() implementations
+
+#define TS_DEF() const std::string ToString( const std::string& prefix ) const override;
+#define TS_BEGIN( _class ) const std::string _class::ToString( const std::string& prefix ) const { \
+    return (std::string)
+#define TS_END() }
+
+#define TS_OFFSET "    "
+
+#define TS_PREFIX prefix
+#define TS_PREFIX_NEXT TS_PREFIX + TS_OFFSET
+
+#define TS_ML_FIRST( _text ) _text + "\n"
+#define TS_ML_NEXT( _text ) TS_PREFIX_NEXT + _text + "\n"
+#define TS_ML_LAST( _text ) TS_PREFIX + _text
+
+#define TS_OBJ_BEGIN( _class ) TS_ML_FIRST( _class + "( {" )
+#define TS_OBJ_PROP( _key, _value ) TS_ML_NEXT( _key + ": " + _value )
+#define TS_OBJ_PROP_STR( _key, _value ) TS_OBJ_PROP( _key, "'" + _value + "'" )
+#define TS_OBJ_PROP_NUM( _key, _value ) TS_OBJ_PROP( _key, std::to_string( _value ) )
+#define TS_OBJ_END() TS_ML_LAST( "} )" )
+
+#define TS_FUNC_BEGIN( _funcname ) TS_ML_FIRST( _funcname + "( " )
+#define TS_FUNC_ARG( _name, _value ) TS_ML_NEXT( _name + " = " + _value )
+#define TS_FUNC_ARG_STR( _name, _value ) TS_ML_NEXT( _name + " = '" + _value + "'" )
+#define TS_FUNC_ARG_NUM( _name, _value ) TS_ML_NEXT( _name + " = " + std::to_string( _value ) )
+#define TS_FUNC_END() TS_ML_LAST( " )" );
+
+#define TS_OF( _what ) ( _what )->ToString( TS_PREFIX_NEXT )
 
 namespace base {
 

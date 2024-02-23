@@ -1,7 +1,7 @@
 #include "Game.h"
 
 #include "engine/Engine.h"
-
+#include "types/Exception.h"
 #include "util/FS.h"
 #include "types/Buffer.h"
 
@@ -11,6 +11,14 @@ using namespace game::connection;
 using namespace game::bindings;
 
 namespace game {
+
+InvalidEvent::InvalidEvent( const std::string& reason, const event::Event* event )
+	: Exception(
+	"InvalidEvent", (std::string)
+		"Event validation failed!\n" +
+		TS_OFFSET + "reason: '" + reason + "'\n" +
+		TS_OFFSET + "event: " + event->ToString( TS_OFFSET )
+) {}
 
 mt_id_t Game::MT_Ping() {
 	MT_Request request = {};
@@ -143,202 +151,220 @@ void Game::Stop() {
 void Game::Iterate() {
 	MTModule::Iterate();
 
-	if ( m_state ) {
-		m_state->Iterate();
-	}
+	try {
+		if ( m_state ) {
+			m_state->Iterate();
+		}
 
-	if ( m_game_state == GS_INITIALIZING ) {
+		if ( m_game_state == GS_INITIALIZING ) {
 
-		auto* ui = g_engine->GetUI();
+			auto* ui = g_engine->GetUI();
 
-		bool ready = true;
+			bool ready = true;
 
-		if ( m_state->IsMaster() ) {
-
+			if ( m_state->IsMaster() ) {
 #ifdef DEBUG
-			static std::string waiting_for_players_old = "";
-			std::string waiting_for_players = "";
+				static std::string waiting_for_players_old = "";
+				std::string waiting_for_players = "";
 #endif
-			for ( const auto& slot : m_state->m_slots.GetSlots() ) {
-				if ( slot.GetState() == Slot::SS_PLAYER && !slot.HasPlayerFlag( Slot::PF_MAP_DOWNLOADED ) ) {
-					ready = false;
+				for ( const auto& slot : m_state->m_slots.GetSlots() ) {
+					if ( slot.GetState() == Slot::SS_PLAYER && !slot.HasPlayerFlag( Slot::PF_MAP_DOWNLOADED ) ) {
+						ready = false;
 #ifdef DEBUG
-					waiting_for_players += " " + slot.GetPlayer()->GetPlayerName();
+						waiting_for_players += " " + slot.GetPlayer()->GetPlayerName();
 #else
-					break;
+						break;
 #endif
+					}
 				}
-			}
 
 #ifdef DEBUG
-			if ( waiting_for_players != waiting_for_players_old ) {
-				waiting_for_players_old = waiting_for_players;
-				if ( !ready ) {
-					Log( "Waiting for players:" + waiting_for_players );
-				}
-			}
-#endif
-		}
-		else {
-			// notify server of successful download and continue initialization
-			m_slot->SetPlayerFlag( Slot::PF_MAP_DOWNLOADED );
-			m_connection->UpdateSlot( m_slot_num, m_slot, true );
-		}
-
-		if ( ready ) {
-
-			auto ec = m_map->Initialize( m_init_cancel );
-			if ( !ec && m_init_cancel ) {
-				ec = map::Map::EC_ABORTED;
-			}
-
-			const auto& f_init_failed = [ this ]( const std::string& error_text ) {
-				// need to delete these here because they weren't passed to main thread
-				if ( m_map->m_textures.terrain ) {
-					DELETE( m_map->m_textures.terrain );
-					m_map->m_textures.terrain = nullptr;
-				}
-				if ( m_map->m_meshes.terrain ) {
-					DELETE( m_map->m_meshes.terrain );
-					m_map->m_meshes.terrain = nullptr;
-				}
-				if ( m_map->m_meshes.terrain_data ) {
-					DELETE( m_map->m_meshes.terrain_data );
-					m_map->m_meshes.terrain_data = nullptr;
-				}
-
-				ResetGame();
-				m_initialization_error = error_text;
-
-				if ( m_old_map ) {
-					Log( "Restoring old map state" );
-					DELETE( m_map );
-					m_map = m_old_map; // restore old state // TODO: test
-				}
-
-				if ( m_connection ) {
-					m_connection->Disconnect( "Failed to initialize game" );
-				}
-			};
-
-			if ( !ec ) {
-
-#ifdef DEBUG
-				const auto* config = g_engine->GetConfig();
-				// also handy to have dump of generated map
-				if (
-					!ec &&
-						config->HasDebugFlag( config::Config::DF_MAPDUMP ) &&
-						!config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) // no point saving if we just loaded it
-					) {
-					Log( (std::string)"Saving map dump to " + config->GetDebugPath() + map::s_consts.debug.lastdump_filename );
-					ui->SetLoaderText( "Saving dump", false );
-					util::FS::WriteFile( config->GetDebugPath() + map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
+				if ( waiting_for_players != waiting_for_players_old ) {
+					waiting_for_players_old = waiting_for_players;
+					if ( !ready ) {
+						Log( "Waiting for players:" + waiting_for_players );
+					}
 				}
 #endif
-
-				ASSERT( m_map, "map not set" );
-
-				NEW( m_response_map_data, response_map_data_t );
-
-				m_response_map_data->map_width = m_map->GetWidth();
-				m_response_map_data->map_height = m_map->GetHeight();
-
-				ASSERT( m_map->m_textures.terrain, "map terrain texture not generated" );
-				m_response_map_data->terrain_texture = m_map->m_textures.terrain;
-
-				ASSERT( m_map->m_meshes.terrain, "map terrain mesh not generated" );
-				m_response_map_data->terrain_mesh = m_map->m_meshes.terrain;
-
-				ASSERT( m_map->m_meshes.terrain_data, "map terrain data mesh not generated" );
-				m_response_map_data->terrain_data_mesh = m_map->m_meshes.terrain_data;
-
-				m_response_map_data->sprites.actors = &m_map->m_sprite_actors;
-				m_response_map_data->sprites.instances = &m_map->m_sprite_instances;
-
-				if ( m_old_map ) {
-					Log( "Destroying old map state" );
-					DELETE( m_old_map );
-					m_old_map = nullptr;
-				}
-
-				// notify server of successful initialization
-				m_slot->SetPlayerFlag( Slot::PF_GAME_INITIALIZED );
-				if ( m_connection ) {
-					m_connection->UpdateSlot( m_slot_num, m_slot, true );
-				}
-
-				// notify frontend
-				const auto& slots = m_state->m_slots.GetSlots();
-				auto* slot_defines = new Event::slot_defines_t();
-				for ( const auto& slot : slots ) {
-					if ( slot.GetState() == Slot::SS_OPEN || slot.GetState() == Slot::SS_CLOSED ) {
-						continue;
-					}
-					ASSERT( slot.GetState() == Slot::SS_PLAYER, "unknown slot state: " + std::to_string( slot.GetState() ) );
-					const auto* player = slot.GetPlayer();
-					ASSERT( player, "slot player not set" );
-					const auto& faction = player->GetFaction();
-					const auto& c = faction.m_colors.border.value;
-					slot_defines->push_back(
-						Event::slot_define_t{
-							slot.GetIndex(),
-							{
-								c.red,
-								c.green,
-								c.blue,
-								c.alpha
-							},
-							( faction.m_flags & rules::Faction::FF_PROGENITOR ) != 0
-						}
-					);
-				}
-				auto e = Event( Event::ET_SLOT_DEFINE );
-				e.data.slot_define.slotdefs = slot_defines;
-				AddEvent( e );
-
-				ASSERT( !m_current_turn, "turn is already initialized" );
-
-				try {
-					// start initial turn
-					NEW( m_current_turn, Turn, 0 );
-
-					// start main loop
-					m_game_state = GS_RUNNING;
-				}
-				catch ( gse::Exception& e ) {
-					Log( (std::string)"Initialization failed: " + e.ToStringAndCleanup() );
-					f_init_failed( e.what() );
-				}
-
-				if ( m_game_state == GS_RUNNING ) {
-
-					for ( auto& it : m_unprocessed_units ) {
-						SpawnUnit( it );
-					}
-					m_unprocessed_units.clear();
-					for ( auto& it : m_unprocessed_events ) {
-						ProcessGameEvent( it );
-					}
-					m_unprocessed_events.clear();
-
-					if ( m_state->IsMaster() ) {
-						g_engine->GetUI()->SetLoaderText( "Starting game...", false );
-						m_state->m_bindings->Call( Bindings::CS_ON_START );
-					}
-
-				}
 			}
 			else {
-				f_init_failed( map::Map::GetErrorString( ec ) );
+				// notify server of successful download and continue initialization
+				m_slot->SetPlayerFlag( Slot::PF_MAP_DOWNLOADED );
+				m_connection->UpdateSlot( m_slot_num, m_slot, true );
+			}
+
+			if ( ready ) {
+
+				auto ec = m_map->Initialize( m_init_cancel );
+				if ( !ec && m_init_cancel ) {
+					ec = map::Map::EC_ABORTED;
+				}
+
+				const auto& f_init_failed = [ this ]( const std::string& error_text ) {
+					// need to delete these here because they weren't passed to main thread
+					if ( m_map->m_textures.terrain ) {
+						DELETE( m_map->m_textures.terrain );
+						m_map->m_textures.terrain = nullptr;
+					}
+					if ( m_map->m_meshes.terrain ) {
+						DELETE( m_map->m_meshes.terrain );
+						m_map->m_meshes.terrain = nullptr;
+					}
+					if ( m_map->m_meshes.terrain_data ) {
+						DELETE( m_map->m_meshes.terrain_data );
+						m_map->m_meshes.terrain_data = nullptr;
+					}
+
+					ResetGame();
+					m_initialization_error = error_text;
+
+					if ( m_old_map ) {
+						Log( "Restoring old map state" );
+						DELETE( m_map );
+						m_map = m_old_map; // restore old state // TODO: test
+					}
+
+					if ( m_connection ) {
+						m_connection->Disconnect( "Failed to initialize game" );
+					}
+				};
+
+				if ( !ec ) {
+
+#ifdef DEBUG
+					const auto* config = g_engine->GetConfig();
+					// also handy to have dump of generated map
+					if (
+						!ec &&
+							config->HasDebugFlag( config::Config::DF_MAPDUMP ) &&
+							!config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) // no point saving if we just loaded it
+						) {
+						Log( (std::string)"Saving map dump to " + config->GetDebugPath() + map::s_consts.debug.lastdump_filename );
+						ui->SetLoaderText( "Saving dump", false );
+						util::FS::WriteFile( config->GetDebugPath() + map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
+					}
+#endif
+
+					ASSERT( m_map, "map not set" );
+
+					NEW( m_response_map_data, response_map_data_t );
+
+					m_response_map_data->map_width = m_map->GetWidth();
+					m_response_map_data->map_height = m_map->GetHeight();
+
+					ASSERT( m_map->m_textures.terrain, "map terrain texture not generated" );
+					m_response_map_data->terrain_texture = m_map->m_textures.terrain;
+
+					ASSERT( m_map->m_meshes.terrain, "map terrain mesh not generated" );
+					m_response_map_data->terrain_mesh = m_map->m_meshes.terrain;
+
+					ASSERT( m_map->m_meshes.terrain_data, "map terrain data mesh not generated" );
+					m_response_map_data->terrain_data_mesh = m_map->m_meshes.terrain_data;
+
+					m_response_map_data->sprites.actors = &m_map->m_sprite_actors;
+					m_response_map_data->sprites.instances = &m_map->m_sprite_instances;
+
+					if ( m_old_map ) {
+						Log( "Destroying old map state" );
+						DELETE( m_old_map );
+						m_old_map = nullptr;
+					}
+
+					// notify server of successful initialization
+					m_slot->SetPlayerFlag( Slot::PF_GAME_INITIALIZED );
+					if ( m_connection ) {
+						m_connection->UpdateSlot( m_slot_num, m_slot, true );
+					}
+
+					// notify frontend
+					const auto& slots = m_state->m_slots.GetSlots();
+					auto* slot_defines = new Event::slot_defines_t();
+					for ( const auto& slot : slots ) {
+						if ( slot.GetState() == Slot::SS_OPEN || slot.GetState() == Slot::SS_CLOSED ) {
+							continue;
+						}
+						ASSERT( slot.GetState() == Slot::SS_PLAYER, "unknown slot state: " + std::to_string( slot.GetState() ) );
+						const auto* player = slot.GetPlayer();
+						ASSERT( player, "slot player not set" );
+						const auto& faction = player->GetFaction();
+						const auto& c = faction.m_colors.border.value;
+						slot_defines->push_back(
+							Event::slot_define_t{
+								slot.GetIndex(),
+								{
+									c.red,
+									c.green,
+									c.blue,
+									c.alpha
+								},
+								( faction.m_flags & rules::Faction::FF_PROGENITOR ) != 0
+							}
+						);
+					}
+					auto e = Event( Event::ET_SLOT_DEFINE );
+					e.data.slot_define.slotdefs = slot_defines;
+					AddEvent( e );
+
+					ASSERT( !m_current_turn, "turn is already initialized" );
+
+					try {
+						// start initial turn
+						NEW( m_current_turn, Turn, 0 );
+
+						// start main loop
+						m_game_state = GS_RUNNING;
+					}
+					catch ( gse::Exception& e ) {
+						Log( (std::string)"Initialization failed: " + e.ToStringAndCleanup() );
+						f_init_failed( e.what() );
+					}
+
+					if ( m_game_state == GS_RUNNING ) {
+
+						for ( auto& it : m_unprocessed_units ) {
+							SpawnUnit( it );
+						}
+						m_unprocessed_units.clear();
+						for ( auto& it : m_unprocessed_events ) {
+							ASSERT( m_connection, "connection not set" );
+							try {
+								ValidateGameEvent( it );
+							}
+							catch ( const InvalidEvent& e ) {
+								for ( auto& it2 : m_unprocessed_events ) {
+									delete it2;
+								}
+								m_unprocessed_events.clear();
+								throw e;
+							}
+						}
+						for ( auto& it : m_unprocessed_events ) {
+							ProcessGameEvent( it );
+						}
+						m_unprocessed_events.clear();
+
+						if ( m_state->IsMaster() ) {
+							g_engine->GetUI()->SetLoaderText( "Starting game...", false );
+							m_state->m_bindings->Call( Bindings::CS_ON_START );
+						}
+
+					}
+				}
+				else {
+					f_init_failed( map::Map::GetErrorString( ec ) );
+				}
+			}
+		}
+		else if ( m_game_state == GS_RUNNING ) {
+			if ( !m_current_turn->GetId() ) {
+				// start first turn
+				NextTurn();
 			}
 		}
 	}
-	else if ( m_game_state == GS_RUNNING ) {
-		if ( !m_current_turn->GetId() ) {
-			// start first turn
-			NextTurn();
-		}
+	catch ( const InvalidEvent& e ) {
+		Log( (std::string)e.what() );
+		Quit( "Event validation error" ); // TODO: fix reason
 	}
 }
 
@@ -363,6 +389,10 @@ const Player* Game::GetPlayer() const {
 	else {
 		return m_state->m_slots.GetSlot( 0 ).GetPlayer();
 	}
+}
+
+const size_t Game::GetInitiatorSlot() const {
+	return GetPlayer()->GetSlot()->GetIndex();
 }
 
 const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE ) {
@@ -918,16 +948,15 @@ const unit::Def* Game::GetUnitDef( const std::string& name ) const {
 	}
 }
 
-const gse::Value Game::AddGameEvent( const event::Event* event, gse::Context* ctx, const gse::si_t& call_si ) {
+const gse::Value Game::AddGameEvent( event::Event* event, gse::Context* ctx, const gse::si_t& call_si ) {
+	ASSERT( event->m_initiator_slot == GetInitiatorSlot(), "initiator slot mismatch" );
 	if ( m_connection ) {
 		m_connection->SendGameEvent( event );
 	}
-	try {
-		return ProcessGameEvent( event );
+	if ( m_state->IsMaster() ) {
+		ProcessGameEvent( event );
 	}
-	catch ( std::runtime_error& err ) {
-		ERROR( gse::EC.GAME_ERROR, err.what() );
-	}
+	return VALUE( gse::type::Undefined );
 }
 
 void Game::DefineUnit( const unit::Def* def ) {
@@ -1025,8 +1054,27 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	delete unit;
 }
 
-const gse::Value Game::ProcessGameEvent( const event::Event* event ) {
+void Game::ValidateGameEvent( event::Event* event ) const {
+	ASSERT( !event->m_is_validated, "event is already validated" );
+	const auto* errmsg = event->Validate( this );
+	if ( errmsg ) {
+		InvalidEvent err( *errmsg, event );
+		delete errmsg;
+		delete event;
+		throw err;
+	}
+	event->m_is_validated = true;
+}
+
+const gse::Value Game::ProcessGameEvent( event::Event* event ) {
 	ASSERT( m_current_turn, "turn not initialized" );
+
+	if ( m_state->IsMaster() ) {
+		ValidateGameEvent( event );
+	}
+
+	ASSERT( event->m_is_validated, "event was not validated" );
+
 	m_current_turn->AddEvent( event );
 	return event->Apply( this );
 }
@@ -1199,13 +1247,20 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			AddEvent( e );
 		};
 
-		m_connection->m_on_game_event = [ this ]( const event::Event* event ) -> void {
+		m_connection->m_on_game_event = [ this ]( event::Event* event ) -> void {
+
+			if ( m_state->IsMaster() ) {
+				ASSERT( m_game_state == GS_RUNNING, "game is not running but received event" );
+			}
+
 			if ( m_game_state == GS_RUNNING ) {
+				ValidateGameEvent( event );
 				ProcessGameEvent( event );
 			}
 			else {
 				m_unprocessed_events.push_back( event );
 			}
+
 		};
 
 	}
