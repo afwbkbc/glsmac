@@ -30,6 +30,7 @@ struct unit_data_t {
 
 struct tile_data_t {
 	bool is_set = false;
+	::game::tile_query_purpose_t purpose = ::game::TQP_NONE;
 	Vec2< size_t > tile_position = {};
 	Vec3 coords = {};
 	::game::map::TileState::tile_vertices_t selection_coords = {};
@@ -38,6 +39,7 @@ struct tile_data_t {
 	std::vector< std::string > sprites = {};
 	bool scroll_adaptively = false;
 	std::vector< unit_data_t > units = {};
+	::game::tile_query_metadata_t metadata = {};
 };
 
 }

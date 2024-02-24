@@ -20,6 +20,7 @@ public:
 		ET_UNIT_DEFINE,
 		ET_UNIT_SPAWN,
 		ET_UNIT_DESPAWN,
+		ET_UNIT_MOVE
 	};
 	Event( const event_type_t type );
 	Event( const Event& other );
@@ -29,7 +30,6 @@ public:
 
 	struct slot_define_t {
 		size_t slot_index;
-		bool is_mine;
 		// TODO: name etc
 		struct {
 			float r;
@@ -81,6 +81,18 @@ public:
 		struct {
 			size_t unit_id;
 		} unit_despawn;
+		struct {
+			size_t unit_id;
+			struct {
+				size_t x;
+				size_t y;
+			} tile_coords;
+			struct {
+				float x;
+				float y;
+				float z;
+			} render_coords;
+		} unit_move;
 	} data;
 };
 

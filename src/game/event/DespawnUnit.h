@@ -20,7 +20,7 @@ private:
 	static DespawnUnit* Unserialize( types::Buffer& buf, const size_t initiator_slot );
 
 private:
-	size_t m_unit_id;
+	const size_t m_unit_id;
 };
 
 }

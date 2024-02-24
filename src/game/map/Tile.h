@@ -69,6 +69,21 @@ public:
 	Tile* SW = nullptr;
 	std::vector< Tile* > neighbours = {}; // for more convenient iteration, contains all neighbouring tiles
 
+	enum direction_t {
+		D_NONE,
+		D_W,
+		D_NW,
+		D_N,
+		D_NE,
+		D_E,
+		D_SE,
+		D_S,
+		D_SW
+	};
+	static const std::unordered_map< direction_t, std::string > s_direction_str;
+	static const std::string& GetDirectionString( const direction_t direction );
+	Tile* GetNeighbour( const direction_t direction );
+
 	// dynamic parameters, do not modify them manually
 	bool is_water_tile = false;
 
@@ -144,6 +159,8 @@ public:
 
 	// reset to empty state
 	void Clear();
+
+	const bool IsAdjactentTo( const Tile* other ) const;
 
 	const Buffer Serialize() const;
 	void Unserialize( Buffer data );

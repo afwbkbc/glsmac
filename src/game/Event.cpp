@@ -54,6 +54,12 @@ Event::Event( const Event& other )
 			data.unit_despawn.unit_id = other.data.unit_despawn.unit_id;
 			break;
 		}
+		case ET_UNIT_MOVE: {
+			data.unit_move.unit_id = other.data.unit_move.unit_id;
+			data.unit_move.tile_coords = other.data.unit_move.tile_coords;
+			data.unit_move.render_coords = other.data.unit_move.render_coords;
+			break;
+		}
 		default: {
 			//
 		}

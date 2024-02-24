@@ -46,6 +46,7 @@ enum op_t {
 	OP_EDIT_MAP,
 	OP_CHAT,
 	OP_GET_EVENTS,
+	OP_ADD_GAME_EVENT,
 #ifdef DEBUG
 	OP_SAVE_DUMP,
 	OP_LOAD_DUMP,
@@ -62,17 +63,17 @@ enum result_t {
 
 typedef std::vector< types::mesh::Render* > data_tile_meshes_t;
 
-enum tile_direction_t {
-	TD_NONE,
-	TD_W,
-	TD_NW,
-	TD_N,
-	TD_NE,
-	TD_E,
-	TD_SE,
-	TD_S,
-	TD_SW
+enum tile_query_purpose_t {
+	TQP_NONE,
+	TQP_TILE_SELECT,
+	TQP_UNIT_SELECT,
 };
+
+typedef union {
+	struct {
+		size_t unit_id;
+	} unit_move;
+} tile_query_metadata_t;
 
 struct MT_Request {
 	op_t op;
@@ -81,9 +82,11 @@ struct MT_Request {
 			State* state;
 		} init;
 		struct {
+			tile_query_purpose_t purpose;
 			size_t tile_x;
 			size_t tile_y;
-			tile_direction_t tile_direction;
+			map::Tile::direction_t tile_direction;
+			tile_query_metadata_t metadata;
 		} select_tile;
 		struct {
 			std::string* path;
@@ -103,6 +106,9 @@ struct MT_Request {
 			map_editor::MapEditor::brush_type_t brush;
 			map_editor::MapEditor::draw_mode_t draw_mode;
 		} edit_map;
+		struct {
+			std::string* serialized_game_event;
+		} add_game_event;
 	} data;
 };
 
@@ -168,12 +174,14 @@ struct MT_Response {
 	result_t result;
 	union {
 		struct {
+			size_t slot_index;
 		} init;
 		response_map_data_t* get_map_data;
 		struct {
 			const std::string* error_text;
 		} error;
 		struct {
+			tile_query_purpose_t purpose;
 			size_t tile_x;
 			size_t tile_y;
 			vec2_t coords;
@@ -186,6 +194,7 @@ struct MT_Response {
 			bool scroll_adaptively;
 			std::vector< std::string >* sprites;
 			std::vector< size_t >* unit_ids;
+			tile_query_metadata_t metadata;
 		} select_tile;
 		struct {
 			std::string* path;
@@ -228,7 +237,12 @@ CLASS( Game, MTModule )
 	mt_id_t MT_Reset();
 
 	// returns some data about tile
-	mt_id_t MT_SelectTile( const types::Vec2< size_t >& tile_coords, const tile_direction_t tile_direction = TD_NONE );
+	mt_id_t MT_SelectTile(
+		const tile_query_purpose_t tile_query_purpose,
+		const types::Vec2< size_t >& tile_coords,
+		const map::Tile::direction_t tile_direction = map::Tile::D_NONE,
+		const tile_query_metadata_t tile_query_metadata = {}
+	);
 
 	// saves current map into file
 	mt_id_t MT_SaveMap( const std::string& path );
@@ -236,8 +250,11 @@ CLASS( Game, MTModule )
 	// perform edit operation on map tile(s)
 	mt_id_t MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::MapEditor::tool_type_t tool, map_editor::MapEditor::brush_type_t brush, map_editor::MapEditor::draw_mode_t draw_mode );
 
-	// get all pending game events (will be cleared after)
+	// get all pending events (will be cleared after)
 	mt_id_t MT_GetEvents();
+
+	// send game event
+	mt_id_t MT_AddGameEvent( const event::Event* event );
 
 #ifdef DEBUG
 
@@ -267,16 +284,20 @@ public:
 	void Message( const std::string& text );
 	void Quit( const std::string& reason );
 	void OnGSEError( gse::Exception& e );
+	unit::Unit* GetUnit( const size_t id ) const;
 	const unit::Def* GetUnitDef( const std::string& name ) const;
-	const gse::Value AddGameEvent( event::Event* event, gse::Context* ctx, const gse::si_t& call_si );
+	void AddGameEvent( event::Event* event );
 	void DefineUnit( const unit::Def* def );
 	void SpawnUnit( unit::Unit* unit );
 	void DespawnUnit( const size_t unit_id );
+	void MoveUnit( unit::Unit* unit, map::Tile* dst_tile );
 
 private:
 
 	void ValidateGameEvent( event::Event* event ) const;
 	const gse::Value ProcessGameEvent( event::Event* event );
+
+	const types::Vec3 GetUnitRenderCoords( const unit::Unit* unit );
 
 	std::unordered_map< std::string, const unit::Def* > m_unit_defs = {};
 	std::map< size_t, unit::Unit* > m_units = {};

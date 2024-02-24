@@ -187,6 +187,11 @@ CLASS( Game, base::Task )
 
 private:
 
+	size_t m_slot_index = 0;
+
+	struct unit_state_t;
+	struct tile_state_t;
+
 	const std::string TERRAIN_SOURCE_PCX = "ter1.pcx";
 
 	::game::map_editor::MapEditor::tool_type_t m_editor_tool = ::game::map_editor::MapEditor::TT_NONE;
@@ -196,7 +201,6 @@ private:
 
 	void DefineSlot(
 		const size_t slot_index,
-		const bool is_mine,
 		const types::Color& color,
 		const bool is_progenitor
 	);
@@ -212,6 +216,7 @@ private:
 		const ::game::unit::Unit::health_t health
 	);
 	void DespawnUnit( const size_t unit_id );
+	void MoveUnit( unit_state_t* unit, tile_state_t* dst_tile, const types::Vec3& dst_render_coords );
 
 	void ProcessEvent( const ::game::Event& event );
 
@@ -330,19 +335,11 @@ private:
 
 	const bool m_is_map_editing_allowed = false;
 
-	struct unit_state_t;
-
 	tile_data_t m_selected_tile_data = {};
 	const unit_data_t* m_selected_unit_data = nullptr;
 	unit_state_t* m_selected_unit_state = nullptr;
 	map_data_t m_map_data = {};
-
-	enum tile_selection_mode_t {
-		TSM_NONE,
-		TSM_TILE,
-		TSM_UNIT
-	};
-	tile_selection_mode_t m_tile_selection_mode = TSM_NONE;
+	size_t m_currently_moving_unit_id = 0;
 
 	// UI stuff
 
@@ -353,14 +350,14 @@ private:
 
 	bool m_is_resize_handler_set = false;
 
-	void SelectTileAtPoint( const size_t x, const size_t y, const tile_selection_mode_t preferred_selection_mode );
-	void SelectTileOrUnit( const tile_data_t& tile_data, const tile_selection_mode_t preferred_selection_mode );
+	void SelectTileAtPoint( const ::game::tile_query_purpose_t tile_query_purpose, const size_t x, const size_t y );
+	void SelectTileOrUnit( const tile_data_t& tile_data );
 	void DeselectTileOrUnit();
 	const unit_data_t* GetFirstSelectableUnit( const std::vector< unit_data_t >& units ) const;
 
 private:
 	friend class ui::UnitsList;
-	void SelectUnit( const unit_data_t& unit_data );
+	void SelectUnit( const unit_data_t& unit_data, const bool actually_select_unit );
 
 	struct {
 		std::unordered_map< std::string, types::Texture* > source;
@@ -392,13 +389,20 @@ private:
 
 	// tile request stuff
 	rr::id_t m_tile_at_request_id = 0;
-	tile_selection_mode_t m_tile_at_preferred_mode = TSM_NONE;
+	::game::tile_query_purpose_t m_tile_at_query_purpose = ::game::TQP_NONE;
+	::game::tile_query_metadata_t m_tile_at_query_metadata = {};
+
 	void CancelTileAtRequest();
-	void GetTileAtScreenCoords( const size_t screen_x, const size_t screen_inverse_y, const tile_selection_mode_t preferred_selection_mode ); // async, y needs to be upside down
+	void GetTileAtScreenCoords( const ::game::tile_query_purpose_t tile_query_purpose, const size_t screen_x, const size_t screen_inverse_y ); // async, y needs to be upside down
 	const bool IsTileAtRequestPending() const;
 	const tile_at_result_t GetTileAtScreenCoordsResult();
 
-	void GetTileAtCoords( const Vec2< size_t >& tile_pos, const tile_selection_mode_t preferred_selection_mode, const ::game::tile_direction_t tile_direction = ::game::TD_NONE );
+	void GetTileAtCoords(
+		const ::game::tile_query_purpose_t tile_query_purpose,
+		const Vec2< size_t >& tile_pos,
+		const ::game::map::Tile::direction_t tile_direction = ::game::map::Tile::D_NONE,
+		const ::game::tile_query_metadata_t& tile_query_metadata = {}
+	);
 	tile_data_t GetTileAtCoordsResult();
 
 	// minimap stuff
@@ -424,14 +428,10 @@ private:
 		// init will be used for loading dump
 #endif
 	} m_mt_ids = {};
-	tile_selection_mode_t m_tile_select_preferred_mode = TSM_NONE;
 
 	typedef std::unordered_map< size_t, unit_state_t* > unit_states_t;
 	struct tile_state_t {
-		struct {
-			size_t x = 0;
-			size_t y = 0;
-		} coords;
+		types::Vec2< size_t > coords;
 		struct {
 			unit_state_t* currently_rendered_unit = nullptr;
 			std::vector< unit_state_t* > currently_rendered_fake_badges = {};
@@ -485,7 +485,7 @@ private:
 	std::vector< sprite_state_t > m_healthbar_sprites = {};
 
 	struct slot_state_t {
-		bool is_mine = false;
+		size_t slot_index = 0;
 		types::Color color = {};
 		unitbadge_defs_t badges = {};
 		sprite_state_t fake_badge = {};

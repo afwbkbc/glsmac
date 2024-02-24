@@ -60,7 +60,7 @@ void UnitsList::ListUnits( const std::vector< unit_data_t >& units ) {
 		left += item->GetWidth();
 	}
 	if ( selected_unit ) {
-		SelectUnit( selected_unit );
+		SelectUnit( selected_unit, false );
 		m_unit_preview->PreviewUnit( selected_unit );
 	}
 }
@@ -80,7 +80,7 @@ void UnitsList::HideUnitPreview( const unit_data_t& unit ) const {
 	}
 }
 
-void UnitsList::SelectUnit( const unit_data_t* unit ) {
+void UnitsList::SelectUnit( const unit_data_t* unit, const bool actually_select_unit ) {
 	if ( unit != m_selected_unit ) {
 		m_selected_unit = unit;
 		for ( auto& it : m_items ) {
@@ -91,7 +91,7 @@ void UnitsList::SelectUnit( const unit_data_t* unit ) {
 				it.second->DeselectUnit();
 			}
 		}
-		m_game->SelectUnit( *m_selected_unit );
+		m_game->SelectUnit( *m_selected_unit, actually_select_unit );
 	}
 }
 

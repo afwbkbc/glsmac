@@ -17,6 +17,7 @@ public:
 		ET_UNIT_DEFINE,
 		ET_UNIT_SPAWN,
 		ET_UNIT_DESPAWN,
+		ET_UNIT_MOVE,
 	};
 
 	Event( const size_t initiator_slot, const event_type_t type );

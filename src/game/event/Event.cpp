@@ -3,6 +3,7 @@
 #include "DefineUnit.h"
 #include "SpawnUnit.h"
 #include "DespawnUnit.h"
+#include "MoveUnit.h"
 
 namespace game {
 namespace event {
@@ -30,6 +31,10 @@ const types::Buffer Event::Serialize( const Event* event ) {
 			DespawnUnit::Serialize( buf, (DespawnUnit*)event );
 			break;
 		}
+		case ET_UNIT_MOVE: {
+			MoveUnit::Serialize( buf, (MoveUnit*)event );
+			break;
+		}
 		default:
 			THROW( "unknown event type on write: " + std::to_string( event->m_type ) );
 	}
@@ -51,6 +56,10 @@ Event* Event::Unserialize( types::Buffer& buf ) {
 		}
 		case ET_UNIT_DESPAWN: {
 			result = DespawnUnit::Unserialize( buf, initiator_slot );
+			break;
+		}
+		case ET_UNIT_MOVE: {
+			result = MoveUnit::Unserialize( buf, initiator_slot );
 			break;
 		}
 		default:

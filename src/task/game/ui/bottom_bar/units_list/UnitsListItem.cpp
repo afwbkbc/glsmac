@@ -52,7 +52,7 @@ void UnitsListItem::Create() {
 	);
 	On(
 		UIEvent::EV_MOUSE_DOWN, EH( this ) {
-			m_units_list->SelectUnit( &m_unit_data );
+			m_units_list->SelectUnit( &m_unit_data, true );
 			return true;
 		}
 	);
