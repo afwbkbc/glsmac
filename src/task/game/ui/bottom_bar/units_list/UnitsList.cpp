@@ -1,6 +1,7 @@
 #include "UnitsList.h"
 
 #include "engine/Engine.h"
+#include "task/game/Game.h"
 
 namespace task {
 namespace game {
@@ -90,6 +91,7 @@ void UnitsList::SelectUnit( const unit_data_t* unit ) {
 				it.second->DeselectUnit();
 			}
 		}
+		m_game->SelectUnit( *m_selected_unit );
 	}
 }
 

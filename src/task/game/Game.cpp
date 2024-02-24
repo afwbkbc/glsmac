@@ -311,14 +311,15 @@ void Game::Iterate() {
 
 		if ( m_is_map_editing_allowed && m_editing_draw_timer.HasTicked() ) {
 			if ( m_is_editing_mode && !IsTileAtRequestPending() ) {
-				SelectTileAtPoint( m_map_control.last_mouse_position.x, m_map_control.last_mouse_position.y ); // async
+				SelectTileAtPoint( m_map_control.last_mouse_position.x, m_map_control.last_mouse_position.y, TSM_TILE ); // async
 			}
 		}
 
 		// response for clicked tile (if click happened)
 		const auto tile_at = GetTileAtScreenCoordsResult();
 		if ( tile_at.is_set ) {
-			GetTileAtCoords( tile_at.tile_pos );
+			ASSERT( m_tile_at_preferred_mode != TSM_NONE, "tile preferred mode not set" );
+			GetTileAtCoords( tile_at.tile_pos, m_tile_at_preferred_mode );
 		}
 
 		const auto tile_data = GetTileAtCoordsResult();
@@ -327,10 +328,10 @@ void Game::Iterate() {
 				if ( !m_mt_ids.edit_map ) { // TODO: need to queue?
 					m_mt_ids.edit_map = game->MT_EditMap( tile_data.tile_position, m_editor_tool, m_editor_brush, m_editor_draw_mode );
 				}
-				SelectTile( tile_data );
+				SelectTileOrUnit( tile_data, TSM_TILE );
 			}
 			else {
-				SelectTile( tile_data );
+				SelectTileOrUnit( tile_data, m_tile_select_preferred_mode );
 				ScrollToTile( tile_data );
 			}
 		}
@@ -372,6 +373,19 @@ void Game::Iterate() {
 
 		for ( auto& actor : m_actors_map ) {
 			actor.first->Iterate();
+		}
+
+		if ( m_selected_unit_state ) {
+			auto& badge = m_selected_unit_state->render.badge;
+			while ( badge.blink.timer.HasTicked() ) {
+				auto& ba = badge.def->instanced_sprite->actor;
+				if ( ba->HasInstance( badge.instance_id ) ) {
+					UnrenderUnitBadge( *m_selected_unit_state );
+				}
+				else {
+					RenderUnitBadge( *m_selected_unit_state );
+				}
+			}
 		}
 	}
 }
@@ -854,6 +868,7 @@ const ::game::map_editor::MapEditor::brush_type_t Game::GetEditorBrush() const {
 
 void Game::DefineSlot(
 	const size_t slot_index,
+	const bool is_mine,
 	const types::Color& color,
 	const bool is_progenitor
 ) {
@@ -863,11 +878,16 @@ void Game::DefineSlot(
 		slot_it = m_slot_states.insert(
 			{
 				slot_index,
-				{}
+				{
+					is_mine,
+					{},
+					{}
+				}
 			}
 		).first;
 	}
 	auto& slot = slot_it->second;
+	ASSERT( is_mine == slot.is_mine, "slot ownership changed" );
 	if ( slot.color != color || slot.badges.empty() ) {
 		const auto badges_key = "Badge_" + std::to_string( slot_index );
 		const auto& c = color.value;
@@ -881,6 +901,13 @@ void Game::DefineSlot(
 				types::Color( ( 0.5f + c.red / 2 ) / 2, ( 0.5f + c.green / 2 ) / 2, ( 0.5f + c.blue / 2 ) / 2 ).GetRGBA()
 			}
 		};
+
+		// fake badges should be slightly grayer
+		auto fake_badge_rules = rules;
+		for ( auto& rule : fake_badge_rules ) {
+			rule.second = types::Color( ( 0.6f + c.red / 2.5 ) / 2, ( 0.6f + c.green / 2.5 ) / 2, ( 0.6f + c.blue / 2.5 ) / 2 ).GetRGBA();
+		}
+
 		if ( !slot.badges.empty() ) {
 			for ( const auto& it : slot.badges ) {
 				const auto& badgedef = it.second;
@@ -910,7 +937,7 @@ void Game::DefineSlot(
 		slot.fake_badge.instanced_sprite = GetRepaintedInstancedSprite(
 			badges_key + "_FAKE",
 			*m_fake_badge,
-			rules
+			fake_badge_rules
 		);
 		slot.fake_badge.next_instance_id = 1;
 	}
@@ -1041,19 +1068,21 @@ void Game::SpawnUnit(
 						render_coords.y,
 						render_coords.z
 					},
+					false,
+					0,
 					{
-						false,
+						is_active
+							? &slot_state.badges.at( morale ).normal
+							: &slot_state.badges.at( morale ).greyedout,
 						0,
 						{
-							is_active
-								? &slot_state.badges.at( morale ).normal
-								: &slot_state.badges.at( morale ).greyedout,
-							0,
-							{
-								&m_healthbar_sprites.at( floor( health * s_consts.badges.healthbars.resolution ) ),
-								0
-							}
+							&m_healthbar_sprites.at( floor( health * s_consts.badges.healthbars.resolution ) ),
+							0
 						}
+					},
+					{
+						false,
+						0
 					}
 				},
 				is_active,
@@ -1136,7 +1165,7 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 		case ::game::Event::ET_SLOT_DEFINE: {
 			for ( const auto& d : *event.data.slot_define.slotdefs ) {
 				const auto& c = d.color;
-				DefineSlot( d.slot_index, types::Color( c.r, c.g, c.b, c.a ), d.is_progenitor );
+				DefineSlot( d.slot_index, d.is_mine, types::Color( c.r, c.g, c.b, c.a ), d.is_progenitor );
 			}
 			break;
 		}
@@ -1474,42 +1503,52 @@ void Game::Initialize(
 			if ( !data->key.modifiers ) {
 				if ( m_selected_tile_data.is_set ) {
 
-					// move tile selector
-					bool is_tile_selected = true;
-					::game::tile_direction_t td = ::game::TD_NONE;
-					if ( data->key.code == UIEvent::K_LEFT || data->key.code == UIEvent::K_KP_LEFT ) {
-						td = ::game::TD_W;
-					}
-					else if ( data->key.code == UIEvent::K_UP || data->key.code == UIEvent::K_KP_UP ) {
-						td = ::game::TD_N;
-					}
-					else if ( data->key.code == UIEvent::K_RIGHT || data->key.code == UIEvent::K_KP_RIGHT ) {
-						td = ::game::TD_E;
-					}
-					else if ( data->key.code == UIEvent::K_DOWN || data->key.code == UIEvent::K_KP_DOWN ) {
-						td = ::game::TD_S;
-					}
-					else if ( data->key.code == UIEvent::K_HOME || data->key.code == UIEvent::K_KP_LEFT_UP ) {
-						td = ::game::TD_NW;
-					}
-					else if ( data->key.code == UIEvent::K_END || data->key.code == UIEvent::K_KP_LEFT_DOWN ) {
-						td = ::game::TD_SW;
-					}
-					else if ( data->key.code == UIEvent::K_PAGEUP || data->key.code == UIEvent::K_KP_RIGHT_UP ) {
-						td = ::game::TD_NE;
-					}
-					else if ( data->key.code == UIEvent::K_PAGEDOWN || data->key.code == UIEvent::K_KP_RIGHT_DOWN ) {
-						td = ::game::TD_SE;
-					}
-					else {
-						is_tile_selected = false; // not selected
-					}
+					switch ( m_tile_selection_mode ) {
+						case TSM_TILE: {
+							// move tile selector
+							bool is_tile_selected = true;
+							::game::tile_direction_t td = ::game::TD_NONE;
+							if ( data->key.code == UIEvent::K_LEFT || data->key.code == UIEvent::K_KP_LEFT ) {
+								td = ::game::TD_W;
+							}
+							else if ( data->key.code == UIEvent::K_UP || data->key.code == UIEvent::K_KP_UP ) {
+								td = ::game::TD_N;
+							}
+							else if ( data->key.code == UIEvent::K_RIGHT || data->key.code == UIEvent::K_KP_RIGHT ) {
+								td = ::game::TD_E;
+							}
+							else if ( data->key.code == UIEvent::K_DOWN || data->key.code == UIEvent::K_KP_DOWN ) {
+								td = ::game::TD_S;
+							}
+							else if ( data->key.code == UIEvent::K_HOME || data->key.code == UIEvent::K_KP_LEFT_UP ) {
+								td = ::game::TD_NW;
+							}
+							else if ( data->key.code == UIEvent::K_END || data->key.code == UIEvent::K_KP_LEFT_DOWN ) {
+								td = ::game::TD_SW;
+							}
+							else if ( data->key.code == UIEvent::K_PAGEUP || data->key.code == UIEvent::K_KP_RIGHT_UP ) {
+								td = ::game::TD_NE;
+							}
+							else if ( data->key.code == UIEvent::K_PAGEDOWN || data->key.code == UIEvent::K_KP_RIGHT_DOWN ) {
+								td = ::game::TD_SE;
+							}
+							else {
+								is_tile_selected = false; // not selected
+							}
 
-					if ( is_tile_selected ) {
+							if ( is_tile_selected ) {
+								GetTileAtCoords( m_selected_tile_data.tile_position, TSM_TILE, td );
+								return true;
+							}
 
-						GetTileAtCoords( m_selected_tile_data.tile_position, td );
-
-						return true;
+							break;
+						}
+						case TSM_UNIT: {
+							// TODO: unit move
+							break;
+						}
+						default:
+							THROW( "unknown tile selection mode: " + std::to_string( m_tile_selection_mode ) );
 					}
 				}
 
@@ -1583,13 +1622,13 @@ void Game::Initialize(
 					}
 
 				}
-				SelectTileAtPoint( data->mouse.absolute.x, data->mouse.absolute.y ); // async
+				SelectTileAtPoint( data->mouse.absolute.x, data->mouse.absolute.y, TSM_TILE ); // async
 				m_editing_draw_timer.SetInterval( Game::s_consts.map_editing.draw_frequency_ms ); // keep drawing until mouseup
 			}
 			else {
 				switch ( data->mouse.button ) {
 					case UIEvent::M_LEFT: {
-						SelectTileAtPoint( data->mouse.absolute.x, data->mouse.absolute.y ); // async
+						SelectTileAtPoint( data->mouse.absolute.x, data->mouse.absolute.y, TSM_UNIT ); // async
 						break;
 					}
 					case UIEvent::M_RIGHT: {
@@ -1755,7 +1794,7 @@ void Game::Deinitialize() {
 	ASSERT( m_is_initialized, "not initialized" );
 
 	CloseMenus();
-	DeselectTile();
+	DeselectTileOrUnit();
 
 	auto* ui = g_engine->GetUI();
 
@@ -1872,31 +1911,98 @@ void Game::SendChatMessage( const std::string& text ) {
 	m_mt_ids.chat = g_engine->GetGame()->MT_Chat( text );
 }
 
-void Game::SelectTileAtPoint( const size_t x, const size_t y ) {
+void Game::SelectTileAtPoint( const size_t x, const size_t y, const tile_selection_mode_t preferred_selection_mode ) {
 	//Log( "Looking up tile at " + std::to_string( x ) + "x" + std::to_string( y ) );
-	GetTileAtScreenCoords( x, m_viewport.window_height - y ); // async
+	GetTileAtScreenCoords( x, m_viewport.window_height - y, preferred_selection_mode ); // async
 }
 
-void Game::SelectTile( const tile_data_t& tile_data ) {
-	DeselectTile();
+void Game::SelectUnit( const unit_data_t& unit_data ) {
+	m_selected_unit_data = &unit_data;
+	ASSERT( m_unit_states.find( m_selected_unit_data->id ) != m_unit_states.end(), "unit id not found" );
+	auto* unit_state = &m_unit_states.at( m_selected_unit_data->id );
+	if ( m_selected_unit_state != unit_state ) {
+		if ( m_selected_unit_state ) {
+			UnrenderUnit( *m_selected_unit_state );
+		}
+		m_selected_unit_state = unit_state;
+		RenderUnit( *m_selected_unit_state );
+	}
+	Log( "Selected unit " + std::to_string( m_selected_unit_data->id ) );
+	if ( unit_state->slot->is_mine ) {
+		UnrenderUnitBadge( *m_selected_unit_state );
+		m_selected_unit_state->render.badge.blink.timer.SetInterval( s_consts.badges.blink.interval_ms );
+	}
+}
 
-	NEW( m_actors.tile_selection, actor::TileSelection, tile_data.selection_coords );
-	AddActor( m_actors.tile_selection );
+void Game::SelectTileOrUnit( const tile_data_t& tile_data, const tile_selection_mode_t preferred_selection_mode ) {
+
+	ASSERT( preferred_selection_mode != TSM_NONE, "preferred selection mode not set" );
+
+	m_tile_selection_mode = preferred_selection_mode;
+	const unit_data_t* selected_unit = nullptr;
+	if ( m_tile_selection_mode == TSM_UNIT ) {
+		selected_unit = GetFirstSelectableUnit( tile_data.units );
+		if ( !selected_unit ) {
+			m_tile_selection_mode = TSM_TILE;
+		}
+	}
+
+	DeselectTileOrUnit();
 
 	m_ui.bottom_bar->PreviewTile( tile_data );
 
 	m_selected_tile_data = tile_data;
 
-	//Log( "Selected tile at " + m_selected_tile_data.tile_position.ToString() );
+	switch ( m_tile_selection_mode ) {
+		case TSM_TILE: {
+			NEW( m_actors.tile_selection, actor::TileSelection, m_selected_tile_data.selection_coords );
+			AddActor( m_actors.tile_selection );
+			Log( "Selected tile at " + m_selected_tile_data.tile_position.ToString() );
+			break;
+		}
+		case TSM_UNIT: {
+			SelectUnit( *selected_unit );
+			break;
+		}
+		default:
+			THROW( "unknown selection mode: " + std::to_string( m_tile_selection_mode ) );
+	}
+
 }
 
-void Game::DeselectTile() {
+void Game::DeselectTileOrUnit() {
 	if ( m_actors.tile_selection ) {
 		RemoveActor( m_actors.tile_selection );
 		m_actors.tile_selection = nullptr;
 	}
+	if ( m_selected_unit_state ) {
+		RenderUnitBadge( *m_selected_unit_state );
+
+		ASSERT( !m_selected_tile_data.units.empty(), "unit was selected but tile data has no units" );
+		// reset to most important unit if needed
+		const auto unit_id = m_selected_tile_data.units.front().id;
+		ASSERT( m_unit_states.find( unit_id ) != m_unit_states.end(), "unit id not found" );
+		auto* most_important_unit = &m_unit_states.at( unit_id );
+		if ( m_selected_unit_state && m_selected_unit_state != most_important_unit ) {
+			UnrenderUnit( *m_selected_unit_state );
+			RenderUnit( *most_important_unit );
+		}
+
+		m_selected_unit_state = nullptr;
+	}
 
 	m_ui.bottom_bar->HideTilePreview();
+}
+
+const unit_data_t* Game::GetFirstSelectableUnit( const std::vector< unit_data_t >& units ) const {
+	for ( const auto& unit : units ) {
+		ASSERT( m_unit_states.find( unit.id ) != m_unit_states.end(), "unit id not found" );
+		const auto& unit_state = m_unit_states.at( unit.id );
+		if ( unit_state.slot->is_mine ) {
+			return &unit;
+		}
+	}
+	return nullptr;
 }
 
 void Game::AddActor( actor::Actor* actor ) {
@@ -2023,10 +2129,12 @@ void Game::CancelTileAtRequest() {
 	m_tile_at_request_id = 0;
 }
 
-void Game::GetTileAtScreenCoords( const size_t screen_x, const size_t screen_inverse_y ) {
+void Game::GetTileAtScreenCoords( const size_t screen_x, const size_t screen_inverse_y, const tile_selection_mode_t preferred_selection_mode ) {
 	if ( m_tile_at_request_id ) {
 		m_actors.terrain->GetMeshActor()->CancelDataRequest( m_tile_at_request_id );
 	}
+	ASSERT( preferred_selection_mode != TSM_NONE, "preferred selection mode is not set" );
+	m_tile_at_preferred_mode = preferred_selection_mode;
 	m_tile_at_request_id = m_actors.terrain->GetMeshActor()->GetDataAt( screen_x, screen_inverse_y );
 }
 
@@ -2061,11 +2169,13 @@ const Game::tile_at_result_t Game::GetTileAtScreenCoordsResult() {
 	return {};
 }
 
-void Game::GetTileAtCoords( const Vec2< size_t >& tile_pos, const ::game::tile_direction_t tile_direction ) {
+void Game::GetTileAtCoords( const Vec2< size_t >& tile_pos, const tile_selection_mode_t preferred_selection_mode, const ::game::tile_direction_t tile_direction ) {
 	auto* game = g_engine->GetGame();
 	if ( m_mt_ids.select_tile ) {
 		game->MT_Cancel( m_mt_ids.select_tile );
 	}
+	ASSERT( preferred_selection_mode != TSM_NONE, "preferred selection mode not set" );
+	m_tile_select_preferred_mode = preferred_selection_mode;
 	m_mt_ids.select_tile = game->MT_SelectTile( tile_pos, tile_direction );
 }
 
@@ -2197,8 +2307,8 @@ tile_data_t Game::GetTileAtCoordsResult() {
 					{
 						unit_state.unit_id,
 						f_meshtex( sprite_state.instanced_sprite ),
-						f_meshtex( unit_state.render.unit.badge.def->instanced_sprite ),
-						f_meshtex( unit_state.render.unit.badge.healthbar.def->instanced_sprite ),
+						f_meshtex( unit_state.render.badge.def->instanced_sprite ),
+						f_meshtex( unit_state.render.badge.healthbar.def->instanced_sprite ),
 						def->m_name,
 						short_power_label,
 						::game::unit::Unit::GetMoraleString( unit_state.morale )
@@ -2294,11 +2404,13 @@ void Game::ResetMapState() {
 	if ( ( coords.y % 2 ) != ( coords.x % 2 ) ) {
 		coords.y++;
 	}
+
 	GetTileAtCoords(
 		{
 			coords.x,
 			coords.y
-		}
+		},
+		TSM_TILE
 	);
 }
 
@@ -2415,9 +2527,11 @@ void Game::ReturnToMainMenu( const std::string reason ) {
 
 void Game::RenderUnit( unit_state_t& unit_state ) {
 
-	Log( "Rendering unit " + std::to_string( unit_state.unit_id ) );
+	if ( unit_state.render.is_rendered ) {
+		return;
+	}
 
-	ASSERT( !unit_state.render.unit.is_rendered, "already rendered" );
+	Log( "Rendering unit " + std::to_string( unit_state.unit_id ) );
 
 	auto* unitdef_state = unit_state.def;
 	auto* slot_state = unit_state.slot;
@@ -2426,40 +2540,42 @@ void Game::RenderUnit( unit_state_t& unit_state ) {
 	ASSERT( unitdef_state->m_type == ::game::unit::Def::DT_STATIC, "only static unitdefs are supported for now" );
 	ASSERT( unitdef_state->static_.render.is_sprite, "only sprite unitdefs are supported for now" );
 
-	// unit
 	auto& sprite = unitdef_state->static_.render.morale_based_xshift
 		? unitdef_state->static_.render.morale_based_sprites->at( unit_state.morale )
 		: unitdef_state->static_.render.sprite;
-	unit_state.render.unit.instance_id = sprite.next_instance_id++;
+	unit_state.render.instance_id = sprite.next_instance_id++;
 	sprite.instanced_sprite->actor->SetInstance(
-		unit_state.render.unit.instance_id, {
+		unit_state.render.instance_id, {
 			c.x,
 			c.y,
 			c.z
 		}
 	);
 
-	// unit badge
-	unit_state.render.unit.badge.instance_id = unit_state.render.unit.badge.def->next_instance_id++;
-	unit_state.render.unit.badge.def->instanced_sprite->actor->SetInstance(
-		unit_state.render.unit.badge.instance_id, {
+	unit_state.render.badge.instance_id = unit_state.render.badge.def->next_instance_id++;
+	unit_state.render.badge.healthbar.instance_id = unit_state.render.badge.healthbar.def->next_instance_id++;
+
+	RenderUnitBadge( unit_state );
+
+	unit_state.render.is_rendered = true;
+}
+
+void Game::RenderUnitBadge( const unit_state_t& unit_state ) {
+	const auto& c = unit_state.render.coords;
+	unit_state.render.badge.def->instanced_sprite->actor->SetInstance(
+		unit_state.render.badge.instance_id, {
 			c.x + ::game::map::s_consts.tile.scale.x * s_consts.badges.offset.x,
 			c.y - ::game::map::s_consts.tile.scale.y * s_consts.badges.offset.y * ::game::map::s_consts.sprite.y_scale,
 			c.z
 		}
 	);
-
-	// unit badge healthbar
-	unit_state.render.unit.badge.healthbar.instance_id = unit_state.render.unit.badge.healthbar.def->next_instance_id++;
-	unit_state.render.unit.badge.healthbar.def->instanced_sprite->actor->SetInstance(
-		unit_state.render.unit.badge.healthbar.instance_id, {
+	unit_state.render.badge.healthbar.def->instanced_sprite->actor->SetInstance(
+		unit_state.render.badge.healthbar.instance_id, {
 			c.x + ::game::map::s_consts.tile.scale.x * s_consts.badges.healthbars.offset.x,
 			c.y - ::game::map::s_consts.tile.scale.y * s_consts.badges.healthbars.offset.y * ::game::map::s_consts.sprite.y_scale,
 			c.z
 		}
 	);
-
-	unit_state.render.unit.is_rendered = true;
 }
 
 void Game::RenderUnitFakeBadge( unit_state_t& unit_state, const size_t offset ) {
@@ -2487,26 +2603,31 @@ void Game::UnrenderUnit( unit_state_t& unit_state ) {
 
 	Log( "Unrendering unit " + std::to_string( unit_state.unit_id ) );
 
-	ASSERT( unit_state.render.unit.is_rendered, "unit not rendered" );
+	ASSERT( unit_state.render.is_rendered, "unit not rendered" );
 
 	const auto& unitdef_state = unit_state.def;
 
 	ASSERT( unitdef_state->m_type == ::game::unit::Def::DT_STATIC, "only static unitdefs are supported for now" );
 	ASSERT( unitdef_state->static_.render.is_sprite, "only sprite unitdefs are supported for now" );
 
-	// unit
+	if ( m_selected_unit_state == &unit_state ) {
+		m_selected_unit_state->render.badge.blink.timer.Stop();
+		m_selected_unit_state = nullptr;
+	}
+
 	auto& sprite = unitdef_state->static_.render.morale_based_xshift
 		? unitdef_state->static_.render.morale_based_sprites->at( unit_state.morale )
 		: unitdef_state->static_.render.sprite;
-	sprite.instanced_sprite->actor->RemoveInstance( unit_state.render.unit.instance_id );
+	sprite.instanced_sprite->actor->RemoveInstance( unit_state.render.instance_id );
 
-	// unit badge
-	unit_state.render.unit.badge.def->instanced_sprite->actor->RemoveInstance( unit_state.render.unit.badge.instance_id );
+	UnrenderUnitBadge( unit_state );
 
-	// unit badge healthbar
-	unit_state.render.unit.badge.healthbar.def->instanced_sprite->actor->RemoveInstance( unit_state.render.unit.badge.healthbar.instance_id );
+	unit_state.render.is_rendered = false;
+}
 
-	unit_state.render.unit.is_rendered = false;
+void Game::UnrenderUnitBadge( const unit_state_t& unit_state ) {
+	unit_state.render.badge.def->instanced_sprite->actor->RemoveInstance( unit_state.render.badge.instance_id );
+	unit_state.render.badge.healthbar.def->instanced_sprite->actor->RemoveInstance( unit_state.render.badge.healthbar.instance_id );
 }
 
 void Game::UnrenderUnitFakeBadge( unit_state_t& unit_state ) {
@@ -2533,23 +2654,26 @@ std::vector< size_t > Game::GetUnitsOrder( const unit_states_t& units ) const {
 
 		// active units have priority
 		if ( unit->is_active ) {
-			weight += 100;
+			weight += 200;
 		}
 
 		// fungal towers are like bases so have priority
 		// TODO: use real unit properties
 		if ( unit->def->m_id == "FungalTower" ) {
-			weight += 30;
+			weight += 100;
 		}
 
 		// non-artillery units have priority
 		// TODO: use real unit properties
 		if ( unit->def->m_id != "SporeLauncher" ) {
-			weight += 10;
+			weight += 60;
 		}
 
 		// higher morale has priority
-		weight += unit->morale;
+		weight += unit->morale * 2;
+
+		// health is also somewhat important
+		weight += unit->health * 10;
 
 		weights[ -weight ].push_back( unit_id ); // negative because we need reverse order
 
@@ -2572,8 +2696,8 @@ void Game::RenderTile( tile_state_t& tile_state ) {
 	// unrender unit
 	if ( tile_state.render.currently_rendered_unit ) {
 		UnrenderUnit( *tile_state.render.currently_rendered_unit );
+		tile_state.render.currently_rendered_unit = nullptr;
 	}
-	tile_state.render.currently_rendered_unit = nullptr;
 
 	// unrender fake badges
 	for ( const auto& unit : tile_state.render.currently_rendered_fake_badges ) {

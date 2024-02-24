@@ -75,7 +75,7 @@ void UIContainer::AddChild( UIObject* object ) {
 	else if (
 		m_overflow == OVERFLOW_HIDDEN
 		) {
-		Log( "Setting overflow limits for " + object->GetName() );
+		//Log( "Setting overflow limits for " + object->GetName() );
 		object->SetAreaLimitsByObject( this );
 	}
 	if ( m_area_limits.enabled ) {

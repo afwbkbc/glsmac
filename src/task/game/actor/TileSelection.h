@@ -20,7 +20,7 @@ CLASS( TileSelection, Actor )
 	static constexpr float GLOW_MAX = 1.0f;
 	static constexpr float GLOW_MIN = 0.25f;
 
-	TileSelection( ::game::map::TileState::tile_vertices_t coords );
+	TileSelection( const ::game::map::TileState::tile_vertices_t& coords );
 
 	void Iterate() override;
 

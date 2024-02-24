@@ -172,9 +172,11 @@ void Instanced::SetInstance( const instance_id_t instance_id, const types::Vec3&
 }
 
 void Instanced::RemoveInstance( const instance_id_t instance_id ) {
-	ASSERT( m_instances.find( instance_id ) != m_instances.end(), "instance " + std::to_string( instance_id ) + " not found" );
-	m_need_world_matrix_update = true;
-	m_instances.erase( instance_id );
+	const auto& it = m_instances.find( instance_id );
+	if ( it != m_instances.end() ) {
+		m_need_world_matrix_update = true;
+		m_instances.erase( it );
+	}
 }
 
 const bool Instanced::HasInstance( const instance_id_t instance_id ) {

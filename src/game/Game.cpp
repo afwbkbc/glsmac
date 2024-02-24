@@ -291,6 +291,7 @@ void Game::Iterate() {
 						slot_defines->push_back(
 							Event::slot_define_t{
 								slot.GetIndex(),
+								slot.GetPlayer() == GetPlayer(),
 								{
 									c.red,
 									c.green,

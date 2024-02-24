@@ -113,6 +113,9 @@ CLASS( Game, base::Task )
 				};
 				const float step_x = 0.032f;
 			} fake_badges;
+			struct {
+				const size_t interval_ms = 128;
+			} blink;
 		} badges;
 	};
 	static const consts_t s_consts;
@@ -193,6 +196,7 @@ private:
 
 	void DefineSlot(
 		const size_t slot_index,
+		const bool is_mine,
 		const types::Color& color,
 		const bool is_progenitor
 	);
@@ -326,8 +330,19 @@ private:
 
 	const bool m_is_map_editing_allowed = false;
 
+	struct unit_state_t;
+
 	tile_data_t m_selected_tile_data = {};
+	const unit_data_t* m_selected_unit_data = nullptr;
+	unit_state_t* m_selected_unit_state = nullptr;
 	map_data_t m_map_data = {};
+
+	enum tile_selection_mode_t {
+		TSM_NONE,
+		TSM_TILE,
+		TSM_UNIT
+	};
+	tile_selection_mode_t m_tile_selection_mode = TSM_NONE;
 
 	// UI stuff
 
@@ -338,10 +353,14 @@ private:
 
 	bool m_is_resize_handler_set = false;
 
-	// tiles stuff
-	void SelectTileAtPoint( const size_t x, const size_t y );
-	void SelectTile( const tile_data_t& tile_data );
-	void DeselectTile();
+	void SelectTileAtPoint( const size_t x, const size_t y, const tile_selection_mode_t preferred_selection_mode );
+	void SelectTileOrUnit( const tile_data_t& tile_data, const tile_selection_mode_t preferred_selection_mode );
+	void DeselectTileOrUnit();
+	const unit_data_t* GetFirstSelectableUnit( const std::vector< unit_data_t >& units ) const;
+
+private:
+	friend class ui::UnitsList;
+	void SelectUnit( const unit_data_t& unit_data );
 
 	struct {
 		std::unordered_map< std::string, types::Texture* > source;
@@ -373,12 +392,13 @@ private:
 
 	// tile request stuff
 	rr::id_t m_tile_at_request_id = 0;
+	tile_selection_mode_t m_tile_at_preferred_mode = TSM_NONE;
 	void CancelTileAtRequest();
-	void GetTileAtScreenCoords( const size_t screen_x, const size_t screen_inverse_y ); // async, y needs to be upside down
+	void GetTileAtScreenCoords( const size_t screen_x, const size_t screen_inverse_y, const tile_selection_mode_t preferred_selection_mode ); // async, y needs to be upside down
 	const bool IsTileAtRequestPending() const;
 	const tile_at_result_t GetTileAtScreenCoordsResult();
 
-	void GetTileAtCoords( const Vec2< size_t >& tile_pos, const ::game::tile_direction_t tile_direction = ::game::TD_NONE );
+	void GetTileAtCoords( const Vec2< size_t >& tile_pos, const tile_selection_mode_t preferred_selection_mode, const ::game::tile_direction_t tile_direction = ::game::TD_NONE );
 	tile_data_t GetTileAtCoordsResult();
 
 	// minimap stuff
@@ -404,8 +424,8 @@ private:
 		// init will be used for loading dump
 #endif
 	} m_mt_ids = {};
+	tile_selection_mode_t m_tile_select_preferred_mode = TSM_NONE;
 
-	struct unit_state_t;
 	typedef std::unordered_map< size_t, unit_state_t* > unit_states_t;
 	struct tile_state_t {
 		struct {
@@ -465,6 +485,7 @@ private:
 	std::vector< sprite_state_t > m_healthbar_sprites = {};
 
 	struct slot_state_t {
+		bool is_mine = false;
 		types::Color color = {};
 		unitbadge_defs_t badges = {};
 		sprite_state_t fake_badge = {};
@@ -478,21 +499,22 @@ private:
 		tile_state_t* tile = nullptr;
 		struct {
 			Vec3 coords = {};
+			bool is_rendered = false;
+			size_t instance_id = 0;
 			struct {
-				bool is_rendered = false;
+				sprite_state_t* def = nullptr;
 				size_t instance_id = 0;
 				struct {
 					sprite_state_t* def = nullptr;
 					size_t instance_id = 0;
-					struct {
-						sprite_state_t* def = nullptr;
-						size_t instance_id = 0;
-					} healthbar;
-				} badge;
-			} unit;
+				} healthbar;
+				struct {
+					util::Timer timer;
+				} blink;
+			} badge;
 			struct {
-				bool is_rendered = false;
-				size_t instance_id = 0;
+				bool is_rendered;
+				size_t instance_id;
 			} fake_badge;
 		} render;
 		bool is_active = false;
@@ -515,8 +537,10 @@ private:
 	};
 
 	void RenderUnit( unit_state_t& unit_state );
+	void RenderUnitBadge( const unit_state_t& unit_state );
 	void RenderUnitFakeBadge( unit_state_t& unit_state, const size_t offset );
 	void UnrenderUnit( unit_state_t& unit_state );
+	void UnrenderUnitBadge( const unit_state_t& unit_state );
 	void UnrenderUnitFakeBadge( unit_state_t& unit_state );
 
 	std::vector< size_t > GetUnitsOrder( const unit_states_t& units ) const;

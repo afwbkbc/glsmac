@@ -29,6 +29,7 @@ public:
 
 	struct slot_define_t {
 		size_t slot_index;
+		bool is_mine;
 		// TODO: name etc
 		struct {
 			float r;
