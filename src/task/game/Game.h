@@ -37,6 +37,14 @@
 #include "game/map/Consts.h"
 #include "game/map_editor/MapEditor.h"
 
+#include "InstancedSprite.h"
+#include "Sprite.h"
+#include "Slot.h"
+#include "UnitDef.h"
+#include "Unit.h"
+#include "SlotBadges.h"
+#include "Tile.h"
+
 using namespace ui;
 namespace ui {
 using namespace event;
@@ -130,15 +138,7 @@ CLASS( Game, base::Task )
 
 	types::Texture* GetRepaintedSourceTexture( const std::string& name, const types::Texture* original, const types::Texture::repaint_rules_t& rules );
 
-	struct instanced_sprite_t {
-		std::string key;
-		std::string name;
-		::game::map::Consts::pcx_texture_coordinates_t xy;
-		::game::map::Consts::pcx_texture_coordinates_t wh;
-		::game::map::Consts::pcx_texture_coordinates_t cxy;
-		scene::actor::Instanced* actor;
-	};
-	instanced_sprite_t& GetInstancedSprite(
+	InstancedSprite* GetInstancedSprite(
 		const std::string& name,
 		types::Texture* texture,
 		const ::game::map::Consts::pcx_texture_coordinates_t& src_xy,
@@ -147,9 +147,9 @@ CLASS( Game, base::Task )
 		const types::Vec2< float > dst_xy,
 		const float z_index
 	);
-	instanced_sprite_t& GetInstancedSpriteByKey( const std::string& key ); // actor must already exist
-	instanced_sprite_t& GetTerrainInstancedSprite( const ::game::map::Map::sprite_actor_t& actor );
-	instanced_sprite_t* GetRepaintedInstancedSprite( const std::string& name, const instanced_sprite_t& original, const types::Texture::repaint_rules_t& rules );
+	InstancedSprite* GetInstancedSpriteByKey( const std::string& key ); // actor must already exist
+	InstancedSprite* GetTerrainInstancedSprite( const ::game::map::Map::sprite_actor_t& actor );
+	InstancedSprite* GetRepaintedInstancedSprite( const std::string& name, const InstancedSprite* original, const types::Texture::repaint_rules_t& rules );
 
 	void RemoveInstancedSpriteByKey( const std::string& key );
 
@@ -190,9 +190,6 @@ private:
 
 	size_t m_slot_index = 0;
 
-	struct unit_state_t;
-	struct tile_state_t;
-
 	const std::string TERRAIN_SOURCE_PCX = "ter1.pcx";
 
 	::game::map_editor::MapEditor::tool_type_t m_editor_tool = ::game::map_editor::MapEditor::TT_NONE;
@@ -218,8 +215,8 @@ private:
 		const ::game::unit::Unit::health_t health
 	);
 	void DespawnUnit( const size_t unit_id );
-	void RefreshUnit( unit_state_t* unit_state );
-	void MoveUnit( unit_state_t* unit, tile_state_t* dst_tile, const types::Vec3& dst_render_coords );
+	void RefreshUnit( Unit* unit_state );
+	void MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_coords );
 
 	void ProcessEvent( const ::game::Event& event );
 
@@ -340,7 +337,7 @@ private:
 
 	tile_data_t m_selected_tile_data = {};
 	const unit_data_t* m_selected_unit_data = nullptr;
-	unit_state_t* m_selected_unit_state = nullptr;
+	Unit* m_selected_unit_state = nullptr;
 	map_data_t m_map_data = {};
 	size_t m_currently_moving_unit_id = 0;
 
@@ -356,7 +353,7 @@ private:
 	void SelectTileAtPoint( const ::game::tile_query_purpose_t tile_query_purpose, const size_t x, const size_t y );
 	void SelectTileOrUnit( const tile_data_t& tile_data, const size_t selected_unit_id );
 	void DeselectTileOrUnit();
-	const bool IsUnitSelectable( const unit_state_t* unit_state ) const;
+	const bool IsUnitSelectable( const Unit* unit_state ) const;
 	const unit_data_t* GetFirstSelectableUnit( const std::vector< unit_data_t >& units ) const;
 
 private:
@@ -433,116 +430,43 @@ private:
 #endif
 	} m_mt_ids = {};
 
-	typedef std::unordered_map< size_t, unit_state_t* > unit_states_t;
-	struct tile_state_t {
-		types::Vec2< size_t > coords;
-		struct {
-			unit_state_t* currently_rendered_unit = nullptr;
-			std::vector< unit_state_t* > currently_rendered_fake_badges = {};
-		} render;
-		unit_states_t units = {};
-	};
-	std::vector< tile_state_t > m_tile_states = {};
+	std::vector< Tile > m_tile_states = {};
 
-	struct sprite_state_t {
-		Game::instanced_sprite_t* instanced_sprite = nullptr;
-		size_t next_instance_id = 1;
-	};
+	typedef std::unordered_map< ::game::unit::Unit::morale_t, Sprite > morale_based_sprite_states_t;
 
-	typedef std::unordered_map< ::game::unit::Unit::morale_t, sprite_state_t > morale_based_sprite_states_t;
+	std::unordered_map< std::string, UnitDef > m_unitdef_states = {};
 
-	struct unitdef_state_t {
-		std::string m_id;
-		std::string m_name;
-		::game::unit::Def::def_type_t m_type;
-		union {
-			struct {
-				::game::unit::StaticDef::movement_type_t movement_type;
-				::game::unit::Unit::movement_t movement_per_turn;
-				struct {
-					bool is_sprite;
-					uint32_t morale_based_xshift;
-					union {
-						sprite_state_t sprite;
-						morale_based_sprite_states_t* morale_based_sprites;
-					};
-				} render;
-			} static_;
-		};
-	};
-	std::unordered_map< std::string, unitdef_state_t > m_unitdef_states = {};
-
-	typedef std::unordered_map< ::game::unit::Unit::morale_t, Game::instanced_sprite_t* > unitbadge_spritemap_t;
+	typedef std::unordered_map< ::game::unit::Unit::morale_t, InstancedSprite* > unitbadge_spritemap_t;
 	typedef uint8_t badge_type_t;
 	const badge_type_t BT_NORMAL = 0 << 0;
 	const badge_type_t BT_GREYEDOUT = 1 << 0;
 	const badge_type_t BT_DEFAULT = 1 << 1;
 	const badge_type_t BT_PROGENITOR = 0 << 1;
 	typedef std::unordered_map< badge_type_t, unitbadge_spritemap_t > unitbadge_spritemaps_t;
-	struct unitbadge_def_t {
-		sprite_state_t normal;
-		sprite_state_t greyedout;
-	};
-	typedef std::unordered_map< ::game::unit::Unit::morale_t, unitbadge_def_t > unitbadge_defs_t;
+	typedef std::unordered_map< ::game::unit::Unit::morale_t, SlotBadges > unitbadge_defs_t;
 	unitbadge_spritemaps_t m_unitbadge_sprites = {};
-	Game::instanced_sprite_t* m_fake_badge = nullptr;
+	InstancedSprite* m_fake_badge = nullptr;
 
 	std::vector< types::Texture* > m_healthbar_textures = {};
-	std::vector< sprite_state_t > m_healthbar_sprites = {};
+	std::vector< Sprite > m_healthbar_sprites = {};
 
-	struct slot_state_t {
-		size_t slot_index = 0;
-		types::Color color = {};
-		unitbadge_defs_t badges = {};
-		sprite_state_t fake_badge = {};
-	};
-	std::unordered_map< size_t, slot_state_t > m_slot_states = {};
+	std::unordered_map< size_t, Slot > m_slot_states = {};
 
-	struct unit_state_t {
-		size_t unit_id = 0;
-		unitdef_state_t* def = nullptr;
-		slot_state_t* slot = nullptr;
-		tile_state_t* tile = nullptr;
-		struct {
-			Vec3 coords = {};
-			bool is_rendered = false;
-			size_t instance_id = 0;
-			struct {
-				sprite_state_t* def = nullptr;
-				size_t instance_id = 0;
-				struct {
-					sprite_state_t* def = nullptr;
-					size_t instance_id = 0;
-				} healthbar;
-				struct {
-					util::Timer timer;
-				} blink;
-			} badge;
-			struct {
-				bool is_rendered;
-				size_t instance_id;
-			} fake_badge;
-		} render;
-		bool is_active = false;
-		::game::unit::Unit::movement_t movement = 0.0f;
-		::game::unit::Unit::morale_t morale = 0;
-		::game::unit::Unit::health_t health = 0;
-	};
-	std::unordered_map< size_t, unit_state_t > m_unit_states = {};
+	std::unordered_map< size_t, Unit > m_unit_states = {};
 	struct {
-		std::vector< unit_state_t* > unit_states = {};
+		std::vector< Unit* > unit_states = {};
 		size_t selected_id_index = 0;
 	} m_selectables;
-	void UpdateSelectable( unit_state_t* unit_state );
-	void AddSelectable( unit_state_t* unit_state );
-	void RemoveSelectable( unit_state_t* unit_state );
-	void SetCurrentSelectable( unit_state_t* unit_state );
-	unit_state_t* GetNextSelectable();
+	void UpdateSelectable( Unit* unit_state );
+	void AddSelectable( Unit* unit_state );
+	void RemoveSelectable( Unit* unit_state );
+	void SetCurrentSelectable( Unit* unit_state );
+	Unit* GetNextSelectable();
 	const bool SelectNextUnitMaybe();
 
-	sprite_state_t* GetUnitBadgeDef( const unit_state_t& unit_state ) const;
+	Sprite* GetUnitBadgeDef( const Unit* unit_state ) const;
 
-	std::unordered_map< std::string, instanced_sprite_t > m_instanced_sprites = {};
+	std::unordered_map< std::string, InstancedSprite > m_instanced_sprites = {};
 
 	void CancelRequests();
 	void CancelGame();
@@ -555,18 +479,18 @@ private:
 		UUF_ALL = 0xff,
 	};
 
-	void RenderUnit( unit_state_t& unit_state );
-	void RenderUnitBadge( const unit_state_t& unit_state );
-	void RenderUnitFakeBadge( unit_state_t& unit_state, const size_t offset );
-	void UnrenderUnit( unit_state_t& unit_state );
-	void UnrenderUnitBadge( const unit_state_t& unit_state );
-	void UnrenderUnitFakeBadge( unit_state_t& unit_state );
+	void RenderUnit( Unit* unit_state );
+	void RenderUnitBadge( const Unit* unit_state );
+	void RenderUnitFakeBadge( Unit* unit_state, const size_t offset );
+	void UnrenderUnit( Unit* unit_state );
+	void UnrenderUnitBadge( const Unit* unit_state );
+	void UnrenderUnitFakeBadge( Unit* unit_state );
 
-	std::vector< size_t > GetUnitsOrder( const unit_states_t& units ) const;
+	std::vector< size_t > GetUnitsOrder( const std::unordered_map< size_t, Unit* >& units ) const;
 
-	void RenderTile( tile_state_t& tile_state );
+	void RenderTile( Tile* tile_state );
 
-	tile_state_t& GetTileState( const size_t x, const size_t y );
+	Tile* GetTileState( const size_t x, const size_t y );
 
 	// special formatting of floats
 	const std::string FloatToString( const float value );

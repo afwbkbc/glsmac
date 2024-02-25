@@ -256,7 +256,7 @@ void Game::Iterate() {
 				if ( response.data.edit_map.sprites.instances_to_remove ) {
 					Log( "Need to remove " + std::to_string( response.data.edit_map.sprites.instances_to_remove->size() ) + " instances" );
 					for ( auto& i : *response.data.edit_map.sprites.instances_to_remove ) {
-						auto* actor = GetInstancedSpriteByKey( i.second ).actor;
+						auto* actor = GetInstancedSpriteByKey( i.second )->actor;
 						ASSERT( actor, "sprite actor not found" );
 						ASSERT( actor->HasInstance( i.first ), "actor instance not found" );
 						actor->RemoveInstance( i.first );
@@ -267,7 +267,7 @@ void Game::Iterate() {
 					Log( "Need to add " + std::to_string( response.data.edit_map.sprites.instances_to_add->size() ) + " instances" );
 					for ( auto& i : *response.data.edit_map.sprites.instances_to_add ) {
 						const auto& instance = i.second;
-						auto* actor = GetInstancedSpriteByKey( instance.first ).actor;
+						auto* actor = GetInstancedSpriteByKey( instance.first )->actor;
 						ASSERT( actor, "sprite actor not found" );
 						ASSERT( !actor->HasInstance( i.first ), "actor instance already exists" );
 						actor->SetInstance( i.first, instance.second );
@@ -389,10 +389,10 @@ void Game::Iterate() {
 			while ( badge.blink.timer.HasTicked() ) {
 				auto& ba = badge.def->instanced_sprite->actor;
 				if ( ba->HasInstance( badge.instance_id ) ) {
-					UnrenderUnitBadge( *m_selected_unit_state );
+					UnrenderUnitBadge( m_selected_unit_state );
 				}
 				else {
-					RenderUnitBadge( *m_selected_unit_state );
+					RenderUnitBadge( m_selected_unit_state );
 				}
 			}
 		}
@@ -451,7 +451,7 @@ types::Texture* Game::GetRepaintedSourceTexture( const std::string& name, const 
 	return texture;
 }
 
-Game::instanced_sprite_t& Game::GetInstancedSprite(
+InstancedSprite* Game::GetInstancedSprite(
 	const std::string& name,
 	types::Texture* texture,
 	const ::game::map::Consts::pcx_texture_coordinates_t& src_xy,
@@ -505,16 +505,16 @@ Game::instanced_sprite_t& Game::GetInstancedSprite(
 			}
 		).first;
 	}
-	return it->second;
+	return &it->second;
 }
 
-Game::instanced_sprite_t& Game::GetInstancedSpriteByKey( const std::string& key ) {
+InstancedSprite* Game::GetInstancedSpriteByKey( const std::string& key ) {
 	const auto& it = m_instanced_sprites.find( key );
 	ASSERT( it != m_instanced_sprites.end(), "sprite actor '" + key + "' not found" );
-	return it->second;
+	return &it->second;
 }
 
-Game::instanced_sprite_t& Game::GetTerrainInstancedSprite( const ::game::map::Map::sprite_actor_t& actor ) {
+InstancedSprite* Game::GetTerrainInstancedSprite( const ::game::map::Map::sprite_actor_t& actor ) {
 	return GetInstancedSprite(
 		"Terrain_" + actor.name,
 		GetSourceTexture( "ter1.pcx" ),
@@ -532,7 +532,7 @@ Game::instanced_sprite_t& Game::GetTerrainInstancedSprite( const ::game::map::Ma
 	);
 }
 
-Game::instanced_sprite_t* Game::GetRepaintedInstancedSprite( const std::string& name, const Game::instanced_sprite_t& original, const types::Texture::repaint_rules_t& rules ) {
+InstancedSprite* Game::GetRepaintedInstancedSprite( const std::string& name, const InstancedSprite* original, const types::Texture::repaint_rules_t& rules ) {
 	const auto& key = name;
 
 	auto it = m_instanced_sprites.find( key );
@@ -540,7 +540,7 @@ Game::instanced_sprite_t* Game::GetRepaintedInstancedSprite( const std::string& 
 
 		Log( "Creating repainted instanced sprite: " + key );
 
-		const auto* original_sprite = original.actor->GetSpriteActor();
+		const auto* original_sprite = original->actor->GetSpriteActor();
 		auto* texture = GetRepaintedSourceTexture( name, original_sprite->GetTexture(), rules );
 
 		NEWV(
@@ -553,7 +553,7 @@ Game::instanced_sprite_t* Game::GetRepaintedInstancedSprite( const std::string& 
 		);
 		sprite->SetRenderFlags( original_sprite->GetRenderFlags() );
 		NEWV( instanced, scene::actor::Instanced, sprite );
-		instanced->SetZIndex( original.actor->GetZIndex() );
+		instanced->SetZIndex( original->actor->GetZIndex() );
 		m_world_scene->AddActor( instanced );
 		it = m_instanced_sprites.insert(
 			{
@@ -561,9 +561,9 @@ Game::instanced_sprite_t* Game::GetRepaintedInstancedSprite( const std::string& 
 				{
 					key,
 					name,
-					original.xy,
-					original.wh,
-					original.cxy,
+					original->xy,
+					original->wh,
+					original->cxy,
 					instanced
 				}
 			}
@@ -930,20 +930,20 @@ void Game::DefineSlot(
 			auto& badgedef = slot.badges[ morale ];
 			badgedef.normal.instanced_sprite = GetRepaintedInstancedSprite(
 				badges_key + "_" + std::to_string( morale ) + "_NORMAL",
-				*m_unitbadge_sprites.at( badge_type | BT_NORMAL ).at( morale ),
+				m_unitbadge_sprites.at( badge_type | BT_NORMAL ).at( morale ),
 				rules
 			);
 			badgedef.normal.next_instance_id = 1;
 			badgedef.greyedout.instanced_sprite = GetRepaintedInstancedSprite(
 				badges_key + "_" + std::to_string( morale ) + "_GREYEDOUT",
-				*m_unitbadge_sprites.at( badge_type | BT_GREYEDOUT ).at( morale ),
+				m_unitbadge_sprites.at( badge_type | BT_GREYEDOUT ).at( morale ),
 				rules
 			);
 			badgedef.greyedout.next_instance_id = 1;
 		}
 		slot.fake_badge.instanced_sprite = GetRepaintedInstancedSprite(
 			badges_key + "_FAKE",
-			*m_fake_badge,
+			m_fake_badge,
 			fake_badge_rules
 		);
 		slot.fake_badge.next_instance_id = 1;
@@ -956,7 +956,7 @@ void Game::DefineUnit( const ::game::unit::Def* unitdef ) {
 	ASSERT( unitdef_it == m_unitdef_states.end(), "unit def already exists" );
 
 	Log( "Initializing unitdef state: " + unitdef->m_id );
-	unitdef_state_t unitdef_state = {
+	UnitDef unitdef_state = {
 		unitdef->m_id,
 		unitdef->m_name,
 		unitdef->m_type,
@@ -996,7 +996,7 @@ void Game::DefineUnit( const ::game::unit::Def* unitdef ) {
 								{
 									morale,
 									{
-										&GetInstancedSprite(
+										GetInstancedSprite(
 											name + "_" + std::to_string( morale ), texture, {
 												render->m_x + xshift,
 												render->m_y,
@@ -1015,7 +1015,7 @@ void Game::DefineUnit( const ::game::unit::Def* unitdef ) {
 						}
 					}
 					else {
-						unitdef_state.static_.render.sprite.instanced_sprite = &GetInstancedSprite(
+						unitdef_state.static_.render.sprite.instanced_sprite = GetInstancedSprite(
 							name, texture, {
 								render->m_x,
 								render->m_y,
@@ -1063,15 +1063,15 @@ void Game::SpawnUnit(
 	ASSERT( m_slot_states.find( slot_index ) != m_slot_states.end(), "slot not found" );
 	ASSERT( m_unit_states.find( unit_id ) == m_unit_states.end(), "unit id already exists" );
 
-	auto& slot_state = m_slot_states.at( slot_index );
-	auto& unit_state = m_unit_states.insert(
+	auto* slot_state = &m_slot_states.at( slot_index );
+	auto* unit_state = &m_unit_states.insert(
 		{
 			unit_id,
 			{
 				unit_id,
 				&m_unitdef_states.at( unitdef_id ),
-				&slot_state,
-				&GetTileState( tile_coords.x, tile_coords.y ),
+				slot_state,
+				GetTileState( tile_coords.x, tile_coords.y ),
 				{
 					{
 						render_coords.x,
@@ -1100,22 +1100,21 @@ void Game::SpawnUnit(
 			}
 		}
 	).first->second;
+	unit_state->render.badge.def = GetUnitBadgeDef( unit_state );
 
-	unit_state.render.badge.def = GetUnitBadgeDef( unit_state );
-
-	ASSERT( unit_state.tile->units.find( unit_id ) == unit_state.tile->units.end(), "unit id already exists" );
-	unit_state.tile->units.insert(
+	ASSERT( unit_state->tile->units.find( unit_id ) == unit_state->tile->units.end(), "unit id already exists" );
+	unit_state->tile->units.insert(
 		{
 			unit_id,
-			&unit_state
+			unit_state
 		}
 	);
 
-	RenderTile( *unit_state.tile );
+	RenderTile( unit_state->tile );
 
-	if ( IsUnitSelectable( &unit_state ) ) {
+	if ( IsUnitSelectable( unit_state ) ) {
 		const bool was_selectables_empty = m_selectables.unit_states.empty();
-		AddSelectable( &unit_state );
+		AddSelectable( unit_state );
 		if ( was_selectables_empty ) {
 			SelectNextUnitMaybe();
 		}
@@ -1136,18 +1135,18 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	ASSERT( tile, "unit tile not set" );
 	ASSERT( tile->units.find( unit_id ) != tile->units.end(), "unit id does not exist" );
 	tile->units.erase( unit_id );
-	RenderTile( *tile );
+	RenderTile( tile );
 
 	m_unit_states.erase( it );
 
 }
 
-void Game::RefreshUnit( unit_state_t* unit_state ) {
+void Game::RefreshUnit( Unit* unit_state ) {
 	if ( unit_state->is_active && unit_state->movement < ::game::unit::Unit::MINIMUM_MOVEMENT_TO_KEEP ) {
 		// no more moves left
 		unit_state->is_active = false;
 		unit_state->render.badge.blink.timer.Stop();
-		unit_state->render.badge.def = GetUnitBadgeDef( *unit_state );
+		unit_state->render.badge.def = GetUnitBadgeDef( unit_state );
 		UpdateSelectable( unit_state );
 		if ( m_selected_tile_data.purpose == ::game::TQP_UNIT_SELECT ) {
 			// update next tile
@@ -1161,10 +1160,10 @@ void Game::RefreshUnit( unit_state_t* unit_state ) {
 			);
 		}
 	}
-	RenderTile( *unit_state->tile );
+	RenderTile( unit_state->tile );
 }
 
-void Game::MoveUnit( unit_state_t* unit, tile_state_t* dst_tile, const types::Vec3& dst_render_coords ) {
+void Game::MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_coords ) {
 	auto* src_tile = unit->tile;
 	ASSERT( src_tile, "unit tile not set" );
 
@@ -1186,7 +1185,7 @@ void Game::MoveUnit( unit_state_t* unit, tile_state_t* dst_tile, const types::Ve
 	// TODO: animation
 
 	// update old tile
-	RenderTile( *src_tile );
+	RenderTile( src_tile );
 
 	// update unit and new tile
 	RefreshUnit( unit );
@@ -1297,12 +1296,12 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 		case ::game::Event::ET_UNIT_MOVE: {
 			const auto& d = event.data.unit_move;
 			ASSERT( m_unit_states.find( d.unit_id ) != m_unit_states.end(), "unit id not found" );
-			auto& unit_state = m_unit_states.at( d.unit_id );
-			unit_state.movement = d.movement_left;
-			auto& tile_state = GetTileState( d.tile_coords.x, d.tile_coords.y );
+			auto* unit_state = &m_unit_states.at( d.unit_id );
+			unit_state->movement = d.movement_left;
+			auto* tile_state = GetTileState( d.tile_coords.x, d.tile_coords.y );
 			const auto& rc = d.render_coords;
 			MoveUnit(
-				&unit_state, &tile_state, {
+				unit_state, tile_state, {
 					rc.x,
 					rc.y,
 					rc.z
@@ -1347,7 +1346,7 @@ void Game::UpdateMapData( const types::Vec2< size_t >& map_size ) {
 	m_tile_states.resize( m_map_data.width * m_map_data.height );
 	for ( size_t y = 0 ; y < m_map_data.height ; y++ ) {
 		for ( size_t x = 0 ; x < m_map_data.width ; x++ ) {
-			GetTileState( x, y ).coords = {
+			GetTileState( x, y )->coords = {
 				x,
 				y
 			};
@@ -1441,7 +1440,7 @@ void Game::Initialize(
 		GetTerrainInstancedSprite( a.second );
 	}
 	for ( auto& instance : sprite_instances ) {
-		auto* actor = GetInstancedSpriteByKey( instance.second.first ).actor;
+		auto* actor = GetInstancedSpriteByKey( instance.second.first )->actor;
 		ASSERT( actor, "sprite actor not found" );
 		ASSERT( !actor->HasInstance( instance.first ), "actor instance already exists" );
 		actor->SetInstance( instance.first, instance.second.second );
@@ -1467,7 +1466,7 @@ void Game::Initialize(
 					// cut holes for healthbars
 					texture->Fill( x + 6, y + 6, x + 7, y + 26, transparent );
 
-					auto* sprite = &GetInstancedSprite(
+					auto* sprite = GetInstancedSprite(
 						"Badge_" + std::to_string( badge_type ) + "_" + std::to_string( badge_mode ),
 						texture,
 						{
@@ -1502,7 +1501,7 @@ void Game::Initialize(
 
 		// load fake badge sprite
 		ASSERT( !m_fake_badge, "fake badge already initialized" );
-		m_fake_badge = &GetInstancedSprite(
+		m_fake_badge = GetInstancedSprite(
 			"Badge_FAKE",
 			texture,
 			{
@@ -1547,7 +1546,7 @@ void Game::Initialize(
 				texture->Fill( 0, step + 1, 0, res - 1, black );
 			}
 
-			auto* sprite = &GetInstancedSprite(
+			auto* sprite = GetInstancedSprite(
 				"Badge_Healthbar_" + std::to_string( step ),
 				texture,
 				{
@@ -2031,17 +2030,17 @@ void Game::SelectUnit( const unit_data_t& unit_data, const bool actually_select_
 	auto* unit_state = &m_unit_states.at( m_selected_unit_data->id );
 	if ( m_selected_unit_state != unit_state ) {
 		if ( m_selected_unit_state ) {
-			UnrenderUnit( *m_selected_unit_state );
+			UnrenderUnit( m_selected_unit_state );
 		}
 		if ( unit_state->tile->render.currently_rendered_unit ) {
-			UnrenderUnit( *unit_state->tile->render.currently_rendered_unit );
+			UnrenderUnit( unit_state->tile->render.currently_rendered_unit );
 			unit_state->tile->render.currently_rendered_unit = unit_state;
 		}
 		m_selected_unit_state = unit_state;
-		RenderUnit( *unit_state );
+		RenderUnit( unit_state );
 	}
 	if ( actually_select_unit ) {
-		UnrenderUnitBadge( *m_selected_unit_state );
+		UnrenderUnitBadge( m_selected_unit_state );
 		m_selected_unit_state->render.badge.blink.timer.SetInterval( s_consts.badges.blink.interval_ms );
 		SetCurrentSelectable( m_selected_unit_state );
 		Log( "Selected unit " + std::to_string( m_selected_unit_data->id ) );
@@ -2106,7 +2105,7 @@ void Game::DeselectTileOrUnit() {
 	if ( m_selected_unit_state ) {
 
 		m_selected_unit_state->render.badge.blink.timer.Stop();
-		RenderUnitBadge( *m_selected_unit_state );
+		RenderUnitBadge( m_selected_unit_state );
 
 		ASSERT( !m_selected_tile_data.units.empty(), "unit was selected but tile data has no units" );
 		// reset to most important unit if needed
@@ -2117,8 +2116,8 @@ void Game::DeselectTileOrUnit() {
 		ASSERT( m_unit_states.find( unit_id ) != m_unit_states.end(), "unit id not found" );
 		auto* most_important_unit = &m_unit_states.at( unit_id );
 		if ( m_selected_unit_state && m_selected_unit_state != most_important_unit ) {
-			UnrenderUnit( *m_selected_unit_state );
-			RenderUnit( *most_important_unit );
+			UnrenderUnit( m_selected_unit_state );
+			RenderUnit( most_important_unit );
 		}
 
 		m_selected_unit_state = nullptr;
@@ -2127,7 +2126,7 @@ void Game::DeselectTileOrUnit() {
 	m_ui.bottom_bar->HideTilePreview();
 }
 
-const bool Game::IsUnitSelectable( const unit_state_t* unit_state ) const {
+const bool Game::IsUnitSelectable( const Unit* unit_state ) const {
 	return unit_state->slot->slot_index == m_slot_index && unit_state->is_active;
 }
 
@@ -2367,7 +2366,7 @@ tile_data_t Game::GetTileAtCoordsResult() {
 
 			result.scroll_adaptively = response.data.select_tile.scroll_adaptively;
 
-			unit_states_t units = {};
+			std::unordered_map< size_t, Unit* > units = {};
 			for ( const auto& unit_id : *response.data.select_tile.unit_ids ) {
 				ASSERT( m_unit_states.find( unit_id ) != m_unit_states.end(), "unit id not found" );
 				units.insert(
@@ -2394,7 +2393,7 @@ tile_data_t Game::GetTileAtCoordsResult() {
 					? render.morale_based_sprites->at( unit_state.morale )
 					: render.sprite;
 
-				const auto& f_meshtex = []( const Game::instanced_sprite_t* sprite ) -> meshtex_t {
+				const auto& f_meshtex = []( const InstancedSprite* sprite ) -> meshtex_t {
 					auto* texture = sprite->actor->GetSpriteActor()->GetTexture();
 					NEWV( mesh, types::mesh::Rectangle );
 					mesh->SetCoords(
@@ -2613,14 +2612,14 @@ void Game::ExitGame( const f_exit_game on_game_exit ) {
 	}
 }
 
-void Game::AddSelectable( unit_state_t* unit_state ) {
+void Game::AddSelectable( Unit* unit_state ) {
 	const auto& it = std::find( m_selectables.unit_states.begin(), m_selectables.unit_states.end(), unit_state );
 	if ( it == m_selectables.unit_states.end() ) {
 		m_selectables.unit_states.push_back( unit_state );
 	}
 }
 
-void Game::RemoveSelectable( unit_state_t* unit_state ) {
+void Game::RemoveSelectable( Unit* unit_state ) {
 	const auto& it = std::find( m_selectables.unit_states.begin(), m_selectables.unit_states.end(), unit_state );
 	if ( it != m_selectables.unit_states.end() ) {
 		const size_t removed_index = it - m_selectables.unit_states.begin();
@@ -2631,7 +2630,7 @@ void Game::RemoveSelectable( unit_state_t* unit_state ) {
 	}
 }
 
-void Game::UpdateSelectable( unit_state_t* unit_state ) {
+void Game::UpdateSelectable( Unit* unit_state ) {
 	if ( unit_state->slot->slot_index == m_slot_index ) {
 		if ( IsUnitSelectable( unit_state ) ) {
 			AddSelectable( unit_state );
@@ -2642,13 +2641,13 @@ void Game::UpdateSelectable( unit_state_t* unit_state ) {
 	}
 }
 
-void Game::SetCurrentSelectable( unit_state_t* unit_state ) {
+void Game::SetCurrentSelectable( Unit* unit_state ) {
 	const auto& it = std::find( m_selectables.unit_states.begin(), m_selectables.unit_states.end(), unit_state );
 	ASSERT( it != m_selectables.unit_states.end(), "selectable not found" );
 	m_selectables.selected_id_index = it - m_selectables.unit_states.begin();
 }
 
-Game::unit_state_t* Game::GetNextSelectable() {
+Unit* Game::GetNextSelectable() {
 	if ( !m_selectables.unit_states.empty() ) {
 		m_selectables.selected_id_index++;
 		if ( m_selectables.selected_id_index >= m_selectables.unit_states.size() ) {
@@ -2676,11 +2675,11 @@ const bool Game::SelectNextUnitMaybe() {
 	return false;
 }
 
-Game::sprite_state_t* Game::GetUnitBadgeDef( const unit_state_t& unit_state ) const {
-	const auto& slot_state = unit_state.slot;
-	return IsUnitSelectable( &unit_state )
-		? &slot_state->badges.at( unit_state.morale ).normal
-		: &slot_state->badges.at( unit_state.morale ).greyedout;
+Sprite* Game::GetUnitBadgeDef( const Unit* unit_state ) const {
+	const auto& slot_state = unit_state->slot;
+	return IsUnitSelectable( unit_state )
+		? &slot_state->badges.at( unit_state->morale ).normal
+		: &slot_state->badges.at( unit_state->morale ).greyedout;
 }
 
 void Game::CancelRequests() {
@@ -2735,53 +2734,53 @@ void Game::ReturnToMainMenu( const std::string reason ) {
 	g_engine->GetScheduler()->AddTask( task );
 }
 
-void Game::RenderUnit( unit_state_t& unit_state ) {
+void Game::RenderUnit( Unit* unit_state ) {
 
-	if ( unit_state.render.is_rendered ) {
+	if ( unit_state->render.is_rendered ) {
 		//Log( "Rendering unit " + std::to_string( unit_state.unit_id ) + " (already rendered)" );
 		return;
 	}
 
-	Log( "Rendering unit " + std::to_string( unit_state.unit_id ) );
+	Log( "Rendering unit " + std::to_string( unit_state->unit_id ) );
 
-	auto* unitdef_state = unit_state.def;
-	auto* slot_state = unit_state.slot;
-	const auto& c = unit_state.render.coords;
+	auto* unitdef_state = unit_state->def;
+	auto* slot_state = unit_state->slot;
+	const auto& c = unit_state->render.coords;
 
 	ASSERT( unitdef_state->m_type == ::game::unit::Def::DT_STATIC, "only static unitdefs are supported for now" );
 	ASSERT( unitdef_state->static_.render.is_sprite, "only sprite unitdefs are supported for now" );
 
 	auto& sprite = unitdef_state->static_.render.morale_based_xshift
-		? unitdef_state->static_.render.morale_based_sprites->at( unit_state.morale )
+		? unitdef_state->static_.render.morale_based_sprites->at( unit_state->morale )
 		: unitdef_state->static_.render.sprite;
-	unit_state.render.instance_id = sprite.next_instance_id++;
+	unit_state->render.instance_id = sprite.next_instance_id++;
 	sprite.instanced_sprite->actor->SetInstance(
-		unit_state.render.instance_id, {
+		unit_state->render.instance_id, {
 			c.x,
 			c.y,
 			c.z
 		}
 	);
 
-	unit_state.render.badge.instance_id = unit_state.render.badge.def->next_instance_id++;
-	unit_state.render.badge.healthbar.instance_id = unit_state.render.badge.healthbar.def->next_instance_id++;
+	unit_state->render.badge.instance_id = unit_state->render.badge.def->next_instance_id++;
+	unit_state->render.badge.healthbar.instance_id = unit_state->render.badge.healthbar.def->next_instance_id++;
 
 	RenderUnitBadge( unit_state );
 
-	unit_state.render.is_rendered = true;
+	unit_state->render.is_rendered = true;
 }
 
-void Game::RenderUnitBadge( const unit_state_t& unit_state ) {
-	const auto& c = unit_state.render.coords;
-	unit_state.render.badge.def->instanced_sprite->actor->SetInstance(
-		unit_state.render.badge.instance_id, {
+void Game::RenderUnitBadge( const Unit* unit_state ) {
+	const auto& c = unit_state->render.coords;
+	unit_state->render.badge.def->instanced_sprite->actor->SetInstance(
+		unit_state->render.badge.instance_id, {
 			c.x + ::game::map::s_consts.tile.scale.x * s_consts.badges.offset.x,
 			c.y - ::game::map::s_consts.tile.scale.y * s_consts.badges.offset.y * ::game::map::s_consts.sprite.y_scale,
 			c.z
 		}
 	);
-	unit_state.render.badge.healthbar.def->instanced_sprite->actor->SetInstance(
-		unit_state.render.badge.healthbar.instance_id, {
+	unit_state->render.badge.healthbar.def->instanced_sprite->actor->SetInstance(
+		unit_state->render.badge.healthbar.instance_id, {
 			c.x + ::game::map::s_consts.tile.scale.x * s_consts.badges.healthbars.offset.x,
 			c.y - ::game::map::s_consts.tile.scale.y * s_consts.badges.healthbars.offset.y * ::game::map::s_consts.sprite.y_scale,
 			c.z
@@ -2789,80 +2788,80 @@ void Game::RenderUnitBadge( const unit_state_t& unit_state ) {
 	);
 }
 
-void Game::RenderUnitFakeBadge( unit_state_t& unit_state, const size_t offset ) {
+void Game::RenderUnitFakeBadge( Unit* unit_state, const size_t offset ) {
 
-	Log( "Rendering unit fake badge " + std::to_string( unit_state.unit_id ) );
+	Log( "Rendering unit fake badge " + std::to_string( unit_state->unit_id ) );
 
-	ASSERT( !unit_state.render.fake_badge.is_rendered, "unit fake badge already rendered" );
+	ASSERT( !unit_state->render.fake_badge.is_rendered, "unit fake badge already rendered" );
 
-	auto& slot_state = unit_state.slot;
+	auto& slot_state = unit_state->slot;
 
-	const auto& c = unit_state.render.coords;
+	const auto& c = unit_state->render.coords;
 
-	unit_state.render.fake_badge.instance_id = slot_state->fake_badge.next_instance_id++;
+	unit_state->render.fake_badge.instance_id = slot_state->fake_badge.next_instance_id++;
 	slot_state->fake_badge.instanced_sprite->actor->SetInstance(
-		unit_state.render.fake_badge.instance_id, {
+		unit_state->render.fake_badge.instance_id, {
 			c.x + ::game::map::s_consts.tile.scale.x * s_consts.badges.fake_badges.offset.x + s_consts.badges.fake_badges.step_x * offset,
 			c.y - ::game::map::s_consts.tile.scale.y * s_consts.badges.fake_badges.offset.y * ::game::map::s_consts.sprite.y_scale,
 			c.z
 		}
 	);
-	unit_state.render.fake_badge.is_rendered = true;
+	unit_state->render.fake_badge.is_rendered = true;
 }
 
-void Game::UnrenderUnit( unit_state_t& unit_state ) {
+void Game::UnrenderUnit( Unit* unit_state ) {
 
-	if ( !unit_state.render.is_rendered ) {
+	if ( !unit_state->render.is_rendered ) {
 		//Log( "Unrendering unit " + std::to_string( unit_state.unit_id ) + " (already unrendered)" );
 		return;
 	}
 
-	Log( "Unrendering unit " + std::to_string( unit_state.unit_id ) );
+	Log( "Unrendering unit " + std::to_string( unit_state->unit_id ) );
 
-	const auto& unitdef_state = unit_state.def;
+	const auto& unitdef_state = unit_state->def;
 
 	ASSERT( unitdef_state->m_type == ::game::unit::Def::DT_STATIC, "only static unitdefs are supported for now" );
 	ASSERT( unitdef_state->static_.render.is_sprite, "only sprite unitdefs are supported for now" );
 
-	if ( m_selected_unit_state == &unit_state ) {
+	if ( m_selected_unit_state == unit_state ) {
 		m_selected_unit_state = nullptr;
 	}
 
 	auto& sprite = unitdef_state->static_.render.morale_based_xshift
-		? unitdef_state->static_.render.morale_based_sprites->at( unit_state.morale )
+		? unitdef_state->static_.render.morale_based_sprites->at( unit_state->morale )
 		: unitdef_state->static_.render.sprite;
-	sprite.instanced_sprite->actor->RemoveInstance( unit_state.render.instance_id );
+	sprite.instanced_sprite->actor->RemoveInstance( unit_state->render.instance_id );
 
 	UnrenderUnitBadge( unit_state );
 
-	unit_state.render.is_rendered = false;
+	unit_state->render.is_rendered = false;
 }
 
-void Game::UnrenderUnitBadge( const unit_state_t& unit_state ) {
-	unit_state.render.badge.def->instanced_sprite->actor->RemoveInstance( unit_state.render.badge.instance_id );
-	unit_state.render.badge.healthbar.def->instanced_sprite->actor->RemoveInstance( unit_state.render.badge.healthbar.instance_id );
+void Game::UnrenderUnitBadge( const Unit* unit_state ) {
+	unit_state->render.badge.def->instanced_sprite->actor->RemoveInstance( unit_state->render.badge.instance_id );
+	unit_state->render.badge.healthbar.def->instanced_sprite->actor->RemoveInstance( unit_state->render.badge.healthbar.instance_id );
 }
 
-void Game::UnrenderUnitFakeBadge( unit_state_t& unit_state ) {
+void Game::UnrenderUnitFakeBadge( Unit* unit_state ) {
 
-	Log( "Unrendering unit fake badge " + std::to_string( unit_state.unit_id ) );
+	Log( "Unrendering unit fake badge " + std::to_string( unit_state->unit_id ) );
 
-	ASSERT( unit_state.render.fake_badge.is_rendered, "unit fake badge not rendered" );
+	ASSERT( unit_state->render.fake_badge.is_rendered, "unit fake badge not rendered" );
 
-	auto& slot = unit_state.slot;
+	auto* slot = unit_state->slot;
 
-	slot->fake_badge.instanced_sprite->actor->RemoveInstance( unit_state.render.fake_badge.instance_id );
+	slot->fake_badge.instanced_sprite->actor->RemoveInstance( unit_state->render.fake_badge.instance_id );
 
-	unit_state.render.fake_badge.is_rendered = false;
+	unit_state->render.fake_badge.is_rendered = false;
 }
 
-std::vector< size_t > Game::GetUnitsOrder( const unit_states_t& units ) const {
+std::vector< size_t > Game::GetUnitsOrder( const std::unordered_map< size_t, Unit* >& units ) const {
 	typedef int16_t weight_t;
 	std::map< weight_t, std::vector< size_t > > weights; // { weight, units }
 
 	for ( auto& it : units ) {
 		const auto unit_id = it.first;
-		const auto& unit = it.second;
+		const auto* unit = it.second;
 		weight_t weight = 0;
 
 		// active units have priority
@@ -2902,24 +2901,24 @@ std::vector< size_t > Game::GetUnitsOrder( const unit_states_t& units ) const {
 	return result;
 }
 
-void Game::RenderTile( tile_state_t& tile_state ) {
+void Game::RenderTile( Tile* tile_state ) {
 
-	Log( "Rendering tile [" + std::to_string( tile_state.coords.x ) + "," + std::to_string( tile_state.coords.y ) + "]" );
+	Log( "Rendering tile [" + std::to_string( tile_state->coords.x ) + "," + std::to_string( tile_state->coords.y ) + "]" );
 
 	// unrender unit
-	if ( tile_state.render.currently_rendered_unit ) {
-		UnrenderUnit( *tile_state.render.currently_rendered_unit );
-		tile_state.render.currently_rendered_unit = nullptr;
+	if ( tile_state->render.currently_rendered_unit ) {
+		UnrenderUnit( tile_state->render.currently_rendered_unit );
+		tile_state->render.currently_rendered_unit = nullptr;
 	}
 
 	// unrender fake badges
-	for ( const auto& unit : tile_state.render.currently_rendered_fake_badges ) {
-		UnrenderUnitFakeBadge( *unit );
+	for ( const auto& unit : tile_state->render.currently_rendered_fake_badges ) {
+		UnrenderUnitFakeBadge( unit );
 	}
-	tile_state.render.currently_rendered_fake_badges.clear();
+	tile_state->render.currently_rendered_fake_badges.clear();
 
-	if ( !tile_state.units.empty() ) {
-		const auto units_order = GetUnitsOrder( tile_state.units );
+	if ( !tile_state->units.empty() ) {
+		const auto units_order = GetUnitsOrder( tile_state->units );
 		ASSERT( !units_order.empty(), "units order is empty" );
 
 		const auto most_important_unit_id = units_order.front();
@@ -2928,44 +2927,44 @@ void Game::RenderTile( tile_state_t& tile_state ) {
 			: 0;
 
 		// also display badges from stacked units that are not visible themselves
-		ASSERT( tile_state.render.currently_rendered_fake_badges.empty(), "orphan badges already rendered" );
+		ASSERT( tile_state->render.currently_rendered_fake_badges.empty(), "orphan badges already rendered" );
 		size_t fake_badge_idx = 1;
-		std::vector< unit_state_t* > fake_badges = {};
+		std::vector< Unit* > fake_badges = {};
 		for ( const auto& unit_id : units_order ) {
-			const auto& unit = tile_state.units.at( unit_id );
-			if ( !tile_state.render.currently_rendered_unit && unit_id == most_important_unit_id ) {
+			const auto& unit = tile_state->units.at( unit_id );
+			if ( !tile_state->render.currently_rendered_unit && unit_id == most_important_unit_id ) {
 				// choose first by default
-				tile_state.render.currently_rendered_unit = unit;
+				tile_state->render.currently_rendered_unit = unit;
 			}
 			else if ( unit_id == selected_unit_id ) {
 				// override default is found
-				tile_state.render.currently_rendered_unit = unit;
+				tile_state->render.currently_rendered_unit = unit;
 			}
 			else {
 				// render fake badge
-				tile_state.render.currently_rendered_fake_badges.push_back( unit );
+				tile_state->render.currently_rendered_fake_badges.push_back( unit );
 				fake_badges.push_back( unit );
 				if ( fake_badge_idx++ > s_consts.badges.fake_badges.max_per_tile ) {
 					break;
 				}
 			}
 		}
-		if ( tile_state.render.currently_rendered_unit ) {
-			RenderUnit( *tile_state.render.currently_rendered_unit );
+		if ( tile_state->render.currently_rendered_unit ) {
+			RenderUnit( tile_state->render.currently_rendered_unit );
 		}
 		size_t idx;
 		for ( size_t i = 0 ; i < fake_badges.size() ; i++ ) { // order is important
 			idx = fake_badges.size() - i - 1;
-			RenderUnitFakeBadge( *fake_badges.at( idx ), i );
+			RenderUnitFakeBadge( fake_badges.at( idx ), i );
 		}
 	}
 }
 
-Game::tile_state_t& Game::GetTileState( const size_t x, const size_t y ) {
+Tile* Game::GetTileState( const size_t x, const size_t y ) {
 	ASSERT( !m_tile_states.empty(), "tile states not set" );
 	ASSERT( x < m_map_data.width, "tile x overflow" );
 	ASSERT( y < m_map_data.height, "tile y overflow" );
-	return m_tile_states.at( y * m_map_data.width + x );
+	return &m_tile_states.at( y * m_map_data.width + x );
 }
 
 const std::string Game::FloatToString( const float value ) {
