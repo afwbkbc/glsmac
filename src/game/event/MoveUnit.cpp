@@ -25,8 +25,13 @@ const std::string* MoveUnit::Validate( const Game* game ) const {
 
 	ASSERT_NOLOG( unit->m_def->m_type == unit::Def::DT_STATIC, "only static units are supported now" );
 	const auto* def = (unit::StaticDef*)unit->m_def;
+
 	if ( def->m_movement_type == unit::StaticDef::MT_IMMOVABLE ) {
 		return new std::string( "Unit is immovable" );
+	}
+
+	if ( unit->m_movement < unit::Unit::MINIMUM_MOVEMENT_TO_KEEP ) {
+		return new std::string( "Unit is out of moves" );
 	}
 
 	auto* src_tile = unit->m_tile;

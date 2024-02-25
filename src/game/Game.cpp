@@ -1018,7 +1018,12 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 	m_units.insert_or_assign( unit->m_id, unit );
 	unit->m_tile = tile;
 	ASSERT( tile->units.find( unit->m_id ) == tile->units.end(), "duplicate unit id in tile" );
-	tile->units.insert_or_assign( unit->m_id, unit );
+	tile->units.insert(
+		{
+			unit->m_id,
+			unit
+		}
+	);
 
 	// notify frontend
 	auto e = Event( Event::ET_UNIT_SPAWN );
@@ -1039,6 +1044,7 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 	// temporary logic for testing - all own units are active, all foreign aren't
 	e.data.unit_spawn.is_active = unit->m_owner == GetPlayer()->GetSlot();
 
+	e.data.unit_spawn.movement = unit->m_movement;
 	e.data.unit_spawn.morale = unit->m_morale;
 	e.data.unit_spawn.health = unit->m_health;
 
@@ -1087,28 +1093,47 @@ void Game::MoveUnit( unit::Unit* unit, map::Tile* dst_tile ) {
 	ASSERT( src_tile->units.find( unit->m_id ) != src_tile->units.end(), "src tile does not contain this unit" );
 	ASSERT( dst_tile->units.find( unit->m_id ) == dst_tile->units.end(), "dst tile already contains this unit" );
 
-	src_tile->units.erase( unit->m_id );
-	dst_tile->units.insert(
-		{
-			unit->m_id,
-			unit
-		}
-	);
-	unit->m_tile = dst_tile;
+	const auto move_result = unit->TryMovingTo( this, dst_tile );
+	switch ( move_result ) {
+		case unit::Unit::MR_MOVED: {
 
-	auto e = Event( Event::ET_UNIT_MOVE );
-	e.data.unit_move.unit_id = unit->m_id;
-	e.data.unit_move.tile_coords = {
-		dst_tile->coord.x,
-		dst_tile->coord.y
-	};
-	const auto c = GetUnitRenderCoords( unit );
-	e.data.unit_move.render_coords = {
-		c.x,
-		c.y,
-		c.z
-	};
-	AddEvent( e );
+			src_tile->units.erase( unit->m_id );
+			dst_tile->units.insert(
+				{
+					unit->m_id,
+					unit
+				}
+			);
+			unit->m_tile = dst_tile;
+
+			// notify frontend
+			auto e = Event( Event::ET_UNIT_MOVE );
+			e.data.unit_move.unit_id = unit->m_id;
+			e.data.unit_move.tile_coords = {
+				dst_tile->coord.x,
+				dst_tile->coord.y
+			};
+			const auto c = GetUnitRenderCoords( unit );
+			e.data.unit_move.render_coords = {
+				c.x,
+				c.y,
+				c.z
+			};
+			e.data.unit_move.movement_left = unit->m_movement;
+			AddEvent( e );
+			break;
+		}
+		case unit::Unit::MR_TRIED_BUT_FAILED: {
+			// refresh unit badge on frontend
+			auto e = Event( Event::ET_UNIT_REFRESH );
+			e.data.unit_refresh.unit_id = unit->m_id;
+			e.data.unit_refresh.movement_left = unit->m_movement;
+			AddEvent( e );
+			break;
+		}
+		default:
+			THROW( "unknown unit move result: " + std::to_string( move_result ) );
+	}
 }
 
 void Game::ValidateGameEvent( event::Event* event ) const {

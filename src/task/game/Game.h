@@ -32,6 +32,7 @@
 #include "actor/TileSelection.h"
 #include "game/Game.h"
 #include "game/Event.h"
+#include "game/unit/StaticDef.h"
 
 #include "game/map/Consts.h"
 #include "game/map_editor/MapEditor.h"
@@ -212,10 +213,12 @@ private:
 		const Vec2< size_t >& tile_coords,
 		const Vec3& render_coords,
 		const bool is_active,
+		const ::game::unit::Unit::movement_t movement,
 		const ::game::unit::Unit::morale_t morale,
 		const ::game::unit::Unit::health_t health
 	);
 	void DespawnUnit( const size_t unit_id );
+	void RefreshUnit( unit_state_t* unit_state );
 	void MoveUnit( unit_state_t* unit, tile_state_t* dst_tile, const types::Vec3& dst_render_coords );
 
 	void ProcessEvent( const ::game::Event& event );
@@ -453,6 +456,8 @@ private:
 		::game::unit::Def::def_type_t m_type;
 		union {
 			struct {
+				::game::unit::StaticDef::movement_type_t movement_type;
+				::game::unit::Unit::movement_t movement_per_turn;
 				struct {
 					bool is_sprite;
 					uint32_t morale_based_xshift;
@@ -518,10 +523,13 @@ private:
 			} fake_badge;
 		} render;
 		bool is_active = false;
+		::game::unit::Unit::movement_t movement = 0.0f;
 		::game::unit::Unit::morale_t morale = 0;
 		::game::unit::Unit::health_t health = 0;
 	};
 	std::unordered_map< size_t, unit_state_t > m_unit_states = {};
+
+	sprite_state_t* GetUnitBadgeDef( const unit_state_t& unit_state ) const;
 
 	std::unordered_map< std::string, instanced_sprite_t > m_instanced_sprites = {};
 
@@ -548,6 +556,9 @@ private:
 	void RenderTile( tile_state_t& tile_state );
 
 	tile_state_t& GetTileState( const size_t x, const size_t y );
+
+	// special formatting of floats
+	const std::string FloatToString( const float value );
 
 };
 

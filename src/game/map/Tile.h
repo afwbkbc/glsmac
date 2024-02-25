@@ -162,6 +162,12 @@ public:
 
 	const bool IsAdjactentTo( const Tile* other ) const;
 
+	// cost to make the move at all
+	const float GetMovementCost() const;
+
+	// if move was made - substract aftercost from movement points
+	const float GetMovementAftercost() const;
+
 	const Buffer Serialize() const;
 	void Unserialize( Buffer data );
 

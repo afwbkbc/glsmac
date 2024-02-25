@@ -24,8 +24,9 @@ struct unit_data_t {
 	meshtex_t badge;
 	meshtex_t healthbar;
 	std::string unit_name;
-	std::string short_power_label;
-	std::string morale_label;
+	std::string short_power_string;
+	std::string morale_string;
+	std::string moves_string;
 };
 
 struct tile_data_t {

@@ -27,9 +27,10 @@ const std::string& StaticDef::GetMovementTypeString( const movement_type_t movem
 	return it->second;
 }
 
-StaticDef::StaticDef( const std::string& id, const std::string& name, const movement_type_t movement_type, const Render* render )
+StaticDef::StaticDef( const std::string& id, const std::string& name, const movement_type_t movement_type, const Unit::movement_t movement_per_turn, const Render* render )
 	: Def( id, DT_STATIC, name )
 	, m_movement_type( movement_type )
+	, m_movement_per_turn( movement_per_turn )
 	, m_render( render ) {}
 
 StaticDef::~StaticDef() {
@@ -46,18 +47,21 @@ const std::string StaticDef::ToString( const std::string& prefix ) const {
 		TS_OBJ_PROP_STR( "id", m_id ) +
 		TS_OBJ_PROP_STR( "name", m_name ) +
 		TS_OBJ_PROP_STR( "movement_type", GetMovementTypeString( m_movement_type ) ) +
+		TS_OBJ_PROP_NUM( "movement_per_turn", m_movement_per_turn ) +
 		TS_OBJ_PROP( "render", m_render->ToString( TS_PREFIX_NEXT ) ) +
 		TS_OBJ_END();
 }
 
 void StaticDef::Serialize( types::Buffer& buf, const StaticDef* def ) {
 	buf.WriteInt( def->m_movement_type );
+	buf.WriteFloat( def->m_movement_per_turn );
 	Render::Serialize( buf, def->m_render );
 }
 
 StaticDef* StaticDef::Unserialize( types::Buffer& buf, const std::string& id, const std::string& name ) {
 	const auto movement_type = (movement_type_t)buf.ReadInt();
-	return new StaticDef( id, name, movement_type, Render::Unserialize( buf ) );
+	const auto movement_per_turn = buf.ReadFloat();
+	return new StaticDef( id, name, movement_type, movement_per_turn, Render::Unserialize( buf ) );
 }
 
 }

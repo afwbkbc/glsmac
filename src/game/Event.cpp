@@ -40,26 +40,23 @@ Event::Event( const Event& other )
 			break;
 		}
 		case ET_UNIT_SPAWN: {
-			data.unit_spawn.unit_id = other.data.unit_spawn.unit_id;
+			data.unit_spawn = other.data.unit_spawn;
 			NEW( data.unit_spawn.unitdef_id, std::string, *other.data.unit_spawn.unitdef_id );
-			data.unit_spawn.slot_index = other.data.unit_spawn.slot_index;
-			data.unit_spawn.tile_coords = other.data.unit_spawn.tile_coords;
-			data.unit_spawn.render_coords = other.data.unit_spawn.render_coords;
-			data.unit_spawn.is_active = other.data.unit_spawn.is_active;
-			data.unit_spawn.morale = other.data.unit_spawn.morale;
-			data.unit_spawn.health = other.data.unit_spawn.health;
 			break;
 		}
 		case ET_UNIT_DESPAWN: {
 			data.unit_despawn.unit_id = other.data.unit_despawn.unit_id;
 			break;
 		}
-		case ET_UNIT_MOVE: {
-			data.unit_move.unit_id = other.data.unit_move.unit_id;
-			data.unit_move.tile_coords = other.data.unit_move.tile_coords;
-			data.unit_move.render_coords = other.data.unit_move.render_coords;
+		case ET_UNIT_REFRESH: {
+			data.unit_refresh = other.data.unit_refresh;
 			break;
 		}
+		case ET_UNIT_MOVE: {
+			data.unit_move = other.data.unit_move;
+			break;
+		}
+
 		default: {
 			//
 		}

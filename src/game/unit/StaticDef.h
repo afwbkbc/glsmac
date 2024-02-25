@@ -4,6 +4,8 @@
 
 #include "Render.h"
 
+#include "Unit.h"
+
 namespace game {
 namespace unit {
 
@@ -17,10 +19,11 @@ public:
 	};
 	static const std::string& GetMovementTypeString( const movement_type_t movement_type );
 
-	StaticDef( const std::string& id, const std::string& name, const movement_type_t movement_type, const Render* render );
+	StaticDef( const std::string& id, const std::string& name, const movement_type_t movement_type, const Unit::movement_t movement_per_turn, const Render* render );
 	~StaticDef();
 
 	const movement_type_t m_movement_type;
+	const Unit::movement_t m_movement_per_turn;
 	const Render* m_render;
 
 	const types::Vec3 GetSpawnCoords( const float tile_x, const float tile_y, const map::TileState::tile_vertices_t& tile_coords ) const override;

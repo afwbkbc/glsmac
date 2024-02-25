@@ -23,6 +23,8 @@ public:
 	static const size_t GetNextId();
 	static const void SetNextId( const size_t id );
 
+	typedef float movement_t;
+
 	typedef uint8_t morale_t;
 	static const morale_t MORALE_MIN;
 	static const morale_t MORALE_MAX;
@@ -36,6 +38,7 @@ public:
 		const Def* def,
 		Slot* owner,
 		map::Tile* tile,
+		const movement_t movement,
 		const morale_t morale,
 		const health_t health
 	);
@@ -46,8 +49,17 @@ public:
 	Slot* m_owner;
 	map::Tile* m_tile = nullptr;
 
+	movement_t m_movement;
 	morale_t m_morale;
 	health_t m_health;
+
+	enum movement_result_t {
+		MR_MOVED,
+		MR_TRIED_BUT_FAILED,
+		MR_COULD_NOT_MOVE,
+	};
+	static const movement_t MINIMUM_MOVEMENT_TO_KEEP;
+	const movement_result_t TryMovingTo( Game* game, const map::Tile* dst_tile );
 
 	static const std::string& GetMoraleString( const morale_t morale );
 

@@ -60,6 +60,7 @@ BINDING_IMPL( units ) {
 					else {
 						ERROR( gse::EC.INVALID_CALL, "Invalid movement type - " + movement_type_str + ". Specify one of: land sea air immovable");
 					}
+					N_GETPROP( movement_per_turn, unit_def, "movement_per_turn", Int );
 					N_GETPROP( render_def, unit_def, "render", Object );
 					N_GETPROP( render_type, render_def, "type", String );
 					if ( render_type == "sprite" ) {
@@ -75,7 +76,17 @@ BINDING_IMPL( units ) {
 							id,
 							name,
 							movement_type,
-							new unit::SpriteRender( sprite_file, sprite_x, sprite_y, sprite_w, sprite_h, sprite_cx, sprite_cy, sprite_morale_based_xshift )
+							movement_per_turn,
+							new unit::SpriteRender(
+								sprite_file,
+								sprite_x,
+								sprite_y,
+								sprite_w,
+								sprite_h,
+								sprite_cx,
+								sprite_cy,
+								sprite_morale_based_xshift
+							)
 						);
 						auto* game = GAME;
 						game->AddGameEvent( new event::DefineUnit( game->GetInitiatorSlot(), def ) );

@@ -26,11 +26,12 @@ const void Unit::SetNextId( const size_t id ) {
 	next_id = id;
 }
 
-Unit::Unit( const size_t id, const Def* def, Slot* owner, map::Tile* tile, const morale_t morale, const health_t health )
+Unit::Unit( const size_t id, const Def* def, Slot* owner, map::Tile* tile, const movement_t movement, const morale_t morale, const health_t health )
 	: m_id( id )
 	, m_def( def )
 	, m_owner( owner )
 	, m_tile( tile )
+	, m_movement( movement )
 	, m_morale( morale )
 	, m_health( health ) {
 	if ( next_id <= id ) {
@@ -59,6 +60,44 @@ const morale_strings_t s_morale_strings_nonnative = {
 	{ 7, "Elite" },
 };
 
+const Unit::movement_t Unit::MINIMUM_MOVEMENT_TO_KEEP = 0.1f;
+
+const Unit::movement_result_t Unit::TryMovingTo( Game* game, const map::Tile* dst_tile ) {
+	// TODO: move to scripts
+	ASSERT_NOLOG( m_movement >= MINIMUM_MOVEMENT_TO_KEEP, "no movement points" );
+
+	auto movement_cost = dst_tile->GetMovementCost();
+	bool move_success = false;
+
+	if ( m_movement >= movement_cost ) {
+		move_success = true;
+		movement_cost += dst_tile->GetMovementAftercost();
+	}
+	else {
+		move_success = game->GetRandom()->GetFloat( 0.0f, movement_cost ) < m_movement;
+	}
+
+	// reduce remaining movement points (even if failed)
+	if ( m_movement >= movement_cost ) {
+		m_movement -= movement_cost;
+		if ( m_movement < MINIMUM_MOVEMENT_TO_KEEP ) {
+			// don't keep tiny leftovers
+			m_movement = 0.0f;
+		}
+	}
+	else {
+		m_movement = 0.0f;
+	}
+
+	if ( move_success ) {
+		return MR_MOVED;
+	}
+	else {
+		return MR_TRIED_BUT_FAILED;
+	}
+
+}
+
 const std::string& Unit::GetMoraleString( const morale_t morale ) {
 	const bool is_native = true; // TODO: non-native units
 	const auto& morale_strings = is_native ? s_morale_strings_native : s_morale_strings_nonnative;
@@ -73,6 +112,7 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 	buf.WriteInt( unit->m_owner->GetIndex() );
 	buf.WriteInt( unit->m_tile->coord.x );
 	buf.WriteInt( unit->m_tile->coord.y );
+	buf.WriteFloat( unit->m_movement );
 	buf.WriteInt( unit->m_morale );
 	buf.WriteFloat( unit->m_health );
 	return buf;
@@ -86,9 +126,10 @@ Unit* Unit::Unserialize( types::Buffer& buf, const Game* game ) {
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
 	auto* tile = game ? game->GetMap()->GetTile( pos_x, pos_y ) : nullptr;
+	const auto movement = (movement_t)buf.ReadFloat();
 	const auto morale = (morale_t)buf.ReadInt();
 	const auto health = (health_t)buf.ReadFloat();
-	return new Unit( id, def, slot, tile, morale, health );
+	return new Unit( id, def, slot, tile, movement, morale, health );
 }
 
 WRAPIMPL_BEGIN( Unit, CLASS_UNIT )
@@ -96,6 +137,10 @@ WRAPIMPL_BEGIN( Unit, CLASS_UNIT )
 		{
 			"id",
 			VALUE( gse::type::Int, m_id )
+		},
+		{
+			"movement",
+			VALUE( gse::type::Float, m_movement )
 		},
 		{
 			"morale",

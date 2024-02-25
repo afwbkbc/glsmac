@@ -3,6 +3,8 @@
 #include "game/Game.h"
 #include "game/State.h"
 
+#include "game/unit/StaticDef.h"
+
 namespace game {
 namespace event {
 
@@ -35,6 +37,8 @@ const std::string* SpawnUnit::Validate( const Game* game ) const {
 const gse::Value SpawnUnit::Apply( game::Game* game ) const {
 	const auto* def = game->GetUnitDef( m_unit_def );
 	ASSERT_NOLOG( def, "unit def '" + m_unit_def + "' not found" );
+	ASSERT_NOLOG( def->m_type == unit::Def::DT_STATIC, "only static defs are supported" );
+	const auto* staticdef = (unit::StaticDef*)def;
 	auto& owner = game->GetState()->m_slots.GetSlot( m_owner_slot );
 	auto* tile = game->GetMap()->GetTile( m_pos_x, m_pos_y );
 	auto* unit = new unit::Unit(
@@ -42,12 +46,11 @@ const gse::Value SpawnUnit::Apply( game::Game* game ) const {
 		def,
 		&owner,
 		tile,
+		staticdef->m_movement_per_turn,
 		m_morale,
 		m_health
 	);
-	game->SpawnUnit(
-		unit
-	);
+	game->SpawnUnit( unit );
 	return unit->Wrap();
 }
 

@@ -20,6 +20,7 @@ public:
 		ET_UNIT_DEFINE,
 		ET_UNIT_SPAWN,
 		ET_UNIT_DESPAWN,
+		ET_UNIT_REFRESH,
 		ET_UNIT_MOVE
 	};
 	Event( const event_type_t type );
@@ -75,12 +76,17 @@ public:
 				float z;
 			} render_coords;
 			bool is_active;
+			unit::Unit::movement_t movement;
 			unit::Unit::morale_t morale;
 			unit::Unit::health_t health;
 		} unit_spawn;
 		struct {
 			size_t unit_id;
 		} unit_despawn;
+		struct {
+			size_t unit_id;
+			unit::Unit::movement_t movement_left;
+		} unit_refresh;
 		struct {
 			size_t unit_id;
 			struct {
@@ -92,6 +98,7 @@ public:
 				float y;
 				float z;
 			} render_coords;
+			unit::Unit::movement_t movement_left;
 		} unit_move;
 	} data;
 };

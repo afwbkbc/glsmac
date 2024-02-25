@@ -43,16 +43,19 @@ void UnitPreview::PreviewUnit( const unit_data_t* unit_data ) {
 	size_t top = 86;
 	::ui::object::Label* label;
 #define X( _text, _align ) \
-    NEW( label, ::ui::object::Label, "BBUnitPreviewLabel" #_align ); \
-    label->SetText( _text ); \
-    label->SetTop( top ); \
-    AddChild( label ); \
-    m_labels.push_back( label ); \
-    top += label->GetHeight();
+    if ( !(_text).empty() ) { \
+        NEW( label, ::ui::object::Label, "BBUnitPreviewLabel" #_align ); \
+        label->SetText( _text ); \
+        label->SetTop( top ); \
+        AddChild( label ); \
+        m_labels.push_back( label ); \
+        top += label->GetHeight(); \
+    }
 
 	X( m_unit_data->unit_name, Header );
-	X( "( " + m_unit_data->short_power_label + " )", Center );
-	X( m_unit_data->morale_label, Left );
+	X( "( " + m_unit_data->short_power_string + " )", Center );
+	X( m_unit_data->morale_string, Left );
+	X( m_unit_data->moves_string, Left );
 
 	// HACK: fix ( and ) vertical misalignment
 	auto& bugged_label = m_labels.at( 1 );

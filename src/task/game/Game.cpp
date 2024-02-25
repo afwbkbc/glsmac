@@ -967,6 +967,8 @@ void Game::DefineUnit( const ::game::unit::Def* unitdef ) {
 				case ::game::unit::Render::RT_SPRITE: {
 					const auto* render = (::game::unit::SpriteRender*)def->m_render;
 
+					unitdef_state.static_.movement_type = def->m_movement_type;
+					unitdef_state.static_.movement_per_turn = def->m_movement_per_turn;
 					unitdef_state.static_.render.is_sprite = true;
 
 					const auto name = "Unit_" + def->m_id;
@@ -1048,6 +1050,7 @@ void Game::SpawnUnit(
 	const Vec2< size_t >& tile_coords,
 	const Vec3& render_coords,
 	const bool is_active,
+	const ::game::unit::Unit::movement_t movement,
 	const ::game::unit::Unit::morale_t morale,
 	const ::game::unit::Unit::health_t health
 ) {
@@ -1074,9 +1077,7 @@ void Game::SpawnUnit(
 					false,
 					0,
 					{
-						is_active
-							? &slot_state.badges.at( morale ).normal
-							: &slot_state.badges.at( morale ).greyedout,
+						nullptr, // will be set later
 						0,
 						{
 							&m_healthbar_sprites.at( floor( health * s_consts.badges.healthbars.resolution ) ),
@@ -1089,11 +1090,14 @@ void Game::SpawnUnit(
 					}
 				},
 				is_active,
+				movement,
 				morale,
 				health
 			}
 		}
 	).first->second;
+
+	unit_state.render.badge.def = GetUnitBadgeDef( unit_state );
 
 	ASSERT( unit_state.tile->units.find( unit_id ) == unit_state.tile->units.end(), "unit id already exists" );
 	unit_state.tile->units.insert(
@@ -1122,6 +1126,21 @@ void Game::DespawnUnit( const size_t unit_id ) {
 
 }
 
+void Game::RefreshUnit( unit_state_t* unit_state ) {
+	if ( unit_state->is_active && unit_state->movement < ::game::unit::Unit::MINIMUM_MOVEMENT_TO_KEEP ) {
+		// no more moves left, unselect
+		// TODO: select next unit
+		unit_state->is_active = false;
+		unit_state->render.badge.blink.timer.Stop();
+		unit_state->render.badge.def = GetUnitBadgeDef( *unit_state );
+		if ( m_selected_tile_data.purpose == ::game::TQP_UNIT_SELECT ) {
+			//m_selected_tile_data.purpose = ::game::TQP_TILE_SELECT;
+			GetTileAtCoords( ::game::TQP_TILE_SELECT, unit_state->tile->coords );
+		}
+	}
+	RenderTile( *unit_state->tile );
+}
+
 void Game::MoveUnit( unit_state_t* unit, tile_state_t* dst_tile, const types::Vec3& dst_render_coords ) {
 	auto* src_tile = unit->tile;
 	ASSERT( src_tile, "unit tile not set" );
@@ -1143,15 +1162,19 @@ void Game::MoveUnit( unit_state_t* unit, tile_state_t* dst_tile, const types::Ve
 
 	// TODO: animation
 
-	// update renders
+	// update old tile
 	RenderTile( *src_tile );
-	RenderTile( *dst_tile );
+
+	// update unit and new tile
+	RefreshUnit( unit );
 
 	if ( unit->unit_id == m_currently_moving_unit_id ) {
-		// update ui and keep same unit selected
-		::game::tile_query_metadata_t metadata = {};
-		metadata.unit_move.unit_id = unit->unit_id;
-		GetTileAtCoords( ::game::TQP_UNIT_SELECT, dst_tile->coords, ::game::map::Tile::D_NONE, metadata );
+		if ( unit->is_active ) {
+			// update ui and keep same unit selected
+			::game::tile_query_metadata_t metadata = {};
+			metadata.unit_move.unit_id = unit->unit_id;
+			GetTileAtCoords( ::game::TQP_UNIT_SELECT, dst_tile->coords, ::game::map::Tile::D_NONE, metadata );
+		}
 		m_currently_moving_unit_id = 0;
 	}
 }
@@ -1231,6 +1254,7 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 					rc.z
 				},
 				d.is_active,
+				d.movement,
 				d.morale,
 				d.health
 			);
@@ -1240,10 +1264,18 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 			DespawnUnit( event.data.unit_despawn.unit_id );
 			break;
 		}
+		case ::game::Event::ET_UNIT_REFRESH: {
+			const auto& d = event.data.unit_refresh;
+			auto& unit_state = m_unit_states.at( d.unit_id );
+			unit_state.movement = d.movement_left;
+			RefreshUnit( &unit_state );
+			break;
+		}
 		case ::game::Event::ET_UNIT_MOVE: {
 			const auto& d = event.data.unit_move;
 			ASSERT( m_unit_states.find( d.unit_id ) != m_unit_states.end(), "unit id not found" );
 			auto& unit_state = m_unit_states.at( d.unit_id );
+			unit_state.movement = d.movement_left;
 			auto& tile_state = GetTileState( d.tile_coords.x, d.tile_coords.y );
 			const auto& rc = d.render_coords;
 			MoveUnit(
@@ -2060,7 +2092,7 @@ const unit_data_t* Game::GetFirstSelectableUnit( const std::vector< unit_data_t 
 	for ( const auto& unit : units ) {
 		ASSERT( m_unit_states.find( unit.id ) != m_unit_states.end(), "unit id not found" );
 		const auto& unit_state = m_unit_states.at( unit.id );
-		if ( unit_state.slot->slot_index == m_slot_index ) {
+		if ( unit_state.slot->slot_index == m_slot_index && unit_state.is_active ) {
 			return &unit;
 		}
 	}
@@ -2352,22 +2384,18 @@ tile_data_t Game::GetTileAtCoordsResult() {
 				};
 
 				// TODO: use real unit properties
-				std::string short_power_label = "";
+				std::string short_power_string = "";
 				if ( def->m_id == "SporeLauncher" ) {
-					short_power_label += "(?)";
+					short_power_string += "(?)";
 				}
 				else {
-					short_power_label += "?";
+					short_power_string += "?";
 				}
-				short_power_label += " - ? - ";
-				if ( def->m_id == "SeaLurk" ) {
-					short_power_label += "4";
-				}
-				else if ( def->m_id == "FungalTower" ) {
-					short_power_label += "0";
-				}
-				else {
-					short_power_label += "1";
+				short_power_string += " - ? - " + FloatToString( def->static_.movement_per_turn );
+
+				std::string moves_string = "";
+				if ( def->static_.movement_type != ::game::unit::StaticDef::MT_IMMOVABLE ) {
+					moves_string = "Moves: " + FloatToString( unit_state.movement );
 				}
 
 				result.units.push_back(
@@ -2377,8 +2405,9 @@ tile_data_t Game::GetTileAtCoordsResult() {
 						f_meshtex( unit_state.render.badge.def->instanced_sprite ),
 						f_meshtex( unit_state.render.badge.healthbar.def->instanced_sprite ),
 						def->m_name,
-						short_power_label,
-						::game::unit::Unit::GetMoraleString( unit_state.morale )
+						short_power_string,
+						::game::unit::Unit::GetMoraleString( unit_state.morale ),
+						moves_string,
 					}
 				);
 			}
@@ -2539,6 +2568,14 @@ void Game::ExitGame( const f_exit_game on_game_exit ) {
 	if ( !m_mt_ids.reset ) {
 		m_mt_ids.reset = game->MT_Reset();
 	}
+}
+
+Game::sprite_state_t* Game::GetUnitBadgeDef( const unit_state_t& unit_state ) const {
+	const auto& slot_state = unit_state.slot;
+	const bool is_active = slot_state->slot_index == m_slot_index && unit_state.is_active;
+	return is_active
+		? &slot_state->badges.at( unit_state.morale ).normal
+		: &slot_state->badges.at( unit_state.morale ).greyedout;
 }
 
 void Game::CancelRequests() {
@@ -2814,6 +2851,13 @@ Game::tile_state_t& Game::GetTileState( const size_t x, const size_t y ) {
 	ASSERT( x < m_map_data.width, "tile x overflow" );
 	ASSERT( y < m_map_data.height, "tile y overflow" );
 	return m_tile_states.at( y * m_map_data.width + x );
+}
+
+const std::string Game::FloatToString( const float value ) {
+	std::string result = std::to_string( value );
+	result.erase( result.find_last_not_of( '0' ) + 1, std::string::npos );
+	result.erase( result.find_last_not_of( '.' ) + 1, std::string::npos );
+	return result;
 }
 
 }

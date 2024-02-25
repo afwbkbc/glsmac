@@ -80,6 +80,36 @@ const bool Tile::IsAdjactentTo( const Tile* other ) const {
 	return false;
 }
 
+const float Tile::GetMovementCost() const {
+	// TODO: move to scripts
+	const bool is_native = true; // TODO
+	if ( features & F_XENOFUNGUS ) {
+		if ( is_native ) {
+			return is_water_tile ? 1.0f : 1.0f / 3;
+		}
+		else {
+			return 3.0f;
+		}
+	}
+	if ( is_water_tile ) {
+		return 1.0f;
+	}
+	// TODO: roads
+	return 1.0f;
+}
+
+const float Tile::GetMovementAftercost() const {
+	// TODO: move to scripts
+	const bool is_native = true; // TODO
+	if ( is_native && ( features & F_XENOFUNGUS ) ) {
+		return 0.0f;
+	}
+	if ( !is_water_tile && rockiness == R_ROCKY ) {
+		return 1.0f;
+	}
+	return 0.0f;
+}
+
 const Buffer Tile::Serialize() const {
 	Buffer buf;
 
