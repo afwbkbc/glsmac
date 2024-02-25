@@ -36,7 +36,7 @@ void UnitsList::ClearUnits() {
 	}
 }
 
-void UnitsList::ListUnits( const std::vector< unit_data_t >& units ) {
+void UnitsList::ListUnits( const std::vector< unit_data_t >& units, const size_t selected_unit_id ) {
 	ClearUnits();
 	NEW( m_body, ::ui::object::ScrollView, ::ui::object::ScrollView::ST_HORIZONTAL_INLINE );
 	m_body->SetScrollSpeed( 70 );
@@ -47,8 +47,14 @@ void UnitsList::ListUnits( const std::vector< unit_data_t >& units ) {
 		NEWV( item, UnitsListItem, m_game, this, unit );
 		item->SetLeft( left );
 		m_body->AddChild( item );
-		if ( m_items.empty() ) {
-			// auto-select first unit
+		if (
+			(
+				selected_unit_id && item->GetUnit().id == selected_unit_id // select unit as requested
+			) ||
+				(
+					!selected_unit_id && m_items.empty() // auto-select first unit by default
+				)
+			) {
 			selected_unit = &item->GetUnit();
 		}
 		m_items.insert(

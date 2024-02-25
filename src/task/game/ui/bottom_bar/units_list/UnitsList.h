@@ -21,7 +21,7 @@ CLASS( UnitsList, BBSection )
 	void Destroy() override;
 
 	void ClearUnits();
-	void ListUnits( const std::vector< unit_data_t >& units );
+	void ListUnits( const std::vector< unit_data_t >& units, const size_t selected_unit_id );
 
 private:
 	friend class UnitsListItem;

@@ -354,8 +354,9 @@ private:
 	bool m_is_resize_handler_set = false;
 
 	void SelectTileAtPoint( const ::game::tile_query_purpose_t tile_query_purpose, const size_t x, const size_t y );
-	void SelectTileOrUnit( const tile_data_t& tile_data );
+	void SelectTileOrUnit( const tile_data_t& tile_data, const size_t selected_unit_id );
 	void DeselectTileOrUnit();
+	const bool IsUnitSelectable( const unit_state_t* unit_state ) const;
 	const unit_data_t* GetFirstSelectableUnit( const std::vector< unit_data_t >& units ) const;
 
 private:
@@ -528,6 +529,16 @@ private:
 		::game::unit::Unit::health_t health = 0;
 	};
 	std::unordered_map< size_t, unit_state_t > m_unit_states = {};
+	struct {
+		std::vector< unit_state_t* > unit_states = {};
+		size_t selected_id_index = 0;
+	} m_selectables;
+	void UpdateSelectable( unit_state_t* unit_state );
+	void AddSelectable( unit_state_t* unit_state );
+	void RemoveSelectable( unit_state_t* unit_state );
+	void SetCurrentSelectable( unit_state_t* unit_state );
+	unit_state_t* GetNextSelectable();
+	const bool SelectNextUnitMaybe();
 
 	sprite_state_t* GetUnitBadgeDef( const unit_state_t& unit_state ) const;
 
