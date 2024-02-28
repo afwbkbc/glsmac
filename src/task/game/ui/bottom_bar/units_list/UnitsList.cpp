@@ -39,6 +39,7 @@ void UnitsList::ClearUnits() {
 void UnitsList::ListUnits( const std::vector< unit_data_t >& units, const size_t selected_unit_id ) {
 	ClearUnits();
 	NEW( m_body, ::ui::object::ScrollView, ::ui::object::ScrollView::ST_HORIZONTAL_INLINE );
+	m_body->SetSticky( false );
 	m_body->SetScrollSpeed( 70 );
 	AddChild( m_body );
 	float left = 0;
@@ -71,13 +72,22 @@ void UnitsList::ListUnits( const std::vector< unit_data_t >& units, const size_t
 	}
 }
 
-void UnitsList::PreviewUnit( const unit_data_t& unit ) const {
-	m_unit_preview->PreviewUnit( &unit );
+void UnitsList::PreviewUnit( const unit_data_t& unit ) {
+	if ( &unit != m_previewing_unit ) {
+		m_previewing_unit = &unit;
+		m_unit_preview->PreviewUnit( &unit );
+	}
 }
 
-void UnitsList::HideUnitPreview( const unit_data_t& unit ) const {
+void UnitsList::HideUnitPreview( const unit_data_t& unit ) {
+	if ( &unit == m_previewing_unit ) {
+		m_previewing_unit = nullptr;
+	}
 	if ( &unit != m_selected_unit ) {
-		if ( m_selected_unit ) {
+		if ( m_previewing_unit ) {
+			m_unit_preview->PreviewUnit( m_previewing_unit );
+		}
+		else if ( m_selected_unit ) {
 			m_unit_preview->PreviewUnit( m_selected_unit );
 		}
 		else {

@@ -15,8 +15,6 @@ Tiles::Tiles( const uint32_t width, const uint32_t height ) {
 }
 
 Tiles::~Tiles() {
-	int a = 5;
-	a++;
 }
 
 void Tiles::Resize( const uint32_t width, const uint32_t height ) {

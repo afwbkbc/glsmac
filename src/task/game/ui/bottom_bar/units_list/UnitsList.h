@@ -25,8 +25,8 @@ CLASS( UnitsList, BBSection )
 
 private:
 	friend class UnitsListItem;
-	void PreviewUnit( const unit_data_t& unit ) const;
-	void HideUnitPreview( const unit_data_t& unit ) const;
+	void PreviewUnit( const unit_data_t& unit );
+	void HideUnitPreview( const unit_data_t& unit );
 	void SelectUnit( const unit_data_t* unit, const bool actually_select_unit );
 
 private:
@@ -34,6 +34,7 @@ private:
 	UnitPreview* m_unit_preview;
 	std::unordered_map< size_t, UnitsListItem* > m_items = {};
 	const unit_data_t* m_selected_unit = nullptr;
+	const unit_data_t* m_previewing_unit = nullptr;
 };
 
 }
