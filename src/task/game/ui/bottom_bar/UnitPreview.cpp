@@ -24,7 +24,7 @@ void UnitPreview::PreviewUnit( const unit_data_t* unit_data ) {
 	HideUnitPreview();
 
 	m_unit_data = unit_data;
-
+ 
 	const types::mesh::Mesh* mesh;
 #define X( _key, _class ) \
     NEW( mesh, types::mesh::Mesh, *m_unit_data->_key.mesh ); /* make a copy */ \

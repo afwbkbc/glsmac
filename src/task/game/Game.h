@@ -381,7 +381,7 @@ private:
 #endif
 	} m_mt_ids = {};
 
-	std::vector< Tile > m_tile_states = {};
+	std::unordered_map< size_t, Tile > m_tile_states = {};
 
 	std::unordered_map< size_t, Slot* > m_slot_states = {};
 	std::unordered_map< std::string, UnitDef* > m_unitdef_states = {};
@@ -407,10 +407,6 @@ private:
 		UUF_HEALTH = 1 << 2,
 		UUF_ALL = 0xff,
 	};
-
-	std::vector< size_t > GetUnitsOrder( const std::unordered_map< size_t, Unit* >& units ) const;
-
-	void RenderTile( Tile* tile_state );
 
 	Tile* GetTileState( const size_t x, const size_t y );
 

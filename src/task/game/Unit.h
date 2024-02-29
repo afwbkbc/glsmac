@@ -50,6 +50,8 @@ public:
 
 	void Iterate();
 
+	void SetActiveOnTile();
+
 	void Show();
 	void Hide();
 

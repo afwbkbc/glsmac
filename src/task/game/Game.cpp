@@ -826,7 +826,11 @@ void Game::SpawnUnit(
 		}
 	).first->second;
 
-	RenderTile( tile );
+	tile->Render(
+		m_selected_unit_data
+			? m_selected_unit_data->id
+			: 0
+	);
 
 	if ( unit_state->IsSelectable() ) {
 		const bool was_selectables_empty = m_selectables.unit_states.empty();
@@ -852,7 +856,11 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	delete unit_state;
 	m_unit_states.erase( it );
 
-	RenderTile( tile );
+	tile->Render(
+		m_selected_unit_data
+			? m_selected_unit_data->id
+			: 0
+	);
 }
 
 void Game::RefreshUnit( Unit* unit_state ) {
@@ -866,7 +874,7 @@ void Game::RefreshUnit( Unit* unit_state ) {
 				metadata.tile_select.try_next_unit = true; // try next unit after updating tile
 				GetTileAtCoords(
 					::game::TQP_TILE_SELECT,
-					unit_state->GetTile()->coords,
+					unit_state->GetTile()->GetCoords(),
 					::game::map::Tile::D_NONE,
 					metadata
 				);
@@ -879,14 +887,18 @@ void Game::RefreshUnit( Unit* unit_state ) {
 				metadata.unit_select.unit_id = unit_state->GetId();
 				GetTileAtCoords(
 					::game::TQP_UNIT_SELECT,
-					unit_state->GetTile()->coords,
+					unit_state->GetTile()->GetCoords(),
 					::game::map::Tile::D_NONE,
 					metadata
 				);
 				m_currently_moving_unit = nullptr;
 			}
 		}
-		RenderTile( unit_state->GetTile() );
+		unit_state->GetTile()->Render(
+			m_selected_unit_data
+				? m_selected_unit_data->id
+				: 0
+		);
 	}
 }
 
@@ -899,7 +911,11 @@ void Game::MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_c
 	// TODO: animation
 
 	// update old tile
-	RenderTile( src_tile );
+	src_tile->Render(
+		m_selected_unit_data
+			? m_selected_unit_data->id
+			: 0
+	);
 
 	// update unit and new tile
 	RefreshUnit( unit );
@@ -1046,16 +1062,23 @@ void Game::UpdateMapData( const types::Vec2< size_t >& map_size ) {
 		}
 	);
 
-	// TODO: optimize for SMAC coordinate system
-	m_tile_states.resize( m_map_data.width * m_map_data.height );
+	m_tile_states.reserve( m_map_data.width * m_map_data.height / 2 ); // / 2 because smac coordinate system
 	for ( size_t y = 0 ; y < m_map_data.height ; y++ ) {
-		for ( size_t x = 0 ; x < m_map_data.width ; x++ ) {
-			GetTileState( x, y )->coords = {
-				x,
-				y
-			};
+		for ( size_t x = y & 1 ; x < m_map_data.width ; x += 2 ) {
+			m_tile_states.insert(
+				{
+					y * m_map_data.width + x,
+					Tile{
+						{
+							x,
+							y
+						}
+					}
+				}
+			);
 		}
 	}
+
 }
 
 void Game::Initialize(
@@ -1530,20 +1553,20 @@ void Game::Deinitialize() {
 		m_textures.terrain = nullptr;
 	}
 
-	for ( const auto& it : m_slot_states ) {
+	for ( const auto& it : m_unit_states ) {
 		delete it.second;
 	}
-	m_slot_states.clear();
+	m_unit_states.clear();
 
 	for ( const auto& it : m_unitdef_states ) {
 		delete it.second;
 	}
 	m_unitdef_states.clear();
 
-	for ( const auto& it : m_unit_states ) {
+	for ( const auto& it : m_slot_states ) {
 		delete it.second;
 	}
-	m_unit_states.clear();
+	m_slot_states.clear();
 
 	for ( auto& it : m_actors_map ) {
 		m_world_scene->RemoveActor( it.second );
@@ -1608,12 +1631,8 @@ void Game::SelectUnit( const unit_data_t& unit_data, const bool actually_select_
 			m_selected_unit_state = nullptr;
 		}
 
-		auto* tile = unit_state->GetTile();
+		unit_state->SetActiveOnTile();
 
-		if ( tile->render.currently_rendered_unit ) {
-			tile->render.currently_rendered_unit->Hide();
-			tile->render.currently_rendered_unit = unit_state;
-		}
 		m_selected_unit_state = unit_state;
 		m_selected_unit_state->Show();
 	}
@@ -1688,7 +1707,7 @@ void Game::DeselectTileOrUnit() {
 		ASSERT( !m_selected_tile_data.units.empty(), "unit was selected but tile data has no units" );
 		// reset to most important unit if needed
 		size_t unit_id = m_selected_tile_data.units.front().id;
-		if ( m_selected_unit_state->GetTile()->coords == m_selected_tile_data.tile_position ) {
+		if ( m_selected_unit_state->GetTile()->GetCoords() == m_selected_tile_data.tile_position ) {
 			unit_id = m_selected_unit_state->GetId();
 		}
 		ASSERT( m_unit_states.find( unit_id ) != m_unit_states.end(), "unit id not found" );
@@ -1953,7 +1972,7 @@ tile_data_t Game::GetTileAtCoordsResult() {
 					}
 				);
 			}
-			const auto units_order = GetUnitsOrder( units );
+			const auto units_order = Tile::GetUnitsOrder( units );
 
 			for ( const auto& unit_id : units_order ) {
 				ASSERT( m_unit_states.find( unit_id ) != m_unit_states.end(), "unit id not found" );
@@ -2222,7 +2241,7 @@ const bool Game::SelectNextUnitMaybe() {
 		metadata.unit_select.unit_id = selected_unit->GetId();
 		GetTileAtCoords(
 			::game::TQP_UNIT_SELECT,
-			selected_unit->GetTile()->coords,
+			selected_unit->GetTile()->GetCoords(),
 			::game::map::Tile::D_NONE,
 			metadata
 		);
@@ -2281,91 +2300,6 @@ void Game::ReturnToMainMenu( const std::string reason ) {
 	}
 	g_engine->GetScheduler()->RemoveTask( this );
 	g_engine->GetScheduler()->AddTask( task );
-}
-
-std::vector< size_t > Game::GetUnitsOrder( const std::unordered_map< size_t, Unit* >& units ) const {
-	std::map< size_t, std::vector< size_t > > weights; // { weight, units }
-
-	for ( auto& it : units ) {
-		const auto unit_id = it.first;
-		const auto* unit = it.second;
-		size_t weight = unit->GetSelectionWeight();
-		weights[ -weight ].push_back( unit_id ); // negative because we need reverse order
-	}
-
-	std::vector< size_t > result = {};
-	for ( const auto& it : weights ) {
-		for ( const auto& unit_id : it.second ) {
-			result.push_back( unit_id );
-		}
-	}
-
-	return result;
-}
-
-void Game::RenderTile( Tile* tile_state ) {
-
-	Log( "Rendering tile [" + std::to_string( tile_state->coords.x ) + "," + std::to_string( tile_state->coords.y ) + "]" );
-
-	// unrender unit
-	if ( tile_state->render.currently_rendered_unit ) {
-		tile_state->render.currently_rendered_unit->Hide();
-		if ( m_selected_unit_state == tile_state->render.currently_rendered_unit ) {
-			m_selected_unit_state = nullptr;
-		}
-		tile_state->render.currently_rendered_unit = nullptr;
-	}
-
-	// unrender fake badges
-	for ( const auto& unit : tile_state->render.currently_rendered_fake_badges ) {
-		unit->HideFakeBadge();
-	}
-	tile_state->render.currently_rendered_fake_badges.clear();
-
-	if ( !tile_state->units.empty() ) {
-		const auto units_order = GetUnitsOrder( tile_state->units );
-		ASSERT( !units_order.empty(), "units order is empty" );
-
-		const auto most_important_unit_id = units_order.front();
-		const auto selected_unit_id = m_selected_unit_data
-			? m_selected_unit_data->id
-			: 0;
-
-		// also display badges from stacked units that are not visible themselves
-		// TODO: refactor
-		ASSERT( tile_state->render.currently_rendered_fake_badges.empty(), "orphan badges already rendered" );
-		size_t fake_badge_idx = 1;
-		for ( const auto& unit_id : units_order ) {
-			const auto& unit = tile_state->units.at( unit_id );
-			if ( !tile_state->render.currently_rendered_unit && unit_id == most_important_unit_id ) {
-				// choose first by default
-				tile_state->render.currently_rendered_unit = unit;
-			}
-			else if ( unit_id == selected_unit_id ) {
-				// override default is found
-				if ( tile_state->render.currently_rendered_unit ) {
-					tile_state->render.currently_rendered_fake_badges.push_back( tile_state->render.currently_rendered_unit );
-				}
-				tile_state->render.currently_rendered_unit = unit;
-			}
-			else {
-				// render fake badge
-				tile_state->render.currently_rendered_fake_badges.push_back( unit );
-				if ( fake_badge_idx++ > 10 ) {
-					break;
-				}
-			}
-		}
-		if ( tile_state->render.currently_rendered_unit ) {
-			tile_state->render.currently_rendered_unit->Show();
-		}
-		size_t idx;
-		const auto& fake_badges = tile_state->render.currently_rendered_fake_badges;
-		for ( size_t i = 0 ; i < fake_badges.size() ; i++ ) { // order is important
-			idx = fake_badges.size() - i - 1;
-			fake_badges.at( idx )->ShowFakeBadge( i );
-		}
-	}
 }
 
 Tile* Game::GetTileState( const size_t x, const size_t y ) {

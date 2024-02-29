@@ -40,18 +40,12 @@ Unit::Unit(
 	, m_health( health ) {
 	m_render.badge.def = m_slot->GetUnitBadgeSprite( m_morale, m_is_active );
 	m_render.badge.healthbar.def = m_badge_defs->GetBadgeHealthbarSprite( m_health );
-	ASSERT_NOLOG( m_tile, "tile not set" );
-	ASSERT_NOLOG( m_tile->units.find( m_id ) == m_tile->units.end(), "unit id already exists" );
-	m_tile->units.insert(
-		{
-			m_id,
-			this
-		}
-	);
+	m_tile->AddUnit( this );
 }
 
 Unit::~Unit() {
-	m_tile->units.erase( m_id );
+	Hide();
+	m_tile->RemoveUnit( this );
 }
 
 const size_t Unit::GetId() const {
@@ -140,46 +134,43 @@ void Unit::Iterate() {
 	}
 }
 
+void Unit::SetActiveOnTile() {
+	m_tile->SetActiveUnit( this );
+}
+
 void Unit::Show() {
-	if ( m_render.is_rendered ) {
-		return;
+	if ( !m_render.is_rendered ) {
+		const auto& c = m_render.coords;
+
+		auto* sprite = m_def->GetSprite( m_morale );
+
+		m_render.instance_id = sprite->next_instance_id++;
+		sprite->instanced_sprite->actor->SetInstance(
+			m_render.instance_id, {
+				c.x,
+				c.y,
+				c.z
+			}
+		);
+
+		m_render.badge.instance_id = m_render.badge.def->next_instance_id++;
+		m_render.badge.healthbar.instance_id = m_render.badge.healthbar.def->next_instance_id++;
+
+		ShowBadge();
+
+		m_render.is_rendered = true;
 	}
-
-	const auto& c = m_render.coords;
-
-	auto* sprite = m_def->GetSprite( m_morale );
-
-	m_render.instance_id = sprite->next_instance_id++;
-	sprite->instanced_sprite->actor->SetInstance(
-		m_render.instance_id, {
-			c.x,
-			c.y,
-			c.z
-		}
-	);
-
-	m_render.badge.instance_id = m_render.badge.def->next_instance_id++;
-	m_render.badge.healthbar.instance_id = m_render.badge.healthbar.def->next_instance_id++;
-
-	ShowBadge();
-
-	m_render.is_rendered = true;
 }
 
 void Unit::Hide() {
-	if ( !m_render.is_rendered ) {
-		return;
+	if ( m_render.is_rendered ) {
+		m_def->GetSprite( m_morale )->instanced_sprite->actor->RemoveInstance( m_render.instance_id );
+		HideBadge();
+		m_render.is_rendered = false;
 	}
-
-	m_def->GetSprite( m_morale )->instanced_sprite->actor->RemoveInstance( m_render.instance_id );
-
-	HideBadge();
-
-	m_render.is_rendered = false;
 }
 
 void Unit::ShowBadge() {
-	const auto& c = m_render.coords;
 	m_render.badge.def->instanced_sprite->actor->SetInstance( m_render.badge.instance_id, BadgeDefs::GetBadgeCoords( m_render.coords ) );
 	m_render.badge.healthbar.def->instanced_sprite->actor->SetInstance( m_render.badge.healthbar.instance_id, BadgeDefs::GetBadgeHealthbarCoords( m_render.coords ) );
 }
@@ -190,14 +181,16 @@ void Unit::HideBadge() {
 }
 
 void Unit::ShowFakeBadge( const uint8_t offset ) {
-	ASSERT_NOLOG( !m_render.fake_badge.instance_id, "unit fake badge already rendered" );
-	m_render.fake_badge.instance_id = m_slot->ShowFakeBadge( m_render.coords, offset );
+	if ( !m_render.fake_badge.instance_id ) {
+		m_render.fake_badge.instance_id = m_slot->ShowFakeBadge( m_render.coords, offset );
+	}
 }
 
 void Unit::HideFakeBadge() {
-	ASSERT_NOLOG( m_render.fake_badge.instance_id, "unit fake badge not rendered" );
-	m_slot->HideFakeBadge( m_render.fake_badge.instance_id );
-	m_render.fake_badge.instance_id = 0;
+	if ( m_render.fake_badge.instance_id ) {
+		m_slot->HideFakeBadge( m_render.fake_badge.instance_id );
+		m_render.fake_badge.instance_id = 0;
+	}
 }
 
 void Unit::StartBadgeBlink() {
@@ -232,18 +225,11 @@ void Unit::MoveTo( task::game::Tile* dst_tile, const types::Vec3& dst_render_coo
 	ASSERT_NOLOG( m_tile, "source tile not set" );
 	ASSERT_NOLOG( dst_tile, "destination tile not set" );
 
-	ASSERT_NOLOG( m_tile->units.find( m_id ) != m_tile->units.end(), "unit id not found in src tile" );
-	m_tile->units.erase( m_id );
+	m_tile->RemoveUnit( this );
 
 	m_tile = dst_tile;
 
-	ASSERT_NOLOG( m_tile->units.find( m_id ) == dst_tile->units.end(), "unit id already exists in dst tile" );
-	m_tile->units.insert(
-		{
-			m_id,
-			this
-		}
-	);
+	m_tile->AddUnit( this );
 
 	m_render.coords = dst_render_coords;
 	m_def->GetSprite( m_morale )->instanced_sprite->actor->SetInstance(
