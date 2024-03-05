@@ -30,7 +30,7 @@ const std::string* MoveUnit::Validate( const Game* game ) const {
 		return new std::string( "Unit is immovable" );
 	}
 
-	if ( unit->m_movement < unit::Unit::MINIMUM_MOVEMENT_TO_KEEP ) {
+	if ( !unit->HasMovesLeft() ) {
 		return new std::string( "Unit is out of moves" );
 	}
 

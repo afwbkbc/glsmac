@@ -5,5 +5,6 @@ SET( SRC ${SRC}
 	${PWD}/SpawnUnit.cpp
 	${PWD}/DespawnUnit.cpp
 	${PWD}/MoveUnit.cpp
+	${PWD}/SkipUnitTurn.cpp
 
 	PARENT_SCOPE )

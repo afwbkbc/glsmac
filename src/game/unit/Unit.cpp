@@ -62,6 +62,10 @@ const morale_strings_t s_morale_strings_nonnative = {
 
 const Unit::movement_t Unit::MINIMUM_MOVEMENT_TO_KEEP = 0.1f;
 
+const bool Unit::HasMovesLeft() const {
+	return m_movement >= unit::Unit::MINIMUM_MOVEMENT_TO_KEEP;
+}
+
 const Unit::movement_result_t Unit::TryMovingTo( Game* game, const map::Tile* dst_tile ) {
 	// TODO: move to scripts
 	ASSERT_NOLOG( m_movement >= MINIMUM_MOVEMENT_TO_KEEP, "no movement points" );
@@ -80,7 +84,7 @@ const Unit::movement_result_t Unit::TryMovingTo( Game* game, const map::Tile* ds
 	// reduce remaining movement points (even if failed)
 	if ( m_movement >= movement_cost ) {
 		m_movement -= movement_cost;
-		if ( m_movement < MINIMUM_MOVEMENT_TO_KEEP ) {
+		if ( !HasMovesLeft() ) {
 			// don't keep tiny leftovers
 			m_movement = 0.0f;
 		}

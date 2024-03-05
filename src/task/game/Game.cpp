@@ -15,6 +15,7 @@
 #include "Types.h"
 
 #include "game/event/MoveUnit.h"
+#include "game/event/SkipUnitTurn.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -284,18 +285,18 @@ void Game::Iterate() {
 		}
 	}
 
-	// poll game thread for events
-	if ( m_mt_ids.get_events ) {
-		auto response = game->MT_GetResponse( m_mt_ids.get_events );
+	// poll game thread for frontend requests
+	if ( m_mt_ids.get_frontend_requests ) {
+		auto response = game->MT_GetResponse( m_mt_ids.get_frontend_requests );
 		if ( response.result != ::game::R_NONE ) {
-			ASSERT( response.result == ::game::R_SUCCESS, "unexpected game events response" );
-			m_mt_ids.get_events = 0;
-			const auto* events = response.data.get_events.events;
-			if ( events ) {
-				Log( "got " + std::to_string( events->size() ) + " game events" );
+			ASSERT( response.result == ::game::R_SUCCESS, "unexpected frontend requests response" );
+			m_mt_ids.get_frontend_requests = 0;
+			const auto* requests = response.data.get_frontend_requests.requests;
+			if ( requests ) {
+				Log( "got " + std::to_string( requests->size() ) + " frontend requests" );
 
-				for ( const auto& event : *events ) {
-					ProcessEvent( event );
+				for ( const auto& request : *requests ) {
+					ProcessRequest( request );
 					if ( m_on_game_exit ) {
 						break; // exiting game
 					}
@@ -303,12 +304,12 @@ void Game::Iterate() {
 			}
 			game->MT_DestroyResponse( response );
 			if ( !m_on_game_exit ) {
-				m_mt_ids.get_events = game->MT_GetEvents();
+				m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests();
 			}
 		}
 	}
 	else {
-		m_mt_ids.get_events = game->MT_GetEvents();
+		m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests();
 	}
 
 	if ( m_is_initialized ) {
@@ -921,11 +922,11 @@ void Game::MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_c
 	RefreshUnit( unit );
 }
 
-void Game::ProcessEvent( const ::game::Event& event ) {
-	//Log( "Received event (type=" + std::to_string( event.type ) + ")" ); // spammy
-	const auto f_exit = [ this, &event ]() -> void {
+void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
+	//Log( "Received frontend request (type=" + std::to_string( request.type ) + ")" ); // spammy
+	const auto f_exit = [ this, &request ]() -> void {
 		ExitGame(
-			[ this, event ]() -> void {
+			[ this, request ]() -> void {
 #ifdef DEBUG
 				if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
 					g_engine->ShutDown();
@@ -934,52 +935,52 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 #endif
 				{
 					ReturnToMainMenu(
-						event.data.quit.reason
-							? *event.data.quit.reason
+						request.data.quit.reason
+							? *request.data.quit.reason
 							: ""
 					);
 				}
 			}
 		);
 	};
-	switch ( event.type ) {
-		case ::game::Event::ET_QUIT: {
+	switch ( request.type ) {
+		case ::game::FrontendRequest::FR_QUIT: {
 			f_exit();
 			break;
 		}
-		case ::game::Event::ET_ERROR: {
-			Log( *event.data.error.stacktrace );
+		case ::game::FrontendRequest::FR_ERROR: {
+			Log( *request.data.error.stacktrace );
 			g_engine->GetUI()->ShowError(
-				*event.data.error.what, UH( f_exit ) {
+				*request.data.error.what, UH( f_exit ) {
 					f_exit();
 				}
 			);
 		}
-		case ::game::Event::ET_GLOBAL_MESSAGE: {
-			AddMessage( *event.data.global_message.message );
+		case ::game::FrontendRequest::FR_GLOBAL_MESSAGE: {
+			AddMessage( *request.data.global_message.message );
 			break;
 		}
-		case ::game::Event::ET_TURN_COMPLETE_STATUS: {
+		case ::game::FrontendRequest::FR_TURN_COMPLETE_STATUS: {
 			ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
-			m_ui.bottom_bar->SetTurnCompleteStatus( event.data.turn_complete_status.is_turn_complete );
+			m_ui.bottom_bar->SetTurnCompleteStatus( request.data.turn_complete_status.is_turn_complete );
 			break;
 		}
-		case ::game::Event::ET_SLOT_DEFINE: {
-			for ( const auto& d : *event.data.slot_define.slotdefs ) {
+		case ::game::FrontendRequest::FR_SLOT_DEFINE: {
+			for ( const auto& d : *request.data.slot_define.slotdefs ) {
 				const auto& c = d.color;
 				DefineSlot( d.slot_index, types::Color( c.r, c.g, c.b, c.a ), d.is_progenitor );
 			}
 			break;
 		}
-		case ::game::Event::ET_UNIT_DEFINE: {
-			types::Buffer buf( *event.data.unit_define.serialized_unitdef );
+		case ::game::FrontendRequest::FR_UNIT_DEFINE: {
+			types::Buffer buf( *request.data.unit_define.serialized_unitdef );
 			const auto* unitdef = ::game::unit::Def::Unserialize( buf );
 			DefineUnit( unitdef );
 			delete unitdef;
 			break;
 		}
-		case ::game::Event::ET_UNIT_SPAWN: {
-			const auto& d = event.data.unit_spawn;
+		case ::game::FrontendRequest::FR_UNIT_SPAWN: {
+			const auto& d = request.data.unit_spawn;
 			const auto& tc = d.tile_coords;
 			const auto& rc = d.render_coords;
 			SpawnUnit(
@@ -1002,19 +1003,19 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 			);
 			break;
 		}
-		case ::game::Event::ET_UNIT_DESPAWN: {
-			DespawnUnit( event.data.unit_despawn.unit_id );
+		case ::game::FrontendRequest::FR_UNIT_DESPAWN: {
+			DespawnUnit( request.data.unit_despawn.unit_id );
 			break;
 		}
-		case ::game::Event::ET_UNIT_REFRESH: {
-			const auto& d = event.data.unit_refresh;
+		case ::game::FrontendRequest::FR_UNIT_REFRESH: {
+			const auto& d = request.data.unit_refresh;
 			auto* unit_state = m_unit_states.at( d.unit_id );
 			unit_state->SetMovement( d.movement_left );
 			RefreshUnit( unit_state );
 			break;
 		}
-		case ::game::Event::ET_UNIT_MOVE: {
-			const auto& d = event.data.unit_move;
+		case ::game::FrontendRequest::FR_UNIT_MOVE: {
+			const auto& d = request.data.unit_move;
 			ASSERT( m_unit_states.find( d.unit_id ) != m_unit_states.end(), "unit id not found" );
 			auto* unit_state = m_unit_states.at( d.unit_id );
 			auto* tile_state = GetTileState( d.tile_coords.x, d.tile_coords.y );
@@ -1030,7 +1031,7 @@ void Game::ProcessEvent( const ::game::Event& event ) {
 			break;
 		}
 		default: {
-			THROW( "unexpected event type: " + std::to_string( event.type ) );
+			THROW( "unexpected frontend request type: " + std::to_string( request.type ) );
 		}
 	}
 }
@@ -1184,6 +1185,8 @@ void Game::Initialize(
 
 	// map event handlers
 
+	auto* game = g_engine->GetGame();
+
 	m_handlers.keydown_before = ui->AddGlobalEventHandler(
 		UIEvent::EV_KEY_DOWN, EH( this, ui ) {
 			if (
@@ -1199,7 +1202,7 @@ void Game::Initialize(
 	);
 
 	m_handlers.keydown_after = ui->AddGlobalEventHandler(
-		UIEvent::EV_KEY_DOWN, EH( this, ui ) {
+		UIEvent::EV_KEY_DOWN, EH( this, ui, game ) {
 
 			if ( ui->HasPopup() ) {
 				return false;
@@ -1232,6 +1235,13 @@ void Game::Initialize(
 							SelectNextUnitMaybe();
 							break;
 						}
+						case UIEvent::K_SPACE: {
+							if ( m_selected_unit_state ) {
+								const auto event = ::game::event::SkipUnitTurn( m_slot_index, m_selected_unit_state->GetId() );
+								game->MT_AddEvent( &event );
+							}
+							break;
+						}
 						default: {
 							// nothing
 						}
@@ -1250,7 +1260,7 @@ void Game::Initialize(
 								ASSERT( m_unit_states.find( m_selected_unit_data->id ) != m_unit_states.end(), "unit id not found" );
 								m_currently_moving_unit = m_unit_states.at( m_selected_unit_data->id );
 								const auto event = ::game::event::MoveUnit( m_slot_index, m_currently_moving_unit->GetId(), td );
-								g_engine->GetGame()->MT_AddGameEvent( &event );
+								game->MT_AddEvent( &event );
 								return true;
 							}
 							default: {
@@ -1661,9 +1671,8 @@ void Game::SelectTileOrUnit( const tile_data_t& tile_data, const size_t selected
 					break;
 				}
 			}
-			ASSERT( selected_unit, "unit id not found" );
 		}
-		else {
+		if ( !selected_unit ) {
 			selected_unit = GetFirstSelectableUnit( m_selected_tile_data.units );
 			if ( !selected_unit ) {
 				m_selected_tile_data.purpose = ::game::TQP_TILE_SELECT;
@@ -2268,9 +2277,9 @@ void Game::CancelRequests() {
 		game->MT_Cancel( m_mt_ids.reset );
 		m_mt_ids.reset = 0;
 	}
-	if ( m_mt_ids.get_events ) {
-		game->MT_Cancel( m_mt_ids.get_events );
-		m_mt_ids.get_events = 0;
+	if ( m_mt_ids.get_frontend_requests ) {
+		game->MT_Cancel( m_mt_ids.get_frontend_requests );
+		m_mt_ids.get_frontend_requests = 0;
 	}
 	// TODO: cancel other requests?
 }

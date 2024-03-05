@@ -16,6 +16,6 @@ SET( SRC ${SRC}
 	${PWD}/Slot.cpp
 	${PWD}/Slots.cpp
 	${PWD}/Turn.cpp
-	${PWD}/Event.cpp
+	${PWD}/FrontendRequest.cpp
 
 	PARENT_SCOPE )

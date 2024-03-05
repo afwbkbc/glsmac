@@ -18,6 +18,7 @@ public:
 		ET_UNIT_SPAWN,
 		ET_UNIT_DESPAWN,
 		ET_UNIT_MOVE,
+		ET_UNIT_SKIP_TURN,
 	};
 
 	Event( const size_t initiator_slot, const event_type_t type );

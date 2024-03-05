@@ -31,7 +31,7 @@
 
 #include "actor/TileSelection.h"
 #include "game/Game.h"
-#include "game/Event.h"
+#include "game/FrontendRequest.h"
 #include "game/unit/StaticDef.h"
 
 #include "game/map/Consts.h"
@@ -171,7 +171,7 @@ private:
 	void RefreshUnit( Unit* unit_state );
 	void MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_coords );
 
-	void ProcessEvent( const ::game::Event& event );
+	void ProcessRequest( const ::game::FrontendRequest& request );
 
 	bool m_is_initialized = false;
 	void Initialize(
@@ -374,7 +374,7 @@ private:
 		mt_id_t save_map = 0;
 		mt_id_t edit_map = 0;
 		mt_id_t chat = 0;
-		mt_id_t get_events = 0;
+		mt_id_t get_frontend_requests = 0;
 #ifdef DEBUG
 		mt_id_t save_dump = 0;
 		// init will be used for loading dump

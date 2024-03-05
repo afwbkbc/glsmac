@@ -14,7 +14,7 @@
 #include "types/mesh/Render.h"
 #include "types/mesh/Data.h"
 #include "Slot.h"
-#include "Event.h"
+#include "FrontendRequest.h"
 #include "Turn.h"
 
 #include "gse/GSE.h"
@@ -45,8 +45,8 @@ enum op_t {
 	OP_SAVE_MAP,
 	OP_EDIT_MAP,
 	OP_CHAT,
-	OP_GET_EVENTS,
-	OP_ADD_GAME_EVENT,
+	OP_GET_FRONTEND_REQUESTS,
+	OP_ADD_EVENT,
 #ifdef DEBUG
 	OP_SAVE_DUMP,
 	OP_LOAD_DUMP,
@@ -110,8 +110,8 @@ struct MT_Request {
 			map_editor::MapEditor::draw_mode_t draw_mode;
 		} edit_map;
 		struct {
-			std::string* serialized_game_event;
-		} add_game_event;
+			std::string* serialized_event;
+		} add_event;
 	} data;
 };
 
@@ -210,8 +210,8 @@ struct MT_Response {
 			} sprites;
 		} edit_map;
 		struct {
-			game_events_t* events;
-		} get_events;
+			std::vector< FrontendRequest >* requests;
+		} get_frontend_requests;
 	} data;
 };
 
@@ -253,11 +253,11 @@ CLASS( Game, MTModule )
 	// perform edit operation on map tile(s)
 	mt_id_t MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::MapEditor::tool_type_t tool, map_editor::MapEditor::brush_type_t brush, map_editor::MapEditor::draw_mode_t draw_mode );
 
-	// get all pending events (will be cleared after)
-	mt_id_t MT_GetEvents();
+	// get all pending frontend requests (will be cleared after)
+	mt_id_t MT_GetFrontendRequests();
 
-	// send game event
-	mt_id_t MT_AddGameEvent( const event::Event* event );
+	// send event
+	mt_id_t MT_AddEvent( const event::Event* event );
 
 #ifdef DEBUG
 
@@ -289,16 +289,17 @@ public:
 	void OnGSEError( gse::Exception& e );
 	unit::Unit* GetUnit( const size_t id ) const;
 	const unit::Def* GetUnitDef( const std::string& name ) const;
-	void AddGameEvent( event::Event* event );
+	void AddEvent( event::Event* event );
 	void DefineUnit( const unit::Def* def );
 	void SpawnUnit( unit::Unit* unit );
+	void SkipUnitTurn( const size_t unit_id );
 	void DespawnUnit( const size_t unit_id );
 	void MoveUnit( unit::Unit* unit, map::Tile* dst_tile );
 
 private:
 
-	void ValidateGameEvent( event::Event* event ) const;
-	const gse::Value ProcessGameEvent( event::Event* event );
+	void ValidateEvent( event::Event* event ) const;
+	const gse::Value ProcessEvent( event::Event* event );
 
 	const types::Vec3 GetUnitRenderCoords( const unit::Unit* unit );
 
@@ -323,8 +324,8 @@ private:
 
 	response_map_data_t* m_response_map_data = nullptr;
 
-	game_events_t* m_pending_events = nullptr;
-	void AddEvent( const Event& event );
+	std::vector< FrontendRequest >* m_pending_frontend_requests = nullptr;
+	void AddFrontendRequest( const FrontendRequest& request );
 
 	void InitGame( MT_Response& response, MT_CANCELABLE );
 	void ResetGame();

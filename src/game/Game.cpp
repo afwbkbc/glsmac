@@ -89,16 +89,16 @@ mt_id_t Game::MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Game::MT_GetEvents() {
+mt_id_t Game::MT_GetFrontendRequests() {
 	MT_Request request = {};
-	request.op = OP_GET_EVENTS;
+	request.op = OP_GET_FRONTEND_REQUESTS;
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Game::MT_AddGameEvent( const event::Event* event ) {
+mt_id_t Game::MT_AddEvent( const event::Event* event ) {
 	MT_Request request = {};
-	request.op = OP_ADD_GAME_EVENT;
-	NEW( request.data.add_game_event.serialized_game_event, std::string, event::Event::Serialize( event ).ToString() );
+	request.op = OP_ADD_EVENT;
+	NEW( request.data.add_event.serialized_event, std::string, event::Event::Serialize( event ).ToString() );
 	return MT_CreateRequest( request );
 }
 
@@ -128,8 +128,8 @@ void Game::Start() {
 	m_game_state = GS_NONE;
 	m_init_cancel = false;
 
-	ASSERT( !m_pending_events, "game events already set" );
-	NEW( m_pending_events, game_events_t );
+	ASSERT( !m_pending_frontend_requests, "frontend requests already set" );
+	NEW( m_pending_frontend_requests, std::vector< FrontendRequest > );
 
 	NEW( m_random, util::Random );
 
@@ -290,9 +290,8 @@ void Game::Iterate() {
 						m_connection->UpdateSlot( m_slot_num, m_slot, true );
 					}
 
-					// notify frontend
 					const auto& slots = m_state->m_slots.GetSlots();
-					auto* slot_defines = new Event::slot_defines_t();
+					auto* slot_defines = new FrontendRequest::slot_defines_t();
 					for ( const auto& slot : slots ) {
 						if ( slot.GetState() == Slot::SS_OPEN || slot.GetState() == Slot::SS_CLOSED ) {
 							continue;
@@ -303,7 +302,7 @@ void Game::Iterate() {
 						const auto& faction = player->GetFaction();
 						const auto& c = faction.m_colors.border.value;
 						slot_defines->push_back(
-							Event::slot_define_t{
+							FrontendRequest::slot_define_t{
 								slot.GetIndex(),
 								{
 									c.red,
@@ -315,9 +314,9 @@ void Game::Iterate() {
 							}
 						);
 					}
-					auto e = Event( Event::ET_SLOT_DEFINE );
-					e.data.slot_define.slotdefs = slot_defines;
-					AddEvent( e );
+					auto fr = FrontendRequest( FrontendRequest::FR_SLOT_DEFINE );
+					fr.data.slot_define.slotdefs = slot_defines;
+					AddFrontendRequest( fr );
 
 					ASSERT( !m_current_turn, "turn is already initialized" );
 
@@ -342,7 +341,7 @@ void Game::Iterate() {
 						for ( auto& it : m_unprocessed_events ) {
 							ASSERT( m_connection, "connection not set" );
 							try {
-								ValidateGameEvent( it );
+								ValidateEvent( it );
 							}
 							catch ( const InvalidEvent& e ) {
 								for ( auto& it2 : m_unprocessed_events ) {
@@ -353,7 +352,7 @@ void Game::Iterate() {
 							}
 						}
 						for ( auto& it : m_unprocessed_events ) {
-							ProcessGameEvent( it );
+							ProcessEvent( it );
 						}
 						m_unprocessed_events.clear();
 
@@ -361,6 +360,7 @@ void Game::Iterate() {
 							g_engine->GetUI()->SetLoaderText( "Starting game...", false );
 							m_state->m_bindings->Call( Bindings::CS_ON_START );
 						}
+						CheckTurnComplete();
 
 					}
 				}
@@ -823,21 +823,21 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			response.result = R_SUCCESS;
 			break;
 		}
-		case OP_GET_EVENTS: {
+		case OP_GET_FRONTEND_REQUESTS: {
 			//Log( "got events request" );
-			if ( !m_pending_events->empty() ) {
-				Log( "sending " + std::to_string( m_pending_events->size() ) + " events to frontend" );
-				response.data.get_events.events = m_pending_events; // will be destroyed in DestroyResponse
-				NEW( m_pending_events, game_events_t ); // reset
+			if ( !m_pending_frontend_requests->empty() ) {
+				Log( "sending " + std::to_string( m_pending_frontend_requests->size() ) + " events to frontend" );
+				response.data.get_frontend_requests.requests = m_pending_frontend_requests; // will be destroyed in DestroyResponse
+				NEW( m_pending_frontend_requests, std::vector< FrontendRequest > ); // reset
 			}
 			else {
-				response.data.get_events.events = nullptr;
+				response.data.get_frontend_requests.requests = nullptr;
 			}
 			response.result = R_SUCCESS;
 			break;
 		}
-		case OP_ADD_GAME_EVENT: {
-			auto buf = types::Buffer( *request.data.add_game_event.serialized_game_event );
+		case OP_ADD_EVENT: {
+			auto buf = types::Buffer( *request.data.add_event.serialized_event );
 			auto* event = event::Event::Unserialize( buf );
 			// softcheck first
 			const auto* errmsg = event->Validate( this );
@@ -848,7 +848,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 				delete event;
 			}
 			else {
-				AddGameEvent( event );
+				AddEvent( event );
 			}
 			break;
 		}
@@ -874,8 +874,8 @@ void Game::DestroyRequest( const MT_Request& request ) {
 			}
 			break;
 		}
-		case OP_ADD_GAME_EVENT: {
-			DELETE( request.data.add_game_event.serialized_game_event );
+		case OP_ADD_EVENT: {
+			DELETE( request.data.add_event.serialized_event );
 			break;
 		}
 		default: {
@@ -929,9 +929,9 @@ void Game::DestroyResponse( const MT_Response& response ) {
 				}
 				break;
 			}
-			case OP_GET_EVENTS: {
-				if ( response.data.get_events.events ) {
-					DELETE( response.data.get_events.events );
+			case OP_GET_FRONTEND_REQUESTS: {
+				if ( response.data.get_frontend_requests.requests ) {
+					DELETE( response.data.get_frontend_requests.requests );
 				}
 				break;
 			}
@@ -943,22 +943,22 @@ void Game::DestroyResponse( const MT_Response& response ) {
 }
 
 void Game::Message( const std::string& text ) {
-	auto e = Event( Event::ET_GLOBAL_MESSAGE );
-	NEW( e.data.global_message.message, std::string, text );
-	AddEvent( e );
+	auto fr = FrontendRequest( FrontendRequest::FR_GLOBAL_MESSAGE );
+	NEW( fr.data.global_message.message, std::string, text );
+	AddFrontendRequest( fr );
 }
 
 void Game::Quit( const std::string& reason ) {
-	auto e = Event( Event::ET_QUIT );
-	NEW( e.data.quit.reason, std::string, "Lost connection to server" );
-	AddEvent( e );
+	auto fr = FrontendRequest( FrontendRequest::FR_QUIT );
+	NEW( fr.data.quit.reason, std::string, "Lost connection to server" );
+	AddFrontendRequest( fr );
 }
 
 void Game::OnGSEError( gse::Exception& err ) {
-	auto e = Event( Event::ET_ERROR );
-	NEW( e.data.error.what, std::string, (std::string)"Script error: " + err.what() );
-	NEW( e.data.error.stacktrace, std::string, err.ToStringAndCleanup() );
-	AddEvent( e );
+	auto fr = FrontendRequest( FrontendRequest::FR_ERROR );
+	NEW( fr.data.error.what, std::string, (std::string)"Script error: " + err.what() );
+	NEW( fr.data.error.stacktrace, std::string, err.ToStringAndCleanup() );
+	AddFrontendRequest( fr );
 }
 
 unit::Unit* Game::GetUnit( const size_t id ) const {
@@ -979,13 +979,13 @@ const unit::Def* Game::GetUnitDef( const std::string& name ) const {
 	}
 }
 
-void Game::AddGameEvent( event::Event* event ) {
+void Game::AddEvent( event::Event* event ) {
 	ASSERT( event->m_initiator_slot == GetInitiatorSlot(), "initiator slot mismatch" );
 	if ( m_connection ) {
 		m_connection->SendGameEvent( event );
 	}
 	if ( m_state->IsMaster() ) {
-		ProcessGameEvent( event );
+		ProcessEvent( event );
 	}
 }
 
@@ -996,10 +996,9 @@ void Game::DefineUnit( const unit::Def* def ) {
 
 	m_unit_defs.insert_or_assign( def->m_id, def );
 
-	// notify frontend
-	auto e = Event( Event::ET_UNIT_DEFINE );
-	NEW( e.data.unit_define.serialized_unitdef, std::string, unit::Def::Serialize( def ).ToString() );
-	AddEvent( e );
+	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_DEFINE );
+	NEW( fr.data.unit_define.serialized_unitdef, std::string, unit::Def::Serialize( def ).ToString() );
+	AddFrontendRequest( fr );
 }
 
 void Game::SpawnUnit( unit::Unit* unit ) {
@@ -1025,34 +1024,49 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 		}
 	);
 
-	// notify frontend
-	auto e = Event( Event::ET_UNIT_SPAWN );
-	e.data.unit_spawn.unit_id = unit->m_id;
-	NEW( e.data.unit_spawn.unitdef_id, std::string, unit->m_def->m_id );
-	e.data.unit_spawn.slot_index = unit->m_owner->GetIndex();
-	e.data.unit_spawn.tile_coords = {
+	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_SPAWN );
+	fr.data.unit_spawn.unit_id = unit->m_id;
+	NEW( fr.data.unit_spawn.unitdef_id, std::string, unit->m_def->m_id );
+	fr.data.unit_spawn.slot_index = unit->m_owner->GetIndex();
+	fr.data.unit_spawn.tile_coords = {
 		tile->coord.x,
 		tile->coord.y
 	};
 	const auto c = GetUnitRenderCoords( unit );
-	e.data.unit_spawn.render_coords = {
+	fr.data.unit_spawn.render_coords = {
 		c.x,
 		c.y,
 		c.z
 	};
 
 	// temporary logic for testing - all own units are active, all foreign aren't
-	e.data.unit_spawn.is_active = unit->m_owner == GetPlayer()->GetSlot();
+	fr.data.unit_spawn.is_active = unit->m_owner == GetPlayer()->GetSlot();
 
-	e.data.unit_spawn.movement = unit->m_movement;
-	e.data.unit_spawn.morale = unit->m_morale;
-	e.data.unit_spawn.health = unit->m_health;
+	fr.data.unit_spawn.movement = unit->m_movement;
+	fr.data.unit_spawn.morale = unit->m_morale;
+	fr.data.unit_spawn.health = unit->m_health;
 
-	AddEvent( e );
+	AddFrontendRequest( fr );
 
 	if ( m_state->IsMaster() ) {
 		m_state->m_bindings->Call( Bindings::CS_ON_SPAWN_UNIT, { unit->Wrap() } );
 	}
+}
+
+void Game::SkipUnitTurn( const size_t unit_id ) {
+	const auto& it = m_units.find( unit_id );
+	ASSERT( it != m_units.end(), "unit id not found" );
+	auto* unit = it->second;
+
+	Log( "Skipping unit turn #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->m_tile->ToString() );
+
+	unit->m_movement = 0.0f;
+
+	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_REFRESH );
+	fr.data.unit_refresh.unit_id = unit->m_id;
+	fr.data.unit_refresh.movement_left = unit->m_movement;
+	AddFrontendRequest( fr );
+	CheckTurnComplete();
 }
 
 void Game::DespawnUnit( const size_t unit_id ) {
@@ -1063,10 +1077,9 @@ void Game::DespawnUnit( const size_t unit_id ) {
 
 	Log( "Despawning unit #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->m_tile->ToString() );
 
-	// notify frontend
-	auto e = Event( Event::ET_UNIT_DESPAWN );
-	e.data.unit_despawn.unit_id = unit_id;
-	AddEvent( e );
+	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_DESPAWN );
+	fr.data.unit_despawn.unit_id = unit_id;
+	AddFrontendRequest( fr );
 
 	ASSERT( unit->m_tile, "unit tile not assigned" );
 	auto* tile = unit->m_tile;
@@ -1106,29 +1119,30 @@ void Game::MoveUnit( unit::Unit* unit, map::Tile* dst_tile ) {
 			);
 			unit->m_tile = dst_tile;
 
-			// notify frontend
-			auto e = Event( Event::ET_UNIT_MOVE );
-			e.data.unit_move.unit_id = unit->m_id;
-			e.data.unit_move.tile_coords = {
+			auto fr = FrontendRequest( FrontendRequest::FR_UNIT_MOVE );
+			fr.data.unit_move.unit_id = unit->m_id;
+			fr.data.unit_move.tile_coords = {
 				dst_tile->coord.x,
 				dst_tile->coord.y
 			};
 			const auto c = GetUnitRenderCoords( unit );
-			e.data.unit_move.render_coords = {
+			fr.data.unit_move.render_coords = {
 				c.x,
 				c.y,
 				c.z
 			};
-			e.data.unit_move.movement_left = unit->m_movement;
-			AddEvent( e );
+			fr.data.unit_move.movement_left = unit->m_movement;
+			AddFrontendRequest( fr );
+			CheckTurnComplete();
 			break;
 		}
 		case unit::Unit::MR_TRIED_BUT_FAILED: {
 			// refresh unit badge on frontend
-			auto e = Event( Event::ET_UNIT_REFRESH );
-			e.data.unit_refresh.unit_id = unit->m_id;
-			e.data.unit_refresh.movement_left = unit->m_movement;
-			AddEvent( e );
+			auto fr = FrontendRequest( FrontendRequest::FR_UNIT_REFRESH );
+			fr.data.unit_refresh.unit_id = unit->m_id;
+			fr.data.unit_refresh.movement_left = unit->m_movement;
+			AddFrontendRequest( fr );
+			CheckTurnComplete();
 			break;
 		}
 		default:
@@ -1136,7 +1150,7 @@ void Game::MoveUnit( unit::Unit* unit, map::Tile* dst_tile ) {
 	}
 }
 
-void Game::ValidateGameEvent( event::Event* event ) const {
+void Game::ValidateEvent( event::Event* event ) const {
 	if ( !event->m_is_validated ) {
 		const auto* errmsg = event->Validate( this );
 		if ( errmsg ) {
@@ -1149,11 +1163,11 @@ void Game::ValidateGameEvent( event::Event* event ) const {
 	}
 }
 
-const gse::Value Game::ProcessGameEvent( event::Event* event ) {
+const gse::Value Game::ProcessEvent( event::Event* event ) {
 	ASSERT( m_current_turn, "turn not initialized" );
 
 	if ( m_state->IsMaster() ) { // TODO: validate in either case?
-		ValidateGameEvent( event );
+		ValidateEvent( event );
 	}
 
 	ASSERT( event->m_is_validated, "event was not validated" );
@@ -1222,9 +1236,9 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 	Log( "Restored next unit id: " + std::to_string( unit::Unit::GetNextId() ) );
 }
 
-void Game::AddEvent( const Event& event ) {
-	//Log( "Sending event (type=" + std::to_string( event.type ) + ")" ); // spammy
-	m_pending_events->push_back( event );
+void Game::AddFrontendRequest( const FrontendRequest& request ) {
+	//Log( "Sending frontend request (type=" + std::to_string( request.type ) + ")" ); // spammy
+	m_pending_frontend_requests->push_back( request );
 }
 
 void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
@@ -1234,8 +1248,8 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 	Log( "Initializing game" );
 
-	ASSERT( m_pending_events, "pending events not set" );
-	m_pending_events->clear();
+	ASSERT( m_pending_frontend_requests, "pending events not set" );
+	m_pending_frontend_requests->clear();
 
 	m_game_state = GS_PREPARING_MAP;
 	m_initialization_error = "";
@@ -1346,9 +1360,9 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		);
 
 		m_connection->m_on_message = [ this ]( const std::string& message ) -> void {
-			auto e = Event( Event::ET_GLOBAL_MESSAGE );
-			NEW( e.data.global_message.message, std::string, message );
-			AddEvent( e );
+			auto fr = FrontendRequest( FrontendRequest::FR_GLOBAL_MESSAGE );
+			NEW( fr.data.global_message.message, std::string, message );
+			AddFrontendRequest( fr );
 		};
 
 		m_connection->m_on_game_event = [ this ]( event::Event* event ) -> void {
@@ -1358,8 +1372,8 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			}
 
 			if ( m_game_state == GS_RUNNING ) {
-				ValidateGameEvent( event );
-				ProcessGameEvent( event );
+				ValidateEvent( event );
+				ProcessEvent( event );
 			}
 			else {
 				m_unprocessed_events.push_back( event );
@@ -1546,8 +1560,8 @@ void Game::ResetGame() {
 		m_map = nullptr;
 	}
 
-	ASSERT( m_pending_events, "pending events not set" );
-	m_pending_events->clear();
+	ASSERT( m_pending_frontend_requests, "pending events not set" );
+	m_pending_frontend_requests->clear();
 
 	if ( m_current_turn ) {
 		DELETE( m_current_turn );
@@ -1585,17 +1599,21 @@ void Game::NextTurn() {
 }
 
 void Game::CheckTurnComplete() {
-	bool is_turn_complete = false;
+	bool is_turn_complete = true;
 
-	// TODO: check if any units should be moved
-	is_turn_complete = true;
+	for ( const auto& unit : m_units ) {
+		if ( unit.second->HasMovesLeft() ) {
+			is_turn_complete = false;
+			break;
+		}
+	}
 
 	if ( m_is_turn_complete != is_turn_complete ) {
 		m_is_turn_complete = is_turn_complete;
 		Log( "Sending turn complete status: " + std::to_string( m_is_turn_complete ) );
-		auto e = Event( Event::ET_TURN_COMPLETE_STATUS );
-		e.data.turn_complete_status.is_turn_complete = m_is_turn_complete;
-		AddEvent( e );
+		auto fr = FrontendRequest( FrontendRequest::FR_TURN_COMPLETE_STATUS );
+		fr.data.turn_complete_status.is_turn_complete = m_is_turn_complete;
+		AddFrontendRequest( fr );
 	}
 }
 

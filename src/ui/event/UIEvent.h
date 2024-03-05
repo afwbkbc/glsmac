@@ -49,6 +49,7 @@ CLASS( UIEvent, base::Base )
 		K_RIGHT,
 		K_DOWN,
 		K_ENTER,
+		K_SPACE,
 		K_TAB,
 		K_BACKSPACE,
 		K_ESCAPE,

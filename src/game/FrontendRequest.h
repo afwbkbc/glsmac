@@ -7,27 +7,27 @@
 
 namespace game {
 
-class Event {
+class FrontendRequest {
 public:
 
-	enum event_type_t {
-		ET_NONE,
-		ET_QUIT,
-		ET_ERROR,
-		ET_GLOBAL_MESSAGE,
-		ET_TURN_COMPLETE_STATUS,
-		ET_SLOT_DEFINE,
-		ET_UNIT_DEFINE,
-		ET_UNIT_SPAWN,
-		ET_UNIT_DESPAWN,
-		ET_UNIT_REFRESH,
-		ET_UNIT_MOVE
+	enum request_type_t {
+		FR_NONE,
+		FR_QUIT,
+		FR_ERROR,
+		FR_GLOBAL_MESSAGE,
+		FR_TURN_COMPLETE_STATUS,
+		FR_SLOT_DEFINE,
+		FR_UNIT_DEFINE,
+		FR_UNIT_SPAWN,
+		FR_UNIT_DESPAWN,
+		FR_UNIT_REFRESH,
+		FR_UNIT_MOVE
 	};
-	Event( const event_type_t type );
-	Event( const Event& other );
-	virtual ~Event();
+	FrontendRequest( const request_type_t type );
+	FrontendRequest( const FrontendRequest& other );
+	virtual ~FrontendRequest();
 
-	const event_type_t type = ET_NONE;
+	const request_type_t type = FR_NONE;
 
 	struct slot_define_t {
 		size_t slot_index;
@@ -102,7 +102,5 @@ public:
 		} unit_move;
 	} data;
 };
-
-typedef std::vector< Event > game_events_t;
 
 }
