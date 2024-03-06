@@ -125,6 +125,7 @@ CLASS( Game, base::Task )
 
 	void AddMessage( const std::string& text );
 	void SendChatMessage( const std::string& text );
+	void CompleteTurn();
 
 	void LoadMap( const std::string& path );
 	void SaveMap( const std::string& path );
@@ -142,6 +143,9 @@ CLASS( Game, base::Task )
 private:
 
 	size_t m_slot_index = 0;
+	bool m_is_turn_active = false;
+	void ActivateTurn();
+	void DeactivateTurn();
 
 	const std::string TERRAIN_SOURCE_PCX = "ter1.pcx";
 
@@ -389,11 +393,12 @@ private:
 	struct {
 		std::vector< Unit* > unit_states = {};
 		size_t selected_id_index = 0;
-	} m_selectables;
+	} m_selectables = {};
 	void UpdateSelectable( Unit* unit_state );
 	void AddSelectable( Unit* unit_state );
 	void RemoveSelectable( Unit* unit_state );
 	void SetCurrentSelectable( Unit* unit_state );
+	Unit* GetCurrentSelectable();
 	Unit* GetNextSelectable();
 	const bool SelectNextUnitMaybe();
 

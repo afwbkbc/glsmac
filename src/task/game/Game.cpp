@@ -16,6 +16,7 @@
 
 #include "game/event/MoveUnit.h"
 #include "game/event/SkipUnitTurn.h"
+#include "game/event/CompleteTurn.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -960,6 +961,24 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 			AddMessage( *request.data.global_message.message );
 			break;
 		}
+		case ::game::FrontendRequest::FR_TURN_ACTIVE_STATUS: {
+			if ( m_is_turn_active != request.data.turn_active_status.is_turn_active ) {
+				m_is_turn_active = request.data.turn_active_status.is_turn_active;
+				ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
+				m_ui.bottom_bar->SetTurnActiveStatus( request.data.turn_active_status.is_turn_active );
+				if ( m_is_turn_active ) {
+					SelectNextUnitMaybe();
+				}
+				else {
+					if ( m_selected_unit_state ) {
+						DeselectTileOrUnit();
+						GetTileAtCoords( ::game::TQP_TILE_SELECT, m_selected_tile_data.tile_position );
+						m_selected_unit_state = nullptr;
+					}
+				}
+			}
+			break;
+		}
 		case ::game::FrontendRequest::FR_TURN_COMPLETE_STATUS: {
 			ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
 			m_ui.bottom_bar->SetTurnCompleteStatus( request.data.turn_complete_status.is_turn_complete );
@@ -1034,6 +1053,14 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 			THROW( "unexpected frontend request type: " + std::to_string( request.type ) );
 		}
 	}
+}
+
+void Game::ActivateTurn() {
+
+}
+
+void Game::DeactivateTurn() {
+
 }
 
 void Game::UpdateMapData( const types::Vec2< size_t >& map_size ) {
@@ -1208,6 +1235,8 @@ void Game::Initialize(
 				return false;
 			}
 
+			m_ui.bottom_bar->CloseMenus();
+
 			if ( !data->key.modifiers ) {
 				if ( m_selected_tile_data.is_set ) {
 
@@ -1325,6 +1354,8 @@ void Game::Initialize(
 				return false;
 			}
 
+			m_ui.bottom_bar->CloseMenus();
+
 			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
 				switch ( data->mouse.button ) {
 					case UIEvent::M_LEFT: {
@@ -1346,7 +1377,11 @@ void Game::Initialize(
 			else {
 				switch ( data->mouse.button ) {
 					case UIEvent::M_LEFT: {
-						SelectTileAtPoint( ::game::TQP_UNIT_SELECT, data->mouse.absolute.x, data->mouse.absolute.y ); // async
+						SelectTileAtPoint(
+							::game::TQP_UNIT_SELECT,
+							data->mouse.absolute.x,
+							data->mouse.absolute.y
+						); // async
 						break;
 					}
 					case UIEvent::M_RIGHT: {
@@ -1626,6 +1661,11 @@ void Game::SendChatMessage( const std::string& text ) {
 	m_mt_ids.chat = g_engine->GetGame()->MT_Chat( text );
 }
 
+void Game::CompleteTurn() {
+	const auto event = ::game::event::CompleteTurn( m_slot_index );
+	g_engine->GetGame()->MT_AddEvent( &event );
+}
+
 void Game::SelectTileAtPoint( const ::game::tile_query_purpose_t tile_query_purpose, const size_t x, const size_t y ) {
 	//Log( "Looking up tile at " + std::to_string( x ) + "x" + std::to_string( y ) );
 	GetTileAtScreenCoords( tile_query_purpose, x, m_viewport.window_height - y ); // async
@@ -1646,7 +1686,12 @@ void Game::SelectUnit( const unit_data_t& unit_data, const bool actually_select_
 		m_selected_unit_state = unit_state;
 		m_selected_unit_state->Show();
 	}
-	if ( actually_select_unit && m_selected_unit_state->IsSelectable() ) {
+	if ( actually_select_unit && m_selected_unit_state->IsSelectable() && m_is_turn_active ) {
+
+		if ( m_selected_unit_state->GetId() != m_selected_tile_data.units.front().id ) {
+			m_unit_states.at( m_selected_tile_data.units.front().id )->Hide();
+		}
+
 		m_selected_unit_state->StartBadgeBlink();
 		SetCurrentSelectable( m_selected_unit_state );
 		Log( "Selected unit " + std::to_string( m_selected_unit_data->id ) );
@@ -1663,20 +1708,22 @@ void Game::SelectTileOrUnit( const tile_data_t& tile_data, const size_t selected
 
 	const unit_data_t* selected_unit = nullptr;
 	if ( m_selected_tile_data.purpose == ::game::TQP_UNIT_SELECT ) {
-		const auto& md = m_selected_tile_data.metadata.unit_select;
-		if ( md.unit_id ) {
-			for ( const auto& unit : m_selected_tile_data.units ) {
-				if ( unit.id == md.unit_id ) {
-					selected_unit = &unit;
-					break;
+		if ( m_is_turn_active ) {
+			const auto& md = m_selected_tile_data.metadata.unit_select;
+			if ( md.unit_id ) {
+				for ( const auto& unit : m_selected_tile_data.units ) {
+					if ( unit.id == md.unit_id ) {
+						selected_unit = &unit;
+						break;
+					}
 				}
+			}
+			if ( !selected_unit ) {
+				selected_unit = GetFirstSelectableUnit( m_selected_tile_data.units );
 			}
 		}
 		if ( !selected_unit ) {
-			selected_unit = GetFirstSelectableUnit( m_selected_tile_data.units );
-			if ( !selected_unit ) {
-				m_selected_tile_data.purpose = ::game::TQP_TILE_SELECT;
-			}
+			m_selected_tile_data.purpose = ::game::TQP_TILE_SELECT;
 		}
 	}
 
@@ -1707,6 +1754,7 @@ void Game::SelectTileOrUnit( const tile_data_t& tile_data, const size_t selected
 }
 
 void Game::DeselectTileOrUnit() {
+
 	if ( m_actors.tile_selection ) {
 		RemoveActor( m_actors.tile_selection );
 		m_actors.tile_selection = nullptr;
@@ -1714,11 +1762,9 @@ void Game::DeselectTileOrUnit() {
 	if ( m_selected_unit_state ) {
 
 		ASSERT( !m_selected_tile_data.units.empty(), "unit was selected but tile data has no units" );
+
 		// reset to most important unit if needed
 		size_t unit_id = m_selected_tile_data.units.front().id;
-		if ( m_selected_unit_state->GetTile()->GetCoords() == m_selected_tile_data.tile_position ) {
-			unit_id = m_selected_unit_state->GetId();
-		}
 		ASSERT( m_unit_states.find( unit_id ) != m_unit_states.end(), "unit id not found" );
 
 		auto* most_important_unit = m_unit_states.at( unit_id );
@@ -1727,7 +1773,6 @@ void Game::DeselectTileOrUnit() {
 		if ( m_selected_unit_state != most_important_unit ) {
 			m_selected_unit_state->Hide();
 			most_important_unit->Show();
-
 		}
 		m_selected_unit_state = nullptr;
 	}
@@ -2199,6 +2244,9 @@ void Game::ExitGame( const f_exit_game on_game_exit ) {
 void Game::AddSelectable( Unit* unit_state ) {
 	const auto& it = std::find( m_selectables.unit_states.begin(), m_selectables.unit_states.end(), unit_state );
 	if ( it == m_selectables.unit_states.end() ) {
+		if ( m_selectables.unit_states.empty() ) {
+			m_selectables.selected_id_index = 0;
+		}
 		m_selectables.unit_states.push_back( unit_state );
 	}
 }
@@ -2231,19 +2279,31 @@ void Game::SetCurrentSelectable( Unit* unit_state ) {
 	m_selectables.selected_id_index = it - m_selectables.unit_states.begin();
 }
 
+Unit* Game::GetCurrentSelectable() {
+	if ( !m_selectables.unit_states.empty() ) {
+		return m_selectables.unit_states.at( m_selectables.selected_id_index );
+	}
+	return nullptr;
+}
+
 Unit* Game::GetNextSelectable() {
 	if ( !m_selectables.unit_states.empty() ) {
 		m_selectables.selected_id_index++;
 		if ( m_selectables.selected_id_index >= m_selectables.unit_states.size() ) {
 			m_selectables.selected_id_index = 0;
 		}
-		return m_selectables.unit_states.at( m_selectables.selected_id_index );
+		return GetCurrentSelectable();
 	}
 	return nullptr;
 }
 
 const bool Game::SelectNextUnitMaybe() {
-	auto* selected_unit = GetNextSelectable();
+	if ( !m_is_turn_active ) {
+		return false;
+	}
+	auto* selected_unit = m_selected_unit_state
+		? GetNextSelectable()
+		: GetCurrentSelectable();
 	if ( selected_unit ) {
 		Log( "Tab-selecting unit " + std::to_string( selected_unit->GetId() ) );
 		::game::tile_query_metadata_t metadata = {};

@@ -165,7 +165,7 @@ void Unit::Show() {
 void Unit::Hide() {
 	if ( m_render.is_rendered ) {
 		m_def->GetSprite( m_morale )->instanced_sprite->actor->RemoveInstance( m_render.instance_id );
-		HideBadge();
+		StopBadgeBlink( false );
 		m_render.is_rendered = false;
 	}
 }

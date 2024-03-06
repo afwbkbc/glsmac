@@ -295,6 +295,8 @@ public:
 	void SkipUnitTurn( const size_t unit_id );
 	void DespawnUnit( const size_t unit_id );
 	void MoveUnit( unit::Unit* unit, map::Tile* dst_tile );
+	const bool IsTurnActive() const;
+	void CompleteTurn();
 
 private:
 

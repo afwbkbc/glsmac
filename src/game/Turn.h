@@ -2,21 +2,26 @@
 
 #include <vector>
 
-#include "base/Base.h"
-
 #include "event/Event.h"
 
 namespace game {
 
-CLASS( Turn, base::Base )
+class Turn {
+public:
 	typedef std::vector< const event::Event* > events_t;
-	Turn( const size_t id );
+
+	Turn();
 	~Turn();
-	const size_t GetId() const;
+
+	const bool IsActive() const;
+
+	void Activate();
+	void Deactivate();
+
 	void AddEvent( const event::Event* event );
 	const events_t* const GetEvents() const;
 private:
-	const size_t m_id;
+	bool m_is_active = false;
 	events_t m_events = {};
 };
 

@@ -321,9 +321,6 @@ void Game::Iterate() {
 					ASSERT( !m_current_turn, "turn is already initialized" );
 
 					try {
-						// start initial turn
-						NEW( m_current_turn, Turn, 0 );
-
 						// start main loop
 						m_game_state = GS_RUNNING;
 					}
@@ -358,6 +355,7 @@ void Game::Iterate() {
 
 						if ( m_state->IsMaster() ) {
 							g_engine->GetUI()->SetLoaderText( "Starting game...", false );
+							NextTurn();
 							m_state->m_bindings->Call( Bindings::CS_ON_START );
 						}
 						CheckTurnComplete();
@@ -367,12 +365,6 @@ void Game::Iterate() {
 				else {
 					f_init_failed( map::Map::GetErrorString( ec ) );
 				}
-			}
-		}
-		else if ( m_game_state == GS_RUNNING ) {
-			if ( !m_current_turn->GetId() ) {
-				// start first turn
-				NextTurn();
 			}
 		}
 	}
@@ -837,10 +829,18 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			break;
 		}
 		case OP_ADD_EVENT: {
-			auto buf = types::Buffer( *request.data.add_event.serialized_event );
-			auto* event = event::Event::Unserialize( buf );
-			// softcheck first
-			const auto* errmsg = event->Validate( this );
+			const std::string* errmsg = nullptr;
+			event::Event* event = nullptr;
+			ASSERT( m_current_turn, "turn not initialized" );
+			if ( !m_current_turn->IsActive() ) {
+				errmsg = new std::string( "Turn not active" );
+			}
+			else {
+				auto buf = types::Buffer( *request.data.add_event.serialized_event );
+				event = event::Event::Unserialize( buf );
+				// softcheck first
+				errmsg = event->Validate( this );
+			}
 			if ( errmsg ) {
 				// log and do nothing
 				Log( "Event declined: " + *errmsg );
@@ -1148,6 +1148,18 @@ void Game::MoveUnit( unit::Unit* unit, map::Tile* dst_tile ) {
 		default:
 			THROW( "unknown unit move result: " + std::to_string( move_result ) );
 	}
+}
+
+const bool Game::IsTurnActive() const {
+	return m_current_turn && m_current_turn->IsActive();
+}
+
+void Game::CompleteTurn() {
+	ASSERT( m_current_turn, "turn not set" );
+	m_current_turn->Deactivate();
+	auto fr = FrontendRequest( FrontendRequest::FR_TURN_ACTIVE_STATUS );
+	fr.data.turn_active_status.is_turn_active = false;
+	AddFrontendRequest( fr );
 }
 
 void Game::ValidateEvent( event::Event* event ) const {
@@ -1582,20 +1594,17 @@ void Game::ResetGame() {
 }
 
 void Game::NextTurn() {
-	ASSERT( m_current_turn, "turn not set" );
+	ASSERT( !m_current_turn, "turn already active set" );
 
-	const auto last_turn_id = m_current_turn->GetId();
-	if ( last_turn_id ) {
-		Log( "turn " + std::to_string( m_current_turn->GetId() ) + " finished" );
-		// TODO: do something?
-	}
-
-	DELETE( m_current_turn );
-
-	NEW( m_current_turn, Turn, last_turn_id + 1 );
-	Log( "turn " + std::to_string( m_current_turn->GetId() ) + " started" );
+	NEW( m_current_turn, Turn );
+	m_current_turn->Activate();
+	Log( "turn started" );
 
 	m_state->m_bindings->Call( Bindings::CS_ON_TURN );
+
+	auto fr = FrontendRequest( FrontendRequest::FR_TURN_ACTIVE_STATUS );
+	fr.data.turn_active_status.is_turn_active = true;
+	AddFrontendRequest( fr );
 }
 
 void Game::CheckTurnComplete() {

@@ -27,6 +27,10 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.global_message.message, std::string, *other.data.global_message.message );
 			break;
 		}
+		case FR_TURN_ACTIVE_STATUS: {
+			data.turn_active_status.is_turn_active = other.data.turn_active_status.is_turn_active;
+			break;
+		}
 		case FR_TURN_COMPLETE_STATUS: {
 			data.turn_complete_status.is_turn_complete = other.data.turn_complete_status.is_turn_complete;
 			break;

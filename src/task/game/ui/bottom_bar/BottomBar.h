@@ -59,6 +59,7 @@ CLASS( BottomBar, UI )
 	void AddMessage( const std::string& text );
 	void UpdateMapFileName();
 
+	void SetTurnActiveStatus( const bool is_turn_active );
 	void SetTurnCompleteStatus( const bool is_turn_complete );
 
 private:

@@ -15,6 +15,7 @@ public:
 		FR_QUIT,
 		FR_ERROR,
 		FR_GLOBAL_MESSAGE,
+		FR_TURN_ACTIVE_STATUS,
 		FR_TURN_COMPLETE_STATUS,
 		FR_SLOT_DEFINE,
 		FR_UNIT_DEFINE,
@@ -53,6 +54,9 @@ public:
 		struct {
 			const std::string* message;
 		} global_message;
+		struct {
+			bool is_turn_active;
+		} turn_active_status;
 		struct {
 			bool is_turn_complete;
 		} turn_complete_status;

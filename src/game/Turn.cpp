@@ -2,8 +2,7 @@
 
 namespace game {
 
-Turn::Turn( const size_t id )
-	: m_id( id ) {
+Turn::Turn() {
 	//
 }
 
@@ -13,8 +12,18 @@ Turn::~Turn() {
 	}
 }
 
-const size_t Turn::GetId() const {
-	return m_id;
+const bool Turn::IsActive() const {
+	return m_is_active;
+}
+
+void Turn::Activate() {
+	ASSERT_NOLOG( !m_is_active, "turn already active" );
+	m_is_active = true;
+}
+
+void Turn::Deactivate() {
+	ASSERT_NOLOG( m_is_active, "turn not active" );
+	m_is_active = false;
 }
 
 void Turn::AddEvent( const event::Event* event ) {

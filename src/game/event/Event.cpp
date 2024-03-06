@@ -5,6 +5,7 @@
 #include "DespawnUnit.h"
 #include "MoveUnit.h"
 #include "SkipUnitTurn.h"
+#include "CompleteTurn.h"
 
 namespace game {
 namespace event {
@@ -30,6 +31,7 @@ const types::Buffer Event::Serialize( const Event* event ) {
 		SERIALIZE( ET_UNIT_DESPAWN, DespawnUnit )
 		SERIALIZE( ET_UNIT_MOVE, MoveUnit )
 		SERIALIZE( ET_UNIT_SKIP_TURN, SkipUnitTurn )
+		SERIALIZE( ET_COMPLETE_TURN, CompleteTurn )
 		default:
 			THROW( "unknown event type on write: " + std::to_string( event->m_type ) );
 	}
@@ -52,6 +54,7 @@ Event* Event::Unserialize( types::Buffer& buf ) {
 		UNSERIALIZE( ET_UNIT_DESPAWN, DespawnUnit )
 		UNSERIALIZE( ET_UNIT_MOVE, MoveUnit )
 		UNSERIALIZE( ET_UNIT_SKIP_TURN, SkipUnitTurn )
+		UNSERIALIZE( ET_COMPLETE_TURN, CompleteTurn )
 		default:
 			THROW( "unknown event type on read: " + std::to_string( type ) );
 	}

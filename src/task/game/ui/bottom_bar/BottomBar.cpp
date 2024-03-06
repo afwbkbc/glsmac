@@ -126,7 +126,7 @@ void BottomBar::Create() {
 	}
 	AddChild( m_sections.mini_map );
 
-	NEW( m_sections.turn_complete_button, TurnCompleteButton );
+	NEW( m_sections.turn_complete_button, TurnCompleteButton, m_game );
 	m_sections.mini_map->AddChild( m_sections.turn_complete_button );
 
 	// side menus
@@ -291,8 +291,12 @@ void BottomBar::UpdateMapFileName() {
 	m_sections.middle_area->UpdateMapFileName();
 }
 
+void BottomBar::SetTurnActiveStatus( const bool is_turn_active ) {
+	m_sections.turn_complete_button->SetTurnActiveStatus( is_turn_active );
+}
+
 void BottomBar::SetTurnCompleteStatus( const bool is_turn_complete ) {
-	m_sections.turn_complete_button->SetTurnCompleteStatus( is_turn_complete );
+	m_sections.turn_complete_button->SetFlashingEnabled( is_turn_complete );
 }
 
 }
