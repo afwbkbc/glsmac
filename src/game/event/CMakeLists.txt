@@ -7,5 +7,6 @@ SET( SRC ${SRC}
 	${PWD}/MoveUnit.cpp
 	${PWD}/SkipUnitTurn.cpp
 	${PWD}/CompleteTurn.cpp
+	${PWD}/UncompleteTurn.cpp
 
 	PARENT_SCOPE )

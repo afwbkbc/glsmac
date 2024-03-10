@@ -297,6 +297,7 @@ public:
 	void MoveUnit( unit::Unit* unit, map::Tile* dst_tile );
 	const bool IsTurnActive() const;
 	void CompleteTurn();
+	void UncompleteTurn();
 
 private:
 

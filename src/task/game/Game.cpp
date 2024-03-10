@@ -17,6 +17,7 @@
 #include "game/event/MoveUnit.h"
 #include "game/event/SkipUnitTurn.h"
 #include "game/event/CompleteTurn.h"
+#include "game/event/UncompleteTurn.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -967,6 +968,7 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 				ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
 				m_ui.bottom_bar->SetTurnActiveStatus( request.data.turn_active_status.is_turn_active );
 				if ( m_is_turn_active ) {
+					m_selected_unit_state = nullptr;
 					SelectNextUnitMaybe();
 				}
 				else {
@@ -1666,6 +1668,11 @@ void Game::CompleteTurn() {
 	g_engine->GetGame()->MT_AddEvent( &event );
 }
 
+void Game::UncompleteTurn() {
+	const auto event = ::game::event::UncompleteTurn( m_slot_index );
+	g_engine->GetGame()->MT_AddEvent( &event );
+}
+
 void Game::SelectTileAtPoint( const ::game::tile_query_purpose_t tile_query_purpose, const size_t x, const size_t y ) {
 	//Log( "Looking up tile at " + std::to_string( x ) + "x" + std::to_string( y ) );
 	GetTileAtScreenCoords( tile_query_purpose, x, m_viewport.window_height - y ); // async
@@ -1731,6 +1738,7 @@ void Game::SelectTileOrUnit( const tile_data_t& tile_data, const size_t selected
 
 	switch ( m_selected_tile_data.purpose ) {
 		case ::game::TQP_TILE_SELECT: {
+			m_selected_unit_state = nullptr;
 			Log( "Selected tile at " + m_selected_tile_data.tile_position.ToString() + " ( " + m_selected_tile_data.selection_coords.center.ToString() + " )" );
 			if ( m_selected_tile_data.metadata.tile_select.try_next_unit && SelectNextUnitMaybe() ) {
 				// no need for tile selector because we selected next unit
@@ -2256,7 +2264,7 @@ void Game::RemoveSelectable( Unit* unit_state ) {
 	if ( it != m_selectables.unit_states.end() ) {
 		const size_t removed_index = it - m_selectables.unit_states.begin();
 		m_selectables.unit_states.erase( it );
-		if ( m_selectables.selected_id_index >= removed_index ) {
+		if ( m_selectables.selected_id_index > 0 && m_selectables.selected_id_index >= removed_index ) {
 			m_selectables.selected_id_index--;
 		}
 	}

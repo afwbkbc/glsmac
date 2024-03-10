@@ -12,20 +12,29 @@ TurnCompleteButton::TurnCompleteButton( Game* game )
 	, m_game( game ) {
 	On(
 		UIEvent::EV_BUTTON_CLICK, EH( this ) {
-			m_game->CompleteTurn();
+			if ( m_is_turn_active ) {
+				m_game->CompleteTurn();
+			}
+			else {
+				m_game->UncompleteTurn();
+			}
 			return true;
 		}
 	);
 	On(
 		UIEvent::EV_MOUSE_OVER, EH( this ) {
-			m_flashing->Hide();
-			return true;
+			if ( m_is_turn_active ) {
+				m_flashing->Hide();
+			}
+			return false;
 		}
 	);
 	On(
 		UIEvent::EV_MOUSE_OUT, EH( this ) {
-			m_flashing->Show();
-			return true;
+			if ( m_is_turn_active ) {
+				m_flashing->Show();
+			}
+			return false;
 		}
 	);
 }
@@ -92,8 +101,6 @@ void TurnCompleteButton::SetTurnActiveStatus( const bool is_turn_active ) {
 		else {
 			SetLabel( "WAITING FOR PLAYERS" );
 			SetFlashingEnabled( true );
-			BlockEvents();
-			RemoveStyleModifier( Style::M_HOVER );
 			m_flashing->Show();
 		}
 		m_is_turn_active = is_turn_active;

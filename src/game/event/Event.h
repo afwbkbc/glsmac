@@ -20,6 +20,7 @@ public:
 		ET_UNIT_MOVE,
 		ET_UNIT_SKIP_TURN,
 		ET_COMPLETE_TURN,
+		ET_UNCOMPLETE_TURN,
 	};
 
 	Event( const size_t initiator_slot, const event_type_t type );

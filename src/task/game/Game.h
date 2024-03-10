@@ -126,6 +126,7 @@ CLASS( Game, base::Task )
 	void AddMessage( const std::string& text );
 	void SendChatMessage( const std::string& text );
 	void CompleteTurn();
+	void UncompleteTurn();
 
 	void LoadMap( const std::string& path );
 	void SaveMap( const std::string& path );

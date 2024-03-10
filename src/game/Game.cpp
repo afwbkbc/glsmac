@@ -832,13 +832,12 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			const std::string* errmsg = nullptr;
 			event::Event* event = nullptr;
 			ASSERT( m_current_turn, "turn not initialized" );
-			if ( !m_current_turn->IsActive() ) {
+			auto buf = types::Buffer( *request.data.add_event.serialized_event );
+			event = event::Event::Unserialize( buf );
+			if ( !m_current_turn->IsActive() && event->m_type != event::Event::ET_UNCOMPLETE_TURN ) {
 				errmsg = new std::string( "Turn not active" );
 			}
 			else {
-				auto buf = types::Buffer( *request.data.add_event.serialized_event );
-				event = event::Event::Unserialize( buf );
-				// softcheck first
 				errmsg = event->Validate( this );
 			}
 			if ( errmsg ) {
@@ -1160,6 +1159,16 @@ void Game::CompleteTurn() {
 	auto fr = FrontendRequest( FrontendRequest::FR_TURN_ACTIVE_STATUS );
 	fr.data.turn_active_status.is_turn_active = false;
 	AddFrontendRequest( fr );
+}
+
+void Game::UncompleteTurn() {
+	ASSERT( m_current_turn, "turn not set" );
+	m_current_turn->Activate();
+	auto fr = FrontendRequest( FrontendRequest::FR_TURN_ACTIVE_STATUS );
+	fr.data.turn_active_status.is_turn_active = true;
+	AddFrontendRequest( fr );
+	m_is_turn_complete = false;
+	CheckTurnComplete();
 }
 
 void Game::ValidateEvent( event::Event* event ) const {
