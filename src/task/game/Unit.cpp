@@ -232,12 +232,20 @@ void Unit::MoveTo( task::game::Tile* dst_tile, const types::Vec3& dst_render_coo
 	m_tile->AddUnit( this );
 
 	m_render.coords = dst_render_coords;
-	m_def->GetSprite( m_morale )->instanced_sprite->actor->SetInstance(
+	m_def->GetSprite( m_morale )->instanced_sprite->actor->UpdateInstance(
 		m_render.instance_id, {
 			dst_render_coords.x,
 			dst_render_coords.y,
 			dst_render_coords.z
 		}
+	);
+	m_render.badge.def->instanced_sprite->actor->UpdateInstance(
+		m_render.badge.instance_id,
+		BadgeDefs::GetBadgeCoords( m_render.coords )
+	);
+	m_render.badge.healthbar.def->instanced_sprite->actor->UpdateInstance(
+		m_render.badge.healthbar.instance_id,
+		BadgeDefs::GetBadgeHealthbarCoords( m_render.coords )
 	);
 }
 

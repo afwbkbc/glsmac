@@ -126,6 +126,11 @@ Config::Config( const int argc, const char* argv[] ) {
 		}
 	);
 	parser.AddRule(
+		"nopings", "Omit pings and timeouts during multiplayer games", AH( this ) {
+			m_debug_flags |= DF_NOPINGS;
+		}
+	);
+	parser.AddRule(
 		"quickstart", "Skip intro and main menu and generate/load map directly", AH( this ) {
 			m_debug_flags |= DF_QUICKSTART;
 		}

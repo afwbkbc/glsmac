@@ -72,9 +72,11 @@ enum tile_query_purpose_t {
 typedef union {
 	struct {
 		bool try_next_unit;
+		bool no_scroll_after;
 	} tile_select;
 	struct {
 		size_t unit_id;
+		bool no_scroll_after;
 	} unit_select;
 } tile_query_metadata_t;
 

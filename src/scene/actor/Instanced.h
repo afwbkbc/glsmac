@@ -50,20 +50,9 @@ CLASS( Instanced, Actor )
 	Mesh* GetMeshActor() const;
 
 	typedef size_t instance_id_t;
-	const instance_id_t AddInstance(
-		const types::Vec3& position, const types::Vec3& angle = {
-		0.0f,
-		0.0f,
-		0.0f
-	}
-	);
-	void SetInstance(
-		const instance_id_t instance_id, const types::Vec3& position, const types::Vec3& angle = {
-		0.0f,
-		0.0f,
-		0.0f
-	}
-	);
+	const instance_id_t AddInstance( const types::Vec3& position, const types::Vec3& angle = {} );
+	void SetInstance( const instance_id_t instance_id, const types::Vec3& position, const types::Vec3& angle = {} );
+	void UpdateInstance( const instance_id_t instance_id, const types::Vec3& position, const types::Vec3& angle = {} );
 	void RemoveInstance( const instance_id_t instance_id );
 	const bool HasInstance( const instance_id_t instance_id );
 
@@ -99,7 +88,7 @@ private:
 
 	const scene::Scene::instance_positions_t* GetWorldInstancePositions();
 
-	void UpdateInstance( instance_t& instance );
+	void UpdateMatrixForInstance( instance_t& instance );
 };
 
 }

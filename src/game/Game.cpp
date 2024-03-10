@@ -353,11 +353,12 @@ void Game::Iterate() {
 						}
 						m_unprocessed_events.clear();
 
+						g_engine->GetUI()->SetLoaderText( "Starting game...", false );
+						NEW( m_current_turn, Turn );
 						if ( m_state->IsMaster() ) {
-							g_engine->GetUI()->SetLoaderText( "Starting game...", false );
-							NextTurn();
 							m_state->m_bindings->Call( Bindings::CS_ON_START );
 						}
+						NextTurn();
 						CheckTurnComplete();
 
 					}
@@ -1603,9 +1604,6 @@ void Game::ResetGame() {
 }
 
 void Game::NextTurn() {
-	ASSERT( !m_current_turn, "turn already active set" );
-
-	NEW( m_current_turn, Turn );
 	m_current_turn->Activate();
 	Log( "turn started" );
 

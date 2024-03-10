@@ -44,6 +44,7 @@ CLASS( Config, base::Module )
 		DF_GSE_TESTS = 1 << 14,
 		DF_GSE_TESTS_SCRIPT = 1 << 15,
 		DF_GSE_PROMPT_JS = 1 << 16,
+		DF_NOPINGS = 1 << 17,
 	};
 #endif
 

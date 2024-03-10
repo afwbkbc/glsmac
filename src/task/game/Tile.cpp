@@ -45,7 +45,7 @@ void Tile::AddUnit( Unit* unit ) {
 void Tile::RemoveUnit( Unit* unit ) {
 	ASSERT_NOLOG( m_units.find( unit->GetId() ) != m_units.end(), "unit not found" );
 	if ( m_render.currently_rendered_unit == unit ) {
-		m_render.currently_rendered_unit = nullptr;
+		SetActiveUnit( nullptr );
 	}
 	m_units.erase( unit->GetId() );
 }

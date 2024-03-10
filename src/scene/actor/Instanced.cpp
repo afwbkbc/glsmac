@@ -78,7 +78,7 @@ void Instanced::GenerateInstanceMatrices( matrices_t* out_matrices, scene::Camer
 	for ( auto& id_instance : m_instances ) {
 		auto& instance = id_instance.second;
 		if ( instance.need_update ) {
-			UpdateInstance( instance );
+			UpdateMatrixForInstance( instance );
 		}
 		for ( auto& matrices : instance.matrices ) {
 			( *out_matrices )[ i ] = matrices.matrix;
@@ -115,7 +115,7 @@ const scene::Scene::instance_positions_t* Instanced::GetWorldInstancePositions()
 	return nullptr;
 }
 
-void Instanced::UpdateInstance( instance_t& instance ) {
+void Instanced::UpdateMatrixForInstance( instance_t& instance ) {
 	const auto& world_instance_positions = GetWorldInstancePositions();
 	const size_t sz = world_instance_positions->size();
 	instance.matrices.resize( world_instance_positions->size() );
@@ -168,6 +168,12 @@ void Instanced::SetInstance( const instance_id_t instance_id, const types::Vec3&
 	};
 	if ( m_next_instance_id <= instance_id ) {
 		m_next_instance_id = instance_id + 1;
+	}
+}
+
+void Instanced::UpdateInstance( const instance_id_t instance_id, const types::Vec3& position, const types::Vec3& angle ) {
+	if ( HasInstance( instance_id ) ) {
+		SetInstance( instance_id, position, angle );
 	}
 }
 

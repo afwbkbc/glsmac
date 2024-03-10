@@ -340,11 +340,18 @@ void Game::Iterate() {
 			}
 			else {
 				size_t selected_unit_id = 0;
+				bool need_scroll = false;
 				if ( tile_data.purpose == ::game::TQP_UNIT_SELECT ) {
 					selected_unit_id = tile_data.metadata.unit_select.unit_id;
+					need_scroll = !tile_data.metadata.unit_select.no_scroll_after;
+				}
+				else if ( tile_data.purpose == ::game::TQP_TILE_SELECT ) {
+					need_scroll = !tile_data.metadata.tile_select.no_scroll_after;
 				}
 				SelectTileOrUnit( tile_data, selected_unit_id );
-				ScrollToTile( tile_data );
+				if ( need_scroll ) {
+					ScrollToTile( tile_data );
+				}
 			}
 		}
 
@@ -867,8 +874,9 @@ void Game::DespawnUnit( const size_t unit_id ) {
 }
 
 void Game::RefreshUnit( Unit* unit_state ) {
-	if ( unit_state->IsActive() ) {
-		unit_state->Refresh();
+	const auto was_active = unit_state->IsActive();
+	unit_state->Refresh();
+	if ( m_currently_moving_unit == unit_state && was_active ) {
 		if ( !unit_state->IsActive() ) {
 			UpdateSelectable( unit_state );
 			if ( m_selected_tile_data.purpose == ::game::TQP_UNIT_SELECT ) {
@@ -884,24 +892,17 @@ void Game::RefreshUnit( Unit* unit_state ) {
 			}
 		}
 		else {
-			if ( unit_state == m_currently_moving_unit ) {
-				// keep same unit selected
-				::game::tile_query_metadata_t metadata = {};
-				metadata.unit_select.unit_id = unit_state->GetId();
-				GetTileAtCoords(
-					::game::TQP_UNIT_SELECT,
-					unit_state->GetTile()->GetCoords(),
-					::game::map::Tile::D_NONE,
-					metadata
-				);
-				m_currently_moving_unit = nullptr;
-			}
+			// keep same unit selected
+			::game::tile_query_metadata_t metadata = {};
+			metadata.unit_select.unit_id = unit_state->GetId();
+			GetTileAtCoords(
+				::game::TQP_UNIT_SELECT,
+				unit_state->GetTile()->GetCoords(),
+				::game::map::Tile::D_NONE,
+				metadata
+			);
+			m_currently_moving_unit = nullptr;
 		}
-		unit_state->GetTile()->Render(
-			m_selected_unit_data
-				? m_selected_unit_data->id
-				: 0
-		);
 	}
 }
 
@@ -920,8 +921,48 @@ void Game::MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_c
 			: 0
 	);
 
-	// update unit and new tile
+	// update unit
 	RefreshUnit( unit );
+
+	// update new tile
+	dst_tile->Render(
+		m_selected_unit_data
+			? m_selected_unit_data->id
+			: 0
+	);
+
+	// update ui
+	// TODO: refactor and get rid of m_selected_tile_data?
+	if (
+		unit != m_selected_unit_state &&
+			m_selected_tile_data.is_set && (
+			m_selected_tile_data.tile_position == src_tile->GetCoords() ||
+				m_selected_tile_data.tile_position == dst_tile->GetCoords()
+		)
+		) {
+		::game::tile_query_metadata_t metadata = {};
+		switch ( m_selected_tile_data.purpose ) {
+			case ::game::TQP_TILE_SELECT: {
+				metadata.tile_select.no_scroll_after = true;
+				break;
+			}
+			case ::game::TQP_UNIT_SELECT: {
+				metadata.unit_select.no_scroll_after = true;
+				break;
+			}
+			default: {
+				//
+			}
+		}
+
+		GetTileAtCoords(
+			m_selected_tile_data.purpose,
+			m_selected_tile_data.tile_position,
+			::game::map::Tile::D_NONE,
+			metadata
+		);
+	}
+
 }
 
 void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
@@ -1033,6 +1074,12 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 			auto* unit_state = m_unit_states.at( d.unit_id );
 			unit_state->SetMovement( d.movement_left );
 			RefreshUnit( unit_state );
+			unit_state->GetTile()->Render(
+				m_selected_unit_data
+					? m_selected_unit_data->id
+					: 0
+			);
+			SelectNextUnitMaybe();
 			break;
 		}
 		case ::game::FrontendRequest::FR_UNIT_MOVE: {
@@ -2026,13 +2073,15 @@ tile_data_t Game::GetTileAtCoordsResult() {
 
 			std::unordered_map< size_t, Unit* > units = {};
 			for ( const auto& unit_id : *response.data.select_tile.unit_ids ) {
-				ASSERT( m_unit_states.find( unit_id ) != m_unit_states.end(), "unit id not found" );
-				units.insert(
-					{
-						unit_id,
-						m_unit_states.at( unit_id )
-					}
-				);
+				const auto& it = m_unit_states.find( unit_id );
+				if ( m_unit_states.find( unit_id ) != m_unit_states.end() ) {
+					units.insert(
+						{
+							unit_id,
+							it->second
+						}
+					);
+				}
 			}
 			const auto units_order = Tile::GetUnitsOrder( units );
 
