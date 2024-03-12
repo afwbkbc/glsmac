@@ -167,7 +167,6 @@ private:
 		const size_t slot_index,
 		const Vec2< size_t >& tile_coords,
 		const Vec3& render_coords,
-		const bool is_active,
 		const ::game::unit::Unit::movement_t movement,
 		const ::game::unit::Unit::morale_t morale,
 		const ::game::unit::Unit::health_t health
@@ -402,6 +401,7 @@ private:
 	Unit* GetCurrentSelectable();
 	Unit* GetNextSelectable();
 	const bool SelectNextUnitMaybe();
+	void SelectNextUnitOrSwitchToTileSelection();
 
 	void CancelRequests();
 	void CancelGame();

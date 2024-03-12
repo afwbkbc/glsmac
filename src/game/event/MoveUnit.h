@@ -12,6 +12,7 @@ public:
 	MoveUnit( const size_t initiator_slot, const size_t unit_id, const game::map::Tile::direction_t direction );
 
 	const std::string* Validate( const Game* game ) const override;
+	void Resolve( Game* game ) override;
 	const gse::Value Apply( game::Game* game ) const override;
 	TS_DEF()
 
@@ -24,6 +25,10 @@ private:
 private:
 	const size_t m_unit_id;
 	const game::map::Tile::direction_t m_direction;
+
+	struct {
+		bool is_move_successful = false;
+	} m_resolutions = {};
 
 };
 

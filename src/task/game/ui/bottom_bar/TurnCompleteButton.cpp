@@ -96,10 +96,10 @@ void TurnCompleteButton::SetTurnActiveStatus( const bool is_turn_active ) {
 		if ( is_turn_active ) {
 			SetFlashingEnabled( false );
 			SetLabel( "TURN COMPLETE" );
-			UnblockEvents();
 		}
 		else {
 			SetLabel( "WAITING FOR PLAYERS" );
+			m_flash_alpha = FLASH_ALPHA_MIN;
 			SetFlashingEnabled( true );
 			m_flashing->Show();
 		}
@@ -109,6 +109,7 @@ void TurnCompleteButton::SetTurnActiveStatus( const bool is_turn_active ) {
 
 void TurnCompleteButton::SetFlashingEnabled( const bool is_flashing_enabled ) {
 	if ( is_flashing_enabled && !m_flash_timer.IsRunning() ) {
+		m_flash_alpha = FLASH_ALPHA_MIN;
 		m_flash_timer.SetInterval( FLASH_INTERVAL_MS );
 		m_sound->Play();
 	}

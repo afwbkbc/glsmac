@@ -1039,9 +1039,6 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 		c.z
 	};
 
-	// temporary logic for testing - all own units are active, all foreign aren't
-	fr.data.unit_spawn.is_active = unit->m_owner == GetPlayer()->GetSlot();
-
 	fr.data.unit_spawn.movement = unit->m_movement;
 	fr.data.unit_spawn.morale = unit->m_morale;
 	fr.data.unit_spawn.health = unit->m_health;
@@ -1096,7 +1093,7 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	delete unit;
 }
 
-void Game::MoveUnit( unit::Unit* unit, map::Tile* dst_tile ) {
+void Game::MoveUnit( unit::Unit* unit, map::Tile* dst_tile, const bool is_move_successful ) {
 	ASSERT( dst_tile, "dst tile not set" );
 
 	Log( "Moving unit #" + std::to_string( unit->m_id ) + " to " + dst_tile->coord.ToString() );
@@ -1106,48 +1103,46 @@ void Game::MoveUnit( unit::Unit* unit, map::Tile* dst_tile ) {
 	ASSERT( src_tile->units.find( unit->m_id ) != src_tile->units.end(), "src tile does not contain this unit" );
 	ASSERT( dst_tile->units.find( unit->m_id ) == dst_tile->units.end(), "dst tile already contains this unit" );
 
-	const auto move_result = unit->TryMovingTo( this, dst_tile );
-	switch ( move_result ) {
-		case unit::Unit::MR_MOVED: {
+	unit->UpdateMoves( this, dst_tile );
 
-			src_tile->units.erase( unit->m_id );
-			dst_tile->units.insert(
-				{
-					unit->m_id,
-					unit
-				}
-			);
-			unit->m_tile = dst_tile;
+	if ( is_move_successful ) {
 
-			auto fr = FrontendRequest( FrontendRequest::FR_UNIT_MOVE );
-			fr.data.unit_move.unit_id = unit->m_id;
-			fr.data.unit_move.tile_coords = {
-				dst_tile->coord.x,
-				dst_tile->coord.y
-			};
-			const auto c = GetUnitRenderCoords( unit );
-			fr.data.unit_move.render_coords = {
-				c.x,
-				c.y,
-				c.z
-			};
-			fr.data.unit_move.movement_left = unit->m_movement;
-			AddFrontendRequest( fr );
+		src_tile->units.erase( unit->m_id );
+		dst_tile->units.insert(
+			{
+				unit->m_id,
+				unit
+			}
+		);
+		unit->m_tile = dst_tile;
+
+		auto fr = FrontendRequest( FrontendRequest::FR_UNIT_MOVE );
+		fr.data.unit_move.unit_id = unit->m_id;
+		fr.data.unit_move.tile_coords = {
+			dst_tile->coord.x,
+			dst_tile->coord.y
+		};
+		const auto c = GetUnitRenderCoords( unit );
+		fr.data.unit_move.render_coords = {
+			c.x,
+			c.y,
+			c.z
+		};
+		fr.data.unit_move.movement_left = unit->m_movement;
+		AddFrontendRequest( fr );
+		if ( !unit->HasMovesLeft() ) {
 			CheckTurnComplete();
-			break;
 		}
-		case unit::Unit::MR_TRIED_BUT_FAILED: {
-			// refresh unit badge on frontend
-			auto fr = FrontendRequest( FrontendRequest::FR_UNIT_REFRESH );
-			fr.data.unit_refresh.unit_id = unit->m_id;
-			fr.data.unit_refresh.movement_left = unit->m_movement;
-			AddFrontendRequest( fr );
-			CheckTurnComplete();
-			break;
-		}
-		default:
-			THROW( "unknown unit move result: " + std::to_string( move_result ) );
 	}
+	else {
+		// refresh unit badge on frontend
+		auto fr = FrontendRequest( FrontendRequest::FR_UNIT_REFRESH );
+		fr.data.unit_refresh.unit_id = unit->m_id;
+		fr.data.unit_refresh.movement_left = unit->m_movement;
+		AddFrontendRequest( fr );
+		CheckTurnComplete();
+	}
+
 }
 
 const bool Game::IsTurnActive() const {
@@ -1193,6 +1188,11 @@ const gse::Value Game::ProcessEvent( event::Event* event ) {
 	}
 
 	ASSERT( event->m_is_validated, "event was not validated" );
+
+	if ( m_state->IsMaster() ) {
+		// things like random outcomes must be resolved on server only
+		event->Resolve( this );
+	}
 
 	m_current_turn->AddEvent( event );
 	return event->Apply( this );
@@ -1618,7 +1618,7 @@ void Game::CheckTurnComplete() {
 	bool is_turn_complete = true;
 
 	for ( const auto& unit : m_units ) {
-		if ( unit.second->HasMovesLeft() ) {
+		if ( unit.second->m_owner == m_slot && unit.second->HasMovesLeft() ) {
 			is_turn_complete = false;
 			break;
 		}

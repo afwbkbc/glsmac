@@ -66,20 +66,11 @@ const bool Unit::HasMovesLeft() const {
 	return m_movement >= unit::Unit::MINIMUM_MOVEMENT_TO_KEEP;
 }
 
-const Unit::movement_result_t Unit::TryMovingTo( Game* game, const map::Tile* dst_tile ) {
+void Unit::UpdateMoves( Game* game, const map::Tile* dst_tile ) {
 	// TODO: move to scripts
-	ASSERT_NOLOG( m_movement >= MINIMUM_MOVEMENT_TO_KEEP, "no movement points" );
+	ASSERT_NOLOG( HasMovesLeft(), "no movement points" );
 
-	auto movement_cost = dst_tile->GetMovementCost();
-	bool move_success = false;
-
-	if ( m_movement >= movement_cost ) {
-		move_success = true;
-		movement_cost += dst_tile->GetMovementAftercost();
-	}
-	else {
-		move_success = game->GetRandom()->GetFloat( 0.0f, movement_cost ) < m_movement;
-	}
+	auto movement_cost = dst_tile->GetMovementCost() + dst_tile->GetMovementAftercost();
 
 	// reduce remaining movement points (even if failed)
 	if ( m_movement >= movement_cost ) {
@@ -91,13 +82,6 @@ const Unit::movement_result_t Unit::TryMovingTo( Game* game, const map::Tile* ds
 	}
 	else {
 		m_movement = 0.0f;
-	}
-
-	if ( move_success ) {
-		return MR_MOVED;
-	}
-	else {
-		return MR_TRIED_BUT_FAILED;
 	}
 
 }

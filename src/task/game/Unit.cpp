@@ -14,7 +14,6 @@ Unit::Unit(
 	Tile* tile,
 	const Vec3& render_coords,
 	const bool is_owned,
-	const bool is_active,
 	const ::game::unit::Unit::movement_t movement,
 	const ::game::unit::Unit::morale_t morale,
 	const ::game::unit::Unit::health_t health
@@ -34,10 +33,10 @@ Unit::Unit(
 		}
 	)
 	, m_is_owned( is_owned )
-	, m_is_active( is_active && !def->IsImmovable() )
 	, m_movement( movement )
 	, m_morale( morale )
 	, m_health( health ) {
+	m_is_active = ShouldBeActive();
 	m_render.badge.def = m_slot->GetUnitBadgeSprite( m_morale, m_is_active );
 	m_render.badge.healthbar.def = m_badge_defs->GetBadgeHealthbarSprite( m_health );
 	m_tile->AddUnit( this );
@@ -58,10 +57,6 @@ const bool Unit::IsOwned() const {
 
 const bool Unit::IsActive() const {
 	return m_is_active;
-}
-
-const bool Unit::IsSelectable() const {
-	return m_is_owned && m_is_active;
 }
 
 Tile* Unit::GetTile() const {
@@ -209,16 +204,22 @@ void Unit::StopBadgeBlink( const bool is_badge_shown ) {
 }
 
 void Unit::Refresh() {
-	if ( m_is_active && m_movement < ::game::unit::Unit::MINIMUM_MOVEMENT_TO_KEEP ) {
-		// no more moves left
-		m_is_active = false;
-		StopBadgeBlink( false );
+	const bool was_active = m_is_active;
+	m_is_active = ShouldBeActive();
+	if ( was_active != m_is_active ) {
+		if ( !m_is_active ) {
+			StopBadgeBlink( false );
+		}
 		m_render.badge.def = m_slot->GetUnitBadgeSprite( m_morale, m_is_active );
 	}
 }
 
 void Unit::SetMovement( const ::game::unit::Unit::movement_t movement ) {
 	m_movement = movement;
+}
+
+const bool Unit::CanMove() const {
+	return m_movement >= ::game::unit::Unit::MINIMUM_MOVEMENT_TO_KEEP;
 }
 
 void Unit::MoveTo( task::game::Tile* dst_tile, const types::Vec3& dst_render_coords ) {
@@ -247,6 +248,10 @@ void Unit::MoveTo( task::game::Tile* dst_tile, const types::Vec3& dst_render_coo
 		m_render.badge.healthbar.instance_id,
 		BadgeDefs::GetBadgeHealthbarCoords( m_render.coords )
 	);
+}
+
+const bool Unit::ShouldBeActive() const {
+	return m_is_owned && CanMove();
 }
 
 }

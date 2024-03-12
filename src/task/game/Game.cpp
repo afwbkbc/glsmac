@@ -799,7 +799,6 @@ void Game::SpawnUnit(
 	const size_t slot_index,
 	const Vec2< size_t >& tile_coords,
 	const Vec3& render_coords,
-	const bool is_active,
 	const ::game::unit::Unit::movement_t movement,
 	const ::game::unit::Unit::morale_t morale,
 	const ::game::unit::Unit::health_t health
@@ -828,7 +827,6 @@ void Game::SpawnUnit(
 					render_coords.z
 				},
 				slot_index == m_slot_index,
-				is_active,
 				movement,
 				morale,
 				health
@@ -842,7 +840,7 @@ void Game::SpawnUnit(
 			: 0
 	);
 
-	if ( unit_state->IsSelectable() ) {
+	if ( unit_state->IsActive() ) {
 		const bool was_selectables_empty = m_selectables.unit_states.empty();
 		AddSelectable( unit_state );
 		if ( was_selectables_empty ) {
@@ -857,7 +855,7 @@ void Game::DespawnUnit( const size_t unit_id ) {
 
 	auto* unit_state = it->second;
 
-	if ( unit_state->IsSelectable() ) {
+	if ( unit_state->IsActive() ) {
 		RemoveSelectable( unit_state );
 	}
 
@@ -1058,7 +1056,6 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 					rc.y,
 					rc.z
 				},
-				d.is_active,
 				d.movement,
 				d.morale,
 				d.health
@@ -1079,7 +1076,10 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 					? m_selected_unit_data->id
 					: 0
 			);
-			SelectNextUnitMaybe();
+			if ( m_selected_unit_state == unit_state && !unit_state->IsActive() ) {
+				RemoveSelectable( unit_state );
+				SelectNextUnitOrSwitchToTileSelection();
+			}
 			break;
 		}
 		case ::game::FrontendRequest::FR_UNIT_MOVE: {
@@ -1740,7 +1740,7 @@ void Game::SelectUnit( const unit_data_t& unit_data, const bool actually_select_
 		m_selected_unit_state = unit_state;
 		m_selected_unit_state->Show();
 	}
-	if ( actually_select_unit && m_selected_unit_state->IsSelectable() && m_is_turn_active ) {
+	if ( actually_select_unit && m_selected_unit_state->IsActive() && m_is_turn_active ) {
 
 		if ( m_selected_unit_state->GetId() != m_selected_tile_data.units.front().id ) {
 			m_unit_states.at( m_selected_tile_data.units.front().id )->Hide();
@@ -1839,7 +1839,7 @@ const unit_data_t* Game::GetFirstSelectableUnit( const std::vector< unit_data_t 
 	for ( const auto& unit : units ) {
 		ASSERT( m_unit_states.find( unit.id ) != m_unit_states.end(), "unit id not found" );
 		const auto* unit_state = m_unit_states.at( unit.id );
-		if ( unit_state->IsSelectable() ) {
+		if ( unit_state->IsActive() ) {
 			return &unit;
 		}
 	}
@@ -2321,7 +2321,7 @@ void Game::RemoveSelectable( Unit* unit_state ) {
 
 void Game::UpdateSelectable( Unit* unit_state ) {
 	if ( unit_state->IsOwned() ) {
-		if ( unit_state->IsSelectable() ) {
+		if ( unit_state->IsActive() ) {
 			AddSelectable( unit_state );
 		}
 		else {
@@ -2376,15 +2376,24 @@ const bool Game::SelectNextUnitMaybe() {
 	return false;
 }
 
+void Game::SelectNextUnitOrSwitchToTileSelection() {
+	if ( !SelectNextUnitMaybe() ) {
+		const auto& coords = m_selected_unit_state->GetTile()->GetCoords();
+		DeselectTileOrUnit();
+		GetTileAtCoords( ::game::TQP_TILE_SELECT, coords );
+	}
+}
+
 void Game::CancelRequests() {
 	auto* game = g_engine->GetGame();
 	if ( m_mt_ids.init ) {
 		game->MT_Cancel( m_mt_ids.init );
 		m_mt_ids.init = 0;
 		// WHY?
-		ASSERT( !m_mt_ids.ping, "ping already active" );
+		// is it even needed?
+		/*ASSERT( !m_mt_ids.ping, "ping already active" );
 		g_engine->GetUI()->SetLoaderText( "Canceling" );
-		m_mt_ids.ping = game->MT_Ping();
+		m_mt_ids.ping = game->MT_Ping();*/
 	}
 	if ( m_mt_ids.get_map_data ) {
 		game->MT_Cancel( m_mt_ids.get_map_data );

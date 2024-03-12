@@ -79,7 +79,6 @@ public:
 				float y;
 				float z;
 			} render_coords;
-			bool is_active;
 			unit::Unit::movement_t movement;
 			unit::Unit::morale_t morale;
 			unit::Unit::health_t health;

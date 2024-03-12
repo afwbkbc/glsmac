@@ -63,10 +63,29 @@ const std::string* MoveUnit::Validate( const Game* game ) const {
 	return nullptr;
 }
 
+void MoveUnit::Resolve( Game* game ) {
+	const auto* unit = game->GetUnit( m_unit_id );
+	ASSERT_NOLOG( unit, "unit not found" );
+
+	auto* src_tile = unit->m_tile;
+	ASSERT_NOLOG( src_tile, "src tile not set" );
+	const auto* dst_tile = src_tile->GetNeighbour( m_direction );
+	ASSERT_NOLOG( dst_tile, "dst tile not set" );
+
+	auto movement_cost = dst_tile->GetMovementCost();
+
+	if ( unit->m_movement >= movement_cost ) {
+		m_resolutions.is_move_successful = true;
+	}
+	else {
+		m_resolutions.is_move_successful = game->GetRandom()->GetFloat( 0.0f, movement_cost ) < unit->m_movement;
+	}
+}
+
 const gse::Value MoveUnit::Apply( game::Game* game ) const {
 	auto* unit = game->GetUnit( m_unit_id );
 	ASSERT_NOLOG( unit, "unit not found" );
-	game->MoveUnit( unit, unit->m_tile->GetNeighbour( m_direction ) );
+	game->MoveUnit( unit, unit->m_tile->GetNeighbour( m_direction ), m_resolutions.is_move_successful );
 	return VALUE( gse::type::Undefined );
 }
 
@@ -80,13 +99,15 @@ TS_END()
 void MoveUnit::Serialize( types::Buffer& buf, const MoveUnit* event ) {
 	buf.WriteInt( event->m_unit_id );
 	buf.WriteInt( event->m_direction );
+	buf.WriteBool( event->m_resolutions.is_move_successful );
 }
 
 MoveUnit* MoveUnit::Unserialize( types::Buffer& buf, const size_t initiator_slot ) {
 	const auto unit_id = buf.ReadInt();
 	const auto direction = (map::Tile::direction_t)buf.ReadInt();
-	return new MoveUnit( initiator_slot, unit_id, direction );
-
+	auto* result = new MoveUnit( initiator_slot, unit_id, direction );
+	result->m_resolutions.is_move_successful = buf.ReadBool();
+	return result;
 }
 
 }

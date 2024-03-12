@@ -276,18 +276,22 @@ void ChoiceList< KEY_TYPE >::SetActiveButton( Button* button ) {
 
 template<>
 void ChoiceList< size_t >::SelectChoice() {
-	UIEvent::event_data_t d = {};
-	d.value.change.id_num = m_value;
-	d.value.change.text = &GetValueString();
-	Trigger( UIEvent::EV_SELECT, &d );
+	if ( m_value ) {
+		UIEvent::event_data_t d = {};
+		d.value.change.id_num = m_value;
+		d.value.change.text = &GetValueString();
+		Trigger( UIEvent::EV_SELECT, &d );
+	}
 }
 
 template<>
 void ChoiceList< std::string >::SelectChoice() {
-	UIEvent::event_data_t d = {};
-	d.value.change.id_str = &m_value;
-	d.value.change.text = &GetValueString();
-	Trigger( UIEvent::EV_SELECT, &d );
+	if ( !m_value.empty() ) {
+		UIEvent::event_data_t d = {};
+		d.value.change.id_str = &m_value;
+		d.value.change.text = &GetValueString();
+		Trigger( UIEvent::EV_SELECT, &d );
+	}
 }
 
 template

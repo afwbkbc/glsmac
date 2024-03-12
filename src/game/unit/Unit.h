@@ -60,7 +60,7 @@ public:
 	};
 	static const movement_t MINIMUM_MOVEMENT_TO_KEEP;
 	const bool HasMovesLeft() const;
-	const movement_result_t TryMovingTo( Game* game, const map::Tile* dst_tile );
+	void UpdateMoves( Game* game, const map::Tile* dst_tile );
 
 	static const std::string& GetMoraleString( const morale_t morale );
 

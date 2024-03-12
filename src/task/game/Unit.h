@@ -24,7 +24,6 @@ public:
 		Tile* tile,
 		const Vec3& render_coords,
 		const bool is_owned,
-		const bool is_active,
 		const ::game::unit::Unit::movement_t movement,
 		const ::game::unit::Unit::morale_t morale,
 		const ::game::unit::Unit::health_t health
@@ -34,7 +33,6 @@ public:
 	const size_t GetId() const;
 	const bool IsOwned() const;
 	const bool IsActive() const;
-	const bool IsSelectable() const;
 	Tile* GetTile() const;
 
 	const size_t GetSelectionWeight() const;
@@ -67,6 +65,7 @@ public:
 	void Refresh();
 
 	void SetMovement( const ::game::unit::Unit::movement_t movement );
+	const bool CanMove() const;
 
 	void MoveTo( Tile* dst_tile, const Vec3& dst_render_coords );
 
@@ -104,6 +103,7 @@ private:
 	::game::unit::Unit::morale_t m_morale = 0;
 	::game::unit::Unit::health_t m_health = 0;
 
+	const bool ShouldBeActive() const;
 };
 
 }

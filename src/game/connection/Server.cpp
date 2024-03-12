@@ -319,32 +319,42 @@ void Server::ProcessEvent( const network::Event& event ) {
 						std::vector< game::event::Event* > game_events = {};
 						game::event::Event::UnserializeMultiple( buf, game_events );
 						const auto slot = m_state->GetCidSlots().at( event.cid );
-						bool ok = true;
+						std::vector< game::event::Event* > valid_events = {};
 						for ( const auto& game_event : game_events ) {
+							bool ok = true;
 							if ( game_event->m_initiator_slot != slot ) {
 								Log( "Event slot mismatch from " + std::to_string( event.cid ) + " ( " + std::to_string( game_event->m_initiator_slot ) + " != " + std::to_string( slot ) + " )" );
 								ok = false;
-								break;
 							}
-							try {
-								m_on_game_event( game_event );
+							else {
+								try {
+									m_on_game_event( game_event );
+								}
+								catch ( const game::InvalidEvent& e ) {
+									Log( "Invalid event received from " + std::to_string( event.cid ) );
+									Log( e.what() );
+									ok = false;
+									break;
+								}
 							}
-							catch ( const game::InvalidEvent& e ) {
-								Log( "Invalid event received from " + std::to_string( event.cid ) );
-								Log( e.what() );
-								ok = false;
-								break;
+							if ( ok ) {
+								valid_events.push_back( game_event );
+							}
+							else {
+								delete game_event;
 							}
 						}
-						if ( ok ) {
+						if ( !valid_events.empty() ) {
+							// broadcast only valid events, nobody will know of invalid attempts
+							const auto serialized_events = game::event::Event::SerializeMultiple( valid_events );
 							Broadcast(
-								[ this, packet, event ]( const network::cid_t cid ) -> void {
-									SendGameEventsTo( packet.data.str, cid );
+								[ this, packet, serialized_events ]( const network::cid_t cid ) -> void {
+									SendGameEventsTo( serialized_events.ToString(), cid );
 								}
 							);
 						}
 						else {
-							Kick( event.cid, "Event validation failed" );
+							// nobody will know of this event, even the initiator
 						}
 						break;
 					}
