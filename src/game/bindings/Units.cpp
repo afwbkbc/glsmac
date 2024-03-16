@@ -89,7 +89,7 @@ BINDING_IMPL( units ) {
 							)
 						);
 						auto* game = GAME;
-						game->AddEvent( new event::DefineUnit( game->GetInitiatorSlot(), def ) );
+						game->AddEvent( new event::DefineUnit( game->GetSlotNum(), def ) );
 						return VALUE( gse::type::Undefined );
 					}
 					else {
@@ -113,7 +113,7 @@ BINDING_IMPL( units ) {
 				N_GETVALUE( health, 4, Float );
 				auto* game = GAME;
 				game->AddEvent( new event::SpawnUnit(
-					game->GetInitiatorSlot(),
+					game->GetSlotNum(),
 					def_name,
 					owner->GetIndex(),
 					tile->coord.x,
@@ -130,7 +130,7 @@ BINDING_IMPL( units ) {
 				N_EXPECT_ARGS( 1 );
 				N_UNWRAP( unit, 0, unit::Unit );
 				auto* game = GAME;
-				game->AddEvent( new event::DespawnUnit( game->GetInitiatorSlot(), unit->m_id ) );
+				game->AddEvent( new event::DespawnUnit( game->GetSlotNum(), unit->m_id ) );
 				return VALUE( gse::type::Undefined );
 			})
 		},

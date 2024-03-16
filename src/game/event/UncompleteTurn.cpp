@@ -13,14 +13,14 @@ UncompleteTurn::UncompleteTurn( const size_t initiator_slot )
 }
 
 const std::string* UncompleteTurn::Validate( const Game* game ) const {
-	if ( game->IsTurnActive() ) {
-		return new std::string( "Turn not completed" );
+	if ( !game->IsTurnCompleted( m_initiator_slot ) ) {
+		return Error( "Turn not completed" );
 	}
-	return nullptr;
+	return Ok();
 }
 
 const gse::Value UncompleteTurn::Apply( game::Game* game ) const {
-	game->UncompleteTurn();
+	game->UncompleteTurn( m_initiator_slot );
 	return VALUE( gse::type::Undefined );
 }
 

@@ -16,22 +16,22 @@ MoveUnit::MoveUnit( const size_t initiator_slot, const size_t unit_id, const gam
 const std::string* MoveUnit::Validate( const Game* game ) const {
 	const auto* unit = game->GetUnit( m_unit_id );
 	if ( !unit ) {
-		return new std::string( "Unit not found" );
+		return Error( "Unit not found" );
 	}
 
 	if ( unit->m_owner->GetIndex() != m_initiator_slot ) {
-		return new std::string( "Unit can only be moved by it's owner" );
+		return Error( "Unit can only be moved by it's owner" );
 	}
 
 	ASSERT_NOLOG( unit->m_def->m_type == unit::Def::DT_STATIC, "only static units are supported now" );
 	const auto* def = (unit::StaticDef*)unit->m_def;
 
 	if ( def->m_movement_type == unit::StaticDef::MT_IMMOVABLE ) {
-		return new std::string( "Unit is immovable" );
+		return Error( "Unit is immovable" );
 	}
 
 	if ( !unit->HasMovesLeft() ) {
-		return new std::string( "Unit is out of moves" );
+		return Error( "Unit is out of moves" );
 	}
 
 	auto* src_tile = unit->m_tile;
@@ -40,27 +40,27 @@ const std::string* MoveUnit::Validate( const Game* game ) const {
 	ASSERT_NOLOG( dst_tile, "dst tile not set" );
 
 	if ( src_tile == dst_tile ) {
-		return new std::string( "Destination tile is same as source tile" );
+		return Error( "Destination tile is same as source tile" );
 	}
 
 	if ( !src_tile->IsAdjactentTo( dst_tile ) ) {
-		return new std::string( "Destination tile is not adjactent to source tile" );
+		return Error( "Destination tile is not adjactent to source tile" );
 	}
 
 	if ( def->m_movement_type == unit::StaticDef::MT_LAND && dst_tile->is_water_tile ) {
-		return new std::string( "Land units can't move to sea tile" );
+		return Error( "Land units can't move to sea tile" );
 	}
 	if ( def->m_movement_type == unit::StaticDef::MT_SEA && !dst_tile->is_water_tile ) {
-		return new std::string( "Sea units can't move to land tile" );
+		return Error( "Sea units can't move to land tile" );
 	}
 
 	for ( const auto& it : dst_tile->units ) {
 		if ( it.second->m_owner != unit->m_owner ) {
-			return new std::string( "Destination tile contains foreign units" );
+			return Error( "Destination tile contains foreign units" );
 		}
 	}
 
-	return nullptr;
+	return Ok();
 }
 
 void MoveUnit::Resolve( Game* game ) {

@@ -29,9 +29,9 @@ SpawnUnit::SpawnUnit(
 
 const std::string* SpawnUnit::Validate( const Game* game ) const {
 	if ( m_initiator_slot != 0 ) {
-		return new std::string( "Only master is allowed to spawn units" );
+		return Error( "Only master is allowed to spawn units" );
 	}
-	return nullptr;
+	return Ok();
 }
 
 const gse::Value SpawnUnit::Apply( game::Game* game ) const {

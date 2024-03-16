@@ -83,5 +83,13 @@ void Event::UnserializeMultiple( types::Buffer& buf, std::vector< Event* >& even
 	}
 }
 
+const std::string* Event::Ok() const {
+	return nullptr;
+}
+
+const std::string* Event::Error( const std::string& text ) const {
+	return new std::string( text );
+}
+
 }
 }

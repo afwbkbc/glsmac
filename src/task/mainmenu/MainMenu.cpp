@@ -186,7 +186,6 @@ void MainMenu::InitSinglePlayer() {
 	const auto& rules = m_state->m_settings.global.game_rules;
 	m_state->m_settings.local.player_name = "Player";
 	NEWV( player, ::game::Player,
-		rules,
 		m_state->m_settings.local.player_name,
 		::game::Player::PR_SINGLE,
 		::game::Player::RANDOM_FACTION,

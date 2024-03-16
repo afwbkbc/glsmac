@@ -398,8 +398,8 @@ const Player* Game::GetPlayer() const {
 	}
 }
 
-const size_t Game::GetInitiatorSlot() const {
-	return GetPlayer()->GetSlot()->GetIndex();
+const size_t Game::GetSlotNum() const {
+	return m_slot_num;
 }
 
 const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE ) {
@@ -413,7 +413,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			m_state = request.data.init.state;
 			m_state->SetGame( this );
 			InitGame( response, MT_C );
-			response.data.init.slot_index = GetInitiatorSlot();
+			response.data.init.slot_index = m_slot_num;
 			break;
 		}
 		case OP_GET_MAP_DATA: {
@@ -980,7 +980,7 @@ const unit::Def* Game::GetUnitDef( const std::string& name ) const {
 }
 
 void Game::AddEvent( event::Event* event ) {
-	ASSERT( event->m_initiator_slot == GetInitiatorSlot(), "initiator slot mismatch" );
+	ASSERT( event->m_initiator_slot == m_slot_num, "initiator slot mismatch" );
 	if ( m_connection ) {
 		m_connection->SendGameEvent( event );
 	}
@@ -1044,6 +1044,8 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 	fr.data.unit_spawn.health = unit->m_health;
 
 	AddFrontendRequest( fr );
+
+	CheckTurnComplete();
 
 	if ( m_state->IsMaster() ) {
 		m_state->m_bindings->Call( Bindings::CS_ON_SPAWN_UNIT, { unit->Wrap() } );
@@ -1149,22 +1151,44 @@ const bool Game::IsTurnActive() const {
 	return m_current_turn && m_current_turn->IsActive();
 }
 
-void Game::CompleteTurn() {
-	ASSERT( m_current_turn, "turn not set" );
-	m_current_turn->Deactivate();
-	auto fr = FrontendRequest( FrontendRequest::FR_TURN_ACTIVE_STATUS );
-	fr.data.turn_active_status.is_turn_active = false;
-	AddFrontendRequest( fr );
+const bool Game::IsTurnCompleted( const size_t slot_num ) const {
+	const auto& slot = m_state->m_slots.GetSlot( slot_num );
+	ASSERT( slot.GetState() == Slot::SS_PLAYER, "slot is not player" );
+	const auto* player = slot.GetPlayer();
+	ASSERT_NOLOG( player, "slot player not set" );
+	return player->IsTurnCompleted();
 }
 
-void Game::UncompleteTurn() {
-	ASSERT( m_current_turn, "turn not set" );
-	m_current_turn->Activate();
-	auto fr = FrontendRequest( FrontendRequest::FR_TURN_ACTIVE_STATUS );
-	fr.data.turn_active_status.is_turn_active = true;
-	AddFrontendRequest( fr );
-	m_is_turn_complete = false;
-	CheckTurnComplete();
+void Game::CompleteTurn( const size_t slot_num ) {
+	const auto& slot = m_state->m_slots.GetSlot( slot_num );
+	ASSERT_NOLOG( slot.GetState() == Slot::SS_PLAYER, "slot is not player" );
+	auto* player = slot.GetPlayer();
+	ASSERT_NOLOG( player, "slot player not set" );
+	player->CompleteTurn();
+	if ( slot_num == m_slot_num ) {
+		ASSERT( m_current_turn, "turn not set" );
+		m_current_turn->Deactivate();
+		auto fr = FrontendRequest( FrontendRequest::FR_TURN_ACTIVE_STATUS );
+		fr.data.turn_active_status.is_turn_active = false;
+		AddFrontendRequest( fr );
+	}
+}
+
+void Game::UncompleteTurn( const size_t slot_num ) {
+	const auto& slot = m_state->m_slots.GetSlot( slot_num );
+	ASSERT_NOLOG( slot.GetState() == Slot::SS_PLAYER, "slot is not player" );
+	auto* player = slot.GetPlayer();
+	ASSERT_NOLOG( player, "slot player not set" );
+	player->UncompleteTurn();
+	if ( slot_num == m_slot_num ) {
+		ASSERT( m_current_turn, "turn not set" );
+		m_current_turn->Activate();
+		auto fr = FrontendRequest( FrontendRequest::FR_TURN_ACTIVE_STATUS );
+		fr.data.turn_active_status.is_turn_active = true;
+		AddFrontendRequest( fr );
+		m_is_turn_complete = false;
+		CheckTurnComplete();
+	}
 }
 
 void Game::ValidateEvent( event::Event* event ) const {

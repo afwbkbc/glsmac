@@ -43,6 +43,8 @@ public:
 	bool m_is_validated = false;
 
 protected:
+	const std::string* Ok() const;
+	const std::string* Error( const std::string& text ) const;
 };
 
 }

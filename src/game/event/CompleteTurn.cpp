@@ -1,6 +1,7 @@
 #include "CompleteTurn.h"
 
 #include "../Game.h"
+#include "../State.h"
 
 #include "gse/type/Undefined.h"
 
@@ -13,14 +14,14 @@ CompleteTurn::CompleteTurn( const size_t initiator_slot )
 }
 
 const std::string* CompleteTurn::Validate( const Game* game ) const {
-	if ( !game->IsTurnActive() ) {
-		return new std::string( "Turn already completed" );
+	if ( game->IsTurnCompleted( m_initiator_slot ) ) {
+		return Error( "Turn already completed" );
 	}
-	return nullptr;
+	return Ok();
 }
 
 const gse::Value CompleteTurn::Apply( game::Game* game ) const {
-	game->CompleteTurn();
+	game->CompleteTurn( m_initiator_slot );
 	return VALUE( gse::type::Undefined );
 }
 

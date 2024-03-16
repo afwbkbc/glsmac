@@ -26,7 +26,6 @@ void Server::ProcessEvent( const network::Event& event ) {
 			const auto& rules = m_state->m_settings.global.game_rules;
 			NEW(
 				m_player, ::game::Player,
-				rules,
 				m_state->m_settings.local.player_name,
 				::game::Player::PR_HOST,
 				::game::Player::RANDOM_FACTION,
@@ -193,7 +192,6 @@ void Server::ProcessEvent( const network::Event& event ) {
 							ClearReadyFlags();
 							NEW(
 								player, ::game::Player,
-								rules,
 								player_name,
 								::game::Player::PR_PLAYER,
 								::game::Player::RANDOM_FACTION,

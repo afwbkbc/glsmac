@@ -276,7 +276,7 @@ CLASS( Game, MTModule )
 	map::Map* GetMap() const;
 	State* GetState() const;
 	const Player* GetPlayer() const;
-	const size_t GetInitiatorSlot() const;
+	const size_t GetSlotNum() const;
 
 protected:
 
@@ -298,8 +298,9 @@ public:
 	void DespawnUnit( const size_t unit_id );
 	void MoveUnit( unit::Unit* unit, map::Tile* dst_tile, const bool is_move_successful );
 	const bool IsTurnActive() const;
-	void CompleteTurn();
-	void UncompleteTurn();
+	const bool IsTurnCompleted( const size_t slot_num ) const;
+	void CompleteTurn( const size_t slot_num );
+	void UncompleteTurn( const size_t slot_num );
 
 private:
 

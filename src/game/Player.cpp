@@ -10,28 +10,21 @@ const rules::Faction Player::RANDOM_FACTION{
 	"Random"
 };
 
-Player::Player( const rules::Rules& rules, Buffer buf )
-	: m_rules( rules ) {
+Player::Player( Buffer buf ) {
 	Player::Unserialize( buf );
 }
 
 Player::Player(
-	const rules::Rules& rules,
 	const std::string& name,
 	const role_t role,
 	const rules::Faction& faction,
 	const rules::DifficultyLevel& difficulty_level
 )
-	: m_rules( rules )
-	, m_name( name )
+	: m_name( name )
 	, m_role( role )
 	, m_faction( faction )
 	, m_difficulty_level( difficulty_level ) {
 	//
-}
-
-const bool Player::IsInitialized() const {
-	return m_is_initialized;
 }
 
 const std::string& Player::GetPlayerName() const {
@@ -84,6 +77,20 @@ Slot* Player::GetSlot() const {
 
 const Player::role_t Player::GetRole() const {
 	return m_role;
+}
+
+const bool Player::IsTurnCompleted() const {
+	return m_is_turn_completed;
+}
+
+void Player::CompleteTurn() {
+	ASSERT( !m_is_turn_completed, "turn already completed" );
+	m_is_turn_completed = true;
+}
+
+void Player::UncompleteTurn() {
+	ASSERT( m_is_turn_completed, "turn not completed" );
+	m_is_turn_completed = false;
 }
 
 const Buffer Player::Serialize() const {
