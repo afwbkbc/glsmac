@@ -34,6 +34,10 @@ CLASS( Player, types::Serializable )
 	const std::string& GetPlayerName() const;
 	const std::string GetFullName() const;
 
+	void Connect();
+	void Disconnect();
+	const bool IsConnected() const;
+
 	void SetFaction( const rules::Faction& faction );
 	const rules::Faction& GetFaction() const;
 
@@ -53,6 +57,7 @@ private:
 	const rules::Rules& m_rules;
 
 	bool m_is_initialized = false;
+	bool m_is_connected = false;
 
 	std::string m_name = "";
 	role_t m_role = PR_NONE;

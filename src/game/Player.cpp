@@ -42,6 +42,20 @@ const std::string Player::GetFullName() const {
 	return GetPlayerName() + " (" + GetFaction().m_name + ")";
 }
 
+void Player::Connect() {
+	ASSERT( !m_is_connected, "player already connected" );
+	m_is_connected = true;
+}
+
+void Player::Disconnect() {
+	ASSERT( m_is_connected, "player not connected" );
+	m_is_connected = false;
+}
+
+const bool Player::IsConnected() const {
+	return m_is_connected;
+}
+
 void Player::SetFaction( const rules::Faction& faction ) {
 	// TODO: validate?
 	m_faction = faction;

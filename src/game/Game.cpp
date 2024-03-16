@@ -1493,6 +1493,16 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				// wait for server to initialize
 				ui->SetLoaderText( "Waiting for server" );
 
+				connection->m_on_players_list_update = [ this ]() -> void {
+					size_t slots_i = 0;
+					for ( auto& slot : m_state->m_slots.GetSlots() ) {
+						//m_players_section->UpdateSlot( slots_i++, &slot );
+						int a = 5;
+						a++;
+					}
+
+				};
+
 				const auto f_download_map = [ this, ui, connection ] {
 
 					ui->SetLoaderText( "Downloading world snapshot" );
