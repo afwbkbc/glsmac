@@ -293,7 +293,6 @@ private:
 	const bool m_is_map_editing_allowed = false;
 
 	tile_data_t m_selected_tile_data = {};
-	const unit_data_t* m_selected_unit_data = nullptr;
 	Unit* m_selected_unit_state = nullptr;
 	map_data_t m_map_data = {};
 	Unit* m_currently_moving_unit = nullptr;
@@ -359,7 +358,7 @@ private:
 		const ::game::map::Tile::direction_t tile_direction = ::game::map::Tile::D_NONE,
 		const ::game::tile_query_metadata_t& tile_query_metadata = {}
 	);
-	tile_data_t GetTileAtCoordsResult();
+	tile_data_t GetTileAtCoordsResult( const mt_id_t mt_id );
 
 	// minimap stuff
 	rr::id_t m_minimap_texture_request_id = 0;
@@ -374,7 +373,7 @@ private:
 		mt_id_t init = 0;
 		mt_id_t get_map_data = 0;
 		mt_id_t reset = 0;
-		mt_id_t select_tile = 0;
+		std::unordered_set< mt_id_t > select_tile = {};
 		mt_id_t save_map = 0;
 		mt_id_t edit_map = 0;
 		mt_id_t chat = 0;

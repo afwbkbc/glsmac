@@ -329,28 +329,31 @@ void Game::Iterate() {
 			GetTileAtCoords( m_tile_at_query_purpose, tile_at.tile_pos );
 		}
 
-		const auto tile_data = GetTileAtCoordsResult();
-		if ( tile_data.is_set ) {
-			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
-				if ( !m_mt_ids.edit_map ) { // TODO: need to queue?
-					m_mt_ids.edit_map = game->MT_EditMap( tile_data.tile_position, m_editor_tool, m_editor_brush, m_editor_draw_mode );
+		const auto select_tile_mt_ids = m_mt_ids.select_tile; // copy for iteration
+		for ( const auto& mt_id : select_tile_mt_ids ) {
+			const auto tile_data = GetTileAtCoordsResult( mt_id );
+			if ( tile_data.is_set ) {
+				if ( m_is_map_editing_allowed && m_is_editing_mode ) {
+					if ( !m_mt_ids.edit_map ) { // TODO: need to queue?
+						m_mt_ids.edit_map = game->MT_EditMap( tile_data.tile_position, m_editor_tool, m_editor_brush, m_editor_draw_mode );
+					}
+					ASSERT( tile_data.purpose == ::game::TQP_TILE_SELECT, "only tile selections allowed in map editor" );
+					SelectTileOrUnit( tile_data, 0 );
 				}
-				ASSERT( tile_data.purpose == ::game::TQP_TILE_SELECT, "only tile selections allowed in map editor" );
-				SelectTileOrUnit( tile_data, 0 );
-			}
-			else {
-				size_t selected_unit_id = 0;
-				bool need_scroll = false;
-				if ( tile_data.purpose == ::game::TQP_UNIT_SELECT ) {
-					selected_unit_id = tile_data.metadata.unit_select.unit_id;
-					need_scroll = !tile_data.metadata.unit_select.no_scroll_after;
-				}
-				else if ( tile_data.purpose == ::game::TQP_TILE_SELECT ) {
-					need_scroll = !tile_data.metadata.tile_select.no_scroll_after;
-				}
-				SelectTileOrUnit( tile_data, selected_unit_id );
-				if ( need_scroll ) {
-					ScrollToTile( tile_data );
+				else {
+					size_t selected_unit_id = 0;
+					bool need_scroll = false;
+					if ( tile_data.purpose == ::game::TQP_UNIT_SELECT ) {
+						selected_unit_id = tile_data.metadata.unit_select.unit_id;
+						need_scroll = !tile_data.metadata.unit_select.no_scroll_after;
+					}
+					else if ( tile_data.purpose == ::game::TQP_TILE_SELECT ) {
+						need_scroll = !tile_data.metadata.tile_select.no_scroll_after;
+					}
+					SelectTileOrUnit( tile_data, selected_unit_id );
+					if ( need_scroll ) {
+						ScrollToTile( tile_data );
+					}
 				}
 			}
 		}
@@ -835,8 +838,8 @@ void Game::SpawnUnit(
 	).first->second;
 
 	tile->Render(
-		m_selected_unit_data
-			? m_selected_unit_data->id
+		m_selected_unit_state
+			? m_selected_unit_state->GetId()
 			: 0
 	);
 
@@ -865,8 +868,8 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	m_unit_states.erase( it );
 
 	tile->Render(
-		m_selected_unit_data
-			? m_selected_unit_data->id
+		m_selected_unit_state
+			? m_selected_unit_state->GetId()
 			: 0
 	);
 }
@@ -874,7 +877,7 @@ void Game::DespawnUnit( const size_t unit_id ) {
 void Game::RefreshUnit( Unit* unit_state ) {
 	const auto was_active = unit_state->IsActive();
 	unit_state->Refresh();
-	if ( m_currently_moving_unit == unit_state && was_active ) {
+	if ( m_selected_unit_state == unit_state && was_active ) {
 		if ( !unit_state->IsActive() ) {
 			UpdateSelectable( unit_state );
 			if ( m_selected_tile_data.purpose == ::game::TQP_UNIT_SELECT ) {
@@ -888,6 +891,7 @@ void Game::RefreshUnit( Unit* unit_state ) {
 					metadata
 				);
 			}
+			m_selected_unit_state = nullptr;
 		}
 		else {
 			// keep same unit selected
@@ -899,7 +903,7 @@ void Game::RefreshUnit( Unit* unit_state ) {
 				::game::map::Tile::D_NONE,
 				metadata
 			);
-			m_currently_moving_unit = nullptr;
+//			m_selected_unit_state = nullptr;
 		}
 	}
 }
@@ -914,8 +918,8 @@ void Game::MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_c
 
 	// update old tile
 	src_tile->Render(
-		m_selected_unit_data
-			? m_selected_unit_data->id
+		m_selected_unit_state
+			? m_selected_unit_state->GetId()
 			: 0
 	);
 
@@ -924,8 +928,8 @@ void Game::MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_c
 
 	// update new tile
 	dst_tile->Render(
-		m_selected_unit_data
-			? m_selected_unit_data->id
+		m_selected_unit_state
+			? m_selected_unit_state->GetId()
 			: 0
 	);
 
@@ -1072,8 +1076,8 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 			unit_state->SetMovement( d.movement_left );
 			RefreshUnit( unit_state );
 			unit_state->GetTile()->Render(
-				m_selected_unit_data
-					? m_selected_unit_data->id
+				m_selected_unit_state
+					? m_selected_unit_state->GetId()
 					: 0
 			);
 			if ( m_selected_unit_state == unit_state && !unit_state->IsActive() ) {
@@ -1334,11 +1338,10 @@ void Game::Initialize(
 							}
 							case ::game::TQP_UNIT_SELECT: {
 								// try moving unit to tile
-								ASSERT( m_selected_unit_data, "no unit data selected" );
-								ASSERT( m_unit_states.find( m_selected_unit_data->id ) != m_unit_states.end(), "unit id not found" );
-								m_currently_moving_unit = m_unit_states.at( m_selected_unit_data->id );
-								const auto event = ::game::event::MoveUnit( m_slot_index, m_currently_moving_unit->GetId(), td );
-								game->MT_AddEvent( &event );
+								if ( m_selected_unit_state ) {
+									const auto event = ::game::event::MoveUnit( m_slot_index, m_selected_unit_state->GetId(), td );
+									game->MT_AddEvent( &event );
+								}
 								return true;
 							}
 							default: {
@@ -1726,9 +1729,8 @@ void Game::SelectTileAtPoint( const ::game::tile_query_purpose_t tile_query_purp
 }
 
 void Game::SelectUnit( const unit_data_t& unit_data, const bool actually_select_unit ) {
-	m_selected_unit_data = &unit_data;
-	ASSERT( m_unit_states.find( m_selected_unit_data->id ) != m_unit_states.end(), "unit id not found" );
-	auto* unit_state = m_unit_states.at( m_selected_unit_data->id );
+	ASSERT( m_unit_states.find( unit_data.id ) != m_unit_states.end(), "unit id not found" );
+	auto* unit_state = m_unit_states.at( unit_data.id );
 	if ( m_selected_unit_state != unit_state ) {
 		if ( m_selected_unit_state ) {
 			m_selected_unit_state->Hide();
@@ -1748,7 +1750,7 @@ void Game::SelectUnit( const unit_data_t& unit_data, const bool actually_select_
 
 		m_selected_unit_state->StartBadgeBlink();
 		SetCurrentSelectable( m_selected_unit_state );
-		Log( "Selected unit " + std::to_string( m_selected_unit_data->id ) );
+		Log( "Selected unit " + std::to_string( m_selected_unit_state->GetId() ) );
 	}
 }
 
@@ -2017,132 +2019,128 @@ void Game::GetTileAtCoords(
 	const ::game::tile_query_metadata_t& tile_query_metadata
 ) {
 	auto* game = g_engine->GetGame();
-	if ( m_mt_ids.select_tile ) {
-		game->MT_Cancel( m_mt_ids.select_tile );
-	}
 	ASSERT( tile_query_purpose != ::game::TQP_NONE, "tile query purpose not set" );
-	m_mt_ids.select_tile = game->MT_SelectTile( tile_query_purpose, tile_pos, tile_direction, tile_query_metadata );
+	m_mt_ids.select_tile.insert( game->MT_SelectTile( tile_query_purpose, tile_pos, tile_direction, tile_query_metadata ) );
 }
 
-tile_data_t Game::GetTileAtCoordsResult() {
-	if ( m_mt_ids.select_tile ) {
-		auto* game = g_engine->GetGame();
-		auto response = game->MT_GetResponse( m_mt_ids.select_tile );
-		if ( response.result != ::game::R_NONE ) {
-			m_mt_ids.select_tile = 0;
+tile_data_t Game::GetTileAtCoordsResult( const mt_id_t mt_id ) {
+	ASSERT( m_mt_ids.select_tile.find( mt_id ) != m_mt_ids.select_tile.end(), "select_tile mt_id not found" );
+	auto* game = g_engine->GetGame();
+	auto response = game->MT_GetResponse( mt_id );
+	if ( response.result != ::game::R_NONE ) {
+		m_mt_ids.select_tile.erase( mt_id );
 
-			tile_data_t result = {};
-			result.is_set = true;
-			result.purpose = response.data.select_tile.purpose;
-			result.tile_position = {
-				response.data.select_tile.tile_x,
-				response.data.select_tile.tile_y
-			};
-			result.coords = {
-				response.data.select_tile.coords.x,
-				response.data.select_tile.coords.y,
-				::game::map::s_consts.tile.elevation_to_vertex_z.Clamp( response.data.select_tile.elevation.center )
-			};
+		tile_data_t result = {};
+		result.is_set = true;
+		result.purpose = response.data.select_tile.purpose;
+		result.tile_position = {
+			response.data.select_tile.tile_x,
+			response.data.select_tile.tile_y
+		};
+		result.coords = {
+			response.data.select_tile.coords.x,
+			response.data.select_tile.coords.y,
+			::game::map::s_consts.tile.elevation_to_vertex_z.Clamp( response.data.select_tile.elevation.center )
+		};
 
 #define xx( _k, _kk ) result.selection_coords._k._kk = response.data.select_tile.selection_coords._k._kk
 #define x( _k ) { \
-                xx( _k, x ); \
-                xx( _k, y ); \
-                xx( _k, z ); \
-            }
-			x( center );
-			x( left );
-			x( top );
-			x( right );
-			x( bottom );
+            xx( _k, x ); \
+            xx( _k, y ); \
+            xx( _k, z ); \
+        }
+		x( center );
+		x( left );
+		x( top );
+		x( right );
+		x( bottom );
 #undef x
 #undef xx
 
-			ASSERT( response.data.select_tile.preview_meshes, "preview meshes not set" );
-			result.preview_meshes = *response.data.select_tile.preview_meshes;
-			// needed to avoid mesh deallocations
-			DELETE( response.data.select_tile.preview_meshes );
-			response.data.select_tile.preview_meshes = nullptr;
+		ASSERT( response.data.select_tile.preview_meshes, "preview meshes not set" );
+		result.preview_meshes = *response.data.select_tile.preview_meshes;
+		// needed to avoid mesh deallocations
+		DELETE( response.data.select_tile.preview_meshes );
+		response.data.select_tile.preview_meshes = nullptr;
 
-			ASSERT( response.data.select_tile.preview_lines, "preview lines not set" );
-			result.preview_lines = *response.data.select_tile.preview_lines;
+		ASSERT( response.data.select_tile.preview_lines, "preview lines not set" );
+		result.preview_lines = *response.data.select_tile.preview_lines;
 
-			result.sprites = *response.data.select_tile.sprites;
+		result.sprites = *response.data.select_tile.sprites;
 
-			result.scroll_adaptively = response.data.select_tile.scroll_adaptively;
+		result.scroll_adaptively = response.data.select_tile.scroll_adaptively;
 
-			std::unordered_map< size_t, Unit* > units = {};
-			for ( const auto& unit_id : *response.data.select_tile.unit_ids ) {
-				const auto& it = m_unit_states.find( unit_id );
-				if ( m_unit_states.find( unit_id ) != m_unit_states.end() ) {
-					units.insert(
-						{
-							unit_id,
-							it->second
-						}
-					);
-				}
-			}
-			const auto units_order = Tile::GetUnitsOrder( units );
-
-			for ( const auto& unit_id : units_order ) {
-				ASSERT( m_unit_states.find( unit_id ) != m_unit_states.end(), "unit id not found" );
-				const auto* unit_state = m_unit_states.at( unit_id );
-
-				types::mesh::Rectangle* mesh = nullptr;
-				types::Texture* texture = nullptr;
-
-				const auto& f_meshtex = []( const InstancedSprite* sprite ) -> meshtex_t {
-					auto* texture = sprite->actor->GetSpriteActor()->GetTexture();
-					NEWV( mesh, types::mesh::Rectangle );
-					mesh->SetCoords(
-						{
-							0.0f,
-							0.0f
-						},
-						{
-							1.0f,
-							1.0f
-						},
-						{
-							sprite->xy.x,
-							sprite->xy.y
-						},
-						{
-							sprite->xy.x + sprite->wh.x,
-							sprite->xy.y + sprite->wh.y
-						},
-						{
-							texture->m_width,
-							texture->m_height
-						},
-						0.8f
-					);
-					return {
-						mesh,
-						texture,
-					};
-				};
-
-				// TODO: use real unit properties
-
-				result.units.push_back(
+		std::unordered_map< size_t, Unit* > units = {};
+		for ( const auto& unit_id : *response.data.select_tile.unit_ids ) {
+			const auto& it = m_unit_states.find( unit_id );
+			if ( m_unit_states.find( unit_id ) != m_unit_states.end() ) {
+				units.insert(
 					{
-						unit_state->GetId(),
-						f_meshtex( unit_state->GetSprite()->instanced_sprite ),
-						f_meshtex( unit_state->GetBadgeSprite()->instanced_sprite ),
-						f_meshtex( unit_state->GetBadgeHealthbarSprite()->instanced_sprite ),
-						unit_state->GetNameString(),
-						unit_state->GetStatsString(),
-						unit_state->GetMoraleString(),
-						unit_state->GetMovesString(),
+						unit_id,
+						it->second
 					}
 				);
 			}
-			result.metadata = response.data.select_tile.metadata;
-
-			return result;
 		}
+		const auto units_order = Tile::GetUnitsOrder( units );
+
+		for ( const auto& unit_id : units_order ) {
+			ASSERT( m_unit_states.find( unit_id ) != m_unit_states.end(), "unit id not found" );
+			const auto* unit_state = m_unit_states.at( unit_id );
+
+			types::mesh::Rectangle* mesh = nullptr;
+			types::Texture* texture = nullptr;
+
+			const auto& f_meshtex = []( const InstancedSprite* sprite ) -> meshtex_t {
+				auto* texture = sprite->actor->GetSpriteActor()->GetTexture();
+				NEWV( mesh, types::mesh::Rectangle );
+				mesh->SetCoords(
+					{
+						0.0f,
+						0.0f
+					},
+					{
+						1.0f,
+						1.0f
+					},
+					{
+						sprite->xy.x,
+						sprite->xy.y
+					},
+					{
+						sprite->xy.x + sprite->wh.x,
+						sprite->xy.y + sprite->wh.y
+					},
+					{
+						texture->m_width,
+						texture->m_height
+					},
+					0.8f
+				);
+				return {
+					mesh,
+					texture,
+				};
+			};
+
+			// TODO: use real unit properties
+
+			result.units.push_back(
+				{
+					unit_state->GetId(),
+					f_meshtex( unit_state->GetSprite()->instanced_sprite ),
+					f_meshtex( unit_state->GetBadgeSprite()->instanced_sprite ),
+					f_meshtex( unit_state->GetBadgeHealthbarSprite()->instanced_sprite ),
+					unit_state->GetNameString(),
+					unit_state->GetStatsString(),
+					unit_state->GetMoraleString(),
+					unit_state->GetMovesString(),
+				}
+			);
+		}
+		result.metadata = response.data.select_tile.metadata;
+
+		return result;
 	}
 	// no data
 	return {};
@@ -2403,6 +2401,10 @@ void Game::CancelRequests() {
 		game->MT_Cancel( m_mt_ids.reset );
 		m_mt_ids.reset = 0;
 	}
+	for ( const auto& mt_id : m_mt_ids.select_tile ) {
+		game->MT_Cancel( mt_id );
+	}
+	m_mt_ids.select_tile.clear();
 	if ( m_mt_ids.get_frontend_requests ) {
 		game->MT_Cancel( m_mt_ids.get_frontend_requests );
 		m_mt_ids.get_frontend_requests = 0;
