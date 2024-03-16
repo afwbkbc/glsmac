@@ -15,6 +15,31 @@ TileState::~TileState() {
 	}*/
 }
 
+TileState* TileState::GetNeighbour( const Tile::direction_t direction ) {
+	switch ( direction ) {
+		case Tile::D_NONE:
+			return this;
+		case Tile::D_W:
+			return W;
+		case Tile::D_NW:
+			return NW;
+		case Tile::D_N:
+			return N;
+		case Tile::D_NE:
+			return NE;
+		case Tile::D_E:
+			return E;
+		case Tile::D_SE:
+			return SE;
+		case Tile::D_S:
+			return S;
+		case Tile::D_SW:
+			return SW;
+		default:
+			THROW( "unknown tile direction: " + std::to_string( direction ) );
+	}
+}
+
 const Buffer TileState::Serialize() const {
 	Buffer buf;
 

@@ -11,6 +11,43 @@
 namespace game {
 namespace map {
 
+const std::unordered_map< Tile::direction_t, std::string > Tile::s_direction_str = {
+#define X( _x ) { D_##_x, #_x },
+	{
+		X( W )
+		X( NW )
+		X( N )
+		X( NE )
+		X( E )
+		X( SE )
+		X( S )
+		X( SW )
+	}
+#undef X
+};
+
+const std::string& Tile::GetDirectionString( const direction_t direction ) {
+	const auto& s = s_direction_str.find( direction );
+	ASSERT_NOLOG( s != s_direction_str.end(), "unknown direction: " + std::to_string( direction ) );
+	return s->second;
+}
+
+Tile* Tile::GetNeighbour( const direction_t direction ) {
+	switch ( direction ) {
+		case D_NONE: return this;
+		case D_W: return W;
+		case D_NW: return NW;
+		case D_N: return N;
+		case D_NE: return NE;
+		case D_E: return E;
+		case D_SE: return SE;
+		case D_S: return S;
+		case D_SW: return SW;
+		default:
+			THROW( "unknown tile direction: " + std::to_string( direction ) );
+	}
+}
+
 void Tile::Update() {
 
 	*elevation.center = ( *elevation.left + *elevation.top + *elevation.right + *elevation.bottom ) / 4;
@@ -32,6 +69,45 @@ void Tile::Clear() {
 		*c = 0;
 	}
 	moisture = rockiness = bonus = features = terraforming = is_water_tile = 0;
+}
+
+const bool Tile::IsAdjactentTo( const Tile* other ) const {
+	for ( const auto& n : neighbours ) {
+		if ( n == other ) {
+			return true;
+		}
+	}
+	return false;
+}
+
+const float Tile::GetMovementCost() const {
+	// TODO: move to scripts
+	const bool is_native = true; // TODO
+	if ( features & F_XENOFUNGUS ) {
+		if ( is_native ) {
+			return is_water_tile ? 1.0f : 1.0f / 3;
+		}
+		else {
+			return 3.0f;
+		}
+	}
+	if ( is_water_tile ) {
+		return 1.0f;
+	}
+	// TODO: roads
+	return 1.0f;
+}
+
+const float Tile::GetMovementAftercost() const {
+	// TODO: move to scripts
+	const bool is_native = true; // TODO
+	if ( is_native && ( features & F_XENOFUNGUS ) ) {
+		return 0.0f;
+	}
+	if ( !is_water_tile && rockiness == R_ROCKY ) {
+		return 1.0f;
+	}
+	return 0.0f;
 }
 
 const Buffer Tile::Serialize() const {

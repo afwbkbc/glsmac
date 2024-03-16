@@ -43,6 +43,24 @@ BINDING_IMPL( units ) {
 				N_GETPROP( name, unit_def, "name", String );
 				N_GETPROP( unit_type, unit_def, "type", String );
 				if ( unit_type == "static" ) {
+					N_GETPROP( movement_type_str, unit_def, "movement_type", String );
+					unit::StaticDef::movement_type_t movement_type;
+					if ( movement_type_str == "land" ) {
+						movement_type = unit::StaticDef::MT_LAND;
+					}
+					else if ( movement_type_str == "sea" ) {
+						movement_type = unit::StaticDef::MT_SEA;
+					}
+					else if ( movement_type_str == "air" ) {
+						movement_type = unit::StaticDef::MT_AIR;
+					}
+					else if ( movement_type_str == "immovable" ) {
+						movement_type = unit::StaticDef::MT_IMMOVABLE;
+					}
+					else {
+						ERROR( gse::EC.INVALID_CALL, "Invalid movement type - " + movement_type_str + ". Specify one of: land sea air immovable");
+					}
+					N_GETPROP( movement_per_turn, unit_def, "movement_per_turn", Int );
 					N_GETPROP( render_def, unit_def, "render", Object );
 					N_GETPROP( render_type, render_def, "type", String );
 					if ( render_type == "sprite" ) {
@@ -57,9 +75,22 @@ BINDING_IMPL( units ) {
 						const auto* def = new unit::StaticDef(
 							id,
 							name,
-							new unit::SpriteRender( sprite_file, sprite_x, sprite_y, sprite_w, sprite_h, sprite_cx, sprite_cy, sprite_morale_based_xshift )
+							movement_type,
+							movement_per_turn,
+							new unit::SpriteRender(
+								sprite_file,
+								sprite_x,
+								sprite_y,
+								sprite_w,
+								sprite_h,
+								sprite_cx,
+								sprite_cy,
+								sprite_morale_based_xshift
+							)
 						);
-						return GAME->AddGameEvent( new event::DefineUnit( def ), ctx, call_si );
+						auto* game = GAME;
+						game->AddEvent( new event::DefineUnit( game->GetSlotNum(), def ) );
+						return VALUE( gse::type::Undefined );
 					}
 					else {
 						ERROR( gse::EC.GAME_ERROR, "Unsupported render type: " + render_type );
@@ -80,14 +111,17 @@ BINDING_IMPL( units ) {
 				N_UNWRAP( tile, 2, map::Tile );
 				N_GETVALUE( morale, 3, Int );
 				N_GETVALUE( health, 4, Float );
-				return GAME->AddGameEvent( new event::SpawnUnit(
+				auto* game = GAME;
+				game->AddEvent( new event::SpawnUnit(
+					game->GetSlotNum(),
 					def_name,
 					owner->GetIndex(),
 					tile->coord.x,
 					tile->coord.y,
 					GetMorale( morale, ctx, call_si ),
 					GetHealth( health, ctx, call_si )
-				), ctx, call_si );
+				) );
+				return VALUE( gse::type::Undefined );
 			})
 		},
 		{
@@ -95,7 +129,9 @@ BINDING_IMPL( units ) {
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
 				N_UNWRAP( unit, 0, unit::Unit );
-				return GAME->AddGameEvent( new event::DespawnUnit( unit->m_id ), ctx, call_si );
+				auto* game = GAME;
+				game->AddEvent( new event::DespawnUnit( game->GetSlotNum(), unit->m_id ) );
+				return VALUE( gse::type::Undefined );
 			})
 		},
 	};

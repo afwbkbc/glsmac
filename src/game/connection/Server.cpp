@@ -2,6 +2,8 @@
 
 using namespace network;
 
+#include "game/Game.h"
+
 namespace game {
 namespace connection {
 
@@ -24,7 +26,6 @@ void Server::ProcessEvent( const network::Event& event ) {
 			const auto& rules = m_state->m_settings.global.game_rules;
 			NEW(
 				m_player, ::game::Player,
-				rules,
 				m_state->m_settings.local.player_name,
 				::game::Player::PR_HOST,
 				::game::Player::RANDOM_FACTION,
@@ -69,24 +70,31 @@ void Server::ProcessEvent( const network::Event& event ) {
 			if ( it != m_state->GetCidSlots().end() ) {
 				const auto slot_num = it->second;
 				m_state->RemoveCIDSlot( event.cid );
+
+				ASSERT( m_game_state != GS_NONE, "player disconnected but game state is not set" );
+
 				auto& slot = m_state->m_slots.GetSlot( slot_num );
-				auto* player = slot.GetPlayerAndClose();
-				ASSERT( player, "player in slot is null" );
-				m_state->RemovePlayer( player );
+				Player* player = nullptr;
+				if ( m_game_state == GS_LOBBY ) {
+					// free slot for next player
+					player = slot.GetPlayerAndClose();
+					ASSERT( player, "player in slot is null" );
+					m_state->RemovePlayer( player );
+					slot.UnsetLinkedGSID();
+				}
+				else {
+					// mark slot as disconnected
+					player = slot.GetPlayer();
+					ASSERT( player, "player in slot is null" );
+					player->Disconnect();
+				}
+				SendSlotUpdate( slot_num, &slot, event.cid ); // notify others
 
 				// cleanup
 				const auto& download_data_it = m_download_data.find( event.cid );
 				if ( download_data_it != m_download_data.end() ) {
 					m_download_data.erase( download_data_it );
 				}
-
-				ASSERT( m_game_state != GS_NONE, "player disconnected but game state is not set" );
-				if ( m_game_state == GS_LOBBY ) {
-					// free slot for next player
-					slot.UnsetLinkedGSID();
-				}
-
-				SendSlotUpdate( slot_num, &slot, event.cid ); // notify others
 
 				if ( m_game_state == GS_LOBBY ) {
 					ClearReadyFlags();
@@ -95,7 +103,10 @@ void Server::ProcessEvent( const network::Event& event ) {
 				if ( m_on_player_leave ) {
 					m_on_player_leave( slot_num, &slot, player );
 				}
-				DELETE( player );
+
+				if ( m_game_state == GS_LOBBY ) {
+					DELETE( player );
+				}
 			}
 			break;
 		}
@@ -125,12 +136,22 @@ void Server::ProcessEvent( const network::Event& event ) {
 
 						// TODO: implementing 'load game' from lobby will need extra gsid logic
 
+						size_t slot_num = 0;
+
 						// check if not already in game
 						bool is_already_in_game = false;
 						for ( auto& slot : m_state->m_slots.GetSlots() ) {
-							if ( slot.GetLinkedGSID() == gsid && slot.GetState() == Slot::SS_PLAYER ) {
-								is_already_in_game = true;
-								break;
+							if ( slot.GetLinkedGSID() == gsid ) {
+								ASSERT( slot.GetState() == Slot::SS_PLAYER, "slot state is not player" );
+								const auto* player = slot.GetPlayer();
+								ASSERT( player, "slot player not set" );
+								if ( player->IsConnected() ) {
+									is_already_in_game = true;
+									break;
+								}
+								else {
+									slot_num = slot.GetIndex();
+								}
 							}
 						}
 						if ( is_already_in_game ) {
@@ -139,7 +160,6 @@ void Server::ProcessEvent( const network::Event& event ) {
 							break;
 						}
 
-						size_t slot_num = 0;
 						if ( m_game_state == GS_LOBBY ) {
 							// on lobby stage everyone can connect and occupy first free slot
 							for ( auto& slot : m_state->m_slots.GetSlots() ) {
@@ -156,12 +176,6 @@ void Server::ProcessEvent( const network::Event& event ) {
 						}
 						else {
 							// once game is started - only players that are linked to slots by gsids can join to their slots
-							for ( auto& slot : m_state->m_slots.GetSlots() ) {
-								if ( slot.GetState() == ::game::Slot::SS_OPEN && slot.GetLinkedGSID() == gsid ) {
-									break;
-								}
-								slot_num++;
-							}
 							if ( slot_num >= m_state->m_slots.GetCount() ) { // no available slots left
 								Log( "No linked slot found for player " + gsid + " (" + player_name + "), rejecting" );
 								Kick( event.cid, "You do not belong to this game." );
@@ -169,28 +183,29 @@ void Server::ProcessEvent( const network::Event& event ) {
 							}
 						}
 
-						if ( m_game_state == GS_LOBBY ) {
-							ClearReadyFlags();
-						}
-
 						const auto& rules = m_state->m_settings.global.game_rules;
-						NEWV(
-							player, ::game::Player,
-							rules,
-							player_name,
-							::game::Player::PR_PLAYER,
-							::game::Player::RANDOM_FACTION,
-							rules.GetDefaultDifficultyLevel()
-						);
-						m_state->AddPlayer( player );
-
 						m_state->AddCIDSlot( event.cid, slot_num );
 						auto& slot = m_state->m_slots.GetSlot( slot_num );
-						slot.SetPlayer( player, event.cid, event.data.remote_address );
+
+						Player* player = nullptr;
 						if ( m_game_state == GS_LOBBY ) {
-							// link slot to player
+							ClearReadyFlags();
+							NEW(
+								player, ::game::Player,
+								player_name,
+								::game::Player::PR_PLAYER,
+								::game::Player::RANDOM_FACTION,
+								rules.GetDefaultDifficultyLevel()
+							);
+							m_state->AddPlayer( player );
 							slot.SetLinkedGSID( gsid );
 						}
+						else {
+							player = slot.GetPlayer();
+						}
+						slot.SetPlayer( player, event.cid, event.data.remote_address );
+						player->Connect();
+
 						SendGameState( event.cid );
 						SendPlayersList( event.cid, slot_num );
 						SendGlobalSettings( event.cid );
@@ -312,25 +327,48 @@ void Server::ProcessEvent( const network::Event& event ) {
 					}
 					case Packet::PT_GAME_EVENTS: {
 						Log( "Got game events packet" );
-						if ( m_on_game_event ) {
-							auto buf = Buffer( packet.data.str );
-							std::vector< const game::event::Event* > game_events = {};
-							game::event::Event::UnserializeMultiple( buf, game_events );
-							for ( const auto& game_event : game_events ) {
-								m_on_game_event( game_event );
+						ASSERT( m_on_game_event, "m_on_game_event is not set" );
+						auto buf = Buffer( packet.data.str );
+						std::vector< game::event::Event* > game_events = {};
+						game::event::Event::UnserializeMultiple( buf, game_events );
+						const auto slot = m_state->GetCidSlots().at( event.cid );
+						std::vector< game::event::Event* > valid_events = {};
+						for ( const auto& game_event : game_events ) {
+							bool ok = true;
+							if ( game_event->m_initiator_slot != slot ) {
+								Log( "Event slot mismatch from " + std::to_string( event.cid ) + " ( " + std::to_string( game_event->m_initiator_slot ) + " != " + std::to_string( slot ) + " )" );
+								ok = false;
 							}
-						}
-						else {
-							Log( "WARNING: game event handler not set" );
-						}
-						// relay to other clients
-						Broadcast(
-							[ this, packet, event ]( const network::cid_t cid ) -> void {
-								if ( cid != event.cid ) { // don't send back
-									SendGameEventsTo( packet.data.str, cid );
+							else {
+								try {
+									m_on_game_event( game_event );
+								}
+								catch ( const game::InvalidEvent& e ) {
+									Log( "Invalid event received from " + std::to_string( event.cid ) );
+									Log( e.what() );
+									ok = false;
+									break;
 								}
 							}
-						);
+							if ( ok ) {
+								valid_events.push_back( game_event );
+							}
+							else {
+								delete game_event;
+							}
+						}
+						if ( !valid_events.empty() ) {
+							// broadcast only valid events, nobody will know of invalid attempts
+							const auto serialized_events = game::event::Event::SerializeMultiple( valid_events );
+							Broadcast(
+								[ this, packet, serialized_events ]( const network::cid_t cid ) -> void {
+									SendGameEventsTo( serialized_events.ToString(), cid );
+								}
+							);
+						}
+						else {
+							// nobody will know of this event, even the initiator
+						}
 						break;
 					}
 					default: {

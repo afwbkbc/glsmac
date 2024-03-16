@@ -21,18 +21,20 @@ CLASS( Player, types::Serializable )
 		PR_PLAYER,
 	};
 
-	Player( const rules::Rules& rules, types::Buffer buf );
+	Player( types::Buffer buf );
 	Player(
-		const rules::Rules& rules,
 		const std::string& name,
 		const role_t role,
 		const rules::Faction& faction,
 		const rules::DifficultyLevel& difficulty_level
 	);
 
-	const bool IsInitialized() const;
 	const std::string& GetPlayerName() const;
 	const std::string GetFullName() const;
+
+	void Connect();
+	void Disconnect();
+	const bool IsConnected() const;
 
 	void SetFaction( const rules::Faction& faction );
 	const rules::Faction& GetFaction() const;
@@ -45,14 +47,16 @@ CLASS( Player, types::Serializable )
 
 	const role_t GetRole() const;
 
+	const bool IsTurnCompleted() const;
+	void CompleteTurn();
+	void UncompleteTurn();
+
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;
 
 private:
 
-	const rules::Rules& m_rules;
-
-	bool m_is_initialized = false;
+	bool m_is_connected = false;
 
 	std::string m_name = "";
 	role_t m_role = PR_NONE;
@@ -62,6 +66,7 @@ private:
 	rules::Faction m_faction = RANDOM_FACTION;
 	rules::DifficultyLevel m_difficulty_level = {};
 
+	bool m_is_turn_completed = false;
 };
 
 }

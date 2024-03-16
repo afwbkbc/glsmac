@@ -14,6 +14,12 @@
 
 #include "SimpleTCP.h"
 
+#ifdef DEBUG
+
+#include "engine/Engine.h"
+
+#endif
+
 namespace network {
 namespace simpletcp {
 
@@ -25,6 +31,9 @@ SimpleTCP::SimpleTCP()
 }
 
 void SimpleTCP::Start() {
+#ifdef DEBUG
+	m_need_pings = !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_NOPINGS );
+#endif
 	m_impl.Start();
 }
 
@@ -613,6 +622,12 @@ bool SimpleTCP::WriteToSocket( int fd, const std::string& data ) {
 }
 
 bool SimpleTCP::MaybePing( remote_socket_data_t& socket ) {
+#ifdef DEBUG
+	if ( !m_need_pings ) {
+		return true;
+	}
+#endif
+
 	m_tmp.time = m_tmp.now - socket.last_data_at;
 
 	if ( m_tmp.time > SEND_PING_AFTER && !socket.ping_sent ) {
@@ -624,6 +639,13 @@ bool SimpleTCP::MaybePing( remote_socket_data_t& socket ) {
 }
 
 bool SimpleTCP::MaybePingDo( remote_socket_data_t& socket ) {
+
+#ifdef DEBUG
+	if ( !m_need_pings ) {
+		return true;
+	}
+#endif
+
 	m_tmp.time = m_tmp.now - socket.last_data_at;
 
 	if ( m_tmp.time > DISCONNECT_AFTER ) {

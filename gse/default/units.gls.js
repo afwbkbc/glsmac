@@ -1,7 +1,9 @@
-let native_lifeform = (id, name, base_y) => {
+let native_lifeform = (id, name, movement_type, movement_per_turn, base_y) => {
     return [id, {
         name: name,
         type: 'static',
+        movement_type: movement_type,
+        movement_per_turn: movement_per_turn,
         render: {
             type: 'sprite',
             file: 'Units.pcx',
@@ -14,8 +16,8 @@ let native_lifeform = (id, name, base_y) => {
 };
 
 return [
-    native_lifeform('FungalTower', 'Fungal Tower', 79),
-    native_lifeform('MindWorms', 'Mind Worms', 233),
-    native_lifeform('SeaLurk', 'Sea Lurk', 310),
-    native_lifeform('SporeLauncher', 'Spore Launcher', 387),
+    native_lifeform('FungalTower', 'Fungal Tower', 'immovable', 0, 79),
+    native_lifeform('MindWorms', 'Mind Worms', 'land', 1, 233),
+    native_lifeform('SeaLurk', 'Sea Lurk', 'sea', 4, 310),
+    native_lifeform('SporeLauncher', 'Spore Launcher', 'land', 1, 387),
 ];

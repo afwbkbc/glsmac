@@ -939,9 +939,6 @@ const JS::source_elements_t::const_iterator JS::GetBracketsEnd( const source_ele
 	source_elements_t::const_iterator it = begin;
 	Block* block = ( Block * ) * begin;
 	const auto& info = block->m_block_info;
-	if ( block->m_block_side != Block::BS_BEGIN ) {
-		int a = 5;
-	}
 	ASSERT( block->m_block_side == Block::BS_BEGIN, "expected opening bracket" );
 	while ( it != end ) {
 		if ( ( *it )->m_type == SourceElement::ET_BLOCK ) {

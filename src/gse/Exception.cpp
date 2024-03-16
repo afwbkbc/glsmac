@@ -16,6 +16,7 @@ const exception_ec_t EC = {
 	"GSELoaderError",
 	"GSEConversionError",
 	"GSEGameError",
+	"GSEInvalidEvent",
 };
 
 const Exception::backtrace_t Exception::GetBacktraceAndCleanup( const Context* const current_ctx ) {

@@ -47,6 +47,9 @@ private:
 	void CloseSocket( int fd, network::cid_t cid = 0, bool skip_event = false );
 	void CloseClientSocket( const remote_socket_data_t& socket );
 
+#ifdef DEBUG
+	bool m_need_pings = true;
+#endif
 };
 
 }

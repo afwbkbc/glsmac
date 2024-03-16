@@ -42,7 +42,8 @@ void ConnectionPopupMenu::SetConnection( ::game::connection::Connection* connect
 					}
 					case Connection::GS_RUNNING: {
 						Log( "Game is already running, trying to join" );
-
+						
+						m_mainmenu->m_state->InitBindings();
 						connection->m_on_global_settings_update = [ this ]() -> void {
 							Log( "Got global settings packet" );
 							Show();

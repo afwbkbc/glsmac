@@ -71,15 +71,11 @@ void BottomBar::Create() {
 	m_buttons.menu->On(
 		UIEvent::EV_BUTTON_CLICK, EH( this ) {
 			if ( m_side_menus.left->IsVisible() ) {
-				if ( m_buttons.menu->HasStyleModifier( Style::M_SELECTED ) ) {
-					m_buttons.menu->RemoveStyleModifier( Style::M_SELECTED );
-				}
+				m_buttons.menu->RemoveStyleModifier( Style::M_SELECTED );
 				m_side_menus.left->Hide();
 			}
 			else {
-				if ( !m_buttons.menu->HasStyleModifier( Style::M_SELECTED ) ) {
-					m_buttons.menu->AddStyleModifier( Style::M_SELECTED );
-				}
+				m_buttons.menu->AddStyleModifier( Style::M_SELECTED );
 				m_side_menus.left->Show();
 			}
 			return true;
@@ -93,15 +89,11 @@ void BottomBar::Create() {
 	m_buttons.commlink->On(
 		UIEvent::EV_BUTTON_CLICK, EH( this ) {
 			if ( m_side_menus.right->IsVisible() ) {
-				if ( m_buttons.commlink->HasStyleModifier( Style::M_SELECTED ) ) {
-					m_buttons.commlink->RemoveStyleModifier( Style::M_SELECTED );
-				}
+				m_buttons.commlink->RemoveStyleModifier( Style::M_SELECTED );
 				m_side_menus.right->Hide();
 			}
 			else {
-				if ( !m_buttons.commlink->HasStyleModifier( Style::M_SELECTED ) ) {
-					m_buttons.commlink->AddStyleModifier( Style::M_SELECTED );
-				}
+				m_buttons.commlink->AddStyleModifier( Style::M_SELECTED );
 				m_side_menus.right->Show();
 			}
 			return true;
@@ -134,7 +126,7 @@ void BottomBar::Create() {
 	}
 	AddChild( m_sections.mini_map );
 
-	NEW( m_sections.turn_complete_button, TurnCompleteButton );
+	NEW( m_sections.turn_complete_button, TurnCompleteButton, m_game );
 	m_sections.mini_map->AddChild( m_sections.turn_complete_button );
 
 	// side menus
@@ -225,9 +217,9 @@ void BottomBar::Align() {
 
 }
 
-void BottomBar::PreviewTile( const tile_data_t& tile_data ) {
+void BottomBar::PreviewTile( const tile_data_t& tile_data, const size_t selected_unit_id ) {
 	m_sections.tile_preview->PreviewTile( tile_data );
-	m_sections.units_list->ListUnits( tile_data.units );
+	m_sections.units_list->ListUnits( tile_data.units, selected_unit_id );
 }
 
 void BottomBar::HideTilePreview() {
@@ -299,8 +291,12 @@ void BottomBar::UpdateMapFileName() {
 	m_sections.middle_area->UpdateMapFileName();
 }
 
+void BottomBar::SetTurnActiveStatus( const bool is_turn_active ) {
+	m_sections.turn_complete_button->SetTurnActiveStatus( is_turn_active );
+}
+
 void BottomBar::SetTurnCompleteStatus( const bool is_turn_complete ) {
-	m_sections.turn_complete_button->SetTurnCompleteStatus( is_turn_complete );
+	m_sections.turn_complete_button->SetFlashingEnabled( is_turn_complete );
 }
 
 }

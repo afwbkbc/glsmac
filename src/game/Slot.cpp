@@ -86,13 +86,19 @@ Player* Slot::GetPlayerAndClose() {
 }
 
 void Slot::SetPlayer( Player* player, const network::cid_t cid, const std::string& remote_address ) {
-	ASSERT( m_slot_state == SS_OPEN, "attempted to set player to non-open slot" );
-	ASSERT( !player->GetSlot(), "attempted to set slot to player with non-empty slot" );
-	m_player_data.player = player;
+	if ( m_slot_state == SS_PLAYER ) {
+		ASSERT( m_player_data.player == player, "attempted to overwrite player with another player" );
+	}
+	else {
+		ASSERT( m_slot_state == SS_OPEN, "attempted to set player to non-open slot" );
+		ASSERT( !player->GetSlot(), "attempted to set slot to player with non-empty slot" );
+		m_player_data.player = player;
+		player->SetSlot( this );
+		m_slot_state = SS_PLAYER;
+	}
 	m_player_data.cid = cid;
 	m_player_data.remote_address = remote_address;
-	player->SetSlot( this );
-	m_slot_state = SS_PLAYER;
+	m_player_data.flags = PF_NONE;
 }
 
 const std::string& Slot::GetLinkedGSID() const {
@@ -141,7 +147,7 @@ void Slot::Unserialize( types::Buffer buf ) {
 	m_slot_state = (slot_state_t)buf.ReadInt();
 	if ( m_slot_state == SS_PLAYER ) {
 		if ( !m_player_data.player ) {
-			m_player_data.player = new Player( m_state->m_settings.global.game_rules, buf.ReadString() );
+			m_player_data.player = new Player( buf.ReadString() );
 			m_player_data.player->SetSlot( this );
 		}
 		else {

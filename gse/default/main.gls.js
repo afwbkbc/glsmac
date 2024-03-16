@@ -105,7 +105,6 @@ let random_health = () => {
 
 #game.on.turn(() => {
     #print('NEW TURN');
-    #print('PLAYERS: ' + #to_string(#game.players.get_all()));
 });
 
 #game.on.spawn_unit((unit) => {

@@ -41,7 +41,7 @@ CLASS( BottomBar, UI )
 	void Destroy() override;
 	void Align() override;
 
-	void PreviewTile( const tile_data_t& tile_data );
+	void PreviewTile( const tile_data_t& tile_data, const size_t selected_unit_id );
 	void HideTilePreview();
 
 	void PreviewUnit( const unit_data_t& unit_data );
@@ -59,6 +59,7 @@ CLASS( BottomBar, UI )
 	void AddMessage( const std::string& text );
 	void UpdateMapFileName();
 
+	void SetTurnActiveStatus( const bool is_turn_active );
 	void SetTurnCompleteStatus( const bool is_turn_complete );
 
 private:

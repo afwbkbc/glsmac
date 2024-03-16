@@ -1,5 +1,6 @@
 #include "String.h"
 
+#include <cmath>
 #include <sstream>
 #include <algorithm>
 
@@ -50,6 +51,13 @@ const std::string String::TrimCopy( const std::string& s ) {
 	std::string str = s;
 	trim( str );
 	return str;
+}
+
+const std::string String::ApproximateFloat( const float value ) {
+	std::string result = std::to_string( std::floor( value * 100 ) / 100 );
+	result.erase( result.find_last_not_of( '0' ) + 1, std::string::npos );
+	result.erase( result.find_last_not_of( '.' ) + 1, std::string::npos );
+	return result;
 }
 
 }

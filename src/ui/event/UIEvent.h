@@ -49,6 +49,7 @@ CLASS( UIEvent, base::Base )
 		K_RIGHT,
 		K_DOWN,
 		K_ENTER,
+		K_SPACE,
 		K_TAB,
 		K_BACKSPACE,
 		K_ESCAPE,
@@ -83,6 +84,7 @@ CLASS( UIEvent, base::Base )
 			} absolute, relative;
 			uint8_t button;
 			ssize_t scroll_y;
+			bool is_outside_parent;
 		} mouse;
 		struct {
 			bool is_printable;

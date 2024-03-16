@@ -120,16 +120,18 @@ void Client::ProcessEvent( const network::Event& event ) {
 									: m_state->m_slots.GetSlot( 0 ).HasPlayerFlag( Slot::PF_READY ) // check readyness of host
 								;
 								slot.Unserialize( packet.data.str );
-								if ( slot.GetState() == Slot::SS_PLAYER ) {
-									if ( wasReady && slot.HasPlayerFlag( Slot::PF_READY ) ) {
-										Error( "player updated slot while ready" );
-										break;
+								if ( m_game_state == GS_LOBBY ) {
+									if ( slot.GetState() == Slot::SS_PLAYER ) {
+										if ( wasReady && slot.HasPlayerFlag( Slot::PF_READY ) ) {
+											Error( "player updated slot while ready" );
+											break;
+										}
 									}
-								}
-								else {
-									if ( wasReady ) {
-										Error( "host updated slot while ready" );
-										break;
+									else {
+										if ( wasReady ) {
+											Error( "host updated slot while ready" );
+											break;
+										}
 									}
 								}
 							}
@@ -224,7 +226,7 @@ void Client::ProcessEvent( const network::Event& event ) {
 							Log( "Got game events packet" );
 							if ( m_on_game_event ) {
 								auto buf = Buffer( packet.data.str );
-								std::vector< const game::event::Event* > game_events = {};
+								std::vector< game::event::Event* > game_events = {};
 								game::event::Event::UnserializeMultiple( buf, game_events );
 								for ( const auto& game_event : game_events ) {
 									m_on_game_event( game_event );

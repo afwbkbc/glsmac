@@ -4,5 +4,9 @@ SET( SRC ${SRC}
 	${PWD}/DefineUnit.cpp
 	${PWD}/SpawnUnit.cpp
 	${PWD}/DespawnUnit.cpp
+	${PWD}/MoveUnit.cpp
+	${PWD}/SkipUnitTurn.cpp
+	${PWD}/CompleteTurn.cpp
+	${PWD}/UncompleteTurn.cpp
 
 	PARENT_SCOPE )

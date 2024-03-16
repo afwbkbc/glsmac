@@ -579,9 +579,32 @@ void BottomBar::AddStyles() {
 		"UnitsListItem", SH() {
 			s->Set( ::Style::A_ALIGN, UIObject::ALIGN_LEFT );
 			s->Set( ::Style::A_TOP, 0 );
-			s->Set( ::Style::A_BOTTOM, 0 );
-			s->Set( ::Style::A_WIDTH, 70 );
-			s->Set( ::Style::A_HEIGHT, 44 );
+			s->Set( ::Style::A_WIDTH, 68 );
+			s->Set( ::Style::A_HEIGHT, 46 );
+		}
+	);
+
+	AddStyle(
+		"UnitsListSelection", SH() {
+			s->Set( ::Style::A_LEFT, -6 );
+			s->Set( ::Style::A_TOP, -6 );
+			s->Set( ::Style::A_BOTTOM, -3 );
+			s->Set( ::Style::A_RIGHT, -6 );
+			s->Set( ::Style::A_BORDER_SIZE, 1 );
+			types::Color c;
+			if ( s->Is( ::Style::M_ACTIVE ) ) {
+				c = Color::FromRGB( 56, 160, 198 );
+			}
+			else if ( s->Is( ::Style::M_HOVER ) ) {
+				c = Color::FromRGB( 28, 80, 99 );
+			}
+			else {
+				c = Color::FromRGBA( 0, 0, 0, 0 );
+			}
+			s->SetColorTexture( ::Style::A_TEXTURE_LEFT, c );
+			s->SetColorTexture( ::Style::A_TEXTURE_TOP, c );
+			s->SetColorTexture( ::Style::A_TEXTURE_RIGHT, c );
+			s->SetColorTexture( ::Style::A_TEXTURE_BOTTOM, c );
 		}
 	);
 

@@ -21,15 +21,20 @@ CLASS( UnitsList, BBSection )
 	void Destroy() override;
 
 	void ClearUnits();
-	void ListUnits( const std::vector< unit_data_t >& units );
+	void ListUnits( const std::vector< unit_data_t >& units, const size_t selected_unit_id );
 
 private:
+	friend class UnitsListItem;
+	void PreviewUnit( const unit_data_t& unit );
+	void HideUnitPreview( const unit_data_t& unit );
+	void SelectUnit( const unit_data_t* unit, const bool actually_select_unit );
 
+private:
 	::ui::object::ScrollView* m_body = nullptr;
-
 	UnitPreview* m_unit_preview;
-	std::vector< UnitsListItem* > m_items = {};
-
+	std::unordered_map< size_t, UnitsListItem* > m_items = {};
+	const unit_data_t* m_selected_unit = nullptr;
+	const unit_data_t* m_previewing_unit = nullptr;
 };
 
 }

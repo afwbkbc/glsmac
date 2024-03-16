@@ -40,6 +40,7 @@ public:
 	TileState* SE;
 	TileState* S;
 	TileState* SW;
+	TileState* GetNeighbour( const Tile::direction_t direction );
 
 	// tile data
 

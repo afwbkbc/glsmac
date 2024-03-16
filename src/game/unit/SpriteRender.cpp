@@ -49,6 +49,20 @@ const types::Vec3 SpriteRender::GetSpawnCoords( const float tile_x, const float 
 	};
 }
 
+const std::string SpriteRender::ToString( const std::string& prefix ) const {
+	return (std::string)
+		TS_OBJ_BEGIN( "SpriteRender" ) +
+		TS_OBJ_PROP_STR( "file", m_file ) +
+		TS_OBJ_PROP_NUM( "x: ", m_x ) +
+		TS_OBJ_PROP_NUM( "y: ", m_y ) +
+		TS_OBJ_PROP_NUM( "w: ", m_w ) +
+		TS_OBJ_PROP_NUM( "h: ", m_w ) +
+		TS_OBJ_PROP_NUM( "cx: ", m_cx ) +
+		TS_OBJ_PROP_NUM( "cy: ", m_cy ) +
+		TS_OBJ_PROP_NUM( "morale_based_xshift", m_morale_based_xshift ) +
+		TS_OBJ_END();
+}
+
 void SpriteRender::Serialize( types::Buffer& buf, const SpriteRender* render ) {
 	buf.WriteString( render->m_file );
 	buf.WriteInt( render->m_x );

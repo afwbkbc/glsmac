@@ -246,6 +246,9 @@ UIEvent::key_code_t SDL2::GetScanCode( SDL_Scancode code, SDL_Keymod modifiers )
 		case SDL_SCANCODE_RETURN: {
 			return UIEvent::K_ENTER;
 		}
+		case SDL_SCANCODE_SPACE: {
+			return UIEvent::K_SPACE;
+		}
 		case SDL_SCANCODE_TAB: {
 			return UIEvent::K_TAB;
 		}

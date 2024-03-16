@@ -7,23 +7,31 @@
 
 namespace task {
 namespace game {
+class Game;
 namespace ui {
 
 CLASS( TurnCompleteButton, ::ui::object::Button )
 
-	TurnCompleteButton();
+	TurnCompleteButton( Game* game );
 
 	void Create() override;
 	void Iterate() override;
 	void Destroy() override;
 
-	void SetTurnCompleteStatus( const bool is_turn_complete );
+	void SetTurnActiveStatus( const bool is_turn_active );
+	void SetFlashingEnabled( const bool is_flashing_enabled );
 
 private:
+	Game* m_game;
+
+	bool m_is_turn_active;
+
 	const size_t FLASH_INTERVAL_MS = 10;
 	const float FLASH_ALPHA_MIN = 0.0f;
-	const float FLASH_ALPHA_MAX = 1.0f;
-	const float FLASH_ALPHA_STEP = 0.0125f;
+	const float FLASH_ALPHA_MAX_ACTIVE = 1.0f;
+	const float FLASH_ALPHA_MAX_INACTIVE = 0.25f;
+	const float FLASH_ALPHA_STEP_ACTIVE = 0.0125f;
+	const float FLASH_ALPHA_STEP_INACTIVE = 0.003125f;
 	util::Timer m_flash_timer;
 	float m_flash_alpha = 0.0f;
 	bool m_flash_reverse = false;
