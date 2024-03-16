@@ -60,7 +60,7 @@ CLASS( BottomBar, UI )
 	void UpdateMapFileName();
 
 	void SetTurnActiveStatus( const bool is_turn_active );
-	void SetTurnCompleteStatus( const bool is_turn_complete );
+	void SetTurnCompleteStatus( const bool is_turn_complete, const bool play_sound );
 
 private:
 	struct {

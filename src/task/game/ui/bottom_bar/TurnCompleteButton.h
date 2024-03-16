@@ -19,7 +19,7 @@ CLASS( TurnCompleteButton, ::ui::object::Button )
 	void Destroy() override;
 
 	void SetTurnActiveStatus( const bool is_turn_active );
-	void SetFlashingEnabled( const bool is_flashing_enabled );
+	void SetFlashingEnabled( const bool is_flashing_enabled, const bool play_sound );
 
 private:
 	Game* m_game;

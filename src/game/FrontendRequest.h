@@ -59,6 +59,7 @@ public:
 		} turn_active_status;
 		struct {
 			bool is_turn_complete;
+			bool play_sound;
 		} turn_complete_status;
 		struct {
 			slot_defines_t* slotdefs;
