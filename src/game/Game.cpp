@@ -359,7 +359,7 @@ void Game::Iterate() {
 							m_state->m_bindings->Call( Bindings::CS_ON_START );
 						}
 						NextTurn();
-						CheckTurnComplete();
+						CheckTurnComplete( false ); // units may spawn later
 
 					}
 				}
@@ -1648,7 +1648,7 @@ void Game::NextTurn() {
 	AddFrontendRequest( fr );
 }
 
-void Game::CheckTurnComplete() {
+void Game::CheckTurnComplete( const bool play_sound ) {
 	bool is_turn_complete = true;
 
 	for ( const auto& unit : m_units ) {
@@ -1663,6 +1663,7 @@ void Game::CheckTurnComplete() {
 		Log( "Sending turn complete status: " + std::to_string( m_is_turn_complete ) );
 		auto fr = FrontendRequest( FrontendRequest::FR_TURN_COMPLETE_STATUS );
 		fr.data.turn_complete_status.is_turn_complete = m_is_turn_complete;
+		fr.data.turn_complete_status.play_sound = play_sound;
 		AddFrontendRequest( fr );
 	}
 }

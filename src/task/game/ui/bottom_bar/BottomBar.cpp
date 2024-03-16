@@ -295,8 +295,8 @@ void BottomBar::SetTurnActiveStatus( const bool is_turn_active ) {
 	m_sections.turn_complete_button->SetTurnActiveStatus( is_turn_active );
 }
 
-void BottomBar::SetTurnCompleteStatus( const bool is_turn_complete ) {
-	m_sections.turn_complete_button->SetFlashingEnabled( is_turn_complete );
+void BottomBar::SetTurnCompleteStatus( const bool is_turn_complete, const bool play_sound ) {
+	m_sections.turn_complete_button->SetFlashingEnabled( is_turn_complete, play_sound );
 }
 
 }

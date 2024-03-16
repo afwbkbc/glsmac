@@ -353,7 +353,7 @@ private:
 	Turn* m_current_turn = nullptr;
 
 	bool m_is_turn_complete = false;
-	void CheckTurnComplete();
+	void CheckTurnComplete( const bool play_sound = true );
 
 };
 
