@@ -7,5 +7,6 @@ SET( SRC ${SRC}
 	${PWD}/SaveMap.cpp
 	${PWD}/LoadMap.cpp
 	${PWD}/ChatPopup.cpp
+	${PWD}/EndTurnConfirmation.cpp
 
 	PARENT_SCOPE )

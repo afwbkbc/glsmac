@@ -168,7 +168,7 @@ void Popup::AddStyles() {
 			s->SetFont( Style::A_FONT, "arialn.ttf", 18 );
 			s->SetColor( Style::A_TEXT_COLOR, Color::FromRGB( 120, 164, 212 ) );
 			s->Set( Style::A_HEIGHT, 18 );
-			s->Set( Style::A_ALIGN, UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
+			s->Set( Style::A_ALIGN, UIObject::ALIGN_HCENTER | UIObject::ALIGN_TOP );
 			s->Set( Style::A_Z_INDEX, 0.6f );
 		}
 	);

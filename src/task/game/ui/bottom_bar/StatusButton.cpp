@@ -2,6 +2,7 @@
 
 #include "task/game/Game.h"
 #include "engine/Engine.h"
+#include "../popup/EndTurnConfirmation.h"
 
 namespace task {
 namespace game {
@@ -15,9 +16,13 @@ StatusButton::StatusButton( Game* game )
 			if ( m_is_clickable ) {
 				switch ( m_status_type ) {
 					case ::game::Turn::TS_TURN_ACTIVE: {
-
-						Log( "TODO: turn complete confirmation" );
-
+						NEWV( popup, ui::popup::EndTurnConfirmation, m_game, UH( this ) {
+							SetStatus( ::game::Turn::TS_PLEASE_WAIT );
+							m_game->CompleteTurn();
+							m_flashing->Show();
+						} );
+						popup->Open();
+						RemoveStyleModifier( Style::M_HOVER );
 						break;
 					}
 					case ::game::Turn::TS_TURN_COMPLETE: {

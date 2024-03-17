@@ -40,6 +40,7 @@ void PleaseDontGo::Create() {
 		}
 	);
 	AddChild( m_choices );
+	m_choices->SetValue( 2 );
 
 	NEW( m_sound, SoundEffect, SubClass( "PleaseDontGoSound" ) );
 	AddChild( m_sound );
