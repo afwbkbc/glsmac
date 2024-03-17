@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "types/Buffer.h"
-
 #include "gse/Value.h"
 
 namespace game {
@@ -21,6 +20,9 @@ public:
 		ET_UNIT_SKIP_TURN,
 		ET_COMPLETE_TURN,
 		ET_UNCOMPLETE_TURN,
+		ET_FINALIZE_TURN,
+		ET_TURN_FINALIZED,
+		ET_ADVANCE_TURN,
 	};
 
 	Event( const size_t initiator_slot, const event_type_t type );

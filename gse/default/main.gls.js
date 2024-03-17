@@ -51,24 +51,18 @@ let random_health = () => {
         let x = 0;
         while (x < w) {
             if (x % 2 == y % 2) {
-                if (#game.random.get_int(0, 1) == 1) {
+                if (#game.random.get_int(0, 24) == 0) {
                     let owner = random_player();
                     let tile = #game.map.get_tile(x, y);
-                    let units_count = #game.random.get_int(1, 4);
-                    if (#game.random.get_int(0, 1) == 0) {
-                        units_count += #game.random.get_int(0, 4);
-                        if (#game.random.get_int(0, 1) == 0) {
-                            units_count += #game.random.get_int(0, 4);
-                        }
-                    }
+                    let units_count = #game.random.get_int(1, 2);
                     let i = 0;
                     while (i++ < units_count) {
                         if (tile.is_land) {
-                            if (#game.random.get_int(0, 2) != 1) {
+                            if (#game.random.get_int(0, 4) != 0) {
                                 #game.units.spawn('MindWorms', owner, tile, random_morale(), random_health());
                                 units_spawned++;
                             } else {
-                                if (tile.has_fungus && #game.random.get_int(0, 1) == 0) {
+                                if (tile.has_fungus && #game.random.get_int(0, 3) == 0) {
                                     // morale depends on count of fungus tiles around
                                     let morale = 1;
                                     let neighbours = tile.get_surrounding_tiles();
@@ -88,7 +82,7 @@ let random_health = () => {
                                 }
                             }
                         } else {
-                            if (#game.random.get_int(0, 1) == 1) {
+                            if (#game.random.get_int(0, 3) == 0) {
                                 #game.units.spawn('SeaLurk', owner, tile, random_morale(), random_health());
                                 units_spawned++;
                             }

@@ -8,6 +8,8 @@
 #include "game/Game.h"
 #include "game/State.h"
 
+#include "StaticDef.h"
+
 namespace game {
 namespace unit {
 
@@ -17,6 +19,7 @@ const Unit::morale_t Unit::MORALE_MAX = 7;
 
 const Unit::health_t Unit::HEALTH_MIN = 0.0f;
 const Unit::health_t Unit::HEALTH_MAX = 1.0f;
+const Unit::health_t Unit::HEALTH_PER_TURN = 0.1f;
 
 static size_t next_id = 1;
 const size_t Unit::GetNextId() {
@@ -84,6 +87,23 @@ void Unit::UpdateMoves( Game* game, const map::Tile* dst_tile ) {
 		m_movement = 0.0f;
 	}
 
+}
+
+void Unit::OnTurn() {
+	// TODO: move to gse?
+
+	ASSERT_NOLOG( m_def->m_type == Def::DT_STATIC, "only static units are supported for now" );
+	const auto* def = (StaticDef*)m_def;
+
+	// refresh moves
+	if ( def->m_movement_type != StaticDef::MT_IMMOVABLE ) {
+		m_movement = def->m_movement_per_turn;
+	}
+
+	// replenish some health
+	if ( m_health < HEALTH_MAX ) {
+		m_health = std::min( m_health + HEALTH_PER_TURN, HEALTH_MAX );
+	}
 }
 
 const std::string& Unit::GetMoraleString( const morale_t morale ) {

@@ -84,12 +84,10 @@ const bool Player::IsTurnCompleted() const {
 }
 
 void Player::CompleteTurn() {
-	ASSERT( !m_is_turn_completed, "turn already completed" );
 	m_is_turn_completed = true;
 }
 
 void Player::UncompleteTurn() {
-	ASSERT( m_is_turn_completed, "turn not completed" );
 	m_is_turn_completed = false;
 }
 

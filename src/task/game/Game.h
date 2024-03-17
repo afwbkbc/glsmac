@@ -33,6 +33,7 @@
 #include "game/Game.h"
 #include "game/FrontendRequest.h"
 #include "game/unit/StaticDef.h"
+#include "game/Turn.h"
 
 #include "game/map/Consts.h"
 #include "game/map_editor/MapEditor.h"
@@ -145,6 +146,8 @@ private:
 
 	size_t m_slot_index = 0;
 	bool m_is_turn_active = false;
+	::game::Turn::turn_status_t m_turn_status = ::game::Turn::TS_PLEASE_WAIT;
+	size_t m_turn_id = 0;
 	void ActivateTurn();
 	void DeactivateTurn();
 

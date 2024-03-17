@@ -7,6 +7,9 @@
 #include "SkipUnitTurn.h"
 #include "CompleteTurn.h"
 #include "UncompleteTurn.h"
+#include "FinalizeTurn.h"
+#include "TurnFinalized.h"
+#include "AdvanceTurn.h"
 
 namespace game {
 namespace event {
@@ -34,6 +37,9 @@ const types::Buffer Event::Serialize( const Event* event ) {
 		SERIALIZE( ET_UNIT_SKIP_TURN, SkipUnitTurn )
 		SERIALIZE( ET_COMPLETE_TURN, CompleteTurn )
 		SERIALIZE( ET_UNCOMPLETE_TURN, UncompleteTurn )
+		SERIALIZE( ET_FINALIZE_TURN, FinalizeTurn )
+		SERIALIZE( ET_TURN_FINALIZED, TurnFinalized )
+		SERIALIZE( ET_ADVANCE_TURN, AdvanceTurn )
 		default:
 			THROW( "unknown event type on write: " + std::to_string( event->m_type ) );
 	}
@@ -58,6 +64,9 @@ Event* Event::Unserialize( types::Buffer& buf ) {
 		UNSERIALIZE( ET_UNIT_SKIP_TURN, SkipUnitTurn )
 		UNSERIALIZE( ET_COMPLETE_TURN, CompleteTurn )
 		UNSERIALIZE( ET_UNCOMPLETE_TURN, UncompleteTurn )
+		UNSERIALIZE( ET_FINALIZE_TURN, FinalizeTurn )
+		UNSERIALIZE( ET_TURN_FINALIZED, TurnFinalized )
+		UNSERIALIZE( ET_ADVANCE_TURN, AdvanceTurn )
 		default:
 			THROW( "unknown event type on read: " + std::to_string( type ) );
 	}

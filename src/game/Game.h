@@ -292,15 +292,24 @@ public:
 	unit::Unit* GetUnit( const size_t id ) const;
 	const unit::Def* GetUnitDef( const std::string& name ) const;
 	void AddEvent( event::Event* event );
+	void RefreshUnit( const unit::Unit* unit );
 	void DefineUnit( const unit::Def* def );
 	void SpawnUnit( unit::Unit* unit );
 	void SkipUnitTurn( const size_t unit_id );
 	void DespawnUnit( const size_t unit_id );
 	void MoveUnit( unit::Unit* unit, map::Tile* dst_tile, const bool is_move_successful );
+	const size_t GetTurnId() const;
 	const bool IsTurnActive() const;
 	const bool IsTurnCompleted( const size_t slot_num ) const;
+	const bool IsTurnChecksumValid( const util::CRC32::crc_t checksum ) const;
 	void CompleteTurn( const size_t slot_num );
 	void UncompleteTurn( const size_t slot_num );
+	void FinalizeTurn();
+	void AdvanceTurn( const size_t turn_id );
+
+	void GlobalFinalizeTurn();
+	void GlobalProcessTurnFinalized( const size_t slot_num, const util::CRC32::crc_t checksum );
+	void GlobalAdvanceTurn();
 
 private:
 
@@ -330,13 +339,14 @@ private:
 
 	response_map_data_t* m_response_map_data = nullptr;
 
+	CRC32::crc_t m_turn_checksum = 0;
+	std::unordered_set< size_t > m_verified_turn_checksum_slots = {};
+
 	std::vector< FrontendRequest >* m_pending_frontend_requests = nullptr;
 	void AddFrontendRequest( const FrontendRequest& request );
 
 	void InitGame( MT_Response& response, MT_CANCELABLE );
 	void ResetGame();
-
-	void NextTurn();
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)
 	util::Random* m_random = nullptr;

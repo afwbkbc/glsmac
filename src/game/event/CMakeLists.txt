@@ -8,5 +8,8 @@ SET( SRC ${SRC}
 	${PWD}/SkipUnitTurn.cpp
 	${PWD}/CompleteTurn.cpp
 	${PWD}/UncompleteTurn.cpp
+	${PWD}/FinalizeTurn.cpp
+	${PWD}/TurnFinalized.cpp
+	${PWD}/AdvanceTurn.cpp
 
 	PARENT_SCOPE )

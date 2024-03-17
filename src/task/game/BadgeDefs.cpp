@@ -180,7 +180,7 @@ InstancedSprite* BadgeDefs::GetFakeBadgeSprite() const {
 }
 
 Sprite* BadgeDefs::GetBadgeHealthbarSprite( const float health ) {
-	return &m_healthbar_sprites.at( floor( health * s_consts.healthbars.resolution ) );
+	return &m_healthbar_sprites.at( round( health * ( s_consts.healthbars.resolution - 1 ) ) );
 }
 
 const size_t BadgeDefs::GetBadgeBlinkInterval() const {

@@ -4,8 +4,10 @@
 #include "types/Exception.h"
 #include "util/FS.h"
 #include "types/Buffer.h"
-
 #include "game/State.h"
+#include "event/FinalizeTurn.h"
+#include "event/TurnFinalized.h"
+#include "event/AdvanceTurn.h"
 
 using namespace game::connection;
 using namespace game::bindings;
@@ -357,8 +359,8 @@ void Game::Iterate() {
 						NEW( m_current_turn, Turn );
 						if ( m_state->IsMaster() ) {
 							m_state->m_bindings->Call( Bindings::CS_ON_START );
+							GlobalAdvanceTurn();
 						}
-						NextTurn();
 						CheckTurnComplete();
 
 					}
@@ -989,6 +991,14 @@ void Game::AddEvent( event::Event* event ) {
 	}
 }
 
+void Game::RefreshUnit( const unit::Unit* unit ) {
+	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_REFRESH );
+	fr.data.unit_refresh.unit_id = unit->m_id;
+	fr.data.unit_refresh.movement = unit->m_movement;
+	fr.data.unit_refresh.health = unit->m_health;
+	AddFrontendRequest( fr );
+}
+
 void Game::DefineUnit( const unit::Def* def ) {
 	Log( "Defining unit ('" + def->m_id + "')" );
 
@@ -1061,10 +1071,8 @@ void Game::SkipUnitTurn( const size_t unit_id ) {
 
 	unit->m_movement = 0.0f;
 
-	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_REFRESH );
-	fr.data.unit_refresh.unit_id = unit->m_id;
-	fr.data.unit_refresh.movement_left = unit->m_movement;
-	AddFrontendRequest( fr );
+	RefreshUnit( unit );
+
 	CheckTurnComplete();
 }
 
@@ -1137,58 +1145,159 @@ void Game::MoveUnit( unit::Unit* unit, map::Tile* dst_tile, const bool is_move_s
 		}
 	}
 	else {
-		// refresh unit badge on frontend
-		auto fr = FrontendRequest( FrontendRequest::FR_UNIT_REFRESH );
-		fr.data.unit_refresh.unit_id = unit->m_id;
-		fr.data.unit_refresh.movement_left = unit->m_movement;
-		AddFrontendRequest( fr );
+		RefreshUnit( unit ); // update badge
 		CheckTurnComplete();
 	}
 
 }
 
+const size_t Game::GetTurnId() const {
+	return m_current_turn->GetId();
+}
+
 const bool Game::IsTurnActive() const {
-	return m_current_turn && m_current_turn->IsActive();
+	return m_current_turn->IsActive();
 }
 
 const bool Game::IsTurnCompleted( const size_t slot_num ) const {
 	const auto& slot = m_state->m_slots.GetSlot( slot_num );
 	ASSERT( slot.GetState() == Slot::SS_PLAYER, "slot is not player" );
 	const auto* player = slot.GetPlayer();
-	ASSERT_NOLOG( player, "slot player not set" );
+	ASSERT( player, "slot player not set" );
 	return player->IsTurnCompleted();
+}
+
+const bool Game::IsTurnChecksumValid( const util::CRC32::crc_t checksum ) const {
+	return m_turn_checksum == checksum;
 }
 
 void Game::CompleteTurn( const size_t slot_num ) {
 	const auto& slot = m_state->m_slots.GetSlot( slot_num );
-	ASSERT_NOLOG( slot.GetState() == Slot::SS_PLAYER, "slot is not player" );
+	ASSERT( slot.GetState() == Slot::SS_PLAYER, "slot is not player" );
 	auto* player = slot.GetPlayer();
-	ASSERT_NOLOG( player, "slot player not set" );
+	ASSERT( player, "slot player not set" );
 	player->CompleteTurn();
+
 	if ( slot_num == m_slot_num ) {
 		ASSERT( m_current_turn, "turn not set" );
-		m_current_turn->Deactivate();
 		auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
 		fr.data.turn_status.status = Turn::TS_WAITING_FOR_PLAYERS;
 		AddFrontendRequest( fr );
+	}
+
+	if ( m_state->IsMaster() ) {
+		// check if all players completed their turns
+		bool is_turn_complete = true;
+		for ( const auto& slot : m_state->m_slots.GetSlots() ) {
+			if ( slot.GetState() == Slot::SS_PLAYER && !slot.GetPlayer()->IsTurnCompleted() ) {
+				is_turn_complete = false;
+				break;
+			}
+		}
+		if ( is_turn_complete ) {
+			GlobalFinalizeTurn();
+		}
 	}
 }
 
 void Game::UncompleteTurn( const size_t slot_num ) {
 	const auto& slot = m_state->m_slots.GetSlot( slot_num );
-	ASSERT_NOLOG( slot.GetState() == Slot::SS_PLAYER, "slot is not player" );
+	ASSERT( slot.GetState() == Slot::SS_PLAYER, "slot is not player" );
 	auto* player = slot.GetPlayer();
-	ASSERT_NOLOG( player, "slot player not set" );
+	ASSERT( player, "slot player not set" );
 	player->UncompleteTurn();
 	if ( slot_num == m_slot_num ) {
 		ASSERT( m_current_turn, "turn not set" );
-		m_current_turn->Activate();
+		m_is_turn_complete = false;
+		CheckTurnComplete();
+		if ( !m_is_turn_complete ) {
+			auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
+			fr.data.turn_status.status = Turn::TS_TURN_ACTIVE;
+			AddFrontendRequest( fr );
+		}
+	}
+}
+
+void Game::FinalizeTurn() {
+	m_turn_checksum = m_current_turn->FinalizeAndChecksum();
+	AddEvent( new event::TurnFinalized( m_slot_num, m_turn_checksum ) );
+}
+
+void Game::AdvanceTurn( const size_t turn_id ) {
+	m_current_turn->AdvanceTurn( turn_id );
+	m_is_turn_complete = false;
+	Log( "Turn started: " + std::to_string( turn_id ) );
+
+	{
+		auto fr = FrontendRequest( FrontendRequest::FR_TURN_ADVANCE );
+		fr.data.turn_advance.turn_id = turn_id;
+		AddFrontendRequest( fr );
+	}
+
+	for ( auto& it : m_units ) {
+		it.second->OnTurn();
+		RefreshUnit( it.second );
+	}
+
+	m_state->m_bindings->Call( Bindings::CS_ON_TURN );
+
+	for ( const auto& slot : m_state->m_slots.GetSlots() ) {
+		if ( slot.GetState() == Slot::SS_PLAYER ) {
+			slot.GetPlayer()->UncompleteTurn();
+		}
+	}
+
+	m_is_turn_complete = false;
+	CheckTurnComplete();
+	if ( !m_is_turn_complete ) {
 		auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
 		fr.data.turn_status.status = Turn::TS_TURN_ACTIVE;
 		AddFrontendRequest( fr );
-		m_is_turn_complete = false;
-		CheckTurnComplete();
 	}
+
+}
+
+void Game::GlobalFinalizeTurn() {
+	ASSERT( m_state->IsMaster(), "not master" );
+	ASSERT( m_current_turn->IsActive(), "current turn not active" );
+	ASSERT( m_verified_turn_checksum_slots.empty(), "turn finalization slots not empty" );
+	Log( "Finalizing turn ( checksum = " + std::to_string( m_turn_checksum ) + " )" );
+	AddEvent( new event::FinalizeTurn( m_slot_num ) );
+}
+
+void Game::GlobalProcessTurnFinalized( const size_t slot_num, const util::CRC32::crc_t checksum ) {
+	ASSERT( m_state->IsMaster(), "not master" );
+	ASSERT( m_turn_checksum == checksum, "turn checksum mismatch" );
+	ASSERT( m_verified_turn_checksum_slots.find( slot_num ) == m_verified_turn_checksum_slots.end(), "duplicate turn finalization from " + std::to_string( slot_num ) );
+	m_verified_turn_checksum_slots.insert( slot_num );
+
+	bool is_turn_finalized = true;
+	for ( const auto& slot : m_state->m_slots.GetSlots() ) {
+		if (
+			slot.GetState() == Slot::SS_PLAYER &&
+				m_verified_turn_checksum_slots.find( slot.GetIndex() ) == m_verified_turn_checksum_slots.end()
+			) {
+			is_turn_finalized = false;
+			break;
+		}
+	}
+
+	if ( is_turn_finalized ) {
+		GlobalAdvanceTurn();
+	}
+}
+
+static size_t s_turn_id = 0;
+void Game::GlobalAdvanceTurn() {
+	ASSERT( m_state->IsMaster(), "not master" );
+
+	// reset some states
+	s_turn_id++;
+	m_verified_turn_checksum_slots.clear();
+	m_turn_checksum = 0;
+
+	Log( "Advancing turn ( id = " + std::to_string( s_turn_id ) + " )" );
+	AddEvent( new event::AdvanceTurn( m_slot_num, s_turn_id ) );
 }
 
 void Game::ValidateEvent( event::Event* event ) const {
@@ -1627,21 +1736,9 @@ void Game::ResetGame() {
 	}
 }
 
-void Game::NextTurn() {
-	m_current_turn->Activate();
-	Log( "turn started" );
-
-	m_state->m_bindings->Call( Bindings::CS_ON_TURN );
-
-	auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
-	fr.data.turn_status.status = Turn::TS_TURN_ACTIVE;
-	AddFrontendRequest( fr );
-
-	CheckTurnComplete();
-}
-
 void Game::CheckTurnComplete() {
-	if ( !m_current_turn ) {
+	ASSERT( m_current_turn, "current turn not set" );
+	if ( !m_current_turn->IsActive() ) {
 		// turn not active
 		return;
 	}

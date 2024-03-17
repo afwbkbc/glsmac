@@ -17,6 +17,7 @@ public:
 		FR_ERROR,
 		FR_GLOBAL_MESSAGE,
 		FR_TURN_STATUS,
+		FR_TURN_ADVANCE,
 		FR_SLOT_DEFINE,
 		FR_UNIT_DEFINE,
 		FR_UNIT_SPAWN,
@@ -58,8 +59,8 @@ public:
 			Turn::turn_status_t status;
 		} turn_status;
 		struct {
-			bool is_turn_complete;
-		} turn_complete_status;
+			size_t turn_id;
+		} turn_advance;
 		struct {
 			slot_defines_t* slotdefs;
 		} slot_define;
@@ -88,7 +89,8 @@ public:
 		} unit_despawn;
 		struct {
 			size_t unit_id;
-			unit::Unit::movement_t movement_left;
+			unit::Unit::movement_t movement;
+			unit::Unit::health_t health;
 		} unit_refresh;
 		struct {
 			size_t unit_id;

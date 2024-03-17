@@ -32,6 +32,7 @@ public:
 	typedef float health_t;
 	static const health_t HEALTH_MIN;
 	static const health_t HEALTH_MAX;
+	static const health_t HEALTH_PER_TURN;
 
 	Unit(
 		const size_t id,
@@ -61,6 +62,8 @@ public:
 	static const movement_t MINIMUM_MOVEMENT_TO_KEEP;
 	const bool HasMovesLeft() const;
 	void UpdateMoves( Game* game, const map::Tile* dst_tile );
+
+	void OnTurn();
 
 	static const std::string& GetMoraleString( const morale_t morale );
 

@@ -16,17 +16,23 @@ const bool Turn::IsActive() const {
 	return m_is_active;
 }
 
-void Turn::Activate() {
+const size_t Turn::GetId() const {
+	return m_id;
+}
+
+void Turn::AdvanceTurn( const size_t turn_id ) {
 	ASSERT_NOLOG( !m_is_active, "turn already active" );
+	m_id = turn_id;
 	m_is_active = true;
 }
 
-void Turn::Deactivate() {
+const util::CRC32::crc_t Turn::FinalizeAndChecksum() {
 	ASSERT_NOLOG( m_is_active, "turn not active" );
 	m_is_active = false;
+	return util::CRC32::CalculateFromBuffer( event::Event::SerializeMultiple( m_events ) );
 }
 
-void Turn::AddEvent( const event::Event* event ) {
+void Turn::AddEvent( event::Event* event ) {
 	m_events.push_back( event );
 }
 

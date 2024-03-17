@@ -1006,10 +1006,10 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 			break;
 		}
 		case ::game::FrontendRequest::FR_TURN_STATUS: {
-			const auto& d = request.data.turn_status;
+			m_turn_status = request.data.turn_status.status;
 			ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
-			m_ui.bottom_bar->SetTurnStatus( d.status );
-			bool is_turn_active = d.status == ::game::Turn::TS_TURN_ACTIVE || d.status == ::game::Turn::TS_TURN_COMPLETE;
+			m_ui.bottom_bar->SetTurnStatus( m_turn_status );
+			bool is_turn_active = m_turn_status == ::game::Turn::TS_TURN_ACTIVE || m_turn_status == ::game::Turn::TS_TURN_COMPLETE;
 			if ( m_is_turn_active != is_turn_active ) {
 				m_is_turn_active = is_turn_active;
 				if ( m_is_turn_active ) {
@@ -1024,6 +1024,10 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 					}
 				}
 			}
+			break;
+		}
+		case ::game::FrontendRequest::FR_TURN_ADVANCE: {
+			m_turn_id = request.data.turn_advance.turn_id;
 			break;
 		}
 		case ::game::FrontendRequest::FR_SLOT_DEFINE: {
@@ -1070,16 +1074,22 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 		case ::game::FrontendRequest::FR_UNIT_REFRESH: {
 			const auto& d = request.data.unit_refresh;
 			auto* unit_state = m_unit_states.at( d.unit_id );
-			unit_state->SetMovement( d.movement_left );
+			unit_state->SetMovement( d.movement );
+			unit_state->SetHealth( d.health );
 			RefreshUnit( unit_state );
 			unit_state->GetTile()->Render(
 				m_selected_unit_state
 					? m_selected_unit_state->GetId()
 					: 0
 			);
-			if ( m_selected_unit_state == unit_state && !unit_state->IsActive() ) {
+			if ( unit_state->IsActive() ) {
+				AddSelectable( unit_state );
+			}
+			else {
 				RemoveSelectable( unit_state );
-				SelectNextUnitOrSwitchToTileSelection();
+				if ( m_selected_unit_state == unit_state ) {
+					SelectNextUnitOrSwitchToTileSelection();
+				}
 			}
 			break;
 		}
@@ -1318,6 +1328,12 @@ void Game::Initialize(
 							if ( m_selected_unit_state ) {
 								const auto event = ::game::event::SkipUnitTurn( m_slot_index, m_selected_unit_state->GetId() );
 								game->MT_AddEvent( &event );
+							}
+							break;
+						}
+						case UIEvent::K_ENTER: {
+							if ( m_turn_status == ::game::Turn::TS_TURN_COMPLETE ) {
+								CompleteTurn();
 							}
 							break;
 						}
@@ -1711,12 +1727,14 @@ void Game::SendChatMessage( const std::string& text ) {
 }
 
 void Game::CompleteTurn() {
-	const auto event = ::game::event::CompleteTurn( m_slot_index );
+	m_is_turn_active = false;
+	const auto event = ::game::event::CompleteTurn( m_slot_index, m_turn_id );
 	g_engine->GetGame()->MT_AddEvent( &event );
 }
 
 void Game::UncompleteTurn() {
-	const auto event = ::game::event::UncompleteTurn( m_slot_index );
+	m_is_turn_active = false;
+	const auto event = ::game::event::UncompleteTurn( m_slot_index, m_turn_id );
 	g_engine->GetGame()->MT_AddEvent( &event );
 }
 

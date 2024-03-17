@@ -5,9 +5,9 @@
 namespace game {
 namespace event {
 
-class CompleteTurn : public Event {
+class AdvanceTurn : public Event {
 public:
-	CompleteTurn( const size_t initiator_slot, const size_t turn_id );
+	AdvanceTurn( const size_t initiator_slot, const size_t turn_id );
 
 	const std::string* Validate( const Game* game ) const override;
 	const gse::Value Apply( game::Game* game ) const override;
@@ -18,8 +18,8 @@ private:
 
 	const size_t m_turn_id;
 
-	static void Serialize( types::Buffer& buf, const CompleteTurn* event );
-	static CompleteTurn* Unserialize( types::Buffer& buf, const size_t initiator_slot );
+	static void Serialize( types::Buffer& buf, const AdvanceTurn* event );
+	static AdvanceTurn* Unserialize( types::Buffer& buf, const size_t initiator_slot );
 
 };
 

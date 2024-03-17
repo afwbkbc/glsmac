@@ -10,5 +10,6 @@ SET( SRC ${SRC}
 	${PWD}/UUID.cpp
 	${PWD}/ArgParser.cpp
 	${PWD}/String.cpp
+	${PWD}/CRC32.cpp
 
 	PARENT_SCOPE )

@@ -119,8 +119,7 @@ const std::string Unit::GetMovesString() const {
 
 void Unit::Iterate() {
 	while ( m_render.badge.blink.timer.HasTicked() ) {
-		auto& ba = m_render.badge.def->instanced_sprite->actor;
-		if ( ba->HasInstance( m_render.badge.instance_id ) ) {
+		if ( IsBadgeVisible() ) {
 			HideBadge();
 		}
 		else {
@@ -165,6 +164,10 @@ void Unit::Hide() {
 	}
 }
 
+const bool Unit::IsBadgeVisible() const {
+	return m_render.badge.def->instanced_sprite->actor->HasInstance( m_render.badge.instance_id );
+}
+
 void Unit::ShowBadge() {
 	m_render.badge.def->instanced_sprite->actor->SetInstance( m_render.badge.instance_id, BadgeDefs::GetBadgeCoords( m_render.coords ) );
 	m_render.badge.healthbar.def->instanced_sprite->actor->SetInstance( m_render.badge.healthbar.instance_id, BadgeDefs::GetBadgeHealthbarCoords( m_render.coords ) );
@@ -204,18 +207,34 @@ void Unit::StopBadgeBlink( const bool is_badge_shown ) {
 }
 
 void Unit::Refresh() {
-	const bool was_active = m_is_active;
-	m_is_active = ShouldBeActive();
-	if ( was_active != m_is_active ) {
+	if ( m_need_refresh ) {
+		m_need_refresh = false;
+		m_is_active = ShouldBeActive();
 		if ( !m_is_active ) {
 			StopBadgeBlink( false );
 		}
+		const bool is_badge_visible = IsBadgeVisible();
+		if ( is_badge_visible ) {
+			HideBadge();
+		}
 		m_render.badge.def = m_slot->GetUnitBadgeSprite( m_morale, m_is_active );
+		m_render.badge.instance_id = m_render.badge.def->next_instance_id++;
+		m_render.badge.healthbar.def = m_badge_defs->GetBadgeHealthbarSprite( m_health );
+		m_render.badge.healthbar.instance_id = m_render.badge.healthbar.def->next_instance_id++;
+		if ( is_badge_visible ) {
+			ShowBadge();
+		}
 	}
 }
 
 void Unit::SetMovement( const ::game::unit::Unit::movement_t movement ) {
 	m_movement = movement;
+	m_need_refresh = true;
+}
+
+void Unit::SetHealth( const ::game::unit::Unit::health_t health ) {
+	m_health = health;
+	m_need_refresh = true;
 }
 
 const bool Unit::CanMove() const {

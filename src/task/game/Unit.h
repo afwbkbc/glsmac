@@ -53,6 +53,7 @@ public:
 	void Show();
 	void Hide();
 
+	const bool IsBadgeVisible() const;
 	void ShowBadge();
 	void HideBadge();
 
@@ -65,6 +66,7 @@ public:
 	void Refresh();
 
 	void SetMovement( const ::game::unit::Unit::movement_t movement );
+	void SetHealth( const ::game::unit::Unit::health_t health );
 	const bool CanMove() const;
 
 	void MoveTo( Tile* dst_tile, const Vec3& dst_render_coords );
@@ -102,6 +104,8 @@ private:
 	::game::unit::Unit::movement_t m_movement = 0.0f;
 	::game::unit::Unit::morale_t m_morale = 0;
 	::game::unit::Unit::health_t m_health = 0;
+
+	bool m_need_refresh = true;
 
 	const bool ShouldBeActive() const;
 };
