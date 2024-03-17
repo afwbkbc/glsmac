@@ -19,7 +19,7 @@
 #include "TilePreview.h"
 #include "MiddleArea.h"
 #include "task/game/ui/bottom_bar/units_list/UnitsList.h"
-#include "TurnCompleteButton.h"
+#include "StatusButton.h"
 #include "MiniMap.h"
 
 // side menus
@@ -59,8 +59,7 @@ CLASS( BottomBar, UI )
 	void AddMessage( const std::string& text );
 	void UpdateMapFileName();
 
-	void SetTurnActiveStatus( const bool is_turn_active );
-	void SetTurnCompleteStatus( const bool is_turn_complete, const bool play_sound );
+	void SetTurnStatus( const ::game::Turn::turn_status_t status );
 
 private:
 	struct {
@@ -84,7 +83,7 @@ private:
 		TilePreview* tile_preview = nullptr;
 		MiddleArea* middle_area = nullptr;
 		UnitsList* units_list = nullptr;
-		TurnCompleteButton* turn_complete_button = nullptr;
+		StatusButton* status_button = nullptr;
 		MiniMap* mini_map = nullptr;
 	} m_sections = {};
 

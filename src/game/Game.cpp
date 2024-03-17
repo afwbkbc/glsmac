@@ -359,7 +359,7 @@ void Game::Iterate() {
 							m_state->m_bindings->Call( Bindings::CS_ON_START );
 						}
 						NextTurn();
-						CheckTurnComplete( false ); // units may spawn later
+						CheckTurnComplete();
 
 					}
 				}
@@ -1168,8 +1168,8 @@ void Game::CompleteTurn( const size_t slot_num ) {
 	if ( slot_num == m_slot_num ) {
 		ASSERT( m_current_turn, "turn not set" );
 		m_current_turn->Deactivate();
-		auto fr = FrontendRequest( FrontendRequest::FR_TURN_ACTIVE_STATUS );
-		fr.data.turn_active_status.is_turn_active = false;
+		auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
+		fr.data.turn_status.status = Turn::TS_WAITING_FOR_PLAYERS;
 		AddFrontendRequest( fr );
 	}
 }
@@ -1183,8 +1183,8 @@ void Game::UncompleteTurn( const size_t slot_num ) {
 	if ( slot_num == m_slot_num ) {
 		ASSERT( m_current_turn, "turn not set" );
 		m_current_turn->Activate();
-		auto fr = FrontendRequest( FrontendRequest::FR_TURN_ACTIVE_STATUS );
-		fr.data.turn_active_status.is_turn_active = true;
+		auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
+		fr.data.turn_status.status = Turn::TS_TURN_ACTIVE;
 		AddFrontendRequest( fr );
 		m_is_turn_complete = false;
 		CheckTurnComplete();
@@ -1517,16 +1517,6 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				// wait for server to initialize
 				ui->SetLoaderText( "Waiting for server" );
 
-				connection->m_on_players_list_update = [ this ]() -> void {
-					size_t slots_i = 0;
-					for ( auto& slot : m_state->m_slots.GetSlots() ) {
-						//m_players_section->UpdateSlot( slots_i++, &slot );
-						int a = 5;
-						a++;
-					}
-
-				};
-
 				const auto f_download_map = [ this, ui, connection ] {
 
 					ui->SetLoaderText( "Downloading world snapshot" );
@@ -1643,12 +1633,19 @@ void Game::NextTurn() {
 
 	m_state->m_bindings->Call( Bindings::CS_ON_TURN );
 
-	auto fr = FrontendRequest( FrontendRequest::FR_TURN_ACTIVE_STATUS );
-	fr.data.turn_active_status.is_turn_active = true;
+	auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
+	fr.data.turn_status.status = Turn::TS_TURN_ACTIVE;
 	AddFrontendRequest( fr );
+
+	CheckTurnComplete();
 }
 
-void Game::CheckTurnComplete( const bool play_sound ) {
+void Game::CheckTurnComplete() {
+	if ( !m_current_turn ) {
+		// turn not active
+		return;
+	}
+
 	bool is_turn_complete = true;
 
 	for ( const auto& unit : m_units ) {
@@ -1661,9 +1658,10 @@ void Game::CheckTurnComplete( const bool play_sound ) {
 	if ( m_is_turn_complete != is_turn_complete ) {
 		m_is_turn_complete = is_turn_complete;
 		Log( "Sending turn complete status: " + std::to_string( m_is_turn_complete ) );
-		auto fr = FrontendRequest( FrontendRequest::FR_TURN_COMPLETE_STATUS );
-		fr.data.turn_complete_status.is_turn_complete = m_is_turn_complete;
-		fr.data.turn_complete_status.play_sound = play_sound;
+		auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
+		fr.data.turn_status.status = m_is_turn_complete
+			? Turn::TS_TURN_COMPLETE
+			: Turn::TS_TURN_ACTIVE;
 		AddFrontendRequest( fr );
 	}
 }

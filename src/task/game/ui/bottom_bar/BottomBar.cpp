@@ -126,8 +126,8 @@ void BottomBar::Create() {
 	}
 	AddChild( m_sections.mini_map );
 
-	NEW( m_sections.turn_complete_button, TurnCompleteButton, m_game );
-	m_sections.mini_map->AddChild( m_sections.turn_complete_button );
+	NEW( m_sections.status_button, StatusButton, m_game );
+	m_sections.mini_map->AddChild( m_sections.status_button );
 
 	// side menus
 	auto* ui = g_engine->GetUI();
@@ -197,7 +197,7 @@ void BottomBar::Destroy() {
 	RemoveChild( m_sections.tile_preview );
 	RemoveChild( m_sections.middle_area );
 	RemoveChild( m_sections.units_list );
-	m_sections.mini_map->RemoveChild( m_sections.turn_complete_button );
+	m_sections.mini_map->RemoveChild( m_sections.status_button );
 	RemoveChild( m_sections.mini_map );
 
 	auto* ui = g_engine->GetUI();
@@ -291,12 +291,8 @@ void BottomBar::UpdateMapFileName() {
 	m_sections.middle_area->UpdateMapFileName();
 }
 
-void BottomBar::SetTurnActiveStatus( const bool is_turn_active ) {
-	m_sections.turn_complete_button->SetTurnActiveStatus( is_turn_active );
-}
-
-void BottomBar::SetTurnCompleteStatus( const bool is_turn_complete, const bool play_sound ) {
-	m_sections.turn_complete_button->SetFlashingEnabled( is_turn_complete, play_sound );
+void BottomBar::SetTurnStatus( const ::game::Turn::turn_status_t status ) {
+	m_sections.status_button->SetStatus( status );
 }
 
 }

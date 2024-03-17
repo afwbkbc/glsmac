@@ -4,6 +4,7 @@
 #include <string>
 
 #include "unit/Unit.h"
+#include "Turn.h"
 
 namespace game {
 
@@ -15,8 +16,7 @@ public:
 		FR_QUIT,
 		FR_ERROR,
 		FR_GLOBAL_MESSAGE,
-		FR_TURN_ACTIVE_STATUS,
-		FR_TURN_COMPLETE_STATUS,
+		FR_TURN_STATUS,
 		FR_SLOT_DEFINE,
 		FR_UNIT_DEFINE,
 		FR_UNIT_SPAWN,
@@ -55,11 +55,10 @@ public:
 			const std::string* message;
 		} global_message;
 		struct {
-			bool is_turn_active;
-		} turn_active_status;
+			Turn::turn_status_t status;
+		} turn_status;
 		struct {
 			bool is_turn_complete;
-			bool play_sound;
 		} turn_complete_status;
 		struct {
 			slot_defines_t* slotdefs;

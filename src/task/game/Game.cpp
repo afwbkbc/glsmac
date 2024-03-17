@@ -1005,12 +1005,13 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 			AddMessage( *request.data.global_message.message );
 			break;
 		}
-		case ::game::FrontendRequest::FR_TURN_ACTIVE_STATUS: {
-			const auto& d = request.data.turn_active_status;
-			if ( m_is_turn_active != d.is_turn_active ) {
-				m_is_turn_active = d.is_turn_active;
-				ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
-				m_ui.bottom_bar->SetTurnActiveStatus( d.is_turn_active );
+		case ::game::FrontendRequest::FR_TURN_STATUS: {
+			const auto& d = request.data.turn_status;
+			ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
+			m_ui.bottom_bar->SetTurnStatus( d.status );
+			bool is_turn_active = d.status == ::game::Turn::TS_TURN_ACTIVE || d.status == ::game::Turn::TS_TURN_COMPLETE;
+			if ( m_is_turn_active != is_turn_active ) {
+				m_is_turn_active = is_turn_active;
 				if ( m_is_turn_active ) {
 					m_selected_unit_state = nullptr;
 					SelectNextUnitMaybe();
@@ -1023,12 +1024,6 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 					}
 				}
 			}
-			break;
-		}
-		case ::game::FrontendRequest::FR_TURN_COMPLETE_STATUS: {
-			ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
-			const auto& d = request.data.turn_complete_status;
-			m_ui.bottom_bar->SetTurnCompleteStatus( d.is_turn_complete, d.play_sound );
 			break;
 		}
 		case ::game::FrontendRequest::FR_SLOT_DEFINE: {
