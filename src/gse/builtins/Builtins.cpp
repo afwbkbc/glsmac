@@ -8,6 +8,7 @@ void Builtins::AddToContext( gse::Context* ctx ) {
 	m_include.AddToContext( ctx );
 	m_console.AddToContext( ctx );
 	m_conversions.AddToContext( ctx );
+	m_math.AddToContext( ctx );
 }
 
 }

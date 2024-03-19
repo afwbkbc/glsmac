@@ -11,6 +11,12 @@ namespace builtins {
 
 void Common::AddToContext( gse::Context* ctx ) {
 
+	ctx->CreateBuiltin( "typeof", NATIVE_CALL() {
+		N_EXPECT_ARGS( 1 );
+		N_GETPTR( v, 0 );
+		return VALUE( type::String, type::Type::GetTypeString( v->type ) );
+	} ) );
+
 	ctx->CreateBuiltin( "size", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GETPTR( v, 0 );

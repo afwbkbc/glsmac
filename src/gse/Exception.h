@@ -19,6 +19,7 @@ struct exception_ec_t {
 	const std::string INVALID_DEREFERENCE;
 	const std::string INVALID_CALL;
 	const std::string LOADER_ERROR;
+	const std::string MATH_ERROR;
 	const std::string CONVERSION_ERROR;
 	const std::string GAME_ERROR;
 	const std::string MAP_ERROR;

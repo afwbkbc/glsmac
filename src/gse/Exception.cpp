@@ -14,6 +14,7 @@ const exception_ec_t EC = {
 	"GSEInvalidDereference",
 	"GSEInvalidCall",
 	"GSELoaderError",
+	"GSEMathError",
 	"GSEConversionError",
 	"GSEGameError",
 	"GSEInvalidEvent",

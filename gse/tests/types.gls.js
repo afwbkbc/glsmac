@@ -213,4 +213,22 @@ test.assert( #to_int( #to_string(2 + 3) + '2' ) * 123 == 6396 );
 test.assert( #to_string('string') == 'string' );
 test.assert( #to_int( 123 ) == 123 );
 
+test.assert( #typeof(null) == 'Null');
+test.assert( #typeof(true) == 'Bool');
+test.assert( #typeof(123) == 'Int');
+test.assert( #typeof(123.45) == 'Float');
+test.assert( #typeof(123.0) == 'Float');
+test.assert( #typeof(123.) == 'Float');
+test.assert( #typeof(0.123) == 'Float');
+test.assert( #typeof('string') == 'String');
+test.assert( #typeof([]) == 'Array');
+test.assert( #typeof(2:3) == 'Range');
+test.assert( #typeof({}) == 'Object');
+test.assert( #typeof(() => {}) == 'Callable');
+
+test.assert( 15.0 != 15 );
+test.assert( #round(15.0) == 15 );
+test.assert( #round(15.4) == 15 );
+test.assert( #round(15.6) == 16 );
+
 ;;;

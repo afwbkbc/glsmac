@@ -179,6 +179,9 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 	const auto& operation_not_supported = [ &expression, &ctx ]( const std::string& a, const std::string& b ) -> gse::Exception {
 		return gse::Exception( EC.OPERATION_NOT_SUPPORTED, "Operation " + expression->op->ToString() + " is not supported between " + a + " and " + b, ctx, expression->op->m_si );
 	};
+	const auto& math_error = [ &expression, &ctx ]( const std::string& reason ) -> gse::Exception {
+		return gse::Exception( EC.MATH_ERROR, reason, ctx, expression->op->m_si );
+	};
 	switch ( expression->op->op ) {
 		case Operator::OT_RETURN: {
 			ASSERT( returnflag, "return keyword not allowed here" );
@@ -275,7 +278,7 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 		case Operator::OT_AND: CMP_BOOL( && )
 		case Operator::OT_OR: CMP_BOOL( || )
 #undef CMP_BOOL
-#define MATH_OP_BEGIN( _op ) \
+#define MATH_OP_BEGIN( _op, _allow_b_zero ) \
             const auto av = Deref( ctx, expression->a->m_si, EvaluateOperand( ctx, expression->a ) ); \
             const auto bv = Deref( ctx, expression->b->m_si, EvaluateOperand( ctx, expression->b ) ); \
             const auto* a = av.Get(); \
@@ -284,21 +287,31 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
                 throw operation_not_supported( a->ToString(), b->ToString() ); \
             } \
             switch ( a->type ) { \
-                case Type::T_INT: \
-                    return VALUE( Int, ( (Int*)a )->value _op ( (Int*)b )->value );
-#define MATH_OP_BEGIN_F( _op ) \
-        MATH_OP_BEGIN( _op ) \
-        case Type::T_FLOAT: \
-                return VALUE( Float, ( (Float*)a )->value _op ( (Float*)b )->value );
+                case Type::T_INT: { \
+                    const auto bval = ( (Int*)b )->value; \
+                    if ( !_allow_b_zero && bval == 0 ) { \
+                        throw math_error( "Division by zero" ); \
+                    } \
+                    return VALUE( Int, ( (Int*)a )->value _op bval ); \
+                }
+#define MATH_OP_BEGIN_F( _op, _allow_b_zero ) \
+        MATH_OP_BEGIN( _op, _allow_b_zero ) \
+            case Type::T_FLOAT: { \
+                const auto bval = ( (Float*)b )->value; \
+                if ( !_allow_b_zero && bval == 0.0f ) { \
+                    throw math_error( "Division by zero" ); \
+                } \
+                return VALUE( Float, ( (Float*)a )->value _op bval ); \
+            }
 #define MATH_OP_END() \
                 default: \
                     throw operation_not_supported( a->ToString(), b->ToString() ); \
             }
-#define MATH_OP( _op ) \
-        MATH_OP_BEGIN_F( _op ) \
+#define MATH_OP( _op, _allow_b_zero ) \
+        MATH_OP_BEGIN_F( _op, _allow_b_zero ) \
         MATH_OP_END()
 		case Operator::OT_ADD: {
-			MATH_OP_BEGIN_F( + )
+			MATH_OP_BEGIN_F( +, true )
 				case Type::T_STRING:
 					return VALUE( String, ( (String*)a )->value + ( (String*)b )->value );
 				case Type::T_ARRAY: {
@@ -319,16 +332,16 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const program::E
 			MATH_OP_END()
 		}
 		case Operator::OT_SUB: {
-			MATH_OP( - )
+			MATH_OP( -, true )
 		}
 		case Operator::OT_MULT: {
-			MATH_OP( * )
+			MATH_OP( *, true )
 		}
 		case Operator::OT_DIV: {
-			MATH_OP( / )
+			MATH_OP( /, false )
 		}
 		case Operator::OT_MOD: {
-			MATH_OP_BEGIN( % )
+			MATH_OP_BEGIN( %, false )
 			MATH_OP_END()
 		}
 #undef MATH_OP

@@ -99,6 +99,12 @@ testcatch('GSEOperationNotSupported', () => {
     let a = 5;
     5 [] = 1;
 });
+testcatch('GSEOperationNotSupported', () => {
+    5 + 1.0;
+});
+testcatch('GSEOperationNotSupported', () => {
+    5.0 + 1;
+});
 testcatch('GSEOperationFailed', () => {
     {
         key: 'value1'
@@ -167,4 +173,10 @@ testcatch( 'GSEConversionError', () => {
 });
 testcatch( 'GSEConversionError', () => {
     #to_float('asd');
+});
+testcatch( 'GSEMathError', () => {
+    5 / 0;
+});
+testcatch( 'GSEMathError', () => {
+    5.0 / 0.0;
 });
