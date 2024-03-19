@@ -32,7 +32,7 @@ const std::string& Player::GetPlayerName() const {
 }
 
 const std::string Player::GetFullName() const {
-	return GetPlayerName() + " (" + GetFaction().m_name + ")";
+	return GetPlayerName() + " (" + m_faction.m_name + ")";
 }
 
 void Player::Connect() {
@@ -54,7 +54,7 @@ void Player::SetFaction( const rules::Faction& faction ) {
 	m_faction = faction;
 }
 
-const rules::Faction& Player::GetFaction() const {
+rules::Faction& Player::GetFaction() {
 	return m_faction;
 }
 

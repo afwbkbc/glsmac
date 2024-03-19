@@ -9,7 +9,7 @@ namespace event {
 
 class DefineUnit : public Event {
 public:
-	DefineUnit( const size_t initiator_slot, const unit::Def* def );
+	DefineUnit( const size_t initiator_slot, unit::Def* def );
 
 	const std::string* Validate( const Game* game ) const override;
 	const gse::Value Apply( game::Game* game ) const override;
@@ -22,7 +22,7 @@ private:
 	static DefineUnit* Unserialize( types::Buffer& buf, const size_t initiator_slot );
 
 private:
-	const unit::Def* m_def;
+	unit::Def* m_def;
 };
 
 }

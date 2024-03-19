@@ -788,7 +788,7 @@ void Interpreter::WriteByRef( Context* ctx, const si_t& si, const gse::Value& re
 	switch ( ref.Get()->type ) {
 		case Type::T_OBJECTREF: {
 			const auto* r = (ObjectRef*)ref.Get();
-			r->object->Set( r->key, value );
+			r->object->Set( r->key, value, ctx, si );
 			break;
 		}
 		case Type::T_ARRAYREF: {

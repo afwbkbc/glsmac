@@ -12,8 +12,9 @@ BINDING_IMPL( on ) {
 		ON( "configure", CS_ON_CONFIGURE ),
 		ON( "start", CS_ON_START ),
 		ON( "turn", CS_ON_TURN ),
-		ON( "spawn_unit", CS_ON_SPAWN_UNIT ),
-		ON( "despawn_unit", CS_ON_DESPAWN_UNIT ),
+		ON( "unit_spawn", CS_ON_UNIT_SPAWN ),
+		ON( "unit_despawn", CS_ON_UNIT_DESPAWN ),
+		ON( "unit_move", CS_ON_UNIT_MOVE ),
 	};
 #undef ON
 	return VALUE( gse::type::Object, properties );

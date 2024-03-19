@@ -29,7 +29,7 @@ const void Unit::SetNextId( const size_t id ) {
 	next_id = id;
 }
 
-Unit::Unit( const size_t id, const Def* def, Slot* owner, map::Tile* tile, const movement_t movement, const morale_t morale, const health_t health )
+Unit::Unit( const size_t id, Def* def, Slot* owner, map::Tile* tile, const movement_t movement, const morale_t morale, const health_t health )
 	: m_id( id )
 	, m_def( def )
 	, m_owner( owner )
@@ -129,7 +129,7 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 Unit* Unit::Unserialize( types::Buffer& buf, const Game* game ) {
 	const auto id = buf.ReadInt();
 	auto defbuf = types::Buffer( buf.ReadString() );
-	const auto* def = Def::Unserialize( defbuf );
+	auto* def = Def::Unserialize( defbuf );
 	auto* slot = game ? &game->GetState()->m_slots.GetSlot( buf.ReadInt() ) : nullptr;
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
@@ -140,44 +140,17 @@ Unit* Unit::Unserialize( types::Buffer& buf, const Game* game ) {
 	return new Unit( id, def, slot, tile, movement, morale, health );
 }
 
-WRAPIMPL_BEGIN( Unit, CLASS_UNIT )
-	WRAPIMPL_PROPS {
-		{
-			"id",
-			VALUE( gse::type::Int, m_id )
-		},
-		{
-			"movement",
-			VALUE( gse::type::Float, m_movement )
-		},
-		{
-			"morale",
-			VALUE( gse::type::Int, m_morale )
-		},
-		{
-			"health",
-			VALUE( gse::type::Float, m_health )
-		},
-		{
-			"get_def",
-			NATIVE_CALL( this ) {
-				return m_def->Wrap();
-			})
-		},
-		{
-			"get_owner",
-			NATIVE_CALL( this ) {
-				return m_owner->Wrap();
-			})
-		},
-		{
-			"get_tile",
-			NATIVE_CALL( this ) {
-				return m_tile->Wrap();
-			})
-		},
-	};
-WRAPIMPL_END_PTR( Unit )
+WRAPIMPL_DYNAMIC_GETTERS( Unit, CLASS_UNIT )
+	WRAPIMPL_DYNAMIC_GET( "id", Int, m_id )
+	WRAPIMPL_DYNAMIC_GET( "movement", Float, m_movement )
+	WRAPIMPL_DYNAMIC_GET( "morale", Int, m_morale )
+	WRAPIMPL_DYNAMIC_GET( "health", Float, m_health )
+	WRAPIMPL_DYNAMIC_LINK( "get_def", m_def )
+	WRAPIMPL_DYNAMIC_LINK( "get_owner", m_owner )
+	WRAPIMPL_DYNAMIC_LINK( "get_tile", m_tile )
+WRAPIMPL_DYNAMIC_SETTERS( Unit )
+	WRAPIMPL_DYNAMIC_SET( "movement", Float, m_movement )
+WRAPIMPL_DYNAMIC_END()
 
 UNWRAPIMPL_PTR( Unit )
 

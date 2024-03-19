@@ -37,7 +37,7 @@ CLASS( Player, types::Serializable )
 	const bool IsConnected() const;
 
 	void SetFaction( const rules::Faction& faction );
-	const rules::Faction& GetFaction() const;
+	rules::Faction& GetFaction();
 
 	void SetDifficultyLevel( const rules::DifficultyLevel& difficulty_level );
 	const rules::DifficultyLevel& GetDifficultyLevel() const;

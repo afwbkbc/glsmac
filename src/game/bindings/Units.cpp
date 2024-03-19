@@ -72,7 +72,7 @@ BINDING_IMPL( units ) {
 						N_GETPROP( sprite_cx, render_def, "cx", Int );
 						N_GETPROP( sprite_cy, render_def, "cy", Int );
 						N_GETPROP_OPT_INT( sprite_morale_based_xshift, render_def, "morale_based_xshift" );
-						const auto* def = new unit::StaticDef(
+						auto* def = new unit::StaticDef(
 							id,
 							name,
 							movement_type,

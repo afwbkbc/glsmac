@@ -15,9 +15,9 @@ BINDING_IMPL( players ) {
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 
-				const auto& slots = m_bindings->GetState()->m_slots.GetSlots();
+				auto& slots = m_bindings->GetState()->m_slots.GetSlots();
 				gse::type::Array::elements_t elements = {};
-				for ( const auto& slot : slots ) {
+				for ( auto& slot : slots ) {
 					const auto state = slot.GetState();
 					if ( state == Slot::SS_OPEN || state == Slot::SS_CLOSED ) {
 						continue; // skip

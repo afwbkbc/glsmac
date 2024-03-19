@@ -15,9 +15,21 @@ let native_lifeform = (id, name, movement_type, movement_per_turn, base_y) => {
     }];
 };
 
-return [
+const units = [
     native_lifeform('FungalTower', 'Fungal Tower', 'immovable', 0, 79),
     native_lifeform('MindWorms', 'Mind Worms', 'land', 1, 233),
     native_lifeform('SeaLurk', 'Sea Lurk', 'sea', 4, 310),
     native_lifeform('SporeLauncher', 'Spore Launcher', 'land', 1, 387),
 ];
+
+let i = 0;
+let sz = #size(units);
+while (i < sz) {
+    #game.units.define(units[i][0], units[i][1]);
+    i++;
+}
+
+#game.on.unit_move((unit, dst_tile) => {
+    unit.movement = unit.movement - 1.0 / 3.0;
+    #print(unit.movement);
+});

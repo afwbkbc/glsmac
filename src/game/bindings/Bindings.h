@@ -31,8 +31,9 @@ public:
 		CS_ON_CONFIGURE,
 		CS_ON_START,
 		CS_ON_TURN,
-		CS_ON_SPAWN_UNIT,
-		CS_ON_DESPAWN_UNIT,
+		CS_ON_UNIT_SPAWN,
+		CS_ON_UNIT_DESPAWN,
+		CS_ON_UNIT_MOVE,
 	};
 	typedef std::vector< gse::Value > callback_arguments_t;
 	void Call( const callback_slot_t slot, const callback_arguments_t& arguments = {} );
@@ -52,11 +53,13 @@ private:
 
 	State* m_state = nullptr;
 
-	const std::string m_entry_script = util::FS::GeneratePath( {
+	const std::string m_entry_script = util::FS::GeneratePath(
+		{
 			"gse", // directory is expected to be in working dir
 			"default", // only 'default' mod for now
 			"main" // script name (extension is appended automatically)
-	}, gse::GSE::PATH_SEPARATOR );
+		}, gse::GSE::PATH_SEPARATOR
+	);
 
 	gse::GSE* m_gse = nullptr;
 	gse::GlobalContext* m_gse_context = nullptr;

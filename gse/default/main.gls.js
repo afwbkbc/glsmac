@@ -34,13 +34,7 @@ let random_health = () => {
     players = #game.players.get_all();
     players_sz = #size(players);
 
-    const units = #include('units');
-    let i = 0;
-    let sz = #size(units);
-    while (i < sz) {
-        #game.units.define(units[i][0], units[i][1]);
-        i++;
-    }
+    #include('units');
 
     let units_spawned = 0;
 
@@ -101,7 +95,7 @@ let random_health = () => {
     #print('NEW TURN');
 });
 
-#game.on.spawn_unit((unit) => {
+#game.on.unit_spawn((unit) => {
     let def = unit.get_def();
     if (def.name != 'MindWorms') {
         let tile = unit.get_tile();
@@ -121,7 +115,7 @@ let random_health = () => {
     }
 });
 
-#game.on.despawn_unit((unit) => {
+#game.on.unit_despawn((unit) => {
     if (unit.get_def() == 'SporeLauncher') {
         #game.units.spawn('MindWorms', random_player(), unit.get_tile(), random_morale(), random_health());
     }

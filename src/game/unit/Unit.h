@@ -36,7 +36,7 @@ public:
 
 	Unit(
 		const size_t id,
-		const Def* def,
+		Def* def,
 		Slot* owner,
 		map::Tile* tile,
 		const movement_t movement,
@@ -46,7 +46,7 @@ public:
 	virtual ~Unit() = default;
 
 	const size_t m_id;
-	const Def* m_def;
+	Def* m_def;
 	Slot* m_owner;
 	map::Tile* m_tile = nullptr;
 
@@ -70,7 +70,7 @@ public:
 	static const types::Buffer Serialize( const Unit* unit );
 	static Unit* Unserialize( types::Buffer& buf, const Game* game );
 
-	WRAPDEFS_PTR( Unit );
+	WRAPDEFS_DYNAMIC( Unit );
 };
 
 }

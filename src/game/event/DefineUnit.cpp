@@ -5,7 +5,7 @@
 namespace game {
 namespace event {
 
-DefineUnit::DefineUnit( const size_t initiator_slot, const unit::Def* def )
+DefineUnit::DefineUnit( const size_t initiator_slot, unit::Def* def )
 	: Event( initiator_slot, ET_UNIT_DEFINE )
 	, m_def( def ) {
 	//

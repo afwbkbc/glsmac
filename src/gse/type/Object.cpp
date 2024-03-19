@@ -4,6 +4,7 @@
 
 #include "Undefined.h"
 #include "ObjectRef.h"
+#include "Exception.h"
 
 #include "String.h"
 
@@ -52,11 +53,12 @@ const std::string& Object::GetClassString( const object_class_t object_class ) {
 	return it->second;
 }
 
-Object::Object( properties_t initial_value, const object_class_t object_class, const void* wrapptr )
+Object::Object( properties_t initial_value, const object_class_t object_class, void* wrapobj, wrapsetter_t* wrapsetter )
 	: Type( GetType() )
 	, value( initial_value )
 	, object_class( object_class )
-	, wrapptr( wrapptr ) {}
+	, wrapobj( wrapobj )
+	, wrapsetter( wrapsetter ) {}
 
 const Value& Object::Get( const key_t& key ) const {
 	const auto& it = value.find( key );
@@ -65,7 +67,13 @@ const Value& Object::Get( const key_t& key ) const {
 		: it->second;
 }
 
-void Object::Set( const key_t& key, const Value& new_value ) {
+void Object::Set( const key_t& key, const Value& new_value, gse::Context* ctx, const si_t& si ) {
+	if ( wrapobj ) {
+		if ( !wrapsetter ) {
+			throw gse::Exception( EC.INVALID_ASSIGNMENT, "Property is read-only", ctx, si );
+		}
+		wrapsetter( wrapobj, key, new_value, ctx, si );
+	}
 	value.insert_or_assign( key, new_value );
 }
 

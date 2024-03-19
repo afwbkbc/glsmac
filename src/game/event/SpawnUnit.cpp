@@ -35,7 +35,7 @@ const std::string* SpawnUnit::Validate( const Game* game ) const {
 }
 
 const gse::Value SpawnUnit::Apply( game::Game* game ) const {
-	const auto* def = game->GetUnitDef( m_unit_def );
+	auto* def = game->GetUnitDef( m_unit_def );
 	ASSERT_NOLOG( def, "unit def '" + m_unit_def + "' not found" );
 	ASSERT_NOLOG( def->m_type == unit::Def::DT_STATIC, "only static defs are supported" );
 	const auto* staticdef = (unit::StaticDef*)def;

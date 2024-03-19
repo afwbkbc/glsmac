@@ -299,7 +299,7 @@ void Game::Iterate() {
 							continue;
 						}
 						ASSERT( slot.GetState() == Slot::SS_PLAYER, "unknown slot state: " + std::to_string( slot.GetState() ) );
-						const auto* player = slot.GetPlayer();
+						auto* player = slot.GetPlayer();
 						ASSERT( player, "slot player not set" );
 						const auto& faction = player->GetFaction();
 						const auto& c = faction.m_colors.border.value;
@@ -971,7 +971,7 @@ unit::Unit* Game::GetUnit( const size_t id ) const {
 	return nullptr;
 }
 
-const unit::Def* Game::GetUnitDef( const std::string& name ) const {
+unit::Def* Game::GetUnitDef( const std::string& name ) const {
 	const auto& it = m_unit_defs.find( name );
 	if ( it != m_unit_defs.end() ) {
 		return it->second;
@@ -999,7 +999,7 @@ void Game::RefreshUnit( const unit::Unit* unit ) {
 	AddFrontendRequest( fr );
 }
 
-void Game::DefineUnit( const unit::Def* def ) {
+void Game::DefineUnit( unit::Def* def ) {
 	Log( "Defining unit ('" + def->m_id + "')" );
 
 	ASSERT( m_unit_defs.find( def->m_id ) == m_unit_defs.end(), "Unit definition '" + def->m_id + "' already exists" );
@@ -1058,7 +1058,7 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 	CheckTurnComplete();
 
 	if ( m_state->IsMaster() ) {
-		m_state->m_bindings->Call( Bindings::CS_ON_SPAWN_UNIT, { unit->Wrap() } );
+		m_state->m_bindings->Call( Bindings::CS_ON_UNIT_SPAWN, { unit->Wrap() } );
 	}
 }
 
@@ -1097,7 +1097,7 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	m_units.erase( it );
 
 	if ( m_state->IsMaster() ) {
-		m_state->m_bindings->Call( Bindings::CS_ON_DESPAWN_UNIT, { unit->Wrap() } );
+		m_state->m_bindings->Call( Bindings::CS_ON_UNIT_DESPAWN, { unit->Wrap() } );
 	}
 
 	delete unit;
@@ -1107,6 +1107,16 @@ void Game::MoveUnit( unit::Unit* unit, map::Tile* dst_tile, const bool is_move_s
 	ASSERT( dst_tile, "dst tile not set" );
 
 	Log( "Moving unit #" + std::to_string( unit->m_id ) + " to " + dst_tile->coord.ToString() );
+
+	/*
+	 * // TODO
+	m_state->m_bindings->Call(
+		Bindings::CS_ON_UNIT_MOVE, {
+			unit->Wrap( true ),
+			dst_tile->Wrap()
+		}
+	);
+	 */
 
 	auto* src_tile = unit->m_tile;
 	ASSERT( src_tile, "src tile not set" );

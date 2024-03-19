@@ -290,10 +290,10 @@ public:
 	void Quit( const std::string& reason );
 	void OnGSEError( gse::Exception& e );
 	unit::Unit* GetUnit( const size_t id ) const;
-	const unit::Def* GetUnitDef( const std::string& name ) const;
+	unit::Def* GetUnitDef( const std::string& name ) const;
 	void AddEvent( event::Event* event );
 	void RefreshUnit( const unit::Unit* unit );
-	void DefineUnit( const unit::Def* def );
+	void DefineUnit( unit::Def* def );
 	void SpawnUnit( unit::Unit* unit );
 	void SkipUnitTurn( const size_t unit_id );
 	void DespawnUnit( const size_t unit_id );
@@ -318,7 +318,7 @@ private:
 
 	const types::Vec3 GetUnitRenderCoords( const unit::Unit* unit );
 
-	std::unordered_map< std::string, const unit::Def* > m_unit_defs = {};
+	std::unordered_map< std::string, unit::Def* > m_unit_defs = {};
 	std::map< size_t, unit::Unit* > m_units = {};
 	void SerializeUnits( types::Buffer& buf ) const;
 	void UnserializeUnits( types::Buffer& buf );

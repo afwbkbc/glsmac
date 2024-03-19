@@ -173,7 +173,7 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 #define GETRESULT( _args, _expected_type, _cast_type ) \
     auto resultvalue = method->Run( nullptr, {}, _args ); \
     auto* resultv = resultvalue.Get(); \
-	GT_ASSERT( resultv->type == _expected_type, "wrong result type ( " + std::to_string( resultv->type ) + " != " + std::to_string( _expected_type ) + " )" ); \
+    GT_ASSERT( resultv->type == _expected_type, "wrong result type ( " + std::to_string( resultv->type ) + " != " + std::to_string( _expected_type ) + " )" ); \
     auto* result = (_cast_type*)resultv;
 
 #define CHECKRESULT( _args, _expected_type, _cast_type, _expected_value ) \
@@ -239,9 +239,9 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 
 					auto obj2 = VALUE( type::Object );
 					auto data2 = VALUE_DATA( type::Object, obj2 );
-					data2->Set( "property_int", VALUE( type::Int, 555 ) );
-					data2->Set( "property_bool", VALUE( type::Bool, false ) );
-					data2->Set( "property_bool", VALUE( type::Bool, true ) ); // this should overwrite previous value
+					data2->Set( "property_int", VALUE( type::Int, 555 ), ctx, call_si );
+					data2->Set( "property_bool", VALUE( type::Bool, false ), ctx, call_si );
+					data2->Set( "property_bool", VALUE( type::Bool, true ), ctx, call_si ); // this should overwrite previous value
 					gse->SetGlobal( "testvar_obj2", obj2 );
 
 					auto properties = type::Object::properties_t{
