@@ -320,16 +320,8 @@ void Game::Iterate() {
 					fr.data.slot_define.slotdefs = slot_defines;
 					AddFrontendRequest( fr );
 
-					ASSERT( !m_current_turn, "turn is already initialized" );
-
-					try {
-						// start main loop
-						m_game_state = GS_RUNNING;
-					}
-					catch ( gse::Exception& e ) {
-						Log( (std::string)"Initialization failed: " + e.ToStringAndCleanup() );
-						f_init_failed( e.what() );
-					}
+					// start main loop
+					m_game_state = GS_RUNNING;
 
 					if ( m_game_state == GS_RUNNING ) {
 
@@ -356,9 +348,14 @@ void Game::Iterate() {
 						m_unprocessed_events.clear();
 
 						g_engine->GetUI()->SetLoaderText( "Starting game...", false );
-						NEW( m_current_turn, Turn );
 						if ( m_state->IsMaster() ) {
-							m_state->m_bindings->Call( Bindings::CS_ON_START );
+							try {
+								m_state->m_bindings->Call( Bindings::CS_ON_START );
+							}
+							catch ( gse::Exception& e ) {
+								Log( (std::string)"Initialization failed: " + e.ToStringAndCleanup() );
+								f_init_failed( e.what() );
+							}
 							GlobalAdvanceTurn();
 						}
 						CheckTurnComplete();
@@ -821,7 +818,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 		case OP_GET_FRONTEND_REQUESTS: {
 			//Log( "got events request" );
 			if ( !m_pending_frontend_requests->empty() ) {
-				Log( "sending " + std::to_string( m_pending_frontend_requests->size() ) + " events to frontend" );
+				Log( "Sending " + std::to_string( m_pending_frontend_requests->size() ) + " events to frontend" );
 				response.data.get_frontend_requests.requests = m_pending_frontend_requests; // will be destroyed in DestroyResponse
 				NEW( m_pending_frontend_requests, std::vector< FrontendRequest > ); // reset
 			}
@@ -834,10 +831,9 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 		case OP_ADD_EVENT: {
 			const std::string* errmsg = nullptr;
 			event::Event* event = nullptr;
-			ASSERT( m_current_turn, "turn not initialized" );
 			auto buf = types::Buffer( *request.data.add_event.serialized_event );
 			event = event::Event::Unserialize( buf );
-			if ( !m_current_turn->IsActive() && event->m_type != event::Event::ET_UNCOMPLETE_TURN ) {
+			if ( !m_current_turn.IsActive() && event->m_type != event::Event::ET_UNCOMPLETE_TURN ) {
 				errmsg = new std::string( "Turn not active" );
 			}
 			else {
@@ -1058,7 +1054,14 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 	CheckTurnComplete();
 
 	if ( m_state->IsMaster() ) {
-		m_state->m_bindings->Call( Bindings::CS_ON_UNIT_SPAWN, { unit->Wrap() } );
+		m_state->m_bindings->Call(
+			Bindings::CS_ON_UNIT_SPAWN, {
+				{
+					"unit",
+					unit->Wrap()
+				},
+			}
+		);
 	}
 }
 
@@ -1097,33 +1100,77 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	m_units.erase( it );
 
 	if ( m_state->IsMaster() ) {
-		m_state->m_bindings->Call( Bindings::CS_ON_UNIT_DESPAWN, { unit->Wrap() } );
+		m_state->m_bindings->Call(
+			Bindings::CS_ON_UNIT_DESPAWN, {
+				{
+					"unit",
+					unit->Wrap()
+				}
+			}
+		);
 	}
 
 	delete unit;
 }
 
-void Game::MoveUnit( unit::Unit* unit, map::Tile* dst_tile, const bool is_move_successful ) {
+const gse::Value Game::MoveUnitResolve( unit::Unit* unit, map::Tile* dst_tile ) {
+	return m_state->m_bindings->Call(
+		Bindings::CS_ON_UNIT_MOVE_RESOLVE, {
+			{
+				"unit",
+				unit->Wrap()
+			},
+			{
+				"src_tile",
+				unit->m_tile->Wrap()
+			},
+			{
+				"dst_tile",
+				dst_tile->Wrap()
+			},
+		}
+	);
+}
+
+void Game::MoveUnit( unit::Unit* unit, map::Tile* dst_tile, const gse::Value resolutions ) {
 	ASSERT( dst_tile, "dst tile not set" );
 
 	Log( "Moving unit #" + std::to_string( unit->m_id ) + " to " + dst_tile->coord.ToString() );
-
-	/*
-	 * // TODO
-	m_state->m_bindings->Call(
-		Bindings::CS_ON_UNIT_MOVE, {
-			unit->Wrap( true ),
-			dst_tile->Wrap()
-		}
-	);
-	 */
 
 	auto* src_tile = unit->m_tile;
 	ASSERT( src_tile, "src tile not set" );
 	ASSERT( src_tile->units.find( unit->m_id ) != src_tile->units.end(), "src tile does not contain this unit" );
 	ASSERT( dst_tile->units.find( unit->m_id ) == dst_tile->units.end(), "dst tile already contains this unit" );
 
-	unit->UpdateMoves( this, dst_tile );
+	const auto result = m_state->m_bindings->Call(
+		Bindings::CS_ON_UNIT_MOVE, {
+			{
+				"unit",
+				unit->Wrap( true )
+			},
+			{
+				"src_tile",
+				src_tile->Wrap()
+			},
+			{
+				"dst_tile",
+				dst_tile->Wrap()
+			},
+			{
+				"resolutions",
+				resolutions
+			}
+		}
+	);
+
+	if ( !unit->HasMovesLeft() ) {
+		// don't keep tiny leftovers // TODO: move to some global setter
+		unit->m_movement = 0.0f;
+	}
+
+	const auto is_move_successful =
+		result.Get()->type == gse::type::Bool::GetType() &&
+			( (gse::type::Bool*)result.Get() )->value;
 
 	if ( is_move_successful ) {
 
@@ -1162,11 +1209,11 @@ void Game::MoveUnit( unit::Unit* unit, map::Tile* dst_tile, const bool is_move_s
 }
 
 const size_t Game::GetTurnId() const {
-	return m_current_turn->GetId();
+	return m_current_turn.GetId();
 }
 
 const bool Game::IsTurnActive() const {
-	return m_current_turn->IsActive();
+	return m_current_turn.IsActive();
 }
 
 const bool Game::IsTurnCompleted( const size_t slot_num ) const {
@@ -1189,7 +1236,6 @@ void Game::CompleteTurn( const size_t slot_num ) {
 	player->CompleteTurn();
 
 	if ( slot_num == m_slot_num ) {
-		ASSERT( m_current_turn, "turn not set" );
 		auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
 		fr.data.turn_status.status = Turn::TS_WAITING_FOR_PLAYERS;
 		AddFrontendRequest( fr );
@@ -1217,7 +1263,6 @@ void Game::UncompleteTurn( const size_t slot_num ) {
 	ASSERT( player, "slot player not set" );
 	player->UncompleteTurn();
 	if ( slot_num == m_slot_num ) {
-		ASSERT( m_current_turn, "turn not set" );
 		m_is_turn_complete = false;
 		CheckTurnComplete();
 		if ( !m_is_turn_complete ) {
@@ -1229,12 +1274,12 @@ void Game::UncompleteTurn( const size_t slot_num ) {
 }
 
 void Game::FinalizeTurn() {
-	m_turn_checksum = m_current_turn->FinalizeAndChecksum();
+	m_turn_checksum = m_current_turn.FinalizeAndChecksum();
 	AddEvent( new event::TurnFinalized( m_slot_num, m_turn_checksum ) );
 }
 
 void Game::AdvanceTurn( const size_t turn_id ) {
-	m_current_turn->AdvanceTurn( turn_id );
+	m_current_turn.AdvanceTurn( turn_id );
 	m_is_turn_complete = false;
 	Log( "Turn started: " + std::to_string( turn_id ) );
 
@@ -1269,7 +1314,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 
 void Game::GlobalFinalizeTurn() {
 	ASSERT( m_state->IsMaster(), "not master" );
-	ASSERT( m_current_turn->IsActive(), "current turn not active" );
+	ASSERT( m_current_turn.IsActive(), "current turn not active" );
 	ASSERT( m_verified_turn_checksum_slots.empty(), "turn finalization slots not empty" );
 	Log( "Finalizing turn ( checksum = " + std::to_string( m_turn_checksum ) + " )" );
 	AddEvent( new event::FinalizeTurn( m_slot_num ) );
@@ -1324,8 +1369,6 @@ void Game::ValidateEvent( event::Event* event ) const {
 }
 
 const gse::Value Game::ProcessEvent( event::Event* event ) {
-	ASSERT( m_current_turn, "turn not initialized" );
-
 	if ( m_state->IsMaster() ) { // TODO: validate in either case?
 		ValidateEvent( event );
 	}
@@ -1337,7 +1380,7 @@ const gse::Value Game::ProcessEvent( event::Event* event ) {
 		event->Resolve( this );
 	}
 
-	m_current_turn->AddEvent( event );
+	m_current_turn.AddEvent( event );
 	return event->Apply( this );
 }
 
@@ -1495,6 +1538,10 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 						SerializeUnits( b );
 						buf.WriteString( b.ToString() );
 					}
+
+					// send turn info
+					Log( "Sending turn ID: " + std::to_string( s_turn_id ) );
+					buf.WriteInt( s_turn_id );
 
 					return buf.ToString();
 				};
@@ -1656,8 +1703,15 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 						if ( ec == map::Map::EC_NONE ) {
 
 							// units
-							auto b = types::Buffer( buf.ReadString() );
-							UnserializeUnits( b );
+							auto ub = types::Buffer( buf.ReadString() );
+							UnserializeUnits( ub );
+
+							// get turn info
+							const auto turn_id = buf.ReadInt();
+							if ( turn_id > 0 ) {
+								Log( "Received turn ID: " + std::to_string( turn_id ) );
+								AdvanceTurn( turn_id );
+							}
 
 							m_game_state = GS_INITIALIZING;
 						}
@@ -1728,10 +1782,7 @@ void Game::ResetGame() {
 	ASSERT( m_pending_frontend_requests, "pending events not set" );
 	m_pending_frontend_requests->clear();
 
-	if ( m_current_turn ) {
-		DELETE( m_current_turn );
-		m_current_turn = nullptr;
-	}
+	m_current_turn.Reset();
 	m_is_turn_complete = false;
 
 	if ( m_state ) {
@@ -1747,8 +1798,7 @@ void Game::ResetGame() {
 }
 
 void Game::CheckTurnComplete() {
-	ASSERT( m_current_turn, "current turn not set" );
-	if ( !m_current_turn->IsActive() ) {
+	if ( !m_current_turn.IsActive() ) {
 		// turn not active
 		return;
 	}

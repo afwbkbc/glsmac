@@ -297,7 +297,8 @@ public:
 	void SpawnUnit( unit::Unit* unit );
 	void SkipUnitTurn( const size_t unit_id );
 	void DespawnUnit( const size_t unit_id );
-	void MoveUnit( unit::Unit* unit, map::Tile* dst_tile, const bool is_move_successful );
+	const gse::Value MoveUnitResolve( unit::Unit* unit, map::Tile* dst_tile );
+	void MoveUnit( unit::Unit* unit, map::Tile* dst_tile, const gse::Value resolutions );
 	const size_t GetTurnId() const;
 	const bool IsTurnActive() const;
 	const bool IsTurnCompleted( const size_t slot_num ) const;
@@ -360,7 +361,7 @@ private:
 	std::vector< game::event::Event* > m_unprocessed_events = {};
 	std::vector< unit::Unit* > m_unprocessed_units = {};
 
-	Turn* m_current_turn = nullptr;
+	Turn m_current_turn = {};
 
 	bool m_is_turn_complete = false;
 	void CheckTurnComplete();

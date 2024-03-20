@@ -3,7 +3,12 @@
 #include <cstdint>
 #include <string>
 
+namespace types {
+class Buffer;
+}
+
 namespace gse {
+class Value;
 namespace type {
 
 class Type {
@@ -44,7 +49,14 @@ protected:
 	Type( const type_t type )
 		: type( type ) {}
 
+private:
+	friend class gse::Value;
+
+	static void Serialize( types::Buffer* buf, const Type* type );
+	static Value Unserialize( types::Buffer* buf );
+
 };
 
 }
 }
+

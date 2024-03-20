@@ -182,8 +182,16 @@ WRAPIMPL_BEGIN( Tile, CLASS_TILE )
 			VALUE( gse::type::Bool, !is_water_tile )
 		},
 		{
+			"is_rocky",
+			VALUE( gse::type::Bool, rockiness == R_ROCKY )
+		},
+		{
 			"has_fungus",
-			VALUE( gse::type::Bool, ( features & F_XENOFUNGUS ) == F_XENOFUNGUS )
+			VALUE( gse::type::Bool, features & F_XENOFUNGUS )
+		},
+		{
+			"has_river",
+			VALUE( gse::type::Bool, features & F_RIVER )
 		},
 		GETN( W ),
 		GETN( NW ),

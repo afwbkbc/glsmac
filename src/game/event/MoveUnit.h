@@ -2,6 +2,8 @@
 
 #include "Event.h"
 
+#include "gse/type/Undefined.h"
+
 #include "game/map/Tile.h"
 
 namespace game {
@@ -26,9 +28,7 @@ private:
 	const size_t m_unit_id;
 	const game::map::Tile::direction_t m_direction;
 
-	struct {
-		bool is_move_successful = false;
-	} m_resolutions = {};
+	gse::Value m_resolutions = VALUE( gse::type::Undefined );
 
 };
 

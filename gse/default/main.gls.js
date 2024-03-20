@@ -1,4 +1,6 @@
-#game.on.configure(() => {
+const units = #include('units');
+
+#game.on.configure((e) => {
 
     const factions = #include('factions');
     let i = 0;
@@ -28,13 +30,16 @@ let random_health = () => {
     return #game.random.get_float(#to_float(0), #to_float(1));
 };
 
-#game.on.start(() => {
+units.init();
+
+#game.on.start((e) => {
+
+    // init units
+    units.define();
 
     // init players
     players = #game.players.get_all();
     players_sz = #size(players);
-
-    #include('units');
 
     let units_spawned = 0;
 
@@ -91,14 +96,14 @@ let random_health = () => {
     #game.message('Total units spawned: ' + #to_string(units_spawned));
 });
 
-#game.on.turn(() => {
+#game.on.turn((e) => {
     #print('NEW TURN');
 });
 
-#game.on.unit_spawn((unit) => {
-    let def = unit.get_def();
+#game.on.unit_spawn((e) => {
+    let def = e.unit.get_def();
     if (def.name != 'MindWorms') {
-        let tile = unit.get_tile();
+        let tile = e.unit.get_tile();
         let neighbours = [tile.get_W(), tile.get_NW(), tile.get_N(), tile.get_NE(), tile.get_E(), tile.get_SE(), tile.get_S(), tile.get_SW()];
         let nearby_units_count = 0;
         let i = 0;
@@ -110,13 +115,13 @@ let random_health = () => {
             i++;
         }
         if (nearby_units_count > 2) {
-            #game.units.despawn(unit);
+            #game.units.despawn(e.unit);
         }
     }
 });
 
-#game.on.unit_despawn((unit) => {
-    if (unit.get_def() == 'SporeLauncher') {
-        #game.units.spawn('MindWorms', random_player(), unit.get_tile(), random_morale(), random_health());
+#game.on.unit_despawn((e) => {
+    if (e.unit.get_def() == 'SporeLauncher') {
+        #game.units.spawn('MindWorms', random_player(), e.unit.get_tile(), random_morale(), random_health());
     }
 });

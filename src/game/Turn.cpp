@@ -7,9 +7,7 @@ Turn::Turn() {
 }
 
 Turn::~Turn() {
-	for ( auto& it : m_events ) {
-		delete it;
-	}
+	Reset();
 }
 
 const bool Turn::IsActive() const {
@@ -38,6 +36,15 @@ void Turn::AddEvent( event::Event* event ) {
 
 const Turn::events_t* const Turn::GetEvents() const {
 	return &m_events;
+}
+
+void Turn::Reset() {
+	m_id = 0;
+	m_is_active = false;
+	for ( auto& it : m_events ) {
+		delete it;
+	}
+	m_events.clear();
 }
 
 }

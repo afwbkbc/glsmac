@@ -14,6 +14,7 @@ BINDING_IMPL( on ) {
 		ON( "turn", CS_ON_TURN ),
 		ON( "unit_spawn", CS_ON_UNIT_SPAWN ),
 		ON( "unit_despawn", CS_ON_UNIT_DESPAWN ),
+		ON( "unit_move_resolve", CS_ON_UNIT_MOVE_RESOLVE ),
 		ON( "unit_move", CS_ON_UNIT_MOVE ),
 	};
 #undef ON

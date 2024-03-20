@@ -30,6 +30,9 @@ public:
 
 	void AddEvent( event::Event* event );
 	const events_t* const GetEvents() const;
+
+	void Reset();
+
 private:
 	size_t m_id = 0;
 	bool m_is_active = false;

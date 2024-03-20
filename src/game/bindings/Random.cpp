@@ -4,6 +4,8 @@
 #include "gse/type/Int.h"
 #include "gse/type/Float.h"
 
+#include "game/State.h"
+
 namespace game {
 namespace bindings {
 
@@ -29,6 +31,9 @@ BINDING_IMPL( random ) {
 				N_GETVALUE( max, 1, Float );
 				if ( max < min ) {
 					ERROR( gse::EC.INVALID_CALL, "Maximum value is smaller than minimum ( " + std::to_string( max ) + " < " + std::to_string( min ) + " )" );
+				}
+				if ( !GAME->GetState()->IsMaster() ) {
+					ERROR( gse::EC.INVALID_CALL, "Only master is allowed to generate random values" );
 				}
 				return VALUE( gse::type::Float, GAME->GetRandom()->GetFloat( min, max ) );
 			})

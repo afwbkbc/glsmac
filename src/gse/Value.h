@@ -1,9 +1,9 @@
 #pragma once
 
+#include <memory>
+
 #include "type/Type.h"
 #include "base/Base.h"
-
-#include <memory>
 
 namespace gse {
 
@@ -123,6 +123,9 @@ public:
 	OP( <= )
 	OP( >= )
 #undef OP
+
+	static void Serialize( types::Buffer* buffer, const Value& value );
+	static Value Unserialize( types::Buffer* buf );
 
 private:
 	std::shared_ptr< type::Type > m_data;

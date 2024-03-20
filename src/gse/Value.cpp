@@ -94,4 +94,12 @@ OP( <= )
 OP( >= )
 #undef OP
 
+void Value::Serialize( types::Buffer* buf, const Value& value ) {
+	type::Type::Serialize( buf, value.Get() );
+}
+
+Value Value::Unserialize( types::Buffer* buf ) {
+	return type::Type::Unserialize( buf );
+}
+
 }

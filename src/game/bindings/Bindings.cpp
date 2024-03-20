@@ -55,11 +55,16 @@ void Bindings::RunMain() {
 	m_gse->GetInclude( m_gse_context, m_si_internal, m_entry_script );
 }
 
-void Bindings::Call( const callback_slot_t slot, const callback_arguments_t& arguments ) {
+gse::Value Bindings::Call( const callback_slot_t slot, const callback_arguments_t& arguments ) {
 	const auto& it = m_callbacks.find( slot );
 	if ( it != m_callbacks.end() ) {
 		try {
-			( (gse::type::Callable*)it->second.Get() )->Run( m_gse_context, m_si_internal, arguments );
+			type::Object::properties_t properties = arguments;
+			return ( (gse::type::Callable*)it->second.Get() )->Run(
+				m_gse_context, m_si_internal, {
+					VALUE( type::Object, properties ),
+				}
+			);
 		}
 		catch ( gse::Exception& e ) {
 			if ( m_state->m_on_gse_error ) {
@@ -70,6 +75,7 @@ void Bindings::Call( const callback_slot_t slot, const callback_arguments_t& arg
 			}
 		}
 	}
+	return VALUE( type::Undefined );
 }
 
 State* Bindings::GetState() const {

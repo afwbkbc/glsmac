@@ -2,6 +2,7 @@
 
 #include "base/Base.h"
 
+#include "Undefined.h"
 #include "Null.h"
 #include "Bool.h"
 #include "Int.h"
@@ -14,6 +15,8 @@
 #include "ObjectRef.h"
 #include "Range.h"
 #include "Exception.h"
+
+#include "types/Buffer.h"
 
 namespace gse {
 namespace type {
@@ -347,6 +350,98 @@ const bool Type::operator>=( const Type& other ) const {
 
 #undef DEFAULT_COMPARE
 #undef DEFAULT_COMPARE_NE
+
+void Type::Serialize( types::Buffer* buf, const Type* type ) {
+	buf->WriteInt( type->type );
+	switch ( type->type ) {
+		case T_UNDEFINED:
+			break;
+		case T_NULL:
+			break;
+		case T_BOOL: {
+			buf->WriteBool( ( (Bool*)type )->value );
+			break;
+		}
+		case T_INT: {
+			buf->WriteInt( ( (Int*)type )->value );
+			break;
+		}
+		case T_FLOAT: {
+			buf->WriteFloat( ( (Float*)type )->value );
+			break;
+		}
+		case T_STRING: {
+			buf->WriteString( ( (String*)type )->value );
+			break;
+		}
+		case T_ARRAY: {
+			const auto& elements = ( (Array*)type )->value;
+			buf->WriteInt( elements.size() );
+			for ( const auto& e : elements ) {
+				Value::Serialize( buf, e );
+			}
+			break;
+		}
+		case T_OBJECT: {
+			const auto* obj = (Object*)type;
+			ASSERT_NOLOG( obj->object_class == Object::CLASS_NONE, "serialization of custom object classes is not supported" );
+			ASSERT_NOLOG( !obj->wrapobj, "serialization of objects with wrapobj is not supported" );
+			ASSERT_NOLOG( !obj->wrapsetter, "serialization of objects with wrapsetter is not supported" );
+			const auto& properties = obj->value;
+			buf->WriteInt( properties.size() );
+			for ( const auto& p : properties ) {
+				buf->WriteString( p.first );
+				Value::Serialize( buf, p.second );
+			}
+			break;
+		}
+		default:
+			THROW( "invalid/unsupported type for serialization: " + GetTypeString( type->type ) );
+	}
+}
+
+Value Type::Unserialize( types::Buffer* buf ) {
+	type_t type = (type_t)buf->ReadInt();
+	switch ( type ) {
+		case T_UNDEFINED:
+			return VALUE( Undefined );
+		case T_NULL:
+			return VALUE( Null );
+		case T_BOOL:
+			return VALUE( Bool, buf->ReadBool() );
+		case T_INT:
+			return VALUE( Int, buf->ReadInt() );
+		case T_FLOAT:
+			return VALUE( Float, buf->ReadFloat() );
+		case T_STRING:
+			return VALUE( String, buf->ReadString() );
+		case T_ARRAY: {
+			Array::elements_t elements = {};
+			const auto size = buf->ReadInt();
+			elements.reserve( size );
+			for ( size_t i = 0 ; i < size ; i++ ) {
+				elements.push_back( Value::Unserialize( buf ) );
+			}
+			return VALUE( Array, elements );
+		}
+		case T_OBJECT: {
+			Object::properties_t properties = {};
+			const auto size = buf->ReadInt();
+			for ( size_t i = 0 ; i < size ; i++ ) {
+				const auto k = buf->ReadString();
+				properties.insert(
+					{
+						k,
+						Value::Unserialize( buf )
+					}
+				);
+			}
+			return VALUE( Object, properties );
+		}
+		default:
+			THROW( "invalid/unsupported type for unserialization: " + GetTypeString( type ) );
+	}
+}
 
 }
 }
