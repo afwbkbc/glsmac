@@ -13,7 +13,7 @@ FinalizeTurn::FinalizeTurn( const size_t initiator_slot )
 	//
 }
 
-const std::string* FinalizeTurn::Validate( const Game* game ) const {
+const std::string* FinalizeTurn::Validate( Game* game ) const {
 	if ( m_initiator_slot != 0 ) {
 		return Error( "Turn can only be finalized by master" );
 	}

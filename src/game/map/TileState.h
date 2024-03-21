@@ -49,7 +49,7 @@ public:
 		LAYER_LAND, // land tiles, includes edge-smoothed moisture textures
 		LAYER_WATER_SURFACE, // water tiles (alpha surface with gradients)
 		LAYER_WATER_SURFACE_EXTRA, // extra textures/effects for water tiles
-		LAYER_WATER, // sea (for non-alpha objects on water)
+		LAYER_WATER, // water (for non-alpha objects on water)
 		LAYER_MAX
 	};
 

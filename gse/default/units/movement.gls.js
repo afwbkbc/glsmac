@@ -1,7 +1,12 @@
 const f_get_movement_cost = (unit, src_tile, dst_tile) => {
     const is_native = true; // TODO: non-native units
 
-    if (src_tile.has_river && dst_tile.has_river) { // TODO: roads
+    if (
+        dst_tile.is_land &&
+        src_tile.has_river &&
+        dst_tile.has_river
+        // TODO: roads
+    ) {
         return 1.0 / 3.0;
     }
 
@@ -32,6 +37,43 @@ return {
 
     init: () => {
 
+        #game.on.unit_move_validate((e) => {
+            if (e.unit.is_immovable) {
+                return 'Unit is immovable';
+            }
+            if (e.unit.movement == 0.0) {
+                return 'Unit is out of moves';
+            }
+            if (e.src_tile == e.dst_tile) {
+                return 'Destination tile is same as source tile';
+            }
+            if (!e.src_tile.is_adjactent_to(e.dst_tile)) {
+                return 'Destination tile is not adjactent to source tile';
+            }
+            if (e.unit.is_land && e.dst_tile.is_water) {
+                return 'Land units can\'t move to water tile';
+            }
+            if (e.unit.is_water && e.dst_tile.is_land) {
+                return 'Water units can\'t move to land tile';
+            }
+
+            const units = e.dst_tile.get_units();
+            let i = 0;
+            let any_foreign_units_in_tile = false;
+            while (i < #size(units)) { // TODO: for loop
+                if (units[i].get_owner() != e.unit.get_owner()) {
+                    any_foreign_units_in_tile = true;
+                    // TODO: break
+                }
+                i++;
+            }
+            if (any_foreign_units_in_tile) {
+                return 'Destination tile contains foreign units (combat not implemented yet)';
+            }
+            // TODO: ZOC
+
+        });
+
         #game.on.unit_move_resolve((e) => {
             if (e.unit.movement == 0.0) {
                 // no moves left
@@ -46,7 +88,7 @@ return {
             };
         });
 
-        #game.on.unit_move((e) => {
+        #game.on.unit_move_apply((e) => {
             let movement_cost = f_get_movement_cost(e.unit, e.src_tile, e.dst_tile) + f_get_movement_aftercost(e.unit, e.src_tile, e.dst_tile);
 
             // reduce remaining movement points (even if failed)

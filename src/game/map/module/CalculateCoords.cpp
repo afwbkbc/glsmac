@@ -8,7 +8,7 @@ void CalculateCoords::GenerateTile( const Tile* tile, TileState* ts, MapState* m
 
 	for ( auto lt = 0 ; lt < TileState::LAYER_MAX ; lt++ ) {
 
-		// vertex coodinates for tile corners ( everything but land is flat at sea level )
+		// vertex coodinates for tile corners ( everything but land is flat at water level )
 #define vcz( _lt, _val ) ( ( _lt == TileState::LAYER_LAND ) ? s_consts.tile.elevation_to_vertex_z.Clamp( _val ) : s_consts.tile.water_level_z )
 
 		ts->layers[ lt ].coords.left = {
@@ -45,10 +45,10 @@ void CalculateCoords::GenerateTile( const Tile* tile, TileState* ts, MapState* m
 					-s_consts.tile.random.texture_center_stretch,
 					s_consts.tile.random.texture_center_stretch
 				),
-				ts->tex_coord.y + m_map->GetRandom()->GetFloat(
-					-s_consts.tile.random.texture_center_stretch,
-					s_consts.tile.random.texture_center_stretch
-				)
+										ts->tex_coord.y + m_map->GetRandom()->GetFloat(
+											-s_consts.tile.random.texture_center_stretch,
+											s_consts.tile.random.texture_center_stretch
+										)
 			}, // center
 			{   ts->tex_coord.x1 + ofs, ts->tex_coord.y2 - ofs }, // left
 			{   ts->tex_coord.x1 + ofs, ts->tex_coord.y1 + ofs }, // top

@@ -44,12 +44,12 @@ BINDING_IMPL( units ) {
 				N_GETPROP( unit_type, unit_def, "type", String );
 				if ( unit_type == "static" ) {
 					N_GETPROP( movement_type_str, unit_def, "movement_type", String );
-					unit::StaticDef::movement_type_t movement_type;
+					unit::Def::movement_type_t movement_type;
 					if ( movement_type_str == "land" ) {
 						movement_type = unit::StaticDef::MT_LAND;
 					}
-					else if ( movement_type_str == "sea" ) {
-						movement_type = unit::StaticDef::MT_SEA;
+					else if ( movement_type_str == "water" ) {
+						movement_type = unit::StaticDef::MT_WATER;
 					}
 					else if ( movement_type_str == "air" ) {
 						movement_type = unit::StaticDef::MT_AIR;
@@ -58,7 +58,7 @@ BINDING_IMPL( units ) {
 						movement_type = unit::StaticDef::MT_IMMOVABLE;
 					}
 					else {
-						ERROR( gse::EC.INVALID_CALL, "Invalid movement type - " + movement_type_str + ". Specify one of: land sea air immovable");
+						ERROR( gse::EC.INVALID_CALL, "Invalid movement type - " + movement_type_str + ". Specify one of: land water air immovable");
 					}
 					N_GETPROP( movement_per_turn, unit_def, "movement_per_turn", Int );
 					N_GETPROP( render_def, unit_def, "render", Object );

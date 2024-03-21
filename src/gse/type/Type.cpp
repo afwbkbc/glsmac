@@ -308,6 +308,9 @@ const bool Type::operator==( const Type& other ) const {
 			if ( obj_a->object_class != obj_b->object_class ) {
 				return false;
 			}
+			if ( obj_a->wrapobj || obj_b->wrapobj ) {
+				return obj_a->wrapobj == obj_b->wrapobj;
+			}
 			const auto& a = obj_a->value;
 			const auto& b = obj_b->value;
 			if ( a.size() != b.size() ) {

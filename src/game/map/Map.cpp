@@ -449,7 +449,7 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_t
 				case TG_FEATURE: {
 					matches[ idx++ ] = (
 						( t->features & value ) == ( tile->features & value ) ||
-							( type == TVT_RIVERS_FORESTS && !tile->is_water_tile && t->is_water_tile ) // rivers end in sea
+							( type == TVT_RIVERS_FORESTS && !tile->is_water_tile && t->is_water_tile ) // rivers end in oceans
 					);
 					break;
 				}

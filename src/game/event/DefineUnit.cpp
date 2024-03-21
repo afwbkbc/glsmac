@@ -11,7 +11,7 @@ DefineUnit::DefineUnit( const size_t initiator_slot, unit::Def* def )
 	//
 }
 
-const std::string* DefineUnit::Validate( const Game* game ) const {
+const std::string* DefineUnit::Validate( Game* game ) const {
 	if ( m_initiator_slot != 0 ) {
 		return Error( "Only master is allowed to define units" );
 	}

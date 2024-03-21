@@ -125,7 +125,7 @@ void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings, MT_C
 	ui->SetLoaderText( "Map generation complete" );
 }
 
-void MapGenerator::SmoothTerrain( Tiles* tiles, MT_CANCELABLE, const bool smooth_land, const bool smooth_sea ) {
+void MapGenerator::SmoothTerrain( Tiles* tiles, MT_CANCELABLE, const bool smooth_land, const bool smooth_water ) {
 
 	Tile::elevation_t c;
 	Tile::elevation_t sharpest;
@@ -140,7 +140,7 @@ void MapGenerator::SmoothTerrain( Tiles* tiles, MT_CANCELABLE, const bool smooth
 			tile->Update();
 
 			if (
-				( tile->is_water_tile && !smooth_sea ) ||
+				( tile->is_water_tile && !smooth_water ) ||
 					( !tile->is_water_tile && !smooth_land )
 				) {
 				continue;

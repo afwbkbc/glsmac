@@ -13,8 +13,8 @@ MoveUnit::MoveUnit( const size_t initiator_slot, const size_t unit_id, const gam
 
 }
 
-const std::string* MoveUnit::Validate( const Game* game ) const {
-	const auto* unit = game->GetUnit( m_unit_id );
+const std::string* MoveUnit::Validate( Game* game ) const {
+	auto* unit = game->GetUnit( m_unit_id );
 	if ( !unit ) {
 		return Error( "Unit not found" );
 	}
@@ -23,44 +23,12 @@ const std::string* MoveUnit::Validate( const Game* game ) const {
 		return Error( "Unit can only be moved by it's owner" );
 	}
 
-	ASSERT_NOLOG( unit->m_def->m_type == unit::Def::DT_STATIC, "only static units are supported now" );
-	const auto* def = (unit::StaticDef*)unit->m_def;
-
-	if ( def->m_movement_type == unit::StaticDef::MT_IMMOVABLE ) {
-		return Error( "Unit is immovable" );
-	}
-
-	if ( !unit->HasMovesLeft() ) {
-		return Error( "Unit is out of moves" );
-	}
-
 	auto* src_tile = unit->m_tile;
 	ASSERT_NOLOG( src_tile, "src tile not set" );
-	const auto* dst_tile = src_tile->GetNeighbour( m_direction );
+	auto* dst_tile = src_tile->GetNeighbour( m_direction );
 	ASSERT_NOLOG( dst_tile, "dst tile not set" );
 
-	if ( src_tile == dst_tile ) {
-		return Error( "Destination tile is same as source tile" );
-	}
-
-	if ( !src_tile->IsAdjactentTo( dst_tile ) ) {
-		return Error( "Destination tile is not adjactent to source tile" );
-	}
-
-	if ( def->m_movement_type == unit::StaticDef::MT_LAND && dst_tile->is_water_tile ) {
-		return Error( "Land units can't move to sea tile" );
-	}
-	if ( def->m_movement_type == unit::StaticDef::MT_SEA && !dst_tile->is_water_tile ) {
-		return Error( "Sea units can't move to land tile" );
-	}
-
-	for ( const auto& it : dst_tile->units ) {
-		if ( it.second->m_owner != unit->m_owner ) {
-			return Error( "Destination tile contains foreign units" );
-		}
-	}
-
-	return Ok();
+	return game->MoveUnitValidate( unit, dst_tile );
 }
 
 void MoveUnit::Resolve( Game* game ) {
@@ -77,7 +45,7 @@ void MoveUnit::Resolve( Game* game ) {
 const gse::Value MoveUnit::Apply( game::Game* game ) const {
 	auto* unit = game->GetUnit( m_unit_id );
 	ASSERT_NOLOG( unit, "unit not found" );
-	game->MoveUnit( unit, unit->m_tile->GetNeighbour( m_direction ), m_resolutions );
+	game->MoveUnitApply( unit, unit->m_tile->GetNeighbour( m_direction ), m_resolutions );
 	return VALUE( gse::type::Undefined );
 }
 

@@ -13,7 +13,7 @@ UncompleteTurn::UncompleteTurn( const size_t initiator_slot, const size_t turn_i
 	//
 }
 
-const std::string* UncompleteTurn::Validate( const Game* game ) const {
+const std::string* UncompleteTurn::Validate( Game* game ) const {
 	if ( game->GetTurnId() != m_turn_id ) {
 		return Error( "Turn ID mismatch" );
 	}

@@ -3,7 +3,7 @@
 namespace game {
 namespace unit {
 
-const std::unordered_map< StaticDef::movement_type_t, std::string > StaticDef::s_movement_type_str = {
+const std::unordered_map< Def::movement_type_t, std::string > StaticDef::s_movement_type_str = {
 	{
 		MT_IMMOVABLE,
 		"IMMOVABLE"
@@ -13,7 +13,7 @@ const std::unordered_map< StaticDef::movement_type_t, std::string > StaticDef::s
 		"LAND"
 	},
 	{
-		MT_SEA,
+		MT_WATER,
 		"SEA"
 	},
 	{
@@ -35,6 +35,10 @@ StaticDef::StaticDef( const std::string& id, const std::string& name, const move
 
 StaticDef::~StaticDef() {
 	delete m_render;
+}
+
+const Def::movement_type_t StaticDef::GetMovementType() const {
+	return m_movement_type;
 }
 
 const types::Vec3 StaticDef::GetSpawnCoords( const float tile_x, const float tile_y, const map::TileState::tile_vertices_t& tile_coords ) const {

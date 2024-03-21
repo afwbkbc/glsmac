@@ -9,7 +9,7 @@ class AdvanceTurn : public Event {
 public:
 	AdvanceTurn( const size_t initiator_slot, const size_t turn_id );
 
-	const std::string* Validate( const Game* game ) const override;
+	const std::string* Validate( Game* game ) const override;
 	const gse::Value Apply( game::Game* game ) const override;
 	TS_DEF()
 

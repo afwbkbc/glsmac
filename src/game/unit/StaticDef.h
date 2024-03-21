@@ -11,12 +11,6 @@ namespace unit {
 
 class StaticDef : public Def {
 public:
-	enum movement_type_t {
-		MT_IMMOVABLE,
-		MT_LAND,
-		MT_SEA,
-		MT_AIR
-	};
 	static const std::string& GetMovementTypeString( const movement_type_t movement_type );
 
 	StaticDef( const std::string& id, const std::string& name, const movement_type_t movement_type, const Unit::movement_t movement_per_turn, const Render* render );
@@ -25,6 +19,8 @@ public:
 	const movement_type_t m_movement_type;
 	const Unit::movement_t m_movement_per_turn;
 	const Render* m_render;
+
+	const movement_type_t GetMovementType() const override;
 
 	const types::Vec3 GetSpawnCoords( const float tile_x, const float tile_y, const map::TileState::tile_vertices_t& tile_coords ) const override;
 	const std::string ToString( const std::string& prefix ) const override;

@@ -14,7 +14,7 @@ CompleteTurn::CompleteTurn( const size_t initiator_slot, const size_t turn_id )
 	//
 }
 
-const std::string* CompleteTurn::Validate( const Game* game ) const {
+const std::string* CompleteTurn::Validate( Game* game ) const {
 	if ( game->GetTurnId() != m_turn_id ) {
 		return Error( "Turn ID mismatch ( " + std::to_string( game->GetTurnId() ) + " != " + std::to_string( m_turn_id ) + " )" );
 	}

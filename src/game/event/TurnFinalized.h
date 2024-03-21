@@ -11,7 +11,7 @@ class TurnFinalized : public Event {
 public:
 	TurnFinalized( const size_t initiator_slot, const util::CRC32::crc_t checksum );
 
-	const std::string* Validate( const Game* game ) const override;
+	const std::string* Validate( Game* game ) const override;
 	const gse::Value Apply( game::Game* game ) const override;
 	TS_DEF()
 

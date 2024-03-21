@@ -297,8 +297,9 @@ public:
 	void SpawnUnit( unit::Unit* unit );
 	void SkipUnitTurn( const size_t unit_id );
 	void DespawnUnit( const size_t unit_id );
+	const std::string* MoveUnitValidate( unit::Unit* unit, map::Tile* dst_tile );
 	const gse::Value MoveUnitResolve( unit::Unit* unit, map::Tile* dst_tile );
-	void MoveUnit( unit::Unit* unit, map::Tile* dst_tile, const gse::Value resolutions );
+	void MoveUnitApply( unit::Unit* unit, map::Tile* dst_tile, const gse::Value resolutions );
 	const size_t GetTurnId() const;
 	const bool IsTurnActive() const;
 	const bool IsTurnCompleted( const size_t slot_num ) const;
@@ -314,7 +315,7 @@ public:
 
 private:
 
-	void ValidateEvent( event::Event* event ) const;
+	void ValidateEvent( event::Event* event );
 	const gse::Value ProcessEvent( event::Event* event );
 
 	const types::Vec3 GetUnitRenderCoords( const unit::Unit* unit );

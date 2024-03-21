@@ -37,7 +37,7 @@ public:
 	const event_type_t m_type;
 	const size_t m_initiator_slot;
 
-	virtual const std::string* Validate( const Game* game ) const = 0;
+	virtual const std::string* Validate( Game* game ) const = 0;
 	virtual void Resolve( Game* game ) {};
 	virtual const gse::Value Apply( Game* game ) const = 0;
 	virtual const std::string ToString( const std::string& prefix = "" ) const = 0;

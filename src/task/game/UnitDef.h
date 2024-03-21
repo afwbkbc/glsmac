@@ -39,7 +39,7 @@ private:
 	// TODO: get rid of union
 	union {
 		struct {
-			::game::unit::StaticDef::movement_type_t movement_type;
+			::game::unit::Def::movement_type_t movement_type;
 			::game::unit::Unit::movement_t movement_per_turn;
 			struct {
 				bool is_sprite;

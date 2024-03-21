@@ -2,6 +2,7 @@
 
 #include <functional>
 
+#include "gse/Exception.h"
 #include "gse/type/Callable.h"
 #include "gse/type/Object.h"
 #include "gse/type/Undefined.h"

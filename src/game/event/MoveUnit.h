@@ -13,7 +13,7 @@ class MoveUnit : public Event {
 public:
 	MoveUnit( const size_t initiator_slot, const size_t unit_id, const game::map::Tile::direction_t direction );
 
-	const std::string* Validate( const Game* game ) const override;
+	const std::string* Validate( Game* game ) const override;
 	void Resolve( Game* game ) override;
 	const gse::Value Apply( game::Game* game ) const override;
 	TS_DEF()

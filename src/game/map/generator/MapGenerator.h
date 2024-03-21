@@ -87,7 +87,7 @@ protected:
 	const std::vector< Tile* > GetTilesInRandomOrder( Tiles* tiles, MT_CANCELABLE );
 
 	// make terrain a bit smoother
-	void SmoothTerrain( Tiles* tiles, MT_CANCELABLE, const bool smooth_land = true, const bool smooth_sea = true );
+	void SmoothTerrain( Tiles* tiles, MT_CANCELABLE, const bool smooth_land = true, const bool smooth_water = true );
 
 	// you can call it from map generator when you think you may have generated extreme slopes
 	// if you don't and keep generating - they will be normalized more aggressively at the end and may make terrain more flat

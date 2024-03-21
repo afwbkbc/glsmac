@@ -14,7 +14,7 @@ TurnFinalized::TurnFinalized( const size_t initiator_slot, const util::CRC32::cr
 	//
 }
 
-const std::string* TurnFinalized::Validate( const Game* game ) const {
+const std::string* TurnFinalized::Validate( Game* game ) const {
 	if ( game->GetState()->IsMaster() ) {
 		if ( game->IsTurnActive() ) {
 			return Error( "Got finalize response but turn is still active" );

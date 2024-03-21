@@ -202,6 +202,14 @@ WRAPIMPL_BEGIN( Tile, CLASS_TILE )
 		GETN( S ),
 		GETN( SW ),
 		{
+			"is_adjactent_to",
+			NATIVE_CALL( this ) {
+				N_ARGS( 1 );
+				N_UNWRAP( other, 0, Tile );
+				return VALUE( gse::type::Bool, IsAdjactentTo( other ) );
+			})
+		},
+		{
 			"get_surrounding_tiles",
 			NATIVE_CALL( this ) {
 				N_ARGS( 0 );
@@ -216,11 +224,11 @@ WRAPIMPL_BEGIN( Tile, CLASS_TILE )
 			"get_units",
 			NATIVE_CALL( this ) {
 				N_ARGS( 0 );
-				gse::type::Object::properties_t result = {};
+				gse::type::Array::elements_t result = {};
 				for ( auto& it : units ) {
-					result.insert_or_assign( std::to_string( it.second->m_id ), it.second->Wrap() );
+					result.push_back( it.second->Wrap() );
 				}
-				return VALUE( gse::type::Object, result );
+				return VALUE( gse::type::Array, result );
 			} )
 		}
 	};

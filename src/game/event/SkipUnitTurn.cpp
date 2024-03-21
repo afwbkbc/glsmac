@@ -13,7 +13,7 @@ SkipUnitTurn::SkipUnitTurn( const size_t initiator_slot, const size_t unit_id )
 	//
 }
 
-const std::string* SkipUnitTurn::Validate( const Game* game ) const {
+const std::string* SkipUnitTurn::Validate( Game* game ) const {
 	const auto* unit = game->GetUnit( m_unit_id );
 	if ( !unit ) {
 		return Error( "Unit not found" );

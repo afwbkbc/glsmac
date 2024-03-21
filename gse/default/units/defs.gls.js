@@ -18,7 +18,7 @@ let native_lifeform = (id, name, movement_type, movement_per_turn, base_y) => {
 const units = [
     native_lifeform('FungalTower', 'Fungal Tower', 'immovable', 0, 79),
     native_lifeform('MindWorms', 'Mind Worms', 'land', 1, 233),
-    native_lifeform('SeaLurk', 'Sea Lurk', 'sea', 4, 310),
+    native_lifeform('SeaLurk', 'Sea Lurk', 'water', 4, 310),
     native_lifeform('SporeLauncher', 'Spore Launcher', 'land', 1, 387),
 ];
 

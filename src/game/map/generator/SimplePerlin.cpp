@@ -122,7 +122,7 @@ void SimplePerlin::GenerateElevations( Tiles* tiles, const game::MapSettings& ma
 	}
 
 	for ( size_t i = 0 ; i < 8 ; i++ ) {
-		// smooth land 2 times, sea 8 times
+		// smooth land 2 times, water 8 times
 		SmoothTerrain( tiles, MT_C, ( i < 2 ), true );
 		MT_RETIF();
 	}

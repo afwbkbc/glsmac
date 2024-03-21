@@ -8,6 +8,7 @@
 #include "event/FinalizeTurn.h"
 #include "event/TurnFinalized.h"
 #include "event/AdvanceTurn.h"
+#include "gse/type/String.h"
 
 using namespace game::connection;
 using namespace game::bindings;
@@ -1113,6 +1114,34 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	delete unit;
 }
 
+const std::string* Game::MoveUnitValidate( unit::Unit* unit, map::Tile* dst_tile ) {
+	const auto result = m_state->m_bindings->Call(
+		Bindings::CS_ON_UNIT_MOVE_VALIDATE, {
+			{
+				"unit",
+				unit->Wrap()
+			},
+			{
+				"src_tile",
+				unit->m_tile->Wrap()
+			},
+			{
+				"dst_tile",
+				dst_tile->Wrap()
+			},
+		}
+	);
+	switch ( result.Get()->type ) {
+		case gse::type::Type::T_NULL:
+		case gse::type::Type::T_UNDEFINED:
+			return nullptr; // no errors
+		case gse::type::Type::T_STRING:
+			return new std::string( ( (gse::type::String*)result.Get() )->value ); // error
+		default:
+			THROW( "unexpected validation result type: " + gse::type::Type::GetTypeString( result.Get()->type ) );
+	}
+}
+
 const gse::Value Game::MoveUnitResolve( unit::Unit* unit, map::Tile* dst_tile ) {
 	return m_state->m_bindings->Call(
 		Bindings::CS_ON_UNIT_MOVE_RESOLVE, {
@@ -1132,7 +1161,7 @@ const gse::Value Game::MoveUnitResolve( unit::Unit* unit, map::Tile* dst_tile ) 
 	);
 }
 
-void Game::MoveUnit( unit::Unit* unit, map::Tile* dst_tile, const gse::Value resolutions ) {
+void Game::MoveUnitApply( unit::Unit* unit, map::Tile* dst_tile, const gse::Value resolutions ) {
 	ASSERT( dst_tile, "dst tile not set" );
 
 	Log( "Moving unit #" + std::to_string( unit->m_id ) + " to " + dst_tile->coord.ToString() );
@@ -1143,7 +1172,7 @@ void Game::MoveUnit( unit::Unit* unit, map::Tile* dst_tile, const gse::Value res
 	ASSERT( dst_tile->units.find( unit->m_id ) == dst_tile->units.end(), "dst tile already contains this unit" );
 
 	const auto result = m_state->m_bindings->Call(
-		Bindings::CS_ON_UNIT_MOVE, {
+		Bindings::CS_ON_UNIT_MOVE_APPLY, {
 			{
 				"unit",
 				unit->Wrap( true )
@@ -1355,7 +1384,7 @@ void Game::GlobalAdvanceTurn() {
 	AddEvent( new event::AdvanceTurn( m_slot_num, s_turn_id ) );
 }
 
-void Game::ValidateEvent( event::Event* event ) const {
+void Game::ValidateEvent( event::Event* event ) {
 	if ( !event->m_is_validated ) {
 		const auto* errmsg = event->Validate( this );
 		if ( errmsg ) {

@@ -14,7 +14,7 @@ AdvanceTurn::AdvanceTurn( const size_t initiator_slot, const size_t turn_id )
 	//
 }
 
-const std::string* AdvanceTurn::Validate( const Game* game ) const {
+const std::string* AdvanceTurn::Validate( Game* game ) const {
 	if ( m_initiator_slot != 0 ) {
 		return Error( "Turn can only be advanced by master" );
 	}

@@ -150,7 +150,7 @@ struct Consts {
 				{ 394, 687 },
 				{ 451, 687 },
 			};
-			const pcx_texture_coordinates_t fungus_sea[16] = {
+			const pcx_texture_coordinates_t fungus_water[16] = {
 				{ 508, 516 },
 				{ 565, 516 },
 				{ 622, 516 },
@@ -231,7 +231,7 @@ struct Consts {
 				25
 			};
 
-			const pcx_texture_coordinates_t nutrient_bonus_sea[2] = {
+			const pcx_texture_coordinates_t nutrient_bonus_water[2] = {
 				{ 1,   253 },
 				{ 102, 253 },
 			};
@@ -239,7 +239,7 @@ struct Consts {
 				{ 203, 253 },
 				{ 304, 253 },
 			};
-			const pcx_texture_coordinates_t minerals_bonus_sea[2] = {
+			const pcx_texture_coordinates_t minerals_bonus_water[2] = {
 				{ 1,   316 },
 				{ 102, 316 },
 			};
@@ -247,7 +247,7 @@ struct Consts {
 				{ 203, 316 },
 				{ 304, 316 },
 			};
-			const pcx_texture_coordinates_t energy_bonus_sea[2] = {
+			const pcx_texture_coordinates_t energy_bonus_water[2] = {
 				{ 1,   379 },
 				{ 102, 379 },
 			};
@@ -267,7 +267,7 @@ struct Consts {
 					190
 				},
 			};
-			const pcx_texture_coordinates_t unity_pod_sea[3] = {
+			const pcx_texture_coordinates_t unity_pod_water[3] = {
 				{ 418, 379 },
 				{ 620, 379 },
 				{ 822, 379 },
@@ -277,7 +277,7 @@ struct Consts {
 				{ 721, 379 },
 				{ 923, 379 },
 			};
-			const pcx_texture_coordinates_t farm_sea[1] = {
+			const pcx_texture_coordinates_t farm_water[1] = {
 				{
 					607,
 					190
@@ -289,7 +289,7 @@ struct Consts {
 				{ 923, 579 },
 				{ 923, 642 },
 			};
-			const pcx_texture_coordinates_t solar_sea[1] = {
+			const pcx_texture_coordinates_t solar_water[1] = {
 				{
 					506,
 					127
@@ -301,7 +301,7 @@ struct Consts {
 					127
 				},
 			};
-			const pcx_texture_coordinates_t mine_sea[1] = {
+			const pcx_texture_coordinates_t mine_water[1] = {
 				{
 					506,
 					64
@@ -443,7 +443,7 @@ struct Consts {
 				}
 			}
 		};
-		const float water_level_z = elevation_to_vertex_z.Clamp( Tile::ELEVATION_LEVEL_COAST ); // sea is always on sea level
+		const float water_level_z = elevation_to_vertex_z.Clamp( Tile::ELEVATION_LEVEL_COAST ); // water is always on water level
 	} tile;
 	const struct {
 		// to compensate for view angle difference from SMAC's
