@@ -20,6 +20,9 @@ BINDING_IMPL( random ) {
 				if ( max < min ) {
 					ERROR( gse::EC.INVALID_CALL, "Maximum value is smaller than minimum ( " + std::to_string( max ) + " < " + std::to_string( min ) + " )" );
 				}
+				if ( !GAME->GetState()->IsMaster() ) {
+					ERROR( gse::EC.INVALID_CALL, "Only master is allowed to generate random values" );
+				}
 				return VALUE( gse::type::Int, GAME->GetRandom()->GetInt64( min, max ) );
 			})
 		},
