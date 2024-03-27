@@ -15,7 +15,8 @@ Unit::Unit(
 	const Vec3& render_coords,
 	const bool is_owned,
 	const ::game::unit::Unit::movement_t movement,
-	const ::game::unit::Unit::morale_t morale,
+	const ::game::unit::Morale::morale_t morale,
+	const std::string& morale_string,
 	const ::game::unit::Unit::health_t health
 )
 	: m_badge_defs( badge_defs )
@@ -35,6 +36,7 @@ Unit::Unit(
 	, m_is_owned( is_owned )
 	, m_movement( movement )
 	, m_morale( morale )
+	, m_morale_string( morale_string )
 	, m_health( health ) {
 	m_is_active = ShouldBeActive();
 	m_render.badge.def = m_slot->GetUnitBadgeSprite( m_morale, m_is_active );
@@ -106,8 +108,8 @@ const std::string Unit::GetStatsString() const {
 	return m_def->GetStatsString();
 }
 
-const std::string Unit::GetMoraleString() const {
-	return ::game::unit::Unit::GetMoraleString( m_morale );
+const std::string& Unit::GetMoraleString() const {
+	return m_morale_string;
 }
 
 const std::string Unit::GetMovesString() const {

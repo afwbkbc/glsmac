@@ -1,5 +1,6 @@
 #include "Event.h"
 
+#include "DefineMorales.h"
 #include "DefineUnit.h"
 #include "SpawnUnit.h"
 #include "DespawnUnit.h"
@@ -30,6 +31,7 @@ const types::Buffer Event::Serialize( const Event* event ) {
         break; \
     }
 	switch ( event->m_type ) {
+		SERIALIZE( ET_UNIT_DEFINE_MORALES, DefineMorales )
 		SERIALIZE( ET_UNIT_DEFINE, DefineUnit )
 		SERIALIZE( ET_UNIT_SPAWN, SpawnUnit )
 		SERIALIZE( ET_UNIT_DESPAWN, DespawnUnit )
@@ -57,6 +59,7 @@ Event* Event::Unserialize( types::Buffer& buf ) {
         break; \
     }
 	switch ( type ) {
+		UNSERIALIZE( ET_UNIT_DEFINE_MORALES, DefineMorales )
 		UNSERIALIZE( ET_UNIT_DEFINE, DefineUnit )
 		UNSERIALIZE( ET_UNIT_SPAWN, SpawnUnit )
 		UNSERIALIZE( ET_UNIT_DESPAWN, DespawnUnit )

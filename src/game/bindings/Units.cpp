@@ -1,13 +1,16 @@
 #include "Binding.h"
 
 #include "gse/type/Object.h"
+#include "gse/type/Array.h"
 #include "gse/type/String.h"
 #include "gse/type/Int.h"
 #include "gse/type/Float.h"
 
+#include "game/unit/MoraleSet.h"
 #include "game/unit/StaticDef.h"
 #include "game/unit/SpriteRender.h"
 
+#include "game/event/DefineMorales.h"
 #include "game/event/DefineUnit.h"
 #include "game/event/SpawnUnit.h"
 #include "game/event/DespawnUnit.h"
@@ -15,11 +18,11 @@
 namespace game {
 namespace bindings {
 
-const unit::Unit::morale_t GetMorale( const int64_t& morale, gse::Context* ctx, const gse::si_t& call_si ) {
-	if ( morale < unit::Unit::MORALE_MIN || morale > unit::Unit::MORALE_MAX ) {
-		ERROR( gse::EC.INVALID_CALL, "Invalid morale value: " + std::to_string( morale ) + " (should be between " + std::to_string( unit::Unit::MORALE_MIN ) + " and " + std::to_string( unit::Unit::MORALE_MAX ) + ", inclusive)" );
+const unit::Morale::morale_t GetMorale( const int64_t& morale, gse::Context* ctx, const gse::si_t& call_si ) {
+	if ( morale < unit::Morale::MORALE_MIN || morale > unit::Morale::MORALE_MAX ) {
+		ERROR( gse::EC.INVALID_CALL, "Invalid morale value: " + std::to_string( morale ) + " (should be between " + std::to_string( unit::Morale::MORALE_MIN ) + " and " + std::to_string( unit::Morale::MORALE_MAX ) + ", inclusive)" );
 	}
-	return (unit::Unit::morale_t)morale;
+	return (unit::Morale::morale_t)morale;
 }
 
 const unit::Unit::health_t GetHealth( const float health, gse::Context* ctx, const gse::si_t& call_si ) {
@@ -35,12 +38,37 @@ const unit::Unit::health_t GetHealth( const float health, gse::Context* ctx, con
 BINDING_IMPL( units ) {
 	const gse::type::Object::properties_t properties = {
 		{
+			"define_morales",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 2 );
+				N_GETVALUE( id, 0, String );
+				N_GETVALUE( arr, 1, Array );
+				const uint8_t expected_count = unit::Morale::MORALE_MAX - unit::Morale::MORALE_MIN + 1;
+				if ( arr.size() != expected_count ) {
+					ERROR( gse::EC.INVALID_CALL, "Morale set must have exactly " + std::to_string( expected_count ) + " values (found " + std::to_string( arr.size() ) + ")");
+				}
+				unit::MoraleSet::morale_values_t values = {};
+				for ( const auto& v : arr ) {
+					if ( v.Get()->type != gse::type::Type::T_OBJECT ) {
+						ERROR( gse::EC.INVALID_CALL, "Morale set elements must be objects");
+					}
+					const auto* obj = (gse::type::Object*)v.Get();
+					N_GETPROP( name, obj->value, "name", String );
+					values.push_back( unit::Morale{ name } );
+				}
+				auto* game = GAME;
+				game->AddEvent( new event::DefineMorales( game->GetSlotNum(), new unit::MoraleSet( id, values ) ) );
+				return VALUE( gse::type::Undefined );
+			} )
+		},
+		{
 			"define",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( id, 0, String );
 				N_GETVALUE( unit_def, 1, Object );
 				N_GETPROP( name, unit_def, "name", String );
+				N_GETPROP( morale, unit_def, "morale", String );
 				N_GETPROP( unit_type, unit_def, "type", String );
 				if ( unit_type == "static" ) {
 					N_GETPROP( movement_type_str, unit_def, "movement_type", String );
@@ -58,7 +86,7 @@ BINDING_IMPL( units ) {
 						movement_type = unit::StaticDef::MT_IMMOVABLE;
 					}
 					else {
-						ERROR( gse::EC.INVALID_CALL, "Invalid movement type - " + movement_type_str + ". Specify one of: land water air immovable");
+						ERROR( gse::EC.INVALID_CALL, "Invalid movement type: " + movement_type_str + ". Specify one of: land water air immovable");
 					}
 					N_GETPROP( movement_per_turn, unit_def, "movement_per_turn", Int );
 					N_GETPROP( render_def, unit_def, "render", Object );
@@ -72,8 +100,14 @@ BINDING_IMPL( units ) {
 						N_GETPROP( sprite_cx, render_def, "cx", Int );
 						N_GETPROP( sprite_cy, render_def, "cy", Int );
 						N_GETPROP_OPT_INT( sprite_morale_based_xshift, render_def, "morale_based_xshift" );
+						auto* game = GAME;
+						const auto* moraleset = game->GetMoraleSet( morale );
+						if ( !moraleset ) {
+							ERROR( gse::EC.INVALID_CALL, "Morale type '" + morale + "' is not defined");
+						}
 						auto* def = new unit::StaticDef(
 							id,
+							moraleset,
 							name,
 							movement_type,
 							movement_per_turn,
@@ -88,7 +122,6 @@ BINDING_IMPL( units ) {
 								sprite_morale_based_xshift
 							)
 						);
-						auto* game = GAME;
 						game->AddEvent( new event::DefineUnit( game->GetSlotNum(), def ) );
 						return VALUE( gse::type::Undefined );
 					}

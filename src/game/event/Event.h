@@ -13,6 +13,7 @@ class Event {
 public:
 	enum event_type_t {
 		ET_NONE,
+		ET_UNIT_DEFINE_MORALES,
 		ET_UNIT_DEFINE,
 		ET_UNIT_SPAWN,
 		ET_UNIT_DESPAWN,

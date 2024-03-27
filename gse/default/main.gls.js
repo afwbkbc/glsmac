@@ -23,7 +23,7 @@ let random_player = () => {
 };
 
 let random_morale = () => {
-    return #game.random.get_int(1, 7); // TODO: get some constants from api
+    return #game.random.get_int(0, 6); // TODO: get some constants from api
 };
 
 let random_health = () => {

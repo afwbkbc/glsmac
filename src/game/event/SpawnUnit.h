@@ -15,7 +15,7 @@ public:
 		const size_t owner_slot,
 		const size_t pos_x,
 		const size_t pos_y,
-		const unit::Unit::morale_t morale,
+		const unit::Morale::morale_t morale,
 		const unit::Unit::health_t health
 	);
 
@@ -34,7 +34,7 @@ private:
 	const size_t m_owner_slot;
 	const size_t m_pos_x;
 	const size_t m_pos_y;
-	const unit::Unit::morale_t m_morale;
+	const unit::Morale::morale_t m_morale;
 	const unit::Unit::health_t m_health;
 };
 

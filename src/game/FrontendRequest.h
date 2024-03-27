@@ -81,7 +81,8 @@ public:
 				float z;
 			} render_coords;
 			unit::Unit::movement_t movement;
-			unit::Unit::morale_t morale;
+			unit::Morale::morale_t morale;
+			const std::string* morale_string;
 			unit::Unit::health_t health;
 		} unit_spawn;
 		struct {

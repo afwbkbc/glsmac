@@ -26,7 +26,7 @@ public:
 	);
 	~Slot();
 
-	Sprite* GetUnitBadgeSprite( const ::game::unit::Unit::morale_t morale, const bool is_active );
+	Sprite* GetUnitBadgeSprite( const ::game::unit::Morale::morale_t morale, const bool is_active );
 
 	const size_t ShowFakeBadge( const Vec3& coords, const uint8_t offset );
 	void HideFakeBadge( const size_t instance_id );
@@ -40,7 +40,7 @@ private:
 	const types::Color m_color;
 	const slot_flags_t m_flags;
 
-	std::unordered_map< ::game::unit::Unit::morale_t, SlotBadges > badges = {};
+	std::unordered_map< ::game::unit::Morale::morale_t, SlotBadges > badges = {};
 	Sprite fake_badge = {};
 };
 

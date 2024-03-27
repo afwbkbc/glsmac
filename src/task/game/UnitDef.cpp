@@ -42,8 +42,8 @@ UnitDef::UnitDef( InstancedSpriteManager* ism, const ::game::unit::Def* unitdef 
 					static_.render.morale_based_xshift = render->m_morale_based_xshift;
 					if ( static_.render.morale_based_xshift ) {
 						NEW( static_.render.morale_based_sprites, morale_based_sprites_t );
-						for ( ::game::unit::Unit::morale_t morale = ::game::unit::Unit::MORALE_MIN ; morale <= ::game::unit::Unit::MORALE_MAX ; morale++ ) {
-							const uint32_t xshift = static_.render.morale_based_xshift * ( morale - ::game::unit::Unit::MORALE_MIN );
+						for ( ::game::unit::Morale::morale_t morale = ::game::unit::Morale::MORALE_MIN ; morale <= ::game::unit::Morale::MORALE_MAX ; morale++ ) {
+							const uint32_t xshift = static_.render.morale_based_xshift * ( morale - ::game::unit::Morale::MORALE_MIN );
 							static_.render.morale_based_sprites->insert(
 								{
 									morale,
@@ -105,7 +105,7 @@ const bool UnitDef::IsArtillery() const {
 	return m_id != "SporeLauncher";
 }
 
-Sprite* UnitDef::GetSprite( const ::game::unit::Unit::morale_t morale ) {
+Sprite* UnitDef::GetSprite( const ::game::unit::Morale::morale_t morale ) {
 	ASSERT_NOLOG( m_type == ::game::unit::Def::DT_STATIC, "only static units are supported for now" );
 	ASSERT_NOLOG( static_.render.is_sprite, "only sprite unitdefs are supported for now" );
 

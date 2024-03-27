@@ -26,8 +26,8 @@ BadgeDefs::BadgeDefs( InstancedSpriteManager* ism )
 		for ( auto badge_mode = BT_NORMAL ; badge_mode <= BT_GREYEDOUT ; badge_mode++ ) {
 			const uint8_t row = badge_type | badge_mode;
 			auto& spritemap = m_unitbadge_sprites[ row ];
-			for ( auto morale = ::game::unit::Unit::MORALE_MIN ; morale <= ::game::unit::Unit::MORALE_MAX ; morale++ ) {
-				x = ( morale - ::game::unit::Unit::MORALE_MIN ) * ( w + margin ) + margin;
+			for ( auto morale = ::game::unit::Morale::MORALE_MIN ; morale <= ::game::unit::Morale::MORALE_MAX ; morale++ ) {
+				x = ( morale - ::game::unit::Morale::MORALE_MIN ) * ( w + margin ) + margin;
 				y = row * ( h + margin ) + margin;
 
 				// cut holes for healthbars
@@ -171,7 +171,7 @@ const Vec3 BadgeDefs::GetBadgeHealthbarCoords( const types::Vec3& unit_coords ) 
 	};
 }
 
-InstancedSprite* BadgeDefs::GetBadgeSprite( const badge_type_t badge_type, const ::game::unit::Unit::morale_t morale ) const {
+InstancedSprite* BadgeDefs::GetBadgeSprite( const badge_type_t badge_type, const ::game::unit::Morale::morale_t morale ) const {
 	return m_unitbadge_sprites.at( badge_type ).at( morale );
 }
 

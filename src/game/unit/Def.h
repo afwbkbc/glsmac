@@ -2,10 +2,9 @@
 
 #include <string>
 
+#include "MoraleSet.h"
 #include "types/Buffer.h"
-
 #include "game/map/TileState.h"
-
 #include "gse/Value.h"
 
 namespace game {
@@ -25,10 +24,11 @@ public:
 		MT_AIR
 	};
 
-	Def( const std::string& id, const def_type_t type, const std::string& name );
+	Def( const std::string& id, const MoraleSet* moraleset, const def_type_t type, const std::string& name );
 	virtual ~Def() = default;
 
 	const std::string m_id;
+	const MoraleSet* m_moraleset;
 	const def_type_t m_type;
 	const std::string m_name;
 

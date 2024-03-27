@@ -3,6 +3,7 @@
 #include <cstddef>
 
 #include "Def.h"
+#include "Morale.h"
 
 #include "gse/Value.h"
 
@@ -25,10 +26,6 @@ public:
 
 	typedef float movement_t;
 
-	typedef uint8_t morale_t;
-	static const morale_t MORALE_MIN;
-	static const morale_t MORALE_MAX;
-
 	typedef float health_t;
 	static const health_t HEALTH_MIN;
 	static const health_t HEALTH_MAX;
@@ -40,7 +37,7 @@ public:
 		Slot* owner,
 		map::Tile* tile,
 		const movement_t movement,
-		const morale_t morale,
+		const Morale::morale_t morale,
 		const health_t health
 	);
 	virtual ~Unit() = default;
@@ -51,7 +48,7 @@ public:
 	map::Tile* m_tile = nullptr;
 
 	movement_t m_movement;
-	morale_t m_morale;
+	Morale::morale_t m_morale;
 	health_t m_health;
 
 	enum movement_result_t {
@@ -61,11 +58,10 @@ public:
 	};
 	static const movement_t MINIMUM_MOVEMENT_TO_KEEP;
 	const bool HasMovesLeft() const;
-	void UpdateMoves( Game* game, const map::Tile* dst_tile );
 
 	void OnTurn();
 
-	static const std::string& GetMoraleString( const morale_t morale );
+	const std::string& GetMoraleString();
 
 	static const types::Buffer Serialize( const Unit* unit );
 	static Unit* Unserialize( types::Buffer& buf, const Game* game );

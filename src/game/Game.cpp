@@ -960,6 +960,14 @@ void Game::OnGSEError( gse::Exception& err ) {
 	AddFrontendRequest( fr );
 }
 
+unit::MoraleSet* Game::GetMoraleSet( const std::string& name ) const {
+	const auto& it = m_unit_moralesets.find( name );
+	if ( it != m_unit_moralesets.end() ) {
+		return it->second;
+	}
+	return nullptr;
+}
+
 unit::Unit* Game::GetUnit( const size_t id ) const {
 	const auto& it = m_units.find( id );
 	if ( it != m_units.end() ) {
@@ -996,12 +1004,30 @@ void Game::RefreshUnit( const unit::Unit* unit ) {
 	AddFrontendRequest( fr );
 }
 
+void Game::DefineMoraleSet( unit::MoraleSet* moraleset ) {
+	Log( "Defining unit moraleset ('" + moraleset->m_id + "')" );
+
+	ASSERT( m_unit_moralesets.find( moraleset->m_id ) == m_unit_moralesets.end(), "Unit moraleset '" + moraleset->m_id + "' already exists" );
+
+	m_unit_moralesets.insert(
+		{
+			moraleset->m_id,
+			moraleset
+		}
+	);
+}
+
 void Game::DefineUnit( unit::Def* def ) {
 	Log( "Defining unit ('" + def->m_id + "')" );
 
 	ASSERT( m_unit_defs.find( def->m_id ) == m_unit_defs.end(), "Unit definition '" + def->m_id + "' already exists" );
 
-	m_unit_defs.insert_or_assign( def->m_id, def );
+	m_unit_defs.insert(
+		{
+			def->m_id,
+			def
+		}
+	);
 
 	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_DEFINE );
 	NEW( fr.data.unit_define.serialized_unitdef, std::string, unit::Def::Serialize( def ).ToString() );
@@ -1048,6 +1074,7 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 
 	fr.data.unit_spawn.movement = unit->m_movement;
 	fr.data.unit_spawn.morale = unit->m_morale;
+	NEW( fr.data.unit_spawn.morale_string, std::string, unit->GetMoraleString() );
 	fr.data.unit_spawn.health = unit->m_health;
 
 	AddFrontendRequest( fr );
@@ -1435,32 +1462,53 @@ const types::Vec3 Game::GetUnitRenderCoords( const unit::Unit* unit ) {
 }
 
 void Game::SerializeUnits( types::Buffer& buf ) const {
+
+	Log( "Serializing " + std::to_string( m_unit_moralesets.size() ) + " unit moralesets" );
+	buf.WriteInt( m_unit_moralesets.size() );
+	for ( const auto& it : m_unit_moralesets ) {
+		buf.WriteString( it.first );
+		buf.WriteString( unit::MoraleSet::Serialize( it.second ).ToString() );
+	}
+
 	Log( "Serializing " + std::to_string( m_unit_defs.size() ) + " unit defs" );
 	buf.WriteInt( m_unit_defs.size() );
 	for ( const auto& it : m_unit_defs ) {
 		buf.WriteString( it.first );
 		buf.WriteString( unit::Def::Serialize( it.second ).ToString() );
 	}
-	buf.WriteInt( m_units.size() );
+
 	Log( "Serializing " + std::to_string( m_units.size() ) + " units" );
+	buf.WriteInt( m_units.size() );
 	for ( const auto& it : m_units ) {
 		buf.WriteInt( it.first );
 		buf.WriteString( unit::Unit::Serialize( it.second ).ToString() );
 	}
 	buf.WriteInt( unit::Unit::GetNextId() );
+
 	Log( "Saved next unit id: " + std::to_string( unit::Unit::GetNextId() ) );
 }
 
 void Game::UnserializeUnits( types::Buffer& buf ) {
+	ASSERT( m_unit_moralesets.empty(), "unit moralesets not empty" );
 	ASSERT( m_unit_defs.empty(), "unit defs not empty" );
 	ASSERT( m_units.empty(), "units not empty" );
+
 	size_t sz = buf.ReadInt();
+	Log( "Unserializing " + std::to_string( sz ) + " unit moralesets" );
+	for ( size_t i = 0 ; i < sz ; i++ ) {
+		const auto name = buf.ReadString();
+		auto b = Buffer( buf.ReadString() );
+		DefineMoraleSet( unit::MoraleSet::Unserialize( b ) );
+	}
+
+	sz = buf.ReadInt();
 	Log( "Unserializing " + std::to_string( sz ) + " unit defs" );
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = Buffer( buf.ReadString() );
 		DefineUnit( unit::Def::Unserialize( b ) );
 	}
+
 	sz = buf.ReadInt();
 	Log( "Unserializing " + std::to_string( sz ) + " units" );
 	ASSERT( m_unprocessed_units.empty(), "unprocessed units not empty" );
@@ -1469,6 +1517,7 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 		auto b = Buffer( buf.ReadString() );
 		SpawnUnit( unit::Unit::Unserialize( b, this ) );
 	}
+
 	unit::Unit::SetNextId( buf.ReadInt() );
 	Log( "Restored next unit id: " + std::to_string( unit::Unit::GetNextId() ) );
 }
@@ -1793,10 +1842,16 @@ void Game::ResetGame() {
 	}
 	m_unprocessed_events.clear();
 
+	for ( auto& it : m_unit_moralesets ) {
+		delete it.second;
+	}
+	m_unit_moralesets.clear();
+
 	for ( auto& it : m_units ) {
 		delete it.second;
 	}
 	m_units.clear();
+
 	for ( auto& it : m_unit_defs ) {
 		delete it.second;
 	}

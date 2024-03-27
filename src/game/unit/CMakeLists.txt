@@ -5,5 +5,7 @@ SET( SRC ${SRC}
 	${PWD}/Render.cpp
 	${PWD}/SpriteRender.cpp
 	${PWD}/Unit.cpp
+	${PWD}/Morale.cpp
+	${PWD}/MoraleSet.cpp
 
 	PARENT_SCOPE )

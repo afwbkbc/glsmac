@@ -27,8 +27,15 @@ const std::string& StaticDef::GetMovementTypeString( const movement_type_t movem
 	return it->second;
 }
 
-StaticDef::StaticDef( const std::string& id, const std::string& name, const movement_type_t movement_type, const Unit::movement_t movement_per_turn, const Render* render )
-	: Def( id, DT_STATIC, name )
+StaticDef::StaticDef(
+	const std::string& id,
+	const MoraleSet* moraleset,
+	const std::string& name,
+	const movement_type_t movement_type,
+	const Unit::movement_t movement_per_turn,
+	const Render* render
+)
+	: Def( id, moraleset, DT_STATIC, name )
 	, m_movement_type( movement_type )
 	, m_movement_per_turn( movement_per_turn )
 	, m_render( render ) {}
@@ -62,10 +69,10 @@ void StaticDef::Serialize( types::Buffer& buf, const StaticDef* def ) {
 	Render::Serialize( buf, def->m_render );
 }
 
-StaticDef* StaticDef::Unserialize( types::Buffer& buf, const std::string& id, const std::string& name ) {
+StaticDef* StaticDef::Unserialize( types::Buffer& buf, const std::string& id, const MoraleSet* moraleset, const std::string& name ) {
 	const auto movement_type = (movement_type_t)buf.ReadInt();
 	const auto movement_per_turn = buf.ReadFloat();
-	return new StaticDef( id, name, movement_type, movement_per_turn, Render::Unserialize( buf ) );
+	return new StaticDef( id, moraleset, name, movement_type, movement_per_turn, Render::Unserialize( buf ) );
 }
 
 }

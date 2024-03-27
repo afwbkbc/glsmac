@@ -1,6 +1,22 @@
-let native_lifeform = (id, name, movement_type, movement_per_turn, base_y) => {
+const MORALE = {
+    NATIVE: 'NATIVE',
+};
+const morales = [
+    [MORALE.NATIVE, [
+        {name: 'Hatchling'},
+        {name: 'Larval Mass'},
+        {name: 'Pre-Boil'},
+        {name: 'Boil'},
+        {name: 'Mature Boil'},
+        {name: 'Great Boil'},
+        {name: 'Demon Boil'},
+    ]],
+];
+
+const native_lifeform = (id, name, movement_type, movement_per_turn, base_y) => {
     return [id, {
         name: name,
+        morale: MORALE.NATIVE,
         type: 'static',
         movement_type: movement_type,
         movement_per_turn: movement_per_turn,
@@ -22,13 +38,26 @@ const units = [
     native_lifeform('SporeLauncher', 'Spore Launcher', 'land', 1, 387),
 ];
 
-return {
+const result = {
     define: () => {
+
+        // TODO: for loops
+
         let i = 0;
-        let sz = #size(units);
+        let sz = #size(morales);
+        while (i < sz) {
+            #game.units.define_morales(morales[i][0], morales[i][1]);
+            i++;
+        }
+
+        i = 0;
+        sz = #size(units);
         while (i < sz) {
             #game.units.define(units[i][0], units[i][1]);
             i++;
         }
+
     },
-}
+};
+
+return result;

@@ -129,6 +129,8 @@ public:
 
 private:
 	std::shared_ptr< type::Type > m_data;
+
+	const Value New( const type::Type* type ) const;
 };
 
 }

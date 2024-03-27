@@ -171,7 +171,8 @@ private:
 		const Vec2< size_t >& tile_coords,
 		const Vec3& render_coords,
 		const ::game::unit::Unit::movement_t movement,
-		const ::game::unit::Unit::morale_t morale,
+		const ::game::unit::Morale::morale_t morale,
+		const std::string& morale_string,
 		const ::game::unit::Unit::health_t health
 	);
 	void DespawnUnit( const size_t unit_id );

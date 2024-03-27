@@ -25,7 +25,8 @@ public:
 		const Vec3& render_coords,
 		const bool is_owned,
 		const ::game::unit::Unit::movement_t movement,
-		const ::game::unit::Unit::morale_t morale,
+		const ::game::unit::Morale::morale_t morale,
+		const std::string& morale_string,
 		const ::game::unit::Unit::health_t health
 	);
 	~Unit();
@@ -43,7 +44,7 @@ public:
 
 	const std::string GetNameString() const;
 	const std::string GetStatsString() const;
-	const std::string GetMoraleString() const;
+	const std::string& GetMoraleString() const;
 	const std::string GetMovesString() const;
 
 	void Iterate();
@@ -102,7 +103,8 @@ private:
 	const bool m_is_owned = false;
 	bool m_is_active = false;
 	::game::unit::Unit::movement_t m_movement = 0.0f;
-	::game::unit::Unit::morale_t m_morale = 0;
+	::game::unit::Morale::morale_t m_morale = 0;
+	std::string m_morale_string = "";
 	::game::unit::Unit::health_t m_health = 0;
 
 	bool m_need_refresh = true;

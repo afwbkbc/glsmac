@@ -38,7 +38,7 @@ Slot::Slot(
 	const BadgeDefs::badge_type_t badge_type = ( m_flags & SF_PROGENITOR )
 		? BadgeDefs::BT_PROGENITOR
 		: BadgeDefs::BT_DEFAULT;
-	for ( auto morale = ::game::unit::Unit::MORALE_MIN ; morale <= ::game::unit::Unit::MORALE_MAX ; morale++ ) {
+	for ( auto morale = ::game::unit::Morale::MORALE_MIN ; morale <= ::game::unit::Morale::MORALE_MAX ; morale++ ) {
 		auto& badgedef = badges[ morale ];
 		badgedef.normal.instanced_sprite = m_ism->GetRepaintedInstancedSprite(
 			m_badges_key + "_" + std::to_string( morale ) + "_NORMAL",
@@ -62,14 +62,14 @@ Slot::Slot(
 }
 
 Slot::~Slot() {
-	for ( auto morale = ::game::unit::Unit::MORALE_MIN ; morale <= ::game::unit::Unit::MORALE_MAX ; morale++ ) {
+	for ( auto morale = ::game::unit::Morale::MORALE_MIN ; morale <= ::game::unit::Morale::MORALE_MAX ; morale++ ) {
 		m_ism->RemoveRepaintedInstancedSpriteByKey( m_badges_key + "_" + std::to_string( morale ) + "_NORMAL" );
 		m_ism->RemoveRepaintedInstancedSpriteByKey( m_badges_key + "_" + std::to_string( morale ) + "_GRAYEDOUT" );
 	}
 	m_ism->RemoveRepaintedInstancedSpriteByKey( m_badges_key + "_FAKE" );
 }
 
-Sprite* Slot::GetUnitBadgeSprite( const ::game::unit::Unit::morale_t morale, const bool is_active ) {
+Sprite* Slot::GetUnitBadgeSprite( const ::game::unit::Morale::morale_t morale, const bool is_active ) {
 	return is_active
 		? &badges.at( morale ).normal
 		: &badges.at( morale ).greyedout;

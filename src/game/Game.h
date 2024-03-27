@@ -20,6 +20,7 @@
 #include "gse/GSE.h"
 #include "gse/GlobalContext.h"
 
+#include "unit/MoraleSet.h"
 #include "unit/Def.h"
 #include "unit/Unit.h"
 #include "event/Event.h"
@@ -289,10 +290,12 @@ public:
 	void Message( const std::string& text );
 	void Quit( const std::string& reason );
 	void OnGSEError( gse::Exception& e );
+	unit::MoraleSet* GetMoraleSet( const std::string& name ) const;
 	unit::Unit* GetUnit( const size_t id ) const;
 	unit::Def* GetUnitDef( const std::string& name ) const;
 	void AddEvent( event::Event* event );
 	void RefreshUnit( const unit::Unit* unit );
+	void DefineMoraleSet( unit::MoraleSet* moraleset );
 	void DefineUnit( unit::Def* def );
 	void SpawnUnit( unit::Unit* unit );
 	void SkipUnitTurn( const size_t unit_id );
@@ -320,6 +323,7 @@ private:
 
 	const types::Vec3 GetUnitRenderCoords( const unit::Unit* unit );
 
+	std::unordered_map< std::string, unit::MoraleSet* > m_unit_moralesets = {};
 	std::unordered_map< std::string, unit::Def* > m_unit_defs = {};
 	std::map< size_t, unit::Unit* > m_units = {};
 	void SerializeUnits( types::Buffer& buf ) const;

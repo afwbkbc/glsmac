@@ -14,7 +14,7 @@ SpawnUnit::SpawnUnit(
 	const size_t owner_slot,
 	const size_t pos_x,
 	const size_t pos_y,
-	const unit::Unit::morale_t morale,
+	const unit::Morale::morale_t morale,
 	const unit::Unit::health_t health
 )
 	: Event( initiator_slot, ET_UNIT_SPAWN )
@@ -79,7 +79,7 @@ SpawnUnit* SpawnUnit::Unserialize( types::Buffer& buf, const size_t initiator_sl
 	const auto owner_slot = buf.ReadInt();
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
-	const auto morale = (unit::Unit::morale_t)buf.ReadInt();
+	const auto morale = (unit::Morale::morale_t)buf.ReadInt();
 	const auto health = (unit::Unit::health_t)buf.ReadFloat();
 	return new SpawnUnit( initiator_slot, unit_def, owner_slot, pos_x, pos_y, morale, health );
 }

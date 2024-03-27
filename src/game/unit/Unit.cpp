@@ -13,10 +13,6 @@
 namespace game {
 namespace unit {
 
-// must be hardcoded because unit badge sprites are
-const Unit::morale_t Unit::MORALE_MIN = 1;
-const Unit::morale_t Unit::MORALE_MAX = 7;
-
 const Unit::health_t Unit::HEALTH_MIN = 0.0f;
 const Unit::health_t Unit::HEALTH_MAX = 1.0f;
 const Unit::health_t Unit::HEALTH_PER_TURN = 0.1f;
@@ -29,7 +25,7 @@ const void Unit::SetNextId( const size_t id ) {
 	next_id = id;
 }
 
-Unit::Unit( const size_t id, Def* def, Slot* owner, map::Tile* tile, const movement_t movement, const morale_t morale, const health_t health )
+Unit::Unit( const size_t id, Def* def, Slot* owner, map::Tile* tile, const movement_t movement, const Morale::morale_t morale, const health_t health )
 	: m_id( id )
 	, m_def( def )
 	, m_owner( owner )
@@ -42,51 +38,10 @@ Unit::Unit( const size_t id, Def* def, Slot* owner, map::Tile* tile, const movem
 	}
 }
 
-// TODO: set these from gse
-typedef const std::unordered_map< Unit::morale_t, std::string > morale_strings_t;
-const morale_strings_t s_morale_strings_native = {
-	{ 1, "Hatchling" },
-	{ 2, "Larval Mass" },
-	{ 3, "Pre-Boil" },
-	{ 4, "Boil" },
-	{ 5, "Mature Boil" },
-	{ 6, "Great Boil" },
-	{ 7, "Demon Boil" },
-};
-const morale_strings_t s_morale_strings_nonnative = {
-	{ 1, "Very green" },
-	{ 2, "Green" },
-	{ 3, "Disciplined" },
-	{ 4, "Hardened" },
-	{ 5, "Veteran" },
-	{ 6, "Commando" },
-	{ 7, "Elite" },
-};
-
 const Unit::movement_t Unit::MINIMUM_MOVEMENT_TO_KEEP = 0.1f;
 
 const bool Unit::HasMovesLeft() const {
 	return m_movement >= unit::Unit::MINIMUM_MOVEMENT_TO_KEEP;
-}
-
-void Unit::UpdateMoves( Game* game, const map::Tile* dst_tile ) {
-	// TODO: move to scripts
-	ASSERT_NOLOG( HasMovesLeft(), "no movement points" );
-
-	auto movement_cost = dst_tile->GetMovementCost() + dst_tile->GetMovementAftercost();
-
-	// reduce remaining movement points (even if failed)
-	if ( m_movement >= movement_cost ) {
-		m_movement -= movement_cost;
-		if ( !HasMovesLeft() ) {
-			// don't keep tiny leftovers
-			m_movement = 0.0f;
-		}
-	}
-	else {
-		m_movement = 0.0f;
-	}
-
 }
 
 void Unit::OnTurn() {
@@ -106,11 +61,8 @@ void Unit::OnTurn() {
 	}
 }
 
-const std::string& Unit::GetMoraleString( const morale_t morale ) {
-	const bool is_native = true; // TODO: non-native units
-	const auto& morale_strings = is_native ? s_morale_strings_native : s_morale_strings_nonnative;
-	ASSERT_NOLOG( morale_strings.find( morale ) != morale_strings.end(), "unknown morale type: " + std::to_string( morale ) );
-	return morale_strings.at( morale );
+const std::string& Unit::GetMoraleString() {
+	return m_def->m_moraleset->m_morale_values.at( m_morale ).m_name;
 }
 
 const types::Buffer Unit::Serialize( const Unit* unit ) {
@@ -135,7 +87,7 @@ Unit* Unit::Unserialize( types::Buffer& buf, const Game* game ) {
 	const auto pos_y = buf.ReadInt();
 	auto* tile = game ? game->GetMap()->GetTile( pos_x, pos_y ) : nullptr;
 	const auto movement = (movement_t)buf.ReadFloat();
-	const auto morale = (morale_t)buf.ReadInt();
+	const auto morale = (Morale::morale_t)buf.ReadInt();
 	const auto health = (health_t)buf.ReadFloat();
 	return new Unit( id, def, slot, tile, movement, morale, health );
 }

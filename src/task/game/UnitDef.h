@@ -19,7 +19,7 @@ public:
 
 	const bool IsArtillery() const;
 
-	Sprite* GetSprite( const ::game::unit::Unit::morale_t morale );
+	Sprite* GetSprite( const ::game::unit::Morale::morale_t morale );
 
 	const bool IsImmovable() const;
 
@@ -34,7 +34,7 @@ private:
 	std::string m_name;
 	::game::unit::Def::def_type_t m_type;
 
-	typedef std::unordered_map< ::game::unit::Unit::morale_t, Sprite > morale_based_sprites_t;
+	typedef std::unordered_map< ::game::unit::Morale::morale_t, Sprite > morale_based_sprites_t;
 
 	// TODO: get rid of union
 	union {

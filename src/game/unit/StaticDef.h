@@ -13,7 +13,14 @@ class StaticDef : public Def {
 public:
 	static const std::string& GetMovementTypeString( const movement_type_t movement_type );
 
-	StaticDef( const std::string& id, const std::string& name, const movement_type_t movement_type, const Unit::movement_t movement_per_turn, const Render* render );
+	StaticDef(
+		const std::string& id,
+		const MoraleSet* moraleset,
+		const std::string& name,
+		const movement_type_t movement_type,
+		const Unit::movement_t movement_per_turn,
+		const Render* render
+	);
 	~StaticDef();
 
 	const movement_type_t m_movement_type;
@@ -32,7 +39,7 @@ private:
 	friend class Def;
 
 	static void Serialize( types::Buffer& buf, const StaticDef* def );
-	static StaticDef* Unserialize( types::Buffer& buf, const std::string& id, const std::string& name );
+	static StaticDef* Unserialize( types::Buffer& buf, const std::string& id, const MoraleSet* moraleset, const std::string& name );
 
 };
 

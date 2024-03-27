@@ -3,7 +3,6 @@
 #include "game/Game.h"
 
 #include "gse/type/String.h"
-#include "gse/type/Int.h"
 #include "gse/type/Object.h"
 #include "gse/type/Callable.h"
 

@@ -15,7 +15,7 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 	: type( other.type ) {
 
 	data = other.data;
-	
+
 	switch ( type ) {
 		case FR_QUIT: {
 			NEW( data.quit.reason, std::string, *other.data.quit.reason );
@@ -40,6 +40,7 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 		}
 		case FR_UNIT_SPAWN: {
 			NEW( data.unit_spawn.unitdef_id, std::string, *other.data.unit_spawn.unitdef_id );
+			NEW( data.unit_spawn.morale_string, std::string, *other.data.unit_spawn.morale_string );
 			break;
 		}
 
@@ -74,6 +75,7 @@ FrontendRequest::~FrontendRequest() {
 		}
 		case FR_UNIT_SPAWN: {
 			DELETE( data.unit_spawn.unitdef_id );
+			DELETE( data.unit_spawn.morale_string );
 			break;
 		}
 		default: {
