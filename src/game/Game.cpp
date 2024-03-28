@@ -1224,6 +1224,8 @@ void Game::MoveUnitApply( unit::Unit* unit, map::Tile* dst_tile, const gse::Valu
 		unit->m_movement = 0.0f;
 	}
 
+	unit->m_moved_this_turn = true;
+
 	const auto is_move_successful =
 		result.Get()->type == gse::type::Bool::GetType() &&
 			( (gse::type::Bool*)result.Get() )->value;
@@ -1346,8 +1348,17 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 	}
 
 	for ( auto& it : m_units ) {
-		it.second->OnTurn();
-		RefreshUnit( it.second );
+		auto* unit = it.second;
+		m_state->m_bindings->Call(
+			Bindings::CS_ON_UNIT_TURN, {
+				{
+					"unit",
+					unit->Wrap( true )
+				},
+			}
+		);
+		unit->m_moved_this_turn = false;
+		RefreshUnit( unit );
 	}
 
 	m_state->m_bindings->Call( Bindings::CS_ON_TURN );

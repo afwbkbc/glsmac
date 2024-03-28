@@ -33,7 +33,7 @@ const f_get_movement_aftercost = (unit, src_tile, dst_tile) => {
     return 0.0;
 };
 
-return {
+const result = {
 
     init: () => {
 
@@ -103,4 +103,6 @@ return {
 
     },
 
-}
+};
+
+return result;

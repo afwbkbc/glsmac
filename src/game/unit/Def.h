@@ -41,6 +41,7 @@ public:
 	static Def* Unserialize( types::Buffer& buf );
 
 	WRAPDEFS_PTR( Def );
+	
 };
 
 }

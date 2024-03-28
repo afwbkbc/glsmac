@@ -48,7 +48,8 @@ const gse::Value SpawnUnit::Apply( game::Game* game ) const {
 		tile,
 		staticdef->m_movement_per_turn,
 		m_morale,
-		m_health
+		m_health,
+		false
 	);
 	game->SpawnUnit( unit );
 	return unit->Wrap();

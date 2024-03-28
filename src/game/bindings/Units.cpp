@@ -26,8 +26,8 @@ const unit::Morale::morale_t GetMorale( const int64_t& morale, gse::Context* ctx
 }
 
 const unit::Unit::health_t GetHealth( const float health, gse::Context* ctx, const gse::si_t& call_si ) {
-	if ( health < unit::Unit::HEALTH_MIN || health > unit::Unit::HEALTH_MAX ) {
-		ERROR( gse::EC.INVALID_CALL, "Invalid health value: " + std::to_string( health ) + " (should be between " + std::to_string( unit::Unit::HEALTH_MIN ) + " and " + std::to_string( unit::Unit::HEALTH_MAX ) + ", inclusive)" );
+	if ( health < unit::Unit::MINIMUM_HEALTH_TO_KEEP || health > unit::StaticDef::HEALTH_MAX ) {
+		ERROR( gse::EC.INVALID_CALL, "Invalid health value: " + std::to_string( health ) + " (should be between " + std::to_string( unit::Unit::MINIMUM_HEALTH_TO_KEEP ) + " and " + std::to_string( unit::StaticDef::HEALTH_MAX ) + ", inclusive)" );
 	}
 	if ( health == 0 ) {
 		ERROR( gse::EC.INVALID_CALL, "Invalid health value: " + std::to_string( health ) + " (you can't spawn a dead unit)" );

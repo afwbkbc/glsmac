@@ -27,7 +27,7 @@ let random_morale = () => {
 };
 
 let random_health = () => {
-    return #game.random.get_float(#to_float(0), #to_float(1));
+    return #game.random.get_float(#to_float(0.1), #to_float(1));
 };
 
 units.init();

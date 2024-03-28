@@ -37,6 +37,7 @@ public:
 		CS_ON_UNIT_MOVE_VALIDATE,
 		CS_ON_UNIT_MOVE_RESOLVE,
 		CS_ON_UNIT_MOVE_APPLY,
+		CS_ON_UNIT_TURN,
 	};
 	typedef std::map< std::string, gse::Value > callback_arguments_t;
 	gse::Value Call( const callback_slot_t slot, const callback_arguments_t& arguments = {} );

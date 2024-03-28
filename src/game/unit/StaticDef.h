@@ -13,6 +13,9 @@ class StaticDef : public Def {
 public:
 	static const std::string& GetMovementTypeString( const movement_type_t movement_type );
 
+	static const Unit::health_t HEALTH_MAX;
+	static const Unit::health_t HEALTH_PER_TURN;
+
 	StaticDef(
 		const std::string& id,
 		const MoraleSet* moraleset,
@@ -31,6 +34,8 @@ public:
 
 	const types::Vec3 GetSpawnCoords( const float tile_x, const float tile_y, const map::TileState::tile_vertices_t& tile_coords ) const override;
 	const std::string ToString( const std::string& prefix ) const override;
+
+	WRAPDEFS_PTR( StaticDef );
 
 private:
 	static const std::unordered_map< movement_type_t, std::string > s_movement_type_str;

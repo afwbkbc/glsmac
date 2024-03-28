@@ -21,7 +21,7 @@ namespace gse {
     static const gse::type::Object::object_class_t WRAP_CLASS;
 #define WRAPDEFS_PTR( _type ) \
     WRAPDEFS_CLASS() \
-    const gse::Value Wrap(); \
+    virtual const gse::Value Wrap(); \
     static _type* Unwrap( const gse::Value& value );
 #define WRAPDEFS_DYNAMIC( _type ) \
     WRAPDEFS_CLASS() \
@@ -43,7 +43,11 @@ namespace gse {
 #define WRAPIMPL_DYNAMIC_GETTERS( _type, _class ) \
     WRAPIMPL_DYNAMIC_BEGIN( _type, _class ) \
     const gse::type::Object::properties_t properties = {
-#define WRAPIMPL_PROPS const gse::type::Object::properties_t properties =
+#define WRAPIMPL_PROPS gse::type::Object::properties_t properties =
+#define WRAPIMPL_PROPS_EXTEND( _parent ) \
+    const auto wrapped_parent = _parent::Wrap(); \
+    const auto& wrapped_parent_props = ( (gse::type::Object*)wrapped_parent.Get() )->value; \
+    properties.insert( wrapped_parent_props.begin(), wrapped_parent_props.end() );
 #define WRAPIMPL_END_PTR( _type ) \
     return VALUE( gse::type::Object, properties, WRAP_CLASS, this ); \
 }
@@ -62,12 +66,12 @@ void _type::WrapSet( void* wrapobj, const std::string& key, const gse::Value& va
         throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property does not exist", ctx, si ); \
     } \
 }
-#define WRAPIMPL_DYNAMIC_GET( _key, _type, _property ) \
+#define WRAPIMPL_GET( _key, _type, _property ) \
     { \
         _key, \
         VALUE( gse::type::_type, _property ) \
     },
-#define WRAPIMPL_DYNAMIC_LINK( _key, _property ) \
+#define WRAPIMPL_LINK( _key, _property ) \
     { \
         _key, \
         NATIVE_CALL( this ) { \
@@ -75,7 +79,7 @@ void _type::WrapSet( void* wrapobj, const std::string& key, const gse::Value& va
         }) \
     },
 
-#define WRAPIMPL_DYNAMIC_SET( _key, _type, _property ) \
+#define WRAPIMPL_SET( _key, _type, _property ) \
     else if ( key == _key ) { \
         if ( value.Get()->type != gse::type::_type::GetType() ) { \
             throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Invalid assignment value type, expected: " + gse::type::Type::GetTypeString( gse::type::_type::GetType() ) + ", got: " + gse::type::Type::GetTypeString( value.Get()->type ), ctx, si ); \

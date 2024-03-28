@@ -25,11 +25,7 @@ public:
 	static const void SetNextId( const size_t id );
 
 	typedef float movement_t;
-
 	typedef float health_t;
-	static const health_t HEALTH_MIN;
-	static const health_t HEALTH_MAX;
-	static const health_t HEALTH_PER_TURN;
 
 	Unit(
 		const size_t id,
@@ -38,7 +34,8 @@ public:
 		map::Tile* tile,
 		const movement_t movement,
 		const Morale::morale_t morale,
-		const health_t health
+		const health_t health,
+		const bool moved_this_turn
 	);
 	virtual ~Unit() = default;
 
@@ -50,6 +47,7 @@ public:
 	movement_t m_movement;
 	Morale::morale_t m_morale;
 	health_t m_health;
+	bool m_moved_this_turn;
 
 	enum movement_result_t {
 		MR_MOVED,
@@ -57,9 +55,8 @@ public:
 		MR_COULD_NOT_MOVE,
 	};
 	static const movement_t MINIMUM_MOVEMENT_TO_KEEP;
+	static const movement_t MINIMUM_HEALTH_TO_KEEP;
 	const bool HasMovesLeft() const;
-
-	void OnTurn();
 
 	const std::string& GetMoraleString();
 

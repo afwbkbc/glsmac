@@ -1,7 +1,15 @@
 #include "StaticDef.h"
 
+#include "gse/type/Bool.h"
+#include "gse/type/Int.h"
+#include "gse/type/Float.h"
+
 namespace game {
 namespace unit {
+
+// TODO: per-def values?
+const Unit::health_t StaticDef::HEALTH_MAX = 1.0f;
+const Unit::health_t StaticDef::HEALTH_PER_TURN = 0.1f;
 
 const std::unordered_map< Def::movement_type_t, std::string > StaticDef::s_movement_type_str = {
 	{
@@ -74,6 +82,21 @@ StaticDef* StaticDef::Unserialize( types::Buffer& buf, const std::string& id, co
 	const auto movement_per_turn = buf.ReadFloat();
 	return new StaticDef( id, moraleset, name, movement_type, movement_per_turn, Render::Unserialize( buf ) );
 }
+
+WRAPIMPL_BEGIN( StaticDef, CLASS_UNITDEF )
+	WRAPIMPL_PROPS {
+		WRAPIMPL_GET( "is_immovable", Bool, m_movement_type == Def::MT_IMMOVABLE )
+		WRAPIMPL_GET( "is_land", Bool, m_movement_type == Def::MT_LAND )
+		WRAPIMPL_GET( "is_water", Bool, m_movement_type == Def::MT_WATER )
+		WRAPIMPL_GET( "is_air", Bool, m_movement_type == Def::MT_AIR )
+		WRAPIMPL_GET( "movement_per_turn", Float, m_movement_per_turn )
+		WRAPIMPL_GET( "health_per_turn", Float, HEALTH_PER_TURN )
+		WRAPIMPL_GET( "health_max", Float, HEALTH_MAX )
+	};
+	WRAPIMPL_PROPS_EXTEND( Def )
+WRAPIMPL_END_PTR( StaticDef )
+
+UNWRAPIMPL_PTR( StaticDef )
 
 }
 }
