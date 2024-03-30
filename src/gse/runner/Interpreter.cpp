@@ -41,6 +41,7 @@ const gse::Value Interpreter::Execute( Context* ctx, const program::Program* pro
 }
 
 const gse::Value Interpreter::EvaluateScope( Context* ctx, const program::Scope* scope ) const {
+	ctx->IncRefs(); // TODO: fix/improve context memory management
 	const auto subctx = ctx->ForkContext( ctx, scope->m_si, false );
 	subctx->IncRefs();
 

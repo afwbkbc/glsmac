@@ -2,7 +2,7 @@ const defs = #include('units/defs');
 const movement = #include('units/movement');
 const turns = #include('units/turns');
 
-return {
+const result = {
 
     init: () => {
         movement.init();
@@ -14,3 +14,5 @@ return {
     },
 
 };
+
+return result;
