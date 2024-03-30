@@ -37,7 +37,10 @@ void UnitsList::ClearUnits() {
 }
 
 void UnitsList::ListUnits( const std::vector< unit_data_t >& units, const size_t selected_unit_id ) {
-	ClearUnits();
+	const auto last_scroll_x = m_body
+		? m_body->GetScrollX()
+		: 0;
+	ClearUnits(); // TODO: avoid redraws?
 	NEW( m_body, ::ui::object::ScrollView, ::ui::object::ScrollView::ST_HORIZONTAL_INLINE );
 	m_body->SetSticky( false );
 	m_body->SetScrollSpeed( 70 );
@@ -66,6 +69,7 @@ void UnitsList::ListUnits( const std::vector< unit_data_t >& units, const size_t
 		);
 		left += item->GetWidth();
 	}
+	m_body->SetScrollX( last_scroll_x );
 	if ( selected_unit ) {
 		SelectUnit( selected_unit, false );
 		m_unit_preview->PreviewUnit( selected_unit );
@@ -100,11 +104,13 @@ void UnitsList::SelectUnit( const unit_data_t* unit, const bool actually_select_
 	if ( unit != m_selected_unit ) {
 		m_selected_unit = unit;
 		for ( auto& it : m_items ) {
+			const auto& item = it.second;
 			if ( it.first == unit->id ) {
-				it.second->SelectUnit();
+				item->SelectUnit();
+				m_body->ScrollToItem( item );
 			}
 			else {
-				it.second->DeselectUnit();
+				item->DeselectUnit();
 			}
 		}
 		m_game->SelectUnit( *m_selected_unit, actually_select_unit );

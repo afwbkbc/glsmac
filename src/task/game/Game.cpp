@@ -1452,7 +1452,7 @@ void Game::Initialize(
 						); // async
 						break;
 					}
-					case UIEvent::M_RIGHT: {
+					case UIEvent::M_MIDDLE: {
 						m_scroller.Stop();
 						m_map_control.is_dragging = true;
 						m_map_control.last_drag_position = {
@@ -1534,7 +1534,7 @@ void Game::Initialize(
 	m_handlers.mouseup = ui->AddGlobalEventHandler(
 		UIEvent::EV_MOUSE_UP, EH( this ) {
 			switch ( data->mouse.button ) {
-				case UIEvent::M_RIGHT: {
+				case UIEvent::M_MIDDLE: {
 					m_map_control.is_dragging = false;
 					break;
 				}

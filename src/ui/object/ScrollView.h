@@ -31,10 +31,15 @@ CLASS( ScrollView, Panel )
 	void SetWidth( const coord_t px ) override;
 	void SetHeight( const coord_t px ) override;
 
+	const coord_t GetScrollX() const;
+	const coord_t GetScrollY() const;
+
 	void SetScroll( vertex_t px, const bool force = false );
 	void SetScrollX( const coord_t px );
 	void SetScrollY( const coord_t px );
 	void ScrollToEnd();
+
+	void ScrollToItem( UIObject* item );
 
 	void SetScrollSpeed( const size_t scroll_speed );
 	void SetSticky( const bool sticky );
@@ -89,6 +94,7 @@ private:
 
 	UIContainer* m_viewport = nullptr;
 	Panel* m_body = nullptr;
+	std::unordered_set< UIObject* > m_items = {};
 
 	bool m_need_body_refresh = false;
 

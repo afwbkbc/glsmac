@@ -234,14 +234,15 @@ protected:
 	friend class UIContainer;
 
 	// callbacks. true if event is processed (then it won't be sent further)
-	virtual bool OnMouseOver( const UIEvent::event_data_t* data ) { return true; };
-	virtual bool OnMouseOut( const UIEvent::event_data_t* data ) { return true; };
-	virtual bool OnMouseDown( const UIEvent::event_data_t* data ) { return true; };
-	virtual bool OnMouseUp( const UIEvent::event_data_t* data ) { return true; };
-	virtual bool OnMouseClick( const UIEvent::event_data_t* data ) { return true; };
-	virtual bool OnKeyDown( const UIEvent::event_data_t* data ) { return true; };
-	virtual bool OnKeyUp( const UIEvent::event_data_t* data ) { return true; };
-	virtual bool OnKeyPress( const UIEvent::event_data_t* data ) { return true; };
+	// TODO: get rid of those
+	virtual bool OnMouseOver( const UIEvent::event_data_t* data ) { return false; };
+	virtual bool OnMouseOut( const UIEvent::event_data_t* data ) { return false; };
+	virtual bool OnMouseDown( const UIEvent::event_data_t* data ) { return false; };
+	virtual bool OnMouseUp( const UIEvent::event_data_t* data ) { return false; };
+	virtual bool OnMouseClick( const UIEvent::event_data_t* data ) { return false; };
+	virtual bool OnKeyDown( const UIEvent::event_data_t* data ) { return false; };
+	virtual bool OnKeyUp( const UIEvent::event_data_t* data ) { return false; };
+	virtual bool OnKeyPress( const UIEvent::event_data_t* data ) { return false; };
 
 	const coord_t ClampX( const coord_t value );
 	const coord_t ClampY( const coord_t value );

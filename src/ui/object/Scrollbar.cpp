@@ -91,6 +91,7 @@ void Scrollbar::Create() {
 					m_slider->SetTop( newtop );
 					UpdatePercentage();
 				}
+				return true;
 			}
 			return false;
 		}, UI::GH_BEFORE

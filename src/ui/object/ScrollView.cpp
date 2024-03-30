@@ -135,7 +135,7 @@ void ScrollView::Create() {
 	// TODO: make dragging global event
 	On(
 		UIEvent::EV_MOUSE_DOWN, EH( this ) {
-			if ( data->mouse.button == UIEvent::M_RIGHT ) {
+			if ( data->mouse.button == UIEvent::M_MIDDLE ) {
 				m_is_dragging = true;
 				m_drag_start_position = {
 					data->mouse.absolute.x + (ssize_t)m_scroll.x,
@@ -158,8 +158,13 @@ void ScrollView::Create() {
 	m_handlers.mouse_move = ui->AddGlobalEventHandler(
 		UIEvent::EV_MOUSE_MOVE, EH( this ) {
 			if ( m_is_dragging ) {
-				SetScrollX( m_drag_start_position.x - data->mouse.absolute.x );
-				SetScrollY( m_drag_start_position.y - data->mouse.absolute.y );
+				if ( m_type == ST_HORIZONTAL_INLINE ) {
+					SetScrollX( m_drag_start_position.x - data->mouse.absolute.x );
+				}
+				if ( m_type == ST_VERTICAL ) {
+					SetScrollY( m_drag_start_position.y - data->mouse.absolute.y );
+				}
+				return true;
 			}
 			return false;
 		}, ::ui::UI::GH_BEFORE
@@ -168,7 +173,7 @@ void ScrollView::Create() {
 	// dragging should be cancelable anywhere
 	m_handlers.mouse_up = ui->AddGlobalEventHandler(
 		UIEvent::EV_MOUSE_UP, EH( this ) {
-			if ( data->mouse.button == UIEvent::M_RIGHT ) {
+			if ( data->mouse.button == UIEvent::M_MIDDLE ) {
 				if ( m_is_dragging ) {
 					m_is_dragging = false;
 					if ( m_is_sticky ) {
@@ -311,6 +316,7 @@ void ScrollView::Destroy() {
 			THROW( "unknown scroll type: " + std::to_string( m_type ) );
 	}
 
+	m_items.clear();
 	m_viewport->RemoveChild( m_body );
 	Panel::RemoveChild( m_viewport );
 
@@ -349,6 +355,16 @@ void ScrollView::SetHeight( const coord_t px ) {
 	if ( m_internal_size.y < px ) {
 		SetInternalHeight( px );
 	}
+}
+
+const UIObject::coord_t ScrollView::GetScrollX() const {
+	ASSERT( m_type == ST_HORIZONTAL_INLINE, "unexpected scrollbar type" );
+	return m_scroll.x;
+}
+
+const UIObject::coord_t ScrollView::GetScrollY() const {
+	ASSERT( m_type == ST_VERTICAL, "unexpected scrollbar type" );
+	return m_scroll.y;
 }
 
 void ScrollView::SetScroll( vertex_t px, const bool force ) {
@@ -431,6 +447,13 @@ void ScrollView::ScrollToEnd() {
 		default:
 			THROW( "unknown scroll type: " + std::to_string( m_type ) );
 	}
+}
+
+void ScrollView::ScrollToItem( UIObject* item ) {
+	ASSERT( m_type == ST_HORIZONTAL_INLINE, "unsupported scrollview type" );
+	ASSERT( m_items.find( item ) != m_items.end(), "scrollview does not contain that item" );
+	m_scroll.x = std::fmin( m_scroll.x, item->GetLeft() );
+	m_scroll.x = std::fmax( m_scroll.x, item->GetLeft() - ( m_object_area.width - 17 * 2 - 4 ) + item->GetWidth() );
 }
 
 void ScrollView::SetScrollSpeed( const size_t scroll_speed ) {
@@ -538,12 +561,14 @@ void ScrollView::AddChildToBody( UIObject* child ) {
 	//child->SetOverflowMargin( m_border_size );
 	child->SetParentStyleObject( this );
 	m_body->AddChild( child );
+	m_items.insert( child );
 	if ( m_type == ST_VERTICAL ) {
 		FixScrollY();
 	}
 }
 
 void ScrollView::RemoveChildFromBody( UIObject* child ) {
+	m_items.erase( child );
 	m_body->RemoveChild( child );
 	if ( m_type == ST_VERTICAL ) {
 		FixScrollY();

@@ -67,7 +67,7 @@ units.init();
                                     let neighbours = tile.get_surrounding_tiles();
                                     let sz = #size(neighbours);
                                     let i = 0;
-                                    while (morale < 7 && i < sz) {
+                                    while (morale < 6 && i < sz) {
                                         if (neighbours[i].has_fungus) {
                                             morale++;
                                         }
