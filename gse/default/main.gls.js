@@ -50,7 +50,7 @@ units.init();
         let x = 0;
         while (x < w) {
             if (x % 2 == y % 2) {
-                if (#game.random.get_int(0, 24) == 0) {
+                if (#game.random.get_int(0, 6) == 0) {
                     let owner = random_player();
                     let tile = #game.map.get_tile(x, y);
                     let units_count = #game.random.get_int(1, 2);
@@ -97,31 +97,13 @@ units.init();
 });
 
 #game.on.turn((e) => {
-    #print('NEW TURN');
+    //
 });
 
 #game.on.unit_spawn((e) => {
-    let def = e.unit.get_def();
-    if (def.name != 'MindWorms') {
-        let tile = e.unit.get_tile();
-        let neighbours = [tile.get_W(), tile.get_NW(), tile.get_N(), tile.get_NE(), tile.get_E(), tile.get_SE(), tile.get_S(), tile.get_SW()];
-        let nearby_units_count = 0;
-        let i = 0;
-        let sz = #size(neighbours);
-        while (i < sz) {
-            if (!#is_empty(neighbours[i].get_units())) {
-                nearby_units_count++;
-            }
-            i++;
-        }
-        if (nearby_units_count > 2) {
-            #game.units.despawn(e.unit);
-        }
-    }
+    //
 });
 
 #game.on.unit_despawn((e) => {
-    if (e.unit.get_def() == 'SporeLauncher') {
-        #game.units.spawn('MindWorms', random_player(), e.unit.get_tile(), random_morale(), random_health());
-    }
+    //
 });

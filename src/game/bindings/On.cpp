@@ -17,6 +17,9 @@ BINDING_IMPL( on ) {
 		ON( "unit_move_validate", CS_ON_UNIT_MOVE_VALIDATE ),
 		ON( "unit_move_resolve", CS_ON_UNIT_MOVE_RESOLVE ),
 		ON( "unit_move_apply", CS_ON_UNIT_MOVE_APPLY ),
+		ON( "unit_attack_validate", CS_ON_UNIT_ATTACK_VALIDATE ),
+		ON( "unit_attack_resolve", CS_ON_UNIT_ATTACK_RESOLVE ),
+		ON( "unit_attack_apply", CS_ON_UNIT_ATTACK_APPLY ),
 		ON( "unit_turn", CS_ON_UNIT_TURN ),
 	};
 #undef ON

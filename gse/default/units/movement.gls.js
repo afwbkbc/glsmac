@@ -1,4 +1,4 @@
-const f_get_movement_cost = (unit, src_tile, dst_tile) => {
+const get_movement_cost = (unit, src_tile, dst_tile) => {
     const is_native = true; // TODO: non-native units
 
     if (
@@ -22,7 +22,7 @@ const f_get_movement_cost = (unit, src_tile, dst_tile) => {
     return 1.0;
 };
 
-const f_get_movement_aftercost = (unit, src_tile, dst_tile) => {
+const get_movement_aftercost = (unit, src_tile, dst_tile) => {
     const is_native = true; // TODO: non-native units
     if (is_native && dst_tile.has_fungus) {
         return 0.0;
@@ -79,7 +79,7 @@ const result = {
                 // no moves left
                 return false;
             }
-            let movement_cost = f_get_movement_cost(e.unit, e.src_tile, e.dst_tile);
+            let movement_cost = get_movement_cost(e.unit, e.src_tile, e.dst_tile);
             return {
                 is_movement_successful:
                     (e.unit.movement >= movement_cost) // unit has enough moves
@@ -89,7 +89,7 @@ const result = {
         });
 
         #game.on.unit_move_apply((e) => {
-            let movement_cost = f_get_movement_cost(e.unit, e.src_tile, e.dst_tile) + f_get_movement_aftercost(e.unit, e.src_tile, e.dst_tile);
+            let movement_cost = get_movement_cost(e.unit, e.src_tile, e.dst_tile) + get_movement_aftercost(e.unit, e.src_tile, e.dst_tile);
 
             // reduce remaining movement points (even if failed)
             if (e.unit.movement >= movement_cost) {

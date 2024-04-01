@@ -6,6 +6,8 @@
 
 #include "types/Vec2.h"
 
+#include "game/map/Tile.h"
+
 namespace task {
 namespace game {
 
@@ -22,10 +24,19 @@ public:
 
 	void AddUnit( Unit* unit );
 	void RemoveUnit( Unit* unit );
-
 	void SetActiveUnit( Unit* unit );
-
 	void Render( size_t selected_unit_id );
+	const std::unordered_map< size_t, Unit* >& GetUnits() const;
+
+	Tile* W;
+	Tile* NW;
+	Tile* N;
+	Tile* NE;
+	Tile* E;
+	Tile* SE;
+	Tile* S;
+	Tile* SW;
+	Tile* GetNeighbour( const ::game::map::Tile::direction_t direction );
 
 private:
 	const types::Vec2< size_t > m_coords;

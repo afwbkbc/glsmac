@@ -67,8 +67,8 @@ void Tile::Render( size_t selected_unit_id ) {
 	m_render.currently_rendered_fake_badges.clear();
 
 	// is needed?
-	/*if ( m_selected_unit_state == tile_state->render.currently_rendered_unit ) {
-		m_selected_unit_state = nullptr;
+	/*if ( m_selected_unit == tile_state->render.currently_rendered_unit ) {
+		m_selected_unit = nullptr;
 	}*/
 
 	if ( !m_units.empty() ) {
@@ -113,6 +113,35 @@ void Tile::Render( size_t selected_unit_id ) {
 		}
 	}
 
+}
+
+const std::unordered_map< size_t, Unit* >& Tile::GetUnits() const {
+	return m_units;
+}
+
+Tile* Tile::GetNeighbour( const ::game::map::Tile::direction_t direction ) {
+	switch ( direction ) {
+		case ::game::map::Tile::D_NONE:
+			return this;
+		case ::game::map::Tile::D_W:
+			return W;
+		case ::game::map::Tile::D_NW:
+			return NW;
+		case ::game::map::Tile::D_N:
+			return N;
+		case ::game::map::Tile::D_NE:
+			return NE;
+		case ::game::map::Tile::D_E:
+			return E;
+		case ::game::map::Tile::D_SE:
+			return SE;
+		case ::game::map::Tile::D_S:
+			return S;
+		case ::game::map::Tile::D_SW:
+			return SW;
+		default:
+			THROW( "unknown tile direction: " + std::to_string( direction ) );
+	}
 }
 
 }

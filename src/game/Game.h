@@ -303,6 +303,9 @@ public:
 	const std::string* MoveUnitValidate( unit::Unit* unit, map::Tile* dst_tile );
 	const gse::Value MoveUnitResolve( unit::Unit* unit, map::Tile* dst_tile );
 	void MoveUnitApply( unit::Unit* unit, map::Tile* dst_tile, const gse::Value resolutions );
+	const std::string* AttackUnitValidate( unit::Unit* attacker, unit::Unit* defender );
+	const gse::Value AttackUnitResolve( unit::Unit* attacker, unit::Unit* defender );
+	void AttackUnitApply( unit::Unit* attacker, unit::Unit* defender, const gse::Value resolutions );
 	const size_t GetTurnId() const;
 	const bool IsTurnActive() const;
 	const bool IsTurnCompleted( const size_t slot_num ) const;

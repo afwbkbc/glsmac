@@ -297,7 +297,7 @@ private:
 	const bool m_is_map_editing_allowed = false;
 
 	tile_data_t m_selected_tile_data = {};
-	Unit* m_selected_unit_state = nullptr;
+	Unit* m_selected_unit = nullptr;
 	map_data_t m_map_data = {};
 	Unit* m_currently_moving_unit = nullptr;
 

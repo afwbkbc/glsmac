@@ -8,6 +8,7 @@
 #include "event/FinalizeTurn.h"
 #include "event/TurnFinalized.h"
 #include "event/AdvanceTurn.h"
+#include "event/DespawnUnit.h"
 #include "gse/type/String.h"
 
 using namespace game::connection;
@@ -1264,6 +1265,81 @@ void Game::MoveUnitApply( unit::Unit* unit, map::Tile* dst_tile, const gse::Valu
 		CheckTurnComplete();
 	}
 
+}
+
+const std::string* Game::AttackUnitValidate( unit::Unit* attacker, unit::Unit* defender ) {
+	const auto result = m_state->m_bindings->Call(
+		Bindings::CS_ON_UNIT_ATTACK_VALIDATE, {
+			{
+				"attacker",
+				attacker->Wrap()
+			},
+			{
+				"defender",
+				defender->Wrap()
+			},
+		}
+	);
+	switch ( result.Get()->type ) {
+		case gse::type::Type::T_NULL:
+		case gse::type::Type::T_UNDEFINED:
+			return nullptr; // no errors
+		case gse::type::Type::T_STRING:
+			return new std::string( ( (gse::type::String*)result.Get() )->value ); // error
+		default:
+			THROW( "unexpected validation result type: " + gse::type::Type::GetTypeString( result.Get()->type ) );
+	}
+	return nullptr;
+}
+
+const gse::Value Game::AttackUnitResolve( unit::Unit* attacker, unit::Unit* defender ) {
+	return m_state->m_bindings->Call(
+		Bindings::CS_ON_UNIT_ATTACK_RESOLVE, {
+			{
+				"attacker",
+				attacker->Wrap()
+			},
+			{
+				"defender",
+				defender->Wrap()
+			},
+		}
+	);
+}
+
+void Game::AttackUnitApply( unit::Unit* attacker, unit::Unit* defender, const gse::Value resolutions ) {
+	m_state->m_bindings->Call(
+		Bindings::CS_ON_UNIT_ATTACK_APPLY, {
+			{
+				"attacker",
+				attacker->Wrap( true )
+			},
+			{
+				"defender",
+				defender->Wrap( true )
+			},
+			{
+				"resolutions",
+				resolutions
+			}
+		}
+	);
+	if ( attacker->m_health <= 0.0f ) {
+		if ( GetState()->IsMaster() ) {
+			AddEvent( new event::DespawnUnit( GetSlotNum(), attacker->m_id ) );
+		}
+	}
+	else {
+		RefreshUnit( attacker );
+	}
+	if ( defender->m_health <= 0.0f ) {
+		if ( GetState()->IsMaster() ) {
+			AddEvent( new event::DespawnUnit( GetSlotNum(), defender->m_id ) );
+		}
+	}
+	else {
+		RefreshUnit( defender );
+	}
 }
 
 const size_t Game::GetTurnId() const {
