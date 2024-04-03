@@ -49,11 +49,6 @@ public:
 	health_t m_health;
 	bool m_moved_this_turn;
 
-	enum movement_result_t {
-		MR_MOVED,
-		MR_TRIED_BUT_FAILED,
-		MR_COULD_NOT_MOVE,
-	};
 	static const movement_t MINIMUM_MOVEMENT_TO_KEEP;
 	static const movement_t MINIMUM_HEALTH_TO_KEEP;
 	const bool HasMovesLeft() const;

@@ -9,9 +9,6 @@
 #include "util/FS.h"
 #include "ui/popup/PleaseDontGo.h"
 
-#include "game/unit/StaticDef.h"
-#include "game/unit/SpriteRender.h"
-
 #include "Types.h"
 
 #include "game/event/MoveUnit.h"
@@ -761,9 +758,9 @@ void Game::DefineSlot(
 	const types::Color& color,
 	const bool is_progenitor
 ) {
-	if ( m_slot_states.find( slot_index ) == m_slot_states.end() ) {
-		Log( "Initializing slot state: " + std::to_string( slot_index ) );
-		m_slot_states.insert(
+	if ( m_slots.find( slot_index ) == m_slots.end() ) {
+		Log( "Initializing slot: " + std::to_string( slot_index ) );
+		m_slots.insert(
 			{
 				slot_index,
 				new Slot(
@@ -781,15 +778,32 @@ void Game::DefineSlot(
 }
 
 void Game::DefineUnit( const ::game::unit::Def* def ) {
-	auto unitdef_it = m_unitdef_states.find( def->m_id );
-	ASSERT( unitdef_it == m_unitdef_states.end(), "unit def already exists" );
+	auto unitdef_it = m_unitdefs.find( def->m_id );
+	ASSERT( unitdef_it == m_unitdefs.end(), "unit def already exists" );
 
-	Log( "Initializing unitdef state: " + def->m_id );
+	Log( "Initializing unit definition: " + def->m_id );
 
-	m_unitdef_states.insert(
+	m_unitdefs.insert(
 		{
 			def->m_id,
 			new UnitDef(
+				m_ism,
+				def
+			)
+		}
+	);
+}
+
+void Game::DefineAnimation( const ::game::animation::Def* def ) {
+	auto animation_it = m_animationdefs.find( def->m_id );
+	ASSERT( animation_it == m_animationdefs.end(), "animation def already exists" );
+
+	Log( "Initializing animation definition: " + def->m_id );
+
+	m_animationdefs.insert(
+		{
+			def->m_id,
+			new AnimationDef(
 				m_ism,
 				def
 			)
@@ -809,15 +823,15 @@ void Game::SpawnUnit(
 	const ::game::unit::Unit::health_t health
 ) {
 
-	ASSERT( m_unitdef_states.find( unitdef_id ) != m_unitdef_states.end(), "unitdef not found" );
-	ASSERT( m_slot_states.find( slot_index ) != m_slot_states.end(), "slot not found" );
-	ASSERT( m_unit_states.find( unit_id ) == m_unit_states.end(), "unit id already exists" );
+	ASSERT( m_unitdefs.find( unitdef_id ) != m_unitdefs.end(), "unitdef not found" );
+	ASSERT( m_slots.find( slot_index ) != m_slots.end(), "slot not found" );
+	ASSERT( m_units.find( unit_id ) == m_units.end(), "unit id already exists" );
 
-	auto* unitdef = m_unitdef_states.at( unitdef_id );
-	auto* slot_state = m_slot_states.at( slot_index );
+	auto* unitdef = m_unitdefs.at( unitdef_id );
+	auto* slot_state = m_slots.at( slot_index );
 	auto* tile = GetTileState( tile_coords.x, tile_coords.y );
 
-	auto* unit_state = m_unit_states.insert(
+	auto* unit = m_units.insert(
 		{
 			unit_id,
 			new Unit(
@@ -846,9 +860,9 @@ void Game::SpawnUnit(
 			: 0
 	);
 
-	if ( unit_state->IsActive() ) {
-		const bool was_selectables_empty = m_selectables.unit_states.empty();
-		AddSelectable( unit_state );
+	if ( unit->IsActive() ) {
+		const bool was_selectables_empty = m_selectables.units.empty();
+		AddSelectable( unit );
 		if ( was_selectables_empty ) {
 			SelectNextUnitMaybe();
 		}
@@ -856,19 +870,19 @@ void Game::SpawnUnit(
 }
 
 void Game::DespawnUnit( const size_t unit_id ) {
-	const auto& it = m_unit_states.find( unit_id );
-	ASSERT( it != m_unit_states.end(), "unit id not found" );
+	const auto& it = m_units.find( unit_id );
+	ASSERT( it != m_units.end(), "unit id not found" );
 
-	auto* unit_state = it->second;
+	auto* unit = it->second;
 
-	if ( unit_state->IsActive() ) {
-		RemoveSelectable( unit_state );
+	if ( unit->IsActive() ) {
+		RemoveSelectable( unit );
 	}
 
-	auto* tile = unit_state->GetTile();
+	auto* tile = unit->GetTile();
 
-	delete unit_state;
-	m_unit_states.erase( it );
+	delete unit;
+	m_units.erase( it );
 
 	tile->Render(
 		m_selected_unit
@@ -877,19 +891,19 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	);
 }
 
-void Game::RefreshUnit( Unit* unit_state ) {
-	const auto was_active = unit_state->IsActive();
-	unit_state->Refresh();
-	if ( m_selected_unit == unit_state && was_active ) {
-		if ( !unit_state->IsActive() ) {
-			UpdateSelectable( unit_state );
+void Game::RefreshUnit( Unit* unit ) {
+	const auto was_active = unit->IsActive();
+	unit->Refresh();
+	if ( m_selected_unit == unit && was_active ) {
+		if ( !unit->IsActive() ) {
+			UpdateSelectable( unit );
 			if ( m_selected_tile_data.purpose == ::game::TQP_UNIT_SELECT ) {
 				// update next tile
 				::game::tile_query_metadata_t metadata = {};
 				metadata.tile_select.try_next_unit = true; // try next unit after updating tile
 				GetTileAtCoords(
 					::game::TQP_TILE_SELECT,
-					unit_state->GetTile()->GetCoords(),
+					unit->GetTile()->GetCoords(),
 					::game::map::Tile::D_NONE,
 					metadata
 				);
@@ -899,10 +913,10 @@ void Game::RefreshUnit( Unit* unit_state ) {
 		else {
 			// keep same unit selected
 			::game::tile_query_metadata_t metadata = {};
-			metadata.unit_select.unit_id = unit_state->GetId();
+			metadata.unit_select.unit_id = unit->GetId();
 			GetTileAtCoords(
 				::game::TQP_UNIT_SELECT,
-				unit_state->GetTile()->GetCoords(),
+				unit->GetTile()->GetCoords(),
 				::game::map::Tile::D_NONE,
 				metadata
 			);
@@ -1040,6 +1054,13 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 			}
 			break;
 		}
+		case ::game::FrontendRequest::FR_ANIMATION_DEFINE: {
+			types::Buffer buf( *request.data.unit_define.serialized_unitdef );
+			const auto* animationdef = ::game::animation::Def::Unserialize( buf );
+			DefineAnimation( animationdef );
+			delete animationdef;
+			break;
+		}
 		case ::game::FrontendRequest::FR_UNIT_DEFINE: {
 			types::Buffer buf( *request.data.unit_define.serialized_unitdef );
 			const auto* unitdef = ::game::unit::Def::Unserialize( buf );
@@ -1077,21 +1098,21 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 		}
 		case ::game::FrontendRequest::FR_UNIT_REFRESH: {
 			const auto& d = request.data.unit_refresh;
-			auto* unit_state = m_unit_states.at( d.unit_id );
-			unit_state->SetMovement( d.movement );
-			unit_state->SetHealth( d.health );
-			RefreshUnit( unit_state );
-			unit_state->GetTile()->Render(
+			auto* unit = m_units.at( d.unit_id );
+			unit->SetMovement( d.movement );
+			unit->SetHealth( d.health );
+			RefreshUnit( unit );
+			unit->GetTile()->Render(
 				m_selected_unit
 					? m_selected_unit->GetId()
 					: 0
 			);
-			if ( unit_state->IsActive() ) {
-				AddSelectable( unit_state );
+			if ( unit->IsActive() ) {
+				AddSelectable( unit );
 			}
 			else {
-				RemoveSelectable( unit_state );
-				if ( m_selected_unit == unit_state ) {
+				RemoveSelectable( unit );
+				if ( m_selected_unit == unit ) {
 					SelectNextUnitOrSwitchToTileSelection();
 				}
 			}
@@ -1099,13 +1120,13 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 		}
 		case ::game::FrontendRequest::FR_UNIT_MOVE: {
 			const auto& d = request.data.unit_move;
-			ASSERT( m_unit_states.find( d.unit_id ) != m_unit_states.end(), "unit id not found" );
-			auto* unit_state = m_unit_states.at( d.unit_id );
-			auto* tile_state = GetTileState( d.tile_coords.x, d.tile_coords.y );
+			ASSERT( m_units.find( d.unit_id ) != m_units.end(), "unit id not found" );
+			auto* unit = m_units.at( d.unit_id );
+			auto* tile = GetTileState( d.tile_coords.x, d.tile_coords.y );
 			const auto& rc = d.render_coords;
-			unit_state->SetMovement( d.movement_left );
+			unit->SetMovement( d.movement_left );
 			MoveUnit(
-				unit_state, tile_state, {
+				unit, tile, {
 					rc.x,
 					rc.y,
 					rc.z
@@ -1129,7 +1150,7 @@ void Game::DeactivateTurn() {
 
 void Game::UpdateMapData( const types::Vec2< size_t >& map_size ) {
 
-	ASSERT( m_tile_states.empty(), "tile states already set" );
+	ASSERT( m_tiles.empty(), "tile states already set" );
 
 	m_map_data.width = map_size.x;
 	m_map_data.height = map_size.y;
@@ -1154,10 +1175,10 @@ void Game::UpdateMapData( const types::Vec2< size_t >& map_size ) {
 		}
 	);
 
-	m_tile_states.reserve( m_map_data.width * m_map_data.height / 2 ); // / 2 because smac coordinate system
+	m_tiles.reserve( m_map_data.width * m_map_data.height / 2 ); // / 2 because smac coordinate system
 	for ( size_t y = 0 ; y < m_map_data.height ; y++ ) {
 		for ( size_t x = y & 1 ; x < m_map_data.width ; x += 2 ) {
-			m_tile_states.insert(
+			m_tiles.insert(
 				{
 					y * m_map_data.width + x,
 					Tile{
@@ -1734,20 +1755,25 @@ void Game::Deinitialize() {
 		m_textures.terrain = nullptr;
 	}
 
-	for ( const auto& it : m_unit_states ) {
+	for ( const auto& it : m_animationdefs ) {
 		delete it.second;
 	}
-	m_unit_states.clear();
+	m_animationdefs.clear();
 
-	for ( const auto& it : m_unitdef_states ) {
+	for ( const auto& it : m_units ) {
 		delete it.second;
 	}
-	m_unitdef_states.clear();
+	m_units.clear();
 
-	for ( const auto& it : m_slot_states ) {
+	for ( const auto& it : m_unitdefs ) {
 		delete it.second;
 	}
-	m_slot_states.clear();
+	m_unitdefs.clear();
+
+	for ( const auto& it : m_slots ) {
+		delete it.second;
+	}
+	m_slots.clear();
 
 	for ( auto& it : m_actors_map ) {
 		m_world_scene->RemoveActor( it.second );
@@ -1815,23 +1841,23 @@ void Game::SelectTileAtPoint( const ::game::tile_query_purpose_t tile_query_purp
 }
 
 void Game::SelectUnit( const unit_data_t& unit_data, const bool actually_select_unit ) {
-	ASSERT( m_unit_states.find( unit_data.id ) != m_unit_states.end(), "unit id not found" );
-	auto* unit_state = m_unit_states.at( unit_data.id );
-	if ( m_selected_unit != unit_state ) {
+	ASSERT( m_units.find( unit_data.id ) != m_units.end(), "unit id not found" );
+	auto* unit = m_units.at( unit_data.id );
+	if ( m_selected_unit != unit ) {
 		if ( m_selected_unit ) {
 			m_selected_unit->Hide();
 			m_selected_unit = nullptr;
 		}
 
-		unit_state->SetActiveOnTile();
+		unit->SetActiveOnTile();
 
-		m_selected_unit = unit_state;
+		m_selected_unit = unit;
 		m_selected_unit->Show();
 	}
 	if ( actually_select_unit && m_selected_unit->IsActive() && m_is_turn_active ) {
 
 		if ( m_selected_unit->GetId() != m_selected_tile_data.units.front().id ) {
-			m_unit_states.at( m_selected_tile_data.units.front().id )->Hide();
+			m_units.at( m_selected_tile_data.units.front().id )->Hide();
 		}
 
 		m_selected_unit->StartBadgeBlink();
@@ -1908,9 +1934,9 @@ void Game::DeselectTileOrUnit() {
 
 		// reset to most important unit if needed
 		size_t unit_id = m_selected_tile_data.units.front().id;
-		ASSERT( m_unit_states.find( unit_id ) != m_unit_states.end(), "unit id not found" );
+		ASSERT( m_units.find( unit_id ) != m_units.end(), "unit id not found" );
 
-		auto* most_important_unit = m_unit_states.at( unit_id );
+		auto* most_important_unit = m_units.at( unit_id );
 
 		m_selected_unit->StopBadgeBlink( m_selected_unit == most_important_unit );
 		if ( m_selected_unit != most_important_unit ) {
@@ -1924,11 +1950,11 @@ void Game::DeselectTileOrUnit() {
 }
 
 const unit_data_t* Game::GetFirstSelectableUnit( const std::vector< unit_data_t >& units ) const {
-	for ( const auto& unit : units ) {
-		ASSERT( m_unit_states.find( unit.id ) != m_unit_states.end(), "unit id not found" );
-		const auto* unit_state = m_unit_states.at( unit.id );
-		if ( unit_state->IsActive() ) {
-			return &unit;
+	for ( const auto& unit_it : units ) {
+		ASSERT( m_units.find( unit_it.id ) != m_units.end(), "unit id not found" );
+		const auto* unit = m_units.at( unit_it.id );
+		if ( unit->IsActive() ) {
+			return &unit_it;
 		}
 	}
 	return nullptr;
@@ -2158,8 +2184,8 @@ tile_data_t Game::GetTileAtCoordsResult( const mt_id_t mt_id ) {
 
 		std::unordered_map< size_t, Unit* > units = {};
 		for ( const auto& unit_id : *response.data.select_tile.unit_ids ) {
-			const auto& it = m_unit_states.find( unit_id );
-			if ( m_unit_states.find( unit_id ) != m_unit_states.end() ) {
+			const auto& it = m_units.find( unit_id );
+			if ( m_units.find( unit_id ) != m_units.end() ) {
 				units.insert(
 					{
 						unit_id,
@@ -2171,8 +2197,8 @@ tile_data_t Game::GetTileAtCoordsResult( const mt_id_t mt_id ) {
 		const auto units_order = Tile::GetUnitsOrder( units );
 
 		for ( const auto& unit_id : units_order ) {
-			ASSERT( m_unit_states.find( unit_id ) != m_unit_states.end(), "unit id not found" );
-			const auto* unit_state = m_unit_states.at( unit_id );
+			ASSERT( m_units.find( unit_id ) != m_units.end(), "unit id not found" );
+			const auto* unit = m_units.at( unit_id );
 
 			types::mesh::Rectangle* mesh = nullptr;
 			types::Texture* texture = nullptr;
@@ -2213,14 +2239,14 @@ tile_data_t Game::GetTileAtCoordsResult( const mt_id_t mt_id ) {
 
 			result.units.push_back(
 				{
-					unit_state->GetId(),
-					f_meshtex( unit_state->GetSprite()->instanced_sprite ),
-					f_meshtex( unit_state->GetBadgeSprite()->instanced_sprite ),
-					f_meshtex( unit_state->GetBadgeHealthbarSprite()->instanced_sprite ),
-					unit_state->GetNameString(),
-					unit_state->GetStatsString(),
-					unit_state->GetMoraleString(),
-					unit_state->GetMovesString(),
+					unit->GetId(),
+					f_meshtex( unit->GetSprite()->instanced_sprite ),
+					f_meshtex( unit->GetBadgeSprite()->instanced_sprite ),
+					f_meshtex( unit->GetBadgeHealthbarSprite()->instanced_sprite ),
+					unit->GetNameString(),
+					unit->GetStatsString(),
+					unit->GetMoraleString(),
+					unit->GetMovesString(),
 				}
 			);
 		}
@@ -2382,55 +2408,55 @@ void Game::ExitGame( const f_exit_game on_game_exit ) {
 	}
 }
 
-void Game::AddSelectable( Unit* unit_state ) {
-	const auto& it = std::find( m_selectables.unit_states.begin(), m_selectables.unit_states.end(), unit_state );
-	if ( it == m_selectables.unit_states.end() ) {
-		if ( m_selectables.unit_states.empty() ) {
+void Game::AddSelectable( Unit* unit ) {
+	const auto& it = std::find( m_selectables.units.begin(), m_selectables.units.end(), unit );
+	if ( it == m_selectables.units.end() ) {
+		if ( m_selectables.units.empty() ) {
 			m_selectables.selected_id_index = 0;
 		}
-		m_selectables.unit_states.push_back( unit_state );
+		m_selectables.units.push_back( unit );
 	}
 }
 
-void Game::RemoveSelectable( Unit* unit_state ) {
-	const auto& it = std::find( m_selectables.unit_states.begin(), m_selectables.unit_states.end(), unit_state );
-	if ( it != m_selectables.unit_states.end() ) {
-		const size_t removed_index = it - m_selectables.unit_states.begin();
-		m_selectables.unit_states.erase( it );
+void Game::RemoveSelectable( Unit* unit ) {
+	const auto& it = std::find( m_selectables.units.begin(), m_selectables.units.end(), unit );
+	if ( it != m_selectables.units.end() ) {
+		const size_t removed_index = it - m_selectables.units.begin();
+		m_selectables.units.erase( it );
 		if ( m_selectables.selected_id_index > 0 && m_selectables.selected_id_index >= removed_index ) {
 			m_selectables.selected_id_index--;
 		}
 	}
 }
 
-void Game::UpdateSelectable( Unit* unit_state ) {
-	if ( unit_state->IsOwned() ) {
-		if ( unit_state->IsActive() ) {
-			AddSelectable( unit_state );
+void Game::UpdateSelectable( Unit* unit ) {
+	if ( unit->IsOwned() ) {
+		if ( unit->IsActive() ) {
+			AddSelectable( unit );
 		}
 		else {
-			RemoveSelectable( unit_state );
+			RemoveSelectable( unit );
 		}
 	}
 }
 
-void Game::SetCurrentSelectable( Unit* unit_state ) {
-	const auto& it = std::find( m_selectables.unit_states.begin(), m_selectables.unit_states.end(), unit_state );
-	ASSERT( it != m_selectables.unit_states.end(), "selectable not found" );
-	m_selectables.selected_id_index = it - m_selectables.unit_states.begin();
+void Game::SetCurrentSelectable( Unit* unit ) {
+	const auto& it = std::find( m_selectables.units.begin(), m_selectables.units.end(), unit );
+	ASSERT( it != m_selectables.units.end(), "selectable not found" );
+	m_selectables.selected_id_index = it - m_selectables.units.begin();
 }
 
 Unit* Game::GetCurrentSelectable() {
-	if ( !m_selectables.unit_states.empty() ) {
-		return m_selectables.unit_states.at( m_selectables.selected_id_index );
+	if ( !m_selectables.units.empty() ) {
+		return m_selectables.units.at( m_selectables.selected_id_index );
 	}
 	return nullptr;
 }
 
 Unit* Game::GetNextSelectable() {
-	if ( !m_selectables.unit_states.empty() ) {
+	if ( !m_selectables.units.empty() ) {
 		m_selectables.selected_id_index++;
-		if ( m_selectables.selected_id_index >= m_selectables.unit_states.size() ) {
+		if ( m_selectables.selected_id_index >= m_selectables.units.size() ) {
 			m_selectables.selected_id_index = 0;
 		}
 		return GetCurrentSelectable();
@@ -2526,10 +2552,10 @@ void Game::ReturnToMainMenu( const std::string reason ) {
 }
 
 Tile* Game::GetTileState( const size_t x, const size_t y ) {
-	ASSERT( !m_tile_states.empty(), "tile states not set" );
+	ASSERT( !m_tiles.empty(), "tile states not set" );
 	ASSERT( x < m_map_data.width, "tile x overflow" );
 	ASSERT( y < m_map_data.height, "tile y overflow" );
-	return &m_tile_states.at( y * m_map_data.width + x );
+	return &m_tiles.at( y * m_map_data.width + x );
 }
 
 }

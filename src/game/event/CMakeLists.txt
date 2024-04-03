@@ -1,6 +1,7 @@
 SET( SRC ${SRC}
 
 	${PWD}/Event.cpp
+	${PWD}/DefineAnimation.cpp
 	${PWD}/DefineMorales.cpp
 	${PWD}/DefineUnit.cpp
 	${PWD}/SpawnUnit.cpp

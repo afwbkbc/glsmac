@@ -20,6 +20,7 @@
 #include "gse/GSE.h"
 #include "gse/GlobalContext.h"
 
+#include "animation/Def.h"
 #include "unit/MoraleSet.h"
 #include "unit/Def.h"
 #include "unit/Unit.h"
@@ -295,6 +296,7 @@ public:
 	unit::Def* GetUnitDef( const std::string& name ) const;
 	void AddEvent( event::Event* event );
 	void RefreshUnit( const unit::Unit* unit );
+	void DefineAnimation( animation::Def* def );
 	void DefineMoraleSet( unit::MoraleSet* moraleset );
 	void DefineUnit( unit::Def* def );
 	void SpawnUnit( unit::Unit* unit );
@@ -325,6 +327,8 @@ private:
 	const gse::Value ProcessEvent( event::Event* event );
 
 	const types::Vec3 GetUnitRenderCoords( const unit::Unit* unit );
+
+	std::unordered_set< std::string > m_defined_animations = {};
 
 	std::unordered_map< std::string, unit::MoraleSet* > m_unit_moralesets = {};
 	std::unordered_map< std::string, unit::Def* > m_unit_defs = {};

@@ -1,3 +1,5 @@
+const weapons = #include('combat/weapons');
+
 const MIN_DAMAGE_VALUE = 0.25;
 const MAX_DAMAGE_VALUE = 1.0;
 const DAMAGE_MULTIPLIER = 1.0 / 3.0;
@@ -97,6 +99,12 @@ const result = {
                 #print( 'Attacker is dead' );
             }
         });
+
+    },
+
+    define: () => {
+
+        weapons.define();
 
     },
 

@@ -80,6 +80,8 @@ BINDING_DEF( factions )
 
 BINDING_DEF( units )
 
+BINDING_DEF( animations )
+
 BINDING_DEF( map )
 
 }

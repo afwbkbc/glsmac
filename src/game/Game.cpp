@@ -1005,6 +1005,19 @@ void Game::RefreshUnit( const unit::Unit* unit ) {
 	AddFrontendRequest( fr );
 }
 
+void Game::DefineAnimation( animation::Def* def ) {
+	Log( "Defining animation ('" + def->m_id + "')" );
+
+	ASSERT( m_defined_animations.find( def->m_id ) == m_defined_animations.end(), "Animation definition '" + def->m_id + "' already exists" );
+
+	// backend doesn't need any animation details, just keep track of it's existence for validations
+	m_defined_animations.insert( def->m_id );
+
+	auto fr = FrontendRequest( FrontendRequest::FR_ANIMATION_DEFINE );
+	NEW( fr.data.animation_define.serialized_animation, std::string, animation::Def::Serialize( def ).ToString() );
+	AddFrontendRequest( fr );
+}
+
 void Game::DefineMoraleSet( unit::MoraleSet* moraleset ) {
 	Log( "Defining unit moraleset ('" + moraleset->m_id + "')" );
 

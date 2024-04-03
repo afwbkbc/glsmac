@@ -34,6 +34,10 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.slot_define.slotdefs, slot_defines_t, *other.data.slot_define.slotdefs );
 			break;
 		}
+		case FR_ANIMATION_DEFINE: {
+			NEW( data.animation_define.serialized_animation, std::string, *other.data.animation_define.serialized_animation );
+			break;
+		}
 		case FR_UNIT_DEFINE: {
 			NEW( data.unit_define.serialized_unitdef, std::string, *other.data.unit_define.serialized_unitdef );
 			break;
@@ -67,6 +71,10 @@ FrontendRequest::~FrontendRequest() {
 		}
 		case FR_SLOT_DEFINE: {
 			DELETE( data.slot_define.slotdefs );
+			break;
+		}
+		case FR_ANIMATION_DEFINE: {
+			DELETE( data.animation_define.serialized_animation );
 			break;
 		}
 		case FR_UNIT_DEFINE: {

@@ -5,7 +5,6 @@
 #include "InstancedSpriteManager.h"
 
 #include "game/unit/Def.h"
-#include "game/unit/StaticDef.h"
 
 #include "Sprite.h"
 

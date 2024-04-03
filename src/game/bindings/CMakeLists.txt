@@ -9,6 +9,7 @@ SET( SRC ${SRC}
 	${PWD}/Players.cpp
 	${PWD}/Factions.cpp
 	${PWD}/Units.cpp
+	${PWD}/Animations.cpp
 	${PWD}/Map.cpp
 
 	PARENT_SCOPE )

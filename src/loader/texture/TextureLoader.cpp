@@ -92,7 +92,14 @@ static const std::unordered_map< std::string, TextureLoader::transparent_colors_
 			Color::RGB( 124, 124, 124 ),
 			s_tc_aqua, // borders
 		}
-	}
+	},
+	{
+		"xi.pcx",
+		{
+			Color::RGB( 0, 67, 255 ),
+			Color::RGB( 27, 187, 231 ), // borders
+		}
+	},
 };
 static const TextureLoader::transparent_colors_t s_no_transparent_colors = {};
 

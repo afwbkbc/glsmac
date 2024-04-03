@@ -33,6 +33,7 @@ public:
 	const movement_type_t GetMovementType() const override;
 
 	const types::Vec3 GetSpawnCoords( const float tile_x, const float tile_y, const map::TileState::tile_vertices_t& tile_coords ) const override;
+
 	const std::string ToString( const std::string& prefix ) const override;
 
 	WRAPDEFS_PTR( StaticDef );

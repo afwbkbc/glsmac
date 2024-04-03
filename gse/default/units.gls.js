@@ -1,18 +1,19 @@
 const defs = #include('units/defs');
 const movement = #include('units/movement');
-const attack = #include('units/attack');
+const combat = #include('units/combat');
 const turns = #include('units/turns');
 
 const result = {
 
     init: () => {
         movement.init();
-        attack.init();
+        combat.init();
         turns.init();
     },
 
     define: () => {
         defs.define();
+        combat.define();
     },
 
 };

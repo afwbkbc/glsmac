@@ -1,5 +1,6 @@
 #include "UnitDef.h"
 
+#include "game/unit/StaticDef.h"
 #include "game/unit/SpriteRender.h"
 
 #include "engine/Engine.h"

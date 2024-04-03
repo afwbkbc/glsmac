@@ -67,7 +67,7 @@ void Tile::Render( size_t selected_unit_id ) {
 	m_render.currently_rendered_fake_badges.clear();
 
 	// is needed?
-	/*if ( m_selected_unit == tile_state->render.currently_rendered_unit ) {
+	/*if ( m_selected_unit == tile->render.currently_rendered_unit ) {
 		m_selected_unit = nullptr;
 	}*/
 

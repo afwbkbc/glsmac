@@ -11,20 +11,20 @@ TileState& MapState::At( const size_t x, const size_t y ) {
 	ASSERT( x < dimensions.x, "tile state x overflow" );
 	ASSERT( y < dimensions.y, "tile state y overflow" );
 	ASSERT( ( x % 2 ) == ( y % 2 ), "tile state axis oddity differs" );
-	return m_tile_states.at( y * dimensions.x + x / 2 );
+	return m_tiles.at( y * dimensions.x + x / 2 );
 }
 
 const TileState& MapState::AtConst( const size_t x, const size_t y ) const {
 	ASSERT( x < dimensions.x, "tile state x overflow" );
 	ASSERT( y < dimensions.y, "tile state y overflow" );
 	ASSERT( ( x % 2 ) == ( y % 2 ), "tile state axis oddity differs" );
-	return m_tile_states.at( y * dimensions.x + x / 2 );
+	return m_tiles.at( y * dimensions.x + x / 2 );
 }
 
 void MapState::LinkTileStates( MT_CANCELABLE ) {
 
-	ASSERT( m_tile_states.empty(), "m_tile_states already set" );
-	m_tile_states.resize( dimensions.y * dimensions.x );
+	ASSERT( m_tiles.empty(), "m_tiles already set" );
+	m_tiles.resize( dimensions.y * dimensions.x );
 
 	Log( "Linking tile states" );
 

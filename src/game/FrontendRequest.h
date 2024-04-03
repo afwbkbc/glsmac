@@ -19,6 +19,7 @@ public:
 		FR_TURN_STATUS,
 		FR_TURN_ADVANCE,
 		FR_SLOT_DEFINE,
+		FR_ANIMATION_DEFINE,
 		FR_UNIT_DEFINE,
 		FR_UNIT_SPAWN,
 		FR_UNIT_DESPAWN,
@@ -64,6 +65,9 @@ public:
 		struct {
 			slot_defines_t* slotdefs;
 		} slot_define;
+		struct {
+			const std::string* serialized_animation; // can be optimized
+		} animation_define;
 		struct {
 			const std::string* serialized_unitdef; // can be optimized
 		} unit_define;

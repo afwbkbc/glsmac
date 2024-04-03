@@ -47,7 +47,7 @@ CLASS( MapState, base::Base )
 	void Unserialize( Buffer buf );
 
 private:
-	std::vector< TileState > m_tile_states = {};
+	std::vector< TileState > m_tiles = {};
 
 };
 

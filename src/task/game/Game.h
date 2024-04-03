@@ -32,7 +32,8 @@
 #include "actor/TileSelection.h"
 #include "game/Game.h"
 #include "game/FrontendRequest.h"
-#include "game/unit/StaticDef.h"
+#include "game/animation/Def.h"
+#include "game/unit/Def.h"
 #include "game/Turn.h"
 
 #include "game/map/Consts.h"
@@ -42,6 +43,7 @@
 #include "InstancedSprite.h"
 #include "Sprite.h"
 #include "Slot.h"
+#include "AnimationDef.h"
 #include "UnitDef.h"
 #include "Unit.h"
 #include "SlotBadges.h"
@@ -163,6 +165,7 @@ private:
 		const types::Color& color,
 		const bool is_progenitor
 	);
+	void DefineAnimation( const ::game::animation::Def* def );
 	void DefineUnit( const ::game::unit::Def* def );
 	void SpawnUnit(
 		const size_t unit_id,
@@ -176,7 +179,7 @@ private:
 		const ::game::unit::Unit::health_t health
 	);
 	void DespawnUnit( const size_t unit_id );
-	void RefreshUnit( Unit* unit_state );
+	void RefreshUnit( Unit* unit );
 	void MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_coords );
 
 	void ProcessRequest( const ::game::FrontendRequest& request );
@@ -388,19 +391,20 @@ private:
 #endif
 	} m_mt_ids = {};
 
-	std::unordered_map< size_t, Tile > m_tile_states = {};
+	std::unordered_map< size_t, Tile > m_tiles = {};
 
-	std::unordered_map< size_t, Slot* > m_slot_states = {};
-	std::unordered_map< std::string, UnitDef* > m_unitdef_states = {};
-	std::unordered_map< size_t, Unit* > m_unit_states = {};
+	std::unordered_map< size_t, Slot* > m_slots = {};
+	std::unordered_map< std::string, AnimationDef* > m_animationdefs = {};
+	std::unordered_map< std::string, UnitDef* > m_unitdefs = {};
+	std::unordered_map< size_t, Unit* > m_units = {};
 	struct {
-		std::vector< Unit* > unit_states = {};
+		std::vector< Unit* > units = {};
 		size_t selected_id_index = 0;
 	} m_selectables = {};
-	void UpdateSelectable( Unit* unit_state );
-	void AddSelectable( Unit* unit_state );
-	void RemoveSelectable( Unit* unit_state );
-	void SetCurrentSelectable( Unit* unit_state );
+	void UpdateSelectable( Unit* unit );
+	void AddSelectable( Unit* unit );
+	void RemoveSelectable( Unit* unit );
+	void SetCurrentSelectable( Unit* unit );
 	Unit* GetCurrentSelectable();
 	Unit* GetNextSelectable();
 	const bool SelectNextUnitMaybe();

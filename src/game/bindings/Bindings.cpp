@@ -29,6 +29,7 @@ Bindings::Bindings( State* state )
 		B( players ),
 		B( factions ),
 		B( units ),
+		B( animations ),
 		B( map ),
 	};
 #undef B

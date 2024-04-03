@@ -24,7 +24,7 @@ public:
 		const ::game::map::Consts::pcx_texture_coordinates_t& src_xy,
 		const ::game::map::Consts::pcx_texture_coordinates_t& src_wh,
 		const ::game::map::Consts::pcx_texture_coordinates_t& src_cxy,
-		const types::Vec2< float > dst_xy,
+		const types::Vec2< float > dst_wh,
 		const float z_index
 	);
 	InstancedSprite* GetInstancedSpriteByKey( const std::string& key ); // actor must already exist

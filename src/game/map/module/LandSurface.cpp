@@ -14,7 +14,7 @@ void LandSurface::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) 
 	for ( auto& t : tile->neighbours ) {
 		if ( !t->is_water_tile && ( t->moisture == Tile::M_RAINY ) != ( tile->moisture == Tile::M_RAINY ) ) {
 
-			// TODO: add pointer connection between tile and tile_state_t?
+			// TODO: add pointer connection between tile and tile_t?
 			auto src = m_map->GetTileState( t->coord.x, t->coord.y )->moisture_original;
 
 			Texture::add_flag_t add_flags = Texture::AM_DEFAULT;
