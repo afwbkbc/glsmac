@@ -17,6 +17,7 @@ public:
 	~AnimationDef();
 
 	const sprites_t& GetSprites() const;
+	const size_t GetDurationMs() const;
 
 private:
 
@@ -26,6 +27,7 @@ private:
 	::game::animation::Def::animation_type_t m_type;
 
 	sprites_t m_sprites = {};
+	const size_t m_duration_ms;
 };
 
 }

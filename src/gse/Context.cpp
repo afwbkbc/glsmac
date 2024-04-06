@@ -92,6 +92,26 @@ void Context::CreateBuiltin( const std::string& name, const Value& value ) {
 	CreateConst( "#" + name, value, nullptr );
 }
 
+void Context::PersistValue( const Value& value ) {
+	ASSERT_NOLOG( m_persisted_values.find( value.Get() ) == m_persisted_values.end(), "value already persisted" );
+	m_persisted_values.insert(
+		{
+			value.Get(),
+			value
+		}
+	);
+}
+
+void Context::UnpersistValue( const Value& value ) {
+	ASSERT_NOLOG( m_persisted_values.find( value.Get() ) != m_persisted_values.end(), "value was not persisted" );
+	m_persisted_values.erase( value.Get() );
+}
+
+void Context::UnpersistValue( const type::Type* type ) {
+	ASSERT_NOLOG( m_persisted_values.find( type ) != m_persisted_values.end(), "value was not persisted" );
+	m_persisted_values.erase( type );
+}
+
 ChildContext* const Context::ForkContext(
 	Context* caller_context,
 	const si_t& call_si,

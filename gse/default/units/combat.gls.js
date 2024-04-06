@@ -86,8 +86,15 @@ const result = {
                 #print( 'Defender takes ' + #to_string(damages[0]) + ' damage');
                 #print( 'Attacker takes ' + #to_string(damages[1]) + ' damage');
 
-                e.defender.health = e.defender.health - damages[0]; // TODO: animation
-                e.attacker.health = e.attacker.health - damages[1]; // TODO: animation
+                #game.animations.show_on_tile('WEAPON_PSI', e.defender.get_tile(), () => {
+                    //#print('ANIMATION CALLBACK');
+                });
+                e.defender.health = e.defender.health - damages[0];
+
+                #game.animations.show_on_tile('WEAPON_PSI', e.attacker.get_tile(), () => {
+                    //#print('ANIMATION CALLBACK');
+                });
+                e.attacker.health = e.attacker.health - damages[1];
 
                 i++;
             }

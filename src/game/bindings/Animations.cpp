@@ -41,6 +41,20 @@ BINDING_IMPL( animations ) {
 				return VALUE( gse::type::Undefined );
 			})
 		},
+		{
+			"show_on_tile",
+			NATIVE_CALL( this ) {
+				N_ARGS( 3 );
+				N_GETVALUE( id, 0, String );
+				N_UNWRAP( tile, 1, map::Tile );
+				N_PERSIST_CALLABLE( on_complete, 2 );
+				GAME->ShowAnimationOnTile( id, tile, [ on_complete, ctx, call_si ]() {
+					on_complete->Run( ctx, call_si, {} );
+					N_UNPERSIST_CALLABLE( on_complete );
+				});
+				return VALUE( gse::type::Undefined );
+			} )
+		}
 	};
 	return VALUE( gse::type::Object, properties );
 }

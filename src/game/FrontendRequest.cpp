@@ -38,6 +38,10 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.animation_define.serialized_animation, std::string, *other.data.animation_define.serialized_animation );
 			break;
 		}
+		case FR_ANIMATION_SHOW: {
+			NEW( data.animation_show.animation_id, std::string, *other.data.animation_show.animation_id );
+			break;
+		}
 		case FR_UNIT_DEFINE: {
 			NEW( data.unit_define.serialized_unitdef, std::string, *other.data.unit_define.serialized_unitdef );
 			break;
@@ -75,6 +79,10 @@ FrontendRequest::~FrontendRequest() {
 		}
 		case FR_ANIMATION_DEFINE: {
 			DELETE( data.animation_define.serialized_animation );
+			break;
+		}
+		case FR_ANIMATION_SHOW: {
+			DELETE( data.animation_show.animation_id );
 			break;
 		}
 		case FR_UNIT_DEFINE: {

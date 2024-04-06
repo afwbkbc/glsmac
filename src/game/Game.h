@@ -15,6 +15,7 @@
 #include "types/mesh/Data.h"
 #include "Slot.h"
 #include "FrontendRequest.h"
+#include "BackendRequest.h"
 #include "Turn.h"
 
 #include "gse/GSE.h"
@@ -48,6 +49,7 @@ enum op_t {
 	OP_EDIT_MAP,
 	OP_CHAT,
 	OP_GET_FRONTEND_REQUESTS,
+	OP_SEND_BACKEND_REQUESTS,
 	OP_ADD_EVENT,
 #ifdef DEBUG
 	OP_SAVE_DUMP,
@@ -116,6 +118,9 @@ struct MT_Request {
 		struct {
 			std::string* serialized_event;
 		} add_event;
+		struct {
+			std::vector< BackendRequest >* requests;
+		} send_backend_requests;
 	} data;
 };
 
@@ -260,6 +265,9 @@ CLASS( Game, MTModule )
 	// get all pending frontend requests (will be cleared after)
 	mt_id_t MT_GetFrontendRequests();
 
+	// send backend requests for processing
+	mt_id_t MT_SendBackendRequests( const std::vector< BackendRequest >& requests );
+
 	// send event
 	mt_id_t MT_AddEvent( const event::Event* event );
 
@@ -287,6 +295,8 @@ protected:
 	void DestroyResponse( const MT_Response& response ) override;
 
 public:
+	typedef std::function< void() > cb_animation_oncomplete;
+
 	// for bindings etc
 	void Message( const std::string& text );
 	void Quit( const std::string& reason );
@@ -297,6 +307,7 @@ public:
 	void AddEvent( event::Event* event );
 	void RefreshUnit( const unit::Unit* unit );
 	void DefineAnimation( animation::Def* def );
+	const std::string* ShowAnimationOnTile( const std::string& animation_id, const map::Tile* tile, const cb_animation_oncomplete& on_complete );
 	void DefineMoraleSet( unit::MoraleSet* moraleset );
 	void DefineUnit( unit::Def* def );
 	void SpawnUnit( unit::Unit* unit );
@@ -326,6 +337,7 @@ private:
 	void ValidateEvent( event::Event* event );
 	const gse::Value ProcessEvent( event::Event* event );
 
+	const types::Vec3 GetTileRenderCoords( const map::Tile* tile );
 	const types::Vec3 GetUnitRenderCoords( const unit::Unit* unit );
 
 	std::unordered_set< std::string > m_defined_animations = {};
@@ -378,6 +390,8 @@ private:
 	bool m_is_turn_complete = false;
 	void CheckTurnComplete();
 
+	size_t m_next_running_animation_id = 1;
+	std::unordered_map< size_t, cb_animation_oncomplete > m_running_animations = {};
 };
 
 }

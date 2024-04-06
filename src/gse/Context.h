@@ -43,6 +43,9 @@ public:
 	void CreateConst( const std::string& name, const Value& value, const si_t* si );
 	void UpdateVariable( const std::string& name, const Value& value, const si_t* si );
 	void CreateBuiltin( const std::string& name, const Value& value );
+	void PersistValue( const Value& value );
+	void UnpersistValue( const Value& value );
+	void UnpersistValue( const type::Type* type );
 
 	ChildContext* const ForkContext(
 		Context* caller_context,
@@ -67,6 +70,8 @@ protected:
 	variables_t m_variables = {};
 	typedef std::unordered_map< std::string, Context* > ref_contexts_t;
 	ref_contexts_t m_ref_contexts = {};
+
+	std::unordered_map< const type::Type*, Value > m_persisted_values = {};
 };
 
 }

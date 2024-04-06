@@ -18,7 +18,8 @@ namespace callable {
     const gse::type::Type* arg; \
     gse::type::Object::properties_t::const_iterator obj_it; \
     auto getprop_val = VALUE( gse::type::Undefined ); \
-    auto obj_val = VALUE( gse::type::Undefined );
+    auto obj_val = VALUE( gse::type::Undefined ); \
+    auto persist_val = VALUE( gse::type::Undefined );
 #define N_EXPECT_ARGS( _count ) \
     if ( arguments.size() != _count ) { \
         throw gse::Exception( gse::EC.INVALID_CALL, "Expected " + std::to_string( _count ) + " arguments, found " + std::to_string( arguments.size() ), ctx, call_si ); \
@@ -39,6 +40,15 @@ namespace callable {
     if ( _var->type != gse::type::_type::GetType() ) { \
         throw gse::Exception( gse::EC.INVALID_CALL, "Argument " + std::to_string( _index ) + " is expected to be " + #_type + ", found: " + _var->GetTypeString( _var->type ), ctx, call_si ); \
     }
+#define N_PERSIST_CALLABLE( _var, _index ) \
+    ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
+    persist_val = arguments.at( _index ); \
+    arg = persist_val.Get(); \
+    N_CHECKTYPE( arg, _index, Callable ); \
+    ctx->PersistValue( persist_val ); \
+    const auto& _var = (gse::type::Callable*)arg;
+#define N_UNPERSIST_CALLABLE( _callable ) \
+    ctx->UnpersistValue( _callable );
 #define N_GETVALUE( _var, _index, _type ) \
     ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
     arg = arguments.at( _index ).Get(); \

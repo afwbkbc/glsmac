@@ -9,10 +9,9 @@ namespace game {
 
 class Animation {
 public:
-	Animation( const size_t id, AnimationDef* def, const Vec3& render_coords );
+	Animation( AnimationDef* def, const Vec3& render_coords );
 	~Animation();
 
-	const size_t GetId() const;
 	const bool IsFinished() const;
 
 	void Iterate();
@@ -20,11 +19,11 @@ public:
 private:
 
 	util::Timer m_timer;
-	size_t m_id = 0;
 	AnimationDef* m_def = nullptr;
 	Vec3 m_render_coords = {};
-	size_t frame_index = 0;
-	size_t instance_id = 0;
+	const AnimationDef::sprites_t& m_frames;
+	size_t m_frame_index = 0;
+	size_t m_instance_id = 0;
 
 };
 

@@ -285,7 +285,36 @@ void Game::Iterate() {
 		}
 	}
 
-	// poll game thread for frontend requests
+	auto it = m_animations.begin();
+	while ( it != m_animations.end() ) {
+		it->second->Iterate();
+		if ( it->second->IsFinished() ) {
+			auto br = ::game::BackendRequest( ::game::BackendRequest::BR_ANIMATION_FINISHED );
+			br.data.animation_finished.animation_id = it->first;
+			SendBackendRequest( br );
+			it = m_animations.erase( it );
+		}
+		else {
+			it++;
+		}
+	}
+
+	// check if previous backend requests were sent successfully
+	if ( m_mt_ids.send_backend_requests ) {
+		auto response = game->MT_GetResponse( m_mt_ids.send_backend_requests );
+		if ( response.result != ::game::R_NONE ) {
+			ASSERT( response.result == ::game::R_SUCCESS, "backend requests result not successful" );
+			m_mt_ids.send_backend_requests = 0;
+		}
+	}
+
+	// send pending backend requests if present and not sending already
+	if ( !m_mt_ids.send_backend_requests && !m_pending_backend_requests.empty() ) {
+		m_mt_ids.send_backend_requests = game->MT_SendBackendRequests( m_pending_backend_requests );
+		m_pending_backend_requests.clear();
+	}
+
+	// poll backend for frontend requests
 	if ( m_mt_ids.get_frontend_requests ) {
 		auto response = game->MT_GetResponse( m_mt_ids.get_frontend_requests );
 		if ( response.result != ::game::R_NONE ) {
@@ -777,6 +806,16 @@ void Game::DefineSlot(
 	}
 }
 
+void Game::ShowAnimation( AnimationDef* def, const size_t animation_id, const Vec3& render_coords ) {
+	ASSERT( m_animations.find( animation_id ) == m_animations.end(), "animation id already exists" );
+	m_animations.insert(
+		{
+			animation_id,
+			new Animation( def, render_coords ),
+		}
+	);
+}
+
 void Game::DefineUnit( const ::game::unit::Def* def ) {
 	auto unitdef_it = m_unitdefs.find( def->m_id );
 	ASSERT( unitdef_it == m_unitdefs.end(), "unit def already exists" );
@@ -829,7 +868,7 @@ void Game::SpawnUnit(
 
 	auto* unitdef = m_unitdefs.at( unitdef_id );
 	auto* slot_state = m_slots.at( slot_index );
-	auto* tile = GetTileState( tile_coords.x, tile_coords.y );
+	auto* tile = GetTile( tile_coords.x, tile_coords.y );
 
 	auto* unit = m_units.insert(
 		{
@@ -1061,6 +1100,24 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 			delete animationdef;
 			break;
 		}
+		case ::game::FrontendRequest::FR_ANIMATION_SHOW: {
+			const auto& d = request.data.animation_show;
+
+			const auto animationdef_it = m_animationdefs.find( *d.animation_id );
+			ASSERT( animationdef_it != m_animationdefs.end(), "animation id not found" );
+			auto* animationdef = animationdef_it->second;
+
+			const auto& c = d.render_coords;
+			ShowAnimation(
+				animationdef, d.running_animation_id, {
+					c.x,
+					c.y,
+					c.z
+				}
+			);
+
+			break;
+		}
 		case ::game::FrontendRequest::FR_UNIT_DEFINE: {
 			types::Buffer buf( *request.data.unit_define.serialized_unitdef );
 			const auto* unitdef = ::game::unit::Def::Unserialize( buf );
@@ -1122,7 +1179,7 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 			const auto& d = request.data.unit_move;
 			ASSERT( m_units.find( d.unit_id ) != m_units.end(), "unit id not found" );
 			auto* unit = m_units.at( d.unit_id );
-			auto* tile = GetTileState( d.tile_coords.x, d.tile_coords.y );
+			auto* tile = GetTile( d.tile_coords.x, d.tile_coords.y );
 			const auto& rc = d.render_coords;
 			unit->SetMovement( d.movement_left );
 			MoveUnit(
@@ -1138,6 +1195,10 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 			THROW( "unexpected frontend request type: " + std::to_string( request.type ) );
 		}
 	}
+}
+
+void Game::SendBackendRequest( const ::game::BackendRequest& request ) {
+	m_pending_backend_requests.push_back( request );
 }
 
 void Game::ActivateTurn() {
@@ -1195,42 +1256,42 @@ void Game::UpdateMapData( const types::Vec2< size_t >& map_size ) {
 	// link tiles to neighbours
 	for ( auto y = 0 ; y < m_map_data.height ; y++ ) {
 		for ( auto x = y & 1 ; x < m_map_data.width ; x += 2 ) {
-			auto* ts = GetTileState( x, y );
+			auto* ts = GetTile( x, y );
 
 			ts->W = ( x >= 2 )
-				? GetTileState( x - 2, y )
-				: GetTileState( m_map_data.width - 1 - ( 1 - ( y % 2 ) ), y );
+				? GetTile( x - 2, y )
+				: GetTile( m_map_data.width - 1 - ( 1 - ( y % 2 ) ), y );
 			ts->NW = ( y >= 1 )
 				? ( ( x >= 1 )
-					? GetTileState( x - 1, y - 1 )
-					: GetTileState( m_map_data.width - 1, y - 1 )
+					? GetTile( x - 1, y - 1 )
+					: GetTile( m_map_data.width - 1, y - 1 )
 				)
 				: ts;
 			ts->N = ( y >= 2 )
-				? GetTileState( x, y - 2 )
+				? GetTile( x, y - 2 )
 				: ts;
 			ts->NE = ( y >= 1 )
 				? ( ( x < m_map_data.width - 1 )
-					? GetTileState( x + 1, y - 1 )
-					: GetTileState( 0, y - 1 )
+					? GetTile( x + 1, y - 1 )
+					: GetTile( 0, y - 1 )
 				)
 				: ts;
 			ts->E = ( x < m_map_data.width - 2 )
-				? GetTileState( x + 2, y )
-				: GetTileState( y % 2, y );
+				? GetTile( x + 2, y )
+				: GetTile( y % 2, y );
 			ts->SE = ( y < m_map_data.height - 1 )
 				? ( ( x < m_map_data.width - 1 )
-					? GetTileState( x + 1, y + 1 )
-					: GetTileState( 0, y + 1 )
+					? GetTile( x + 1, y + 1 )
+					: GetTile( 0, y + 1 )
 				)
 				: ts;
 			ts->S = ( y < m_map_data.height - 2 )
-				? GetTileState( x, y + 2 )
+				? GetTile( x, y + 2 )
 				: ts;
 			ts->SW = ( y < m_map_data.height - 1 )
 				? ( ( x >= 1 )
-					? GetTileState( x - 1, y + 1 )
-					: GetTileState( m_map_data.width - 1, y + 1 )
+					? GetTile( x - 1, y + 1 )
+					: GetTile( m_map_data.width - 1, y + 1 )
 				)
 				: ts;
 		}
@@ -1754,6 +1815,11 @@ void Game::Deinitialize() {
 		DELETE( m_textures.terrain );
 		m_textures.terrain = nullptr;
 	}
+
+	for ( const auto& it : m_animations ) {
+		delete it.second;
+	}
+	m_animations.clear();
 
 	for ( const auto& it : m_animationdefs ) {
 		delete it.second;
@@ -2521,6 +2587,10 @@ void Game::CancelRequests() {
 		game->MT_Cancel( m_mt_ids.get_frontend_requests );
 		m_mt_ids.get_frontend_requests = 0;
 	}
+	if ( m_mt_ids.send_backend_requests ) {
+		game->MT_Cancel( m_mt_ids.send_backend_requests );
+		m_mt_ids.send_backend_requests = 0;
+	}
 	// TODO: cancel other requests?
 }
 
@@ -2551,7 +2621,7 @@ void Game::ReturnToMainMenu( const std::string reason ) {
 	g_engine->GetScheduler()->AddTask( task );
 }
 
-Tile* Game::GetTileState( const size_t x, const size_t y ) {
+Tile* Game::GetTile( const size_t x, const size_t y ) {
 	ASSERT( !m_tiles.empty(), "tile states not set" );
 	ASSERT( x < m_map_data.width, "tile x overflow" );
 	ASSERT( y < m_map_data.height, "tile y overflow" );

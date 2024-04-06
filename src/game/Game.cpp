@@ -99,6 +99,13 @@ mt_id_t Game::MT_GetFrontendRequests() {
 	return MT_CreateRequest( request );
 }
 
+mt_id_t Game::MT_SendBackendRequests( const std::vector< BackendRequest >& requests ) {
+	MT_Request request = {};
+	request.op = OP_SEND_BACKEND_REQUESTS;
+	NEW( request.data.send_backend_requests.requests, std::vector< BackendRequest >, requests );
+	return MT_CreateRequest( request );
+}
+
 mt_id_t Game::MT_AddEvent( const event::Event* event ) {
 	MT_Request request = {};
 	request.op = OP_ADD_EVENT;
@@ -830,6 +837,23 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			response.result = R_SUCCESS;
 			break;
 		}
+		case OP_SEND_BACKEND_REQUESTS: {
+			for ( const auto& r : *request.data.send_backend_requests.requests ) {
+				switch ( r.type ) {
+					case BackendRequest::BR_ANIMATION_FINISHED: {
+						const auto& it = m_running_animations.find( r.data.animation_finished.animation_id );
+						ASSERT( it != m_running_animations.end(), "animation " + std::to_string( r.data.animation_finished.animation_id ) + " is not running" );
+						it->second();
+						m_running_animations.erase( it );
+						break;
+					}
+					default:
+						THROW( "unknown backend request type: " + std::to_string( r.type ) );
+				}
+			}
+			response.result = R_SUCCESS;
+			break;
+		}
 		case OP_ADD_EVENT: {
 			const std::string* errmsg = nullptr;
 			event::Event* event = nullptr;
@@ -877,6 +901,11 @@ void Game::DestroyRequest( const MT_Request& request ) {
 		case OP_ADD_EVENT: {
 			DELETE( request.data.add_event.serialized_event );
 			break;
+		}
+		case OP_SEND_BACKEND_REQUESTS: {
+			if ( request.data.send_backend_requests.requests ) {
+				DELETE( request.data.send_backend_requests.requests );
+			}
 		}
 		default: {
 			// nothing to delete
@@ -1016,6 +1045,30 @@ void Game::DefineAnimation( animation::Def* def ) {
 	auto fr = FrontendRequest( FrontendRequest::FR_ANIMATION_DEFINE );
 	NEW( fr.data.animation_define.serialized_animation, std::string, animation::Def::Serialize( def ).ToString() );
 	AddFrontendRequest( fr );
+}
+
+const std::string* Game::ShowAnimationOnTile( const std::string& animation_id, const map::Tile* tile, const cb_animation_oncomplete& on_complete ) {
+	if ( m_defined_animations.find( animation_id ) == m_defined_animations.end() ) {
+		return new std::string( "Animation '" + animation_id + "' is not defined" );
+	}
+	const auto running_animation_id = m_next_running_animation_id++;
+	m_running_animations.insert(
+		{
+			running_animation_id,
+			on_complete
+		}
+	);
+	auto fr = FrontendRequest( FrontendRequest::FR_ANIMATION_SHOW );
+	NEW( fr.data.animation_show.animation_id, std::string, animation_id );
+	fr.data.animation_show.running_animation_id = running_animation_id;
+	const auto c = GetTileRenderCoords( tile );
+	fr.data.animation_show.render_coords = {
+		c.x,
+		c.y,
+		c.z,
+	};
+	AddFrontendRequest( fr );
+	return nullptr; // no error
 }
 
 void Game::DefineMoraleSet( unit::MoraleSet* moraleset ) {
@@ -1538,6 +1591,21 @@ const gse::Value Game::ProcessEvent( event::Event* event ) {
 
 	m_current_turn.AddEvent( event );
 	return event->Apply( this );
+}
+
+const types::Vec3 Game::GetTileRenderCoords( const map::Tile* tile ) {
+	const auto* ts = m_map->GetTileState( tile );
+	ASSERT( ts, "ts not set" );
+	const auto l = tile->is_water_tile
+		? map::TileState::LAYER_WATER
+		: map::TileState::LAYER_LAND;
+	const auto& layer = ts->layers[ l ];
+	const auto& c = layer.coords.center;
+	return {
+		c.x,
+		-c.y,
+		c.z
+	};
 }
 
 const types::Vec3 Game::GetUnitRenderCoords( const unit::Unit* unit ) {

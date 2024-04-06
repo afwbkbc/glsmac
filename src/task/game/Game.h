@@ -44,6 +44,7 @@
 #include "Sprite.h"
 #include "Slot.h"
 #include "AnimationDef.h"
+#include "Animation.h"
 #include "UnitDef.h"
 #include "Unit.h"
 #include "SlotBadges.h"
@@ -166,6 +167,7 @@ private:
 		const bool is_progenitor
 	);
 	void DefineAnimation( const ::game::animation::Def* def );
+	void ShowAnimation( AnimationDef* def, const size_t animation_id, const Vec3& render_coords );
 	void DefineUnit( const ::game::unit::Def* def );
 	void SpawnUnit(
 		const size_t unit_id,
@@ -183,6 +185,7 @@ private:
 	void MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_coords );
 
 	void ProcessRequest( const ::game::FrontendRequest& request );
+	void SendBackendRequest( const ::game::BackendRequest& request );
 
 	bool m_is_initialized = false;
 	void Initialize(
@@ -385,6 +388,7 @@ private:
 		mt_id_t edit_map = 0;
 		mt_id_t chat = 0;
 		mt_id_t get_frontend_requests = 0;
+		mt_id_t send_backend_requests = 0;
 #ifdef DEBUG
 		mt_id_t save_dump = 0;
 		// init will be used for loading dump
@@ -395,6 +399,7 @@ private:
 
 	std::unordered_map< size_t, Slot* > m_slots = {};
 	std::unordered_map< std::string, AnimationDef* > m_animationdefs = {};
+	std::unordered_map< size_t, Animation* > m_animations;
 	std::unordered_map< std::string, UnitDef* > m_unitdefs = {};
 	std::unordered_map< size_t, Unit* > m_units = {};
 	struct {
@@ -413,6 +418,8 @@ private:
 	void CancelRequests();
 	void CancelGame();
 
+	std::vector< ::game::BackendRequest > m_pending_backend_requests = {};
+
 	enum unit_update_flags_t : uint8_t {
 		UUF_NONE = 0,
 		UUF_POSITION = 1 << 0,
@@ -421,7 +428,7 @@ private:
 		UUF_ALL = 0xff,
 	};
 
-	Tile* GetTileState( const size_t x, const size_t y );
+	Tile* GetTile( const size_t x, const size_t y );
 
 };
 

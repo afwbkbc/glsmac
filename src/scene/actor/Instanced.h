@@ -83,7 +83,7 @@ private:
 		bool need_update;
 	} instance_t;
 
-	instance_id_t m_next_instance_id = 0;
+	instance_id_t m_next_instance_id = 1;
 	std::map< instance_id_t, instance_t > m_instances = {};
 
 	const scene::Scene::instance_positions_t* GetWorldInstancePositions();
