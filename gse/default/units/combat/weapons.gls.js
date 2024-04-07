@@ -10,12 +10,14 @@ const animations = [
         frame_width: 43, frame_height: 47,
         frame_padding: 2,
         frames_count: 16,
-        duration_ms: 500,
+        duration_ms: 160,
         sound: 'psi attack.wav',
     }],
 ];
 
 const result = {
+
+    ANIMATION: ANIMATION,
 
     define: () => {
 

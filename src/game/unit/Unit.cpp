@@ -22,6 +22,7 @@ const void Unit::SetNextId( const size_t id ) {
 }
 
 Unit::Unit(
+	Game* game,
 	const size_t id,
 	Def* def,
 	Slot* owner,
@@ -31,7 +32,8 @@ Unit::Unit(
 	const health_t health,
 	const bool moved_this_turn
 )
-	: m_id( id )
+	: m_game( game )
+	, m_id( id )
 	, m_def( def )
 	, m_owner( owner )
 	, m_tile( tile )
@@ -69,7 +71,7 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 	return buf;
 }
 
-Unit* Unit::Unserialize( types::Buffer& buf, const Game* game ) {
+Unit* Unit::Unserialize( types::Buffer& buf, Game* game ) {
 	const auto id = buf.ReadInt();
 	auto defbuf = types::Buffer( buf.ReadString() );
 	auto* def = Def::Unserialize( defbuf );
@@ -81,7 +83,7 @@ Unit* Unit::Unserialize( types::Buffer& buf, const Game* game ) {
 	const auto morale = (Morale::morale_t)buf.ReadInt();
 	const auto health = (health_t)buf.ReadFloat();
 	const auto moved_this_turn = buf.ReadBool();
-	return new Unit( id, def, slot, tile, movement, morale, health, moved_this_turn );
+	return new Unit( game, id, def, slot, tile, movement, morale, health, moved_this_turn );
 }
 
 WRAPIMPL_DYNAMIC_GETTERS( Unit, CLASS_UNIT )
@@ -100,6 +102,10 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit, CLASS_UNIT )
 WRAPIMPL_DYNAMIC_SETTERS( Unit )
 	WRAPIMPL_SET( "movement", Float, m_movement )
 	WRAPIMPL_SET( "health", Float, m_health )
+WRAPIMPL_DYNAMIC_ON_SET( Unit )
+	// this is potentially risky because if it gets zero health it will be despawned without script's awareness, how to handle it?
+	// maybe despawn unit from within script? but then it would be script's responsibility to ensure there are no zero-health units walking around
+	m_game->RefreshUnit( this );
 WRAPIMPL_DYNAMIC_END()
 
 UNWRAPIMPL_PTR( Unit )

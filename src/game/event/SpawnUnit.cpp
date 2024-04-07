@@ -42,6 +42,7 @@ const gse::Value SpawnUnit::Apply( game::Game* game ) const {
 	auto& owner = game->GetState()->m_slots.GetSlot( m_owner_slot );
 	auto* tile = game->GetMap()->GetTile( m_pos_x, m_pos_y );
 	auto* unit = new unit::Unit(
+		game,
 		unit::Unit::GetNextId(),
 		def,
 		&owner,

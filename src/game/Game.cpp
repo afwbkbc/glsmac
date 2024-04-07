@@ -1027,11 +1027,18 @@ void Game::AddEvent( event::Event* event ) {
 }
 
 void Game::RefreshUnit( const unit::Unit* unit ) {
-	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_REFRESH );
-	fr.data.unit_refresh.unit_id = unit->m_id;
-	fr.data.unit_refresh.movement = unit->m_movement;
-	fr.data.unit_refresh.health = unit->m_health;
-	AddFrontendRequest( fr );
+	if ( unit->m_health <= 0.0f ) {
+		if ( GetState()->IsMaster() ) {
+			AddEvent( new event::DespawnUnit( GetSlotNum(), unit->m_id ) );
+		}
+	}
+	else {
+		auto fr = FrontendRequest( FrontendRequest::FR_UNIT_REFRESH );
+		fr.data.unit_refresh.unit_id = unit->m_id;
+		fr.data.unit_refresh.movement = unit->m_movement;
+		fr.data.unit_refresh.health = unit->m_health;
+		AddFrontendRequest( fr );
+	}
 }
 
 void Game::DefineAnimation( animation::Def* def ) {
@@ -2014,6 +2021,8 @@ void Game::ResetGame() {
 		delete it.second;
 	}
 	m_unit_moralesets.clear();
+
+	m_defined_animations.clear();
 
 	for ( auto& it : m_units ) {
 		delete it.second;

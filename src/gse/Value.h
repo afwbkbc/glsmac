@@ -27,7 +27,8 @@ namespace gse {
     WRAPDEFS_CLASS() \
     const gse::Value Wrap( const bool dynamic = false ); \
     static _type* Unwrap( const gse::Value& value ); \
-    static void WrapSet( void* wrapobj, const std::string& key, const gse::Value& value, gse::Context* ctx, const gse::si_t& si );
+    static void WrapSet( void* wrapobj, const std::string& key, const gse::Value& value, gse::Context* ctx, const gse::si_t& si ); \
+    void OnWrapSet( const std::string& property_name );
 #define WRAPDEFS_NOPTR( _type ) \
     WRAPDEFS_CLASS() \
     const gse::Value Wrap(); \
@@ -61,10 +62,13 @@ void _type::WrapSet( void* wrapobj, const std::string& key, const gse::Value& va
 #define WRAPIMPL_END_NOPTR( _type ) \
     return VALUE( gse::type::Object, properties, WRAP_CLASS ); \
 }
-#define WRAPIMPL_DYNAMIC_END() \
+#define WRAPIMPL_DYNAMIC_ON_SET( _type ) \
     else { \
         throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property does not exist", ctx, si ); \
     } \
+} \
+void _type::OnWrapSet( const std::string& property_name ) {
+#define WRAPIMPL_DYNAMIC_END() \
 }
 #define WRAPIMPL_GET( _key, _type, _property ) \
     { \
@@ -85,6 +89,7 @@ void _type::WrapSet( void* wrapobj, const std::string& key, const gse::Value& va
             throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Invalid assignment value type, expected: " + gse::type::Type::GetTypeString( gse::type::_type::GetType() ) + ", got: " + gse::type::Type::GetTypeString( value.Get()->type ), ctx, si ); \
         } \
         obj->_property = ((gse::type::_type*)value.Get())->value; \
+        obj->OnWrapSet( _key ); \
     }
 
 #define UNWRAPIMPL_PTR( _type ) \

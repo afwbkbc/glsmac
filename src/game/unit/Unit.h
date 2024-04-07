@@ -28,6 +28,7 @@ public:
 	typedef float health_t;
 
 	Unit(
+		Game* game,
 		const size_t id,
 		Def* def,
 		Slot* owner,
@@ -56,9 +57,13 @@ public:
 	const std::string& GetMoraleString();
 
 	static const types::Buffer Serialize( const Unit* unit );
-	static Unit* Unserialize( types::Buffer& buf, const Game* game );
+	static Unit* Unserialize( types::Buffer& buf, Game* game );
 
 	WRAPDEFS_DYNAMIC( Unit );
+
+private:
+	Game* const m_game;
+
 };
 
 }
