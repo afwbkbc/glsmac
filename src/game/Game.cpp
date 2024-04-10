@@ -1037,7 +1037,18 @@ void Game::RefreshUnit( const unit::Unit* unit ) {
 		fr.data.unit_refresh.unit_id = unit->m_id;
 		fr.data.unit_refresh.movement = unit->m_movement;
 		fr.data.unit_refresh.health = unit->m_health;
+		fr.data.unit_refresh.tile_coords = {
+			unit->m_tile->coord.x,
+			unit->m_tile->coord.y
+		};
+		const auto c = GetUnitRenderCoords( unit );
+		fr.data.unit_refresh.render_coords = {
+			c.x,
+			c.y,
+			c.z
+		};
 		AddFrontendRequest( fr );
+		CheckTurnComplete();
 	}
 }
 
@@ -1213,6 +1224,8 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	}
 
 	delete unit;
+
+	CheckTurnComplete();
 }
 
 const std::string* Game::MoveUnitValidate( unit::Unit* unit, map::Tile* dst_tile ) {
@@ -1293,14 +1306,9 @@ void Game::MoveUnitApply( unit::Unit* unit, map::Tile* dst_tile, const gse::Valu
 		}
 	);
 
-	if ( !unit->HasMovesLeft() ) {
-		// don't keep tiny leftovers // TODO: move to some global setter
-		unit->m_movement = 0.0f;
-	}
+	//unit->m_moved_this_turn = true;
 
-	unit->m_moved_this_turn = true;
-
-	const auto is_move_successful =
+/*	const auto is_move_successful =
 		result.Get()->type == gse::type::Bool::GetType() &&
 			( (gse::type::Bool*)result.Get() )->value;
 
@@ -1337,7 +1345,7 @@ void Game::MoveUnitApply( unit::Unit* unit, map::Tile* dst_tile, const gse::Valu
 		RefreshUnit( unit ); // update badge
 		CheckTurnComplete();
 	}
-
+*/
 }
 
 const std::string* Game::AttackUnitValidate( unit::Unit* attacker, unit::Unit* defender ) {

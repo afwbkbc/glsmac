@@ -89,7 +89,7 @@ const result = {
         });
 
         #game.on.unit_move_apply((e) => {
-            let movement_cost = get_movement_cost(e.unit, e.src_tile, e.dst_tile) + get_movement_aftercost(e.unit, e.src_tile, e.dst_tile);
+            let movement_cost = get_movement_cost(e.unit, e.unit.get_tile(), e.dst_tile) + get_movement_aftercost(e.unit, e.unit.get_tile(), e.dst_tile);
 
             // reduce remaining movement points (even if failed)
             if (e.unit.movement >= movement_cost) {
@@ -98,7 +98,10 @@ const result = {
                 e.unit.movement = 0.0;
             }
 
-            return e.resolutions.is_movement_successful;
+            e.unit.moved_this_turn = true;
+            if (e.resolutions.is_movement_successful) {
+                e.unit.set_tile(e.dst_tile);
+            }
         });
 
     },

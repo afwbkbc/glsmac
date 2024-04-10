@@ -64,7 +64,7 @@ namespace callable {
     obj_val = arguments.at( _index );
 #define N_UNWRAP( _var, _index, _type ) \
     N_GETOBJ( _index, _type::WRAP_CLASS ); \
-    const auto* _var = _type::Unwrap( obj_val );
+    auto* _var = _type::Unwrap( obj_val );
 #define N_CHECK_OBJECT_CLASS( _var, _class ) \
     if ( ((gse::type::Object*)_var)->object_class != _class ) { \
         throw gse::Exception( gse::EC.INVALID_CALL, "Value is expected to be object of class " + gse::type::Object::GetClassString( _class ) + ", found class: " + gse::type::Object::GetClassString( ((gse::type::Object*)_var)->object_class ), ctx, call_si ); \

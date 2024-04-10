@@ -2,7 +2,6 @@ const weapons = #include('combat/weapons');
 
 const MIN_DAMAGE_VALUE = 0.1;
 const MAX_DAMAGE_VALUE = 0.3;
-const DAMAGE_MULTIPLIER = 1.0;
 
 const get_unit_attack_power = (unit) => {
     const is_native = true; // TODO: non-native units
@@ -58,42 +57,59 @@ const result = {
 
             let attacker_health = e.attacker.health;
             let defender_health = e.defender.health;
+
             let damage_sequence = [];
             while (attacker_health > 0.0 && defender_health > 0.0) {
-                const damage_to_defender = #min(defender_health, #game.random.get_float(attack_power * MIN_DAMAGE_VALUE, attack_power * MAX_DAMAGE_VALUE) * DAMAGE_MULTIPLIER);
-                const damage_to_attacker = #min(attacker_health, #game.random.get_float(defence_power * MIN_DAMAGE_VALUE, defence_power * MAX_DAMAGE_VALUE) * DAMAGE_MULTIPLIER);
-                defender_health -= damage_to_defender;
-                attacker_health -= damage_to_attacker;
-                damage_sequence []= [damage_to_defender, damage_to_attacker];
+                let attack_roll = #game.random.get_float(0.0, attack_power);
+                let defence_roll = #game.random.get_float(0.0, defence_power);
+                if (attack_roll >= defence_roll) {
+                    let damage = #min(defender_health, #game.random.get_float(MIN_DAMAGE_VALUE, MAX_DAMAGE_VALUE));
+                    damage_sequence []= [true, damage];
+                    defender_health -= damage;
+                }
+                if (defence_roll >= attack_roll) {
+                    let damage = #min(attacker_health, #game.random.get_float(MIN_DAMAGE_VALUE, MAX_DAMAGE_VALUE));
+                    damage_sequence []= [false, damage];
+                    attacker_health -= damage;
+                }
             }
-
             return damage_sequence;
         });
 
         #game.on.unit_attack_apply((e) => {
 
-            e.attacker.movement = 0.0;
-
             let damages_sz = #size(e.resolutions);
 
-            const process_next_damage = ( damage_index, is_attacker_turn ) => {
-                if ( damage_index < damages_sz ) {
+            const process_next_damage = (damage_index) => {
+                if (damage_index < damages_sz) {
                     const damages = e.resolutions[damage_index];
-                    if (is_attacker_turn) {
+                    if (damages[0]) {
                         #game.animations.show_on_tile(weapons.ANIMATION.PSI, e.defender.get_tile(), () => {
-                            e.defender.health = e.defender.health - damages[0];
-                            process_next_damage(damage_index, false);
+                            e.defender.health = e.defender.health - damages[1];
+                            #print('DEFENDER TAKES ' + #to_string(damages[1]) + ' DAMAGE (HEALTH LEFT: ' + #to_string(e.defender.health) + ')');
+                            if (e.defender.health <= 0.0) {
+                                #print('DEFENDER IS DEAD');
+                            }
+                            process_next_damage(damage_index + 1);
                         });
                     } else {
                         #game.animations.show_on_tile(weapons.ANIMATION.PSI, e.attacker.get_tile(), () => {
                             e.attacker.health = e.attacker.health - damages[1];
-                            process_next_damage(damage_index + 1, true);
+                            #print('ATTACKER TAKES ' + #to_string(damages[1]) + ' DAMAGE (HEALTH LEFT: ' + #to_string(e.attacker.health) + ')');
+                            if (e.attacker.health <= 0.0) {
+                                #print('ATTACKER IS DEAD');
+                            }
+                            process_next_damage(damage_index + 1);
                         });
                     }
+                } else {
+                    #print('COMBAT FINISHED');
+                    //e.attacker.movement = 0.0; // TODO
                 }
             };
-            process_next_damage(0, true);
-       });
+            #print('COMBAT STARTED ( ' + #to_string(e.attacker.id) + ' -> ' + #to_string(e.defender.id) + ' )');
+            process_next_damage(0);
+        });
 
     },
 

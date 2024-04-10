@@ -914,20 +914,24 @@ void Game::DespawnUnit( const size_t unit_id ) {
 
 	auto* unit = it->second;
 
+	if ( m_selected_unit == unit ) {
+		m_selected_unit = nullptr;
+	}
+
 	if ( unit->IsActive() ) {
 		RemoveSelectable( unit );
 	}
+	m_units.erase( it );
 
 	auto* tile = unit->GetTile();
-
-	delete unit;
-	m_units.erase( it );
 
 	tile->Render(
 		m_selected_unit
 			? m_selected_unit->GetId()
 			: 0
 	);
+
+	delete unit;
 }
 
 void Game::RefreshUnit( Unit* unit ) {
@@ -1158,6 +1162,16 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 			auto* unit = m_units.at( d.unit_id );
 			unit->SetMovement( d.movement );
 			unit->SetHealth( d.health );
+			const auto& c = unit->GetTile()->GetCoords();
+			if ( d.tile_coords.x != c.x || d.tile_coords.y != c.y ) {
+				unit->MoveTo(
+					GetTile( d.tile_coords.x, d.tile_coords.y ), {
+						d.render_coords.x,
+						d.render_coords.y,
+						d.render_coords.z,
+					}
+				);
+			}
 			RefreshUnit( unit );
 			unit->GetTile()->Render(
 				m_selected_unit

@@ -99,9 +99,29 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit, CLASS_UNIT )
 	WRAPIMPL_LINK( "get_def", m_def )
 	WRAPIMPL_LINK( "get_owner", m_owner )
 	WRAPIMPL_LINK( "get_tile", m_tile )
+	{
+		"set_tile",
+		NATIVE_CALL( this ) {
+			N_ARGS( 1 );
+			N_UNWRAP( tile, 0, map::Tile );
+			if ( tile != m_tile ) {
+				m_tile->units.erase( m_id );
+				tile->units.insert(
+					{
+						m_id,
+						this
+					}
+				);
+				m_tile = tile;
+				m_game->RefreshUnit( this );
+			}
+			return VALUE( gse::type::Undefined );
+		} )
+	},
 WRAPIMPL_DYNAMIC_SETTERS( Unit )
 	WRAPIMPL_SET( "movement", Float, m_movement )
 	WRAPIMPL_SET( "health", Float, m_health )
+	WRAPIMPL_SET( "moved_this_turn", Bool, m_moved_this_turn )
 WRAPIMPL_DYNAMIC_ON_SET( Unit )
 	// this is potentially risky because if it gets zero health it will be despawned without script's awareness, how to handle it?
 	// maybe despawn unit from within script? but then it would be script's responsibility to ensure there are no zero-health units walking around

@@ -106,6 +106,15 @@ public:
 			size_t unit_id;
 			unit::Unit::movement_t movement;
 			unit::Unit::health_t health;
+			struct {
+				size_t x;
+				size_t y;
+			} tile_coords;
+			struct {
+				float x;
+				float y;
+				float z;
+			} render_coords; // TODO: store render coords of tiles on frontend
 		} unit_refresh;
 		struct {
 			size_t unit_id;
