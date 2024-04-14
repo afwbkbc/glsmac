@@ -1305,47 +1305,6 @@ void Game::MoveUnitApply( unit::Unit* unit, map::Tile* dst_tile, const gse::Valu
 			}
 		}
 	);
-
-	//unit->m_moved_this_turn = true;
-
-/*	const auto is_move_successful =
-		result.Get()->type == gse::type::Bool::GetType() &&
-			( (gse::type::Bool*)result.Get() )->value;
-
-	if ( is_move_successful ) {
-
-		src_tile->units.erase( unit->m_id );
-		dst_tile->units.insert(
-			{
-				unit->m_id,
-				unit
-			}
-		);
-		unit->m_tile = dst_tile;
-
-		auto fr = FrontendRequest( FrontendRequest::FR_UNIT_MOVE );
-		fr.data.unit_move.unit_id = unit->m_id;
-		fr.data.unit_move.tile_coords = {
-			dst_tile->coord.x,
-			dst_tile->coord.y
-		};
-		const auto c = GetUnitRenderCoords( unit );
-		fr.data.unit_move.render_coords = {
-			c.x,
-			c.y,
-			c.z
-		};
-		fr.data.unit_move.movement_left = unit->m_movement;
-		AddFrontendRequest( fr );
-		if ( !unit->HasMovesLeft() ) {
-			CheckTurnComplete();
-		}
-	}
-	else {
-		RefreshUnit( unit ); // update badge
-		CheckTurnComplete();
-	}
-*/
 }
 
 const std::string* Game::AttackUnitValidate( unit::Unit* attacker, unit::Unit* defender ) {

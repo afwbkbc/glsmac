@@ -80,34 +80,24 @@ const result = {
 
             let damages_sz = #size(e.resolutions);
 
+            e.attacker.movement = 0.0;
+
             const process_next_damage = (damage_index) => {
                 if (damage_index < damages_sz) {
                     const damages = e.resolutions[damage_index];
                     if (damages[0]) {
                         #game.animations.show_on_tile(weapons.ANIMATION.PSI, e.defender.get_tile(), () => {
                             e.defender.health = e.defender.health - damages[1];
-                            #print('DEFENDER TAKES ' + #to_string(damages[1]) + ' DAMAGE (HEALTH LEFT: ' + #to_string(e.defender.health) + ')');
-                            if (e.defender.health <= 0.0) {
-                                #print('DEFENDER IS DEAD');
-                            }
                             process_next_damage(damage_index + 1);
                         });
                     } else {
                         #game.animations.show_on_tile(weapons.ANIMATION.PSI, e.attacker.get_tile(), () => {
                             e.attacker.health = e.attacker.health - damages[1];
-                            #print('ATTACKER TAKES ' + #to_string(damages[1]) + ' DAMAGE (HEALTH LEFT: ' + #to_string(e.attacker.health) + ')');
-                            if (e.attacker.health <= 0.0) {
-                                #print('ATTACKER IS DEAD');
-                            }
                             process_next_damage(damage_index + 1);
                         });
                     }
-                } else {
-                    #print('COMBAT FINISHED');
-                    //e.attacker.movement = 0.0; // TODO
                 }
             };
-            #print('COMBAT STARTED ( ' + #to_string(e.attacker.id) + ' -> ' + #to_string(e.defender.id) + ' )');
             process_next_damage(0);
         });
 

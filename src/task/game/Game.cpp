@@ -916,6 +916,7 @@ void Game::DespawnUnit( const size_t unit_id ) {
 
 	if ( m_selected_unit == unit ) {
 		m_selected_unit = nullptr;
+		SelectNextUnitOrSwitchToTileSelection();
 	}
 
 	if ( unit->IsActive() ) {
@@ -954,16 +955,7 @@ void Game::RefreshUnit( Unit* unit ) {
 			m_selected_unit = nullptr;
 		}
 		else {
-			// keep same unit selected
-			::game::tile_query_metadata_t metadata = {};
-			metadata.unit_select.unit_id = unit->GetId();
-			GetTileAtCoords(
-				::game::TQP_UNIT_SELECT,
-				unit->GetTile()->GetCoords(),
-				::game::map::Tile::D_NONE,
-				metadata
-			);
-//			m_selected_unit = nullptr;
+			unit->StartBadgeBlink();
 		}
 	}
 }
@@ -1186,6 +1178,9 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 				if ( m_selected_unit == unit ) {
 					SelectNextUnitOrSwitchToTileSelection();
 				}
+			}
+			if ( unit == m_selected_unit ) {
+				unit->StartBadgeBlink();
 			}
 			break;
 		}

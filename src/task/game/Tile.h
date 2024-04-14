@@ -25,7 +25,7 @@ public:
 	void AddUnit( Unit* unit );
 	void RemoveUnit( Unit* unit );
 	void SetActiveUnit( Unit* unit );
-	void Render( size_t selected_unit_id );
+	void Render( size_t selected_unit_id = 0 );
 	const std::unordered_map< size_t, Unit* >& GetUnits() const;
 
 	Tile* W;

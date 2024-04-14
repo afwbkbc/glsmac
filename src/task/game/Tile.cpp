@@ -40,6 +40,7 @@ void Tile::AddUnit( Unit* unit ) {
 			unit
 		}
 	);
+	Render();
 }
 
 void Tile::RemoveUnit( Unit* unit ) {
@@ -48,6 +49,7 @@ void Tile::RemoveUnit( Unit* unit ) {
 		SetActiveUnit( nullptr );
 	}
 	m_units.erase( unit->GetId() );
+	Render();
 }
 
 void Tile::SetActiveUnit( Unit* unit ) {
@@ -65,11 +67,6 @@ void Tile::Render( size_t selected_unit_id ) {
 		unit->HideFakeBadge();
 	}
 	m_render.currently_rendered_fake_badges.clear();
-
-	// is needed?
-	/*if ( m_selected_unit == tile->render.currently_rendered_unit ) {
-		m_selected_unit = nullptr;
-	}*/
 
 	if ( !m_units.empty() ) {
 		const auto units_order = GetUnitsOrder( m_units );
