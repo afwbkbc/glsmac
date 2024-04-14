@@ -72,6 +72,23 @@ public:
 
 	void MoveTo( Tile* dst_tile, const Vec3& dst_render_coords );
 
+	struct meshtex_t {
+		const types::mesh::Mesh* mesh = nullptr;
+		types::Texture* texture = nullptr;
+	};
+	struct render_data_t {
+		meshtex_t unit;
+		meshtex_t badge;
+		meshtex_t healthbar;
+		struct {
+			std::string name;
+			std::string power;
+			std::string morale;
+			std::string moves;
+		} labels;
+	};
+	const render_data_t& GetRenderData() const;
+
 private:
 
 	BadgeDefs* const m_badge_defs;
@@ -110,6 +127,8 @@ private:
 	bool m_need_refresh = true;
 
 	const bool ShouldBeActive() const;
+
+	render_data_t m_render_data = {};
 };
 
 }

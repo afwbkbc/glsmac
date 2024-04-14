@@ -40,6 +40,7 @@ CLASS( MapState, base::Base )
 
 	TileState& At( const size_t x, const size_t y );
 	const TileState& AtConst( const size_t x, const size_t y ) const;
+	const std::vector< TileState >* GetTileStatesPtr() const;
 
 	void LinkTileStates( MT_CANCELABLE );
 

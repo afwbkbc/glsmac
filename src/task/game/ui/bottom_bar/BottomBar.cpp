@@ -217,17 +217,17 @@ void BottomBar::Align() {
 
 }
 
-void BottomBar::PreviewTile( const tile_data_t& tile_data, const size_t selected_unit_id ) {
-	m_sections.tile_preview->PreviewTile( tile_data );
-	m_sections.units_list->ListUnits( tile_data.units, selected_unit_id );
+void BottomBar::PreviewTile( Tile* tile, const size_t selected_unit_id ) {
+	m_sections.tile_preview->PreviewTile( tile );
+	m_sections.units_list->ListUnits( tile->GetOrderedUnits(), selected_unit_id );
 }
 
 void BottomBar::HideTilePreview() {
 	m_sections.tile_preview->HideTilePreview();
 }
 
-void BottomBar::PreviewUnit( const unit_data_t& unit_data ) {
-	m_sections.unit_preview->PreviewUnit( &unit_data );
+void BottomBar::PreviewUnit( const Unit* unit ) {
+	m_sections.unit_preview->PreviewUnit( unit );
 }
 
 void BottomBar::HideUnitPreview() {

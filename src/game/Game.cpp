@@ -57,7 +57,7 @@ mt_id_t Game::MT_Reset() {
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Game::MT_SelectTile(
+/*mt_id_t Game::MT_SelectTile(
 	const tile_query_purpose_t tile_query_purpose,
 	const types::Vec2< size_t >& tile_coords,
 	const map::Tile::direction_t tile_direction,
@@ -71,7 +71,7 @@ mt_id_t Game::MT_SelectTile(
 	request.data.select_tile.tile_direction = tile_direction;
 	request.data.select_tile.metadata = tile_query_metadata;
 	return MT_CreateRequest( request );
-}
+}*/
 
 mt_id_t Game::MT_SaveMap( const std::string& path ) {
 	ASSERT( !path.empty(), "savemap path is empty" );
@@ -289,6 +289,9 @@ void Game::Iterate() {
 					m_response_map_data->sprites.actors = &m_map->m_sprite_actors;
 					m_response_map_data->sprites.instances = &m_map->m_sprite_instances;
 
+					m_response_map_data->tiles = m_map->GetTilesPtr()->GetTilesPtr();
+					m_response_map_data->tile_states = m_map->GetMapState()->GetTileStatesPtr();
+
 					if ( m_old_map ) {
 						Log( "Destroying old map state" );
 						DELETE( m_old_map );
@@ -467,288 +470,12 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			auto* tile = m_map
 				->GetTile( request.data.select_tile.tile_x, request.data.select_tile.tile_y )
 				->GetNeighbour( request.data.select_tile.tile_direction );
+
 			auto* ts = m_map
 				->GetTileState( request.data.select_tile.tile_x, request.data.select_tile.tile_y )
 				->GetNeighbour( request.data.select_tile.tile_direction );
 
 			//Log( "Selecting tile at " + tile->coord.ToString() );
-
-			response.result = R_SUCCESS;
-
-			response.data.select_tile.purpose = request.data.select_tile.purpose;
-
-			response.data.select_tile.tile_x = tile->coord.x;
-			response.data.select_tile.tile_y = tile->coord.y;
-
-			response.data.select_tile.coords.x = ts->coord.x;
-			response.data.select_tile.coords.y = ts->coord.y;
-
-			response.data.select_tile.elevation.center = ts->elevations.center;
-
-			map::TileState::tile_layer_type_t lt = ( tile->is_water_tile
-				? map::TileState::LAYER_WATER
-				: map::TileState::LAYER_LAND
-			);
-			const auto& layer = ts->layers[ lt ];
-#define x( _k ) response.data.select_tile.selection_coords._k = layer.coords._k
-			x( center );
-			x( left );
-			x( top );
-			x( right );
-			x( bottom );
-#undef x
-
-			if ( !tile->is_water_tile && ts->is_coastline_corner ) {
-				if ( tile->W->is_water_tile ) {
-					response.data.select_tile.selection_coords.left = ts->layers[ map::TileState::LAYER_WATER ].coords.left;
-				}
-				if ( tile->N->is_water_tile ) {
-					response.data.select_tile.selection_coords.top = ts->layers[ map::TileState::LAYER_WATER ].coords.top;
-				}
-				if ( tile->E->is_water_tile ) {
-					response.data.select_tile.selection_coords.right = ts->layers[ map::TileState::LAYER_WATER ].coords.right;
-				}
-				if ( tile->S->is_water_tile ) {
-					response.data.select_tile.selection_coords.bottom = ts->layers[ map::TileState::LAYER_WATER ].coords.bottom;
-				}
-			}
-
-			map::TileState::tile_vertices_t preview_coords = {};
-
-			lt = ( ( tile->is_water_tile || ts->is_coastline_corner )
-				? map::TileState::LAYER_WATER
-				: map::TileState::LAYER_LAND
-			);
-#define x( _k ) preview_coords._k = layer.coords._k
-			x( center );
-			x( left );
-			x( top );
-			x( right );
-			x( bottom );
-#undef x
-			// absolute coords to relative
-#define x( _k ) preview_coords._k -= preview_coords.center
-			x( left );
-			x( top );
-			x( right );
-			x( bottom );
-#undef x
-			preview_coords.center = {
-				0.0f,
-				0.0f,
-				0.0f
-			};
-
-			std::vector< map::TileState::tile_layer_type_t > layers = {};
-			if ( tile->is_water_tile ) {
-				layers.push_back( map::TileState::LAYER_LAND );
-				layers.push_back( map::TileState::LAYER_WATER_SURFACE );
-				layers.push_back( map::TileState::LAYER_WATER_SURFACE_EXTRA ); // TODO: only near coastlines?
-				layers.push_back( map::TileState::LAYER_WATER );
-			}
-			else {
-				if ( ts->is_coastline_corner ) {
-					layers.push_back( map::TileState::LAYER_WATER_SURFACE );
-					layers.push_back( map::TileState::LAYER_WATER_SURFACE_EXTRA );
-					layers.push_back( map::TileState::LAYER_WATER );
-				}
-				else {
-					layers.push_back( map::TileState::LAYER_LAND );
-				}
-			}
-
-			// looks a bit too bright without lighting otherwise
-			const float tint_modifier = 0.7f;
-
-			NEW( response.data.select_tile.preview_meshes, data_tile_meshes_t );
-			response.data.select_tile.preview_meshes->reserve( layers.size() );
-			for ( auto i = 0 ; i < layers.size() ; i++ ) {
-				const auto& lt = layers[ i ];
-
-				NEWV( mesh, mesh::Render, 5, 4 );
-
-				auto& layer = ts->layers[ lt ];
-
-				auto tint = layer.colors;
-
-				//Log( "Coords = " + preview_coords.center.ToString() + " " + preview_coords.left.ToString() + " " + preview_coords.top.ToString() + " " + preview_coords.right.ToString() + " " + preview_coords.bottom.ToString() );
-
-#define x( _k ) auto _k = mesh->AddVertex( preview_coords._k, layer.tex_coords._k, tint._k * tint_modifier )
-				x( center );
-				x( left );
-				x( top );
-				x( right );
-				x( bottom );
-#undef x
-
-#define x( _a, _b, _c ) mesh->AddSurface( { _a, _b, _c } )
-				x( center, left, top );
-				x( center, top, right );
-				x( center, right, bottom );
-				x( center, bottom, left );
-#undef x
-
-				mesh->Finalize();
-
-				response.data.select_tile.preview_meshes->push_back( mesh );
-			}
-
-			std::vector< std::string > info_lines;
-
-			auto e = *tile->elevation.center;
-			if ( tile->is_water_tile ) {
-				if ( e < map::Tile::ELEVATION_LEVEL_TRENCH ) {
-					info_lines.push_back( "Ocean Trench" );
-				}
-				else if ( e < map::Tile::ELEVATION_LEVEL_OCEAN ) {
-					info_lines.push_back( "Ocean" );
-				}
-				else {
-					info_lines.push_back( "Ocean Shelf" );
-				}
-				info_lines.push_back( "Depth: " + std::to_string( -e ) + "m" );
-			}
-			else {
-				info_lines.push_back( "Elev: " + std::to_string( e ) + "m" );
-				std::string tilestr = "";
-				switch ( tile->rockiness ) {
-					case map::Tile::R_FLAT: {
-						tilestr += "Flat";
-						break;
-					}
-					case map::Tile::R_ROLLING: {
-						tilestr += "Rolling";
-						break;
-					}
-					case map::Tile::R_ROCKY: {
-						tilestr += "Rocky";
-						break;
-					}
-				}
-				tilestr += " & ";
-				switch ( tile->moisture ) {
-					case map::Tile::M_ARID: {
-						tilestr += "Arid";
-						break;
-					}
-					case map::Tile::M_MOIST: {
-						tilestr += "Moist";
-						break;
-					}
-					case map::Tile::M_RAINY: {
-						tilestr += "Rainy";
-						break;
-					}
-				}
-				info_lines.push_back( tilestr );
-
-			}
-
-#define FEATURE( _feature, _line ) \
-            if ( tile->features & map::Tile::_feature ) { \
-                info_lines.push_back( _line ); \
-            }
-
-			if ( tile->is_water_tile ) {
-				FEATURE( F_XENOFUNGUS, "Sea Fungus" )
-			}
-			else {
-				FEATURE( F_XENOFUNGUS, "Xenofungus" )
-			}
-
-			switch ( tile->bonus ) {
-				case map::Tile::B_NUTRIENT: {
-					info_lines.push_back( "Nutrient bonus" );
-					break;
-				}
-				case map::Tile::B_ENERGY: {
-					info_lines.push_back( "Energy bonus" );
-					break;
-				}
-				case map::Tile::B_MINERALS: {
-					info_lines.push_back( "Minerals bonus" );
-					break;
-				}
-				default: {
-					// nothing
-				}
-			}
-
-			if ( tile->is_water_tile ) {
-				FEATURE( F_GEOTHERMAL, "Geothermal" )
-			}
-			else {
-				FEATURE( F_RIVER, "River" )
-				FEATURE( F_JUNGLE, "Jungle" )
-				FEATURE( F_DUNES, "Dunes" )
-				FEATURE( F_URANIUM, "Uranium" )
-			}
-			FEATURE( F_MONOLITH, "Monolith" )
-
-#undef FEATURE
-
-#define TERRAFORMING( _terraforming, _line ) \
-            if ( tile->terraforming & map::Tile::_terraforming ) { \
-                info_lines.push_back( _line ); \
-            }
-
-			if ( tile->is_water_tile ) {
-				TERRAFORMING( T_FARM, "Kelp Farm" );
-				TERRAFORMING( T_SOLAR, "Tidal Harness" );
-				TERRAFORMING( T_MINE, "Mining Platform" );
-
-				TERRAFORMING( T_SENSOR, "Sensor Buoy" );
-			}
-			else {
-				TERRAFORMING( T_FOREST, "Forest" );
-				TERRAFORMING( T_FARM, "Farm" );
-				TERRAFORMING( T_SOIL_ENRICHER, "Soil Enricher" );
-				TERRAFORMING( T_MINE, "Mine" );
-				TERRAFORMING( T_SOLAR, "Solar Collector" );
-
-				TERRAFORMING( T_CONDENSER, "Condenser" );
-				TERRAFORMING( T_MIRROR, "Echelon Mirror" );
-				TERRAFORMING( T_BOREHOLE, "Thermal Borehole" );
-
-				TERRAFORMING( T_ROAD, "Road" );
-				TERRAFORMING( T_MAG_TUBE, "Mag Tube" );
-
-				TERRAFORMING( T_SENSOR, "Sensor Array" );
-				TERRAFORMING( T_BUNKER, "Bunker" );
-				TERRAFORMING( T_AIRBASE, "Airbase" );
-			}
-
-#undef TERRAFORMING
-
-			// combine into printable lines
-			std::string info_line = "";
-			std::string info_line_new = "";
-			constexpr size_t max_length = 16; // TODO: determine width from actual text because different symbols are different
-
-			NEW( response.data.select_tile.preview_lines, std::vector< std::string > );
-
-			for ( auto& line : info_lines ) {
-				info_line_new = info_line + ( info_line.empty()
-					? ""
-					: ", "
-				) + line;
-				if ( info_line_new.size() > max_length ) {
-					response.data.select_tile.preview_lines->push_back( info_line );
-					info_line = line;
-				}
-				else {
-					info_line = info_line_new;
-				}
-			}
-			if ( !info_line.empty() ) {
-				response.data.select_tile.preview_lines->push_back( info_line );
-			}
-
-			// copy sprites from tile
-			NEW( response.data.select_tile.sprites, std::vector< std::string > );
-			for ( auto& s : ts->sprites ) {
-				response.data.select_tile.sprites->push_back( s.actor );
-			}
 
 			// adaptive scroll if tile was selected with arrows
 			response.data.select_tile.scroll_adaptively = request.data.select_tile.tile_direction != map::Tile::D_NONE;
@@ -923,12 +650,6 @@ void Game::DestroyResponse( const MT_Response& response ) {
 				break;
 			}
 			case OP_SELECT_TILE: {
-				if ( response.data.select_tile.preview_meshes ) {
-					for ( auto& mesh : *response.data.select_tile.preview_meshes ) {
-						DELETE( mesh );
-					}
-					DELETE( response.data.select_tile.preview_meshes );
-				}
 				if ( response.data.select_tile.preview_lines ) {
 					DELETE( response.data.select_tile.preview_lines );
 				}

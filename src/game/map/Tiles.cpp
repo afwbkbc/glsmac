@@ -195,6 +195,10 @@ const Tile& Tiles::AtConst( const size_t x, const size_t y ) const {
 	return m_data.at( y * m_width + x / 2 );
 }
 
+const std::vector< Tile >* Tiles::GetTilesPtr() const {
+	return &m_data;
+}
+
 Tile::elevation_t* Tiles::TopVertexAt( const size_t x, const size_t y ) {
 	ASSERT( x < m_width, "invalid top vertex x coordinate" );
 	ASSERT( y < 2, "invalid top vertex y coordinate" );

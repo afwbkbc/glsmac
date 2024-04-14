@@ -18,13 +18,16 @@ void TilePreview::Destroy() {
 	BBSection::Destroy();
 }
 
-void TilePreview::PreviewTile( const tile_data_t& tile_data ) {
+void TilePreview::PreviewTile( const Tile* tile ) {
 	HideTilePreview();
 
-	for ( auto& mesh : tile_data.preview_meshes ) {
+	const auto& render = tile->GetRenderData();
+
+	for ( auto& mesh : render.preview_meshes ) {
 
 		NEWV( preview, object::Mesh, "BBTilePreviewImage" );
-		preview->SetMesh( mesh );
+		NEWV( mesh_copy, types::mesh::Render, *mesh );
+		preview->SetMesh( mesh_copy );
 		preview->SetTexture( m_game->GetTerrainTexture() );
 		m_preview_layers.push_back(
 			{
@@ -36,9 +39,11 @@ void TilePreview::PreviewTile( const tile_data_t& tile_data ) {
 		AddChild( preview );
 	}
 
+	ASSERT( !m_preview_layers.empty(), "no preview layers defined" );
+
 	// print lines
 	size_t label_top = m_preview_layers.front().object->GetHeight() + 6;
-	for ( auto& line : tile_data.preview_lines ) {
+	for ( auto& line : render.preview_lines ) {
 		NEWV( label, object::Label, "BBTilePreviewTextLine" );
 		label->SetText( line );
 		label->SetTop( label_top );
@@ -49,12 +54,12 @@ void TilePreview::PreviewTile( const tile_data_t& tile_data ) {
 
 	// print tile coordinates
 	NEWV( label, object::Label, "BBTilePreviewTextFooter" );
-	label->SetText( "(" + std::to_string( tile_data.tile_position.x ) + "," + std::to_string( tile_data.tile_position.y ) + ")" );
+	label->SetText( "(" + std::to_string( tile->GetCoords().x ) + "," + std::to_string( tile->GetCoords().y ) + ")" );
 	m_info_lines.push_back( label );
 	AddChild( label );
 
 	// copy sprites from tile
-	for ( auto& s : tile_data.sprites ) {
+	for ( auto& s : render.sprites ) {
 		auto* actor = m_game->GetISM()->GetInstancedSpriteByKey( s )->actor;
 		auto sprite = actor->GetSpriteActor();
 		auto mesh = sprite->GenerateMesh();

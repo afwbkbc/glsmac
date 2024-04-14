@@ -168,6 +168,8 @@ struct response_map_data_t {
 		std::unordered_map< std::string, map::Map::sprite_actor_t >* actors;
 		std::unordered_map< size_t, std::pair< std::string, Vec3 > >* instances;
 	} sprites;
+	const std::vector< map::Tile >* tiles;
+	const std::vector< map::TileState >* tile_states;
 	~response_map_data_t() {
 		if ( terrain_texture ) {
 			DELETE( terrain_texture );
@@ -249,12 +251,12 @@ CLASS( Game, MTModule )
 	mt_id_t MT_Reset();
 
 	// returns some data about tile
-	mt_id_t MT_SelectTile(
+	/*mt_id_t MT_SelectTile(
 		const tile_query_purpose_t tile_query_purpose,
 		const types::Vec2< size_t >& tile_coords,
 		const map::Tile::direction_t tile_direction = map::Tile::D_NONE,
 		const tile_query_metadata_t tile_query_metadata = {}
-	);
+	);*/
 
 	// saves current map into file
 	mt_id_t MT_SaveMap( const std::string& path );

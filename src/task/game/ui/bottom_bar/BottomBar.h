@@ -9,6 +9,7 @@
 #include "ui/object/Button.h"
 
 #include "types/Texture.h"
+#include "task/game/Tile.h"
 
 // message label
 #include "ui/object/Label.h"
@@ -41,10 +42,10 @@ CLASS( BottomBar, UI )
 	void Destroy() override;
 	void Align() override;
 
-	void PreviewTile( const tile_data_t& tile_data, const size_t selected_unit_id );
+	void PreviewTile( Tile* tile, const size_t selected_unit_id );
 	void HideTilePreview();
 
-	void PreviewUnit( const unit_data_t& unit_data );
+	void PreviewUnit( const Unit* unit );
 	void HideUnitPreview();
 
 	void SetMinimapTexture( types::Texture* texture );

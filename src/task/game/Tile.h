@@ -5,8 +5,10 @@
 #include <unordered_map>
 
 #include "types/Vec2.h"
+#include "types/mesh/Render.h"
 
 #include "game/map/Tile.h"
+#include "game/map/TileState.h"
 
 namespace task {
 namespace game {
@@ -27,6 +29,8 @@ public:
 	void SetActiveUnit( Unit* unit );
 	void Render( size_t selected_unit_id = 0 );
 	const std::unordered_map< size_t, Unit* >& GetUnits() const;
+	const std::vector< Unit* >& GetOrderedUnits();
+	Unit* GetMostImportantUnit();
 
 	Tile* W;
 	Tile* NW;
@@ -38,6 +42,20 @@ public:
 	Tile* SW;
 	Tile* GetNeighbour( const ::game::map::Tile::direction_t direction );
 
+	struct render_data_t {
+		Vec3 coords = {};
+		::game::map::TileState::tile_vertices_t selection_coords = {};
+		std::vector< types::mesh::Render* > preview_meshes = {};
+		std::vector< std::string > preview_lines = {};
+		std::vector< std::string > sprites = {};
+	};
+	const render_data_t& GetRenderData() const;
+
+	void SetSelectionCoords( const ::game::map::TileState::tile_vertices_t& selection_coords );
+	void SetPreviewMeshes( const std::vector< types::mesh::Render* >& preview_meshes );
+	void SetPreviewLines( const std::vector< std::string >& preview_lines );
+	void SetSprites( const std::vector< std::string >& sprites );
+
 private:
 	const types::Vec2< size_t > m_coords;
 	struct {
@@ -46,6 +64,10 @@ private:
 	} m_render;
 	std::unordered_map< size_t, Unit* > m_units = {};
 
+	std::vector< Unit* > m_ordered_units = {};
+	bool m_is_units_reorder_needed = true;
+
+	render_data_t m_render_data = {};
 };
 
 }

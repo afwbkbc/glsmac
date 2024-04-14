@@ -193,7 +193,9 @@ private:
 		types::mesh::Render* terrain_mesh,
 		types::mesh::Data* terrain_data_mesh,
 		const std::unordered_map< std::string, ::game::map::Map::sprite_actor_t >& sprite_actors,
-		const std::unordered_map< size_t, std::pair< std::string, Vec3 > >& sprite_instances
+		const std::unordered_map< size_t, std::pair< std::string, Vec3 > >& sprite_instances,
+		const std::vector< ::game::map::Tile >* tiles,
+		const std::vector< ::game::map::TileState >* tile_states
 	);
 	void Deinitialize();
 
@@ -302,7 +304,7 @@ private:
 
 	const bool m_is_map_editing_allowed = false;
 
-	tile_data_t m_selected_tile_data = {};
+	Tile* m_selected_tile = nullptr;
 	Unit* m_selected_unit = nullptr;
 	map_data_t m_map_data = {};
 	Unit* m_currently_moving_unit = nullptr;
@@ -317,13 +319,13 @@ private:
 	bool m_is_resize_handler_set = false;
 
 	void SelectTileAtPoint( const ::game::tile_query_purpose_t tile_query_purpose, const size_t x, const size_t y );
-	void SelectTileOrUnit( const tile_data_t& tile_data, const size_t selected_unit_id );
+	void SelectTileOrUnit( Tile* tile, const size_t selected_unit_id = 0 );
 	void DeselectTileOrUnit();
-	const unit_data_t* GetFirstSelectableUnit( const std::vector< unit_data_t >& units ) const;
+	Unit* GetFirstSelectableUnit( const std::unordered_map< size_t, Unit* >& units ) const;
 
 private:
 	friend class ui::UnitsList;
-	void SelectUnit( const unit_data_t& unit_data, const bool actually_select_unit );
+	void SelectUnit( Unit* unit_data, const bool actually_select_unit );
 
 	struct {
 		std::unordered_map< std::string, types::Texture* > source;
@@ -345,7 +347,7 @@ private:
 	const Vec2< float > GetTileWindowCoordinates( const Vec3& tile_coords );
 
 	void ScrollTo( const Vec3& target );
-	void ScrollToTile( const tile_data_t& tile_data );
+	void ScrollToTile( const Tile* tile );
 
 	struct tile_at_result_t {
 		bool is_set = false;
@@ -362,13 +364,13 @@ private:
 	const bool IsTileAtRequestPending() const;
 	const tile_at_result_t GetTileAtScreenCoordsResult();
 
-	void GetTileAtCoords(
+	/*void GetTileAtCoords(
 		const ::game::tile_query_purpose_t tile_query_purpose,
 		const Vec2< size_t >& tile_pos,
 		const ::game::map::Tile::direction_t tile_direction = ::game::map::Tile::D_NONE,
 		const ::game::tile_query_metadata_t& tile_query_metadata = {}
 	);
-	tile_data_t GetTileAtCoordsResult( const mt_id_t mt_id );
+	tile_data_t GetTileAtCoordsResult( const mt_id_t mt_id );*/
 
 	// minimap stuff
 	rr::id_t m_minimap_texture_request_id = 0;
@@ -429,6 +431,7 @@ private:
 	};
 
 	Tile* GetTile( const size_t x, const size_t y );
+	Tile* GetTile( const types::Vec2< size_t >& coords );
 
 };
 

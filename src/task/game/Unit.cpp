@@ -271,6 +271,10 @@ void Unit::MoveTo( task::game::Tile* dst_tile, const types::Vec3& dst_render_coo
 	);
 }
 
+const Unit::render_data_t& Unit::GetRenderData() const {
+	return m_render_data;
+}
+
 const bool Unit::ShouldBeActive() const {
 	return m_is_owned && CanMove();
 }

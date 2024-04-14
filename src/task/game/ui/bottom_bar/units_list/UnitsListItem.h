@@ -4,6 +4,7 @@
 
 #include "../UnitPreview.h"
 #include "task/game/Types.h"
+#include "task/game/Unit.h"
 #include "ui/object/Label.h"
 
 namespace task {
@@ -14,7 +15,7 @@ class UnitsList;
 
 CLASS( UnitsListItem, Section )
 
-	UnitsListItem( Game* game, UnitsList* units_list, const unit_data_t& unit_data );
+	UnitsListItem( Game* game, UnitsList* units_list, Unit* unit );
 
 	void Create() override;
 	void Destroy() override;
@@ -23,11 +24,11 @@ private:
 	friend class UnitsList;
 	void SelectUnit();
 	void DeselectUnit();
-	const unit_data_t& GetUnit() const;
+	const Unit* GetUnit() const;
 
 private:
 	UnitsList* m_units_list;
-	const unit_data_t m_unit_data;
+	Unit* m_unit;
 
 	struct sprite_t {
 		types::mesh::Mesh* mesh = nullptr; // save mesh to be able to preview units

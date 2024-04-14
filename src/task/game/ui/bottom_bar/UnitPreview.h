@@ -6,6 +6,7 @@
 #include "ui/object/Section.h"
 
 #include "task/game/Types.h"
+#include "task/game/Unit.h"
 
 namespace task {
 namespace game {
@@ -18,12 +19,12 @@ CLASS( UnitPreview, BBSection )
 	void Create() override;
 	void Destroy() override;
 
-	void PreviewUnit( const unit_data_t* unit_data );
+	void PreviewUnit( const Unit* unit );
 	void HideUnitPreview();
-	void HideUnitPreview( const unit_data_t* unit_data );
+	//void HideUnitPreview( const unit_data_t* unit_data );
 
 private:
-	const unit_data_t* m_unit_data = nullptr;
+	const Unit* m_unit = nullptr;
 
 	struct {
 		object::Mesh* unit = nullptr;

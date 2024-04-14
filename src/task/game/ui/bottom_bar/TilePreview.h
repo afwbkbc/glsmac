@@ -2,7 +2,8 @@
 
 #include "BBSection.h"
 
-#include "../../Types.h"
+#include "task/game/Types.h"
+#include "task/game/Tile.h"
 
 #include "ui/object/Mesh.h"
 #include "ui/object/Label.h"
@@ -19,7 +20,7 @@ CLASS( TilePreview, BBSection )
 	void Create() override;
 	void Destroy() override;
 
-	void PreviewTile( const tile_data_t& tile_data );
+	void PreviewTile( const Tile* tile );
 	void HideTilePreview();
 
 private:

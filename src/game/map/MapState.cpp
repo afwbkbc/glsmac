@@ -21,6 +21,10 @@ const TileState& MapState::AtConst( const size_t x, const size_t y ) const {
 	return m_tiles.at( y * dimensions.x + x / 2 );
 }
 
+const std::vector< TileState >* MapState::GetTileStatesPtr() const {
+	return &m_tiles;
+}
+
 void MapState::LinkTileStates( MT_CANCELABLE ) {
 
 	ASSERT( m_tiles.empty(), "m_tiles already set" );

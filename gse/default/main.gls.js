@@ -46,6 +46,7 @@ units.init();
     let y = 0;
     let w = #game.map.get_width();
     let h = #game.map.get_height();
+
     while (y < h) {
         let x = 0;
         while (x < w) {
