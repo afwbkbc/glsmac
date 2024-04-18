@@ -54,10 +54,10 @@ void UnitPreview::PreviewUnit( const Unit* unit ) {
         top += label->GetHeight(); \
     }
 
-	X( render.labels.name, Header );
-	X( "( " + render.labels.power + " )", Center );
-	X( render.labels.morale, Left );
-	X( render.labels.moves, Left );
+	X( m_unit->GetNameString(), Header );
+	X( "( " + m_unit->GetStatsString() + " )", Center );
+	X( m_unit->GetMoraleString(), Left );
+	X( m_unit->GetMovesString(), Left );
 
 	// HACK: fix ( and ) vertical misalignment
 	auto& bugged_label = m_labels.at( 1 );

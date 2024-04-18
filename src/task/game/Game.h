@@ -364,14 +364,6 @@ private:
 	const bool IsTileAtRequestPending() const;
 	const tile_at_result_t GetTileAtScreenCoordsResult();
 
-	/*void GetTileAtCoords(
-		const ::game::tile_query_purpose_t tile_query_purpose,
-		const Vec2< size_t >& tile_pos,
-		const ::game::map::Tile::direction_t tile_direction = ::game::map::Tile::D_NONE,
-		const ::game::tile_query_metadata_t& tile_query_metadata = {}
-	);
-	tile_data_t GetTileAtCoordsResult( const mt_id_t mt_id );*/
-
 	// minimap stuff
 	rr::id_t m_minimap_texture_request_id = 0;
 	void GetMinimapTexture( scene::Camera* camera, const Vec2< size_t > texture_dimensions );

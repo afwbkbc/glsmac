@@ -275,6 +275,18 @@ const Unit::render_data_t& Unit::GetRenderData() const {
 	return m_render_data;
 }
 
+void Unit::SetUnitMeshTex( const meshtex_t& meshtex ) {
+	m_render_data.unit = meshtex;
+}
+
+void Unit::SetBadgeMeshTex( const meshtex_t& meshtex ) {
+	m_render_data.badge = meshtex;
+}
+
+void Unit::SetHealthbarMeshTex( const meshtex_t& meshtex ) {
+	m_render_data.healthbar = meshtex;
+}
+
 const bool Unit::ShouldBeActive() const {
 	return m_is_owned && CanMove();
 }

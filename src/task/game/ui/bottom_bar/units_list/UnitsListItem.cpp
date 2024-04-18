@@ -38,7 +38,7 @@ void UnitsListItem::Create() {
 
 	NEW( m_label, ::ui::object::Label, "BBUnitsListPreviewLabel" );
 	m_label->SetTop( 0 );
-	m_label->SetText( render.labels.power );
+	m_label->SetText( m_unit->GetStatsString() );
 	AddChild( m_label );
 
 	On(

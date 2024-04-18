@@ -80,14 +80,12 @@ public:
 		meshtex_t unit;
 		meshtex_t badge;
 		meshtex_t healthbar;
-		struct {
-			std::string name;
-			std::string power;
-			std::string morale;
-			std::string moves;
-		} labels;
 	};
 	const render_data_t& GetRenderData() const;
+
+	void SetUnitMeshTex( const meshtex_t& meshtex );
+	void SetBadgeMeshTex( const meshtex_t& meshtex );
+	void SetHealthbarMeshTex( const meshtex_t& meshtex );
 
 private:
 

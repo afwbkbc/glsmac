@@ -888,6 +888,45 @@ void Game::SpawnUnit(
 		}
 	).first->second;
 
+	types::mesh::Rectangle* mesh = nullptr;
+	types::Texture* texture = nullptr;
+
+	const auto& f_meshtex = []( const InstancedSprite* sprite ) -> Unit::meshtex_t {
+		auto* texture = sprite->actor->GetSpriteActor()->GetTexture();
+		NEWV( mesh, types::mesh::Rectangle );
+		mesh->SetCoords(
+			{
+				0.0f,
+				0.0f
+			},
+			{
+				1.0f,
+				1.0f
+			},
+			{
+				sprite->xy.x,
+				sprite->xy.y
+			},
+			{
+				sprite->xy.x + sprite->wh.x,
+				sprite->xy.y + sprite->wh.y
+			},
+			{
+				texture->m_width,
+				texture->m_height
+			},
+			0.8f
+		);
+		return {
+			mesh,
+			texture,
+		};
+	};
+
+	unit->SetUnitMeshTex( f_meshtex( unit->GetSprite()->instanced_sprite ) );
+	unit->SetBadgeMeshTex( f_meshtex( unit->GetBadgeSprite()->instanced_sprite ) );
+	unit->SetHealthbarMeshTex( f_meshtex( unit->GetBadgeHealthbarSprite()->instanced_sprite ) );
+
 	tile->Render(
 		m_selected_unit
 			? m_selected_unit->GetId()
@@ -2502,144 +2541,6 @@ const Game::tile_at_result_t Game::GetTileAtScreenCoordsResult() {
 	// no data
 	return {};
 }
-
-/*
-void Game::GetTileAtCoords(
-	const ::game::tile_query_purpose_t tile_query_purpose,
-	const Vec2< size_t >& tile_pos,
-	const ::game::map::Tile::direction_t tile_direction,
-	const ::game::tile_query_metadata_t& tile_query_metadata
-) {
-	auto* game = g_engine->GetGame();
-	ASSERT( tile_query_purpose != ::game::TQP_NONE, "tile query purpose not set" );
-	m_mt_ids.select_tile.insert( game->MT_SelectTile( tile_query_purpose, tile_pos, tile_direction, tile_query_metadata ) );
-}
-
-tile_data_t Game::GetTileAtCoordsResult( const mt_id_t mt_id ) {
-	ASSERT( m_mt_ids.select_tile.find( mt_id ) != m_mt_ids.select_tile.end(), "select_tile mt_id not found" );
-	auto* game = g_engine->GetGame();
-	auto response = game->MT_GetResponse( mt_id );
-	if ( response.result != ::game::R_NONE ) {
-		m_mt_ids.select_tile.erase( mt_id );
-
-		tile_data_t result = {};
-		result.is_set = true;
-		result.purpose = response.data.select_tile.purpose;
-		result.tile_position = {
-			response.data.select_tile.tile_x,
-			response.data.select_tile.tile_y
-		};
-		result.coords = {
-			response.data.select_tile.coords.x,
-			response.data.select_tile.coords.y,
-			::game::map::s_consts.tile.elevation_to_vertex_z.Clamp( response.data.select_tile.elevation.center )
-		};
-
-#define xx( _k, _kk ) result.selection_coords._k._kk = response.data.select_tile.selection_coords._k._kk
-#define x( _k ) { \
-            xx( _k, x ); \
-            xx( _k, y ); \
-            xx( _k, z ); \
-        }
-		x( center );
-		x( left );
-		x( top );
-		x( right );
-		x( bottom );
-#undef x
-#undef xx
-
-		ASSERT( response.data.select_tile.preview_meshes, "preview meshes not set" );
-		result.preview_meshes = *response.data.select_tile.preview_meshes;
-		// needed to avoid mesh deallocations
-		DELETE( response.data.select_tile.preview_meshes );
-		response.data.select_tile.preview_meshes = nullptr;
-
-		ASSERT( response.data.select_tile.preview_lines, "preview lines not set" );
-		result.preview_lines = *response.data.select_tile.preview_lines;
-
-		result.sprites = *response.data.select_tile.sprites;
-
-		result.scroll_adaptively = response.data.select_tile.scroll_adaptively;
-
-		std::unordered_map< size_t, Unit* > units = {};
-		for ( const auto& unit_id : *response.data.select_tile.unit_ids ) {
-			const auto& it = m_units.find( unit_id );
-			if ( m_units.find( unit_id ) != m_units.end() ) {
-				units.insert(
-					{
-						unit_id,
-						it->second
-					}
-				);
-			}
-		}
-		const auto units_order = Tile::GetUnitsOrder( units );
-
-		for ( const auto& unit_id : units_order ) {
-			ASSERT( m_units.find( unit_id ) != m_units.end(), "unit id not found" );
-			const auto* unit = m_units.at( unit_id );
-
-			types::mesh::Rectangle* mesh = nullptr;
-			types::Texture* texture = nullptr;
-
-			const auto& f_meshtex = []( const InstancedSprite* sprite ) -> meshtex_t {
-				auto* texture = sprite->actor->GetSpriteActor()->GetTexture();
-				NEWV( mesh, types::mesh::Rectangle );
-				mesh->SetCoords(
-					{
-						0.0f,
-						0.0f
-					},
-					{
-						1.0f,
-						1.0f
-					},
-					{
-						sprite->xy.x,
-						sprite->xy.y
-					},
-					{
-						sprite->xy.x + sprite->wh.x,
-						sprite->xy.y + sprite->wh.y
-					},
-					{
-						texture->m_width,
-						texture->m_height
-					},
-					0.8f
-				);
-				return {
-					mesh,
-					texture,
-				};
-			};
-
-			// TODO: use real unit properties
-
-			result.units.push_back(
-				{
-					unit->GetId(),
-					f_meshtex( unit->GetSprite()->instanced_sprite ),
-					f_meshtex( unit->GetBadgeSprite()->instanced_sprite ),
-					f_meshtex( unit->GetBadgeHealthbarSprite()->instanced_sprite ),
-					unit->GetNameString(),
-					unit->GetStatsString(),
-					unit->GetMoraleString(),
-					unit->GetMovesString(),
-				}
-			);
-		}
-		result.metadata = response.data.select_tile.metadata;
-
-		return result;
-	}
-	// no data
-	return {};
-}
-*/
-
-
 
 void Game::GetMinimapTexture( scene::Camera* camera, const Vec2< size_t > texture_dimensions ) {
 	if ( m_minimap_texture_request_id ) {
