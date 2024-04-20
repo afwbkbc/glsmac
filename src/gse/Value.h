@@ -19,9 +19,9 @@ namespace gse {
 
 #define WRAPDEFS_CLASS() \
     static const gse::type::Object::object_class_t WRAP_CLASS;
-#define WRAPDEFS_PTR( _type ) \
+#define WRAPDEFS_PTR( _type, ... ) \
     WRAPDEFS_CLASS() \
-    virtual const gse::Value Wrap(); \
+    virtual const gse::Value Wrap() __VA_ARGS__; \
     static _type* Unwrap( const gse::Value& value );
 #define WRAPDEFS_DYNAMIC( _type ) \
     WRAPDEFS_CLASS() \

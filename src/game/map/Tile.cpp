@@ -175,7 +175,7 @@ WRAPIMPL_BEGIN( Tile, CLASS_TILE )
 		{
 			"is_adjactent_to",
 			NATIVE_CALL( this ) {
-				N_ARGS( 1 );
+				N_EXPECT_ARGS( 1 );
 				N_UNWRAP( other, 0, Tile );
 				return VALUE( gse::type::Bool, IsAdjactentTo( other ) );
 			})
@@ -183,7 +183,7 @@ WRAPIMPL_BEGIN( Tile, CLASS_TILE )
 		{
 			"get_surrounding_tiles",
 			NATIVE_CALL( this ) {
-				N_ARGS( 0 );
+				N_EXPECT_ARGS( 0 );
 				gse::type::Array::elements_t result = {};
 				for ( const auto& n : neighbours ) {
 					result.push_back( n->Wrap() );
@@ -194,7 +194,7 @@ WRAPIMPL_BEGIN( Tile, CLASS_TILE )
 		{
 			"get_units",
 			NATIVE_CALL( this ) {
-				N_ARGS( 0 );
+				N_EXPECT_ARGS( 0 );
 				gse::type::Array::elements_t result = {};
 				for ( auto& it : units ) {
 					result.push_back( it.second->Wrap() );

@@ -36,7 +36,7 @@ public:
 
 	const std::string ToString( const std::string& prefix ) const override;
 
-	WRAPDEFS_PTR( StaticDef );
+	WRAPDEFS_PTR( StaticDef, override );
 
 private:
 	static const std::unordered_map< movement_type_t, std::string > s_movement_type_str;

@@ -102,7 +102,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit, CLASS_UNIT )
 	{
 		"set_tile",
 		NATIVE_CALL( this ) {
-			N_ARGS( 1 );
+			N_EXPECT_ARGS( 1 );
 			N_UNWRAP( tile, 0, map::Tile );
 			if ( tile != m_tile ) {
 				m_tile->units.erase( m_id );

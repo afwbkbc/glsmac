@@ -44,7 +44,7 @@ BINDING_IMPL( animations ) {
 		{
 			"show_on_tile",
 			NATIVE_CALL( this ) {
-				N_ARGS( 3 );
+				N_EXPECT_ARGS( 3 );
 				N_GETVALUE( id, 0, String );
 				N_UNWRAP( tile, 1, map::Tile );
 				N_PERSIST_CALLABLE( on_complete, 2 );

@@ -987,7 +987,6 @@ void Game::RefreshUnit( Unit* unit ) {
 				);
 			}*/
 			SelectNextUnitOrSwitchToTileSelection();
-			m_selected_unit = nullptr;
 		}
 		else {
 			unit->StartBadgeBlink();
@@ -1000,6 +999,11 @@ void Game::MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_c
 	auto* src_tile = unit->GetTile();
 
 	unit->MoveTo( dst_tile, dst_render_coords );
+
+	if ( m_selected_unit == unit ) {
+		ASSERT( m_selected_tile == src_tile, "selected tile not src tile on unit move" );
+		m_selected_tile = dst_tile;
+	}
 
 	// TODO: animation
 
@@ -1020,37 +1024,9 @@ void Game::MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_c
 			: 0
 	);
 
-	// update ui
-	/*if (
-		unit != m_selected_unit &&
-			m_selected_tile_data.is_set && (
-			m_selected_tile_data.tile_position == src_tile->GetCoords() ||
-				m_selected_tile_data.tile_position == dst_tile->GetCoords()
-		)
-		) {
-		::game::tile_query_metadata_t metadata = {};
-		switch ( m_selected_tile_data.purpose ) {
-			case ::game::TQP_TILE_SELECT: {
-				metadata.tile_select.no_scroll_after = true;
-				break;
-			}
-			case ::game::TQP_UNIT_SELECT: {
-				metadata.unit_select.no_scroll_after = true;
-				break;
-			}
-			default: {
-				//
-			}
-		}
-
-		GetTileAtCoords(
-			m_selected_tile_data.purpose,
-			m_selected_tile_data.tile_position,
-			::game::map::Tile::D_NONE,
-			metadata
-		);
-	}*/
-	// TODO: update units in bottom bar
+	if ( m_selected_unit == unit ) {
+		m_ui.bottom_bar->PreviewTile( m_selected_tile, m_selected_unit->GetId() );
+	}
 
 }
 
@@ -1191,7 +1167,8 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 			unit->SetHealth( d.health );
 			const auto& c = unit->GetTile()->GetCoords();
 			if ( d.tile_coords.x != c.x || d.tile_coords.y != c.y ) {
-				unit->MoveTo(
+				MoveUnit(
+					unit,
 					GetTile(
 						{
 							d.tile_coords.x,
@@ -1204,12 +1181,14 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 					}
 				);
 			}
-			RefreshUnit( unit );
-			unit->GetTile()->Render(
-				m_selected_unit
-					? m_selected_unit->GetId()
-					: 0
-			);
+			else {
+				RefreshUnit( unit );
+				unit->GetTile()->Render(
+					m_selected_unit
+						? m_selected_unit->GetId()
+						: 0
+				);
+			}
 			if ( unit->IsActive() ) {
 				AddSelectable( unit );
 			}
@@ -1823,19 +1802,15 @@ void Game::Initialize(
 					}
 
 					if ( is_tile_selected ) {
-						SelectTileOrUnit( m_selected_tile->GetNeighbour( td ) );
 
-						/*switch ( m_tile_at_query_purpose ) {
-
+						switch ( m_tile_at_query_purpose ) {
 							case ::game::TQP_TILE_SELECT: {
-								// move tile selector
-								GetTileAtCoords( ::game::TQP_TILE_SELECT, m_selected_tile_data.tile_position, td );
+								SelectTileOrUnit( m_selected_tile->GetNeighbour( td ) );
 								return true;
 							}
 							case ::game::TQP_UNIT_SELECT: {
 								// try moving unit to tile
 								if ( m_selected_unit ) {
-
 									const auto& ts = m_selected_unit->GetTile()->GetNeighbour( td );
 									std::unordered_map< size_t, Unit* > foreign_units = {};
 									for ( const auto& it : ts->GetUnits() ) {
@@ -1852,10 +1827,8 @@ void Game::Initialize(
 									}
 									else {
 										// attack
-
 										// TODO: select the most powerful defender for attacker
 										const auto& target_unit = foreign_units.at( Tile::GetUnitsOrder( foreign_units ).front() );
-
 										const auto event = ::game::event::AttackUnit( m_slot_index, m_selected_unit->GetId(), target_unit->GetId() );
 										game->MT_AddEvent( &event );
 									}
@@ -1866,7 +1839,7 @@ void Game::Initialize(
 							default: {
 								// nothing
 							}
-						}*/
+						}
 					}
 				}
 
@@ -2269,6 +2242,7 @@ void Game::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 		unit->SetActiveOnTile();
 
 		m_selected_unit = unit;
+		m_selected_tile = m_selected_unit->GetTile();
 		m_selected_unit->Show();
 	}
 	if ( actually_select_unit && m_selected_unit->IsActive() && m_is_turn_active ) {
@@ -2752,7 +2726,7 @@ const bool Game::SelectNextUnitMaybe() {
 		: GetCurrentSelectable();
 	if ( selected_unit ) {
 		Log( "Tab-selecting unit " + std::to_string( selected_unit->GetId() ) );
-		::game::tile_query_metadata_t metadata = {};
+		m_tile_at_query_purpose = ::game::TQP_UNIT_SELECT;
 		SelectTileOrUnit( selected_unit->GetTile(), selected_unit->GetId() );
 		return true;
 	}
