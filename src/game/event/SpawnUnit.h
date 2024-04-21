@@ -19,7 +19,7 @@ public:
 		const unit::Unit::health_t health
 	);
 
-	const std::string* Validate( Game* game ) const;
+	const std::string* Validate( Game* game ) const override;
 	const gse::Value Apply( game::Game* game ) const override;
 	TS_DEF()
 

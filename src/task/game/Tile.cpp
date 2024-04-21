@@ -169,6 +169,10 @@ const Tile::render_data_t& Tile::GetRenderData() const {
 	return m_render_data;
 }
 
+void Tile::SetCoords( const Vec3& coords ) {
+	m_render_data.coords = coords;
+}
+
 void Tile::SetSelectionCoords( const ::game::map::TileState::tile_vertices_t& selection_coords ) {
 	m_render_data.selection_coords = selection_coords;
 }

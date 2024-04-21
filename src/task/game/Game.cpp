@@ -365,17 +365,10 @@ void Game::Iterate() {
 			}
 			else {
 				size_t selected_unit_id = 0;
-				bool need_scroll = false;
-				/*if ( m_tile_at_query_purpose == ::game::TQP_UNIT_SELECT ) {
-					selected_unit_id = tile_data.metadata.unit_select.unit_id;
-					need_scroll = !tile_data.metadata.unit_select.no_scroll_after;
-				}
-				else if ( tile_data.purpose == ::game::TQP_TILE_SELECT ) {
-					need_scroll = !tile_data.metadata.tile_select.no_scroll_after;
-				}*/ // TODO: set selected_unit_id and need_scroll
+				bool need_scroll = true;
 				SelectTileOrUnit( tile, selected_unit_id );
 				if ( need_scroll ) {
-					ScrollToTile( tile );
+					ScrollToTile( tile, true );
 				}
 			}
 		}
@@ -399,6 +392,7 @@ void Game::Iterate() {
 			if ( new_position.z != m_camera_position.z ) {
 				is_camera_scale_updated = true;
 			}
+
 			m_camera_position = new_position;
 		}
 		if ( !m_scroller.IsRunning() ) {
@@ -1026,6 +1020,7 @@ void Game::MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_c
 
 	if ( m_selected_unit == unit ) {
 		m_ui.bottom_bar->PreviewTile( m_selected_tile, m_selected_unit->GetId() );
+		ScrollToTile( m_selected_tile, false );
 	}
 
 }
@@ -1714,6 +1709,7 @@ void Game::Initialize(
 				preview_lines.push_back( info_line );
 			}
 
+			tile->SetCoords( layer.coords.center );
 			tile->SetSelectionCoords( selection_coords );
 			tile->SetPreviewMeshes( preview_meshes );
 			tile->SetPreviewLines( preview_lines );
@@ -1802,10 +1798,12 @@ void Game::Initialize(
 					}
 
 					if ( is_tile_selected ) {
+						auto* tile = m_selected_tile->GetNeighbour( td );
 
 						switch ( m_tile_at_query_purpose ) {
 							case ::game::TQP_TILE_SELECT: {
-								SelectTileOrUnit( m_selected_tile->GetNeighbour( td ) );
+								SelectTileOrUnit( tile );
+								ScrollToTile( tile, false );
 								return true;
 							}
 							case ::game::TQP_UNIT_SELECT: {
@@ -2384,11 +2382,11 @@ void Game::ScrollTo( const Vec3& target ) {
 	m_scroller.Scroll( m_camera_position, target );
 }
 
-void Game::ScrollToTile( const Tile* tile ) {
+void Game::ScrollToTile( const Tile* tile, bool center_on_tile ) {
 
 	const auto& c = tile->GetRenderData().coords;
 
-	if ( true /* TODO: tile_data.scroll_adaptively */ ) {
+	if ( !center_on_tile ) {
 
 		const auto tc = GetTileWindowCoordinates( c );
 
@@ -2725,9 +2723,10 @@ const bool Game::SelectNextUnitMaybe() {
 		? GetNextSelectable()
 		: GetCurrentSelectable();
 	if ( selected_unit ) {
-		Log( "Tab-selecting unit " + std::to_string( selected_unit->GetId() ) );
+		Log( "Selecting unit " + std::to_string( selected_unit->GetId() ) );
 		m_tile_at_query_purpose = ::game::TQP_UNIT_SELECT;
 		SelectTileOrUnit( selected_unit->GetTile(), selected_unit->GetId() );
+		ScrollToTile( m_selected_unit->GetTile(), true );
 		return true;
 	}
 	return false;

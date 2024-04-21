@@ -347,7 +347,7 @@ private:
 	const Vec2< float > GetTileWindowCoordinates( const Vec3& tile_coords );
 
 	void ScrollTo( const Vec3& target );
-	void ScrollToTile( const Tile* tile );
+	void ScrollToTile( const Tile* tile, bool center_on_tile );
 
 	struct tile_at_result_t {
 		bool is_set = false;
