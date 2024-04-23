@@ -921,11 +921,7 @@ void Game::SpawnUnit(
 	unit->SetBadgeMeshTex( f_meshtex( unit->GetBadgeSprite()->instanced_sprite ) );
 	unit->SetHealthbarMeshTex( f_meshtex( unit->GetBadgeHealthbarSprite()->instanced_sprite ) );
 
-	tile->Render(
-		m_selected_unit
-			? m_selected_unit->GetId()
-			: 0
-	);
+	RenderTile( tile );
 
 	if ( unit->IsActive() ) {
 		const bool was_selectables_empty = m_selectables.units.empty();
@@ -954,11 +950,7 @@ void Game::DespawnUnit( const size_t unit_id ) {
 
 	auto* tile = unit->GetTile();
 
-	tile->Render(
-		m_selected_unit
-			? m_selected_unit->GetId()
-			: 0
-	);
+	RenderTile( tile );
 
 	delete unit;
 }
@@ -969,17 +961,6 @@ void Game::RefreshUnit( Unit* unit ) {
 	if ( m_selected_unit == unit && was_active ) {
 		if ( !unit->IsActive() ) {
 			UpdateSelectable( unit );
-			/*if ( m_selected_tile_data.purpose == ::game::TQP_UNIT_SELECT ) {
-				// update next tile
-				::game::tile_query_metadata_t metadata = {};
-				metadata.tile_select.try_next_unit = true; // try next unit after updating tile
-				GetTileAtCoords(
-					::game::TQP_TILE_SELECT,
-					unit->GetTile()->GetCoords(),
-					::game::map::Tile::D_NONE,
-					metadata
-				);
-			}*/
 			SelectNextUnitOrSwitchToTileSelection();
 		}
 		else {
@@ -994,29 +975,20 @@ void Game::MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_c
 
 	unit->MoveTo( dst_tile, dst_render_coords );
 
-	if ( m_selected_unit == unit ) {
-		ASSERT( m_selected_tile == src_tile, "selected tile not src tile on unit move" );
-		m_selected_tile = dst_tile;
-	}
-
 	// TODO: animation
 
+	if ( m_selected_unit == unit ) {
+		m_selected_tile = m_selected_unit->GetTile();
+	}
+
 	// update old tile
-	src_tile->Render(
-		m_selected_unit
-			? m_selected_unit->GetId()
-			: 0
-	);
+	RenderTile( src_tile );
 
 	// update unit
 	RefreshUnit( unit );
 
 	// update new tile
-	dst_tile->Render(
-		m_selected_unit
-			? m_selected_unit->GetId()
-			: 0
-	);
+	RenderTile( dst_tile );
 
 	if ( m_selected_unit == unit ) {
 		m_ui.bottom_bar->PreviewTile( m_selected_tile, m_selected_unit->GetId() );
@@ -1178,11 +1150,7 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 			}
 			else {
 				RefreshUnit( unit );
-				unit->GetTile()->Render(
-					m_selected_unit
-						? m_selected_unit->GetId()
-						: 0
-				);
+				RenderTile( unit->GetTile() );
 			}
 			if ( unit->IsActive() ) {
 				AddSelectable( unit );
@@ -1192,9 +1160,6 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 				if ( m_selected_unit == unit ) {
 					SelectNextUnitOrSwitchToTileSelection();
 				}
-			}
-			if ( unit == m_selected_unit ) {
-				unit->StartBadgeBlink();
 			}
 			break;
 		}
@@ -2231,6 +2196,8 @@ void Game::SelectTileAtPoint( const ::game::tile_query_purpose_t tile_query_purp
 }
 
 void Game::SelectUnit( Unit* unit, const bool actually_select_unit ) {
+	m_tile_at_query_purpose = ::game::TQP_UNIT_SELECT;
+	DeselectTileOrUnit();
 	if ( m_selected_unit != unit ) {
 		if ( m_selected_unit ) {
 			m_selected_unit->Hide();
@@ -2242,6 +2209,8 @@ void Game::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 		m_selected_unit = unit;
 		m_selected_tile = m_selected_unit->GetTile();
 		m_selected_unit->Show();
+
+		m_ui.bottom_bar->PreviewTile( m_selected_tile, m_selected_unit->GetId() );
 	}
 	if ( actually_select_unit && m_selected_unit->IsActive() && m_is_turn_active ) {
 
@@ -2287,21 +2256,12 @@ void Game::SelectTileOrUnit( Tile* tile, const size_t selected_unit_id ) {
 		}
 	}
 
-	m_ui.bottom_bar->PreviewTile( m_selected_tile, selected_unit_id );
-
 	switch ( m_tile_at_query_purpose ) {
 		case ::game::TQP_TILE_SELECT: {
 			m_selected_unit = nullptr;
 			Log( "Selected tile at " + m_selected_tile->GetCoords().ToString() + " ( " + m_selected_tile->GetRenderData().selection_coords.center.ToString() + " )" );
-			if ( false /* m_selected_tile_data.metadata.tile_select.try_next_unit && SelectNextUnitMaybe()*/ ) {
-				// no need for tile selector because we selected next unit
-				break;
-			}
-			else {
-				// show tile selector
-				NEW( m_actors.tile_selection, actor::TileSelection, m_selected_tile->GetRenderData().selection_coords );
-				AddActor( m_actors.tile_selection );
-			}
+			ShowTileSelector();
+			m_ui.bottom_bar->PreviewTile( m_selected_tile, selected_unit_id );
 			break;
 		}
 		case ::game::TQP_UNIT_SELECT: {
@@ -2316,10 +2276,7 @@ void Game::SelectTileOrUnit( Tile* tile, const size_t selected_unit_id ) {
 
 void Game::DeselectTileOrUnit() {
 
-	if ( m_actors.tile_selection ) {
-		RemoveActor( m_actors.tile_selection );
-		m_actors.tile_selection = nullptr;
-	}
+	HideTileSelector();
 	if ( m_selected_unit ) {
 
 		ASSERT( !m_selected_tile->GetUnits().empty(), "unit was selected but tile data has no units" );
@@ -2327,7 +2284,6 @@ void Game::DeselectTileOrUnit() {
 		// reset to most important unit if needed
 		auto* most_important_unit = m_selected_tile->GetMostImportantUnit();
 
-		m_selected_unit->StopBadgeBlink( m_selected_unit == most_important_unit );
 		if ( m_selected_unit != most_important_unit ) {
 			m_selected_unit->Hide();
 			most_important_unit->Show();
@@ -2724,8 +2680,7 @@ const bool Game::SelectNextUnitMaybe() {
 		: GetCurrentSelectable();
 	if ( selected_unit ) {
 		Log( "Selecting unit " + std::to_string( selected_unit->GetId() ) );
-		m_tile_at_query_purpose = ::game::TQP_UNIT_SELECT;
-		SelectTileOrUnit( selected_unit->GetTile(), selected_unit->GetId() );
+		SelectUnit( selected_unit, true );
 		ScrollToTile( m_selected_unit->GetTile(), true );
 		return true;
 	}
@@ -2808,6 +2763,31 @@ Tile* Game::GetTile( const size_t x, const size_t y ) {
 
 Tile* Game::GetTile( const types::Vec2< size_t >& coords ) {
 	return GetTile( coords.x, coords.y );
+}
+
+void Game::ShowTileSelector() {
+	HideTileSelector();
+	NEW( m_actors.tile_selection, actor::TileSelection, m_selected_tile->GetRenderData().selection_coords );
+	AddActor( m_actors.tile_selection );
+}
+
+void Game::HideTileSelector() {
+	if ( m_actors.tile_selection ) {
+		RemoveActor( m_actors.tile_selection );
+		m_actors.tile_selection = nullptr;
+	}
+}
+
+void Game::RenderTile( Tile* tile ) {
+	tile->Render(
+		m_selected_unit
+			? m_selected_unit->GetId()
+			: 0
+	);
+	m_ui.bottom_bar->PreviewTile( tile, 0 );
+	if ( m_selected_unit && m_selected_unit->IsActive() ) {
+		m_selected_unit->StartBadgeBlink();
+	}
 }
 
 }

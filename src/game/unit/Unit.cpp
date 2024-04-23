@@ -53,7 +53,7 @@ const bool Unit::HasMovesLeft() const {
 	return m_movement >= unit::Unit::MINIMUM_MOVEMENT_TO_KEEP;
 }
 
-const std::string& Unit::GetMoraleString() {
+const std::string& Unit::GetMoraleString() const {
 	return m_def->m_moraleset->m_morale_values.at( m_morale ).m_name;
 }
 

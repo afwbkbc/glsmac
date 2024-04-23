@@ -44,7 +44,6 @@ enum op_t {
 	OP_INIT,
 	OP_GET_MAP_DATA,
 	OP_RESET,
-	OP_SELECT_TILE,
 	OP_SAVE_MAP,
 	OP_EDIT_MAP,
 	OP_CHAT,
@@ -394,6 +393,21 @@ private:
 
 	size_t m_next_running_animation_id = 1;
 	std::unordered_map< size_t, cb_animation_oncomplete > m_running_animations = {};
+
+	enum unit_update_op_t : uint8_t {
+		UUO_NONE = 0,
+		UUO_SPAWN = 1 << 0,
+		UUO_REFRESH = 1 << 1,
+		UUO_DESPAWN = 1 << 2,
+	};
+	struct unit_update_t {
+		unit_update_op_t ops = UUO_NONE;
+		const unit::Unit* unit = nullptr;
+	};
+	std::unordered_map< size_t, unit_update_t > m_unit_updates = {};
+
+	void QueueUnitUpdate( const unit::Unit* unit, const unit_update_op_t op );
+	void PushUnitUpdates();
 };
 
 }

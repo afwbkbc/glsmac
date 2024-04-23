@@ -100,7 +100,7 @@ void UnitsList::HideUnitPreview( Unit* unit ) {
 	}
 }
 
-void UnitsList::SelectUnit( Unit* unit, const bool actually_select_unit ) {
+void UnitsList::SelectUnit( Unit* unit, const bool activate_unit ) {
 	if ( unit != m_selected_unit ) {
 		m_selected_unit = unit;
 		for ( auto& it : m_items ) {
@@ -113,7 +113,9 @@ void UnitsList::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 				item->DeselectUnit();
 			}
 		}
-		m_game->SelectUnit( m_selected_unit, actually_select_unit );
+		if ( activate_unit ) {
+			m_game->SelectUnit( m_selected_unit, true );
+		}
 	}
 }
 

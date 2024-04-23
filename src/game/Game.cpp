@@ -57,22 +57,6 @@ mt_id_t Game::MT_Reset() {
 	return MT_CreateRequest( request );
 }
 
-/*mt_id_t Game::MT_SelectTile(
-	const tile_query_purpose_t tile_query_purpose,
-	const types::Vec2< size_t >& tile_coords,
-	const map::Tile::direction_t tile_direction,
-	const tile_query_metadata_t tile_query_metadata
-) {
-	MT_Request request = {};
-	request.op = OP_SELECT_TILE;
-	request.data.select_tile.purpose = tile_query_purpose;
-	request.data.select_tile.tile_x = tile_coords.x;
-	request.data.select_tile.tile_y = tile_coords.y;
-	request.data.select_tile.tile_direction = tile_direction;
-	request.data.select_tile.metadata = tile_query_metadata;
-	return MT_CreateRequest( request );
-}*/
-
 mt_id_t Game::MT_SaveMap( const std::string& path ) {
 	ASSERT( !path.empty(), "savemap path is empty" );
 	MT_Request request = {};
@@ -384,6 +368,7 @@ void Game::Iterate() {
 		Log( (std::string)e.what() );
 		Quit( "Event validation error" ); // TODO: fix reason
 	}
+	PushUnitUpdates();
 }
 
 util::Random* Game::GetRandom() const {
@@ -461,32 +446,6 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 		case OP_PING: {
 			//Log( "Got ping request" );
 			response.result = R_SUCCESS;
-			break;
-		}
-		case OP_SELECT_TILE: {
-			ASSERT( m_map, "map not set" );
-			//Log( "Got tile select request [ " + std::to_string( request.data.select_tile.tile_x ) + " " + std::to_string( request.data.select_tile.tile_y ) + " ]" );
-
-			auto* tile = m_map
-				->GetTile( request.data.select_tile.tile_x, request.data.select_tile.tile_y )
-				->GetNeighbour( request.data.select_tile.tile_direction );
-
-			auto* ts = m_map
-				->GetTileState( request.data.select_tile.tile_x, request.data.select_tile.tile_y )
-				->GetNeighbour( request.data.select_tile.tile_direction );
-
-			//Log( "Selecting tile at " + tile->coord.ToString() );
-
-			// adaptive scroll if tile was selected with arrows
-			response.data.select_tile.scroll_adaptively = request.data.select_tile.tile_direction != map::Tile::D_NONE;
-
-			NEW( response.data.select_tile.unit_ids, std::vector< size_t > );
-			for ( const auto& it : tile->units ) {
-				response.data.select_tile.unit_ids->push_back( it.first );
-			}
-
-			response.data.select_tile.metadata = request.data.select_tile.metadata;
-
 			break;
 		}
 		case OP_SAVE_MAP: {
@@ -649,18 +608,6 @@ void Game::DestroyResponse( const MT_Response& response ) {
 				}
 				break;
 			}
-			case OP_SELECT_TILE: {
-				if ( response.data.select_tile.preview_lines ) {
-					DELETE( response.data.select_tile.preview_lines );
-				}
-				if ( response.data.select_tile.sprites ) {
-					DELETE( response.data.select_tile.sprites );
-				}
-				if ( response.data.select_tile.unit_ids ) {
-					DELETE( response.data.select_tile.unit_ids );
-				}
-				break;
-			}
 			case OP_SAVE_MAP: {
 				if ( response.data.save_map.path ) {
 					DELETE( response.data.save_map.path );
@@ -754,22 +701,7 @@ void Game::RefreshUnit( const unit::Unit* unit ) {
 		}
 	}
 	else {
-		auto fr = FrontendRequest( FrontendRequest::FR_UNIT_REFRESH );
-		fr.data.unit_refresh.unit_id = unit->m_id;
-		fr.data.unit_refresh.movement = unit->m_movement;
-		fr.data.unit_refresh.health = unit->m_health;
-		fr.data.unit_refresh.tile_coords = {
-			unit->m_tile->coord.x,
-			unit->m_tile->coord.y
-		};
-		const auto c = GetUnitRenderCoords( unit );
-		fr.data.unit_refresh.render_coords = {
-			c.x,
-			c.y,
-			c.z
-		};
-		AddFrontendRequest( fr );
-		CheckTurnComplete();
+		QueueUnitUpdate( unit, UUO_REFRESH );
 	}
 }
 
@@ -863,29 +795,7 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 		}
 	);
 
-	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_SPAWN );
-	fr.data.unit_spawn.unit_id = unit->m_id;
-	NEW( fr.data.unit_spawn.unitdef_id, std::string, unit->m_def->m_id );
-	fr.data.unit_spawn.slot_index = unit->m_owner->GetIndex();
-	fr.data.unit_spawn.tile_coords = {
-		tile->coord.x,
-		tile->coord.y
-	};
-	const auto c = GetUnitRenderCoords( unit );
-	fr.data.unit_spawn.render_coords = {
-		c.x,
-		c.y,
-		c.z
-	};
-
-	fr.data.unit_spawn.movement = unit->m_movement;
-	fr.data.unit_spawn.morale = unit->m_morale;
-	NEW( fr.data.unit_spawn.morale_string, std::string, unit->GetMoraleString() );
-	fr.data.unit_spawn.health = unit->m_health;
-
-	AddFrontendRequest( fr );
-
-	CheckTurnComplete();
+	QueueUnitUpdate( unit, UUO_SPAWN );
 
 	if ( m_state->IsMaster() ) {
 		m_state->m_bindings->Call(
@@ -909,8 +819,6 @@ void Game::SkipUnitTurn( const size_t unit_id ) {
 	unit->m_movement = 0.0f;
 
 	RefreshUnit( unit );
-
-	CheckTurnComplete();
 }
 
 void Game::DespawnUnit( const size_t unit_id ) {
@@ -921,9 +829,7 @@ void Game::DespawnUnit( const size_t unit_id ) {
 
 	Log( "Despawning unit #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->m_tile->ToString() );
 
-	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_DESPAWN );
-	fr.data.unit_despawn.unit_id = unit_id;
-	AddFrontendRequest( fr );
+	QueueUnitUpdate( unit, UUO_DESPAWN );
 
 	ASSERT( unit->m_tile, "unit tile not assigned" );
 	auto* tile = unit->m_tile;
@@ -945,8 +851,6 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	}
 
 	delete unit;
-
-	CheckTurnComplete();
 }
 
 const std::string* Game::MoveUnitValidate( unit::Unit* unit, map::Tile* dst_tile ) {
@@ -1731,6 +1635,8 @@ void Game::ResetGame() {
 	ASSERT( m_pending_frontend_requests, "pending events not set" );
 	m_pending_frontend_requests->clear();
 
+	m_unit_updates.clear();
+
 	m_current_turn.Reset();
 	m_is_turn_complete = false;
 
@@ -1769,6 +1675,88 @@ void Game::CheckTurnComplete() {
 			? Turn::TS_TURN_COMPLETE
 			: Turn::TS_TURN_ACTIVE;
 		AddFrontendRequest( fr );
+	}
+}
+
+void Game::QueueUnitUpdate( const unit::Unit* unit, const unit_update_op_t op ) {
+	auto it = m_unit_updates.find( unit->m_id );
+	if ( it == m_unit_updates.end() ) {
+		it = m_unit_updates.insert(
+			{
+				unit->m_id,
+				{
+					{},
+					unit,
+				}
+			}
+		).first;
+	}
+	auto& update = it->second;
+	if ( op == UUO_DESPAWN ) {
+		if ( op & UUO_SPAWN ) {
+			// if unit is despawned immediately after spawning - frontend doesn't need to know
+			m_unit_updates.erase( it );
+			return;
+		}
+		update.ops = UUO_NONE; // clear other actions if unit was despawned
+	}
+	// add to operations list
+	update.ops = (unit_update_op_t)( (uint8_t)update.ops | (uint8_t)op );
+}
+
+void Game::PushUnitUpdates() {
+	if ( !m_unit_updates.empty() ) {
+		for ( const auto& it : m_unit_updates ) {
+			const auto unit_id = it.first;
+			const auto& uu = it.second;
+			const auto& unit = uu.unit;
+			if ( uu.ops & UUO_SPAWN ) {
+				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_SPAWN );
+				fr.data.unit_spawn.unit_id = unit->m_id;
+				NEW( fr.data.unit_spawn.unitdef_id, std::string, unit->m_def->m_id );
+				fr.data.unit_spawn.slot_index = unit->m_owner->GetIndex();
+				fr.data.unit_spawn.tile_coords = {
+					unit->m_tile->coord.x,
+					unit->m_tile->coord.y
+				};
+				const auto c = GetUnitRenderCoords( unit );
+				fr.data.unit_spawn.render_coords = {
+					c.x,
+					c.y,
+					c.z
+				};
+
+				fr.data.unit_spawn.movement = unit->m_movement;
+				fr.data.unit_spawn.morale = unit->m_morale;
+				NEW( fr.data.unit_spawn.morale_string, std::string, unit->GetMoraleString() );
+				fr.data.unit_spawn.health = unit->m_health;
+				AddFrontendRequest( fr );
+			}
+			if ( uu.ops & UUO_REFRESH ) {
+				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_REFRESH );
+				fr.data.unit_refresh.unit_id = unit->m_id;
+				fr.data.unit_refresh.movement = unit->m_movement;
+				fr.data.unit_refresh.health = unit->m_health;
+				fr.data.unit_refresh.tile_coords = {
+					unit->m_tile->coord.x,
+					unit->m_tile->coord.y
+				};
+				const auto c = GetUnitRenderCoords( unit );
+				fr.data.unit_refresh.render_coords = {
+					c.x,
+					c.y,
+					c.z
+				};
+				AddFrontendRequest( fr );
+			}
+			if ( uu.ops & UUO_DESPAWN ) {
+				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_DESPAWN );
+				fr.data.unit_despawn.unit_id = unit_id;
+				AddFrontendRequest( fr );
+			}
+		}
+		m_unit_updates.clear();
+		CheckTurnComplete();
 	}
 }
 

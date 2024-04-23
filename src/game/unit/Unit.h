@@ -54,7 +54,7 @@ public:
 	static const movement_t MINIMUM_HEALTH_TO_KEEP;
 	const bool HasMovesLeft() const;
 
-	const std::string& GetMoraleString();
+	const std::string& GetMoraleString() const;
 
 	static const types::Buffer Serialize( const Unit* unit );
 	static Unit* Unserialize( types::Buffer& buf, Game* game );

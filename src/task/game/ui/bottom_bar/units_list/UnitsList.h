@@ -28,7 +28,7 @@ private:
 	friend class UnitsListItem;
 	void PreviewUnit( Unit* unit );
 	void HideUnitPreview( Unit* unit );
-	void SelectUnit( Unit* unit, const bool actually_select_unit );
+	void SelectUnit( Unit* unit, const bool activate_unit );
 
 private:
 	::ui::object::ScrollView* m_body = nullptr;

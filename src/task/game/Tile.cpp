@@ -55,7 +55,7 @@ void Tile::RemoveUnit( Unit* unit ) {
 }
 
 void Tile::SetActiveUnit( Unit* unit ) {
-	if ( m_render.currently_rendered_unit ) {
+	if ( m_render.currently_rendered_unit && m_render.currently_rendered_unit != unit ) {
 		m_render.currently_rendered_unit->Hide();
 		m_render.currently_rendered_unit = unit;
 	}
