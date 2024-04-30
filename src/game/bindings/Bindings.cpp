@@ -60,11 +60,16 @@ gse::Value Bindings::Call( const callback_slot_t slot, const callback_arguments_
 	if ( it != m_callbacks.end() ) {
 		try {
 			type::Object::properties_t properties = arguments;
-			return ( (gse::type::Callable*)it->second.Get() )->Run(
+			const gse::Value result = ( (gse::type::Callable*)it->second.Get() )->Run(
 				m_gse_context, m_si_internal, {
 					VALUE( type::Object, properties ),
 				}
 			);
+			auto* game = m_state->GetGame();
+			if ( game ) {
+				game->PushUnitUpdates();
+			}
+			return result;
 		}
 		catch ( gse::Exception& e ) {
 			if ( m_state->m_on_gse_error ) {

@@ -35,7 +35,11 @@ class Connection;
 }
 
 namespace bindings {
+
 class Binding;
+
+class Bindings;
+
 }
 
 enum op_t {
@@ -407,6 +411,9 @@ private:
 	std::unordered_map< size_t, unit_update_t > m_unit_updates = {};
 
 	void QueueUnitUpdate( const unit::Unit* unit, const unit_update_op_t op );
+
+private:
+	friend class bindings::Bindings;
 	void PushUnitUpdates();
 };
 

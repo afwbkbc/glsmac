@@ -958,9 +958,9 @@ void Game::DespawnUnit( const size_t unit_id ) {
 void Game::RefreshUnit( Unit* unit ) {
 	const auto was_active = unit->IsActive();
 	unit->Refresh();
+	UpdateSelectable( unit );
 	if ( m_selected_unit == unit && was_active ) {
 		if ( !unit->IsActive() ) {
-			UpdateSelectable( unit );
 			SelectNextUnitOrSwitchToTileSelection();
 		}
 		else {
@@ -2199,10 +2199,6 @@ void Game::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 	m_tile_at_query_purpose = ::game::TQP_UNIT_SELECT;
 	DeselectTileOrUnit();
 	if ( m_selected_unit != unit ) {
-		if ( m_selected_unit ) {
-			m_selected_unit->Hide();
-			m_selected_unit = nullptr;
-		}
 
 		unit->SetActiveOnTile();
 
@@ -2248,7 +2244,7 @@ void Game::SelectTileOrUnit( Tile* tile, const size_t selected_unit_id ) {
 				}
 			}
 			if ( !selected_unit ) {
-				selected_unit = GetFirstSelectableUnit( units );
+				selected_unit = m_selected_tile->GetMostImportantUnit();//GetFirstSelectableUnit( units );
 			}
 		}
 		if ( !selected_unit ) {
@@ -2283,12 +2279,16 @@ void Game::DeselectTileOrUnit() {
 
 		// reset to most important unit if needed
 		auto* most_important_unit = m_selected_tile->GetMostImportantUnit();
-
-		if ( m_selected_unit != most_important_unit ) {
-			m_selected_unit->Hide();
-			most_important_unit->Show();
+		if ( m_selected_unit ) {
+			if ( m_selected_unit == most_important_unit ) {
+				m_selected_unit->StopBadgeBlink( true );
+			}
+			else {
+				m_selected_unit->Hide();
+				most_important_unit->Show();
+			}
+			m_selected_unit = nullptr;
 		}
-		m_selected_unit = nullptr;
 	}
 
 	m_ui.bottom_bar->HideTilePreview();
