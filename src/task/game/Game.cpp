@@ -2748,6 +2748,9 @@ void Game::RenderTile( Tile* tile ) {
 			? m_selected_unit->GetId()
 			: 0
 	);
+	if ( m_selected_unit && m_selected_unit->IsActive() ) {
+		m_selected_unit->StartBadgeBlink();
+	}
 }
 
 }
