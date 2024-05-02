@@ -83,10 +83,6 @@ public:
 	};
 	const render_data_t& GetRenderData() const;
 
-	void SetUnitMeshTex( const meshtex_t& meshtex );
-	void SetBadgeMeshTex( const meshtex_t& meshtex );
-	void SetHealthbarMeshTex( const meshtex_t& meshtex );
-
 private:
 
 	BadgeDefs* const m_badge_defs;
@@ -127,6 +123,8 @@ private:
 	const bool ShouldBeActive() const;
 
 	render_data_t m_render_data = {};
+
+	Unit::meshtex_t GetMeshTex( const InstancedSprite* sprite );
 };
 
 }

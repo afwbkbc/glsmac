@@ -885,42 +885,6 @@ void Game::SpawnUnit(
 	types::mesh::Rectangle* mesh = nullptr;
 	types::Texture* texture = nullptr;
 
-	const auto& f_meshtex = []( const InstancedSprite* sprite ) -> Unit::meshtex_t {
-		auto* texture = sprite->actor->GetSpriteActor()->GetTexture();
-		NEWV( mesh, types::mesh::Rectangle );
-		mesh->SetCoords(
-			{
-				0.0f,
-				0.0f
-			},
-			{
-				1.0f,
-				1.0f
-			},
-			{
-				sprite->xy.x,
-				sprite->xy.y
-			},
-			{
-				sprite->xy.x + sprite->wh.x,
-				sprite->xy.y + sprite->wh.y
-			},
-			{
-				texture->m_width,
-				texture->m_height
-			},
-			0.8f
-		);
-		return {
-			mesh,
-			texture,
-		};
-	};
-
-	unit->SetUnitMeshTex( f_meshtex( unit->GetSprite()->instanced_sprite ) );
-	unit->SetBadgeMeshTex( f_meshtex( unit->GetBadgeSprite()->instanced_sprite ) );
-	unit->SetHealthbarMeshTex( f_meshtex( unit->GetBadgeHealthbarSprite()->instanced_sprite ) );
-
 	RenderTile( tile );
 
 	if ( unit->IsActive() ) {
@@ -2784,10 +2748,6 @@ void Game::RenderTile( Tile* tile ) {
 			? m_selected_unit->GetId()
 			: 0
 	);
-	m_ui.bottom_bar->PreviewTile( tile, 0 );
-	if ( m_selected_unit && m_selected_unit->IsActive() ) {
-		m_selected_unit->StartBadgeBlink();
-	}
 }
 
 }

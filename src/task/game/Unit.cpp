@@ -3,6 +3,8 @@
 #include "util/String.h"
 #include "game/unit/Unit.h"
 
+#include "types/mesh/Rectangle.h"
+
 namespace task {
 namespace game {
 
@@ -41,6 +43,9 @@ Unit::Unit(
 	m_is_active = ShouldBeActive();
 	m_render.badge.def = m_slot->GetUnitBadgeSprite( m_morale, m_is_active );
 	m_render.badge.healthbar.def = m_badge_defs->GetBadgeHealthbarSprite( m_health );
+	m_render_data.unit = GetMeshTex( GetSprite()->instanced_sprite );
+	m_render_data.badge = GetMeshTex( GetBadgeSprite()->instanced_sprite );
+	m_render_data.healthbar = GetMeshTex( GetBadgeHealthbarSprite()->instanced_sprite );
 	m_tile->AddUnit( this );
 }
 
@@ -223,6 +228,10 @@ void Unit::Refresh() {
 		m_render.badge.instance_id = m_render.badge.def->next_instance_id++;
 		m_render.badge.healthbar.def = m_badge_defs->GetBadgeHealthbarSprite( m_health );
 		m_render.badge.healthbar.instance_id = m_render.badge.healthbar.def->next_instance_id++;
+		// TODO: cache/optimize
+		m_render_data.unit = GetMeshTex( GetSprite()->instanced_sprite );
+		m_render_data.badge = GetMeshTex( GetBadgeSprite()->instanced_sprite );
+		m_render_data.healthbar = GetMeshTex( GetBadgeHealthbarSprite()->instanced_sprite );
 		if ( is_badge_visible ) {
 			ShowBadge();
 		}
@@ -230,13 +239,17 @@ void Unit::Refresh() {
 }
 
 void Unit::SetMovement( const ::game::unit::Unit::movement_t movement ) {
-	m_movement = movement;
-	m_need_refresh = true;
+	if ( movement != m_movement ) {
+		m_movement = movement;
+		m_need_refresh = true;
+	}
 }
 
 void Unit::SetHealth( const ::game::unit::Unit::health_t health ) {
-	m_health = health;
-	m_need_refresh = true;
+	if ( health != m_health ) {
+		m_health = health;
+		m_need_refresh = true;
+	}
 }
 
 const bool Unit::CanMove() const {
@@ -275,20 +288,40 @@ const Unit::render_data_t& Unit::GetRenderData() const {
 	return m_render_data;
 }
 
-void Unit::SetUnitMeshTex( const meshtex_t& meshtex ) {
-	m_render_data.unit = meshtex;
-}
-
-void Unit::SetBadgeMeshTex( const meshtex_t& meshtex ) {
-	m_render_data.badge = meshtex;
-}
-
-void Unit::SetHealthbarMeshTex( const meshtex_t& meshtex ) {
-	m_render_data.healthbar = meshtex;
-}
-
 const bool Unit::ShouldBeActive() const {
 	return m_is_owned && CanMove();
+}
+
+Unit::meshtex_t Unit::GetMeshTex( const InstancedSprite* sprite ) {
+	auto* texture = sprite->actor->GetSpriteActor()->GetTexture();
+	NEWV( mesh, types::mesh::Rectangle );
+	mesh->SetCoords(
+		{
+			0.0f,
+			0.0f
+		},
+		{
+			1.0f,
+			1.0f
+		},
+		{
+			sprite->xy.x,
+			sprite->xy.y
+		},
+		{
+			sprite->xy.x + sprite->wh.x,
+			sprite->xy.y + sprite->wh.y
+		},
+		{
+			texture->m_width,
+			texture->m_height
+		},
+		0.8f
+	);
+	return {
+		mesh,
+		texture,
+	};
 }
 
 }
