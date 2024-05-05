@@ -50,7 +50,7 @@ BINDING_IMPL( animations ) {
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 3 );
 				N_GETVALUE( id, 0, String );
-				N_UNWRAP( tile, 1, map::Tile );
+				N_GETVALUE_UNWRAP( tile, 1, map::Tile );
 				N_PERSIST_CALLABLE( on_complete, 2 );
 				const auto* errmsg = GAME->ShowAnimationOnTile( id, tile, [ on_complete, ctx, call_si ]() {
 					on_complete->Run( ctx, call_si, {} );

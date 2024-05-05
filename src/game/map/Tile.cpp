@@ -4,13 +4,27 @@
 #include "gse/type/Array.h"
 #include "gse/type/Int.h"
 #include "gse/type/Bool.h"
-#include "gse/type/String.h"
 #include "gse/callable/Native.h"
 
 #include "game/unit/Unit.h"
 
 namespace game {
 namespace map {
+
+const std::string Tile::TilePositionsToString( const tile_positions_t& tile_positions, std::string prefx ) {
+	// TODO: refactor
+	std::string result = TS_ARR_BEGIN( "Tiles" );
+	for ( const auto& pos : tile_positions ) {
+		std::string prefix = prefx + TS_OFFSET;
+		result += TS_OFFSET + TS_OBJ_BEGIN( "Tile" ) +
+			TS_OBJ_PROP_NUM( "x", pos.x ) +
+			TS_OBJ_PROP_NUM( "y", pos.y ) +
+			TS_OBJ_END() + ",\n";
+	}
+	std::string prefix = prefx;
+	result += TS_ARR_END();
+	return result;
+}
 
 const std::unordered_map< Tile::direction_t, std::string > Tile::s_direction_str = {
 #define X( _x ) { D_##_x, #_x },
@@ -176,7 +190,7 @@ WRAPIMPL_BEGIN( Tile, CLASS_TILE )
 			"is_adjactent_to",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
-				N_UNWRAP( other, 0, Tile );
+				N_GETVALUE_UNWRAP( other, 0, Tile );
 				return VALUE( gse::type::Bool, IsAdjactentTo( other ) );
 			})
 		},
@@ -207,17 +221,20 @@ WRAPIMPL_END_PTR( Tile )
 
 UNWRAPIMPL_PTR( Tile )
 
-void Tile::Lock() {
+void Tile::Lock( const size_t initiator_slot ) {
 	ASSERT_NOLOG( !m_is_locked, "tile already locked" );
+	m_lock_initiator_slot = initiator_slot;
 	m_is_locked = true;
 }
 void Tile::Unlock() {
 	ASSERT_NOLOG( m_is_locked, "tile not locked" );
 	m_is_locked = false;
 }
-
 const bool Tile::IsLocked() const {
 	return m_is_locked;
+}
+const bool Tile::IsLockedBy( const size_t initiator_slot ) const {
+	return m_is_locked && m_lock_initiator_slot == initiator_slot;
 }
 
 }

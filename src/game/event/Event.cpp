@@ -13,6 +13,10 @@
 #include "FinalizeTurn.h"
 #include "TurnFinalized.h"
 #include "AdvanceTurn.h"
+#include "RequestTileLocks.h"
+#include "LockTiles.h"
+#include "RequestTileUnlocks.h"
+#include "UnlockTiles.h"
 
 namespace game {
 namespace event {
@@ -46,6 +50,10 @@ const types::Buffer Event::Serialize( const Event* event ) {
 		SERIALIZE( ET_FINALIZE_TURN, FinalizeTurn )
 		SERIALIZE( ET_TURN_FINALIZED, TurnFinalized )
 		SERIALIZE( ET_ADVANCE_TURN, AdvanceTurn )
+		SERIALIZE( ET_REQUEST_TILE_LOCKS, RequestTileLocks )
+		SERIALIZE( ET_LOCK_TILES, LockTiles )
+		SERIALIZE( ET_REQUEST_TILE_UNLOCKS, RequestTileUnlocks )
+		SERIALIZE( ET_UNLOCK_TILES, UnlockTiles )
 		default:
 			THROW( "unknown event type on write: " + std::to_string( event->m_type ) );
 	}
@@ -76,6 +84,10 @@ Event* Event::Unserialize( types::Buffer& buf ) {
 		UNSERIALIZE( ET_FINALIZE_TURN, FinalizeTurn )
 		UNSERIALIZE( ET_TURN_FINALIZED, TurnFinalized )
 		UNSERIALIZE( ET_ADVANCE_TURN, AdvanceTurn )
+		UNSERIALIZE( ET_REQUEST_TILE_LOCKS, RequestTileLocks )
+		UNSERIALIZE( ET_LOCK_TILES, LockTiles )
+		UNSERIALIZE( ET_REQUEST_TILE_UNLOCKS, RequestTileUnlocks )
+		UNSERIALIZE( ET_UNLOCK_TILES, LockTiles )
 		default:
 			THROW( "unknown event type on read: " + std::to_string( type ) );
 	}
@@ -98,6 +110,16 @@ void Event::UnserializeMultiple( types::Buffer& buf, std::vector< Event* >& even
 	for ( auto i = 0 ; i < count ; i++ ) {
 		auto event_buf = types::Buffer( buf.ReadString() );
 		events_out.push_back( game::event::Event::Unserialize( event_buf ) );
+	}
+}
+
+const bool Event::IsBroadcastable( const event_type_t type ) {
+	switch ( type ) {
+		case ET_REQUEST_TILE_LOCKS:
+		case ET_REQUEST_TILE_UNLOCKS:
+			return false;
+		default:
+			return true;
 	}
 }
 

@@ -55,7 +55,7 @@ protected:
 #define CALLBACK( _type ) NATIVE_CALL( this ) { \
     N_EXPECT_ARGS( 1 ); \
     N_GET( cb, 0 ); \
-    N_CHECKTYPE( cb.Get(), 0, Callable ); \
+    N_CHECKARG( cb.Get(), 0, Callable ); \
     m_bindings->SetCallback( _type, cb, ctx, call_si ); \
     return VALUE( gse::type::Undefined ); \
 })
@@ -77,6 +77,8 @@ BINDING_DEF( on )
 BINDING_DEF( players )
 
 BINDING_DEF( factions )
+
+BINDING_DEF( tiles )
 
 BINDING_DEF( units )
 

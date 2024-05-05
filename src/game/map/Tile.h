@@ -30,7 +30,11 @@ public:
 
 	// map coordinates
 	// using SMAC coordinate system (increments by 2 horizontally and vertically, by 1 diagonally)
-	Vec2< size_t > coord;
+	typedef Vec2< size_t > coord_t;
+	coord_t coord;
+
+	typedef std::vector< coord_t > tile_positions_t;
+	static const std::string TilePositionsToString( const tile_positions_t& tile_positions, std::string prefx = "" );
 
 	// per-vertex, left, right and top linked to vertices of others tiles
 	typedef ssize_t elevation_t;
@@ -169,12 +173,14 @@ public:
 
 	WRAPDEFS_PTR( Tile );
 
-	void Lock();
+	void Lock( const size_t initiator_slot );
 	void Unlock();
 	const bool IsLocked() const;
+	const bool IsLockedBy( const size_t initiator_slot ) const;
 
 private:
 	bool m_is_locked = false;
+	size_t m_lock_initiator_slot = 0;
 };
 
 }

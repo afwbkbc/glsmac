@@ -5,10 +5,16 @@
 #include "util/FS.h"
 #include "types/Buffer.h"
 #include "game/State.h"
+
 #include "event/FinalizeTurn.h"
 #include "event/TurnFinalized.h"
 #include "event/AdvanceTurn.h"
 #include "event/DespawnUnit.h"
+#include "event/RequestTileLocks.h"
+#include "event/LockTiles.h"
+#include "event/RequestTileUnlocks.h"
+#include "event/UnlockTiles.h"
+
 #include "gse/type/String.h"
 
 using namespace game::connection;
@@ -369,6 +375,8 @@ void Game::Iterate() {
 		Quit( "Event validation error" ); // TODO: fix reason
 	}
 	PushUnitUpdates();
+	ProcessTileUnlockRequests();
+	ProcessTileLockRequests();
 }
 
 util::Random* Game::GetRandom() const {
@@ -530,7 +538,6 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 						const auto& it = m_running_animations.find( r.data.animation_finished.animation_id );
 						ASSERT( it != m_running_animations.end(), "animation " + std::to_string( r.data.animation_finished.animation_id ) + " is not running" );
 						const auto& animation_info = it->second;
-						animation_info.tile->Unlock();
 						const auto on_complete = animation_info.on_complete;
 						m_running_animations.erase( it );
 						on_complete();
@@ -721,14 +728,13 @@ void Game::DefineAnimation( animation::Def* def ) {
 	AddFrontendRequest( fr );
 }
 
-const std::string* Game::ShowAnimationOnTile( const std::string& animation_id, map::Tile* tile, const cb_animation_oncomplete& on_complete ) {
+const std::string* Game::ShowAnimationOnTile( const std::string& animation_id, map::Tile* tile, const cb_oncomplete& on_complete ) {
 	if ( m_defined_animations.find( animation_id ) == m_defined_animations.end() ) {
 		return new std::string( "Animation '" + animation_id + "' is not defined" );
 	}
-	if ( tile->IsLocked() ) {
-		return new std::string( "Can't show animation on locked tile" );
+	if ( !tile->IsLocked() ) {
+		return new std::string( "Tile must be locked before showing animation" );
 	}
-	tile->Lock();
 	const auto running_animation_id = m_next_running_animation_id++;
 	m_running_animations.insert(
 		{
@@ -1173,6 +1179,69 @@ void Game::GlobalAdvanceTurn() {
 	AddEvent( new event::AdvanceTurn( m_slot_num, s_turn_id ) );
 }
 
+void Game::SendTileLockRequest( const map::Tile::tile_positions_t& tile_positions, const cb_oncomplete& on_complete ) {
+	m_tile_lock_callbacks.push_back(
+		{
+			tile_positions,
+			on_complete
+		}
+	);
+	AddEvent( new event::RequestTileLocks( m_slot_num, tile_positions ) );
+}
+
+void Game::RequestTileLocks( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions ) {
+	if ( m_state->IsMaster() ) {
+		Log( "Tile locks request from " + std::to_string( initiator_slot ) + ": " + map::Tile::TilePositionsToString( tile_positions, "" ) );
+		AddTileLockRequest( initiator_slot, tile_positions, m_tile_lock_requests );
+	}
+}
+
+void Game::LockTiles( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions ) {
+	for ( const auto& pos : tile_positions ) {
+		auto* tile = m_map->GetTile( pos.x, pos.y );
+		ASSERT_NOLOG( !tile->IsLocked(), "tile " + pos.ToString() + " is already locked" );
+		tile->Lock( initiator_slot );
+	}
+	for ( auto it = m_tile_lock_callbacks.begin() ; it != m_tile_lock_callbacks.end() ; it++ ) {
+		const auto& it_positions = it->first;
+		const auto sz = it_positions.size();
+		if ( sz == tile_positions.size() ) {
+			bool match = true;
+			for ( size_t i = 0 ; i < sz ; i++ ) {
+				if ( tile_positions.at( i ) != it_positions.at( i ) ) {
+					match = false;
+					break;
+				}
+			}
+			if ( match ) {
+				const auto cb = it->second;
+				m_tile_lock_callbacks.erase( it );
+				cb();
+				break;
+			}
+		}
+	}
+}
+
+void Game::SendTileUnlockRequest( const map::Tile::tile_positions_t& tile_positions ) {
+	AddEvent( new event::RequestTileUnlocks( m_slot_num, tile_positions ) );
+}
+
+void Game::RequestTileUnlocks( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions ) {
+	if ( m_state->IsMaster() ) {
+		Log( "Tile unlocks request from " + std::to_string( initiator_slot ) + ": " + map::Tile::TilePositionsToString( tile_positions, "" ) );
+		AddTileLockRequest( initiator_slot, tile_positions, m_tile_unlock_requests );
+	}
+}
+
+void Game::UnlockTiles( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions ) {
+	for ( const auto& pos : tile_positions ) {
+		auto* tile = m_map->GetTile( pos.x, pos.y );
+		ASSERT_NOLOG( tile->IsLockedBy( initiator_slot ), "tile " + pos.ToString() + " is not locked by " + std::to_string( initiator_slot ) );
+		tile->Unlock();
+	}
+}
+
 void Game::ValidateEvent( event::Event* event ) {
 	if ( !event->m_is_validated ) {
 		const auto* errmsg = event->Validate( this );
@@ -1374,6 +1443,11 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				connection->m_on_player_leave = [ this, connection ]( const size_t slot_num, Slot* slot, const Player* player ) -> void {
 					Log( "Player " + player->GetFullName() + " left the game." );
 					connection->GlobalMessage( player->GetFullName() + " left the game." );
+					const auto& it = m_tile_locks.find( slot_num );
+					if ( it != m_tile_locks.end() ) {
+						Log( "Releasing " + std::to_string( it->second.size() ) + " tile locks" );
+						m_tile_locks.erase( it );
+					}
 				};
 
 				connection->m_on_download_request = [ this ]() -> const std::string {
@@ -1647,6 +1721,12 @@ void Game::ResetGame() {
 
 	m_unit_updates.clear();
 
+	m_tile_lock_requests.clear();
+	m_tile_unlock_requests.clear();
+	m_tile_locks.clear();
+
+	m_tile_lock_callbacks.clear();
+
 	m_current_turn.Reset();
 	m_is_turn_complete = false;
 
@@ -1767,6 +1847,98 @@ void Game::PushUnitUpdates() {
 		}
 		m_unit_updates.clear();
 		CheckTurnComplete();
+	}
+}
+
+void Game::AddTileLockRequest( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions, tile_lock_requests_t& target ) {
+	ASSERT_NOLOG( m_state && m_state->IsMaster(), "only master can manage tile locks" );
+	bool is_overlapping = false;
+	for ( const auto& req : target ) {
+		for ( const auto& req_pos : req.tile_positions ) {
+			for ( const auto& pos : tile_positions ) {
+				if ( pos == req_pos ) {
+					is_overlapping = true;
+					break;
+				}
+			}
+			if ( is_overlapping ) {
+				break;
+			}
+		}
+		if ( is_overlapping ) {
+			break;
+		}
+	}
+	if ( !is_overlapping ) {
+		target.push_back(
+			{
+				initiator_slot,
+				tile_positions
+			}
+		);
+	}
+	else {
+		Log( "Some tile locks/unlocks would overlap, skipping" );
+	}
+}
+
+void Game::ProcessTileLockRequests() {
+	if ( m_state && m_state->IsMaster() ) {
+		for ( const auto& req : m_tile_lock_requests ) {
+			const auto state = m_state->m_slots.GetSlot( req.initiator_slot ).GetState();
+			if ( state != Slot::SS_PLAYER ) {
+				// player disconnected?
+				Log( "Skipping tile locks for slot " + std::to_string( req.initiator_slot ) + " (invalid slot state: " + std::to_string( state ) );
+				continue;
+			}
+			auto it = m_tile_locks.find( req.initiator_slot );
+			if ( it == m_tile_locks.end() ) {
+				it = m_tile_locks.insert(
+					{
+						req.initiator_slot,
+						{}
+					}
+				).first;
+			}
+			Log( "Locking tiles for " + std::to_string( req.initiator_slot ) + ": " + map::Tile::TilePositionsToString( req.tile_positions ) );
+			it->second.push_back( TileLock{ req.tile_positions } );
+			AddEvent( new event::LockTiles( m_slot_num, req.tile_positions, req.initiator_slot ) );
+		}
+		m_tile_lock_requests.clear();
+	}
+}
+
+void Game::ProcessTileUnlockRequests() {
+	if ( m_state && m_state->IsMaster() ) {
+		for ( const auto& req : m_tile_unlock_requests ) {
+			const auto state = m_state->m_slots.GetSlot( req.initiator_slot ).GetState();
+			if ( state != Slot::SS_PLAYER ) {
+				// player disconnected?
+				Log( "Skipping tile unlocks for slot " + std::to_string( req.initiator_slot ) + " (invalid slot state: " + std::to_string( state ) );
+				continue;
+			}
+			bool found = false;
+			auto it = m_tile_locks.find( req.initiator_slot );
+			if ( it != m_tile_locks.end() ) {
+				auto& locks = it->second;
+				for ( auto locks_it = locks.begin() ; locks_it != locks.end() ; locks_it++ ) {
+					if ( locks_it->Matches( req.tile_positions ) ) {
+						found = true;
+						Log( "Unlocking tiles for " + std::to_string( req.initiator_slot ) + ": " + map::Tile::TilePositionsToString( req.tile_positions ) );
+						locks.erase( locks_it );
+						if ( locks.empty() ) {
+							m_tile_locks.erase( it );
+						}
+						AddEvent( new event::UnlockTiles( m_slot_num, req.tile_positions, req.initiator_slot ) );
+						break;
+					}
+				}
+			}
+			if ( !found ) {
+				Log( "Could not find matching tile locks for " + std::to_string( req.initiator_slot ) + ": " + map::Tile::TilePositionsToString( req.tile_positions ) );
+			}
+		}
+		m_tile_unlock_requests.clear();
 	}
 }
 

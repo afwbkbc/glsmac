@@ -332,7 +332,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 						std::vector< game::event::Event* > game_events = {};
 						game::event::Event::UnserializeMultiple( buf, game_events );
 						const auto slot = m_state->GetCidSlots().at( event.cid );
-						std::vector< game::event::Event* > valid_events = {};
+						std::vector< game::event::Event* > broadcastable_events = {};
 						for ( const auto& game_event : game_events ) {
 							bool ok = true;
 							if ( game_event->m_initiator_slot != slot ) {
@@ -350,16 +350,16 @@ void Server::ProcessEvent( const network::Event& event ) {
 									break;
 								}
 							}
-							if ( ok ) {
-								valid_events.push_back( game_event );
+							if ( ok && game::event::Event::IsBroadcastable( game_event->m_type ) ) {
+								broadcastable_events.push_back( game_event );
 							}
 							else {
 								delete game_event;
 							}
 						}
-						if ( !valid_events.empty() ) {
+						if ( !broadcastable_events.empty() ) {
 							// broadcast only valid events, nobody will know of invalid attempts
-							const auto serialized_events = game::event::Event::SerializeMultiple( valid_events );
+							const auto serialized_events = game::event::Event::SerializeMultiple( broadcastable_events );
 							Broadcast(
 								[ this, packet, serialized_events ]( const network::cid_t cid ) -> void {
 									SendGameEventsTo( serialized_events.ToString(), cid );

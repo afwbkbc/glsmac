@@ -19,5 +19,6 @@ SET( SRC ${SRC}
 	${PWD}/Turn.cpp
 	${PWD}/FrontendRequest.cpp
 	${PWD}/BackendRequest.cpp
+	${PWD}/TileLock.cpp
 
 	PARENT_SCOPE )

@@ -94,8 +94,9 @@ void _type::OnWrapSet( const std::string& property_name ) {
 
 #define UNWRAPIMPL_PTR( _type ) \
 _type* _type::Unwrap( const gse::Value& value ) { \
-    ASSERT_NOLOG( value.Get()->type == gse::type::Type::T_OBJECT, "can't unwrap non-object: " + value.Dump() ); \
-    const auto* obj = (gse::type::Object*)value.Get(); \
+    const auto* valueobj = value.Get()->Deref(); \
+    ASSERT_NOLOG( valueobj->type == gse::type::Type::T_OBJECT, "can't unwrap non-object: " + valueobj->Dump() ); \
+    const auto* obj = (gse::type::Object*)valueobj; \
     ASSERT_NOLOG( obj->object_class == WRAP_CLASS, "can't unwrap object of different class ( " + gse::type::Object::GetClassString( obj->object_class ) + " != " + gse::type::Object::GetClassString( WRAP_CLASS ) + " )" ); \
     ASSERT_NOLOG( obj->wrapobj, "can't unwrap object without internal link" ); \
     return (_type*)obj->wrapobj; \
@@ -103,8 +104,9 @@ _type* _type::Unwrap( const gse::Value& value ) { \
 
 #define UNWRAPIMPL_NOPTR_BEGIN( _type ) \
 _type _type::Unwrap( const gse::Value& value ) { \
-    ASSERT_NOLOG( value.Get()->type == gse::type::Type::T_OBJECT, "can only unwrap objects" ); \
-    const auto* obj = (gse::type::Object*)value.Get(); \
+    const auto* valueobj = value.Get()->Deref(); \
+    ASSERT_NOLOG( valueobj->type == gse::type::Type::T_OBJECT, "can only unwrap objects" ); \
+    const auto* obj = (gse::type::Object*)valueobj; \
     ASSERT_NOLOG( obj->object_class == WRAP_CLASS, "can only unwrap objects of same class" ); \
     const auto& properties = obj->value;
 

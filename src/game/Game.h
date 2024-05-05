@@ -10,6 +10,7 @@
 #include "map_editor/MapEditor.h"
 
 #include "util/Random.h"
+#include "util/Timer.h"
 #include "types/Texture.h"
 #include "types/mesh/Render.h"
 #include "types/mesh/Data.h"
@@ -27,6 +28,8 @@
 #include "unit/Unit.h"
 #include "event/Event.h"
 
+#include "TileLock.h"
+
 namespace game {
 
 class State;
@@ -35,11 +38,7 @@ class Connection;
 }
 
 namespace bindings {
-
-class Binding;
-
 class Bindings;
-
 }
 
 enum op_t {
@@ -253,14 +252,6 @@ CLASS( Game, MTModule )
 	// deinitialize everything
 	mt_id_t MT_Reset();
 
-	// returns some data about tile
-	/*mt_id_t MT_SelectTile(
-		const tile_query_purpose_t tile_query_purpose,
-		const types::Vec2< size_t >& tile_coords,
-		const map::Tile::direction_t tile_direction = map::Tile::D_NONE,
-		const tile_query_metadata_t tile_query_metadata = {}
-	);*/
-
 	// saves current map into file
 	mt_id_t MT_SaveMap( const std::string& path );
 
@@ -300,7 +291,7 @@ protected:
 	void DestroyResponse( const MT_Response& response ) override;
 
 public:
-	typedef std::function< void() > cb_animation_oncomplete;
+	typedef std::function< void() > cb_oncomplete;
 
 	// for bindings etc
 	void Message( const std::string& text );
@@ -312,7 +303,7 @@ public:
 	void AddEvent( event::Event* event );
 	void RefreshUnit( const unit::Unit* unit );
 	void DefineAnimation( animation::Def* def );
-	const std::string* ShowAnimationOnTile( const std::string& animation_id, map::Tile* tile, const cb_animation_oncomplete& on_complete );
+	const std::string* ShowAnimationOnTile( const std::string& animation_id, map::Tile* tile, const cb_oncomplete& on_complete );
 	void DefineMoraleSet( unit::MoraleSet* moraleset );
 	void DefineUnit( unit::Def* def );
 	void SpawnUnit( unit::Unit* unit );
@@ -336,6 +327,14 @@ public:
 	void GlobalFinalizeTurn();
 	void GlobalProcessTurnFinalized( const size_t slot_num, const util::CRC32::crc_t checksum );
 	void GlobalAdvanceTurn();
+
+	void SendTileLockRequest( const map::Tile::tile_positions_t& tile_positions, const cb_oncomplete& on_complete );
+	void RequestTileLocks( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions );
+	void LockTiles( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions );
+
+	void SendTileUnlockRequest( const map::Tile::tile_positions_t& tile_positions );
+	void RequestTileUnlocks( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions );
+	void UnlockTiles( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions );
 
 private:
 
@@ -398,7 +397,7 @@ private:
 	size_t m_next_running_animation_id = 1;
 	struct animation_info_t {
 		map::Tile* tile;
-		cb_animation_oncomplete on_complete;
+		cb_oncomplete on_complete;
 	};
 	std::unordered_map< size_t, animation_info_t > m_running_animations = {};
 
@@ -416,9 +415,25 @@ private:
 
 	void QueueUnitUpdate( const unit::Unit* unit, const unit_update_op_t op );
 
+	// server-side lock tracking
+	struct tile_lock_request_t {
+		const size_t initiator_slot;
+		const map::Tile::tile_positions_t tile_positions;
+	};
+	typedef std::vector< tile_lock_request_t > tile_lock_requests_t;  // requests fifo
+	tile_lock_requests_t m_tile_lock_requests = {};
+	tile_lock_requests_t m_tile_unlock_requests = {};
+	void AddTileLockRequest( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions, tile_lock_requests_t& target );
+	std::unordered_map< size_t, std::vector< TileLock > > m_tile_locks = {}; // slot id, locks
+	void ProcessTileLockRequests();
+	void ProcessTileUnlockRequests();
+
+	std::vector< std::pair< map::Tile::tile_positions_t, cb_oncomplete > > m_tile_lock_callbacks = {}; // tile positions (for matching), callback
+
 private:
 	friend class bindings::Bindings;
 	void PushUnitUpdates();
+
 };
 
 }

@@ -140,8 +140,8 @@ BINDING_IMPL( units ) {
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 5 );
 				N_GETVALUE( def_name, 0, String );
-				N_UNWRAP( owner, 1, Slot );
-				N_UNWRAP( tile, 2, map::Tile );
+				N_GETVALUE_UNWRAP( owner, 1, Slot );
+				N_GETVALUE_UNWRAP( tile, 2, map::Tile );
 				N_GETVALUE( morale, 3, Int );
 				N_GETVALUE( health, 4, Float );
 				auto* game = GAME;
@@ -161,7 +161,7 @@ BINDING_IMPL( units ) {
 			"despawn",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
-				N_UNWRAP( unit, 0, unit::Unit );
+				N_GETVALUE_UNWRAP( unit, 0, unit::Unit );
 				auto* game = GAME;
 				game->AddEvent( new event::DespawnUnit( game->GetSlotNum(), unit->m_id ) );
 				return VALUE( gse::type::Undefined );

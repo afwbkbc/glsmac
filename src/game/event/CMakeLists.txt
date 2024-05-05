@@ -14,5 +14,10 @@ SET( SRC ${SRC}
 	${PWD}/FinalizeTurn.cpp
 	${PWD}/TurnFinalized.cpp
 	${PWD}/AdvanceTurn.cpp
+	${PWD}/TileLocksEvent.cpp
+	${PWD}/RequestTileLocks.cpp
+	${PWD}/LockTiles.cpp
+	${PWD}/RequestTileUnlocks.cpp
+	${PWD}/UnlockTiles.cpp
 
 	PARENT_SCOPE )

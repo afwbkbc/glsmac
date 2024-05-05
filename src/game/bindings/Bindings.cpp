@@ -28,6 +28,7 @@ Bindings::Bindings( State* state )
 		B( on ),
 		B( players ),
 		B( factions ),
+		B( tiles ),
 		B( units ),
 		B( animations ),
 		B( map ),
