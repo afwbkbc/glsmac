@@ -29,9 +29,6 @@ Sound* SDL2::LoadSound( const std::string& name ) {
 
 		Log( "Loading sound \"" + name + "\"" );
 
-		NEWV( sound, Sound );
-		sound->m_name = name;
-
 		Uint8* wav_buffer = nullptr; // buffer containing our audio file
 		Uint32 wav_length = 0; // length of our sample
 		SDL_AudioSpec wav_spec; // the specs of our piece of music
@@ -53,7 +50,12 @@ Sound* SDL2::LoadSound( const std::string& name ) {
 				break;
 			}
 		}
-		ASSERT( ret, "Unable to load sound \"" + name + "\"" );
+		if ( !ret ) {
+			return nullptr;
+		}
+
+		NEWV( sound, Sound );
+		sound->m_name = name;
 
 		sound->m_buffer_size = wav_length;
 		sound->m_buffer = (unsigned char*)malloc( sound->m_buffer_size );

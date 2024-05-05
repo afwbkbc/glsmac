@@ -6,6 +6,7 @@
 
 #include "game/event/DefineAnimation.h"
 #include "game/animation/FramesRow.h"
+#include "engine/Engine.h"
 
 namespace game {
 namespace bindings {
@@ -30,6 +31,9 @@ BINDING_IMPL( animations ) {
 					N_GETPROP( frames_count, animation_def, "frames_count", Int );
 					N_GETPROP( duration_ms, animation_def, "duration_ms", Int );
 					N_GETPROP( sound, animation_def, "sound", String );
+					if ( !g_engine->GetSoundLoader()->LoadSound( sound ) ) {
+						ERROR( gse::EC.GAME_ERROR, "Failed to load animation sound '" + sound + "'" );
+					}
 					auto* def = new animation::FramesRow( id, file, row_x, row_y, frame_width, frame_height, frame_padding, frames_count, duration_ms, sound );
 					auto* game = GAME;
 					game->AddEvent( new event::DefineAnimation( game->GetSlotNum(), def ) );

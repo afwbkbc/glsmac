@@ -3,13 +3,14 @@
 #include "AnimationDef.h"
 
 #include "util/Timer.h"
+#include "scene/actor/Sound.h"
 
 namespace task {
 namespace game {
 
 class Animation {
 public:
-	Animation( AnimationDef* def, const Vec3& render_coords );
+	Animation( const size_t animation_id, AnimationDef* def, const Vec3& render_coords );
 	~Animation();
 
 	const bool IsFinished() const;
@@ -17,8 +18,9 @@ public:
 	void Iterate();
 
 private:
-
+	
 	util::Timer m_timer;
+	scene::actor::Sound* m_sound = nullptr;
 	AnimationDef* m_def = nullptr;
 	Vec3 m_render_coords = {};
 	const AnimationDef::sprites_t& m_frames;

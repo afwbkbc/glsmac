@@ -294,6 +294,7 @@ void Game::Iterate() {
 			auto br = ::game::BackendRequest( ::game::BackendRequest::BR_ANIMATION_FINISHED );
 			br.data.animation_finished.animation_id = it->first;
 			SendBackendRequest( br );
+			delete it->second;
 			it = m_animations.erase( it );
 		}
 		else {
@@ -800,7 +801,7 @@ void Game::ShowAnimation( AnimationDef* def, const size_t animation_id, const Ve
 	m_animations.insert(
 		{
 			animation_id,
-			new Animation( def, render_coords ),
+			new Animation( animation_id, def, render_coords ),
 		}
 	);
 }

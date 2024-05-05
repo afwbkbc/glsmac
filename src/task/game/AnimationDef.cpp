@@ -10,7 +10,8 @@ AnimationDef::AnimationDef( InstancedSpriteManager* ism, const ::game::animation
 	: m_ism( ism )
 	, m_id( def->m_id )
 	, m_type( def->m_type )
-	, m_duration_ms( def->m_duration_ms ) {
+	, m_duration_ms( def->m_duration_ms )
+	, m_sound( g_engine->GetSoundLoader()->LoadSound( def->m_sound_file ) ) {
 
 	ASSERT_NOLOG( def->m_type == ::game::animation::Def::animation_type_t::AT_FRAMES_ROW, "only frames row animations are supported for now" );
 	const auto* d = (::game::animation::FramesRow*)def;
@@ -59,6 +60,10 @@ const AnimationDef::sprites_t& AnimationDef::GetSprites() const {
 
 const size_t AnimationDef::GetDurationMs() const {
 	return m_duration_ms;
+}
+
+const types::Sound* AnimationDef::GetSound() const {
+	return m_sound;
 }
 
 }
