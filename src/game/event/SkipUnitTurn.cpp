@@ -19,6 +19,10 @@ const std::string* SkipUnitTurn::Validate( Game* game ) const {
 		return Error( "Unit not found" );
 	}
 
+	if ( unit->m_tile->IsLocked() ) {
+		return Error( "Unit tile is locked" );
+	}
+
 	if ( unit->m_owner->GetIndex() != m_initiator_slot ) {
 		return Error( "Unit can only be moved by it's owner" );
 	}

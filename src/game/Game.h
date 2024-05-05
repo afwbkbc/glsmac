@@ -312,7 +312,7 @@ public:
 	void AddEvent( event::Event* event );
 	void RefreshUnit( const unit::Unit* unit );
 	void DefineAnimation( animation::Def* def );
-	const std::string* ShowAnimationOnTile( const std::string& animation_id, const map::Tile* tile, const cb_animation_oncomplete& on_complete );
+	const std::string* ShowAnimationOnTile( const std::string& animation_id, map::Tile* tile, const cb_animation_oncomplete& on_complete );
 	void DefineMoraleSet( unit::MoraleSet* moraleset );
 	void DefineUnit( unit::Def* def );
 	void SpawnUnit( unit::Unit* unit );
@@ -396,7 +396,11 @@ private:
 	void CheckTurnComplete();
 
 	size_t m_next_running_animation_id = 1;
-	std::unordered_map< size_t, cb_animation_oncomplete > m_running_animations = {};
+	struct animation_info_t {
+		map::Tile* tile;
+		cb_animation_oncomplete on_complete;
+	};
+	std::unordered_map< size_t, animation_info_t > m_running_animations = {};
 
 	enum unit_update_op_t : uint8_t {
 		UUO_NONE = 0,

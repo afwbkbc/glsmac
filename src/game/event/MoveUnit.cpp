@@ -25,8 +25,14 @@ const std::string* MoveUnit::Validate( Game* game ) const {
 
 	auto* src_tile = unit->m_tile;
 	ASSERT_NOLOG( src_tile, "src tile not set" );
+	if ( src_tile->IsLocked() ) {
+		return Error( "Source tile is locked" );
+	}
 	auto* dst_tile = src_tile->GetNeighbour( m_direction );
 	ASSERT_NOLOG( dst_tile, "dst tile not set" );
+	if ( dst_tile->IsLocked() ) {
+		return Error( "Destination tile is locked" );
+	}
 
 	return game->MoveUnitValidate( unit, dst_tile );
 }

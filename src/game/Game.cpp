@@ -529,8 +529,11 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 					case BackendRequest::BR_ANIMATION_FINISHED: {
 						const auto& it = m_running_animations.find( r.data.animation_finished.animation_id );
 						ASSERT( it != m_running_animations.end(), "animation " + std::to_string( r.data.animation_finished.animation_id ) + " is not running" );
-						it->second();
+						const auto& animation_info = it->second;
+						animation_info.tile->Unlock();
+						const auto on_complete = animation_info.on_complete;
 						m_running_animations.erase( it );
+						on_complete();
 						break;
 					}
 					default:
@@ -718,15 +721,22 @@ void Game::DefineAnimation( animation::Def* def ) {
 	AddFrontendRequest( fr );
 }
 
-const std::string* Game::ShowAnimationOnTile( const std::string& animation_id, const map::Tile* tile, const cb_animation_oncomplete& on_complete ) {
+const std::string* Game::ShowAnimationOnTile( const std::string& animation_id, map::Tile* tile, const cb_animation_oncomplete& on_complete ) {
 	if ( m_defined_animations.find( animation_id ) == m_defined_animations.end() ) {
 		return new std::string( "Animation '" + animation_id + "' is not defined" );
 	}
+	if ( tile->IsLocked() ) {
+		return new std::string( "Can't show animation on locked tile" );
+	}
+	tile->Lock();
 	const auto running_animation_id = m_next_running_animation_id++;
 	m_running_animations.insert(
 		{
 			running_animation_id,
-			on_complete
+			{
+				tile,
+				on_complete
+			}
 		}
 	);
 	auto fr = FrontendRequest( FrontendRequest::FR_ANIMATION_SHOW );

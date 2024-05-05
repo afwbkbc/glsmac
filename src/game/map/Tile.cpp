@@ -207,5 +207,18 @@ WRAPIMPL_END_PTR( Tile )
 
 UNWRAPIMPL_PTR( Tile )
 
+void Tile::Lock() {
+	ASSERT_NOLOG( !m_is_locked, "tile already locked" );
+	m_is_locked = true;
+}
+void Tile::Unlock() {
+	ASSERT_NOLOG( m_is_locked, "tile not locked" );
+	m_is_locked = false;
+}
+
+const bool Tile::IsLocked() const {
+	return m_is_locked;
+}
+
 }
 }

@@ -168,6 +168,13 @@ public:
 	const std::string ToString() const;
 
 	WRAPDEFS_PTR( Tile );
+
+	void Lock();
+	void Unlock();
+	const bool IsLocked() const;
+
+private:
+	bool m_is_locked = false;
 };
 
 }

@@ -48,10 +48,14 @@ BINDING_IMPL( animations ) {
 				N_GETVALUE( id, 0, String );
 				N_UNWRAP( tile, 1, map::Tile );
 				N_PERSIST_CALLABLE( on_complete, 2 );
-				GAME->ShowAnimationOnTile( id, tile, [ on_complete, ctx, call_si ]() {
+				const auto* errmsg = GAME->ShowAnimationOnTile( id, tile, [ on_complete, ctx, call_si ]() {
 					on_complete->Run( ctx, call_si, {} );
 					N_UNPERSIST_CALLABLE( on_complete );
 				});
+				if ( errmsg ) {
+					ERROR( gse::EC.GAME_ERROR, *errmsg );
+					delete errmsg;
+				}
 				return VALUE( gse::type::Undefined );
 			} )
 		}
