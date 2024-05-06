@@ -5,6 +5,7 @@
 #include "Def.h"
 #include "Morale.h"
 
+#include "gse/Wrappable.h"
 #include "gse/Value.h"
 
 #include "game/map/Tile.h"
@@ -18,7 +19,7 @@ class Slot;
 
 namespace unit {
 
-class Unit {
+class Unit : public gse::Wrappable {
 public:
 
 	static const size_t GetNextId();

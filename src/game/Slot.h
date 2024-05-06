@@ -5,13 +5,14 @@
 #include "game/Player.h"
 #include "network/Network.h"
 
+#include "gse/Wrappable.h"
 #include "gse/Value.h"
 
 namespace game {
 
 class State;
 
-CLASS( Slot, types::Serializable )
+CLASS2( Slot, types::Serializable, gse::Wrappable )
 
 	Slot( const size_t index, const State* state );
 

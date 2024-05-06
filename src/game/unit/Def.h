@@ -5,12 +5,13 @@
 #include "MoraleSet.h"
 #include "types/Buffer.h"
 #include "game/map/TileState.h"
+#include "gse/Wrappable.h"
 #include "gse/Value.h"
 
 namespace game {
 namespace unit {
 
-class Def {
+class Def : public gse::Wrappable {
 public:
 
 	enum def_type_t {
@@ -41,7 +42,7 @@ public:
 	static Def* Unserialize( types::Buffer& buf );
 
 	WRAPDEFS_PTR( Def );
-	
+
 };
 
 }

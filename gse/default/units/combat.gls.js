@@ -85,8 +85,6 @@ const result = {
 
                 let damages_sz = #size(e.resolutions);
 
-                e.attacker.movement = 0.0;
-
                 const process_next_damage = (damage_index) => {
                     if (damage_index < damages_sz) {
                         const damages = e.resolutions[damage_index];
@@ -103,6 +101,7 @@ const result = {
                         }
                     }
                     else {
+                        e.attacker.movement = 0.0;
                         unlock();
                     }
                 };

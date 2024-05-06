@@ -8,6 +8,7 @@
 #include "types/Serializable.h"
 #include "types/Vec2.h"
 
+#include "gse/Wrappable.h"
 #include "gse/Value.h"
 #include "gse/type/Object.h"
 
@@ -25,7 +26,7 @@ namespace map {
 //   you can read any properties you need
 //   but be careful modifying anything, some things are only to be modified within Tile::Update() to keep consistent state
 // Some day this class will be refactored with access isolation and getters/setters
-class Tile {
+class Tile : public gse::Wrappable {
 public:
 
 	// map coordinates

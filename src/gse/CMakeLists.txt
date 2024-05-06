@@ -16,6 +16,7 @@ SET( SRC ${SRC}
 	${PWD}/ChildContext.cpp
 	${PWD}/GlobalContext.cpp
 	${PWD}/Exception.cpp
+	${PWD}/Wrappable.cpp
 
 	)
 
