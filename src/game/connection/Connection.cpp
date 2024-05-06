@@ -21,7 +21,8 @@ void Connection::ResetHandlers() {
 	m_on_flags_update = nullptr;
 	m_on_message = nullptr;
 	m_on_global_settings_update = nullptr;
-	m_on_game_event = nullptr;
+	m_on_game_event_validate = nullptr;
+	m_on_game_event_apply = nullptr;
 	if ( m_mt_ids.events ) {
 		m_network->MT_Cancel( m_mt_ids.events );
 		m_mt_ids.events = 0;

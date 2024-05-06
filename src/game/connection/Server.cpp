@@ -327,7 +327,8 @@ void Server::ProcessEvent( const network::Event& event ) {
 					}
 					case Packet::PT_GAME_EVENTS: {
 						Log( "Got game events packet" );
-						ASSERT( m_on_game_event, "m_on_game_event is not set" );
+						ASSERT( m_on_game_event_validate, "m_on_game_event_validate is not set" );
+						ASSERT( m_on_game_event_apply, "m_on_game_event_apply is not set" );
 						auto buf = Buffer( packet.data.str );
 						std::vector< game::event::Event* > game_events = {};
 						game::event::Event::UnserializeMultiple( buf, game_events );
@@ -341,7 +342,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 							}
 							else {
 								try {
-									m_on_game_event( game_event );
+									m_on_game_event_validate( game_event );
 								}
 								catch ( const game::InvalidEvent& e ) {
 									Log( "Invalid event received from " + std::to_string( event.cid ) );
@@ -352,6 +353,11 @@ void Server::ProcessEvent( const network::Event& event ) {
 							}
 							if ( ok && game::event::Event::IsBroadcastable( game_event->m_type ) ) {
 								broadcastable_events.push_back( game_event );
+							}
+						}
+						for ( const auto& game_event : game_events ) {
+							if ( game_event->m_is_validated ) {
+								m_on_game_event_apply( game_event );
 							}
 						}
 						if ( !broadcastable_events.empty() ) {

@@ -38,6 +38,7 @@ const Value Context::GetVariable( const std::string& name, const si_t* si ) {
 	}
 	const auto ref_it = m_ref_contexts.find( name );
 	if ( ref_it != m_ref_contexts.end() ) {
+		ASSERT_NOLOG( ref_it->second != this, "unexpected ref context recursion (was this context freed while in use?)" );
 		return ref_it->second->GetVariable( name, si );
 	}
 	throw Exception( EC.REFERENCE_ERROR, "Variable '" + name + "' is not defined", this, *si );
@@ -100,16 +101,28 @@ void Context::PersistValue( const Value& value ) {
 			value
 		}
 	);
+	// this context chain must live until all variables are unpersisted
+	Context* ctx = this;
+	while ( ctx ) {
+		ctx->IncRefs();
+		ctx = ctx->GetParentContext();
+	}
 }
 
 void Context::UnpersistValue( const Value& value ) {
 	ASSERT_NOLOG( m_persisted_values.find( value.Get() ) != m_persisted_values.end(), "value was not persisted" );
 	m_persisted_values.erase( value.Get() );
+	Context* ctx = this;
+	while ( ctx ) {
+		ctx->DecRefs();
+		ctx = ctx->GetParentContext();
+	}
 }
 
 void Context::UnpersistValue( const type::Type* type ) {
 	ASSERT_NOLOG( m_persisted_values.find( type ) != m_persisted_values.end(), "value was not persisted" );
 	m_persisted_values.erase( type );
+	DecRefs();
 }
 
 ChildContext* const Context::ForkContext(

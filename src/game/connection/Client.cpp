@@ -224,13 +224,14 @@ void Client::ProcessEvent( const network::Event& event ) {
 						}
 						case Packet::PT_GAME_EVENTS: {
 							Log( "Got game events packet" );
-							if ( m_on_game_event ) {
+							if ( m_on_game_event_validate && m_on_game_event_apply ) {
 								auto buf = Buffer( packet.data.str );
 								std::vector< game::event::Event* > game_events = {};
 								game::event::Event::UnserializeMultiple( buf, game_events );
 								for ( const auto& game_event : game_events ) {
 									Log( "Got game event: " + game_event->ToString() );
-									m_on_game_event( game_event );
+									m_on_game_event_validate( game_event );
+									m_on_game_event_apply( game_event );
 								}
 							}
 							else {

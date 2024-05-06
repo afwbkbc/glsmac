@@ -78,27 +78,36 @@ const result = {
 
         #game.on.unit_attack_apply((e) => {
 
-            let damages_sz = #size(e.resolutions);
+            let attacker_tile = e.attacker.get_tile();
+            let defender_tile = e.defender.get_tile();
 
-            e.attacker.movement = 0.0;
+            #game.tiles.lock([attacker_tile, defender_tile], (unlock) => {
 
-            const process_next_damage = (damage_index) => {
-                if (damage_index < damages_sz) {
-                    const damages = e.resolutions[damage_index];
-                    if (damages[0]) {
-                        #game.animations.show_on_tile(weapons.ANIMATION.PSI, e.defender.get_tile(), () => {
-                            e.defender.health = e.defender.health - damages[1];
-                            process_next_damage(damage_index + 1);
-                        });
-                    } else {
-                        #game.animations.show_on_tile(weapons.ANIMATION.PSI, e.attacker.get_tile(), () => {
-                            e.attacker.health = e.attacker.health - damages[1];
-                            process_next_damage(damage_index + 1);
-                        });
+                let damages_sz = #size(e.resolutions);
+
+                e.attacker.movement = 0.0;
+
+                const process_next_damage = (damage_index) => {
+                    if (damage_index < damages_sz) {
+                        const damages = e.resolutions[damage_index];
+                        if (damages[0]) {
+                            #game.animations.show_on_tile(weapons.ANIMATION.PSI, defender_tile, () => {
+                                e.defender.health = e.defender.health - damages[1];
+                                process_next_damage(damage_index + 1);
+                            });
+                        } else {
+                            #game.animations.show_on_tile(weapons.ANIMATION.PSI, attacker_tile, () => {
+                                e.attacker.health = e.attacker.health - damages[1];
+                                process_next_damage(damage_index + 1);
+                            });
+                        }
                     }
-                }
-            };
-            process_next_damage(0);
+                    else {
+                        unlock();
+                    }
+                };
+                process_next_damage(0);
+            });
         });
 
     },

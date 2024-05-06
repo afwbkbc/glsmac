@@ -903,19 +903,10 @@ void Game::DespawnUnit( const size_t unit_id ) {
 
 	auto* unit = it->second;
 
-	if ( m_selected_unit == unit ) {
-		m_selected_unit = nullptr;
-		SelectNextUnitOrSwitchToTileSelection();
-	}
-
 	if ( unit->IsActive() ) {
 		RemoveSelectable( unit );
 	}
 	m_units.erase( it );
-
-	auto* tile = unit->GetTile();
-
-	RenderTile( tile );
 
 	delete unit;
 }
@@ -1883,7 +1874,6 @@ void Game::Initialize(
 			}
 
 			if ( m_map_control.is_dragging ) {
-
 				Vec2< float > current_drag_position = {
 					m_clamp.x.Clamp( data->mouse.absolute.x ),
 					m_clamp.y.Clamp( data->mouse.absolute.y )
@@ -1897,26 +1887,34 @@ void Game::Initialize(
 				m_map_control.last_drag_position = current_drag_position;
 			}
 			else if ( !m_ui.bottom_bar->IsMouseDraggingMiniMap() ) {
-				const ssize_t edge_distance = m_viewport.is_fullscreen
-					? Game::s_consts.map_scroll.static_scrolling.edge_distance_px.fullscreen
-					: Game::s_consts.map_scroll.static_scrolling.edge_distance_px.windowed;
-				if ( data->mouse.absolute.x < edge_distance ) {
-					m_map_control.edge_scrolling.speed.x = Game::s_consts.map_scroll.static_scrolling.speed.x;
-				}
-				else if ( data->mouse.absolute.x >= m_viewport.window_width - edge_distance ) {
-					m_map_control.edge_scrolling.speed.x = -Game::s_consts.map_scroll.static_scrolling.speed.x;
+				if ( g_engine->GetGraphics()->IsFullscreen() ) { // edge scrolling only usable in fullscreen
+					const ssize_t edge_distance = m_viewport.is_fullscreen
+						? Game::s_consts.map_scroll.static_scrolling.edge_distance_px.fullscreen
+						: Game::s_consts.map_scroll.static_scrolling.edge_distance_px.windowed;
+					if ( data->mouse.absolute.x < edge_distance ) {
+						m_map_control.edge_scrolling.speed.x = Game::s_consts.map_scroll.static_scrolling.speed.x;
+					}
+					else if ( data->mouse.absolute.x >= m_viewport.window_width - edge_distance ) {
+						m_map_control.edge_scrolling.speed.x = -Game::s_consts.map_scroll.static_scrolling.speed.x;
+					}
+					else {
+						m_map_control.edge_scrolling.speed.x = 0;
+					}
+					if ( data->mouse.absolute.y <= edge_distance ) {
+						m_map_control.edge_scrolling.speed.y = Game::s_consts.map_scroll.static_scrolling.speed.y;
+					}
+					else if ( data->mouse.absolute.y >= m_viewport.window_height - edge_distance ) {
+						m_map_control.edge_scrolling.speed.y = -Game::s_consts.map_scroll.static_scrolling.speed.y;
+					}
+					else {
+						m_map_control.edge_scrolling.speed.y = 0;
+					}
 				}
 				else {
-					m_map_control.edge_scrolling.speed.x = 0;
-				}
-				if ( data->mouse.absolute.y <= edge_distance ) {
-					m_map_control.edge_scrolling.speed.y = Game::s_consts.map_scroll.static_scrolling.speed.y;
-				}
-				else if ( data->mouse.absolute.y >= m_viewport.window_height - edge_distance ) {
-					m_map_control.edge_scrolling.speed.y = -Game::s_consts.map_scroll.static_scrolling.speed.y;
-				}
-				else {
-					m_map_control.edge_scrolling.speed.y = 0;
+					m_map_control.edge_scrolling.speed = {
+						0.0f,
+						0.0f
+					};
 				}
 				if ( m_map_control.edge_scrolling.speed ) {
 					if ( !m_map_control.edge_scrolling.timer.IsRunning() ) {
@@ -2598,6 +2596,10 @@ void Game::RemoveSelectable( Unit* unit ) {
 		if ( m_selectables.selected_id_index > 0 && m_selectables.selected_id_index >= removed_index ) {
 			m_selectables.selected_id_index--;
 		}
+		if ( m_selected_unit == unit ) {
+			m_selected_unit = nullptr;
+			SelectNextUnitOrSwitchToTileSelection();
+		}
 	}
 }
 
@@ -2654,7 +2656,11 @@ const bool Game::SelectNextUnitMaybe() {
 
 void Game::SelectNextUnitOrSwitchToTileSelection() {
 	if ( !SelectNextUnitMaybe() ) {
-		SelectTileOrUnit( m_selected_unit->GetTile() );
+		SelectTileOrUnit(
+			m_selected_tile, m_selected_unit
+				? m_selected_unit->GetId()
+				: 0
+		);
 	}
 }
 

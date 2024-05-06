@@ -1179,13 +1179,16 @@ void Game::GlobalAdvanceTurn() {
 }
 
 void Game::SendTileLockRequest( const map::Tile::tile_positions_t& tile_positions, const cb_oncomplete& on_complete ) {
-	m_tile_lock_callbacks.push_back(
+	// testing
+	/*m_tile_lock_callbacks.push_back(
 		{
 			tile_positions,
 			on_complete
 		}
-	);
-	AddEvent( new event::RequestTileLocks( m_slot_num, tile_positions ) );
+	);*/
+	LockTiles( m_slot_num, tile_positions );
+	on_complete();
+	//AddEvent( new event::RequestTileLocks( m_slot_num, tile_positions ) );
 }
 
 void Game::RequestTileLocks( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions ) {
@@ -1223,7 +1226,9 @@ void Game::LockTiles( const size_t initiator_slot, const map::Tile::tile_positio
 }
 
 void Game::SendTileUnlockRequest( const map::Tile::tile_positions_t& tile_positions ) {
-	AddEvent( new event::RequestTileUnlocks( m_slot_num, tile_positions ) );
+	// testing
+	UnlockTiles( m_slot_num, tile_positions );
+	//AddEvent( new event::RequestTileUnlocks( m_slot_num, tile_positions ) );
 }
 
 void Game::RequestTileUnlocks( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions ) {
@@ -1505,20 +1510,26 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			AddFrontendRequest( fr );
 		};
 
-		m_connection->m_on_game_event = [ this ]( event::Event* event ) -> void {
-
+		m_connection->m_on_game_event_validate = [ this ]( event::Event* event ) -> void {
 			if ( m_state->IsMaster() ) {
 				ASSERT( m_game_state == GS_RUNNING, "game is not running but received event" );
 			}
-
 			if ( m_game_state == GS_RUNNING ) {
 				ValidateEvent( event );
-				ProcessEvent( event );
 			}
 			else {
 				m_unprocessed_events.push_back( event );
 			}
 
+		};
+
+		m_connection->m_on_game_event_apply = [ this ]( event::Event* event ) -> void {
+			if ( m_state->IsMaster() ) {
+				ASSERT( m_game_state == GS_RUNNING, "game is not running but received event" );
+			}
+			if ( m_game_state == GS_RUNNING ) {
+				ProcessEvent( event );
+			}
 		};
 
 	}

@@ -89,19 +89,27 @@ const result = {
         });
 
         #game.on.unit_move_apply((e) => {
-            let movement_cost = get_movement_cost(e.unit, e.unit.get_tile(), e.dst_tile) + get_movement_aftercost(e.unit, e.unit.get_tile(), e.dst_tile);
+            let src_tile = e.unit.get_tile();
 
-            // reduce remaining movement points (even if failed)
-            if (e.unit.movement >= movement_cost) {
-                e.unit.movement = e.unit.movement - movement_cost;
-            } else {
-                e.unit.movement = 0.0;
-            }
+            #game.tiles.lock([src_tile, e.dst_tile], (unlock) => {
 
-            e.unit.moved_this_turn = true;
-            if (e.resolutions.is_movement_successful) {
-                e.unit.set_tile(e.dst_tile);
-            }
+                let movement_cost = get_movement_cost(e.unit, src_tile, e.dst_tile) + get_movement_aftercost(e.unit, e.unit.get_tile(), e.dst_tile);
+
+                // reduce remaining movement points (even if failed)
+                if (e.unit.movement >= movement_cost) {
+                    e.unit.movement = e.unit.movement - movement_cost;
+                } else {
+                    e.unit.movement = 0.0;
+                }
+
+                e.unit.moved_this_turn = true;
+                if (e.resolutions.is_movement_successful) {
+                    e.unit.set_tile(e.dst_tile);
+                }
+
+                unlock();
+            });
+
         });
 
     },
