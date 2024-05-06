@@ -87,7 +87,7 @@ Event* Event::Unserialize( types::Buffer& buf ) {
 		UNSERIALIZE( ET_REQUEST_TILE_LOCKS, RequestTileLocks )
 		UNSERIALIZE( ET_LOCK_TILES, LockTiles )
 		UNSERIALIZE( ET_REQUEST_TILE_UNLOCKS, RequestTileUnlocks )
-		UNSERIALIZE( ET_UNLOCK_TILES, LockTiles )
+		UNSERIALIZE( ET_UNLOCK_TILES, UnlockTiles )
 		default:
 			THROW( "unknown event type on read: " + std::to_string( type ) );
 	}
@@ -121,6 +121,19 @@ const bool Event::IsBroadcastable( const event_type_t type ) {
 		default:
 			return true;
 	}
+}
+
+void Event::SetDestinationSlot( const uint8_t destination_slot ) {
+	m_is_public = false;
+	m_destination_slot = destination_slot;
+}
+
+const bool Event::IsProcessableBy( const uint8_t destination_slot ) const {
+	return m_is_public || m_destination_slot == destination_slot;
+};
+
+const bool Event::IsSendableTo( const uint8_t destination_slot ) const {
+	return IsBroadcastable( m_type ) && IsProcessableBy( destination_slot );
 }
 
 const std::string* Event::Ok() const {

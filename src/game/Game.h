@@ -417,16 +417,15 @@ private:
 
 	// server-side lock tracking
 	struct tile_lock_request_t {
+		const bool is_lock; // lock or unlock
 		const size_t initiator_slot;
 		const map::Tile::tile_positions_t tile_positions;
 	};
 	typedef std::vector< tile_lock_request_t > tile_lock_requests_t;  // requests fifo
 	tile_lock_requests_t m_tile_lock_requests = {};
-	tile_lock_requests_t m_tile_unlock_requests = {};
-	void AddTileLockRequest( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions, tile_lock_requests_t& target );
+	void AddTileLockRequest( const bool is_lock, const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions );
 	std::unordered_map< size_t, std::vector< TileLock > > m_tile_locks = {}; // slot id, locks
 	void ProcessTileLockRequests();
-	void ProcessTileUnlockRequests();
 
 	std::vector< std::pair< map::Tile::tile_positions_t, cb_oncomplete > > m_tile_lock_callbacks = {}; // tile positions (for matching), callback
 

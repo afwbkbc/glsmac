@@ -375,7 +375,6 @@ void Game::Iterate() {
 		Quit( "Event validation error" ); // TODO: fix reason
 	}
 	PushUnitUpdates();
-	ProcessTileUnlockRequests();
 	ProcessTileLockRequests();
 }
 
@@ -1192,7 +1191,7 @@ void Game::SendTileLockRequest( const map::Tile::tile_positions_t& tile_position
 void Game::RequestTileLocks( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions ) {
 	if ( m_state->IsMaster() ) {
 		Log( "Tile locks request from " + std::to_string( initiator_slot ) + ": " + map::Tile::TilePositionsToString( tile_positions, "" ) );
-		AddTileLockRequest( initiator_slot, tile_positions, m_tile_lock_requests );
+		AddTileLockRequest( true, initiator_slot, tile_positions );
 	}
 }
 
@@ -1230,7 +1229,7 @@ void Game::SendTileUnlockRequest( const map::Tile::tile_positions_t& tile_positi
 void Game::RequestTileUnlocks( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions ) {
 	if ( m_state->IsMaster() ) {
 		Log( "Tile unlocks request from " + std::to_string( initiator_slot ) + ": " + map::Tile::TilePositionsToString( tile_positions, "" ) );
-		AddTileLockRequest( initiator_slot, tile_positions, m_tile_unlock_requests );
+		AddTileLockRequest( false, initiator_slot, tile_positions );
 	}
 }
 
@@ -1722,7 +1721,6 @@ void Game::ResetGame() {
 	m_unit_updates.clear();
 
 	m_tile_lock_requests.clear();
-	m_tile_unlock_requests.clear();
 	m_tile_locks.clear();
 
 	m_tile_lock_callbacks.clear();
@@ -1850,45 +1848,26 @@ void Game::PushUnitUpdates() {
 	}
 }
 
-void Game::AddTileLockRequest( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions, tile_lock_requests_t& target ) {
+void Game::AddTileLockRequest( const bool is_lock, const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions ) {
 	ASSERT_NOLOG( m_state && m_state->IsMaster(), "only master can manage tile locks" );
-	bool is_overlapping = false;
-	for ( const auto& req : target ) {
-		for ( const auto& req_pos : req.tile_positions ) {
-			for ( const auto& pos : tile_positions ) {
-				if ( pos == req_pos ) {
-					is_overlapping = true;
-					break;
-				}
-			}
-			if ( is_overlapping ) {
-				break;
-			}
+	m_tile_lock_requests.push_back(
+		{
+			is_lock,
+			initiator_slot,
+			tile_positions
 		}
-		if ( is_overlapping ) {
-			break;
-		}
-	}
-	if ( !is_overlapping ) {
-		target.push_back(
-			{
-				initiator_slot,
-				tile_positions
-			}
-		);
-	}
-	else {
-		Log( "Some tile locks/unlocks would overlap, skipping" );
-	}
+	);
 }
 
 void Game::ProcessTileLockRequests() {
-	if ( m_state && m_state->IsMaster() ) {
-		for ( const auto& req : m_tile_lock_requests ) {
+	if ( m_state && m_state->IsMaster() && !m_tile_lock_requests.empty() ) {
+		const auto tile_lock_requests = m_tile_lock_requests;
+		m_tile_lock_requests.clear();
+		for ( const auto& req : tile_lock_requests ) {
 			const auto state = m_state->m_slots.GetSlot( req.initiator_slot ).GetState();
 			if ( state != Slot::SS_PLAYER ) {
 				// player disconnected?
-				Log( "Skipping tile locks for slot " + std::to_string( req.initiator_slot ) + " (invalid slot state: " + std::to_string( state ) );
+				Log( "Skipping tile locks/unlocks for slot " + std::to_string( req.initiator_slot ) + " (invalid slot state: " + std::to_string( state ) + ")" );
 				continue;
 			}
 			auto it = m_tile_locks.find( req.initiator_slot );
@@ -1900,27 +1879,18 @@ void Game::ProcessTileLockRequests() {
 					}
 				).first;
 			}
-			Log( "Locking tiles for " + std::to_string( req.initiator_slot ) + ": " + map::Tile::TilePositionsToString( req.tile_positions ) );
-			it->second.push_back( TileLock{ req.tile_positions } );
-			AddEvent( new event::LockTiles( m_slot_num, req.tile_positions, req.initiator_slot ) );
-		}
-		m_tile_lock_requests.clear();
-	}
-}
-
-void Game::ProcessTileUnlockRequests() {
-	if ( m_state && m_state->IsMaster() ) {
-		for ( const auto& req : m_tile_unlock_requests ) {
-			const auto state = m_state->m_slots.GetSlot( req.initiator_slot ).GetState();
-			if ( state != Slot::SS_PLAYER ) {
-				// player disconnected?
-				Log( "Skipping tile unlocks for slot " + std::to_string( req.initiator_slot ) + " (invalid slot state: " + std::to_string( state ) );
-				continue;
+			auto& locks = it->second;
+			if ( req.is_lock ) {
+				// lock
+				Log( "Locking tiles for " + std::to_string( req.initiator_slot ) + ": " + map::Tile::TilePositionsToString( req.tile_positions ) );
+				locks.push_back( TileLock{ req.tile_positions } );
+				auto e = new event::LockTiles( m_slot_num, req.tile_positions, req.initiator_slot );
+				e->SetDestinationSlot( req.initiator_slot );
+				AddEvent( e );
 			}
-			bool found = false;
-			auto it = m_tile_locks.find( req.initiator_slot );
-			if ( it != m_tile_locks.end() ) {
-				auto& locks = it->second;
+			else {
+				// unlock
+				bool found = false;
 				for ( auto locks_it = locks.begin() ; locks_it != locks.end() ; locks_it++ ) {
 					if ( locks_it->Matches( req.tile_positions ) ) {
 						found = true;
@@ -1929,16 +1899,17 @@ void Game::ProcessTileUnlockRequests() {
 						if ( locks.empty() ) {
 							m_tile_locks.erase( it );
 						}
-						AddEvent( new event::UnlockTiles( m_slot_num, req.tile_positions, req.initiator_slot ) );
+						auto e = new event::UnlockTiles( m_slot_num, req.tile_positions, req.initiator_slot );
+						e->SetDestinationSlot( req.initiator_slot );
+						AddEvent( e );
 						break;
 					}
 				}
-			}
-			if ( !found ) {
-				Log( "Could not find matching tile locks for " + std::to_string( req.initiator_slot ) + ": " + map::Tile::TilePositionsToString( req.tile_positions ) );
+				if ( !found ) {
+					Log( "Could not find matching tile locks for " + std::to_string( req.initiator_slot ) + ": " + map::Tile::TilePositionsToString( req.tile_positions ) );
+				}
 			}
 		}
-		m_tile_unlock_requests.clear();
 	}
 }
 

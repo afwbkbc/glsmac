@@ -247,8 +247,8 @@ void Connection::Disconnect( const std::string& reason ) {
 void Connection::ProcessPending() {
 	if ( !m_pending_game_events.empty() ) {
 		SendGameEvents( m_pending_game_events );
+		m_pending_game_events.clear();
 	}
-	m_pending_game_events.clear();
 }
 
 void Connection::ClearPending() {

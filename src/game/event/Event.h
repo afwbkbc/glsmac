@@ -46,6 +46,10 @@ public:
 	const event_type_t m_type;
 	const size_t m_initiator_slot;
 
+	void SetDestinationSlot( const uint8_t destination_slot );
+	const bool IsProcessableBy( const uint8_t destination_slot ) const;
+	const bool IsSendableTo( const uint8_t destination_slot ) const;
+
 	virtual const std::string* Validate( Game* game ) const = 0;
 	virtual void Resolve( Game* game ) {};
 	virtual const gse::Value Apply( Game* game ) const = 0;
@@ -56,6 +60,10 @@ public:
 protected:
 	const std::string* Ok() const;
 	const std::string* Error( const std::string& text ) const;
+
+private:
+	bool m_is_public = true;
+	uint8_t m_destination_slot = 0;
 };
 
 }

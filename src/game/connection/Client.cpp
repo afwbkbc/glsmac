@@ -229,6 +229,7 @@ void Client::ProcessEvent( const network::Event& event ) {
 								std::vector< game::event::Event* > game_events = {};
 								game::event::Event::UnserializeMultiple( buf, game_events );
 								for ( const auto& game_event : game_events ) {
+									Log( "Got game event: " + game_event->ToString() );
 									m_on_game_event( game_event );
 								}
 							}

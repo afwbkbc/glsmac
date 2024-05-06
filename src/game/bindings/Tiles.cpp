@@ -22,6 +22,7 @@ BINDING_IMPL( tiles ) {
 					N_UNWRAP( tile, tileobj, map::Tile );
 					tile_positions.push_back( tile->coord );
 				}
+
 				GAME->SendTileLockRequest( tile_positions, [ this, on_complete, tile_positions, ctx, call_si ]() {
 					on_complete->Run( ctx, call_si, {
 						VALUE( gse::callable::Native, [ this, tile_positions ](

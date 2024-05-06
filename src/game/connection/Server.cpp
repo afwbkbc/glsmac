@@ -331,7 +331,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 						auto buf = Buffer( packet.data.str );
 						std::vector< game::event::Event* > game_events = {};
 						game::event::Event::UnserializeMultiple( buf, game_events );
-						const auto slot = m_state->GetCidSlots().at( event.cid );
+						const size_t slot = m_state->GetCidSlots().at( event.cid );
 						std::vector< game::event::Event* > broadcastable_events = {};
 						for ( const auto& game_event : game_events ) {
 							bool ok = true;
@@ -353,21 +353,9 @@ void Server::ProcessEvent( const network::Event& event ) {
 							if ( ok && game::event::Event::IsBroadcastable( game_event->m_type ) ) {
 								broadcastable_events.push_back( game_event );
 							}
-							else {
-								delete game_event;
-							}
 						}
 						if ( !broadcastable_events.empty() ) {
-							// broadcast only valid events, nobody will know of invalid attempts
-							const auto serialized_events = game::event::Event::SerializeMultiple( broadcastable_events );
-							Broadcast(
-								[ this, packet, serialized_events ]( const network::cid_t cid ) -> void {
-									SendGameEventsTo( serialized_events.ToString(), cid );
-								}
-							);
-						}
-						else {
-							// nobody will know of this event, even the initiator
+							SendGameEvents( broadcastable_events );
 						}
 						break;
 					}
@@ -393,10 +381,20 @@ void Server::ProcessEvent( const network::Event& event ) {
 
 void Server::SendGameEvents( const game_events_t& game_events ) {
 	Log( "Sending " + std::to_string( game_events.size() ) + " game events" );
-	const auto serialized_events = game::event::Event::SerializeMultiple( game_events ).ToString();
 	Broadcast(
-		[ this, serialized_events ]( const network::cid_t cid ) -> void {
-			SendGameEventsTo( serialized_events, cid );
+		[ this, game_events ]( const network::cid_t cid ) -> void {
+			std::vector< game::event::Event* > events = {};
+			for ( const auto& e : game_events ) {
+				const auto slot_num = m_state->GetCidSlots().at( cid );
+				if ( e->IsSendableTo( slot_num ) ) {
+					Log( "Sending event to " + std::to_string( slot_num ) + ": " + e->ToString() );
+					events.push_back( e );
+				}
+			}
+			if ( !events.empty() ) {
+				const auto serialized_events = game::event::Event::SerializeMultiple( events ).ToString();
+				SendGameEventsTo( serialized_events, cid );
+			}
 		}
 	);
 }
