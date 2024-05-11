@@ -1,8 +1,8 @@
-#include "String.h"
-
 #include <cmath>
 #include <sstream>
 #include <algorithm>
+
+#include "String.h"
 
 namespace util {
 

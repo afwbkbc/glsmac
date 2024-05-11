@@ -2,7 +2,6 @@
 
 #include <cstring>
 #include <cmath>
-#include <iostream>
 
 #include "base/ObjectLink.h"
 #include "engine/Engine.h"
