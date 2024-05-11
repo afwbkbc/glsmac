@@ -2,6 +2,12 @@
 
 #include "UnitsList.h"
 
+#include "task/game/Unit.h"
+#include "ui/object/Label.h"
+#include "ui/object/Panel.h"
+#include "ui/object/Mesh.h"
+#include "types/mesh/Mesh.h"
+
 namespace task {
 namespace game {
 namespace ui {
@@ -24,7 +30,7 @@ void UnitsListItem::Create() {
 #define X( _key, _class ) \
     ASSERT( render._key.mesh, #_key " mesh not defined" ); \
     NEW( mesh, types::mesh::Mesh, *render._key.mesh ); /* make a copy */ \
-    NEW( m_sprites._key.obj, object::Mesh, "BBUnitsListPreview" _class ); \
+    NEW( m_sprites._key.obj, ::ui::object::Mesh, "BBUnitsListPreview" _class ); \
     m_sprites._key.obj->SetMesh( mesh ); \
     m_sprites._key.obj->SetTexture( render._key.texture ); \
     AddChild( m_sprites._key.obj );
@@ -42,20 +48,20 @@ void UnitsListItem::Create() {
 	AddChild( m_label );
 
 	On(
-		UIEvent::EV_MOUSE_OVER, EH( this ) {
+		::ui::event::EV_MOUSE_OVER, EH( this ) {
 			m_units_list->PreviewUnit( m_unit );
 			return true;
 		}
 	);
 	On(
-		UIEvent::EV_MOUSE_OUT, EH( this ) {
+		::ui::event::EV_MOUSE_OUT, EH( this ) {
 			m_units_list->HideUnitPreview( m_unit );
 			return true;
 		}
 	);
 	On(
-		UIEvent::EV_MOUSE_DOWN, EH( this ) {
-			if ( data->mouse.button == UIEvent::M_LEFT ) {
+		::ui::event::EV_MOUSE_DOWN, EH( this ) {
+			if ( data->mouse.button == ::ui::event::M_LEFT ) {
 				m_units_list->SelectUnit( m_unit, true );
 				return true;
 			}
@@ -83,11 +89,11 @@ void UnitsListItem::Destroy() {
 }
 
 void UnitsListItem::SelectUnit() {
-	m_selection_frame->AddStyleModifier( Style::M_ACTIVE );
+	m_selection_frame->AddStyleModifier( ::ui::M_ACTIVE );
 }
 
 void UnitsListItem::DeselectUnit() {
-	m_selection_frame->RemoveStyleModifier( Style::M_ACTIVE );
+	m_selection_frame->RemoveStyleModifier( ::ui::M_ACTIVE );
 }
 
 const Unit* UnitsListItem::GetUnit() const {

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <vector>
-#include <unordered_map>
-
 #include "base/Base.h"
 
 namespace rr {
@@ -31,7 +28,5 @@ private:
 	bool m_is_processed = false;
 
 };
-
-typedef size_t id_t;
 
 }

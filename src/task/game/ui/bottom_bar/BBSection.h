@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Section.h"
+#include "task/game/ui/Section.h"
 
 namespace task {
 namespace game {

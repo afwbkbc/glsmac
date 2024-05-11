@@ -6,15 +6,15 @@
 
 #include "base/Task.h"
 
-#include "gse/GSE.h"
+namespace gse {
+class GSE;
+}
 
 namespace task {
 namespace gsetests {
 
-typedef std::function< std::string( gse::GSE& gse ) > gse_test_t;
-#define GT( ... ) [ __VA_ARGS__ ]( gse::GSE & gse ) -> std::string
-
-#include <iostream>
+typedef std::function< std::string( gse::GSE* gse ) > gse_test_t;
+#define GT( ... ) [ __VA_ARGS__ ]( gse::GSE* gse ) -> std::string
 
 #define GT_LOG( _text ) { \
     task->LogTest( _text );\
@@ -52,4 +52,5 @@ private:
 	} m_stats = {};
 };
 
-} }
+}
+}

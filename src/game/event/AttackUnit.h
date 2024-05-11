@@ -2,10 +2,6 @@
 
 #include "Event.h"
 
-#include "gse/type/Undefined.h"
-
-#include "game/map/Tile.h"
-
 namespace game {
 namespace event {
 
@@ -28,7 +24,7 @@ private:
 	const size_t m_attacker_unit_id;
 	const size_t m_defender_unit_id;
 
-	gse::Value m_resolutions = VALUE( gse::type::Undefined );
+	gse::Value m_resolutions;
 
 };
 

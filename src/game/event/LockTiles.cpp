@@ -2,13 +2,14 @@
 
 #include "game/Game.h"
 #include "game/State.h"
+#include "gse/type/Undefined.h"
 
 namespace game {
 namespace event {
 
 LockTiles::LockTiles(
 	const size_t initiator_slot,
-	const map::Tile::tile_positions_t& tile_positions,
+	const map::tile::positions_t& tile_positions,
 	const size_t lock_owner_slot
 )
 	: TileLocksEvent( initiator_slot, ET_LOCK_TILES, "LockTiles", tile_positions )

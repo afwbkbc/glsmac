@@ -4,14 +4,24 @@
 #include <map>
 
 #include "base/Base.h"
-#include "base/ObjectLink.h"
-#include "scene/Scene.h"
-#include "shader_program/ShaderProgram.h"
-#include "texture/Texture.h"
 #include "actor/Actor.h"
+
+namespace base {
+class ObjectLink;
+}
+
+namespace scene {
+class Scene;
+}
 
 namespace graphics {
 namespace opengl {
+
+class Texture;
+
+namespace shader_program {
+class ShaderProgram;
+}
 
 namespace routine {
 class Routine;
@@ -20,21 +30,10 @@ class Routine;
 CLASS( Scene, base::Base )
 	Scene( scene::Scene* scene, routine::Routine* routine );
 	~Scene();
-	scene::Scene* GetScene() const {
-		return m_scene;
-	}
-	Texture* GetSkyboxTexture() const {
-		if ( ( !m_skybox_texture ) || m_skybox_texture->Removed() ) {
-			return NULL;
-		}
-		return m_skybox_texture->GetDstObject< Texture >();
-	}
-	base::ObjectLink* GetSkyboxTextureObj() const {
-		return m_skybox_texture;
-	}
-	void SetSkyboxTextureObj( base::ObjectLink* skybox_texture ) {
-		m_skybox_texture = skybox_texture;
-	}
+	scene::Scene* GetScene() const;
+	Texture* GetSkyboxTexture() const;
+	base::ObjectLink* GetSkyboxTextureObj() const;
+	void SetSkyboxTextureObj( base::ObjectLink* skybox_texture );
 	// other_shader_program is used for fonts in Overlay routine // TODO: refactor
 	void Draw( shader_program::ShaderProgram* shader_program, shader_program::ShaderProgram* other_shader_program = nullptr );
 	void Update();
@@ -56,8 +55,5 @@ private:
 	void RemoveActorFromZIndexSet( Actor* gl_actor );
 };
 
-} /* namespace opengl */
-} /* namespace graphics */
-
-#include "routine/Routine.h"
-
+}
+}

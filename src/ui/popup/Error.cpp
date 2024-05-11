@@ -1,5 +1,9 @@
 #include "Error.h"
 
+#include "ui/object/Section.h"
+#include "ui/object/Button.h"
+#include "ui/object/Label.h"
+
 namespace ui {
 namespace popup {
 
@@ -16,7 +20,7 @@ Error::Error( const std::string class_name )
 void Error::Create() {
 	object::Popup::Create();
 
-	NEW( m_body, Section, SubClass( "Window" ) );
+	NEW( m_body, object::Section, SubClass( "Window" ) );
 	m_body->SetTitleText( "Error" );
 	AddChild( m_body );
 
@@ -24,17 +28,17 @@ void Error::Create() {
 	if ( !m_text.empty() ) {
 		m_label->SetText( m_text );
 	}
-	m_label->SetAlign( UIObject::ALIGN_HCENTER | UIObject::ALIGN_TOP );
+	m_label->SetAlign( ALIGN_HCENTER | ALIGN_TOP );
 	m_label->SetTop( 20 ); // TODO: style?
 	m_body->AddChild( m_label );
 
 	NEW( m_ok_button, object::Button, SubClass( "ButtonOkCancel" ) );
-	m_ok_button->SetAlign( object::UIObject::ALIGN_HCENTER | object::UIObject::ALIGN_BOTTOM );
+	m_ok_button->SetAlign( ALIGN_HCENTER | ALIGN_BOTTOM );
 	m_ok_button->SetBottom( 6 );
 	m_ok_button->SetLabel( "OK" );
 	m_ok_button->SetZIndex( 0.9f ); // TODO: hack
 	m_ok_button->On(
-		UIEvent::EV_BUTTON_CLICK, EH( this ) {
+		ui::event::EV_BUTTON_CLICK, EH( this ) {
 			Close();
 			return true;
 		}
@@ -42,9 +46,9 @@ void Error::Create() {
 	m_body->AddChild( m_ok_button );
 
 	On(
-		UIEvent::EV_KEY_DOWN, EH( this ) {
+		ui::event::EV_KEY_DOWN, EH( this ) {
 			if ( !data->key.modifiers ) {
-				if ( data->key.code == UIEvent::K_ENTER || ( data->key.code == UIEvent::K_ESCAPE ) ) {
+				if ( data->key.code == ui::event::K_ENTER || ( data->key.code == ui::event::K_ESCAPE ) ) {
 					Close();
 				}
 			}

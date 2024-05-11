@@ -2,6 +2,8 @@
 
 #include "engine/Engine.h"
 #include "game/animation/FramesRow.h"
+#include "loader/sound/SoundLoader.h"
+#include "loader/texture/TextureLoader.h"
 
 namespace task {
 namespace game {
@@ -13,7 +15,7 @@ AnimationDef::AnimationDef( InstancedSpriteManager* ism, const ::game::animation
 	, m_duration_ms( def->m_duration_ms )
 	, m_sound( g_engine->GetSoundLoader()->LoadSound( def->m_sound_file ) ) {
 
-	ASSERT_NOLOG( def->m_type == ::game::animation::Def::animation_type_t::AT_FRAMES_ROW, "only frames row animations are supported for now" );
+	ASSERT_NOLOG( def->m_type == ::game::animation::animation_type_t::AT_FRAMES_ROW, "only frames row animations are supported for now" );
 	const auto* d = (::game::animation::FramesRow*)def;
 
 	auto* texture = g_engine->GetTextureLoader()->LoadTexture( d->m_file );
@@ -54,7 +56,7 @@ AnimationDef::~AnimationDef() {
 	//
 }
 
-const AnimationDef::sprites_t& AnimationDef::GetSprites() const {
+const instanced_sprites_t& AnimationDef::GetSprites() const {
 	return m_sprites;
 }
 

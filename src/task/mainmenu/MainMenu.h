@@ -5,29 +5,30 @@
 
 #include "base/Task.h"
 
-#include "ui/object/Surface.h"
-#include "ui/object/SoundEffect.h"
-#include "ui/object/Label.h"
+namespace game {
+class State;
+}
 
-#include "scene/actor/Sound.h"
+namespace util::random {
+class Random;
+}
 
-#include "MenuObject.h"
-
-#include "game/State.h"
-
-#include "ui/Theme.h"
-#include "util/Random.h"
-
-using namespace types;
-using namespace loader::texture;
-
-using namespace ui;
 namespace ui {
-using namespace object;
+namespace object {
+class Label;
+class Surface;
+class SoundEffect;
+}
+namespace event {
+class UIEventHandler;
+}
 }
 
 namespace task {
 namespace mainmenu {
+
+class MenuObject;
+class Theme;
 
 CLASS( MainMenu, base::Task )
 	void Start() override;
@@ -47,17 +48,17 @@ CLASS( MainMenu, base::Task )
 	const std::string& GetMapPreviewFilename() const;
 	void SetCustomizeMapMoons( const std::string& moons_filename );
 
-	util::Random* GetRandom();
+	util::random::Random* GetRandom();
 
 private:
-	Theme m_theme;
+	Theme* m_theme;
 
-	const UIEventHandler* m_key_handler = nullptr;
-	const UIEventHandler* m_mouse_handler = nullptr;
+	const ::ui::event::UIEventHandler* m_key_handler = nullptr;
+	const ::ui::event::UIEventHandler* m_mouse_handler = nullptr;
 
-	Surface* m_background = nullptr;
-	Surface* m_customize_map_preview = nullptr;
-	Surface* m_customize_map_moons = nullptr;
+	::ui::object::Surface* m_background = nullptr;
+	::ui::object::Surface* m_customize_map_preview = nullptr;
+	::ui::object::Surface* m_customize_map_moons = nullptr;
 
 	std::string m_customize_map_preview_filename = "";
 	std::vector< std::string > m_customize_map_preview_history = {};
@@ -71,11 +72,11 @@ private:
 	MenuObject* m_menu_next = nullptr;
 	bool m_goback = false;
 
-	SoundEffect* m_music = nullptr;
+	::ui::object::SoundEffect* m_music = nullptr;
 
-	Label* m_glsmac_logo = nullptr;
+	::ui::object::Label* m_glsmac_logo = nullptr;
 
-	util::Random m_random;
+	util::random::Random* m_random;
 
 	std::string m_show_error_on_start = "";
 
@@ -83,5 +84,5 @@ private:
 
 };
 
-} /* namespace mainmenu */
-} /* namespace game */
+}
+}

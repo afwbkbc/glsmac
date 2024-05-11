@@ -4,12 +4,22 @@
 #include "MainMenu.h"
 
 #include "engine/Engine.h"
-
+#include "graphics/Graphics.h"
+#include "scheduler/Scheduler.h"
+#include "loader/texture/TextureLoader.h"
 #include "task/game/Game.h"
-
+#include "game/Player.h"
+#include "game/slot/Slots.h"
 #include "menu/lobby/Lobby.h"
 #include "menu/Main.h"
 #include "menu/Error.h"
+#include "game/State.h"
+#include "util/random/Random.h"
+#include "ui/Theme.h"
+#include "ui/UI.h"
+#include "ui/object/Surface.h"
+#include "ui/object/Label.h"
+#include "ui/object/SoundEffect.h"
 
 #include "version.h"
 
@@ -20,12 +30,15 @@ void MainMenu::Start() {
 	ASSERT( !m_state, "mainmenu state already set" );
 	NEW( m_state, ::game::State );
 
+	NEW( m_random, util::random::Random );
+
 	auto* ui = g_engine->GetUI();
 
-	ui->AddTheme( &m_theme );
+	NEW( m_theme, Theme );
+	ui->AddTheme( m_theme );
 
 	// background
-	NEW( m_background, Surface, "MainMenuBackground" );
+	NEW( m_background, ui::object::Surface, "MainMenuBackground" );
 	ui->AddObject( m_background );
 
 	// preview image for 'customize map'
@@ -45,28 +58,28 @@ void MainMenu::Start() {
 	ui->AddObject( m_glsmac_logo );
 
 	m_mouse_handler = ui->AddGlobalEventHandler(
-		UIEvent::EV_MOUSE_DOWN, EH( this ) {
+		ui::event::EV_MOUSE_DOWN, EH( this ) {
 			// rightclick = back
-			if ( data->mouse.button == UIEvent::M_RIGHT && m_menu_object ) {
+			if ( data->mouse.button == ui::event::M_RIGHT && m_menu_object ) {
 				if ( !m_menu_history.empty() ) { // don't exit game on right-click
 					return m_menu_object->MaybeClose(); // only sliding menus will close on right click
 				}
 			}
 			return false;
-		}, UI::GH_BEFORE
+		}, ui::UI::GH_BEFORE
 	);
 
 	m_key_handler = ui->AddGlobalEventHandler(
-		UIEvent::EV_KEY_DOWN, EH( this ) {
+		ui::event::EV_KEY_DOWN, EH( this ) {
 			// escape = back
-			if ( !data->key.modifiers && data->key.code == UIEvent::K_ESCAPE && m_menu_object ) {
+			if ( !data->key.modifiers && data->key.code == ui::event::K_ESCAPE && m_menu_object ) {
 				return m_menu_object->MaybeClose(); // popups have their own escape handler
 			}
 			return false;
-		}, UI::GH_BEFORE
+		}, ui::UI::GH_BEFORE
 	);
 
-	NEW( m_music, SoundEffect, "MainMenuMusic" );
+	NEW( m_music, ui::object::SoundEffect, "MainMenuMusic" );
 	g_engine->GetUI()->AddObject( m_music );
 
 	g_engine->GetGraphics()->AddOnWindowResizeHandler(
@@ -162,8 +175,10 @@ void MainMenu::Stop() {
 
 	ui->RemoveObject( m_glsmac_logo );
 
-	ui->RemoveTheme( &m_theme );
+	ui->RemoveTheme( m_theme );
+	DELETE( m_theme );
 
+	DELETE( m_random );
 }
 
 void MainMenu::GoBack() {
@@ -182,21 +197,21 @@ void MainMenu::MenuError( const std::string& error_text ) {
 }
 
 void MainMenu::InitSinglePlayer() {
-	m_state->m_slots.Resize( 7 ); // TODO: make dynamic?
+	m_state->m_slots->Resize( 7 ); // TODO: make dynamic?
 	const auto& rules = m_state->m_settings.global.game_rules;
 	m_state->m_settings.local.player_name = "Player";
 	NEWV( player, ::game::Player,
 		m_state->m_settings.local.player_name,
 		::game::Player::PR_SINGLE,
-		::game::Player::RANDOM_FACTION,
+		{},
 		rules.GetDefaultDifficultyLevel() // TODO: make configurable
 	);
 	m_state->AddPlayer( player );
 	size_t slot_num = 0; // player always has slot 0
 	m_state->AddCIDSlot( 0, slot_num ); // for consistency
-	auto& slot = m_state->m_slots.GetSlot( slot_num );
+	auto& slot = m_state->m_slots->GetSlot( slot_num );
 	slot.SetPlayer( player, 0, "" );
-	slot.SetPlayerFlag( ::game::Slot::PF_READY );
+	slot.SetPlayerFlag( ::game::slot::PF_READY );
 }
 
 void MainMenu::StartGame() {
@@ -246,8 +261,8 @@ void MainMenu::SetCustomizeMapMoons( const std::string& moons_filename ) {
 	}
 }
 
-util::Random* MainMenu::GetRandom() {
-	return &m_random;
+util::random::Random* MainMenu::GetRandom() {
+	return m_random;
 }
 
 void MainMenu::ResizeCustomizeMapPreview() {
@@ -264,5 +279,5 @@ void MainMenu::ResizeCustomizeMapPreview() {
 	}
 }
 
-} /* namespace mainmenu */
-} /* namespace game */
+}
+}

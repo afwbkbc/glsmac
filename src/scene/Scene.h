@@ -5,21 +5,20 @@
 
 #include "base/Base.h"
 
-#include "actor/Actor.h"
-#include "Camera.h"
-#include "Light.h"
-#include "types/Texture.h"
-#include "types/Vec3.h"
+#include "Types.h"
+
+namespace types::texture {
+class Texture;
+}
 
 namespace scene {
 
-enum scene_type_t {
-	SCENE_TYPE_NONE,
-	SCENE_TYPE_SIMPLE2D,
-	SCENE_TYPE_ORTHO,
-	SCENE_TYPE_ORTHO_UI, // same as ortho, but is drawn after (and on top of) overlay
-	SCENE_TYPE_PERSP,
-};
+class Camera;
+class Light;
+
+namespace actor {
+class Actor;
+}
 
 CLASS( Scene, base::Base )
 	Scene( const std::string& name, const scene_type_t scene_type )
@@ -39,10 +38,9 @@ CLASS( Scene, base::Base )
 	Camera* GetCamera() const;
 	void AddLight( Light* light );
 	std::unordered_set< Light* >* GetLights();
-	void SetSkyboxTexture( types::Texture* skybox_texture );
-	types::Texture* GetSkyboxTexture();
+	void SetSkyboxTexture( types::texture::Texture* skybox_texture );
+	types::texture::Texture* GetSkyboxTexture();
 
-	typedef std::vector< Vec3 > instance_positions_t;
 	void SetWorldInstancePositions( const instance_positions_t& world_instance_positions );
 	const instance_positions_t& GetWorldInstancePositions() const;
 
@@ -57,7 +55,7 @@ protected:
 
 	Camera* m_camera = nullptr;
 	std::unordered_set< Light* > m_lights = {};
-	types::Texture* m_skybox_texture = nullptr;
+	types::texture::Texture* m_skybox_texture = nullptr;
 
 	instance_positions_t m_game_instance_positions = {
 		{
@@ -68,4 +66,4 @@ protected:
 	}; // only 1 instance by default
 };
 
-} /* namespace scene */
+}

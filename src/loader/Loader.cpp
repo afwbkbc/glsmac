@@ -1,6 +1,7 @@
 #include "Loader.h"
 
 #include "engine/Engine.h"
+#include "config/Config.h"
 
 namespace loader {
 

@@ -2,15 +2,19 @@
 
 #include "ui/object/Popup.h"
 
-#include "../Section.h"
-#include "ui/object/Surface.h"
-
 #include "util/Scroller.h"
+
+namespace ui::object {
+class Surface;
+}
 
 namespace task {
 namespace game {
 class Game;
 namespace ui {
+
+class Section;
+
 namespace popup {
 
 CLASS( Popup, ::ui::object::Popup )
@@ -21,7 +25,7 @@ CLASS( Popup, ::ui::object::Popup )
 	virtual void Align() override;
 	void Iterate() override;
 	void Destroy() override;
-	void ProcessEvent( event::UIEvent* event ) override;
+	void ProcessEvent( ::ui::event::UIEvent* event ) override;
 	bool MaybeClose() override;
 	void SetHeight( const coord_t px ) override;
 

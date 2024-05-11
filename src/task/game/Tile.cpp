@@ -1,5 +1,7 @@
 #include "Tile.h"
 
+#include "Unit.h"
+
 namespace task {
 namespace game {
 
@@ -122,7 +124,7 @@ const std::vector< Unit* >& Tile::GetOrderedUnits() {
 	if ( m_is_units_reorder_needed ) {
 		m_ordered_units.clear();
 		m_ordered_units.reserve( m_units.size() );
-		const auto order = Tile::GetUnitsOrder( m_units );
+		const auto order = GetUnitsOrder( m_units );
 		for ( const auto& it : order ) {
 			m_ordered_units.push_back( m_units.at( it ) );
 		}
@@ -140,25 +142,25 @@ Unit* Tile::GetMostImportantUnit() {
 	}
 }
 
-Tile* Tile::GetNeighbour( const ::game::map::Tile::direction_t direction ) {
+Tile* Tile::GetNeighbour( const ::game::map::tile::direction_t direction ) {
 	switch ( direction ) {
-		case ::game::map::Tile::D_NONE:
+		case ::game::map::tile::D_NONE:
 			return this;
-		case ::game::map::Tile::D_W:
+		case ::game::map::tile::D_W:
 			return W;
-		case ::game::map::Tile::D_NW:
+		case ::game::map::tile::D_NW:
 			return NW;
-		case ::game::map::Tile::D_N:
+		case ::game::map::tile::D_N:
 			return N;
-		case ::game::map::Tile::D_NE:
+		case ::game::map::tile::D_NE:
 			return NE;
-		case ::game::map::Tile::D_E:
+		case ::game::map::tile::D_E:
 			return E;
-		case ::game::map::Tile::D_SE:
+		case ::game::map::tile::D_SE:
 			return SE;
-		case ::game::map::Tile::D_S:
+		case ::game::map::tile::D_S:
 			return S;
-		case ::game::map::Tile::D_SW:
+		case ::game::map::tile::D_SW:
 			return SW;
 		default:
 			THROW( "unknown tile direction: " + std::to_string( direction ) );
@@ -169,11 +171,11 @@ const Tile::render_data_t& Tile::GetRenderData() const {
 	return m_render_data;
 }
 
-void Tile::SetCoords( const Vec3& coords ) {
+void Tile::SetCoords( const types::Vec3& coords ) {
 	m_render_data.coords = coords;
 }
 
-void Tile::SetSelectionCoords( const ::game::map::TileState::tile_vertices_t& selection_coords ) {
+void Tile::SetSelectionCoords( const ::game::map::tile::tile_vertices_t& selection_coords ) {
 	m_render_data.selection_coords = selection_coords;
 }
 

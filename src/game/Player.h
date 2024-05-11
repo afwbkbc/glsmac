@@ -1,18 +1,20 @@
 #pragma once
 
 #include <string>
+#include <optional>
 
 #include "types/Serializable.h"
 
-#include "game/rules/Rules.h"
+#include "rules/Faction.h"
+#include "rules/DifficultyLevel.h"
 
 namespace game {
 
+namespace slot {
 class Slot;
+}
 
 CLASS( Player, types::Serializable )
-
-	const static rules::Faction RANDOM_FACTION;
 
 	enum role_t {
 		PR_NONE,
@@ -37,13 +39,14 @@ CLASS( Player, types::Serializable )
 	const bool IsConnected() const;
 
 	void SetFaction( const rules::Faction& faction );
-	rules::Faction& GetFaction();
+	void ClearFaction();
+	std::optional< rules::Faction >& GetFaction();
 
 	void SetDifficultyLevel( const rules::DifficultyLevel& difficulty_level );
-	const rules::DifficultyLevel& GetDifficultyLevel() const;
+	const std::optional< rules::DifficultyLevel >& GetDifficultyLevel() const;
 
-	void SetSlot( Slot* slot );
-	Slot* GetSlot() const;
+	void SetSlot( slot::Slot* slot );
+	slot::Slot* GetSlot() const;
 
 	const role_t GetRole() const;
 
@@ -61,14 +64,13 @@ private:
 	std::string m_name = "";
 	role_t m_role = PR_NONE;
 
-	Slot* m_slot = nullptr;
+	slot::Slot* m_slot = nullptr;
 
-	rules::Faction m_faction = RANDOM_FACTION;
-	rules::DifficultyLevel m_difficulty_level = {};
+	// EXPERIMENTAL
+	std::optional< rules::Faction > m_faction = {};
+	std::optional< rules::DifficultyLevel > m_difficulty_level = {};
 
 	bool m_is_turn_completed = false;
 };
 
 }
-
-#include "game/Slot.h"

@@ -2,8 +2,6 @@
 
 #include "Audio.h"
 
-#include "scene/actor/Sound.h"
-
 namespace audio {
 
 CLASS( Null, Audio )

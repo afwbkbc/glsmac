@@ -1,6 +1,9 @@
 #include "Context.h"
 
+#include "gse/ChildContext.h"
 #include "gse/Exception.h"
+
+#include "base/Base.h"
 
 namespace gse {
 
@@ -130,7 +133,7 @@ ChildContext* const Context::ForkContext(
 	const si_t& call_si,
 	const bool is_traceable,
 	const std::vector< std::string > parameters,
-	const type::Callable::function_arguments_t& arguments
+	const type::function_arguments_t& arguments
 ) {
 	if ( parameters.size() != arguments.size() ) {
 		throw Exception( EC.INVALID_CALL, "Expected " + std::to_string( parameters.size() ) + " arguments, found " + std::to_string( arguments.size() ), this, call_si );

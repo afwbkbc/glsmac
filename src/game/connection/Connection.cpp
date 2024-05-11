@@ -1,5 +1,11 @@
 #include "Connection.h"
 
+#include "game/State.h"
+#include "engine/Engine.h"
+#include "network/Network.h"
+#include "ui/UI.h"
+#include "game/event/Event.h"
+
 namespace game {
 namespace connection {
 
@@ -29,9 +35,10 @@ void Connection::ResetHandlers() {
 	}
 }
 
-Connection::Connection( const network::connection_mode_t connection_mode, LocalSettings* const settings )
+Connection::Connection( const network::connection_mode_t connection_mode, settings::LocalSettings* const settings )
 	: m_connection_mode( connection_mode )
-	, m_settings( settings ) {
+	, m_settings( settings )
+	, m_network( g_engine->GetNetwork() ) {
 	//
 }
 

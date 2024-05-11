@@ -2,8 +2,15 @@
 
 #include "util/String.h"
 #include "game/unit/Unit.h"
-
+#include "Slot.h"
+#include "Tile.h"
+#include "UnitDef.h"
+#include "BadgeDefs.h"
+#include "InstancedSprite.h"
+#include "scene/actor/Instanced.h"
 #include "types/mesh/Rectangle.h"
+#include "scene/actor/Sprite.h"
+#include "types/texture/Texture.h"
 
 namespace task {
 namespace game {
@@ -14,12 +21,12 @@ Unit::Unit(
 	UnitDef* def,
 	Slot* slot,
 	Tile* tile,
-	const Vec3& render_coords,
+	const types::Vec3& render_coords,
 	const bool is_owned,
-	const ::game::unit::Unit::movement_t movement,
-	const ::game::unit::Morale::morale_t morale,
+	const ::game::unit::movement_t movement,
+	const ::game::unit::morale_t morale,
 	const std::string& morale_string,
-	const ::game::unit::Unit::health_t health
+	const ::game::unit::health_t health
 )
 	: m_badge_defs( badge_defs )
 	, m_id( id )
@@ -238,14 +245,14 @@ void Unit::Refresh() {
 	}
 }
 
-void Unit::SetMovement( const ::game::unit::Unit::movement_t movement ) {
+void Unit::SetMovement( const ::game::unit::movement_t movement ) {
 	if ( movement != m_movement ) {
 		m_movement = movement;
 		m_need_refresh = true;
 	}
 }
 
-void Unit::SetHealth( const ::game::unit::Unit::health_t health ) {
+void Unit::SetHealth( const ::game::unit::health_t health ) {
 	if ( health != m_health ) {
 		m_health = health;
 		m_need_refresh = true;

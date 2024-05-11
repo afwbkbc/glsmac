@@ -1,8 +1,12 @@
 #pragma once
 
-#include "type/Object.h"
+#include <unordered_set>
 
 namespace gse {
+
+namespace type {
+class Object;
+}
 
 class Wrappable {
 public:

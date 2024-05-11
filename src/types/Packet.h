@@ -61,8 +61,8 @@ CLASS( Packet, Serializable )
 		std::vector< std::string > vec;
 	} data;
 
-	const Buffer Serialize() const override;
-	void Unserialize( Buffer buffer ) override;
+	const types::Buffer Serialize() const override;
+	void Unserialize( types::Buffer buffer ) override;
 };
 
 }

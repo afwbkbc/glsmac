@@ -2,6 +2,9 @@
 
 #include "game/Game.h"
 #include "game/unit/StaticDef.h"
+#include "game/unit/Unit.h"
+#include "game/slot/Slot.h"
+#include "gse/type/Undefined.h"
 
 namespace game {
 namespace event {
@@ -9,7 +12,8 @@ namespace event {
 AttackUnit::AttackUnit( const size_t initiator_slot, const size_t attacker_unit_id, const size_t defender_unit_id )
 	: Event( initiator_slot, ET_UNIT_ATTACK )
 	, m_attacker_unit_id( attacker_unit_id )
-	, m_defender_unit_id( defender_unit_id ) {
+	, m_defender_unit_id( defender_unit_id )
+	, m_resolutions( VALUE( gse::type::Undefined ) ) {
 
 }
 

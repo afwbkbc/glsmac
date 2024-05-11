@@ -6,11 +6,11 @@ Light::Light( const light_type_t light_type ) {
 	//
 }
 
-void Light::SetColor( const Color& color ) {
+void Light::SetColor( const types::Color& color ) {
 	m_color = color;
 }
 
-const Color& Light::GetColor() const {
+const types::Color& Light::GetColor() const {
 	return m_color;
 }
 

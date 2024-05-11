@@ -2,11 +2,11 @@
 
 #include "Actor.h"
 
-#include "types/Font.h"
-#include "types/Vec2.h"
 #include "types/Color.h"
 
-using namespace types;
+namespace types {
+class Font;
+}
 
 namespace scene {
 namespace actor {
@@ -14,7 +14,7 @@ namespace actor {
 CLASS( Text, Actor )
 
 	Text(
-		Font* font, const std::string& text, Color color = {
+		types::Font* font, const std::string& text, types::Color color = {
 		1.0,
 		1.0,
 		1.0,
@@ -23,13 +23,13 @@ CLASS( Text, Actor )
 	);
 	~Text();
 
-	Font* GetFont() const;
+	types::Font* GetFont() const;
 	const std::string& GetText() const;
-	const Color& GetColor() const;
+	const types::Color& GetColor() const;
 
 	void SetText( const std::string& text );
-	void SetColor( const Color& color );
-	void SetFont( Font* font );
+	void SetColor( const types::Color& color );
+	void SetFont( types::Font* font );
 	void UpdatePosition() override;
 
 	void Redraw();
@@ -46,5 +46,5 @@ protected:
 	};
 };
 
-} /* namespace actor */
-} /* namespace scene */
+}
+}

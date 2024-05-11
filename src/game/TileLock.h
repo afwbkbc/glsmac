@@ -1,6 +1,6 @@
 #pragma once
 
-#include "map/Tile.h"
+#include "map/tile/Types.h"
 #include "util/Timer.h"
 
 namespace game {
@@ -10,14 +10,14 @@ class TileLock {
 public:
 	static const size_t MAX_WAIT_MS;
 
-	TileLock( const map::Tile::tile_positions_t& tile_positions );
-	const bool Matches( const map::Tile::tile_positions_t& tile_positions ) const;
+	TileLock( const map::tile::positions_t& tile_positions );
+	const bool Matches( const map::tile::positions_t& tile_positions ) const;
 	const bool IsExpired();
 
 	TileLock& operator=( const TileLock& other );
 
 private:
-	map::Tile::tile_positions_t m_tile_positions;
+	map::tile::positions_t m_tile_positions;
 	util::Timer m_expiration_timer;
 };
 

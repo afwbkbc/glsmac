@@ -2,8 +2,7 @@
 
 #include "gse/Bindings.h"
 
-#include "gse/ChildContext.h"
-
+// TODO: refactor
 #include "Common.h"
 #include "Console.h"
 #include "Include.h"

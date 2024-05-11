@@ -1,9 +1,11 @@
 #pragma once
 
-#include "gse/GlobalContext.h"
-#include "gse/tests/Tests.h"
+#include "gse/tests/Types.h"
 
 namespace gse {
+
+class GlobalContext;
+
 namespace tests {
 namespace mocks {
 

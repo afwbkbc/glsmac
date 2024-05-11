@@ -2,8 +2,10 @@
 
 #include "LobbySection.h"
 
-#include "ui/object/Input.h"
-#include "ui/object/TextView.h"
+namespace ui::object {
+class Input;
+class TextView;
+}
 
 namespace task {
 namespace mainmenu {

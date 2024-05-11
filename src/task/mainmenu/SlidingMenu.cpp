@@ -1,12 +1,14 @@
 #include "SlidingMenu.h"
 
-#include "game/Settings.h"
+#include "game/settings/Settings.h"
 #include "engine/Engine.h"
+#include "ui/slidingmenu/MenuBlock.h"
+#include "ui/UI.h"
 
 namespace task {
 namespace mainmenu {
 
-SlidingMenu::SlidingMenu( MainMenu* mainmenu, const std::string& title, const MenuBlock::choices_t& choices, const size_t default_choice )
+SlidingMenu::SlidingMenu( MainMenu* mainmenu, const std::string& title, const choices_t& choices, const size_t default_choice )
 	: MenuObject( mainmenu, title )
 	, m_choices( choices )
 	, m_default_choice( default_choice ) {
@@ -76,7 +78,7 @@ bool SlidingMenu::IsReadyToClose() const {
 	return !m_menu_block->IsSliding();
 }
 
-const MenuBlock::choice_handlers_t& SlidingMenu::GetChoiceHandlers( const std::string& choice ) const {
+const choice_handlers_t& SlidingMenu::GetChoiceHandlers( const std::string& choice ) const {
 	for ( auto& it : m_choices ) {
 		if ( it.first == choice ) {
 			return it.second;

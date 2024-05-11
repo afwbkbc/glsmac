@@ -2,10 +2,11 @@
 
 #include "StartGame.h"
 #include "Scenario.h"
-
 #include "Multiplayer.h"
-
+#include "task/mainmenu/MainMenu.h"
 #include "engine/Engine.h"
+#include "game/State.h"
+#include "util/random/Random.h"
 
 namespace task {
 namespace mainmenu {
@@ -20,7 +21,7 @@ Main::Main( MainMenu* mainmenu )
 									m_mainmenu->m_state->InitBindings();
 									m_mainmenu->m_state->Configure();
 
-									m_mainmenu->m_state->m_settings.local.game_mode = game::LocalSettings::GM_SINGLEPLAYER;
+									m_mainmenu->m_state->m_settings.local.game_mode = game::settings::LocalSettings::GM_SINGLEPLAYER;
 									m_mainmenu->m_state->m_settings.global.Initialize();
 									NEWV( menu, StartGame, m_mainmenu );
 									NextMenu( menu );
@@ -34,12 +35,12 @@ Main::Main( MainMenu* mainmenu )
 									m_mainmenu->m_state->InitBindings();
 									m_mainmenu->m_state->Configure();
 
-									m_mainmenu->m_state->m_settings.local.game_mode = game::LocalSettings::GM_SINGLEPLAYER;
+									m_mainmenu->m_state->m_settings.local.game_mode = game::settings::LocalSettings::GM_SINGLEPLAYER;
 
 									// randomize settings
 									m_mainmenu->m_state->m_settings.global.Initialize();
-									m_mainmenu->m_state->m_settings.global.map.type = game::MapSettings::MT_RANDOM;
-									m_mainmenu->m_state->m_settings.global.map.size = game::MapSettings::MAP_STANDARD;
+									m_mainmenu->m_state->m_settings.global.map.type = game::settings::MapSettings::MT_RANDOM;
+									m_mainmenu->m_state->m_settings.global.map.size = game::settings::MapSettings::MAP_CONFIG_STANDARD;
 									m_mainmenu->m_state->m_settings.global.map.ocean = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
 									m_mainmenu->m_state->m_settings.global.map.erosive = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
 									m_mainmenu->m_state->m_settings.global.map.lifeforms = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
@@ -56,7 +57,7 @@ Main::Main( MainMenu* mainmenu )
 		{
 			"SCENARIO",     {
 								CH( this ) {
-									m_mainmenu->m_state->m_settings.local.game_mode = game::LocalSettings::GM_SCENARIO;
+									m_mainmenu->m_state->m_settings.local.game_mode = game::settings::LocalSettings::GM_SCENARIO;
 									NEWV( menu, Scenario, m_mainmenu );
 									NextMenu( menu );
 								}
@@ -66,7 +67,7 @@ Main::Main( MainMenu* mainmenu )
 		{
 			"MULTIPLAYER",  {
 								CH( this ) {
-									m_mainmenu->m_state->m_settings.local.game_mode = game::LocalSettings::GM_MULTIPLAYER;
+									m_mainmenu->m_state->m_settings.local.game_mode = game::settings::LocalSettings::GM_MULTIPLAYER;
 									NEWV( menu, Multiplayer, m_mainmenu );
 									NextMenu( menu );
 								}

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstddef>
-
 #include "Entity.h"
 
 #include "types/Matrix44.h"
@@ -71,6 +69,4 @@ protected:
 
 };
 
-} /* namespace scene */
-
-#include "Scene.h"
+}

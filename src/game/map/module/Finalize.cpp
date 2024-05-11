@@ -1,14 +1,23 @@
 #include "Finalize.h"
 
+#include "game/map/Map.h"
+#include "game/map/MapState.h"
+#include "game/map/Consts.h"
+#include "game/map/tile/Tile.h"
+#include "game/map/tile/TileState.h"
+#include "util/random/Random.h"
+#include "types/mesh/Render.h"
+#include "types/mesh/Data.h"
+
 namespace game {
 namespace map {
 namespace module {
 
-void Finalize::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) {
+void Finalize::GenerateTile( const tile::Tile* tile, tile::TileState* ts, MapState* ms ) {
 
-	TileState::tile_vertices_t vertices;
-	TileState::tile_tex_coords_t tex_coords;
-	TileState::tile_colors_t tint;
+	tile::tile_vertices_t vertices;
+	tile::tile_tex_coords_t tex_coords;
+	tile::tile_colors_t tint;
 
 #define do_x() \
         x( center ); \
@@ -35,7 +44,7 @@ void Finalize::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) {
 		*tile->elevation.center = em;
 	}
 
-	for ( auto lt = 0 ; lt < TileState::LAYER_MAX ; lt++ ) {
+	for ( auto lt = 0 ; lt < tile::LAYER_MAX ; lt++ ) {
 
 		// raise everything on z axis to prevent negative z values ( camera doesn't like it when zoomed in )
 #define x( _k ) ts->layers[ lt ].coords._k.z += s_consts.tile.scale.z;
@@ -43,7 +52,7 @@ void Finalize::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) {
 #undef x
 
 		vertices = ts->layers[ lt ].coords;
-		if ( lt == TileState::LAYER_LAND && !tile->is_water_tile && !ts->has_water ) {
+		if ( lt == tile::LAYER_LAND && !tile->is_water_tile && !ts->has_water ) {
 
 			// smooth center vertices a bit and add some randomness
 
@@ -71,7 +80,7 @@ void Finalize::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) {
 #undef xx
 
 		}
-		else if ( lt != TileState::LAYER_LAND ) {
+		else if ( lt != tile::LAYER_LAND ) {
 #define x( _k ) vertices._k.z = s_consts.tile.water_level_z + s_consts.tile.scale.z
 			do_x();
 #undef x
@@ -91,10 +100,10 @@ void Finalize::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) {
 		{
 #define x( _k ) \
                 if ( !tile->is_water_tile ) { \
-                    if ( lt == TileState::LAYER_LAND && vertices._k.z < s_consts.tile.scale.z + emf ) { \
+                    if ( lt == tile::LAYER_LAND && vertices._k.z < s_consts.tile.scale.z + emf ) { \
                         vertices._k.z = s_consts.tile.scale.z + emf; \
                     } \
-                    else if ( lt == TileState::LAYER_WATER_SURFACE && vertices._k.z > s_consts.tile.scale.z - emf ) { \
+                    else if ( lt == tile::LAYER_WATER_SURFACE && vertices._k.z > s_consts.tile.scale.z - emf ) { \
                         vertices._k.z = s_consts.tile.scale.z - emf; \
                     } \
                 }
@@ -115,7 +124,7 @@ void Finalize::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) {
 		do_x();
 #undef x
 
-		if ( tile->coord.x == 0 && lt == TileState::LAYER_LAND ) {
+		if ( tile->coord.x == 0 && lt == tile::LAYER_LAND ) {
 
 			// also copy tile to overdraw column
 
@@ -155,29 +164,29 @@ void Finalize::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) {
 	// also add to data mesh for click lookups
 
 	if ( tile->is_water_tile ) {
-		vertices = ts->layers[ TileState::LAYER_WATER ].coords;
+		vertices = ts->layers[ tile::LAYER_WATER ].coords;
 	}
 	else {
-		vertices = ts->layers[ TileState::LAYER_LAND ].coords;
+		vertices = ts->layers[ tile::LAYER_LAND ].coords;
 		if ( ts->is_coastline_corner ) {
 			if ( tile->W->is_water_tile ) {
-				vertices.left = ts->layers[ TileState::LAYER_WATER ].coords.left;
+				vertices.left = ts->layers[ tile::LAYER_WATER ].coords.left;
 			}
 			if ( tile->N->is_water_tile ) {
-				vertices.top = ts->layers[ TileState::LAYER_WATER ].coords.top;
+				vertices.top = ts->layers[ tile::LAYER_WATER ].coords.top;
 			}
 			if ( tile->E->is_water_tile ) {
-				vertices.right = ts->layers[ TileState::LAYER_WATER ].coords.right;
+				vertices.right = ts->layers[ tile::LAYER_WATER ].coords.right;
 			}
 			if ( tile->S->is_water_tile ) {
-				vertices.bottom = ts->layers[ TileState::LAYER_WATER ].coords.bottom;
+				vertices.bottom = ts->layers[ tile::LAYER_WATER ].coords.bottom;
 			}
 			vertices.center.z = ( vertices.left.z + vertices.top.z + vertices.right.z + vertices.bottom.z ) / 4;
 		}
 	}
 
 	// store tile coordinates
-	mesh::Data::data_t data = tile->coord.y * ms->dimensions.x + tile->coord.x + 1; // +1 because we need to differentiate 'tile at 0,0' from 'no tiles'
+	types::mesh::data_t data = tile->coord.y * ms->dimensions.x + tile->coord.x + 1; // +1 because we need to differentiate 'tile at 0,0' from 'no tiles'
 
 	if ( ms->first_run ) {
 #define x( _k ) ts->data_mesh.indices._k = m_map->m_meshes.terrain_data->AddEmptyVertex()

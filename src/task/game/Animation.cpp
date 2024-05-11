@@ -1,11 +1,16 @@
 #include "Animation.h"
 
 #include "engine/Engine.h"
+#include "AnimationDef.h"
+#include "scene/actor/Sound.h"
+#include "audio/Audio.h"
+#include "InstancedSprite.h"
+#include "scene/actor/Instanced.h"
 
 namespace task {
 namespace game {
 
-Animation::Animation( const size_t animation_id, AnimationDef* def, const Vec3& render_coords )
+Animation::Animation( const size_t animation_id, AnimationDef* def, const types::Vec3& render_coords )
 	: m_def( def )
 	, m_render_coords( render_coords )
 	, m_frames( def->GetSprites() ) {

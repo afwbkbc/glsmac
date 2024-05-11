@@ -1,5 +1,6 @@
 #include "Exception.h"
 
+#include "gse/Context.h"
 #include "util/String.h"
 
 namespace gse {

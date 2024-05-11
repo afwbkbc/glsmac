@@ -79,7 +79,7 @@ const Value Value::New( const type::Type* type ) const {
 		case type::Type::T_STRING:
 			return VALUE( type::String, ( (type::String*)type )->value );
 		case type::Type::T_ARRAY: {
-			type::Array::elements_t elements = {};
+			type::array_elements_t elements = {};
 			const auto* arr = (type::Array*)type;
 			for ( const auto& it : arr->value ) {
 				elements.push_back( it.Clone() );
@@ -87,7 +87,7 @@ const Value Value::New( const type::Type* type ) const {
 			return VALUE( type::Array, elements );
 		}
 		case type::Type::T_OBJECT: {
-			type::Object::properties_t properties = {};
+			type::object_properties_t properties = {};
 			const auto* obj = (type::Object*)type;
 			for ( const auto& it : obj->value ) {
 				properties.insert_or_assign( it.first, it.second.Clone() );

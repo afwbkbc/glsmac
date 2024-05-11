@@ -3,11 +3,15 @@
 #include "gse/type/Object.h"
 #include "gse/type/Int.h"
 #include "gse/type/Float.h"
+#include "gse/type/Bool.h"
+#include "gse/type/Undefined.h"
 #include "gse/callable/Native.h"
-
 #include "game/Game.h"
 #include "game/State.h"
-
+#include "game/slot/Slot.h"
+#include "game/slot/Slots.h"
+#include "game/map/Map.h"
+#include "MoraleSet.h"
 #include "StaticDef.h"
 
 namespace game {
@@ -25,10 +29,10 @@ Unit::Unit(
 	Game* game,
 	const size_t id,
 	Def* def,
-	Slot* owner,
-	map::Tile* tile,
+	slot::Slot* owner,
+	map::tile::Tile* tile,
 	const movement_t movement,
-	const Morale::morale_t morale,
+	const morale_t morale,
 	const health_t health,
 	const bool moved_this_turn
 )
@@ -46,8 +50,8 @@ Unit::Unit(
 	}
 }
 
-const Unit::movement_t Unit::MINIMUM_MOVEMENT_TO_KEEP = 0.1f;
-const Unit::movement_t Unit::MINIMUM_HEALTH_TO_KEEP = 0.1f;
+const movement_t Unit::MINIMUM_MOVEMENT_TO_KEEP = 0.1f;
+const movement_t Unit::MINIMUM_HEALTH_TO_KEEP = 0.1f;
 
 const bool Unit::HasMovesLeft() const {
 	return m_movement >= unit::Unit::MINIMUM_MOVEMENT_TO_KEEP;
@@ -75,12 +79,12 @@ Unit* Unit::Unserialize( types::Buffer& buf, Game* game ) {
 	const auto id = buf.ReadInt();
 	auto defbuf = types::Buffer( buf.ReadString() );
 	auto* def = Def::Unserialize( defbuf );
-	auto* slot = game ? &game->GetState()->m_slots.GetSlot( buf.ReadInt() ) : nullptr;
+	auto* slot = game ? &game->GetState()->m_slots->GetSlot( buf.ReadInt() ) : nullptr;
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
 	auto* tile = game ? game->GetMap()->GetTile( pos_x, pos_y ) : nullptr;
 	const auto movement = (movement_t)buf.ReadFloat();
-	const auto morale = (Morale::morale_t)buf.ReadInt();
+	const auto morale = (morale_t)buf.ReadInt();
 	const auto health = (health_t)buf.ReadFloat();
 	const auto moved_this_turn = buf.ReadBool();
 	return new Unit( game, id, def, slot, tile, movement, morale, health, moved_this_turn );
@@ -92,10 +96,10 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit, CLASS_UNIT )
 	WRAPIMPL_GET( "morale", Int, m_morale )
 	WRAPIMPL_GET( "health", Float, m_health )
 	WRAPIMPL_GET( "moved_this_turn", Bool, m_moved_this_turn )
-	WRAPIMPL_GET( "is_immovable", Bool, m_def->GetMovementType() == Def::MT_IMMOVABLE )
-	WRAPIMPL_GET( "is_land", Bool, m_def->GetMovementType() == Def::MT_LAND )
-	WRAPIMPL_GET( "is_water", Bool, m_def->GetMovementType() == Def::MT_WATER )
-	WRAPIMPL_GET( "is_air", Bool, m_def->GetMovementType() == Def::MT_AIR )
+	WRAPIMPL_GET( "is_immovable", Bool, m_def->GetMovementType() == MT_IMMOVABLE )
+	WRAPIMPL_GET( "is_land", Bool, m_def->GetMovementType() == MT_LAND )
+	WRAPIMPL_GET( "is_water", Bool, m_def->GetMovementType() == MT_WATER )
+	WRAPIMPL_GET( "is_air", Bool, m_def->GetMovementType() == MT_AIR )
 	WRAPIMPL_LINK( "get_def", m_def )
 	WRAPIMPL_LINK( "get_owner", m_owner )
 	WRAPIMPL_LINK( "get_tile", m_tile )
@@ -103,7 +107,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit, CLASS_UNIT )
 		"set_tile",
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 1 );
-			N_GETVALUE_UNWRAP( tile, 0, map::Tile );
+			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
 			if ( tile != m_tile ) {
 				m_tile->units.erase( m_id );
 				tile->units.insert(

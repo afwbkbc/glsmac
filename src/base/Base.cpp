@@ -3,6 +3,7 @@
 #include "Base.h"
 
 #include "engine/Engine.h"
+#include "logger/Logger.h"
 
 #ifdef DEBUG
 debug_stats_t g_debug_stats = {};
@@ -60,4 +61,4 @@ void Base::TestBreakpoint() {
 
 #endif
 
-} /* namespace base */
+}

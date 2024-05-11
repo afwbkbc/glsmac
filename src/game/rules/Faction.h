@@ -3,11 +3,9 @@
 #include <string>
 
 #include "types/Serializable.h"
+#include "gse/Wrappable.h"
 
 #include "types/Color.h"
-
-#include "gse/Wrappable.h"
-#include "gse/Value.h"
 
 namespace game {
 namespace rules {

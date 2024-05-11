@@ -2,11 +2,10 @@
 
 #include "UIContainer.h"
 
-#include "../UI.h"
+#include "ui/UI.h"
+#include "ui/event/UIEvent.h"
 
 namespace ui {
-
-using namespace event;
 
 namespace object {
 
@@ -164,9 +163,9 @@ void UIContainer::SetOverflow( const overflow_t overflow ) {
 	}
 }
 
-void UIContainer::ProcessEvent( UIEvent* event ) {
+void UIContainer::ProcessEvent( event::UIEvent* event ) {
 
-	if ( !( event->m_flags & UIEvent::EF_MOUSE ) ) {
+	if ( !( event->m_flags & event::EF_MOUSE ) ) {
 		// non-mouse events are processed by parent before children
 		UIObject::ProcessEvent( event );
 		if ( event->IsProcessed() ) {
@@ -175,7 +174,7 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 	}
 
 	bool is_processed = false;
-	if ( event->m_flags & UIEvent::EF_MOUSE ) {
+	if ( event->m_flags & event::EF_MOUSE ) {
 		const bool is_outside =
 			event->m_data.mouse.is_outside_parent || ( // check parent state, if any
 				m_overflow == OVERFLOW_HIDDEN && // only useful for overflow-hidden elements
@@ -186,13 +185,13 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 		const auto child_objects = m_child_objects;
 		for ( auto c = child_objects.rbegin() ; c != child_objects.rend() ; c++ ) {
 			if (
-				( event->m_type == UIEvent::EV_MOUSE_MOVE ) || // mousemove needs to be sent to all objects for mouseout events to work
+				( event->m_type == event::EV_MOUSE_MOVE ) || // mousemove needs to be sent to all objects for mouseout events to work
 					( // other events - only until handled and only to those actually under mouse pointer
 						!is_processed &&
 							( *c )->IsPointInside( event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y )
 					)
 				) {
-				NEWV( child_event, UIEvent, event );
+				NEWV( child_event, event::UIEvent, event );
 				child_event->m_data.mouse.is_outside_parent = is_outside;
 				( *c )->ProcessEvent( child_event );
 				is_processed = child_event->IsProcessed();
@@ -207,10 +206,10 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 		event->SetProcessed();
 	}
 
-	if ( ( event->m_flags & UIEvent::EF_KEYBOARD ) == UIEvent::EF_KEYBOARD ) {
+	if ( ( event->m_flags & event::EF_KEYBOARD ) == event::EF_KEYBOARD ) {
 		// TODO: send only to focused/active element
 		for ( auto& c : m_child_objects ) {
-			NEWV( child_event, UIEvent, event );
+			NEWV( child_event, event::UIEvent, event );
 			c->ProcessEvent( child_event );
 			is_processed = child_event->IsProcessed();
 			DELETE( child_event );
@@ -221,10 +220,10 @@ void UIContainer::ProcessEvent( UIEvent* event ) {
 		}
 	}
 
-	if ( event->m_flags & UIEvent::EF_MOUSE ) {
+	if ( event->m_flags & event::EF_MOUSE ) {
 		// mouse events are processed by children before parent
 		if (
-			( event->m_type == UIEvent::EV_MOUSE_MOVE ) || // mousemove needs to be sent to all objects for mouseout events to work
+			( event->m_type == event::EV_MOUSE_MOVE ) || // mousemove needs to be sent to all objects for mouseout events to work
 				!event->IsProcessed()
 			) {
 			UIObject::ProcessEvent( event );
@@ -254,8 +253,8 @@ const UIObject::object_area_t UIContainer::GetInternalObjectArea() {
 void UIContainer::ApplyStyle() {
 	UIObject::ApplyStyle();
 
-	if ( Has( Style::A_PADDING ) ) {
-		SetPadding( Get( Style::A_PADDING ) );
+	if ( Has( A_PADDING ) ) {
+		SetPadding( Get( A_PADDING ) );
 	}
 
 	for ( auto& c : m_child_objects ) {
@@ -307,7 +306,7 @@ void UIContainer::AddOverriddenEventContexts( event_context_t contexts ) {
 	}
 }
 
-void UIContainer::AddStyleModifier( const Style::modifier_t modifier ) {
+void UIContainer::AddStyleModifier( const modifier_t modifier ) {
 	UIObject::AddStyleModifier( modifier );
 
 	for ( auto& c : m_child_objects ) {
@@ -315,7 +314,7 @@ void UIContainer::AddStyleModifier( const Style::modifier_t modifier ) {
 	}
 }
 
-void UIContainer::RemoveStyleModifier( const Style::modifier_t modifier ) {
+void UIContainer::RemoveStyleModifier( const modifier_t modifier ) {
 	UIObject::RemoveStyleModifier( modifier );
 
 	for ( auto& c : m_child_objects ) {
@@ -435,7 +434,7 @@ void UIContainer::GrowFromObject( UIObject* object ) {
 }
 
 void UIContainer::ShrinkToFit() {
-	Vec2< coord_t > shrink_to = {
+	types::Vec2< coord_t > shrink_to = {
 		0.0f,
 		0.0f
 	};
@@ -454,5 +453,5 @@ void UIContainer::ShrinkToFit() {
 	}
 }
 
-} /* namespace object */
-} /* namespace ui */
+}
+}

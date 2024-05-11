@@ -6,9 +6,9 @@ namespace graphics {
 namespace opengl {
 
 CLASS( CubemapTexture, Texture )
-	CubemapTexture( types::Texture* texture );
+	CubemapTexture( types::texture::Texture* texture );
 	void Load() override;
 };
 
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}

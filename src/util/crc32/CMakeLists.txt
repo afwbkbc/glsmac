@@ -1,0 +1,5 @@
+SET( SRC ${SRC}
+
+	${PWD}/CRC32.cpp
+
+	PARENT_SCOPE )

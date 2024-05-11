@@ -2,6 +2,22 @@
 
 #include "engine/Engine.h"
 
+#include "types/texture/Texture.h"
+#include "ui/object/Surface.h"
+#include "ui/object/Button.h"
+#include "ui/object/Label.h"
+#include "left_menu/LeftMenu.h"
+#include "right_menu/RightMenu.h"
+#include "UnitPreview.h"
+#include "TilePreview.h"
+#include "MiddleArea.h"
+#include "units_list/UnitsList.h"
+#include "MiniMap.h"
+#include "StatusButton.h"
+#include "ui/UI.h"
+#include "task/game/Tile.h"
+#include "graphics/Graphics.h"
+
 namespace task {
 namespace game {
 namespace ui {
@@ -11,44 +27,44 @@ void BottomBar::Create() {
 
 	// frames
 
-	NEW( m_frames.left, Surface, "BBFrameLeft" );
+	NEW( m_frames.left, ::ui::object::Surface, "BBFrameLeft" );
 	m_frames.left->SetZIndex( 0.4f ); // needed because it needs to be above its background because in pcx there's transparent line around one of borders
 	AddChild( m_frames.left );
 
-	NEW( m_frames.middle, Surface, "BBFrameMiddle" );
+	NEW( m_frames.middle, ::ui::object::Surface, "BBFrameMiddle" );
 	AddChild( m_frames.middle );
 
-	NEW( m_frames.right, Surface, "BBFrameRight" );
+	NEW( m_frames.right, ::ui::object::Surface, "BBFrameRight" );
 	m_frames.right->SetZIndex( 0.3f ); // same as above (but needs to go under left panel if interface is shrunk)
 	AddChild( m_frames.right );
 
 	// background
 
 	struct bg_coords_t {
-		const UIObject::alignment_t alignment;
-		const Vec2< size_t > position;
-		const Vec2< size_t > size;
+		const ::ui::alignment_t alignment;
+		const types::Vec2< size_t > position;
+		const types::Vec2< size_t > size;
 		const float zindex; // needed in case game window is shrunk to the point where frame starts to overlap other side
 	};
 	const std::vector< bg_coords_t > bg_coords = {
-		{ UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT,  { 4,   57 }, { 241, 196 }, 0.35f }, // left side part under unit and tile previews (+ a bit under units)
-		{ UIObject::ALIGN_TOP | UIObject::ALIGN_RIGHT, { 4,   57 }, { 241, 196 }, 0.25f }, // part under minimap
-		{ UIObject::ALIGN_BOTTOM,                      { 245, 5 },  { 0,   62 },  0.2f }, // bottom part (under units)
-		{ UIObject::ALIGN_TOP,                         { 261, 67 }, { 0,   105 }, 0.2f }, // middle part (with info panels)
+		{ ::ui::ALIGN_TOP | ::ui::ALIGN_LEFT,  { 4,   57 }, { 241, 196 }, 0.35f }, // left side part under unit and tile previews (+ a bit under units)
+		{ ::ui::ALIGN_TOP | ::ui::ALIGN_RIGHT, { 4,   57 }, { 241, 196 }, 0.25f }, // part under minimap
+		{ ::ui::ALIGN_BOTTOM,                  { 245, 5 },  { 0,   62 },  0.2f }, // bottom part (under units)
+		{ ::ui::ALIGN_TOP,                     { 261, 67 }, { 0,   105 }, 0.2f }, // middle part (with info panels)
 	};
 	for ( auto& b : bg_coords ) {
-		NEWV( background, Surface, "BBFrameBackground" );
+		NEWV( background, ::ui::object::Surface, "BBFrameBackground" );
 		background->SetAlign( b.alignment );
-		if ( b.alignment & UIObject::ALIGN_LEFT ) {
+		if ( b.alignment & ::ui::ALIGN_LEFT ) {
 			background->SetLeft( b.position.x );
 		}
-		else if ( b.alignment & UIObject::ALIGN_RIGHT ) {
+		else if ( b.alignment & ::ui::ALIGN_RIGHT ) {
 			background->SetRight( b.position.x );
 		}
-		if ( b.alignment & UIObject::ALIGN_TOP ) {
+		if ( b.alignment & ::ui::ALIGN_TOP ) {
 			background->SetTop( b.position.y );
 		}
-		else if ( b.alignment & UIObject::ALIGN_BOTTOM ) {
+		else if ( b.alignment & ::ui::ALIGN_BOTTOM ) {
 			background->SetBottom( b.position.y );
 		}
 		if ( b.size.x ) {
@@ -66,16 +82,16 @@ void BottomBar::Create() {
 
 	// buttons
 
-	NEW( m_buttons.menu, Button, "BBButtonMenu" );
+	NEW( m_buttons.menu, ::ui::object::Button, "BBButtonMenu" );
 	m_buttons.menu->SetLabel( "MENU" );
 	m_buttons.menu->On(
-		UIEvent::EV_BUTTON_CLICK, EH( this ) {
+		::ui::event::EV_BUTTON_CLICK, EH( this ) {
 			if ( m_side_menus.left->IsVisible() ) {
-				m_buttons.menu->RemoveStyleModifier( Style::M_SELECTED );
+				m_buttons.menu->RemoveStyleModifier( ::ui::M_SELECTED );
 				m_side_menus.left->Hide();
 			}
 			else {
-				m_buttons.menu->AddStyleModifier( Style::M_SELECTED );
+				m_buttons.menu->AddStyleModifier( ::ui::M_SELECTED );
 				m_side_menus.left->Show();
 			}
 			return true;
@@ -83,17 +99,17 @@ void BottomBar::Create() {
 	);
 	AddChild( m_buttons.menu );
 
-	NEW( m_buttons.commlink, Button, "BBButtonCommlink" );
-	m_buttons.commlink->SetAlign( UIObject::ALIGN_TOP | UIObject::ALIGN_RIGHT );
+	NEW( m_buttons.commlink, ::ui::object::Button, "BBButtonCommlink" );
+	m_buttons.commlink->SetAlign( ::ui::ALIGN_TOP | ::ui::ALIGN_RIGHT );
 	m_buttons.commlink->SetLabel( "COMMLINK" );
 	m_buttons.commlink->On(
-		UIEvent::EV_BUTTON_CLICK, EH( this ) {
+		::ui::event::EV_BUTTON_CLICK, EH( this ) {
 			if ( m_side_menus.right->IsVisible() ) {
-				m_buttons.commlink->RemoveStyleModifier( Style::M_SELECTED );
+				m_buttons.commlink->RemoveStyleModifier( ::ui::M_SELECTED );
 				m_side_menus.right->Hide();
 			}
 			else {
-				m_buttons.commlink->AddStyleModifier( Style::M_SELECTED );
+				m_buttons.commlink->AddStyleModifier( ::ui::M_SELECTED );
 				m_side_menus.right->Show();
 			}
 			return true;
@@ -103,7 +119,7 @@ void BottomBar::Create() {
 
 	// message label
 
-	NEW( m_message_label, Label, "BBMessageLabel" );
+	NEW( m_message_label, ::ui::object::Label, "BBMessageLabel" );
 	AddChild( m_message_label );
 
 	// sections
@@ -145,8 +161,8 @@ void BottomBar::Create() {
 
 	m_mouse_blocker = On(
 		{
-			UIEvent::EV_MOUSE_DOWN,
-			UIEvent::EV_MOUSE_SCROLL
+			::ui::event::EV_MOUSE_DOWN,
+			::ui::event::EV_MOUSE_SCROLL
 		}, EH( this ) {
 
 			// don't let mouse events that weren't handled by child elements go through to map
@@ -193,10 +209,10 @@ void BottomBar::Destroy() {
 	RemoveChild( m_frames.middle );
 	RemoveChild( m_frames.right );
 
+	RemoveChild( m_sections.units_list );
 	RemoveChild( m_sections.unit_preview );
 	RemoveChild( m_sections.tile_preview );
 	RemoveChild( m_sections.middle_area );
-	RemoveChild( m_sections.units_list );
 	m_sections.mini_map->RemoveChild( m_sections.status_button );
 	RemoveChild( m_sections.mini_map );
 
@@ -234,7 +250,7 @@ void BottomBar::HideUnitPreview() {
 	m_sections.unit_preview->HideUnitPreview();
 }
 
-void BottomBar::SetMinimapTexture( types::Texture* texture ) {
+void BottomBar::SetMinimapTexture( types::texture::Texture* texture ) {
 	if ( m_sections.mini_map ) {
 		m_sections.mini_map->SetMinimapTexture( texture );
 	}
@@ -244,7 +260,7 @@ void BottomBar::SetMinimapTexture( types::Texture* texture ) {
 	m_textures.minimap = texture;
 }
 
-const Vec2< size_t > BottomBar::GetMinimapDimensions() const {
+const types::Vec2< size_t > BottomBar::GetMinimapDimensions() const {
 	ASSERT( m_sections.mini_map, "minimap not initialized" );
 	return {
 		224,
@@ -252,7 +268,7 @@ const Vec2< size_t > BottomBar::GetMinimapDimensions() const {
 	}; // TODO: get from minimap style
 }
 
-void BottomBar::SetMinimapSelection( const Vec2< float > position_percents, const Vec2< float > zoom ) {
+void BottomBar::SetMinimapSelection( const types::Vec2< float > position_percents, const types::Vec2< float > zoom ) {
 	ASSERT( m_sections.mini_map, "minimap not initialized" );
 	m_sections.mini_map->SetMinimapSelection( position_percents, zoom );
 }
@@ -263,12 +279,12 @@ const bool BottomBar::IsMouseDraggingMiniMap() const {
 }
 
 void BottomBar::CloseMenus() {
-	if ( m_buttons.menu->HasStyleModifier( Style::M_SELECTED ) ) {
-		m_buttons.menu->RemoveStyleModifier( Style::M_SELECTED );
+	if ( m_buttons.menu->HasStyleModifier( ::ui::M_SELECTED ) ) {
+		m_buttons.menu->RemoveStyleModifier( ::ui::M_SELECTED );
 		m_side_menus.left->Hide();
 	}
-	if ( m_buttons.commlink->HasStyleModifier( Style::M_SELECTED ) ) {
-		m_buttons.commlink->RemoveStyleModifier( Style::M_SELECTED );
+	if ( m_buttons.commlink->HasStyleModifier( ::ui::M_SELECTED ) ) {
+		m_buttons.commlink->RemoveStyleModifier( ::ui::M_SELECTED );
 		m_side_menus.right->Hide();
 	}
 }
@@ -291,7 +307,7 @@ void BottomBar::UpdateMapFileName() {
 	m_sections.middle_area->UpdateMapFileName();
 }
 
-void BottomBar::SetTurnStatus( const ::game::Turn::turn_status_t status ) {
+void BottomBar::SetTurnStatus( const ::game::turn::turn_status_t status ) {
 	m_sections.status_button->SetStatus( status );
 }
 

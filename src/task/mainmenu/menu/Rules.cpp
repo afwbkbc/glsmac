@@ -1,5 +1,7 @@
 #include "Rules.h"
 
+#include "task/mainmenu/MainMenu.h"
+
 namespace task {
 namespace mainmenu {
 

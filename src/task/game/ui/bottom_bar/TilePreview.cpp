@@ -1,7 +1,15 @@
 #include "TilePreview.h"
 
 #include "engine/Engine.h"
-#include "../../Game.h"
+#include "task/game/Game.h"
+#include "ui/object/Mesh.h"
+#include "types/mesh/Render.h"
+#include "ui/object/Label.h"
+#include "ui/object/Mesh.h"
+#include "task/game/InstancedSpriteManager.h"
+#include "task/game/InstancedSprite.h"
+#include "scene/actor/Instanced.h"
+#include "scene/actor/Sprite.h"
 
 namespace task {
 namespace game {
@@ -25,7 +33,7 @@ void TilePreview::PreviewTile( const Tile* tile ) {
 
 	for ( auto& mesh : render.preview_meshes ) {
 
-		NEWV( preview, object::Mesh, "BBTilePreviewImage" );
+		NEWV( preview, ::ui::object::Mesh, "BBTilePreviewImage" );
 		NEWV( mesh_copy, types::mesh::Render, *mesh );
 		preview->SetMesh( mesh_copy );
 		preview->SetTexture( m_game->GetTerrainTexture() );
@@ -44,7 +52,7 @@ void TilePreview::PreviewTile( const Tile* tile ) {
 	// print lines
 	size_t label_top = m_preview_layers.front().object->GetHeight() + 6;
 	for ( auto& line : render.preview_lines ) {
-		NEWV( label, object::Label, "BBTilePreviewTextLine" );
+		NEWV( label, ::ui::object::Label, "BBTilePreviewTextLine" );
 		label->SetText( line );
 		label->SetTop( label_top );
 		m_info_lines.push_back( label );
@@ -53,7 +61,7 @@ void TilePreview::PreviewTile( const Tile* tile ) {
 	}
 
 	// print tile coordinates
-	NEWV( label, object::Label, "BBTilePreviewTextFooter" );
+	NEWV( label, ::ui::object::Label, "BBTilePreviewTextFooter" );
 	label->SetText( "(" + std::to_string( tile->GetCoords().x ) + "," + std::to_string( tile->GetCoords().y ) + ")" );
 	m_info_lines.push_back( label );
 	AddChild( label );
@@ -63,7 +71,7 @@ void TilePreview::PreviewTile( const Tile* tile ) {
 		auto* actor = m_game->GetISM()->GetInstancedSpriteByKey( s )->actor;
 		auto sprite = actor->GetSpriteActor();
 		auto mesh = sprite->GenerateMesh();
-		NEWV( sprite_preview, object::Mesh, "BBTilePreviewSprite" );
+		NEWV( sprite_preview, ::ui::object::Mesh, "BBTilePreviewSprite" );
 		sprite_preview->SetMesh( mesh );
 		sprite_preview->SetTintColor(
 			{

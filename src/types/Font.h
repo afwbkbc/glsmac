@@ -4,7 +4,9 @@
 
 #include "base/Base.h"
 
-#include "base/ObjectLink.h"
+namespace base {
+class ObjectLink;
+}
 
 namespace types {
 
@@ -40,4 +42,4 @@ CLASS( Font, base::Base )
 
 };
 
-} /* namespace types */
+}

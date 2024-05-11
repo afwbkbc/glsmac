@@ -1,6 +1,7 @@
 #include "Surface.h"
 
-using namespace types;
+#include "types/mesh/Rectangle.h"
+#include "types/texture/Texture.h"
 
 namespace ui {
 namespace object {
@@ -10,7 +11,7 @@ Surface::Surface( const std::string& class_name )
 	//
 }
 
-void Surface::SetTexture( types::Texture* texture ) {
+void Surface::SetTexture( types::texture::Texture* texture ) {
 	if ( texture != m_texture ) {
 		Mesh::SetTexture( texture );
 		Resize();
@@ -45,18 +46,18 @@ void Surface::Iterate() {
 void Surface::ApplyStyle() {
 	Mesh::ApplyStyle();
 
-	if ( Has( Style::A_TEXTURE ) ) {
-		auto* texture = (Texture*)GetObject( Style::A_TEXTURE );
+	if ( Has( A_TEXTURE ) ) {
+		auto* texture = (types::texture::Texture*)GetObject( A_TEXTURE );
 		if ( texture ) {
 			SetTexture( texture );
-			if ( Has( Style::A_SIZE_FROM_TEXTURE ) ) {
+			if ( Has( A_SIZE_FROM_TEXTURE ) ) {
 				SetWidth( texture->m_width );
 				SetHeight( texture->m_height );
 			}
-			if ( Has( Style::A_STRETCH_TEXTURE ) ) {
+			if ( Has( A_STRETCH_TEXTURE ) ) {
 				SetStretchTexture( true );
 			}
-			if ( Has( Style::A_KEEP_TEXTURE_ASPECT_RATIO ) ) {
+			if ( Has( A_KEEP_TEXTURE_ASPECT_RATIO ) ) {
 				ForceAspectRatio( (float)texture->m_height / texture->m_width );
 			}
 		}
@@ -116,11 +117,11 @@ void Surface::ResizeNow() {
 		}
 
 		if ( need_resize ) {
-			Vec2< coord_t > pos = {
+			types::Vec2< coord_t > pos = {
 				0.0f,
 				0.0f
 			};
-			Vec2< coord_t > size = {
+			types::Vec2< coord_t > size = {
 				ClampX( m_surface_object_area.right ) - ClampX( m_surface_object_area.left ),
 				ClampY( m_surface_object_area.bottom ) - ClampY( m_surface_object_area.top )
 			};

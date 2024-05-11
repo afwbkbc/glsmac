@@ -3,9 +3,6 @@
 #include <vector>
 #include <string>
 
-#include "unit/Unit.h"
-#include "Turn.h"
-
 namespace game {
 
 class BackendRequest {

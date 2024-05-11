@@ -3,10 +3,15 @@
 #include "base/Base.h"
 
 #include "gse/Value.h"
-#include "gse/program/Program.h"
 
 namespace gse {
+
 class Context;
+
+namespace program {
+class Program;
+}
+
 namespace runner {
 
 CLASS( Runner, base::Base )
@@ -29,5 +34,3 @@ protected:
 
 }
 }
-
-#include "gse/ChildContext.h"

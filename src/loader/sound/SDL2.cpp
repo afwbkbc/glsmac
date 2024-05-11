@@ -5,8 +5,7 @@
 #include "SDL2.h"
 
 #include "util/System.h"
-
-using namespace types;
+#include "types/Sound.h"
 
 namespace loader {
 namespace sound {
@@ -17,7 +16,7 @@ SDL2::~SDL2() {
 	}
 }
 
-Sound* SDL2::LoadSound( const std::string& name ) {
+types::Sound* SDL2::LoadSound( const std::string& name ) {
 
 	std::string font_key = name;
 
@@ -54,7 +53,7 @@ Sound* SDL2::LoadSound( const std::string& name ) {
 			return nullptr;
 		}
 
-		NEWV( sound, Sound );
+		NEWV( sound, types::Sound );
 		sound->m_name = name;
 
 		sound->m_buffer_size = wav_length;

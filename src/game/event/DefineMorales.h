@@ -2,9 +2,12 @@
 
 #include "Event.h"
 
-#include "game/unit/MoraleSet.h"
-
 namespace game {
+
+namespace unit {
+class MoraleSet;
+}
+
 namespace event {
 
 class DefineMorales : public Event {

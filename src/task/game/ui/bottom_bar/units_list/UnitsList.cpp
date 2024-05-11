@@ -2,6 +2,10 @@
 
 #include "engine/Engine.h"
 #include "task/game/Game.h"
+#include "ui/object/ScrollView.h"
+#include "task/game/ui/bottom_bar/UnitPreview.h"
+#include "UnitsListItem.h"
+#include "task/game/Unit.h"
 
 namespace task {
 namespace game {

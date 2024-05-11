@@ -3,20 +3,15 @@
 #ifdef _WIN32
 #include "env/Win32.h"
 #else
-
 #include "env/Posix.h"
-
 #endif
 
 #include <string>
-#include <stdexcept>
 
-#define THROW( _text ) throw std::runtime_error( _text )
+#include "Assert.h"
 
 #ifdef DEBUG
-
 #include "env/Debug.h"
-
 #else
 #include "env/Release.h"
 #endif
@@ -108,6 +103,4 @@ class _name : public _parent { \
 class _name : public _parent1, public _parent2 { \
     CLASS_HEADER( _name, _parent1 )
 
-} /* namespace base */
-
-using namespace base;
+}

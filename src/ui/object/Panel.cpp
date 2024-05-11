@@ -2,6 +2,8 @@
 
 #include "engine/Engine.h"
 
+#include "Surface.h"
+
 namespace ui {
 namespace object {
 
@@ -14,22 +16,22 @@ void Panel::Create() {
 	UIContainer::Create();
 
 	for ( auto& b : m_surfaces ) {
-		NEW( b.second, Surface );
+		NEW( b.second, ui::object::Surface );
 
 		// some days ago it was added, why? check if anything is broken now
-		//b.second->SetOverflow( UIObject::OVERFLOW_VISIBLE_ALWAYS );
+		//b.second->SetOverflow( OVERFLOW_VISIBLE_ALWAYS );
 
-		b.second->ForwardStyleAttribute( b.first, Style::A_TEXTURE );
+		b.second->ForwardStyleAttribute( b.first, A_TEXTURE );
 	}
 
-	m_surfaces[ Style::A_TEXTURE_LEFT ]->SetAlign( UIObject::ALIGN_LEFT );
-	m_surfaces[ Style::A_TEXTURE_TOP ]->SetAlign( UIObject::ALIGN_TOP );
-	m_surfaces[ Style::A_TEXTURE_RIGHT ]->SetAlign( UIObject::ALIGN_RIGHT );
-	m_surfaces[ Style::A_TEXTURE_BOTTOM ]->SetAlign( UIObject::ALIGN_BOTTOM );
-	m_surfaces[ Style::A_TEXTURE_LEFTTOP ]->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
-	m_surfaces[ Style::A_TEXTURE_RIGHTTOP ]->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_TOP );
-	m_surfaces[ Style::A_TEXTURE_RIGHTBOTTOM ]->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_BOTTOM );
-	m_surfaces[ Style::A_TEXTURE_LEFTBOTTOM ]->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_BOTTOM );
+	m_surfaces[ A_TEXTURE_LEFT ]->SetAlign( ALIGN_LEFT );
+	m_surfaces[ A_TEXTURE_TOP ]->SetAlign( ALIGN_TOP );
+	m_surfaces[ A_TEXTURE_RIGHT ]->SetAlign( ALIGN_RIGHT );
+	m_surfaces[ A_TEXTURE_BOTTOM ]->SetAlign( ALIGN_BOTTOM );
+	m_surfaces[ A_TEXTURE_LEFTTOP ]->SetAlign( ALIGN_LEFT | ALIGN_TOP );
+	m_surfaces[ A_TEXTURE_RIGHTTOP ]->SetAlign( ALIGN_RIGHT | ALIGN_TOP );
+	m_surfaces[ A_TEXTURE_RIGHTBOTTOM ]->SetAlign( ALIGN_RIGHT | ALIGN_BOTTOM );
+	m_surfaces[ A_TEXTURE_LEFTBOTTOM ]->SetAlign( ALIGN_LEFT | ALIGN_BOTTOM );
 
 	for ( auto& b : m_surfaces ) {
 		AddChild( b.second );
@@ -51,38 +53,38 @@ void Panel::Align() {
 
 	for ( auto& b : m_surfaces ) {
 		bool is_corner =
-			b.first == Style::A_TEXTURE_LEFTTOP ||
-				b.first == Style::A_TEXTURE_RIGHTTOP ||
-				b.first == Style::A_TEXTURE_RIGHTBOTTOM ||
-				b.first == Style::A_TEXTURE_LEFTBOTTOM;
-		if ( b.first == Style::A_TEXTURE_BACK ) {
+			b.first == A_TEXTURE_LEFTTOP ||
+				b.first == A_TEXTURE_RIGHTTOP ||
+				b.first == A_TEXTURE_RIGHTBOTTOM ||
+				b.first == A_TEXTURE_LEFTBOTTOM;
+		if ( b.first == A_TEXTURE_BACK ) {
 			b.second->SetMargin( m_border_size );
 			b.second->Maximize();
 		}
 		if (
-			b.first == Style::A_TEXTURE_LEFT ||
-				b.first == Style::A_TEXTURE_RIGHT ||
+			b.first == A_TEXTURE_LEFT ||
+				b.first == A_TEXTURE_RIGHT ||
 				is_corner
 			) {
 			b.second->SetWidth( m_border_size );
 		}
 		if (
-			b.first == Style::A_TEXTURE_TOP ||
-				b.first == Style::A_TEXTURE_BOTTOM ||
+			b.first == A_TEXTURE_TOP ||
+				b.first == A_TEXTURE_BOTTOM ||
 				is_corner
 			) {
 			b.second->SetHeight( m_border_size );
 		}
 		if (
-			b.first == Style::A_TEXTURE_LEFT ||
-				b.first == Style::A_TEXTURE_RIGHT
+			b.first == A_TEXTURE_LEFT ||
+				b.first == A_TEXTURE_RIGHT
 			) {
 			b.second->SetTop( m_border_size );
 			b.second->SetBottom( m_border_size );
 		}
 		if (
-			b.first == Style::A_TEXTURE_TOP ||
-				b.first == Style::A_TEXTURE_BOTTOM
+			b.first == A_TEXTURE_TOP ||
+				b.first == A_TEXTURE_BOTTOM
 			) {
 			b.second->SetLeft( m_border_size );
 			b.second->SetRight( m_border_size );
@@ -104,8 +106,8 @@ const size_t Panel::GetBorderSize() const {
 void Panel::ApplyStyle() {
 	UIContainer::ApplyStyle();
 
-	if ( Has( Style::A_BORDER_SIZE ) ) {
-		SetBorderWidth( Get( Style::A_BORDER_SIZE ) );
+	if ( Has( A_BORDER_SIZE ) ) {
+		SetBorderWidth( Get( A_BORDER_SIZE ) );
 	}
 
 }

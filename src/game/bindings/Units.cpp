@@ -1,49 +1,54 @@
 #include "Binding.h"
 
+#include "gse/callable/Native.h"
+#include "gse/Exception.h"
 #include "gse/type/Object.h"
 #include "gse/type/Array.h"
 #include "gse/type/String.h"
 #include "gse/type/Int.h"
 #include "gse/type/Float.h"
-
+#include "gse/type/Undefined.h"
+#include "game/Game.h"
+#include "game/slot/Slot.h"
 #include "game/unit/MoraleSet.h"
 #include "game/unit/StaticDef.h"
 #include "game/unit/SpriteRender.h"
-
+#include "game/unit/Unit.h"
 #include "game/event/DefineMorales.h"
 #include "game/event/DefineUnit.h"
 #include "game/event/SpawnUnit.h"
 #include "game/event/DespawnUnit.h"
+#include "game/bindings/Bindings.h"
 
 namespace game {
 namespace bindings {
 
-const unit::Morale::morale_t GetMorale( const int64_t& morale, gse::Context* ctx, const gse::si_t& call_si ) {
-	if ( morale < unit::Morale::MORALE_MIN || morale > unit::Morale::MORALE_MAX ) {
-		ERROR( gse::EC.INVALID_CALL, "Invalid morale value: " + std::to_string( morale ) + " (should be between " + std::to_string( unit::Morale::MORALE_MIN ) + " and " + std::to_string( unit::Morale::MORALE_MAX ) + ", inclusive)" );
+const unit::morale_t GetMorale( const int64_t& morale, gse::Context* ctx, const gse::si_t& call_si ) {
+	if ( morale < unit::MORALE_MIN || morale > unit::MORALE_MAX ) {
+		ERROR( gse::EC.INVALID_CALL, "Invalid morale value: " + std::to_string( morale ) + " (should be between " + std::to_string( unit::MORALE_MIN ) + " and " + std::to_string( unit::MORALE_MAX ) + ", inclusive)" );
 	}
-	return (unit::Morale::morale_t)morale;
+	return (unit::morale_t)morale;
 }
 
-const unit::Unit::health_t GetHealth( const float health, gse::Context* ctx, const gse::si_t& call_si ) {
+const unit::health_t GetHealth( const float health, gse::Context* ctx, const gse::si_t& call_si ) {
 	if ( health < unit::Unit::MINIMUM_HEALTH_TO_KEEP || health > unit::StaticDef::HEALTH_MAX ) {
 		ERROR( gse::EC.INVALID_CALL, "Invalid health value: " + std::to_string( health ) + " (should be between " + std::to_string( unit::Unit::MINIMUM_HEALTH_TO_KEEP ) + " and " + std::to_string( unit::StaticDef::HEALTH_MAX ) + ", inclusive)" );
 	}
 	if ( health == 0 ) {
 		ERROR( gse::EC.INVALID_CALL, "Invalid health value: " + std::to_string( health ) + " (you can't spawn a dead unit)" );
 	}
-	return (unit::Unit::health_t)health;
+	return (unit::health_t)health;
 }
 
 BINDING_IMPL( units ) {
-	const gse::type::Object::properties_t properties = {
+	const gse::type::object_properties_t properties = {
 		{
 			"define_morales",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( id, 0, String );
 				N_GETVALUE( arr, 1, Array );
-				const uint8_t expected_count = unit::Morale::MORALE_MAX - unit::Morale::MORALE_MIN + 1;
+				const uint8_t expected_count = unit::MORALE_MAX - unit::MORALE_MIN + 1;
 				if ( arr.size() != expected_count ) {
 					ERROR( gse::EC.INVALID_CALL, "Morale set must have exactly " + std::to_string( expected_count ) + " values (found " + std::to_string( arr.size() ) + ")");
 				}
@@ -72,18 +77,18 @@ BINDING_IMPL( units ) {
 				N_GETPROP( unit_type, unit_def, "type", String );
 				if ( unit_type == "static" ) {
 					N_GETPROP( movement_type_str, unit_def, "movement_type", String );
-					unit::Def::movement_type_t movement_type;
+					unit::movement_type_t movement_type;
 					if ( movement_type_str == "land" ) {
-						movement_type = unit::StaticDef::MT_LAND;
+						movement_type = unit::MT_LAND;
 					}
 					else if ( movement_type_str == "water" ) {
-						movement_type = unit::StaticDef::MT_WATER;
+						movement_type = unit::MT_WATER;
 					}
 					else if ( movement_type_str == "air" ) {
-						movement_type = unit::StaticDef::MT_AIR;
+						movement_type = unit::MT_AIR;
 					}
 					else if ( movement_type_str == "immovable" ) {
-						movement_type = unit::StaticDef::MT_IMMOVABLE;
+						movement_type = unit::MT_IMMOVABLE;
 					}
 					else {
 						ERROR( gse::EC.INVALID_CALL, "Invalid movement type: " + movement_type_str + ". Specify one of: land water air immovable");
@@ -140,8 +145,8 @@ BINDING_IMPL( units ) {
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 5 );
 				N_GETVALUE( def_name, 0, String );
-				N_GETVALUE_UNWRAP( owner, 1, Slot );
-				N_GETVALUE_UNWRAP( tile, 2, map::Tile );
+				N_GETVALUE_UNWRAP( owner, 1, slot::Slot );
+				N_GETVALUE_UNWRAP( tile, 2, map::tile::Tile );
 				N_GETVALUE( morale, 3, Int );
 				N_GETVALUE( health, 4, Float );
 				auto* game = GAME;

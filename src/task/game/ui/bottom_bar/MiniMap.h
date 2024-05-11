@@ -2,11 +2,15 @@
 
 #include "BBSection.h"
 
-#include "ui/object/Mesh.h"
-#include "ui/object/Section.h"
-#include "ui/object/Label.h"
+namespace types::texture {
+class Texture;
+}
 
-#include "types/Texture.h"
+namespace ui::object {
+class Mesh;
+class Section;
+class Label;
+}
 
 namespace task {
 namespace game {
@@ -19,34 +23,34 @@ CLASS( MiniMap, BBSection )
 	void Create() override;
 	void Destroy() override;
 
-	void SetMinimapTexture( types::Texture* texture );
+	void SetMinimapTexture( types::texture::Texture* texture );
 
-	void SetMinimapSelection( const Vec2< float > position_percents, const Vec2< float > zoom );
+	void SetMinimapSelection( const types::Vec2< float > position_percents, const types::Vec2< float > zoom );
 	void ClearMinimapSelection();
 
 	const bool IsMouseDragging() const;
 
 private:
-	types::Texture* m_texture = nullptr;
+	types::texture::Texture* m_texture = nullptr;
 	bool m_is_dragging = false;
-	types::Texture* m_map_selection_texture = nullptr;
-	Vec2< ssize_t > m_last_selection_size = {
+	types::texture::Texture* m_map_selection_texture = nullptr;
+	types::Vec2< ssize_t > m_last_selection_size = {
 		0,
 		0
 	};
 
 	struct {
-		const UIEventHandler* mouse_up = nullptr;
-		const UIEventHandler* mouse_move = nullptr;
+		const ::ui::event::UIEventHandler* mouse_up = nullptr;
+		const ::ui::event::UIEventHandler* mouse_move = nullptr;
 	} m_handlers;
 
-	object::Mesh* m_map_surface = nullptr;
-	object::Mesh* m_map_selection = nullptr;
+	::ui::object::Mesh* m_map_surface = nullptr;
+	::ui::object::Mesh* m_map_selection = nullptr;
 
-	object::Section* m_bottom_bar = nullptr;
+	::ui::object::Section* m_bottom_bar = nullptr;
 	struct {
-		object::Label* mission_year = nullptr;
-		object::Label* energy = nullptr;
+		::ui::object::Label* mission_year = nullptr;
+		::ui::object::Label* energy = nullptr;
 	} m_bottom_bar_labels = {};
 
 };

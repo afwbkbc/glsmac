@@ -1,5 +1,7 @@
 #include "Font.h"
 
+#include "scene/actor/Actor.h"
+
 namespace graphics {
 namespace opengl {
 namespace shader_program {
@@ -17,7 +19,7 @@ out vec2 fragpos; \
 \
 void main(void) { \
 	vec2 coord = aCoord.xy; \
-	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_2D_POSITION ) + " ) { \
+	if ( " + S_HasFlag( "uFlags", scene::actor::Actor::RF_USE_2D_POSITION ) + " ) { \
 		coord += uPosition; \
 	}\
 	gl_Position = vec4( coord, uZIndex, 1 ); \
@@ -41,7 +43,7 @@ uniform vec3 uAreaLimitsMax; \
 out vec4 FragColor; \
 \
 void main(void) { \
-	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_AREA_LIMITS ) + " ) { \
+	if ( " + S_HasFlag( "uFlags", scene::actor::Actor::RF_USE_AREA_LIMITS ) + " ) { \
 		if ( \
 			fragpos.x < uAreaLimitsMin.x || \
 			fragpos.x > uAreaLimitsMax.x || \
@@ -81,6 +83,6 @@ void Font::DisableAttributes() const {
 	glDisableVertexAttribArray( attributes.coord );
 };
 
-} /* namespace shader_program */
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}
+}

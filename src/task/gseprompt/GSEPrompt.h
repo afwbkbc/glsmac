@@ -2,10 +2,16 @@
 
 #include "base/Task.h"
 
-#include "gse/GSE.h"
-#include "gse/GlobalContext.h"
-#include "gse/runner/Runner.h"
-#include "gse/program/Program.h"
+namespace gse {
+class GSE;
+class GlobalContext;
+namespace runner {
+class Runner;
+}
+namespace program {
+class Program;
+}
+}
 
 namespace task {
 namespace gseprompt {
@@ -26,7 +32,7 @@ private:
 
 	const bool m_is_tty;
 
-	gse::GSE m_gse;
+	gse::GSE* m_gse;
 	gse::GlobalContext* m_gse_context = nullptr;
 	gse::runner::Runner* m_runner;
 

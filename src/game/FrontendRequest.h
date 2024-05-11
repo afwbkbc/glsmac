@@ -3,8 +3,8 @@
 #include <vector>
 #include <string>
 
-#include "unit/Unit.h"
-#include "Turn.h"
+#include "unit/Types.h"
+#include "game/turn/Types.h"
 
 namespace game {
 
@@ -58,7 +58,7 @@ public:
 			const std::string* message;
 		} global_message;
 		struct {
-			Turn::turn_status_t status;
+			turn::turn_status_t status;
 		} turn_status;
 		struct {
 			size_t turn_id;
@@ -94,18 +94,18 @@ public:
 				float y;
 				float z;
 			} render_coords;
-			unit::Unit::movement_t movement;
-			unit::Morale::morale_t morale;
+			unit::movement_t movement;
+			unit::morale_t morale;
 			const std::string* morale_string;
-			unit::Unit::health_t health;
+			unit::health_t health;
 		} unit_spawn;
 		struct {
 			size_t unit_id;
 		} unit_despawn;
 		struct {
 			size_t unit_id;
-			unit::Unit::movement_t movement;
-			unit::Unit::health_t health;
+			unit::movement_t movement;
+			unit::health_t health;
 			struct {
 				size_t x;
 				size_t y;
@@ -127,7 +127,7 @@ public:
 				float y;
 				float z;
 			} render_coords;
-			unit::Unit::movement_t movement_left;
+			unit::movement_t movement_left;
 		} unit_move;
 	} data;
 };

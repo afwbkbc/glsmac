@@ -2,12 +2,10 @@
 
 #include "UIContainer.h"
 
-#include "Surface.h"
-
-#include "ui/object/SoundEffect.h"
-
 namespace ui {
 namespace object {
+
+class SoundEffect;
 
 CLASS( Popup, UIContainer )
 

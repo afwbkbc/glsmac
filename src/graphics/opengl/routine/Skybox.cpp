@@ -3,7 +3,13 @@
 #include "Skybox.h"
 
 #include "engine/Engine.h"
-#include "../texture/CubemapTexture.h"
+#include "graphics/opengl/texture/CubemapTexture.h"
+#include "graphics/opengl/shader_program/Skybox.h"
+#include "graphics/opengl/texture/Texture.h"
+#include "base/ObjectLink.h"
+#include "types/texture/Texture.h"
+#include "scene/Scene.h"
+#include "scene/Camera.h"
 
 namespace graphics {
 namespace opengl {
@@ -130,7 +136,7 @@ void Skybox::Stop() {
 
 void Skybox::RemoveTexture( base::ObjectLink* link ) {
 	if ( !link->Removed() ) {
-		link->GetSrcObject< types::Texture >()->m_graphics_object = NULL;
+		link->GetSrcObject< types::texture::Texture >()->m_graphics_object = NULL;
 	}
 	auto* gl_texture = link->GetDstObject< Texture >();
 	gl_texture->Unload();
@@ -216,6 +222,6 @@ bool Skybox::SceneBelongs( const scene::Scene* scene ) const {
 	return scene->GetType() == scene::SCENE_TYPE_PERSP;
 }
 
-} /* namespace routine */
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}
+}

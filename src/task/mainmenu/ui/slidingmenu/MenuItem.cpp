@@ -1,5 +1,9 @@
 #include "MenuItem.h"
 
+#include "ui/object/Surface.h"
+#include "ui/object/Label.h"
+#include "task/mainmenu/ui/slidingmenu/MenuBlock.h"
+
 namespace task {
 namespace mainmenu {
 
@@ -18,7 +22,7 @@ void MenuItem::Create() {
 
 #define ADDPART( _part ) \
     { \
-        NEWV( part, Surface, _part ); \
+        NEWV( part, ui::object::Surface, _part ); \
         m_parts.push_back( part ); \
     }
 	ADDPART( "SlidingMenuItemBody" );
@@ -33,7 +37,7 @@ void MenuItem::Create() {
 		AddChild( part );
 	}
 
-	NEW( m_label, Label );
+	NEW( m_label, ui::object::Label );
 	m_label->SetText( m_text );
 	m_label->SetClass(
 		m_is_title
@@ -58,8 +62,8 @@ const std::string& MenuItem::GetText() const {
 	return m_text;
 }
 
-bool MenuItem::OnMouseDown( const UIEvent::event_data_t* data ) {
-	if ( !m_is_title && data->mouse.button == UIEvent::M_LEFT ) {
+bool MenuItem::OnMouseDown( const ui::event::event_data_t* data ) {
+	if ( !m_is_title && data->mouse.button == ui::event::M_LEFT ) {
 		m_menu->OnItemClick( m_text );
 	}
 	return true;

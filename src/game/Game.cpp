@@ -2,10 +2,13 @@
 
 #include "engine/Engine.h"
 #include "types/Exception.h"
+#include "types/texture/Texture.h"
+#include "types/mesh/Render.h"
+#include "types/mesh/Data.h"
 #include "util/FS.h"
 #include "types/Buffer.h"
-#include "game/State.h"
-
+#include "State.h"
+#include "map_editor/MapEditor.h"
 #include "event/FinalizeTurn.h"
 #include "event/TurnFinalized.h"
 #include "event/AdvanceTurn.h"
@@ -14,13 +17,39 @@
 #include "event/LockTiles.h"
 #include "event/RequestTileUnlocks.h"
 #include "event/UnlockTiles.h"
-
+#include "util/random/Random.h"
+#include "config/Config.h"
+#include "slot/Slots.h"
+#include "Player.h"
+#include "connection/Connection.h"
+#include "connection/Server.h"
+#include "connection/Client.h"
+#include "map/Map.h"
+#include "map/Consts.h"
 #include "gse/type/String.h"
-
-using namespace game::connection;
-using namespace game::bindings;
+#include "ui/UI.h"
+#include "map/tile/Tiles.h"
+#include "map/MapState.h"
+#include "bindings/Bindings.h"
+#include "graphics/Graphics.h"
+#include "animation/Def.h"
+#include "unit/Def.h"
+#include "unit/Unit.h"
+#include "unit/MoraleSet.h"
 
 namespace game {
+
+response_map_data_t::~response_map_data_t() {
+	if ( terrain_texture ) {
+		DELETE( terrain_texture );
+	}
+	if ( terrain_mesh ) {
+		DELETE( terrain_mesh );
+	}
+	if ( terrain_data_mesh ) {
+		DELETE( terrain_data_mesh );
+	}
+};
 
 InvalidEvent::InvalidEvent( const std::string& reason, const event::Event* event )
 	: Exception(
@@ -30,40 +59,40 @@ InvalidEvent::InvalidEvent( const std::string& reason, const event::Event* event
 		TS_OFFSET + "event: " + event->ToString( TS_OFFSET )
 ) {}
 
-mt_id_t Game::MT_Ping() {
+base::mt_id_t Game::MT_Ping() {
 	MT_Request request = {};
 	request.op = OP_PING;
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Game::MT_Init( State* state ) {
+base::mt_id_t Game::MT_Init( State* state ) {
 	MT_Request request = {};
 	request.op = OP_INIT;
 	request.data.init.state = state;
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Game::MT_Chat( const std::string& message ) {
+base::mt_id_t Game::MT_Chat( const std::string& message ) {
 	MT_Request request = {};
 	request.op = OP_CHAT;
 	NEW( request.data.save_map.path, std::string, message );
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Game::MT_GetMapData() {
+base::mt_id_t Game::MT_GetMapData() {
 	MT_Request request = {};
 	request.op = OP_GET_MAP_DATA;
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Game::MT_Reset() {
+base::mt_id_t Game::MT_Reset() {
 	m_init_cancel = true; // stop initialization in Iterate()
 	MT_Request request = {};
 	request.op = OP_RESET;
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Game::MT_SaveMap( const std::string& path ) {
+base::mt_id_t Game::MT_SaveMap( const std::string& path ) {
 	ASSERT( !path.empty(), "savemap path is empty" );
 	MT_Request request = {};
 	request.op = OP_SAVE_MAP;
@@ -72,7 +101,7 @@ mt_id_t Game::MT_SaveMap( const std::string& path ) {
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Game::MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::MapEditor::tool_type_t tool, map_editor::MapEditor::brush_type_t brush, map_editor::MapEditor::draw_mode_t draw_mode ) {
+base::mt_id_t Game::MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::tool_type_t tool, map_editor::brush_type_t brush, map_editor::draw_mode_t draw_mode ) {
 	MT_Request request = {};
 	request.op = OP_EDIT_MAP;
 	request.data.edit_map.tile_x = tile_coords.x;
@@ -83,20 +112,20 @@ mt_id_t Game::MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Game::MT_GetFrontendRequests() {
+base::mt_id_t Game::MT_GetFrontendRequests() {
 	MT_Request request = {};
 	request.op = OP_GET_FRONTEND_REQUESTS;
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Game::MT_SendBackendRequests( const std::vector< BackendRequest >& requests ) {
+base::mt_id_t Game::MT_SendBackendRequests( const std::vector< BackendRequest >& requests ) {
 	MT_Request request = {};
 	request.op = OP_SEND_BACKEND_REQUESTS;
 	NEW( request.data.send_backend_requests.requests, std::vector< BackendRequest >, requests );
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Game::MT_AddEvent( const event::Event* event ) {
+base::mt_id_t Game::MT_AddEvent( const event::Event* event ) {
 	MT_Request request = {};
 	request.op = OP_ADD_EVENT;
 	NEW( request.data.add_event.serialized_event, std::string, event::Event::Serialize( event ).ToString() );
@@ -105,7 +134,7 @@ mt_id_t Game::MT_AddEvent( const event::Event* event ) {
 
 #ifdef DEBUG
 #define x( _method, _op ) \
-    mt_id_t Game::_method( const std::string& path ) { \
+    base::mt_id_t Game::_method( const std::string& path ) { \
         ASSERT( !path.empty(), "dump path is empty" ); \
         MT_Request request = {}; \
         request.op = _op; \
@@ -132,7 +161,7 @@ void Game::Start() {
 	ASSERT( !m_pending_frontend_requests, "frontend requests already set" );
 	NEW( m_pending_frontend_requests, std::vector< FrontendRequest > );
 
-	NEW( m_random, util::Random );
+	NEW( m_random, util::random::Random );
 
 #ifdef DEBUG
 	const auto* config = g_engine->GetConfig();
@@ -182,8 +211,8 @@ void Game::Iterate() {
 				static std::string waiting_for_players_old = "";
 				std::string waiting_for_players = "";
 #endif
-				for ( const auto& slot : m_state->m_slots.GetSlots() ) {
-					if ( slot.GetState() == Slot::SS_PLAYER && !slot.HasPlayerFlag( Slot::PF_MAP_DOWNLOADED ) ) {
+				for ( const auto& slot : m_state->m_slots->GetSlots() ) {
+					if ( slot.GetState() == slot::Slot::SS_PLAYER && !slot.HasPlayerFlag( slot::PF_MAP_DOWNLOADED ) ) {
 						ready = false;
 #ifdef DEBUG
 						waiting_for_players += " " + slot.GetPlayer()->GetPlayerName();
@@ -204,7 +233,7 @@ void Game::Iterate() {
 			}
 			else {
 				// notify server of successful download and continue initialization
-				m_slot->SetPlayerFlag( Slot::PF_MAP_DOWNLOADED );
+				m_slot->SetPlayerFlag( slot::PF_MAP_DOWNLOADED );
 				m_connection->UpdateSlot( m_slot_num, m_slot, true );
 			}
 
@@ -289,22 +318,22 @@ void Game::Iterate() {
 					}
 
 					// notify server of successful initialization
-					m_slot->SetPlayerFlag( Slot::PF_GAME_INITIALIZED );
+					m_slot->SetPlayerFlag( slot::PF_GAME_INITIALIZED );
 					if ( m_connection ) {
 						m_connection->UpdateSlot( m_slot_num, m_slot, true );
 					}
 
-					const auto& slots = m_state->m_slots.GetSlots();
+					const auto& slots = m_state->m_slots->GetSlots();
 					auto* slot_defines = new FrontendRequest::slot_defines_t();
 					for ( const auto& slot : slots ) {
-						if ( slot.GetState() == Slot::SS_OPEN || slot.GetState() == Slot::SS_CLOSED ) {
+						if ( slot.GetState() == slot::Slot::SS_OPEN || slot.GetState() == slot::Slot::SS_CLOSED ) {
 							continue;
 						}
-						ASSERT( slot.GetState() == Slot::SS_PLAYER, "unknown slot state: " + std::to_string( slot.GetState() ) );
+						ASSERT( slot.GetState() == slot::Slot::SS_PLAYER, "unknown slot state: " + std::to_string( slot.GetState() ) );
 						auto* player = slot.GetPlayer();
 						ASSERT( player, "slot player not set" );
 						const auto& faction = player->GetFaction();
-						const auto& c = faction.m_colors.border.value;
+						const auto& c = faction->m_colors.border.value;
 						slot_defines->push_back(
 							FrontendRequest::slot_define_t{
 								slot.GetIndex(),
@@ -314,7 +343,7 @@ void Game::Iterate() {
 									c.blue,
 									c.alpha
 								},
-								( faction.m_flags & rules::Faction::FF_PROGENITOR ) != 0
+								( faction->m_flags & rules::Faction::FF_PROGENITOR ) != 0
 							}
 						);
 					}
@@ -352,7 +381,7 @@ void Game::Iterate() {
 						g_engine->GetUI()->SetLoaderText( "Starting game...", false );
 						if ( m_state->IsMaster() ) {
 							try {
-								m_state->m_bindings->Call( Bindings::CS_ON_START );
+								m_state->m_bindings->Call( bindings::Bindings::CS_ON_START );
 							}
 							catch ( gse::Exception& e ) {
 								Log( (std::string)"Initialization failed: " + e.ToStringAndCleanup() );
@@ -378,7 +407,7 @@ void Game::Iterate() {
 	ProcessTileLockRequests();
 }
 
-util::Random* Game::GetRandom() const {
+util::random::Random* Game::GetRandom() const {
 	return m_random;
 }
 
@@ -397,7 +426,7 @@ const Player* Game::GetPlayer() const {
 		return m_connection->GetPlayer();
 	}
 	else {
-		return m_state->m_slots.GetSlot( 0 ).GetPlayer();
+		return m_state->m_slots->GetSlot( 0 ).GetPlayer();
 	}
 }
 
@@ -488,7 +517,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 				m_map->FixNormals( tiles_to_reload, MT_C );
 				graphics->Unlock();
 
-				typedef std::unordered_map< std::string, map::Map::sprite_actor_t > t1; // can't use comma in macro below
+				typedef std::unordered_map< std::string, map::sprite_actor_t > t1; // can't use comma in macro below
 				NEW( response.data.edit_map.sprites.actors_to_add, t1 );
 				*response.data.edit_map.sprites.actors_to_add = m_map->m_sprite_actors_to_add;
 
@@ -496,7 +525,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 				NEW( response.data.edit_map.sprites.instances_to_remove, t2 );
 				*response.data.edit_map.sprites.instances_to_remove = m_map->m_sprite_instances_to_remove;
 
-				typedef std::unordered_map< size_t, std::pair< std::string, Vec3 > > t3; // can't use comma in macro below
+				typedef std::unordered_map< size_t, std::pair< std::string, types::Vec3 > > t3; // can't use comma in macro below
 				NEW( response.data.edit_map.sprites.instances_to_add, t3 );
 				*response.data.edit_map.sprites.instances_to_add = m_map->m_sprite_instances_to_add;
 			}
@@ -727,7 +756,7 @@ void Game::DefineAnimation( animation::Def* def ) {
 	AddFrontendRequest( fr );
 }
 
-const std::string* Game::ShowAnimationOnTile( const std::string& animation_id, map::Tile* tile, const cb_oncomplete& on_complete ) {
+const std::string* Game::ShowAnimationOnTile( const std::string& animation_id, map::tile::Tile* tile, const cb_oncomplete& on_complete ) {
 	if ( m_defined_animations.find( animation_id ) == m_defined_animations.end() ) {
 		return new std::string( "Animation '" + animation_id + "' is not defined" );
 	}
@@ -814,7 +843,7 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 
 	if ( m_state->IsMaster() ) {
 		m_state->m_bindings->Call(
-			Bindings::CS_ON_UNIT_SPAWN, {
+			bindings::Bindings::CS_ON_UNIT_SPAWN, {
 				{
 					"unit",
 					unit->Wrap()
@@ -856,7 +885,7 @@ void Game::DespawnUnit( const size_t unit_id ) {
 
 	if ( m_state->IsMaster() ) {
 		m_state->m_bindings->Call(
-			Bindings::CS_ON_UNIT_DESPAWN, {
+			bindings::Bindings::CS_ON_UNIT_DESPAWN, {
 				{
 					"unit",
 					unit->Wrap()
@@ -868,9 +897,9 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	delete unit;
 }
 
-const std::string* Game::MoveUnitValidate( unit::Unit* unit, map::Tile* dst_tile ) {
+const std::string* Game::MoveUnitValidate( unit::Unit* unit, map::tile::Tile* dst_tile ) {
 	const auto result = m_state->m_bindings->Call(
-		Bindings::CS_ON_UNIT_MOVE_VALIDATE, {
+		bindings::Bindings::CS_ON_UNIT_MOVE_VALIDATE, {
 			{
 				"unit",
 				unit->Wrap()
@@ -896,9 +925,9 @@ const std::string* Game::MoveUnitValidate( unit::Unit* unit, map::Tile* dst_tile
 	}
 }
 
-const gse::Value Game::MoveUnitResolve( unit::Unit* unit, map::Tile* dst_tile ) {
+const gse::Value Game::MoveUnitResolve( unit::Unit* unit, map::tile::Tile* dst_tile ) {
 	return m_state->m_bindings->Call(
-		Bindings::CS_ON_UNIT_MOVE_RESOLVE, {
+		bindings::Bindings::CS_ON_UNIT_MOVE_RESOLVE, {
 			{
 				"unit",
 				unit->Wrap()
@@ -915,7 +944,7 @@ const gse::Value Game::MoveUnitResolve( unit::Unit* unit, map::Tile* dst_tile ) 
 	);
 }
 
-void Game::MoveUnitApply( unit::Unit* unit, map::Tile* dst_tile, const gse::Value resolutions ) {
+void Game::MoveUnitApply( unit::Unit* unit, map::tile::Tile* dst_tile, const gse::Value resolutions ) {
 	ASSERT( dst_tile, "dst tile not set" );
 
 	Log( "Moving unit #" + std::to_string( unit->m_id ) + " to " + dst_tile->coord.ToString() );
@@ -926,7 +955,7 @@ void Game::MoveUnitApply( unit::Unit* unit, map::Tile* dst_tile, const gse::Valu
 	ASSERT( dst_tile->units.find( unit->m_id ) == dst_tile->units.end(), "dst tile already contains this unit" );
 
 	const auto result = m_state->m_bindings->Call(
-		Bindings::CS_ON_UNIT_MOVE_APPLY, {
+		bindings::Bindings::CS_ON_UNIT_MOVE_APPLY, {
 			{
 				"unit",
 				unit->Wrap( true )
@@ -949,7 +978,7 @@ void Game::MoveUnitApply( unit::Unit* unit, map::Tile* dst_tile, const gse::Valu
 
 const std::string* Game::AttackUnitValidate( unit::Unit* attacker, unit::Unit* defender ) {
 	const auto result = m_state->m_bindings->Call(
-		Bindings::CS_ON_UNIT_ATTACK_VALIDATE, {
+		bindings::Bindings::CS_ON_UNIT_ATTACK_VALIDATE, {
 			{
 				"attacker",
 				attacker->Wrap()
@@ -974,7 +1003,7 @@ const std::string* Game::AttackUnitValidate( unit::Unit* attacker, unit::Unit* d
 
 const gse::Value Game::AttackUnitResolve( unit::Unit* attacker, unit::Unit* defender ) {
 	return m_state->m_bindings->Call(
-		Bindings::CS_ON_UNIT_ATTACK_RESOLVE, {
+		bindings::Bindings::CS_ON_UNIT_ATTACK_RESOLVE, {
 			{
 				"attacker",
 				attacker->Wrap()
@@ -989,7 +1018,7 @@ const gse::Value Game::AttackUnitResolve( unit::Unit* attacker, unit::Unit* defe
 
 void Game::AttackUnitApply( unit::Unit* attacker, unit::Unit* defender, const gse::Value resolutions ) {
 	m_state->m_bindings->Call(
-		Bindings::CS_ON_UNIT_ATTACK_APPLY, {
+		bindings::Bindings::CS_ON_UNIT_ATTACK_APPLY, {
 			{
 				"attacker",
 				attacker->Wrap( true )
@@ -1031,35 +1060,35 @@ const bool Game::IsTurnActive() const {
 }
 
 const bool Game::IsTurnCompleted( const size_t slot_num ) const {
-	const auto& slot = m_state->m_slots.GetSlot( slot_num );
-	ASSERT( slot.GetState() == Slot::SS_PLAYER, "slot is not player" );
+	const auto& slot = m_state->m_slots->GetSlot( slot_num );
+	ASSERT( slot.GetState() == slot::Slot::SS_PLAYER, "slot is not player" );
 	const auto* player = slot.GetPlayer();
 	ASSERT( player, "slot player not set" );
 	return player->IsTurnCompleted();
 }
 
-const bool Game::IsTurnChecksumValid( const util::CRC32::crc_t checksum ) const {
+const bool Game::IsTurnChecksumValid( const util::crc32::crc_t checksum ) const {
 	return m_turn_checksum == checksum;
 }
 
 void Game::CompleteTurn( const size_t slot_num ) {
-	const auto& slot = m_state->m_slots.GetSlot( slot_num );
-	ASSERT( slot.GetState() == Slot::SS_PLAYER, "slot is not player" );
+	const auto& slot = m_state->m_slots->GetSlot( slot_num );
+	ASSERT( slot.GetState() == slot::Slot::SS_PLAYER, "slot is not player" );
 	auto* player = slot.GetPlayer();
 	ASSERT( player, "slot player not set" );
 	player->CompleteTurn();
 
 	if ( slot_num == m_slot_num ) {
 		auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
-		fr.data.turn_status.status = Turn::TS_WAITING_FOR_PLAYERS;
+		fr.data.turn_status.status = turn::TS_WAITING_FOR_PLAYERS;
 		AddFrontendRequest( fr );
 	}
 
 	if ( m_state->IsMaster() ) {
 		// check if all players completed their turns
 		bool is_turn_complete = true;
-		for ( const auto& slot : m_state->m_slots.GetSlots() ) {
-			if ( slot.GetState() == Slot::SS_PLAYER && !slot.GetPlayer()->IsTurnCompleted() ) {
+		for ( const auto& slot : m_state->m_slots->GetSlots() ) {
+			if ( slot.GetState() == slot::Slot::SS_PLAYER && !slot.GetPlayer()->IsTurnCompleted() ) {
 				is_turn_complete = false;
 				break;
 			}
@@ -1071,8 +1100,8 @@ void Game::CompleteTurn( const size_t slot_num ) {
 }
 
 void Game::UncompleteTurn( const size_t slot_num ) {
-	const auto& slot = m_state->m_slots.GetSlot( slot_num );
-	ASSERT( slot.GetState() == Slot::SS_PLAYER, "slot is not player" );
+	const auto& slot = m_state->m_slots->GetSlot( slot_num );
+	ASSERT( slot.GetState() == slot::Slot::SS_PLAYER, "slot is not player" );
 	auto* player = slot.GetPlayer();
 	ASSERT( player, "slot player not set" );
 	player->UncompleteTurn();
@@ -1081,7 +1110,7 @@ void Game::UncompleteTurn( const size_t slot_num ) {
 		CheckTurnComplete();
 		if ( !m_is_turn_complete ) {
 			auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
-			fr.data.turn_status.status = Turn::TS_TURN_ACTIVE;
+			fr.data.turn_status.status = turn::TS_TURN_ACTIVE;
 			AddFrontendRequest( fr );
 		}
 	}
@@ -1106,7 +1135,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 	for ( auto& it : m_units ) {
 		auto* unit = it.second;
 		m_state->m_bindings->Call(
-			Bindings::CS_ON_UNIT_TURN, {
+			bindings::Bindings::CS_ON_UNIT_TURN, {
 				{
 					"unit",
 					unit->Wrap( true )
@@ -1117,10 +1146,10 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		RefreshUnit( unit );
 	}
 
-	m_state->m_bindings->Call( Bindings::CS_ON_TURN );
+	m_state->m_bindings->Call( bindings::Bindings::CS_ON_TURN );
 
-	for ( const auto& slot : m_state->m_slots.GetSlots() ) {
-		if ( slot.GetState() == Slot::SS_PLAYER ) {
+	for ( const auto& slot : m_state->m_slots->GetSlots() ) {
+		if ( slot.GetState() == slot::Slot::SS_PLAYER ) {
 			slot.GetPlayer()->UncompleteTurn();
 		}
 	}
@@ -1129,7 +1158,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 	CheckTurnComplete();
 	if ( !m_is_turn_complete ) {
 		auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
-		fr.data.turn_status.status = Turn::TS_TURN_ACTIVE;
+		fr.data.turn_status.status = turn::TS_TURN_ACTIVE;
 		AddFrontendRequest( fr );
 	}
 
@@ -1143,16 +1172,16 @@ void Game::GlobalFinalizeTurn() {
 	AddEvent( new event::FinalizeTurn( m_slot_num ) );
 }
 
-void Game::GlobalProcessTurnFinalized( const size_t slot_num, const util::CRC32::crc_t checksum ) {
+void Game::GlobalProcessTurnFinalized( const size_t slot_num, const util::crc32::crc_t checksum ) {
 	ASSERT( m_state->IsMaster(), "not master" );
 	ASSERT( m_turn_checksum == checksum, "turn checksum mismatch" );
 	ASSERT( m_verified_turn_checksum_slots.find( slot_num ) == m_verified_turn_checksum_slots.end(), "duplicate turn finalization from " + std::to_string( slot_num ) );
 	m_verified_turn_checksum_slots.insert( slot_num );
 
 	bool is_turn_finalized = true;
-	for ( const auto& slot : m_state->m_slots.GetSlots() ) {
+	for ( const auto& slot : m_state->m_slots->GetSlots() ) {
 		if (
-			slot.GetState() == Slot::SS_PLAYER &&
+			slot.GetState() == slot::Slot::SS_PLAYER &&
 				m_verified_turn_checksum_slots.find( slot.GetIndex() ) == m_verified_turn_checksum_slots.end()
 			) {
 			is_turn_finalized = false;
@@ -1178,7 +1207,7 @@ void Game::GlobalAdvanceTurn() {
 	AddEvent( new event::AdvanceTurn( m_slot_num, s_turn_id ) );
 }
 
-void Game::SendTileLockRequest( const map::Tile::tile_positions_t& tile_positions, const cb_oncomplete& on_complete ) {
+void Game::SendTileLockRequest( const map::tile::positions_t& tile_positions, const cb_oncomplete& on_complete ) {
 	// testing
 	/*m_tile_lock_callbacks.push_back(
 		{
@@ -1191,14 +1220,14 @@ void Game::SendTileLockRequest( const map::Tile::tile_positions_t& tile_position
 	//AddEvent( new event::RequestTileLocks( m_slot_num, tile_positions ) );
 }
 
-void Game::RequestTileLocks( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions ) {
+void Game::RequestTileLocks( const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
 	if ( m_state->IsMaster() ) {
-		Log( "Tile locks request from " + std::to_string( initiator_slot ) + ": " + map::Tile::TilePositionsToString( tile_positions, "" ) );
+		Log( "Tile locks request from " + std::to_string( initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( tile_positions, "" ) );
 		AddTileLockRequest( true, initiator_slot, tile_positions );
 	}
 }
 
-void Game::LockTiles( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions ) {
+void Game::LockTiles( const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
 	for ( const auto& pos : tile_positions ) {
 		auto* tile = m_map->GetTile( pos.x, pos.y );
 		ASSERT_NOLOG( !tile->IsLocked(), "tile " + pos.ToString() + " is already locked" );
@@ -1225,20 +1254,20 @@ void Game::LockTiles( const size_t initiator_slot, const map::Tile::tile_positio
 	}
 }
 
-void Game::SendTileUnlockRequest( const map::Tile::tile_positions_t& tile_positions ) {
+void Game::SendTileUnlockRequest( const map::tile::positions_t& tile_positions ) {
 	// testing
 	UnlockTiles( m_slot_num, tile_positions );
 	//AddEvent( new event::RequestTileUnlocks( m_slot_num, tile_positions ) );
 }
 
-void Game::RequestTileUnlocks( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions ) {
+void Game::RequestTileUnlocks( const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
 	if ( m_state->IsMaster() ) {
-		Log( "Tile unlocks request from " + std::to_string( initiator_slot ) + ": " + map::Tile::TilePositionsToString( tile_positions, "" ) );
+		Log( "Tile unlocks request from " + std::to_string( initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( tile_positions, "" ) );
 		AddTileLockRequest( false, initiator_slot, tile_positions );
 	}
 }
 
-void Game::UnlockTiles( const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions ) {
+void Game::UnlockTiles( const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
 	for ( const auto& pos : tile_positions ) {
 		auto* tile = m_map->GetTile( pos.x, pos.y );
 		ASSERT_NOLOG( tile->IsLockedBy( initiator_slot ), "tile " + pos.ToString() + " is not locked by " + std::to_string( initiator_slot ) );
@@ -1275,12 +1304,12 @@ const gse::Value Game::ProcessEvent( event::Event* event ) {
 	return event->Apply( this );
 }
 
-const types::Vec3 Game::GetTileRenderCoords( const map::Tile* tile ) {
+const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
 	const auto* ts = m_map->GetTileState( tile );
 	ASSERT( ts, "ts not set" );
 	const auto l = tile->is_water_tile
-		? map::TileState::LAYER_WATER
-		: map::TileState::LAYER_LAND;
+		? map::tile::LAYER_WATER
+		: map::tile::LAYER_LAND;
 	const auto& layer = ts->layers[ l ];
 	const auto& c = layer.coords.center;
 	return {
@@ -1296,14 +1325,7 @@ const types::Vec3 Game::GetUnitRenderCoords( const unit::Unit* unit ) {
 	ASSERT( tile, "tile not set" );
 	const auto* ts = m_map->GetTileState( tile );
 	ASSERT( ts, "ts not set" );
-	const auto l = tile->is_water_tile
-		? map::TileState::LAYER_WATER
-		: map::TileState::LAYER_LAND;
-	const auto c = unit->m_def->GetSpawnCoords(
-		ts->coord.x,
-		ts->coord.y,
-		ts->layers[ l ].coords
-	);
+	const auto c = unit->m_def->GetSpawnCoords( tile, ts );
 	return {
 		c.x,
 		-c.y,
@@ -1347,7 +1369,7 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 	Log( "Unserializing " + std::to_string( sz ) + " unit moralesets" );
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
-		auto b = Buffer( buf.ReadString() );
+		auto b = types::Buffer( buf.ReadString() );
 		DefineMoraleSet( unit::MoraleSet::Unserialize( b ) );
 	}
 
@@ -1355,7 +1377,7 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 	Log( "Unserializing " + std::to_string( sz ) + " unit defs" );
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
-		auto b = Buffer( buf.ReadString() );
+		auto b = types::Buffer( buf.ReadString() );
 		DefineUnit( unit::Def::Unserialize( b ) );
 	}
 
@@ -1364,7 +1386,7 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 	ASSERT( m_unprocessed_units.empty(), "unprocessed units not empty" );
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto unit_id = buf.ReadInt();
-		auto b = Buffer( buf.ReadString() );
+		auto b = types::Buffer( buf.ReadString() );
 		SpawnUnit( unit::Unit::Unserialize( b, this ) );
 	}
 
@@ -1397,12 +1419,12 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		// assign random factions to players
 		const auto& factions = m_state->m_settings.global.game_rules.m_factions;
 		std::vector< std::string > m_available_factions = {};
-		const auto& slots = m_state->m_slots.GetSlots();
+		const auto& slots = m_state->m_slots->GetSlots();
 		for ( const auto& slot : slots ) {
-			if ( slot.GetState() == ::game::Slot::SS_PLAYER ) {
+			if ( slot.GetState() == ::game::slot::Slot::SS_PLAYER ) {
 				auto* player = slot.GetPlayer();
 				ASSERT( player, "player not set" );
-				if ( player->GetFaction().m_id == ::game::Player::RANDOM_FACTION.m_id ) {
+				if ( !player->GetFaction().has_value() ) {
 					if ( m_available_factions.empty() ) {
 						// (re)load factions list
 						for ( const auto& it : factions ) {
@@ -1428,23 +1450,23 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 		m_connection->ResetHandlers();
 		m_connection->IfServer(
-			[ this ]( Server* connection ) -> void {
+			[ this ]( connection::Server* connection ) -> void {
 
-				connection->m_on_player_join = [ this, connection ]( const size_t slot_num, Slot* slot, const Player* player ) -> void {
+				connection->m_on_player_join = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const Player* player ) -> void {
 					Log( "Player " + player->GetFullName() + " is connecting..." );
 					connection->GlobalMessage( "Connection from " + player->GetFullName() + "..." );
 					// actual join will happen after he downloads and initializes map
 				};
 
-				connection->m_on_flags_update = [ this, connection ]( const size_t slot_num, Slot* slot, const Slot::player_flag_t old_flags, const Slot::player_flag_t new_flags ) -> void {
-					if ( !( old_flags & Slot::PF_GAME_INITIALIZED ) && ( new_flags & Slot::PF_GAME_INITIALIZED ) ) {
+				connection->m_on_flags_update = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const slot::player_flag_t old_flags, const slot::player_flag_t new_flags ) -> void {
+					if ( !( old_flags & slot::PF_GAME_INITIALIZED ) && ( new_flags & slot::PF_GAME_INITIALIZED ) ) {
 						const auto* player = slot->GetPlayer();
 						Log( player->GetFullName() + " joined the game." );
 						connection->GlobalMessage( player->GetFullName() + " joined the game." );
 					}
 				};
 
-				connection->m_on_player_leave = [ this, connection ]( const size_t slot_num, Slot* slot, const Player* player ) -> void {
+				connection->m_on_player_leave = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const Player* player ) -> void {
 					Log( "Player " + player->GetFullName() + " left the game." );
 					connection->GlobalMessage( player->GetFullName() + " left the game." );
 					const auto& it = m_tile_locks.find( slot_num );
@@ -1479,12 +1501,12 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					return buf.ToString();
 				};
 
-				connection->SetGameState( Connection::GS_INITIALIZING );
+				connection->SetGameState( connection::Connection::GS_INITIALIZING );
 			}
 		);
 
 		m_connection->IfClient(
-			[ this ]( Client* connection ) -> void {
+			[ this ]( connection::Client* connection ) -> void {
 				connection->m_on_disconnect = [ this ]() -> bool {
 					Log( "Connection lost" );
 					m_state->DetachConnection();
@@ -1536,7 +1558,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	else {
 		m_slot_num = 0;
 	}
-	m_player = m_state->m_slots.GetSlot( m_slot_num ).GetPlayer();
+	m_player = m_state->m_slots->GetSlot( m_slot_num ).GetPlayer();
 	m_slot = m_player->GetSlot();
 
 	auto* ui = g_engine->GetUI();
@@ -1582,13 +1604,13 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			else
 #endif
 			{
-				const auto& map_settings = m_state->m_settings.global.map;
-				if ( map_settings.type == MapSettings::MT_MAPFILE ) {
+				auto& map_settings = m_state->m_settings.global.map;
+				if ( map_settings.type == settings::MapSettings::MT_MAPFILE ) {
 					ASSERT( !map_settings.filename.empty(), "loading map requested but map file not specified" );
 					ec = m_map->LoadFromFile( map_settings.filename );
 				}
 				else {
-					ec = m_map->Generate( map_settings, MT_C );
+					ec = m_map->Generate( &map_settings, MT_C );
 				}
 			}
 
@@ -1599,11 +1621,11 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		}
 
 		if ( !ec ) {
-			m_slot->SetPlayerFlag( Slot::PF_MAP_DOWNLOADED ); // map was generated locally
+			m_slot->SetPlayerFlag( slot::PF_MAP_DOWNLOADED ); // map was generated locally
 			if ( m_connection ) {
 				m_connection->IfServer(
-					[ this ]( Server* connection ) -> void {
-						connection->SetGameState( Connection::GS_RUNNING ); // allow clients to download map
+					[ this ]( connection::Server* connection ) -> void {
+						connection->SetGameState( connection::Connection::GS_RUNNING ); // allow clients to download map
 					}
 				);
 				m_connection->UpdateSlot( m_slot_num, m_slot, true );
@@ -1617,7 +1639,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	}
 	else {
 		m_connection->IfClient(
-			[ this, &response, ui ]( Client* connection ) -> void {
+			[ this, &response, ui ]( connection::Client* connection ) -> void {
 
 				// wait for server to initialize
 				ui->SetLoaderText( "Waiting for server" );
@@ -1661,14 +1683,14 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					};
 					connection->RequestDownload();
 				};
-				if ( connection->GetGameState() == Connection::GS_RUNNING ) {
+				if ( connection->GetGameState() == connection::Connection::GS_RUNNING ) {
 					// server already initialized
 					f_download_map();
 				}
 				else {
 					// wait for server to initialize
-					connection->m_on_game_state_change = [ this, f_download_map ]( const Connection::game_state_t state ) -> void {
-						if ( state == Connection::GS_RUNNING ) {
+					connection->m_on_game_state_change = [ this, f_download_map ]( const connection::Connection::game_state_t state ) -> void {
+						if ( state == connection::Connection::GS_RUNNING ) {
 							f_download_map();
 						}
 						else {
@@ -1771,8 +1793,8 @@ void Game::CheckTurnComplete() {
 		Log( "Sending turn complete status: " + std::to_string( m_is_turn_complete ) );
 		auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
 		fr.data.turn_status.status = m_is_turn_complete
-			? Turn::TS_TURN_COMPLETE
-			: Turn::TS_TURN_ACTIVE;
+			? turn::TS_TURN_COMPLETE
+			: turn::TS_TURN_ACTIVE;
 		AddFrontendRequest( fr );
 	}
 }
@@ -1859,7 +1881,7 @@ void Game::PushUnitUpdates() {
 	}
 }
 
-void Game::AddTileLockRequest( const bool is_lock, const size_t initiator_slot, const map::Tile::tile_positions_t& tile_positions ) {
+void Game::AddTileLockRequest( const bool is_lock, const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
 	ASSERT_NOLOG( m_state && m_state->IsMaster(), "only master can manage tile locks" );
 	m_tile_lock_requests.push_back(
 		{
@@ -1875,8 +1897,8 @@ void Game::ProcessTileLockRequests() {
 		const auto tile_lock_requests = m_tile_lock_requests;
 		m_tile_lock_requests.clear();
 		for ( const auto& req : tile_lock_requests ) {
-			const auto state = m_state->m_slots.GetSlot( req.initiator_slot ).GetState();
-			if ( state != Slot::SS_PLAYER ) {
+			const auto state = m_state->m_slots->GetSlot( req.initiator_slot ).GetState();
+			if ( state != slot::Slot::SS_PLAYER ) {
 				// player disconnected?
 				Log( "Skipping tile locks/unlocks for slot " + std::to_string( req.initiator_slot ) + " (invalid slot state: " + std::to_string( state ) + ")" );
 				continue;
@@ -1893,7 +1915,7 @@ void Game::ProcessTileLockRequests() {
 			auto& locks = it->second;
 			if ( req.is_lock ) {
 				// lock
-				Log( "Locking tiles for " + std::to_string( req.initiator_slot ) + ": " + map::Tile::TilePositionsToString( req.tile_positions ) );
+				Log( "Locking tiles for " + std::to_string( req.initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( req.tile_positions ) );
 				locks.push_back( TileLock{ req.tile_positions } );
 				auto e = new event::LockTiles( m_slot_num, req.tile_positions, req.initiator_slot );
 				e->SetDestinationSlot( req.initiator_slot );
@@ -1905,7 +1927,7 @@ void Game::ProcessTileLockRequests() {
 				for ( auto locks_it = locks.begin() ; locks_it != locks.end() ; locks_it++ ) {
 					if ( locks_it->Matches( req.tile_positions ) ) {
 						found = true;
-						Log( "Unlocking tiles for " + std::to_string( req.initiator_slot ) + ": " + map::Tile::TilePositionsToString( req.tile_positions ) );
+						Log( "Unlocking tiles for " + std::to_string( req.initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( req.tile_positions ) );
 						locks.erase( locks_it );
 						if ( locks.empty() ) {
 							m_tile_locks.erase( it );
@@ -1917,7 +1939,7 @@ void Game::ProcessTileLockRequests() {
 					}
 				}
 				if ( !found ) {
-					Log( "Could not find matching tile locks for " + std::to_string( req.initiator_slot ) + ": " + map::Tile::TilePositionsToString( req.tile_positions ) );
+					Log( "Could not find matching tile locks for " + std::to_string( req.initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( req.tile_positions ) );
 				}
 			}
 		}

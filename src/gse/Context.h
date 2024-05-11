@@ -3,10 +3,11 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
-#include <vector>
+
+#include "Types.h"
+#include "type/Types.h"
 
 #include "Value.h"
-#include "type/Callable.h"
 
 namespace gse {
 
@@ -52,7 +53,7 @@ public:
 		const si_t& call_si,
 		const bool is_traceable,
 		const std::vector< std::string > parameters = {},
-		const type::Callable::function_arguments_t& arguments = {}
+		const type::function_arguments_t& arguments = {}
 	);
 
 	virtual Context* GetParentContext() const = 0;

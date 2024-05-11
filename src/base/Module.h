@@ -8,17 +8,13 @@
 
 namespace base {
 
-typedef size_t mt_id_t;
-
 class Module : public Base {
 public:
 	virtual ~Module() = default;
-	
+
 	virtual void Start() {}
 	virtual void Stop() {}
 	virtual void Iterate() {}
 };
 
-typedef std::vector< base::Module* > modules_t;
-
-} /* namespace base */
+}

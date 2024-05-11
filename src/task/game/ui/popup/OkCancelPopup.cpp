@@ -1,5 +1,7 @@
 #include "OkCancelPopup.h"
 
+#include "ui/object/Button.h"
+
 namespace task {
 namespace game {
 namespace ui {
@@ -14,13 +16,13 @@ void OkCancelPopup::Create() {
 	Popup::Create();
 
 	NEW( m_buttons.ok, ::ui::object::Button, "PopupButtonOkCancel" );
-	m_buttons.ok->SetAlign( ::ui::object::UIObject::ALIGN_LEFT | ::ui::object::UIObject::ALIGN_BOTTOM );
+	m_buttons.ok->SetAlign( ::ui::ALIGN_LEFT | ::ui::ALIGN_BOTTOM );
 	m_buttons.ok->SetLeft( 12 );
 	m_buttons.ok->SetBottom( 40 );
 	m_buttons.ok->SetLabel( "OK" );
 	m_buttons.ok->SetZIndex( 0.9f ); // TODO: hack
 	m_buttons.ok->On(
-		::ui::UIEvent::EV_BUTTON_CLICK, EH( this ) {
+		::ui::event::EV_BUTTON_CLICK, EH( this ) {
 			OnOk();
 			return true;
 		}
@@ -28,13 +30,13 @@ void OkCancelPopup::Create() {
 	AddChild( m_buttons.ok );
 
 	NEW( m_buttons.cancel, ::ui::object::Button, "PopupButtonOkCancel" );
-	m_buttons.cancel->SetAlign( ::ui::object::UIObject::ALIGN_RIGHT | ::ui::object::UIObject::ALIGN_BOTTOM );
+	m_buttons.cancel->SetAlign( ::ui::ALIGN_RIGHT | ::ui::ALIGN_BOTTOM );
 	m_buttons.cancel->SetRight( 12 );
 	m_buttons.cancel->SetBottom( 40 );
 	m_buttons.cancel->SetLabel( "CANCEL" );
 	m_buttons.cancel->SetZIndex( 0.9f ); // TODO: hack
 	m_buttons.cancel->On(
-		::ui::UIEvent::EV_BUTTON_CLICK, EH( this ) {
+		::ui::event::EV_BUTTON_CLICK, EH( this ) {
 			Close();
 			return true;
 		}

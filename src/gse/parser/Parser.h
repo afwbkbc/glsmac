@@ -5,12 +5,14 @@
 
 #include "base/Base.h"
 
-#include "gse/program/Program.h"
-#include "gse/program/Scope.h"
-#include "gse/program/Statement.h"
-#include "gse/program/Object.h"
+#include "gse/Types.h"
 
 namespace gse {
+
+namespace program {
+class Program;
+}
+
 namespace parser {
 
 CLASS( Parser, base::Base )

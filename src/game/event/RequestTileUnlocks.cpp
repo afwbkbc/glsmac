@@ -2,13 +2,14 @@
 
 #include "game/Game.h"
 #include "game/State.h"
+#include "gse/type/Undefined.h"
 
 namespace game {
 namespace event {
 
 RequestTileUnlocks::RequestTileUnlocks(
 	const size_t initiator_slot,
-	const map::Tile::tile_positions_t& tile_positions,
+	const map::tile::positions_t& tile_positions,
 	const size_t nothing
 )
 	: TileLocksEvent( initiator_slot, ET_REQUEST_TILE_UNLOCKS, "RequestTileUnlocks", tile_positions ) {

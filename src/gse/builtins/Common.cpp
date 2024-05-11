@@ -1,10 +1,15 @@
 #include "Common.h"
 
 #include "gse/GSE.h"
+#include "gse/Context.h"
+#include "gse/callable/Native.h"
+#include "gse/Exception.h"
 #include "gse/type/Int.h"
 #include "gse/type/String.h"
 #include "gse/type/Array.h"
 #include "gse/type/Bool.h"
+#include "gse/type/Undefined.h"
+#include "gse/type/Object.h"
 
 namespace gse {
 namespace builtins {

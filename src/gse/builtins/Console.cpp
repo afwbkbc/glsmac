@@ -2,8 +2,8 @@
 
 #include <iostream>
 
+#include "gse/Context.h"
 #include "gse/callable/Native.h"
-
 #include "gse/type/Undefined.h"
 
 #include "logger/Stdout.h"

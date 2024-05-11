@@ -5,15 +5,17 @@
 
 #include "Actor.h"
 
+#include "scene/Types.h"
+
 #include "types/Matrix44.h"
-#include "scene/Scene.h"
-#include "scene/Camera.h"
 
 namespace scene {
+
+class Camera;
+
 namespace actor {
 
 class Sprite;
-
 class Mesh;
 
 CLASS( Instanced, Actor )
@@ -86,13 +88,10 @@ private:
 	instance_id_t m_next_instance_id = 1;
 	std::map< instance_id_t, instance_t > m_instances = {};
 
-	const scene::Scene::instance_positions_t* GetWorldInstancePositions();
+	const scene::instance_positions_t* GetWorldInstancePositions();
 
 	void UpdateMatrixForInstance( instance_t& instance );
 };
 
 }
 }
-
-#include "Sprite.h"
-#include "Mesh.h"

@@ -10,4 +10,4 @@ CLASS( Logger, base::Module )
 	virtual void Log( const std::string& text ) = 0;
 };
 
-} /* namespace logger */
+}

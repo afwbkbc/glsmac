@@ -1,5 +1,6 @@
 #include "FreeType.h"
 
+#include "types/Font.h"
 #include "util/System.h"
 
 namespace loader {
@@ -93,5 +94,5 @@ types::Font* FreeType::LoadFont( const std::string& name, const unsigned char si
 	}
 }
 
-} /* namespace font */
-} /* namespace loader */
+}
+}

@@ -1,17 +1,19 @@
 #pragma once
 
-#include <vector>
 #include <unordered_map>
 
-/* Clickable button */
-
 #include "Panel.h"
-#include "Label.h"
+
+/* Text input */
+
+#include "ui/theme/Types.h"
 
 #include "util/Timer.h"
 
 namespace ui {
 namespace object {
+
+class Label;
 
 CLASS( Input, Panel )
 
@@ -36,17 +38,17 @@ CLASS( Input, Panel )
 private:
 
 	struct {
-		const std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > value_label = {
-			{ Style::A_FONT,       Style::A_FONT },
-			{ Style::A_TEXT_COLOR, Style::A_TEXT_COLOR },
+		const std::unordered_map< attribute_type_t, attribute_type_t > value_label = {
+			{ A_FONT,       A_FONT },
+			{ A_TEXT_COLOR, A_TEXT_COLOR },
 		};
-		const std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > hint_label = {
-			{ Style::A_FONT,       Style::A_FONT },
-			{ Style::A_HINT_COLOR, Style::A_TEXT_COLOR },
+		const std::unordered_map< attribute_type_t, attribute_type_t > hint_label = {
+			{ A_FONT,       A_FONT },
+			{ A_HINT_COLOR, A_TEXT_COLOR },
 		};
 	} m_forwarded_style_attributes;
 
-	bool OnKeyDown( const UIEvent::event_data_t* data ) override;
+	bool OnKeyDown( const event::event_data_t* data ) override;
 
 	std::string m_value = "";
 	size_t m_max_length = 0;
@@ -64,5 +66,5 @@ private:
 
 };
 
-} /* namespace object */
-} /* namespace ui */
+}
+}

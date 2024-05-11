@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Rules.h"
+#include "game/rules/Rules.h"
 
 namespace game {
 namespace rules {

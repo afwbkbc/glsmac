@@ -1,6 +1,8 @@
 #include "Actor.h"
 
-#include "../Scene.h"
+#include "scene/Scene.h"
+#include "scene/Camera.h"
+#include "base/ObjectLink.h"
 
 namespace scene {
 namespace actor {
@@ -93,5 +95,5 @@ void Actor::Unserialize( types::Buffer buf ) {
 	UpdateMatrix();
 }
 
-} /* namespace actor */
-} /* namespace scene */
+}
+}

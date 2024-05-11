@@ -1,5 +1,7 @@
 #include "StaticDef.h"
 
+#include "Render.h"
+
 #include "gse/type/Bool.h"
 #include "gse/type/Int.h"
 #include "gse/type/Float.h"
@@ -8,10 +10,10 @@ namespace game {
 namespace unit {
 
 // TODO: per-def values?
-const Unit::health_t StaticDef::HEALTH_MAX = 1.0f;
-const Unit::health_t StaticDef::HEALTH_PER_TURN = 0.1f;
+const health_t StaticDef::HEALTH_MAX = 1.0f;
+const health_t StaticDef::HEALTH_PER_TURN = 0.1f;
 
-const std::unordered_map< Def::movement_type_t, std::string > StaticDef::s_movement_type_str = {
+const std::unordered_map< movement_type_t, std::string > StaticDef::s_movement_type_str = {
 	{
 		MT_IMMOVABLE,
 		"IMMOVABLE"
@@ -40,7 +42,7 @@ StaticDef::StaticDef(
 	const MoraleSet* moraleset,
 	const std::string& name,
 	const movement_type_t movement_type,
-	const Unit::movement_t movement_per_turn,
+	const movement_t movement_per_turn,
 	const Render* render
 )
 	: Def( id, moraleset, DT_STATIC, name )
@@ -52,12 +54,12 @@ StaticDef::~StaticDef() {
 	delete m_render;
 }
 
-const Def::movement_type_t StaticDef::GetMovementType() const {
+const movement_type_t StaticDef::GetMovementType() const {
 	return m_movement_type;
 }
 
-const types::Vec3 StaticDef::GetSpawnCoords( const float tile_x, const float tile_y, const map::TileState::tile_vertices_t& tile_coords ) const {
-	return m_render->GetSpawnCoords( tile_x, tile_y, tile_coords );
+const types::Vec3 StaticDef::GetSpawnCoords( const map::tile::Tile* tile, const map::tile::TileState* ts ) const {
+	return m_render->GetSpawnCoords( tile, ts );
 }
 
 const std::string StaticDef::ToString( const std::string& prefix ) const {
@@ -85,10 +87,10 @@ StaticDef* StaticDef::Unserialize( types::Buffer& buf, const std::string& id, co
 
 WRAPIMPL_BEGIN( StaticDef, CLASS_UNITDEF )
 	WRAPIMPL_PROPS {
-		WRAPIMPL_GET( "is_immovable", Bool, m_movement_type == Def::MT_IMMOVABLE )
-		WRAPIMPL_GET( "is_land", Bool, m_movement_type == Def::MT_LAND )
-		WRAPIMPL_GET( "is_water", Bool, m_movement_type == Def::MT_WATER )
-		WRAPIMPL_GET( "is_air", Bool, m_movement_type == Def::MT_AIR )
+		WRAPIMPL_GET( "is_immovable", Bool, m_movement_type == MT_IMMOVABLE )
+		WRAPIMPL_GET( "is_land", Bool, m_movement_type == MT_LAND )
+		WRAPIMPL_GET( "is_water", Bool, m_movement_type == MT_WATER )
+		WRAPIMPL_GET( "is_air", Bool, m_movement_type == MT_AIR )
 		WRAPIMPL_GET( "movement_per_turn", Float, m_movement_per_turn )
 		WRAPIMPL_GET( "health_per_turn", Float, HEALTH_PER_TURN )
 		WRAPIMPL_GET( "health_max", Float, HEALTH_MAX )

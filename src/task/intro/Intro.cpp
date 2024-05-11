@@ -3,17 +3,20 @@
 #include "task/mainmenu/MainMenu.h"
 
 #include "engine/Engine.h"
-
-using namespace ui::object;
+#include "ui/UI.h"
+#include "Theme.h"
+#include "ui/object/Surface.h"
+#include "scheduler/Scheduler.h"
 
 namespace task {
 namespace intro {
 
 void Intro::Start() {
 
-	g_engine->GetUI()->AddTheme( &m_theme );
+	NEW( m_theme, Theme );
+	g_engine->GetUI()->AddTheme( m_theme );
 
-	NEW( m_logo, Surface, "IntroLogo" );
+	NEW( m_logo, ui::object::Surface, "IntroLogo" );
 	g_engine->GetUI()->AddObject( m_logo );
 
 	m_timer.SetTimeout( 1000 ); // pretend we're loading something
@@ -23,7 +26,8 @@ void Intro::Start() {
 void Intro::Stop() {
 	g_engine->GetUI()->RemoveObject( m_logo );
 
-	g_engine->GetUI()->RemoveTheme( &m_theme );
+	g_engine->GetUI()->RemoveTheme( m_theme );
+	DELETE( m_theme );
 }
 
 void Intro::Iterate() {
@@ -35,5 +39,5 @@ void Intro::Iterate() {
 	}
 }
 
-} /* namespace intro */
-} /* namespace task */
+}
+}

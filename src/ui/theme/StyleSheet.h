@@ -1,14 +1,16 @@
 #pragma once
 
 #include <unordered_map>
+#include <vector>
 
 #include "base/Base.h"
 
-#include "ui/theme/Style.h"
-#include "ui/object/UIObject.h"
+#include "Types.h"
 
 namespace ui {
 namespace theme {
+
+class Style;
 
 CLASS( StyleSheet, base::Base )
 
@@ -16,8 +18,8 @@ CLASS( StyleSheet, base::Base )
 
 	virtual ~StyleSheet();
 
-	void AddStyle( const std::string& style_name, const Style::includes_t& includes, const Style::style_handler_t handler );
-	void AddStyle( const std::string& style_name, const Style::style_handler_t handler );
+	void AddStyle( const std::string& style_name, const includes_t& includes, const style_handler_t handler );
+	void AddStyle( const std::string& style_name, const style_handler_t handler );
 
 	typedef std::unordered_map< std::string, Style* > styles_t;
 	const std::vector< Style* > GetStyles();

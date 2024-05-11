@@ -8,5 +8,5 @@ namespace object {
 CLASS( Root, UIContainer )
 };
 
-} /* namespace object */
-} /* namespace ui */
+}
+}

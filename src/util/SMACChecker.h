@@ -12,4 +12,4 @@ CLASS( SMACChecker, Util )
 private:
 };
 
-} /* namespace util */
+}

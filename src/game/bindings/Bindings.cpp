@@ -1,20 +1,33 @@
 #include "Bindings.h"
 
-#include "game/Game.h"
+#include "util/FS.h"
 
+#include "game/Game.h"
+#include "game/bindings/Binding.h"
+#include "gse/GSE.h"
+#include "gse/GlobalContext.h"
+#include "gse/Exception.h"
 #include "gse/type/String.h"
 #include "gse/type/Object.h"
 #include "gse/type/Callable.h"
+#include "gse/type/Undefined.h"
 
 #include "game/State.h"
-
-using namespace gse;
 
 namespace game {
 namespace bindings {
 
 Bindings::Bindings( State* state )
-	: m_state( state ) {
+	: m_state( state )
+	, m_entry_script(
+		util::FS::GeneratePath(
+			{
+				"gse", // directory is expected to be in working dir
+				"default", // only 'default' mod for now
+				"main" // script name (extension is appended automatically)
+			}, gse::GSE::PATH_SEPARATOR
+		)
+	) {
 	NEW( m_gse, gse::GSE );
 	m_gse->AddBindings( this );
 	m_gse_context = m_gse->CreateGlobalContext();
@@ -45,11 +58,11 @@ Bindings::~Bindings() {
 }
 
 void Bindings::AddToContext( gse::Context* ctx ) {
-	type::Object::properties_t methods = {};
+	gse::type::object_properties_t methods = {};
 	for ( auto& it : m_bindings ) {
 		it->Add( methods );
 	}
-	ctx->CreateBuiltin( "game", VALUE( type::Object, methods ) );
+	ctx->CreateBuiltin( "game", VALUE( gse::type::Object, methods ) );
 }
 
 void Bindings::RunMain() {
@@ -60,10 +73,10 @@ gse::Value Bindings::Call( const callback_slot_t slot, const callback_arguments_
 	const auto& it = m_callbacks.find( slot );
 	if ( it != m_callbacks.end() ) {
 		try {
-			type::Object::properties_t properties = arguments;
+			gse::type::object_properties_t properties = arguments;
 			const gse::Value result = ( (gse::type::Callable*)it->second.Get() )->Run(
 				m_gse_context, m_si_internal, {
-					VALUE( type::Object, properties ),
+					VALUE( gse::type::Object, properties ),
 				}
 			);
 			auto* game = m_state->GetGame();
@@ -81,24 +94,24 @@ gse::Value Bindings::Call( const callback_slot_t slot, const callback_arguments_
 			}
 		}
 	}
-	return VALUE( type::Undefined );
+	return VALUE( gse::type::Undefined );
 }
 
 State* Bindings::GetState() const {
 	return m_state;
 }
 
-Game* Bindings::GetGame( gse::Context* ctx, const si_t& call_si ) const {
+Game* Bindings::GetGame( gse::Context* ctx, const gse::si_t& call_si ) const {
 	auto* game = m_state->GetGame();
 	if ( !game ) {
-		ERROR( EC.GAME_ERROR, "Game not started yet" );
+		ERROR( gse::EC.GAME_ERROR, "Game not started yet" );
 	}
 	return game;
 }
 
-void Bindings::SetCallback( const callback_slot_t slot, const gse::Value& callback, gse::Context* context, const si_t& si ) {
+void Bindings::SetCallback( const callback_slot_t slot, const gse::Value& callback, gse::Context* context, const gse::si_t& si ) {
 	if ( m_callbacks.find( slot ) != m_callbacks.end() ) {
-		throw gse::Exception( EC.GAME_ERROR, "Callback slot already in use", context, si );
+		throw gse::Exception( gse::EC.GAME_ERROR, "Callback slot already in use", context, si );
 	}
 	m_callbacks.insert_or_assign( slot, callback );
 }

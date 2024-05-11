@@ -2,21 +2,18 @@
 
 #include <functional>
 
-#include "gse/Exception.h"
 #include "gse/type/Callable.h"
-#include "gse/type/Object.h"
-#include "gse/type/Undefined.h"
-#include "gse/type/Bool.h"
+#include "gse/type/Types.h"
 
 namespace gse {
 namespace callable {
 
-#define NATIVE_CALL( ... ) VALUE( gse::callable::Native, [ __VA_ARGS__ ]( gse::Context* ctx, const gse::si_t& call_si, const gse::type::Callable::function_arguments_t& arguments ) -> gse::Value
+#define NATIVE_CALL( ... ) VALUE( gse::callable::Native, [ __VA_ARGS__ ]( gse::Context* ctx, const gse::si_t& call_si, const gse::type::function_arguments_t& arguments ) -> gse::Value
 
 // TODO: refactor these
 #define N_ARGS \
     const gse::type::Type* arg; \
-    gse::type::Object::properties_t::const_iterator obj_it; \
+    gse::type::object_properties_t::const_iterator obj_it; \
     auto getprop_val = VALUE( gse::type::Undefined ); \
     auto obj_val = VALUE( gse::type::Undefined ); \
     auto persist_val = VALUE( gse::type::Undefined );
@@ -128,10 +125,10 @@ namespace callable {
 
 class Native : public type::Callable {
 public:
-	typedef std::function< Value( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) > executor_t;
+	typedef std::function< Value( Context* ctx, const si_t& call_si, const type::function_arguments_t& arguments ) > executor_t;
 	Native() = delete;
 	Native( const executor_t& executor );
-	virtual Value Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) override;
+	virtual Value Run( Context* ctx, const si_t& call_si, const type::function_arguments_t& arguments ) override;
 
 private:
 	const executor_t m_executor;

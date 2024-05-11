@@ -3,7 +3,8 @@
 #include <vector>
 
 #include "types/Exception.h"
-#include "program/Element.h"
+
+#include "gse/Types.h"
 
 namespace gse {
 
@@ -53,5 +54,3 @@ public:
 };
 
 }
-
-#include "ChildContext.h"

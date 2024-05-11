@@ -2,14 +2,16 @@
 
 #include "base/Task.h"
 
-#include "types/Texture.h"
-#include "ui/object/Surface.h"
 #include "util/Timer.h"
 
-#include "Theme.h"
+namespace ui::object {
+class Surface;
+}
 
 namespace task {
 namespace intro {
+
+class Theme;
 
 CLASS( Intro, base::Task )
 	void Start() override;
@@ -17,11 +19,11 @@ CLASS( Intro, base::Task )
 	void Iterate() override;
 
 protected:
-	Theme m_theme;
+	Theme* m_theme;
 	::ui::object::Surface* m_logo = nullptr;
 	util::Timer m_timer;
 
 };
 
-} /* namespace intro */
-} /* namespace game */
+}
+}

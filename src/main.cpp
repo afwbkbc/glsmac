@@ -62,6 +62,10 @@
 
 #include "version.h"
 
+#include "game/State.h"
+#include "game/Player.h"
+#include "game/slot/Slots.h"
+
 // TODO: move to config
 #define WINDOW_WIDTH 1024
 #define WINDOW_HEIGHT 768
@@ -79,10 +83,7 @@
 #include "debug/MemoryWatcher.h"
 #include "debug/DebugOverlay.h"
 
-using namespace util;
 #endif
-
-using namespace std;
 
 #ifdef main
 #undef main
@@ -101,40 +102,40 @@ int main( const int argc, const char* argv[] ) {
 	if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
 #ifdef __linux__
 		// automatically start under gdb if possible
-		if ( !System::AreWeUnderGDB() && System::IsGDBAvailable() ) {
-			cout << "Restarting process under GDB..." << endl;
+		if ( !util::System::AreWeUnderGDB() && util::System::IsGDBAvailable() ) {
+			std::cout << "Restarting process under GDB..." << std::endl;
 
-			string cmdline = "printf \"r\\nbt\\n\" | gdb --args";
+			std::string cmdline = "printf \"r\\nbt\\n\" | gdb --args";
 			for ( int c = 0 ; c < argc ; c++ ) {
-				cmdline += (string)" " + argv[ c ];
+				cmdline += (std::string)" " + argv[ c ];
 			}
 			cmdline += " 2>&1 | tee debug.log";
 
-			cout << cmdline << endl;
+			std::cout << cmdline << std::endl;
 			int status = system( cmdline.c_str() );
 			if ( status < 0 ) {
-				cout << "Error: " << strerror( errno ) << endl;
+				std::cout << "Error: " << strerror( errno ) << std::endl;
 				exit( EXIT_FAILURE );
 			}
 			else if ( WIFEXITED( status ) ) {
-				cout << "Process finished, output saved to debug.log" << endl;
+				std::cout << "Process finished, output saved to debug.log" << std::endl;
 				exit( EXIT_SUCCESS );
 			}
 			else {
-				cout << "Process finished, output saved to debug.log" << endl;
+				std::cout << "Process finished, output saved to debug.log" << std::endl;
 				exit( EXIT_FAILURE );
 			}
 		}
 #else
-		cout << "WARNING: gdb check skipped due to unsupported platform" << endl;
+		std::cout << "WARNING: gdb check skipped due to unsupported platform" << std::endl;
 #endif
 	}
 	debug::MemoryWatcher memory_watcher( config.HasDebugFlag( config::Config::DF_MEMORYDEBUG ), config.HasDebugFlag( config::Config::DF_QUIET ) );
 #endif
 
-	FS::CreateDirectoryIfNotExists( config.GetPrefix() );
+	util::FS::CreateDirectoryIfNotExists( config.GetPrefix() );
 #ifdef DEBUG
-	FS::CreateDirectoryIfNotExists( config.GetDebugPath() );
+	util::FS::CreateDirectoryIfNotExists( config.GetDebugPath() );
 #endif
 
 	int result = EXIT_FAILURE;
@@ -281,13 +282,13 @@ int main( const int argc, const char* argv[] ) {
 					player, ::game::Player,
 					"Player",
 					::game::Player::PR_HOST,
-					::game::Player::RANDOM_FACTION,
+					{},
 					rules.GetDefaultDifficultyLevel()
 				);
 				state->AddPlayer( player );
 				state->AddCIDSlot( 0, 0 );
-				state->m_slots.Resize( 1 );
-				auto& slot = state->m_slots.GetSlot( 0 );
+				state->m_slots->Resize( 1 );
+				auto& slot = state->m_slots->GetSlot( 0 );
 				slot.SetPlayer( player, 0, "" );
 				slot.SetLinkedGSID( state->m_settings.local.account.GetGSID() );
 				NEW( task, task::game::Game, state, 0, UH() {

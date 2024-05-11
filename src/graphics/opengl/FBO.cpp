@@ -1,5 +1,9 @@
 #include "FBO.h"
 
+#include "types/mesh/Simple.h"
+#include "types/texture/Texture.h"
+#include "graphics/opengl/shader_program/Simple2D.h"
+
 namespace graphics {
 namespace opengl {
 
@@ -9,7 +13,7 @@ FBO::FBO( const size_t width, const size_t height ) {
 	glGenBuffers( 1, &m_vbo );
 	glGenBuffers( 1, &m_ibo );
 
-	NEW( m_mesh, mesh::Simple, 4, 2 ); // TODO: quad mesh
+	NEW( m_mesh, types::mesh::Simple, 4, 2 ); // TODO: quad mesh
 	auto top_left = m_mesh->AddVertex(
 		{
 			-1,
@@ -212,7 +216,7 @@ void FBO::Draw( shader_program::Simple2D* sp ) {
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 }
 
-types::Texture* FBO::CaptureToTexture() {
+types::texture::Texture* FBO::CaptureToTexture() {
 	ASSERT( !m_is_enabled, "can't read fbo that is being written to" );
 	ASSERT( m_width > 0, "fbo width is zero" );
 	ASSERT( m_height > 0, "fbo height is zero" );
@@ -221,7 +225,7 @@ types::Texture* FBO::CaptureToTexture() {
 	const auto width = m_width / INTERNAL_RESOLUTION_MULTIPLIER;
 	const auto height = m_height / INTERNAL_RESOLUTION_MULTIPLIER;
 
-	NEWV( texture, types::Texture, "FBOCapture", width, height );
+	NEWV( texture, types::texture::Texture, "FBOCapture", width, height );
 
 	glBindFramebuffer( GL_READ_FRAMEBUFFER, m_fbo );
 	glReadBuffer( GL_COLOR_ATTACHMENT0 );

@@ -2,6 +2,11 @@
 
 #include "engine/Engine.h"
 
+#include "task/game/Unit.h"
+#include "ui/object/Mesh.h"
+#include "ui/object/Label.h"
+#include "types/mesh/Mesh.h"
+
 namespace task {
 namespace game {
 namespace ui {
@@ -30,7 +35,7 @@ void UnitPreview::PreviewUnit( const Unit* unit ) {
 	const types::mesh::Mesh* mesh;
 #define X( _key, _class ) \
     NEW( mesh, types::mesh::Mesh, *render._key.mesh ); /* make a copy */ \
-    NEW( m_sprites._key, object::Mesh, "BBUnitPreview" _class ); \
+    NEW( m_sprites._key, ::ui::object::Mesh, "BBUnitPreview" _class ); \
     m_sprites._key->SetMesh( mesh ); \
     m_sprites._key->SetTexture( render._key.texture ); \
     AddChild( m_sprites._key );

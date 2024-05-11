@@ -8,8 +8,12 @@
 #include "gse/type/String.h"
 
 #include "gse/Exception.h"
-
+#include "gse/program/Program.h"
+#include "gse/program/Statement.h"
+#include "gse/program/Expression.h"
 #include "gse/program/Variable.h"
+#include "gse/program/Operator.h"
+#include "gse/program/Catch.h"
 #include "gse/program/Value.h"
 #include "gse/program/Array.h"
 #include "gse/program/Object.h"
@@ -22,9 +26,10 @@
 #include "gse/program/Try.h"
 
 namespace gse {
-namespace parser {
 
 using namespace program;
+
+namespace parser {
 
 JS::JS( const std::string& filename, const std::string& source, const size_t initial_line_num )
 	: Parser( filename, source, initial_line_num ) {
@@ -359,7 +364,7 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 	source_elements_t::const_iterator it = begin, it_end, it_next, it_tmp;
 	uint8_t t;
 	bool var_hints_allowed = true;
-	Variable::variable_hints_t next_var_hints = Variable::VH_NONE;
+	variable_hints_t next_var_hints = VH_NONE;
 	const Expression* condition;
 
 	// split by operator priority
@@ -523,7 +528,7 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 				}
 				else {
 					// child dereference, group it into expression
-					ASSERT( next_var_hints == Variable::VH_NONE, "variable modifier can't be used with properties" );
+					ASSERT( next_var_hints == VH_NONE, "variable modifier can't be used with properties" );
 					elements.push_back( GetExpressionOrOperand( it, it_tmp ) );
 					it = it_tmp - 1;
 				}
@@ -558,7 +563,7 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 					if ( it + 3 == end ) {
 						throw gse::Exception( EC.PARSE_ERROR, "Expected value after =", nullptr, ( *( it + 2 ) )->m_si );
 					}
-					ASSERT( next_var_hints == Variable::VH_NONE, "multiple variable hints" );
+					ASSERT( next_var_hints == VH_NONE, "multiple variable hints" );
 					if ( !var_hints_allowed ) {
 						throw gse::Exception( EC.PARSE_ERROR, "Unexpected keyword: " + mod_it->first, nullptr, ( *it )->m_si );
 					}
@@ -672,8 +677,8 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 								if (
 									(*callable_begin)->m_element_type != Element::ET_OPERAND && (
 										(*callable_begin)->m_element_type != Element::ET_OPERATOR || (
-											((program::Operator*)(*callable_begin))->op != program::Operator::OT_CHILD &&
-												((program::Operator*)(*callable_begin))->op != program::Operator::OT_AT
+											((program::Operator*)(*callable_begin))->op != program::OT_CHILD &&
+												((program::Operator*)(*callable_begin))->op != program::OT_AT
 										)
 									)
 								) {
@@ -750,12 +755,12 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 										) {
 										// 'append' operator ( []= )
 										ASSERT( it + 2 != end, "value expected after append operator" );
-										elements.push_back( new program::Operator( GetSI( it, it_end + 2 ), program::Operator::OT_APPEND ) );
+										elements.push_back( new program::Operator( GetSI( it, it_end + 2 ), program::OT_APPEND ) );
 										it_end++;
 									}
 									else {
 										// 'at' operator ( [i] )
-										elements.push_back( new program::Operator( GetSI( it, it_end + 1 ), program::Operator::OT_AT ) );
+										elements.push_back( new program::Operator( GetSI( it, it_end + 1 ), program::OT_AT ) );
 										elements.push_back( GetExpressionOrOperand( it + 1, it_end ) );
 									}
 									break;
@@ -778,7 +783,7 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 				throw gse::Exception( EC.PARSE_ERROR, "Unexpected: " + ( *it )->ToString() + "", nullptr, ( *it )->m_si );
 		}
 		if ( !var_hints_allowed ) {
-			ASSERT( next_var_hints == Variable::VH_NONE, "variable name required after modifier" );
+			ASSERT( next_var_hints == VH_NONE, "variable name required after modifier" );
 		}
 		if ( it != end ) {
 			it++;
@@ -795,14 +800,14 @@ const program::Expression* JS::GetExpression( const source_elements_t::const_ite
 		: new Expression( operand->m_si, operand );
 }
 
-const program::Operand* JS::GetOperand( const Identifier* element, program::Variable::variable_hints_t* next_var_hints ) {
+const program::Operand* JS::GetOperand( const Identifier* element, program::variable_hints_t* next_var_hints ) {
 	EL( "GetOperand" )
 	switch ( element->m_identifier_type ) {
 		case IDENTIFIER_VARIABLE: {
-			program::Variable::variable_hints_t hints = Variable::VH_NONE;
+			program::variable_hints_t hints = VH_NONE;
 			if ( next_var_hints ) {
 				hints = *next_var_hints;
-				*next_var_hints = Variable::VH_NONE;
+				*next_var_hints = VH_NONE;
 			}
 			return new Variable( element->m_si, element->m_name, hints );
 		}

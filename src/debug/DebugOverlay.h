@@ -6,15 +6,24 @@
 #include "base/Task.h"
 
 #include "util/Timer.h"
-#include "types/Font.h"
-#include "ui/object/Label.h"
-#include "ui/object/Surface.h"
 
-using namespace types;
-using namespace ui;
-namespace ui {
-using namespace object;
+namespace types {
+class Font;
+namespace texture {
+class Texture;
 }
+}
+
+namespace ui {
+namespace object {
+class Label;
+class Surface;
+}
+namespace event {
+class UIEventHandler;
+}
+}
+
 namespace debug {
 
 CLASS( DebugOverlay, base::Task )
@@ -33,25 +42,25 @@ CLASS( DebugOverlay, base::Task )
 protected:
 	util::Timer m_stats_timer;
 
-	Texture* m_background_texture = nullptr;
-	Surface* m_background_left = nullptr;
-	Surface* m_background_middle = nullptr;
+	types::texture::Texture* m_background_texture = nullptr;
+	ui::object::Surface* m_background_left = nullptr;
+	ui::object::Surface* m_background_middle = nullptr;
 
 	size_t m_memory_stats_lines = 0;
 	size_t m_font_size = 0;
-	Font* m_stats_font = nullptr;
+	types::Font* m_stats_font = nullptr;
 
-#define D( _stat ) Label* m_##_stats_label_##_stat = nullptr;
+#define D( _stat ) ui::object::Label* m_##_stats_label_##_stat = nullptr;
 	DEBUG_STATS;
 #undef D
 
-	std::vector< Label* > m_memory_stats_labels = {};
-	void ActivateLabel( Label* label, const size_t left, const size_t top );
+	std::vector< ui::object::Label* > m_memory_stats_labels = {};
+	void ActivateLabel( ui::object::Label* label, const size_t left, const size_t top );
 
 private:
 	bool m_is_visible = false;
 
-	const UIEventHandler* m_toggle_handler = nullptr;
+	const ui::event::UIEventHandler* m_toggle_handler = nullptr;
 
 };
 

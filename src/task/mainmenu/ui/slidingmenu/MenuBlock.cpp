@@ -1,6 +1,9 @@
 #include "MenuBlock.h"
 
 #include "ui/event/UIEvent.h"
+#include "MenuItem.h"
+#include "task/mainmenu/SlidingMenu.h"
+#include "ui/object/SoundEffect.h"
 
 namespace task {
 namespace mainmenu {
@@ -73,7 +76,7 @@ void MenuBlock::Create() {
 		NEWV( menu_item, MenuItem, this, item.first );
 		menu_item->SetBottom( m_menu_items.size() * 70 );
 		menu_item->On(
-			UIEvent::EV_MOUSE_MOVE, EH( this, item, i ) {
+			ui::event::EV_MOUSE_MOVE, EH( this, item, i ) {
 				SetActiveItem( m_items.size() - i );
 				return false;
 			}
@@ -89,22 +92,22 @@ void MenuBlock::Create() {
 	}
 
 	On(
-		UIEvent::EV_KEY_DOWN, EH( this ) {
+		ui::event::EV_KEY_DOWN, EH( this ) {
 			if ( !data->key.modifiers ) {
-				if ( data->key.code == UIEvent::K_UP ) {
+				if ( data->key.code == ui::event::K_UP ) {
 					if ( m_selected_item_index < m_items.size() - 1 ) {
 						SetActiveItem( m_selected_item_index + 1 );
 					}
 				}
-				else if ( data->key.code == UIEvent::K_DOWN ) {
+				else if ( data->key.code == ui::event::K_DOWN ) {
 					if ( m_selected_item_index > 0 ) {
 						SetActiveItem( m_selected_item_index - 1 );
 					}
 				}
-				else if ( data->key.code == UIEvent::K_ESCAPE ) {
+				else if ( data->key.code == ui::event::K_ESCAPE ) {
 					GoBack();
 				}
-				else if ( data->key.code == UIEvent::K_ENTER ) {
+				else if ( data->key.code == ui::event::K_ENTER ) {
 					OnItemClick( m_selected_item->GetText() );
 				}
 				else {
@@ -120,7 +123,7 @@ void MenuBlock::Create() {
 
 	SetActiveItem( m_selected_item_index );
 
-	NEW( m_sound, SoundEffect, "SlidingMenuSound" );
+	NEW( m_sound, ui::object::SoundEffect, "SlidingMenuSound" );
 	AddChild( m_sound );
 
 	m_slide_timer.SetInterval( 1 );
@@ -189,9 +192,9 @@ void MenuBlock::SetActiveItem( const size_t index ) {
 		auto* item = m_menu_items[ index ];
 		if ( item != m_selected_item ) {
 			if ( m_selected_item ) {
-				m_selected_item->RemoveStyleModifier( Style::M_SELECTED );
+				m_selected_item->RemoveStyleModifier( ui::M_SELECTED );
 			}
-			item->AddStyleModifier( Style::M_SELECTED );
+			item->AddStyleModifier( ui::M_SELECTED );
 			m_selected_item = item;
 			m_selected_item_index = index;
 			const auto& i = m_items[ m_items.size() - index - 1 ];

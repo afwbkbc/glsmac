@@ -1,8 +1,8 @@
 #include "Orthographic.h"
 
-using namespace scene;
-
 #include "graphics/opengl/OpenGL.h"
+#include "scene/actor/Actor.h"
+#include "types/mesh/Render.h"
 
 namespace graphics {
 namespace opengl {
@@ -27,13 +27,13 @@ out vec3 normal; \
 \
 void main(void) { \
 	vec4 position; \
-	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_IGNORE_CAMERA ) + " ) { \
+	if ( " + S_HasFlag( "uFlags", scene::actor::Actor::RF_IGNORE_CAMERA ) + " ) { \
 		position = vec4( aCoord, 1.0 ); \
 	} \
 	else { \
 		position = uWorld * uInstances[ gl_InstanceID ] * vec4( aCoord, 1.0 ); \
 	} \
-	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_2D_POSITION ) + " ) { \
+	if ( " + S_HasFlag( "uFlags", scene::actor::Actor::RF_USE_2D_POSITION ) + " ) { \
 		position += vec4( uPosition, 0.0, 0.0 ); \
 	}\
 	gl_Position = position; \
@@ -62,7 +62,7 @@ uniform vec3 uAreaLimitsMax; \
 out vec4 FragColor; \
 \
 void main(void) { \
-	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_AREA_LIMITS ) + " ) { \
+	if ( " + S_HasFlag( "uFlags", scene::actor::Actor::RF_USE_AREA_LIMITS ) + " ) { \
 		if ( \
 			fragpos.x < uAreaLimitsMin.x || \
 			fragpos.x > uAreaLimitsMax.x || \
@@ -90,11 +90,11 @@ void main(void) { \
 	float gamma = 1.4; /* TODO: pass via uniform */ \
 	vec3 color = vec3( tex.r * tintcolor.r, tex.g * tintcolor.g, tex.b * tintcolor.b ); \
 	float alpha = tintcolor.a * tex.a; \
-	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_TINT ) + " ) { \
+	if ( " + S_HasFlag( "uFlags", scene::actor::Actor::RF_USE_TINT ) + " ) { \
 		color *= uTintColor.rgb; \
 		alpha *= uTintColor.a; \
 	} \
-	if ( ! " + S_HasFlag( "uFlags", actor::Actor::RF_IGNORE_LIGHTING ) + " ) { \
+	if ( ! " + S_HasFlag( "uFlags", scene::actor::Actor::RF_IGNORE_LIGHTING ) + " ) { \
 		color *= ambient + diffuse; \
 	} \
 	FragColor = vec4( color * gamma, alpha ); \
@@ -122,7 +122,7 @@ void Orthographic::Initialize() {
 };
 
 void Orthographic::EnableAttributes() const {
-	const size_t tsz = sizeof( types::mesh::Mesh::coord_t );
+	const size_t tsz = sizeof( types::mesh::coord_t );
 	const size_t vasz = types::mesh::Render::VERTEX_SIZE * tsz;
 	size_t vaofs = 0;
 	glEnableVertexAttribArray( attributes.coord );
@@ -146,6 +146,6 @@ void Orthographic::DisableAttributes() const {
 	glDisableVertexAttribArray( attributes.normal );
 };
 
-} /* namespace shader_program */
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}
+}

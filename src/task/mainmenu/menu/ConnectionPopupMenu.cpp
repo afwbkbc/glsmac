@@ -2,6 +2,11 @@
 
 #include "lobby/Lobby.h"
 
+#include "task/mainmenu/MainMenu.h"
+#include "game/State.h"
+#include "game/connection/Connection.h"
+#include "game/connection/Client.h"
+
 namespace task {
 namespace mainmenu {
 
@@ -31,18 +36,18 @@ void ConnectionPopupMenu::SetConnection( ::game::connection::Connection* connect
 		}
 		else {
 			// client may join either lobby or running game, so need to check game state first
-			connection->AsClient()->m_on_game_state_change = [ this, connection ]( const Connection::game_state_t game_state ) -> void {
+			connection->AsClient()->m_on_game_state_change = [ this, connection ]( const game::connection::Connection::game_state_t game_state ) -> void {
 				switch ( game_state ) {
-					case Connection::GS_LOBBY: {
+					case game::connection::Connection::GS_LOBBY: {
 						Show();
 						NEWV( menu, lobby::Lobby, m_mainmenu, connection );
 						//connection = nullptr;
 						NextMenu( menu );
 						break;
 					}
-					case Connection::GS_RUNNING: {
+					case game::connection::Connection::GS_RUNNING: {
 						Log( "Game is already running, trying to join" );
-						
+
 						m_mainmenu->m_state->InitBindings();
 						connection->m_on_global_settings_update = [ this ]() -> void {
 							Log( "Got global settings packet" );

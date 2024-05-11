@@ -1,17 +1,26 @@
 #pragma once
 
-#include "../../Section.h"
+#include "task/game/ui/Section.h"
 
-#include "../UnitPreview.h"
-#include "task/game/Types.h"
-#include "task/game/Unit.h"
-#include "ui/object/Label.h"
+namespace types::mesh {
+class Mesh;
+}
+
+namespace ui::object {
+class Label;
+class Mesh;
+class Panel;
+}
 
 namespace task {
 namespace game {
+
+class Unit;
+
 namespace ui {
 
 class UnitsList;
+class UnitPreview;
 
 CLASS( UnitsListItem, Section )
 
@@ -32,7 +41,7 @@ private:
 
 	struct sprite_t {
 		types::mesh::Mesh* mesh = nullptr; // save mesh to be able to preview units
-		object::Mesh* obj = nullptr; // this will get copy of mesh
+		::ui::object::Mesh* obj = nullptr; // this will get copy of mesh
 	};
 	struct {
 		sprite_t unit = {};

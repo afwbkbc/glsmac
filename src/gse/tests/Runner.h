@@ -1,6 +1,8 @@
 #pragma once
 
-#include "task/gsetests/GSETests.h"
+namespace task::gsetests {
+class GSETests;
+}
 
 namespace gse {
 namespace tests {

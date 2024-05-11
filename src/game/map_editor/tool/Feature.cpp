@@ -1,25 +1,25 @@
 #include "Feature.h"
 
-#include "../../Game.h"
+#include "game/Game.h"
 
 namespace game {
 namespace map_editor {
 namespace tool {
 
-Feature::Feature( Game* game, const MapEditor::tool_type_t type, const map::Tile::feature_t feature )
+Feature::Feature( Game* game, const tool_type_t type, const map::tile::feature_t feature )
 	: Tool( game, type )
 	, m_feature( feature ) {
 	//
 }
 
-const MapEditor::tiles_t Feature::Draw( map::Tile* tile, const MapEditor::draw_mode_t mode ) {
-	if ( mode == MapEditor::DM_DEC ) {
+const tiles_t Feature::Draw( map::tile::Tile* tile, const draw_mode_t mode ) {
+	if ( mode == DM_DEC ) {
 		if ( !( tile->features & m_feature ) ) {
 			return {}; // already unset
 		}
 		tile->features &= ~m_feature;
 	}
-	else if ( mode == MapEditor::DM_INC ) {
+	else if ( mode == DM_INC ) {
 		if ( tile->features & m_feature ) {
 			return {}; // already set
 		}
@@ -27,7 +27,7 @@ const MapEditor::tiles_t Feature::Draw( map::Tile* tile, const MapEditor::draw_m
 	}
 
 	// some features will alter surrounding tiles, others won't
-	if ( m_feature & ( map::Tile::F_JUNGLE | map::Tile::F_RIVER | map::Tile::F_XENOFUNGUS ) ) {
+	if ( m_feature & ( map::tile::FEATURE_JUNGLE | map::tile::FEATURE_RIVER | map::tile::FEATURE_XENOFUNGUS ) ) {
 		return {
 			tile,
 			tile->W,

@@ -1,8 +1,10 @@
 #include "Style.h"
 
 #include "engine/Engine.h"
-
-using namespace types;
+#include "loader/texture/TextureLoader.h"
+#include "loader/sound/SoundLoader.h"
+#include "loader/font/FontLoader.h"
+#include "StyleSheet.h"
 
 namespace ui {
 namespace theme {
@@ -41,7 +43,7 @@ void Style::Set( const attribute_type_t attribute_type, const float value ) {
 	( *m_attributes_ptr )[ attribute_type ].value.scalar = value;
 }
 
-void Style::SetColor( const attribute_type_t attribute_type, const Color& value ) {
+void Style::SetColor( const attribute_type_t attribute_type, const types::Color& value ) {
 #ifdef DEBUG
 	CheckSet( attribute_type );
 #endif
@@ -65,7 +67,7 @@ void Style::SetTexture( const attribute_type_t attribute_type, const std::string
 	SetObject( attribute_type, g_engine->GetTextureLoader()->LoadTexture( name, x1, y1, x2, y2, flags, value ) );
 }
 
-void Style::SetColorTexture( const attribute_type_t attribute_type, const Color& color ) {
+void Style::SetColorTexture( const attribute_type_t attribute_type, const types::Color& color ) {
 	SetObject( attribute_type, g_engine->GetTextureLoader()->GetColorTexture( color ) );
 }
 
@@ -89,7 +91,7 @@ const float Style::Get( const attribute_type_t attribute_type, const modifier_t 
 	return m_attributes[ modifiers ][ attribute_type ].value.scalar;
 }
 
-const Color Style::GetColor( const attribute_type_t attribute_type, const modifier_t modifiers ) const {
+const types::Color Style::GetColor( const attribute_type_t attribute_type, const modifier_t modifiers ) const {
 #ifdef DEBUG
 	CheckGet( attribute_type, modifiers );
 #endif
@@ -136,7 +138,7 @@ void Style::SetStyleForInclude( attributes_t* attributes_ptr, const modifier_t m
 	m_attributes_ptr = attributes_ptr_old;
 }
 
-const Style::modifier_t Style::GetModifiers() const {
+const modifier_t Style::GetModifiers() const {
 	return m_modifiers;
 }
 

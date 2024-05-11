@@ -2,9 +2,11 @@
 
 #include "OkCancelPopup.h"
 
-#include "ui/object/Section.h"
-#include "ui/object/Label.h"
-#include "ui/object/Input.h"
+namespace ui::object {
+class Section;
+class Label;
+class Input;
+}
 
 namespace task {
 namespace game {
@@ -20,7 +22,7 @@ CLASS( ChatPopup, OkCancelPopup )
 
 protected:
 	void OnOk() override;
-	
+
 private:
 
 	::ui::object::Section* m_message_section = nullptr;

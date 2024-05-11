@@ -1,6 +1,7 @@
 SUBDIR( type )
 SUBDIR( callable )
 SUBDIR( parser )
+SUBDIR( program )
 SUBDIR( runner )
 SUBDIR( builtins )
 

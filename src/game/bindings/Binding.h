@@ -1,11 +1,8 @@
 #pragma once
 
-#include "gse/type/Object.h"
+#include "gse/type/Types.h"
 
-#include "gse/callable/Native.h"
-#include "gse/Exception.h"
 #include "gse/Value.h"
-#include "gse/type/Undefined.h"
 
 namespace game {
 class Game;
@@ -20,7 +17,7 @@ public:
 	Binding( const std::string& name, Bindings* bindings );
 	virtual ~Binding() = default;
 
-	void Add( gse::type::Object::properties_t& methods );
+	void Add( gse::type::object_properties_t& methods );
 
 protected:
 
@@ -59,9 +56,6 @@ protected:
     m_bindings->SetCallback( _type, cb, ctx, call_si ); \
     return VALUE( gse::type::Undefined ); \
 })
-
-#include "Bindings.h"
-#include "../Game.h"
 
 namespace game {
 namespace bindings {

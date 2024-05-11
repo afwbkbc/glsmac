@@ -12,9 +12,9 @@ public:
 
 	virtual ~Serializable() = default;
 
-	virtual const Buffer Serialize() const = 0;
+	virtual const types::Buffer Serialize() const = 0;
 
-	virtual void Unserialize( Buffer buffer ) = 0;
+	virtual void Unserialize( types::Buffer buffer ) = 0;
 
 	virtual void operator=( const Serializable& other ) {
 		// not super efficient, but convenient

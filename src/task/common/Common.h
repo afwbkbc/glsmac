@@ -2,10 +2,14 @@
 
 #include "base/Task.h"
 
-#include "ui/style/Theme.h"
-#include "ui/FPSCounter.h"
-
 namespace task {
+
+namespace ui {
+class FPSCounter;
+}
+namespace style {
+class Theme;
+}
 
 CLASS( Common, base::Task )
 	void Start() override;
@@ -13,7 +17,7 @@ CLASS( Common, base::Task )
 	void Iterate() override;
 
 protected:
-	task::style::Theme m_theme;
+	style::Theme* m_theme;
 
 	ui::FPSCounter* m_fps_counter = nullptr;
 

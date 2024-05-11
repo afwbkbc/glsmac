@@ -8,9 +8,6 @@ namespace unit {
 
 class Morale {
 public:
-	typedef uint8_t morale_t;
-	static const morale_t MORALE_MIN;
-	static const morale_t MORALE_MAX;
 
 	Morale( const std::string& name );
 

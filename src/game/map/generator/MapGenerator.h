@@ -2,23 +2,35 @@
 
 #include "base/Base.h"
 
-#include "../Tiles.h"
-#include "game/Settings.h"
+#include "base/MTTypes.h"
+#include "game/map/tile/Types.h"
+#include "game/settings/Types.h"
 
-#include "util/Random.h"
-
-#include "base/MTModule.h"
+namespace util::random {
+class Random;
+}
 
 namespace game {
+
+namespace settings {
+class MapSettings;
+}
+
 namespace map {
+
+namespace tile {
+class Tile;
+class Tiles;
+}
+
 namespace generator {
 
 CLASS( MapGenerator, base::Base )
 
 	// you should stay within these boundaries when generating
 	// currently, any elevations will work because map will be normalized to valid range afterwards. but this may change in future
-	static constexpr Tile::elevation_t MAPGEN_ELEVATION_MIN = -10000;
-	static constexpr Tile::elevation_t MAPGEN_ELEVATION_MAX = 10000;
+	static constexpr tile::elevation_t MAPGEN_ELEVATION_MIN = -10000;
+	static constexpr tile::elevation_t MAPGEN_ELEVATION_MAX = 10000;
 
 	// this is for normalizing map parameters (elevations etc) to required range after generation by mapgen
 	// original SMAC has 0.1 inaccuracy (i.e. '50%-70% ocean' so 0.6+/-0.1)
@@ -39,77 +51,77 @@ CLASS( MapGenerator, base::Base )
 	// so we give up and crash to prevent infinite loop
 	static constexpr size_t MAXIMUM_REGENERATION_ATTEMPTS = 50;
 
-	typedef std::unordered_map< MapSettings::parameter_t, float > map_parameter_mappings_t;
+	typedef std::unordered_map< settings::map_config_value_t, float > map_config_mappings_t;
 	// 'select ocean coverage'
-	const map_parameter_mappings_t TARGET_LAND_AMOUNTS = {
-		{ MapSettings::MAP_OCEAN_LOW,    0.6f }, // '30-50% of surface'
-		{ MapSettings::MAP_OCEAN_MEDIUM, 0.4f }, // '50-70% of surface'
-		{ MapSettings::MAP_OCEAN_HIGH,   0.2f }  // '70-90% of surface'
+	const map_config_mappings_t TARGET_LAND_AMOUNTS = {
+		{ settings::MAP_CONFIG_OCEAN_LOW,    0.6f }, // '30-50% of surface'
+		{ settings::MAP_CONFIG_OCEAN_MEDIUM, 0.4f }, // '50-70% of surface'
+		{ settings::MAP_CONFIG_OCEAN_HIGH,   0.2f }  // '70-90% of surface'
 	};
 
 	// 'adjust erosive forces'
-	const map_parameter_mappings_t TARGET_EVELATION_MULTIPLIERS = {
-		{ MapSettings::MAP_EROSIVE_STRONG,  0.5f }, // 'strong'
-		{ MapSettings::MAP_EROSIVE_AVERAGE, 0.75f }, // 'average'
-		{ MapSettings::MAP_EROSIVE_WEAK,    1.0f }, // 'weak'
+	const map_config_mappings_t TARGET_EVELATION_MULTIPLIERS = {
+		{ settings::MAP_CONFIG_EROSIVE_STRONG,  0.5f }, // 'strong'
+		{ settings::MAP_CONFIG_EROSIVE_AVERAGE, 0.75f }, // 'average'
+		{ settings::MAP_CONFIG_EROSIVE_WEAK,    1.0f }, // 'weak'
 	};
 
 	// 'native life forms'
-	const map_parameter_mappings_t TARGET_FUNGUS_AMOUNTS = {
-		{ MapSettings::MAP_LIFEFORMS_RARE,     0.25f }, // 'rare'
-		{ MapSettings::MAP_LIFEFORMS_AVERAGE,  0.5f }, // 'average'
-		{ MapSettings::MAP_LIFEFORMS_ABUNDANT, 0.75f }, // 'abundant'
+	const map_config_mappings_t TARGET_FUNGUS_AMOUNTS = {
+		{ settings::MAP_CONFIG_LIFEFORMS_RARE,     0.25f }, // 'rare'
+		{ settings::MAP_CONFIG_LIFEFORMS_AVERAGE,  0.5f }, // 'average'
+		{ settings::MAP_CONFIG_LIFEFORMS_ABUNDANT, 0.75f }, // 'abundant'
 	};
 
 	// 'select cloud cover'
-	const map_parameter_mappings_t TARGET_MOISTURE_AMOUNTS = {
-		{ MapSettings::MAP_CLOUDS_SPARSE,  0.25f }, // 'sparse'
-		{ MapSettings::MAP_CLOUDS_AVERAGE, 0.5f }, // 'average'
-		{ MapSettings::MAP_CLOUDS_DENSE,   0.75f }, // 'dense'
+	const map_config_mappings_t TARGET_MOISTURE_AMOUNTS = {
+		{ settings::MAP_CONFIG_CLOUDS_SPARSE,  0.25f }, // 'sparse'
+		{ settings::MAP_CONFIG_CLOUDS_AVERAGE, 0.5f }, // 'average'
+		{ settings::MAP_CONFIG_CLOUDS_DENSE,   0.75f }, // 'dense'
 	};
 
-	MapGenerator( Random* random );
+	MapGenerator( util::random::Random* random );
 
-	void Generate( Tiles* tiles, const MapSettings& map_settings, MT_CANCELABLE );
+	void Generate( tile::Tiles* tiles, const settings::MapSettings* map_settings, MT_CANCELABLE );
 
 	// generate ONLY elevations here
-	virtual void GenerateElevations( Tiles* tiles, const MapSettings& map_settings, MT_CANCELABLE ) = 0;
+	virtual void GenerateElevations( tile::Tiles* tiles, const settings::MapSettings* map_settings, MT_CANCELABLE ) = 0;
 
 	// generate everything EXCEPT FOR elevations here
-	virtual void GenerateDetails( Tiles* tiles, const MapSettings& map_settings, MT_CANCELABLE ) = 0;
+	virtual void GenerateDetails( tile::Tiles* tiles, const settings::MapSettings* map_settings, MT_CANCELABLE ) = 0;
 
 protected:
 
 	// use this while generating for all random things
-	Random* const m_random = 0;
+	util::random::Random* const m_random = 0;
 
 	// get vector with all tiles in random order
-	const std::vector< Tile* > GetTilesInRandomOrder( Tiles* tiles, MT_CANCELABLE );
+	const std::vector< tile::Tile* > GetTilesInRandomOrder( tile::Tiles* tiles, MT_CANCELABLE );
 
 	// make terrain a bit smoother
-	void SmoothTerrain( Tiles* tiles, MT_CANCELABLE, const bool smooth_land = true, const bool smooth_water = true );
+	void SmoothTerrain( tile::Tiles* tiles, MT_CANCELABLE, const bool smooth_land = true, const bool smooth_water = true );
 
 	// you can call it from map generator when you think you may have generated extreme slopes
 	// if you don't and keep generating - they will be normalized more aggressively at the end and may make terrain more flat
-	void FixExtremeSlopes( Tiles* tiles, MT_CANCELABLE );
+	void FixExtremeSlopes( tile::Tiles* tiles, MT_CANCELABLE );
 
 private:
 
 	// normalizing and fixing
-	void SetLandAmount( Tiles* tiles, const float amount, MT_CANCELABLE );
-	const float GetLandAmount( Tiles* tiles, MT_CANCELABLE, Tile::elevation_t elevation_diff = 0.0f );
-	void SetFungusAmount( Tiles* tiles, const float amount, MT_CANCELABLE );
-	const float GetFungusAmount( Tiles* tiles, MT_CANCELABLE );
-	void SetMoistureAmount( Tiles* tiles, const float amount, MT_CANCELABLE );
-	const float GetMoistureAmount( Tiles* tiles, MT_CANCELABLE );
-	void FixImpossibleThings( Tiles* tiles, MT_CANCELABLE );
+	void SetLandAmount( tile::Tiles* tiles, const float amount, MT_CANCELABLE );
+	const float GetLandAmount( tile::Tiles* tiles, MT_CANCELABLE, tile::elevation_t elevation_diff = 0.0f );
+	void SetFungusAmount( tile::Tiles* tiles, const float amount, MT_CANCELABLE );
+	const float GetFungusAmount( tile::Tiles* tiles, MT_CANCELABLE );
+	void SetMoistureAmount( tile::Tiles* tiles, const float amount, MT_CANCELABLE );
+	const float GetMoistureAmount( tile::Tiles* tiles, MT_CANCELABLE );
+	void FixImpossibleThings( tile::Tiles* tiles, MT_CANCELABLE );
 
 	// helpers
-	void RaiseAllTilesBy( Tiles* tiles, Tile::elevation_t amount, MT_CANCELABLE );
-	void ScaleAllTilesBy( Tiles* tiles, float amount, MT_CANCELABLE );
-	const std::pair< Tile::elevation_t, Tile::elevation_t > GetElevationsRange( Tiles* tiles, MT_CANCELABLE ) const;
-	void RemoveExtremeSlopes( Tiles* tiles, const Tile::elevation_t max_allowed_diff, MT_CANCELABLE );
-	void NormalizeElevationRange( Tiles* tiles, MT_CANCELABLE );
+	void RaiseAllTilesBy( tile::Tiles* tiles, tile::elevation_t amount, MT_CANCELABLE );
+	void ScaleAllTilesBy( tile::Tiles* tiles, float amount, MT_CANCELABLE );
+	const std::pair< tile::elevation_t, tile::elevation_t > GetElevationsRange( tile::Tiles* tiles, MT_CANCELABLE ) const;
+	void RemoveExtremeSlopes( tile::Tiles* tiles, const tile::elevation_t max_allowed_diff, MT_CANCELABLE );
+	void NormalizeElevationRange( tile::Tiles* tiles, MT_CANCELABLE );
 
 };
 

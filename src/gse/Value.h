@@ -2,8 +2,9 @@
 
 #include <memory>
 
+#include "base/Assert.h"
+
 #include "type/Type.h"
-#include "base/Base.h"
 
 namespace gse {
 
@@ -43,8 +44,8 @@ namespace gse {
     const gse::Value _type::Wrap( const bool dynamic ) {
 #define WRAPIMPL_DYNAMIC_GETTERS( _type, _class ) \
     WRAPIMPL_DYNAMIC_BEGIN( _type, _class ) \
-    const gse::type::Object::properties_t properties = {
-#define WRAPIMPL_PROPS gse::type::Object::properties_t properties =
+    const gse::type::object_properties_t properties = {
+#define WRAPIMPL_PROPS gse::type::object_properties_t properties =
 #define WRAPIMPL_PROPS_EXTEND( _parent ) \
     const auto wrapped_parent = _parent::Wrap(); \
     const auto& wrapped_parent_props = ( (gse::type::Object*)wrapped_parent.Get() )->value; \

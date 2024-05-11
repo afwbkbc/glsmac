@@ -8,7 +8,7 @@
 namespace game {
 namespace event {
 
-TurnFinalized::TurnFinalized( const size_t initiator_slot, const util::CRC32::crc_t checksum )
+TurnFinalized::TurnFinalized( const size_t initiator_slot, const util::crc32::crc_t checksum )
 	: Event( initiator_slot, ET_TURN_FINALIZED )
 	, m_checksum( checksum ) {
 	//
@@ -44,7 +44,7 @@ void TurnFinalized::Serialize( types::Buffer& buf, const TurnFinalized* event ) 
 }
 
 TurnFinalized* TurnFinalized::Unserialize( types::Buffer& buf, const size_t initiator_slot ) {
-	const util::CRC32::crc_t checksum = buf.ReadInt();
+	const util::crc32::crc_t checksum = buf.ReadInt();
 	return new TurnFinalized( initiator_slot, checksum );
 }
 

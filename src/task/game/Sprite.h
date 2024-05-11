@@ -1,11 +1,11 @@
 #pragma once
 
-#include <cstdint>
-
-#include "InstancedSprite.h"
+#include <cstddef>
 
 namespace task {
 namespace game {
+
+class InstancedSprite;
 
 class Sprite {
 public:

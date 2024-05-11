@@ -1,46 +1,49 @@
 #include "Elevations.h"
 
-#include "../../Game.h"
+#include "game/Game.h"
+#include "game/map/Map.h"
+#include "game/map/Consts.h"
+#include "util/random/Random.h"
 
 namespace game {
 namespace map_editor {
 namespace tool {
 
 Elevations::Elevations( Game* game )
-	: Tool( game, MapEditor::TT_ELEVATIONS ) {
+	: Tool( game, TT_ELEVATIONS ) {
 	//
 }
 
-const MapEditor::tiles_t Elevations::Draw( map::Tile* tile, const MapEditor::draw_mode_t mode ) {
-	MapEditor::tiles_t tiles_to_reload = {};
+const tiles_t Elevations::Draw( map::tile::Tile* tile, const draw_mode_t mode ) {
+	tiles_t tiles_to_reload = {};
 
 	if ( tile->coord.y > 1 && tile->coord.y < m_game->GetMap()->GetHeight() - 2 ) { // editing poles will screw things up
 
-		map::Tile::elevation_t elevation, change;
+		map::tile::elevation_t elevation, change;
 
 		// prevent extreme slopes
 		const auto el = map::s_consts.tile.maximum_allowed_slope_elevation;
 		const auto f_change_corner =
 			[ this, &tile, &mode, &elevation, &change, &el ]
-				( map::Tile::elevation_t* corner )
+				( map::tile::elevation_t* corner )
 				-> void {
 				elevation = *corner;
-				change = (map::Tile::elevation_t)m_game->GetRandom()->GetUInt( elevation_change_min, elevation_change_max );
-				if ( mode == MapEditor::DM_DEC ) {
-					elevation = std::max< map::Tile::elevation_t >( map::Tile::ELEVATION_MIN, elevation - change );
+				change = (map::tile::elevation_t)m_game->GetRandom()->GetUInt( elevation_change_min, elevation_change_max );
+				if ( mode == DM_DEC ) {
+					elevation = std::max< map::tile::elevation_t >( map::tile::ELEVATION_MIN, elevation - change );
 				}
-				else if ( mode == MapEditor::DM_INC ) {
-					elevation = std::min< map::Tile::elevation_t >( map::Tile::ELEVATION_MAX, elevation + change );
+				else if ( mode == DM_INC ) {
+					elevation = std::min< map::tile::elevation_t >( map::tile::ELEVATION_MAX, elevation + change );
 				}
 				for ( auto& n : tile->neighbours ) {
-					elevation = std::min< map::Tile::elevation_t >( elevation, *n->elevation.center + el );
-					elevation = std::max< map::Tile::elevation_t >( elevation, *n->elevation.center - el );
+					elevation = std::min< map::tile::elevation_t >( elevation, *n->elevation.center + el );
+					elevation = std::max< map::tile::elevation_t >( elevation, *n->elevation.center - el );
 				}
-				if ( mode == MapEditor::DM_DEC ) {
-					*corner = std::min< map::Tile::elevation_t >( *corner, elevation );
+				if ( mode == DM_DEC ) {
+					*corner = std::min< map::tile::elevation_t >( *corner, elevation );
 				}
-				else if ( mode == MapEditor::DM_INC ) {
-					*corner = std::max< map::Tile::elevation_t >( *corner, elevation );
+				else if ( mode == DM_INC ) {
+					*corner = std::max< map::tile::elevation_t >( *corner, elevation );
 				}
 			};
 

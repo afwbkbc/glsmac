@@ -106,6 +106,6 @@ types::Matrix44 World::GetWorldMatrix() {
 	return projection_matrix * rotate_matrix * translate_matrix;
 }
 
-} /* namespace shader_program */
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}
+}

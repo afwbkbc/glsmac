@@ -1,5 +1,7 @@
 #include "Wrappable.h"
 
+#include "gse/type/Object.h"
+
 namespace gse {
 
 Wrappable::~Wrappable() {

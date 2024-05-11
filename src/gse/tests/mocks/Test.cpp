@@ -1,14 +1,16 @@
 #include "Test.h"
 
 #include <unordered_map>
+#include <chrono>
 
+#include "gse/GlobalContext.h"
+#include "gse/callable/Native.h"
+#include "gse/Exception.h"
+#include "gse/type/Undefined.h"
 #include "gse/type/Object.h"
 #include "gse/type/Bool.h"
 #include "gse/type/Int.h"
 #include "gse/type/String.h"
-#include "gse/type/Undefined.h"
-
-#include "gse/Exception.h"
 #include "gse/tests/Tests.h"
 
 namespace gse {
@@ -18,7 +20,7 @@ namespace mocks {
 static std::unordered_map< std::string, Value > s_global_map = {};
 
 void Test::AddMocks( gse::GlobalContext* ctx, const test_info_t& test_info ) {
-	type::Object::properties_t mocks = {
+	type::object_properties_t mocks = {
 		{
 			"assert",
 			NATIVE_CALL() {

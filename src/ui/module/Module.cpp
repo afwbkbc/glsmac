@@ -1,5 +1,7 @@
 #include "Module.h"
 
+#include "ui/UI.h"
+
 namespace ui {
 namespace module {
 

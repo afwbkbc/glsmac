@@ -1,7 +1,5 @@
 #include "Scenario.h"
 
-using namespace task;
-
 namespace task {
 namespace mainmenu {
 

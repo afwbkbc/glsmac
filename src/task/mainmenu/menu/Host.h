@@ -1,19 +1,14 @@
 #pragma once
 
-#include <string>
-
 #include "ConnectionPopupMenu.h"
 
-#include "base/MTModule.h"
-
-#include "ui/object/Section.h"
-#include "ui/object/Label.h"
-#include "ui/object/Input.h"
+namespace ui::object {
+class Section;
+class Label;
+class Input;
+}
 
 namespace task {
-
-using namespace ui;
-
 namespace mainmenu {
 
 CLASS( Host, ConnectionPopupMenu )
@@ -31,13 +26,13 @@ CLASS( Host, ConnectionPopupMenu )
 
 private:
 
-	Section* m_section = nullptr;
+	ui::object::Section* m_section = nullptr;
 
-	Label* m_label_yourname = nullptr;
-	Input* m_input_yourname = nullptr;
+	ui::object::Label* m_label_yourname = nullptr;
+	ui::object::Input* m_input_yourname = nullptr;
 
-	Label* m_label_gamename = nullptr;
-	Input* m_input_gamename = nullptr;
+	ui::object::Label* m_label_gamename = nullptr;
+	ui::object::Input* m_input_gamename = nullptr;
 
 };
 

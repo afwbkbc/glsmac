@@ -189,7 +189,7 @@ void Buffer::WriteVec2u( const Vec2< uint32_t > val ) {
 }
 
 const Vec2< uint32_t > Buffer::ReadVec2u() {
-	Vec2< uint32_t > val = {
+	types::Vec2< uint32_t > val = {
 		0,
 		0
 	};
@@ -203,7 +203,7 @@ void Buffer::WriteVec2f( const Vec2< float > val ) {
 }
 
 const Vec2< float > Buffer::ReadVec2f() {
-	Vec2< float > val = {
+	types::Vec2< float > val = {
 		0,
 		0
 	};
@@ -212,12 +212,12 @@ const Vec2< float > Buffer::ReadVec2f() {
 	return val;
 }
 
-void Buffer::WriteVec3( const Vec3 val ) {
+void Buffer::WriteVec3( const types::Vec3 val ) {
 	WriteImpl( T_VEC3, (const char*)&val, sizeof( val ) );
 }
 
-const Vec3 Buffer::ReadVec3() {
-	Vec3 val;
+const types::Vec3 Buffer::ReadVec3() {
+	types::Vec3 val;
 	uint32_t sz = 0;
 	ReadImpl( T_VEC3, (char*)&val, &sz, sizeof( val ) );
 	return val;

@@ -4,17 +4,18 @@
 #include <string>
 #include <functional>
 
+#include "Types.h"
+#include "gse/Types.h"
+
 #include "Type.h"
-#include "../Value.h"
-#include "../Context.h"
+#include "gse/Value.h"
 
 namespace gse {
 
 class Wrappable;
+class Context;
 
 namespace type {
-
-static const std::string OBJECT_CLASS_TILE = "Tile";
 
 class Object : public Type {
 public:
@@ -34,21 +35,18 @@ public:
 
 	static const type_t GetType() { return Type::T_OBJECT; }
 
-	typedef std::string key_t; // keep it simple for now
-	typedef std::map< key_t, Value > properties_t;
-
 	typedef void (wrapsetter_t)( Wrappable*, const std::string&, const gse::Value&, gse::Context* ctx, const gse::si_t& si ); // ( obj, key, value, ctx, si )
-	Object( properties_t initial_value = {}, const object_class_t object_class = CLASS_NONE, Wrappable* wrapobj = nullptr, wrapsetter_t* wrapsetter = nullptr );
+	Object( object_properties_t initial_value = {}, const object_class_t object_class = CLASS_NONE, Wrappable* wrapobj = nullptr, wrapsetter_t* wrapsetter = nullptr );
 	~Object();
 
-	const Value& Get( const key_t& key ) const;
-	void Set( const key_t& key, const Value& value, gse::Context* ctx, const si_t& si );
+	const Value& Get( const object_key_t& key ) const;
+	void Set( const object_key_t& key, const Value& value, gse::Context* ctx, const si_t& si );
 
-	const Value GetRef( const key_t& key );
+	const Value GetRef( const object_key_t& key );
 
 	void Unlink();
 
-	properties_t value;
+	object_properties_t value;
 	const object_class_t object_class;
 	Wrappable* wrapobj;
 	wrapsetter_t* wrapsetter;

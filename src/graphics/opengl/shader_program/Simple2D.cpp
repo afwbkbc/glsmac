@@ -1,5 +1,8 @@
 #include "Simple2D.h"
 
+#include "scene/actor/Actor.h"
+#include "types/mesh/Simple.h"
+
 namespace graphics {
 namespace opengl {
 namespace shader_program {
@@ -17,7 +20,7 @@ out vec3 fragpos; \
 \
 void main(void) { \
 	vec3 coord = aCoord; \
-	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_2D_POSITION ) + " ) { \
+	if ( " + S_HasFlag( "uFlags", scene::actor::Actor::RF_USE_2D_POSITION ) + " ) { \
 		coord += vec3( uPosition, 0.0 ); \
 	} \
 	gl_Position = vec4( coord, 1.0 ); \
@@ -41,7 +44,7 @@ uniform vec3 uAreaLimitsMax; \
 out vec4 FragColor; \
 \
 void main(void) { \
-	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_AREA_LIMITS ) + " ) { \
+	if ( " + S_HasFlag( "uFlags", scene::actor::Actor::RF_USE_AREA_LIMITS ) + " ) { \
 		if ( \
 			fragpos.x < uAreaLimitsMin.x || \
 			fragpos.x > uAreaLimitsMax.x || \
@@ -54,7 +57,7 @@ void main(void) { \
 		} \
 	} \
 	vec4 color = vec4(texture2D(uTexture, vec2(texpos.xy))); \
-	if ( " + S_HasFlag( "uFlags", actor::Actor::RF_USE_TINT ) + " ) { \
+	if ( " + S_HasFlag( "uFlags", scene::actor::Actor::RF_USE_TINT ) + " ) { \
 		color *= uTintColor; \
 	} \
 	FragColor = color; \
@@ -77,7 +80,7 @@ void Simple2D::Initialize() {
 };
 
 void Simple2D::EnableAttributes() const {
-	const size_t tsz = sizeof( types::mesh::Mesh::coord_t );
+	const size_t tsz = sizeof( types::mesh::coord_t );
 	const size_t vasz = types::mesh::Simple::VERTEX_SIZE * tsz;
 	size_t vaofs = 0;
 	glEnableVertexAttribArray( attributes.coord );
@@ -93,6 +96,6 @@ void Simple2D::DisableAttributes() const {
 	glDisableVertexAttribArray( attributes.tex_coord );
 };
 
-} /* namespace shader_program */
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}
+}

@@ -2,15 +2,19 @@
 
 #include <cstddef>
 
-#include "InstancedSpriteManager.h"
-#include "Sprite.h"
+#include "game/unit/Types.h"
+
+#include "types/Vec3.h"
 #include "SlotBadges.h"
-#include "BadgeDefs.h"
 
 #include "types/Color.h"
 
 namespace task {
 namespace game {
+
+class Sprite;
+class InstancedSpriteManager;
+class BadgeDefs;
 
 class Slot {
 public:
@@ -26,9 +30,9 @@ public:
 	);
 	~Slot();
 
-	Sprite* GetUnitBadgeSprite( const ::game::unit::Morale::morale_t morale, const bool is_active );
+	Sprite* GetUnitBadgeSprite( const ::game::unit::morale_t morale, const bool is_active );
 
-	const size_t ShowFakeBadge( const Vec3& coords, const uint8_t offset );
+	const size_t ShowFakeBadge( const types::Vec3& coords, const uint8_t offset );
 	void HideFakeBadge( const size_t instance_id );
 
 private:
@@ -40,7 +44,7 @@ private:
 	const types::Color m_color;
 	const slot_flags_t m_flags;
 
-	std::unordered_map< ::game::unit::Morale::morale_t, SlotBadges > badges = {};
+	std::unordered_map< ::game::unit::morale_t, SlotBadges > badges = {};
 	Sprite fake_badge = {};
 };
 

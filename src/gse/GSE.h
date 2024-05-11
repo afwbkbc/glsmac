@@ -7,16 +7,15 @@
 
 #include "base/Base.h"
 
-#include "type/Type.h"
-#include "gse/type/Callable.h"
-#include "Exception.h"
-#include "program/Program.h"
+#include "Types.h"
+
+#include "Value.h"
 #include "builtins/Builtins.h"
-#include "Bindings.h"
 
 namespace gse {
 
 class GlobalContext;
+class Bindings;
 
 namespace parser {
 class Parser;
@@ -24,6 +23,14 @@ class Parser;
 
 namespace runner {
 class Runner;
+}
+
+namespace program {
+class Program;
+}
+
+namespace type {
+class Callable;
 }
 
 CLASS( GSE, base::Base )
@@ -78,6 +85,3 @@ private:
 };
 
 }
-
-#include "parser/Parser.h"
-#include "runner/Runner.h"

@@ -1,8 +1,11 @@
 #include "DefineAnimation.h"
 
-#include "../Game.h"
+#include "game/Game.h"
 
 #include "engine/Engine.h"
+#include "loader/sound/SoundLoader.h"
+#include "game/animation/Def.h"
+#include "gse/type/Undefined.h"
 
 namespace game {
 namespace event {

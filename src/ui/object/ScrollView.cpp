@@ -1,6 +1,9 @@
 #include "ScrollView.h"
 
 #include "engine/Engine.h"
+#include "ui/UI.h"
+#include "Scrollbar.h"
+#include "SimpleButton.h"
 
 namespace ui {
 namespace object {
@@ -15,7 +18,7 @@ void ScrollView::Create() {
 	Panel::Create();
 
 	NEW( m_viewport, UIContainer );
-	m_viewport->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
+	m_viewport->SetAlign( ALIGN_LEFT | ALIGN_TOP );
 	m_viewport->SetMargin( m_border_size );
 	if ( m_type == ST_VERTICAL ) {
 		// to leave space for scrollbar // TODO: put to style
@@ -26,30 +29,30 @@ void ScrollView::Create() {
 		m_viewport->SetLeft( 17 );
 		m_viewport->SetRight( 17 );
 	}
-	m_viewport->SetOverflow( UIObject::OVERFLOW_HIDDEN );
+	m_viewport->SetOverflow( OVERFLOW_HIDDEN );
 
 	Panel::AddChild( m_viewport );
 
-	Vec2< float > body_size = {
+	types::Vec2< float > body_size = {
 		m_internal_size.x,
 		m_internal_size.y
 	};
 
 	NEW( m_body, Panel );
-	m_body->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
+	m_body->SetAlign( ALIGN_LEFT | ALIGN_TOP );
 	m_body->SetWidth( m_internal_size.x );
 	m_body->SetHeight( m_internal_size.y );
 	m_body->SetMargin( m_border_size );
-	m_body->SetOverflow( UIObject::OVERFLOW_GROW );
+	m_body->SetOverflow( OVERFLOW_GROW );
 	m_body->On(
-		UIEvent::EV_RESIZE, EH( this ) {
+		event::EV_RESIZE, EH( this ) {
 			m_need_body_refresh = true;
 			return true;
 		}
 	);
 	m_viewport->AddChild( m_body );
 
-	const auto f_handle_mouse_scroll = [ this ]( const UIEvent::event_data_t* data ) -> void {
+	const auto f_handle_mouse_scroll = [ this ]( const event::event_data_t* data ) -> void {
 		switch ( m_type ) {
 			case ST_VERTICAL: {
 				ScrollTo( m_scroll.y - (coord_t)data->mouse.scroll_y * m_scroll_speed );
@@ -70,18 +73,18 @@ void ScrollView::Create() {
 	switch ( m_type ) {
 		case ST_VERTICAL: {
 			NEW( m_vertical.scrollbar, Scrollbar, Scrollbar::SD_VERTICAL, "ScrollbarVerticalThick" );
-			m_vertical.scrollbar->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_VCENTER );
+			m_vertical.scrollbar->SetAlign( ALIGN_RIGHT | ALIGN_VCENTER );
 			m_vertical.scrollbar->SetTop( m_border_size + 1 );
 			m_vertical.scrollbar->SetRight( m_border_size + 1 );
 			m_vertical.scrollbar->SetBottom( m_border_size + 1 );
 			m_vertical.scrollbar->On(
-				UIEvent::EV_MOUSE_SCROLL, EH( this, f_handle_mouse_scroll ) {
+				event::EV_MOUSE_SCROLL, EH( this, f_handle_mouse_scroll ) {
 					f_handle_mouse_scroll( data );
 					return true;
 				}
 			);
 			m_vertical.scrollbar->On(
-				UIEvent::EV_CHANGE, EH( this ) {
+				event::EV_CHANGE, EH( this ) {
 					if ( data->value.scroll.is_scrolling ) {
 						const auto limits = GetScrollLimits();
 						SetScrollY( ( limits.bottom - limits.top ) * data->value.scroll.percentage / 100.0f );
@@ -103,21 +106,21 @@ void ScrollView::Create() {
 			};
 			NEW( m_horizontal_inline.left_arrow, SimpleButton, "ScrollbarHorizontalLeftArrow" );
 			m_horizontal_inline.left_arrow->On(
-				UIEvent::EV_MOUSE_DOWN, EH( this ) {
+				event::EV_MOUSE_DOWN, EH( this ) {
 					m_scroll_direction = SD_LEFT;
 					return false;
 				}
 			);
-			m_horizontal_inline.left_arrow->On( UIEvent::EV_MOUSE_UP, f_mouseup );
+			m_horizontal_inline.left_arrow->On( event::EV_MOUSE_UP, f_mouseup );
 			Panel::AddChild( m_horizontal_inline.left_arrow );
 			NEW( m_horizontal_inline.right_arrow, SimpleButton, "ScrollbarHorizontalRightArrow" );
 			m_horizontal_inline.right_arrow->On(
-				UIEvent::EV_MOUSE_DOWN, EH( this ) {
+				event::EV_MOUSE_DOWN, EH( this ) {
 					m_scroll_direction = SD_RIGHT;
 					return false;
 				}
 			);
-			m_horizontal_inline.right_arrow->On( UIEvent::EV_MOUSE_UP, f_mouseup );
+			m_horizontal_inline.right_arrow->On( event::EV_MOUSE_UP, f_mouseup );
 			Panel::AddChild( m_horizontal_inline.right_arrow );
 			break;
 		}
@@ -134,8 +137,8 @@ void ScrollView::Create() {
 
 	// TODO: make dragging global event
 	On(
-		UIEvent::EV_MOUSE_DOWN, EH( this ) {
-			if ( data->mouse.button == UIEvent::M_MIDDLE ) {
+		event::EV_MOUSE_DOWN, EH( this ) {
+			if ( data->mouse.button == event::M_MIDDLE ) {
 				m_is_dragging = true;
 				m_drag_start_position = {
 					data->mouse.absolute.x + (ssize_t)m_scroll.x,
@@ -147,7 +150,7 @@ void ScrollView::Create() {
 	);
 
 	On(
-		UIEvent::EV_MOUSE_SCROLL, EH( this, f_handle_mouse_scroll ) {
+		event::EV_MOUSE_SCROLL, EH( this, f_handle_mouse_scroll ) {
 			f_handle_mouse_scroll( data );
 			return true;
 		}
@@ -156,7 +159,7 @@ void ScrollView::Create() {
 	auto* ui = g_engine->GetUI();
 	// mousemove should keep working if mouse is outside minimap but dragging continues
 	m_handlers.mouse_move = ui->AddGlobalEventHandler(
-		UIEvent::EV_MOUSE_MOVE, EH( this ) {
+		event::EV_MOUSE_MOVE, EH( this ) {
 			if ( m_is_dragging ) {
 				if ( m_type == ST_HORIZONTAL_INLINE ) {
 					SetScrollX( m_drag_start_position.x - data->mouse.absolute.x );
@@ -172,8 +175,8 @@ void ScrollView::Create() {
 
 	// dragging should be cancelable anywhere
 	m_handlers.mouse_up = ui->AddGlobalEventHandler(
-		UIEvent::EV_MOUSE_UP, EH( this ) {
-			if ( data->mouse.button == UIEvent::M_MIDDLE ) {
+		event::EV_MOUSE_UP, EH( this ) {
+			if ( data->mouse.button == event::M_MIDDLE ) {
 				if ( m_is_dragging ) {
 					m_is_dragging = false;
 					if ( m_is_sticky ) {
@@ -230,17 +233,17 @@ void ScrollView::Iterate() {
 
 		if ( m_scroller.IsRunning() ) {
 			if ( m_scroller.GetTargetPosition() < m_scroll.x ) {
-				m_horizontal_inline.right_arrow->RemoveStyleModifier( Style::M_HIGHLIGHT );
-				m_horizontal_inline.left_arrow->AddStyleModifier( Style::M_HIGHLIGHT );
+				m_horizontal_inline.right_arrow->RemoveStyleModifier( M_HIGHLIGHT );
+				m_horizontal_inline.left_arrow->AddStyleModifier( M_HIGHLIGHT );
 			}
 			if ( m_scroller.GetTargetPosition() > m_scroll.x ) {
-				m_horizontal_inline.left_arrow->RemoveStyleModifier( Style::M_HIGHLIGHT );
-				m_horizontal_inline.right_arrow->AddStyleModifier( Style::M_HIGHLIGHT );
+				m_horizontal_inline.left_arrow->RemoveStyleModifier( M_HIGHLIGHT );
+				m_horizontal_inline.right_arrow->AddStyleModifier( M_HIGHLIGHT );
 			}
 		}
 		else {
-			m_horizontal_inline.left_arrow->RemoveStyleModifier( Style::M_HIGHLIGHT );
-			m_horizontal_inline.right_arrow->RemoveStyleModifier( Style::M_HIGHLIGHT );
+			m_horizontal_inline.left_arrow->RemoveStyleModifier( M_HIGHLIGHT );
+			m_horizontal_inline.right_arrow->RemoveStyleModifier( M_HIGHLIGHT );
 		}
 	}
 

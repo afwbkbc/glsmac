@@ -4,9 +4,12 @@
 
 #include "UIObject.h"
 
-#include "ui/event/UIEvent.h"
-
 namespace ui {
+
+namespace event {
+class UIEvent;
+}
+
 namespace object {
 
 CLASS( UIContainer, UIObject )
@@ -33,8 +36,8 @@ CLASS( UIContainer, UIObject )
 
 	virtual const object_area_t GetInternalObjectArea() override;
 
-	void AddStyleModifier( const Style::modifier_t modifier ) override;
-	void RemoveStyleModifier( const Style::modifier_t modifier ) override;
+	void AddStyleModifier( const modifier_t modifier ) override;
+	void RemoveStyleModifier( const modifier_t modifier ) override;
 
 	virtual void SetAreaLimits( const coord_box_t limits ) override;
 	virtual void SetAreaLimitsMaybe( const coord_box_t limits ) override; // set limits for self and for children that aren't limited by object(s)
@@ -78,5 +81,5 @@ private:
 
 };
 
-} /* namespace object */
-} /* namespace ui */
+}
+}

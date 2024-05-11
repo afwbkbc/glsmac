@@ -4,10 +4,9 @@
 
 #include "base/Module.h"
 
-#include "util/Random.h"
+#include "util/random/Types.h"
+#include "game/settings/Types.h"
 #include "types/Vec2.h"
-
-#include "game/Settings.h"
 
 namespace config {
 
@@ -64,14 +63,14 @@ CLASS( Config, base::Module )
 #ifdef DEBUG
 
 	const bool HasDebugFlag( const debug_flag_t flag ) const;
-	const util::Random::state_t& GetQuickstartSeed() const;
+	const util::random::state_t& GetQuickstartSeed() const;
 	const std::string& GetQuickstartMapDump() const;
 	const std::string& GetQuickstartMapFile() const;
 	const types::Vec2< size_t >& GetQuickstartMapSize() const;
-	const game::MapSettings::parameter_t GetQuickstartMapOcean() const;
-	const game::MapSettings::parameter_t GetQuickstartMapErosive() const;
-	const game::MapSettings::parameter_t GetQuickstartMapLifeforms() const;
-	const game::MapSettings::parameter_t GetQuickstartMapClouds() const;
+	const game::settings::map_config_value_t GetQuickstartMapOcean() const;
+	const game::settings::map_config_value_t GetQuickstartMapErosive() const;
+	const game::settings::map_config_value_t GetQuickstartMapLifeforms() const;
+	const game::settings::map_config_value_t GetQuickstartMapClouds() const;
 	const std::string& GetGSETestsScript() const;
 
 #endif
@@ -95,19 +94,18 @@ private:
 #ifdef DEBUG
 
 	uint32_t m_debug_flags = DF_NONE;
-	util::Random::state_t m_quickstart_seed = {};
+	util::random::state_t m_quickstart_seed = {};
 	std::string m_quickstart_mapdump = "";
 	std::string m_quickstart_mapfile = "";
 	types::Vec2< size_t > m_quickstart_mapsize = {};
-	game::MapSettings::parameter_t m_quickstart_map_ocean = game::MapSettings::MAP_OCEAN_MEDIUM;
-	game::MapSettings::parameter_t m_quickstart_map_erosive = game::MapSettings::MAP_EROSIVE_AVERAGE;
-	game::MapSettings::parameter_t m_quickstart_map_lifeforms = game::MapSettings::MAP_LIFEFORMS_AVERAGE;
-	game::MapSettings::parameter_t m_quickstart_map_clouds = game::MapSettings::MAP_CLOUDS_AVERAGE;
+	game::settings::map_config_value_t m_quickstart_map_ocean = game::settings::MAP_CONFIG_OCEAN_MEDIUM;
+	game::settings::map_config_value_t m_quickstart_map_erosive = game::settings::MAP_CONFIG_EROSIVE_AVERAGE;
+	game::settings::map_config_value_t m_quickstart_map_lifeforms = game::settings::MAP_CONFIG_LIFEFORMS_AVERAGE;
+	game::settings::map_config_value_t m_quickstart_map_clouds = game::settings::MAP_CONFIG_CLOUDS_AVERAGE;
 
 	std::string m_gse_tests_script = "";
 
 #endif
 };
 
-} /* namespace config */
-
+}

@@ -2,6 +2,7 @@
 
 #include "game/Game.h"
 #include "game/State.h"
+#include "game/map/Map.h"
 
 #include "RequestTileLocks.h"
 #include "LockTiles.h"
@@ -15,7 +16,7 @@ TileLocksEvent::TileLocksEvent(
 	const size_t initiator_slot,
 	const event_type_t event_type,
 	const std::string event_name,
-	const map::Tile::tile_positions_t& tile_positions
+	const map::tile::positions_t& tile_positions
 )
 	: Event( initiator_slot, event_type )
 	, m_event_name( event_name )
@@ -25,7 +26,7 @@ TileLocksEvent::TileLocksEvent(
 
 TS_BEGIN( TileLocksEvent )
 		TS_FUNC_BEGIN( m_event_name ) +
-			map::Tile::TilePositionsToString( m_tile_positions, TS_PREFIX ) +
+			map::tile::Tile::TilePositionsToString( m_tile_positions, TS_PREFIX ) +
 		TS_FUNC_END()
 TS_END()
 
@@ -41,7 +42,7 @@ void TileLocksEvent::Serialize( types::Buffer& buf, const T* event ) {
 template< class T >
 T* TileLocksEvent::Unserialize( types::Buffer& buf, const size_t initiator_slot, const size_t lock_owner_slot ) {
 	const auto positions_count = buf.ReadInt();
-	map::Tile::tile_positions_t positions = {};
+	map::tile::positions_t positions = {};
 	positions.reserve( positions_count );
 	for ( size_t i = 0 ; i < positions_count ; i++ ) {
 		const auto x = buf.ReadInt();

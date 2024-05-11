@@ -3,8 +3,12 @@
 #include <cmath>
 
 #include "gse/GSE.h"
+#include "gse/Context.h"
+#include "gse/callable/Native.h"
+#include "gse/Exception.h"
 #include "gse/type/Int.h"
 #include "gse/type/Float.h"
+#include "gse/type/Undefined.h"
 
 namespace gse {
 namespace builtins {

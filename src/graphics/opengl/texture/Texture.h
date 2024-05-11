@@ -4,13 +4,15 @@
 
 #include "base/Base.h"
 
-#include "types/Texture.h"
+namespace types::texture {
+class Texture;
+}
 
 namespace graphics {
 namespace opengl {
 
 CLASS( Texture, base::Base )
-	Texture( types::Texture* texture );
+	Texture( types::texture::Texture* texture );
 	~Texture();
 	virtual void Load();
 	virtual void Enable();
@@ -18,12 +20,12 @@ CLASS( Texture, base::Base )
 	virtual void Unload();
 protected:
 
-	types::Texture* m_texture;
+	types::texture::Texture* m_texture;
 
 	GLenum m_target = GL_TEXTURE_2D;
 	GLuint m_texture_obj;
 
 };
 
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}

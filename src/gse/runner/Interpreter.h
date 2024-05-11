@@ -1,21 +1,31 @@
 #pragma once
 
-#include <unordered_map>
 #include <string>
 #include <optional>
 
 #include "Runner.h"
 
+#include "gse/type/Types.h"
+
 #include "gse/Value.h"
-
-#include "gse/program/Variable.h"
-#include "gse/program/Conditional.h"
-#include "gse/program/Statement.h"
-
 #include "gse/type/Callable.h"
-#include "gse/type/Array.h"
 
 namespace gse {
+
+namespace program {
+class Scope;
+class Statement;
+class Control;
+class Conditional;
+class Expression;
+class Operand;
+class Variable;
+}
+
+namespace type {
+class Array;
+}
+
 namespace runner {
 
 CLASS( Interpreter, Runner )
@@ -33,7 +43,7 @@ private:
 			const program::Program* const program
 		);
 		~Function();
-		Value Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) override;
+		Value Run( Context* ctx, const si_t& call_si, const type::function_arguments_t& arguments ) override;
 	private:
 		const Interpreter* runner;
 		Context* context;

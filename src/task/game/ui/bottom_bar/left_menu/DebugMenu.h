@@ -2,10 +2,7 @@
 
 #ifdef DEBUG
 
-#include <vector>
-#include <string>
-
-#include "../../Menu.h"
+#include "task/game/ui/Menu.h"
 
 namespace task {
 namespace game {

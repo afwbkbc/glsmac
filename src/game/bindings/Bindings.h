@@ -2,22 +2,27 @@
 
 #include <unordered_map>
 #include <map>
+#include <vector>
 
-#include "util/FS.h"
-#include "gse/GSE.h"
+#include "gse/Types.h"
+#include "gse/type/Types.h"
+
 #include "gse/Bindings.h"
-#include "gse/GlobalContext.h"
-#include "gse/type/Callable.h"
-#include "game/Player.h"
+#include "gse/Value.h"
 
-#include "Binding.h"
+namespace gse {
+class GSE;
+class GlobalContext;
+}
 
 namespace game {
-class Game;
 
+class Game;
 class State;
 
 namespace bindings {
+
+class Binding;
 
 class Bindings : public gse::Bindings {
 public:
@@ -54,19 +59,13 @@ private:
 	std::vector< Binding* > m_bindings = {};
 
 	const gse::si_t m_si_internal = { "" };
-	const gse::type::Callable::function_arguments_t m_no_arguments = {};
+	const gse::type::function_arguments_t m_no_arguments = {};
 
 	std::unordered_map< callback_slot_t, gse::Value > m_callbacks = {};
 
 	State* m_state = nullptr;
 
-	const std::string m_entry_script = util::FS::GeneratePath(
-		{
-			"gse", // directory is expected to be in working dir
-			"default", // only 'default' mod for now
-			"main" // script name (extension is appended automatically)
-		}, gse::GSE::PATH_SEPARATOR
-	);
+	const std::string m_entry_script;
 
 	gse::GSE* m_gse = nullptr;
 	gse::GlobalContext* m_gse_context = nullptr;

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include "Mesh.h"
 
 namespace types {
@@ -15,7 +13,7 @@ CLASS( Simple, Mesh )
 	Simple( const size_t vertex_count, const size_t surface_count );
 
 	index_t AddVertex(
-		const Vec3& coord, const Vec2< coord_t >& tex_coord = {
+		const types::Vec3& coord, const Vec2< coord_t >& tex_coord = {
 		0.0f,
 		0.0f
 	}
@@ -27,7 +25,7 @@ CLASS( Simple, Mesh )
 	}
 	);
 
-	void SetVertex( const index_t index, const Vec3& coord, const Vec2< coord_t >& tex_coord );
+	void SetVertex( const index_t index, const types::Vec3& coord, const Vec2< coord_t >& tex_coord );
 	void SetVertex( const index_t index, const Vec2< coord_t >& coord, const Vec2< coord_t >& tex_coord );
 
 	void SetVertexTexCoord( const index_t index, const Vec2< coord_t >& tex_coord );

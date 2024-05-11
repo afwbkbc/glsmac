@@ -1,5 +1,6 @@
 #include "Tests.h"
-#include "gse/type/Int.h"
+
+#include "task/gsetests/GSETests.h"
 #include "gse/program/Program.h"
 #include "gse/program/Scope.h"
 #include "gse/program/Statement.h"
@@ -21,9 +22,8 @@
 #include "gse/parser/JS.h"
 
 namespace gse {
-namespace tests {
-
 using namespace program;
+namespace tests {
 
 void AddParserTests( task::gsetests::GSETests* task ) {
 
@@ -179,12 +179,12 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 		const auto operatr = VALIDATOR( Operator, &errmsg, &si ) {
 			GT_ASSERT(
 				( a == nullptr ) == ( b == nullptr ), "operators have different null states ( " + ( a == nullptr
-					? "null"
-					: a->Dump()
-				) + " != " + ( b == nullptr
-					? "null"
-					: b->Dump()
-				) + " )"
+				? "null"
+				: a->Dump()
+			) + " != " + ( b == nullptr
+				? "null"
+				: b->Dump()
+			) + " )"
 			);
 			if ( a && b ) {
 				VALIDATE( si, a->m_si, b->m_si );

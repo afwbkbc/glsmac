@@ -2,7 +2,7 @@
 
 #include "Event.h"
 
-#include "game/map/Tile.h"
+#include "game/map/tile/Types.h"
 
 namespace game {
 namespace event {
@@ -17,7 +17,7 @@ public:
 		const size_t initiator_slot,
 		const event_type_t event_type,
 		const std::string event_name,
-		const map::Tile::tile_positions_t& tile_positions
+		const map::tile::positions_t& tile_positions
 	);
 
 	TS_DEF()
@@ -34,7 +34,7 @@ private:
 	static T* Unserialize( types::Buffer& buf, const size_t initiator_slot, const size_t lock_owner_slot );
 
 protected:
-	const map::Tile::tile_positions_t m_tile_positions;
+	const map::tile::positions_t m_tile_positions;
 	const std::string* ValidateTilePositions( const Game* game, const bool should_be_locked, const size_t should_be_locked_by = 0 ) const;
 
 private:

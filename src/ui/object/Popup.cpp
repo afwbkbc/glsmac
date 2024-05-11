@@ -1,6 +1,9 @@
 #include "Popup.h"
 
 #include "engine/Engine.h"
+#include "loader/sound/SoundLoader.h"
+#include "ui/UI.h"
+#include "SoundEffect.h"
 
 namespace ui {
 namespace object {
@@ -17,7 +20,7 @@ void Popup::Create() {
 
 	// TODO: fix blending
 	// TODO: maybe not needed?
-	/* NEW( m_background_locker, Surface, "PopupBackground" );
+	/* NEW( m_background_locker, ui::object::Surface, "PopupBackground" );
 	g_engine->GetUI()->AddObject( m_background_locker ); */
 
 	auto* soundloader = g_engine->GetSoundLoader();

@@ -4,11 +4,11 @@
 
 #include "UIContainer.h"
 
-#include "TextView.h"
-#include "Input.h"
-
 namespace ui {
 namespace object {
+
+class TextView;
+class Input;
 
 CLASS( FileBrowser, UIContainer )
 

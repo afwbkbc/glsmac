@@ -5,6 +5,7 @@
 #include "GlobalContext.h"
 #include "Exception.h"
 #include "type/Undefined.h"
+#include "program/Program.h"
 
 #include "util/FS.h"
 
@@ -27,7 +28,7 @@ GSE::~GSE() {
 }
 
 parser::Parser* GSE::GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num ) const {
-	parser::Parser* parser = nullptr;
+	parser::Parser * parser = nullptr;
 	const auto extensions = util::FS::GetExtensions( filename, PATH_SEPARATOR );
 	ASSERT( extensions.size() == 2 && extensions[ 0 ] == ".gls", "unsupported file name ( " + filename + " ), expected: *.gls.*" );
 	if ( extensions[ 1 ] == ".js" ) {

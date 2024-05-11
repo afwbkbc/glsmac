@@ -1,8 +1,13 @@
 #pragma once
 
+#include <vector>
 #include <unordered_map>
 
-#include "rr/RR.h"
+#include "rr/Types.h"
+
+namespace rr {
+class RR;
+}
 
 namespace base {
 

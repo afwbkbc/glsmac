@@ -2,14 +2,18 @@
 
 #include "game/Game.h"
 #include "game/unit/StaticDef.h"
+#include "game/unit/Unit.h"
+#include "game/slot/Slot.h"
+#include "gse/type/Undefined.h"
 
 namespace game {
 namespace event {
 
-MoveUnit::MoveUnit( const size_t initiator_slot, const size_t unit_id, const game::map::Tile::direction_t direction )
+MoveUnit::MoveUnit( const size_t initiator_slot, const size_t unit_id, const game::map::tile::direction_t direction )
 	: Event( initiator_slot, ET_UNIT_MOVE )
 	, m_unit_id( unit_id )
-	, m_direction( direction ) {
+	, m_direction( direction )
+	, m_resolutions( VALUE( gse::type::Undefined ) ) {
 
 }
 
@@ -58,7 +62,7 @@ const gse::Value MoveUnit::Apply( game::Game* game ) const {
 TS_BEGIN( MoveUnit )
 		TS_FUNC_BEGIN( "MoveUnit" ) +
 			TS_FUNC_ARG_NUM( "unit_id", m_unit_id ) +
-			TS_FUNC_ARG_STR( "direction", map::Tile::GetDirectionString( m_direction ) ) +
+			TS_FUNC_ARG_STR( "direction", map::tile::Tile::GetDirectionString( m_direction ) ) +
 		TS_FUNC_END()
 TS_END()
 
@@ -72,7 +76,7 @@ void MoveUnit::Serialize( types::Buffer& buf, const MoveUnit* event ) {
 
 MoveUnit* MoveUnit::Unserialize( types::Buffer& buf, const size_t initiator_slot ) {
 	const auto unit_id = buf.ReadInt();
-	const auto direction = (map::Tile::direction_t)buf.ReadInt();
+	const auto direction = (map::tile::direction_t)buf.ReadInt();
 	auto* result = new MoveUnit( initiator_slot, unit_id, direction );
 	types::Buffer b( buf.ReadString() );
 	result->m_resolutions = gse::Value::Unserialize( &b );

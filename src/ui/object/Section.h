@@ -2,13 +2,11 @@
 
 #include "UIContainer.h"
 
-#include "Panel.h"
-#include "Label.h"
-
-#include "Surface.h"
-
 namespace ui {
 namespace object {
+
+class Panel;
+class Label;
 
 CLASS( Section, UIContainer )
 
@@ -33,44 +31,44 @@ protected:
 	Panel* m_body = nullptr;
 
 	// TODO: style attribute scopes/inheritance
-	const std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_forwarded_style_attributes = {
-		{ Style::A_BORDER_SIZE,           Style::A_BORDER_SIZE },
-		{ Style::A_HEADER_TEXTURE_BACK,   Style::A_HEADER_TEXTURE_BACK },
-		{ Style::A_HEADER_TEXTURE_LEFT,   Style::A_HEADER_TEXTURE_LEFT },
-		{ Style::A_HEADER_TEXTURE_TOP,    Style::A_HEADER_TEXTURE_TOP },
-		{ Style::A_HEADER_TEXTURE_RIGHT,  Style::A_HEADER_TEXTURE_RIGHT },
-		{ Style::A_HEADER_TEXTURE_BOTTOM, Style::A_HEADER_TEXTURE_BOTTOM },
-		{ Style::A_HEADER_FONT,           Style::A_HEADER_FONT },
-		{ Style::A_HEADER_TEXTCOLOR,      Style::A_HEADER_TEXTCOLOR },
-		{ Style::A_HEADER_TEXTALIGN,      Style::A_HEADER_TEXTALIGN },
-		{ Style::A_TEXTURE_BACK,          Style::A_TEXTURE_BACK },
-		{ Style::A_TEXTURE_LEFT,          Style::A_TEXTURE_LEFT },
-		{ Style::A_TEXTURE_LEFTTOP,       Style::A_TEXTURE_LEFTTOP },
-		{ Style::A_TEXTURE_TOP,           Style::A_TEXTURE_TOP },
-		{ Style::A_TEXTURE_RIGHTTOP,      Style::A_TEXTURE_RIGHTTOP },
-		{ Style::A_TEXTURE_RIGHT,         Style::A_TEXTURE_RIGHT },
-		{ Style::A_TEXTURE_RIGHTBOTTOM,   Style::A_TEXTURE_RIGHTBOTTOM },
-		{ Style::A_TEXTURE_BOTTOM,        Style::A_TEXTURE_BOTTOM },
-		{ Style::A_TEXTURE_LEFTBOTTOM,    Style::A_TEXTURE_LEFTBOTTOM },
-		{ Style::A_HEADER_HEIGHT,         Style::A_HEADER_HEIGHT },
+	const std::unordered_map< attribute_type_t, attribute_type_t > m_forwarded_style_attributes = {
+		{ A_BORDER_SIZE,           A_BORDER_SIZE },
+		{ A_HEADER_TEXTURE_BACK,   A_HEADER_TEXTURE_BACK },
+		{ A_HEADER_TEXTURE_LEFT,   A_HEADER_TEXTURE_LEFT },
+		{ A_HEADER_TEXTURE_TOP,    A_HEADER_TEXTURE_TOP },
+		{ A_HEADER_TEXTURE_RIGHT,  A_HEADER_TEXTURE_RIGHT },
+		{ A_HEADER_TEXTURE_BOTTOM, A_HEADER_TEXTURE_BOTTOM },
+		{ A_HEADER_FONT,           A_HEADER_FONT },
+		{ A_HEADER_TEXTCOLOR,      A_HEADER_TEXTCOLOR },
+		{ A_HEADER_TEXTALIGN,      A_HEADER_TEXTALIGN },
+		{ A_TEXTURE_BACK,          A_TEXTURE_BACK },
+		{ A_TEXTURE_LEFT,          A_TEXTURE_LEFT },
+		{ A_TEXTURE_LEFTTOP,       A_TEXTURE_LEFTTOP },
+		{ A_TEXTURE_TOP,           A_TEXTURE_TOP },
+		{ A_TEXTURE_RIGHTTOP,      A_TEXTURE_RIGHTTOP },
+		{ A_TEXTURE_RIGHT,         A_TEXTURE_RIGHT },
+		{ A_TEXTURE_RIGHTBOTTOM,   A_TEXTURE_RIGHTBOTTOM },
+		{ A_TEXTURE_BOTTOM,        A_TEXTURE_BOTTOM },
+		{ A_TEXTURE_LEFTBOTTOM,    A_TEXTURE_LEFTBOTTOM },
+		{ A_HEADER_HEIGHT,         A_HEADER_HEIGHT },
 	};
 
-	const std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_forwarded_header_style_attributes = {
-		{ Style::A_HEADER_TEXTURE_BACK,   Style::A_TEXTURE_BACK },
-		{ Style::A_HEADER_TEXTURE_LEFT,   Style::A_TEXTURE_LEFT },
-		{ Style::A_HEADER_TEXTURE_TOP,    Style::A_TEXTURE_TOP },
-		{ Style::A_HEADER_TEXTURE_RIGHT,  Style::A_TEXTURE_RIGHT },
-		{ Style::A_HEADER_TEXTURE_BOTTOM, Style::A_TEXTURE_BOTTOM },
-		{ Style::A_HEADER_FONT,           Style::A_HEADER_FONT },
-		{ Style::A_HEADER_TEXTCOLOR,      Style::A_HEADER_TEXTCOLOR },
-		{ Style::A_HEADER_TEXTALIGN,      Style::A_HEADER_TEXTALIGN },
-		{ Style::A_HEADER_HEIGHT,         Style::A_HEIGHT },
+	const std::unordered_map< attribute_type_t, attribute_type_t > m_forwarded_header_style_attributes = {
+		{ A_HEADER_TEXTURE_BACK,   A_TEXTURE_BACK },
+		{ A_HEADER_TEXTURE_LEFT,   A_TEXTURE_LEFT },
+		{ A_HEADER_TEXTURE_TOP,    A_TEXTURE_TOP },
+		{ A_HEADER_TEXTURE_RIGHT,  A_TEXTURE_RIGHT },
+		{ A_HEADER_TEXTURE_BOTTOM, A_TEXTURE_BOTTOM },
+		{ A_HEADER_FONT,           A_HEADER_FONT },
+		{ A_HEADER_TEXTCOLOR,      A_HEADER_TEXTCOLOR },
+		{ A_HEADER_TEXTALIGN,      A_HEADER_TEXTALIGN },
+		{ A_HEADER_HEIGHT,         A_HEIGHT },
 	};
 
-	const std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_forwarded_header_label_style_attributes = {
-		{ Style::A_HEADER_FONT,      Style::A_FONT },
-		{ Style::A_HEADER_TEXTCOLOR, Style::A_TEXT_COLOR },
-		{ Style::A_HEADER_TEXTALIGN, Style::A_TEXT_ALIGN },
+	const std::unordered_map< attribute_type_t, attribute_type_t > m_forwarded_header_label_style_attributes = {
+		{ A_HEADER_FONT,      A_FONT },
+		{ A_HEADER_TEXTCOLOR, A_TEXT_COLOR },
+		{ A_HEADER_TEXTALIGN, A_TEXT_ALIGN },
 	};
 };
 

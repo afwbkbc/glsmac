@@ -1,18 +1,15 @@
 #pragma once
 
-#include <string>
+#include "task/mainmenu/PopupMenu.h"
 
-#include "../PopupMenu.h"
-
-#include "base/MTModule.h"
-
-#include "ui/object/Section.h"
+// TODO: remove this
 #include "ui/object/ChoiceList.h"
 
+namespace ui::object {
+class Section;
+}
+
 namespace task {
-
-using namespace ui;
-
 namespace mainmenu {
 
 CLASS( HostJoin, PopupMenu )
@@ -30,8 +27,8 @@ CLASS( HostJoin, PopupMenu )
 
 private:
 
-	Section* m_section = nullptr;
-	NumChoiceList* m_choices = nullptr;
+	ui::object::Section* m_section = nullptr;
+	ui::object::NumChoiceList* m_choices = nullptr;
 
 };
 

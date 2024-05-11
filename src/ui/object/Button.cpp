@@ -2,6 +2,9 @@
 
 #define DOUBLECLICK_MAX_MS 1000
 
+#include "Label.h"
+#include "SoundEffect.h"
+
 namespace ui {
 namespace object {
 
@@ -18,21 +21,21 @@ void Button::Create() {
 	m_label->SetMargin( 3 );
 	m_label->ForwardStyleAttributesV(
 		{
-			Style::A_FONT,
-			Style::A_TEXT_COLOR,
+			A_FONT,
+			A_TEXT_COLOR,
 		}
 	);
-	m_label->ForwardStyleAttribute( Style::A_TEXT_ALIGN, Style::A_ALIGN );
+	m_label->ForwardStyleAttribute( A_TEXT_ALIGN, A_ALIGN );
 	AddChild( m_label );
 
 	NEW( m_click_sound, SoundEffect );
-	m_click_sound->ForwardStyleAttribute( Style::A_BUTTON_CLICK_SOUND, Style::A_SOUND );
-	m_click_sound->ForwardStyleAttribute( Style::A_SOUND_VOLUME );
+	m_click_sound->ForwardStyleAttribute( A_BUTTON_CLICK_SOUND, A_SOUND );
+	m_click_sound->ForwardStyleAttribute( A_SOUND_VOLUME );
 	AddChild( m_click_sound );
 
 	NEW( m_move_sound, SoundEffect );
-	m_move_sound->ForwardStyleAttribute( Style::A_BUTTON_MOVE_SOUND, Style::A_SOUND );
-	m_move_sound->ForwardStyleAttribute( Style::A_SOUND_VOLUME );
+	m_move_sound->ForwardStyleAttribute( A_BUTTON_MOVE_SOUND, A_SOUND );
+	m_move_sound->ForwardStyleAttribute( A_SOUND_VOLUME );
 	AddChild( m_move_sound );
 }
 
@@ -59,7 +62,7 @@ const std::string& Button::GetLabel() const {
 	return m_label_text;
 }
 
-void Button::SetTextAlign( UIObject::alignment_t alignment ) {
+void Button::SetTextAlign( alignment_t alignment ) {
 	if ( alignment != m_label_alignment ) {
 		m_label_alignment = alignment;
 		if ( m_label ) {
@@ -73,14 +76,14 @@ void Button::ApplyStyle() {
 
 }
 
-bool Button::OnMouseOver( const UIEvent::event_data_t* data ) {
+bool Button::OnMouseOver( const event::event_data_t* data ) {
 	return true;
 }
 
-bool Button::OnMouseOut( const UIEvent::event_data_t* data ) {
+bool Button::OnMouseOut( const event::event_data_t* data ) {
 	if ( m_is_clicking ) {
 		m_is_clicking = false;
-		RemoveStyleModifier( Style::M_ACTIVE );
+		RemoveStyleModifier( M_ACTIVE );
 	}
 	if ( m_maybe_doubleclick ) {
 		m_doubleclick_timer.Stop();
@@ -89,18 +92,18 @@ bool Button::OnMouseOut( const UIEvent::event_data_t* data ) {
 	return true;
 }
 
-bool Button::OnMouseDown( const UIEvent::event_data_t* data ) {
-	if ( data->mouse.button == UIEvent::M_LEFT ) {
-		AddStyleModifier( Style::M_ACTIVE );
+bool Button::OnMouseDown( const event::event_data_t* data ) {
+	if ( data->mouse.button == event::M_LEFT ) {
+		AddStyleModifier( M_ACTIVE );
 		m_is_clicking = true;
 	}
 	return true;
 }
 
-bool Button::OnMouseUp( const UIEvent::event_data_t* data ) {
+bool Button::OnMouseUp( const event::event_data_t* data ) {
 	if ( m_is_clicking ) {
 		m_is_clicking = false;
-		RemoveStyleModifier( Style::M_ACTIVE );
+		RemoveStyleModifier( M_ACTIVE );
 		bool is_double_click = false;
 		if ( m_maybe_doubleclick ) {
 			if ( !m_doubleclick_timer.HasTicked() ) {
@@ -115,9 +118,9 @@ bool Button::OnMouseUp( const UIEvent::event_data_t* data ) {
 		}
 		m_click_sound->Play();
 		// double click event should go after normal click
-		bool ret = Trigger( UIEvent::EV_BUTTON_CLICK, data );
+		bool ret = Trigger( event::EV_BUTTON_CLICK, data );
 		if ( is_double_click ) {
-			Trigger( UIEvent::EV_BUTTON_DOUBLE_CLICK, data );
+			Trigger( event::EV_BUTTON_DOUBLE_CLICK, data );
 		}
 		return ret;
 	}

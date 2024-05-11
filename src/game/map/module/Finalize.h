@@ -11,7 +11,7 @@ CLASS( Finalize, Module )
 	Finalize( Map* const map )
 		: Module( map ) {}
 
-	void GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) override;
+	void GenerateTile( const tile::Tile* tile, tile::TileState* ts, MapState* ms ) override;
 
 };
 

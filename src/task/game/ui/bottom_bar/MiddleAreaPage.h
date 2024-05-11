@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "../UI.h"
+#include "task/game/ui/UI.h"
 
 namespace task {
 namespace game {

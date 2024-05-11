@@ -34,9 +34,6 @@ protected:
 
 };
 
-} /* namespace shader_program */
-} /* namespace opengl */
-} /* namespace graphics */
-
-#include "../actor/Mesh.h"
-
+}
+}
+}

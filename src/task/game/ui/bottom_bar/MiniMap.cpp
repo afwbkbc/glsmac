@@ -1,7 +1,13 @@
 #include "MiniMap.h"
 
 #include "engine/Engine.h"
-#include "../../Game.h"
+#include "task/game/Game.h"
+#include "ui/object/Mesh.h"
+#include "types/mesh/Render.h"
+#include "ui/UI.h"
+#include "ui/object/Section.h"
+#include "ui/object/Label.h"
+#include "types/texture/Texture.h"
 
 namespace task {
 namespace game {
@@ -15,13 +21,13 @@ MiniMap::MiniMap( Game* game )
 void MiniMap::Create() {
 	BBSection::Create();
 
-	NEW( m_map_surface, object::Mesh, "BBMinimapImage" );
+	NEW( m_map_surface, ::ui::object::Mesh, "BBMinimapImage" );
 	m_map_surface->SetMesh( types::mesh::Render::Rectangle() );
 	if ( m_texture ) {
 		m_map_surface->SetTexture( m_texture );
 	}
 	m_map_surface->AddEventContexts( EC_MOUSEMOVE );
-	const auto f_scrollto = [ this ]( const Vec2< ssize_t > coords ) -> void {
+	const auto f_scrollto = [ this ]( const types::Vec2< ssize_t > coords ) -> void {
 		//Log( "Minimap select at " + coords.ToString() );
 		m_game->CenterAtCoordinatePercents(
 			{
@@ -31,7 +37,7 @@ void MiniMap::Create() {
 		);
 	};
 	m_map_surface->On(
-		UIEvent::EV_MOUSE_DOWN, EH( this, f_scrollto ) {
+		::ui::event::EV_MOUSE_DOWN, EH( this, f_scrollto ) {
 			m_is_dragging = true;
 			f_scrollto(
 				{
@@ -43,7 +49,7 @@ void MiniMap::Create() {
 		}
 	);
 	m_map_surface->On(
-		UIEvent::EV_MOUSE_MOVE, EH( this, f_scrollto ) {
+		::ui::event::EV_MOUSE_MOVE, EH( this, f_scrollto ) {
 			if ( m_is_dragging ) {
 				f_scrollto(
 					{
@@ -62,7 +68,7 @@ void MiniMap::Create() {
 
 	// mousemove should keep working if mouse is outside minimap but dragging continues
 	m_handlers.mouse_move = ui->AddGlobalEventHandler(
-		UIEvent::EV_MOUSE_MOVE, EH( this, f_scrollto ) {
+		::ui::event::EV_MOUSE_MOVE, EH( this, f_scrollto ) {
 			if ( m_is_dragging ) {
 				auto area = m_map_surface->GetObjectArea();
 				f_scrollto(
@@ -78,7 +84,7 @@ void MiniMap::Create() {
 
 	// dragging should be cancelable anywhere
 	m_handlers.mouse_up = ui->AddGlobalEventHandler(
-		UIEvent::EV_MOUSE_UP, EH( this ) {
+		::ui::event::EV_MOUSE_UP, EH( this ) {
 			if ( m_is_dragging ) {
 				m_is_dragging = false;
 			}
@@ -87,7 +93,7 @@ void MiniMap::Create() {
 	);
 
 	m_map_surface->On(
-		UIEvent::EV_MOUSE_SCROLL, EH( this, f_scrollto ) {
+		::ui::event::EV_MOUSE_SCROLL, EH( this, f_scrollto ) {
 			f_scrollto(
 				{
 					data->mouse.relative.x,
@@ -101,22 +107,22 @@ void MiniMap::Create() {
 
 	AddChild( m_map_surface );
 
-	NEW( m_bottom_bar, object::Section, "BBMinimapBottomBar" );
+	NEW( m_bottom_bar, ::ui::object::Section, "BBMinimapBottomBar" );
 	AddChild( m_bottom_bar );
-	NEW( m_bottom_bar_labels.mission_year, object::Label, "BBMinimapBottomBarLabel" );
+	NEW( m_bottom_bar_labels.mission_year, ::ui::object::Label, "BBMinimapBottomBarLabel" );
 	m_bottom_bar_labels.mission_year->SetText( "Mission Year 2101" );
 	m_bottom_bar_labels.mission_year->SetTop( 3 );
 	m_bottom_bar->AddChild( m_bottom_bar_labels.mission_year );
-	NEW( m_bottom_bar_labels.energy, object::Label, "BBMinimapBottomBarLabel" );
+	NEW( m_bottom_bar_labels.energy, ::ui::object::Label, "BBMinimapBottomBarLabel" );
 	m_bottom_bar_labels.energy->SetText( "Energy: 0" );
 	m_bottom_bar_labels.energy->SetTop( 18 );
 	m_bottom_bar->AddChild( m_bottom_bar_labels.energy );
 
 }
 
-void MiniMap::SetMinimapSelection( const Vec2< float > position_percents, const Vec2< float > zoom ) {
+void MiniMap::SetMinimapSelection( const types::Vec2< float > position_percents, const types::Vec2< float > zoom ) {
 
-	Vec2< ssize_t > size = {
+	types::Vec2< ssize_t > size = {
 		(ssize_t)round( (float)m_map_surface->GetWidth() * zoom.x ),
 		(ssize_t)round( (float)m_map_surface->GetHeight() * zoom.y )
 	};
@@ -144,12 +150,12 @@ void MiniMap::SetMinimapSelection( const Vec2< float > position_percents, const 
 	size.y = shh * 2;
 
 	// draw 3 quads with 1 screen distance between them, to make selection also appear from other side when moved to one side
-	const Vec2< size_t > full_size = {
+	const types::Vec2< size_t > full_size = {
 		w * 2 + size.x,
 		h
 	};
 
-	Vec2< ssize_t > top_left = {
+	types::Vec2< ssize_t > top_left = {
 		(ssize_t)floor( w * position_percents.x - full_size.x / 2 ) + 1,
 		(ssize_t)floor( h * position_percents.y - full_size.y / 2 ) + 29
 	};
@@ -163,14 +169,14 @@ void MiniMap::SetMinimapSelection( const Vec2< float > position_percents, const 
 
 		ClearMinimapSelection();
 
-		const Color c( 1.0f, 1.0f, 1.0f, 0.6f );
+		const types::Color c( 1.0f, 1.0f, 1.0f, 0.6f );
 
-		const Vec2< size_t > half_size = {
+		const types::Vec2< size_t > half_size = {
 			full_size.x / 2,
 			full_size.y / 2
 		};
 
-		NEW( m_map_selection_texture, types::Texture, "MapSelection", full_size.x, full_size.y );
+		NEW( m_map_selection_texture, types::texture::Texture, "MapSelection", full_size.x, full_size.y );
 		for ( auto y = 0 ; y < size.y ; y++ ) {
 			const auto yy = half_size.y - shh + y;
 			// left instance
@@ -195,8 +201,8 @@ void MiniMap::SetMinimapSelection( const Vec2< float > position_percents, const 
 			m_map_selection_texture->SetPixel( x + full_size.x - size.x, half_size.y + shh - 1, c );
 		}
 
-		NEW( m_map_selection, object::Mesh );
-		m_map_selection->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
+		NEW( m_map_selection, ::ui::object::Mesh );
+		m_map_selection->SetAlign( ::ui::ALIGN_LEFT | ::ui::ALIGN_TOP );
 		m_map_selection->SetLeft( top_left.x );
 		m_map_selection->SetTop( top_left.y );
 		m_map_selection->SetWidth( full_size.x );
@@ -252,7 +258,7 @@ void MiniMap::Destroy() {
 	BBSection::Destroy();
 }
 
-void MiniMap::SetMinimapTexture( types::Texture* texture ) {
+void MiniMap::SetMinimapTexture( types::texture::Texture* texture ) {
 	m_texture = texture;
 	if ( m_map_surface ) {
 		m_map_surface->SetTexture( m_texture );

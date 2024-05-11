@@ -1,6 +1,12 @@
 #include "Binding.h"
 
+#include "game/Game.h"
+#include "game/bindings/Bindings.h"
+
 #include "gse/type/String.h"
+#include "gse/callable/Native.h"
+#include "gse/Exception.h"
+#include "gse/type/Undefined.h"
 
 namespace game {
 namespace bindings {

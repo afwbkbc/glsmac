@@ -2,8 +2,6 @@
 
 #include "TileLocksEvent.h"
 
-#include "game/map/Tile.h"
-
 namespace game {
 namespace event {
 
@@ -11,7 +9,7 @@ class UnlockTiles : public TileLocksEvent {
 public:
 	UnlockTiles(
 		const size_t initiator_slot,
-		const map::Tile::tile_positions_t& tile_positions,
+		const map::tile::positions_t& tile_positions,
 		const size_t lock_owner_slot
 	);
 

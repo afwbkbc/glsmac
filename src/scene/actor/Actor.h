@@ -1,9 +1,12 @@
 #pragma once
 
-#include "../Entity.h"
-#include "base/ObjectLink.h"
+#include "scene/Entity.h"
 
 #include "types/Matrix44.h"
+
+namespace base {
+class ObjectLink;
+}
 
 namespace scene {
 
@@ -78,5 +81,5 @@ protected:
 
 };
 
-} /* namespace actor */
-} /* namespace scene */
+}
+}

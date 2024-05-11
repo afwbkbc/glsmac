@@ -1,25 +1,31 @@
 #include "Binding.h"
 
+#include "gse/Context.h"
+#include "gse/callable/Native.h"
+#include "gse/Exception.h"
 #include "gse/type/Array.h"
 #include "gse/type/Object.h"
-
+#include "gse/type/Undefined.h"
+#include "game/Game.h"
 #include "game/event/RequestTileLocks.h"
+#include "game/map/tile/Tile.h"
+#include "game/bindings/Bindings.h"
 
 namespace game {
 namespace bindings {
 
 BINDING_IMPL( tiles ) {
-	const gse::type::Object::properties_t properties = {
+	const gse::type::object_properties_t properties = {
 		{
 			"lock",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( tiles, 0, Array );
 				N_PERSIST_CALLABLE( on_complete, 1 );
-				map::Tile::tile_positions_t tile_positions = {};
+				map::tile::positions_t tile_positions = {};
 				tile_positions.reserve( tiles.size() );
 				for ( const auto& tileobj : tiles ) {
-					N_UNWRAP( tile, tileobj, map::Tile );
+					N_UNWRAP( tile, tileobj, map::tile::Tile );
 					tile_positions.push_back( tile->coord );
 				}
 
@@ -28,7 +34,7 @@ BINDING_IMPL( tiles ) {
 						VALUE( gse::callable::Native, [ this, tile_positions ](
 							gse::Context* ctx,
 							const gse::si_t& call_si,
-							const gse::type::Callable::function_arguments_t& arguments
+							const gse::type::function_arguments_t& arguments
 						) -> gse::Value {
 							GAME->SendTileUnlockRequest( tile_positions );
 							return VALUE( gse::type::Undefined );

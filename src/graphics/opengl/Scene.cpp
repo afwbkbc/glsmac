@@ -2,9 +2,14 @@
 
 #include "actor/Sprite.h"
 #include "actor/Mesh.h"
-
+#include "base/ObjectLink.h"
+#include "scene/Scene.h"
 #include "scene/actor/Actor.h"
+#include "scene/actor/Mesh.h"
+#include "scene/actor/Sprite.h"
 #include "scene/actor/Instanced.h"
+#include "routine/Routine.h"
+#include "texture/Texture.h"
 
 namespace graphics {
 namespace opengl {
@@ -156,6 +161,22 @@ void Scene::Update() {
 #endif
 }
 
+scene::Scene* Scene::GetScene() const {
+	return m_scene;
+}
+Texture* Scene::GetSkyboxTexture() const {
+	if ( ( !m_skybox_texture ) || m_skybox_texture->Removed() ) {
+		return NULL;
+	}
+	return m_skybox_texture->GetDstObject< Texture >();
+}
+base::ObjectLink* Scene::GetSkyboxTextureObj() const {
+	return m_skybox_texture;
+}
+void Scene::SetSkyboxTextureObj( base::ObjectLink* skybox_texture ) {
+	m_skybox_texture = skybox_texture;
+}
+
 void Scene::Draw( shader_program::ShaderProgram* shader_program, shader_program::ShaderProgram* other_shader_program ) {
 
 #ifdef DEBUG
@@ -195,5 +216,5 @@ void Scene::OnWindowResize() {
 	}
 }
 
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}

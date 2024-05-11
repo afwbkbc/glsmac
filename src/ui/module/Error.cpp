@@ -1,5 +1,12 @@
 #include "Error.h"
 
+#include "ui/UI.h"
+#include "ui/theme/Types.h"
+
+#include "ui/object/Section.h"
+#include "ui/object/Label.h"
+#include "ui/object/Button.h"
+
 #define MAX_DOTS 3
 #define DOTS_CHANGE_INTERVAL 200
 
@@ -42,32 +49,32 @@ void Error::Start() {
 
 	m_ui->BlockEvents(); // don't allow anything else while error is visible
 
-	NEW( m_section, Section, "DefaultPopupFrame" );
+	NEW( m_section, object::Section, "DefaultPopupFrame" );
 	m_section->SetTitleText( "ERROR" );
-	m_section->SetAlign( UIObject::ALIGN_CENTER );
+	m_section->SetAlign( ALIGN_CENTER );
 	m_section->SetWidth( 560 );
 	m_section->SetHeight( 150 );
 	m_section->SetZIndex( 0.9 );
 	m_ui->AddObject( m_section );
 
-	NEW( m_label, Label, "DefaultPopupLabel" );
-	m_label->SetAlign( UIObject::ALIGN_HCENTER | UIObject::ALIGN_TOP );
+	NEW( m_label, object::Label, "DefaultPopupLabel" );
+	m_label->SetAlign( ALIGN_HCENTER | ALIGN_TOP );
 	m_label->SetTop( 36 );
 	m_label->SetText( m_error_text );
 	m_label->ForwardStyleAttributesV(
 		{
-			Style::A_FONT,
-			Style::A_TEXT_COLOR
+			A_FONT,
+			A_TEXT_COLOR
 		}
 	);
 	m_section->AddChild( m_label );
 
-	NEW( m_button_close, Button, "DefaultPopupButton" );
-	m_button_close->SetAlign( UIObject::ALIGN_BOTTOM | UIObject::ALIGN_HCENTER );
+	NEW( m_button_close, object::Button, "DefaultPopupButton" );
+	m_button_close->SetAlign( ALIGN_BOTTOM | ALIGN_HCENTER );
 	m_button_close->SetBottom( 15 );
 	m_button_close->SetLabel( "OK" );
 	m_button_close->On(
-		UIEvent::EV_BUTTON_CLICK, EH( this ) {
+		ui::event::EV_BUTTON_CLICK, EH( this ) {
 			Close();
 			return true;
 		}
@@ -75,12 +82,12 @@ void Error::Start() {
 	m_section->AddChild( m_button_close );
 
 	m_section->On(
-		UIEvent::EV_KEY_DOWN, EH( this ) {
+		ui::event::EV_KEY_DOWN, EH( this ) {
 			if (
 				!data->key.modifiers &&
 					(
-						data->key.code == UIEvent::K_ESCAPE |
-							data->key.code == UIEvent::K_ENTER
+						data->key.code == ui::event::K_ESCAPE |
+							data->key.code == ui::event::K_ENTER
 					)
 				) {
 				Close();

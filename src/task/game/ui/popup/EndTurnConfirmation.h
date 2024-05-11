@@ -2,11 +2,16 @@
 
 #include "Popup.h"
 
-#include "ui/object/Label.h"
-#include "ui/object/ChoiceList.h"
-#include "ui/object/SoundEffect.h"
+#include "ui/Types.h"
 
-#include "../../../../ui/UI.h"
+// TODO: remove this
+#include "ui/object/ChoiceList.h"
+
+namespace ui::object {
+class Label;
+class Section;
+class SoundEffect;
+}
 
 namespace task {
 namespace game {
@@ -15,7 +20,7 @@ namespace popup {
 
 CLASS( EndTurnConfirmation, Popup )
 
-	EndTurnConfirmation( Game* game, const ui_handler_t on_confirm );
+	EndTurnConfirmation( Game* game, const ::ui::ui_handler_t on_confirm );
 
 	void Create() override;
 	void Destroy() override;
@@ -23,7 +28,7 @@ CLASS( EndTurnConfirmation, Popup )
 
 private:
 
-	const ui_handler_t m_on_confirm;
+	const ::ui::ui_handler_t m_on_confirm;
 
 	::ui::object::Section* m_message_section = nullptr;
 	struct {

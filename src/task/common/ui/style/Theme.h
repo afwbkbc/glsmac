@@ -2,22 +2,23 @@
 
 #include "ui/theme/Theme.h"
 
-#include "Common.h"
-#include "Popup.h"
-#include "Scrollbars.h"
-
 namespace task {
 namespace style {
 
-CLASS( Theme, ui::theme::Theme )
+class Common;
+class Popup;
+class Scrollbars;
+
+CLASS( Theme, ::ui::theme::Theme )
 	Theme();
+	~Theme();
 
 protected:
 
 	struct {
-		Common common;
-		Popup popup_menu;
-		Scrollbars scrollbars;
+		Common* common;
+		Popup* popup;
+		Scrollbars* scrollbars;
 	} m_styles;
 };
 

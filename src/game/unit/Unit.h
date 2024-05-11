@@ -1,23 +1,25 @@
 #pragma once
 
-#include <cstddef>
+#include <string>
 
-#include "Def.h"
-#include "Morale.h"
+#include "Types.h"
 
+#include "types/Buffer.h"
 #include "gse/Wrappable.h"
-#include "gse/Value.h"
-
-#include "game/map/Tile.h"
-#include "game/Slot.h"
 
 namespace game {
 
 class Game;
-
+namespace slot {
 class Slot;
+}
+namespace map::tile {
+class Tile;
+}
 
 namespace unit {
+
+class Def;
 
 class Unit : public gse::Wrappable {
 public:
@@ -25,17 +27,14 @@ public:
 	static const size_t GetNextId();
 	static const void SetNextId( const size_t id );
 
-	typedef float movement_t;
-	typedef float health_t;
-
 	Unit(
 		Game* game,
 		const size_t id,
 		Def* def,
-		Slot* owner,
-		map::Tile* tile,
+		slot::Slot* owner,
+		map::tile::Tile* tile,
 		const movement_t movement,
-		const Morale::morale_t morale,
+		const morale_t morale,
 		const health_t health,
 		const bool moved_this_turn
 	);
@@ -43,11 +42,11 @@ public:
 
 	const size_t m_id;
 	Def* m_def;
-	Slot* m_owner;
-	map::Tile* m_tile = nullptr;
+	slot::Slot* m_owner;
+	map::tile::Tile* m_tile = nullptr;
 
 	movement_t m_movement;
-	Morale::morale_t m_morale;
+	morale_t m_morale;
 	health_t m_health;
 	bool m_moved_this_turn;
 

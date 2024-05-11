@@ -1,5 +1,8 @@
 #include "Module.h"
 
+#include "util/random/Random.h"
+#include "game/map/Map.h"
+
 namespace game {
 namespace map {
 namespace module {

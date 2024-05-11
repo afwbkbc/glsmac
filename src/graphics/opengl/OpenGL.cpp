@@ -4,11 +4,15 @@
 
 #include "shader_program/Simple2D.h"
 #include "shader_program/Orthographic.h"
+#include "shader_program/OrthographicData.h"
 #include "shader_program/Font.h"
-
+#include "scene/Scene.h"
+#include "scene/Camera.h"
 #include "routine/Overlay.h"
 #include "routine/Skybox.h"
 #include "routine/World.h"
+#include "FBO.h"
+#include "types/texture/Texture.h"
 
 namespace graphics {
 namespace opengl {
@@ -282,7 +286,7 @@ void OpenGL::OnWindowResize() {
 	}
 }
 
-void OpenGL::LoadTexture( types::Texture* texture ) {
+void OpenGL::LoadTexture( types::texture::Texture* texture ) {
 	ASSERT( texture, "texture is null" );
 
 	bool is_reload_needed = false;
@@ -343,13 +347,13 @@ void OpenGL::LoadTexture( types::Texture* texture ) {
 
 			// combine multiple updates into one or fewer
 
-			types::Texture::updated_areas_t areas = {};
+			types::texture::Texture::updated_areas_t areas = {};
 
 			const auto& updated_areas = texture->GetUpdatedAreas();
 
 			const uint8_t od = 1; // overlap distance
 
-			const auto f_are_combineable = []( const types::Texture::updated_area_t& first, const types::Texture::updated_area_t& second ) -> bool {
+			const auto f_are_combineable = []( const types::texture::Texture::updated_area_t& first, const types::texture::Texture::updated_area_t& second ) -> bool {
 				return
 					(
 						( first.left + od >= second.left && first.left - od <= second.right ) ||
@@ -361,7 +365,7 @@ void OpenGL::LoadTexture( types::Texture* texture ) {
 						);
 			};
 
-			const auto f_combine = []( types::Texture::updated_area_t& first, const types::Texture::updated_area_t& second ) -> void {
+			const auto f_combine = []( types::texture::Texture::updated_area_t& first, const types::texture::Texture::updated_area_t& second ) -> void {
 				//Log( "Merging texture area " + second.ToString() + " into " + first.ToString() );
 				first.left = std::min< size_t >( first.left, second.left );
 				first.top = std::min< size_t >( first.top, second.top );
@@ -370,12 +374,12 @@ void OpenGL::LoadTexture( types::Texture* texture ) {
 			};
 
 			// mark area as removed (merged into another)
-			const auto f_remove = []( types::Texture::updated_area_t& area ) -> void {
+			const auto f_remove = []( types::texture::Texture::updated_area_t& area ) -> void {
 				area.right = area.top = 0; // hackish but no actual area would have these coordinates at 0
 			};
 
 			// check if area was marked as removed (to skip)
-			const auto f_is_removed = []( const types::Texture::updated_area_t& area ) -> bool {
+			const auto f_is_removed = []( const types::texture::Texture::updated_area_t& area ) -> bool {
 				return area.right == 0 && area.top == 0;
 			};
 
@@ -474,7 +478,7 @@ void OpenGL::LoadTexture( types::Texture* texture ) {
 	}
 }
 
-void OpenGL::UnloadTexture( const types::Texture* texture ) {
+void OpenGL::UnloadTexture( const types::texture::Texture* texture ) {
 	m_textures_map::iterator it = m_textures.find( texture );
 	if ( it != m_textures.end() ) {
 		//Log("Unloading texture '" + texture->m_name + "'");
@@ -484,7 +488,7 @@ void OpenGL::UnloadTexture( const types::Texture* texture ) {
 	}
 }
 
-void OpenGL::EnableTexture( const types::Texture* texture ) {
+void OpenGL::EnableTexture( const types::texture::Texture* texture ) {
 	if ( texture ) {
 		auto it = m_textures.find( texture );
 		ASSERT( it != m_textures.end(), "texture to be enabled ( " + texture->m_name + " ) not found" );
@@ -611,5 +615,5 @@ void OpenGL::UpdateViewportSize( const size_t width, const size_t height ) {
 	m_viewport_size.y = ( height + 1 ) / 2 * 2;
 }
 
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}

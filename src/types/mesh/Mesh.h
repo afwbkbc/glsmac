@@ -1,11 +1,10 @@
 #pragma once
 
-#include <vector>
-
 #include "types/Serializable.h"
 
-#include "../Vec3.h"
-#include "../Color.h"
+#include "Types.h"
+
+#include "types/Vec3.h"
 
 namespace types {
 namespace mesh {
@@ -23,9 +22,6 @@ CLASS( Mesh, Serializable )
 	static constexpr uint8_t VERTEX_COORD_SIZE = 3; // x, y, z
 	static constexpr uint8_t SURFACE_SIZE = 3; // triangles
 
-	typedef float coord_t;
-	typedef uint32_t index_t;
-	typedef uint32_t surface_id_t;
 	struct surface_t {
 		const index_t v1;
 		const index_t v2;
@@ -41,13 +37,13 @@ CLASS( Mesh, Serializable )
 	index_t AddEmptyVertex(); // empty vertex (to be modified later)
 	surface_id_t AddSurface( const surface_t& surface );
 
-	void SetVertexCoord( const index_t index, const Vec3& coord );
+	void SetVertexCoord( const index_t index, const types::Vec3& coord );
 	void SetVertexCoord( const index_t index, const Vec2< coord_t >& coord );
 	void SetSurface( const index_t index, const surface_t& surface );
 
 	virtual void Finalize();
 
-	void GetVertexCoord( const index_t index, Vec3* coord ) const;
+	void GetVertexCoord( const index_t index, types::Vec3* coord ) const;
 
 	const size_t GetVertexCount() const;
 	const size_t GetVertexDataSize() const;
@@ -62,8 +58,8 @@ CLASS( Mesh, Serializable )
 
 	const mesh_type_t GetType() const;
 
-	const Buffer Serialize() const override;
-	void Unserialize( Buffer buf ) override;
+	const types::Buffer Serialize() const override;
+	void Unserialize( types::Buffer buf ) override;
 
 protected:
 

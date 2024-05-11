@@ -4,13 +4,21 @@
 
 #include "base/Base.h"
 
-#include "shader_program/Simple2D.h"
-
-#include "types/mesh/Simple.h"
-#include "types/Texture.h"
+namespace types {
+namespace texture {
+class Texture;
+}
+namespace mesh {
+class Simple;
+}
+}
 
 namespace graphics {
 namespace opengl {
+
+namespace shader_program {
+class Simple2D;
+}
 
 CLASS( FBO, base::Base )
 
@@ -27,7 +35,7 @@ CLASS( FBO, base::Base )
 
 	void Draw( shader_program::Simple2D* sp );
 
-	types::Texture* CaptureToTexture();
+	types::texture::Texture* CaptureToTexture();
 
 protected:
 

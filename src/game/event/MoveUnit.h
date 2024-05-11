@@ -2,16 +2,14 @@
 
 #include "Event.h"
 
-#include "gse/type/Undefined.h"
-
-#include "game/map/Tile.h"
+#include "game/map/tile/Types.h"
 
 namespace game {
 namespace event {
 
 class MoveUnit : public Event {
 public:
-	MoveUnit( const size_t initiator_slot, const size_t unit_id, const game::map::Tile::direction_t direction );
+	MoveUnit( const size_t initiator_slot, const size_t unit_id, const game::map::tile::direction_t direction );
 
 	const std::string* Validate( Game* game ) const override;
 	void Resolve( Game* game ) override;
@@ -26,9 +24,9 @@ private:
 
 private:
 	const size_t m_unit_id;
-	const game::map::Tile::direction_t m_direction;
+	const game::map::tile::direction_t m_direction;
 
-	gse::Value m_resolutions = VALUE( gse::type::Undefined );
+	gse::Value m_resolutions;
 
 };
 

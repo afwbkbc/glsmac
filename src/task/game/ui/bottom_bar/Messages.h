@@ -2,10 +2,12 @@
 
 #include "MiddleAreaPage.h"
 
-#include "ui/object/TextView.h"
-#include "ui/object/Label.h"
-
 #include "util/Timer.h"
+
+namespace ui::object {
+class Label;
+class TextView;
+}
 
 namespace task {
 namespace game {
@@ -24,7 +26,7 @@ CLASS( Messages, MiddleAreaPage )
 	void AddMessage( const std::string& text );
 
 private:
-	object::TextView* m_messages_list = nullptr;
+	::ui::object::TextView* m_messages_list = nullptr;
 
 	// for testing
 	util::Timer m_test_timer;

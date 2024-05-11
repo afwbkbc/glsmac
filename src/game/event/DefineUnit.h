@@ -2,9 +2,12 @@
 
 #include "Event.h"
 
-#include "game/unit/Def.h"
-
 namespace game {
+
+namespace unit {
+class Def;
+}
+
 namespace event {
 
 class DefineUnit : public Event {

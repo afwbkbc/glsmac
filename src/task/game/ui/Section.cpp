@@ -2,6 +2,8 @@
 
 #include "engine/Engine.h"
 
+#include "ui/object/Section.h"
+
 namespace task {
 namespace game {
 namespace ui {
@@ -15,12 +17,12 @@ Section::Section( Game* game, const std::string class_name, const std::string se
 void Section::Create() {
 	UI::Create();
 
-	NEW( m_outer, object::Section, m_config.no_outer_border
+	NEW( m_outer, ::ui::object::Section, m_config.no_outer_border
 		? ""
 		: m_section_class_prefix + "SectionOuter" );
 	UI::AddChild( m_outer );
 
-	NEW( m_inner, object::Section, m_config.no_inner_border
+	NEW( m_inner, ::ui::object::Section, m_config.no_inner_border
 		? ""
 		: m_section_class_prefix + "SectionInner" );
 	if ( !m_title_text.empty() ) {
@@ -38,11 +40,11 @@ void Section::Destroy() {
 	UI::Destroy();
 }
 
-void Section::AddChild( UIObject* object ) {
+void Section::AddChild( ::ui::object::UIObject* object ) {
 	m_inner->AddChild( object );
 }
 
-void Section::RemoveChild( UIObject* object ) {
+void Section::RemoveChild( ::ui::object::UIObject* object ) {
 	m_inner->RemoveChild( object );
 }
 

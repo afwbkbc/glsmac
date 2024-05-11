@@ -2,6 +2,8 @@
 
 #include "StaticDef.h"
 
+#include "MoraleSet.h"
+
 #include "gse/type/Object.h"
 #include "gse/type/String.h"
 

@@ -316,7 +316,7 @@ const bool Type::operator==( const Type& other ) const {
 			if ( a.size() != b.size() ) {
 				return false;
 			}
-			Object::properties_t::const_iterator it_b;
+			object_properties_t::const_iterator it_b;
 			for ( const auto& it : a ) {
 				if (
 					( it_b = b.find( it.first ) ) == b.end() ||
@@ -419,7 +419,7 @@ Value Type::Unserialize( types::Buffer* buf ) {
 		case T_STRING:
 			return VALUE( String, buf->ReadString() );
 		case T_ARRAY: {
-			Array::elements_t elements = {};
+			array_elements_t elements = {};
 			const auto size = buf->ReadInt();
 			elements.reserve( size );
 			for ( size_t i = 0 ; i < size ; i++ ) {
@@ -428,7 +428,7 @@ Value Type::Unserialize( types::Buffer* buf ) {
 			return VALUE( Array, elements );
 		}
 		case T_OBJECT: {
-			Object::properties_t properties = {};
+			object_properties_t properties = {};
 			const auto size = buf->ReadInt();
 			for ( size_t i = 0 ; i < size ; i++ ) {
 				const auto k = buf->ReadString();

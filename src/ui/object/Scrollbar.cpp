@@ -1,6 +1,9 @@
 #include "Scrollbar.h"
 
 #include "engine/Engine.h"
+#include "ui/UI.h"
+#include "Surface.h"
+#include "SimpleButton.h"
 
 namespace ui {
 namespace object {
@@ -8,23 +11,23 @@ namespace object {
 void Scrollbar::Create() {
 	UIContainer::Create();
 
-	NEW( m_background, Surface );
-	m_background->ForwardStyleAttribute( Style::A_TEXTURE_BACK, Style::A_TEXTURE );
+	NEW( m_background, ui::object::Surface );
+	m_background->ForwardStyleAttribute( A_TEXTURE_BACK, A_TEXTURE );
 	AddChild( m_background );
 
-	const Style::attribute_type_t sizeattr = m_direction == SD_VERTICAL
-		? Style::A_WIDTH
-		: Style::A_HEIGHT;
+	const attribute_type_t sizeattr = m_direction == SD_VERTICAL
+		? A_WIDTH
+		: A_HEIGHT;
 
 	ASSERT( m_direction == SD_VERTICAL, "only vertical scrollbar is implemented for now" );
 
 	NEW( m_up, SimpleButton );
 	m_up->SetAlign( ALIGN_HCENTER | ALIGN_TOP );
-	m_up->ForwardStyleAttribute( Style::A_TEXTURE_TOP, Style::A_TEXTURE );
-	m_up->ForwardStyleAttribute( sizeattr, Style::A_WIDTH );
-	m_up->ForwardStyleAttribute( sizeattr, Style::A_HEIGHT );
+	m_up->ForwardStyleAttribute( A_TEXTURE_TOP, A_TEXTURE );
+	m_up->ForwardStyleAttribute( sizeattr, A_WIDTH );
+	m_up->ForwardStyleAttribute( sizeattr, A_HEIGHT );
 	m_up->On(
-		UIEvent::EV_MOUSE_DOWN, EH( this ) {
+		event::EV_MOUSE_DOWN, EH( this ) {
 			m_arrow_scroll.value = 1;
 			ProcessArrowScroll();
 			m_arrow_scroll.timer.SetInterval( m_arrow_scroll.frequency_ms );
@@ -33,8 +36,8 @@ void Scrollbar::Create() {
 	);
 	m_up->On(
 		{
-			UIEvent::EV_MOUSE_UP,
-			UIEvent::EV_MOUSE_OUT
+			event::EV_MOUSE_UP,
+			event::EV_MOUSE_OUT
 		}, EH( this ) {
 			m_arrow_scroll.timer.Stop();
 			return false;
@@ -44,39 +47,39 @@ void Scrollbar::Create() {
 
 	NEW( m_slider, SimpleButton );
 	m_slider->SetAlign( ALIGN_HCENTER | ALIGN_TOP );
-	m_slider->ForwardStyleAttribute( Style::A_TEXTURE_CENTER, Style::A_TEXTURE );
-	m_slider->ForwardStyleAttribute( sizeattr, Style::A_WIDTH );
-	m_slider->ForwardStyleAttribute( sizeattr, Style::A_HEIGHT );
+	m_slider->ForwardStyleAttribute( A_TEXTURE_CENTER, A_TEXTURE );
+	m_slider->ForwardStyleAttribute( sizeattr, A_WIDTH );
+	m_slider->ForwardStyleAttribute( sizeattr, A_HEIGHT );
 
 	// TODO: global mouse drag event
 	m_slider->On(
-		UIEvent::EV_MOUSE_DOWN, EH( this ) {
+		event::EV_MOUSE_DOWN, EH( this ) {
 			m_slider_scroll.is_dragging = true;
 			m_slider_scroll.drag_rel_position = {
 				data->mouse.absolute.x - (ssize_t)m_slider->GetLeft(),
 				data->mouse.absolute.y - (ssize_t)m_slider->GetTop()
 			};
-			m_slider->AddStyleModifier( Style::M_ACTIVE );
+			m_slider->AddStyleModifier( M_ACTIVE );
 			return true;
 		}
 	);
 	auto* ui = g_engine->GetUI();
 	m_slider_scroll.on_mouse_up = ui->AddGlobalEventHandler(
-		UIEvent::EV_MOUSE_UP, EH( this ) {
+		event::EV_MOUSE_UP, EH( this ) {
 			if ( m_slider_scroll.is_dragging ) {
 				m_slider_scroll.is_dragging = false;
-				m_slider->RemoveStyleModifier( Style::M_ACTIVE );
-				UIEvent::event_data_t d = {};
+				m_slider->RemoveStyleModifier( M_ACTIVE );
+				event::event_data_t d = {};
 				d.value.scroll.is_scrolling = false;
-				Trigger( UIEvent::EV_CHANGE, &d );
+				Trigger( event::EV_CHANGE, &d );
 			}
 			return false;
 		}, UI::GH_BEFORE
 	);
 	m_slider_scroll.on_mouse_move = ui->AddGlobalEventHandler(
-		UIEvent::EV_MOUSE_MOVE, EH( this ) {
+		event::EV_MOUSE_MOVE, EH( this ) {
 			if ( m_slider_scroll.is_dragging ) {
-				const Vec2< ssize_t > drag_position = {
+				const types::Vec2< ssize_t > drag_position = {
 					data->mouse.absolute.x,
 					data->mouse.absolute.y
 				};
@@ -101,11 +104,11 @@ void Scrollbar::Create() {
 
 	NEW( m_down, SimpleButton );
 	m_down->SetAlign( ALIGN_HCENTER | ALIGN_BOTTOM );
-	m_down->ForwardStyleAttribute( Style::A_TEXTURE_BOTTOM, Style::A_TEXTURE );
-	m_down->ForwardStyleAttribute( sizeattr, Style::A_WIDTH );
-	m_down->ForwardStyleAttribute( sizeattr, Style::A_HEIGHT );
+	m_down->ForwardStyleAttribute( A_TEXTURE_BOTTOM, A_TEXTURE );
+	m_down->ForwardStyleAttribute( sizeattr, A_WIDTH );
+	m_down->ForwardStyleAttribute( sizeattr, A_HEIGHT );
 	m_down->On(
-		UIEvent::EV_MOUSE_DOWN, EH( this ) {
+		event::EV_MOUSE_DOWN, EH( this ) {
 			m_arrow_scroll.value = -1;
 			ProcessArrowScroll();
 			m_arrow_scroll.timer.SetInterval( m_arrow_scroll.frequency_ms );
@@ -114,8 +117,8 @@ void Scrollbar::Create() {
 	);
 	m_down->On(
 		{
-			UIEvent::EV_MOUSE_UP,
-			UIEvent::EV_MOUSE_OUT
+			event::EV_MOUSE_UP,
+			event::EV_MOUSE_OUT
 		}, EH( this ) {
 			m_arrow_scroll.timer.Stop();
 			return false;
@@ -171,10 +174,10 @@ const float Scrollbar::GetPercentage() const {
 
 void Scrollbar::ProcessArrowScroll() {
 	// emulate mouse scroll
-	UIEvent::event_data_t d = {};
+	event::event_data_t d = {};
 	d.mouse.scroll_y = m_arrow_scroll.value;
 	// TODO: mouse coordinates?
-	Trigger( UIEvent::EV_MOUSE_SCROLL, &d );
+	Trigger( event::EV_MOUSE_SCROLL, &d );
 }
 
 void Scrollbar::UpdatePercentage() {
@@ -192,10 +195,10 @@ void Scrollbar::UpdatePercentage() {
 
 	if ( percentage != m_percentage ) {
 		m_percentage = percentage;
-		UIEvent::event_data_t d = {};
+		event::event_data_t d = {};
 		d.value.scroll.is_scrolling = true;
 		d.value.scroll.percentage = m_percentage;
-		Trigger( UIEvent::EV_CHANGE, &d );
+		Trigger( event::EV_CHANGE, &d );
 	}
 }
 

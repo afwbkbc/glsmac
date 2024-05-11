@@ -3,6 +3,14 @@
 #include "engine/Engine.h"
 
 #include "util/FS.h"
+#include "ui/object/Section.h"
+#include "ui/object/FileBrowser.h"
+#include "game/map/Consts.h"
+#include "graphics/Graphics.h"
+#include "ui/object/Panel.h"
+#include "ui/UI.h"
+#include "task/mainmenu/MainMenu.h"
+#include "game/State.h"
 
 namespace task {
 namespace mainmenu {
@@ -24,7 +32,7 @@ LoadMapFile::~LoadMapFile() {
 void LoadMapFile::Show() {
 	PopupMenu::Show();
 
-	NEW( m_section, Section, "PopupSection" );
+	NEW( m_section, ui::object::Section, "PopupSection" );
 	m_body->AddChild( m_section );
 
 	NEW( m_file_browser, ::ui::object::FileBrowser );
@@ -36,7 +44,7 @@ void LoadMapFile::Show() {
 	m_file_browser->SetDefaultDirectory( util::FS::GetAbsolutePath( ::game::map::s_consts.fs.default_map_directory ) );
 	m_file_browser->SetFileExtension( ::game::map::s_consts.fs.default_map_extension );
 	m_file_browser->On(
-		UIEvent::EV_SELECT, EH( this ) {
+		ui::event::EV_SELECT, EH( this ) {
 			const auto& path = m_file_browser->GetSelectedFile();
 			if ( !util::FS::FileExists( path ) ) {
 				g_engine->GetUI()->Error(

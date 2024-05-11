@@ -2,7 +2,10 @@
 
 #include "task/game/Game.h"
 #include "engine/Engine.h"
-#include "../popup/EndTurnConfirmation.h"
+#include "task/game/ui/popup/EndTurnConfirmation.h"
+#include "ui/object/Surface.h"
+#include "ui/object/SoundEffect.h"
+#include "loader/texture/TextureLoader.h"
 
 namespace task {
 namespace game {
@@ -12,26 +15,26 @@ StatusButton::StatusButton( Game* game )
 	: ::ui::object::Button( "BBTurnCompleteButton" )
 	, m_game( game ) {
 	On(
-		UIEvent::EV_BUTTON_CLICK, EH( this ) {
+		::ui::event::EV_BUTTON_CLICK, EH( this ) {
 			if ( m_is_clickable ) {
 				switch ( m_status_type ) {
-					case ::game::Turn::TS_TURN_ACTIVE: {
+					case ::game::turn::TS_TURN_ACTIVE: {
 						NEWV( popup, ui::popup::EndTurnConfirmation, m_game, UH( this ) {
-							SetStatus( ::game::Turn::TS_PLEASE_WAIT );
+							SetStatus( ::game::turn::TS_PLEASE_WAIT );
 							m_game->CompleteTurn();
 							m_flashing->Show();
 						} );
 						popup->Open();
-						RemoveStyleModifier( Style::M_HOVER );
+						RemoveStyleModifier( ::ui::M_HOVER );
 						break;
 					}
-					case ::game::Turn::TS_TURN_COMPLETE: {
-						SetStatus( ::game::Turn::TS_PLEASE_WAIT );
+					case ::game::turn::TS_TURN_COMPLETE: {
+						SetStatus( ::game::turn::TS_PLEASE_WAIT );
 						m_game->CompleteTurn();
 						break;
 					}
-					case ::game::Turn::TS_WAITING_FOR_PLAYERS: {
-						SetStatus( ::game::Turn::TS_PLEASE_WAIT );
+					case ::game::turn::TS_WAITING_FOR_PLAYERS: {
+						SetStatus( ::game::turn::TS_PLEASE_WAIT );
 						m_game->UncompleteTurn();
 						break;
 					}
@@ -44,7 +47,7 @@ StatusButton::StatusButton( Game* game )
 		}
 	);
 	On(
-		UIEvent::EV_MOUSE_OVER, EH( this ) {
+		::ui::event::EV_MOUSE_OVER, EH( this ) {
 			if ( m_is_clickable ) {
 				m_flashing->Hide();
 			}
@@ -52,7 +55,7 @@ StatusButton::StatusButton( Game* game )
 		}
 	);
 	On(
-		UIEvent::EV_MOUSE_OUT, EH( this ) {
+		::ui::event::EV_MOUSE_OUT, EH( this ) {
 			if ( m_is_clickable ) {
 				m_flashing->Show();
 			}
@@ -70,10 +73,10 @@ void StatusButton::Create() {
 	m_flashing->SetTexture( g_engine->GetTextureLoader()->LoadTexture( "console_x2_a.pcx", 199, 113, 373, 129 ) );
 	AddChild( m_flashing );
 
-	NEW( m_sound, SoundEffect, "BBTurnCompleteSound" );
+	NEW( m_sound, ::ui::object::SoundEffect, "BBTurnCompleteSound" );
 	AddChild( m_sound );
 
-	SetStatus( ::game::Turn::TS_PLEASE_WAIT );
+	SetStatus( ::game::turn::TS_PLEASE_WAIT );
 }
 
 void StatusButton::Iterate() {
@@ -105,36 +108,36 @@ void StatusButton::Destroy() {
 	::ui::object::Button::Destroy();
 }
 
-static const std::unordered_map< ::game::Turn::turn_status_t, std::string > s_status_labels = {
+static const std::unordered_map< ::game::turn::turn_status_t, std::string > s_status_labels = {
 	{
-		::game::Turn::TS_PLEASE_WAIT,
+		::game::turn::TS_PLEASE_WAIT,
 		"PLEASE WAIT"
 	},
 	{
-		::game::Turn::TS_TURN_ACTIVE,
+		::game::turn::TS_TURN_ACTIVE,
 		"TURN COMPLETE",
 	},
 	{
-		::game::Turn::TS_TURN_COMPLETE,
+		::game::turn::TS_TURN_COMPLETE,
 		"TURN COMPLETE",
 	},
 	{
-		::game::Turn::TS_WAITING_FOR_PLAYERS,
+		::game::turn::TS_WAITING_FOR_PLAYERS,
 		"WAITING FOR PLAYERS",
 	}
 };
-void StatusButton::SetStatus( const ::game::Turn::turn_status_t status ) {
+void StatusButton::SetStatus( const ::game::turn::turn_status_t status ) {
 	if ( m_status_type != status ) {
 		m_status_type = status;
 		ASSERT( s_status_labels.find( m_status_type ) != s_status_labels.end(), "invalid status type: " + std::to_string( m_status_type ) );
 		SetLabel( s_status_labels.at( m_status_type ) );
 		switch ( m_status_type ) {
-			case ::game::Turn::TS_TURN_COMPLETE: {
+			case ::game::turn::TS_TURN_COMPLETE: {
 				StartFlashing( 1.0f, 1.0f );
 				m_sound->Play();
 				break;
 			}
-			case ::game::Turn::TS_WAITING_FOR_PLAYERS: {
+			case ::game::turn::TS_WAITING_FOR_PLAYERS: {
 				StartFlashing( 0.25f, 0.25f );
 				m_sound->Stop();
 				break;
@@ -144,13 +147,13 @@ void StatusButton::SetStatus( const ::game::Turn::turn_status_t status ) {
 				m_sound->Stop();
 			}
 		}
-		m_is_clickable = m_status_type != ::game::Turn::TS_PLEASE_WAIT;
+		m_is_clickable = m_status_type != ::game::turn::TS_PLEASE_WAIT;
 		if ( m_is_clickable ) {
 			UnblockEvents();
 		}
 		else {
 			BlockEvents();
-			RemoveStyleModifier( Style::M_HOVER );
+			RemoveStyleModifier( ::ui::M_HOVER );
 		}
 	}
 }

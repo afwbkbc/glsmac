@@ -1,6 +1,10 @@
 #include "Conversions.h"
 
 #include "gse/GSE.h"
+#include "gse/Context.h"
+#include "gse/callable/Native.h"
+#include "gse/Exception.h"
+#include "gse/type/Undefined.h"
 #include "gse/type/Int.h"
 #include "gse/type/Float.h"
 #include "gse/type/String.h"
@@ -28,7 +32,6 @@ void Conversions::AddToContext( gse::Context* ctx ) {
 	} \
 	return _constructor( r, g, b ).Wrap(); \
 }
-
 
 	ctx->CreateBuiltin( "to_string", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );

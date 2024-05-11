@@ -31,7 +31,7 @@ void GSETests::Iterate() {
 		gse::GSE gse;
 		const auto& it = m_tests[ current_test_index++ ];
 		LogTest( "  " + it.first + "..." );
-		const auto errmsg = it.second( gse );
+		const auto errmsg = it.second( &gse );
 		if ( errmsg.empty() ) {
 			m_stats.passed++;
 		}

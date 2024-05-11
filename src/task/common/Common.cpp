@@ -1,15 +1,18 @@
 #include "Common.h"
 
 #include "engine/Engine.h"
-
-using namespace ui::object;
+#include "config/Config.h"
+#include "ui/UI.h"
+#include "ui/FPSCounter.h"
+#include "ui/style/Theme.h"
 
 namespace task {
 
 void Common::Start() {
 	auto* ui = g_engine->GetUI();
 
-	ui->AddTheme( &m_theme );
+	NEW( m_theme, task::style::Theme );
+	ui->AddTheme( m_theme );
 
 	if ( g_engine->GetConfig()->HasLaunchFlag( config::Config::LF_SHOWFPS ) ) {
 		NEW( m_fps_counter, ui::FPSCounter );
@@ -26,7 +29,8 @@ void Common::Stop() {
 		m_fps_counter = nullptr;
 	}
 
-	ui->RemoveTheme( &m_theme );
+	ui->RemoveTheme( m_theme );
+	DELETE( m_theme );
 }
 
 void Common::Iterate() {

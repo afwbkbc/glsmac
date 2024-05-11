@@ -3,6 +3,7 @@
 #include <string>
 #include <cstdint>
 
+#include "Types.h"
 #include "types/Buffer.h"
 
 namespace game {
@@ -10,10 +11,6 @@ namespace animation {
 
 class Def {
 public:
-	enum animation_type_t {
-		AT_NONE,
-		AT_FRAMES_ROW,
-	};
 
 	Def(
 		const std::string& id,

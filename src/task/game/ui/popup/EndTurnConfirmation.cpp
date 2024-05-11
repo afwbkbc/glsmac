@@ -1,11 +1,14 @@
 #include "EndTurnConfirmation.h"
 
+#include "ui/object/Section.h"
+#include "ui/object/Label.h"
+
 namespace task {
 namespace game {
 namespace ui {
 namespace popup {
 
-EndTurnConfirmation::EndTurnConfirmation( Game* game, const ui_handler_t on_confirm )
+EndTurnConfirmation::EndTurnConfirmation( Game* game, const ::ui::ui_handler_t on_confirm )
 	: Popup( game )
 	, m_on_confirm( on_confirm ) {
 	SetTitleText( "OPERATIONS DIRECTOR" );
@@ -17,7 +20,7 @@ void EndTurnConfirmation::Create() {
 	Popup::Create();
 
 	NEW( m_message_section, ::ui::object::Section, SubClass( "InnerFrame" ) );
-	m_message_section->SetAlign( UIObject::ALIGN_TOP );
+	m_message_section->SetAlign( ::ui::ALIGN_TOP );
 	m_message_section->SetLeft( 6 );
 	m_message_section->SetRight( 6 );
 	m_message_section->SetTop( 34 );
@@ -45,7 +48,7 @@ void EndTurnConfirmation::Create() {
 		}
 	);
 	m_choices->On(
-		UIEvent::EV_SELECT, EH( this ) {
+		::ui::event::EV_SELECT, EH( this ) {
 			SelectChoice();
 			return true;
 		}

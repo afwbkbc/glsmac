@@ -2,9 +2,13 @@
 
 #include "ui/object/Button.h"
 
+#include "game/turn/Types.h"
+
 #include "util/Timer.h"
-#include "ui/object/SoundEffect.h"
-#include "game/Turn.h"
+
+namespace ui::object {
+class SoundEffect;
+}
 
 namespace task {
 namespace game {
@@ -19,14 +23,14 @@ CLASS( StatusButton, ::ui::object::Button )
 	void Iterate() override;
 	void Destroy() override;
 
-	void SetStatus( const ::game::Turn::turn_status_t status );
+	void SetStatus( const ::game::turn::turn_status_t status );
 
 private:
 	const size_t FLASH_INTERVAL_MS = 10;
 
 	Game* m_game;
 
-	::game::Turn::turn_status_t m_status_type = ::game::Turn::TS_NONE;
+	::game::turn::turn_status_t m_status_type = ::game::turn::TS_NONE;
 
 	util::Timer m_flash_timer;
 	float m_flash_alpha = 0.0f;

@@ -2,28 +2,28 @@
 
 #include <string>
 
-#include "MoraleSet.h"
+#include "Types.h"
 #include "types/Buffer.h"
-#include "game/map/TileState.h"
+
+#include "game/map/tile/Types.h"
 #include "gse/Wrappable.h"
 #include "gse/Value.h"
 
 namespace game {
+
+namespace map {
+namespace tile {
+class Tile;
+class TileState;
+}
+}
+
 namespace unit {
+
+class MoraleSet;
 
 class Def : public gse::Wrappable {
 public:
-
-	enum def_type_t {
-		DT_STATIC,
-	};
-
-	enum movement_type_t {
-		MT_IMMOVABLE,
-		MT_LAND,
-		MT_WATER,
-		MT_AIR
-	};
 
 	Def( const std::string& id, const MoraleSet* moraleset, const def_type_t type, const std::string& name );
 	virtual ~Def() = default;
@@ -35,7 +35,7 @@ public:
 
 	virtual const movement_type_t GetMovementType() const = 0;
 
-	virtual const types::Vec3 GetSpawnCoords( const float tile_x, const float tile_y, const map::TileState::tile_vertices_t& tile_coords ) const = 0;
+	virtual const types::Vec3 GetSpawnCoords( const map::tile::Tile* tile, const map::tile::TileState* ts ) const = 0;
 	virtual const std::string ToString( const std::string& prefix = "" ) const = 0;
 
 	static const types::Buffer Serialize( const Def* def );

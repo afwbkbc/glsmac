@@ -1,14 +1,11 @@
 #pragma once
 
-#include <vector>
 #include <unordered_map>
 #include <unordered_set>
 
 #include "Parser.h"
 
-#include "gse/program/Variable.h"
-#include "gse/program/Array.h"
-#include "gse/program/Conditional.h"
+#include "gse/program/Types.h"
 
 #include "gse/Value.h"
 #include "gse/type/Bool.h"
@@ -16,6 +13,19 @@
 #include "gse/type/Undefined.h"
 
 namespace gse {
+
+namespace program {
+class Scope;
+class Statement;
+class Control;
+class Conditional;
+class Expression;
+class Operator;
+class Operand;
+class Object;
+class Array;
+}
+
 namespace parser {
 
 CLASS( JS, Parser )
@@ -36,7 +46,7 @@ private:
 	const program::Statement* GetStatement( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 	const program::Operand* GetExpressionOrOperand( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 	const program::Expression* GetExpression( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
-	const program::Operand* GetOperand( const Identifier* element, program::Variable::variable_hints_t* next_var_hints = nullptr );
+	const program::Operand* GetOperand( const Identifier* element, program::variable_hints_t* next_var_hints = nullptr );
 	const program::Operator* GetOperator( const Operator* element );
 	const program::Array* GetArray( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 	const program::Object* GetObject( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
@@ -119,15 +129,15 @@ private:
 		}
 	};
 
-	const std::unordered_map< std::string, program::Variable::variable_hints_t > MODIFIER_OPERATORS = {
+	const std::unordered_map< std::string, program::variable_hints_t > MODIFIER_OPERATORS = {
 		{
 			{
 				"let",
-				program::Variable::VH_CREATE_VAR,
+				program::VH_CREATE_VAR,
 			},
 			{
 				"const",
-				program::Variable::VH_CREATE_CONST,
+				program::VH_CREATE_CONST,
 			},
 		}
 	};
@@ -151,118 +161,118 @@ private:
 		},
 	};
 
-	const std::unordered_map< std::string, program::Operator::operator_type_t > OPERATOR_NAMES = {
+	const std::unordered_map< std::string, program::operator_type_t > OPERATOR_NAMES = {
 		{
 			"return",
-			program::Operator::OT_RETURN
+			program::OT_RETURN
 		},
 		{
 			"throw",
-			program::Operator::OT_THROW
+			program::OT_THROW
 		},
 		{
 			"=",
-			program::Operator::OT_ASSIGN
+			program::OT_ASSIGN
 		},
 		{
 			"!",
-			program::Operator::OT_NOT
+			program::OT_NOT
 		},
 		{
 			"==",
-			program::Operator::OT_EQ
+			program::OT_EQ
 		},
 		{
 			"!=",
-			program::Operator::OT_NE
+			program::OT_NE
 		},
 		{
 			"<",
-			program::Operator::OT_LT
+			program::OT_LT
 		},
 		{
 			"<=",
-			program::Operator::OT_LTE
+			program::OT_LTE
 		},
 		{
 			">",
-			program::Operator::OT_GT
+			program::OT_GT
 		},
 		{
 			">=",
-			program::Operator::OT_GTE
+			program::OT_GTE
 		},
 		{
 			"&&",
-			program::Operator::OT_AND
+			program::OT_AND
 		},
 		{
 			"||",
-			program::Operator::OT_OR
+			program::OT_OR
 		},
 		{
 			"+",
-			program::Operator::OT_ADD
+			program::OT_ADD
 		},
 		{
 			"-",
-			program::Operator::OT_SUB
+			program::OT_SUB
 		},
 		{
 			"*",
-			program::Operator::OT_MULT
+			program::OT_MULT
 		},
 		{
 			"/",
-			program::Operator::OT_DIV
+			program::OT_DIV
 		},
 		{
 			"%",
-			program::Operator::OT_MOD
+			program::OT_MOD
 		},
 		{
 			"++",
-			program::Operator::OT_INC
+			program::OT_INC
 		},
 		{
 			"--",
-			program::Operator::OT_DEC
+			program::OT_DEC
 		},
 		{
 			"+=",
-			program::Operator::OT_INC_BY
+			program::OT_INC_BY
 		},
 		{
 			"-=",
-			program::Operator::OT_DEC_BY
+			program::OT_DEC_BY
 		},
 		{
 			"*=",
-			program::Operator::OT_MULT_BY
+			program::OT_MULT_BY
 		},
 		{
 			"/=",
-			program::Operator::OT_DIV_BY
+			program::OT_DIV_BY
 		},
 		{
 			"%/",
-			program::Operator::OT_MOD_BY
+			program::OT_MOD_BY
 		},
 		{
 			".",
-			program::Operator::OT_CHILD
+			program::OT_CHILD
 		},
 		{
 			"[]",
-			program::Operator::OT_AT
+			program::OT_AT
 		},
 		{
 			"[]=",
-			program::Operator::OT_APPEND
+			program::OT_APPEND
 		},
 		{
 			":",
-			program::Operator::OT_RANGE
+			program::OT_RANGE
 		},
 	};
 
@@ -277,198 +287,198 @@ private:
 		uint8_t priority;
 		operator_link_t link;
 	};
-	const std::unordered_map< program::Operator::operator_type_t, const operator_info_t > OPERATOR_INFO = {
+	const std::unordered_map< program::operator_type_t, const operator_info_t > OPERATOR_INFO = {
 		{
-			program::Operator::OT_RETURN,
+			program::OT_RETURN,
 			{
 				1,
 				OL_RIGHT
 			}
 		},
 		{
-			program::Operator::OT_THROW,
+			program::OT_THROW,
 			{
 				1,
 				OL_RIGHT
 			}
 		},
 		{
-			program::Operator::OT_ASSIGN,
+			program::OT_ASSIGN,
 			{
 				2,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_NOT,
+			program::OT_NOT,
 			{
 				14,
 				OL_RIGHT
 			}
 		},
 		{
-			program::Operator::OT_EQ,
+			program::OT_EQ,
 			{
 				8,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_NE,
+			program::OT_NE,
 			{
 				8,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_LT,
+			program::OT_LT,
 			{
 				9,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_LTE,
+			program::OT_LTE,
 			{
 				9,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_GT,
+			program::OT_GT,
 			{
 				9,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_GTE,
+			program::OT_GTE,
 			{
 				9,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_AND,
+			program::OT_AND,
 			{
 				4,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_OR,
+			program::OT_OR,
 			{
 				3,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_ADD,
+			program::OT_ADD,
 			{
 				11,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_SUB,
+			program::OT_SUB,
 			{
 				11,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_MULT,
+			program::OT_MULT,
 			{
 				12,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_DIV,
+			program::OT_DIV,
 			{
 				12,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_MOD,
+			program::OT_MOD,
 			{
 				12,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_INC,
+			program::OT_INC,
 			{
 				15,
 				OL_ANY
 			}
 		},
 		{
-			program::Operator::OT_DEC,
+			program::OT_DEC,
 			{
 				15,
 				OL_ANY
 			}
 		},
 		{
-			program::Operator::OT_INC_BY,
+			program::OT_INC_BY,
 			{
 				2,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_DEC_BY,
+			program::OT_DEC_BY,
 			{
 				2,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_MULT_BY,
+			program::OT_MULT_BY,
 			{
 				2,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_DIV_BY,
+			program::OT_DIV_BY,
 			{
 				2,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_MOD_BY,
+			program::OT_MOD_BY,
 			{
 				2,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_CHILD,
+			program::OT_CHILD,
 			{
 				17,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_AT,
+			program::OT_AT,
 			{
 				18,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_APPEND,
+			program::OT_APPEND,
 			{
 				2,
 				OL_BOTH
 			}
 		},
 		{
-			program::Operator::OT_RANGE,
+			program::OT_RANGE,
 			{
 				3,
 				OL_ANY_OR_BOTH

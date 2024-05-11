@@ -3,16 +3,20 @@
 #include <vector>
 
 #include "task/game/ui/bottom_bar/BBSection.h"
-#include "ui/object/Section.h"
-#include "ui/object/ScrollView.h"
-#include "task/game/Types.h"
-#include "task/game/Unit.h"
-#include "../UnitPreview.h"
-#include "UnitsListItem.h"
+
+namespace ui::object {
+class ScrollView;
+}
 
 namespace task {
 namespace game {
+
+class Unit;
+
 namespace ui {
+
+class UnitPreview;
+class UnitsListItem;
 
 CLASS( UnitsList, BBSection )
 

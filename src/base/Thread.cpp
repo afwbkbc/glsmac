@@ -4,12 +4,11 @@
 #include <cmath>
 
 #include "Thread.h"
-
-using namespace std;
+#include "base/Module.h"
 
 namespace base {
 
-Thread::Thread( const string& thread_name )
+Thread::Thread( const std::string& thread_name )
 	: Base()
 	, m_thread_name( thread_name ) {
 	m_state = STATE_INACTIVE;
@@ -29,7 +28,7 @@ Thread::~Thread() {
 void Thread::T_Start() {
 	ASSERT( !m_thread, "thread object already initialized" );
 	m_state = STATE_STARTING;
-	m_thread = new thread( &Thread::Run, this );
+	m_thread = new std::thread( &Thread::Run, this );
 }
 
 bool Thread::T_IsRunning() {
@@ -131,7 +130,7 @@ void Thread::Run() {
 				m_state = STATE_STOPPING;
 				break;
 			default:
-				THROW( "unknown thread command " + to_string( m_command ) );
+				THROW( "unknown thread command " + std::to_string( m_command ) );
 		}
 	}
 
@@ -159,8 +158,8 @@ void Thread::Run() {
 	}*/
 }
 
-const string& Thread::GetThreadName() const {
+const std::string& Thread::GetThreadName() const {
 	return m_thread_name;
 }
 
-} /* namespace base */
+}

@@ -10,7 +10,7 @@ Native::Native( const executor_t& executor )
 	//
 }
 
-Value Native::Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) {
+Value Native::Run( Context* ctx, const si_t& call_si, const gse::type::function_arguments_t& arguments ) {
 	return m_executor( ctx, call_si, arguments );
 }
 

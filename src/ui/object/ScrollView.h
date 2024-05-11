@@ -4,13 +4,14 @@
 
 #include "Panel.h"
 
+#include "types/Vec2.h"
 #include "util/Scroller.h"
-
-#include "Scrollbar.h"
-#include "SimpleButton.h"
 
 namespace ui {
 namespace object {
+
+class Scrollbar;
+class SimpleButton;
 
 CLASS( ScrollView, Panel )
 
@@ -99,13 +100,13 @@ private:
 	bool m_need_body_refresh = false;
 
 	bool m_is_dragging = false;
-	Vec2< ssize_t > m_drag_start_position = {
+	types::Vec2< ssize_t > m_drag_start_position = {
 		0,
 		0
 	};
 	struct {
-		const UIEventHandler* mouse_up;
-		const UIEventHandler* mouse_move;
+		const event::UIEventHandler* mouse_up;
+		const event::UIEventHandler* mouse_move;
 	} m_handlers;
 
 	void AddChildToBody( UIObject* child );

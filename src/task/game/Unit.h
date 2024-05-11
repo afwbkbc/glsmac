@@ -2,16 +2,29 @@
 
 #include <cstddef>
 
-#include "UnitDef.h"
-#include "Slot.h"
-#include "Sprite.h"
+#include "game/unit/Types.h"
 
 #include "util/Timer.h"
+#include "types/Vec3.h"
+
+namespace types {
+namespace texture {
+class Texture;
+}
+namespace mesh {
+class Mesh;
+}
+}
 
 namespace task {
 namespace game {
 
+class UnitDef;
+class Slot;
 class Tile;
+class Sprite;
+class BadgeDefs;
+class InstancedSprite;
 
 class Unit {
 public:
@@ -22,12 +35,12 @@ public:
 		UnitDef* def,
 		Slot* slot,
 		Tile* tile,
-		const Vec3& render_coords,
+		const types::Vec3& render_coords,
 		const bool is_owned,
-		const ::game::unit::Unit::movement_t movement,
-		const ::game::unit::Morale::morale_t morale,
+		const ::game::unit::movement_t movement,
+		const ::game::unit::morale_t morale,
 		const std::string& morale_string,
-		const ::game::unit::Unit::health_t health
+		const ::game::unit::health_t health
 	);
 	~Unit();
 
@@ -66,15 +79,15 @@ public:
 
 	void Refresh();
 
-	void SetMovement( const ::game::unit::Unit::movement_t movement );
-	void SetHealth( const ::game::unit::Unit::health_t health );
+	void SetMovement( const ::game::unit::movement_t movement );
+	void SetHealth( const ::game::unit::health_t health );
 	const bool CanMove() const;
 
-	void MoveTo( Tile* dst_tile, const Vec3& dst_render_coords );
+	void MoveTo( Tile* dst_tile, const types::Vec3& dst_render_coords );
 
 	struct meshtex_t {
 		const types::mesh::Mesh* mesh = nullptr;
-		types::Texture* texture = nullptr;
+		types::texture::Texture* texture = nullptr;
 	};
 	struct render_data_t {
 		meshtex_t unit;
@@ -92,7 +105,7 @@ private:
 	Slot* m_slot = nullptr;
 	Tile* m_tile = nullptr;
 	struct {
-		Vec3 coords = {};
+		types::Vec3 coords = {};
 		bool is_rendered = false;
 		size_t instance_id = 0;
 		struct {
@@ -113,10 +126,10 @@ private:
 
 	const bool m_is_owned = false;
 	bool m_is_active = false;
-	::game::unit::Unit::movement_t m_movement = 0.0f;
-	::game::unit::Morale::morale_t m_morale = 0;
+	::game::unit::movement_t m_movement = 0.0f;
+	::game::unit::morale_t m_morale = 0;
 	std::string m_morale_string = "";
-	::game::unit::Unit::health_t m_health = 0;
+	::game::unit::health_t m_health = 0;
 
 	bool m_need_refresh = true;
 
@@ -129,5 +142,3 @@ private:
 
 }
 }
-
-#include "Tile.h"

@@ -68,4 +68,4 @@ protected:
 
 };
 
-} /* namespace scene */
+}

@@ -1,5 +1,13 @@
 #include "Coastlines2.h"
 
+#include "game/map/Map.h"
+#include "game/map/MapState.h"
+#include "game/map/Consts.h"
+#include "game/map/tile/Tile.h"
+#include "game/map/tile/TileState.h"
+#include "util/random/Random.h"
+#include "util/Perlin.h"
+
 namespace game {
 namespace map {
 namespace module {
@@ -13,7 +21,7 @@ Coastlines2::~Coastlines2() {
 	DELETE( m_perlin );
 }
 
-void Coastlines2::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) {
+void Coastlines2::GenerateTile( const tile::Tile* tile, tile::TileState* ts, MapState* ms ) {
 
 	// fix coastline texture center alpha for corners
 
@@ -24,28 +32,28 @@ void Coastlines2::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) 
 					( tile->SW->is_water_tile || tile->coord.y == ms->dimensions.y - 1 ) &&
 					( tile->NW->is_water_tile || tile->coord.y == 0 )
 				) {
-				ts->W->layers[ TileState::LAYER_WATER_SURFACE_EXTRA ].colors.center.value.alpha *= s_consts.coastlines.coast_water_center_alpha_corner_mod;
+				ts->W->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.center.value.alpha *= s_consts.coastlines.coast_water_center_alpha_corner_mod;
 			}
 			if (
 				( tile->N->is_water_tile || tile->coord.y <= 1 ) &&
 					( tile->NW->is_water_tile || tile->coord.y == 0 ) &&
 					( tile->NE->is_water_tile || tile->coord.y == 0 )
 				) {
-				ts->N->layers[ TileState::LAYER_WATER_SURFACE_EXTRA ].colors.center.value.alpha *= s_consts.coastlines.coast_water_center_alpha_corner_mod;
+				ts->N->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.center.value.alpha *= s_consts.coastlines.coast_water_center_alpha_corner_mod;
 			}
 			if (
 				tile->E->is_water_tile &&
 					( tile->SE->is_water_tile || tile->coord.y == ms->dimensions.y - 1 ) &&
 					( tile->NE->is_water_tile || tile->coord.y == 0 )
 				) {
-				ts->E->layers[ TileState::LAYER_WATER_SURFACE_EXTRA ].colors.center.value.alpha *= s_consts.coastlines.coast_water_center_alpha_corner_mod;
+				ts->E->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.center.value.alpha *= s_consts.coastlines.coast_water_center_alpha_corner_mod;
 			}
 			if (
 				( tile->S->is_water_tile || tile->coord.y <= ms->dimensions.y - 2 ) &&
 					( tile->SE->is_water_tile || tile->coord.y == ms->dimensions.y - 1 ) &&
 					( tile->SW->is_water_tile || tile->coord.y == ms->dimensions.y - 1 )
 				) {
-				ts->S->layers[ TileState::LAYER_WATER_SURFACE_EXTRA ].colors.center.value.alpha *= s_consts.coastlines.coast_water_center_alpha_corner_mod;
+				ts->S->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.center.value.alpha *= s_consts.coastlines.coast_water_center_alpha_corner_mod;
 			}
 		}
 	}
@@ -56,7 +64,7 @@ void Coastlines2::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) 
 				( !tile->SE->is_water_tile && !tile->NE->is_water_tile ) ||
 				( !tile->SE->is_water_tile && !tile->SW->is_water_tile )
 			) {
-			ts->layers[ TileState::LAYER_WATER_SURFACE_EXTRA ].colors.center.value.alpha /= s_consts.coastlines.coast_water_center_alpha_corner_mod / 2;
+			ts->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.center.value.alpha /= s_consts.coastlines.coast_water_center_alpha_corner_mod / 2;
 		}
 
 		// add perlin borders where needed
@@ -66,12 +74,12 @@ void Coastlines2::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) 
 
 		if ( !tile->NW->is_water_tile && tile->coord.y > 0 ) {
 			coastline_corner_tmp = {};
-			coastline_corner_tmp.flags = Texture::AM_MIRROR_X | Texture::AM_PERLIN_LEFT;
+			coastline_corner_tmp.flags = types::texture::AM_MIRROR_X | types::texture::AM_PERLIN_LEFT;
 			if ( tile->N->is_water_tile ) {
-				coastline_corner_tmp.flags |= Texture::AM_PERLIN_CUT_TOP;
+				coastline_corner_tmp.flags |= types::texture::AM_PERLIN_CUT_TOP;
 			}
 			if ( tile->W->is_water_tile ) {
-				coastline_corner_tmp.flags |= Texture::AM_PERLIN_CUT_BOTTOM;
+				coastline_corner_tmp.flags |= types::texture::AM_PERLIN_CUT_BOTTOM;
 			}
 			if ( tile->coord.x > 0 ) {
 				coastline_corner_tmp.msx = tile->coord.x - 1;
@@ -84,12 +92,12 @@ void Coastlines2::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) 
 		}
 		if ( !tile->NE->is_water_tile && tile->coord.y > 0 ) {
 			coastline_corner_tmp = {};
-			coastline_corner_tmp.flags |= Texture::AM_MIRROR_Y | Texture::AM_PERLIN_TOP;
+			coastline_corner_tmp.flags |= types::texture::AM_MIRROR_Y | types::texture::AM_PERLIN_TOP;
 			if ( tile->N->is_water_tile ) {
-				coastline_corner_tmp.flags |= Texture::AM_PERLIN_CUT_LEFT;
+				coastline_corner_tmp.flags |= types::texture::AM_PERLIN_CUT_LEFT;
 			}
 			if ( tile->E->is_water_tile ) {
-				coastline_corner_tmp.flags |= Texture::AM_PERLIN_CUT_RIGHT;
+				coastline_corner_tmp.flags |= types::texture::AM_PERLIN_CUT_RIGHT;
 			}
 			if ( tile->coord.x < ms->dimensions.x - 1 ) {
 				coastline_corner_tmp.msx = tile->coord.x + 1;
@@ -102,12 +110,12 @@ void Coastlines2::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) 
 		}
 		if ( !tile->SE->is_water_tile && tile->coord.y < ms->dimensions.y - 1 ) {
 			coastline_corner_tmp = {};
-			coastline_corner_tmp.flags |= Texture::AM_MIRROR_X | Texture::AM_PERLIN_RIGHT;
+			coastline_corner_tmp.flags |= types::texture::AM_MIRROR_X | types::texture::AM_PERLIN_RIGHT;
 			if ( tile->E->is_water_tile ) {
-				coastline_corner_tmp.flags |= Texture::AM_PERLIN_CUT_TOP;
+				coastline_corner_tmp.flags |= types::texture::AM_PERLIN_CUT_TOP;
 			}
 			if ( tile->S->is_water_tile ) {
-				coastline_corner_tmp.flags |= Texture::AM_PERLIN_CUT_BOTTOM;
+				coastline_corner_tmp.flags |= types::texture::AM_PERLIN_CUT_BOTTOM;
 			}
 			if ( tile->coord.x < ms->dimensions.x - 1 ) {
 				coastline_corner_tmp.msx = tile->coord.x + 1;
@@ -120,12 +128,12 @@ void Coastlines2::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) 
 		}
 		if ( !tile->SW->is_water_tile && tile->coord.y < ms->dimensions.y - 1 ) {
 			coastline_corner_tmp = {};
-			coastline_corner_tmp.flags |= Texture::AM_MIRROR_Y | Texture::AM_PERLIN_BOTTOM;
+			coastline_corner_tmp.flags |= types::texture::AM_MIRROR_Y | types::texture::AM_PERLIN_BOTTOM;
 			if ( tile->W->is_water_tile ) {
-				coastline_corner_tmp.flags |= Texture::AM_PERLIN_CUT_LEFT;
+				coastline_corner_tmp.flags |= types::texture::AM_PERLIN_CUT_LEFT;
 			}
 			if ( tile->S->is_water_tile ) {
-				coastline_corner_tmp.flags |= Texture::AM_PERLIN_CUT_RIGHT;
+				coastline_corner_tmp.flags |= types::texture::AM_PERLIN_CUT_RIGHT;
 			}
 			if ( tile->coord.x > 0 ) {
 				coastline_corner_tmp.msx = tile->coord.x - 1;
@@ -143,11 +151,11 @@ void Coastlines2::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) 
 			const float pb = (float)m_map->GetRandom()->GetUInt( 1, 1000000 ) / 1000000;
 
 			m_map->CopyTextureDeferred(
-				TileState::LAYER_LAND,
+				tile::LAYER_LAND,
 				c.msx * s_consts.tc.texture_pcx.dimensions.x,
 				c.msy * s_consts.tc.texture_pcx.dimensions.y,
-				TileState::LAYER_WATER,
-				Texture::AM_MERGE | c.flags | Texture::AM_COASTLINE_BORDER,
+				tile::LAYER_WATER,
+				types::texture::AM_MERGE | c.flags | types::texture::AM_COASTLINE_BORDER,
 				0,
 				pb,
 				m_perlin

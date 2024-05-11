@@ -10,7 +10,7 @@ namespace type {
 
 static Value s_undefined = VALUE( type::Undefined );
 
-Array::Array( elements_t initial_value )
+Array::Array( array_elements_t initial_value )
 	: Type( GetType() )
 	, value( initial_value ) {}
 

@@ -1,8 +1,11 @@
 #pragma once
 
-#include "Mocks.h"
+#include "gse/tests/Types.h"
 
 namespace gse {
+
+class GlobalContext;
+
 namespace tests {
 namespace mocks {
 
@@ -15,4 +18,3 @@ public:
 }
 }
 }
-

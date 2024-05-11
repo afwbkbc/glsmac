@@ -1,6 +1,9 @@
 #include "DefineMorales.h"
 
-#include "../Game.h"
+#include "game/Game.h"
+
+#include "game/unit/MoraleSet.h"
+#include "gse/type/Undefined.h"
 
 namespace game {
 namespace event {

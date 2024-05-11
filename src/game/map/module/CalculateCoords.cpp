@@ -1,15 +1,20 @@
 #include "CalculateCoords.h"
 
+#include "game/map/Map.h"
+#include "game/map/Consts.h"
+#include "game/map/tile/TileState.h"
+#include "util/random/Random.h"
+
 namespace game {
 namespace map {
 namespace module {
 
-void CalculateCoords::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) {
+void CalculateCoords::GenerateTile( const tile::Tile* tile, tile::TileState* ts, MapState* ms ) {
 
-	for ( auto lt = 0 ; lt < TileState::LAYER_MAX ; lt++ ) {
+	for ( auto lt = 0 ; lt < tile::LAYER_MAX ; lt++ ) {
 
 		// vertex coodinates for tile corners ( everything but land is flat at water level )
-#define vcz( _lt, _val ) ( ( _lt == TileState::LAYER_LAND ) ? s_consts.tile.elevation_to_vertex_z.Clamp( _val ) : s_consts.tile.water_level_z )
+#define vcz( _lt, _val ) ( ( _lt == tile::LAYER_LAND ) ? s_consts.tile.elevation_to_vertex_z.Clamp( _val ) : s_consts.tile.water_level_z )
 
 		ts->layers[ lt ].coords.left = {
 			ts->coord.x - s_consts.tile.radius.x,
@@ -32,8 +37,8 @@ void CalculateCoords::GenerateTile( const Tile* tile, TileState* ts, MapState* m
 			vcz( lt, ts->elevations.bottom )
 		};
 		ts->layers[ lt ].coords.center = {
-			( ts->layers[ lt ].coords.left.x + ts->layers[ TileState::LAYER_LAND ].coords.right.x ) / 2,
-			( ts->layers[ TileState::LAYER_LAND ].coords.top.y + ts->layers[ TileState::LAYER_LAND ].coords.bottom.y ) / 2,
+			( ts->layers[ lt ].coords.left.x + ts->layers[ tile::LAYER_LAND ].coords.right.x ) / 2,
+			( ts->layers[ tile::LAYER_LAND ].coords.top.y + ts->layers[ tile::LAYER_LAND ].coords.bottom.y ) / 2,
 			vcz( lt, ts->elevations.center )
 		};
 

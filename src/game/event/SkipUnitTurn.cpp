@@ -1,7 +1,8 @@
 #include "SkipUnitTurn.h"
 
-#include "../Game.h"
-
+#include "game/Game.h"
+#include "game/unit/Unit.h"
+#include "game/slot/Slot.h"
 #include "gse/type/Undefined.h"
 
 namespace game {

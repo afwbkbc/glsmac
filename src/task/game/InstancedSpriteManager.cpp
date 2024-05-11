@@ -1,5 +1,11 @@
 #include "InstancedSpriteManager.h"
 
+#include "task/game/InstancedSprite.h"
+#include "scene/Scene.h"
+#include "scene/actor/Instanced.h"
+#include "scene/actor/Sprite.h"
+#include "types/texture/Texture.h"
+
 namespace task {
 namespace game {
 
@@ -26,10 +32,10 @@ InstancedSpriteManager::~InstancedSpriteManager() {
 
 InstancedSprite* InstancedSpriteManager::GetInstancedSprite(
 	const std::string& name,
-	types::Texture* texture,
-	const ::game::map::Consts::pcx_texture_coordinates_t& src_xy,
-	const ::game::map::Consts::pcx_texture_coordinates_t& src_wh,
-	const ::game::map::Consts::pcx_texture_coordinates_t& src_cxy,
+	types::texture::Texture* texture,
+	const ::game::map::pcx_texture_coordinates_t& src_xy,
+	const ::game::map::pcx_texture_coordinates_t& src_wh,
+	const ::game::map::pcx_texture_coordinates_t& src_cxy,
 	const types::Vec2< float > dst_wh,
 	const float z_index
 ) {
@@ -87,7 +93,7 @@ InstancedSprite* InstancedSpriteManager::GetInstancedSpriteByKey( const std::str
 	return &it->second;
 }
 
-InstancedSprite* InstancedSpriteManager::GetRepaintedInstancedSprite( const std::string& name, const InstancedSprite* original, const types::Texture::repaint_rules_t& rules ) {
+InstancedSprite* InstancedSpriteManager::GetRepaintedInstancedSprite( const std::string& name, const InstancedSprite* original, const types::texture::repaint_rules_t& rules ) {
 	const auto& key = name;
 
 	auto it = m_repainted_instanced_sprites.find( key );
@@ -146,12 +152,12 @@ void InstancedSpriteManager::RemoveRepaintedInstancedSpriteByKey( const std::str
 	m_repainted_instanced_sprites.erase( it );
 }
 
-types::Texture* InstancedSpriteManager::GetRepaintedSourceTexture( const std::string& name, const types::Texture* original, const types::Texture::repaint_rules_t& rules ) {
+types::texture::Texture* InstancedSpriteManager::GetRepaintedSourceTexture( const std::string& name, const types::texture::Texture* original, const types::texture::repaint_rules_t& rules ) {
 	const auto it = m_repainted_textures.find( name );
 	if ( it != m_repainted_textures.end() ) {
 		return it->second;
 	}
-	NEWV( texture, types::Texture, original->m_name, original->m_width, original->m_height );
+	NEWV( texture, types::texture::Texture, original->m_name, original->m_width, original->m_height );
 	texture->RepaintFrom( original, rules );
 	m_repainted_textures.insert(
 		{

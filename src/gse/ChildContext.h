@@ -1,14 +1,8 @@
 #pragma once
 
-#include <vector>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 #include "Context.h"
-
-#include "Value.h"
-#include "type/Callable.h"
 
 namespace gse {
 

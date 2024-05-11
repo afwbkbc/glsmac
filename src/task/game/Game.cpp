@@ -4,18 +4,46 @@
 #include <map>
 
 #include "engine/Engine.h"
-#include "../mainmenu/MainMenu.h"
+#include "util/random/Random.h"
+#include "config/Config.h"
+#include "scheduler/Scheduler.h"
+#include "../../ui/UI.h" // TODO: fix path
+#include "game/Game.h"
+#include "game/unit/Def.h"
+#include "game/animation/Def.h"
+#include "game/connection/Connection.h"
+#include "task/mainmenu/MainMenu.h"
 #include "graphics/Graphics.h"
 #include "util/FS.h"
 #include "ui/popup/PleaseDontGo.h"
-
+#include "game/State.h"
 #include "Types.h"
-
 #include "game/event/MoveUnit.h"
 #include "game/event/AttackUnit.h"
 #include "game/event/SkipUnitTurn.h"
 #include "game/event/CompleteTurn.h"
 #include "game/event/UncompleteTurn.h"
+#include "ui/bottom_bar/BottomBar.h"
+#include "InstancedSpriteManager.h"
+#include "Animation.h"
+#include "AnimationDef.h"
+#include "Unit.h"
+#include "UnitDef.h"
+#include "Slot.h"
+#include "BadgeDefs.h"
+#include "scene/actor/Actor.h"
+#include "scene/actor/Instanced.h"
+#include "InstancedSprite.h"
+#include "loader/texture/TextureLoader.h"
+#include "actor/Actor.h"
+#include "actor/TileSelection.h"
+#include "scene/Camera.h"
+#include "scene/Light.h"
+#include "scene/Scene.h"
+#include "types/texture/Texture.h"
+#include "types/mesh/Render.h"
+#include "types/mesh/Data.h"
+#include "ui/style/Theme.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -24,7 +52,7 @@ namespace game {
 
 const Game::consts_t Game::s_consts = {};
 
-Game::Game( ::game::State* state, ui_handler_t on_start, ui_handler_t on_cancel )
+Game::Game( ::game::State* state, ::ui::ui_handler_t on_start, ::ui::ui_handler_t on_cancel )
 	: m_state( state )
 	, m_on_start( on_start )
 	, m_on_cancel( on_cancel )
@@ -41,7 +69,7 @@ Game::~Game() {
 void Game::Start() {
 
 	// note: game thread has it's own random, this one is mostly for UI and small things
-	NEW( m_random, util::Random );
+	NEW( m_random, util::random::Random );
 
 	auto* ui = g_engine->GetUI();
 	auto* game = g_engine->GetGame();
@@ -50,12 +78,12 @@ void Game::Start() {
 	if ( m_state->IsMaster() ) {
 #ifdef DEBUG
 		if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) {
-			m_state->m_settings.global.map.type = ::game::MapSettings::MT_MAPFILE;
+			m_state->m_settings.global.map.type = ::game::settings::MapSettings::MT_MAPFILE;
 			m_state->m_settings.global.map.filename = config->GetQuickstartMapFile();
 		}
 #endif
 
-		if ( m_state->m_settings.global.map.type == ::game::MapSettings::MT_MAPFILE ) {
+		if ( m_state->m_settings.global.map.type == ::game::settings::MapSettings::MT_MAPFILE ) {
 			m_map_data.filename = util::FS::GetBaseName( m_state->m_settings.global.map.filename );
 			m_map_data.last_directory = util::FS::GetDirName( m_state->m_settings.global.map.filename );
 		}
@@ -293,7 +321,7 @@ void Game::Iterate() {
 		if ( it->second->IsFinished() ) {
 			auto br = ::game::BackendRequest( ::game::BackendRequest::BR_ANIMATION_FINISHED );
 			br.data.animation_finished.animation_id = it->first;
-			SendBackendRequest( br );
+			SendBackendRequest( &br );
 			delete it->second;
 			it = m_animations.erase( it );
 		}
@@ -328,7 +356,7 @@ void Game::Iterate() {
 				Log( "got " + std::to_string( requests->size() ) + " frontend requests" );
 
 				for ( const auto& request : *requests ) {
-					ProcessRequest( request );
+					ProcessRequest( &request );
 					if ( m_on_game_exit ) {
 						break; // exiting game
 					}
@@ -445,7 +473,7 @@ InstancedSpriteManager* Game::GetISM() const {
 	return m_ism;
 }
 
-types::Texture* Game::GetSourceTexture( const std::string& name ) {
+types::texture::Texture* Game::GetSourceTexture( const std::string& name ) {
 	const auto it = m_textures.source.find( name );
 	if ( it != m_textures.source.end() ) {
 		return it->second;
@@ -461,7 +489,7 @@ types::Texture* Game::GetSourceTexture( const std::string& name ) {
 	return texture;
 }
 
-InstancedSprite* Game::GetTerrainInstancedSprite( const ::game::map::Map::sprite_actor_t& actor ) {
+InstancedSprite* Game::GetTerrainInstancedSprite( const ::game::map::sprite_actor_t& actor ) {
 	return m_ism->GetInstancedSprite(
 		"Terrain_" + actor.name,
 		GetSourceTexture( "ter1.pcx" ),
@@ -479,8 +507,8 @@ InstancedSprite* Game::GetTerrainInstancedSprite( const ::game::map::Map::sprite
 	);
 }
 
-void Game::CenterAtCoordinatePercents( const Vec2< float > position_percents ) {
-	const Vec2< float > position = {
+void Game::CenterAtCoordinatePercents( const types::Vec2< float > position_percents ) {
+	const types::Vec2< float > position = {
 		m_map_data.range.percent_to_absolute.x.Clamp( position_percents.x ),
 		m_map_data.range.percent_to_absolute.y.Clamp( position_percents.y )
 	};
@@ -493,7 +521,7 @@ void Game::CenterAtCoordinatePercents( const Vec2< float > position_percents ) {
 	UpdateCameraPosition();
 }
 
-void Game::SetCameraPosition( const Vec3 camera_position ) {
+void Game::SetCameraPosition( const types::Vec3 camera_position ) {
 	if ( camera_position != m_camera_position ) {
 		bool position_updated =
 			( m_camera_position.x != camera_position.x ) ||
@@ -628,7 +656,7 @@ void Game::UpdateCameraRange() {
 
 void Game::UpdateMapInstances() {
 	// needed for horizontal scrolling
-	std::vector< Vec3 > instances;
+	std::vector< types::Vec3 > instances;
 
 	const float mhw = ::game::map::s_consts.tile.scale.x * m_map_data.width / 2;
 
@@ -697,7 +725,7 @@ const size_t Game::GetViewportHeight() const {
 }
 
 void Game::LoadMap( const std::string& path ) {
-	ASSERT( FS::FileExists( path ), "map file \"" + path + "\" not found" );
+	ASSERT( util::FS::FileExists( path ), "map file \"" + path + "\" not found" );
 
 	auto* game = g_engine->GetGame();
 	g_engine->GetUI()->ShowLoader(
@@ -707,7 +735,7 @@ void Game::LoadMap( const std::string& path ) {
 		}
 	);
 	ASSERT( m_state, "state not set" );
-	m_state->m_settings.global.map.type = ::game::MapSettings::MT_MAPFILE;
+	m_state->m_settings.global.map.type = ::game::settings::MapSettings::MT_MAPFILE;
 	m_state->m_settings.global.map.filename = path;
 	m_map_data.filename = util::FS::GetBaseName( path );
 	m_map_data.last_directory = util::FS::GetDirName( path );
@@ -744,30 +772,30 @@ void Game::ConfirmExit( ::ui::ui_handler_t on_confirm ) {
 	popup->Open();
 }
 
-types::Texture* Game::GetTerrainTexture() const {
+types::texture::Texture* Game::GetTerrainTexture() const {
 	return m_textures.terrain;
 }
 
-void Game::SetEditorTool( ::game::map_editor::MapEditor::tool_type_t editor_tool ) {
+void Game::SetEditorTool( ::game::map_editor::tool_type_t editor_tool ) {
 	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
 	if ( m_editor_tool != editor_tool ) {
 		m_editor_tool = editor_tool;
 	}
 }
 
-const ::game::map_editor::MapEditor::tool_type_t Game::GetEditorTool() const {
+const ::game::map_editor::tool_type_t Game::GetEditorTool() const {
 	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
 	return m_editor_tool;
 }
 
-void Game::SetEditorBrush( ::game::map_editor::MapEditor::brush_type_t editor_brush ) {
+void Game::SetEditorBrush( ::game::map_editor::brush_type_t editor_brush ) {
 	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
 	if ( m_editor_brush != editor_brush ) {
 		m_editor_brush = editor_brush;
 	}
 }
 
-const ::game::map_editor::MapEditor::brush_type_t Game::GetEditorBrush() const {
+const ::game::map_editor::brush_type_t Game::GetEditorBrush() const {
 	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
 	return m_editor_brush;
 }
@@ -796,7 +824,7 @@ void Game::DefineSlot(
 	}
 }
 
-void Game::ShowAnimation( AnimationDef* def, const size_t animation_id, const Vec3& render_coords ) {
+void Game::ShowAnimation( AnimationDef* def, const size_t animation_id, const types::Vec3& render_coords ) {
 	ASSERT( m_animations.find( animation_id ) == m_animations.end(), "animation id already exists" );
 	m_animations.insert(
 		{
@@ -844,12 +872,12 @@ void Game::SpawnUnit(
 	const size_t unit_id,
 	const std::string& unitdef_id,
 	const size_t slot_index,
-	const Vec2< size_t >& tile_coords,
-	const Vec3& render_coords,
-	const ::game::unit::Unit::movement_t movement,
-	const ::game::unit::Morale::morale_t morale,
+	const types::Vec2< size_t >& tile_coords,
+	const types::Vec3& render_coords,
+	const ::game::unit::movement_t movement,
+	const ::game::unit::morale_t morale,
 	const std::string& morale_string,
-	const ::game::unit::Unit::health_t health
+	const ::game::unit::health_t health
 ) {
 
 	ASSERT( m_unitdefs.find( unitdef_id ) != m_unitdefs.end(), "unitdef not found" );
@@ -884,7 +912,7 @@ void Game::SpawnUnit(
 	).first->second;
 
 	types::mesh::Rectangle* mesh = nullptr;
-	types::Texture* texture = nullptr;
+	types::texture::Texture* texture = nullptr;
 
 	RenderTile( tile );
 
@@ -953,8 +981,8 @@ void Game::MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_c
 
 }
 
-void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
-	//Log( "Received frontend request (type=" + std::to_string( request.type ) + ")" ); // spammy
+void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
+	//Log( "Received frontend request (type=" + std::to_string( request->type ) + ")" ); // spammy
 	const auto f_exit = [ this, &request ]() -> void {
 		ExitGame(
 			[ this, request ]() -> void {
@@ -966,36 +994,36 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 #endif
 				{
 					ReturnToMainMenu(
-						request.data.quit.reason
-							? *request.data.quit.reason
+						request->data.quit.reason
+							? *request->data.quit.reason
 							: ""
 					);
 				}
 			}
 		);
 	};
-	switch ( request.type ) {
+	switch ( request->type ) {
 		case ::game::FrontendRequest::FR_QUIT: {
 			f_exit();
 			break;
 		}
 		case ::game::FrontendRequest::FR_ERROR: {
-			Log( *request.data.error.stacktrace );
+			Log( *request->data.error.stacktrace );
 			g_engine->GetUI()->ShowError(
-				*request.data.error.what, UH( f_exit ) {
+				*request->data.error.what, UH( f_exit ) {
 					f_exit();
 				}
 			);
 		}
 		case ::game::FrontendRequest::FR_GLOBAL_MESSAGE: {
-			AddMessage( *request.data.global_message.message );
+			AddMessage( *request->data.global_message.message );
 			break;
 		}
 		case ::game::FrontendRequest::FR_TURN_STATUS: {
-			m_turn_status = request.data.turn_status.status;
+			m_turn_status = request->data.turn_status.status;
 			ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
 			m_ui.bottom_bar->SetTurnStatus( m_turn_status );
-			bool is_turn_active = m_turn_status == ::game::Turn::TS_TURN_ACTIVE || m_turn_status == ::game::Turn::TS_TURN_COMPLETE;
+			bool is_turn_active = m_turn_status == ::game::turn::TS_TURN_ACTIVE || m_turn_status == ::game::turn::TS_TURN_COMPLETE;
 			if ( m_is_turn_active != is_turn_active ) {
 				m_is_turn_active = is_turn_active;
 				if ( m_is_turn_active ) {
@@ -1013,25 +1041,25 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 			break;
 		}
 		case ::game::FrontendRequest::FR_TURN_ADVANCE: {
-			m_turn_id = request.data.turn_advance.turn_id;
+			m_turn_id = request->data.turn_advance.turn_id;
 			break;
 		}
 		case ::game::FrontendRequest::FR_SLOT_DEFINE: {
-			for ( const auto& d : *request.data.slot_define.slotdefs ) {
+			for ( const auto& d : *request->data.slot_define.slotdefs ) {
 				const auto& c = d.color;
 				DefineSlot( d.slot_index, types::Color( c.r, c.g, c.b, c.a ), d.is_progenitor );
 			}
 			break;
 		}
 		case ::game::FrontendRequest::FR_ANIMATION_DEFINE: {
-			types::Buffer buf( *request.data.unit_define.serialized_unitdef );
+			types::Buffer buf( *request->data.unit_define.serialized_unitdef );
 			const auto* animationdef = ::game::animation::Def::Unserialize( buf );
 			DefineAnimation( animationdef );
 			delete animationdef;
 			break;
 		}
 		case ::game::FrontendRequest::FR_ANIMATION_SHOW: {
-			const auto& d = request.data.animation_show;
+			const auto& d = request->data.animation_show;
 
 			const auto animationdef_it = m_animationdefs.find( *d.animation_id );
 			ASSERT( animationdef_it != m_animationdefs.end(), "animation id not found" );
@@ -1049,14 +1077,14 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 			break;
 		}
 		case ::game::FrontendRequest::FR_UNIT_DEFINE: {
-			types::Buffer buf( *request.data.unit_define.serialized_unitdef );
+			types::Buffer buf( *request->data.unit_define.serialized_unitdef );
 			const auto* unitdef = ::game::unit::Def::Unserialize( buf );
 			DefineUnit( unitdef );
 			delete unitdef;
 			break;
 		}
 		case ::game::FrontendRequest::FR_UNIT_SPAWN: {
-			const auto& d = request.data.unit_spawn;
+			const auto& d = request->data.unit_spawn;
 			const auto& tc = d.tile_coords;
 			const auto& rc = d.render_coords;
 			SpawnUnit(
@@ -1080,11 +1108,11 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 			break;
 		}
 		case ::game::FrontendRequest::FR_UNIT_DESPAWN: {
-			DespawnUnit( request.data.unit_despawn.unit_id );
+			DespawnUnit( request->data.unit_despawn.unit_id );
 			break;
 		}
 		case ::game::FrontendRequest::FR_UNIT_REFRESH: {
-			const auto& d = request.data.unit_refresh;
+			const auto& d = request->data.unit_refresh;
 			auto* unit = m_units.at( d.unit_id );
 			unit->SetMovement( d.movement );
 			unit->SetHealth( d.health );
@@ -1120,7 +1148,7 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 			break;
 		}
 		case ::game::FrontendRequest::FR_UNIT_MOVE: {
-			const auto& d = request.data.unit_move;
+			const auto& d = request->data.unit_move;
 			ASSERT( m_units.find( d.unit_id ) != m_units.end(), "unit id not found" );
 			auto* unit = m_units.at( d.unit_id );
 			auto* tile = GetTile(
@@ -1141,13 +1169,13 @@ void Game::ProcessRequest( const ::game::FrontendRequest& request ) {
 			break;
 		}
 		default: {
-			THROW( "unexpected frontend request type: " + std::to_string( request.type ) );
+			THROW( "unexpected frontend request type: " + std::to_string( request->type ) );
 		}
 	}
 }
 
-void Game::SendBackendRequest( const ::game::BackendRequest& request ) {
-	m_pending_backend_requests.push_back( request );
+void Game::SendBackendRequest( const ::game::BackendRequest* request ) {
+	m_pending_backend_requests.push_back( *request );
 }
 
 void Game::ActivateTurn() {
@@ -1254,13 +1282,13 @@ void Game::UpdateMapData( const types::Vec2< size_t >& map_size ) {
 }
 
 void Game::Initialize(
-	types::Texture* terrain_texture,
+	types::texture::Texture* terrain_texture,
 	types::mesh::Render* terrain_mesh,
 	types::mesh::Data* terrain_data_mesh,
-	const std::unordered_map< std::string, ::game::map::Map::sprite_actor_t >& sprite_actors,
-	const std::unordered_map< size_t, std::pair< std::string, Vec3 > >& sprite_instances,
-	const std::vector< ::game::map::Tile >* tiles,
-	const std::vector< ::game::map::TileState >* tile_states
+	const std::unordered_map< std::string, ::game::map::sprite_actor_t >& sprite_actors,
+	const std::unordered_map< size_t, std::pair< std::string, types::Vec3 > >& sprite_instances,
+	const std::vector< ::game::map::tile::Tile >* tiles,
+	const std::vector< ::game::map::tile::TileState >* tile_states
 ) {
 	ASSERT( !m_is_initialized, "already initialized" );
 
@@ -1272,11 +1300,11 @@ void Game::Initialize(
 
 	Log( "Initializing game" );
 
-	NEW( m_world_scene, Scene, "Game", SCENE_TYPE_ORTHO );
+	NEW( m_world_scene, scene::Scene, "Game", scene::SCENE_TYPE_ORTHO );
 	NEW( m_ism, InstancedSpriteManager, m_world_scene );
 	NEW( m_badge_defs, BadgeDefs, m_ism );
 
-	NEW( m_camera, Camera, Camera::CT_ORTHOGRAPHIC );
+	NEW( m_camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
 	m_camera_angle = INITIAL_CAMERA_ANGLE;
 	UpdateCameraAngle();
 
@@ -1284,7 +1312,7 @@ void Game::Initialize(
 
 	// don't set exact 45 degree angles for lights, it will produce weird straight lines because of shadows
 	{
-		NEW( m_light_a, Light, Light::LT_AMBIENT_DIFFUSE );
+		NEW( m_light_a, scene::Light, scene::Light::LT_AMBIENT_DIFFUSE );
 		m_light_a->SetPosition(
 			{
 				48.227f,
@@ -1303,7 +1331,7 @@ void Game::Initialize(
 		m_world_scene->AddLight( m_light_a );
 	}
 	{
-		NEW( m_light_b, Light, Light::LT_AMBIENT_DIFFUSE );
+		NEW( m_light_b, scene::Light, scene::Light::LT_AMBIENT_DIFFUSE );
 		m_light_b->SetPosition(
 			{
 				22.412f,
@@ -1365,14 +1393,14 @@ void Game::Initialize(
 
 			Log( "Processing tile state: " + ts.coord.ToString() );
 
-			::game::map::TileState::tile_layer_type_t lt = ( t.is_water_tile
-				? ::game::map::TileState::LAYER_WATER
-				: ::game::map::TileState::LAYER_LAND
+			::game::map::tile::tile_layer_type_t lt = ( t.is_water_tile
+				? ::game::map::tile::LAYER_WATER
+				: ::game::map::tile::LAYER_LAND
 			);
 			const auto& layer = ts.layers[ lt ];
 
-			::game::map::TileState::tile_vertices_t selection_coords = {};
-			::game::map::TileState::tile_vertices_t preview_coords = {};
+			::game::map::tile::tile_vertices_t selection_coords = {};
+			::game::map::tile::tile_vertices_t preview_coords = {};
 
 #define x( _k ) selection_coords._k = layer.coords._k
 			x( center );
@@ -1384,22 +1412,22 @@ void Game::Initialize(
 
 			if ( !t.is_water_tile && ts.is_coastline_corner ) {
 				if ( t.W->is_water_tile ) {
-					selection_coords.left = ts.layers[ ::game::map::TileState::LAYER_WATER ].coords.left;
+					selection_coords.left = ts.layers[ ::game::map::tile::LAYER_WATER ].coords.left;
 				}
 				if ( t.N->is_water_tile ) {
-					selection_coords.top = ts.layers[ ::game::map::TileState::LAYER_WATER ].coords.top;
+					selection_coords.top = ts.layers[ ::game::map::tile::LAYER_WATER ].coords.top;
 				}
 				if ( t.E->is_water_tile ) {
-					selection_coords.right = ts.layers[ ::game::map::TileState::LAYER_WATER ].coords.right;
+					selection_coords.right = ts.layers[ ::game::map::tile::LAYER_WATER ].coords.right;
 				}
 				if ( t.S->is_water_tile ) {
-					selection_coords.bottom = ts.layers[ ::game::map::TileState::LAYER_WATER ].coords.bottom;
+					selection_coords.bottom = ts.layers[ ::game::map::tile::LAYER_WATER ].coords.bottom;
 				}
 			}
 
 			lt = ( ( t.is_water_tile || ts.is_coastline_corner )
-				? ::game::map::TileState::LAYER_WATER
-				: ::game::map::TileState::LAYER_LAND
+				? ::game::map::tile::LAYER_WATER
+				: ::game::map::tile::LAYER_LAND
 			);
 #define x( _k ) preview_coords._k = layer.coords._k
 			x( center );
@@ -1421,21 +1449,21 @@ void Game::Initialize(
 				0.0f
 			};
 
-			std::vector< ::game::map::TileState::tile_layer_type_t > layers = {};
+			std::vector< ::game::map::tile::tile_layer_type_t > layers = {};
 			if ( t.is_water_tile ) {
-				layers.push_back( ::game::map::TileState::LAYER_LAND );
-				layers.push_back( ::game::map::TileState::LAYER_WATER_SURFACE );
-				layers.push_back( ::game::map::TileState::LAYER_WATER_SURFACE_EXTRA ); // TODO: only near coastlines?
-				layers.push_back( ::game::map::TileState::LAYER_WATER );
+				layers.push_back( ::game::map::tile::LAYER_LAND );
+				layers.push_back( ::game::map::tile::LAYER_WATER_SURFACE );
+				layers.push_back( ::game::map::tile::LAYER_WATER_SURFACE_EXTRA ); // TODO: only near coastlines?
+				layers.push_back( ::game::map::tile::LAYER_WATER );
 			}
 			else {
 				if ( ts.is_coastline_corner ) {
-					layers.push_back( ::game::map::TileState::LAYER_WATER_SURFACE );
-					layers.push_back( ::game::map::TileState::LAYER_WATER_SURFACE_EXTRA );
-					layers.push_back( ::game::map::TileState::LAYER_WATER );
+					layers.push_back( ::game::map::tile::LAYER_WATER_SURFACE );
+					layers.push_back( ::game::map::tile::LAYER_WATER_SURFACE_EXTRA );
+					layers.push_back( ::game::map::tile::LAYER_WATER );
 				}
 				else {
-					layers.push_back( ::game::map::TileState::LAYER_LAND );
+					layers.push_back( ::game::map::tile::LAYER_LAND );
 				}
 			}
 
@@ -1448,7 +1476,7 @@ void Game::Initialize(
 			for ( auto i = 0 ; i < layers.size() ; i++ ) {
 				const auto& lt = layers[ i ];
 
-				NEWV( mesh, mesh::Render, 5, 4 );
+				NEWV( mesh, types::mesh::Render, 5, 4 );
 
 				auto& layer = ts.layers[ lt ];
 
@@ -1485,10 +1513,10 @@ void Game::Initialize(
 
 			auto e = *t.elevation.center;
 			if ( t.is_water_tile ) {
-				if ( e < ::game::map::Tile::ELEVATION_LEVEL_TRENCH ) {
+				if ( e < ::game::map::tile::ELEVATION_LEVEL_TRENCH ) {
 					info_lines.push_back( "Ocean Trench" );
 				}
-				else if ( e < ::game::map::Tile::ELEVATION_LEVEL_OCEAN ) {
+				else if ( e < ::game::map::tile::ELEVATION_LEVEL_OCEAN ) {
 					info_lines.push_back( "Ocean" );
 				}
 				else {
@@ -1500,30 +1528,30 @@ void Game::Initialize(
 				info_lines.push_back( "Elev: " + std::to_string( e ) + "m" );
 				std::string tilestr = "";
 				switch ( t.rockiness ) {
-					case ::game::map::Tile::R_FLAT: {
+					case ::game::map::tile::ROCKINESS_FLAT: {
 						tilestr += "Flat";
 						break;
 					}
-					case ::game::map::Tile::R_ROLLING: {
+					case ::game::map::tile::ROCKINESS_ROLLING: {
 						tilestr += "Rolling";
 						break;
 					}
-					case ::game::map::Tile::R_ROCKY: {
+					case ::game::map::tile::ROCKINESS_ROCKY: {
 						tilestr += "Rocky";
 						break;
 					}
 				}
 				tilestr += " & ";
 				switch ( t.moisture ) {
-					case ::game::map::Tile::M_ARID: {
+					case ::game::map::tile::MOISTURE_ARID: {
 						tilestr += "Arid";
 						break;
 					}
-					case ::game::map::Tile::M_MOIST: {
+					case ::game::map::tile::MOISTURE_MOIST: {
 						tilestr += "Moist";
 						break;
 					}
-					case ::game::map::Tile::M_RAINY: {
+					case ::game::map::tile::MOISTURE_RAINY: {
 						tilestr += "Rainy";
 						break;
 					}
@@ -1532,27 +1560,27 @@ void Game::Initialize(
 			}
 
 #define FEATURE( _feature, _line ) \
-            if ( t.features & ::game::map::Tile::_feature ) { \
+            if ( t.features & ::game::map::tile::_feature ) { \
                 info_lines.push_back( _line ); \
             }
 
 			if ( t.is_water_tile ) {
-				FEATURE( F_XENOFUNGUS, "Sea Fungus" )
+				FEATURE( FEATURE_XENOFUNGUS, "Sea Fungus" )
 			}
 			else {
-				FEATURE( F_XENOFUNGUS, "Xenofungus" )
+				FEATURE( FEATURE_XENOFUNGUS, "Xenofungus" )
 			}
 
 			switch ( t.bonus ) {
-				case ::game::map::Tile::B_NUTRIENT: {
+				case ::game::map::tile::BONUS_NUTRIENT: {
 					info_lines.push_back( "Nutrient bonus" );
 					break;
 				}
-				case ::game::map::Tile::B_ENERGY: {
+				case ::game::map::tile::BONUS_ENERGY: {
 					info_lines.push_back( "Energy bonus" );
 					break;
 				}
-				case ::game::map::Tile::B_MINERALS: {
+				case ::game::map::tile::BONUS_MINERALS: {
 					info_lines.push_back( "Minerals bonus" );
 					break;
 				}
@@ -1562,47 +1590,47 @@ void Game::Initialize(
 			}
 
 			if ( t.is_water_tile ) {
-				FEATURE( F_GEOTHERMAL, "Geothermal" )
+				FEATURE( FEATURE_GEOTHERMAL, "Geothermal" )
 			}
 			else {
-				FEATURE( F_RIVER, "River" )
-				FEATURE( F_JUNGLE, "Jungle" )
-				FEATURE( F_DUNES, "Dunes" )
-				FEATURE( F_URANIUM, "Uranium" )
+				FEATURE( FEATURE_RIVER, "River" )
+				FEATURE( FEATURE_JUNGLE, "Jungle" )
+				FEATURE( FEATURE_DUNES, "Dunes" )
+				FEATURE( FEATURE_URANIUM, "Uranium" )
 			}
-			FEATURE( F_MONOLITH, "Monolith" )
+			FEATURE( FEATURE_MONOLITH, "Monolith" )
 
 #undef FEATURE
 
 #define TERRAFORMING( _terraforming, _line ) \
-            if ( t.terraforming & ::game::map::Tile::_terraforming ) { \
+            if ( t.terraforming & ::game::map::tile::_terraforming ) { \
                 info_lines.push_back( _line ); \
             }
 
 			if ( t.is_water_tile ) {
-				TERRAFORMING( T_FARM, "Kelp Farm" );
-				TERRAFORMING( T_SOLAR, "Tidal Harness" );
-				TERRAFORMING( T_MINE, "Mining Platform" );
+				TERRAFORMING( TERRAFORMING_FARM, "Kelp Farm" );
+				TERRAFORMING( TERRAFORMING_SOLAR, "Tidal Harness" );
+				TERRAFORMING( TERRAFORMING_MINE, "Mining Platform" );
 
-				TERRAFORMING( T_SENSOR, "Sensor Buoy" );
+				TERRAFORMING( TERRAFORMING_SENSOR, "Sensor Buoy" );
 			}
 			else {
-				TERRAFORMING( T_FOREST, "Forest" );
-				TERRAFORMING( T_FARM, "Farm" );
-				TERRAFORMING( T_SOIL_ENRICHER, "Soil Enricher" );
-				TERRAFORMING( T_MINE, "Mine" );
-				TERRAFORMING( T_SOLAR, "Solar Collector" );
+				TERRAFORMING( TERRAFORMING_FOREST, "Forest" );
+				TERRAFORMING( TERRAFORMING_FARM, "Farm" );
+				TERRAFORMING( TERRAFORMING_SOIL_ENRICHER, "Soil Enricher" );
+				TERRAFORMING( TERRAFORMING_MINE, "Mine" );
+				TERRAFORMING( TERRAFORMING_SOLAR, "Solar Collector" );
 
-				TERRAFORMING( T_CONDENSER, "Condenser" );
-				TERRAFORMING( T_MIRROR, "Echelon Mirror" );
-				TERRAFORMING( T_BOREHOLE, "Thermal Borehole" );
+				TERRAFORMING( TERRAFORMING_CONDENSER, "Condenser" );
+				TERRAFORMING( TERRAFORMING_MIRROR, "Echelon Mirror" );
+				TERRAFORMING( TERRAFORMING_BOREHOLE, "Thermal Borehole" );
 
-				TERRAFORMING( T_ROAD, "Road" );
-				TERRAFORMING( T_MAG_TUBE, "Mag Tube" );
+				TERRAFORMING( TERRAFORMING_ROAD, "Road" );
+				TERRAFORMING( TERRAFORMING_MAG_TUBE, "Mag Tube" );
 
-				TERRAFORMING( T_SENSOR, "Sensor Array" );
-				TERRAFORMING( T_BUNKER, "Bunker" );
-				TERRAFORMING( T_AIRBASE, "Airbase" );
+				TERRAFORMING( TERRAFORMING_SENSOR, "Sensor Array" );
+				TERRAFORMING( TERRAFORMING_BUNKER, "Bunker" );
+				TERRAFORMING( TERRAFORMING_AIRBASE, "Airbase" );
 			}
 
 #undef TERRAFORMING
@@ -1640,7 +1668,8 @@ void Game::Initialize(
 
 
 	// UI
-	ui->AddTheme( &m_ui.theme );
+	NEW( m_ui.theme, ui::style::Theme );
+	ui->AddTheme( m_ui.theme );
 	NEW( m_ui.bottom_bar, ui::BottomBar, this );
 	ui->AddObject( m_ui.bottom_bar );
 
@@ -1651,21 +1680,21 @@ void Game::Initialize(
 	auto* game = g_engine->GetGame();
 
 	m_handlers.keydown_before = ui->AddGlobalEventHandler(
-		UIEvent::EV_KEY_DOWN, EH( this, ui ) {
+		::ui::event::EV_KEY_DOWN, EH( this, ui ) {
 			if (
 				ui->HasPopup() &&
 					!data->key.modifiers &&
-					data->key.code == UIEvent::K_ESCAPE
+					data->key.code == ::ui::event::K_ESCAPE
 				) {
 				ui->CloseLastPopup();
 				return true;
 			}
 			return false;
-		}, UI::GH_BEFORE
+		}, ::ui::UI::GH_BEFORE
 	);
 
 	m_handlers.keydown_after = ui->AddGlobalEventHandler(
-		UIEvent::EV_KEY_DOWN, EH( this, ui, game ) {
+		::ui::event::EV_KEY_DOWN, EH( this, ui, game ) {
 
 			if ( ui->HasPopup() ) {
 				return false;
@@ -1677,13 +1706,13 @@ void Game::Initialize(
 				if ( m_selected_tile ) {
 
 					bool is_tile_selected = false;
-					::game::map::Tile::direction_t td = ::game::map::Tile::D_NONE;
+					::game::map::tile::direction_t td = ::game::map::tile::D_NONE;
 
 					switch ( data->key.code ) {
 #define X( _key, _altkey, _direction ) \
-                        case UIEvent::_key: \
-                        case UIEvent::_altkey: { \
-                            td = ::game::map::Tile::_direction; \
+                        case ::ui::event::_key: \
+                        case ::ui::event::_altkey: { \
+                            td = ::game::map::tile::_direction; \
                             is_tile_selected = true; \
                             break; \
                         }
@@ -1696,19 +1725,19 @@ void Game::Initialize(
 						X( K_PAGEUP, K_KP_RIGHT_UP, D_NE )
 						X( K_PAGEDOWN, K_KP_RIGHT_DOWN, D_SE )
 #undef X
-						case UIEvent::K_TAB: {
+						case ::ui::event::K_TAB: {
 							SelectNextUnitMaybe();
 							break;
 						}
-						case UIEvent::K_SPACE: {
+						case ::ui::event::K_SPACE: {
 							if ( m_selected_unit ) {
 								const auto event = ::game::event::SkipUnitTurn( m_slot_index, m_selected_unit->GetId() );
 								game->MT_AddEvent( &event );
 							}
 							break;
 						}
-						case UIEvent::K_ENTER: {
-							if ( m_turn_status == ::game::Turn::TS_TURN_COMPLETE ) {
+						case ::ui::event::K_ENTER: {
+							if ( m_turn_status == ::game::turn::TS_TURN_COMPLETE ) {
 								CompleteTurn();
 							}
 							break;
@@ -1771,7 +1800,7 @@ void Game::Initialize(
 					return true;
 				}
 
-				if ( data->key.code == UIEvent::K_ESCAPE ) {
+				if ( data->key.code == ::ui::event::K_ESCAPE ) {
 					if ( !g_engine->GetUI()->HasPopup() ) { // close all other popups first (including same one)
 						ConfirmExit(
 							UH( this ) {
@@ -1786,33 +1815,33 @@ void Game::Initialize(
 					return true;
 				}
 			}
-			else if ( m_is_map_editing_allowed && data->key.code == UIEvent::K_CTRL ) {
+			else if ( m_is_map_editing_allowed && data->key.code == ::ui::event::K_CTRL ) {
 				m_is_editing_mode = true;
 			}
 
 			return false;
-		}, UI::GH_AFTER
+		}, ::ui::UI::GH_AFTER
 	);
 
 	m_handlers.keyup = ui->AddGlobalEventHandler(
-		UIEvent::EV_KEY_UP, EH( this ) {
+		::ui::event::EV_KEY_UP, EH( this ) {
 			if ( data->key.key == 'z' || data->key.key == 'x' ) {
 				if ( m_map_control.key_zooming ) {
 					m_map_control.key_zooming = 0;
 					m_scroller.Stop();
 				}
 			}
-			else if ( m_is_map_editing_allowed && data->key.code == UIEvent::K_CTRL ) {
+			else if ( m_is_map_editing_allowed && data->key.code == ::ui::event::K_CTRL ) {
 				m_is_editing_mode = false;
 				m_editing_draw_timer.Stop();
-				m_editor_draw_mode = ::game::map_editor::MapEditor::DM_NONE;
+				m_editor_draw_mode = ::game::map_editor::DM_NONE;
 			}
 			return false;
-		}, UI::GH_BEFORE
+		}, ::ui::UI::GH_BEFORE
 	);
 
 	m_handlers.mousedown = ui->AddGlobalEventHandler(
-		UIEvent::EV_MOUSE_DOWN, EH( this, ui ) {
+		::ui::event::EV_MOUSE_DOWN, EH( this, ui ) {
 			if ( ui->HasPopup() ) {
 				return false;
 			}
@@ -1821,16 +1850,16 @@ void Game::Initialize(
 
 			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
 				switch ( data->mouse.button ) {
-					case UIEvent::M_LEFT: {
-						m_editor_draw_mode = ::game::map_editor::MapEditor::DM_INC;
+					case ::ui::event::M_LEFT: {
+						m_editor_draw_mode = ::game::map_editor::DM_INC;
 						break;
 					}
-					case UIEvent::M_RIGHT: {
-						m_editor_draw_mode = ::game::map_editor::MapEditor::DM_DEC;
+					case ::ui::event::M_RIGHT: {
+						m_editor_draw_mode = ::game::map_editor::DM_DEC;
 						break;
 					}
 					default: {
-						m_editor_draw_mode = ::game::map_editor::MapEditor::DM_NONE;
+						m_editor_draw_mode = ::game::map_editor::DM_NONE;
 					}
 
 				}
@@ -1839,7 +1868,7 @@ void Game::Initialize(
 			}
 			else {
 				switch ( data->mouse.button ) {
-					case UIEvent::M_LEFT: {
+					case ::ui::event::M_LEFT: {
 						SelectTileAtPoint(
 							::game::TQP_UNIT_SELECT,
 							data->mouse.absolute.x,
@@ -1847,7 +1876,7 @@ void Game::Initialize(
 						); // async
 						break;
 					}
-					case UIEvent::M_MIDDLE: {
+					case ::ui::event::M_MIDDLE: {
 						m_scroller.Stop();
 						m_map_control.is_dragging = true;
 						m_map_control.last_drag_position = {
@@ -1859,11 +1888,11 @@ void Game::Initialize(
 				}
 			}
 			return true;
-		}, UI::GH_AFTER
+		}, ::ui::UI::GH_AFTER
 	);
 
 	m_handlers.mousemove = ui->AddGlobalEventHandler(
-		UIEvent::EV_MOUSE_MOVE, EH( this, ui ) {
+		::ui::event::EV_MOUSE_MOVE, EH( this, ui ) {
 			m_map_control.last_mouse_position = {
 				GetFixedX( data->mouse.absolute.x ),
 				(float)data->mouse.absolute.y
@@ -1874,11 +1903,11 @@ void Game::Initialize(
 			}
 
 			if ( m_map_control.is_dragging ) {
-				Vec2< float > current_drag_position = {
+				types::Vec2< float > current_drag_position = {
 					m_clamp.x.Clamp( data->mouse.absolute.x ),
 					m_clamp.y.Clamp( data->mouse.absolute.y )
 				};
-				Vec2< float > drag = current_drag_position - m_map_control.last_drag_position;
+				types::Vec2< float > drag = current_drag_position - m_map_control.last_drag_position;
 
 				m_camera_position.x += (float)drag.x;
 				m_camera_position.y += (float)drag.y;
@@ -1930,34 +1959,34 @@ void Game::Initialize(
 				}
 			}
 			return true;
-		}, UI::GH_AFTER
+		}, ::ui::UI::GH_AFTER
 	);
 
 	m_handlers.mouseup = ui->AddGlobalEventHandler(
-		UIEvent::EV_MOUSE_UP, EH( this ) {
+		::ui::event::EV_MOUSE_UP, EH( this ) {
 			switch ( data->mouse.button ) {
-				case UIEvent::M_MIDDLE: {
+				case ::ui::event::M_MIDDLE: {
 					m_map_control.is_dragging = false;
 					break;
 				}
 			}
 			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
 				m_editing_draw_timer.Stop();
-				m_editor_draw_mode = ::game::map_editor::MapEditor::DM_NONE;
+				m_editor_draw_mode = ::game::map_editor::DM_NONE;
 			}
 			return true;
-		}, UI::GH_AFTER
+		}, ::ui::UI::GH_AFTER
 	);
 
 	m_handlers.mousescroll = ui->AddGlobalEventHandler(
-		UIEvent::EV_MOUSE_SCROLL, EH( this, ui ) {
+		::ui::event::EV_MOUSE_SCROLL, EH( this, ui ) {
 			if ( ui->HasPopup() ) {
 				return false;
 			}
 
 			SmoothScroll( m_map_control.last_mouse_position, data->mouse.scroll_y );
 			return true;
-		}, UI::GH_AFTER
+		}, ::ui::UI::GH_AFTER
 	);
 
 	// other stuff
@@ -2023,8 +2052,10 @@ void Game::Deinitialize() {
 
 	if ( m_ui.bottom_bar ) {
 		ui->RemoveObject( m_ui.bottom_bar );
-		ui->RemoveTheme( &m_ui.theme );
+		ui->RemoveTheme( m_ui.theme );
 		m_ui.bottom_bar = nullptr;
+		DELETE( m_ui.theme );
+		m_ui.theme = nullptr;
 	}
 
 	if ( m_is_resize_handler_set ) {
@@ -2283,14 +2314,14 @@ void Game::RemoveActor( actor::Actor* actor ) {
 	m_actors_map.erase( it );
 }
 
-const Vec2< float > Game::GetTileWindowCoordinates( const Vec3& tile_coords ) {
+const types::Vec2< float > Game::GetTileWindowCoordinates( const types::Vec3& tile_coords ) {
 	return {
 		tile_coords.x * m_viewport.window_aspect_ratio * m_camera_position.z,
 		( tile_coords.y - std::max( 0.0f, tile_coords.z ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f
 	};
 }
 
-void Game::ScrollTo( const Vec3& target ) {
+void Game::ScrollTo( const types::Vec3& target ) {
 	if ( m_scroller.IsRunning() && true /* TODO: m_selected_tile_data.scroll_adaptively */ ) {
 		const auto& target = m_scroller.GetTargetPosition();
 		if ( target.z == m_camera_position.z ) {
@@ -2309,12 +2340,12 @@ void Game::ScrollToTile( const Tile* tile, bool center_on_tile ) {
 
 		const auto tc = GetTileWindowCoordinates( c );
 
-		Vec2< float > uc = {
+		types::Vec2< float > uc = {
 			GetFixedX( tc.x + m_camera_position.x ),
 			tc.y + m_camera_position.y
 		};
 
-		Vec2< float > scroll_by = {
+		types::Vec2< float > scroll_by = {
 			0,
 			0
 		};
@@ -2322,12 +2353,12 @@ void Game::ScrollToTile( const Tile* tile, bool center_on_tile ) {
 		//Log( "Resolved tile coordinates to " + uc.ToString() + " ( camera: " + m_camera_position.ToString() + " )" );
 
 		// tile size
-		Vec2< float > ts = {
+		types::Vec2< float > ts = {
 			::game::map::s_consts.tile.scale.x * m_camera_position.z,
 			::game::map::s_consts.tile.scale.y * m_camera_position.z
 		};
 		// edge size
-		Vec2< float > es = {
+		types::Vec2< float > es = {
 			0.5f - ts.x,
 			0.5f - ts.y
 		};
@@ -2360,7 +2391,7 @@ void Game::ScrollToTile( const Tile* tile, bool center_on_tile ) {
 	}
 	else {
 
-		Vec2< float > tc = {
+		types::Vec2< float > tc = {
 			c.x * m_viewport.window_aspect_ratio * m_camera_position.z,
 			( c.y - std::max( 0.0f, c.z ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f
 		};
@@ -2433,7 +2464,7 @@ const Game::tile_at_result_t Game::GetTileAtScreenCoordsResult() {
 	return {};
 }
 
-void Game::GetMinimapTexture( scene::Camera* camera, const Vec2< size_t > texture_dimensions ) {
+void Game::GetMinimapTexture( scene::Camera* camera, const types::Vec2< size_t > texture_dimensions ) {
 	if ( m_minimap_texture_request_id ) {
 		Log( "Canceling minimap texture request" );
 		m_actors.terrain->GetMeshActor()->CancelDataRequest( m_minimap_texture_request_id );
@@ -2442,7 +2473,7 @@ void Game::GetMinimapTexture( scene::Camera* camera, const Vec2< size_t > textur
 	m_minimap_texture_request_id = m_actors.terrain->GetMeshActor()->CaptureToTexture( camera, texture_dimensions );
 }
 
-Texture* Game::GetMinimapTextureResult() {
+types::texture::Texture* Game::GetMinimapTextureResult() {
 	if ( m_minimap_texture_request_id ) {
 		auto result = m_actors.terrain->GetMeshActor()->GetCaptureToTextureResponse( m_minimap_texture_request_id );
 		if ( result ) {
@@ -2461,7 +2492,7 @@ void Game::UpdateMinimap() {
 	auto mm = m_ui.bottom_bar->GetMinimapDimensions();
 	// 'black grid' artifact workaround
 	// TODO: find reason and fix properly, maybe just keep larger internal viewport
-	Vec2< float > scale = {
+	types::Vec2< float > scale = {
 		(float)m_viewport.window_width / mm.x,
 		(float)m_viewport.window_height / mm.y
 	};
@@ -2507,7 +2538,7 @@ void Game::ResetMapState() {
 	UpdateMinimap();
 
 	// select tile at center
-	Vec2< size_t > coords = {
+	types::Vec2< size_t > coords = {
 		m_map_data.width / 2,
 		m_map_data.height / 2
 	};
@@ -2528,7 +2559,7 @@ void Game::SmoothScroll( const float scroll_value ) {
 	);
 }
 
-void Game::SmoothScroll( const Vec2< float > position, const float scroll_value ) {
+void Game::SmoothScroll( const types::Vec2< float > position, const float scroll_value ) {
 
 	float speed = Game::s_consts.map_scroll.smooth_scrolling.zoom_speed * m_camera_position.z;
 
@@ -2543,7 +2574,7 @@ void Game::SmoothScroll( const Vec2< float > position, const float scroll_value 
 
 	float diff = m_camera_position.z / new_z;
 
-	Vec2< float > m = {
+	types::Vec2< float > m = {
 		m_clamp.x.Clamp( position.x ),
 		m_clamp.y.Clamp( position.y )
 	};
@@ -2557,7 +2588,7 @@ void Game::SmoothScroll( const Vec2< float > position, const float scroll_value 
 	);
 }
 
-util::Random* Game::GetRandom() const {
+util::random::Random* Game::GetRandom() const {
 	return m_random;
 }
 

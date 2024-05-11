@@ -2,8 +2,11 @@
 
 #include "SimplePerlin.h"
 
+#include "util/random/Random.h"
 #include "util/Perlin.h"
 #include "util/Clamper.h"
+
+#include "game/map/tile/Tiles.h"
 
 // higher values generate more interesting maps, at cost of longer map generation (isn't noticeable before 200 or so)
 #define PERLIN_PASSES 128
@@ -24,8 +27,8 @@ namespace game {
 namespace map {
 namespace generator {
 
-void SimplePerlin::GenerateElevations( Tiles* tiles, const game::MapSettings& map_settings, MT_CANCELABLE ) {
-	Tile* tile;
+void SimplePerlin::GenerateElevations( tile::Tiles* tiles, const game::settings::MapSettings* map_settings, MT_CANCELABLE ) {
+	tile::Tile* tile;
 
 	const auto w = tiles->GetWidth();
 	const auto h = tiles->GetHeight();
@@ -54,7 +57,7 @@ void SimplePerlin::GenerateElevations( Tiles* tiles, const game::MapSettings& ma
 	MT_RETIF();
 
 	// process in random order
-	std::vector< Tile* > randomtiles = GetTilesInRandomOrder( tiles, MT_C );
+	std::vector< tile::Tile* > randomtiles = GetTilesInRandomOrder( tiles, MT_C );
 	MT_RETIF();
 
 	for ( auto& tile : randomtiles ) {
@@ -87,26 +90,26 @@ void SimplePerlin::GenerateElevations( Tiles* tiles, const game::MapSettings& ma
 
 			// moisture
 			tile->moisture = perlin_to_value.Clamp( ceil( PERLIN_S( x + 0.5f, y + 0.5f, z_moisture, 0.6f ) ) );
-			if ( tile->moisture == Tile::M_RAINY ) {
+			if ( tile->moisture == tile::MOISTURE_RAINY ) {
 				if ( PERLIN_S( x + 0.5f, y + 0.5f, z_jungle, 0.2f ) > 0.7 ) {
-					tile->features |= Tile::F_JUNGLE;
+					tile->features |= tile::FEATURE_JUNGLE;
 				}
 			}
 
 			// rockiness
 			tile->rockiness = perlin_to_value.Clamp( round( PERLIN_S( x + 0.5f, y + 0.5f, z_rocks, 1.0f ) ) );
-			if ( tile->rockiness == Tile::R_ROCKY ) {
+			if ( tile->rockiness == tile::ROCKINESS_ROCKY ) {
 				if ( m_random->IsLucky( 3 ) ) {
-					tile->rockiness = Tile::R_ROLLING;
+					tile->rockiness = tile::ROCKINESS_ROLLING;
 				}
 			}
 			// extra rockiness spots
 			if ( m_random->IsLucky( 30 ) ) {
-				tile->rockiness = Tile::R_ROCKY;
+				tile->rockiness = tile::ROCKINESS_ROCKY;
 				for ( auto& t : tile->neighbours ) {
 					if ( m_random->IsLucky( 3 ) ) {
-						if ( t->rockiness != Tile::R_ROCKY ) {
-							t->rockiness = Tile::R_ROLLING;
+						if ( t->rockiness != tile::ROCKINESS_ROCKY ) {
+							t->rockiness = tile::ROCKINESS_ROLLING;
 						}
 					}
 				}
@@ -114,7 +117,7 @@ void SimplePerlin::GenerateElevations( Tiles* tiles, const game::MapSettings& ma
 
 			// fungus
 			if ( PERLIN_S( x + 0.5f, y + 0.5f, z_xenofungus, 0.6f ) > 0.4 ) {
-				tile->features |= Tile::F_XENOFUNGUS;
+				tile->features |= tile::FEATURE_XENOFUNGUS;
 			}
 
 			MT_RETIF();
@@ -128,8 +131,8 @@ void SimplePerlin::GenerateElevations( Tiles* tiles, const game::MapSettings& ma
 	}
 }
 
-void SimplePerlin::GenerateDetails( Tiles* tiles, const game::MapSettings& map_settings, MT_CANCELABLE ) {
-	Tile* tile;
+void SimplePerlin::GenerateDetails( tile::Tiles* tiles, const game::settings::MapSettings* map_settings, MT_CANCELABLE ) {
+	tile::Tile* tile;
 
 	Log( "Generating details ( " + std::to_string( tiles->GetWidth() ) + " x " + std::to_string( tiles->GetHeight() ) + " )" );
 
@@ -153,7 +156,7 @@ void SimplePerlin::GenerateDetails( Tiles* tiles, const game::MapSettings& map_s
 
 			// bonus resources
 			if ( m_random->IsLucky( RESOURCE_SPAWN_CHANCE_DIFFICULTY ) ) {
-				tile->bonus = m_random->GetUInt( Tile::B_NUTRIENT, Tile::B_MINERALS );
+				tile->bonus = m_random->GetUInt( tile::BONUS_NUTRIENT, tile::BONUS_MINERALS );
 			}
 
 			MT_RETIF();
@@ -161,9 +164,9 @@ void SimplePerlin::GenerateDetails( Tiles* tiles, const game::MapSettings& map_s
 	}
 }
 
-void SimplePerlin::GenerateRiver( Tiles* tiles, Tile* tile, uint8_t length, uint8_t direction, int8_t direction_diagonal, MT_CANCELABLE ) {
+void SimplePerlin::GenerateRiver( tile::Tiles* tiles, tile::Tile* tile, uint8_t length, uint8_t direction, int8_t direction_diagonal, MT_CANCELABLE ) {
 
-	if ( tile->features & Tile::F_RIVER ) {
+	if ( tile->features & tile::FEATURE_RIVER ) {
 		// joined existing river
 		return;
 	}
@@ -174,7 +177,7 @@ void SimplePerlin::GenerateRiver( Tiles* tiles, Tile* tile, uint8_t length, uint
 
 	MT_RETIF();
 
-	tile->features |= Tile::F_RIVER;
+	tile->features |= tile::FEATURE_RIVER;
 
 	length--;
 	if ( length > 0 ) {
@@ -249,9 +252,9 @@ void SimplePerlin::GenerateRiver( Tiles* tiles, Tile* tile, uint8_t length, uint
 	}
 }
 
-bool SimplePerlin::HasRiversNearby( Tile* current_tile, Tile* tile ) {
+bool SimplePerlin::HasRiversNearby( tile::Tile* current_tile, tile::Tile* tile ) {
 	for ( auto& t : tile->neighbours ) {
-		if ( t != current_tile && t->features & Tile::F_RIVER ) {
+		if ( t != current_tile && t->features & tile::FEATURE_RIVER ) {
 			return true;
 		}
 	}

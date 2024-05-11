@@ -2,21 +2,25 @@
 
 #include "base/Base.h"
 
-#include "scene/actor/Actor.h"
-#include "scene/Camera.h"
-#include "../shader_program/ShaderProgram.h"
-
 #include "types/Vec3.h"
 
-using namespace types;
-using namespace scene;
+namespace scene {
+namespace actor {
+class Actor;
+}
+class Camera;
+}
 
 namespace graphics {
 namespace opengl {
 
+namespace shader_program {
+class ShaderProgram;
+}
+
 CLASS( Actor, base::Base )
 
-	Actor( actor::Actor* actor );
+	Actor( scene::actor::Actor* actor );
 	~Actor();
 
 	virtual void LoadMesh() {};
@@ -26,8 +30,8 @@ CLASS( Actor, base::Base )
 	virtual bool MeshReloadNeeded() { return false; }
 	virtual bool TextureReloadNeeded() { return false; }
 
-	virtual void Draw( shader_program::ShaderProgram* shader_program, Camera* camera = nullptr ) = 0;
-	actor::Actor* GetActor() const {
+	virtual void Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) = 0;
+	scene::actor::Actor* GetActor() const {
 		return m_actor;
 	}
 	void UnlinkActor() {
@@ -39,11 +43,11 @@ CLASS( Actor, base::Base )
 	virtual void OnWindowResize() {};
 
 protected:
-	actor::Actor* m_actor;
+	scene::actor::Actor* m_actor;
 
 	float m_z_index = 0.0f;
 
 };
 
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}

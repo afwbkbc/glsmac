@@ -1,18 +1,24 @@
 #include "Binding.h"
 
+#include "gse/Context.h"
+#include "gse/callable/Native.h"
+#include "gse/Exception.h"
 #include "gse/type/Int.h"
 #include "gse/type/String.h"
 #include "gse/type/Object.h"
-
+#include "gse/type/Undefined.h"
+#include "game/Game.h"
+#include "game/bindings/Bindings.h"
 #include "game/event/DefineAnimation.h"
 #include "game/animation/FramesRow.h"
 #include "engine/Engine.h"
+#include "loader/sound/SoundLoader.h"
 
 namespace game {
 namespace bindings {
 
 BINDING_IMPL( animations ) {
-	const gse::type::Object::properties_t properties = {
+	const gse::type::object_properties_t properties = {
 		{
 			"define",
 			NATIVE_CALL( this ) {
@@ -50,7 +56,7 @@ BINDING_IMPL( animations ) {
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 3 );
 				N_GETVALUE( id, 0, String );
-				N_GETVALUE_UNWRAP( tile, 1, map::Tile );
+				N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
 				N_PERSIST_CALLABLE( on_complete, 2 );
 				const auto* errmsg = GAME->ShowAnimationOnTile( id, tile, [ on_complete, ctx, call_si ]() {
 					on_complete->Run( ctx, call_si, {} );

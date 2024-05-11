@@ -4,7 +4,7 @@
 namespace scene {
 namespace actor {
 
-Sprite::Sprite( const std::string& name, const coords_t dimensions, types::Texture* texture, const types::mesh::Render::tex_coords_t tex_coords )
+Sprite::Sprite( const std::string& name, const scene::actor::sprite_coords_t dimensions, types::texture::Texture* texture, const types::mesh::tex_coords_t tex_coords )
 	: Actor( TYPE_SPRITE, name )
 	, m_dimensions( dimensions )
 	, m_texture( texture )
@@ -20,15 +20,15 @@ Sprite::Sprite( Sprite* orig )
 	//
 }
 
-const Sprite::coords_t& Sprite::GetDimensions() const {
+const scene::actor::sprite_coords_t& Sprite::GetDimensions() const {
 	return m_dimensions;
 }
 
-types::Texture* Sprite::GetTexture() const {
+types::texture::Texture* Sprite::GetTexture() const {
 	return m_texture;
 }
 
-const types::mesh::Render::tex_coords_t& Sprite::GetTexCoords() const {
+const types::mesh::tex_coords_t& Sprite::GetTexCoords() const {
 	return m_tex_coords;
 }
 

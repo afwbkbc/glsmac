@@ -1,6 +1,7 @@
 #include "DefineUnit.h"
 
-#include "../Game.h"
+#include "game/Game.h"
+#include "game/unit/Def.h"
 
 namespace game {
 namespace event {

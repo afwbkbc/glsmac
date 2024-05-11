@@ -2,9 +2,12 @@
 
 #include "Event.h"
 
-#include "game/animation/Def.h"
-
 namespace game {
+
+namespace animation {
+class Def;
+}
+
 namespace event {
 
 class DefineAnimation : public Event {

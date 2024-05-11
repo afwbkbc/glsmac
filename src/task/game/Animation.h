@@ -1,16 +1,22 @@
 #pragma once
 
-#include "AnimationDef.h"
+#include "Types.h"
 
 #include "util/Timer.h"
-#include "scene/actor/Sound.h"
+#include "types/Vec3.h"
+
+namespace scene::actor {
+class Sound;
+}
 
 namespace task {
 namespace game {
 
+class AnimationDef;
+
 class Animation {
 public:
-	Animation( const size_t animation_id, AnimationDef* def, const Vec3& render_coords );
+	Animation( const size_t animation_id, AnimationDef* def, const types::Vec3& render_coords );
 	~Animation();
 
 	const bool IsFinished() const;
@@ -18,12 +24,12 @@ public:
 	void Iterate();
 
 private:
-	
+
 	util::Timer m_timer;
 	scene::actor::Sound* m_sound = nullptr;
 	AnimationDef* m_def = nullptr;
-	Vec3 m_render_coords = {};
-	const AnimationDef::sprites_t& m_frames;
+	types::Vec3 m_render_coords = {};
+	const instanced_sprites_t& m_frames;
 	size_t m_frame_index = 0;
 	size_t m_instance_id = 0;
 

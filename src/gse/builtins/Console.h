@@ -2,8 +2,6 @@
 
 #include <string>
 
-#include "gse/ChildContext.h"
-
 #include "gse/Bindings.h"
 
 namespace gse {

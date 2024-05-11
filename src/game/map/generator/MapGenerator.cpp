@@ -1,21 +1,25 @@
 #include "MapGenerator.h"
 
-#include "util/Clamper.h"
-#include "../Map.h"
+#include "game/settings/Settings.h"
+#include "game/map/Consts.h"
+#include "game/map/tile/Tiles.h"
 #include "engine/Engine.h"
+#include "ui/UI.h"
+#include "util/Clamper.h"
+#include "util/random/Random.h"
 
 namespace game {
 namespace map {
 namespace generator {
 
-MapGenerator::MapGenerator( Random* random )
+MapGenerator::MapGenerator( util::random::Random* random )
 	: m_random( random ) {
 	//
 }
 
-void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings, MT_CANCELABLE ) {
-	ASSERT( TARGET_LAND_AMOUNTS.find( map_settings.ocean ) != TARGET_LAND_AMOUNTS.end(), "unknown map ocean setting " + std::to_string( map_settings.ocean ) );
-	float desired_land_amount = TARGET_LAND_AMOUNTS.at( map_settings.ocean );
+void MapGenerator::Generate( tile::Tiles* tiles, const settings::MapSettings* map_settings, MT_CANCELABLE ) {
+	ASSERT( TARGET_LAND_AMOUNTS.find( map_settings->ocean ) != TARGET_LAND_AMOUNTS.end(), "unknown map ocean setting " + std::to_string( map_settings->ocean ) );
+	float desired_land_amount = TARGET_LAND_AMOUNTS.at( map_settings->ocean );
 
 	auto* ui = g_engine->GetUI();
 
@@ -73,18 +77,18 @@ void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings, MT_C
 
 	ui->SetLoaderText( "Normalizing erosive forces" );
 	// normalize erosive forces
-	ASSERT( TARGET_EVELATION_MULTIPLIERS.find( map_settings.erosive ) != TARGET_EVELATION_MULTIPLIERS.end(), "unknown map erosive setting " + std::to_string( map_settings.erosive ) );
+	ASSERT( TARGET_EVELATION_MULTIPLIERS.find( map_settings->erosive ) != TARGET_EVELATION_MULTIPLIERS.end(), "unknown map erosive setting " + std::to_string( map_settings->erosive ) );
 	const auto range = GetElevationsRange( tiles, MT_C );
 	MT_RETIF();
 	float target_elevation_multiplier = std::min< float >(
 		1.0f, (
 			fabs(
 				std::min< float >(
-					(float)Tile::ELEVATION_MIN / range.first,
-					(float)Tile::ELEVATION_MAX / range.second
+					(float)tile::ELEVATION_MIN / range.first,
+					(float)tile::ELEVATION_MAX / range.second
 				)
 			) *
-				TARGET_EVELATION_MULTIPLIERS.at( map_settings.erosive )
+				TARGET_EVELATION_MULTIPLIERS.at( map_settings->erosive )
 		)
 	);
 	ScaleAllTilesBy( tiles, target_elevation_multiplier, MT_C );
@@ -95,15 +99,15 @@ void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings, MT_C
 
 	ui->SetLoaderText( "Normalizing fungus amount" );
 	// normalize fungus amount
-	ASSERT( TARGET_FUNGUS_AMOUNTS.find( map_settings.lifeforms ) != TARGET_FUNGUS_AMOUNTS.end(), "unknown map lifeforms setting " + std::to_string( map_settings.lifeforms ) );
-	const auto desired_fungus_amount = TARGET_FUNGUS_AMOUNTS.at( map_settings.lifeforms );
+	ASSERT( TARGET_FUNGUS_AMOUNTS.find( map_settings->lifeforms ) != TARGET_FUNGUS_AMOUNTS.end(), "unknown map lifeforms setting " + std::to_string( map_settings->lifeforms ) );
+	const auto desired_fungus_amount = TARGET_FUNGUS_AMOUNTS.at( map_settings->lifeforms );
 	SetFungusAmount( tiles, desired_fungus_amount, MT_C );
 	MT_RETIF();
 
 	ui->SetLoaderText( "Normalizing moisture amount" );
 	// normalize moisture amount
-	ASSERT( TARGET_MOISTURE_AMOUNTS.find( map_settings.clouds ) != TARGET_MOISTURE_AMOUNTS.end(), "unknown map clouds setting " + std::to_string( map_settings.clouds ) );
-	const auto desired_moisture_amount = TARGET_MOISTURE_AMOUNTS.at( map_settings.clouds );
+	ASSERT( TARGET_MOISTURE_AMOUNTS.find( map_settings->clouds ) != TARGET_MOISTURE_AMOUNTS.end(), "unknown map clouds setting " + std::to_string( map_settings->clouds ) );
+	const auto desired_moisture_amount = TARGET_MOISTURE_AMOUNTS.at( map_settings->clouds );
 	SetMoistureAmount( tiles, desired_moisture_amount, MT_C );
 	MT_RETIF();
 
@@ -125,13 +129,13 @@ void MapGenerator::Generate( Tiles* tiles, const MapSettings& map_settings, MT_C
 	ui->SetLoaderText( "Map generation complete" );
 }
 
-void MapGenerator::SmoothTerrain( Tiles* tiles, MT_CANCELABLE, const bool smooth_land, const bool smooth_water ) {
+void MapGenerator::SmoothTerrain( tile::Tiles* tiles, MT_CANCELABLE, const bool smooth_land, const bool smooth_water ) {
 
-	Tile::elevation_t c;
-	Tile::elevation_t sharpest;
+	tile::elevation_t c;
+	tile::elevation_t sharpest;
 	int8_t idx;
 	int8_t mod;
-	Tile* tile;
+	tile::Tile* tile;
 	uint8_t i;
 	for ( auto y = 0 ; y < tiles->GetHeight() ; y++ ) {
 		for ( auto x = y & 1 ; x < tiles->GetWidth() ; x += 2 ) {
@@ -160,25 +164,25 @@ void MapGenerator::SmoothTerrain( Tiles* tiles, MT_CANCELABLE, const bool smooth
 	}
 }
 
-void MapGenerator::FixExtremeSlopes( Tiles* tiles, MT_CANCELABLE ) {
+void MapGenerator::FixExtremeSlopes( tile::Tiles* tiles, MT_CANCELABLE ) {
 	auto elevations_range = GetElevationsRange( tiles, MT_C );
 	MT_RETIF();
-	util::Clamper< Tile::elevation_t > converter(
+	util::Clamper< tile::elevation_t > converter(
 		{
-			{ Tile::ELEVATION_MIN,    Tile::ELEVATION_MAX },
+			{ tile::ELEVATION_MIN,    tile::ELEVATION_MAX },
 			{ elevations_range.first, elevations_range.second }
 		}
 	);
 	RemoveExtremeSlopes( tiles, abs( converter.Clamp( s_consts.tile.maximum_allowed_slope_elevation ) ), MT_C );
 }
 
-void MapGenerator::SetLandAmount( Tiles* tiles, const float amount, MT_CANCELABLE ) {
+void MapGenerator::SetLandAmount( tile::Tiles* tiles, const float amount, MT_CANCELABLE ) {
 
 	Log( "Setting land amount to " + std::to_string( amount ) );
 
 	float acceptable_inaccuracy = 0.01f;
-	Tile::elevation_t elevation = Tile::ELEVATION_LEVEL_COAST; // start with 0
-	Tile::elevation_t elevation_change_by = ( Tile::ELEVATION_MAX - Tile::ELEVATION_MIN ) / 2; // for bisecting to find best elevation difference for desired land amount
+	tile::elevation_t elevation = tile::ELEVATION_LEVEL_COAST; // start with 0
+	tile::elevation_t elevation_change_by = ( tile::ELEVATION_MAX - tile::ELEVATION_MIN ) / 2; // for bisecting to find best elevation difference for desired land amount
 	float current_land_amount;
 	int8_t last_direction = 0;
 	while ( elevation_change_by > 1 ) {
@@ -210,7 +214,7 @@ void MapGenerator::SetLandAmount( Tiles* tiles, const float amount, MT_CANCELABL
 	RaiseAllTilesBy( tiles, elevation, MT_C );
 }
 
-const float MapGenerator::GetLandAmount( Tiles* tiles, MT_CANCELABLE, Tile::elevation_t elevation_diff ) {
+const float MapGenerator::GetLandAmount( tile::Tiles* tiles, MT_CANCELABLE, tile::elevation_t elevation_diff ) {
 	size_t land_tiles = 0;
 	const auto w = tiles->GetWidth();
 	const auto h = tiles->GetHeight();
@@ -225,15 +229,15 @@ const float MapGenerator::GetLandAmount( Tiles* tiles, MT_CANCELABLE, Tile::elev
 	return (float)land_tiles / ( w * h / 2 );
 }
 
-void MapGenerator::SetFungusAmount( Tiles* tiles, const float amount, MT_CANCELABLE ) {
+void MapGenerator::SetFungusAmount( tile::Tiles* tiles, const float amount, MT_CANCELABLE ) {
 
-	Tile* tile;
+	tile::Tile* tile;
 	const auto w = tiles->GetWidth();
 	const auto h = tiles->GetHeight();
 	const auto sz = w * h / 2;
 
-	std::vector< Tile* > with_fungus = {};
-	std::vector< Tile* > without_fungus = {};
+	std::vector< tile::Tile* > with_fungus = {};
+	std::vector< tile::Tile* > without_fungus = {};
 
 	// to avoid reallocations
 	with_fungus.reserve( sz );
@@ -242,7 +246,7 @@ void MapGenerator::SetFungusAmount( Tiles* tiles, const float amount, MT_CANCELA
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
 			tile = &tiles->At( x, y );
-			if ( tile->features & Tile::F_XENOFUNGUS ) {
+			if ( tile->features & tile::FEATURE_XENOFUNGUS ) {
 				with_fungus.push_back( tile );
 			}
 			else {
@@ -257,7 +261,7 @@ void MapGenerator::SetFungusAmount( Tiles* tiles, const float amount, MT_CANCELA
 		Log( "Adding fungus to " + std::to_string( c ) + " tiles" );
 		m_random->Shuffle( without_fungus );
 		for ( auto i = 0 ; i < c ; i++ ) {
-			without_fungus[ i ]->features |= Tile::F_XENOFUNGUS;
+			without_fungus[ i ]->features |= tile::FEATURE_XENOFUNGUS;
 			MT_RETIF();
 		}
 	}
@@ -266,19 +270,19 @@ void MapGenerator::SetFungusAmount( Tiles* tiles, const float amount, MT_CANCELA
 		Log( "Removing fungus from " + std::to_string( c ) + " tiles" );
 		m_random->Shuffle( with_fungus );
 		for ( auto i = 0 ; i < c ; i++ ) {
-			with_fungus[ i ]->features &= ~Tile::F_XENOFUNGUS;
+			with_fungus[ i ]->features &= ~tile::FEATURE_XENOFUNGUS;
 			MT_RETIF();
 		}
 	}
 }
 
-const float MapGenerator::GetFungusAmount( Tiles* tiles, MT_CANCELABLE ) {
+const float MapGenerator::GetFungusAmount( tile::Tiles* tiles, MT_CANCELABLE ) {
 	size_t fungus_tiles = 0;
 	const auto w = tiles->GetWidth();
 	const auto h = tiles->GetHeight();
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
-			if ( tiles->At( x, y ).features & Tile::F_XENOFUNGUS ) {
+			if ( tiles->At( x, y ).features & tile::FEATURE_XENOFUNGUS ) {
 				fungus_tiles++;
 			}
 			MT_RETIFV( 0.0f );
@@ -287,16 +291,16 @@ const float MapGenerator::GetFungusAmount( Tiles* tiles, MT_CANCELABLE ) {
 	return (float)fungus_tiles / ( w * h / 2 );
 }
 
-void MapGenerator::SetMoistureAmount( Tiles* tiles, const float amount, MT_CANCELABLE ) {
-	Tile* tile;
+void MapGenerator::SetMoistureAmount( tile::Tiles* tiles, const float amount, MT_CANCELABLE ) {
+	tile::Tile* tile;
 	const auto w = tiles->GetWidth();
 	const auto h = tiles->GetHeight();
 	const auto sz = w * h / 2;
 
 	float moisture_amount = 0.0f;
-	std::vector< Tile* > arid_tiles = {};
-	std::vector< Tile* > moist_tiles = {};
-	std::vector< Tile* > rainy_tiles = {};
+	std::vector< tile::Tile* > arid_tiles = {};
+	std::vector< tile::Tile* > moist_tiles = {};
+	std::vector< tile::Tile* > rainy_tiles = {};
 
 	// to avoid reallocations
 	arid_tiles.reserve( sz );
@@ -307,16 +311,16 @@ void MapGenerator::SetMoistureAmount( Tiles* tiles, const float amount, MT_CANCE
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
 			tile = &tiles->At( x, y );
 			switch ( tile->moisture ) {
-				case Tile::M_ARID: {
+				case tile::MOISTURE_ARID: {
 					arid_tiles.push_back( tile );
 					break;
 				}
-				case Tile::M_MOIST: {
+				case tile::MOISTURE_MOIST: {
 					moisture_amount += 0.5f;
 					moist_tiles.push_back( tile );
 					break;
 				}
-				case Tile::M_RAINY: {
+				case tile::MOISTURE_RAINY: {
 					moisture_amount += 1.0f;
 					rainy_tiles.push_back( tile );
 					break;
@@ -339,7 +343,7 @@ void MapGenerator::SetMoistureAmount( Tiles* tiles, const float amount, MT_CANCE
 		MT_RETIF();
 		size_t i_moist = 0;
 		bool use_moist = false;
-		std::vector< Tile* > new_moist_tiles = {};
+		std::vector< tile::Tile* > new_moist_tiles = {};
 		new_moist_tiles.reserve( arid_tiles.size() );
 		while ( moisture_amount < desired_moisture_amount ) {
 
@@ -356,10 +360,10 @@ void MapGenerator::SetMoistureAmount( Tiles* tiles, const float amount, MT_CANCE
 				break; // exceeded
 			}
 			if ( use_moist ) {
-				moist_tiles[ i_moist++ ]->moisture = Tile::M_RAINY;
+				moist_tiles[ i_moist++ ]->moisture = tile::MOISTURE_RAINY;
 			}
 			else {
-				arid_tiles[ i_arid ]->moisture = Tile::M_MOIST;
+				arid_tiles[ i_arid ]->moisture = tile::MOISTURE_MOIST;
 				new_moist_tiles.push_back( arid_tiles[ i_arid ] ); // to make rainy later if needed
 				i_arid++;
 			}
@@ -372,7 +376,7 @@ void MapGenerator::SetMoistureAmount( Tiles* tiles, const float amount, MT_CANCE
 			i_moist = 0;
 			while ( moisture_amount < desired_moisture_amount ) {
 				ASSERT( i_moist < new_moist_tiles.size(), "unable to add enough moisture" );
-				new_moist_tiles[ i_moist++ ]->moisture = Tile::M_RAINY;
+				new_moist_tiles[ i_moist++ ]->moisture = tile::MOISTURE_RAINY;
 				moisture_amount += 0.5f;
 			}
 		}
@@ -386,7 +390,7 @@ void MapGenerator::SetMoistureAmount( Tiles* tiles, const float amount, MT_CANCE
 		MT_RETIF();
 		size_t i_moist = 0;
 		bool use_moist = false;
-		std::vector< Tile* > new_moist_tiles = {};
+		std::vector< tile::Tile* > new_moist_tiles = {};
 		new_moist_tiles.reserve( rainy_tiles.size() );
 		while ( moisture_amount > desired_moisture_amount ) {
 
@@ -403,10 +407,10 @@ void MapGenerator::SetMoistureAmount( Tiles* tiles, const float amount, MT_CANCE
 				break; // exceeded
 			}
 			if ( use_moist ) {
-				moist_tiles[ i_moist++ ]->moisture = Tile::M_ARID;
+				moist_tiles[ i_moist++ ]->moisture = tile::MOISTURE_ARID;
 			}
 			else {
-				rainy_tiles[ i_rainy ]->moisture = Tile::M_MOIST;
+				rainy_tiles[ i_rainy ]->moisture = tile::MOISTURE_MOIST;
 				new_moist_tiles.push_back( rainy_tiles[ i_rainy ] ); // to make arid later if needed
 				i_rainy++;
 			}
@@ -419,28 +423,28 @@ void MapGenerator::SetMoistureAmount( Tiles* tiles, const float amount, MT_CANCE
 			i_moist = 0;
 			while ( moisture_amount > desired_moisture_amount ) {
 				ASSERT( i_moist < new_moist_tiles.size(), "unable to remove enough moisture" );
-				new_moist_tiles[ i_moist++ ]->moisture = Tile::M_ARID;
+				new_moist_tiles[ i_moist++ ]->moisture = tile::MOISTURE_ARID;
 				moisture_amount -= 0.5f;
 			}
 		}
 	}
 }
 
-const float MapGenerator::GetMoistureAmount( Tiles* tiles, MT_CANCELABLE ) {
+const float MapGenerator::GetMoistureAmount( tile::Tiles* tiles, MT_CANCELABLE ) {
 	float moisture_amount = 0.0f;
 	const auto w = tiles->GetWidth();
 	const auto h = tiles->GetHeight();
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
 			switch ( tiles->AtConst( x, y ).moisture ) {
-				case Tile::M_ARID: {
+				case tile::MOISTURE_ARID: {
 					break;
 				}
-				case Tile::M_MOIST: {
+				case tile::MOISTURE_MOIST: {
 					moisture_amount += 0.5f;
 					break;
 				}
-				case Tile::M_RAINY: {
+				case tile::MOISTURE_RAINY: {
 					moisture_amount += 1.0f;
 					break;
 				}
@@ -456,24 +460,24 @@ const float MapGenerator::GetMoistureAmount( Tiles* tiles, MT_CANCELABLE ) {
 
 }
 
-void MapGenerator::FixImpossibleThings( Tiles* tiles, MT_CANCELABLE ) {
-	Tile* tile;
+void MapGenerator::FixImpossibleThings( tile::Tiles* tiles, MT_CANCELABLE ) {
+	tile::Tile* tile;
 	const auto w = tiles->GetWidth();
 	const auto h = tiles->GetHeight();
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
 			tile = &tiles->At( x, y );
-			if ( tile->features & Tile::F_JUNGLE && tile->moisture != Tile::M_RAINY ) {
+			if ( tile->features & tile::FEATURE_JUNGLE && tile->moisture != tile::MOISTURE_RAINY ) {
 				// jungle should only be on rainy tiles
-				tile->features &= ~Tile::F_JUNGLE;
+				tile->features &= ~tile::FEATURE_JUNGLE;
 			}
 			MT_RETIF();
 		}
 	}
 }
 
-const std::vector< Tile* > MapGenerator::GetTilesInRandomOrder( Tiles* tiles, MT_CANCELABLE ) {
-	std::vector< Tile* > randomtiles;
+const std::vector< tile::Tile* > MapGenerator::GetTilesInRandomOrder( tile::Tiles* tiles, MT_CANCELABLE ) {
+	std::vector< tile::Tile* > randomtiles;
 	const auto w = tiles->GetWidth();
 	const auto h = tiles->GetHeight();
 	for ( auto y = 0 ; y < h ; y++ ) {
@@ -486,11 +490,11 @@ const std::vector< Tile* > MapGenerator::GetTilesInRandomOrder( Tiles* tiles, MT
 	return randomtiles;
 }
 
-void MapGenerator::RaiseAllTilesBy( Tiles* tiles, Tile::elevation_t amount, MT_CANCELABLE ) {
+void MapGenerator::RaiseAllTilesBy( tile::Tiles* tiles, tile::elevation_t amount, MT_CANCELABLE ) {
 	Log( "Raising all tiles by " + std::to_string( amount ) );
 	const auto w = tiles->GetWidth();
 	const auto h = tiles->GetHeight();
-	Tile* tile;
+	tile::Tile* tile;
 
 	const auto randomtiles = GetTilesInRandomOrder( tiles, MT_C );
 	MT_RETIF();
@@ -518,11 +522,11 @@ void MapGenerator::RaiseAllTilesBy( Tiles* tiles, Tile::elevation_t amount, MT_C
 	}
 }
 
-void MapGenerator::ScaleAllTilesBy( Tiles* tiles, float amount, MT_CANCELABLE ) {
+void MapGenerator::ScaleAllTilesBy( tile::Tiles* tiles, float amount, MT_CANCELABLE ) {
 	Log( "Multiplying all tiles by " + std::to_string( amount ) );
 	const auto w = tiles->GetWidth();
 	const auto h = tiles->GetHeight();
-	Tile* tile;
+	tile::Tile* tile;
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
 			tile = &tiles->At( x, y );
@@ -539,14 +543,14 @@ void MapGenerator::ScaleAllTilesBy( Tiles* tiles, float amount, MT_CANCELABLE ) 
 	}
 }
 
-const std::pair< Tile::elevation_t, Tile::elevation_t > MapGenerator::GetElevationsRange( Tiles* tiles, MT_CANCELABLE ) const {
-	std::pair< Tile::elevation_t, Tile::elevation_t > result = {
+const std::pair< tile::elevation_t, tile::elevation_t > MapGenerator::GetElevationsRange( tile::Tiles* tiles, MT_CANCELABLE ) const {
+	std::pair< tile::elevation_t, tile::elevation_t > result = {
 		0,
 		0
 	};
 	const auto w = tiles->GetWidth();
 	const auto h = tiles->GetHeight();
-	const Tile* tile;
+	const tile::Tile* tile;
 	// determine min and max elevations from generated tiles
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
@@ -566,17 +570,17 @@ const std::pair< Tile::elevation_t, Tile::elevation_t > MapGenerator::GetElevati
 	return result;
 }
 
-void MapGenerator::RemoveExtremeSlopes( Tiles* tiles, const Tile::elevation_t max_allowed_diff, MT_CANCELABLE ) {
-	Tile::elevation_t elevation_fixby_change = 1;
-	Tile::elevation_t elevation_fixby_max = max_allowed_diff / 3; // to prevent infinite loops when it grows so large it starts creating new extreme slopes
+void MapGenerator::RemoveExtremeSlopes( tile::Tiles* tiles, const tile::elevation_t max_allowed_diff, MT_CANCELABLE ) {
+	tile::elevation_t elevation_fixby_change = 1;
+	tile::elevation_t elevation_fixby_max = max_allowed_diff / 3; // to prevent infinite loops when it grows so large it starts creating new extreme slopes
 	float elevation_fixby_div_change = 0.001f; // needed to prevent infinite loops when nearby tiles keep 'fixing' each other forever
 
 	const auto w = tiles->GetWidth();
 	const auto h = tiles->GetHeight();
 
 	size_t pass = 0;
-	Tile* tile;
-	Tile::elevation_t elevation_fixby = 0;
+	tile::Tile* tile;
+	tile::elevation_t elevation_fixby = 0;
 	float elevation_fixby_div = 1.0f;
 	bool found = true;
 	size_t i;
@@ -632,15 +636,15 @@ void MapGenerator::RemoveExtremeSlopes( Tiles* tiles, const Tile::elevation_t ma
 	}
 }
 
-void MapGenerator::NormalizeElevationRange( Tiles* tiles, MT_CANCELABLE ) {
+void MapGenerator::NormalizeElevationRange( tile::Tiles* tiles, MT_CANCELABLE ) {
 	const auto w = tiles->GetWidth();
 	const auto h = tiles->GetHeight();
 	auto elevations_range = GetElevationsRange( tiles, MT_C );
 	MT_RETIF();
-	util::Clamper< Tile::elevation_t > converter(
+	util::Clamper< tile::elevation_t > converter(
 		{
 			{ elevations_range.first, elevations_range.second },
-			{ Tile::ELEVATION_MIN,    Tile::ELEVATION_MAX }
+			{ tile::ELEVATION_MIN,    tile::ELEVATION_MAX }
 		}
 	);
 
