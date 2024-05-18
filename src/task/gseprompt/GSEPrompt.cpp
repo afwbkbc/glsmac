@@ -1,5 +1,3 @@
-#include "GSEPrompt.h"
-
 #ifdef _WIN32
 #include <io.h>
 #define isatty _isatty
@@ -10,6 +8,9 @@
 
 #include <iostream>
 #include <cstring>
+
+#include "GSEPrompt.h"
+
 #include "gse/Exception.h"
 #include "engine/Engine.h"
 #include "util/String.h"

@@ -1,6 +1,6 @@
-#include "GSETests.h"
-
 #include <iostream> // not using Log() everywhere because important stuff should be printed with --quiet too
+
+#include "GSETests.h"
 
 #include "gse/GSE.h"
 #include "gse/tests/Tests.h"
