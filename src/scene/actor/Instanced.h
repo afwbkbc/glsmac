@@ -47,7 +47,7 @@ CLASS( Instanced, Actor )
 	void UpdateWorldMatrix() override;
 	void UpdatePosition() override;
 	void UpdateMatrix() override;
-
+	
 	Sprite* GetSpriteActor() const;
 	Mesh* GetMeshActor() const;
 

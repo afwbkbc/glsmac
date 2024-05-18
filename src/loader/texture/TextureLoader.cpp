@@ -102,6 +102,14 @@ static const std::unordered_map< std::string, TextureLoader::transparent_colors_
 			types::Color::RGB( 27, 187, 231 ), // borders
 		}
 	},
+	{
+		"XF.pcx",
+		{
+			types::Color::RGB( 0, 0, 0 ),
+			types::Color::RGB( 155, 27, 231 ), // tile
+			types::Color::RGB( 27, 187, 231 ), // borders
+		}
+	}
 };
 static const TextureLoader::transparent_colors_t s_no_transparent_colors = {};
 

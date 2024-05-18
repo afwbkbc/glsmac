@@ -151,7 +151,7 @@ Mesh* Instanced::GetMeshActor() const {
 
 const Instanced::instance_id_t Instanced::AddInstance( const types::Vec3& position, const types::Vec3& angle ) {
 	m_instances[ m_next_instance_id ] = {
-		position,
+		m_actor->NormalizePosition( position ),
 		angle,
 		{},
 		true

@@ -34,8 +34,11 @@ BINDING_IMPL( animations ) {
 					N_GETPROP( row_y, animation_def, "row_y", Int );
 					N_GETPROP( frame_width, animation_def, "frame_width", Int );
 					N_GETPROP( frame_height, animation_def, "frame_height", Int );
+					N_GETPROP_OPT( int64_t, frame_center_x, animation_def, "frame_center_x", Int, frame_width / 2 );
+					N_GETPROP_OPT( int64_t, frame_center_y, animation_def, "frame_center_y", Int, frame_height / 2 );
 					N_GETPROP( frame_padding, animation_def, "frame_padding", Int );
 					N_GETPROP( frames_count, animation_def, "frames_count", Int );
+					N_GETPROP_OPT( int64_t, frames_per_row, animation_def, "frames_per_row", Int, frames_count );
 					N_GETPROP_OPT( float, scale_x, animation_def, "scale_x", Float, 1.0f );
 					N_GETPROP_OPT( float, scale_y, animation_def, "scale_y", Float, 1.0f );
 					N_GETPROP( duration_ms, animation_def, "duration_ms", Int );
@@ -43,7 +46,23 @@ BINDING_IMPL( animations ) {
 					if ( !g_engine->GetSoundLoader()->LoadSound( sound ) ) {
 						ERROR( gse::EC.GAME_ERROR, "Failed to load animation sound '" + sound + "'" );
 					}
-					auto* def = new animation::FramesRow( id, file, row_x, row_y, frame_width, frame_height, frame_padding, frames_count, scale_x, scale_y, duration_ms, sound );
+					auto* def = new animation::FramesRow(
+						id,
+						file,
+						row_x,
+						row_y,
+						frame_width,
+						frame_height,
+						frame_center_x,
+						frame_center_y,
+						frame_padding,
+						frames_count,
+						frames_per_row,
+						scale_x,
+						scale_y,
+						duration_ms,
+						sound
+					);
 					auto* game = GAME;
 					game->AddEvent( new event::DefineAnimation( game->GetSlotNum(), def ) );
 					return VALUE( gse::type::Undefined );

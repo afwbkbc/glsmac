@@ -1,5 +1,3 @@
-const weapons = #include('combat/weapons');
-
 const MIN_DAMAGE_VALUE = 0.1;
 const MAX_DAMAGE_VALUE = 0.3;
 
@@ -19,7 +17,7 @@ const get_unit_defence_power = (unit) => {
 
 const result = {
 
-    init: () => {
+    init: (animations) => {
 
         #game.on.unit_attack_validate((e) => {
 
@@ -89,12 +87,12 @@ const result = {
                     if (damage_index < damages_sz) {
                         const damages = e.resolutions[damage_index];
                         if (damages[0]) {
-                            #game.animations.show_on_tile(weapons.ANIMATION.PSI, defender_tile, () => {
+                            #game.animations.show_on_tile(animations.ATTACK_PSI, defender_tile, () => {
                                 e.defender.health = e.defender.health - damages[1];
                                 process_next_damage(damage_index + 1);
                             });
                         } else {
-                            #game.animations.show_on_tile(weapons.ANIMATION.PSI, attacker_tile, () => {
+                            #game.animations.show_on_tile(animations.ATTACK_PSI, attacker_tile, () => {
                                 e.attacker.health = e.attacker.health - damages[1];
                                 process_next_damage(damage_index + 1);
                             });
@@ -108,12 +106,6 @@ const result = {
                 process_next_damage(0);
             });
         });
-
-    },
-
-    define: () => {
-
-        weapons.define();
 
     },
 

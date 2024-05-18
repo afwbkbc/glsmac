@@ -42,6 +42,10 @@ void Actor::UpdateMatrix() {
 	m_need_world_matrix_update = true;
 }
 
+const types::Vec3 Actor::NormalizePosition( const types::Vec3& position ) const {
+	return position;
+}
+
 void Actor::SetScene( Scene* scene ) {
 	ASSERT( m_scene == NULL || scene == NULL, "scene overlap" );
 	m_scene = scene;

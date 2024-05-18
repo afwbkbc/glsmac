@@ -20,12 +20,24 @@ AnimationDef::AnimationDef( InstancedSpriteManager* ism, const ::game::animation
 
 	auto* texture = g_engine->GetTextureLoader()->LoadTexture( d->m_file );
 	m_sprites = {};
+	const uint32_t w = d->m_frame_width;
+	const uint32_t h = d->m_frame_height;
+	const uint32_t p = d->m_frame_padding;
+	const types::Vec2< uint32_t > src_wh = {
+		w,
+		h
+	};
+	const types::Vec2< float > dst_wh = {
+		d->m_scale_x,
+		d->m_scale_y / 0.8f
+	};
+	const types::Vec2< uint32_t > cxy = {
+		d->m_frame_center_x,//(uint32_t)( (float)d->m_frame_center_x * d->m_scale_x ),
+		d->m_frame_center_y,//(uint32_t)( (float)d->m_frame_center_y * d->m_scale_y * 0.8f ),
+	};
 	for ( size_t i = 0 ; i < d->m_frames_count ; i++ ) {
-		const uint32_t x = d->m_row_x + i * ( d->m_frame_width + d->m_frame_padding );
-		const uint32_t y = d->m_row_y;
-		const uint32_t w = d->m_frame_width;
-		const uint32_t h = d->m_frame_height;
-		const auto cy = y + h / 2;
+		const uint32_t x = d->m_row_x + ( i % d->m_frames_per_row ) * ( w + p );
+		const uint32_t y = d->m_row_y + ( i / d->m_frames_per_row ) * ( h + p );
 
 		m_sprites.push_back(
 			m_ism->GetInstancedSprite(
@@ -35,18 +47,12 @@ AnimationDef::AnimationDef( InstancedSpriteManager* ism, const ::game::animation
 					x,
 					y
 				},
+				src_wh,
 				{
-					w,
-					h,
+					x + cxy.x,
+					y + cxy.y
 				},
-				{
-					x + (uint32_t)( (float)w / 2 * d->m_scale_x ),
-					y + (uint32_t)( (float)h / ( 2.0f * d->m_scale_y / 0.8f ) ),
-				},
-				{
-					d->m_scale_x,
-					d->m_scale_y / 0.8f
-				},
+				dst_wh,
 				0.5f // ?
 			)
 		);

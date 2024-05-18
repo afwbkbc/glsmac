@@ -41,6 +41,8 @@ CLASS( Actor, Entity )
 	virtual void UpdateWorldMatrix();
 	virtual void UpdateMatrix() override;
 
+	virtual const types::Vec3 NormalizePosition( const types::Vec3& position ) const;
+
 	void SetScene( Scene* scene );
 	Scene* GetScene();
 
