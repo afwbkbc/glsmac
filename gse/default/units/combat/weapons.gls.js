@@ -10,7 +10,9 @@ const animations = [
         frame_width: 43, frame_height: 47,
         frame_padding: 2,
         frames_count: 16,
-        duration_ms: 160,
+        scale_x: 0.7,
+        scale_y: 0.7,
+        duration_ms: 250,
         sound: 'psi attack.wav',
     }],
 ];

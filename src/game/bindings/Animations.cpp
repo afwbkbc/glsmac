@@ -4,6 +4,7 @@
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
 #include "gse/type/Int.h"
+#include "gse/type/Float.h"
 #include "gse/type/String.h"
 #include "gse/type/Object.h"
 #include "gse/type/Undefined.h"
@@ -35,12 +36,14 @@ BINDING_IMPL( animations ) {
 					N_GETPROP( frame_height, animation_def, "frame_height", Int );
 					N_GETPROP( frame_padding, animation_def, "frame_padding", Int );
 					N_GETPROP( frames_count, animation_def, "frames_count", Int );
+					N_GETPROP_OPT( float, scale_x, animation_def, "scale_x", Float, 1.0f );
+					N_GETPROP_OPT( float, scale_y, animation_def, "scale_x", Float, 1.0f );
 					N_GETPROP( duration_ms, animation_def, "duration_ms", Int );
 					N_GETPROP( sound, animation_def, "sound", String );
 					if ( !g_engine->GetSoundLoader()->LoadSound( sound ) ) {
 						ERROR( gse::EC.GAME_ERROR, "Failed to load animation sound '" + sound + "'" );
 					}
-					auto* def = new animation::FramesRow( id, file, row_x, row_y, frame_width, frame_height, frame_padding, frames_count, duration_ms, sound );
+					auto* def = new animation::FramesRow( id, file, row_x, row_y, frame_width, frame_height, frame_padding, frames_count, scale_x, scale_y, duration_ms, sound );
 					auto* game = GAME;
 					game->AddEvent( new event::DefineAnimation( game->GetSlotNum(), def ) );
 					return VALUE( gse::type::Undefined );

@@ -41,9 +41,9 @@ AnimationDef::AnimationDef( InstancedSpriteManager* ism, const ::game::animation
 					x + w / 2,
 					y + h / 2,
 				},
-				{ // ?
-					1.0f,
-					1.0f
+				{
+					d->m_scale_x,
+					d->m_scale_y / 0.8f
 				},
 				0.5f // ?
 			)

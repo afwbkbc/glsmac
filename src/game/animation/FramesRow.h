@@ -19,6 +19,8 @@ public:
 		const uint16_t frame_height,
 		const uint16_t frame_padding,
 		const uint8_t frames_count,
+		const float scale_x,
+		const float scale_y,
 		const uint16_t duration_ms,
 		const std::string& sound_file
 	);
@@ -37,7 +39,14 @@ private:
 	friend class Def;
 
 	static void Serialize( types::Buffer& buf, const FramesRow* def );
-	static FramesRow* Unserialize( types::Buffer& buf, const std::string& id, const uint16_t duration_ms, const std::string& sound_file );
+	static FramesRow* Unserialize(
+		types::Buffer& buf,
+		const std::string& id,
+		const float scale_x,
+		const float scale_y,
+		const uint16_t duration_ms,
+		const std::string& sound_file
+	);
 };
 
 }

@@ -12,10 +12,12 @@ FramesRow::FramesRow(
 	const uint16_t frame_height,
 	const uint16_t frame_padding,
 	const uint8_t frames_count,
+	const float scale_x,
+	const float scale_y,
 	const uint16_t duration_ms,
 	const std::string& sound_file
 )
-	: Def( id, AT_FRAMES_ROW, duration_ms, sound_file )
+	: Def( id, AT_FRAMES_ROW, duration_ms, scale_x, scale_y, sound_file )
 	, m_file( file )
 	, m_row_x( row_x )
 	, m_row_y( row_y )
@@ -52,7 +54,14 @@ void FramesRow::Serialize( types::Buffer& buf, const FramesRow* def ) {
 	buf.WriteInt( def->m_frames_count );
 }
 
-FramesRow* FramesRow::Unserialize( types::Buffer& buf, const std::string& id, const uint16_t duration_ms, const std::string& sound_file ) {
+FramesRow* FramesRow::Unserialize(
+	types::Buffer& buf,
+	const std::string& id,
+	const float scale_x,
+	const float scale_y,
+	const uint16_t duration_ms,
+	const std::string& sound_file
+) {
 	const auto file = buf.ReadString();
 	const auto row_x = buf.ReadInt();
 	const auto row_y = buf.ReadInt();
@@ -60,7 +69,7 @@ FramesRow* FramesRow::Unserialize( types::Buffer& buf, const std::string& id, co
 	const auto frame_height = buf.ReadInt();
 	const auto frame_padding = buf.ReadInt();
 	const auto frames_count = buf.ReadInt();
-	return new FramesRow( id, file, row_x, row_y, frame_width, frame_height, frame_padding, frames_count, duration_ms, sound_file );
+	return new FramesRow( id, file, row_x, row_y, frame_width, frame_height, frame_padding, frames_count, scale_x, scale_y, duration_ms, sound_file );
 }
 
 }
