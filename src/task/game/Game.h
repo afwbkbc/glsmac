@@ -348,7 +348,6 @@ private:
 	Tile* m_selected_tile = nullptr;
 	Unit* m_selected_unit = nullptr;
 	map_data_t m_map_data = {};
-	Unit* m_currently_moving_unit = nullptr;
 
 	// UI stuff
 

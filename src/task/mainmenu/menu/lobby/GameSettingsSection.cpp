@@ -176,9 +176,9 @@ void GameSettingsSection::UpdateRows() {
 
 	UpdateRow(
 		RI_PLANET_OCEAN, {
-			{ ::game::settings::MapSettings::MAP_CONFIG_OCEAN_LOW,    "30-50% of ui::object::Surface" },
-			{ ::game::settings::MapSettings::MAP_CONFIG_OCEAN_MEDIUM, "50-70% of ui::object::Surface" },
-			{ ::game::settings::MapSettings::MAP_CONFIG_OCEAN_HIGH,   "70-90% of ui::object::Surface" },
+			{ ::game::settings::MapSettings::MAP_CONFIG_OCEAN_LOW,    "30-50% of Surface" },
+			{ ::game::settings::MapSettings::MAP_CONFIG_OCEAN_MEDIUM, "50-70% of Surface" },
+			{ ::game::settings::MapSettings::MAP_CONFIG_OCEAN_HIGH,   "70-90% of Surface" },
 		}, m_game_settings->map.ocean
 	);
 

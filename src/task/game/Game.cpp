@@ -931,12 +931,14 @@ void Game::DespawnUnit( const size_t unit_id ) {
 
 	auto* unit = it->second;
 
-	if ( unit->IsActive() ) {
-		RemoveSelectable( unit );
-	}
+	const bool is_owned = unit->IsOwned();
 	m_units.erase( it );
 
 	delete unit;
+
+	if ( is_owned ) {
+		RemoveSelectable( unit );
+	}
 }
 
 void Game::RefreshUnit( Unit* unit ) {
@@ -983,9 +985,12 @@ void Game::MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_c
 
 void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 	//Log( "Received frontend request (type=" + std::to_string( request->type ) + ")" ); // spammy
-	const auto f_exit = [ this, &request ]() -> void {
+	const auto f_exit = [ this, request ]() -> void {
+		const auto quit_reason = request->data.quit.reason
+			? *request->data.quit.reason
+			: "";
 		ExitGame(
-			[ this, request ]() -> void {
+			[ this, quit_reason ]() -> void {
 #ifdef DEBUG
 				if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
 					g_engine->ShutDown();
@@ -993,11 +998,7 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 				else
 #endif
 				{
-					ReturnToMainMenu(
-						request->data.quit.reason
-							? *request->data.quit.reason
-							: ""
-					);
+					ReturnToMainMenu( quit_reason );
 				}
 			}
 		);

@@ -27,7 +27,7 @@ CLASS( Player, types::Serializable )
 	Player(
 		const std::string& name,
 		const role_t role,
-		const rules::Faction& faction,
+		const std::optional< rules::Faction >& faction,
 		const rules::DifficultyLevel& difficulty_level
 	);
 
@@ -43,7 +43,7 @@ CLASS( Player, types::Serializable )
 	std::optional< rules::Faction >& GetFaction();
 
 	void SetDifficultyLevel( const rules::DifficultyLevel& difficulty_level );
-	const std::optional< rules::DifficultyLevel >& GetDifficultyLevel() const;
+	const rules::DifficultyLevel& GetDifficultyLevel() const;
 
 	void SetSlot( slot::Slot* slot );
 	slot::Slot* GetSlot() const;
@@ -68,7 +68,7 @@ private:
 
 	// EXPERIMENTAL
 	std::optional< rules::Faction > m_faction = {};
-	std::optional< rules::DifficultyLevel > m_difficulty_level = {};
+	rules::DifficultyLevel m_difficulty_level = {};
 
 	bool m_is_turn_completed = false;
 };

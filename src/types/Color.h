@@ -26,7 +26,7 @@ public:
 		}
 	};
 
-	color_t value;
+	color_t value = {};
 
 	Color();
 	Color( const channel_t red, const channel_t green, const channel_t blue, const channel_t alpha );

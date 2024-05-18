@@ -9,7 +9,7 @@ Player::Player( types::Buffer buf ) {
 Player::Player(
 	const std::string& name,
 	const role_t role,
-	const rules::Faction& faction,
+	const std::optional< rules::Faction >& faction,
 	const rules::DifficultyLevel& difficulty_level
 )
 	: m_name( name )
@@ -59,7 +59,7 @@ void Player::SetDifficultyLevel( const rules::DifficultyLevel& difficulty_level 
 	m_difficulty_level = difficulty_level;
 }
 
-const std::optional< rules::DifficultyLevel >& Player::GetDifficultyLevel() const {
+const rules::DifficultyLevel& Player::GetDifficultyLevel() const {
 	return m_difficulty_level;
 }
 
@@ -92,8 +92,11 @@ const types::Buffer Player::Serialize() const {
 
 	buf.WriteString( m_name );
 	buf.WriteInt( m_role );
-	buf.WriteString( m_faction->Serialize().ToString() );
-	buf.WriteString( m_difficulty_level->Serialize().ToString() );
+	buf.WriteBool( m_faction.has_value() );
+	if ( m_faction.has_value() ) {
+		buf.WriteString( m_faction->Serialize().ToString() );
+	}
+	buf.WriteString( m_difficulty_level.Serialize().ToString() );
 
 	return buf;
 }
@@ -102,8 +105,12 @@ void Player::Unserialize( types::Buffer buf ) {
 
 	m_name = buf.ReadString();
 	m_role = (role_t)buf.ReadInt();
-	m_faction->Unserialize( buf.ReadString() );
-	m_difficulty_level->Unserialize( buf.ReadString() );
+	m_faction = {};
+	if ( buf.ReadBool() ) {
+		m_faction = rules::Faction{};
+		m_faction->Unserialize( buf.ReadString() );
+	}
+	m_difficulty_level.Unserialize( buf.ReadString() );
 
 }
 

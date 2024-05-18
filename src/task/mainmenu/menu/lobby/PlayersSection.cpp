@@ -61,7 +61,7 @@ void PlayersSection::UpdateSlots( std::vector< ::game::slot::Slot >& slots ) {
 	m_choices.factions.clear();
 	m_choices.factions.push_back(
 		{
-			"",
+			"RANDOM",
 			"Random"
 		}
 	);

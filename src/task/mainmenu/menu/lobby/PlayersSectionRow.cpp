@@ -68,10 +68,18 @@ void PlayersSectionRow::Create() {
 		NEW( m_elements.faction, ui::object::AssocDropdown, "PopupDropdown" );
 		if ( allowed_to_change ) {
 			m_elements.faction->SetChoices( m_parent->GetFactionChoices() );
-			m_elements.faction->SetValueByKey( faction->m_id );
+			m_elements.faction->SetValueByKey(
+				faction.has_value()
+					? faction->m_id
+					: "RANDOM"
+			);
 		}
 		else {
-			m_elements.faction->SetValue( faction->m_name );
+			m_elements.faction->SetValue(
+				faction.has_value()
+					? faction->m_name
+					: "Random"
+			);
 		}
 		m_elements.faction->SetTextColor( faction_color );
 		m_elements.faction->SetLeft( 218 );
@@ -79,7 +87,7 @@ void PlayersSectionRow::Create() {
 		m_elements.faction->On(
 			ui::event::EV_CHANGE, EH( this, player, rules ) {
 				const auto& faction_id = *data->value.change.id_str;
-				if ( faction_id == "" ) {
+				if ( faction_id == "RANDOM" ) {
 					player->ClearFaction();
 				}
 				else {
@@ -96,7 +104,7 @@ void PlayersSectionRow::Create() {
 		if ( allowed_to_change ) {
 			m_elements.difficulty_level->SetChoices( m_parent->GetDifficultyLevelChoices() );
 		}
-		m_elements.difficulty_level->SetValue( player->GetDifficultyLevel()->m_name );
+		m_elements.difficulty_level->SetValue( player->GetDifficultyLevel().m_name );
 		m_elements.difficulty_level->SetTextColor( faction_color );
 		m_elements.difficulty_level->SetLeft( 360 );
 		m_elements.difficulty_level->SetWidth( 118 );
