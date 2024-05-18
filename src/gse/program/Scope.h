@@ -3,36 +3,22 @@
 #include <vector>
 
 #include "Operand.h"
-#include "Control.h"
 
 namespace gse {
 namespace program {
 
+class Control;
+
 class Scope : public Operand {
 public:
 
-	Scope( const si_t& si, const std::vector< const Control* >& body )
-		: Operand( si, OT_SCOPE )
-		, body( body ) {}
+	Scope( const si_t& si, const std::vector< const Control* >& body );
+	~Scope();
 
 	const std::vector< const Control* > body;
 
-	~Scope() {
-		for ( auto& it : body ) {
-			delete it;
-		}
-	}
-
-	const std::string ToString() const override {
-		return "{ ... }";
-	}
-	const std::string Dump( const size_t depth = 0 ) const override {
-		std::string result = Formatted( "Scope" + m_si.ToString() + "(", depth );
-		for ( const auto& it : body ) {
-			result += it->Dump( depth + 1 );
-		}
-		return result + Formatted( ")", depth );
-	}
+	const std::string ToString() const override;
+	const std::string Dump( const size_t depth = 0 ) const override;
 };
 
 }

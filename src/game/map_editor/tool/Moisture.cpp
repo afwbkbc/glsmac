@@ -1,25 +1,26 @@
 #include "Moisture.h"
 
-#include "../../Game.h"
+#include "game/map/tile/Tile.h"
+#include "game/map_editor/Types.h"
 
 namespace game {
 namespace map_editor {
 namespace tool {
 
 Moisture::Moisture( Game* game )
-	: Tool( game, MapEditor::TT_MOISTURE ) {
+	: Tool( game, TT_MOISTURE ) {
 	//
 }
 
-const MapEditor::tiles_t Moisture::Draw( map::Tile* tile, const MapEditor::draw_mode_t mode ) {
-	if ( mode == MapEditor::DM_DEC ) {
-		if ( tile->moisture <= map::Tile::M_ARID ) {
+const tiles_t Moisture::Draw( map::tile::Tile* tile, const draw_mode_t mode ) {
+	if ( mode == DM_DEC ) {
+		if ( tile->moisture <= map::tile::MOISTURE_ARID ) {
 			return {}; // can't decrease further
 		}
 		tile->moisture--;
 	}
-	else if ( mode == MapEditor::DM_INC ) {
-		if ( tile->moisture >= map::Tile::M_RAINY ) {
+	else if ( mode == DM_INC ) {
+		if ( tile->moisture >= map::tile::MOISTURE_RAINY ) {
 			return {}; // can't increase further
 		}
 		tile->moisture++;

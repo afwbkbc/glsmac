@@ -3,20 +3,19 @@
 #include "gse/type/Object.h"
 #include "gse/type/Int.h"
 #include "gse/type/Float.h"
+#include "gse/type/Bool.h"
+#include "gse/type/Undefined.h"
 #include "gse/callable/Native.h"
-
 #include "game/Game.h"
 #include "game/State.h"
+#include "game/slot/Slot.h"
+#include "game/slot/Slots.h"
+#include "game/map/Map.h"
+#include "MoraleSet.h"
+#include "StaticDef.h"
 
 namespace game {
 namespace unit {
-
-// must be hardcoded because unit badge sprites are
-const Unit::morale_t Unit::MORALE_MIN = 1;
-const Unit::morale_t Unit::MORALE_MAX = 7;
-
-const Unit::health_t Unit::HEALTH_MIN = 0.0f;
-const Unit::health_t Unit::HEALTH_MAX = 1.0f;
 
 static size_t next_id = 1;
 const size_t Unit::GetNextId() {
@@ -26,71 +25,40 @@ const void Unit::SetNextId( const size_t id ) {
 	next_id = id;
 }
 
-Unit::Unit( const size_t id, const Def* def, Slot* owner, map::Tile* tile, const movement_t movement, const morale_t morale, const health_t health )
-	: m_id( id )
+Unit::Unit(
+	Game* game,
+	const size_t id,
+	Def* def,
+	slot::Slot* owner,
+	map::tile::Tile* tile,
+	const movement_t movement,
+	const morale_t morale,
+	const health_t health,
+	const bool moved_this_turn
+)
+	: m_game( game )
+	, m_id( id )
 	, m_def( def )
 	, m_owner( owner )
 	, m_tile( tile )
 	, m_movement( movement )
 	, m_morale( morale )
-	, m_health( health ) {
+	, m_health( health )
+	, m_moved_this_turn( moved_this_turn ) {
 	if ( next_id <= id ) {
 		next_id = id + 1;
 	}
 }
 
-// TODO: set these from gse
-typedef const std::unordered_map< Unit::morale_t, std::string > morale_strings_t;
-const morale_strings_t s_morale_strings_native = {
-	{ 1, "Hatchling" },
-	{ 2, "Larval Mass" },
-	{ 3, "Pre-Boil" },
-	{ 4, "Boil" },
-	{ 5, "Mature Boil" },
-	{ 6, "Great Boil" },
-	{ 7, "Demon Boil" },
-};
-const morale_strings_t s_morale_strings_nonnative = {
-	{ 1, "Very green" },
-	{ 2, "Green" },
-	{ 3, "Disciplined" },
-	{ 4, "Hardened" },
-	{ 5, "Veteran" },
-	{ 6, "Commando" },
-	{ 7, "Elite" },
-};
-
-const Unit::movement_t Unit::MINIMUM_MOVEMENT_TO_KEEP = 0.1f;
+const movement_t Unit::MINIMUM_MOVEMENT_TO_KEEP = 0.1f;
+const movement_t Unit::MINIMUM_HEALTH_TO_KEEP = 0.1f;
 
 const bool Unit::HasMovesLeft() const {
 	return m_movement >= unit::Unit::MINIMUM_MOVEMENT_TO_KEEP;
 }
 
-void Unit::UpdateMoves( Game* game, const map::Tile* dst_tile ) {
-	// TODO: move to scripts
-	ASSERT_NOLOG( HasMovesLeft(), "no movement points" );
-
-	auto movement_cost = dst_tile->GetMovementCost() + dst_tile->GetMovementAftercost();
-
-	// reduce remaining movement points (even if failed)
-	if ( m_movement >= movement_cost ) {
-		m_movement -= movement_cost;
-		if ( !HasMovesLeft() ) {
-			// don't keep tiny leftovers
-			m_movement = 0.0f;
-		}
-	}
-	else {
-		m_movement = 0.0f;
-	}
-
-}
-
-const std::string& Unit::GetMoraleString( const morale_t morale ) {
-	const bool is_native = true; // TODO: non-native units
-	const auto& morale_strings = is_native ? s_morale_strings_native : s_morale_strings_nonnative;
-	ASSERT_NOLOG( morale_strings.find( morale ) != morale_strings.end(), "unknown morale type: " + std::to_string( morale ) );
-	return morale_strings.at( morale );
+const std::string& Unit::GetMoraleString() const {
+	return m_def->m_moraleset->m_morale_values.at( m_morale ).m_name;
 }
 
 const types::Buffer Unit::Serialize( const Unit* unit ) {
@@ -103,61 +71,66 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 	buf.WriteFloat( unit->m_movement );
 	buf.WriteInt( unit->m_morale );
 	buf.WriteFloat( unit->m_health );
+	buf.WriteBool( unit->m_moved_this_turn );
 	return buf;
 }
 
-Unit* Unit::Unserialize( types::Buffer& buf, const Game* game ) {
+Unit* Unit::Unserialize( types::Buffer& buf, Game* game ) {
 	const auto id = buf.ReadInt();
 	auto defbuf = types::Buffer( buf.ReadString() );
-	const auto* def = Def::Unserialize( defbuf );
-	auto* slot = game ? &game->GetState()->m_slots.GetSlot( buf.ReadInt() ) : nullptr;
+	auto* def = Def::Unserialize( defbuf );
+	auto* slot = game ? &game->GetState()->m_slots->GetSlot( buf.ReadInt() ) : nullptr;
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
 	auto* tile = game ? game->GetMap()->GetTile( pos_x, pos_y ) : nullptr;
 	const auto movement = (movement_t)buf.ReadFloat();
 	const auto morale = (morale_t)buf.ReadInt();
 	const auto health = (health_t)buf.ReadFloat();
-	return new Unit( id, def, slot, tile, movement, morale, health );
+	const auto moved_this_turn = buf.ReadBool();
+	return new Unit( game, id, def, slot, tile, movement, morale, health, moved_this_turn );
 }
 
-WRAPIMPL_BEGIN( Unit, CLASS_UNIT )
-	WRAPIMPL_PROPS {
-		{
-			"id",
-			VALUE( gse::type::Int, m_id )
-		},
-		{
-			"movement",
-			VALUE( gse::type::Float, m_movement )
-		},
-		{
-			"morale",
-			VALUE( gse::type::Int, m_morale )
-		},
-		{
-			"health",
-			VALUE( gse::type::Float, m_health )
-		},
-		{
-			"get_def",
-			NATIVE_CALL( this ) {
-				return m_def->Wrap();
-			})
-		},
-		{
-			"get_owner",
-			NATIVE_CALL( this ) {
-				return m_owner->Wrap();
-			})
-		},
-		{
-			"get_tile",
-			NATIVE_CALL( this ) {
-				return m_tile->Wrap();
-			})
-		},
-	};
-WRAPIMPL_END_PTR( Unit )
+WRAPIMPL_DYNAMIC_GETTERS( Unit, CLASS_UNIT )
+	WRAPIMPL_GET( "id", Int, m_id )
+	WRAPIMPL_GET( "movement", Float, m_movement )
+	WRAPIMPL_GET( "morale", Int, m_morale )
+	WRAPIMPL_GET( "health", Float, m_health )
+	WRAPIMPL_GET( "moved_this_turn", Bool, m_moved_this_turn )
+	WRAPIMPL_GET( "is_immovable", Bool, m_def->GetMovementType() == MT_IMMOVABLE )
+	WRAPIMPL_GET( "is_land", Bool, m_def->GetMovementType() == MT_LAND )
+	WRAPIMPL_GET( "is_water", Bool, m_def->GetMovementType() == MT_WATER )
+	WRAPIMPL_GET( "is_air", Bool, m_def->GetMovementType() == MT_AIR )
+	WRAPIMPL_LINK( "get_def", m_def )
+	WRAPIMPL_LINK( "get_owner", m_owner )
+	WRAPIMPL_LINK( "get_tile", m_tile )
+	{
+		"set_tile",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 1 );
+			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
+			if ( tile != m_tile ) {
+				m_tile->units.erase( m_id );
+				tile->units.insert(
+					{
+						m_id,
+						this
+					}
+				);
+				m_tile = tile;
+				m_game->RefreshUnit( this );
+			}
+			return VALUE( gse::type::Undefined );
+		} )
+	},
+WRAPIMPL_DYNAMIC_SETTERS( Unit )
+	WRAPIMPL_SET( "movement", Float, m_movement )
+	WRAPIMPL_SET( "health", Float, m_health )
+	WRAPIMPL_SET( "moved_this_turn", Bool, m_moved_this_turn )
+WRAPIMPL_DYNAMIC_ON_SET( Unit )
+	// this is potentially risky because if it gets zero health it will be despawned without script's awareness, how to handle it?
+	// maybe despawn unit from within script? but then it would be script's responsibility to ensure there are no zero-health units walking around
+	m_game->RefreshUnit( this );
+WRAPIMPL_DYNAMIC_END()
 
 UNWRAPIMPL_PTR( Unit )
 

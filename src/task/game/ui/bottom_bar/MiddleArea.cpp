@@ -1,6 +1,10 @@
 #include "MiddleArea.h"
 
-#include "../../Game.h"
+#include "task/game/Game.h"
+#include "ui/object/Button.h"
+#include "Messages.h"
+#include "InfoPanels.h"
+#include "Toolbar.h"
 
 namespace task {
 namespace game {
@@ -17,12 +21,12 @@ void MiddleArea::Create() {
 	// buttons
 
 	const std::string buttonclass = "BBMiddleAreaButton";
-	NEW( m_buttons.messages, ::ui::Button, buttonclass );
+	NEW( m_buttons.messages, ::ui::object::Button, buttonclass );
 	m_buttons.messages->SetLabel( "M" );
 	m_buttons.messages->SetTop( 3 );
 	m_buttons.messages->SetHeight( 19 );
 	m_buttons.messages->On(
-		UIEvent::EV_BUTTON_CLICK, EH( this ) {
+		::ui::event::EV_BUTTON_CLICK, EH( this ) {
 			SwitchPage( m_buttons.messages, m_pages.messages );
 			return true;
 		}
@@ -30,25 +34,25 @@ void MiddleArea::Create() {
 	AddChild( m_buttons.messages );
 
 	if ( m_game->IsMapEditingAllowed() ) {
-		NEW( m_buttons.toolbar, ::ui::Button, buttonclass );
+		NEW( m_buttons.toolbar, ::ui::object::Button, buttonclass );
 		m_buttons.toolbar->SetLabel( "T" );
 		m_buttons.toolbar->SetTop( 27 );
 		m_buttons.toolbar->SetHeight( 37 );
 		m_buttons.toolbar->On(
-			UIEvent::EV_BUTTON_CLICK, EH( this ) {
+			::ui::event::EV_BUTTON_CLICK, EH( this ) {
 				SwitchPage( m_buttons.toolbar, m_pages.toolbar );
 				return true;
 			}
 		);
 		AddChild( m_buttons.toolbar );
 	}
-	
-	NEW( m_buttons.info_panels, ::ui::Button, buttonclass );
+
+	NEW( m_buttons.info_panels, ::ui::object::Button, buttonclass );
 	m_buttons.info_panels->SetLabel( "I" );
 	m_buttons.info_panels->SetTop( 69 );
 	m_buttons.info_panels->SetHeight( 19 );
 	m_buttons.info_panels->On(
-		UIEvent::EV_BUTTON_CLICK, EH( this ) {
+		::ui::event::EV_BUTTON_CLICK, EH( this ) {
 			SwitchPage( m_buttons.info_panels, m_pages.info_panels );
 			return true;
 		}
@@ -108,7 +112,7 @@ void MiddleArea::UpdateMapFileName() {
 	}
 }
 
-void MiddleArea::SwitchPage( ::ui::Button* active_button, MiddleAreaPage* active_page ) {
+void MiddleArea::SwitchPage( ::ui::object::Button* active_button, MiddleAreaPage* active_page ) {
 	if ( m_active_button != active_button ) {
 		if ( m_active_button ) {
 			m_active_button->Deselect();

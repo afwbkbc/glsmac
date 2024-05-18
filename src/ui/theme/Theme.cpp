@@ -1,5 +1,8 @@
 #include "Theme.h"
 
+#include "Style.h"
+#include "StyleSheet.h"
+
 namespace ui {
 namespace theme {
 

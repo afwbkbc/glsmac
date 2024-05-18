@@ -1,5 +1,8 @@
 #include "SpriteRender.h"
 
+#include "game/map/tile/Tile.h"
+#include "game/map/tile/TileState.h"
+
 namespace game {
 namespace unit {
 
@@ -27,15 +30,21 @@ SpriteRender::SpriteRender(
 	//
 }
 
-const types::Vec3 SpriteRender::GetSpawnCoords( const float tile_x, const float tile_y, const map::TileState::tile_vertices_t& tile_coords ) const {
-	float cx = tile_x;
+const types::Vec3 SpriteRender::GetSpawnCoords( const map::tile::Tile* tile, const map::tile::TileState* ts ) const {
+	const auto& tile_coords = ts->layers[
+		tile->is_water_tile
+			? map::tile::LAYER_WATER
+			: map::tile::LAYER_LAND
+	].coords;
+
+	float cx = tile_coords.center.x;
 	if ( m_cshift_x < 0 ) {
 		cx -= ( cx - tile_coords.left.x ) * m_cshift_x;
 	}
 	if ( m_cshift_x > 0 ) {
 		cx += ( tile_coords.right.x - cx ) * m_cshift_x;
 	}
-	float cy = tile_y;
+	float cy = tile_coords.center.y;
 	if ( m_cshift_y < 0 ) {
 		cy += ( cy - tile_coords.top.y ) * m_cshift_y;
 	}

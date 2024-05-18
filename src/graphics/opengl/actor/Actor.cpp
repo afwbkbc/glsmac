@@ -1,6 +1,6 @@
 #include "Actor.h"
 
-using namespace types;
+#include "scene/actor/Actor.h"
 
 namespace graphics {
 namespace opengl {
@@ -22,5 +22,5 @@ Actor::~Actor() {
 
 }
 
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}

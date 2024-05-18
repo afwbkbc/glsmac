@@ -1,11 +1,8 @@
 #pragma once
 
-#include "gse/type/Object.h"
+#include "gse/type/Types.h"
 
-#include "gse/callable/Native.h"
-#include "gse/Exception.h"
 #include "gse/Value.h"
-#include "gse/type/Undefined.h"
 
 namespace game {
 class Game;
@@ -20,7 +17,7 @@ public:
 	Binding( const std::string& name, Bindings* bindings );
 	virtual ~Binding() = default;
 
-	void Add( gse::type::Object::properties_t& methods );
+	void Add( gse::type::object_properties_t& methods );
 
 protected:
 
@@ -55,13 +52,10 @@ protected:
 #define CALLBACK( _type ) NATIVE_CALL( this ) { \
     N_EXPECT_ARGS( 1 ); \
     N_GET( cb, 0 ); \
-    N_CHECKTYPE( cb.Get(), 0, Callable ); \
+    N_CHECKARG( cb.Get(), 0, Callable ); \
     m_bindings->SetCallback( _type, cb, ctx, call_si ); \
     return VALUE( gse::type::Undefined ); \
 })
-
-#include "Bindings.h"
-#include "../Game.h"
 
 namespace game {
 namespace bindings {
@@ -78,7 +72,11 @@ BINDING_DEF( players )
 
 BINDING_DEF( factions )
 
+BINDING_DEF( tiles )
+
 BINDING_DEF( units )
+
+BINDING_DEF( animations )
 
 BINDING_DEF( map )
 

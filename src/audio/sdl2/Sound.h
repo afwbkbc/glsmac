@@ -6,7 +6,9 @@
 
 #include "base/Base.h"
 
-#include "scene/actor/Sound.h"
+namespace scene::actor {
+class Sound;
+}
 
 namespace audio {
 namespace sdl2 {

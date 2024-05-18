@@ -1,6 +1,8 @@
 #include "Actor.h"
 
-#include "../Scene.h"
+#include "scene/Scene.h"
+#include "scene/Camera.h"
+#include "base/ObjectLink.h"
 
 namespace scene {
 namespace actor {
@@ -38,6 +40,10 @@ void Actor::UpdateMatrix() {
 	Entity::UpdateMatrix();
 
 	m_need_world_matrix_update = true;
+}
+
+const types::Vec3 Actor::NormalizePosition( const types::Vec3& position ) const {
+	return position;
 }
 
 void Actor::SetScene( Scene* scene ) {
@@ -93,5 +99,5 @@ void Actor::Unserialize( types::Buffer buf ) {
 	UpdateMatrix();
 }
 
-} /* namespace actor */
-} /* namespace scene */
+}
+}

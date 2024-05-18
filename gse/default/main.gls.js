@@ -1,15 +1,17 @@
-#game.on.configure(() => {
+const units = #include('units');
 
-    const factions = #include('factions');
-    let i = 0;
-    let sz = #size(factions);
-    while (i < sz) {
-        #game.factions.define(factions[i][0], factions[i][1]);
-        i++;
-    }
+#game.on.configure((e) => {
 
-    const rules = #include('rules');
-    // TODO
+	const factions = #include('factions');
+	let i = 0;
+	let sz = #size(factions);
+	while (i < sz) {
+		#game.factions.define(factions[i][0], factions[i][1]);
+		i++;
+	}
+
+	const rules = #include('rules');
+	// TODO
 
 });
 
@@ -17,118 +19,92 @@
 let players = [];
 let players_sz = 0;
 let random_player = () => {
-    return players[(#game.random.get_int(0, players_sz - 1))];
+	return players[(#game.random.get_int(0, players_sz - 1))];
 };
 
 let random_morale = () => {
-    return #game.random.get_int(1, 7); // TODO: get some constants from api
+	return #game.random.get_int(0, 6); // TODO: get some constants from api
 };
 
 let random_health = () => {
-    return #game.random.get_float(#to_float(0), #to_float(1));
+	return #game.random.get_float(#to_float(0.1), #to_float(1));
 };
 
-#game.on.start(() => {
+units.init();
 
-    // init players
-    players = #game.players.get_all();
-    players_sz = #size(players);
+#game.on.start((e) => {
 
-    const units = #include('units');
-    let i = 0;
-    let sz = #size(units);
-    while (i < sz) {
-        #game.units.define(units[i][0], units[i][1]);
-        i++;
-    }
+	// init units
+	units.define();
 
-    let units_spawned = 0;
+	// init players
+	players = #game.players.get_all();
+	players_sz = #size(players);
 
-    let y = 0;
-    let w = #game.map.get_width();
-    let h = #game.map.get_height();
-    while (y < h) {
-        let x = 0;
-        while (x < w) {
-            if (x % 2 == y % 2) {
-                if (#game.random.get_int(0, 1) == 1) {
-                    let owner = random_player();
-                    let tile = #game.map.get_tile(x, y);
-                    let units_count = #game.random.get_int(1, 4);
-                    if (#game.random.get_int(0, 1) == 0) {
-                        units_count += #game.random.get_int(0, 4);
-                        if (#game.random.get_int(0, 1) == 0) {
-                            units_count += #game.random.get_int(0, 4);
-                        }
-                    }
-                    let i = 0;
-                    while (i++ < units_count) {
-                        if (tile.is_land) {
-                            if (#game.random.get_int(0, 2) != 1) {
-                                #game.units.spawn('MindWorms', owner, tile, random_morale(), random_health());
-                                units_spawned++;
-                            } else {
-                                if (tile.has_fungus && #game.random.get_int(0, 1) == 0) {
-                                    // morale depends on count of fungus tiles around
-                                    let morale = 1;
-                                    let neighbours = tile.get_surrounding_tiles();
-                                    let sz = #size(neighbours);
-                                    let i = 0;
-                                    while (morale < 7 && i < sz) {
-                                        if (neighbours[i].has_fungus) {
-                                            morale++;
-                                        }
-                                        i++;
-                                    }
-                                    #game.units.spawn('FungalTower', owner, tile, morale, random_health());
-                                    units_spawned++;
-                                } else {
-                                    #game.units.spawn('SporeLauncher', owner, tile, random_morale(), random_health());
-                                    units_spawned++;
-                                }
-                            }
-                        } else {
-                            if (#game.random.get_int(0, 1) == 1) {
-                                #game.units.spawn('SeaLurk', owner, tile, random_morale(), random_health());
-                                units_spawned++;
-                            }
-                        }
-                    }
-                }
-            }
-            x++;
-        }
-        y++;
-    }
-    #game.message('Total units spawned: ' + #to_string(units_spawned));
+	let units_spawned = 0;
+
+	let y = 0;
+	let w = #game.map.get_width();
+	let h = #game.map.get_height();
+
+	while (y < h) {
+		let x = 0;
+		while (x < w) {
+			if (x % 2 == y % 2) {
+				if (#game.random.get_int(0, 6) == 0) {
+					let owner = random_player();
+					let tile = #game.map.get_tile(x, y);
+					let units_count = #game.random.get_int(1, 2);
+					let i = 0;
+					while (i++ < units_count) {
+						if (tile.is_land) {
+							if (#game.random.get_int(0, 4) != 0) {
+								#game.units.spawn('MindWorms', owner, tile, random_morale(), random_health());
+								units_spawned++;
+							} else {
+								if (tile.has_fungus && #game.random.get_int(0, 3) == 0) {
+									// morale depends on count of fungus tiles around
+									let morale = 1;
+									let neighbours = tile.get_surrounding_tiles();
+									let sz = #size(neighbours);
+									let i = 0;
+									while (morale < 6 && i < sz) {
+										if (neighbours[i].has_fungus) {
+											morale++;
+										}
+										i++;
+									}
+									#game.units.spawn('FungalTower', owner, tile, morale, random_health());
+									units_spawned++;
+								} else {
+									#game.units.spawn('SporeLauncher', owner, tile, random_morale(), random_health());
+									units_spawned++;
+								}
+							}
+						} else {
+							if (#game.random.get_int(0, 3) == 0) {
+								#game.units.spawn('SeaLurk', owner, tile, random_morale(), random_health());
+								units_spawned++;
+							}
+						}
+					}
+				}
+			}
+			x++;
+		}
+		y++;
+	}
+	#game.message('Total units spawned: ' + #to_string(units_spawned));
 });
 
-#game.on.turn(() => {
-    #print('NEW TURN');
+#game.on.turn((e) => {
+	//
 });
 
-#game.on.spawn_unit((unit) => {
-    let def = unit.get_def();
-    if (def.name != 'MindWorms') {
-        let tile = unit.get_tile();
-        let neighbours = [tile.get_W(), tile.get_NW(), tile.get_N(), tile.get_NE(), tile.get_E(), tile.get_SE(), tile.get_S(), tile.get_SW()];
-        let nearby_units_count = 0;
-        let i = 0;
-        let sz = #size(neighbours);
-        while (i < sz) {
-            if (!#is_empty(neighbours[i].get_units())) {
-                nearby_units_count++;
-            }
-            i++;
-        }
-        if (nearby_units_count > 2) {
-            #game.units.despawn(unit);
-        }
-    }
+#game.on.unit_spawn((e) => {
+	//
 });
 
-#game.on.despawn_unit((unit) => {
-    if (unit.get_def() == 'SporeLauncher') {
-        #game.units.spawn('MindWorms', random_player(), unit.get_tile(), random_morale(), random_health());
-    }
+#game.on.unit_despawn((e) => {
+	//
 });

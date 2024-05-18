@@ -5,8 +5,6 @@
 
 #include "base/Base.h"
 
-//#include "base/ObjectLink.h"
-
 namespace types {
 
 CLASS( Sound, base::Base )

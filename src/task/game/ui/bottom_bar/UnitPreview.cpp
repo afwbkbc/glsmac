@@ -2,6 +2,11 @@
 
 #include "engine/Engine.h"
 
+#include "task/game/Unit.h"
+#include "ui/object/Mesh.h"
+#include "ui/object/Label.h"
+#include "types/mesh/Mesh.h"
+
 namespace task {
 namespace game {
 namespace ui {
@@ -20,17 +25,19 @@ void UnitPreview::Destroy() {
 	BBSection::Destroy();
 }
 
-void UnitPreview::PreviewUnit( const unit_data_t* unit_data ) {
+void UnitPreview::PreviewUnit( const Unit* unit ) {
 	HideUnitPreview();
 
-	m_unit_data = unit_data;
- 
+	m_unit = unit;
+
+	const auto& render = m_unit->GetRenderData();
+
 	const types::mesh::Mesh* mesh;
 #define X( _key, _class ) \
-    NEW( mesh, types::mesh::Mesh, *m_unit_data->_key.mesh ); /* make a copy */ \
-    NEW( m_sprites._key, object::Mesh, "BBUnitPreview" _class ); \
+    NEW( mesh, types::mesh::Mesh, *render._key.mesh ); /* make a copy */ \
+    NEW( m_sprites._key, ::ui::object::Mesh, "BBUnitPreview" _class ); \
     m_sprites._key->SetMesh( mesh ); \
-    m_sprites._key->SetTexture( m_unit_data->_key.texture ); \
+    m_sprites._key->SetTexture( render._key.texture ); \
     AddChild( m_sprites._key );
 
 	// order is important
@@ -52,10 +59,10 @@ void UnitPreview::PreviewUnit( const unit_data_t* unit_data ) {
         top += label->GetHeight(); \
     }
 
-	X( m_unit_data->unit_name, Header );
-	X( "( " + m_unit_data->short_power_string + " )", Center );
-	X( m_unit_data->morale_string, Left );
-	X( m_unit_data->moves_string, Left );
+	X( m_unit->GetNameString(), Header );
+	X( "( " + m_unit->GetStatsString() + " )", Center );
+	X( m_unit->GetMoraleString(), Left );
+	X( m_unit->GetMovesString(), Left );
 
 	// HACK: fix ( and ) vertical misalignment
 	auto& bugged_label = m_labels.at( 1 );
@@ -66,7 +73,7 @@ void UnitPreview::PreviewUnit( const unit_data_t* unit_data ) {
 }
 
 void UnitPreview::HideUnitPreview() {
-	if ( m_unit_data ) {
+	if ( m_unit ) {
 		RemoveChild( m_sprites.unit );
 		RemoveChild( m_sprites.healthbar );
 		RemoveChild( m_sprites.badge );
@@ -76,15 +83,15 @@ void UnitPreview::HideUnitPreview() {
 		}
 		m_labels.clear();
 
-		m_unit_data = nullptr;
+		m_unit = nullptr;
 	}
 }
 
-void UnitPreview::HideUnitPreview( const unit_data_t* unit_data ) {
+/*void UnitPreview::HideUnitPreview( const unit_data_t* unit_data ) {
 	if ( m_unit_data == unit_data ) {
 		HideUnitPreview();
 	}
-}
+}*/
 
 }
 }

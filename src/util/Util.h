@@ -7,4 +7,4 @@ namespace util {
 CLASS( Util, base::Base )
 };
 
-} /* namespace util */
+}

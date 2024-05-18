@@ -2,13 +2,17 @@
 
 #include <algorithm>
 
-using namespace network;
+#include "game/State.h"
+#include "game/slot/Slots.h"
+#include "game/event/Event.h"
+#include "types/Packet.h"
+#include "network/Network.h"
 
 namespace game {
 namespace connection {
 
-Client::Client( LocalSettings* const settings )
-	: Connection( CM_CLIENT, settings ) {
+Client::Client( settings::LocalSettings* const settings )
+	: Connection( network::CM_CLIENT, settings ) {
 	//
 }
 
@@ -21,20 +25,20 @@ void Client::ProcessEvent( const network::Event& event ) {
 		case network::Event::ET_PACKET: {
 			try {
 				if ( !event.data.packet_data.empty() ) {
-					Packet packet( Packet::PT_NONE );
-					packet.Unserialize( Buffer( event.data.packet_data ) );
+					types::Packet packet( types::Packet::PT_NONE );
+					packet.Unserialize( types::Buffer( event.data.packet_data ) );
 					switch ( packet.type ) {
-						case Packet::PT_REQUEST_AUTH: {
+						case types::Packet::PT_REQUEST_AUTH: {
 							Log( "Authenticating" );
-							Packet p( Packet::PT_AUTH );
+							types::Packet p( types::Packet::PT_AUTH );
 							p.data.vec = {
 								m_settings->account.GetGSID(),
 								m_settings->player_name,
 							};
-							m_network->MT_SendPacket( p );
+							m_network->MT_SendPacket( &p );
 							break;
 						}
-						case Packet::PT_PLAYERS: {
+						case types::Packet::PT_PLAYERS: {
 							Log( "Got players list from server" );
 							if ( packet.data.num ) {
 								// initial players list
@@ -42,12 +46,12 @@ void Client::ProcessEvent( const network::Event& event ) {
 							}
 							else {
 								// players list update (i.e. after resolving random players )
-								m_state->m_slots.Clear();
+								m_state->m_slots->Clear();
 							}
-							m_state->m_slots.Unserialize( packet.data.str );
-							for ( auto i = 0 ; i < m_state->m_slots.GetCount() ; i++ ) {
-								const auto& slot = m_state->m_slots.GetSlot( i );
-								if ( slot.GetState() == Slot::SS_PLAYER ) {
+							m_state->m_slots->Unserialize( packet.data.str );
+							for ( auto i = 0 ; i < m_state->m_slots->GetCount() ; i++ ) {
+								const auto& slot = m_state->m_slots->GetSlot( i );
+								if ( slot.GetState() == slot::Slot::SS_PLAYER ) {
 									const auto& player = slot.GetPlayer();
 									m_state->AddPlayer( player );
 									if ( i == m_slot ) {
@@ -60,13 +64,13 @@ void Client::ProcessEvent( const network::Event& event ) {
 							}
 							break;
 						}
-						case Packet::PT_GLOBAL_SETTINGS: {
+						case types::Packet::PT_GLOBAL_SETTINGS: {
 							Log( "Got global settings update from server" );
-							const auto& host_slot = m_state->m_slots.GetSlot( 0 );
+							const auto& host_slot = m_state->m_slots->GetSlot( 0 );
 							bool ok = true;
 							switch ( m_game_state ) {
 								case Connection::GS_LOBBY: {
-									if ( host_slot.HasPlayerFlag( Slot::PF_READY ) ) {
+									if ( host_slot.HasPlayerFlag( slot::PF_READY ) ) {
 										Error( "host updated settings while ready" );
 										ok = false;
 									}
@@ -88,25 +92,25 @@ void Client::ProcessEvent( const network::Event& event ) {
 							if ( !ok ) {
 								break; // something went wrong
 							}
-							m_state->m_settings.global.Unserialize( Buffer( packet.data.str ) );
+							m_state->m_settings.global.Unserialize( types::Buffer( packet.data.str ) );
 							if ( m_on_global_settings_update ) {
 								m_on_global_settings_update();
 							}
 							m_are_global_settings_received = true;
 							break;
 						}
-						case Packet::PT_SLOT_UPDATE:
-						case Packet::PT_FLAGS_UPDATE: {
-							const bool only_flags = packet.type == Packet::PT_FLAGS_UPDATE;
+						case types::Packet::PT_SLOT_UPDATE:
+						case types::Packet::PT_FLAGS_UPDATE: {
+							const bool only_flags = packet.type == types::Packet::PT_FLAGS_UPDATE;
 							const size_t slot_num = only_flags
 								? packet.udata.flags.slot_num
 								: packet.data.num;
-							if ( slot_num >= m_state->m_slots.GetSlots().size() ) {
+							if ( slot_num >= m_state->m_slots->GetSlots().size() ) {
 								Error( "slot index mismatch" );
 								return;
 							}
-							auto& slot = m_state->m_slots.GetSlot( slot_num );
-							const auto old_flags = slot.GetState() == Slot::SS_PLAYER
+							auto& slot = m_state->m_slots->GetSlot( slot_num );
+							const auto old_flags = slot.GetState() == slot::Slot::SS_PLAYER
 								? slot.GetPlayerFlags()
 								: 0;
 							if ( only_flags ) {
@@ -115,14 +119,14 @@ void Client::ProcessEvent( const network::Event& event ) {
 							}
 							else {
 								Log( "Got slot update from server (slot: " + std::to_string( slot_num ) + ")" );
-								const bool wasReady = slot.GetState() == Slot::SS_PLAYER
-									? slot.HasPlayerFlag( Slot::PF_READY ) // check readyness of player
-									: m_state->m_slots.GetSlot( 0 ).HasPlayerFlag( Slot::PF_READY ) // check readyness of host
+								const bool wasReady = slot.GetState() == slot::Slot::SS_PLAYER
+									? slot.HasPlayerFlag( slot::PF_READY ) // check readyness of player
+									: m_state->m_slots->GetSlot( 0 ).HasPlayerFlag( slot::PF_READY ) // check readyness of host
 								;
 								slot.Unserialize( packet.data.str );
 								if ( m_game_state == GS_LOBBY ) {
-									if ( slot.GetState() == Slot::SS_PLAYER ) {
-										if ( wasReady && slot.HasPlayerFlag( Slot::PF_READY ) ) {
+									if ( slot.GetState() == slot::Slot::SS_PLAYER ) {
+										if ( wasReady && slot.HasPlayerFlag( slot::PF_READY ) ) {
 											Error( "player updated slot while ready" );
 											break;
 										}
@@ -145,18 +149,18 @@ void Client::ProcessEvent( const network::Event& event ) {
 							}
 							break;
 						}
-						case Packet::PT_KICK: {
+						case types::Packet::PT_KICK: {
 							Disconnect( packet.data.str );
 							break;
 						}
-						case Packet::PT_MESSAGE: {
+						case types::Packet::PT_MESSAGE: {
 							Log( "Got chat message: " + packet.data.str );
 							if ( m_on_message ) {
 								m_on_message( packet.data.str );
 							}
 							break;
 						}
-						case Packet::PT_GAME_STATE: {
+						case types::Packet::PT_GAME_STATE: {
 							Log( "Got game state: " + std::to_string( packet.data.num ) );
 							if ( packet.udata.game_state.state != m_game_state ) {
 								m_game_state = (game_state_t)packet.udata.game_state.state;
@@ -166,7 +170,7 @@ void Client::ProcessEvent( const network::Event& event ) {
 							}
 							break;
 						}
-						case Packet::PT_DOWNLOAD_RESPONSE: {
+						case types::Packet::PT_DOWNLOAD_RESPONSE: {
 							Log( "Got download response" );
 							if ( !m_download_state.is_downloading ) {
 								Error( "download response received while not downloading" );
@@ -183,7 +187,7 @@ void Client::ProcessEvent( const network::Event& event ) {
 							}
 							break;
 						}
-						case Packet::PT_DOWNLOAD_NEXT_CHUNK_RESPONSE: {
+						case types::Packet::PT_DOWNLOAD_NEXT_CHUNK_RESPONSE: {
 							Log( "Downloaded next chunk ( offset=" + std::to_string( packet.udata.download.offset ) + " size=" + std::to_string( packet.udata.download.size ) + " )" );
 							const size_t end = packet.udata.download.offset + packet.udata.download.size;
 							if ( !m_download_state.is_downloading ) {
@@ -222,14 +226,16 @@ void Client::ProcessEvent( const network::Event& event ) {
 							}
 							break;
 						}
-						case Packet::PT_GAME_EVENTS: {
+						case types::Packet::PT_GAME_EVENTS: {
 							Log( "Got game events packet" );
-							if ( m_on_game_event ) {
-								auto buf = Buffer( packet.data.str );
+							if ( m_on_game_event_validate && m_on_game_event_apply ) {
+								auto buf = types::Buffer( packet.data.str );
 								std::vector< game::event::Event* > game_events = {};
 								game::event::Event::UnserializeMultiple( buf, game_events );
 								for ( const auto& game_event : game_events ) {
-									m_on_game_event( game_event );
+									Log( "Got game event: " + game_event->ToString() );
+									m_on_game_event_validate( game_event );
+									m_on_game_event_apply( game_event );
 								}
 							}
 							else {
@@ -264,33 +270,33 @@ void Client::ProcessEvent( const network::Event& event ) {
 
 void Client::SendGameEvents( const game_events_t& game_events ) {
 	Log( "Sending " + std::to_string( game_events.size() ) + " game events" );
-	Packet p( Packet::PT_GAME_EVENTS );
+	types::Packet p( types::Packet::PT_GAME_EVENTS );
 	p.data.str = game::event::Event::SerializeMultiple( game_events ).ToString();
-	m_network->MT_SendPacket( p );
+	m_network->MT_SendPacket( &p );
 }
 
-void Client::UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flags ) {
+void Client::UpdateSlot( const size_t slot_num, slot::Slot* slot, const bool only_flags ) {
 	if ( only_flags ) {
 		Log( "Sending flags update" );
-		Packet p( Packet::PT_UPDATE_FLAGS );
+		types::Packet p( types::Packet::PT_UPDATE_FLAGS );
 		// not sending slot num because server knows it anyway
 		p.udata.flags.flags = slot->GetPlayerFlags();
-		m_network->MT_SendPacket( p );
+		m_network->MT_SendPacket( &p );
 	}
 	else {
 		Log( "Sending slot update" );
-		Packet p( Packet::PT_UPDATE_SLOT );
+		types::Packet p( types::Packet::PT_UPDATE_SLOT );
 		// not sending slot num because server knows it anyway
 		p.data.str = slot->Serialize().ToString();
-		m_network->MT_SendPacket( p );
+		m_network->MT_SendPacket( &p );
 	}
 }
 
 void Client::SendMessage( const std::string& message ) {
 	Log( "Sending chat message: " + message );
-	Packet p( Packet::PT_MESSAGE );
+	types::Packet p( types::Packet::PT_MESSAGE );
 	p.data.str = message;
-	m_network->MT_SendPacket( p );
+	m_network->MT_SendPacket( &p );
 }
 
 const Connection::game_state_t Client::GetGameState() const {
@@ -302,8 +308,8 @@ void Client::RequestDownload() {
 	ASSERT( !m_download_state.is_downloading, "download already started" );
 	ASSERT( m_on_download_complete, "download requested but m_on_download_complete is not set" );
 	m_download_state.is_downloading = true;
-	Packet p( Packet::PT_DOWNLOAD_REQUEST );
-	m_network->MT_SendPacket( p );
+	types::Packet p( types::Packet::PT_DOWNLOAD_REQUEST );
+	m_network->MT_SendPacket( &p );
 }
 
 void Client::ResetHandlers() {
@@ -325,10 +331,10 @@ void Client::DownloadNextChunk() {
 	ASSERT( m_download_state.downloaded_size < m_download_state.total_size, "download already finished" );
 	const size_t size = std::min( DOWNLOAD_CHUNK_SIZE, m_download_state.total_size - m_download_state.downloaded_size );
 	Log( "Requesting next chunk ( offset=" + std::to_string( m_download_state.downloaded_size ) + " size=" + std::to_string( size ) + " )" );
-	Packet p( Packet::PT_DOWNLOAD_NEXT_CHUNK_REQUEST );
+	types::Packet p( types::Packet::PT_DOWNLOAD_NEXT_CHUNK_REQUEST );
 	p.udata.download.offset = m_download_state.downloaded_size;
 	p.udata.download.size = size;
-	m_network->MT_SendPacket( p );
+	m_network->MT_SendPacket( &p );
 }
 
 }

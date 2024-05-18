@@ -11,9 +11,6 @@
 #define DELETE( _var ) delete _var
 #define ptr( _ptr, _offset, _size ) ( _ptr + (_offset) )
 
-#define ASSERT( _condition, _text )
-#define ASSERT_NOLOG( _condition, _text )
-
 #define TEST_OBJECT( _obj )
 #define UNTEST_OBJECT( _obj )
 #define TEST_BREAKPOINT( _obj )

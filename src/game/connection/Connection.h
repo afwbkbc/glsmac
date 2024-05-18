@@ -3,15 +3,32 @@
 #include <vector>
 
 #include "base/Module.h"
-#include "engine/Engine.h"
-#include "network/Network.h"
-#include "ui/module/Loader.h"
-#include "game/Slot.h"
-#include "game/Player.h"
-#include "game/event/Event.h"
+
+#include "game/slot/Types.h"
+#include "network/Types.h"
+
+namespace network {
+class Network;
+}
 
 namespace game {
+
 class State;
+
+namespace settings {
+class LocalSettings;
+}
+
+namespace slot {
+class Slot;
+}
+
+class Player;
+
+namespace event {
+class Event;
+}
+
 namespace connection {
 
 class Client;
@@ -27,7 +44,7 @@ CLASS( Connection, base::Module )
 		GS_RUNNING,
 	};
 
-	Connection( const network::connection_mode_t connection_mode, LocalSettings* const settings );
+	Connection( const network::connection_mode_t connection_mode, settings::LocalSettings* const settings );
 	virtual ~Connection();
 
 	std::function< void() > m_on_connect = nullptr;
@@ -38,12 +55,13 @@ CLASS( Connection, base::Module )
 	std::function< bool( const std::string& message ) > m_on_error = nullptr;
 
 	std::function< void() > m_on_global_settings_update = nullptr;
-	std::function< void( const size_t slot_num, Slot* slot, const Player* player ) > m_on_player_join = nullptr;
-	std::function< void( const size_t slot_num, Slot* slot, const Player* player ) > m_on_player_leave = nullptr;
-	std::function< void( const size_t slot_num, game::Slot* slot ) > m_on_slot_update = nullptr;
-	std::function< void( const size_t slot_num, game::Slot* slot, const Slot::player_flag_t old_flags, const Slot::player_flag_t new_flags ) > m_on_flags_update = nullptr;
+	std::function< void( const size_t slot_num, slot::Slot* slot, const Player* player ) > m_on_player_join = nullptr;
+	std::function< void( const size_t slot_num, slot::Slot* slot, const Player* player ) > m_on_player_leave = nullptr;
+	std::function< void( const size_t slot_num, slot::Slot* slot ) > m_on_slot_update = nullptr;
+	std::function< void( const size_t slot_num, slot::Slot* slot, const slot::player_flag_t old_flags, const slot::player_flag_t new_flags ) > m_on_flags_update = nullptr;
 	std::function< void( const std::string& message ) > m_on_message = nullptr;
-	std::function< void( game::event::Event* event ) > m_on_game_event = nullptr;
+	std::function< void( game::event::Event* event ) > m_on_game_event_validate = nullptr;
+	std::function< void( game::event::Event* event ) > m_on_game_event_apply = nullptr;
 
 	void SetState( State* state );
 
@@ -67,13 +85,13 @@ CLASS( Connection, base::Module )
 	const size_t GetSlotNum() const;
 	const Player* GetPlayer() const;
 
-	virtual void UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flags = false ) = 0;
+	virtual void UpdateSlot( const size_t slot_num, slot::Slot* slot, const bool only_flags = false ) = 0;
 	virtual void SendMessage( const std::string& message ) = 0;
 
 protected:
 	const int DOWNLOAD_CHUNK_SIZE = 16384;
 
-	network::Network* const m_network = g_engine->GetNetwork();
+	network::Network* const m_network;
 
 	virtual void ProcessEvent( const network::Event& event );
 
@@ -81,7 +99,7 @@ protected:
 	bool m_is_canceled = false; // canceled by user
 
 	std::string m_disconnect_reason = "";
-	LocalSettings* m_settings = nullptr;
+	settings::LocalSettings* m_settings = nullptr;
 	State* m_state = nullptr;
 
 protected:
@@ -96,9 +114,9 @@ protected:
 private:
 	const network::connection_mode_t m_connection_mode = network::CM_NONE;
 	struct {
-		mt_id_t connect = 0;
-		mt_id_t events = 0;
-		mt_id_t disconnect = 0;
+		base::mt_id_t connect = 0;
+		base::mt_id_t events = 0;
+		base::mt_id_t disconnect = 0;
 	} m_mt_ids = {};
 
 	// buffer events for optimization
@@ -112,7 +130,3 @@ private:
 
 }
 }
-
-#include "game/State.h"
-#include "Client.h"
-#include "Server.h"

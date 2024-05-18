@@ -11,8 +11,6 @@ namespace base {
 class Base;
 }
 
-using namespace base;
-
 namespace debug {
 
 class MemoryWatcher {

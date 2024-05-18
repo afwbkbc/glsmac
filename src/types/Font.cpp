@@ -1,6 +1,6 @@
 #include "Font.h"
 
-#include <cstdint>
+#include "base/ObjectLink.h"
 
 namespace types {
 
@@ -41,4 +41,4 @@ size_t Font::GetTextHeight( const char* text ) const {
 	return height;
 }
 
-} /* namespace types */
+}

@@ -7,7 +7,7 @@ namespace types {
 
 #define DATATYPE float
 
-void Vec3::Rotate( const DATATYPE angle, const Vec3 axe ) {
+void types::Vec3::Rotate( const DATATYPE angle, const types::Vec3 axe ) {
 	const float SinHalfAngle = sin( angle / 2.0f );
 	const float CosHalfAngle = cos( angle / 2.0f );
 
@@ -19,10 +19,10 @@ void Vec3::Rotate( const DATATYPE angle, const Vec3 axe ) {
 	Set( rq.x, rq.y, rq.z );
 };
 
-const std::string Vec3::ToString() const {
+const std::string types::Vec3::ToString() const {
 	return "[ " + std::to_string( x ) + " " + std::to_string( y ) + " " + std::to_string( z ) + " ]";
 }
 
 #undef DATATYPE
 
-} /* namespace types */
+}

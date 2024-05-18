@@ -1,22 +1,21 @@
 #pragma once
 
-#include <map>
+#include <vector>
 #include <string>
 
 #include "LobbySection.h"
-#include "ui/object/Label.h"
-#include "ui/object/ChoiceList.h"
 
-#include "game/Settings.h"
-#include "game/rules/Rules.h"
-#include "game/Slot.h"
+#include "ui/object/Types.h"
+
+namespace game::slot {
+class Slot;
+}
 
 namespace task {
 namespace mainmenu {
 namespace lobby {
 
 class Lobby;
-
 class PlayersSectionRow;
 
 CLASS( PlayersSection, LobbySection )
@@ -27,19 +26,19 @@ CLASS( PlayersSection, LobbySection )
 	void Align() override;
 	void Destroy() override;
 
-	void UpdateSlot( const size_t slot_num, ::game::Slot* slot );
-	void UpdateSlots( std::vector< ::game::Slot >& slots );
+	void UpdateSlot( const size_t slot_num, ::game::slot::Slot* slot );
+	void UpdateSlots( std::vector< ::game::slot::Slot >& slots );
 
-	const AssocChoiceList::choices_t& GetFactionChoices();
-	const NumChoiceList::choices_t& GetDifficultyLevelChoices();
+	const ui::object::assoc_choices_t& GetFactionChoices();
+	const ui::object::num_choices_t& GetDifficultyLevelChoices();
 
 private:
 	std::vector< PlayersSectionRow* > m_slots = {};
 
 	// some caches for player rows
 	struct {
-		AssocChoiceList::choices_t factions = {};
-		NumChoiceList::choices_t difficulty_levels = {};
+		ui::object::assoc_choices_t factions = {};
+		ui::object::num_choices_t difficulty_levels = {};
 	} m_choices;
 
 };
@@ -47,6 +46,3 @@ private:
 }
 }
 }
-
-#include "PlayersSectionRow.h"
-#include "Lobby.h"

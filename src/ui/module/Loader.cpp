@@ -1,5 +1,10 @@
 #include "Loader.h"
 
+#include "ui/UI.h"
+#include "ui/object/Section.h"
+#include "ui/object/Label.h"
+#include "ui/object/Button.h"
+
 #define MAX_DOTS 3
 #define DOTS_CHANGE_INTERVAL 200
 
@@ -42,43 +47,43 @@ void Loader::Start() {
 
 	m_ui->BlockEvents(); // don't allow anything else while loader is visible
 
-	NEW( m_section, Section, "DefaultPopupFrame" );
+	NEW( m_section, object::Section, "DefaultPopupFrame" );
 	m_section->SetTitleText( "PLEASE WAIT" );
-	m_section->SetAlign( UIObject::ALIGN_CENTER );
+	m_section->SetAlign( ALIGN_CENTER );
 	m_section->SetWidth( 560 );
 	m_section->SetHeight( 150 );
 	m_section->SetZIndex( 0.9 );
 	m_ui->AddObject( m_section );
 
-	NEW( m_label, Label, "DefaultPopupLabel" );
-	m_label->SetAlign( UIObject::ALIGN_HCENTER | UIObject::ALIGN_TOP );
+	NEW( m_label, object::Label, "DefaultPopupLabel" );
+	m_label->SetAlign( ALIGN_HCENTER | ALIGN_TOP );
 	m_label->SetTop( 36 );
 	m_label->SetText( m_loading_text );
 	m_label->ForwardStyleAttributesV(
 		{
-			Style::A_FONT,
-			Style::A_TEXT_COLOR
+			A_FONT,
+			A_TEXT_COLOR
 		}
 	);
 	m_section->AddChild( m_label );
 
 	if ( m_is_cancelable ) {
-		NEW( m_button_cancel, Button, "DefaultPopupButton" );
-		m_button_cancel->SetAlign( UIObject::ALIGN_BOTTOM | UIObject::ALIGN_HCENTER );
+		NEW( m_button_cancel, object::Button, "DefaultPopupButton" );
+		m_button_cancel->SetAlign( ALIGN_BOTTOM | ALIGN_HCENTER );
 		m_button_cancel->SetBottom( 15 );
 		m_button_cancel->SetLabel( "CANCEL" );
 		m_button_cancel->On(
-			UIEvent::EV_BUTTON_CLICK, EH( this ) {
+			ui::event::EV_BUTTON_CLICK, EH( this ) {
 				Cancel();
 				return true;
 			}
 		);
 		m_section->AddChild( m_button_cancel );
 		m_section->On(
-			UIEvent::EV_KEY_DOWN, EH( this ) {
+			ui::event::EV_KEY_DOWN, EH( this ) {
 				if (
 					!data->key.modifiers &&
-						data->key.code == UIEvent::K_ESCAPE
+						data->key.code == ui::event::K_ESCAPE
 					) {
 					if ( m_is_cancelable ) {
 						Cancel();

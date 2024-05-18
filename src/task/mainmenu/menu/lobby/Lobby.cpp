@@ -2,17 +2,22 @@
 
 #include "engine/Engine.h"
 #include "game/connection/Server.h"
-
-using namespace types;
-using namespace network;
-
-using namespace ::game::connection;
+#include "task/mainmenu/MainMenu.h"
+#include "game/State.h"
+#include "game/Player.h"
+#include "game/slot/Slots.h"
+#include "GameSettingsSection.h"
+#include "PlayersSection.h"
+#include "ui/object/Button.h"
+#include "ui/object/Section.h"
+#include "ChatSection.h"
+#include "game/connection/Client.h"
 
 namespace task {
 namespace mainmenu {
 namespace lobby {
 
-Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
+Lobby::Lobby( MainMenu* mainmenu, game::connection::Connection* connection )
 	: PopupMenu( mainmenu, "MULTIPLAYER SETUP" )
 	, m_state( mainmenu->m_state ) {
 	ASSERT( connection, "connection is null" );
@@ -36,30 +41,30 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 	};
 	connection->m_on_global_settings_update = [ this ]() -> void {
 		m_game_settings_section->UpdateRows();
-		m_players_section->UpdateSlots( m_state->m_slots.GetSlots() );
+		m_players_section->UpdateSlots( m_state->m_slots->GetSlots() );
 	};
-	connection->m_on_player_join = [ this ]( const size_t slot_num, game::Slot* slot, const game::Player* player ) -> void {
+	connection->m_on_player_join = [ this ]( const size_t slot_num, game::slot::Slot* slot, const game::Player* player ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
 		GlobalMessage( "Player \"" + player->GetPlayerName() + "\" joined." );
 	};
-	connection->m_on_player_leave = [ this ]( const size_t slot_num, game::Slot* slot, const game::Player* player ) -> void {
+	connection->m_on_player_leave = [ this ]( const size_t slot_num, game::slot::Slot* slot, const game::Player* player ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
 		GlobalMessage( "Player \"" + player->GetPlayerName() + "\" left." );
 	};
-	connection->m_on_slot_update = [ this ]( const size_t slot_num, game::Slot* slot ) -> void {
+	connection->m_on_slot_update = [ this ]( const size_t slot_num, game::slot::Slot* slot ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
 	};
-	connection->m_on_flags_update = [ this ]( const size_t slot_num, game::Slot* slot, const game::Slot::player_flag_t old_flags, const game::Slot::player_flag_t new_flags ) -> void {
+	connection->m_on_flags_update = [ this ]( const size_t slot_num, game::slot::Slot* slot, const game::slot::player_flag_t old_flags, const game::slot::player_flag_t new_flags ) -> void {
 		if ( slot_num == m_connection->GetSlotNum() ) {
 
-			const bool is_ready = slot->HasPlayerFlag( ::game::Slot::PF_READY );
+			const bool is_ready = slot->HasPlayerFlag( ::game::slot::PF_READY );
 
 			// update 'ready' button to match
 			if ( is_ready ) {
-				m_ready_button->AddStyleModifier( Style::M_SELECTED );
+				m_ready_button->AddStyleModifier( ui::M_SELECTED );
 			}
 			else if ( !is_ready ) {
-				m_ready_button->RemoveStyleModifier( Style::M_SELECTED );
+				m_ready_button->RemoveStyleModifier( ui::M_SELECTED );
 			}
 
 			if ( slot->GetPlayer()->GetRole() == ::game::Player::PR_HOST ) {
@@ -71,10 +76,10 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 					m_game_settings_section->Unlock();
 				}
 				// lock/unlock non-player slots
-				auto& slots = m_state->m_slots.GetSlots();
+				auto& slots = m_state->m_slots->GetSlots();
 				for ( size_t num = 0 ; num < slots.size() ; num++ ) {
 					auto& s = slots.at( num );
-					if ( s.GetState() != ::game::Slot::SS_PLAYER ) {
+					if ( s.GetState() != ::game::slot::Slot::SS_PLAYER ) {
 						m_players_section->UpdateSlot( num, &s );
 					}
 				}
@@ -88,27 +93,27 @@ Lobby::Lobby( MainMenu* mainmenu, Connection* connection )
 	};
 
 	connection->IfServer(
-		[ this ]( Server* connection ) -> void {
+		[ this ]( game::connection::Server* connection ) -> void {
 			connection->m_on_listen = [ this ]() -> void {
 				size_t slots_i = 0;
-				for ( ::game::Slot& slot : m_state->m_slots.GetSlots() ) {
+				for ( ::game::slot::Slot& slot : m_state->m_slots->GetSlots() ) {
 					m_players_section->UpdateSlot( slots_i++, &slot );
 				}
 			};
-			connection->SetGameState( Connection::GS_LOBBY );
+			connection->SetGameState( game::connection::Connection::GS_LOBBY );
 		}
 	);
 
 	connection->IfClient(
-		[ this ]( Client* connection ) -> void {
+		[ this ]( game::connection::Client* connection ) -> void {
 			connection->m_on_players_list_update = [ this ]() -> void {
 				size_t slots_i = 0;
-				for ( auto& slot : m_state->m_slots.GetSlots() ) {
+				for ( auto& slot : m_state->m_slots->GetSlots() ) {
 					m_players_section->UpdateSlot( slots_i++, &slot );
 				}
 			};
-			connection->m_on_game_state_change = [ this, connection ]( const Connection::game_state_t state ) -> void {
-				if ( state == Connection::GS_INITIALIZING ) {
+			connection->m_on_game_state_change = [ this, connection ]( const game::connection::Connection::game_state_t state ) -> void {
+				if ( state == game::connection::Connection::GS_INITIALIZING ) {
 					// server tells us to change state
 
 					// cleanup for next state
@@ -142,22 +147,22 @@ void Lobby::Show() {
 	NEW( m_players_section, PlayersSection, this );
 	m_body->AddChild( m_players_section );
 
-	NEW( m_ready_button, Button, "PopupButtonOkCancel" ); // TODO: correct style
-	m_ready_button->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_BOTTOM );
+	NEW( m_ready_button, ui::object::Button, "PopupButtonOkCancel" ); // TODO: correct style
+	m_ready_button->SetAlign( ui::ALIGN_LEFT | ui::ALIGN_BOTTOM );
 	m_ready_button->SetLeft( 8 );
 	m_ready_button->SetBottom( 4 );
 	m_ready_button->SetWidth( 234 );
 	m_ready_button->SetHeight( 22 );
 	m_ready_button->SetLabel( "READY" );
 	m_ready_button->On(
-		UIEvent::EV_BUTTON_CLICK, EH( this ) {
+		ui::event::EV_BUTTON_CLICK, EH( this ) {
 			ASSERT( m_connection, "connection not set" );
 			auto* slot = GetPlayer()->GetSlot();
-			if ( !slot->HasPlayerFlag( ::game::Slot::PF_READY ) ) {
-				slot->SetPlayerFlag( ::game::Slot::PF_READY );
+			if ( !slot->HasPlayerFlag( ::game::slot::PF_READY ) ) {
+				slot->SetPlayerFlag( ::game::slot::PF_READY );
 			}
 			else {
-				slot->UnsetPlayerFlag( ::game::Slot::PF_READY );
+				slot->UnsetPlayerFlag( ::game::slot::PF_READY );
 			}
 			UpdateSlot( m_connection->GetSlotNum(), slot, true );
 			return true;
@@ -165,15 +170,15 @@ void Lobby::Show() {
 	);
 	m_players_section->AddChild( m_ready_button );
 
-	NEW( m_cancel_button, Button, "PopupButtonOkCancel" ); // TODO: correct style
-	m_cancel_button->SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_BOTTOM );
+	NEW( m_cancel_button, ui::object::Button, "PopupButtonOkCancel" ); // TODO: correct style
+	m_cancel_button->SetAlign( ui::ALIGN_RIGHT | ui::ALIGN_BOTTOM );
 	m_cancel_button->SetRight( 8 );
 	m_cancel_button->SetBottom( 4 );
 	m_cancel_button->SetWidth( 234 );
 	m_cancel_button->SetHeight( 22 );
 	m_cancel_button->SetLabel( "CANCEL" );
 	m_cancel_button->On(
-		UIEvent::EV_BUTTON_CLICK, EH( this ) {
+		ui::event::EV_BUTTON_CLICK, EH( this ) {
 			m_connection->Disconnect();
 			return true;
 		}
@@ -183,9 +188,9 @@ void Lobby::Show() {
 	NEW( m_chat_section, ChatSection, this );
 	m_body->AddChild( m_chat_section );
 
-	NEW( m_game_options_section, Section, "PopupSection" );
+	NEW( m_game_options_section, ui::object::Section, "PopupSection" );
 	m_game_options_section->SetTitleText( "CUSTOM GAME OPTIONS" );
-	m_game_options_section->SetAlign( UIObject::ALIGN_BOTTOM );
+	m_game_options_section->SetAlign( ui::ALIGN_BOTTOM );
 	m_game_options_section->SetHeight( 210 );
 	m_body->AddChild( m_game_options_section );
 
@@ -232,8 +237,8 @@ void Lobby::Iterate() {
 	}
 }
 
-::game::Settings& Lobby::GetSettings() {
-	return m_state->m_settings;
+::game::settings::Settings* Lobby::GetSettings() {
+	return &m_state->m_settings;
 }
 
 const ::game::Player* Lobby::GetPlayer() {
@@ -247,7 +252,7 @@ void Lobby::Message( const std::string& message ) {
 	m_connection->SendMessage( message );
 }
 
-void Lobby::UpdateSlot( const size_t slot_num, ::game::Slot* slot, const bool only_flags ) {
+void Lobby::UpdateSlot( const size_t slot_num, ::game::slot::Slot* slot, const bool only_flags ) {
 	if ( only_flags ) {
 		Log( "Updating slot " + slot->GetName() );
 	}
@@ -262,32 +267,32 @@ void Lobby::UpdateSlot( const size_t slot_num, ::game::Slot* slot, const bool on
 void Lobby::KickFromSlot( const size_t slot_num ) {
 	if ( m_connection->IsServer() ) {
 		Log( "Kicking from slot " + std::to_string( slot_num ) );
-		( (Server*)m_connection )->KickFromSlot( slot_num );
+		( (game::connection::Server*)m_connection )->KickFromSlot( slot_num );
 	}
 }
 
 void Lobby::BanFromSlot( const size_t slot_num ) {
 	if ( m_connection->IsServer() ) {
 		Log( "Banning from slot " + std::to_string( slot_num ) );
-		( (Server*)m_connection )->BanFromSlot( slot_num );
+		( (game::connection::Server*)m_connection )->BanFromSlot( slot_num );
 	}
 }
 
 void Lobby::UpdateGameSettings() {
 	if ( m_connection->IsServer() ) {
 		Log( "Updating game settings" );
-		( (Server*)m_connection )->UpdateGameSettings();
+		( (game::connection::Server*)m_connection )->UpdateGameSettings();
 	}
 }
 
 void Lobby::GlobalMessage( const std::string& message ) {
 	if ( m_connection->IsServer() ) {
 		Log( "Sending global message: " + message );
-		( (Server*)m_connection )->GlobalMessage( message );
+		( (game::connection::Server*)m_connection )->GlobalMessage( message );
 	}
 }
 
-const Connection* Lobby::GetConnection() const {
+const game::connection::Connection* Lobby::GetConnection() const {
 	return m_connection;
 }
 
@@ -307,8 +312,8 @@ void Lobby::UnlockInput() {
 void Lobby::ManageCountdown() {
 	if ( m_connection->IsServer() ) {
 		bool is_everyone_ready = true;
-		for ( const auto& slot : m_state->m_slots.GetSlots() ) {
-			if ( slot.GetState() == game::Slot::SS_PLAYER && !slot.HasPlayerFlag( ::game::Slot::PF_READY ) ) {
+		for ( const auto& slot : m_state->m_slots->GetSlots() ) {
+			if ( slot.GetState() == game::slot::Slot::SS_PLAYER && !slot.HasPlayerFlag( ::game::slot::PF_READY ) ) {
 				is_everyone_ready = false;
 				break;
 			}

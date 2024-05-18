@@ -2,13 +2,20 @@
 
 #include "BBSection.h"
 
-#include "../../Types.h"
+namespace types::texture {
+class Texture;
+}
 
-#include "ui/object/Mesh.h"
-#include "ui/object/Label.h"
+namespace ui::object {
+class Mesh;
+class Label;
+}
 
 namespace task {
 namespace game {
+
+class Tile;
+
 namespace ui {
 
 CLASS( TilePreview, BBSection )
@@ -19,19 +26,19 @@ CLASS( TilePreview, BBSection )
 	void Create() override;
 	void Destroy() override;
 
-	void PreviewTile( const tile_data_t& tile_data );
+	void PreviewTile( const Tile* tile );
 	void HideTilePreview();
 
 private:
 
 	struct preview_layer_t {
-		object::Mesh* object;
-		types::Texture* texture;
+		::ui::object::Mesh* object;
+		types::texture::Texture* texture;
 	};
 	std::vector< preview_layer_t > m_preview_layers = {}; // multiple layers of textures
 
 	// TODO: multiline labels?
-	std::vector< Label* > m_info_lines = {};
+	std::vector< ::ui::object::Label* > m_info_lines = {};
 
 };
 

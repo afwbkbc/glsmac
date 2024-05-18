@@ -16,9 +16,9 @@ CLASS( Null, Graphics )
 	const unsigned short GetViewportWidth() const override { return 0; }
 	const unsigned short GetViewportHeight() const override { return 0; };
 
-	void LoadTexture( types::Texture* texture ) override {};
-	void UnloadTexture( const types::Texture* texture ) override {};
-	void EnableTexture( const types::Texture* texture ) override {};
+	void LoadTexture( types::texture::Texture* texture ) override {};
+	void UnloadTexture( const types::texture::Texture* texture ) override {};
+	void EnableTexture( const types::texture::Texture* texture ) override {};
 	void DisableTexture() override {};
 
 	const bool IsFullscreen() const override { return false; }

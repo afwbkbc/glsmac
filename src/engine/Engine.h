@@ -2,32 +2,68 @@
 
 #include <vector>
 #include <unordered_map>
+#include <atomic>
 
 #include "base/Base.h"
-#include "base/Module.h"
-#include "base/Thread.h"
-
-#include "config/Config.h"
-#include "error_handler/ErrorHandler.h"
-#include "logger/Logger.h"
-
-#include "loader/font/FontLoader.h"
-#include "loader/texture/TextureLoader.h"
-#include "loader/sound/SoundLoader.h"
-
-#include "input/Input.h"
-#include "graphics/Graphics.h"
-#include "audio/Audio.h"
-#include "network/Network.h"
-
-#include "game/Game.h"
-
-#include "scheduler/Scheduler.h"
-
-#include "../ui/UI.h"
 
 // TODO: move to config
 extern const size_t g_max_fps;
+
+namespace base {
+class Thread;
+}
+
+namespace config {
+class Config;
+}
+
+namespace error_handler {
+class ErrorHandler;
+}
+
+namespace logger {
+class Logger;
+}
+
+namespace loader {
+namespace font {
+class FontLoader;
+}
+namespace texture {
+class TextureLoader;
+}
+namespace sound {
+class SoundLoader;
+}
+}
+
+namespace input {
+class Input;
+}
+
+namespace graphics {
+class Graphics;
+}
+
+namespace audio {
+class Audio;
+}
+
+namespace network {
+class Network;
+}
+
+namespace game {
+class Game;
+}
+
+namespace scheduler {
+class Scheduler;
+}
+
+namespace ui {
+class UI;
+}
 
 namespace engine {
 
@@ -70,7 +106,7 @@ protected:
 
 	std::atomic< bool > m_is_shutting_down = false;
 
-	std::vector< Thread* > m_threads = {};
+	std::vector< base::Thread* > m_threads = {};
 
 	config::Config* const m_config = nullptr;
 	error_handler::ErrorHandler* m_error_handler = nullptr;
@@ -88,6 +124,6 @@ protected:
 
 };
 
-} /* namespace engine */
+}
 
 extern engine::Engine* g_engine;

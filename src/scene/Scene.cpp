@@ -2,6 +2,8 @@
 
 #include "Scene.h"
 #include "graphics/Graphics.h"
+#include "Camera.h"
+#include "actor/Actor.h"
 
 namespace scene {
 
@@ -47,11 +49,11 @@ std::unordered_set< Light* >* Scene::GetLights() {
 	return &m_lights;
 }
 
-void Scene::SetSkyboxTexture( types::Texture* skybox_texture ) {
+void Scene::SetSkyboxTexture( types::texture::Texture* skybox_texture ) {
 	m_skybox_texture = skybox_texture;
 }
 
-types::Texture* Scene::GetSkyboxTexture() {
+types::texture::Texture* Scene::GetSkyboxTexture() {
 	return m_skybox_texture;
 }
 
@@ -63,8 +65,8 @@ void Scene::SetWorldInstancePositions( const instance_positions_t& world_instanc
 	}
 }
 
-const Scene::instance_positions_t& Scene::GetWorldInstancePositions() const {
+const instance_positions_t& Scene::GetWorldInstancePositions() const {
 	return m_game_instance_positions;
 }
 
-} /* namespace scene */
+}

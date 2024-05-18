@@ -1,8 +1,9 @@
 #include "Faction.h"
 
+#include "types/texture/Texture.h"
 #include "gse/type/String.h"
-
 #include "engine/Engine.h"
+#include "loader/texture/TextureLoader.h"
 
 namespace game {
 namespace rules {
@@ -47,7 +48,7 @@ void Faction::Unserialize( types::Buffer buf ) {
 }
 
 WRAPIMPL_BEGIN( Faction, CLASS_FACTION )
-	gse::type::Object::properties_t color_obj = {
+	gse::type::object_properties_t color_obj = {
 		{
 			"text",
 			m_colors.text.Wrap()

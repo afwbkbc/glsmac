@@ -1,8 +1,10 @@
 #include "Network.h"
 
+#include "types/Packet.h"
+
 namespace network {
 
-mt_id_t Network::MT_Connect( const connection_mode_t connect_mode, const std::string& remote_address ) {
+base::mt_id_t Network::MT_Connect( const connection_mode_t connect_mode, const std::string& remote_address ) {
 	ASSERT( !( connect_mode == CM_CLIENT && remote_address.empty() ), "client connection without remote address" );
 	MT_Request request;
 	request.op = OP_CONNECT;
@@ -11,33 +13,33 @@ mt_id_t Network::MT_Connect( const connection_mode_t connect_mode, const std::st
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Network::MT_Disconnect() {
+base::mt_id_t Network::MT_Disconnect() {
 	MT_Request request;
 	request.op = OP_DISCONNECT;
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Network::MT_DisconnectClient( const network::cid_t cid ) {
+base::mt_id_t Network::MT_DisconnectClient( const network::cid_t cid ) {
 	MT_Request request;
 	request.op = OP_DISCONNECT_CLIENT;
 	request.cid = cid;
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Network::MT_GetEvents() {
+base::mt_id_t Network::MT_GetEvents() {
 	MT_Request request;
 	request.op = OP_GETEVENTS;
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Network::MT_SendEvent( const Event& event ) {
+base::mt_id_t Network::MT_SendEvent( const Event& event ) {
 	MT_Request request;
 	request.op = OP_SENDEVENT;
 	request.event = event;
 	return MT_CreateRequest( request );
 }
 
-mt_id_t Network::MT_SendPacket( const Packet& packet, const network::cid_t cid ) {
+base::mt_id_t Network::MT_SendPacket( const types::Packet* packet, const network::cid_t cid ) {
 	if ( m_current_connection_mode == CM_NONE ) {
 		// maybe old event, nothing to do
 		return MT_Success();
@@ -50,9 +52,9 @@ mt_id_t Network::MT_SendPacket( const Packet& packet, const network::cid_t cid )
 	Event e;
 	e.cid = cid;
 	e.type = Event::ET_PACKET;
-	e.data.packet_data = packet.Serialize().ToString();
+	e.data.packet_data = packet->Serialize().ToString();
 	Log(
-		"Sending packet ( type = " + std::to_string( packet.type ) + " )" + ( cid
+		"Sending packet ( type = " + std::to_string( packet->type ) + " )" + ( cid
 			? " to client " + std::to_string( cid )
 			: ""
 		)
@@ -180,7 +182,7 @@ const connection_mode_t Network::GetCurrentConnectionMode() const {
 	return m_current_connection_mode;
 }
 
-MT_Response Network::MT_GetResult( mt_id_t mt_id ) {
+MT_Response Network::MT_GetResult( base::mt_id_t mt_id ) {
 	return MT_GetResponse( mt_id );
 }
 
@@ -208,7 +210,7 @@ const MT_Response Network::Canceled() const {
 	return response;
 }
 
-mt_id_t Network::MT_Success() {
+base::mt_id_t Network::MT_Success() {
 	MT_Request request;
 	request.op = OP_SUCCESS;
 	return MT_CreateRequest( request );

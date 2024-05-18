@@ -32,8 +32,6 @@ protected:
 	void DisableAttributes() const override;
 };
 
-} /* namespace shader_program */
-} /* namespace opengl */
-} /* namespace graphics */
-
-#include "../routine/Skybox.h"
+}
+}
+}

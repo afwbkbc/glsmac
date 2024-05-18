@@ -5,13 +5,15 @@
 
 #include "base/Base.h"
 
-#include "Style.h"
-#include "StyleSheet.h"
-
 namespace ui {
 namespace theme {
 
+class Style;
+class StyleSheet;
+
 CLASS( Theme, base::Base )
+
+	virtual ~Theme() = default;
 
 	void AddStyle( Style* style );
 	void AddStyleSheet( StyleSheet* stylesheet );

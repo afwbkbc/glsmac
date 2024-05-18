@@ -1,5 +1,14 @@
 #include "Overlay.h"
 
+#include "graphics/opengl/OpenGL.h"
+#include "graphics/opengl/FBO.h"
+#include "graphics/opengl/actor/Text.h"
+#include "graphics/opengl/shader_program/Simple2D.h"
+#include "graphics/opengl/shader_program/Font.h"
+#include "scene/Scene.h"
+#include "scene/actor/Actor.h"
+#include "scene/actor/Text.h"
+
 namespace graphics {
 namespace opengl {
 namespace routine {
@@ -78,6 +87,6 @@ bool Overlay::SceneBelongs( const scene::Scene* scene ) const {
 	return scene->GetType() == scene::SCENE_TYPE_SIMPLE2D;
 }
 
-} /* namespace routine */
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}
+}

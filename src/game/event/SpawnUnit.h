@@ -2,7 +2,7 @@
 
 #include "Event.h"
 
-#include "game/unit/Unit.h"
+#include "game/unit/Types.h"
 
 namespace game {
 namespace event {
@@ -15,11 +15,11 @@ public:
 		const size_t owner_slot,
 		const size_t pos_x,
 		const size_t pos_y,
-		const unit::Unit::morale_t morale,
-		const unit::Unit::health_t health
+		const unit::morale_t morale,
+		const unit::health_t health
 	);
 
-	const std::string* Validate( const Game* game ) const;
+	const std::string* Validate( Game* game ) const override;
 	const gse::Value Apply( game::Game* game ) const override;
 	TS_DEF()
 
@@ -34,8 +34,8 @@ private:
 	const size_t m_owner_slot;
 	const size_t m_pos_x;
 	const size_t m_pos_y;
-	const unit::Unit::morale_t m_morale;
-	const unit::Unit::health_t m_health;
+	const unit::morale_t m_morale;
+	const unit::health_t m_health;
 };
 
 }

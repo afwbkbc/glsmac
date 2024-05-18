@@ -1,5 +1,9 @@
 #include "InfoPanels.h"
 
+#include <cmath>
+
+#include "InfoPanel.h"
+
 namespace task {
 namespace game {
 namespace ui {

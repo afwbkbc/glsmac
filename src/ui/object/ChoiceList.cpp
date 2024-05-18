@@ -1,5 +1,7 @@
 #include "ChoiceList.h"
 
+#include "Button.h"
+
 namespace ui {
 namespace object {
 
@@ -143,8 +145,8 @@ void ChoiceList< KEY_TYPE >::Align() {
 }
 
 /*template< typename KEY_TYPE >
-void ChoiceList< KEY_TYPE >::OnChange( UIEventHandler::handler_function_t func ) {
-	On( UIEvent::EV_CHANGE, func );
+void ChoiceList< KEY_TYPE >::OnChange( handler_function_t func ) {
+	On( event::EV_CHANGE, func );
 }*/
 
 template< typename KEY_TYPE >
@@ -163,12 +165,12 @@ template< typename KEY_TYPE >
 void ChoiceList< KEY_TYPE >::ApplyStyle() {
 	UIContainer::ApplyStyle();
 
-	if ( Has( Style::A_ITEM_MARGIN ) ) {
-		SetItemMargin( Get( Style::A_ITEM_MARGIN ) );
+	if ( Has( A_ITEM_MARGIN ) ) {
+		SetItemMargin( Get( A_ITEM_MARGIN ) );
 	}
 
-	if ( Has( Style::A_ITEM_HEIGHT ) ) {
-		SetItemHeight( Get( Style::A_ITEM_HEIGHT ) );
+	if ( Has( A_ITEM_HEIGHT ) ) {
+		SetItemHeight( Get( A_ITEM_HEIGHT ) );
 	}
 }
 
@@ -190,9 +192,9 @@ void ChoiceList< KEY_TYPE >::UpdateButtons() {
 			button->SetRight( 3 );
 			button->ForwardStyleAttributesV( m_forwarded_style_attributes );
 			button->On(
-				UIEvent::EV_BUTTON_CLICK, EH( this, button, value_index_local ) {
+				event::EV_BUTTON_CLICK, EH( this, button, value_index_local ) {
 					m_value_index = value_index_local;
-					if ( !button->HasStyleModifier( Style::M_SELECTED ) ) {
+					if ( !button->HasStyleModifier( M_SELECTED ) ) {
 						SetActiveButton( button );
 					}
 					if ( m_immediate_mode ) {
@@ -202,7 +204,7 @@ void ChoiceList< KEY_TYPE >::UpdateButtons() {
 				}
 			);
 			button->On(
-				UIEvent::EV_BUTTON_DOUBLE_CLICK, EH( this ) {
+				event::EV_BUTTON_DOUBLE_CLICK, EH( this ) {
 					if ( !m_immediate_mode ) {
 						SelectChoice();
 					}
@@ -223,23 +225,23 @@ void ChoiceList< KEY_TYPE >::UpdateButtons() {
 }
 
 template< typename KEY_TYPE >
-bool ChoiceList< KEY_TYPE >::OnKeyDown( const UIEvent::event_data_t* data ) {
+bool ChoiceList< KEY_TYPE >::OnKeyDown( const event::event_data_t* data ) {
 	switch ( data->key.code ) {
-		case UIEvent::K_DOWN: {
+		case event::K_DOWN: {
 			if ( m_value_index < m_values.size() - 1 ) {
 				m_value_index++;
 			}
 			SetValue( m_values[ m_value_index ] );
 			break;
 		}
-		case UIEvent::K_UP: {
+		case event::K_UP: {
 			if ( m_value_index > 0 ) {
 				m_value_index--;
 			}
 			SetValue( m_values[ m_value_index ] );
 			break;
 		}
-		case UIEvent::K_ENTER: {
+		case event::K_ENTER: {
 			SelectChoice();
 			break;
 		}
@@ -251,12 +253,12 @@ bool ChoiceList< KEY_TYPE >::OnKeyDown( const UIEvent::event_data_t* data ) {
 }
 
 template< typename KEY_TYPE >
-bool ChoiceList< KEY_TYPE >::OnKeyUp( const UIEvent::event_data_t* data ) {
+bool ChoiceList< KEY_TYPE >::OnKeyUp( const event::event_data_t* data ) {
 	return true;
 }
 
 template< typename KEY_TYPE >
-bool ChoiceList< KEY_TYPE >::OnKeyPress( const UIEvent::event_data_t* data ) {
+bool ChoiceList< KEY_TYPE >::OnKeyPress( const event::event_data_t* data ) {
 	return true;
 }
 
@@ -266,10 +268,10 @@ void ChoiceList< KEY_TYPE >::SetActiveButton( Button* button ) {
 	ASSERT( it != m_button_values.end(), "button not in buttons list" );
 	for ( auto& b : m_buttons ) {
 		if ( b.second != button ) {
-			b.second->RemoveStyleModifier( Style::M_SELECTED );
+			b.second->RemoveStyleModifier( M_SELECTED );
 		}
 	}
-	button->AddStyleModifier( Style::M_SELECTED );
+	button->AddStyleModifier( M_SELECTED );
 	ASSERT( m_labels.find( it->second ) != m_labels.end(), "unknown button value" );
 	m_value = it->second;
 }
@@ -277,20 +279,20 @@ void ChoiceList< KEY_TYPE >::SetActiveButton( Button* button ) {
 template<>
 void ChoiceList< size_t >::SelectChoice() {
 	if ( m_value ) {
-		UIEvent::event_data_t d = {};
+		event::event_data_t d = {};
 		d.value.change.id_num = m_value;
 		d.value.change.text = &GetValueString();
-		Trigger( UIEvent::EV_SELECT, &d );
+		Trigger( event::EV_SELECT, &d );
 	}
 }
 
 template<>
 void ChoiceList< std::string >::SelectChoice() {
 	if ( !m_value.empty() ) {
-		UIEvent::event_data_t d = {};
+		event::event_data_t d = {};
 		d.value.change.id_str = &m_value;
 		d.value.change.text = &GetValueString();
-		Trigger( UIEvent::EV_SELECT, &d );
+		Trigger( event::EV_SELECT, &d );
 	}
 }
 

@@ -3,15 +3,24 @@
 #include <algorithm>
 
 #include "Lobby.h"
+#include "ui/object/Label.h"
+#include "game/Player.h"
+#include "game/settings/Settings.h"
+#include "util/FS.h"
+#include "engine/Engine.h"
+#include "ui/object/Button.h"
+#include "ui/UI.h"
+#include "ui/object/FileBrowser.h"
+#include "game/map/Consts.h"
 
 namespace task {
 namespace mainmenu {
 namespace lobby {
 
-GameSettingsSection::GameSettingsSection( Lobby* lobby, ::game::GlobalSettings* game_settings )
+GameSettingsSection::GameSettingsSection( Lobby* lobby, ::game::settings::GlobalSettings* game_settings )
 	: LobbySection( lobby )
 	, m_game_settings( game_settings ) {
-	SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_TOP );
+	SetAlign( ui::ALIGN_LEFT | ui::ALIGN_TOP );
 	SetTitleText( " " ); // to have header created
 }
 
@@ -44,7 +53,7 @@ void GameSettingsSection::Create() {
 	}
 
 	// to allow selecting Load Map repeatedly
-	m_element_rows[ RI_MAP_TYPE ].choices->SetMode( NumDropdown::DM_MENU );
+	m_element_rows[ RI_MAP_TYPE ].choices->SetMode( ui::object::NumDropdown::DM_MENU );
 
 	// these two are paginated based on "Random Map"/"Load Map" choice
 	m_element_rows[ RI_MAP_FILE ].label->SetTop( m_element_rows[ RI_PLANET_SIZE ].label->GetTop() );
@@ -103,7 +112,7 @@ void GameSettingsSection::UpdateRows() {
 	const auto& game_rules = m_game_settings->game_rules;
 
 	::ui::object::NumChoiceList::choices_t difficulty_levels = {};
-	NumChoiceList::value_t current_difficulty_level = 0;
+	ui::object::NumChoiceList::value_t current_difficulty_level = 0;
 	for ( auto& it : game_rules.m_difficulty_levels ) {
 		if ( m_game_settings->global_difficulty.m_name == it.second.m_name ) {
 			current_difficulty_level = it.first;
@@ -129,16 +138,16 @@ void GameSettingsSection::UpdateRows() {
 		}, 0
 	);
 
-	NumChoiceList::value_t game_type = 0;
+	ui::object::NumChoiceList::value_t game_type = 0;
 	switch ( m_game_settings->map.type ) {
-		case game::MapSettings::MT_RANDOM:
-		case game::MapSettings::MT_CUSTOM: {
+		case game::settings::MapSettings::MT_RANDOM:
+		case game::settings::MapSettings::MT_CUSTOM: {
 			HideRows( m_loadmap_rows );
 			ShowRows( m_non_loadmap_rows );
 			game_type = 0;
 			break;
 		}
-		case game::MapSettings::MT_MAPFILE: {
+		case game::settings::MapSettings::MT_MAPFILE: {
 			HideRows( m_non_loadmap_rows );
 			ShowRows( m_loadmap_rows );
 			game_type = 1;
@@ -157,19 +166,19 @@ void GameSettingsSection::UpdateRows() {
 
 	UpdateRow(
 		RI_PLANET_SIZE, {
-			{ ::game::MapSettings::MAP_TINY,     "Tiny Planet" },
-			{ ::game::MapSettings::MAP_SMALL,    "Small Planet" },
-			{ ::game::MapSettings::MAP_STANDARD, "Standard Planet" },
-			{ ::game::MapSettings::MAP_LARGE,    "Large Planet" },
-			{ ::game::MapSettings::MAP_HUGE,     "Huge Planet" },
+			{ ::game::settings::MapSettings::MAP_CONFIG_TINY,     "Tiny Planet" },
+			{ ::game::settings::MapSettings::MAP_CONFIG_SMALL,    "Small Planet" },
+			{ ::game::settings::MapSettings::MAP_CONFIG_STANDARD, "Standard Planet" },
+			{ ::game::settings::MapSettings::MAP_CONFIG_LARGE,    "Large Planet" },
+			{ ::game::settings::MapSettings::MAP_CONFIG_HUGE,     "Huge Planet" },
 		}, m_game_settings->map.size
 	);
 
 	UpdateRow(
 		RI_PLANET_OCEAN, {
-			{ ::game::MapSettings::MAP_OCEAN_LOW,    "30-50% of Surface" },
-			{ ::game::MapSettings::MAP_OCEAN_MEDIUM, "50-70% of Surface" },
-			{ ::game::MapSettings::MAP_OCEAN_HIGH,   "70-90% of Surface" },
+			{ ::game::settings::MapSettings::MAP_CONFIG_OCEAN_LOW,    "30-50% of Surface" },
+			{ ::game::settings::MapSettings::MAP_CONFIG_OCEAN_MEDIUM, "50-70% of Surface" },
+			{ ::game::settings::MapSettings::MAP_CONFIG_OCEAN_HIGH,   "70-90% of Surface" },
 		}, m_game_settings->map.ocean
 	);
 
@@ -214,16 +223,16 @@ const bool GameSettingsSection::IsLocked() const {
 void GameSettingsSection::CreateRow( const row_id_t row_id, const std::string& label, const size_t label_width, const size_t choices_width ) {
 	NEWV( label_el, ::ui::object::Label, "PopupLabel" );
 	label_el->SetText( label );
-	label_el->SetAlign( UIObject::ALIGN_LEFT );
+	label_el->SetAlign( ui::ALIGN_LEFT );
 	label_el->SetLeft( 6 );
 	label_el->SetWidth( label_width );
 	m_body->AddChild( label_el );
 	NEWV( choices_el, ::ui::object::NumDropdown, "PopupDropdown" );
-	choices_el->SetAlign( UIObject::ALIGN_LEFT );
+	choices_el->SetAlign( ui::ALIGN_LEFT );
 	choices_el->SetLeft( label_width );
 	choices_el->SetWidth( choices_width );
 	choices_el->On(
-		UIEvent::EV_CHANGE, EH( this, choices_el, row_id ) {
+		ui::event::EV_CHANGE, EH( this, choices_el, row_id ) {
 			const auto& game_rules = m_game_settings->game_rules;
 			switch ( row_id ) {
 				case RI_DIFFICULTY_LEVEL:
@@ -239,7 +248,7 @@ void GameSettingsSection::CreateRow( const row_id_t row_id, const std::string& l
 						ShowLoadMap();
 					}
 					else { // "random map"
-						m_game_settings->map.type = game::MapSettings::MT_RANDOM;
+						m_game_settings->map.type = game::settings::MapSettings::MT_RANDOM;
 						m_game_settings->map.filename = "";
 						UpdateRows();
 						GetLobby()->UpdateGameSettings();
@@ -277,7 +286,7 @@ void GameSettingsSection::CreateRow( const row_id_t row_id, const std::string& l
 	};
 }
 
-void GameSettingsSection::UpdateRow( const row_id_t row_id, const ::ui::object::NumChoiceList::choices_t& choices, const NumChoiceList::value_t default_choice ) {
+void GameSettingsSection::UpdateRow( const row_id_t row_id, const ::ui::object::NumChoiceList::choices_t& choices, const ::ui::object::NumChoiceList::value_t default_choice ) {
 	const auto& row = m_element_rows.at( row_id );
 	if ( !IsLocked() && row_id != RI_MAP_FILE ) {
 		row.choices->SetChoices( choices );
@@ -318,11 +327,11 @@ void GameSettingsSection::ShowLoadMap() {
 	m_load_map.section->SetHeight( 520 );
 	m_load_map.section->SetWidth( 450 );
 	m_load_map.section->SetZIndex( 0.7f );
-	m_load_map.section->SetAlign( ::ui::object::UIObject::ALIGN_CENTER );
+	m_load_map.section->SetAlign( ui::ALIGN_CENTER );
 	m_load_map.section->On(
-		UIEvent::EV_KEY_DOWN, EH( this ) {
-			if ( data->key.code == UIEvent::K_ESCAPE ) {
-				return m_load_map.button_cancel->Trigger( UIEvent::EV_BUTTON_CLICK, data );
+		ui::event::EV_KEY_DOWN, EH( this ) {
+			if ( data->key.code == ui::event::K_ESCAPE ) {
+				return m_load_map.button_cancel->Trigger( ui::event::EV_BUTTON_CLICK, data );
 			}
 			return false;
 		}
@@ -345,7 +354,7 @@ void GameSettingsSection::ShowLoadMap() {
 	}
 	m_load_map.browser->SetFileExtension( ::game::map::s_consts.fs.default_map_extension );
 	m_load_map.browser->On(
-		UIEvent::EV_SELECT, EH( this ) {
+		ui::event::EV_SELECT, EH( this ) {
 			const auto& path = m_load_map.browser->GetSelectedFile();
 			if ( !util::FS::FileExists( path ) ) {
 				g_engine->GetUI()->Error(
@@ -354,7 +363,7 @@ void GameSettingsSection::ShowLoadMap() {
 			}
 			else {
 				ASSERT( util::FS::IsAbsolutePath( path ), "path must be absolute" );
-				m_game_settings->map.type = game::MapSettings::MT_MAPFILE;
+				m_game_settings->map.type = game::settings::MapSettings::MT_MAPFILE;
 				m_game_settings->map.filename = path;
 				UpdateRows();
 				GetLobby()->UpdateGameSettings();
@@ -365,29 +374,29 @@ void GameSettingsSection::ShowLoadMap() {
 	);
 	m_load_map.section->AddChild( m_load_map.browser );
 	NEW( m_load_map.button_ok, ::ui::object::Button, "PopupButtonOkCancel" );
-	m_load_map.button_ok->SetAlign( ::ui::object::UIObject::ALIGN_BOTTOM | ::ui::object::UIObject::ALIGN_LEFT );
+	m_load_map.button_ok->SetAlign( ::ui::ALIGN_BOTTOM | ::ui::ALIGN_LEFT );
 	m_load_map.button_ok->SetBottom( 8 );
 	m_load_map.button_ok->SetLeft( 12 );
 	m_load_map.button_ok->SetWidth( 206 );
 	m_load_map.button_ok->SetLabel( "OK" );
 	m_load_map.button_ok->On(
-		UIEvent::EV_BUTTON_CLICK, EH( this ) {
-			UIEvent::event_data_t newdata = {};
-			newdata.key.code = UIEvent::K_ENTER;
-			return m_load_map.browser->Trigger( ui::event::UIEvent::EV_KEY_DOWN, &newdata );
+		ui::event::EV_BUTTON_CLICK, EH( this ) {
+			ui::event::event_data_t newdata = {};
+			newdata.key.code = ui::event::K_ENTER;
+			return m_load_map.browser->Trigger( ui::event::EV_KEY_DOWN, &newdata );
 		}
 	);
 
 	m_load_map.section->AddChild( m_load_map.button_ok );
 
 	NEW( m_load_map.button_cancel, ::ui::object::Button, "PopupButtonOkCancel" );
-	m_load_map.button_cancel->SetAlign( ::ui::object::UIObject::ALIGN_BOTTOM | ::ui::object::UIObject::ALIGN_RIGHT );
+	m_load_map.button_cancel->SetAlign( ::ui::ALIGN_BOTTOM | ::ui::ALIGN_RIGHT );
 	m_load_map.button_cancel->SetBottom( 8 );
 	m_load_map.button_cancel->SetRight( 12 );
 	m_load_map.button_cancel->SetWidth( 206 );
 	m_load_map.button_cancel->SetLabel( "CANCEL" );
 	m_load_map.button_cancel->On(
-		UIEvent::EV_BUTTON_CLICK, EH( this ) {
+		ui::event::EV_BUTTON_CLICK, EH( this ) {
 			HideLoadMap();
 			return true;
 		}

@@ -1,9 +1,13 @@
 #pragma once
 
-#include "../PopupMenu.h"
+#include "task/mainmenu/PopupMenu.h"
 
-#include "ui/object/Section.h"
+// TODO: remove this
 #include "ui/object/ChoiceList.h"
+
+namespace ui::object {
+class Section;
+}
 
 namespace task {
 namespace mainmenu {
@@ -23,11 +27,10 @@ protected:
 
 private:
 
-	Section* m_section = nullptr;
-	NumChoiceList* m_choices = nullptr;
+	ui::object::Section* m_section = nullptr;
+	ui::object::NumChoiceList* m_choices = nullptr;
 
 };
 
 }
 }
-

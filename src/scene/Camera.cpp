@@ -1,6 +1,9 @@
 #include "Camera.h"
 
 #include "engine/Engine.h"
+#include "graphics/Graphics.h"
+#include "scene/Scene.h"
+#include "scene/actor/Actor.h"
 
 #define ANGLE_CENTER ( - M_PI / 2 )
 
@@ -126,4 +129,4 @@ void Camera::UpdateUpTarget() {
 	m_target = view ^ axis;
 }
 
-} /* namespace scene */
+}

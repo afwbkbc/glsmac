@@ -4,12 +4,21 @@
 
 #include "LobbySection.h"
 
-#include "game/Settings.h"
+#include "ui/object/Types.h"
 
-#include "ui/object/Label.h"
+// TODO: remove this
 #include "ui/object/Dropdown.h"
-#include "ui/object/Section.h"
-#include "ui/object/FileBrowser.h"
+
+namespace game::settings {
+class GlobalSettings;
+}
+
+namespace ui::object {
+class Label;
+class Section;
+class FileBrowser;
+class Button;
+}
 
 namespace task {
 namespace mainmenu {
@@ -17,7 +26,7 @@ namespace lobby {
 
 CLASS( GameSettingsSection, LobbySection )
 
-	GameSettingsSection( Lobby* lobby, ::game::GlobalSettings* game_settings );
+	GameSettingsSection( Lobby* lobby, ::game::settings::GlobalSettings* game_settings );
 
 	void Create() override;
 	void Align() override;
@@ -36,7 +45,7 @@ private:
 	void ShowLoadMap();
 	void HideLoadMap();
 
-	::game::GlobalSettings* m_game_settings = nullptr;
+	::game::settings::GlobalSettings* m_game_settings = nullptr;
 
 	enum row_id_t {
 		RI_DIFFICULTY_LEVEL,
@@ -56,7 +65,7 @@ private:
 
 	void CreateRow( const row_id_t row_id, const std::string& label, const size_t label_width, const size_t choices_width );
 
-	void UpdateRow( const row_id_t row_id, const ::ui::object::NumChoiceList::choices_t& choices, const ::ui::object::NumChoiceList::value_t default_choice );
+	void UpdateRow( const row_id_t row_id, const ::ui::object::num_choices_t& choices, const ::ui::object::num_choice_t default_choice );
 
 	typedef struct {
 		::ui::object::Label* label;

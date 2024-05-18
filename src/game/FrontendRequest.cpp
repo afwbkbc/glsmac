@@ -13,6 +13,9 @@ FrontendRequest::FrontendRequest( const request_type_t type )
 
 FrontendRequest::FrontendRequest( const FrontendRequest& other )
 	: type( other.type ) {
+
+	data = other.data;
+
 	switch ( type ) {
 		case FR_QUIT: {
 			NEW( data.quit.reason, std::string, *other.data.quit.reason );
@@ -27,16 +30,16 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.global_message.message, std::string, *other.data.global_message.message );
 			break;
 		}
-		case FR_TURN_ACTIVE_STATUS: {
-			data.turn_active_status = other.data.turn_active_status;
-			break;
-		}
-		case FR_TURN_COMPLETE_STATUS: {
-			data.turn_complete_status = other.data.turn_complete_status;
-			break;
-		}
 		case FR_SLOT_DEFINE: {
 			NEW( data.slot_define.slotdefs, slot_defines_t, *other.data.slot_define.slotdefs );
+			break;
+		}
+		case FR_ANIMATION_DEFINE: {
+			NEW( data.animation_define.serialized_animation, std::string, *other.data.animation_define.serialized_animation );
+			break;
+		}
+		case FR_ANIMATION_SHOW: {
+			NEW( data.animation_show.animation_id, std::string, *other.data.animation_show.animation_id );
 			break;
 		}
 		case FR_UNIT_DEFINE: {
@@ -44,20 +47,8 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			break;
 		}
 		case FR_UNIT_SPAWN: {
-			data.unit_spawn = other.data.unit_spawn;
 			NEW( data.unit_spawn.unitdef_id, std::string, *other.data.unit_spawn.unitdef_id );
-			break;
-		}
-		case FR_UNIT_DESPAWN: {
-			data.unit_despawn.unit_id = other.data.unit_despawn.unit_id;
-			break;
-		}
-		case FR_UNIT_REFRESH: {
-			data.unit_refresh = other.data.unit_refresh;
-			break;
-		}
-		case FR_UNIT_MOVE: {
-			data.unit_move = other.data.unit_move;
+			NEW( data.unit_spawn.morale_string, std::string, *other.data.unit_spawn.morale_string );
 			break;
 		}
 
@@ -86,12 +77,21 @@ FrontendRequest::~FrontendRequest() {
 			DELETE( data.slot_define.slotdefs );
 			break;
 		}
+		case FR_ANIMATION_DEFINE: {
+			DELETE( data.animation_define.serialized_animation );
+			break;
+		}
+		case FR_ANIMATION_SHOW: {
+			DELETE( data.animation_show.animation_id );
+			break;
+		}
 		case FR_UNIT_DEFINE: {
 			DELETE( data.unit_define.serialized_unitdef );
 			break;
 		}
 		case FR_UNIT_SPAWN: {
 			DELETE( data.unit_spawn.unitdef_id );
+			DELETE( data.unit_spawn.morale_string );
 			break;
 		}
 		default: {

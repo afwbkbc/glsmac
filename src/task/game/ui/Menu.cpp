@@ -1,7 +1,10 @@
 #include "Menu.h"
 
 #include "engine/Engine.h"
-#include "../Game.h"
+#include "task/game/Game.h"
+#include "ui/UI.h"
+#include "ui/object/Surface.h"
+#include "ui/object/LabelButton.h"
 
 namespace task {
 namespace game {
@@ -44,9 +47,9 @@ void Menu::Create() {
 		button->SetLabel( item.label );
 		button->SetAreaLimitsByObject( this );
 		button->On(
-			UIEvent::EV_BUTTON_CLICK, EH( this, item, button ) {
+			::ui::event::EV_BUTTON_CLICK, EH( this, item, button ) {
 				if ( m_active_button && m_active_button != button ) {
-					m_active_button->RemoveStyleModifier( Style::M_SELECTED );
+					m_active_button->RemoveStyleModifier( ::ui::M_SELECTED );
 					m_active_button = nullptr;
 				}
 				if ( m_active_submenu && m_active_submenu != item.submenu ) {
@@ -54,15 +57,15 @@ void Menu::Create() {
 					m_active_submenu = nullptr;
 				}
 				if ( item.submenu ) {
-					if ( button->HasStyleModifier( Style::M_SELECTED ) ) {
-						button->RemoveStyleModifier( Style::M_SELECTED );
+					if ( button->HasStyleModifier( ::ui::M_SELECTED ) ) {
+						button->RemoveStyleModifier( ::ui::M_SELECTED );
 						item.submenu->Hide();
 						m_active_button = nullptr;
 						m_active_submenu = nullptr;
 					}
 					else {
 						m_active_button = button;
-						m_active_button->AddStyleModifier( Style::M_SELECTED );
+						m_active_button->AddStyleModifier( ::ui::M_SELECTED );
 						item.submenu->SetBottom( GetBottom() + GetHeight() - ( button->GetTop() + button->GetHeight() ) - m_margin );
 						item.submenu->Show();
 						m_active_submenu = item.submenu;
@@ -87,7 +90,7 @@ void Menu::Create() {
 	}
 
 	On(
-		UIEvent::EV_MOUSE_DOWN, EH() {
+		::ui::event::EV_MOUSE_DOWN, EH() {
 			return true; // prevent clickthrough
 		}
 	);
@@ -131,7 +134,7 @@ void Menu::Destroy() {
 	UI::Destroy();
 }
 
-void Menu::ProcessEvent( event::UIEvent* event ) {
+void Menu::ProcessEvent( ::ui::event::UIEvent* event ) {
 	if ( !m_slide.IsRunning() ) { // ignore events during slide
 		UI::ProcessEvent( event );
 	}
@@ -150,7 +153,7 @@ void Menu::Show() {
 void Menu::Hide() {
 
 	if ( m_active_button ) {
-		m_active_button->RemoveStyleModifier( Style::M_SELECTED );
+		m_active_button->RemoveStyleModifier( ::ui::M_SELECTED );
 		m_active_button = nullptr;
 	}
 	if ( m_active_submenu ) {
@@ -168,7 +171,7 @@ void Menu::Hide() {
 	}
 }
 
-void Menu::AddItem( const std::string& label, std::function< bool( LabelButton* button, menu_item_t item ) > on_click ) {
+void Menu::AddItem( const std::string& label, std::function< bool( ::ui::object::LabelButton* button, menu_item_t item ) > on_click ) {
 	ASSERT( !m_created, "don't add items to active menu" );
 	m_menu_items.push_back(
 		{

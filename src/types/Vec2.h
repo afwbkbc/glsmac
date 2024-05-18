@@ -61,4 +61,4 @@ public:
 	}
 };
 
-} /* namespace types */
+}

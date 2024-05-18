@@ -48,10 +48,6 @@ protected:
 	void DisableAttributes() const override;
 };
 
-} /* namespace shader_program */
-} /* namespace opengl */
-} /* namespace graphics */
-
-#include "../actor/Sprite.h"
-#include "../actor/Mesh.h"
-
+}
+}
+}

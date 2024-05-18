@@ -1,9 +1,11 @@
 #include "Texture.h"
 
+#include "types/texture/Texture.h"
+
 namespace graphics {
 namespace opengl {
 
-Texture::Texture( types::Texture* texture )
+Texture::Texture( types::texture::Texture* texture )
 	: m_texture( texture ) {
 	m_name = texture->m_name;
 
@@ -46,5 +48,5 @@ void Texture::Disable() {
 	glBindTexture( m_target, 0 );
 }
 
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}

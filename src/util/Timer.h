@@ -42,4 +42,4 @@ protected:
 
 };
 
-} /* namespace util */
+}

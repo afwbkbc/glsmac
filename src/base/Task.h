@@ -4,7 +4,7 @@
 
 namespace base {
 
-CLASS( Task, base::Module )
+CLASS( Task, Module )
 	virtual ~Task() {};
 };
 

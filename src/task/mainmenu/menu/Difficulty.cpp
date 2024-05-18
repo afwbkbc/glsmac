@@ -1,8 +1,10 @@
 #include "Difficulty.h"
 
-#include <algorithm>
-
 #include "Rules.h"
+
+#include "task/mainmenu/MainMenu.h"
+#include "game/State.h"
+#include "game/settings/Settings.h"
 
 namespace task {
 namespace mainmenu {
@@ -12,8 +14,8 @@ Difficulty::Difficulty( MainMenu* mainmenu )
 	//
 }
 
-const MenuBlock::choices_t Difficulty::GenerateChoices( MainMenu* mainmenu ) {
-	MenuBlock::choices_t choices = {};
+const choices_t Difficulty::GenerateChoices( MainMenu* mainmenu ) {
+	choices_t choices = {};
 	auto& rules = mainmenu->m_state->m_settings.global.game_rules;
 	for ( auto& it : rules.m_difficulty_levels ) {
 		auto name = it.second.m_name;

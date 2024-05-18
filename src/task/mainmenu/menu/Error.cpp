@@ -1,5 +1,8 @@
 #include "Error.h"
 
+#include "ui/object/Label.h"
+#include "ui/object/Panel.h"
+
 namespace task {
 namespace mainmenu {
 
@@ -15,7 +18,7 @@ Error::Error( MainMenu* mainmenu, const std::string& error_text )
 void Error::Show() {
 	PopupMenu::Show();
 
-	NEW( m_error_label, Label, "PopupText" );
+	NEW( m_error_label, ui::object::Label, "PopupText" );
 	m_error_label->SetText( m_error_text );
 	m_body->AddChild( m_error_label );
 }

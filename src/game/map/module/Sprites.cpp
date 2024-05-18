@@ -3,12 +3,17 @@
 #include "Sprites.h"
 
 #include "scene/actor/Sprite.h"
+#include "game/map/Map.h"
+#include "game/map/Consts.h"
+#include "game/map/tile/Tile.h"
+#include "game/map/tile/TileState.h"
+#include "util/random/Random.h"
 
 namespace game {
 namespace map {
 namespace module {
 
-void Sprites::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) {
+void Sprites::GenerateTile( const tile::Tile* tile, tile::TileState* ts, MapState* ms ) {
 
 	for ( auto& sprite : ts->sprites ) {
 		m_map->RemoveTerrainSpriteActorInstance( sprite.actor, sprite.instance );
@@ -54,29 +59,29 @@ void Sprites::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) {
     GenerateSprite( tile, ts, _name, s_consts.tc.ter1_pcx._texture, 0.4f + 0.001f * ( std::find( sprite_z_order.begin(), sprite_z_order.end(), _name ) - sprite_z_order.begin() ) )
 
 #define FEATURE_SPRITE( _feature, _name, _texture ) \
-    if ( tile->features & Tile::_feature ) { \
+    if ( tile->features & tile::_feature ) { \
         SPRITE( _name, _texture ); \
     }
 
 #define TERRAFORMING_SPRITE( _terraforming, _name, _texture ) \
-    if ( tile->terraforming & Tile::_terraforming ) { \
+    if ( tile->terraforming & tile::_terraforming ) { \
         SPRITE( _name, _texture ); \
     }
 
 	if ( tile->is_water_tile ) {
-		FEATURE_SPRITE( F_GEOTHERMAL, "Geothermal", geothermal[ 0 ] );
+		FEATURE_SPRITE( FEATURE_GEOTHERMAL, "Geothermal", geothermal[ 0 ] );
 
 		switch ( tile->bonus ) {
-			case Tile::B_NUTRIENT: {
-				SPRITE( "NutrientBonusSea", nutrient_bonus_sea[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
+			case tile::BONUS_NUTRIENT: {
+				SPRITE( "NutrientBonusSea", nutrient_bonus_water[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
 				break;
 			}
-			case Tile::B_ENERGY: {
-				SPRITE( "EnergyBonusSea", energy_bonus_sea[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
+			case tile::BONUS_ENERGY: {
+				SPRITE( "EnergyBonusSea", energy_bonus_water[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
 				break;
 			}
-			case Tile::B_MINERALS: {
-				SPRITE( "MineralsBonusSea", minerals_bonus_sea[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
+			case tile::BONUS_MINERALS: {
+				SPRITE( "MineralsBonusSea", minerals_bonus_water[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
 				break;
 			}
 			default: {
@@ -84,21 +89,21 @@ void Sprites::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) {
 			}
 		}
 
-		TERRAFORMING_SPRITE( T_FARM, "FarmSea", farm_sea[ 0 ] );
-		TERRAFORMING_SPRITE( T_SOLAR, "SolarSea", solar_sea[ 0 ] );
-		TERRAFORMING_SPRITE( T_MINE, "MineSea", mine_sea[ 0 ] );
+		TERRAFORMING_SPRITE( TERRAFORMING_FARM, "FarmSea", farm_water[ 0 ] );
+		TERRAFORMING_SPRITE( TERRAFORMING_SOLAR, "SolarSea", solar_water[ 0 ] );
+		TERRAFORMING_SPRITE( TERRAFORMING_MINE, "MineSea", mine_water[ 0 ] );
 	}
 	else {
 		switch ( tile->bonus ) {
-			case Tile::B_NUTRIENT: {
+			case tile::BONUS_NUTRIENT: {
 				SPRITE( "NutrientBonusLand", nutrient_bonus_land[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
 				break;
 			}
-			case Tile::B_ENERGY: {
+			case tile::BONUS_ENERGY: {
 				SPRITE( "EnergyBonusLand", energy_bonus_land[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
 				break;
 			}
-			case Tile::B_MINERALS: {
+			case tile::BONUS_MINERALS: {
 				SPRITE( "MineralsBonusLand", minerals_bonus_land[ m_map->GetRandom()->GetUInt( 0, 1 ) ] );
 				break;
 			}
@@ -106,37 +111,37 @@ void Sprites::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) {
 				// nothing
 			}
 		}
-		FEATURE_SPRITE( F_URANIUM, "Uranium", uranium[ 0 ] );
+		FEATURE_SPRITE( FEATURE_URANIUM, "Uranium", uranium[ 0 ] );
 
-		TERRAFORMING_SPRITE( T_CONDENSER, "Condenser", condenser[ 0 ] );
+		TERRAFORMING_SPRITE( TERRAFORMING_CONDENSER, "Condenser", condenser[ 0 ] );
 
-		TERRAFORMING_SPRITE( T_SOLAR, "SolarLand", solar_land[ 0 ] );
+		TERRAFORMING_SPRITE( TERRAFORMING_SOLAR, "SolarLand", solar_land[ 0 ] );
 
 		// TODO: select based on nutrients yields instead of moisture
-		TERRAFORMING_SPRITE( T_FARM, "FarmLand", farm_land[ tile->moisture ] );
-		TERRAFORMING_SPRITE( T_SOIL_ENRICHER, "SoilEnricher", soil_enricher[ tile->moisture ] );
+		TERRAFORMING_SPRITE( TERRAFORMING_FARM, "FarmLand", farm_land[ tile->moisture ] );
+		TERRAFORMING_SPRITE( TERRAFORMING_SOIL_ENRICHER, "SoilEnricher", soil_enricher[ tile->moisture ] );
 
-		TERRAFORMING_SPRITE( T_MINE, "MineLand", mine_land[ 0 ] );
-		TERRAFORMING_SPRITE( T_MIRROR, "EchelonMirror", mirror[ 0 ] );
-		TERRAFORMING_SPRITE( T_BOREHOLE, "ThermalBorehole", borehole[ 0 ] );
+		TERRAFORMING_SPRITE( TERRAFORMING_MINE, "MineLand", mine_land[ 0 ] );
+		TERRAFORMING_SPRITE( TERRAFORMING_MIRROR, "EchelonMirror", mirror[ 0 ] );
+		TERRAFORMING_SPRITE( TERRAFORMING_BOREHOLE, "ThermalBorehole", borehole[ 0 ] );
 
-		TERRAFORMING_SPRITE( T_AIRBASE, "Airbase", airbase[ 0 ] );
+		TERRAFORMING_SPRITE( TERRAFORMING_AIRBASE, "Airbase", airbase[ 0 ] );
 
 	}
 
-	FEATURE_SPRITE( F_MONOLITH, "Monolith", monolith[ 0 ] );
+	FEATURE_SPRITE( FEATURE_MONOLITH, "Monolith", monolith[ 0 ] );
 
-	TERRAFORMING_SPRITE( T_SENSOR, "Sensor", sensor[ 0 ] );
+	TERRAFORMING_SPRITE( TERRAFORMING_SENSOR, "Sensor", sensor[ 0 ] );
 
 	if ( !tile->is_water_tile ) {
-		TERRAFORMING_SPRITE( T_BUNKER, "Bunker", bunker[ 0 ] );
+		TERRAFORMING_SPRITE( TERRAFORMING_BUNKER, "Bunker", bunker[ 0 ] );
 	}
 
 	if ( !tile->is_water_tile ) {
-		FEATURE_SPRITE( F_UNITY_POD, "UnityPodLand", unity_pod_land[ m_map->GetRandom()->GetUInt( 0, 2 ) ] );
+		FEATURE_SPRITE( FEATURE_UNITY_POD, "UnityPodLand", unity_pod_land[ m_map->GetRandom()->GetUInt( 0, 2 ) ] );
 	}
 	else {
-		FEATURE_SPRITE( F_UNITY_POD, "UnityPodSea", unity_pod_sea[ m_map->GetRandom()->GetUInt( 0, 2 ) ] );
+		FEATURE_SPRITE( FEATURE_UNITY_POD, "UnityPodSea", unity_pod_water[ m_map->GetRandom()->GetUInt( 0, 2 ) ] );
 	}
 
 #undef FEATURE_SPRITE
@@ -145,12 +150,12 @@ void Sprites::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) {
 
 }
 
-void Sprites::GenerateSprite( const Tile* tile, TileState* ts, const std::string& name, const Consts::pcx_texture_coordinates_t& tex_coords, const float z_index ) {
-	TileState::sprite_t sprite = {};
+void Sprites::GenerateSprite( const tile::Tile* tile, tile::TileState* ts, const std::string& name, const pcx_texture_coordinates_t& tex_coords, const float z_index ) {
+	tile::TileState::sprite_t sprite = {};
 
 	const auto& coords = tile->is_water_tile
-		? ts->layers[ TileState::LAYER_WATER ].coords
-		: ts->layers[ TileState::LAYER_LAND ].coords;
+		? ts->layers[ tile::LAYER_WATER ].coords
+		: ts->layers[ tile::LAYER_LAND ].coords;
 
 	sprite.name = name;
 	sprite.tex_coords = tex_coords;

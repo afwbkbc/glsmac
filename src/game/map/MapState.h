@@ -1,11 +1,25 @@
 #pragma once
 
-#include "base/Base.h"
-
 #include <vector>
 
-#include "TileState.h"
+#include "base/Base.h"
+
+#include "types/texture/Types.h"
+
+#include "base/MTTypes.h"
+#include "types/Buffer.h"
+#include "types/Vec2.h"
+#include "tile/TileState.h"
+
 #include "base/MTModule.h"
+
+namespace types {
+class Texture;
+}
+
+namespace util {
+class Perlin;
+}
 
 namespace game {
 namespace map {
@@ -15,7 +29,7 @@ CLASS( MapState, base::Base )
 	~MapState();
 
 	struct copy_from_after_t {
-		Texture::add_flag_t mode;
+		types::texture::add_flag_t mode;
 		size_t tx1_from;
 		size_t ty1_from;
 		size_t tx2_from;
@@ -28,26 +42,27 @@ CLASS( MapState, base::Base )
 	};
 
 	bool first_run;
-	Vec2< float > coord;
-	Vec2< uint32_t > dimensions;
+	types::Vec2< float > coord;
+	types::Vec2< uint32_t > dimensions;
 	struct {
-		Vec2< float > texture_scaling;
+		types::Vec2< float > texture_scaling;
 	} variables;
 	std::vector< copy_from_after_t > copy_from_after;
 
-	const Texture* terrain_texture;
-	const Texture* ter1_pcx;
+	const types::texture::Texture* terrain_texture;
+	const types::texture::Texture* ter1_pcx;
 
-	TileState& At( const size_t x, const size_t y );
-	const TileState& AtConst( const size_t x, const size_t y ) const;
+	tile::TileState* At( const size_t x, const size_t y );
+	const tile::TileState* AtConst( const size_t x, const size_t y ) const;
+	const std::vector< tile::TileState >* GetTileStatesPtr() const;
 
 	void LinkTileStates( MT_CANCELABLE );
 
-	const Buffer Serialize() const;
-	void Unserialize( Buffer buf );
+	const types::Buffer Serialize() const;
+	void Unserialize( types::Buffer buf );
 
 private:
-	std::vector< TileState > m_tile_states = {};
+	std::vector< tile::TileState > m_tiles = {};
 
 };
 

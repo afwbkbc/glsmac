@@ -2,10 +2,13 @@
 
 #include "Routine.h"
 
-#include "../shader_program/Skybox.h"
-
 namespace graphics {
 namespace opengl {
+
+namespace shader_program {
+class Skybox;
+}
+
 namespace routine {
 
 CLASS( Skybox, Routine )
@@ -32,6 +35,6 @@ private:
 	void RemoveTexture( base::ObjectLink* link );
 };
 
-} /* namespace routine */
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}
+}

@@ -2,6 +2,14 @@
 
 #include "mocks/Mocks.h"
 
+#include "gse/GSE.h"
+#include "gse/Exception.h"
+#include "gse/context/GlobalContext.h"
+#include "gse/parser/Parser.h"
+#include "gse/runner/Runner.h"
+#include "gse/program/Program.h"
+#include "config/Config.h"
+#include "task/gsetests/GSETests.h"
 #include "util/FS.h"
 #include "util/String.h"
 
@@ -10,17 +18,17 @@
 namespace gse {
 namespace tests {
 
-using namespace program;
-
 #define TEST_SCRIPTS_PATH "gse/tests"
 
 void AddScriptsTests( task::gsetests::GSETests* task ) {
 
-	const std::string tests_path = util::FS::GeneratePath({
-		".",
-		"gse",
-		"tests",
-	}, GSE::PATH_SEPARATOR );
+	const std::string tests_path = util::FS::GeneratePath(
+		{
+			".",
+			"gse",
+			"tests",
+		}, GSE::PATH_SEPARATOR
+	);
 
 	const auto* c = g_engine->GetConfig();
 	if ( !c->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
@@ -45,23 +53,23 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 			"testing " + script,
 			GT( task, script ) {
 
-				gse::parser::Parser* parser = nullptr;
-				const gse::runner::Runner* runner = nullptr;
-				const gse::program::Program* program = nullptr;
-				gse::GlobalContext* context = nullptr;
+				parser::Parser* parser = nullptr;
+				const runner::Runner* runner = nullptr;
+				const program::Program* program = nullptr;
+				context::GlobalContext* context = nullptr;
 
 				std::string last_error = "";
 				try {
 					const auto source = util::FS::ReadFile( script, GSE::PATH_SEPARATOR );
-					parser = gse.GetParser( script, source );
-					context = gse.CreateGlobalContext( script );
+					parser = gse->GetParser( script, source );
+					context = gse->CreateGlobalContext( script );
 					context->IncRefs();
 					mocks::AddMocks( context, { script } );
 					program = parser->Parse();
-					runner = gse.GetRunner();
+					runner = gse->GetRunner();
 					runner->Execute( context, program );
 				}
-				catch ( gse::Exception& e ) {
+				catch ( Exception& e ) {
 					last_error = e.ToStringAndCleanup();
 					context = nullptr;
 				}

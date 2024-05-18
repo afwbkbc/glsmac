@@ -1,5 +1,7 @@
 #include "Instanced.h"
 
+#include "scene/Scene.h"
+
 namespace scene {
 namespace actor {
 
@@ -108,7 +110,7 @@ void Instanced::UpdateMatrix() {
 	m_need_world_matrix_update = true;
 }
 
-const scene::Scene::instance_positions_t* Instanced::GetWorldInstancePositions() {
+const scene::instance_positions_t* Instanced::GetWorldInstancePositions() {
 	if ( m_scene ) {
 		return &m_scene->GetWorldInstancePositions();
 	}
@@ -149,7 +151,7 @@ Mesh* Instanced::GetMeshActor() const {
 
 const Instanced::instance_id_t Instanced::AddInstance( const types::Vec3& position, const types::Vec3& angle ) {
 	m_instances[ m_next_instance_id ] = {
-		position,
+		m_actor->NormalizePosition( position ),
 		angle,
 		{},
 		true

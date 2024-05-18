@@ -8,4 +8,4 @@ void Stdout::HandleError( const std::runtime_error& e ) const {
 	throw e;
 }
 
-} /* namespace error_handler */
+}

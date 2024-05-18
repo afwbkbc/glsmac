@@ -2,13 +2,16 @@
 
 #include "base/Base.h"
 
-#include "ui/event/UIEvent.h"
-
 namespace ui {
+
 class UI;
+namespace event {
+class UIEvent;
+}
+
 namespace module {
 
-CLASS( Module, Base )
+CLASS( Module, base::Base )
 
 	Module( UI* ui );
 
@@ -25,5 +28,3 @@ protected:
 
 }
 }
-
-#include "../../ui/UI.h"

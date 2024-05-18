@@ -1,16 +1,9 @@
 #pragma once
-#pragma once
-
-#include <unordered_map>
 
 #include <sys/types.h>
 #include <memory.h>
 
-#include "../Network.h"
-
-#include "util/Timer.h"
-
-using namespace util;
+#include "network/Network.h"
 
 // seconds
 #define SEND_PING_AFTER 12

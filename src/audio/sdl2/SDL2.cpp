@@ -1,8 +1,12 @@
 #include <algorithm>
+#include <SDL.h>
 
 #include "SDL2.h"
 
+#include "Sound.h"
 #include "engine/Engine.h"
+#include "config/Config.h"
+#include "scene/actor/Sound.h"
 
 namespace audio {
 namespace sdl2 {

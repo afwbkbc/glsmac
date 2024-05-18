@@ -1,17 +1,18 @@
 #include "DefineUnit.h"
 
-#include "../Game.h"
+#include "game/Game.h"
+#include "game/unit/Def.h"
 
 namespace game {
 namespace event {
 
-DefineUnit::DefineUnit( const size_t initiator_slot, const unit::Def* def )
+DefineUnit::DefineUnit( const size_t initiator_slot, unit::Def* def )
 	: Event( initiator_slot, ET_UNIT_DEFINE )
 	, m_def( def ) {
 	//
 }
 
-const std::string* DefineUnit::Validate( const Game* game ) const {
+const std::string* DefineUnit::Validate( Game* game ) const {
 	if ( m_initiator_slot != 0 ) {
 		return Error( "Only master is allowed to define units" );
 	}

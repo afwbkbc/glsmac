@@ -1,5 +1,7 @@
 #include "StyleSheet.h"
 
+#include "Style.h"
+
 namespace ui {
 namespace theme {
 
@@ -9,11 +11,11 @@ StyleSheet::~StyleSheet() {
 	}
 }
 
-void StyleSheet::AddStyle( const std::string& style_name, const Style::includes_t& includes, const Style::style_handler_t handler ) {
+void StyleSheet::AddStyle( const std::string& style_name, const includes_t& includes, const style_handler_t handler ) {
 	const std::string sn = m_prefix + style_name;
 	ASSERT( m_styles.find( sn ) == m_styles.end(), "style '" + sn + "' already exists" );
 	NEWV( style, Style, sn, this );
-	Style::includes_t i;
+	includes_t i;
 	for ( auto& include : includes ) {
 		i.push_back( m_prefix + include );
 	}
@@ -23,7 +25,7 @@ void StyleSheet::AddStyle( const std::string& style_name, const Style::includes_
 	m_styles_order.push_back( sn );
 }
 
-void StyleSheet::AddStyle( const std::string& style_name, const Style::style_handler_t handler ) {
+void StyleSheet::AddStyle( const std::string& style_name, const style_handler_t handler ) {
 	AddStyle( style_name, {}, handler );
 }
 

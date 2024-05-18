@@ -1,7 +1,8 @@
 #include "SkipUnitTurn.h"
 
-#include "../Game.h"
-
+#include "game/Game.h"
+#include "game/unit/Unit.h"
+#include "game/slot/Slot.h"
 #include "gse/type/Undefined.h"
 
 namespace game {
@@ -13,10 +14,14 @@ SkipUnitTurn::SkipUnitTurn( const size_t initiator_slot, const size_t unit_id )
 	//
 }
 
-const std::string* SkipUnitTurn::Validate( const Game* game ) const {
+const std::string* SkipUnitTurn::Validate( Game* game ) const {
 	const auto* unit = game->GetUnit( m_unit_id );
 	if ( !unit ) {
 		return Error( "Unit not found" );
+	}
+
+	if ( unit->m_tile->IsLocked() ) {
+		return Error( "Unit tile is locked" );
 	}
 
 	if ( unit->m_owner->GetIndex() != m_initiator_slot ) {

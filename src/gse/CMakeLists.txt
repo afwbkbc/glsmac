@@ -1,6 +1,8 @@
+SUBDIR( context )
 SUBDIR( type )
 SUBDIR( callable )
 SUBDIR( parser )
+SUBDIR( program )
 SUBDIR( runner )
 SUBDIR( builtins )
 
@@ -12,10 +14,8 @@ SET( SRC ${SRC}
 
 	${PWD}/GSE.cpp
 	${PWD}/Value.cpp
-	${PWD}/Context.cpp
-	${PWD}/ChildContext.cpp
-	${PWD}/GlobalContext.cpp
 	${PWD}/Exception.cpp
+	${PWD}/Wrappable.cpp
 
 	)
 

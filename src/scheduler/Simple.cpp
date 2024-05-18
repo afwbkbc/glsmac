@@ -2,7 +2,7 @@
 
 #include "Simple.h"
 
-using namespace base;
+#include "base/Task.h"
 
 namespace scheduler {
 
@@ -59,7 +59,7 @@ void Simple::Iterate() {
 #endif
 }
 
-void Simple::AddTask( Task* task ) {
+void Simple::AddTask( base::Task* task ) {
 	if ( m_iterating ) {
 		m_tasks_toadd.push_back( task );
 	}
@@ -72,7 +72,7 @@ void Simple::AddTask( Task* task ) {
 	}
 }
 
-void Simple::RemoveTask( Task* task ) {
+void Simple::RemoveTask( base::Task* task ) {
 	if ( m_iterating ) {
 		m_tasks_toremove.push_back( task );
 	}
@@ -88,4 +88,4 @@ void Simple::RemoveTask( Task* task ) {
 	}
 }
 
-} /* namespace scheduler */
+}

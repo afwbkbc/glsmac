@@ -1,25 +1,25 @@
 #include "Terraforming.h"
 
-#include "../../Game.h"
+#include "game/map/tile/Tile.h"
 
 namespace game {
 namespace map_editor {
 namespace tool {
 
-Terraforming::Terraforming( Game* game, const MapEditor::tool_type_t type, const map::Tile::terraforming_t terraforming )
+Terraforming::Terraforming( Game* game, const tool_type_t type, const map::tile::terraforming_t terraforming )
 	: Tool( game, type )
 	, m_terraforming( terraforming ) {
 	//
 }
 
-const MapEditor::tiles_t Terraforming::Draw( map::Tile* tile, const MapEditor::draw_mode_t mode ) {
-	if ( mode == MapEditor::DM_DEC ) {
+const tiles_t Terraforming::Draw( map::tile::Tile* tile, const draw_mode_t mode ) {
+	if ( mode == DM_DEC ) {
 		if ( !( tile->terraforming & m_terraforming ) ) {
 			return {}; // already unset
 		}
 		tile->terraforming &= ~m_terraforming;
 	}
-	else if ( mode == MapEditor::DM_INC ) {
+	else if ( mode == DM_INC ) {
 		if ( tile->terraforming & m_terraforming ) {
 			return {}; // already set
 		}
@@ -27,7 +27,7 @@ const MapEditor::tiles_t Terraforming::Draw( map::Tile* tile, const MapEditor::d
 	}
 
 	// some terraforming types will alter surrounding tiles, others won't
-	if ( m_terraforming & ( map::Tile::T_FOREST | map::Tile::T_FARM | map::Tile::T_SOIL_ENRICHER | map::Tile::T_ROAD | map::Tile::T_MAG_TUBE ) ) {
+	if ( m_terraforming & ( map::tile::TERRAFORMING_FOREST | map::tile::TERRAFORMING_FARM | map::tile::TERRAFORMING_SOIL_ENRICHER | map::tile::TERRAFORMING_ROAD | map::tile::TERRAFORMING_MAG_TUBE ) ) {
 		return {
 			tile,
 			tile->W,

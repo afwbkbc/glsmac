@@ -1,17 +1,13 @@
 #pragma once
 
-#include <string>
+#include "task/mainmenu/PopupMenu.h"
 
-#include "../PopupMenu.h"
-
-#include "base/MTModule.h"
-
-#include "ui/object/FileBrowser.h"
+namespace ui::object {
+class Section;
+class FileBrowser;
+}
 
 namespace task {
-
-using namespace ui;
-
 namespace mainmenu {
 
 CLASS( LoadMapFile, PopupMenu )
@@ -27,9 +23,9 @@ CLASS( LoadMapFile, PopupMenu )
 
 private:
 
-	Section* m_section = nullptr;
+	ui::object::Section* m_section = nullptr;
 	::ui::object::FileBrowser* m_file_browser = nullptr;
-	
+
 };
 
 }

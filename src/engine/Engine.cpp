@@ -2,6 +2,20 @@
 #include <thread>
 
 #include "Engine.h"
+#include "config/Config.h"
+#include "base/Thread.h"
+#include "error_handler/ErrorHandler.h"
+#include "logger/Logger.h"
+#include "loader/font/FontLoader.h"
+#include "loader/texture/TextureLoader.h"
+#include "loader/sound/SoundLoader.h"
+#include "scheduler/Scheduler.h"
+#include "input/Input.h"
+#include "graphics/Graphics.h"
+#include "audio/Audio.h"
+#include "network/Network.h"
+#include "ui/UI.h"
+#include "game/Game.h"
 
 // TODO: move to config
 const size_t g_max_fps = 500;
@@ -43,7 +57,7 @@ Engine::Engine(
 
 	g_engine = this;
 
-	NEWV( t_main, Thread, "MAIN" );
+	NEWV( t_main, base::Thread, "MAIN" );
 	if ( m_config->HasLaunchFlag( config::Config::LF_BENCHMARK ) ) {
 		t_main->SetIPS( 999999.9f );
 	}
@@ -63,13 +77,13 @@ Engine::Engine(
 	t_main->AddModule( m_scheduler );
 	m_threads.push_back( t_main );
 
-	NEWV( t_network, Thread, "NETWORK" );
+	NEWV( t_network, base::Thread, "NETWORK" );
 	t_network->SetIPS( 100 );
 	t_network->AddModule( m_network );
 	m_threads.push_back( t_network );
 
 	if ( m_game ) {
-		NEWV( t_game, Thread, "GAME" );
+		NEWV( t_game, base::Thread, "GAME" );
 		t_game->SetIPS( g_max_fps );
 		t_game->AddModule( m_game );
 		m_threads.push_back( t_game );
@@ -152,4 +166,4 @@ void Engine::ShutDown() {
 	m_is_shutting_down = true;
 }
 
-} /* namespace engine */
+}

@@ -1,5 +1,7 @@
 #include "Tile.h"
 
+#include "Unit.h"
+
 namespace task {
 namespace game {
 
@@ -40,6 +42,8 @@ void Tile::AddUnit( Unit* unit ) {
 			unit
 		}
 	);
+	m_is_units_reorder_needed = true;
+	Render();
 }
 
 void Tile::RemoveUnit( Unit* unit ) {
@@ -48,10 +52,12 @@ void Tile::RemoveUnit( Unit* unit ) {
 		SetActiveUnit( nullptr );
 	}
 	m_units.erase( unit->GetId() );
+	m_is_units_reorder_needed = true;
+	Render();
 }
 
 void Tile::SetActiveUnit( Unit* unit ) {
-	if ( m_render.currently_rendered_unit ) {
+	if ( m_render.currently_rendered_unit && m_render.currently_rendered_unit != unit ) {
 		m_render.currently_rendered_unit->Hide();
 		m_render.currently_rendered_unit = unit;
 	}
@@ -65,11 +71,6 @@ void Tile::Render( size_t selected_unit_id ) {
 		unit->HideFakeBadge();
 	}
 	m_render.currently_rendered_fake_badges.clear();
-
-	// is needed?
-	/*if ( m_selected_unit_state == tile_state->render.currently_rendered_unit ) {
-		m_selected_unit_state = nullptr;
-	}*/
 
 	if ( !m_units.empty() ) {
 		const auto units_order = GetUnitsOrder( m_units );
@@ -113,6 +114,81 @@ void Tile::Render( size_t selected_unit_id ) {
 		}
 	}
 
+}
+
+const std::unordered_map< size_t, Unit* >& Tile::GetUnits() const {
+	return m_units;
+}
+
+const std::vector< Unit* >& Tile::GetOrderedUnits() {
+	if ( m_is_units_reorder_needed ) {
+		m_ordered_units.clear();
+		m_ordered_units.reserve( m_units.size() );
+		const auto order = GetUnitsOrder( m_units );
+		for ( const auto& it : order ) {
+			m_ordered_units.push_back( m_units.at( it ) );
+		}
+		m_is_units_reorder_needed = false;
+	}
+	return m_ordered_units;
+}
+
+Unit* Tile::GetMostImportantUnit() {
+	if ( m_units.empty() ) {
+		return nullptr;
+	}
+	else {
+		return GetOrderedUnits().front();
+	}
+}
+
+Tile* Tile::GetNeighbour( const ::game::map::tile::direction_t direction ) {
+	switch ( direction ) {
+		case ::game::map::tile::D_NONE:
+			return this;
+		case ::game::map::tile::D_W:
+			return W;
+		case ::game::map::tile::D_NW:
+			return NW;
+		case ::game::map::tile::D_N:
+			return N;
+		case ::game::map::tile::D_NE:
+			return NE;
+		case ::game::map::tile::D_E:
+			return E;
+		case ::game::map::tile::D_SE:
+			return SE;
+		case ::game::map::tile::D_S:
+			return S;
+		case ::game::map::tile::D_SW:
+			return SW;
+		default:
+			THROW( "unknown tile direction: " + std::to_string( direction ) );
+	}
+}
+
+const Tile::render_data_t& Tile::GetRenderData() const {
+	return m_render_data;
+}
+
+void Tile::SetCoords( const types::Vec3& coords ) {
+	m_render_data.coords = coords;
+}
+
+void Tile::SetSelectionCoords( const ::game::map::tile::tile_vertices_t& selection_coords ) {
+	m_render_data.selection_coords = selection_coords;
+}
+
+void Tile::SetPreviewMeshes( const std::vector< types::mesh::Render* >& preview_meshes ) {
+	m_render_data.preview_meshes = preview_meshes;
+}
+
+void Tile::SetPreviewLines( const std::vector< std::string >& preview_lines ) {
+	m_render_data.preview_lines = preview_lines;
+}
+
+void Tile::SetSprites( const std::vector< std::string >& sprites ) {
+	m_render_data.sprites = sprites;
 }
 
 }

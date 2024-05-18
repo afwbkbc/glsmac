@@ -2,19 +2,19 @@
 
 #include "gse/Bindings.h"
 
-#include "gse/ChildContext.h"
-
+// TODO: refactor
 #include "Common.h"
 #include "Console.h"
 #include "Include.h"
 #include "Conversions.h"
+#include "Math.h"
 
 namespace gse {
 namespace builtins {
 
 class Builtins : public Bindings {
 public:
-	void AddToContext( gse::Context* ctx ) override;
+	void AddToContext( context::Context* ctx ) override;
 
 #ifdef DEBUG
 	void LogCaptureStart() const { m_console.CaptureStart(); }
@@ -26,6 +26,7 @@ private:
 	Include m_include = {};
 	Console m_console = {};
 	Conversions m_conversions = {};
+	Math m_math = {};
 
 };
 

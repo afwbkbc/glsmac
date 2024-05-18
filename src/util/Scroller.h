@@ -1,9 +1,8 @@
 #pragma once
 
 #include "Util.h"
-#include "Timer.h"
 
-#include "types/Vec3.h"
+#include "Timer.h"
 
 namespace util {
 

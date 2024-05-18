@@ -2,10 +2,11 @@
 
 #include "Actor.h"
 
-#include "types/Sound.h"
 #include "util/Timer.h"
 
-using namespace types;
+namespace types {
+class Sound;
+}
 
 namespace scene {
 namespace actor {
@@ -37,7 +38,7 @@ CLASS( Sound, Actor )
 
 	void Rewind();
 	void GetNextBuffer( uint8_t* buffer, int len );
-	
+
 private:
 	const types::Sound* m_sound = nullptr;
 

@@ -7,7 +7,7 @@ namespace game {
 class Game;
 namespace ui {
 
-CLASS( UI, UIContainer )
+CLASS( UI, ::ui::object::UIContainer )
 
 	UI( Game* game, const std::string& class_name );
 

@@ -1,9 +1,12 @@
 #include "UnitDef.h"
 
+#include "game/unit/StaticDef.h"
 #include "game/unit/SpriteRender.h"
-
 #include "engine/Engine.h"
+#include "loader/texture/TextureLoader.h"
 #include "util/String.h"
+#include "InstancedSpriteManager.h"
+#include "game/map/Consts.h"
 
 namespace task {
 namespace game {
@@ -15,7 +18,7 @@ UnitDef::UnitDef( InstancedSpriteManager* ism, const ::game::unit::Def* unitdef 
 	, m_type( unitdef->m_type ) {
 
 	switch ( unitdef->m_type ) {
-		case ::game::unit::Def::DT_STATIC: {
+		case ::game::unit::DT_STATIC: {
 			const auto* def = (::game::unit::StaticDef*)unitdef;
 
 			switch ( def->m_render->m_type ) {
@@ -29,11 +32,11 @@ UnitDef::UnitDef( InstancedSpriteManager* ism, const ::game::unit::Def* unitdef 
 
 					const auto name = "Unit_" + def->m_id;
 					auto* texture = g_engine->GetTextureLoader()->LoadTexture( render->m_file );
-					const ::game::map::Consts::pcx_texture_coordinates_t& src_wh = {
+					const ::game::map::pcx_texture_coordinates_t& src_wh = {
 						render->m_w,
 						render->m_h,
 					};
-					const Vec2< float >& dst_wh = {
+					const types::Vec2< float >& dst_wh = {
 						::game::map::s_consts.tile.scale.x,
 						::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
 					};
@@ -42,8 +45,8 @@ UnitDef::UnitDef( InstancedSpriteManager* ism, const ::game::unit::Def* unitdef 
 					static_.render.morale_based_xshift = render->m_morale_based_xshift;
 					if ( static_.render.morale_based_xshift ) {
 						NEW( static_.render.morale_based_sprites, morale_based_sprites_t );
-						for ( ::game::unit::Unit::morale_t morale = ::game::unit::Unit::MORALE_MIN ; morale <= ::game::unit::Unit::MORALE_MAX ; morale++ ) {
-							const uint32_t xshift = static_.render.morale_based_xshift * ( morale - ::game::unit::Unit::MORALE_MIN );
+						for ( ::game::unit::morale_t morale = ::game::unit::MORALE_MIN ; morale <= ::game::unit::MORALE_MAX ; morale++ ) {
+							const uint32_t xshift = static_.render.morale_based_xshift * ( morale - ::game::unit::MORALE_MIN );
 							static_.render.morale_based_sprites->insert(
 								{
 									morale,
@@ -94,7 +97,7 @@ UnitDef::UnitDef( InstancedSpriteManager* ism, const ::game::unit::Def* unitdef 
 }
 
 UnitDef::~UnitDef() {
-	if ( m_type == ::game::unit::Def::DT_STATIC ) {
+	if ( m_type == ::game::unit::DT_STATIC ) {
 		if ( static_.render.morale_based_xshift ) {
 			DELETE( static_.render.morale_based_sprites );
 		}
@@ -105,8 +108,8 @@ const bool UnitDef::IsArtillery() const {
 	return m_id != "SporeLauncher";
 }
 
-Sprite* UnitDef::GetSprite( const ::game::unit::Unit::morale_t morale ) {
-	ASSERT_NOLOG( m_type == ::game::unit::Def::DT_STATIC, "only static units are supported for now" );
+Sprite* UnitDef::GetSprite( const ::game::unit::morale_t morale ) {
+	ASSERT_NOLOG( m_type == ::game::unit::DT_STATIC, "only static units are supported for now" );
 	ASSERT_NOLOG( static_.render.is_sprite, "only sprite unitdefs are supported for now" );
 
 	auto& render = static_.render;
@@ -117,7 +120,7 @@ Sprite* UnitDef::GetSprite( const ::game::unit::Unit::morale_t morale ) {
 }
 
 const bool UnitDef::IsImmovable() const {
-	return static_.movement_type == ::game::unit::StaticDef::MT_IMMOVABLE;
+	return static_.movement_type == ::game::unit::MT_IMMOVABLE;
 }
 
 const std::string UnitDef::GetNameString() const {

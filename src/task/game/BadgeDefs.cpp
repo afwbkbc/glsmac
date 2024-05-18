@@ -1,6 +1,11 @@
 #include "BadgeDefs.h"
 
 #include "engine/Engine.h"
+#include "loader/texture/TextureLoader.h"
+#include "types/texture/Texture.h"
+#include "InstancedSpriteManager.h"
+#include "game/map/Consts.h"
+#include "InstancedSprite.h"
 
 namespace task {
 namespace game {
@@ -26,8 +31,8 @@ BadgeDefs::BadgeDefs( InstancedSpriteManager* ism )
 		for ( auto badge_mode = BT_NORMAL ; badge_mode <= BT_GREYEDOUT ; badge_mode++ ) {
 			const uint8_t row = badge_type | badge_mode;
 			auto& spritemap = m_unitbadge_sprites[ row ];
-			for ( auto morale = ::game::unit::Unit::MORALE_MIN ; morale <= ::game::unit::Unit::MORALE_MAX ; morale++ ) {
-				x = ( morale - ::game::unit::Unit::MORALE_MIN ) * ( w + margin ) + margin;
+			for ( auto morale = ::game::unit::MORALE_MIN ; morale <= ::game::unit::MORALE_MAX ; morale++ ) {
+				x = ( morale - ::game::unit::MORALE_MIN ) * ( w + margin ) + margin;
 				y = row * ( h + margin ) + margin;
 
 				// cut holes for healthbars
@@ -102,7 +107,7 @@ BadgeDefs::BadgeDefs( InstancedSpriteManager* ism )
 	for ( auto step = 0 ; step < res ; step++ ) {
 
 		// generate healthbar texture
-		texture = new types::Texture( "HealthBar_" + std::to_string( step ), 1, res );
+		texture = new types::texture::Texture( "HealthBar_" + std::to_string( step ), 1, res );
 
 		texture->Fill( 0, 0, 0, step, color );
 		if ( step < res - 1 ) {
@@ -155,7 +160,7 @@ BadgeDefs::~BadgeDefs() {
 	}
 }
 
-const Vec3 BadgeDefs::GetBadgeCoords( const Vec3& unit_coords ) {
+const types::Vec3 BadgeDefs::GetBadgeCoords( const types::Vec3& unit_coords ) {
 	return {
 		unit_coords.x + ::game::map::s_consts.tile.scale.x * s_consts.offset.x,
 		unit_coords.y - ::game::map::s_consts.tile.scale.y * s_consts.offset.y * ::game::map::s_consts.sprite.y_scale,
@@ -163,7 +168,7 @@ const Vec3 BadgeDefs::GetBadgeCoords( const Vec3& unit_coords ) {
 	};
 }
 
-const Vec3 BadgeDefs::GetBadgeHealthbarCoords( const types::Vec3& unit_coords ) {
+const types::Vec3 BadgeDefs::GetBadgeHealthbarCoords( const types::Vec3& unit_coords ) {
 	return {
 		unit_coords.x + ::game::map::s_consts.tile.scale.x * s_consts.healthbars.offset.x,
 		unit_coords.y - ::game::map::s_consts.tile.scale.y * s_consts.healthbars.offset.y * ::game::map::s_consts.sprite.y_scale,
@@ -171,7 +176,7 @@ const Vec3 BadgeDefs::GetBadgeHealthbarCoords( const types::Vec3& unit_coords ) 
 	};
 }
 
-InstancedSprite* BadgeDefs::GetBadgeSprite( const badge_type_t badge_type, const ::game::unit::Unit::morale_t morale ) const {
+InstancedSprite* BadgeDefs::GetBadgeSprite( const badge_type_t badge_type, const ::game::unit::morale_t morale ) const {
 	return m_unitbadge_sprites.at( badge_type ).at( morale );
 }
 
@@ -180,14 +185,14 @@ InstancedSprite* BadgeDefs::GetFakeBadgeSprite() const {
 }
 
 Sprite* BadgeDefs::GetBadgeHealthbarSprite( const float health ) {
-	return &m_healthbar_sprites.at( floor( health * s_consts.healthbars.resolution ) );
+	return &m_healthbar_sprites.at( round( health * ( s_consts.healthbars.resolution - 1 ) ) );
 }
 
 const size_t BadgeDefs::GetBadgeBlinkInterval() const {
 	return s_consts.blink.interval_ms;
 }
 
-const Vec3 BadgeDefs::GetFakeBadgeCoords( const types::Vec3& coords, const uint8_t offset ) const {
+const types::Vec3 BadgeDefs::GetFakeBadgeCoords( const types::Vec3& coords, const uint8_t offset ) const {
 	return {
 		coords.x + ::game::map::s_consts.tile.scale.x * s_consts.fake_badges.offset.x + s_consts.fake_badges.step_x * offset,
 		coords.y - ::game::map::s_consts.tile.scale.y * s_consts.fake_badges.offset.y * ::game::map::s_consts.sprite.y_scale,

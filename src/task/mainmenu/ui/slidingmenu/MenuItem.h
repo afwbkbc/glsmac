@@ -3,18 +3,19 @@
 #include <vector>
 
 #include "ui/object/UIContainer.h"
-#include "ui/object/Surface.h"
-#include "ui/object/Label.h"
 
-using namespace ui::object;
-using namespace ui::event;
+#include "ui/event/Types.h"
+
+namespace ui::object {
+class Label;
+}
 
 namespace task {
 namespace mainmenu {
 
 class MenuBlock;
 
-CLASS( MenuItem, UIContainer )
+CLASS( MenuItem, ui::object::UIContainer )
 	MenuItem( MenuBlock* menu, const std::string& text, const bool is_title = false );
 
 	virtual void Create() override;
@@ -24,18 +25,16 @@ CLASS( MenuItem, UIContainer )
 
 protected:
 
-	bool OnMouseDown( const UIEvent::event_data_t* data ) override;
+	bool OnMouseDown( const ui::event::event_data_t* data ) override;
 
 	MenuBlock* m_menu = nullptr;
 	const std::string m_text = "";
 	const bool m_is_title = false;
 
-	Label* m_label = nullptr;
+	ui::object::Label* m_label = nullptr;
 
 	std::vector< UIObject* > m_parts = {};
 };
 
 }
 }
-
-#include "MenuBlock.h"

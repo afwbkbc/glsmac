@@ -6,60 +6,104 @@
 #include "base/Task.h"
 
 #include "Types.h"
+#include "base/MTTypes.h"
+#include "ui/Types.h"
+#include "game/turn/Types.h"
+#include "game/map/Types.h"
+#include "game/map_editor/Types.h"
+#include "game/unit/Types.h"
+#include "game/Types.h"
+#include "rr/Types.h"
 
-#include "base/MTModule.h"
-
-#include "game/State.h"
-
-#include "scene/Scene.h"
-#include "scene/actor/Instanced.h"
-
-#include "types/Texture.h"
-#include "types/mesh/Render.h"
-#include "types/mesh/Data.h"
-
+#include "types/Vec2.h"
+#include "types/Vec3.h"
+#include "types/Color.h"
 #include "util/Clamper.h"
-#include "util/Random.h"
 #include "util/Scroller.h"
 
-#include "game/map_editor/MapEditor.h"
-
-#include "../../ui/UI.h"
-#include "ui/event/UIEventHandler.h"
-#include "ui/style/Theme.h"
-#include "ui/bottom_bar/BottomBar.h"
-
-#include "actor/TileSelection.h"
-#include "game/Game.h"
-#include "game/FrontendRequest.h"
-#include "game/unit/StaticDef.h"
-
-#include "game/map/Consts.h"
-#include "game/map_editor/MapEditor.h"
-
-#include "InstancedSpriteManager.h"
-#include "InstancedSprite.h"
-#include "Sprite.h"
-#include "Slot.h"
-#include "UnitDef.h"
-#include "Unit.h"
-#include "SlotBadges.h"
+// TODO: remove those
+#include "game/map/tile/Tile.h"
+#include "game/map/tile/TileState.h"
 #include "Tile.h"
+#include "game/BackendRequest.h"
 
-using namespace ui;
-namespace ui {
-using namespace event;
+// TODO: remove this
+#include "game/map/Consts.h"
+#include "util/FS.h"
+
+namespace types {
+namespace texture {
+class Texture;
+}
+namespace mesh {
+class Render;
+class Data;
+}
 }
 
-using namespace util;
-using namespace scene;
+namespace util::random {
+class Random;
+}
+
+namespace scene {
+class Scene;
+class Camera;
+class Light;
+namespace actor {
+class Instanced;
+}
+}
+
+namespace ui {
+namespace event {
+class UIEventHandler;
+}
+namespace style {
+class Theme;
+}
+}
+
+namespace game {
+class State;
+class FrontendRequest;
+namespace animation {
+class Def;
+}
+namespace unit {
+class Def;
+}
+}
 
 namespace task {
 namespace game {
 
+class InstancedSpriteManager;
+class InstancedSprite;
+class Sprite;
+class Slot;
+class AnimationDef;
+class Animation;
+class UnitDef;
+class Unit;
+class SlotBadges;
+class BadgeDefs;
+
+namespace ui {
+class BottomBar;
+class UnitsList;
+namespace style {
+class Theme;
+}
+}
+
+namespace actor {
+class TileSelection;
+class Actor;
+}
+
 CLASS( Game, base::Task )
 
-	Game( ::game::State* state, ui_handler_t on_start = 0, ui_handler_t on_cancel = 0 );
+	Game( ::game::State* state, ::ui::ui_handler_t on_start = 0, ::ui::ui_handler_t on_cancel = 0 );
 	~Game();
 
 	void Start() override;
@@ -79,7 +123,7 @@ CLASS( Game, base::Task )
 					const size_t windowed = 10; // harder to place cursor at edge of window
 				} edge_distance_px;
 				const uint16_t scroll_step_ms = 2;
-				const Vec2< float > speed = {
+				const types::Vec2< float > speed = {
 					0.002f * scroll_step_ms,
 					0.003f * scroll_step_ms,
 				};
@@ -103,15 +147,15 @@ CLASS( Game, base::Task )
 	const std::string& GetMapLastDirectory() const;
 
 	InstancedSpriteManager* GetISM() const;
-	types::Texture* GetSourceTexture( const std::string& name );
-	InstancedSprite* GetTerrainInstancedSprite( const ::game::map::Map::sprite_actor_t& actor );
+	types::texture::Texture* GetSourceTexture( const std::string& name );
+	InstancedSprite* GetTerrainInstancedSprite( const ::game::map::sprite_actor_t& actor );
 
-	void CenterAtCoordinatePercents( const Vec2< float > position_percents );
+	void CenterAtCoordinatePercents( const ::types::Vec2< float > position_percents );
 
 	void SmoothScroll( const float scroll_value );
-	void SmoothScroll( const Vec2< float > position, const float scroll_value );
+	void SmoothScroll( const ::types::Vec2< float > position, const float scroll_value );
 
-	util::Random* GetRandom() const;
+	util::random::Random* GetRandom() const;
 
 	void CloseMenus();
 
@@ -133,25 +177,27 @@ CLASS( Game, base::Task )
 
 	void ConfirmExit( ::ui::ui_handler_t on_confirm );
 
-	types::Texture* GetTerrainTexture() const;
+	types::texture::Texture* GetTerrainTexture() const;
 
-	void SetEditorTool( ::game::map_editor::MapEditor::tool_type_t tool );
-	const ::game::map_editor::MapEditor::tool_type_t GetEditorTool() const;
+	void SetEditorTool( ::game::map_editor::tool_type_t tool );
+	const ::game::map_editor::tool_type_t GetEditorTool() const;
 
-	void SetEditorBrush( ::game::map_editor::MapEditor::brush_type_t editor_brush );
-	const ::game::map_editor::MapEditor::brush_type_t GetEditorBrush() const;
+	void SetEditorBrush( ::game::map_editor::brush_type_t editor_brush );
+	const ::game::map_editor::brush_type_t GetEditorBrush() const;
 
 private:
 
 	size_t m_slot_index = 0;
 	bool m_is_turn_active = false;
+	::game::turn::turn_status_t m_turn_status = ::game::turn::TS_PLEASE_WAIT;
+	size_t m_turn_id = 0;
 	void ActivateTurn();
 	void DeactivateTurn();
 
 	const std::string TERRAIN_SOURCE_PCX = "ter1.pcx";
 
-	::game::map_editor::MapEditor::tool_type_t m_editor_tool = ::game::map_editor::MapEditor::TT_NONE;
-	::game::map_editor::MapEditor::brush_type_t m_editor_brush = ::game::map_editor::MapEditor::BT_NONE;
+	::game::map_editor::tool_type_t m_editor_tool = ::game::map_editor::TT_NONE;
+	::game::map_editor::brush_type_t m_editor_brush = ::game::map_editor::BT_NONE;
 
 	void UpdateMapData( const types::Vec2< size_t >& map_size );
 
@@ -160,53 +206,59 @@ private:
 		const types::Color& color,
 		const bool is_progenitor
 	);
+	void DefineAnimation( const ::game::animation::Def* def );
+	void ShowAnimation( AnimationDef* def, const size_t animation_id, const ::types::Vec3& render_coords );
 	void DefineUnit( const ::game::unit::Def* def );
 	void SpawnUnit(
 		const size_t unit_id,
 		const std::string& unitdef_name,
 		const size_t slot_index,
-		const Vec2< size_t >& tile_coords,
-		const Vec3& render_coords,
-		const ::game::unit::Unit::movement_t movement,
-		const ::game::unit::Unit::morale_t morale,
-		const ::game::unit::Unit::health_t health
+		const ::types::Vec2< size_t >& tile_coords,
+		const ::types::Vec3& render_coords,
+		const ::game::unit::movement_t movement,
+		const ::game::unit::morale_t morale,
+		const std::string& morale_string,
+		const ::game::unit::health_t health
 	);
 	void DespawnUnit( const size_t unit_id );
-	void RefreshUnit( Unit* unit_state );
+	void RefreshUnit( Unit* unit );
 	void MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_coords );
 
-	void ProcessRequest( const ::game::FrontendRequest& request );
+	void ProcessRequest( const ::game::FrontendRequest* request );
+	void SendBackendRequest( const ::game::BackendRequest* request );
 
 	bool m_is_initialized = false;
 	void Initialize(
-		types::Texture* terrain_texture,
+		types::texture::Texture* terrain_texture,
 		types::mesh::Render* terrain_mesh,
 		types::mesh::Data* terrain_data_mesh,
-		const std::unordered_map< std::string, ::game::map::Map::sprite_actor_t >& sprite_actors,
-		const std::unordered_map< size_t, std::pair< std::string, Vec3 > >& sprite_instances
+		const std::unordered_map< std::string, ::game::map::sprite_actor_t >& sprite_actors,
+		const std::unordered_map< size_t, std::pair< std::string, ::types::Vec3 > >& sprite_instances,
+		const std::vector< ::game::map::tile::Tile >* tiles,
+		const std::vector< ::game::map::tile::TileState >* tile_states
 	);
 	void Deinitialize();
 
-	ui_handler_t m_on_start;
-	ui_handler_t m_on_cancel;
+	::ui::ui_handler_t m_on_start;
+	::ui::ui_handler_t m_on_cancel;
 
-	void SetCameraPosition( const Vec3 camera_position );
+	void SetCameraPosition( const ::types::Vec3 camera_position );
 
 	::game::State* m_state = nullptr;
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)
-	Random* m_random = nullptr;
+	util::random::Random* m_random = nullptr;
 
 	// map rendering stuff
-	Vec3 m_camera_position; // { x, y, zoom }
-	Vec3 m_camera_angle;
-	Camera* m_camera = nullptr;
-	Light* m_light_a = nullptr; // Alpha Centauri A
-	Light* m_light_b = nullptr; // Alpha Centauri B
-	Scene* m_world_scene = nullptr;
+	types::Vec3 m_camera_position; // { x, y, zoom }
+	types::Vec3 m_camera_angle;
+	scene::Camera* m_camera = nullptr;
+	scene::Light* m_light_a = nullptr; // Alpha Centauri A
+	scene::Light* m_light_b = nullptr; // Alpha Centauri B
+	scene::Scene* m_world_scene = nullptr;
 
 	bool m_is_editing_mode = false;
-	::game::map_editor::MapEditor::draw_mode_t m_editor_draw_mode = ::game::map_editor::MapEditor::DM_NONE;
+	::game::map_editor::draw_mode_t m_editor_draw_mode = ::game::map_editor::DM_NONE;
 	util::Timer m_editing_draw_timer;
 
 	struct {
@@ -218,25 +270,25 @@ private:
 
 	struct {
 		bool is_dragging = false;
-		Vec2< float > last_drag_position;
+		types::Vec2< float > last_drag_position;
 		struct {
 			util::Timer timer;
-			Vec2< float > speed = {
+			types::Vec2< float > speed = {
 				0,
 				0
 			};
 		} edge_scrolling;
-		Vec2< float > last_mouse_position;
+		types::Vec2< float > last_mouse_position;
 		float key_zooming = 0;
 	} m_map_control = {};
 
 	struct {
 		size_t window_width;
 		size_t window_height;
-		Vec2< size_t > min;
-		Vec2< size_t > max;
+		types::Vec2< size_t > min;
+		types::Vec2< size_t > max;
 		size_t bottom_bar_overlap;
-		Vec2< float > ratio;
+		types::Vec2< float > ratio;
 		size_t width;
 		size_t height;
 		float aspect_ratio;
@@ -244,8 +296,8 @@ private:
 		bool is_fullscreen;
 	} m_viewport;
 	struct {
-		Vec3 min;
-		Vec3 max;
+		types::Vec3 min;
+		types::Vec3 max;
 	} m_camera_range;
 
 	// shift x to center instance when needed
@@ -253,13 +305,13 @@ private:
 	void FixCameraX();
 
 	struct {
-		const UIEventHandler* keydown_before = nullptr;
-		const UIEventHandler* keydown_after = nullptr;
-		const UIEventHandler* keyup = nullptr;
-		const UIEventHandler* mousedown = nullptr;
-		const UIEventHandler* mousemove = nullptr;
-		const UIEventHandler* mouseup = nullptr;
-		const UIEventHandler* mousescroll = nullptr;
+		const ::ui::event::UIEventHandler* keydown_before = nullptr;
+		const ::ui::event::UIEventHandler* keydown_after = nullptr;
+		const ::ui::event::UIEventHandler* keyup = nullptr;
+		const ::ui::event::UIEventHandler* mousedown = nullptr;
+		const ::ui::event::UIEventHandler* mousemove = nullptr;
+		const ::ui::event::UIEventHandler* mouseup = nullptr;
+		const ::ui::event::UIEventHandler* mousescroll = nullptr;
 	} m_handlers;
 	void UpdateViewport();
 	void UpdateCameraPosition();
@@ -269,13 +321,14 @@ private:
 	void UpdateMapInstances();
 	void UpdateUICamera();
 
+	// TODO: move this to .cpp
 	// structures received from game thread
 	struct map_data_t {
 		size_t width = 0;
 		size_t height = 0;
 		struct {
-			Vec2< float > min = {};
-			Vec2< float > max = {};
+			types::Vec2< float > min = {};
+			types::Vec2< float > max = {};
 			struct {
 				util::Clamper< float > x;
 				util::Clamper< float > y;
@@ -292,32 +345,31 @@ private:
 
 	const bool m_is_map_editing_allowed = false;
 
-	tile_data_t m_selected_tile_data = {};
-	Unit* m_selected_unit_state = nullptr;
+	Tile* m_selected_tile = nullptr;
+	Unit* m_selected_unit = nullptr;
 	map_data_t m_map_data = {};
-	Unit* m_currently_moving_unit = nullptr;
 
 	// UI stuff
 
 	struct {
-		ui::style::Theme theme;
-		ui::BottomBar* bottom_bar = nullptr;
+		ui::style::Theme* theme = nullptr;
+		task::game::ui::BottomBar* bottom_bar = nullptr;
 	} m_ui;
 
 	bool m_is_resize_handler_set = false;
 
 	void SelectTileAtPoint( const ::game::tile_query_purpose_t tile_query_purpose, const size_t x, const size_t y );
-	void SelectTileOrUnit( const tile_data_t& tile_data, const size_t selected_unit_id );
+	void SelectTileOrUnit( Tile* tile, const size_t selected_unit_id = 0 );
 	void DeselectTileOrUnit();
-	const unit_data_t* GetFirstSelectableUnit( const std::vector< unit_data_t >& units ) const;
+	Unit* GetFirstSelectableUnit( const std::unordered_map< size_t, Unit* >& units ) const;
 
 private:
 	friend class ui::UnitsList;
-	void SelectUnit( const unit_data_t& unit_data, const bool actually_select_unit );
+	void SelectUnit( Unit* unit_data, const bool actually_select_unit );
 
 	struct {
-		std::unordered_map< std::string, types::Texture* > source;
-		types::Texture* terrain = nullptr;
+		std::unordered_map< std::string, types::texture::Texture* > source;
+		types::texture::Texture* terrain = nullptr;
 	} m_textures;
 
 	struct {
@@ -332,10 +384,10 @@ private:
 	void AddActor( actor::Actor* actor );
 	void RemoveActor( actor::Actor* actor );
 
-	const Vec2< float > GetTileWindowCoordinates( const Vec3& tile_coords );
+	const ::types::Vec2< float > GetTileWindowCoordinates( const ::types::Vec3& tile_coords );
 
-	void ScrollTo( const Vec3& target );
-	void ScrollToTile( const tile_data_t& tile_data );
+	void ScrollTo( const ::types::Vec3& target );
+	void ScrollToTile( const Tile* tile, bool center_on_tile );
 
 	struct tile_at_result_t {
 		bool is_set = false;
@@ -345,58 +397,52 @@ private:
 	// tile request stuff
 	rr::id_t m_tile_at_request_id = 0;
 	::game::tile_query_purpose_t m_tile_at_query_purpose = ::game::TQP_NONE;
-	::game::tile_query_metadata_t m_tile_at_query_metadata = {};
 
 	void CancelTileAtRequest();
 	void GetTileAtScreenCoords( const ::game::tile_query_purpose_t tile_query_purpose, const size_t screen_x, const size_t screen_inverse_y ); // async, y needs to be upside down
 	const bool IsTileAtRequestPending() const;
 	const tile_at_result_t GetTileAtScreenCoordsResult();
 
-	void GetTileAtCoords(
-		const ::game::tile_query_purpose_t tile_query_purpose,
-		const Vec2< size_t >& tile_pos,
-		const ::game::map::Tile::direction_t tile_direction = ::game::map::Tile::D_NONE,
-		const ::game::tile_query_metadata_t& tile_query_metadata = {}
-	);
-	tile_data_t GetTileAtCoordsResult( const mt_id_t mt_id );
-
 	// minimap stuff
 	rr::id_t m_minimap_texture_request_id = 0;
-	void GetMinimapTexture( scene::Camera* camera, const Vec2< size_t > texture_dimensions );
-	Texture* GetMinimapTextureResult();
+	void GetMinimapTexture( scene::Camera* camera, const ::types::Vec2< size_t > texture_dimensions );
+	types::texture::Texture* GetMinimapTextureResult();
 	void UpdateMinimap();
 
 	void ResetMapState();
 
 	struct {
-		mt_id_t ping = 0;
-		mt_id_t init = 0;
-		mt_id_t get_map_data = 0;
-		mt_id_t reset = 0;
-		std::unordered_set< mt_id_t > select_tile = {};
-		mt_id_t save_map = 0;
-		mt_id_t edit_map = 0;
-		mt_id_t chat = 0;
-		mt_id_t get_frontend_requests = 0;
+		base::mt_id_t ping = 0;
+		base::mt_id_t init = 0;
+		base::mt_id_t get_map_data = 0;
+		base::mt_id_t reset = 0;
+		std::unordered_set< base::mt_id_t > select_tile = {};
+		base::mt_id_t save_map = 0;
+		base::mt_id_t edit_map = 0;
+		base::mt_id_t chat = 0;
+		base::mt_id_t get_frontend_requests = 0;
+		base::mt_id_t send_backend_requests = 0;
 #ifdef DEBUG
-		mt_id_t save_dump = 0;
+		base::mt_id_t save_dump = 0;
 		// init will be used for loading dump
 #endif
 	} m_mt_ids = {};
 
-	std::unordered_map< size_t, Tile > m_tile_states = {};
+	std::unordered_map< size_t, Tile > m_tiles = {};
 
-	std::unordered_map< size_t, Slot* > m_slot_states = {};
-	std::unordered_map< std::string, UnitDef* > m_unitdef_states = {};
-	std::unordered_map< size_t, Unit* > m_unit_states = {};
+	std::unordered_map< size_t, Slot* > m_slots = {};
+	std::unordered_map< std::string, AnimationDef* > m_animationdefs = {};
+	std::unordered_map< size_t, Animation* > m_animations;
+	std::unordered_map< std::string, UnitDef* > m_unitdefs = {};
+	std::unordered_map< size_t, Unit* > m_units = {};
 	struct {
-		std::vector< Unit* > unit_states = {};
+		std::vector< Unit* > units = {};
 		size_t selected_id_index = 0;
 	} m_selectables = {};
-	void UpdateSelectable( Unit* unit_state );
-	void AddSelectable( Unit* unit_state );
-	void RemoveSelectable( Unit* unit_state );
-	void SetCurrentSelectable( Unit* unit_state );
+	void UpdateSelectable( Unit* unit );
+	void AddSelectable( Unit* unit );
+	void RemoveSelectable( Unit* unit );
+	void SetCurrentSelectable( Unit* unit );
 	Unit* GetCurrentSelectable();
 	Unit* GetNextSelectable();
 	const bool SelectNextUnitMaybe();
@@ -404,6 +450,8 @@ private:
 
 	void CancelRequests();
 	void CancelGame();
+
+	std::vector< ::game::BackendRequest > m_pending_backend_requests = {};
 
 	enum unit_update_flags_t : uint8_t {
 		UUF_NONE = 0,
@@ -413,7 +461,12 @@ private:
 		UUF_ALL = 0xff,
 	};
 
-	Tile* GetTileState( const size_t x, const size_t y );
+	Tile* GetTile( const size_t x, const size_t y );
+	Tile* GetTile( const types::Vec2< size_t >& coords );
+
+	void ShowTileSelector();
+	void HideTileSelector();
+	void RenderTile( Tile* tile );
 
 };
 

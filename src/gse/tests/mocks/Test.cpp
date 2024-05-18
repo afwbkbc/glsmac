@@ -1,14 +1,16 @@
 #include "Test.h"
 
 #include <unordered_map>
+#include <chrono>
 
+#include "gse/context/GlobalContext.h"
+#include "gse/callable/Native.h"
+#include "gse/Exception.h"
+#include "gse/type/Undefined.h"
 #include "gse/type/Object.h"
 #include "gse/type/Bool.h"
 #include "gse/type/Int.h"
 #include "gse/type/String.h"
-#include "gse/type/Undefined.h"
-
-#include "gse/Exception.h"
 #include "gse/tests/Tests.h"
 
 namespace gse {
@@ -17,20 +19,20 @@ namespace mocks {
 
 static std::unordered_map< std::string, Value > s_global_map = {};
 
-void Test::AddMocks( gse::GlobalContext* ctx, const test_info_t& test_info ) {
-	type::Object::properties_t mocks = {
+void Test::AddMocks( context::GlobalContext* ctx, const test_info_t& test_info ) {
+	type::object_properties_t mocks = {
 		{
 			"assert",
 			NATIVE_CALL() {
 				if ( arguments.size() < 1 ) {
-					throw gse::Exception( EC.INVALID_CALL, "Condition to test.assert is missing", ctx, call_si );
+					throw Exception( EC.INVALID_CALL, "Condition to test.assert is missing", ctx, call_si );
 				}
 				if ( arguments.size() > 2 ) {
-					throw gse::Exception( EC.INVALID_CALL, "Expected 1 or 2 arguments to test.assert, found: " + std::to_string( arguments.size() ), ctx, call_si );
+					throw Exception( EC.INVALID_CALL, "Expected 1 or 2 arguments to test.assert, found: " + std::to_string( arguments.size() ), ctx, call_si );
 				}
 				const auto& condition = arguments.at( 0 );
 				if ( condition.Get()->type != type::Type::T_BOOL ) {
-					throw gse::Exception( EC.INVALID_CALL, "Condition to test.assert is not boolean: " + condition.ToString(), ctx, call_si );
+					throw Exception( EC.INVALID_CALL, "Condition to test.assert is not boolean: " + condition.ToString(), ctx, call_si );
 				}
 				if ( !( (type::Bool*)condition.Get() )->value ) {
 					std::string reason = "";
@@ -39,7 +41,7 @@ void Test::AddMocks( gse::GlobalContext* ctx, const test_info_t& test_info ) {
 						ASSERT_NOLOG( reasonv.Get()->type == type::Type::T_STRING, "test.assert reason is not string: " + reasonv.ToString() );
 						reason = ( (type::String*)reasonv.Get() )->value;
 					}
-					throw gse::Exception( "TestError", "Assertion failed: " + reason, ctx, call_si );
+					throw Exception( "TestError", "Assertion failed: " + reason, ctx, call_si );
 				}
 				return VALUE( type::Undefined );
 			} )

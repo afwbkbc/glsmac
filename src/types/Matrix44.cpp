@@ -146,13 +146,13 @@ void Matrix44::TransformRotate( const float x, const float y, const float z ) {
 	*this = rx * ry * rz;
 };
 
-void Matrix44::TransformCameraRotate( const Vec3 target, const Vec3 up ) {
-	Vec3 N = target;
+void Matrix44::TransformCameraRotate( const types::Vec3 target, const types::Vec3 up ) {
+	types::Vec3 N = target;
 	N.Normalize();
-	Vec3 U = up;
+	types::Vec3 U = up;
 	U.Normalize();
 	U = U ^ target;
-	Vec3 V = N ^ U;
+	types::Vec3 V = N ^ U;
 
 	m[ 0 ][ 0 ] = U.x;
 	m[ 0 ][ 1 ] = U.y;
@@ -253,4 +253,4 @@ const std::string Matrix44::ToString() const {
 	return ret + "\n";
 }
 
-} /* namespace types */
+}

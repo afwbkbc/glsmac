@@ -2,11 +2,14 @@
 
 #include "engine/Engine.h"
 
+#include "types/mesh/Render.h"
+#include "loader/texture/TextureLoader.h"
+
 namespace task {
 namespace game {
 namespace actor {
 
-TileSelection::TileSelection( const ::game::map::TileState::tile_vertices_t& coords )
+TileSelection::TileSelection( const ::game::map::tile::tile_vertices_t& coords )
 	: Actor( "TileSelection" ) {
 	NEWV( mesh, types::mesh::Render, 5, 4 );
 

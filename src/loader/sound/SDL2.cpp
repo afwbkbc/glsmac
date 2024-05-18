@@ -5,8 +5,7 @@
 #include "SDL2.h"
 
 #include "util/System.h"
-
-using namespace types;
+#include "types/Sound.h"
 
 namespace loader {
 namespace sound {
@@ -17,7 +16,7 @@ SDL2::~SDL2() {
 	}
 }
 
-Sound* SDL2::LoadSound( const std::string& name ) {
+types::Sound* SDL2::LoadSound( const std::string& name ) {
 
 	std::string font_key = name;
 
@@ -28,9 +27,6 @@ Sound* SDL2::LoadSound( const std::string& name ) {
 	else {
 
 		Log( "Loading sound \"" + name + "\"" );
-
-		NEWV( sound, Sound );
-		sound->m_name = name;
 
 		Uint8* wav_buffer = nullptr; // buffer containing our audio file
 		Uint32 wav_length = 0; // length of our sample
@@ -53,7 +49,12 @@ Sound* SDL2::LoadSound( const std::string& name ) {
 				break;
 			}
 		}
-		ASSERT( ret, "Unable to load sound \"" + name + "\"" );
+		if ( !ret ) {
+			return nullptr;
+		}
+
+		NEWV( sound, types::Sound );
+		sound->m_name = name;
 
 		sound->m_buffer_size = wav_length;
 		sound->m_buffer = (unsigned char*)malloc( sound->m_buffer_size );

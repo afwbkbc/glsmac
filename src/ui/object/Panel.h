@@ -4,13 +4,10 @@
 
 #include "UIContainer.h"
 
-#include "types/Color.h"
-#include "types/Texture.h"
-
-#include "Surface.h"
-
 namespace ui {
 namespace object {
+
+class Surface;
 
 CLASS( Panel, UIContainer )
 	Panel( const std::string& class_name = "" );
@@ -28,16 +25,16 @@ protected:
 
 	virtual void ApplyStyle() override;
 
-	std::unordered_map< Style::attribute_type_t, Surface* > m_surfaces = {
-		{ Style::A_TEXTURE_BACK,        nullptr },
-		{ Style::A_TEXTURE_LEFT,        nullptr },
-		{ Style::A_TEXTURE_TOP,         nullptr },
-		{ Style::A_TEXTURE_RIGHT,       nullptr },
-		{ Style::A_TEXTURE_BOTTOM,      nullptr },
-		{ Style::A_TEXTURE_LEFTTOP,     nullptr },
-		{ Style::A_TEXTURE_RIGHTTOP,    nullptr },
-		{ Style::A_TEXTURE_RIGHTBOTTOM, nullptr },
-		{ Style::A_TEXTURE_LEFTBOTTOM,  nullptr },
+	std::unordered_map< attribute_type_t, ui::object::Surface* > m_surfaces = {
+		{ A_TEXTURE_BACK,        nullptr },
+		{ A_TEXTURE_LEFT,        nullptr },
+		{ A_TEXTURE_TOP,         nullptr },
+		{ A_TEXTURE_RIGHT,       nullptr },
+		{ A_TEXTURE_BOTTOM,      nullptr },
+		{ A_TEXTURE_LEFTTOP,     nullptr },
+		{ A_TEXTURE_RIGHTTOP,    nullptr },
+		{ A_TEXTURE_RIGHTBOTTOM, nullptr },
+		{ A_TEXTURE_LEFTBOTTOM,  nullptr },
 	};
 };
 

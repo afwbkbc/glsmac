@@ -1,42 +1,48 @@
 #include "LandMoisture.h"
 
+#include "types/texture/Texture.h"
+#include "game/map/Map.h"
+#include "game/map/Consts.h"
+#include "game/map/tile/Tile.h"
+#include "game/map/tile/TileState.h"
+
 namespace game {
 namespace map {
 namespace module {
 
-void LandMoisture::GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) {
+void LandMoisture::GenerateTile( const tile::Tile* tile, tile::TileState* ts, MapState* ms ) {
 
 	const auto w = s_consts.tc.texture_pcx.dimensions.x;
 	const auto h = s_consts.tc.texture_pcx.dimensions.y;
 
-	Consts::pcx_texture_coordinates_t tc = {};
+	pcx_texture_coordinates_t tc = {};
 	uint8_t rotate = 0;
 
 	if ( !ts->moisture_original ) {
-		NEW( ts->moisture_original, Texture, "MoistureOriginal", w, h );
+		NEW( ts->moisture_original, types::texture::Texture, "MoistureOriginal", w, h );
 	}
 
-	auto add_flags = Texture::AM_DEFAULT;
+	auto add_flags = types::texture::AM_DEFAULT;
 
 	switch ( tile->moisture ) {
-		case Tile::M_NONE: {
+		case tile::MOISTURE_NONE: {
 			// invisible tile (for dev/test purposes)
 			break;
 		}
-		case Tile::M_ARID: {
+		case tile::MOISTURE_ARID: {
 			tc = s_consts.tc.texture_pcx.arid[ 0 ];
 			rotate = RandomRotate();
-			add_flags = Texture::AM_RANDOM_STRETCH_SHUFFLE;
+			add_flags = types::texture::AM_RANDOM_STRETCH_SHUFFLE;
 			break;
 		}
-		case Tile::M_MOIST: {
+		case tile::MOISTURE_MOIST: {
 			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_TILES, tile, Map::TG_MOISTURE );
 			tc = s_consts.tc.texture_pcx.moist[ txinfo.texture_variant ];
 			rotate = txinfo.rotate_direction;
 			add_flags = txinfo.texture_flags;
 			break;
 		}
-		case Tile::M_RAINY: {
+		case tile::MOISTURE_RAINY: {
 			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_TILES, tile, Map::TG_MOISTURE );
 			tc = s_consts.tc.texture_pcx.rainy[ txinfo.texture_variant ];
 			rotate = txinfo.rotate_direction;

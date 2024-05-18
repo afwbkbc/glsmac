@@ -2,11 +2,13 @@
 
 #include "rr/GetData.h"
 #include "rr/Capture.h"
+#include "types/mesh/Mesh.h"
+#include "types/mesh/Data.h"
 
 namespace scene {
 namespace actor {
 
-Mesh::Mesh( const std::string& name, const mesh::Mesh* mesh, const type_t type )
+Mesh::Mesh( const std::string& name, const types::mesh::Mesh* mesh, const type_t type )
 	: Actor( type, name )
 	, m_mesh( mesh ) {
 	//
@@ -21,38 +23,38 @@ Mesh::~Mesh() {
 	}
 }
 
-void Mesh::SetMesh( const mesh::Mesh* mesh ) {
+void Mesh::SetMesh( const types::mesh::Mesh* mesh ) {
 	ASSERT( !m_mesh, "mesh already set" );
 	m_mesh = mesh;
 }
 
-const mesh::Mesh* Mesh::GetMesh() const {
+const types::mesh::Mesh* Mesh::GetMesh() const {
 	ASSERT( m_mesh, "mesh not set" );
 	return m_mesh;
 }
 
-void Mesh::SetTintColor( const Color tint_color ) {
+void Mesh::SetTintColor( const types::Color tint_color ) {
 	m_render_flags |= RF_USE_TINT;
 	m_tint_color = tint_color;
 }
 
-const Color& Mesh::GetTintColor() const {
+const types::Color& Mesh::GetTintColor() const {
 	return m_tint_color;
 }
 
-const mesh::Data* Mesh::GetDataMesh() const {
+const types::mesh::Data* Mesh::GetDataMesh() const {
 	return m_data_mesh;
 }
 
-void Mesh::SetTexture( Texture* texture ) {
+void Mesh::SetTexture( types::texture::Texture* texture ) {
 	m_texture = texture;
 }
 
-Texture* Mesh::GetTexture() const {
+types::texture::Texture* Mesh::GetTexture() const {
 	return m_texture;
 }
 
-void Mesh::SetDataMesh( const mesh::Data* data_mesh ) {
+void Mesh::SetDataMesh( const types::mesh::Data* data_mesh ) {
 	ASSERT( !m_data_mesh, "data mesh already set" );
 	m_data_mesh = data_mesh;
 }
@@ -89,7 +91,7 @@ void Mesh::CancelDataRequest( const rr::id_t request_id ) {
 	RR_Cancel< rr::GetData >( request_id );
 }
 
-rr::id_t Mesh::CaptureToTexture( scene::Camera* camera, const Vec2< size_t > texture_dimensions ) {
+rr::id_t Mesh::CaptureToTexture( scene::Camera* camera, const types::Vec2< size_t > texture_dimensions ) {
 	Log( "Requesting capture-to-texture" );
 	NEWV( request, rr::Capture );
 	request->camera = camera;
@@ -98,10 +100,10 @@ rr::id_t Mesh::CaptureToTexture( scene::Camera* camera, const Vec2< size_t > tex
 	return RR_Send( request );
 }
 
-Texture* Mesh::GetCaptureToTextureResponse( const rr::id_t request_id ) {
+types::texture::Texture* Mesh::GetCaptureToTextureResponse( const rr::id_t request_id ) {
 	auto* r = RR_GetResponse< rr::Capture >( request_id );
 	if ( r ) {
-		Texture* result = r->texture;
+		types::texture::Texture* result = r->texture;
 		r->texture = nullptr; // to prevent deletion in destructor
 		ASSERT( result, "received null texture response for " + std::to_string( request_id ) );
 		Log( "Received capture-to-texture response for " + std::to_string( request_id ) );
@@ -115,5 +117,5 @@ void Mesh::CancelCaptureToTextureRequest( const rr::id_t request_id ) {
 	Log( "Canceling capture-to-texture request " + std::to_string( request_id ) );
 }
 
-} /* namespace actor */
-} /* namespace scene */
+}
+}

@@ -1,14 +1,22 @@
 #pragma once
 
-#include "types/mesh/Rectangle.h"
-#include "types/Color.h"
-
-#include "scene/actor/Mesh.h"
-
 #include "UIObject.h"
 
+#include "types/Vec2.h"
 #include "types/Color.h"
-#include "types/Texture.h"
+
+namespace types {
+namespace texture {
+class Texture;
+}
+namespace mesh {
+class Mesh;
+}
+}
+
+namespace scene::actor {
+class Mesh;
+}
 
 namespace ui {
 namespace object {
@@ -18,7 +26,7 @@ CLASS( Mesh, UIObject )
 	Mesh( const std::string& class_name = "" );
 
 	void SetMesh( const types::mesh::Mesh* mesh );
-	virtual void SetTexture( types::Texture* texture );
+	virtual void SetTexture( types::texture::Texture* texture );
 	void ClearTexture();
 
 	void SetTintColor( const types::Color& color );
@@ -42,7 +50,7 @@ protected:
 
 	aspect_ratio_mode_t m_aspect_ratio_mode = AM_NONE;
 
-	types::Texture* m_texture = nullptr;
+	types::texture::Texture* m_texture = nullptr;
 
 	scene::actor::Mesh* m_actor = nullptr;
 
@@ -56,13 +64,13 @@ protected:
 		0,
 		0
 	};
-	Vec2< size_t > m_last_viewport_size = {
+	types::Vec2< size_t > m_last_viewport_size = {
 		0,
 		0
 	};
 	coord_t m_last_margin = 0;
 	types::mesh::Mesh* m_last_mesh = nullptr;
-	Vec2< size_t > m_last_texture_size = {
+	types::Vec2< size_t > m_last_texture_size = {
 		0,
 		0
 	};
@@ -71,5 +79,5 @@ protected:
 	void UpdateRenderFlags();
 };
 
-} /* namespace object */
-} /* namespace ui */
+}
+}

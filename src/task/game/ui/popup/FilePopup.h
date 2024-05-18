@@ -2,7 +2,9 @@
 
 #include "OkCancelPopup.h"
 
-#include "ui/object/FileBrowser.h"
+namespace ui::object {
+class FileBrowser;
+}
 
 namespace task {
 namespace game {

@@ -6,8 +6,6 @@
 
 #include "Util.h"
 
-#include "types/Vec2.h"
-
 namespace util {
 
 CLASS( Perlin, Util )

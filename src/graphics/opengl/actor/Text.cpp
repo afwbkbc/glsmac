@@ -1,13 +1,14 @@
 #include "Text.h"
 
 #include "engine/Engine.h"
-
-using namespace types;
+#include "scene/actor/Text.h"
+#include "graphics/Graphics.h"
+#include "graphics/opengl/texture/FontTexture.h"
 
 namespace graphics {
 namespace opengl {
 
-Text::Text( scene::actor::Text* actor, Font* font )
+Text::Text( scene::actor::Text* actor, types::Font* font )
 	: Actor( actor )
 	, m_font( font ) {
 	//Log( "Creating OpenGL text '" + actor->GetText() + "' with font " + font->m_name );
@@ -25,10 +26,10 @@ Text::~Text() {
 	}
 }
 
-void Text::Update( Font* font, const std::string& text, const float x, const float y ) {
+void Text::Update( types::Font* font, const std::string& text, const float x, const float y ) {
 
 	const auto* g = g_engine->GetGraphics();
-	const Vec2< size_t > window_size = {
+	const types::Vec2< size_t > window_size = {
 		g->GetViewportWidth(),
 		g->GetViewportHeight()
 	};
@@ -69,7 +70,7 @@ void Text::Update( Font* font, const std::string& text, const float x, const flo
 			float cx = 0;
 			float cy = 0;
 
-			Font::bitmap_t* bitmap = nullptr;
+			types::Font::bitmap_t* bitmap = nullptr;
 			for ( const char* p = m_text.c_str() ; *p ; p++ ) {
 				unsigned char sym = (unsigned char)*p;
 
@@ -123,7 +124,7 @@ void Text::Update( Font* font, const std::string& text, const float x, const flo
 	}
 }
 
-void Text::Draw( shader_program::ShaderProgram* shader_program, Camera* camera ) {
+void Text::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
 	if ( m_boxes_count > 0 ) {
 		auto* sp = (shader_program::Font*)shader_program;
 
@@ -139,13 +140,13 @@ void Text::Draw( shader_program::ShaderProgram* shader_program, Camera* camera )
 		auto flags = text_actor->GetRenderFlags();
 
 		glUniform1ui( sp->uniforms.flags, flags );
-		if ( flags & actor::Actor::RF_USE_AREA_LIMITS ) {
+		if ( flags & scene::actor::Actor::RF_USE_AREA_LIMITS ) {
 			const auto& limits = text_actor->GetAreaLimits();
 			glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
 			glUniform3fv( sp->uniforms.area_limits.max, 1, (const GLfloat*)&limits.second );
 		}
 
-		if ( flags & actor::Actor::RF_USE_2D_POSITION ) {
+		if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
 			glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&m_coords );
 		}
 
@@ -167,5 +168,5 @@ void Text::Draw( shader_program::ShaderProgram* shader_program, Camera* camera )
 
 }
 
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}

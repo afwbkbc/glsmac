@@ -1,8 +1,9 @@
 #pragma once
 
+#include <unordered_map>
+
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#include <unordered_map>
 
 #include "FontLoader.h"
 
@@ -27,5 +28,5 @@ protected:
 	font_map_t m_fonts;
 };
 
-} /* namespace font */
-} /* namespace loader */
+}
+}

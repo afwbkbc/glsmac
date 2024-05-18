@@ -3,15 +3,22 @@
 #include "base/Base.h"
 
 #include "gse/Value.h"
-#include "gse/program/Program.h"
 
 namespace gse {
+
+namespace context {
 class Context;
+}
+
+namespace program {
+class Program;
+}
+
 namespace runner {
 
 CLASS( Runner, base::Base )
 
-	virtual const Value Execute( Context* ctx, const program::Program* program ) const = 0;
+	virtual const Value Execute( context::Context* ctx, const program::Program* program ) const = 0;
 
 #ifdef DEBUG
 	void EnableScopeContextJoins() {
@@ -29,5 +36,3 @@ protected:
 
 }
 }
-
-#include "gse/ChildContext.h"

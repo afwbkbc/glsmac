@@ -12,4 +12,4 @@ protected:
 	const std::string& GetRoot();
 };
 
-} /* namespace loader */
+}

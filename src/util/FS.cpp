@@ -5,8 +5,6 @@
 
 #include "FS.h"
 
-using namespace std;
-
 #ifdef DEBUG
 #define Log( _text ) std::cout << "<Util::FS> " << (_text) << std::endl
 #else
@@ -21,7 +19,7 @@ const char FS::PATH_SEPARATOR =
 #else
 	'/'
 #endif
-	;
+;
 
 const char FS::EXTENSION_SEPARATOR = '.';
 
@@ -187,27 +185,27 @@ const std::vector< std::string > FS::GetExtensions( const std::string& path, con
 	return result;
 }
 
-const bool FS::Exists( const string& path, const char path_separator ) {
+const bool FS::Exists( const std::string& path, const char path_separator ) {
 	return std::filesystem::exists( NormalizePath( path, path_separator ) );
 }
 
-const bool FS::IsFile( const string& path, const char path_separator ) {
+const bool FS::IsFile( const std::string& path, const char path_separator ) {
 	return std::filesystem::is_regular_file( NormalizePath( path, path_separator ) );
 }
 
-const bool FS::FileExists( const string& path, const char path_separator ) {
+const bool FS::FileExists( const std::string& path, const char path_separator ) {
 	return Exists( path, path_separator ) && IsFile( path, path_separator );
 }
 
-const bool FS::IsDirectory( const string& path, const char path_separator ) {
+const bool FS::IsDirectory( const std::string& path, const char path_separator ) {
 	return std::filesystem::is_directory( NormalizePath( path, path_separator ) );
 }
 
-const bool FS::DirectoryExists( const string& path, const char path_separator ) {
+const bool FS::DirectoryExists( const std::string& path, const char path_separator ) {
 	return Exists( path, path_separator ) && IsDirectory( path, path_separator );
 }
 
-void FS::CreateDirectoryIfNotExists( const string& path, const char path_separator ) {
+void FS::CreateDirectoryIfNotExists( const std::string& path, const char path_separator ) {
 	if ( !DirectoryExists( path, path_separator ) ) {
 		//Log( "Creating directory: " + path );
 		std::filesystem::create_directories( NormalizePath( path, path_separator ) );
@@ -252,11 +250,13 @@ std::vector< std::string > FS::ListDirectory( const std::string& directory, cons
 				? 0
 				: 1;
 			ASSERT_NOLOG( item_str.substr( 0, directory.size() ) == directory, "unexpected path in directory list results: " + item_str );
-			result.push_back( ConvertPath(
-				return_absolute_paths
-					? item_str
-					: item_str.substr( directory.size() + prefix_len )
-			, path_separator ) );
+			result.push_back(
+				ConvertPath(
+					return_absolute_paths
+						? item_str
+						: item_str.substr( directory.size() + prefix_len ), path_separator
+				)
+			);
 		}
 	}
 	catch ( std::filesystem::filesystem_error& e ) {
@@ -268,19 +268,19 @@ std::vector< std::string > FS::ListDirectory( const std::string& directory, cons
 	return result;
 }
 
-const string FS::ReadFile( const string& path, const char path_separator ) {
+const std::string FS::ReadFile( const std::string& path, const char path_separator ) {
 	//Log( "Reading file: " + path );
 	ASSERT_NOLOG( FileExists( path, path_separator ), "file \"" + path + "\" does not exist or is not a file" );
-	stringstream data;
-	ifstream in( NormalizePath( path, path_separator ), std::ios_base::binary );
+	std::stringstream data;
+	std::ifstream in( NormalizePath( path, path_separator ), std::ios_base::binary );
 	while ( data << in.rdbuf() ) {}
 	in.close();
 	return data.str();
 }
 
-const void FS::WriteFile( const string& path, const string& data, const char path_separator ) {
+const void FS::WriteFile( const std::string& path, const std::string& data, const char path_separator ) {
 	//Log( "Writing file: " + path );
-	ofstream out( NormalizePath( path, path_separator ), std::ios_base::binary );
+	std::ofstream out( NormalizePath( path, path_separator ), std::ios_base::binary );
 	out << data;
 	out.close();
 }

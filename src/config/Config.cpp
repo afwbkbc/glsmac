@@ -7,9 +7,10 @@
 
 #include "util/ArgParser.h"
 #include "util/FS.h"
+#include "util/random/Random.h"
 #include "util/SMACChecker.h"
 
-#include "game/Settings.h"
+#include "game/settings/Settings.h"
 
 namespace config {
 
@@ -142,7 +143,7 @@ Config::Config( const int argc, const char* argv[] ) {
 				f_error( s_quickstart_argument_missing );
 			}
 			try {
-				m_quickstart_seed = util::Random::GetStateFromString( value );
+				m_quickstart_seed = util::random::Random::GetStateFromString( value );
 			}
 			catch ( std::runtime_error& e ) {
 				f_error( "Invalid seed format! Seed must contain four numbers separated by colon, for example: 1651011033:1377505029:3019448108:3247278135" );
@@ -184,7 +185,7 @@ Config::Config( const int argc, const char* argv[] ) {
 		}
 	);
 	const auto f_add_map_parameter_option =
-		[ this, &parser, f_error, &s_quickstart_argument_missing ]( const std::string& name, const std::vector< std::string >& values, const std::string& desc, debug_flag_t flag, game::MapSettings::parameter_t* out_param )
+		[ this, &parser, f_error, &s_quickstart_argument_missing ]( const std::string& name, const std::vector< std::string >& values, const std::string& desc, debug_flag_t flag, game::settings::map_config_value_t* out_param )
 			-> void {
 			ASSERT( values.size() == 3, "values size mismatch" );
 			parser.AddRule(
@@ -328,7 +329,7 @@ const bool Config::HasDebugFlag( const debug_flag_t flag ) const {
 	return m_debug_flags & flag;
 }
 
-const util::Random::state_t& Config::GetQuickstartSeed() const {
+const util::random::state_t& Config::GetQuickstartSeed() const {
 	return m_quickstart_seed;
 }
 
@@ -344,19 +345,19 @@ const types::Vec2< size_t >& Config::GetQuickstartMapSize() const {
 	return m_quickstart_mapsize;
 }
 
-const game::MapSettings::parameter_t Config::GetQuickstartMapOcean() const {
+const game::settings::map_config_value_t Config::GetQuickstartMapOcean() const {
 	return m_quickstart_map_ocean;
 }
 
-const game::MapSettings::parameter_t Config::GetQuickstartMapErosive() const {
+const game::settings::map_config_value_t Config::GetQuickstartMapErosive() const {
 	return m_quickstart_map_erosive;
 }
 
-const game::MapSettings::parameter_t Config::GetQuickstartMapLifeforms() const {
+const game::settings::map_config_value_t Config::GetQuickstartMapLifeforms() const {
 	return m_quickstart_map_lifeforms;
 }
 
-const game::MapSettings::parameter_t Config::GetQuickstartMapClouds() const {
+const game::settings::map_config_value_t Config::GetQuickstartMapClouds() const {
 	return m_quickstart_map_clouds;
 }
 

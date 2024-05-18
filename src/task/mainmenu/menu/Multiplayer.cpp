@@ -2,6 +2,11 @@
 
 #include "HostJoin.h"
 #include "ui/object/Section.h"
+#include "ui/object/Panel.h"
+#include "ui/object/ChoiceList.h"
+#include "task/mainmenu/MainMenu.h"
+#include "game/State.h"
+#include "game/settings/Settings.h"
 
 namespace task {
 namespace mainmenu {
@@ -26,11 +31,11 @@ Multiplayer::Multiplayer( MainMenu* mainmenu )
 void Multiplayer::Show() {
 	PopupMenu::Show();
 
-	NEW( m_section, Section, "PopupSection" );
+	NEW( m_section, ui::object::Section, "PopupSection" );
 	m_section->SetTitleText( "Select a service..." );
 	m_body->AddChild( m_section );
 
-	NEW( m_choices, NumChoiceList, "PopupButtonList" );
+	NEW( m_choices, ui::object::NumChoiceList, "PopupButtonList" );
 	m_choices->SetImmediateMode( false );
 	m_choices->SetMargin( 3 );
 	m_choices->SetChoices(
@@ -40,7 +45,7 @@ void Multiplayer::Show() {
 		}
 	);
 	m_choices->On(
-		UIEvent::EV_SELECT, EH( this ) {
+		ui::event::EV_SELECT, EH( this ) {
 			OnNext();
 			return true;
 		}
@@ -58,7 +63,7 @@ void Multiplayer::Hide() {
 void Multiplayer::OnNext() {
 	const auto value = m_choices->GetValue();
 	if ( value == C_SIMPLE ) {
-		m_mainmenu->m_state->m_settings.local.network_type = game::LocalSettings::NT_SIMPLETCP;
+		m_mainmenu->m_state->m_settings.local.network_type = game::settings::LocalSettings::NT_SIMPLETCP;
 		NEWV( menu, HostJoin, m_mainmenu );
 		NextMenu( menu );
 	}

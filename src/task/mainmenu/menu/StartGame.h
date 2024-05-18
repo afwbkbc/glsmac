@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../SlidingMenu.h"
+#include "task/mainmenu/SlidingMenu.h"
 
 namespace task {
 namespace mainmenu {

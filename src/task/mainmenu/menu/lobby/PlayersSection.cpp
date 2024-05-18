@@ -2,7 +2,11 @@
 
 #include "engine/Engine.h"
 
-#include "game/Slot.h"
+#include "game/slot/Slot.h"
+
+#include "PlayersSectionRow.h"
+#include "Lobby.h"
+#include "game/settings/Settings.h"
 
 namespace task {
 namespace mainmenu {
@@ -11,7 +15,7 @@ namespace lobby {
 PlayersSection::PlayersSection( Lobby* lobby )
 	: LobbySection( lobby ) {
 	SetTitleText( "PLAYERS" );
-	SetAlign( UIObject::ALIGN_RIGHT | UIObject::ALIGN_TOP );
+	SetAlign( ui::ALIGN_RIGHT | ui::ALIGN_TOP );
 }
 
 void PlayersSection::Create() {
@@ -35,7 +39,7 @@ void PlayersSection::Destroy() {
 	LobbySection::Destroy();
 }
 
-void PlayersSection::UpdateSlot( const size_t slot_num, ::game::Slot* slot ) {
+void PlayersSection::UpdateSlot( const size_t slot_num, ::game::slot::Slot* slot ) {
 	ASSERT( slot, "updateslot with null slot" );
 	ASSERT( slot_num <= m_slots.size(), "slot num overflow ( " + std::to_string( slot_num ) + " > " + std::to_string( m_slots.size() ) + " )" );
 	NEWV( row, PlayersSectionRow, this, slot_num, slot );
@@ -51,15 +55,14 @@ void PlayersSection::UpdateSlot( const size_t slot_num, ::game::Slot* slot ) {
 	AddChild( row );
 }
 
-void PlayersSection::UpdateSlots( std::vector< ::game::Slot >& slots ) {
-	const auto& game_rules = GetLobby()->GetSettings().global.game_rules;
+void PlayersSection::UpdateSlots( std::vector< ::game::slot::Slot >& slots ) {
+	const auto& game_rules = GetLobby()->GetSettings()->global.game_rules;
 
 	m_choices.factions.clear();
-	const auto& random_faction = ::game::Player::RANDOM_FACTION;
 	m_choices.factions.push_back(
 		{
-			random_faction.m_id,
-			random_faction.m_name
+			"RANDOM",
+			"Random"
 		}
 	);
 	for ( auto& id : game_rules.m_factions_order ) {
@@ -89,11 +92,11 @@ void PlayersSection::UpdateSlots( std::vector< ::game::Slot >& slots ) {
 	}
 }
 
-const AssocChoiceList::choices_t& PlayersSection::GetFactionChoices() {
+const ui::object::assoc_choices_t& PlayersSection::GetFactionChoices() {
 	return m_choices.factions;
 }
 
-const NumChoiceList::choices_t& PlayersSection::GetDifficultyLevelChoices() {
+const ui::object::num_choices_t& PlayersSection::GetDifficultyLevelChoices() {
 	return m_choices.difficulty_levels;
 }
 

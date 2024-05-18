@@ -2,16 +2,16 @@
 
 #include "Event.h"
 
-#include "game/map/Tile.h"
+#include "game/map/tile/Types.h"
 
 namespace game {
 namespace event {
 
 class MoveUnit : public Event {
 public:
-	MoveUnit( const size_t initiator_slot, const size_t unit_id, const game::map::Tile::direction_t direction );
+	MoveUnit( const size_t initiator_slot, const size_t unit_id, const game::map::tile::direction_t direction );
 
-	const std::string* Validate( const Game* game ) const override;
+	const std::string* Validate( Game* game ) const override;
 	void Resolve( Game* game ) override;
 	const gse::Value Apply( game::Game* game ) const override;
 	TS_DEF()
@@ -24,11 +24,9 @@ private:
 
 private:
 	const size_t m_unit_id;
-	const game::map::Tile::direction_t m_direction;
+	const game::map::tile::direction_t m_direction;
 
-	struct {
-		bool is_move_successful = false;
-	} m_resolutions = {};
+	gse::Value m_resolutions;
 
 };
 

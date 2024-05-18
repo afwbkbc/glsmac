@@ -2,10 +2,10 @@
 
 #include "SimpleButton.h"
 
-#include "Label.h"
-
 namespace ui {
 namespace object {
+
+class Label;
 
 CLASS( LabelButton, SimpleButton )
 
@@ -23,5 +23,5 @@ protected:
 
 };
 
-} /* namespace object */
-} /* namespace ui */
+}
+}

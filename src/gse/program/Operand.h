@@ -17,12 +17,9 @@ public:
 		OT_EXPRESSION,
 		OT_FUNCTION,
 		OT_CALL,
-		OT_IF,
 	};
 
-	Operand( const si_t& si, const operand_type_t type )
-		: Element( si, ET_OPERAND )
-		, type( type ) {}
+	Operand( const si_t& si, const operand_type_t type );
 
 	const operand_type_t type;
 

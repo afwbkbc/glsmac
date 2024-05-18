@@ -46,7 +46,7 @@ void Mesh::Clear() {
 	m_is_final = true;
 }
 
-Mesh::index_t Mesh::AddEmptyVertex() {
+index_t Mesh::AddEmptyVertex() {
 	ASSERT( !m_is_final, "addvertex on already finalized mesh" );
 	ASSERT( m_vertex_i < m_vertex_count, "vertex out of bounds (" + std::to_string( m_vertex_i ) + " >= " + std::to_string( m_vertex_count ) + ")" );
 	index_t ret = m_vertex_i;
@@ -54,7 +54,7 @@ Mesh::index_t Mesh::AddEmptyVertex() {
 	return ret;
 }
 
-Mesh::surface_id_t Mesh::AddSurface( const surface_t& surface ) {
+surface_id_t Mesh::AddSurface( const surface_t& surface ) {
 	ASSERT( !m_is_final, "addsurface on already finalized mesh" );
 	ASSERT( m_surface_i < m_surface_count, "surface out of bounds" );
 	// add triangle
@@ -64,7 +64,7 @@ Mesh::surface_id_t Mesh::AddSurface( const surface_t& surface ) {
 	return ret;
 }
 
-void Mesh::SetVertexCoord( const index_t index, const Vec3& coord ) {
+void Mesh::SetVertexCoord( const index_t index, const types::Vec3& coord ) {
 	ASSERT( index < m_vertex_count, "index out of bounds" );
 	memcpy( ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( coord ) ), &coord, sizeof( coord ) );
 	Update();
@@ -94,9 +94,9 @@ void Mesh::Finalize() {
 	m_is_final = true;
 }
 
-void Mesh::GetVertexCoord( const index_t index, Vec3* coord ) const {
+void Mesh::GetVertexCoord( const index_t index, types::Vec3* coord ) const {
 	ASSERT( index < m_vertex_count, "index out of bounds" );
-	memcpy( coord, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( Vec3 ) ), sizeof( Vec3 ) );
+	memcpy( coord, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( types::Vec3 ) ), sizeof( types::Vec3 ) );
 }
 
 const size_t Mesh::GetVertexCount() const {
@@ -139,8 +139,8 @@ const Mesh::mesh_type_t Mesh::GetType() const {
 	return m_mesh_type;
 }
 
-const Buffer Mesh::Serialize() const {
-	Buffer buf;
+const types::Buffer Mesh::Serialize() const {
+	types::Buffer buf;
 
 	buf.WriteInt( m_mesh_type );
 
@@ -158,7 +158,7 @@ const Buffer Mesh::Serialize() const {
 	return buf;
 }
 
-void Mesh::Unserialize( Buffer buf ) {
+void Mesh::Unserialize( types::Buffer buf ) {
 
 	auto mesh_type = (mesh_type_t)buf.ReadInt();
 	ASSERT( m_mesh_type == mesh_type, "mesh type mismatch" );

@@ -9,16 +9,14 @@
 
 #include "SMACChecker.h"
 
-using namespace std;
-
 namespace util {
 
-bool SMACChecker::IsSMACDirectory( const string& path ) {
-	const vector< string > important_files = {
+bool SMACChecker::IsSMACDirectory( const std::string& path ) {
+	const std::vector< std::string > important_files = {
 		"terranx.exe"
 	};
 	for ( auto& file : important_files ) {
-		string fullPath = path + "/" + file;
+		std::string fullPath = path + "/" + file;
 #ifdef _WIN32
 		if (GetFileAttributesA(fullPath.c_str()) == INVALID_FILE_ATTRIBUTES) {
 #else

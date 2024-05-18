@@ -3,32 +3,34 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <cstring>
 
 #include "base/Base.h"
 
-#include "ui/event/UIEvent.h"
+#include "Types.h"
+#include "ui/event/Types.h"
+#include "ui/theme/Types.h"
 
-#include "scene/Scene.h"
-#include "scene/actor/Actor.h"
+#include "types/Vec2.h"
+#include "types/Color.h"
 
-#include "ui/event/UIEvent.h"
-#include "ui/event/UIEventHandler.h"
-
-#include "ui/theme/Style.h"
-
-using namespace types;
-
-using namespace scene;
 namespace scene {
-using namespace actor;
+class Scene;
+namespace actor {
+class Actor;
+}
 }
 
 namespace ui {
 
 class UI;
-
-using namespace event;
-using namespace theme;
+namespace event {
+class UIEvent;
+class UIEventHandler;
+}
+namespace theme {
+class Style;
+}
 
 namespace object {
 
@@ -38,25 +40,8 @@ CLASS( UIObject, base::Base )
 	UIObject( const std::string& class_name = "" );
 	virtual ~UIObject();
 
-	typedef uint8_t alignment_t;
-	const static alignment_t ALIGN_NONE = 0;
-	const static alignment_t ALIGN_LEFT = 1 << 0;
-	const static alignment_t ALIGN_RIGHT = 1 << 1;
-	const static alignment_t ALIGN_HCENTER = ALIGN_LEFT | ALIGN_RIGHT;
-	const static alignment_t ALIGN_TOP = 1 << 2;
-	const static alignment_t ALIGN_BOTTOM = 1 << 3;
-	const static alignment_t ALIGN_VCENTER = ALIGN_TOP | ALIGN_BOTTOM;
-	const static alignment_t ALIGN_CENTER = ALIGN_HCENTER | ALIGN_VCENTER;
-
-	enum overflow_t {
-		OVERFLOW_VISIBLE, // Allow children to be rendered outside of this object (default)
-		OVERFLOW_VISIBLE_ALWAYS, // Render outside of object and override OVERFLOW_HIDDEN of parent
-		OVERFLOW_HIDDEN, // Hide parts of children that are outside of this object
-		OVERFLOW_GROW // Grow automatically when children are added
-	};
-
 	typedef float coord_t;
-	typedef Vec2< coord_t > vertex_t;
+	typedef types::Vec2< coord_t > vertex_t;
 
 	UIObject* GetParentObject() const;
 	void SetParentObject( UIContainer* parent_object );
@@ -68,8 +53,8 @@ CLASS( UIObject, base::Base )
 	virtual void Redraw();
 	void UpdateObjectArea();
 
-	void AddActor( Actor* actor );
-	void RemoveActor( Actor* actor );
+	void AddActor( scene::actor::Actor* actor );
+	void RemoveActor( scene::actor::Actor* actor );
 	void EnableActors();
 	void DisableActors();
 
@@ -125,11 +110,6 @@ CLASS( UIObject, base::Base )
 	const float GetZIndex() const;
 	const overflow_t GetOverflow() const;
 
-	enum event_type_t : uint8_t {
-		EV_MOUSEOVER,
-		EV_MOUSEOUT,
-	};
-
 	virtual void ProcessEvent( event::UIEvent* event );
 
 	struct object_area_t {
@@ -163,20 +143,20 @@ CLASS( UIObject, base::Base )
 #endif
 
 	void SetParentStyleObject( const UIContainer* object );
-	void ForwardStyleAttribute( const Style::attribute_type_t src_type, const Style::attribute_type_t dst_type );
-	void ForwardStyleAttribute( const Style::attribute_type_t type );
-	void ForwardStyleAttributesV( const std::vector< Style::attribute_type_t > type );
-	void ForwardStyleAttributesM( const std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > types );
+	void ForwardStyleAttribute( const attribute_type_t src_type, const attribute_type_t dst_type );
+	void ForwardStyleAttribute( const attribute_type_t type );
+	void ForwardStyleAttributesV( const std::vector< attribute_type_t > type );
+	void ForwardStyleAttributesM( const std::unordered_map< attribute_type_t, attribute_type_t > types );
 	void ForwardAllStyleAttributes();
 
-	virtual void AddStyleModifier( const Style::modifier_t modifier );
-	virtual void RemoveStyleModifier( const Style::modifier_t modifier );
-	const bool HasStyleModifier( const Style::modifier_t modifier ) const;
+	virtual void AddStyleModifier( const modifier_t modifier );
+	virtual void RemoveStyleModifier( const modifier_t modifier );
+	const bool HasStyleModifier( const modifier_t modifier ) const;
 
-	const UIEventHandler* On( const std::vector< UIEvent::event_type_t >& types, UIEventHandler::handler_function_t func );
-	const UIEventHandler* On( const UIEvent::event_type_t type, UIEventHandler::handler_function_t func );
-	void Off( const UIEventHandler* handler );
-	bool Trigger( const UIEvent::event_type_t type, const UIEvent::event_data_t* data );
+	const event::UIEventHandler* On( const std::vector< event::event_type_t >& types, event::handler_function_t func );
+	const event::UIEventHandler* On( const event::event_type_t type, event::handler_function_t func );
+	void Off( const event::UIEventHandler* handler );
+	bool Trigger( const event::event_type_t type, const event::event_data_t* data );
 
 	virtual void BlockEvents();
 	virtual void UnblockEvents();
@@ -202,16 +182,6 @@ CLASS( UIObject, base::Base )
 	void RemoveAreaLimitsChild( UIObject* child_object );
 	virtual void ClearAreaLimits();
 
-	typedef std::unordered_map<
-		UIEvent::event_type_t,
-		std::vector<
-			std::pair<
-				UIEventHandler*,
-				bool // delete handler in destructor or not
-			>
-		>
-	> event_handlers_t;
-
 	// bit flags
 	typedef uint8_t event_context_t;
 	static constexpr event_context_t EC_NONE = 0;
@@ -234,14 +204,15 @@ protected:
 	friend class UIContainer;
 
 	// callbacks. true if event is processed (then it won't be sent further)
-	virtual bool OnMouseOver( const UIEvent::event_data_t* data ) { return true; };
-	virtual bool OnMouseOut( const UIEvent::event_data_t* data ) { return true; };
-	virtual bool OnMouseDown( const UIEvent::event_data_t* data ) { return true; };
-	virtual bool OnMouseUp( const UIEvent::event_data_t* data ) { return true; };
-	virtual bool OnMouseClick( const UIEvent::event_data_t* data ) { return true; };
-	virtual bool OnKeyDown( const UIEvent::event_data_t* data ) { return true; };
-	virtual bool OnKeyUp( const UIEvent::event_data_t* data ) { return true; };
-	virtual bool OnKeyPress( const UIEvent::event_data_t* data ) { return true; };
+	// TODO: get rid of those
+	virtual bool OnMouseOver( const event::event_data_t* data ) { return false; };
+	virtual bool OnMouseOut( const event::event_data_t* data ) { return false; };
+	virtual bool OnMouseDown( const event::event_data_t* data ) { return false; };
+	virtual bool OnMouseUp( const event::event_data_t* data ) { return false; };
+	virtual bool OnMouseClick( const event::event_data_t* data ) { return false; };
+	virtual bool OnKeyDown( const event::event_data_t* data ) { return false; };
+	virtual bool OnKeyUp( const event::event_data_t* data ) { return false; };
+	virtual bool OnKeyPress( const event::event_data_t* data ) { return false; };
 
 	const coord_t ClampX( const coord_t value );
 	const coord_t ClampY( const coord_t value );
@@ -256,7 +227,7 @@ protected:
 
 	UIContainer* m_parent_object = nullptr;
 
-	std::vector< Actor* > m_actors = {};
+	std::vector< scene::actor::Actor* > m_actors = {};
 
 	size_t m_depth = 0;
 	float m_z_index = 0.5f;
@@ -297,26 +268,26 @@ protected:
 	const static state_t STATE_MOUSEOVER = 1;
 	state_t m_state = STATE_NONE;
 
-	scene::Scene* GetSceneOfActor( const Actor* actor ) const;
+	scene::Scene* GetSceneOfActor( const scene::actor::Actor* actor ) const;
 
-	void IgnoreStyleAttribute( const Style::attribute_type_t type );
+	void IgnoreStyleAttribute( const attribute_type_t type );
 	virtual void ApplyStyle();
 	virtual void ReloadStyle();
 
 	void ApplyStyleIfNeeded();
 	void ApplyStyleIfNotLoaded();
 
-	void ForwardStyleAttribute( const Style::attribute_type_t src_type, const Style::attribute_type_t dst_type, UIObject* child );
-	void ForwardStyleAttribute( const Style::attribute_type_t type, UIObject* child );
+	void ForwardStyleAttribute( const attribute_type_t src_type, const attribute_type_t dst_type, UIObject* child );
+	void ForwardStyleAttribute( const attribute_type_t type, UIObject* child );
 
-	bool Has( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const;
-	bool Has( const Style::attribute_type_t attribute_type ) const;
-	const float Get( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const;
-	const float Get( const Style::attribute_type_t attribute_type ) const;
-	const Color GetColor( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const;
-	const Color GetColor( const Style::attribute_type_t attribute_type ) const;
-	const void* GetObject( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const;
-	const void* GetObject( const Style::attribute_type_t attribute_type ) const;
+	bool Has( const attribute_type_t attribute_type, const modifier_t style_modifiers ) const;
+	bool Has( const attribute_type_t attribute_type ) const;
+	const float Get( const attribute_type_t attribute_type, const modifier_t style_modifiers ) const;
+	const float Get( const attribute_type_t attribute_type ) const;
+	const types::Color GetColor( const attribute_type_t attribute_type, const modifier_t style_modifiers ) const;
+	const types::Color GetColor( const attribute_type_t attribute_type ) const;
+	const void* GetObject( const attribute_type_t attribute_type, const modifier_t style_modifiers ) const;
+	const void* GetObject( const attribute_type_t attribute_type ) const;
 
 #ifdef DEBUG
 
@@ -325,9 +296,9 @@ protected:
 
 #endif
 
-	typedef std::unordered_set< UIEvent::event_type_t > events_t;
+	typedef std::unordered_set< event::event_type_t > events_t;
 
-	void ListenToEvent( const UIEvent::event_type_t event );
+	void ListenToEvent( const event::event_type_t event );
 	void ListenToEvents( const events_t& events );
 
 	const std::string GetStyleModifiersString() const;
@@ -367,17 +338,17 @@ private:
 	bool m_is_applying_style = false;
 	std::string m_style_class = "";
 	bool m_style_loaded = false; // will load on first draw
-	const Style* m_style = nullptr;
+	const theme::Style* m_style = nullptr;
 	const UIContainer* m_parent_style_object = nullptr;
-	std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > m_parent_style_attributes = {};
+	std::unordered_map< attribute_type_t, attribute_type_t > m_parent_style_attributes = {};
 	bool m_forward_all_style_attributes = false;
-	std::unordered_set< Style::attribute_type_t > m_ignore_style_attributes = {};
+	std::unordered_set< attribute_type_t > m_ignore_style_attributes = {};
 
-	const Style::attribute_type_t GetParentAttribute( const Style::attribute_type_t source_type ) const;
+	const attribute_type_t GetParentAttribute( const attribute_type_t source_type ) const;
 
-	Style::modifier_t m_style_modifiers = Style::M_NONE;
+	modifier_t m_style_modifiers = M_NONE;
 
-	event_handlers_t m_event_handlers = {};
+	event::event_handlers_t m_event_handlers = {};
 
 	struct {
 		bool enabled = false;
@@ -389,7 +360,5 @@ private:
 
 };
 
-} /* namespace object */
-} /* namespace ui */
-
-#include "UIContainer.h"
+}
+}

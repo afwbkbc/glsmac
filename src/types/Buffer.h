@@ -40,8 +40,8 @@ CLASS( Buffer, base::Base )
 	const Vec2< uint32_t > ReadVec2u();
 	void WriteVec2f( const Vec2< float > val );
 	const Vec2< float > ReadVec2f();
-	void WriteVec3( const Vec3 val );
-	const Vec3 ReadVec3();
+	void WriteVec3( const types::Vec3 val );
+	const types::Vec3 ReadVec3();
 	void WriteColor( const Color val );
 	const Color ReadColor();
 	void WriteData( const void* data, const uint32_t len );

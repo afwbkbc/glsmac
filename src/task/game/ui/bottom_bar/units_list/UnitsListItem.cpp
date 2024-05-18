@@ -2,14 +2,20 @@
 
 #include "UnitsList.h"
 
+#include "task/game/Unit.h"
+#include "ui/object/Label.h"
+#include "ui/object/Panel.h"
+#include "ui/object/Mesh.h"
+#include "types/mesh/Mesh.h"
+
 namespace task {
 namespace game {
 namespace ui {
 
-UnitsListItem::UnitsListItem( Game* game, UnitsList* units_list, const unit_data_t& unit_data )
+UnitsListItem::UnitsListItem( Game* game, UnitsList* units_list, Unit* unit )
 	: Section( game, "BBUnitsListItem", "BB" )
 	, m_units_list( units_list )
-	, m_unit_data( unit_data ) {
+	, m_unit( unit ) {
 	m_config.no_outer_border = true;
 	m_config.no_inner_border = true;
 	SetEventContexts( EC_MOUSE | EC_MOUSEMOVE );
@@ -18,12 +24,15 @@ UnitsListItem::UnitsListItem( Game* game, UnitsList* units_list, const unit_data
 void UnitsListItem::Create() {
 	Section::Create();
 
+	const auto& render = m_unit->GetRenderData();
+
 	const types::mesh::Mesh* mesh;
 #define X( _key, _class ) \
-    NEW( mesh, types::mesh::Mesh, *m_unit_data._key.mesh ); /* make a copy */ \
-    NEW( m_sprites._key.obj, object::Mesh, "BBUnitsListPreview" _class ); \
+    ASSERT( render._key.mesh, #_key " mesh not defined" ); \
+    NEW( mesh, types::mesh::Mesh, *render._key.mesh ); /* make a copy */ \
+    NEW( m_sprites._key.obj, ::ui::object::Mesh, "BBUnitsListPreview" _class ); \
     m_sprites._key.obj->SetMesh( mesh ); \
-    m_sprites._key.obj->SetTexture( m_unit_data._key.texture ); \
+    m_sprites._key.obj->SetTexture( render._key.texture ); \
     AddChild( m_sprites._key.obj );
 
 	// order is important
@@ -35,25 +44,28 @@ void UnitsListItem::Create() {
 
 	NEW( m_label, ::ui::object::Label, "BBUnitsListPreviewLabel" );
 	m_label->SetTop( 0 );
-	m_label->SetText( m_unit_data.short_power_string );
+	m_label->SetText( m_unit->GetStatsString() );
 	AddChild( m_label );
 
 	On(
-		UIEvent::EV_MOUSE_OVER, EH( this ) {
-			m_units_list->PreviewUnit( m_unit_data );
+		::ui::event::EV_MOUSE_OVER, EH( this ) {
+			m_units_list->PreviewUnit( m_unit );
 			return true;
 		}
 	);
 	On(
-		UIEvent::EV_MOUSE_OUT, EH( this ) {
-			m_units_list->HideUnitPreview( m_unit_data );
+		::ui::event::EV_MOUSE_OUT, EH( this ) {
+			m_units_list->HideUnitPreview( m_unit );
 			return true;
 		}
 	);
 	On(
-		UIEvent::EV_MOUSE_DOWN, EH( this ) {
-			m_units_list->SelectUnit( &m_unit_data, true );
-			return true;
+		::ui::event::EV_MOUSE_DOWN, EH( this ) {
+			if ( data->mouse.button == ::ui::event::M_LEFT ) {
+				m_units_list->SelectUnit( m_unit, true );
+				return true;
+			}
+			return false;
 		}
 	);
 
@@ -65,14 +77,11 @@ void UnitsListItem::Destroy() {
 
 	RemoveChild( m_selection_frame );
 
-	m_units_list->HideUnitPreview( m_unit_data );
+	m_units_list->HideUnitPreview( m_unit );
 
 	RemoveChild( m_sprites.unit.obj );
-	DELETE( m_unit_data.unit.mesh );
 	RemoveChild( m_sprites.healthbar.obj );
-	DELETE( m_unit_data.healthbar.mesh );
 	RemoveChild( m_sprites.badge.obj );
-	DELETE( m_unit_data.badge.mesh );
 
 	RemoveChild( m_label );
 
@@ -80,15 +89,15 @@ void UnitsListItem::Destroy() {
 }
 
 void UnitsListItem::SelectUnit() {
-	m_selection_frame->AddStyleModifier( Style::M_ACTIVE );
+	m_selection_frame->AddStyleModifier( ::ui::M_ACTIVE );
 }
 
 void UnitsListItem::DeselectUnit() {
-	m_selection_frame->RemoveStyleModifier( Style::M_ACTIVE );
+	m_selection_frame->RemoveStyleModifier( ::ui::M_ACTIVE );
 }
 
-const unit_data_t& UnitsListItem::GetUnit() const {
-	return m_unit_data;
+const Unit* UnitsListItem::GetUnit() const {
+	return m_unit;
 }
 
 }

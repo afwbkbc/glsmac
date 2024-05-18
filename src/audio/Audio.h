@@ -4,7 +4,9 @@
 
 #include "base/Module.h"
 
-#include "scene/actor/Sound.h"
+namespace scene::actor {
+class Sound;
+}
 
 namespace audio {
 
@@ -26,4 +28,4 @@ protected:
 
 };
 
-} /* namespace audio */
+}

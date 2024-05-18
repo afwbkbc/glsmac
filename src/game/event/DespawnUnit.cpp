@@ -13,7 +13,7 @@ DespawnUnit::DespawnUnit( const size_t initiator_slot, const size_t unit_id )
 	//
 }
 
-const std::string* DespawnUnit::Validate( const Game* game ) const {
+const std::string* DespawnUnit::Validate( Game* game ) const {
 	if ( m_initiator_slot != 0 ) {
 		return Error( "Only master is allowed to despawn units" );
 	}

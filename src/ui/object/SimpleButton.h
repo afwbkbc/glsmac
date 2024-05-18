@@ -3,12 +3,13 @@
 // TODO: combine with Button
 
 #include "UIContainer.h"
-#include "Surface.h"
 
 #include "util/Timer.h"
 
 namespace ui {
 namespace object {
+
+class Surface;
 
 CLASS( SimpleButton, UIContainer )
 
@@ -19,10 +20,10 @@ CLASS( SimpleButton, UIContainer )
 
 protected:
 
-	bool OnMouseOver( const UIEvent::event_data_t* data ) override;
-	bool OnMouseOut( const UIEvent::event_data_t* data ) override;
-	bool OnMouseDown( const UIEvent::event_data_t* data ) override;
-	bool OnMouseUp( const UIEvent::event_data_t* data ) override;
+	bool OnMouseOver( const event::event_data_t* data ) override;
+	bool OnMouseOut( const event::event_data_t* data ) override;
+	bool OnMouseDown( const event::event_data_t* data ) override;
+	bool OnMouseUp( const event::event_data_t* data ) override;
 
 	bool m_is_clicking = false; // mouseup at different position after mousedown is still counted as click, as long as it's inside button
 
@@ -34,5 +35,5 @@ private:
 
 };
 
-} /* namespace object */
-} /* namespace ui */
+}
+}

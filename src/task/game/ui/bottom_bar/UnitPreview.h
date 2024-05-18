@@ -3,12 +3,18 @@
 #include <vector>
 
 #include "BBSection.h"
-#include "ui/object/Section.h"
 
-#include "task/game/Types.h"
+namespace ui::object {
+class Section;
+class Label;
+class Mesh;
+}
 
 namespace task {
 namespace game {
+
+class Unit;
+
 namespace ui {
 
 CLASS( UnitPreview, BBSection )
@@ -18,17 +24,16 @@ CLASS( UnitPreview, BBSection )
 	void Create() override;
 	void Destroy() override;
 
-	void PreviewUnit( const unit_data_t* unit_data );
+	void PreviewUnit( const Unit* unit );
 	void HideUnitPreview();
-	void HideUnitPreview( const unit_data_t* unit_data );
 
 private:
-	const unit_data_t* m_unit_data = nullptr;
+	const Unit* m_unit = nullptr;
 
 	struct {
-		object::Mesh* unit = nullptr;
-		object::Mesh* badge = nullptr;
-		object::Mesh* healthbar = nullptr;
+		::ui::object::Mesh* unit = nullptr;
+		::ui::object::Mesh* badge = nullptr;
+		::ui::object::Mesh* healthbar = nullptr;
 	} m_sprites;
 
 	std::vector< ::ui::object::Label* > m_labels = {};

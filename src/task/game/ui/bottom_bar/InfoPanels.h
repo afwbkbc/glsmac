@@ -4,12 +4,13 @@
 
 #include "MiddleAreaPage.h"
 
-#include "InfoPanel.h"
 #include "types/Vec2.h"
 
 namespace task {
 namespace game {
 namespace ui {
+
+class InfoPanel;
 
 CLASS( InfoPanels, MiddleAreaPage )
 

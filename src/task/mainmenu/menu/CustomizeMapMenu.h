@@ -1,10 +1,6 @@
 #pragma once
 
-#include <unordered_map>
-
-#include "../SlidingMenu.h"
-
-#include "ui/object/Surface.h"
+#include "task/mainmenu/SlidingMenu.h"
 
 namespace task {
 namespace mainmenu {
@@ -15,7 +11,7 @@ CLASS( CustomizeMapMenu, SlidingMenu )
 		MainMenu* mainmenu,
 		const std::string& title,
 		const uint8_t preview_filename_position,
-		const MenuBlock::choices_t& choices,
+		const choices_t& choices,
 		const size_t default_choice = 0
 	);
 

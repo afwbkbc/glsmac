@@ -4,10 +4,10 @@
 
 namespace base {
 
-CLASS( ObjectLink, base::Base )
+CLASS( ObjectLink, Base )
 	template< class T1, class T2 >
 	ObjectLink( const T1* src_object, const T2* dst_object )
-		: base::Base()
+		: Base()
 		, m_src_object( (const void*)src_object )
 		, m_dst_object( (const void*)dst_object ) {
 		//
@@ -32,4 +32,4 @@ protected:
 	bool m_removed = false;
 };
 
-} /* namespace base */
+}

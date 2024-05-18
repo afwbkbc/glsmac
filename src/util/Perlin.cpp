@@ -6,8 +6,6 @@
 
 // based on https://github.com/sol-prog/Perlin_Noise
 
-using namespace std;
-
 namespace util {
 
 // Initialize with the reference values for the permutation vector
@@ -323,8 +321,8 @@ float Perlin::Noise( float x, float y, float z ) {
 
 	//res = (res + 1.0)/2.0;
 
-	ASSERT( res >= -1, "perlin res overflow ( " + to_string( res ) + " < -1 )" );
-	ASSERT( res <= 1, "perlin res overflow ( " + to_string( res ) + " > 1 )" );
+	ASSERT( res >= -1, "perlin res overflow ( " + std::to_string( res ) + " < -1 )" );
+	ASSERT( res <= 1, "perlin res overflow ( " + std::to_string( res ) + " > 1 )" );
 	//Log( "Noise( " + to_string( x ) + "x" + to_string( y ) + " ) = " + to_string( res ) );
 	return res;
 }
@@ -337,7 +335,7 @@ float Perlin::Noise( float x, float y, float z, size_t passes ) {
 		scale /= 2;
 	}
 
-	res = max( -1.0f, min( 1.0f, res ) );
+	res = std::max( -1.0f, std::min( 1.0f, res ) );
 
 	//Log( "Noise( " + to_string( x ) + "x" + to_string( y ) + ":" + to_string( passes ) + " ) = " + to_string( res ) );
 	return res;

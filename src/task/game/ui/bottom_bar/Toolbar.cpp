@@ -1,8 +1,10 @@
 #include "Toolbar.h"
 
-#include "../../Game.h"
-
-#include "util/FS.h"
+#include "task/game/Game.h"
+#include "CenteredBlock.h"
+#include "ui/object/SimpleButton.h"
+#include "BBSection.h"
+#include "ui/object/Label.h"
 
 namespace task {
 namespace game {
@@ -21,20 +23,20 @@ void Toolbar::Create() {
 	// TODO: split to separate panels/sections?
 
 	{ // tool buttons
-		const Vec2< size_t > offset = {
+		const types::Vec2< size_t > offset = {
 			0,
 			0
 		};
 		uint8_t bx = 0, by = 0;
-		for ( auto t = MapEditor::TT_NONE + 1 ; t < MapEditor::TT_MAX ; t++ ) {
-			const auto tool = (MapEditor::tool_type_t)t;
+		for ( auto t = ::game::map_editor::TT_NONE + 1 ; t < ::game::map_editor::TT_MAX ; t++ ) {
+			const auto tool = (::game::map_editor::tool_type_t)t;
 			ASSERT( m_tool_names.find( tool ) != m_tool_names.end(), "tool name not found" );
 			const std::string& tool_name = m_tool_names.at( tool );
 			NEWV( button, ::ui::object::SimpleButton, "BBMiddleAreaToolbarButton Tool " + tool_name );
 			button->SetLeft( offset.x + bx * s_tool_button_width );
 			button->SetTop( offset.y + by * s_tool_button_height );
 			button->On(
-				UIEvent::EV_MOUSE_DOWN, EH( this, tool ) {
+				::ui::event::EV_MOUSE_DOWN, EH( this, tool ) {
 					SelectTool( tool );
 					return true;
 				}
@@ -51,20 +53,20 @@ void Toolbar::Create() {
 	}
 
 	{ // brush buttons
-		const Vec2< size_t > offset = {
+		const types::Vec2< size_t > offset = {
 			225,
 			10
 		};
 		uint8_t bx = 0, by = 0;
-		for ( auto b = MapEditor::BT_NONE + 1 ; b < MapEditor::BT_MAX ; b++ ) {
-			const auto brush = (MapEditor::brush_type_t)b;
+		for ( auto b = ::game::map_editor::BT_NONE + 1 ; b < ::game::map_editor::BT_MAX ; b++ ) {
+			const auto brush = (::game::map_editor::brush_type_t)b;
 			ASSERT( m_brush_names.find( brush ) != m_brush_names.end(), "brush name not found" );
 			const std::string& brush_name = m_brush_names.at( brush );
 			NEWV( button, ::ui::object::SimpleButton, "BBMiddleAreaToolbarButton Brush " + brush_name );
 			button->SetLeft( offset.x + bx * s_brush_button_width );
 			button->SetTop( offset.y + by * s_brush_button_height );
 			button->On(
-				UIEvent::EV_MOUSE_DOWN, EH( this, brush ) {
+				::ui::event::EV_MOUSE_DOWN, EH( this, brush ) {
 					SelectBrush( brush );
 					return true;
 				}
@@ -108,14 +110,14 @@ void Toolbar::Create() {
 	);
 	m_tool_info.labels[ TI_MODE ]->SetText( "PLAY mode (No Scroll Lock)" );
 
-	SelectTool( MapEditor::TT_ELEVATIONS );
-	SelectBrush( MapEditor::BT_DOT );
+	SelectTool( ::game::map_editor::TT_ELEVATIONS );
+	SelectBrush( ::game::map_editor::BT_DOT );
 }
 
 void Toolbar::Destroy() {
 
 	{ // tools
-		SelectTool( MapEditor::TT_NONE );
+		SelectTool( ::game::map_editor::TT_NONE );
 		for ( auto& button : m_tool_buttons ) {
 			m_centered_block->RemoveChild( button );
 		}
@@ -123,7 +125,7 @@ void Toolbar::Destroy() {
 	}
 
 	{ // brushes
-		SelectBrush( MapEditor::BT_NONE );
+		SelectBrush( ::game::map_editor::BT_NONE );
 		for ( auto& button : m_brush_buttons ) {
 			m_centered_block->RemoveChild( button );
 		}
@@ -149,11 +151,11 @@ void Toolbar::Align() {
 		// TODO: implement in Style ?
 		if ( m_object_area.width >= 460 ) {
 			m_tool_info.body->Show();
-			m_centered_block->SetAlign( UIObject::ALIGN_CENTER );
+			m_centered_block->SetAlign( ::ui::ALIGN_CENTER );
 		}
 		else {
 			m_tool_info.body->Hide();
-			m_centered_block->SetAlign( UIObject::ALIGN_LEFT );
+			m_centered_block->SetAlign( ::ui::ALIGN_LEFT );
 		}
 	}
 }
@@ -163,7 +165,7 @@ void Toolbar::UpdateMapFileName() {
 	m_tool_info.labels[ TI_FILE ]->SetText( "File: " + m_game->GetMapFilename() );
 }
 
-void Toolbar::SelectTool( MapEditor::tool_type_t tool ) {
+void Toolbar::SelectTool( ::game::map_editor::tool_type_t tool ) {
 
 	if ( m_game->GetEditorTool() != tool ) {
 
@@ -172,21 +174,21 @@ void Toolbar::SelectTool( MapEditor::tool_type_t tool ) {
 		m_game->SetEditorTool( tool );
 
 		if ( m_active_tool_button ) {
-			m_active_tool_button->RemoveStyleModifier( Style::M_SELECTED );
+			m_active_tool_button->RemoveStyleModifier( ::ui::M_SELECTED );
 		}
-		if ( tool == MapEditor::TT_NONE ) {
+		if ( tool == ::game::map_editor::TT_NONE ) {
 			m_active_tool_button = nullptr;
 		}
 		else {
-			m_active_tool_button = m_tool_buttons.at( tool - 1 ); // because there's no button for MapEditor::TT_NONE
-			m_active_tool_button->AddStyleModifier( Style::M_SELECTED );
+			m_active_tool_button = m_tool_buttons.at( tool - 1 ); // because there's no button for ::game::map_editor::TT_NONE
+			m_active_tool_button->AddStyleModifier( ::ui::M_SELECTED );
 		}
 
 		m_tool_info.labels[ TI_TOOL ]->SetText( "Editing: " + m_tool_names.at( tool ) );
 	}
 }
 
-void Toolbar::SelectBrush( MapEditor::brush_type_t brush ) {
+void Toolbar::SelectBrush( ::game::map_editor::brush_type_t brush ) {
 
 	if ( m_game->GetEditorBrush() != brush ) {
 
@@ -195,14 +197,14 @@ void Toolbar::SelectBrush( MapEditor::brush_type_t brush ) {
 		m_game->SetEditorBrush( brush );
 
 		if ( m_active_brush_button ) {
-			m_active_brush_button->RemoveStyleModifier( Style::M_SELECTED );
+			m_active_brush_button->RemoveStyleModifier( ::ui::M_SELECTED );
 		}
-		if ( brush == MapEditor::BT_NONE ) {
+		if ( brush == ::game::map_editor::BT_NONE ) {
 			m_active_brush_button = nullptr;
 		}
 		else {
-			m_active_brush_button = m_brush_buttons.at( brush - 1 ); // because there's no button for MapEditor::BT_NONE
-			m_active_brush_button->AddStyleModifier( Style::M_SELECTED );
+			m_active_brush_button = m_brush_buttons.at( brush - 1 ); // because there's no button for ::game::map_editor::BT_NONE
+			m_active_brush_button->AddStyleModifier( ::ui::M_SELECTED );
 		}
 
 		m_tool_info.labels[ TI_BRUSH ]->SetText( "Brush: " + m_brush_names.at( brush ) );

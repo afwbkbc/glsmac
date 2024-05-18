@@ -2,8 +2,12 @@
 
 #include "util/Clamper.h"
 #include "engine/Engine.h"
-
-using namespace types;
+#include "scene/actor/Mesh.h"
+#include "types/mesh/Mesh.h"
+#include "types/mesh/Simple.h"
+#include "types/mesh/Render.h"
+#include "types/texture/Texture.h"
+#include "graphics/Graphics.h"
 
 namespace ui {
 namespace object {
@@ -39,7 +43,7 @@ void Mesh::SetMesh( const types::mesh::Mesh* mesh ) {
 	}
 }
 
-void Mesh::SetTexture( types::Texture* texture ) {
+void Mesh::SetTexture( types::texture::Texture* texture ) {
 	if ( texture != m_texture ) {
 		/*if ( m_texture && m_texture ) {
 			Log( "Changing texture from " + m_texture->m_name + " to " + texture->m_name );
@@ -76,7 +80,7 @@ void Mesh::SetTintColor( const types::Color& color ) {
 
 void Mesh::SetTintAlpha( const float alpha ) {
 	m_tint_color.enabled = true;
-	m_tint_color.color = Color( 1.0f, 1.0f, 1.0f, alpha );
+	m_tint_color.color = types::Color( 1.0f, 1.0f, 1.0f, alpha );
 	UpdateRenderFlags();
 }
 
@@ -98,12 +102,12 @@ void Mesh::Align() {
 
 	auto c = m_original_mesh->GetVertexCount();
 
-	Vec3 coord = {};
-	Vec2< coord_t > tex_coord = {};
+	types::Vec3 coord = {};
+	types::Vec2< coord_t > tex_coord = {};
 
 	coord_t mesh_left, mesh_top, mesh_right, mesh_bottom;
 
-	for ( types::mesh::Mesh::index_t i = 0 ; i < c ; i++ ) {
+	for ( types::mesh::index_t i = 0 ; i < c ; i++ ) {
 		m_original_mesh->GetVertexCoord( i, &coord );
 		if ( i == 0 || coord.x < mesh_left ) {
 			mesh_left = coord.x;
@@ -197,7 +201,7 @@ void Mesh::Align() {
 		need_resize = true;
 	}
 	auto* g = g_engine->GetGraphics();
-	Vec2< size_t > viewport_size = {
+	types::Vec2< size_t > viewport_size = {
 		g->GetViewportWidth(),
 		g->GetViewportHeight()
 	};
@@ -229,7 +233,7 @@ void Mesh::Align() {
 			}
 		);
 
-		for ( types::mesh::Mesh::index_t i = 0 ; i < c ; i++ ) {
+		for ( types::mesh::index_t i = 0 ; i < c ; i++ ) {
 			m_original_mesh->GetVertexCoord( i, &coord );
 
 			coord.x = ClampX( object_area_to_mesh_coords.x.Clamp( UnclampX( coord.x ) ) );

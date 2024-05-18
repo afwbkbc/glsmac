@@ -1,9 +1,11 @@
 #include "CubemapTexture.h"
 
+#include "types/texture/Texture.h"
+
 namespace graphics {
 namespace opengl {
 
-CubemapTexture::CubemapTexture( types::Texture* texture )
+CubemapTexture::CubemapTexture( types::texture::Texture* texture )
 	: Texture( texture ) {
 	m_target = GL_TEXTURE_CUBE_MAP;
 }
@@ -88,5 +90,5 @@ void CubemapTexture::Load() {
 	glBindTexture( m_target, 0 );
 }
 
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}

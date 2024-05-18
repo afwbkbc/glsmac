@@ -1,24 +1,30 @@
 #pragma once
 
-#include <cstdint>
 #include <unordered_set>
 #include <unordered_map>
 #include <functional>
 
 #include "base/Base.h"
 
-#include "Settings.h"
-#include "Player.h"
-#include "Slots.h"
+#include "network/Types.h"
 
-#include "connection/Connection.h"
-#include "network/types.h"
-
-#include "bindings/Bindings.h"
+#include "gse/Exception.h"
+#include "game/settings/Settings.h"
 
 namespace game {
 
 class Game;
+class Player;
+
+namespace connection {
+class Connection;
+}
+namespace bindings {
+class Bindings;
+}
+namespace slot {
+class Slots;
+}
 
 CLASS( State, base::Base )
 
@@ -29,8 +35,8 @@ CLASS( State, base::Base )
 	void UnsetGame();
 	Game* GetGame() const;
 
-	Settings m_settings = {};
-	Slots m_slots = { this };
+	settings::Settings m_settings = {};
+	slot::Slots* m_slots;
 
 	bindings::Bindings* m_bindings = nullptr;
 

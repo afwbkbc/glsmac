@@ -1,5 +1,8 @@
 #include "CustomizeMapMenu.h"
 
+#include "task/mainmenu/ui/slidingmenu/Types.h"
+#include "task/mainmenu/MainMenu.h"
+
 namespace task {
 namespace mainmenu {
 
@@ -7,7 +10,7 @@ CustomizeMapMenu::CustomizeMapMenu(
 	MainMenu* mainmenu,
 	const std::string& title,
 	const uint8_t preview_filename_position,
-	const MenuBlock::choices_t& choices,
+	const choices_t& choices,
 	const size_t default_choice
 )
 	: SlidingMenu( mainmenu, title, choices, default_choice )

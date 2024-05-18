@@ -2,31 +2,29 @@
 
 #include <unordered_map>
 
-#include "game/Settings.h"
-
-#include "Tile.h"
+#include "Types.h"
+#include "game/settings/Types.h"
+#include "game/map/tile/Types.h"
 
 #include "types/Vec2.h"
-#include "util/Clamper.h"
+#include "types/Vec3.h"
+#include "types/Color.h"
 
-using namespace types;
+#include "util/Clamper.h"
 
 namespace game {
 namespace map {
 
 struct Consts {
 
-	// coordinates of textures (x1 and y1) in pcx file
-	typedef Vec2< uint32_t > pcx_texture_coordinates_t;
-
 	const struct {
 		const struct {
 
-			const Vec2< uint32_t > dimensions = {
+			const types::Vec2< uint32_t > dimensions = {
 				56,
 				56
 			};
-			const Vec2< uint32_t > radius = dimensions / (uint32_t)2;
+			const types::Vec2< uint32_t > radius = dimensions / (uint32_t)2;
 
 			const pcx_texture_coordinates_t water[2] = {
 				{ 280, 79 },
@@ -150,7 +148,7 @@ struct Consts {
 				{ 394, 687 },
 				{ 451, 687 },
 			};
-			const pcx_texture_coordinates_t fungus_sea[16] = {
+			const pcx_texture_coordinates_t fungus_water[16] = {
 				{ 508, 516 },
 				{ 565, 516 },
 				{ 622, 516 },
@@ -222,16 +220,16 @@ struct Consts {
 		} texture_pcx;
 		const struct {
 
-			const Vec2< uint32_t > dimensions = {
+			const types::Vec2< uint32_t > dimensions = {
 				100,
 				62
 			};
-			const Vec2< uint32_t > center = {
+			const types::Vec2< uint32_t > center = {
 				50,
 				25
 			};
 
-			const pcx_texture_coordinates_t nutrient_bonus_sea[2] = {
+			const pcx_texture_coordinates_t nutrient_bonus_water[2] = {
 				{ 1,   253 },
 				{ 102, 253 },
 			};
@@ -239,7 +237,7 @@ struct Consts {
 				{ 203, 253 },
 				{ 304, 253 },
 			};
-			const pcx_texture_coordinates_t minerals_bonus_sea[2] = {
+			const pcx_texture_coordinates_t minerals_bonus_water[2] = {
 				{ 1,   316 },
 				{ 102, 316 },
 			};
@@ -247,7 +245,7 @@ struct Consts {
 				{ 203, 316 },
 				{ 304, 316 },
 			};
-			const pcx_texture_coordinates_t energy_bonus_sea[2] = {
+			const pcx_texture_coordinates_t energy_bonus_water[2] = {
 				{ 1,   379 },
 				{ 102, 379 },
 			};
@@ -267,7 +265,7 @@ struct Consts {
 					190
 				},
 			};
-			const pcx_texture_coordinates_t unity_pod_sea[3] = {
+			const pcx_texture_coordinates_t unity_pod_water[3] = {
 				{ 418, 379 },
 				{ 620, 379 },
 				{ 822, 379 },
@@ -277,7 +275,7 @@ struct Consts {
 				{ 721, 379 },
 				{ 923, 379 },
 			};
-			const pcx_texture_coordinates_t farm_sea[1] = {
+			const pcx_texture_coordinates_t farm_water[1] = {
 				{
 					607,
 					190
@@ -289,7 +287,7 @@ struct Consts {
 				{ 923, 579 },
 				{ 923, 642 },
 			};
-			const pcx_texture_coordinates_t solar_sea[1] = {
+			const pcx_texture_coordinates_t solar_water[1] = {
 				{
 					506,
 					127
@@ -301,7 +299,7 @@ struct Consts {
 					127
 				},
 			};
-			const pcx_texture_coordinates_t mine_sea[1] = {
+			const pcx_texture_coordinates_t mine_water[1] = {
 				{
 					506,
 					64
@@ -366,17 +364,17 @@ struct Consts {
 		} ter1_pcx;
 	} tc;
 	const struct {
-		const Vec3 scale = {
+		const types::Vec3 scale = {
 			1.0f,
 			1.0f,
 			2.0f
 		};
-		const Vec2< float > radius = {
+		const types::Vec2< float > radius = {
 			scale.x / 2,
 			scale.y / 2
 		};
 		const float rotated_width = sqrt( pow( scale.x, 2 ) + pow( scale.y, 2 ) );
-		const Tile::elevation_t maximum_allowed_slope_elevation = 650; // TODO: fix black lines when texture is perpendicular to camera
+		const tile::elevation_t maximum_allowed_slope_elevation = 650; // TODO: fix black lines when texture is perpendicular to camera
 		const struct {
 			const float texture_edge_stretch_min = 0.05f;
 			const float texture_edge_stretch_max = 0.15f;
@@ -386,8 +384,8 @@ struct Consts {
 		const util::Clamper< float > elevation_to_vertex_z = {
 			{
 				{
-					Tile::ELEVATION_MIN,
-					Tile::ELEVATION_MAX
+					tile::ELEVATION_MIN,
+					tile::ELEVATION_MAX
 				},
 				{
 					-scale.z,
@@ -398,8 +396,8 @@ struct Consts {
 		const util::Clamper< float > elevation_to_water_r = {
 			{
 				{
-					Tile::ELEVATION_LEVEL_TRENCH,
-					Tile::ELEVATION_LEVEL_COAST
+					tile::ELEVATION_LEVEL_TRENCH,
+					tile::ELEVATION_LEVEL_COAST
 				},
 				{
 					0.6f,
@@ -410,8 +408,8 @@ struct Consts {
 		const util::Clamper< float > elevation_to_water_g = {
 			{
 				{
-					Tile::ELEVATION_LEVEL_TRENCH,
-					Tile::ELEVATION_LEVEL_COAST
+					tile::ELEVATION_LEVEL_TRENCH,
+					tile::ELEVATION_LEVEL_COAST
 				},
 				{
 					0.6f,
@@ -422,8 +420,8 @@ struct Consts {
 		const util::Clamper< float > elevation_to_water_b = {
 			{
 				{
-					Tile::ELEVATION_LEVEL_TRENCH,
-					Tile::ELEVATION_LEVEL_COAST
+					tile::ELEVATION_LEVEL_TRENCH,
+					tile::ELEVATION_LEVEL_COAST
 				},
 				{
 					0.8f,
@@ -434,8 +432,8 @@ struct Consts {
 		const util::Clamper< float > elevation_to_water_a = {
 			{
 				{
-					Tile::ELEVATION_LEVEL_TRENCH,
-					Tile::ELEVATION_LEVEL_COAST
+					tile::ELEVATION_LEVEL_TRENCH,
+					tile::ELEVATION_LEVEL_COAST
 				},
 				{
 					1.0f,
@@ -443,31 +441,31 @@ struct Consts {
 				}
 			}
 		};
-		const float water_level_z = elevation_to_vertex_z.Clamp( Tile::ELEVATION_LEVEL_COAST ); // sea is always on sea level
+		const float water_level_z = elevation_to_vertex_z.Clamp( tile::ELEVATION_LEVEL_COAST ); // water is always on water level
 	} tile;
 	const struct {
 		// to compensate for view angle difference from SMAC's
 		const float y_scale = 0.8f;
 	} sprite;
-	const Vec3 map_position = {
+	const types::Vec3 map_position = {
 		0.0f,
 		0.0f,
 		0.0f
 	};
-	const Vec3 map_rotation = {
+	const types::Vec3 map_rotation = {
 		0.0f,
 		0.0f,
 		0.0f
 	};
-	const Color underwater_tint = {
+	const types::Color underwater_tint = {
 		0.0f,
 		0.2f,
 		0.5f,
 		1.0f
 	};
 	const struct {
-		//const Color coastline_tint = { 0.7f, 0.7f, 0.7f, 1.0f };
-		const Color coastline_tint = {
+		//const types::Color coastline_tint = { 0.7f, 0.7f, 0.7f, 1.0f };
+		const types::Color coastline_tint = {
 			1.0f,
 			1.0f,
 			1.0f,
@@ -476,7 +474,7 @@ struct Consts {
 		const float coast_water_alpha = 0.4f;
 		const float coast_water_center_alpha = coast_water_alpha / 1.5f;
 		const float coast_water_center_alpha_corner_mod = 0.7f;
-		const Color border_color = {
+		const types::Color border_color = {
 			0.425f,
 			0.378f,
 			0.311f,
@@ -497,21 +495,21 @@ struct Consts {
 		const std::string default_map_filename = "untitled";
 		const std::string default_map_extension = ".gsm";
 	} fs;
-	const std::unordered_map< MapSettings::parameter_t, Vec2< size_t > > map_sizes = {
+	const std::unordered_map< settings::map_config_value_t, types::Vec2< size_t > > map_sizes = {
 		// original SMAC sizes (1:1)
 		/*
-		{ MapSettings::MAP_TINY, { 48, 48 } },
-		{ MapSettings::MAP_SMALL, { 64, 64 } },
-		{ MapSettings::MAP_STANDARD, { 80, 80 } },
-		{ MapSettings::MAP_LARGE, { 100, 100 } },
-		{ MapSettings::MAP_HUGE, { 128, 128 } }
+		{ settings::MAP_CONFIG_TINY, { 48, 48 } },
+		{ settings::MAP_CONFIG_SMALL, { 64, 64 } },
+		{ settings::MAP_CONFIG_STANDARD, { 80, 80 } },
+		{ settings::MAP_CONFIG_LARGE, { 100, 100 } },
+		{ settings::MAP_CONFIG_HUGE, { 128, 128 } }
 		 */
 		// 2:1 sizes (better for minimap and solves horizontal repeat problem for widescreens)
-		{ MapSettings::MAP_TINY,     { 68,  34 } },
-		{ MapSettings::MAP_SMALL,    { 88,  44 } },
-		{ MapSettings::MAP_STANDARD, { 112, 56 } },
-		{ MapSettings::MAP_LARGE,    { 140, 70 } },
-		{ MapSettings::MAP_HUGE,     { 180, 90 } }
+		{ settings::MAP_CONFIG_TINY,     { 68,  34 } },
+		{ settings::MAP_CONFIG_SMALL,    { 88,  44 } },
+		{ settings::MAP_CONFIG_STANDARD, { 112, 56 } },
+		{ settings::MAP_CONFIG_LARGE,    { 140, 70 } },
+		{ settings::MAP_CONFIG_HUGE,     { 180, 90 } }
 	};
 #ifdef DEBUG
 	const struct {

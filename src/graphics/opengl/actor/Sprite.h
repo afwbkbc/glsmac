@@ -3,7 +3,17 @@
 #include <GL/glew.h>
 
 #include "Actor.h"
-#include "scene/actor/Sprite.h"
+
+#include "scene/actor/Types.h"
+#include "types/mesh/Types.h"
+
+namespace types::texture {
+class Texture;
+}
+
+namespace scene::actor {
+class Sprite;
+}
 
 namespace graphics {
 namespace opengl {
@@ -19,18 +29,18 @@ CLASS( Sprite, Actor )
 	void LoadMesh() override;
 	void LoadTexture() override;
 
-	void Draw( shader_program::ShaderProgram* shader_program, Camera* camera = nullptr ) override;
+	void Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) override;
 
 protected:
 
 	scene::actor::Sprite* GetSpriteActor() const;
 
-	actor::Sprite::coords_t m_last_dimensions = {
+	scene::actor::sprite_coords_t m_last_dimensions = {
 		0.0f,
 		0.0f
 	};
-	const types::Texture* m_last_texture = nullptr;
-	mesh::Render::tex_coords_t m_last_tex_coords = {
+	const types::texture::Texture* m_last_texture = nullptr;
+	types::mesh::tex_coords_t m_last_tex_coords = {
 		{ 0.0f, 0.0f },
 		{ 0.0f, 0.0f }
 	};
@@ -41,5 +51,5 @@ protected:
 
 };
 
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}

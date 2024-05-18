@@ -2,13 +2,16 @@
 
 #include "Routine.h"
 
-#include "../shader_program/Simple2D.h"
-#include "../shader_program/Font.h"
-
-#include "../FBO.h"
-
 namespace graphics {
 namespace opengl {
+
+namespace shader_program {
+class Simple2D;
+class Font;
+}
+
+class FBO;
+
 namespace routine {
 
 CLASS( Overlay, Routine )
@@ -34,6 +37,6 @@ protected:
 	FBO* m_fbo = nullptr;
 };
 
-} /* namespace routine */
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}
+}

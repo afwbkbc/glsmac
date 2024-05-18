@@ -2,9 +2,11 @@
 
 #include <string>
 
-#include "../Loader.h"
+#include "loader/Loader.h"
 
-#include "types/Sound.h"
+namespace types {
+class Sound;
+}
 
 namespace loader {
 namespace sound {
@@ -13,5 +15,5 @@ CLASS( SoundLoader, Loader )
 	virtual types::Sound* LoadSound( const std::string& name ) = 0;
 };
 
-} /* namespace sound */
-} /* namespace loader */
+}
+}

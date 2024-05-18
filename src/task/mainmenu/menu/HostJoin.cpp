@@ -5,6 +5,14 @@
 #include "Host.h"
 #include "Join.h"
 
+#include "ui/object/Panel.h"
+#include "ui/object/Section.h"
+#include "ui/object/ChoiceList.h"
+
+#include "task/mainmenu/MainMenu.h"
+#include "game/State.h"
+#include "game/settings/Settings.h"
+
 namespace task {
 namespace mainmenu {
 
@@ -26,11 +34,11 @@ HostJoin::~HostJoin() {
 void HostJoin::Show() {
 	PopupMenu::Show();
 
-	NEW( m_section, Section, "PopupSection" );
+	NEW( m_section, ui::object::Section, "PopupSection" );
 	m_section->SetTitleText( "Would you like to host a new game or join an existing one?" );
 	m_body->AddChild( m_section );
 
-	NEW( m_choices, NumChoiceList, "PopupButtonList" );
+	NEW( m_choices, ui::object::NumChoiceList, "PopupButtonList" );
 	m_choices->SetImmediateMode( false );
 	m_choices->SetMargin( 3 );
 	m_choices->SetChoicesV(
@@ -40,7 +48,7 @@ void HostJoin::Show() {
 		}
 	);
 	m_choices->On(
-		UIEvent::EV_SELECT, EH( this ) {
+		ui::event::EV_SELECT, EH( this ) {
 			OnNext();
 			return true;
 		}
@@ -60,12 +68,12 @@ void HostJoin::OnNext() {
 	const auto value = m_choices->GetValueString();
 	MenuObject* menu = nullptr;
 	if ( value == "Host new game" ) {
-		m_mainmenu->m_state->m_settings.local.network_role = game::LocalSettings::NR_SERVER;
+		m_mainmenu->m_state->m_settings.local.network_role = game::settings::LocalSettings::NR_SERVER;
 		NEW( menu, Host, m_mainmenu );
 		NextMenu( menu );
 	}
 	else {
-		m_mainmenu->m_state->m_settings.local.network_role = game::LocalSettings::NR_CLIENT;
+		m_mainmenu->m_state->m_settings.local.network_role = game::settings::LocalSettings::NR_CLIENT;
 		NEW( menu, Join, m_mainmenu );
 		NextMenu( menu );
 	}

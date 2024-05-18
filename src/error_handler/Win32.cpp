@@ -9,4 +9,4 @@ void Win32::HandleError( const std::runtime_error& e ) const {
 #endif
 }
 
-} /* namespace error_handler */
+}

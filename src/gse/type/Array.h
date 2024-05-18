@@ -4,7 +4,10 @@
 #include <optional>
 
 #include "Type.h"
-#include "../Value.h"
+
+#include "Types.h"
+
+#include "gse/Value.h"
 
 namespace gse {
 namespace type {
@@ -14,9 +17,7 @@ public:
 
 	static const type_t GetType() { return Type::T_ARRAY; }
 
-	typedef std::vector< Value > elements_t;
-
-	Array( elements_t initial_value = {} );
+	Array( array_elements_t initial_value = {} );
 
 	const Value& Get( const size_t index ) const;
 	const Value GetSubArray( const std::optional< size_t > from, const std::optional< size_t > to ) const;
@@ -27,7 +28,7 @@ public:
 	const Value GetRef( const size_t index );
 	const Value GetRangeRef( const std::optional< size_t > from, const std::optional< size_t > to );
 
-	elements_t value = {};
+	array_elements_t value = {};
 
 private:
 	void ValidateFromTo( const std::optional< size_t >& from, const std::optional< size_t >& to ) const;

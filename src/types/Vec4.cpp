@@ -46,7 +46,7 @@ Vec4 Vec4::operator*( const Vec4 operand ) {
 	return r;
 };
 
-Vec4 Vec4::operator*( const Vec3 operand ) {
+Vec4 Vec4::operator*( const types::Vec3 operand ) {
 	Vec4 r;
 
 	r.w = -( this->x * operand.x ) - ( this->y * operand.y ) - ( this->z * operand.z );
@@ -57,5 +57,5 @@ Vec4 Vec4::operator*( const Vec3 operand ) {
 	return r;
 };
 
-} /* namespace types */
+}
 

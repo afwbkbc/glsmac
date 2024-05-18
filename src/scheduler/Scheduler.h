@@ -1,16 +1,17 @@
 #pragma once
 
 #include "base/Module.h"
-#include "base/Task.h"
 
-using namespace base;
+namespace base {
+class Task;
+}
 
 namespace scheduler {
 
-CLASS( Scheduler, Module )
-	virtual void AddTask( Task* task ) = 0;
-	virtual void RemoveTask( Task* task ) = 0;
+CLASS( Scheduler, base::Module )
+	virtual void AddTask( base::Task* task ) = 0;
+	virtual void RemoveTask( base::Task* task ) = 0;
 protected:
 };
 
-} /* namespace scheduler */
+}

@@ -10,6 +10,8 @@ SET( SRC ${SRC}
 	${PWD}/BadgeDefs.cpp
 	${PWD}/Slot.cpp
 	${PWD}/SlotBadges.cpp
+	${PWD}/AnimationDef.cpp
+	${PWD}/Animation.cpp
 	${PWD}/UnitDef.cpp
 	${PWD}/Unit.cpp
 	${PWD}/Tile.cpp

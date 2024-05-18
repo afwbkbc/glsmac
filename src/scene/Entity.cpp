@@ -106,4 +106,4 @@ const bool Entity::IsVisible() const {
 	return m_is_visible;
 }
 
-} /* namespace scene */
+}

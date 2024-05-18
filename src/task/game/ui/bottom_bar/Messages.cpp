@@ -2,7 +2,8 @@
 
 #include "engine/Engine.h"
 
-#include "../../Game.h"
+#include "task/game/Game.h"
+#include "ui/object/TextView.h"
 
 namespace task {
 namespace game {
@@ -11,7 +12,7 @@ namespace ui {
 void Messages::Create() {
 	MiddleAreaPage::Create();
 
-	NEW( m_messages_list, object::TextView, "BBMiddleAreaMessagesList" );
+	NEW( m_messages_list, ::ui::object::TextView, "BBMiddleAreaMessagesList" );
 	m_messages_list->SetLinesLimit( 200 );
 	AddChild( m_messages_list );
 

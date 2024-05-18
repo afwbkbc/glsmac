@@ -2,6 +2,10 @@
 
 #include "engine/Engine.h"
 #include "task/game/Game.h"
+#include "ui/object/ScrollView.h"
+#include "task/game/ui/bottom_bar/UnitPreview.h"
+#include "UnitsListItem.h"
+#include "task/game/Unit.h"
 
 namespace task {
 namespace game {
@@ -36,78 +40,86 @@ void UnitsList::ClearUnits() {
 	}
 }
 
-void UnitsList::ListUnits( const std::vector< unit_data_t >& units, const size_t selected_unit_id ) {
-	ClearUnits();
+void UnitsList::ListUnits( const std::vector< Unit* >& units, const size_t selected_unit_id ) {
+	const auto last_scroll_x = m_body
+		? m_body->GetScrollX()
+		: 0;
+	ClearUnits(); // TODO: avoid redraws?
 	NEW( m_body, ::ui::object::ScrollView, ::ui::object::ScrollView::ST_HORIZONTAL_INLINE );
 	m_body->SetSticky( false );
 	m_body->SetScrollSpeed( 70 );
 	AddChild( m_body );
 	float left = 0;
-	const unit_data_t* selected_unit = nullptr;
+	Unit* selected_unit = nullptr;
 	for ( const auto& unit : units ) {
 		NEWV( item, UnitsListItem, m_game, this, unit );
 		item->SetLeft( left );
 		m_body->AddChild( item );
 		if (
 			(
-				selected_unit_id && item->GetUnit().id == selected_unit_id // select unit as requested
+				selected_unit_id && unit->GetId() == selected_unit_id // select unit as requested
 			) ||
 				(
 					!selected_unit_id && m_items.empty() // auto-select first unit by default
 				)
 			) {
-			selected_unit = &item->GetUnit();
+			selected_unit = unit;
 		}
 		m_items.insert(
 			{
-				unit.id,
+				unit->GetId(),
 				item
 			}
 		);
 		left += item->GetWidth();
 	}
+	m_body->SetScrollX( last_scroll_x );
 	if ( selected_unit ) {
 		SelectUnit( selected_unit, false );
 		m_unit_preview->PreviewUnit( selected_unit );
 	}
 }
 
-void UnitsList::PreviewUnit( const unit_data_t& unit ) {
-	if ( &unit != m_previewing_unit ) {
-		m_previewing_unit = &unit;
-		m_unit_preview->PreviewUnit( &unit );
+void UnitsList::PreviewUnit( Unit* unit ) {
+	if ( unit != m_previewing_unit ) {
+		m_previewing_unit = unit;
+		m_unit_preview->PreviewUnit( unit );
 	}
 }
 
-void UnitsList::HideUnitPreview( const unit_data_t& unit ) {
-	if ( &unit == m_previewing_unit ) {
-		m_previewing_unit = nullptr;
-	}
-	if ( &unit != m_selected_unit ) {
+void UnitsList::HideUnitPreview( Unit* unit ) {
+	if ( unit != m_selected_unit ) {
 		if ( m_previewing_unit ) {
 			m_unit_preview->PreviewUnit( m_previewing_unit );
 		}
 		else if ( m_selected_unit ) {
 			m_unit_preview->PreviewUnit( m_selected_unit );
 		}
-		else {
-			m_unit_preview->HideUnitPreview( &unit );
+		else if ( unit == m_previewing_unit ) { // TODO: test
+			m_unit_preview->HideUnitPreview();
 		}
+	}
+	if ( unit == m_previewing_unit ) {
+		m_previewing_unit = nullptr;
 	}
 }
 
-void UnitsList::SelectUnit( const unit_data_t* unit, const bool actually_select_unit ) {
+void UnitsList::SelectUnit( Unit* unit, const bool activate_unit ) {
 	if ( unit != m_selected_unit ) {
 		m_selected_unit = unit;
 		for ( auto& it : m_items ) {
-			if ( it.first == unit->id ) {
-				it.second->SelectUnit();
+			const auto& item = it.second;
+			if ( it.first == unit->GetId() ) {
+				item->SelectUnit();
+				m_body->ScrollToItem( item );
 			}
 			else {
-				it.second->DeselectUnit();
+				item->DeselectUnit();
 			}
 		}
-		m_game->SelectUnit( *m_selected_unit, actually_select_unit );
+		if ( activate_unit ) {
+			m_game->SelectUnit( m_selected_unit, true );
+		}
 	}
 }
 

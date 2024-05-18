@@ -10,6 +10,8 @@
 #include "type/String.h"
 #include "type/Array.h"
 #include "type/Object.h"
+#include "type/ArrayRef.h"
+#include "type/ObjectRef.h"
 
 namespace gse {
 
@@ -39,47 +41,7 @@ const std::string Value::Dump() const {
 }
 
 const Value Value::Clone() const {
-	switch ( m_data.get()->type ) {
-		case type::Type::T_UNDEFINED:
-			return VALUE( type::Undefined );
-		case type::Type::T_NULL:
-			return VALUE( type::Null );
-		case type::Type::T_BOOL:
-			return VALUE( type::Bool, ( (type::Bool*)m_data.get() )->value );
-		case type::Type::T_INT:
-			return VALUE( type::Int, ( (type::Int*)m_data.get() )->value );
-		case type::Type::T_FLOAT:
-			return VALUE( type::Float, ( (type::Float*)m_data.get() )->value );
-		case type::Type::T_STRING:
-			return VALUE( type::String, ( (type::String*)m_data.get() )->value );
-		case type::Type::T_ARRAY: {
-			type::Array::elements_t elements = {};
-			const auto* arr = (type::Array*)m_data.get();
-			for ( const auto& it : arr->value ) {
-				elements.push_back( it.Clone() );
-			}
-			return VALUE( type::Array, elements );
-		}
-		case type::Type::T_OBJECT: {
-			type::Object::properties_t properties = {};
-			const auto* obj = (type::Object*)m_data.get();
-			for ( const auto& it : obj->value ) {
-				properties.insert_or_assign( it.first, it.second.Clone() );
-			}
-			return VALUE( type::Object, properties, obj->object_class, obj->wrapptr );
-		}
-		case type::Type::T_CALLABLE:
-			return *this;
-		case type::Type::T_ARRAYREF:
-		case type::Type::T_ARRAYRANGEREF:
-		case type::Type::T_OBJECTREF:
-			THROW( "refs are not supposed to be cloned" );
-		case type::Type::T_RANGE:
-			THROW( "ranges are not supposed to be cloned" );
-		default: {
-			THROW( "unsupported value type: " + ToString() );
-		}
-	}
+	return New( m_data.get() );
 }
 
 #define OP( _op ) \
@@ -93,5 +55,59 @@ OP( > )
 OP( <= )
 OP( >= )
 #undef OP
+
+void Value::Serialize( types::Buffer* buf, const Value& value ) {
+	type::Type::Serialize( buf, value.Get() );
+}
+
+Value Value::Unserialize( types::Buffer* buf ) {
+	return type::Type::Unserialize( buf );
+}
+
+const Value Value::New( const type::Type* type ) const {
+	switch ( type->type ) {
+		case type::Type::T_UNDEFINED:
+			return VALUE( type::Undefined );
+		case type::Type::T_NULL:
+			return VALUE( type::Null );
+		case type::Type::T_BOOL:
+			return VALUE( type::Bool, ( (type::Bool*)type )->value );
+		case type::Type::T_INT:
+			return VALUE( type::Int, ( (type::Int*)type )->value );
+		case type::Type::T_FLOAT:
+			return VALUE( type::Float, ( (type::Float*)type )->value );
+		case type::Type::T_STRING:
+			return VALUE( type::String, ( (type::String*)type )->value );
+		case type::Type::T_ARRAY: {
+			type::array_elements_t elements = {};
+			const auto* arr = (type::Array*)type;
+			for ( const auto& it : arr->value ) {
+				elements.push_back( it.Clone() );
+			}
+			return VALUE( type::Array, elements );
+		}
+		case type::Type::T_OBJECT: {
+			type::object_properties_t properties = {};
+			const auto* obj = (type::Object*)type;
+			for ( const auto& it : obj->value ) {
+				properties.insert_or_assign( it.first, it.second.Clone() );
+			}
+			return VALUE( type::Object, properties, obj->object_class, obj->wrapobj );
+		}
+		case type::Type::T_CALLABLE:
+			return *this;
+		case type::Type::T_ARRAYREF:
+		case type::Type::T_ARRAYRANGEREF:
+		case type::Type::T_OBJECTREF: {
+			// no need to keep ref to old value if it's a copy
+			return New( type->Deref() );
+		}
+		case type::Type::T_RANGE:
+			THROW( "ranges are not supposed to be cloned" );
+		default: {
+			THROW( "unsupported value type: " + ToString() );
+		}
+	}
+}
 
 }

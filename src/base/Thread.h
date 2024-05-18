@@ -4,9 +4,11 @@
 #include <thread>
 
 #include "base/Base.h"
-#include "base/Module.h"
+#include "base/Types.h"
 
 namespace base {
+
+class Module;
 
 CLASS( Thread, Base )
 
@@ -27,7 +29,7 @@ CLASS( Thread, Base )
 	void SetIPS( const float ips ) {
 		m_ips = ips;
 	}
-	void AddModule( base::Module* module ) {
+	void AddModule( Module* module ) {
 		m_modules.push_back( module );
 	}
 	void T_Start();
@@ -44,7 +46,7 @@ protected:
 
 	std::atomic< thread_state_t > m_state = STATE_INACTIVE;
 	std::atomic< thread_command_t > m_command = COMMAND_NONE;
-	base::modules_t m_modules = {};
+	modules_t m_modules = {};
 	float m_ips = 10;
 
 #ifdef DEBUG
@@ -54,4 +56,4 @@ protected:
 #endif
 };
 
-} /* namespace base */
+}

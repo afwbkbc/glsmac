@@ -1,25 +1,21 @@
 #pragma once
 
-#include "Scope.h"
+#include <string>
 
 namespace gse {
 namespace program {
 
+class Scope;
+
 class Program {
 public:
 
-	Program( const Scope* body )
-		: body( body ) {}
+	Program( const Scope* body );
+	~Program();
 
 	const Scope* body;
 
-	~Program() {
-		delete body;
-	}
-
-	const std::string Dump() const {
-		return "Program(\n" + body->Dump( 1 ) + ")\n";
-	}
+	const std::string Dump() const;
 
 };
 

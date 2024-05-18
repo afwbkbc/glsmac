@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cfloat>
-#include <cmath>
 #include <string>
+#include <cmath>
 
 #include "Vec2.h"
 
@@ -198,4 +198,4 @@ public:
 
 #undef DATATYPE
 
-} /* namespace types */
+}

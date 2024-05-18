@@ -7,4 +7,4 @@ namespace input {
 CLASS( Input, base::Module )
 };
 
-} /* namespace input */
+}

@@ -1,8 +1,9 @@
-#include "Account.h"
-
 #include "yaml-cpp/yaml.h"
 
+#include "Account.h"
+
 #include "engine/Engine.h"
+#include "config/Config.h"
 
 #include "util/FS.h"
 #include "util/UUID.h"
@@ -10,7 +11,7 @@
 namespace game {
 
 Account::Account() {
-	if ( FS::FileExists( GetPath() ) ) {
+	if ( util::FS::FileExists( GetPath() ) ) {
 		Load();
 	}
 	else {
@@ -54,7 +55,7 @@ const std::string Account::GetPath() const {
 }
 
 void Account::Create() {
-	m_gsid = UUID::Generate();
+	m_gsid = util::UUID::Generate();
 	Log( "Creating local account " + m_gsid );
 	Save();
 }
@@ -69,11 +70,11 @@ void Account::Save() {
 	last_values[ "remote_address" ] = m_last_values.remote_address;
 	account[ "last_values" ] = last_values;
 	root[ m_gsid ] = account; // gsids are keys
-	FS::WriteFile( GetPath(), Dump( root ) );
+	util::FS::WriteFile( GetPath(), Dump( root ) );
 }
 
 void Account::Load() {
-	ASSERT( FS::FileExists( GetPath() ), "tried to load account but file does not exist" );
+	ASSERT( util::FS::FileExists( GetPath() ), "tried to load account but file does not exist" );
 	bool load_successful = false; // if file contains unparseable garbage or wrong fields - we'll need to create new account
 	bool need_update = false; // if accounts.yml is outdated then we'll load what we can and then save in new format
 

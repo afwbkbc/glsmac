@@ -1,5 +1,7 @@
 #include "Rectangle.h"
+
 #include "engine/Engine.h"
+#include "graphics/Graphics.h"
 
 namespace types {
 namespace mesh {
@@ -9,7 +11,7 @@ Rectangle::Rectangle()
 	Clear();
 }
 
-Rectangle::Rectangle( const Vec2< Mesh::coord_t >& top_left, const Vec2< Mesh::coord_t >& bottom_right, const coord_t z )
+Rectangle::Rectangle( const Vec2< coord_t >& top_left, const Vec2< coord_t >& bottom_right, const coord_t z )
 	: Simple( 4, 2 ) {
 	Clear();
 	SetCoords( top_left, bottom_right, z );
@@ -17,7 +19,7 @@ Rectangle::Rectangle( const Vec2< Mesh::coord_t >& top_left, const Vec2< Mesh::c
 
 // TODO: refactor these
 
-void Rectangle::SetCoordsTiled( const Vec2< Mesh::coord_t >& top_left, const Vec2< Mesh::coord_t >& bottom_right, const Vec2< size_t >& tx, const coord_t z ) {
+void Rectangle::SetCoordsTiled( const Vec2< coord_t >& top_left, const Vec2< coord_t >& bottom_right, const Vec2< size_t >& tx, const coord_t z ) {
 	const float rectwidth = ( bottom_right.x - top_left.x ) / 2;
 	const float rectheight = ( top_left.y - bottom_right.y ) / 2;
 	const float texwidth = (float)tx.x / g_engine->GetGraphics()->GetViewportWidth();
@@ -84,8 +86,8 @@ void Rectangle::SetCoordsTiled( const Vec2< Mesh::coord_t >& top_left, const Vec
 }
 
 void Rectangle::SetCoords(
-	const Vec2< Mesh::coord_t >& top_left,
-	const Vec2< Mesh::coord_t >& bottom_right,
+	const Vec2< coord_t >& top_left,
+	const Vec2< coord_t >& bottom_right,
 	const Vec2< size_t >& tx_top_left,
 	const Vec2< size_t >& tx_bottom_right,
 	const Vec2< size_t >& tx_wh,
@@ -155,7 +157,7 @@ void Rectangle::SetCoords(
 	Update();
 }
 
-void Rectangle::SetCoords( const Vec2< Mesh::coord_t >& top_left, const Vec2< Mesh::coord_t >& bottom_right, const coord_t z ) {
+void Rectangle::SetCoords( const Vec2< coord_t >& top_left, const Vec2< coord_t >& bottom_right, const coord_t z ) {
 	SetVertex(
 		0, {
 			top_left.x,

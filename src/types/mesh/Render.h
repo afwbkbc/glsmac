@@ -17,7 +17,7 @@ CLASS( Render, Mesh )
 	Render( const size_t vertex_count, const size_t surface_count );
 
 	index_t AddVertex(
-		const Vec3& coord, const Vec2< coord_t >& tex_coord = {
+		const types::Vec3& coord, const Vec2< coord_t >& tex_coord = {
 		0.0f,
 		0.0f
 	}, const Color tint = {
@@ -25,7 +25,7 @@ CLASS( Render, Mesh )
 		1.0f,
 		1.0f,
 		1.0f
-	}, const Vec3& normal = {
+	}, const types::Vec3& normal = {
 		0.0f,
 		0.0f,
 		0.0f
@@ -40,7 +40,7 @@ CLASS( Render, Mesh )
 		1.0f,
 		1.0f,
 		1.0f
-	}, const Vec3& normal = {
+	}, const types::Vec3& normal = {
 		0.0f,
 		0.0f,
 		0.0f
@@ -48,12 +48,12 @@ CLASS( Render, Mesh )
 	);
 
 	void SetVertex(
-		const index_t index, const Vec3& coord, const Vec2< coord_t >& tex_coord, const Color tint = {
+		const index_t index, const types::Vec3& coord, const Vec2< coord_t >& tex_coord, const Color tint = {
 		1.0f,
 		1.0f,
 		1.0f,
 		1.0f
-	}, const Vec3& normal = {
+	}, const types::Vec3& normal = {
 		0.0f,
 		0.0f,
 		0.0f
@@ -65,7 +65,7 @@ CLASS( Render, Mesh )
 		1.0f,
 		1.0f,
 		1.0f
-	}, const Vec3& normal = {
+	}, const types::Vec3& normal = {
 		0.0f,
 		0.0f,
 		0.0f
@@ -74,10 +74,10 @@ CLASS( Render, Mesh )
 
 	void SetVertexTexCoord( const index_t index, const Vec2< coord_t >& tex_coord );
 	void SetVertexTint( const index_t index, const Color tint );
-	void SetVertexNormal( const index_t index, const Vec3& normal );
+	void SetVertexNormal( const index_t index, const types::Vec3& normal );
 
 	void GetVertexTexCoord( const index_t index, Vec2< coord_t >* tex_coord ) const;
-	const Vec3 GetVertexNormal( const index_t index ) const;
+	const types::Vec3 GetVertexNormal( const index_t index ) const;
 
 	void CombineNormals( const std::vector< index_t >& indices );
 
@@ -85,8 +85,6 @@ CLASS( Render, Mesh )
 	void UpdateNormals( const std::vector< surface_id_t >& surfaces );
 	void UpdateAllNormals();
 
-	typedef coord_t tex_coord_t;
-	typedef std::pair< Vec2< tex_coord_t >, Vec2< tex_coord_t > > tex_coords_t;
 	static Render* Rectangle(
 		float w = 0.5f, float h = 0.5f, const tex_coords_t tex_coords = {
 		{ 0.0f, 1.0f },

@@ -3,6 +3,8 @@
 #include "util/FS.h"
 
 #include "engine/Engine.h"
+#include "ui/object/FileBrowser.h"
+#include "ui/UI.h"
 
 namespace task {
 namespace game {
@@ -42,7 +44,7 @@ void FilePopup::Create() {
 	m_file_browser->SetFileExtension( m_file_extension );
 	m_file_browser->SetDefaultFilename( m_default_filename );
 	m_file_browser->On(
-		UIEvent::EV_SELECT, EH( this ) {
+		::ui::event::EV_SELECT, EH( this ) {
 			const auto& path = *data->value.change.text;
 			switch ( m_file_mode ) {
 				case FM_READ: {

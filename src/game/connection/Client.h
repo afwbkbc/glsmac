@@ -7,14 +7,14 @@ namespace connection {
 
 CLASS( Client, Connection )
 
-	Client( LocalSettings* const settings );
+	Client( settings::LocalSettings* const settings );
 
 	std::function< void() > m_on_players_list_update = nullptr;
 	std::function< void( const game_state_t game_state ) > m_on_game_state_change = nullptr;
 	std::function< void( const float progress ) > m_on_download_progress = nullptr; // progress is from 0.0f to 1.0f
 	std::function< void( const std::string serialized_tiles ) > m_on_download_complete = nullptr;
 
-	void UpdateSlot( const size_t slot_num, Slot* slot, const bool only_flags = false ) override;
+	void UpdateSlot( const size_t slot_num, slot::Slot* slot, const bool only_flags = false ) override;
 	void SendMessage( const std::string& message ) override;
 
 	const game_state_t GetGameState() const;

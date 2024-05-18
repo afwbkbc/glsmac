@@ -1,13 +1,19 @@
 #pragma once
 
-#include "ui/object/Surface.h"
 #include "ui/object/UIContainer.h"
-#include "ui/object/Dropdown.h"
 
-#include "game/Slot.h"
 #include "game/Player.h"
 
-using namespace ui::object;
+// TODO: remove this
+#include "ui/object/Dropdown.h"
+
+namespace game::slot {
+class Slot;
+}
+
+namespace ui::object {
+class Surface;
+}
 
 namespace task {
 namespace mainmenu {
@@ -15,9 +21,9 @@ namespace lobby {
 
 class PlayersSection;
 
-CLASS( PlayersSectionRow, UIContainer )
+CLASS( PlayersSectionRow, ui::object::UIContainer )
 
-	PlayersSectionRow( PlayersSection* parent, const size_t slot_num, ::game::Slot* slot, const std::string& class_name = "" );
+	PlayersSectionRow( PlayersSection* parent, const size_t slot_num, ::game::slot::Slot* slot, const std::string& class_name = "" );
 
 	void Create() override;
 	void Destroy() override;
@@ -25,13 +31,13 @@ CLASS( PlayersSectionRow, UIContainer )
 private:
 	PlayersSection* m_parent;
 	const size_t m_slot_num;
-	::game::Slot* m_slot;
+	::game::slot::Slot* m_slot;
 
 	struct {
-		Surface* ready = nullptr;
-		NumDropdown* actions = nullptr;
-		AssocDropdown* faction = nullptr;
-		NumDropdown* difficulty_level = nullptr;
+		ui::object::Surface* ready = nullptr;
+		ui::object::NumDropdown* actions = nullptr;
+		ui::object::AssocDropdown* faction = nullptr;
+		ui::object::NumDropdown* difficulty_level = nullptr;
 	} m_elements = {};
 
 };
@@ -39,5 +45,3 @@ private:
 }
 }
 }
-
-#include "PlayersSection.h"

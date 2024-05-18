@@ -1,3 +1,6 @@
+SUBDIR( random )
+SUBDIR( crc32 )
+
 SET( SRC ${SRC}
 
 	${PWD}/Timer.cpp
@@ -6,7 +9,6 @@ SET( SRC ${SRC}
 	${PWD}/Math.cpp
 	${PWD}/Perlin.cpp
 	${PWD}/FS.cpp
-	${PWD}/Random.cpp
 	${PWD}/UUID.cpp
 	${PWD}/ArgParser.cpp
 	${PWD}/String.cpp

@@ -1,20 +1,30 @@
 #pragma once
 
-#include "../../Section.h"
+#include "task/game/ui/Section.h"
 
-#include "../UnitPreview.h"
-#include "task/game/Types.h"
-#include "ui/object/Label.h"
+namespace types::mesh {
+class Mesh;
+}
+
+namespace ui::object {
+class Label;
+class Mesh;
+class Panel;
+}
 
 namespace task {
 namespace game {
+
+class Unit;
+
 namespace ui {
 
 class UnitsList;
+class UnitPreview;
 
 CLASS( UnitsListItem, Section )
 
-	UnitsListItem( Game* game, UnitsList* units_list, const unit_data_t& unit_data );
+	UnitsListItem( Game* game, UnitsList* units_list, Unit* unit );
 
 	void Create() override;
 	void Destroy() override;
@@ -23,15 +33,15 @@ private:
 	friend class UnitsList;
 	void SelectUnit();
 	void DeselectUnit();
-	const unit_data_t& GetUnit() const;
+	const Unit* GetUnit() const;
 
 private:
 	UnitsList* m_units_list;
-	const unit_data_t m_unit_data;
+	Unit* m_unit;
 
 	struct sprite_t {
 		types::mesh::Mesh* mesh = nullptr; // save mesh to be able to preview units
-		object::Mesh* obj = nullptr; // this will get copy of mesh
+		::ui::object::Mesh* obj = nullptr; // this will get copy of mesh
 	};
 	struct {
 		sprite_t unit = {};

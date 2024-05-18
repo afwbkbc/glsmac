@@ -1,23 +1,15 @@
 #include "Player.h"
 
-using namespace types;
-
 namespace game {
 
-// builtin
-const rules::Faction Player::RANDOM_FACTION{
-	"RANDOM",
-	"Random"
-};
-
-Player::Player( Buffer buf ) {
+Player::Player( types::Buffer buf ) {
 	Player::Unserialize( buf );
 }
 
 Player::Player(
 	const std::string& name,
 	const role_t role,
-	const rules::Faction& faction,
+	const std::optional< rules::Faction >& faction,
 	const rules::DifficultyLevel& difficulty_level
 )
 	: m_name( name )
@@ -32,7 +24,7 @@ const std::string& Player::GetPlayerName() const {
 }
 
 const std::string Player::GetFullName() const {
-	return GetPlayerName() + " (" + GetFaction().m_name + ")";
+	return GetPlayerName() + " (" + m_faction->m_name + ")";
 }
 
 void Player::Connect() {
@@ -54,7 +46,11 @@ void Player::SetFaction( const rules::Faction& faction ) {
 	m_faction = faction;
 }
 
-const rules::Faction& Player::GetFaction() const {
+void Player::ClearFaction() {
+	m_faction = {};
+}
+
+std::optional< rules::Faction >& Player::GetFaction() {
 	return m_faction;
 }
 
@@ -67,11 +63,11 @@ const rules::DifficultyLevel& Player::GetDifficultyLevel() const {
 	return m_difficulty_level;
 }
 
-void Player::SetSlot( Slot* slot ) {
+void Player::SetSlot( slot::Slot* slot ) {
 	m_slot = slot;
 }
 
-Slot* Player::GetSlot() const {
+slot::Slot* Player::GetSlot() const {
 	return m_slot;
 }
 
@@ -84,31 +80,36 @@ const bool Player::IsTurnCompleted() const {
 }
 
 void Player::CompleteTurn() {
-	ASSERT( !m_is_turn_completed, "turn already completed" );
 	m_is_turn_completed = true;
 }
 
 void Player::UncompleteTurn() {
-	ASSERT( m_is_turn_completed, "turn not completed" );
 	m_is_turn_completed = false;
 }
 
-const Buffer Player::Serialize() const {
-	Buffer buf;
+const types::Buffer Player::Serialize() const {
+	types::Buffer buf;
 
 	buf.WriteString( m_name );
 	buf.WriteInt( m_role );
-	buf.WriteString( m_faction.Serialize().ToString() );
+	buf.WriteBool( m_faction.has_value() );
+	if ( m_faction.has_value() ) {
+		buf.WriteString( m_faction->Serialize().ToString() );
+	}
 	buf.WriteString( m_difficulty_level.Serialize().ToString() );
 
 	return buf;
 }
 
-void Player::Unserialize( Buffer buf ) {
+void Player::Unserialize( types::Buffer buf ) {
 
 	m_name = buf.ReadString();
 	m_role = (role_t)buf.ReadInt();
-	m_faction.Unserialize( buf.ReadString() );
+	m_faction = {};
+	if ( buf.ReadBool() ) {
+		m_faction = rules::Faction{};
+		m_faction->Unserialize( buf.ReadString() );
+	}
 	m_difficulty_level.Unserialize( buf.ReadString() );
 
 }

@@ -1,16 +1,21 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 
-#include "InstancedSpriteManager.h"
+#include "game/unit/Types.h"
 
-#include "game/unit/Def.h"
-#include "game/unit/StaticDef.h"
-
+// TODO: remove?
 #include "Sprite.h"
+
+namespace game::unit {
+class Def;
+}
 
 namespace task {
 namespace game {
+
+class InstancedSpriteManager;
 
 class UnitDef {
 public:
@@ -19,7 +24,7 @@ public:
 
 	const bool IsArtillery() const;
 
-	Sprite* GetSprite( const ::game::unit::Unit::morale_t morale );
+	Sprite* GetSprite( const ::game::unit::morale_t morale );
 
 	const bool IsImmovable() const;
 
@@ -32,15 +37,15 @@ private:
 
 	std::string m_id;
 	std::string m_name;
-	::game::unit::Def::def_type_t m_type;
+	::game::unit::def_type_t m_type;
 
-	typedef std::unordered_map< ::game::unit::Unit::morale_t, Sprite > morale_based_sprites_t;
+	typedef std::unordered_map< ::game::unit::morale_t, Sprite > morale_based_sprites_t;
 
 	// TODO: get rid of union
 	union {
 		struct {
-			::game::unit::StaticDef::movement_type_t movement_type;
-			::game::unit::Unit::movement_t movement_per_turn;
+			::game::unit::movement_type_t movement_type;
+			::game::unit::movement_t movement_per_turn;
 			struct {
 				bool is_sprite;
 				uint32_t morale_based_xshift;

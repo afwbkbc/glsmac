@@ -1,5 +1,3 @@
-#include "GSEPrompt.h"
-
 #ifdef _WIN32
 #include <io.h>
 #define isatty _isatty
@@ -9,32 +7,45 @@
 #endif
 
 #include <iostream>
+#include <cstring>
+
+#include "GSEPrompt.h"
 
 #include "gse/Exception.h"
 #include "engine/Engine.h"
 #include "util/String.h"
+#include "gse/GSE.h"
+#include "gse/context/GlobalContext.h"
+#include "gse/context/ChildContext.h"
+#include "gse/runner/Runner.h"
+#include "gse/parser/Parser.h"
+#include "gse/program/Program.h"
 
 namespace task {
 namespace gseprompt {
 
 GSEPrompt::GSEPrompt( const std::string& syntax )
 	: m_syntax( syntax )
-	, m_is_tty( isatty( fileno( stdin ) ) ) {
+	, m_is_tty( isatty( fileno( stdin ) ) )
+	, m_gse( new gse::GSE() ) {
 
 }
 
 GSEPrompt::~GSEPrompt() {
-	delete m_gse_context;
+	if ( m_gse_context ) {
+		delete m_gse_context;
+	}
+	delete m_gse;
 }
 
 void GSEPrompt::Start() {
 	Log( "Starting GSE prompt (syntax: " + m_syntax + ")" );
 
-	m_runner = m_gse.GetRunner();
+	m_runner = m_gse->GetRunner();
 	if ( m_is_tty ) {
 		m_runner->EnableScopeContextJoins();
 	}
-	m_gse_context = m_gse.CreateGlobalContext();
+	m_gse_context = m_gse->CreateGlobalContext();
 	m_gse_context->IncRefs();
 	m_is_running = true;
 	if ( m_is_tty ) {
@@ -110,14 +121,14 @@ void GSEPrompt::ProcessInput() {
 		m_lines_count++;
 	}
 
-	auto* parser = m_gse.GetParser(
+	auto* parser = m_gse->GetParser(
 		"<STDIN>.gls." + m_syntax, source, m_is_tty
 			? m_lines_count
 			: 1
 	);
 
 	const gse::program::Program* program = nullptr;
-	gse::Context* context = nullptr;
+	gse::context::Context* context = nullptr;
 	try {
 		program = parser->Parse();
 		if ( m_is_tty ) {
@@ -140,7 +151,7 @@ void GSEPrompt::ProcessInput() {
 		}
 		const auto result = m_runner->Execute( context, program );
 		if ( m_is_tty ) {
-			( (gse::ChildContext*)context )->JoinContext();
+			( (gse::context::ChildContext*)context )->JoinContext();
 		}
 		std::cout << result.Dump() << std::endl;
 	}

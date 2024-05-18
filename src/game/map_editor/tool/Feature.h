@@ -2,7 +2,7 @@
 
 #include "Tool.h"
 
-#include "game/map/Tile.h"
+#include "game/map/tile/Types.h"
 
 namespace game {
 namespace map_editor {
@@ -10,12 +10,12 @@ namespace tool {
 
 CLASS( Feature, Tool )
 
-	Feature( Game* game, const MapEditor::tool_type_t type, const map::Tile::feature_t feature );
+	Feature( Game* game, const tool_type_t type, const map::tile::feature_t feature );
 
-	const MapEditor::tiles_t Draw( map::Tile* tile, const MapEditor::draw_mode_t mode ) override;
+	const tiles_t Draw( map::tile::Tile* tile, const draw_mode_t mode ) override;
 
 private:
-	const map::Tile::feature_t m_feature = map::Tile::F_NONE;
+	const map::tile::feature_t m_feature = map::tile::FEATURE_NONE;
 
 };
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string>
-
 #include "Render.h"
 
 namespace game {
@@ -31,7 +29,7 @@ public:
 	const float m_cshift_x;
 	const float m_cshift_y;
 
-	const types::Vec3 GetSpawnCoords( const float tile_x, const float tile_y, const map::TileState::tile_vertices_t& tile_coords ) const override;
+	const types::Vec3 GetSpawnCoords( const map::tile::Tile* tile, const map::tile::TileState* ts ) const override;
 	const std::string ToString( const std::string& prefix ) const override;
 
 private:

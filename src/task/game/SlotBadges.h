@@ -7,7 +7,6 @@ namespace game {
 
 class SlotBadges {
 public:
-
 	Sprite normal;
 	Sprite greyedout;
 };

@@ -1,9 +1,14 @@
 #include "Map.h"
 
+#include "game/Game.h"
+#include "game/settings/Settings.h"
 #include "generator/SimplePerlin.h"
-
 #include "engine/Engine.h"
-
+#include "config/Config.h"
+#include "util/random/Random.h"
+#include "util/FS.h"
+#include "ui/UI.h"
+#include "loader/texture/TextureLoader.h"
 #include "module/Prepare.h"
 #include "module/LandMoisture.h"
 #include "module/LandSurface.h"
@@ -15,8 +20,13 @@
 #include "module/Coastlines2.h"
 #include "module/Sprites.h"
 #include "module/Finalize.h"
-
+#include "types/texture/Texture.h"
+#include "types/mesh/Render.h"
+#include "types/mesh/Data.h"
 #include "game/State.h"
+#include "game/map/MapState.h"
+#include "game/map/tile/Tiles.h"
+#include "Consts.h"
 
 #ifdef DEBUG
 
@@ -170,9 +180,9 @@ Map::~Map() {
 	}
 }
 
-const Buffer Map::Serialize() const {
+const types::Buffer Map::Serialize() const {
 
-	Buffer buf;
+	types::Buffer buf;
 
 	buf.WriteString( m_tiles->Serialize().ToString() );
 	buf.WriteString( m_map_state->Serialize().ToString() );
@@ -184,7 +194,7 @@ const Buffer Map::Serialize() const {
 
 	buf.WriteInt( m_sprite_actors.size() );
 	for ( auto& it : m_sprite_actors ) {
-		buf.WriteString( it.second.Serialize().ToString() );
+		buf.WriteString( SerializeSpriteActor( it.second ).ToString() );
 		buf.WriteString( it.first );
 	}
 	buf.WriteInt( m_sprite_instances.size() );
@@ -198,20 +208,10 @@ const Buffer Map::Serialize() const {
 	return buf;
 }
 
-const Buffer Map::sprite_actor_t::Serialize() const {
-	Buffer buf;
-
-	buf.WriteString( name );
-	buf.WriteVec2u( tex_coords );
-	buf.WriteFloat( z_index );
-
-	return buf;
-}
-
-void Map::Unserialize( Buffer buf ) {
+void Map::Unserialize( types::Buffer buf ) {
 
 	ASSERT( !m_tiles, "tiles already set" );
-	NEW( m_tiles, Tiles );
+	NEW( m_tiles, tile::Tiles );
 	m_tiles->Unserialize( buf.ReadString() );
 
 	ASSERT( !m_map_state, "map state already set" );
@@ -226,9 +226,7 @@ void Map::Unserialize( Buffer buf ) {
 	size_t sz = buf.ReadInt();
 	m_sprite_actors.clear();
 	for ( auto i = 0 ; i < sz ; i++ ) {
-		sprite_actor_t actor;
-		actor.Unserialize( buf.ReadString() );
-		m_sprite_actors[ buf.ReadString() ] = actor;
+		m_sprite_actors[ buf.ReadString() ] = UnserializeSpriteActor( buf.ReadString() );
 	}
 
 	sz = buf.ReadInt();
@@ -247,12 +245,6 @@ void Map::Unserialize( Buffer buf ) {
 	m_sprite_instances_to_add.clear();
 }
 
-void Map::sprite_actor_t::Unserialize( Buffer buf ) {
-	name = buf.ReadString();
-	tex_coords = buf.ReadVec2u();
-	z_index = buf.ReadFloat();
-}
-
 const std::string& Map::GetErrorString( const error_code_t& code ) {
 
 	static const std::unordered_map< error_code_t, const std::string > m_error_code_strings = {
@@ -267,17 +259,17 @@ const std::string& Map::GetErrorString( const error_code_t& code ) {
 	return it->second;
 }
 
-Tile* Map::GetTile( const size_t x, const size_t y ) const {
+tile::Tile* Map::GetTile( const size_t x, const size_t y ) const {
 	ASSERT( m_tiles, "tiles not set" );
 	return &m_tiles->At( x, y );
 }
 
-TileState* Map::GetTileState( const size_t x, const size_t y ) const {
+tile::TileState* Map::GetTileState( const size_t x, const size_t y ) const {
 	ASSERT( m_map_state, "map state not set" );
-	return &m_map_state->At( x, y );
+	return m_map_state->At( x, y );
 }
 
-TileState* Map::GetTileState( const Tile* tile ) const {
+tile::TileState* Map::GetTileState( const tile::Tile* tile ) const {
 	// TODO: link by pointer?
 	return GetTileState( tile->coord.x, tile->coord.y );
 }
@@ -290,7 +282,7 @@ const MapState* Map::GetMapState() const {
 void Map::ClearTexture() {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "ClearTexture called outside of tile generation" );
-	for ( auto lt = 0 ; lt < TileState::LAYER_MAX ; lt++ ) {
+	for ( auto lt = 0 ; lt < tile::LAYER_MAX ; lt++ ) {
 		m_textures.terrain->Erase(
 			m_current_ts->tex_coord.x1,
 			lt * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + m_current_ts->tex_coord.y1,
@@ -300,7 +292,7 @@ void Map::ClearTexture() {
 	}
 }
 
-void Map::AddTexture( const TileState::tile_layer_type_t tile_layer, const Consts::pcx_texture_coordinates_t& tc, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
+void Map::AddTexture( const tile::tile_layer_type_t tile_layer, const pcx_texture_coordinates_t& tc, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "AddTexture called outside of tile generation" );
 	m_textures.terrain->AddFrom(
@@ -319,7 +311,7 @@ void Map::AddTexture( const TileState::tile_layer_type_t tile_layer, const Const
 	);
 };
 
-void Map::CopyTextureFromLayer( const TileState::tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const TileState::tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
+void Map::CopyTextureFromLayer( const tile::tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile::tile_layer_type_t tile_layer, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "CopyTextureFromLayer called outside of tile generation" );
 	m_textures.terrain->AddFrom(
@@ -338,7 +330,7 @@ void Map::CopyTextureFromLayer( const TileState::tile_layer_type_t tile_layer_fr
 	);
 };
 
-void Map::CopyTexture( const TileState::tile_layer_type_t tile_layer_from, const TileState::tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
+void Map::CopyTexture( const tile::tile_layer_type_t tile_layer_from, const tile::tile_layer_type_t tile_layer, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
 	ASSERT( m_current_ts, "CopyTexture called outside of tile generation" );
 	CopyTextureFromLayer(
 		tile_layer_from,
@@ -352,7 +344,7 @@ void Map::CopyTexture( const TileState::tile_layer_type_t tile_layer_from, const
 	);
 };
 
-void Map::CopyTextureDeferred( const TileState::tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const TileState::tile_layer_type_t tile_layer, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
+void Map::CopyTextureDeferred( const tile::tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile::tile_layer_type_t tile_layer, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "CopyTextureDeferred called outside of tile generation" );
 	m_map_state->copy_from_after.push_back(
@@ -371,7 +363,7 @@ void Map::CopyTextureDeferred( const TileState::tile_layer_type_t tile_layer_fro
 	);
 };
 
-void Map::GetTexture( Texture* dest_texture, const Consts::pcx_texture_coordinates_t& tc, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
+void Map::GetTexture( types::texture::Texture* dest_texture, const pcx_texture_coordinates_t& tc, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
 	ASSERT( m_current_ts, "GetTexture called outside of tile generation" );
 	ASSERT( dest_texture->m_width == s_consts.tc.texture_pcx.dimensions.x, "tile dest texture width mismatch" );
 	ASSERT( dest_texture->m_height == s_consts.tc.texture_pcx.dimensions.y, "tile dest texture height mismatch" );
@@ -390,7 +382,7 @@ void Map::GetTexture( Texture* dest_texture, const Consts::pcx_texture_coordinat
 	);
 }
 
-void Map::GetTextureFromLayer( Texture* dest_texture, const TileState::tile_layer_type_t tile_layer, const size_t tx_from, const size_t ty_from, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha ) const {
+void Map::GetTextureFromLayer( types::texture::Texture* dest_texture, const tile::tile_layer_type_t tile_layer, const size_t tx_from, const size_t ty_from, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha ) const {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( dest_texture->m_width == s_consts.tc.texture_pcx.dimensions.x, "tile dest texture width mismatch" );
 	ASSERT( dest_texture->m_height == s_consts.tc.texture_pcx.dimensions.y, "tile dest texture height mismatch" );
@@ -409,7 +401,7 @@ void Map::GetTextureFromLayer( Texture* dest_texture, const TileState::tile_laye
 	);
 }
 
-void Map::SetTexture( const TileState::tile_layer_type_t tile_layer, TileState* ts, Texture* src_texture, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
+void Map::SetTexture( const tile::tile_layer_type_t tile_layer, tile::TileState* ts, types::texture::Texture* src_texture, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "SetTexture called outside of tile generation" );
 	ASSERT( src_texture->m_width == s_consts.tc.texture_pcx.dimensions.x, "tile src texture width mismatch" );
@@ -429,11 +421,11 @@ void Map::SetTexture( const TileState::tile_layer_type_t tile_layer, TileState* 
 	);
 }
 
-void Map::SetTexture( const TileState::tile_layer_type_t tile_layer, Texture* src_texture, const Texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
+void Map::SetTexture( const tile::tile_layer_type_t tile_layer, types::texture::Texture* src_texture, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
 	SetTexture( tile_layer, m_current_ts, src_texture, mode, rotate, alpha );
 }
 
-const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_type_t type, const Tile* tile, const tile_grouping_criteria_t criteria, const uint16_t value ) const {
+const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_type_t type, const tile::Tile* tile, const tile_grouping_criteria_t criteria, const uint16_t value ) const {
 	ASSERT( m_current_ts, "GetTileTextureInfo called outside of tile generation" );
 	Map::tile_texture_info_t info;
 
@@ -449,7 +441,7 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_t
 				case TG_FEATURE: {
 					matches[ idx++ ] = (
 						( t->features & value ) == ( tile->features & value ) ||
-							( type == TVT_RIVERS_FORESTS && !tile->is_water_tile && t->is_water_tile ) // rivers end in sea
+							( type == TVT_RIVERS_FORESTS && !tile->is_water_tile && t->is_water_tile ) // rivers end in oceans
 					);
 					break;
 				}
@@ -473,7 +465,7 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_t
 	ASSERT( variants != m_texture_variants.end(), "texture variants for " + std::to_string( type ) + " not calculated" );
 
 	for ( info.rotate_direction = 0 ; info.rotate_direction < 8 ; info.rotate_direction += 2 ) {
-		if ( criteria == TG_TERRAFORMING && value == Tile::T_FOREST ) {
+		if ( criteria == TG_TERRAFORMING && value == tile::TERRAFORMING_FOREST ) {
 			// forests must always be vertical
 			if ( info.rotate_direction != 6 ) {
 				continue;
@@ -502,24 +494,24 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_t
 		THROW( "could not find texture variant" );
 	}
 
-	info.texture_flags = Texture::AM_DEFAULT;
+	info.texture_flags = types::texture::AM_DEFAULT;
 
 	if ( type == TVT_TILES ) {
 		if ( info.texture_variant >= 14 ) {
 			// no important edges so we can shuffle harder
 			info.texture_flags |=
-				Texture::AM_RANDOM_MIRROR_X |
-					Texture::AM_RANDOM_MIRROR_Y |
-					Texture::AM_RANDOM_STRETCH_SHUFFLE;
+				types::texture::AM_RANDOM_MIRROR_X |
+					types::texture::AM_RANDOM_MIRROR_Y |
+					types::texture::AM_RANDOM_STRETCH_SHUFFLE;
 		}
 		else {
-			info.texture_flags |= Texture::AM_RANDOM_STRETCH;
+			info.texture_flags |= types::texture::AM_RANDOM_STRETCH;
 		}
 	}
 	return info;
 }
 
-Random* Map::GetRandom() const {
+util::random::Random* Map::GetRandom() const {
 	return m_game->GetRandom();
 }
 
@@ -533,12 +525,33 @@ const size_t Map::GetHeight() const {
 	return m_tiles->GetHeight();
 }
 
-Tiles* Map::GetTilesPtr() const {
+tile::Tiles* Map::GetTilesPtr() const {
 	ASSERT( m_tiles, "tiles not set" );
 	return m_tiles;
 }
 
-const std::string Map::GetTerrainSpriteActor( const std::string& name, const Consts::pcx_texture_coordinates_t& tex_coords, const float z_index ) {
+const types::Buffer Map::SerializeSpriteActor( const sprite_actor_t& sprite_actor ) const {
+	types::Buffer buf;
+
+	buf.WriteString( sprite_actor.name );
+	buf.WriteVec2u( sprite_actor.tex_coords );
+	buf.WriteFloat( sprite_actor.z_index );
+
+	return buf;
+}
+
+const sprite_actor_t Map::UnserializeSpriteActor( types::Buffer buf ) const {
+	const auto name = buf.ReadString();
+	const auto tex_coords = buf.ReadVec2u();
+	const auto z_index = buf.ReadFloat();
+	return sprite_actor_t{
+		name,
+		tex_coords,
+		z_index
+	};
+}
+
+const std::string Map::GetTerrainSpriteActor( const std::string& name, const pcx_texture_coordinates_t& tex_coords, const float z_index ) {
 	const auto key = "Terrain_" + name + " " + tex_coords.ToString() + " " + ::game::map::s_consts.tc.ter1_pcx.dimensions.ToString();
 
 	auto it = m_sprite_actors.find( key );
@@ -567,7 +580,7 @@ const std::string Map::GetTerrainSpriteActor( const std::string& name, const Con
 	return key;
 }
 
-const size_t Map::AddTerrainSpriteActorInstance( const std::string& key, const Vec3& coords ) {
+const size_t Map::AddTerrainSpriteActorInstance( const std::string& key, const types::Vec3& coords ) {
 	ASSERT( m_sprite_actors.find( key ) != m_sprite_actors.end(), "actor not found" );
 	const auto it = m_sprite_instances.insert(
 		{
@@ -593,19 +606,12 @@ void Map::RemoveTerrainSpriteActorInstance( const std::string& key, const size_t
 	);
 }
 
-const Map::error_code_t Map::Generate(
-#ifdef DEBUG
-	MapSettings map_settings
-#else
-	const MapSettings& map_settings
-#endif
-	, MT_CANCELABLE
-) {
+const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_CANCELABLE ) {
 	auto* random = m_game->GetRandom();
 	generator::SimplePerlin generator( random );
-	Vec2< size_t > size = map_settings.size == MapSettings::MAP_CUSTOM
-		? map_settings.custom_size
-		: map::s_consts.map_sizes.at( map_settings.size );
+	types::Vec2< size_t > size = map_settings->size == settings::MAP_CONFIG_CUSTOM
+		? map_settings->custom_size
+		: map::s_consts.map_sizes.at( map_settings->size );
 #ifdef DEBUG
 	util::Timer timer;
 	timer.Start();
@@ -614,23 +620,23 @@ const Map::error_code_t Map::Generate(
 		if ( c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_SIZE ) ) {
 			size = c->GetQuickstartMapSize();
 		}
-		map_settings.ocean = c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_OCEAN )
-			? map_settings.ocean = c->GetQuickstartMapOcean()
-			: map_settings.ocean = random->GetUInt( 1, 3 );
-		map_settings.erosive = c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_EROSIVE )
-			? map_settings.erosive = c->GetQuickstartMapErosive()
-			: map_settings.erosive = random->GetUInt( 1, 3 );
-		map_settings.lifeforms = c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_LIFEFORMS )
-			? map_settings.lifeforms = c->GetQuickstartMapLifeforms()
-			: map_settings.lifeforms = random->GetUInt( 1, 3 );
-		map_settings.clouds = c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_CLOUDS )
-			? map_settings.clouds = c->GetQuickstartMapClouds()
-			: map_settings.clouds = random->GetUInt( 1, 3 );
+		map_settings->ocean = c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_OCEAN )
+			? map_settings->ocean = c->GetQuickstartMapOcean()
+			: map_settings->ocean = random->GetUInt( 1, 3 );
+		map_settings->erosive = c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_EROSIVE )
+			? map_settings->erosive = c->GetQuickstartMapErosive()
+			: map_settings->erosive = random->GetUInt( 1, 3 );
+		map_settings->lifeforms = c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_LIFEFORMS )
+			? map_settings->lifeforms = c->GetQuickstartMapLifeforms()
+			: map_settings->lifeforms = random->GetUInt( 1, 3 );
+		map_settings->clouds = c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_CLOUDS )
+			? map_settings->clouds = c->GetQuickstartMapClouds()
+			: map_settings->clouds = random->GetUInt( 1, 3 );
 	}
 #endif
 	Log( "Generating map of size " + size.ToString() );
 	ASSERT( !m_tiles, "tiles already set" );
-	NEW( m_tiles, Tiles, size.x, size.y );
+	NEW( m_tiles, tile::Tiles, size.x, size.y );
 	generator.Generate( m_tiles, map_settings, MT_C );
 	if ( canceled ) {
 		Log( "Map generation canceled" );
@@ -643,18 +649,18 @@ const Map::error_code_t Map::Generate(
 	// if crash happens - it's handy to have a map file to reproduce it
 	if ( !c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) { // no point saving if we just loaded it
 		Log( (std::string)"Saving map to " + c->GetDebugPath() + s_consts.debug.lastmap_filename );
-		FS::WriteFile( c->GetDebugPath() + s_consts.debug.lastmap_filename, m_tiles->Serialize().ToString() );
+		util::FS::WriteFile( c->GetDebugPath() + s_consts.debug.lastmap_filename, m_tiles->Serialize().ToString() );
 	}
 #endif
 
 	return EC_NONE;
 }
 
-const Map::error_code_t Map::LoadFromBuffer( Buffer& buffer ) {
+const Map::error_code_t Map::LoadFromBuffer( types::Buffer& buffer ) {
 	if ( m_tiles ) {
 		DELETE( m_tiles );
 	}
-	NEW( m_tiles, Tiles );
+	NEW( m_tiles, tile::Tiles );
 	try {
 		m_tiles->Unserialize( buffer );
 		return EC_NONE;
@@ -668,20 +674,20 @@ const Map::error_code_t Map::LoadFromBuffer( Buffer& buffer ) {
 }
 
 const Map::error_code_t Map::LoadFromFile( const std::string& path ) {
-	ASSERT( FS::FileExists( path ), "map file \"" + path + "\" not found" );
+	ASSERT( util::FS::FileExists( path ), "map file \"" + path + "\" not found" );
 
 	Log( "Loading map from " + path );
-	auto b = types::Buffer( FS::ReadFile( path ) );
+	auto b = types::Buffer( util::FS::ReadFile( path ) );
 	return LoadFromBuffer( b );
 }
 
-void Map::SaveToBuffer( Buffer& buffer ) const {
+void Map::SaveToBuffer( types::Buffer& buffer ) const {
 	buffer.WriteString( m_tiles->Serialize().ToString() );
 }
 
 const Map::error_code_t Map::SaveToFile( const std::string& path ) const {
 	try {
-		FS::WriteFile( path, m_tiles->Serialize().ToString() );
+		util::FS::WriteFile( path, m_tiles->Serialize().ToString() );
 		return EC_NONE;
 	}
 	catch ( std::runtime_error& e ) {
@@ -711,7 +717,7 @@ const Map::error_code_t Map::Initialize( MT_CANCELABLE ) {
 	};
 	m_map_state->variables.texture_scaling = {
 		1.0f / s_consts.tc.texture_pcx.dimensions.x / ( m_map_state->dimensions.x + 1 ), // + 1 for overdraw column
-		1.0f / s_consts.tc.texture_pcx.dimensions.y / m_map_state->dimensions.y / TileState::LAYER_MAX
+		1.0f / s_consts.tc.texture_pcx.dimensions.y / m_map_state->dimensions.y / tile::LAYER_MAX
 	};
 
 	m_map_state->LinkTileStates( MT_C );
@@ -750,15 +756,15 @@ void Map::InitTextureAndMesh() {
 	if ( m_textures.terrain ) {
 		DELETE( m_textures.terrain );
 	}
-	NEW( m_textures.terrain, Texture, "TerrainTexture",
+	NEW( m_textures.terrain, types::texture::Texture, "TerrainTexture",
 		( m_map_state->dimensions.x + 1 ) * s_consts.tc.texture_pcx.dimensions.x, // + 1 for overdraw_column
-		( m_map_state->dimensions.y * TileState::LAYER_MAX ) * s_consts.tc.texture_pcx.dimensions.y
+		( m_map_state->dimensions.y * tile::LAYER_MAX ) * s_consts.tc.texture_pcx.dimensions.y
 	);
 
 	// not deleting meshes because if they exist - it means they are already linked to actor and are deleted together when needed
 	NEW( m_meshes.terrain, types::mesh::Render,
-		( m_map_state->dimensions.x * TileState::LAYER_MAX + 1 ) * m_map_state->dimensions.y * 5 / 2, // + 1 for overdraw column
-		( m_map_state->dimensions.x * TileState::LAYER_MAX + 1 ) * m_map_state->dimensions.y * 4 / 2 // + 1 for overdraw column
+		( m_map_state->dimensions.x * tile::LAYER_MAX + 1 ) * m_map_state->dimensions.y * 5 / 2, // + 1 for overdraw column
+		( m_map_state->dimensions.x * tile::LAYER_MAX + 1 ) * m_map_state->dimensions.y * 4 / 2 // + 1 for overdraw column
 	);
 	NEW( m_meshes.terrain_data, types::mesh::Data, // data mesh has only one layer and no overdraw column
 		m_map_state->dimensions.x * m_map_state->dimensions.y * 5 / 2,
@@ -848,7 +854,7 @@ void Map::FixNormals( const tiles_t& tiles, MT_CANCELABLE ) {
 
 	g_engine->GetUI()->SetLoaderText( "Fixing normals" );
 
-	std::vector< types::mesh::Mesh::surface_id_t > surfaces = {};
+	std::vector< types::mesh::surface_id_t > surfaces = {};
 
 	// avoiding reallocations is more important than saving memory
 	// worst case scenario: 4 surfaces per tile, 4 layers + overdraw column (only land layer)
@@ -861,11 +867,11 @@ void Map::FixNormals( const tiles_t& tiles, MT_CANCELABLE ) {
             surfaces.push_back( _layer.surfaces.top_right ); \
             surfaces.push_back( _layer.surfaces.right_bottom ); \
             surfaces.push_back( _layer.surfaces.bottom_left )
-		x( ts->layers[ TileState::LAYER_LAND ] );
+		x( ts->layers[ tile::LAYER_LAND ] );
 		if ( ts->has_water ) {
-			x( ts->layers[ TileState::LAYER_WATER ] );
-			x( ts->layers[ TileState::LAYER_WATER_SURFACE ] );
-			x( ts->layers[ TileState::LAYER_WATER_SURFACE_EXTRA ] );
+			x( ts->layers[ tile::LAYER_WATER ] );
+			x( ts->layers[ tile::LAYER_WATER_SURFACE ] );
+			x( ts->layers[ tile::LAYER_WATER_SURFACE_EXTRA ] );
 		}
 		if ( tile->coord.x == 0 ) {
 			// also update overdraw column
@@ -876,14 +882,14 @@ void Map::FixNormals( const tiles_t& tiles, MT_CANCELABLE ) {
 	}
 	m_meshes.terrain->UpdateNormals( surfaces );
 
-	std::vector< mesh::Mesh::index_t > v, vtmp;
+	std::vector< types::mesh::index_t > v, vtmp;
 
 	// to prevent reallocations
 	vtmp.reserve( 4 );
 	v.reserve( 8 );
 
 	// normals will be combined at left vertex of tile
-	const auto f_combine_normals_at_left_vertex = [ this, &v, &vtmp ]( const Tile* tile ) -> void {
+	const auto f_combine_normals_at_left_vertex = [ this, &v, &vtmp ]( const tile::Tile* tile ) -> void {
 		auto* ts = GetTileState( tile->coord.x, tile->coord.y );
 #define x( _lt ) { \
             ts->layers[ _lt ].indices.left, \
@@ -891,18 +897,18 @@ void Map::FixNormals( const tiles_t& tiles, MT_CANCELABLE ) {
             ts->W->layers[ _lt ].indices.right, \
             ts->SW->layers[ _lt ].indices.top, \
         }
-		v = x( TileState::LAYER_LAND );
+		v = x( tile::LAYER_LAND );
 		if ( tile->is_water_tile || tile->W->is_water_tile || tile->NW->is_water_tile ) {
-			vtmp = x( TileState::LAYER_WATER );
+			vtmp = x( tile::LAYER_WATER );
 			v.insert( v.end(), vtmp.begin(), vtmp.end() );
 		}
 #undef x
 
 		m_meshes.terrain->CombineNormals( v );
 	};
-	std::unordered_set< const Tile* > processed_tiles = {}; // to prevent duplicate combining
+	std::unordered_set< const tile::Tile* > processed_tiles = {}; // to prevent duplicate combining
 	processed_tiles.reserve( tiles.size() * 4 ); // minimizing reallocations is more important than saving memory
-	const auto f_combine_normals_maybe = [ &f_combine_normals_at_left_vertex, &processed_tiles ]( const Tile* tile ) -> void {
+	const auto f_combine_normals_maybe = [ &f_combine_normals_at_left_vertex, &processed_tiles ]( const tile::Tile* tile ) -> void {
 		if ( processed_tiles.find( tile ) == processed_tiles.end() ) {
 			f_combine_normals_at_left_vertex( tile );
 			processed_tiles.insert( tile );
@@ -921,11 +927,11 @@ void Map::FixNormals( const tiles_t& tiles, MT_CANCELABLE ) {
 		auto* ts = GetTileState( tile->coord.x, tile->coord.y );
 
 		m_meshes.terrain->SetVertexNormal(
-			ts->layers[ TileState::LAYER_LAND ].indices.center, (
-				m_meshes.terrain->GetVertexNormal( ts->layers[ TileState::LAYER_LAND ].indices.left ) +
-					m_meshes.terrain->GetVertexNormal( ts->layers[ TileState::LAYER_LAND ].indices.top ) +
-					m_meshes.terrain->GetVertexNormal( ts->layers[ TileState::LAYER_LAND ].indices.right ) +
-					m_meshes.terrain->GetVertexNormal( ts->layers[ TileState::LAYER_LAND ].indices.bottom )
+			ts->layers[ tile::LAYER_LAND ].indices.center, (
+				m_meshes.terrain->GetVertexNormal( ts->layers[ tile::LAYER_LAND ].indices.left ) +
+					m_meshes.terrain->GetVertexNormal( ts->layers[ tile::LAYER_LAND ].indices.top ) +
+					m_meshes.terrain->GetVertexNormal( ts->layers[ tile::LAYER_LAND ].indices.right ) +
+					m_meshes.terrain->GetVertexNormal( ts->layers[ tile::LAYER_LAND ].indices.bottom )
 			) / 4
 		);
 	}

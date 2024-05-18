@@ -25,5 +25,5 @@ CLASS( FontTexture, base::Base )
 	GLuint m_texture = 0;
 };
 
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}
