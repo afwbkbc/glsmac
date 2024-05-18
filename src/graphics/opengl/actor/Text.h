@@ -1,5 +1,7 @@
 #pragma once
 
+#include <GL/glew.h>
+
 #include "Actor.h"
 
 #include "types/Vec2.h"

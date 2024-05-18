@@ -1,3 +1,5 @@
+#include <cstdint>
+
 #include "Font.h"
 
 #include "base/ObjectLink.h"

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include "task/mainmenu/SlidingMenu.h"
 
 namespace task {
