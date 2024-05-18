@@ -6,7 +6,9 @@
 
 namespace gse {
 
+namespace context {
 class Context;
+}
 
 namespace program {
 class Program;
@@ -16,7 +18,7 @@ namespace runner {
 
 CLASS( Runner, base::Base )
 
-	virtual const Value Execute( Context* ctx, const program::Program* program ) const = 0;
+	virtual const Value Execute( context::Context* ctx, const program::Program* program ) const = 0;
 
 #ifdef DEBUG
 	void EnableScopeContextJoins() {

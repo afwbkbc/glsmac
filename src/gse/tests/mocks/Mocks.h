@@ -4,12 +4,14 @@
 
 namespace gse {
 
+namespace context {
 class GlobalContext;
+}
 
 namespace tests {
 namespace mocks {
 
-void AddMocks( gse::GlobalContext* ctx, const test_info_t& test_info );
+void AddMocks( context::GlobalContext* ctx, const test_info_t& test_info );
 
 }
 }

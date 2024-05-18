@@ -8,6 +8,8 @@ namespace gse {
 
 class GSE;
 
+namespace context {
+
 class GlobalContext : public Context {
 public:
 
@@ -30,4 +32,5 @@ private:
 
 };
 
+}
 }

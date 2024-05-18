@@ -1,7 +1,7 @@
 #include "Common.h"
 
 #include "gse/GSE.h"
-#include "gse/Context.h"
+#include "gse/context/Context.h"
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
 #include "gse/type/Int.h"
@@ -14,7 +14,7 @@
 namespace gse {
 namespace builtins {
 
-void Common::AddToContext( gse::Context* ctx ) {
+void Common::AddToContext( context::Context* ctx ) {
 
 	ctx->CreateBuiltin( "typeof", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
@@ -32,7 +32,7 @@ void Common::AddToContext( gse::Context* ctx ) {
 				break;
 			}
 			default:
-				throw gse::Exception( EC.OPERATION_NOT_SUPPORTED, "Could not get size of " + v->GetTypeString( v->type ) + ": " + v->ToString(), ctx, call_si );
+				throw Exception( EC.OPERATION_NOT_SUPPORTED, "Could not get size of " + v->GetTypeString( v->type ) + ": " + v->ToString(), ctx, call_si );
 		}
 		return VALUE( type::Int, size );
 	} ) );
@@ -55,7 +55,7 @@ void Common::AddToContext( gse::Context* ctx ) {
 				break;
 			}
 			default:
-				throw gse::Exception( EC.OPERATION_NOT_SUPPORTED, "Could not get size of " + v->GetTypeString( v->type ) + ": " + v->ToString(), ctx, call_si );
+				throw Exception( EC.OPERATION_NOT_SUPPORTED, "Could not get size of " + v->GetTypeString( v->type ) + ": " + v->ToString(), ctx, call_si );
 		}
 		return VALUE( type::Bool, is_empty );
 	} ) );

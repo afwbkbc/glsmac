@@ -12,7 +12,11 @@
 
 namespace gse {
 class GSE;
+
+namespace context {
 class GlobalContext;
+}
+
 }
 
 namespace game {
@@ -29,7 +33,7 @@ public:
 	Bindings( State* state );
 	~Bindings();
 
-	void AddToContext( gse::Context* ctx ) override;
+	void AddToContext( gse::context::Context* ctx ) override;
 
 	void RunMain();
 
@@ -51,8 +55,8 @@ public:
 	gse::Value Call( const callback_slot_t slot, const callback_arguments_t& arguments = {} );
 
 	State* GetState() const;
-	Game* GetGame( gse::Context* ctx, const gse::si_t& call_si ) const;
-	void SetCallback( const callback_slot_t slot, const gse::Value& callback, gse::Context* context, const gse::si_t& si );
+	Game* GetGame( gse::context::Context* ctx, const gse::si_t& call_si ) const;
+	void SetCallback( const callback_slot_t slot, const gse::Value& callback, gse::context::Context* context, const gse::si_t& si );
 
 private:
 
@@ -68,7 +72,7 @@ private:
 	const std::string m_entry_script;
 
 	gse::GSE* m_gse = nullptr;
-	gse::GlobalContext* m_gse_context = nullptr;
+	gse::context::GlobalContext* m_gse_context = nullptr;
 };
 
 }

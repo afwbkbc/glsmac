@@ -6,6 +6,7 @@
 #include "gse/GSE.h"
 
 namespace gse {
+namespace context {
 
 GlobalContext::GlobalContext( GSE* gse, const std::string& source_path )
 	: Context( gse )
@@ -59,4 +60,5 @@ void GlobalContext::AddSourceLines( const source_lines_t& source_lines ) {
 	m_source_lines.insert( m_source_lines.begin(), source_lines.begin(), source_lines.end() );
 }
 
+}
 }

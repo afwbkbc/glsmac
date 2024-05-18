@@ -15,8 +15,8 @@
 #include "engine/Engine.h"
 #include "util/String.h"
 #include "gse/GSE.h"
-#include "gse/GlobalContext.h"
-#include "gse/ChildContext.h"
+#include "gse/context/GlobalContext.h"
+#include "gse/context/ChildContext.h"
 #include "gse/runner/Runner.h"
 #include "gse/parser/Parser.h"
 #include "gse/program/Program.h"
@@ -128,7 +128,7 @@ void GSEPrompt::ProcessInput() {
 	);
 
 	const gse::program::Program* program = nullptr;
-	gse::Context* context = nullptr;
+	gse::context::Context* context = nullptr;
 	try {
 		program = parser->Parse();
 		if ( m_is_tty ) {
@@ -151,7 +151,7 @@ void GSEPrompt::ProcessInput() {
 		}
 		const auto result = m_runner->Execute( context, program );
 		if ( m_is_tty ) {
-			( (gse::ChildContext*)context )->JoinContext();
+			( (gse::context::ChildContext*)context )->JoinContext();
 		}
 		std::cout << result.Dump() << std::endl;
 	}

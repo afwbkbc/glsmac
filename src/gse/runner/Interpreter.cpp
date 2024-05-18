@@ -1,9 +1,7 @@
 #include "Interpreter.h"
 
-#include "gse/program/Types.h"
-
-#include "gse/Context.h"
-#include "gse/ChildContext.h"
+#include "gse/context/Context.h"
+#include "gse/context/ChildContext.h"
 #include "gse/program/Program.h"
 #include "gse/program/Object.h"
 #include "gse/program/Value.h"
@@ -37,8 +35,6 @@
 #include "gse/type/Exception.h"
 #include "gse/type/Undefined.h"
 
-#include "util/String.h"
-
 namespace gse {
 
 using namespace program;
@@ -46,11 +42,11 @@ using namespace type;
 
 namespace runner {
 
-const gse::Value Interpreter::Execute( Context* ctx, const Program* program ) const {
+const gse::Value Interpreter::Execute( context::Context* ctx, const Program* program ) const {
 	return EvaluateScope( ctx, program->body );
 }
 
-const gse::Value Interpreter::EvaluateScope( Context* ctx, const Scope* scope ) const {
+const gse::Value Interpreter::EvaluateScope( context::Context* ctx, const Scope* scope ) const {
 	ctx->IncRefs(); // TODO: fix/improve context memory management
 	const auto subctx = ctx->ForkContext( ctx, scope->m_si, false );
 	subctx->IncRefs();
@@ -85,7 +81,7 @@ const gse::Value Interpreter::EvaluateScope( Context* ctx, const Scope* scope ) 
 	return result;
 }
 
-const gse::Value Interpreter::EvaluateStatement( Context* ctx, const Statement* statement ) const {
+const gse::Value Interpreter::EvaluateStatement( context::Context* ctx, const Statement* statement ) const {
 	bool returnflag = false;
 	const auto result = EvaluateExpression( ctx, statement->body, &returnflag );
 	if ( returnflag ) {
@@ -94,7 +90,7 @@ const gse::Value Interpreter::EvaluateStatement( Context* ctx, const Statement* 
 	return VALUE( Undefined );
 }
 
-const gse::Value Interpreter::EvaluateConditional( Context* ctx, const Conditional* conditional, bool is_nested ) const {
+const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const Conditional* conditional, bool is_nested ) const {
 	switch ( conditional->conditional_type ) {
 		case Conditional::CT_IF: {
 			const auto* c = (If*)conditional;
@@ -181,7 +177,7 @@ const gse::Value Interpreter::EvaluateConditional( Context* ctx, const Condition
 	}
 }
 
-const gse::Value Interpreter::EvaluateExpression( Context* ctx, const Expression* expression, bool* returnflag ) const {
+const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const Expression* expression, bool* returnflag ) const {
 	if ( !expression->op ) {
 		ASSERT( !expression->b, "expression has second operand but no operator" );
 		ASSERT( expression->a, "expression is empty" );
@@ -645,7 +641,7 @@ const gse::Value Interpreter::EvaluateExpression( Context* ctx, const Expression
 	}
 }
 
-const gse::Value Interpreter::EvaluateOperand( Context* ctx, const Operand* operand ) const {
+const gse::Value Interpreter::EvaluateOperand( context::Context* ctx, const Operand* operand ) const {
 	ASSERT( operand, "operand is null" );
 	switch ( operand->type ) {
 		case Operand::OT_VALUE: {
@@ -663,12 +659,20 @@ const gse::Value Interpreter::EvaluateOperand( Context* ctx, const Operand* oper
 			return VALUE( type::Array, elements );
 		}
 		case Operand::OT_OBJECT: {
-			object_properties_t properties = {};
+			const auto objctx = ctx->ForkContext( ctx, operand->m_si, false );
+			objctx->IncRefs();
+			auto result = VALUE( type::Object, object_properties_t{} );
+			auto& properties = ( (type::Object*)result.Get() )->value;
+			objctx->CreateConst( "this", result, &operand->m_si );
 			const auto* obj = (program::Object*)operand;
-			for ( const auto& it : obj->properties ) {
-				properties.insert_or_assign( it.first, EvaluateExpression( ctx, it.second ) );
+			for ( const auto& it : obj->ordered_properties ) {
+				if ( it.first == "this" ) {
+					throw gse::Exception( EC.INVALID_ASSIGNMENT, "'this' can't be overwritten", ctx, it.second->m_si );
+				}
+				properties.insert_or_assign( it.first, EvaluateExpression( objctx, it.second ) );
 			}
-			return VALUE( type::Object, properties );
+			objctx->DecRefs(); // ?
+			return result;
 		}
 		case Operand::OT_SCOPE: {
 			return EvaluateScope( ctx, (Scope*)operand );
@@ -706,7 +710,7 @@ const gse::Value Interpreter::EvaluateOperand( Context* ctx, const Operand* oper
 	}
 }
 
-const std::string Interpreter::EvaluateString( Context* ctx, const Operand* operand ) const {
+const std::string Interpreter::EvaluateString( context::Context* ctx, const Operand* operand ) const {
 	const auto result = Deref( ctx, operand->m_si, EvaluateOperand( ctx, operand ) );
 	if ( result.Get()->type != Type::T_STRING ) {
 		throw gse::Exception( EC.TYPE_ERROR, "Expected string, found: " + operand->ToString(), ctx, operand->m_si );
@@ -714,7 +718,7 @@ const std::string Interpreter::EvaluateString( Context* ctx, const Operand* oper
 	return ( (String*)result.Get() )->value;
 }
 
-const gse::Value Interpreter::EvaluateRange( Context* ctx, const Operand* operand, const bool only_index ) const {
+const gse::Value Interpreter::EvaluateRange( context::Context* ctx, const Operand* operand, const bool only_index ) const {
 	ASSERT( operand, "index operand missing" );
 	const auto& get_index = [ &ctx, &operand ]( const gse::Value& value ) -> size_t {
 		const auto* val = value.Get();
@@ -754,7 +758,7 @@ const gse::Value Interpreter::EvaluateRange( Context* ctx, const Operand* operan
 	}
 }
 
-const bool Interpreter::EvaluateBool( Context* ctx, const Operand* operand ) const {
+const bool Interpreter::EvaluateBool( context::Context* ctx, const Operand* operand ) const {
 	const auto result = Deref( ctx, operand->m_si, EvaluateOperand( ctx, operand ) );
 	if ( result.Get()->type != Type::T_BOOL ) {
 		throw gse::Exception( EC.TYPE_ERROR, "Expected bool, found: " + operand->ToString(), ctx, operand->m_si );
@@ -762,20 +766,20 @@ const bool Interpreter::EvaluateBool( Context* ctx, const Operand* operand ) con
 	return ( (Bool*)result.Get() )->value;
 }
 
-const Variable* Interpreter::EvaluateVariable( Context* ctx, const Operand* operand ) const {
+const Variable* Interpreter::EvaluateVariable( context::Context* ctx, const Operand* operand ) const {
 	if ( operand->type != Operand::OT_VARIABLE ) {
 		throw gse::Exception( EC.REFERENCE_ERROR, "Expected variable, found: " + operand->ToString(), ctx, operand->m_si );
 	}
 	return (Variable*)operand;
 }
 
-const std::string Interpreter::EvaluateVarName( Context* ctx, const Operand* operand ) const {
+const std::string Interpreter::EvaluateVarName( context::Context* ctx, const Operand* operand ) const {
 	const auto* var = EvaluateVariable( ctx, operand );
 	ASSERT( var->hints == VH_NONE, "unexpected variable hints" );
 	return var->name;
 }
 
-const gse::Value Interpreter::Deref( Context* ctx, const si_t& si, const gse::Value& value ) const {
+const gse::Value Interpreter::Deref( context::Context* ctx, const si_t& si, const gse::Value& value ) const {
 	switch ( value.Get()->type ) {
 		case Type::T_ARRAYREF: {
 			const auto* ref = (ArrayRef*)value.Get();
@@ -795,7 +799,7 @@ const gse::Value Interpreter::Deref( Context* ctx, const si_t& si, const gse::Va
 	}
 }
 
-void Interpreter::WriteByRef( Context* ctx, const si_t& si, const gse::Value& ref, const gse::Value& value ) const {
+void Interpreter::WriteByRef( context::Context* ctx, const si_t& si, const gse::Value& ref, const gse::Value& value ) const {
 	switch ( ref.Get()->type ) {
 		case Type::T_OBJECTREF: {
 			const auto* r = (ObjectRef*)ref.Get();
@@ -818,7 +822,7 @@ void Interpreter::WriteByRef( Context* ctx, const si_t& si, const gse::Value& re
 	}
 }
 
-void Interpreter::ValidateRange( Context* ctx, const si_t& si, const type::Array* array, const std::optional< size_t > from, const std::optional< size_t > to ) const {
+void Interpreter::ValidateRange( context::Context* ctx, const si_t& si, const type::Array* array, const std::optional< size_t > from, const std::optional< size_t > to ) const {
 	const auto& max = array->value.size() - 1;
 	if ( from.has_value() ) {
 		if ( from.value() > max ) {
@@ -839,7 +843,7 @@ void Interpreter::ValidateRange( Context* ctx, const si_t& si, const type::Array
 
 Interpreter::Function::Function(
 	const Interpreter* runner,
-	Context* context,
+	context::Context* context,
 	const std::vector< std::string >& parameters,
 	const Program* const program
 )
@@ -854,7 +858,7 @@ Interpreter::Function::~Function() {
 	context->DecRefs();
 }
 
-gse::Value Interpreter::Function::Run( Context* ctx, const si_t& call_si, const function_arguments_t& arguments ) {
+gse::Value Interpreter::Function::Run( context::Context* ctx, const si_t& call_si, const function_arguments_t& arguments ) {
 	ctx->IncRefs();
 	auto* subctx = context->ForkContext( ctx, call_si, true, parameters, arguments );
 	subctx->IncRefs();

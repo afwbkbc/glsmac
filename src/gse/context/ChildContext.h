@@ -8,6 +8,8 @@ namespace gse {
 
 class GSE;
 
+namespace context {
+
 class ChildContext : public Context {
 public:
 
@@ -15,7 +17,7 @@ public:
 
 	Context* GetParentContext() const override;
 	Context* GetCallerContext() const override;
-	const bool IsTraceable() const override;
+	virtual const bool IsTraceable() const override;
 	const std::string& GetSourceLine( const size_t line_num ) const override;
 	const si_t& GetSI() const override;
 	const script_info_t& GetScriptInfo() const override;
@@ -31,4 +33,5 @@ private:
 
 };
 
+}
 }

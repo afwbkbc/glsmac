@@ -13,7 +13,10 @@
 namespace gse {
 
 class Wrappable;
+
+namespace context {
 class Context;
+}
 
 namespace type {
 
@@ -35,12 +38,12 @@ public:
 
 	static const type_t GetType() { return Type::T_OBJECT; }
 
-	typedef void (wrapsetter_t)( Wrappable*, const std::string&, const gse::Value&, gse::Context* ctx, const gse::si_t& si ); // ( obj, key, value, ctx, si )
+	typedef void (wrapsetter_t)( Wrappable*, const std::string&, const Value&, context::Context* ctx, const si_t& si ); // ( obj, key, value, ctx, si )
 	Object( object_properties_t initial_value = {}, const object_class_t object_class = CLASS_NONE, Wrappable* wrapobj = nullptr, wrapsetter_t* wrapsetter = nullptr );
 	~Object();
 
 	const Value& Get( const object_key_t& key ) const;
-	void Set( const object_key_t& key, const Value& value, gse::Context* ctx, const si_t& si );
+	void Set( const object_key_t& key, const Value& value, context::Context* ctx, const si_t& si );
 
 	const Value GetRef( const object_key_t& key );
 

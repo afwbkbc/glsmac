@@ -1,11 +1,12 @@
 #include "Context.h"
 
-#include "gse/ChildContext.h"
+#include "ChildContext.h"
 #include "gse/Exception.h"
 
 #include "base/Base.h"
 
 namespace gse {
+namespace context {
 
 GSE* Context::GetGSE() const {
 	return m_gse;
@@ -58,7 +59,7 @@ void Context::CreateVariable( const std::string& name, const Value& value, const
 	m_variables.insert_or_assign(
 		name, var_info_t{
 			value,
-			false
+			false,
 		}
 	);
 }
@@ -152,4 +153,5 @@ ChildContext* const Context::ForkContext(
 	return result;
 }
 
+}
 }

@@ -1,8 +1,9 @@
 #include "ChildContext.h"
 
-#include "Exception.h"
+#include "gse/Exception.h"
 
 namespace gse {
+namespace context {
 
 ChildContext::ChildContext( GSE* gse, Context* parent_context, Context* caller_context, const si_t& si, const bool is_traceable )
 	: Context( gse )
@@ -42,4 +43,5 @@ void ChildContext::JoinContext() const {
 	}
 }
 
+}
 }

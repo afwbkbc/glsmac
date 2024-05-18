@@ -2,11 +2,13 @@
 
 namespace gse {
 
+namespace context {
 class Context;
+}
 
 class Bindings {
 public:
-	virtual void AddToContext( gse::Context* ctx ) = 0;
+	virtual void AddToContext( context::Context* ctx ) = 0;
 };
 
 }

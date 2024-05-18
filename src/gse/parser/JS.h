@@ -142,7 +142,7 @@ private:
 		}
 	};
 
-	const std::unordered_map< std::string, gse::Value > PREDEF_OPERATORS = {
+	const std::unordered_map< std::string, Value > PREDEF_OPERATORS = {
 		{
 			"true",
 			VALUE( type::Bool, true ),

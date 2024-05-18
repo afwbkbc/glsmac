@@ -1,6 +1,6 @@
 #include "Exception.h"
 
-#include "gse/Context.h"
+#include "gse/context/Context.h"
 #include "util/String.h"
 
 namespace gse {
@@ -21,10 +21,10 @@ const exception_ec_t EC = {
 	"GSEInvalidEvent",
 };
 
-const Exception::backtrace_t Exception::GetBacktraceAndCleanup( const Context* const current_ctx ) {
+const Exception::backtrace_t Exception::GetBacktraceAndCleanup( const context::Context* const current_ctx ) {
 	ASSERT_NOLOG( !contexts_freed, "contexts already freed" );
-	Context* ctx = context;
-	Context* pt;
+	context::Context* ctx = context;
+	context::Context* pt;
 #define FORMAT_SI( _si ) "\tat " + (_si).file + ":" + std::to_string( (_si).from.line ) + ": " + util::String::TrimCopy( ctx ? ctx->GetSourceLine( (_si).from.line ) : "" )
 	backtrace_t backtrace = { FORMAT_SI( si ) };
 	while ( ctx && ctx != current_ctx ) {

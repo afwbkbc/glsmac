@@ -1,6 +1,6 @@
 #include "Binding.h"
 
-#include "gse/Context.h"
+#include "gse/context/Context.h"
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
 #include "gse/type/Array.h"
@@ -32,7 +32,7 @@ BINDING_IMPL( tiles ) {
 				GAME->SendTileLockRequest( tile_positions, [ this, on_complete, tile_positions, ctx, call_si ]() {
 					on_complete->Run( ctx, call_si, {
 						VALUE( gse::callable::Native, [ this, tile_positions ](
-							gse::Context* ctx,
+							gse::context::Context* ctx,
 							const gse::si_t& call_si,
 							const gse::type::function_arguments_t& arguments
 						) -> gse::Value {

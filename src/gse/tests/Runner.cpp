@@ -4,7 +4,7 @@
 
 #include "task/gsetests/GSETests.h"
 #include "gse/GSE.h"
-#include "gse/GlobalContext.h"
+#include "gse/context/GlobalContext.h"
 #include "gse/runner/Interpreter.h"
 
 #include "mocks/Mocks.h"
@@ -29,7 +29,7 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 
 			runner::Interpreter interpreter;
 
-			GlobalContext* context = gse->CreateGlobalContext();
+			context::GlobalContext* context = gse->CreateGlobalContext();
 			context->IncRefs();
 			context->AddSourceLines( util::String::SplitToLines( GetTestSource() ) );
 			mocks::AddMocks( context, {} );

@@ -4,14 +4,16 @@
 #include <string>
 #include <unordered_map>
 
-#include "Types.h"
-#include "type/Types.h"
+#include "gse/Types.h"
+#include "gse/type/Types.h"
 
-#include "Value.h"
+#include "gse/Value.h"
 
 namespace gse {
 
 class GSE;
+
+namespace context {
 
 class ChildContext;
 
@@ -75,4 +77,5 @@ protected:
 	std::unordered_map< const type::Type*, Value > m_persisted_values = {};
 };
 
+}
 }

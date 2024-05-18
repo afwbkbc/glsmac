@@ -9,7 +9,11 @@
 #include "gse/Value.h"
 
 namespace gse {
+
+namespace context {
 class Context;
+}
+
 namespace type {
 
 class Callable : public Type {
@@ -22,7 +26,7 @@ public:
 
 	virtual ~Callable() {}
 
-	virtual Value Run( Context* ctx, const si_t& call_si, const function_arguments_t& arguments ) = 0;
+	virtual Value Run( context::Context* ctx, const si_t& call_si, const function_arguments_t& arguments ) = 0;
 
 };
 

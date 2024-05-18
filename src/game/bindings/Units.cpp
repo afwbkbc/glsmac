@@ -23,14 +23,14 @@
 namespace game {
 namespace bindings {
 
-const unit::morale_t GetMorale( const int64_t& morale, gse::Context* ctx, const gse::si_t& call_si ) {
+const unit::morale_t GetMorale( const int64_t& morale, gse::context::Context* ctx, const gse::si_t& call_si ) {
 	if ( morale < unit::MORALE_MIN || morale > unit::MORALE_MAX ) {
 		ERROR( gse::EC.INVALID_CALL, "Invalid morale value: " + std::to_string( morale ) + " (should be between " + std::to_string( unit::MORALE_MIN ) + " and " + std::to_string( unit::MORALE_MAX ) + ", inclusive)" );
 	}
 	return (unit::morale_t)morale;
 }
 
-const unit::health_t GetHealth( const float health, gse::Context* ctx, const gse::si_t& call_si ) {
+const unit::health_t GetHealth( const float health, gse::context::Context* ctx, const gse::si_t& call_si ) {
 	if ( health < unit::Unit::MINIMUM_HEALTH_TO_KEEP || health > unit::StaticDef::HEALTH_MAX ) {
 		ERROR( gse::EC.INVALID_CALL, "Invalid health value: " + std::to_string( health ) + " (should be between " + std::to_string( unit::Unit::MINIMUM_HEALTH_TO_KEEP ) + " and " + std::to_string( unit::StaticDef::HEALTH_MAX ) + ", inclusive)" );
 	}

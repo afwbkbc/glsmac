@@ -4,7 +4,11 @@
 
 namespace gse {
 class GSE;
+
+namespace context {
 class GlobalContext;
+}
+
 namespace runner {
 class Runner;
 }
@@ -33,7 +37,7 @@ private:
 	const bool m_is_tty;
 
 	gse::GSE* m_gse;
-	gse::GlobalContext* m_gse_context = nullptr;
+	gse::context::GlobalContext* m_gse_context = nullptr;
 	gse::runner::Runner* m_runner;
 
 	fd_set fds;

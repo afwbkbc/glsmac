@@ -28,7 +28,7 @@ namespace gse {
     WRAPDEFS_CLASS() \
     const gse::Value Wrap( const bool dynamic = false ); \
     static _type* Unwrap( const gse::Value& value ); \
-    static void WrapSet( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, gse::Context* ctx, const gse::si_t& si ); \
+    static void WrapSet( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& si ); \
     void OnWrapSet( const std::string& property_name );
 #define WRAPDEFS_NOPTR( _type ) \
     WRAPDEFS_CLASS() \
@@ -57,7 +57,7 @@ namespace gse {
     }; \
     return VALUE( gse::type::Object, properties, WRAP_CLASS, this, dynamic ? &_type::WrapSet : nullptr ); \
 } \
-void _type::WrapSet( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, gse::Context* ctx, const gse::si_t& si ) { \
+void _type::WrapSet( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& si ) { \
     auto* obj = (_type*)wrapobj; \
     if ( !obj ) {}
 #define WRAPIMPL_END_NOPTR( _type ) \

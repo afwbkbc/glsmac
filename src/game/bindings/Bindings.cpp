@@ -5,7 +5,7 @@
 #include "game/Game.h"
 #include "game/bindings/Binding.h"
 #include "gse/GSE.h"
-#include "gse/GlobalContext.h"
+#include "gse/context/GlobalContext.h"
 #include "gse/Exception.h"
 #include "gse/type/String.h"
 #include "gse/type/Object.h"
@@ -57,7 +57,7 @@ Bindings::~Bindings() {
 	DELETE( m_gse );
 }
 
-void Bindings::AddToContext( gse::Context* ctx ) {
+void Bindings::AddToContext( gse::context::Context* ctx ) {
 	gse::type::object_properties_t methods = {};
 	for ( auto& it : m_bindings ) {
 		it->Add( methods );
@@ -101,7 +101,7 @@ State* Bindings::GetState() const {
 	return m_state;
 }
 
-Game* Bindings::GetGame( gse::Context* ctx, const gse::si_t& call_si ) const {
+Game* Bindings::GetGame( gse::context::Context* ctx, const gse::si_t& call_si ) const {
 	auto* game = m_state->GetGame();
 	if ( !game ) {
 		ERROR( gse::EC.GAME_ERROR, "Game not started yet" );
@@ -109,7 +109,7 @@ Game* Bindings::GetGame( gse::Context* ctx, const gse::si_t& call_si ) const {
 	return game;
 }
 
-void Bindings::SetCallback( const callback_slot_t slot, const gse::Value& callback, gse::Context* context, const gse::si_t& si ) {
+void Bindings::SetCallback( const callback_slot_t slot, const gse::Value& callback, gse::context::Context* context, const gse::si_t& si ) {
 	if ( m_callbacks.find( slot ) != m_callbacks.end() ) {
 		throw gse::Exception( gse::EC.GAME_ERROR, "Callback slot already in use", context, si );
 	}

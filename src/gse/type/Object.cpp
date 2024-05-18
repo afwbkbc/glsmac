@@ -78,7 +78,7 @@ const Value& Object::Get( const object_key_t& key ) const {
 		: it->second;
 }
 
-void Object::Set( const object_key_t& key, const Value& new_value, gse::Context* ctx, const si_t& si ) {
+void Object::Set( const object_key_t& key, const Value& new_value, context::Context* ctx, const si_t& si ) {
 	if ( wrapobj ) {
 		if ( !wrapsetter ) {
 			throw gse::Exception( EC.INVALID_ASSIGNMENT, "Property is read-only", ctx, si );

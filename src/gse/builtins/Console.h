@@ -9,7 +9,7 @@ namespace builtins {
 
 class Console : public Bindings {
 public:
-	void AddToContext( gse::Context* ctx ) override;
+	void AddToContext( context::Context* ctx ) override;
 
 #ifdef DEBUG
 	void CaptureStart() const;

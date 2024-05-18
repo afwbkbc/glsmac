@@ -30,8 +30,8 @@ let testmethod2 = (a, b, c) => {
 
 let testarr1 = [];
 let testarr2 = [ 3, 'TEST', {
-  key1: 'value1',
-  key2: 'value2',
+	key1: 'value1',
+	key2: 'value2',
 } ];
 testarr1 []= 'first';
 testarr1 []= 'second';
@@ -52,13 +52,32 @@ let testobj2 = {
 	propertyInt2: 222,
 };
 let testobj3 = {
-  child1: {
-    child2: {
-      value: 'CHILD VALUE'
-    }
-  },
+	child1: {
+		child2: {
+			value: 'CHILD VALUE'
+		}
+	},
 };
 testobj1.propertyInt = testobj2.propertyInt1 + testobj2.propertyInt2;
+
+let testobj4 = {
+	myvalue: 'my own value',
+	myvalue2: this.myvalue + ' 2',
+};
+test.assert(testobj4.myvalue2 == 'my own value 2');
+let testobj5 = {
+	myvalue: 'some value',
+	testfunc: () => {
+		let internalobj = {
+			myvalue: 'some internal value',
+			testfunc: () => {
+				return this.myvalue;
+			}
+		};
+		return this.myvalue + ',' + internalobj.testfunc();
+	}
+};
+test.assert(testobj5.testfunc() == 'some value,some internal value');
 
 let d = null;
 let x = a > b;
@@ -137,73 +156,73 @@ test.assert(testobj2.propertyString == 'STRING' );
 
 let yes_or_no = false;
 if ( a > b ) {
-  yes_or_no = true;
+	yes_or_no = true;
 }
 else {
-  yes_or_no = false;
+	yes_or_no = false;
 };
 test.assert( yes_or_no );
 
 if ( b > a ) {
-  yes_or_no = true;
+	yes_or_no = true;
 }
 else {
-  yes_or_no = false;
+	yes_or_no = false;
 };
 test.assert( !yes_or_no );
 
 if ( false ) { test.assert(false); }
 if ( false ) {
-  test.assert(false);
+	test.assert(false);
 } elseif ( false ) {
-  test.assert(false);
+	test.assert(false);
 } elseif ( true ) {
-  yes_or_no = true;
+	yes_or_no = true;
 } else {
-  test.assert(false);
+	test.assert(false);
 }
 test.assert( yes_or_no );
 
 let arr = [];
 let i = 0;
 while ( i++ < 5 ) {
-  arr []= i;
+	arr []= i;
 }
 test.assert( arr == [1, 2, 3, 4, 5] );
 
 arr = [];
 try {
-  arr []= 'BEFORE EXCEPTION'; // should be printed
-  let realfailfunc = () => {
-      arr []= 'failfunc2';
-      {
-          throw TestError('something happened');
-      }
-  };
-  let failfunc = () => {
-    arr []= 'failfunc';
-    realfailfunc();
-  };
-  failfunc();
-  arr []= 'AFTER EXCEPTION'; // should not be printed
+	arr []= 'BEFORE EXCEPTION'; // should be printed
+	let realfailfunc = () => {
+			arr []= 'failfunc2';
+			{
+					throw TestError('something happened');
+			}
+	};
+	let failfunc = () => {
+		arr []= 'failfunc';
+		realfailfunc();
+	};
+	failfunc();
+	arr []= 'AFTER EXCEPTION'; // should not be printed
 }
 catch {
-  UnknownError: (e) => {
-    arr []= 'shouldnt catch this';
-  },
-  TestError: (e) => {
-    arr []= 'CAUGHT ' + e.type + ' : ' + e.reason;
-    arr += e.backtrace;
-  }
+	UnknownError: (e) => {
+		arr []= 'shouldnt catch this';
+	},
+	TestError: (e) => {
+		arr []= 'CAUGHT ' + e.type + ' : ' + e.reason;
+		arr += e.backtrace;
+	}
 };
 test.assert( arr == [
-    'BEFORE EXCEPTION',
-    'failfunc',
-    'failfunc2',
-    'CAUGHT TestError : something happened',
-    '\tat ' + test.get_script_path() + ':180: throw TestError(\'something happened\');',
-    '\tat ' + test.get_script_path() + ':185: realfailfunc();',
-    '\tat ' + test.get_script_path() + ':187: failfunc();'
+		'BEFORE EXCEPTION',
+		'failfunc',
+		'failfunc2',
+		'CAUGHT TestError : something happened',
+		'\tat ' + test.get_script_path() + ':199: throw TestError(\'something happened\');',
+		'\tat ' + test.get_script_path() + ':204: realfailfunc();',
+		'\tat ' + test.get_script_path() + ':206: failfunc();'
 ] );
 
 test.assert( #to_string(2 + 3) + ' (five)' == '5 (five)' );

@@ -4,7 +4,7 @@
 
 #include "gse/GSE.h"
 #include "gse/Exception.h"
-#include "gse/GlobalContext.h"
+#include "gse/context/GlobalContext.h"
 #include "gse/parser/Parser.h"
 #include "gse/runner/Runner.h"
 #include "gse/program/Program.h"
@@ -53,10 +53,10 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 			"testing " + script,
 			GT( task, script ) {
 
-				gse::parser::Parser* parser = nullptr;
-				const gse::runner::Runner* runner = nullptr;
-				const gse::program::Program* program = nullptr;
-				gse::GlobalContext* context = nullptr;
+				parser::Parser* parser = nullptr;
+				const runner::Runner* runner = nullptr;
+				const program::Program* program = nullptr;
+				context::GlobalContext* context = nullptr;
 
 				std::string last_error = "";
 				try {
@@ -69,7 +69,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 					runner = gse->GetRunner();
 					runner->Execute( context, program );
 				}
-				catch ( gse::Exception& e ) {
+				catch ( Exception& e ) {
 					last_error = e.ToStringAndCleanup();
 					context = nullptr;
 				}
