@@ -76,10 +76,11 @@
 #define START_FULLSCREEN true
 #endif
 
+#include "util/FS.h"
+
 #ifdef DEBUG
 
 #include "util/System.h"
-#include "util/FS.h"
 #include "debug/MemoryWatcher.h"
 #include "debug/DebugOverlay.h"
 

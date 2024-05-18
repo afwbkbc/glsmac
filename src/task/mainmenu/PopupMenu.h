@@ -2,6 +2,7 @@
 
 #include <string>
 #include <unordered_set>
+#include <cstdint>
 
 #include "MenuObject.h"
 
