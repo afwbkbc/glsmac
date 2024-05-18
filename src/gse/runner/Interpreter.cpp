@@ -659,6 +659,7 @@ const gse::Value Interpreter::EvaluateOperand( context::Context* ctx, const Oper
 			return VALUE( type::Array, elements );
 		}
 		case Operand::OT_OBJECT: {
+			ctx->IncRefs(); // TODO: cleanup
 			const auto objctx = ctx->ForkContext( ctx, operand->m_si, false );
 			objctx->IncRefs();
 			auto result = VALUE( type::Object, object_properties_t{} );
@@ -671,7 +672,7 @@ const gse::Value Interpreter::EvaluateOperand( context::Context* ctx, const Oper
 				}
 				properties.insert_or_assign( it.first, EvaluateExpression( objctx, it.second ) );
 			}
-			objctx->DecRefs(); // ?
+			objctx->DecRefs();
 			return result;
 		}
 		case Operand::OT_SCOPE: {

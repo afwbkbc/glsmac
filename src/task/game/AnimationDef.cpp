@@ -25,6 +25,8 @@ AnimationDef::AnimationDef( InstancedSpriteManager* ism, const ::game::animation
 		const uint32_t y = d->m_row_y;
 		const uint32_t w = d->m_frame_width;
 		const uint32_t h = d->m_frame_height;
+		const auto cy = y + h / 2;
+
 		m_sprites.push_back(
 			m_ism->GetInstancedSprite(
 				"Animation_" + d->m_id,
@@ -38,8 +40,8 @@ AnimationDef::AnimationDef( InstancedSpriteManager* ism, const ::game::animation
 					h,
 				},
 				{
-					x + w / 2,
-					y + h / 2,
+					x + (uint32_t)( (float)w / 2 * d->m_scale_x ),
+					y + (uint32_t)( (float)h / ( 2.0f * d->m_scale_y / 0.8f ) ),
 				},
 				{
 					d->m_scale_x,

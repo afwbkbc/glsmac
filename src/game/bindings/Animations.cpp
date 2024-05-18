@@ -37,7 +37,7 @@ BINDING_IMPL( animations ) {
 					N_GETPROP( frame_padding, animation_def, "frame_padding", Int );
 					N_GETPROP( frames_count, animation_def, "frames_count", Int );
 					N_GETPROP_OPT( float, scale_x, animation_def, "scale_x", Float, 1.0f );
-					N_GETPROP_OPT( float, scale_y, animation_def, "scale_x", Float, 1.0f );
+					N_GETPROP_OPT( float, scale_y, animation_def, "scale_y", Float, 1.0f );
 					N_GETPROP( duration_ms, animation_def, "duration_ms", Int );
 					N_GETPROP( sound, animation_def, "sound", String );
 					if ( !g_engine->GetSoundLoader()->LoadSound( sound ) ) {
