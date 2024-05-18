@@ -932,9 +932,18 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	auto* unit = it->second;
 
 	const bool is_owned = unit->IsOwned();
-	m_units.erase( it );
+	const bool need_tile_refresh = m_selected_tile == unit->GetTile();
 
+	m_units.erase( it );
 	delete unit;
+
+	if ( m_selected_unit == unit ) {
+		m_selected_unit = nullptr;
+	}
+
+	if ( need_tile_refresh ) {
+		m_ui.bottom_bar->PreviewTile( m_selected_tile, 0 );
+	}
 
 	if ( is_owned ) {
 		RemoveSelectable( unit );
@@ -2343,7 +2352,7 @@ void Game::ScrollToTile( const Tile* tile, bool center_on_tile ) {
 
 		types::Vec2< float > uc = {
 			GetFixedX( tc.x + m_camera_position.x ),
-			tc.y + m_camera_position.y
+			tc.y + m_camera_position.y + 0.5f
 		};
 
 		types::Vec2< float > scroll_by = {
@@ -2394,7 +2403,7 @@ void Game::ScrollToTile( const Tile* tile, bool center_on_tile ) {
 
 		types::Vec2< float > tc = {
 			c.x * m_viewport.window_aspect_ratio * m_camera_position.z,
-			( c.y - std::max( 0.0f, c.z ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f
+			( c.y - ( c.z - 2.0f ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f
 		};
 
 		const float tile_x_shifted = m_camera_position.x > 0
