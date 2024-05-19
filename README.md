@@ -6,7 +6,7 @@ Unofficial open-source OpenGL/SDL2 reimplementation of Sid Meier's Alpha Centaur
 
 Note: you will still need to own the original game and expansion - GLSMAC will load its resources like images or sounds.
 
-Check [Screenshots](https://github.com/afwbkbc/glsmac/wiki/Screenshots) for current state of project.
+Check [Screenshots](https://github.com/afwbkbc/glsmac/wiki/Screenshots) and [Videos](https://www.youtube.com/playlist?list=PLX0T-HsVvJwL779fEsDpDuXGs1wkV6zwN) for current state and history of project.
 
 GLSMAC discord : https://discord.gg/fWG3xK7cUx
 
