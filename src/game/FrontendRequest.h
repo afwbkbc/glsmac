@@ -25,7 +25,7 @@ public:
 		FR_UNIT_SPAWN,
 		FR_UNIT_DESPAWN,
 		FR_UNIT_REFRESH,
-		FR_UNIT_MOVE
+		FR_UNIT_MOVE,
 	};
 	FrontendRequest( const request_type_t type );
 	FrontendRequest( const FrontendRequest& other );
@@ -118,16 +118,11 @@ public:
 		} unit_refresh;
 		struct {
 			size_t unit_id;
+			size_t running_animation_id;
 			struct {
 				size_t x;
 				size_t y;
-			} tile_coords;
-			struct {
-				float x;
-				float y;
-				float z;
-			} render_coords;
-			unit::movement_t movement_left;
+			} dst_tile_coords;
 		} unit_move;
 	} data;
 };

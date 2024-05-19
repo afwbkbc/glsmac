@@ -31,13 +31,13 @@ SpriteRender::SpriteRender(
 }
 
 const types::Vec3 SpriteRender::GetSpawnCoords( const map::tile::Tile* tile, const map::tile::TileState* ts ) const {
-	const auto& tile_coords = ts->layers[
+	return ts->layers[
 		tile->is_water_tile
 			? map::tile::LAYER_WATER
 			: map::tile::LAYER_LAND
-	].coords;
+	].coords.center;
 
-	float cx = tile_coords.center.x;
+	/*float cx = tile_coords.center.x;
 	if ( m_cshift_x < 0 ) {
 		cx -= ( cx - tile_coords.left.x ) * m_cshift_x;
 	}
@@ -55,7 +55,7 @@ const types::Vec3 SpriteRender::GetSpawnCoords( const map::tile::Tile* tile, con
 		cx,
 		cy,
 		tile_coords.center.z,
-	};
+	};*/
 }
 
 const std::string SpriteRender::ToString( const std::string& prefix ) const {

@@ -1,5 +1,6 @@
 #include "Unit.h"
 
+#include "Game.h"
 #include "util/String.h"
 #include "game/unit/Unit.h"
 #include "Slot.h"
@@ -12,10 +13,13 @@
 #include "scene/actor/Sprite.h"
 #include "types/texture/Texture.h"
 
+#include <iostream>
+
 namespace task {
 namespace game {
 
 Unit::Unit(
+	Game* game,
 	BadgeDefs* badge_defs,
 	const size_t id,
 	UnitDef* def,
@@ -28,7 +32,8 @@ Unit::Unit(
 	const std::string& morale_string,
 	const ::game::unit::health_t health
 )
-	: m_badge_defs( badge_defs )
+	: m_game( game )
+	, m_badge_defs( badge_defs )
 	, m_id( id )
 	, m_def( def )
 	, m_slot( slot )
@@ -140,6 +145,9 @@ void Unit::Iterate() {
 			ShowBadge();
 		}
 	}
+	while ( m_mover.HasTicked() ) {
+		SetRenderCoords( m_mover.GetPosition() );
+	}
 }
 
 void Unit::SetActiveOnTile() {
@@ -152,7 +160,9 @@ void Unit::Show() {
 
 		auto* sprite = m_def->GetSprite( m_morale );
 
-		m_render.instance_id = sprite->next_instance_id++;
+		if ( !m_render.instance_id ) {
+			m_render.instance_id = sprite->next_instance_id++;
+		}
 		sprite->instanced_sprite->actor->SetInstance(
 			m_render.instance_id, {
 				c.x,
@@ -161,8 +171,12 @@ void Unit::Show() {
 			}
 		);
 
-		m_render.badge.instance_id = m_render.badge.def->next_instance_id++;
-		m_render.badge.healthbar.instance_id = m_render.badge.healthbar.def->next_instance_id++;
+		if ( !m_render.badge.instance_id ) {
+			m_render.badge.instance_id = m_render.badge.def->next_instance_id++;
+		}
+		if ( !m_render.badge.healthbar.instance_id ) {
+			m_render.badge.healthbar.instance_id = m_render.badge.healthbar.def->next_instance_id++;
+		}
 
 		ShowBadge();
 
@@ -231,10 +245,32 @@ void Unit::Refresh() {
 		if ( is_badge_visible ) {
 			HideBadge();
 		}
-		m_render.badge.def = m_slot->GetUnitBadgeSprite( m_morale, m_is_active );
-		m_render.badge.instance_id = m_render.badge.def->next_instance_id++;
-		m_render.badge.healthbar.def = m_badge_defs->GetBadgeHealthbarSprite( m_health );
-		m_render.badge.healthbar.instance_id = m_render.badge.healthbar.def->next_instance_id++;
+		{
+			auto* newdef = m_slot->GetUnitBadgeSprite( m_morale, m_is_active );
+			if ( m_render.badge.def != newdef ) {
+				if ( m_render.badge.instance_id ) {
+					m_render.badge.def->instanced_sprite->actor->RemoveInstance( m_render.badge.instance_id );
+					m_render.badge.instance_id = 0;
+				}
+				m_render.badge.def = newdef;
+			}
+			if ( !m_render.badge.instance_id ) {
+				m_render.badge.instance_id = m_render.badge.def->next_instance_id++;
+			}
+		}
+		{
+			auto* newdef = m_badge_defs->GetBadgeHealthbarSprite( m_health );
+			if ( m_render.badge.healthbar.def != newdef ) {
+				if ( m_render.badge.healthbar.instance_id ) {
+					m_render.badge.healthbar.def->instanced_sprite->actor->RemoveInstance( m_render.badge.healthbar.instance_id );
+					m_render.badge.healthbar.instance_id = 0;
+				}
+				m_render.badge.healthbar.def = newdef;
+			}
+			if ( !m_render.badge.healthbar.instance_id ) {
+				m_render.badge.healthbar.instance_id = m_render.badge.healthbar.def->next_instance_id++;
+			}
+		}
 		// TODO: cache/optimize
 		m_render_data.unit = GetMeshTex( GetSprite()->instanced_sprite );
 		m_render_data.badge = GetMeshTex( GetBadgeSprite()->instanced_sprite );
@@ -263,7 +299,7 @@ const bool Unit::CanMove() const {
 	return m_movement >= ::game::unit::Unit::MINIMUM_MOVEMENT_TO_KEEP;
 }
 
-void Unit::MoveTo( task::game::Tile* dst_tile, const types::Vec3& dst_render_coords ) {
+void Unit::SetTile( task::game::Tile* dst_tile ) {
 	ASSERT_NOLOG( m_tile, "source tile not set" );
 	ASSERT_NOLOG( dst_tile, "destination tile not set" );
 
@@ -273,22 +309,26 @@ void Unit::MoveTo( task::game::Tile* dst_tile, const types::Vec3& dst_render_coo
 
 	m_tile->AddUnit( this );
 
-	m_render.coords = dst_render_coords;
-	m_def->GetSprite( m_morale )->instanced_sprite->actor->UpdateInstance(
-		m_render.instance_id, {
-			dst_render_coords.x,
-			dst_render_coords.y,
-			dst_render_coords.z
-		}
-	);
-	m_render.badge.def->instanced_sprite->actor->UpdateInstance(
-		m_render.badge.instance_id,
-		BadgeDefs::GetBadgeCoords( m_render.coords )
-	);
-	m_render.badge.healthbar.def->instanced_sprite->actor->UpdateInstance(
-		m_render.badge.healthbar.instance_id,
-		BadgeDefs::GetBadgeHealthbarCoords( m_render.coords )
-	);
+	SetRenderCoords( m_tile->GetRenderData().coords.InvertY() );
+}
+
+void Unit::MoveToTile( Tile* dst_tile ) {
+	ASSERT_NOLOG( !m_mover.IsRunning(), "unit already moving" );
+	ASSERT_NOLOG( m_tile != dst_tile, "can't move to same tile" );
+	ASSERT_NOLOG( m_tile, "source tile not set" );
+	ASSERT_NOLOG( dst_tile, "destination tile not set" );
+
+	StopBadgeBlink( true );
+	HideFakeBadge();
+	Show();
+
+	auto from = m_tile->GetRenderData().coords.InvertY();
+	auto to = dst_tile->GetRenderData().coords.InvertY();
+	m_mover.Scroll( from, m_game->GetCloserCoords( to, from ), MOVE_DURATION_MS );
+}
+
+const bool Unit::IsMoving() const {
+	return m_mover.IsRunning();
 }
 
 const Unit::render_data_t& Unit::GetRenderData() const {
@@ -329,6 +369,26 @@ Unit::meshtex_t Unit::GetMeshTex( const InstancedSprite* sprite ) {
 		mesh,
 		texture,
 	};
+}
+
+void Unit::SetRenderCoords( const types::Vec3& coords ) {
+	m_render.coords = coords;
+	m_def->GetSprite( m_morale )->instanced_sprite->actor->UpdateInstance(
+		m_render.instance_id, {
+			coords.x,
+			coords.y,
+			coords.z
+		}
+	);
+	m_render.badge.def->instanced_sprite->actor->UpdateInstance(
+		m_render.badge.instance_id,
+		BadgeDefs::GetBadgeCoords( m_render.coords )
+	);
+	m_render.badge.healthbar.def->instanced_sprite->actor->UpdateInstance(
+		m_render.badge.healthbar.instance_id,
+		BadgeDefs::GetBadgeHealthbarCoords( m_render.coords )
+	);
+	m_need_refresh = true;
 }
 
 }

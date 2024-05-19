@@ -95,19 +95,23 @@ const result = {
 
 				let movement_cost = get_movement_cost(e.unit, src_tile, e.dst_tile) + get_movement_aftercost(e.unit, e.unit.get_tile(), e.dst_tile);
 
-				// reduce remaining movement points (even if failed)
-				if (e.unit.movement >= movement_cost) {
-					e.unit.movement = e.unit.movement - movement_cost;
-				} else {
-					e.unit.movement = 0.0;
-				}
+				let next = () => {
+					// reduce remaining movement points (even if failed)
+					if (e.unit.movement >= movement_cost) {
+						e.unit.movement = e.unit.movement - movement_cost;
+					} else {
+						e.unit.movement = 0.0;
+					}
+					e.unit.moved_this_turn = true;
+					unlock();
+				};
 
-				e.unit.moved_this_turn = true;
 				if (e.resolutions.is_movement_successful) {
-					e.unit.set_tile(e.dst_tile);
+					e.unit.move_to_tile(e.dst_tile, next);
+				} else {
+					next();
 				}
 
-				unlock();
 			});
 
 		});

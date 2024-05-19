@@ -15,6 +15,8 @@ class SimpleButton;
 
 CLASS( ScrollView, Panel )
 
+	static constexpr size_t SCROLL_DURATION_MS = 100;
+
 	enum scrollview_type_t {
 		ST_VERTICAL,
 		ST_HORIZONTAL_INLINE,

@@ -9,19 +9,19 @@ namespace util {
 template< class POSITION_TYPE >
 CLASS( Scroller, util::Util )
 
-	static constexpr uint16_t scroll_time_ms = 100;
-	static constexpr uint16_t scroll_step_ms = 10;
-	static constexpr uint8_t scroll_steps = scroll_time_ms / scroll_step_ms;
+	static constexpr uint16_t SCROLL_STEP_MS = 10;
 
-	void Scroll( const POSITION_TYPE& from, const POSITION_TYPE& to ) {
+	void Scroll( const POSITION_TYPE& from, const POSITION_TYPE& to, const size_t duration_ms ) {
 		if ( IsRunning() ) {
 			Stop();
 		}
 		m_position = from;
 		m_target_position = to;
-		m_steps_left = scroll_steps;
+		m_duration_ms = duration_ms;
+		m_scroll_steps = m_duration_ms / SCROLL_STEP_MS;
+		m_steps_left = m_scroll_steps;
 		m_step = ( m_target_position - m_position ) / m_steps_left;
-		m_timer.SetInterval( scroll_step_ms );
+		m_timer.SetInterval( SCROLL_STEP_MS );
 	}
 
 	void Stop() {
@@ -59,6 +59,9 @@ CLASS( Scroller, util::Util )
 private:
 
 	util::Timer m_timer;
+
+	size_t m_duration_ms;
+	size_t m_scroll_steps;
 
 	POSITION_TYPE m_position;
 	POSITION_TYPE m_step;

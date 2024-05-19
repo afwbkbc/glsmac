@@ -37,7 +37,7 @@ void Popup::Create() {
 	// slide up
 	const auto start_at = m_game->GetBottomBarMiddleHeight() - GetHeight();
 	SetBottom( start_at );
-	m_slide.Scroll( start_at, start_at + GetHeight() );
+	m_slide.Scroll( start_at, start_at + GetHeight(), SLIDE_DURATION_MS );
 }
 
 void Popup::Align() {
@@ -91,7 +91,7 @@ bool Popup::MaybeClose() {
 	else {
 		// slide down
 		m_is_closing = true;
-		m_slide.Scroll( GetBottom(), m_game->GetBottomBarMiddleHeight() - GetHeight() );
+		m_slide.Scroll( GetBottom(), m_game->GetBottomBarMiddleHeight() - GetHeight(), SLIDE_DURATION_MS );
 		PlayCloseSound();
 	}
 	return false; // not ready to close yet

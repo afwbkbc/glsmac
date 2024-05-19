@@ -103,6 +103,8 @@ class Actor;
 
 CLASS( Game, base::Task )
 
+	static constexpr size_t SCROLL_DURATION_MS = 100;
+
 	Game( ::game::State* state, ::ui::ui_handler_t on_start = 0, ::ui::ui_handler_t on_cancel = 0 );
 	~Game();
 
@@ -184,6 +186,8 @@ CLASS( Game, base::Task )
 
 	void SetEditorBrush( ::game::map_editor::brush_type_t editor_brush );
 	const ::game::map_editor::brush_type_t GetEditorBrush() const;
+
+	const types::Vec3 GetCloserCoords( const types::Vec3& coords, const types::Vec3& ref_coords ) const;
 
 private:
 
@@ -300,8 +304,6 @@ private:
 		types::Vec3 max;
 	} m_camera_range;
 
-	// shift x to center instance when needed
-	const float GetFixedX( float x ) const;
 	void FixCameraX();
 
 	struct {
@@ -348,6 +350,12 @@ private:
 	Tile* m_selected_tile = nullptr;
 	Unit* m_selected_unit = nullptr;
 	map_data_t m_map_data = {};
+
+	struct moving_unit_info_t {
+		Tile* tile;
+		size_t animation_id;
+	};
+	std::unordered_map< Unit*, moving_unit_info_t > m_moving_units = {};
 
 	// UI stuff
 
@@ -461,6 +469,9 @@ private:
 		UUF_ALL = 0xff,
 	};
 
+	const float GetFixedX( const float x ) const;
+	const float GetCloserX( const float x, const float ref_x ) const;
+
 	Tile* GetTile( const size_t x, const size_t y );
 	Tile* GetTile( const types::Vec2< size_t >& coords );
 
@@ -468,6 +479,7 @@ private:
 	void HideTileSelector();
 	void RenderTile( Tile* tile );
 
+	void SendAnimationFinished( const size_t animation_id );
 };
 
 }

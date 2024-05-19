@@ -563,11 +563,10 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			for ( const auto& r : *request.data.send_backend_requests.requests ) {
 				switch ( r.type ) {
 					case BackendRequest::BR_ANIMATION_FINISHED: {
-						const auto& it = m_running_animations.find( r.data.animation_finished.animation_id );
-						ASSERT( it != m_running_animations.end(), "animation " + std::to_string( r.data.animation_finished.animation_id ) + " is not running" );
-						const auto& animation_info = it->second;
-						const auto on_complete = animation_info.on_complete;
-						m_running_animations.erase( it );
+						const auto& it = m_running_animations_callbacks.find( r.data.animation_finished.animation_id );
+						ASSERT( it != m_running_animations_callbacks.end(), "animation " + std::to_string( r.data.animation_finished.animation_id ) + " is not running" );
+						const auto on_complete = it->second;
+						m_running_animations_callbacks.erase( it );
 						on_complete();
 						break;
 					}
@@ -764,13 +763,10 @@ const std::string* Game::ShowAnimationOnTile( const std::string& animation_id, m
 		return new std::string( "Tile must be locked before showing animation" );
 	}
 	const auto running_animation_id = m_next_running_animation_id++;
-	m_running_animations.insert(
+	m_running_animations_callbacks.insert(
 		{
 			running_animation_id,
-			{
-				tile,
-				on_complete
-			}
+			on_complete
 		}
 	);
 	auto fr = FrontendRequest( FrontendRequest::FR_ANIMATION_SHOW );
@@ -830,14 +826,6 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 
 	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
 	m_units.insert_or_assign( unit->m_id, unit );
-	unit->m_tile = tile;
-	ASSERT( tile->units.find( unit->m_id ) == tile->units.end(), "duplicate unit id in tile" );
-	tile->units.insert(
-		{
-			unit->m_id,
-			unit
-		}
-	);
 
 	QueueUnitUpdate( unit, UUO_SPAWN );
 
@@ -974,6 +962,38 @@ void Game::MoveUnitApply( unit::Unit* unit, map::tile::Tile* dst_tile, const gse
 			}
 		}
 	);
+}
+
+const std::string* Game::MoveUnitToTile( unit::Unit* unit, map::tile::Tile* dst_tile, const cb_oncomplete& on_complete ) {
+	const auto* src_tile = unit->m_tile;
+	if ( src_tile == dst_tile ) {
+		return new std::string( "Unit can't move because it's already on target tile" );
+	}
+	if ( !src_tile->IsLocked() ) {
+		return new std::string( "Source tile must be locked before moving unit" );
+	}
+	if ( !dst_tile->IsLocked() ) {
+		return new std::string( "Destination tile must be locked before moving unit" );
+	}
+	const auto running_animation_id = m_next_running_animation_id++;
+	m_running_animations_callbacks.insert(
+		{
+			running_animation_id,
+			[ this, on_complete, unit, dst_tile ]() {
+				unit->SetTile( dst_tile );
+				on_complete();
+			}
+		}
+	);
+	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_MOVE );
+	fr.data.unit_move.unit_id = unit->m_id;
+	fr.data.unit_move.dst_tile_coords = {
+		dst_tile->coord.x,
+		dst_tile->coord.y
+	};
+	fr.data.unit_move.running_animation_id = running_animation_id;
+	AddFrontendRequest( fr );
+	return nullptr; // no error
 }
 
 const std::string* Game::AttackUnitValidate( unit::Unit* attacker, unit::Unit* defender ) {
@@ -1724,6 +1744,9 @@ void Game::ResetGame() {
 		delete it;
 	}
 	m_unprocessed_events.clear();
+
+	m_running_animations_callbacks.clear();
+	m_next_running_animation_id = 1;
 
 	for ( auto& it : m_unit_moralesets ) {
 		delete it.second;

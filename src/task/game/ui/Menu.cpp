@@ -144,7 +144,7 @@ void Menu::Show() {
 	if ( m_config.use_slide_animation ) {
 		// slide up
 		m_is_closing = false;
-		m_slide.Scroll( GetHeight(), CalculateHeight() );
+		m_slide.Scroll( GetHeight(), CalculateHeight(), SLIDE_DURATION_MS );
 	}
 
 	UI::Show();
@@ -164,7 +164,7 @@ void Menu::Hide() {
 	if ( m_config.use_slide_animation ) {
 		// slide down
 		m_is_closing = true;
-		m_slide.Scroll( GetHeight(), 0 );
+		m_slide.Scroll( GetHeight(), 0, SLIDE_DURATION_MS );
 	}
 	else {
 		UI::Hide();

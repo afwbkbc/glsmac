@@ -47,16 +47,6 @@ InstancedSprite* InstancedSpriteManager::GetInstancedSprite(
 
 		Log( "Creating instanced sprite: " + key );
 
-		const types::Vec2< types::mesh::tex_coord_t > test = {
-			dst_wh.x * ( ( (float)( src_cxy.x - src_xy.x ) / src_wh.x ) - 0.5f ),
-			dst_wh.y * ( ( (float)( src_cxy.y - src_xy.y ) / src_wh.y ) - 0.5f )
-		};
-
-		if ( name.find( "Animation_DEATH_PSI" ) != std::string::npos ) {
-			int a = 5;
-			a++;
-		}
-
 		NEWV(
 			sprite,
 			scene::actor::Sprite,
@@ -76,7 +66,10 @@ InstancedSprite* InstancedSpriteManager::GetInstancedSprite(
 					(float)1.0f / texture->m_height * ( src_xy.y + src_wh.y )
 				}
 			},
-			test
+			{
+				dst_wh.x * ( ( (float)( src_cxy.x - src_xy.x ) / src_wh.x ) - 0.5f ),
+				dst_wh.y * ( ( (float)( src_cxy.y - src_xy.y ) / src_wh.y ) - 0.5f )
+			}
 		);
 		NEWV( instanced, scene::actor::Instanced, sprite );
 		instanced->SetZIndex( z_index ); // needs to be higher than map terrain z position

@@ -163,7 +163,7 @@ const Instanced::instance_id_t Instanced::AddInstance( const types::Vec3& positi
 void Instanced::SetInstance( const instance_id_t instance_id, const types::Vec3& position, const types::Vec3& angle ) {
 	m_need_world_matrix_update = true;
 	m_instances[ instance_id ] = {
-		position,
+		m_actor->NormalizePosition( position ),
 		angle,
 		{},
 		true

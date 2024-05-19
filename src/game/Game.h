@@ -329,6 +329,7 @@ public:
 	const std::string* MoveUnitValidate( unit::Unit* unit, map::tile::Tile* dst_tile );
 	const gse::Value MoveUnitResolve( unit::Unit* unit, map::tile::Tile* dst_tile );
 	void MoveUnitApply( unit::Unit* unit, map::tile::Tile* dst_tile, const gse::Value resolutions );
+	const std::string* MoveUnitToTile( unit::Unit* unit, map::tile::Tile* dst_tile, const cb_oncomplete& on_complete );
 	const std::string* AttackUnitValidate( unit::Unit* attacker, unit::Unit* defender );
 	const gse::Value AttackUnitResolve( unit::Unit* attacker, unit::Unit* defender );
 	void AttackUnitApply( unit::Unit* attacker, unit::Unit* defender, const gse::Value resolutions );
@@ -412,11 +413,7 @@ private:
 	void CheckTurnComplete();
 
 	size_t m_next_running_animation_id = 1;
-	struct animation_info_t {
-		map::tile::Tile* tile;
-		cb_oncomplete on_complete;
-	};
-	std::unordered_map< size_t, animation_info_t > m_running_animations = {};
+	std::unordered_map< size_t, cb_oncomplete > m_running_animations_callbacks = {};
 
 	enum unit_update_op_t : uint8_t {
 		UUO_NONE = 0,

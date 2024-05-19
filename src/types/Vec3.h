@@ -34,6 +34,15 @@ public:
 		this->z = z;
 	};
 
+	// TODO: fix Y inversion globally
+	const Vec3 InvertY() const {
+		return {
+			x,
+			-y,
+			z
+		};
+	}
+
 	Vec3 operator=( const Vec2< float > source ) {
 		return Vec3( source.x, source.y, 0.0 );
 	};

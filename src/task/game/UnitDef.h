@@ -5,6 +5,7 @@
 
 #include "game/unit/Types.h"
 
+#include "types/Vec3.h"
 // TODO: remove?
 #include "Sprite.h"
 
@@ -25,6 +26,7 @@ public:
 	const bool IsArtillery() const;
 
 	Sprite* GetSprite( const ::game::unit::morale_t morale );
+	const types::Vec3 GetUnitCoordsOnTile( const types::Vec3& tile_coords );
 
 	const bool IsImmovable() const;
 
