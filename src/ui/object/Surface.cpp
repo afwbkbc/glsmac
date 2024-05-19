@@ -1,5 +1,7 @@
 #include "Surface.h"
 
+#include <algorithm>
+
 #include "types/mesh/Rectangle.h"
 #include "types/texture/Texture.h"
 
