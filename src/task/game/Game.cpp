@@ -2324,10 +2324,11 @@ void Game::RemoveActor( actor::Actor* actor ) {
 	m_actors_map.erase( it );
 }
 
-const types::Vec2< float > Game::GetTileWindowCoordinates( const types::Vec3& tile_coords ) {
+const types::Vec2< float > Game::GetTileWindowCoordinates( const Tile* tile ) const {
+	const auto& c = tile->GetRenderData().coords;
 	return {
-		tile_coords.x * m_viewport.window_aspect_ratio * m_camera_position.z,
-		( tile_coords.y - std::max( 0.0f, tile_coords.z ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f
+		c.x * m_viewport.window_aspect_ratio * m_camera_position.z,
+		( c.y - ( c.z - 2.0f ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f
 	};
 }
 
@@ -2344,15 +2345,33 @@ void Game::ScrollTo( const types::Vec3& target ) {
 
 void Game::ScrollToTile( const Tile* tile, bool center_on_tile ) {
 
-	const auto& c = tile->GetRenderData().coords;
+	auto tc = GetTileWindowCoordinates( tile );
 
-	if ( !center_on_tile ) {
+	if ( center_on_tile ) {
+		const float tile_x_shifted = m_camera_position.x > 0
+			? tc.x - ( m_camera_range.max.x - m_camera_range.min.x )
+			: tc.x + ( m_camera_range.max.x - m_camera_range.min.x );
+		if (
+			fabs( tile_x_shifted - -m_camera_position.x )
+				<
+					fabs( tc.x - -m_camera_position.x )
+			) {
+			// smaller distance if going other side
+			tc.x = tile_x_shifted;
+		}
 
-		const auto tc = GetTileWindowCoordinates( c );
-
+		ScrollTo(
+			{
+				-tc.x,
+				-tc.y,
+				m_camera_position.z
+			}
+		);
+	}
+	else {
 		types::Vec2< float > uc = {
 			GetFixedX( tc.x + m_camera_position.x ),
-			tc.y + m_camera_position.y + 0.5f
+			tc.y + m_camera_position.y
 		};
 
 		types::Vec2< float > scroll_by = {
@@ -2397,34 +2416,6 @@ void Game::ScrollToTile( const Tile* tile, bool center_on_tile ) {
 				}
 			);
 		}
-
-	}
-	else {
-
-		types::Vec2< float > tc = {
-			c.x * m_viewport.window_aspect_ratio * m_camera_position.z,
-			( c.y - ( c.z - 2.0f ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f
-		};
-
-		const float tile_x_shifted = m_camera_position.x > 0
-			? tc.x - ( m_camera_range.max.x - m_camera_range.min.x )
-			: tc.x + ( m_camera_range.max.x - m_camera_range.min.x );
-		if (
-			fabs( tile_x_shifted - -m_camera_position.x )
-				<
-					fabs( tc.x - -m_camera_position.x )
-			) {
-			// smaller distance if going other side
-			tc.x = tile_x_shifted;
-		}
-
-		ScrollTo(
-			{
-				-tc.x,
-				-tc.y,
-				m_camera_position.z
-			}
-		);
 	}
 }
 

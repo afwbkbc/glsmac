@@ -384,7 +384,7 @@ private:
 	void AddActor( actor::Actor* actor );
 	void RemoveActor( actor::Actor* actor );
 
-	const ::types::Vec2< float > GetTileWindowCoordinates( const ::types::Vec3& tile_coords );
+	const types::Vec2< float > GetTileWindowCoordinates( const Tile* tile ) const;
 
 	void ScrollTo( const ::types::Vec3& target );
 	void ScrollToTile( const Tile* tile, bool center_on_tile );
