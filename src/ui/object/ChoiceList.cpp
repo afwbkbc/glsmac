@@ -1,5 +1,7 @@
 #include "ChoiceList.h"
 
+#include <algorithm>
+
 #include "Button.h"
 
 namespace ui {
