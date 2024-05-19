@@ -5,6 +5,7 @@
 #include "game/unit/Types.h"
 
 #include "util/Timer.h"
+#include "util/Scroller.h"
 #include "types/Vec3.h"
 
 namespace types {
@@ -19,6 +20,7 @@ class Mesh;
 namespace task {
 namespace game {
 
+class Game;
 class UnitDef;
 class Slot;
 class Tile;
@@ -28,8 +30,12 @@ class InstancedSprite;
 
 class Unit {
 public:
+
+	static constexpr size_t MOVE_DURATION_MS = 125;
+
 	// TODO: refactor
 	Unit(
+		Game* game,
 		BadgeDefs* badge_defs,
 		const size_t id,
 		UnitDef* def,
@@ -83,7 +89,9 @@ public:
 	void SetHealth( const ::game::unit::health_t health );
 	const bool CanMove() const;
 
-	void MoveTo( Tile* dst_tile, const types::Vec3& dst_render_coords );
+	void SetTile( Tile* dst_tile );
+	void MoveToTile( Tile* dst_tile );
+	const bool IsMoving() const;
 
 	struct meshtex_t {
 		const types::mesh::Mesh* mesh = nullptr;
@@ -97,6 +105,8 @@ public:
 	const render_data_t& GetRenderData() const;
 
 private:
+
+	Game* m_game = nullptr;
 
 	BadgeDefs* const m_badge_defs;
 
@@ -137,7 +147,10 @@ private:
 
 	render_data_t m_render_data = {};
 
+	util::Scroller< types::Vec3 > m_mover;
+
 	Unit::meshtex_t GetMeshTex( const InstancedSprite* sprite );
+	void SetRenderCoords( const types::Vec3& coords );
 };
 
 }

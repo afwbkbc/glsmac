@@ -55,6 +55,8 @@ public:
 	const bool HasMovesLeft() const;
 
 	const std::string& GetMoraleString() const;
+	
+	void SetTile( map::tile::Tile* tile );
 
 	static const types::Buffer Serialize( const Unit* unit );
 	static Unit* Unserialize( types::Buffer& buf, Game* game );

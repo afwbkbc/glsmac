@@ -21,6 +21,8 @@ namespace ui {
 
 CLASS( Menu, UI )
 
+	static constexpr size_t SLIDE_DURATION_MS = 100;
+
 	Menu( Game* game, const std::string& class_name, const uint8_t item_height = 18, const uint8_t margin = 4 );
 	~Menu();
 

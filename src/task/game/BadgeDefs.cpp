@@ -98,7 +98,7 @@ BadgeDefs::BadgeDefs( InstancedSpriteManager* ism )
 
 	const auto res = s_consts.healthbars.resolution;
 
-	const float stepval = 1.0f / ( res );
+	const float stepval = 1.0f / res;
 	types::Color black( 0.0f, 0.0f, 0.0f );
 	types::Color color( 1.0f - stepval / 2, stepval / 2, 0.0f );
 
@@ -127,7 +127,7 @@ BadgeDefs::BadgeDefs( InstancedSpriteManager* ism )
 			},
 			{
 				0,
-				0,
+				(unsigned int)res / 2,
 			},
 			{
 				::game::map::s_consts.tile.scale.x * s_consts.healthbars.scale.x,

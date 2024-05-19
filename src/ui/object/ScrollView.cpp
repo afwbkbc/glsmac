@@ -182,11 +182,19 @@ void ScrollView::Create() {
 					if ( m_is_sticky ) {
 						switch ( m_type ) {
 							case ST_VERTICAL: {
-								m_scroller.Scroll( m_scroll.y, (ssize_t)round( m_scroll.y + m_scroll_speed / 2.0f ) / (ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed );
+								m_scroller.Scroll(
+									m_scroll.y,
+									(ssize_t)round( m_scroll.y + m_scroll_speed / 2.0f ) / (ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed,
+									SCROLL_DURATION_MS
+								);
 								break;
 							}
 							case ST_HORIZONTAL_INLINE: {
-								m_scroller.Scroll( m_scroll.x, (ssize_t)round( m_scroll.x + m_scroll_speed / 2.0f ) / (ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed );
+								m_scroller.Scroll(
+									m_scroll.x,
+									(ssize_t)round( m_scroll.x + m_scroll_speed / 2.0f ) / (ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed,
+									SCROLL_DURATION_MS
+								);
 								break;
 							}
 							default:
@@ -256,7 +264,8 @@ void ScrollView::Iterate() {
 						m_scroll.y,
 						(ssize_t)round( m_scroll.y + m_scroll_speed / 2.0f )
 							/
-								(ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed
+								(ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed,
+						SCROLL_DURATION_MS
 					);
 					break;
 				}
@@ -265,7 +274,8 @@ void ScrollView::Iterate() {
 						m_scroll.x,
 						(ssize_t)round( m_scroll.x + m_scroll_speed / 2.0f )
 							/
-								(ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed
+								(ssize_t)m_scroll_speed * (ssize_t)m_scroll_speed,
+						SCROLL_DURATION_MS
 					);
 					break;
 				}
@@ -557,7 +567,7 @@ void ScrollView::ScrollTo( float target ) {
 				THROW( "unknown scroll type: " + std::to_string( m_type ) );
 		}
 	}
-	m_scroller.Scroll( source, target );
+	m_scroller.Scroll( source, target, SCROLL_DURATION_MS );
 };
 
 void ScrollView::AddChildToBody( UIObject* child ) {

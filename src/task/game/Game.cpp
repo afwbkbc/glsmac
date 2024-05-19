@@ -315,18 +315,18 @@ void Game::Iterate() {
 		}
 	}
 
-	auto it = m_animations.begin();
-	while ( it != m_animations.end() ) {
-		it->second->Iterate();
-		if ( it->second->IsFinished() ) {
-			auto br = ::game::BackendRequest( ::game::BackendRequest::BR_ANIMATION_FINISHED );
-			br.data.animation_finished.animation_id = it->first;
-			SendBackendRequest( &br );
-			delete it->second;
-			it = m_animations.erase( it );
-		}
-		else {
-			it++;
+	{
+		auto it = m_animations.begin();
+		while ( it != m_animations.end() ) {
+			it->second->Iterate();
+			if ( it->second->IsFinished() ) {
+				SendAnimationFinished( it->first );
+				delete it->second;
+				it = m_animations.erase( it );
+			}
+			else {
+				it++;
+			}
 		}
 	}
 
@@ -445,6 +445,34 @@ void Game::Iterate() {
 		if ( m_selected_unit ) {
 			m_selected_unit->Iterate();
 		}
+		{
+			auto it = m_moving_units.begin();
+			while ( it != m_moving_units.end() ) {
+				const auto& unit = it->first;
+				if ( unit != m_selected_unit ) { // already iterated
+					unit->Iterate();
+				}
+				if ( !unit->IsMoving() ) {
+					const auto& tile = it->second.tile;
+					if ( unit == m_selected_unit ) {
+						m_selected_tile = tile;
+					}
+					unit->SetTile( tile );
+					if ( m_selected_tile == tile ) {
+						m_ui.bottom_bar->PreviewTile(
+							m_selected_tile, unit == m_selected_unit
+								? unit->GetId()
+								: 0
+						);
+					}
+					SendAnimationFinished( it->second.animation_id );
+					it = m_moving_units.erase( it );
+				}
+				else {
+					it++;
+				}
+			}
+		}
 	}
 }
 
@@ -535,16 +563,6 @@ void Game::SetCameraPosition( const types::Vec3 camera_position ) {
 			UpdateCameraScale();
 		}
 	}
-}
-
-const float Game::GetFixedX( float x ) const {
-	if ( x < m_camera_range.min.x ) {
-		x += m_camera_range.max.x - m_camera_range.min.x;
-	}
-	else if ( x > m_camera_range.max.x ) {
-		x -= m_camera_range.max.x - m_camera_range.min.x;
-	}
-	return x;
 }
 
 void Game::FixCameraX() {
@@ -800,6 +818,14 @@ const ::game::map_editor::brush_type_t Game::GetEditorBrush() const {
 	return m_editor_brush;
 }
 
+const types::Vec3 Game::GetCloserCoords( const types::Vec3& coords, const types::Vec3& ref_coords ) const {
+	return {
+		GetCloserX( coords.x, ref_coords.x ),
+		coords.y,
+		coords.z
+	};
+}
+
 void Game::DefineSlot(
 	const size_t slot_index,
 	const types::Color& color,
@@ -892,6 +918,7 @@ void Game::SpawnUnit(
 		{
 			unit_id,
 			new Unit(
+				this,
 				m_badge_defs,
 				unit_id,
 				unitdef,
@@ -968,7 +995,7 @@ void Game::MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_c
 
 	auto* src_tile = unit->GetTile();
 
-	unit->MoveTo( dst_tile, dst_render_coords );
+	unit->SetTile( dst_tile );
 
 	// TODO: animation
 
@@ -1161,21 +1188,30 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 			const auto& d = request->data.unit_move;
 			ASSERT( m_units.find( d.unit_id ) != m_units.end(), "unit id not found" );
 			auto* unit = m_units.at( d.unit_id );
-			auto* tile = GetTile(
+			ASSERT( m_moving_units.find( unit ) == m_moving_units.end(), "unit already moving" );
+			auto* src_tile = unit->GetTile();
+			auto* dst_tile = GetTile(
 				{
-					d.tile_coords.x,
-					d.tile_coords.y
+					d.dst_tile_coords.x,
+					d.dst_tile_coords.y
 				}
 			);
-			const auto& rc = d.render_coords;
-			unit->SetMovement( d.movement_left );
-			MoveUnit(
-				unit, tile, {
-					rc.x,
-					rc.y,
-					rc.z
+			m_moving_units.insert(
+				{
+					unit,
+					{
+						dst_tile,
+						d.running_animation_id
+					}
 				}
 			);
+
+			src_tile->RemoveUnit( unit );
+			if ( m_selected_tile == src_tile ) {
+				m_ui.bottom_bar->PreviewTile( m_selected_tile, 0 );
+				m_selected_tile = dst_tile;
+			}
+			unit->MoveToTile( dst_tile );
 			break;
 		}
 		default: {
@@ -2119,6 +2155,7 @@ void Game::Deinitialize() {
 	}
 	m_animationdefs.clear();
 
+	m_moving_units.clear();
 	for ( const auto& it : m_units ) {
 		delete it.second;
 	}
@@ -2279,19 +2316,21 @@ void Game::DeselectTileOrUnit() {
 	HideTileSelector();
 	if ( m_selected_unit ) {
 
-		ASSERT( !m_selected_tile->GetUnits().empty(), "unit was selected but tile data has no units" );
+		if ( !m_selected_unit->IsMoving() ) {
+			ASSERT( !m_selected_tile->GetUnits().empty(), "unit was selected but tile data has no units" );
 
-		// reset to most important unit if needed
-		auto* most_important_unit = m_selected_tile->GetMostImportantUnit();
-		if ( m_selected_unit ) {
-			if ( m_selected_unit == most_important_unit ) {
-				m_selected_unit->StopBadgeBlink( true );
+			// reset to most important unit if needed
+			auto* most_important_unit = m_selected_tile->GetMostImportantUnit();
+			if ( m_selected_unit ) {
+				if ( m_selected_unit == most_important_unit ) {
+					m_selected_unit->StopBadgeBlink( true );
+				}
+				else {
+					m_selected_unit->Hide();
+					most_important_unit->Show();
+				}
+				m_selected_unit = nullptr;
 			}
-			else {
-				m_selected_unit->Hide();
-				most_important_unit->Show();
-			}
-			m_selected_unit = nullptr;
 		}
 	}
 
@@ -2324,10 +2363,11 @@ void Game::RemoveActor( actor::Actor* actor ) {
 	m_actors_map.erase( it );
 }
 
-const types::Vec2< float > Game::GetTileWindowCoordinates( const types::Vec3& tile_coords ) {
+const types::Vec2< float > Game::GetTileWindowCoordinates( const Tile* tile ) const {
+	const auto& c = tile->GetRenderData().coords;
 	return {
-		tile_coords.x * m_viewport.window_aspect_ratio * m_camera_position.z,
-		( tile_coords.y - std::max( 0.0f, tile_coords.z ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f
+		c.x * m_viewport.window_aspect_ratio * m_camera_position.z,
+		( c.y - ( c.z - 2.0f ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f
 	};
 }
 
@@ -2339,20 +2379,38 @@ void Game::ScrollTo( const types::Vec3& target ) {
 			UpdateCameraPosition();
 		}
 	}
-	m_scroller.Scroll( m_camera_position, target );
+	m_scroller.Scroll( m_camera_position, target, SCROLL_DURATION_MS );
 }
 
 void Game::ScrollToTile( const Tile* tile, bool center_on_tile ) {
 
-	const auto& c = tile->GetRenderData().coords;
+	auto tc = GetTileWindowCoordinates( tile );
 
-	if ( !center_on_tile ) {
+	if ( center_on_tile ) {
+		const float tile_x_shifted = m_camera_position.x > 0
+			? tc.x - ( m_camera_range.max.x - m_camera_range.min.x )
+			: tc.x + ( m_camera_range.max.x - m_camera_range.min.x );
+		if (
+			fabs( tile_x_shifted - -m_camera_position.x )
+				<
+					fabs( tc.x - -m_camera_position.x )
+			) {
+			// smaller distance if going other side
+			tc.x = tile_x_shifted;
+		}
 
-		const auto tc = GetTileWindowCoordinates( c );
-
+		ScrollTo(
+			{
+				-tc.x,
+				-tc.y,
+				m_camera_position.z
+			}
+		);
+	}
+	else {
 		types::Vec2< float > uc = {
 			GetFixedX( tc.x + m_camera_position.x ),
-			tc.y + m_camera_position.y + 0.5f
+			tc.y + m_camera_position.y
 		};
 
 		types::Vec2< float > scroll_by = {
@@ -2397,34 +2455,6 @@ void Game::ScrollToTile( const Tile* tile, bool center_on_tile ) {
 				}
 			);
 		}
-
-	}
-	else {
-
-		types::Vec2< float > tc = {
-			c.x * m_viewport.window_aspect_ratio * m_camera_position.z,
-			( c.y - ( c.z - 2.0f ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f
-		};
-
-		const float tile_x_shifted = m_camera_position.x > 0
-			? tc.x - ( m_camera_range.max.x - m_camera_range.min.x )
-			: tc.x + ( m_camera_range.max.x - m_camera_range.min.x );
-		if (
-			fabs( tile_x_shifted - -m_camera_position.x )
-				<
-					fabs( tc.x - -m_camera_position.x )
-			) {
-			// smaller distance if going other side
-			tc.x = tile_x_shifted;
-		}
-
-		ScrollTo(
-			{
-				-tc.x,
-				-tc.y,
-				m_camera_position.z
-			}
-		);
 	}
 }
 
@@ -2766,6 +2796,36 @@ void Game::ReturnToMainMenu( const std::string reason ) {
 	g_engine->GetScheduler()->AddTask( task );
 }
 
+const float Game::GetFixedX( const float x ) const {
+	if ( x < m_camera_range.min.x ) {
+		return x + m_camera_range.max.x - m_camera_range.min.x;
+	}
+	else if ( x > m_camera_range.max.x ) {
+		return x - m_camera_range.max.x + m_camera_range.min.x;
+	}
+	else {
+		return x;
+	}
+}
+
+const float Game::GetCloserX( const float x, const float ref_x ) const {
+	const auto x_range = (float)m_map_data.width * ::game::map::s_consts.tile.scale.x / 2.0f;
+	const float x_shifted = ref_x > 0
+		? x + x_range
+		: x - x_range;
+	if (
+		fabs( x_shifted - ref_x )
+			<
+				fabs( x - ref_x )
+		) {
+		// smaller distance if going other side
+		return x_shifted;
+	}
+	else {
+		return x;
+	}
+}
+
 Tile* Game::GetTile( const size_t x, const size_t y ) {
 	ASSERT( !m_tiles.empty(), "tile states not set" );
 	ASSERT( x < m_map_data.width, "tile x overflow" );
@@ -2799,6 +2859,12 @@ void Game::RenderTile( Tile* tile ) {
 	if ( m_selected_unit && m_selected_unit->IsActive() ) {
 		m_selected_unit->StartBadgeBlink();
 	}
+}
+
+void Game::SendAnimationFinished( const size_t animation_id ) {
+	auto br = ::game::BackendRequest( ::game::BackendRequest::BR_ANIMATION_FINISHED );
+	br.data.animation_finished.animation_id = animation_id;
+	SendBackendRequest( &br );
 }
 
 }

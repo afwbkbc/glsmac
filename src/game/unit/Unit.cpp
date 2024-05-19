@@ -1,5 +1,6 @@
 #include "Unit.h"
 
+#include "gse/context/Context.h"
 #include "gse/type/Object.h"
 #include "gse/type/Int.h"
 #include "gse/type/Float.h"
@@ -40,7 +41,7 @@ Unit::Unit(
 	, m_id( id )
 	, m_def( def )
 	, m_owner( owner )
-	, m_tile( tile )
+	, m_tile( nullptr )
 	, m_movement( movement )
 	, m_morale( morale )
 	, m_health( health )
@@ -48,6 +49,7 @@ Unit::Unit(
 	if ( next_id <= id ) {
 		next_id = id + 1;
 	}
+	SetTile( tile );
 }
 
 const movement_t Unit::MINIMUM_MOVEMENT_TO_KEEP = 0.1f;
@@ -59,6 +61,21 @@ const bool Unit::HasMovesLeft() const {
 
 const std::string& Unit::GetMoraleString() const {
 	return m_def->m_moraleset->m_morale_values.at( m_morale ).m_name;
+}
+
+void Unit::SetTile( map::tile::Tile* tile ) {
+	if ( m_tile ) {
+		m_tile->units.erase( m_id );
+	}
+	ASSERT_NOLOG( tile->units.find( m_id ) == tile->units.end(), "duplicate unit id in tile" );
+	tile->units.insert(
+		{
+			m_id,
+			this
+		}
+	);
+	m_tile = tile;
+	m_game->RefreshUnit( this );
 }
 
 const types::Buffer Unit::Serialize( const Unit* unit ) {
@@ -109,15 +126,24 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit, CLASS_UNIT )
 			N_EXPECT_ARGS( 1 );
 			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
 			if ( tile != m_tile ) {
-				m_tile->units.erase( m_id );
-				tile->units.insert(
-					{
-						m_id,
-						this
-					}
-				);
-				m_tile = tile;
-				m_game->RefreshUnit( this );
+				SetTile( tile );
+			}
+			return VALUE( gse::type::Undefined );
+		} )
+	},
+	{
+		"move_to_tile",
+		NATIVE_CALL(this) {
+			N_EXPECT_ARGS( 2 );
+			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
+			N_PERSIST_CALLABLE( on_complete, 1 );
+			const auto* errmsg = m_game->MoveUnitToTile( this, tile, [ on_complete, ctx, call_si ]() {
+				on_complete->Run( ctx, call_si, {} );
+				N_UNPERSIST_CALLABLE( on_complete );
+			});
+			if ( errmsg ) {
+				throw gse::Exception( gse::EC.GAME_ERROR, *errmsg, ctx, call_si );
+				delete errmsg;
 			}
 			return VALUE( gse::type::Undefined );
 		} )

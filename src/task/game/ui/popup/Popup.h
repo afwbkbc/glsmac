@@ -19,6 +19,8 @@ namespace popup {
 
 CLASS( Popup, ::ui::object::Popup )
 
+	static constexpr size_t SLIDE_DURATION_MS = 100;
+
 	Popup( Game* game );
 
 	void Create() override;

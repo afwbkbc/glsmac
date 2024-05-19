@@ -35,7 +35,9 @@ const types::Vec2< size_t >& Tile::GetCoords() const {
 }
 
 void Tile::AddUnit( Unit* unit ) {
-	ASSERT_NOLOG( m_units.find( unit->GetId() ) == m_units.end(), "unit already added" );
+	if ( m_units.find( unit->GetId() ) != m_units.end() ) {
+		return; // already on tile
+	}
 	m_units.insert(
 		{
 			unit->GetId(),
@@ -47,7 +49,9 @@ void Tile::AddUnit( Unit* unit ) {
 }
 
 void Tile::RemoveUnit( Unit* unit ) {
-	ASSERT_NOLOG( m_units.find( unit->GetId() ) != m_units.end(), "unit not found" );
+	if ( m_units.find( unit->GetId() ) == m_units.end() ) {
+		return; // not on tile
+	}
 	if ( m_render.currently_rendered_unit == unit ) {
 		SetActiveUnit( nullptr );
 	}
