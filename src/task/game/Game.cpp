@@ -944,7 +944,7 @@ void Game::SpawnUnit(
 	RenderTile( tile );
 
 	if ( unit->IsActive() ) {
-		const bool was_selectables_empty = m_selectables.units.empty();
+		const bool was_selectables_empty = m_selectable_units.empty();
 		AddSelectable( unit );
 		if ( was_selectables_empty ) {
 			SelectNextUnitMaybe();
@@ -2259,7 +2259,6 @@ void Game::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 		}
 
 		m_selected_unit->StartBadgeBlink();
-		SetCurrentSelectable( m_selected_unit );
 		Log( "Selected unit " + std::to_string( m_selected_unit->GetId() ) );
 	}
 }
@@ -2650,23 +2649,16 @@ void Game::ExitGame( const f_exit_game on_game_exit ) {
 }
 
 void Game::AddSelectable( Unit* unit ) {
-	const auto& it = std::find( m_selectables.units.begin(), m_selectables.units.end(), unit );
-	if ( it == m_selectables.units.end() ) {
-		if ( m_selectables.units.empty() ) {
-			m_selectables.selected_id_index = 0;
-		}
-		m_selectables.units.push_back( unit );
+	const auto& it = std::find( m_selectable_units.begin(), m_selectable_units.end(), unit );
+	if ( it == m_selectable_units.end() ) {
+		m_selectable_units.push_back( unit );
 	}
 }
 
 void Game::RemoveSelectable( Unit* unit ) {
-	const auto& it = std::find( m_selectables.units.begin(), m_selectables.units.end(), unit );
-	if ( it != m_selectables.units.end() ) {
-		const size_t removed_index = it - m_selectables.units.begin();
-		m_selectables.units.erase( it );
-		if ( m_selectables.selected_id_index > 0 && m_selectables.selected_id_index >= removed_index ) {
-			m_selectables.selected_id_index--;
-		}
+	const auto& it = std::find( m_selectable_units.begin(), m_selectable_units.end(), unit );
+	if ( it != m_selectable_units.end() ) {
+		m_selectable_units.erase( it );
 		if ( m_selected_unit == unit ) {
 			m_selected_unit = nullptr;
 			SelectNextUnitOrSwitchToTileSelection();
@@ -2685,26 +2677,30 @@ void Game::UpdateSelectable( Unit* unit ) {
 	}
 }
 
-void Game::SetCurrentSelectable( Unit* unit ) {
-	const auto& it = std::find( m_selectables.units.begin(), m_selectables.units.end(), unit );
-	ASSERT( it != m_selectables.units.end(), "selectable not found" );
-	m_selectables.selected_id_index = it - m_selectables.units.begin();
-}
-
-Unit* Game::GetCurrentSelectable() {
-	if ( !m_selectables.units.empty() ) {
-		return m_selectables.units.at( m_selectables.selected_id_index );
-	}
-	return nullptr;
-}
-
 Unit* Game::GetNextSelectable() {
-	if ( !m_selectables.units.empty() ) {
-		m_selectables.selected_id_index++;
-		if ( m_selectables.selected_id_index >= m_selectables.units.size() ) {
-			m_selectables.selected_id_index = 0;
+	if ( !m_selectable_units.empty() ) {
+		if ( !m_selected_unit ) {
+			return m_selectable_units.front();
 		}
-		return GetCurrentSelectable();
+		Unit* selected_unit = nullptr;
+		float selected_distance = 0;
+		// can be optimized, but probably no need
+		for ( const auto& unit : m_selectable_units ) {
+			if ( unit == m_selected_unit ) {
+				continue;
+			}
+			const auto& a = unit->GetTile()->GetCoords();
+			const auto& b = m_selected_unit->GetTile()->GetCoords();
+			float distance = sqrtf( pow( (float)a.x - b.x, 2 ) + pow( (float)a.y - b.y, 2 ) );
+			if ( !selected_unit || distance < selected_distance ) {
+				selected_unit = unit;
+				selected_distance = distance;
+			}
+		}
+		if ( !selected_unit ) {
+			selected_unit = m_selected_unit; // the only unit left
+		}
+		return selected_unit;
 	}
 	return nullptr;
 }
@@ -2713,10 +2709,8 @@ const bool Game::SelectNextUnitMaybe() {
 	if ( !m_is_turn_active ) {
 		return false;
 	}
-	auto* selected_unit = m_selected_unit
-		? GetNextSelectable()
-		: GetCurrentSelectable();
-	if ( selected_unit ) {
+	auto* selected_unit = GetNextSelectable();
+	if ( selected_unit && selected_unit != m_selected_unit ) {
 		Log( "Selecting unit " + std::to_string( selected_unit->GetId() ) );
 		SelectUnit( selected_unit, true );
 		ScrollToTile( m_selected_unit->GetTile(), true );
