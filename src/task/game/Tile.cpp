@@ -109,6 +109,10 @@ void Tile::Render( size_t selected_unit_id ) {
 		}
 		if ( m_render.currently_rendered_unit ) {
 			m_render.currently_rendered_unit->Show();
+			const auto id = m_render.currently_rendered_unit->GetId();
+			if ( id == most_important_unit_id ) {
+				m_render.currently_rendered_unit->ShowBadge();
+			}
 		}
 		size_t idx;
 		const auto& fake_badges = m_render.currently_rendered_fake_badges;

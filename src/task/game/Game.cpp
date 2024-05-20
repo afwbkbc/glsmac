@@ -1064,7 +1064,11 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 			if ( m_is_turn_active != is_turn_active ) {
 				m_is_turn_active = is_turn_active;
 				if ( m_is_turn_active ) {
+					const auto* previously_selected_unit = m_selected_unit;
 					m_selected_unit = nullptr;
+					if ( previously_selected_unit ) {
+						RenderTile( previously_selected_unit->GetTile() );
+					}
 					SelectNextUnitMaybe();
 				}
 				else {
@@ -1172,15 +1176,6 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 			else {
 				RefreshUnit( unit );
 				RenderTile( unit->GetTile() );
-			}
-			if ( unit->IsActive() ) {
-				AddSelectable( unit );
-			}
-			else {
-				RemoveSelectable( unit );
-				if ( m_selected_unit == unit ) {
-					SelectNextUnitOrSwitchToTileSelection();
-				}
 			}
 			break;
 		}
@@ -2237,6 +2232,7 @@ void Game::SelectTileAtPoint( const ::game::tile_query_purpose_t tile_query_purp
 }
 
 void Game::SelectUnit( Unit* unit, const bool actually_select_unit ) {
+	Log( "Selecting unit " + std::to_string( unit->GetId() ) );
 	m_tile_at_query_purpose = ::game::TQP_UNIT_SELECT;
 	DeselectTileOrUnit();
 	if ( m_selected_unit != unit ) {
@@ -2660,7 +2656,6 @@ void Game::RemoveSelectable( Unit* unit ) {
 	if ( it != m_selectable_units.end() ) {
 		m_selectable_units.erase( it );
 		if ( m_selected_unit == unit ) {
-			m_selected_unit = nullptr;
 			SelectNextUnitOrSwitchToTileSelection();
 		}
 	}
@@ -2673,6 +2668,9 @@ void Game::UpdateSelectable( Unit* unit ) {
 		}
 		else {
 			RemoveSelectable( unit );
+			if ( m_selected_unit == unit ) {
+				SelectNextUnitOrSwitchToTileSelection();
+			}
 		}
 	}
 }
@@ -2700,6 +2698,37 @@ Unit* Game::GetNextSelectable() {
 		if ( !selected_unit ) {
 			selected_unit = m_selected_unit; // the only unit left
 		}
+		else {
+			auto* tile = selected_unit->GetTile();
+			if ( tile == m_selected_unit->GetTile() ) {
+				const auto tile_units = tile->GetOrderedUnits();
+				ASSERT( !tile_units.empty(), "tile units empty" );
+				bool searching = false;
+				bool found = false;
+				Unit* first_good_candidate = nullptr;
+				for ( size_t i = 0 ; i < tile_units.size() ; i++ ) {
+					if ( tile_units.at( i ) == m_selected_unit ) {
+						searching = true;
+					}
+					else {
+						auto* tile_unit = tile_units.at( i );
+						if ( searching ) {
+							if ( tile_unit->IsActive() ) {
+								selected_unit = tile_unit;
+								found = true;
+								break;
+							}
+						}
+						else if ( !first_good_candidate && tile_unit->IsActive() ) {
+							first_good_candidate = tile_unit;
+						}
+					}
+				}
+				if ( searching && !found ) {
+					selected_unit = first_good_candidate;
+				}
+			}
+		}
 		return selected_unit;
 	}
 	return nullptr;
@@ -2710,10 +2739,14 @@ const bool Game::SelectNextUnitMaybe() {
 		return false;
 	}
 	auto* selected_unit = GetNextSelectable();
-	if ( selected_unit && selected_unit != m_selected_unit ) {
-		Log( "Selecting unit " + std::to_string( selected_unit->GetId() ) );
-		SelectUnit( selected_unit, true );
-		ScrollToTile( m_selected_unit->GetTile(), true );
+	if ( selected_unit != m_selected_unit ) {
+		if ( selected_unit ) {
+			SelectUnit( selected_unit, true );
+			ScrollToTile( m_selected_unit->GetTile(), true );
+		}
+		else {
+			m_selected_unit = nullptr;
+		}
 		return true;
 	}
 	return false;
