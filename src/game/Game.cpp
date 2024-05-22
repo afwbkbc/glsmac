@@ -528,6 +528,22 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 				typedef std::unordered_map< size_t, std::pair< std::string, types::Vec3 > > t3; // can't use comma in macro below
 				NEW( response.data.edit_map.sprites.instances_to_add, t3 );
 				*response.data.edit_map.sprites.instances_to_add = m_map->m_sprite_instances_to_add;
+
+				// TODO: remove invalid units and terraforming
+
+				auto fr = FrontendRequest( FrontendRequest::FR_UPDATE_TILES );
+				NEWV( tile_updates, FrontendRequest::tile_updates_t );
+				tile_updates->reserve( tiles_to_reload.size() );
+				for ( const auto& tile : tiles_to_reload ) {
+					tile_updates->push_back(
+						{
+							tile,
+							m_map->GetTileState( tile )
+						}
+					);
+				}
+				fr.data.update_tiles.tile_updates = tile_updates;
+				AddFrontendRequest( fr );
 			}
 
 			response.result = R_SUCCESS;

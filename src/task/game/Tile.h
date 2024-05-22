@@ -62,11 +62,7 @@ public:
 
 	const render_data_t& GetRenderData() const;
 
-	void SetCoords( const types::Vec3& coords );
-	void SetSelectionCoords( const ::game::map::tile::tile_vertices_t& selection_coords );
-	void SetPreviewMeshes( const std::vector< types::mesh::Render* >& preview_meshes );
-	void SetPreviewLines( const std::vector< std::string >& preview_lines );
-	void SetSprites( const std::vector< std::string >& sprites );
+	void Update( const ::game::map::tile::Tile& tile, const ::game::map::tile::TileState& ts );
 
 private:
 	const types::Vec2< size_t > m_coords;
@@ -78,6 +74,7 @@ private:
 	std::vector< Unit* > m_ordered_units = {};
 	bool m_is_units_reorder_needed = true;
 	render_data_t m_render_data = {};
+
 };
 
 }
