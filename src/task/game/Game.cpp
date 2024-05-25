@@ -330,49 +330,49 @@ void Game::Iterate() {
 		}
 	}
 
-	// check if previous backend requests were sent successfully
-	if ( m_mt_ids.send_backend_requests ) {
-		auto response = game->MT_GetResponse( m_mt_ids.send_backend_requests );
-		if ( response.result != ::game::R_NONE ) {
-			ASSERT( response.result == ::game::R_SUCCESS, "backend requests result not successful" );
-			m_mt_ids.send_backend_requests = 0;
+	if ( m_is_initialized ) {
+
+		// check if previous backend requests were sent successfully
+		if ( m_mt_ids.send_backend_requests ) {
+			auto response = game->MT_GetResponse( m_mt_ids.send_backend_requests );
+			if ( response.result != ::game::R_NONE ) {
+				ASSERT( response.result == ::game::R_SUCCESS, "backend requests result not successful" );
+				m_mt_ids.send_backend_requests = 0;
+			}
 		}
-	}
 
-	// send pending backend requests if present and not sending already
-	if ( !m_mt_ids.send_backend_requests && !m_pending_backend_requests.empty() ) {
-		m_mt_ids.send_backend_requests = game->MT_SendBackendRequests( m_pending_backend_requests );
-		m_pending_backend_requests.clear();
-	}
+		// send pending backend requests if present and not sending already
+		if ( !m_mt_ids.send_backend_requests && !m_pending_backend_requests.empty() ) {
+			m_mt_ids.send_backend_requests = game->MT_SendBackendRequests( m_pending_backend_requests );
+			m_pending_backend_requests.clear();
+		}
 
-	// poll backend for frontend requests
-	if ( m_mt_ids.get_frontend_requests ) {
-		auto response = game->MT_GetResponse( m_mt_ids.get_frontend_requests );
-		if ( response.result != ::game::R_NONE ) {
-			ASSERT( response.result == ::game::R_SUCCESS, "unexpected frontend requests response" );
-			m_mt_ids.get_frontend_requests = 0;
-			const auto* requests = response.data.get_frontend_requests.requests;
-			if ( requests ) {
-				Log( "got " + std::to_string( requests->size() ) + " frontend requests" );
+		// poll backend for frontend requests
+		if ( m_mt_ids.get_frontend_requests ) {
+			auto response = game->MT_GetResponse( m_mt_ids.get_frontend_requests );
+			if ( response.result != ::game::R_NONE ) {
+				ASSERT( response.result == ::game::R_SUCCESS, "unexpected frontend requests response" );
+				m_mt_ids.get_frontend_requests = 0;
+				const auto* requests = response.data.get_frontend_requests.requests;
+				if ( requests ) {
+					Log( "got " + std::to_string( requests->size() ) + " frontend requests" );
 
-				for ( const auto& request : *requests ) {
-					ProcessRequest( &request );
-					if ( m_on_game_exit ) {
-						break; // exiting game
+					for ( const auto& request : *requests ) {
+						ProcessRequest( &request );
+						if ( m_on_game_exit ) {
+							break; // exiting game
+						}
 					}
 				}
-			}
-			game->MT_DestroyResponse( response );
-			if ( !m_on_game_exit ) {
-				m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests();
+				game->MT_DestroyResponse( response );
+				if ( !m_on_game_exit ) {
+					m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests();
+				}
 			}
 		}
-	}
-	else {
-		m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests();
-	}
-
-	if ( m_is_initialized ) {
+		else {
+			m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests();
+		}
 
 		if ( m_is_map_editing_allowed && m_editing_draw_timer.HasTicked() ) {
 			if ( m_is_editing_mode && !IsTileAtRequestPending() ) {

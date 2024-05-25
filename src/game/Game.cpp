@@ -761,10 +761,15 @@ void Game::RefreshUnit( const unit::Unit* unit ) {
 void Game::DefineAnimation( animation::Def* def ) {
 	Log( "Defining animation ('" + def->m_id + "')" );
 
-	ASSERT( m_defined_animations.find( def->m_id ) == m_defined_animations.end(), "Animation definition '" + def->m_id + "' already exists" );
+	ASSERT( m_animation_defs.find( def->m_id ) == m_animation_defs.end(), "Animation definition '" + def->m_id + "' already exists" );
 
 	// backend doesn't need any animation details, just keep track of it's existence for validations
-	m_defined_animations.insert( def->m_id );
+	m_animation_defs.insert(
+		{
+			def->m_id,
+			def
+		}
+	);
 
 	auto fr = FrontendRequest( FrontendRequest::FR_ANIMATION_DEFINE );
 	NEW( fr.data.animation_define.serialized_animation, std::string, animation::Def::Serialize( def ).ToString() );
@@ -772,7 +777,7 @@ void Game::DefineAnimation( animation::Def* def ) {
 }
 
 const std::string* Game::ShowAnimationOnTile( const std::string& animation_id, map::tile::Tile* tile, const cb_oncomplete& on_complete ) {
-	if ( m_defined_animations.find( animation_id ) == m_defined_animations.end() ) {
+	if ( m_animation_defs.find( animation_id ) == m_animation_defs.end() ) {
 		return new std::string( "Animation '" + animation_id + "' is not defined" );
 	}
 	if ( !tile->IsLocked() ) {
@@ -1430,6 +1435,25 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 	Log( "Restored next unit id: " + std::to_string( unit::Unit::GetNextId() ) );
 }
 
+void Game::SerializeAnimations( types::Buffer& buf ) const {
+	Log( "Serializing " + std::to_string( m_animation_defs.size() ) + " animation defs" );
+	buf.WriteInt( m_animation_defs.size() );
+	for ( const auto& it : m_animation_defs ) {
+		buf.WriteString( it.first );
+		buf.WriteString( animation::Def::Serialize( it.second ).ToString() );
+	}
+}
+
+void Game::UnserializeAnimations( types::Buffer& buf ) {
+	size_t sz = buf.ReadInt();
+	Log( "Unserializing " + std::to_string( sz ) + " animation defs" );
+	for ( size_t i = 0 ; i < sz ; i++ ) {
+		const auto name = buf.ReadString();
+		auto b = types::Buffer( buf.ReadString() );
+		DefineAnimation( animation::Def::Unserialize( b ) );
+	}
+}
+
 void Game::AddFrontendRequest( const FrontendRequest& request ) {
 	//Log( "Sending frontend request (type=" + std::to_string( request.type ) + ")" ); // spammy
 	m_pending_frontend_requests->push_back( request );
@@ -1527,6 +1551,13 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					{
 						types::Buffer b;
 						SerializeUnits( b );
+						buf.WriteString( b.ToString() );
+					}
+
+					// animations
+					{
+						types::Buffer b;
+						SerializeAnimations( b );
 						buf.WriteString( b.ToString() );
 					}
 
@@ -1700,8 +1731,16 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 						if ( ec == map::Map::EC_NONE ) {
 
 							// units
-							auto ub = types::Buffer( buf.ReadString() );
-							UnserializeUnits( ub );
+							{
+								auto ub = types::Buffer( buf.ReadString() );
+								UnserializeUnits( ub );
+							}
+
+							// animations
+							{
+								auto ub = types::Buffer( buf.ReadString() );
+								UnserializeAnimations( ub );
+							}
 
 							// get turn info
 							const auto turn_id = buf.ReadInt();
@@ -1769,8 +1808,6 @@ void Game::ResetGame() {
 	}
 	m_unit_moralesets.clear();
 
-	m_defined_animations.clear();
-
 	for ( auto& it : m_units ) {
 		delete it.second;
 	}
@@ -1780,6 +1817,11 @@ void Game::ResetGame() {
 		delete it.second;
 	}
 	m_unit_defs.clear();
+
+	for ( auto& it : m_animation_defs ) {
+		delete it.second;
+	}
+	m_animation_defs.clear();
 
 	if ( m_map ) {
 		Log( "Resetting map" );
@@ -1865,7 +1907,7 @@ void Game::QueueUnitUpdate( const unit::Unit* unit, const unit_update_op_t op ) 
 }
 
 void Game::PushUnitUpdates() {
-	if ( !m_unit_updates.empty() ) {
+	if ( m_game_state == GS_RUNNING && !m_unit_updates.empty() ) {
 		for ( const auto& it : m_unit_updates ) {
 			const auto unit_id = it.first;
 			const auto& uu = it.second;
@@ -1932,7 +1974,7 @@ void Game::AddTileLockRequest( const bool is_lock, const size_t initiator_slot, 
 }
 
 void Game::ProcessTileLockRequests() {
-	if ( m_state && m_state->IsMaster() && !m_tile_lock_requests.empty() ) {
+	if ( m_state && m_game_state == GS_RUNNING && m_state->IsMaster() && !m_tile_lock_requests.empty() ) {
 		const auto tile_lock_requests = m_tile_lock_requests;
 		m_tile_lock_requests.clear();
 		for ( const auto& req : tile_lock_requests ) {

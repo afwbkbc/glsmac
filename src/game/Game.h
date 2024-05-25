@@ -362,13 +362,15 @@ private:
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
 	const types::Vec3 GetUnitRenderCoords( const unit::Unit* unit );
 
-	std::unordered_set< std::string > m_defined_animations = {};
-
 	std::unordered_map< std::string, unit::MoraleSet* > m_unit_moralesets = {};
 	std::unordered_map< std::string, unit::Def* > m_unit_defs = {};
 	std::map< size_t, unit::Unit* > m_units = {};
 	void SerializeUnits( types::Buffer& buf ) const;
 	void UnserializeUnits( types::Buffer& buf );
+
+	std::unordered_map< std::string, animation::Def* > m_animation_defs = {};
+	void SerializeAnimations( types::Buffer& buf ) const;
+	void UnserializeAnimations( types::Buffer& buf );
 
 	enum game_state_t {
 		GS_NONE,
