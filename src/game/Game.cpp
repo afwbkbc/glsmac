@@ -1893,16 +1893,16 @@ void Game::PushUnitUpdates() {
 				AddFrontendRequest( fr );
 			}
 			if ( uu.ops & UUO_REFRESH ) {
-				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_REFRESH );
-				fr.data.unit_refresh.unit_id = unit->m_id;
-				fr.data.unit_refresh.movement = unit->m_movement;
-				fr.data.unit_refresh.health = unit->m_health;
-				fr.data.unit_refresh.tile_coords = {
+				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_UPDATE );
+				fr.data.unit_update.unit_id = unit->m_id;
+				fr.data.unit_update.movement = unit->m_movement;
+				fr.data.unit_update.health = unit->m_health;
+				fr.data.unit_update.tile_coords = {
 					unit->m_tile->coord.x,
 					unit->m_tile->coord.y
 				};
 				const auto c = GetUnitRenderCoords( unit );
-				fr.data.unit_refresh.render_coords = {
+				fr.data.unit_update.render_coords = {
 					c.x,
 					c.y,
 					c.z

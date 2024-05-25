@@ -958,29 +958,34 @@ void Game::DespawnUnit( const size_t unit_id ) {
 
 	auto* unit = it->second;
 
-	const bool is_owned = unit->IsOwned();
-	const bool need_tile_refresh = m_selected_tile == unit->GetTile();
-
 	m_units.erase( it );
 	delete unit;
 
-	if ( m_selected_unit == unit ) {
-		m_selected_unit = nullptr;
-	}
-
-	if ( need_tile_refresh ) {
-		m_ui.bottom_bar->PreviewTile( m_selected_tile, 0 );
-	}
-
-	if ( is_owned ) {
+	if ( unit->IsOwned() ) {
 		RemoveSelectable( unit );
 	}
+
+	if ( m_selected_tile ) {
+		m_ui.bottom_bar->PreviewTile(
+			m_selected_tile, m_selected_unit
+				? m_selected_unit->GetId()
+				: 0
+		);
+	}
+
 }
 
 void Game::RefreshUnit( Unit* unit ) {
 	const auto was_active = unit->IsActive();
 	unit->Refresh();
 	UpdateSelectable( unit );
+	if ( m_selected_tile && m_selected_tile == unit->GetTile() ) {
+		m_ui.bottom_bar->PreviewTile(
+			m_selected_tile, m_selected_unit
+				? m_selected_unit->GetId()
+				: 0
+		);
+	}
 	if ( m_selected_unit == unit && was_active ) {
 		if ( !unit->IsActive() ) {
 			SelectNextUnitOrSwitchToTileSelection();
@@ -1167,8 +1172,8 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 			DespawnUnit( request->data.unit_despawn.unit_id );
 			break;
 		}
-		case ::game::FrontendRequest::FR_UNIT_REFRESH: {
-			const auto& d = request->data.unit_refresh;
+		case ::game::FrontendRequest::FR_UNIT_UPDATE: {
+			const auto& d = request->data.unit_update;
 			auto* unit = m_units.at( d.unit_id );
 			unit->SetMovement( d.movement );
 			unit->SetHealth( d.health );
@@ -2050,10 +2055,7 @@ void Game::DeselectTileOrUnit() {
 
 	HideTileSelector();
 	if ( m_selected_unit ) {
-
-		if ( !m_selected_unit->IsMoving() ) {
-			ASSERT( !m_selected_tile->GetUnits().empty(), "unit was selected but tile data has no units" );
-
+		if ( !m_selected_tile->GetUnits().empty() ) {
 			// reset to most important unit if needed
 			auto* most_important_unit = m_selected_tile->GetMostImportantUnit();
 			if ( m_selected_unit ) {
@@ -2483,11 +2485,12 @@ const bool Game::SelectNextUnitMaybe() {
 		if ( selected_unit ) {
 			SelectUnit( selected_unit, true );
 			ScrollToTile( m_selected_unit->GetTile(), true );
+			return true;
 		}
 		else {
 			m_selected_unit = nullptr;
+			return false;
 		}
-		return true;
 	}
 	return false;
 }

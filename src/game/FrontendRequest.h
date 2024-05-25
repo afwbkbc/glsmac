@@ -30,7 +30,7 @@ public:
 		FR_UNIT_DEFINE,
 		FR_UNIT_SPAWN,
 		FR_UNIT_DESPAWN,
-		FR_UNIT_REFRESH,
+		FR_UNIT_UPDATE,
 		FR_UNIT_MOVE,
 	};
 	FrontendRequest( const request_type_t type );
@@ -126,7 +126,7 @@ public:
 				float y;
 				float z;
 			} render_coords; // TODO: store render coords of tiles on frontend
-		} unit_refresh;
+		} unit_update;
 		struct {
 			size_t unit_id;
 			size_t running_animation_id;
