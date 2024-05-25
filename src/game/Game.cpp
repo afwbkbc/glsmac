@@ -528,6 +528,22 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 				typedef std::unordered_map< size_t, std::pair< std::string, types::Vec3 > > t3; // can't use comma in macro below
 				NEW( response.data.edit_map.sprites.instances_to_add, t3 );
 				*response.data.edit_map.sprites.instances_to_add = m_map->m_sprite_instances_to_add;
+
+				// TODO: remove invalid units and terraforming
+
+				auto fr = FrontendRequest( FrontendRequest::FR_UPDATE_TILES );
+				NEWV( tile_updates, FrontendRequest::tile_updates_t );
+				tile_updates->reserve( tiles_to_reload.size() );
+				for ( const auto& tile : tiles_to_reload ) {
+					tile_updates->push_back(
+						{
+							tile,
+							m_map->GetTileState( tile )
+						}
+					);
+				}
+				fr.data.update_tiles.tile_updates = tile_updates;
+				AddFrontendRequest( fr );
 			}
 
 			response.result = R_SUCCESS;
@@ -1877,16 +1893,16 @@ void Game::PushUnitUpdates() {
 				AddFrontendRequest( fr );
 			}
 			if ( uu.ops & UUO_REFRESH ) {
-				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_REFRESH );
-				fr.data.unit_refresh.unit_id = unit->m_id;
-				fr.data.unit_refresh.movement = unit->m_movement;
-				fr.data.unit_refresh.health = unit->m_health;
-				fr.data.unit_refresh.tile_coords = {
+				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_UPDATE );
+				fr.data.unit_update.unit_id = unit->m_id;
+				fr.data.unit_update.movement = unit->m_movement;
+				fr.data.unit_update.health = unit->m_health;
+				fr.data.unit_update.tile_coords = {
 					unit->m_tile->coord.x,
 					unit->m_tile->coord.y
 				};
 				const auto c = GetUnitRenderCoords( unit );
-				fr.data.unit_refresh.render_coords = {
+				fr.data.unit_update.render_coords = {
 					c.x,
 					c.y,
 					c.z

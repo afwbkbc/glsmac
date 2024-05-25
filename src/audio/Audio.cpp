@@ -1,5 +1,7 @@
 #include "Audio.h"
 
+#include <algorithm>
+
 #include "scene/actor/Sound.h"
 
 namespace audio {
@@ -17,7 +19,7 @@ void Audio::RemoveAndDeleteActor( scene::actor::Sound* actor ) {
 		DELETE( actor );
 	}
 	else {
-		ASSERT( find( m_removal_queue.begin(), m_removal_queue.end(), actor ) == m_removal_queue.end(), "actor already in removal queue" );
+		ASSERT( std::find( m_removal_queue.begin(), m_removal_queue.end(), actor ) == m_removal_queue.end(), "actor already in removal queue" );
 		m_removal_queue.push_back( actor );
 	}
 }

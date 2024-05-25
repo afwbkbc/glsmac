@@ -35,6 +35,10 @@ void Loader::Hide() {
 	}
 }
 
+const bool Loader::IsActive() const {
+	return m_is_active;
+}
+
 void Loader::Start() {
 
 	if ( m_is_active ) {

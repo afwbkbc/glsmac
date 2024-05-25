@@ -29,6 +29,8 @@ CLASS( Loader, Module )
 	void Show( const std::string& text, const loader_cancel_handler_t on_cancel = 0 );
 	void Hide();
 
+	const bool IsActive() const;
+
 	void SetText( const std::string& loading_text ); // mt supported
 	void SetIsCancelable( const bool is_cancelable );
 

@@ -338,6 +338,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 						game::event::Event::UnserializeMultiple( buf, game_events );
 						const size_t slot = m_state->GetCidSlots().at( event.cid );
 						std::vector< game::event::Event* > broadcastable_events = {};
+						std::vector< game::event::Event* > valid_events = {};
 						for ( const auto& game_event : game_events ) {
 							bool ok = true;
 							if ( game_event->m_initiator_slot != slot ) {
@@ -352,14 +353,16 @@ void Server::ProcessEvent( const network::Event& event ) {
 									Log( "Invalid event received from " + std::to_string( event.cid ) );
 									Log( e.what() );
 									ok = false;
-									break;
 								}
 							}
-							if ( ok && game::event::Event::IsBroadcastable( game_event->m_type ) ) {
-								broadcastable_events.push_back( game_event );
+							if ( ok ) {
+								valid_events.push_back( game_event );
+								if ( game::event::Event::IsBroadcastable( game_event->m_type ) ) {
+									broadcastable_events.push_back( game_event );
+								}
 							}
 						}
-						for ( const auto& game_event : game_events ) {
+						for ( const auto& game_event : valid_events ) {
 							if ( game_event->m_is_validated ) {
 								m_on_game_event_apply( game_event );
 							}

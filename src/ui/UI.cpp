@@ -1,5 +1,7 @@
 #include "UI.h"
 
+#include <algorithm>
+
 #include "engine/Engine.h"
 
 #include "event/MouseMove.h"
@@ -451,7 +453,7 @@ void UI::AddIterativeObject( void* object, const ui_handler_t handler ) {
 }
 
 void UI::RemoveIterativeObject( void* object ) {
-	ASSERT( find( m_iterative_objects_to_remove.begin(), m_iterative_objects_to_remove.end(), object ) == m_iterative_objects_to_remove.end(),
+	ASSERT( std::find( m_iterative_objects_to_remove.begin(), m_iterative_objects_to_remove.end(), object ) == m_iterative_objects_to_remove.end(),
 		"iterative object already in removal queue"
 	);
 	m_iterative_objects_to_remove.push_back( object ); // can't remove here because removal can be requested from within it's handler
@@ -470,20 +472,20 @@ void UI::HideError() const {
 }
 
 void UI::ShowLoader( const std::string& text, const loader_cancel_handler_t on_cancel ) const {
-	if ( m_loader ) {
+	if ( !m_loader->IsActive() ) {
 		m_loader->Show( text, on_cancel );
 	}
 }
 
 void UI::SetLoaderText( const std::string& text, bool is_cancelable ) const {
-	if ( m_loader ) {
+	if ( m_loader->IsActive() ) {
 		m_loader->SetText( text );
 		m_loader->SetIsCancelable( is_cancelable );
 	}
 }
 
 void UI::HideLoader() const {
-	if ( m_loader ) {
+	if ( m_loader->IsActive() ) {
 		m_loader->Hide();
 	}
 }

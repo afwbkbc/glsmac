@@ -8,6 +8,11 @@
 
 namespace game {
 
+namespace map::tile {
+class Tile;
+class TileState;
+}
+
 class FrontendRequest {
 public:
 
@@ -16,6 +21,7 @@ public:
 		FR_QUIT,
 		FR_ERROR,
 		FR_GLOBAL_MESSAGE,
+		FR_UPDATE_TILES,
 		FR_TURN_STATUS,
 		FR_TURN_ADVANCE,
 		FR_SLOT_DEFINE,
@@ -24,7 +30,7 @@ public:
 		FR_UNIT_DEFINE,
 		FR_UNIT_SPAWN,
 		FR_UNIT_DESPAWN,
-		FR_UNIT_REFRESH,
+		FR_UNIT_UPDATE,
 		FR_UNIT_MOVE,
 	};
 	FrontendRequest( const request_type_t type );
@@ -46,6 +52,8 @@ public:
 	};
 	typedef std::vector< slot_define_t > slot_defines_t;
 
+	typedef std::vector< std::pair< map::tile::Tile*, map::tile::TileState* > > tile_updates_t;
+
 	union {
 		struct {
 			const std::string* reason;
@@ -57,6 +65,9 @@ public:
 		struct {
 			const std::string* message;
 		} global_message;
+		struct {
+			const tile_updates_t* tile_updates;
+		} update_tiles;
 		struct {
 			turn::turn_status_t status;
 		} turn_status;
@@ -115,7 +126,7 @@ public:
 				float y;
 				float z;
 			} render_coords; // TODO: store render coords of tiles on frontend
-		} unit_refresh;
+		} unit_update;
 		struct {
 			size_t unit_id;
 			size_t running_animation_id;

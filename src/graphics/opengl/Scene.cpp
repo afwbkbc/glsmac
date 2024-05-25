@@ -1,5 +1,7 @@
 #include "Scene.h"
 
+#include <algorithm>
+
 #include "actor/Sprite.h"
 #include "actor/Mesh.h"
 #include "base/ObjectLink.h"
@@ -50,7 +52,7 @@ void Scene::AddActorToZIndexSet( Actor* gl_actor ) {
 		m_gl_actors_by_zindex[ zindex ] = {};
 		it = m_gl_actors_by_zindex.find( zindex );
 	}
-	ASSERT( find( it->second.begin(), it->second.end(), gl_actor ) == it->second.end(), "actor already found in zindex set" );
+	ASSERT( std::find( it->second.begin(), it->second.end(), gl_actor ) == it->second.end(), "actor already found in zindex set" );
 	//Log( "Adding actor " + gl_actor->GetName() + " to zindex set " + std::to_string( gl_actor->GetPosition().z ) );
 	it->second.push_back( gl_actor );
 }

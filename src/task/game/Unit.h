@@ -91,6 +91,9 @@ public:
 
 	void SetTile( Tile* dst_tile );
 	void MoveToTile( Tile* dst_tile );
+	void UpdateFromTile();
+
+	const bool IsValid() const;
 	const bool IsMoving() const;
 
 	struct meshtex_t {
@@ -142,6 +145,7 @@ private:
 	::game::unit::health_t m_health = 0;
 
 	bool m_need_refresh = true;
+	uint8_t m_fake_badge_offset = 0;
 
 	const bool ShouldBeActive() const;
 

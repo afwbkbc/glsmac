@@ -30,6 +30,10 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.global_message.message, std::string, *other.data.global_message.message );
 			break;
 		}
+		case FR_UPDATE_TILES: {
+			NEW( data.update_tiles.tile_updates, tile_updates_t, *other.data.update_tiles.tile_updates );
+			break;
+		}
 		case FR_SLOT_DEFINE: {
 			NEW( data.slot_define.slotdefs, slot_defines_t, *other.data.slot_define.slotdefs );
 			break;
@@ -71,6 +75,10 @@ FrontendRequest::~FrontendRequest() {
 		}
 		case FR_GLOBAL_MESSAGE: {
 			DELETE( data.global_message.message );
+			break;
+		}
+		case FR_UPDATE_TILES: {
+			DELETE( data.update_tiles.tile_updates );
 			break;
 		}
 		case FR_SLOT_DEFINE: {

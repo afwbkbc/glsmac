@@ -207,8 +207,12 @@ void Unit::HideBadge() {
 }
 
 void Unit::ShowFakeBadge( const uint8_t offset ) {
-	if ( !m_render.fake_badge.instance_id ) {
+	if ( !m_render.fake_badge.instance_id || m_fake_badge_offset != offset ) {
+		if ( m_render.fake_badge.instance_id ) {
+			m_slot->HideFakeBadge( !m_render.fake_badge.instance_id );
+		}
 		m_render.fake_badge.instance_id = m_slot->ShowFakeBadge( m_render.coords, offset );
+		m_fake_badge_offset = offset;
 	}
 }
 
@@ -216,6 +220,7 @@ void Unit::HideFakeBadge() {
 	if ( m_render.fake_badge.instance_id ) {
 		m_slot->HideFakeBadge( m_render.fake_badge.instance_id );
 		m_render.fake_badge.instance_id = 0;
+		m_fake_badge_offset = 0;
 	}
 }
 
@@ -309,7 +314,7 @@ void Unit::SetTile( task::game::Tile* dst_tile ) {
 
 	m_tile->AddUnit( this );
 
-	SetRenderCoords( m_tile->GetRenderData().coords.InvertY() );
+	UpdateFromTile();
 }
 
 void Unit::MoveToTile( Tile* dst_tile ) {
@@ -325,6 +330,11 @@ void Unit::MoveToTile( Tile* dst_tile ) {
 	auto from = m_tile->GetRenderData().coords.InvertY();
 	auto to = dst_tile->GetRenderData().coords.InvertY();
 	m_mover.Scroll( from, m_game->GetCloserCoords( to, from ), MOVE_DURATION_MS );
+}
+
+void Unit::UpdateFromTile() {
+	ASSERT_NOLOG( m_tile, "tile not set" );
+	SetRenderCoords( m_tile->GetRenderData().coords.InvertY() );
 }
 
 const bool Unit::IsMoving() const {
@@ -388,6 +398,10 @@ void Unit::SetRenderCoords( const types::Vec3& coords ) {
 		m_render.badge.healthbar.instance_id,
 		BadgeDefs::GetBadgeHealthbarCoords( m_render.coords )
 	);
+	if ( m_render.fake_badge.instance_id ) {
+		m_slot->HideFakeBadge( m_render.fake_badge.instance_id );
+		m_render.fake_badge.instance_id = m_slot->ShowFakeBadge( m_render.coords, m_fake_badge_offset );
+	}
 	m_need_refresh = true;
 }
 

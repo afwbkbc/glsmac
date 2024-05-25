@@ -443,15 +443,10 @@ private:
 	std::unordered_map< size_t, Animation* > m_animations;
 	std::unordered_map< std::string, UnitDef* > m_unitdefs = {};
 	std::unordered_map< size_t, Unit* > m_units = {};
-	struct {
-		std::vector< Unit* > units = {};
-		size_t selected_id_index = 0;
-	} m_selectables = {};
+	std::vector< Unit* > m_selectable_units = {};
 	void UpdateSelectable( Unit* unit );
 	void AddSelectable( Unit* unit );
 	void RemoveSelectable( Unit* unit );
-	void SetCurrentSelectable( Unit* unit );
-	Unit* GetCurrentSelectable();
 	Unit* GetNextSelectable();
 	const bool SelectNextUnitMaybe();
 	void SelectNextUnitOrSwitchToTileSelection();
