@@ -1,6 +1,6 @@
 #include "Tile.h"
 
-#include "Unit.h"
+#include "task/game/unit/Unit.h"
 #include "game/map/tile/Tile.h"
 #include "game/map/tile/TileState.h"
 #include "types/mesh/Render.h"
@@ -8,7 +8,7 @@
 namespace task {
 namespace game {
 
-std::vector< size_t > Tile::GetUnitsOrder( const std::unordered_map< size_t, Unit* >& units ) {
+std::vector< size_t > Tile::GetUnitsOrder( const std::unordered_map< size_t, unit::Unit* >& units ) {
 	std::map< size_t, std::vector< size_t > > weights; // { weight, units }
 
 	for ( auto& it : units ) {
@@ -37,7 +37,7 @@ const types::Vec2< size_t >& Tile::GetCoords() const {
 	return m_coords;
 }
 
-void Tile::AddUnit( Unit* unit ) {
+void Tile::AddUnit( unit::Unit* unit ) {
 	if ( m_units.find( unit->GetId() ) != m_units.end() ) {
 		return; // already on tile
 	}
@@ -51,7 +51,7 @@ void Tile::AddUnit( Unit* unit ) {
 	Render();
 }
 
-void Tile::RemoveUnit( Unit* unit ) {
+void Tile::RemoveUnit( unit::Unit* unit ) {
 	if ( m_units.find( unit->GetId() ) == m_units.end() ) {
 		return; // not on tile
 	}
@@ -63,7 +63,7 @@ void Tile::RemoveUnit( Unit* unit ) {
 	Render();
 }
 
-void Tile::SetActiveUnit( Unit* unit ) {
+void Tile::SetActiveUnit( unit::Unit* unit ) {
 	if ( m_render.currently_rendered_unit && m_render.currently_rendered_unit != unit ) {
 		m_render.currently_rendered_unit->Hide();
 		m_render.currently_rendered_unit = unit;
@@ -127,11 +127,11 @@ void Tile::Render( size_t selected_unit_id ) {
 
 }
 
-const std::unordered_map< size_t, Unit* >& Tile::GetUnits() const {
+const std::unordered_map< size_t, unit::Unit* >& Tile::GetUnits() const {
 	return m_units;
 }
 
-const std::vector< Unit* >& Tile::GetOrderedUnits() {
+const std::vector< unit::Unit* >& Tile::GetOrderedUnits() {
 	if ( m_is_units_reorder_needed ) {
 		m_ordered_units.clear();
 		m_ordered_units.reserve( m_units.size() );
@@ -144,7 +144,7 @@ const std::vector< Unit* >& Tile::GetOrderedUnits() {
 	return m_ordered_units;
 }
 
-Unit* Tile::GetMostImportantUnit() {
+unit::Unit* Tile::GetMostImportantUnit() {
 	if ( m_units.empty() ) {
 		return nullptr;
 	}

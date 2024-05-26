@@ -15,7 +15,9 @@ class Panel;
 namespace task {
 namespace game {
 
+namespace unit {
 class Unit;
+}
 
 namespace ui {
 
@@ -24,7 +26,7 @@ class UnitPreview;
 
 CLASS( UnitsListItem, Section )
 
-	UnitsListItem( Game* game, UnitsList* units_list, Unit* unit );
+	UnitsListItem( Game* game, UnitsList* units_list, unit::Unit* unit );
 
 	void Create() override;
 	void Destroy() override;
@@ -33,11 +35,11 @@ private:
 	friend class UnitsList;
 	void SelectUnit();
 	void DeselectUnit();
-	const Unit* GetUnit() const;
+	const unit::Unit* GetUnit() const;
 
 private:
 	UnitsList* m_units_list;
-	Unit* m_unit;
+	unit::Unit* m_unit;
 
 	struct sprite_t {
 		types::mesh::Mesh* mesh = nullptr; // save mesh to be able to preview units

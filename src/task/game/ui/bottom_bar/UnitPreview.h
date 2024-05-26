@@ -13,7 +13,9 @@ class Mesh;
 namespace task {
 namespace game {
 
+namespace unit {
 class Unit;
+}
 
 namespace ui {
 
@@ -24,11 +26,11 @@ CLASS( UnitPreview, BBSection )
 	void Create() override;
 	void Destroy() override;
 
-	void PreviewUnit( const Unit* unit );
+	void PreviewUnit( const unit::Unit* unit );
 	void HideUnitPreview();
 
 private:
-	const Unit* m_unit = nullptr;
+	const unit::Unit* m_unit = nullptr;
 
 	struct {
 		::ui::object::Mesh* unit = nullptr;

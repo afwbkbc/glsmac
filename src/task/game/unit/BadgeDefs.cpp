@@ -3,12 +3,13 @@
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
 #include "types/texture/Texture.h"
-#include "InstancedSpriteManager.h"
+#include "task/game/InstancedSpriteManager.h"
 #include "game/map/Consts.h"
-#include "InstancedSprite.h"
+#include "task/game/InstancedSprite.h"
 
 namespace task {
 namespace game {
+namespace unit {
 
 const BadgeDefs::consts_t BadgeDefs::s_consts = {};
 
@@ -200,5 +201,6 @@ const types::Vec3 BadgeDefs::GetFakeBadgeCoords( const types::Vec3& coords, cons
 	};
 }
 
+}
 }
 }

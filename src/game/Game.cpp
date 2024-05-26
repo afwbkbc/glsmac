@@ -323,33 +323,38 @@ void Game::Iterate() {
 						m_connection->UpdateSlot( m_slot_num, m_slot, true );
 					}
 
-					const auto& slots = m_state->m_slots->GetSlots();
-					auto* slot_defines = new FrontendRequest::slot_defines_t();
-					for ( const auto& slot : slots ) {
-						if ( slot.GetState() == slot::Slot::SS_OPEN || slot.GetState() == slot::Slot::SS_CLOSED ) {
-							continue;
+					{
+						const auto& factions = m_state->m_settings.global.game_rules.m_factions;
+						auto* faction_defines = new FrontendRequest::faction_defines_t();
+						for ( const auto& it : factions ) {
+							faction_defines->push_back( &it.second );
 						}
-						ASSERT( slot.GetState() == slot::Slot::SS_PLAYER, "unknown slot state: " + std::to_string( slot.GetState() ) );
-						auto* player = slot.GetPlayer();
-						ASSERT( player, "slot player not set" );
-						const auto& faction = player->GetFaction();
-						const auto& c = faction->m_colors.border.value;
-						slot_defines->push_back(
-							FrontendRequest::slot_define_t{
-								slot.GetIndex(),
-								{
-									c.red,
-									c.green,
-									c.blue,
-									c.alpha
-								},
-								( faction->m_flags & rules::Faction::FF_PROGENITOR ) != 0
-							}
-						);
+						auto fr = FrontendRequest( FrontendRequest::FR_FACTION_DEFINE );
+						fr.data.faction_define.factiondefs = faction_defines;
+						AddFrontendRequest( fr );
 					}
-					auto fr = FrontendRequest( FrontendRequest::FR_SLOT_DEFINE );
-					fr.data.slot_define.slotdefs = slot_defines;
-					AddFrontendRequest( fr );
+
+					{
+						const auto& slots = m_state->m_slots->GetSlots();
+						auto* slot_defines = new FrontendRequest::slot_defines_t();
+						for ( const auto& slot : slots ) {
+							if ( slot.GetState() == slot::Slot::SS_OPEN || slot.GetState() == slot::Slot::SS_CLOSED ) {
+								continue;
+							}
+							ASSERT( slot.GetState() == slot::Slot::SS_PLAYER, "unknown slot state: " + std::to_string( slot.GetState() ) );
+							auto* player = slot.GetPlayer();
+							ASSERT( player, "slot player not set" );
+							slot_defines->push_back(
+								FrontendRequest::slot_define_t{
+									slot.GetIndex(),
+									player->GetFaction()->m_id
+								}
+							);
+						}
+						auto fr = FrontendRequest( FrontendRequest::FR_SLOT_DEFINE );
+						fr.data.slot_define.slotdefs = slot_defines;
+						AddFrontendRequest( fr );
+					}
 
 					// start main loop
 					m_game_state = GS_RUNNING;

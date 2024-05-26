@@ -5,7 +5,8 @@
 #include "ui/object/ScrollView.h"
 #include "task/game/ui/bottom_bar/UnitPreview.h"
 #include "UnitsListItem.h"
-#include "task/game/Unit.h"
+#include "task/game/unit/Unit.h"
+#include "task/game/unit/UnitManager.h"
 
 namespace task {
 namespace game {
@@ -40,7 +41,7 @@ void UnitsList::ClearUnits() {
 	}
 }
 
-void UnitsList::ListUnits( const std::vector< Unit* >& units, const size_t selected_unit_id ) {
+void UnitsList::ListUnits( const std::vector< unit::Unit* >& units, const size_t selected_unit_id ) {
 	const auto last_scroll_x = m_body
 		? m_body->GetScrollX()
 		: 0;
@@ -50,7 +51,7 @@ void UnitsList::ListUnits( const std::vector< Unit* >& units, const size_t selec
 	m_body->SetScrollSpeed( 70 );
 	AddChild( m_body );
 	float left = 0;
-	Unit* selected_unit = nullptr;
+	unit::Unit* selected_unit = nullptr;
 	for ( const auto& unit : units ) {
 		NEWV( item, UnitsListItem, m_game, this, unit );
 		item->SetLeft( left );
@@ -80,14 +81,14 @@ void UnitsList::ListUnits( const std::vector< Unit* >& units, const size_t selec
 	}
 }
 
-void UnitsList::PreviewUnit( Unit* unit ) {
+void UnitsList::PreviewUnit( unit::Unit* unit ) {
 	if ( unit != m_previewing_unit ) {
 		m_previewing_unit = unit;
 		m_unit_preview->PreviewUnit( unit );
 	}
 }
 
-void UnitsList::HideUnitPreview( Unit* unit ) {
+void UnitsList::HideUnitPreview( unit::Unit* unit ) {
 	if ( unit != m_selected_unit ) {
 		if ( m_previewing_unit ) {
 			m_unit_preview->PreviewUnit( m_previewing_unit );
@@ -104,7 +105,7 @@ void UnitsList::HideUnitPreview( Unit* unit ) {
 	}
 }
 
-void UnitsList::SelectUnit( Unit* unit, const bool activate_unit ) {
+void UnitsList::SelectUnit( unit::Unit* unit, const bool activate_unit ) {
 	if ( unit != m_selected_unit ) {
 		m_selected_unit = unit;
 		for ( auto& it : m_items ) {
@@ -118,7 +119,7 @@ void UnitsList::SelectUnit( Unit* unit, const bool activate_unit ) {
 			}
 		}
 		if ( activate_unit ) {
-			m_game->SelectUnit( m_selected_unit, true );
+			m_game->GetUM()->SelectUnit( m_selected_unit, true );
 		}
 	}
 }

@@ -242,7 +242,7 @@ void BottomBar::HideTilePreview() {
 	m_sections.tile_preview->HideTilePreview();
 }
 
-void BottomBar::PreviewUnit( const Unit* unit ) {
+void BottomBar::PreviewUnit( const unit::Unit* unit ) {
 	m_sections.unit_preview->PreviewUnit( unit );
 }
 

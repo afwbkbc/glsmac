@@ -24,13 +24,15 @@
 #include "game/event/CompleteTurn.h"
 #include "game/event/UncompleteTurn.h"
 #include "ui/bottom_bar/BottomBar.h"
+#include "unit/UnitManager.h"
+#include "faction/FactionManager.h"
 #include "InstancedSpriteManager.h"
 #include "Animation.h"
 #include "AnimationDef.h"
-#include "Unit.h"
-#include "UnitDef.h"
+#include "task/game/unit/Unit.h"
+#include "task/game/unit/UnitDef.h"
 #include "Slot.h"
-#include "BadgeDefs.h"
+#include "task/game/unit/BadgeDefs.h"
 #include "scene/actor/Actor.h"
 #include "scene/actor/Instanced.h"
 #include "InstancedSprite.h"
@@ -442,37 +444,7 @@ void Game::Iterate() {
 			actor.first->Iterate();
 		}
 
-		if ( m_selected_unit ) {
-			m_selected_unit->Iterate();
-		}
-		{
-			auto it = m_moving_units.begin();
-			while ( it != m_moving_units.end() ) {
-				const auto& unit = it->first;
-				if ( unit != m_selected_unit ) { // already iterated
-					unit->Iterate();
-				}
-				if ( !unit->IsMoving() ) {
-					const auto& tile = it->second.tile;
-					if ( unit == m_selected_unit ) {
-						m_selected_tile = tile;
-					}
-					unit->SetTile( tile );
-					if ( m_selected_tile == tile ) {
-						m_ui.bottom_bar->PreviewTile(
-							m_selected_tile, unit == m_selected_unit
-								? unit->GetId()
-								: 0
-						);
-					}
-					SendAnimationFinished( it->second.animation_id );
-					it = m_moving_units.erase( it );
-				}
-				else {
-					it++;
-				}
-			}
-		}
+		m_um->Iterate();
 	}
 }
 
@@ -494,6 +466,11 @@ const std::string& Game::GetMapFilename() const {
 
 const std::string& Game::GetMapLastDirectory() const {
 	return m_map_data.last_directory;
+}
+
+unit::UnitManager* Game::GetUM() const {
+	ASSERT( m_um, "um not set" );
+	return m_um;
 }
 
 InstancedSpriteManager* Game::GetISM() const {
@@ -826,10 +803,25 @@ const types::Vec3 Game::GetCloserCoords( const types::Vec3& coords, const types:
 	};
 }
 
+Slot* Game::GetSlot( const size_t index ) const {
+	ASSERT( m_slots.find( index ) != m_slots.end(), "slot not found" );
+	return m_slots.at( index );
+}
+
+Tile* Game::GetTile( const size_t x, const size_t y ) {
+	ASSERT( !m_tiles.empty(), "tile states not set" );
+	ASSERT( x < m_map_data.width, "tile x overflow" );
+	ASSERT( y < m_map_data.height, "tile y overflow" );
+	return &m_tiles.at( y * m_map_data.width + x );
+}
+
+Tile* Game::GetTile( const types::Vec2< size_t >& coords ) {
+	return GetTile( coords.x, coords.y );
+}
+
 void Game::DefineSlot(
 	const size_t slot_index,
-	const types::Color& color,
-	const bool is_progenitor
+	const faction::Faction* faction
 ) {
 	if ( m_slots.find( slot_index ) == m_slots.end() ) {
 		Log( "Initializing slot: " + std::to_string( slot_index ) );
@@ -837,13 +829,8 @@ void Game::DefineSlot(
 			{
 				slot_index,
 				new Slot(
-					m_badge_defs,
-					m_ism,
 					slot_index,
-					color,
-					is_progenitor
-						? Slot::SF_PROGENITOR
-						: Slot::SF_NONE
+					faction
 				)
 			}
 		);
@@ -856,23 +843,6 @@ void Game::ShowAnimation( AnimationDef* def, const size_t animation_id, const ty
 		{
 			animation_id,
 			new Animation( animation_id, def, render_coords ),
-		}
-	);
-}
-
-void Game::DefineUnit( const ::game::unit::Def* def ) {
-	auto unitdef_it = m_unitdefs.find( def->m_id );
-	ASSERT( unitdef_it == m_unitdefs.end(), "unit def already exists" );
-
-	Log( "Initializing unit definition: " + def->m_id );
-
-	m_unitdefs.insert(
-		{
-			def->m_id,
-			new UnitDef(
-				m_ism,
-				def
-			)
 		}
 	);
 }
@@ -892,136 +862,6 @@ void Game::DefineAnimation( const ::game::animation::Def* def ) {
 			)
 		}
 	);
-}
-
-void Game::SpawnUnit(
-	const size_t unit_id,
-	const std::string& unitdef_id,
-	const size_t slot_index,
-	const types::Vec2< size_t >& tile_coords,
-	const types::Vec3& render_coords,
-	const ::game::unit::movement_t movement,
-	const ::game::unit::morale_t morale,
-	const std::string& morale_string,
-	const ::game::unit::health_t health
-) {
-
-	ASSERT( m_unitdefs.find( unitdef_id ) != m_unitdefs.end(), "unitdef not found" );
-	ASSERT( m_slots.find( slot_index ) != m_slots.end(), "slot not found" );
-	ASSERT( m_units.find( unit_id ) == m_units.end(), "unit id already exists" );
-
-	auto* unitdef = m_unitdefs.at( unitdef_id );
-	auto* slot_state = m_slots.at( slot_index );
-	auto* tile = GetTile( tile_coords );
-
-	auto* unit = m_units.insert(
-		{
-			unit_id,
-			new Unit(
-				this,
-				m_badge_defs,
-				unit_id,
-				unitdef,
-				slot_state,
-				tile,
-				{
-					render_coords.x,
-					render_coords.y,
-					render_coords.z
-				},
-				slot_index == m_slot_index,
-				movement,
-				morale,
-				morale_string,
-				health
-			)
-		}
-	).first->second;
-
-	types::mesh::Rectangle* mesh = nullptr;
-	types::texture::Texture* texture = nullptr;
-
-	RenderTile( tile );
-
-	if ( unit->IsActive() ) {
-		const bool was_selectables_empty = m_selectable_units.empty();
-		AddSelectable( unit );
-		if ( was_selectables_empty ) {
-			SelectNextUnitMaybe();
-		}
-	}
-}
-
-void Game::DespawnUnit( const size_t unit_id ) {
-	const auto& it = m_units.find( unit_id );
-	ASSERT( it != m_units.end(), "unit id not found" );
-
-	auto* unit = it->second;
-
-	m_units.erase( it );
-	delete unit;
-
-	if ( unit->IsOwned() ) {
-		RemoveSelectable( unit );
-	}
-
-	if ( m_selected_tile ) {
-		m_ui.bottom_bar->PreviewTile(
-			m_selected_tile, m_selected_unit
-				? m_selected_unit->GetId()
-				: 0
-		);
-	}
-
-}
-
-void Game::RefreshUnit( Unit* unit ) {
-	const auto was_active = unit->IsActive();
-	unit->Refresh();
-	UpdateSelectable( unit );
-	if ( m_selected_tile && m_selected_tile == unit->GetTile() ) {
-		m_ui.bottom_bar->PreviewTile(
-			m_selected_tile, m_selected_unit
-				? m_selected_unit->GetId()
-				: 0
-		);
-	}
-	if ( m_selected_unit == unit && was_active ) {
-		if ( !unit->IsActive() ) {
-			SelectNextUnitOrSwitchToTileSelection();
-		}
-		else {
-			unit->StartBadgeBlink();
-		}
-	}
-}
-
-void Game::MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_coords ) {
-
-	auto* src_tile = unit->GetTile();
-
-	unit->SetTile( dst_tile );
-
-	// TODO: animation
-
-	if ( m_selected_unit == unit ) {
-		m_selected_tile = m_selected_unit->GetTile();
-	}
-
-	// update old tile
-	RenderTile( src_tile );
-
-	// update unit
-	RefreshUnit( unit );
-
-	// update new tile
-	RenderTile( dst_tile );
-
-	if ( m_selected_unit == unit ) {
-		m_ui.bottom_bar->PreviewTile( m_selected_tile, m_selected_unit->GetId() );
-		ScrollToTile( m_selected_tile, false );
-	}
-
 }
 
 void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
@@ -1084,19 +924,16 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 			if ( m_is_turn_active != is_turn_active ) {
 				m_is_turn_active = is_turn_active;
 				if ( m_is_turn_active ) {
-					const auto* previously_selected_unit = m_selected_unit;
+					/*const auto* previously_selected_unit = m_selected_unit;
 					m_selected_unit = nullptr;
 					if ( previously_selected_unit ) {
 						RenderTile( previously_selected_unit->GetTile() );
-					}
-					SelectNextUnitMaybe();
+					}*/ // ???????
+					m_um->SelectNextUnitOrSwitchToTileSelection();
 				}
 				else {
-					if ( m_selected_unit ) {
-						DeselectTileOrUnit();
-						//GetTileAtCoords( ::game::TQP_TILE_SELECT, m_selected_tile_data.tile_position ); // TODO ?
-						m_selected_unit = nullptr;
-					}
+					DeselectTileOrUnit();
+					//GetTileAtCoords( ::game::TQP_TILE_SELECT, m_selected_tile_data.tile_position ); // TODO ?
 				}
 			}
 			break;
@@ -1105,10 +942,17 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 			m_turn_id = request->data.turn_advance.turn_id;
 			break;
 		}
+		case ::game::FrontendRequest::FR_FACTION_DEFINE: {
+			for ( const auto& faction : *request->data.faction_define.factiondefs ) {
+				m_fm->DefineFaction( faction );
+			}
+			break;
+		}
 		case ::game::FrontendRequest::FR_SLOT_DEFINE: {
 			for ( const auto& d : *request->data.slot_define.slotdefs ) {
-				const auto& c = d.color;
-				DefineSlot( d.slot_index, types::Color( c.r, c.g, c.b, c.a ), d.is_progenitor );
+				const auto* faction = m_fm->GetFactionById( d.faction_id );
+				DefineSlot( d.slot_index, faction );
+				m_um->DefineSlotBadges( d.slot_index, faction );
 			}
 			break;
 		}
@@ -1140,7 +984,7 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 		case ::game::FrontendRequest::FR_UNIT_DEFINE: {
 			types::Buffer buf( *request->data.unit_define.serialized_unitdef );
 			const auto* unitdef = ::game::unit::Def::Unserialize( buf );
-			DefineUnit( unitdef );
+			m_um->DefineUnit( unitdef );
 			delete unitdef;
 			break;
 		}
@@ -1148,7 +992,7 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 			const auto& d = request->data.unit_spawn;
 			const auto& tc = d.tile_coords;
 			const auto& rc = d.render_coords;
-			SpawnUnit(
+			m_um->SpawnUnit(
 				d.unit_id,
 				*d.unitdef_id,
 				d.slot_index,
@@ -1169,17 +1013,17 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 			break;
 		}
 		case ::game::FrontendRequest::FR_UNIT_DESPAWN: {
-			DespawnUnit( request->data.unit_despawn.unit_id );
+			m_um->DespawnUnit( request->data.unit_despawn.unit_id );
 			break;
 		}
 		case ::game::FrontendRequest::FR_UNIT_UPDATE: {
 			const auto& d = request->data.unit_update;
-			auto* unit = m_units.at( d.unit_id );
+			auto* unit = m_um->GetUnitById( d.unit_id );
 			unit->SetMovement( d.movement );
 			unit->SetHealth( d.health );
 			const auto& c = unit->GetTile()->GetCoords();
 			if ( d.tile_coords.x != c.x || d.tile_coords.y != c.y ) {
-				MoveUnit(
+				/*MoveUnit(
 					unit,
 					GetTile(
 						{
@@ -1191,42 +1035,24 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 						d.render_coords.y,
 						d.render_coords.z,
 					}
-				);
+				);*/
+				THROW( "deprecated, shouldnt be here" );
 			}
 			else {
-				RefreshUnit( unit );
-				RenderTile( unit->GetTile() );
+				m_um->RefreshUnit( unit );
 			}
 			break;
 		}
 		case ::game::FrontendRequest::FR_UNIT_MOVE: {
 			const auto& d = request->data.unit_move;
-			ASSERT( m_units.find( d.unit_id ) != m_units.end(), "unit id not found" );
-			auto* unit = m_units.at( d.unit_id );
-			ASSERT( m_moving_units.find( unit ) == m_moving_units.end(), "unit already moving" );
-			auto* src_tile = unit->GetTile();
+			auto* unit = m_um->GetUnitById( d.unit_id );
 			auto* dst_tile = GetTile(
 				{
 					d.dst_tile_coords.x,
 					d.dst_tile_coords.y
 				}
 			);
-			m_moving_units.insert(
-				{
-					unit,
-					{
-						dst_tile,
-						d.running_animation_id
-					}
-				}
-			);
-
-			src_tile->RemoveUnit( unit );
-			if ( m_selected_tile == src_tile ) {
-				m_ui.bottom_bar->PreviewTile( m_selected_tile, 0 );
-				m_selected_tile = dst_tile;
-			}
-			unit->MoveToTile( dst_tile );
+			m_um->MoveUnit( unit, dst_tile, d.running_animation_id );
 			break;
 		}
 		default: {
@@ -1362,8 +1188,10 @@ void Game::Initialize(
 	Log( "Initializing game" );
 
 	NEW( m_world_scene, scene::Scene, "Game", scene::SCENE_TYPE_ORTHO );
+
 	NEW( m_ism, InstancedSpriteManager, m_world_scene );
-	NEW( m_badge_defs, BadgeDefs, m_ism );
+	NEW( m_fm, faction::FactionManager );
+	NEW( m_um, unit::UnitManager, this );
 
 	NEW( m_camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
 	m_camera_angle = INITIAL_CAMERA_ANGLE;
@@ -1512,12 +1340,13 @@ void Game::Initialize(
 						X( K_PAGEDOWN, K_KP_RIGHT_DOWN, D_SE )
 #undef X
 						case ::ui::event::K_TAB: {
-							SelectNextUnitMaybe();
+							m_um->SelectNextUnitMaybe();
 							break;
 						}
 						case ::ui::event::K_SPACE: {
-							if ( m_selected_unit ) {
-								const auto event = ::game::event::SkipUnitTurn( m_slot_index, m_selected_unit->GetId() );
+							auto* unit = m_um->GetSelectedUnit();
+							if ( unit ) {
+								const auto event = ::game::event::SkipUnitTurn( m_slot_index, unit->GetId() );
 								game->MT_AddEvent( &event );
 							}
 							break;
@@ -1535,44 +1364,38 @@ void Game::Initialize(
 
 					if ( is_tile_selected ) {
 						auto* tile = m_selected_tile->GetNeighbour( td );
+						auto* selected_unit = m_um->GetSelectedUnit();
 
-						switch ( m_tile_at_query_purpose ) {
-							case ::game::TQP_TILE_SELECT: {
-								SelectTileOrUnit( tile );
-								ScrollToTile( tile, false );
-								return true;
-							}
-							case ::game::TQP_UNIT_SELECT: {
-								// try moving unit to tile
-								if ( m_selected_unit ) {
-									const auto& ts = m_selected_unit->GetTile()->GetNeighbour( td );
-									std::unordered_map< size_t, Unit* > foreign_units = {};
-									for ( const auto& it : ts->GetUnits() ) {
-										const auto& unit = it.second;
-										if ( !unit->IsOwned() ) { // TODO: pacts
-											// TODO: skip units of treaty/truce faction?
-											foreign_units.insert( it );
-										}
-									}
-									if ( foreign_units.empty() ) {
-										// move
-										const auto event = ::game::event::MoveUnit( m_slot_index, m_selected_unit->GetId(), td );
-										game->MT_AddEvent( &event );
-									}
-									else {
-										// attack
-										// TODO: select the most powerful defender for attacker
-										const auto& target_unit = foreign_units.at( Tile::GetUnitsOrder( foreign_units ).front() );
-										const auto event = ::game::event::AttackUnit( m_slot_index, m_selected_unit->GetId(), target_unit->GetId() );
-										game->MT_AddEvent( &event );
-									}
-
+						if ( !selected_unit ) {
+							SelectTileOrUnit( tile );
+							ScrollToTile( tile, false );
+							return true;
+						}
+						else {
+							// try moving unit to tile
+							const auto& dst_tile = selected_unit->GetTile()->GetNeighbour( td );
+							std::unordered_map< size_t, unit::Unit* > foreign_units = {};
+							for ( const auto& it : dst_tile->GetUnits() ) {
+								const auto& unit = it.second;
+								if ( !unit->IsOwned() ) { // TODO: pacts
+									// TODO: skip units of treaty/truce faction?
+									foreign_units.insert( it );
 								}
-								return true;
 							}
-							default: {
-								// nothing
+							if ( foreign_units.empty() ) {
+								// move
+								const auto event = ::game::event::MoveUnit( m_slot_index, selected_unit->GetId(), td );
+								game->MT_AddEvent( &event );
 							}
+							else {
+								// attack
+								// TODO: select the most powerful defender for attacker
+								const auto& target_unit = foreign_units.at( Tile::GetUnitsOrder( foreign_units ).front() );
+								const auto event = ::game::event::AttackUnit( m_slot_index, selected_unit->GetId(), target_unit->GetId() );
+								game->MT_AddEvent( &event );
+							}
+
+							return true;
 						}
 					}
 				}
@@ -1895,17 +1718,6 @@ void Game::Deinitialize() {
 	}
 	m_animationdefs.clear();
 
-	m_moving_units.clear();
-	for ( const auto& it : m_units ) {
-		delete it.second;
-	}
-	m_units.clear();
-
-	for ( const auto& it : m_unitdefs ) {
-		delete it.second;
-	}
-	m_unitdefs.clear();
-
 	for ( const auto& it : m_slots ) {
 		delete it.second;
 	}
@@ -1917,9 +1729,14 @@ void Game::Deinitialize() {
 	}
 	m_actors_map.clear();
 
-	if ( m_badge_defs ) {
-		DELETE( m_badge_defs );
-		m_badge_defs = nullptr;
+	if ( m_fm ) {
+		DELETE( m_fm );
+		m_fm = nullptr;
+	}
+
+	if ( m_um ) {
+		DELETE( m_um );
+		m_um = nullptr;
 	}
 
 	if ( m_ism ) {
@@ -1976,34 +1793,6 @@ void Game::SelectTileAtPoint( const ::game::tile_query_purpose_t tile_query_purp
 	GetTileAtScreenCoords( tile_query_purpose, x, m_viewport.window_height - y ); // async
 }
 
-void Game::SelectUnit( Unit* unit, const bool actually_select_unit ) {
-	Log( "Selecting unit " + std::to_string( unit->GetId() ) );
-	m_tile_at_query_purpose = ::game::TQP_UNIT_SELECT;
-	DeselectTileOrUnit();
-	if ( m_selected_unit != unit ) {
-
-		unit->SetActiveOnTile();
-
-		m_selected_unit = unit;
-		m_selected_tile = m_selected_unit->GetTile();
-		m_selected_unit->Show();
-
-		m_ui.bottom_bar->PreviewTile( m_selected_tile, m_selected_unit->GetId() );
-	}
-	if ( actually_select_unit && m_selected_unit->IsActive() && m_is_turn_active ) {
-
-		if ( m_selected_tile && !m_selected_tile->GetUnits().empty() ) {
-			auto* most_important_unit = m_selected_tile->GetMostImportantUnit();
-			if ( m_selected_unit != most_important_unit ) {
-				most_important_unit->Hide();
-			}
-		}
-
-		m_selected_unit->StartBadgeBlink();
-		Log( "Selected unit " + std::to_string( m_selected_unit->GetId() ) );
-	}
-}
-
 void Game::SelectTileOrUnit( Tile* tile, const size_t selected_unit_id ) {
 
 	ASSERT( m_tile_at_query_purpose != ::game::TQP_NONE, "tile query purpose not set" );
@@ -2012,7 +1801,7 @@ void Game::SelectTileOrUnit( Tile* tile, const size_t selected_unit_id ) {
 
 	m_selected_tile = tile;
 
-	Unit* selected_unit = nullptr;
+	unit::Unit* selected_unit = nullptr;
 	if ( m_tile_at_query_purpose == ::game::TQP_UNIT_SELECT ) {
 		const auto& units = m_selected_tile->GetUnits();
 		if ( m_is_turn_active ) {
@@ -2035,14 +1824,14 @@ void Game::SelectTileOrUnit( Tile* tile, const size_t selected_unit_id ) {
 
 	switch ( m_tile_at_query_purpose ) {
 		case ::game::TQP_TILE_SELECT: {
-			m_selected_unit = nullptr;
+			m_um->DeselectUnit();
 			Log( "Selected tile at " + m_selected_tile->GetCoords().ToString() + " ( " + m_selected_tile->GetRenderData().selection_coords.center.ToString() + " )" );
 			ShowTileSelector();
 			m_ui.bottom_bar->PreviewTile( m_selected_tile, selected_unit_id );
 			break;
 		}
 		case ::game::TQP_UNIT_SELECT: {
-			SelectUnit( selected_unit, true );
+			m_um->SelectUnit( selected_unit, true );
 			break;
 		}
 		default:
@@ -2054,34 +1843,9 @@ void Game::SelectTileOrUnit( Tile* tile, const size_t selected_unit_id ) {
 void Game::DeselectTileOrUnit() {
 
 	HideTileSelector();
-	if ( m_selected_unit ) {
-		if ( !m_selected_tile->GetUnits().empty() ) {
-			// reset to most important unit if needed
-			auto* most_important_unit = m_selected_tile->GetMostImportantUnit();
-			if ( m_selected_unit ) {
-				if ( m_selected_unit == most_important_unit ) {
-					m_selected_unit->StopBadgeBlink( true );
-				}
-				else {
-					m_selected_unit->Hide();
-					most_important_unit->Show();
-				}
-				m_selected_unit = nullptr;
-			}
-		}
-	}
+	m_um->DeselectUnit();
 
 	m_ui.bottom_bar->HideTilePreview();
-}
-
-Unit* Game::GetFirstSelectableUnit( const std::unordered_map< size_t, Unit* >& units ) const {
-	for ( const auto& it : units ) {
-		auto* unit = it.second;
-		if ( unit->IsActive() ) {
-			return unit;
-		}
-	}
-	return nullptr;
 }
 
 void Game::AddActor( actor::Actor* actor ) {
@@ -2386,125 +2150,6 @@ void Game::ExitGame( const f_exit_game on_game_exit ) {
 	}
 }
 
-void Game::AddSelectable( Unit* unit ) {
-	const auto& it = std::find( m_selectable_units.begin(), m_selectable_units.end(), unit );
-	if ( it == m_selectable_units.end() ) {
-		m_selectable_units.push_back( unit );
-	}
-}
-
-void Game::RemoveSelectable( Unit* unit ) {
-	const auto& it = std::find( m_selectable_units.begin(), m_selectable_units.end(), unit );
-	if ( it != m_selectable_units.end() ) {
-		m_selectable_units.erase( it );
-		if ( m_selected_unit == unit ) {
-			SelectNextUnitOrSwitchToTileSelection();
-		}
-	}
-}
-
-void Game::UpdateSelectable( Unit* unit ) {
-	if ( unit->IsOwned() ) {
-		if ( unit->IsActive() ) {
-			AddSelectable( unit );
-		}
-		else {
-			RemoveSelectable( unit );
-			if ( m_selected_unit == unit ) {
-				SelectNextUnitOrSwitchToTileSelection();
-			}
-		}
-	}
-}
-
-Unit* Game::GetNextSelectable() {
-	if ( !m_selectable_units.empty() ) {
-		if ( !m_selected_unit ) {
-			return m_selectable_units.front();
-		}
-		Unit* selected_unit = nullptr;
-		float selected_distance = 0;
-		// can be optimized, but probably no need
-		for ( const auto& unit : m_selectable_units ) {
-			if ( unit == m_selected_unit ) {
-				continue;
-			}
-			const auto& a = unit->GetTile()->GetCoords();
-			const auto& b = m_selected_unit->GetTile()->GetCoords();
-			float distance = sqrtf( pow( (float)a.x - b.x, 2 ) + pow( (float)a.y - b.y, 2 ) );
-			if ( !selected_unit || distance < selected_distance ) {
-				selected_unit = unit;
-				selected_distance = distance;
-			}
-		}
-		if ( !selected_unit ) {
-			selected_unit = m_selected_unit; // the only unit left
-		}
-		else {
-			auto* tile = selected_unit->GetTile();
-			if ( tile == m_selected_unit->GetTile() ) {
-				const auto tile_units = tile->GetOrderedUnits();
-				ASSERT( !tile_units.empty(), "tile units empty" );
-				bool searching = false;
-				bool found = false;
-				Unit* first_good_candidate = nullptr;
-				for ( size_t i = 0 ; i < tile_units.size() ; i++ ) {
-					if ( tile_units.at( i ) == m_selected_unit ) {
-						searching = true;
-					}
-					else {
-						auto* tile_unit = tile_units.at( i );
-						if ( searching ) {
-							if ( tile_unit->IsActive() ) {
-								selected_unit = tile_unit;
-								found = true;
-								break;
-							}
-						}
-						else if ( !first_good_candidate && tile_unit->IsActive() ) {
-							first_good_candidate = tile_unit;
-						}
-					}
-				}
-				if ( searching && !found ) {
-					selected_unit = first_good_candidate;
-				}
-			}
-		}
-		return selected_unit;
-	}
-	return nullptr;
-}
-
-const bool Game::SelectNextUnitMaybe() {
-	if ( !m_is_turn_active ) {
-		return false;
-	}
-	auto* selected_unit = GetNextSelectable();
-	if ( selected_unit != m_selected_unit ) {
-		if ( selected_unit ) {
-			SelectUnit( selected_unit, true );
-			ScrollToTile( m_selected_unit->GetTile(), true );
-			return true;
-		}
-		else {
-			m_selected_unit = nullptr;
-			return false;
-		}
-	}
-	return false;
-}
-
-void Game::SelectNextUnitOrSwitchToTileSelection() {
-	if ( !SelectNextUnitMaybe() ) {
-		SelectTileOrUnit(
-			m_selected_tile, m_selected_unit
-				? m_selected_unit->GetId()
-				: 0
-		);
-	}
-}
-
 void Game::CancelRequests() {
 	auto* game = g_engine->GetGame();
 	if ( m_mt_ids.init ) {
@@ -2596,17 +2241,6 @@ const float Game::GetCloserX( const float x, const float ref_x ) const {
 	}
 }
 
-Tile* Game::GetTile( const size_t x, const size_t y ) {
-	ASSERT( !m_tiles.empty(), "tile states not set" );
-	ASSERT( x < m_map_data.width, "tile x overflow" );
-	ASSERT( y < m_map_data.height, "tile y overflow" );
-	return &m_tiles.at( y * m_map_data.width + x );
-}
-
-Tile* Game::GetTile( const types::Vec2< size_t >& coords ) {
-	return GetTile( coords.x, coords.y );
-}
-
 void Game::ShowTileSelector() {
 	HideTileSelector();
 	NEW( m_actors.tile_selection, actor::TileSelection, m_selected_tile->GetRenderData().selection_coords );
@@ -2620,15 +2254,16 @@ void Game::HideTileSelector() {
 	}
 }
 
-void Game::RenderTile( Tile* tile ) {
+void Game::RenderTile( Tile* tile, const unit::Unit* selected_unit ) {
 	tile->Render(
-		m_selected_unit
-			? m_selected_unit->GetId()
+		selected_unit
+			? selected_unit->GetId()
 			: 0
 	);
+	/*
 	if ( m_selected_unit && m_selected_unit->IsActive() ) {
 		m_selected_unit->StartBadgeBlink();
-	}
+	}*/ // ???
 }
 
 void Game::SendAnimationFinished( const size_t animation_id ) {
@@ -2637,5 +2272,57 @@ void Game::SendAnimationFinished( const size_t animation_id ) {
 	SendBackendRequest( &br );
 }
 
+const bool Game::IsTurnActive() const {
+	return m_is_turn_active;
+}
+
+const size_t Game::GetMySlotIndex() const {
+	return m_slot_index;
+}
+
+Tile* Game::GetSelectedTile() const {
+	return m_selected_tile;
+}
+
+void Game::SetSelectedTile( Tile* tile ) {
+	m_selected_tile = tile;
+}
+
+void Game::RefreshSelectedTile( unit::Unit* selected_unit ) {
+	if ( m_selected_tile ) {
+		m_ui.bottom_bar->PreviewTile(
+			m_selected_tile, selected_unit
+				? selected_unit->GetId()
+				: 0
+		);
+	}
+}
+
+void Game::RefreshSelectedTileIf( task::game::Tile* if_tile, unit::Unit* selected_unit ) {
+	if ( m_selected_tile && m_selected_tile == if_tile ) {
+		RefreshSelectedTile( selected_unit );
+	}
+}
+
+void Game::ScrollToSelectedTile( const bool center_on_tile ) {
+	ScrollToTile( m_selected_tile, center_on_tile );
+}
+
+void Game::SelectUnitOrSelectedTile( unit::Unit* selected_unit ) {
+	SelectTileOrUnit(
+		m_selected_tile, selected_unit
+			? selected_unit->GetId()
+			: 0
+	);
+}
+
+unit::Unit* Game::GetSelectedTileMostImportantUnit() const {
+	if ( m_selected_tile && !m_selected_tile->GetUnits().empty() ) {
+		return m_selected_tile->GetMostImportantUnit();
+	}
+	else {
+		return nullptr;
+	}
+}
 }
 }

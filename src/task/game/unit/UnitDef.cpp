@@ -5,11 +5,12 @@
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
 #include "util/String.h"
-#include "InstancedSpriteManager.h"
+#include "task/game/InstancedSpriteManager.h"
 #include "game/map/Consts.h"
 
 namespace task {
 namespace game {
+namespace unit {
 
 UnitDef::UnitDef( InstancedSpriteManager* ism, const ::game::unit::Def* unitdef )
 	: m_ism( ism )
@@ -139,5 +140,6 @@ const std::string UnitDef::GetStatsString() const {
 
 }
 
+}
 }
 }
