@@ -20,7 +20,7 @@ void DebugOverlay::Start() {
 	m_font_size = 16;
 	m_memory_stats_lines = 10;
 
-	m_stats_font = g_engine->GetFontLoader()->LoadFont( "arialn.ttf", m_font_size );
+	m_stats_font = g_engine->GetFontLoader()->LoadFont( resource::TTF_ARIALN, m_font_size );
 
 	NEW( m_background_texture, types::texture::Texture, "OverlayBackground", 1, 1 );
 	m_background_texture->SetPixel(

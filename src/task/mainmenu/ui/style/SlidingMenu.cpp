@@ -33,7 +33,7 @@ void SlidingMenu::AddStyles() {
 			s->Set( ui::A_HEIGHT, 36 );
 			s->SetTexture(
 				ui::A_TEXTURE,
-				"palette.pcx",
+				resource::PCX_PALETTE,
 				450, 28, 450, 28,
 				ui::LT_ALPHA,
 				0.8
@@ -47,7 +47,7 @@ void SlidingMenu::AddStyles() {
 			s->Set( ui::A_TOP, 40 );
 			s->SetTexture(
 				ui::A_TEXTURE,
-				"console_x.pcx",
+				resource::PCX_CONSOLE_X,
 				699, 1, 706, 293,
 				ui::LT_ROTATE |
 					ui::LT_FLIPV |
@@ -64,7 +64,7 @@ void SlidingMenu::AddStyles() {
 			s->Set( ui::A_TOP, 6 );
 			s->SetTexture(
 				ui::A_TEXTURE,
-				"interface.pcx",
+				resource::PCX_INTERFACE,
 				472, 756, 476, 790,
 				ui::LT_CONTRAST,
 				0.3
@@ -79,7 +79,7 @@ void SlidingMenu::AddStyles() {
 			s->Set( ui::A_TOP, -2 );
 			s->SetTexture(
 				ui::A_TEXTURE,
-				"console_x.pcx",
+				resource::PCX_CONSOLE_X,
 				708, 1, 715, 354,
 				ui::LT_ROTATE |
 					ui::LT_FLIPV |
@@ -96,7 +96,7 @@ void SlidingMenu::AddStyles() {
 			s->Set( ui::A_TOP, 6 );
 			s->SetTexture(
 				ui::A_TEXTURE,
-				"interface.pcx",
+				resource::PCX_INTERFACE,
 				299, 756, 303, 790,
 				ui::LT_CONTRAST,
 				0.2
@@ -112,7 +112,7 @@ void SlidingMenu::AddStyles() {
 			s->Set( ui::A_TOP, -8 );
 			s->SetTexture(
 				ui::A_TEXTURE,
-				"console_x.pcx",
+				resource::PCX_CONSOLE_X,
 				708, 1, 715, 354,
 				ui::LT_ROTATE |
 					ui::LT_FLIPV |
@@ -125,7 +125,7 @@ void SlidingMenu::AddStyles() {
 
 	AddStyle(
 		"SlidingMenuItemText", SH() {
-			s->SetFont( ui::A_FONT, "arialnb.ttf", 20 );
+			s->SetFont( ui::A_FONT, resource::TTF_ARIALNB, 20 );
 		}
 	);
 
@@ -152,7 +152,7 @@ void SlidingMenu::AddStyles() {
 
 	AddStyle(
 		"SlidingMenuSound", SH() {
-			s->SetSound( ui::A_SOUND, "menu out.wav" );
+			s->SetSound( ui::A_SOUND, resource::WAV_MENU_OUT );
 			s->Set( ui::A_SOUND_AUTOPLAY );
 			s->Set( ui::A_SOUND_START_DELAY, 60 );
 			s->Set( ui::A_SOUND_VOLUME, 0.7 );

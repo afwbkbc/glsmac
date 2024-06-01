@@ -7,7 +7,7 @@
 
 #include "game/unit/Types.h"
 
-#include "Sprite.h"
+#include "task/game/Sprite.h"
 
 namespace types::texture {
 class Texture;
@@ -18,6 +18,8 @@ namespace game {
 
 class InstancedSprite;
 class InstancedSpriteManager;
+
+namespace unit {
 
 class BadgeDefs {
 public:
@@ -93,5 +95,6 @@ private:
 
 };
 
+}
 }
 }

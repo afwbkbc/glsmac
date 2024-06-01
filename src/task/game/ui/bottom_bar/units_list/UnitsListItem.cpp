@@ -2,7 +2,7 @@
 
 #include "UnitsList.h"
 
-#include "task/game/Unit.h"
+#include "task/game/unit/Unit.h"
 #include "ui/object/Label.h"
 #include "ui/object/Panel.h"
 #include "ui/object/Mesh.h"
@@ -12,7 +12,7 @@ namespace task {
 namespace game {
 namespace ui {
 
-UnitsListItem::UnitsListItem( Game* game, UnitsList* units_list, Unit* unit )
+UnitsListItem::UnitsListItem( Game* game, UnitsList* units_list, unit::Unit* unit )
 	: Section( game, "BBUnitsListItem", "BB" )
 	, m_units_list( units_list )
 	, m_unit( unit ) {
@@ -96,7 +96,7 @@ void UnitsListItem::DeselectUnit() {
 	m_selection_frame->RemoveStyleModifier( ::ui::M_ACTIVE );
 }
 
-const Unit* UnitsListItem::GetUnit() const {
+const unit::Unit* UnitsListItem::GetUnit() const {
 	return m_unit;
 }
 

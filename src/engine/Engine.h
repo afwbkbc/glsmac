@@ -25,6 +25,10 @@ namespace logger {
 class Logger;
 }
 
+namespace resource {
+class ResourceManager;
+}
+
 namespace loader {
 namespace font {
 class FontLoader;
@@ -73,6 +77,7 @@ CLASS( Engine, base::Base );
 		config::Config* config,
 		error_handler::ErrorHandler* error_handler,
 		logger::Logger* logger,
+		resource::ResourceManager* resource_manager,
 		loader::font::FontLoader* font_loader,
 		loader::texture::TextureLoader* texture_loader,
 		loader::sound::SoundLoader* sound_loader,
@@ -91,6 +96,7 @@ CLASS( Engine, base::Base );
 
 	config::Config* GetConfig() const { return m_config; }
 	logger::Logger* GetLogger() const { return m_logger; }
+	resource::ResourceManager* GetResourceManager() const { return m_resource_manager; }
 	loader::font::FontLoader* GetFontLoader() const { return m_font_loader; }
 	loader::texture::TextureLoader* GetTextureLoader() const { return m_texture_loader; }
 	loader::sound::SoundLoader* GetSoundLoader() const { return m_sound_loader; }
@@ -111,6 +117,7 @@ protected:
 	config::Config* const m_config = nullptr;
 	error_handler::ErrorHandler* m_error_handler = nullptr;
 	logger::Logger* m_logger = nullptr;
+	resource::ResourceManager* m_resource_manager = nullptr;
 	loader::font::FontLoader* m_font_loader = nullptr;
 	loader::texture::TextureLoader* m_texture_loader = nullptr;
 	loader::sound::SoundLoader* m_sound_loader = nullptr;

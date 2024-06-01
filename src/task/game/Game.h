@@ -14,6 +14,7 @@
 #include "game/unit/Types.h"
 #include "game/Types.h"
 #include "rr/Types.h"
+#include "resource/Types.h"
 
 #include "types/Vec2.h"
 #include "types/Vec3.h"
@@ -77,14 +78,23 @@ class Def;
 namespace task {
 namespace game {
 
+namespace faction {
+class FactionManager;
+class Faction;
+}
+
+namespace unit {
+class UnitDef;
+class Unit;
+class UnitManager;
+}
+
 class InstancedSpriteManager;
 class InstancedSprite;
 class Sprite;
 class Slot;
 class AnimationDef;
 class Animation;
-class UnitDef;
-class Unit;
 class SlotBadges;
 class BadgeDefs;
 
@@ -140,16 +150,19 @@ CLASS( Game, base::Task )
 	};
 	static const consts_t s_consts;
 
+	faction::FactionManager* m_fm = nullptr;
+	unit::UnitManager* m_um = nullptr;
 	InstancedSpriteManager* m_ism = nullptr;
-	BadgeDefs* m_badge_defs = nullptr;
 
 	const size_t GetMapWidth() const;
 	const size_t GetMapHeight() const;
 	const std::string& GetMapFilename() const;
 	const std::string& GetMapLastDirectory() const;
 
+	unit::UnitManager* GetUM() const;
 	InstancedSpriteManager* GetISM() const;
-	types::texture::Texture* GetSourceTexture( const std::string& name );
+
+	types::texture::Texture* GetSourceTexture( const resource::resource_t res );
 	InstancedSprite* GetTerrainInstancedSprite( const ::game::map::sprite_actor_t& actor );
 
 	void CenterAtCoordinatePercents( const ::types::Vec2< float > position_percents );
@@ -189,6 +202,10 @@ CLASS( Game, base::Task )
 
 	const types::Vec3 GetCloserCoords( const types::Vec3& coords, const types::Vec3& ref_coords ) const;
 
+	Slot* GetSlot( const size_t index ) const;
+	Tile* GetTile( const size_t x, const size_t y );
+	Tile* GetTile( const types::Vec2< size_t >& coords );
+
 private:
 
 	size_t m_slot_index = 0;
@@ -198,8 +215,6 @@ private:
 	void ActivateTurn();
 	void DeactivateTurn();
 
-	const std::string TERRAIN_SOURCE_PCX = "ter1.pcx";
-
 	::game::map_editor::tool_type_t m_editor_tool = ::game::map_editor::TT_NONE;
 	::game::map_editor::brush_type_t m_editor_brush = ::game::map_editor::BT_NONE;
 
@@ -207,26 +222,10 @@ private:
 
 	void DefineSlot(
 		const size_t slot_index,
-		const types::Color& color,
-		const bool is_progenitor
+		const faction::Faction* faction
 	);
 	void DefineAnimation( const ::game::animation::Def* def );
 	void ShowAnimation( AnimationDef* def, const size_t animation_id, const ::types::Vec3& render_coords );
-	void DefineUnit( const ::game::unit::Def* def );
-	void SpawnUnit(
-		const size_t unit_id,
-		const std::string& unitdef_name,
-		const size_t slot_index,
-		const ::types::Vec2< size_t >& tile_coords,
-		const ::types::Vec3& render_coords,
-		const ::game::unit::movement_t movement,
-		const ::game::unit::morale_t morale,
-		const std::string& morale_string,
-		const ::game::unit::health_t health
-	);
-	void DespawnUnit( const size_t unit_id );
-	void RefreshUnit( Unit* unit );
-	void MoveUnit( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_coords );
 
 	void ProcessRequest( const ::game::FrontendRequest* request );
 	void SendBackendRequest( const ::game::BackendRequest* request );
@@ -348,14 +347,7 @@ private:
 	const bool m_is_map_editing_allowed = false;
 
 	Tile* m_selected_tile = nullptr;
-	Unit* m_selected_unit = nullptr;
 	map_data_t m_map_data = {};
-
-	struct moving_unit_info_t {
-		Tile* tile;
-		size_t animation_id;
-	};
-	std::unordered_map< Unit*, moving_unit_info_t > m_moving_units = {};
 
 	// UI stuff
 
@@ -369,14 +361,12 @@ private:
 	void SelectTileAtPoint( const ::game::tile_query_purpose_t tile_query_purpose, const size_t x, const size_t y );
 	void SelectTileOrUnit( Tile* tile, const size_t selected_unit_id = 0 );
 	void DeselectTileOrUnit();
-	Unit* GetFirstSelectableUnit( const std::unordered_map< size_t, Unit* >& units ) const;
 
 private:
 	friend class ui::UnitsList;
-	void SelectUnit( Unit* unit_data, const bool actually_select_unit );
 
 	struct {
-		std::unordered_map< std::string, types::texture::Texture* > source;
+		std::unordered_map< resource::resource_t, types::texture::Texture* > source;
 		types::texture::Texture* terrain = nullptr;
 	} m_textures;
 
@@ -441,40 +431,36 @@ private:
 	std::unordered_map< size_t, Slot* > m_slots = {};
 	std::unordered_map< std::string, AnimationDef* > m_animationdefs = {};
 	std::unordered_map< size_t, Animation* > m_animations;
-	std::unordered_map< std::string, UnitDef* > m_unitdefs = {};
-	std::unordered_map< size_t, Unit* > m_units = {};
-	std::vector< Unit* > m_selectable_units = {};
-	void UpdateSelectable( Unit* unit );
-	void AddSelectable( Unit* unit );
-	void RemoveSelectable( Unit* unit );
-	Unit* GetNextSelectable();
-	const bool SelectNextUnitMaybe();
-	void SelectNextUnitOrSwitchToTileSelection();
 
 	void CancelRequests();
 	void CancelGame();
 
 	std::vector< ::game::BackendRequest > m_pending_backend_requests = {};
 
-	enum unit_update_flags_t : uint8_t {
-		UUF_NONE = 0,
-		UUF_POSITION = 1 << 0,
-		UUF_MORALE = 1 << 1,
-		UUF_HEALTH = 1 << 2,
-		UUF_ALL = 0xff,
-	};
-
 	const float GetFixedX( const float x ) const;
 	const float GetCloserX( const float x, const float ref_x ) const;
 
-	Tile* GetTile( const size_t x, const size_t y );
-	Tile* GetTile( const types::Vec2< size_t >& coords );
-
 	void ShowTileSelector();
 	void HideTileSelector();
-	void RenderTile( Tile* tile );
+	void RenderTile( Tile* tile, const unit::Unit* selected_unit );
 
 	void SendAnimationFinished( const size_t animation_id );
+
+private:
+	friend class unit::UnitManager;
+
+	const bool IsTurnActive() const;
+
+	const size_t GetMySlotIndex() const;
+
+	Tile* GetSelectedTile() const;
+	void SetSelectedTile( Tile* tile );
+	void RefreshSelectedTile( unit::Unit* selected_unit );
+	void RefreshSelectedTileIf( Tile* if_tile, unit::Unit* selected_unit );
+	void ScrollToSelectedTile( const bool center_on_tile );
+	void SelectUnitOrSelectedTile( unit::Unit* selected_unit );
+	unit::Unit* GetSelectedTileMostImportantUnit() const;
+
 };
 
 }

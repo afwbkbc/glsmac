@@ -1,5 +1,7 @@
 #include "TextureLoader.h"
 
+#include <algorithm>
+
 #include "types/texture/Texture.h"
 
 namespace loader {
@@ -10,69 +12,69 @@ static const auto s_tc_pink = types::Color::RGB( 255, 0, 255 );
 static const auto s_tc_purple = types::Color::RGB( 152, 24, 228 );
 static const auto s_tc_darkpurple = types::Color::RGB( 100, 16, 156 );
 static const auto s_tc_aqua = types::Color::RGB( 24, 184, 228 );
-static const std::unordered_map< std::string, TextureLoader::transparent_colors_t > s_tcs = {
+static const std::unordered_map< resource::resource_t, TextureLoader::transparent_colors_t > s_tcs = {
 	{
-		"texture.pcx",
+		resource::PCX_TEXTURE,
 		{
 			types::Color::RGB( 125, 0, 128 ),
 		}
 	},
 	{
-		"interface.pcx",
+		resource::PCX_INTERFACE,
 		{
 			s_tc_pink,
 		}
 	},
 	{
-		"moon1.pcx",
+		resource::PCX_MOON1,
 		{
 			s_tc_pink,
 		}
 	},
 	{
-		"moon2.pcx",
+		resource::PCX_MOON2,
 		{
 			s_tc_pink,
 		}
 	},
 	{
-		"moon3.pcx",
+		resource::PCX_MOON3,
 		{
 			s_tc_pink,
 		}
 	},
 	{
-		"Icons.pcx",
+		resource::PCX_ICONS,
 		{
 			s_tc_purple,
 		}
 	},
 	{
-		"console_x.pcx",
+		resource::PCX_CONSOLE_X,
 		{
 			s_tc_pink,
 		}
 	},
 	{
-		"console2_A.pcx",
+		resource::PCX_CONSOLE2_A,
 		{
 			s_tc_darkpurple,
 		}
 	},
 	{
-		"console_x2_a.pcx",
+		resource::PCX_CONSOLE_X2_A,
 		{
 			s_tc_pink,
 		}
 	},
 	{
-		"Jackal.pcx",
+		resource::PCX_JACKAL,
 		{
 			s_tc_darkpurple,
 		}
 	},
 	{
-		"ter1.pcx",
+		resource::PCX_TER1,
 		{
 			s_tc_purple,
 			s_tc_darkpurple, // tile markings
@@ -81,7 +83,7 @@ static const std::unordered_map< std::string, TextureLoader::transparent_colors_
 		}
 	},
 	{
-		"Units.pcx",
+		resource::PCX_UNITS,
 		{
 			s_tc_purple,
 			s_tc_darkpurple, // tile markings
@@ -89,21 +91,21 @@ static const std::unordered_map< std::string, TextureLoader::transparent_colors_
 		}
 	},
 	{
-		"flags.pcx",
+		resource::PCX_FLAGS,
 		{
 			types::Color::RGB( 124, 124, 124 ),
 			s_tc_aqua, // borders
 		}
 	},
 	{
-		"xi.pcx",
+		resource::PCX_XI,
 		{
 			types::Color::RGB( 0, 67, 255 ),
 			types::Color::RGB( 27, 187, 231 ), // borders
 		}
 	},
 	{
-		"XF.pcx",
+		resource::PCX_XF,
 		{
 			types::Color::RGB( 0, 0, 0 ),
 			types::Color::RGB( 155, 27, 231 ), // tile
@@ -113,8 +115,24 @@ static const std::unordered_map< std::string, TextureLoader::transparent_colors_
 };
 static const TextureLoader::transparent_colors_t s_no_transparent_colors = {};
 
-const TextureLoader::transparent_colors_t& TextureLoader::GetTCs( const std::string& name ) {
-	const auto& transparent_colors_it = s_tcs.find( name );
+// resolve some known files (TODO: move to scripts?)
+static const std::unordered_map< std::string, resource::resource_t > s_filename_to_res = {
+	{
+		"units.pcx",
+		resource::PCX_UNITS
+	},
+	{
+		"xi.pcx",
+		resource::PCX_XI,
+	},
+	{
+		"xf.pcx",
+		resource::PCX_XF,
+	},
+};
+
+const TextureLoader::transparent_colors_t& TextureLoader::GetTCs( const resource::resource_t res ) {
+	const auto& transparent_colors_it = s_tcs.find( res );
 	if ( transparent_colors_it != s_tcs.end() ) {
 		return transparent_colors_it->second;
 	}
@@ -123,18 +141,34 @@ const TextureLoader::transparent_colors_t& TextureLoader::GetTCs( const std::str
 	}
 }
 
-types::texture::Texture* TextureLoader::LoadTexture( const std::string& name ) {
+types::texture::Texture* TextureLoader::LoadTexture( const resource::resource_t res ) {
 	const transparent_colors_t colors_old = m_transparent_colors;
-	m_transparent_colors = GetTCs( name );
-	types::texture::Texture* result = LoadTextureImpl( name );
+	m_transparent_colors = GetTCs( res );
+	auto* result = LoadTextureImpl( GetFilename( res ) );
 	m_transparent_colors = colors_old;
 	return result;
 }
+types::texture::Texture* TextureLoader::LoadCustomTexture( const std::string& filename ) {
+	std::string key;
+	key.resize( filename.size() );
+	std::transform( filename.begin(), filename.end(), key.begin(), ::tolower );
+	const auto& it = s_filename_to_res.find( key );
+	transparent_colors_t colors_old;
+	if ( it != s_filename_to_res.end() ) {
+		colors_old = m_transparent_colors;
+		m_transparent_colors = GetTCs( it->second );
+	}
+	auto* result = LoadTextureImpl( GetCustomFilename( filename ) );
+	if ( it != s_filename_to_res.end() ) {
+		m_transparent_colors = colors_old;
+	}
+	return result;
+}
 
-types::texture::Texture* TextureLoader::LoadTexture( const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
+types::texture::Texture* TextureLoader::LoadTexture( const resource::resource_t res, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
 	const transparent_colors_t colors_old = m_transparent_colors;
-	m_transparent_colors = GetTCs( name );
-	types::texture::Texture* result = LoadTextureImpl( name, x1, y1, x2, y2, flags, value );
+	m_transparent_colors = GetTCs( res );
+	types::texture::Texture* result = LoadTextureImpl( GetFilename( res ), x1, y1, x2, y2, flags, value );
 	m_transparent_colors = colors_old;
 	return result;
 }

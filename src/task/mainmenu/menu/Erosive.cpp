@@ -20,7 +20,7 @@ Erosive::Erosive( MainMenu* mainmenu )
 							   NextMenu( menu );
 						   },
 						   CH( this ) {
-							   SetMoonsVariant( '1' );
+							   m_mainmenu->SetCustomizeMapMoons( 1 );
 						   }
 					   }
 		},
@@ -32,7 +32,7 @@ Erosive::Erosive( MainMenu* mainmenu )
 							   NextMenu( menu );
 						   },
 						   CH( this ) {
-							   SetMoonsVariant( '2' );
+							   m_mainmenu->SetCustomizeMapMoons( 2 );
 						   }
 					   }
 		},
@@ -44,7 +44,7 @@ Erosive::Erosive( MainMenu* mainmenu )
 							   NextMenu( menu );
 						   },
 						   CH( this ) {
-							   SetMoonsVariant( '3' );
+							   m_mainmenu->SetCustomizeMapMoons( 3 );
 						   }
 					   }
 		},
@@ -55,13 +55,9 @@ Erosive::Erosive( MainMenu* mainmenu )
 
 void Erosive::Close() {
 	if ( IsReadyToClose() ) {
-		m_mainmenu->SetCustomizeMapMoons( "" );
+		m_mainmenu->SetCustomizeMapMoons( 0 );
 		SlidingMenu::Close();
 	}
-}
-
-void Erosive::SetMoonsVariant( const char variant ) {
-	m_mainmenu->SetCustomizeMapMoons( (std::string)"moon" + variant );
 }
 
 }

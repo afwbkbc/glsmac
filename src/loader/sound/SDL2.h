@@ -11,7 +11,8 @@ CLASS( SDL2, SoundLoader )
 
 	virtual ~SDL2();
 
-	types::Sound* LoadSound( const std::string& name ) override;
+protected:
+	types::Sound* LoadSoundImpl( const std::string& filename ) override;
 
 private:
 	// cache all sounds for future use

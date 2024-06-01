@@ -8,10 +8,17 @@
 #include "game/settings/Types.h"
 #include "types/Vec2.h"
 
+namespace util {
+class ArgParser;
+}
+
 namespace config {
 
 CLASS( Config, base::Module )
 	Config( const int argc, const char* argv[] );
+	~Config();
+
+	void Init();
 
 	enum launch_flag_t : uint8_t {
 		LF_NONE = 0,
@@ -50,7 +57,8 @@ CLASS( Config, base::Module )
 	const std::string GetEnv( const std::string& var ) const;
 
 	const std::string& GetPrefix() const;
-	const std::string& GetSMACPath() const;
+
+	const std::vector< std::string > GetPossibleSMACPaths() const;
 
 #ifdef DEBUG
 
@@ -77,6 +85,12 @@ CLASS( Config, base::Module )
 
 private:
 
+	util::ArgParser* m_parser = nullptr;
+
+	void Error( const std::string& error );
+	const types::Vec2< size_t > ParseSize( const std::string& value );
+	void CheckAndSetSMACPath( const std::string& path );
+
 	const std::string DEFAULT_GLSMAC_PREFIX =
 #ifdef _WIN32
 		GetEnv( "APPDATA" ) + "/GLSMAC"
@@ -85,8 +99,8 @@ private:
 #endif
 	;
 
-	std::string m_prefix = DEFAULT_GLSMAC_PREFIX + "/";
-	std::string m_smac_path = "";
+	std::string m_prefix;
+	std::string m_smac_path;
 
 	uint8_t m_launch_flags = LF_NONE;
 	types::Vec2< size_t > m_window_size = {};

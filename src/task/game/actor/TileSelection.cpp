@@ -35,7 +35,7 @@ TileSelection::TileSelection( const ::game::map::tile::tile_vertices_t& coords )
 	mesh->Finalize();
 
 	SetMesh( mesh );
-	SetTexture( g_engine->GetTextureLoader()->LoadTexture( "texture.pcx", 1, 571, 56, 626 ) );
+	SetTexture( g_engine->GetTextureLoader()->LoadTexture( resource::PCX_TEXTURE, 1, 571, 56, 626 ) );
 	SetRenderFlags( RF_IGNORE_LIGHTING | RF_IGNORE_DEPTH );
 
 	m_glow_timer.SetInterval( GLOW_STEP );

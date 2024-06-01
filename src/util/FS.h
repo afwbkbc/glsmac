@@ -12,6 +12,9 @@ CLASS( FS, Util )
 	static const char PATH_SEPARATOR;
 	static const char EXTENSION_SEPARATOR;
 
+	// to workaround uppercase or lowercase filenames
+	static const std::string GetExistingCaseSensitivePath( const std::string& base_path, const std::string& case_insensitive_path );
+
 	static const std::string NormalizePath( const std::string& path, const char path_separator );
 	static const std::string ConvertPath( const std::string& path, const char path_separator );
 

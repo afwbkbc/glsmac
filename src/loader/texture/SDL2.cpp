@@ -2,7 +2,7 @@
 
 #include "SDL2.h"
 
-#include "util/System.h"
+#include "util/FS.h"
 #include "types/texture/Texture.h"
 
 namespace loader {
@@ -29,22 +29,15 @@ void SDL2::Iterate() {
 
 }
 
-types::texture::Texture* SDL2::LoadTextureImpl( const std::string& name ) {
+types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename ) {
 
-	texture_map_t::iterator it = m_textures.find( name );
+	texture_map_t::iterator it = m_textures.find( filename );
 	if ( it != m_textures.end() ) {
 		return it->second;
 	}
 	else {
-		Log( "Loading texture \"" + name + "\"" );
-		auto filenames = util::System::GetPossibleFilenames( name );
-		SDL_Surface* image = nullptr;
-		for ( auto& filename : filenames ) {
-			image = IMG_Load( ( GetRoot() + name ).c_str() );
-			if ( image ) {
-				break;
-			}
-		}
+		Log( "Loading texture \"" + filename + "\"" );
+		auto* image = IMG_Load( filename.c_str() );
 		ASSERT( image, IMG_GetError() );
 		if ( image->format->format != SDL_PIXELFORMAT_RGBA32 ) {
 			// we must have all images in same format
@@ -54,7 +47,7 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& name ) {
 			SDL_FreeSurface( old );
 		}
 
-		NEWV( texture, types::texture::Texture, name, image->w, image->h );
+		NEWV( texture, types::texture::Texture, filename, image->w, image->h );
 		texture->m_aspect_ratio = (float)texture->m_height / texture->m_width;
 		texture->m_bpp = image->format->BitsPerPixel / 8;
 		texture->m_bitmap_size = image->w * image->h * texture->m_bpp;
@@ -66,7 +59,7 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& name ) {
 
 		FixTransparency( texture ); // TODO: base texture should be saved as-is
 
-		m_textures[ name ] = texture;
+		m_textures[ filename ] = texture;
 
 		DEBUG_STAT_INC( textures_loaded );
 
@@ -94,7 +87,7 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& name, const s
 	}
 	else {
 
-		auto* full_texture = LoadTexture( name );
+		auto* full_texture = LoadTextureImpl( name );
 
 		NEWV( subtexture, types::texture::Texture, subtexture_key, x2 - x1 + 1, y2 - y1 + 1 );
 

@@ -1,13 +1,15 @@
 #include "Unit.h"
 
-#include "Game.h"
+#include "task/game/Game.h"
 #include "util/String.h"
 #include "game/unit/Unit.h"
-#include "Slot.h"
-#include "Tile.h"
+#include "task/game/Slot.h"
+#include "task/game/Tile.h"
 #include "UnitDef.h"
 #include "BadgeDefs.h"
-#include "InstancedSprite.h"
+#include "SlotBadges.h"
+#include "UnitManager.h"
+#include "task/game/InstancedSprite.h"
 #include "scene/actor/Instanced.h"
 #include "types/mesh/Rectangle.h"
 #include "scene/actor/Sprite.h"
@@ -17,9 +19,10 @@
 
 namespace task {
 namespace game {
+namespace unit {
 
 Unit::Unit(
-	Game* game,
+	UnitManager* um,
 	BadgeDefs* badge_defs,
 	const size_t id,
 	UnitDef* def,
@@ -32,11 +35,11 @@ Unit::Unit(
 	const std::string& morale_string,
 	const ::game::unit::health_t health
 )
-	: m_game( game )
+	: m_um( um )
 	, m_badge_defs( badge_defs )
 	, m_id( id )
 	, m_def( def )
-	, m_slot( slot )
+	, m_slot_badges( m_um->GetSlotBadges( slot->GetIndex() ) )
 	, m_tile( tile )
 	, m_render(
 		{
@@ -53,7 +56,7 @@ Unit::Unit(
 	, m_morale_string( morale_string )
 	, m_health( health ) {
 	m_is_active = ShouldBeActive();
-	m_render.badge.def = m_slot->GetUnitBadgeSprite( m_morale, m_is_active );
+	m_render.badge.def = m_slot_badges->GetUnitBadgeSprite( m_morale, m_is_active );
 	m_render.badge.healthbar.def = m_badge_defs->GetBadgeHealthbarSprite( m_health );
 	m_render_data.unit = GetMeshTex( GetSprite()->instanced_sprite );
 	m_render_data.badge = GetMeshTex( GetBadgeSprite()->instanced_sprite );
@@ -209,16 +212,16 @@ void Unit::HideBadge() {
 void Unit::ShowFakeBadge( const uint8_t offset ) {
 	if ( !m_render.fake_badge.instance_id || m_fake_badge_offset != offset ) {
 		if ( m_render.fake_badge.instance_id ) {
-			m_slot->HideFakeBadge( !m_render.fake_badge.instance_id );
+			m_slot_badges->HideFakeBadge( !m_render.fake_badge.instance_id );
 		}
-		m_render.fake_badge.instance_id = m_slot->ShowFakeBadge( m_render.coords, offset );
+		m_render.fake_badge.instance_id = m_slot_badges->ShowFakeBadge( m_render.coords, offset );
 		m_fake_badge_offset = offset;
 	}
 }
 
 void Unit::HideFakeBadge() {
 	if ( m_render.fake_badge.instance_id ) {
-		m_slot->HideFakeBadge( m_render.fake_badge.instance_id );
+		m_slot_badges->HideFakeBadge( m_render.fake_badge.instance_id );
 		m_render.fake_badge.instance_id = 0;
 		m_fake_badge_offset = 0;
 	}
@@ -251,7 +254,7 @@ void Unit::Refresh() {
 			HideBadge();
 		}
 		{
-			auto* newdef = m_slot->GetUnitBadgeSprite( m_morale, m_is_active );
+			auto* newdef = m_slot_badges->GetUnitBadgeSprite( m_morale, m_is_active );
 			if ( m_render.badge.def != newdef ) {
 				if ( m_render.badge.instance_id ) {
 					m_render.badge.def->instanced_sprite->actor->RemoveInstance( m_render.badge.instance_id );
@@ -329,7 +332,7 @@ void Unit::MoveToTile( Tile* dst_tile ) {
 
 	auto from = m_tile->GetRenderData().coords.InvertY();
 	auto to = dst_tile->GetRenderData().coords.InvertY();
-	m_mover.Scroll( from, m_game->GetCloserCoords( to, from ), MOVE_DURATION_MS );
+	m_mover.Scroll( from, m_um->GetCloserCoords( to, from ), MOVE_DURATION_MS );
 }
 
 void Unit::UpdateFromTile() {
@@ -399,11 +402,12 @@ void Unit::SetRenderCoords( const types::Vec3& coords ) {
 		BadgeDefs::GetBadgeHealthbarCoords( m_render.coords )
 	);
 	if ( m_render.fake_badge.instance_id ) {
-		m_slot->HideFakeBadge( m_render.fake_badge.instance_id );
-		m_render.fake_badge.instance_id = m_slot->ShowFakeBadge( m_render.coords, m_fake_badge_offset );
+		m_slot_badges->HideFakeBadge( m_render.fake_badge.instance_id );
+		m_render.fake_badge.instance_id = m_slot_badges->ShowFakeBadge( m_render.coords, m_fake_badge_offset );
 	}
 	m_need_refresh = true;
 }
 
+}
 }
 }

@@ -1,5 +1,7 @@
 SUBDIR( ui )
 SUBDIR( actor )
+SUBDIR( faction )
+SUBDIR( unit )
 
 SET( SRC ${SRC}
 
@@ -7,13 +9,9 @@ SET( SRC ${SRC}
 	${PWD}/InstancedSpriteManager.cpp
 	${PWD}/InstancedSprite.cpp
 	${PWD}/Sprite.cpp
-	${PWD}/BadgeDefs.cpp
 	${PWD}/Slot.cpp
-	${PWD}/SlotBadges.cpp
 	${PWD}/AnimationDef.cpp
 	${PWD}/Animation.cpp
-	${PWD}/UnitDef.cpp
-	${PWD}/Unit.cpp
 	${PWD}/Tile.cpp
 
 	PARENT_SCOPE )

@@ -6,6 +6,7 @@
 #include "base/Thread.h"
 #include "error_handler/ErrorHandler.h"
 #include "logger/Logger.h"
+#include "resource/ResourceManager.h"
 #include "loader/font/FontLoader.h"
 #include "loader/texture/TextureLoader.h"
 #include "loader/sound/SoundLoader.h"
@@ -28,6 +29,7 @@ Engine::Engine(
 	config::Config* config,
 	error_handler::ErrorHandler* error_handler,
 	logger::Logger* logger,
+	resource::ResourceManager* resource_manager,
 	loader::font::FontLoader* font_loader,
 	loader::texture::TextureLoader* texture_loader,
 	loader::sound::SoundLoader* sound_loader,
@@ -43,6 +45,7 @@ Engine::Engine(
 	m_config( config )
 	, m_error_handler( error_handler )
 	, m_logger( logger )
+	, m_resource_manager( resource_manager )
 	, m_font_loader( font_loader )
 	, m_texture_loader( texture_loader )
 	, m_sound_loader( sound_loader )
@@ -57,6 +60,9 @@ Engine::Engine(
 
 	g_engine = this;
 
+	m_config->Init();
+	m_resource_manager->Init( m_config->GetPossibleSMACPaths() );
+
 	NEWV( t_main, base::Thread, "MAIN" );
 	if ( m_config->HasLaunchFlag( config::Config::LF_BENCHMARK ) ) {
 		t_main->SetIPS( 999999.9f );
@@ -70,6 +76,7 @@ Engine::Engine(
 	t_main->AddModule( m_texture_loader );
 	t_main->AddModule( m_sound_loader );
 	t_main->AddModule( m_logger );
+	t_main->AddModule( m_resource_manager );
 	t_main->AddModule( m_input );
 	t_main->AddModule( m_graphics );
 	t_main->AddModule( m_audio );

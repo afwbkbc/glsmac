@@ -2,7 +2,7 @@
 
 #include "engine/Engine.h"
 
-#include "task/game/Unit.h"
+#include "task/game/unit/Unit.h"
 #include "ui/object/Mesh.h"
 #include "ui/object/Label.h"
 #include "types/mesh/Mesh.h"
@@ -25,7 +25,7 @@ void UnitPreview::Destroy() {
 	BBSection::Destroy();
 }
 
-void UnitPreview::PreviewUnit( const Unit* unit ) {
+void UnitPreview::PreviewUnit( const unit::Unit* unit ) {
 	HideUnitPreview();
 
 	m_unit = unit;

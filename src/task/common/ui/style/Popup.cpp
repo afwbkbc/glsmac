@@ -20,7 +20,7 @@ void Popup::AddStyles() {
 					{ ui::A_TEXTURE_BOTTOM, { 86,  461, 109, 461 } },
 				};
 				for ( auto& texture : textures ) {
-					s->SetTexture( texture.first, "interface.pcx", texture.second[ 0 ], texture.second[ 1 ], texture.second[ 2 ], texture.second[ 3 ] );
+					s->SetTexture( texture.first, resource::PCX_INTERFACE, texture.second[ 0 ], texture.second[ 1 ], texture.second[ 2 ], texture.second[ 3 ] );
 				}
 			}
 		}
@@ -51,7 +51,7 @@ void Popup::AddStyles() {
 						}
 				);
 				for ( auto& texture : textures ) {
-					s->SetTexture( texture.first, "interface.pcx", texture.second[ 0 ], texture.second[ 1 ], texture.second[ 2 ], texture.second[ 3 ] );
+					s->SetTexture( texture.first, resource::PCX_INTERFACE, texture.second[ 0 ], texture.second[ 1 ], texture.second[ 2 ], texture.second[ 3 ] );
 				}
 			}
 
@@ -65,7 +65,7 @@ void Popup::AddStyles() {
 					{ ui::A_HEADER_TEXTURE_BOTTOM, { 86,  461, 109, 461 } },
 				};
 				for ( auto& texture : textures ) {
-					s->SetTexture( texture.first, "interface.pcx", texture.second[ 0 ], texture.second[ 1 ], texture.second[ 2 ], texture.second[ 3 ] );
+					s->SetTexture( texture.first, resource::PCX_INTERFACE, texture.second[ 0 ], texture.second[ 1 ], texture.second[ 2 ], texture.second[ 3 ] );
 				}
 			}
 			s->SetColor( ui::A_HEADER_TEXTCOLOR, types::Color::FromRGB( 109, 126, 178 ) );
@@ -74,14 +74,14 @@ void Popup::AddStyles() {
 
 	AddStyle(
 		"PopupWindow", { "PopupFrame" }, SH() {
-			s->SetFont( ui::A_HEADER_FONT, "arialnb.ttf", 18 );
+			s->SetFont( ui::A_HEADER_FONT, resource::TTF_ARIALNB, 18 );
 			s->Set( ui::A_HEADER_HEIGHT, 22 );
 		}
 	);
 
 	AddStyle(
 		"PopupSection", { "PopupFrame" }, SH() {
-			s->SetFont( ui::A_HEADER_FONT, "arialnb.ttf", 16 );
+			s->SetFont( ui::A_HEADER_FONT, resource::TTF_ARIALNB, 16 );
 			s->Set( ui::A_HEADER_HEIGHT, 20 );
 		}
 	);
@@ -89,7 +89,7 @@ void Popup::AddStyles() {
 	AddStyle(
 		"PopupLabel", SH() {
 			s->SetColor( ui::A_TEXT_COLOR, types::Color::FromRGB( 109, 126, 178 ) );
-			s->SetFont( ui::A_FONT, "arialnb.ttf", 18 );
+			s->SetFont( ui::A_FONT, resource::TTF_ARIALNB, 18 );
 		}
 	);
 
@@ -98,7 +98,7 @@ void Popup::AddStyles() {
 			"PopupBorder"
 		}, SH() {
 			s->SetColor( ui::A_TEXT_COLOR, types::Color::FromRGB( 159, 196, 198 ) );
-			s->SetFont( ui::A_FONT, "arialnb.ttf", 18 );
+			s->SetFont( ui::A_FONT, resource::TTF_ARIALNB, 18 );
 			s->Set( ui::A_HEIGHT, 22 );
 		}
 	);
@@ -143,7 +143,7 @@ void Popup::AddStyles() {
 			}
 
 			for ( auto& texture : textures ) {
-				s->SetTexture( texture.first, "interface.pcx", texture.second[ 0 ], texture.second[ 1 ], texture.second[ 2 ], texture.second[ 3 ] );
+				s->SetTexture( texture.first, resource::PCX_INTERFACE, texture.second[ 0 ], texture.second[ 1 ], texture.second[ 2 ], texture.second[ 3 ] );
 			}
 
 			if ( s->Is( ui::M_HOVER ) && !s->Is( ui::M_ACTIVE ) && !s->Is( ui::M_SELECTED ) ) {
@@ -164,7 +164,7 @@ void Popup::AddStyles() {
 			//s->Set( ui::A_TOP, 3 );
 			s->Set( ui::A_BOTTOM, 3 );
 
-			s->SetFont( ui::A_FONT, "arialnb.ttf", 16 );
+			s->SetFont( ui::A_FONT, resource::TTF_ARIALNB, 16 );
 			s->Set( ui::A_TEXT_ALIGN, ui::ALIGN_LEFT );
 		}
 	);
@@ -176,15 +176,15 @@ void Popup::AddStyles() {
 			s->Set( ui::A_WIDTH, 230 );
 			s->Set( ui::A_HEIGHT, 20 );
 
-			s->SetFont( ui::A_FONT, "arialnb.ttf", 18 );
-			s->SetSound( ui::A_BUTTON_CLICK_SOUND, "ok.wav" );
+			s->SetFont( ui::A_FONT, resource::TTF_ARIALNB, 18 );
+			s->SetSound( ui::A_BUTTON_CLICK_SOUND, resource::WAV_OK );
 			s->Set( ui::A_SOUND_VOLUME, 0.5 );
 		}
 	);
 
 	AddStyle(
 		"PopupText", SH() {
-			s->SetFont( ui::A_FONT, "arialnb.ttf", 18 );
+			s->SetFont( ui::A_FONT, resource::TTF_ARIALNB, 18 );
 			s->SetColor( ui::A_TEXT_COLOR, types::Color::FromRGB( 129, 146, 198 ) );
 		}
 	);
@@ -213,7 +213,7 @@ void Popup::AddStyles() {
 		"PopupFileList", SH() {
 			s->Set( ui::A_RIGHT, 4 );
 			s->Set( ui::A_BOTTOM, 30 ); // to fit text input
-			s->SetFont( ::ui::A_FONT, "arialn.ttf", 16 );
+			s->SetFont( ::ui::A_FONT, resource::TTF_ARIALN, 16 );
 			s->Set( ui::A_ITEM_HEIGHT, 17 ); // TODO: auto-size?
 		}
 	);
@@ -222,7 +222,7 @@ void Popup::AddStyles() {
 		"PopupFileListInput", { "PopupBorder" }, SH() {
 			s->SetColor( ui::A_TEXT_COLOR, types::Color::FromRGB( 92, 124, 188 ) );
 			s->SetColor( ui::A_HINT_COLOR, types::Color::FromRGBA( 92, 124, 188, 127 ) );
-			s->SetFont( ui::A_FONT, "arialn.ttf", 18 );
+			s->SetFont( ui::A_FONT, resource::TTF_ARIALN, 18 );
 			s->Set( ui::A_HEIGHT, 22 );
 			s->Set( ui::A_ALIGN, ui::ALIGN_HCENTER | ui::ALIGN_BOTTOM );
 			s->Set( ui::A_BOTTOM, 2 );
@@ -237,11 +237,11 @@ void Popup::AddStyles() {
 			s->Set( ui::A_TEXT_LEFT, 20 );
 
 			if ( s->Is( ui::M_SELECTED ) ) {
-				s->SetTexture( ui::A_ITEM_TEXTURE, "interface.pcx", 68, 169, 134, 188 );
+				s->SetTexture( ui::A_ITEM_TEXTURE, resource::PCX_INTERFACE, 68, 169, 134, 188 );
 				s->SetColor( ::ui::A_TEXT_COLOR, types::Color::FromRGB( 13, 23, 36 ) );
 			}
 			else if ( s->Is( ui::M_HOVER ) ) {
-				s->SetTexture( ui::A_ITEM_TEXTURE, "interface.pcx", 68, 149, 134, 166, ui::LT_CONTRAST, 0.7f );
+				s->SetTexture( ui::A_ITEM_TEXTURE, resource::PCX_INTERFACE, 68, 149, 134, 166, ui::LT_CONTRAST, 0.7f );
 				s->SetColor( ::ui::A_TEXT_COLOR, types::Color::FromRGB( 120, 164, 212 ) );
 			}
 			else {
@@ -257,19 +257,19 @@ void Popup::AddStyles() {
 
 	AddStyle(
 		"PopupFileListItemFile", { "PopupFileListItem" }, SH() {
-			s->SetTexture( ui::A_ITEM_ICON_TEXTURE, "Jackal.pcx", 18, 1, 33, 16 );
+			s->SetTexture( ui::A_ITEM_ICON_TEXTURE, resource::PCX_JACKAL, 18, 1, 33, 16 );
 		}
 	);
 
 	AddStyle(
 		"PopupFileListItemDir", { "PopupFileListItem" }, SH() {
-			s->SetTexture( ui::A_ITEM_ICON_TEXTURE, "Jackal.pcx", 1, 1, 16, 16 );
+			s->SetTexture( ui::A_ITEM_ICON_TEXTURE, resource::PCX_JACKAL, 1, 1, 16, 16 );
 		}
 	);
 
 	AddStyle(
 		"PopupFileListItemDirUp", { "PopupFileListItem" }, SH() {
-			s->SetTexture( ui::A_ITEM_ICON_TEXTURE, "Jackal.pcx", 35, 1, 50, 16 );
+			s->SetTexture( ui::A_ITEM_ICON_TEXTURE, resource::PCX_JACKAL, 35, 1, 50, 16 );
 		}
 	);
 
@@ -278,17 +278,17 @@ void Popup::AddStyles() {
 		"DefaultPopupFrame", {
 			"PopupFrame"
 		}, SH() {
-			s->SetFont( ui::A_HEADER_FONT, "arialnb.ttf", 18 );
+			s->SetFont( ui::A_HEADER_FONT, resource::TTF_ARIALNB, 18 );
 			s->Set( ui::A_HEADER_HEIGHT, 22 );
 			s->SetColor( ui::A_TEXT_COLOR, types::Color::FromRGB( 109, 126, 178 ) );
-			s->SetFont( ui::A_FONT, "arialnb.ttf", 20 );
+			s->SetFont( ui::A_FONT, resource::TTF_ARIALNB, 20 );
 		}
 	);
 
 	AddStyle(
 		"DefaultPopupLabel", SH() {
 			s->SetColor( ui::A_TEXT_COLOR, types::Color::FromRGB( 109, 126, 178 ) );
-			s->SetFont( ui::A_FONT, "arialnb.ttf", 20 );
+			s->SetFont( ui::A_FONT, resource::TTF_ARIALNB, 20 );
 		}
 	);
 
@@ -299,8 +299,8 @@ void Popup::AddStyles() {
 			s->Set( ui::A_WIDTH, 234 );
 			s->Set( ui::A_HEIGHT, 20 );
 
-			s->SetFont( ui::A_FONT, "arialnb.ttf", 18 );
-			s->SetSound( ui::A_BUTTON_CLICK_SOUND, "ok.wav" );
+			s->SetFont( ui::A_FONT, resource::TTF_ARIALNB, 18 );
+			s->SetSound( ui::A_BUTTON_CLICK_SOUND, resource::WAV_OK );
 			s->Set( ui::A_SOUND_VOLUME, 0.5 );
 		}
 	);
@@ -310,7 +310,7 @@ void Popup::AddStyles() {
 			"PopupFrame"
 		}, SH() {
 			s->Set( ui::A_HEIGHT, 24 );
-			s->SetFont( ui::A_FONT, "arialnb.ttf", 18 );
+			s->SetFont( ui::A_FONT, resource::TTF_ARIALNB, 18 );
 			s->SetColor( ui::A_TEXT_COLOR, types::Color::FromRGB( 255, 255, 255 ) );
 			s->Set( ui::A_TEXT_ALIGN, ui::ALIGN_LEFT | ui::ALIGN_TOP );
 			s->Set( ui::A_TEXT_LEFT, 4 );
@@ -328,13 +328,13 @@ void Popup::AddStyles() {
 			s->Set( ui::A_RIGHT, 3 );
 
 			if ( s->Is( ui::M_ACTIVE ) ) {
-				s->SetTexture( ui::A_TEXTURE, "interface.pcx", 550, 537, 556, 549 );
+				s->SetTexture( ui::A_TEXTURE, resource::PCX_INTERFACE, 550, 537, 556, 549 );
 			}
 			else if ( s->Is( ui::M_HOVER ) ) {
-				s->SetTexture( ui::A_TEXTURE, "interface.pcx", 542, 537, 548, 549 );
+				s->SetTexture( ui::A_TEXTURE, resource::PCX_INTERFACE, 542, 537, 548, 549 );
 			}
 			else {
-				s->SetTexture( ui::A_TEXTURE, "interface.pcx", 534, 537, 540, 549 );
+				s->SetTexture( ui::A_TEXTURE, resource::PCX_INTERFACE, 534, 537, 540, 549 );
 			}
 		}
 	);
@@ -346,16 +346,16 @@ void Popup::AddStyles() {
 			s->Set( ui::A_ITEM_HEIGHT, 19 );
 			s->Set( ui::A_BORDER_SIZE, 0 );
 
-			s->SetFont( ui::A_FONT, "arialnb.ttf", 17 );
+			s->SetFont( ui::A_FONT, resource::TTF_ARIALNB, 17 );
 			s->Set( ui::A_TEXT_ALIGN, ui::ALIGN_LEFT | ui::ALIGN_TOP );
 
 			if ( s->Is( ui::M_HOVER ) ) {
 				s->SetColor( ui::A_TEXT_COLOR, types::Color::FromRGB( 53, 61, 115 ) );
-				s->SetTexture( ui::A_TEXTURE_BACK, "interface.pcx", 68, 169, 134, 188 );
+				s->SetTexture( ui::A_TEXTURE_BACK, resource::PCX_INTERFACE, 68, 169, 134, 188 );
 			}
 			else {
 				s->SetColor( ui::A_TEXT_COLOR, types::Color::FromRGB( 176, 212, 235 ) );
-				s->SetTexture( ui::A_TEXTURE_BACK, "interface.pcx", 68, 127, 134, 146 );
+				s->SetTexture( ui::A_TEXTURE_BACK, resource::PCX_INTERFACE, 68, 127, 134, 146 );
 			}
 		}
 	);

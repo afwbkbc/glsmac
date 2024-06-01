@@ -3,12 +3,13 @@
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
 #include "types/texture/Texture.h"
-#include "InstancedSpriteManager.h"
+#include "task/game/InstancedSpriteManager.h"
 #include "game/map/Consts.h"
-#include "InstancedSprite.h"
+#include "task/game/InstancedSprite.h"
 
 namespace task {
 namespace game {
+namespace unit {
 
 const BadgeDefs::consts_t BadgeDefs::s_consts = {};
 
@@ -23,7 +24,7 @@ BadgeDefs::BadgeDefs( InstancedSpriteManager* ism )
 	const uint8_t h = 30;
 	const uint8_t margin = 1;
 
-	auto* texture = tl->LoadTexture( "flags.pcx" );
+	auto* texture = tl->LoadTexture( resource::PCX_FLAGS );
 
 	const types::Color transparent( 0.0f, 0.0f, 0.0f, 0.0f );
 	uint32_t x, y;
@@ -200,5 +201,6 @@ const types::Vec3 BadgeDefs::GetFakeBadgeCoords( const types::Vec3& coords, cons
 	};
 }
 
+}
 }
 }

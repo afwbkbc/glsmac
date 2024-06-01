@@ -7,7 +7,7 @@
 
 #include "types/Vec3.h"
 // TODO: remove?
-#include "Sprite.h"
+#include "task/game/Sprite.h"
 
 namespace game::unit {
 class Def;
@@ -17,6 +17,8 @@ namespace task {
 namespace game {
 
 class InstancedSpriteManager;
+
+namespace unit {
 
 class UnitDef {
 public:
@@ -60,5 +62,6 @@ private:
 	};
 };
 
+}
 }
 }

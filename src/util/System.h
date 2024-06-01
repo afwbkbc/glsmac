@@ -16,9 +16,6 @@ CLASS( System, Util )
 
 #endif
 
-	// to workaround uppercase or lowercase filenames
-	static std::vector< std::string > GetPossibleFilenames( const std::string& filename );
-
 };
 
 }

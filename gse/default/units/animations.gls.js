@@ -23,7 +23,7 @@ const result = {
 
 			[this.DEATH_PSI, {
 				type: 'frames_row',
-				file: 'XF.pcx',
+				file: 'xf.pcx',
 				row_x: 2, row_y: 914,
 				frame_width: 100, frame_height: 150,
 				frame_center_x: 50, frame_center_y: 125,

@@ -13,6 +13,10 @@ class Tile;
 class TileState;
 }
 
+namespace rules {
+class Faction;
+}
+
 class FrontendRequest {
 public:
 
@@ -24,6 +28,7 @@ public:
 		FR_UPDATE_TILES,
 		FR_TURN_STATUS,
 		FR_TURN_ADVANCE,
+		FR_FACTION_DEFINE,
 		FR_SLOT_DEFINE,
 		FR_ANIMATION_DEFINE,
 		FR_ANIMATION_SHOW,
@@ -39,16 +44,11 @@ public:
 
 	const request_type_t type = FR_NONE;
 
+	typedef std::vector< const game::rules::Faction* > faction_defines_t;
+
 	struct slot_define_t {
 		size_t slot_index;
-		// TODO: name etc
-		struct {
-			float r;
-			float g;
-			float b;
-			float a;
-		} color;
-		bool is_progenitor;
+		std::string faction_id;
 	};
 	typedef std::vector< slot_define_t > slot_defines_t;
 
@@ -74,6 +74,9 @@ public:
 		struct {
 			size_t turn_id;
 		} turn_advance;
+		struct {
+			faction_defines_t* factiondefs;
+		} faction_define;
 		struct {
 			slot_defines_t* slotdefs;
 		} slot_define;

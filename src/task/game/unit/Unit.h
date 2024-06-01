@@ -21,12 +21,17 @@ namespace task {
 namespace game {
 
 class Game;
-class UnitDef;
 class Slot;
 class Tile;
 class Sprite;
-class BadgeDefs;
 class InstancedSprite;
+
+namespace unit {
+
+class UnitDef;
+class BadgeDefs;
+class SlotBadges;
+class UnitManager;
 
 class Unit {
 public:
@@ -35,10 +40,10 @@ public:
 
 	// TODO: refactor
 	Unit(
-		Game* game,
+		UnitManager* um,
 		BadgeDefs* badge_defs,
 		const size_t id,
-		UnitDef* def,
+		unit::UnitDef* def,
 		Slot* slot,
 		Tile* tile,
 		const types::Vec3& render_coords,
@@ -109,13 +114,13 @@ public:
 
 private:
 
-	Game* m_game = nullptr;
+	UnitManager* m_um = nullptr;
 
 	BadgeDefs* const m_badge_defs;
+	SlotBadges* const m_slot_badges;
 
 	size_t m_id = 0;
 	UnitDef* m_def = nullptr;
-	Slot* m_slot = nullptr;
 	Tile* m_tile = nullptr;
 	struct {
 		types::Vec3 coords = {};
@@ -157,5 +162,6 @@ private:
 	void SetRenderCoords( const types::Vec3& coords );
 };
 
+}
 }
 }

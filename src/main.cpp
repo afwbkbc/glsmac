@@ -32,6 +32,8 @@
 
 #endif
 
+#include "resource/ResourceManager.h"
+
 #include "loader/font/FreeType.h"
 #include "loader/texture/SDL2.h"
 #include "loader/sound/SDL2.h"
@@ -196,6 +198,7 @@ int main( const int argc, const char* argv[] ) {
 				&config,
 				&error_handler,
 				logger,
+				nullptr,
 				&font_loader,
 				&texture_loader,
 				&sound_loader,
@@ -215,10 +218,10 @@ int main( const int argc, const char* argv[] ) {
 		{
 			game::Game game;
 
+			resource::ResourceManager resource_manager;
+
 			loader::font::FreeType font_loader;
-
 			loader::texture::SDL2 texture_loader;
-
 			loader::sound::SDL2 sound_loader;
 
 			input::sdl2::SDL2 input;
@@ -260,6 +263,7 @@ int main( const int argc, const char* argv[] ) {
 				&config,
 				&error_handler,
 				logger,
+				&resource_manager,
 				&font_loader,
 				&texture_loader,
 				&sound_loader,

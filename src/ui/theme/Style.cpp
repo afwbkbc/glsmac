@@ -59,24 +59,24 @@ void Style::SetObject( const attribute_type_t attribute_type, const void* ptr ) 
 	( *m_attributes_ptr )[ attribute_type ].value.ptr = ptr;
 }
 
-void Style::SetTexture( const attribute_type_t attribute_type, const std::string& name ) {
-	SetObject( attribute_type, g_engine->GetTextureLoader()->LoadTexture( name ) );
+void Style::SetTexture( const attribute_type_t attribute_type, const resource::resource_t res ) {
+	SetObject( attribute_type, g_engine->GetTextureLoader()->LoadTexture( res ) );
 }
 
-void Style::SetTexture( const attribute_type_t attribute_type, const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
-	SetObject( attribute_type, g_engine->GetTextureLoader()->LoadTexture( name, x1, y1, x2, y2, flags, value ) );
+void Style::SetTexture( const attribute_type_t attribute_type, const resource::resource_t res, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
+	SetObject( attribute_type, g_engine->GetTextureLoader()->LoadTexture( res, x1, y1, x2, y2, flags, value ) );
 }
 
 void Style::SetColorTexture( const attribute_type_t attribute_type, const types::Color& color ) {
 	SetObject( attribute_type, g_engine->GetTextureLoader()->GetColorTexture( color ) );
 }
 
-void Style::SetFont( const attribute_type_t attribute_type, const std::string& name, const unsigned char size ) {
-	SetObject( attribute_type, g_engine->GetFontLoader()->LoadFont( name, size ) );
+void Style::SetFont( const attribute_type_t attribute_type, const resource::resource_t res, const unsigned char size ) {
+	SetObject( attribute_type, g_engine->GetFontLoader()->LoadFont( res, size ) );
 }
 
-void Style::SetSound( const attribute_type_t attribute_type, const std::string& name ) {
-	SetObject( attribute_type, g_engine->GetSoundLoader()->LoadSound( name ) );
+void Style::SetSound( const attribute_type_t attribute_type, const resource::resource_t res ) {
+	SetObject( attribute_type, g_engine->GetSoundLoader()->LoadSound( res ) );
 }
 
 bool Style::Has( const attribute_type_t attribute_type, const modifier_t modifiers ) const {

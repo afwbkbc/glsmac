@@ -238,7 +238,7 @@ void MainMenu::ShowErrorOnStart( const std::string& error ) {
 void MainMenu::SetCustomizeMapPreview( const std::string& preview_filename ) {
 	//Log( "Set customize map preview to " + preview_filename );
 	m_customize_map_preview_filename = preview_filename;
-	m_customize_map_preview->SetTexture( g_engine->GetTextureLoader()->LoadTexture( preview_filename + ".pcx" ) );
+	m_customize_map_preview->SetTexture( g_engine->GetTextureLoader()->LoadTexture( GetPreviewResource( preview_filename ) ) );
 	m_customize_map_preview->SetStretchTexture( true );
 	m_customize_map_preview->Show();
 }
@@ -247,11 +247,10 @@ const std::string& MainMenu::GetMapPreviewFilename() const {
 	return m_customize_map_preview_filename;
 }
 
-void MainMenu::SetCustomizeMapMoons( const std::string& moons_filename ) {
-	if ( !moons_filename.empty() ) {
-		Log( "Set customize map moons to " + moons_filename );
-		m_customize_map_moons_filename = moons_filename;
-		m_customize_map_moons->SetTexture( g_engine->GetTextureLoader()->LoadTexture( moons_filename + ".pcx" ) );
+void MainMenu::SetCustomizeMapMoons( const uint8_t moons_count ) {
+	if ( moons_count > 0 ) {
+		Log( "Set customize map moons to " + std::to_string( moons_count ) );
+		m_customize_map_moons->SetTexture( g_engine->GetTextureLoader()->LoadTexture( GetMoonsResource( moons_count ) ) );
 		m_customize_map_moons->SetStretchTexture( true );
 		m_customize_map_moons->Show();
 	}
@@ -276,6 +275,41 @@ void MainMenu::ResizeCustomizeMapPreview() {
 	if ( m_customize_map_moons ) {
 		m_customize_map_moons->SetWidth( floor( 450.0f / 1024.0f * w ) );
 		m_customize_map_moons->SetHeight( floor( 450.0f / 768.0f * h ) );
+	}
+}
+
+const resource::resource_t MainMenu::GetPreviewResource( const std::string& preview_filename ) const {
+	ASSERT( preview_filename.length() == 6 && preview_filename[ 0 ] == 'S' && preview_filename[ 2 ] == 'L' && preview_filename[ 4 ] == 'C', "unexpected preview filename format: " + preview_filename );
+#define xSLC( _s, _l, _c ) \
+    if ( preview_filename[1] == (_s+'0') && preview_filename[3] == (_l+'0') && preview_filename[5] == (_c+'0') ) return resource::PCX_S##_s##L##_l##C##_c;
+#define xSL( _s, _l ) \
+    xSLC( _s, _l, 1 ) \
+    xSLC( _s, _l, 2 ) \
+    xSLC( _s, _l, 3 )
+#define xS( _s ) \
+    xSL( _s, 1 ) \
+    xSL( _s, 2 ) \
+    xSL( _s, 3 )
+	xS( 1 )
+	xS( 2 )
+	xS( 3 )
+#undef xS
+#undef xSL
+#undef xSLC
+	THROW( "could not match filename to resource: " + preview_filename );
+}
+
+const resource::resource_t MainMenu::GetMoonsResource( const uint8_t moons_count ) const {
+	ASSERT( moons_count < 4, "unexpected moons count: " + std::to_string( moons_count ) );
+	switch ( moons_count ) {
+#define xM( _m ) \
+        case _m: return resource::PCX_MOON##_m;
+		xM( 1 )
+		xM( 2 )
+		xM( 3 )
+#undef xM
+		default:
+			THROW( "could not match moons to resource: " + std::to_string( moons_count ) );
 	}
 }
 

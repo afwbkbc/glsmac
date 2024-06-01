@@ -22,7 +22,7 @@ const native_lifeform = (id, name, movement_type, movement_per_turn, base_y) => 
 		movement_per_turn: movement_per_turn,
 		render: {
 			type: 'sprite',
-			file: 'Units.pcx',
+			file: 'units.pcx',
 			x: 2, y: base_y,
 			w: 100, h: 75,
 			cx: 53, cy: base_y + 51,

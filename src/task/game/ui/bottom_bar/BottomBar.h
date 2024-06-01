@@ -21,7 +21,9 @@ namespace task {
 namespace game {
 class Game;
 class Tile;
+namespace unit {
 class Unit;
+}
 namespace ui {
 
 class UnitPreview;
@@ -49,7 +51,7 @@ CLASS( BottomBar, UI )
 	void PreviewTile( Tile* tile, const size_t selected_unit_id );
 	void HideTilePreview();
 
-	void PreviewUnit( const Unit* unit );
+	void PreviewUnit( const unit::Unit* unit );
 	void HideUnitPreview();
 
 	void SetMinimapTexture( types::texture::Texture* texture );

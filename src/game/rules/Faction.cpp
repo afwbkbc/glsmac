@@ -4,6 +4,7 @@
 #include "gse/type/String.h"
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
+#include "resource/ResourceManager.h"
 
 namespace game {
 namespace rules {
@@ -22,7 +23,7 @@ Faction::Faction( const std::string& id, const std::string& name )
 }
 
 void Faction::ImportPCX( const std::string& pcx_file ) {
-	const auto* texture = g_engine->GetTextureLoader()->LoadTexture( pcx_file );
+	const auto* texture = g_engine->GetTextureLoader()->LoadCustomTexture( pcx_file );
 	m_colors.text = types::Color::FromRGBA( texture->GetPixel( 5, 755 ) );
 	m_colors.border = types::Color::FromRGBA( texture->GetPixel( 162, 750 ) );
 }

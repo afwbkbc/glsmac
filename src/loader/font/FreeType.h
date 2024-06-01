@@ -18,9 +18,11 @@ CLASS( FreeType, FontLoader )
 	void Stop() override;
 	void Iterate() override;
 
-	types::Font* LoadFont( const std::string& name, const unsigned char size ) override;
-
 protected:
+
+	types::Font* LoadFontImpl( const std::string& filename, const unsigned char size ) override;
+
+private:
 	FT_Library m_freetype;
 
 	// cache all fonts for future use

@@ -43,7 +43,7 @@ BINDING_IMPL( animations ) {
 					N_GETPROP_OPT( float, scale_y, animation_def, "scale_y", Float, 1.0f );
 					N_GETPROP( duration_ms, animation_def, "duration_ms", Int );
 					N_GETPROP( sound, animation_def, "sound", String );
-					if ( !g_engine->GetSoundLoader()->LoadSound( sound ) ) {
+					if ( !g_engine->GetSoundLoader()->LoadCustomSound( sound ) ) {
 						ERROR( gse::EC.GAME_ERROR, "Failed to load animation sound '" + sound + "'" );
 					}
 					auto* def = new animation::FramesRow(

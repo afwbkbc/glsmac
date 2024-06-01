@@ -4,7 +4,7 @@ return [
 	['GAIANS', {
 		name: 'Gaians',
 		files: {
-			pcx: 'Gaians.pcx'
+			pcx: 'gaians.pcx'
 		}
 	}],
 	['HIVE', {

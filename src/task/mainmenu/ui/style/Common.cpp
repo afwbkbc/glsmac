@@ -11,14 +11,14 @@ void Common::AddStyles() {
 	AddStyle(
 		"MainMenuBackground", SH() {
 			s->Set( ui::A_ALIGN, ui::ALIGN_RIGHT | ui::ALIGN_BOTTOM );
-			s->SetTexture( ui::A_TEXTURE, "openinga.pcx" );
+			s->SetTexture( ui::A_TEXTURE, resource::PCX_OPENINGA );
 			s->Set( ui::A_STRETCH_TEXTURE );
 		}
 	);
 
 	AddStyle(
 		"MainMenuMusic", SH() {
-			s->SetSound( ui::A_SOUND, "opening menu.wav" );
+			s->SetSound( ui::A_SOUND, resource::WAV_OPENING_MENU );
 			s->Set( ui::A_SOUND_AUTOPLAY );
 			s->Set( ui::A_SOUND_REPEATABLE );
 			s->Set( ui::A_SOUND_VOLUME, 0.8 );
@@ -28,7 +28,7 @@ void Common::AddStyles() {
 	AddStyle(
 		"MainMenuGLSMACLogo", SH() {
 			s->Set( ui::A_ALIGN, ui::ALIGN_RIGHT | ui::ALIGN_TOP );
-			s->SetFont( ui::A_FONT, "arialnb.ttf", 14 );
+			s->SetFont( ui::A_FONT, resource::TTF_ARIALNB, 14 );
 			s->SetColor( ui::A_TEXT_COLOR, types::Color::FromRGBA( 127, 192, 192, 127 ) );
 			s->Set( ui::A_TOP, 3 ); // TODO: fix text width determination
 		}
