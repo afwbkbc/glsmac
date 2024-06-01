@@ -5,6 +5,8 @@
 
 #include "base/Task.h"
 
+#include "resource/Types.h"
+
 namespace game {
 class State;
 }
@@ -46,7 +48,7 @@ CLASS( MainMenu, base::Task )
 
 	void SetCustomizeMapPreview( const std::string& preview_filename );
 	const std::string& GetMapPreviewFilename() const;
-	void SetCustomizeMapMoons( const std::string& moons_filename );
+	void SetCustomizeMapMoons( const uint8_t moons_count );
 
 	util::random::Random* GetRandom();
 
@@ -62,8 +64,6 @@ private:
 
 	std::string m_customize_map_preview_filename = "";
 	std::vector< std::string > m_customize_map_preview_history = {};
-
-	std::string m_customize_map_moons_filename = "";
 
 	MenuObject* m_menu_object = nullptr;
 	std::vector< MenuObject* > m_menu_history = {};
@@ -81,6 +81,9 @@ private:
 	std::string m_show_error_on_start = "";
 
 	void ResizeCustomizeMapPreview();
+
+	const resource::resource_t GetPreviewResource( const std::string& preview_filename ) const;
+	const resource::resource_t GetMoonsResource( const uint8_t moons_count ) const;
 
 };
 

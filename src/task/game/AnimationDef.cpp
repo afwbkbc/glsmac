@@ -13,12 +13,12 @@ AnimationDef::AnimationDef( InstancedSpriteManager* ism, const ::game::animation
 	, m_id( def->m_id )
 	, m_type( def->m_type )
 	, m_duration_ms( def->m_duration_ms )
-	, m_sound( g_engine->GetSoundLoader()->LoadSound( def->m_sound_file ) ) {
+	, m_sound( g_engine->GetSoundLoader()->LoadCustomSound( def->m_sound_file ) ) {
 
 	ASSERT_NOLOG( def->m_type == ::game::animation::animation_type_t::AT_FRAMES_ROW, "only frames row animations are supported for now" );
 	const auto* d = (::game::animation::FramesRow*)def;
 
-	auto* texture = g_engine->GetTextureLoader()->LoadTexture( d->m_file );
+	auto* texture = g_engine->GetTextureLoader()->LoadCustomTexture( d->m_file );
 	m_sprites = {};
 	const uint32_t w = d->m_frame_width;
 	const uint32_t h = d->m_frame_height;

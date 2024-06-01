@@ -18,7 +18,7 @@ CLASS( SDL2, TextureLoader )
 
 protected:
 
-	types::texture::Texture* LoadTextureImpl( const std::string& name ) override;
+	types::texture::Texture* LoadTextureImpl( const std::string& filename ) override;
 	types::texture::Texture* LoadTextureImpl( const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) override;
 
 	// cache all textures for future use

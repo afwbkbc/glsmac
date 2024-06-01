@@ -216,13 +216,15 @@ Wasn't tested. Feel free to test, but I have feeling it will require many change
 
 ### Launch
 
+Note: GLSMAC needs `gse` directory to be in working directory from where it's run, it loads scripts from there in runtime (later some of them will be built into binary so this step won't be needed).
+
 Just run ./bin/GLSMAC --smacpath <smac_directory>
 
 Or copy `GLSMAC` file and `gse` directory into your SMAC directory and run without arguments from there.
 
 Run ./bin/GLSMAC --help to see more options. Debug builds have extra options that aren't available for release builds.
 
-Note: GLSMAC needs `gse` directory to be in working directory from where it's run, it loads scripts from there in runtime (later some of them will be built into binary so this step won't be needed).
+Supported SMAC releases: GOG, Loki, Planetary Pack (if you have something else and it doesn't work - double-check that you have SMACX expansion and then create issue)
 
 ### Reporting problems
 

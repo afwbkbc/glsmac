@@ -23,6 +23,66 @@ const char FS::PATH_SEPARATOR =
 
 const char FS::EXTENSION_SEPARATOR = '.';
 
+const std::string FS::GetExistingCaseSensitivePath( const std::string& base_path, const std::string& case_insensitive_path ) {
+
+#define CHK( _var ) \
+    if ( Exists( base_path + PATH_SEPARATOR + _var ) ) { \
+        return base_path + PATH_SEPARATOR + _var; \
+    }
+
+	// original file
+	CHK( case_insensitive_path );
+
+	// all uppercase
+	std::string str_upper = case_insensitive_path;
+	std::transform( case_insensitive_path.begin(), case_insensitive_path.end(), str_upper.begin(), ::toupper );
+	CHK( str_upper );
+
+	// all lowercase
+	std::string str_lower = case_insensitive_path;
+	std::transform( case_insensitive_path.begin(), case_insensitive_path.end(), str_lower.begin(), ::tolower );
+	CHK( str_lower );
+
+	const auto ext = util::FS::GetExtension( case_insensitive_path );
+	const auto extpos = case_insensitive_path.length() - ext.length();
+
+	// lowercase with uppercase extension
+	std::transform( ext.begin(), ext.end(), str_lower.begin() + extpos, ::toupper );
+	CHK( str_lower );
+
+	// uppercase with lowercase extension
+	std::transform( ext.begin(), ext.end(), str_upper.begin() + extpos, ::tolower );
+	CHK( str_upper );
+
+	// lowercase starting from capital letter (uppercase extension)
+	std::transform( case_insensitive_path.begin(), case_insensitive_path.begin() + 1, str_lower.begin(), ::toupper );
+	CHK( str_lower );
+
+	// lowercase starting from capital letter (lowercase extension)
+	std::transform( ext.begin(), ext.end(), str_lower.begin() + extpos, ::tolower );
+	CHK( str_lower );
+
+	// still no luck, fetch entire directory and go file by file lowercase-to-lowercase
+	const auto files = ListDirectory( base_path, false );
+	std::vector< std::string > lowercase_files = {};
+	lowercase_files.reserve( files.size() );
+	for ( auto file : files ) {
+		std::transform( file.begin(), file.end(), file.begin(), ::tolower );
+		lowercase_files.push_back( file );
+	}
+	ASSERT_NOLOG( files.size() == lowercase_files.size(), "files vector mismatch" );
+	std::transform( case_insensitive_path.begin(), case_insensitive_path.begin() + 1, str_lower.begin(), ::tolower );
+	for ( size_t i = 0 ; i < lowercase_files.size() ; i++ ) {
+		if ( lowercase_files.at( i ) == str_lower ) {
+			return base_path + PATH_SEPARATOR + files.at( i );
+		}
+
+	}
+
+	// give up
+	return "";
+}
+
 const std::string FS::NormalizePath( const std::string& path, const char path_separator ) {
 	if ( path_separator == PATH_SEPARATOR ) {
 		return path;
@@ -163,7 +223,7 @@ const std::string FS::GetExtension( const std::string& path, const char path_sep
 	}
 	else {
 		const auto pathsep_pos = path.rfind( path_separator );
-		if ( pathsep_pos > pos ) {
+		if ( pathsep_pos != std::string::npos && pathsep_pos > pos ) {
 			return "";
 		}
 		return path.substr( pos );

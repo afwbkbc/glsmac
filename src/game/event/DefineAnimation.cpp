@@ -20,7 +20,7 @@ const std::string* DefineAnimation::Validate( Game* game ) const {
 	if ( m_initiator_slot != 0 ) {
 		return Error( "Only master is allowed to define animations" );
 	}
-	if ( !g_engine->GetSoundLoader()->LoadSound( m_def->m_sound_file ) ) {
+	if ( !g_engine->GetSoundLoader()->LoadCustomSound( m_def->m_sound_file ) ) {
 		return Error( "Failed to load animation sound '" + m_def->m_sound_file + "'" );
 	}
 	return Ok();

@@ -4,6 +4,8 @@
 
 #include "loader/Loader.h"
 
+#include "resource/Types.h"
+
 namespace types {
 class Font;
 }
@@ -12,7 +14,9 @@ namespace loader {
 namespace font {
 
 CLASS( FontLoader, Loader )
-	virtual types::Font* LoadFont( const std::string& name, const unsigned char size ) = 0;
+	types::Font* LoadFont( const resource::resource_t res, const unsigned char size );
+protected:
+	virtual types::Font* LoadFontImpl( const std::string& filename, const unsigned char size ) = 0;
 };
 
 }

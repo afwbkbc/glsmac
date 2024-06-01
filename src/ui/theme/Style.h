@@ -3,6 +3,7 @@
 #include "base/Base.h"
 
 #include "Types.h"
+#include "resource/Types.h"
 
 #include "types/Color.h"
 
@@ -37,11 +38,11 @@ CLASS( Style, base::Base )
 	// raw setter
 	void SetObject( const attribute_type_t attribute_type, const void* value );
 	// convenience setters // TODO: improve SetTexture* API
-	void SetTexture( const attribute_type_t attribute_type, const std::string& name );
-	void SetTexture( const attribute_type_t attribute_type, const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = 0, const float value = 1.0 );
+	void SetTexture( const attribute_type_t attribute_type, const resource::resource_t res );
+	void SetTexture( const attribute_type_t attribute_type, const resource::resource_t res, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = 0, const float value = 1.0 );
 	void SetColorTexture( const attribute_type_t attribute_type, const types::Color& color );
-	void SetFont( const attribute_type_t attribute_type, const std::string& name, const unsigned char size );
-	void SetSound( const attribute_type_t attribute_type, const std::string& name );
+	void SetFont( const attribute_type_t attribute_type, const resource::resource_t res, const unsigned char size );
+	void SetSound( const attribute_type_t attribute_type, const resource::resource_t res );
 
 	bool Has( const attribute_type_t attribute_type, const modifier_t modifiers ) const;
 	const float Get( const attribute_type_t attribute_type, const modifier_t modifiers ) const;

@@ -70,7 +70,7 @@ void StatusButton::Create() {
 	NEW( m_flashing, ::ui::object::Surface );
 	m_flashing->SetMargin( 4 );
 	m_flashing->SetTintAlpha( 0.0f );
-	m_flashing->SetTexture( g_engine->GetTextureLoader()->LoadTexture( "console_x2_a.pcx", 199, 113, 373, 129 ) );
+	m_flashing->SetTexture( g_engine->GetTextureLoader()->LoadTexture( resource::PCX_CONSOLE_X2_A, 199, 113, 373, 129 ) );
 	AddChild( m_flashing );
 
 	NEW( m_sound, ::ui::object::SoundEffect, "BBTurnCompleteSound" );

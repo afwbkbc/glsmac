@@ -14,6 +14,7 @@
 #include "game/unit/Types.h"
 #include "game/Types.h"
 #include "rr/Types.h"
+#include "resource/Types.h"
 
 #include "types/Vec2.h"
 #include "types/Vec3.h"
@@ -161,7 +162,7 @@ CLASS( Game, base::Task )
 	unit::UnitManager* GetUM() const;
 	InstancedSpriteManager* GetISM() const;
 
-	types::texture::Texture* GetSourceTexture( const std::string& name );
+	types::texture::Texture* GetSourceTexture( const resource::resource_t res );
 	InstancedSprite* GetTerrainInstancedSprite( const ::game::map::sprite_actor_t& actor );
 
 	void CenterAtCoordinatePercents( const ::types::Vec2< float > position_percents );
@@ -213,8 +214,6 @@ private:
 	size_t m_turn_id = 0;
 	void ActivateTurn();
 	void DeactivateTurn();
-
-	const std::string TERRAIN_SOURCE_PCX = "ter1.pcx";
 
 	::game::map_editor::tool_type_t m_editor_tool = ::game::map_editor::TT_NONE;
 	::game::map_editor::brush_type_t m_editor_brush = ::game::map_editor::BT_NONE;
@@ -367,7 +366,7 @@ private:
 	friend class ui::UnitsList;
 
 	struct {
-		std::unordered_map< std::string, types::texture::Texture* > source;
+		std::unordered_map< resource::resource_t, types::texture::Texture* > source;
 		types::texture::Texture* terrain = nullptr;
 	} m_textures;
 

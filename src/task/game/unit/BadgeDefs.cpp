@@ -24,7 +24,7 @@ BadgeDefs::BadgeDefs( InstancedSpriteManager* ism )
 	const uint8_t h = 30;
 	const uint8_t margin = 1;
 
-	auto* texture = tl->LoadTexture( "flags.pcx" );
+	auto* texture = tl->LoadTexture( resource::PCX_FLAGS );
 
 	const types::Color transparent( 0.0f, 0.0f, 0.0f, 0.0f );
 	uint32_t x, y;

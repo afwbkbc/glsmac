@@ -478,16 +478,16 @@ InstancedSpriteManager* Game::GetISM() const {
 	return m_ism;
 }
 
-types::texture::Texture* Game::GetSourceTexture( const std::string& name ) {
-	const auto it = m_textures.source.find( name );
+types::texture::Texture* Game::GetSourceTexture( const resource::resource_t res ) {
+	const auto it = m_textures.source.find( res );
 	if ( it != m_textures.source.end() ) {
 		return it->second;
 	}
-	auto* texture = g_engine->GetTextureLoader()->LoadTexture( name );
+	auto* texture = g_engine->GetTextureLoader()->LoadTexture( res );
 	ASSERT( texture, "texture not loaded" );
 	m_textures.source.insert(
 		{
-			name,
+			res,
 			texture
 		}
 	);
@@ -497,7 +497,7 @@ types::texture::Texture* Game::GetSourceTexture( const std::string& name ) {
 InstancedSprite* Game::GetTerrainInstancedSprite( const ::game::map::sprite_actor_t& actor ) {
 	return m_ism->GetInstancedSprite(
 		"Terrain_" + actor.name,
-		GetSourceTexture( "ter1.pcx" ),
+		GetSourceTexture( resource::PCX_TER1 ),
 		actor.tex_coords,
 		::game::map::s_consts.tc.ter1_pcx.dimensions,
 		{

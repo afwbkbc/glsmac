@@ -26,11 +26,11 @@ void Popup::Create() {
 	auto* soundloader = g_engine->GetSoundLoader();
 
 	NEW( m_sounds.open, SoundEffect );
-	m_sounds.open->SetSound( soundloader->LoadSound( "menu up.wav" ) );
+	m_sounds.open->SetSound( soundloader->LoadSound( resource::WAV_MENU_UP ) );
 	m_sounds.open->SetVolume( 0.4f );
 	AddChild( m_sounds.open );
 	NEW( m_sounds.close, SoundEffect );
-	m_sounds.close->SetSound( soundloader->LoadSound( "menu down.wav" ) );
+	m_sounds.close->SetSound( soundloader->LoadSound( resource::WAV_MENU_DOWN ) );
 	m_sounds.open->SetVolume( 0.6f );
 	AddChild( m_sounds.close );
 

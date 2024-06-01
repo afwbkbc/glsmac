@@ -12,7 +12,12 @@ namespace loader {
 namespace sound {
 
 CLASS( SoundLoader, Loader )
-	virtual types::Sound* LoadSound( const std::string& name ) = 0;
+
+	types::Sound* LoadSound( const resource::resource_t res );
+	types::Sound* LoadCustomSound( const std::string& filename );
+
+protected:
+	virtual types::Sound* LoadSoundImpl( const std::string& filename ) = 0;
 };
 
 }

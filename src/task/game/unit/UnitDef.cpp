@@ -32,7 +32,7 @@ UnitDef::UnitDef( InstancedSpriteManager* ism, const ::game::unit::Def* unitdef 
 					static_.render.is_sprite = true;
 
 					const auto name = "Unit_" + def->m_id;
-					auto* texture = g_engine->GetTextureLoader()->LoadTexture( render->m_file );
+					auto* texture = g_engine->GetTextureLoader()->LoadCustomTexture( render->m_file );
 					const ::game::map::pcx_texture_coordinates_t& src_wh = {
 						render->m_w,
 						render->m_h,

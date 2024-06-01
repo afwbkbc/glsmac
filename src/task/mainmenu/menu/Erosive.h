@@ -10,9 +10,6 @@ CLASS( Erosive, SlidingMenu )
 
 	void Close() override;
 
-private:
-	void SetMoonsVariant( const char variant );
-
 };
 
 }
