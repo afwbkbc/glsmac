@@ -150,11 +150,6 @@ CLASS( Game, base::Task )
 	};
 	static const consts_t s_consts;
 
-	faction::FactionManager* m_fm = nullptr;
-	tile::TileManager* m_tm = nullptr;
-	unit::UnitManager* m_um = nullptr;
-	InstancedSpriteManager* m_ism = nullptr;
-
 	const size_t GetMapWidth() const;
 	const size_t GetMapHeight() const;
 	const std::string& GetMapFilename() const;
@@ -227,6 +222,11 @@ CLASS( Game, base::Task )
 	Slot* GetSlot( const size_t index ) const;
 
 private:
+
+	faction::FactionManager* m_fm = nullptr;
+	tile::TileManager* m_tm = nullptr;
+	unit::UnitManager* m_um = nullptr;
+	InstancedSpriteManager* m_ism = nullptr;
 
 	size_t m_slot_index = 0;
 	bool m_is_turn_active = false;

@@ -1116,7 +1116,7 @@ void Game::Initialize(
 	NEW( m_world_scene, scene::Scene, "Game", scene::SCENE_TYPE_ORTHO );
 
 	NEW( m_ism, InstancedSpriteManager, m_world_scene );
-	NEW( m_fm, faction::FactionManager );
+	NEW( m_fm, faction::FactionManager, this );
 	NEW( m_tm, tile::TileManager, this );
 	NEW( m_um, unit::UnitManager, this );
 

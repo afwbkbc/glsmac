@@ -1,5 +1,6 @@
 #include "FactionManager.h"
 
+#include "task/game/Game.h"
 #include "game/rules/Faction.h"
 #include "Faction.h"
 
@@ -7,10 +8,15 @@ namespace task {
 namespace game {
 namespace faction {
 
+FactionManager::FactionManager( Game* game )
+	: m_game( game ) {
+
+}
+
 void FactionManager::DefineFaction( const ::game::rules::Faction* def ) {
 	ASSERT( def, "faction is null" );
 	ASSERT( m_factions.find( def->m_id ) == m_factions.end(), "faction already defined" );
-	NEWV( faction, Faction, def );
+	NEWV( faction, Faction, def, m_game->GetISM() );
 	m_factions.insert(
 		{
 			def->m_id,

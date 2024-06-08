@@ -14,6 +14,8 @@ static const auto s_tc_pink = types::Color::RGB( 255, 0, 255 );
 static const auto s_tc_purple = types::Color::RGB( 152, 24, 228 );
 static const auto s_tc_darkpurple = types::Color::RGB( 100, 16, 156 );
 static const auto s_tc_aqua = types::Color::RGB( 24, 184, 228 );
+static const auto s_tc_yellowshadow = types::Color::RGB( 253, 189, 118 );
+static const auto s_tc_facborder = types::Color::RGB( 77, 156, 176 );
 static const std::unordered_map< resource::resource_t, TextureLoader::transparent_colors_t > s_tcs = {
 	{
 		resource::PCX_TEXTURE,
@@ -81,7 +83,7 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 			s_tc_purple,
 			s_tc_darkpurple, // tile markings
 			s_tc_aqua, // borders
-			types::Color::RGB( 253, 189, 118 ), // shadows
+			s_tc_yellowshadow // shadows
 		}
 	},
 	{
@@ -113,7 +115,119 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 			types::Color::RGB( 155, 27, 231 ), // tile
 			types::Color::RGB( 27, 187, 231 ), // borders
 		}
-	}
+	},
+	{
+		resource::PCX_GAIANS,
+		{
+			s_tc_pink,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_HIVE,
+		{
+			s_tc_pink,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_UNIV,
+		{
+			s_tc_pink,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_MORGAN,
+		{
+			s_tc_pink,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_SPARTANS,
+		{
+			s_tc_pink,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_BELIEVE,
+		{
+			s_tc_pink,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_PEACE,
+		{
+			s_tc_pink,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_CYBORG,
+		{
+			s_tc_darkpurple,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_PIRATES,
+		{
+			s_tc_darkpurple,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_DRONE,
+		{
+			s_tc_darkpurple,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_ANGELS,
+		{
+			s_tc_darkpurple,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_FUNGBOY,
+		{
+			s_tc_darkpurple,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_CARETAKE,
+		{
+			s_tc_darkpurple,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_USURPER,
+		{
+			s_tc_darkpurple,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
 };
 static const TextureLoader::transparent_colors_t s_no_transparent_colors = {};
 

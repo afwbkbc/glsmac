@@ -107,6 +107,62 @@ ResourceManager::ResourceManager()
 			PCX_XF,
 			"xf.pcx"
 		},
+		{
+			PCX_GAIANS,
+			"gaians.pcx"
+		},
+		{
+			PCX_HIVE,
+			"hive.pcx"
+		},
+		{
+			PCX_UNIV,
+			"univ.pcx"
+		},
+		{
+			PCX_MORGAN,
+			"morgan.pcx"
+		},
+		{
+			PCX_SPARTANS,
+			"spartans.pcx"
+		},
+		{
+			PCX_BELIEVE,
+			"believe.pcx"
+		},
+		{
+			PCX_PEACE,
+			"peace.pcx"
+		},
+		{
+			PCX_CYBORG,
+			"cyborg.pcx"
+		},
+		{
+			PCX_PIRATES,
+			"pirates.pcx"
+		},
+		{
+			PCX_DRONE,
+			"drone.pcx"
+		},
+		{
+			PCX_ANGELS,
+			"angels.pcx"
+		},
+		{
+			PCX_FUNGBOY,
+			"fungboy.pcx"
+		},
+		{
+			PCX_CARETAKE,
+			"caretake.pcx"
+		},
+		{
+			PCX_USURPER,
+			"usurper.pcx"
+		},
 
 		{
 			TTF_ARIALN,
