@@ -1,6 +1,7 @@
 SUBDIR( ui )
 SUBDIR( actor )
 SUBDIR( faction )
+SUBDIR( tile )
 SUBDIR( unit )
 
 SET( SRC ${SRC}
@@ -12,6 +13,5 @@ SET( SRC ${SRC}
 	${PWD}/Slot.cpp
 	${PWD}/AnimationDef.cpp
 	${PWD}/Animation.cpp
-	${PWD}/Tile.cpp
 
 	PARENT_SCOPE )

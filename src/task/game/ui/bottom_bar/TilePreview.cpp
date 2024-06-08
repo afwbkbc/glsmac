@@ -2,6 +2,7 @@
 
 #include "engine/Engine.h"
 #include "task/game/Game.h"
+#include "task/game/tile/Tile.h"
 #include "ui/object/Mesh.h"
 #include "types/mesh/Render.h"
 #include "ui/object/Label.h"
@@ -26,7 +27,7 @@ void TilePreview::Destroy() {
 	BBSection::Destroy();
 }
 
-void TilePreview::PreviewTile( const Tile* tile ) {
+void TilePreview::PreviewTile( const tile::Tile* tile ) {
 	HideTilePreview();
 
 	const auto& render = tile->GetRenderData();

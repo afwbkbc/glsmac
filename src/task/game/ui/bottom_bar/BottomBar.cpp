@@ -15,7 +15,7 @@
 #include "MiniMap.h"
 #include "StatusButton.h"
 #include "ui/UI.h"
-#include "task/game/Tile.h"
+#include "task/game/tile/Tile.h"
 #include "graphics/Graphics.h"
 
 namespace task {
@@ -233,7 +233,7 @@ void BottomBar::Align() {
 
 }
 
-void BottomBar::PreviewTile( Tile* tile, const size_t selected_unit_id ) {
+void BottomBar::PreviewTile( tile::Tile* tile, const size_t selected_unit_id ) {
 	m_sections.tile_preview->PreviewTile( tile );
 	m_sections.units_list->ListUnits( tile->GetOrderedUnits(), selected_unit_id );
 }

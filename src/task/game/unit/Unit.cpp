@@ -1,10 +1,10 @@
 #include "Unit.h"
 
 #include "task/game/Game.h"
+#include "task/game/tile/Tile.h"
 #include "util/String.h"
 #include "game/unit/Unit.h"
 #include "task/game/Slot.h"
-#include "task/game/Tile.h"
 #include "UnitDef.h"
 #include "BadgeDefs.h"
 #include "SlotBadges.h"
@@ -14,8 +14,6 @@
 #include "types/mesh/Rectangle.h"
 #include "scene/actor/Sprite.h"
 #include "types/texture/Texture.h"
-
-#include <iostream>
 
 namespace task {
 namespace game {
@@ -27,7 +25,7 @@ Unit::Unit(
 	const size_t id,
 	UnitDef* def,
 	Slot* slot,
-	Tile* tile,
+	tile::Tile* tile,
 	const types::Vec3& render_coords,
 	const bool is_owned,
 	const ::game::unit::movement_t movement,
@@ -81,7 +79,7 @@ const bool Unit::IsActive() const {
 	return m_is_active;
 }
 
-Tile* Unit::GetTile() const {
+tile::Tile* Unit::GetTile() const {
 	return m_tile;
 }
 
@@ -307,7 +305,7 @@ const bool Unit::CanMove() const {
 	return m_movement >= ::game::unit::Unit::MINIMUM_MOVEMENT_TO_KEEP;
 }
 
-void Unit::SetTile( task::game::Tile* dst_tile ) {
+void Unit::SetTile( tile::Tile* dst_tile ) {
 	ASSERT_NOLOG( m_tile, "source tile not set" );
 	ASSERT_NOLOG( dst_tile, "destination tile not set" );
 
@@ -320,7 +318,7 @@ void Unit::SetTile( task::game::Tile* dst_tile ) {
 	UpdateFromTile();
 }
 
-void Unit::MoveToTile( Tile* dst_tile ) {
+void Unit::MoveToTile( tile::Tile* dst_tile ) {
 	ASSERT_NOLOG( !m_mover.IsRunning(), "unit already moving" );
 	ASSERT_NOLOG( m_tile != dst_tile, "can't move to same tile" );
 	ASSERT_NOLOG( m_tile, "source tile not set" );

@@ -25,6 +25,8 @@ namespace unit {
 class Unit;
 }
 
+namespace tile {
+
 class Tile {
 public:
 
@@ -79,5 +81,6 @@ private:
 
 };
 
+}
 }
 }

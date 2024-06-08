@@ -20,9 +20,9 @@ namespace game {
 class Game;
 class InstancedSpriteManager;
 
-//namespace tile {
+namespace tile {
 class Tile;
-//}
+}
 
 namespace faction {
 class Faction;
@@ -62,8 +62,8 @@ CLASS( UnitManager, base::Base )
 	);
 	void DespawnUnit( const size_t unit_id );
 	void RefreshUnit( Unit* unit );
-	void MoveUnit( Unit* unit, Tile* dst_tile, const size_t animation_id );
-	void MoveUnit_deprecated( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_coords );
+	void MoveUnit( Unit* unit, tile::Tile* dst_tile, const size_t animation_id );
+	void MoveUnit_deprecated( Unit* unit, tile::Tile* dst_tile, const types::Vec3& dst_render_coords );
 
 	Unit* GetSelectedUnit() const;
 	void SelectUnit( Unit* unit_data, const bool actually_select_unit );
@@ -93,7 +93,7 @@ private:
 	std::unordered_map< size_t, SlotBadges* > m_slot_badges = {};
 
 	struct moving_unit_info_t {
-		Tile* tile;
+		tile::Tile* tile;
 		size_t animation_id;
 	};
 	std::unordered_map< Unit*, moving_unit_info_t > m_moving_units = {};

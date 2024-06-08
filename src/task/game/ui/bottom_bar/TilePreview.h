@@ -14,7 +14,9 @@ class Label;
 namespace task {
 namespace game {
 
+namespace tile {
 class Tile;
+}
 
 namespace ui {
 
@@ -26,7 +28,7 @@ CLASS( TilePreview, BBSection )
 	void Create() override;
 	void Destroy() override;
 
-	void PreviewTile( const Tile* tile );
+	void PreviewTile( const tile::Tile* tile );
 	void HideTilePreview();
 
 private:

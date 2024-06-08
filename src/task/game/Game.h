@@ -23,14 +23,9 @@
 #include "util/Scroller.h"
 
 // TODO: remove those
-#include "game/map/tile/Tile.h"
 #include "game/map/tile/TileState.h"
-#include "Tile.h"
+#include "task/game/tile/Tile.h"
 #include "game/BackendRequest.h"
-
-// TODO: remove this
-#include "game/map/Consts.h"
-#include "util/FS.h"
 
 namespace types {
 namespace texture {
@@ -81,6 +76,11 @@ namespace game {
 namespace faction {
 class FactionManager;
 class Faction;
+}
+
+namespace tile {
+class TileManager;
+class Tile;
 }
 
 namespace unit {
@@ -151,6 +151,7 @@ CLASS( Game, base::Task )
 	static const consts_t s_consts;
 
 	faction::FactionManager* m_fm = nullptr;
+	tile::TileManager* m_tm = nullptr;
 	unit::UnitManager* m_um = nullptr;
 	InstancedSpriteManager* m_ism = nullptr;
 
@@ -159,6 +160,7 @@ CLASS( Game, base::Task )
 	const std::string& GetMapFilename() const;
 	const std::string& GetMapLastDirectory() const;
 
+	tile::TileManager* GetTM() const;
 	unit::UnitManager* GetUM() const;
 	InstancedSpriteManager* GetISM() const;
 
@@ -192,6 +194,26 @@ CLASS( Game, base::Task )
 
 	void ConfirmExit( ::ui::ui_handler_t on_confirm );
 
+	// TODO: move this to .cpp
+	// structures received from game thread
+	struct map_data_t {
+		map_data_t();
+		size_t width = 0;
+		size_t height = 0;
+		struct {
+			types::Vec2< float > min = {};
+			types::Vec2< float > max = {};
+			struct {
+				util::Clamper< float > x;
+				util::Clamper< float > y;
+			} percent_to_absolute;
+		} range;
+		std::string filename;
+		std::string last_directory;
+	};
+
+	map_data_t m_map_data = {};
+
 	types::texture::Texture* GetTerrainTexture() const;
 
 	void SetEditorTool( ::game::map_editor::tool_type_t tool );
@@ -203,8 +225,6 @@ CLASS( Game, base::Task )
 	const types::Vec3 GetCloserCoords( const types::Vec3& coords, const types::Vec3& ref_coords ) const;
 
 	Slot* GetSlot( const size_t index ) const;
-	Tile* GetTile( const size_t x, const size_t y );
-	Tile* GetTile( const types::Vec2< size_t >& coords );
 
 private:
 
@@ -232,6 +252,7 @@ private:
 
 	bool m_is_initialized = false;
 	void Initialize(
+		const types::Vec2< size_t >& map_size,
 		types::texture::Texture* terrain_texture,
 		types::mesh::Render* terrain_mesh,
 		types::mesh::Data* terrain_data_mesh,
@@ -322,32 +343,7 @@ private:
 	void UpdateMapInstances();
 	void UpdateUICamera();
 
-	// TODO: move this to .cpp
-	// structures received from game thread
-	struct map_data_t {
-		size_t width = 0;
-		size_t height = 0;
-		struct {
-			types::Vec2< float > min = {};
-			types::Vec2< float > max = {};
-			struct {
-				util::Clamper< float > x;
-				util::Clamper< float > y;
-			} percent_to_absolute;
-		} range;
-		std::string filename =
-			::game::map::s_consts.fs.default_map_filename +
-				::game::map::s_consts.fs.default_map_extension;
-		std::string last_directory =
-			util::FS::GetCurrentDirectory() +
-				util::FS::PATH_SEPARATOR +
-				::game::map::s_consts.fs.default_map_directory;
-	};
-
 	const bool m_is_map_editing_allowed = false;
-
-	Tile* m_selected_tile = nullptr;
-	map_data_t m_map_data = {};
 
 	// UI stuff
 
@@ -359,7 +355,7 @@ private:
 	bool m_is_resize_handler_set = false;
 
 	void SelectTileAtPoint( const ::game::tile_query_purpose_t tile_query_purpose, const size_t x, const size_t y );
-	void SelectTileOrUnit( Tile* tile, const size_t selected_unit_id = 0 );
+	void SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id = 0 );
 	void DeselectTileOrUnit();
 
 private:
@@ -382,10 +378,10 @@ private:
 	void AddActor( actor::Actor* actor );
 	void RemoveActor( actor::Actor* actor );
 
-	const types::Vec2< float > GetTileWindowCoordinates( const Tile* tile ) const;
+	const types::Vec2< float > GetTileWindowCoordinates( const tile::Tile* tile ) const;
 
 	void ScrollTo( const ::types::Vec3& target );
-	void ScrollToTile( const Tile* tile, bool center_on_tile );
+	void ScrollToTile( const tile::Tile* tile, bool center_on_tile );
 
 	struct tile_at_result_t {
 		bool is_set = false;
@@ -426,8 +422,6 @@ private:
 #endif
 	} m_mt_ids = {};
 
-	std::unordered_map< size_t, Tile > m_tiles = {};
-
 	std::unordered_map< size_t, Slot* > m_slots = {};
 	std::unordered_map< std::string, AnimationDef* > m_animationdefs = {};
 	std::unordered_map< size_t, Animation* > m_animations;
@@ -442,7 +436,7 @@ private:
 
 	void ShowTileSelector();
 	void HideTileSelector();
-	void RenderTile( Tile* tile, const unit::Unit* selected_unit );
+	void RenderTile( tile::Tile* tile, const unit::Unit* selected_unit );
 
 	void SendAnimationFinished( const size_t animation_id );
 
@@ -453,10 +447,9 @@ private:
 
 	const size_t GetMySlotIndex() const;
 
-	Tile* GetSelectedTile() const;
-	void SetSelectedTile( Tile* tile );
+	void SetSelectedTile( tile::Tile* tile );
 	void RefreshSelectedTile( unit::Unit* selected_unit );
-	void RefreshSelectedTileIf( Tile* if_tile, unit::Unit* selected_unit );
+	void RefreshSelectedTileIf( tile::Tile* if_tile, unit::Unit* selected_unit );
 	void ScrollToSelectedTile( const bool center_on_tile );
 	void SelectUnitOrSelectedTile( unit::Unit* selected_unit );
 	unit::Unit* GetSelectedTileMostImportantUnit() const;
