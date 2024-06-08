@@ -11,12 +11,18 @@ namespace resource {
 
 CLASS( ResourceManager, base::Module )
 
+	ResourceManager();
+
 	void Init( std::vector< std::string > possible_smac_paths );
 
+	const resource_t GetResource( const std::string& filename ) const;
 	const std::string& GetPath( const resource_t res ) const;
 	const std::string& GetCustomPath( const std::string& path );
 
 private:
+
+	const std::unordered_map< resource_t, std::string > m_resources_to_filenames = {};
+	std::unordered_map< std::string, resource_t > m_filenames_to_resources = {};
 
 	typedef std::unordered_map< std::string, std::string > extension_path_map_t;
 

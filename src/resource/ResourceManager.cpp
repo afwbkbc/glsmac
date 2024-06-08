@@ -7,81 +7,83 @@
 
 namespace resource {
 
-const std::unordered_map< resource_t, std::string > s_builtin_resources = {
+ResourceManager::ResourceManager()
+	: m_resources_to_filenames(
+	{
 
-	{
-		PCX_PALETTE,
-		"palette.pcx"
-	},
-	{
-		PCX_INTERFACE,
-		"interface.pcx"
-	},
-	{
-		PCX_JACKAL,
-		"jackal.pcx"
-	},
-	{
-		PCX_ICONS,
-		"icons.pcx"
-	},
-	{
-		PCX_FLAGS,
-		"flags.pcx"
-	},
-	{
-		PCX_UNITS,
-		"units.pcx"
-	},
-	{
-		PCX_TEXTURE,
-		"texture.pcx"
-	},
-	{
-		PCX_TER1,
-		"ter1.pcx"
-	},
-	{
-		PCX_CONSOLE_X,
-		"console_x.pcx"
-	},
-	{
-		PCX_CONSOLE_X2_A,
-		"console_x2_a.pcx"
-	},
-	{
-		PCX_CONSOLE2_A,
-		"console2_a.pcx"
-	},
-	{
-		PCX_LOGO,
-		"logo.pcx"
-	},
-	{
-		PCX_OPENINGA,
-		"openinga.pcx"
-	},
-	{
-		PCX_SPACE_SM,
-		"space_sm.pcx"
-	},
+		{
+			PCX_PALETTE,
+			"palette.pcx"
+		},
+		{
+			PCX_INTERFACE,
+			"interface.pcx"
+		},
+		{
+			PCX_JACKAL,
+			"jackal.pcx"
+		},
+		{
+			PCX_ICONS,
+			"icons.pcx"
+		},
+		{
+			PCX_FLAGS,
+			"flags.pcx"
+		},
+		{
+			PCX_UNITS,
+			"units.pcx"
+		},
+		{
+			PCX_TEXTURE,
+			"texture.pcx"
+		},
+		{
+			PCX_TER1,
+			"ter1.pcx"
+		},
+		{
+			PCX_CONSOLE_X,
+			"console_x.pcx"
+		},
+		{
+			PCX_CONSOLE_X2_A,
+			"console_x2_a.pcx"
+		},
+		{
+			PCX_CONSOLE2_A,
+			"console2_a.pcx"
+		},
+		{
+			PCX_LOGO,
+			"logo.pcx"
+		},
+		{
+			PCX_OPENINGA,
+			"openinga.pcx"
+		},
+		{
+			PCX_SPACE_SM,
+			"space_sm.pcx"
+		},
 #define xM( _m ) { PCX_MOON##_m, "moon"#_m".pcx" }
-	xM( 1 ),
-	xM( 2 ),
-	xM( 3 ),
+		xM( 1 ),
+		xM( 2 ),
+		xM( 3 ),
 #undef xM
-	{
-		PCX_MOON1,
-		"moon1.pcx"
-	},
-	{
-		PCX_MOON2,
-		"moon2.pcx"
-	},
-	{
-		PCX_MOON3,
-		"moon3.pcx"
-	},
+		{
+			PCX_MOON1,
+			"moon1.pcx"
+		},
+		{
+			PCX_MOON2,
+			"moon2.pcx"
+		},
+		{
+			PCX_MOON3,
+			"moon3.pcx"
+		},
 #define xSLC( _s, _l, _c ) { PCX_S##_s##L##_l##C##_c, "S"#_s"L"#_l"C"#_c".pcx" }
 #define xSL( _s, _l ) \
     xSLC( _s, _l, 1 ), \
@@ -91,68 +93,78 @@ const std::unordered_map< resource_t, std::string > s_builtin_resources = {
     xSL( _s, 1 ), \
     xSL( _s, 2 ), \
     xSL( _s, 3 )
-	xS( 1 ),
-	xS( 2 ),
-	xS( 3 ),
+		xS( 1 ),
+		xS( 2 ),
+		xS( 3 ),
 #undef xS
 #undef xSL
 #undef xSLC
-	{
-		PCX_XI,
-		"xi.pcx"
-	},
-	{
-		PCX_XF,
-		"xf.pcx"
-	},
+		{
+			PCX_XI,
+			"xi.pcx"
+		},
+		{
+			PCX_XF,
+			"xf.pcx"
+		},
 
-	{
-		TTF_ARIALN,
-		"arialn.ttf"
-	},
-	{
-		TTF_ARIALNB,
-		"arialnb.ttf"
-	},
+		{
+			TTF_ARIALN,
+			"arialn.ttf"
+		},
+		{
+			TTF_ARIALNB,
+			"arialnb.ttf"
+		},
 
-	{
-		WAV_OPENING_MENU,
-		"opening menu.wav"
-	},
-	{
-		WAV_OK,
-		"ok.wav"
-	},
-	{
-		WAV_MENU_UP,
-		"menu up.wav"
-	},
-	{
-		WAV_MENU_DOWN,
-		"menu down.wav"
-	},
-	{
-		WAV_MENU_OUT,
-		"menu out.wav"
-	},
-	{
-		WAV_AMENU2,
-		"amenu2.wav"
-	},
-	{
-		WAV_MMENU,
-		"mmenu.wav"
-	},
-	{
-		WAV_TURN_COMPLETE,
-		"cpu turn complete.wav"
-	},
-	{
-		WAV_PLS_DONT_GO,
-		"CPU please don't go.wav"
-	},
+		{
+			WAV_OPENING_MENU,
+			"opening menu.wav"
+		},
+		{
+			WAV_OK,
+			"ok.wav"
+		},
+		{
+			WAV_MENU_UP,
+			"menu up.wav"
+		},
+		{
+			WAV_MENU_DOWN,
+			"menu down.wav"
+		},
+		{
+			WAV_MENU_OUT,
+			"menu out.wav"
+		},
+		{
+			WAV_AMENU2,
+			"amenu2.wav"
+		},
+		{
+			WAV_MMENU,
+			"mmenu.wav"
+		},
+		{
+			WAV_TURN_COMPLETE,
+			"cpu turn complete.wav"
+		},
+		{
+			WAV_PLS_DONT_GO,
+			"CPU please don't go.wav"
+		},
 
-};
+	}
+) {
+	for ( const auto& it : m_resources_to_filenames ) {
+		m_filenames_to_resources.insert(
+			{
+				it.second,
+				it.first
+			}
+		);
+	}
+}
 
 void ResourceManager::Init( std::vector< std::string > possible_smac_paths ) {
 	for ( const auto& path : possible_smac_paths ) {
@@ -201,6 +213,14 @@ void ResourceManager::Init( std::vector< std::string > possible_smac_paths ) {
 		paths += path + "; ";
 	}
 	THROW( "Unable to find SMAC distribution (tried paths: " + paths + "). Run from SMAC directory or pass it with --smacpath argument" );
+}
+
+const resource_t ResourceManager::GetResource( const std::string& filename ) const {
+	const auto it = m_filenames_to_resources.find( filename );
+	if ( it != m_filenames_to_resources.end() ) {
+		return it->second;
+	}
+	return NONE;
 }
 
 const std::string& ResourceManager::GetPath( const resource_t res ) const {
@@ -257,8 +277,8 @@ const bool ResourceManager::CheckFiles( const std::string& path, const std::vect
 
 const bool ResourceManager::ResolveBuiltins( const std::string& path, const extension_path_map_t& extension_path_map, const path_modifier_t path_modifiers ) {
 	std::unordered_map< resource::resource_t, std::string > resolved_files = {};
-	resolved_files.reserve( s_builtin_resources.size() );
-	for ( const auto& it : s_builtin_resources ) {
+	resolved_files.reserve( m_resources_to_filenames.size() );
+	for ( const auto& it : m_resources_to_filenames ) {
 		const auto resolved_file = util::FS::GetExistingCaseSensitivePath( path, GetFixedPath( it.second, extension_path_map, path_modifiers ) );
 		if ( resolved_file.empty() || !util::FS::IsFile( resolved_file ) ) {
 			return false;
@@ -270,7 +290,7 @@ const bool ResourceManager::ResolveBuiltins( const std::string& path, const exte
 			}
 		);
 	}
-	ASSERT_NOLOG( resolved_files.size() == s_builtin_resources.size(), "some files were not resolved" );
+	ASSERT_NOLOG( resolved_files.size() == m_resources_to_filenames.size(), "some files were not resolved" );
 	ASSERT_NOLOG( m_resource_paths.empty(), "resource paths not empty" );
 	m_smac_path = path;
 	m_resource_paths = resolved_files;

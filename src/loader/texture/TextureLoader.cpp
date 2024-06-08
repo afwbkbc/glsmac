@@ -3,6 +3,8 @@
 #include <algorithm>
 
 #include "types/texture/Texture.h"
+#include "engine/Engine.h"
+#include "resource/ResourceManager.h"
 
 namespace loader {
 namespace texture {
@@ -115,22 +117,6 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 };
 static const TextureLoader::transparent_colors_t s_no_transparent_colors = {};
 
-// resolve some known files (TODO: move to scripts?)
-static const std::unordered_map< std::string, resource::resource_t > s_filename_to_res = {
-	{
-		"units.pcx",
-		resource::PCX_UNITS
-	},
-	{
-		"xi.pcx",
-		resource::PCX_XI,
-	},
-	{
-		"xf.pcx",
-		resource::PCX_XF,
-	},
-};
-
 const TextureLoader::transparent_colors_t& TextureLoader::GetTCs( const resource::resource_t res ) {
 	const auto& transparent_colors_it = s_tcs.find( res );
 	if ( transparent_colors_it != s_tcs.end() ) {
@@ -152,14 +138,14 @@ types::texture::Texture* TextureLoader::LoadCustomTexture( const std::string& fi
 	std::string key;
 	key.resize( filename.size() );
 	std::transform( filename.begin(), filename.end(), key.begin(), ::tolower );
-	const auto& it = s_filename_to_res.find( key );
+	const auto res = g_engine->GetResourceManager()->GetResource( filename );
 	transparent_colors_t colors_old;
-	if ( it != s_filename_to_res.end() ) {
+	if ( res != resource::NONE ) {
 		colors_old = m_transparent_colors;
-		m_transparent_colors = GetTCs( it->second );
+		m_transparent_colors = GetTCs( res );
 	}
 	auto* result = LoadTextureImpl( GetCustomFilename( filename ) );
-	if ( it != s_filename_to_res.end() ) {
+	if ( res != resource::NONE ) {
 		m_transparent_colors = colors_old;
 	}
 	return result;

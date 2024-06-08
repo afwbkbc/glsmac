@@ -1,5 +1,7 @@
 #include "UnitManager.h"
 
+#include <algorithm>
+
 #include "Unit.h"
 #include "UnitDef.h"
 #include "SlotBadges.h"
