@@ -18,6 +18,7 @@ Animation::Animation( const size_t animation_id, AnimationDef* def, const types:
 	m_sound = new scene::actor::Sound( "Animation_Sound_" + std::to_string( animation_id ), def->GetSound() );
 	g_engine->GetAudio()->AddActor( m_sound );
 	m_timer.SetInterval( m_def->GetDurationMs() / m_frames.size() );
+	ShowNextFrame();
 	m_sound->Play();
 }
 
@@ -36,19 +37,23 @@ const bool Animation::IsFinished() const {
 
 void Animation::Iterate() {
 	while ( m_timer.HasTicked() ) {
-		if ( m_frame_index ) {
-			// clear previous frame
-			m_frames.at( m_frame_index - 1 )->actor->RemoveInstance( m_instance_id );
-		}
-		if ( m_frame_index++ < m_frames.size() ) {
-			// show next frame
-			m_instance_id = m_frames.at( m_frame_index - 1 )->actor->AddInstance( m_render_coords );
-		}
-		else {
-			// no frames left
-			m_instance_id = 0;
-			m_timer.Stop();
-		}
+		ShowNextFrame();
+	}
+}
+
+void Animation::ShowNextFrame() {
+	if ( m_frame_index ) {
+		// clear previous frame
+		m_frames.at( m_frame_index - 1 )->actor->RemoveInstance( m_instance_id );
+	}
+	if ( m_frame_index++ < m_frames.size() ) {
+		// show next frame
+		m_instance_id = m_frames.at( m_frame_index - 1 )->actor->AddInstance( m_render_coords );
+	}
+	else {
+		// no frames left
+		m_instance_id = 0;
+		m_timer.Stop();
 	}
 }
 

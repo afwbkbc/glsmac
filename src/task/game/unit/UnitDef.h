@@ -52,20 +52,17 @@ private:
 
 	typedef std::unordered_map< ::game::unit::morale_t, Sprite > morale_based_sprites_t;
 
-	// TODO: get rid of union
-	union {
+	struct {
+		::game::unit::movement_type_t movement_type;
+		::game::unit::movement_t movement_per_turn;
 		struct {
-			::game::unit::movement_type_t movement_type;
-			::game::unit::movement_t movement_per_turn;
-			struct {
-				bool is_sprite = false;
-				uint32_t morale_based_xshift = 0;
-				types::texture::Texture* texture = nullptr;
-				Sprite sprite = {};
-				morale_based_sprites_t* morale_based_sprites = nullptr;
-			} render;
-		} static_;
-	};
+			bool is_sprite = false;
+			uint32_t morale_based_xshift = 0;
+			types::texture::Texture* texture = nullptr;
+			Sprite sprite = {};
+			morale_based_sprites_t* morale_based_sprites = nullptr;
+		} render = {};
+	} static_ = {};
 
 	types::texture::Texture* GetSpriteTexture();
 };

@@ -105,6 +105,7 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 		resource::PCX_XI,
 		{
 			types::Color::RGB( 0, 67, 255 ),
+			types::Color::RGB( 155, 27, 231 ), // label
 			types::Color::RGB( 27, 187, 231 ), // borders
 		}
 	},

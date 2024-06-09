@@ -25,6 +25,8 @@ public:
 
 private:
 
+	void ShowNextFrame();
+
 	util::Timer m_timer;
 	scene::actor::Sound* m_sound = nullptr;
 	AnimationDef* m_def = nullptr;
