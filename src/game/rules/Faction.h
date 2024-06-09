@@ -5,6 +5,7 @@
 #include "types/Serializable.h"
 #include "gse/Wrappable.h"
 
+#include "Types.h"
 #include "types/Color.h"
 
 namespace game {
@@ -28,18 +29,7 @@ CLASS2( Faction, types::Serializable, gse::Wrappable )
 		types::Color border = {};
 	} m_colors = {};
 
-	struct {
-		std::string file = "";
-		size_t grid_x = 0;
-		size_t grid_y = 0;
-		size_t cell_width = 0;
-		size_t cell_height = 0;
-		size_t cell_cx = 0;
-		size_t cell_cy = 0;
-		size_t cell_padding = 0;
-		float scale_x = 1.0f;
-		float scale_y = 1.0f;
-	} m_bases_render = {};
+	bases_render_info_t m_bases_render = {};
 
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;

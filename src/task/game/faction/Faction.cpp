@@ -12,53 +12,87 @@ namespace game {
 namespace faction {
 
 Faction::Faction( const ::game::rules::Faction* def, InstancedSpriteManager* ism )
-	: m_border_color( def->m_colors.border )
-	, m_is_progenitor( def->m_flags & ::game::rules::Faction::FF_PROGENITOR ) {
-
-	auto* texture = g_engine->GetTextureLoader()->LoadCustomTexture( def->m_bases_render.file );
-
-	const uint32_t w = def->m_bases_render.cell_width;
-	const uint32_t h = def->m_bases_render.cell_height;
-	const uint32_t p = def->m_bases_render.cell_padding;
-	const types::Vec2< uint32_t > src_wh = {
-		w,
-		h
-	};
-	const types::Vec2< float > dst_wh = {
-		def->m_bases_render.scale_x,
-		def->m_bases_render.scale_y / 0.8f
-	};
-	const types::Vec2< uint32_t > cxy = {
-		(uint32_t)def->m_bases_render.cell_cx,
-		(uint32_t)def->m_bases_render.cell_cy
-	};
-
-	for ( uint8_t base_type = 0 ; base_type < 6 ; base_type++ ) {
-		for ( uint8_t base_size = 0 ; base_size < 4 ; base_size++ ) {
-
-			const uint32_t x = def->m_bases_render.grid_x + base_size * ( w + p );
-			const uint32_t y = def->m_bases_render.grid_y + base_type * ( h + p );
-
-			m_base_sprites[ base_type ][ base_size ] = {
-				ism->GetInstancedSprite(
-					"Faction_Base_" + def->m_id + "_" + std::to_string( base_type ) + "_" + std::to_string( base_size ),
-					texture,
-					{
-						x,
-						y
-					},
-					src_wh,
-					{
-						x + cxy.x,
-						y + cxy.y
-					},
-					dst_wh,
-					0.5f // ?
-				),
-				1
-			};
+	: m_ism( ism )
+	, m_id( def->m_id )
+	, m_border_color( def->m_colors.border )
+	, m_is_progenitor( def->m_flags & ::game::rules::Faction::FF_PROGENITOR )
+	, m_render(
+		{
+			def->m_bases_render,
 		}
+	) {
+	//
+}
+
+Sprite* Faction::GetBaseSprite( const bool is_water, const uint8_t size, const uint8_t perimeter_level ) {
+	ASSERT_NOLOG( size < 4, "base size overflow ( " + std::to_string( size ) + " >= 4 )" );
+	ASSERT_NOLOG( perimeter_level < 3, "base perimeter level overflow ( " + std::to_string( perimeter_level ) + " >= 3 )" );
+	const uint8_t index = ( is_water
+		? 12
+		: 0
+	) + size + perimeter_level * 4;
+	auto it = m_base_grid_sprites.find( index );
+	if ( it == m_base_grid_sprites.end() ) {
+
+		const uint32_t w = m_render.bases_render.cell_width;
+		const uint32_t h = m_render.bases_render.cell_height;
+		const uint32_t p = m_render.bases_render.cell_padding;
+		const types::Vec2< uint32_t > src_wh = {
+			w,
+			h
+		};
+		const types::Vec2< float > dst_wh = {
+			m_render.bases_render.scale_x,
+			m_render.bases_render.scale_y / 0.8f
+		};
+		const types::Vec2< uint32_t > cxy = {
+			(uint32_t)m_render.bases_render.cell_cx,
+			(uint32_t)m_render.bases_render.cell_cy
+		};
+
+		const uint32_t x = m_render.bases_render.grid_x + size * ( w + p );
+		const uint32_t y = m_render.bases_render.grid_y + ( perimeter_level + ( is_water
+			? 3
+			: 0
+		)
+		) * ( h + p );
+
+		it = m_base_grid_sprites.insert(
+			{
+				index,
+				{
+					m_ism->GetInstancedSprite(
+						"Faction_Base_" + m_id + "_" + ( is_water
+							? "W"
+							: "L"
+						) + " " + std::to_string( size ) + "_" + std::to_string( perimeter_level ),
+						GetBaseGridTexture(),
+						{
+							x,
+							y
+						},
+						src_wh,
+						{
+							x + cxy.x,
+							y + cxy.y
+						},
+						dst_wh,
+						0.5f // ?
+					),
+					1
+				}
+			}
+		).first;
+
 	}
+	return &it->second;
+}
+
+types::texture::Texture* Faction::GetBaseGridTexture() {
+	if ( !m_base_grid_texture ) {
+		m_base_grid_texture = g_engine->GetTextureLoader()->LoadCustomTexture( m_render.bases_render.file );
+	}
+	return m_base_grid_texture;
 }
 
 }
