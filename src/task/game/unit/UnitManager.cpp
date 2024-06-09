@@ -147,11 +147,12 @@ void UnitManager::DespawnUnit( const size_t unit_id ) {
 	auto* unit = it->second;
 
 	m_units.erase( it );
-	delete unit;
-
+	
 	if ( unit->IsOwned() ) {
 		RemoveSelectable( unit );
 	}
+
+	delete unit;
 
 	m_game->RefreshSelectedTile( m_selected_unit );
 
