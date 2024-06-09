@@ -25,66 +25,12 @@ UnitDef::UnitDef( InstancedSpriteManager* ism, const ::game::unit::Def* unitdef 
 			switch ( def->m_render->m_type ) {
 
 				case ::game::unit::Render::RT_SPRITE: {
-					const auto* render = (::game::unit::SpriteRender*)def->m_render;
+					m_render = ( (::game::unit::SpriteRender*)def->m_render )->m_render;
 
 					static_.movement_type = def->m_movement_type;
 					static_.movement_per_turn = def->m_movement_per_turn;
 					static_.render.is_sprite = true;
 
-					const auto name = "Unit_" + def->m_id;
-					auto* texture = g_engine->GetTextureLoader()->LoadCustomTexture( render->m_file );
-					const ::game::map::pcx_texture_coordinates_t& src_wh = {
-						render->m_w,
-						render->m_h,
-					};
-					const types::Vec2< float >& dst_wh = {
-						::game::map::s_consts.tile.scale.x,
-						::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
-					};
-					const auto zindex = 0.5f;
-
-					static_.render.morale_based_xshift = render->m_morale_based_xshift;
-					if ( static_.render.morale_based_xshift ) {
-						NEW( static_.render.morale_based_sprites, morale_based_sprites_t );
-						for ( ::game::unit::morale_t morale = ::game::unit::MORALE_MIN ; morale <= ::game::unit::MORALE_MAX ; morale++ ) {
-							const uint32_t xshift = static_.render.morale_based_xshift * ( morale - ::game::unit::MORALE_MIN );
-							static_.render.morale_based_sprites->insert(
-								{
-									morale,
-									{
-										m_ism->GetInstancedSprite(
-											name + "_" + std::to_string( morale ), texture, {
-												render->m_x + xshift,
-												render->m_y,
-											},
-											src_wh,
-											{
-												render->m_cx + xshift,
-												render->m_cy,
-											},
-											dst_wh,
-											zindex
-										),
-									}
-								}
-							);
-						}
-					}
-					else {
-						static_.render.sprite.instanced_sprite = m_ism->GetInstancedSprite(
-							name, texture, {
-								render->m_x,
-								render->m_y,
-							},
-							src_wh,
-							{
-								render->m_cx,
-								render->m_cy,
-							},
-							dst_wh,
-							zindex
-						);
-					}
 					break;
 				}
 				default:
@@ -100,7 +46,9 @@ UnitDef::UnitDef( InstancedSpriteManager* ism, const ::game::unit::Def* unitdef 
 UnitDef::~UnitDef() {
 	if ( m_type == ::game::unit::DT_STATIC ) {
 		if ( static_.render.morale_based_xshift ) {
-			DELETE( static_.render.morale_based_sprites );
+			if ( static_.render.morale_based_sprites ) {
+				DELETE( static_.render.morale_based_sprites );
+			}
 		}
 	}
 }
@@ -113,11 +61,69 @@ Sprite* UnitDef::GetSprite( const ::game::unit::morale_t morale ) {
 	ASSERT_NOLOG( m_type == ::game::unit::DT_STATIC, "only static units are supported for now" );
 	ASSERT_NOLOG( static_.render.is_sprite, "only sprite unitdefs are supported for now" );
 
-	auto& render = static_.render;
-	ASSERT_NOLOG( render.is_sprite, "only sprite units are supported for now" );
-	return render.morale_based_xshift
-		? &render.morale_based_sprites->at( morale )
-		: &render.sprite;
+	if ( m_render.morale_based_xshift ) {
+		if ( !static_.render.morale_based_sprites ) {
+			NEW( static_.render.morale_based_sprites, morale_based_sprites_t );
+		}
+		auto it = static_.render.morale_based_sprites->find( morale );
+		if ( it == static_.render.morale_based_sprites->end() ) {
+			const uint32_t xshift = static_.render.morale_based_xshift * ( morale - ::game::unit::MORALE_MIN );
+			it = static_.render.morale_based_sprites->insert(
+				{
+					morale,
+					{
+						m_ism->GetInstancedSprite(
+							"Unit_" + m_id + "_" + std::to_string( morale ), GetSpriteTexture(), {
+								m_render.x + xshift,
+								m_render.y,
+							},
+							{
+								m_render.w,
+								m_render.h,
+							},
+							{
+								m_render.cx + xshift,
+								m_render.cy,
+							},
+							{
+								::game::map::s_consts.tile.scale.x,
+								::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
+							},
+							0.5f
+						),
+					}
+				}
+			).first;
+		}
+		return &it->second;
+	}
+	else {
+		if ( !static_.render.sprite.instanced_sprite ) {
+			static_.render.sprite = {
+				m_ism->GetInstancedSprite(
+					"Unit_" + m_id, GetSpriteTexture(), {
+						m_render.x,
+						m_render.y,
+					},
+					{
+						m_render.w,
+						m_render.h,
+					},
+					{
+						m_render.cx,
+						m_render.cy,
+					},
+					{
+						::game::map::s_consts.tile.scale.x,
+						::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
+					},
+					0.5f
+				),
+				1
+			};
+		}
+		return &static_.render.sprite;
+	}
 }
 
 const bool UnitDef::IsImmovable() const {
@@ -138,6 +144,13 @@ const std::string UnitDef::GetStatsString() const {
 	}
 	return str + " - ? - " + util::String::ApproximateFloat( static_.movement_per_turn );
 
+}
+
+types::texture::Texture* UnitDef::GetSpriteTexture() {
+	if ( !static_.render.texture ) {
+		static_.render.texture = g_engine->GetTextureLoader()->LoadCustomTexture( m_render.file );
+	}
+	return static_.render.texture;
 }
 
 }
