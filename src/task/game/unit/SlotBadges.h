@@ -3,6 +3,7 @@
 #include <cstddef>
 
 #include "game/unit/Types.h"
+#include "types/texture/Types.h"
 
 #include "types/Vec3.h"
 #include "types/Color.h"
@@ -42,6 +43,7 @@ private:
 	BadgeDefs* const m_badge_defs;
 	InstancedSpriteManager* const m_ism;
 	const std::string m_badges_key;
+	const faction::Faction* m_faction = nullptr;
 
 	class slot_sprites_t {
 	public:
@@ -49,7 +51,12 @@ private:
 		Sprite* greyedout;
 	};
 	std::unordered_map< ::game::unit::morale_t, slot_sprites_t > m_per_morale_sprites = {};
-	Sprite* m_fake_badge;
+
+	types::texture::repaint_rules_t m_repaint_rules = {};
+	types::texture::repaint_rules_t m_fake_badge_repaint_rules = {};
+
+	Sprite* m_fake_badge = nullptr;
+	Sprite* GetFakeBadge();
 };
 
 }
