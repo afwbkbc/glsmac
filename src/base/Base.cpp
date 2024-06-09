@@ -1,5 +1,9 @@
 #include <atomic>
 
+#ifdef DEBUG
+#include <chrono>
+#endif
+
 #include "Base.h"
 
 #include "engine/Engine.h"
@@ -35,9 +39,25 @@ const std::string& Base::GetLocalName() const {
 	return m_name;
 }
 
+#ifdef DEBUG
+static uint64_t last_time = 0;
+#endif
+
 void Base::Log( const std::string& text ) const {
 	if ( g_engine != NULL ) {
-		g_engine->GetLogger()->Log( "<" + GetName() + "> " + text );
+#ifdef DEBUG
+		const auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+		const auto duration = last_time
+			? time - last_time
+			: 0;
+		last_time = time;
+#endif
+		g_engine->GetLogger()->Log(
+#ifdef DEBUG
+			"[+" + std::to_string( duration ) + "ns] " +
+#endif
+				"<" + GetName() + "> " + text
+		);
 	}
 }
 
