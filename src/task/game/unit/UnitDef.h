@@ -9,6 +9,12 @@
 // TODO: remove?
 #include "task/game/Sprite.h"
 
+namespace types {
+namespace texture {
+class Texture;
+}
+}
+
 namespace game::unit {
 class Def;
 }
@@ -28,7 +34,6 @@ public:
 	const bool IsArtillery() const;
 
 	Sprite* GetSprite( const ::game::unit::morale_t morale );
-	const types::Vec3 GetUnitCoordsOnTile( const types::Vec3& tile_coords );
 
 	const bool IsImmovable() const;
 
@@ -39,27 +44,27 @@ private:
 
 	InstancedSpriteManager* const m_ism;
 
+	::game::unit::sprite_render_info_t m_render = {};
+
 	std::string m_id;
 	std::string m_name;
 	::game::unit::def_type_t m_type;
 
 	typedef std::unordered_map< ::game::unit::morale_t, Sprite > morale_based_sprites_t;
 
-	// TODO: get rid of union
-	union {
+	struct {
+		::game::unit::movement_type_t movement_type;
+		::game::unit::movement_t movement_per_turn;
 		struct {
-			::game::unit::movement_type_t movement_type;
-			::game::unit::movement_t movement_per_turn;
-			struct {
-				bool is_sprite;
-				uint32_t morale_based_xshift;
-				union {
-					Sprite sprite;
-					morale_based_sprites_t* morale_based_sprites;
-				};
-			} render;
-		} static_;
-	};
+			bool is_sprite = false;
+			uint32_t morale_based_xshift = 0;
+			types::texture::Texture* texture = nullptr;
+			Sprite sprite = {};
+			morale_based_sprites_t* morale_based_sprites = nullptr;
+		} render = {};
+	} static_ = {};
+
+	types::texture::Texture* GetSpriteTexture();
 };
 
 }

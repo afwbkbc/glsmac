@@ -22,9 +22,12 @@ namespace game {
 
 class Game;
 class Slot;
-class Tile;
 class Sprite;
 class InstancedSprite;
+
+namespace tile {
+class Tile;
+}
 
 namespace unit {
 
@@ -45,7 +48,7 @@ public:
 		const size_t id,
 		unit::UnitDef* def,
 		Slot* slot,
-		Tile* tile,
+		tile::Tile* tile,
 		const types::Vec3& render_coords,
 		const bool is_owned,
 		const ::game::unit::movement_t movement,
@@ -58,7 +61,7 @@ public:
 	const size_t GetId() const;
 	const bool IsOwned() const;
 	const bool IsActive() const;
-	Tile* GetTile() const;
+	tile::Tile* GetTile() const;
 
 	const size_t GetSelectionWeight() const;
 
@@ -94,8 +97,8 @@ public:
 	void SetHealth( const ::game::unit::health_t health );
 	const bool CanMove() const;
 
-	void SetTile( Tile* dst_tile );
-	void MoveToTile( Tile* dst_tile );
+	void SetTile( tile::Tile* dst_tile );
+	void MoveToTile( tile::Tile* dst_tile );
 	void UpdateFromTile();
 
 	const bool IsValid() const;
@@ -121,7 +124,7 @@ private:
 
 	size_t m_id = 0;
 	UnitDef* m_def = nullptr;
-	Tile* m_tile = nullptr;
+	tile::Tile* m_tile = nullptr;
 	struct {
 		types::Vec3 coords = {};
 		bool is_rendered = false;

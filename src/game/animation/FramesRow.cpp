@@ -21,16 +21,22 @@ FramesRow::FramesRow(
 	const std::string& sound_file
 )
 	: Def( id, AT_FRAMES_ROW, duration_ms, scale_x, scale_y, sound_file )
-	, m_file( file )
-	, m_row_x( row_x )
-	, m_row_y( row_y )
-	, m_frame_width( frame_width )
-	, m_frame_height( frame_height )
-	, m_frame_center_x( frame_center_x )
-	, m_frame_center_y( frame_center_y )
-	, m_frame_padding( frame_padding )
-	, m_frames_count( frames_count )
-	, m_frames_per_row( frames_per_row ) {
+	, m_render(
+		{
+			file,
+			row_x,
+			row_y,
+			frame_width,
+			frame_height,
+			frame_padding,
+			frame_center_x,
+			frame_center_y,
+			frames_count,
+			frames_per_row,
+			scale_x,
+			scale_y
+		}
+	) {
 	//
 }
 
@@ -38,16 +44,16 @@ const std::string FramesRow::ToString( const std::string& prefix ) const {
 	return (std::string)
 		TS_OBJ_BEGIN( "FramesRow" ) +
 		TS_OBJ_PROP_STR( "id", m_id ) +
-		TS_OBJ_PROP_STR( "file", m_file ) +
-		TS_OBJ_PROP_NUM( "row_x", m_row_x ) +
-		TS_OBJ_PROP_NUM( "row_y", m_row_y ) +
-		TS_OBJ_PROP_NUM( "frame_width", m_frame_width ) +
-		TS_OBJ_PROP_NUM( "frame_height", m_frame_height ) +
-		TS_OBJ_PROP_NUM( "frame_center_x", m_frame_center_x ) +
-		TS_OBJ_PROP_NUM( "frame_center_y", m_frame_center_y ) +
-		TS_OBJ_PROP_NUM( "frame_padding", m_frame_padding ) +
-		TS_OBJ_PROP_NUM( "frames_count", m_frames_count ) +
-		TS_OBJ_PROP_NUM( "frames_per_row", m_frames_per_row ) +
+		TS_OBJ_PROP_STR( "file", m_render.file ) +
+		TS_OBJ_PROP_NUM( "row_x", m_render.row_x ) +
+		TS_OBJ_PROP_NUM( "row_y", m_render.row_y ) +
+		TS_OBJ_PROP_NUM( "frame_width", m_render.frame_width ) +
+		TS_OBJ_PROP_NUM( "frame_height", m_render.frame_height ) +
+		TS_OBJ_PROP_NUM( "frame_center_x", m_render.frame_center_x ) +
+		TS_OBJ_PROP_NUM( "frame_center_y", m_render.frame_center_y ) +
+		TS_OBJ_PROP_NUM( "frame_padding", m_render.frame_padding ) +
+		TS_OBJ_PROP_NUM( "frames_count", m_render.frames_count ) +
+		TS_OBJ_PROP_NUM( "frames_per_row", m_render.frames_per_row ) +
 		TS_OBJ_PROP_NUM( "scale_x", m_scale_x ) +
 		TS_OBJ_PROP_NUM( "scale_y", m_scale_y ) +
 		TS_OBJ_PROP_NUM( "duration_ms", m_duration_ms ) +
@@ -56,16 +62,16 @@ const std::string FramesRow::ToString( const std::string& prefix ) const {
 }
 
 void FramesRow::Serialize( types::Buffer& buf, const FramesRow* def ) {
-	buf.WriteString( def->m_file );
-	buf.WriteInt( def->m_row_x );
-	buf.WriteInt( def->m_row_y );
-	buf.WriteInt( def->m_frame_width );
-	buf.WriteInt( def->m_frame_height );
-	buf.WriteInt( def->m_frame_center_x );
-	buf.WriteInt( def->m_frame_center_y );
-	buf.WriteInt( def->m_frame_padding );
-	buf.WriteInt( def->m_frames_count );
-	buf.WriteInt( def->m_frames_per_row );
+	buf.WriteString( def->m_render.file );
+	buf.WriteInt( def->m_render.row_x );
+	buf.WriteInt( def->m_render.row_y );
+	buf.WriteInt( def->m_render.frame_width );
+	buf.WriteInt( def->m_render.frame_height );
+	buf.WriteInt( def->m_render.frame_center_x );
+	buf.WriteInt( def->m_render.frame_center_y );
+	buf.WriteInt( def->m_render.frame_padding );
+	buf.WriteInt( def->m_render.frames_count );
+	buf.WriteInt( def->m_render.frames_per_row );
 }
 
 FramesRow* FramesRow::Unserialize(

@@ -5,6 +5,7 @@
 #include "types/Serializable.h"
 #include "gse/Wrappable.h"
 
+#include "Types.h"
 #include "types/Color.h"
 
 namespace game {
@@ -28,7 +29,7 @@ CLASS2( Faction, types::Serializable, gse::Wrappable )
 		types::Color border = {};
 	} m_colors = {};
 
-	void ImportPCX( const std::string& pcx_file );
+	bases_render_info_t m_bases_render = {};
 
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;

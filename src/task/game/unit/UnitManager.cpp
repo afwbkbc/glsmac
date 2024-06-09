@@ -1,10 +1,13 @@
 #include "UnitManager.h"
 
+#include <algorithm>
+
 #include "Unit.h"
 #include "UnitDef.h"
 #include "SlotBadges.h"
 #include "game/unit/Def.h"
 #include "task/game/Game.h"
+#include "task/game/tile/TileManager.h"
 #include "task/game/unit/BadgeDefs.h"
 #include "types/mesh/Rectangle.h"
 
@@ -97,7 +100,7 @@ void UnitManager::SpawnUnit(
 
 	auto* unitdef = m_unitdefs.at( unitdef_id );
 	auto* slot = m_game->GetSlot( slot_index );
-	auto* tile = m_game->GetTile( tile_coords );
+	auto* tile = m_game->GetTM()->GetTile( tile_coords );
 
 	auto* unit = m_units.insert(
 		{
@@ -144,11 +147,12 @@ void UnitManager::DespawnUnit( const size_t unit_id ) {
 	auto* unit = it->second;
 
 	m_units.erase( it );
-	delete unit;
-
+	
 	if ( unit->IsOwned() ) {
 		RemoveSelectable( unit );
 	}
+
+	delete unit;
 
 	m_game->RefreshSelectedTile( m_selected_unit );
 
@@ -170,7 +174,7 @@ void UnitManager::RefreshUnit( Unit* unit ) {
 	}
 }
 
-void UnitManager::MoveUnit( Unit* unit, Tile* dst_tile, const size_t animation_id ) {
+void UnitManager::MoveUnit( Unit* unit, tile::Tile* dst_tile, const size_t animation_id ) {
 	auto* src_tile = unit->GetTile();
 	ASSERT( m_moving_units.find( unit ) == m_moving_units.end(), "unit already moving" );
 	m_moving_units.insert(
@@ -188,7 +192,7 @@ void UnitManager::MoveUnit( Unit* unit, Tile* dst_tile, const size_t animation_i
 	unit->MoveToTile( dst_tile );
 }
 
-void UnitManager::MoveUnit_deprecated( Unit* unit, Tile* dst_tile, const types::Vec3& dst_render_coords ) {
+void UnitManager::MoveUnit_deprecated( Unit* unit, tile::Tile* dst_tile, const types::Vec3& dst_render_coords ) {
 
 	auto* src_tile = unit->GetTile();
 

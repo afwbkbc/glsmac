@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "Types.h"
+
 #include "Def.h"
 
 namespace game {
@@ -28,16 +30,7 @@ public:
 		const std::string& sound_file
 	);
 
-	const std::string m_file;
-	const uint16_t m_row_x;
-	const uint16_t m_row_y;
-	const uint16_t m_frame_width;
-	const uint16_t m_frame_height;
-	const uint16_t m_frame_padding;
-	const uint16_t m_frame_center_x;
-	const uint16_t m_frame_center_y;
-	const uint8_t m_frames_count;
-	const uint8_t m_frames_per_row;
+	sprite_render_info_t m_render = {};
 
 	const std::string ToString( const std::string& prefix ) const override;
 

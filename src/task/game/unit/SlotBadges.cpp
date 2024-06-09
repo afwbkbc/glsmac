@@ -18,10 +18,11 @@ SlotBadges::SlotBadges(
 )
 	: m_badge_defs( badge_defs )
 	, m_ism( ism )
-	, m_badges_key( "Badge_" + std::to_string( slot_index ) ) {
+	, m_badges_key( "Badge_" + std::to_string( slot_index ) )
+	, m_faction( faction ) {
 
 	const auto& c = faction->m_border_color.value;
-	const types::texture::repaint_rules_t& rules = {
+	m_repaint_rules = {
 		{ // active
 			types::Color::RGB( 252, 0, 0 ),
 			types::Color( c.red, c.green, c.blue ).GetRGBA()
@@ -32,72 +33,94 @@ SlotBadges::SlotBadges(
 		}
 	};
 
-	// fake badges should be slightly grayer
-	auto fake_badge_rules = rules;
-	for ( auto& rule : fake_badge_rules ) {
+	// fake badges should be slightly greyer
+	m_fake_badge_repaint_rules = m_repaint_rules;
+	for ( auto& rule : m_fake_badge_repaint_rules ) {
 		rule.second = types::Color( ( 0.6f + c.red / 2.5 ) / 2, ( 0.6f + c.green / 2.5 ) / 2, ( 0.6f + c.blue / 2.5 ) / 2 ).GetRGBA();
 	}
 
-	const BadgeDefs::badge_type_t badge_type = faction->m_is_progenitor
-		? BadgeDefs::BT_PROGENITOR
-		: BadgeDefs::BT_DEFAULT;
-	for ( auto morale = ::game::unit::MORALE_MIN ; morale <= ::game::unit::MORALE_MAX ; morale++ ) {
-		auto& badgedef = m_per_morale_sprites[ morale ];
-		NEW( badgedef.normal, Sprite, {
-			m_ism->GetRepaintedInstancedSprite(
-				m_badges_key + "_" + std::to_string( morale ) + "_NORMAL",
-				m_badge_defs->GetBadgeSprite( badge_type | BadgeDefs::BT_NORMAL, morale ),
-				rules
-			),
-			1
-		} );
-		NEW( badgedef.greyedout, Sprite, {
-			m_ism->GetRepaintedInstancedSprite(
-				m_badges_key + "_" + std::to_string( morale ) + "_GRAYEDOUT",
-				m_badge_defs->GetBadgeSprite( badge_type | BadgeDefs::BT_GREYEDOUT, morale ),
-				rules
-			),
-			1
-		} );
-	}
-	NEW( m_fake_badge, Sprite, {
-		m_ism->GetRepaintedInstancedSprite(
-			m_badges_key + "_FAKE",
-			m_badge_defs->GetFakeBadgeSprite(),
-			fake_badge_rules
-		),
-		1
-	} );
 }
 
 SlotBadges::~SlotBadges() {
-	for ( auto morale = ::game::unit::MORALE_MIN ; morale <= ::game::unit::MORALE_MAX ; morale++ ) {
-		m_ism->RemoveRepaintedInstancedSpriteByKey( m_badges_key + "_" + std::to_string( morale ) + "_NORMAL" );
-		m_ism->RemoveRepaintedInstancedSpriteByKey( m_badges_key + "_" + std::to_string( morale ) + "_GRAYEDOUT" );
+	for ( const auto& it : m_per_morale_sprites ) {
+		if ( it.second.normal ) {
+			m_ism->RemoveRepaintedInstancedSpriteByKey( it.second.normal->instanced_sprite->key );
+			DELETE( it.second.normal );
+		}
+		if ( it.second.greyedout ) {
+			m_ism->RemoveRepaintedInstancedSpriteByKey( it.second.greyedout->instanced_sprite->key );
+			DELETE( it.second.greyedout );
+		}
 	}
-	m_ism->RemoveRepaintedInstancedSpriteByKey( m_badges_key + "_FAKE" );
-	for ( auto morale = ::game::unit::MORALE_MIN ; morale <= ::game::unit::MORALE_MAX ; morale++ ) {
-		auto& badgedef = m_per_morale_sprites[ morale ];
-		DELETE( badgedef.normal );
-		DELETE( badgedef.greyedout );
+	if ( m_fake_badge ) {
+		m_ism->RemoveRepaintedInstancedSpriteByKey( m_fake_badge->instanced_sprite->key );
+		DELETE( m_fake_badge );
 	}
-	DELETE( m_fake_badge );
 }
 
 Sprite* SlotBadges::GetUnitBadgeSprite( const ::game::unit::morale_t morale, const bool is_active ) {
-	return is_active
-		? m_per_morale_sprites.at( morale ).normal
-		: m_per_morale_sprites.at( morale ).greyedout;
+	auto it = m_per_morale_sprites.find( morale );
+	if ( it == m_per_morale_sprites.end() ) {
+		it = m_per_morale_sprites.insert(
+			{
+				morale,
+				{
+					nullptr,
+					nullptr
+				}
+			}
+		).first;
+	}
+	Sprite** sprite_ptr = is_active
+		? &it->second.normal
+		: &it->second.greyedout;
+	if ( !*sprite_ptr ) {
+		NEW( *sprite_ptr, Sprite, {
+			m_ism->GetRepaintedInstancedSprite(
+				m_badges_key + "_" + std::to_string( morale ) + ( is_active
+					? "_NORMAL"
+					: "_GREYEDOUT"
+				),
+				m_badge_defs->GetBadgeSprite(
+					( m_faction->m_is_progenitor
+						? BadgeDefs::BT_PROGENITOR
+						: BadgeDefs::BT_DEFAULT
+					) | ( is_active
+						? BadgeDefs::BT_NORMAL
+						: BadgeDefs::BT_GREYEDOUT
+					), morale
+				),
+				m_repaint_rules
+			),
+			1
+		} );
+	}
+	return *sprite_ptr;
 }
 
 const size_t SlotBadges::ShowFakeBadge( const types::Vec3& coords, const uint8_t offset ) {
-	const size_t instance_id = m_fake_badge->next_instance_id++;
-	m_fake_badge->instanced_sprite->actor->SetInstance( instance_id, m_badge_defs->GetFakeBadgeCoords( coords, offset ) );
+	auto* fake_badge = GetFakeBadge();
+	const size_t instance_id = fake_badge->next_instance_id++;
+	fake_badge->instanced_sprite->actor->SetInstance( instance_id, m_badge_defs->GetFakeBadgeCoords( coords, offset ) );
 	return instance_id;
 }
 
 void SlotBadges::HideFakeBadge( const size_t instance_id ) {
-	m_fake_badge->instanced_sprite->actor->RemoveInstance( instance_id );
+	GetFakeBadge()->instanced_sprite->actor->RemoveInstance( instance_id );
+}
+
+Sprite* SlotBadges::GetFakeBadge() {
+	if ( !m_fake_badge ) {
+		NEW( m_fake_badge, Sprite, {
+			m_ism->GetRepaintedInstancedSprite(
+				m_badges_key + "_FAKE",
+				m_badge_defs->GetFakeBadgeSprite(),
+				m_fake_badge_repaint_rules
+			),
+			1
+		} );
+	}
+	return m_fake_badge;
 }
 
 }

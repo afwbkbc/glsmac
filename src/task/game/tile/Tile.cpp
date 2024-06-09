@@ -7,6 +7,7 @@
 
 namespace task {
 namespace game {
+namespace tile {
 
 std::vector< size_t > Tile::GetUnitsOrder( const std::unordered_map< size_t, unit::Unit* >& units ) {
 	std::map< size_t, std::vector< size_t > > weights; // { weight, units }
@@ -460,5 +461,6 @@ void Tile::Update( const ::game::map::tile::Tile& tile, const ::game::map::tile:
 	}
 }
 
+}
 }
 }

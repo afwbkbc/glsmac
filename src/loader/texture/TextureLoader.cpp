@@ -3,6 +3,8 @@
 #include <algorithm>
 
 #include "types/texture/Texture.h"
+#include "engine/Engine.h"
+#include "resource/ResourceManager.h"
 
 namespace loader {
 namespace texture {
@@ -12,6 +14,8 @@ static const auto s_tc_pink = types::Color::RGB( 255, 0, 255 );
 static const auto s_tc_purple = types::Color::RGB( 152, 24, 228 );
 static const auto s_tc_darkpurple = types::Color::RGB( 100, 16, 156 );
 static const auto s_tc_aqua = types::Color::RGB( 24, 184, 228 );
+static const auto s_tc_yellowshadow = types::Color::RGB( 253, 189, 118 );
+static const auto s_tc_facborder = types::Color::RGB( 77, 156, 176 );
 static const std::unordered_map< resource::resource_t, TextureLoader::transparent_colors_t > s_tcs = {
 	{
 		resource::PCX_TEXTURE,
@@ -79,7 +83,7 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 			s_tc_purple,
 			s_tc_darkpurple, // tile markings
 			s_tc_aqua, // borders
-			types::Color::RGB( 253, 189, 118 ), // shadows
+			s_tc_yellowshadow // shadows
 		}
 	},
 	{
@@ -101,6 +105,7 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 		resource::PCX_XI,
 		{
 			types::Color::RGB( 0, 67, 255 ),
+			types::Color::RGB( 155, 27, 231 ), // label
 			types::Color::RGB( 27, 187, 231 ), // borders
 		}
 	},
@@ -111,25 +116,121 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 			types::Color::RGB( 155, 27, 231 ), // tile
 			types::Color::RGB( 27, 187, 231 ), // borders
 		}
-	}
+	},
+	{
+		resource::PCX_GAIANS,
+		{
+			s_tc_pink,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_HIVE,
+		{
+			s_tc_pink,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_UNIV,
+		{
+			s_tc_pink,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_MORGAN,
+		{
+			s_tc_pink,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_SPARTANS,
+		{
+			s_tc_pink,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_BELIEVE,
+		{
+			s_tc_pink,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_PEACE,
+		{
+			s_tc_pink,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_CYBORG,
+		{
+			s_tc_darkpurple,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_PIRATES,
+		{
+			s_tc_darkpurple,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_DRONE,
+		{
+			s_tc_darkpurple,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_ANGELS,
+		{
+			s_tc_darkpurple,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_FUNGBOY,
+		{
+			s_tc_darkpurple,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_CARETAKE,
+		{
+			s_tc_darkpurple,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
+	{
+		resource::PCX_USURPER,
+		{
+			s_tc_darkpurple,
+			s_tc_yellowshadow,
+			s_tc_facborder,
+		},
+	},
 };
 static const TextureLoader::transparent_colors_t s_no_transparent_colors = {};
-
-// resolve some known files (TODO: move to scripts?)
-static const std::unordered_map< std::string, resource::resource_t > s_filename_to_res = {
-	{
-		"units.pcx",
-		resource::PCX_UNITS
-	},
-	{
-		"xi.pcx",
-		resource::PCX_XI,
-	},
-	{
-		"xf.pcx",
-		resource::PCX_XF,
-	},
-};
 
 const TextureLoader::transparent_colors_t& TextureLoader::GetTCs( const resource::resource_t res ) {
 	const auto& transparent_colors_it = s_tcs.find( res );
@@ -152,14 +253,14 @@ types::texture::Texture* TextureLoader::LoadCustomTexture( const std::string& fi
 	std::string key;
 	key.resize( filename.size() );
 	std::transform( filename.begin(), filename.end(), key.begin(), ::tolower );
-	const auto& it = s_filename_to_res.find( key );
+	const auto res = g_engine->GetResourceManager()->GetResource( filename );
 	transparent_colors_t colors_old;
-	if ( it != s_filename_to_res.end() ) {
+	if ( res != resource::NONE ) {
 		colors_old = m_transparent_colors;
-		m_transparent_colors = GetTCs( it->second );
+		m_transparent_colors = GetTCs( res );
 	}
 	auto* result = LoadTextureImpl( GetCustomFilename( filename ) );
-	if ( it != s_filename_to_res.end() ) {
+	if ( res != resource::NONE ) {
 		m_transparent_colors = colors_old;
 	}
 	return result;

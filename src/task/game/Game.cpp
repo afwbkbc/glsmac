@@ -24,6 +24,7 @@
 #include "game/event/CompleteTurn.h"
 #include "game/event/UncompleteTurn.h"
 #include "ui/bottom_bar/BottomBar.h"
+#include "tile/TileManager.h"
 #include "unit/UnitManager.h"
 #include "faction/FactionManager.h"
 #include "InstancedSpriteManager.h"
@@ -33,7 +34,6 @@
 #include "task/game/unit/UnitDef.h"
 #include "Slot.h"
 #include "task/game/unit/BadgeDefs.h"
-#include "scene/actor/Actor.h"
 #include "scene/actor/Instanced.h"
 #include "InstancedSprite.h"
 #include "loader/texture/TextureLoader.h"
@@ -46,6 +46,7 @@
 #include "types/mesh/Render.h"
 #include "types/mesh/Data.h"
 #include "ui/style/Theme.h"
+#include "game/map/Consts.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -182,18 +183,15 @@ void Game::Iterate() {
 						m_on_start = nullptr;
 					}
 
-					UpdateMapData(
-						{
-							response.data.get_map_data->map_width,
-							response.data.get_map_data->map_height
-						}
-					);
-
 					if ( m_is_initialized ) {
 						Deinitialize();
 					}
 
 					Initialize(
+						{
+							response.data.get_map_data->map_width,
+							response.data.get_map_data->map_height
+						},
 						response.data.get_map_data->terrain_texture,
 						response.data.get_map_data->terrain_mesh,
 						response.data.get_map_data->terrain_data_mesh,
@@ -386,7 +384,7 @@ void Game::Iterate() {
 		const auto tile_at = GetTileAtScreenCoordsResult();
 		if ( tile_at.is_set ) {
 			ASSERT( m_tile_at_query_purpose != ::game::TQP_NONE, "tile preferred mode not set" );
-			auto* tile = GetTile( tile_at.tile_pos );
+			auto* tile = m_tm->GetTile( tile_at.tile_pos );
 			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
 				if ( !m_mt_ids.edit_map ) { // TODO: need to queue?
 					m_mt_ids.edit_map = game->MT_EditMap( tile->GetCoords(), m_editor_tool, m_editor_brush, m_editor_draw_mode );
@@ -466,6 +464,11 @@ const std::string& Game::GetMapFilename() const {
 
 const std::string& Game::GetMapLastDirectory() const {
 	return m_map_data.last_directory;
+}
+
+tile::TileManager* Game::GetTM() const {
+	ASSERT( m_tm, "tm not set" );
+	return m_tm;
 }
 
 unit::UnitManager* Game::GetUM() const {
@@ -808,17 +811,6 @@ Slot* Game::GetSlot( const size_t index ) const {
 	return m_slots.at( index );
 }
 
-Tile* Game::GetTile( const size_t x, const size_t y ) {
-	ASSERT( !m_tiles.empty(), "tile states not set" );
-	ASSERT( x < m_map_data.width, "tile x overflow" );
-	ASSERT( y < m_map_data.height, "tile y overflow" );
-	return &m_tiles.at( y * m_map_data.width + x );
-}
-
-Tile* Game::GetTile( const types::Vec2< size_t >& coords ) {
-	return GetTile( coords.x, coords.y );
-}
-
 void Game::DefineSlot(
 	const size_t slot_index,
 	const faction::Faction* faction
@@ -908,7 +900,7 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 				ASSERT( t, "tile not found" );
 				const auto& ts = tile_data.second;
 				ASSERT( ts, "tile state not found" );
-				auto* tile = GetTile( t->coord.x, t->coord.y );
+				auto* tile = m_tm->GetTile( t->coord.x, t->coord.y );
 				ASSERT( tile, "matching tile not found" );
 
 				Log( "Updating tile: " + tile->GetCoords().ToString() );
@@ -1046,7 +1038,7 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 		case ::game::FrontendRequest::FR_UNIT_MOVE: {
 			const auto& d = request->data.unit_move;
 			auto* unit = m_um->GetUnitById( d.unit_id );
-			auto* dst_tile = GetTile(
+			auto* dst_tile = m_tm->GetTile(
 				{
 					d.dst_tile_coords.x,
 					d.dst_tile_coords.y
@@ -1075,8 +1067,6 @@ void Game::DeactivateTurn() {
 
 void Game::UpdateMapData( const types::Vec2< size_t >& map_size ) {
 
-	ASSERT( m_tiles.empty(), "tile states already set" );
-
 	m_map_data.width = map_size.x;
 	m_map_data.height = map_size.y;
 	m_map_data.range.min = {
@@ -1100,75 +1090,11 @@ void Game::UpdateMapData( const types::Vec2< size_t >& map_size ) {
 		}
 	);
 
-	m_tiles.reserve( m_map_data.width * m_map_data.height / 2 ); // / 2 because smac coordinate system
-	for ( size_t y = 0 ; y < m_map_data.height ; y++ ) {
-		for ( size_t x = y & 1 ; x < m_map_data.width ; x += 2 ) {
-			m_tiles.insert(
-				{
-					y * m_map_data.width + x,
-					Tile{
-						{
-							x,
-							y
-						}
-					}
-				}
-			);
-		}
-	}
-
-	// link tiles to neighbours
-	for ( size_t y = 0 ; y < m_map_data.height ; y++ ) {
-		for ( size_t x = y & 1 ; x < m_map_data.width ; x += 2 ) {
-			auto* ts = GetTile(
-				{
-					x,
-					y
-				}
-			);
-
-			ts->W = ( x >= 2 )
-				? GetTile( x - 2, y )
-				: GetTile( m_map_data.width - 1 - ( 1 - ( y % 2 ) ), y );
-			ts->NW = ( y >= 1 )
-				? ( ( x >= 1 )
-					? GetTile( x - 1, y - 1 )
-					: GetTile( m_map_data.width - 1, y - 1 )
-				)
-				: ts;
-			ts->N = ( y >= 2 )
-				? GetTile( x, y - 2 )
-				: ts;
-			ts->NE = ( y >= 1 )
-				? ( ( x < m_map_data.width - 1 )
-					? GetTile( x + 1, y - 1 )
-					: GetTile( 0, y - 1 )
-				)
-				: ts;
-			ts->E = ( x < m_map_data.width - 2 )
-				? GetTile( x + 2, y )
-				: GetTile( y % 2, y );
-			ts->SE = ( y < m_map_data.height - 1 )
-				? ( ( x < m_map_data.width - 1 )
-					? GetTile( x + 1, y + 1 )
-					: GetTile( 0, y + 1 )
-				)
-				: ts;
-			ts->S = ( y < m_map_data.height - 2 )
-				? GetTile( x, y + 2 )
-				: ts;
-			ts->SW = ( y < m_map_data.height - 1 )
-				? ( ( x >= 1 )
-					? GetTile( x - 1, y + 1 )
-					: GetTile( m_map_data.width - 1, y + 1 )
-				)
-				: ts;
-		}
-	}
-
+	m_tm->InitTiles( map_size );
 }
 
 void Game::Initialize(
+	const types::Vec2< size_t >& map_size,
 	types::texture::Texture* terrain_texture,
 	types::mesh::Render* terrain_mesh,
 	types::mesh::Data* terrain_data_mesh,
@@ -1190,7 +1116,8 @@ void Game::Initialize(
 	NEW( m_world_scene, scene::Scene, "Game", scene::SCENE_TYPE_ORTHO );
 
 	NEW( m_ism, InstancedSpriteManager, m_world_scene );
-	NEW( m_fm, faction::FactionManager );
+	NEW( m_fm, faction::FactionManager, this );
+	NEW( m_tm, tile::TileManager, this );
 	NEW( m_um, unit::UnitManager, this );
 
 	NEW( m_camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
@@ -1267,6 +1194,7 @@ void Game::Initialize(
 	}
 
 	// process tiles
+	UpdateMapData( map_size );
 
 	ASSERT( tiles, "tiles not set" );
 	ASSERT( tiles->size() == m_map_data.width * m_map_data.height, "tiles count mismatch" ); // TODO: /2
@@ -1275,7 +1203,7 @@ void Game::Initialize(
 
 	for ( size_t y = 0 ; y < m_map_data.height ; y++ ) {
 		for ( size_t x = y & 1 ; x < m_map_data.width ; x += 2 ) {
-			auto* tile = GetTile( x, y );
+			auto* tile = m_tm->GetTile( x, y );
 			Log( "Initializing tile: " + tile->GetCoords().ToString() );
 			tile->Update( tiles->at( y * m_map_data.width + x / 2 ), tile_states->at( y * m_map_data.width + x / 2 ) );
 		}
@@ -1317,7 +1245,8 @@ void Game::Initialize(
 			m_ui.bottom_bar->CloseMenus();
 
 			if ( !data->key.modifiers ) {
-				if ( m_selected_tile ) {
+				auto* selected_tile = m_tm->GetSelectedTile();
+				if ( selected_tile ) {
 
 					bool is_tile_selected = false;
 					::game::map::tile::direction_t td = ::game::map::tile::D_NONE;
@@ -1363,7 +1292,7 @@ void Game::Initialize(
 					}
 
 					if ( is_tile_selected ) {
-						auto* tile = m_selected_tile->GetNeighbour( td );
+						auto* tile = selected_tile->GetNeighbour( td );
 						auto* selected_unit = m_um->GetSelectedUnit();
 
 						if ( !selected_unit ) {
@@ -1390,7 +1319,7 @@ void Game::Initialize(
 							else {
 								// attack
 								// TODO: select the most powerful defender for attacker
-								const auto& target_unit = foreign_units.at( Tile::GetUnitsOrder( foreign_units ).front() );
+								const auto& target_unit = foreign_units.at( tile::Tile::GetUnitsOrder( foreign_units ).front() );
 								const auto event = ::game::event::AttackUnit( m_slot_index, selected_unit->GetId(), target_unit->GetId() );
 								game->MT_AddEvent( &event );
 							}
@@ -1739,6 +1668,11 @@ void Game::Deinitialize() {
 		m_um = nullptr;
 	}
 
+	if ( m_tm ) {
+		DELETE( m_tm );
+		m_tm = nullptr;
+	}
+
 	if ( m_ism ) {
 		DELETE( m_ism );
 		m_ism = nullptr;
@@ -1793,17 +1727,18 @@ void Game::SelectTileAtPoint( const ::game::tile_query_purpose_t tile_query_purp
 	GetTileAtScreenCoords( tile_query_purpose, x, m_viewport.window_height - y ); // async
 }
 
-void Game::SelectTileOrUnit( Tile* tile, const size_t selected_unit_id ) {
+void Game::SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id ) {
 
 	ASSERT( m_tile_at_query_purpose != ::game::TQP_NONE, "tile query purpose not set" );
 
 	DeselectTileOrUnit();
 
-	m_selected_tile = tile;
+	m_tm->SelectTile( tile );
 
 	unit::Unit* selected_unit = nullptr;
+
 	if ( m_tile_at_query_purpose == ::game::TQP_UNIT_SELECT ) {
-		const auto& units = m_selected_tile->GetUnits();
+		const auto& units = tile->GetUnits();
 		if ( m_is_turn_active ) {
 			if ( selected_unit_id ) {
 				for ( const auto& it : units ) {
@@ -1814,7 +1749,7 @@ void Game::SelectTileOrUnit( Tile* tile, const size_t selected_unit_id ) {
 				}
 			}
 			if ( !selected_unit ) {
-				selected_unit = m_selected_tile->GetMostImportantUnit();//GetFirstSelectableUnit( units );
+				selected_unit = tile->GetMostImportantUnit();//GetFirstSelectableUnit( units );
 			}
 		}
 		if ( !selected_unit ) {
@@ -1825,9 +1760,9 @@ void Game::SelectTileOrUnit( Tile* tile, const size_t selected_unit_id ) {
 	switch ( m_tile_at_query_purpose ) {
 		case ::game::TQP_TILE_SELECT: {
 			m_um->DeselectUnit();
-			Log( "Selected tile at " + m_selected_tile->GetCoords().ToString() + " ( " + m_selected_tile->GetRenderData().selection_coords.center.ToString() + " )" );
+			Log( "Selected tile at " + tile->GetCoords().ToString() + " ( " + tile->GetRenderData().selection_coords.center.ToString() + " )" );
 			ShowTileSelector();
-			m_ui.bottom_bar->PreviewTile( m_selected_tile, selected_unit_id );
+			m_ui.bottom_bar->PreviewTile( tile, selected_unit_id );
 			break;
 		}
 		case ::game::TQP_UNIT_SELECT: {
@@ -1864,7 +1799,7 @@ void Game::RemoveActor( actor::Actor* actor ) {
 	m_actors_map.erase( it );
 }
 
-const types::Vec2< float > Game::GetTileWindowCoordinates( const Tile* tile ) const {
+const types::Vec2< float > Game::GetTileWindowCoordinates( const tile::Tile* tile ) const {
 	const auto& c = tile->GetRenderData().coords;
 	return {
 		c.x * m_viewport.window_aspect_ratio * m_camera_position.z,
@@ -1883,7 +1818,7 @@ void Game::ScrollTo( const types::Vec3& target ) {
 	m_scroller.Scroll( m_camera_position, target, SCROLL_DURATION_MS );
 }
 
-void Game::ScrollToTile( const Tile* tile, bool center_on_tile ) {
+void Game::ScrollToTile( const tile::Tile* tile, bool center_on_tile ) {
 
 	auto tc = GetTileWindowCoordinates( tile );
 
@@ -2088,7 +2023,7 @@ void Game::ResetMapState() {
 	}
 
 	m_tile_at_query_purpose = ::game::TQP_TILE_SELECT;
-	SelectTileOrUnit( GetTile( coords ) );
+	SelectTileOrUnit( m_tm->GetTile( coords ) );
 }
 
 void Game::SmoothScroll( const float scroll_value ) {
@@ -2243,7 +2178,7 @@ const float Game::GetCloserX( const float x, const float ref_x ) const {
 
 void Game::ShowTileSelector() {
 	HideTileSelector();
-	NEW( m_actors.tile_selection, actor::TileSelection, m_selected_tile->GetRenderData().selection_coords );
+	NEW( m_actors.tile_selection, actor::TileSelection, m_tm->GetSelectedTile()->GetRenderData().selection_coords );
 	AddActor( m_actors.tile_selection );
 }
 
@@ -2254,7 +2189,7 @@ void Game::HideTileSelector() {
 	}
 }
 
-void Game::RenderTile( Tile* tile, const unit::Unit* selected_unit ) {
+void Game::RenderTile( tile::Tile* tile, const unit::Unit* selected_unit ) {
 	tile->Render(
 		selected_unit
 			? selected_unit->GetId()
@@ -2280,49 +2215,57 @@ const size_t Game::GetMySlotIndex() const {
 	return m_slot_index;
 }
 
-Tile* Game::GetSelectedTile() const {
-	return m_selected_tile;
-}
-
-void Game::SetSelectedTile( Tile* tile ) {
-	m_selected_tile = tile;
+void Game::SetSelectedTile( tile::Tile* tile ) {
+	m_tm->SelectTile( tile );
 }
 
 void Game::RefreshSelectedTile( unit::Unit* selected_unit ) {
-	if ( m_selected_tile ) {
+	auto* selected_tile = m_tm->GetSelectedTile();
+	if ( selected_tile ) {
 		m_ui.bottom_bar->PreviewTile(
-			m_selected_tile, selected_unit
+			selected_tile, selected_unit
 				? selected_unit->GetId()
 				: 0
 		);
 	}
 }
 
-void Game::RefreshSelectedTileIf( task::game::Tile* if_tile, unit::Unit* selected_unit ) {
-	if ( m_selected_tile && m_selected_tile == if_tile ) {
+void Game::RefreshSelectedTileIf( tile::Tile* if_tile, unit::Unit* selected_unit ) {
+	auto* selected_tile = m_tm->GetSelectedTile();
+	if ( selected_tile && selected_tile == if_tile ) {
 		RefreshSelectedTile( selected_unit );
 	}
 }
 
 void Game::ScrollToSelectedTile( const bool center_on_tile ) {
-	ScrollToTile( m_selected_tile, center_on_tile );
+	ASSERT( m_tm->GetSelectedTile(), "tile not selected" );
+	ScrollToTile( m_tm->GetSelectedTile(), center_on_tile );
 }
 
 void Game::SelectUnitOrSelectedTile( unit::Unit* selected_unit ) {
+	ASSERT( m_tm->GetSelectedTile(), "tile not selected" );
 	SelectTileOrUnit(
-		m_selected_tile, selected_unit
+		m_tm->GetSelectedTile(), selected_unit
 			? selected_unit->GetId()
 			: 0
 	);
 }
 
 unit::Unit* Game::GetSelectedTileMostImportantUnit() const {
-	if ( m_selected_tile && !m_selected_tile->GetUnits().empty() ) {
-		return m_selected_tile->GetMostImportantUnit();
+	auto* selected_tile = m_tm->GetSelectedTile();
+	if ( selected_tile && !selected_tile->GetUnits().empty() ) {
+		return selected_tile->GetMostImportantUnit();
 	}
 	else {
 		return nullptr;
 	}
 }
+
+Game::map_data_t::map_data_t()
+	: filename( ::game::map::s_consts.fs.default_map_filename + ::game::map::s_consts.fs.default_map_extension )
+	, last_directory( util::FS::GetCurrentDirectory() + util::FS::PATH_SEPARATOR + ::game::map::s_consts.fs.default_map_directory ) {
+	//
+}
+
 }
 }

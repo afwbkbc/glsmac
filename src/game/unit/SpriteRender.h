@@ -2,6 +2,8 @@
 
 #include "Render.h"
 
+#include "Types.h"
+
 namespace game {
 namespace unit {
 
@@ -18,16 +20,7 @@ public:
 		const uint32_t morale_based_xshift
 	);
 
-	const std::string m_file;
-	const uint32_t m_x;
-	const uint32_t m_y;
-	const uint32_t m_w;
-	const uint32_t m_h;
-	const uint32_t m_cx;
-	const uint32_t m_cy;
-	const uint32_t m_morale_based_xshift;
-	const float m_cshift_x;
-	const float m_cshift_y;
+	const sprite_render_info_t m_render = {};
 
 	const types::Vec3 GetSpawnCoords( const map::tile::Tile* tile, const map::tile::TileState* ts ) const override;
 	const std::string ToString( const std::string& prefix ) const override;

@@ -36,8 +36,8 @@ public:
 	static const badge_type_t BT_DEFAULT{ 1 << 1 };
 	static const badge_type_t BT_PROGENITOR{ 0 << 1 };
 
-	InstancedSprite* GetBadgeSprite( const badge_type_t badge_type, const ::game::unit::morale_t morale ) const;
-	InstancedSprite* GetFakeBadgeSprite() const;
+	InstancedSprite* GetBadgeSprite( const badge_type_t badge_type, const ::game::unit::morale_t morale );
+	InstancedSprite* GetFakeBadgeSprite();
 	Sprite* GetBadgeHealthbarSprite( const float health );
 	const size_t GetBadgeBlinkInterval() const;
 
@@ -54,6 +54,11 @@ private:
 			-0.25f,
 			-0.5
 		};
+		const struct {
+			const uint8_t width = 23;
+			const uint8_t height = 30;
+			const uint8_t margin = 1;
+		} badges;
 		const struct {
 			const uint8_t resolution = 25;
 			const types::Vec2< float > scale = {
@@ -90,8 +95,11 @@ private:
 
 	InstancedSprite* m_fake_badge = nullptr;
 
-	std::vector< types::texture::Texture* > m_healthbar_textures = {};
-	std::vector< Sprite > m_healthbar_sprites = {};
+	types::texture::Texture* m_badges_texture = nullptr;
+	types::texture::Texture* GetBadgesTexture();
+
+	std::unordered_map< uint8_t, types::texture::Texture* > m_healthbar_textures = {};
+	std::unordered_map< uint8_t, Sprite > m_healthbar_sprites = {};
 
 };
 

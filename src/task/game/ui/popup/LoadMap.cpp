@@ -1,9 +1,7 @@
 #include "LoadMap.h"
+
 #include "task/game/Game.h"
-
-#include "util/FS.h"
-
-#include "engine/Engine.h"
+#include "game/map/Consts.h"
 
 namespace task {
 namespace game {

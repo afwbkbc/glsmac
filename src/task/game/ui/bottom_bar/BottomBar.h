@@ -20,7 +20,9 @@ class Label;
 namespace task {
 namespace game {
 class Game;
+namespace tile {
 class Tile;
+}
 namespace unit {
 class Unit;
 }
@@ -48,7 +50,7 @@ CLASS( BottomBar, UI )
 	void Destroy() override;
 	void Align() override;
 
-	void PreviewTile( Tile* tile, const size_t selected_unit_id );
+	void PreviewTile( tile::Tile* tile, const size_t selected_unit_id );
 	void HideTilePreview();
 
 	void PreviewUnit( const unit::Unit* unit );
