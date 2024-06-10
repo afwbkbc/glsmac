@@ -25,14 +25,14 @@ const std::string* AttackUnit::Validate( Game* game ) const {
 	if ( attacker->m_owner->GetIndex() != m_initiator_slot ) {
 		return Error( "Unit can only be ordered to attack by it's owner" );
 	}
-	if ( attacker->m_tile->IsLocked() ) {
+	if ( attacker->GetTile()->IsLocked() ) {
 		return Error( "Attacker tile is locked" );
 	}
 	auto* defender = game->GetUnit( m_defender_unit_id );
 	if ( !defender ) {
 		return Error( "Defender unit not found" );
 	}
-	if ( defender->m_tile->IsLocked() ) {
+	if ( defender->GetTile()->IsLocked() ) {
 		return Error( "Attacker tile is locked" );
 	}
 	return game->AttackUnitValidate( attacker, defender );

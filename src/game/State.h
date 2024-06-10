@@ -26,7 +26,7 @@ namespace slot {
 class Slots;
 }
 
-CLASS( State, base::Base )
+CLASS( State, ::base::Base )
 
 	State();
 	virtual ~State();

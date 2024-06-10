@@ -24,7 +24,7 @@ class Perlin;
 namespace game {
 namespace map {
 
-CLASS( MapState, base::Base )
+CLASS( MapState, ::base::Base )
 
 	~MapState();
 

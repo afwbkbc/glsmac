@@ -17,7 +17,7 @@ class TileState;
 
 namespace module {
 
-CLASS( Module, base::Base )
+CLASS( Module, ::base::Base )
 
 	Module( Map* const map );
 

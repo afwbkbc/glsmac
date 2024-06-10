@@ -59,40 +59,40 @@ InvalidEvent::InvalidEvent( const std::string& reason, const event::Event* event
 		TS_OFFSET + "event: " + event->ToString( TS_OFFSET )
 ) {}
 
-base::mt_id_t Game::MT_Ping() {
+::base::mt_id_t Game::MT_Ping() {
 	MT_Request request = {};
 	request.op = OP_PING;
 	return MT_CreateRequest( request );
 }
 
-base::mt_id_t Game::MT_Init( State* state ) {
+::base::mt_id_t Game::MT_Init( State* state ) {
 	MT_Request request = {};
 	request.op = OP_INIT;
 	request.data.init.state = state;
 	return MT_CreateRequest( request );
 }
 
-base::mt_id_t Game::MT_Chat( const std::string& message ) {
+::base::mt_id_t Game::MT_Chat( const std::string& message ) {
 	MT_Request request = {};
 	request.op = OP_CHAT;
 	NEW( request.data.save_map.path, std::string, message );
 	return MT_CreateRequest( request );
 }
 
-base::mt_id_t Game::MT_GetMapData() {
+::base::mt_id_t Game::MT_GetMapData() {
 	MT_Request request = {};
 	request.op = OP_GET_MAP_DATA;
 	return MT_CreateRequest( request );
 }
 
-base::mt_id_t Game::MT_Reset() {
+::base::mt_id_t Game::MT_Reset() {
 	m_init_cancel = true; // stop initialization in Iterate()
 	MT_Request request = {};
 	request.op = OP_RESET;
 	return MT_CreateRequest( request );
 }
 
-base::mt_id_t Game::MT_SaveMap( const std::string& path ) {
+::base::mt_id_t Game::MT_SaveMap( const std::string& path ) {
 	ASSERT( !path.empty(), "savemap path is empty" );
 	MT_Request request = {};
 	request.op = OP_SAVE_MAP;
@@ -101,7 +101,7 @@ base::mt_id_t Game::MT_SaveMap( const std::string& path ) {
 	return MT_CreateRequest( request );
 }
 
-base::mt_id_t Game::MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::tool_type_t tool, map_editor::brush_type_t brush, map_editor::draw_mode_t draw_mode ) {
+::base::mt_id_t Game::MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::tool_type_t tool, map_editor::brush_type_t brush, map_editor::draw_mode_t draw_mode ) {
 	MT_Request request = {};
 	request.op = OP_EDIT_MAP;
 	request.data.edit_map.tile_x = tile_coords.x;
@@ -112,20 +112,20 @@ base::mt_id_t Game::MT_EditMap( const types::Vec2< size_t >& tile_coords, map_ed
 	return MT_CreateRequest( request );
 }
 
-base::mt_id_t Game::MT_GetFrontendRequests() {
+::base::mt_id_t Game::MT_GetFrontendRequests() {
 	MT_Request request = {};
 	request.op = OP_GET_FRONTEND_REQUESTS;
 	return MT_CreateRequest( request );
 }
 
-base::mt_id_t Game::MT_SendBackendRequests( const std::vector< BackendRequest >& requests ) {
+::base::mt_id_t Game::MT_SendBackendRequests( const std::vector< BackendRequest >& requests ) {
 	MT_Request request = {};
 	request.op = OP_SEND_BACKEND_REQUESTS;
 	NEW( request.data.send_backend_requests.requests, std::vector< BackendRequest >, requests );
 	return MT_CreateRequest( request );
 }
 
-base::mt_id_t Game::MT_AddEvent( const event::Event* event ) {
+::base::mt_id_t Game::MT_AddEvent( const event::Event* event ) {
 	MT_Request request = {};
 	request.op = OP_ADD_EVENT;
 	NEW( request.data.add_event.serialized_event, std::string, event::Event::Serialize( event ).ToString() );
@@ -134,7 +134,7 @@ base::mt_id_t Game::MT_AddEvent( const event::Event* event ) {
 
 #ifdef DEBUG
 #define x( _method, _op ) \
-    base::mt_id_t Game::_method( const std::string& path ) { \
+    ::base::mt_id_t Game::_method( const std::string& path ) { \
         ASSERT( !path.empty(), "dump path is empty" ); \
         MT_Request request = {}; \
         request.op = _op; \
@@ -365,6 +365,10 @@ void Game::Iterate() {
 							SpawnUnit( it );
 						}
 						m_unprocessed_units.clear();
+						for ( auto& it : m_unprocessed_bases ) {
+							SpawnBase( it );
+						}
+						m_unprocessed_bases.clear();
 						for ( auto& it : m_unprocessed_events ) {
 							ASSERT( m_connection, "connection not set" );
 							try {
@@ -409,6 +413,7 @@ void Game::Iterate() {
 		Quit( "Event validation error" ); // TODO: fix reason
 	}
 	PushUnitUpdates();
+	PushBaseUpdates();
 	ProcessTileLockRequests();
 }
 
@@ -763,6 +768,10 @@ void Game::RefreshUnit( const unit::Unit* unit ) {
 	}
 }
 
+void Game::RefreshBase( const base::Base* base ) {
+	// TODO
+}
+
 void Game::DefineAnimation( animation::Def* def ) {
 	Log( "Defining animation ('" + def->m_id + "')" );
 
@@ -844,11 +853,9 @@ void Game::SpawnUnit( unit::Unit* unit ) {
 		return;
 	}
 
-	Log( "Spawning unit #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->m_tile->ToString() );
+	auto* tile = unit->GetTile();
 
-	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
-
-	auto* tile = unit->m_tile;
+	Log( "Spawning unit #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + tile->ToString() );
 
 	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
 	m_units.insert_or_assign( unit->m_id, unit );
@@ -872,7 +879,7 @@ void Game::SkipUnitTurn( const size_t unit_id ) {
 	ASSERT( it != m_units.end(), "unit id not found" );
 	auto* unit = it->second;
 
-	Log( "Skipping unit turn #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->m_tile->ToString() );
+	Log( "Skipping unit turn #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->GetTile()->ToString() );
 
 	unit->m_movement = 0.0f;
 
@@ -885,12 +892,12 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	ASSERT( it != m_units.end(), "unit id not found" );
 	auto* unit = it->second;
 
-	Log( "Despawning unit #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->m_tile->ToString() );
+	Log( "Despawning unit #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->GetTile()->ToString() );
 
 	QueueUnitUpdate( unit, UUO_DESPAWN );
 
-	ASSERT( unit->m_tile, "unit tile not assigned" );
-	auto* tile = unit->m_tile;
+	auto* tile = unit->GetTile();
+	ASSERT( tile, "unit tile not set" );
 	const auto& tile_it = tile->units.find( unit->m_id );
 	ASSERT( tile_it != tile->units.end(), "unit id not found in tile" );
 	tile->units.erase( tile_it );
@@ -911,6 +918,33 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	delete unit;
 }
 
+void Game::SpawnBase( base::Base* base ) {
+	if ( m_game_state != GS_RUNNING ) {
+		m_unprocessed_bases.push_back( base );
+		return;
+	}
+
+	Log( "Spawning base #" + std::to_string( base->m_id ) + " at " + base->GetTile()->ToString() );
+
+	ASSERT( m_bases.find( base->m_id ) == m_bases.end(), "duplicate base id" );
+	m_bases.insert_or_assign( base->m_id, base );
+
+	auto* tile = base->GetTile();
+
+	QueueBaseUpdate( base, BUO_SPAWN );
+
+	if ( m_state->IsMaster() ) {
+		m_state->m_bindings->Call(
+			bindings::Bindings::CS_ON_BASE_SPAWN, {
+				{
+					"base",
+					base->Wrap()
+				},
+			}
+		);
+	}
+}
+
 const std::string* Game::MoveUnitValidate( unit::Unit* unit, map::tile::Tile* dst_tile ) {
 	const auto result = m_state->m_bindings->Call(
 		bindings::Bindings::CS_ON_UNIT_MOVE_VALIDATE, {
@@ -920,7 +954,7 @@ const std::string* Game::MoveUnitValidate( unit::Unit* unit, map::tile::Tile* ds
 			},
 			{
 				"src_tile",
-				unit->m_tile->Wrap()
+				unit->GetTile()->Wrap()
 			},
 			{
 				"dst_tile",
@@ -948,7 +982,7 @@ const gse::Value Game::MoveUnitResolve( unit::Unit* unit, map::tile::Tile* dst_t
 			},
 			{
 				"src_tile",
-				unit->m_tile->Wrap()
+				unit->GetTile()->Wrap()
 			},
 			{
 				"dst_tile",
@@ -963,7 +997,7 @@ void Game::MoveUnitApply( unit::Unit* unit, map::tile::Tile* dst_tile, const gse
 
 	Log( "Moving unit #" + std::to_string( unit->m_id ) + " to " + dst_tile->coord.ToString() );
 
-	auto* src_tile = unit->m_tile;
+	auto* src_tile = unit->GetTile();
 	ASSERT( src_tile, "src tile not set" );
 	ASSERT( src_tile->units.find( unit->m_id ) != src_tile->units.end(), "src tile does not contain this unit" );
 	ASSERT( dst_tile->units.find( unit->m_id ) == dst_tile->units.end(), "dst tile already contains this unit" );
@@ -991,7 +1025,7 @@ void Game::MoveUnitApply( unit::Unit* unit, map::tile::Tile* dst_tile, const gse
 }
 
 const std::string* Game::MoveUnitToTile( unit::Unit* unit, map::tile::Tile* dst_tile, const cb_oncomplete& on_complete ) {
-	const auto* src_tile = unit->m_tile;
+	const auto* src_tile = unit->GetTile();
 	if ( src_tile == dst_tile ) {
 		return new std::string( "Unit can't move because it's already on target tile" );
 	}
@@ -1192,6 +1226,19 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		RefreshUnit( unit );
 	}
 
+	for ( auto& it : m_bases ) {
+		auto* base = it.second;
+		m_state->m_bindings->Call(
+			bindings::Bindings::CS_ON_BASE_TURN, {
+				{
+					"base",
+					base->Wrap( true )
+				},
+			}
+		);
+		RefreshBase( base );
+	}
+
 	m_state->m_bindings->Call( bindings::Bindings::CS_ON_TURN );
 
 	for ( const auto& slot : m_state->m_slots->GetSlots() ) {
@@ -1365,20 +1412,6 @@ const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
 	};
 }
 
-const types::Vec3 Game::GetUnitRenderCoords( const unit::Unit* unit ) {
-	ASSERT( unit, "unit not set" );
-	const auto* tile = unit->m_tile;
-	ASSERT( tile, "tile not set" );
-	const auto* ts = m_map->GetTileState( tile );
-	ASSERT( ts, "ts not set" );
-	const auto c = unit->m_def->GetSpawnCoords( tile, ts );
-	return {
-		c.x,
-		-c.y,
-		c.z
-	};
-}
-
 void Game::SerializeUnits( types::Buffer& buf ) const {
 
 	Log( "Serializing " + std::to_string( m_unit_moralesets.size() ) + " unit moralesets" );
@@ -1438,6 +1471,35 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 
 	unit::Unit::SetNextId( buf.ReadInt() );
 	Log( "Restored next unit id: " + std::to_string( unit::Unit::GetNextId() ) );
+}
+
+void Game::SerializeBases( types::Buffer& buf ) const {
+
+	Log( "Serializing " + std::to_string( m_bases.size() ) + " bases" );
+	buf.WriteInt( m_bases.size() );
+	for ( const auto& it : m_bases ) {
+		buf.WriteInt( it.first );
+		buf.WriteString( base::Base::Serialize( it.second ).ToString() );
+	}
+	buf.WriteInt( base::Base::GetNextId() );
+
+	Log( "Saved next base id: " + std::to_string( base::Base::GetNextId() ) );
+}
+
+void Game::UnserializeBases( types::Buffer& buf ) {
+	ASSERT( m_bases.empty(), "bases not empty" );
+
+	const size_t sz = buf.ReadInt();
+	Log( "Unserializing " + std::to_string( sz ) + " bases" );
+	ASSERT( m_unprocessed_bases.empty(), "unprocessed bases not empty" );
+	for ( size_t i = 0 ; i < sz ; i++ ) {
+		const auto base_id = buf.ReadInt();
+		auto b = types::Buffer( buf.ReadString() );
+		SpawnBase( base::Base::Unserialize( b, this ) );
+	}
+
+	base::Base::SetNextId( buf.ReadInt() );
+	Log( "Restored next base id: " + std::to_string( base::Base::GetNextId() ) );
 }
 
 void Game::SerializeAnimations( types::Buffer& buf ) const {
@@ -1556,6 +1618,13 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					{
 						types::Buffer b;
 						SerializeUnits( b );
+						buf.WriteString( b.ToString() );
+					}
+
+					// bases
+					{
+						types::Buffer b;
+						SerializeBases( b );
 						buf.WriteString( b.ToString() );
 					}
 
@@ -1741,10 +1810,16 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 								UnserializeUnits( ub );
 							}
 
+							// bases
+							{
+								auto bb = types::Buffer( buf.ReadString() );
+								UnserializeBases( bb );
+							}
+
 							// animations
 							{
-								auto ub = types::Buffer( buf.ReadString() );
-								UnserializeAnimations( ub );
+								auto ab = types::Buffer( buf.ReadString() );
+								UnserializeAnimations( ab );
 							}
 
 							// get turn info
@@ -1823,6 +1898,11 @@ void Game::ResetGame() {
 	}
 	m_unit_defs.clear();
 
+	for ( auto& it : m_bases ) {
+		delete it.second;
+	}
+	m_bases.clear();
+
 	for ( auto& it : m_animation_defs ) {
 		delete it.second;
 	}
@@ -1838,6 +1918,7 @@ void Game::ResetGame() {
 	m_pending_frontend_requests->clear();
 
 	m_unit_updates.clear();
+	m_base_updates.clear();
 
 	m_tile_lock_requests.clear();
 	m_tile_locks.clear();
@@ -1911,6 +1992,32 @@ void Game::QueueUnitUpdate( const unit::Unit* unit, const unit_update_op_t op ) 
 	update.ops = (unit_update_op_t)( (uint8_t)update.ops | (uint8_t)op );
 }
 
+void Game::QueueBaseUpdate( const base::Base* base, const base_update_op_t op ) {
+	auto it = m_base_updates.find( base->m_id );
+	if ( it == m_base_updates.end() ) {
+		it = m_base_updates.insert(
+			{
+				base->m_id,
+				{
+					{},
+					base,
+				}
+			}
+		).first;
+	}
+	auto& update = it->second;
+	if ( op == BUO_DESPAWN ) {
+		if ( op & BUO_SPAWN ) {
+			// if base is despawned immediately after spawning - frontend doesn't need to know
+			m_base_updates.erase( it );
+			return;
+		}
+		update.ops = BUO_NONE; // clear other actions if base was despawned
+	}
+	// add to operations list
+	update.ops = (base_update_op_t)( (uint8_t)update.ops | (uint8_t)op );
+}
+
 void Game::PushUnitUpdates() {
 	if ( m_game_state == GS_RUNNING && !m_unit_updates.empty() ) {
 		for ( const auto& it : m_unit_updates ) {
@@ -1922,11 +2029,12 @@ void Game::PushUnitUpdates() {
 				fr.data.unit_spawn.unit_id = unit->m_id;
 				NEW( fr.data.unit_spawn.unitdef_id, std::string, unit->m_def->m_id );
 				fr.data.unit_spawn.slot_index = unit->m_owner->GetIndex();
+				const auto* tile = unit->GetTile();
 				fr.data.unit_spawn.tile_coords = {
-					unit->m_tile->coord.x,
-					unit->m_tile->coord.y
+					tile->coord.x,
+					tile->coord.y
 				};
-				const auto c = GetUnitRenderCoords( unit );
+				const auto c = unit->GetRenderCoords();
 				fr.data.unit_spawn.render_coords = {
 					c.x,
 					c.y,
@@ -1944,11 +2052,12 @@ void Game::PushUnitUpdates() {
 				fr.data.unit_update.unit_id = unit->m_id;
 				fr.data.unit_update.movement = unit->m_movement;
 				fr.data.unit_update.health = unit->m_health;
+				const auto* tile = unit->GetTile();
 				fr.data.unit_update.tile_coords = {
-					unit->m_tile->coord.x,
-					unit->m_tile->coord.y
+					tile->coord.x,
+					tile->coord.y
 				};
-				const auto c = GetUnitRenderCoords( unit );
+				const auto c = unit->GetRenderCoords();
 				fr.data.unit_update.render_coords = {
 					c.x,
 					c.y,
@@ -1964,6 +2073,40 @@ void Game::PushUnitUpdates() {
 		}
 		m_unit_updates.clear();
 		CheckTurnComplete();
+	}
+}
+
+void Game::PushBaseUpdates() {
+	if ( m_game_state == GS_RUNNING && !m_base_updates.empty() ) {
+		for ( const auto& it : m_base_updates ) {
+			const auto base_id = it.first;
+			const auto& bu = it.second;
+			const auto& base = bu.base;
+			if ( bu.ops & BUO_SPAWN ) {
+				auto fr = FrontendRequest( FrontendRequest::FR_BASE_SPAWN );
+				fr.data.unit_spawn.unit_id = base->m_id;
+				fr.data.base_spawn.slot_index = base->m_owner->GetIndex();
+				const auto* tile = base->GetTile();
+				fr.data.base_spawn.tile_coords = {
+					tile->coord.x,
+					tile->coord.y
+				};
+				const auto c = base->GetRenderCoords();
+				fr.data.base_spawn.render_coords = {
+					c.x,
+					c.y,
+					c.z
+				};
+				AddFrontendRequest( fr );
+			}
+			if ( bu.ops & BUO_REFRESH ) {
+				THROW( "TODO: BASE REFRESH" );
+			}
+			if ( bu.ops & UUO_DESPAWN ) {
+				THROW( "TODO: BASE DESPAWN" );
+			}
+		}
+		m_base_updates.clear();
 	}
 }
 

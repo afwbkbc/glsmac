@@ -22,7 +22,6 @@ public:
 
 	const sprite_render_info_t m_render = {};
 
-	const types::Vec3 GetSpawnCoords( const map::tile::Tile* tile, const map::tile::TileState* ts ) const override;
 	const std::string ToString( const std::string& prefix ) const override;
 
 private:

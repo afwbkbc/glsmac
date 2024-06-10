@@ -22,7 +22,7 @@ namespace brush {
 class Brush;
 }
 
-CLASS( MapEditor, base::Base )
+CLASS( MapEditor, ::base::Base )
 
 	std::unordered_map< tool_type_t, tool::Tool* > m_tools = {};
 	tool::Tool* m_active_tool = nullptr;

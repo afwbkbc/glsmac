@@ -50,6 +50,8 @@ public:
 		CS_ON_UNIT_ATTACK_RESOLVE,
 		CS_ON_UNIT_ATTACK_APPLY,
 		CS_ON_UNIT_TURN,
+		CS_ON_BASE_SPAWN,
+		CS_ON_BASE_TURN,
 	};
 	typedef std::map< std::string, gse::Value > callback_arguments_t;
 	gse::Value Call( const callback_slot_t slot, const callback_arguments_t& arguments = {} );

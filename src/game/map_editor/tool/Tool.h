@@ -11,7 +11,7 @@ class Game;
 namespace map_editor {
 namespace tool {
 
-CLASS( Tool, base::Base )
+CLASS( Tool, ::base::Base )
 
 	Tool( Game* game, const tool_type_t type );
 

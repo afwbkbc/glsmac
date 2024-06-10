@@ -1047,6 +1047,10 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 			m_um->MoveUnit( unit, dst_tile, d.running_animation_id );
 			break;
 		}
+		case ::game::FrontendRequest::FR_BASE_SPAWN: {
+			Log( "TODO: SPAWN BASE" );
+			break;
+		}
 		default: {
 			THROW( "unexpected frontend request type: " + std::to_string( request->type ) );
 		}

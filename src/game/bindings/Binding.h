@@ -76,6 +76,8 @@ BINDING_DEF( tiles )
 
 BINDING_DEF( units )
 
+BINDING_DEF( bases )
+
 BINDING_DEF( animations )
 
 BINDING_DEF( map )

@@ -25,7 +25,7 @@ class Tiles;
 
 namespace generator {
 
-CLASS( MapGenerator, base::Base )
+CLASS( MapGenerator, ::base::Base )
 
 	// you should stay within these boundaries when generating
 	// currently, any elevations will work because map will be normalized to valid range afterwards. but this may change in future

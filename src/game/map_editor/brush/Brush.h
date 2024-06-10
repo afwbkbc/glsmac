@@ -13,7 +13,7 @@ class Game;
 namespace map_editor {
 namespace brush {
 
-CLASS( Brush, base::Base )
+CLASS( Brush, ::base::Base )
 
 	Brush( Game* game, const brush_type_t type );
 

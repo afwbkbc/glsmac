@@ -8,6 +8,7 @@
 #include "MoveUnit.h"
 #include "AttackUnit.h"
 #include "SkipUnitTurn.h"
+#include "SpawnBase.h"
 #include "CompleteTurn.h"
 #include "UncompleteTurn.h"
 #include "FinalizeTurn.h"
@@ -45,6 +46,7 @@ const types::Buffer Event::Serialize( const Event* event ) {
 		SERIALIZE( ET_UNIT_MOVE, MoveUnit )
 		SERIALIZE( ET_UNIT_ATTACK, AttackUnit )
 		SERIALIZE( ET_UNIT_SKIP_TURN, SkipUnitTurn )
+		SERIALIZE( ET_BASE_SPAWN, SpawnBase )
 		SERIALIZE( ET_COMPLETE_TURN, CompleteTurn )
 		SERIALIZE( ET_UNCOMPLETE_TURN, UncompleteTurn )
 		SERIALIZE( ET_FINALIZE_TURN, FinalizeTurn )
@@ -79,6 +81,7 @@ Event* Event::Unserialize( types::Buffer& buf ) {
 		UNSERIALIZE( ET_UNIT_MOVE, MoveUnit )
 		UNSERIALIZE( ET_UNIT_ATTACK, AttackUnit )
 		UNSERIALIZE( ET_UNIT_SKIP_TURN, SkipUnitTurn )
+		UNSERIALIZE( ET_BASE_SPAWN, SpawnBase )
 		UNSERIALIZE( ET_COMPLETE_TURN, CompleteTurn )
 		UNSERIALIZE( ET_UNCOMPLETE_TURN, UncompleteTurn )
 		UNSERIALIZE( ET_FINALIZE_TURN, FinalizeTurn )

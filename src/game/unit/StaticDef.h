@@ -32,8 +32,6 @@ public:
 
 	const movement_type_t GetMovementType() const override;
 
-	const types::Vec3 GetSpawnCoords( const map::tile::Tile* tile, const map::tile::TileState* ts ) const override;
-
 	const std::string ToString( const std::string& prefix ) const override;
 
 	WRAPDEFS_PTR( StaticDef, override );

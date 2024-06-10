@@ -43,6 +43,7 @@ Bindings::Bindings( State* state )
 		B( factions ),
 		B( tiles ),
 		B( units ),
+		B( bases ),
 		B( animations ),
 		B( map ),
 	};

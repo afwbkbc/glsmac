@@ -33,6 +33,7 @@ public:
 		CLASS_FACTION,
 		CLASS_UNITDEF,
 		CLASS_UNIT,
+		CLASS_BASE,
 	};
 	static const std::string& GetClassString( const object_class_t object_class );
 

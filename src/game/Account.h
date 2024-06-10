@@ -4,7 +4,7 @@
 
 namespace game {
 
-CLASS( Account, base::Base )
+CLASS( Account, ::base::Base )
 
 	Account();
 
