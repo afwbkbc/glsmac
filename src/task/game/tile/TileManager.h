@@ -16,7 +16,7 @@ class Game;
 
 namespace tile {
 
-CLASS( TileManager, base::Base )
+CLASS( TileManager, ::base::Base )
 
 	TileManager( Game* game );
 

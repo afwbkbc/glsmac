@@ -3,6 +3,7 @@ SUBDIR( actor )
 SUBDIR( faction )
 SUBDIR( tile )
 SUBDIR( unit )
+SUBDIR( base )
 
 SET( SRC ${SRC}
 

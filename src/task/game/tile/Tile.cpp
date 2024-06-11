@@ -1,6 +1,7 @@
 #include "Tile.h"
 
 #include "task/game/unit/Unit.h"
+#include "task/game/base/Base.h"
 #include "game/map/tile/Tile.h"
 #include "game/map/tile/TileState.h"
 #include "types/mesh/Render.h"
@@ -71,7 +72,24 @@ void Tile::SetActiveUnit( unit::Unit* unit ) {
 	}
 }
 
+void Tile::SetBase( base::Base* base ) {
+	ASSERT_NOLOG( !m_base, "base already set" );
+	m_base = base;
+	Render();
+}
+
+void Tile::UnsetBase( base::Base* base ) {
+	ASSERT_NOLOG( m_base == base, "different or no base set" );
+	m_base->Hide();
+	m_base = nullptr;
+	Render();
+}
+
 void Tile::Render( size_t selected_unit_id ) {
+
+	if ( m_base ) {
+		m_base->Hide();
+	}
 
 	SetActiveUnit( nullptr );
 
@@ -79,6 +97,10 @@ void Tile::Render( size_t selected_unit_id ) {
 		unit->HideFakeBadge();
 	}
 	m_render.currently_rendered_fake_badges.clear();
+
+	if ( m_base ) {
+		m_base->Show();
+	}
 
 	if ( !m_units.empty() ) {
 		const auto units_order = GetUnitsOrder( m_units );

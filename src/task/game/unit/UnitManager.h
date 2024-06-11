@@ -39,7 +39,7 @@ class UnitDef;
 class BadgeDefs;
 class SlotBadges;
 
-CLASS( UnitManager, base::Base )
+CLASS( UnitManager, ::base::Base )
 
 	UnitManager( Game* game );
 	~UnitManager();

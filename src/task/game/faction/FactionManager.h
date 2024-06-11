@@ -17,7 +17,7 @@ namespace faction {
 
 class Faction;
 
-CLASS( FactionManager, base::Base )
+CLASS( FactionManager, ::base::Base )
 
 	FactionManager( Game* game );
 

@@ -26,6 +26,7 @@
 #include "ui/bottom_bar/BottomBar.h"
 #include "tile/TileManager.h"
 #include "unit/UnitManager.h"
+#include "base/BaseManager.h"
 #include "faction/FactionManager.h"
 #include "InstancedSpriteManager.h"
 #include "Animation.h"
@@ -476,6 +477,11 @@ unit::UnitManager* Game::GetUM() const {
 	return m_um;
 }
 
+base::BaseManager* Game::GetBM() const {
+	ASSERT( m_um, "bm not set" );
+	return m_bm;
+}
+
 InstancedSpriteManager* Game::GetISM() const {
 	ASSERT( m_ism, "ism not set" );
 	return m_ism;
@@ -813,7 +819,7 @@ Slot* Game::GetSlot( const size_t index ) const {
 
 void Game::DefineSlot(
 	const size_t slot_index,
-	const faction::Faction* faction
+	faction::Faction* faction
 ) {
 	if ( m_slots.find( slot_index ) == m_slots.end() ) {
 		Log( "Initializing slot: " + std::to_string( slot_index ) );
@@ -942,7 +948,7 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 		}
 		case ::game::FrontendRequest::FR_SLOT_DEFINE: {
 			for ( const auto& d : *request->data.slot_define.slotdefs ) {
-				const auto* faction = m_fm->GetFactionById( d.faction_id );
+				auto* faction = m_fm->GetFactionById( d.faction_id );
 				DefineSlot( d.slot_index, faction );
 				m_um->DefineSlotBadges( d.slot_index, faction );
 			}
@@ -1048,7 +1054,22 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 			break;
 		}
 		case ::game::FrontendRequest::FR_BASE_SPAWN: {
-			Log( "TODO: SPAWN BASE" );
+			const auto& d = request->data.base_spawn;
+			const auto& tc = d.tile_coords;
+			const auto& rc = d.render_coords;
+			m_bm->SpawnBase(
+				d.base_id,
+				d.slot_index,
+				{
+					tc.x,
+					tc.y
+				},
+				{
+					rc.x,
+					rc.y,
+					rc.z
+				}
+			);
 			break;
 		}
 		default: {
@@ -1123,6 +1144,7 @@ void Game::Initialize(
 	NEW( m_fm, faction::FactionManager, this );
 	NEW( m_tm, tile::TileManager, this );
 	NEW( m_um, unit::UnitManager, this );
+	NEW( m_bm, base::BaseManager, this );
 
 	NEW( m_camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
 	m_camera_angle = INITIAL_CAMERA_ANGLE;
@@ -1670,6 +1692,11 @@ void Game::Deinitialize() {
 	if ( m_um ) {
 		DELETE( m_um );
 		m_um = nullptr;
+	}
+
+	if ( m_bm ) {
+		DELETE( m_bm );
+		m_bm = nullptr;
 	}
 
 	if ( m_tm ) {

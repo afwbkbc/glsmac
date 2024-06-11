@@ -15,16 +15,16 @@ public:
 
 	Slot(
 		const size_t slot_index,
-		const faction::Faction* faction
+		faction::Faction* faction
 	);
 
 	const size_t GetIndex() const;
-	const faction::Faction* GetFaction() const;
+	faction::Faction* GetFaction() const;
 
 private:
 
 	const size_t m_slot_index;
-	const faction::Faction* m_faction;
+	faction::Faction* m_faction;
 
 };
 

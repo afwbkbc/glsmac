@@ -20,7 +20,7 @@ class Scene;
 namespace task {
 namespace game {
 
-CLASS( InstancedSpriteManager, base::Base )
+CLASS( InstancedSpriteManager, ::base::Base )
 public:
 
 	InstancedSpriteManager( scene::Scene* scene );
