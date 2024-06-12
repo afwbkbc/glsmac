@@ -23,6 +23,13 @@ namespace game {
 CLASS( InstancedSpriteManager, ::base::Base )
 public:
 
+	enum z_level_t {
+		ZL_TERRAIN,
+		ZL_BASES,
+		ZL_UNITS,
+		ZL_ANIMATIONS,
+	};
+
 	InstancedSpriteManager( scene::Scene* scene );
 	~InstancedSpriteManager();
 
@@ -33,7 +40,8 @@ public:
 		const ::game::map::pcx_texture_coordinates_t& src_wh,
 		const ::game::map::pcx_texture_coordinates_t& src_cxy,
 		const types::Vec2< float > dst_wh,
-		const float z_index
+		const z_level_t z_level,
+		const float z_index_adjustment = 0.0f
 	);
 	InstancedSprite* GetInstancedSpriteByKey( const std::string& key ); // actor must already exist
 	InstancedSprite* GetRepaintedInstancedSprite( const std::string& name, const InstancedSprite* original, const types::texture::repaint_rules_t& rules );

@@ -28,7 +28,7 @@ protected:
 
 private:
 	void FixTransparency( types::texture::Texture* texture ) const;
-
+	void FixYellowShadows( types::texture::Texture* texture ) const;
 	void FixTexture( types::texture::Texture* texture ) const;
 
 };

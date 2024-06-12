@@ -517,6 +517,7 @@ InstancedSprite* Game::GetTerrainInstancedSprite( const ::game::map::sprite_acto
 			::game::map::s_consts.tile.scale.x,
 			::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
 		},
+		InstancedSpriteManager::ZL_TERRAIN,
 		actor.z_index
 	);
 }

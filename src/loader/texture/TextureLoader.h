@@ -36,7 +36,8 @@ protected:
 	virtual types::texture::Texture* LoadTextureImpl( const std::string& filename ) = 0;
 	virtual types::texture::Texture* LoadTextureImpl( const std::string& filename, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) = 0;
 
-	transparent_colors_t m_transparent_colors;
+	transparent_colors_t m_transparent_colors = {};
+	bool m_fix_yellow_shadows = false;
 
 	typedef std::unordered_map< types::Color::rgba_t, types::texture::Texture* > color_texture_map_t;
 	color_texture_map_t m_color_textures = {};

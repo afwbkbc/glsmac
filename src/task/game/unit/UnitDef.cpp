@@ -89,7 +89,7 @@ Sprite* UnitDef::GetSprite( const ::game::unit::morale_t morale ) {
 								::game::map::s_consts.tile.scale.x,
 								::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
 							},
-							0.5f
+							InstancedSpriteManager::ZL_UNITS
 						),
 					}
 				}
@@ -117,7 +117,7 @@ Sprite* UnitDef::GetSprite( const ::game::unit::morale_t morale ) {
 						::game::map::s_consts.tile.scale.x,
 						::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
 					},
-					0.5f
+					InstancedSpriteManager::ZL_UNITS
 				),
 				1
 			};

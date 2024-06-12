@@ -57,7 +57,8 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename ) {
 
 		FixTexture( texture ); // some pcx files have strange artifacts that we need to fix procedurally
 
-		FixTransparency( texture ); // TODO: base texture should be saved as-is
+		FixTransparency( texture );
+		FixYellowShadows( texture );
 
 		m_textures[ filename ] = texture;
 
@@ -110,7 +111,9 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& name, const s
 			subtexture->m_is_tiled = true;
 		}
 
+		// needed?
 		FixTransparency( subtexture );
+		//FixYellowShadows( subtexture );
 
 		m_subtextures[ subtexture_key ] = subtexture;
 
@@ -128,6 +131,20 @@ void SDL2::FixTransparency( types::texture::Texture* texture ) const {
 					memset( at, 0, texture->m_bpp );
 					break;
 				}
+			}
+		}
+	}
+}
+
+static const types::Color::rgba_t s_yellow_shadow_src = types::Color::RGB( 253, 189, 118 );
+static const types::Color::rgba_t s_yellow_shadow_dst = types::Color::RGBA( 0, 0, 0, 127 );
+void SDL2::FixYellowShadows( types::texture::Texture* texture ) const {
+	if ( m_fix_yellow_shadows ) {
+		void* at = nullptr;
+		for ( size_t i = 0 ; i < texture->m_bitmap_size ; i += texture->m_bpp ) {
+			at = ptr( texture->m_bitmap, i, texture->m_bpp );
+			if ( !memcmp( at, &s_yellow_shadow_src, texture->m_bpp ) ) {
+				memcpy( at, &s_yellow_shadow_dst, texture->m_bpp );
 			}
 		}
 	}

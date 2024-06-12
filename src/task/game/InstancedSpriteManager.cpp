@@ -9,6 +9,26 @@
 namespace task {
 namespace game {
 
+static const float MAX_ZINDEX_ADJUSTMENT = 0.05f;
+static const std::unordered_map< InstancedSpriteManager::z_level_t, float > s_zlevel_map = {
+	{
+		InstancedSpriteManager::ZL_TERRAIN,
+		0.4f
+	},
+	{
+		InstancedSpriteManager::ZL_BASES,
+		0.5f
+	},
+	{
+		InstancedSpriteManager::ZL_UNITS,
+		0.6f
+	},
+	{
+		InstancedSpriteManager::ZL_ANIMATIONS,
+		0.7f
+	},
+};
+
 InstancedSpriteManager::InstancedSpriteManager( scene::Scene* scene )
 	: m_scene( scene ) {
 
@@ -37,8 +57,12 @@ InstancedSprite* InstancedSpriteManager::GetInstancedSprite(
 	const ::game::map::pcx_texture_coordinates_t& src_wh,
 	const ::game::map::pcx_texture_coordinates_t& src_cxy,
 	const types::Vec2< float > dst_wh,
-	const float z_index
+	const z_level_t z_level,
+	const float z_index_adjustment
 ) {
+
+	ASSERT( s_zlevel_map.find( z_level ) != s_zlevel_map.end(), "unknown z level " + std::to_string( z_level ) );
+	ASSERT( z_index_adjustment >= -MAX_ZINDEX_ADJUSTMENT && z_index_adjustment <= MAX_ZINDEX_ADJUSTMENT, "z index adjustment too large" );
 
 	const auto key = name + " " + src_xy.ToString() + " " + src_wh.ToString();
 
@@ -72,7 +96,7 @@ InstancedSprite* InstancedSpriteManager::GetInstancedSprite(
 			}
 		);
 		NEWV( instanced, scene::actor::Instanced, sprite );
-		instanced->SetZIndex( z_index ); // needs to be higher than map terrain z position
+		instanced->SetZIndex( s_zlevel_map.at( z_level ) + z_index_adjustment );
 		m_scene->AddActor( instanced );
 		it = m_instanced_sprites.insert(
 			{

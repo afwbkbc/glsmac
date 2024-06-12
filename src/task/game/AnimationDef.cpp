@@ -61,7 +61,7 @@ const instanced_sprites_t& AnimationDef::GetSprites() {
 						y + cxy.y
 					},
 					dst_wh,
-					0.5f // ?
+					InstancedSpriteManager::ZL_ANIMATIONS
 				)
 			);
 		}

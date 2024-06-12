@@ -43,7 +43,7 @@ Sprite* Faction::GetBaseSprite( const bool is_water, const uint8_t size, const u
 		};
 		const types::Vec2< float > dst_wh = {
 			m_render.bases_render.scale_x,
-			m_render.bases_render.scale_y / 0.8f
+			m_render.bases_render.scale_y / 1.0f
 		};
 		const types::Vec2< uint32_t > cxy = {
 			(uint32_t)m_render.bases_render.cell_cx,
@@ -77,7 +77,7 @@ Sprite* Faction::GetBaseSprite( const bool is_water, const uint8_t size, const u
 							y + cxy.y
 						},
 						dst_wh,
-						0.5f // ?
+						InstancedSpriteManager::ZL_BASES
 					),
 					1
 				}
