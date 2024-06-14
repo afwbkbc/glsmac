@@ -9,7 +9,7 @@ namespace font {
 
 CLASS( Null, FontLoader )
 protected:
-	types::Font* LoadFontImpl( const std::string& filename, const unsigned char size ) override { return nullptr; }
+	types::Font* LoadFontImpl( const std::string& name, const std::string& path, const unsigned char size ) override { return nullptr; }
 };
 
 }

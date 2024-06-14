@@ -105,8 +105,8 @@ units.init();
 		let base_x = 0;
 		let base_y = 1;
 		while (base_x % 2 != base_y % 2) {
-			base_x = #game.random.get_int(0, w - 1);
-			base_y = #game.random.get_int(0, h - 1);
+			base_x = #game.random.get_int(1, w - 2);
+			base_y = #game.random.get_int(1, h - 2);
 		}
 		#game.bases.spawn(
 			players[i],

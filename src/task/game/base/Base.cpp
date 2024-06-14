@@ -6,8 +6,8 @@
 #include "util/String.h"
 #include "game/base/Base.h"
 #include "task/game/Slot.h"
-#include "task/game/Sprite.h"
-#include "task/game/InstancedSprite.h"
+#include "task/game/sprite/Sprite.h"
+#include "task/game/sprite/InstancedSprite.h"
 #include "scene/actor/Instanced.h"
 #include "types/mesh/Rectangle.h"
 #include "scene/actor/Sprite.h"
@@ -58,7 +58,7 @@ tile::Tile* Base::GetTile() const {
 	return m_tile;
 }
 
-Sprite* Base::GetSprite() const {
+sprite::Sprite* Base::GetSprite() const {
 	return m_faction->GetBaseSprite( false, 1, 0 );
 }
 
@@ -66,7 +66,7 @@ void Base::Show() {
 	if ( !m_render.is_rendered ) {
 		const auto& c = m_render.coords;
 
-		Sprite* sprite = GetSprite();
+		sprite::Sprite* sprite = GetSprite();
 
 		if ( !m_render.instance_id ) {
 			m_render.instance_id = sprite->next_instance_id++;
@@ -94,7 +94,7 @@ const Base::render_data_t& Base::GetRenderData() const {
 	return m_render_data;
 }
 
-Base::meshtex_t Base::GetMeshTex( const InstancedSprite* sprite ) {
+Base::meshtex_t Base::GetMeshTex( const sprite::InstancedSprite* sprite ) {
 	auto* texture = sprite->actor->GetSpriteActor()->GetTexture();
 	NEWV( mesh, types::mesh::Rectangle );
 	mesh->SetCoords(

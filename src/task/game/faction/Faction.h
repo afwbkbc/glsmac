@@ -5,7 +5,7 @@
 #include "game/rules/Types.h"
 
 #include "types/Color.h"
-#include "task/game/Sprite.h"
+#include "task/game/sprite/Sprite.h"
 
 namespace types {
 namespace texture {
@@ -20,16 +20,18 @@ class Faction;
 namespace task {
 namespace game {
 
+namespace sprite {
 class InstancedSpriteManager;
 class InstancedSprite;
+}
 
 namespace faction {
 
 class Faction {
 public:
-	Faction( const ::game::rules::Faction* def, InstancedSpriteManager* ism );
+	Faction( const ::game::rules::Faction* def, sprite::InstancedSpriteManager* ism );
 
-	Sprite* GetBaseSprite( const bool is_water, const uint8_t size, const uint8_t perimeter_level );
+	sprite::Sprite* GetBaseSprite( const bool is_water, const uint8_t size, const uint8_t perimeter_level );
 
 	const std::string m_id;
 	const types::Color m_border_color;
@@ -37,7 +39,7 @@ public:
 
 private:
 
-	InstancedSpriteManager* m_ism = nullptr;
+	sprite::InstancedSpriteManager* m_ism = nullptr;
 
 	struct {
 		::game::rules::bases_render_info_t bases_render;
@@ -46,8 +48,8 @@ private:
 	types::texture::Texture* m_base_grid_texture = nullptr;
 	types::texture::Texture* GetBaseGridTexture();
 
-	std::unordered_map< uint8_t, Sprite > m_base_grid_sprites = {};
-	Sprite m_base_sprites[6][4] = {};
+	std::unordered_map< uint8_t, sprite::Sprite > m_base_grid_sprites = {};
+	sprite::Sprite m_base_sprites[6][4] = {};
 
 };
 

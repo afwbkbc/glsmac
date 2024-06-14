@@ -94,9 +94,16 @@ class BaseManager;
 class Base;
 }
 
+namespace sprite {
 class InstancedSpriteManager;
 class InstancedSprite;
 class Sprite;
+}
+
+namespace text {
+class InstancedTextManager;
+}
+
 class Slot;
 class AnimationDef;
 class Animation;
@@ -161,10 +168,11 @@ CLASS( Game, ::base::Task )
 	tile::TileManager* GetTM() const;
 	unit::UnitManager* GetUM() const;
 	base::BaseManager* GetBM() const;
-	InstancedSpriteManager* GetISM() const;
+	sprite::InstancedSpriteManager* GetISM() const;
+	text::InstancedTextManager* GetITM() const;
 
 	types::texture::Texture* GetSourceTexture( const resource::resource_t res );
-	InstancedSprite* GetTerrainInstancedSprite( const ::game::map::sprite_actor_t& actor );
+	sprite::InstancedSprite* GetTerrainInstancedSprite( const ::game::map::sprite_actor_t& actor );
 
 	void CenterAtCoordinatePercents( const ::types::Vec2< float > position_percents );
 
@@ -231,14 +239,13 @@ private:
 	tile::TileManager* m_tm = nullptr;
 	unit::UnitManager* m_um = nullptr;
 	base::BaseManager* m_bm = nullptr;
-	InstancedSpriteManager* m_ism = nullptr;
+	sprite::InstancedSpriteManager* m_ism = nullptr;
+	text::InstancedTextManager* m_itm = nullptr;
 
 	size_t m_slot_index = 0;
 	bool m_is_turn_active = false;
 	::game::turn::turn_status_t m_turn_status = ::game::turn::TS_PLEASE_WAIT;
 	size_t m_turn_id = 0;
-	void ActivateTurn();
-	void DeactivateTurn();
 
 	::game::map_editor::tool_type_t m_editor_tool = ::game::map_editor::TT_NONE;
 	::game::map_editor::brush_type_t m_editor_brush = ::game::map_editor::BT_NONE;

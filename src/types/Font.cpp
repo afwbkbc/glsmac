@@ -1,10 +1,15 @@
-#include <cstdint>
+#include <cmath>
 
 #include "Font.h"
 
 #include "base/ObjectLink.h"
 
 namespace types {
+
+Font::Font( const std::string& name )
+	: m_name( name ) {
+	//
+}
 
 Font::~Font() {
 	if ( m_graphics_object ) {

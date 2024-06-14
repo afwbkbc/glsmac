@@ -4,6 +4,7 @@
 
 namespace task {
 namespace game {
+namespace sprite {
 
 class InstancedSprite;
 
@@ -13,5 +14,6 @@ public:
 	size_t next_instance_id = 1;
 };
 
+}
 }
 }

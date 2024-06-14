@@ -1,8 +1,8 @@
 #include "SlotBadges.h"
 
 #include "BadgeDefs.h"
-#include "task/game/InstancedSpriteManager.h"
-#include "task/game/InstancedSprite.h"
+#include "task/game/sprite/InstancedSpriteManager.h"
+#include "task/game/sprite/InstancedSprite.h"
 #include "task/game/faction/Faction.h"
 #include "scene/actor/Instanced.h"
 
@@ -12,7 +12,7 @@ namespace unit {
 
 SlotBadges::SlotBadges(
 	BadgeDefs* badge_defs,
-	InstancedSpriteManager* ism,
+	sprite::InstancedSpriteManager* ism,
 	const size_t slot_index,
 	const faction::Faction* faction
 )
@@ -58,7 +58,7 @@ SlotBadges::~SlotBadges() {
 	}
 }
 
-Sprite* SlotBadges::GetUnitBadgeSprite( const ::game::unit::morale_t morale, const bool is_active ) {
+sprite::Sprite* SlotBadges::GetUnitBadgeSprite( const ::game::unit::morale_t morale, const bool is_active ) {
 	auto it = m_per_morale_sprites.find( morale );
 	if ( it == m_per_morale_sprites.end() ) {
 		it = m_per_morale_sprites.insert(
@@ -71,11 +71,11 @@ Sprite* SlotBadges::GetUnitBadgeSprite( const ::game::unit::morale_t morale, con
 			}
 		).first;
 	}
-	Sprite** sprite_ptr = is_active
+	sprite::Sprite** sprite_ptr = is_active
 		? &it->second.normal
 		: &it->second.greyedout;
 	if ( !*sprite_ptr ) {
-		NEW( *sprite_ptr, Sprite, {
+		NEW( *sprite_ptr, sprite::Sprite, {
 			m_ism->GetRepaintedInstancedSprite(
 				m_badges_key + "_" + std::to_string( morale ) + ( is_active
 					? "_NORMAL"
@@ -109,9 +109,9 @@ void SlotBadges::HideFakeBadge( const size_t instance_id ) {
 	GetFakeBadge()->instanced_sprite->actor->RemoveInstance( instance_id );
 }
 
-Sprite* SlotBadges::GetFakeBadge() {
+sprite::Sprite* SlotBadges::GetFakeBadge() {
 	if ( !m_fake_badge ) {
-		NEW( m_fake_badge, Sprite, {
+		NEW( m_fake_badge, sprite::Sprite, {
 			m_ism->GetRepaintedInstancedSprite(
 				m_badges_key + "_FAKE",
 				m_badge_defs->GetFakeBadgeSprite(),

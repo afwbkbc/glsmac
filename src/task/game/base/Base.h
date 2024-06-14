@@ -22,8 +22,11 @@ namespace game {
 
 class Game;
 class Slot;
+
+namespace sprite {
 class Sprite;
 class InstancedSprite;
+}
 
 namespace tile {
 class Tile;
@@ -55,7 +58,7 @@ public:
 	const bool IsOwned() const;
 	tile::Tile* GetTile() const;
 
-	Sprite* GetSprite() const;
+	sprite::Sprite* GetSprite() const;
 
 	void Show();
 	void Hide();
@@ -88,7 +91,7 @@ private:
 
 	render_data_t m_render_data = {};
 
-	meshtex_t GetMeshTex( const InstancedSprite* sprite );
+	meshtex_t GetMeshTex( const sprite::InstancedSprite* sprite );
 };
 
 }

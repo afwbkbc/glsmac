@@ -7,7 +7,7 @@
 
 #include "game/unit/Types.h"
 
-#include "task/game/Sprite.h"
+#include "task/game/sprite/Sprite.h"
 
 namespace types::texture {
 class Texture;
@@ -16,8 +16,10 @@ class Texture;
 namespace task {
 namespace game {
 
+namespace sprite {
 class InstancedSprite;
 class InstancedSpriteManager;
+}
 
 namespace unit {
 
@@ -27,7 +29,7 @@ public:
 	static const types::Vec3 GetBadgeCoords( const types::Vec3& unit_coords );
 	static const types::Vec3 GetBadgeHealthbarCoords( const types::Vec3& unit_coords );
 
-	BadgeDefs( InstancedSpriteManager* ism );
+	BadgeDefs( sprite::InstancedSpriteManager* ism );
 	~BadgeDefs();
 
 	typedef uint8_t badge_type_t;
@@ -36,9 +38,9 @@ public:
 	static const badge_type_t BT_DEFAULT{ 1 << 1 };
 	static const badge_type_t BT_PROGENITOR{ 0 << 1 };
 
-	InstancedSprite* GetBadgeSprite( const badge_type_t badge_type, const ::game::unit::morale_t morale );
-	InstancedSprite* GetFakeBadgeSprite();
-	Sprite* GetBadgeHealthbarSprite( const float health );
+	sprite::InstancedSprite* GetBadgeSprite( const badge_type_t badge_type, const ::game::unit::morale_t morale );
+	sprite::InstancedSprite* GetFakeBadgeSprite();
+	sprite::Sprite* GetBadgeHealthbarSprite( const float health );
 	const size_t GetBadgeBlinkInterval() const;
 
 	const types::Vec3 GetFakeBadgeCoords( const types::Vec3& coords, const uint8_t offset ) const;
@@ -87,19 +89,19 @@ private:
 		} blink;
 	} s_consts;
 
-	InstancedSpriteManager* const m_ism = nullptr;
+	sprite::InstancedSpriteManager* const m_ism = nullptr;
 
-	typedef std::unordered_map< ::game::unit::morale_t, InstancedSprite* > unitbadge_spritemap_t;
+	typedef std::unordered_map< ::game::unit::morale_t, sprite::InstancedSprite* > unitbadge_spritemap_t;
 	typedef std::unordered_map< badge_type_t, unitbadge_spritemap_t > unitbadge_spritemaps_t;
 	unitbadge_spritemaps_t m_unitbadge_sprites = {};
 
-	InstancedSprite* m_fake_badge = nullptr;
+	sprite::InstancedSprite* m_fake_badge = nullptr;
 
 	types::texture::Texture* m_badges_texture = nullptr;
 	types::texture::Texture* GetBadgesTexture();
 
 	std::unordered_map< uint8_t, types::texture::Texture* > m_healthbar_textures = {};
-	std::unordered_map< uint8_t, Sprite > m_healthbar_sprites = {};
+	std::unordered_map< uint8_t, sprite::Sprite > m_healthbar_sprites = {};
 
 };
 

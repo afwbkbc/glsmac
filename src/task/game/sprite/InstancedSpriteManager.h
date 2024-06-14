@@ -5,6 +5,7 @@
 
 #include "base/Base.h"
 
+#include "task/game/Types.h"
 #include "game/map/Types.h"
 #include "types/texture/Types.h"
 #include "InstancedSprite.h"
@@ -19,16 +20,10 @@ class Scene;
 
 namespace task {
 namespace game {
+namespace sprite {
 
 CLASS( InstancedSpriteManager, ::base::Base )
 public:
-
-	enum z_level_t {
-		ZL_TERRAIN,
-		ZL_BASES,
-		ZL_UNITS,
-		ZL_ANIMATIONS,
-	};
 
 	InstancedSpriteManager( scene::Scene* scene );
 	~InstancedSpriteManager();
@@ -60,5 +55,6 @@ private:
 
 };
 
+}
 }
 }

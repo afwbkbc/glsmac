@@ -25,9 +25,9 @@ void FreeType::Iterate() {
 
 }
 
-types::Font* FreeType::LoadFontImpl( const std::string& filename, const unsigned char size ) {
+types::Font* FreeType::LoadFontImpl( const std::string& name, const std::string& path, const unsigned char size ) {
 
-	std::string font_key = filename + ":" + std::to_string( size );
+	std::string font_key = name + ":" + std::to_string( size );
 
 	font_map_t::iterator it = m_fonts.find( font_key );
 	if ( it != m_fonts.end() ) {
@@ -38,12 +38,11 @@ types::Font* FreeType::LoadFontImpl( const std::string& filename, const unsigned
 
 		Log( "Loading font \"" + font_key + "\"" );
 
-		NEWV( font, types::Font );
-		font->m_name = filename;
+		NEWV( font, types::Font, font_key );
 
 		FT_Face ftface;
-		res = FT_New_Face( m_freetype, filename.c_str(), 0, &ftface );
-		ASSERT( !res, "Unable to load font \"" + filename + "\"" );
+		res = FT_New_Face( m_freetype, path.c_str(), 0, &ftface );
+		ASSERT( !res, "Unable to load font \"" + path + "\"" );
 
 		FT_Set_Pixel_Sizes( ftface, 0, size );
 
@@ -55,7 +54,7 @@ types::Font* FreeType::LoadFontImpl( const std::string& filename, const unsigned
 
 		for ( int i = 32 ; i < 128 ; i++ ) { // only ascii for now
 			res = FT_Load_Char( ftface, i, FT_LOAD_RENDER );
-			ASSERT( !res, "Font \"" + filename + "\" bitmap loading failed" );
+			ASSERT( !res, "Font \"" + path + "\" bitmap loading failed" );
 
 			bitmap = &font->m_symbols[ i ];
 

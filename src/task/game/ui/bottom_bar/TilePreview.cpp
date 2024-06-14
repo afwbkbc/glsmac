@@ -7,8 +7,8 @@
 #include "types/mesh/Render.h"
 #include "ui/object/Label.h"
 #include "ui/object/Mesh.h"
-#include "task/game/InstancedSpriteManager.h"
-#include "task/game/InstancedSprite.h"
+#include "task/game/sprite/InstancedSpriteManager.h"
+#include "task/game/sprite/InstancedSprite.h"
 #include "scene/actor/Instanced.h"
 #include "scene/actor/Sprite.h"
 

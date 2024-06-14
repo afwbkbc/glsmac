@@ -1,6 +1,6 @@
 #include "InstancedSpriteManager.h"
 
-#include "task/game/InstancedSprite.h"
+#include "InstancedSprite.h"
 #include "scene/Scene.h"
 #include "scene/actor/Instanced.h"
 #include "scene/actor/Sprite.h"
@@ -8,26 +8,7 @@
 
 namespace task {
 namespace game {
-
-static const float MAX_ZINDEX_ADJUSTMENT = 0.05f;
-static const std::unordered_map< InstancedSpriteManager::z_level_t, float > s_zlevel_map = {
-	{
-		InstancedSpriteManager::ZL_TERRAIN,
-		0.4f
-	},
-	{
-		InstancedSpriteManager::ZL_BASES,
-		0.5f
-	},
-	{
-		InstancedSpriteManager::ZL_UNITS,
-		0.6f
-	},
-	{
-		InstancedSpriteManager::ZL_ANIMATIONS,
-		0.7f
-	},
-};
+namespace sprite {
 
 InstancedSpriteManager::InstancedSpriteManager( scene::Scene* scene )
 	: m_scene( scene ) {
@@ -197,5 +178,6 @@ types::texture::Texture* InstancedSpriteManager::GetRepaintedSourceTexture( cons
 	return texture;
 }
 
+}
 }
 }

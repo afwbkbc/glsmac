@@ -9,7 +9,7 @@
 #include "BadgeDefs.h"
 #include "SlotBadges.h"
 #include "UnitManager.h"
-#include "task/game/InstancedSprite.h"
+#include "task/game/sprite/InstancedSprite.h"
 #include "scene/actor/Instanced.h"
 #include "types/mesh/Rectangle.h"
 #include "scene/actor/Sprite.h"
@@ -106,15 +106,15 @@ const size_t Unit::GetSelectionWeight() const {
 	return weight;
 }
 
-Sprite* Unit::GetSprite() const {
+sprite::Sprite* Unit::GetSprite() const {
 	return m_def->GetSprite( m_morale );
 }
 
-Sprite* Unit::GetBadgeSprite() const {
+sprite::Sprite* Unit::GetBadgeSprite() const {
 	return m_render.badge.def;
 }
 
-Sprite* Unit::GetBadgeHealthbarSprite() const {
+sprite::Sprite* Unit::GetBadgeHealthbarSprite() const {
 	return m_render.badge.healthbar.def;
 }
 
@@ -350,7 +350,7 @@ const bool Unit::ShouldBeActive() const {
 	return m_is_owned && CanMove();
 }
 
-Unit::meshtex_t Unit::GetMeshTex( const InstancedSprite* sprite ) {
+Unit::meshtex_t Unit::GetMeshTex( const sprite::InstancedSprite* sprite ) {
 	auto* texture = sprite->actor->GetSpriteActor()->GetTexture();
 	NEWV( mesh, types::mesh::Rectangle );
 	mesh->SetCoords(

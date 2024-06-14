@@ -5,14 +5,14 @@
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
 #include "util/String.h"
-#include "task/game/InstancedSpriteManager.h"
+#include "task/game/sprite/InstancedSpriteManager.h"
 #include "game/map/Consts.h"
 
 namespace task {
 namespace game {
 namespace unit {
 
-UnitDef::UnitDef( InstancedSpriteManager* ism, const ::game::unit::Def* unitdef )
+UnitDef::UnitDef( sprite::InstancedSpriteManager* ism, const ::game::unit::Def* unitdef )
 	: m_ism( ism )
 	, m_id( unitdef->m_id )
 	, m_name( unitdef->m_name )
@@ -57,7 +57,7 @@ const bool UnitDef::IsArtillery() const {
 	return m_id != "SporeLauncher";
 }
 
-Sprite* UnitDef::GetSprite( const ::game::unit::morale_t morale ) {
+sprite::Sprite* UnitDef::GetSprite( const ::game::unit::morale_t morale ) {
 	ASSERT_NOLOG( m_type == ::game::unit::DT_STATIC, "only static units are supported for now" );
 	ASSERT_NOLOG( static_.render.is_sprite, "only sprite unitdefs are supported for now" );
 
@@ -89,7 +89,7 @@ Sprite* UnitDef::GetSprite( const ::game::unit::morale_t morale ) {
 								::game::map::s_consts.tile.scale.x,
 								::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
 							},
-							InstancedSpriteManager::ZL_UNITS
+							ZL_UNITS
 						),
 					}
 				}
@@ -117,7 +117,7 @@ Sprite* UnitDef::GetSprite( const ::game::unit::morale_t morale ) {
 						::game::map::s_consts.tile.scale.x,
 						::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
 					},
-					InstancedSpriteManager::ZL_UNITS
+					ZL_UNITS
 				),
 				1
 			};

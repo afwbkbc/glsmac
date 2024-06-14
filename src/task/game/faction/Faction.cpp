@@ -1,7 +1,7 @@
 #include "Faction.h"
 
 #include "game/rules/Faction.h"
-#include "task/game/InstancedSpriteManager.h"
+#include "task/game/sprite/InstancedSpriteManager.h"
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
 
@@ -11,7 +11,7 @@ namespace task {
 namespace game {
 namespace faction {
 
-Faction::Faction( const ::game::rules::Faction* def, InstancedSpriteManager* ism )
+Faction::Faction( const ::game::rules::Faction* def, sprite::InstancedSpriteManager* ism )
 	: m_ism( ism )
 	, m_id( def->m_id )
 	, m_border_color( def->m_colors.border )
@@ -24,7 +24,7 @@ Faction::Faction( const ::game::rules::Faction* def, InstancedSpriteManager* ism
 	//
 }
 
-Sprite* Faction::GetBaseSprite( const bool is_water, const uint8_t size, const uint8_t perimeter_level ) {
+sprite::Sprite* Faction::GetBaseSprite( const bool is_water, const uint8_t size, const uint8_t perimeter_level ) {
 	ASSERT_NOLOG( size < 4, "base size overflow ( " + std::to_string( size ) + " >= 4 )" );
 	ASSERT_NOLOG( perimeter_level < 3, "base perimeter level overflow ( " + std::to_string( perimeter_level ) + " >= 3 )" );
 	const uint8_t index = ( is_water
@@ -77,7 +77,7 @@ Sprite* Faction::GetBaseSprite( const bool is_water, const uint8_t size, const u
 							y + cxy.y
 						},
 						dst_wh,
-						InstancedSpriteManager::ZL_BASES
+						ZL_BASES
 					),
 					1
 				}

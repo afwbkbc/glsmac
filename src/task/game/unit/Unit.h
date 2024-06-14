@@ -22,8 +22,11 @@ namespace game {
 
 class Game;
 class Slot;
+
+namespace sprite {
 class Sprite;
 class InstancedSprite;
+}
 
 namespace tile {
 class Tile;
@@ -65,9 +68,9 @@ public:
 
 	const size_t GetSelectionWeight() const;
 
-	Sprite* GetSprite() const;
-	Sprite* GetBadgeSprite() const;
-	Sprite* GetBadgeHealthbarSprite() const;
+	sprite::Sprite* GetSprite() const;
+	sprite::Sprite* GetBadgeSprite() const;
+	sprite::Sprite* GetBadgeHealthbarSprite() const;
 
 	const std::string GetNameString() const;
 	const std::string GetStatsString() const;
@@ -101,7 +104,6 @@ public:
 	void MoveToTile( tile::Tile* dst_tile );
 	void UpdateFromTile();
 
-	const bool IsValid() const;
 	const bool IsMoving() const;
 
 	struct meshtex_t {
@@ -130,10 +132,10 @@ private:
 		bool is_rendered = false;
 		size_t instance_id = 0;
 		struct {
-			Sprite* def = nullptr;
+			sprite::Sprite* def = nullptr;
 			size_t instance_id = 0;
 			struct {
-				Sprite* def = nullptr;
+				sprite::Sprite* def = nullptr;
 				size_t instance_id = 0;
 			} healthbar;
 			struct {
@@ -161,7 +163,7 @@ private:
 
 	util::Scroller< types::Vec3 > m_mover;
 
-	Unit::meshtex_t GetMeshTex( const InstancedSprite* sprite );
+	Unit::meshtex_t GetMeshTex( const sprite::InstancedSprite* sprite );
 	void SetRenderCoords( const types::Vec3& coords );
 };
 

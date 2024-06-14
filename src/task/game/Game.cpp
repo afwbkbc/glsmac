@@ -28,7 +28,8 @@
 #include "unit/UnitManager.h"
 #include "base/BaseManager.h"
 #include "faction/FactionManager.h"
-#include "InstancedSpriteManager.h"
+#include "task/game/sprite/InstancedSpriteManager.h"
+#include "task/game/text/InstancedTextManager.h"
 #include "Animation.h"
 #include "AnimationDef.h"
 #include "task/game/unit/Unit.h"
@@ -36,7 +37,7 @@
 #include "Slot.h"
 #include "task/game/unit/BadgeDefs.h"
 #include "scene/actor/Instanced.h"
-#include "InstancedSprite.h"
+#include "task/game/sprite/InstancedSprite.h"
 #include "loader/texture/TextureLoader.h"
 #include "actor/Actor.h"
 #include "actor/TileSelection.h"
@@ -48,6 +49,10 @@
 #include "types/mesh/Data.h"
 #include "ui/style/Theme.h"
 #include "game/map/Consts.h"
+
+// TMP
+#include "loader/font/FontLoader.h"
+#include "text/InstancedText.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -482,9 +487,14 @@ base::BaseManager* Game::GetBM() const {
 	return m_bm;
 }
 
-InstancedSpriteManager* Game::GetISM() const {
+sprite::InstancedSpriteManager* Game::GetISM() const {
 	ASSERT( m_ism, "ism not set" );
 	return m_ism;
+}
+
+text::InstancedTextManager* Game::GetITM() const {
+	ASSERT( m_itm, "itm not set" );
+	return m_itm;
 }
 
 types::texture::Texture* Game::GetSourceTexture( const resource::resource_t res ) {
@@ -503,7 +513,7 @@ types::texture::Texture* Game::GetSourceTexture( const resource::resource_t res 
 	return texture;
 }
 
-InstancedSprite* Game::GetTerrainInstancedSprite( const ::game::map::sprite_actor_t& actor ) {
+sprite::InstancedSprite* Game::GetTerrainInstancedSprite( const ::game::map::sprite_actor_t& actor ) {
 	return m_ism->GetInstancedSprite(
 		"Terrain_" + actor.name,
 		GetSourceTexture( resource::PCX_TER1 ),
@@ -517,7 +527,7 @@ InstancedSprite* Game::GetTerrainInstancedSprite( const ::game::map::sprite_acto
 			::game::map::s_consts.tile.scale.x,
 			::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
 		},
-		InstancedSpriteManager::ZL_TERRAIN,
+		ZL_TERRAIN,
 		actor.z_index
 	);
 }
@@ -1083,14 +1093,6 @@ void Game::SendBackendRequest( const ::game::BackendRequest* request ) {
 	m_pending_backend_requests.push_back( *request );
 }
 
-void Game::ActivateTurn() {
-
-}
-
-void Game::DeactivateTurn() {
-
-}
-
 void Game::UpdateMapData( const types::Vec2< size_t >& map_size ) {
 
 	m_map_data.width = map_size.x;
@@ -1141,7 +1143,8 @@ void Game::Initialize(
 
 	NEW( m_world_scene, scene::Scene, "Game", scene::SCENE_TYPE_ORTHO );
 
-	NEW( m_ism, InstancedSpriteManager, m_world_scene );
+	NEW( m_ism, sprite::InstancedSpriteManager, m_world_scene );
+	NEW( m_itm, text::InstancedTextManager, m_world_scene );
 	NEW( m_fm, faction::FactionManager, this );
 	NEW( m_tm, tile::TileManager, this );
 	NEW( m_um, unit::UnitManager, this );
@@ -1604,6 +1607,33 @@ void Game::Initialize(
 
 	ResetMapState();
 
+	// TEST
+
+	auto* font = m_itm->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( resource::TTF_ARIALN, 18 ) );
+
+	auto* text = m_itm->CreateInstancedText(
+		"X",
+		font,
+		types::Color{
+			1.0f,
+			0.0f,
+			0.0f,
+			1.0f
+		},
+		ZL_BASES
+	);
+
+
+
+	/*
+	text->actor->AddInstance(
+		{
+			0.0f,
+			0.0f,
+			0.0f
+		}
+	);*/
+
 	m_is_initialized = true;
 }
 
@@ -1703,6 +1733,11 @@ void Game::Deinitialize() {
 	if ( m_tm ) {
 		DELETE( m_tm );
 		m_tm = nullptr;
+	}
+
+	if ( m_itm ) {
+		DELETE( m_itm );
+		m_itm = nullptr;
 	}
 
 	if ( m_ism ) {

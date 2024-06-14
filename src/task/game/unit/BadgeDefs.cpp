@@ -3,9 +3,9 @@
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
 #include "types/texture/Texture.h"
-#include "task/game/InstancedSpriteManager.h"
+#include "task/game/sprite/InstancedSpriteManager.h"
 #include "game/map/Consts.h"
-#include "task/game/InstancedSprite.h"
+#include "task/game/sprite/InstancedSprite.h"
 
 namespace task {
 namespace game {
@@ -13,7 +13,7 @@ namespace unit {
 
 const BadgeDefs::consts_t BadgeDefs::s_consts = {};
 
-BadgeDefs::BadgeDefs( InstancedSpriteManager* ism )
+BadgeDefs::BadgeDefs( sprite::InstancedSpriteManager* ism )
 	: m_ism( ism ) {
 	//
 }
@@ -51,7 +51,7 @@ const types::Vec3 BadgeDefs::GetBadgeHealthbarCoords( const types::Vec3& unit_co
 	};
 }
 
-InstancedSprite* BadgeDefs::GetBadgeSprite( const badge_type_t badge_type, const ::game::unit::morale_t morale ) {
+sprite::InstancedSprite* BadgeDefs::GetBadgeSprite( const badge_type_t badge_type, const ::game::unit::morale_t morale ) {
 	auto it1 = m_unitbadge_sprites.find( badge_type );
 	if ( it1 == m_unitbadge_sprites.end() ) {
 		it1 = m_unitbadge_sprites.insert(
@@ -102,7 +102,7 @@ InstancedSprite* BadgeDefs::GetBadgeSprite( const badge_type_t badge_type, const
 						::game::map::s_consts.tile.scale.x * s_consts.scale.x,
 						::game::map::s_consts.tile.scale.y * s_consts.scale.y * ::game::map::s_consts.sprite.y_scale
 					},
-					InstancedSpriteManager::ZL_UNITS,
+					ZL_UNITS,
 					0.008f
 				)
 			}
@@ -111,7 +111,7 @@ InstancedSprite* BadgeDefs::GetBadgeSprite( const badge_type_t badge_type, const
 	return it2->second;
 }
 
-InstancedSprite* BadgeDefs::GetFakeBadgeSprite() {
+sprite::InstancedSprite* BadgeDefs::GetFakeBadgeSprite() {
 	if ( !m_fake_badge ) {
 		m_fake_badge = m_ism->GetInstancedSprite(
 			"Badge_FAKE",
@@ -132,14 +132,14 @@ InstancedSprite* BadgeDefs::GetFakeBadgeSprite() {
 				::game::map::s_consts.tile.scale.x * s_consts.fake_badges.scale.x,
 				::game::map::s_consts.tile.scale.y * s_consts.fake_badges.scale.y * ::game::map::s_consts.sprite.y_scale
 			},
-			InstancedSpriteManager::ZL_UNITS,
+			ZL_UNITS,
 			0.002f
 		);
 	}
 	return m_fake_badge;
 }
 
-Sprite* BadgeDefs::GetBadgeHealthbarSprite( const float health ) {
+sprite::Sprite* BadgeDefs::GetBadgeHealthbarSprite( const float health ) {
 	const uint8_t step = round( health * ( s_consts.healthbars.resolution - 1 ) );
 	auto it = m_healthbar_sprites.find( step );
 	if ( it == m_healthbar_sprites.end() ) {
@@ -195,7 +195,7 @@ Sprite* BadgeDefs::GetBadgeHealthbarSprite( const float health ) {
 							::game::map::s_consts.tile.scale.x * s_consts.healthbars.scale.x,
 							::game::map::s_consts.tile.scale.y * s_consts.healthbars.scale.y * ::game::map::s_consts.sprite.y_scale
 						},
-						InstancedSpriteManager::ZL_UNITS,
+						ZL_UNITS,
 						0.005f
 					),
 					1
