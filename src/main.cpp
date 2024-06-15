@@ -92,12 +92,7 @@
 #undef main
 #endif
 
-#if !defined(_WIN32) || defined( VISUAL_STUDIO )
-
 int main( const int argc, const char* argv[] ) {
-#else
-	int main_real(const int argc, const char* argv[]) {
-#endif
 
 	config::Config config( argc, argv );
 
@@ -321,10 +316,3 @@ int main( const int argc, const char* argv[] ) {
 
 	return result;
 }
-
-#if defined(_WIN32) && !defined( VISUAL_STUDIO )
-INT WINAPI WinMain( HINSTANCE hInst, HINSTANCE, LPSTR strCmdLine, INT )
-{
-	main_real(__argc, (const char**)__argv);
-}
-#endif

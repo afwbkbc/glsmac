@@ -73,7 +73,10 @@ Engine::Engine(
 	t_main->AddModule( m_texture_loader );
 	t_main->AddModule( m_sound_loader );
 	t_main->AddModule( m_logger );
-	if ( !m_config->HasDebugFlag( config::Config::DF_GSE_ONLY ) ) {
+#ifdef DEBUG
+	if ( !m_config->HasDebugFlag( config::Config::DF_GSE_ONLY ) )
+#endif
+	{
 		m_resource_manager->Init( m_config->GetPossibleSMACPaths() );
 		t_main->AddModule( m_resource_manager );
 	}
