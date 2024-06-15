@@ -22,7 +22,7 @@ Bindings::Bindings( State* state )
 	, m_entry_script(
 		util::FS::GeneratePath(
 			{
-				"gse", // directory is expected to be in working dir
+				"GLSMAC_data", // directory is expected to be in working dir
 				"default", // only 'default' mod for now
 				"main" // script name (extension is appended automatically)
 			}, gse::GSE::PATH_SEPARATOR

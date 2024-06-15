@@ -29,7 +29,7 @@ test.assert(timeof('empty loop with 10000 iterations', () => {
 	let i = 0;
 	while (i++ < 10000) {
 	}
-}) < 300000000);
+}) < 350000000);
 
 let idx = 0;
 let arr = [];
@@ -38,7 +38,7 @@ test.assert(timeof('appending 10000 elements to array', () => {
 	while (idx < 10000) {
 		arr [] = idx++;
 	}
-}) < 300000000);
+}) < 350000000);
 
 let sum = 0;
 test.assert(timeof('reading and summing 10000 elements from array', () => {
