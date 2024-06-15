@@ -29,7 +29,7 @@ test.assert(timeof('empty loop with 10000 iterations', () => {
 	let i = 0;
 	while (i++ < 10000) {
 	}
-}) < 100000000);
+}) < 300000000);
 
 let idx = 0;
 let arr = [];

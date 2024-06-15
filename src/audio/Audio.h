@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "base/Module.h"
+#include "common/Module.h"
 
 namespace scene::actor {
 class Sound;
@@ -10,7 +10,7 @@ class Sound;
 
 namespace audio {
 
-CLASS( Audio, base::Module )
+CLASS( Audio, common::Module )
 
 	virtual ~Audio();
 

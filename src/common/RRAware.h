@@ -9,7 +9,7 @@ namespace rr {
 class RR;
 }
 
-namespace base {
+namespace common {
 
 // Request-Response
 class RRAware {

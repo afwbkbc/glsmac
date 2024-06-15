@@ -17,8 +17,8 @@ CLASS( Simple, Scheduler )
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;
-	void AddTask( base::Task* task ) override;
-	void RemoveTask( base::Task* task ) override;
+	void AddTask( common::Task* task ) override;
+	void RemoveTask( common::Task* task ) override;
 
 protected:
 
@@ -26,9 +26,9 @@ protected:
 	util::Timer m_timer;
 #endif
 
-	std::vector< base::Task* > m_tasks = {};
-	std::vector< base::Task* > m_tasks_toadd = {};
-	std::vector< base::Task* > m_tasks_toremove = {};
+	std::vector< common::Task* > m_tasks = {};
+	std::vector< common::Task* > m_tasks_toadd = {};
+	std::vector< common::Task* > m_tasks_toremove = {};
 	bool m_active = false;
 	bool m_iterating = false;
 };

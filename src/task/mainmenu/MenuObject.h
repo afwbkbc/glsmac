@@ -2,14 +2,14 @@
 
 #include <string>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 namespace task {
 namespace mainmenu {
 
 class MainMenu;
 
-CLASS( MenuObject, base::Base )
+CLASS( MenuObject, common::Class )
 	MenuObject( MainMenu* mainmenu, const std::string& title );
 
 	virtual void Show() = 0;

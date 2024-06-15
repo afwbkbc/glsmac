@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <string>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "game/map/Types.h"
 #include "types/texture/Types.h"
@@ -20,7 +20,7 @@ class Scene;
 namespace task {
 namespace game {
 
-CLASS( InstancedSpriteManager, ::base::Base )
+CLASS( InstancedSpriteManager, ::common::Class )
 public:
 
 	enum z_level_t {

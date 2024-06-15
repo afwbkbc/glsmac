@@ -2,16 +2,16 @@
 
 #include <vector>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "types/texture/Types.h"
 
-#include "base/MTTypes.h"
+#include "common/MTTypes.h"
 #include "types/Buffer.h"
 #include "types/Vec2.h"
 #include "tile/TileState.h"
 
-#include "base/MTModule.h"
+#include "common/MTModule.h"
 
 namespace types {
 class Texture;
@@ -24,7 +24,7 @@ class Perlin;
 namespace game {
 namespace map {
 
-CLASS( MapState, ::base::Base )
+CLASS( MapState, common::Class )
 
 	~MapState();
 

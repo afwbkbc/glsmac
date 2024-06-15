@@ -1,6 +1,6 @@
 SET( SRC ${SRC}
 
-	${PWD}/Base.cpp
+	${PWD}/Common.cpp
 	${PWD}/Thread.cpp
 	${PWD}/RRAware.cpp
 

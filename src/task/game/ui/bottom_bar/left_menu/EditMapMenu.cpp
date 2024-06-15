@@ -2,8 +2,8 @@
 
 #include "engine/Engine.h"
 
-#include "../../popup/SaveMap.h"
-#include "../../popup/LoadMap.h"
+#include "task/game/ui/popup/SaveMap.h"
+#include "task/game/ui/popup/LoadMap.h"
 
 namespace task {
 namespace game {

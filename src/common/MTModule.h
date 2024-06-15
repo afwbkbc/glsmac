@@ -9,7 +9,7 @@
 #include "Module.h"
 #include "MTTypes.h"
 
-namespace base {
+namespace common {
 
 static std::mutex s_next_mt_id_mutex;
 static mt_id_t s_next_mt_id = 0;

@@ -1,6 +1,6 @@
 #include "MapObject.h"
 
-#include "base/Assert.h"
+#include "common/Assert.h"
 #include "map/Map.h"
 #include "map/tile/Tile.h"
 #include "map/tile/TileState.h"

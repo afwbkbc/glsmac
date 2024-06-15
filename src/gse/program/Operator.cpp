@@ -1,6 +1,6 @@
 #include "Operator.h"
 
-#include "base/Assert.h"
+#include "common/Assert.h"
 
 namespace gse {
 namespace program {

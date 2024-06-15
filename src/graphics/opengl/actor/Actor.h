@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "types/Vec3.h"
 
@@ -18,7 +18,7 @@ namespace shader_program {
 class ShaderProgram;
 }
 
-CLASS( Actor, base::Base )
+CLASS( Actor, common::Class )
 
 	Actor( scene::actor::Actor* actor );
 	~Actor();

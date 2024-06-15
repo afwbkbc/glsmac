@@ -2,7 +2,7 @@
 
 #include "Module.h"
 
-namespace base {
+namespace common {
 
 CLASS( Task, Module )
 	virtual ~Task() {};

@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "game/map_editor/Types.h"
 
@@ -13,7 +13,7 @@ class Game;
 namespace map_editor {
 namespace brush {
 
-CLASS( Brush, ::base::Base )
+CLASS( Brush, common::Class )
 
 	Brush( Game* game, const brush_type_t type );
 

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "Buffer.h"
 
 namespace types {
 
 // don't set namespace
-class Serializable : public base::Base {
+class Serializable : public common::Class {
 public:
 
 	virtual ~Serializable() = default;

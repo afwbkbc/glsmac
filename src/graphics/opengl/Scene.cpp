@@ -4,7 +4,7 @@
 
 #include "actor/Sprite.h"
 #include "actor/Mesh.h"
-#include "base/ObjectLink.h"
+#include "common/ObjectLink.h"
 #include "scene/Scene.h"
 #include "scene/actor/Actor.h"
 #include "scene/actor/Mesh.h"
@@ -29,7 +29,7 @@ Scene::~Scene() {
 
 }
 
-void Scene::RemoveActor( base::ObjectLink* link ) {
+void Scene::RemoveActor( common::ObjectLink* link ) {
 	auto* gl_actor = link->GetDstObject< Actor >();
 	if ( link->Removed() ) {
 		// already removed on other side
@@ -68,7 +68,7 @@ void Scene::RemoveActorFromZIndexSet( Actor* gl_actor ) {
 }
 
 void Scene::Update() {
-	base::ObjectLink* obj;
+	common::ObjectLink* obj;
 
 	for ( auto it = m_gl_actors.begin() ; it < m_gl_actors.end() ; ++it ) {
 		Actor* gl_actor = ( *it )->GetDstObject< Actor >();
@@ -144,7 +144,7 @@ void Scene::Update() {
 			if ( gl_actor ) {
 				gl_actor->LoadMesh();
 				gl_actor->LoadTexture();
-				NEW( obj, base::ObjectLink, ( *it ), gl_actor );
+				NEW( obj, common::ObjectLink, ( *it ), gl_actor );
 				m_gl_actors.push_back( obj );
 				AddActorToZIndexSet( gl_actor ); // TODO: only Simple2D
 				( *it )->m_graphics_object = obj;
@@ -172,10 +172,10 @@ Texture* Scene::GetSkyboxTexture() const {
 	}
 	return m_skybox_texture->GetDstObject< Texture >();
 }
-base::ObjectLink* Scene::GetSkyboxTextureObj() const {
+common::ObjectLink* Scene::GetSkyboxTextureObj() const {
 	return m_skybox_texture;
 }
-void Scene::SetSkyboxTextureObj( base::ObjectLink* skybox_texture ) {
+void Scene::SetSkyboxTextureObj( common::ObjectLink* skybox_texture ) {
 	m_skybox_texture = skybox_texture;
 }
 

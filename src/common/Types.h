@@ -2,7 +2,7 @@
 
 #include <vector>
 
-namespace base {
+namespace common {
 
 class Module;
 

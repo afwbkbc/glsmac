@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "Types.h"
 
@@ -12,7 +12,7 @@ namespace theme {
 
 class Style;
 
-CLASS( StyleSheet, base::Base )
+CLASS( StyleSheet, common::Class )
 
 	virtual void AddStyles() = 0;
 

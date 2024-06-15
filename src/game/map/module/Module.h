@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 namespace game {
 namespace map {
@@ -17,7 +17,7 @@ class TileState;
 
 namespace module {
 
-CLASS( Module, ::base::Base )
+CLASS( Module, common::Class )
 
 	Module( Map* const map );
 

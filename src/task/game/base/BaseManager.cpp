@@ -25,7 +25,7 @@ BaseManager::~BaseManager() {
 	}
 }
 
-task::game::base::Base* BaseManager::GetBaseById( const size_t id ) const {
+base::Base* BaseManager::GetBaseById( const size_t id ) const {
 	ASSERT( m_bases.find( id ) != m_bases.end(), "base id not found" );
 	return m_bases.at( id );
 }
@@ -45,7 +45,7 @@ void BaseManager::SpawnBase(
 	auto* base = m_bases.insert(
 		{
 			base_id,
-			new task::game::base::Base(
+			new base::Base(
 				this,
 				base_id,
 				slot,

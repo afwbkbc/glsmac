@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 namespace ui {
 
@@ -11,7 +11,7 @@ class UIEvent;
 
 namespace module {
 
-CLASS( Module, base::Base )
+CLASS( Module, common::Class )
 
 	Module( UI* ui );
 

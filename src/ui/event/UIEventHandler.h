@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "Types.h"
 
@@ -9,7 +9,7 @@ namespace event {
 
 class UIEvent;
 
-CLASS( UIEventHandler, base::Base )
+CLASS( UIEventHandler, common::Class )
 
 	UIEventHandler( const handler_function_t func );
 

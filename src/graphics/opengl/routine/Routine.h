@@ -2,7 +2,7 @@
 
 #include "graphics/opengl/Scene.h"
 
-#include "base/Module.h"
+#include "common/Module.h"
 
 namespace scene {
 class Scene;
@@ -19,7 +19,7 @@ class Actor;
 
 namespace routine {
 
-CLASS( Routine, base::Module )
+CLASS( Routine, common::Module )
 
 	Routine( OpenGL* opengl );
 	~Routine();

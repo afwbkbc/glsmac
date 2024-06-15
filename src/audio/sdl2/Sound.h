@@ -4,7 +4,7 @@
 
 #include <SDL.h>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 namespace scene::actor {
 class Sound;
@@ -15,7 +15,7 @@ namespace sdl2 {
 
 class SDL2;
 
-CLASS( Sound, base::Base )
+CLASS( Sound, common::Class )
 
 	Sound( scene::actor::Sound* actor );
 	~Sound();

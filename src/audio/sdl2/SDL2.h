@@ -8,7 +8,7 @@
 
 #include <mutex>
 
-#include "../Audio.h"
+#include "audio/Audio.h"
 
 // this must match specs of SMAC wavs until resampling is implemented
 #define AUDIO_FREQUENCY 22050

@@ -3,10 +3,10 @@
 #include <unordered_set>
 #include <unordered_map>
 
-#include "base/Task.h"
+#include "common/Task.h"
 
 #include "Types.h"
-#include "base/MTTypes.h"
+#include "common/MTTypes.h"
 #include "ui/Types.h"
 #include "game/turn/Types.h"
 #include "game/map/Types.h"
@@ -114,7 +114,7 @@ class TileSelection;
 class Actor;
 }
 
-CLASS( Game, ::base::Task )
+CLASS( Game, common::Task )
 
 	static constexpr size_t SCROLL_DURATION_MS = 100;
 
@@ -411,18 +411,18 @@ private:
 	void ResetMapState();
 
 	struct {
-		::base::mt_id_t ping = 0;
-		::base::mt_id_t init = 0;
-		::base::mt_id_t get_map_data = 0;
-		::base::mt_id_t reset = 0;
-		std::unordered_set< ::base::mt_id_t > select_tile = {};
-		::base::mt_id_t save_map = 0;
-		::base::mt_id_t edit_map = 0;
-		::base::mt_id_t chat = 0;
-		::base::mt_id_t get_frontend_requests = 0;
-		::base::mt_id_t send_backend_requests = 0;
+		common::mt_id_t ping = 0;
+		common::mt_id_t init = 0;
+		common::mt_id_t get_map_data = 0;
+		common::mt_id_t reset = 0;
+		std::unordered_set< common::mt_id_t > select_tile = {};
+		common::mt_id_t save_map = 0;
+		common::mt_id_t edit_map = 0;
+		common::mt_id_t chat = 0;
+		common::mt_id_t get_frontend_requests = 0;
+		common::mt_id_t send_backend_requests = 0;
 #ifdef DEBUG
-		::base::mt_id_t save_dump = 0;
+		common::mt_id_t save_dump = 0;
 		// init will be used for loading dump
 #endif
 	} m_mt_ids = {};

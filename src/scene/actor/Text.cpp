@@ -1,7 +1,7 @@
 #include "Text.h"
 
 #include "types/Font.h"
-#include "base/ObjectLink.h"
+#include "common/ObjectLink.h"
 #include "graphics/opengl/actor/Text.h"
 
 namespace scene {

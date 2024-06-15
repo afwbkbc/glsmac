@@ -3,7 +3,7 @@
 #include <vector>
 #include <unordered_map>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "Types.h"
 
@@ -22,7 +22,7 @@ namespace brush {
 class Brush;
 }
 
-CLASS( MapEditor, ::base::Base )
+CLASS( MapEditor, common::Class )
 
 	std::unordered_map< tool_type_t, tool::Tool* > m_tools = {};
 	tool::Tool* m_active_tool = nullptr;

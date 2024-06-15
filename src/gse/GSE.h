@@ -5,7 +5,7 @@
 #include <map>
 #include <vector>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "Types.h"
 
@@ -36,7 +36,7 @@ namespace type {
 class Callable;
 }
 
-CLASS( GSE, base::Base )
+CLASS( GSE, common::Class )
 	GSE();
 	virtual ~GSE();
 

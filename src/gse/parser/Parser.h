@@ -3,7 +3,7 @@
 #include <vector>
 #include <cstdint>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "gse/Types.h"
 
@@ -15,7 +15,7 @@ class Program;
 
 namespace parser {
 
-CLASS( Parser, base::Base )
+CLASS( Parser, common::Class )
 
 	Parser( const std::string& filename, const std::string& source, const size_t initial_line_num );
 	virtual ~Parser() = default;

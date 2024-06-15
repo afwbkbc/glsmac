@@ -8,8 +8,8 @@
 #include "scene/actor/Instanced.h"
 #include "graphics/Graphics.h"
 #include "graphics/opengl/OpenGL.h"
-#include "../shader_program/Orthographic.h"
-#include "../shader_program/World.h"
+#include "graphics/opengl/shader_program/Orthographic.h"
+#include "graphics/opengl/shader_program/World.h"
 
 #include "types/Matrix44.h"
 

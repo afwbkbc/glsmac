@@ -4,7 +4,7 @@
 
 #include "types/Matrix44.h"
 
-namespace base {
+namespace common {
 class ObjectLink;
 }
 
@@ -34,7 +34,7 @@ CLASS( Actor, Entity )
 		return m_type;
 	}
 
-	base::ObjectLink* m_graphics_object = NULL;
+	common::ObjectLink* m_graphics_object = NULL;
 
 	virtual types::Matrix44& GetWorldMatrix();
 

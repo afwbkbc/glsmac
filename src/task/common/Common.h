@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/Task.h"
+#include "common/Task.h"
 
 namespace task {
 
@@ -11,7 +11,7 @@ namespace style {
 class Theme;
 }
 
-CLASS( Common, base::Task )
+CLASS( Common, common::Task )
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;

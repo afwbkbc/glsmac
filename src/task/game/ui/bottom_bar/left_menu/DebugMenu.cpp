@@ -3,7 +3,7 @@
 #include "DebugMenu.h"
 
 #include "engine/Engine.h"
-#include "../../../Game.h"
+#include "task/game/Game.h"
 
 namespace task {
 namespace game {
