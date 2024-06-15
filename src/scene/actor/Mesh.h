@@ -3,7 +3,7 @@
 #include <optional>
 
 #include "Actor.h"
-#include "base/RRAware.h"
+#include "common/RRAware.h"
 
 #include "types/Color.h"
 
@@ -25,7 +25,7 @@ class Camera;
 
 namespace actor {
 
-CLASS2( Mesh, Actor, base::RRAware )
+CLASS2( Mesh, Actor, common::RRAware )
 
 	// mesh can also be set in constructor of derived class, but it MUST be set
 	Mesh( const std::string& name, const types::mesh::Mesh* mesh = nullptr, const type_t type = Actor::TYPE_MESH );

@@ -134,7 +134,7 @@ IF ( WIN32 )
 	TARGET_LINK_OPTIONS( ${PROJECT_NAME} PRIVATE -lws2_32 )
 ENDIF()
 
-SET( CMAKE_CXX_FLAGS " -std=c++17 ${CMAKE_CXX_FLAGS} -Wno-pointer-arith" )
+SET( CMAKE_CXX_FLAGS " -std=c++17 ${CMAKE_CXX_FLAGS} -Wno-pointer-arith -Wno-vla-cxx-extension" )
 
 IF (
 	CMAKE_BUILD_TYPE STREQUAL "Release" OR

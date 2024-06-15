@@ -5,7 +5,7 @@
 #include <unordered_set>
 #include <cstring>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "Types.h"
 #include "ui/event/Types.h"
@@ -36,7 +36,7 @@ namespace object {
 
 class UIContainer;
 
-CLASS( UIObject, base::Base )
+CLASS( UIObject, common::Class )
 	UIObject( const std::string& class_name = "" );
 	virtual ~UIObject();
 

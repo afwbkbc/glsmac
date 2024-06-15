@@ -3,10 +3,10 @@
 #include <unordered_set>
 #include <unordered_map>
 
-#include "base/Task.h"
+#include "common/Task.h"
 
 #include "Types.h"
-#include "base/MTTypes.h"
+#include "common/MTTypes.h"
 #include "ui/Types.h"
 #include "game/turn/Types.h"
 #include "game/map/Types.h"
@@ -89,14 +89,17 @@ class Unit;
 class UnitManager;
 }
 
+namespace base {
+class BaseManager;
+class Base;
+}
+
 class InstancedSpriteManager;
 class InstancedSprite;
 class Sprite;
 class Slot;
 class AnimationDef;
 class Animation;
-class SlotBadges;
-class BadgeDefs;
 
 namespace ui {
 class BottomBar;
@@ -111,7 +114,7 @@ class TileSelection;
 class Actor;
 }
 
-CLASS( Game, base::Task )
+CLASS( Game, common::Task )
 
 	static constexpr size_t SCROLL_DURATION_MS = 100;
 
@@ -157,6 +160,7 @@ CLASS( Game, base::Task )
 
 	tile::TileManager* GetTM() const;
 	unit::UnitManager* GetUM() const;
+	base::BaseManager* GetBM() const;
 	InstancedSpriteManager* GetISM() const;
 
 	types::texture::Texture* GetSourceTexture( const resource::resource_t res );
@@ -226,6 +230,7 @@ private:
 	faction::FactionManager* m_fm = nullptr;
 	tile::TileManager* m_tm = nullptr;
 	unit::UnitManager* m_um = nullptr;
+	base::BaseManager* m_bm = nullptr;
 	InstancedSpriteManager* m_ism = nullptr;
 
 	size_t m_slot_index = 0;
@@ -242,7 +247,7 @@ private:
 
 	void DefineSlot(
 		const size_t slot_index,
-		const faction::Faction* faction
+		faction::Faction* faction
 	);
 	void DefineAnimation( const ::game::animation::Def* def );
 	void ShowAnimation( AnimationDef* def, const size_t animation_id, const ::types::Vec3& render_coords );
@@ -406,18 +411,18 @@ private:
 	void ResetMapState();
 
 	struct {
-		base::mt_id_t ping = 0;
-		base::mt_id_t init = 0;
-		base::mt_id_t get_map_data = 0;
-		base::mt_id_t reset = 0;
-		std::unordered_set< base::mt_id_t > select_tile = {};
-		base::mt_id_t save_map = 0;
-		base::mt_id_t edit_map = 0;
-		base::mt_id_t chat = 0;
-		base::mt_id_t get_frontend_requests = 0;
-		base::mt_id_t send_backend_requests = 0;
+		common::mt_id_t ping = 0;
+		common::mt_id_t init = 0;
+		common::mt_id_t get_map_data = 0;
+		common::mt_id_t reset = 0;
+		std::unordered_set< common::mt_id_t > select_tile = {};
+		common::mt_id_t save_map = 0;
+		common::mt_id_t edit_map = 0;
+		common::mt_id_t chat = 0;
+		common::mt_id_t get_frontend_requests = 0;
+		common::mt_id_t send_backend_requests = 0;
 #ifdef DEBUG
-		base::mt_id_t save_dump = 0;
+		common::mt_id_t save_dump = 0;
 		// init will be used for loading dump
 #endif
 	} m_mt_ids = {};
@@ -442,6 +447,7 @@ private:
 
 private:
 	friend class unit::UnitManager;
+	friend class base::BaseManager;
 
 	const bool IsTurnActive() const;
 

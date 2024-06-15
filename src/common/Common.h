@@ -52,12 +52,12 @@
 
 #define TS_OF( _what ) ( _what )->ToString( TS_PREFIX_NEXT )
 
-namespace base {
+namespace common {
 
-class Base {
+class Class {
 public:
-	Base();
-	virtual ~Base() = default;
+	Class();
+	virtual ~Class() = default;
 
 	virtual const std::string GetNamespace() const;
 	const std::string GetName() const;

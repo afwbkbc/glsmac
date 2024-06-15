@@ -1,6 +1,6 @@
 #include "Rockiness.h"
 
-#include "../../Game.h"
+#include "game/Game.h"
 
 namespace game {
 namespace map_editor {

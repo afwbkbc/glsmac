@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <functional>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "network/Types.h"
 
@@ -26,7 +26,7 @@ namespace slot {
 class Slots;
 }
 
-CLASS( State, base::Base )
+CLASS( State, common::Class )
 
 	State();
 	virtual ~State();

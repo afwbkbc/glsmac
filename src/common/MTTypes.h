@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <atomic>
 
-namespace base {
+namespace common {
 typedef size_t mt_id_t;
 
 // used to check if request processing should continue or stop
@@ -14,7 +14,7 @@ typedef std::atomic< bool > mt_flag_t;
 #define MT_C canceled
 
 // add 'canceled' parameter
-#define MT_CANCELABLE const base::mt_flag_t& MT_C
+#define MT_CANCELABLE const common::mt_flag_t& MT_C
 
 // 'return if canceled'
 #define MT_RETIF() \

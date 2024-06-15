@@ -37,6 +37,7 @@ public:
 		FR_UNIT_DESPAWN,
 		FR_UNIT_UPDATE,
 		FR_UNIT_MOVE,
+		FR_BASE_SPAWN,
 	};
 	FrontendRequest( const request_type_t type );
 	FrontendRequest( const FrontendRequest& other );
@@ -138,6 +139,19 @@ public:
 				size_t y;
 			} dst_tile_coords;
 		} unit_move;
+		struct {
+			size_t base_id;
+			size_t slot_index;
+			struct {
+				size_t x;
+				size_t y;
+			} tile_coords;
+			struct {
+				float x;
+				float y;
+				float z;
+			} render_coords;
+		} base_spawn;
 	} data;
 };
 

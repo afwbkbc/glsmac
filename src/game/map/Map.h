@@ -7,7 +7,7 @@
 #include "types/Serializable.h"
 
 #include "Types.h"
-#include "base/MTTypes.h"
+#include "common/MTTypes.h"
 #include "game/map/tile/Types.h"
 #include "types/texture/Types.h"
 

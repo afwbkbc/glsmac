@@ -3,7 +3,7 @@
 #include <cstring>
 #include <cmath>
 
-#include "base/ObjectLink.h"
+#include "common/ObjectLink.h"
 #include "engine/Engine.h"
 #include "graphics/Graphics.h"
 #include "util/random/Random.h"

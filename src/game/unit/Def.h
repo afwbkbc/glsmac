@@ -35,7 +35,6 @@ public:
 
 	virtual const movement_type_t GetMovementType() const = 0;
 
-	virtual const types::Vec3 GetSpawnCoords( const map::tile::Tile* tile, const map::tile::TileState* ts ) const = 0;
 	virtual const std::string ToString( const std::string& prefix = "" ) const = 0;
 
 	static const types::Buffer Serialize( const Def* def );

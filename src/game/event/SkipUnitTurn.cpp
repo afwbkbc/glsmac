@@ -20,7 +20,7 @@ const std::string* SkipUnitTurn::Validate( Game* game ) const {
 		return Error( "Unit not found" );
 	}
 
-	if ( unit->m_tile->IsLocked() ) {
+	if ( unit->GetTile()->IsLocked() ) {
 		return Error( "Unit tile is locked" );
 	}
 

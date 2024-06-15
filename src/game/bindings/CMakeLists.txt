@@ -10,6 +10,7 @@ SET( SRC ${SRC}
 	${PWD}/Factions.cpp
 	${PWD}/Tiles.cpp
 	${PWD}/Units.cpp
+	${PWD}/Bases.cpp
 	${PWD}/Animations.cpp
 	${PWD}/Map.cpp
 

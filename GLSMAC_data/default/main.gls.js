@@ -41,6 +41,8 @@ units.init();
 	players = #game.players.get_all();
 	players_sz = #size(players);
 
+	// spawn units
+
 	let units_spawned = 0;
 
 	let y = 0;
@@ -95,6 +97,24 @@ units.init();
 		y++;
 	}
 	#game.message('Total units spawned: ' + #to_string(units_spawned));
+
+	// spawn bases
+
+	let i = 0;
+	while (i < players_sz) {
+		let base_x = 0;
+		let base_y = 1;
+		while (base_x % 2 != base_y % 2) {
+			base_x = #game.random.get_int(0, w - 1);
+			base_y = #game.random.get_int(0, h - 1);
+		}
+		#game.bases.spawn(
+			players[i],
+			#game.map.get_tile(base_x, base_y)
+		);
+		i++;
+	}
+
 });
 
 #game.on.turn((e) => {

@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include "base/Task.h"
+#include "common/Task.h"
 
 #include "resource/Types.h"
 
@@ -32,7 +32,7 @@ namespace mainmenu {
 class MenuObject;
 class Theme;
 
-CLASS( MainMenu, base::Task )
+CLASS( MainMenu, common::Task )
 	void Start() override;
 	void Iterate() override;
 	void Stop() override;

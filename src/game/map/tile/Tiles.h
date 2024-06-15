@@ -5,7 +5,7 @@
 #include "types/Serializable.h"
 
 #include "game/map/tile/Tile.h"
-#include "base/MTTypes.h"
+#include "common/MTTypes.h"
 
 namespace util::random {
 class Random;

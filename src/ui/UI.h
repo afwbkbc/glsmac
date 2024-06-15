@@ -6,7 +6,7 @@
 #include <functional>
 #include <vector>
 
-#include "base/Module.h"
+#include "common/Module.h"
 
 #include "Types.h"
 #include "event/Types.h"
@@ -53,7 +53,7 @@ class Theme;
 class Style;
 }
 
-CLASS( UI, base::Module )
+CLASS( UI, common::Module )
 
 	typedef float coord_t;
 

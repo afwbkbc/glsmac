@@ -9,12 +9,30 @@
 namespace loader {
 namespace texture {
 
-// different files use different color for transparency
+// some pcxs contain special yellow shadows, replace with semi-transparent shadow
+static const std::unordered_set< resource::resource_t > s_fix_yellow_shadow = {
+	resource::PCX_TER1,
+	resource::PCX_GAIANS,
+	resource::PCX_HIVE,
+	resource::PCX_UNIV,
+	resource::PCX_MORGAN,
+	resource::PCX_SPARTANS,
+	resource::PCX_BELIEVE,
+	resource::PCX_PEACE,
+	resource::PCX_CYBORG,
+	resource::PCX_PIRATES,
+	resource::PCX_DRONE,
+	resource::PCX_ANGELS,
+	resource::PCX_FUNGBOY,
+	resource::PCX_CARETAKE,
+	resource::PCX_USURPER,
+};
+
+// different pcxs use different color for transparency, also some colors should be filtered out
 static const auto s_tc_pink = types::Color::RGB( 255, 0, 255 );
 static const auto s_tc_purple = types::Color::RGB( 152, 24, 228 );
 static const auto s_tc_darkpurple = types::Color::RGB( 100, 16, 156 );
 static const auto s_tc_aqua = types::Color::RGB( 24, 184, 228 );
-static const auto s_tc_yellowshadow = types::Color::RGB( 253, 189, 118 );
 static const auto s_tc_facborder = types::Color::RGB( 77, 156, 176 );
 static const std::unordered_map< resource::resource_t, TextureLoader::transparent_colors_t > s_tcs = {
 	{
@@ -83,7 +101,6 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 			s_tc_purple,
 			s_tc_darkpurple, // tile markings
 			s_tc_aqua, // borders
-			s_tc_yellowshadow // shadows
 		}
 	},
 	{
@@ -121,7 +138,6 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 		resource::PCX_GAIANS,
 		{
 			s_tc_pink,
-			s_tc_yellowshadow,
 			s_tc_facborder,
 		},
 	},
@@ -129,7 +145,6 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 		resource::PCX_HIVE,
 		{
 			s_tc_pink,
-			s_tc_yellowshadow,
 			s_tc_facborder,
 		},
 	},
@@ -137,7 +152,6 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 		resource::PCX_UNIV,
 		{
 			s_tc_pink,
-			s_tc_yellowshadow,
 			s_tc_facborder,
 		},
 	},
@@ -145,7 +159,6 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 		resource::PCX_MORGAN,
 		{
 			s_tc_pink,
-			s_tc_yellowshadow,
 			s_tc_facborder,
 		},
 	},
@@ -153,7 +166,6 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 		resource::PCX_SPARTANS,
 		{
 			s_tc_pink,
-			s_tc_yellowshadow,
 			s_tc_facborder,
 		},
 	},
@@ -161,7 +173,6 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 		resource::PCX_BELIEVE,
 		{
 			s_tc_pink,
-			s_tc_yellowshadow,
 			s_tc_facborder,
 		},
 	},
@@ -169,7 +180,6 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 		resource::PCX_PEACE,
 		{
 			s_tc_pink,
-			s_tc_yellowshadow,
 			s_tc_facborder,
 		},
 	},
@@ -177,7 +187,6 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 		resource::PCX_CYBORG,
 		{
 			s_tc_darkpurple,
-			s_tc_yellowshadow,
 			s_tc_facborder,
 		},
 	},
@@ -185,7 +194,6 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 		resource::PCX_PIRATES,
 		{
 			s_tc_darkpurple,
-			s_tc_yellowshadow,
 			s_tc_facborder,
 		},
 	},
@@ -193,7 +201,6 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 		resource::PCX_DRONE,
 		{
 			s_tc_darkpurple,
-			s_tc_yellowshadow,
 			s_tc_facborder,
 		},
 	},
@@ -201,7 +208,6 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 		resource::PCX_ANGELS,
 		{
 			s_tc_darkpurple,
-			s_tc_yellowshadow,
 			s_tc_facborder,
 		},
 	},
@@ -209,7 +215,6 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 		resource::PCX_FUNGBOY,
 		{
 			s_tc_darkpurple,
-			s_tc_yellowshadow,
 			s_tc_facborder,
 		},
 	},
@@ -217,7 +222,6 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 		resource::PCX_CARETAKE,
 		{
 			s_tc_darkpurple,
-			s_tc_yellowshadow,
 			s_tc_facborder,
 		},
 	},
@@ -225,7 +229,6 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 		resource::PCX_USURPER,
 		{
 			s_tc_darkpurple,
-			s_tc_yellowshadow,
 			s_tc_facborder,
 		},
 	},
@@ -244,9 +247,12 @@ const TextureLoader::transparent_colors_t& TextureLoader::GetTCs( const resource
 
 types::texture::Texture* TextureLoader::LoadTexture( const resource::resource_t res ) {
 	const transparent_colors_t colors_old = m_transparent_colors;
+	const bool fix_yellow_shadows_old = m_fix_yellow_shadows;
 	m_transparent_colors = GetTCs( res );
+	m_fix_yellow_shadows = s_fix_yellow_shadow.find( res ) != s_fix_yellow_shadow.end();
 	auto* result = LoadTextureImpl( GetFilename( res ) );
 	m_transparent_colors = colors_old;
+	m_fix_yellow_shadows = fix_yellow_shadows_old;
 	return result;
 }
 types::texture::Texture* TextureLoader::LoadCustomTexture( const std::string& filename ) {
@@ -255,13 +261,17 @@ types::texture::Texture* TextureLoader::LoadCustomTexture( const std::string& fi
 	std::transform( filename.begin(), filename.end(), key.begin(), ::tolower );
 	const auto res = g_engine->GetResourceManager()->GetResource( filename );
 	transparent_colors_t colors_old;
+	bool fix_yellow_shadows_old;
 	if ( res != resource::NONE ) {
 		colors_old = m_transparent_colors;
+		fix_yellow_shadows_old = m_fix_yellow_shadows;
 		m_transparent_colors = GetTCs( res );
+		m_fix_yellow_shadows = s_fix_yellow_shadow.find( res ) != s_fix_yellow_shadow.end();
 	}
 	auto* result = LoadTextureImpl( GetCustomFilename( filename ) );
 	if ( res != resource::NONE ) {
 		m_transparent_colors = colors_old;
+		m_fix_yellow_shadows = fix_yellow_shadows_old;
 	}
 	return result;
 }

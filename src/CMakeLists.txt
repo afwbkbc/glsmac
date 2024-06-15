@@ -1,4 +1,4 @@
-SUBDIR( base )
+SUBDIR( common )
 SUBDIR( types )
 SUBDIR( util )
 SUBDIR( config )

@@ -56,7 +56,7 @@ void Sprites::GenerateTile( const tile::Tile* tile, tile::TileState* ts, MapStat
 
 #define SPRITE( _name, _texture ) \
     ASSERT( std::find( sprite_z_order.begin(), sprite_z_order.end(), _name ) != sprite_z_order.end(), "sprite '" _name "' not found in sprite z order" ); \
-    GenerateSprite( tile, ts, _name, s_consts.tc.ter1_pcx._texture, 0.4f + 0.001f * ( std::find( sprite_z_order.begin(), sprite_z_order.end(), _name ) - sprite_z_order.begin() ) )
+    GenerateSprite( tile, ts, _name, s_consts.tc.ter1_pcx._texture, 0.002f * ( std::find( sprite_z_order.begin(), sprite_z_order.end(), _name ) - sprite_z_order.begin() ) )
 
 #define FEATURE_SPRITE( _feature, _name, _texture ) \
     if ( tile->features & tile::_feature ) { \

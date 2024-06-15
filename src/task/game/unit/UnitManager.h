@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "game/unit/Types.h"
 
@@ -39,7 +39,7 @@ class UnitDef;
 class BadgeDefs;
 class SlotBadges;
 
-CLASS( UnitManager, base::Base )
+CLASS( UnitManager, common::Class )
 
 	UnitManager( Game* game );
 	~UnitManager();

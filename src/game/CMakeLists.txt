@@ -6,6 +6,7 @@ SUBDIR( slot )
 SUBDIR( connection )
 SUBDIR( animation )
 SUBDIR( unit )
+SUBDIR( base )
 SUBDIR( bindings )
 SUBDIR( event )
 SUBDIR( turn )
@@ -18,6 +19,7 @@ SET( SRC ${SRC}
 	${PWD}/Player.cpp
 	${PWD}/FrontendRequest.cpp
 	${PWD}/BackendRequest.cpp
+	${PWD}/MapObject.cpp
 	${PWD}/TileLock.cpp
 
 	PARENT_SCOPE )

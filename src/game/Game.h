@@ -4,7 +4,7 @@
 #include <map>
 #include <vector>
 
-#include "base/MTModule.h"
+#include "common/MTModule.h"
 
 #include "Types.h"
 #include "map/Types.h"
@@ -45,6 +45,10 @@ namespace unit {
 class MoraleSet;
 class Def;
 class Unit;
+}
+
+namespace base {
+class Base;
 }
 
 namespace event {
@@ -245,7 +249,7 @@ struct MT_Response {
 	} data;
 };
 
-typedef base::MTModule< MT_Request, MT_Response > MTModule;
+typedef common::MTModule< MT_Request, MT_Response > MTModule;
 
 class InvalidEvent : public types::Exception {
 public:
@@ -255,39 +259,39 @@ public:
 CLASS( Game, MTModule )
 
 	// returns success as soon as this thread is ready (not busy with previous requests)
-	base::mt_id_t MT_Ping();
+	common::mt_id_t MT_Ping();
 
 	// initialize map and other things
-	base::mt_id_t MT_Init( State* state );
+	common::mt_id_t MT_Init( State* state );
 
 	// send chat message
-	base::mt_id_t MT_Chat( const std::string& message );
+	common::mt_id_t MT_Chat( const std::string& message );
 
 	// get map data for display
-	base::mt_id_t MT_GetMapData();
+	common::mt_id_t MT_GetMapData();
 
 	// deinitialize everything
-	base::mt_id_t MT_Reset();
+	common::mt_id_t MT_Reset();
 
 	// saves current map into file
-	base::mt_id_t MT_SaveMap( const std::string& path );
+	common::mt_id_t MT_SaveMap( const std::string& path );
 
 	// perform edit operation on map tile(s)
-	base::mt_id_t MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::tool_type_t tool, map_editor::brush_type_t brush, map_editor::draw_mode_t draw_mode );
+	common::mt_id_t MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::tool_type_t tool, map_editor::brush_type_t brush, map_editor::draw_mode_t draw_mode );
 
 	// get all pending frontend requests (will be cleared after)
-	base::mt_id_t MT_GetFrontendRequests();
+	common::mt_id_t MT_GetFrontendRequests();
 
 	// send backend requests for processing
-	base::mt_id_t MT_SendBackendRequests( const std::vector< BackendRequest >& requests );
+	common::mt_id_t MT_SendBackendRequests( const std::vector< BackendRequest >& requests );
 
 	// send event
-	base::mt_id_t MT_AddEvent( const event::Event* event );
+	common::mt_id_t MT_AddEvent( const event::Event* event );
 
 #ifdef DEBUG
 
-	base::mt_id_t MT_SaveDump( const std::string& path );
-	base::mt_id_t MT_LoadDump( const std::string& path );
+	common::mt_id_t MT_SaveDump( const std::string& path );
+	common::mt_id_t MT_LoadDump( const std::string& path );
 
 #endif
 
@@ -319,6 +323,7 @@ public:
 	unit::Def* GetUnitDef( const std::string& name ) const;
 	void AddEvent( event::Event* event );
 	void RefreshUnit( const unit::Unit* unit );
+	void RefreshBase( const base::Base* base );
 	void DefineAnimation( animation::Def* def );
 	const std::string* ShowAnimationOnTile( const std::string& animation_id, map::tile::Tile* tile, const cb_oncomplete& on_complete );
 	void DefineMoraleSet( unit::MoraleSet* moraleset );
@@ -326,6 +331,7 @@ public:
 	void SpawnUnit( unit::Unit* unit );
 	void SkipUnitTurn( const size_t unit_id );
 	void DespawnUnit( const size_t unit_id );
+	void SpawnBase( base::Base* base );
 	const std::string* MoveUnitValidate( unit::Unit* unit, map::tile::Tile* dst_tile );
 	const gse::Value MoveUnitResolve( unit::Unit* unit, map::tile::Tile* dst_tile );
 	void MoveUnitApply( unit::Unit* unit, map::tile::Tile* dst_tile, const gse::Value resolutions );
@@ -360,13 +366,16 @@ private:
 	const gse::Value ProcessEvent( event::Event* event );
 
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
-	const types::Vec3 GetUnitRenderCoords( const unit::Unit* unit );
 
 	std::unordered_map< std::string, unit::MoraleSet* > m_unit_moralesets = {};
 	std::unordered_map< std::string, unit::Def* > m_unit_defs = {};
 	std::map< size_t, unit::Unit* > m_units = {};
 	void SerializeUnits( types::Buffer& buf ) const;
 	void UnserializeUnits( types::Buffer& buf );
+
+	std::map< size_t, base::Base* > m_bases = {};
+	void SerializeBases( types::Buffer& buf ) const;
+	void UnserializeBases( types::Buffer& buf );
 
 	std::unordered_map< std::string, animation::Def* > m_animation_defs = {};
 	void SerializeAnimations( types::Buffer& buf ) const;
@@ -379,7 +388,7 @@ private:
 		GS_RUNNING,
 	};
 	game_state_t m_game_state = GS_NONE;
-	base::mt_flag_t m_init_cancel = false;
+	common::mt_flag_t m_init_cancel = false;
 	std::string m_initialization_error = "";
 
 	const Player* m_player = nullptr;
@@ -407,7 +416,9 @@ private:
 	map_editor::MapEditor* m_map_editor = nullptr;
 
 	std::vector< game::event::Event* > m_unprocessed_events = {};
+	// TODO: refactor these?
 	std::vector< unit::Unit* > m_unprocessed_units = {};
+	std::vector< base::Base* > m_unprocessed_bases = {};
 
 	turn::Turn m_current_turn = {};
 
@@ -428,8 +439,20 @@ private:
 		const unit::Unit* unit = nullptr;
 	};
 	std::unordered_map< size_t, unit_update_t > m_unit_updates = {};
-
 	void QueueUnitUpdate( const unit::Unit* unit, const unit_update_op_t op );
+
+	enum base_update_op_t : uint8_t {
+		BUO_NONE = 0,
+		BUO_SPAWN = 1 << 0,
+		BUO_REFRESH = 1 << 1,
+		BUO_DESPAWN = 1 << 2,
+	};
+	struct base_update_t {
+		base_update_op_t ops = BUO_NONE;
+		const base::Base* base = nullptr;
+	};
+	std::unordered_map< size_t, base_update_t > m_base_updates = {};
+	void QueueBaseUpdate( const base::Base* base, const base_update_op_t op );
 
 	// server-side lock tracking
 	struct tile_lock_request_t {
@@ -448,6 +471,7 @@ private:
 private:
 	friend class bindings::Bindings;
 	void PushUnitUpdates();
+	void PushBaseUpdates();
 
 };
 

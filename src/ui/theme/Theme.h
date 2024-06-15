@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 namespace ui {
 namespace theme {
@@ -12,7 +12,7 @@ namespace theme {
 class Style;
 class StyleSheet;
 
-CLASS( Theme, base::Base )
+CLASS( Theme, common::Class )
 
 	virtual ~Theme() = default;
 

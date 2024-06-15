@@ -1,10 +1,10 @@
 #pragma once
 
-#include "base/Module.h"
+#include "common/Module.h"
 
 namespace input {
 
-CLASS( Input, base::Module )
+CLASS( Input, common::Module )
 };
 
 }

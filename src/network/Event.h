@@ -1,12 +1,12 @@
 #pragma once
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "Types.h"
 
 namespace network {
 
-CLASS( Event, base::Base )
+CLASS( Event, common::Class )
 
 	enum event_type_t {
 		ET_NONE,

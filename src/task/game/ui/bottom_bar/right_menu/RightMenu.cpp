@@ -1,6 +1,6 @@
 #include "RightMenu.h"
 
-#include "../../popup/ChatPopup.h"
+#include "task/game/ui/popup/ChatPopup.h"
 
 namespace task {
 namespace game {

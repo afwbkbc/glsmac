@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common/Common.h"
+
 #include "gse/type/Types.h"
 
 #include "gse/Value.h"
@@ -75,6 +77,8 @@ BINDING_DEF( factions )
 BINDING_DEF( tiles )
 
 BINDING_DEF( units )
+
+BINDING_DEF( bases )
 
 BINDING_DEF( animations )
 

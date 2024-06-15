@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/Task.h"
+#include "common/Task.h"
 
 namespace gse {
 class GSE;
@@ -20,7 +20,7 @@ class Program;
 namespace task {
 namespace gseprompt {
 
-CLASS( GSEPrompt, base::Task )
+CLASS( GSEPrompt, common::Task )
 
 	GSEPrompt( const std::string& syntax );
 	~GSEPrompt();

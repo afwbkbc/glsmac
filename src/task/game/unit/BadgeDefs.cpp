@@ -102,7 +102,8 @@ InstancedSprite* BadgeDefs::GetBadgeSprite( const badge_type_t badge_type, const
 						::game::map::s_consts.tile.scale.x * s_consts.scale.x,
 						::game::map::s_consts.tile.scale.y * s_consts.scale.y * ::game::map::s_consts.sprite.y_scale
 					},
-					0.55f
+					InstancedSpriteManager::ZL_UNITS,
+					0.008f
 				)
 			}
 		).first;
@@ -131,7 +132,8 @@ InstancedSprite* BadgeDefs::GetFakeBadgeSprite() {
 				::game::map::s_consts.tile.scale.x * s_consts.fake_badges.scale.x,
 				::game::map::s_consts.tile.scale.y * s_consts.fake_badges.scale.y * ::game::map::s_consts.sprite.y_scale
 			},
-			0.52f
+			InstancedSpriteManager::ZL_UNITS,
+			0.002f
 		);
 	}
 	return m_fake_badge;
@@ -193,7 +195,8 @@ Sprite* BadgeDefs::GetBadgeHealthbarSprite( const float health ) {
 							::game::map::s_consts.tile.scale.x * s_consts.healthbars.scale.x,
 							::game::map::s_consts.tile.scale.y * s_consts.healthbars.scale.y * ::game::map::s_consts.sprite.y_scale
 						},
-						0.54f
+						InstancedSpriteManager::ZL_UNITS,
+						0.005f
 					),
 					1
 				}

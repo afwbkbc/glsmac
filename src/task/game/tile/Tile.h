@@ -25,6 +25,10 @@ namespace unit {
 class Unit;
 }
 
+namespace base {
+class Base;
+}
+
 namespace tile {
 
 class Tile {
@@ -39,6 +43,9 @@ public:
 	void AddUnit( unit::Unit* unit );
 	void RemoveUnit( unit::Unit* unit );
 	void SetActiveUnit( unit::Unit* unit );
+
+	void SetBase( base::Base* base );
+	void UnsetBase( base::Base* base );
 
 	void Render( size_t selected_unit_id = 0 );
 
@@ -70,6 +77,7 @@ public:
 
 private:
 	const types::Vec2< size_t > m_coords;
+
 	struct {
 		unit::Unit* currently_rendered_unit = nullptr;
 		std::vector< unit::Unit* > currently_rendered_fake_badges = {};
@@ -77,6 +85,9 @@ private:
 	std::unordered_map< size_t, unit::Unit* > m_units = {};
 	std::vector< unit::Unit* > m_ordered_units = {};
 	bool m_is_units_reorder_needed = true;
+
+	base::Base* m_base = nullptr;
+
 	render_data_t m_render_data = {};
 
 };

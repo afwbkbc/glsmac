@@ -3,7 +3,7 @@
 #include <vector>
 #include <unordered_set>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "Types.h"
 
@@ -20,7 +20,7 @@ namespace actor {
 class Actor;
 }
 
-CLASS( Scene, base::Base )
+CLASS( Scene, common::Class )
 	Scene( const std::string& name, const scene_type_t scene_type )
 		: m_scene_type( scene_type ) {
 		m_name = name;

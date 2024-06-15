@@ -1,6 +1,6 @@
 #include "UncompleteTurn.h"
 
-#include "../Game.h"
+#include "game/Game.h"
 
 #include "gse/type/Undefined.h"
 

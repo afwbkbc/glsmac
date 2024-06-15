@@ -58,10 +58,6 @@ const movement_type_t StaticDef::GetMovementType() const {
 	return m_movement_type;
 }
 
-const types::Vec3 StaticDef::GetSpawnCoords( const map::tile::Tile* tile, const map::tile::TileState* ts ) const {
-	return m_render->GetSpawnCoords( tile, ts );
-}
-
 const std::string StaticDef::ToString( const std::string& prefix ) const {
 	return (std::string)
 		TS_OBJ_BEGIN( "StaticDef" ) +

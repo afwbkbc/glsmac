@@ -106,7 +106,7 @@ void glDrawArrays_real( GLenum mode, GLint first, GLsizei count ) {
 	glDrawArrays( mode, first, count );
 }
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 namespace debug {
 

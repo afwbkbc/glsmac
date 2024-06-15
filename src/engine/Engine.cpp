@@ -3,7 +3,7 @@
 
 #include "Engine.h"
 #include "config/Config.h"
-#include "base/Thread.h"
+#include "common/Thread.h"
 #include "error_handler/ErrorHandler.h"
 #include "logger/Logger.h"
 #include "resource/ResourceManager.h"
@@ -60,10 +60,7 @@ Engine::Engine(
 
 	g_engine = this;
 
-	m_config->Init();
-	m_resource_manager->Init( m_config->GetPossibleSMACPaths() );
-
-	NEWV( t_main, base::Thread, "MAIN" );
+	NEWV( t_main, common::Thread, "MAIN" );
 	if ( m_config->HasLaunchFlag( config::Config::LF_BENCHMARK ) ) {
 		t_main->SetIPS( 999999.9f );
 	}
@@ -76,7 +73,10 @@ Engine::Engine(
 	t_main->AddModule( m_texture_loader );
 	t_main->AddModule( m_sound_loader );
 	t_main->AddModule( m_logger );
-	t_main->AddModule( m_resource_manager );
+	if ( !m_config->HasDebugFlag( config::Config::DF_GSE_ONLY ) ) {
+		m_resource_manager->Init( m_config->GetPossibleSMACPaths() );
+		t_main->AddModule( m_resource_manager );
+	}
 	t_main->AddModule( m_input );
 	t_main->AddModule( m_graphics );
 	t_main->AddModule( m_audio );
@@ -84,13 +84,13 @@ Engine::Engine(
 	t_main->AddModule( m_scheduler );
 	m_threads.push_back( t_main );
 
-	NEWV( t_network, base::Thread, "NETWORK" );
+	NEWV( t_network, common::Thread, "NETWORK" );
 	t_network->SetIPS( 100 );
 	t_network->AddModule( m_network );
 	m_threads.push_back( t_network );
 
 	if ( m_game ) {
-		NEWV( t_game, base::Thread, "GAME" );
+		NEWV( t_game, common::Thread, "GAME" );
 		t_game->SetIPS( g_max_fps );
 		t_game->AddModule( m_game );
 		m_threads.push_back( t_game );

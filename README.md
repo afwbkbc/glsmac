@@ -202,9 +202,9 @@ It should open `launch.vs.json` file, make it look similar to this (debug and re
 
 Replace the path to SMAC installation with your own path to the game. Then you are done and can run the game in Visual Studio.
 
-`currentDir` above is required because GLSMAC will load scripts from `./gse` in runtime.
+`currentDir` above is required because GLSMAC will load scripts from `./GLSMAC_data` in runtime.
 
-Alternatively, set working directory to that of your SMAC installation (you'll need to copy `gse` directory there), it will work without `--smacpath` argument then.
+Alternatively, set working directory to that of your SMAC installation (you'll need to copy `GLSMAC_data` directory there), it will work without `--smacpath` argument then.
 
 #### MinGW
 
@@ -216,11 +216,11 @@ Wasn't tested. Feel free to test, but I have feeling it will require many change
 
 ### Launch
 
-Note: GLSMAC needs `gse` directory to be in working directory from where it's run, it loads scripts from there in runtime (later some of them will be built into binary so this step won't be needed).
+Note: GLSMAC needs `GLSMAC_data` directory to be in working directory from where it's run, it loads scripts from there in runtime (later some of them will be built into binary so this step won't be needed).
 
-Just run ./bin/GLSMAC --smacpath <smac_directory>
+Just run ./GLSMAC --smacpath <smac_directory>
 
-Or copy `GLSMAC` file and `gse` directory into your SMAC directory and run without arguments from there.
+Or copy `GLSMAC` file and `GLSMAC_data` directory into your SMAC directory and run without arguments from there.
 
 Run ./bin/GLSMAC --help to see more options. Debug builds have extra options that aren't available for release builds.
 

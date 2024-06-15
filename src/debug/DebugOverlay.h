@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include "base/Task.h"
+#include "common/Task.h"
 
 #include "util/Timer.h"
 
@@ -26,7 +26,7 @@ class UIEventHandler;
 
 namespace debug {
 
-CLASS( DebugOverlay, base::Task )
+CLASS( DebugOverlay, common::Task )
 
 	void Start() override;
 	void Stop() override;

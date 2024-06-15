@@ -27,7 +27,7 @@ const std::string* MoveUnit::Validate( Game* game ) const {
 		return Error( "Unit can only be moved by it's owner" );
 	}
 
-	auto* src_tile = unit->m_tile;
+	auto* src_tile = unit->GetTile();
 	ASSERT_NOLOG( src_tile, "src tile not set" );
 	if ( src_tile->IsLocked() ) {
 		return Error( "Source tile is locked" );
@@ -44,7 +44,7 @@ const std::string* MoveUnit::Validate( Game* game ) const {
 void MoveUnit::Resolve( Game* game ) {
 	auto* unit = game->GetUnit( m_unit_id );
 	ASSERT_NOLOG( unit, "unit not found" );
-	auto* src_tile = unit->m_tile;
+	auto* src_tile = unit->GetTile();
 	ASSERT_NOLOG( src_tile, "src tile not set" );
 	auto* dst_tile = src_tile->GetNeighbour( m_direction );
 	ASSERT_NOLOG( dst_tile, "dst tile not set" );
@@ -55,7 +55,7 @@ void MoveUnit::Resolve( Game* game ) {
 const gse::Value MoveUnit::Apply( game::Game* game ) const {
 	auto* unit = game->GetUnit( m_unit_id );
 	ASSERT_NOLOG( unit, "unit not found" );
-	game->MoveUnitApply( unit, unit->m_tile->GetNeighbour( m_direction ), m_resolutions );
+	game->MoveUnitApply( unit, unit->GetTile()->GetNeighbour( m_direction ), m_resolutions );
 	return VALUE( gse::type::Undefined );
 }
 

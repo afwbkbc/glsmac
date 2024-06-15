@@ -17,6 +17,10 @@ namespace unit {
 class Unit;
 }
 
+namespace base {
+class Base;
+}
+
 namespace map {
 namespace tile {
 
@@ -75,6 +79,8 @@ public:
 
 	// units (id -> unit)
 	std::map< size_t, unit::Unit* > units = {};
+
+	base::Base* base = nullptr;
 
 	// WARNING: make sure to call this after changing something in tile
 	//   it recalculates dynamic properties and solves inconsistencies

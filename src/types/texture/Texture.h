@@ -9,7 +9,7 @@
 
 #include "types/Color.h"
 
-namespace base {
+namespace common {
 class ObjectLink;
 }
 
@@ -38,7 +38,7 @@ CLASS( Texture, Serializable )
 
 	bool m_is_tiled = false;
 
-	base::ObjectLink* m_graphics_object = nullptr;
+	common::ObjectLink* m_graphics_object = nullptr;
 
 	const bool IsEmpty() const;
 	void Resize( const size_t width, const size_t height );

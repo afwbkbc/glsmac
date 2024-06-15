@@ -1,7 +1,7 @@
 #include "AdvanceTurn.h"
 
-#include "../Game.h"
-#include "../State.h"
+#include "game/Game.h"
+#include "game/State.h"
 
 #include "gse/type/Undefined.h"
 

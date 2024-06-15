@@ -2,10 +2,12 @@
 
 #include <string>
 
+#include "gse/Wrappable.h"
+#include "game/MapObject.h"
+
 #include "Types.h"
 
 #include "types/Buffer.h"
-#include "gse/Wrappable.h"
 
 namespace game {
 
@@ -21,7 +23,7 @@ namespace unit {
 
 class Def;
 
-class Unit : public gse::Wrappable {
+class Unit : public gse::Wrappable, public MapObject {
 public:
 
 	static const size_t GetNextId();
@@ -43,8 +45,7 @@ public:
 	const size_t m_id;
 	Def* m_def;
 	slot::Slot* m_owner;
-	map::tile::Tile* m_tile = nullptr;
-
+	
 	movement_t m_movement;
 	morale_t m_morale;
 	health_t m_health;
@@ -55,7 +56,7 @@ public:
 	const bool HasMovesLeft() const;
 
 	const std::string& GetMoraleString() const;
-	
+
 	void SetTile( map::tile::Tile* tile );
 
 	static const types::Buffer Serialize( const Unit* unit );

@@ -9,6 +9,7 @@ SET( SRC ${SRC}
 	${PWD}/MoveUnit.cpp
 	${PWD}/AttackUnit.cpp
 	${PWD}/SkipUnitTurn.cpp
+	${PWD}/SpawnBase.cpp
 	${PWD}/CompleteTurn.cpp
 	${PWD}/UncompleteTurn.cpp
 	${PWD}/FinalizeTurn.cpp

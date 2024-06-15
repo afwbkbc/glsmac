@@ -32,14 +32,6 @@ SpriteRender::SpriteRender(
 	//
 }
 
-const types::Vec3 SpriteRender::GetSpawnCoords( const map::tile::Tile* tile, const map::tile::TileState* ts ) const {
-	return ts->layers[
-		tile->is_water_tile
-			? map::tile::LAYER_WATER
-			: map::tile::LAYER_LAND
-	].coords.center;
-}
-
 const std::string SpriteRender::ToString( const std::string& prefix ) const {
 	return (std::string)
 		TS_OBJ_BEGIN( "SpriteRender" ) +

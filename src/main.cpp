@@ -101,6 +101,9 @@ int main( const int argc, const char* argv[] ) {
 
 	config::Config config( argc, argv );
 
+	config.Init();
+
+
 #ifdef DEBUG
 	if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
 #ifdef __linux__
@@ -257,7 +260,7 @@ int main( const int argc, const char* argv[] ) {
 			scheduler.AddTask( task_common );
 
 			// game entry point
-			base::Task* task = nullptr;
+			common::Task* task = nullptr;
 
 			engine::Engine engine(
 				&config,

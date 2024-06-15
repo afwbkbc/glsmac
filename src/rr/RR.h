@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 namespace rr {
 
@@ -11,7 +11,7 @@ enum type_t {
 };
 
 // Request-Response
-CLASS( RR, base::Base )
+CLASS( RR, common::Class )
 
 	const type_t GetType() const;
 	const bool IsProcessed() const;

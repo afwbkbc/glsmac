@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <mutex>
 
-#include "base/Module.h"
+#include "common/Module.h"
 
 typedef std::function< void( const float aspect_ratio ) > on_resize_handler_t;
 
@@ -21,7 +21,7 @@ class Scene;
 
 namespace graphics {
 
-CLASS( Graphics, base::Module )
+CLASS( Graphics, common::Module )
 
 	static constexpr size_t MAX_WORLD_LIGHTS = 2;
 

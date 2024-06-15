@@ -37,11 +37,11 @@ Unit::Unit(
 	const health_t health,
 	const bool moved_this_turn
 )
-	: m_game( game )
+	: MapObject( game->GetMap(), tile )
+	, m_game( game )
 	, m_id( id )
 	, m_def( def )
 	, m_owner( owner )
-	, m_tile( nullptr )
 	, m_movement( movement )
 	, m_morale( morale )
 	, m_health( health )

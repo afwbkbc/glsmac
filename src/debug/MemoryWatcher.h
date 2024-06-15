@@ -7,10 +7,6 @@
 #include <mutex>
 #include <GL/glew.h>
 
-namespace base {
-class Base;
-}
-
 namespace debug {
 
 class MemoryWatcher {

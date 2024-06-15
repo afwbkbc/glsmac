@@ -25,7 +25,6 @@ public:
 	Render( const render_type_t type );
 	virtual ~Render() = default;
 
-	virtual const types::Vec3 GetSpawnCoords( const map::tile::Tile* tile, const map::tile::TileState* ts ) const = 0;
 	virtual const std::string ToString( const std::string& prefix ) const = 0;
 
 	const render_type_t m_type;

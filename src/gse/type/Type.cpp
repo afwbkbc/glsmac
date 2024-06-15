@@ -1,6 +1,6 @@
 #include "Type.h"
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "Undefined.h"
 #include "Null.h"

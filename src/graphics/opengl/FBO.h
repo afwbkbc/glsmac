@@ -2,7 +2,7 @@
 
 #include <GL/glew.h>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 namespace types {
 namespace texture {
@@ -20,7 +20,7 @@ namespace shader_program {
 class Simple2D;
 }
 
-CLASS( FBO, base::Base )
+CLASS( FBO, common::Class )
 
 	// this doesn't seem to help with anything, keep it at 1 for now
 	static constexpr ssize_t INTERNAL_RESOLUTION_MULTIPLIER = 1;

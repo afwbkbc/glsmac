@@ -3,13 +3,13 @@
 #include <vector>
 #include <string>
 
-#include "base/Module.h"
+#include "common/Module.h"
 
 #include "Types.h"
 
 namespace resource {
 
-CLASS( ResourceManager, base::Module )
+CLASS( ResourceManager, common::Module )
 
 	ResourceManager();
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "base/Base.h"
+#include "common/Common.h"
 
-#include "base/MTTypes.h"
+#include "common/MTTypes.h"
 #include "game/map/tile/Types.h"
 #include "game/settings/Types.h"
 
@@ -25,7 +25,7 @@ class Tiles;
 
 namespace generator {
 
-CLASS( MapGenerator, base::Base )
+CLASS( MapGenerator, common::Class )
 
 	// you should stay within these boundaries when generating
 	// currently, any elevations will work because map will be normalized to valid range afterwards. but this may change in future
