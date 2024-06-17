@@ -3,14 +3,14 @@
 #include <atomic>
 #include <thread>
 
-#include "base/Base.h"
-#include "base/Types.h"
+#include "Common.h"
+#include "Types.h"
 
-namespace base {
+namespace common {
 
 class Module;
 
-CLASS( Thread, Base )
+CLASS( Thread, Class )
 
 	enum thread_state_t {
 		STATE_INACTIVE,
@@ -26,12 +26,10 @@ CLASS( Thread, Base )
 
 	Thread( const std::string& thread_name );
 	~Thread();
-	void SetIPS( const float ips ) {
-		m_ips = ips;
-	}
-	void AddModule( Module* module ) {
-		m_modules.push_back( module );
-	}
+
+	void SetIPS( const float ips );
+	void AddModule( Module* module );
+
 	void T_Start();
 	bool T_IsRunning();
 	void T_Stop();

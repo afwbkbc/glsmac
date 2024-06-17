@@ -1,13 +1,13 @@
 #pragma once
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "Types.h"
 
 namespace ui {
 namespace event {
 
-CLASS( UIEvent, base::Base )
+CLASS( UIEvent, common::Class )
 
 	const event_type_t m_type = EV_NONE;
 	event_flag_t m_flags = EF_NONE;

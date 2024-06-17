@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "base/Assert.h"
+#include "common/Assert.h"
 
 #include "type/Type.h"
 

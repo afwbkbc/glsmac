@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "task/game/Types.h"
 
@@ -21,7 +21,7 @@ namespace text {
 class InstancedFont;
 class InstancedText;
 
-CLASS( InstancedTextManager, ::base::Base )
+CLASS( InstancedTextManager, common::Class )
 public:
 
 	InstancedTextManager( scene::Scene* scene );
@@ -42,6 +42,7 @@ private:
 	scene::Scene* m_scene = nullptr;
 
 	std::unordered_map< const types::Font*, InstancedFont* > m_instanced_fonts = {};
+	std::unordered_map< const types::Font*, InstancedText* > m_instanced_texts = {};
 
 };
 

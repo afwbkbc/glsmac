@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "base/Task.h"
+#include "common/Task.h"
 
 namespace gse {
 class GSE;
@@ -34,7 +34,7 @@ typedef std::function< std::string( gse::GSE* gse ) > gse_test_t;
     }\
 }
 
-CLASS( GSETests, base::Task )
+CLASS( GSETests, common::Task )
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;

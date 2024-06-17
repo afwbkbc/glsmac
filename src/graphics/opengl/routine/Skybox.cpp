@@ -6,7 +6,7 @@
 #include "graphics/opengl/texture/CubemapTexture.h"
 #include "graphics/opengl/shader_program/Skybox.h"
 #include "graphics/opengl/texture/Texture.h"
-#include "base/ObjectLink.h"
+#include "common/ObjectLink.h"
 #include "types/texture/Texture.h"
 #include "scene/Scene.h"
 #include "scene/Camera.h"
@@ -134,7 +134,7 @@ void Skybox::Stop() {
 
 }
 
-void Skybox::RemoveTexture( base::ObjectLink* link ) {
+void Skybox::RemoveTexture( common::ObjectLink* link ) {
 	if ( !link->Removed() ) {
 		link->GetSrcObject< types::texture::Texture >()->m_graphics_object = NULL;
 	}
@@ -168,7 +168,7 @@ void Skybox::Iterate() {
 			auto* texture = ( *it )->GetScene()->GetSkyboxTexture();
 			if ( texture ) {
 				NEWV( gl_texture, CubemapTexture, texture );
-				NEWV( obj, base::ObjectLink, texture, gl_texture );
+				NEWV( obj, common::ObjectLink, texture, gl_texture );
 				texture->m_graphics_object = obj;
 				( *it )->SetSkyboxTextureObj( obj );
 				gl_texture->Load();

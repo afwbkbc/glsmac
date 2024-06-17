@@ -4,11 +4,11 @@
 #include <functional>
 #include <unordered_map>
 
-#include "Base.h"
+#include "Common.h"
 
-namespace base {
+namespace common {
 
-class Module : public Base {
+class Module : public Class {
 public:
 	virtual ~Module() = default;
 

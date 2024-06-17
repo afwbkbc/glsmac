@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "gse/Value.h"
 
@@ -16,7 +16,7 @@ class Program;
 
 namespace runner {
 
-CLASS( Runner, base::Base )
+CLASS( Runner, common::Class )
 
 	virtual const Value Execute( context::Context* ctx, const program::Program* program ) const = 0;
 

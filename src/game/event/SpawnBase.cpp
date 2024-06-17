@@ -6,6 +6,7 @@
 #include "game/map/Map.h"
 #include "game/unit/StaticDef.h"
 #include "game/unit/Unit.h"
+#include "game/base/Base.h"
 #include "gse/type/Undefined.h"
 
 namespace game {

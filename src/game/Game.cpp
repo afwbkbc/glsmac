@@ -36,6 +36,7 @@
 #include "unit/Def.h"
 #include "unit/Unit.h"
 #include "unit/MoraleSet.h"
+#include "base/Base.h"
 
 namespace game {
 
@@ -59,40 +60,40 @@ InvalidEvent::InvalidEvent( const std::string& reason, const event::Event* event
 		TS_OFFSET + "event: " + event->ToString( TS_OFFSET )
 ) {}
 
-::base::mt_id_t Game::MT_Ping() {
+common::mt_id_t Game::MT_Ping() {
 	MT_Request request = {};
 	request.op = OP_PING;
 	return MT_CreateRequest( request );
 }
 
-::base::mt_id_t Game::MT_Init( State* state ) {
+common::mt_id_t Game::MT_Init( State* state ) {
 	MT_Request request = {};
 	request.op = OP_INIT;
 	request.data.init.state = state;
 	return MT_CreateRequest( request );
 }
 
-::base::mt_id_t Game::MT_Chat( const std::string& message ) {
+common::mt_id_t Game::MT_Chat( const std::string& message ) {
 	MT_Request request = {};
 	request.op = OP_CHAT;
 	NEW( request.data.save_map.path, std::string, message );
 	return MT_CreateRequest( request );
 }
 
-::base::mt_id_t Game::MT_GetMapData() {
+common::mt_id_t Game::MT_GetMapData() {
 	MT_Request request = {};
 	request.op = OP_GET_MAP_DATA;
 	return MT_CreateRequest( request );
 }
 
-::base::mt_id_t Game::MT_Reset() {
+common::mt_id_t Game::MT_Reset() {
 	m_init_cancel = true; // stop initialization in Iterate()
 	MT_Request request = {};
 	request.op = OP_RESET;
 	return MT_CreateRequest( request );
 }
 
-::base::mt_id_t Game::MT_SaveMap( const std::string& path ) {
+common::mt_id_t Game::MT_SaveMap( const std::string& path ) {
 	ASSERT( !path.empty(), "savemap path is empty" );
 	MT_Request request = {};
 	request.op = OP_SAVE_MAP;
@@ -101,7 +102,7 @@ InvalidEvent::InvalidEvent( const std::string& reason, const event::Event* event
 	return MT_CreateRequest( request );
 }
 
-::base::mt_id_t Game::MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::tool_type_t tool, map_editor::brush_type_t brush, map_editor::draw_mode_t draw_mode ) {
+common::mt_id_t Game::MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::tool_type_t tool, map_editor::brush_type_t brush, map_editor::draw_mode_t draw_mode ) {
 	MT_Request request = {};
 	request.op = OP_EDIT_MAP;
 	request.data.edit_map.tile_x = tile_coords.x;
@@ -112,20 +113,20 @@ InvalidEvent::InvalidEvent( const std::string& reason, const event::Event* event
 	return MT_CreateRequest( request );
 }
 
-::base::mt_id_t Game::MT_GetFrontendRequests() {
+common::mt_id_t Game::MT_GetFrontendRequests() {
 	MT_Request request = {};
 	request.op = OP_GET_FRONTEND_REQUESTS;
 	return MT_CreateRequest( request );
 }
 
-::base::mt_id_t Game::MT_SendBackendRequests( const std::vector< BackendRequest >& requests ) {
+common::mt_id_t Game::MT_SendBackendRequests( const std::vector< BackendRequest >& requests ) {
 	MT_Request request = {};
 	request.op = OP_SEND_BACKEND_REQUESTS;
 	NEW( request.data.send_backend_requests.requests, std::vector< BackendRequest >, requests );
 	return MT_CreateRequest( request );
 }
 
-::base::mt_id_t Game::MT_AddEvent( const event::Event* event ) {
+common::mt_id_t Game::MT_AddEvent( const event::Event* event ) {
 	MT_Request request = {};
 	request.op = OP_ADD_EVENT;
 	NEW( request.data.add_event.serialized_event, std::string, event::Event::Serialize( event ).ToString() );
@@ -134,7 +135,7 @@ InvalidEvent::InvalidEvent( const std::string& reason, const event::Event* event
 
 #ifdef DEBUG
 #define x( _method, _op ) \
-    ::base::mt_id_t Game::_method( const std::string& path ) { \
+    common::mt_id_t Game::_method( const std::string& path ) { \
         ASSERT( !path.empty(), "dump path is empty" ); \
         MT_Request request = {}; \
         request.op = _op; \

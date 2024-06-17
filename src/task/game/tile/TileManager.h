@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include <unordered_map>
 #include <cstddef>
@@ -16,7 +16,7 @@ class Game;
 
 namespace tile {
 
-CLASS( TileManager, ::base::Base )
+CLASS( TileManager, ::common::Class )
 
 	TileManager( Game* game );
 

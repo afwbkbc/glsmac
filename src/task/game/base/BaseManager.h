@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "game/unit/Types.h"
 
@@ -35,12 +35,12 @@ namespace base {
 
 class Base;
 
-CLASS( BaseManager, ::base::Base )
+CLASS( BaseManager, common::Class )
 
 	BaseManager( Game* game );
 	~BaseManager();
 
-	task::game::base::Base* GetBaseById( const size_t id ) const;
+	base::Base* GetBaseById( const size_t id ) const;
 
 	void SpawnBase(
 		const size_t base_id,
@@ -57,7 +57,7 @@ private:
 
 	const size_t m_slot_index;
 
-	std::unordered_map< size_t, ::task::game::base::Base* > m_bases = {};
+	std::unordered_map< size_t, base::Base* > m_bases = {};
 
 };
 

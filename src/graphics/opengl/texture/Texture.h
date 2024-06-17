@@ -2,7 +2,7 @@
 
 #include <GL/glew.h>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 namespace types::texture {
 class Texture;
@@ -11,7 +11,7 @@ class Texture;
 namespace graphics {
 namespace opengl {
 
-CLASS( Texture, base::Base )
+CLASS( Texture, common::Class )
 	Texture( types::texture::Texture* texture );
 	~Texture();
 	virtual void Load();

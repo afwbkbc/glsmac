@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "types/Vec2.h"
 #include "types/Vec3.h"
@@ -8,7 +8,7 @@
 
 namespace types {
 
-CLASS( Buffer, base::Base )
+CLASS( Buffer, common::Class )
 
 	static constexpr uint32_t BUFFER_ALLOC_CHUNK = 1024;
 

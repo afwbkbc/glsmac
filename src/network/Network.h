@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/MTModule.h"
+#include "common/MTModule.h"
 
 #include "Types.h"
 
@@ -14,16 +14,16 @@ namespace network {
 
 CLASS( Network, MTModule )
 
-	base::mt_id_t MT_Connect( const connection_mode_t connect_mode, const std::string& remote_address = "" );
-	base::mt_id_t MT_Disconnect();
-	base::mt_id_t MT_DisconnectClient( const cid_t cid );
+	common::mt_id_t MT_Connect( const connection_mode_t connect_mode, const std::string& remote_address = "" );
+	common::mt_id_t MT_Disconnect();
+	common::mt_id_t MT_DisconnectClient( const cid_t cid );
 
-	base::mt_id_t MT_GetEvents();
-	base::mt_id_t MT_SendEvent( const Event& event );
+	common::mt_id_t MT_GetEvents();
+	common::mt_id_t MT_SendEvent( const Event& event );
 
-	base::mt_id_t MT_SendPacket( const types::Packet* packet, const cid_t cid = 0 );
+	common::mt_id_t MT_SendPacket( const types::Packet* packet, const cid_t cid = 0 );
 
-	MT_Response MT_GetResult( base::mt_id_t mt_id );
+	MT_Response MT_GetResult( common::mt_id_t mt_id );
 
 	void Iterate() override;
 
@@ -85,7 +85,7 @@ protected:
 		remote_socket_data_t socket = {};
 	} m_client = {};
 
-	CLASS( Impl, base::Base )
+	CLASS( Impl, common::Class )
 	public:
 		Impl();
 		~Impl();
@@ -121,7 +121,7 @@ protected:
 	const MT_Response Success() const;
 	const MT_Response Canceled() const;
 
-	base::mt_id_t MT_Success();
+	common::mt_id_t MT_Success();
 
 	void AddEvent( const Event& event );
 	events_t GetEvents();

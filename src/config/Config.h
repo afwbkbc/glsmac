@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "base/Module.h"
+#include "common/Module.h"
 
 #include "util/random/Types.h"
 #include "game/settings/Types.h"
@@ -14,7 +14,7 @@ class ArgParser;
 
 namespace config {
 
-CLASS( Config, base::Module )
+CLASS( Config, common::Module )
 	Config( const int argc, const char* argv[] );
 	~Config();
 

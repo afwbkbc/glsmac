@@ -2,7 +2,7 @@
 
 #include <unordered_map>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 namespace game::rules {
 class Faction;
@@ -17,7 +17,7 @@ namespace faction {
 
 class Faction;
 
-CLASS( FactionManager, ::base::Base )
+CLASS( FactionManager, common::Class )
 
 	FactionManager( Game* game );
 

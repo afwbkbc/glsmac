@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include "common/Common.h"
+
 #include "types/Vec2.h"
 #include "types/Vec3.h"
 #include "types/Color.h"

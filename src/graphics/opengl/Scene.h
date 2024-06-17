@@ -3,10 +3,10 @@
 #include <vector>
 #include <map>
 
-#include "base/Base.h"
+#include "common/Common.h"
 #include "actor/Actor.h"
 
-namespace base {
+namespace common {
 class ObjectLink;
 }
 
@@ -27,13 +27,13 @@ namespace routine {
 class Routine;
 }
 
-CLASS( Scene, base::Base )
+CLASS( Scene, common::Class )
 	Scene( scene::Scene* scene, routine::Routine* routine );
 	~Scene();
 	scene::Scene* GetScene() const;
 	Texture* GetSkyboxTexture() const;
-	base::ObjectLink* GetSkyboxTextureObj() const;
-	void SetSkyboxTextureObj( base::ObjectLink* skybox_texture );
+	common::ObjectLink* GetSkyboxTextureObj() const;
+	void SetSkyboxTextureObj( common::ObjectLink* skybox_texture );
 	// other_shader_program is used for fonts in Overlay routine // TODO: refactor
 	void Draw( shader_program::ShaderProgram* shader_program, shader_program::ShaderProgram* other_shader_program = nullptr );
 	void Update();
@@ -44,13 +44,13 @@ protected:
 	scene::Scene* m_scene;
 	routine::Routine* m_routine;
 
-	base::ObjectLink* m_skybox_texture = NULL;
+	common::ObjectLink* m_skybox_texture = NULL;
 
-	std::vector< base::ObjectLink* > m_gl_actors;
+	std::vector< common::ObjectLink* > m_gl_actors;
 	std::map< float, std::vector< Actor* > > m_gl_actors_by_zindex;
 
 private:
-	void RemoveActor( base::ObjectLink* link );
+	void RemoveActor( common::ObjectLink* link );
 	void AddActorToZIndexSet( Actor* gl_actor );
 	void RemoveActorFromZIndexSet( Actor* gl_actor );
 };

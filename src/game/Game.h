@@ -4,7 +4,7 @@
 #include <map>
 #include <vector>
 
-#include "base/MTModule.h"
+#include "common/MTModule.h"
 
 #include "Types.h"
 #include "map/Types.h"
@@ -249,7 +249,7 @@ struct MT_Response {
 	} data;
 };
 
-typedef ::base::MTModule< MT_Request, MT_Response > MTModule;
+typedef common::MTModule< MT_Request, MT_Response > MTModule;
 
 class InvalidEvent : public types::Exception {
 public:
@@ -259,39 +259,39 @@ public:
 CLASS( Game, MTModule )
 
 	// returns success as soon as this thread is ready (not busy with previous requests)
-	::base::mt_id_t MT_Ping();
+	common::mt_id_t MT_Ping();
 
 	// initialize map and other things
-	::base::mt_id_t MT_Init( State* state );
+	common::mt_id_t MT_Init( State* state );
 
 	// send chat message
-	::base::mt_id_t MT_Chat( const std::string& message );
+	common::mt_id_t MT_Chat( const std::string& message );
 
 	// get map data for display
-	::base::mt_id_t MT_GetMapData();
+	common::mt_id_t MT_GetMapData();
 
 	// deinitialize everything
-	::base::mt_id_t MT_Reset();
+	common::mt_id_t MT_Reset();
 
 	// saves current map into file
-	::base::mt_id_t MT_SaveMap( const std::string& path );
+	common::mt_id_t MT_SaveMap( const std::string& path );
 
 	// perform edit operation on map tile(s)
-	::base::mt_id_t MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::tool_type_t tool, map_editor::brush_type_t brush, map_editor::draw_mode_t draw_mode );
+	common::mt_id_t MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::tool_type_t tool, map_editor::brush_type_t brush, map_editor::draw_mode_t draw_mode );
 
 	// get all pending frontend requests (will be cleared after)
-	::base::mt_id_t MT_GetFrontendRequests();
+	common::mt_id_t MT_GetFrontendRequests();
 
 	// send backend requests for processing
-	::base::mt_id_t MT_SendBackendRequests( const std::vector< BackendRequest >& requests );
+	common::mt_id_t MT_SendBackendRequests( const std::vector< BackendRequest >& requests );
 
 	// send event
-	::base::mt_id_t MT_AddEvent( const event::Event* event );
+	common::mt_id_t MT_AddEvent( const event::Event* event );
 
 #ifdef DEBUG
 
-	::base::mt_id_t MT_SaveDump( const std::string& path );
-	::base::mt_id_t MT_LoadDump( const std::string& path );
+	common::mt_id_t MT_SaveDump( const std::string& path );
+	common::mt_id_t MT_LoadDump( const std::string& path );
 
 #endif
 
@@ -388,7 +388,7 @@ private:
 		GS_RUNNING,
 	};
 	game_state_t m_game_state = GS_NONE;
-	::base::mt_flag_t m_init_cancel = false;
+	common::mt_flag_t m_init_cancel = false;
 	std::string m_initialization_error = "";
 
 	const Player* m_player = nullptr;

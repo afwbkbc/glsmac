@@ -4,7 +4,7 @@
 #include "rr/GetData.h"
 #include "rr/Capture.h"
 
-namespace base {
+namespace common {
 
 template< class RRClass >
 const rr::id_t RRAware::RR_Send( RRClass* rr ) {

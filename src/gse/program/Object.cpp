@@ -1,6 +1,6 @@
 #include "Object.h"
 
-#include "base/Assert.h"
+#include "common/Assert.h"
 
 #include "Expression.h"
 

@@ -34,7 +34,7 @@ protected:
 	//GLuint m_texture;
 
 private:
-	void RemoveTexture( base::ObjectLink* link );
+	void RemoveTexture( common::ObjectLink* link );
 };
 
 }

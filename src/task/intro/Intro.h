@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/Task.h"
+#include "common/Task.h"
 
 #include "util/Timer.h"
 
@@ -13,7 +13,7 @@ namespace intro {
 
 class Theme;
 
-CLASS( Intro, base::Task )
+CLASS( Intro, common::Task )
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;

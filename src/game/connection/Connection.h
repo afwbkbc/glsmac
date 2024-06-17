@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "base/Module.h"
+#include "common/Module.h"
 
 #include "game/slot/Types.h"
 #include "network/Types.h"
@@ -35,7 +35,7 @@ class Client;
 
 class Server;
 
-CLASS( Connection, ::base::Module )
+CLASS( Connection, common::Module )
 
 	enum game_state_t : uint8_t {
 		GS_NONE,
@@ -114,9 +114,9 @@ protected:
 private:
 	const network::connection_mode_t m_connection_mode = network::CM_NONE;
 	struct {
-		::base::mt_id_t connect = 0;
-		::base::mt_id_t events = 0;
-		::base::mt_id_t disconnect = 0;
+		common::mt_id_t connect = 0;
+		common::mt_id_t events = 0;
+		common::mt_id_t disconnect = 0;
 	} m_mt_ids = {};
 
 	// buffer events for optimization

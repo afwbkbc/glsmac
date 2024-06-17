@@ -2,13 +2,13 @@
 
 #include <string>
 
-#include "base/Module.h"
+#include "common/Module.h"
 
 #include "resource/Types.h"
 
 namespace loader {
 
-CLASS( Loader, base::Module )
+CLASS( Loader, common::Module )
 
 protected:
 	const std::string& GetFilename( const resource::resource_t res ) const;

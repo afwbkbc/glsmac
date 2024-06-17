@@ -1,6 +1,6 @@
 #include "LeftMenu.h"
 
-#include "../../../Game.h"
+#include "task/game/Game.h"
 
 // submenus
 #include "GameMenu.h"

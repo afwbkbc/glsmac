@@ -2,15 +2,15 @@
 
 #include <string>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
-namespace base {
+namespace common {
 class ObjectLink;
 }
 
 namespace types {
 
-CLASS( Font, base::Base )
+CLASS( Font, common::Class )
 	Font( const std::string& name );
 	virtual ~Font();
 
@@ -38,7 +38,7 @@ CLASS( Font, base::Base )
 		0.0
 	};
 
-	base::ObjectLink* m_graphics_object = nullptr;
+	common::ObjectLink* m_graphics_object = nullptr;
 
 	size_t GetTextWidth( const char* text ) const;
 	size_t GetTextHeight( const char* text ) const;

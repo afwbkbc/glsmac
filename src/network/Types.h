@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "base/MTModule.h"
+#include "common/MTModule.h"
 
 namespace network {
 
@@ -57,6 +57,6 @@ struct MT_Response {
 	events_t events;
 };
 
-typedef base::MTModule< MT_Request, MT_Response > MTModule;
+typedef common::MTModule< MT_Request, MT_Response > MTModule;
 
 }

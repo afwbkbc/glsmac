@@ -4,13 +4,12 @@
 #include <cmath>
 
 #include "Thread.h"
-#include "base/Module.h"
+#include "common/Module.h"
 
-namespace base {
+namespace common {
 
 Thread::Thread( const std::string& thread_name )
-	: Base()
-	, m_thread_name( thread_name ) {
+	: m_thread_name( thread_name ) {
 	m_state = STATE_INACTIVE;
 	m_command = COMMAND_NONE;
 	m_name = thread_name;
@@ -23,6 +22,14 @@ Thread::~Thread() {
 	else {
 		//delete m_thread;
 	}
+}
+
+void Thread::SetIPS( const float ips ) {
+	m_ips = ips;
+}
+void Thread::AddModule( Module* module ) {
+	ASSERT( module, "null module added" );
+	m_modules.push_back( module );
 }
 
 void Thread::T_Start() {

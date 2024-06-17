@@ -280,9 +280,9 @@ test.assert(arr == [
 	'failfunc',
 	'failfunc2',
 	'CAUGHT TestError : something happened',
-	'\tat ' + test.get_script_path() + ':199: throw TestError(\'something happened\');',
-	'\tat ' + test.get_script_path() + ':204: realfailfunc();',
-	'\tat ' + test.get_script_path() + ':206: failfunc();'
+	'\tat ' + test.get_script_path() + ':257: throw TestError(\'something happened\');',
+	'\tat ' + test.get_script_path() + ':262: realfailfunc();',
+	'\tat ' + test.get_script_path() + ':264: failfunc();'
 ]);
 
 test.assert(#to_string(2 + 3) + ' (five)' == '5 (five)');

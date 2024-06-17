@@ -1,10 +1,10 @@
 #pragma once
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 namespace util {
 
-CLASS( Util, base::Base )
+CLASS( Util, common::Class )
 };
 
 }

@@ -3,7 +3,7 @@
 #include "ChildContext.h"
 #include "gse/Exception.h"
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 namespace gse {
 namespace context {

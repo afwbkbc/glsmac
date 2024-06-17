@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "game/map_editor/Types.h"
 
@@ -11,7 +11,7 @@ class Game;
 namespace map_editor {
 namespace tool {
 
-CLASS( Tool, ::base::Base )
+CLASS( Tool, common::Class )
 
 	Tool( Game* game, const tool_type_t type );
 

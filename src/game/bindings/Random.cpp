@@ -1,5 +1,3 @@
-#include "Binding.h"
-
 #include "game/Game.h"
 #include "game/State.h"
 #include "game/bindings/Bindings.h"
@@ -9,6 +7,8 @@
 #include "gse/type/Float.h"
 #include "gse/type/Undefined.h"
 #include "util/random/Random.h"
+
+#include "Binding.h"
 
 namespace game {
 namespace bindings {

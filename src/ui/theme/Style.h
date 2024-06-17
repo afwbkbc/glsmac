@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "Types.h"
 #include "resource/Types.h"
@@ -23,7 +23,7 @@ class StyleSheet;
 
 #define SH( ... ) [__VA_ARGS__] ( ::ui::theme::Style* s ) -> void
 
-CLASS( Style, base::Base )
+CLASS( Style, common::Class )
 
 	Style( const std::string& style_name, const StyleSheet* stylesheet );
 

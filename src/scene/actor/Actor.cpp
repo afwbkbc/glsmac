@@ -2,7 +2,7 @@
 
 #include "scene/Scene.h"
 #include "scene/Camera.h"
-#include "base/ObjectLink.h"
+#include "common/ObjectLink.h"
 
 namespace scene {
 namespace actor {

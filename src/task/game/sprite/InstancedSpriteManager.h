@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <string>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "task/game/Types.h"
 #include "game/map/Types.h"
@@ -22,7 +22,7 @@ namespace task {
 namespace game {
 namespace sprite {
 
-CLASS( InstancedSpriteManager, ::base::Base )
+CLASS( InstancedSpriteManager, ::common::Class )
 public:
 
 	InstancedSpriteManager( scene::Scene* scene );

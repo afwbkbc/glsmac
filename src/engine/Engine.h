@@ -4,12 +4,12 @@
 #include <unordered_map>
 #include <atomic>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 // TODO: move to config
 extern const size_t g_max_fps;
 
-namespace base {
+namespace common {
 class Thread;
 }
 
@@ -71,7 +71,7 @@ class UI;
 
 namespace engine {
 
-CLASS( Engine, base::Base );
+CLASS( Engine, common::Class );
 
 	Engine(
 		config::Config* config,
@@ -112,7 +112,7 @@ protected:
 
 	std::atomic< bool > m_is_shutting_down = false;
 
-	std::vector< base::Thread* > m_threads = {};
+	std::vector< common::Thread* > m_threads = {};
 
 	config::Config* const m_config = nullptr;
 	error_handler::ErrorHandler* m_error_handler = nullptr;

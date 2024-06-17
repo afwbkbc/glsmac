@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common/Common.h"
+
 #include "gse/type/Types.h"
 
 #include "gse/Value.h"

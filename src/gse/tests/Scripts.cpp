@@ -18,14 +18,12 @@
 namespace gse {
 namespace tests {
 
-#define TEST_SCRIPTS_PATH "gse/tests"
-
 void AddScriptsTests( task::gsetests::GSETests* task ) {
 
 	const std::string tests_path = util::FS::GeneratePath(
 		{
 			".",
-			"gse",
+			"GLSMAC_data",
 			"tests",
 		}, GSE::PATH_SEPARATOR
 	);
