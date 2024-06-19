@@ -1144,7 +1144,7 @@ void Game::Initialize(
 	NEW( m_world_scene, scene::Scene, "Game", scene::SCENE_TYPE_ORTHO );
 
 	NEW( m_ism, sprite::InstancedSpriteManager, m_world_scene );
-	NEW( m_itm, text::InstancedTextManager, m_world_scene );
+	NEW( m_itm, text::InstancedTextManager, m_ism );
 	NEW( m_fm, faction::FactionManager, this );
 	NEW( m_tm, tile::TileManager, this );
 	NEW( m_um, unit::UnitManager, this );
@@ -1623,7 +1623,13 @@ void Game::Initialize(
 		ZL_BASES
 	);
 
-
+	text->ShowAt(
+		{
+			0.0f,
+			0.0f,
+			0.0f
+		}
+	);
 
 	/*
 	text->actor->AddInstance(

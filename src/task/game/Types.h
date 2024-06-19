@@ -14,6 +14,7 @@ typedef std::vector< sprite::InstancedSprite* > instanced_sprites_t;
 
 enum z_level_t {
 	ZL_TERRAIN,
+	ZL_TERRAIN_TEXT,
 	ZL_BASES,
 	ZL_UNITS,
 	ZL_ANIMATIONS,
@@ -24,6 +25,10 @@ static const std::unordered_map< z_level_t, float > s_zlevel_map = {
 	{
 		ZL_TERRAIN,
 		0.4f
+	},
+	{
+		ZL_TERRAIN_TEXT,
+		0.5f
 	},
 	{
 		ZL_BASES,

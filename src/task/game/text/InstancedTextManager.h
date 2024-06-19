@@ -16,6 +16,11 @@ class Scene;
 
 namespace task {
 namespace game {
+
+namespace sprite {
+class InstancedSpriteManager;
+}
+
 namespace text {
 
 class InstancedFont;
@@ -24,7 +29,7 @@ class InstancedText;
 CLASS( InstancedTextManager, common::Class )
 public:
 
-	InstancedTextManager( scene::Scene* scene );
+	InstancedTextManager( sprite::InstancedSpriteManager* ism );
 	~InstancedTextManager();
 
 	InstancedFont* GetInstancedFont( const types::Font* font );
@@ -39,7 +44,7 @@ public:
 
 private:
 
-	scene::Scene* m_scene = nullptr;
+	sprite::InstancedSpriteManager* m_ism = nullptr;
 
 	std::unordered_map< const types::Font*, InstancedFont* > m_instanced_fonts = {};
 	std::unordered_map< const types::Font*, InstancedText* > m_instanced_texts = {};

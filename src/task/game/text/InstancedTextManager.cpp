@@ -8,8 +8,8 @@ namespace task {
 namespace game {
 namespace text {
 
-InstancedTextManager::InstancedTextManager( scene::Scene* scene )
-	: m_scene( scene ) {
+InstancedTextManager::InstancedTextManager( sprite::InstancedSpriteManager* ism )
+	: m_ism( ism ) {
 	//
 }
 
@@ -29,7 +29,7 @@ InstancedFont* InstancedTextManager::GetInstancedFont( const types::Font* font )
 		it = m_instanced_fonts.insert(
 			{
 				font,
-				new InstancedFont( font )
+				new InstancedFont( m_ism, font )
 			}
 		).first;
 	}
