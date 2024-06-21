@@ -6,7 +6,11 @@
 #include "task/game/Game.h"
 #include "task/game/unit/UnitManager.h"
 #include "task/game/tile/TileManager.h"
+#include "task/game/text/InstancedTextManager.h"
+#include "task/game/text/InstancedText.h"
 #include "types/mesh/Rectangle.h"
+#include "engine/Engine.h"
+#include "loader/font/FontLoader.h"
 
 namespace task {
 namespace game {
@@ -64,6 +68,31 @@ void BaseManager::SpawnBase(
 	types::texture::Texture* texture = nullptr;
 
 	m_game->RenderTile( tile, m_game->GetUM()->GetSelectedUnit() );
+
+	// TEST
+
+	auto* itm = m_game->GetITM();
+	auto* font = itm->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( resource::TTF_ARIALN, 24 ) );
+
+	auto* text = itm->CreateInstancedText(
+		"abcdefghijklmnopqrstuvwxyz",
+		font,
+		types::Color{
+			1.0f,
+			0.0f,
+			0.0f,
+			1.0f
+		},
+		ZL_BASES
+	);
+
+	text->ShowAt(
+		{
+			render_coords.x,
+			render_coords.y - 0.25f,
+			render_coords.z - 0.25f
+		}
+	);
 
 }
 

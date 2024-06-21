@@ -29,6 +29,7 @@ private:
 	const std::string m_text = "";
 	std::vector< sprite::InstancedSprite* > m_text_sprites = {};
 	std::vector< size_t > m_instance_ids = {};
+	std::vector< types::Vec2< float > > m_offsets = {};
 
 };
 

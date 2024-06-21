@@ -1606,40 +1606,7 @@ void Game::Initialize(
 	m_is_resize_handler_set = true;
 
 	ResetMapState();
-
-	// TEST
-
-	auto* font = m_itm->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( resource::TTF_ARIALN, 18 ) );
-
-	auto* text = m_itm->CreateInstancedText(
-		"X",
-		font,
-		types::Color{
-			1.0f,
-			0.0f,
-			0.0f,
-			1.0f
-		},
-		ZL_BASES
-	);
-
-	text->ShowAt(
-		{
-			0.0f,
-			0.0f,
-			0.0f
-		}
-	);
-
-	/*
-	text->actor->AddInstance(
-		{
-			0.0f,
-			0.0f,
-			0.0f
-		}
-	);*/
-
+	
 	m_is_initialized = true;
 }
 

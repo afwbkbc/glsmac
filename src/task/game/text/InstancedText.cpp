@@ -11,10 +11,11 @@ namespace text {
 InstancedText::InstancedText( const std::string& text, InstancedFont* font )
 	: m_text( text ) {
 	// create instance for every letter
-	for ( const auto c : text ) {
+	for ( const auto c : m_text ) {
 		m_text_sprites.push_back( font->GetSymbolSprite( c ) );
 	}
 	m_instance_ids.reserve( m_text_sprites.size() );
+	m_offsets = font->GetSymbolOffsets( m_text );
 }
 
 InstancedText::~InstancedText() {
@@ -24,8 +25,16 @@ InstancedText::~InstancedText() {
 void InstancedText::ShowAt( const types::Vec3& coords ) {
 	Hide();
 	for ( size_t i = 0 ; i < m_text_sprites.size() ; i++ ) {
-		m_instance_ids.push_back( m_text_sprites.at( i )->actor->AddInstance( coords ) );
-		break; // TMP
+		const auto& offsets = m_offsets.at( i );
+		m_instance_ids.push_back(
+			m_text_sprites.at( i )->actor->AddInstance(
+				{
+					coords.x + offsets.x,
+					coords.y + offsets.y,
+					coords.z
+				}
+			)
+		);
 	}
 }
 
@@ -34,7 +43,6 @@ void InstancedText::Hide() {
 		ASSERT_NOLOG( m_instance_ids.size() == m_text_sprites.size(), "instance ids size mismatch" );
 		for ( size_t i = 0 ; i < m_instance_ids.size() ; i++ ) {
 			m_text_sprites.at( i )->actor->RemoveInstance( m_instance_ids.at( i ) );
-			break; // TMP
 		}
 		m_instance_ids.clear();
 	}
