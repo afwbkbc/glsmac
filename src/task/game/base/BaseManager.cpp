@@ -4,10 +4,12 @@
 
 #include "Base.h"
 #include "task/game/Game.h"
+#include "task/game/Slot.h"
 #include "task/game/unit/UnitManager.h"
 #include "task/game/tile/TileManager.h"
 #include "task/game/text/InstancedTextManager.h"
 #include "task/game/text/InstancedText.h"
+#include "task/game/faction/Faction.h"
 #include "types/mesh/Rectangle.h"
 #include "engine/Engine.h"
 #include "loader/font/FontLoader.h"
@@ -46,7 +48,7 @@ void BaseManager::SpawnBase(
 	auto* slot = m_game->GetSlot( slot_index );
 	auto* tile = m_game->GetTM()->GetTile( tile_coords );
 
-	auto* base = m_bases.insert(
+	m_bases.insert(
 		{
 			base_id,
 			new base::Base(
@@ -62,28 +64,19 @@ void BaseManager::SpawnBase(
 				slot_index == m_slot_index
 			)
 		}
-	).first->second;
-
-	types::mesh::Rectangle* mesh = nullptr;
-	types::texture::Texture* texture = nullptr;
+	);
 
 	m_game->RenderTile( tile, m_game->GetUM()->GetSelectedUnit() );
 
 	// TEST
 
 	auto* itm = m_game->GetITM();
-	auto* font = itm->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( resource::TTF_ARIALN, 24 ) );
+	auto* font = itm->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( resource::TTF_ARIALN, 48 ) );
 
 	auto* text = itm->CreateInstancedText(
-		"abcdefghijklmnopqrstuvwxyz",
+		"Base_Name",
 		font,
-		types::Color{
-			1.0f,
-			0.0f,
-			0.0f,
-			1.0f
-		},
-		ZL_BASES
+		slot->GetFaction()->m_colors.text
 	);
 
 	text->ShowAt(

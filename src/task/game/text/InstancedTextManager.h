@@ -37,9 +37,7 @@ public:
 	InstancedText* CreateInstancedText(
 		const std::string& text,
 		InstancedFont* font,
-		const types::Color& color,
-		const z_level_t z_level,
-		const float z_index_adjustment = 0.0f
+		const types::Color& color
 	);
 
 private:

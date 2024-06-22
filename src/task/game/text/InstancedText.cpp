@@ -8,14 +8,11 @@ namespace task {
 namespace game {
 namespace text {
 
-InstancedText::InstancedText( const std::string& text, InstancedFont* font )
+InstancedText::InstancedText( const std::string& text, InstancedFont* font, const types::Color& color )
 	: m_text( text ) {
-	// create instance for every letter
-	for ( const auto c : m_text ) {
-		m_text_sprites.push_back( font->GetSymbolSprite( c ) );
-	}
-	m_instance_ids.reserve( m_text_sprites.size() );
+	m_text_sprites = font->GetSymbolSprites( m_text, color );
 	m_offsets = font->GetSymbolOffsets( m_text );
+	m_instance_ids.reserve( m_text_sprites.size() );
 }
 
 InstancedText::~InstancedText() {

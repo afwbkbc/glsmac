@@ -39,23 +39,10 @@ InstancedFont* InstancedTextManager::GetInstancedFont( const types::Font* font )
 InstancedText* InstancedTextManager::CreateInstancedText(
 	const std::string& text,
 	InstancedFont* font,
-	const types::Color& color,
-	const z_level_t z_level,
-	const float z_index_adjustment
+	const types::Color& color
 ) {
-
-	ASSERT( s_zlevel_map.find( z_level ) != s_zlevel_map.end(), "unknown z level " + std::to_string( z_level ) );
-	ASSERT( z_index_adjustment >= -MAX_ZINDEX_ADJUSTMENT && z_index_adjustment <= MAX_ZINDEX_ADJUSTMENT, "z index adjustment too large" );
-
-	Log( "Creating instanced text: '" + text + "', " + font->GetFontName() );
-
-	/*
-	NEWV( instanced, scene::actor::Instanced, actor );
-	instanced->SetZIndex( s_zlevel_map.at( z_level ) + z_index_adjustment );
-	m_scene->AddActor( instanced );
-	 */
-
-	return new InstancedText( text, font );
+	Log( "Creating instanced text: '" + text + "', " + font->GetFontName() + ", " + color.ToString() );
+	return new InstancedText( text, font, color );
 }
 
 }

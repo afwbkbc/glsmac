@@ -14,7 +14,12 @@ namespace faction {
 Faction::Faction( const ::game::rules::Faction* def, sprite::InstancedSpriteManager* ism )
 	: m_ism( ism )
 	, m_id( def->m_id )
-	, m_border_color( def->m_colors.border )
+	, m_colors(
+		{
+			def->m_colors.text,
+			def->m_colors.border
+		}
+	)
 	, m_is_progenitor( def->m_flags & ::game::rules::Faction::FF_PROGENITOR )
 	, m_render(
 		{

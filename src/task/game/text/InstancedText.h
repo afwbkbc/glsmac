@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "types/Vec3.h"
+#include "types/Color.h"
 
 namespace task {
 namespace game {
@@ -19,7 +20,7 @@ class InstancedFont;
 
 class InstancedText {
 public:
-	InstancedText( const std::string& text, InstancedFont* font );
+	InstancedText( const std::string& text, InstancedFont* font, const types::Color& color );
 	~InstancedText();
 
 	void ShowAt( const types::Vec3& coords );

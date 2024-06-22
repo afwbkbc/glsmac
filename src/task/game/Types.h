@@ -28,7 +28,7 @@ static const std::unordered_map< z_level_t, float > s_zlevel_map = {
 	},
 	{
 		ZL_TERRAIN_TEXT,
-		0.5f
+		0.8f
 	},
 	{
 		ZL_BASES,

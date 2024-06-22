@@ -44,6 +44,7 @@ units.init();
 	// spawn units
 
 	let units_spawned = 0;
+	let bases_spawned = 0;
 
 	let y = 0;
 	let w = #game.map.get_width();
@@ -53,9 +54,9 @@ units.init();
 		let x = 0;
 		while (x < w) {
 			if (x % 2 == y % 2) {
+				let owner = random_player();
+				let tile = #game.map.get_tile(x, y);
 				if (#game.random.get_int(0, 6) == 0) {
-					let owner = random_player();
-					let tile = #game.map.get_tile(x, y);
 					let units_count = #game.random.get_int(1, 2);
 					let i = 0;
 					while (i++ < units_count) {
@@ -91,16 +92,24 @@ units.init();
 						}
 					}
 				}
+				if (#game.random.get_int(0, 2) == 0) {
+					#game.bases.spawn(
+						owner,
+						tile
+					);
+					bases_spawned++;
+				}
 			}
 			x++;
 		}
 		y++;
 	}
 	#game.message('Total units spawned: ' + #to_string(units_spawned));
+	#game.message('Total bases spawned: ' + #to_string(bases_spawned));
 
 	// spawn bases
 
-	let i = 0;
+	/*let i = 0;
 	while (i < players_sz) {
 		let base_x = 0;
 		let base_y = 1;
@@ -113,7 +122,7 @@ units.init();
 			#game.map.get_tile(base_x, base_y)
 		);
 		i++;
-	}
+	}*/
 
 });
 

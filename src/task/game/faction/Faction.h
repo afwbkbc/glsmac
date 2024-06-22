@@ -34,7 +34,12 @@ public:
 	sprite::Sprite* GetBaseSprite( const bool is_water, const uint8_t size, const uint8_t perimeter_level );
 
 	const std::string m_id;
-	const types::Color m_border_color;
+
+	struct {
+		const types::Color text = {};
+		const types::Color border = {};
+	} m_colors = {};
+
 	const bool m_is_progenitor;
 
 private:

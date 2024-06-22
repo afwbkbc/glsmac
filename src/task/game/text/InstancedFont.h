@@ -7,6 +7,8 @@
 
 #include "game/map/Types.h"
 
+#include "types/Color.h"
+
 namespace types {
 class Font;
 namespace texture {
@@ -30,7 +32,7 @@ public:
 	~InstancedFont();
 
 	const std::string& GetFontName() const;
-	sprite::InstancedSprite* GetSymbolSprite( const unsigned char symbol ) const;
+	const std::vector< sprite::InstancedSprite* > GetSymbolSprites( const std::string& text, const types::Color& color );
 	const std::vector< types::Vec2< float > > GetSymbolOffsets( const std::string& text ) const;
 
 private:
@@ -52,7 +54,8 @@ private:
 	const types::Font* m_font = nullptr;
 	const std::string m_name = "";
 
-	types::texture::Texture* m_texture = nullptr;
+	types::texture::Texture* m_base_texture = nullptr;
+	std::unordered_map< types::Color::rgba_t, types::texture::Texture* > m_color_textures = {};
 };
 
 }

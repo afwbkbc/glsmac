@@ -21,7 +21,7 @@ SlotBadges::SlotBadges(
 	, m_badges_key( "Badge_" + std::to_string( slot_index ) )
 	, m_faction( faction ) {
 
-	const auto& c = faction->m_border_color.value;
+	const auto& c = faction->m_colors.border.value;
 	m_repaint_rules = {
 		{ // active
 			types::Color::RGB( 252, 0, 0 ),
