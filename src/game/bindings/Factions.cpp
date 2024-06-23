@@ -38,6 +38,10 @@ BINDING_IMPL( factions ) {
 				N_GETPROP_UNWRAP( colors_border, colors, "border", types::Color );
 				faction.m_colors = { colors_text, colors_border };
 
+				N_GETPROP_OPT_BOOL( is_naval, faction_def, "is_naval")
+				if ( is_naval ) {
+					faction.m_flags |= rules::Faction::FF_NAVAL;
+				}
 				N_GETPROP_OPT_BOOL( is_progenitor, faction_def, "is_progenitor")
 				if ( is_progenitor ) {
 					faction.m_flags |= rules::Faction::FF_PROGENITOR;

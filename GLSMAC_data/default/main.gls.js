@@ -1,17 +1,12 @@
 const units = #include('units');
+const factions = #include('factions');
 
 #game.on.configure((e) => {
 
-	const factions = #include('factions');
-	let i = 0;
-	let sz = #size(factions);
-	while (i < sz) {
-		#game.factions.define(factions[i][0], factions[i][1]);
-		i++;
-	}
+	factions.define();
 
-	const rules = #include('rules');
 	// TODO
+	const rules = #include('rules');
 
 });
 

@@ -9,9 +9,6 @@
 namespace game {
 namespace rules {
 
-const Faction::faction_flag_t Faction::FF_NONE = 0;
-const Faction::faction_flag_t Faction::FF_PROGENITOR = 1 << 0;
-
 Faction::Faction() {
 	//
 }

@@ -8,6 +8,7 @@
 #include "Include.h"
 #include "Conversions.h"
 #include "Math.h"
+#include "String.h"
 
 namespace gse {
 namespace builtins {
@@ -27,6 +28,7 @@ private:
 	Console m_console = {};
 	Conversions m_conversions = {};
 	Math m_math = {};
+	String m_string = {};
 
 };
 

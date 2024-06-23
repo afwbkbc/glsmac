@@ -50,6 +50,11 @@ namespace callable {
     const auto& _var = (gse::type::Callable*)arg;
 #define N_UNPERSIST_CALLABLE( _callable ) \
     ctx->UnpersistValue( _callable );
+#define N_GETVALUE_NONCONST( _var, _index, _type ) \
+    ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
+    arg = arguments.at( _index ).Get(); \
+    N_CHECKARG( arg, _index, _type ); \
+    auto _var = ((gse::type::_type*)arg)->value;
 #define N_GETVALUE( _var, _index, _type ) \
     ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
     arg = arguments.at( _index ).Get(); \
