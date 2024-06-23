@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace resource {
 
 enum resource_t : uint8_t {
