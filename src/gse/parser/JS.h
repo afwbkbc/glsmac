@@ -120,6 +120,10 @@ private:
 			Parser::Conditional::CT_WHILE
 		},
 		{
+			"for",
+			Parser::Conditional::CT_FOR
+		},
+		{
 			"try",
 			Parser::Conditional::CT_TRY
 		},

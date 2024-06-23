@@ -123,6 +123,7 @@ protected:
 			CT_ELSEIF,
 			CT_ELSE,
 			CT_WHILE,
+			CT_FOR,
 			CT_TRY,
 			CT_CATCH,
 		};
@@ -132,7 +133,8 @@ protected:
 			, has_condition(
 				conditional_type == CT_IF ||
 					conditional_type == CT_ELSEIF ||
-					conditional_type == CT_WHILE
+					conditional_type == CT_WHILE ||
+					conditional_type == CT_FOR
 			) {};
 
 		const conditional_type_t m_conditional_type;
@@ -148,6 +150,8 @@ protected:
 					return "else";
 				case CT_WHILE:
 					return "while";
+				case CT_FOR:
+					return "for";
 				case CT_TRY:
 					return "try";
 				case CT_CATCH:

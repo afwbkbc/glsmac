@@ -6,6 +6,11 @@
 #include "gse/program/Object.h"
 #include "gse/program/Value.h"
 #include "gse/program/Expression.h"
+#include "gse/program/Condition.h"
+#include "gse/program/SimpleCondition.h"
+#include "gse/program/ForCondition.h"
+#include "gse/program/ForConditionInOf.h"
+#include "gse/program/ForConditionExpressions.h"
 #include "gse/program/Operator.h"
 #include "gse/program/Operand.h"
 #include "gse/program/Variable.h"
@@ -17,6 +22,7 @@
 #include "gse/program/ElseIf.h"
 #include "gse/program/Else.h"
 #include "gse/program/While.h"
+#include "gse/program/For.h"
 #include "gse/program/Try.h"
 #include "gse/program/Catch.h"
 #include "gse/type/Type.h"
@@ -94,7 +100,7 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 	switch ( conditional->conditional_type ) {
 		case Conditional::CT_IF: {
 			const auto* c = (If*)conditional;
-			if ( EvaluateBool( ctx, c->condition ) ) {
+			if ( EvaluateBool( ctx, c->condition->expression ) ) {
 				return EvaluateScope( ctx, c->body );
 			}
 			else if ( c->els ) {
@@ -110,7 +116,7 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 				throw gse::Exception( EC.PARSE_ERROR, "Unexpected elseif without if", ctx, conditional->m_si );
 			}
 			const auto* c = (ElseIf*)conditional;
-			if ( EvaluateBool( ctx, c->condition ) ) {
+			if ( EvaluateBool( ctx, c->condition->expression ) ) {
 				return EvaluateScope( ctx, c->body );
 			}
 			else if ( c->els ) {
@@ -131,11 +137,93 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 		case Conditional::CT_WHILE: {
 			const auto* c = (While*)conditional;
 			gse::Value result = VALUE( Undefined );
-			while ( EvaluateBool( ctx, c->condition ) ) {
+			while ( EvaluateBool( ctx, c->condition->expression ) ) {
 				result = EvaluateScope( ctx, c->body );
 				if ( result.Get()->type != Type::T_UNDEFINED ) {
 					break;
 				}
+			}
+			return result;
+		}
+		case Conditional::CT_FOR: {
+			const auto* c = (For*)conditional;
+			gse::Value result = VALUE( Undefined );
+			switch ( c->condition->for_type ) {
+				case ForCondition::FCT_EXPRESSIONS: {
+					const auto* condition = (ForConditionExpressions*)c->condition;
+					EvaluateExpression( ctx, condition->init );
+					while ( EvaluateBool( ctx, condition->check ) ) {
+						result = EvaluateScope( ctx, c->body );
+						if ( result.Get()->type != Type::T_UNDEFINED ) {
+							break;
+						}
+						EvaluateExpression( ctx, condition->iterate );
+					}
+					break;
+				}
+				case ForCondition::FCT_IN_OF: {
+					const auto* condition = (ForConditionInOf*)c->condition;
+					const auto target = EvaluateExpression( ctx, condition->expression );
+					const auto forctx = ctx->ForkContext( ctx, condition->m_si, false );
+					forctx->IncRefs();
+					switch ( target.Get()->type ) {
+						case Type::T_ARRAY: {
+							const auto* arr = (type::Array*)target.Get();
+							switch ( condition->for_inof_type ) {
+								case ForConditionInOf::FIC_IN: {
+									for ( size_t i = 0 ; i < arr->value.size() ; i++ ) {
+										forctx->CreateConst( condition->variable->name, VALUE( Int, i ), &condition->m_si );
+										result = EvaluateScope( forctx, c->body );
+										forctx->DestroyVariable( condition->variable->name, &condition->m_si );
+										if ( result.Get()->type != Type::T_UNDEFINED ) {
+											break;
+										}
+									}
+									break;
+								}
+								case ForConditionInOf::FIC_OF: {
+									for ( const auto& v : arr->value ) {
+										forctx->CreateConst( condition->variable->name, v, &condition->m_si );
+										result = EvaluateScope( forctx, c->body );
+										forctx->DestroyVariable( condition->variable->name, &condition->m_si );
+										if ( result.Get()->type != Type::T_UNDEFINED ) {
+											break;
+										}
+									}
+									break;
+								}
+								default:
+									THROW( "unexpected for in_of condition type: " + std::to_string( condition->for_inof_type ) );
+							}
+							break;
+						}
+						case Type::T_OBJECT: {
+							const auto* obj = (type::Object*)target.Get();
+							if ( condition->for_inof_type != ForConditionInOf::FIC_IN && condition->for_inof_type != ForConditionInOf::FIC_OF ) {
+								THROW( "unexpected for in_of condition type: " + std::to_string( condition->for_inof_type ) );
+							}
+							for ( const auto& v : obj->value ) {
+								forctx->CreateConst(
+									condition->variable->name, condition->for_inof_type == ForConditionInOf::FIC_IN
+										? VALUE( String, v.first )
+										: v.second, &condition->m_si
+								);
+								result = EvaluateScope( forctx, c->body );
+								forctx->DestroyVariable( condition->variable->name, &condition->m_si );
+								if ( result.Get()->type != Type::T_UNDEFINED ) {
+									break;
+								}
+							}
+							break;
+						}
+						default:
+							THROW( "unexpected type for iteration: " + target.ToString() );
+					}
+					forctx->DecRefs();
+					break;
+				}
+				default:
+					THROW( "unexpected for condition type: " + std::to_string( c->condition->for_type ) );
 			}
 			return result;
 		}

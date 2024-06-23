@@ -93,6 +93,15 @@ void Context::UpdateVariable( const std::string& name, const Value& value, const
 	throw Exception( EC.REFERENCE_ERROR, "Variable '" + name + "' is not defined", this, *si );
 }
 
+void Context::DestroyVariable( const std::string& name, const si_t* si ) {
+	const auto it = m_variables.find( name );
+	if ( it != m_variables.end() ) {
+		m_variables.erase( it );
+		return;
+	}
+	throw Exception( EC.REFERENCE_ERROR, "Variable '" + name + "' is not defined", this, *si );
+}
+
 void Context::CreateBuiltin( const std::string& name, const Value& value ) {
 	CreateConst( "#" + name, value, nullptr );
 }

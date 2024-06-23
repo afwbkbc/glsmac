@@ -57,15 +57,12 @@ const result = {
 				return 'Water units can\'t move to land tile';
 			}
 
-			const units = e.dst_tile.get_units();
-			let i = 0;
 			let any_foreign_units_in_tile = false;
-			while (i < #size(units)) { // TODO: for loop
-				if (units[i].get_owner() != e.unit.get_owner()) {
+			for (unit of e.dst_tile.get_units()) { // TODO: for loop
+				if (unit.get_owner() != e.unit.get_owner()) {
 					any_foreign_units_in_tile = true;
 					// TODO: break
 				}
-				i++;
 			}
 			if (any_foreign_units_in_tile) {
 				return 'Destination tile contains foreign units (combat not implemented yet)';

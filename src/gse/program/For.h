@@ -5,16 +5,16 @@
 namespace gse {
 namespace program {
 
-class SimpleCondition;
+class ForCondition;
 class Scope;
 
-class While : public Conditional {
+class For : public Conditional {
 public:
 
-	While( const si_t& si, const SimpleCondition* condition, const Scope* body );
-	~While();
+	For( const si_t& si, const ForCondition* condition, const Scope* body );
+	~For();
 
-	const SimpleCondition* condition;
+	const ForCondition* condition;
 	const Scope* body;
 
 	const std::string Dump( const size_t depth = 0 ) const override;
@@ -22,4 +22,3 @@ public:
 
 }
 }
-

@@ -1,23 +1,23 @@
-#include "While.h"
+#include "For.h"
 
-#include "SimpleCondition.h"
+#include "ForCondition.h"
 #include "Scope.h"
 
 namespace gse {
 namespace program {
 
-While::While( const si_t& si, const SimpleCondition* condition, const Scope* body )
-	: Conditional( si, CT_WHILE )
+For::For( const si_t& si, const ForCondition* condition, const Scope* body )
+	: Conditional( si, CT_FOR )
 	, condition( condition )
 	, body( body ) {}
 
-While::~While() {
+For::~For() {
 	delete condition;
 	delete body;
 }
 
-const std::string While::Dump( const size_t depth ) const {
-	return Formatted( "While" + m_si.ToString() + "(", depth ) +
+const std::string For::Dump( const size_t depth ) const {
+	return Formatted( "For" + m_si.ToString() + "(", depth ) +
 		Formatted( "Condition(", depth + 1 ) +
 		condition->Dump( depth + 2 ) +
 		Formatted( ")", depth + 1 ) +

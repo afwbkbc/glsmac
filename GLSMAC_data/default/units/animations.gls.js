@@ -38,11 +38,8 @@ const result = {
 
 		];
 
-		let sz = #size(animations);
-		let i = 0;
-		while (i < sz) {
-			#game.animations.define(animations[i][0], animations[i][1]);
-			i++;
+		for (animation of animations) {
+			#game.animations.define(animation[0], animation[1]);
 		}
 
 	},

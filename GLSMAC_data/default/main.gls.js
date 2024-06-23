@@ -41,20 +41,17 @@ units.init();
 	let units_spawned = 0;
 	let bases_spawned = 0;
 
-	let y = 0;
 	let w = #game.map.get_width();
 	let h = #game.map.get_height();
 
-	while (y < h) {
-		let x = 0;
-		while (x < w) {
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
 			if (x % 2 == y % 2) {
 				let owner = random_player();
 				let tile = #game.map.get_tile(x, y);
 				if (#game.random.get_int(0, 6) == 0) {
 					let units_count = #game.random.get_int(1, 2);
-					let i = 0;
-					while (i++ < units_count) {
+					for (let i = 0; i < units_count; i++) {
 						if (tile.is_land) {
 							if (#game.random.get_int(0, 4) != 0) {
 								#game.units.spawn('MindWorms', owner, tile, random_morale(), random_health());
@@ -95,9 +92,7 @@ units.init();
 					bases_spawned++;
 				}
 			}
-			x++;
 		}
-		y++;
 	}
 	#game.message('Total units spawned: ' + #to_string(units_spawned));
 	#game.message('Total bases spawned: ' + #to_string(bases_spawned));
