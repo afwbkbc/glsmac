@@ -58,7 +58,7 @@ enum resource_t : uint8_t {
 	PCX_FUNGBOY,
 	PCX_CARETAKE,
 	PCX_USURPER,
-	
+
 	TTF_ARIALN,
 	TTF_ARIALNB,
 

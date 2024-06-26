@@ -12,6 +12,7 @@ return {
 			cell_width: 100, cell_height: 75,
 			cell_padding: 1,
 		},
+		names: #game.factions.import_base_names('usurper.txt'),
 	},
 	is_progenitor: true,
 };

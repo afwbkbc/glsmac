@@ -3,6 +3,7 @@
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
 #include "gse/type/Object.h"
+#include "gse/type/Array.h"
 #include "gse/type/String.h"
 #include "gse/type/Int.h"
 #include "gse/type/Float.h"
@@ -10,6 +11,9 @@
 #include "gse/type/Bool.h"
 #include "game/bindings/Bindings.h"
 #include "game/State.h"
+#include "engine/Engine.h"
+#include "loader/txt/TXTLoaders.h"
+#include "loader/txt/FactionTXTLoader.h"
 
 #include "types/Color.h"
 
@@ -21,8 +25,31 @@ BINDING_IMPL( factions ) {
 	auto& factions_order = m_bindings->GetState()->m_settings.global.game_rules.m_factions_order;
 	const gse::type::object_properties_t properties = {
 		{
+			"import_base_names",
+			NATIVE_CALL() {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( filename, 0, String );
+				const auto& data = g_engine->GetTXTLoaders()->factions->GetFactionData( filename );
+				std::vector< gse::Value > land_names = {};
+				land_names.reserve( data.bases_names.land.size() );
+				for ( const auto& name : data.bases_names.land ) {
+					land_names.push_back( VALUE( gse::type::String, name ) );
+				}
+				std::vector< gse::Value > water_names = {};
+				water_names.reserve( data.bases_names.water.size() );
+				for ( const auto& name : data.bases_names.water ) {
+					water_names.push_back( VALUE( gse::type::String, name ) );
+				}
+				const auto properties = gse::type::object_properties_t{
+					{ "land", VALUE( gse::type::Array, land_names ) },
+					{ "water", VALUE( gse::type::Array, water_names ) },
+				};
+				return VALUE( gse::type::Object, properties );
+			} )
+		},
+		{
 			"define",
-			NATIVE_CALL( this, &factions, &factions_order ) {
+			NATIVE_CALL( &factions, &factions_order ) {
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( id, 0, String );
 				if ( factions.find( id ) != factions.end() ) {
