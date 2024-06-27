@@ -43,7 +43,7 @@ TXTLoader::txt_data_t::txt_data_t( const std::string& source ) {
 			}
 		}
 		else {
-			if ( section_it != sections.end() ) {
+			if ( !line.empty() && section_it != sections.end() ) {
 				section_it->second.push_back( line );
 			}
 		}

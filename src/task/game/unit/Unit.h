@@ -2,6 +2,8 @@
 
 #include <cstddef>
 
+#include "task/game/TileObject.h"
+
 #include "game/unit/Types.h"
 
 #include "util/Timer.h"
@@ -39,12 +41,11 @@ class BadgeDefs;
 class SlotBadges;
 class UnitManager;
 
-class Unit {
+class Unit : public TileObject {
 public:
 
 	static constexpr size_t MOVE_DURATION_MS = 125;
 
-	// TODO: refactor
 	Unit(
 		UnitManager* um,
 		BadgeDefs* badge_defs,
@@ -102,7 +103,6 @@ public:
 
 	void SetTile( tile::Tile* dst_tile );
 	void MoveToTile( tile::Tile* dst_tile );
-	void UpdateFromTile();
 
 	const bool IsMoving() const;
 
@@ -117,6 +117,9 @@ public:
 	};
 	const render_data_t& GetRenderData() const;
 
+protected:
+	void SetRenderCoords( const types::Vec3& coords ) override;
+
 private:
 
 	UnitManager* m_um = nullptr;
@@ -126,7 +129,6 @@ private:
 
 	size_t m_id = 0;
 	UnitDef* m_def = nullptr;
-	tile::Tile* m_tile = nullptr;
 	struct {
 		types::Vec3 coords = {};
 		bool is_rendered = false;
@@ -164,7 +166,6 @@ private:
 	util::Scroller< types::Vec3 > m_mover;
 
 	Unit::meshtex_t GetMeshTex( const sprite::InstancedSprite* sprite );
-	void SetRenderCoords( const types::Vec3& coords );
 };
 
 }

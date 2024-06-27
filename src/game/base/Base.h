@@ -29,14 +29,16 @@ public:
 		Game* game,
 		const size_t id,
 		slot::Slot* owner,
-		map::tile::Tile* tile
+		map::tile::Tile* tile,
+		const std::string& name
 	);
 	virtual ~Base() = default;
 
 	const size_t m_id;
 	slot::Slot* m_owner;
+	std::string m_name;
 
-	static const types::Buffer Serialize( const Base* unit );
+	static const types::Buffer Serialize( const Base* base );
 	static Base* Unserialize( types::Buffer& buf, Game* game );
 
 	WRAPDEFS_DYNAMIC( Base );

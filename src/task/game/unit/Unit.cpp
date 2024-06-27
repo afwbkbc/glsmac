@@ -33,12 +33,12 @@ Unit::Unit(
 	const std::string& morale_string,
 	const ::game::unit::health_t health
 )
-	: m_um( um )
+	: TileObject( tile )
+	, m_um( um )
 	, m_badge_defs( badge_defs )
 	, m_id( id )
 	, m_def( def )
 	, m_slot_badges( m_um->GetSlotBadges( slot->GetIndex() ) )
-	, m_tile( tile )
 	, m_render(
 		{
 			render_coords,
@@ -331,11 +331,6 @@ void Unit::MoveToTile( tile::Tile* dst_tile ) {
 	auto from = m_tile->GetRenderData().coords.InvertY();
 	auto to = dst_tile->GetRenderData().coords.InvertY();
 	m_mover.Scroll( from, m_um->GetCloserCoords( to, from ), MOVE_DURATION_MS );
-}
-
-void Unit::UpdateFromTile() {
-	ASSERT_NOLOG( m_tile, "tile not set" );
-	SetRenderCoords( m_tile->GetRenderData().coords.InvertY() );
 }
 
 const bool Unit::IsMoving() const {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <string>
 
 #include "types/Serializable.h"
@@ -29,6 +30,11 @@ CLASS2( Faction, types::Serializable, gse::Wrappable )
 		types::Color text = {};
 		types::Color border = {};
 	} m_colors = {};
+
+	struct {
+		std::vector< std::string > land = {};
+		std::vector< std::string > water = {};
+	} m_base_names = {};
 
 	bases_render_info_t m_bases_render = {};
 

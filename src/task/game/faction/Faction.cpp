@@ -20,6 +20,12 @@ Faction::Faction( const ::game::rules::Faction* def, sprite::InstancedSpriteMana
 			def->m_colors.border
 		}
 	)
+	, m_base_names(
+		{
+			def->m_base_names.land,
+			def->m_base_names.water,
+		}
+	)
 	, m_is_progenitor( def->m_flags & ::game::rules::Faction::FF_PROGENITOR )
 	, m_render(
 		{

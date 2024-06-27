@@ -11,6 +11,7 @@ SET( SRC ${SRC}
 
 	${PWD}/Game.cpp
 	${PWD}/Slot.cpp
+	${PWD}/TileObject.cpp
 	${PWD}/AnimationDef.cpp
 	${PWD}/Animation.cpp
 

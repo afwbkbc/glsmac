@@ -8,6 +8,7 @@
 #include "task/game/Slot.h"
 #include "task/game/sprite/Sprite.h"
 #include "task/game/sprite/InstancedSprite.h"
+#include "task/game/text/InstancedText.h"
 #include "scene/actor/Instanced.h"
 #include "types/mesh/Rectangle.h"
 #include "scene/actor/Sprite.h"
@@ -18,20 +19,20 @@ namespace game {
 namespace base {
 
 Base::Base(
-	BaseManager* bm,
 	const size_t id,
 	Slot* slot,
 	tile::Tile* tile,
+	const bool is_owned,
 	const types::Vec3& render_coords,
-	const bool is_owned
+	text::InstancedText* render_name_sprite
 )
-	: m_bm( bm )
+	: TileObject( tile )
 	, m_id( id )
 	, m_faction( slot->GetFaction() )
-	, m_tile( tile )
 	, m_render(
 		{
 			render_coords,
+			render_name_sprite,
 			false,
 			0,
 		}
@@ -44,6 +45,7 @@ Base::Base(
 Base::~Base() {
 	Hide();
 	m_tile->UnsetBase( this );
+	delete m_render.name_sprite;
 }
 
 const size_t Base::GetId() const {
@@ -79,6 +81,14 @@ void Base::Show() {
 			}
 		);
 
+		m_render.name_sprite->ShowAt(
+			{
+				m_render.coords.x,
+				m_render.coords.y - 0.25f,
+				m_render.coords.z - 0.25f
+			}
+		);
+
 		m_render.is_rendered = true;
 	}
 }
@@ -86,12 +96,19 @@ void Base::Show() {
 void Base::Hide() {
 	if ( m_render.is_rendered ) {
 		GetSprite()->instanced_sprite->actor->RemoveInstance( m_render.instance_id );
+		m_render.name_sprite->Hide();
 		m_render.is_rendered = false;
 	}
 }
 
 const Base::render_data_t& Base::GetRenderData() const {
 	return m_render_data;
+}
+
+void Base::SetRenderCoords( const types::Vec3& coords ) {
+	Hide();
+	m_render.coords = coords;
+	Show();
 }
 
 Base::meshtex_t Base::GetMeshTex( const sprite::InstancedSprite* sprite ) {

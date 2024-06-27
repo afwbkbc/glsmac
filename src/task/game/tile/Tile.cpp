@@ -481,6 +481,9 @@ void Tile::Update( const ::game::map::tile::Tile& tile, const ::game::map::tile:
 	for ( const auto& it : m_units ) {
 		it.second->UpdateFromTile();
 	}
+	if ( m_base ) {
+		m_base->UpdateFromTile();
+	}
 }
 
 }

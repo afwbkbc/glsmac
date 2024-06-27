@@ -1079,7 +1079,8 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 					rc.x,
 					rc.y,
 					rc.z
-				}
+				},
+				*d.base_info.name
 			);
 			break;
 		}
@@ -1606,7 +1607,7 @@ void Game::Initialize(
 	m_is_resize_handler_set = true;
 
 	ResetMapState();
-	
+
 	m_is_initialized = true;
 }
 

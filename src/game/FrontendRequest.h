@@ -151,6 +151,9 @@ public:
 				float y;
 				float z;
 			} render_coords;
+			struct {
+				const std::string* name;
+			} base_info;
 		} base_spawn;
 	} data;
 };

@@ -87,7 +87,10 @@ units.init();
 				if (#game.random.get_int(0, 2) == 0) {
 					#game.bases.spawn(
 						owner,
-						tile
+						tile,
+						{
+							// name: 'base name',
+						}
 					);
 					bases_spawned++;
 				}

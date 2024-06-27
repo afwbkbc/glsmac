@@ -2,6 +2,8 @@
 
 #include <cstddef>
 
+#include "task/game/TileObject.h"
+
 #include "game/unit/Types.h"
 
 #include "util/Timer.h"
@@ -28,6 +30,10 @@ class Sprite;
 class InstancedSprite;
 }
 
+namespace text {
+class InstancedText;
+}
+
 namespace tile {
 class Tile;
 }
@@ -40,17 +46,16 @@ namespace base {
 
 class BaseManager;
 
-class Base {
+class Base : public TileObject {
 public:
 
-	// TODO: refactor
 	Base(
-		BaseManager* bm,
 		const size_t id,
 		Slot* slot,
 		tile::Tile* tile,
+		const bool is_owned,
 		const types::Vec3& render_coords,
-		const bool is_owned
+		text::InstancedText* render_name_sprite
 	);
 	~Base();
 
@@ -72,17 +77,18 @@ public:
 	};
 	const render_data_t& GetRenderData() const;
 
-private:
+protected:
+	void SetRenderCoords( const types::Vec3& coords ) override;
 
-	BaseManager* m_bm = nullptr;
+private:
 
 	size_t m_id = 0;
 
 	faction::Faction* m_faction = nullptr;
 
-	tile::Tile* m_tile = nullptr;
 	struct {
 		types::Vec3 coords = {};
+		text::InstancedText* name_sprite = nullptr;
 		bool is_rendered = false;
 		size_t instance_id = 0;
 	} m_render;

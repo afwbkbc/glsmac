@@ -20,8 +20,7 @@ namespace base {
 
 BaseManager::BaseManager( Game* game )
 	: m_game( game )
-	, m_ism( game->GetISM() )
-	, m_slot_index( game->GetMySlotIndex() ) {
+	, m_name_font( game->GetITM()->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( resource::TTF_ARIALN, 36 ) ) ) {
 
 }
 
@@ -40,52 +39,35 @@ void BaseManager::SpawnBase(
 	const size_t base_id,
 	const size_t slot_index,
 	const types::Vec2< size_t >& tile_coords,
-	const types::Vec3& render_coords
+	const types::Vec3& render_coords,
+	const std::string& name
 ) {
 
 	ASSERT( m_bases.find( base_id ) == m_bases.end(), "base id already exists" );
 
-	auto* slot = m_game->GetSlot( slot_index );
 	auto* tile = m_game->GetTM()->GetTile( tile_coords );
+	auto* slot = m_game->GetSlot( slot_index );
+	auto* faction = slot->GetFaction();
 
 	m_bases.insert(
 		{
 			base_id,
 			new base::Base(
-				this,
 				base_id,
 				slot,
 				tile,
-				{
-					render_coords.x,
-					render_coords.y,
-					render_coords.z
-				},
-				slot_index == m_slot_index
+				slot_index == m_game->GetMySlotIndex(),
+				render_coords,
+				m_game->GetITM()->CreateInstancedText(
+					name,
+					m_name_font,
+					faction->m_colors.text
+				)
 			)
 		}
 	);
 
 	m_game->RenderTile( tile, m_game->GetUM()->GetSelectedUnit() );
-
-	// TEST
-
-	auto* itm = m_game->GetITM();
-	auto* font = itm->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( resource::TTF_ARIALN, 48 ) );
-
-	auto* text = itm->CreateInstancedText(
-		"Base_Name",
-		font,
-		slot->GetFaction()->m_colors.text
-	);
-
-	text->ShowAt(
-		{
-			render_coords.x,
-			render_coords.y - 0.25f,
-			render_coords.z - 0.25f
-		}
-	);
 
 }
 

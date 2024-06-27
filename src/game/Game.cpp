@@ -925,12 +925,41 @@ void Game::SpawnBase( base::Base* base ) {
 		return;
 	}
 
-	Log( "Spawning base #" + std::to_string( base->m_id ) + " at " + base->GetTile()->ToString() );
+	auto* tile = base->GetTile();
+
+	// validate and fix name if needed (or assign if empty)
+	std::vector< std::string > names_to_try = {};
+	if ( base->m_name.empty() ) {
+		const auto& names = base->m_owner->GetPlayer()->GetFaction()->m_base_names;
+		names_to_try = tile->is_water_tile
+			? names.water
+			: names.land;
+	}
+	else if ( m_registered_base_names.find( base->m_name ) != m_registered_base_names.end() ) {
+		names_to_try = { base->m_name };
+	}
+	if ( !names_to_try.empty() ) {
+		size_t cycle = 0;
+		bool found = false;
+		while ( !found ) {
+			cycle++;
+			for ( const auto& name_to_try : names_to_try ) {
+				base->m_name = cycle == 1
+					? name_to_try
+					: name_to_try + " " + std::to_string( cycle );
+				if ( m_registered_base_names.find( base->m_name ) == m_registered_base_names.end() ) {
+					found = true;
+					break;
+				}
+			}
+		}
+	}
+	m_registered_base_names.insert( base->m_name );
+
+	Log( "Spawning base #" + std::to_string( base->m_id ) + " ( " + base->m_name + " ) at " + base->GetTile()->ToString() );
 
 	ASSERT( m_bases.find( base->m_id ) == m_bases.end(), "duplicate base id" );
 	m_bases.insert_or_assign( base->m_id, base );
-
-	auto* tile = base->GetTile();
 
 	QueueBaseUpdate( base, BUO_SPAWN );
 
@@ -944,6 +973,8 @@ void Game::SpawnBase( base::Base* base ) {
 			}
 		);
 	}
+
+	RefreshBase( base );
 }
 
 const std::string* Game::MoveUnitValidate( unit::Unit* unit, map::tile::Tile* dst_tile ) {
@@ -2098,6 +2129,7 @@ void Game::PushBaseUpdates() {
 					c.y,
 					c.z
 				};
+				NEW( fr.data.base_spawn.base_info.name, std::string, base->m_name );
 				AddFrontendRequest( fr );
 			}
 			if ( bu.ops & BUO_REFRESH ) {

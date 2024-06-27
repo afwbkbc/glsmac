@@ -106,6 +106,21 @@ BINDING_IMPL( factions ) {
 					ERROR( gse::EC.GAME_ERROR, "Unsupported bases render type: " + bases_render_type );
 				}
 
+				N_GETPROP( base_names, bases_def, "names", Object );
+				N_GETPROP( base_names_land, base_names, "land", Array );
+				faction.m_base_names.land.reserve( base_names_land.size() );
+				for ( size_t i = 0  ; i < base_names_land.size() ; i++ ) {
+					N_GETELEMENT( v, base_names_land, i, String );
+					faction.m_base_names.land.push_back( v );
+				}
+
+				N_GETPROP( base_names_water, base_names, "water", Array );
+				faction.m_base_names.water.reserve( base_names_water.size() );
+				for ( size_t i = 0  ; i < base_names_water.size() ; i++ ) {
+					N_GETELEMENT( v, base_names_water, i, String );
+					faction.m_base_names.water.push_back( v );
+				}
+
 				factions.insert({ id, faction });
 				factions_order.push_back( id );
 				return VALUE( gse::type::Undefined );

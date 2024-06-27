@@ -1,6 +1,8 @@
 #pragma once
 
 #include <unordered_map>
+#include <vector>
+#include <string>
 
 #include "game/rules/Types.h"
 
@@ -39,6 +41,11 @@ public:
 		const types::Color text = {};
 		const types::Color border = {};
 	} m_colors = {};
+
+	struct {
+		const std::vector< std::string > land = {};
+		const std::vector< std::string > water = {};
+	} m_base_names = {};
 
 	const bool m_is_progenitor;
 
