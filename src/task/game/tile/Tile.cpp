@@ -139,6 +139,9 @@ void Tile::Render( size_t selected_unit_id ) {
 			if ( id == most_important_unit_id ) {
 				m_render.currently_rendered_unit->ShowBadge();
 			}
+			if ( id == selected_unit_id ) {
+				m_render.currently_rendered_unit->StartBadgeBlink();
+			}
 		}
 		size_t idx;
 		const auto& fake_badges = m_render.currently_rendered_fake_badges;
