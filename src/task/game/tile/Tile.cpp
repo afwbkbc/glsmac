@@ -35,6 +35,10 @@ Tile::Tile( const types::Vec2< size_t >& coords )
 
 }
 
+const bool Tile::IsWater() const {
+	return m_is_water;
+}
+
 const types::Vec2< size_t >& Tile::GetCoords() const {
 	return m_coords;
 }
@@ -209,6 +213,8 @@ const Tile::render_data_t& Tile::GetRenderData() const {
 }
 
 void Tile::Update( const ::game::map::tile::Tile& tile, const ::game::map::tile::TileState& ts ) {
+
+	m_is_water = tile.is_water_tile;
 
 	::game::map::tile::tile_layer_type_t lt = ( tile.is_water_tile
 		? ::game::map::tile::LAYER_WATER

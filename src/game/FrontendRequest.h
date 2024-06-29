@@ -153,6 +153,7 @@ public:
 			} render_coords;
 			struct {
 				const std::string* name;
+				size_t population;
 			} base_info;
 		} base_spawn;
 	} data;

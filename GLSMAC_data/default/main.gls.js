@@ -64,7 +64,6 @@ units.init();
 										if (morale >= 6) {
 											break;
 										}
-										#print(neighbour);
 										if (neighbour.has_fungus) {
 											morale++;
 										}
@@ -85,14 +84,24 @@ units.init();
 					}
 				}
 				if (#game.random.get_int(0, 2) == 0) {
-					#game.bases.spawn(
-						owner,
-						tile,
-						{
-							// name: 'base name',
+					let has_adjactent_bases = false;
+					for (neighbour of tile.get_surrounding_tiles()) {
+						if (neighbour.get_base() != null) {
+							has_adjactent_bases = true;
+							break;
 						}
-					);
-					bases_spawned++;
+					}
+					if (!has_adjactent_bases) {
+						#game.bases.spawn(
+							owner,
+							tile,
+							{
+								// name: 'base name',
+								population: #game.random.get_int(0, 4) * #game.random.get_int(0, 4) + #game.random.get_int(1, 3),
+							}
+						);
+						bases_spawned++;
+					}
 				}
 			}
 		}

@@ -6,6 +6,7 @@
 #include "gse/Exception.h"
 #include "gse/type/Undefined.h"
 #include "gse/type/Object.h"
+#include "gse/type/Int.h"
 #include "gse/type/String.h"
 #include "game/Game.h"
 #include "game/slot/Slot.h"
@@ -26,6 +27,7 @@ BINDING_IMPL( bases ) {
 
 				N_GETVALUE( info, 2, Object );
 				N_GETPROP_OPT( std::string, name, info, "name", String, "" );
+				N_GETPROP_OPT( size_t, population, info, "population", Int, 1 );
 
 				auto* game = GAME;
 				game->AddEvent( new event::SpawnBase(
@@ -33,7 +35,7 @@ BINDING_IMPL( bases ) {
 					owner->GetIndex(),
 					tile->coord.x,
 					tile->coord.y,
-					name
+					base::BaseData( name, population )
 				) );
 				return VALUE( gse::type::Undefined );
 			})

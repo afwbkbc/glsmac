@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "BaseData.h"
+
 #include "gse/Wrappable.h"
 #include "game/MapObject.h"
 
@@ -30,13 +32,14 @@ public:
 		const size_t id,
 		slot::Slot* owner,
 		map::tile::Tile* tile,
-		const std::string& name
+		const BaseData& data
 	);
 	virtual ~Base() = default;
 
 	const size_t m_id;
 	slot::Slot* m_owner;
-	std::string m_name;
+
+	BaseData m_data;
 
 	static const types::Buffer Serialize( const Base* base );
 	static Base* Unserialize( types::Buffer& buf, Game* game );

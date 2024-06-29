@@ -18,13 +18,21 @@ namespace task {
 namespace game {
 namespace base {
 
+static const std::vector< uint8_t > s_base_render_population_thresholds = {
+	1,
+	4,
+	8,
+	15,
+};
+
 Base::Base(
 	const size_t id,
 	Slot* slot,
 	tile::Tile* tile,
 	const bool is_owned,
 	const types::Vec3& render_coords,
-	text::InstancedText* render_name_sprite
+	text::InstancedText* render_name_sprite,
+	size_t population
 )
 	: TileObject( tile )
 	, m_id( id )
@@ -37,7 +45,8 @@ Base::Base(
 			0,
 		}
 	)
-	, m_is_owned( is_owned ) {
+	, m_is_owned( is_owned )
+	, m_population( population ) {
 	m_render_data.base = GetMeshTex( GetSprite()->instanced_sprite );
 	m_tile->SetBase( this );
 }
@@ -61,7 +70,14 @@ tile::Tile* Base::GetTile() const {
 }
 
 sprite::Sprite* Base::GetSprite() const {
-	return m_faction->GetBaseSprite( false, 1, 0 );
+	uint8_t size = 0;
+	for ( uint8_t i = 0 ; i < s_base_render_population_thresholds.size() ; i++ ) {
+		if ( s_base_render_population_thresholds.at( i ) > m_population ) {
+			break;
+		}
+		size = i;
+	}
+	return m_faction->GetBaseSprite( m_tile->IsWater(), size, 0 ); // TODO: perimeter
 }
 
 void Base::Show() {

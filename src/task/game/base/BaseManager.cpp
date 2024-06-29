@@ -40,7 +40,7 @@ void BaseManager::SpawnBase(
 	const size_t slot_index,
 	const types::Vec2< size_t >& tile_coords,
 	const types::Vec3& render_coords,
-	const std::string& name
+	const ::game::base::BaseData& data
 ) {
 
 	ASSERT( m_bases.find( base_id ) == m_bases.end(), "base id already exists" );
@@ -59,10 +59,11 @@ void BaseManager::SpawnBase(
 				slot_index == m_game->GetMySlotIndex(),
 				render_coords,
 				m_game->GetITM()->CreateInstancedText(
-					name,
+					data.name,
 					m_name_font,
 					faction->m_colors.text
-				)
+				),
+				data.population
 			)
 		}
 	);

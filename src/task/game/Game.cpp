@@ -1080,7 +1080,10 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 					rc.y,
 					rc.z
 				},
-				*d.base_info.name
+				{
+					*d.base_info.name,
+					d.base_info.population
+				}
 			);
 			break;
 		}

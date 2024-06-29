@@ -4,11 +4,13 @@
 #include "gse/type/Array.h"
 #include "gse/type/Int.h"
 #include "gse/type/Bool.h"
+#include "gse/type/Null.h"
 #include "gse/type/Undefined.h"
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
 
 #include "game/unit/Unit.h"
+#include "game/base/Base.h"
 
 namespace game {
 namespace map {
@@ -217,6 +219,18 @@ WRAPIMPL_BEGIN( Tile, CLASS_TILE )
 					result.push_back( it.second->Wrap() );
 				}
 				return VALUE( gse::type::Array, result );
+			} )
+		},
+		{
+			"get_base",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				if ( base ) {
+					return base->Wrap();
+				}
+				else {
+					return VALUE( gse::type::Null );
+				}
 			} )
 		},
 	};

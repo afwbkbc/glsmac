@@ -26,13 +26,13 @@ Base::Base(
 	const size_t id,
 	slot::Slot* owner,
 	map::tile::Tile* tile,
-	const std::string& name
+	const BaseData& data
 )
 	: MapObject( game->GetMap(), tile )
 	, m_game( game )
 	, m_id( id )
 	, m_owner( owner )
-	, m_name( name ) {
+	, m_data( data ) {
 	if ( next_id <= id ) {
 		next_id = id + 1;
 	}
@@ -47,7 +47,7 @@ const types::Buffer Base::Serialize( const Base* base ) {
 	buf.WriteInt( base->m_owner->GetIndex() );
 	buf.WriteInt( base->m_tile->coord.x );
 	buf.WriteInt( base->m_tile->coord.y );
-	buf.WriteString( base->m_name );
+	base->m_data.Serialize( buf );
 	return buf;
 }
 
@@ -57,8 +57,8 @@ Base* Base::Unserialize( types::Buffer& buf, Game* game ) {
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
 	auto* tile = game ? game->GetMap()->GetTile( pos_x, pos_y ) : nullptr;
-	const auto name = buf.ReadString();
-	return new Base( game, id, slot, tile, name );
+	const auto data = BaseData( buf );
+	return new Base( game, id, slot, tile, data );
 }
 
 WRAPIMPL_DYNAMIC_GETTERS( Base, CLASS_BASE )

@@ -55,7 +55,8 @@ public:
 		tile::Tile* tile,
 		const bool is_owned,
 		const types::Vec3& render_coords,
-		text::InstancedText* render_name_sprite
+		text::InstancedText* render_name_sprite,
+		size_t population
 	);
 	~Base();
 
@@ -92,6 +93,8 @@ private:
 		bool is_rendered = false;
 		size_t instance_id = 0;
 	} m_render;
+
+	size_t m_population = 0;
 
 	const bool m_is_owned = false;
 
