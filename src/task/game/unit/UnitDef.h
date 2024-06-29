@@ -59,7 +59,6 @@ private:
 		::game::unit::movement_t movement_per_turn;
 		struct {
 			bool is_sprite = false;
-			uint32_t morale_based_xshift = 0;
 			types::texture::Texture* texture = nullptr;
 			sprite::Sprite sprite = {};
 			morale_based_sprites_t* morale_based_sprites = nullptr;

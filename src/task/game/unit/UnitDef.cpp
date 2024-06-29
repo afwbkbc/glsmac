@@ -45,7 +45,7 @@ UnitDef::UnitDef( sprite::InstancedSpriteManager* ism, const ::game::unit::Def* 
 
 UnitDef::~UnitDef() {
 	if ( m_type == ::game::unit::DT_STATIC ) {
-		if ( static_.render.morale_based_xshift ) {
+		if ( m_render.morale_based_xshift ) {
 			if ( static_.render.morale_based_sprites ) {
 				DELETE( static_.render.morale_based_sprites );
 			}
@@ -67,7 +67,7 @@ sprite::Sprite* UnitDef::GetSprite( const ::game::unit::morale_t morale ) {
 		}
 		auto it = static_.render.morale_based_sprites->find( morale );
 		if ( it == static_.render.morale_based_sprites->end() ) {
-			const uint32_t xshift = static_.render.morale_based_xshift * ( morale - ::game::unit::MORALE_MIN );
+			const uint32_t xshift = m_render.morale_based_xshift * ( morale - ::game::unit::MORALE_MIN );
 			it = static_.render.morale_based_sprites->insert(
 				{
 					morale,
