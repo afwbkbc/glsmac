@@ -14,6 +14,8 @@ enum variable_hints_t : uint8_t {
 enum operator_type_t {
 	OT_NOOP,
 	OT_RETURN,
+	OT_BREAK,
+	OT_CONTINUE,
 	OT_THROW,
 	OT_ASSIGN,
 	OT_NOT,
@@ -41,6 +43,12 @@ enum operator_type_t {
 	OT_AT,
 	OT_APPEND,
 	OT_RANGE,
+};
+
+enum loop_control_type_t {
+	LCT_NONE,
+	LCT_BREAK,
+	LCT_CONTINUE,
 };
 
 }

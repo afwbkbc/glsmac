@@ -9,6 +9,7 @@ SET( SRC ${SRC}
 	${PWD}/ForCondition.cpp
 	${PWD}/ForConditionInOf.cpp
 	${PWD}/ForConditionExpressions.cpp
+	${PWD}/LoopControl.cpp
 	${PWD}/Control.cpp
 	${PWD}/Element.cpp
 	${PWD}/Else.cpp

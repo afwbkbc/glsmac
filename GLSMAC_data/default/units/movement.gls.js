@@ -58,10 +58,10 @@ const result = {
 			}
 
 			let any_foreign_units_in_tile = false;
-			for (unit of e.dst_tile.get_units()) { // TODO: for loop
+			for (unit of e.dst_tile.get_units()) {
 				if (unit.get_owner() != e.unit.get_owner()) {
 					any_foreign_units_in_tile = true;
-					// TODO: break
+					break;
 				}
 			}
 			if (any_foreign_units_in_tile) {

@@ -16,6 +16,4 @@ const faction = {
 	},
 };
 
-#print('FACTION', faction);
-
 return faction;

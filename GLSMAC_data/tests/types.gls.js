@@ -13,6 +13,18 @@ let c = (a + 2) * 4;
 c = 123;
 c -= 23;
 
+let emptymethod = () => {};
+test.assert(#typeof(emptymethod()) == 'Undefined');
+
+let ret = 0;
+let testmethod0 = () => {
+	ret = 1;
+	return;
+	ret = 2;
+};
+test.assert(#typeof(testmethod0()) == 'Undefined');
+test.assert(ret == 1);
+
 let testmethod1 = (a, b, c) => {
 	return a + b + c;
 };
@@ -257,6 +269,72 @@ const for_func = () => {
 test.assert(for_func() == 6);
 
 arr = [];
+for ( i = 0 ; i < 10 ; i++ ) {
+	arr []= i;
+	if (i >= 3) {
+		arr []= 'x';
+		for ( i = 5 ; i < 10 ; i++ ) {
+			if ( i == 7 ) {
+				break;
+			}
+			arr []= i;
+		}
+		arr []= 'y';
+		break;
+	}
+}
+test.assert(arr == [0, 1, 2, 3, 'x', 5, 6, 'y']);
+
+arr = [];
+i = 5;
+while (i > 0) {
+	if (i == 2 ) {
+		break;
+	}
+	arr []= i;
+	i--;
+}
+test.assert(arr == [5, 4, 3]);
+
+arr = [];
+for ( i of [4, 7, 1, 5] ) {
+	if ( i == 1 ) {
+		break;
+	}
+	arr []= i;
+}
+test.assert(arr == [4, 7]);
+
+arr = [];
+for ( i = 0 ; i < 10 ; i++ ) {
+	if ( i < 5 || i > 8 ) {
+		continue;
+	}
+	arr []= i;
+}
+test.assert(arr == [5, 6, 7, 8]);
+
+arr = [];
+i = 10;
+while (i > 0) {
+	i--;
+	if (i > 7 || i < 3) {
+		for ( ii of ['a', 'b', 'c', 'd', 'e', 'f'] ) {
+			if ( ii == 'a' || ii == 'c' ) {
+				continue;
+			}
+			elseif (ii == 'e') {
+				break;
+			}
+			arr []= ii;
+		}
+		continue;
+	}
+	arr []= i;
+}
+test.assert(arr == ['b', 'd', 'b', 'd', 7, 6, 5, 4, 3, 'b', 'd', 'b', 'd', 'b', 'd']);
+
+arr = [];
 try {
 	arr [] = 'BEFORE EXCEPTION'; // should be printed
 	let realfailfunc = () => {
@@ -288,9 +366,9 @@ test.assert(arr == [
 	'failfunc',
 	'failfunc2',
 	'CAUGHT TestError : something happened',
-	'\tat ' + test.get_script_path() + ':265: throw TestError(\'something happened\');',
-	'\tat ' + test.get_script_path() + ':270: realfailfunc();',
-	'\tat ' + test.get_script_path() + ':272: failfunc();'
+	'\tat ' + test.get_script_path() + ':343: throw TestError(\'something happened\');',
+	'\tat ' + test.get_script_path() + ':348: realfailfunc();',
+	'\tat ' + test.get_script_path() + ':350: failfunc();'
 ]);
 
 test.assert(#to_string(2 + 3) + ' (five)' == '5 (five)');

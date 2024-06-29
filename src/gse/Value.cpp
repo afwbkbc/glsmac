@@ -104,6 +104,8 @@ const Value Value::New( const type::Type* type ) const {
 		}
 		case type::Type::T_RANGE:
 			THROW( "ranges are not supposed to be cloned" );
+		case type::Type::T_LOOPCONTROL:
+			THROW( "loop controls are not supposed to be cloned" );
 		default: {
 			THROW( "unsupported value type: " + ToString() );
 		}

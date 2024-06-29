@@ -85,6 +85,10 @@ gse::Value Bindings::Call( const callback_slot_t slot, const callback_arguments_
 			if ( game ) {
 				game->PushUnitUpdates();
 			}
+			if ( result.Get()->type == gse::type::Type::T_NOTHING ) {
+				// return undefined by default
+				return VALUE( gse::type::Undefined );
+			}
 			return result;
 		}
 		catch ( gse::Exception& e ) {

@@ -6,6 +6,7 @@
 #include "common/Common.h"
 
 #include "gse/Types.h"
+#include "gse/program/Types.h"
 
 namespace gse {
 
@@ -40,6 +41,7 @@ protected:
 			ET_DELIMITER,
 			ET_CONDITIONAL,
 			ET_BLOCK,
+			ET_LOOP_CONTROL
 		};
 		SourceElement( const element_type_t type, const si_t& si )
 			: m_type( type )
@@ -203,6 +205,26 @@ protected:
 				default:
 					THROW( "unexpected block side: " + std::to_string( m_block_side ) );
 			}
+		}
+	};
+	class LoopControl : public SourceElement {
+	public:
+		LoopControl( const program::loop_control_type_t loop_control_type, const si_t& si )
+			: SourceElement( ET_LOOP_CONTROL, si )
+			, m_loop_control_type( loop_control_type ) {}
+		const program::loop_control_type_t m_loop_control_type;
+		const std::string ToString() const override {
+			switch ( m_loop_control_type ) {
+				case program::LCT_BREAK:
+					return "break";
+				case program::LCT_CONTINUE:
+					return "continue";
+				default:
+					THROW( "unexpected loop control type: " + std::to_string( m_loop_control_type ) );
+			}
+		}
+		const std::string Dump() const override {
+			return "loop_control{" + ToString() + "}";
 		}
 	};
 

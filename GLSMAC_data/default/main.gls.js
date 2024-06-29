@@ -60,14 +60,14 @@ units.init();
 								if (tile.has_fungus && #game.random.get_int(0, 3) == 0) {
 									// morale depends on count of fungus tiles around
 									let morale = 1;
-									let neighbours = tile.get_surrounding_tiles();
-									let sz = #size(neighbours);
-									let i = 0;
-									while (morale < 6 && i < sz) {
-										if (neighbours[i].has_fungus) {
+									for (neighbour of tile.get_surrounding_tiles()) {
+										if (morale >= 6) {
+											break;
+										}
+										#print(neighbour);
+										if (neighbour.has_fungus) {
 											morale++;
 										}
-										i++;
 									}
 									#game.units.spawn('FungalTower', owner, tile, morale, random_health());
 									units_spawned++;
@@ -99,23 +99,6 @@ units.init();
 	}
 	#game.message('Total units spawned: ' + #to_string(units_spawned));
 	#game.message('Total bases spawned: ' + #to_string(bases_spawned));
-
-	// spawn bases
-
-	/*let i = 0;
-	while (i < players_sz) {
-		let base_x = 0;
-		let base_y = 1;
-		while (base_x % 2 != base_y % 2) {
-			base_x = #game.random.get_int(1, w - 2);
-			base_y = #game.random.get_int(1, h - 2);
-		}
-		#game.bases.spawn(
-			players[i],
-			#game.map.get_tile(base_x, base_y)
-		);
-		i++;
-	}*/
 
 });
 
