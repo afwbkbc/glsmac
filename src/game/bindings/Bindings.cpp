@@ -11,7 +11,8 @@
 #include "gse/type/Object.h"
 #include "gse/type/Callable.h"
 #include "gse/type/Undefined.h"
-
+#include "engine/Engine.h"
+#include "config/Config.h"
 #include "game/State.h"
 
 namespace game {
@@ -22,7 +23,7 @@ Bindings::Bindings( State* state )
 	, m_entry_script(
 		util::FS::GeneratePath(
 			{
-				"GLSMAC_data", // directory is expected to be in working dir
+				g_engine->GetConfig()->GetDataPath(),
 				"default", // only 'default' mod for now
 				"main" // script name (extension is appended automatically)
 			}, gse::GSE::PATH_SEPARATOR

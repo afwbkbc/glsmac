@@ -41,8 +41,9 @@ const types::Vec2< size_t > Config::ParseSize( const std::string& value ) {
 
 Config::Config( const int argc, const char* argv[] )
 	: m_smac_path( "" )
+	, m_data_path( "GLSMAC_data" )
 	, m_prefix( DEFAULT_GLSMAC_PREFIX + util::FS::PATH_SEPARATOR ) {
-	
+
 	m_parser = new util::ArgParser( argc, argv );
 
 	m_parser->AddRule(
@@ -51,8 +52,8 @@ Config::Config( const int argc, const char* argv[] )
 		}
 	);
 	m_parser->AddRule(
-		"showfps", "Show FPS counter at top left corner", AH( this ) {
-			m_launch_flags |= LF_SHOWFPS;
+		"datapath", "DATA_PATH", "Specify path to GLSMAC_data directory (default: " + util::FS::GetCurrentDirectory() + "/" + m_data_path + ")", AH( this ) {
+			m_data_path = value;
 		}
 	);
 	m_parser->AddRule(
@@ -74,6 +75,11 @@ Config::Config( const int argc, const char* argv[] )
 	m_parser->AddRule(
 		"skipintro", "Skip intro", AH( this ) {
 			m_launch_flags |= LF_SKIPINTRO;
+		}
+	);
+	m_parser->AddRule(
+		"showfps", "Show FPS counter at top left corner", AH( this ) {
+			m_launch_flags |= LF_SHOWFPS;
 		}
 	);
 	m_parser->AddRule(
@@ -308,6 +314,10 @@ const std::string Config::GetDebugPath() const {
 }
 
 #endif
+
+const std::string& Config::GetDataPath() const {
+	return m_data_path;
+}
 
 const std::vector< std::string > Config::GetPossibleSMACPaths() const {
 	std::vector< std::string > result = {};
