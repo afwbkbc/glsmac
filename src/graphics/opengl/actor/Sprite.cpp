@@ -1,19 +1,21 @@
 #include "Sprite.h"
 
+#include "scene/Scene.h"
+#include "scene/Light.h"
+#include "scene/Camera.h"
+#include "scene/actor/Actor.h"
 #include "scene/actor/Sprite.h"
 #include "scene/actor/Instanced.h"
-
-#include "../shader_program/Orthographic.h"
-#include "../shader_program/World.h"
+#include "graphics/Graphics.h"
+#include "graphics/opengl/OpenGL.h"
+#include "graphics/opengl/shader_program/Orthographic.h"
+#include "graphics/opengl/shader_program/World.h"
 
 #include "types/Matrix44.h"
 
 #include "engine/Engine.h"
 
 #include "types/mesh/Render.h"
-
-using namespace scene;
-using namespace mesh;
 
 namespace graphics {
 namespace opengl {
@@ -40,7 +42,8 @@ bool Sprite::MeshReloadNeeded() {
 	auto* actor = GetSpriteActor();
 	return
 		m_last_dimensions != actor->GetDimensions() ||
-			m_last_tex_coords != actor->GetTexCoords();
+		m_last_tex_coords != actor->GetTexCoords()
+	;
 }
 
 bool Sprite::TextureReloadNeeded() {
@@ -85,11 +88,11 @@ void Sprite::LoadTexture() {
 
 scene::actor::Sprite* Sprite::GetSpriteActor() const {
 	switch ( m_actor->GetType() ) {
-		case scene::Actor::TYPE_SPRITE: {
+		case scene::actor::Actor::TYPE_SPRITE: {
 			return (scene::actor::Sprite*)m_actor;
 			break;
 		}
-		case scene::Actor::TYPE_INSTANCED_SPRITE: {
+		case scene::actor::Actor::TYPE_INSTANCED_SPRITE: {
 			return ( (scene::actor::Instanced*)m_actor )->GetSpriteActor();
 			break;
 		}
@@ -100,7 +103,7 @@ scene::actor::Sprite* Sprite::GetSpriteActor() const {
 	}
 }
 
-void Sprite::Draw( shader_program::ShaderProgram* shader_program, Camera* camera ) {
+void Sprite::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
 
 	auto* sprite_actor = GetSpriteActor();
 
@@ -125,14 +128,15 @@ void Sprite::Draw( shader_program::ShaderProgram* shader_program, Camera* camera
 
 			auto flags = sprite_actor->GetRenderFlags();
 			glUniform1ui( sp->uniforms.flags, flags );
-			if ( flags & actor::Actor::RF_USE_2D_POSITION ) {
-				glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&sprite_actor->GetPosition() );
+			if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
+				const types::Vec3 pos = sprite_actor->NormalizePosition(sprite_actor->GetPosition());
+				glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&pos );
 			}
 
 			auto* lights = m_actor->GetScene()->GetLights();
 			if ( !lights->empty() ) {
-				Vec3 light_pos[lights->size()];
-				Color light_color[lights->size()];
+				types::Vec3 light_pos[lights->size()];
+				types::Color light_color[lights->size()];
 				size_t i = 0;
 				for ( auto& light : *lights ) {
 					light_pos[ i ] = light->GetPosition();
@@ -143,18 +147,18 @@ void Sprite::Draw( shader_program::ShaderProgram* shader_program, Camera* camera
 				glUniform4fv( sp->uniforms.light_color, lights->size(), (const GLfloat*)light_color );
 			}
 
-			if ( !( flags & actor::Actor::RF_SPRITES_DEPTH ) ) {
+			if ( !( flags & scene::actor::Actor::RF_SPRITES_DEPTH ) ) {
 				glDisable( GL_DEPTH_TEST );
 			}
 
 			glUniformMatrix4fv( sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)&camera->GetMatrix() );
 
-			if ( m_actor->GetType() == scene::Actor::TYPE_SPRITE ) {
+			if ( m_actor->GetType() == scene::actor::Actor::TYPE_SPRITE ) {
 				types::Matrix44 matrix = m_actor->GetWorldMatrix();
 				glUniformMatrix4fv( sp->uniforms.instances, 1, GL_TRUE, (const GLfloat*)( &matrix ) );
 				glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void*)( 0 ) );
 			}
-			else if ( m_actor->GetType() == scene::Actor::TYPE_INSTANCED_SPRITE ) {
+			else if ( m_actor->GetType() == scene::actor::Actor::TYPE_INSTANCED_SPRITE ) {
 				auto* instanced = (scene::actor::Instanced*)m_actor;
 				auto& matrices = instanced->GetInstanceMatrices();
 				const auto sz = matrices.size();
@@ -170,7 +174,7 @@ void Sprite::Draw( shader_program::ShaderProgram* shader_program, Camera* camera
 				THROW( "unknown actor type " + std::to_string( m_actor->GetType() ) );
 			}
 
-			if ( !( flags & actor::Actor::RF_SPRITES_DEPTH ) ) {
+			if ( !( flags & scene::actor::Actor::RF_SPRITES_DEPTH ) ) {
 				glEnable( GL_DEPTH_TEST );
 			}
 
@@ -198,5 +202,5 @@ void Sprite::Draw( shader_program::ShaderProgram* shader_program, Camera* camera
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 }
 
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}

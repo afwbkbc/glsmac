@@ -6,7 +6,7 @@ Unofficial open-source OpenGL/SDL2 reimplementation of Sid Meier's Alpha Centaur
 
 Note: you will still need to own the original game and expansion - GLSMAC will load its resources like images or sounds.
 
-Check [Screenshots](https://github.com/afwbkbc/glsmac/wiki/Screenshots) for current state of project.
+Check [Screenshots](https://github.com/afwbkbc/glsmac/wiki/Screenshots) and [Videos](https://www.youtube.com/playlist?list=PLX0T-HsVvJwL779fEsDpDuXGs1wkV6zwN) for current state and history of project.
 
 GLSMAC discord : https://discord.gg/fWG3xK7cUx
 
@@ -165,17 +165,46 @@ Building with Visual Studio is recommended for windows. You will need **git** (f
 
 You will need to install the following `C++ CMake tools for windows`, `C++ Clang Compiler for windows`, `C++ Clang-cl`, `Windows 11 SDK (10.2.22621.0)`, `Windows Universal CRT SDK`, `Windows Universal C Runtime`.
 
-Once that is done you should clone the git, then open the folder. Press the top button **Project**->**Configure**, then the output should open. Wait for it to say "CMake generation finished.". Once that is done select the build target `GLSMAC.exe` and press the debug button.
+Once that is done you should clone the git, then open the folder. Press the top button **Project**->**Configure**, then the output should open. Wait for it to say "CMake generation finished.". On top you'll see build configuration dropdown, select either `x64 Debug` or `x64 Release`. Then press 'build' button (or usually it's F10 or Shift+F10 hotkey), wait until build is finished. Once that is done (without errors) select the build target `GLSMAC.exe` and press the debug button.
 
 You are going to want to add your path to the start argument when running, to do that open the **Solution Explorer** and press **Show all files**. Then go to `out\build\x64-debug-win-clang\bin`, right click GLSMAC.exe and select **Add Debug Configuration**->**Default**.
 
-Then in the file that just open paste
+It should open `launch.vs.json` file, make it look similar to this (debug and release entries, add more arguments as necessary):
 
-`"args": [ "--smacpath", "\"C:\\GOG Games\\Sid Meier's Alpha Centauri\"" ]`
+```
+{
+    "version": "0.2.1",
+    "defaults": {},
+    "configurations": [
+        {
+            "type": "default",
+            "project": "out\\build\\x64-debug-win-clang\\bin\\GLSMAC.exe",
+            "projectTarget": "",
+            "currentDir": ".",
+            "name": "GLSMAC.exe",
+            "args": [
+                "--smacpath C:\\smac"
+            ]
+        },
+        {
+            "type": "default",
+            "project": "out\\build\\x64-release-win-clang\\bin\\GLSMAC.exe",
+            "projectTarget": "",
+            "currentDir": ".",
+            "name": "GLSMAC.exe",
+            "args": [
+                "--smacpath C:\\smac",
+            ]
+        }
+    ]
+}
+```
 
-below name in the configuration. You need to replace the path with your own path to the game. Then you are done and can run the game in Visual Studio.
+Replace the path to SMAC installation with your own path to the game. Then you are done and can run the game in Visual Studio.
 
-Alternatively, set working directory to that of your SMAC installation, it will work without arguments then.
+`currentDir` above is required because GLSMAC will load scripts from `./GLSMAC_data` in runtime.
+
+Alternatively, set working directory to that of your SMAC installation (you'll need to copy `GLSMAC_data` directory there), it will work without `--smacpath` argument then.
 
 #### MinGW
 
@@ -187,11 +216,15 @@ Wasn't tested. Feel free to test, but I have feeling it will require many change
 
 ### Launch
 
-Just run ./bin/GLSMAC --smacpath <smac_directory>
+Note: GLSMAC needs `GLSMAC_data` directory to be in working directory from where it's run, it loads scripts from there in runtime (later some of them will be built into binary so this step won't be needed).
 
-Or copy GLSMAC into your SMAC directory and run without arguments from there.
+Just run ./GLSMAC --smacpath <smac_directory>
+
+Or copy `GLSMAC` file and `GLSMAC_data` directory into your SMAC directory and run without arguments from there.
 
 Run ./bin/GLSMAC --help to see more options. Debug builds have extra options that aren't available for release builds.
+
+Supported SMAC releases: GOG, Loki, Planetary Pack (if you have something else and it doesn't work - double-check that you have SMACX expansion and then create issue)
 
 ### Reporting problems
 

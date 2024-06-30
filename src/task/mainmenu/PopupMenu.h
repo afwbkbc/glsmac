@@ -2,16 +2,14 @@
 
 #include <string>
 #include <unordered_set>
+#include <cstdint>
 
 #include "MenuObject.h"
 
-#include "ui/object/Panel.h"
-#include "ui/object/Section.h"
-#include "ui/object/Button.h"
-
-using namespace ui;
-namespace ui {
-using namespace object;
+namespace ui::object {
+class Panel;
+class Section;
+class Button;
 }
 
 namespace task {
@@ -40,17 +38,17 @@ protected:
 	void SetWidth( const size_t width );
 	void SetHeight( const size_t height );
 
-	Panel* m_body = nullptr; // child classes can add elements here
+	ui::object::Panel* m_body = nullptr; // child classes can add elements here
 
 	void Resize();
 
 	const bool IsShown() const;
 
-	Section* m_frame = nullptr;
+	ui::object::Section* m_frame = nullptr;
 
 private:
-	Button* m_button_ok = nullptr;
-	Button* m_button_cancel = nullptr;
+	ui::object::Button* m_button_ok = nullptr;
+	ui::object::Button* m_button_cancel = nullptr;
 
 	std::unordered_set< popup_flag_t > m_flags = {};
 	size_t m_width = 0;
@@ -63,5 +61,3 @@ private:
 
 }
 }
-
-#include "MainMenu.h"

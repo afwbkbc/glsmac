@@ -2,6 +2,8 @@
 
 #define DOUBLECLICK_MAX_MS 1000
 
+#include "Label.h"
+
 namespace ui {
 namespace object {
 
@@ -18,12 +20,12 @@ void LabelButton::Create() {
 	//m_label->SetMargin( 3 );
 	m_label->ForwardStyleAttributesV(
 		{
-			Style::A_FONT,
-			Style::A_TEXT_COLOR,
+			A_FONT,
+			A_TEXT_COLOR,
 		}
 	);
-	m_label->ForwardStyleAttribute( Style::A_TEXT_ALIGN, Style::A_ALIGN );
-	m_label->ForwardStyleAttribute( Style::A_TEXT_LEFT, Style::A_LEFT );
+	m_label->ForwardStyleAttribute( A_TEXT_ALIGN, A_ALIGN );
+	m_label->ForwardStyleAttribute( A_TEXT_LEFT, A_LEFT );
 	AddChild( m_label );
 }
 

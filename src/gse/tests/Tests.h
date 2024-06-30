@@ -1,15 +1,18 @@
 #pragma once
 
-#include "task/gsetests/GSETests.h"
+#include <string>
 
-#include "gse/program/Program.h"
+namespace task::gsetests {
+class GSETests;
+}
 
 namespace gse {
-namespace tests {
 
-struct test_info_t {
-	std::string script_path;
-};
+namespace program {
+class Program;
+}
+
+namespace tests {
 
 void AddTests( task::gsetests::GSETests* task );
 

@@ -1,9 +1,6 @@
 #pragma once
 
-#include <vector>
-#include <unordered_map>
-
-#include "base/Base.h"
+#include "common/Common.h"
 
 namespace rr {
 
@@ -14,7 +11,7 @@ enum type_t {
 };
 
 // Request-Response
-CLASS( RR, base::Base )
+CLASS( RR, common::Class )
 
 	const type_t GetType() const;
 	const bool IsProcessed() const;
@@ -31,7 +28,5 @@ private:
 	bool m_is_processed = false;
 
 };
-
-typedef size_t id_t;
 
 }

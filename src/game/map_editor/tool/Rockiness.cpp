@@ -1,25 +1,25 @@
 #include "Rockiness.h"
 
-#include "../../Game.h"
+#include "game/Game.h"
 
 namespace game {
 namespace map_editor {
 namespace tool {
 
 Rockiness::Rockiness( Game* game )
-	: Tool( game, MapEditor::TT_ROCKINESS ) {
+	: Tool( game, TT_ROCKINESS ) {
 	//
 }
 
-const MapEditor::tiles_t Rockiness::Draw( map::Tile* tile, const MapEditor::draw_mode_t mode ) {
-	if ( mode == MapEditor::DM_DEC ) {
-		if ( tile->rockiness <= map::Tile::R_FLAT ) {
+const tiles_t Rockiness::Draw( map::tile::Tile* tile, const draw_mode_t mode ) {
+	if ( mode == DM_DEC ) {
+		if ( tile->rockiness <= map::tile::ROCKINESS_FLAT ) {
 			return {}; // can't decrease further
 		}
 		tile->rockiness--;
 	}
-	else if ( mode == MapEditor::DM_INC ) {
-		if ( tile->rockiness >= map::Tile::R_ROCKY ) {
+	else if ( mode == DM_INC ) {
+		if ( tile->rockiness >= map::tile::ROCKINESS_ROCKY ) {
 			return {}; // can't increase further
 		}
 		tile->rockiness++;

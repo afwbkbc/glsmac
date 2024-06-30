@@ -7,7 +7,7 @@ namespace builtins {
 
 class Common : public Bindings {
 public:
-	void AddToContext( gse::Context* ctx ) override;
+	void AddToContext( context::Context* ctx ) override;
 };
 
 }

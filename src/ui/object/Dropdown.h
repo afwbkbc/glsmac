@@ -1,13 +1,17 @@
 #pragma once
 
-#include "base/Base.h"
+#include "Panel.h"
 
-#include "Label.h"
-#include "SimpleButton.h"
+#include "types/Color.h"
+
+// TODO: remove this
 #include "ChoiceList.h"
 
 namespace ui {
 namespace object {
+
+class Label;
+class SimpleButton;
 
 /* Extendable dropdown with selection */
 
@@ -29,7 +33,7 @@ CLASS( Dropdown, Panel )
 	// TODO: refactor and remove
 	void SetChoicesV( const std::vector< std::string >& labels );
 
-	void SetTextColor( const Color& color );
+	void SetTextColor( const types::Color& color );
 
 	void Create() override;
 	void Destroy() override;
@@ -40,7 +44,7 @@ private:
 	dropdown_mode_t m_mode = DM_SELECT;
 
 	bool m_custom_text_color = false;
-	Color m_text_color = {};
+	types::Color m_text_color = {};
 
 	const bool IsExpanded() const;
 	void Expand();

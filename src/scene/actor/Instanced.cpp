@@ -1,5 +1,7 @@
 #include "Instanced.h"
 
+#include "scene/Scene.h"
+
 namespace scene {
 namespace actor {
 
@@ -78,7 +80,7 @@ void Instanced::GenerateInstanceMatrices( matrices_t* out_matrices, scene::Camer
 	for ( auto& id_instance : m_instances ) {
 		auto& instance = id_instance.second;
 		if ( instance.need_update ) {
-			UpdateInstance( instance );
+			UpdateMatrixForInstance( instance );
 		}
 		for ( auto& matrices : instance.matrices ) {
 			( *out_matrices )[ i ] = matrices.matrix;
@@ -108,14 +110,14 @@ void Instanced::UpdateMatrix() {
 	m_need_world_matrix_update = true;
 }
 
-const scene::Scene::instance_positions_t* Instanced::GetWorldInstancePositions() {
+const scene::instance_positions_t* Instanced::GetWorldInstancePositions() {
 	if ( m_scene ) {
 		return &m_scene->GetWorldInstancePositions();
 	}
 	return nullptr;
 }
 
-void Instanced::UpdateInstance( instance_t& instance ) {
+void Instanced::UpdateMatrixForInstance( instance_t& instance ) {
 	const auto& world_instance_positions = GetWorldInstancePositions();
 	const size_t sz = world_instance_positions->size();
 	instance.matrices.resize( world_instance_positions->size() );
@@ -149,7 +151,7 @@ Mesh* Instanced::GetMeshActor() const {
 
 const Instanced::instance_id_t Instanced::AddInstance( const types::Vec3& position, const types::Vec3& angle ) {
 	m_instances[ m_next_instance_id ] = {
-		position,
+		m_actor->NormalizePosition( position ),
 		angle,
 		{},
 		true
@@ -161,7 +163,7 @@ const Instanced::instance_id_t Instanced::AddInstance( const types::Vec3& positi
 void Instanced::SetInstance( const instance_id_t instance_id, const types::Vec3& position, const types::Vec3& angle ) {
 	m_need_world_matrix_update = true;
 	m_instances[ instance_id ] = {
-		position,
+		m_actor->NormalizePosition( position ),
 		angle,
 		{},
 		true
@@ -171,10 +173,18 @@ void Instanced::SetInstance( const instance_id_t instance_id, const types::Vec3&
 	}
 }
 
+void Instanced::UpdateInstance( const instance_id_t instance_id, const types::Vec3& position, const types::Vec3& angle ) {
+	if ( HasInstance( instance_id ) ) {
+		SetInstance( instance_id, position, angle );
+	}
+}
+
 void Instanced::RemoveInstance( const instance_id_t instance_id ) {
-	ASSERT( m_instances.find( instance_id ) != m_instances.end(), "instance " + std::to_string( instance_id ) + " not found" );
-	m_need_world_matrix_update = true;
-	m_instances.erase( instance_id );
+	const auto& it = m_instances.find( instance_id );
+	if ( it != m_instances.end() ) {
+		m_need_world_matrix_update = true;
+		m_instances.erase( it );
+	}
 }
 
 const bool Instanced::HasInstance( const instance_id_t instance_id ) {

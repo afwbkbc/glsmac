@@ -2,17 +2,25 @@
 
 #include <GL/glew.h>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
-#include "shader_program/Simple2D.h"
-
-#include "types/mesh/Simple.h"
-#include "types/Texture.h"
+namespace types {
+namespace texture {
+class Texture;
+}
+namespace mesh {
+class Simple;
+}
+}
 
 namespace graphics {
 namespace opengl {
 
-CLASS( FBO, base::Base )
+namespace shader_program {
+class Simple2D;
+}
+
+CLASS( FBO, common::Class )
 
 	// this doesn't seem to help with anything, keep it at 1 for now
 	static constexpr ssize_t INTERNAL_RESOLUTION_MULTIPLIER = 1;
@@ -27,7 +35,7 @@ CLASS( FBO, base::Base )
 
 	void Draw( shader_program::Simple2D* sp );
 
-	types::Texture* CaptureToTexture();
+	types::texture::Texture* CaptureToTexture();
 
 protected:
 

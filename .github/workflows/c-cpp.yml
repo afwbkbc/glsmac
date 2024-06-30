@@ -28,8 +28,10 @@ jobs:
         run: cmake -DCMAKE_BUILD_TYPE=Portable64 .
       - name: make64
         run: make
+      - name: data64
+        run: mv GLSMAC_data bin/
       - name: pack64
-        run: tar zcvf GLSMAC-v0.3-${{ env.SHA }}-bin64.tar.gz bin/
+        run: tar -C bin -zcvf GLSMAC-v0.3-${{ env.SHA }}-bin64.tar.gz GLSMAC GLSMAC_data
       - name: publish
         uses: actions/upload-artifact@v3
         with:

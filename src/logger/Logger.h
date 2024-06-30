@@ -2,12 +2,12 @@
 
 #include <string>
 
-#include "base/Module.h"
+#include "common/Module.h"
 
 namespace logger {
 
-CLASS( Logger, base::Module )
+CLASS( Logger, common::Module )
 	virtual void Log( const std::string& text ) = 0;
 };
 
-} /* namespace logger */
+}

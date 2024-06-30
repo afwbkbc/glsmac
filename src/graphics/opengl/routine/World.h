@@ -2,13 +2,16 @@
 
 #include "Routine.h"
 
-#include "../shader_program/Orthographic.h"
-#include "../shader_program/OrthographicData.h"
-
-#include "scene/Scene.h"
+#include "scene/Types.h"
 
 namespace graphics {
 namespace opengl {
+
+namespace shader_program {
+class Orthographic;
+class OrthographicData;
+}
+
 namespace routine {
 
 CLASS( World, Routine )
@@ -33,6 +36,6 @@ protected:
 	shader_program::OrthographicData* m_data_shader_program;
 };
 
-} /* namespace routine */
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}
+}

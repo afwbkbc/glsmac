@@ -1,8 +1,7 @@
 #include "OrthographicData.h"
 
-using namespace scene;
-
 #include "graphics/opengl/OpenGL.h"
+#include "types/mesh/Data.h"
 
 namespace graphics {
 namespace opengl {
@@ -47,7 +46,7 @@ void OrthographicData::Initialize() {
 };
 
 void OrthographicData::EnableAttributes() const {
-	const size_t tsz = sizeof( types::mesh::Data::coord_t );
+	const size_t tsz = sizeof( types::mesh::coord_t );
 	const size_t vasz = types::mesh::Data::VERTEX_SIZE * tsz;
 	size_t vaofs = 0;
 	glEnableVertexAttribArray( attributes.coord );
@@ -62,6 +61,6 @@ void OrthographicData::DisableAttributes() const {
 	glDisableVertexAttribArray( attributes.data );
 };
 
-} /* namespace shader_program */
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}
+}

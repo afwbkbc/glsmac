@@ -1,19 +1,23 @@
 #pragma once
 
-#include "base/Task.h"
-
-#include "ui/style/Theme.h"
-#include "ui/FPSCounter.h"
+#include "common/Task.h"
 
 namespace task {
 
-CLASS( Common, base::Task )
+namespace ui {
+class FPSCounter;
+}
+namespace style {
+class Theme;
+}
+
+CLASS( Common, common::Task )
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;
 
 protected:
-	task::style::Theme m_theme;
+	style::Theme* m_theme;
 
 	ui::FPSCounter* m_fps_counter = nullptr;
 

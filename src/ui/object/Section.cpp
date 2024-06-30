@@ -1,5 +1,8 @@
 #include "Section.h"
 
+#include "Label.h"
+#include "Panel.h"
+
 namespace ui {
 namespace object {
 
@@ -29,14 +32,14 @@ void Section::Create() {
 	UIContainer::Create();
 
 	NEW( m_frame, Panel );
-	m_frame->SetAlign( UIObject::ALIGN_CENTER );
+	m_frame->SetAlign( ALIGN_CENTER );
 	m_frame->SetMargin( 3 );
 	m_frame->ForwardStyleAttributesM( m_forwarded_style_attributes );
 	UIContainer::AddChild( m_frame );
 
 	if ( !m_title_text.empty() ) {
 		NEW( m_titlebar, Panel );
-		m_titlebar->SetAlign( UIObject::ALIGN_TOP );
+		m_titlebar->SetAlign( ALIGN_TOP );
 		m_titlebar->SetMargin(
 			{
 				3, // left
@@ -73,8 +76,8 @@ void Section::Destroy() {
 void Section::ApplyStyle() {
 
 	if ( m_body ) {
-		if ( Has( Style::A_HEADER_HEIGHT ) && !m_title_text.empty() ) {
-			m_body->SetTop( Get( Style::A_HEADER_HEIGHT ) + 2 );
+		if ( Has( A_HEADER_HEIGHT ) && !m_title_text.empty() ) {
+			m_body->SetTop( Get( A_HEADER_HEIGHT ) + 2 );
 		}
 		else {
 			m_body->SetTop( 0 );

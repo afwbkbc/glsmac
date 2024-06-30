@@ -2,10 +2,10 @@
 
 #include "Type.h"
 
-#include "Object.h"
-
 namespace gse {
 namespace type {
+
+class Object;
 
 class ObjectRef : public Type {
 public:

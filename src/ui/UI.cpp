@@ -1,29 +1,38 @@
 #include "UI.h"
 
+#include <algorithm>
+
 #include "engine/Engine.h"
 
 #include "event/MouseMove.h"
 
 #include "popup/Error.h"
 #include "popup/Confirm.h"
-
-using namespace scene;
-using namespace types;
+#include "scene/Scene.h"
+#include "graphics/Graphics.h"
+#include "object/Root.h"
+#include "module/Error.h"
+#include "module/Loader.h"
+#include "types/mesh/Mesh.h"
+#include "event/UIEventHandler.h"
+#include "theme/Theme.h"
+#include "types/texture/Texture.h"
+#include "types/mesh/Rectangle.h"
+#include "scene/actor/Mesh.h"
 
 namespace ui {
-
-using namespace object;
 
 void UI::Start() {
 	Log( "Creating UI" );
 
-	NEW( m_shape_scene_simple2d, Scene, "UIScene::Simple2D", SCENE_TYPE_SIMPLE2D );
+	NEW( m_shape_scene_simple2d, scene::Scene, "UIScene::Simple2D", scene::SCENE_TYPE_SIMPLE2D );
 	g_engine->GetGraphics()->AddScene( m_shape_scene_simple2d );
-	NEW( m_shape_scene_ortho, Scene, "UIScene::Ortho", SCENE_TYPE_ORTHO_UI );
+	NEW( m_shape_scene_ortho, scene::Scene, "UIScene::Ortho", scene::SCENE_TYPE_ORTHO_UI );
 	g_engine->GetGraphics()->AddScene( m_shape_scene_ortho );
 
-	m_root_object.Create();
-	m_root_object.UpdateObjectArea();
+	NEW( m_root_object, object::Root );
+	m_root_object->Create();
+	m_root_object->UpdateObjectArea();
 
 	m_clamp.x.SetRange(
 		{
@@ -69,12 +78,12 @@ void UI::Start() {
 					(float)g_engine->GetGraphics()->GetViewportHeight()
 				}
 			);
-			m_root_object.Realign();
+			m_root_object->Realign();
 		}
 	);
 
 #ifdef DEBUG
-	NEW( m_debug_scene, Scene, "UIDebug", SCENE_TYPE_SIMPLE2D );
+	NEW( m_debug_scene, scene::Scene, "UIDebug", scene::SCENE_TYPE_SIMPLE2D );
 	g_engine->GetGraphics()->AddScene( m_debug_scene );
 #endif
 }
@@ -113,26 +122,27 @@ void UI::Stop() {
 	ASSERT( m_focusable_objects.empty(), "some objects still remain focusable" );
 	ASSERT( m_focusable_objects_order.empty(), "some objects still remain in focusable order" );
 
-	m_root_object.Destroy();
+	m_root_object->Destroy();
+	DELETE( m_root_object );
 }
 
 void UI::AddObject( object::UIObject* object ) {
-	m_root_object.AddChild( object );
-	if ( object->HasEventContext( UIObject::EC_OFFCLICK_AWARE ) ) {
+	m_root_object->AddChild( object );
+	if ( object->HasEventContext( ui::object::UIObject::EC_OFFCLICK_AWARE ) ) {
 		ASSERT( m_offclick_aware_objects.find( object ) == m_offclick_aware_objects.end(), "double add to offlick aware objects" );
 		m_offclick_aware_objects.insert( object );
 	}
 }
 
 void UI::RemoveObject( object::UIObject* object ) {
-	if ( object->HasEventContext( UIObject::EC_OFFCLICK_AWARE ) ) {
+	if ( object->HasEventContext( ui::object::UIObject::EC_OFFCLICK_AWARE ) ) {
 		ASSERT( m_offclick_aware_objects.find( object ) != m_offclick_aware_objects.end(), "offlick aware object not found" );
 		m_offclick_aware_objects.erase( object );
 	}
-	m_root_object.RemoveChild( object );
+	m_root_object->RemoveChild( object );
 }
 
-Scene* UI::GetShapeScene( const types::mesh::Mesh* mesh ) {
+scene::Scene* UI::GetShapeScene( const types::mesh::Mesh* mesh ) {
 	switch ( mesh->GetType() ) {
 		case types::mesh::Mesh::MT_SIMPLE: {
 			return m_shape_scene_simple2d;
@@ -148,7 +158,7 @@ Scene* UI::GetShapeScene( const types::mesh::Mesh* mesh ) {
 	return nullptr; // remove warning
 }
 
-Scene* UI::GetTextScene() {
+scene::Scene* UI::GetTextScene() {
 	return m_shape_scene_simple2d;
 }
 
@@ -177,7 +187,7 @@ const UI::coord_t UI::UnclampY( const coord_t value ) const {
 }
 
 void UI::Iterate() {
-	m_root_object.Iterate();
+	m_root_object->Iterate();
 
 	if ( !m_iterative_objects_to_remove.empty() ) {
 		for ( auto& remove_it : m_iterative_objects_to_remove ) {
@@ -200,7 +210,7 @@ void UI::Iterate() {
 	}
 }
 
-void UI::TriggerGlobalEventHandlers( global_event_handler_order_t order, UIEvent* event ) {
+void UI::TriggerGlobalEventHandlers( global_event_handler_order_t order, ui::event::UIEvent* event ) {
 	auto ghs1 = m_global_event_handlers.find( order );
 	if ( ghs1 != m_global_event_handlers.end() ) {
 		auto ghs2 = ghs1->second.find( event->m_type );
@@ -215,8 +225,8 @@ void UI::TriggerGlobalEventHandlers( global_event_handler_order_t order, UIEvent
 	}
 }
 
-void UI::ProcessEvent( UIEvent* event ) {
-	if ( event->m_type == UIEvent::EV_MOUSE_MOVE ) {
+void UI::ProcessEvent( event::UIEvent* event ) {
+	if ( event->m_type == ui::event::EV_MOUSE_MOVE ) {
 		// need to save last mouse position to be able to trigger mouseover/mouseout events for objects that will move/resize themselves later
 		m_last_mouse_position = {
 			event->m_data.mouse.absolute.x,
@@ -226,9 +236,9 @@ void UI::ProcessEvent( UIEvent* event ) {
 
 	// toggle fullscreen
 	if (
-		event->m_type == UIEvent::EV_KEY_DOWN &&
-			( event->m_data.key.modifiers & UIEvent::KM_ALT ) &&
-			event->m_data.key.code == UIEvent::K_ENTER
+		event->m_type == ui::event::EV_KEY_DOWN &&
+			( event->m_data.key.modifiers & ui::event::KM_ALT ) &&
+			event->m_data.key.code == ui::event::K_ENTER
 		) {
 		g_engine->GetGraphics()->ToggleFullscreen();
 		return;
@@ -238,21 +248,21 @@ void UI::ProcessEvent( UIEvent* event ) {
 	if (
 		m_active_module
 #ifdef DEBUG
-			&& !( event->m_type == UIEvent::EV_KEY_DOWN && event->m_data.key.code == UIEvent::K_GRAVE ) // debug overlay
+			&& !( event->m_type == ui::event::EV_KEY_DOWN && event->m_data.key.code == ui::event::K_GRAVE ) // debug overlay
 #endif
 		) {
 		m_active_module->ProcessEvent( event );
 		return;
 	}
 
-	if ( event->m_type == UIEvent::EV_MOUSE_DOWN ) {
+	if ( event->m_type == ui::event::EV_MOUSE_DOWN ) {
 		// notify of offclicks
 		for ( auto& obj : m_offclick_aware_objects ) {
 			if ( obj->IsVisible() && !obj->IsPointInside(
 				event->m_data.mouse.absolute.x,
 				event->m_data.mouse.absolute.y
 			) ) {
-				obj->Trigger( UIEvent::EV_OFFCLICK, &event->m_data );
+				obj->Trigger( ui::event::EV_OFFCLICK, &event->m_data );
 			}
 		}
 	}
@@ -261,12 +271,12 @@ void UI::ProcessEvent( UIEvent* event ) {
 
 	TriggerGlobalEventHandlers( GH_BEFORE, event );
 
-	if ( event->m_type == UIEvent::EV_KEY_DOWN ) {
+	if ( event->m_type == ui::event::EV_KEY_DOWN ) {
 		if (
 			m_focused_object &&
 				m_focusable_objects.size() > 1 &&
 				!event->m_data.key.modifiers &&
-				( event->m_data.key.code == UIEvent::K_TAB )
+				( event->m_data.key.code == ui::event::K_TAB )
 			) {
 			FocusNextObject();
 			event->SetProcessed();
@@ -278,15 +288,15 @@ void UI::ProcessEvent( UIEvent* event ) {
 			m_popups.back()->ProcessEvent( event );
 		}
 		else {
-			m_root_object.ProcessEvent( event );
+			m_root_object->ProcessEvent( event );
 		}
 	}
 
 	if ( !event->IsProcessed() ) {
-		if ( event->m_type == UIEvent::EV_KEY_DOWN ) {
+		if ( event->m_type == ui::event::EV_KEY_DOWN ) {
 			if ( m_focused_object && !event->m_data.key.modifiers && (
 				( event->m_data.key.key ) || // ascii key
-					( event->m_data.key.code == UIEvent::K_BACKSPACE )
+					( event->m_data.key.code == ui::event::K_BACKSPACE )
 			) ) {
 				m_focused_object->ProcessEvent( event );
 			}
@@ -298,14 +308,14 @@ void UI::ProcessEvent( UIEvent* event ) {
 	}
 }
 
-void UI::SendMouseMoveEvent( UIObject* object ) {
-	NEWV( event, MouseMove, m_last_mouse_position.x, m_last_mouse_position.y );
+void UI::SendMouseMoveEvent( object::UIObject* object ) {
+	NEWV( event, event::MouseMove, m_last_mouse_position.x, m_last_mouse_position.y );
 	object->ProcessEvent( event );
 	DELETE( event );
 }
 
-const UIEventHandler* UI::AddGlobalEventHandler( const UIEvent::event_type_t type, const UIEventHandler::handler_function_t& func, const global_event_handler_order_t order ) {
-	NEWV( handler, UIEventHandler, func );
+const event::UIEventHandler* UI::AddGlobalEventHandler( const ui::event::event_type_t type, const event::handler_function_t& func, const global_event_handler_order_t order ) {
+	NEWV( handler, event::UIEventHandler, func );
 	auto its = m_global_event_handlers.find( order );
 	if ( its == m_global_event_handlers.end() ) {
 		m_global_event_handlers[ order ] = {};
@@ -325,7 +335,7 @@ const UIEventHandler* UI::AddGlobalEventHandler( const UIEvent::event_type_t typ
 	return handler;
 }
 
-void UI::RemoveGlobalEventHandler( const UIEventHandler* handler ) {
+void UI::RemoveGlobalEventHandler( const event::UIEventHandler* handler ) {
 	for ( auto& its : m_global_event_handlers ) {
 		for ( auto& handlers : its.second ) {
 			auto it = handlers.second.begin();
@@ -361,7 +371,7 @@ const UI::themes_t UI::GetThemes() const {
 	return m_themes;
 }
 
-void UI::AddToFocusableObjects( UIObject* object ) {
+void UI::AddToFocusableObjects( object::UIObject* object ) {
 	Log( "Adding " + object->GetName() + " to focusable objects" );
 	ASSERT( m_focusable_objects.find( object ) == m_focusable_objects.end(), "object already focusable" );
 	m_focusable_objects.insert( object );
@@ -371,7 +381,7 @@ void UI::AddToFocusableObjects( UIObject* object ) {
 	}
 }
 
-void UI::RemoveFromFocusableObjects( UIObject* object ) {
+void UI::RemoveFromFocusableObjects( object::UIObject* object ) {
 	Log( "Removing " + object->GetName() + " from focusable objects" );
 	auto it = m_focusable_objects.find( object );
 	ASSERT( it != m_focusable_objects.end(), "object not focusable" );
@@ -417,7 +427,7 @@ void UI::FocusNextObject() {
 	FocusObject( m_focusable_objects_order[ 0 ] );
 }
 
-void UI::FocusObject( UIObject* object ) {
+void UI::FocusObject( object::UIObject* object ) {
 	if ( object != m_focused_object ) {
 		if ( m_focused_object ) {
 			m_focused_object->Defocus();
@@ -443,7 +453,7 @@ void UI::AddIterativeObject( void* object, const ui_handler_t handler ) {
 }
 
 void UI::RemoveIterativeObject( void* object ) {
-	ASSERT( find( m_iterative_objects_to_remove.begin(), m_iterative_objects_to_remove.end(), object ) == m_iterative_objects_to_remove.end(),
+	ASSERT( std::find( m_iterative_objects_to_remove.begin(), m_iterative_objects_to_remove.end(), object ) == m_iterative_objects_to_remove.end(),
 		"iterative object already in removal queue"
 	);
 	m_iterative_objects_to_remove.push_back( object ); // can't remove here because removal can be requested from within it's handler
@@ -461,31 +471,31 @@ void UI::HideError() const {
 	}
 }
 
-void UI::ShowLoader( const std::string& text, const module::loader_cancel_handler_t on_cancel ) const {
-	if ( m_loader ) {
+void UI::ShowLoader( const std::string& text, const loader_cancel_handler_t on_cancel ) const {
+	if ( !m_loader->IsActive() ) {
 		m_loader->Show( text, on_cancel );
 	}
 }
 
 void UI::SetLoaderText( const std::string& text, bool is_cancelable ) const {
-	if ( m_loader ) {
+	if ( m_loader->IsActive() ) {
 		m_loader->SetText( text );
 		m_loader->SetIsCancelable( is_cancelable );
 	}
 }
 
 void UI::HideLoader() const {
-	if ( m_loader ) {
+	if ( m_loader->IsActive() ) {
 		m_loader->Hide();
 	}
 }
 
 void UI::BlockEvents() {
-	m_root_object.BlockEvents();
+	m_root_object->BlockEvents();
 }
 
 void UI::UnblockEvents() {
-	m_root_object.UnblockEvents();
+	m_root_object->UnblockEvents();
 }
 
 void UI::Redraw() {
@@ -496,12 +506,12 @@ bool UI::HasPopup() const {
 	return !m_popups.empty();
 }
 
-void UI::OpenPopup( Popup* popup ) {
+void UI::OpenPopup( object::Popup* popup ) {
 	m_popups.push_back( popup );
 	AddObject( popup );
 }
 
-void UI::ClosePopup( Popup* popup, bool force ) {
+void UI::ClosePopup( object::Popup* popup, bool force ) {
 	if ( force || popup->MaybeClose() ) { // ask popup to close, remove if it was closed (unless forced)
 		if ( popup == m_popups.back() ) {
 			RemoveObject( popup );
@@ -537,7 +547,7 @@ void UI::Confirm( const std::string& text, const ui_handler_t on_confirm ) {
 	NEWV( popup, popup::Confirm );
 	popup->SetText( text );
 	popup->On(
-		UIEvent::EV_CONFIRM, EH( on_confirm ) {
+		ui::event::EV_CONFIRM, EH( on_confirm ) {
 			on_confirm();
 			return true;
 		}
@@ -547,19 +557,19 @@ void UI::Confirm( const std::string& text, const ui_handler_t on_confirm ) {
 
 #ifdef DEBUG
 
-void UI::ShowDebugFrame( UIObject* object ) {
+void UI::ShowDebugFrame( object::UIObject* object ) {
 	auto it = m_debug_frames.find( object );
 	if ( it == m_debug_frames.end() ) {
 		Log( "Showing debug frame for " + object->GetName() );
 		debug_frame_data_t data;
 
 		// semi-transparent 1x1 texture with random color for every frame
-		NEW( data.texture, Texture, "DebugTexture", 1, 1 );
-		data.texture->SetPixel( 0, 0, Color::RGBA( rand() % 256, rand() % 256, rand() % 256, 160 ) );
+		NEW( data.texture, types::texture::Texture, "DebugTexture", 1, 1 );
+		data.texture->SetPixel( 0, 0, types::Color::RGBA( rand() % 256, rand() % 256, rand() % 256, 160 ) );
 
-		NEW( data.mesh, mesh::Rectangle );
+		NEW( data.mesh, types::mesh::Rectangle );
 
-		NEW( data.actor, actor::Mesh, "DebugFrame", data.mesh );
+		NEW( data.actor, scene::actor::Mesh, "DebugFrame", data.mesh );
 		data.actor->SetTexture( data.texture );
 
 		ResizeDebugFrame( object, &data );
@@ -570,7 +580,7 @@ void UI::ShowDebugFrame( UIObject* object ) {
 	}
 }
 
-void UI::HideDebugFrame( UIObject* object ) {
+void UI::HideDebugFrame( object::UIObject* object ) {
 	auto it = m_debug_frames.find( object );
 	if ( it != m_debug_frames.end() ) {
 		Log( "Hiding debug frame for " + object->GetName() );
@@ -581,7 +591,7 @@ void UI::HideDebugFrame( UIObject* object ) {
 	}
 }
 
-void UI::ResizeDebugFrame( UIObject* object, const debug_frame_data_t* data ) {
+void UI::ResizeDebugFrame( object::UIObject* object, const debug_frame_data_t* data ) {
 	auto area = object->GetObjectArea();
 	data->mesh->SetCoords(
 		{
@@ -595,7 +605,7 @@ void UI::ResizeDebugFrame( UIObject* object, const debug_frame_data_t* data ) {
 
 }
 
-void UI::ResizeDebugFrame( UIObject* object ) {
+void UI::ResizeDebugFrame( object::UIObject* object ) {
 	auto it = m_debug_frames.find( object );
 	if ( it != m_debug_frames.end() ) {
 		ResizeDebugFrame( object, &it->second );
@@ -607,7 +617,7 @@ void UI::ResizeDebugFrame( UIObject* object ) {
 void UI::ActivateModule( module::Module* module ) {
 	ASSERT( !m_active_module, "some module already active" );
 	m_active_module = module;
-	NEWV( event, MouseMove, m_last_mouse_position.x, m_last_mouse_position.y );
+	NEWV( event, event::MouseMove, m_last_mouse_position.x, m_last_mouse_position.y );
 	m_active_module->ProcessEvent( event );
 }
 
@@ -616,4 +626,4 @@ void UI::DeactivateModule( module::Module* module ) {
 	m_active_module = nullptr;
 }
 
-} /* namespace ui */
+}

@@ -1,23 +1,19 @@
 #pragma once
 
-#include <functional>
+#include "common/Common.h"
 
-#include "base/Base.h"
-
-#include "UIEvent.h"
+#include "Types.h"
 
 namespace ui {
 namespace event {
 
-#define EH( ... ) [__VA_ARGS__] ( const UIEvent::event_type_t event_type, const UIEvent::event_data_t* data ) -> bool
+class UIEvent;
 
-CLASS( UIEventHandler, base::Base )
-
-	typedef std::function< bool( const UIEvent::event_type_t event_type, const UIEvent::event_data_t* data ) > handler_function_t;
+CLASS( UIEventHandler, common::Class )
 
 	UIEventHandler( const handler_function_t func );
 
-	bool Execute( const UIEvent::event_type_t event_type, const UIEvent::event_data_t* data );
+	bool Execute( const event_type_t event_type, const event_data_t* data );
 
 private:
 	const handler_function_t m_func;

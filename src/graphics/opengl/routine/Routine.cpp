@@ -2,6 +2,7 @@
 
 #include "Routine.h"
 
+#include "scene/Scene.h"
 #include "graphics/Graphics.h"
 
 namespace graphics {
@@ -63,6 +64,6 @@ void Routine::OnWindowResize() {
 	}
 }
 
-} /* namespace routine */
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}
+}

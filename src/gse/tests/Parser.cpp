@@ -1,10 +1,13 @@
 #include "Tests.h"
-#include "gse/type/Int.h"
+
+#include "task/gsetests/GSETests.h"
 #include "gse/program/Program.h"
 #include "gse/program/Scope.h"
 #include "gse/program/Statement.h"
 #include "gse/program/Conditional.h"
 #include "gse/program/Expression.h"
+#include "gse/program/Condition.h"
+#include "gse/program/SimpleCondition.h"
 #include "gse/program/Operator.h"
 #include "gse/program/Value.h"
 #include "gse/program/Variable.h"
@@ -21,9 +24,8 @@
 #include "gse/parser/JS.h"
 
 namespace gse {
-namespace tests {
-
 using namespace program;
+namespace tests {
 
 void AddParserTests( task::gsetests::GSETests* task ) {
 
@@ -179,12 +181,12 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 		const auto operatr = VALIDATOR( Operator, &errmsg, &si ) {
 			GT_ASSERT(
 				( a == nullptr ) == ( b == nullptr ), "operators have different null states ( " + ( a == nullptr
-					? "null"
-					: a->Dump()
-				) + " != " + ( b == nullptr
-					? "null"
-					: b->Dump()
-				) + " )"
+				? "null"
+				: a->Dump()
+			) + " != " + ( b == nullptr
+				? "null"
+				: b->Dump()
+			) + " )"
 			);
 			if ( a && b ) {
 				VALIDATE( si, a->m_si, b->m_si );
@@ -197,6 +199,25 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			VALIDATE( operand, a->a, b->a );
 			VALIDATE( operatr, a->op, b->op );
 			VALIDATE( operand, a->b, b->b );
+			GT_OK();
+		};
+		const auto simple_condition = VALIDATOR( SimpleCondition, &errmsg, &expression, &si ) {
+			VALIDATE( si, a->m_si, b->m_si );
+			VALIDATE( expression, a->expression, b->expression );
+			GT_OK();
+		};
+		const auto condition = VALIDATOR( Condition, &errmsg, &simple_condition, &si ) {
+			GT_ASSERT( a->type == b->type, "conditions have different types ( " + a->ToString() + " != " + b->ToString() + " )" );
+			VALIDATE( si, a->m_si, b->m_si );
+			switch ( a->type ) {
+				case Condition::CT_SIMPLE: {
+					VALIDATE( simple_condition, (SimpleCondition*)a, (SimpleCondition*)b );
+					break;
+				}
+				default: {
+					GT_FAIL( "unknown condition type: " + std::to_string( a->type ) );
+				}
+			}
 			GT_OK();
 		};
 		const auto statement = VALIDATOR( Statement, &errmsg, &expression, &si ) {
@@ -212,7 +233,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 		> conditional = VALIDATOR(
 			Conditional,
 			&errmsg,
-			&expression,
+			&condition,
 			&scope,
 			&conditional,
 			&object,
@@ -222,12 +243,12 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT( a->conditional_type == b->conditional_type, "conditionals have different types ( " + a->Dump() + " != " + b->Dump() + " )" );
 			switch ( a->conditional_type ) {
 				case Conditional::CT_IF: {
-					VALIDATE( expression, ( (If*)a )->condition, ( (If*)b )->condition );
+					VALIDATE( condition, ( (If*)a )->condition, ( (If*)b )->condition );
 					VALIDATE( scope, ( (If*)a )->body, ( (If*)b )->body );
 					break;
 				}
 				case Conditional::CT_ELSEIF: {
-					VALIDATE( expression, ( (ElseIf*)a )->condition, ( (ElseIf*)b )->condition );
+					VALIDATE( condition, ( (ElseIf*)a )->condition, ( (ElseIf*)b )->condition );
 					VALIDATE( scope, ( (ElseIf*)a )->body, ( (ElseIf*)b )->body );
 					break;
 				}
@@ -236,9 +257,12 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 					break;
 				}
 				case Conditional::CT_WHILE: {
-					VALIDATE( expression, ( (While*)a )->condition, ( (While*)b )->condition );
+					VALIDATE( condition, ( (While*)a )->condition, ( (While*)b )->condition );
 					VALIDATE( scope, ( (While*)a )->body, ( (While*)b )->body );
 					break;
+				}
+				case Conditional::CT_FOR: {
+					THROW( "TODO: PARSER FOR" );
 				}
 				case Conditional::CT_TRY: {
 					VALIDATE( scope, ( (Try*)a )->body, ( (Try*)b )->body );

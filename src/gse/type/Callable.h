@@ -2,32 +2,33 @@
 
 #include <vector>
 
-#include "gse/type/Type.h"
+#include "Type.h"
+
+#include "Types.h"
+#include "gse/Types.h"
 #include "gse/Value.h"
 
-#include "gse/program/Element.h"
-
 namespace gse {
+
+namespace context {
 class Context;
+}
+
 namespace type {
 
-class Callable : public type::Type {
+class Callable : public Type {
 public:
 
 	static const type_t GetType() { return Type::T_CALLABLE; }
-
-	typedef std::vector< Value > function_arguments_t;
 
 	Callable()
 		: type::Type( GetType() ) {}
 
 	virtual ~Callable() {}
 
-	virtual Value Run( Context* ctx, const si_t& call_si, const Callable::function_arguments_t& arguments ) = 0;
+	virtual Value Run( context::Context* ctx, const si_t& call_si, const function_arguments_t& arguments ) = 0;
 
 };
 
 }
 }
-
-#include "gse/Context.h"

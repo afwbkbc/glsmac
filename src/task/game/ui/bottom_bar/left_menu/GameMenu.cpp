@@ -1,7 +1,8 @@
 #include "GameMenu.h"
 
 #include "engine/Engine.h"
-#include "../../../Game.h"
+#include "task/game/Game.h"
+#include "config/Config.h"
 
 namespace task {
 namespace game {

@@ -4,9 +4,8 @@
 
 #include "SDL2.h"
 
-#include "util/System.h"
-
-using namespace types;
+#include "util/FS.h"
+#include "types/Sound.h"
 
 namespace loader {
 namespace sound {
@@ -17,20 +16,15 @@ SDL2::~SDL2() {
 	}
 }
 
-Sound* SDL2::LoadSound( const std::string& name ) {
+types::Sound* SDL2::LoadSoundImpl( const std::string& filename ) {
 
-	std::string font_key = name;
-
-	sound_map_t::iterator it = m_sounds.find( font_key );
+	sound_map_t::iterator it = m_sounds.find( filename );
 	if ( it != m_sounds.end() ) {
 		return it->second;
 	}
 	else {
 
-		Log( "Loading sound \"" + name + "\"" );
-
-		NEWV( sound, Sound );
-		sound->m_name = name;
+		Log( "Loading sound \"" + filename + "\"" );
 
 		Uint8* wav_buffer = nullptr; // buffer containing our audio file
 		Uint32 wav_length = 0; // length of our sample
@@ -38,22 +32,15 @@ Sound* SDL2::LoadSound( const std::string& name ) {
 
 		SDL_AudioSpec* ret = nullptr;
 
-		auto dirs = util::System::GetPossibleFilenames( "fx" );
-		auto filenames = util::System::GetPossibleFilenames( name );
-		for ( auto& dir : dirs ) {
-			for ( auto& filename : filenames ) {
-				/* Load the WAV */
-				// the specs, length and buffer of our wav are filled
-				ret = SDL_LoadWAV( ( GetRoot() + dir + "/" + filename ).c_str(), &wav_spec, &wav_buffer, &wav_length );
-				if ( ret ) {
-					break;
-				}
-			}
-			if ( ret ) {
-				break;
-			}
+		/* Load the WAV */
+		// the specs, length and buffer of our wav are filled
+		ret = SDL_LoadWAV( filename.c_str(), &wav_spec, &wav_buffer, &wav_length );
+		if ( !ret ) {
+			return nullptr;
 		}
-		ASSERT( ret, "Unable to load sound \"" + name + "\"" );
+
+		NEWV( sound, types::Sound );
+		sound->m_name = filename;
 
 		sound->m_buffer_size = wav_length;
 		sound->m_buffer = (unsigned char*)malloc( sound->m_buffer_size );
@@ -69,7 +56,7 @@ Sound* SDL2::LoadSound( const std::string& name ) {
 
 		SDL_FreeWAV( wav_buffer );
 
-		m_sounds[ font_key ] = sound;
+		m_sounds[ filename ] = sound;
 
 		return sound;
 	}

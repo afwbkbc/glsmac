@@ -1,6 +1,6 @@
-#include "GSETests.h"
-
 #include <iostream> // not using Log() everywhere because important stuff should be printed with --quiet too
+
+#include "GSETests.h"
 
 #include "gse/GSE.h"
 #include "gse/tests/Tests.h"
@@ -31,7 +31,7 @@ void GSETests::Iterate() {
 		gse::GSE gse;
 		const auto& it = m_tests[ current_test_index++ ];
 		LogTest( "  " + it.first + "..." );
-		const auto errmsg = it.second( gse );
+		const auto errmsg = it.second( &gse );
 		if ( errmsg.empty() ) {
 			m_stats.passed++;
 		}

@@ -3,17 +3,17 @@
 #include <string>
 #include <GL/glew.h>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 #include "types/Font.h"
 #include "types/Color.h"
 
-#include "../shader_program/Font.h"
+#include "graphics/opengl/shader_program/Font.h"
 
 namespace graphics {
 namespace opengl {
 
-CLASS( FontTexture, base::Base )
+CLASS( FontTexture, common::Class )
 
 	FontTexture( types::Font* font );
 	~FontTexture();
@@ -25,5 +25,5 @@ CLASS( FontTexture, base::Base )
 	GLuint m_texture = 0;
 };
 
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}

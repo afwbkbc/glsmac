@@ -1,13 +1,20 @@
 #pragma once
 
-#include "RR.h"
+#include <cstdint>
 
-#include "types/Texture.h"
-#include "scene/Camera.h"
+#include "RR.h"
 
 /**
  * Captures rendered mesh into texture
  */
+
+namespace types::texture {
+class Texture;
+}
+
+namespace scene {
+class Camera;
+}
 
 namespace rr {
 
@@ -27,17 +34,10 @@ CLASS( Capture, RR )
 	size_t texture_height = 0;
 
 	// response
-	types::Texture* texture = nullptr;
+	types::texture::Texture* texture = nullptr;
 
 	// cleanup
-	~Capture() {
-		if ( camera ) {
-			DELETE( camera );
-		}
-		if ( texture ) {
-			DELETE( texture );
-		}
-	}
+	~Capture();
 };
 
 }

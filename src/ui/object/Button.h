@@ -3,13 +3,14 @@
 // TODO: combine with SimpleButton
 
 #include "Panel.h"
-#include "Label.h"
-#include "SoundEffect.h"
 
 #include "util/Timer.h"
 
 namespace ui {
 namespace object {
+
+class Label;
+class SoundEffect;
 
 CLASS( Button, Panel )
 
@@ -25,10 +26,10 @@ CLASS( Button, Panel )
 protected:
 	virtual void ApplyStyle() override;
 
-	bool OnMouseOver( const UIEvent::event_data_t* data ) override;
-	bool OnMouseOut( const UIEvent::event_data_t* data ) override;
-	bool OnMouseDown( const UIEvent::event_data_t* data ) override;
-	bool OnMouseUp( const UIEvent::event_data_t* data ) override;
+	bool OnMouseOver( const event::event_data_t* data ) override;
+	bool OnMouseOut( const event::event_data_t* data ) override;
+	bool OnMouseDown( const event::event_data_t* data ) override;
+	bool OnMouseUp( const event::event_data_t* data ) override;
 
 	std::string m_label_text = "";
 	alignment_t m_label_alignment = ALIGN_CENTER;
@@ -44,5 +45,5 @@ private:
 	SoundEffect* m_move_sound = nullptr;
 };
 
-} /* namespace object */
-} /* namespace ui */
+}
+}

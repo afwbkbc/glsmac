@@ -1,6 +1,6 @@
 #include "Style.h"
 
-using namespace ui;
+#include "ui/theme/Style.h"
 
 namespace task {
 namespace intro {
@@ -9,10 +9,10 @@ void Style::AddStyles() {
 
 	AddStyle(
 		"IntroLogo", SH() {
-			s->Set( theme::Style::A_ALIGN, ui::object::UIObject::ALIGN_CENTER );
-			s->SetTexture( theme::Style::A_TEXTURE, "logo.pcx" );
-			s->Set( theme::Style::A_STRETCH_TEXTURE );
-			s->Set( theme::Style::A_KEEP_TEXTURE_ASPECT_RATIO );
+			s->Set( ui::A_ALIGN, ui::ALIGN_CENTER );
+			s->SetTexture( ui::A_TEXTURE, resource::PCX_LOGO );
+			s->Set( ui::A_STRETCH_TEXTURE );
+			s->Set( ui::A_KEEP_TEXTURE_ASPECT_RATIO );
 		}
 	);
 

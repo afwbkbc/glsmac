@@ -1,8 +1,10 @@
 #pragma once
 
-#include "../PopupMenu.h"
+#include "task/mainmenu/PopupMenu.h"
 
-#include "game/connection/Connection.h"
+namespace game::connection {
+class Connection;
+}
 
 namespace task {
 namespace mainmenu {

@@ -1,17 +1,16 @@
 #pragma once
 
-#include <vector>
-#include <map>
-
 #include "ScrollView.h"
 
-#include "Label.h"
-#include "TextLine.h"
+#include <vector>
+#include <map>
 
 #include "util/Timer.h"
 
 namespace ui {
 namespace object {
+
+class TextLine;
 
 CLASS( TextView, ScrollView )
 
@@ -21,7 +20,7 @@ CLASS( TextView, ScrollView )
 	};
 
 	TextView( const std::string& class_name = "" )
-		: ScrollView( class_name ) {}
+		: ScrollView( ST_VERTICAL, class_name ) {}
 
 	void Create() override;
 	void Align() override;
@@ -60,16 +59,16 @@ private:
 	textview_type_t m_type = TT_SIMPLE;
 	size_t m_lines_limit = 200;
 
-	const std::vector< Style::attribute_type_t > m_forwarded_style_attributes = {
-		Style::A_FONT,
-		Style::A_TEXT_COLOR,
-		Style::A_TEXT_ALIGN,
+	const std::vector< attribute_type_t > m_forwarded_style_attributes = {
+		A_FONT,
+		A_TEXT_COLOR,
+		A_TEXT_ALIGN,
 	};
 
-	const std::vector< Style::attribute_type_t > m_forwarded_style_attributes_ext = {
-		Style::A_TEXT_LEFT,
-		Style::A_ITEM_TEXTURE,
-		Style::A_ITEM_ICON_TEXTURE,
+	const std::vector< attribute_type_t > m_forwarded_style_attributes_ext = {
+		A_TEXT_LEFT,
+		A_ITEM_TEXTURE,
+		A_ITEM_ICON_TEXTURE,
 	};
 
 	struct line_t {

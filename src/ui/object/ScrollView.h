@@ -4,17 +4,25 @@
 
 #include "Panel.h"
 
+#include "types/Vec2.h"
 #include "util/Scroller.h"
-
-#include "Scrollbar.h"
 
 namespace ui {
 namespace object {
 
+class Scrollbar;
+class SimpleButton;
+
 CLASS( ScrollView, Panel )
 
-	ScrollView( const std::string& class_name = "" )
-		: Panel( class_name ) {}
+	static constexpr size_t SCROLL_DURATION_MS = 100;
+
+	enum scrollview_type_t {
+		ST_VERTICAL,
+		ST_HORIZONTAL_INLINE,
+	};
+
+	ScrollView( const scrollview_type_t type, const std::string& class_name = "" );
 
 	virtual void Create() override;
 	virtual void Iterate() override;
@@ -26,12 +34,18 @@ CLASS( ScrollView, Panel )
 	void SetWidth( const coord_t px ) override;
 	void SetHeight( const coord_t px ) override;
 
+	const coord_t GetScrollX() const;
+	const coord_t GetScrollY() const;
+
 	void SetScroll( vertex_t px, const bool force = false );
 	void SetScrollX( const coord_t px );
 	void SetScrollY( const coord_t px );
-	void ScrollToBottom();
+	void ScrollToEnd();
+
+	void ScrollToItem( UIObject* item );
 
 	void SetScrollSpeed( const size_t scroll_speed );
+	void SetSticky( const bool sticky );
 
 	void SetInternalWidth( const coord_t px );
 	void SetInternalHeight( const coord_t px );
@@ -41,10 +55,19 @@ protected:
 
 private:
 
+	const scrollview_type_t m_type;
+
 	size_t m_scroll_speed = 17;
 	bool m_is_sticky = true;
 
-	Scrollbar* m_scrollbar = nullptr;
+	struct {
+		Scrollbar* scrollbar = nullptr;
+	} m_vertical;
+
+	struct {
+		SimpleButton* left_arrow = nullptr;
+		SimpleButton* right_arrow = nullptr;
+	} m_horizontal_inline;
 
 	vertex_t m_internal_size = {
 		0,
@@ -65,19 +88,27 @@ private:
 	util::Scroller< float > m_scroller;
 	bool m_need_stickyness = false;
 
+	enum scroll_direction_t {
+		SD_NONE,
+		SD_LEFT,
+		SD_RIGHT
+	};
+	scroll_direction_t m_scroll_direction = SD_NONE;
+
 	UIContainer* m_viewport = nullptr;
 	Panel* m_body = nullptr;
+	std::unordered_set< UIObject* > m_items = {};
 
 	bool m_need_body_refresh = false;
 
 	bool m_is_dragging = false;
-	Vec2< ssize_t > m_drag_start_position = {
+	types::Vec2< ssize_t > m_drag_start_position = {
 		0,
 		0
 	};
 	struct {
-		const UIEventHandler* mouse_up;
-		const UIEventHandler* mouse_move;
+		const event::UIEventHandler* mouse_up;
+		const event::UIEventHandler* mouse_move;
 	} m_handlers;
 
 	void AddChildToBody( UIObject* child );

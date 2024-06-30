@@ -2,16 +2,19 @@
 
 #include <unordered_map>
 #include <string>
+#include <vector>
 
-#include "base/Base.h"
-
-#include "Style.h"
-#include "StyleSheet.h"
+#include "common/Common.h"
 
 namespace ui {
 namespace theme {
 
-CLASS( Theme, base::Base )
+class Style;
+class StyleSheet;
+
+CLASS( Theme, common::Class )
+
+	virtual ~Theme() = default;
 
 	void AddStyle( Style* style );
 	void AddStyleSheet( StyleSheet* stylesheet );

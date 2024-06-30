@@ -2,11 +2,14 @@
 
 #include "UIContainer.h"
 
-#include "Surface.h"
-#include "SimpleButton.h"
+#include "types/Vec2.h"
+#include "util/Timer.h"
 
 namespace ui {
 namespace object {
+
+class Surface;
+class SimpleButton;
 
 CLASS( Scrollbar, UIContainer )
 
@@ -38,7 +41,7 @@ private:
 
 	struct {
 		bool is_dragging = false;
-		Vec2< ssize_t > drag_rel_position = {
+		types::Vec2< ssize_t > drag_rel_position = {
 			0,
 			0
 		};

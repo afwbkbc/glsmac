@@ -4,7 +4,7 @@ namespace ui {
 namespace event {
 
 UIEvent::UIEvent( const UIEvent* other )
-	: base::Base()
+	: common::Class()
 	, m_type( other->m_type )
 	, m_flags( other->m_flags )
 	, m_data( other->m_data )
@@ -14,7 +14,7 @@ UIEvent::UIEvent( const UIEvent* other )
 }
 
 UIEvent::UIEvent( const event_type_t type )
-	: base::Base()
+	: common::Class()
 	, m_type( type ) {
 	//
 }

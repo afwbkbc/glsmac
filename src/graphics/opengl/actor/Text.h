@@ -1,11 +1,18 @@
 #pragma once
 
+#include <GL/glew.h>
+
 #include "Actor.h"
 
-#include "scene/actor/Text.h"
-#include "types/Font.h"
+#include "types/Vec2.h"
 
-using namespace types;
+namespace types {
+class Font;
+}
+
+namespace scene::actor {
+class Text;
+}
 
 namespace graphics {
 namespace opengl {
@@ -14,11 +21,11 @@ class FontTexture;
 
 CLASS( Text, Actor )
 
-	Text( scene::actor::Text* actor, Font* font );
+	Text( scene::actor::Text* actor, types::Font* font );
 	~Text();
 
-	void Update( Font* font, const std::string& text, const float x, const float y );
-	void Draw( shader_program::ShaderProgram* shader_program, Camera* camera = nullptr ) override;
+	void Update( types::Font* font, const std::string& text, const float x, const float y );
+	void Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) override;
 
 protected:
 
@@ -34,7 +41,7 @@ protected:
 		vertex_t v3;
 		vertex_t v4;
 	};
-	Vec2< float > m_coords = {
+	types::Vec2< float > m_coords = {
 		0,
 		0
 	};
@@ -42,9 +49,9 @@ protected:
 	GLuint m_vbo = 0;
 	size_t m_boxes_count = 0;
 
-	Font* m_font = nullptr;
+	types::Font* m_font = nullptr;
 	std::string m_text = "";
-	Vec2< size_t > m_last_window_size = {
+	types::Vec2< size_t > m_last_window_size = {
 		0,
 		0
 	};
@@ -52,7 +59,5 @@ protected:
 	FontTexture* m_texture = nullptr;
 };
 
-} /* namespace opengl */
-} /* namespace graphics */
-
-#include "../texture/FontTexture.h"
+}
+}

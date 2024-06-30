@@ -2,8 +2,6 @@
 
 #include "ShaderProgram.h"
 
-using namespace std;
-
 namespace graphics {
 namespace opengl {
 namespace shader_program {
@@ -114,8 +112,8 @@ void ShaderProgram::BindAttribLocation( GLuint index, const std::string name ) {
 	glBindAttribLocation( m_gl_shader_program, index, name.c_str() );
 }
 
-const string ShaderProgram::S_HasFlag( const string& var, const GLuint flag ) const {
-	return "( ( " + var + " & uint( " + to_string( flag ) + " ) ) == uint( " + to_string( flag ) + " ) )";
+const std::string ShaderProgram::S_HasFlag( const std::string& var, const GLuint flag ) const {
+	return "( ( " + var + " & uint( " + std::to_string( flag ) + " ) ) == uint( " + std::to_string( flag ) + " ) )";
 }
 
 const std::string ShaderProgram::S_For( const std::string& iterator, const size_t begin, const size_t end, const std::string& body ) const {
@@ -126,6 +124,6 @@ const std::string ShaderProgram::S_For( const std::string& iterator, const size_
 	return result;
 }
 
-} /* namespace shader_program */
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}
+}

@@ -1,20 +1,21 @@
 #pragma once
 
 #include <map>
+#include <unordered_map>
 #include <vector>
 
 /* List with multiple selectable choices */
 
 #include "UIContainer.h"
-#include "Button.h"
 
 namespace ui {
 namespace object {
 
+class Button;
+
 template< typename KEY_TYPE = size_t >
 CLASS( ChoiceList, UIContainer )
 	typedef KEY_TYPE value_t;
-
 	typedef std::vector< std::pair< value_t, std::string > > choices_t;
 
 	ChoiceList( const std::string& class_name = "" );
@@ -40,9 +41,9 @@ CLASS( ChoiceList, UIContainer )
 protected:
 	virtual void ApplyStyle() override;
 
-	bool OnKeyDown( const UIEvent::event_data_t* data ) override;
-	bool OnKeyUp( const UIEvent::event_data_t* data ) override;
-	bool OnKeyPress( const UIEvent::event_data_t* data ) override;
+	bool OnKeyDown( const event::event_data_t* data ) override;
+	bool OnKeyUp( const event::event_data_t* data ) override;
+	bool OnKeyPress( const event::event_data_t* data ) override;
 
 private:
 	void UpdateButtons();
@@ -64,22 +65,22 @@ private:
 
 	void SetActiveButton( Button* button );
 
-	const std::vector< Style::attribute_type_t > m_forwarded_style_attributes = {
-		Style::A_TEXTURE_BACK,
-		Style::A_TEXTURE_LEFT,
-		Style::A_TEXTURE_TOP,
-		Style::A_TEXTURE_RIGHT,
-		Style::A_TEXTURE_BOTTOM,
-		Style::A_TEXTURE_LEFTTOP,
-		Style::A_TEXTURE_RIGHTTOP,
-		Style::A_TEXTURE_RIGHTBOTTOM,
-		Style::A_TEXTURE_LEFTBOTTOM,
-		Style::A_FONT,
-		Style::A_TEXT_COLOR,
-		Style::A_TEXT_ALIGN,
-		Style::A_BUTTON_CLICK_SOUND,
-		Style::A_BUTTON_MOVE_SOUND,
-		Style::A_BORDER_SIZE,
+	const std::vector< attribute_type_t > m_forwarded_style_attributes = {
+		A_TEXTURE_BACK,
+		A_TEXTURE_LEFT,
+		A_TEXTURE_TOP,
+		A_TEXTURE_RIGHT,
+		A_TEXTURE_BOTTOM,
+		A_TEXTURE_LEFTTOP,
+		A_TEXTURE_RIGHTTOP,
+		A_TEXTURE_RIGHTBOTTOM,
+		A_TEXTURE_LEFTBOTTOM,
+		A_FONT,
+		A_TEXT_COLOR,
+		A_TEXT_ALIGN,
+		A_BUTTON_CLICK_SOUND,
+		A_BUTTON_MOVE_SOUND,
+		A_BORDER_SIZE,
 	};
 
 	void SelectChoice();
@@ -88,5 +89,5 @@ private:
 typedef ChoiceList< size_t > NumChoiceList;
 typedef ChoiceList< std::string > AssocChoiceList;
 
-} /* namespace object */
-} /* namespace ui */
+}
+}

@@ -12,18 +12,12 @@ namespace program {
 class Value : public Operand {
 public:
 
-	Value( const si_t& si, const gse::Value& value )
-		: Operand( si, OT_VALUE )
-		, value( value ) {}
+	Value( const si_t& si, const gse::Value& value );
 
 	const gse::Value value;
 
-	const std::string ToString() const override {
-		return value.ToString();
-	}
-	const std::string Dump( const size_t depth = 0 ) const override {
-		return Formatted( "Value" + m_si.ToString() + "( " + value.ToString() + " )", depth );
-	}
+	const std::string ToString() const override;
+	const std::string Dump( const size_t depth = 0 ) const override;
 };
 
 }

@@ -1,5 +1,8 @@
 #include "SoundEffect.h"
+
 #include "engine/Engine.h"
+#include "scene/actor/Sound.h"
+#include "audio/Audio.h"
 
 namespace ui {
 namespace object {
@@ -94,7 +97,7 @@ void SoundEffect::Create() {
 void SoundEffect::Iterate() {
 	UIObject::Iterate();
 
-	std::vector< actor::Sound* > active_actors = {};
+	std::vector< scene::actor::Sound* > active_actors = {};
 	for ( auto& actor : m_actors ) {
 		if ( actor->IsFinished() ) {
 			//Log( "Destroying inactive sound actor" );
@@ -124,25 +127,25 @@ void SoundEffect::Destroy() {
 void SoundEffect::ApplyStyle() {
 	UIObject::ApplyStyle();
 
-	if ( Has( Style::A_SOUND ) ) {
-		const auto* sound = (types::Sound*)GetObject( Style::A_SOUND );
+	if ( Has( A_SOUND ) ) {
+		const auto* sound = (types::Sound*)GetObject( A_SOUND );
 		if ( sound ) {
 			SetSound( sound );
 		}
-		if ( Has( Style::A_SOUND_VOLUME ) ) {
-			SetVolume( Get( Style::A_SOUND_VOLUME ) );
+		if ( Has( A_SOUND_VOLUME ) ) {
+			SetVolume( Get( A_SOUND_VOLUME ) );
 		}
-		if ( Has( Style::A_SOUND_AUTOPLAY ) ) {
+		if ( Has( A_SOUND_AUTOPLAY ) ) {
 			SetAutoPlay( true );
 		}
-		if ( Has( Style::A_SOUND_AUTOSTOP ) ) {
+		if ( Has( A_SOUND_AUTOSTOP ) ) {
 			SetAutoStop( true );
 		}
-		if ( Has( Style::A_SOUND_REPEATABLE ) ) {
+		if ( Has( A_SOUND_REPEATABLE ) ) {
 			SetRepeatable( true );
 		}
-		if ( Has( Style::A_SOUND_START_DELAY ) ) {
-			SetStartDelay( Get( Style::A_SOUND_START_DELAY ) );
+		if ( Has( A_SOUND_START_DELAY ) ) {
+			SetStartDelay( Get( A_SOUND_START_DELAY ) );
 		}
 
 		if ( m_autoplay && m_actors.empty() ) {

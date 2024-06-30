@@ -1,5 +1,11 @@
 #include "Connection.h"
 
+#include "game/State.h"
+#include "engine/Engine.h"
+#include "network/Network.h"
+#include "ui/UI.h"
+#include "game/event/Event.h"
+
 namespace game {
 namespace connection {
 
@@ -21,16 +27,18 @@ void Connection::ResetHandlers() {
 	m_on_flags_update = nullptr;
 	m_on_message = nullptr;
 	m_on_global_settings_update = nullptr;
-	m_on_game_event = nullptr;
+	m_on_game_event_validate = nullptr;
+	m_on_game_event_apply = nullptr;
 	if ( m_mt_ids.events ) {
 		m_network->MT_Cancel( m_mt_ids.events );
 		m_mt_ids.events = 0;
 	}
 }
 
-Connection::Connection( const network::connection_mode_t connection_mode, LocalSettings* const settings )
+Connection::Connection( const network::connection_mode_t connection_mode, settings::LocalSettings* const settings )
 	: m_connection_mode( connection_mode )
-	, m_settings( settings ) {
+	, m_settings( settings )
+	, m_network( g_engine->GetNetwork() ) {
 	//
 }
 
@@ -191,7 +199,7 @@ void Connection::IfServer( std::function< void( Server* ) > cb ) {
 	}
 }
 
-void Connection::SendGameEvent( const game::event::Event* event ) {
+void Connection::SendGameEvent( game::event::Event* event ) {
 	if ( m_pending_game_events.size() >= PENDING_GAME_EVENTS_LIMIT ) {
 		SendGameEvents( m_pending_game_events );
 		m_pending_game_events.clear();
@@ -247,8 +255,8 @@ void Connection::Disconnect( const std::string& reason ) {
 void Connection::ProcessPending() {
 	if ( !m_pending_game_events.empty() ) {
 		SendGameEvents( m_pending_game_events );
+		m_pending_game_events.clear();
 	}
-	m_pending_game_events.clear();
 }
 
 void Connection::ClearPending() {

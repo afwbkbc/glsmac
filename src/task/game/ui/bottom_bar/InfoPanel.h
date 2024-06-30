@@ -6,7 +6,10 @@
 #include "BBSection.h"
 
 #include "util/Timer.h"
-#include "ui/object/Label.h"
+
+namespace ui::object {
+class Label;
+}
 
 namespace task {
 namespace game {

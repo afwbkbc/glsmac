@@ -2,11 +2,14 @@
 
 #include "engine/Engine.h"
 
+#include "types/mesh/Render.h"
+#include "loader/texture/TextureLoader.h"
+
 namespace task {
 namespace game {
 namespace actor {
 
-TileSelection::TileSelection( ::game::map::TileState::tile_vertices_t coords )
+TileSelection::TileSelection( const ::game::map::tile::tile_vertices_t& coords )
 	: Actor( "TileSelection" ) {
 	NEWV( mesh, types::mesh::Render, 5, 4 );
 
@@ -32,7 +35,7 @@ TileSelection::TileSelection( ::game::map::TileState::tile_vertices_t coords )
 	mesh->Finalize();
 
 	SetMesh( mesh );
-	SetTexture( g_engine->GetTextureLoader()->LoadTexture( "texture.pcx", 1, 571, 56, 626 ) );
+	SetTexture( g_engine->GetTextureLoader()->LoadTexture( resource::PCX_TEXTURE, 1, 571, 56, 626 ) );
 	SetRenderFlags( RF_IGNORE_LIGHTING | RF_IGNORE_DEPTH );
 
 	m_glow_timer.SetInterval( GLOW_STEP );

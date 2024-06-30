@@ -4,12 +4,16 @@
 
 #include "Module.h"
 
-#include "ui/object/Section.h"
-#include "ui/object/Button.h"
-
-#include "util/Timer.h"
+#include "ui/Types.h"
 
 namespace ui {
+
+namespace object {
+class Section;
+class Label;
+class Button;
+}
+
 namespace module {
 
 CLASS( Error, Module )
@@ -33,9 +37,9 @@ private:
 
 	std::string m_error_text = "";
 
-	Section* m_section = nullptr;
-	Label* m_label = nullptr;
-	Button* m_button_close = nullptr;
+	object::Section* m_section = nullptr;
+	object::Label* m_label = nullptr;
+	object::Button* m_button_close = nullptr;
 
 	ui_handler_t m_on_close = 0;
 

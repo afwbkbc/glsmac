@@ -51,6 +51,6 @@ void Skybox::DisableAttributes() const {
 	glDisableVertexAttribArray( attributes.vertex );
 };
 
-} /* namespace shader_program */
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}
+}

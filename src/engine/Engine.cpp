@@ -2,6 +2,22 @@
 #include <thread>
 
 #include "Engine.h"
+#include "config/Config.h"
+#include "common/Thread.h"
+#include "error_handler/ErrorHandler.h"
+#include "logger/Logger.h"
+#include "resource/ResourceManager.h"
+#include "loader/font/FontLoader.h"
+#include "loader/texture/TextureLoader.h"
+#include "loader/sound/SoundLoader.h"
+#include "loader/txt/TXTLoaders.h"
+#include "scheduler/Scheduler.h"
+#include "input/Input.h"
+#include "graphics/Graphics.h"
+#include "audio/Audio.h"
+#include "network/Network.h"
+#include "ui/UI.h"
+#include "game/Game.h"
 
 // TODO: move to config
 const size_t g_max_fps = 500;
@@ -14,9 +30,11 @@ Engine::Engine(
 	config::Config* config,
 	error_handler::ErrorHandler* error_handler,
 	logger::Logger* logger,
+	resource::ResourceManager* resource_manager,
 	loader::font::FontLoader* font_loader,
 	loader::texture::TextureLoader* texture_loader,
 	loader::sound::SoundLoader* sound_loader,
+	loader::txt::TXTLoaders* txt_loaders,
 	scheduler::Scheduler* scheduler,
 	input::Input* input,
 	graphics::Graphics* graphics,
@@ -29,9 +47,11 @@ Engine::Engine(
 	m_config( config )
 	, m_error_handler( error_handler )
 	, m_logger( logger )
+	, m_resource_manager( resource_manager )
 	, m_font_loader( font_loader )
 	, m_texture_loader( texture_loader )
 	, m_sound_loader( sound_loader )
+	, m_txt_loaders( txt_loaders )
 	, m_scheduler( scheduler )
 	, m_input( input )
 	, m_graphics( graphics )
@@ -43,7 +63,7 @@ Engine::Engine(
 
 	g_engine = this;
 
-	NEWV( t_main, Thread, "MAIN" );
+	NEWV( t_main, common::Thread, "MAIN" );
 	if ( m_config->HasLaunchFlag( config::Config::LF_BENCHMARK ) ) {
 		t_main->SetIPS( 999999.9f );
 	}
@@ -56,6 +76,13 @@ Engine::Engine(
 	t_main->AddModule( m_texture_loader );
 	t_main->AddModule( m_sound_loader );
 	t_main->AddModule( m_logger );
+#ifdef DEBUG
+	if ( !m_config->HasDebugFlag( config::Config::DF_GSE_ONLY ) )
+#endif
+	{
+		m_resource_manager->Init( m_config->GetPossibleSMACPaths() );
+		t_main->AddModule( m_resource_manager );
+	}
 	t_main->AddModule( m_input );
 	t_main->AddModule( m_graphics );
 	t_main->AddModule( m_audio );
@@ -63,13 +90,13 @@ Engine::Engine(
 	t_main->AddModule( m_scheduler );
 	m_threads.push_back( t_main );
 
-	NEWV( t_network, Thread, "NETWORK" );
+	NEWV( t_network, common::Thread, "NETWORK" );
 	t_network->SetIPS( 100 );
 	t_network->AddModule( m_network );
 	m_threads.push_back( t_network );
 
 	if ( m_game ) {
-		NEWV( t_game, Thread, "GAME" );
+		NEWV( t_game, common::Thread, "GAME" );
 		t_game->SetIPS( g_max_fps );
 		t_game->AddModule( m_game );
 		m_threads.push_back( t_game );
@@ -152,4 +179,4 @@ void Engine::ShutDown() {
 	m_is_shutting_down = true;
 }
 
-} /* namespace engine */
+}

@@ -1,32 +1,58 @@
 #pragma once
 
-#include "../../Section.h"
+#include "task/game/ui/Section.h"
 
-#include "task/game/Types.h"
+namespace types::mesh {
+class Mesh;
+}
 
-#include "ui/object/Label.h"
+namespace ui::object {
+class Label;
+class Mesh;
+class Panel;
+}
 
 namespace task {
 namespace game {
+
+namespace unit {
+class Unit;
+}
+
 namespace ui {
+
+class UnitsList;
+class UnitPreview;
 
 CLASS( UnitsListItem, Section )
 
-	UnitsListItem( Game* game, const unit_data_t* unit_data );
+	UnitsListItem( Game* game, UnitsList* units_list, unit::Unit* unit );
 
 	void Create() override;
 	void Destroy() override;
 
 private:
-	const unit_data_t* m_unit_data;
+	friend class UnitsList;
+	void SelectUnit();
+	void DeselectUnit();
+	const unit::Unit* GetUnit() const;
 
+private:
+	UnitsList* m_units_list;
+	unit::Unit* m_unit;
+
+	struct sprite_t {
+		types::mesh::Mesh* mesh = nullptr; // save mesh to be able to preview units
+		::ui::object::Mesh* obj = nullptr; // this will get copy of mesh
+	};
 	struct {
-		object::Mesh* unit = nullptr;
-		object::Mesh* badge = nullptr;
-		object::Mesh* healthbar = nullptr;
+		sprite_t unit = {};
+		sprite_t badge = {};
+		sprite_t healthbar = {};
 	} m_sprites;
 	::ui::object::Label* m_label = nullptr;
 
+	::ui::object::Panel* m_selection_frame = nullptr;
 };
 
 }

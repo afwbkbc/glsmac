@@ -1,6 +1,9 @@
 #include "ChatPopup.h"
 
-#include "../../Game.h"
+#include "task/game/Game.h"
+#include "ui/object/Section.h"
+#include "ui/object/Label.h"
+#include "ui/object/Input.h"
 
 namespace task {
 namespace game {
@@ -18,7 +21,7 @@ void ChatPopup::Create() {
 	OkCancelPopup::Create();
 
 	NEW( m_message_section, ::ui::object::Section, SubClass( "InnerFrame" ) );
-	m_message_section->SetAlign( UIObject::ALIGN_TOP );
+	m_message_section->SetAlign( ::ui::ALIGN_TOP );
 	m_message_section->SetLeft( 6 );
 	m_message_section->SetRight( 6 );
 	m_message_section->SetTop( 34 );
@@ -37,9 +40,9 @@ void ChatPopup::Create() {
 	m_message_input->SetLeft( 80 );
 	m_message_input->SetRight( 6 );
 	m_message_input->On(
-		UIEvent::EV_KEY_DOWN, EH( this ) {
+		::ui::event::EV_KEY_DOWN, EH( this ) {
 			if ( !data->key.modifiers ) {
-				if ( data->key.code == UIEvent::K_ENTER ) {
+				if ( data->key.code == ::ui::event::K_ENTER ) {
 					OnOk();
 					return true;
 				}

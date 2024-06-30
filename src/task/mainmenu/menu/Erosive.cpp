@@ -2,6 +2,10 @@
 
 #include "Lifeforms.h"
 
+#include "task/mainmenu/MainMenu.h"
+#include "game/State.h"
+#include "game/settings/Settings.h"
+
 namespace task {
 namespace mainmenu {
 
@@ -11,36 +15,36 @@ Erosive::Erosive( MainMenu* mainmenu )
 		{
 			"STRONG",  {
 						   CH( this ) {
-							   m_mainmenu->m_state->m_settings.global.map.erosive = game::MapSettings::MAP_EROSIVE_STRONG;
+							   m_mainmenu->m_state->m_settings.global.map.erosive = game::settings::MapSettings::MAP_CONFIG_EROSIVE_STRONG;
 							   NEWV( menu, Lifeforms, m_mainmenu );
 							   NextMenu( menu );
 						   },
 						   CH( this ) {
-							   SetMoonsVariant( '1' );
+							   m_mainmenu->SetCustomizeMapMoons( 1 );
 						   }
 					   }
 		},
 		{
 			"AVERAGE", {
 						   CH( this ) {
-							   m_mainmenu->m_state->m_settings.global.map.erosive = game::MapSettings::MAP_EROSIVE_AVERAGE;
+							   m_mainmenu->m_state->m_settings.global.map.erosive = game::settings::MapSettings::MAP_CONFIG_EROSIVE_AVERAGE;
 							   NEWV( menu, Lifeforms, m_mainmenu );
 							   NextMenu( menu );
 						   },
 						   CH( this ) {
-							   SetMoonsVariant( '2' );
+							   m_mainmenu->SetCustomizeMapMoons( 2 );
 						   }
 					   }
 		},
 		{
 			"WEAK",    {
 						   CH( this ) {
-							   m_mainmenu->m_state->m_settings.global.map.erosive = game::MapSettings::MAP_EROSIVE_WEAK;
+							   m_mainmenu->m_state->m_settings.global.map.erosive = game::settings::MapSettings::MAP_CONFIG_EROSIVE_WEAK;
 							   NEWV( menu, Lifeforms, m_mainmenu );
 							   NextMenu( menu );
 						   },
 						   CH( this ) {
-							   SetMoonsVariant( '3' );
+							   m_mainmenu->SetCustomizeMapMoons( 3 );
 						   }
 					   }
 		},
@@ -51,13 +55,9 @@ Erosive::Erosive( MainMenu* mainmenu )
 
 void Erosive::Close() {
 	if ( IsReadyToClose() ) {
-		m_mainmenu->SetCustomizeMapMoons( "" );
+		m_mainmenu->SetCustomizeMapMoons( 0 );
 		SlidingMenu::Close();
 	}
-}
-
-void Erosive::SetMoonsVariant( const char variant ) {
-	m_mainmenu->SetCustomizeMapMoons( (std::string)"moon" + variant );
 }
 
 }

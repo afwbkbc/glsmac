@@ -2,7 +2,9 @@
 
 #include "Popup.h"
 
-#include "ui/object/Button.h"
+namespace ui::object {
+class Button;
+}
 
 namespace task {
 namespace game {

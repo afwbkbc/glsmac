@@ -8,10 +8,7 @@
 
 #include <mutex>
 
-#include "scene/actor/Sound.h"
-#include "Sound.h"
-
-#include "../Audio.h"
+#include "audio/Audio.h"
 
 // this must match specs of SMAC wavs until resampling is implemented
 #define AUDIO_FREQUENCY 22050
@@ -25,6 +22,8 @@
 
 namespace audio {
 namespace sdl2 {
+
+class Sound;
 
 CLASS( SDL2, Audio )
 	SDL2();
@@ -54,5 +53,5 @@ private:
 	AUDIO_SAMPLE_TYPE* m_buffer = nullptr;
 };
 
-} /* namespace sdl2 */
-} /* namespace audio */
+}
+}

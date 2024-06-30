@@ -1,6 +1,7 @@
 #include "FreeType.h"
 
-#include "util/System.h"
+#include "types/Font.h"
+#include "util/FS.h"
 
 namespace loader {
 namespace font {
@@ -24,7 +25,7 @@ void FreeType::Iterate() {
 
 }
 
-types::Font* FreeType::LoadFont( const std::string& name, const unsigned char size ) {
+types::Font* FreeType::LoadFontImpl( const std::string& name, const std::string& path, const unsigned char size ) {
 
 	std::string font_key = name + ":" + std::to_string( size );
 
@@ -37,19 +38,12 @@ types::Font* FreeType::LoadFont( const std::string& name, const unsigned char si
 
 		Log( "Loading font \"" + font_key + "\"" );
 
-		NEWV( font, types::Font );
-		font->m_name = name;
+		NEWV( font, types::Font, font_key );
 
 		FT_Face ftface;
-		auto filenames = util::System::GetPossibleFilenames( name );
-		for ( auto& filename : filenames ) {
-			res = FT_New_Face( m_freetype, ( GetRoot() + filename ).c_str(), 0, &ftface );
-			if ( !res ) {
-				break;
-			}
-		}
+		res = FT_New_Face( m_freetype, path.c_str(), 0, &ftface );
+		ASSERT( !res, "Unable to load font \"" + path + "\"" );
 
-		ASSERT( !res, "Unable to load font \"" + name + "\"" );
 		FT_Set_Pixel_Sizes( ftface, 0, size );
 
 		font->m_dimensions.width = font->m_dimensions.height = 0;
@@ -60,7 +54,7 @@ types::Font* FreeType::LoadFont( const std::string& name, const unsigned char si
 
 		for ( int i = 32 ; i < 128 ; i++ ) { // only ascii for now
 			res = FT_Load_Char( ftface, i, FT_LOAD_RENDER );
-			ASSERT( !res, "Font \"" + name + "\" bitmap loading failed" );
+			ASSERT( !res, "Font \"" + path + "\" bitmap loading failed" );
 
 			bitmap = &font->m_symbols[ i ];
 
@@ -93,5 +87,5 @@ types::Font* FreeType::LoadFont( const std::string& name, const unsigned char si
 	}
 }
 
-} /* namespace font */
-} /* namespace loader */
+}
+}

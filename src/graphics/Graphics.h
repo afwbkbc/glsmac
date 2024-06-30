@@ -5,18 +5,23 @@
 #include <unordered_map>
 #include <mutex>
 
-#include "base/Module.h"
-
-#include "scene/Scene.h"
-#include "types/Texture.h"
+#include "common/Module.h"
 
 typedef std::function< void( const float aspect_ratio ) > on_resize_handler_t;
 
 #define RH( ... ) [ __VA_ARGS__ ] ( const float aspect_ratio ) -> void
 
+namespace types::texture {
+class Texture;
+}
+
+namespace scene {
+class Scene;
+}
+
 namespace graphics {
 
-CLASS( Graphics, base::Module )
+CLASS( Graphics, common::Module )
 
 	static constexpr size_t MAX_WORLD_LIGHTS = 2;
 
@@ -31,9 +36,9 @@ CLASS( Graphics, base::Module )
 	virtual const unsigned short GetViewportWidth() const = 0;
 	virtual const unsigned short GetViewportHeight() const = 0;
 
-	virtual void LoadTexture( types::Texture* texture ) = 0;
-	virtual void UnloadTexture( const types::Texture* texture ) = 0;
-	virtual void EnableTexture( const types::Texture* texture ) = 0;
+	virtual void LoadTexture( types::texture::Texture* texture ) = 0;
+	virtual void UnloadTexture( const types::texture::Texture* texture ) = 0;
+	virtual void EnableTexture( const types::texture::Texture* texture ) = 0;
 	virtual void DisableTexture() = 0;
 
 	virtual const bool IsFullscreen() const = 0;
@@ -73,4 +78,4 @@ private:
 	std::vector< void* > m_on_resize_handlers_order = {};
 };
 
-} /* namespace graphics */
+}

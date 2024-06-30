@@ -32,9 +32,12 @@
 
 #endif
 
+#include "resource/ResourceManager.h"
+
 #include "loader/font/FreeType.h"
 #include "loader/texture/SDL2.h"
 #include "loader/sound/SDL2.h"
+#include "loader/txt/TXTLoaders.h"
 #include "input/sdl2/SDL2.h"
 #include "graphics/opengl/OpenGL.h"
 #include "audio/sdl2/SDL2.h"
@@ -62,6 +65,10 @@
 
 #include "version.h"
 
+#include "game/State.h"
+#include "game/Player.h"
+#include "game/slot/Slots.h"
+
 // TODO: move to config
 #define WINDOW_WIDTH 1024
 #define WINDOW_HEIGHT 768
@@ -72,69 +79,64 @@
 #define START_FULLSCREEN true
 #endif
 
+#include "util/FS.h"
+
 #ifdef DEBUG
 
 #include "util/System.h"
-#include "util/FS.h"
 #include "debug/MemoryWatcher.h"
 #include "debug/DebugOverlay.h"
 
-using namespace util;
 #endif
-
-using namespace std;
 
 #ifdef main
 #undef main
 #endif
 
-#if !defined(_WIN32) || defined( VISUAL_STUDIO )
-
 int main( const int argc, const char* argv[] ) {
-#else
-	int main_real(const int argc, const char* argv[]) {
-#endif
 
 	config::Config config( argc, argv );
+
+	config.Init();
 
 #ifdef DEBUG
 	if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
 #ifdef __linux__
 		// automatically start under gdb if possible
-		if ( !System::AreWeUnderGDB() && System::IsGDBAvailable() ) {
-			cout << "Restarting process under GDB..." << endl;
+		if ( !util::System::AreWeUnderGDB() && util::System::IsGDBAvailable() ) {
+			std::cout << "Restarting process under GDB..." << std::endl;
 
-			string cmdline = "printf \"r\\nbt\\n\" | gdb --args";
+			std::string cmdline = "printf \"r\\nbt\\n\" | gdb --args";
 			for ( int c = 0 ; c < argc ; c++ ) {
-				cmdline += (string)" " + argv[ c ];
+				cmdline += (std::string)" " + argv[ c ];
 			}
 			cmdline += " 2>&1 | tee debug.log";
 
-			cout << cmdline << endl;
+			std::cout << cmdline << std::endl;
 			int status = system( cmdline.c_str() );
 			if ( status < 0 ) {
-				cout << "Error: " << strerror( errno ) << endl;
+				std::cout << "Error: " << strerror( errno ) << std::endl;
 				exit( EXIT_FAILURE );
 			}
 			else if ( WIFEXITED( status ) ) {
-				cout << "Process finished, output saved to debug.log" << endl;
+				std::cout << "Process finished, output saved to debug.log" << std::endl;
 				exit( EXIT_SUCCESS );
 			}
 			else {
-				cout << "Process finished, output saved to debug.log" << endl;
+				std::cout << "Process finished, output saved to debug.log" << std::endl;
 				exit( EXIT_FAILURE );
 			}
 		}
 #else
-		cout << "WARNING: gdb check skipped due to unsupported platform" << endl;
+		std::cout << "WARNING: gdb check skipped due to unsupported platform" << std::endl;
 #endif
 	}
 	debug::MemoryWatcher memory_watcher( config.HasDebugFlag( config::Config::DF_MEMORYDEBUG ), config.HasDebugFlag( config::Config::DF_QUIET ) );
 #endif
 
-	FS::CreateDirectoryIfNotExists( config.GetPrefix() );
+	util::FS::CreateDirectoryIfNotExists( config.GetPrefix() );
 #ifdef DEBUG
-	FS::CreateDirectoryIfNotExists( config.GetDebugPath() );
+	util::FS::CreateDirectoryIfNotExists( config.GetDebugPath() );
 #endif
 
 	int result = EXIT_FAILURE;
@@ -194,9 +196,11 @@ int main( const int argc, const char* argv[] ) {
 				&config,
 				&error_handler,
 				logger,
+				nullptr,
 				&font_loader,
 				&texture_loader,
 				&sound_loader,
+				nullptr,
 				&scheduler,
 				&input,
 				&graphics,
@@ -213,11 +217,12 @@ int main( const int argc, const char* argv[] ) {
 		{
 			game::Game game;
 
+			resource::ResourceManager resource_manager;
+
 			loader::font::FreeType font_loader;
-
 			loader::texture::SDL2 texture_loader;
-
 			loader::sound::SDL2 sound_loader;
+			loader::txt::TXTLoaders txt_loaders;
 
 			input::sdl2::SDL2 input;
 			bool vsync = VSYNC;
@@ -252,15 +257,17 @@ int main( const int argc, const char* argv[] ) {
 			scheduler.AddTask( task_common );
 
 			// game entry point
-			base::Task* task = nullptr;
+			common::Task* task = nullptr;
 
 			engine::Engine engine(
 				&config,
 				&error_handler,
 				logger,
+				&resource_manager,
 				&font_loader,
 				&texture_loader,
 				&sound_loader,
+				&txt_loaders,
 				&scheduler,
 				&input,
 				&graphics,
@@ -279,16 +286,15 @@ int main( const int argc, const char* argv[] ) {
 				const auto& rules = state->m_settings.global.game_rules;
 				NEWV(
 					player, ::game::Player,
-					rules,
 					"Player",
 					::game::Player::PR_HOST,
-					::game::Player::RANDOM_FACTION,
+					{},
 					rules.GetDefaultDifficultyLevel()
 				);
 				state->AddPlayer( player );
 				state->AddCIDSlot( 0, 0 );
-				state->m_slots.Resize( 1 );
-				auto& slot = state->m_slots.GetSlot( 0 );
+				state->m_slots->Resize( 1 );
+				auto& slot = state->m_slots->GetSlot( 0 );
 				slot.SetPlayer( player, 0, "" );
 				slot.SetLinkedGSID( state->m_settings.local.account.GetGSID() );
 				NEW( task, task::game::Game, state, 0, UH() {
@@ -313,10 +319,3 @@ int main( const int argc, const char* argv[] ) {
 
 	return result;
 }
-
-#if defined(_WIN32) && !defined( VISUAL_STUDIO )
-INT WINAPI WinMain( HINSTANCE hInst, HINSTANCE, LPSTR strCmdLine, INT )
-{
-	main_real(__argc, (const char**)__argv);
-}
-#endif

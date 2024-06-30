@@ -2,27 +2,29 @@
 
 #include <vector>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
-#include "../MapEditor.h"
+#include "game/map_editor/Types.h"
 
 namespace game {
+
 class Game;
+
 namespace map_editor {
 namespace brush {
 
-CLASS( Brush, base::Base )
+CLASS( Brush, common::Class )
 
-	Brush( Game* game, const MapEditor::brush_type_t type );
+	Brush( Game* game, const brush_type_t type );
 
-	const MapEditor::brush_type_t GetType() const;
+	const brush_type_t GetType() const;
 
 	// return tiles that need to be drawn
-	virtual const MapEditor::tiles_t Draw( map::Tile* center_tile ) = 0;
+	virtual const tiles_t Draw( map::tile::Tile* center_tile ) = 0;
 
 protected:
 	const Game* m_game = nullptr;
-	const MapEditor::brush_type_t m_type = MapEditor::BT_NONE;
+	const brush_type_t m_type = BT_NONE;
 
 };
 

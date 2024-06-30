@@ -1,6 +1,10 @@
 #include "Conversions.h"
 
 #include "gse/GSE.h"
+#include "gse/context/Context.h"
+#include "gse/callable/Native.h"
+#include "gse/Exception.h"
+#include "gse/type/Undefined.h"
 #include "gse/type/Int.h"
 #include "gse/type/Float.h"
 #include "gse/type/String.h"
@@ -10,25 +14,24 @@
 namespace gse {
 namespace builtins {
 
-void Conversions::AddToContext( gse::Context* ctx ) {
+void Conversions::AddToContext( context::Context* ctx ) {
 
-#define CONVERSION_ERROR( _type ) throw gse::Exception( EC.CONVERSION_ERROR, "Could not convert " + v->GetTypeString(v->type) + " to " + _type + ": " + v->ToString(), ctx, call_si );
+#define CONVERSION_ERROR( _type ) throw Exception( EC.CONVERSION_ERROR, "Could not convert " + v->GetTypeString(v->type) + " to " + _type + ": " + v->ToString(), ctx, call_si );
 
 #define CONVERT_COLOR( _type, _constructor, _min, _max ) { \
 	N_GETVALUE( r, 0, _type ); \
-    if ( r < _min || r > _max ) throw gse::Exception( EC.INVALID_CALL, "Red value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( r ), ctx, call_si ); \
+    if ( r < _min || r > _max ) throw Exception( EC.INVALID_CALL, "Red value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( r ), ctx, call_si ); \
 	N_GETVALUE( g, 1, _type ); \
-    if ( g < _min || g > _max ) throw gse::Exception( EC.INVALID_CALL, "Green value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( g ), ctx, call_si ); \
+    if ( g < _min || g > _max ) throw Exception( EC.INVALID_CALL, "Green value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( g ), ctx, call_si ); \
 	N_GETVALUE( b, 2, _type ); \
-    if ( b < _min || b > _max ) throw gse::Exception( EC.INVALID_CALL, "Blue value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( b ), ctx, call_si ); \
+    if ( b < _min || b > _max ) throw Exception( EC.INVALID_CALL, "Blue value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( b ), ctx, call_si ); \
 	if ( arguments.size() == 4 ) { \
 		N_GETVALUE( a, 3, _type ); \
-	    if ( a < _min || a > _max ) throw gse::Exception( EC.INVALID_CALL, "Alpha value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( a ), ctx, call_si ); \
+	    if ( a < _min || a > _max ) throw Exception( EC.INVALID_CALL, "Alpha value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( a ), ctx, call_si ); \
 		return _constructor( r, g, b, a ).Wrap(); \
 	} \
 	return _constructor( r, g, b ).Wrap(); \
 }
-
 
 	ctx->CreateBuiltin( "to_string", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
@@ -106,7 +109,7 @@ void Conversions::AddToContext( gse::Context* ctx ) {
 			default:
 				f_err();
 		}
-		return VALUE( gse::type::Undefined );
+		return VALUE( type::Undefined );
 	} ) );
 
 #undef CONVERT_COLOR

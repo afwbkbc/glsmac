@@ -2,6 +2,9 @@
 
 #include "util/FS.h"
 
+#include "TextView.h"
+#include "Input.h"
+
 namespace ui {
 namespace object {
 
@@ -39,7 +42,7 @@ void FileBrowser::Create() {
 	NEW( m_file_list, TextView, "PopupFileList" );
 	m_file_list->SetType( TextView::TT_EXTENDED );
 	m_file_list->On(
-		UIEvent::EV_CHANGE, EH( this ) {
+		event::EV_CHANGE, EH( this ) {
 			const std::string v = data->value.change.text
 				? *data->value.change.text
 				: "";
@@ -55,7 +58,7 @@ void FileBrowser::Create() {
 		}
 	);
 	m_file_list->On(
-		UIEvent::EV_SELECT, EH( this ) {
+		event::EV_SELECT, EH( this ) {
 			ASSERT( data->value.change.text, "null text ptr in select event data" );
 			SelectItem( *data->value.change.text );
 			return true;
@@ -67,7 +70,7 @@ void FileBrowser::Create() {
 	m_input->SetZIndex( 0.8f ); // TODO: fix z index bugs`
 	m_input->SetMaxLength( 128 ); // TODO: make scrollable horizontally when overflowed
 	m_input->On(
-		UIEvent::EV_CHANGE, EH( this ) {
+		event::EV_CHANGE, EH( this ) {
 			ASSERT( data->value.change.text, "input changed but test ptr is null" );
 			m_is_typing = true; // prevent input value change while typing
 			if ( m_file_list->SelectByMask( *data->value.change.text ) == m_input->GetValue().size() ) { // full match
@@ -110,41 +113,41 @@ void FileBrowser::Create() {
 	AddChild( m_input );
 
 	On(
-		UIEvent::EV_KEY_DOWN, EH( this ) {
+		event::EV_KEY_DOWN, EH( this ) {
 			if ( !data->key.modifiers ) {
 				switch ( data->key.code ) {
-					case UIEvent::K_UP: {
+					case event::K_UP: {
 						m_file_list->SelectPreviousLine();
 						break;
 					}
-					case UIEvent::K_DOWN: {
+					case event::K_DOWN: {
 						m_file_list->SelectNextLine();
 						break;
 					}
-					case UIEvent::K_PAGEUP: {
+					case event::K_PAGEUP: {
 						m_file_list->SelectPreviousPage();
 						break;
 					}
-					case UIEvent::K_PAGEDOWN: {
+					case event::K_PAGEDOWN: {
 						m_file_list->SelectNextPage();
 						break;
 					}
-					case UIEvent::K_HOME: {
+					case event::K_HOME: {
 						m_file_list->SelectFirstLine();
 						break;
 					}
-					case UIEvent::K_END: {
+					case event::K_END: {
 						m_file_list->SelectLastLine();
 						break;
 					}
-					case UIEvent::K_TAB: {
+					case event::K_TAB: {
 						const auto& hint = m_input->GetHint();
 						if ( !hint.empty() ) {
 							m_input->SetValue( hint );
 						}
 						break;
 					}
-					case UIEvent::K_ENTER: {
+					case event::K_ENTER: {
 						SelectCurrentValue();
 						break;
 					}
@@ -160,7 +163,7 @@ void FileBrowser::Create() {
 
 	m_selection_stack.clear();
 	size_t oldpos = 0, pos = 0;
-	const auto sep = util::FS::GetPathSeparator();
+	const auto sep = util::FS::PATH_SEPARATOR;
 	while ( ( pos = m_default_directory.find( sep, oldpos ) ) != std::string::npos ) {
 		m_selection_stack.push_back( m_default_directory.substr( oldpos, pos - oldpos ) );
 		//Log( "Path part: " + m_selection_stack.back() );
@@ -185,7 +188,7 @@ void FileBrowser::Destroy() {
 }
 
 const std::string FileBrowser::GetSelectedFile() const {
-	const auto sep = util::FS::GetPathSeparator();
+	const auto sep = util::FS::PATH_SEPARATOR;
 	const auto& value = m_input->GetValue();
 	return
 #ifdef _WIN32
@@ -203,7 +206,7 @@ void FileBrowser::SelectCurrentValue() {
 }
 
 void FileBrowser::SelectCurrentValueOrItem() {
-	const auto sep = util::FS::GetPathSeparator();
+	const auto sep = util::FS::PATH_SEPARATOR;
 #ifdef _WIN32
 	if ( !m_current_directory.empty() )
 #endif
@@ -227,7 +230,7 @@ void FileBrowser::ChangeDirectory( std::string directory ) {
 	ASSERT( util::FS::IsAbsolutePath( directory ), "directory must be absolute path" );
 
 	// remove trailing slash
-	const char sep = util::FS::GetPathSeparator()[ 0 ];
+	const char sep = util::FS::PATH_SEPARATOR;
 	while ( !directory.empty() && directory[ directory.size() - 1 ] == sep ) {
 		directory.pop_back();
 	}
@@ -291,14 +294,14 @@ void FileBrowser::SelectItem( std::string item ) {
 		m_input->SetValue( item );
 	}
 
-	const std::string sep = util::FS::GetPathSeparator();
+	const auto sep = util::FS::PATH_SEPARATOR;
 	std::string path = GetSelectedFile();
 
 	if ( item == util::FS::GetUpDirString() ) {
 		//Log( "Selected directory up" );
 		const auto pos = m_current_directory.rfind( sep );
 		if ( pos == std::string::npos ) {
-			ChangeDirectory( sep );
+			ChangeDirectory( std::string( 1, sep ) );
 		}
 		else {
 			ChangeDirectory( m_current_directory.substr( 0, pos ) );
@@ -334,9 +337,9 @@ void FileBrowser::SelectItem( std::string item ) {
 				)
 				) {
 				//Log( "Selected file: " + path );
-				UIEvent::event_data_t data = {};
+				event::event_data_t data = {};
 				data.value.change.text = &path;
-				Trigger( UIEvent::EV_SELECT, &data );
+				Trigger( event::EV_SELECT, &data );
 
 			}
 		}

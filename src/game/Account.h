@@ -1,10 +1,10 @@
 #pragma once
 
-#include "base/Base.h"
+#include "common/Common.h"
 
 namespace game {
 
-CLASS( Account, base::Base )
+CLASS( Account, common::Class )
 
 	Account();
 

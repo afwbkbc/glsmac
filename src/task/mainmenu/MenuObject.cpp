@@ -1,10 +1,12 @@
 #include "MenuObject.h"
 
+#include "task/mainmenu/MainMenu.h"
+
 namespace task {
 namespace mainmenu {
 
 MenuObject::MenuObject( MainMenu* mainmenu, const std::string& title )
-	: base::Base()
+	: common::Class()
 	, m_mainmenu( mainmenu )
 	, m_title( title ) {
 	//

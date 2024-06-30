@@ -1,11 +1,16 @@
 #pragma once
 
-#include "Routine.h"
+#include <GL/glew.h>
 
-#include "../shader_program/Skybox.h"
+#include "Routine.h"
 
 namespace graphics {
 namespace opengl {
+
+namespace shader_program {
+class Skybox;
+}
+
 namespace routine {
 
 CLASS( Skybox, Routine )
@@ -29,9 +34,9 @@ protected:
 	//GLuint m_texture;
 
 private:
-	void RemoveTexture( base::ObjectLink* link );
+	void RemoveTexture( common::ObjectLink* link );
 };
 
-} /* namespace routine */
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}
+}

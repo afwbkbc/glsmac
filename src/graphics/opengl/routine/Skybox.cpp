@@ -3,7 +3,13 @@
 #include "Skybox.h"
 
 #include "engine/Engine.h"
-#include "../texture/CubemapTexture.h"
+#include "graphics/opengl/texture/CubemapTexture.h"
+#include "graphics/opengl/shader_program/Skybox.h"
+#include "graphics/opengl/texture/Texture.h"
+#include "common/ObjectLink.h"
+#include "types/texture/Texture.h"
+#include "scene/Scene.h"
+#include "scene/Camera.h"
 
 namespace graphics {
 namespace opengl {
@@ -128,9 +134,9 @@ void Skybox::Stop() {
 
 }
 
-void Skybox::RemoveTexture( base::ObjectLink* link ) {
+void Skybox::RemoveTexture( common::ObjectLink* link ) {
 	if ( !link->Removed() ) {
-		link->GetSrcObject< types::Texture >()->m_graphics_object = NULL;
+		link->GetSrcObject< types::texture::Texture >()->m_graphics_object = NULL;
 	}
 	auto* gl_texture = link->GetDstObject< Texture >();
 	gl_texture->Unload();
@@ -162,7 +168,7 @@ void Skybox::Iterate() {
 			auto* texture = ( *it )->GetScene()->GetSkyboxTexture();
 			if ( texture ) {
 				NEWV( gl_texture, CubemapTexture, texture );
-				NEWV( obj, base::ObjectLink, texture, gl_texture );
+				NEWV( obj, common::ObjectLink, texture, gl_texture );
 				texture->m_graphics_object = obj;
 				( *it )->SetSkyboxTextureObj( obj );
 				gl_texture->Load();
@@ -216,6 +222,6 @@ bool Skybox::SceneBelongs( const scene::Scene* scene ) const {
 	return scene->GetType() == scene::SCENE_TYPE_PERSP;
 }
 
-} /* namespace routine */
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}
+}

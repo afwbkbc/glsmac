@@ -2,13 +2,17 @@
 
 #include "parser/JS.h"
 #include "runner/Interpreter.h"
-#include "GlobalContext.h"
+#include "gse/context/GlobalContext.h"
 #include "Exception.h"
 #include "type/Undefined.h"
+#include "program/Program.h"
 
 #include "util/FS.h"
 
 namespace gse {
+
+// scripts must be cross-platform
+const char GSE::PATH_SEPARATOR = '/';
 
 GSE::GSE() {
 	m_bindings.push_back( &m_builtins );
@@ -25,7 +29,7 @@ GSE::~GSE() {
 
 parser::Parser* GSE::GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num ) const {
 	parser::Parser* parser = nullptr;
-	const auto extensions = util::FS::GetExtensions( filename );
+	const auto extensions = util::FS::GetExtensions( filename, PATH_SEPARATOR );
 	ASSERT( extensions.size() == 2 && extensions[ 0 ] == ".gls", "unsupported file name ( " + filename + " ), expected: *.gls.*" );
 	if ( extensions[ 1 ] == ".js" ) {
 		NEW( parser, parser::JS, filename, source, initial_line_num );
@@ -43,8 +47,8 @@ void GSE::AddBindings( Bindings* bindings ) {
 	m_bindings.push_back( bindings );
 }
 
-GlobalContext* GSE::CreateGlobalContext( const std::string& source_path ) {
-	NEWV( context, gse::GlobalContext, this, source_path );
+context::GlobalContext* GSE::CreateGlobalContext( const std::string& source_path ) {
+	NEWV( context, context::GlobalContext, this, source_path );
 	for ( const auto& it : m_bindings ) {
 		it->AddToContext( context );
 	}
@@ -68,7 +72,7 @@ void GSE::Run() {
 		auto it = m_modules.find( i );
 		ASSERT( it != m_modules.end(), "required module missing: " + i );
 		Log( "Executing module: " + it->first );
-		GlobalContext context( this, {} );
+		context::GlobalContext context( this, {} );
 		it->second->Run( &context, {}, {} );
 		// TODO: cleanup context properly or don't
 	}
@@ -76,24 +80,24 @@ void GSE::Run() {
 	Log( "GSE finished" );
 }
 
-const Value GSE::GetInclude( Context* ctx, const si_t& si, const std::string& path ) {
+const Value GSE::GetInclude( context::Context* ctx, const si_t& si, const std::string& path ) {
 	const auto& it = m_include_cache.find( path );
 	if ( it != m_include_cache.end() ) {
 		return it->second.result;
 	}
 	std::string full_path = "";
 	for ( const auto& it : m_supported_extensions ) {
-		if ( util::FS::FileExists( path + it ) ) {
+		if ( util::FS::FileExists( path + it, PATH_SEPARATOR ) ) {
 			if ( !full_path.empty() ) {
-				throw gse::Exception( EC.LOADER_ERROR, "Multiple candidates found for include '" + path + "': '" + std::string( full_path ) + "', '" + path + it + "', ...", ctx, si );
+				throw Exception( EC.LOADER_ERROR, "Multiple candidates found for include '" + path + "': '" + std::string( full_path ) + "', '" + path + it + "', ...", ctx, si );
 			}
 			full_path = path + it;
 		}
 	}
 	if ( full_path.empty() ) {
-		throw gse::Exception( EC.LOADER_ERROR, "Could not find script for include '" + path + "'", ctx, si );
+		throw Exception( EC.LOADER_ERROR, "Could not find script for include '" + path + "'", ctx, si );
 	}
-	const auto source = util::FS::ReadFile( full_path );
+	const auto source = util::FS::ReadFile( full_path, PATH_SEPARATOR );
 	include_cache_t cache = {
 		VALUE( type::Undefined ),
 		nullptr,
@@ -119,7 +123,7 @@ const Value GSE::GetInclude( Context* ctx, const si_t& si, const std::string& pa
 		m_include_cache.insert_or_assign( path, cache );
 		return cache.result;
 	}
-	catch ( gse::Exception& e ) {
+	catch ( Exception& e ) {
 		cache.Cleanup();
 		throw e;
 	}

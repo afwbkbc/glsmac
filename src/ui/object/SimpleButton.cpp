@@ -2,6 +2,8 @@
 
 #define DOUBLECLICK_MAX_MS 1000
 
+#include "Surface.h"
+
 namespace ui {
 namespace object {
 
@@ -13,8 +15,8 @@ SimpleButton::SimpleButton( const std::string& class_name )
 void SimpleButton::Create() {
 	UIContainer::Create();
 
-	NEW( m_background, Surface );
-	m_background->ForwardStyleAttribute( Style::A_TEXTURE );
+	NEW( m_background, ui::object::Surface );
+	m_background->ForwardStyleAttribute( A_TEXTURE );
 	AddChild( m_background );
 }
 
@@ -24,14 +26,14 @@ void SimpleButton::Destroy() {
 	UIContainer::Destroy();
 }
 
-bool SimpleButton::OnMouseOver( const UIEvent::event_data_t* data ) {
+bool SimpleButton::OnMouseOver( const event::event_data_t* data ) {
 	return true;
 }
 
-bool SimpleButton::OnMouseOut( const UIEvent::event_data_t* data ) {
+bool SimpleButton::OnMouseOut( const event::event_data_t* data ) {
 	if ( m_is_clicking ) {
 		m_is_clicking = false;
-		RemoveStyleModifier( Style::M_ACTIVE );
+		RemoveStyleModifier( M_ACTIVE );
 	}
 	if ( m_maybe_doubleclick ) {
 		m_doubleclick_timer.Stop();
@@ -40,18 +42,18 @@ bool SimpleButton::OnMouseOut( const UIEvent::event_data_t* data ) {
 	return true;
 }
 
-bool SimpleButton::OnMouseDown( const UIEvent::event_data_t* data ) {
-	if ( data->mouse.button == UIEvent::M_LEFT ) {
-		AddStyleModifier( Style::M_ACTIVE );
+bool SimpleButton::OnMouseDown( const event::event_data_t* data ) {
+	if ( data->mouse.button == event::M_LEFT ) {
+		AddStyleModifier( M_ACTIVE );
 		m_is_clicking = true;
 	}
 	return true;
 }
 
-bool SimpleButton::OnMouseUp( const UIEvent::event_data_t* data ) {
+bool SimpleButton::OnMouseUp( const event::event_data_t* data ) {
 	if ( m_is_clicking ) {
 		m_is_clicking = false;
-		RemoveStyleModifier( Style::M_ACTIVE );
+		RemoveStyleModifier( M_ACTIVE );
 		bool is_double_click = false;
 		if ( m_maybe_doubleclick ) {
 			if ( !m_doubleclick_timer.HasTicked() ) {
@@ -65,9 +67,9 @@ bool SimpleButton::OnMouseUp( const UIEvent::event_data_t* data ) {
 			m_maybe_doubleclick = true;
 		}
 		// double click event should go after normal click
-		bool ret = Trigger( UIEvent::EV_BUTTON_CLICK, data );
+		bool ret = Trigger( event::EV_BUTTON_CLICK, data );
 		if ( is_double_click ) {
-			Trigger( UIEvent::EV_BUTTON_DOUBLE_CLICK, data );
+			Trigger( event::EV_BUTTON_DOUBLE_CLICK, data );
 		}
 		return ret;
 	}

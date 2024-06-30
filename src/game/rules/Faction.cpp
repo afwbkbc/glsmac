@@ -1,14 +1,13 @@
 #include "Faction.h"
 
+#include "types/texture/Texture.h"
 #include "gse/type/String.h"
-
 #include "engine/Engine.h"
+#include "loader/texture/TextureLoader.h"
+#include "resource/ResourceManager.h"
 
 namespace game {
 namespace rules {
-
-const Faction::faction_flag_t Faction::FF_NONE = 0;
-const Faction::faction_flag_t Faction::FF_PROGENITOR = 1 << 0;
 
 Faction::Faction() {
 	//
@@ -20,19 +19,26 @@ Faction::Faction( const std::string& id, const std::string& name )
 	//
 }
 
-void Faction::ImportPCX( const std::string& pcx_file ) {
-	const auto* texture = g_engine->GetTextureLoader()->LoadTexture( pcx_file );
-	m_colors.text = types::Color::FromRGBA( texture->GetPixel( 5, 755 ) );
-	m_colors.border = types::Color::FromRGBA( texture->GetPixel( 162, 750 ) );
-}
-
 const types::Buffer Faction::Serialize() const {
 	types::Buffer buf;
 
 	buf.WriteString( m_id );
 	buf.WriteString( m_name );
+
 	buf.WriteColor( m_colors.text );
+	buf.WriteColor( m_colors.text_shadow );
 	buf.WriteColor( m_colors.border );
+
+	buf.WriteString( m_bases_render.file );
+	buf.WriteInt( m_bases_render.grid_x );
+	buf.WriteInt( m_bases_render.grid_y );
+	buf.WriteInt( m_bases_render.cell_width );
+	buf.WriteInt( m_bases_render.cell_height );
+	buf.WriteInt( m_bases_render.cell_cx );
+	buf.WriteInt( m_bases_render.cell_cy );
+	buf.WriteInt( m_bases_render.cell_padding );
+	buf.WriteFloat( m_bases_render.scale_x );
+	buf.WriteFloat( m_bases_render.scale_y );
 
 	return buf;
 }
@@ -41,22 +47,25 @@ void Faction::Unserialize( types::Buffer buf ) {
 
 	m_id = buf.ReadString();
 	m_name = buf.ReadString();
+
 	m_colors.text = buf.ReadColor();
+	m_colors.text_shadow = buf.ReadColor();
 	m_colors.border = buf.ReadColor();
+
+	m_bases_render.file = buf.ReadString();
+	m_bases_render.grid_x = buf.ReadInt();
+	m_bases_render.grid_y = buf.ReadInt();
+	m_bases_render.cell_width = buf.ReadInt();
+	m_bases_render.cell_height = buf.ReadInt();
+	m_bases_render.cell_cx = buf.ReadInt();
+	m_bases_render.cell_cy = buf.ReadInt();
+	m_bases_render.cell_padding = buf.ReadInt();
+	m_bases_render.scale_x = buf.ReadFloat();
+	m_bases_render.scale_y = buf.ReadFloat();
 
 }
 
 WRAPIMPL_BEGIN( Faction, CLASS_FACTION )
-	gse::type::Object::properties_t color_obj = {
-		{
-			"text",
-			m_colors.text.Wrap()
-		},
-		{
-			"border",
-			m_colors.border.Wrap()
-		}
-	};
 	WRAPIMPL_PROPS {
 		{
 			"id",
@@ -65,10 +74,6 @@ WRAPIMPL_BEGIN( Faction, CLASS_FACTION )
 		{
 			"name",
 			VALUE( gse::type::String, m_name )
-		},
-		{
-			"colors",
-			VALUE( gse::type::Object, color_obj )
 		},
 	};
 WRAPIMPL_END_PTR( Faction )

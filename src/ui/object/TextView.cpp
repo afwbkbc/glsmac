@@ -3,6 +3,8 @@
 #include "TextView.h"
 
 #include "engine/Engine.h"
+#include "TextLine.h"
+#include "Label.h"
 
 #define DOUBLECLICK_MAX_MS 1000
 
@@ -89,9 +91,9 @@ void TextView::Clear() {
 		m_current_index = -1;
 		if ( m_active_textline ) {
 			m_active_textline = nullptr;
-			UIEvent::event_data_t d = {};
+			event::event_data_t d = {};
 			d.value.change.text = nullptr;
-			Trigger( UIEvent::EV_CHANGE, &d );
+			Trigger( event::EV_CHANGE, &d );
 		}
 	}
 }
@@ -270,18 +272,18 @@ size_t TextView::SelectByMask( std::string mask ) {
 void TextView::ApplyStyle() {
 	ScrollView::ApplyStyle();
 
-	if ( Has( Style::A_ITEM_WIDTH ) ) {
+	if ( Has( A_ITEM_WIDTH ) ) {
 		THROW( "A_ITEM_WIDTH not implemented yet" );
-		SetItemWidth( Get( Style::A_ITEM_WIDTH ) );
+		SetItemWidth( Get( A_ITEM_WIDTH ) );
 	}
-	if ( Has( Style::A_ITEM_HEIGHT ) ) {
-		SetItemHeight( Get( Style::A_ITEM_HEIGHT ) );
+	if ( Has( A_ITEM_HEIGHT ) ) {
+		SetItemHeight( Get( A_ITEM_HEIGHT ) );
 	}
-	if ( Has( Style::A_ITEM_MARGIN ) ) {
-		SetItemMargin( Get( Style::A_ITEM_MARGIN ) );
+	if ( Has( A_ITEM_MARGIN ) ) {
+		SetItemMargin( Get( A_ITEM_MARGIN ) );
 	}
-	if ( Has( Style::A_TEXT_LEFT ) ) {
-		SetTextLeft( Get( Style::A_TEXT_LEFT ) );
+	if ( Has( A_TEXT_LEFT ) ) {
+		SetTextLeft( Get( A_TEXT_LEFT ) );
 	}
 }
 
@@ -295,15 +297,15 @@ void TextView::SelectItem( const index_t index ) {
 
 	if ( m_active_textline != textline ) {
 		if ( m_active_textline ) {
-			m_active_textline->RemoveStyleModifier( Style::M_SELECTED );
+			m_active_textline->RemoveStyleModifier( M_SELECTED );
 		}
 		m_current_index = index;
 		m_active_textline = textline;
 		ScrollToObjectMaybe( m_active_textline );
-		m_active_textline->AddStyleModifier( Style::M_SELECTED );
-		UIEvent::event_data_t d = {};
+		m_active_textline->AddStyleModifier( M_SELECTED );
+		event::event_data_t d = {};
 		d.value.change.text = textline->GetTextPtr();
-		Trigger( UIEvent::EV_CHANGE, &d );
+		Trigger( event::EV_CHANGE, &d );
 	}
 }
 
@@ -321,8 +323,8 @@ void TextView::AddItem( const size_t index, const line_t& line ) {
 			NEWV( textline, TextLine, line.line_class );
 			textline->SetText( line.text );
 			textline->On(
-				UIEvent::EV_MOUSE_DOWN, EH( this, index, textline ) {
-					if ( data->mouse.button == UIEvent::M_LEFT ) {
+				event::EV_MOUSE_DOWN, EH( this, index, textline ) {
+					if ( data->mouse.button == event::M_LEFT ) {
 						bool is_double_click = false;
 						if ( m_active_textline == textline && m_maybe_doubleclick ) {
 							if ( !m_doubleclick_timer.HasTicked() ) {
@@ -339,9 +341,9 @@ void TextView::AddItem( const size_t index, const line_t& line ) {
 							SelectItem( index );
 						}
 						if ( is_double_click ) {
-							UIEvent::event_data_t d = {};
+							event::event_data_t d = {};
 							d.value.change.text = textline->GetTextPtr();
-							Trigger( UIEvent::EV_SELECT, &d );
+							Trigger( event::EV_SELECT, &d );
 						}
 						return true;
 					}
@@ -392,9 +394,9 @@ void TextView::RemoveItem( const size_t index ) {
 	if ( m_active_textline == item ) {
 		m_current_index = -1;
 		m_active_textline = nullptr;
-		UIEvent::event_data_t d = {};
+		event::event_data_t d = {};
 		d.value.change.text = nullptr;
-		Trigger( UIEvent::EV_CHANGE, &d );
+		Trigger( event::EV_CHANGE, &d );
 	}
 	RemoveChild( item );
 	m_items.erase( m_items.begin() + index );

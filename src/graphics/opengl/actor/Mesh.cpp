@@ -1,20 +1,26 @@
 #include "Mesh.h"
 
+#include "scene/Scene.h"
+#include "scene/Light.h"
+#include "scene/Camera.h"
+#include "scene/actor/Actor.h"
 #include "scene/actor/Mesh.h"
 #include "scene/actor/Instanced.h"
-
-#include "../shader_program/Orthographic.h"
-#include "../shader_program/OrthographicData.h"
-#include "../shader_program/World.h"
-
+#include "graphics/Graphics.h"
+#include "graphics/opengl/OpenGL.h"
+#include "graphics/opengl/FBO.h"
+#include "graphics/opengl/shader_program/Orthographic.h"
+#include "graphics/opengl/shader_program/OrthographicData.h"
+#include "graphics/opengl/shader_program/Simple2D.h"
+#include "graphics/opengl/shader_program/World.h"
 #include "rr/GetData.h"
 #include "rr/Capture.h"
-
 #include "types/Matrix44.h"
+#include "types/texture/Texture.h"
+#include "types/mesh/Mesh.h"
+#include "types/mesh/Data.h"
 #include "engine/Engine.h"
-
-using namespace scene;
-using namespace mesh;
+#include "ui/UI.h"
 
 namespace graphics {
 namespace opengl {
@@ -126,11 +132,11 @@ void Mesh::LoadTexture() {
 
 scene::actor::Mesh* Mesh::GetMeshActor() const {
 	switch ( m_actor->GetType() ) {
-		case scene::Actor::TYPE_MESH: {
+		case scene::actor::Actor::TYPE_MESH: {
 			return (scene::actor::Mesh*)m_actor;
 			break;
 		}
-		case scene::Actor::TYPE_INSTANCED_MESH: {
+		case scene::actor::Actor::TYPE_INSTANCED_MESH: {
 			return ( (scene::actor::Instanced*)m_actor )->GetMeshActor();
 			break;
 		}
@@ -207,7 +213,7 @@ void Mesh::PrepareDataMesh() {
 
 }
 
-void Mesh::Draw( shader_program::ShaderProgram* shader_program, Camera* camera ) {
+void Mesh::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
 
 	l_draw_begin:
 
@@ -261,15 +267,15 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, Camera* camera )
 		case ( shader_program::ShaderProgram::TYPE_SIMPLE2D ) : {
 			auto* sp = (shader_program::Simple2D*)shader_program;
 			glUniform1ui( sp->uniforms.flags, flags );
-			if ( flags & actor::Actor::RF_USE_TINT ) {
+			if ( flags & scene::actor::Actor::RF_USE_TINT ) {
 				glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&mesh_actor->GetTintColor() );
 			}
-			if ( flags & actor::Actor::RF_USE_AREA_LIMITS ) {
+			if ( flags & scene::actor::Actor::RF_USE_AREA_LIMITS ) {
 				const auto& limits = mesh_actor->GetAreaLimits();
 				glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
 				glUniform3fv( sp->uniforms.area_limits.max, 1, (const GLfloat*)&limits.second );
 			}
-			if ( flags & actor::Actor::RF_USE_2D_POSITION ) {
+			if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
 				glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&mesh_actor->GetPosition() );
 			}
 			glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void*)( 0 ) );
@@ -287,9 +293,9 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, Camera* camera )
 					// non-world uniforms apply only to render mesh
 					glUniform1ui( sp->uniforms.flags, flags );
 					auto* lights = m_actor->GetScene()->GetLights();
-					if ( !( flags & actor::Actor::RF_IGNORE_LIGHTING ) && !lights->empty() ) {
-						Vec3 light_pos[lights->size()];
-						Color light_color[lights->size()];
+					if ( !( flags & scene::actor::Actor::RF_IGNORE_LIGHTING ) && !lights->empty() ) {
+						types::Vec3 light_pos[lights->size()];
+						types::Color light_color[lights->size()];
 						size_t i = 0;
 						for ( auto& light : *lights ) {
 							light_pos[ i ] = light->GetPosition();
@@ -299,15 +305,15 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, Camera* camera )
 						glUniform3fv( sp->uniforms.light_pos, lights->size(), (const GLfloat*)light_pos );
 						glUniform4fv( sp->uniforms.light_color, lights->size(), (const GLfloat*)light_color );
 					}
-					if ( flags & actor::Actor::RF_USE_TINT ) {
+					if ( flags & scene::actor::Actor::RF_USE_TINT ) {
 						glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&mesh_actor->GetTintColor() );
 					}
-					if ( flags & actor::Actor::RF_USE_AREA_LIMITS ) {
+					if ( flags & scene::actor::Actor::RF_USE_AREA_LIMITS ) {
 						const auto& limits = mesh_actor->GetAreaLimits();
 						glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
 						glUniform3fv( sp->uniforms.area_limits.max, 1, (const GLfloat*)&limits.second );
 					}
-					if ( flags & actor::Actor::RF_USE_2D_POSITION ) {
+					if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
 						glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&mesh_actor->GetPosition() );
 					}
 					ibo_size = m_ibo_size;
@@ -322,7 +328,7 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, Camera* camera )
 				}
 			}
 
-			if ( flags & actor::Actor::RF_IGNORE_DEPTH ) {
+			if ( flags & scene::actor::Actor::RF_IGNORE_DEPTH ) {
 				glDisable( GL_DEPTH_TEST );
 			}
 
@@ -343,7 +349,7 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, Camera* camera )
 					)
 				);
 			}
-			if ( ignore_camera || m_actor->GetType() == scene::Actor::TYPE_MESH ) {
+			if ( ignore_camera || m_actor->GetType() == scene::actor::Actor::TYPE_MESH ) {
 				types::Matrix44 matrix;
 				ASSERT( !capture_request, "non-instanced captures not implemented" );
 				if ( ignore_camera ) {
@@ -359,7 +365,7 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, Camera* camera )
 				);
 				glDrawElements( GL_TRIANGLES, ibo_size, GL_UNSIGNED_INT, (void*)( 0 ) );
 			}
-			else if ( m_actor->GetType() == scene::Actor::TYPE_INSTANCED_MESH ) {
+			else if ( m_actor->GetType() == scene::actor::Actor::TYPE_INSTANCED_MESH ) {
 				auto* instanced = (scene::actor::Instanced*)m_actor;
 				scene::actor::Instanced::matrices_t matrices;
 				if ( capture_request ) {
@@ -385,7 +391,7 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, Camera* camera )
 				THROW( "unknown actor type " + std::to_string( m_actor->GetType() ) );
 			}
 
-			if ( flags & actor::Actor::RF_IGNORE_DEPTH ) {
+			if ( flags & scene::actor::Actor::RF_IGNORE_DEPTH ) {
 				glEnable( GL_DEPTH_TEST );
 			}
 
@@ -455,15 +461,15 @@ void Mesh::OnWindowResize() {
 	}
 }
 
-mesh::Data::data_t Mesh::GetDataAt( const size_t x, const size_t y ) {
+types::mesh::data_t Mesh::GetDataAt( const size_t x, const size_t y ) {
 	ASSERT( m_data.is_allocated, "mesh data not allocated" );
 
-	mesh::Data::data_t data = 0;
+	types::mesh::data_t data = 0;
 	glReadPixels( x, y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &data );
 	ASSERT( !glGetError(), "Error reading data pixel" );
 
 	return data;
 }
 
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}

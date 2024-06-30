@@ -38,8 +38,6 @@ protected:
 
 };
 
-} /* namespace shader_program */
-} /* namespace opengl */
-} /* namespace graphics */
-
-#include "../actor/Text.h"
+}
+}
+}

@@ -2,7 +2,7 @@
 
 #include "MapEditor.h"
 
-#include "../map/Tile.h"
+#include "game/map/tile/Tile.h"
 
 #include "brush/Dot.h"
 #include "brush/Cross.h"
@@ -35,31 +35,31 @@ MapEditor::MapEditor( Game* game )
 
 	NEW( m_tools[ TT_RESOURCES ], tool::Resource, m_game );
 
-#define x( _tt, _f ) NEW( m_tools[ _tt ], tool::Feature, m_game, _tt, map::Tile::_f )
-	x( TT_MONOLITH, F_MONOLITH );
-	x( TT_FUNGUS, F_XENOFUNGUS );
-	x( TT_JUNGLE, F_JUNGLE );
-	x( TT_RIVERS, F_RIVER );
-	x( TT_DUNES, F_DUNES );
-	x( TT_URANIUM, F_URANIUM );
-	x( TT_GEOTHERMAL, F_GEOTHERMAL );
-	x( TT_UNITY_PODS, F_UNITY_POD );
+#define x( _tt, _f ) NEW( m_tools[ _tt ], tool::Feature, m_game, _tt, map::tile::_f )
+	x( TT_MONOLITH, FEATURE_MONOLITH );
+	x( TT_FUNGUS, FEATURE_XENOFUNGUS );
+	x( TT_JUNGLE, FEATURE_JUNGLE );
+	x( TT_RIVERS, FEATURE_RIVER );
+	x( TT_DUNES, FEATURE_DUNES );
+	x( TT_URANIUM, FEATURE_URANIUM );
+	x( TT_GEOTHERMAL, FEATURE_GEOTHERMAL );
+	x( TT_UNITY_PODS, FEATURE_UNITY_POD );
 #undef x
 
-#define x( _tt, _t ) NEW( m_tools[ _tt ], tool::Terraforming, m_game, _tt, map::Tile::_t )
-	x( TT_FOREST, T_FOREST );
-	x( TT_FARM, T_FARM );
-	x( TT_SOLAR_COLLECTOR, T_SOLAR );
-	x( TT_MINE, T_MINE );
-	x( TT_SOIL_ENRICHER, T_SOIL_ENRICHER );
-	x( TT_CONDENSER, T_CONDENSER );
-	x( TT_ECHELON_MIRROR, T_MIRROR );
-	x( TT_THERMAL_BOREHOLE, T_BOREHOLE );
-	x( TT_SENSOR_ARRAY, T_SENSOR );
-	x( TT_BUNKER, T_BUNKER );
-	x( TT_AIRBASE, T_AIRBASE );
-	x( TT_ROAD, T_ROAD );
-	x( TT_MAG_TUBE, T_MAG_TUBE );
+#define x( _tt, _t ) NEW( m_tools[ _tt ], tool::Terraforming, m_game, _tt, map::tile::_t )
+	x( TT_FOREST, TERRAFORMING_FOREST );
+	x( TT_FARM, TERRAFORMING_FARM );
+	x( TT_SOLAR_COLLECTOR, TERRAFORMING_SOLAR );
+	x( TT_MINE, TERRAFORMING_MINE );
+	x( TT_SOIL_ENRICHER, TERRAFORMING_SOIL_ENRICHER );
+	x( TT_CONDENSER, TERRAFORMING_CONDENSER );
+	x( TT_ECHELON_MIRROR, TERRAFORMING_MIRROR );
+	x( TT_THERMAL_BOREHOLE, TERRAFORMING_BOREHOLE );
+	x( TT_SENSOR_ARRAY, TERRAFORMING_SENSOR );
+	x( TT_BUNKER, TERRAFORMING_BUNKER );
+	x( TT_AIRBASE, TERRAFORMING_AIRBASE );
+	x( TT_ROAD, TERRAFORMING_ROAD );
+	x( TT_MAG_TUBE, TERRAFORMING_MAG_TUBE );
 #undef x
 }
 
@@ -74,7 +74,7 @@ const bool MapEditor::IsEnabled() const {
 	return true;
 }
 
-const MapEditor::tiles_t MapEditor::Draw( map::Tile* tile, const draw_mode_t mode ) {
+const tiles_t MapEditor::Draw( map::tile::Tile* tile, const draw_mode_t mode ) {
 	if ( IsEnabled() && mode != DM_NONE && m_active_tool && m_active_brush ) {
 		Log( "Drawing at " + tile->coord.ToString() + " with brush " + std::to_string( GetActiveBrushType() ) + " tool " + std::to_string( GetActiveToolType() ) );
 		tiles_t tiles_to_reload = {};
@@ -90,7 +90,7 @@ const MapEditor::tiles_t MapEditor::Draw( map::Tile* tile, const draw_mode_t mod
 	}
 }
 
-void MapEditor::SelectTool( MapEditor::tool_type_t tool ) {
+void MapEditor::SelectTool( tool_type_t tool ) {
 
 	if ( GetActiveToolType() != tool ) {
 		auto it = m_tools.find( tool );
@@ -108,7 +108,7 @@ void MapEditor::SelectTool( MapEditor::tool_type_t tool ) {
 	}
 }
 
-const MapEditor::tool_type_t MapEditor::GetActiveToolType() const {
+const tool_type_t MapEditor::GetActiveToolType() const {
 	if ( m_active_tool ) {
 		return m_active_tool->GetType();
 	}
@@ -117,7 +117,7 @@ const MapEditor::tool_type_t MapEditor::GetActiveToolType() const {
 	}
 }
 
-void MapEditor::SelectBrush( MapEditor::brush_type_t brush ) {
+void MapEditor::SelectBrush( brush_type_t brush ) {
 
 	if ( GetActiveBrushType() != brush ) {
 		auto it = m_brushes.find( brush );
@@ -135,7 +135,7 @@ void MapEditor::SelectBrush( MapEditor::brush_type_t brush ) {
 	}
 }
 
-const MapEditor::brush_type_t MapEditor::GetActiveBrushType() const {
+const brush_type_t MapEditor::GetActiveBrushType() const {
 	if ( m_active_brush ) {
 		return m_active_brush->GetType();
 	}
@@ -144,8 +144,8 @@ const MapEditor::brush_type_t MapEditor::GetActiveBrushType() const {
 	}
 }
 
-const MapEditor::tiles_t MapEditor::GetUniqueTiles( const tiles_t& tiles ) const {
-	std::unordered_set< map::Tile* > added_tiles = {};
+const tiles_t MapEditor::GetUniqueTiles( const tiles_t& tiles ) const {
+	std::unordered_set< map::tile::Tile* > added_tiles = {};
 	added_tiles.reserve( tiles.size() );
 	tiles_t result = {};
 	result.reserve( tiles.size() );

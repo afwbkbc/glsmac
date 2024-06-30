@@ -1,9 +1,12 @@
 #pragma once
 
-#include "../Entity.h"
-#include "base/ObjectLink.h"
+#include "scene/Entity.h"
 
 #include "types/Matrix44.h"
+
+namespace common {
+class ObjectLink;
+}
 
 namespace scene {
 
@@ -31,12 +34,14 @@ CLASS( Actor, Entity )
 		return m_type;
 	}
 
-	base::ObjectLink* m_graphics_object = NULL;
+	common::ObjectLink* m_graphics_object = NULL;
 
 	virtual types::Matrix44& GetWorldMatrix();
 
 	virtual void UpdateWorldMatrix();
 	virtual void UpdateMatrix() override;
+
+	virtual const types::Vec3 NormalizePosition( const types::Vec3& position ) const;
 
 	void SetScene( Scene* scene );
 	Scene* GetScene();
@@ -78,5 +83,5 @@ protected:
 
 };
 
-} /* namespace actor */
-} /* namespace scene */
+}
+}

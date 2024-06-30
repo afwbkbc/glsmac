@@ -4,52 +4,48 @@
 #include <unordered_set>
 #include <unordered_map>
 
-#include "../Loader.h"
+#include "loader/Loader.h"
 
-#include "types/Texture.h"
+#include "ui/theme/Types.h"
+
 #include "types/Color.h"
 
-using namespace types;
+namespace types::texture {
+class Texture;
+}
 
 namespace loader {
 namespace texture {
 
 CLASS( TextureLoader, Loader )
 
-	// loadtexture flags
-	static constexpr uint8_t LT_NONE = 0;
-	static constexpr uint8_t LT_ROTATE = 1;
-	static constexpr uint8_t LT_FLIPV = 2;
-	static constexpr uint8_t LT_FLIPH = 4;
-	static constexpr uint8_t LT_TILED = 8;
-	static constexpr uint8_t LT_ALPHA = 16;
-	static constexpr uint8_t LT_CONTRAST = 32;
-
-	typedef std::unordered_set< Color::rgba_t > transparent_colors_t;
+	typedef std::unordered_set< types::Color::rgba_t > transparent_colors_t;
 
 	// load full texture
-	Texture* LoadTexture( const std::string& name );
+	types::texture::Texture* LoadTexture( const resource::resource_t res );
+	types::texture::Texture* LoadCustomTexture( const std::string& filename );
 
 	// load part of texture
-	Texture* LoadTexture( const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = LT_NONE, const float value = 1.0 );
+	types::texture::Texture* LoadTexture( const resource::resource_t res, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = ui::LT_NONE, const float value = 1.0 );
 
 	// create texture of solid color
-	Texture* GetColorTexture( const Color& color );
+	types::texture::Texture* GetColorTexture( const types::Color& color );
 
 protected:
 
-	virtual Texture* LoadTextureImpl( const std::string& name ) = 0;
-	virtual Texture* LoadTextureImpl( const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) = 0;
+	virtual types::texture::Texture* LoadTextureImpl( const std::string& filename ) = 0;
+	virtual types::texture::Texture* LoadTextureImpl( const std::string& filename, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) = 0;
 
-	transparent_colors_t m_transparent_colors;
+	transparent_colors_t m_transparent_colors = {};
+	bool m_fix_yellow_shadows = false;
 
-	typedef std::unordered_map< Color::rgba_t, Texture* > color_texture_map_t;
+	typedef std::unordered_map< types::Color::rgba_t, types::texture::Texture* > color_texture_map_t;
 	color_texture_map_t m_color_textures = {};
 
 private:
-	const transparent_colors_t& GetTCs( const std::string& name );
+	const transparent_colors_t& GetTCs( const resource::resource_t res );
 
 };
 
-} /* namespace texture */
-} /* namespace loader */
+}
+}

@@ -1,11 +1,15 @@
 #include "PleaseDontGo.h"
 
+#include "ui/object/Surface.h"
+#include "ui/object/Label.h"
+#include "ui/object/SoundEffect.h"
+
 namespace task {
 namespace game {
 namespace ui {
 namespace popup {
 
-PleaseDontGo::PleaseDontGo( Game* game, const ui_handler_t on_order )
+PleaseDontGo::PleaseDontGo( Game* game, const ::ui::ui_handler_t on_order )
 	: Popup( game )
 	, m_on_order( on_order ) {
 	SetTitleText( "SID MEIER'S ALPHA CENTAURI" );
@@ -34,14 +38,15 @@ void PleaseDontGo::Create() {
 		}
 	);
 	m_choices->On(
-		UIEvent::EV_SELECT, EH( this ) {
+		::ui::event::EV_SELECT, EH( this ) {
 			SelectChoice();
 			return true;
 		}
 	);
 	AddChild( m_choices );
+	m_choices->SetValue( 2 );
 
-	NEW( m_sound, SoundEffect, SubClass( "PleaseDontGoSound" ) );
+	NEW( m_sound, ::ui::object::SoundEffect, SubClass( "PleaseDontGoSound" ) );
 	AddChild( m_sound );
 }
 

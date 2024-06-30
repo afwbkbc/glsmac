@@ -1,16 +1,9 @@
 #pragma once
-#pragma once
-
-#include <unordered_map>
 
 #include <sys/types.h>
 #include <memory.h>
 
-#include "../Network.h"
-
-#include "util/Timer.h"
-
-using namespace util;
+#include "network/Network.h"
 
 // seconds
 #define SEND_PING_AFTER 12
@@ -47,6 +40,9 @@ private:
 	void CloseSocket( int fd, network::cid_t cid = 0, bool skip_event = false );
 	void CloseClientSocket( const remote_socket_data_t& socket );
 
+#ifdef DEBUG
+	bool m_need_pings = true;
+#endif
 };
 
 }

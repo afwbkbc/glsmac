@@ -2,12 +2,9 @@
 
 #include "Actor.h"
 
-#include "game/map/TileState.h"
+#include "game/map/tile/Types.h"
 
 #include "util/Timer.h"
-
-using namespace types;
-using namespace util;
 
 namespace task {
 namespace game {
@@ -20,16 +17,16 @@ CLASS( TileSelection, Actor )
 	static constexpr float GLOW_MAX = 1.0f;
 	static constexpr float GLOW_MIN = 0.25f;
 
-	TileSelection( ::game::map::TileState::tile_vertices_t coords );
+	TileSelection( const ::game::map::tile::tile_vertices_t& coords );
 
 	void Iterate() override;
 
 private:
-	Texture* m_texture = nullptr;
+	types::texture::Texture* m_texture = nullptr;
 
 	float m_glow = GLOW_MAX;
 	int8_t m_glow_direction = -1;
-	Timer m_glow_timer;
+	util::Timer m_glow_timer;
 
 };
 

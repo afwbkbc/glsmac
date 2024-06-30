@@ -1,24 +1,26 @@
 #pragma once
 
+#include <vector>
 #include <string>
 
 #include "types/Serializable.h"
+#include "gse/Wrappable.h"
 
+#include "Types.h"
 #include "types/Color.h"
-
-#include "gse/Value.h"
 
 namespace game {
 namespace rules {
 
-CLASS( Faction, types::Serializable )
+CLASS2( Faction, types::Serializable, gse::Wrappable )
 
 	Faction();
 	Faction( const std::string& id, const std::string& name );
 
 	typedef uint8_t faction_flag_t;
-	static const faction_flag_t FF_NONE;
-	static const faction_flag_t FF_PROGENITOR;
+	static constexpr Faction::faction_flag_t FF_NONE = 0;
+	static constexpr Faction::faction_flag_t FF_PROGENITOR = 1 << 0;
+	static constexpr Faction::faction_flag_t FF_NAVAL = 1 << 1;
 
 	std::string m_id = "";
 	std::string m_name = "";
@@ -26,10 +28,16 @@ CLASS( Faction, types::Serializable )
 
 	struct {
 		types::Color text = {};
+		types::Color text_shadow = {};
 		types::Color border = {};
 	} m_colors = {};
 
-	void ImportPCX( const std::string& pcx_file );
+	struct {
+		std::vector< std::string > land = {};
+		std::vector< std::string > water = {};
+	} m_base_names = {};
+
+	bases_render_info_t m_bases_render = {};
 
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;

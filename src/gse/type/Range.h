@@ -4,8 +4,6 @@
 
 #include "Type.h"
 
-#include "Array.h"
-
 namespace gse {
 namespace type {
 

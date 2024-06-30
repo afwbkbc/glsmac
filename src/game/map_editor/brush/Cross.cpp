@@ -1,17 +1,17 @@
 #include "Cross.h"
 
-#include "../../map/Tile.h"
+#include "game/map/tile/Tile.h"
 
 namespace game {
 namespace map_editor {
 namespace brush {
 
 Cross::Cross( Game* game )
-	: Brush( game, MapEditor::BT_CROSS ) {
+	: Brush( game, BT_CROSS ) {
 	//
 }
 
-const MapEditor::tiles_t Cross::Draw( map::Tile* center_tile ) {
+const tiles_t Cross::Draw( map::tile::Tile* center_tile ) {
 	// order is important, center tile must be last for greatest effect
 	// TODO: shuffle
 	return {

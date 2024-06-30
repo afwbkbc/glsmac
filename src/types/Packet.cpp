@@ -7,8 +7,8 @@ Packet::Packet( const packet_type_t type )
 
 }
 
-const Buffer Packet::Serialize() const {
-	Buffer buf;
+const types::Buffer Packet::Serialize() const {
+	types::Buffer buf;
 
 	buf.WriteInt( type );
 
@@ -87,7 +87,7 @@ const Buffer Packet::Serialize() const {
 	return buf;
 }
 
-void Packet::Unserialize( Buffer buf ) {
+void Packet::Unserialize( types::Buffer buf ) {
 
 	ASSERT( type == PT_NONE, "unserializing into existing packet" );
 

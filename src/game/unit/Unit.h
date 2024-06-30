@@ -1,59 +1,72 @@
 #pragma once
 
-#include <cstddef>
+#include <string>
 
-#include "Def.h"
+#include "gse/Wrappable.h"
+#include "game/MapObject.h"
 
-#include "gse/Value.h"
+#include "Types.h"
 
-#include "game/map/Tile.h"
-#include "game/Slot.h"
+#include "types/Buffer.h"
 
 namespace game {
 
 class Game;
-
+namespace slot {
 class Slot;
+}
+namespace map::tile {
+class Tile;
+}
 
 namespace unit {
 
-class Unit {
+class Def;
+
+class Unit : public gse::Wrappable, public MapObject {
 public:
 
 	static const size_t GetNextId();
 	static const void SetNextId( const size_t id );
 
-	typedef uint8_t morale_t;
-	static const morale_t MORALE_MIN;
-	static const morale_t MORALE_MAX;
-
-	typedef float health_t;
-	static const health_t HEALTH_MIN;
-	static const health_t HEALTH_MAX;
-
 	Unit(
+		Game* game,
 		const size_t id,
-		const Def* def,
-		Slot* owner,
-		map::Tile* tile,
+		Def* def,
+		slot::Slot* owner,
+		map::tile::Tile* tile,
+		const movement_t movement,
 		const morale_t morale,
-		const health_t health
+		const health_t health,
+		const bool moved_this_turn
 	);
 	virtual ~Unit() = default;
 
 	const size_t m_id;
-	const Def* m_def;
-	Slot* m_owner;
-	map::Tile* m_tile = nullptr;
-
+	Def* m_def;
+	slot::Slot* m_owner;
+	
+	movement_t m_movement;
 	morale_t m_morale;
 	health_t m_health;
+	bool m_moved_this_turn;
+
+	static const movement_t MINIMUM_MOVEMENT_TO_KEEP;
+	static const movement_t MINIMUM_HEALTH_TO_KEEP;
+	const bool HasMovesLeft() const;
+
 	const std::string& GetMoraleString() const;
 
-	static const types::Buffer Serialize( const Unit* unit );
-	static Unit* Unserialize( types::Buffer& buf, const Game* game );
+	void SetTile( map::tile::Tile* tile );
 
-	WRAPDEFS_PTR( Unit );
+	static const types::Buffer Serialize( const Unit* unit );
+	static Unit* Unserialize( types::Buffer& buf, Game* game );
+
+	WRAPDEFS_DYNAMIC( Unit );
+
+private:
+	Game* const m_game;
+
 };
 
 }

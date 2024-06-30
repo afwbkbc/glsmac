@@ -3,33 +3,36 @@
 #include <vector>
 #include <string>
 
-#include "base/Task.h"
+#include "common/Task.h"
 
-#include "ui/object/Surface.h"
-#include "ui/object/SoundEffect.h"
-#include "ui/object/Label.h"
+#include "resource/Types.h"
 
-#include "scene/actor/Sound.h"
+namespace game {
+class State;
+}
 
-#include "MenuObject.h"
+namespace util::random {
+class Random;
+}
 
-#include "game/State.h"
-
-#include "ui/Theme.h"
-#include "util/Random.h"
-
-using namespace types;
-using namespace loader::texture;
-
-using namespace ui;
 namespace ui {
-using namespace object;
+namespace object {
+class Label;
+class Surface;
+class SoundEffect;
+}
+namespace event {
+class UIEventHandler;
+}
 }
 
 namespace task {
 namespace mainmenu {
 
-CLASS( MainMenu, base::Task )
+class MenuObject;
+class Theme;
+
+CLASS( MainMenu, common::Task )
 	void Start() override;
 	void Iterate() override;
 	void Stop() override;
@@ -45,24 +48,22 @@ CLASS( MainMenu, base::Task )
 
 	void SetCustomizeMapPreview( const std::string& preview_filename );
 	const std::string& GetMapPreviewFilename() const;
-	void SetCustomizeMapMoons( const std::string& moons_filename );
+	void SetCustomizeMapMoons( const uint8_t moons_count );
 
-	util::Random* GetRandom();
+	util::random::Random* GetRandom();
 
 private:
-	Theme m_theme;
+	Theme* m_theme;
 
-	const UIEventHandler* m_key_handler = nullptr;
-	const UIEventHandler* m_mouse_handler = nullptr;
+	const ::ui::event::UIEventHandler* m_key_handler = nullptr;
+	const ::ui::event::UIEventHandler* m_mouse_handler = nullptr;
 
-	Surface* m_background = nullptr;
-	Surface* m_customize_map_preview = nullptr;
-	Surface* m_customize_map_moons = nullptr;
+	::ui::object::Surface* m_background = nullptr;
+	::ui::object::Surface* m_customize_map_preview = nullptr;
+	::ui::object::Surface* m_customize_map_moons = nullptr;
 
 	std::string m_customize_map_preview_filename = "";
 	std::vector< std::string > m_customize_map_preview_history = {};
-
-	std::string m_customize_map_moons_filename = "";
 
 	MenuObject* m_menu_object = nullptr;
 	std::vector< MenuObject* > m_menu_history = {};
@@ -71,17 +72,20 @@ private:
 	MenuObject* m_menu_next = nullptr;
 	bool m_goback = false;
 
-	SoundEffect* m_music = nullptr;
+	::ui::object::SoundEffect* m_music = nullptr;
 
-	Label* m_glsmac_logo = nullptr;
+	::ui::object::Label* m_glsmac_logo = nullptr;
 
-	util::Random m_random;
+	util::random::Random* m_random;
 
 	std::string m_show_error_on_start = "";
 
 	void ResizeCustomizeMapPreview();
 
+	const resource::resource_t GetPreviewResource( const std::string& preview_filename ) const;
+	const resource::resource_t GetMoonsResource( const uint8_t moons_count ) const;
+
 };
 
-} /* namespace mainmenu */
-} /* namespace game */
+}
+}

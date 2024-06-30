@@ -1,12 +1,12 @@
 #pragma once
 
-#include "base/Base.h"
+#include "common/Common.h"
 
-#include "network/types.h"
+#include "Types.h"
 
 namespace network {
 
-CLASS( Event, base::Base )
+CLASS( Event, common::Class )
 
 	enum event_type_t {
 		ET_NONE,
@@ -18,7 +18,7 @@ CLASS( Event, base::Base )
 		ET_PACKET,
 	};
 
-	network::cid_t cid = 0; // 'client id', linked to network connection (usually to socket fd)
+	cid_t cid = 0; // 'client id', linked to network connection (usually to socket fd)
 
 	event_type_t type = ET_NONE;
 	struct {

@@ -1,20 +1,25 @@
 #pragma once
 
-#include "scene/Scene.h"
-#include "scene/actor/Actor.h"
-#include "../Scene.h"
-#include "../actor/Actor.h"
+#include "graphics/opengl/Scene.h"
 
-#include "base/Module.h"
+#include "common/Module.h"
+
+namespace scene {
+class Scene;
+namespace actor {
+class Actor;
+}
+}
 
 namespace graphics {
 namespace opengl {
 
 class OpenGL;
+class Actor;
 
 namespace routine {
 
-CLASS( Routine, base::Module )
+CLASS( Routine, common::Module )
 
 	Routine( OpenGL* opengl );
 	~Routine();
@@ -39,9 +44,6 @@ protected:
 	virtual bool SceneBelongs( const scene::Scene* scene ) const = 0;
 };
 
-} /* namespace routine */
-} /* namespace opengl */
-} /* namespace graphics */
-
-#include "../shader_program/ShaderProgram.h"
-#include "../OpenGL.h"
+}
+}
+}

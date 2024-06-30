@@ -21,7 +21,7 @@ public:
 	void Conjugate();
 
 	Vec4 operator*( const Vec4 operand );
-	Vec4 operator*( const Vec3 operand );
+	Vec4 operator*( const types::Vec3 operand );
 };
 
-} /* namespace types */
+}

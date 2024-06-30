@@ -2,7 +2,7 @@
 
 #include "Tool.h"
 
-#include "game/map/Tile.h"
+#include "game/map/tile/Types.h"
 
 namespace game {
 namespace map_editor {
@@ -10,12 +10,12 @@ namespace tool {
 
 CLASS( Terraforming, Tool )
 
-	Terraforming( Game* game, const MapEditor::tool_type_t type, const map::Tile::terraforming_t terraforming );
+	Terraforming( Game* game, const tool_type_t type, const map::tile::terraforming_t terraforming );
 
-	const MapEditor::tiles_t Draw( map::Tile* tile, const MapEditor::draw_mode_t mode ) override;
+	const tiles_t Draw( map::tile::Tile* tile, const draw_mode_t mode ) override;
 
 private:
-	const map::Tile::terraforming_t m_terraforming = map::Tile::T_NONE;
+	const map::tile::terraforming_t m_terraforming = map::tile::TERRAFORMING_NONE;
 
 };
 

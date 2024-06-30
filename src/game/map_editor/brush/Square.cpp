@@ -1,26 +1,28 @@
 #include "Square.h"
 
-#include "../../map/Tile.h"
-#include "../../Game.h"
+#include "game/Game.h"
+#include "game/map/Map.h"
+#include "game/map/tile/Tiles.h"
+#include "game/map/tile/Tile.h"
 
 namespace game {
 namespace map_editor {
 namespace brush {
 
-Square::Square( Game* game, const MapEditor::brush_type_t type, const uint16_t width )
+Square::Square( Game* game, const brush_type_t type, const uint16_t width )
 	: Brush( game, type )
 	, m_width( width ) {
 	//
 }
 
-const MapEditor::tiles_t Square::Draw( map::Tile* center_tile ) {
+const tiles_t Square::Draw( map::tile::Tile* center_tile ) {
 	auto* map = m_game->GetMap()->GetTilesPtr();
-	MapEditor::tiles_t tiles = {};
+	tiles_t tiles = {};
 	tiles.reserve( m_width * m_width );
 	// order is important, start with sides and move towards center for greatest effect
 	// TODO: shuffle
 
-	const auto f_add_tile_maybe = [ &tiles, &map ]( const Vec2< ssize_t > coords ) -> void {
+	const auto f_add_tile_maybe = [ &tiles, &map ]( const types::Vec2< ssize_t > coords ) -> void {
 		if (
 			coords.x >= 0 &&
 				coords.y >= 0 &&

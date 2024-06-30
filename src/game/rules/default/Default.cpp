@@ -1,12 +1,9 @@
 #include "Default.h"
 
-using namespace types;
-
 namespace game {
 namespace rules {
 
 void Default::InitRules() {
-
 	m_difficulty_levels = {
 		{ DT_CITIZEN,    { "Citizen",    -3 } },
 		{ DT_SPECIALIST, { "Specialist", -2 } },

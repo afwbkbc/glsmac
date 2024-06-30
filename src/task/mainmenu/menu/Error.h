@@ -1,6 +1,10 @@
 #pragma once
 
-#include "../PopupMenu.h"
+#include "task/mainmenu/PopupMenu.h"
+
+namespace ui::object {
+class Label;
+}
 
 namespace task {
 namespace mainmenu {
@@ -20,7 +24,7 @@ protected:
 private:
 	const std::string m_error_text = "";
 
-	Label* m_error_label = nullptr;
+	ui::object::Label* m_error_label = nullptr;
 };
 
 }

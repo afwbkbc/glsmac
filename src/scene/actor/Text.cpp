@@ -1,5 +1,7 @@
 #include "Text.h"
 
+#include "types/Font.h"
+#include "common/ObjectLink.h"
 #include "graphics/opengl/actor/Text.h"
 
 namespace scene {
@@ -18,7 +20,7 @@ Text::~Text() {
 
 }
 
-Font* Text::GetFont() const {
+types::Font* Text::GetFont() const {
 	return m_font;
 }
 
@@ -26,7 +28,7 @@ const std::string& Text::GetText() const {
 	return m_text;
 }
 
-const Color& Text::GetColor() const {
+const types::Color& Text::GetColor() const {
 	return m_color;
 }
 
@@ -38,7 +40,7 @@ void Text::SetText( const std::string& text ) {
 	}
 }
 
-void Text::SetColor( const Color& color ) {
+void Text::SetColor( const types::Color& color ) {
 	if ( color != m_color ) {
 		m_color = color;
 
@@ -46,7 +48,7 @@ void Text::SetColor( const Color& color ) {
 	}
 }
 
-void Text::SetFont( Font* font ) {
+void Text::SetFont( types::Font* font ) {
 	if ( font != m_font ) {
 		m_font = font;
 
@@ -69,5 +71,5 @@ void Text::Redraw() {
 	}
 }
 
-} /* namespace actor */
-} /* namespace scene */
+}
+}

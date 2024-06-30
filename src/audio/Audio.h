@@ -2,13 +2,15 @@
 
 #include <vector>
 
-#include "base/Module.h"
+#include "common/Module.h"
 
-#include "scene/actor/Sound.h"
+namespace scene::actor {
+class Sound;
+}
 
 namespace audio {
 
-CLASS( Audio, base::Module )
+CLASS( Audio, common::Module )
 
 	virtual ~Audio();
 
@@ -26,4 +28,4 @@ protected:
 
 };
 
-} /* namespace audio */
+}

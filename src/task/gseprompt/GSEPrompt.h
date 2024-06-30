@@ -1,16 +1,26 @@
 #pragma once
 
-#include "base/Task.h"
+#include "common/Task.h"
 
-#include "gse/GSE.h"
-#include "gse/GlobalContext.h"
-#include "gse/runner/Runner.h"
-#include "gse/program/Program.h"
+namespace gse {
+class GSE;
+
+namespace context {
+class GlobalContext;
+}
+
+namespace runner {
+class Runner;
+}
+namespace program {
+class Program;
+}
+}
 
 namespace task {
 namespace gseprompt {
 
-CLASS( GSEPrompt, base::Task )
+CLASS( GSEPrompt, common::Task )
 
 	GSEPrompt( const std::string& syntax );
 	~GSEPrompt();
@@ -26,8 +36,8 @@ private:
 
 	const bool m_is_tty;
 
-	gse::GSE m_gse;
-	gse::GlobalContext* m_gse_context = nullptr;
+	gse::GSE* m_gse;
+	gse::context::GlobalContext* m_gse_context = nullptr;
 	gse::runner::Runner* m_runner;
 
 	fd_set fds;

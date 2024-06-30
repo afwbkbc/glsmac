@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Element.h"
+#include "Control.h"
 
 namespace gse {
 namespace program {
@@ -12,17 +12,16 @@ public:
 		CT_ELSEIF,
 		CT_ELSE,
 		CT_WHILE,
+		CT_FOR,
 		CT_TRY,
 		CT_CATCH,
 	};
 
-	Conditional( const si_t& si, const conditional_type_t conditional_type )
-		: Control( si, CT_CONDITIONAL )
-		, conditional_type( conditional_type ) {}
+	Conditional( const si_t& si, const conditional_type_t conditional_type );
+	virtual ~Conditional() = default;
 
 	const conditional_type_t conditional_type;
 
-	virtual ~Conditional() = default;
 };
 
 }

@@ -3,13 +3,13 @@
 #include <string>
 #include <GL/glew.h>
 
-#include "base/Module.h"
+#include "common/Module.h"
 
 namespace graphics {
 namespace opengl {
 namespace shader_program {
 
-CLASS( ShaderProgram, base::Module )
+CLASS( ShaderProgram, common::Module )
 	enum type_t {
 		TYPE_SIMPLE2D,
 		TYPE_ORTHO,
@@ -50,6 +50,6 @@ protected:
 
 };
 
-} /* namespace shader_program */
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}
+}

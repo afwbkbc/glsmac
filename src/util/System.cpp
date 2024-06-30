@@ -79,17 +79,4 @@ bool System::IsGDBAvailable() {
 
 #endif
 
-std::vector< std::string > System::GetPossibleFilenames( const std::string& filename ) {
-	std::vector< std::string > result;
-	result.push_back( filename );
-
-	std::string str = filename;
-	std::transform( str.begin(), str.end(), str.begin(), ::toupper );
-	result.push_back( str );
-	std::transform( str.begin(), str.end(), str.begin(), ::tolower );
-	result.push_back( str );
-
-	return result;
-}
-
 }

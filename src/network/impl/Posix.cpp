@@ -1,4 +1,4 @@
-#include "../Network.h"
+#include "network/Network.h"
 
 #include <fcntl.h>
 #include <sys/socket.h>

@@ -135,4 +135,4 @@ protected:
 	bool m_overflow_allowed = false;
 };
 
-} /* namespace util */
+}

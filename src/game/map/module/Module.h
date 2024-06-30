@@ -1,21 +1,27 @@
 #pragma once
 
-#include "base/Base.h"
+#include <cstdint>
 
-#include "../Map.h"
-#include "../Tile.h"
-#include "../MapState.h"
-#include "../TileState.h"
+#include "common/Common.h"
 
 namespace game {
 namespace map {
+
+class Map;
+class MapState;
+
+namespace tile {
+class Tile;
+class TileState;
+}
+
 namespace module {
 
-CLASS( Module, base::Base )
+CLASS( Module, common::Class )
 
 	Module( Map* const map );
 
-	virtual void GenerateTile( const Tile* tile, TileState* ts, MapState* ms ) = 0;
+	virtual void GenerateTile( const tile::Tile* tile, tile::TileState* ts, MapState* ms ) = 0;
 
 protected:
 	Map* const m_map;

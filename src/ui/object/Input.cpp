@@ -5,6 +5,8 @@
 #define CURSOR_BLINK_INTERVAL 200 // ms
 #define CURSOR_BLINK_SYMBOL "_"
 
+#include "Label.h"
+
 namespace ui {
 namespace object {
 
@@ -20,7 +22,7 @@ void Input::Create() {
 	m_value_label->SetText( m_value );
 	m_value_label->SetMargin( 5 ); // TODO: align properly
 	m_value_label->ForwardStyleAttributesM( m_forwarded_style_attributes.value_label );
-	m_value_label->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_BOTTOM );
+	m_value_label->SetAlign( ALIGN_LEFT | ALIGN_BOTTOM );
 	AddChild( m_value_label );
 
 	if ( !m_hint.empty() ) {
@@ -96,8 +98,8 @@ void Input::Clear() {
 	SetHint( "" );
 }
 
-bool Input::OnKeyDown( const UIEvent::event_data_t* data ) {
-	if ( data->key.code == UIEvent::K_BACKSPACE ) {
+bool Input::OnKeyDown( const event::event_data_t* data ) {
+	if ( data->key.code == event::K_BACKSPACE ) {
 		if ( !m_value.empty() ) {
 			m_value = m_value.substr( 0, m_value.size() - 1 );
 			UpdateValueLabel( true );
@@ -116,9 +118,9 @@ void Input::UpdateValueLabel( const bool send_event ) {
 	if ( m_value_label ) {
 		m_value_label->SetText( m_value + m_cursor_blink_value );
 		if ( send_event ) {
-			UIEvent::event_data_t data = {};
+			event::event_data_t data = {};
 			data.value.change.text = &m_value;
-			Trigger( UIEvent::EV_CHANGE, &data );
+			Trigger( event::EV_CHANGE, &data );
 		}
 	}
 }
@@ -128,7 +130,7 @@ void Input::UpdateHintLabel() {
 		NEW( m_hint_label, Label );
 		m_hint_label->SetMargin( 5 ); // TODO: align properly
 		m_hint_label->ForwardStyleAttributesM( m_forwarded_style_attributes.hint_label );
-		m_hint_label->SetAlign( UIObject::ALIGN_LEFT | UIObject::ALIGN_BOTTOM );
+		m_hint_label->SetAlign( ALIGN_LEFT | ALIGN_BOTTOM );
 		AddChild( m_hint_label );
 	}
 	m_hint_label->SetText( m_hint );

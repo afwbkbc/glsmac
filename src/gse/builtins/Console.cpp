@@ -2,8 +2,8 @@
 
 #include <iostream>
 
+#include "gse/context/Context.h"
 #include "gse/callable/Native.h"
-
 #include "gse/type/Undefined.h"
 
 #include "logger/Stdout.h"
@@ -26,7 +26,7 @@ const std::string& Console::CaptureStopGet() const {
 }
 #endif
 
-void Console::AddToContext( gse::Context* ctx ) {
+void Console::AddToContext( context::Context* ctx ) {
 
 	ctx->CreateBuiltin( "print", NATIVE_CALL( this ) {
 		std::string line = "";

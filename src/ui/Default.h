@@ -7,5 +7,5 @@ namespace ui {
 CLASS( Default, UI )
 };
 
-} /* namespace ui */
+}
 

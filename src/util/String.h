@@ -13,6 +13,7 @@ CLASS( String, Util )
 
 	static void Trim( std::string& s );
 	static const std::string TrimCopy( const std::string& s );
+	static const std::string ApproximateFloat( const float value );
 
 };
 

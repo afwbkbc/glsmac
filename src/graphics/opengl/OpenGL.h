@@ -5,30 +5,25 @@
 #include <unordered_set>
 
 #define SDL_MAIN_HANDLED 1
-
 #include <SDL.h>
 #include <GL/glew.h>
 
-#include "../Graphics.h"
+#include "graphics/Graphics.h"
 
-#include "Scene.h"
-
-#include "ui/event/UIEvent.h"
-
-#include "shader_program/ShaderProgram.h"
-#include "routine/Routine.h"
-
-#include "FBO.h"
-
-using namespace ui;
-namespace ui {
-using namespace event;
-}
+#include "types/Vec2.h"
 
 namespace graphics {
 namespace opengl {
 
+class Scene;
+class FBO;
+
+namespace shader_program {
+class ShaderProgram;
+}
+
 namespace routine {
+class Routine;
 class Overlay;
 }
 
@@ -56,9 +51,9 @@ CLASS( OpenGL, Graphics )
 	const unsigned short GetViewportWidth() const override;
 	const unsigned short GetViewportHeight() const override;
 
-	void LoadTexture( types::Texture* texture ) override;
-	void UnloadTexture( const types::Texture* texture ) override;
-	void EnableTexture( const types::Texture* texture ) override;
+	void LoadTexture( types::texture::Texture* texture ) override;
+	void UnloadTexture( const types::texture::Texture* texture ) override;
+	void EnableTexture( const types::texture::Texture* texture ) override;
 	void DisableTexture() override;
 
 	FBO* CreateFBO();
@@ -82,9 +77,9 @@ protected:
 		unsigned short viewport_height;
 		bool vsync;
 	} m_options;
-	Vec2< unsigned short > m_window_size;
-	Vec2< unsigned short > m_last_window_size;
-	Vec2< unsigned short > m_viewport_size;
+	types::Vec2< unsigned short > m_window_size;
+	types::Vec2< unsigned short > m_last_window_size;
+	types::Vec2< unsigned short > m_viewport_size;
 	SDL_Window* m_window;
 	SDL_GLContext m_gl_context;
 	std::vector< shader_program::ShaderProgram* > m_shader_programs;
@@ -101,11 +96,11 @@ private:
 		GLuint obj = 0;
 		size_t last_texture_update_counter = 0;
 	};
-	typedef std::unordered_map< const types::Texture*, texture_data_t > m_textures_map;
+	typedef std::unordered_map< const types::texture::Texture*, texture_data_t > m_textures_map;
 	m_textures_map m_textures = {};
 	GLuint m_no_texture = 0;
 
-	std::unordered_map< uint8_t, Vec2< ssize_t > > m_active_mousedowns = {};
+	std::unordered_map< uint8_t, types::Vec2< ssize_t > > m_active_mousedowns = {};
 
 	std::unordered_set< FBO* > m_fbos = {};
 
@@ -114,5 +109,5 @@ private:
 	void UpdateViewportSize( const size_t width, const size_t height );
 };
 
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}

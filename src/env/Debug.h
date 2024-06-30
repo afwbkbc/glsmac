@@ -3,11 +3,8 @@
 #ifdef DEBUG
 
 #include <mutex>
-#include <iostream>
 
 #include "debug/MemoryWatcher.h"
-
-using namespace debug;
 
 #define DEBUG_STATS \
     D( seconds_passed ) \
@@ -88,101 +85,89 @@ extern debug_stats_t g_debug_stats;
 
 #define NEW( _var, _class, ... ) \
     _var = new _class( __VA_ARGS__ ); \
-    g_memory_watcher->New( _var, sizeof( _class ), __FILE__, __LINE__ );
+    debug::g_memory_watcher->New( _var, sizeof( _class ), __FILE__, __LINE__ );
 
 #define NEWV( _var, _class, ... ) \
     _class* _var; \
     NEW( _var, _class, __VA_ARGS__ )
 
 #define DELETE( _var ) \
-    g_memory_watcher->Delete( _var, __FILE__, __LINE__ ); \
+    debug::g_memory_watcher->Delete( _var, __FILE__, __LINE__ ); \
     delete _var;
 
-#define malloc( __size ) g_memory_watcher->Malloc( __size, __FILE__, __LINE__ )
-#define realloc( __ptr, __size ) g_memory_watcher->Realloc( __ptr, __size, __FILE__, __LINE__ )
-#define ptr( _ptr, _offset, _size ) g_memory_watcher->Ptr( (unsigned char*)_ptr, _offset, _size, __FILE__, __LINE__ )
-#define free( __ptr ) g_memory_watcher->Free( __ptr, __FILE__, __LINE__ )
+#define malloc( __size ) debug::g_memory_watcher->Malloc( __size, __FILE__, __LINE__ )
+#define realloc( __ptr, __size ) debug::g_memory_watcher->Realloc( __ptr, __size, __FILE__, __LINE__ )
+#define ptr( _ptr, _offset, _size ) debug::g_memory_watcher->Ptr( (unsigned char*)_ptr, _offset, _size, __FILE__, __LINE__ )
+#define free( __ptr ) debug::g_memory_watcher->Free( __ptr, __FILE__, __LINE__ )
 
 #undef glGenBuffers
-#define glGenBuffers( _size, _ptr ) g_memory_watcher->GLGenBuffers( _size, _ptr, __FILE__, __LINE__ )
+#define glGenBuffers( _size, _ptr ) debug::g_memory_watcher->GLGenBuffers( _size, _ptr, __FILE__, __LINE__ )
 
 #undef glBindBuffer
-#define glBindBuffer( _target, _ptr ) g_memory_watcher->GLBindBuffer( _target, _ptr, __FILE__, __LINE__ )
+#define glBindBuffer( _target, _ptr ) debug::g_memory_watcher->GLBindBuffer( _target, _ptr, __FILE__, __LINE__ )
 
 #undef glBufferData
-#define glBufferData( _target, _size, _data, _mode ) g_memory_watcher->GLBufferData( _target, _size, _data, _mode, __FILE__, __LINE__ )
+#define glBufferData( _target, _size, _data, _mode ) debug::g_memory_watcher->GLBufferData( _target, _size, _data, _mode, __FILE__, __LINE__ )
 
 #undef glDeleteBuffers
-#define glDeleteBuffers( _size, _ptr ) g_memory_watcher->GLDeleteBuffers( _size, _ptr, __FILE__, __LINE__ )
+#define glDeleteBuffers( _size, _ptr ) debug::g_memory_watcher->GLDeleteBuffers( _size, _ptr, __FILE__, __LINE__ )
 
 #undef glGenTextures
-#define glGenTextures( _size, _ptr ) g_memory_watcher->GLGenTextures( _size, _ptr, __FILE__, __LINE__ )
+#define glGenTextures( _size, _ptr ) debug::g_memory_watcher->GLGenTextures( _size, _ptr, __FILE__, __LINE__ )
 
 #undef glBindTexture
-#define glBindTexture( _target, _ptr ) g_memory_watcher->GLBindTexture( _target, _ptr, __FILE__, __LINE__ )
+#define glBindTexture( _target, _ptr ) debug::g_memory_watcher->GLBindTexture( _target, _ptr, __FILE__, __LINE__ )
 
 #undef glTexImage2D
 #define glTexImage2D( _target, _level, _srcfmt, _width, _height, _border, _dstfmt, _type, _ptr ) \
-    g_memory_watcher->GLTexImage2D( _target, _level, _srcfmt, _width, _height, _border, _dstfmt, _type, _ptr, __FILE__, __LINE__ )
+    debug::g_memory_watcher->GLTexImage2D( _target, _level, _srcfmt, _width, _height, _border, _dstfmt, _type, _ptr, __FILE__, __LINE__ )
 
 #undef glTexSubImage2D
 #define glTexSubImage2D( _target, _level, _xoffset, _yoffset, _width, _height, format, _type, _ptr ) \
-    g_memory_watcher->GLTexSubImage2D( _target, _level, _xoffset, _yoffset, _width, _height, format, _type, _ptr, __FILE__, __LINE__ )
+    debug::g_memory_watcher->GLTexSubImage2D( _target, _level, _xoffset, _yoffset, _width, _height, format, _type, _ptr, __FILE__, __LINE__ )
 
 #undef glGenFramebuffers
-#define glGenFramebuffers( _size, _ptr ) g_memory_watcher->GLGenFramebuffers( _size, _ptr, __FILE__, __LINE__ )
+#define glGenFramebuffers( _size, _ptr ) debug::g_memory_watcher->GLGenFramebuffers( _size, _ptr, __FILE__, __LINE__ )
 
 #undef glBindFramebuffer
-#define glBindFramebuffer( _target, _ptr ) g_memory_watcher->GLBindFramebuffer( _target, _ptr, __FILE__, __LINE__ )
+#define glBindFramebuffer( _target, _ptr ) debug::g_memory_watcher->GLBindFramebuffer( _target, _ptr, __FILE__, __LINE__ )
 
 #undef glFramebufferTexture2D
-#define glFramebufferTexture2D( _target, _attachment, _textarget, _texture, _level ) g_memory_watcher->GLFramebufferTexture2D( _target, _attachment, _textarget, _texture, _level, __FILE__, __LINE__ )
+#define glFramebufferTexture2D( _target, _attachment, _textarget, _texture, _level ) debug::g_memory_watcher->GLFramebufferTexture2D( _target, _attachment, _textarget, _texture, _level, __FILE__, __LINE__ )
 
 #undef glDeleteFramebuffers
-#define glDeleteFramebuffers( _size, _ptr ) g_memory_watcher->GLDeleteFramebuffers( _size, _ptr, __FILE__, __LINE__ )
+#define glDeleteFramebuffers( _size, _ptr ) debug::g_memory_watcher->GLDeleteFramebuffers( _size, _ptr, __FILE__, __LINE__ )
 
 #undef glCreateProgram
-#define glCreateProgram() g_memory_watcher->GLCreateProgram( __FILE__, __LINE__ )
+#define glCreateProgram() debug::g_memory_watcher->GLCreateProgram( __FILE__, __LINE__ )
 
 #undef glLinkProgram
-#define glLinkProgram( _program ) g_memory_watcher->GLLinkProgram( _program, __FILE__, __LINE__ )
+#define glLinkProgram( _program ) debug::g_memory_watcher->GLLinkProgram( _program, __FILE__, __LINE__ )
 
 #undef glValidateProgram
-#define glValidateProgram( _program ) g_memory_watcher->GLValidateProgram( _program, __FILE__, __LINE__ )
+#define glValidateProgram( _program ) debug::g_memory_watcher->GLValidateProgram( _program, __FILE__, __LINE__ )
 
 #undef glUseProgram
-#define glUseProgram( _program ) g_memory_watcher->GLUseProgram( _program, __FILE__, __LINE__ )
+#define glUseProgram( _program ) debug::g_memory_watcher->GLUseProgram( _program, __FILE__, __LINE__ )
 
 #undef glDeleteProgram
-#define glDeleteProgram( _program ) g_memory_watcher->GLDeleteProgram( _program, __FILE__, __LINE__ )
+#define glDeleteProgram( _program ) debug::g_memory_watcher->GLDeleteProgram( _program, __FILE__, __LINE__ )
 
 #undef glDrawElements
-#define glDrawElements( _mode, _count, _type, _indices ) g_memory_watcher->GLDrawElements( _mode, _count, _type, _indices, __FILE__, __LINE__ )
+#define glDrawElements( _mode, _count, _type, _indices ) debug::g_memory_watcher->GLDrawElements( _mode, _count, _type, _indices, __FILE__, __LINE__ )
 
 #undef glDrawElementsInstanced
-#define glDrawElementsInstanced( _mode, _count, _type, _indices, _primcount ) g_memory_watcher->GLDrawElementsInstanced( _mode, _count, _type, _indices, _primcount, __FILE__, __LINE__ )
+#define glDrawElementsInstanced( _mode, _count, _type, _indices, _primcount ) debug::g_memory_watcher->GLDrawElementsInstanced( _mode, _count, _type, _indices, _primcount, __FILE__, __LINE__ )
 
 #undef glDrawArrays
-#define glDrawArrays( _mode, _first, _count ) g_memory_watcher->GLDrawArrays( _mode, _first, _count, __FILE__, __LINE__ )
+#define glDrawArrays( _mode, _first, _count ) debug::g_memory_watcher->GLDrawArrays( _mode, _first, _count, __FILE__, __LINE__ )
 
 #undef glDeleteTextures
-#define glDeleteTextures( _size, _ptr ) g_memory_watcher->GLDeleteTextures( _size, _ptr, __FILE__, __LINE__ )
+#define glDeleteTextures( _size, _ptr ) debug::g_memory_watcher->GLDeleteTextures( _size, _ptr, __FILE__, __LINE__ )
 
-#define ASSERT( _condition, _text ) \
-    if ( !( _condition ) ) { \
-        Log( (std::string) "FATAL: " + _text ); \
-        THROW( _text ); \
-    }
-
-// for rare cases when Log() is not available
-#define ASSERT_NOLOG( _condition, _text ) \
-    if ( !( _condition ) ) { \
-        THROW( _text ); \
-    }
-
-#define TEST_OBJECT( _obj ) _obj->SetTesting( true )
-#define UNTEST_OBJECT( _obj ) _obj->SetTesting( false )
-#define TEST_BREAKPOINT( _obj ) _obj->TestBreakpoint()
-#define IS_TESTING( _obj ) _obj->IsTesting()
+#define TEST_OBJECT( _obj ) (_obj)->SetTesting( true )
+#define UNTEST_OBJECT( _obj ) (_obj)->SetTesting( false )
+#define TEST_BREAKPOINT( _obj ) (_obj)->TestBreakpoint()
+#define IS_TESTING( _obj ) (_obj)->IsTesting()
 
 #endif

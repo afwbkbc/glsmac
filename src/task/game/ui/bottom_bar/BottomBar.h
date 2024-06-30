@@ -1,35 +1,44 @@
 #pragma once
 
-#include "../UI.h"
+#include "task/game/ui/UI.h"
 
-#include "../../Types.h"
+#include "game/turn/Types.h"
 
-#include "ui/object/Surface.h"
-#include "ui/object/Section.h"
-#include "ui/object/Button.h"
-
-#include "types/Texture.h"
-
-// message label
-#include "ui/object/Label.h"
+#include "types/Vec2.h"
 #include "util/Timer.h"
 
-// sections
-#include "UnitPreview.h"
-#include "TilePreview.h"
-#include "MiddleArea.h"
-#include "task/game/ui/bottom_bar/units_list/UnitsList.h"
-#include "TurnCompleteButton.h"
-#include "MiniMap.h"
+namespace types::texture {
+class Texture;
+}
 
-// side menus
-#include "left_menu/LeftMenu.h"
-#include "right_menu/RightMenu.h"
+namespace ui::object {
+class Surface;
+class Button;
+class Label;
+}
 
 namespace task {
 namespace game {
 class Game;
+namespace tile {
+class Tile;
+}
+namespace unit {
+class Unit;
+}
 namespace ui {
+
+class UnitPreview;
+class TilePreview;
+class MiddleArea;
+class StatusButton;
+class UnitsList;
+class MiniMap;
+
+namespace menu {
+class LeftMenu;
+class RightMenu;
+}
 
 CLASS( BottomBar, UI )
 
@@ -41,12 +50,15 @@ CLASS( BottomBar, UI )
 	void Destroy() override;
 	void Align() override;
 
-	void PreviewTile( const tile_data_t& tile_data );
+	void PreviewTile( tile::Tile* tile, const size_t selected_unit_id );
 	void HideTilePreview();
 
-	void SetMinimapTexture( types::Texture* texture );
-	const Vec2< size_t > GetMinimapDimensions() const;
-	void SetMinimapSelection( const Vec2< float > position_percents, const Vec2< float > zoom );
+	void PreviewUnit( const unit::Unit* unit );
+	void HideUnitPreview();
+
+	void SetMinimapTexture( types::texture::Texture* texture );
+	const types::Vec2< size_t > GetMinimapDimensions() const;
+	void SetMinimapSelection( const types::Vec2< float > position_percents, const types::Vec2< float > zoom );
 	const bool IsMouseDraggingMiniMap() const;
 
 	void CloseMenus();
@@ -56,23 +68,23 @@ CLASS( BottomBar, UI )
 	void AddMessage( const std::string& text );
 	void UpdateMapFileName();
 
-	void SetTurnCompleteStatus( const bool is_turn_complete );
+	void SetTurnStatus( const ::game::turn::turn_status_t status );
 
 private:
 	struct {
-		Surface* left = nullptr;
-		Surface* right = nullptr;
-		Surface* middle = nullptr;
+		::ui::object::Surface* left = nullptr;
+		::ui::object::Surface* right = nullptr;
+		::ui::object::Surface* middle = nullptr;
 	} m_frames = {};
 
-	std::vector< Surface* > m_backgrounds = {};
+	std::vector< ::ui::object::Surface* > m_backgrounds = {};
 
 	struct {
-		Button* menu = nullptr;
-		Button* commlink = nullptr;
+		::ui::object::Button* menu = nullptr;
+		::ui::object::Button* commlink = nullptr;
 	} m_buttons = {};
 
-	Label* m_message_label = nullptr;
+	::ui::object::Label* m_message_label = nullptr;
 	util::Timer m_message_label_clear_timer;
 
 	struct {
@@ -80,7 +92,7 @@ private:
 		TilePreview* tile_preview = nullptr;
 		MiddleArea* middle_area = nullptr;
 		UnitsList* units_list = nullptr;
-		TurnCompleteButton* turn_complete_button = nullptr;
+		StatusButton* status_button = nullptr;
 		MiniMap* mini_map = nullptr;
 	} m_sections = {};
 
@@ -90,10 +102,10 @@ private:
 	} m_side_menus = {};
 
 	struct {
-		types::Texture* minimap = nullptr;
+		types::texture::Texture* minimap = nullptr;
 	} m_textures = {};
 
-	const UIEventHandler* m_mouse_blocker = nullptr;
+	const ::ui::event::UIEventHandler* m_mouse_blocker = nullptr;
 
 };
 

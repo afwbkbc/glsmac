@@ -10,7 +10,8 @@ namespace loader {
 namespace sound {
 
 CLASS( Null, SoundLoader )
-	types::Sound* LoadSound( const std::string& name ) override { return nullptr; }
+protected:
+	types::Sound* LoadSoundImpl( const std::string& name ) override { return nullptr; }
 };
 
 }

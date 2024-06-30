@@ -1,7 +1,8 @@
 #include "Type.h"
 
-#include "base/Base.h"
+#include "common/Common.h"
 
+#include "Undefined.h"
 #include "Null.h"
 #include "Bool.h"
 #include "Int.h"
@@ -14,6 +15,9 @@
 #include "ObjectRef.h"
 #include "Range.h"
 #include "Exception.h"
+#include "LoopControl.h"
+
+#include "types/Buffer.h"
 
 namespace gse {
 namespace type {
@@ -31,6 +35,7 @@ static const std::string s_t_arrayref = "Arrayref";
 static const std::string s_t_arrayrangeref = "Arrayrangeref";
 static const std::string s_t_objectref = "Objectref";
 static const std::string s_t_range = "Range";
+static const std::string s_t_loopcontrol = "LoopControl";
 static const std::string s_t_unknown = "Unknown";
 const std::string& Type::GetTypeString( const type_t type ) {
 	switch ( type ) {
@@ -60,6 +65,8 @@ const std::string& Type::GetTypeString( const type_t type ) {
 			return s_t_objectref;
 		case T_RANGE:
 			return s_t_range;
+		case T_LOOPCONTROL:
+			return s_t_loopcontrol;
 		default:
 			return s_t_unknown;
 	}
@@ -140,6 +147,16 @@ const std::string Type::ToString() const {
 					: ""
 			) + "]";
 		}
+		case T_LOOPCONTROL: {
+			switch ( ( (LoopControl*)this )->value ) {
+				case program::LCT_BREAK:
+					return "break";
+				case program::LCT_CONTINUE:
+					return "continue";
+				default:
+					THROW( "unexpected loop control type: " + std::to_string( ( (LoopControl*)this )->value ) );
+			}
+		}
 		default:
 			THROW( "unknown is not intended to be printed" );
 	}
@@ -199,11 +216,11 @@ const std::string Type::Dump() const {
 			return "callable{}"; // TODO
 		case T_ARRAYREF: {
 			const auto* that = (ArrayRef*)this;
-			return "arrayref{" + std::to_string( (long)that->array ) + "," + std::to_string( that->index ) + +"}";
+			return "arrayref{" + std::to_string( (ptr_int_t)that->array ) + "," + std::to_string( that->index ) + +"}";
 		}
 		case T_ARRAYRANGEREF: {
 			const auto* that = (ArrayRangeRef*)this;
-			return "arrayrangeref{" + std::to_string( (long)that->array ) + "," + (
+			return "arrayrangeref{" + std::to_string( (ptr_int_t)that->array ) + "," + (
 				that->from.has_value()
 					? std::to_string( that->from.value() )
 					: ""
@@ -215,7 +232,7 @@ const std::string Type::Dump() const {
 		}
 		case T_OBJECTREF: {
 			const auto* that = (ObjectRef*)this;
-			return "objectref{" + std::to_string( (long)that->object ) + "," + that->key + "}";
+			return "objectref{" + std::to_string( (ptr_int_t)that->object ) + "," + that->key + "}";
 		}
 		case T_RANGE: {
 			const auto* that = (Range*)this;
@@ -228,6 +245,9 @@ const std::string Type::Dump() const {
 					? std::to_string( *that->to )
 					: ""
 			) + "}";
+		}
+		case T_LOOPCONTROL: {
+			return "loopcontrol{" + ToString() + "}";
 		}
 		default:
 			return "unknown{" + std::to_string( type ) + "}";
@@ -305,12 +325,15 @@ const bool Type::operator==( const Type& other ) const {
 			if ( obj_a->object_class != obj_b->object_class ) {
 				return false;
 			}
+			if ( obj_a->wrapobj || obj_b->wrapobj ) {
+				return obj_a->wrapobj == obj_b->wrapobj;
+			}
 			const auto& a = obj_a->value;
 			const auto& b = obj_b->value;
 			if ( a.size() != b.size() ) {
 				return false;
 			}
-			Object::properties_t::const_iterator it_b;
+			object_properties_t::const_iterator it_b;
 			for ( const auto& it : a ) {
 				if (
 					( it_b = b.find( it.first ) ) == b.end() ||
@@ -347,6 +370,98 @@ const bool Type::operator>=( const Type& other ) const {
 
 #undef DEFAULT_COMPARE
 #undef DEFAULT_COMPARE_NE
+
+void Type::Serialize( types::Buffer* buf, const Type* type ) {
+	buf->WriteInt( type->type );
+	switch ( type->type ) {
+		case T_UNDEFINED:
+			break;
+		case T_NULL:
+			break;
+		case T_BOOL: {
+			buf->WriteBool( ( (Bool*)type )->value );
+			break;
+		}
+		case T_INT: {
+			buf->WriteInt( ( (Int*)type )->value );
+			break;
+		}
+		case T_FLOAT: {
+			buf->WriteFloat( ( (Float*)type )->value );
+			break;
+		}
+		case T_STRING: {
+			buf->WriteString( ( (String*)type )->value );
+			break;
+		}
+		case T_ARRAY: {
+			const auto& elements = ( (Array*)type )->value;
+			buf->WriteInt( elements.size() );
+			for ( const auto& e : elements ) {
+				Value::Serialize( buf, e );
+			}
+			break;
+		}
+		case T_OBJECT: {
+			const auto* obj = (Object*)type;
+			ASSERT_NOLOG( obj->object_class == Object::CLASS_NONE, "serialization of custom object classes is not supported" );
+			ASSERT_NOLOG( !obj->wrapobj, "serialization of objects with wrapobj is not supported" );
+			ASSERT_NOLOG( !obj->wrapsetter, "serialization of objects with wrapsetter is not supported" );
+			const auto& properties = obj->value;
+			buf->WriteInt( properties.size() );
+			for ( const auto& p : properties ) {
+				buf->WriteString( p.first );
+				Value::Serialize( buf, p.second );
+			}
+			break;
+		}
+		default:
+			THROW( "invalid/unsupported type for serialization: " + GetTypeString( type->type ) );
+	}
+}
+
+Value Type::Unserialize( types::Buffer* buf ) {
+	type_t type = (type_t)buf->ReadInt();
+	switch ( type ) {
+		case T_UNDEFINED:
+			return VALUE( Undefined );
+		case T_NULL:
+			return VALUE( Null );
+		case T_BOOL:
+			return VALUE( Bool, buf->ReadBool() );
+		case T_INT:
+			return VALUE( Int, buf->ReadInt() );
+		case T_FLOAT:
+			return VALUE( Float, buf->ReadFloat() );
+		case T_STRING:
+			return VALUE( String, buf->ReadString() );
+		case T_ARRAY: {
+			array_elements_t elements = {};
+			const auto size = buf->ReadInt();
+			elements.reserve( size );
+			for ( size_t i = 0 ; i < size ; i++ ) {
+				elements.push_back( Value::Unserialize( buf ) );
+			}
+			return VALUE( Array, elements );
+		}
+		case T_OBJECT: {
+			object_properties_t properties = {};
+			const auto size = buf->ReadInt();
+			for ( size_t i = 0 ; i < size ; i++ ) {
+				const auto k = buf->ReadString();
+				properties.insert(
+					{
+						k,
+						Value::Unserialize( buf )
+					}
+				);
+			}
+			return VALUE( Object, properties );
+		}
+		default:
+			THROW( "invalid/unsupported type for unserialization: " + GetTypeString( type ) );
+	}
+}
 
 }
 }

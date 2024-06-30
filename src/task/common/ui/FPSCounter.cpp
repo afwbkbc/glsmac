@@ -1,8 +1,7 @@
 #include "FPSCounter.h"
 
 #include "engine/Engine.h"
-
-using namespace ui::object;
+#include "graphics/Graphics.h"
 
 namespace task {
 namespace ui {

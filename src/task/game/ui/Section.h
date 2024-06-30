@@ -2,7 +2,9 @@
 
 #include "UI.h"
 
-#include "ui/object/Section.h"
+namespace ui::object {
+class Section;
+}
 
 namespace task {
 namespace game {
@@ -30,8 +32,8 @@ private:
 	const std::string m_section_class_prefix = "";
 	std::string m_title_text = "";
 
-	object::Section* m_outer = nullptr;
-	object::Section* m_inner = nullptr;
+	::ui::object::Section* m_outer = nullptr;
+	::ui::object::Section* m_inner = nullptr;
 
 };
 

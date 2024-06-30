@@ -3,13 +3,11 @@
 #include <string>
 #include <cstdint>
 
-#include "base/Base.h"
-
-//#include "base/ObjectLink.h"
+#include "common/Common.h"
 
 namespace types {
 
-CLASS( Sound, base::Base )
+CLASS( Sound, common::Class )
 
 	~Sound();
 

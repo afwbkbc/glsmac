@@ -13,6 +13,14 @@
 #endif
 
 #include "SimpleTCP.h"
+#include "types/Packet.h"
+
+#ifdef DEBUG
+
+#include "engine/Engine.h"
+#include "config/Config.h"
+
+#endif
 
 namespace network {
 namespace simpletcp {
@@ -25,6 +33,9 @@ SimpleTCP::SimpleTCP()
 }
 
 void SimpleTCP::Start() {
+#ifdef DEBUG
+	m_need_pings = !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_NOPINGS );
+#endif
 	m_impl.Start();
 }
 
@@ -529,15 +540,15 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket ) {
 			m_tmp.event.data.remote_address = socket.remote_address;
 			m_tmp.event.data.packet_data = std::string( m_tmp.ptr, m_tmp.tmpint );
 			try {
-				Packet p( Packet::PT_NONE );
-				p.Unserialize( Buffer( m_tmp.event.data.packet_data ) );
+				types::Packet p( types::Packet::PT_NONE );
+				p.Unserialize( types::Buffer( m_tmp.event.data.packet_data ) );
 				// quick hack to respond to pings without escalating events outside
 				// TODO: refactor
-				if ( p.type == Packet::PT_PING ) {
+				if ( p.type == types::Packet::PT_PING ) {
 					Log( "Ping received" );
 					socket.pong_needed = true;
 				}
-				else if ( p.type == Packet::PT_PONG ) {
+				else if ( p.type == types::Packet::PT_PONG ) {
 					Log( "Pong received" );
 					socket.ping_sent = false;
 				}
@@ -613,6 +624,12 @@ bool SimpleTCP::WriteToSocket( int fd, const std::string& data ) {
 }
 
 bool SimpleTCP::MaybePing( remote_socket_data_t& socket ) {
+#ifdef DEBUG
+	if ( !m_need_pings ) {
+		return true;
+	}
+#endif
+
 	m_tmp.time = m_tmp.now - socket.last_data_at;
 
 	if ( m_tmp.time > SEND_PING_AFTER && !socket.ping_sent ) {
@@ -624,6 +641,13 @@ bool SimpleTCP::MaybePing( remote_socket_data_t& socket ) {
 }
 
 bool SimpleTCP::MaybePingDo( remote_socket_data_t& socket ) {
+
+#ifdef DEBUG
+	if ( !m_need_pings ) {
+		return true;
+	}
+#endif
+
 	m_tmp.time = m_tmp.now - socket.last_data_at;
 
 	if ( m_tmp.time > DISCONNECT_AFTER ) {
@@ -634,14 +658,14 @@ bool SimpleTCP::MaybePingDo( remote_socket_data_t& socket ) {
 
 	if ( socket.ping_needed && !socket.ping_sent ) {
 		Log( "Sending ping to " + std::to_string( socket.fd ) + " (cid " + std::to_string( socket.cid ) + ")" );
-		Packet packet( Packet::PT_PING );
+		types::Packet packet( types::Packet::PT_PING );
 		std::string data = packet.Serialize().ToString();
 		socket.ping_sent = true;
 		return WriteToSocket( socket.fd, data );
 	}
 	if ( socket.pong_needed ) {
 		Log( "Ping received, sending pong to " + std::to_string( socket.fd ) + " (cid " + std::to_string( socket.cid ) + ")" );
-		Packet packet( Packet::PT_PONG );
+		types::Packet packet( types::Packet::PT_PONG );
 		socket.pong_needed = false;
 		std::string data = packet.Serialize().ToString();
 		return WriteToSocket( socket.fd, data );

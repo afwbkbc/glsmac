@@ -8,15 +8,15 @@ namespace generator {
 
 CLASS( SimplePerlin, MapGenerator )
 
-	SimplePerlin( Random* random )
+	SimplePerlin( util::random::Random* random )
 		: MapGenerator( random ) {}
 
-	void GenerateElevations( Tiles* tiles, const MapSettings& map_settings, MT_CANCELABLE ) override;
-	void GenerateDetails( Tiles* tiles, const MapSettings& map_settings, MT_CANCELABLE ) override;
+	void GenerateElevations( tile::Tiles* tiles, const settings::MapSettings* map_settings, MT_CANCELABLE ) override;
+	void GenerateDetails( tile::Tiles* tiles, const settings::MapSettings* map_settings, MT_CANCELABLE ) override;
 
 private:
-	void GenerateRiver( Tiles* tiles, Tile* tile, uint8_t length, uint8_t direction, int8_t direction_diagonal, MT_CANCELABLE );
-	bool HasRiversNearby( Tile* current_tile, Tile* tile );
+	void GenerateRiver( tile::Tiles* tiles, tile::Tile* tile, uint8_t length, uint8_t direction, int8_t direction_diagonal, MT_CANCELABLE );
+	bool HasRiversNearby( tile::Tile* current_tile, tile::Tile* tile );
 
 };
 

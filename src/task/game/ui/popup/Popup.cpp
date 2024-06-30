@@ -1,6 +1,8 @@
 #include "Popup.h"
 
-#include "../../Game.h"
+#include "task/game/Game.h"
+#include "ui/object/Surface.h"
+#include "task/game/ui/Section.h"
 
 namespace task {
 namespace game {
@@ -8,13 +10,13 @@ namespace ui {
 namespace popup {
 
 Popup::Popup( Game* game )
-	: object::Popup( "WP" )
+	: ::ui::object::Popup( "WP" )
 	, m_game( game ) {
-	SetAlign( ALIGN_HCENTER | ALIGN_BOTTOM );
+	SetAlign( ::ui::ALIGN_HCENTER | ::ui::ALIGN_BOTTOM );
 }
 
 void Popup::Create() {
-	object::Popup::Create();
+	::ui::object::Popup::Create();
 
 	NEW( m_body, Section, m_game, "", "WP" );
 	if ( !m_title_text.empty() ) {
@@ -23,7 +25,7 @@ void Popup::Create() {
 	AddChild( m_body );
 
 #define x( _k, _n ) {\
-        NEW( m_side_frames._k, object::Surface, "WP" _n "Frame" ); \
+        NEW( m_side_frames._k, ::ui::object::Surface, "WP" _n "Frame" ); \
         AddChild( m_side_frames._k ); \
     }
 	x( left_left, "LeftLeft" );
@@ -35,20 +37,20 @@ void Popup::Create() {
 	// slide up
 	const auto start_at = m_game->GetBottomBarMiddleHeight() - GetHeight();
 	SetBottom( start_at );
-	m_slide.Scroll( start_at, start_at + GetHeight() );
+	m_slide.Scroll( start_at, start_at + GetHeight(), SLIDE_DURATION_MS );
 }
 
 void Popup::Align() {
 
 	// don't let popup top go outside of window
 	// TODO: add 'max_height' to styles
-	object::Popup::SetHeight( std::min< coord_t >( m_original_height, m_game->GetViewportHeight() ) );
+	::ui::object::Popup::SetHeight( std::min< coord_t >( m_original_height, m_game->GetViewportHeight() ) );
 
-	object::Popup::Align();
+	::ui::object::Popup::Align();
 }
 
 void Popup::Iterate() {
-	object::Popup::Iterate();
+	::ui::object::Popup::Iterate();
 
 	bool has_ticked = false;
 	while ( m_slide.HasTicked() ) {
@@ -71,25 +73,25 @@ void Popup::Destroy() {
 	x( right_left );
 #undef x
 
-	object::Popup::Destroy();
+	::ui::object::Popup::Destroy();
 }
 
-void Popup::ProcessEvent( event::UIEvent* event ) {
+void Popup::ProcessEvent( ::ui::event::UIEvent* event ) {
 	if ( !m_slide.IsRunning() ) { // ignore events during slide
-		object::Popup::ProcessEvent( event );
+		::ui::object::Popup::ProcessEvent( event );
 	}
 }
 
 bool Popup::MaybeClose() {
 	if ( m_is_closing ) {
 		if ( !m_slide.IsRunning() ) { // ready to close if slide down finished
-			return object::Popup::MaybeClose();
+			return ::ui::object::Popup::MaybeClose();
 		}
 	}
 	else {
 		// slide down
 		m_is_closing = true;
-		m_slide.Scroll( GetBottom(), m_game->GetBottomBarMiddleHeight() - GetHeight() );
+		m_slide.Scroll( GetBottom(), m_game->GetBottomBarMiddleHeight() - GetHeight(), SLIDE_DURATION_MS );
 		PlayCloseSound();
 	}
 	return false; // not ready to close yet
@@ -97,7 +99,7 @@ bool Popup::MaybeClose() {
 
 void Popup::SetHeight( const coord_t px ) {
 	m_original_height = px;
-	object::Popup::SetHeight( px );
+	::ui::object::Popup::SetHeight( px );
 }
 
 void Popup::SetTitleText( const std::string& title_text ) {

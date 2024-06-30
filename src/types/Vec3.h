@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cfloat>
-#include <cmath>
 #include <string>
+#include <cmath>
 
 #include "Vec2.h"
 
@@ -33,6 +33,15 @@ public:
 		this->y = y;
 		this->z = z;
 	};
+
+	// TODO: fix Y inversion globally
+	const Vec3 InvertY() const {
+		return {
+			x,
+			-y,
+			z
+		};
+	}
 
 	Vec3 operator=( const Vec2< float > source ) {
 		return Vec3( source.x, source.y, 0.0 );
@@ -198,4 +207,4 @@ public:
 
 #undef DATATYPE
 
-} /* namespace types */
+}

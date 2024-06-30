@@ -1,27 +1,29 @@
 #pragma once
 
-#include "base/Task.h"
+#include "common/Task.h"
 
-#include "types/Texture.h"
-#include "ui/object/Surface.h"
 #include "util/Timer.h"
 
-#include "Theme.h"
+namespace ui::object {
+class Surface;
+}
 
 namespace task {
 namespace intro {
 
-CLASS( Intro, base::Task )
+class Theme;
+
+CLASS( Intro, common::Task )
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;
 
 protected:
-	Theme m_theme;
+	Theme* m_theme;
 	::ui::object::Surface* m_logo = nullptr;
 	util::Timer m_timer;
 
 };
 
-} /* namespace intro */
-} /* namespace game */
+}
+}

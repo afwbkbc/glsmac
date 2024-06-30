@@ -5,18 +5,20 @@
 #include <map>
 #include <vector>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
-#include "type/Type.h"
-#include "gse/type/Callable.h"
-#include "Exception.h"
-#include "program/Program.h"
+#include "Types.h"
+
+#include "Value.h"
 #include "builtins/Builtins.h"
-#include "Bindings.h"
 
 namespace gse {
 
+namespace context {
 class GlobalContext;
+}
+
+class Bindings;
 
 namespace parser {
 class Parser;
@@ -26,21 +28,31 @@ namespace runner {
 class Runner;
 }
 
-CLASS( GSE, base::Base )
+namespace program {
+class Program;
+}
+
+namespace type {
+class Callable;
+}
+
+CLASS( GSE, common::Class )
 	GSE();
 	virtual ~GSE();
+
+	static const char PATH_SEPARATOR;
 
 	parser::Parser* GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num = 1 ) const;
 	runner::Runner* GetRunner() const;
 
 	void AddBindings( Bindings* bindings );
 
-	GlobalContext* CreateGlobalContext( const std::string& source_path = "" );
+	context::GlobalContext* CreateGlobalContext( const std::string& source_path = "" );
 
 	void AddModule( const std::string& path, type::Callable* module );
 
 	void Run();
-	const Value GetInclude( Context* ctx, const si_t& si, const std::string& path );
+	const Value GetInclude( context::Context* ctx, const si_t& si, const std::string& path );
 
 	void SetGlobal( const std::string& identifier, Value variable );
 	const Value& GetGlobal( const std::string& identifier );
@@ -65,7 +77,7 @@ private:
 
 	struct include_cache_t {
 		Value result;
-		Context* context;
+		context::Context* context;
 		// TODO: why can't we delete these two upon getting result?
 		const program::Program* program;
 		const runner::Runner* runner;
@@ -76,6 +88,3 @@ private:
 };
 
 }
-
-#include "parser/Parser.h"
-#include "runner/Runner.h"

@@ -1,8 +1,8 @@
 #include "Label.h"
 
 #include "engine/Engine.h"
-
-using namespace types;
+#include "scene/actor/Text.h"
+#include "types/Font.h"
 
 namespace ui {
 namespace object {
@@ -25,7 +25,7 @@ void Label::SetText( const std::string& text ) {
 	}
 }
 
-void Label::SetTextColor( const Color& color ) {
+void Label::SetTextColor( const types::Color& color ) {
 	if ( m_color != color ) {
 		m_color = color;
 		if ( m_actor ) {
@@ -34,7 +34,7 @@ void Label::SetTextColor( const Color& color ) {
 	}
 }
 
-void Label::SetFont( Font* font ) {
+void Label::SetFont( types::Font* font ) {
 	if ( m_font != font ) {
 		m_font = font;
 		UpdateTextDimensions();
@@ -113,14 +113,14 @@ void Label::Align() {
 void Label::ApplyStyle() {
 	UIObject::ApplyStyle();
 
-	if ( Has( Style::A_TEXT_ALIGN ) ) {
-		SetAlign( Get( Style::A_TEXT_ALIGN ) );
+	if ( Has( A_TEXT_ALIGN ) ) {
+		SetAlign( Get( A_TEXT_ALIGN ) );
 	}
-	if ( Has( Style::A_TEXT_COLOR ) ) {
-		SetTextColor( GetColor( Style::A_TEXT_COLOR ) );
+	if ( Has( A_TEXT_COLOR ) ) {
+		SetTextColor( GetColor( A_TEXT_COLOR ) );
 	}
-	if ( Has( Style::A_FONT ) ) {
-		SetFont( (Font*)GetObject( Style::A_FONT ) );
+	if ( Has( A_FONT ) ) {
+		SetFont( (types::Font*)GetObject( A_FONT ) );
 	}
 }
 

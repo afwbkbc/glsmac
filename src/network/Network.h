@@ -1,70 +1,29 @@
 #pragma once
 
-#include "base/MTModule.h"
+#include "common/MTModule.h"
+
+#include "Types.h"
 
 #include "Event.h"
-#include "types/Packet.h"
-#include "types.h"
 
-using namespace types;
+namespace types {
+class Packet;
+}
 
 namespace network {
 
-enum op_t {
-	OP_NONE,
-	OP_SUCCESS, // just confirm success
-	OP_CONNECT,
-	OP_DISCONNECT,
-	OP_DISCONNECT_CLIENT,
-	OP_GETEVENTS,
-	OP_SENDEVENT, // todo: multiple?
-};
-
-enum connection_mode_t {
-	CM_NONE,
-	CM_SERVER,
-	CM_CLIENT,
-};
-
-enum result_t {
-	R_NONE,
-	R_SUCCESS,
-	R_ERROR,
-	R_CANCELED,
-};
-
-typedef std::vector< Event > events_t;
-
-struct MT_Request {
-	op_t op;
-	struct {
-		connection_mode_t mode;
-		std::string remote_address;
-	} connect;
-	cid_t cid;
-	Event event;
-};
-
-struct MT_Response {
-	result_t result;
-	std::string message;
-	events_t events;
-};
-
-typedef base::MTModule< MT_Request, MT_Response > MTModule;
-
 CLASS( Network, MTModule )
 
-	mt_id_t MT_Connect( const connection_mode_t connect_mode, const std::string& remote_address = "" );
-	mt_id_t MT_Disconnect();
-	mt_id_t MT_DisconnectClient( const cid_t cid );
+	common::mt_id_t MT_Connect( const connection_mode_t connect_mode, const std::string& remote_address = "" );
+	common::mt_id_t MT_Disconnect();
+	common::mt_id_t MT_DisconnectClient( const cid_t cid );
 
-	mt_id_t MT_GetEvents();
-	mt_id_t MT_SendEvent( const Event& event );
+	common::mt_id_t MT_GetEvents();
+	common::mt_id_t MT_SendEvent( const Event& event );
 
-	mt_id_t MT_SendPacket( const Packet& packet, const cid_t cid = 0 );
+	common::mt_id_t MT_SendPacket( const types::Packet* packet, const cid_t cid = 0 );
 
-	MT_Response MT_GetResult( mt_id_t mt_id );
+	MT_Response MT_GetResult( common::mt_id_t mt_id );
 
 	void Iterate() override;
 
@@ -126,7 +85,7 @@ protected:
 		remote_socket_data_t socket = {};
 	} m_client = {};
 
-	CLASS( Impl, base::Base )
+	CLASS( Impl, common::Class )
 	public:
 		Impl();
 		~Impl();
@@ -162,7 +121,7 @@ protected:
 	const MT_Response Success() const;
 	const MT_Response Canceled() const;
 
-	mt_id_t MT_Success();
+	common::mt_id_t MT_Success();
 
 	void AddEvent( const Event& event );
 	events_t GetEvents();

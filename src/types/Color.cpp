@@ -73,6 +73,15 @@ const Color Color::operator/( float operand ) const {
 	};
 }
 
+const Color Color::operator*( const Color& other ) const {
+	return {
+		value.red * other.value.red,
+		value.green * other.value.green,
+		value.blue * other.value.blue,
+		value.alpha * other.value.alpha,
+	};
+}
+
 const Color::rgba_t Color::GetRGBA() const {
 	return RGBA( value.red * 255, value.green * 255, value.blue * 255, value.alpha * 255 );
 };

@@ -2,14 +2,19 @@
 
 #include <string>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
-#include "base/ObjectLink.h"
+namespace common {
+class ObjectLink;
+}
 
 namespace types {
 
-CLASS( Font, base::Base )
+CLASS( Font, common::Class )
+	Font( const std::string& name );
 	virtual ~Font();
+
+	const std::string m_name = "";
 
 	struct dimensions_t {
 		float width;
@@ -26,18 +31,18 @@ CLASS( Font, base::Base )
 		unsigned char* data;
 	};
 
-	std::string m_name = "";
+	std::string m_filename = "";
 	bitmap_t m_symbols[128] = {};
 	dimensions_t m_dimensions = {
 		0.0,
 		0.0
 	};
 
-	base::ObjectLink* m_graphics_object = nullptr;
+	common::ObjectLink* m_graphics_object = nullptr;
 
 	size_t GetTextWidth( const char* text ) const;
 	size_t GetTextHeight( const char* text ) const;
 
 };
 
-} /* namespace types */
+}

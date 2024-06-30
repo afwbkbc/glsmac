@@ -1,8 +1,5 @@
 #pragma once
 
-#include <map>
-#include <string>
-
 #include "ui/object/Section.h"
 
 namespace task {
@@ -11,7 +8,7 @@ namespace lobby {
 
 class Lobby;
 
-CLASS( LobbySection, Section )
+CLASS( LobbySection, ui::object::Section )
 	LobbySection( Lobby* lobby );
 
 	Lobby* GetLobby() const;
@@ -23,4 +20,3 @@ private:
 }
 }
 }
-

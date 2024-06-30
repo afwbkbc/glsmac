@@ -3,10 +3,13 @@
 #include "DebugOverlay.h"
 
 #include "engine/Engine.h"
-
-namespace ui {
-using namespace object;
-}
+#include "config/Config.h"
+#include "loader/font/FontLoader.h"
+#include "types/texture/Texture.h"
+#include "ui/UI.h"
+#include "ui/event/Types.h"
+#include "ui/object/Label.h"
+#include "ui/object/Surface.h"
 
 namespace debug {
 
@@ -17,9 +20,9 @@ void DebugOverlay::Start() {
 	m_font_size = 16;
 	m_memory_stats_lines = 10;
 
-	m_stats_font = g_engine->GetFontLoader()->LoadFont( "arialn.ttf", m_font_size );
+	m_stats_font = g_engine->GetFontLoader()->LoadFont( resource::TTF_ARIALN, m_font_size );
 
-	NEW( m_background_texture, types::Texture, "OverlayBackground", 1, 1 );
+	NEW( m_background_texture, types::texture::Texture, "OverlayBackground", 1, 1 );
 	m_background_texture->SetPixel(
 		0, 0, {
 			0.0,
@@ -30,13 +33,13 @@ void DebugOverlay::Start() {
 	);
 
 	m_toggle_handler = g_engine->GetUI()->AddGlobalEventHandler(
-		UIEvent::EV_KEY_DOWN, EH( this ) {
-			if ( data->key.code == UIEvent::K_GRAVE && !data->key.modifiers ) {
+		ui::event::EV_KEY_DOWN, EH( this ) {
+			if ( data->key.code == ui::event::K_GRAVE && !data->key.modifiers ) {
 				Toggle();
 				return true;
 			}
 			return false;
-		}, UI::GH_BEFORE
+		}, ui::UI::GH_BEFORE
 	);
 
 	DEBUG_STATS_SET_RW();
@@ -60,19 +63,19 @@ void DebugOverlay::Show() {
 
 		size_t stat_line = 0;
 #define D( _stat ) \
-            NEW( m_##_stats_label_##_stat, Label ); \
+            NEW( m_##_stats_label_##_stat, ui::object::Label ); \
             ActivateLabel( m_##_stats_label_##_stat, 3, (stat_line++) * ( m_font_size + 1 ) );
 		DEBUG_STATS;
 #undef D
 
 		for ( int i = 0 ; i < m_memory_stats_lines ; i++ ) {
-			NEWV( label, Label );
+			NEWV( label, ui::object::Label );
 			ActivateLabel( label, 340, i * ( m_font_size + 1 ) );
 			m_memory_stats_labels.push_back( label );
 		}
 
-		NEW( m_background_left, Surface );
-		m_background_left->SetAlign( UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+		NEW( m_background_left, ui::object::Surface );
+		m_background_left->SetAlign( ui::ALIGN_TOP | ui::ALIGN_LEFT );
 		m_background_left->SetLeft( 0 );
 		m_background_left->SetRight( 0 );
 		m_background_left->SetTop( 0 );
@@ -83,8 +86,8 @@ void DebugOverlay::Show() {
 		g_engine->GetUI()->AddObject( m_background_left );
 
 		if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_MEMORYDEBUG ) ) {
-			NEW( m_background_middle, Surface );
-			m_background_middle->SetAlign( UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+			NEW( m_background_middle, ui::object::Surface );
+			m_background_middle->SetAlign( ui::ALIGN_TOP | ui::ALIGN_LEFT );
 			m_background_middle->SetLeft( 340 );
 			m_background_middle->SetRight( 0 );
 			m_background_middle->SetTop( 0 );
@@ -201,7 +204,7 @@ void DebugOverlay::Iterate() {
 }
 
 // not using themes because overlay should be independent of them
-void DebugOverlay::ActivateLabel( Label* label, const size_t left, const size_t top ) {
+void DebugOverlay::ActivateLabel( ui::object::Label* label, const size_t left, const size_t top ) {
 	DEBUG_STATS_SET_RO();
 
 	Log( "created label " + label->GetName() );
@@ -216,7 +219,7 @@ void DebugOverlay::ActivateLabel( Label* label, const size_t left, const size_t 
 	);
 	label->SetLeft( left );
 	label->SetTop( top );
-	label->SetAlign( UIObject::ALIGN_TOP | UIObject::ALIGN_LEFT );
+	label->SetAlign( ui::ALIGN_TOP | ui::ALIGN_LEFT );
 	g_engine->GetUI()->AddObject( label );
 
 	DEBUG_STATS_SET_RW();

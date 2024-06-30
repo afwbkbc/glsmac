@@ -6,7 +6,7 @@ namespace gse {
 namespace parser {
 
 Parser::Parser( const std::string& filename, const std::string& source, const size_t initial_line_num )
-	: m_source( source )
+	: m_source( source + '\n' )
 	, m_filename( filename )
 	, m_begin( m_source.c_str() )
 	, m_end( m_source.c_str() + m_source.size() ) {

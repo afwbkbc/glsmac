@@ -4,16 +4,18 @@
 
 #include <SDL.h>
 
-#include "base/Base.h"
+#include "common/Common.h"
 
-#include "scene/actor/Sound.h"
+namespace scene::actor {
+class Sound;
+}
 
 namespace audio {
 namespace sdl2 {
 
 class SDL2;
 
-CLASS( Sound, base::Base )
+CLASS( Sound, common::Class )
 
 	Sound( scene::actor::Sound* actor );
 	~Sound();

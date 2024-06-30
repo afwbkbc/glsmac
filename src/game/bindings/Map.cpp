@@ -1,13 +1,19 @@
 #include "Binding.h"
 
+#include "gse/callable/Native.h"
+#include "gse/Exception.h"
 #include "gse/type/Object.h"
 #include "gse/type/Int.h"
+#include "gse/type/Undefined.h"
+#include "game/Game.h"
+#include "game/bindings/Bindings.h"
+#include "game/map/Map.h"
 
 namespace game {
 namespace bindings {
 
 BINDING_IMPL( map ) {
-	const gse::type::Object::properties_t properties = {
+	const gse::type::object_properties_t properties = {
 		{
 			"get_width",
 			NATIVE_CALL( this ) {

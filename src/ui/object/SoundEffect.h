@@ -2,8 +2,13 @@
 
 #include "UIObject.h"
 
-#include "types/Sound.h"
-#include "scene/actor/Sound.h"
+namespace types {
+class Sound;
+}
+
+namespace scene::actor {
+class Sound;
+}
 
 namespace ui {
 namespace object {
@@ -39,7 +44,7 @@ protected:
 	bool m_repeatable = false;
 	size_t m_start_delay = 0;
 
-	std::vector< actor::Sound* > m_actors = {};
+	std::vector< scene::actor::Sound* > m_actors = {};
 };
 
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace types {
 
 template< typename DATATYPE = float >
@@ -59,4 +61,4 @@ public:
 	}
 };
 
-} /* namespace types */
+}

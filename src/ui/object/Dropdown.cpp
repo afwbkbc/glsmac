@@ -1,8 +1,10 @@
 #include "Dropdown.h"
 
 #include "engine/Engine.h"
-
-#include "../event/MouseMove.h"
+#include "ui/event/MouseMove.h"
+#include "Label.h"
+#include "SimpleButton.h"
+#include "ui/UI.h"
 
 namespace ui {
 namespace object {
@@ -91,7 +93,7 @@ void Dropdown< std::string >::SetChoicesV( const std::vector< std::string >& lab
 }
 
 template< typename KEY_TYPE >
-void Dropdown< KEY_TYPE >::SetTextColor( const Color& color ) {
+void Dropdown< KEY_TYPE >::SetTextColor( const types::Color& color ) {
 	m_custom_text_color = true;
 	m_text_color = color;
 	if ( m_elements.value ) {
@@ -107,16 +109,16 @@ void Dropdown< KEY_TYPE >::Create() {
 	m_elements.value->SetText( m_value );
 	m_elements.value->ForwardStyleAttributesV(
 		{
-			Style::A_FONT,
-			Style::A_TEXT_ALIGN,
+			A_FONT,
+			A_TEXT_ALIGN,
 		}
 	);
-	m_elements.value->ForwardStyleAttribute( Style::A_TEXT_LEFT, Style::A_LEFT );
+	m_elements.value->ForwardStyleAttribute( A_TEXT_LEFT, A_LEFT );
 	if ( m_custom_text_color ) {
 		m_elements.value->SetTextColor( m_text_color );
 	}
 	else {
-		m_elements.value->ForwardStyleAttribute( Style::A_TEXT_COLOR ); // TODO: global style overrides
+		m_elements.value->ForwardStyleAttribute( A_TEXT_COLOR ); // TODO: global style overrides
 	}
 	AddChild( m_elements.value );
 
@@ -124,7 +126,7 @@ void Dropdown< KEY_TYPE >::Create() {
 	m_elements.open_close->SetAlign( ALIGN_HCENTER | ALIGN_TOP );
 	m_elements.open_close->AddEventContexts( EC_PARENTAREA );
 	m_elements.open_close->On(
-		UIEvent::EV_MOUSE_DOWN, EH( this ) {
+		event::EV_MOUSE_DOWN, EH( this ) {
 			if ( IsExpanded() ) {
 				Collapse();
 			}
@@ -145,21 +147,21 @@ void Dropdown< KEY_TYPE >::Create() {
 	m_elements.choices->SetChoices( m_choices );
 	m_elements.choices->SetZIndex( 0.8f );
 	m_elements.choices->On(
-		UIEvent::EV_SELECT, EH( this ) {
+		event::EV_SELECT, EH( this ) {
 			Collapse();
 			const auto* value = data->value.change.text;
 			if ( *value != m_value || m_mode == DM_MENU ) { // in menu mode allow to select same value again
 				if ( m_mode == DM_SELECT ) {
 					SetValue( *value );
 				}
-				Trigger( UIEvent::EV_CHANGE, data );
+				Trigger( event::EV_CHANGE, data );
 			}
 			return true;
 		}
 	);
 	m_elements.choices->AddEventContexts( UIObject::EC_OFFCLICK_AWARE );
 	m_elements.choices->On(
-		UIEvent::EV_OFFCLICK, EH( this ) {
+		event::EV_OFFCLICK, EH( this ) {
 			if ( !m_elements.open_close->IsPointInside( // prevent close-open because there will be mousedown event on value too
 				data->mouse.absolute.x,
 				data->mouse.absolute.y
@@ -202,19 +204,19 @@ void Dropdown< KEY_TYPE >::Align() {
 
 template< typename KEY_TYPE >
 const bool Dropdown< KEY_TYPE >::IsExpanded() const {
-	return m_elements.open_close->HasStyleModifier( Style::M_ACTIVE );
+	return m_elements.open_close->HasStyleModifier( M_ACTIVE );
 }
 
 template< typename KEY_TYPE >
 void Dropdown< KEY_TYPE >::Expand() {
-	m_elements.open_close->AddStyleModifier( Style::M_ACTIVE );
+	m_elements.open_close->AddStyleModifier( M_ACTIVE );
 	m_elements.choices->Show();
 }
 
 template< typename KEY_TYPE >
 void Dropdown< KEY_TYPE >::Collapse() {
 	m_elements.choices->Hide();
-	m_elements.open_close->RemoveStyleModifier( Style::M_ACTIVE );
+	m_elements.open_close->RemoveStyleModifier( M_ACTIVE );
 }
 
 template

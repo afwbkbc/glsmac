@@ -2,11 +2,18 @@
 
 #include "UIObject.h"
 
+#include "UIContainer.h"
 #include "engine/Engine.h"
+#include "ui/UI.h"
+#include "graphics/Graphics.h"
+#include "ui/event/UIEventHandler.h"
+#include "scene/actor/Actor.h"
+#include "scene/actor/Mesh.h"
+#include "ui/theme/Style.h"
+#include "scene/Scene.h"
+#include "ui/event/UIEvent.h"
 
 namespace ui {
-
-using namespace event;
 
 namespace object {
 
@@ -53,7 +60,7 @@ void UIObject::Create() {
 	DEBUG_STAT_INC( ui_elements_created );
 	DEBUG_STAT_INC( ui_elements_active );
 
-	m_style_modifiers = Style::M_NONE;
+	m_style_modifiers = M_NONE;
 
 	m_created = true;
 }
@@ -125,13 +132,13 @@ void UIObject::UpdateZIndex() {
 	SetAbsoluteZIndex( new_absolute_z_index );
 }
 
-scene::Scene* UIObject::GetSceneOfActor( const Actor* actor ) const {
+scene::Scene* UIObject::GetSceneOfActor( const scene::actor::Actor* actor ) const {
 	scene::Scene* scene;
 	switch ( actor->GetType() ) {
-		case ( Actor::TYPE_MESH ):
-			scene = g_engine->GetUI()->GetShapeScene( ( (actor::Mesh*)actor )->GetMesh() );
+		case ( scene::actor::Actor::TYPE_MESH ):
+			scene = g_engine->GetUI()->GetShapeScene( ( (scene::actor::Mesh*)actor )->GetMesh() );
 			break;
-		case ( Actor::TYPE_TEXT ):
+		case ( scene::actor::Actor::TYPE_TEXT ):
 			scene = g_engine->GetUI()->GetTextScene();
 			break;
 		default:
@@ -150,34 +157,34 @@ void UIObject::ApplyStyle() {
 		Log( "Using " + to_string( m_parent_style_attributes.size() ) + " forwarded style attributes from parent (modifiers: " + to_string( m_style_modifiers ) + ")" );
 	}*/
 
-	if ( Has( Style::A_ALIGN ) ) {
-		SetAlign( Get( Style::A_ALIGN ) );
+	if ( Has( A_ALIGN ) ) {
+		SetAlign( Get( A_ALIGN ) );
 	}
-	if ( Has( Style::A_LEFT ) ) {
-		SetLeft( Get( Style::A_LEFT ) );
+	if ( Has( A_LEFT ) ) {
+		SetLeft( Get( A_LEFT ) );
 	}
-	if ( Has( Style::A_TOP ) ) {
-		SetTop( Get( Style::A_TOP ) );
+	if ( Has( A_TOP ) ) {
+		SetTop( Get( A_TOP ) );
 	}
-	if ( Has( Style::A_RIGHT ) ) {
-		SetRight( Get( Style::A_RIGHT ) );
+	if ( Has( A_RIGHT ) ) {
+		SetRight( Get( A_RIGHT ) );
 	}
-	if ( Has( Style::A_BOTTOM ) ) {
-		SetBottom( Get( Style::A_BOTTOM ) );
+	if ( Has( A_BOTTOM ) ) {
+		SetBottom( Get( A_BOTTOM ) );
 	}
-	if ( Has( Style::A_WIDTH ) ) {
-		SetWidth( Get( Style::A_WIDTH ) );
+	if ( Has( A_WIDTH ) ) {
+		SetWidth( Get( A_WIDTH ) );
 	}
-	if ( Has( Style::A_HEIGHT ) ) {
-		SetHeight( Get( Style::A_HEIGHT ) );
+	if ( Has( A_HEIGHT ) ) {
+		SetHeight( Get( A_HEIGHT ) );
 	}
-	if ( Has( Style::A_Z_INDEX ) ) {
-		SetZIndex( Get( Style::A_Z_INDEX ) );
+	if ( Has( A_Z_INDEX ) ) {
+		SetZIndex( Get( A_Z_INDEX ) );
 	}
 
 }
 
-void UIObject::IgnoreStyleAttribute( const Style::attribute_type_t type ) {
+void UIObject::IgnoreStyleAttribute( const attribute_type_t type ) {
 	if ( !m_is_applying_style ) {
 		m_ignore_style_attributes.insert( type );
 	}
@@ -189,23 +196,23 @@ void UIObject::ReloadStyle() {
 	}
 }
 
-void UIObject::ForwardStyleAttribute( const Style::attribute_type_t src_type, const Style::attribute_type_t dst_type ) {
+void UIObject::ForwardStyleAttribute( const attribute_type_t src_type, const attribute_type_t dst_type ) {
 	m_parent_style_attributes[ dst_type ] = src_type;
 	ReloadStyle();
 }
 
-void UIObject::ForwardStyleAttribute( const Style::attribute_type_t type ) {
+void UIObject::ForwardStyleAttribute( const attribute_type_t type ) {
 	ForwardStyleAttribute( type, type );
 }
 
-void UIObject::ForwardStyleAttributesV( const std::vector< Style::attribute_type_t > types ) {
+void UIObject::ForwardStyleAttributesV( const std::vector< attribute_type_t > types ) {
 	for ( auto& type : types ) {
 		m_parent_style_attributes[ type ] = type;
 	}
 	ReloadStyle();
 }
 
-void UIObject::ForwardStyleAttributesM( const std::unordered_map< Style::attribute_type_t, Style::attribute_type_t > types ) {
+void UIObject::ForwardStyleAttributesM( const std::unordered_map< attribute_type_t, attribute_type_t > types ) {
 	for ( auto& type : types ) {
 		m_parent_style_attributes[ type.second ] = type.first;
 	}
@@ -222,7 +229,7 @@ void UIObject::SetParentStyleObject( const UIContainer* object ) {
 	m_parent_style_object = object;
 }
 
-bool UIObject::Has( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const {
+bool UIObject::Has( const attribute_type_t attribute_type, const modifier_t style_modifiers ) const {
 	if ( m_ignore_style_attributes.find( attribute_type ) != m_ignore_style_attributes.end() ) {
 		return false;
 	}
@@ -244,11 +251,11 @@ bool UIObject::Has( const Style::attribute_type_t attribute_type, const Style::m
 	return false;
 }
 
-bool UIObject::Has( const Style::attribute_type_t attribute_type ) const {
+bool UIObject::Has( const attribute_type_t attribute_type ) const {
 	return Has( attribute_type, m_style_modifiers );
 }
 
-const float UIObject::Get( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const {
+const float UIObject::Get( const attribute_type_t attribute_type, const modifier_t style_modifiers ) const {
 	ASSERT( Has( attribute_type, style_modifiers ), "attribute get without has" );
 	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
 		return m_style->Get( attribute_type, style_modifiers );
@@ -260,11 +267,11 @@ const float UIObject::Get( const Style::attribute_type_t attribute_type, const S
 	return style_object->Get( GetParentAttribute( attribute_type ), style_modifiers );
 }
 
-const float UIObject::Get( const Style::attribute_type_t attribute_type ) const {
+const float UIObject::Get( const attribute_type_t attribute_type ) const {
 	return Get( attribute_type, m_style_modifiers );
 }
 
-const Color UIObject::GetColor( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const {
+const types::Color UIObject::GetColor( const attribute_type_t attribute_type, const modifier_t style_modifiers ) const {
 	ASSERT( Has( attribute_type, style_modifiers ), "attribute get without has" );
 	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
 		return m_style->GetColor( attribute_type, style_modifiers );
@@ -276,11 +283,11 @@ const Color UIObject::GetColor( const Style::attribute_type_t attribute_type, co
 	return style_object->GetColor( GetParentAttribute( attribute_type ), style_modifiers );
 }
 
-const Color UIObject::GetColor( const Style::attribute_type_t attribute_type ) const {
+const types::Color UIObject::GetColor( const attribute_type_t attribute_type ) const {
 	return GetColor( attribute_type, m_style_modifiers );
 }
 
-const void* UIObject::GetObject( const Style::attribute_type_t attribute_type, const Style::modifier_t style_modifiers ) const {
+const void* UIObject::GetObject( const attribute_type_t attribute_type, const modifier_t style_modifiers ) const {
 	ASSERT( Has( attribute_type, style_modifiers ), "attribute get without has" );
 	if ( m_style && m_style->Has( attribute_type, style_modifiers ) ) {
 		return m_style->GetObject( attribute_type, style_modifiers );
@@ -292,11 +299,11 @@ const void* UIObject::GetObject( const Style::attribute_type_t attribute_type, c
 	return style_object->GetObject( GetParentAttribute( attribute_type ), style_modifiers );
 }
 
-const void* UIObject::GetObject( const Style::attribute_type_t attribute_type ) const {
+const void* UIObject::GetObject( const attribute_type_t attribute_type ) const {
 	return GetObject( attribute_type, m_style_modifiers );
 }
 
-void UIObject::AddActor( Actor* actor ) {
+void UIObject::AddActor( scene::actor::Actor* actor ) {
 	ASSERT( std::find( m_actors.begin(), m_actors.end(), actor ) == m_actors.end(), "duplicate actor add" );
 	actor->SetPositionZ( m_absolute_z_index );
 	if ( m_is_actually_visible ) {
@@ -308,7 +315,7 @@ void UIObject::AddActor( Actor* actor ) {
 	m_actors.push_back( actor );
 }
 
-void UIObject::RemoveActor( Actor* actor ) {
+void UIObject::RemoveActor( scene::actor::Actor* actor ) {
 	auto it = std::find( m_actors.begin(), m_actors.end(), actor );
 	ASSERT( it != m_actors.end(), "actor to be removed not found" );
 	m_actors.erase( it );
@@ -392,8 +399,8 @@ void UIObject::RealignNow() {
 			round( object_area_old.width ) != round( object_area_new.width ) ||
 				round( object_area_old.height ) != round( object_area_new.height )
 			) {
-			UIEvent::event_data_t d = {};
-			Trigger( UIEvent::EV_RESIZE, &d );
+			event::event_data_t d = {};
+			Trigger( event::EV_RESIZE, &d );
 		}
 	}
 }
@@ -540,7 +547,7 @@ void UIObject::SetWidth( const coord_t px ) {
 		m_size.width = px;
 		Realign();
 	}
-	IgnoreStyleAttribute( Style::A_WIDTH );
+	IgnoreStyleAttribute( A_WIDTH );
 }
 
 void UIObject::SetHeight( const coord_t px ) {
@@ -549,7 +556,7 @@ void UIObject::SetHeight( const coord_t px ) {
 		m_size.height = px;
 		Realign();
 	}
-	IgnoreStyleAttribute( Style::A_HEIGHT );
+	IgnoreStyleAttribute( A_HEIGHT );
 }
 
 void UIObject::ForceAspectRatio( const float aspect_ratio ) {
@@ -723,17 +730,17 @@ const float UIObject::GetZIndex() const {
 	return m_z_index;
 }
 
-const UIObject::overflow_t UIObject::GetOverflow() const {
+const overflow_t UIObject::GetOverflow() const {
 	return m_overflow;
 }
 
-void UIObject::ProcessEvent( UIEvent* event ) {
+void UIObject::ProcessEvent( event::UIEvent* event ) {
 
 	if ( m_are_events_blocked || !m_is_actually_visible ) {
 		return;
 	}
 
-	if ( event->m_flags & UIEvent::EF_MOUSE ) {
+	if ( event->m_flags & event::EF_MOUSE ) {
 		event->m_data.mouse.relative.x = event->m_data.mouse.absolute.x - m_object_area.left;
 		event->m_data.mouse.relative.y = event->m_data.mouse.absolute.y - m_object_area.top;
 	}
@@ -741,7 +748,7 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 	bool is_processed = false;
 
 	if (
-		( event->m_type != UIEvent::EV_MOUSE_MOVE ) || // mouse move events are sent to all elements, but we need to process only those inside object area
+		( event->m_type != event::EV_MOUSE_MOVE ) || // mouse move events are sent to all elements, but we need to process only those inside object area
 			( !m_parent_object ) // root object should be able to send mousemove to global handlers
 		) {
 		is_processed = Trigger( event->m_type, &event->m_data );
@@ -750,10 +757,11 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 	if ( !is_processed ) {
 
 		switch ( event->m_type ) {
-			case UIEvent::EV_MOUSE_MOVE: {
+			case event::EV_MOUSE_MOVE: {
 				if ( HasEventContext( EC_MOUSEMOVE ) ) {
 					if (
-						!event->IsMouseOverHappened() &&
+						!event->m_data.mouse.is_outside_parent &&
+							!event->IsMouseOverHappened() &&
 							IsPointInside( event->m_data.mouse.absolute.x, event->m_data.mouse.absolute.y )
 						) {
 						event->SetMouseOverHappened();
@@ -761,8 +769,8 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 						if ( !is_processed ) {
 							if ( !( m_state & STATE_MOUSEOVER ) ) {
 								m_state |= STATE_MOUSEOVER;
-								AddStyleModifier( Style::M_HOVER );
-								is_processed = Trigger( UIEvent::EV_MOUSE_OVER, &event->m_data );
+								AddStyleModifier( M_HOVER );
+								is_processed = Trigger( event::EV_MOUSE_OVER, &event->m_data );
 								if ( !is_processed ) {
 									is_processed = OnMouseOver( &event->m_data );
 								}
@@ -775,8 +783,8 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 					else {
 						if ( m_state & STATE_MOUSEOVER ) {
 							m_state &= ~STATE_MOUSEOVER;
-							RemoveStyleModifier( Style::M_HOVER );
-							is_processed = Trigger( UIEvent::EV_MOUSE_OUT, &event->m_data );
+							RemoveStyleModifier( M_HOVER );
+							is_processed = Trigger( event::EV_MOUSE_OUT, &event->m_data );
 							if ( !is_processed ) {
 								is_processed = OnMouseOut( &event->m_data );
 							}
@@ -788,40 +796,42 @@ void UIObject::ProcessEvent( UIEvent* event ) {
 				}
 				break;
 			}
-			case UIEvent::EV_MOUSE_DOWN: {
-				if ( m_is_focusable && !m_is_focused ) {
-					g_engine->GetUI()->FocusObject( this );
-				}
-				if ( HasEventContext( EC_MOUSE ) ) {
-					is_processed = OnMouseDown( &event->m_data );
+			case event::EV_MOUSE_DOWN: {
+				if ( !event->m_data.mouse.is_outside_parent ) {
+					if ( m_is_focusable && !m_is_focused ) {
+						g_engine->GetUI()->FocusObject( this );
+					}
+					if ( HasEventContext( EC_MOUSE ) ) {
+						is_processed = OnMouseDown( &event->m_data );
+					}
 				}
 				break;
 			}
-			case UIEvent::EV_MOUSE_UP: {
+			case event::EV_MOUSE_UP: {
 				if ( HasEventContext( EC_MOUSE ) ) {
 					is_processed = OnMouseUp( &event->m_data );
 				}
 				break;
 			}
-				/*case UIEvent::EV_MOUSECLICK: {
+				/*case event::EV_MOUSECLICK: {
 					if ( HasEventContext( EC_MOUSE ) ) {
 						is_processed = OnMouseClick( &event->m_data );
 					}
 					break;
 				}*/ // conflicts with button click, maybe not needed?
-			case UIEvent::EV_KEY_DOWN: {
+			case event::EV_KEY_DOWN: {
 				if ( HasEventContext( EC_KEYBOARD ) || m_is_focused ) {
 					is_processed = OnKeyDown( &event->m_data );
 				}
 				break;
 			}
-			case UIEvent::EV_KEY_UP: {
+			case event::EV_KEY_UP: {
 				if ( HasEventContext( EC_KEYBOARD ) ) {
 					is_processed = OnKeyUp( &event->m_data );
 				}
 				break;
 			}
-			case UIEvent::EV_KEY_PRESS: {
+			case event::EV_KEY_PRESS: {
 				if ( HasEventContext( EC_KEYBOARD ) ) {
 					is_processed = OnKeyPress( &event->m_data );
 				}
@@ -915,30 +925,32 @@ void UIObject::ApplyStyleIfNotLoaded() {
 	}
 }
 
-void UIObject::AddStyleModifier( const Style::modifier_t modifier ) {
-	ASSERT( !( m_style_modifiers & modifier ), "style modifier " + std::to_string( modifier ) + " already added" );
-	m_style_modifiers |= modifier;
-	m_is_applying_style = true;
-	ApplyStyleIfNeeded();
-	m_is_applying_style = false;
-	Redraw();
+void UIObject::AddStyleModifier( const modifier_t modifier ) {
+	if ( !( m_style_modifiers & modifier ) ) {
+		m_style_modifiers |= modifier;
+		m_is_applying_style = true;
+		ApplyStyleIfNeeded();
+		m_is_applying_style = false;
+		Redraw();
+	}
 }
 
-void UIObject::RemoveStyleModifier( const Style::modifier_t modifier ) {
-	ASSERT( ( m_style_modifiers & modifier ), "style modifier " + std::to_string( modifier ) + " already removed" );
-	m_style_modifiers &= ~modifier;
-	m_is_applying_style = true;
-	ApplyStyleIfNeeded();
-	m_is_applying_style = false;
-	Redraw();
+void UIObject::RemoveStyleModifier( const modifier_t modifier ) {
+	if ( m_style_modifiers & modifier ) {
+		m_style_modifiers &= ~modifier;
+		m_is_applying_style = true;
+		ApplyStyleIfNeeded();
+		m_is_applying_style = false;
+		Redraw();
+	}
 }
 
-const bool UIObject::HasStyleModifier( const Style::modifier_t modifier ) const {
+const bool UIObject::HasStyleModifier( const modifier_t modifier ) const {
 	return ( ( m_style_modifiers & modifier ) == modifier );
 }
 
-const UIEventHandler* UIObject::On( const std::vector< UIEvent::event_type_t >& types, UIEventHandler::handler_function_t func ) {
-	NEWV( handler, UIEventHandler, func );
+const event::UIEventHandler* UIObject::On( const std::vector< event::event_type_t >& types, event::handler_function_t func ) {
+	NEWV( handler, event::UIEventHandler, func );
 	bool need_delete = true; // need to delete only once
 	for ( auto& type : types ) {
 		auto it = m_event_handlers.find( type );
@@ -957,11 +969,11 @@ const UIEventHandler* UIObject::On( const std::vector< UIEvent::event_type_t >& 
 	return handler;
 }
 
-const UIEventHandler* UIObject::On( const UIEvent::event_type_t type, UIEventHandler::handler_function_t func ) {
+const event::UIEventHandler* UIObject::On( const event::event_type_t type, event::handler_function_t func ) {
 	return On( std::vector{ type }, func );
 }
 
-void UIObject::Off( const UIEventHandler* handler ) {
+void UIObject::Off( const event::UIEventHandler* handler ) {
 	for ( auto& handlers : m_event_handlers ) {
 		auto it = handlers.second.begin();
 		while ( it != handlers.second.end() ) {
@@ -976,7 +988,7 @@ void UIObject::Off( const UIEventHandler* handler ) {
 	DELETE( handler );
 }
 
-bool UIObject::Trigger( const UIEvent::event_type_t type, const UIEvent::event_data_t* data ) {
+bool UIObject::Trigger( const event::event_type_t type, const event::event_data_t* data ) {
 	auto handlers = m_event_handlers.find( type );
 	if ( handlers != m_event_handlers.end() ) {
 		for ( auto& handler : handlers->second ) {
@@ -988,7 +1000,7 @@ bool UIObject::Trigger( const UIEvent::event_type_t type, const UIEvent::event_d
 	return false; // not processed
 }
 
-const Style::attribute_type_t UIObject::GetParentAttribute( const Style::attribute_type_t source_type ) const {
+const attribute_type_t UIObject::GetParentAttribute( const attribute_type_t source_type ) const {
 	if ( m_forward_all_style_attributes ) {
 		return source_type;
 	}
@@ -1003,13 +1015,13 @@ const Style::attribute_type_t UIObject::GetParentAttribute( const Style::attribu
 const std::string UIObject::GetStyleModifiersString() const {
 	std::string str = " ";
 #ifdef DEBUG
-	if ( HasStyleModifier( Style::M_HOVER ) ) {
+	if ( HasStyleModifier( M_HOVER ) ) {
 		str += "HOVER ";
 	}
-	if ( HasStyleModifier( Style::M_ACTIVE ) ) {
+	if ( HasStyleModifier( M_ACTIVE ) ) {
 		str += "ACTIVE ";
 	}
-	if ( HasStyleModifier( Style::M_SELECTED ) ) {
+	if ( HasStyleModifier( M_SELECTED ) ) {
 		str += "SELECTED ";
 	}
 	str = "( " + str + " )";
@@ -1054,21 +1066,21 @@ void UIObject::UnblockEvents() {
 }
 
 void UIObject::Select() {
-	AddStyleModifier( Style::M_SELECTED );
+	AddStyleModifier( M_SELECTED );
 }
 
 void UIObject::Deselect() {
-	RemoveStyleModifier( Style::M_SELECTED );
+	RemoveStyleModifier( M_SELECTED );
 }
 
 void UIObject::Focus() {
 	m_is_focused = true;
-	AddStyleModifier( Style::M_SELECTED );
+	AddStyleModifier( M_SELECTED );
 }
 
 void UIObject::Defocus() {
 	m_is_focused = false;
-	RemoveStyleModifier( Style::M_SELECTED );
+	RemoveStyleModifier( M_SELECTED );
 }
 
 void UIObject::Show() {
@@ -1108,9 +1120,9 @@ void UIObject::HideActors() {
 		m_is_actually_visible = false;
 		if ( m_state & STATE_MOUSEOVER ) {
 			m_state &= ~STATE_MOUSEOVER;
-			RemoveStyleModifier( Style::M_HOVER );
-			UIEvent::event_data_t data = {};
-			Trigger( UIEvent::EV_MOUSE_OUT, &data );
+			RemoveStyleModifier( M_HOVER );
+			event::event_data_t data = {};
+			Trigger( event::EV_MOUSE_OUT, &data );
 		}
 		for ( auto& actor : m_actors ) {
 			actor->Hide();
@@ -1227,5 +1239,5 @@ void UIObject::UpdateAreaLimits() {
 	}
 }
 
-} /* namespace object */
-} /* namespace ui */
+}
+}

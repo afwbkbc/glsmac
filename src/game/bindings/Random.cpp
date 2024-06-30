@@ -1,14 +1,20 @@
-#include "Binding.h"
-
+#include "game/Game.h"
+#include "game/State.h"
+#include "game/bindings/Bindings.h"
+#include "gse/callable/Native.h"
 #include "gse/type/Object.h"
 #include "gse/type/Int.h"
 #include "gse/type/Float.h"
+#include "gse/type/Undefined.h"
+#include "util/random/Random.h"
+
+#include "Binding.h"
 
 namespace game {
 namespace bindings {
 
 BINDING_IMPL( random ) {
-	const gse::type::Object::properties_t properties = {
+	const gse::type::object_properties_t properties = {
 		{
 			"get_int",
 			NATIVE_CALL( this ) {
@@ -17,6 +23,9 @@ BINDING_IMPL( random ) {
 				N_GETVALUE( max, 1, Int );
 				if ( max < min ) {
 					ERROR( gse::EC.INVALID_CALL, "Maximum value is smaller than minimum ( " + std::to_string( max ) + " < " + std::to_string( min ) + " )" );
+				}
+				if ( !GAME->GetState()->IsMaster() ) {
+					ERROR( gse::EC.INVALID_CALL, "Only master is allowed to generate random values" );
 				}
 				return VALUE( gse::type::Int, GAME->GetRandom()->GetInt64( min, max ) );
 			})
@@ -29,6 +38,9 @@ BINDING_IMPL( random ) {
 				N_GETVALUE( max, 1, Float );
 				if ( max < min ) {
 					ERROR( gse::EC.INVALID_CALL, "Maximum value is smaller than minimum ( " + std::to_string( max ) + " < " + std::to_string( min ) + " )" );
+				}
+				if ( !GAME->GetState()->IsMaster() ) {
+					ERROR( gse::EC.INVALID_CALL, "Only master is allowed to generate random values" );
 				}
 				return VALUE( gse::type::Float, GAME->GetRandom()->GetFloat( min, max ) );
 			})

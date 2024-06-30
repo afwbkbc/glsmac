@@ -3,8 +3,6 @@
 namespace task {
 namespace mainmenu {
 
-using namespace style;
-
 Theme::Theme()
 	: ui::theme::Theme() {
 

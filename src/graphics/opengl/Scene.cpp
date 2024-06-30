@@ -1,10 +1,17 @@
 #include "Scene.h"
 
+#include <algorithm>
+
 #include "actor/Sprite.h"
 #include "actor/Mesh.h"
-
+#include "common/ObjectLink.h"
+#include "scene/Scene.h"
 #include "scene/actor/Actor.h"
+#include "scene/actor/Mesh.h"
+#include "scene/actor/Sprite.h"
 #include "scene/actor/Instanced.h"
+#include "routine/Routine.h"
+#include "texture/Texture.h"
 
 namespace graphics {
 namespace opengl {
@@ -22,7 +29,7 @@ Scene::~Scene() {
 
 }
 
-void Scene::RemoveActor( base::ObjectLink* link ) {
+void Scene::RemoveActor( common::ObjectLink* link ) {
 	auto* gl_actor = link->GetDstObject< Actor >();
 	if ( link->Removed() ) {
 		// already removed on other side
@@ -45,7 +52,7 @@ void Scene::AddActorToZIndexSet( Actor* gl_actor ) {
 		m_gl_actors_by_zindex[ zindex ] = {};
 		it = m_gl_actors_by_zindex.find( zindex );
 	}
-	ASSERT( find( it->second.begin(), it->second.end(), gl_actor ) == it->second.end(), "actor already found in zindex set" );
+	ASSERT( std::find( it->second.begin(), it->second.end(), gl_actor ) == it->second.end(), "actor already found in zindex set" );
 	//Log( "Adding actor " + gl_actor->GetName() + " to zindex set " + std::to_string( gl_actor->GetPosition().z ) );
 	it->second.push_back( gl_actor );
 }
@@ -61,7 +68,7 @@ void Scene::RemoveActorFromZIndexSet( Actor* gl_actor ) {
 }
 
 void Scene::Update() {
-	base::ObjectLink* obj;
+	common::ObjectLink* obj;
 
 	for ( auto it = m_gl_actors.begin() ; it < m_gl_actors.end() ; ++it ) {
 		Actor* gl_actor = ( *it )->GetDstObject< Actor >();
@@ -137,7 +144,7 @@ void Scene::Update() {
 			if ( gl_actor ) {
 				gl_actor->LoadMesh();
 				gl_actor->LoadTexture();
-				NEW( obj, base::ObjectLink, ( *it ), gl_actor );
+				NEW( obj, common::ObjectLink, ( *it ), gl_actor );
 				m_gl_actors.push_back( obj );
 				AddActorToZIndexSet( gl_actor ); // TODO: only Simple2D
 				( *it )->m_graphics_object = obj;
@@ -154,6 +161,22 @@ void Scene::Update() {
 		THROW( "gl_actors_by_zindex count does not match gl_actors count ( " + std::to_string( gl_actors_by_zindex_count ) + " , " + std::to_string( m_gl_actors.size() ) + " )" );
 	}
 #endif
+}
+
+scene::Scene* Scene::GetScene() const {
+	return m_scene;
+}
+Texture* Scene::GetSkyboxTexture() const {
+	if ( ( !m_skybox_texture ) || m_skybox_texture->Removed() ) {
+		return NULL;
+	}
+	return m_skybox_texture->GetDstObject< Texture >();
+}
+common::ObjectLink* Scene::GetSkyboxTextureObj() const {
+	return m_skybox_texture;
+}
+void Scene::SetSkyboxTextureObj( common::ObjectLink* skybox_texture ) {
+	m_skybox_texture = skybox_texture;
 }
 
 void Scene::Draw( shader_program::ShaderProgram* shader_program, shader_program::ShaderProgram* other_shader_program ) {
@@ -195,5 +218,5 @@ void Scene::OnWindowResize() {
 	}
 }
 
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}

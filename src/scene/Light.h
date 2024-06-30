@@ -4,8 +4,6 @@
 
 #include "types/Color.h"
 
-using namespace types;
-
 namespace scene {
 
 class Scene;
@@ -18,12 +16,12 @@ CLASS( Light, Entity )
 
 	Light( const light_type_t light_type );
 
-	void SetColor( const Color& color );
-	const Color& GetColor() const;
+	void SetColor( const types::Color& color );
+	const types::Color& GetColor() const;
 
 private:
 
-	Color m_color = {
+	types::Color m_color = {
 		1.0f,
 		1.0f,
 		1.0f,

@@ -1,8 +1,15 @@
 #include "State.h"
 
+#include "Game.h"
+#include "connection/Connection.h"
+#include "bindings/Bindings.h"
+#include "slot/Slots.h"
+#include "Player.h"
+
 namespace game {
 
-State::State() {
+State::State()
+	: m_slots( new slot::Slots( this ) ) {
 
 }
 
@@ -11,6 +18,7 @@ State::~State() {
 	if ( m_bindings ) {
 		delete m_bindings;
 	}
+	delete m_slots;
 }
 
 void State::SetGame( Game* game ) {
@@ -55,7 +63,7 @@ void State::RemovePlayer( Player* player ) {
 #ifdef DEBUG
 	ASSERT( m_players.find( player ) != m_players.end(), "player not found" );
 	for ( auto& it : m_cid_slots ) {
-		ASSERT( m_slots.GetSlot( it.second ).GetPlayer() != player, "player still in cid slots" );
+		ASSERT( m_slots->GetSlot( it.second ).GetPlayer() != player, "player still in cid slots" );
 	}
 #endif
 	m_players.erase( player );
@@ -143,7 +151,7 @@ void State::Reset() {
 		DELETE( player );
 	}
 	m_players.clear();
-	m_slots.Clear();
+	m_slots->Clear();
 	m_cid_slots.clear();
 	m_game = nullptr;
 	m_on_gse_error = nullptr;

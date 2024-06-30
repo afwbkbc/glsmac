@@ -52,5 +52,5 @@ FontTexture::~FontTexture() {
 	glDeleteTextures( 1, &m_texture );
 }
 
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}

@@ -1,8 +1,16 @@
-#include "Font.h"
-
+#include <cmath>
 #include <cstdint>
 
+#include "Font.h"
+
+#include "common/ObjectLink.h"
+
 namespace types {
+
+Font::Font( const std::string& name )
+	: m_name( name ) {
+	//
+}
 
 Font::~Font() {
 	if ( m_graphics_object ) {
@@ -41,4 +49,4 @@ size_t Font::GetTextHeight( const char* text ) const {
 	return height;
 }
 
-} /* namespace types */
+}

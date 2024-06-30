@@ -1,5 +1,9 @@
 #include "World.h"
 
+#include "scene/Scene.h"
+#include "graphics/opengl/shader_program/Orthographic.h"
+#include "graphics/opengl/shader_program/OrthographicData.h"
+
 namespace graphics {
 namespace opengl {
 namespace routine {
@@ -71,6 +75,6 @@ bool World::SceneBelongs( const scene::Scene* scene ) const {
 	return scene->GetType() == m_scene_type;
 }
 
-} /* namespace routine */
-} /* namespace opengl */
-} /* namespace graphics */
+}
+}
+}

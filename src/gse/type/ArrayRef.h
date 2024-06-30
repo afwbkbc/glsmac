@@ -2,10 +2,10 @@
 
 #include "Type.h"
 
-#include "Array.h"
-
 namespace gse {
 namespace type {
+
+class Array;
 
 class ArrayRef : public Type {
 public:
