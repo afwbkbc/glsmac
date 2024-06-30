@@ -102,6 +102,13 @@ void TileManager::SelectTile( Tile* tile ) {
 	m_selected_tile = tile;
 }
 
+void TileManager::DeselectTile() {
+	if ( m_selected_tile ) {
+		m_selected_tile->Render();
+		m_selected_tile = nullptr;
+	}
+}
+
 }
 }
 }

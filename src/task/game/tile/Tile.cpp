@@ -102,11 +102,18 @@ void Tile::Render( size_t selected_unit_id ) {
 	}
 	m_render.currently_rendered_fake_badges.clear();
 
+	bool should_show_units = !m_units.empty();
 	if ( m_base ) {
 		m_base->Show();
+		should_show_units = false;
+		for ( const auto& it : m_units ) {
+			if ( it.second->GetId() == selected_unit_id ) {
+				should_show_units = true;
+				break;
+			}
+		}
 	}
-
-	if ( !m_units.empty() ) {
+	if ( should_show_units ) {
 		const auto units_order = GetUnitsOrder( m_units );
 		ASSERT_NOLOG( !units_order.empty(), "units order is empty" );
 
@@ -138,12 +145,12 @@ void Tile::Render( size_t selected_unit_id ) {
 			}
 		}
 		if ( m_render.currently_rendered_unit ) {
-			m_render.currently_rendered_unit->Show();
 			const auto id = m_render.currently_rendered_unit->GetId();
+			m_render.currently_rendered_unit->Show();
 			if ( id == most_important_unit_id ) {
 				m_render.currently_rendered_unit->ShowBadge();
 			}
-			if ( id == selected_unit_id ) {
+			if ( id == selected_unit_id && m_render.currently_rendered_unit->IsActive() ) {
 				m_render.currently_rendered_unit->StartBadgeBlink();
 			}
 		}
@@ -152,6 +159,13 @@ void Tile::Render( size_t selected_unit_id ) {
 		for ( size_t i = 0 ; i < fake_badges.size() ; i++ ) { // order is important
 			idx = fake_badges.size() - i - 1;
 			fake_badges.at( idx )->ShowFakeBadge( i );
+		}
+	}
+	else {
+		for ( const auto& it : m_units ) {
+			it.second->Hide();
+			it.second->HideFakeBadge();
+			it.second->HideBadge();
 		}
 	}
 

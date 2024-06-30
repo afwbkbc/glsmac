@@ -1823,6 +1823,7 @@ void Game::DeselectTileOrUnit() {
 
 	HideTileSelector();
 	m_um->DeselectUnit();
+	m_tm->DeselectTile();
 
 	m_ui.bottom_bar->HideTilePreview();
 }

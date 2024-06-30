@@ -27,6 +27,7 @@ CLASS( TileManager, ::common::Class )
 
 	Tile* GetSelectedTile() const;
 	void SelectTile( Tile* tile );
+	void DeselectTile();
 
 private:
 
