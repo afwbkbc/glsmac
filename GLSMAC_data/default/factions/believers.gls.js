@@ -1,9 +1,6 @@
 return {
 	name: 'Believers',
-	colors: {
-		text: #to_color(224, 156, 28),
-		border: #to_color(236, 92, 0),
-	},
+	colors: #game.factions.import_colors('believe.pcx'),
 	bases: {
 		render: {
 			type: 'sprite_grid',

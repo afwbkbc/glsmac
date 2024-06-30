@@ -17,6 +17,7 @@ Faction::Faction( const ::game::rules::Faction* def, sprite::InstancedSpriteMana
 	, m_colors(
 		{
 			def->m_colors.text,
+			def->m_colors.text_shadow,
 			def->m_colors.border
 		}
 	)

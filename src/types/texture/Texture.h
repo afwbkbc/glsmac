@@ -74,7 +74,7 @@ CLASS( Texture, Serializable )
 	void Fill( const size_t x1, const size_t y1, const size_t x2, const size_t y2, const types::Color& color );
 
 	void RepaintFrom( const types::texture::Texture* original, const repaint_rules_t& rules );
-	void ColorizeFrom( const types::texture::Texture* original, const types::Color& color );
+	void ColorizeFrom( const types::texture::Texture* original, const types::Color& color, const types::Color& shadow_color );
 
 	void Rotate();
 	void FlipV();

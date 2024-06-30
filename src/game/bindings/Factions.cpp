@@ -14,6 +14,8 @@
 #include "engine/Engine.h"
 #include "loader/txt/TXTLoaders.h"
 #include "loader/txt/FactionTXTLoader.h"
+#include "loader/texture/TextureLoader.h"
+#include "types/texture/Texture.h"
 
 #include "types/Color.h"
 
@@ -48,6 +50,24 @@ BINDING_IMPL( factions ) {
 			} )
 		},
 		{
+			"import_colors",
+			NATIVE_CALL() {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( filename, 0, String );
+				const auto* texture = g_engine->GetTextureLoader()->LoadCustomTexture( filename );
+				const auto properties = gse::type::object_properties_t{
+					{ "faction", types::Color::FromRGBA( texture->GetPixel( 4, 739 ) ).Wrap() },
+					{ "faction_shadow", types::Color::FromRGBA( texture->GetPixel( 4, 747 ) ).Wrap() },
+					{ "text", types::Color::FromRGBA( texture->GetPixel( 4, 755 ) ).Wrap() },
+					{ "text_shadow", types::Color::FromRGBA( texture->GetPixel( 4, 763 ) ).Wrap() },
+					{ "border", types::Color::FromRGBA( texture->GetPixel( 161, 749 ) ).Wrap() },
+					{ "border_alpha", types::Color::FromRGBA( texture->GetPixel( 161, 757 ) ).Wrap() },
+					{ "vehicle", types::Color::FromRGBA( texture->GetPixel( 435, 744 ) ).Wrap() },
+				};
+				return VALUE( gse::type::Object, properties );
+			} )
+		},
+		{
 			"define",
 			NATIVE_CALL( &factions, &factions_order ) {
 				N_EXPECT_ARGS( 2 );
@@ -62,8 +82,13 @@ BINDING_IMPL( factions ) {
 
 				N_GETPROP( colors, faction_def, "colors", Object );
 				N_GETPROP_UNWRAP( colors_text, colors, "text", types::Color );
+				N_GETPROP_UNWRAP( colors_text_shadow, colors, "text", types::Color );
 				N_GETPROP_UNWRAP( colors_border, colors, "border", types::Color );
-				faction.m_colors = { colors_text, colors_border };
+				faction.m_colors = {
+					colors_text,
+					colors_text_shadow,
+					colors_border
+				};
 
 				N_GETPROP_OPT_BOOL( is_naval, faction_def, "is_naval")
 				if ( is_naval ) {

@@ -39,6 +39,7 @@ public:
 
 	struct {
 		const types::Color text = {};
+		const types::Color text_shadow = {};
 		const types::Color border = {};
 	} m_colors = {};
 

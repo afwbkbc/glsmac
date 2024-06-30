@@ -1,9 +1,6 @@
 return {
 	name: 'Angels',
-	colors: {
-		text: #to_color(103, 91, 181),
-		border: #to_color(103, 91, 181),
-	},
+	colors: #game.factions.import_colors('angels.pcx'),
 	bases: {
 		render: {
 			type: 'sprite_grid',

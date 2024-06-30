@@ -1,9 +1,6 @@
 return {
 	name: 'Pirates',
-	colors: {
-		text: #to_color(0, 255, 255),
-		border: #to_color(0, 255, 255),
-	},
+	colors: #game.factions.import_colors('pirates.pcx'),
 	bases: {
 		render: {
 			type: 'sprite_grid',

@@ -1,9 +1,6 @@
 return {
 	name: 'Consciousness',
-	colors: {
-		text: #to_color(44, 128, 104),
-		border: #to_color(44, 128, 104),
-	},
+	colors: #game.factions.import_colors('cyborg.pcx'),
 	bases: {
 		render: {
 			type: 'sprite_grid',

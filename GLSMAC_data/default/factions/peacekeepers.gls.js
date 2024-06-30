@@ -1,9 +1,6 @@
 return {
 	name: 'Peacekeepers',
-	colors: {
-		text: #to_color(164, 176, 232),
-		border: #to_color(164, 176, 232),
-	},
+	colors: #game.factions.import_colors('peace.pcx'),
 	bases: {
 		render: {
 			type: 'sprite_grid',

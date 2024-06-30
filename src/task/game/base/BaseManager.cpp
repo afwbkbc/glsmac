@@ -61,7 +61,8 @@ void BaseManager::SpawnBase(
 				m_game->GetITM()->CreateInstancedText(
 					data.name,
 					m_name_font,
-					faction->m_colors.text
+					faction->m_colors.text,
+					faction->m_colors.text_shadow
 				),
 				data.population
 			)

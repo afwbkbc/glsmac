@@ -1,9 +1,6 @@
 return {
 	name: 'Hive',
-	colors: {
-		text: #to_color(0, 97, 255),
-		border: #to_color(0, 0, 255),
-	},
+	colors: #game.factions.import_colors('hive.pcx'),
 	bases: {
 		render: {
 			type: 'sprite_grid',

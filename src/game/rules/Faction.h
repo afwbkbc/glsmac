@@ -28,6 +28,7 @@ CLASS2( Faction, types::Serializable, gse::Wrappable )
 
 	struct {
 		types::Color text = {};
+		types::Color text_shadow = {};
 		types::Color border = {};
 	} m_colors = {};
 

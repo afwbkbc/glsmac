@@ -20,7 +20,7 @@ class InstancedFont;
 
 class InstancedText {
 public:
-	InstancedText( const std::string& text, InstancedFont* font, const types::Color& color );
+	InstancedText( const std::string& text, InstancedFont* font, const types::Color& color, const types::Color& shadow_color );
 	~InstancedText();
 
 	void ShowAt( const types::Vec3& coords );

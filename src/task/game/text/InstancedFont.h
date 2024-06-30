@@ -32,7 +32,7 @@ public:
 	~InstancedFont();
 
 	const std::string& GetFontName() const;
-	const std::vector< sprite::InstancedSprite* > GetSymbolSprites( const std::string& text, const types::Color& color );
+	const std::vector< sprite::InstancedSprite* > GetSymbolSprites( const std::string& text, const types::Color& color, const types::Color& shadow_color );
 	const std::vector< types::Vec2< float > > GetSymbolOffsets( const std::string& text ) const;
 
 private:

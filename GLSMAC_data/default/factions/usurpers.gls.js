@@ -1,9 +1,6 @@
 return {
 	name: 'Usurpers',
-	colors: {
-		text: #to_color(212, 208, 116),
-		border: #to_color(212, 208, 116),
-	},
+	colors: #game.factions.import_colors('usurper.pcx'),
 	bases: {
 		render: {
 			type: 'sprite_grid',

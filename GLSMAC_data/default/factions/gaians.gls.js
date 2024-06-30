@@ -1,9 +1,6 @@
 const faction = {
 	name: 'Gaians',
-	colors: {
-		text: #to_color(16, 228, 0),
-		border: #to_color(0, 252, 0),
-	},
+	colors: #game.factions.import_colors('gaians.pcx'),
 	bases: {
 		render: {
 			type: 'sprite_grid',

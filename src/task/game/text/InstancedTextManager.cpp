@@ -39,10 +39,11 @@ InstancedFont* InstancedTextManager::GetInstancedFont( const types::Font* font )
 InstancedText* InstancedTextManager::CreateInstancedText(
 	const std::string& text,
 	InstancedFont* font,
-	const types::Color& color
+	const types::Color& color,
+	const types::Color& shadow_color
 ) {
-	Log( "Creating instanced text: '" + text + "', " + font->GetFontName() + ", " + color.ToString() );
-	return new InstancedText( text, font, color );
+	Log( "Creating instanced text: '" + text + "', " + font->GetFontName() + ", " + color.ToString() + "-" + shadow_color.ToString() );
+	return new InstancedText( text, font, color, shadow_color );
 }
 
 }

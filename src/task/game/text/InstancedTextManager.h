@@ -37,7 +37,8 @@ public:
 	InstancedText* CreateInstancedText(
 		const std::string& text,
 		InstancedFont* font,
-		const types::Color& color
+		const types::Color& color,
+		const types::Color& shadow_color
 	);
 
 private:

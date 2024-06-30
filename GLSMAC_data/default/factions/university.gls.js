@@ -1,9 +1,6 @@
 return {
 	name: 'University',
-	colors: {
-		text: #to_color(216, 224, 244),
-		border: #to_color(255, 255, 255),
-	},
+	colors: #game.factions.import_colors('univ.pcx'),
 	bases: {
 		render: {
 			type: 'sprite_grid',

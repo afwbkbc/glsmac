@@ -1,9 +1,6 @@
 return {
 	name: 'Planet Cult',
-	colors: {
-		text: #to_color(232, 84, 84),
-		border: #to_color(232, 84, 84),
-	},
+	colors: #game.factions.import_colors('fungboy.pcx'),
 	bases: {
 		render: {
 			type: 'sprite_grid',

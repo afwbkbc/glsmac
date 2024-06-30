@@ -1,9 +1,6 @@
 return {
 	name: 'Morganites',
-	colors: {
-		text: #to_color(255, 255, 0),
-		border: #to_color(255, 255, 0),
-	},
+	colors: #game.factions.import_colors('morgan.pcx'),
 	bases: {
 		render: {
 			type: 'sprite_grid',

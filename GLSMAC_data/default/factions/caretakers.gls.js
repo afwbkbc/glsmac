@@ -1,9 +1,6 @@
 return {
 	name: 'Caretakers',
-	colors: {
-		text: #to_color(116, 156, 56),
-		border: #to_color(116, 156, 56),
-	},
+	colors: #game.factions.import_colors('caretake.pcx'),
 	bases: {
 		render: {
 			type: 'sprite_grid',

@@ -1,9 +1,6 @@
 return {
 	name: 'Drones',
-	colors: {
-		text: #to_color(173, 196, 192),
-		border: #to_color(136, 12, 12),
-	},
+	colors: #game.factions.import_colors('drone.pcx'),
 	bases: {
 		render: {
 			type: 'sprite_grid',

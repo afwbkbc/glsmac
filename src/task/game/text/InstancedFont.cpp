@@ -11,18 +11,13 @@ namespace game {
 namespace text {
 
 static const types::Vec2< float > s_font_scale = {
-	0.004f,
-	0.005f,
+	0.0045f,
+	0.006f,
 };
 
-static const types::Vec2< uint8_t > s_shadow_offsets = {
-	0,
-	0
-};
-
-static const types::Vec2< uint8_t > s_normal_offsets = {
-	1,
-	1
+const std::vector< float > s_shadow_alpha_levels = {
+	1.0f,
+	0.6f,
 };
 
 InstancedFont::InstancedFont( sprite::InstancedSpriteManager* ism, const types::Font* font )
@@ -32,22 +27,23 @@ InstancedFont::InstancedFont( sprite::InstancedSpriteManager* ism, const types::
 
 	// load font into texture
 
-	const uint32_t sym_offset = 1; // to keep antialiasing working
+	const uint8_t sym_offset = 2; // to keep antialiasing working
+	const uint8_t shadow_offset = s_shadow_alpha_levels.size();
 
-	unsigned int w = sym_offset;
+	unsigned int w = sym_offset + shadow_offset;
 	unsigned int h = 0;
 	for ( uint8_t i = 32 ; i < 128 ; i++ ) {
 		const auto& sym = m_font->m_symbols[ i ];
 		w += sym.width + sym_offset;
-		h = std::max( h, sym.top + sym.height + 1 );
+		h = std::max( h, sym.top + sym.height + sym_offset );
 	}
 
 	NEW(
 		m_base_texture,
 		types::texture::Texture,
 		"InstancedFont_" + m_name + "_BASE",
-		w + std::max( s_shadow_offsets.x, s_normal_offsets.x ),
-		sym_offset + h + sym_offset + std::max( s_shadow_offsets.y, s_normal_offsets.y )
+		w + sym_offset + shadow_offset,
+		h + ( sym_offset + shadow_offset ) * 2
 	);
 	const auto f_paint_base_texture = [ this ]( const types::Vec2< uint8_t >& offsets, const types::Color& multiplier ) -> void {
 		unsigned int sym_x = sym_offset;
@@ -76,16 +72,58 @@ InstancedFont::InstancedFont( sprite::InstancedSpriteManager* ism, const types::
 			sym_x += sym.width + sym_offset;
 		}
 	};
-	f_paint_base_texture(
-		s_shadow_offsets, types::Color{
+	for ( uint8_t i = 0 ; i < shadow_offset ; i++ ) {
+		const auto& c = types::Color{
 			0.0f,
 			0.0f,
 			0.0f,
-			1.0f
+			s_shadow_alpha_levels.at( i )
+		};
+		const uint8_t before = shadow_offset - i - 1;
+		const uint8_t after = shadow_offset + i + 1;
+		std::vector< types::Vec2< uint8_t > > offsets = {
+			{
+				before,
+				shadow_offset,
+			},
+			{
+				shadow_offset,
+				before,
+			},
+			{
+				after,
+				shadow_offset,
+			},
+			{
+				shadow_offset,
+				after,
+			},
+			{
+				before,
+				before,
+			},
+			{
+				after,
+				before,
+			},
+			{
+				after,
+				after,
+			},
+			{
+				before,
+				after,
+			},
+		};
+		for ( const auto& o : offsets ) {
+			f_paint_base_texture( o, c );
 		}
-	);
+	}
 	f_paint_base_texture(
-		s_normal_offsets, types::Color{
+		{
+			shadow_offset,
+			shadow_offset,
+		}, types::Color{
 			1.0f,
 			1.0f,
 			1.0f,
@@ -105,8 +143,8 @@ InstancedFont::InstancedFont( sprite::InstancedSpriteManager* ism, const types::
 							sym_offset
 						},
 						{
-							sym.width + s_normal_offsets.x,
-							sym.height + s_normal_offsets.y
+							sym.width + ( sym_offset + shadow_offset ) - 1,
+							sym.height + ( sym_offset + shadow_offset ) - 1
 						},
 						{
 							sym_x,// + sym.width / 2,
@@ -142,7 +180,7 @@ const std::string& InstancedFont::GetFontName() const {
 	return m_name;
 }
 
-const std::vector< sprite::InstancedSprite* > InstancedFont::GetSymbolSprites( const std::string& text, const types::Color& color ) {
+const std::vector< sprite::InstancedSprite* > InstancedFont::GetSymbolSprites( const std::string& text, const types::Color& color, const types::Color& shadow_color ) {
 	std::vector< sprite::InstancedSprite* > sprites = {};
 	const auto texture_key = color.GetRGBA();
 	auto texture_it = m_color_textures.find( texture_key );
@@ -154,7 +192,7 @@ const std::vector< sprite::InstancedSprite* > InstancedFont::GetSymbolSprites( c
 			m_base_texture->m_width,
 			m_base_texture->m_height
 		);
-		texture->ColorizeFrom( m_base_texture, color );
+		texture->ColorizeFrom( m_base_texture, color, shadow_color );
 		texture_it = m_color_textures.insert(
 			{
 				texture_key,

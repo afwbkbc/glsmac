@@ -746,7 +746,7 @@ void Texture::RepaintFrom( const types::texture::Texture* original, const repain
 
 }
 
-void Texture::ColorizeFrom( const types::texture::Texture* original, const types::Color& color ) {
+void Texture::ColorizeFrom( const types::texture::Texture* original, const types::Color& color, const types::Color& shadow_color ) {
 	ASSERT( m_width == original->m_width, "repaint width mismatch" );
 	ASSERT( m_height == original->m_height, "repaint width mismatch" );
 	ASSERT( m_bpp == original->m_bpp, "repaint bpp mismatch" );
@@ -759,8 +759,16 @@ void Texture::ColorizeFrom( const types::texture::Texture* original, const types
 		for ( size_t x = 0 ; x < m_width ; x++ ) {
 			const auto idx = ( y * m_width + x ) * m_bpp;
 			memcpy( &rgba, ptr( original->m_bitmap, idx, m_bpp ), m_bpp );
-			rgba = ( types::Color::FromRGBA( rgba ) * color ).GetRGBA();
-			memcpy( ptr( m_bitmap, idx, m_bpp ), &rgba, m_bpp );
+			if ( rgba ) {
+				const auto c = types::Color::FromRGBA( rgba );
+				if ( !c.value.red && !c.value.green && !c.value.blue ) {
+					rgba = ( c * shadow_color ).GetRGBA();
+				}
+				else {
+					rgba = ( c * color ).GetRGBA();
+				}
+				memcpy( ptr( m_bitmap, idx, m_bpp ), &rgba, m_bpp );
+			}
 		}
 	}
 }

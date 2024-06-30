@@ -1,9 +1,6 @@
 return {
 	name: 'Spartans',
-	colors: {
-		text: #to_color(136, 166, 166),
-		border: #to_color(0, 0, 0),
-	},
+	colors: #game.factions.import_colors('spartans.pcx'),
 	bases: {
 		render: {
 			type: 'sprite_grid',
