@@ -11,13 +11,15 @@ namespace game {
 namespace text {
 
 static const types::Vec2< float > s_font_scale = {
-	0.0045f,
-	0.006f,
+	0.003f,
+	0.004f,
 };
 
 const std::vector< float > s_shadow_alpha_levels = {
 	1.0f,
-	0.6f,
+	1.0f,
+	0.5f,
+	0.25f,
 };
 
 InstancedFont::InstancedFont( sprite::InstancedSpriteManager* ism, const types::Font* font )
@@ -27,7 +29,7 @@ InstancedFont::InstancedFont( sprite::InstancedSpriteManager* ism, const types::
 
 	// load font into texture
 
-	const uint8_t sym_offset = 2; // to keep antialiasing working
+	const uint8_t sym_offset = s_shadow_alpha_levels.size() * 2 + 1; // to keep antialiasing working
 	const uint8_t shadow_offset = s_shadow_alpha_levels.size();
 
 	unsigned int w = sym_offset + shadow_offset;
@@ -45,7 +47,7 @@ InstancedFont::InstancedFont( sprite::InstancedSpriteManager* ism, const types::
 		w + sym_offset + shadow_offset,
 		h + ( sym_offset + shadow_offset ) * 2
 	);
-	const auto f_paint_base_texture = [ this ]( const types::Vec2< uint8_t >& offsets, const types::Color& multiplier ) -> void {
+	const auto f_paint_base_texture = [ this, sym_offset ]( const types::Vec2< uint8_t >& offsets, const types::Color& multiplier ) -> void {
 		unsigned int sym_x = sym_offset;
 		for ( uint8_t i = 32 ; i < 128 ; i++ ) {
 			const auto& sym = m_font->m_symbols[ i ];
@@ -143,8 +145,8 @@ InstancedFont::InstancedFont( sprite::InstancedSpriteManager* ism, const types::
 							sym_offset
 						},
 						{
-							sym.width + ( sym_offset + shadow_offset ) - 1,
-							sym.height + ( sym_offset + shadow_offset ) - 1
+							sym.width + sym_offset,
+							sym.height + sym_offset
 						},
 						{
 							sym_x,// + sym.width / 2,

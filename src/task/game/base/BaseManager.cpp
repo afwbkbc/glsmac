@@ -20,7 +20,7 @@ namespace base {
 
 BaseManager::BaseManager( Game* game )
 	: m_game( game )
-	, m_name_font( game->GetITM()->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( resource::TTF_ARIALN, 36 ) ) ) {
+	, m_name_font( game->GetITM()->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( resource::TTF_ARIALN, 48 ) ) ) {
 
 }
 
