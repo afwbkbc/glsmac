@@ -39,7 +39,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.ver }}-${{ env.sha }}
+          tag_name: v0.3-${{ env.sha }}
           release_name: ${{ env.ver }}-${{ env.sha }}
           draft: false
           prerelease: false
