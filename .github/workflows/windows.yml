@@ -23,7 +23,9 @@ jobs:
         env:
           SHA: ${{ steps.short-sha.outputs.sha }}
       - name: prepare
-        run: mkdir build
+        run: |
+          choco install ninja
+          mkdir build
       - name: cmake64
         run: cmake -G Ninja -DCMAKE_BUILD_TYPE=Portable64 -DVENDORED_DEPENDENCIES=1 ..
         working-directory: ./build
