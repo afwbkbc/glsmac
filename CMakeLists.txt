@@ -67,6 +67,11 @@ INCLUDE_DIRECTORIES( "src" )
 IF ( VISUAL_STUDIO ) # (Provided in CMakePresets)
 	ADD_COMPILE_DEFINITIONS( _ITERATOR_DEBUG_LEVEL=0 )
 	ADD_COMPILE_DEFINITIONS( VISUAL_STUDIO )
+ELSEIF ( WIN32 ) # probably mingw or github runner
+	TARGET_LINK_LIBRARIES( ${PROJECT_NAME} PRIVATE wsock32 )
+	TARGET_LINK_LIBRARIES( ${PROJECT_NAME} PRIVATE ws2_32 )
+#	TARGET_LINK_OPTIONS( ${PROJECT_NAME} PRIVATE -static-libgcc -static-libstdc++ -static-winpthread )
+	TARGET_LINK_OPTIONS( ${PROJECT_NAME} PRIVATE -static )
 ENDIF ()
 
 # needed for some uncommon IDE and OS combinations
