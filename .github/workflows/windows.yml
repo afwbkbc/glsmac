@@ -38,9 +38,9 @@ jobs:
         run: tar -C bin -zcvf GLSMAC-v0.3-win64-${{ env.SHA }}-bin64.tar.gz GLSMAC.exe GLSMAC_data
       - name: publish
         working-directory: ./build
-        uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v3
         with:
-          name: GLSMAC-ubuntu-bin
+          name: GLSMAC-win64-bin
           path: |
             ./GLSMAC-v0.3-win64-${{ env.SHA }}-bin64.tar.gz
       - uses: dev-drprasad/delete-older-releases@v0.2.0
