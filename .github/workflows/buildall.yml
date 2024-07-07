@@ -21,8 +21,8 @@ jobs:
         id: short-sha
         with:
           length: 7
-      - run: echo $SHA
-        id: env
+#      - run: echo $SHA
+      - id: env
         env:
           ver: v0.3
           sha: ${{ steps.short-sha.outputs.sha }}
@@ -32,6 +32,8 @@ jobs:
 #          delete_tags: true
 #        env:
 #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - info:
+        run: echo $sha $ver
       - name: create-release
         id: create_release
         uses: actions/create-release@v1
