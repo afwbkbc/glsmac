@@ -22,8 +22,8 @@ jobs:
         with:
           length: 7
 #      - run: echo $SHA
-      - id: env
-        env:
+#      - id: env
+      - env:
           ver: v0.3
           sha: ${{ steps.short-sha.outputs.sha }}
 #      - uses: dev-drprasad/delete-older-releases@v0.2.0
