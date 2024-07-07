@@ -16,16 +16,14 @@ jobs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
       ver: ${{ steps.env.env.ver }}
       sha: ${{ steps.env.env.sha }}
+    env:
+      ver: v0.3
+      sha: ${{ steps.short-sha.outputs.sha }}
     steps:
       - uses: benjlevesque/short-sha@v2.1
         id: short-sha
         with:
           length: 7
-#      - run: echo $SHA
-#      - id: env
-      - env:
-          ver: v0.3
-          sha: ${{ steps.short-sha.outputs.sha }}
 #      - uses: dev-drprasad/delete-older-releases@v0.2.0
 #        with:
 #          keep_latest: 4
