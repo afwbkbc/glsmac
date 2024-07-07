@@ -7,10 +7,12 @@
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
 #endif
+#if !defined(NOMINMAX)
 #define NOMINMAX
+#endif
 #define WIN32_LEAN_AND_MEAN
 
-#define _WINSOCKAPI_ 
+#define _WINSOCKAPI_
 #include <WinSock2.h> // TODO: check if compiles with mingw
 #include <windows.h>
 
