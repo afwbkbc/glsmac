@@ -14,8 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
-      ver: ${{ steps.env.env.ver }}
-      sha: ${{ steps.env.env.sha }}
+      ver: ${{ steps.info.env.ver }}
+      sha: ${{ steps.info.env.sha }}
     env:
       ver: v0.3
     steps:
