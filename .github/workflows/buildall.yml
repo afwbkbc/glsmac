@@ -107,9 +107,8 @@ jobs:
 
 
   build_windows:
-
+    needs: [prepare]
     runs-on: windows-latest
-
     steps:
       - uses: actions/checkout@v3
 #      - uses: benjlevesque/short-sha@v2.1
