@@ -34,7 +34,7 @@ jobs:
         run: ninja
       - name: data64
         working-directory: ./build
-        run: mv GLSMAC_data bin/
+        run: mv ../GLSMAC_data bin/
       - name: pack64
         working-directory: ./build
         run: tar -C bin -zcvf GLSMAC-v0.3-win64-${{ env.SHA }}-bin64.tar.gz GLSMAC.exe GLSMAC_data
