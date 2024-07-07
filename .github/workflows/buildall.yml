@@ -18,7 +18,6 @@ jobs:
       sha: ${{ steps.env.env.sha }}
     env:
       ver: v0.3
-      sha: ${{ steps.short-sha.outputs.sha }}
     steps:
       - uses: benjlevesque/short-sha@v2.1
         id: short-sha
@@ -31,6 +30,8 @@ jobs:
 #        env:
 #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - info:
+        env:
+          sha: ${{ steps.short-sha.outputs.sha }}
         run: echo $sha $ver
       - name: create-release
         id: create_release
