@@ -38,7 +38,7 @@ jobs:
         run: tar -C bin -zcvf GLSMAC-v0.3-win64-${{ env.SHA }}-bin64.tar.gz GLSMAC.exe GLSMAC_data
       - name: publish
         working-directory: ./build
-      - uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3
         with:
           name: GLSMAC-win64-bin
           path: |
@@ -65,7 +65,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./GLSMAC-v0.3-win64-${{ env.SHA }}-bin64.tar.gz
           asset_name: GLSMAC-v0.3-win64-${{ env.SHA }}-bin64.tar.gz
           asset_content_type: application/gzip
