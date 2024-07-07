@@ -1,0 +1,71 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "main" ]
+#    branches: [ "stable" ]
+  pull_request:
+    branches: [ "main" ]
+#    branches: [ "stable" ]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: benjlevesque/short-sha@v2.1
+        id: short-sha
+        with:
+          length: 7
+      - run: echo $SHA
+        env:
+          SHA: ${{ steps.short-sha.outputs.sha }}
+      - name: prepare
+        run: mkdir build
+      - name: cmake64
+        run: cmake -G Ninja -DCMAKE_BUILD_TYPE=Portable64 -DVENDORED_DEPENDENCIES=1 ..
+        working-directory: ./build
+      - name: make64
+        working-directory: ./build
+        run: ninja
+      - name: data64
+        working-directory: ./build
+        run: mv GLSMAC_data bin/
+      - name: pack64
+        working-directory: ./build
+        run: tar -C bin -zcvf GLSMAC-v0.3-win64-${{ env.SHA }}-bin64.tar.gz GLSMAC.exe GLSMAC_data
+      - name: publish
+        working-directory: ./build
+        uses: actions/upload-artifact@v3
+        with:
+          name: GLSMAC-ubuntu-bin
+          path: |
+            ./GLSMAC-v0.3-win64-${{ env.SHA }}-bin64.tar.gz
+      - uses: dev-drprasad/delete-older-releases@v0.2.0
+        with:
+          keep_latest: 4
+          delete_tags: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v0.3-win64-${{ env.SHA }}
+          release_name: v0.3-win64-${{ env.SHA }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset 64
+        id: upload-release-asset-64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./GLSMAC-v0.3-win64-${{ env.SHA }}-bin64.tar.gz
+          asset_name: GLSMAC-v0.3-win64-${{ env.SHA }}-bin64.tar.gz
+          asset_content_type: application/gzip
