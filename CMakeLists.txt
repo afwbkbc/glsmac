@@ -68,8 +68,8 @@ IF ( VISUAL_STUDIO ) # (Provided in CMakePresets)
 	ADD_COMPILE_DEFINITIONS( _ITERATOR_DEBUG_LEVEL=0 )
 	ADD_COMPILE_DEFINITIONS( VISUAL_STUDIO )
 ELSEIF ( WIN32 ) # probably mingw or github runner
-	TARGET_LINK_LIBRARIES( -lwsock32 )
-	TARGET_LINK_LIBRARIES( -lw2_s32 )
+	TARGET_LINK_LIBRARIES( ${PROJECT_NAME} -lwsock32 )
+	TARGET_LINK_LIBRARIES( ${PROJECT_NAME} -lw2_s32 )
 ENDIF ()
 
 # needed for some uncommon IDE and OS combinations
