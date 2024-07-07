@@ -32,7 +32,7 @@ jobs:
       - name: info
         env:
           sha: ${{ steps.short-sha.outputs.sha }}
-        run: echo $sha $ver
+        run: echo ${{ env.ver }} ${{ env.sha }}
       - name: create-release
         id: create_release
         uses: actions/create-release@v1
