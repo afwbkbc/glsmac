@@ -135,9 +135,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: update-release
-        uses: actions/edit-release@v1
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          id: ${{ needs.prepare.outputs.release_id }}
+          tag_name: ${{ steps.info.outputs.ver }}-${{ steps.info.outputs.sha }}
+          release_name: ${{ steps.info.outputs.ver }}-${{ steps.info.outputs.sha }}
+          on_release_exists: update_only_unreleased_or_skip
           draft: false
