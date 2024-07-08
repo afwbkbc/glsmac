@@ -41,20 +41,12 @@ const units = [
 const result = {
 	define: () => {
 
-		// TODO: for loops
-
-		let i = 0;
-		let sz = #size(morales);
-		while (i < sz) {
-			#game.units.define_morales(morales[i][0], morales[i][1]);
-			i++;
+		for (morale of morales) {
+			#game.units.define_morales(morale[0], morale[1]);
 		}
 
-		i = 0;
-		sz = #size(units);
-		while (i < sz) {
-			#game.units.define(units[i][0], units[i][1]);
-			i++;
+		for (unit of units) {
+			#game.units.define(unit[0], unit[1]);
 		}
 
 	},

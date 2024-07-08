@@ -25,6 +25,7 @@
 #include "gse/program/Expression.h"
 #include "gse/program/Operator.h"
 #include "gse/program/Object.h"
+#include "gse/program/SimpleCondition.h"
 #include "gse/type/Bool.h"
 #include "gse/type/Int.h"
 #include "gse/type/String.h"
@@ -1463,11 +1464,14 @@ const Program* GetTestProgram() {
 				),
 				new If(
 					SI( 84, 1, 86, 2 ),
-					new Expression(
-						SI( 84, 6, 84, 11 ),
-						new Variable( SI( 84, 6, 84, 7 ), "a" ),
-						new Operator( SI( 84, 8, 84, 9 ), OT_GT ),
-						new Variable( SI( 84, 10, 84, 11 ), "b" )
+					new SimpleCondition(
+						SI( 84, 4, 84, 5 ),
+						new Expression(
+							SI( 84, 6, 84, 11 ),
+							new Variable( SI( 84, 6, 84, 7 ), "a" ),
+							new Operator( SI( 84, 8, 84, 9 ), OT_GT ),
+							new Variable( SI( 84, 10, 84, 11 ), "b" )
+						)
 					),
 					new Scope(
 						SI( 85, 8, 85, 24 ),
@@ -1503,11 +1507,14 @@ const Program* GetTestProgram() {
 				),
 				new If(
 					SI( 90, 1, 92, 2 ),
-					new Expression(
-						SI( 90, 6, 90, 11 ),
-						new Variable( SI( 90, 6, 90, 7 ), "b" ),
-						new Operator( SI( 90, 8, 90, 9 ), OT_GT ),
-						new Variable( SI( 90, 10, 90, 11 ), "a" )
+					new SimpleCondition(
+						SI( 90, 4, 90, 5 ),
+						new Expression(
+							SI( 90, 6, 90, 11 ),
+							new Variable( SI( 90, 6, 90, 7 ), "b" ),
+							new Operator( SI( 90, 8, 90, 9 ), OT_GT ),
+							new Variable( SI( 90, 10, 90, 11 ), "a" )
+						)
 					),
 					new Scope(
 						SI( 91, 8, 91, 24 ),
@@ -1543,9 +1550,12 @@ const Program* GetTestProgram() {
 				),
 				new If(
 					SI( 96, 1, 96, 41 ),
-					new Expression(
-						SI( 96, 6, 96, 11 ),
-						new program::Value( SI( 96, 6, 96, 11 ), VALUE( type::Bool, false ) )
+					new SimpleCondition(
+						SI( 96, 4, 96, 5 ),
+						new Expression(
+							SI( 96, 6, 96, 11 ),
+							new program::Value( SI( 96, 6, 96, 11 ), VALUE( type::Bool, false ) )
+						)
 					),
 					new Scope(
 						SI( 96, 21, 96, 39 ),
@@ -1564,9 +1574,12 @@ const Program* GetTestProgram() {
 				),
 				new If(
 					SI( 97, 1, 99, 2 ),
-					new Expression(
-						SI( 97, 6, 97, 11 ),
-						new program::Value( SI( 97, 6, 97, 11 ), VALUE( type::Bool, false ) )
+					new SimpleCondition(
+						SI( 97, 4, 97, 5 ),
+						new Expression(
+							SI( 97, 6, 97, 11 ),
+							new program::Value( SI( 97, 6, 97, 11 ), VALUE( type::Bool, false ) )
+						)
 					),
 					new Scope(
 						SI( 98, 8, 98, 23 ),
@@ -1584,9 +1597,12 @@ const Program* GetTestProgram() {
 					),
 					new ElseIf(
 						SI( 99, 3, 101, 2 ),
-						new Expression(
-							SI( 99, 12, 99, 17 ),
-							new program::Value( SI( 99, 12, 99, 17 ), VALUE( type::Bool, false ) )
+						new SimpleCondition(
+							SI( 99, 3, 101, 2 ),
+							new Expression(
+								SI( 99, 12, 99, 17 ),
+								new program::Value( SI( 99, 12, 99, 17 ), VALUE( type::Bool, false ) )
+							)
 						),
 						new Scope(
 							SI( 100, 3, 100, 25 ),
@@ -1604,9 +1620,12 @@ const Program* GetTestProgram() {
 						),
 						new ElseIf(
 							SI( 101, 3, 103, 2 ),
-							new Expression(
-								SI( 101, 12, 101, 16 ),
-								new program::Value( SI( 101, 12, 101, 16 ), VALUE( type::Bool, true ) )
+							new SimpleCondition(
+								SI( 101, 3, 103, 2 ),
+								new Expression(
+									SI( 101, 12, 101, 16 ),
+									new program::Value( SI( 101, 12, 101, 16 ), VALUE( type::Bool, true ) )
+								)
 							),
 							new Scope(
 								SI( 102, 3, 102, 23 ),
@@ -1653,15 +1672,18 @@ const Program* GetTestProgram() {
 				),
 				new While(
 					SI( 108, 1, 110, 2 ),
-					new Expression(
-						SI( 108, 9, 108, 16 ),
+					new SimpleCondition(
+						SI( 108, 7, 108, 8 ),
 						new Expression(
-							SI( 108, 9, 108, 12 ),
-							new Variable( SI( 108, 9, 108, 10 ), "i" ),
-							new Operator( SI( 108, 10, 108, 12 ), OT_INC )
-						),
-						new Operator( SI( 108, 13, 108, 14 ), OT_LT ),
-						new program::Value( SI( 108, 15, 108, 16 ), VALUE( type::Int, 5 ) )
+							SI( 108, 9, 108, 16 ),
+							new Expression(
+								SI( 108, 9, 108, 12 ),
+								new Variable( SI( 108, 9, 108, 10 ), "i" ),
+								new Operator( SI( 108, 10, 108, 12 ), OT_INC )
+							),
+							new Operator( SI( 108, 13, 108, 14 ), OT_LT ),
+							new program::Value( SI( 108, 15, 108, 16 ), VALUE( type::Int, 5 ) )
+						)
 					),
 					new Scope(
 						SI( 109, 8, 109, 18 ),

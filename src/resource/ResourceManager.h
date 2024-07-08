@@ -16,6 +16,7 @@ CLASS( ResourceManager, common::Module )
 	void Init( std::vector< std::string > possible_smac_paths );
 
 	const resource_t GetResource( const std::string& filename ) const;
+	const std::string& GetFilename( const resource_t res ) const;
 	const std::string& GetPath( const resource_t res ) const;
 	const std::string& GetCustomPath( const std::string& path );
 

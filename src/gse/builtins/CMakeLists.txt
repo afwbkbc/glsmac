@@ -6,5 +6,6 @@ SET( SRC ${SRC}
 	${PWD}/Console.cpp
 	${PWD}/Conversions.cpp
 	${PWD}/Math.cpp
+	${PWD}/String.cpp
 
 	PARENT_SCOPE )

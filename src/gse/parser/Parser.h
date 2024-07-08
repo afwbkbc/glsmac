@@ -6,6 +6,7 @@
 #include "common/Common.h"
 
 #include "gse/Types.h"
+#include "gse/program/Types.h"
 
 namespace gse {
 
@@ -40,6 +41,7 @@ protected:
 			ET_DELIMITER,
 			ET_CONDITIONAL,
 			ET_BLOCK,
+			ET_LOOP_CONTROL
 		};
 		SourceElement( const element_type_t type, const si_t& si )
 			: m_type( type )
@@ -123,6 +125,7 @@ protected:
 			CT_ELSEIF,
 			CT_ELSE,
 			CT_WHILE,
+			CT_FOR,
 			CT_TRY,
 			CT_CATCH,
 		};
@@ -132,7 +135,8 @@ protected:
 			, has_condition(
 				conditional_type == CT_IF ||
 					conditional_type == CT_ELSEIF ||
-					conditional_type == CT_WHILE
+					conditional_type == CT_WHILE ||
+					conditional_type == CT_FOR
 			) {};
 
 		const conditional_type_t m_conditional_type;
@@ -148,6 +152,8 @@ protected:
 					return "else";
 				case CT_WHILE:
 					return "while";
+				case CT_FOR:
+					return "for";
 				case CT_TRY:
 					return "try";
 				case CT_CATCH:
@@ -199,6 +205,26 @@ protected:
 				default:
 					THROW( "unexpected block side: " + std::to_string( m_block_side ) );
 			}
+		}
+	};
+	class LoopControl : public SourceElement {
+	public:
+		LoopControl( const program::loop_control_type_t loop_control_type, const si_t& si )
+			: SourceElement( ET_LOOP_CONTROL, si )
+			, m_loop_control_type( loop_control_type ) {}
+		const program::loop_control_type_t m_loop_control_type;
+		const std::string ToString() const override {
+			switch ( m_loop_control_type ) {
+				case program::LCT_BREAK:
+					return "break";
+				case program::LCT_CONTINUE:
+					return "continue";
+				default:
+					THROW( "unexpected loop control type: " + std::to_string( m_loop_control_type ) );
+			}
+		}
+		const std::string Dump() const override {
+			return "loop_control{" + ToString() + "}";
 		}
 	};
 

@@ -18,7 +18,10 @@ namespace task {
 namespace game {
 
 class Game;
+
+namespace sprite {
 class InstancedSpriteManager;
+}
 
 namespace tile {
 class Tile;
@@ -79,7 +82,7 @@ CLASS( UnitManager, common::Class )
 private:
 
 	Game* m_game;
-	InstancedSpriteManager* m_ism;
+	sprite::InstancedSpriteManager* m_ism;
 
 	const size_t m_slot_index;
 

@@ -10,6 +10,7 @@
 #include "loader/font/FontLoader.h"
 #include "loader/texture/TextureLoader.h"
 #include "loader/sound/SoundLoader.h"
+#include "loader/txt/TXTLoaders.h"
 #include "scheduler/Scheduler.h"
 #include "input/Input.h"
 #include "graphics/Graphics.h"
@@ -33,6 +34,7 @@ Engine::Engine(
 	loader::font::FontLoader* font_loader,
 	loader::texture::TextureLoader* texture_loader,
 	loader::sound::SoundLoader* sound_loader,
+	loader::txt::TXTLoaders* txt_loaders,
 	scheduler::Scheduler* scheduler,
 	input::Input* input,
 	graphics::Graphics* graphics,
@@ -49,6 +51,7 @@ Engine::Engine(
 	, m_font_loader( font_loader )
 	, m_texture_loader( texture_loader )
 	, m_sound_loader( sound_loader )
+	, m_txt_loaders( txt_loaders )
 	, m_scheduler( scheduler )
 	, m_input( input )
 	, m_graphics( graphics )

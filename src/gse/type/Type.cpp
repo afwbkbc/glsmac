@@ -15,6 +15,7 @@
 #include "ObjectRef.h"
 #include "Range.h"
 #include "Exception.h"
+#include "LoopControl.h"
 
 #include "types/Buffer.h"
 
@@ -34,6 +35,7 @@ static const std::string s_t_arrayref = "Arrayref";
 static const std::string s_t_arrayrangeref = "Arrayrangeref";
 static const std::string s_t_objectref = "Objectref";
 static const std::string s_t_range = "Range";
+static const std::string s_t_loopcontrol = "LoopControl";
 static const std::string s_t_unknown = "Unknown";
 const std::string& Type::GetTypeString( const type_t type ) {
 	switch ( type ) {
@@ -63,6 +65,8 @@ const std::string& Type::GetTypeString( const type_t type ) {
 			return s_t_objectref;
 		case T_RANGE:
 			return s_t_range;
+		case T_LOOPCONTROL:
+			return s_t_loopcontrol;
 		default:
 			return s_t_unknown;
 	}
@@ -142,6 +146,16 @@ const std::string Type::ToString() const {
 					? std::to_string( *that->to )
 					: ""
 			) + "]";
+		}
+		case T_LOOPCONTROL: {
+			switch ( ( (LoopControl*)this )->value ) {
+				case program::LCT_BREAK:
+					return "break";
+				case program::LCT_CONTINUE:
+					return "continue";
+				default:
+					THROW( "unexpected loop control type: " + std::to_string( ( (LoopControl*)this )->value ) );
+			}
 		}
 		default:
 			THROW( "unknown is not intended to be printed" );
@@ -231,6 +245,9 @@ const std::string Type::Dump() const {
 					? std::to_string( *that->to )
 					: ""
 			) + "}";
+		}
+		case T_LOOPCONTROL: {
+			return "loopcontrol{" + ToString() + "}";
 		}
 		default:
 			return "unknown{" + std::to_string( type ) + "}";

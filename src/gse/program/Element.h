@@ -11,6 +11,7 @@ public:
 		ET_OPERAND,
 		ET_OPERATOR,
 		ET_CONDITIONAL,
+		ET_CONDITION,
 	};
 	Element( const si_t& si, const element_type_t element_type );
 	virtual ~Element() = default;

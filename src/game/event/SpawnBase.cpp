@@ -16,12 +16,14 @@ SpawnBase::SpawnBase(
 	const size_t initiator_slot,
 	const size_t owner_slot,
 	const size_t pos_x,
-	const size_t pos_y
+	const size_t pos_y,
+	const base::BaseData& data
 )
 	: Event( initiator_slot, ET_BASE_SPAWN )
 	, m_owner_slot( owner_slot )
 	, m_pos_x( pos_x )
-	, m_pos_y( pos_y ) {
+	, m_pos_y( pos_y )
+	, m_data( data ) {
 	//
 }
 
@@ -41,7 +43,8 @@ const gse::Value SpawnBase::Apply( game::Game* game ) const {
 		game,
 		base::Base::GetNextId(),
 		&owner,
-		tile
+		tile,
+		m_data
 	);
 	game->SpawnBase( base );
 	return base->Wrap();
@@ -52,6 +55,7 @@ TS_BEGIN( SpawnBase )
 			TS_FUNC_ARG_NUM( "owner_slot", m_owner_slot ) +
 			TS_FUNC_ARG_NUM( "pos_x", m_pos_x ) +
 			TS_FUNC_ARG_NUM( "pos_y", m_pos_y ) +
+			TS_FUNC_ARG_STR( "data", m_data.ToString( TS_PREFIX_NEXT ) ) +
 		TS_FUNC_END()
 TS_END()
 
@@ -59,13 +63,15 @@ void SpawnBase::Serialize( types::Buffer& buf, const SpawnBase* event ) {
 	buf.WriteInt( event->m_owner_slot );
 	buf.WriteInt( event->m_pos_x );
 	buf.WriteInt( event->m_pos_y );
+	event->m_data.Serialize( buf );
 }
 
 SpawnBase* SpawnBase::Unserialize( types::Buffer& buf, const size_t initiator_slot ) {
 	const auto owner_slot = buf.ReadInt();
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
-	return new SpawnBase( initiator_slot, owner_slot, pos_x, pos_y );
+	const auto data = base::BaseData( buf );
+	return new SpawnBase( initiator_slot, owner_slot, pos_x, pos_y, data );
 }
 
 }

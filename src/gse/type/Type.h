@@ -14,6 +14,7 @@ namespace type {
 class Type {
 public:
 	enum type_t : uint8_t {
+		T_NOTHING,
 		T_UNDEFINED,
 		T_NULL,
 		T_BOOL,
@@ -27,6 +28,7 @@ public:
 		T_ARRAYRANGEREF,
 		T_OBJECTREF,
 		T_RANGE,
+		T_LOOPCONTROL,
 	};
 
 	static const std::string& GetTypeString( const type_t type );

@@ -4,9 +4,15 @@
 
 #include "Base.h"
 #include "task/game/Game.h"
+#include "task/game/Slot.h"
 #include "task/game/unit/UnitManager.h"
 #include "task/game/tile/TileManager.h"
+#include "task/game/text/InstancedTextManager.h"
+#include "task/game/text/InstancedText.h"
+#include "task/game/faction/Faction.h"
 #include "types/mesh/Rectangle.h"
+#include "engine/Engine.h"
+#include "loader/font/FontLoader.h"
 
 namespace task {
 namespace game {
@@ -14,8 +20,7 @@ namespace base {
 
 BaseManager::BaseManager( Game* game )
 	: m_game( game )
-	, m_ism( game->GetISM() )
-	, m_slot_index( game->GetMySlotIndex() ) {
+	, m_name_font( game->GetITM()->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( resource::TTF_ARIALN, 48 ) ) ) {
 
 }
 
@@ -34,34 +39,35 @@ void BaseManager::SpawnBase(
 	const size_t base_id,
 	const size_t slot_index,
 	const types::Vec2< size_t >& tile_coords,
-	const types::Vec3& render_coords
+	const types::Vec3& render_coords,
+	const ::game::base::BaseData& data
 ) {
 
 	ASSERT( m_bases.find( base_id ) == m_bases.end(), "base id already exists" );
 
-	auto* slot = m_game->GetSlot( slot_index );
 	auto* tile = m_game->GetTM()->GetTile( tile_coords );
+	auto* slot = m_game->GetSlot( slot_index );
+	auto* faction = slot->GetFaction();
 
-	auto* base = m_bases.insert(
+	m_bases.insert(
 		{
 			base_id,
 			new base::Base(
-				this,
 				base_id,
 				slot,
 				tile,
-				{
-					render_coords.x,
-					render_coords.y,
-					render_coords.z
-				},
-				slot_index == m_slot_index
+				slot_index == m_game->GetMySlotIndex(),
+				render_coords,
+				m_game->GetITM()->CreateInstancedText(
+					data.name,
+					m_name_font,
+					faction->m_colors.text,
+					faction->m_colors.text_shadow
+				),
+				data.population
 			)
 		}
-	).first->second;
-
-	types::mesh::Rectangle* mesh = nullptr;
-	types::texture::Texture* texture = nullptr;
+	);
 
 	m_game->RenderTile( tile, m_game->GetUM()->GetSelectedUnit() );
 

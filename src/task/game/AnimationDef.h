@@ -1,7 +1,5 @@
 #pragma once
 
-#include "InstancedSpriteManager.h"
-
 #include "Types.h"
 #include "game/animation/Types.h"
 
@@ -16,10 +14,14 @@ class Def;
 namespace task {
 namespace game {
 
+namespace sprite {
+class InstancedSpriteManager;
+}
+
 class AnimationDef {
 public:
 
-	AnimationDef( InstancedSpriteManager* ism, const ::game::animation::Def* def );
+	AnimationDef( sprite::InstancedSpriteManager* ism, const ::game::animation::Def* def );
 	~AnimationDef();
 
 	const instanced_sprites_t& GetSprites();
@@ -28,7 +30,7 @@ public:
 
 private:
 
-	InstancedSpriteManager* const m_ism = nullptr;
+	sprite::InstancedSpriteManager* const m_ism = nullptr;
 
 	::game::animation::sprite_render_info_t m_render = {};
 

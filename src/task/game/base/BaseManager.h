@@ -5,6 +5,8 @@
 
 #include "common/Common.h"
 
+#include "game/base/BaseData.h"
+
 #include "game/unit/Types.h"
 
 #include "types/Vec2.h"
@@ -18,7 +20,17 @@ namespace task {
 namespace game {
 
 class Game;
+class Slot;
+
+namespace sprite {
 class InstancedSpriteManager;
+}
+
+namespace text {
+class InstancedFont;
+class InstancedText;
+class InstancedTextManager;
+}
 
 namespace tile {
 class Tile;
@@ -43,16 +55,18 @@ CLASS( BaseManager, common::Class )
 		const size_t base_id,
 		const size_t slot_index,
 		const ::types::Vec2< size_t >& tile_coords,
-		const ::types::Vec3& render_coords
+		const ::types::Vec3& render_coords,
+		const ::game::base::BaseData& data
 	);
 	// TODO void DespawnBase( const size_t base_id );
 
 private:
+	friend class base::Base;
+
+private:
 
 	Game* m_game;
-	InstancedSpriteManager* m_ism;
-
-	const size_t m_slot_index;
+	text::InstancedFont* m_name_font;
 
 	std::unordered_map< size_t, base::Base* > m_bases = {};
 

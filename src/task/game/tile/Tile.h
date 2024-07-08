@@ -38,6 +38,8 @@ public:
 
 	Tile( const types::Vec2< size_t >& coords );
 
+	const bool IsWater() const;
+
 	const types::Vec2< size_t >& GetCoords() const;
 
 	void AddUnit( unit::Unit* unit );
@@ -85,6 +87,8 @@ private:
 	std::unordered_map< size_t, unit::Unit* > m_units = {};
 	std::vector< unit::Unit* > m_ordered_units = {};
 	bool m_is_units_reorder_needed = true;
+
+	bool m_is_water = false;
 
 	base::Base* m_base = nullptr;
 

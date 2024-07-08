@@ -5,16 +5,16 @@
 namespace gse {
 namespace program {
 
-class Expression;
+class SimpleCondition;
 class Scope;
 
 class ElseIf : public Conditional {
 public:
 
-	ElseIf( const si_t& si, const Expression* condition, const Scope* body, const Conditional* els = nullptr );
+	ElseIf( const si_t& si, const SimpleCondition* condition, const Scope* body, const Conditional* els = nullptr );
 	~ElseIf();
 
-	const Expression* condition;
+	const SimpleCondition* condition;
 	const Scope* body;
 	const Conditional* els;
 

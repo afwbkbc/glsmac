@@ -9,7 +9,7 @@
 #include "BadgeDefs.h"
 #include "SlotBadges.h"
 #include "UnitManager.h"
-#include "task/game/InstancedSprite.h"
+#include "task/game/sprite/InstancedSprite.h"
 #include "scene/actor/Instanced.h"
 #include "types/mesh/Rectangle.h"
 #include "scene/actor/Sprite.h"
@@ -33,12 +33,12 @@ Unit::Unit(
 	const std::string& morale_string,
 	const ::game::unit::health_t health
 )
-	: m_um( um )
+	: TileObject( tile )
+	, m_um( um )
 	, m_badge_defs( badge_defs )
 	, m_id( id )
 	, m_def( def )
 	, m_slot_badges( m_um->GetSlotBadges( slot->GetIndex() ) )
-	, m_tile( tile )
 	, m_render(
 		{
 			render_coords,
@@ -106,15 +106,15 @@ const size_t Unit::GetSelectionWeight() const {
 	return weight;
 }
 
-Sprite* Unit::GetSprite() const {
+sprite::Sprite* Unit::GetSprite() const {
 	return m_def->GetSprite( m_morale );
 }
 
-Sprite* Unit::GetBadgeSprite() const {
+sprite::Sprite* Unit::GetBadgeSprite() const {
 	return m_render.badge.def;
 }
 
-Sprite* Unit::GetBadgeHealthbarSprite() const {
+sprite::Sprite* Unit::GetBadgeHealthbarSprite() const {
 	return m_render.badge.healthbar.def;
 }
 
@@ -333,11 +333,6 @@ void Unit::MoveToTile( tile::Tile* dst_tile ) {
 	m_mover.Scroll( from, m_um->GetCloserCoords( to, from ), MOVE_DURATION_MS );
 }
 
-void Unit::UpdateFromTile() {
-	ASSERT_NOLOG( m_tile, "tile not set" );
-	SetRenderCoords( m_tile->GetRenderData().coords.InvertY() );
-}
-
 const bool Unit::IsMoving() const {
 	return m_mover.IsRunning();
 }
@@ -350,7 +345,7 @@ const bool Unit::ShouldBeActive() const {
 	return m_is_owned && CanMove();
 }
 
-Unit::meshtex_t Unit::GetMeshTex( const InstancedSprite* sprite ) {
+Unit::meshtex_t Unit::GetMeshTex( const sprite::InstancedSprite* sprite ) {
 	auto* texture = sprite->actor->GetSpriteActor()->GetTexture();
 	NEWV( mesh, types::mesh::Rectangle );
 	mesh->SetCoords(

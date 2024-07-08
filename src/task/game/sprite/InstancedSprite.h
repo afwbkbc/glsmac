@@ -10,6 +10,7 @@ class Instanced;
 
 namespace task {
 namespace game {
+namespace sprite {
 
 class InstancedSprite {
 public:
@@ -21,5 +22,6 @@ public:
 	scene::actor::Instanced* actor;
 };
 
+}
 }
 }

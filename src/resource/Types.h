@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace resource {
 
 enum resource_t : uint8_t {
@@ -56,7 +58,7 @@ enum resource_t : uint8_t {
 	PCX_FUNGBOY,
 	PCX_CARETAKE,
 	PCX_USURPER,
-	
+
 	TTF_ARIALN,
 	TTF_ARIALNB,
 

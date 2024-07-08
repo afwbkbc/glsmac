@@ -17,6 +17,7 @@ public:
 		OT_EXPRESSION,
 		OT_FUNCTION,
 		OT_CALL,
+		OT_LOOP_CONTROL,
 	};
 
 	Operand( const si_t& si, const operand_type_t type );

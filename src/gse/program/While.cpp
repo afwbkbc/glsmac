@@ -1,12 +1,12 @@
 #include "While.h"
 
-#include "Expression.h"
+#include "SimpleCondition.h"
 #include "Scope.h"
 
 namespace gse {
 namespace program {
 
-While::While( const si_t& si, const Expression* condition, const Scope* body )
+While::While( const si_t& si, const SimpleCondition* condition, const Scope* body )
 	: Conditional( si, CT_WHILE )
 	, condition( condition )
 	, body( body ) {}

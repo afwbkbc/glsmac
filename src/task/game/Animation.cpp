@@ -4,7 +4,7 @@
 #include "AnimationDef.h"
 #include "scene/actor/Sound.h"
 #include "audio/Audio.h"
-#include "InstancedSprite.h"
+#include "task/game/sprite/InstancedSprite.h"
 #include "scene/actor/Instanced.h"
 
 namespace task {

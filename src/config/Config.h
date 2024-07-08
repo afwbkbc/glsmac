@@ -57,7 +57,7 @@ CLASS( Config, common::Module )
 	const std::string GetEnv( const std::string& var ) const;
 
 	const std::string& GetPrefix() const;
-
+	const std::string& GetDataPath() const;
 	const std::vector< std::string > GetPossibleSMACPaths() const;
 
 #ifdef DEBUG
@@ -100,6 +100,7 @@ private:
 	;
 
 	std::string m_prefix;
+	std::string m_data_path;
 	std::string m_smac_path;
 
 	uint8_t m_launch_flags = LF_NONE;

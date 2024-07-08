@@ -65,6 +65,7 @@ private:
 	const Value Deref( context::Context* ctx, const si_t& si, const Value& value ) const;
 	void WriteByRef( context::Context* ctx, const si_t& si, const Value& ref, const Value& value ) const;
 	void ValidateRange( context::Context* ctx, const si_t& si, const type::Array* array, const std::optional< size_t > from, const std::optional< size_t > to ) const;
+	void CheckBreakCondition( const gse::Value& result, bool* need_break, bool* need_clear ) const;
 
 };
 

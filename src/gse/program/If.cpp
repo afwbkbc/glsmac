@@ -1,12 +1,12 @@
 #include "If.h"
 
-#include "Expression.h"
+#include "SimpleCondition.h"
 #include "Scope.h"
 
 namespace gse {
 namespace program {
 
-If::If( const si_t& si, const Expression* condition, const Scope* body, const Conditional* els )
+If::If( const si_t& si, const SimpleCondition* condition, const Scope* body, const Conditional* els )
 	: Conditional( si, CT_IF )
 	, condition( condition )
 	, body( body )

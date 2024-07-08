@@ -11,7 +11,8 @@
 #include "gse/type/Object.h"
 #include "gse/type/Callable.h"
 #include "gse/type/Undefined.h"
-
+#include "engine/Engine.h"
+#include "config/Config.h"
 #include "game/State.h"
 
 namespace game {
@@ -22,7 +23,7 @@ Bindings::Bindings( State* state )
 	, m_entry_script(
 		util::FS::GeneratePath(
 			{
-				"GLSMAC_data", // directory is expected to be in working dir
+				g_engine->GetConfig()->GetDataPath(),
 				"default", // only 'default' mod for now
 				"main" // script name (extension is appended automatically)
 			}, gse::GSE::PATH_SEPARATOR
@@ -83,6 +84,10 @@ gse::Value Bindings::Call( const callback_slot_t slot, const callback_arguments_
 			auto* game = m_state->GetGame();
 			if ( game ) {
 				game->PushUnitUpdates();
+			}
+			if ( result.Get()->type == gse::type::Type::T_NOTHING ) {
+				// return undefined by default
+				return VALUE( gse::type::Undefined );
 			}
 			return result;
 		}

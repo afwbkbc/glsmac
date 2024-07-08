@@ -4,11 +4,12 @@
 #include "game/animation/FramesRow.h"
 #include "loader/sound/SoundLoader.h"
 #include "loader/texture/TextureLoader.h"
+#include "task/game/sprite/InstancedSpriteManager.h"
 
 namespace task {
 namespace game {
 
-AnimationDef::AnimationDef( InstancedSpriteManager* ism, const ::game::animation::Def* def )
+AnimationDef::AnimationDef( sprite::InstancedSpriteManager* ism, const ::game::animation::Def* def )
 	: m_ism( ism )
 	, m_id( def->m_id )
 	, m_type( def->m_type )
@@ -61,7 +62,7 @@ const instanced_sprites_t& AnimationDef::GetSprites() {
 						y + cxy.y
 					},
 					dst_wh,
-					InstancedSpriteManager::ZL_ANIMATIONS
+					ZL_ANIMATIONS
 				)
 			);
 		}

@@ -37,6 +37,7 @@
 #include "loader/font/FreeType.h"
 #include "loader/texture/SDL2.h"
 #include "loader/sound/SDL2.h"
+#include "loader/txt/TXTLoaders.h"
 #include "input/sdl2/SDL2.h"
 #include "graphics/opengl/OpenGL.h"
 #include "audio/sdl2/SDL2.h"
@@ -97,7 +98,6 @@ int main( const int argc, const char* argv[] ) {
 	config::Config config( argc, argv );
 
 	config.Init();
-
 
 #ifdef DEBUG
 	if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
@@ -200,6 +200,7 @@ int main( const int argc, const char* argv[] ) {
 				&font_loader,
 				&texture_loader,
 				&sound_loader,
+				nullptr,
 				&scheduler,
 				&input,
 				&graphics,
@@ -221,6 +222,7 @@ int main( const int argc, const char* argv[] ) {
 			loader::font::FreeType font_loader;
 			loader::texture::SDL2 texture_loader;
 			loader::sound::SDL2 sound_loader;
+			loader::txt::TXTLoaders txt_loaders;
 
 			input::sdl2::SDL2 input;
 			bool vsync = VSYNC;
@@ -265,6 +267,7 @@ int main( const int argc, const char* argv[] ) {
 				&font_loader,
 				&texture_loader,
 				&sound_loader,
+				&txt_loaders,
 				&scheduler,
 				&input,
 				&graphics,

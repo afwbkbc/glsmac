@@ -9,9 +9,6 @@
 namespace game {
 namespace rules {
 
-const Faction::faction_flag_t Faction::FF_NONE = 0;
-const Faction::faction_flag_t Faction::FF_PROGENITOR = 1 << 0;
-
 Faction::Faction() {
 	//
 }
@@ -29,6 +26,7 @@ const types::Buffer Faction::Serialize() const {
 	buf.WriteString( m_name );
 
 	buf.WriteColor( m_colors.text );
+	buf.WriteColor( m_colors.text_shadow );
 	buf.WriteColor( m_colors.border );
 
 	buf.WriteString( m_bases_render.file );
@@ -51,6 +49,7 @@ void Faction::Unserialize( types::Buffer buf ) {
 	m_name = buf.ReadString();
 
 	m_colors.text = buf.ReadColor();
+	m_colors.text_shadow = buf.ReadColor();
 	m_colors.border = buf.ReadColor();
 
 	m_bases_render.file = buf.ReadString();

@@ -6,8 +6,9 @@
 #include "util/String.h"
 #include "game/base/Base.h"
 #include "task/game/Slot.h"
-#include "task/game/Sprite.h"
-#include "task/game/InstancedSprite.h"
+#include "task/game/sprite/Sprite.h"
+#include "task/game/sprite/InstancedSprite.h"
+#include "task/game/text/InstancedText.h"
 #include "scene/actor/Instanced.h"
 #include "types/mesh/Rectangle.h"
 #include "scene/actor/Sprite.h"
@@ -17,26 +18,35 @@ namespace task {
 namespace game {
 namespace base {
 
+static const std::vector< uint8_t > s_base_render_population_thresholds = {
+	1,
+	4,
+	8,
+	15,
+};
+
 Base::Base(
-	BaseManager* bm,
 	const size_t id,
 	Slot* slot,
 	tile::Tile* tile,
+	const bool is_owned,
 	const types::Vec3& render_coords,
-	const bool is_owned
+	text::InstancedText* render_name_sprite,
+	size_t population
 )
-	: m_bm( bm )
+	: TileObject( tile )
 	, m_id( id )
 	, m_faction( slot->GetFaction() )
-	, m_tile( tile )
 	, m_render(
 		{
 			render_coords,
+			render_name_sprite,
 			false,
 			0,
 		}
 	)
-	, m_is_owned( is_owned ) {
+	, m_is_owned( is_owned )
+	, m_population( population ) {
 	m_render_data.base = GetMeshTex( GetSprite()->instanced_sprite );
 	m_tile->SetBase( this );
 }
@@ -44,6 +54,7 @@ Base::Base(
 Base::~Base() {
 	Hide();
 	m_tile->UnsetBase( this );
+	delete m_render.name_sprite;
 }
 
 const size_t Base::GetId() const {
@@ -58,15 +69,22 @@ tile::Tile* Base::GetTile() const {
 	return m_tile;
 }
 
-Sprite* Base::GetSprite() const {
-	return m_faction->GetBaseSprite( false, 1, 0 );
+sprite::Sprite* Base::GetSprite() const {
+	uint8_t size = 0;
+	for ( uint8_t i = 0 ; i < s_base_render_population_thresholds.size() ; i++ ) {
+		if ( s_base_render_population_thresholds.at( i ) > m_population ) {
+			break;
+		}
+		size = i;
+	}
+	return m_faction->GetBaseSprite( m_tile->IsWater(), size, 0 ); // TODO: perimeter
 }
 
 void Base::Show() {
 	if ( !m_render.is_rendered ) {
 		const auto& c = m_render.coords;
 
-		Sprite* sprite = GetSprite();
+		sprite::Sprite* sprite = GetSprite();
 
 		if ( !m_render.instance_id ) {
 			m_render.instance_id = sprite->next_instance_id++;
@@ -79,6 +97,14 @@ void Base::Show() {
 			}
 		);
 
+		m_render.name_sprite->ShowAt(
+			{
+				m_render.coords.x,
+				m_render.coords.y - 0.25f,
+				m_render.coords.z - 0.25f
+			}
+		);
+
 		m_render.is_rendered = true;
 	}
 }
@@ -86,6 +112,7 @@ void Base::Show() {
 void Base::Hide() {
 	if ( m_render.is_rendered ) {
 		GetSprite()->instanced_sprite->actor->RemoveInstance( m_render.instance_id );
+		m_render.name_sprite->Hide();
 		m_render.is_rendered = false;
 	}
 }
@@ -94,7 +121,13 @@ const Base::render_data_t& Base::GetRenderData() const {
 	return m_render_data;
 }
 
-Base::meshtex_t Base::GetMeshTex( const InstancedSprite* sprite ) {
+void Base::SetRenderCoords( const types::Vec3& coords ) {
+	Hide();
+	m_render.coords = coords;
+	Show();
+}
+
+Base::meshtex_t Base::GetMeshTex( const sprite::InstancedSprite* sprite ) {
 	auto* texture = sprite->actor->GetSpriteActor()->GetTexture();
 	NEWV( mesh, types::mesh::Rectangle );
 	mesh->SetCoords(

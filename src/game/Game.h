@@ -1,6 +1,8 @@
 #pragma once
 
 #include <unordered_map>
+#include <unordered_set>
+#include <string>
 #include <map>
 #include <vector>
 
@@ -331,6 +333,7 @@ public:
 	void SpawnUnit( unit::Unit* unit );
 	void SkipUnitTurn( const size_t unit_id );
 	void DespawnUnit( const size_t unit_id );
+	std::string RegisterBaseName( const std::string& requested_name );
 	void SpawnBase( base::Base* base );
 	const std::string* MoveUnitValidate( unit::Unit* unit, map::tile::Tile* dst_tile );
 	const gse::Value MoveUnitResolve( unit::Unit* unit, map::tile::Tile* dst_tile );
@@ -467,6 +470,8 @@ private:
 	void ProcessTileLockRequests();
 
 	std::vector< std::pair< map::tile::positions_t, cb_oncomplete > > m_tile_lock_callbacks = {}; // tile positions (for matching), callback
+
+	std::unordered_set< std::string > m_registered_base_names = {};
 
 private:
 	friend class bindings::Bindings;

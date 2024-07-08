@@ -35,6 +35,10 @@ Tile::Tile( const types::Vec2< size_t >& coords )
 
 }
 
+const bool Tile::IsWater() const {
+	return m_is_water;
+}
+
 const types::Vec2< size_t >& Tile::GetCoords() const {
 	return m_coords;
 }
@@ -98,11 +102,18 @@ void Tile::Render( size_t selected_unit_id ) {
 	}
 	m_render.currently_rendered_fake_badges.clear();
 
+	bool should_show_units = !m_units.empty();
 	if ( m_base ) {
 		m_base->Show();
+		should_show_units = false;
+		for ( const auto& it : m_units ) {
+			if ( it.second->GetId() == selected_unit_id ) {
+				should_show_units = true;
+				break;
+			}
+		}
 	}
-
-	if ( !m_units.empty() ) {
+	if ( should_show_units ) {
 		const auto units_order = GetUnitsOrder( m_units );
 		ASSERT_NOLOG( !units_order.empty(), "units order is empty" );
 
@@ -134,10 +145,13 @@ void Tile::Render( size_t selected_unit_id ) {
 			}
 		}
 		if ( m_render.currently_rendered_unit ) {
-			m_render.currently_rendered_unit->Show();
 			const auto id = m_render.currently_rendered_unit->GetId();
+			m_render.currently_rendered_unit->Show();
 			if ( id == most_important_unit_id ) {
 				m_render.currently_rendered_unit->ShowBadge();
+			}
+			if ( id == selected_unit_id && m_render.currently_rendered_unit->IsActive() ) {
+				m_render.currently_rendered_unit->StartBadgeBlink();
 			}
 		}
 		size_t idx;
@@ -145,6 +159,13 @@ void Tile::Render( size_t selected_unit_id ) {
 		for ( size_t i = 0 ; i < fake_badges.size() ; i++ ) { // order is important
 			idx = fake_badges.size() - i - 1;
 			fake_badges.at( idx )->ShowFakeBadge( i );
+		}
+	}
+	else {
+		for ( const auto& it : m_units ) {
+			it.second->Hide();
+			it.second->HideFakeBadge();
+			it.second->HideBadge();
 		}
 	}
 
@@ -206,6 +227,8 @@ const Tile::render_data_t& Tile::GetRenderData() const {
 }
 
 void Tile::Update( const ::game::map::tile::Tile& tile, const ::game::map::tile::TileState& ts ) {
+
+	m_is_water = tile.is_water_tile;
 
 	::game::map::tile::tile_layer_type_t lt = ( tile.is_water_tile
 		? ::game::map::tile::LAYER_WATER
@@ -480,6 +503,9 @@ void Tile::Update( const ::game::map::tile::Tile& tile, const ::game::map::tile:
 
 	for ( const auto& it : m_units ) {
 		it.second->UpdateFromTile();
+	}
+	if ( m_base ) {
+		m_base->UpdateFromTile();
 	}
 }
 

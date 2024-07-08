@@ -15,6 +15,14 @@ static const std::unordered_map< operator_type_t, std::string > s_op_labels = {
 		"return"
 	},
 	{
+		OT_BREAK,
+		"break"
+	},
+	{
+		OT_CONTINUE,
+		"continue"
+	},
+	{
 		OT_THROW,
 		"throw"
 	},

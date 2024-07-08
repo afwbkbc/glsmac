@@ -6,6 +6,10 @@
 namespace loader {
 
 const std::string& Loader::GetFilename( const resource::resource_t res ) const {
+	return g_engine->GetResourceManager()->GetFilename( res );
+}
+
+const std::string& Loader::GetPath( const resource::resource_t res ) const {
 	return g_engine->GetResourceManager()->GetPath( res );
 }
 
