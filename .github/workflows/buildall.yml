@@ -139,7 +139,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.info.outputs.ver }}-${{ steps.info.outputs.sha }}
-          release_name: ${{ steps.info.outputs.ver }}-${{ steps.info.outputs.sha }}
+          tag_name: ${{ needs.prepare.outputs.ver }}-${{ needs.prepare.outputs.sha }}
+          release_name: ${{ needs.prepare.outputs.ver }}-${{ needs.prepare.outputs.sha }}
           on_release_exists: update_only_unreleased_or_skip
           draft: false
