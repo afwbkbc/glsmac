@@ -67,7 +67,7 @@ jobs:
       - name: make
         working-directory: ./build
         run: make
-      - name: data
+      - name: data
         working-directory: ./build
         run: mv ../GLSMAC_data bin/
       - name: pack
