@@ -30,6 +30,7 @@ jobs:
 #        env:
 #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: info
+        id: info
         env:
           sha: ${{ steps.short-sha.outputs.sha }}
         run: echo ${{ env.ver }} ${{ env.sha }}
@@ -86,7 +87,7 @@ jobs:
           asset_content_type: application/gzip
 
 
-  build_windows:
+  build_windows64:
     needs: [prepare]
     runs-on: windows-latest
     steps:
@@ -107,20 +108,21 @@ jobs:
         working-directory: ./build
         run: mv ../GLSMAC_data bin/
       - name: pack
-        working-directory: ./build
-        run: tar -C bin -zcvf GLSMAC.tar.gz GLSMAC.exe GLSMAC_data
+        working-directory: ./build/bin
+#        run: tar -C bin -zcvf GLSMAC.tar.gz GLSMAC.exe GLSMAC_data
+        run: Compress-Archive -Path GLSMAC.exe,GLSMAC_data -Destination ../GLSMAC.zip
       - name: publish
         uses: actions/upload-artifact@v3
         with:
           name: GLSMAC-windows64-bin
           path: |
-            ./build/GLSMAC.tar.gz
+            ./build/GLSMAC.zip
       - name: upload
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.prepare.outputs.upload_url }}
-          asset_path: ./build/GLSMAC.tar.gz
-          asset_name: GLSMAC-${{ needs.prepare.outputs.ver }}-windows64-${{ needs.prepare.outputs.sha }}.tar.gz
+          asset_path: ./build/GLSMAC.zip
+          asset_name: GLSMAC-${{ needs.prepare.outputs.ver }}-windows64-${{ needs.prepare.outputs.sha }}.zip
           asset_content_type: application/gzip
