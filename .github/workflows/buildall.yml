@@ -14,10 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
-      ver: ${{ steps.info.env.ver }}
-      sha: ${{ steps.info.env.sha }}
-    env:
-      ver: v0.3
+      ver: ${{ steps.info.outputs.ver }}
+      sha: ${{ steps.info.outputs.sha }}
     steps:
       - uses: benjlevesque/short-sha@v2.1
         id: short-sha
@@ -32,16 +30,20 @@ jobs:
       - name: info
         id: info
         env:
+          ver: v0.3
           sha: ${{ steps.short-sha.outputs.sha }}
         run: echo ${{ env.ver }} ${{ env.sha }}
+        outputs:
+          ver: ${{ env.ver }}
+          sha: ${{ env.sha }}
       - name: create-release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v0.3-${{ steps.short-sha.outputs.sha }}
-          release_name: ${{ env.ver }}-${{ env.sha }}
+          tag_name: ${{ steps.info.outputs.ver }}-${{ steps.short-sha.outputs.sha }}
+          release_name: ${{ steps.info.outputs.ver }}-${{ steps.info.outputs.sha }}
           draft: false
           prerelease: false
 
