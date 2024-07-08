@@ -50,7 +50,7 @@ jobs:
 
 
   build_linux:
-    needs: [prepare, finalize]
+    needs: [prepare]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -91,7 +91,7 @@ jobs:
 
 
   build_windows:
-    needs: [prepare, finalize]
+    needs: [prepare]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
@@ -130,8 +130,7 @@ jobs:
           asset_content_type: application/gzip
 
   finalize:
-#    needs: [prepare, build_linux, build_windows]
-    needs: [prepare]
+    needs: [prepare, build_linux, build_windows]
     runs-on: ubuntu-latest
     steps:
       - name: update-release
