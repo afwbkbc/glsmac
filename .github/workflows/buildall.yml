@@ -101,7 +101,7 @@ jobs:
           mkdir build
       - name: cmake
         working-directory: ./build
-        run: cmake -G Ninja -DCMAKE_BUILD_TYPE=Portable64 -DVENDORED_DEPENDENCIES=1 ..
+        run: cmake -G Ninja -DCMAKE_BUILD_TYPE=Portable64 ..
       - name: make
         working-directory: ./build
         run: ninja
