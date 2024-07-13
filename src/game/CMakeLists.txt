@@ -1,4 +1,5 @@
 SUBDIR( backend )
+SUBDIR( frontend )
 
 SET( SRC ${SRC}
 
