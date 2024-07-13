@@ -10,7 +10,7 @@ const std::vector< std::string > String::SplitToLines( const std::string& input 
 	std::vector< std::string > lines = {};
 	auto ss = std::stringstream{ input };
 	for ( std::string line ; std::getline( ss, line, '\n' ) ; ) {
-		if ( line.back() == '\r' ) {
+		if ( !line.empty() && line.back() == '\r' ) {
 			line.erase( line.end() - 1 );
 		}
 		lines.push_back( line );
