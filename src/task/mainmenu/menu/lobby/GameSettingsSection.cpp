@@ -4,20 +4,20 @@
 
 #include "Lobby.h"
 #include "ui/object/Label.h"
-#include "game/Player.h"
-#include "game/settings/Settings.h"
+#include "game/backend/Player.h"
+#include "game/backend/settings/Settings.h"
 #include "util/FS.h"
 #include "engine/Engine.h"
 #include "ui/object/Button.h"
 #include "ui/UI.h"
 #include "ui/object/FileBrowser.h"
-#include "game/map/Consts.h"
+#include "game/backend/map/Consts.h"
 
 namespace task {
 namespace mainmenu {
 namespace lobby {
 
-GameSettingsSection::GameSettingsSection( Lobby* lobby, ::game::settings::GlobalSettings* game_settings )
+GameSettingsSection::GameSettingsSection( Lobby* lobby, game::backend::settings::GlobalSettings* game_settings )
 	: LobbySection( lobby )
 	, m_game_settings( game_settings ) {
 	SetAlign( ui::ALIGN_LEFT | ui::ALIGN_TOP );
@@ -85,7 +85,7 @@ void GameSettingsSection::Destroy() {
 
 void GameSettingsSection::Lock() {
 	if ( !m_is_locked ) {
-		ASSERT( GetLobby()->GetPlayer()->GetRole() == ::game::Player::PR_HOST, "settings can only be locked for host" );
+		ASSERT( GetLobby()->GetPlayer()->GetRole() == game::backend::Player::PR_HOST, "settings can only be locked for host" );
 		Log( "Locking game settings" );
 		m_is_locked = true;
 		UpdateRows();
@@ -94,7 +94,7 @@ void GameSettingsSection::Lock() {
 
 void GameSettingsSection::Unlock() {
 	if ( m_is_locked ) {
-		ASSERT( GetLobby()->GetPlayer()->GetRole() == ::game::Player::PR_HOST, "settings can only be unlocked for host" );
+		ASSERT( GetLobby()->GetPlayer()->GetRole() == game::backend::Player::PR_HOST, "settings can only be unlocked for host" );
 		Log( "Unlocking game settings" );
 		m_is_locked = false;
 		UpdateRows();
@@ -140,14 +140,14 @@ void GameSettingsSection::UpdateRows() {
 
 	ui::object::NumChoiceList::value_t game_type = 0;
 	switch ( m_game_settings->map.type ) {
-		case game::settings::MapSettings::MT_RANDOM:
-		case game::settings::MapSettings::MT_CUSTOM: {
+		case game::backend::settings::MapSettings::MT_RANDOM:
+		case game::backend::settings::MapSettings::MT_CUSTOM: {
 			HideRows( m_loadmap_rows );
 			ShowRows( m_non_loadmap_rows );
 			game_type = 0;
 			break;
 		}
-		case game::settings::MapSettings::MT_MAPFILE: {
+		case game::backend::settings::MapSettings::MT_MAPFILE: {
 			HideRows( m_non_loadmap_rows );
 			ShowRows( m_loadmap_rows );
 			game_type = 1;
@@ -166,19 +166,19 @@ void GameSettingsSection::UpdateRows() {
 
 	UpdateRow(
 		RI_PLANET_SIZE, {
-			{ ::game::settings::MapSettings::MAP_CONFIG_TINY,     "Tiny Planet" },
-			{ ::game::settings::MapSettings::MAP_CONFIG_SMALL,    "Small Planet" },
-			{ ::game::settings::MapSettings::MAP_CONFIG_STANDARD, "Standard Planet" },
-			{ ::game::settings::MapSettings::MAP_CONFIG_LARGE,    "Large Planet" },
-			{ ::game::settings::MapSettings::MAP_CONFIG_HUGE,     "Huge Planet" },
+			{ game::backend::settings::MapSettings::MAP_CONFIG_TINY,     "Tiny Planet" },
+			{ game::backend::settings::MapSettings::MAP_CONFIG_SMALL,    "Small Planet" },
+			{ game::backend::settings::MapSettings::MAP_CONFIG_STANDARD, "Standard Planet" },
+			{ game::backend::settings::MapSettings::MAP_CONFIG_LARGE,    "Large Planet" },
+			{ game::backend::settings::MapSettings::MAP_CONFIG_HUGE,     "Huge Planet" },
 		}, m_game_settings->map.size
 	);
 
 	UpdateRow(
 		RI_PLANET_OCEAN, {
-			{ ::game::settings::MapSettings::MAP_CONFIG_OCEAN_LOW,    "30-50% of Surface" },
-			{ ::game::settings::MapSettings::MAP_CONFIG_OCEAN_MEDIUM, "50-70% of Surface" },
-			{ ::game::settings::MapSettings::MAP_CONFIG_OCEAN_HIGH,   "70-90% of Surface" },
+			{ game::backend::settings::MapSettings::MAP_CONFIG_OCEAN_LOW,    "30-50% of Surface" },
+			{ game::backend::settings::MapSettings::MAP_CONFIG_OCEAN_MEDIUM, "50-70% of Surface" },
+			{ game::backend::settings::MapSettings::MAP_CONFIG_OCEAN_HIGH,   "70-90% of Surface" },
 		}, m_game_settings->map.ocean
 	);
 
@@ -217,7 +217,7 @@ void GameSettingsSection::UpdateRows() {
 }
 
 const bool GameSettingsSection::IsLocked() const {
-	return m_is_locked || GetLobby()->GetPlayer()->GetRole() != ::game::Player::PR_HOST; // always locked for non-host
+	return m_is_locked || GetLobby()->GetPlayer()->GetRole() != game::backend::Player::PR_HOST; // always locked for non-host
 }
 
 void GameSettingsSection::CreateRow( const row_id_t row_id, const std::string& label, const size_t label_width, const size_t choices_width ) {
@@ -248,7 +248,7 @@ void GameSettingsSection::CreateRow( const row_id_t row_id, const std::string& l
 						ShowLoadMap();
 					}
 					else { // "random map"
-						m_game_settings->map.type = game::settings::MapSettings::MT_RANDOM;
+						m_game_settings->map.type = game::backend::settings::MapSettings::MT_RANDOM;
 						m_game_settings->map.filename = "";
 						UpdateRows();
 						GetLobby()->UpdateGameSettings();
@@ -350,9 +350,9 @@ void GameSettingsSection::ShowLoadMap() {
 		m_load_map.browser->SetDefaultFilename( util::FS::GetBaseName( filename ) );
 	}
 	else {
-		m_load_map.browser->SetDefaultDirectory( util::FS::GetAbsolutePath( ::game::map::s_consts.fs.default_map_directory ) );
+		m_load_map.browser->SetDefaultDirectory( util::FS::GetAbsolutePath( game::backend::map::s_consts.fs.default_map_directory ) );
 	}
-	m_load_map.browser->SetFileExtension( ::game::map::s_consts.fs.default_map_extension );
+	m_load_map.browser->SetFileExtension( game::backend::map::s_consts.fs.default_map_extension );
 	m_load_map.browser->On(
 		ui::event::EV_SELECT, EH( this ) {
 			const auto& path = m_load_map.browser->GetSelectedFile();
@@ -363,7 +363,7 @@ void GameSettingsSection::ShowLoadMap() {
 			}
 			else {
 				ASSERT( util::FS::IsAbsolutePath( path ), "path must be absolute" );
-				m_game_settings->map.type = game::settings::MapSettings::MT_MAPFILE;
+				m_game_settings->map.type = game::backend::settings::MapSettings::MT_MAPFILE;
 				m_game_settings->map.filename = path;
 				UpdateRows();
 				GetLobby()->UpdateGameSettings();

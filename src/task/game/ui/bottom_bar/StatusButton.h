@@ -2,7 +2,7 @@
 
 #include "ui/object/Button.h"
 
-#include "game/turn/Types.h"
+#include "game/backend/turn/Types.h"
 
 #include "util/Timer.h"
 
@@ -23,14 +23,14 @@ CLASS( StatusButton, ::ui::object::Button )
 	void Iterate() override;
 	void Destroy() override;
 
-	void SetStatus( const ::game::turn::turn_status_t status );
+	void SetStatus( const ::game::backend::turn::turn_status_t status );
 
 private:
 	const size_t FLASH_INTERVAL_MS = 10;
 
 	Game* m_game;
 
-	::game::turn::turn_status_t m_status_type = ::game::turn::TS_NONE;
+	::game::backend::turn::turn_status_t m_status_type = ::game::backend::turn::TS_NONE;
 
 	util::Timer m_flash_timer;
 	float m_flash_alpha = 0.0f;

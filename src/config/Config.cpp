@@ -9,7 +9,7 @@
 #include "util/FS.h"
 #include "util/random/Random.h"
 
-#include "game/settings/Settings.h"
+#include "game/backend/settings/Settings.h"
 
 namespace config {
 
@@ -188,7 +188,7 @@ Config::Config( const int argc, const char* argv[] )
 		}
 	);
 	const auto f_add_map_parameter_option =
-		[ this, s_quickstart_argument_missing ]( const std::string& name, const std::vector< std::string >& values, const std::string& desc, debug_flag_t flag, game::settings::map_config_value_t* out_param )
+		[ this, s_quickstart_argument_missing ]( const std::string& name, const std::vector< std::string >& values, const std::string& desc, debug_flag_t flag, game::backend::settings::map_config_value_t* out_param )
 			-> void {
 			ASSERT( values.size() == 3, "values size mismatch" );
 			m_parser->AddRule(
@@ -360,19 +360,19 @@ const types::Vec2< size_t >& Config::GetQuickstartMapSize() const {
 	return m_quickstart_mapsize;
 }
 
-const game::settings::map_config_value_t Config::GetQuickstartMapOcean() const {
+const game::backend::settings::map_config_value_t Config::GetQuickstartMapOcean() const {
 	return m_quickstart_map_ocean;
 }
 
-const game::settings::map_config_value_t Config::GetQuickstartMapErosive() const {
+const game::backend::settings::map_config_value_t Config::GetQuickstartMapErosive() const {
 	return m_quickstart_map_erosive;
 }
 
-const game::settings::map_config_value_t Config::GetQuickstartMapLifeforms() const {
+const game::backend::settings::map_config_value_t Config::GetQuickstartMapLifeforms() const {
 	return m_quickstart_map_lifeforms;
 }
 
-const game::settings::map_config_value_t Config::GetQuickstartMapClouds() const {
+const game::backend::settings::map_config_value_t Config::GetQuickstartMapClouds() const {
 	return m_quickstart_map_clouds;
 }
 

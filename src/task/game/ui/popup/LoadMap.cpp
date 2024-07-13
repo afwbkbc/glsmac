@@ -1,7 +1,7 @@
 #include "LoadMap.h"
 
 #include "task/game/Game.h"
-#include "game/map/Consts.h"
+#include "game/backend/map/Consts.h"
 
 namespace task {
 namespace game {
@@ -14,7 +14,7 @@ LoadMap::LoadMap( Game* game )
 	"LOAD MAP",
 	FM_READ,
 	game->GetMapLastDirectory(),
-	::game::map::s_consts.fs.default_map_extension,
+	::game::backend::map::s_consts.fs.default_map_extension,
 	game->GetMapFilename()
 ) {
 

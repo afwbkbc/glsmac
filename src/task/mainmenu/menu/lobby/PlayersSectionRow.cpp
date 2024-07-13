@@ -1,10 +1,10 @@
 #include "PlayersSectionRow.h"
 
 #include "engine/Engine.h"
-#include "game/slot/Slot.h"
+#include "game/backend/slot/Slot.h"
 #include "PlayersSection.h"
 #include "Lobby.h"
-#include "game/settings/Settings.h"
+#include "game/backend/settings/Settings.h"
 #include "ui/object/Surface.h"
 #include "ui/UI.h"
 #include "loader/texture/TextureLoader.h"
@@ -13,7 +13,7 @@ namespace task {
 namespace mainmenu {
 namespace lobby {
 
-PlayersSectionRow::PlayersSectionRow( PlayersSection* parent, const size_t slot_num, ::game::slot::Slot* slot, const std::string& class_name )
+PlayersSectionRow::PlayersSectionRow( PlayersSection* parent, const size_t slot_num, game::backend::slot::Slot* slot, const std::string& class_name )
 	: UIContainer( class_name )
 	, m_parent( parent )
 	, m_slot_num( slot_num )
@@ -25,19 +25,19 @@ void PlayersSectionRow::Create() {
 	UIContainer::Create();
 
 	auto* me = m_parent->GetLobby()->GetPlayer();
-	const bool am_i_host = me->GetRole() == ::game::Player::PR_HOST;
-	const bool am_i_ready = me->GetSlot()->HasPlayerFlag( ::game::slot::PF_READY );
+	const bool am_i_host = me->GetRole() == game::backend::Player::PR_HOST;
+	const bool am_i_ready = me->GetSlot()->HasPlayerFlag( game::backend::slot::PF_READY );
 
 	NEW( m_elements.actions, ui::object::NumDropdown, "PopupDropdown" );
 	m_elements.actions->SetLeft( 36 );
 	m_elements.actions->SetWidth( 178 );
 
-	if ( m_slot->GetState() == ::game::slot::Slot::SS_PLAYER ) {
+	if ( m_slot->GetState() == game::backend::slot::Slot::SS_PLAYER ) {
 
 		auto* player = m_slot->GetPlayer();
 		ASSERT( player, "slot player is null" );
 		const bool is_it_me = player == me;
-		const bool is_it_ready = m_slot->HasPlayerFlag( ::game::slot::PF_READY );
+		const bool is_it_ready = m_slot->HasPlayerFlag( game::backend::slot::PF_READY );
 		const bool allowed_to_change = is_it_me && !am_i_ready;
 
 		m_elements.actions->SetMode( ui::object::NumDropdown::DM_MENU );
@@ -170,7 +170,7 @@ void PlayersSectionRow::Create() {
 				}
 			);
 		}
-		if ( m_slot->GetState() == game::slot::Slot::SS_OPEN ) {
+		if ( m_slot->GetState() == game::backend::slot::Slot::SS_OPEN ) {
 			m_elements.actions->SetValue( "Open" );
 		}
 		else {

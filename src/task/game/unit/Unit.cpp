@@ -3,7 +3,7 @@
 #include "task/game/Game.h"
 #include "task/game/tile/Tile.h"
 #include "util/String.h"
-#include "game/unit/Unit.h"
+#include "game/backend/unit/Unit.h"
 #include "task/game/Slot.h"
 #include "UnitDef.h"
 #include "BadgeDefs.h"
@@ -28,10 +28,10 @@ Unit::Unit(
 	tile::Tile* tile,
 	const types::Vec3& render_coords,
 	const bool is_owned,
-	const ::game::unit::movement_t movement,
-	const ::game::unit::morale_t morale,
+	const ::game::backend::unit::movement_t movement,
+	const ::game::backend::unit::morale_t morale,
 	const std::string& morale_string,
-	const ::game::unit::health_t health
+	const ::game::backend::unit::health_t health
 )
 	: TileObject( tile )
 	, m_um( um )
@@ -287,14 +287,14 @@ void Unit::Refresh() {
 	}
 }
 
-void Unit::SetMovement( const ::game::unit::movement_t movement ) {
+void Unit::SetMovement( const ::game::backend::unit::movement_t movement ) {
 	if ( movement != m_movement ) {
 		m_movement = movement;
 		m_need_refresh = true;
 	}
 }
 
-void Unit::SetHealth( const ::game::unit::health_t health ) {
+void Unit::SetHealth( const ::game::backend::unit::health_t health ) {
 	if ( health != m_health ) {
 		m_health = health;
 		m_need_refresh = true;
@@ -302,7 +302,7 @@ void Unit::SetHealth( const ::game::unit::health_t health ) {
 }
 
 const bool Unit::CanMove() const {
-	return m_movement >= ::game::unit::Unit::MINIMUM_MOVEMENT_TO_KEEP;
+	return m_movement >= ::game::backend::unit::Unit::MINIMUM_MOVEMENT_TO_KEEP;
 }
 
 void Unit::SetTile( tile::Tile* dst_tile ) {

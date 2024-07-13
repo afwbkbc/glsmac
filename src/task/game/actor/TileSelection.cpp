@@ -9,7 +9,7 @@ namespace task {
 namespace game {
 namespace actor {
 
-TileSelection::TileSelection( const ::game::map::tile::tile_vertices_t& coords )
+TileSelection::TileSelection( const ::game::backend::map::tile::tile_vertices_t& coords )
 	: Actor( "TileSelection" ) {
 	NEWV( mesh, types::mesh::Render, 5, 4 );
 

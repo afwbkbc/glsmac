@@ -1,6 +1,6 @@
 #include "Faction.h"
 
-#include "game/rules/Faction.h"
+#include "game/backend/rules/Faction.h"
 #include "task/game/sprite/InstancedSpriteManager.h"
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
@@ -11,7 +11,7 @@ namespace task {
 namespace game {
 namespace faction {
 
-Faction::Faction( const ::game::rules::Faction* def, sprite::InstancedSpriteManager* ism )
+Faction::Faction( const ::game::backend::rules::Faction* def, sprite::InstancedSpriteManager* ism )
 	: m_ism( ism )
 	, m_id( def->m_id )
 	, m_colors(
@@ -27,7 +27,7 @@ Faction::Faction( const ::game::rules::Faction* def, sprite::InstancedSpriteMana
 			def->m_base_names.water,
 		}
 	)
-	, m_is_progenitor( def->m_flags & ::game::rules::Faction::FF_PROGENITOR )
+	, m_is_progenitor( def->m_flags & ::game::backend::rules::Faction::FF_PROGENITOR )
 	, m_render(
 		{
 			def->m_bases_render,

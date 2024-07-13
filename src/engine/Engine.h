@@ -60,7 +60,7 @@ namespace network {
 class Network;
 }
 
-namespace game {
+namespace game::backend {
 class Game;
 }
 
@@ -91,7 +91,7 @@ CLASS( Engine, common::Class );
 		audio::Audio* audio,
 		network::Network* network,
 		ui::UI* ui,
-		game::Game* game
+		game::backend::Game* game
 	);
 
 	~Engine();
@@ -111,7 +111,7 @@ CLASS( Engine, common::Class );
 	network::Network* GetNetwork() const { return m_network; }
 	scheduler::Scheduler* GetScheduler() const { return m_scheduler; }
 	ui::UI* GetUI() const { return m_ui; }
-	game::Game* GetGame() const { return m_game; }
+	game::backend::Game* GetGame() const { return m_game; }
 
 protected:
 
@@ -133,7 +133,7 @@ protected:
 	audio::Audio* m_audio = nullptr;
 	network::Network* m_network = nullptr;
 	ui::UI* m_ui = nullptr;
-	game::Game* m_game = nullptr;
+	game::backend::Game* m_game = nullptr;
 
 };
 

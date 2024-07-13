@@ -1,6 +1,6 @@
 #include "SlidingMenu.h"
 
-#include "game/settings/Settings.h"
+#include "game/backend/settings/Settings.h"
 #include "engine/Engine.h"
 #include "ui/slidingmenu/MenuBlock.h"
 #include "ui/UI.h"

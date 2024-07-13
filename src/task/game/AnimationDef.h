@@ -1,13 +1,13 @@
 #pragma once
 
 #include "Types.h"
-#include "game/animation/Types.h"
+#include "game/backend/animation/Types.h"
 
 namespace types {
 class Sound;
 }
 
-namespace game::animation {
+namespace game::backend::animation {
 class Def;
 }
 
@@ -21,7 +21,7 @@ class InstancedSpriteManager;
 class AnimationDef {
 public:
 
-	AnimationDef( sprite::InstancedSpriteManager* ism, const ::game::animation::Def* def );
+	AnimationDef( sprite::InstancedSpriteManager* ism, const ::game::backend::animation::Def* def );
 	~AnimationDef();
 
 	const instanced_sprites_t& GetSprites();
@@ -32,10 +32,10 @@ private:
 
 	sprite::InstancedSpriteManager* const m_ism = nullptr;
 
-	::game::animation::sprite_render_info_t m_render = {};
+	::game::backend::animation::sprite_render_info_t m_render = {};
 
 	std::string m_id = "";
-	::game::animation::animation_type_t m_type;
+	::game::backend::animation::animation_type_t m_type;
 
 	types::Sound* m_sound = nullptr;
 

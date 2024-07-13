@@ -3,7 +3,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "game/unit/Types.h"
+#include "game/backend/unit/Types.h"
 
 #include "types/Vec3.h"
 // TODO: remove?
@@ -15,7 +15,7 @@ class Texture;
 }
 }
 
-namespace game::unit {
+namespace game::backend::unit {
 class Def;
 }
 
@@ -30,12 +30,12 @@ namespace unit {
 
 class UnitDef {
 public:
-	UnitDef( sprite::InstancedSpriteManager* ism, const ::game::unit::Def* unitdef );
+	UnitDef( sprite::InstancedSpriteManager* ism, const ::game::backend::unit::Def* unitdef );
 	~UnitDef();
 
 	const bool IsArtillery() const;
 
-	sprite::Sprite* GetSprite( const ::game::unit::morale_t morale );
+	sprite::Sprite* GetSprite( const ::game::backend::unit::morale_t morale );
 
 	const bool IsImmovable() const;
 
@@ -46,17 +46,17 @@ private:
 
 	sprite::InstancedSpriteManager* const m_ism;
 
-	::game::unit::sprite_render_info_t m_render = {};
+	::game::backend::unit::sprite_render_info_t m_render = {};
 
 	std::string m_id;
 	std::string m_name;
-	::game::unit::def_type_t m_type;
+	::game::backend::unit::def_type_t m_type;
 
-	typedef std::unordered_map< ::game::unit::morale_t, sprite::Sprite > morale_based_sprites_t;
+	typedef std::unordered_map< ::game::backend::unit::morale_t, sprite::Sprite > morale_based_sprites_t;
 
 	struct {
-		::game::unit::movement_type_t movement_type;
-		::game::unit::movement_t movement_per_turn;
+		::game::backend::unit::movement_type_t movement_type;
+		::game::backend::unit::movement_t movement_per_turn;
 		struct {
 			bool is_sprite = false;
 			types::texture::Texture* texture = nullptr;

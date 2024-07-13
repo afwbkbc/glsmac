@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "game/map/Types.h"
+#include "game/backend/map/Types.h"
 
 #include "types/Color.h"
 
@@ -39,9 +39,9 @@ private:
 
 	struct symbol_pos_t {
 		struct {
-			::game::map::pcx_texture_coordinates_t top_left;
-			::game::map::pcx_texture_coordinates_t width_height;
-			::game::map::pcx_texture_coordinates_t center;
+			::game::backend::map::pcx_texture_coordinates_t top_left;
+			::game::backend::map::pcx_texture_coordinates_t width_height;
+			::game::backend::map::pcx_texture_coordinates_t center;
 		} src;
 		struct {
 			types::Vec2< int > top_left;

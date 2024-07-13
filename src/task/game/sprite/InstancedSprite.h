@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "game/map/Types.h"
+#include "game/backend/map/Types.h"
 
 namespace scene::actor {
 class Instanced;
@@ -16,9 +16,9 @@ class InstancedSprite {
 public:
 	std::string key;
 	std::string name;
-	::game::map::pcx_texture_coordinates_t xy;
-	::game::map::pcx_texture_coordinates_t wh;
-	::game::map::pcx_texture_coordinates_t cxy;
+	::game::backend::map::pcx_texture_coordinates_t xy;
+	::game::backend::map::pcx_texture_coordinates_t wh;
+	::game::backend::map::pcx_texture_coordinates_t cxy;
 	scene::actor::Instanced* actor;
 };
 

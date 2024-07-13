@@ -5,14 +5,14 @@
 
 #include "common/Common.h"
 
-#include "game/base/BaseData.h"
+#include "game/backend/base/BaseData.h"
 
-#include "game/unit/Types.h"
+#include "game/backend/unit/Types.h"
 
 #include "types/Vec2.h"
 #include "types/Vec3.h"
 
-namespace game::unit {
+namespace game::backend::unit {
 class Def;
 }
 
@@ -56,7 +56,7 @@ CLASS( BaseManager, common::Class )
 		const size_t slot_index,
 		const ::types::Vec2< size_t >& tile_coords,
 		const ::types::Vec3& render_coords,
-		const ::game::base::BaseData& data
+		const ::game::backend::base::BaseData& data
 	);
 	// TODO void DespawnBase( const size_t base_id );
 

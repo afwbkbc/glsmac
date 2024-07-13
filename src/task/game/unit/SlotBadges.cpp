@@ -58,7 +58,7 @@ SlotBadges::~SlotBadges() {
 	}
 }
 
-sprite::Sprite* SlotBadges::GetUnitBadgeSprite( const ::game::unit::morale_t morale, const bool is_active ) {
+sprite::Sprite* SlotBadges::GetUnitBadgeSprite( const ::game::backend::unit::morale_t morale, const bool is_active ) {
 	auto it = m_per_morale_sprites.find( morale );
 	if ( it == m_per_morale_sprites.end() ) {
 		it = m_per_morale_sprites.insert(

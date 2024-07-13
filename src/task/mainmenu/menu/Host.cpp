@@ -1,12 +1,12 @@
 #include "Host.h"
 
 #include "engine/Engine.h"
-#include "game/connection/Server.h"
+#include "game/backend/connection/Server.h"
 #include "ui/object/Section.h"
 #include "ui/object/Input.h"
 #include "ui/object/Label.h"
 #include "task/mainmenu/MainMenu.h"
-#include "game/State.h"
+#include "game/backend/State.h"
 
 namespace task {
 namespace mainmenu {
@@ -108,7 +108,7 @@ void Host::OnNext() {
 		m_mainmenu->m_state->m_settings.local.banned_addresses.clear(); // TODO: persist?
 
 		Hide();
-		NEWV( connection, ::game::connection::Server, &m_mainmenu->m_state->m_settings.local );
+		NEWV( connection, game::backend::connection::Server, &m_mainmenu->m_state->m_settings.local );
 		SetConnection( connection );
 	}
 

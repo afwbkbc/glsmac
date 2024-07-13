@@ -2,7 +2,7 @@
 
 #include "task/game/ui/UI.h"
 
-#include "game/turn/Types.h"
+#include "game/backend/turn/Types.h"
 
 #include "types/Vec2.h"
 #include "util/Timer.h"
@@ -68,7 +68,7 @@ CLASS( BottomBar, UI )
 	void AddMessage( const std::string& text );
 	void UpdateMapFileName();
 
-	void SetTurnStatus( const ::game::turn::turn_status_t status );
+	void SetTurnStatus( const ::game::backend::turn::turn_status_t status );
 
 private:
 	struct {

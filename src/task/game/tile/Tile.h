@@ -4,7 +4,7 @@
 #include <vector>
 #include <unordered_map>
 
-#include "game/map/tile/Types.h"
+#include "game/backend/map/tile/Types.h"
 
 #include "types/Vec2.h"
 #include "types/Vec3.h"
@@ -13,7 +13,7 @@ namespace types::mesh {
 class Render;
 }
 
-namespace game::map::tile {
+namespace game::backend::map::tile {
 class Tile;
 class TileState;
 }
@@ -63,11 +63,11 @@ public:
 	Tile* SE;
 	Tile* S;
 	Tile* SW;
-	Tile* GetNeighbour( const ::game::map::tile::direction_t direction );
+	Tile* GetNeighbour( const ::game::backend::map::tile::direction_t direction );
 
 	struct render_data_t {
 		types::Vec3 coords = {};
-		::game::map::tile::tile_vertices_t selection_coords = {};
+		::game::backend::map::tile::tile_vertices_t selection_coords = {};
 		std::vector< types::mesh::Render* > preview_meshes = {};
 		std::vector< std::string > preview_lines = {};
 		std::vector< std::string > sprites = {};
@@ -75,7 +75,7 @@ public:
 
 	const render_data_t& GetRenderData() const;
 
-	void Update( const ::game::map::tile::Tile& tile, const ::game::map::tile::TileState& ts );
+	void Update( const ::game::backend::map::tile::Tile& tile, const ::game::backend::map::tile::TileState& ts );
 
 private:
 	const types::Vec2< size_t > m_coords;

@@ -6,7 +6,7 @@
 #include "common/Common.h"
 
 #include "task/game/Types.h"
-#include "game/map/Types.h"
+#include "game/backend/map/Types.h"
 #include "types/texture/Types.h"
 #include "InstancedSprite.h"
 
@@ -31,9 +31,9 @@ public:
 	InstancedSprite* GetInstancedSprite(
 		const std::string& name,
 		types::texture::Texture* texture,
-		const ::game::map::pcx_texture_coordinates_t& src_xy,
-		const ::game::map::pcx_texture_coordinates_t& src_wh,
-		const ::game::map::pcx_texture_coordinates_t& src_cxy,
+		const ::game::backend::map::pcx_texture_coordinates_t& src_xy,
+		const ::game::backend::map::pcx_texture_coordinates_t& src_wh,
+		const ::game::backend::map::pcx_texture_coordinates_t& src_cxy,
 		const types::Vec2< float > dst_wh,
 		const z_level_t z_level,
 		const float z_index_adjustment = 0.0f

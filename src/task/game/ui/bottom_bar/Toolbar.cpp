@@ -28,8 +28,8 @@ void Toolbar::Create() {
 			0
 		};
 		uint8_t bx = 0, by = 0;
-		for ( auto t = ::game::map_editor::TT_NONE + 1 ; t < ::game::map_editor::TT_MAX ; t++ ) {
-			const auto tool = (::game::map_editor::tool_type_t)t;
+		for ( auto t = ::game::backend::map_editor::TT_NONE + 1 ; t < ::game::backend::map_editor::TT_MAX ; t++ ) {
+			const auto tool = (::game::backend::map_editor::tool_type_t)t;
 			ASSERT( m_tool_names.find( tool ) != m_tool_names.end(), "tool name not found" );
 			const std::string& tool_name = m_tool_names.at( tool );
 			NEWV( button, ::ui::object::SimpleButton, "BBMiddleAreaToolbarButton Tool " + tool_name );
@@ -58,8 +58,8 @@ void Toolbar::Create() {
 			10
 		};
 		uint8_t bx = 0, by = 0;
-		for ( auto b = ::game::map_editor::BT_NONE + 1 ; b < ::game::map_editor::BT_MAX ; b++ ) {
-			const auto brush = (::game::map_editor::brush_type_t)b;
+		for ( auto b = ::game::backend::map_editor::BT_NONE + 1 ; b < ::game::backend::map_editor::BT_MAX ; b++ ) {
+			const auto brush = (::game::backend::map_editor::brush_type_t)b;
 			ASSERT( m_brush_names.find( brush ) != m_brush_names.end(), "brush name not found" );
 			const std::string& brush_name = m_brush_names.at( brush );
 			NEWV( button, ::ui::object::SimpleButton, "BBMiddleAreaToolbarButton Brush " + brush_name );
@@ -110,14 +110,14 @@ void Toolbar::Create() {
 	);
 	m_tool_info.labels[ TI_MODE ]->SetText( "PLAY mode (No Scroll Lock)" );
 
-	SelectTool( ::game::map_editor::TT_ELEVATIONS );
-	SelectBrush( ::game::map_editor::BT_DOT );
+	SelectTool( ::game::backend::map_editor::TT_ELEVATIONS );
+	SelectBrush( ::game::backend::map_editor::BT_DOT );
 }
 
 void Toolbar::Destroy() {
 
 	{ // tools
-		SelectTool( ::game::map_editor::TT_NONE );
+		SelectTool( ::game::backend::map_editor::TT_NONE );
 		for ( auto& button : m_tool_buttons ) {
 			m_centered_block->RemoveChild( button );
 		}
@@ -125,7 +125,7 @@ void Toolbar::Destroy() {
 	}
 
 	{ // brushes
-		SelectBrush( ::game::map_editor::BT_NONE );
+		SelectBrush( ::game::backend::map_editor::BT_NONE );
 		for ( auto& button : m_brush_buttons ) {
 			m_centered_block->RemoveChild( button );
 		}
@@ -165,7 +165,7 @@ void Toolbar::UpdateMapFileName() {
 	m_tool_info.labels[ TI_FILE ]->SetText( "File: " + m_game->GetMapFilename() );
 }
 
-void Toolbar::SelectTool( ::game::map_editor::tool_type_t tool ) {
+void Toolbar::SelectTool( ::game::backend::map_editor::tool_type_t tool ) {
 
 	if ( m_game->GetEditorTool() != tool ) {
 
@@ -176,11 +176,11 @@ void Toolbar::SelectTool( ::game::map_editor::tool_type_t tool ) {
 		if ( m_active_tool_button ) {
 			m_active_tool_button->RemoveStyleModifier( ::ui::M_SELECTED );
 		}
-		if ( tool == ::game::map_editor::TT_NONE ) {
+		if ( tool == ::game::backend::map_editor::TT_NONE ) {
 			m_active_tool_button = nullptr;
 		}
 		else {
-			m_active_tool_button = m_tool_buttons.at( tool - 1 ); // because there's no button for ::game::map_editor::TT_NONE
+			m_active_tool_button = m_tool_buttons.at( tool - 1 ); // because there's no button for ::game::backend::map_editor::TT_NONE
 			m_active_tool_button->AddStyleModifier( ::ui::M_SELECTED );
 		}
 
@@ -188,7 +188,7 @@ void Toolbar::SelectTool( ::game::map_editor::tool_type_t tool ) {
 	}
 }
 
-void Toolbar::SelectBrush( ::game::map_editor::brush_type_t brush ) {
+void Toolbar::SelectBrush( ::game::backend::map_editor::brush_type_t brush ) {
 
 	if ( m_game->GetEditorBrush() != brush ) {
 
@@ -199,11 +199,11 @@ void Toolbar::SelectBrush( ::game::map_editor::brush_type_t brush ) {
 		if ( m_active_brush_button ) {
 			m_active_brush_button->RemoveStyleModifier( ::ui::M_SELECTED );
 		}
-		if ( brush == ::game::map_editor::BT_NONE ) {
+		if ( brush == ::game::backend::map_editor::BT_NONE ) {
 			m_active_brush_button = nullptr;
 		}
 		else {
-			m_active_brush_button = m_brush_buttons.at( brush - 1 ); // because there's no button for ::game::map_editor::BT_NONE
+			m_active_brush_button = m_brush_buttons.at( brush - 1 ); // because there's no button for ::game::backend::map_editor::BT_NONE
 			m_active_brush_button->AddStyleModifier( ::ui::M_SELECTED );
 		}
 

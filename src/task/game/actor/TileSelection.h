@@ -2,7 +2,7 @@
 
 #include "Actor.h"
 
-#include "game/map/tile/Types.h"
+#include "game/backend/map/tile/Types.h"
 
 #include "util/Timer.h"
 
@@ -17,7 +17,7 @@ CLASS( TileSelection, Actor )
 	static constexpr float GLOW_MAX = 1.0f;
 	static constexpr float GLOW_MIN = 0.25f;
 
-	TileSelection( const ::game::map::tile::tile_vertices_t& coords );
+	TileSelection( const ::game::backend::map::tile::tile_vertices_t& coords );
 
 	void Iterate() override;
 

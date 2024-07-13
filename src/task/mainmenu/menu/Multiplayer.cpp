@@ -5,8 +5,8 @@
 #include "ui/object/Panel.h"
 #include "ui/object/ChoiceList.h"
 #include "task/mainmenu/MainMenu.h"
-#include "game/State.h"
-#include "game/settings/Settings.h"
+#include "game/backend/State.h"
+#include "game/backend/settings/Settings.h"
 
 namespace task {
 namespace mainmenu {
@@ -63,7 +63,7 @@ void Multiplayer::Hide() {
 void Multiplayer::OnNext() {
 	const auto value = m_choices->GetValue();
 	if ( value == C_SIMPLE ) {
-		m_mainmenu->m_state->m_settings.local.network_type = game::settings::LocalSettings::NT_SIMPLETCP;
+		m_mainmenu->m_state->m_settings.local.network_type = game::backend::settings::LocalSettings::NT_SIMPLETCP;
 		NEWV( menu, HostJoin, m_mainmenu );
 		NextMenu( menu );
 	}

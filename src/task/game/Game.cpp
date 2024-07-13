@@ -8,21 +8,21 @@
 #include "config/Config.h"
 #include "scheduler/Scheduler.h"
 #include "../../ui/UI.h" // TODO: fix path
-#include "game/Game.h"
-#include "game/unit/Def.h"
-#include "game/animation/Def.h"
-#include "game/connection/Connection.h"
+#include "game/backend/Game.h"
+#include "game/backend/unit/Def.h"
+#include "game/backend/animation/Def.h"
+#include "game/backend/connection/Connection.h"
 #include "task/mainmenu/MainMenu.h"
 #include "graphics/Graphics.h"
 #include "util/FS.h"
 #include "ui/popup/PleaseDontGo.h"
-#include "game/State.h"
+#include "game/backend/State.h"
 #include "Types.h"
-#include "game/event/MoveUnit.h"
-#include "game/event/AttackUnit.h"
-#include "game/event/SkipUnitTurn.h"
-#include "game/event/CompleteTurn.h"
-#include "game/event/UncompleteTurn.h"
+#include "game/backend/event/MoveUnit.h"
+#include "game/backend/event/AttackUnit.h"
+#include "game/backend/event/SkipUnitTurn.h"
+#include "game/backend/event/CompleteTurn.h"
+#include "game/backend/event/UncompleteTurn.h"
 #include "ui/bottom_bar/BottomBar.h"
 #include "tile/TileManager.h"
 #include "unit/UnitManager.h"
@@ -48,7 +48,7 @@
 #include "types/mesh/Render.h"
 #include "types/mesh/Data.h"
 #include "ui/style/Theme.h"
-#include "game/map/Consts.h"
+#include "game/backend/map/Consts.h"
 
 // TMP
 #include "loader/font/FontLoader.h"
@@ -61,7 +61,7 @@ namespace game {
 
 const Game::consts_t Game::s_consts = {};
 
-Game::Game( ::game::State* state, ::ui::ui_handler_t on_start, ::ui::ui_handler_t on_cancel )
+Game::Game( ::game::backend::State* state, ::ui::ui_handler_t on_start, ::ui::ui_handler_t on_cancel )
 	: m_state( state )
 	, m_on_start( on_start )
 	, m_on_cancel( on_cancel )
@@ -87,12 +87,12 @@ void Game::Start() {
 	if ( m_state->IsMaster() ) {
 #ifdef DEBUG
 		if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) {
-			m_state->m_settings.global.map.type = ::game::settings::MapSettings::MT_MAPFILE;
+			m_state->m_settings.global.map.type = ::game::backend::settings::MapSettings::MT_MAPFILE;
 			m_state->m_settings.global.map.filename = config->GetQuickstartMapFile();
 		}
 #endif
 
-		if ( m_state->m_settings.global.map.type == ::game::settings::MapSettings::MT_MAPFILE ) {
+		if ( m_state->m_settings.global.map.type == ::game::backend::settings::MapSettings::MT_MAPFILE ) {
 			m_map_data.filename = util::FS::GetBaseName( m_state->m_settings.global.map.filename );
 			m_map_data.last_directory = util::FS::GetDirName( m_state->m_settings.global.map.filename );
 		}
@@ -132,13 +132,13 @@ void Game::Iterate() {
 	auto* ui = g_engine->GetUI();
 	auto* config = g_engine->GetConfig();
 
-	const auto f_handle_nonsuccess_init = [ this, ui ]( const ::game::MT_Response& response ) -> void {
+	const auto f_handle_nonsuccess_init = [ this, ui ]( const ::game::backend::MT_Response& response ) -> void {
 		switch ( response.result ) {
-			case ::game::R_ABORTED: {
+			case ::game::backend::R_ABORTED: {
 				CancelGame();
 				break;
 			}
-			case ::game::R_ERROR: {
+			case ::game::backend::R_ERROR: {
 				const std::string error_text = *response.data.error.error_text;
 				ui->ShowError(
 					error_text, UH( this ) {
@@ -155,9 +155,9 @@ void Game::Iterate() {
 
 	if ( m_mt_ids.init ) {
 		auto response = game->MT_GetResponse( m_mt_ids.init );
-		if ( response.result != ::game::R_NONE ) {
+		if ( response.result != ::game::backend::R_NONE ) {
 			m_mt_ids.init = 0;
-			if ( response.result == ::game::R_SUCCESS ) {
+			if ( response.result == ::game::backend::R_SUCCESS ) {
 				// game thread will manage state from now on
 				m_state = nullptr;
 				// set own slot
@@ -173,8 +173,8 @@ void Game::Iterate() {
 	}
 	if ( m_mt_ids.get_map_data ) {
 		auto response = game->MT_GetResponse( m_mt_ids.get_map_data );
-		if ( response.result != ::game::R_NONE ) {
-			if ( response.result == ::game::R_PENDING ) {
+		if ( response.result != ::game::backend::R_NONE ) {
+			if ( response.result == ::game::backend::R_PENDING ) {
 				// still initializing, try later
 				m_mt_ids.get_map_data = game->MT_GetMapData();
 			}
@@ -182,7 +182,7 @@ void Game::Iterate() {
 				ui->HideLoader();
 				m_mt_ids.get_map_data = 0;
 
-				if ( response.result == ::game::R_SUCCESS ) {
+				if ( response.result == ::game::backend::R_SUCCESS ) {
 					// at this point starting continues in this thread so is not cancelable anymore
 					if ( m_on_start ) {
 						m_on_start();
@@ -224,12 +224,12 @@ void Game::Iterate() {
 	}
 	if ( m_mt_ids.reset ) {
 		auto response = game->MT_GetResponse( m_mt_ids.reset );
-		if ( response.result != ::game::R_NONE ) {
+		if ( response.result != ::game::backend::R_NONE ) {
 			ui->HideLoader();
 			m_mt_ids.reset = 0;
 
 			switch ( response.result ) {
-				case ::game::R_SUCCESS: {
+				case ::game::backend::R_SUCCESS: {
 					ASSERT( m_on_game_exit, "game exit handler not set" );
 					const auto on_game_exit = m_on_game_exit;
 					m_on_game_exit = nullptr;
@@ -244,23 +244,23 @@ void Game::Iterate() {
 	}
 	if ( m_mt_ids.ping ) {
 		auto response = game->MT_GetResponse( m_mt_ids.ping );
-		if ( response.result != ::game::R_NONE ) {
+		if ( response.result != ::game::backend::R_NONE ) {
 			ui->HideLoader();
 			m_mt_ids.ping = 0;
-			ASSERT( response.result == ::game::R_SUCCESS, "ping not successful" );
+			ASSERT( response.result == ::game::backend::R_SUCCESS, "ping not successful" );
 			CancelGame();
 		}
 	}
 	if ( m_is_map_editing_allowed ) {
 		if ( m_mt_ids.save_map ) {
 			auto response = game->MT_GetResponse( m_mt_ids.save_map );
-			if ( response.result != ::game::R_NONE ) {
+			if ( response.result != ::game::backend::R_NONE ) {
 				ui->HideLoader();
 				m_mt_ids.save_map = 0;
 				if ( ui->HasPopup() ) {
 					ui->CloseLastPopup();
 				}
-				if ( response.result == ::game::R_SUCCESS ) {
+				if ( response.result == ::game::backend::R_SUCCESS ) {
 					m_map_data.last_directory = util::FS::GetDirName( *response.data.save_map.path );
 					m_map_data.filename = util::FS::GetBaseName( *response.data.save_map.path );
 					m_ui.bottom_bar->UpdateMapFileName();
@@ -277,10 +277,10 @@ void Game::Iterate() {
 		}
 		if ( m_mt_ids.edit_map ) {
 			auto response = game->MT_GetResponse( m_mt_ids.edit_map );
-			if ( response.result != ::game::R_NONE ) {
+			if ( response.result != ::game::backend::R_NONE ) {
 				m_mt_ids.edit_map = 0;
 
-				ASSERT( response.result == ::game::R_SUCCESS, "edit map unsuccessful" );
+				ASSERT( response.result == ::game::backend::R_SUCCESS, "edit map unsuccessful" );
 
 				// add missing things, remove unneeded things
 				if ( response.data.edit_map.sprites.actors_to_add ) {
@@ -315,8 +315,8 @@ void Game::Iterate() {
 	}
 	if ( m_mt_ids.chat ) {
 		auto response = game->MT_GetResponse( m_mt_ids.chat );
-		if ( response.result != ::game::R_NONE ) {
-			ASSERT( response.result == ::game::R_SUCCESS, "failed to send chat message to game thread" );
+		if ( response.result != ::game::backend::R_NONE ) {
+			ASSERT( response.result == ::game::backend::R_SUCCESS, "failed to send chat message to game thread" );
 			m_mt_ids.chat = 0;
 		}
 	}
@@ -341,8 +341,8 @@ void Game::Iterate() {
 		// check if previous backend requests were sent successfully
 		if ( m_mt_ids.send_backend_requests ) {
 			auto response = game->MT_GetResponse( m_mt_ids.send_backend_requests );
-			if ( response.result != ::game::R_NONE ) {
-				ASSERT( response.result == ::game::R_SUCCESS, "backend requests result not successful" );
+			if ( response.result != ::game::backend::R_NONE ) {
+				ASSERT( response.result == ::game::backend::R_SUCCESS, "backend requests result not successful" );
 				m_mt_ids.send_backend_requests = 0;
 			}
 		}
@@ -356,8 +356,8 @@ void Game::Iterate() {
 		// poll backend for frontend requests
 		if ( m_mt_ids.get_frontend_requests ) {
 			auto response = game->MT_GetResponse( m_mt_ids.get_frontend_requests );
-			if ( response.result != ::game::R_NONE ) {
-				ASSERT( response.result == ::game::R_SUCCESS, "unexpected frontend requests response" );
+			if ( response.result != ::game::backend::R_NONE ) {
+				ASSERT( response.result == ::game::backend::R_SUCCESS, "unexpected frontend requests response" );
 				m_mt_ids.get_frontend_requests = 0;
 				const auto* requests = response.data.get_frontend_requests.requests;
 				if ( requests ) {
@@ -382,20 +382,20 @@ void Game::Iterate() {
 
 		if ( m_is_map_editing_allowed && m_editing_draw_timer.HasTicked() ) {
 			if ( m_is_editing_mode && !IsTileAtRequestPending() ) {
-				SelectTileAtPoint( ::game::TQP_TILE_SELECT, m_map_control.last_mouse_position.x, m_map_control.last_mouse_position.y ); // async
+				SelectTileAtPoint( ::game::backend::TQP_TILE_SELECT, m_map_control.last_mouse_position.x, m_map_control.last_mouse_position.y ); // async
 			}
 		}
 
 		// response for clicked tile (if click happened)
 		const auto tile_at = GetTileAtScreenCoordsResult();
 		if ( tile_at.is_set ) {
-			ASSERT( m_tile_at_query_purpose != ::game::TQP_NONE, "tile preferred mode not set" );
+			ASSERT( m_tile_at_query_purpose != ::game::backend::TQP_NONE, "tile preferred mode not set" );
 			auto* tile = m_tm->GetTile( tile_at.tile_pos );
 			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
 				if ( !m_mt_ids.edit_map ) { // TODO: need to queue?
 					m_mt_ids.edit_map = game->MT_EditMap( tile->GetCoords(), m_editor_tool, m_editor_brush, m_editor_draw_mode );
 				}
-				ASSERT( m_tile_at_query_purpose == ::game::TQP_TILE_SELECT, "only tile selections allowed in map editor" );
+				ASSERT( m_tile_at_query_purpose == ::game::backend::TQP_TILE_SELECT, "only tile selections allowed in map editor" );
 				SelectTileOrUnit( tile );
 			}
 			else {
@@ -513,19 +513,19 @@ types::texture::Texture* Game::GetSourceTexture( const resource::resource_t res 
 	return texture;
 }
 
-sprite::InstancedSprite* Game::GetTerrainInstancedSprite( const ::game::map::sprite_actor_t& actor ) {
+sprite::InstancedSprite* Game::GetTerrainInstancedSprite( const ::game::backend::map::sprite_actor_t& actor ) {
 	return m_ism->GetInstancedSprite(
 		"Terrain_" + actor.name,
 		GetSourceTexture( resource::PCX_TER1 ),
 		actor.tex_coords,
-		::game::map::s_consts.tc.ter1_pcx.dimensions,
+		::game::backend::map::s_consts.tc.ter1_pcx.dimensions,
 		{
-			actor.tex_coords.x + ::game::map::s_consts.tc.ter1_pcx.center.x,
-			actor.tex_coords.y + ::game::map::s_consts.tc.ter1_pcx.center.y
+			actor.tex_coords.x + ::game::backend::map::s_consts.tc.ter1_pcx.center.x,
+			actor.tex_coords.y + ::game::backend::map::s_consts.tc.ter1_pcx.center.y
 		},
 		{
-			::game::map::s_consts.tile.scale.x,
-			::game::map::s_consts.tile.scale.y * ::game::map::s_consts.sprite.y_scale
+			::game::backend::map::s_consts.tile.scale.x,
+			::game::backend::map::s_consts.tile.scale.y * ::game::backend::map::s_consts.sprite.y_scale
 		},
 		ZL_TERRAIN,
 		actor.z_index
@@ -613,7 +613,7 @@ void Game::UpdateCameraPosition() {
 	m_camera->SetPosition(
 		{
 			( 0.5f + m_camera_position.x ) / m_viewport.window_aspect_ratio,
-			( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + ::game::map::s_consts.tile.scale.z * m_camera_position.z / 1.414f, // TODO: why 1.414?
+			( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + ::game::backend::map::s_consts.tile.scale.z * m_camera_position.z / 1.414f, // TODO: why 1.414?
 			( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + m_camera_position.z
 		}
 	);
@@ -673,7 +673,7 @@ void Game::UpdateMapInstances() {
 	// needed for horizontal scrolling
 	std::vector< types::Vec3 > instances;
 
-	const float mhw = ::game::map::s_consts.tile.scale.x * m_map_data.width / 2;
+	const float mhw = ::game::backend::map::s_consts.tile.scale.x * m_map_data.width / 2;
 
 	uint8_t instances_before_after = floor(
 		m_viewport.aspect_ratio
@@ -750,7 +750,7 @@ void Game::LoadMap( const std::string& path ) {
 		}
 	);
 	ASSERT( m_state, "state not set" );
-	m_state->m_settings.global.map.type = ::game::settings::MapSettings::MT_MAPFILE;
+	m_state->m_settings.global.map.type = ::game::backend::settings::MapSettings::MT_MAPFILE;
 	m_state->m_settings.global.map.filename = path;
 	m_map_data.filename = util::FS::GetBaseName( path );
 	m_map_data.last_directory = util::FS::GetDirName( path );
@@ -791,26 +791,26 @@ types::texture::Texture* Game::GetTerrainTexture() const {
 	return m_textures.terrain;
 }
 
-void Game::SetEditorTool( ::game::map_editor::tool_type_t editor_tool ) {
+void Game::SetEditorTool( ::game::backend::map_editor::tool_type_t editor_tool ) {
 	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
 	if ( m_editor_tool != editor_tool ) {
 		m_editor_tool = editor_tool;
 	}
 }
 
-const ::game::map_editor::tool_type_t Game::GetEditorTool() const {
+const ::game::backend::map_editor::tool_type_t Game::GetEditorTool() const {
 	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
 	return m_editor_tool;
 }
 
-void Game::SetEditorBrush( ::game::map_editor::brush_type_t editor_brush ) {
+void Game::SetEditorBrush( ::game::backend::map_editor::brush_type_t editor_brush ) {
 	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
 	if ( m_editor_brush != editor_brush ) {
 		m_editor_brush = editor_brush;
 	}
 }
 
-const ::game::map_editor::brush_type_t Game::GetEditorBrush() const {
+const ::game::backend::map_editor::brush_type_t Game::GetEditorBrush() const {
 	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
 	return m_editor_brush;
 }
@@ -856,7 +856,7 @@ void Game::ShowAnimation( AnimationDef* def, const size_t animation_id, const ty
 	);
 }
 
-void Game::DefineAnimation( const ::game::animation::Def* def ) {
+void Game::DefineAnimation( const ::game::backend::animation::Def* def ) {
 	auto animation_it = m_animationdefs.find( def->m_id );
 	ASSERT( animation_it == m_animationdefs.end(), "animation def already exists" );
 
@@ -929,7 +929,7 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 			m_turn_status = request->data.turn_status.status;
 			ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
 			m_ui.bottom_bar->SetTurnStatus( m_turn_status );
-			bool is_turn_active = m_turn_status == ::game::turn::TS_TURN_ACTIVE || m_turn_status == ::game::turn::TS_TURN_COMPLETE;
+			bool is_turn_active = m_turn_status == ::game::backend::turn::TS_TURN_ACTIVE || m_turn_status == ::game::backend::turn::TS_TURN_COMPLETE;
 			if ( m_is_turn_active != is_turn_active ) {
 				m_is_turn_active = is_turn_active;
 				if ( m_is_turn_active ) {
@@ -942,7 +942,7 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 				}
 				else {
 					DeselectTileOrUnit();
-					//GetTileAtCoords( ::game::TQP_TILE_SELECT, m_selected_tile_data.tile_position ); // TODO ?
+					//GetTileAtCoords( ::game::backend::TQP_TILE_SELECT, m_selected_tile_data.tile_position ); // TODO ?
 				}
 			}
 			break;
@@ -967,7 +967,7 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 		}
 		case ::game::FrontendRequest::FR_ANIMATION_DEFINE: {
 			types::Buffer buf( *request->data.unit_define.serialized_unitdef );
-			const auto* animationdef = ::game::animation::Def::Unserialize( buf );
+			const auto* animationdef = ::game::backend::animation::Def::Unserialize( buf );
 			DefineAnimation( animationdef );
 			delete animationdef;
 			break;
@@ -992,7 +992,7 @@ void Game::ProcessRequest( const ::game::FrontendRequest* request ) {
 		}
 		case ::game::FrontendRequest::FR_UNIT_DEFINE: {
 			types::Buffer buf( *request->data.unit_define.serialized_unitdef );
-			const auto* unitdef = ::game::unit::Def::Unserialize( buf );
+			const auto* unitdef = ::game::backend::unit::Def::Unserialize( buf );
 			m_um->DefineUnit( unitdef );
 			delete unitdef;
 			break;
@@ -1102,23 +1102,23 @@ void Game::UpdateMapData( const types::Vec2< size_t >& map_size ) {
 	m_map_data.width = map_size.x;
 	m_map_data.height = map_size.y;
 	m_map_data.range.min = {
-		-(float)( m_map_data.width - 1 ) * ::game::map::s_consts.tile.radius.x / 2,
-		-(float)( m_map_data.height - 1 ) * ::game::map::s_consts.tile.radius.y / 2,
+		-(float)( m_map_data.width - 1 ) * ::game::backend::map::s_consts.tile.radius.x / 2,
+		-(float)( m_map_data.height - 1 ) * ::game::backend::map::s_consts.tile.radius.y / 2,
 	};
 	m_map_data.range.max = {
-		(float)( m_map_data.width - 1 ) * ::game::map::s_consts.tile.radius.x / 2,
-		(float)( m_map_data.height - 1 ) * ::game::map::s_consts.tile.radius.y / 2,
+		(float)( m_map_data.width - 1 ) * ::game::backend::map::s_consts.tile.radius.x / 2,
+		(float)( m_map_data.height - 1 ) * ::game::backend::map::s_consts.tile.radius.y / 2,
 	};
 	m_map_data.range.percent_to_absolute.x.SetRange(
 		{
-			{ 0.0f,                                                         1.0f },
-			{ m_map_data.range.min.x - ::game::map::s_consts.tile.radius.x, m_map_data.range.max.x + ::game::map::s_consts.tile.radius.x }
+			{ 0.0f,                                                                  1.0f },
+			{ m_map_data.range.min.x - ::game::backend::map::s_consts.tile.radius.x, m_map_data.range.max.x + ::game::backend::map::s_consts.tile.radius.x }
 		}
 	);
 	m_map_data.range.percent_to_absolute.y.SetRange(
 		{
-			{ 0.0f,                                                         1.0f },
-			{ m_map_data.range.min.y - ::game::map::s_consts.tile.radius.y, m_map_data.range.max.y + ::game::map::s_consts.tile.radius.y }
+			{ 0.0f,                                                                  1.0f },
+			{ m_map_data.range.min.y - ::game::backend::map::s_consts.tile.radius.y, m_map_data.range.max.y + ::game::backend::map::s_consts.tile.radius.y }
 		}
 	);
 
@@ -1130,10 +1130,10 @@ void Game::Initialize(
 	types::texture::Texture* terrain_texture,
 	types::mesh::Render* terrain_mesh,
 	types::mesh::Data* terrain_data_mesh,
-	const std::unordered_map< std::string, ::game::map::sprite_actor_t >& sprite_actors,
+	const std::unordered_map< std::string, ::game::backend::map::sprite_actor_t >& sprite_actors,
 	const std::unordered_map< size_t, std::pair< std::string, types::Vec3 > >& sprite_instances,
-	const std::vector< ::game::map::tile::Tile >* tiles,
-	const std::vector< ::game::map::tile::TileState >* tile_states
+	const std::vector< ::game::backend::map::tile::Tile >* tiles,
+	const std::vector< ::game::backend::map::tile::TileState >* tile_states
 ) {
 	ASSERT( !m_is_initialized, "already initialized" );
 
@@ -1208,8 +1208,8 @@ void Game::Initialize(
 	ASSERT( !m_actors.terrain, "terrain actor already set" );
 	NEWV( terrain_actor, scene::actor::Mesh, "MapTerrain", terrain_mesh );
 	terrain_actor->SetTexture( m_textures.terrain );
-	terrain_actor->SetPosition( ::game::map::s_consts.map_position );
-	terrain_actor->SetAngle( ::game::map::s_consts.map_rotation );
+	terrain_actor->SetPosition( ::game::backend::map::s_consts.map_position );
+	terrain_actor->SetAngle( ::game::backend::map::s_consts.map_rotation );
 	terrain_actor->SetDataMesh( terrain_data_mesh );
 	NEW( m_actors.terrain, scene::actor::Instanced, terrain_actor );
 	m_actors.terrain->AddInstance( {} ); // default instance
@@ -1283,13 +1283,13 @@ void Game::Initialize(
 				if ( selected_tile ) {
 
 					bool is_tile_selected = false;
-					::game::map::tile::direction_t td = ::game::map::tile::D_NONE;
+					::game::backend::map::tile::direction_t td = ::game::backend::map::tile::D_NONE;
 
 					switch ( data->key.code ) {
 #define X( _key, _altkey, _direction ) \
                         case ::ui::event::_key: \
                         case ::ui::event::_altkey: { \
-                            td = ::game::map::tile::_direction; \
+                            td = ::game::backend::map::tile::_direction; \
                             is_tile_selected = true; \
                             break; \
                         }
@@ -1309,13 +1309,13 @@ void Game::Initialize(
 						case ::ui::event::K_SPACE: {
 							auto* unit = m_um->GetSelectedUnit();
 							if ( unit ) {
-								const auto event = ::game::event::SkipUnitTurn( m_slot_index, unit->GetId() );
+								const auto event = ::game::backend::event::SkipUnitTurn( m_slot_index, unit->GetId() );
 								game->MT_AddEvent( &event );
 							}
 							break;
 						}
 						case ::ui::event::K_ENTER: {
-							if ( m_turn_status == ::game::turn::TS_TURN_COMPLETE ) {
+							if ( m_turn_status == ::game::backend::turn::TS_TURN_COMPLETE ) {
 								CompleteTurn();
 							}
 							break;
@@ -1347,14 +1347,14 @@ void Game::Initialize(
 							}
 							if ( foreign_units.empty() ) {
 								// move
-								const auto event = ::game::event::MoveUnit( m_slot_index, selected_unit->GetId(), td );
+								const auto event = ::game::backend::event::MoveUnit( m_slot_index, selected_unit->GetId(), td );
 								game->MT_AddEvent( &event );
 							}
 							else {
 								// attack
 								// TODO: select the most powerful defender for attacker
 								const auto& target_unit = foreign_units.at( tile::Tile::GetUnitsOrder( foreign_units ).front() );
-								const auto event = ::game::event::AttackUnit( m_slot_index, selected_unit->GetId(), target_unit->GetId() );
+								const auto event = ::game::backend::event::AttackUnit( m_slot_index, selected_unit->GetId(), target_unit->GetId() );
 								game->MT_AddEvent( &event );
 							}
 
@@ -1406,7 +1406,7 @@ void Game::Initialize(
 			else if ( m_is_map_editing_allowed && data->key.code == ::ui::event::K_CTRL ) {
 				m_is_editing_mode = false;
 				m_editing_draw_timer.Stop();
-				m_editor_draw_mode = ::game::map_editor::DM_NONE;
+				m_editor_draw_mode = ::game::backend::map_editor::DM_NONE;
 			}
 			return false;
 		}, ::ui::UI::GH_BEFORE
@@ -1423,26 +1423,26 @@ void Game::Initialize(
 			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
 				switch ( data->mouse.button ) {
 					case ::ui::event::M_LEFT: {
-						m_editor_draw_mode = ::game::map_editor::DM_INC;
+						m_editor_draw_mode = ::game::backend::map_editor::DM_INC;
 						break;
 					}
 					case ::ui::event::M_RIGHT: {
-						m_editor_draw_mode = ::game::map_editor::DM_DEC;
+						m_editor_draw_mode = ::game::backend::map_editor::DM_DEC;
 						break;
 					}
 					default: {
-						m_editor_draw_mode = ::game::map_editor::DM_NONE;
+						m_editor_draw_mode = ::game::backend::map_editor::DM_NONE;
 					}
 
 				}
-				SelectTileAtPoint( ::game::TQP_TILE_SELECT, data->mouse.absolute.x, data->mouse.absolute.y ); // async
+				SelectTileAtPoint( ::game::backend::TQP_TILE_SELECT, data->mouse.absolute.x, data->mouse.absolute.y ); // async
 				m_editing_draw_timer.SetInterval( Game::s_consts.map_editing.draw_frequency_ms ); // keep drawing until mouseup
 			}
 			else {
 				switch ( data->mouse.button ) {
 					case ::ui::event::M_LEFT: {
 						SelectTileAtPoint(
-							::game::TQP_UNIT_SELECT,
+							::game::backend::TQP_UNIT_SELECT,
 							data->mouse.absolute.x,
 							data->mouse.absolute.y
 						); // async
@@ -1544,7 +1544,7 @@ void Game::Initialize(
 			}
 			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
 				m_editing_draw_timer.Stop();
-				m_editor_draw_mode = ::game::map_editor::DM_NONE;
+				m_editor_draw_mode = ::game::backend::map_editor::DM_NONE;
 			}
 			return true;
 		}, ::ui::UI::GH_AFTER
@@ -1756,24 +1756,24 @@ void Game::SendChatMessage( const std::string& text ) {
 
 void Game::CompleteTurn() {
 	m_is_turn_active = false;
-	const auto event = ::game::event::CompleteTurn( m_slot_index, m_turn_id );
+	const auto event = ::game::backend::event::CompleteTurn( m_slot_index, m_turn_id );
 	g_engine->GetGame()->MT_AddEvent( &event );
 }
 
 void Game::UncompleteTurn() {
 	m_is_turn_active = false;
-	const auto event = ::game::event::UncompleteTurn( m_slot_index, m_turn_id );
+	const auto event = ::game::backend::event::UncompleteTurn( m_slot_index, m_turn_id );
 	g_engine->GetGame()->MT_AddEvent( &event );
 }
 
-void Game::SelectTileAtPoint( const ::game::tile_query_purpose_t tile_query_purpose, const size_t x, const size_t y ) {
+void Game::SelectTileAtPoint( const ::game::backend::tile_query_purpose_t tile_query_purpose, const size_t x, const size_t y ) {
 	//Log( "Looking up tile at " + std::to_string( x ) + "x" + std::to_string( y ) );
 	GetTileAtScreenCoords( tile_query_purpose, x, m_viewport.window_height - y ); // async
 }
 
 void Game::SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id ) {
 
-	ASSERT( m_tile_at_query_purpose != ::game::TQP_NONE, "tile query purpose not set" );
+	ASSERT( m_tile_at_query_purpose != ::game::backend::TQP_NONE, "tile query purpose not set" );
 
 	DeselectTileOrUnit();
 
@@ -1781,7 +1781,7 @@ void Game::SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id ) {
 
 	unit::Unit* selected_unit = nullptr;
 
-	if ( m_tile_at_query_purpose == ::game::TQP_UNIT_SELECT ) {
+	if ( m_tile_at_query_purpose == ::game::backend::TQP_UNIT_SELECT ) {
 		const auto& units = tile->GetUnits();
 		if ( m_is_turn_active ) {
 			if ( selected_unit_id ) {
@@ -1797,19 +1797,19 @@ void Game::SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id ) {
 			}
 		}
 		if ( !selected_unit ) {
-			m_tile_at_query_purpose = ::game::TQP_TILE_SELECT;
+			m_tile_at_query_purpose = ::game::backend::TQP_TILE_SELECT;
 		}
 	}
 
 	switch ( m_tile_at_query_purpose ) {
-		case ::game::TQP_TILE_SELECT: {
+		case ::game::backend::TQP_TILE_SELECT: {
 			m_um->DeselectUnit();
 			Log( "Selected tile at " + tile->GetCoords().ToString() + " ( " + tile->GetRenderData().selection_coords.center.ToString() + " )" );
 			ShowTileSelector();
 			m_ui.bottom_bar->PreviewTile( tile, selected_unit_id );
 			break;
 		}
-		case ::game::TQP_UNIT_SELECT: {
+		case ::game::backend::TQP_UNIT_SELECT: {
 			m_um->SelectUnit( selected_unit, true );
 			break;
 		}
@@ -1903,8 +1903,8 @@ void Game::ScrollToTile( const tile::Tile* tile, bool center_on_tile ) {
 
 		// tile size
 		types::Vec2< float > ts = {
-			::game::map::s_consts.tile.scale.x * m_camera_position.z,
-			::game::map::s_consts.tile.scale.y * m_camera_position.z
+			::game::backend::map::s_consts.tile.scale.x * m_camera_position.z,
+			::game::backend::map::s_consts.tile.scale.y * m_camera_position.z
 		};
 		// edge size
 		types::Vec2< float > es = {
@@ -1945,11 +1945,11 @@ void Game::CancelTileAtRequest() {
 	m_tile_at_request_id = 0;
 }
 
-void Game::GetTileAtScreenCoords( const ::game::tile_query_purpose_t tile_query_purpose, const size_t screen_x, const size_t screen_inverse_y ) {
+void Game::GetTileAtScreenCoords( const ::game::backend::tile_query_purpose_t tile_query_purpose, const size_t screen_x, const size_t screen_inverse_y ) {
 	if ( m_tile_at_request_id ) {
 		m_actors.terrain->GetMeshActor()->CancelDataRequest( m_tile_at_request_id );
 	}
-	ASSERT( tile_query_purpose != ::game::TQP_NONE, "tile query purpose is not set" );
+	ASSERT( tile_query_purpose != ::game::backend::TQP_NONE, "tile query purpose is not set" );
 	m_tile_at_query_purpose = tile_query_purpose;
 	m_tile_at_request_id = m_actors.terrain->GetMeshActor()->GetDataAt( screen_x, screen_inverse_y );
 }
@@ -2021,8 +2021,8 @@ void Game::UpdateMinimap() {
 	mm.x *= scale.x;
 	mm.y *= scale.y;
 
-	const float sx = (float)mm.x / (float)m_map_data.width / (float)::game::map::s_consts.tc.texture_pcx.dimensions.x;
-	const float sy = (float)mm.y / (float)m_map_data.height / (float)::game::map::s_consts.tc.texture_pcx.dimensions.y;
+	const float sx = (float)mm.x / (float)m_map_data.width / (float)::game::backend::map::s_consts.tc.texture_pcx.dimensions.x;
+	const float sy = (float)mm.y / (float)m_map_data.height / (float)::game::backend::map::s_consts.tc.texture_pcx.dimensions.y;
 	const float sz = ( sx + sy ) / 2;
 	const float ss = ( (float)mm.y / (float)m_viewport.window_height );
 	const float sxy = (float)scale.x / scale.y;
@@ -2067,7 +2067,7 @@ void Game::ResetMapState() {
 		coords.y++;
 	}
 
-	m_tile_at_query_purpose = ::game::TQP_TILE_SELECT;
+	m_tile_at_query_purpose = ::game::backend::TQP_TILE_SELECT;
 	SelectTileOrUnit( m_tm->GetTile( coords ) );
 }
 
@@ -2204,7 +2204,7 @@ const float Game::GetFixedX( const float x ) const {
 }
 
 const float Game::GetCloserX( const float x, const float ref_x ) const {
-	const auto x_range = (float)m_map_data.width * ::game::map::s_consts.tile.scale.x / 2.0f;
+	const auto x_range = (float)m_map_data.width * ::game::backend::map::s_consts.tile.scale.x / 2.0f;
 	const float x_shifted = ref_x > 0
 		? x + x_range
 		: x - x_range;
@@ -2307,8 +2307,8 @@ unit::Unit* Game::GetSelectedTileMostImportantUnit() const {
 }
 
 Game::map_data_t::map_data_t()
-	: filename( ::game::map::s_consts.fs.default_map_filename + ::game::map::s_consts.fs.default_map_extension )
-	, last_directory( util::FS::GetCurrentDirectory() + util::FS::PATH_SEPARATOR + ::game::map::s_consts.fs.default_map_directory ) {
+	: filename( ::game::backend::map::s_consts.fs.default_map_filename + ::game::backend::map::s_consts.fs.default_map_extension )
+	, last_directory( util::FS::GetCurrentDirectory() + util::FS::PATH_SEPARATOR + ::game::backend::map::s_consts.fs.default_map_directory ) {
 	//
 }
 

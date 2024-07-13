@@ -1,7 +1,7 @@
 #include "AnimationDef.h"
 
 #include "engine/Engine.h"
-#include "game/animation/FramesRow.h"
+#include "game/backend/animation/FramesRow.h"
 #include "loader/sound/SoundLoader.h"
 #include "loader/texture/TextureLoader.h"
 #include "task/game/sprite/InstancedSpriteManager.h"
@@ -9,16 +9,16 @@
 namespace task {
 namespace game {
 
-AnimationDef::AnimationDef( sprite::InstancedSpriteManager* ism, const ::game::animation::Def* def )
+AnimationDef::AnimationDef( sprite::InstancedSpriteManager* ism, const ::game::backend::animation::Def* def )
 	: m_ism( ism )
 	, m_id( def->m_id )
 	, m_type( def->m_type )
 	, m_duration_ms( def->m_duration_ms )
 	, m_sound_file( def->m_sound_file ) {
 
-	ASSERT_NOLOG( def->m_type == ::game::animation::animation_type_t::AT_FRAMES_ROW, "only frames row animations are supported for now" );
+	ASSERT_NOLOG( def->m_type == ::game::backend::animation::animation_type_t::AT_FRAMES_ROW, "only frames row animations are supported for now" );
 
-	const auto* d = (::game::animation::FramesRow*)def;
+	const auto* d = (::game::backend::animation::FramesRow*)def;
 	m_render = d->m_render;
 	ASSERT_NOLOG( m_render.frames_count > 0, "animation has no frames defined" );
 }

@@ -5,7 +5,7 @@
 #include "common/Module.h"
 
 #include "util/random/Types.h"
-#include "game/settings/Types.h"
+#include "game/backend/settings/Types.h"
 #include "types/Vec2.h"
 
 namespace util {
@@ -75,10 +75,10 @@ CLASS( Config, common::Module )
 	const std::string& GetQuickstartMapDump() const;
 	const std::string& GetQuickstartMapFile() const;
 	const types::Vec2< size_t >& GetQuickstartMapSize() const;
-	const game::settings::map_config_value_t GetQuickstartMapOcean() const;
-	const game::settings::map_config_value_t GetQuickstartMapErosive() const;
-	const game::settings::map_config_value_t GetQuickstartMapLifeforms() const;
-	const game::settings::map_config_value_t GetQuickstartMapClouds() const;
+	const game::backend::settings::map_config_value_t GetQuickstartMapOcean() const;
+	const game::backend::settings::map_config_value_t GetQuickstartMapErosive() const;
+	const game::backend::settings::map_config_value_t GetQuickstartMapLifeforms() const;
+	const game::backend::settings::map_config_value_t GetQuickstartMapClouds() const;
 	const std::string& GetGSETestsScript() const;
 
 #endif
@@ -113,10 +113,10 @@ private:
 	std::string m_quickstart_mapdump = "";
 	std::string m_quickstart_mapfile = "";
 	types::Vec2< size_t > m_quickstart_mapsize = {};
-	game::settings::map_config_value_t m_quickstart_map_ocean = game::settings::MAP_CONFIG_OCEAN_MEDIUM;
-	game::settings::map_config_value_t m_quickstart_map_erosive = game::settings::MAP_CONFIG_EROSIVE_AVERAGE;
-	game::settings::map_config_value_t m_quickstart_map_lifeforms = game::settings::MAP_CONFIG_LIFEFORMS_AVERAGE;
-	game::settings::map_config_value_t m_quickstart_map_clouds = game::settings::MAP_CONFIG_CLOUDS_AVERAGE;
+	game::backend::settings::map_config_value_t m_quickstart_map_ocean = game::backend::settings::MAP_CONFIG_OCEAN_MEDIUM;
+	game::backend::settings::map_config_value_t m_quickstart_map_erosive = game::backend::settings::MAP_CONFIG_EROSIVE_AVERAGE;
+	game::backend::settings::map_config_value_t m_quickstart_map_lifeforms = game::backend::settings::MAP_CONFIG_LIFEFORMS_AVERAGE;
+	game::backend::settings::map_config_value_t m_quickstart_map_clouds = game::backend::settings::MAP_CONFIG_CLOUDS_AVERAGE;
 
 	std::string m_gse_tests_script = "";
 

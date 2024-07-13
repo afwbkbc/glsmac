@@ -4,7 +4,7 @@
 
 #include "task/game/TileObject.h"
 
-#include "game/unit/Types.h"
+#include "game/backend/unit/Types.h"
 
 #include "util/Timer.h"
 #include "util/Scroller.h"
@@ -55,10 +55,10 @@ public:
 		tile::Tile* tile,
 		const types::Vec3& render_coords,
 		const bool is_owned,
-		const ::game::unit::movement_t movement,
-		const ::game::unit::morale_t morale,
+		const ::game::backend::unit::movement_t movement,
+		const ::game::backend::unit::morale_t morale,
 		const std::string& morale_string,
-		const ::game::unit::health_t health
+		const ::game::backend::unit::health_t health
 	);
 	~Unit();
 
@@ -97,8 +97,8 @@ public:
 
 	void Refresh();
 
-	void SetMovement( const ::game::unit::movement_t movement );
-	void SetHealth( const ::game::unit::health_t health );
+	void SetMovement( const ::game::backend::unit::movement_t movement );
+	void SetHealth( const ::game::backend::unit::health_t health );
 	const bool CanMove() const;
 
 	void SetTile( tile::Tile* dst_tile );
@@ -151,10 +151,10 @@ private:
 
 	const bool m_is_owned = false;
 	bool m_is_active = false;
-	::game::unit::movement_t m_movement = 0.0f;
-	::game::unit::morale_t m_morale = 0;
+	::game::backend::unit::movement_t m_movement = 0.0f;
+	::game::backend::unit::morale_t m_morale = 0;
 	std::string m_morale_string = "";
-	::game::unit::health_t m_health = 0;
+	::game::backend::unit::health_t m_health = 0;
 
 	bool m_need_refresh = true;
 	uint8_t m_fake_badge_offset = 0;

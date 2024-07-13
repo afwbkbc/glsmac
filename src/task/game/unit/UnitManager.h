@@ -5,12 +5,12 @@
 
 #include "common/Common.h"
 
-#include "game/unit/Types.h"
+#include "game/backend/unit/Types.h"
 
 #include "types/Vec2.h"
 #include "types/Vec3.h"
 
-namespace game::unit {
+namespace game::backend::unit {
 class Def;
 }
 
@@ -51,17 +51,17 @@ CLASS( UnitManager, common::Class )
 
 	Unit* GetUnitById( const size_t id ) const;
 
-	void DefineUnit( const ::game::unit::Def* def );
+	void DefineUnit( const ::game::backend::unit::Def* def );
 	void SpawnUnit(
 		const size_t unit_id,
 		const std::string& unitdef_name,
 		const size_t slot_index,
 		const ::types::Vec2< size_t >& tile_coords,
 		const ::types::Vec3& render_coords,
-		const ::game::unit::movement_t movement,
-		const ::game::unit::morale_t morale,
+		const ::game::backend::unit::movement_t movement,
+		const ::game::backend::unit::morale_t morale,
 		const std::string& morale_string,
-		const ::game::unit::health_t health
+		const ::game::backend::unit::health_t health
 	);
 	void DespawnUnit( const size_t unit_id );
 	void RefreshUnit( Unit* unit );
