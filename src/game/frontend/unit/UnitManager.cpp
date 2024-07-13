@@ -66,7 +66,7 @@ Unit* UnitManager::GetUnitById( const size_t id ) const {
 	return m_units.at( id );
 }
 
-void UnitManager::DefineUnit( const ::game::backend::unit::Def* def ) {
+void UnitManager::DefineUnit( const backend::unit::Def* def ) {
 	auto unitdef_it = m_unitdefs.find( def->m_id );
 	ASSERT( unitdef_it == m_unitdefs.end(), "unit def already exists" );
 
@@ -89,10 +89,10 @@ void UnitManager::SpawnUnit(
 	const size_t slot_index,
 	const types::Vec2< size_t >& tile_coords,
 	const types::Vec3& render_coords,
-	const ::game::backend::unit::movement_t movement,
-	const ::game::backend::unit::morale_t morale,
+	const backend::unit::movement_t movement,
+	const backend::unit::morale_t morale,
 	const std::string& morale_string,
-	const ::game::backend::unit::health_t health
+	const backend::unit::health_t health
 ) {
 
 	ASSERT( m_unitdefs.find( unitdef_id ) != m_unitdefs.end(), "unitdef not found" );
@@ -226,7 +226,7 @@ Unit* UnitManager::GetSelectedUnit() const {
 
 void UnitManager::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 	Log( "Selecting unit " + std::to_string( unit->GetId() ) );
-	//m_tile_at_query_purpose = ::game::backend::TQP_UNIT_SELECT; // ???
+	//m_tile_at_query_purpose = backend::TQP_UNIT_SELECT; // ???
 	m_game->DeselectTileOrUnit();
 	if ( m_selected_unit != unit ) {
 

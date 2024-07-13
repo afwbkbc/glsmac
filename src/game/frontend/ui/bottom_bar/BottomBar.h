@@ -68,7 +68,7 @@ CLASS( BottomBar, UI )
 	void AddMessage( const std::string& text );
 	void UpdateMapFileName();
 
-	void SetTurnStatus( const ::game::backend::turn::turn_status_t status );
+	void SetTurnStatus( const backend::turn::turn_status_t status );
 
 private:
 	struct {

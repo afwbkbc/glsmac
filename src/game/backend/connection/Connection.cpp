@@ -208,7 +208,7 @@ void Connection::IfServer( std::function< void( Server* ) > cb ) {
 	}
 }
 
-void Connection::SendGameEvent( game::backend::event::Event* event ) {
+void Connection::SendGameEvent( backend::event::Event* event ) {
 	if ( m_pending_game_events.size() >= PENDING_GAME_EVENTS_LIMIT ) {
 		SendGameEvents( m_pending_game_events );
 		m_pending_game_events.clear();

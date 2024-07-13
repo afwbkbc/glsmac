@@ -13,7 +13,7 @@ FactionManager::FactionManager( Game* game )
 
 }
 
-void FactionManager::DefineFaction( const ::game::backend::rules::Faction* def ) {
+void FactionManager::DefineFaction( const backend::rules::Faction* def ) {
 	ASSERT( def, "faction is null" );
 	ASSERT( m_factions.find( def->m_id ) == m_factions.end(), "faction already defined" );
 	NEWV( faction, Faction, def, m_game->GetISM() );

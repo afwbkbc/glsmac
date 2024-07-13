@@ -231,8 +231,8 @@ void Client::ProcessEvent( const network::Event& event ) {
 							Log( "Got game events packet" );
 							if ( m_on_game_event_validate && m_on_game_event_apply ) {
 								auto buf = types::Buffer( packet.data.str );
-								std::vector< game::backend::event::Event* > game_events = {};
-								game::backend::event::Event::UnserializeMultiple( buf, game_events );
+								std::vector< backend::event::Event* > game_events = {};
+								backend::event::Event::UnserializeMultiple( buf, game_events );
 								for ( const auto& game_event : game_events ) {
 									Log( "Got game event: " + game_event->ToString() );
 									m_on_game_event_validate( game_event );
@@ -272,7 +272,7 @@ void Client::ProcessEvent( const network::Event& event ) {
 void Client::SendGameEvents( const game_events_t& game_events ) {
 	Log( "Sending " + std::to_string( game_events.size() ) + " game events" );
 	types::Packet p( types::Packet::PT_GAME_EVENTS );
-	p.data.str = game::backend::event::Event::SerializeMultiple( game_events ).ToString();
+	p.data.str = backend::event::Event::SerializeMultiple( game_events ).ToString();
 	m_network->MT_SendPacket( &p );
 }
 

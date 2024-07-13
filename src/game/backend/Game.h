@@ -419,7 +419,7 @@ private:
 	map::Map* m_old_map = nullptr; // to restore state, for example if loading of another map failed
 	map_editor::MapEditor* m_map_editor = nullptr;
 
-	std::vector< game::backend::event::Event* > m_unprocessed_events = {};
+	std::vector< backend::event::Event* > m_unprocessed_events = {};
 	// TODO: refactor these?
 	std::vector< unit::Unit* > m_unprocessed_units = {};
 	std::vector< base::Base* > m_unprocessed_bases = {};

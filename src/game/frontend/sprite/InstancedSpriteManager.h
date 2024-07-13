@@ -31,9 +31,9 @@ public:
 	InstancedSprite* GetInstancedSprite(
 		const std::string& name,
 		types::texture::Texture* texture,
-		const ::game::backend::map::pcx_texture_coordinates_t& src_xy,
-		const ::game::backend::map::pcx_texture_coordinates_t& src_wh,
-		const ::game::backend::map::pcx_texture_coordinates_t& src_cxy,
+		const backend::map::pcx_texture_coordinates_t& src_xy,
+		const backend::map::pcx_texture_coordinates_t& src_wh,
+		const backend::map::pcx_texture_coordinates_t& src_cxy,
 		const types::Vec2< float > dst_wh,
 		const z_level_t z_level,
 		const float z_index_adjustment = 0.0f

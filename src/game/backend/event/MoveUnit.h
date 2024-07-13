@@ -10,7 +10,7 @@ namespace event {
 
 class MoveUnit : public Event {
 public:
-	MoveUnit( const size_t initiator_slot, const size_t unit_id, const game::backend::map::tile::direction_t direction );
+	MoveUnit( const size_t initiator_slot, const size_t unit_id, const backend::map::tile::direction_t direction );
 
 	const std::string* Validate( Game* game ) const override;
 	void Resolve( Game* game ) override;
@@ -25,7 +25,7 @@ private:
 
 private:
 	const size_t m_unit_id;
-	const game::backend::map::tile::direction_t m_direction;
+	const backend::map::tile::direction_t m_direction;
 
 	gse::Value m_resolutions;
 

@@ -12,20 +12,20 @@ namespace game {
 namespace frontend {
 namespace unit {
 
-UnitDef::UnitDef( sprite::InstancedSpriteManager* ism, const ::game::backend::unit::Def* unitdef )
+UnitDef::UnitDef( sprite::InstancedSpriteManager* ism, const backend::unit::Def* unitdef )
 	: m_ism( ism )
 	, m_id( unitdef->m_id )
 	, m_name( unitdef->m_name )
 	, m_type( unitdef->m_type ) {
 
 	switch ( unitdef->m_type ) {
-		case ::game::backend::unit::DT_STATIC: {
-			const auto* def = (::game::backend::unit::StaticDef*)unitdef;
+		case backend::unit::DT_STATIC: {
+			const auto* def = (backend::unit::StaticDef*)unitdef;
 
 			switch ( def->m_render->m_type ) {
 
-				case ::game::backend::unit::Render::RT_SPRITE: {
-					m_render = ( (::game::backend::unit::SpriteRender*)def->m_render )->m_render;
+				case backend::unit::Render::RT_SPRITE: {
+					m_render = ( (backend::unit::SpriteRender*)def->m_render )->m_render;
 
 					static_.movement_type = def->m_movement_type;
 					static_.movement_per_turn = def->m_movement_per_turn;
@@ -44,7 +44,7 @@ UnitDef::UnitDef( sprite::InstancedSpriteManager* ism, const ::game::backend::un
 }
 
 UnitDef::~UnitDef() {
-	if ( m_type == ::game::backend::unit::DT_STATIC ) {
+	if ( m_type == backend::unit::DT_STATIC ) {
 		if ( m_render.morale_based_xshift ) {
 			if ( static_.render.morale_based_sprites ) {
 				DELETE( static_.render.morale_based_sprites );
@@ -57,8 +57,8 @@ const bool UnitDef::IsArtillery() const {
 	return m_id != "SporeLauncher";
 }
 
-sprite::Sprite* UnitDef::GetSprite( const ::game::backend::unit::morale_t morale ) {
-	ASSERT_NOLOG( m_type == ::game::backend::unit::DT_STATIC, "only static units are supported for now" );
+sprite::Sprite* UnitDef::GetSprite( const backend::unit::morale_t morale ) {
+	ASSERT_NOLOG( m_type == backend::unit::DT_STATIC, "only static units are supported for now" );
 	ASSERT_NOLOG( static_.render.is_sprite, "only sprite unitdefs are supported for now" );
 
 	if ( m_render.morale_based_xshift ) {
@@ -67,7 +67,7 @@ sprite::Sprite* UnitDef::GetSprite( const ::game::backend::unit::morale_t morale
 		}
 		auto it = static_.render.morale_based_sprites->find( morale );
 		if ( it == static_.render.morale_based_sprites->end() ) {
-			const uint32_t xshift = m_render.morale_based_xshift * ( morale - ::game::backend::unit::MORALE_MIN );
+			const uint32_t xshift = m_render.morale_based_xshift * ( morale - backend::unit::MORALE_MIN );
 			it = static_.render.morale_based_sprites->insert(
 				{
 					morale,
@@ -86,8 +86,8 @@ sprite::Sprite* UnitDef::GetSprite( const ::game::backend::unit::morale_t morale
 								m_render.cy,
 							},
 							{
-								::game::backend::map::s_consts.tile.scale.x,
-								::game::backend::map::s_consts.tile.scale.y * ::game::backend::map::s_consts.sprite.y_scale
+								backend::map::s_consts.tile.scale.x,
+								backend::map::s_consts.tile.scale.y * backend::map::s_consts.sprite.y_scale
 							},
 							ZL_UNITS
 						),
@@ -114,8 +114,8 @@ sprite::Sprite* UnitDef::GetSprite( const ::game::backend::unit::morale_t morale
 						m_render.cy,
 					},
 					{
-						::game::backend::map::s_consts.tile.scale.x,
-						::game::backend::map::s_consts.tile.scale.y * ::game::backend::map::s_consts.sprite.y_scale
+						backend::map::s_consts.tile.scale.x,
+						backend::map::s_consts.tile.scale.y * backend::map::s_consts.sprite.y_scale
 					},
 					ZL_UNITS
 				),
@@ -127,7 +127,7 @@ sprite::Sprite* UnitDef::GetSprite( const ::game::backend::unit::morale_t morale
 }
 
 const bool UnitDef::IsImmovable() const {
-	return static_.movement_type == ::game::backend::unit::MT_IMMOVABLE;
+	return static_.movement_type == backend::unit::MT_IMMOVABLE;
 }
 
 const std::string UnitDef::GetNameString() const {

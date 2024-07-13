@@ -21,7 +21,7 @@ CLASS( FactionManager, common::Class )
 
 	FactionManager( Game* game );
 
-	void DefineFaction( const ::game::backend::rules::Faction* def );
+	void DefineFaction( const backend::rules::Faction* def );
 
 	Faction* GetFactionById( const std::string& id ) const;
 

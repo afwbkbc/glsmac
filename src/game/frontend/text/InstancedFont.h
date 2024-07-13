@@ -39,9 +39,9 @@ private:
 
 	struct symbol_pos_t {
 		struct {
-			::game::backend::map::pcx_texture_coordinates_t top_left;
-			::game::backend::map::pcx_texture_coordinates_t width_height;
-			::game::backend::map::pcx_texture_coordinates_t center;
+			backend::map::pcx_texture_coordinates_t top_left;
+			backend::map::pcx_texture_coordinates_t width_height;
+			backend::map::pcx_texture_coordinates_t center;
 		} src;
 		struct {
 			types::Vec2< int > top_left;

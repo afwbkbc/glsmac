@@ -16,9 +16,9 @@ class InstancedSprite {
 public:
 	std::string key;
 	std::string name;
-	::game::backend::map::pcx_texture_coordinates_t xy;
-	::game::backend::map::pcx_texture_coordinates_t wh;
-	::game::backend::map::pcx_texture_coordinates_t cxy;
+	backend::map::pcx_texture_coordinates_t xy;
+	backend::map::pcx_texture_coordinates_t wh;
+	backend::map::pcx_texture_coordinates_t cxy;
 	scene::actor::Instanced* actor;
 };
 

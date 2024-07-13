@@ -131,7 +131,7 @@ CLASS( Game, common::Module )
 
 	static constexpr size_t SCROLL_DURATION_MS = 100;
 
-	Game( task::game::Game* task, ::game::backend::State* state, ::ui::ui_handler_t on_start = 0, ::ui::ui_handler_t on_cancel = 0 );
+	Game( task::game::Game* task, backend::State* state, ::ui::ui_handler_t on_start = 0, ::ui::ui_handler_t on_cancel = 0 );
 	~Game();
 
 	void Start() override;
@@ -178,7 +178,7 @@ CLASS( Game, common::Module )
 	text::InstancedTextManager* GetITM() const;
 
 	types::texture::Texture* GetSourceTexture( const resource::resource_t res );
-	sprite::InstancedSprite* GetTerrainInstancedSprite( const ::game::backend::map::sprite_actor_t& actor );
+	sprite::InstancedSprite* GetTerrainInstancedSprite( const backend::map::sprite_actor_t& actor );
 
 	void CenterAtCoordinatePercents( const ::types::Vec2< float > position_percents );
 
@@ -229,11 +229,11 @@ CLASS( Game, common::Module )
 
 	types::texture::Texture* GetTerrainTexture() const;
 
-	void SetEditorTool( ::game::backend::map_editor::tool_type_t tool );
-	const ::game::backend::map_editor::tool_type_t GetEditorTool() const;
+	void SetEditorTool( backend::map_editor::tool_type_t tool );
+	const backend::map_editor::tool_type_t GetEditorTool() const;
 
-	void SetEditorBrush( ::game::backend::map_editor::brush_type_t editor_brush );
-	const ::game::backend::map_editor::brush_type_t GetEditorBrush() const;
+	void SetEditorBrush( backend::map_editor::brush_type_t editor_brush );
+	const backend::map_editor::brush_type_t GetEditorBrush() const;
 
 	const types::Vec3 GetCloserCoords( const types::Vec3& coords, const types::Vec3& ref_coords ) const;
 
@@ -252,11 +252,11 @@ private:
 
 	size_t m_slot_index = 0;
 	bool m_is_turn_active = false;
-	::game::backend::turn::turn_status_t m_turn_status = ::game::backend::turn::TS_PLEASE_WAIT;
+	backend::turn::turn_status_t m_turn_status = backend::turn::TS_PLEASE_WAIT;
 	size_t m_turn_id = 0;
 
-	::game::backend::map_editor::tool_type_t m_editor_tool = ::game::backend::map_editor::TT_NONE;
-	::game::backend::map_editor::brush_type_t m_editor_brush = ::game::backend::map_editor::BT_NONE;
+	backend::map_editor::tool_type_t m_editor_tool = backend::map_editor::TT_NONE;
+	backend::map_editor::brush_type_t m_editor_brush = backend::map_editor::BT_NONE;
 
 	void UpdateMapData( const types::Vec2< size_t >& map_size );
 
@@ -264,11 +264,11 @@ private:
 		const size_t slot_index,
 		faction::Faction* faction
 	);
-	void DefineAnimation( const ::game::backend::animation::Def* def );
+	void DefineAnimation( const backend::animation::Def* def );
 	void ShowAnimation( AnimationDef* def, const size_t animation_id, const ::types::Vec3& render_coords );
 
-	void ProcessRequest( const ::game::FrontendRequest* request );
-	void SendBackendRequest( const ::game::BackendRequest* request );
+	void ProcessRequest( const FrontendRequest* request );
+	void SendBackendRequest( const BackendRequest* request );
 
 	bool m_is_initialized = false;
 	void Initialize(
@@ -276,10 +276,10 @@ private:
 		types::texture::Texture* terrain_texture,
 		types::mesh::Render* terrain_mesh,
 		types::mesh::Data* terrain_data_mesh,
-		const std::unordered_map< std::string, ::game::backend::map::sprite_actor_t >& sprite_actors,
+		const std::unordered_map< std::string, backend::map::sprite_actor_t >& sprite_actors,
 		const std::unordered_map< size_t, std::pair< std::string, ::types::Vec3 > >& sprite_instances,
-		const std::vector< ::game::backend::map::tile::Tile >* tiles,
-		const std::vector< ::game::backend::map::tile::TileState >* tile_states
+		const std::vector< backend::map::tile::Tile >* tiles,
+		const std::vector< backend::map::tile::TileState >* tile_states
 	);
 	void Deinitialize();
 
@@ -288,7 +288,7 @@ private:
 
 	void SetCameraPosition( const ::types::Vec3 camera_position );
 
-	::game::backend::State* m_state = nullptr;
+	backend::State* m_state = nullptr;
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)
 	util::random::Random* m_random = nullptr;
@@ -302,7 +302,7 @@ private:
 	scene::Scene* m_world_scene = nullptr;
 
 	bool m_is_editing_mode = false;
-	::game::backend::map_editor::draw_mode_t m_editor_draw_mode = ::game::backend::map_editor::DM_NONE;
+	backend::map_editor::draw_mode_t m_editor_draw_mode = backend::map_editor::DM_NONE;
 	util::Timer m_editing_draw_timer;
 
 	struct {
@@ -374,7 +374,7 @@ private:
 
 	bool m_is_resize_handler_set = false;
 
-	void SelectTileAtPoint( const ::game::backend::tile_query_purpose_t tile_query_purpose, const size_t x, const size_t y );
+	void SelectTileAtPoint( const backend::tile_query_purpose_t tile_query_purpose, const size_t x, const size_t y );
 	void SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id = 0 );
 	void DeselectTileOrUnit();
 
@@ -410,10 +410,10 @@ private:
 
 	// tile request stuff
 	rr::id_t m_tile_at_request_id = 0;
-	::game::backend::tile_query_purpose_t m_tile_at_query_purpose = ::game::backend::TQP_NONE;
+	backend::tile_query_purpose_t m_tile_at_query_purpose = backend::TQP_NONE;
 
 	void CancelTileAtRequest();
-	void GetTileAtScreenCoords( const ::game::backend::tile_query_purpose_t tile_query_purpose, const size_t screen_x, const size_t screen_inverse_y ); // async, y needs to be upside down
+	void GetTileAtScreenCoords( const backend::tile_query_purpose_t tile_query_purpose, const size_t screen_x, const size_t screen_inverse_y ); // async, y needs to be upside down
 	const bool IsTileAtRequestPending() const;
 	const tile_at_result_t GetTileAtScreenCoordsResult();
 
@@ -449,7 +449,7 @@ private:
 	void CancelRequests();
 	void CancelGame();
 
-	std::vector< ::game::BackendRequest > m_pending_backend_requests = {};
+	std::vector< BackendRequest > m_pending_backend_requests = {};
 
 	const float GetFixedX( const float x ) const;
 	const float GetCloserX( const float x, const float ref_x ) const;

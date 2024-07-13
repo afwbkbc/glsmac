@@ -38,7 +38,7 @@ public:
 	static const badge_type_t BT_DEFAULT{ 1 << 1 };
 	static const badge_type_t BT_PROGENITOR{ 0 << 1 };
 
-	sprite::InstancedSprite* GetBadgeSprite( const badge_type_t badge_type, const ::game::backend::unit::morale_t morale );
+	sprite::InstancedSprite* GetBadgeSprite( const badge_type_t badge_type, const backend::unit::morale_t morale );
 	sprite::InstancedSprite* GetFakeBadgeSprite();
 	sprite::Sprite* GetBadgeHealthbarSprite( const float health );
 	const size_t GetBadgeBlinkInterval() const;
@@ -91,7 +91,7 @@ private:
 
 	sprite::InstancedSpriteManager* const m_ism = nullptr;
 
-	typedef std::unordered_map< ::game::backend::unit::morale_t, sprite::InstancedSprite* > unitbadge_spritemap_t;
+	typedef std::unordered_map< backend::unit::morale_t, sprite::InstancedSprite* > unitbadge_spritemap_t;
 	typedef std::unordered_map< badge_type_t, unitbadge_spritemap_t > unitbadge_spritemaps_t;
 	unitbadge_spritemaps_t m_unitbadge_sprites = {};
 

@@ -28,7 +28,7 @@ namespace backend {
 namespace map {
 namespace generator {
 
-void SimplePerlin::GenerateElevations( tile::Tiles* tiles, const game::backend::settings::MapSettings* map_settings, MT_CANCELABLE ) {
+void SimplePerlin::GenerateElevations( tile::Tiles* tiles, const backend::settings::MapSettings* map_settings, MT_CANCELABLE ) {
 	tile::Tile* tile;
 
 	const auto w = tiles->GetWidth();
@@ -132,7 +132,7 @@ void SimplePerlin::GenerateElevations( tile::Tiles* tiles, const game::backend::
 	}
 }
 
-void SimplePerlin::GenerateDetails( tile::Tiles* tiles, const game::backend::settings::MapSettings* map_settings, MT_CANCELABLE ) {
+void SimplePerlin::GenerateDetails( tile::Tiles* tiles, const backend::settings::MapSettings* map_settings, MT_CANCELABLE ) {
 	tile::Tile* tile;
 
 	Log( "Generating details ( " + std::to_string( tiles->GetWidth() ) + " x " + std::to_string( tiles->GetHeight() ) + " )" );

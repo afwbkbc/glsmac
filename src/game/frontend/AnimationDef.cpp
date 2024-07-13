@@ -9,16 +9,16 @@
 namespace game {
 namespace frontend {
 
-AnimationDef::AnimationDef( sprite::InstancedSpriteManager* ism, const ::game::backend::animation::Def* def )
+AnimationDef::AnimationDef( sprite::InstancedSpriteManager* ism, const backend::animation::Def* def )
 	: m_ism( ism )
 	, m_id( def->m_id )
 	, m_type( def->m_type )
 	, m_duration_ms( def->m_duration_ms )
 	, m_sound_file( def->m_sound_file ) {
 
-	ASSERT_NOLOG( def->m_type == ::game::backend::animation::animation_type_t::AT_FRAMES_ROW, "only frames row animations are supported for now" );
+	ASSERT_NOLOG( def->m_type == backend::animation::animation_type_t::AT_FRAMES_ROW, "only frames row animations are supported for now" );
 
-	const auto* d = (::game::backend::animation::FramesRow*)def;
+	const auto* d = (backend::animation::FramesRow*)def;
 	m_render = d->m_render;
 	ASSERT_NOLOG( m_render.frames_count > 0, "animation has no frames defined" );
 }

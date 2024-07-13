@@ -21,7 +21,7 @@ class InstancedSpriteManager;
 class AnimationDef {
 public:
 
-	AnimationDef( sprite::InstancedSpriteManager* ism, const ::game::backend::animation::Def* def );
+	AnimationDef( sprite::InstancedSpriteManager* ism, const backend::animation::Def* def );
 	~AnimationDef();
 
 	const instanced_sprites_t& GetSprites();
@@ -32,10 +32,10 @@ private:
 
 	sprite::InstancedSpriteManager* const m_ism = nullptr;
 
-	::game::backend::animation::sprite_render_info_t m_render = {};
+	backend::animation::sprite_render_info_t m_render = {};
 
 	std::string m_id = "";
-	::game::backend::animation::animation_type_t m_type;
+	backend::animation::animation_type_t m_type;
 
 	types::Sound* m_sound = nullptr;
 

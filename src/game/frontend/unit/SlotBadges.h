@@ -35,7 +35,7 @@ public:
 	);
 	~SlotBadges();
 
-	sprite::Sprite* GetUnitBadgeSprite( const ::game::backend::unit::morale_t morale, const bool is_active );
+	sprite::Sprite* GetUnitBadgeSprite( const backend::unit::morale_t morale, const bool is_active );
 
 	const size_t ShowFakeBadge( const types::Vec3& coords, const uint8_t offset );
 	void HideFakeBadge( const size_t instance_id );
@@ -52,7 +52,7 @@ private:
 		sprite::Sprite* normal;
 		sprite::Sprite* greyedout;
 	};
-	std::unordered_map< ::game::backend::unit::morale_t, slot_sprites_t > m_per_morale_sprites = {};
+	std::unordered_map< backend::unit::morale_t, slot_sprites_t > m_per_morale_sprites = {};
 
 	types::texture::repaint_rules_t m_repaint_rules = {};
 	types::texture::repaint_rules_t m_fake_badge_repaint_rules = {};

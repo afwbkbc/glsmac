@@ -37,21 +37,21 @@ BadgeDefs::~BadgeDefs() {
 
 const types::Vec3 BadgeDefs::GetBadgeCoords( const types::Vec3& unit_coords ) {
 	return {
-		unit_coords.x + ::game::backend::map::s_consts.tile.scale.x * s_consts.offset.x,
-		unit_coords.y - ::game::backend::map::s_consts.tile.scale.y * s_consts.offset.y * ::game::backend::map::s_consts.sprite.y_scale,
+		unit_coords.x + backend::map::s_consts.tile.scale.x * s_consts.offset.x,
+		unit_coords.y - backend::map::s_consts.tile.scale.y * s_consts.offset.y * backend::map::s_consts.sprite.y_scale,
 		unit_coords.z
 	};
 }
 
 const types::Vec3 BadgeDefs::GetBadgeHealthbarCoords( const types::Vec3& unit_coords ) {
 	return {
-		unit_coords.x + ::game::backend::map::s_consts.tile.scale.x * s_consts.healthbars.offset.x,
-		unit_coords.y - ::game::backend::map::s_consts.tile.scale.y * s_consts.healthbars.offset.y * ::game::backend::map::s_consts.sprite.y_scale,
+		unit_coords.x + backend::map::s_consts.tile.scale.x * s_consts.healthbars.offset.x,
+		unit_coords.y - backend::map::s_consts.tile.scale.y * s_consts.healthbars.offset.y * backend::map::s_consts.sprite.y_scale,
 		unit_coords.z
 	};
 }
 
-sprite::InstancedSprite* BadgeDefs::GetBadgeSprite( const badge_type_t badge_type, const ::game::backend::unit::morale_t morale ) {
+sprite::InstancedSprite* BadgeDefs::GetBadgeSprite( const badge_type_t badge_type, const backend::unit::morale_t morale ) {
 	auto it1 = m_unitbadge_sprites.find( badge_type );
 	if ( it1 == m_unitbadge_sprites.end() ) {
 		it1 = m_unitbadge_sprites.insert(
@@ -67,7 +67,7 @@ sprite::InstancedSprite* BadgeDefs::GetBadgeSprite( const badge_type_t badge_typ
 		const auto w = s_consts.badges.width;
 		const auto h = s_consts.badges.height;
 		const auto m = s_consts.badges.margin;
-		const uint32_t x = ( morale - ::game::backend::unit::MORALE_MIN ) * ( w + m ) + m;
+		const uint32_t x = ( morale - backend::unit::MORALE_MIN ) * ( w + m ) + m;
 		const uint32_t y = badge_type * ( h + m ) + m;
 
 		// cut hole for healthbar
@@ -99,8 +99,8 @@ sprite::InstancedSprite* BadgeDefs::GetBadgeSprite( const badge_type_t badge_typ
 						y + h / 2,
 					},
 					{
-						::game::backend::map::s_consts.tile.scale.x * s_consts.scale.x,
-						::game::backend::map::s_consts.tile.scale.y * s_consts.scale.y * ::game::backend::map::s_consts.sprite.y_scale
+						backend::map::s_consts.tile.scale.x * s_consts.scale.x,
+						backend::map::s_consts.tile.scale.y * s_consts.scale.y * backend::map::s_consts.sprite.y_scale
 					},
 					ZL_UNITS,
 					0.008f
@@ -129,8 +129,8 @@ sprite::InstancedSprite* BadgeDefs::GetFakeBadgeSprite() {
 				12,
 			},
 			{
-				::game::backend::map::s_consts.tile.scale.x * s_consts.fake_badges.scale.x,
-				::game::backend::map::s_consts.tile.scale.y * s_consts.fake_badges.scale.y * ::game::backend::map::s_consts.sprite.y_scale
+				backend::map::s_consts.tile.scale.x * s_consts.fake_badges.scale.x,
+				backend::map::s_consts.tile.scale.y * s_consts.fake_badges.scale.y * backend::map::s_consts.sprite.y_scale
 			},
 			ZL_UNITS,
 			0.002f
@@ -192,8 +192,8 @@ sprite::Sprite* BadgeDefs::GetBadgeHealthbarSprite( const float health ) {
 							(unsigned int)res / 2,
 						},
 						{
-							::game::backend::map::s_consts.tile.scale.x * s_consts.healthbars.scale.x,
-							::game::backend::map::s_consts.tile.scale.y * s_consts.healthbars.scale.y * ::game::backend::map::s_consts.sprite.y_scale
+							backend::map::s_consts.tile.scale.x * s_consts.healthbars.scale.x,
+							backend::map::s_consts.tile.scale.y * s_consts.healthbars.scale.y * backend::map::s_consts.sprite.y_scale
 						},
 						ZL_UNITS,
 						0.005f
@@ -212,8 +212,8 @@ const size_t BadgeDefs::GetBadgeBlinkInterval() const {
 
 const types::Vec3 BadgeDefs::GetFakeBadgeCoords( const types::Vec3& coords, const uint8_t offset ) const {
 	return {
-		coords.x + ::game::backend::map::s_consts.tile.scale.x * s_consts.fake_badges.offset.x + s_consts.fake_badges.step_x * offset,
-		coords.y - ::game::backend::map::s_consts.tile.scale.y * s_consts.fake_badges.offset.y * ::game::backend::map::s_consts.sprite.y_scale,
+		coords.x + backend::map::s_consts.tile.scale.x * s_consts.fake_badges.offset.x + s_consts.fake_badges.step_x * offset,
+		coords.y - backend::map::s_consts.tile.scale.y * s_consts.fake_badges.offset.y * backend::map::s_consts.sprite.y_scale,
 		coords.z
 	};
 }

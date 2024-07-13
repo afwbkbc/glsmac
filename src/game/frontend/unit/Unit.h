@@ -55,10 +55,10 @@ public:
 		tile::Tile* tile,
 		const types::Vec3& render_coords,
 		const bool is_owned,
-		const ::game::backend::unit::movement_t movement,
-		const ::game::backend::unit::morale_t morale,
+		const backend::unit::movement_t movement,
+		const backend::unit::morale_t morale,
 		const std::string& morale_string,
-		const ::game::backend::unit::health_t health
+		const backend::unit::health_t health
 	);
 	~Unit();
 
@@ -97,8 +97,8 @@ public:
 
 	void Refresh();
 
-	void SetMovement( const ::game::backend::unit::movement_t movement );
-	void SetHealth( const ::game::backend::unit::health_t health );
+	void SetMovement( const backend::unit::movement_t movement );
+	void SetHealth( const backend::unit::health_t health );
 	const bool CanMove() const;
 
 	void SetTile( tile::Tile* dst_tile );
@@ -151,10 +151,10 @@ private:
 
 	const bool m_is_owned = false;
 	bool m_is_active = false;
-	::game::backend::unit::movement_t m_movement = 0.0f;
-	::game::backend::unit::morale_t m_morale = 0;
+	backend::unit::movement_t m_movement = 0.0f;
+	backend::unit::morale_t m_morale = 0;
 	std::string m_morale_string = "";
-	::game::backend::unit::health_t m_health = 0;
+	backend::unit::health_t m_health = 0;
 
 	bool m_need_refresh = true;
 	uint8_t m_fake_badge_offset = 0;

@@ -307,7 +307,7 @@ void BottomBar::UpdateMapFileName() {
 	m_sections.middle_area->UpdateMapFileName();
 }
 
-void BottomBar::SetTurnStatus( const ::game::backend::turn::turn_status_t status ) {
+void BottomBar::SetTurnStatus( const backend::turn::turn_status_t status ) {
 	m_sections.status_button->SetStatus( status );
 }
 

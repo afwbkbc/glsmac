@@ -18,9 +18,9 @@ StatusButton::StatusButton( Game* game )
 		::ui::event::EV_BUTTON_CLICK, EH( this ) {
 			if ( m_is_clickable ) {
 				switch ( m_status_type ) {
-					case ::game::backend::turn::TS_TURN_ACTIVE: {
+					case backend::turn::TS_TURN_ACTIVE: {
 						NEWV( popup, ui::popup::EndTurnConfirmation, m_game, UH( this ) {
-							SetStatus( ::game::backend::turn::TS_PLEASE_WAIT );
+							SetStatus( backend::turn::TS_PLEASE_WAIT );
 							m_game->CompleteTurn();
 							m_flashing->Show();
 						} );
@@ -28,13 +28,13 @@ StatusButton::StatusButton( Game* game )
 						RemoveStyleModifier( ::ui::M_HOVER );
 						break;
 					}
-					case ::game::backend::turn::TS_TURN_COMPLETE: {
-						SetStatus( ::game::backend::turn::TS_PLEASE_WAIT );
+					case backend::turn::TS_TURN_COMPLETE: {
+						SetStatus( backend::turn::TS_PLEASE_WAIT );
 						m_game->CompleteTurn();
 						break;
 					}
-					case ::game::backend::turn::TS_WAITING_FOR_PLAYERS: {
-						SetStatus( ::game::backend::turn::TS_PLEASE_WAIT );
+					case backend::turn::TS_WAITING_FOR_PLAYERS: {
+						SetStatus( backend::turn::TS_PLEASE_WAIT );
 						m_game->UncompleteTurn();
 						break;
 					}
@@ -76,7 +76,7 @@ void StatusButton::Create() {
 	NEW( m_sound, ::ui::object::SoundEffect, "BBTurnCompleteSound" );
 	AddChild( m_sound );
 
-	SetStatus( ::game::backend::turn::TS_PLEASE_WAIT );
+	SetStatus( backend::turn::TS_PLEASE_WAIT );
 }
 
 void StatusButton::Iterate() {
@@ -108,36 +108,36 @@ void StatusButton::Destroy() {
 	::ui::object::Button::Destroy();
 }
 
-static const std::unordered_map< ::game::backend::turn::turn_status_t, std::string > s_status_labels = {
+static const std::unordered_map< backend::turn::turn_status_t, std::string > s_status_labels = {
 	{
-		::game::backend::turn::TS_PLEASE_WAIT,
+		backend::turn::TS_PLEASE_WAIT,
 		"PLEASE WAIT"
 	},
 	{
-		::game::backend::turn::TS_TURN_ACTIVE,
+		backend::turn::TS_TURN_ACTIVE,
 		"TURN COMPLETE",
 	},
 	{
-		::game::backend::turn::TS_TURN_COMPLETE,
+		backend::turn::TS_TURN_COMPLETE,
 		"TURN COMPLETE",
 	},
 	{
-		::game::backend::turn::TS_WAITING_FOR_PLAYERS,
+		backend::turn::TS_WAITING_FOR_PLAYERS,
 		"WAITING FOR PLAYERS",
 	}
 };
-void StatusButton::SetStatus( const ::game::backend::turn::turn_status_t status ) {
+void StatusButton::SetStatus( const backend::turn::turn_status_t status ) {
 	if ( m_status_type != status ) {
 		m_status_type = status;
 		ASSERT( s_status_labels.find( m_status_type ) != s_status_labels.end(), "invalid status type: " + std::to_string( m_status_type ) );
 		SetLabel( s_status_labels.at( m_status_type ) );
 		switch ( m_status_type ) {
-			case ::game::backend::turn::TS_TURN_COMPLETE: {
+			case backend::turn::TS_TURN_COMPLETE: {
 				StartFlashing( 1.0f, 1.0f );
 				m_sound->Play();
 				break;
 			}
-			case ::game::backend::turn::TS_WAITING_FOR_PLAYERS: {
+			case backend::turn::TS_WAITING_FOR_PLAYERS: {
 				StartFlashing( 0.25f, 0.25f );
 				m_sound->Stop();
 				break;
@@ -147,7 +147,7 @@ void StatusButton::SetStatus( const ::game::backend::turn::turn_status_t status 
 				m_sound->Stop();
 			}
 		}
-		m_is_clickable = m_status_type != ::game::backend::turn::TS_PLEASE_WAIT;
+		m_is_clickable = m_status_type != backend::turn::TS_PLEASE_WAIT;
 		if ( m_is_clickable ) {
 			UnblockEvents();
 		}

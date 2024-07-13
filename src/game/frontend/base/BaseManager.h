@@ -56,7 +56,7 @@ CLASS( BaseManager, common::Class )
 		const size_t slot_index,
 		const ::types::Vec2< size_t >& tile_coords,
 		const ::types::Vec3& render_coords,
-		const ::game::backend::base::BaseData& data
+		const backend::base::BaseData& data
 	);
 	// TODO void DespawnBase( const size_t base_id );
 

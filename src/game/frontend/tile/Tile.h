@@ -63,11 +63,11 @@ public:
 	Tile* SE;
 	Tile* S;
 	Tile* SW;
-	Tile* GetNeighbour( const ::game::backend::map::tile::direction_t direction );
+	Tile* GetNeighbour( const backend::map::tile::direction_t direction );
 
 	struct render_data_t {
 		types::Vec3 coords = {};
-		::game::backend::map::tile::tile_vertices_t selection_coords = {};
+		backend::map::tile::tile_vertices_t selection_coords = {};
 		std::vector< types::mesh::Render* > preview_meshes = {};
 		std::vector< std::string > preview_lines = {};
 		std::vector< std::string > sprites = {};
@@ -75,7 +75,7 @@ public:
 
 	const render_data_t& GetRenderData() const;
 
-	void Update( const ::game::backend::map::tile::Tile& tile, const ::game::backend::map::tile::TileState& ts );
+	void Update( const backend::map::tile::Tile& tile, const backend::map::tile::TileState& ts );
 
 private:
 	const types::Vec2< size_t > m_coords;
