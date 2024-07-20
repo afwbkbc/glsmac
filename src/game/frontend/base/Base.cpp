@@ -13,6 +13,8 @@
 #include "types/mesh/Rectangle.h"
 #include "scene/actor/Sprite.h"
 #include "types/texture/Texture.h"
+#include "BaseManager.h"
+#include "SlotBadges.h"
 
 namespace game {
 namespace frontend {
@@ -26,6 +28,7 @@ static const std::vector< uint8_t > s_base_render_population_thresholds = {
 };
 
 Base::Base(
+	BaseManager* bm,
 	const size_t id,
 	Slot* slot,
 	tile::Tile* tile,
@@ -35,6 +38,7 @@ Base::Base(
 	size_t population
 )
 	: TileObject( tile )
+	, m_bm( bm )
 	, m_id( id )
 	, m_faction( slot->GetFaction() )
 	, m_render(
@@ -46,8 +50,11 @@ Base::Base(
 		}
 	)
 	, m_is_owned( is_owned )
-	, m_population( population ) {
+	, m_population( population )
+	, m_is_guarded( !m_tile->GetUnits().empty() )
+	, m_slot_badges( m_bm->GetSlotBadges( slot->GetIndex() ) ) {
 	m_render_data.base = GetMeshTex( GetSprite()->instanced_sprite );
+	m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_population, m_is_guarded );
 	m_tile->SetBase( this );
 }
 
@@ -105,6 +112,8 @@ void Base::Show() {
 			}
 		);
 
+		ShowBadge();
+
 		m_render.is_rendered = true;
 	}
 }
@@ -113,7 +122,22 @@ void Base::Hide() {
 	if ( m_render.is_rendered ) {
 		GetSprite()->instanced_sprite->actor->RemoveInstance( m_render.instance_id );
 		m_render.name_sprite->Hide();
+		HideBadge();
 		m_render.is_rendered = false;
+	}
+}
+
+void Base::Update() {
+	const auto is_guarded = !m_tile->GetUnits().empty();
+	if ( is_guarded != m_is_guarded ) {
+		if ( m_render.is_rendered ) {
+			HideBadge();
+		}
+		m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_population, m_is_guarded );
+		if ( m_render.is_rendered ) {
+			ShowBadge();
+		}
+		m_is_guarded = is_guarded;
 	}
 }
 
@@ -125,6 +149,17 @@ void Base::SetRenderCoords( const types::Vec3& coords ) {
 	Hide();
 	m_render.coords = coords;
 	Show();
+}
+
+void Base::ShowBadge() {
+	if ( !m_render.badge.instance_id ) {
+		m_render.badge.instance_id = m_render.badge.def->next_instance_id++;
+	}
+	m_render.badge.def->instanced_sprite->actor->SetInstance( m_render.badge.instance_id, SlotBadges::GetBadgeCoords( m_render.coords ) );
+}
+
+void Base::HideBadge() {
+	m_render.badge.def->instanced_sprite->actor->RemoveInstance( m_render.badge.instance_id );
 }
 
 Base::meshtex_t Base::GetMeshTex( const sprite::InstancedSprite* sprite ) {

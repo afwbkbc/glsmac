@@ -18,7 +18,7 @@ SlotBadges::SlotBadges(
 )
 	: m_badge_defs( badge_defs )
 	, m_ism( ism )
-	, m_badges_key( "Badge_" + std::to_string( slot_index ) )
+	, m_badges_key( "UnitBadges_" + std::to_string( slot_index ) )
 	, m_faction( faction ) {
 
 	const auto& c = faction->m_colors.border.value;

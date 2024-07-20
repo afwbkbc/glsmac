@@ -43,6 +43,7 @@ class Faction;
 namespace base {
 
 class Base;
+class SlotBadges;
 
 CLASS( BaseManager, common::Class )
 
@@ -60,13 +61,25 @@ CLASS( BaseManager, common::Class )
 	);
 	// TODO void DespawnBase( const size_t base_id );
 
+	SlotBadges* GetSlotBadges( const size_t slot_index ) const;
+	void DefineSlotBadges( const size_t slot_index, const faction::Faction* faction );
+
 private:
-	friend class base::Base;
+	friend class Base;
+
+private:
+	friend class SlotBadges;
+	text::InstancedFont* GetBadgeFont() const;
 
 private:
 
 	Game* m_game;
+	sprite::InstancedSpriteManager* m_ism;
+
 	text::InstancedFont* m_name_font;
+	text::InstancedFont* m_badge_font;
+
+	std::unordered_map< size_t, SlotBadges* > m_slot_badges = {};
 
 	std::unordered_map< size_t, base::Base* > m_bases = {};
 

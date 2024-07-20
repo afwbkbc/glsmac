@@ -13,6 +13,7 @@
 #include "types/mesh/Rectangle.h"
 #include "engine/Engine.h"
 #include "loader/font/FontLoader.h"
+#include "SlotBadges.h"
 
 namespace game {
 namespace frontend {
@@ -20,8 +21,10 @@ namespace base {
 
 BaseManager::BaseManager( Game* game )
 	: m_game( game )
-	, m_name_font( game->GetITM()->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( resource::TTF_ARIALN, 48 ) ) ) {
-
+	, m_ism( game->GetISM() )
+	, m_name_font( game->GetITM()->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( resource::TTF_ARIALN, 48 ) ) )
+	, m_badge_font( game->GetITM()->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( resource::TTF_ARIALNB, 48 ) ) ) {
+	//
 }
 
 BaseManager::~BaseManager() {
@@ -53,6 +56,7 @@ void BaseManager::SpawnBase(
 		{
 			base_id,
 			new base::Base(
+				this,
 				base_id,
 				slot,
 				tile,
@@ -90,6 +94,25 @@ void BaseManager::SpawnBase(
 	m_game->RefreshSelectedTile( m_selected_unit );
 
 }*/
+
+SlotBadges* BaseManager::GetSlotBadges( const size_t slot_index ) const {
+	ASSERT( m_slot_badges.find( slot_index ) != m_slot_badges.end(), "slot base badges for index " + std::to_string( slot_index ) + " not defined" );
+	return m_slot_badges.at( slot_index );
+}
+
+void BaseManager::DefineSlotBadges( const size_t slot_index, const faction::Faction* faction ) {
+	ASSERT( m_slot_badges.find( slot_index ) == m_slot_badges.end(), "slot base badges for index " + std::to_string( slot_index ) + " already defined" );
+	m_slot_badges.insert(
+		{
+			slot_index,
+			new SlotBadges( this, m_ism, slot_index, faction )
+		}
+	);
+}
+
+text::InstancedFont* BaseManager::GetBadgeFont() const {
+	return m_badge_font;
+}
 
 }
 }

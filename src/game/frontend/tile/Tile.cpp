@@ -54,6 +54,9 @@ void Tile::AddUnit( unit::Unit* unit ) {
 		}
 	);
 	m_is_units_reorder_needed = true;
+	if ( m_base ) {
+		m_base->Update();
+	}
 	Render();
 }
 
@@ -66,6 +69,9 @@ void Tile::RemoveUnit( unit::Unit* unit ) {
 	}
 	m_units.erase( unit->GetId() );
 	m_is_units_reorder_needed = true;
+	if ( m_base ) {
+		m_base->Update();
+	}
 	Render();
 }
 

@@ -263,12 +263,12 @@ void UnitManager::DeselectUnit() {
 }
 
 SlotBadges* UnitManager::GetSlotBadges( const size_t slot_index ) const {
-	ASSERT( m_slot_badges.find( slot_index ) != m_slot_badges.end(), "slot badges for index " + std::to_string( slot_index ) + " not defined" );
+	ASSERT( m_slot_badges.find( slot_index ) != m_slot_badges.end(), "slot unit badges for index " + std::to_string( slot_index ) + " not defined" );
 	return m_slot_badges.at( slot_index );
 }
 
 void UnitManager::DefineSlotBadges( const size_t slot_index, const faction::Faction* faction ) {
-	ASSERT( m_slot_badges.find( slot_index ) == m_slot_badges.end(), "slot badges for index " + std::to_string( slot_index ) + " already defined" );
+	ASSERT( m_slot_badges.find( slot_index ) == m_slot_badges.end(), "slot unit badges for index " + std::to_string( slot_index ) + " already defined" );
 	m_slot_badges.insert(
 		{
 			slot_index,

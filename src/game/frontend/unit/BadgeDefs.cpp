@@ -84,7 +84,7 @@ sprite::InstancedSprite* BadgeDefs::GetBadgeSprite( const badge_type_t badge_typ
 			{
 				morale,
 				m_ism->GetInstancedSprite(
-					"Badge_" + std::to_string( badge_type ) + "_" + std::to_string( badge_type ),
+					"UnitBadge_" + std::to_string( badge_type ) + "_" + std::to_string( badge_type ),
 					texture,
 					{
 						x,
@@ -114,7 +114,7 @@ sprite::InstancedSprite* BadgeDefs::GetBadgeSprite( const badge_type_t badge_typ
 sprite::InstancedSprite* BadgeDefs::GetFakeBadgeSprite() {
 	if ( !m_fake_badge ) {
 		m_fake_badge = m_ism->GetInstancedSprite(
-			"Badge_FAKE",
+			"UnitBadge_FAKE",
 			GetBadgesTexture(),
 			{
 				21,
@@ -177,7 +177,7 @@ sprite::Sprite* BadgeDefs::GetBadgeHealthbarSprite( const float health ) {
 				step,
 				{
 					m_ism->GetInstancedSprite(
-						"Badge_Healthbar_" + std::to_string( step ),
+						"UnitBadge_Healthbar_" + std::to_string( step ),
 						texture,
 						{
 							0,

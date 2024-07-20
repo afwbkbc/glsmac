@@ -184,31 +184,14 @@ const std::string& InstancedFont::GetFontName() const {
 
 const std::vector< sprite::InstancedSprite* > InstancedFont::GetSymbolSprites( const std::string& text, const types::Color& color, const types::Color& shadow_color ) {
 	std::vector< sprite::InstancedSprite* > sprites = {};
-	const auto texture_key = color.GetRGBA();
-	auto texture_it = m_color_textures.find( texture_key );
-	if ( texture_it == m_color_textures.end() ) {
-		NEWV(
-			texture,
-			types::texture::Texture,
-			"InstancedFont_" + m_name + "_" + std::to_string( texture_key ),
-			m_base_texture->m_width,
-			m_base_texture->m_height
-		);
-		texture->ColorizeFrom( m_base_texture, color, shadow_color );
-		texture_it = m_color_textures.insert(
-			{
-				texture_key,
-				texture,
-			}
-		).first;
-	}
+	auto* texture = GetColorizedTexture( color, shadow_color );
 	for ( const auto symbol : text ) {
 		ASSERT_NOLOG( m_symbol_positions.find( symbol ) != m_symbol_positions.end(), "invalid/unsupported symbol: " + std::to_string( symbol ) );
 		const auto& pos = m_symbol_positions.find( symbol )->second;
 		sprites.push_back(
 			m_ism->GetInstancedSprite(
 				"InstancedFont_" + m_name + "_sym_" + std::to_string( symbol ),
-				texture_it->second,
+				texture,
 				pos.src.top_left,
 				pos.src.width_height,
 				pos.src.center,
@@ -256,6 +239,64 @@ const std::vector< types::Vec2< float > > InstancedFont::GetSymbolOffsets( const
 		offset.x -= x_center;
 	}
 	return offsets;
+}
+
+static size_t s_text_texture_id = 1;
+types::texture::Texture* InstancedFont::GetTextTexture(
+	const std::string& text,
+	const types::Color& background,
+	const types::Color& foreground,
+	const types::Color& shadow,
+	const uint8_t margin
+) {
+
+	uint32_t w = 0;
+	uint32_t h = 0;
+	for ( const auto symbol : text ) {
+		ASSERT_NOLOG( m_symbol_positions.find( symbol ) != m_symbol_positions.end(), "invalid/unsupported symbol: " + std::to_string( symbol ) );
+		const auto& pos = m_symbol_positions.find( symbol )->second;
+		w += pos.src.width_height.x;
+		h = std::max( h, pos.src.width_height.y );
+	}
+	w += margin * 2 + 1; // some symbols like '1' or '4' look shifted to the left without + 1 // TODO: investigate
+	h += margin * 2;
+
+	NEWV( texture, types::texture::Texture, "Texture_" + m_name + "_" + std::to_string( s_text_texture_id++ ), w, h );
+
+	texture->Fill( 0, 0, texture->m_width - 1, texture->m_height - 1, background );
+
+	uint32_t x = margin;
+	uint32_t y = margin;
+	const auto* source_texture = GetColorizedTexture( foreground, shadow );
+	for ( const auto symbol : text ) {
+		const auto& pos = m_symbol_positions.find( symbol )->second;
+		texture->AddFrom( source_texture, types::texture::AM_MERGE, pos.src.top_left.x, pos.src.top_left.y, pos.src.top_left.x + pos.src.width_height.x - 1, pos.src.top_left.y + pos.src.width_height.y - 1, x, y );
+		x += pos.src.width_height.x;
+	}
+
+	return texture;
+}
+
+types::texture::Texture* InstancedFont::GetColorizedTexture( const types::Color& color, const types::Color& shadow_color ) {
+	const auto texture_key = color.GetRGBA();
+	auto texture_it = m_color_textures.find( texture_key );
+	if ( texture_it == m_color_textures.end() ) {
+		NEWV(
+			texture,
+			types::texture::Texture,
+			"InstancedFont_" + m_name + "_" + std::to_string( texture_key ),
+			m_base_texture->m_width,
+			m_base_texture->m_height
+		);
+		texture->ColorizeFrom( m_base_texture, color, shadow_color );
+		texture_it = m_color_textures.insert(
+			{
+				texture_key,
+				texture,
+			}
+		).first;
+	}
+	return texture_it->second;
 }
 
 }

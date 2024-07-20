@@ -45,11 +45,13 @@ class Faction;
 namespace base {
 
 class BaseManager;
+class SlotBadges;
 
 class Base : public TileObject {
 public:
 
 	Base(
+		BaseManager* bm,
 		const size_t id,
 		Slot* slot,
 		tile::Tile* tile,
@@ -68,6 +70,7 @@ public:
 
 	void Show();
 	void Hide();
+	void Update();
 
 	struct meshtex_t {
 		const types::mesh::Mesh* mesh = nullptr;
@@ -83,6 +86,9 @@ protected:
 
 private:
 
+	BaseManager* m_bm = nullptr;
+	SlotBadges* const m_slot_badges;
+
 	size_t m_id = 0;
 
 	faction::Faction* m_faction = nullptr;
@@ -92,13 +98,22 @@ private:
 		text::InstancedText* name_sprite = nullptr;
 		bool is_rendered = false;
 		size_t instance_id = 0;
+		struct {
+			sprite::Sprite* def = nullptr;
+			size_t instance_id = 0;
+			text::InstancedText* label = nullptr;
+		} badge;
 	} m_render;
 
 	size_t m_population = 0;
+	bool m_is_guarded = false;
 
 	const bool m_is_owned = false;
 
 	render_data_t m_render_data = {};
+
+	void ShowBadge();
+	void HideBadge();
 
 	meshtex_t GetMeshTex( const sprite::InstancedSprite* sprite );
 };
