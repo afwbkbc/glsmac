@@ -45,12 +45,13 @@ CLASS( Config, common::Module )
 		DF_QUICKSTART_MAP_EROSIVE = 1 << 9,
 		DF_QUICKSTART_MAP_LIFEFORMS = 1 << 10,
 		DF_QUICKSTART_MAP_CLOUDS = 1 << 11,
-		DF_QUIET = 1 << 12,
-		DF_GSE_ONLY = 1 << 13,
-		DF_GSE_TESTS = 1 << 14,
-		DF_GSE_TESTS_SCRIPT = 1 << 15,
-		DF_GSE_PROMPT_JS = 1 << 16,
-		DF_NOPINGS = 1 << 17,
+		DF_QUICKSTART_FACTION = 1 << 12,
+		DF_QUIET = 1 << 13,
+		DF_GSE_ONLY = 1 << 14,
+		DF_GSE_TESTS = 1 << 15,
+		DF_GSE_TESTS_SCRIPT = 1 << 16,
+		DF_GSE_PROMPT_JS = 1 << 17,
+		DF_NOPINGS = 1 << 18,
 	};
 #endif
 
@@ -79,6 +80,7 @@ CLASS( Config, common::Module )
 	const game::backend::settings::map_config_value_t GetQuickstartMapErosive() const;
 	const game::backend::settings::map_config_value_t GetQuickstartMapLifeforms() const;
 	const game::backend::settings::map_config_value_t GetQuickstartMapClouds() const;
+	const std::string& GetQuickstartFaction() const;
 	const std::string& GetGSETestsScript() const;
 
 #endif
@@ -117,6 +119,7 @@ private:
 	game::backend::settings::map_config_value_t m_quickstart_map_erosive = game::backend::settings::MAP_CONFIG_EROSIVE_AVERAGE;
 	game::backend::settings::map_config_value_t m_quickstart_map_lifeforms = game::backend::settings::MAP_CONFIG_LIFEFORMS_AVERAGE;
 	game::backend::settings::map_config_value_t m_quickstart_map_clouds = game::backend::settings::MAP_CONFIG_CLOUDS_AVERAGE;
+	std::string m_quickstart_faction = "";
 
 	std::string m_gse_tests_script = "";
 

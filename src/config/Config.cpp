@@ -246,6 +246,15 @@ Config::Config( const int argc, const char* argv[] )
 		DF_QUICKSTART_MAP_CLOUDS, &m_quickstart_map_clouds
 	);
 	m_parser->AddRule(
+		"quickstart-faction", "FACTION", "Play as specific faction", AH( this, s_quickstart_argument_missing ) {
+			if ( !HasDebugFlag( DF_QUICKSTART ) ) {
+				Error( s_quickstart_argument_missing );
+			}
+			m_quickstart_faction = value;
+			m_debug_flags |= DF_QUICKSTART_FACTION;
+		}
+	);
+	m_parser->AddRule(
 		"quiet", "Do not output debug logs to console", AH( this ) {
 			m_debug_flags |= DF_QUIET;
 		}
@@ -374,6 +383,10 @@ const game::backend::settings::map_config_value_t Config::GetQuickstartMapLifefo
 
 const game::backend::settings::map_config_value_t Config::GetQuickstartMapClouds() const {
 	return m_quickstart_map_clouds;
+}
+
+const std::string& Config::GetQuickstartFaction() const {
+	return m_quickstart_faction;
 }
 
 const std::string& Config::GetGSETestsScript() const {

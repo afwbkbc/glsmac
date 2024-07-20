@@ -284,11 +284,24 @@ int main( const int argc, const char* argv[] ) {
 				state->InitBindings();
 				state->Configure();
 				const auto& rules = state->m_settings.global.game_rules;
+				std::optional< game::backend::rules::Faction > faction = {};
+				if ( config.HasDebugFlag( config::Config::DF_QUICKSTART_FACTION ) ) {
+					const auto& f = state->m_settings.global.game_rules.m_factions;
+					const auto it = f.find( config.GetQuickstartFaction() );
+					if ( it == f.end() ) {
+						std::string errmsg = "Faction \"" + config.GetQuickstartFaction() + "\" does not exist. Available factions:";
+						for ( const auto& f_it : f ) {
+							errmsg += " " + f_it.second.m_id;
+						}
+						THROW( errmsg );
+					}
+					faction = it->second;
+				}
 				NEWV(
 					player, game::backend::Player,
 					"Player",
 					game::backend::Player::PR_HOST,
-					{},
+					faction,
 					rules.GetDefaultDifficultyLevel()
 				);
 				state->AddPlayer( player );
