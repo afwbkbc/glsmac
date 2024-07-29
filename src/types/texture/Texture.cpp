@@ -572,7 +572,7 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 				}
 #endif
 
-				if ( ( !( flags & types::texture::AM_MERGE ) ) || ( *(uint32_t*)from & 0x000000ff ) ) {
+				if ( ( !( flags & types::texture::AM_MERGE ) ) || ( *(uint32_t*)from & 0xff000000 ) ) {
 
 					if (
 						( flags & types::texture::AM_GRADIENT_LEFT ) ||

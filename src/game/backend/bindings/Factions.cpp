@@ -83,7 +83,7 @@ BINDING_IMPL( factions ) {
 
 				N_GETPROP( colors, faction_def, "colors", Object );
 				N_GETPROP_UNWRAP( colors_text, colors, "text", types::Color );
-				N_GETPROP_UNWRAP( colors_text_shadow, colors, "text", types::Color );
+				N_GETPROP_UNWRAP( colors_text_shadow, colors, "text_shadow", types::Color );
 				N_GETPROP_UNWRAP( colors_border, colors, "border", types::Color );
 				faction.m_colors = {
 					colors_text,

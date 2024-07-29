@@ -105,7 +105,7 @@ void BaseManager::DefineSlotBadges( const size_t slot_index, const faction::Fact
 	m_slot_badges.insert(
 		{
 			slot_index,
-			new SlotBadges( this, m_ism, slot_index, faction )
+			new SlotBadges( this, m_ism, faction )
 		}
 	);
 }

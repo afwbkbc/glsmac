@@ -132,12 +132,13 @@ void Base::Update() {
 	if ( is_guarded != m_is_guarded ) {
 		if ( m_render.is_rendered ) {
 			HideBadge();
+			m_render.badge.instance_id = 0;
 		}
+		m_is_guarded = is_guarded;
 		m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_population, m_is_guarded );
 		if ( m_render.is_rendered ) {
 			ShowBadge();
 		}
-		m_is_guarded = is_guarded;
 	}
 }
 

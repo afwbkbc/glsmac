@@ -26,12 +26,10 @@ const types::Vec3 SlotBadges::GetBadgeCoords( const types::Vec3& unit_coords ) {
 SlotBadges::SlotBadges(
 	BaseManager* bm,
 	sprite::InstancedSpriteManager* ism,
-	const size_t slot_index,
 	const faction::Faction* faction
 )
 	: m_bm( bm )
 	, m_ism( ism )
-	, m_badges_key( "BaseBadges_" + std::to_string( slot_index ) )
 	, m_faction( faction ) {
 	//
 }
@@ -97,20 +95,20 @@ sprite::InstancedSprite* SlotBadges::GetBadgeSprite( const size_t population, co
 
 		const auto& c = m_faction->m_colors;
 		const auto transparent = types::Color::FromRGBA( 0, 0, 0, 0 );
-		const auto black = types::Color::FromRGB( 2, 0, 0 );
+		const auto black = types::Color::FromRGB( 0, 0, 0 );
 
 		types::Color background, border, text, text_shadow;
 		if ( is_guarded ) {
 			background = c.text;
-			border = c.text_shadow;
-			text = black;//c.text_shadow;
-			text_shadow = c.text;// black;//c.text;
+			border = black;
+			text = black;
+			text_shadow = transparent;
 		}
 		else {
 			background = transparent;
 			border = black;
 			text = c.text;
-			text_shadow = c.text_shadow;
+			text_shadow = black;
 		}
 
 		auto* texture = m_bm->GetBadgeFont()->GetTextTexture(
