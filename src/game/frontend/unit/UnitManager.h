@@ -32,7 +32,7 @@ class Faction;
 }
 
 namespace ui {
-class UnitsList;
+class ObjectsList;
 }
 
 namespace unit {

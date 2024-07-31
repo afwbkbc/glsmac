@@ -116,7 +116,7 @@ class Animation;
 
 namespace ui {
 class BottomBar;
-class UnitsList;
+class ObjectsList;
 namespace style {
 class Theme;
 }
@@ -379,7 +379,7 @@ private:
 	void DeselectTileOrUnit();
 
 private:
-	friend class ui::UnitsList;
+	friend class ui::ObjectsList;
 
 	struct {
 		std::unordered_map< resource::resource_t, types::texture::Texture* > source;

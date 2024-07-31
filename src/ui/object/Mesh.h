@@ -29,6 +29,8 @@ CLASS( Mesh, UIObject )
 	virtual void SetTexture( types::texture::Texture* texture );
 	void ClearTexture();
 
+	const types::mesh::Mesh* GetOriginalMesh() const;
+
 	void SetTintColor( const types::Color& color );
 	void SetTintAlpha( const float alpha );
 

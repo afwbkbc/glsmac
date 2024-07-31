@@ -14,6 +14,10 @@
 #include "types/mesh/Rectangle.h"
 #include "scene/actor/Sprite.h"
 #include "types/texture/Texture.h"
+#include "ui/object/Mesh.h"
+#include "ui/object/Label.h"
+#include "../ui/bottom_bar/objects_list/ObjectsListItem.h"
+#include "../ui/bottom_bar/ObjectPreview.h"
 
 namespace game {
 namespace frontend {
@@ -33,7 +37,7 @@ Unit::Unit(
 	const std::string& morale_string,
 	const backend::unit::health_t health
 )
-	: TileObject( tile )
+	: TileObject( TOT_UNIT, tile )
 	, m_um( um )
 	, m_badge_defs( badge_defs )
 	, m_id( id )
@@ -339,6 +343,111 @@ const bool Unit::IsMoving() const {
 
 const Unit::render_data_t& Unit::GetRenderData() const {
 	return m_render_data;
+}
+
+void* Unit::CreateOnBottomBarList( ui::ObjectsListItem* element ) const {
+	NEWV( ui_elements, std::vector< ::ui::object::UIObject* >, {} );
+
+	const auto& render = GetRenderData();
+
+	const types::mesh::Mesh* mesh;
+	::ui::object::Mesh* ui_mesh;
+#define X( _key, _class ) \
+    ASSERT_NOLOG( render._key.mesh, #_key " mesh not defined" ); \
+    NEW( mesh, types::mesh::Mesh, *render._key.mesh ); /* make a copy */ \
+    NEW( ui_mesh, ::ui::object::Mesh, "BBObjectsListPreview" _class ); \
+    ui_mesh->SetMesh( mesh ); \
+    ui_mesh->SetTexture( render._key.texture ); \
+    element->AddChild( ui_mesh ); \
+    ui_elements->push_back( ui_mesh );
+
+	// order is important
+	X( unit, "Unit" );
+	X( healthbar, "UnitHealthbar" );
+	X( badge, "UnitBadge" );
+
+#undef X
+
+	NEWV( label, ::ui::object::Label, "BBObjectsListPreviewLabel" );
+	label->SetTop( 0 );
+	label->SetText( GetStatsString() );
+	element->AddChild( label );
+	ui_elements->push_back( label );
+
+	return ui_elements;
+}
+
+void Unit::DestroyOnBottomBarList( ui::ObjectsListItem* element, void* state ) const {
+	auto* ui_elements = (std::vector< ::ui::object::UIObject* >*)state;
+
+	for ( const auto& e : *ui_elements ) {
+		element->RemoveChild( e );
+	}
+
+	DELETE( ui_elements );
+}
+
+void* Unit::CreateOnBottomBarPreview( ui::ObjectPreview* element ) const {
+	NEWV( ui_elements, std::vector< ::ui::object::UIObject* >, {} );
+
+	const auto& render = GetRenderData();
+
+	const types::mesh::Mesh* mesh;
+	::ui::object::Mesh* ui_mesh;
+#define X( _key, _class ) \
+    NEW( mesh, types::mesh::Mesh, *render._key.mesh ); /* make a copy */ \
+    NEW( ui_mesh, ::ui::object::Mesh, "BBObjectPreview" _class ); \
+    ui_mesh->SetMesh( mesh ); \
+    ui_mesh->SetTexture( render._key.texture ); \
+    element->AddChild( ui_mesh ); \
+    ui_elements->push_back( ui_mesh );
+
+	// order is important
+	X( unit, "Object" );
+	X( healthbar, "Healthbar" );
+	X( badge, "Badge" );
+
+#undef X
+
+	size_t top = 86;
+	::ui::object::Label* label;
+#define X( _text, _align ) \
+    if ( !(_text).empty() ) { \
+        NEW( label, ::ui::object::Label, "BBObjectPreviewLabel" #_align ); \
+        label->SetText( _text ); \
+        label->SetTop( top ); \
+        element->AddChild( label ); \
+        ui_elements->push_back( label ); \
+        top += label->GetHeight(); \
+    }
+
+	X( GetNameString(), Header );
+	X( "( " + GetStatsString() + " )", Center );
+	X( GetMoraleString(), Left );
+	X( GetMovesString(), Left );
+
+	// HACK: fix ( and ) vertical misalignment
+	auto& bugged_label = ui_elements->at( 4 );
+	bugged_label->SetTop( bugged_label->GetTop() - 4 );
+
+#undef X
+
+	return ui_elements;
+}
+
+void Unit::DestroyOnBottomBarPreview( ui::ObjectPreview* element, void* state ) const {
+	auto* ui_elements = (std::vector< ::ui::object::UIObject* >*)state;
+
+	for ( const auto& e : *ui_elements ) {
+		element->RemoveChild( e );
+	}
+
+	DELETE( ui_elements );
+}
+
+const bool Unit::OnBottomBarListActivate( Game* game ) {
+	game->GetUM()->SelectUnit( this, true );
+	return true;
 }
 
 const bool Unit::ShouldBeActive() const {

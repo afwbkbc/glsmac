@@ -144,7 +144,7 @@ void BottomBar::AddStyles() {
 	// unit preview
 
 	AddStyle(
-		"UnitPreview", SH() {
+		"ObjectPreview", SH() {
 			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_TOP | ::ui::ALIGN_LEFT );
 			s->Set( ::ui::A_TOP, 58 );
 			s->Set( ::ui::A_BOTTOM, 6 );
@@ -154,7 +154,7 @@ void BottomBar::AddStyles() {
 	);
 
 	AddStyle(
-		"UnitPreviewUnit", SH() {
+		"ObjectPreviewObject", SH() {
 			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_TOP | ::ui::ALIGN_HCENTER );
 			s->Set( ::ui::A_TOP, 12 );
 			s->Set( ::ui::A_WIDTH, 100 ); // 80
@@ -162,7 +162,7 @@ void BottomBar::AddStyles() {
 		}
 	);
 	AddStyle(
-		"UnitPreviewBadge", SH() {
+		"ObjectPreviewBadge", SH() {
 			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_TOP | ::ui::ALIGN_LEFT );
 			s->Set( ::ui::A_LEFT, 6 );
 			s->Set( ::ui::A_TOP, 6 );
@@ -171,7 +171,7 @@ void BottomBar::AddStyles() {
 		}
 	);
 	AddStyle(
-		"UnitPreviewHealthbar", SH() {
+		"ObjectPreviewHealthbar", SH() {
 			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_TOP | ::ui::ALIGN_LEFT );
 			s->Set( ::ui::A_LEFT, 12 );
 			s->Set( ::ui::A_TOP, 12 );
@@ -180,7 +180,7 @@ void BottomBar::AddStyles() {
 		}
 	);
 	AddStyle(
-		"UnitPreviewLabel", SH() {
+		"ObjectPreviewLabel", SH() {
 			s->SetFont( ::ui::A_FONT, resource::TTF_ARIALN, 14 );
 			s->SetColor( ::ui::A_TEXT_COLOR, types::Color::FromRGB( 116, 156, 56 ) );
 			s->Set( ::ui::A_HEIGHT, 17 );
@@ -188,7 +188,7 @@ void BottomBar::AddStyles() {
 		}
 	);
 	AddStyle(
-		"UnitPreviewLabelHeader", SH() {
+		"ObjectPreviewLabelHeader", SH() {
 			s->SetFont( ::ui::A_FONT, resource::TTF_ARIALNB, 16 );
 			s->SetColor( ::ui::A_TEXT_COLOR, types::Color::FromRGB( 116, 156, 56 ) );
 			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_TOP | ::ui::ALIGN_HCENTER );
@@ -196,13 +196,13 @@ void BottomBar::AddStyles() {
 		}
 	);
 	AddStyle(
-		"UnitPreviewLabelLeft", { "UnitPreviewLabel" }, SH() {
+		"ObjectPreviewLabelLeft", { "ObjectPreviewLabel" }, SH() {
 			s->Set( ::ui::A_LEFT, 6 );
 			s->Set( ::ui::A_TEXT_ALIGN, ::ui::ALIGN_TOP | ::ui::ALIGN_LEFT );
 		}
 	);
 	AddStyle(
-		"UnitPreviewLabelCenter", { "UnitPreviewLabel" }, SH() {
+		"ObjectPreviewLabelCenter", { "ObjectPreviewLabel" }, SH() {
 			s->Set( ::ui::A_TEXT_ALIGN, ::ui::ALIGN_TOP | ::ui::ALIGN_HCENTER );
 		}
 	);
@@ -568,7 +568,7 @@ void BottomBar::AddStyles() {
 	// units list at bottom
 
 	AddStyle(
-		"UnitsList", SH() {
+		"ObjectsList", SH() {
 			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_BOTTOM );
 			s->Set( ::ui::A_BOTTOM, 6 );
 			s->Set( ::ui::A_LEFT, 242 );
@@ -578,7 +578,7 @@ void BottomBar::AddStyles() {
 	);
 
 	AddStyle(
-		"UnitsListItem", SH() {
+		"ObjectsListItem", SH() {
 			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_LEFT );
 			s->Set( ::ui::A_TOP, 0 );
 			s->Set( ::ui::A_WIDTH, 68 );
@@ -587,7 +587,7 @@ void BottomBar::AddStyles() {
 	);
 
 	AddStyle(
-		"UnitsListSelection", SH() {
+		"ObjectsListSelection", SH() {
 			s->Set( ::ui::A_LEFT, -6 );
 			s->Set( ::ui::A_TOP, -6 );
 			s->Set( ::ui::A_BOTTOM, -3 );
@@ -611,7 +611,7 @@ void BottomBar::AddStyles() {
 	);
 
 	AddStyle(
-		"UnitsListPreviewUnit", SH() {
+		"ObjectsListPreviewUnit", SH() {
 			s->Set( ::ui::A_LEFT, 6 );
 			s->Set( ::ui::A_TOP, -6 );
 			s->Set( ::ui::A_WIDTH, 60 );
@@ -619,7 +619,7 @@ void BottomBar::AddStyles() {
 		}
 	);
 	AddStyle(
-		"UnitsListPreviewBadge", SH() {
+		"ObjectsListPreviewUnitBadge", SH() {
 			s->Set( ::ui::A_LEFT, 0 );
 			s->Set( ::ui::A_TOP, -3 );
 			s->Set( ::ui::A_WIDTH, 20 );
@@ -627,7 +627,7 @@ void BottomBar::AddStyles() {
 		}
 	);
 	AddStyle(
-		"UnitsListPreviewHealthbar", SH() {
+		"ObjectsListPreviewUnitHealthbar", SH() {
 			s->Set( ::ui::A_LEFT, 5 );
 			s->Set( ::ui::A_TOP, 2 );
 			s->Set( ::ui::A_WIDTH, 3 );
@@ -635,7 +635,15 @@ void BottomBar::AddStyles() {
 		}
 	);
 	AddStyle(
-		"UnitsListPreviewLabel", SH() {
+		"ObjectsListPreviewBase", SH() {
+			s->Set( ::ui::A_LEFT, 2 );
+			s->Set( ::ui::A_TOP, -6 );
+			s->Set( ::ui::A_WIDTH, 60 );
+			s->Set( ::ui::A_HEIGHT, 40 );
+		}
+	);
+	AddStyle(
+		"ObjectsListPreviewLabel", SH() {
 			s->SetFont( ::ui::A_FONT, resource::TTF_ARIALNB, 12 );
 			s->Set( ::ui::A_TEXT_ALIGN, ::ui::ALIGN_BOTTOM | ::ui::ALIGN_HCENTER );
 			s->SetColor( ::ui::A_TEXT_COLOR, types::Color::FromRGB( 235, 235, 235 ) );

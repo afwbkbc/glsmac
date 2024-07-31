@@ -21,6 +21,8 @@ class TileState;
 namespace game {
 namespace frontend {
 
+class TileObject;
+
 namespace unit {
 class Unit;
 }
@@ -53,7 +55,10 @@ public:
 
 	const std::unordered_map< size_t, unit::Unit* >& GetUnits() const;
 	const std::vector< unit::Unit* >& GetOrderedUnits();
+	const std::vector< TileObject* >& GetOrderedObjects();
 	unit::Unit* GetMostImportantUnit();
+
+	const base::Base* GetBase() const;
 
 	Tile* W;
 	Tile* NW;
@@ -85,8 +90,12 @@ private:
 		std::vector< unit::Unit* > currently_rendered_fake_badges = {};
 	} m_render;
 	std::unordered_map< size_t, unit::Unit* > m_units = {};
+
 	std::vector< unit::Unit* > m_ordered_units = {};
 	bool m_is_units_reorder_needed = true;
+
+	std::vector< TileObject* > m_ordered_objects = {};
+	bool m_is_objects_reorder_needed = true;
 
 	bool m_is_water = false;
 

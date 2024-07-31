@@ -53,6 +53,7 @@ public:
 	Base(
 		BaseManager* bm,
 		const size_t id,
+		const std::string& name,
 		Slot* slot,
 		tile::Tile* tile,
 		const bool is_owned,
@@ -81,6 +82,12 @@ public:
 	};
 	const render_data_t& GetRenderData() const;
 
+	void* CreateOnBottomBarList( ui::ObjectsListItem* element ) const override;
+	void DestroyOnBottomBarList( ui::ObjectsListItem* element, void* state ) const override;
+	void* CreateOnBottomBarPreview( ui::ObjectPreview* element ) const override;
+	void DestroyOnBottomBarPreview( ui::ObjectPreview* element, void* state ) const override;
+	const bool OnBottomBarListActivate( Game* game ) override;
+
 protected:
 	void SetRenderCoords( const types::Vec3& coords ) override;
 
@@ -90,6 +97,7 @@ private:
 	SlotBadges* const m_slot_badges;
 
 	size_t m_id = 0;
+	std::string m_name = "";
 
 	faction::Faction* m_faction = nullptr;
 

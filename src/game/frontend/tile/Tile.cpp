@@ -54,6 +54,7 @@ void Tile::AddUnit( unit::Unit* unit ) {
 		}
 	);
 	m_is_units_reorder_needed = true;
+	m_is_objects_reorder_needed = true;
 	if ( m_base ) {
 		m_base->Update();
 	}
@@ -69,6 +70,7 @@ void Tile::RemoveUnit( unit::Unit* unit ) {
 	}
 	m_units.erase( unit->GetId() );
 	m_is_units_reorder_needed = true;
+	m_is_objects_reorder_needed = true;
 	if ( m_base ) {
 		m_base->Update();
 	}
@@ -85,6 +87,7 @@ void Tile::SetActiveUnit( unit::Unit* unit ) {
 void Tile::SetBase( base::Base* base ) {
 	ASSERT_NOLOG( !m_base, "base already set" );
 	m_base = base;
+	m_is_objects_reorder_needed = true;
 	Render();
 }
 
@@ -194,6 +197,27 @@ const std::vector< unit::Unit* >& Tile::GetOrderedUnits() {
 	return m_ordered_units;
 }
 
+const std::vector< TileObject* >& Tile::GetOrderedObjects() {
+	if ( m_is_objects_reorder_needed ) {
+		m_ordered_objects.clear();
+		const auto& units = GetOrderedUnits();
+		m_ordered_objects.reserve(
+			( m_base
+				? 1
+				: 0
+			) + units.size()
+		);
+		if ( m_base ) {
+			m_ordered_objects.push_back( m_base );
+		}
+		for ( const auto& unit : units ) {
+			m_ordered_objects.push_back( unit );
+		}
+		m_is_objects_reorder_needed = false;
+	}
+	return m_ordered_objects;
+}
+
 unit::Unit* Tile::GetMostImportantUnit() {
 	if ( m_units.empty() ) {
 		return nullptr;
@@ -201,6 +225,10 @@ unit::Unit* Tile::GetMostImportantUnit() {
 	else {
 		return GetOrderedUnits().front();
 	}
+}
+
+const base::Base* Tile::GetBase() const {
+	return m_base;
 }
 
 Tile* Tile::GetNeighbour( const backend::map::tile::direction_t direction ) {
@@ -268,10 +296,6 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 		}
 	}
 
-	lt = ( ( tile.is_water_tile || ts.is_coastline_corner )
-		? backend::map::tile::LAYER_WATER
-		: backend::map::tile::LAYER_LAND
-	);
 #define x( _k ) preview_coords._k = layer.coords._k
 	x( center );
 	x( left );

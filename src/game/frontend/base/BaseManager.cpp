@@ -58,6 +58,7 @@ void BaseManager::SpawnBase(
 			new base::Base(
 				this,
 				base_id,
+				data.name,
 				slot,
 				tile,
 				slot_index == m_game->GetMySlotIndex(),

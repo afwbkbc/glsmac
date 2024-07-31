@@ -23,16 +23,15 @@ class Game;
 namespace tile {
 class Tile;
 }
-namespace unit {
-class Unit;
-}
+class TileObject;
+
 namespace ui {
 
-class UnitPreview;
+class ObjectPreview;
 class TilePreview;
 class MiddleArea;
 class StatusButton;
-class UnitsList;
+class ObjectsList;
 class MiniMap;
 
 namespace menu {
@@ -53,8 +52,8 @@ CLASS( BottomBar, UI )
 	void PreviewTile( tile::Tile* tile, const size_t selected_unit_id );
 	void HideTilePreview();
 
-	void PreviewUnit( const unit::Unit* unit );
-	void HideUnitPreview();
+	void PreviewObject( const TileObject* object );
+	void HideObjectPreview();
 
 	void SetMinimapTexture( types::texture::Texture* texture );
 	const types::Vec2< size_t > GetMinimapDimensions() const;
@@ -88,10 +87,10 @@ private:
 	util::Timer m_message_label_clear_timer;
 
 	struct {
-		UnitPreview* unit_preview = nullptr;
+		ObjectPreview* unit_preview = nullptr;
 		TilePreview* tile_preview = nullptr;
 		MiddleArea* middle_area = nullptr;
-		UnitsList* units_list = nullptr;
+		ObjectsList* objects_list = nullptr;
 		StatusButton* status_button = nullptr;
 		MiniMap* mini_map = nullptr;
 	} m_sections = {};

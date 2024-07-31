@@ -15,6 +15,10 @@
 #include "types/texture/Texture.h"
 #include "BaseManager.h"
 #include "SlotBadges.h"
+#include "ui/object/Mesh.h"
+#include "ui/object/Label.h"
+#include "../ui/bottom_bar/objects_list/ObjectsListItem.h"
+#include "../ui/bottom_bar/ObjectPreview.h"
 
 namespace game {
 namespace frontend {
@@ -30,6 +34,7 @@ static const std::vector< uint8_t > s_base_render_population_thresholds = {
 Base::Base(
 	BaseManager* bm,
 	const size_t id,
+	const std::string& name,
 	Slot* slot,
 	tile::Tile* tile,
 	const bool is_owned,
@@ -37,9 +42,10 @@ Base::Base(
 	text::InstancedText* render_name_sprite,
 	size_t population
 )
-	: TileObject( tile )
+	: TileObject( TOT_BASE, tile )
 	, m_bm( bm )
 	, m_id( id )
+	, m_name( name )
 	, m_faction( slot->GetFaction() )
 	, m_render(
 		{
@@ -144,6 +150,52 @@ void Base::Update() {
 
 const Base::render_data_t& Base::GetRenderData() const {
 	return m_render_data;
+}
+
+void* Base::CreateOnBottomBarList( ui::ObjectsListItem* element ) const {
+	NEWV( ui_elements, std::vector< ::ui::object::UIObject* >, {} );
+
+	const auto& render = GetRenderData();
+
+	const types::mesh::Mesh* mesh;
+	::ui::object::Mesh* ui_mesh;
+#define X( _key, _class ) \
+    ASSERT_NOLOG( render._key.mesh, #_key " mesh not defined" ); \
+    NEW( mesh, types::mesh::Mesh, *render._key.mesh ); /* make a copy */ \
+    NEW( ui_mesh, ::ui::object::Mesh, "BBObjectsListPreview" _class ); \
+    ui_mesh->SetMesh( mesh ); \
+    ui_mesh->SetTexture( render._key.texture ); \
+    element->AddChild( ui_mesh ); \
+    ui_elements->push_back( ui_mesh );
+
+	// order is important
+	X( base, "Base" );
+
+#undef X
+
+	return ui_elements;
+}
+
+void Base::DestroyOnBottomBarList( ui::ObjectsListItem* element, void* state ) const {
+	auto* ui_elements = (std::vector< ::ui::object::UIObject* >*)state;
+
+	for ( const auto& e : *ui_elements ) {
+		element->RemoveChild( e );
+	}
+
+	DELETE( ui_elements );
+}
+
+void* Base::CreateOnBottomBarPreview( ui::ObjectPreview* element ) const {
+	return nullptr;
+}
+
+void Base::DestroyOnBottomBarPreview( ui::ObjectPreview* element, void* state ) const {
+
+}
+
+const bool Base::OnBottomBarListActivate( Game* game ) {
+	return false;
 }
 
 void Base::SetRenderCoords( const types::Vec3& coords ) {

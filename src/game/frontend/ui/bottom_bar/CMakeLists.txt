@@ -1,11 +1,11 @@
 SUBDIR( left_menu )
 SUBDIR( right_menu )
-SUBDIR( units_list )
+SUBDIR( objects_list )
 
 SET( SRC ${SRC}
 
 	${PWD}/BottomBar.cpp
-	${PWD}/UnitPreview.cpp
+	${PWD}/ObjectPreview.cpp
 	${PWD}/TilePreview.cpp
 	${PWD}/MiddleArea.cpp
 	${PWD}/MiddleAreaPage.cpp

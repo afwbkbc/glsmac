@@ -8,10 +8,10 @@
 #include "ui/object/Label.h"
 #include "game/frontend/ui/bottom_bar/left_menu/LeftMenu.h"
 #include "game/frontend/ui/bottom_bar/right_menu/RightMenu.h"
-#include "UnitPreview.h"
+#include "ObjectPreview.h"
 #include "TilePreview.h"
 #include "MiddleArea.h"
-#include "game/frontend/ui/bottom_bar/units_list/UnitsList.h"
+#include "game/frontend/ui/bottom_bar/objects_list/ObjectsList.h"
 #include "MiniMap.h"
 #include "StatusButton.h"
 #include "ui/UI.h"
@@ -124,7 +124,7 @@ void BottomBar::Create() {
 
 	// sections
 
-	NEW( m_sections.unit_preview, UnitPreview, m_game );
+	NEW( m_sections.unit_preview, ObjectPreview, m_game );
 	AddChild( m_sections.unit_preview );
 
 	NEW( m_sections.tile_preview, TilePreview, m_game );
@@ -133,8 +133,8 @@ void BottomBar::Create() {
 	NEW( m_sections.middle_area, MiddleArea, m_game );
 	AddChild( m_sections.middle_area );
 
-	NEW( m_sections.units_list, UnitsList, m_game, m_sections.unit_preview );
-	AddChild( m_sections.units_list );
+	NEW( m_sections.objects_list, ObjectsList, m_game, m_sections.unit_preview );
+	AddChild( m_sections.objects_list );
 
 	NEW( m_sections.mini_map, MiniMap, m_game );
 	if ( m_textures.minimap ) {
@@ -209,7 +209,7 @@ void BottomBar::Destroy() {
 	RemoveChild( m_frames.middle );
 	RemoveChild( m_frames.right );
 
-	RemoveChild( m_sections.units_list );
+	RemoveChild( m_sections.objects_list );
 	RemoveChild( m_sections.unit_preview );
 	RemoveChild( m_sections.tile_preview );
 	RemoveChild( m_sections.middle_area );
@@ -235,19 +235,19 @@ void BottomBar::Align() {
 
 void BottomBar::PreviewTile( tile::Tile* tile, const size_t selected_unit_id ) {
 	m_sections.tile_preview->PreviewTile( tile );
-	m_sections.units_list->ListUnits( tile->GetOrderedUnits(), selected_unit_id );
+	m_sections.objects_list->ListObjects( tile->GetOrderedObjects(), selected_unit_id );
 }
 
 void BottomBar::HideTilePreview() {
 	m_sections.tile_preview->HideTilePreview();
 }
 
-void BottomBar::PreviewUnit( const unit::Unit* unit ) {
-	m_sections.unit_preview->PreviewUnit( unit );
+void BottomBar::PreviewObject( const TileObject* object ) {
+	m_sections.unit_preview->PreviewObject( object );
 }
 
-void BottomBar::HideUnitPreview() {
-	m_sections.unit_preview->HideUnitPreview();
+void BottomBar::HideObjectPreview() {
+	m_sections.unit_preview->HideObjectPreview();
 }
 
 void BottomBar::SetMinimapTexture( types::texture::Texture* texture ) {
