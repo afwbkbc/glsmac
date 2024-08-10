@@ -61,6 +61,7 @@ Base::Base(
 	, m_slot_badges( m_bm->GetSlotBadges( slot->GetIndex() ) ) {
 	m_render_data.base = GetMeshTex( GetSprite()->instanced_sprite );
 	m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_population, m_is_guarded );
+	m_render_data.badge = GetMeshTex( m_render.badge.def->instanced_sprite );
 	m_tile->SetBase( this );
 }
 
@@ -142,6 +143,7 @@ void Base::Update() {
 		}
 		m_is_guarded = is_guarded;
 		m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_population, m_is_guarded );
+		m_render_data.badge = GetMeshTex( m_render.badge.def->instanced_sprite );
 		if ( m_render.is_rendered ) {
 			ShowBadge();
 		}
@@ -162,7 +164,7 @@ void* Base::CreateOnBottomBarList( ui::ObjectsListItem* element ) const {
 #define X( _key, _class ) \
     ASSERT_NOLOG( render._key.mesh, #_key " mesh not defined" ); \
     NEW( mesh, types::mesh::Mesh, *render._key.mesh ); /* make a copy */ \
-    NEW( ui_mesh, ::ui::object::Mesh, "BBObjectsListPreview" _class ); \
+    NEW( ui_mesh, ::ui::object::Mesh, (std::string)"BBObjectsListPreview" + (_class) ); \
     ui_mesh->SetMesh( mesh ); \
     ui_mesh->SetTexture( render._key.texture ); \
     element->AddChild( ui_mesh ); \
@@ -170,6 +172,10 @@ void* Base::CreateOnBottomBarList( ui::ObjectsListItem* element ) const {
 
 	// order is important
 	X( base, "Base" );
+	X( badge, m_population >= 10
+		? "BaseBadge2"
+		: "BaseBadge1"
+	);
 
 #undef X
 

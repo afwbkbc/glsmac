@@ -79,6 +79,7 @@ public:
 	};
 	struct render_data_t {
 		meshtex_t base;
+		meshtex_t badge;
 	};
 	const render_data_t& GetRenderData() const;
 

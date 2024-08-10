@@ -643,6 +643,23 @@ void BottomBar::AddStyles() {
 		}
 	);
 	AddStyle(
+		"ObjectsListPreviewBaseBadge", SH() {
+			s->Set( ::ui::A_LEFT, 2 );
+			s->Set( ::ui::A_TOP, -4 );
+			s->Set( ::ui::A_HEIGHT, 16 );
+		}
+	);
+	AddStyle(
+		"ObjectsListPreviewBaseBadge1", { "ObjectsListPreviewBaseBadge" }, SH() {
+			s->Set( ::ui::A_WIDTH, 12 );
+		}
+	);
+	AddStyle(
+		"ObjectsListPreviewBaseBadge2", { "ObjectsListPreviewBaseBadge" }, SH() {
+			s->Set( ::ui::A_WIDTH, 24 );
+		}
+	);
+	AddStyle(
 		"ObjectsListPreviewLabel", SH() {
 			s->SetFont( ::ui::A_FONT, resource::TTF_ARIALNB, 12 );
 			s->Set( ::ui::A_TEXT_ALIGN, ::ui::ALIGN_BOTTOM | ::ui::ALIGN_HCENTER );
