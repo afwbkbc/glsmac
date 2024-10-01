@@ -120,6 +120,9 @@ class ObjectsList;
 namespace style {
 class Theme;
 }
+namespace popup::base_popup {
+class BasePopup;
+}
 }
 
 namespace actor {
@@ -377,6 +380,7 @@ private:
 	void SelectTileAtPoint( const backend::tile_query_purpose_t tile_query_purpose, const size_t x, const size_t y );
 	void SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id = 0 );
 	void DeselectTileOrUnit();
+	void OpenBasePopup( base::Base* base );
 
 private:
 	friend class ui::ObjectsList;
@@ -460,6 +464,8 @@ private:
 
 	void SendAnimationFinished( const size_t animation_id );
 
+	ui::popup::base_popup::BasePopup* m_base_popup = nullptr;
+
 private:
 	friend class unit::UnitManager;
 	friend class base::BaseManager;
@@ -474,6 +480,10 @@ private:
 	void ScrollToSelectedTile( const bool center_on_tile );
 	void SelectUnitOrSelectedTile( unit::Unit* selected_unit );
 	unit::Unit* GetSelectedTileMostImportantUnit() const;
+
+private:
+	friend class ui::popup::base_popup::BasePopup;
+	void OnBasePopupClose();
 
 };
 

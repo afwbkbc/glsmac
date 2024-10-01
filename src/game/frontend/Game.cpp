@@ -26,7 +26,9 @@
 #include "game/frontend/ui/bottom_bar/BottomBar.h"
 #include "game/frontend/tile/TileManager.h"
 #include "game/frontend/unit/UnitManager.h"
+#include "game/frontend/unit/Unit.h"
 #include "game/frontend/base/BaseManager.h"
+#include "game/frontend/base/Base.h"
 #include "game/frontend/faction/FactionManager.h"
 #include "game/frontend/sprite/InstancedSpriteManager.h"
 #include "game/frontend/text/InstancedTextManager.h"
@@ -50,10 +52,7 @@
 #include "game/frontend/ui/style/Theme.h"
 #include "game/backend/map/Consts.h"
 #include "task/game/Game.h"
-
-// TMP
-#include "loader/font/FontLoader.h"
-#include "game/frontend/text/InstancedText.h"
+#include "game/frontend/ui/popup/base_popup/BasePopup.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -1318,8 +1317,19 @@ void Game::Initialize(
 							break;
 						}
 						case ::ui::event::K_ENTER: {
+							auto* const unit = m_um->GetSelectedUnit();
+							if ( unit ) {
+								ASSERT( unit->IsActive(), "selected unit not active" );
+								auto* const base = unit->GetTile()->GetBase();
+								if ( base ) {
+									DeselectTileOrUnit();
+									OpenBasePopup( base );
+									break;
+								}
+							}
 							if ( m_turn_status == backend::turn::TS_TURN_COMPLETE ) {
 								CompleteTurn();
+								break;
 							}
 							break;
 						}
@@ -1445,7 +1455,7 @@ void Game::Initialize(
 				switch ( data->mouse.button ) {
 					case ::ui::event::M_LEFT: {
 						SelectTileAtPoint(
-							backend::TQP_UNIT_SELECT,
+							backend::TQP_OBJECT_SELECT,
 							data->mouse.absolute.x,
 							data->mouse.absolute.y
 						); // async
@@ -1782,25 +1792,50 @@ void Game::SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id ) {
 
 	m_tm->SelectTile( tile );
 
-	unit::Unit* selected_unit = nullptr;
+	TileObject* selected_object = nullptr;
 
-	if ( m_tile_at_query_purpose == backend::TQP_UNIT_SELECT ) {
+	if ( m_tile_at_query_purpose == backend::TQP_UNIT_SELECT ||
+		m_tile_at_query_purpose == backend::TQP_OBJECT_SELECT
+		) {
 		const auto& units = tile->GetUnits();
 		if ( m_is_turn_active ) {
 			if ( selected_unit_id ) {
 				for ( const auto& it : units ) {
 					if ( it.first == selected_unit_id ) {
-						selected_unit = it.second;
+						selected_object = it.second;
 						break;
 					}
 				}
 			}
-			if ( !selected_unit ) {
-				selected_unit = tile->GetMostImportantUnit();//GetFirstSelectableUnit( units );
+			if ( !selected_object ) {
+				switch ( m_tile_at_query_purpose ) {
+					case backend::TQP_UNIT_SELECT: {
+						selected_object = tile->GetMostImportantUnit();
+						break;
+					}
+					case backend::TQP_OBJECT_SELECT: {
+						selected_object = tile->GetMostImportantObject();
+						break;
+					}
+					default:
+						ASSERT( false, "unexpected purpose: " + std::to_string( m_tile_at_query_purpose ) );
+				}
 			}
 		}
-		if ( !selected_unit ) {
+		if ( !selected_object ) {
 			m_tile_at_query_purpose = backend::TQP_TILE_SELECT;
+		}
+		else if ( selected_object->GetType() == TileObject::TOT_BASE ) {
+			m_bm->SelectBase( (base::Base*)selected_object );
+			m_tile_at_query_purpose = backend::TQP_NONE;
+		}
+		else if ( selected_object->GetType() == TileObject::TOT_UNIT ) {
+			if ( ( (unit::Unit*)selected_object )->IsActive() ) {
+				m_tile_at_query_purpose = backend::TQP_UNIT_SELECT;
+			}
+			else {
+				m_tile_at_query_purpose = backend::TQP_TILE_SELECT;
+			}
 		}
 	}
 
@@ -1813,7 +1848,12 @@ void Game::SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id ) {
 			break;
 		}
 		case backend::TQP_UNIT_SELECT: {
-			m_um->SelectUnit( selected_unit, true );
+			ASSERT( selected_object && selected_object->GetType() == TileObject::TOT_UNIT, "object not selected or is not a unit" );
+			m_um->SelectUnit( (unit::Unit*)selected_object, true );
+			break;
+		}
+		case backend::TQP_NONE: {
+			// do nothing
 			break;
 		}
 		default:
@@ -1829,6 +1869,13 @@ void Game::DeselectTileOrUnit() {
 	m_tm->DeselectTile();
 
 	m_ui.bottom_bar->HideTilePreview();
+}
+
+void Game::OpenBasePopup( base::Base* base ) {
+	if ( !m_base_popup ) {
+		NEW( m_base_popup, ui::popup::base_popup::BasePopup, this, base );
+		m_base_popup->Open();
+	}
 }
 
 void Game::AddActor( actor::Actor* actor ) {
@@ -2313,6 +2360,19 @@ Game::map_data_t::map_data_t()
 	: filename( backend::map::s_consts.fs.default_map_filename + backend::map::s_consts.fs.default_map_extension )
 	, last_directory( util::FS::GetCurrentDirectory() + util::FS::PATH_SEPARATOR + backend::map::s_consts.fs.default_map_directory ) {
 	//
+}
+
+void Game::OnBasePopupClose() {
+	ASSERT( m_base_popup, "base popup not open" );
+	auto* const unit = m_um->GetPreviouslyDeselectedUnit();
+	if ( unit ) {
+		m_um->SelectUnit( unit, true );
+	}
+	else {
+		m_tile_at_query_purpose = backend::TQP_UNIT_SELECT;
+		SelectTileOrUnit( m_base_popup->GetBase()->GetTile() );
+	}
+	m_base_popup = nullptr;
 }
 
 }

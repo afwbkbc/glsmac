@@ -57,8 +57,9 @@ public:
 	const std::vector< unit::Unit* >& GetOrderedUnits();
 	const std::vector< TileObject* >& GetOrderedObjects();
 	unit::Unit* GetMostImportantUnit();
+	TileObject* GetMostImportantObject();
 
-	const base::Base* GetBase() const;
+	base::Base* GetBase() const;
 
 	Tile* W;
 	Tile* NW;

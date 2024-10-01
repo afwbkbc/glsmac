@@ -227,7 +227,16 @@ unit::Unit* Tile::GetMostImportantUnit() {
 	}
 }
 
-const base::Base* Tile::GetBase() const {
+TileObject* Tile::GetMostImportantObject() {
+	if ( !m_base && m_units.empty() ) {
+		return nullptr;
+	}
+	else {
+		return GetOrderedObjects().front();
+	}
+}
+
+base::Base* Tile::GetBase() const {
 	return m_base;
 }
 

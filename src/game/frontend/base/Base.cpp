@@ -4,7 +4,6 @@
 #include "game/frontend/faction/Faction.h"
 #include "game/frontend/tile/Tile.h"
 #include "util/String.h"
-#include "game/backend/base/Base.h"
 #include "game/frontend/Slot.h"
 #include "game/frontend/sprite/Sprite.h"
 #include "game/frontend/sprite/InstancedSprite.h"
@@ -201,7 +200,8 @@ void Base::DestroyOnBottomBarPreview( ui::ObjectPreview* element, void* state ) 
 }
 
 const bool Base::OnBottomBarListActivate( Game* game ) {
-	return false;
+	game->GetBM()->SelectBase( this );
+	return false; // because previously active unit should stay active, base popup will have it's own bottombar
 }
 
 void Base::SetRenderCoords( const types::Vec3& coords ) {

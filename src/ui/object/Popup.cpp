@@ -48,6 +48,8 @@ void Popup::Destroy() {
 	// TODO: maybe not needed?
 	//g_engine->GetUI()->RemoveObject( m_background_locker );
 
+	OnClose();
+
 	UIContainer::Destroy();
 }
 

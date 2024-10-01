@@ -64,6 +64,8 @@ CLASS( BaseManager, common::Class )
 	SlotBadges* GetSlotBadges( const size_t slot_index ) const;
 	void DefineSlotBadges( const size_t slot_index, const faction::Faction* faction );
 
+	void SelectBase( Base* base );
+
 private:
 	friend class Base;
 

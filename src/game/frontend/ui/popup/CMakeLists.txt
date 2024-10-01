@@ -1,3 +1,5 @@
+SUBDIR( base_popup )
+
 SET( SRC ${SRC}
 
 	${PWD}/Popup.cpp

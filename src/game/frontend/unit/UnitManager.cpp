@@ -152,6 +152,8 @@ void UnitManager::DespawnUnit( const size_t unit_id ) {
 		RemoveSelectable( unit );
 	}
 
+	ASSERT( m_selected_unit != unit, "unit still selected" );
+	
 	delete unit;
 
 	m_game->RefreshSelectedTile( m_selected_unit );
@@ -249,6 +251,7 @@ void UnitManager::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 }
 
 void UnitManager::DeselectUnit() {
+	m_previously_deselected_unit = m_selected_unit;
 	if ( m_selected_unit ) {
 		auto* most_important_unit = m_game->GetSelectedTileMostImportantUnit();
 		if ( !most_important_unit || m_selected_unit == most_important_unit ) {
@@ -260,6 +263,10 @@ void UnitManager::DeselectUnit() {
 		}
 		m_selected_unit = nullptr;
 	}
+}
+
+Unit* UnitManager::GetPreviouslyDeselectedUnit() const {
+	return m_previously_deselected_unit;
 }
 
 SlotBadges* UnitManager::GetSlotBadges( const size_t slot_index ) const {
@@ -292,6 +299,9 @@ void UnitManager::RemoveSelectable( Unit* unit ) {
 	const auto& it = std::find( m_selectable_units.begin(), m_selectable_units.end(), unit );
 	if ( it != m_selectable_units.end() ) {
 		m_selectable_units.erase( it );
+		if ( m_previously_deselected_unit == unit ) {
+			m_previously_deselected_unit = nullptr;
+		}
 		if ( m_selected_unit == unit ) {
 			SelectNextUnitOrSwitchToTileSelection();
 		}

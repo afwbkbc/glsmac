@@ -27,6 +27,9 @@ protected:
 	void PlayOpenSound();
 	void PlayCloseSound();
 
+	// override if needed
+	virtual void OnClose() {};
+
 private:
 	struct {
 		SoundEffect* open = nullptr;

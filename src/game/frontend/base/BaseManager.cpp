@@ -111,6 +111,10 @@ void BaseManager::DefineSlotBadges( const size_t slot_index, const faction::Fact
 	);
 }
 
+void BaseManager::SelectBase( Base* base ) {
+	m_game->OpenBasePopup( base );
+}
+
 text::InstancedFont* BaseManager::GetBadgeFont() const {
 	return m_badge_font;
 }

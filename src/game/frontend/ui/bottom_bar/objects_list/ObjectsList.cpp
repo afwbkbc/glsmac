@@ -108,7 +108,10 @@ void ObjectsList::HideObjectPreview( TileObject* object ) {
 }
 
 void ObjectsList::SelectObject( TileObject* object, const bool activate_object ) {
-	if ( object != m_selected_object ) {
+	if (
+		object != m_selected_object ||
+			object->GetType() == TileObject::TOT_BASE // select base again unless popup is open
+		) {
 		m_selected_object = object;
 		bool was_selected = true;
 		if ( activate_object ) {

@@ -71,6 +71,7 @@ CLASS( UnitManager, common::Class )
 	Unit* GetSelectedUnit() const;
 	void SelectUnit( Unit* unit_data, const bool actually_select_unit );
 	void DeselectUnit();
+	Unit* GetPreviouslyDeselectedUnit() const;
 	const bool SelectNextUnitMaybe();
 	void SelectNextUnitOrSwitchToTileSelection();
 
@@ -100,6 +101,8 @@ private:
 		size_t animation_id;
 	};
 	std::unordered_map< Unit*, moving_unit_info_t > m_moving_units = {};
+
+	Unit* m_previously_deselected_unit = nullptr;
 
 	void AddSelectable( Unit* unit );
 	void RemoveSelectable( Unit* unit );
