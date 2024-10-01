@@ -103,6 +103,9 @@ void ObjectsList::HideObjectPreview( TileObject* object ) {
 		}
 	}
 	if ( object == m_previewing_object ) {
+		if ( m_selected_object ) {
+			m_object_preview->PreviewObject( m_selected_object );
+		}
 		m_previewing_object = nullptr;
 	}
 }

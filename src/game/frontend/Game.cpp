@@ -2339,6 +2339,7 @@ void Game::ScrollToSelectedTile( const bool center_on_tile ) {
 
 void Game::SelectUnitOrSelectedTile( unit::Unit* selected_unit ) {
 	ASSERT( m_tm->GetSelectedTile(), "tile not selected" );
+	m_tile_at_query_purpose = backend::TQP_UNIT_SELECT;
 	SelectTileOrUnit(
 		m_tm->GetSelectedTile(), selected_unit
 			? selected_unit->GetId()
