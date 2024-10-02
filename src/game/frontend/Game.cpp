@@ -829,6 +829,14 @@ Slot* Game::GetSlot( const size_t index ) const {
 	return m_slots.at( index );
 }
 
+void Game::HideBottomBar() {
+	m_ui.bottom_bar->Hide();
+}
+
+void Game::ShowBottomBar() {
+	m_ui.bottom_bar->Show();
+}
+
 void Game::DefineSlot(
 	const size_t slot_index,
 	faction::Faction* faction
@@ -1325,6 +1333,16 @@ void Game::Initialize(
 									DeselectTileOrUnit();
 									OpenBasePopup( base );
 									break;
+								}
+							}
+							else {
+								auto* const tile = m_tm->GetSelectedTile();
+								if ( tile ) {
+									auto* const base = tile->GetBase();
+									if ( base ) {
+										OpenBasePopup( base );
+										break;
+									}
 								}
 							}
 							if ( m_turn_status == backend::turn::TS_TURN_COMPLETE ) {

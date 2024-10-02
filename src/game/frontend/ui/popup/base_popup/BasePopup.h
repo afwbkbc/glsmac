@@ -19,6 +19,10 @@ namespace ui {
 namespace popup {
 namespace base_popup {
 
+namespace bottom_bar {
+class BottomBar;
+}
+
 CLASS( BasePopup, Popup )
 
 	BasePopup( Game* game, base::Base* base );
@@ -29,10 +33,13 @@ CLASS( BasePopup, Popup )
 	base::Base* GetBase() const;
 
 protected:
+	void OnOpen() override;
 	void OnClose() override;
 
 private:
 	base::Base* m_base = nullptr;
+
+	bottom_bar::BottomBar* m_bottom_bar = nullptr;
 
 };
 

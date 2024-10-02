@@ -4,6 +4,7 @@ SUBDIR( objects_list )
 
 SET( SRC ${SRC}
 
+	${PWD}/BottomBarBase.cpp
 	${PWD}/BottomBar.cpp
 	${PWD}/ObjectPreview.cpp
 	${PWD}/TilePreview.cpp

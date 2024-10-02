@@ -56,6 +56,9 @@ void Popup::Destroy() {
 void Popup::Open() {
 	ASSERT( !m_is_opened, "popup already opened" );
 	m_is_opened = true;
+
+	OnOpen();
+
 	g_engine->GetUI()->OpenPopup( this );
 }
 

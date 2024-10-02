@@ -242,6 +242,9 @@ CLASS( Game, common::Module )
 
 	Slot* GetSlot( const size_t index ) const;
 
+	void HideBottomBar();
+	void ShowBottomBar();
+
 private:
 
 	task::game::Game* m_task = nullptr;

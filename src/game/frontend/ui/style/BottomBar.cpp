@@ -857,6 +857,53 @@ void BottomBar::AddStyles() {
 			s->SetColor( ::ui::A_TEXT_COLOR, types::Color::FromRGB( 232, 212, 140 ) );
 		}
 	);
+
+	// base-specific bottom bar
+
+	AddStyle(
+		"BuildPreview", SH() {
+			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_TOP | ::ui::ALIGN_LEFT );
+			s->Set( ::ui::A_TOP, 58 );
+			s->Set( ::ui::A_BOTTOM, 6 );
+			s->Set( ::ui::A_LEFT, 5 );
+			s->Set( ::ui::A_WIDTH, 133 );
+		}
+	);
+	AddStyle(
+		"BuildQueue", SH() {
+			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_TOP | ::ui::ALIGN_LEFT );
+			s->Set( ::ui::A_TOP, 83 );
+			s->Set( ::ui::A_BOTTOM, 55 );
+			s->Set( ::ui::A_LEFT, 136 );
+			s->Set( ::ui::A_WIDTH, 108 );
+		}
+	);
+	AddStyle(
+		"BaseTitle", SH() {
+			s->Set( ::ui::A_LEFT, 262 );
+			s->Set( ::ui::A_TOP, 67 );
+			s->Set( ::ui::A_RIGHT, 262 );
+			s->Set( ::ui::A_HEIGHT, 47 ); // 41
+		}
+	);
+	AddStyle(
+		"Population", SH() {
+			s->Set( ::ui::A_LEFT, 262 );
+			s->Set( ::ui::A_TOP, 112 );
+			s->Set( ::ui::A_RIGHT, 320 );
+			s->Set( ::ui::A_BOTTOM, 85 );
+		}
+	);
+	AddStyle(
+		"SupportedUnits", SH() {
+			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_TOP | ::ui::ALIGN_RIGHT );
+			s->Set( ::ui::A_TOP, 58 );
+			s->Set( ::ui::A_BOTTOM, 6 );
+			s->Set( ::ui::A_RIGHT, 6 );
+			s->Set( ::ui::A_WIDTH, 238 );
+		}
+	);
+
 }
 
 }

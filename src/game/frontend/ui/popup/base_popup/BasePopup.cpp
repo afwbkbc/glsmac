@@ -2,6 +2,9 @@
 
 #include "game/frontend/Game.h"
 #include "game/frontend/base/Base.h"
+#include "game/frontend/ui/popup/base_popup/bottom_bar/BottomBar.h"
+#include "engine/Engine.h"
+#include "ui/UI.h"
 
 namespace game {
 namespace frontend {
@@ -28,6 +31,7 @@ void BasePopup::Create() {
 			return false;
 		}
 	);
+
 }
 
 void BasePopup::Destroy() {
@@ -39,7 +43,21 @@ base::Base* BasePopup::GetBase() const {
 	return m_base;
 }
 
+void BasePopup::OnOpen() {
+
+	// show base-specific bottom bar
+	m_game->HideBottomBar();
+	NEW( m_bottom_bar, bottom_bar::BottomBar, m_game, this );
+	g_engine->GetUI()->AddObject( m_bottom_bar );
+
+}
+
 void BasePopup::OnClose() {
+
+	// restore main bottom bar
+	g_engine->GetUI()->RemoveObject( m_bottom_bar );
+	m_game->ShowBottomBar();
+
 	m_game->OnBasePopupClose();
 }
 

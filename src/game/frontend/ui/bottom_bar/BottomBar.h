@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/frontend/ui/UI.h"
+#include "BottomBarBase.h"
 
 #include "game/backend/turn/Types.h"
 
@@ -12,7 +12,6 @@ class Texture;
 }
 
 namespace ui::object {
-class Surface;
 class Button;
 class Label;
 }
@@ -39,15 +38,13 @@ class LeftMenu;
 class RightMenu;
 }
 
-CLASS( BottomBar, UI )
+CLASS( BottomBar, BottomBarBase )
 
-	BottomBar( Game* game )
-		: UI( game, "BB" ) {}
+	BottomBar( Game* game );
 
 	void Create() override;
 	void Iterate() override;
 	void Destroy() override;
-	void Align() override;
 
 	void PreviewTile( tile::Tile* tile, const size_t selected_unit_id );
 	void HideTilePreview();
@@ -70,13 +67,6 @@ CLASS( BottomBar, UI )
 	void SetTurnStatus( const backend::turn::turn_status_t status );
 
 private:
-	struct {
-		::ui::object::Surface* left = nullptr;
-		::ui::object::Surface* right = nullptr;
-		::ui::object::Surface* middle = nullptr;
-	} m_frames = {};
-
-	std::vector< ::ui::object::Surface* > m_backgrounds = {};
 
 	struct {
 		::ui::object::Button* menu = nullptr;

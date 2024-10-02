@@ -28,6 +28,7 @@ protected:
 	void PlayCloseSound();
 
 	// override if needed
+	virtual void OnOpen() {};
 	virtual void OnClose() {};
 
 private:
