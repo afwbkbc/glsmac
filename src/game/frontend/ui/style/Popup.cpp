@@ -170,7 +170,7 @@ void Popup::AddStyles() {
 			s->SetFont( ::ui::A_FONT, resource::TTF_ARIALN, 18 );
 			s->SetColor( ::ui::A_TEXT_COLOR, types::Color::FromRGB( 120, 164, 212 ) );
 			s->Set( ::ui::A_HEIGHT, 18 );
-			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_HCENTER | ::ui::ALIGN_TOP );
+			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_LEFT | ::ui::ALIGN_TOP );
 			s->Set( ::ui::A_Z_INDEX, 0.6f );
 		}
 	);

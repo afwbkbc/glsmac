@@ -30,10 +30,12 @@ void EndTurnConfirmation::Create() {
 	// TODO: multiline labels? word wrap?
 	NEW( m_message_labels.first, ::ui::object::Label, SubClass( "Label" ) );
 	m_message_labels.first->SetText( "Some of our units have not yet moved this turn." );
+	m_message_labels.first->SetLeft( 4 );
 	m_message_labels.first->SetTop( 4 );
 	m_message_section->AddChild( m_message_labels.first );
 	NEW( m_message_labels.second, ::ui::object::Label, SubClass( "Label" ) );
 	m_message_labels.second->SetText( "Do you really want to end the turn now?" );
+	m_message_labels.second->SetLeft( 4 );
 	m_message_labels.second->SetTop( 24 );
 	m_message_section->AddChild( m_message_labels.second );
 

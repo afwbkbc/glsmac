@@ -25,7 +25,7 @@ void ChatPopup::Create() {
 	m_message_section->SetLeft( 6 );
 	m_message_section->SetRight( 6 );
 	m_message_section->SetTop( 34 );
-	m_message_section->SetHeight( 34 );
+	m_message_section->SetHeight( 36 );
 	AddChild( m_message_section );
 
 	NEW( m_message_label, ::ui::object::Label, SubClass( "Label" ) );
