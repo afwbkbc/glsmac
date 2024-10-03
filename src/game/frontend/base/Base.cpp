@@ -192,11 +192,54 @@ void Base::DestroyOnBottomBarList( ui::ObjectsListItem* element, void* state ) c
 }
 
 void* Base::CreateOnBottomBarPreview( ui::ObjectPreview* element ) const {
-	return nullptr;
+	NEWV( ui_elements, std::vector< ::ui::object::UIObject* >, {} );
+
+	const auto& render = GetRenderData();
+
+	const types::mesh::Mesh* mesh;
+	::ui::object::Mesh* ui_mesh;
+#define X( _key, _class ) \
+    NEW( mesh, types::mesh::Mesh, *render._key.mesh ); /* make a copy */ \
+    NEW( ui_mesh, ::ui::object::Mesh, "BBObjectPreview" _class ); \
+    ui_mesh->SetMesh( mesh ); \
+    ui_mesh->SetTexture( render._key.texture ); \
+    element->AddChild( ui_mesh ); \
+    ui_elements->push_back( ui_mesh );
+
+	// order is important
+	X( base, "Object" );
+	X( badge, "Badge" );
+
+#undef X
+
+	size_t top = 86;
+	::ui::object::Label* label;
+#define X( _text, _align ) \
+    if ( !(_text).empty() ) { \
+        NEW( label, ::ui::object::Label, "BBObjectPreviewLabel" #_align ); \
+        label->SetText( _text );                                           \
+        label->SetTop( top ); \
+        element->AddChild( label ); \
+        ui_elements->push_back( label ); \
+        top += label->GetHeight(); \
+    }
+
+	X( m_name, Header );
+	X( (std::string)"Producing:", Left );
+
+#undef X
+
+	return ui_elements;
 }
 
 void Base::DestroyOnBottomBarPreview( ui::ObjectPreview* element, void* state ) const {
+	auto* ui_elements = (std::vector< ::ui::object::UIObject* >*)state;
 
+	for ( const auto& e : *ui_elements ) {
+		element->RemoveChild( e );
+	}
+
+	DELETE( ui_elements );
 }
 
 const bool Base::OnBottomBarListActivate( Game* game ) {
