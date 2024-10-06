@@ -24,6 +24,7 @@ class Operator;
 class Operand;
 class Object;
 class Array;
+class LoopControl;
 }
 
 namespace parser {
@@ -50,6 +51,7 @@ private:
 	const program::Operator* GetOperator( const Operator* element );
 	const program::Array* GetArray( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 	const program::Object* GetObject( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
+	const program::LoopControl* GetLoopControl( const LoopControl* loop_control );
 
 	const std::string CHARS_WHITESPACE = CHARS_EOLN + "	 ";
 	const std::string CHARS_NAMES = CHARS_LETTERS + "_#";
@@ -93,6 +95,8 @@ private:
 
 	const std::unordered_set< std::string > KEYWORDS = {
 		"return",
+		"break",
+		"continue",
 		"throw",
 		"let",
 		"const",
@@ -120,12 +124,27 @@ private:
 			Parser::Conditional::CT_WHILE
 		},
 		{
+			"for",
+			Parser::Conditional::CT_FOR
+		},
+		{
 			"try",
 			Parser::Conditional::CT_TRY
 		},
 		{
 			"catch",
 			Parser::Conditional::CT_CATCH
+		}
+	};
+
+	const std::unordered_map< std::string, program::loop_control_type_t > LOOP_CONTROL_KEYWORDS = {
+		{
+			"break",
+			program::LCT_BREAK
+		},
+		{
+			"continue",
+			program::LCT_CONTINUE
 		}
 	};
 
@@ -165,6 +184,14 @@ private:
 		{
 			"return",
 			program::OT_RETURN
+		},
+		{
+			"break",
+			program::OT_BREAK
+		},
+		{
+			"continue",
+			program::OT_CONTINUE
 		},
 		{
 			"throw",
@@ -292,7 +319,21 @@ private:
 			program::OT_RETURN,
 			{
 				1,
-				OL_RIGHT
+				OL_RIGHT // undefined will be auto-appended if missing
+			}
+		},
+		{
+			program::OT_BREAK,
+			{
+				1,
+				OL_RIGHT // loop control will be auto-appended
+			}
+		},
+		{
+			program::OT_CONTINUE,
+			{
+				1,
+				OL_RIGHT // loop control will be auto-appended
 			}
 		},
 		{

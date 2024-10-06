@@ -42,6 +42,8 @@ public:
 	const Color operator*( const float operand ) const;
 	const Color operator/( const float operand ) const;
 
+	const Color operator*( const Color& other ) const;
+
 	const rgba_t GetRGBA() const;
 	static Color FromRGBA( const rgba_t rgba );
 	static Color FromRGBA( const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha = 255 );

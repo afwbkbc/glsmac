@@ -45,6 +45,7 @@ public:
 	void CreateVariable( const std::string& name, const Value& value, const si_t* si );
 	void CreateConst( const std::string& name, const Value& value, const si_t* si );
 	void UpdateVariable( const std::string& name, const Value& value, const si_t* si );
+	void DestroyVariable( const std::string& name, const si_t* si );
 	void CreateBuiltin( const std::string& name, const Value& value );
 	void PersistValue( const Value& value );
 	void UnpersistValue( const Value& value );

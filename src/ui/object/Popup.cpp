@@ -48,12 +48,17 @@ void Popup::Destroy() {
 	// TODO: maybe not needed?
 	//g_engine->GetUI()->RemoveObject( m_background_locker );
 
+	OnClose();
+
 	UIContainer::Destroy();
 }
 
 void Popup::Open() {
 	ASSERT( !m_is_opened, "popup already opened" );
 	m_is_opened = true;
+
+	OnOpen();
+
 	g_engine->GetUI()->OpenPopup( this );
 }
 

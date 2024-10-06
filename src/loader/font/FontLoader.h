@@ -16,7 +16,7 @@ namespace font {
 CLASS( FontLoader, Loader )
 	types::Font* LoadFont( const resource::resource_t res, const unsigned char size );
 protected:
-	virtual types::Font* LoadFontImpl( const std::string& filename, const unsigned char size ) = 0;
+	virtual types::Font* LoadFontImpl( const std::string& name, const std::string& path, const unsigned char size ) = 0;
 };
 
 }

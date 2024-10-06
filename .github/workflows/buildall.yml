@@ -1,0 +1,128 @@
+name: GLSMAC autobuild
+
+on:
+  push:
+    branches: [ "stable" ]
+  pull_request:
+    branches: [ "stable" ]
+
+jobs:
+
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      release_id: ${{ steps.create_release.outputs.id }}
+      ver: ${{ steps.info.outputs.ver }}
+      sha: ${{ steps.info.outputs.sha }}
+    steps:
+      - uses: benjlevesque/short-sha@v2.1
+        id: short-sha
+        with:
+          length: 7
+      - uses: dev-drprasad/delete-older-releases@v0.2.0
+        with:
+          keep_latest: 4
+          delete_tags: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: info
+        id: info
+        env:
+          ver: v0.3
+          sha: ${{ steps.short-sha.outputs.sha }}
+        run: |
+          echo ${{ env.ver }} ${{ env.sha }}
+          echo "ver=${{ env.ver }}" >> $GITHUB_OUTPUT
+          echo "sha=${{ env.sha }}" >> $GITHUB_OUTPUT
+      - name: create-release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.info.outputs.ver }}-${{ steps.info.outputs.sha }}
+          release_name: ${{ steps.info.outputs.ver }}-${{ steps.info.outputs.sha }}
+          draft: false
+          prerelease: false
+
+
+  build_ubuntu:
+    needs: [prepare]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: install_dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev
+      - name: prepare
+        run: |
+          mkdir build
+      - name: cmake
+        working-directory: ./build
+        run: cmake -DCMAKE_BUILD_TYPE=Portable64 ..
+      - name: make
+        working-directory: ./build
+        run: make
+      - name: data
+        working-directory: ./build
+        run: mv ../GLSMAC_data bin/
+      - name: pack
+        working-directory: ./build
+        run: tar -C bin -zcvf GLSMAC.tar.gz GLSMAC GLSMAC_data
+      - name: publish
+        uses: actions/upload-artifact@v3
+        with:
+          name: GLSMAC-ubuntu64-bin
+          path: |
+            ./build/GLSMAC.tar.gz
+      - name: upload
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.prepare.outputs.upload_url }}
+          asset_path: ./build/GLSMAC.tar.gz
+          asset_name: GLSMAC-${{ needs.prepare.outputs.ver }}-ubuntu64-${{ needs.prepare.outputs.sha }}.tar.gz
+          asset_content_type: application/gzip
+
+
+  build_windows:
+    needs: [prepare]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: install_dependencies
+        run: |
+          choco install ninja
+      - name: prepare
+        run: |
+          mkdir build
+      - name: cmake
+        working-directory: ./build
+        run: cmake -G Ninja -DCMAKE_BUILD_TYPE=Portable64 ..
+      - name: make
+        working-directory: ./build
+        run: ninja
+      - name: data
+        working-directory: ./build
+        run: mv ../GLSMAC_data bin/
+      - name: pack
+        working-directory: ./build/bin
+        run: Compress-Archive -Path GLSMAC.exe,GLSMAC_data -Destination ../GLSMAC.zip
+      - name: publish
+        uses: actions/upload-artifact@v3
+        with:
+          name: GLSMAC-windows64-bin
+          path: |
+            ./build/GLSMAC.zip
+      - name: upload
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.prepare.outputs.upload_url }}
+          asset_path: ./build/GLSMAC.zip
+          asset_name: GLSMAC-${{ needs.prepare.outputs.ver }}-win64-${{ needs.prepare.outputs.sha }}.zip
+          asset_content_type: application/gzip

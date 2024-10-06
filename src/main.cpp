@@ -37,6 +37,7 @@
 #include "loader/font/FreeType.h"
 #include "loader/texture/SDL2.h"
 #include "loader/sound/SDL2.h"
+#include "loader/txt/TXTLoaders.h"
 #include "input/sdl2/SDL2.h"
 #include "graphics/opengl/OpenGL.h"
 #include "audio/sdl2/SDL2.h"
@@ -58,15 +59,15 @@
 #include "task/intro/Intro.h"
 #include "task/mainmenu/MainMenu.h"
 
-#include "game/Game.h"
+#include "game/backend/Game.h"
 
 #include "engine/Engine.h"
 
 #include "version.h"
 
-#include "game/State.h"
-#include "game/Player.h"
-#include "game/slot/Slots.h"
+#include "game/backend/State.h"
+#include "game/backend/Player.h"
+#include "game/backend/slot/Slots.h"
 
 // TODO: move to config
 #define WINDOW_WIDTH 1024
@@ -97,7 +98,6 @@ int main( const int argc, const char* argv[] ) {
 	config::Config config( argc, argv );
 
 	config.Init();
-
 
 #ifdef DEBUG
 	if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
@@ -200,6 +200,7 @@ int main( const int argc, const char* argv[] ) {
 				&font_loader,
 				&texture_loader,
 				&sound_loader,
+				nullptr,
 				&scheduler,
 				&input,
 				&graphics,
@@ -214,13 +215,14 @@ int main( const int argc, const char* argv[] ) {
 		else
 #endif
 		{
-			game::Game game;
+			game::backend::Game game;
 
 			resource::ResourceManager resource_manager;
 
 			loader::font::FreeType font_loader;
 			loader::texture::SDL2 texture_loader;
 			loader::sound::SDL2 sound_loader;
+			loader::txt::TXTLoaders txt_loaders;
 
 			input::sdl2::SDL2 input;
 			bool vsync = VSYNC;
@@ -265,6 +267,7 @@ int main( const int argc, const char* argv[] ) {
 				&font_loader,
 				&texture_loader,
 				&sound_loader,
+				&txt_loaders,
 				&scheduler,
 				&input,
 				&graphics,
@@ -276,16 +279,29 @@ int main( const int argc, const char* argv[] ) {
 
 #ifdef DEBUG
 			if ( config.HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
-				NEWV( state, game::State ); // TODO: initialize settings randomly
+				NEWV( state, game::backend::State ); // TODO: initialize settings randomly
 				state->m_settings.global.game_rules.Initialize();
 				state->InitBindings();
 				state->Configure();
 				const auto& rules = state->m_settings.global.game_rules;
+				std::optional< game::backend::rules::Faction > faction = {};
+				if ( config.HasDebugFlag( config::Config::DF_QUICKSTART_FACTION ) ) {
+					const auto& f = state->m_settings.global.game_rules.m_factions;
+					const auto it = f.find( config.GetQuickstartFaction() );
+					if ( it == f.end() ) {
+						std::string errmsg = "Faction \"" + config.GetQuickstartFaction() + "\" does not exist. Available factions:";
+						for ( const auto& f_it : f ) {
+							errmsg += " " + f_it.second.m_id;
+						}
+						THROW( errmsg );
+					}
+					faction = it->second;
+				}
 				NEWV(
-					player, ::game::Player,
+					player, game::backend::Player,
 					"Player",
-					::game::Player::PR_HOST,
-					{},
+					game::backend::Player::PR_HOST,
+					faction,
 					rules.GetDefaultDifficultyLevel()
 				);
 				state->AddPlayer( player );

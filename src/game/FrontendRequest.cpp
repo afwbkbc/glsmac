@@ -59,6 +59,10 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.unit_spawn.morale_string, std::string, *other.data.unit_spawn.morale_string );
 			break;
 		}
+		case FR_BASE_SPAWN: {
+			NEW( data.base_spawn.base_info.name, std::string, *other.data.base_spawn.base_info.name );
+			break;
+		}
 
 		default: {
 			//
@@ -108,6 +112,10 @@ FrontendRequest::~FrontendRequest() {
 		case FR_UNIT_SPAWN: {
 			DELETE( data.unit_spawn.unitdef_id );
 			DELETE( data.unit_spawn.morale_string );
+			break;
+		}
+		case FR_BASE_SPAWN: {
+			DELETE( data.base_spawn.base_info.name );
 			break;
 		}
 		default: {

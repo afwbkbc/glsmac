@@ -20,7 +20,7 @@ CLASS( FreeType, FontLoader )
 
 protected:
 
-	types::Font* LoadFontImpl( const std::string& filename, const unsigned char size ) override;
+	types::Font* LoadFontImpl( const std::string& name, const std::string& path, const unsigned char size ) override;
 
 private:
 	FT_Library m_freetype;

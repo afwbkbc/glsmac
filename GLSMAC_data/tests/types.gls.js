@@ -13,6 +13,18 @@ let c = (a + 2) * 4;
 c = 123;
 c -= 23;
 
+let emptymethod = () => {};
+test.assert(#typeof(emptymethod()) == 'Undefined');
+
+let ret = 0;
+let testmethod0 = () => {
+	ret = 1;
+	return;
+	ret = 2;
+};
+test.assert(#typeof(testmethod0()) == 'Undefined');
+test.assert(ret == 1);
+
 let testmethod1 = (a, b, c) => {
 	return a + b + c;
 };
@@ -43,29 +55,9 @@ testarr1 [] = testarr2;
 let testarr3 = testarr1;
 testarr3[1] = 'SECOND';
 testarr3[testmethod2(a, b, c) + 61] = 'FIRST';
-testarr3[2
-:
-5
-]
-= testarr1[0
-:
-1
-]
-+testarr2[0
-:
-1
-]
-;
-let testarr4 = testarr3[
-:
-3
-]
-;
-testarr4[c + 1 - 100
-:
-c - 100 + 2
-]
-= ['new first', 'new second'];
+testarr3[2:5] = testarr1[0:1] + testarr2[0:1];
+let testarr4 = testarr3[:3];
+testarr4[ c + 1 - 100 : c - 100 + 2 ] = ['new first', 'new second'];
 
 let testobj1 = {};
 let testobj2 = {
@@ -164,39 +156,11 @@ test.assert(testarr4[1] == 'new first');
 test.assert(testarr4[2] == 'new second');
 test.assert(testarr4[3] == 'second');
 
-test.assert(testarr1[0
-:
-1
-] ==
-['first', 'second']
-)
-;
+test.assert(testarr1[0:1] == ['first', 'second']);
 
-test.assert(testarr1[5
-:] ==
-[testarr1[5], testarr1[6]]
-)
-;
-test.assert(testarr1[
-:
-3
-] ==
-[testarr1[0], testarr1[1]] + testarr1[2
-:
-3
-] )
-;
-test.assert(testarr1[4
-:
-5
-]
-+testarr1[2
-:
-3
-] ==
-[testarr1[4], testarr1[5], testarr1[2], testarr1[3]]
-)
-;
+test.assert(testarr1[5:] == [testarr1[5], testarr1[6]]);
+test.assert(testarr1[:3] == [testarr1[0], testarr1[1]] + testarr1[2:3] );
+test.assert(testarr1[4:5] + testarr1[2:3] == [testarr1[4], testarr1[5], testarr1[2], testarr1[3]]);
 test.assert(testobj3.child1.child2.value == 'CHILD VALUE');
 test.assert(testobj1.propertyInt == 272 + c);
 test.assert(testobj1 == {propertyInt: 372});
@@ -248,6 +212,128 @@ while (i++ < 5) {
 }
 test.assert(arr == [1, 2, 3, 4, 5]);
 
+const data = ['a', 'b', 'c'];
+
+arr = [];
+for (i in data) {
+	arr []= #to_string(i) + '_' + data[i];
+}
+test.assert(arr == ['0_a', '1_b', '2_c']);
+for (i in ['asd', 'qwe', 'zxc']) {
+	arr []= i;
+}
+test.assert(arr == ['0_a', '1_b', '2_c', 0, 1, 2]);
+for (i in {
+	key1: 'value1',
+	key2: 'value2',
+}) {
+	arr []= i;
+}
+test.assert(arr == ['0_a', '1_b', '2_c', 0, 1, 2, 'key1', 'key2']);
+
+arr = [];
+for (v of data) {
+	arr []= 'of_' + v;
+}
+test.assert(arr == ['of_a', 'of_b', 'of_c']);
+for (v of ['asd', 'qwe', 'zxc', (5 + 10), {k: 'v'}, ((x) => { return x * 2 })(5)]) {
+	arr []= v;
+}
+test.assert(arr == [ 'of_a', 'of_b', 'of_c', 'asd', 'qwe', 'zxc', 15, {k: 'v'}, 10]);
+for (i of {
+	key1: 'value1',
+	key2: 'value2',
+}) {
+	arr []= i;
+}
+test.assert(arr == [ 'of_a', 'of_b', 'of_c', 'asd', 'qwe', 'zxc', 15, {k: 'v'}, 10, 'value1', 'value2']);
+
+arr = [];
+for (let ii = 2 ; ii > 0 ; ii--) {
+	arr []= 'i_' + data[ii];
+}
+test.assert(arr == ['i_c', 'i_b']);
+
+for (i = 5 ; i <= 10 ; i++) {
+	arr []= i;
+}
+test.assert(arr == ['i_c', 'i_b', 5, 6, 7, 8, 9, 10 ]);
+
+const for_func = () => {
+	for ( i = 0 ; i < 10 ; i++ ) {
+		if ( i == 6 ) {
+			return i;
+		}
+	}
+};
+test.assert(for_func() == 6);
+
+arr = [];
+for ( i = 0 ; i < 10 ; i++ ) {
+	arr []= i;
+	if (i >= 3) {
+		arr []= 'x';
+		for ( i = 5 ; i < 10 ; i++ ) {
+			if ( i == 7 ) {
+				break;
+			}
+			arr []= i;
+		}
+		arr []= 'y';
+		break;
+	}
+}
+test.assert(arr == [0, 1, 2, 3, 'x', 5, 6, 'y']);
+
+arr = [];
+i = 5;
+while (i > 0) {
+	if (i == 2 ) {
+		break;
+	}
+	arr []= i;
+	i--;
+}
+test.assert(arr == [5, 4, 3]);
+
+arr = [];
+for ( i of [4, 7, 1, 5] ) {
+	if ( i == 1 ) {
+		break;
+	}
+	arr []= i;
+}
+test.assert(arr == [4, 7]);
+
+arr = [];
+for ( i = 0 ; i < 10 ; i++ ) {
+	if ( i < 5 || i > 8 ) {
+		continue;
+	}
+	arr []= i;
+}
+test.assert(arr == [5, 6, 7, 8]);
+
+arr = [];
+i = 10;
+while (i > 0) {
+	i--;
+	if (i > 7 || i < 3) {
+		for ( ii of ['a', 'b', 'c', 'd', 'e', 'f'] ) {
+			if ( ii == 'a' || ii == 'c' ) {
+				continue;
+			}
+			elseif (ii == 'e') {
+				break;
+			}
+			arr []= ii;
+		}
+		continue;
+	}
+	arr []= i;
+}
+test.assert(arr == ['b', 'd', 'b', 'd', 7, 6, 5, 4, 3, 'b', 'd', 'b', 'd', 'b', 'd']);
+
 arr = [];
 try {
 	arr [] = 'BEFORE EXCEPTION'; // should be printed
@@ -273,16 +359,16 @@ try {
 		arr [] = 'CAUGHT ' + e.type + ' : ' + e.reason;
 		arr += e.backtrace;
 	}
-}
-;
+};
+
 test.assert(arr == [
 	'BEFORE EXCEPTION',
 	'failfunc',
 	'failfunc2',
 	'CAUGHT TestError : something happened',
-	'\tat ' + test.get_script_path() + ':257: throw TestError(\'something happened\');',
-	'\tat ' + test.get_script_path() + ':262: realfailfunc();',
-	'\tat ' + test.get_script_path() + ':264: failfunc();'
+	'\tat ' + test.get_script_path() + ':343: throw TestError(\'something happened\');',
+	'\tat ' + test.get_script_path() + ':348: realfailfunc();',
+	'\tat ' + test.get_script_path() + ':350: failfunc();'
 ]);
 
 test.assert(#to_string(2 + 3) + ' (five)' == '5 (five)');
@@ -301,16 +387,9 @@ test.assert(#typeof(123.) == 'Float');
 test.assert(#typeof(0.123) == 'Float');
 test.assert(#typeof('string') == 'String');
 test.assert(#typeof([]) == 'Array');
-test.assert(#typeof(2
-:
-3
-) ==
-'Range'
-)
-;
+test.assert(#typeof(2:3) == 'Range');
 test.assert(#typeof({}) == 'Object');
-test.assert(#typeof(() => {
-}) == 'Callable');
+test.assert(#typeof(() => {}) == 'Callable');
 
 test.assert(15.0 != 15);
 test.assert(#round(15.0) == 15);

@@ -43,6 +43,10 @@ void Mesh::SetMesh( const types::mesh::Mesh* mesh ) {
 	}
 }
 
+const types::mesh::Mesh* Mesh::GetOriginalMesh() const {
+	return m_original_mesh;
+}
+
 void Mesh::SetTexture( types::texture::Texture* texture ) {
 	if ( texture != m_texture ) {
 		/*if ( m_texture && m_texture ) {

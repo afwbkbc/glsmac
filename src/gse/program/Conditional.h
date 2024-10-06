@@ -12,6 +12,7 @@ public:
 		CT_ELSEIF,
 		CT_ELSE,
 		CT_WHILE,
+		CT_FOR,
 		CT_TRY,
 		CT_CATCH,
 	};

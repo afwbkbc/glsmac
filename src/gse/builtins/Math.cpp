@@ -42,11 +42,17 @@ void Math::AddToContext( context::Context* ctx ) {
 	AB( "max", std::max, std::fmax )
 #undef AB
 
-	ctx->CreateBuiltin( "round", NATIVE_CALL() {
-		N_EXPECT_ARGS( 1 );
-		N_GETVALUE( v, 0, Float );
-		return VALUE( type::Int, std::round( v ) );
+#define F( _func, _in_type, _out_type ) \
+	ctx->CreateBuiltin( #_func, NATIVE_CALL() { \
+		N_EXPECT_ARGS( 1 ); \
+		N_GETVALUE( v, 0, _in_type ); \
+		return VALUE( type::_out_type, std::_func( v ) ); \
 	} ) );
+	F( floor, Float, Int )
+	F( round, Float, Int )
+	F( ceil, Float, Int )
+	F( sqrt, Float, Float )
+#undef F
 
 }
 

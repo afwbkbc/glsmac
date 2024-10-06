@@ -2,7 +2,7 @@
 
 #include "task/mainmenu/PopupMenu.h"
 
-namespace game::connection {
+namespace game::backend::connection {
 class Connection;
 }
 
@@ -16,7 +16,7 @@ CLASS( ConnectionPopupMenu, PopupMenu )
 	void Iterate() override;
 
 protected:
-	void SetConnection( ::game::connection::Connection* connection );
+	void SetConnection( game::backend::connection::Connection* connection );
 
 };
 

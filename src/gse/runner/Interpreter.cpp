@@ -6,6 +6,10 @@
 #include "gse/program/Object.h"
 #include "gse/program/Value.h"
 #include "gse/program/Expression.h"
+#include "gse/program/SimpleCondition.h"
+#include "gse/program/ForCondition.h"
+#include "gse/program/ForConditionInOf.h"
+#include "gse/program/ForConditionExpressions.h"
 #include "gse/program/Operator.h"
 #include "gse/program/Operand.h"
 #include "gse/program/Variable.h"
@@ -17,10 +21,13 @@
 #include "gse/program/ElseIf.h"
 #include "gse/program/Else.h"
 #include "gse/program/While.h"
+#include "gse/program/For.h"
 #include "gse/program/Try.h"
 #include "gse/program/Catch.h"
+#include "gse/program/LoopControl.h"
 #include "gse/type/Type.h"
 #include "gse/type/Undefined.h"
+#include "gse/type/Nothing.h"
 #include "gse/type/Bool.h"
 #include "gse/type/Int.h"
 #include "gse/type/Float.h"
@@ -32,6 +39,7 @@
 #include "gse/type/ObjectRef.h"
 #include "gse/type/Callable.h"
 #include "gse/type/Range.h"
+#include "gse/type/LoopControl.h"
 #include "gse/type/Exception.h"
 #include "gse/type/Undefined.h"
 
@@ -51,7 +59,7 @@ const gse::Value Interpreter::EvaluateScope( context::Context* ctx, const Scope*
 	const auto subctx = ctx->ForkContext( ctx, scope->m_si, false );
 	subctx->IncRefs();
 
-	gse::Value result = VALUE( Undefined );
+	gse::Value result = VALUE( Nothing );
 	for ( const auto& it : scope->body ) {
 		switch ( it->control_type ) {
 			case Control::CT_STATEMENT: {
@@ -65,7 +73,7 @@ const gse::Value Interpreter::EvaluateScope( context::Context* ctx, const Scope*
 			default:
 				THROW( "unexpected control type: " + it->Dump() );
 		}
-		if ( result.Get()->type != Type::T_UNDEFINED ) {
+		if ( result.Get()->type != Type::T_NOTHING ) {
 			// got return statement
 			break;
 		}
@@ -87,21 +95,21 @@ const gse::Value Interpreter::EvaluateStatement( context::Context* ctx, const St
 	if ( returnflag ) {
 		return result;
 	}
-	return VALUE( Undefined );
+	return VALUE( Nothing );
 }
 
 const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const Conditional* conditional, bool is_nested ) const {
 	switch ( conditional->conditional_type ) {
 		case Conditional::CT_IF: {
 			const auto* c = (If*)conditional;
-			if ( EvaluateBool( ctx, c->condition ) ) {
+			if ( EvaluateBool( ctx, c->condition->expression ) ) {
 				return EvaluateScope( ctx, c->body );
 			}
 			else if ( c->els ) {
 				return EvaluateConditional( ctx, c->els, true );
 			}
 			else {
-				return VALUE( Undefined );
+				return VALUE( Nothing );
 			}
 		}
 		case Conditional::CT_ELSEIF: {
@@ -110,14 +118,14 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 				throw gse::Exception( EC.PARSE_ERROR, "Unexpected elseif without if", ctx, conditional->m_si );
 			}
 			const auto* c = (ElseIf*)conditional;
-			if ( EvaluateBool( ctx, c->condition ) ) {
+			if ( EvaluateBool( ctx, c->condition->expression ) ) {
 				return EvaluateScope( ctx, c->body );
 			}
 			else if ( c->els ) {
 				return EvaluateConditional( ctx, c->els, true );
 			}
 			else {
-				return VALUE( Undefined );
+				return VALUE( Nothing );
 			}
 		}
 		case Conditional::CT_ELSE: {
@@ -130,12 +138,117 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 		}
 		case Conditional::CT_WHILE: {
 			const auto* c = (While*)conditional;
-			gse::Value result = VALUE( Undefined );
-			while ( EvaluateBool( ctx, c->condition ) ) {
+			gse::Value result = VALUE( Nothing );
+			bool need_break = false;
+			bool need_clear = false;
+			while ( EvaluateBool( ctx, c->condition->expression ) ) {
 				result = EvaluateScope( ctx, c->body );
-				if ( result.Get()->type != Type::T_UNDEFINED ) {
+				CheckBreakCondition( result, &need_break, &need_clear );
+				if ( need_clear ) {
+					result = VALUE( Nothing );
+				}
+				if ( need_break ) {
 					break;
 				}
+			}
+			return result;
+		}
+		case Conditional::CT_FOR: {
+			const auto* c = (For*)conditional;
+			gse::Value result = VALUE( Nothing );
+			bool need_break = false;
+			bool need_clear = false;
+			switch ( c->condition->for_type ) {
+				case ForCondition::FCT_EXPRESSIONS: {
+					const auto* condition = (ForConditionExpressions*)c->condition;
+					EvaluateExpression( ctx, condition->init );
+					while ( EvaluateBool( ctx, condition->check ) ) {
+						result = EvaluateScope( ctx, c->body );
+						CheckBreakCondition( result, &need_break, &need_clear );
+						if ( need_break ) {
+							if ( need_clear ) {
+								result = VALUE( Nothing );
+							}
+							break;
+						}
+						EvaluateExpression( ctx, condition->iterate );
+					}
+					break;
+				}
+				case ForCondition::FCT_IN_OF: {
+					const auto* condition = (ForConditionInOf*)c->condition;
+					const auto target = EvaluateExpression( ctx, condition->expression );
+					const auto forctx = ctx->ForkContext( ctx, condition->m_si, false );
+					forctx->IncRefs();
+					switch ( target.Get()->type ) {
+						case Type::T_ARRAY: {
+							const auto* arr = (type::Array*)target.Get();
+							switch ( condition->for_inof_type ) {
+								case ForConditionInOf::FIC_IN: {
+									for ( size_t i = 0 ; i < arr->value.size() ; i++ ) {
+										forctx->CreateConst( condition->variable->name, VALUE( Int, i ), &condition->m_si );
+										result = EvaluateScope( forctx, c->body );
+										forctx->DestroyVariable( condition->variable->name, &condition->m_si );
+										CheckBreakCondition( result, &need_break, &need_clear );
+										if ( need_break ) {
+											if ( need_clear ) {
+												result = VALUE( Nothing );
+											}
+											break;
+										}
+									}
+									break;
+								}
+								case ForConditionInOf::FIC_OF: {
+									for ( const auto& v : arr->value ) {
+										forctx->CreateConst( condition->variable->name, v, &condition->m_si );
+										result = EvaluateScope( forctx, c->body );
+										forctx->DestroyVariable( condition->variable->name, &condition->m_si );
+										CheckBreakCondition( result, &need_break, &need_clear );
+										if ( need_break ) {
+											if ( need_clear ) {
+												result = VALUE( Nothing );
+											}
+											break;
+										}
+									}
+									break;
+								}
+								default:
+									THROW( "unexpected for in_of condition type: " + std::to_string( condition->for_inof_type ) );
+							}
+							break;
+						}
+						case Type::T_OBJECT: {
+							const auto* obj = (type::Object*)target.Get();
+							if ( condition->for_inof_type != ForConditionInOf::FIC_IN && condition->for_inof_type != ForConditionInOf::FIC_OF ) {
+								THROW( "unexpected for in_of condition type: " + std::to_string( condition->for_inof_type ) );
+							}
+							for ( const auto& v : obj->value ) {
+								forctx->CreateConst(
+									condition->variable->name, condition->for_inof_type == ForConditionInOf::FIC_IN
+										? VALUE( String, v.first )
+										: v.second, &condition->m_si
+								);
+								result = EvaluateScope( forctx, c->body );
+								forctx->DestroyVariable( condition->variable->name, &condition->m_si );
+								if ( result.Get()->type != Type::T_NOTHING ) {
+									break;
+								}
+							}
+							break;
+						}
+						default:
+							THROW( "unexpected type for iteration: " + target.ToString() );
+					}
+					forctx->DecRefs();
+					break;
+				}
+				default:
+					THROW( "unexpected for condition type: " + std::to_string( c->condition->for_type ) );
+			}
+			if ( result.Get()->type == Type::T_LOOPCONTROL ) {
+				return VALUE( Nothing ); // we don't want to break out from parent scope
 			}
 			return result;
 		}
@@ -197,6 +310,18 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 			ASSERT( expression->b, "return value or expression expected" );
 			*returnflag = true;
 			return Deref( ctx, expression->b->m_si, EvaluateOperand( ctx, expression->b ) );
+		}
+		case OT_BREAK: {
+			ASSERT( returnflag, "break keyword not allowed here" );
+			ASSERT( !*returnflag, "already returning" );
+			*returnflag = true;
+			return EvaluateOperand( ctx, expression->b );
+		}
+		case OT_CONTINUE: {
+			ASSERT( returnflag, "continue keyword not allowed here" );
+			ASSERT( !*returnflag, "already returning" );
+			*returnflag = true;
+			return EvaluateOperand( ctx, expression->b );
 		}
 		case OT_THROW: {
 			ASSERT( !expression->a, "unexpected left operand before throw" );
@@ -395,7 +520,7 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
         if ( a->type != b->type ) {                                 \
             throw operation_not_supported( a->ToString(), b->ToString() ); \
         } \
-        gse::Value result = VALUE( Undefined ); \
+        gse::Value result = VALUE( Nothing ); \
         switch ( a->type ) { \
             case Type::T_INT: { \
                 result = VALUE( Int, ( (Int*)a )->value _op ( (Int*)b )->value ); \
@@ -578,6 +703,9 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 						case Type::T_ARRAYRANGEREF: {
 							THROW( "TODO: T_ARRAYRANGEREF" );
 						}
+						case Type::T_LOOPCONTROL: {
+							THROW( "TODO: T_LOOPCONTROL" );
+						}
 						case Type::T_OBJECTREF: {
 							const auto arrv = Deref( ctx, expression->a->m_si, refv );
 							const auto* arr = arrv.Get();
@@ -699,11 +827,19 @@ const gse::Value Interpreter::EvaluateOperand( context::Context* ctx, const Oper
 					for ( const auto& it : call->arguments ) {
 						arguments.push_back( Deref( ctx, it->m_si, EvaluateExpression( ctx, it ) ) );
 					}
-					return ( (Callable*)callable.Get() )->Run( ctx, call->m_si, arguments );
+					const auto result = ( (Callable*)callable.Get() )->Run( ctx, call->m_si, arguments );
+					if ( result.Get()->type == Type::T_NOTHING ) {
+						// function will return undefined by default
+						return VALUE( Undefined );
+					}
+					return result;
 				}
 				default:
 					throw gse::Exception( EC.INVALID_CALL, "Callable expected, found: " + callable.ToString(), ctx, call->m_si );
 			}
+		}
+		case Operand::OT_LOOP_CONTROL: {
+			return VALUE( type::LoopControl, ( (program::LoopControl*)operand )->loop_control_type );
 		}
 		default: {
 			THROW( "operand " + operand->ToString() + " not implemented" );
@@ -839,6 +975,35 @@ void Interpreter::ValidateRange( context::Context* ctx, const si_t& si, const ty
 				throw gse::Exception( EC.INVALID_DEREFERENCE, "Invalid range - opening index is behind closing index ( " + std::to_string( from.value() ) + " > " + std::to_string( to.value() ) + " )", ctx, si );
 			}
 		}
+	}
+}
+
+void Interpreter::CheckBreakCondition( const gse::Value& result, bool* need_break, bool* need_clear ) const {
+	switch ( result.Get()->type ) {
+		case Type::T_NOTHING:
+			*need_break = false;
+			*need_clear = false;
+			return;
+		case Type::T_LOOPCONTROL: {
+			*need_clear = true;
+			const auto type = ( (type::LoopControl*)result.Get() )->value;
+			switch ( type ) {
+				case program::LCT_BREAK: {
+					*need_break = true;
+					return;
+				}
+				case program::LCT_CONTINUE: {
+					*need_break = false;
+					return;
+				}
+				default:
+					THROW( "unexpected loop control type: " + std::to_string( type ) );
+			}
+		}
+		default:
+			// got something to return
+			*need_break = true;
+			*need_clear = false;
 	}
 }
 

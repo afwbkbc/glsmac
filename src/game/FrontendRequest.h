@@ -3,18 +3,19 @@
 #include <vector>
 #include <string>
 
-#include "unit/Types.h"
-#include "game/turn/Types.h"
+#include "backend/unit/Types.h"
+#include "backend/turn/Types.h"
 
 namespace game {
 
+namespace backend {
 namespace map::tile {
 class Tile;
 class TileState;
 }
-
 namespace rules {
 class Faction;
+}
 }
 
 class FrontendRequest {
@@ -45,7 +46,7 @@ public:
 
 	const request_type_t type = FR_NONE;
 
-	typedef std::vector< const game::rules::Faction* > faction_defines_t;
+	typedef std::vector< const backend::rules::Faction* > faction_defines_t;
 
 	struct slot_define_t {
 		size_t slot_index;
@@ -53,7 +54,7 @@ public:
 	};
 	typedef std::vector< slot_define_t > slot_defines_t;
 
-	typedef std::vector< std::pair< map::tile::Tile*, map::tile::TileState* > > tile_updates_t;
+	typedef std::vector< std::pair< backend::map::tile::Tile*, backend::map::tile::TileState* > > tile_updates_t;
 
 	union {
 		struct {
@@ -70,7 +71,7 @@ public:
 			const tile_updates_t* tile_updates;
 		} update_tiles;
 		struct {
-			turn::turn_status_t status;
+			backend::turn::turn_status_t status;
 		} turn_status;
 		struct {
 			size_t turn_id;
@@ -109,18 +110,18 @@ public:
 				float y;
 				float z;
 			} render_coords;
-			unit::movement_t movement;
-			unit::morale_t morale;
+			backend::unit::movement_t movement;
+			backend::unit::morale_t morale;
 			const std::string* morale_string;
-			unit::health_t health;
+			backend::unit::health_t health;
 		} unit_spawn;
 		struct {
 			size_t unit_id;
 		} unit_despawn;
 		struct {
 			size_t unit_id;
-			unit::movement_t movement;
-			unit::health_t health;
+			backend::unit::movement_t movement;
+			backend::unit::health_t health;
 			struct {
 				size_t x;
 				size_t y;
@@ -151,6 +152,10 @@ public:
 				float y;
 				float z;
 			} render_coords;
+			struct {
+				const std::string* name;
+				size_t population;
+			} base_info;
 		} base_spawn;
 	} data;
 };

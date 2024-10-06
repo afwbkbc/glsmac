@@ -8,12 +8,12 @@
 #include "scheduler/Scheduler.h"
 #include "loader/texture/TextureLoader.h"
 #include "task/game/Game.h"
-#include "game/Player.h"
-#include "game/slot/Slots.h"
+#include "game/backend/Player.h"
+#include "game/backend/slot/Slots.h"
 #include "menu/lobby/Lobby.h"
 #include "menu/Main.h"
 #include "menu/Error.h"
-#include "game/State.h"
+#include "game/backend/State.h"
 #include "util/random/Random.h"
 #include "ui/Theme.h"
 #include "ui/UI.h"
@@ -28,7 +28,7 @@ namespace mainmenu {
 
 void MainMenu::Start() {
 	ASSERT( !m_state, "mainmenu state already set" );
-	NEW( m_state, ::game::State );
+	NEW( m_state, ::game::backend::State );
 
 	NEW( m_random, util::random::Random );
 
@@ -200,9 +200,9 @@ void MainMenu::InitSinglePlayer() {
 	m_state->m_slots->Resize( 7 ); // TODO: make dynamic?
 	const auto& rules = m_state->m_settings.global.game_rules;
 	m_state->m_settings.local.player_name = "Player";
-	NEWV( player, ::game::Player,
+	NEWV( player, ::game::backend::Player,
 		m_state->m_settings.local.player_name,
-		::game::Player::PR_SINGLE,
+		::game::backend::Player::PR_SINGLE,
 		{},
 		rules.GetDefaultDifficultyLevel() // TODO: make configurable
 	);
@@ -211,7 +211,7 @@ void MainMenu::InitSinglePlayer() {
 	m_state->AddCIDSlot( 0, slot_num ); // for consistency
 	auto& slot = m_state->m_slots->GetSlot( slot_num );
 	slot.SetPlayer( player, 0, "" );
-	slot.SetPlayerFlag( ::game::slot::PF_READY );
+	slot.SetPlayerFlag( ::game::backend::slot::PF_READY );
 }
 
 void MainMenu::StartGame() {
@@ -219,7 +219,7 @@ void MainMenu::StartGame() {
 	// save it as backup, then make temporary shallow copy (no connection, players etc)
 	//   just for the sake of passing settings to previous menu
 	auto* real_state = m_state;
-	NEW( m_state, ::game::State );
+	NEW( m_state, ::game::backend::State );
 	m_state->m_settings = real_state->m_settings;
 	NEWV( task, task::game::Game, real_state, UH( this ) {
 		g_engine->GetScheduler()->RemoveTask( this );

@@ -4,6 +4,12 @@ SET( SRC ${SRC}
 	${PWD}/Call.cpp
 	${PWD}/Catch.cpp
 	${PWD}/Conditional.cpp
+	${PWD}/Condition.cpp
+	${PWD}/SimpleCondition.cpp
+	${PWD}/ForCondition.cpp
+	${PWD}/ForConditionInOf.cpp
+	${PWD}/ForConditionExpressions.cpp
+	${PWD}/LoopControl.cpp
 	${PWD}/Control.cpp
 	${PWD}/Element.cpp
 	${PWD}/Else.cpp
@@ -22,6 +28,7 @@ SET( SRC ${SRC}
 	${PWD}/Value.cpp
 	${PWD}/Variable.cpp
 	${PWD}/While.cpp
+	${PWD}/For.cpp
 
 	)
 

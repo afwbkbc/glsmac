@@ -10,6 +10,14 @@ Check [Screenshots](https://github.com/afwbkbc/glsmac/wiki/Screenshots) and [Vid
 
 GLSMAC discord : https://discord.gg/fWG3xK7cUx
 
+### Quickstart
+
+1) Download [latest release](https://github.com/afwbkbc/glsmac/releases/latest) for your OS ( only 64-bit windows and ubuntu for now )
+
+2) Unpack all files into your SMAC directory (must have SMACX expansion too)
+
+3) Run GLSMAC
+
 ### Why?
 
 SMAC was a great game, possibly the best in 4x genre, but it's outdated so much it barely runs on modern systems. Especially multiplayer (which is based on ancient directplay).
@@ -138,7 +146,7 @@ For same build as before (or Release if it's first build): `cmake -S . -B build 
 
 Add -j parameter to make to speed up if you have multiple cores, i.e. `make -C build -j9` for 8 cores.
 
-Optionally, add `-DVENDORED_DEPENDENCIES=YES` to cmake parameters to download and build all required libraries, instead of using system-installed ones. By default this is enabled on Windows and disabled on other OSes. You can't disable it on Windows.
+Optionally, add `-DVENDORED_DEPENDENCIES=YES` to cmake parameters to download and build all required libraries, instead of using system-installed ones. By default this is enabled on Windows and disabled on other OSes. You can't disable it on Windows. Portable32 and Portable64 enable vendored dependencies automatically.
 
 Optionally, use `VERBOSE=1 make -C build` to see actual compiling/linking commands (useful when build fails)
 

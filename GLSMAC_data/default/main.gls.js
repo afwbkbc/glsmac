@@ -1,17 +1,12 @@
 const units = #include('units');
+const factions = #include('factions');
 
 #game.on.configure((e) => {
 
-	const factions = #include('factions');
-	let i = 0;
-	let sz = #size(factions);
-	while (i < sz) {
-		#game.factions.define(factions[i][0], factions[i][1]);
-		i++;
-	}
+	factions.define();
 
-	const rules = #include('rules');
 	// TODO
+	const rules = #include('rules');
 
 });
 
@@ -44,21 +39,19 @@ units.init();
 	// spawn units
 
 	let units_spawned = 0;
+	let bases_spawned = 0;
 
-	let y = 0;
 	let w = #game.map.get_width();
 	let h = #game.map.get_height();
 
-	while (y < h) {
-		let x = 0;
-		while (x < w) {
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
 			if (x % 2 == y % 2) {
+				let owner = random_player();
+				let tile = #game.map.get_tile(x, y);
 				if (#game.random.get_int(0, 6) == 0) {
-					let owner = random_player();
-					let tile = #game.map.get_tile(x, y);
 					let units_count = #game.random.get_int(1, 2);
-					let i = 0;
-					while (i++ < units_count) {
+					for (let i = 0; i < units_count; i++) {
 						if (tile.is_land) {
 							if (#game.random.get_int(0, 4) != 0) {
 								#game.units.spawn('MindWorms', owner, tile, random_morale(), random_health());
@@ -67,14 +60,13 @@ units.init();
 								if (tile.has_fungus && #game.random.get_int(0, 3) == 0) {
 									// morale depends on count of fungus tiles around
 									let morale = 1;
-									let neighbours = tile.get_surrounding_tiles();
-									let sz = #size(neighbours);
-									let i = 0;
-									while (morale < 6 && i < sz) {
-										if (neighbours[i].has_fungus) {
+									for (neighbour of tile.get_surrounding_tiles()) {
+										if (morale >= 6) {
+											break;
+										}
+										if (neighbour.has_fungus) {
 											morale++;
 										}
-										i++;
 									}
 									#game.units.spawn('FungalTower', owner, tile, morale, random_health());
 									units_spawned++;
@@ -91,29 +83,31 @@ units.init();
 						}
 					}
 				}
+				if (#game.random.get_int(0, 2) == 0) {
+					let has_adjactent_bases = false;
+					for (neighbour of tile.get_surrounding_tiles()) {
+						if (neighbour.get_base() != null) {
+							has_adjactent_bases = true;
+							break;
+						}
+					}
+					if (!has_adjactent_bases) {
+						#game.bases.spawn(
+							owner,
+							tile,
+							{
+								// name: 'base name',
+								population: #game.random.get_int(0, 4) * #game.random.get_int(0, 4) + #game.random.get_int(1, 3),
+							}
+						);
+						bases_spawned++;
+					}
+				}
 			}
-			x++;
 		}
-		y++;
 	}
 	#game.message('Total units spawned: ' + #to_string(units_spawned));
-
-	// spawn bases
-
-	let i = 0;
-	while (i < players_sz) {
-		let base_x = 0;
-		let base_y = 1;
-		while (base_x % 2 != base_y % 2) {
-			base_x = #game.random.get_int(0, w - 1);
-			base_y = #game.random.get_int(0, h - 1);
-		}
-		#game.bases.spawn(
-			players[i],
-			#game.map.get_tile(base_x, base_y)
-		);
-		i++;
-	}
+	#game.message('Total bases spawned: ' + #to_string(bases_spawned));
 
 });
 

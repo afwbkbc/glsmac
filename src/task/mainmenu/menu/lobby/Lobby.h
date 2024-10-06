@@ -5,6 +5,7 @@
 #include "util/Timer.h"
 
 namespace game {
+namespace backend {
 class State;
 namespace slot {
 class Slot;
@@ -15,6 +16,7 @@ class Connection;
 }
 namespace settings {
 class Settings;
+}
 }
 }
 
@@ -35,26 +37,26 @@ CLASS( Lobby, PopupMenu )
 
 	static const char COUNTDOWN_SECONDS = 3;
 
-	Lobby( MainMenu* mainmenu, ::game::connection::Connection* connection );
+	Lobby( MainMenu* mainmenu, ::game::backend::connection::Connection* connection );
 	virtual ~Lobby();
 
 	void Show() override;
 	void Hide() override;
 	void Iterate() override;
 
-	::game::settings::Settings* GetSettings();
-	const ::game::Player* GetPlayer();
+	::game::backend::settings::Settings* GetSettings();
+	const ::game::backend::Player* GetPlayer();
 
 	void Message( const std::string& message );
 
-	void UpdateSlot( const size_t slot_num, ::game::slot::Slot* slot, const bool only_flags = false );
+	void UpdateSlot( const size_t slot_num, ::game::backend::slot::Slot* slot, const bool only_flags = false );
 	void KickFromSlot( const size_t slot_num );
 	void BanFromSlot( const size_t slot_num );
 	void GlobalMessage( const std::string& message );
 
 	void UpdateGameSettings();
 
-	const ::game::connection::Connection* GetConnection() const;
+	const ::game::backend::connection::Connection* GetConnection() const;
 
 	void LockInput();
 	void UnlockInput();
@@ -70,10 +72,10 @@ protected:
 	ChatSection* m_chat_section = nullptr;
 	ui::object::Section* m_game_options_section = nullptr;
 
-	::game::State* m_state = nullptr;
+	::game::backend::State* m_state = nullptr;
 
 private:
-	::game::connection::Connection* m_connection = nullptr;
+	::game::backend::connection::Connection* m_connection = nullptr;
 
 	void ManageCountdown();
 	util::Timer m_countdown_timer;
