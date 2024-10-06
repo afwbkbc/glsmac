@@ -59,15 +59,15 @@
 #include "task/intro/Intro.h"
 #include "task/mainmenu/MainMenu.h"
 
-#include "game/Game.h"
+#include "game/backend/Game.h"
 
 #include "engine/Engine.h"
 
 #include "version.h"
 
-#include "game/State.h"
-#include "game/Player.h"
-#include "game/slot/Slots.h"
+#include "game/backend/State.h"
+#include "game/backend/Player.h"
+#include "game/backend/slot/Slots.h"
 
 // TODO: move to config
 #define WINDOW_WIDTH 1024
@@ -215,7 +215,7 @@ int main( const int argc, const char* argv[] ) {
 		else
 #endif
 		{
-			game::Game game;
+			game::backend::Game game;
 
 			resource::ResourceManager resource_manager;
 
@@ -279,16 +279,29 @@ int main( const int argc, const char* argv[] ) {
 
 #ifdef DEBUG
 			if ( config.HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
-				NEWV( state, game::State ); // TODO: initialize settings randomly
+				NEWV( state, game::backend::State ); // TODO: initialize settings randomly
 				state->m_settings.global.game_rules.Initialize();
 				state->InitBindings();
 				state->Configure();
 				const auto& rules = state->m_settings.global.game_rules;
+				std::optional< game::backend::rules::Faction > faction = {};
+				if ( config.HasDebugFlag( config::Config::DF_QUICKSTART_FACTION ) ) {
+					const auto& f = state->m_settings.global.game_rules.m_factions;
+					const auto it = f.find( config.GetQuickstartFaction() );
+					if ( it == f.end() ) {
+						std::string errmsg = "Faction \"" + config.GetQuickstartFaction() + "\" does not exist. Available factions:";
+						for ( const auto& f_it : f ) {
+							errmsg += " " + f_it.second.m_id;
+						}
+						THROW( errmsg );
+					}
+					faction = it->second;
+				}
 				NEWV(
-					player, ::game::Player,
+					player, game::backend::Player,
 					"Player",
-					::game::Player::PR_HOST,
-					{},
+					game::backend::Player::PR_HOST,
+					faction,
 					rules.GetDefaultDifficultyLevel()
 				);
 				state->AddPlayer( player );

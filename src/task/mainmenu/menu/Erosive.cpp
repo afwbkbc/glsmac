@@ -3,8 +3,8 @@
 #include "Lifeforms.h"
 
 #include "task/mainmenu/MainMenu.h"
-#include "game/State.h"
-#include "game/settings/Settings.h"
+#include "game/backend/State.h"
+#include "game/backend/settings/Settings.h"
 
 namespace task {
 namespace mainmenu {
@@ -15,7 +15,7 @@ Erosive::Erosive( MainMenu* mainmenu )
 		{
 			"STRONG",  {
 						   CH( this ) {
-							   m_mainmenu->m_state->m_settings.global.map.erosive = game::settings::MapSettings::MAP_CONFIG_EROSIVE_STRONG;
+							   m_mainmenu->m_state->m_settings.global.map.erosive = game::backend::settings::MapSettings::MAP_CONFIG_EROSIVE_STRONG;
 							   NEWV( menu, Lifeforms, m_mainmenu );
 							   NextMenu( menu );
 						   },
@@ -27,7 +27,7 @@ Erosive::Erosive( MainMenu* mainmenu )
 		{
 			"AVERAGE", {
 						   CH( this ) {
-							   m_mainmenu->m_state->m_settings.global.map.erosive = game::settings::MapSettings::MAP_CONFIG_EROSIVE_AVERAGE;
+							   m_mainmenu->m_state->m_settings.global.map.erosive = game::backend::settings::MapSettings::MAP_CONFIG_EROSIVE_AVERAGE;
 							   NEWV( menu, Lifeforms, m_mainmenu );
 							   NextMenu( menu );
 						   },
@@ -39,7 +39,7 @@ Erosive::Erosive( MainMenu* mainmenu )
 		{
 			"WEAK",    {
 						   CH( this ) {
-							   m_mainmenu->m_state->m_settings.global.map.erosive = game::settings::MapSettings::MAP_CONFIG_EROSIVE_WEAK;
+							   m_mainmenu->m_state->m_settings.global.map.erosive = game::backend::settings::MapSettings::MAP_CONFIG_EROSIVE_WEAK;
 							   NEWV( menu, Lifeforms, m_mainmenu );
 							   NextMenu( menu );
 						   },

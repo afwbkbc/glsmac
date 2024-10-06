@@ -7,7 +7,7 @@
 
 #include "ui/object/Types.h"
 
-namespace game::slot {
+namespace game::backend::slot {
 class Slot;
 }
 
@@ -26,8 +26,8 @@ CLASS( PlayersSection, LobbySection )
 	void Align() override;
 	void Destroy() override;
 
-	void UpdateSlot( const size_t slot_num, ::game::slot::Slot* slot );
-	void UpdateSlots( std::vector< ::game::slot::Slot >& slots );
+	void UpdateSlot( const size_t slot_num, game::backend::slot::Slot* slot );
+	void UpdateSlots( std::vector< game::backend::slot::Slot >& slots );
 
 	const ui::object::assoc_choices_t& GetFactionChoices();
 	const ui::object::num_choices_t& GetDifficultyLevelChoices();

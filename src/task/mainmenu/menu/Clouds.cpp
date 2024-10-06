@@ -3,8 +3,8 @@
 #include "Difficulty.h"
 
 #include "task/mainmenu/MainMenu.h"
-#include "game/State.h"
-#include "game/settings/Settings.h"
+#include "game/backend/State.h"
+#include "game/backend/settings/Settings.h"
 
 namespace task {
 namespace mainmenu {
@@ -15,7 +15,7 @@ Clouds::Clouds( MainMenu* mainmenu )
 		{
 			"SPARSE",  {
 						   CH( this ) {
-							   m_mainmenu->m_state->m_settings.global.map.clouds = game::settings::MapSettings::MAP_CONFIG_CLOUDS_SPARSE;
+							   m_mainmenu->m_state->m_settings.global.map.clouds = game::backend::settings::MapSettings::MAP_CONFIG_CLOUDS_SPARSE;
 							   NEWV( menu, Difficulty, m_mainmenu );
 							   NextMenu( menu );
 						   },
@@ -27,7 +27,7 @@ Clouds::Clouds( MainMenu* mainmenu )
 		{
 			"AVERAGE", {
 						   CH( this ) {
-							   m_mainmenu->m_state->m_settings.global.map.clouds = game::settings::MapSettings::MAP_CONFIG_CLOUDS_AVERAGE;
+							   m_mainmenu->m_state->m_settings.global.map.clouds = game::backend::settings::MapSettings::MAP_CONFIG_CLOUDS_AVERAGE;
 							   NEWV( menu, Difficulty, m_mainmenu );
 							   NextMenu( menu );
 						   },
@@ -39,7 +39,7 @@ Clouds::Clouds( MainMenu* mainmenu )
 		{
 			"DENSE",   {
 						   CH( this ) {
-							   m_mainmenu->m_state->m_settings.global.map.clouds = game::settings::MapSettings::MAP_CONFIG_CLOUDS_DENSE;
+							   m_mainmenu->m_state->m_settings.global.map.clouds = game::backend::settings::MapSettings::MAP_CONFIG_CLOUDS_DENSE;
 							   NEWV( menu, Difficulty, m_mainmenu );
 							   NextMenu( menu );
 						   },

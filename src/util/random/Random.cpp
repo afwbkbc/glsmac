@@ -4,7 +4,7 @@
 
 #include "Random.h"
 
-#include "game/map/tile/Tile.h"
+#include "game/backend/map/tile/Tile.h"
 
 namespace util {
 namespace random {
@@ -143,7 +143,7 @@ const state_t Random::GetStateFromString( std::string value ) {
 	return state;
 }
 
-template void Random::Shuffle< game::map::tile::Tile* >( std::vector< game::map::tile::Tile* >& vector );
+template void Random::Shuffle< game::backend::map::tile::Tile* >( std::vector< game::backend::map::tile::Tile* >& vector );
 
 }
 }

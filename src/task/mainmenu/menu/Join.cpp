@@ -2,12 +2,12 @@
 
 #include "engine/Engine.h"
 
-#include "game/connection/Client.h"
+#include "game/backend/connection/Client.h"
 #include "ui/object/Section.h"
 #include "ui/object/Input.h"
 #include "ui/object/Label.h"
 #include "task/mainmenu/MainMenu.h"
-#include "game/State.h"
+#include "game/backend/State.h"
 
 namespace task {
 namespace mainmenu {
@@ -107,7 +107,7 @@ void Join::OnNext() {
 		m_mainmenu->m_state->m_settings.local.account.SetLastRemoteAddress( m_mainmenu->m_state->m_settings.local.remote_address );
 
 		Hide();
-		NEWV( connection, ::game::connection::Client, &m_mainmenu->m_state->m_settings.local );
+		NEWV( connection, game::backend::connection::Client, &m_mainmenu->m_state->m_settings.local );
 		SetConnection( connection );
 	}
 

@@ -5,8 +5,10 @@
 #include "common/Module.h"
 
 #include "util/random/Types.h"
-#include "game/settings/Types.h"
+#include "game/backend/settings/Types.h"
 #include "types/Vec2.h"
+
+#include "Types.h"
 
 namespace util {
 class ArgParser;
@@ -45,20 +47,22 @@ CLASS( Config, common::Module )
 		DF_QUICKSTART_MAP_EROSIVE = 1 << 9,
 		DF_QUICKSTART_MAP_LIFEFORMS = 1 << 10,
 		DF_QUICKSTART_MAP_CLOUDS = 1 << 11,
-		DF_QUIET = 1 << 12,
-		DF_GSE_ONLY = 1 << 13,
-		DF_GSE_TESTS = 1 << 14,
-		DF_GSE_TESTS_SCRIPT = 1 << 15,
-		DF_GSE_PROMPT_JS = 1 << 16,
-		DF_NOPINGS = 1 << 17,
+		DF_QUICKSTART_FACTION = 1 << 12,
+		DF_QUIET = 1 << 13,
+		DF_GSE_ONLY = 1 << 14,
+		DF_GSE_TESTS = 1 << 15,
+		DF_GSE_TESTS_SCRIPT = 1 << 16,
+		DF_GSE_PROMPT_JS = 1 << 17,
+		DF_NOPINGS = 1 << 18,
 	};
 #endif
 
 	const std::string GetEnv( const std::string& var ) const;
-
 	const std::string& GetPrefix() const;
 	const std::string& GetDataPath() const;
 	const std::vector< std::string > GetPossibleSMACPaths() const;
+
+	const smac_type_t GetSMACType() const;
 
 #ifdef DEBUG
 
@@ -75,10 +79,11 @@ CLASS( Config, common::Module )
 	const std::string& GetQuickstartMapDump() const;
 	const std::string& GetQuickstartMapFile() const;
 	const types::Vec2< size_t >& GetQuickstartMapSize() const;
-	const game::settings::map_config_value_t GetQuickstartMapOcean() const;
-	const game::settings::map_config_value_t GetQuickstartMapErosive() const;
-	const game::settings::map_config_value_t GetQuickstartMapLifeforms() const;
-	const game::settings::map_config_value_t GetQuickstartMapClouds() const;
+	const game::backend::settings::map_config_value_t GetQuickstartMapOcean() const;
+	const game::backend::settings::map_config_value_t GetQuickstartMapErosive() const;
+	const game::backend::settings::map_config_value_t GetQuickstartMapLifeforms() const;
+	const game::backend::settings::map_config_value_t GetQuickstartMapClouds() const;
+	const std::string& GetQuickstartFaction() const;
 	const std::string& GetGSETestsScript() const;
 
 #endif
@@ -102,6 +107,7 @@ private:
 	std::string m_prefix;
 	std::string m_data_path;
 	std::string m_smac_path;
+	smac_type_t m_smac_type = ST_AUTO;
 
 	uint8_t m_launch_flags = LF_NONE;
 	types::Vec2< size_t > m_window_size = {};
@@ -113,10 +119,11 @@ private:
 	std::string m_quickstart_mapdump = "";
 	std::string m_quickstart_mapfile = "";
 	types::Vec2< size_t > m_quickstart_mapsize = {};
-	game::settings::map_config_value_t m_quickstart_map_ocean = game::settings::MAP_CONFIG_OCEAN_MEDIUM;
-	game::settings::map_config_value_t m_quickstart_map_erosive = game::settings::MAP_CONFIG_EROSIVE_AVERAGE;
-	game::settings::map_config_value_t m_quickstart_map_lifeforms = game::settings::MAP_CONFIG_LIFEFORMS_AVERAGE;
-	game::settings::map_config_value_t m_quickstart_map_clouds = game::settings::MAP_CONFIG_CLOUDS_AVERAGE;
+	game::backend::settings::map_config_value_t m_quickstart_map_ocean = game::backend::settings::MAP_CONFIG_OCEAN_MEDIUM;
+	game::backend::settings::map_config_value_t m_quickstart_map_erosive = game::backend::settings::MAP_CONFIG_EROSIVE_AVERAGE;
+	game::backend::settings::map_config_value_t m_quickstart_map_lifeforms = game::backend::settings::MAP_CONFIG_LIFEFORMS_AVERAGE;
+	game::backend::settings::map_config_value_t m_quickstart_map_clouds = game::backend::settings::MAP_CONFIG_CLOUDS_AVERAGE;
+	std::string m_quickstart_faction = "";
 
 	std::string m_gse_tests_script = "";
 

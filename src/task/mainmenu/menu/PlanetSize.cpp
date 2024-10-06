@@ -4,8 +4,8 @@
 
 #include "Difficulty.h"
 #include "task/mainmenu/MainMenu.h"
-#include "game/State.h"
-#include "game/settings/Settings.h"
+#include "game/backend/State.h"
+#include "game/backend/settings/Settings.h"
 #include "util/random/Random.h"
 
 namespace task {
@@ -17,7 +17,7 @@ PlanetSize::PlanetSize( MainMenu* mainmenu )
 		{
 			"TINY PLANET",     {
 								   CH( this ) {
-									   m_mainmenu->m_state->m_settings.global.map.size = game::settings::MapSettings::MAP_CONFIG_TINY;
+									   m_mainmenu->m_state->m_settings.global.map.size = game::backend::settings::MapSettings::MAP_CONFIG_TINY;
 									   ChooseNext();
 								   }
 							   }
@@ -25,7 +25,7 @@ PlanetSize::PlanetSize( MainMenu* mainmenu )
 		{
 			"SMALL PLANET",    {
 								   CH( this ) {
-									   m_mainmenu->m_state->m_settings.global.map.size = game::settings::MapSettings::MAP_CONFIG_SMALL;
+									   m_mainmenu->m_state->m_settings.global.map.size = game::backend::settings::MapSettings::MAP_CONFIG_SMALL;
 									   ChooseNext();
 								   }
 							   }
@@ -33,7 +33,7 @@ PlanetSize::PlanetSize( MainMenu* mainmenu )
 		{
 			"STANDARD PLANET", {
 								   CH( this ) {
-									   m_mainmenu->m_state->m_settings.global.map.size = game::settings::MapSettings::MAP_CONFIG_STANDARD;
+									   m_mainmenu->m_state->m_settings.global.map.size = game::backend::settings::MapSettings::MAP_CONFIG_STANDARD;
 									   ChooseNext();
 								   }
 							   }
@@ -41,7 +41,7 @@ PlanetSize::PlanetSize( MainMenu* mainmenu )
 		{
 			"LARGE PLANET",    {
 								   CH( this ) {
-									   m_mainmenu->m_state->m_settings.global.map.size = game::settings::MapSettings::MAP_CONFIG_LARGE;
+									   m_mainmenu->m_state->m_settings.global.map.size = game::backend::settings::MapSettings::MAP_CONFIG_LARGE;
 									   ChooseNext();
 								   }
 							   }
@@ -49,7 +49,7 @@ PlanetSize::PlanetSize( MainMenu* mainmenu )
 		{
 			"HUGE PLANET",     {
 								   CH( this ) {
-									   m_mainmenu->m_state->m_settings.global.map.size = game::settings::MapSettings::MAP_CONFIG_HUGE;
+									   m_mainmenu->m_state->m_settings.global.map.size = game::backend::settings::MapSettings::MAP_CONFIG_HUGE;
 									   ChooseNext();
 								   }
 							   }
@@ -62,7 +62,7 @@ PlanetSize::PlanetSize( MainMenu* mainmenu )
 
 void PlanetSize::ChooseNext() {
 	SlidingMenu* menu;
-	if ( m_mainmenu->m_state->m_settings.global.map.type == game::settings::MapSettings::MT_CUSTOM ) {
+	if ( m_mainmenu->m_state->m_settings.global.map.type == game::backend::settings::MapSettings::MT_CUSTOM ) {
 		NEW( menu, Ocean, m_mainmenu );
 	}
 	else {

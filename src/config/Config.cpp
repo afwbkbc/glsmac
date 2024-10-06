@@ -9,7 +9,7 @@
 #include "util/FS.h"
 #include "util/random/Random.h"
 
-#include "game/settings/Settings.h"
+#include "game/backend/settings/Settings.h"
 
 namespace config {
 
@@ -85,6 +85,26 @@ Config::Config( const int argc, const char* argv[] )
 	m_parser->AddRule(
 		"smacpath", "SMAC_PATH", "Specify path to SMAC directory (must contain SMACX too)", AH( this ) {
 			m_smac_path = value;
+		}
+	);
+	m_parser->AddRule(
+		"smactype", "SMAC_TYPE", "Specify type of SMAC installation: gog, loki, pp (default: autodetect)", AH( this ) {
+			const std::unordered_map< std::string, smac_type_t > values = {
+				{ "gog", ST_GOG },
+				{ "loki", ST_LOKI },
+				{ "pp", ST_PP },
+			};
+			const auto& it = values.find( value );
+			if ( it != values.end() ) {
+				m_smac_type = it->second;
+			}
+			else {
+				std::string errmsg = "Invalid --smactype value specified! Possible choices:";
+				for ( const auto& it : values ) {
+					errmsg += " " + it.first;
+				}
+				Error( errmsg );
+			}
 		}
 	);
 	m_parser->AddRule(
@@ -188,7 +208,7 @@ Config::Config( const int argc, const char* argv[] )
 		}
 	);
 	const auto f_add_map_parameter_option =
-		[ this, s_quickstart_argument_missing ]( const std::string& name, const std::vector< std::string >& values, const std::string& desc, debug_flag_t flag, game::settings::map_config_value_t* out_param )
+		[ this, s_quickstart_argument_missing ]( const std::string& name, const std::vector< std::string >& values, const std::string& desc, debug_flag_t flag, game::backend::settings::map_config_value_t* out_param )
 			-> void {
 			ASSERT( values.size() == 3, "values size mismatch" );
 			m_parser->AddRule(
@@ -244,6 +264,15 @@ Config::Config( const int argc, const char* argv[] )
 			"dense"
 		}, "cloud cover",
 		DF_QUICKSTART_MAP_CLOUDS, &m_quickstart_map_clouds
+	);
+	m_parser->AddRule(
+		"quickstart-faction", "FACTION", "Play as specific faction", AH( this, s_quickstart_argument_missing ) {
+			if ( !HasDebugFlag( DF_QUICKSTART ) ) {
+				Error( s_quickstart_argument_missing );
+			}
+			m_quickstart_faction = value;
+			m_debug_flags |= DF_QUICKSTART_FACTION;
+		}
 	);
 	m_parser->AddRule(
 		"quiet", "Do not output debug logs to console", AH( this ) {
@@ -330,6 +359,10 @@ const std::vector< std::string > Config::GetPossibleSMACPaths() const {
 	return result;
 }
 
+const smac_type_t Config::GetSMACType() const {
+	return m_smac_type;
+}
+
 const bool Config::HasLaunchFlag( launch_flag_t flag ) const {
 	return m_launch_flags & flag;
 }
@@ -360,20 +393,24 @@ const types::Vec2< size_t >& Config::GetQuickstartMapSize() const {
 	return m_quickstart_mapsize;
 }
 
-const game::settings::map_config_value_t Config::GetQuickstartMapOcean() const {
+const game::backend::settings::map_config_value_t Config::GetQuickstartMapOcean() const {
 	return m_quickstart_map_ocean;
 }
 
-const game::settings::map_config_value_t Config::GetQuickstartMapErosive() const {
+const game::backend::settings::map_config_value_t Config::GetQuickstartMapErosive() const {
 	return m_quickstart_map_erosive;
 }
 
-const game::settings::map_config_value_t Config::GetQuickstartMapLifeforms() const {
+const game::backend::settings::map_config_value_t Config::GetQuickstartMapLifeforms() const {
 	return m_quickstart_map_lifeforms;
 }
 
-const game::settings::map_config_value_t Config::GetQuickstartMapClouds() const {
+const game::backend::settings::map_config_value_t Config::GetQuickstartMapClouds() const {
 	return m_quickstart_map_clouds;
+}
+
+const std::string& Config::GetQuickstartFaction() const {
+	return m_quickstart_faction;
 }
 
 const std::string& Config::GetGSETestsScript() const {

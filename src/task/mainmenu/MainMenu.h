@@ -8,7 +8,9 @@
 #include "resource/Types.h"
 
 namespace game {
+namespace backend {
 class State;
+}
 }
 
 namespace util::random {
@@ -37,7 +39,7 @@ CLASS( MainMenu, common::Task )
 	void Iterate() override;
 	void Stop() override;
 
-	::game::State* m_state = nullptr;
+	::game::backend::State* m_state = nullptr;
 
 	void ShowMenu( MenuObject* menu_object );
 	void GoBack();

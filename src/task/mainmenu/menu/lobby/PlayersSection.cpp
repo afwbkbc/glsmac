@@ -2,11 +2,11 @@
 
 #include "engine/Engine.h"
 
-#include "game/slot/Slot.h"
+#include "game/backend/slot/Slot.h"
 
 #include "PlayersSectionRow.h"
 #include "Lobby.h"
-#include "game/settings/Settings.h"
+#include "game/backend/settings/Settings.h"
 
 namespace task {
 namespace mainmenu {
@@ -39,7 +39,7 @@ void PlayersSection::Destroy() {
 	LobbySection::Destroy();
 }
 
-void PlayersSection::UpdateSlot( const size_t slot_num, ::game::slot::Slot* slot ) {
+void PlayersSection::UpdateSlot( const size_t slot_num, game::backend::slot::Slot* slot ) {
 	ASSERT( slot, "updateslot with null slot" );
 	ASSERT( slot_num <= m_slots.size(), "slot num overflow ( " + std::to_string( slot_num ) + " > " + std::to_string( m_slots.size() ) + " )" );
 	NEWV( row, PlayersSectionRow, this, slot_num, slot );
@@ -55,7 +55,7 @@ void PlayersSection::UpdateSlot( const size_t slot_num, ::game::slot::Slot* slot
 	AddChild( row );
 }
 
-void PlayersSection::UpdateSlots( std::vector< ::game::slot::Slot >& slots ) {
+void PlayersSection::UpdateSlots( std::vector< game::backend::slot::Slot >& slots ) {
 	const auto& game_rules = GetLobby()->GetSettings()->global.game_rules;
 
 	m_choices.factions.clear();

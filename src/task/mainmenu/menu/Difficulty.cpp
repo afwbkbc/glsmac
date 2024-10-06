@@ -5,8 +5,8 @@
 #include "Rules.h"
 
 #include "task/mainmenu/MainMenu.h"
-#include "game/State.h"
-#include "game/settings/Settings.h"
+#include "game/backend/State.h"
+#include "game/backend/settings/Settings.h"
 
 namespace task {
 namespace mainmenu {

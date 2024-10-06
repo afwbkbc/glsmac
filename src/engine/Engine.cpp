@@ -17,7 +17,7 @@
 #include "audio/Audio.h"
 #include "network/Network.h"
 #include "ui/UI.h"
-#include "game/Game.h"
+#include "game/backend/Game.h"
 
 // TODO: move to config
 const size_t g_max_fps = 500;
@@ -41,7 +41,7 @@ Engine::Engine(
 	audio::Audio* audio,
 	network::Network* network,
 	ui::UI* ui,
-	game::Game* game
+	game::backend::Game* game
 )
 	:
 	m_config( config )
@@ -80,7 +80,7 @@ Engine::Engine(
 	if ( !m_config->HasDebugFlag( config::Config::DF_GSE_ONLY ) )
 #endif
 	{
-		m_resource_manager->Init( m_config->GetPossibleSMACPaths() );
+		m_resource_manager->Init( m_config->GetPossibleSMACPaths(), m_config->GetSMACType() );
 		t_main->AddModule( m_resource_manager );
 	}
 	t_main->AddModule( m_input );

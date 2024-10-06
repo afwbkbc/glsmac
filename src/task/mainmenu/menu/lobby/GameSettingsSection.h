@@ -9,7 +9,7 @@
 // TODO: remove this
 #include "ui/object/Dropdown.h"
 
-namespace game::settings {
+namespace game::backend::settings {
 class GlobalSettings;
 }
 
@@ -26,7 +26,7 @@ namespace lobby {
 
 CLASS( GameSettingsSection, LobbySection )
 
-	GameSettingsSection( Lobby* lobby, ::game::settings::GlobalSettings* game_settings );
+	GameSettingsSection( Lobby* lobby, game::backend::settings::GlobalSettings* game_settings );
 
 	void Create() override;
 	void Align() override;
@@ -45,7 +45,7 @@ private:
 	void ShowLoadMap();
 	void HideLoadMap();
 
-	::game::settings::GlobalSettings* m_game_settings = nullptr;
+	game::backend::settings::GlobalSettings* m_game_settings = nullptr;
 
 	enum row_id_t {
 		RI_DIFFICULTY_LEVEL,
