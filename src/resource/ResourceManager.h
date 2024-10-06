@@ -6,6 +6,7 @@
 #include "common/Module.h"
 
 #include "Types.h"
+#include "config/Types.h"
 
 namespace resource {
 
@@ -13,7 +14,7 @@ CLASS( ResourceManager, common::Module )
 
 	ResourceManager();
 
-	void Init( std::vector< std::string > possible_smac_paths );
+	void Init( std::vector< std::string > possible_smac_paths, const config::smac_type_t smac_type );
 
 	const resource_t GetResource( const std::string& filename ) const;
 	const std::string& GetPath( const resource_t res ) const;
@@ -37,10 +38,8 @@ private:
 	std::unordered_map< std::string, std::string > m_custom_resource_paths = {};
 
 	const std::string GetFixedPath( const std::string& file, const extension_path_map_t& extension_path_map, const path_modifier_t path_modifiers );
-
-	const bool CheckFiles( const std::string& path, const std::vector< std::string >& files );
-
-	const bool ResolveBuiltins( const std::string& path, const extension_path_map_t& extension_path_map, const path_modifier_t path_modifiers );
+	const bool CheckFiles( const std::string& path, const std::vector< std::string >& files, const bool print_errors ) const;
+	const bool ResolveBuiltins( const std::string& path, const extension_path_map_t& extension_path_map, const path_modifier_t path_modifiers, const bool print_errors );
 
 };
 

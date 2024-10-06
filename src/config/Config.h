@@ -8,6 +8,8 @@
 #include "game/settings/Types.h"
 #include "types/Vec2.h"
 
+#include "Types.h"
+
 namespace util {
 class ArgParser;
 }
@@ -55,10 +57,10 @@ CLASS( Config, common::Module )
 #endif
 
 	const std::string GetEnv( const std::string& var ) const;
-
 	const std::string& GetPrefix() const;
-
 	const std::vector< std::string > GetPossibleSMACPaths() const;
+
+	const smac_type_t GetSMACType() const;
 
 #ifdef DEBUG
 
@@ -101,6 +103,7 @@ private:
 
 	std::string m_prefix;
 	std::string m_smac_path;
+	smac_type_t m_smac_type = ST_AUTO;
 
 	uint8_t m_launch_flags = LF_NONE;
 	types::Vec2< size_t > m_window_size = {};

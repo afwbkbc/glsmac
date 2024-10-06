@@ -82,6 +82,26 @@ Config::Config( const int argc, const char* argv[] )
 		}
 	);
 	m_parser->AddRule(
+		"smactype", "SMAC_TYPE", "Specify type of SMAC installation: gog, loki, pp (default: autodetect)", AH( this ) {
+			const std::unordered_map< std::string, smac_type_t > values = {
+				{ "gog", ST_GOG },
+				{ "loki", ST_LOKI },
+				{ "pp", ST_PP },
+			};
+			const auto& it = values.find( value );
+			if ( it != values.end() ) {
+				m_smac_type = it->second;
+			}
+			else {
+				std::string errmsg = "Invalid --smactype value specified! Possible choices:";
+				for ( const auto& it : values ) {
+					errmsg += " " + it.first;
+				}
+				Error( errmsg );
+			}
+		}
+	);
+	m_parser->AddRule(
 		"version", "Show version of GLSMAC", AH() {
 			std::cout
 				<< std::endl
@@ -318,6 +338,10 @@ const std::vector< std::string > Config::GetPossibleSMACPaths() const {
 		result.push_back( "." );
 	}
 	return result;
+}
+
+const smac_type_t Config::GetSMACType() const {
+	return m_smac_type;
 }
 
 const bool Config::HasLaunchFlag( launch_flag_t flag ) const {
