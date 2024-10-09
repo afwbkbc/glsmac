@@ -11,9 +11,6 @@ namespace frontend {
 class Game;
 
 namespace ui {
-
-class ObjectsList;
-
 namespace popup {
 namespace base_popup {
 
@@ -25,6 +22,7 @@ class BuildPreview;
 class BuildQueue;
 class BaseTitle;
 class Population;
+class UnitsList;
 class SupportedUnits;
 
 CLASS( BottomBar, BottomBarBase )
@@ -43,7 +41,7 @@ private:
 		BuildQueue* build_queue = nullptr;
 		BaseTitle* base_title = nullptr;
 		Population* population = nullptr;
-		ui::ObjectsList* objects_list = nullptr;
+		UnitsList* units_list = nullptr;
 		SupportedUnits* supported_units = nullptr;
 	} m_sections = {};
 

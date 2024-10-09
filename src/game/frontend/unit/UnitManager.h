@@ -69,7 +69,7 @@ CLASS( UnitManager, common::Class )
 	void MoveUnit_deprecated( Unit* unit, tile::Tile* dst_tile, const types::Vec3& dst_render_coords );
 
 	Unit* GetSelectedUnit() const;
-	void SelectUnit( Unit* unit_data, const bool actually_select_unit );
+	void SelectUnit( Unit* unit, const bool actually_select_unit );
 	void DeselectUnit();
 	Unit* GetPreviouslyDeselectedUnit() const;
 	const bool SelectNextUnitMaybe();

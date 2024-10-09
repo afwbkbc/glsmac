@@ -40,7 +40,7 @@ private:
 	base::Base* m_base = nullptr;
 
 	bottom_bar::BottomBar* m_bottom_bar = nullptr;
-
+	
 };
 
 }

@@ -49,12 +49,14 @@ void BasePopup::OnOpen() {
 	m_game->HideBottomBar();
 	NEW( m_bottom_bar, bottom_bar::BottomBar, m_game, this );
 	g_engine->GetUI()->AddObject( m_bottom_bar );
-
+	AddEventsTarget( m_bottom_bar );
+	
 }
 
 void BasePopup::OnClose() {
 
 	// restore main bottom bar
+	RemoveEventsTarget( m_bottom_bar );
 	g_engine->GetUI()->RemoveObject( m_bottom_bar );
 	m_game->ShowBottomBar();
 

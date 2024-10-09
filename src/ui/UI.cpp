@@ -306,6 +306,7 @@ void UI::ProcessEvent( event::UIEvent* event ) {
 	if ( !event->IsProcessed() ) {
 		TriggerGlobalEventHandlers( GH_AFTER, event );
 	}
+
 }
 
 void UI::SendMouseMoveEvent( object::UIObject* object ) {

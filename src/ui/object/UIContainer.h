@@ -32,7 +32,7 @@ CLASS( UIContainer, UIObject )
 	const coord_t GetPadding() const;
 
 	void SetOverflow( const overflow_t overflow ) override;
-	void ProcessEvent( event::UIEvent* event ) override;
+	virtual void ProcessEvent( event::UIEvent* event ) override;
 
 	virtual const object_area_t GetInternalObjectArea() override;
 

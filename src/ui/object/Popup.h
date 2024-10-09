@@ -13,6 +13,7 @@ CLASS( Popup, UIContainer )
 
 	void Create() override;
 	void Destroy() override;
+	void ProcessEvent( event::UIEvent* event ) override;
 
 	// open or close popup
 	void Open();
@@ -20,6 +21,10 @@ CLASS( Popup, UIContainer )
 
 	// return true if ready to close, false if not yet (in that case you'll need to call ClosePopup manually when it's done)
 	virtual bool MaybeClose();
+
+	// process events by other object(s) if not processed by popup
+	void AddEventsTarget( UIObject* const object );
+	void RemoveEventsTarget( UIObject* const object );
 
 protected:
 
@@ -45,6 +50,7 @@ private:
 
 	bool m_is_opened = false;
 
+	std::unordered_set< UIObject* > m_events_targets = {};
 };
 
 }

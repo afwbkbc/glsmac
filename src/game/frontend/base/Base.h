@@ -64,6 +64,8 @@ public:
 	~Base();
 
 	const size_t GetId() const;
+	const std::string& GetName() const;
+	faction::Faction* const GetFaction() const;
 	const bool IsOwned() const;
 	tile::Tile* GetTile() const;
 

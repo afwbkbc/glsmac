@@ -19,24 +19,24 @@ class TileObject;
 
 namespace ui {
 
-class ObjectsList;
+class ObjectsListBase;
 class ObjectPreview;
 
 CLASS( ObjectsListItem, Section )
 
-	ObjectsListItem( Game* game, ObjectsList* objects_list, TileObject* object );
+	ObjectsListItem( Game* game, ObjectsListBase* objects_list, TileObject* object );
 
 	void Create() override;
 	void Destroy() override;
 
 private:
-	friend class ObjectsList;
+	friend class ObjectsListBase;
 	void SelectObject();
 	void DeselectObject();
 	const TileObject* GetObject() const;
 
 private:
-	ObjectsList* m_objects_list;
+	ObjectsListBase* m_objects_list;
 	TileObject* m_object;
 
 	void* m_ui_state = nullptr;

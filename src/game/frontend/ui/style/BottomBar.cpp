@@ -887,6 +887,12 @@ void BottomBar::AddStyles() {
 		}
 	);
 	AddStyle(
+		"BaseTitleText", SH() {
+			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_CENTER );
+			s->SetFont( ::ui::A_FONT, resource::TTF_ARIALNB, 28 );
+		}
+	);
+	AddStyle(
 		"Population", SH() {
 			s->Set( ::ui::A_LEFT, 262 );
 			s->Set( ::ui::A_TOP, 112 );

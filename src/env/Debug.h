@@ -85,7 +85,7 @@ extern debug_stats_t g_debug_stats;
 
 #define NEW( _var, _class, ... ) \
     _var = new _class( __VA_ARGS__ ); \
-    debug::g_memory_watcher->New( _var, sizeof( _class ), __FILE__, __LINE__ );
+    debug::g_memory_watcher->New( _var, sizeof( _class ), __FILE__, __LINE__ )
 
 #define NEWV( _var, _class, ... ) \
     _class* _var; \
