@@ -5,6 +5,7 @@ SET( SRC ${SRC}
 	${PWD}/BuildQueue.cpp
 	${PWD}/BaseTitle.cpp
 	${PWD}/Population.cpp
+	${PWD}/UnitsList.cpp
 	${PWD}/SupportedUnits.cpp
 
 	PARENT_SCOPE )

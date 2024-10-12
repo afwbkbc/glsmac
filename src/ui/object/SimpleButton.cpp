@@ -3,6 +3,7 @@
 #define DOUBLECLICK_MAX_MS 1000
 
 #include "Surface.h"
+#include "SoundEffect.h"
 
 namespace ui {
 namespace object {
@@ -15,13 +16,19 @@ SimpleButton::SimpleButton( const std::string& class_name )
 void SimpleButton::Create() {
 	UIContainer::Create();
 
-	NEW( m_background, ui::object::Surface );
+	NEW( m_background, Surface );
 	m_background->ForwardStyleAttribute( A_TEXTURE );
 	AddChild( m_background );
+
+	NEW( m_click_sound, SoundEffect );
+	m_click_sound->ForwardStyleAttribute( A_BUTTON_CLICK_SOUND, A_SOUND );
+	m_click_sound->ForwardStyleAttribute( A_SOUND_VOLUME );
+	AddChild( m_click_sound );
 }
 
 void SimpleButton::Destroy() {
 	RemoveChild( m_background );
+	RemoveChild( m_click_sound );
 
 	UIContainer::Destroy();
 }
@@ -66,6 +73,7 @@ bool SimpleButton::OnMouseUp( const event::event_data_t* data ) {
 			m_doubleclick_timer.SetTimeout( DOUBLECLICK_MAX_MS );
 			m_maybe_doubleclick = true;
 		}
+		m_click_sound->Play();
 		// double click event should go after normal click
 		bool ret = Trigger( event::EV_BUTTON_CLICK, data );
 		if ( is_double_click ) {

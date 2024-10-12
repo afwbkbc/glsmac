@@ -5,8 +5,10 @@
 #include "BuildQueue.h"
 #include "BaseTitle.h"
 #include "Population.h"
-#include "game/frontend/ui/bottom_bar/objects_list/ObjectsList.h"
+#include "UnitsList.h"
 #include "SupportedUnits.h"
+#include "game/frontend/base/Base.h"
+#include "game/frontend/tile/Tile.h"
 
 namespace game {
 namespace frontend {
@@ -32,14 +34,14 @@ void BottomBar::Create() {
 	NEW( m_sections.build_queue, BuildQueue, m_game );
 	AddChild( m_sections.build_queue );
 
-	NEW( m_sections.base_title, BaseTitle, m_game );
+	NEW( m_sections.base_title, BaseTitle, m_game, m_popup );
 	AddChild( m_sections.base_title );
 
 	NEW( m_sections.population, Population, m_game );
 	AddChild( m_sections.population );
 
-	NEW( m_sections.objects_list, ui::ObjectsList, m_game, nullptr );
-	AddChild( m_sections.objects_list );
+	NEW( m_sections.units_list, UnitsList, m_game, m_popup );
+	AddChild( m_sections.units_list );
 
 	NEW( m_sections.supported_units, SupportedUnits, m_game );
 	AddChild( m_sections.supported_units );
@@ -52,10 +54,15 @@ void BottomBar::Destroy() {
 	RemoveChild( m_sections.build_queue );
 	RemoveChild( m_sections.base_title );
 	RemoveChild( m_sections.population );
-	RemoveChild( m_sections.objects_list );
+	RemoveChild( m_sections.units_list );
 	RemoveChild( m_sections.supported_units );
 
 	BottomBarBase::Destroy();
+}
+
+void BottomBar::Update( base::Base* base ) {
+	m_sections.base_title->Update( base );
+	m_sections.units_list->ListObjects( base->GetTile()->GetOrderedObjects(), 0 );
 }
 
 }

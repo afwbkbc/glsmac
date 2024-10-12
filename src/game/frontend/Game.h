@@ -122,6 +122,9 @@ class Theme;
 }
 namespace popup::base_popup {
 class BasePopup;
+namespace bottom_bar {
+class UnitsList;
+}
 }
 }
 
@@ -468,6 +471,8 @@ private:
 	void SendAnimationFinished( const size_t animation_id );
 
 	ui::popup::base_popup::BasePopup* m_base_popup = nullptr;
+	unit::Unit* m_unit_selected_before_base_popup = nullptr;
+	tile::Tile* m_tile_selected_before_base_popup = nullptr;
 
 private:
 	friend class unit::UnitManager;
@@ -481,12 +486,17 @@ private:
 	void RefreshSelectedTile( unit::Unit* selected_unit );
 	void RefreshSelectedTileIf( tile::Tile* if_tile, unit::Unit* selected_unit );
 	void ScrollToSelectedTile( const bool center_on_tile );
+	void SelectAnyUnitAtTile( tile::Tile* tile );
 	void SelectUnitOrSelectedTile( unit::Unit* selected_unit );
 	unit::Unit* GetSelectedTileMostImportantUnit() const;
 
 private:
 	friend class ui::popup::base_popup::BasePopup;
 	void OnBasePopupClose();
+
+private:
+	friend class ui::popup::base_popup::bottom_bar::UnitsList;
+	void SetBasePopupSelectedUnit( unit::Unit* unit );
 
 };
 

@@ -28,6 +28,7 @@ CLASS( TileManager, ::common::Class )
 	Tile* GetSelectedTile() const;
 	void SelectTile( Tile* tile );
 	void DeselectTile();
+	Tile* GetPreviouslyDeselectedTile() const;
 
 private:
 
@@ -37,6 +38,7 @@ private:
 	std::unordered_map< size_t, Tile > m_tiles = {};
 
 	Tile* m_selected_tile = nullptr;
+	Tile* m_previously_deselected_tile = nullptr;
 
 };
 

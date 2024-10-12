@@ -74,6 +74,14 @@ const size_t Base::GetId() const {
 	return m_id;
 }
 
+const std::string& Base::GetName() const {
+	return m_name;
+}
+
+faction::Faction* const Base::GetFaction() const {
+	return m_faction;
+}
+
 const bool Base::IsOwned() const {
 	return m_is_owned;
 }

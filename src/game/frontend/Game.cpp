@@ -1325,6 +1325,10 @@ void Game::Initialize(
 							break;
 						}
 						case ::ui::event::K_ENTER: {
+							if ( m_turn_status == backend::turn::TS_TURN_COMPLETE ) {
+								CompleteTurn();
+								break;
+							}
 							auto* const unit = m_um->GetSelectedUnit();
 							if ( unit ) {
 								ASSERT( unit->IsActive(), "selected unit not active" );
@@ -1344,10 +1348,6 @@ void Game::Initialize(
 										break;
 									}
 								}
-							}
-							if ( m_turn_status == backend::turn::TS_TURN_COMPLETE ) {
-								CompleteTurn();
-								break;
 							}
 							break;
 						}
@@ -1891,6 +1891,8 @@ void Game::DeselectTileOrUnit() {
 
 void Game::OpenBasePopup( base::Base* base ) {
 	if ( !m_base_popup ) {
+		m_tile_selected_before_base_popup = m_tm->GetPreviouslyDeselectedTile();
+		m_unit_selected_before_base_popup = m_um->GetPreviouslyDeselectedUnit();
 		NEW( m_base_popup, ui::popup::base_popup::BasePopup, this, base );
 		m_base_popup->Open();
 	}
@@ -2355,6 +2357,12 @@ void Game::ScrollToSelectedTile( const bool center_on_tile ) {
 	ScrollToTile( m_tm->GetSelectedTile(), center_on_tile );
 }
 
+void Game::SelectAnyUnitAtTile( tile::Tile* tile ) {
+	m_tile_at_query_purpose = backend::TQP_UNIT_SELECT;
+	SelectTileOrUnit( tile );
+	ScrollToTile( tile, true );
+}
+
 void Game::SelectUnitOrSelectedTile( unit::Unit* selected_unit ) {
 	ASSERT( m_tm->GetSelectedTile(), "tile not selected" );
 	m_tile_at_query_purpose = backend::TQP_UNIT_SELECT;
@@ -2383,15 +2391,21 @@ Game::map_data_t::map_data_t()
 
 void Game::OnBasePopupClose() {
 	ASSERT( m_base_popup, "base popup not open" );
-	auto* const unit = m_um->GetPreviouslyDeselectedUnit();
-	if ( unit ) {
-		m_um->SelectUnit( unit, true );
+	if ( m_unit_selected_before_base_popup ) {
+		m_um->SelectUnit( m_unit_selected_before_base_popup, true );
+		//ScrollToTile( m_unit_selected_before_base_popup->GetTile(), true );
 	}
-	else {
-		m_tile_at_query_purpose = backend::TQP_UNIT_SELECT;
-		SelectTileOrUnit( m_base_popup->GetBase()->GetTile() );
+	else if ( m_tile_selected_before_base_popup ) {
+		m_tile_at_query_purpose = backend::TQP_TILE_SELECT;
+		SelectTileOrUnit( m_tile_selected_before_base_popup );
+		//ScrollToTile( m_tile_selected_before_base_popup, true );
 	}
 	m_base_popup = nullptr;
+	m_unit_selected_before_base_popup = nullptr;
+}
+
+void Game::SetBasePopupSelectedUnit( unit::Unit* unit ) {
+	m_unit_selected_before_base_popup = unit;
 }
 
 }

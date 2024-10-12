@@ -1,6 +1,6 @@
 #include "ObjectsListItem.h"
 
-#include "ObjectsList.h"
+#include "ObjectsListBase.h"
 
 #include "game/frontend/unit/Unit.h"
 #include "ui/object/Label.h"
@@ -11,7 +11,7 @@ namespace game {
 namespace frontend {
 namespace ui {
 
-ObjectsListItem::ObjectsListItem( Game* game, ObjectsList* objects_list, TileObject* object )
+ObjectsListItem::ObjectsListItem( Game* game, ObjectsListBase* objects_list, TileObject* object )
 	: Section( game, "BBObjectsListItem", "BB" )
 	, m_objects_list( objects_list )
 	, m_object( object ) {
@@ -27,14 +27,12 @@ void ObjectsListItem::Create() {
 
 	On(
 		::ui::event::EV_MOUSE_OVER, EH( this ) {
-			m_objects_list->PreviewObject( m_object );
-			return true;
+			return m_objects_list->ObjectMouseOver( m_object );
 		}
 	);
 	On(
 		::ui::event::EV_MOUSE_OUT, EH( this ) {
-			m_objects_list->HideObjectPreview( m_object );
-			return true;
+			return m_objects_list->ObjectMouseOut( m_object );
 		}
 	);
 	On(
@@ -53,7 +51,7 @@ void ObjectsListItem::Create() {
 
 void ObjectsListItem::Destroy() {
 	RemoveChild( m_selection_frame );
-	m_objects_list->HideObjectPreview( m_object );
+	m_objects_list->ObjectMouseOut( m_object );
 	m_object->DestroyOnBottomBarList( this, m_ui_state );
 
 	Section::Destroy();

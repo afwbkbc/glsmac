@@ -4,6 +4,7 @@
 #include "loader/sound/SoundLoader.h"
 #include "ui/UI.h"
 #include "SoundEffect.h"
+#include "ui/event/UIEvent.h"
 
 namespace ui {
 namespace object {
@@ -53,6 +54,20 @@ void Popup::Destroy() {
 	UIContainer::Destroy();
 }
 
+void Popup::ProcessEvent( event::UIEvent* event ) {
+	UIContainer::ProcessEvent( event );
+
+	if ( !event->IsProcessed() ) {
+		// order is unspecified. improve it if ordering will be needed
+		for ( const auto& events_target : m_events_targets ) {
+			events_target->ProcessEvent( event );
+			if ( event->IsProcessed() ) {
+				break;
+			}
+		}
+	}
+}
+
 void Popup::Open() {
 	ASSERT( !m_is_opened, "popup already opened" );
 	m_is_opened = true;
@@ -71,6 +86,16 @@ bool Popup::MaybeClose() {
 	ASSERT( m_is_opened, "maybeclose but popup not opened" );
 	m_is_opened = false;
 	return true;
+}
+
+void Popup::AddEventsTarget( UIObject* const object ) {
+	ASSERT( m_events_targets.find( object ) == m_events_targets.end(), "object already in events targets" );
+	m_events_targets.insert( object );
+}
+
+void Popup::RemoveEventsTarget( UIObject* const object ) {
+	ASSERT( m_events_targets.find( object ) != m_events_targets.end(), "object not in events targets" );
+	m_events_targets.erase( object );
 }
 
 void Popup::PlayOpenSound() {

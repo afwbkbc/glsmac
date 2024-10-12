@@ -73,6 +73,17 @@ void BaseManager::SpawnBase(
 			)
 		}
 	);
+	auto it = m_faction_base_ids.find( faction );
+	if ( it == m_faction_base_ids.end() ) {
+		it = m_faction_base_ids.insert(
+			{
+				faction,
+				{}
+			}
+		).first;
+	}
+	ASSERT( it->second.find( base_id ) == it->second.end(), "faction base id already exists" );
+	it->second.insert( base_id );
 
 	m_game->RenderTile( tile, m_game->GetUM()->GetSelectedUnit() );
 
@@ -113,6 +124,34 @@ void BaseManager::DefineSlotBadges( const size_t slot_index, const faction::Fact
 
 void BaseManager::SelectBase( Base* base ) {
 	m_game->OpenBasePopup( base );
+}
+
+Base* BaseManager::GetBaseBefore( Base* base ) const {
+	const auto& ids_it = m_faction_base_ids.find( base->GetFaction() );
+	ASSERT( ids_it != m_faction_base_ids.end(), "faction ids not found" );
+	const auto& ids = ids_it->second;
+	auto it = ids.find( base->GetId() );
+	ASSERT( it != ids.end(), "base not in faction ids" );
+	if ( it == ids.begin() ) {
+		it = ids.end();
+	}
+	it--;
+	ASSERT( m_bases.find( *it ) != m_bases.end(), "base id not found" );
+	return m_bases.at( *it );
+}
+
+Base* BaseManager::GetBaseAfter( Base* base ) const {
+	const auto& ids_it = m_faction_base_ids.find( base->GetFaction() );
+	ASSERT( ids_it != m_faction_base_ids.end(), "faction ids not found" );
+	const auto& ids = ids_it->second;
+	auto it = ids.find( base->GetId() );
+	ASSERT( it != ids.end(), "base not in faction ids" );
+	it++;
+	if ( it == ids.end() ) {
+		it = ids.begin();
+	}
+	ASSERT( m_bases.find( *it ) != m_bases.end(), "base id not found" );
+	return m_bases.at( *it );
 }
 
 text::InstancedFont* BaseManager::GetBadgeFont() const {
