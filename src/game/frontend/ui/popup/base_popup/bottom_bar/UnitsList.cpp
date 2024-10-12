@@ -26,8 +26,8 @@ bool UnitsList::OnObjectMouseOut( TileObject* const object ) {
 
 bool UnitsList::OnObjectClick( TileObject* const object ) {
 	if ( object->GetType() == TileObject::TOT_UNIT ) {
+		m_game->SetBasePopupSelectedUnit( (unit::Unit*)object );
 		m_popup->Close();
-		m_game->GetUM()->SelectUnit( (unit::Unit*)object, true );
 	}
 	return true;
 }

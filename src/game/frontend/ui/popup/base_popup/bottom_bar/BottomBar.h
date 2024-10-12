@@ -8,7 +8,12 @@
 
 namespace game {
 namespace frontend {
+
 class Game;
+
+namespace base {
+class Base;
+}
 
 namespace ui {
 namespace popup {
@@ -44,6 +49,10 @@ private:
 		UnitsList* units_list = nullptr;
 		SupportedUnits* supported_units = nullptr;
 	} m_sections = {};
+
+private:
+	friend class base_popup::BasePopup;
+	void Update( base::Base* base );
 
 };
 

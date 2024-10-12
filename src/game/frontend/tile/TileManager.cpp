@@ -103,10 +103,15 @@ void TileManager::SelectTile( Tile* tile ) {
 }
 
 void TileManager::DeselectTile() {
+	m_previously_deselected_tile = m_selected_tile;
 	if ( m_selected_tile ) {
 		m_selected_tile->Render();
 		m_selected_tile = nullptr;
 	}
+}
+
+Tile* TileManager::GetPreviouslyDeselectedTile() const {
+	return m_previously_deselected_tile;
 }
 
 }

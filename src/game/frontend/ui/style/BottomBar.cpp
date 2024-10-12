@@ -878,12 +878,14 @@ void BottomBar::AddStyles() {
 			s->Set( ::ui::A_WIDTH, 108 );
 		}
 	);
+
+	// base title
 	AddStyle(
 		"BaseTitle", SH() {
 			s->Set( ::ui::A_LEFT, 262 );
 			s->Set( ::ui::A_TOP, 67 );
 			s->Set( ::ui::A_RIGHT, 262 );
-			s->Set( ::ui::A_HEIGHT, 47 ); // 41
+			s->Set( ::ui::A_HEIGHT, 49 ); // 41
 		}
 	);
 	AddStyle(
@@ -892,6 +894,44 @@ void BottomBar::AddStyles() {
 			s->SetFont( ::ui::A_FONT, resource::TTF_ARIALNB, 28 );
 		}
 	);
+	AddStyle(
+		"BaseTitleArrow", SH() {
+			s->Set( ::ui::A_WIDTH, 18 );
+			s->Set( ::ui::A_HEIGHT, 33 );
+			s->SetSound( ::ui::A_BUTTON_CLICK_SOUND, resource::WAV_OK );
+		}
+	);
+	AddStyle(
+		"BaseTitleLeftArrow", { "BaseTitleArrow" }, SH() {
+			if ( s->Is( ::ui::M_ACTIVE ) || s->Is( ::ui::M_HIGHLIGHT ) ) {
+				s->SetTexture( ::ui::A_TEXTURE, resource::PCX_INTERFACE, 291, 137, 308, 169 );
+			}
+			else if ( s->Is( ::ui::M_HOVER ) ) {
+				s->SetTexture( ::ui::A_TEXTURE, resource::PCX_INTERFACE, 291, 101, 308, 133 );
+			}
+			else {
+				s->SetTexture( ::ui::A_TEXTURE, resource::PCX_INTERFACE, 291, 65, 308, 97 );
+			}
+			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_LEFT | ::ui::ALIGN_VCENTER );
+			s->Set( ::ui::A_LEFT, 3 );
+		}
+	);
+	AddStyle(
+		"BaseTitleRightArrow", { "BaseTitleArrow" }, SH() {
+			if ( s->Is( ::ui::M_ACTIVE ) || s->Is( ::ui::M_HIGHLIGHT ) ) {
+				s->SetTexture( ::ui::A_TEXTURE, resource::PCX_INTERFACE, 312, 137, 329, 169 );
+			}
+			else if ( s->Is( ::ui::M_HOVER ) ) {
+				s->SetTexture( ::ui::A_TEXTURE, resource::PCX_INTERFACE, 312, 101, 329, 133 );
+			}
+			else {
+				s->SetTexture( ::ui::A_TEXTURE, resource::PCX_INTERFACE, 312, 65, 329, 97 );
+			}
+			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_RIGHT | ::ui::ALIGN_VCENTER );
+			s->Set( ::ui::A_RIGHT, 3 );
+		}
+	);
+
 	AddStyle(
 		"Population", SH() {
 			s->Set( ::ui::A_LEFT, 262 );

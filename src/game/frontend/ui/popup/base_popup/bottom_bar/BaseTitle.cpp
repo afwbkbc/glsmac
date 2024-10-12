@@ -1,6 +1,7 @@
 #include "BaseTitle.h"
 
 #include "ui/object/Label.h"
+#include "ui/object/SimpleButton.h"
 
 #include "game/frontend/ui/popup/base_popup/BasePopup.h"
 #include "game/frontend/base/Base.h"
@@ -24,16 +25,40 @@ void BaseTitle::Create() {
 	BBSection::Create();
 
 	NEW( m_label, ::ui::object::Label, SubClass( "Text" ) );
-	m_label->SetText( util::String::ToUpperCase( m_popup->GetBase()->GetName() ) );
-	m_label->SetTextColor( m_popup->GetBase()->GetFaction()->m_colors.text );
 	AddChild( m_label );
+
+	NEW( m_arrows.left, ::ui::object::SimpleButton, SubClass( "LeftArrow" ) );
+	m_arrows.left->On(
+		::ui::event::EV_BUTTON_CLICK, EH( this ) {
+			m_popup->SelectNextBase();
+			return true;
+		}
+	);
+	AddChild( m_arrows.left );
+
+	NEW( m_arrows.right, ::ui::object::SimpleButton, SubClass( "RightArrow" ) );
+	m_arrows.right->On(
+		::ui::event::EV_BUTTON_CLICK, EH( this ) {
+			m_popup->SelectPrevBase();
+			return true;
+		}
+	);
+	AddChild( m_arrows.right );
+
 }
 
 void BaseTitle::Destroy() {
 
 	RemoveChild( m_label );
+	RemoveChild( m_arrows.left );
+	RemoveChild( m_arrows.right );
 
 	BBSection::Destroy();
+}
+
+void BaseTitle::Update( base::Base* base ) {
+	m_label->SetText( util::String::ToUpperCase( base->GetName() ) );
+	m_label->SetTextColor( base->GetFaction()->m_colors.text );
 }
 
 }

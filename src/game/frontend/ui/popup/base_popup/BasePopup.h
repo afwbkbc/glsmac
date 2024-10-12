@@ -21,6 +21,7 @@ namespace base_popup {
 
 namespace bottom_bar {
 class BottomBar;
+class BaseTitle;
 }
 
 CLASS( BasePopup, Popup )
@@ -40,7 +41,14 @@ private:
 	base::Base* m_base = nullptr;
 
 	bottom_bar::BottomBar* m_bottom_bar = nullptr;
-	
+
+	void Update( base::Base* base );
+
+private:
+	friend class bottom_bar::BaseTitle;
+	void SelectNextBase();
+	void SelectPrevBase();
+
 };
 
 }

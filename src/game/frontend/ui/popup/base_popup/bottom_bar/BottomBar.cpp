@@ -46,8 +46,6 @@ void BottomBar::Create() {
 	NEW( m_sections.supported_units, SupportedUnits, m_game );
 	AddChild( m_sections.supported_units );
 
-	m_sections.units_list->ListObjects( m_popup->GetBase()->GetTile()->GetOrderedObjects(), 0 );
-
 }
 
 void BottomBar::Destroy() {
@@ -60,6 +58,11 @@ void BottomBar::Destroy() {
 	RemoveChild( m_sections.supported_units );
 
 	BottomBarBase::Destroy();
+}
+
+void BottomBar::Update( base::Base* base ) {
+	m_sections.base_title->Update( base );
+	m_sections.units_list->ListObjects( base->GetTile()->GetOrderedObjects(), 0 );
 }
 
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <unordered_map>
-#include <vector>
+#include <set>
 
 #include "common/Common.h"
 
@@ -65,6 +65,8 @@ CLASS( BaseManager, common::Class )
 	void DefineSlotBadges( const size_t slot_index, const faction::Faction* faction );
 
 	void SelectBase( Base* base );
+	Base* GetBaseBefore( Base* base ) const;
+	Base* GetBaseAfter( Base* base ) const;
 
 private:
 	friend class Base;
@@ -84,6 +86,8 @@ private:
 	std::unordered_map< size_t, SlotBadges* > m_slot_badges = {};
 
 	std::unordered_map< size_t, base::Base* > m_bases = {};
+	typedef std::set< size_t > ordered_base_ids_t;
+	std::unordered_map< faction::Faction*, ordered_base_ids_t > m_faction_base_ids = {};
 
 };
 

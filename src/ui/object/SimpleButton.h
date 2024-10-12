@@ -10,6 +10,7 @@ namespace ui {
 namespace object {
 
 class Surface;
+class SoundEffect;
 
 CLASS( SimpleButton, UIContainer )
 
@@ -28,6 +29,7 @@ protected:
 	bool m_is_clicking = false; // mouseup at different position after mousedown is still counted as click, as long as it's inside button
 
 	Surface* m_background = nullptr;
+	SoundEffect* m_click_sound = nullptr;
 
 private:
 	bool m_maybe_doubleclick = false;

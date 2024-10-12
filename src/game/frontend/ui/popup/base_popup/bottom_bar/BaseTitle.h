@@ -4,10 +4,14 @@
 
 namespace ui::object {
 class Label;
+class SimpleButton;
 }
 
 namespace game {
 namespace frontend {
+namespace base {
+class Base;
+}
 namespace ui {
 namespace popup {
 namespace base_popup {
@@ -27,6 +31,16 @@ private:
 	BasePopup* m_popup;
 
 	::ui::object::Label* m_label = nullptr;
+
+	struct {
+		::ui::object::SimpleButton* left = nullptr;
+		::ui::object::SimpleButton* right = nullptr;
+	} m_arrows = {};
+
+private:
+	friend class BottomBar;
+	void Update( base::Base* base );
+
 };
 
 }
