@@ -24,6 +24,16 @@ class BottomBar;
 class BaseTitle;
 }
 
+class Governor;
+class Nutrients;
+class Commerce;
+class GlobalInfo;
+class CenterArea;
+class Yields;
+class Energy;
+class Facilities;
+class Buttons;
+
 CLASS( BasePopup, Popup )
 
 	BasePopup( Game* game, base::Base* base );
@@ -31,6 +41,7 @@ CLASS( BasePopup, Popup )
 	void Create() override;
 	void Destroy() override;
 
+	Game* GetGame() const;
 	base::Base* GetBase() const;
 
 protected:
@@ -41,6 +52,17 @@ private:
 	base::Base* m_base = nullptr;
 
 	bottom_bar::BottomBar* m_bottom_bar = nullptr;
+	struct {
+		Governor* governor = nullptr;
+		Nutrients* nutrients = nullptr;
+		Commerce* commerce = nullptr;
+		GlobalInfo* global_info = nullptr;
+		CenterArea* center_area = nullptr;
+		Yields* yields = nullptr;
+		Energy* energy = nullptr;
+		Facilities* facilities = nullptr;
+		Buttons* buttons = nullptr;
+	} m_sections = {};
 
 	void Update( base::Base* base );
 

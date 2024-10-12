@@ -28,9 +28,6 @@ private:
 	::ui::object::Section* m_message_section = nullptr;
 	::ui::object::Label* m_message_label = nullptr;
 	::ui::object::Input* m_message_input = nullptr;
-	struct {
-
-	} m_buttons;
 
 };
 

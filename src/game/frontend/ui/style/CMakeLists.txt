@@ -4,5 +4,6 @@ SET( SRC ${SRC}
 	${PWD}/BottomBar.cpp
 	${PWD}/Popup.cpp
 	${PWD}/Theme.cpp
+	${PWD}/BasePopup.cpp
 
 	PARENT_SCOPE )

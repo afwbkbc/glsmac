@@ -6,6 +6,7 @@
 #include "Style.h"
 #include "BottomBar.h"
 #include "Popup.h"
+#include "BasePopup.h"
 
 namespace game {
 namespace frontend {
@@ -21,6 +22,7 @@ protected:
 		Style style;
 		BottomBar bottom_bar;
 		Popup popup;
+		BasePopup base_popup;
 	} m_styles;
 };
 

@@ -84,6 +84,11 @@ void BottomBar::AddStyles() {
 			s->SetTexture( ::ui::A_TEXTURE_RIGHTBOTTOM, resource::PCX_INTERFACE, 36, 303, 38, 305 );
 			s->SetTexture( ::ui::A_TEXTURE_BOTTOM, resource::PCX_INTERFACE, 8, 303, 31, 305 );
 			s->SetTexture( ::ui::A_TEXTURE_LEFTBOTTOM, resource::PCX_INTERFACE, 1, 303, 3, 305 );
+		}
+	);
+
+	AddStyle(
+		"SectionInnerWithBackground", { "SectionInner" }, SH() {
 			s->SetTexture( ::ui::A_TEXTURE_BACK, resource::PCX_INTERFACE, 86, 548, 109, 571 );
 		}
 	);

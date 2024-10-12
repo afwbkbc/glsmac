@@ -19,6 +19,8 @@ void Popup::Create() {
 	::ui::object::Popup::Create();
 
 	NEW( m_body, Section, m_game, "", "WP" );
+	m_body->m_config.no_outer_border = m_config.no_outer_border;
+	m_body->m_config.no_inner_border = m_config.no_inner_border;
 	if ( !m_title_text.empty() ) {
 		m_body->SetTitleText( m_title_text );
 	}

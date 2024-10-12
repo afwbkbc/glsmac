@@ -22,10 +22,10 @@ CLASS( Section, UI )
 
 	void SetTitleText( const std::string& title_text );
 
-protected:
 	struct {
 		bool no_outer_border = false;
 		bool no_inner_border = false;
+		bool no_inner_background = false;
 	} m_config = {};
 
 private:
