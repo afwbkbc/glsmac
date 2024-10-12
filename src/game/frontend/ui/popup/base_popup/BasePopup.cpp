@@ -6,6 +6,15 @@
 #include "game/frontend/ui/popup/base_popup/bottom_bar/BottomBar.h"
 #include "engine/Engine.h"
 #include "ui/UI.h"
+#include "Governor.h"
+#include "Nutrients.h"
+#include "Commerce.h"
+#include "GlobalInfo.h"
+#include "CenterArea.h"
+#include "Yields.h"
+#include "Energy.h"
+#include "Facilities.h"
+#include "Buttons.h"
 
 namespace game {
 namespace frontend {
@@ -17,7 +26,8 @@ BasePopup::BasePopup( Game* game, base::Base* base )
 	: Popup( game )
 	, m_base( base ) {
 	SetWidth( 680 );
-	SetHeight( 480 );
+	SetHeight( 504 );
+	m_config.no_inner_border = true;
 }
 
 void BasePopup::Create() {
@@ -45,11 +55,51 @@ void BasePopup::Create() {
 		}
 	);
 
+	NEW( m_sections.governor, Governor, this );
+	AddChild( m_sections.governor );
+
+	NEW( m_sections.nutrients, Nutrients, this );
+	AddChild( m_sections.nutrients );
+
+	NEW( m_sections.commerce, Commerce, this );
+	AddChild( m_sections.commerce );
+
+	NEW( m_sections.global_info, GlobalInfo, this );
+	AddChild( m_sections.global_info );
+
+	NEW( m_sections.center_area, CenterArea, this );
+	AddChild( m_sections.center_area );
+
+	NEW( m_sections.yields, Yields, this );
+	AddChild( m_sections.yields );
+
+	NEW( m_sections.energy, Energy, this );
+	AddChild( m_sections.energy );
+
+	NEW( m_sections.facilities, Facilities, this );
+	AddChild( m_sections.facilities );
+
+	NEW( m_sections.buttons, Buttons, this );
+	AddChild( m_sections.buttons );
 }
 
 void BasePopup::Destroy() {
 
+	RemoveChild( m_sections.governor );
+	RemoveChild( m_sections.nutrients );
+	RemoveChild( m_sections.commerce );
+	RemoveChild( m_sections.global_info );
+	RemoveChild( m_sections.center_area );
+	RemoveChild( m_sections.yields );
+	RemoveChild( m_sections.energy );
+	RemoveChild( m_sections.facilities );
+	RemoveChild( m_sections.buttons );
+
 	Popup::Destroy();
+}
+
+Game* BasePopup::GetGame() const {
+	return m_game;
 }
 
 base::Base* BasePopup::GetBase() const {

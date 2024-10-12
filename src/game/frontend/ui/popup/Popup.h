@@ -40,6 +40,11 @@ protected:
 
 	void CloseNow();
 
+	struct {
+		bool no_outer_border = false;
+		bool no_inner_border = false;
+	} m_config = {};
+
 private:
 	coord_t m_original_height = 0; // TODO: move to styles?
 	std::string m_title_text = "";

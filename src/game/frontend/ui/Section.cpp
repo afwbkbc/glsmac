@@ -24,7 +24,11 @@ void Section::Create() {
 
 	NEW( m_inner, ::ui::object::Section, m_config.no_inner_border
 		? ""
-		: m_section_class_prefix + "SectionInner" );
+		: m_section_class_prefix + (
+			m_section_class_prefix != "BB" || m_config.no_inner_background // TODO: refactor
+				? "SectionInner"
+				: "SectionInnerWithBackground"
+		) );
 	if ( !m_title_text.empty() ) {
 		m_inner->SetTitleText( m_title_text );
 	}
