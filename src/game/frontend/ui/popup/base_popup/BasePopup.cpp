@@ -81,6 +81,8 @@ void BasePopup::Create() {
 
 	NEW( m_sections.buttons, Buttons, this );
 	AddChild( m_sections.buttons );
+
+	m_sections.center_area->Update( m_base );
 }
 
 void BasePopup::Destroy() {
@@ -114,8 +116,7 @@ void BasePopup::OnOpen() {
 	g_engine->GetUI()->AddObject( m_bottom_bar );
 	AddEventsTarget( m_bottom_bar );
 
-	Update( m_base );
-
+	m_bottom_bar->Update( m_base );
 }
 
 void BasePopup::OnClose() {

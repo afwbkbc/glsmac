@@ -70,7 +70,7 @@ void CenterArea::ActivateButton( ::ui::object::Button* button ) {
 }
 
 void CenterArea::Update( base::Base* base ) {
-	
+	m_pages.resource->Update( base );
 }
 
 }

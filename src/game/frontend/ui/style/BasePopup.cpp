@@ -81,6 +81,22 @@ void BasePopup::AddStyles() {
 	);
 
 	AddStyle(
+		"CenterAreaResourceTile", SH() {
+			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_CENTER );
+			s->Set( ::ui::A_WIDTH, 96 );
+			s->Set( ::ui::A_HEIGHT, 48 );
+		}
+	);
+
+	AddStyle(
+		"CenterAreaResourceSprite", SH() {
+			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_CENTER );
+			s->Set( ::ui::A_WIDTH, 100 );
+			s->Set( ::ui::A_HEIGHT, 68 );
+		}
+	);
+
+	AddStyle(
 		"Yields", SH() {
 			s->Set( ::ui::A_TOP, 261 + ftop );
 			s->Set( ::ui::A_LEFT, 142 + fleft );
