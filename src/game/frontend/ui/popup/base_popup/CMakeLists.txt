@@ -1,4 +1,5 @@
 SUBDIR( bottom_bar )
+SUBDIR( center_area )
 
 SET( SRC ${SRC}
 
@@ -8,7 +9,6 @@ SET( SRC ${SRC}
 	${PWD}/Nutrients.cpp
 	${PWD}/Commerce.cpp
 	${PWD}/GlobalInfo.cpp
-	${PWD}/CenterArea.cpp
 	${PWD}/Yields.cpp
 	${PWD}/Energy.cpp
 	${PWD}/Facilities.cpp

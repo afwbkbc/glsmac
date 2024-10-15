@@ -1344,6 +1344,7 @@ void Game::Initialize(
 								if ( tile ) {
 									auto* const base = tile->GetBase();
 									if ( base ) {
+										DeselectTileOrUnit();
 										OpenBasePopup( base );
 										break;
 									}

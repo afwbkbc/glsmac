@@ -75,6 +75,12 @@ void BasePopup::AddStyles() {
 	);
 
 	AddStyle(
+		"CenterAreaPage", SH() {
+			s->Set( ::ui::A_BOTTOM, 26 );
+		}
+	);
+
+	AddStyle(
 		"Yields", SH() {
 			s->Set( ::ui::A_TOP, 261 + ftop );
 			s->Set( ::ui::A_LEFT, 142 + fleft );
