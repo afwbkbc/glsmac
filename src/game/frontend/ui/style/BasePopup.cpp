@@ -82,7 +82,7 @@ void BasePopup::AddStyles() {
 
 	AddStyle(
 		"CenterAreaResourceTile", SH() {
-			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_CENTER );
+			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_LEFT | ::ui::ALIGN_TOP );
 			s->Set( ::ui::A_WIDTH, 96 );
 			s->Set( ::ui::A_HEIGHT, 48 );
 		}
@@ -90,7 +90,7 @@ void BasePopup::AddStyles() {
 
 	AddStyle(
 		"CenterAreaResourceSprite", SH() {
-			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_CENTER );
+			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_LEFT | ::ui::ALIGN_TOP );
 			s->Set( ::ui::A_WIDTH, 100 );
 			s->Set( ::ui::A_HEIGHT, 68 );
 		}

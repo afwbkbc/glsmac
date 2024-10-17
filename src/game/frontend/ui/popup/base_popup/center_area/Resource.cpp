@@ -18,44 +18,87 @@ namespace base_popup {
 namespace center_area {
 
 Resource::Resource( CenterArea* center_area )
-	: CenterAreaPage( center_area ) {}
+	: CenterAreaPage( center_area ) {
+	m_resource_tiles.reserve( 21 );
+}
 
 void Resource::Create() {
 	CenterAreaPage::Create();
 }
 
 void Resource::Destroy() {
-	HideTilePreview();
+	HideTilePreviews();
 
 	CenterAreaPage::Destroy();
 }
 
 void Resource::Update( base::Base* base ) {
-	PreviewTile( base->GetTile() );
+	HideTilePreviews();
+	UpdateResourceTiles( base );
+	const auto* const t = base->GetTile();
+	for ( const auto& it : m_resource_tiles ) {
+		PreviewTile( it.first, it.second );
+	}
 }
 
-void Resource::PreviewTile( const tile::Tile* tile ) {
-	HideTilePreview();
+void Resource::UpdateResourceTiles( base::Base* base ) {
+	m_resource_tiles.clear();
+	const auto* const t = base->GetTile();
+	const auto mh = m_game->GetMapHeight();
+#define X( _t, _x, _y ) m_resource_tiles.insert( { _t, { _x, _y } } )
+	X( t, 0, 0 );
+	X( t->E, 2, 0 );
+	X( t->W, -2, 0 );
+	if ( t->m_coords.y > 0 ) {
+		X( t->NW, -1, -1 );
+		X( t->NW->W, -3, -1 );
+		X( t->NE, 1, -1 );
+		X( t->NE->E, 3, -1 );
+		if ( t->m_coords.y > 1 ) {
+			X( t->N, 0, -2 );
+			X( t->N->W, -2, -2 );
+			X( t->N->E, 2, -2 );
+			if ( t->m_coords.y > 2 ) {
+				X( t->N->NW, -1, -3 );
+				X( t->N->NE, 1, -3 );
+			}
+		}
+	}
+	if ( t->m_coords.y < mh - 1 ) {
+		X( t->SW, -1, 1 );
+		X( t->SW->W, -3, 1 );
+		X( t->SE, 1, 1 );
+		X( t->SE->E, 3, 1 );
+		if ( t->m_coords.y < mh - 2 ) {
+			X( t->S, 0, 2 );
+			X( t->S->W, -2, 2 );
+			X( t->S->E, 2, 2 );
+			if ( t->m_coords.y < mh - 3 ) {
+				X( t->S->SW, -1, 3 );
+				X( t->S->SE, 1, 3 );
+			}
+		}
+	}
+#undef X
+}
+
+void Resource::PreviewTile( const tile::Tile* tile, const types::Vec2< int8_t > pos ) {
+	tile_preview_t tile_preview = {};
+
+	const auto left = 144 + 48 * pos.x;
+	const auto top = 72 + 24 * pos.y;
 
 	const auto& render = tile->GetRenderData();
-
 	for ( auto& mesh : render.preview_meshes ) {
-
 		NEWV( preview, ::ui::object::Mesh, "BPCenterAreaResourceTile" );
 		NEWV( mesh_copy, types::mesh::Render, *mesh );
 		preview->SetMesh( mesh_copy );
 		preview->SetTexture( m_game->GetTerrainTexture() );
-		m_preview_layers.push_back(
-			{
-				preview,
-				nullptr
-			}
-		);
-
+		preview->SetLeft( left );
+		preview->SetTop( top );
+		tile_preview.push_back( preview );
 		AddChild( preview );
 	}
-
-	ASSERT( !m_preview_layers.empty(), "no preview layers defined" );
 
 	// copy sprites from tile
 	for ( auto& s : render.sprites ) {
@@ -73,21 +116,37 @@ void Resource::PreviewTile( const tile::Tile* tile ) {
 			}
 		); // lower brightness a bit because it's too high otherwise for some reason
 		sprite_preview->SetTexture( sprite->GetTexture() );
-		m_preview_layers.push_back(
-			{
-				sprite_preview,
-				nullptr
-			}
-		);
+		sprite_preview->SetLeft( left );
+		sprite_preview->SetTop( top );
+		sprite_preview->SetZIndex( 0.6f );
+		tile_preview.push_back( sprite_preview );
 		AddChild( sprite_preview );
 	}
+
+	const auto* base = tile->GetBase();
+	if ( base ) {
+		const auto& base_render = base->GetRenderData();
+		NEWV( preview, ::ui::object::Mesh, "BPCenterAreaResourceTile" );
+		NEWV( mesh_copy, types::mesh::Mesh, *base_render.base.mesh );
+		preview->SetMesh( mesh_copy );
+		preview->SetTexture( base_render.base.texture );
+		preview->SetLeft( left );
+		preview->SetTop( top );
+		preview->SetZIndex( 0.7f );
+		tile_preview.push_back( preview );
+		AddChild( preview );
+	}
+
+	m_tile_previews.push_back( tile_preview );
 }
 
-void Resource::HideTilePreview() {
-	for ( auto& preview_layer : m_preview_layers ) {
-		RemoveChild( preview_layer.object );
+void Resource::HideTilePreviews() {
+	for ( auto& tile_preview : m_tile_previews ) {
+		for ( auto& preview_mesh : tile_preview ) {
+			RemoveChild( preview_mesh );
+		}
 	}
-	m_preview_layers.clear();
+	m_tile_previews.clear();
 }
 
 }

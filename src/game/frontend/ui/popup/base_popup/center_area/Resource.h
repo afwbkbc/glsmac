@@ -37,15 +37,14 @@ private:
 	friend class CenterArea;
 	void Update( base::Base* base );
 
-	struct preview_layer_t {
-		::ui::object::Mesh* object = nullptr;
-		types::texture::Texture* texture = nullptr;
-	};
-	std::vector< preview_layer_t > m_preview_layers = {}; // multiple layers of textures
+	typedef std::vector< ::ui::object::Mesh* > tile_preview_t;
+	std::vector< tile_preview_t > m_tile_previews = {};
 
-private:
-	void PreviewTile( const tile::Tile* tile );
-	void HideTilePreview();
+	std::unordered_map< const tile::Tile*, types::Vec2< int8_t > > m_resource_tiles = {};
+
+	void UpdateResourceTiles( base::Base* base );
+	void PreviewTile( const tile::Tile* tile, const types::Vec2< int8_t > pos );
+	void HideTilePreviews();
 
 };
 
