@@ -49,6 +49,7 @@ Base::Base(
 	, m_render(
 		{
 			render_coords,
+			nullptr,
 			render_name_sprite,
 			false,
 			0,
@@ -103,14 +104,15 @@ sprite::Sprite* Base::GetSprite() const {
 
 void Base::Show() {
 	if ( !m_render.is_rendered ) {
+
 		const auto& c = m_render.coords;
 
-		sprite::Sprite* sprite = GetSprite();
+		m_render.sprite = GetSprite();
 
 		if ( !m_render.instance_id ) {
-			m_render.instance_id = sprite->next_instance_id++;
+			m_render.instance_id = m_render.sprite->next_instance_id++;
 		}
-		sprite->instanced_sprite->actor->SetInstance(
+		m_render.sprite->instanced_sprite->actor->SetInstance(
 			m_render.instance_id, {
 				c.x,
 				c.y,
@@ -134,7 +136,7 @@ void Base::Show() {
 
 void Base::Hide() {
 	if ( m_render.is_rendered ) {
-		GetSprite()->instanced_sprite->actor->RemoveInstance( m_render.instance_id );
+		m_render.sprite->instanced_sprite->actor->RemoveInstance( m_render.instance_id );
 		m_render.name_sprite->Hide();
 		HideBadge();
 		m_render.is_rendered = false;
@@ -251,7 +253,7 @@ void Base::DestroyOnBottomBarPreview( ui::ObjectPreview* element, void* state ) 
 }
 
 const bool Base::OnBottomBarListActivate( Game* game ) {
-	game->GetBM()->SelectBase( this );
+	game->SelectBase( this );
 	return false; // because previously active unit should stay active, base popup will have it's own bottombar
 }
 

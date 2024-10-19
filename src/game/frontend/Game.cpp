@@ -2409,5 +2409,10 @@ void Game::SetBasePopupSelectedUnit( unit::Unit* unit ) {
 	m_unit_selected_before_base_popup = unit;
 }
 
+void Game::SelectBase( base::Base* base ) {
+	DeselectTileOrUnit();
+	m_bm->SelectBase( base );
+}
+
 }
 }

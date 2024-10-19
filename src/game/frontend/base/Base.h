@@ -106,6 +106,7 @@ private:
 
 	struct {
 		types::Vec3 coords = {};
+		sprite::Sprite* sprite = nullptr;
 		text::InstancedText* name_sprite = nullptr;
 		bool is_rendered = false;
 		size_t instance_id = 0;
