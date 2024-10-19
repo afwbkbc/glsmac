@@ -183,6 +183,21 @@ void Popup::AddStyles() {
 	);
 
 	AddStyle(
+		"PopupButtonCenterArea", {
+			"PopupButton"
+		}, SH() {
+			s->Set( ui::A_ALIGN, ui::ALIGN_LEFT | ui::ALIGN_BOTTOM );
+			s->Set( ui::A_WIDTH, 128 );
+			s->Set( ui::A_HEIGHT, 20 );
+			s->Set( ui::A_BOTTOM, 3 );
+
+			s->SetFont( ui::A_FONT, resource::TTF_ARIALNB, 16 );
+			s->SetSound( ui::A_BUTTON_CLICK_SOUND, resource::WAV_OK );
+			s->Set( ui::A_SOUND_VOLUME, 0.5 );
+		}
+	);
+
+	AddStyle(
 		"PopupText", SH() {
 			s->SetFont( ui::A_FONT, resource::TTF_ARIALNB, 18 );
 			s->SetColor( ui::A_TEXT_COLOR, types::Color::FromRGB( 129, 146, 198 ) );

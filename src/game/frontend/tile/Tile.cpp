@@ -280,7 +280,33 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 	const auto& layer = ts.layers[ lt ];
 
 	backend::map::tile::tile_vertices_t selection_coords = {};
-	backend::map::tile::tile_vertices_t preview_coords = {};
+	backend::map::tile::tile_vertices_t preview_coords = {
+		{
+			0.0f,
+			0.0f,
+			0.0f
+		},
+		{
+			-0.5f,
+			0.0f,
+			0.0f,
+		},
+		{
+			0.0f,
+			-0.5f,
+			0.0f,
+		},
+		{
+			0.5f,
+			0.0f,
+			0.0f,
+		},
+		{
+			0.0f,
+			0.5f,
+			0.0f,
+		}
+	};
 
 #define x( _k ) selection_coords._k = layer.coords._k
 	x( center );
@@ -305,14 +331,7 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 		}
 	}
 
-#define x( _k ) preview_coords._k = layer.coords._k
-	x( center );
-	x( left );
-	x( top );
-	x( right );
-	x( bottom );
-#undef x
-	// absolute coords to relative
+		// absolute coords to relative
 #define x( _k ) preview_coords._k -= preview_coords.center
 	x( left );
 	x( top );
@@ -358,9 +377,9 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 
 		auto tint = l.colors;
 
-		//Log( "Coords = " + preview_coords.center.ToString() + " " + preview_coords.left.ToString() + " " + preview_coords.top.ToString() + " " + preview_coords.right.ToString() + " " + preview_coords.bottom.ToString() );
+		std::string c = "Coords = " + preview_coords.center.ToString() + " " + preview_coords.left.ToString() + " " + preview_coords.top.ToString() + " " + preview_coords.right.ToString() + " " + preview_coords.bottom.ToString();
 
-#define x( _k ) auto _k = mesh->AddVertex( preview_coords._k, l.tex_coords._k, tint._k * tint_modifier )
+#define x( _k ) auto _k = mesh->AddVertex( { preview_coords._k.x, preview_coords._k.y, preview_coords._k.z }, l.tex_coords._k, tint._k * tint_modifier )
 		x( center );
 		x( left );
 		x( top );

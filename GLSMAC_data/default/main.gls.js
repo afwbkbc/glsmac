@@ -83,7 +83,7 @@ units.init();
 						}
 					}
 				}
-				if (#game.random.get_int(0, 2) == 0) {
+				if (#game.random.get_int(0, 5) == 0) {
 					let has_adjactent_bases = false;
 					for (neighbour of tile.get_surrounding_tiles()) {
 						if (neighbour.get_base() != null) {

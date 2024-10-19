@@ -24,6 +24,7 @@ CLASS( Rectangle, Simple )
 		const coord_t z
 	);
 	void SetCoords( const Vec2< coord_t >& top_left, const Vec2< coord_t >& bottom_right, const coord_t z );
+
 };
 
 }

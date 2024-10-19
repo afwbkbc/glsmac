@@ -71,6 +71,8 @@ public:
 	Tile* SW;
 	Tile* GetNeighbour( const backend::map::tile::direction_t direction );
 
+	const types::Vec2< size_t > m_coords;
+
 	struct render_data_t {
 		types::Vec3 coords = {};
 		backend::map::tile::tile_vertices_t selection_coords = {};
@@ -84,7 +86,6 @@ public:
 	void Update( const backend::map::tile::Tile& tile, const backend::map::tile::TileState& ts );
 
 private:
-	const types::Vec2< size_t > m_coords;
 
 	struct {
 		unit::Unit* currently_rendered_unit = nullptr;

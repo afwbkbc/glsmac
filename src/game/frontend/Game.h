@@ -498,6 +498,10 @@ private:
 	friend class ui::popup::base_popup::bottom_bar::UnitsList;
 	void SetBasePopupSelectedUnit( unit::Unit* unit );
 
+private:
+	friend class base::Base;
+	void SelectBase( base::Base* base );
+
 };
 
 }

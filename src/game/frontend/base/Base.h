@@ -15,7 +15,7 @@ namespace texture {
 class Texture;
 }
 namespace mesh {
-class Mesh;
+class Simple;
 }
 }
 
@@ -68,6 +68,7 @@ public:
 	faction::Faction* const GetFaction() const;
 	const bool IsOwned() const;
 	tile::Tile* GetTile() const;
+	const size_t GetPopulation() const;
 
 	sprite::Sprite* GetSprite() const;
 
@@ -76,7 +77,7 @@ public:
 	void Update();
 
 	struct meshtex_t {
-		const types::mesh::Mesh* mesh = nullptr;
+		const types::mesh::Simple* mesh = nullptr;
 		types::texture::Texture* texture = nullptr;
 	};
 	struct render_data_t {
@@ -106,6 +107,7 @@ private:
 
 	struct {
 		types::Vec3 coords = {};
+		sprite::Sprite* sprite = nullptr;
 		text::InstancedText* name_sprite = nullptr;
 		bool is_rendered = false;
 		size_t instance_id = 0;

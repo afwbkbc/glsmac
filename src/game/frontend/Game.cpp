@@ -1344,6 +1344,7 @@ void Game::Initialize(
 								if ( tile ) {
 									auto* const base = tile->GetBase();
 									if ( base ) {
+										DeselectTileOrUnit();
 										OpenBasePopup( base );
 										break;
 									}
@@ -2406,6 +2407,11 @@ void Game::OnBasePopupClose() {
 
 void Game::SetBasePopupSelectedUnit( unit::Unit* unit ) {
 	m_unit_selected_before_base_popup = unit;
+}
+
+void Game::SelectBase( base::Base* base ) {
+	DeselectTileOrUnit();
+	m_bm->SelectBase( base );
 }
 
 }

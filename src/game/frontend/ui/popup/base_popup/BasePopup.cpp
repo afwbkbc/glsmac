@@ -10,7 +10,7 @@
 #include "Nutrients.h"
 #include "Commerce.h"
 #include "GlobalInfo.h"
-#include "CenterArea.h"
+#include "game/frontend/ui/popup/base_popup/center_area/CenterArea.h"
 #include "Yields.h"
 #include "Energy.h"
 #include "Facilities.h"
@@ -67,7 +67,7 @@ void BasePopup::Create() {
 	NEW( m_sections.global_info, GlobalInfo, this );
 	AddChild( m_sections.global_info );
 
-	NEW( m_sections.center_area, CenterArea, this );
+	NEW( m_sections.center_area, center_area::CenterArea, this );
 	AddChild( m_sections.center_area );
 
 	NEW( m_sections.yields, Yields, this );
@@ -81,6 +81,8 @@ void BasePopup::Create() {
 
 	NEW( m_sections.buttons, Buttons, this );
 	AddChild( m_sections.buttons );
+
+	m_sections.center_area->Update( m_base );
 }
 
 void BasePopup::Destroy() {
@@ -114,8 +116,7 @@ void BasePopup::OnOpen() {
 	g_engine->GetUI()->AddObject( m_bottom_bar );
 	AddEventsTarget( m_bottom_bar );
 
-	Update( m_base );
-
+	m_bottom_bar->Update( m_base );
 }
 
 void BasePopup::OnClose() {
@@ -134,6 +135,7 @@ void BasePopup::Update( base::Base* base ) {
 		m_game->SelectAnyUnitAtTile( m_base->GetTile() );
 	}
 	m_bottom_bar->Update( m_base );
+	m_sections.center_area->Update( m_base );
 }
 
 void BasePopup::SelectNextBase() {

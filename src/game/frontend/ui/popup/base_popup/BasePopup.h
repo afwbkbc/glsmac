@@ -28,7 +28,11 @@ class Governor;
 class Nutrients;
 class Commerce;
 class GlobalInfo;
+
+namespace center_area {
 class CenterArea;
+}
+
 class Yields;
 class Energy;
 class Facilities;
@@ -57,7 +61,7 @@ private:
 		Nutrients* nutrients = nullptr;
 		Commerce* commerce = nullptr;
 		GlobalInfo* global_info = nullptr;
-		CenterArea* center_area = nullptr;
+		center_area::CenterArea* center_area = nullptr;
 		Yields* yields = nullptr;
 		Energy* energy = nullptr;
 		Facilities* facilities = nullptr;
