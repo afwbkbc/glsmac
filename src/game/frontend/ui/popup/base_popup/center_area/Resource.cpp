@@ -132,7 +132,6 @@ void Resource::PreviewTileSprites( const tile::Tile* tile, const types::Vec2< in
 		sprite_preview->SetTexture( sprite->GetTexture() );
 		sprite_preview->SetLeft( left );
 		sprite_preview->SetTop( top );
-		sprite_preview->SetZIndex( 0.6f );
 		tile_preview.push_back( sprite_preview );
 		AddChild( sprite_preview );
 	}
@@ -142,10 +141,17 @@ void Resource::PreviewTileSprites( const tile::Tile* tile, const types::Vec2< in
 		const auto& base_render = base->GetRenderData();
 		NEWV( preview, ::ui::object::Mesh, "BPCenterAreaResourceSprite" );
 		preview->SetMesh( base_render.base.mesh->CopyAsRenderMesh() );
+		preview->SetTintColor(
+			{
+				0.7f,
+				0.7f,
+				0.7f,
+				1.0f
+			}
+		);
 		preview->SetTexture( base_render.base.texture );
 		preview->SetLeft( left );
 		preview->SetTop( top - 10 ); // TODO: why?
-		preview->SetZIndex( 0.7f );
 		tile_preview.push_back( preview );
 		AddChild( preview );
 	}
