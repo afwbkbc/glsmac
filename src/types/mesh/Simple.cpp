@@ -3,6 +3,7 @@
 #include "Simple.h"
 
 #include "util/Math.h"
+#include "Render.h"
 
 namespace types {
 namespace mesh {
@@ -37,6 +38,14 @@ void Simple::SetVertex( const index_t index, const types::Vec3& coord, const Vec
 	Update();
 }
 
+void Simple::GetVertex( const index_t index, Vec3* coord, Vec2< coord_t >* tex_coord ) const {
+	ASSERT( index < m_vertex_count, "index out of bounds" );
+	size_t offset = index * VERTEX_SIZE * sizeof( coord_t );
+	memcpy( coord, ptr( m_vertex_data, offset, sizeof( coord ) ), sizeof( *coord ) );
+	offset += VERTEX_COORD_SIZE * sizeof( coord_t );
+	memcpy( tex_coord, ptr( m_vertex_data, offset, sizeof( tex_coord ) ), sizeof( *tex_coord ) );
+}
+
 void Simple::SetVertex( const index_t index, const Vec2< coord_t >& coord, const Vec2< coord_t >& tex_coord ) {
 	SetVertex(
 		index, {
@@ -53,9 +62,42 @@ void Simple::SetVertexTexCoord( const index_t index, const Vec2< coord_t >& tex_
 	Update();
 }
 
-void Simple::GetVertexTexCoord( const index_t index, Vec2< coord_t >* coord ) const {
+void Simple::GetVertexTexCoord( const index_t index, Vec2< coord_t >* tex_coord ) const {
 	ASSERT( index < m_vertex_count, "index out of bounds" );
-	memcpy( coord, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( Vec2< coord_t > ) ), sizeof( Vec2< coord_t > ) );
+	memcpy( tex_coord, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t ), sizeof( Vec2< coord_t > ) ), sizeof( Vec2< coord_t > ) );
+}
+
+Render* Simple::CopyAsRenderMesh() const {
+	Vec3 coord;
+	Vec2< float > tex_coord;
+	NEWV( render_mesh, Render, 4, 2 );
+	for ( uint8_t i = 0 ; i < 4 ; i++ ) {
+		GetVertex( i, &coord, &tex_coord );
+		coord.y *= -1; // TODO: why?
+		render_mesh->SetVertex( i, coord, tex_coord );
+	}
+	render_mesh->SetSurface(
+		0, {
+			0,
+			3,
+			2
+		}
+	);
+	render_mesh->SetSurface(
+		1, {
+			2,
+			1,
+			0
+		}
+	);
+	return render_mesh;
+}
+
+Render* Simple::ToRenderMesh() {
+	auto* render_mesh = CopyAsRenderMesh();
+	delete this;
+	return render_mesh;
+
 }
 
 }

@@ -15,7 +15,7 @@ namespace texture {
 class Texture;
 }
 namespace mesh {
-class Mesh;
+class Simple;
 }
 }
 
@@ -76,7 +76,7 @@ public:
 	void Update();
 
 	struct meshtex_t {
-		const types::mesh::Mesh* mesh = nullptr;
+		const types::mesh::Simple* mesh = nullptr;
 		types::texture::Texture* texture = nullptr;
 	};
 	struct render_data_t {

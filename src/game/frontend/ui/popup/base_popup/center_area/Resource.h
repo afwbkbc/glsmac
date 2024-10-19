@@ -44,6 +44,7 @@ private:
 
 	void UpdateResourceTiles( base::Base* base );
 	void PreviewTile( const tile::Tile* tile, const types::Vec2< int8_t > pos );
+	void PreviewTileSprites( const tile::Tile* tile, const types::Vec2< int8_t > pos );
 	void HideTilePreviews();
 
 };

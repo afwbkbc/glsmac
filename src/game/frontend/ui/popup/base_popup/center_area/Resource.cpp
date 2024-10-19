@@ -3,6 +3,7 @@
 #include "ui/object/Mesh.h"
 #include "scene/actor/Instanced.h"
 #include "scene/actor/Sprite.h"
+#include "types/mesh/Simple.h"
 #include "types/mesh/Render.h"
 #include "types/texture/Texture.h"
 #include "game/frontend/base/Base.h"
@@ -39,6 +40,9 @@ void Resource::Update( base::Base* base ) {
 	for ( const auto& it : m_resource_tiles ) {
 		PreviewTile( it.first, it.second );
 	}
+	for ( const auto& it : m_resource_tiles ) {
+		PreviewTileSprites( it.first, it.second );
+	}
 }
 
 void Resource::UpdateResourceTiles( base::Base* base ) {
@@ -46,24 +50,25 @@ void Resource::UpdateResourceTiles( base::Base* base ) {
 	const auto* const t = base->GetTile();
 	const auto mh = m_game->GetMapHeight();
 #define X( _t, _x, _y ) m_resource_tiles.insert( { _t, { _x, _y } } )
-	X( t, 0, 0 );
-	X( t->E, 2, 0 );
-	X( t->W, -2, 0 );
+	// from top to bottom
+	if ( t->m_coords.y > 2 ) {
+		X( t->N->NW, -1, -3 );
+		X( t->N->NE, 1, -3 );
+	}
+	if ( t->m_coords.y > 1 ) {
+		X( t->N, 0, -2 );
+		X( t->N->W, -2, -2 );
+		X( t->N->E, 2, -2 );
+	}
 	if ( t->m_coords.y > 0 ) {
 		X( t->NW, -1, -1 );
 		X( t->NW->W, -3, -1 );
 		X( t->NE, 1, -1 );
 		X( t->NE->E, 3, -1 );
-		if ( t->m_coords.y > 1 ) {
-			X( t->N, 0, -2 );
-			X( t->N->W, -2, -2 );
-			X( t->N->E, 2, -2 );
-			if ( t->m_coords.y > 2 ) {
-				X( t->N->NW, -1, -3 );
-				X( t->N->NE, 1, -3 );
-			}
-		}
 	}
+	X( t, 0, 0 );
+	X( t->E, 2, 0 );
+	X( t->W, -2, 0 );
 	if ( t->m_coords.y < mh - 1 ) {
 		X( t->SW, -1, 1 );
 		X( t->SW->W, -3, 1 );
@@ -99,14 +104,23 @@ void Resource::PreviewTile( const tile::Tile* tile, const types::Vec2< int8_t > 
 		tile_preview.push_back( preview );
 		AddChild( preview );
 	}
+	m_tile_previews.push_back( tile_preview );
+}
+
+void Resource::PreviewTileSprites( const tile::Tile* tile, const types::Vec2< int8_t > pos ) {
+	tile_preview_t tile_preview = {};
+
+	const auto left = 144 + 48 * pos.x;
+	const auto top = 72 + 24 * pos.y;
+
+	const auto& render = tile->GetRenderData();
 
 	// copy sprites from tile
 	for ( auto& s : render.sprites ) {
 		auto* actor = m_game->GetISM()->GetInstancedSpriteByKey( s )->actor;
 		auto sprite = actor->GetSpriteActor();
-		auto mesh = sprite->GenerateMesh();
 		NEWV( sprite_preview, ::ui::object::Mesh, "BPCenterAreaResourceSprite" );
-		sprite_preview->SetMesh( mesh );
+		sprite_preview->SetMesh( sprite->GenerateMesh() );
 		sprite_preview->SetTintColor(
 			{
 				0.7f,
@@ -126,12 +140,11 @@ void Resource::PreviewTile( const tile::Tile* tile, const types::Vec2< int8_t > 
 	const auto* base = tile->GetBase();
 	if ( base ) {
 		const auto& base_render = base->GetRenderData();
-		NEWV( preview, ::ui::object::Mesh, "BPCenterAreaResourceTile" );
-		NEWV( mesh_copy, types::mesh::Mesh, *base_render.base.mesh );
-		preview->SetMesh( mesh_copy );
+		NEWV( preview, ::ui::object::Mesh, "BPCenterAreaResourceSprite" );
+		preview->SetMesh( base_render.base.mesh->CopyAsRenderMesh() );
 		preview->SetTexture( base_render.base.texture );
 		preview->SetLeft( left );
-		preview->SetTop( top );
+		preview->SetTop( top - 10 ); // TODO: why?
 		preview->SetZIndex( 0.7f );
 		tile_preview.push_back( preview );
 		AddChild( preview );

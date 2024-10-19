@@ -5,6 +5,8 @@
 namespace types {
 namespace mesh {
 
+class Render;
+
 CLASS( Simple, Mesh )
 
 	static constexpr uint8_t VERTEX_TEXCOORD_SIZE = 2; // tx, ty
@@ -26,10 +28,14 @@ CLASS( Simple, Mesh )
 	);
 
 	void SetVertex( const index_t index, const types::Vec3& coord, const Vec2< coord_t >& tex_coord );
+	void GetVertex( const index_t index, Vec3* coord, Vec2< coord_t >* tex_coord ) const;
 	void SetVertex( const index_t index, const Vec2< coord_t >& coord, const Vec2< coord_t >& tex_coord );
 
 	void SetVertexTexCoord( const index_t index, const Vec2< coord_t >& tex_coord );
 	void GetVertexTexCoord( const index_t index, Vec2< coord_t >* tex_coord ) const;
+
+	Render* CopyAsRenderMesh() const;
+	Render* ToRenderMesh();
 
 };
 
