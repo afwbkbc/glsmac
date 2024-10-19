@@ -946,6 +946,24 @@ void BottomBar::AddStyles() {
 		}
 	);
 	AddStyle(
+		"PopulationIcon", SH() {
+			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_LEFT | ::ui::ALIGN_VCENTER );
+			s->Set( ::ui::A_WIDTH, 38 );
+			s->Set( ::ui::A_HEIGHT, 48 );
+		}
+	);
+	AddStyle(
+		"PopulationIconHuman", { "PopulationIcon" }, SH() {
+			s->SetTexture( ::ui::A_TEXTURE, resource::PCX_NEWICONS, 79, 501, 116, 548 );
+		}
+	);
+	AddStyle(
+		"PopulationIconProgenitor", { "PopulationIcon" }, SH() {
+			s->SetTexture( ::ui::A_TEXTURE, resource::PCX_ALIENCIT, 40, 41, 77, 88 );
+		}
+	);
+
+	AddStyle(
 		"SupportedUnits", SH() {
 			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_TOP | ::ui::ALIGN_RIGHT );
 			s->Set( ::ui::A_TOP, 58 );

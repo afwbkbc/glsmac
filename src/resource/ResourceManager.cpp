@@ -28,6 +28,14 @@ ResourceManager::ResourceManager()
 			"icons.pcx"
 		},
 		{
+			PCX_NEWICONS,
+			"newicons.pcx"
+		},
+		{
+			PCX_ALIENCIT,
+			"aliencit.pcx"
+		},
+		{
 			PCX_FLAGS,
 			"flags.pcx"
 		},
@@ -228,12 +236,12 @@ void ResourceManager::Init( std::vector< std::string > possible_smac_paths, cons
 		// GOG / Planetary Pack
 		if (
 			( smac_type == config::ST_GOG || smac_type == config::ST_PP || smac_type == config::ST_AUTO ) &&
-			CheckFiles(
-				path, {
-					"terran.exe",
-					"terranx.exe"
-				}, print_errors
-			) && ResolveBuiltins(
+				CheckFiles(
+					path, {
+						"terran.exe",
+						"terranx.exe"
+					}, print_errors
+				) && ResolveBuiltins(
 				path, {
 					{
 						".wav",
@@ -241,21 +249,21 @@ void ResourceManager::Init( std::vector< std::string > possible_smac_paths, cons
 					},
 				}, PM_NONE, print_errors
 			)
-		) {
+			) {
 			return; // found GOG
 		}
 
 		// Loki
 		if (
 			( smac_type == config::ST_LOKI || smac_type == config::ST_AUTO ) &&
-			CheckFiles(
-				path, {
-					"smac",
-					"smac.sh",
-					"smacx",
-					"smacx.sh",
-				}, print_errors
-			) && ResolveBuiltins(
+				CheckFiles(
+					path, {
+						"smac",
+						"smac.sh",
+						"smacx",
+						"smacx.sh",
+					}, print_errors
+				) && ResolveBuiltins(
 				path + util::FS::PATH_SEPARATOR + "data", {
 					{
 						".wav",
@@ -267,7 +275,7 @@ void ResourceManager::Init( std::vector< std::string > possible_smac_paths, cons
 					}
 				}, PM_SPACES_TO_UNDERSCORES, print_errors
 			)
-		) {
+			) {
 			return; // found Loki
 		}
 		if ( smac_type != config::ST_AUTO ) {
@@ -281,7 +289,7 @@ void ResourceManager::Init( std::vector< std::string > possible_smac_paths, cons
 	const std::string msg = "Unable to find SMAC distribution (tried paths: " + paths + "). Run from SMAC directory or pass it with --smacpath argument";
 	Log( msg );
 	if ( smac_type == config::ST_AUTO ) {
-		Log("Also try --smactype with your SMAC installation type (e.g. GoG, Loki, Planetary Pack), this will give more descriptive errors if some files are not found.");
+		Log( "Also try --smactype with your SMAC installation type (e.g. GoG, Loki, Planetary Pack), this will give more descriptive errors if some files are not found." );
 	}
 	THROW( msg );
 }
@@ -346,7 +354,14 @@ const bool ResourceManager::CheckFiles( const std::string& path, const std::vect
 		const auto resolved_file = util::FS::GetExistingCaseSensitivePath( path, file );
 		if ( resolved_file.empty() || !util::FS::IsFile( resolved_file ) ) {
 			if ( print_errors ) {
-				Log( "Could not find file: " + util::FS::GeneratePath( { path, file } ) );
+				Log(
+					"Could not find file: " + util::FS::GeneratePath(
+						{
+							path,
+							file
+						}
+					)
+				);
 			}
 			return false;
 		}
@@ -361,7 +376,14 @@ const bool ResourceManager::ResolveBuiltins( const std::string& path, const exte
 		const auto resolved_file = util::FS::GetExistingCaseSensitivePath( path, GetFixedPath( it.second, extension_path_map, path_modifiers ) );
 		if ( resolved_file.empty() || !util::FS::IsFile( resolved_file ) ) {
 			if ( print_errors ) {
-				Log( "Could not resolve file: " + util::FS::GeneratePath( { path, it.second } ) );
+				Log(
+					"Could not resolve file: " + util::FS::GeneratePath(
+						{
+							path,
+							it.second
+						}
+					)
+				);
 			}
 			return false;
 		}

@@ -72,6 +72,18 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 		}
 	},
 	{
+		resource::PCX_NEWICONS,
+		{
+			s_tc_pink,
+		}
+	},
+	{
+		resource::PCX_ALIENCIT,
+		{
+			s_tc_pink,
+		}
+	},
+	{
 		resource::PCX_CONSOLE_X,
 		{
 			s_tc_pink,

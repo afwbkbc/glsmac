@@ -62,6 +62,7 @@ void BottomBar::Destroy() {
 
 void BottomBar::Update( base::Base* base ) {
 	m_sections.base_title->Update( base );
+	m_sections.population->Update( base );
 	m_sections.units_list->ListObjects( base->GetTile()->GetOrderedObjects(), 0 );
 }
 

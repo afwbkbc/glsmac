@@ -68,6 +68,7 @@ public:
 	faction::Faction* const GetFaction() const;
 	const bool IsOwned() const;
 	tile::Tile* GetTile() const;
+	const size_t GetPopulation() const;
 
 	sprite::Sprite* GetSprite() const;
 

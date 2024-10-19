@@ -91,6 +91,10 @@ tile::Tile* Base::GetTile() const {
 	return m_tile;
 }
 
+const size_t Base::GetPopulation() const {
+	return m_population;
+}
+
 sprite::Sprite* Base::GetSprite() const {
 	uint8_t size = 0;
 	for ( uint8_t i = 0 ; i < s_base_render_population_thresholds.size() ; i++ ) {
