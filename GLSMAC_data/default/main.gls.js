@@ -1,5 +1,6 @@
-const units = #include('units');
 const factions = #include('factions');
+const units = #include('units');
+const bases = #include('bases');
 
 #game.on.configure((e) => {
 
@@ -31,6 +32,9 @@ units.init();
 
 	// init units
 	units.define();
+
+	// init bases
+	bases.define();
 
 	// init players
 	players = #game.players.get_all();

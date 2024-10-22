@@ -152,10 +152,7 @@ public:
 				float y;
 				float z;
 			} render_coords;
-			struct {
-				const std::string* name;
-				size_t population;
-			} base_info;
+			const std::string* name;
 		} base_spawn;
 	} data;
 };

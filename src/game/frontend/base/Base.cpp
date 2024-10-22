@@ -38,8 +38,7 @@ Base::Base(
 	tile::Tile* tile,
 	const bool is_owned,
 	const types::Vec3& render_coords,
-	text::InstancedText* render_name_sprite,
-	size_t population
+	text::InstancedText* render_name_sprite
 )
 	: TileObject( TOT_BASE, tile )
 	, m_bm( bm )
@@ -56,11 +55,10 @@ Base::Base(
 		}
 	)
 	, m_is_owned( is_owned )
-	, m_population( population )
 	, m_is_guarded( !m_tile->GetUnits().empty() )
 	, m_slot_badges( m_bm->GetSlotBadges( slot->GetIndex() ) ) {
 	m_render_data.base = GetMeshTex( GetSprite()->instanced_sprite );
-	m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_population, m_is_guarded );
+	m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( 0, m_is_guarded );
 	m_render_data.badge = GetMeshTex( m_render.badge.def->instanced_sprite );
 	m_tile->SetBase( this );
 }
@@ -92,13 +90,14 @@ tile::Tile* Base::GetTile() const {
 }
 
 const size_t Base::GetPopulation() const {
-	return m_population;
+	return 0; // TODO
 }
 
 sprite::Sprite* Base::GetSprite() const {
 	uint8_t size = 0;
+	const auto population = GetPopulation();
 	for ( uint8_t i = 0 ; i < s_base_render_population_thresholds.size() ; i++ ) {
-		if ( s_base_render_population_thresholds.at( i ) > m_population ) {
+		if ( s_base_render_population_thresholds.at( i ) > population ) {
 			break;
 		}
 		size = i;
@@ -155,7 +154,7 @@ void Base::Update() {
 			m_render.badge.instance_id = 0;
 		}
 		m_is_guarded = is_guarded;
-		m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_population, m_is_guarded );
+		m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( GetPopulation(), m_is_guarded );
 		m_render_data.badge = GetMeshTex( m_render.badge.def->instanced_sprite );
 		if ( m_render.is_rendered ) {
 			ShowBadge();
@@ -185,7 +184,7 @@ void* Base::CreateOnBottomBarList( ui::ObjectsListItem* element ) const {
 
 	// order is important
 	X( base, "Base" );
-	X( badge, m_population >= 10
+	X( badge, GetPopulation() >= 10
 		? "BaseBadge2"
 		: "BaseBadge1"
 	);

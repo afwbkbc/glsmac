@@ -1090,10 +1090,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 					rc.y,
 					rc.z
 				},
-				{
-					*d.base_info.name,
-					d.base_info.population
-				}
+				*d.name
 			);
 			break;
 		}

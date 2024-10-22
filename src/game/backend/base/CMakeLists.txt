@@ -1,6 +1,7 @@
 SET( SRC ${SRC}
 
 	${PWD}/Base.cpp
-	${PWD}/BaseData.cpp
+	${PWD}/PopDef.cpp
+	${PWD}/Pop.cpp
 
 	PARENT_SCOPE )

@@ -4,8 +4,6 @@
 
 #include "Event.h"
 
-#include "game/backend/base/BaseData.h"
-
 namespace game {
 namespace backend {
 namespace event {
@@ -17,7 +15,7 @@ public:
 		const size_t owner_slot,
 		const size_t pos_x,
 		const size_t pos_y,
-		const base::BaseData& data
+		const std::string& name
 	);
 
 	const std::string* Validate( Game* game ) const override;
@@ -34,7 +32,7 @@ private:
 	const size_t m_owner_slot;
 	const size_t m_pos_x;
 	const size_t m_pos_y;
-	const base::BaseData m_data;
+	const std::string m_name;
 };
 
 }

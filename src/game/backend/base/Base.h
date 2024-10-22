@@ -1,13 +1,14 @@
 #pragma once
 
+#include <vector>
 #include <string>
-
-#include "BaseData.h"
 
 #include "gse/Wrappable.h"
 #include "game/backend/MapObject.h"
 
 #include "types/Buffer.h"
+
+#include "Pop.h"
 
 namespace game {
 namespace backend {
@@ -28,19 +29,23 @@ public:
 	static const size_t GetNextId();
 	static const void SetNextId( const size_t id );
 
+	typedef std::vector< Pop > pops_t;
+
 	Base(
 		Game* game,
 		const size_t id,
 		slot::Slot* owner,
 		map::tile::Tile* tile,
-		const BaseData& data
+		const std::string& name,
+		const pops_t& pops
 	);
 	virtual ~Base() = default;
 
 	const size_t m_id;
 	slot::Slot* m_owner;
 
-	BaseData m_data;
+	std::string m_name;
+	pops_t m_pops;
 
 	static const types::Buffer Serialize( const Base* base );
 	static Base* Unserialize( types::Buffer& buf, Game* game );

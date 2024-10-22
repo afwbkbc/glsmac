@@ -36,6 +36,7 @@
 #include "game/backend/unit/Def.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/MoraleSet.h"
+#include "game/backend/base/PopDef.h"
 #include "game/backend/base/Base.h"
 
 namespace game {
@@ -749,6 +750,26 @@ unit::Def* Game::GetUnitDef( const std::string& name ) const {
 	}
 }
 
+base::PopDef* Game::GetPopDef( const std::string& name ) const {
+	const auto& it = m_base_popdefs.find( name );
+	if ( it != m_base_popdefs.end() ) {
+		return it->second;
+	}
+	else {
+		return nullptr;
+	}
+}
+
+base::Base* Game::GetBase( const size_t id ) const {
+	const auto& it = m_bases.find( id );
+	if ( it != m_bases.end() ) {
+		return it->second;
+	}
+	else {
+		return nullptr;
+	}
+}
+
 void Game::AddEvent( event::Event* event ) {
 	ASSERT( event->m_initiator_slot == m_slot_num, "initiator slot mismatch" );
 	if ( m_connection ) {
@@ -920,6 +941,19 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	delete unit;
 }
 
+void Game::DefinePop( base::PopDef* pop_def ) {
+	Log( "Defining base pop ('" + pop_def->m_id + "')" );
+
+	ASSERT( m_base_popdefs.find( pop_def->m_id ) == m_base_popdefs.end(), "Base pop def '" + pop_def->m_id + "' already exists" );
+
+	m_base_popdefs.insert(
+		{
+			pop_def->m_id,
+			pop_def
+		}
+	);
+}
+
 void Game::SpawnBase( base::Base* base ) {
 	if ( m_game_state != GS_RUNNING ) {
 		m_unprocessed_bases.push_back( base );
@@ -930,14 +964,14 @@ void Game::SpawnBase( base::Base* base ) {
 
 	// validate and fix name if needed (or assign if empty)
 	std::vector< std::string > names_to_try = {};
-	if ( base->m_data.name.empty() ) {
+	if ( base->m_name.empty() ) {
 		const auto& names = base->m_owner->GetPlayer()->GetFaction()->m_base_names;
 		names_to_try = tile->is_water_tile
 			? names.water
 			: names.land;
 	}
-	else if ( m_registered_base_names.find( base->m_data.name ) != m_registered_base_names.end() ) {
-		names_to_try = { base->m_data.name };
+	else if ( m_registered_base_names.find( base->m_name ) != m_registered_base_names.end() ) {
+		names_to_try = { base->m_name };
 	}
 	if ( !names_to_try.empty() ) {
 		size_t cycle = 0;
@@ -945,19 +979,19 @@ void Game::SpawnBase( base::Base* base ) {
 		while ( !found ) {
 			cycle++;
 			for ( const auto& name_to_try : names_to_try ) {
-				base->m_data.name = cycle == 1
+				base->m_name = cycle == 1
 					? name_to_try
 					: name_to_try + " " + std::to_string( cycle );
-				if ( m_registered_base_names.find( base->m_data.name ) == m_registered_base_names.end() ) {
+				if ( m_registered_base_names.find( base->m_name ) == m_registered_base_names.end() ) {
 					found = true;
 					break;
 				}
 			}
 		}
 	}
-	m_registered_base_names.insert( base->m_data.name );
+	m_registered_base_names.insert( base->m_name );
 
-	Log( "Spawning base #" + std::to_string( base->m_id ) + " ( " + base->m_data.name + ", " + std::to_string( base->m_data.population ) + " ) at " + base->GetTile()->ToString() );
+	Log( "Spawning base #" + std::to_string( base->m_id ) + " ( " + base->m_name + " ) at " + base->GetTile()->ToString() );
 
 	ASSERT( m_bases.find( base->m_id ) == m_bases.end(), "duplicate base id" );
 	m_bases.insert_or_assign( base->m_id, base );
@@ -1508,6 +1542,13 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 
 void Game::SerializeBases( types::Buffer& buf ) const {
 
+	Log( "Serializing " + std::to_string( m_base_popdefs.size() ) + " base pop defs" );
+	buf.WriteInt( m_base_popdefs.size() );
+	for ( const auto& it : m_base_popdefs ) {
+		buf.WriteString( it.first );
+		buf.WriteString( base::PopDef::Serialize( it.second ).ToString() );
+	}
+
 	Log( "Serializing " + std::to_string( m_bases.size() ) + " bases" );
 	buf.WriteInt( m_bases.size() );
 	for ( const auto& it : m_bases ) {
@@ -1520,9 +1561,18 @@ void Game::SerializeBases( types::Buffer& buf ) const {
 }
 
 void Game::UnserializeBases( types::Buffer& buf ) {
+	ASSERT( m_base_popdefs.empty(), "base pop defs not empty" );
 	ASSERT( m_bases.empty(), "bases not empty" );
 
-	const size_t sz = buf.ReadInt();
+	size_t sz = buf.ReadInt();
+	Log( "Unserializing " + std::to_string( sz ) + " base pop defs" );
+	for ( size_t i = 0 ; i < sz ; i++ ) {
+		const auto name = buf.ReadString();
+		auto b = types::Buffer( buf.ReadString() );
+		DefinePop( base::PopDef::Unserialize( b ) );
+	}
+
+	sz = buf.ReadInt();
 	Log( "Unserializing " + std::to_string( sz ) + " bases" );
 	ASSERT( m_unprocessed_bases.empty(), "unprocessed bases not empty" );
 	for ( size_t i = 0 ; i < sz ; i++ ) {
@@ -1931,6 +1981,10 @@ void Game::ResetGame() {
 	}
 	m_unit_defs.clear();
 
+	for ( auto& it : m_base_popdefs ) {
+		delete it.second;
+	}
+	m_base_popdefs.clear();
 	for ( auto& it : m_bases ) {
 		delete it.second;
 	}
@@ -2130,8 +2184,7 @@ void Game::PushBaseUpdates() {
 					c.y,
 					c.z
 				};
-				NEW( fr.data.base_spawn.base_info.name, std::string, base->m_data.name );
-				fr.data.base_spawn.base_info.population = base->m_data.population;
+				NEW( fr.data.base_spawn.name, std::string, base->m_name );
 				AddFrontendRequest( fr );
 			}
 			if ( bu.ops & BUO_REFRESH ) {

@@ -9,6 +9,7 @@
 #include "game/backend/slot/Slot.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
+#include "Pop.h"
 
 namespace game {
 namespace backend {
@@ -27,13 +28,15 @@ Base::Base(
 	const size_t id,
 	slot::Slot* owner,
 	map::tile::Tile* tile,
-	const BaseData& data
+	const std::string& name,
+	const pops_t& pops
 )
 	: MapObject( game->GetMap(), tile )
 	, m_game( game )
 	, m_id( id )
 	, m_owner( owner )
-	, m_data( data ) {
+	, m_name( name )
+	, m_pops( pops ) {
 	if ( next_id <= id ) {
 		next_id = id + 1;
 	}
@@ -48,7 +51,11 @@ const types::Buffer Base::Serialize( const Base* base ) {
 	buf.WriteInt( base->m_owner->GetIndex() );
 	buf.WriteInt( base->m_tile->coord.x );
 	buf.WriteInt( base->m_tile->coord.y );
-	base->m_data.Serialize( buf );
+	buf.WriteString( base->m_name );
+	buf.WriteInt( base->m_pops.size() );
+	for ( const auto& pop : base->m_pops ) {
+		pop.Serialize( buf );
+	}
 	return buf;
 }
 
@@ -62,14 +69,20 @@ Base* Base::Unserialize( types::Buffer& buf, Game* game ) {
 	auto* tile = game
 		? game->GetMap()->GetTile( pos_x, pos_y )
 		: nullptr;
-	const auto data = BaseData( buf );
-	return new Base( game, id, slot, tile, data );
+	const auto name = buf.ReadString();
+	pops_t pops = {};
+	const auto pops_count = buf.ReadInt();
+	pops.resize( pops_count );
+	for ( auto& pop : pops ) {
+		pop.Unserialize( buf, game );
+	}
+	return new Base( game, id, slot, tile, name, pops );
 }
 
 WRAPIMPL_DYNAMIC_GETTERS( Base, CLASS_BASE )
-			WRAPIMPL_GET( "id", Int, m_id )
-			WRAPIMPL_LINK( "get_owner", m_owner )
-			WRAPIMPL_LINK( "get_tile", m_tile )
+	WRAPIMPL_GET( "id", Int, m_id )
+	WRAPIMPL_LINK( "get_owner", m_owner )
+	WRAPIMPL_LINK( "get_tile", m_tile )
 WRAPIMPL_DYNAMIC_SETTERS( Base )
 WRAPIMPL_DYNAMIC_ON_SET( Base )
 WRAPIMPL_DYNAMIC_END()

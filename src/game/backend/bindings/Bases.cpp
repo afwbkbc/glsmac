@@ -8,9 +8,12 @@
 #include "gse/type/Object.h"
 #include "gse/type/Int.h"
 #include "gse/type/String.h"
+#include "gse/type/Array.h"
 #include "game/backend/Game.h"
 #include "game/backend/slot/Slot.h"
 #include "game/backend/map/tile/Tile.h"
+#include "game/backend/base/PopDef.h"
+#include "game/backend/event/DefinePop.h"
 #include "game/backend/event/SpawnBase.h"
 
 namespace game {
@@ -20,6 +23,61 @@ namespace bindings {
 BINDING_IMPL( bases ) {
 	const gse::type::object_properties_t properties = {
 		{
+			"define_pop",
+			NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 2 );
+			N_GETVALUE( id, 0, String );
+			N_GETVALUE( def, 1, Object );
+
+			N_GETPROP( name, def, "name", String );
+
+			base::pop_render_infos_t rh = {};
+			base::pop_render_infos_t rp = {};
+			const auto& f_read_renders = [ &def, &arg, &call_si, &ctx, &getprop_val, &obj_it ]( const std::string& key, base::pop_render_infos_t& out ) {
+				N_GETPROP( renders, def, key, Array );
+				out.reserve( renders.size() );
+				for ( const auto& v : renders ) {
+					if ( v.Get()->type != gse::type::Type::T_OBJECT ) {
+						ERROR( gse::EC.INVALID_CALL, "Pop render elements must be objects" );
+					}
+					const auto* obj = (gse::type::Object*)v.Get();
+					const auto& ov = obj->value;
+					N_GETPROP( type, ov, "type", String );
+					if ( type == "sprite" ) {
+						N_GETPROP( file, ov, "file", String );
+						N_GETPROP( x, ov, "x", Int );
+						N_GETPROP( y, ov, "y", Int );
+						N_GETPROP( w, ov, "w", Int );
+						N_GETPROP( h, ov, "h", Int );
+						out.push_back(
+							base::pop_render_info_t{
+								file,
+								(uint16_t)x,
+								(uint16_t)y,
+								(uint16_t)w,
+								(uint16_t)h
+							}
+						);
+					}
+					else {
+						ERROR( gse::EC.INVALID_CALL, "Only sprite pops are supported for now" );
+					}
+
+				}
+			};
+			f_read_renders( "renders_human", rh );
+			f_read_renders( "renders_progenitor", rp );
+
+			auto* game = GAME;
+			game->AddEvent( new event::DefinePop(
+				game->GetSlotNum(),
+				new base::PopDef( id, name, rh, rp )
+			) );
+
+			return VALUE( gse::type::Undefined );
+		} )
+		},
+		{
 			"spawn",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 3 );
@@ -28,7 +86,6 @@ BINDING_IMPL( bases ) {
 
 				N_GETVALUE( info, 2, Object );
 				N_GETPROP_OPT( std::string, name, info, "name", String, "" );
-				N_GETPROP_OPT( size_t, population, info, "population", Int, 1 );
 
 				auto* game = GAME;
 				game->AddEvent( new event::SpawnBase(
@@ -36,7 +93,7 @@ BINDING_IMPL( bases ) {
 					owner->GetIndex(),
 					tile->coord.x,
 					tile->coord.y,
-					base::BaseData( name, population )
+					name
 				) );
 				return VALUE( gse::type::Undefined );
 			})

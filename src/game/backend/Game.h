@@ -51,6 +51,7 @@ class Unit;
 }
 
 namespace base {
+class PopDef;
 class Base;
 }
 
@@ -324,6 +325,8 @@ public:
 	unit::MoraleSet* GetMoraleSet( const std::string& name ) const;
 	unit::Unit* GetUnit( const size_t id ) const;
 	unit::Def* GetUnitDef( const std::string& name ) const;
+	base::PopDef* GetPopDef( const std::string& name ) const;
+	base::Base* GetBase( const size_t id ) const;
 	void AddEvent( event::Event* event );
 	void RefreshUnit( const unit::Unit* unit );
 	void RefreshBase( const base::Base* base );
@@ -334,7 +337,7 @@ public:
 	void SpawnUnit( unit::Unit* unit );
 	void SkipUnitTurn( const size_t unit_id );
 	void DespawnUnit( const size_t unit_id );
-	std::string RegisterBaseName( const std::string& requested_name );
+	void DefinePop( base::PopDef* pop_def );
 	void SpawnBase( base::Base* base );
 	const std::string* MoveUnitValidate( unit::Unit* unit, map::tile::Tile* dst_tile );
 	const gse::Value MoveUnitResolve( unit::Unit* unit, map::tile::Tile* dst_tile );
@@ -377,6 +380,7 @@ private:
 	void SerializeUnits( types::Buffer& buf ) const;
 	void UnserializeUnits( types::Buffer& buf );
 
+	std::unordered_map< std::string, base::PopDef* > m_base_popdefs = {};
 	std::map< size_t, base::Base* > m_bases = {};
 	void SerializeBases( types::Buffer& buf ) const;
 	void UnserializeBases( types::Buffer& buf );

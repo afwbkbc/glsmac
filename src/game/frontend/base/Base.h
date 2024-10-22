@@ -58,8 +58,7 @@ public:
 		tile::Tile* tile,
 		const bool is_owned,
 		const types::Vec3& render_coords,
-		text::InstancedText* render_name_sprite,
-		size_t population
+		text::InstancedText* render_name_sprite
 	);
 	~Base();
 
@@ -118,7 +117,6 @@ private:
 		} badge;
 	} m_render;
 
-	size_t m_population = 0;
 	bool m_is_guarded = false;
 
 	const bool m_is_owned = false;

@@ -60,7 +60,7 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			break;
 		}
 		case FR_BASE_SPAWN: {
-			NEW( data.base_spawn.base_info.name, std::string, *other.data.base_spawn.base_info.name );
+			NEW( data.base_spawn.name, std::string, *other.data.base_spawn.name );
 			break;
 		}
 
@@ -115,7 +115,7 @@ FrontendRequest::~FrontendRequest() {
 			break;
 		}
 		case FR_BASE_SPAWN: {
-			DELETE( data.base_spawn.base_info.name );
+			DELETE( data.base_spawn.name );
 			break;
 		}
 		default: {
