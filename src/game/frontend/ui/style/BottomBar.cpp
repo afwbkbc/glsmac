@@ -952,16 +952,6 @@ void BottomBar::AddStyles() {
 			s->Set( ::ui::A_HEIGHT, 48 );
 		}
 	);
-	AddStyle(
-		"PopulationIconHuman", { "PopulationIcon" }, SH() {
-			s->SetTexture( ::ui::A_TEXTURE, resource::PCX_NEWICONS, 79, 501, 116, 548 );
-		}
-	);
-	AddStyle(
-		"PopulationIconProgenitor", { "PopulationIcon" }, SH() {
-			s->SetTexture( ::ui::A_TEXTURE, resource::PCX_ALIENCIT, 40, 41, 77, 88 );
-		}
-	);
 
 	AddStyle(
 		"SupportedUnits", SH() {

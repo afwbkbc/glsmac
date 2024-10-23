@@ -10,8 +10,13 @@
 #include "types/Vec2.h"
 #include "types/Vec3.h"
 
-namespace game::backend::unit {
+namespace game::backend {
+namespace unit {
 class Def;
+}
+namespace base {
+class PopDef;
+}
 }
 
 namespace game {
@@ -40,6 +45,7 @@ class Faction;
 
 namespace base {
 
+class PopDef;
 class Base;
 class SlotBadges;
 
@@ -50,6 +56,9 @@ CLASS( BaseManager, common::Class )
 
 	base::Base* GetBaseById( const size_t id ) const;
 
+	void DefinePop( const backend::base::PopDef* def );
+	PopDef* GetPopDef( const std::string& id ) const;
+
 	void SpawnBase(
 		const size_t base_id,
 		const size_t slot_index,
@@ -58,6 +67,7 @@ CLASS( BaseManager, common::Class )
 		const std::string& name
 	);
 	// TODO void DespawnBase( const size_t base_id );
+	void RefreshBase( Base* base );
 
 	SlotBadges* GetSlotBadges( const size_t slot_index ) const;
 	void DefineSlotBadges( const size_t slot_index, const faction::Faction* faction );
@@ -82,6 +92,8 @@ private:
 	text::InstancedFont* m_badge_font;
 
 	std::unordered_map< size_t, SlotBadges* > m_slot_badges = {};
+
+	std::unordered_map< std::string, PopDef* > m_popdefs = {};
 
 	std::unordered_map< size_t, base::Base* > m_bases = {};
 	typedef std::set< size_t > ordered_base_ids_t;

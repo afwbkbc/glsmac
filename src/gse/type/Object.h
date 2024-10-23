@@ -34,6 +34,7 @@ public:
 		CLASS_UNITDEF,
 		CLASS_UNIT,
 		CLASS_BASE,
+		CLASS_BASE_POP,
 	};
 	static const std::string& GetClassString( const object_class_t object_class );
 

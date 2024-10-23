@@ -484,7 +484,7 @@ private:
 
 	void SetSelectedTile( tile::Tile* tile );
 	void RefreshSelectedTile( unit::Unit* selected_unit );
-	void RefreshSelectedTileIf( tile::Tile* if_tile, unit::Unit* selected_unit );
+	void RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* selected_unit );
 	void ScrollToSelectedTile( const bool center_on_tile );
 	void SelectAnyUnitAtTile( tile::Tile* tile );
 	void SelectUnitOrSelectedTile( unit::Unit* selected_unit );

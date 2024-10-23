@@ -2,6 +2,7 @@
 
 #include "ui/object/Surface.h"
 #include "game/frontend/base/Base.h"
+#include "game/frontend/base/PopDef.h"
 #include "game/frontend/faction/Faction.h"
 
 namespace game {
@@ -30,21 +31,20 @@ void Population::Destroy() {
 void Population::Update( base::Base* base ) {
 	// TODO: use actual pop objects
 	HideIcons();
-	auto icon_class = SubClass(
-		base->GetFaction()->m_is_progenitor
-			? "IconProgenitor"
-			: "IconHuman"
-	);
-	const auto population = base->GetPopulation();
+	const auto& pops = base->GetPops();
+	const size_t pops_count = pops.size();
 	float w = 40.0f;
-	if ( w * ( population - 1 ) > 390.0f ) {
-		w = 390.0f / ( population - 1 );
+	if ( w * ( pops_count - 1 ) > 390.0f ) {
+		w = 390.0f / ( pops_count - 1 );
 	}
-	m_icons.reserve( population );
-	for ( size_t i = 0 ; i < population ; i++ ) {
-		NEWV( icon, ::ui::object::Surface, icon_class );
+	m_icons.reserve( pops_count );
+	for ( size_t i = 0 ; i < pops_count ; i++ ) {
+		const auto& pop = pops.at( i );
+		NEWV( icon, ::ui::object::Surface, SubClass( "Icon" ) );
 		icon->SetLeft( i * w );
+		// TODO: SetTexture doesn't work if used before AddChild, fix
 		AddChild( icon );
+		icon->SetTexture( pop.GetTexture() );
 		m_icons.push_back( icon );
 	}
 }

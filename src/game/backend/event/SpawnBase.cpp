@@ -9,6 +9,7 @@
 #include "game/backend/base/Base.h"
 #include "game/backend/base/Pop.h"
 #include "gse/type/Undefined.h"
+#include "game/backend/Player.h"
 
 namespace game {
 namespace backend {
@@ -45,6 +46,7 @@ const gse::Value SpawnBase::Apply( Game* game ) const {
 		game,
 		base::Base::GetNextId(),
 		&owner,
+		&owner.GetPlayer()->GetFaction().value(),
 		tile,
 		m_name,
 		{} // will be added later

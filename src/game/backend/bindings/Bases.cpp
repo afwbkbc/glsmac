@@ -9,6 +9,7 @@
 #include "gse/type/Int.h"
 #include "gse/type/String.h"
 #include "gse/type/Array.h"
+#include "gse/context/Context.h"
 #include "game/backend/Game.h"
 #include "game/backend/slot/Slot.h"
 #include "game/backend/map/tile/Tile.h"
@@ -69,33 +70,34 @@ BINDING_IMPL( bases ) {
 			f_read_renders( "renders_progenitor", rp );
 
 			auto* game = GAME;
-			game->AddEvent( new event::DefinePop(
+			return game->AddEvent( new event::DefinePop(
 				game->GetSlotNum(),
 				new base::PopDef( id, name, rh, rp )
 			) );
-
-			return VALUE( gse::type::Undefined );
 		} )
 		},
 		{
 			"spawn",
 			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 3 );
+				N_EXPECT_ARGS_MIN_MAX( 3, 4 );
 				N_GETVALUE_UNWRAP( owner, 0, slot::Slot );
 				N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
 
 				N_GETVALUE( info, 2, Object );
 				N_GETPROP_OPT( std::string, name, info, "name", String, "" );
 
+				if ( arguments.size() > 3 ) {
+					N_PERSIST_CALLABLE( on_spawn, 3 );
+				}
+
 				auto* game = GAME;
-				game->AddEvent( new event::SpawnBase(
+				return game->AddEvent( new event::SpawnBase(
 					game->GetSlotNum(),
 					owner->GetIndex(),
 					tile->coord.x,
 					tile->coord.y,
 					name
 				) );
-				return VALUE( gse::type::Undefined );
 			})
 		},
 	};

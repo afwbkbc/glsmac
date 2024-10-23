@@ -153,7 +153,7 @@ void UnitManager::DespawnUnit( const size_t unit_id ) {
 	}
 
 	ASSERT( m_selected_unit != unit, "unit still selected" );
-	
+
 	delete unit;
 
 	m_game->RefreshSelectedTile( m_selected_unit );
@@ -165,7 +165,6 @@ void UnitManager::RefreshUnit( Unit* unit ) {
 	unit->Refresh();
 	UpdateSelectable( unit );
 	m_game->RenderTile( unit->GetTile(), m_selected_unit );
-	m_game->RefreshSelectedTileIf( unit->GetTile(), m_selected_unit );
 	if ( m_selected_unit == unit && was_active ) {
 		if ( !unit->IsActive() ) {
 			SelectNextUnitOrSwitchToTileSelection();
@@ -216,7 +215,6 @@ void UnitManager::MoveUnit_deprecated( Unit* unit, tile::Tile* dst_tile, const t
 	m_game->RenderTile( dst_tile, m_selected_unit );
 
 	if ( m_selected_unit == unit ) {
-		m_game->RefreshSelectedTile( m_selected_unit );
 		m_game->ScrollToSelectedTile( false );
 	}
 

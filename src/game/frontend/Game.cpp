@@ -10,6 +10,7 @@
 #include "../../ui/UI.h" // TODO: fix path
 #include "game/backend/Game.h"
 #include "game/backend/unit/Def.h"
+#include "game/backend/base/PopDef.h"
 #include "game/backend/animation/Def.h"
 #include "game/backend/connection/Connection.h"
 #include "task/mainmenu/MainMenu.h"
@@ -30,6 +31,7 @@
 #include "game/frontend/base/BaseManager.h"
 #include "game/frontend/base/Base.h"
 #include "game/frontend/faction/FactionManager.h"
+#include "game/frontend/faction/Faction.h"
 #include "game/frontend/sprite/InstancedSpriteManager.h"
 #include "game/frontend/text/InstancedTextManager.h"
 #include "Animation.h"
@@ -1074,6 +1076,13 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			m_um->MoveUnit( unit, dst_tile, d.running_animation_id );
 			break;
 		}
+		case FrontendRequest::FR_BASE_POP_DEFINE: {
+			types::Buffer buf( *request->data.base_pop_define.serialized_popdef );
+			const auto* popdef = backend::base::PopDef::Unserialize( buf );
+			m_bm->DefinePop( popdef );
+			delete popdef;
+			break;
+		}
 		case FrontendRequest::FR_BASE_SPAWN: {
 			const auto& d = request->data.base_spawn;
 			const auto& tc = d.tile_coords;
@@ -1092,6 +1101,29 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 				},
 				*d.name
 			);
+			break;
+		}
+		case FrontendRequest::FR_BASE_UPDATE: {
+			const auto& d = request->data.base_update;
+			auto* base = m_bm->GetBaseById( d.base_id );
+			base->SetName( *d.name );
+			// TODO: update slot index
+			if ( base->GetFaction()->m_id != *d.faction_id ) {
+				THROW( "TODO: UPDATE FACTION" );
+			}
+			base::Base::pops_t pops = {};
+			pops.reserve( d.pops->size() );
+			for ( const auto& pop : *d.pops ) {
+				pops.push_back(
+					base::Pop{
+						base,
+						m_bm->GetPopDef( pop.type ),
+						pop.variant
+					}
+				);
+			}
+			base->SetPops( pops );
+			m_bm->RefreshBase( base );
 			break;
 		}
 		default: {
@@ -2308,6 +2340,7 @@ void Game::RenderTile( tile::Tile* tile, const unit::Unit* selected_unit ) {
 			? selected_unit->GetId()
 			: 0
 	);
+	RefreshSelectedTileIf( tile, selected_unit );
 	/*
 	if ( m_selected_unit && m_selected_unit->IsActive() ) {
 		m_selected_unit->StartBadgeBlink();
@@ -2343,10 +2376,14 @@ void Game::RefreshSelectedTile( unit::Unit* selected_unit ) {
 	}
 }
 
-void Game::RefreshSelectedTileIf( tile::Tile* if_tile, unit::Unit* selected_unit ) {
+void Game::RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* selected_unit ) {
 	auto* selected_tile = m_tm->GetSelectedTile();
 	if ( selected_tile && selected_tile == if_tile ) {
-		RefreshSelectedTile( selected_unit );
+		m_ui.bottom_bar->PreviewTile(
+			selected_tile, selected_unit
+				? selected_unit->GetId()
+				: 0
+		);
 	}
 }
 

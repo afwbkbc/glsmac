@@ -58,7 +58,7 @@ Base::Base(
 	, m_is_guarded( !m_tile->GetUnits().empty() )
 	, m_slot_badges( m_bm->GetSlotBadges( slot->GetIndex() ) ) {
 	m_render_data.base = GetMeshTex( GetSprite()->instanced_sprite );
-	m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( 0, m_is_guarded );
+	m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_render.badge.pops_count, m_is_guarded );
 	m_render_data.badge = GetMeshTex( m_render.badge.def->instanced_sprite );
 	m_tile->SetBase( this );
 }
@@ -77,6 +77,12 @@ const std::string& Base::GetName() const {
 	return m_name;
 }
 
+void Base::SetName( const std::string& name ) {
+	if ( m_name != name ) {
+		m_name = name;
+	}
+}
+
 faction::Faction* const Base::GetFaction() const {
 	return m_faction;
 }
@@ -89,13 +95,9 @@ tile::Tile* Base::GetTile() const {
 	return m_tile;
 }
 
-const size_t Base::GetPopulation() const {
-	return 0; // TODO
-}
-
 sprite::Sprite* Base::GetSprite() const {
 	uint8_t size = 0;
-	const auto population = GetPopulation();
+	const auto population = m_pops.size();
 	for ( uint8_t i = 0 ; i < s_base_render_population_thresholds.size() ; i++ ) {
 		if ( s_base_render_population_thresholds.at( i ) > population ) {
 			break;
@@ -107,6 +109,13 @@ sprite::Sprite* Base::GetSprite() const {
 
 void Base::Show() {
 	if ( !m_render.is_rendered ) {
+
+		if ( m_render.badge.pops_count != m_pops.size() ) {
+			m_render.badge.pops_count = m_pops.size();
+			m_render_data.base = GetMeshTex( GetSprite()->instanced_sprite );
+			m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_render.badge.pops_count, m_is_guarded );
+			m_render_data.badge = GetMeshTex( m_render.badge.def->instanced_sprite );
+		}
 
 		const auto& c = m_render.coords;
 
@@ -154,7 +163,7 @@ void Base::Update() {
 			m_render.badge.instance_id = 0;
 		}
 		m_is_guarded = is_guarded;
-		m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( GetPopulation(), m_is_guarded );
+		m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_pops.size(), m_is_guarded );
 		m_render_data.badge = GetMeshTex( m_render.badge.def->instanced_sprite );
 		if ( m_render.is_rendered ) {
 			ShowBadge();
@@ -184,7 +193,7 @@ void* Base::CreateOnBottomBarList( ui::ObjectsListItem* element ) const {
 
 	// order is important
 	X( base, "Base" );
-	X( badge, GetPopulation() >= 10
+	X( badge, m_pops.size() >= 10
 		? "BaseBadge2"
 		: "BaseBadge1"
 	);
@@ -258,6 +267,14 @@ void Base::DestroyOnBottomBarPreview( ui::ObjectPreview* element, void* state ) 
 const bool Base::OnBottomBarListActivate( Game* game ) {
 	game->SelectBase( this );
 	return false; // because previously active unit should stay active, base popup will have it's own bottombar
+}
+
+const Base::pops_t& Base::GetPops() const {
+	return m_pops;
+}
+
+void Base::SetPops( const pops_t& pops ) {
+	m_pops = pops; // can be optimized if needed
 }
 
 void Base::SetRenderCoords( const types::Vec3& coords ) {

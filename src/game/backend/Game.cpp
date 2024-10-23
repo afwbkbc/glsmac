@@ -27,6 +27,7 @@
 #include "game/backend/map/Map.h"
 #include "game/backend/map/Consts.h"
 #include "gse/type/String.h"
+#include "gse/type/Undefined.h"
 #include "ui/UI.h"
 #include "game/backend/map/tile/Tiles.h"
 #include "game/backend/map/MapState.h"
@@ -750,8 +751,8 @@ unit::Def* Game::GetUnitDef( const std::string& name ) const {
 	}
 }
 
-base::PopDef* Game::GetPopDef( const std::string& name ) const {
-	const auto& it = m_base_popdefs.find( name );
+base::PopDef* Game::GetPopDef( const std::string& id ) const {
+	const auto& it = m_base_popdefs.find( id );
 	if ( it != m_base_popdefs.end() ) {
 		return it->second;
 	}
@@ -770,14 +771,16 @@ base::Base* Game::GetBase( const size_t id ) const {
 	}
 }
 
-void Game::AddEvent( event::Event* event ) {
+const gse::Value Game::AddEvent( event::Event* event ) {
 	ASSERT( event->m_initiator_slot == m_slot_num, "initiator slot mismatch" );
 	if ( m_connection ) {
 		m_connection->SendGameEvent( event );
 	}
 	if ( m_state->IsMaster() ) {
-		ProcessEvent( event );
+		// note that this will work only on master, do slaves need return values too? i.e. for callbacks
+		return ProcessEvent( event );
 	}
+	return VALUE( gse::type::Undefined );
 }
 
 void Game::RefreshUnit( const unit::Unit* unit ) {
@@ -792,7 +795,7 @@ void Game::RefreshUnit( const unit::Unit* unit ) {
 }
 
 void Game::RefreshBase( const base::Base* base ) {
-	// TODO
+	QueueBaseUpdate( base, BUO_REFRESH );
 }
 
 void Game::DefineAnimation( animation::Def* def ) {
@@ -952,6 +955,11 @@ void Game::DefinePop( base::PopDef* pop_def ) {
 			pop_def
 		}
 	);
+
+	auto fr = FrontendRequest( FrontendRequest::FR_BASE_POP_DEFINE );
+	NEW( fr.data.base_pop_define.serialized_popdef, std::string, base::PopDef::Serialize( pop_def ).ToString() );
+	AddFrontendRequest( fr );
+
 }
 
 void Game::SpawnBase( base::Base* base ) {
@@ -1433,6 +1441,12 @@ void Game::UnlockTiles( const size_t initiator_slot, const map::tile::positions_
 		ASSERT_NOLOG( tile->IsLockedBy( initiator_slot ), "tile " + pos.ToString() + " is not locked by " + std::to_string( initiator_slot ) );
 		tile->Unlock();
 	}
+}
+
+rules::Faction* Game::GetFaction( const std::string& id ) const {
+	const auto& it = m_state->m_settings.global.game_rules.m_factions.find( id ); // TODO: store factions in Game itself?
+	ASSERT( it != m_state->m_settings.global.game_rules.m_factions.end(), "faction not found: " + id );
+	return &it->second;
 }
 
 void Game::ValidateEvent( event::Event* event ) {
@@ -2171,7 +2185,7 @@ void Game::PushBaseUpdates() {
 			const auto& base = bu.base;
 			if ( bu.ops & BUO_SPAWN ) {
 				auto fr = FrontendRequest( FrontendRequest::FR_BASE_SPAWN );
-				fr.data.unit_spawn.unit_id = base->m_id;
+				fr.data.base_spawn.base_id = base->m_id;
 				fr.data.base_spawn.slot_index = base->m_owner->GetIndex();
 				const auto* tile = base->GetTile();
 				fr.data.base_spawn.tile_coords = {
@@ -2188,7 +2202,21 @@ void Game::PushBaseUpdates() {
 				AddFrontendRequest( fr );
 			}
 			if ( bu.ops & BUO_REFRESH ) {
-				THROW( "TODO: BASE REFRESH" );
+				auto fr = FrontendRequest( FrontendRequest::FR_BASE_UPDATE );
+				fr.data.base_update.base_id = base->m_id;
+				fr.data.base_update.slot_index = base->m_owner->GetIndex();
+				NEW( fr.data.base_update.name, std::string, base->m_name );
+				NEW( fr.data.base_update.faction_id, std::string, base->m_faction->m_id );
+				NEW( fr.data.base_update.pops, FrontendRequest::base_pops_t, {} );
+				for ( const auto& pop : base->m_pops ) {
+					fr.data.base_update.pops->push_back(
+						{
+							pop.m_def->m_id,
+							pop.m_variant
+						}
+					);
+				}
+				AddFrontendRequest( fr );
 			}
 			if ( bu.ops & UUO_DESPAWN ) {
 				THROW( "TODO: BASE DESPAWN" );

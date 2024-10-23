@@ -59,8 +59,18 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.unit_spawn.morale_string, std::string, *other.data.unit_spawn.morale_string );
 			break;
 		}
+		case FR_BASE_POP_DEFINE: {
+			NEW( data.base_pop_define.serialized_popdef, std::string, *other.data.base_pop_define.serialized_popdef );
+			break;
+		}
 		case FR_BASE_SPAWN: {
 			NEW( data.base_spawn.name, std::string, *other.data.base_spawn.name );
+			break;
+		}
+		case FR_BASE_UPDATE: {
+			NEW( data.base_update.name, std::string, *other.data.base_update.name );
+			NEW( data.base_update.faction_id, std::string, *other.data.base_update.faction_id );
+			NEW( data.base_update.pops, base_pops_t, *other.data.base_update.pops );
 			break;
 		}
 
@@ -114,8 +124,18 @@ FrontendRequest::~FrontendRequest() {
 			DELETE( data.unit_spawn.morale_string );
 			break;
 		}
+		case FR_BASE_POP_DEFINE: {
+			DELETE( data.base_pop_define.serialized_popdef );
+			break;
+		}
 		case FR_BASE_SPAWN: {
 			DELETE( data.base_spawn.name );
+			break;
+		}
+		case FR_BASE_UPDATE: {
+			DELETE( data.base_update.name );
+			DELETE( data.base_update.faction_id );
+			DELETE( data.base_update.pops );
 			break;
 		}
 		default: {

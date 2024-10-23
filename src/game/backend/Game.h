@@ -325,9 +325,9 @@ public:
 	unit::MoraleSet* GetMoraleSet( const std::string& name ) const;
 	unit::Unit* GetUnit( const size_t id ) const;
 	unit::Def* GetUnitDef( const std::string& name ) const;
-	base::PopDef* GetPopDef( const std::string& name ) const;
+	base::PopDef* GetPopDef( const std::string& id ) const;
 	base::Base* GetBase( const size_t id ) const;
-	void AddEvent( event::Event* event );
+	const gse::Value AddEvent( event::Event* event );
 	void RefreshUnit( const unit::Unit* unit );
 	void RefreshBase( const base::Base* base );
 	void DefineAnimation( animation::Def* def );
@@ -366,6 +366,8 @@ public:
 	void SendTileUnlockRequest( const map::tile::positions_t& tile_positions );
 	void RequestTileUnlocks( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
 	void UnlockTiles( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
+
+	rules::Faction* GetFaction( const std::string& id ) const;
 
 private:
 

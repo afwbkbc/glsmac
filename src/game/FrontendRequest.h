@@ -38,7 +38,9 @@ public:
 		FR_UNIT_DESPAWN,
 		FR_UNIT_UPDATE,
 		FR_UNIT_MOVE,
+		FR_BASE_POP_DEFINE,
 		FR_BASE_SPAWN,
+		FR_BASE_UPDATE
 	};
 	FrontendRequest( const request_type_t type );
 	FrontendRequest( const FrontendRequest& other );
@@ -55,6 +57,12 @@ public:
 	typedef std::vector< slot_define_t > slot_defines_t;
 
 	typedef std::vector< std::pair< backend::map::tile::Tile*, backend::map::tile::TileState* > > tile_updates_t;
+
+	struct base_pop_t {
+		std::string type;
+		uint8_t variant;
+	};
+	typedef std::vector< base_pop_t > base_pops_t;
 
 	union {
 		struct {
@@ -141,6 +149,9 @@ public:
 			} dst_tile_coords;
 		} unit_move;
 		struct {
+			const std::string* serialized_popdef;
+		} base_pop_define;
+		struct {
 			size_t base_id;
 			size_t slot_index;
 			struct {
@@ -154,6 +165,13 @@ public:
 			} render_coords;
 			const std::string* name;
 		} base_spawn;
+		struct {
+			size_t base_id;
+			size_t slot_index;
+			const std::string* faction_id;
+			const std::string* name;
+			base_pops_t* pops;
+		} base_update;
 	} data;
 };
 
