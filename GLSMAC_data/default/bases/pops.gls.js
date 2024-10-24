@@ -1,4 +1,5 @@
-const define_pop = (id, name, renders_human_x, renders_progenitor_x) => {
+const define = (id, name, renders_human_x, renders_progenitor_x, properties) => {
+	// TODO: if (!properties) { ... }
 	let rh = [];
 	for ( x of renders_human_x ) {
 		rh []= {
@@ -21,23 +22,23 @@ const define_pop = (id, name, renders_human_x, renders_progenitor_x) => {
 		name: name,
 		renders_human: rh,
 		renders_progenitor: rp,
-	});
+	} + properties);
 };
 
 const result = {
 	define: () => {
 
-		define_pop('Worker', 'Worker', [79, 118], [40]);
-		define_pop('Talent', 'Talent', [1, 40], [1]);
-		define_pop('Doctor', 'Doctor', [352], [196]);
-		define_pop('Technician', 'Technician', [313], [157]);
-		define_pop('Librarian', 'Librarian', [391], [235]);
-		define_pop('Engineer', 'Engineer', [430], [274]);
-		define_pop('Empath', 'Empath', [469], [313]);
-		define_pop('Thinker', 'Thinker', [508], [352]);
-		define_pop('Transcend', 'Transcend', [547], [391]);
-		define_pop('Drone', 'Drone', [157, 196], [79]);
-		define_pop('DronePlus', 'Drone', [235, 274], [118]);
+		define('Worker', 'Worker', [79, 118], [40], {tile_worker: true});
+		define('Talent', 'Talent', [1, 40], [1], {tile_worker: true});
+		define('Doctor', 'Doctor', [352], [196], {});
+		define('Technician', 'Technician', [313], [157], {});
+		define('Librarian', 'Librarian', [391], [235], {});
+		define('Engineer', 'Engineer', [430], [274], {});
+		define('Empath', 'Empath', [469], [313], {});
+		define('Thinker', 'Thinker', [508], [352], {});
+		define('Transcend', 'Transcend', [547], [391], {});
+		define('Drone', 'Drone', [157, 196], [79], {});
+		define('DronePlus', 'Drone', [235, 274], [118], {});
 
 	},
 };

@@ -57,6 +57,8 @@ CLASS( BaseManager, common::Class )
 	base::Base* GetBaseById( const size_t id ) const;
 
 	void DefinePop( const backend::base::PopDef* def );
+
+	const std::vector< std::string >& GetPopDefOrder() const;
 	PopDef* GetPopDef( const std::string& id ) const;
 
 	void SpawnBase(
@@ -93,6 +95,7 @@ private:
 
 	std::unordered_map< size_t, SlotBadges* > m_slot_badges = {};
 
+	std::vector< std::string > m_popdefs_order = {};
 	std::unordered_map< std::string, PopDef* > m_popdefs = {};
 
 	std::unordered_map< size_t, base::Base* > m_bases = {};

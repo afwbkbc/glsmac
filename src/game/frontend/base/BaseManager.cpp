@@ -45,6 +45,7 @@ base::Base* BaseManager::GetBaseById( const size_t id ) const {
 
 void BaseManager::DefinePop( const backend::base::PopDef* def ) {
 	ASSERT( m_popdefs.find( def->m_id ) == m_popdefs.end(), "popdef already defined: " + def->m_id );
+	m_popdefs_order.push_back( def->m_id );
 	m_popdefs.insert(
 		{
 			def->m_id,
@@ -55,6 +56,10 @@ void BaseManager::DefinePop( const backend::base::PopDef* def ) {
 			)
 		}
 	);
+}
+
+const std::vector< std::string >& BaseManager::GetPopDefOrder() const {
+	return m_popdefs_order;
 }
 
 PopDef* BaseManager::GetPopDef( const std::string& id ) const {

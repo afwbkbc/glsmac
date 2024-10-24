@@ -1,3 +1,4 @@
+const map = #include('map');
 const factions = #include('factions');
 const units = #include('units');
 const bases = #include('bases');
@@ -48,10 +49,9 @@ let all_bases = [];
 
 #game.on.start((e) => {
 
-	// init units
+	// init game data
+	map.define();
 	units.define();
-
-	// init bases
 	bases.define();
 
 	// init players

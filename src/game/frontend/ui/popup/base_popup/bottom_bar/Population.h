@@ -30,7 +30,11 @@ CLASS( Population, BBSection )
 	void Update( base::Base* base );
 
 private:
-	std::vector< ::ui::object::Surface* > m_icons = {};
+	struct pop_info_t {
+		size_t pop_id;
+		::ui::object::Surface* icon;
+	};
+	std::vector< pop_info_t > m_pops = {};
 
 	void HideIcons();
 

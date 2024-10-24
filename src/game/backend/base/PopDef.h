@@ -13,11 +13,16 @@ namespace base {
 class PopDef {
 public:
 
+	typedef uint8_t pop_flags_t;
+	static constexpr pop_flags_t PF_NONE = 0;
+	static constexpr pop_flags_t PF_TILE_WORKER = 1 << 0;
+
 	PopDef(
 		const std::string& id,
 		const std::string& name,
 		const pop_render_infos_t& renders_human,
-		const pop_render_infos_t& renders_progenitor
+		const pop_render_infos_t& renders_progenitor,
+		const pop_flags_t flags
 	);
 	virtual ~PopDef() = default;
 
@@ -25,6 +30,7 @@ public:
 	const std::string m_name;
 	const pop_render_infos_t m_renders_human;
 	const pop_render_infos_t m_renders_progenitor;
+	const pop_flags_t m_flags;
 
 	const std::string ToString( const std::string& prefix = "" ) const;
 

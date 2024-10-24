@@ -8,12 +8,14 @@ PopDef::PopDef(
 	const std::string& id,
 	const std::string& name,
 	const pop_render_infos_t& renders_human,
-	const pop_render_infos_t& renders_progenitor
+	const pop_render_infos_t& renders_progenitor,
+	const pop_flags_t flags
 )
 	: m_id( id )
 	, m_name( name )
 	, m_renders_human( renders_human )
-	, m_renders_progenitor( renders_progenitor ) {
+	, m_renders_progenitor( renders_progenitor )
+	, m_flags( flags ) {
 	//
 }
 
@@ -24,6 +26,11 @@ const std::string PopDef::ToString( const std::string& prefix ) const {
 		TS_OBJ_PROP_STR( "name", m_name ) +
 		InfosToString( prefix, "renders_human", m_renders_human ) +
 		InfosToString( prefix, "renders_progenitor", m_renders_human ) +
+		TS_OBJ_PROP_STR( "flags", (
+			( m_flags & PF_TILE_WORKER )
+				? "tile_worker"
+				: ""
+		) ) +
 		TS_OBJ_END();
 }
 
@@ -43,6 +50,7 @@ const types::Buffer PopDef::Serialize( const PopDef* def ) {
 	X( m_renders_human )
 	X( m_renders_progenitor )
 #undef X
+	buf.WriteInt( def->m_flags );
 	return buf;
 }
 
@@ -62,7 +70,8 @@ PopDef* PopDef::Unserialize( types::Buffer& buf ) {
 	X( renders_human )
 	X( renders_progenitor )
 #undef X
-	return new PopDef( id, name, renders_human, renders_progenitor );
+	const auto flags = buf.ReadInt();
+	return new PopDef( id, name, renders_human, renders_progenitor, flags );
 }
 
 const std::string PopDef::InfosToString( const std::string& prefix, const std::string& name, const pop_render_infos_t& infos ) const {

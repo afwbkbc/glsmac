@@ -9,6 +9,7 @@
 #include "gse/type/Int.h"
 #include "gse/type/String.h"
 #include "gse/type/Array.h"
+#include "gse/type/Bool.h"
 #include "gse/context/Context.h"
 #include "game/backend/Game.h"
 #include "game/backend/slot/Slot.h"
@@ -69,10 +70,16 @@ BINDING_IMPL( bases ) {
 			f_read_renders( "renders_human", rh );
 			f_read_renders( "renders_progenitor", rp );
 
+			base::PopDef::pop_flags_t flags = base::PopDef::PF_NONE;
+			N_GETPROP_OPT( bool, can_work_tiles, def, "tile_worker", Bool, false );
+			if ( can_work_tiles ) {
+				flags |= base::PopDef::PF_TILE_WORKER;
+			}
+
 			auto* game = GAME;
 			return game->AddEvent( new event::DefinePop(
 				game->GetSlotNum(),
-				new base::PopDef( id, name, rh, rp )
+				new base::PopDef( id, name, rh, rp, flags )
 			) );
 		} )
 		},
