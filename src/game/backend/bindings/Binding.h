@@ -88,6 +88,8 @@ BINDING_DEF( animations )
 
 BINDING_DEF( map )
 
+BINDING_DEF( resources )
+
 }
 }
 }

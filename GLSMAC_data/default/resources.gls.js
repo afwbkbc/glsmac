@@ -1,15 +1,13 @@
 const define = (id, levels_y, minusplus_y) => {
 
-	return; // TODO
-	
-	#game.map.define_resource(id, {
+	#game.resources.define(id, {
 		name: id,
 		render: {
-			type: 'sprite',
+			type: 'sprite_map',
 			file: 'newicons.pcx',
-			levels: {
+			yields: {
 				grid_x: 174, grid_y: levels_y, grid_margin: 1,
-				cell_width: 40, cell_height: 40, cell_count: 8,
+				cell_width: 40, cell_height: 40, cells_count: 8,
 			},
 			plus: {
 				x: 24, y: minusplus_y,

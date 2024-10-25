@@ -55,6 +55,8 @@ class PopDef;
 class Base;
 }
 
+class Resource;
+
 namespace event {
 class Event;
 }
@@ -332,6 +334,7 @@ public:
 	void RefreshBase( const base::Base* base );
 	void DefineAnimation( animation::Def* def );
 	const std::string* ShowAnimationOnTile( const std::string& animation_id, map::tile::Tile* tile, const cb_oncomplete& on_complete );
+	void DefineResource( Resource* resource );
 	void DefineMoraleSet( unit::MoraleSet* moraleset );
 	void DefineUnit( unit::Def* def );
 	void SpawnUnit( unit::Unit* unit );
@@ -375,6 +378,10 @@ private:
 	const gse::Value ProcessEvent( event::Event* event );
 
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
+
+	std::unordered_map< std::string, Resource* > m_resources = {};
+	void SerializeResources( types::Buffer& buf ) const;
+	void UnserializeResources( types::Buffer& buf );
 
 	std::unordered_map< std::string, unit::MoraleSet* > m_unit_moralesets = {};
 	std::unordered_map< std::string, unit::Def* > m_unit_defs = {};

@@ -8,37 +8,38 @@
 #include "util/FS.h"
 #include "types/Buffer.h"
 #include "State.h"
-#include "game/backend/map_editor/MapEditor.h"
-#include "game/backend/event/FinalizeTurn.h"
-#include "game/backend/event/TurnFinalized.h"
-#include "game/backend/event/AdvanceTurn.h"
-#include "game/backend/event/DespawnUnit.h"
-#include "game/backend/event/RequestTileLocks.h"
-#include "game/backend/event/LockTiles.h"
-#include "game/backend/event/RequestTileUnlocks.h"
-#include "game/backend/event/UnlockTiles.h"
+#include "map_editor/MapEditor.h"
+#include "event/FinalizeTurn.h"
+#include "event/TurnFinalized.h"
+#include "event/AdvanceTurn.h"
+#include "event/DespawnUnit.h"
+#include "event/RequestTileLocks.h"
+#include "event/LockTiles.h"
+#include "event/RequestTileUnlocks.h"
+#include "event/UnlockTiles.h"
 #include "util/random/Random.h"
 #include "config/Config.h"
-#include "game/backend/slot/Slots.h"
+#include "slot/Slots.h"
 #include "Player.h"
-#include "game/backend/connection/Connection.h"
-#include "game/backend/connection/Server.h"
-#include "game/backend/connection/Client.h"
-#include "game/backend/map/Map.h"
-#include "game/backend/map/Consts.h"
+#include "connection/Connection.h"
+#include "connection/Server.h"
+#include "connection/Client.h"
+#include "map/Map.h"
+#include "map/Consts.h"
 #include "gse/type/String.h"
 #include "gse/type/Undefined.h"
 #include "ui/UI.h"
-#include "game/backend/map/tile/Tiles.h"
-#include "game/backend/map/MapState.h"
-#include "game/backend/bindings/Bindings.h"
+#include "map/tile/Tiles.h"
+#include "map/MapState.h"
+#include "bindings/Bindings.h"
 #include "graphics/Graphics.h"
-#include "game/backend/animation/Def.h"
-#include "game/backend/unit/Def.h"
-#include "game/backend/unit/Unit.h"
-#include "game/backend/unit/MoraleSet.h"
-#include "game/backend/base/PopDef.h"
-#include "game/backend/base/Base.h"
+#include "Resource.h"
+#include "animation/Def.h"
+#include "unit/Def.h"
+#include "unit/Unit.h"
+#include "unit/MoraleSet.h"
+#include "base/PopDef.h"
+#include "base/Base.h"
 
 namespace game {
 namespace backend {
@@ -843,6 +844,19 @@ const std::string* Game::ShowAnimationOnTile( const std::string& animation_id, m
 	return nullptr; // no error
 }
 
+void Game::DefineResource( Resource* resource ) {
+	Log( "Defining resource ('" + resource->m_id + "')" );
+
+	ASSERT( m_resources.find( resource->m_id ) == m_resources.end(), "Resource '" + resource->m_id + "' already exists" );
+
+	m_resources.insert(
+		{
+			resource->m_id,
+			resource
+		}
+	);
+}
+
 void Game::DefineMoraleSet( unit::MoraleSet* moraleset ) {
 	Log( "Defining unit moraleset ('" + moraleset->m_id + "')" );
 
@@ -1493,6 +1507,27 @@ const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
 	};
 }
 
+void Game::SerializeResources( types::Buffer& buf ) const {
+	Log( "Serializing " + std::to_string( m_resources.size() ) + " resources" );
+	buf.WriteInt( m_resources.size() );
+	for ( const auto& it : m_resources ) {
+		buf.WriteString( it.first );
+		buf.WriteString( Resource::Serialize( it.second ).ToString() );
+	}
+}
+
+void Game::UnserializeResources( types::Buffer& buf ) {
+	ASSERT( m_resources.empty(), "resources not empty" );
+	size_t sz = buf.ReadInt();
+	Log( "Unserializing " + std::to_string( sz ) + " resources" );
+	m_resources.reserve( sz );
+	for ( size_t i = 0 ; i < sz ; i++ ) {
+		const auto name = buf.ReadString();
+		auto b = types::Buffer( buf.ReadString() );
+		DefineResource( Resource::Unserialize( b ) );
+	}
+}
+
 void Game::SerializeUnits( types::Buffer& buf ) const {
 
 	Log( "Serializing " + std::to_string( m_unit_moralesets.size() ) + " unit moralesets" );
@@ -1524,9 +1559,11 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 	ASSERT( m_unit_moralesets.empty(), "unit moralesets not empty" );
 	ASSERT( m_unit_defs.empty(), "unit defs not empty" );
 	ASSERT( m_units.empty(), "units not empty" );
+	ASSERT( m_unprocessed_units.empty(), "unprocessed units not empty" );
 
 	size_t sz = buf.ReadInt();
 	Log( "Unserializing " + std::to_string( sz ) + " unit moralesets" );
+	m_unit_moralesets.reserve( sz );
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
@@ -1535,6 +1572,7 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 
 	sz = buf.ReadInt();
 	Log( "Unserializing " + std::to_string( sz ) + " unit defs" );
+	m_unit_defs.reserve( sz );
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
@@ -1543,7 +1581,9 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 
 	sz = buf.ReadInt();
 	Log( "Unserializing " + std::to_string( sz ) + " units" );
-	ASSERT( m_unprocessed_units.empty(), "unprocessed units not empty" );
+	if ( m_game_state != GS_RUNNING ) {
+		m_unprocessed_units.reserve( sz );
+	}
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto unit_id = buf.ReadInt();
 		auto b = types::Buffer( buf.ReadString() );
@@ -1577,8 +1617,10 @@ void Game::SerializeBases( types::Buffer& buf ) const {
 void Game::UnserializeBases( types::Buffer& buf ) {
 	ASSERT( m_base_popdefs.empty(), "base pop defs not empty" );
 	ASSERT( m_bases.empty(), "bases not empty" );
+	ASSERT( m_unprocessed_bases.empty(), "unprocessed bases not empty" );
 
 	size_t sz = buf.ReadInt();
+	m_base_popdefs.reserve( sz );
 	Log( "Unserializing " + std::to_string( sz ) + " base pop defs" );
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
@@ -1588,7 +1630,9 @@ void Game::UnserializeBases( types::Buffer& buf ) {
 
 	sz = buf.ReadInt();
 	Log( "Unserializing " + std::to_string( sz ) + " bases" );
-	ASSERT( m_unprocessed_bases.empty(), "unprocessed bases not empty" );
+	if ( m_game_state != GS_RUNNING ) {
+		m_unprocessed_bases.reserve( sz );
+	}
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto base_id = buf.ReadInt();
 		auto b = types::Buffer( buf.ReadString() );
@@ -1609,8 +1653,10 @@ void Game::SerializeAnimations( types::Buffer& buf ) const {
 }
 
 void Game::UnserializeAnimations( types::Buffer& buf ) {
+	ASSERT( m_animation_defs.empty(), "animation defs not empty" );
 	size_t sz = buf.ReadInt();
 	Log( "Unserializing " + std::to_string( sz ) + " animation defs" );
+	m_animation_defs.reserve( sz );
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
@@ -1710,6 +1756,13 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 					// map
 					m_map->SaveToBuffer( buf );
+
+					// resources
+					{
+						types::Buffer b;
+						SerializeResources( b );
+						buf.WriteString( b.ToString() );
+					}
 
 					// units
 					{
@@ -1901,6 +1954,12 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 						const auto ec = m_map->LoadFromBuffer( b );
 						if ( ec == map::Map::EC_NONE ) {
 
+							// resources
+							{
+								auto ub = types::Buffer( buf.ReadString() );
+								UnserializeResources( ub );
+							}
+
 							// units
 							{
 								auto ub = types::Buffer( buf.ReadString() );
@@ -1979,6 +2038,11 @@ void Game::ResetGame() {
 
 	m_running_animations_callbacks.clear();
 	m_next_running_animation_id = 1;
+
+	for ( auto& it : m_resources ) {
+		delete it.second;
+	}
+	m_resources.clear();
 
 	for ( auto& it : m_unit_moralesets ) {
 		delete it.second;
