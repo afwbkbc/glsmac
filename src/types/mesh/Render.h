@@ -20,7 +20,7 @@ CLASS( Render, Mesh )
 		const types::Vec3& coord, const Vec2< coord_t >& tex_coord = {
 		0.0f,
 		0.0f
-	}, const Color tint = {
+	}, const Color::color_t tint = {
 		1.0f,
 		1.0f,
 		1.0f,
@@ -35,7 +35,7 @@ CLASS( Render, Mesh )
 		const Vec2< coord_t >& coord, const Vec2< coord_t >& tex_coord = {
 		0.0f,
 		0.0f
-	}, const Color tint = {
+	}, const Color::color_t tint = {
 		1.0f,
 		1.0f,
 		1.0f,
@@ -48,7 +48,7 @@ CLASS( Render, Mesh )
 	);
 
 	void SetVertex(
-		const index_t index, const types::Vec3& coord, const Vec2< coord_t >& tex_coord, const Color tint = {
+		const index_t index, const types::Vec3& coord, const Vec2< coord_t >& tex_coord, const Color::color_t tint = {
 		1.0f,
 		1.0f,
 		1.0f,
@@ -60,7 +60,7 @@ CLASS( Render, Mesh )
 	}
 	);
 	void SetVertex(
-		const index_t index, const Vec2< coord_t >& coord, const Vec2< coord_t >& tex_coord, const Color tint = {
+		const index_t index, const Vec2< coord_t >& coord, const Vec2< coord_t >& tex_coord, const Color::color_t tint = {
 		1.0f,
 		1.0f,
 		1.0f,
@@ -73,7 +73,7 @@ CLASS( Render, Mesh )
 	);
 
 	void SetVertexTexCoord( const index_t index, const Vec2< coord_t >& tex_coord );
-	void SetVertexTint( const index_t index, const Color tint );
+	void SetVertexTint( const index_t index, const Color::color_t tint );
 	void SetVertexNormal( const index_t index, const types::Vec3& normal );
 
 	void GetVertexTexCoord( const index_t index, Vec2< coord_t >* tex_coord ) const;

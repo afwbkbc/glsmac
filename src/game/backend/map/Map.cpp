@@ -160,6 +160,7 @@ Map::Map( Game* game )
 		module_pass.push_back( m );
 		m_modules_deferred.push_back( module_pass );
 	}
+
 }
 
 Map::~Map() {

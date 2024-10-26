@@ -295,7 +295,7 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* c
 					auto* lights = m_actor->GetScene()->GetLights();
 					if ( !( flags & scene::actor::Actor::RF_IGNORE_LIGHTING ) && !lights->empty() ) {
 						types::Vec3 light_pos[lights->size()];
-						types::Color light_color[lights->size()];
+						types::Color::color_t light_color[lights->size()];
 						size_t i = 0;
 						for ( auto& light : *lights ) {
 							light_pos[ i ] = light->GetPosition();

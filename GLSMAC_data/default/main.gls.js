@@ -1,5 +1,6 @@
 const factions = #include('factions');
 const resources = #include('resources');
+const map = #include('map');
 const units = #include('units');
 const bases = #include('bases');
 
@@ -51,6 +52,7 @@ let all_bases = [];
 
 	// init game data
 	resources.define();
+	map.define();
 	units.define();
 	bases.define();
 

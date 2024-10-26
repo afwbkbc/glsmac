@@ -28,6 +28,7 @@
 #include "map/Consts.h"
 #include "gse/type/String.h"
 #include "gse/type/Undefined.h"
+#include "gse/type/Array.h"
 #include "ui/UI.h"
 #include "map/tile/Tiles.h"
 #include "map/MapState.h"
@@ -396,6 +397,9 @@ void Game::Iterate() {
 						if ( m_state->IsMaster() ) {
 							try {
 								m_state->m_bindings->Call( bindings::Bindings::CS_ON_START );
+								common::mt_flag_t b = false;
+								const auto tiles = m_map->GetTilesPtr()->GetVector( b );
+								UpdateTileData( tiles );
 							}
 							catch ( gse::Exception& e ) {
 								Log( (std::string)"Initialization failed: " + e.ToStringAndCleanup() );
@@ -447,6 +451,19 @@ const Player* Game::GetPlayer() const {
 
 const size_t Game::GetSlotNum() const {
 	return m_slot_num;
+}
+
+void Game::UpdateTileData( const std::vector< map::tile::Tile* >& tiles ) const {
+
+	m_state->m_bindings->Call(
+		bindings::Bindings::CS_ON_TILES_UPDATE, {
+			{
+				"tiles",
+				gse::type::Array::FromVector( (const std::vector< gse::Wrappable* >*)&tiles ),
+			},
+		}
+	);
+
 }
 
 const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE ) {
@@ -855,6 +872,13 @@ void Game::DefineResource( Resource* resource ) {
 			resource
 		}
 	);
+	m_resource_idx_map.insert(
+		{
+			resource->m_id,
+			m_resource_idx.size()
+		}
+	);
+	m_resource_idx.push_back( resource->m_id );
 }
 
 void Game::DefineMoraleSet( unit::MoraleSet* moraleset ) {
@@ -1510,9 +1534,11 @@ const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
 void Game::SerializeResources( types::Buffer& buf ) const {
 	Log( "Serializing " + std::to_string( m_resources.size() ) + " resources" );
 	buf.WriteInt( m_resources.size() );
-	for ( const auto& it : m_resources ) {
-		buf.WriteString( it.first );
-		buf.WriteString( Resource::Serialize( it.second ).ToString() );
+	for ( const auto& it : m_resource_idx ) {
+		ASSERT( m_resources.find( it ) != m_resources.end(), "invalid resource idx" );
+		const auto& res = m_resources.at( it );
+		buf.WriteString( res->m_id );
+		buf.WriteString( Resource::Serialize( res ).ToString() );
 	}
 }
 
@@ -1521,6 +1547,8 @@ void Game::UnserializeResources( types::Buffer& buf ) {
 	size_t sz = buf.ReadInt();
 	Log( "Unserializing " + std::to_string( sz ) + " resources" );
 	m_resources.reserve( sz );
+	m_resource_idx.reserve( sz );
+	m_resource_idx_map.reserve( sz );
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
@@ -2043,6 +2071,8 @@ void Game::ResetGame() {
 		delete it.second;
 	}
 	m_resources.clear();
+	m_resource_idx.clear();
+	m_resource_idx_map.clear();
 
 	for ( auto& it : m_unit_moralesets ) {
 		delete it.second;

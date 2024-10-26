@@ -42,8 +42,7 @@ bool Sprite::MeshReloadNeeded() {
 	auto* actor = GetSpriteActor();
 	return
 		m_last_dimensions != actor->GetDimensions() ||
-		m_last_tex_coords != actor->GetTexCoords()
-	;
+			m_last_tex_coords != actor->GetTexCoords();
 }
 
 bool Sprite::TextureReloadNeeded() {
@@ -129,14 +128,14 @@ void Sprite::Draw( shader_program::ShaderProgram* shader_program, scene::Camera*
 			auto flags = sprite_actor->GetRenderFlags();
 			glUniform1ui( sp->uniforms.flags, flags );
 			if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
-				const types::Vec3 pos = sprite_actor->NormalizePosition(sprite_actor->GetPosition());
+				const types::Vec3 pos = sprite_actor->NormalizePosition( sprite_actor->GetPosition() );
 				glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&pos );
 			}
 
 			auto* lights = m_actor->GetScene()->GetLights();
 			if ( !lights->empty() ) {
 				types::Vec3 light_pos[lights->size()];
-				types::Color light_color[lights->size()];
+				types::Color::color_t light_color[lights->size()];
 				size_t i = 0;
 				for ( auto& light : *lights ) {
 					light_pos[ i ] = light->GetPosition();

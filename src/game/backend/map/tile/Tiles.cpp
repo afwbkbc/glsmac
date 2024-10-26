@@ -198,7 +198,7 @@ const Tile& Tiles::AtConst( const size_t x, const size_t y ) const {
 	return m_data.at( y * m_width + x / 2 );
 }
 
-const std::vector< Tile >* Tiles::GetTilesPtr() const {
+std::vector< Tile >* Tiles::GetTilesPtr() {
 	return &m_data;
 }
 
@@ -275,7 +275,7 @@ void Tiles::FixTopBottomRows( util::random::Random* random ) {
 }
 
 const std::vector< Tile* > Tiles::GetVector( MT_CANCELABLE ) {
-	std::vector< Tile* > tiles;
+	std::vector< Tile* > tiles = {};
 	const size_t tiles_count = GetDataCount() / 2; // / 2 because SMAC coordinate system
 	tiles.reserve( tiles_count );
 	for ( size_t y = 0 ; y < m_height ; y++ ) {

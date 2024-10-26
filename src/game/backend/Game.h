@@ -311,6 +311,8 @@ CLASS( Game, MTModule )
 	const Player* GetPlayer() const;
 	const size_t GetSlotNum() const;
 
+	void UpdateTileData( const std::vector< map::tile::Tile* >& tiles ) const;
+
 protected:
 
 	const MT_Response ProcessRequest( const MT_Request& request, MT_CANCELABLE ) override;
@@ -380,6 +382,8 @@ private:
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
 
 	std::unordered_map< std::string, Resource* > m_resources = {};
+	std::vector< std::string > m_resource_idx = {};
+	std::unordered_map< std::string, size_t > m_resource_idx_map = {};
 	void SerializeResources( types::Buffer& buf ) const;
 	void UnserializeResources( types::Buffer& buf );
 

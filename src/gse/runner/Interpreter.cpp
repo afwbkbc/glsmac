@@ -177,7 +177,7 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 				}
 				case ForCondition::FCT_IN_OF: {
 					const auto* condition = (ForConditionInOf*)c->condition;
-					const auto target = EvaluateExpression( ctx, condition->expression );
+					const auto target = Deref( ctx, condition->m_si, EvaluateExpression( ctx, condition->expression ) );
 					const auto forctx = ctx->ForkContext( ctx, condition->m_si, false );
 					forctx->IncRefs();
 					switch ( target.Get()->type ) {
@@ -239,7 +239,7 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 							break;
 						}
 						default:
-							THROW( "unexpected type for iteration: " + target.ToString() );
+							THROW( "unexpected type for iteration (" + target.GetTypeString() + "): " + target.ToString() );
 					}
 					forctx->DecRefs();
 					break;
