@@ -2,6 +2,7 @@
 
 #include "types/texture/Texture.h"
 #include "gse/type/String.h"
+#include "gse/type/Bool.h"
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
 #include "resource/ResourceManager.h"
@@ -75,6 +76,10 @@ WRAPIMPL_BEGIN( Faction, CLASS_FACTION )
 		{
 			"name",
 			VALUE( gse::type::String, m_name )
+		},
+		{
+			"is_progenitor",
+			VALUE( gse::type::Bool, ( m_flags & rules::Faction::FF_PROGENITOR ) == rules::Faction::FF_PROGENITOR )
 		},
 	};
 WRAPIMPL_END_PTR( Faction )

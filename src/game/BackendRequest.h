@@ -10,6 +10,7 @@ public:
 
 	enum request_type_t {
 		BR_NONE,
+		BR_GET_TILE_DATA,
 		BR_ANIMATION_FINISHED,
 	};
 	BackendRequest( const request_type_t type );
@@ -19,6 +20,10 @@ public:
 	const request_type_t type = BR_NONE;
 
 	union {
+		struct {
+			size_t tile_x;
+			size_t tile_y;
+		} get_tile_data;
 		struct {
 			size_t animation_id;
 		} animation_finished;

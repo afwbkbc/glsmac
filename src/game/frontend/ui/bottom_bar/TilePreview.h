@@ -8,6 +8,7 @@ class Texture;
 
 namespace ui::object {
 class Mesh;
+class UIContainer;
 class Label;
 }
 
@@ -30,6 +31,7 @@ CLASS( TilePreview, BBSection )
 
 	void PreviewTile( const tile::Tile* tile );
 	void HideTilePreview();
+	void SetTileYields( const std::vector< std::pair< std::string, size_t > >& yields );
 
 private:
 
@@ -39,8 +41,20 @@ private:
 	};
 	std::vector< preview_layer_t > m_preview_layers = {}; // multiple layers of textures
 
+	bool show_yields_page = false;
+	struct {
+		::ui::object::UIContainer* normal = nullptr;
+		::ui::object::UIContainer* yields = nullptr;
+	} m_pages = {};
+
 	// TODO: multiline labels?
-	std::vector< ::ui::object::Label* > m_info_lines = {};
+	struct {
+		std::vector< ::ui::object::Label* > normal = {};
+		std::vector< ::ui::object::Label* > yields = {};
+		::ui::object::Label* footer = nullptr;
+	} m_texts = {};
+
+	void HideYields();
 
 };
 

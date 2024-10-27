@@ -243,6 +243,12 @@ void BottomBar::AddStyles() {
 	);
 
 	AddStyle(
+		"TilePreviewPage", SH() {
+			s->Set( ::ui::A_TOP, 56 );
+		}
+	);
+
+	AddStyle(
 		"TilePreviewText", SH() {
 			s->SetFont( ::ui::A_FONT, resource::TTF_ARIALN, 14 );
 			s->SetColor( ::ui::A_TEXT_COLOR, types::Color::FromRGB( 116, 156, 56 ) );

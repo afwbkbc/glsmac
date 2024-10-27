@@ -339,13 +339,13 @@ void Game::Iterate() {
 		}
 	}
 
-	if ( m_is_initialized ) {
+	if ( m_is_initialized ) { // do not check anything else if error
 
 		// check if previous backend requests were sent successfully
 		if ( m_mt_ids.send_backend_requests ) {
 			auto response = game->MT_GetResponse( m_mt_ids.send_backend_requests );
 			if ( response.result != backend::R_NONE ) {
-				ASSERT( response.result == backend::R_SUCCESS, "backend requests result not successful" );
+				//ASSERT( response.result == backend::R_SUCCESS, "backend requests result not successful" );
 				m_mt_ids.send_backend_requests = 0;
 			}
 		}
@@ -886,10 +886,7 @@ void Game::DefineAnimation( const backend::animation::Def* def ) {
 
 void Game::ProcessRequest( const FrontendRequest* request ) {
 	//Log( "Received frontend request (type=" + std::to_string( request->type ) + ")" ); // spammy
-	const auto f_exit = [ this, request ]() -> void {
-		const auto quit_reason = request->data.quit.reason
-			? *request->data.quit.reason
-			: "";
+	const auto f_exit = [ this ]( const std::string& quit_reason ) -> void {
 		ExitGame(
 			[ this, quit_reason ]() -> void {
 #ifdef DEBUG
@@ -904,18 +901,32 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			}
 		);
 	};
-	switch ( request->type ) {
+	switch ( request
+		? request->type
+		: FrontendRequest::FR_QUIT ) {
 		case FrontendRequest::FR_QUIT: {
-			f_exit();
+			f_exit(
+				request && request->data.quit.reason
+					? *request->data.quit.reason
+					: ""
+			);
 			break;
 		}
 		case FrontendRequest::FR_ERROR: {
-			Log( *request->data.error.stacktrace );
-			g_engine->GetUI()->ShowError(
-				*request->data.error.what, UH( f_exit ) {
-					f_exit();
+			if ( !g_engine->GetUI()->HasErrorPopup() ) { // show first error only
+				const auto& errmsg = *request->data.error.what;
+				if ( request->data.error.stacktrace ) {
+					Log( *request->data.error.stacktrace );
 				}
-			);
+				else {
+					Log( errmsg );
+				}
+				g_engine->GetUI()->ShowError(
+					errmsg, UH( f_exit, errmsg ) {
+						f_exit( errmsg );
+					}
+				);
+			}
 		}
 		case FrontendRequest::FR_GLOBAL_MESSAGE: {
 			AddMessage( *request->data.global_message.message );
@@ -933,6 +944,16 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 
 				Log( "Updating tile: " + tile->GetCoords().ToString() );
 				tile->Update( *t, *ts );
+			}
+			break;
+		}
+		case FrontendRequest::FR_TILE_DATA: {
+			const auto& d = request->data.tile_data;
+			if ( m_ui.bottom_bar ) {
+				const auto& sc = m_tm->GetSelectedTile()->m_coords;
+				if ( d.tile_x == sc.x && d.tile_y == sc.y ) {
+					m_ui.bottom_bar->SetTileYields( *d.tile_yields );
+				}
 			}
 			break;
 		}
@@ -1277,7 +1298,7 @@ void Game::Initialize(
 	for ( size_t y = 0 ; y < m_map_data.height ; y++ ) {
 		for ( size_t x = y & 1 ; x < m_map_data.width ; x += 2 ) {
 			auto* tile = m_tm->GetTile( x, y );
-			Log( "Initializing tile: " + tile->GetCoords().ToString() );
+			//Log( "Initializing tile: " + tile->GetCoords().ToString() );
 			tile->Update( tiles->at( y * m_map_data.width + x / 2 ), tile_states->at( y * m_map_data.width + x / 2 ) );
 		}
 	}
@@ -2249,10 +2270,6 @@ void Game::CancelRequests() {
 		game->MT_Cancel( m_mt_ids.reset );
 		m_mt_ids.reset = 0;
 	}
-	for ( const auto& mt_id : m_mt_ids.select_tile ) {
-		game->MT_Cancel( mt_id );
-	}
-	m_mt_ids.select_tile.clear();
 	if ( m_mt_ids.get_frontend_requests ) {
 		game->MT_Cancel( m_mt_ids.get_frontend_requests );
 		m_mt_ids.get_frontend_requests = 0;
@@ -2353,6 +2370,13 @@ void Game::SendAnimationFinished( const size_t animation_id ) {
 	SendBackendRequest( &br );
 }
 
+void Game::SendGetTileData( const tile::Tile* tile ) {
+	auto br = BackendRequest( BackendRequest::BR_GET_TILE_DATA );
+	br.data.get_tile_data.tile_x = tile->m_coords.x;
+	br.data.get_tile_data.tile_y = tile->m_coords.y;
+	SendBackendRequest( &br );
+}
+
 const bool Game::IsTurnActive() const {
 	return m_is_turn_active;
 }
@@ -2374,6 +2398,7 @@ void Game::RefreshSelectedTile( unit::Unit* selected_unit ) {
 				: 0
 		);
 	}
+	SendGetTileData( selected_tile );
 }
 
 void Game::RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* selected_unit ) {
@@ -2384,6 +2409,7 @@ void Game::RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* selecte
 				? selected_unit->GetId()
 				: 0
 		);
+		SendGetTileData( selected_tile );
 	}
 }
 

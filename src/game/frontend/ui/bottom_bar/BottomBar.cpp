@@ -179,6 +179,10 @@ void BottomBar::HideTilePreview() {
 	m_sections.tile_preview->HideTilePreview();
 }
 
+void BottomBar::SetTileYields( const std::vector< std::pair< std::string, size_t > >& yields ) const {
+	m_sections.tile_preview->SetTileYields( yields );
+}
+
 void BottomBar::PreviewObject( const TileObject* object ) {
 	m_sections.unit_preview->PreviewObject( object );
 }

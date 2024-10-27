@@ -17,7 +17,7 @@ BINDING_IMPL( on ) {
 		ON( "configure", CS_ON_CONFIGURE ),
 		ON( "start", CS_ON_START ),
 		ON( "turn", CS_ON_TURN ),
-		ON( "tiles_update", CS_ON_TILES_UPDATE ),
+		ON( "get_tile_yields", CS_ON_GET_TILE_YIELDS ),
 		ON( "unit_spawn", CS_ON_UNIT_SPAWN ),
 		ON( "unit_despawn", CS_ON_UNIT_DESPAWN ),
 		ON( "unit_move_validate", CS_ON_UNIT_MOVE_VALIDATE ),

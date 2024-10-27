@@ -23,7 +23,9 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 		}
 		case FR_ERROR: {
 			NEW( data.error.what, std::string, *other.data.error.what );
-			NEW( data.error.stacktrace, std::string, *other.data.error.stacktrace );
+			if ( other.data.error.stacktrace ) {
+				NEW( data.error.stacktrace, std::string, *other.data.error.stacktrace );
+			}
 			break;
 		}
 		case FR_GLOBAL_MESSAGE: {
@@ -32,6 +34,10 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 		}
 		case FR_UPDATE_TILES: {
 			NEW( data.update_tiles.tile_updates, tile_updates_t, *other.data.update_tiles.tile_updates );
+			break;
+		}
+		case FR_TILE_DATA: {
+			NEW( data.tile_data.tile_yields, tile_yields_t, *other.data.tile_data.tile_yields );
 			break;
 		}
 		case FR_FACTION_DEFINE: {
@@ -88,7 +94,9 @@ FrontendRequest::~FrontendRequest() {
 		}
 		case FR_ERROR: {
 			DELETE( data.error.what );
-			DELETE( data.error.stacktrace );
+			if ( data.error.stacktrace ) {
+				DELETE( data.error.stacktrace );
+			}
 			break;
 		}
 		case FR_GLOBAL_MESSAGE: {
@@ -97,6 +105,10 @@ FrontendRequest::~FrontendRequest() {
 		}
 		case FR_UPDATE_TILES: {
 			DELETE( data.update_tiles.tile_updates );
+			break;
+		}
+		case FR_TILE_DATA: {
+			DELETE( data.tile_data.tile_yields );
 			break;
 		}
 		case FR_FACTION_DEFINE: {

@@ -311,8 +311,6 @@ CLASS( Game, MTModule )
 	const Player* GetPlayer() const;
 	const size_t GetSlotNum() const;
 
-	void UpdateTileData( const std::vector< map::tile::Tile* >& tiles ) const;
-
 protected:
 
 	const MT_Response ProcessRequest( const MT_Request& request, MT_CANCELABLE ) override;
@@ -325,6 +323,7 @@ public:
 	// for bindings etc
 	void Message( const std::string& text );
 	void Quit( const std::string& reason );
+	void OnError( std::runtime_error& err );
 	void OnGSEError( gse::Exception& e );
 	unit::MoraleSet* GetMoraleSet( const std::string& name ) const;
 	unit::Unit* GetUnit( const size_t id ) const;

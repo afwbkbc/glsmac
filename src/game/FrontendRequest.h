@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <unordered_map>
 
 #include "backend/unit/Types.h"
 #include "backend/turn/Types.h"
@@ -27,6 +28,7 @@ public:
 		FR_ERROR,
 		FR_GLOBAL_MESSAGE,
 		FR_UPDATE_TILES,
+		FR_TILE_DATA,
 		FR_TURN_STATUS,
 		FR_TURN_ADVANCE,
 		FR_FACTION_DEFINE,
@@ -64,6 +66,8 @@ public:
 	};
 	typedef std::vector< base_pop_t > base_pops_t;
 
+	typedef std::vector< std::pair< std::string, size_t > > tile_yields_t;
+
 	union {
 		struct {
 			const std::string* reason;
@@ -78,6 +82,11 @@ public:
 		struct {
 			const tile_updates_t* tile_updates;
 		} update_tiles;
+		struct {
+			size_t tile_x;
+			size_t tile_y;
+			const tile_yields_t* tile_yields;
+		} tile_data;
 		struct {
 			backend::turn::turn_status_t status;
 		} turn_status;

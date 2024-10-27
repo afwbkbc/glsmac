@@ -507,6 +507,10 @@ bool UI::HasPopup() const {
 	return !m_popups.empty();
 }
 
+const bool UI::HasErrorPopup() const {
+	return m_error && m_error->IsActive();
+}
+
 void UI::OpenPopup( object::Popup* popup ) {
 	m_popups.push_back( popup );
 	AddObject( popup );

@@ -185,6 +185,18 @@ WRAPIMPL_BEGIN( Tile, CLASS_TILE )
 			VALUE( gse::type::Bool, !is_water_tile )
 		},
 		{
+			"moisture",
+			VALUE( gse::type::Int, moisture )
+		},
+		{
+			"rockiness",
+			VALUE( gse::type::Int, rockiness )
+		},
+		{
+			"elevation",
+			VALUE( gse::type::Int, *elevation.center )
+		},
+		{
 			"is_rocky",
 			VALUE( gse::type::Bool, rockiness == ROCKINESS_ROCKY )
 		},

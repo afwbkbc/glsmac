@@ -23,6 +23,7 @@ CLASS( Error, Module )
 
 	void Show( const std::string& text, const ui_handler_t on_close = UH() {} );
 	void Hide();
+	const bool IsActive() const;
 
 	void SetText( const std::string& error_text );
 

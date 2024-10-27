@@ -27,6 +27,7 @@
 #include "map/Map.h"
 #include "map/Consts.h"
 #include "gse/type/String.h"
+#include "gse/type/Int.h"
 #include "gse/type/Undefined.h"
 #include "gse/type/Array.h"
 #include "ui/UI.h"
@@ -397,9 +398,6 @@ void Game::Iterate() {
 						if ( m_state->IsMaster() ) {
 							try {
 								m_state->m_bindings->Call( bindings::Bindings::CS_ON_START );
-								common::mt_flag_t b = false;
-								const auto tiles = m_map->GetTilesPtr()->GetVector( b );
-								UpdateTileData( tiles );
 							}
 							catch ( gse::Exception& e ) {
 								Log( (std::string)"Initialization failed: " + e.ToStringAndCleanup() );
@@ -451,19 +449,6 @@ const Player* Game::GetPlayer() const {
 
 const size_t Game::GetSlotNum() const {
 	return m_slot_num;
-}
-
-void Game::UpdateTileData( const std::vector< map::tile::Tile* >& tiles ) const {
-
-	m_state->m_bindings->Call(
-		bindings::Bindings::CS_ON_TILES_UPDATE, {
-			{
-				"tiles",
-				gse::type::Array::FromVector( (const std::vector< gse::Wrappable* >*)&tiles ),
-			},
-		}
-	);
-
 }
 
 const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE ) {
@@ -608,21 +593,80 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			break;
 		}
 		case OP_SEND_BACKEND_REQUESTS: {
-			for ( const auto& r : *request.data.send_backend_requests.requests ) {
-				switch ( r.type ) {
-					case BackendRequest::BR_ANIMATION_FINISHED: {
-						const auto& it = m_running_animations_callbacks.find( r.data.animation_finished.animation_id );
-						ASSERT( it != m_running_animations_callbacks.end(), "animation " + std::to_string( r.data.animation_finished.animation_id ) + " is not running" );
-						const auto on_complete = it->second;
-						m_running_animations_callbacks.erase( it );
-						on_complete();
-						break;
+			try {
+				for ( const auto& r : *request.data.send_backend_requests.requests ) {
+					switch ( r.type ) {
+						case BackendRequest::BR_GET_TILE_DATA: {
+							const auto& tile = m_map->GetTile( r.data.get_tile_data.tile_x, r.data.get_tile_data.tile_y );
+							const auto result = m_state->m_bindings->Call(
+								bindings::Bindings::CS_ON_GET_TILE_YIELDS, {
+									{
+										"tile",
+										tile->Wrap()
+									},
+									{
+										"player",
+										m_slot->Wrap()
+									},
+								}
+							);
+							if ( result.Get()->type != gse::type::Type::T_OBJECT ) {
+								THROW( "unexpected return type: expected Object, got " + result.GetTypeString() );
+							}
+							const auto& values = ( (gse::type::Object*)result.Get() )->value;
+							for ( const auto& v : values ) {
+								if ( m_resources.find( v.first ) == m_resources.end() ) {
+									THROW( "unknown resource type: " + v.first );
+								}
+							}
+							NEWV( yields, FrontendRequest::tile_yields_t, {} );
+							yields->reserve( m_resource_idx.size() );
+							for ( const auto& idx : m_resource_idx ) {
+								const auto& v = values.find( idx );
+								if ( v == values.end() ) {
+									DELETE( yields );
+									THROW( "missing yields for resource: " + idx );
+								}
+								if ( v->second.Get()->type != gse::type::Type::T_INT ) {
+									DELETE( yields );
+									THROW( "invalid resource value, expected Int, got " + v->second.GetTypeString() + ": " + v->second.ToString() );
+								}
+								yields->push_back(
+									{
+										idx,
+										( (gse::type::Int*)v->second.Get() )->value
+									}
+								);
+							}
+							auto fr = FrontendRequest( FrontendRequest::FR_TILE_DATA );
+							fr.data.tile_data.tile_x = tile->coord.x;
+							fr.data.tile_data.tile_y = tile->coord.y;
+							fr.data.tile_data.tile_yields = yields;
+							AddFrontendRequest( fr );
+							break;
+						}
+						case BackendRequest::BR_ANIMATION_FINISHED: {
+							const auto& it = m_running_animations_callbacks.find( r.data.animation_finished.animation_id );
+							ASSERT( it != m_running_animations_callbacks.end(), "animation " + std::to_string( r.data.animation_finished.animation_id ) + " is not running" );
+							const auto on_complete = it->second;
+							m_running_animations_callbacks.erase( it );
+							on_complete();
+							break;
+						}
+						default:
+							THROW( "unknown backend request type: " + std::to_string( r.type ) );
 					}
-					default:
-						THROW( "unknown backend request type: " + std::to_string( r.type ) );
 				}
+				response.result = R_SUCCESS;
 			}
-			response.result = R_SUCCESS;
+			catch ( gse::Exception& e ) {
+				OnGSEError( e );
+				response.result = R_ERROR;
+			}
+			catch ( std::runtime_error& e ) {
+				OnError( e );
+				response.result = R_ERROR;
+			}
 			break;
 		}
 		case OP_ADD_EVENT: {
@@ -733,6 +777,13 @@ void Game::Message( const std::string& text ) {
 void Game::Quit( const std::string& reason ) {
 	auto fr = FrontendRequest( FrontendRequest::FR_QUIT );
 	NEW( fr.data.quit.reason, std::string, "Lost connection to server" );
+	AddFrontendRequest( fr );
+}
+
+void Game::OnError( std::runtime_error& err ) {
+	auto fr = FrontendRequest( FrontendRequest::FR_ERROR );
+	NEW( fr.data.error.what, std::string, (std::string)"Script error: " + err.what() );
+	fr.data.error.stacktrace = nullptr;
 	AddFrontendRequest( fr );
 }
 
