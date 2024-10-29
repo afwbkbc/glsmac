@@ -233,13 +233,17 @@ ResourceManager::ResourceManager()
 void ResourceManager::Init( std::vector< std::string > possible_smac_paths, const config::smac_type_t smac_type ) {
 	const bool print_errors = smac_type != config::ST_AUTO;
 	for ( const auto& path : possible_smac_paths ) {
-		// GOG / Planetary Pack
+
+		// GOG / Steam
 		if (
-			( smac_type == config::ST_GOG || smac_type == config::ST_PP || smac_type == config::ST_AUTO ) &&
+			( smac_type == config::ST_GOG || smac_type == config::ST_STEAM || smac_type == config::ST_AUTO ) &&
 				CheckFiles(
 					path, {
 						"terran.exe",
-						"terranx.exe"
+						"terranx.exe",
+						"arialnb.ttf",
+						"arialnbi.ttf",
+						"arialni.ttf",
 					}, print_errors
 				) && ResolveBuiltins(
 				path, {
@@ -247,10 +251,13 @@ void ResourceManager::Init( std::vector< std::string > possible_smac_paths, cons
 						".wav",
 						"fx"
 					},
-				}, PM_NONE, print_errors
+				}, PM_NONE, {}, print_errors
 			)
 			) {
-			return; // found GOG
+			m_detected_smac_type = smac_type == config::ST_AUTO
+				? config::ST_STEAM // for now there don't seem to be any differences between Steam and GoG so can pick whatever
+				: smac_type;
+			return; // found GOG or Steam
 		}
 
 		// Loki
@@ -273,11 +280,46 @@ void ResourceManager::Init( std::vector< std::string > possible_smac_paths, cons
 						".ttf",
 						"fonts"
 					}
-				}, PM_SPACES_TO_UNDERSCORES, print_errors
+				}, PM_SPACES_TO_UNDERSCORES, {}, print_errors
 			)
 			) {
-			return; // found Loki
+			m_detected_smac_type = config::ST_LOKI;
+			return;
 		}
+
+		// Legacy
+		if (
+			( smac_type == config::ST_LEGACY || smac_type == config::ST_AUTO ) &&
+				CheckFiles(
+					path, {
+						"terran.exe",
+						"terranx.exe",
+						"arialb.ttf", // legacy has different fonts
+						"ariali.ttf", // legacy has different fonts
+						"arialr.ttf", // legacy has different fonts
+					}, print_errors
+				) && ResolveBuiltins(
+				path, {
+					{
+						".wav",
+						"fx"
+					},
+				}, PM_NONE, {
+					{
+						TTF_ARIALNB,
+						"arialn.ttf"
+					},
+					{
+						PCX_LOGO,
+						"openinga.pcx"
+					},
+				}, print_errors
+			)
+			) {
+			m_detected_smac_type = config::ST_LEGACY;
+			return;
+		}
+
 		if ( smac_type != config::ST_AUTO ) {
 			break; // don't search in . if specific type was given
 		}
@@ -292,6 +334,10 @@ void ResourceManager::Init( std::vector< std::string > possible_smac_paths, cons
 		Log( "Also try --smactype with your SMAC installation type (e.g. GoG, Loki, Planetary Pack), this will give more descriptive errors if some files are not found." );
 	}
 	THROW( msg );
+}
+
+const config::smac_type_t ResourceManager::GetDetectedSMACType() const {
+	return m_detected_smac_type;
 }
 
 const resource_t ResourceManager::GetResource( const std::string& filename ) const {
@@ -369,18 +415,23 @@ const bool ResourceManager::CheckFiles( const std::string& path, const std::vect
 	return true;
 }
 
-const bool ResourceManager::ResolveBuiltins( const std::string& path, const extension_path_map_t& extension_path_map, const path_modifier_t path_modifiers, const bool print_errors ) {
+const bool ResourceManager::ResolveBuiltins( const std::string& path, const extension_path_map_t& extension_path_map, const path_modifier_t path_modifiers, const resource_substitutes_t& substitutes, const bool print_errors ) {
 	std::unordered_map< resource::resource_t, std::string > resolved_files = {};
 	resolved_files.reserve( m_resources_to_filenames.size() );
 	for ( const auto& it : m_resources_to_filenames ) {
-		const auto resolved_file = util::FS::GetExistingCaseSensitivePath( path, GetFixedPath( it.second, extension_path_map, path_modifiers ) );
+		std::string file = it.second;
+		const auto& sub_it = substitutes.find( it.first );
+		if ( sub_it != substitutes.end() ) {
+			file = sub_it->second;
+		}
+		const auto resolved_file = util::FS::GetExistingCaseSensitivePath( path, GetFixedPath( file, extension_path_map, path_modifiers ) );
 		if ( resolved_file.empty() || !util::FS::IsFile( resolved_file ) ) {
 			if ( print_errors ) {
 				Log(
 					"Could not resolve file: " + util::FS::GeneratePath(
 						{
 							path,
-							it.second
+							file
 						}
 					)
 				);

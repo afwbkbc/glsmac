@@ -88,11 +88,12 @@ Config::Config( const int argc, const char* argv[] )
 		}
 	);
 	m_parser->AddRule(
-		"smactype", "SMAC_TYPE", "Specify type of SMAC installation: gog, loki, pp (default: autodetect)", AH( this ) {
+		"smactype", "SMAC_TYPE", "Specify type of SMAC installation: gog, loki, steam, legacy (default: autodetect)", AH( this ) {
 			const std::unordered_map< std::string, smac_type_t > values = {
-				{ "gog", ST_GOG },
-				{ "loki", ST_LOKI },
-				{ "pp", ST_PP },
+				{ "gog",    ST_GOG },
+				{ "loki",   ST_LOKI },
+				{ "steam",  ST_STEAM },
+				{ "legacy", ST_LEGACY },
 			};
 			const auto& it = values.find( value );
 			if ( it != values.end() ) {

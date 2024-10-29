@@ -38,6 +38,7 @@ public:
 	Color( const channel_t red, const channel_t green, const channel_t blue, const channel_t alpha );
 	Color( const channel_t red, const channel_t green, const channel_t blue );
 	Color( const color_t& color );
+	virtual ~Color() = default;
 
 	void Set( channel_t red, channel_t green, channel_t blue, channel_t alpha );
 

@@ -16,6 +16,7 @@ CLASS( ResourceManager, common::Module )
 
 	void Init( std::vector< std::string > possible_smac_paths, const config::smac_type_t smac_type );
 
+	const config::smac_type_t GetDetectedSMACType() const;
 	const resource_t GetResource( const std::string& filename ) const;
 	const std::string& GetFilename( const resource_t res ) const;
 	const std::string& GetPath( const resource_t res ) const;
@@ -23,10 +24,13 @@ CLASS( ResourceManager, common::Module )
 
 private:
 
+	config::smac_type_t m_detected_smac_type = config::ST_AUTO;
+
 	const std::unordered_map< resource_t, std::string > m_resources_to_filenames = {};
 	std::unordered_map< std::string, resource_t > m_filenames_to_resources = {};
 
 	typedef std::unordered_map< std::string, std::string > extension_path_map_t;
+	typedef std::unordered_map< resource_t, std::string > resource_substitutes_t;
 
 	typedef uint8_t path_modifier_t;
 	path_modifier_t PM_NONE = 0;
@@ -40,7 +44,7 @@ private:
 
 	const std::string GetFixedPath( const std::string& file, const extension_path_map_t& extension_path_map, const path_modifier_t path_modifiers );
 	const bool CheckFiles( const std::string& path, const std::vector< std::string >& files, const bool print_errors ) const;
-	const bool ResolveBuiltins( const std::string& path, const extension_path_map_t& extension_path_map, const path_modifier_t path_modifiers, const bool print_errors );
+	const bool ResolveBuiltins( const std::string& path, const extension_path_map_t& extension_path_map, const path_modifier_t path_modifiers, const resource_substitutes_t& substitutes, const bool print_errors );
 
 };
 
