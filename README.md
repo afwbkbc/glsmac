@@ -232,7 +232,7 @@ Or copy `GLSMAC` file and `GLSMAC_data` directory into your SMAC directory and r
 
 Run ./bin/GLSMAC --help to see more options. Debug builds have extra options that aren't available for release builds.
 
-Supported SMAC releases: GOG, Loki, Planetary Pack (if you have something else and it doesn't work - double-check that you have SMACX expansion and then create issue)
+Supported SMAC releases: GOG, Steam, Loki, Legacy (if you have something else and it doesn't work - double-check that you have SMACX expansion and then create issue)
 
 ### Reporting problems
 
