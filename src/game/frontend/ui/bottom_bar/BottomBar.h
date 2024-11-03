@@ -49,6 +49,8 @@ CLASS( BottomBar, BottomBarBase )
 	void PreviewTile( tile::Tile* tile, const size_t selected_unit_id );
 	void HideTilePreview();
 
+	void SetTileYields( const std::vector< std::pair< std::string, size_t > >& yields ) const;
+
 	void PreviewObject( const TileObject* object );
 	void HideObjectPreview();
 

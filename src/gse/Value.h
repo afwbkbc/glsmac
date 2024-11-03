@@ -20,25 +20,25 @@ namespace gse {
 
 #define WRAPDEFS_CLASS() \
     static const gse::type::Object::object_class_t WRAP_CLASS;
-#define WRAPDEFS_PTR( _type, ... ) \
+#define WRAPDEFS_PTR( _type ) \
     WRAPDEFS_CLASS() \
-    virtual const gse::Value Wrap() __VA_ARGS__; \
+    virtual const gse::Value Wrap( const bool dynamic = false ) override; \
     static _type* Unwrap( const gse::Value& value );
 #define WRAPDEFS_DYNAMIC( _type ) \
     WRAPDEFS_CLASS() \
-    const gse::Value Wrap( const bool dynamic = false ); \
+    virtual const gse::Value Wrap( const bool dynamic = false ) override; \
     static _type* Unwrap( const gse::Value& value ); \
     static void WrapSet( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& si ); \
     void OnWrapSet( const std::string& property_name );
 #define WRAPDEFS_NOPTR( _type ) \
     WRAPDEFS_CLASS() \
-    const gse::Value Wrap(); \
+    virtual const gse::Value Wrap( const bool dynamic = false ) override; \
     static _type Unwrap( const gse::Value& value );
 #define WRAPIMPL_CLASS( _type, _class ) \
     const gse::type::Object::object_class_t _type::WRAP_CLASS = gse::type::Object::_class;
 #define WRAPIMPL_BEGIN( _type, _class ) \
     WRAPIMPL_CLASS( _type, _class ) \
-    const gse::Value _type::Wrap() {
+    const gse::Value _type::Wrap( const bool dynamic ) {
 #define WRAPIMPL_DYNAMIC_BEGIN( _type, _class ) \
     WRAPIMPL_CLASS( _type, _class ) \
     const gse::Value _type::Wrap( const bool dynamic ) {

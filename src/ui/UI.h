@@ -114,6 +114,7 @@ CLASS( UI, common::Module )
 	void Redraw();
 
 	bool HasPopup() const;
+	const bool HasErrorPopup() const;
 	void OpenPopup( object::Popup* popup );
 	void ClosePopup( object::Popup* popup, bool force = false );
 	void CloseLastPopup( bool force = false );

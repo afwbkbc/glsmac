@@ -23,7 +23,9 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 		}
 		case FR_ERROR: {
 			NEW( data.error.what, std::string, *other.data.error.what );
-			NEW( data.error.stacktrace, std::string, *other.data.error.stacktrace );
+			if ( other.data.error.stacktrace ) {
+				NEW( data.error.stacktrace, std::string, *other.data.error.stacktrace );
+			}
 			break;
 		}
 		case FR_GLOBAL_MESSAGE: {
@@ -32,6 +34,10 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 		}
 		case FR_UPDATE_TILES: {
 			NEW( data.update_tiles.tile_updates, tile_updates_t, *other.data.update_tiles.tile_updates );
+			break;
+		}
+		case FR_TILE_DATA: {
+			NEW( data.tile_data.tile_yields, tile_yields_t, *other.data.tile_data.tile_yields );
 			break;
 		}
 		case FR_FACTION_DEFINE: {
@@ -59,8 +65,18 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.unit_spawn.morale_string, std::string, *other.data.unit_spawn.morale_string );
 			break;
 		}
+		case FR_BASE_POP_DEFINE: {
+			NEW( data.base_pop_define.serialized_popdef, std::string, *other.data.base_pop_define.serialized_popdef );
+			break;
+		}
 		case FR_BASE_SPAWN: {
-			NEW( data.base_spawn.base_info.name, std::string, *other.data.base_spawn.base_info.name );
+			NEW( data.base_spawn.name, std::string, *other.data.base_spawn.name );
+			break;
+		}
+		case FR_BASE_UPDATE: {
+			NEW( data.base_update.name, std::string, *other.data.base_update.name );
+			NEW( data.base_update.faction_id, std::string, *other.data.base_update.faction_id );
+			NEW( data.base_update.pops, base_pops_t, *other.data.base_update.pops );
 			break;
 		}
 
@@ -78,7 +94,9 @@ FrontendRequest::~FrontendRequest() {
 		}
 		case FR_ERROR: {
 			DELETE( data.error.what );
-			DELETE( data.error.stacktrace );
+			if ( data.error.stacktrace ) {
+				DELETE( data.error.stacktrace );
+			}
 			break;
 		}
 		case FR_GLOBAL_MESSAGE: {
@@ -87,6 +105,10 @@ FrontendRequest::~FrontendRequest() {
 		}
 		case FR_UPDATE_TILES: {
 			DELETE( data.update_tiles.tile_updates );
+			break;
+		}
+		case FR_TILE_DATA: {
+			DELETE( data.tile_data.tile_yields );
 			break;
 		}
 		case FR_FACTION_DEFINE: {
@@ -114,8 +136,18 @@ FrontendRequest::~FrontendRequest() {
 			DELETE( data.unit_spawn.morale_string );
 			break;
 		}
+		case FR_BASE_POP_DEFINE: {
+			DELETE( data.base_pop_define.serialized_popdef );
+			break;
+		}
 		case FR_BASE_SPAWN: {
-			DELETE( data.base_spawn.base_info.name );
+			DELETE( data.base_spawn.name );
+			break;
+		}
+		case FR_BASE_UPDATE: {
+			DELETE( data.base_update.name );
+			DELETE( data.base_update.faction_id );
+			DELETE( data.base_update.pops );
 			break;
 		}
 		default: {

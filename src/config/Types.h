@@ -7,7 +7,8 @@ enum smac_type_t : uint8_t {
 	ST_AUTO,
 	ST_GOG,
 	ST_LOKI,
-	ST_PP,
+	ST_STEAM,
+	ST_LEGACY,
 
 };
 

@@ -18,10 +18,12 @@ CLASS( Intro, common::Task )
 	void Stop() override;
 	void Iterate() override;
 
-protected:
-	Theme* m_theme;
+private:
+	Theme* m_theme = nullptr;
 	::ui::object::Surface* m_logo = nullptr;
 	util::Timer m_timer;
+
+	void Finish();
 
 };
 

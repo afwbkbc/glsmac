@@ -440,7 +440,6 @@ private:
 		common::mt_id_t init = 0;
 		common::mt_id_t get_map_data = 0;
 		common::mt_id_t reset = 0;
-		std::unordered_set< common::mt_id_t > select_tile = {};
 		common::mt_id_t save_map = 0;
 		common::mt_id_t edit_map = 0;
 		common::mt_id_t chat = 0;
@@ -475,6 +474,10 @@ private:
 	tile::Tile* m_tile_selected_before_base_popup = nullptr;
 
 private:
+	friend class tile::TileManager;
+	void SendGetTileData( const tile::Tile* tile );
+
+private:
 	friend class unit::UnitManager;
 	friend class base::BaseManager;
 
@@ -484,7 +487,7 @@ private:
 
 	void SetSelectedTile( tile::Tile* tile );
 	void RefreshSelectedTile( unit::Unit* selected_unit );
-	void RefreshSelectedTileIf( tile::Tile* if_tile, unit::Unit* selected_unit );
+	void RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* selected_unit );
 	void ScrollToSelectedTile( const bool center_on_tile );
 	void SelectAnyUnitAtTile( tile::Tile* tile );
 	void SelectUnitOrSelectedTile( unit::Unit* selected_unit );

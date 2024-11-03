@@ -13,5 +13,6 @@ SET( SRC ${SRC}
 	${PWD}/Bases.cpp
 	${PWD}/Animations.cpp
 	${PWD}/Map.cpp
+	${PWD}/Resources.cpp
 
 	PARENT_SCOPE )

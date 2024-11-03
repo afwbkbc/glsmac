@@ -65,13 +65,11 @@ BINDING_IMPL( animations ) {
 						sound
 					);
 					auto* game = GAME;
-					game->AddEvent( new event::DefineAnimation( game->GetSlotNum(), def ) );
-					return VALUE( gse::type::Undefined );
+					return game->AddEvent( new event::DefineAnimation( game->GetSlotNum(), def ) );
 				}
 				else {
 					ERROR( gse::EC.GAME_ERROR, "Unsupported animation type: " + type );
 				}
-				return VALUE( gse::type::Undefined );
 			})
 		},
 		{

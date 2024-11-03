@@ -41,6 +41,10 @@ void Error::Hide() {
 	}
 }
 
+const bool Error::IsActive() const {
+	return m_is_active;
+}
+
 void Error::Start() {
 
 	if ( m_is_active ) {

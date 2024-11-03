@@ -51,8 +51,11 @@ class Unit;
 }
 
 namespace base {
+class PopDef;
 class Base;
 }
+
+class Resource;
 
 namespace event {
 class Event;
@@ -320,21 +323,25 @@ public:
 	// for bindings etc
 	void Message( const std::string& text );
 	void Quit( const std::string& reason );
+	void OnError( std::runtime_error& err );
 	void OnGSEError( gse::Exception& e );
 	unit::MoraleSet* GetMoraleSet( const std::string& name ) const;
 	unit::Unit* GetUnit( const size_t id ) const;
 	unit::Def* GetUnitDef( const std::string& name ) const;
-	void AddEvent( event::Event* event );
+	base::PopDef* GetPopDef( const std::string& id ) const;
+	base::Base* GetBase( const size_t id ) const;
+	const gse::Value AddEvent( event::Event* event );
 	void RefreshUnit( const unit::Unit* unit );
 	void RefreshBase( const base::Base* base );
 	void DefineAnimation( animation::Def* def );
 	const std::string* ShowAnimationOnTile( const std::string& animation_id, map::tile::Tile* tile, const cb_oncomplete& on_complete );
+	void DefineResource( Resource* resource );
 	void DefineMoraleSet( unit::MoraleSet* moraleset );
 	void DefineUnit( unit::Def* def );
 	void SpawnUnit( unit::Unit* unit );
 	void SkipUnitTurn( const size_t unit_id );
 	void DespawnUnit( const size_t unit_id );
-	std::string RegisterBaseName( const std::string& requested_name );
+	void DefinePop( base::PopDef* pop_def );
 	void SpawnBase( base::Base* base );
 	const std::string* MoveUnitValidate( unit::Unit* unit, map::tile::Tile* dst_tile );
 	const gse::Value MoveUnitResolve( unit::Unit* unit, map::tile::Tile* dst_tile );
@@ -364,6 +371,8 @@ public:
 	void RequestTileUnlocks( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
 	void UnlockTiles( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
 
+	rules::Faction* GetFaction( const std::string& id ) const;
+
 private:
 
 	void ValidateEvent( event::Event* event );
@@ -371,12 +380,19 @@ private:
 
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
 
+	std::unordered_map< std::string, Resource* > m_resources = {};
+	std::vector< std::string > m_resource_idx = {};
+	std::unordered_map< std::string, size_t > m_resource_idx_map = {};
+	void SerializeResources( types::Buffer& buf ) const;
+	void UnserializeResources( types::Buffer& buf );
+
 	std::unordered_map< std::string, unit::MoraleSet* > m_unit_moralesets = {};
 	std::unordered_map< std::string, unit::Def* > m_unit_defs = {};
 	std::map< size_t, unit::Unit* > m_units = {};
 	void SerializeUnits( types::Buffer& buf ) const;
 	void UnserializeUnits( types::Buffer& buf );
 
+	std::unordered_map< std::string, base::PopDef* > m_base_popdefs = {};
 	std::map< size_t, base::Base* > m_bases = {};
 	void SerializeBases( types::Buffer& buf ) const;
 	void UnserializeBases( types::Buffer& buf );

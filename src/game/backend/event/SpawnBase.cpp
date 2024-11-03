@@ -7,7 +7,9 @@
 #include "game/backend/unit/StaticDef.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/base/Base.h"
+#include "game/backend/base/Pop.h"
 #include "gse/type/Undefined.h"
+#include "game/backend/Player.h"
 
 namespace game {
 namespace backend {
@@ -18,13 +20,13 @@ SpawnBase::SpawnBase(
 	const size_t owner_slot,
 	const size_t pos_x,
 	const size_t pos_y,
-	const base::BaseData& data
+	const std::string& name
 )
 	: Event( initiator_slot, ET_BASE_SPAWN )
 	, m_owner_slot( owner_slot )
 	, m_pos_x( pos_x )
 	, m_pos_y( pos_y )
-	, m_data( data ) {
+	, m_name( name ) {
 	//
 }
 
@@ -44,8 +46,10 @@ const gse::Value SpawnBase::Apply( Game* game ) const {
 		game,
 		base::Base::GetNextId(),
 		&owner,
+		&owner.GetPlayer()->GetFaction().value(),
 		tile,
-		m_data
+		m_name,
+		{} // will be added later
 	);
 	game->SpawnBase( base );
 	return base->Wrap();
@@ -56,7 +60,7 @@ TS_BEGIN( SpawnBase )
 			TS_FUNC_ARG_NUM( "owner_slot", m_owner_slot ) +
 			TS_FUNC_ARG_NUM( "pos_x", m_pos_x ) +
 			TS_FUNC_ARG_NUM( "pos_y", m_pos_y ) +
-			TS_FUNC_ARG_STR( "data", m_data.ToString( TS_PREFIX_NEXT ) ) +
+			TS_FUNC_ARG_STR( "name", m_name ) +
 		TS_FUNC_END()
 TS_END()
 
@@ -64,15 +68,15 @@ void SpawnBase::Serialize( types::Buffer& buf, const SpawnBase* event ) {
 	buf.WriteInt( event->m_owner_slot );
 	buf.WriteInt( event->m_pos_x );
 	buf.WriteInt( event->m_pos_y );
-	event->m_data.Serialize( buf );
+	buf.WriteString( event->m_name );
 }
 
 SpawnBase* SpawnBase::Unserialize( types::Buffer& buf, const size_t initiator_slot ) {
 	const auto owner_slot = buf.ReadInt();
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
-	const auto data = base::BaseData( buf );
-	return new SpawnBase( initiator_slot, owner_slot, pos_x, pos_y, data );
+	const auto name = buf.ReadString();
+	return new SpawnBase( initiator_slot, owner_slot, pos_x, pos_y, name );
 }
 
 }

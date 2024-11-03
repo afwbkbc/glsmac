@@ -48,6 +48,7 @@ Bindings::Bindings( State* state )
 		B( bases ),
 		B( animations ),
 		B( map ),
+		B( resources ),
 	};
 #undef B
 }

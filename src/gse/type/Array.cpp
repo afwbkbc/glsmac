@@ -4,6 +4,7 @@
 #include "ArrayRef.h"
 #include "ArrayRangeRef.h"
 #include "String.h"
+#include "gse/Wrappable.h"
 
 namespace gse {
 namespace type {
@@ -63,6 +64,15 @@ const Value Array::GetRef( const size_t index ) {
 
 const Value Array::GetRangeRef( const std::optional< size_t > from, const std::optional< size_t > to ) {
 	return VALUE( ArrayRangeRef, this, from, to );
+}
+
+const Value Array::FromVector( const std::vector< Wrappable* >* data, const bool dynamic ) {
+	array_elements_t elements = {};
+	elements.reserve( data->size() );
+	for ( const auto& el : *data ) {
+		elements.push_back( el->Wrap( dynamic ) );
+	}
+	return VALUE( Array, elements );
 }
 
 void Array::ValidateFromTo( const std::optional< size_t >& from, const std::optional< size_t >& to ) const {

@@ -1,5 +1,8 @@
-const units = #include('units');
 const factions = #include('factions');
+const resources = #include('resources');
+const map = #include('map');
+const units = #include('units');
+const bases = #include('bases');
 
 #game.on.configure((e) => {
 
@@ -25,12 +28,33 @@ let random_health = () => {
 	return #game.random.get_float(#to_float(0.1), #to_float(1));
 };
 
+const pop_types = [
+	'Worker',
+	'Talent',
+	'Doctor',
+	'Librarian',
+];
+
+let add_pops = ( base, count ) => {
+	for (let i = 0; i < count; i++) {
+		const type = pop_types[(#game.random.get_int(0, #size(pop_types) - 1))];
+		base.create_pop({
+			type: type,
+		});
+	}
+};
+
 units.init();
+
+let all_bases = [];
 
 #game.on.start((e) => {
 
-	// init units
+	// init game data
+	resources.define();
+	map.define();
 	units.define();
+	bases.define();
 
 	// init players
 	players = #game.players.get_all();
@@ -92,14 +116,15 @@ units.init();
 						}
 					}
 					if (!has_adjactent_bases) {
-						#game.bases.spawn(
+						let base = #game.bases.spawn(
 							owner,
 							tile,
 							{
 								// name: 'base name',
-								population: #game.random.get_int(0, 4) * #game.random.get_int(0, 4) + #game.random.get_int(1, 3),
 							}
 						);
+						add_pops(base, #game.random.get_int(1, 7));
+						all_bases []= base;
 						bases_spawned++;
 					}
 				}
@@ -112,6 +137,9 @@ units.init();
 });
 
 #game.on.turn((e) => {
+	for ( base of all_bases ) {
+		add_pops(base, 1);
+	}
 	//
 });
 

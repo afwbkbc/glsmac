@@ -19,5 +19,6 @@ SET( SRC ${SRC}
 	${PWD}/Player.cpp
 	${PWD}/MapObject.cpp
 	${PWD}/TileLock.cpp
+	${PWD}/Resource.cpp
 
 	PARENT_SCOPE )

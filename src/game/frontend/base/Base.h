@@ -6,6 +6,8 @@
 
 #include "game/backend/unit/Types.h"
 
+#include "Pop.h"
+
 #include "util/Timer.h"
 #include "util/Scroller.h"
 #include "types/Vec3.h"
@@ -58,17 +60,18 @@ public:
 		tile::Tile* tile,
 		const bool is_owned,
 		const types::Vec3& render_coords,
-		text::InstancedText* render_name_sprite,
-		size_t population
+		text::InstancedText* render_name_sprite
 	);
 	~Base();
 
 	const size_t GetId() const;
+
 	const std::string& GetName() const;
+	void SetName( const std::string& name );
+
 	faction::Faction* const GetFaction() const;
 	const bool IsOwned() const;
 	tile::Tile* GetTile() const;
-	const size_t GetPopulation() const;
 
 	sprite::Sprite* GetSprite() const;
 
@@ -92,6 +95,10 @@ public:
 	void DestroyOnBottomBarPreview( ui::ObjectPreview* element, void* state ) const override;
 	const bool OnBottomBarListActivate( Game* game ) override;
 
+	typedef std::vector< Pop > pops_t;
+	const pops_t& GetPops() const;
+	void SetPops( const pops_t& pops );
+
 protected:
 	void SetRenderCoords( const types::Vec3& coords ) override;
 
@@ -112,18 +119,20 @@ private:
 		bool is_rendered = false;
 		size_t instance_id = 0;
 		struct {
+			size_t pops_count = 0;
 			sprite::Sprite* def = nullptr;
 			size_t instance_id = 0;
 			text::InstancedText* label = nullptr;
 		} badge;
 	} m_render;
 
-	size_t m_population = 0;
 	bool m_is_guarded = false;
 
 	const bool m_is_owned = false;
 
 	render_data_t m_render_data = {};
+
+	pops_t m_pops = {};
 
 	void ShowBadge();
 	void HideBadge();

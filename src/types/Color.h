@@ -6,10 +6,13 @@
 
 #include "gse/Value.h"
 #include "gse/type/Object.h"
+#include "gse/Wrappable.h"
+
+// TODO: refactor
 
 namespace types {
 
-class Color {
+class Color : public gse::Wrappable {
 public:
 
 	typedef float channel_t;
@@ -20,10 +23,13 @@ public:
 		channel_t green;
 		channel_t blue;
 		channel_t alpha;
-
-		void operator=( const Color& color ) {
-			memcpy( this, &color.value, sizeof( color.value ) );
-		}
+		color_t() = default;
+		~color_t() = default;
+		color_t( const color_t& color );
+		color_t( const Color& color );
+		void operator=( const Color& color );
+		color_t( const channel_t red, const channel_t green, const channel_t blue, const channel_t alpha );
+		color_t( const channel_t red, const channel_t green, const channel_t blue );
 	};
 
 	color_t value = {};
@@ -32,6 +38,7 @@ public:
 	Color( const channel_t red, const channel_t green, const channel_t blue, const channel_t alpha );
 	Color( const channel_t red, const channel_t green, const channel_t blue );
 	Color( const color_t& color );
+	virtual ~Color() = default;
 
 	void Set( channel_t red, channel_t green, channel_t blue, channel_t alpha );
 

@@ -80,7 +80,7 @@ Engine::Engine(
 	if ( !m_config->HasDebugFlag( config::Config::DF_GSE_ONLY ) )
 #endif
 	{
-		m_resource_manager->Init( m_config->GetPossibleSMACPaths(), m_config->GetSMACType() );
+		m_resource_manager->Init( m_config->GetPossibleSMACPaths(), m_config->GetSMACType(), m_config->GetDataPath() );
 		t_main->AddModule( m_resource_manager );
 	}
 	t_main->AddModule( m_input );

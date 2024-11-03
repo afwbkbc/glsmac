@@ -88,11 +88,12 @@ Config::Config( const int argc, const char* argv[] )
 		}
 	);
 	m_parser->AddRule(
-		"smactype", "SMAC_TYPE", "Specify type of SMAC installation: gog, loki, pp (default: autodetect)", AH( this ) {
+		"smactype", "SMAC_TYPE", "Specify type of SMAC installation: gog, loki, steam, legacy (default: autodetect)", AH( this ) {
 			const std::unordered_map< std::string, smac_type_t > values = {
-				{ "gog", ST_GOG },
-				{ "loki", ST_LOKI },
-				{ "pp", ST_PP },
+				{ "gog",    ST_GOG },
+				{ "loki",   ST_LOKI },
+				{ "steam",  ST_STEAM },
+				{ "legacy", ST_LEGACY },
 			};
 			const auto& it = values.find( value );
 			if ( it != values.end() ) {
@@ -133,6 +134,115 @@ Config::Config( const int argc, const char* argv[] )
 		}
 	);
 
+	m_parser->AddRule(
+		"quickstart", "Skip intro and main menu and generate/load map directly", AH( this ) {
+			m_launch_flags |= LF_QUICKSTART;
+		}
+	);
+	const std::string s_quickstart_argument_missing = "Quickstart-related options can only be used after --quickstart argument!";
+	m_parser->AddRule(
+		"quickstart-seed", "SEED", "Generate map with specific seed (A:B:C:D)", AH( this, s_quickstart_argument_missing ) {
+			if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
+				Error( s_quickstart_argument_missing );
+			}
+			try {
+				m_quickstart_seed = util::random::Random::GetStateFromString( value );
+			}
+			catch ( std::runtime_error& e ) {
+				Error( "Invalid seed format! Seed must contain four numbers separated by colon, for example: 1651011033:1377505029:3019448108:3247278135" );
+			}
+			m_launch_flags |= LF_QUICKSTART_SEED;
+		}
+	);
+	m_parser->AddRule(
+		"quickstart-mapfile", "MAP_FILE", "Load from existing map file (*.gsm)", AH( this, s_quickstart_argument_missing ) {
+			if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
+				Error( s_quickstart_argument_missing );
+			}
+			if ( !util::FS::FileExists( value ) ) {
+				Error( "Map file \"" + value + "\" not found!" );
+			}
+			m_quickstart_mapfile = value;
+			m_launch_flags |= LF_QUICKSTART_MAP_FILE;
+		}
+	);
+	m_parser->AddRule(
+		"quickstart-mapsize", "MAP_SIZE", "Generate map of specific size (WxH)", AH( this, s_quickstart_argument_missing ) {
+			if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
+				Error( s_quickstart_argument_missing );
+			}
+			m_quickstart_mapsize = ParseSize( value );
+			m_launch_flags |= LF_QUICKSTART_MAP_SIZE;
+		}
+	);
+	const auto f_add_map_parameter_option =
+		[ this, s_quickstart_argument_missing ]( const std::string& name, const std::vector< std::string >& values, const std::string& desc, launch_flag_t flag, game::backend::settings::map_config_value_t* out_param )
+			-> void {
+			ASSERT( values.size() == 3, "values size mismatch" );
+			m_parser->AddRule(
+				name, values[ 0 ] + "|" + values[ 1 ] + "|" + values[ 2 ], "Generate map with specific " + desc + " setting",
+				AH( this, name, values, s_quickstart_argument_missing, out_param, &desc, flag ) {
+					if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
+						Error( s_quickstart_argument_missing );
+					}
+					if ( value == values[ 0 ] ) {
+						*out_param = 1;
+					}
+					else if ( value == values[ 1 ] ) {
+						*out_param = 2;
+					}
+					else if ( value == values[ 2 ] ) {
+						*out_param = 3;
+					}
+					else {
+						Error( "Invalid --" + name + " value specified! Possible choices: " + values[ 0 ] + " " + values[ 1 ] + " " + values[ 2 ] );
+					}
+					m_launch_flags |= flag;
+				}
+			);
+		};
+	f_add_map_parameter_option(
+		"quickstart-map-ocean", {
+			"low",
+			"medium",
+			"high"
+		}, "ocean coverage",
+		LF_QUICKSTART_MAP_OCEAN, &m_quickstart_map_ocean
+	);
+	f_add_map_parameter_option(
+		"quickstart-map-erosive", {
+			"strong",
+			"average",
+			"weak"
+		}, "erosive forces",
+		LF_QUICKSTART_MAP_EROSIVE, &m_quickstart_map_erosive
+	);
+	f_add_map_parameter_option(
+		"quickstart-map-lifeforms", {
+			"rare",
+			"average",
+			"abundant"
+		}, "native lifeforms",
+		LF_QUICKSTART_MAP_LIFEFORMS, &m_quickstart_map_lifeforms
+	);
+	f_add_map_parameter_option(
+		"quickstart-map-clouds", {
+			"sparse",
+			"average",
+			"dense"
+		}, "cloud cover",
+		LF_QUICKSTART_MAP_CLOUDS, &m_quickstart_map_clouds
+	);
+	m_parser->AddRule(
+		"quickstart-faction", "FACTION", "Play as specific faction", AH( this, s_quickstart_argument_missing ) {
+			if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
+				Error( s_quickstart_argument_missing );
+			}
+			m_quickstart_faction = value;
+			m_launch_flags |= LF_QUICKSTART_FACTION;
+		}
+	);
+
 #ifdef DEBUG
 	m_parser->AddRule(
 		"gdb", "Try to start within gdb (on supported platforms)", AH( this ) {
@@ -155,28 +265,8 @@ Config::Config( const int argc, const char* argv[] )
 		}
 	);
 	m_parser->AddRule(
-		"quickstart", "Skip intro and main menu and generate/load map directly", AH( this ) {
-			m_debug_flags |= DF_QUICKSTART;
-		}
-	);
-	const std::string s_quickstart_argument_missing = "Quickstart-related options can only be used after --quickstart argument!";
-	m_parser->AddRule(
-		"quickstart-seed", "SEED", "Generate map with specific seed (A:B:C:D)", AH( this, s_quickstart_argument_missing ) {
-			if ( !HasDebugFlag( DF_QUICKSTART ) ) {
-				Error( s_quickstart_argument_missing );
-			}
-			try {
-				m_quickstart_seed = util::random::Random::GetStateFromString( value );
-			}
-			catch ( std::runtime_error& e ) {
-				Error( "Invalid seed format! Seed must contain four numbers separated by colon, for example: 1651011033:1377505029:3019448108:3247278135" );
-			}
-			m_debug_flags |= DF_QUICKSTART_SEED;
-		}
-	);
-	m_parser->AddRule(
 		"quickstart-mapdump", "MAP_DUMP_FILE", "Load from existing map dump file (*.gsmd)", AH( this, s_quickstart_argument_missing ) {
-			if ( !HasDebugFlag( DF_QUICKSTART ) ) {
+			if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
 				Error( s_quickstart_argument_missing );
 			}
 			if ( !util::FS::FileExists( value ) ) {
@@ -184,94 +274,6 @@ Config::Config( const int argc, const char* argv[] )
 			}
 			m_quickstart_mapdump = value;
 			m_debug_flags |= DF_QUICKSTART_MAP_DUMP;
-		}
-	);
-	m_parser->AddRule(
-		"quickstart-mapfile", "MAP_FILE", "Load from existing map file (*.gsm)", AH( this, s_quickstart_argument_missing ) {
-			if ( !HasDebugFlag( DF_QUICKSTART ) ) {
-				Error( s_quickstart_argument_missing );
-			}
-			if ( !util::FS::FileExists( value ) ) {
-				Error( "Map file \"" + value + "\" not found!" );
-			}
-			m_quickstart_mapfile = value;
-			m_debug_flags |= DF_QUICKSTART_MAP_FILE;
-		}
-	);
-	m_parser->AddRule(
-		"quickstart-mapsize", "MAP_SIZE", "Generate map of specific size (WxH)", AH( this, s_quickstart_argument_missing ) {
-			if ( !HasDebugFlag( DF_QUICKSTART ) ) {
-				Error( s_quickstart_argument_missing );
-			}
-			m_quickstart_mapsize = ParseSize( value );
-			m_debug_flags |= DF_QUICKSTART_MAP_SIZE;
-		}
-	);
-	const auto f_add_map_parameter_option =
-		[ this, s_quickstart_argument_missing ]( const std::string& name, const std::vector< std::string >& values, const std::string& desc, debug_flag_t flag, game::backend::settings::map_config_value_t* out_param )
-			-> void {
-			ASSERT( values.size() == 3, "values size mismatch" );
-			m_parser->AddRule(
-				name, values[ 0 ] + "|" + values[ 1 ] + "|" + values[ 2 ], "Generate map with specific " + desc + " setting",
-				AH( this, name, values, s_quickstart_argument_missing, out_param, &desc, flag ) {
-					if ( !HasDebugFlag( DF_QUICKSTART ) ) {
-						Error( s_quickstart_argument_missing );
-					}
-					if ( value == values[ 0 ] ) {
-						*out_param = 1;
-					}
-					else if ( value == values[ 1 ] ) {
-						*out_param = 2;
-					}
-					else if ( value == values[ 2 ] ) {
-						*out_param = 3;
-					}
-					else {
-						Error( "Invalid --" + name + " value specified! Possible choices: " + values[ 0 ] + " " + values[ 1 ] + " " + values[ 2 ] );
-					}
-					m_debug_flags |= flag;
-				}
-			);
-		};
-	f_add_map_parameter_option(
-		"quickstart-map-ocean", {
-			"low",
-			"medium",
-			"high"
-		}, "ocean coverage",
-		DF_QUICKSTART_MAP_OCEAN, &m_quickstart_map_ocean
-	);
-	f_add_map_parameter_option(
-		"quickstart-map-erosive", {
-			"strong",
-			"average",
-			"weak"
-		}, "erosive forces",
-		DF_QUICKSTART_MAP_EROSIVE, &m_quickstart_map_erosive
-	);
-	f_add_map_parameter_option(
-		"quickstart-map-lifeforms", {
-			"rare",
-			"average",
-			"abundant"
-		}, "native lifeforms",
-		DF_QUICKSTART_MAP_LIFEFORMS, &m_quickstart_map_lifeforms
-	);
-	f_add_map_parameter_option(
-		"quickstart-map-clouds", {
-			"sparse",
-			"average",
-			"dense"
-		}, "cloud cover",
-		DF_QUICKSTART_MAP_CLOUDS, &m_quickstart_map_clouds
-	);
-	m_parser->AddRule(
-		"quickstart-faction", "FACTION", "Play as specific faction", AH( this, s_quickstart_argument_missing ) {
-			if ( !HasDebugFlag( DF_QUICKSTART ) ) {
-				Error( s_quickstart_argument_missing );
-			}
-			m_quickstart_faction = value;
-			m_debug_flags |= DF_QUICKSTART_FACTION;
 		}
 	);
 	m_parser->AddRule(
@@ -371,18 +373,8 @@ const types::Vec2< size_t >& Config::GetWindowSize() const {
 	return m_window_size;
 }
 
-#ifdef DEBUG
-
-const bool Config::HasDebugFlag( const debug_flag_t flag ) const {
-	return m_debug_flags & flag;
-}
-
 const util::random::state_t& Config::GetQuickstartSeed() const {
 	return m_quickstart_seed;
-}
-
-const std::string& Config::GetQuickstartMapDump() const {
-	return m_quickstart_mapdump;
 }
 
 const std::string& Config::GetQuickstartMapFile() const {
@@ -411,6 +403,16 @@ const game::backend::settings::map_config_value_t Config::GetQuickstartMapClouds
 
 const std::string& Config::GetQuickstartFaction() const {
 	return m_quickstart_faction;
+}
+
+#ifdef DEBUG
+
+const bool Config::HasDebugFlag( const debug_flag_t flag ) const {
+	return m_debug_flags & flag;
+}
+
+const std::string& Config::GetQuickstartMapDump() const {
+	return m_quickstart_mapdump;
 }
 
 const std::string& Config::GetGSETestsScript() const {

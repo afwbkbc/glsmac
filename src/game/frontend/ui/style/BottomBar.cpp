@@ -243,6 +243,12 @@ void BottomBar::AddStyles() {
 	);
 
 	AddStyle(
+		"TilePreviewPage", SH() {
+			s->Set( ::ui::A_TOP, 56 );
+		}
+	);
+
+	AddStyle(
 		"TilePreviewText", SH() {
 			s->SetFont( ::ui::A_FONT, resource::TTF_ARIALN, 14 );
 			s->SetColor( ::ui::A_TEXT_COLOR, types::Color::FromRGB( 116, 156, 56 ) );
@@ -950,16 +956,6 @@ void BottomBar::AddStyles() {
 			s->Set( ::ui::A_ALIGN, ::ui::ALIGN_LEFT | ::ui::ALIGN_VCENTER );
 			s->Set( ::ui::A_WIDTH, 38 );
 			s->Set( ::ui::A_HEIGHT, 48 );
-		}
-	);
-	AddStyle(
-		"PopulationIconHuman", { "PopulationIcon" }, SH() {
-			s->SetTexture( ::ui::A_TEXTURE, resource::PCX_NEWICONS, 79, 501, 116, 548 );
-		}
-	);
-	AddStyle(
-		"PopulationIconProgenitor", { "PopulationIcon" }, SH() {
-			s->SetTexture( ::ui::A_TEXTURE, resource::PCX_ALIENCIT, 40, 41, 77, 88 );
 		}
 	);
 

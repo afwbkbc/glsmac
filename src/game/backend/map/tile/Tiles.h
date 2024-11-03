@@ -32,7 +32,7 @@ CLASS( Tiles, types::Serializable )
 
 	Tile& At( const size_t x, const size_t y );
 	const Tile& AtConst( const size_t x, const size_t y ) const;
-	const std::vector< Tile >* GetTilesPtr() const;
+	std::vector< Tile >* GetTilesPtr();
 	elevation_t* TopVertexAt( const size_t x, const size_t y );
 	elevation_t* TopRightVertexAt( const size_t x );
 

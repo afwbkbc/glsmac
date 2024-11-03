@@ -12,10 +12,7 @@ namespace menu {
 GameMenu::GameMenu( Game* game )
 	: Menu( game, "BBLeftMenu" ) {
 
-#ifdef DEBUG
-	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART ) )
-#endif
-	{
+	if ( !g_engine->GetConfig()->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
 		AddItem(
 			"Start New Game", MH( this ) {
 				m_game->ConfirmExit(
@@ -27,11 +24,9 @@ GameMenu::GameMenu( Game* game )
 						);
 					}
 				);
-#ifdef DEBUG
-				if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
+				if ( g_engine->GetConfig()->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
 					return false;
 				} // menu is already destroyed by now, can't do animation
-#endif
 				return true;
 			}
 		);
@@ -44,11 +39,9 @@ GameMenu::GameMenu( Game* game )
 					g_engine->ShutDown();
 				}
 			);
-#ifdef DEBUG
-			if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
+			if ( g_engine->GetConfig()->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
 				return false;
 			} // menu is already destroyed by now, can't do animation
-#endif
 			return true;
 		}
 	);

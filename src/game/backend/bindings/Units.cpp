@@ -63,8 +63,7 @@ BINDING_IMPL( units ) {
 					values.push_back( unit::Morale{ name } );
 				}
 				auto* game = GAME;
-				game->AddEvent( new event::DefineMorales( game->GetSlotNum(), new unit::MoraleSet( id, values ) ) );
-				return VALUE( gse::type::Undefined );
+				return game->AddEvent( new event::DefineMorales( game->GetSlotNum(), new unit::MoraleSet( id, values ) ) );
 			} )
 		},
 		{
@@ -128,8 +127,7 @@ BINDING_IMPL( units ) {
 								sprite_morale_based_xshift
 							)
 						);
-						game->AddEvent( new event::DefineUnit( game->GetSlotNum(), def ) );
-						return VALUE( gse::type::Undefined );
+						return game->AddEvent( new event::DefineUnit( game->GetSlotNum(), def ) );
 					}
 					else {
 						ERROR( gse::EC.GAME_ERROR, "Unsupported render type: " + render_type );
@@ -138,7 +136,6 @@ BINDING_IMPL( units ) {
 				else {
 					ERROR( gse::EC.GAME_ERROR, "Unsupported unit type: " + unit_type );
 				}
-				return VALUE( gse::type::Undefined );
 			})
 		},
 		{
@@ -151,7 +148,7 @@ BINDING_IMPL( units ) {
 				N_GETVALUE( morale, 3, Int );
 				N_GETVALUE( health, 4, Float );
 				auto* game = GAME;
-				game->AddEvent( new event::SpawnUnit(
+				return game->AddEvent( new event::SpawnUnit(
 					game->GetSlotNum(),
 					def_name,
 					owner->GetIndex(),
@@ -160,7 +157,6 @@ BINDING_IMPL( units ) {
 					GetMorale( morale, ctx, call_si ),
 					GetHealth( health, ctx, call_si )
 				) );
-				return VALUE( gse::type::Undefined );
 			})
 		},
 		{
@@ -169,8 +165,7 @@ BINDING_IMPL( units ) {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE_UNWRAP( unit, 0, unit::Unit );
 				auto* game = GAME;
-				game->AddEvent( new event::DespawnUnit( game->GetSlotNum(), unit->m_id ) );
-				return VALUE( gse::type::Undefined );
+				return game->AddEvent( new event::DespawnUnit( game->GetSlotNum(), unit->m_id ) );
 			})
 		},
 	};

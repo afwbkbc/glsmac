@@ -10,6 +10,9 @@
 #include "gse/Value.h"
 
 namespace gse {
+
+class Wrappable;
+
 namespace type {
 
 class Array : public Type {
@@ -29,6 +32,8 @@ public:
 	const Value GetRangeRef( const std::optional< size_t > from, const std::optional< size_t > to );
 
 	array_elements_t value = {};
+
+	static const Value FromVector( const std::vector< Wrappable* >* data, const bool dynamic = false ); // be careful
 
 private:
 	void ValidateFromTo( const std::optional< size_t >& from, const std::optional< size_t >& to ) const;

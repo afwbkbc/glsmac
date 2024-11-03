@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <unordered_map>
 
 #include "backend/unit/Types.h"
 #include "backend/turn/Types.h"
@@ -27,6 +28,7 @@ public:
 		FR_ERROR,
 		FR_GLOBAL_MESSAGE,
 		FR_UPDATE_TILES,
+		FR_TILE_DATA,
 		FR_TURN_STATUS,
 		FR_TURN_ADVANCE,
 		FR_FACTION_DEFINE,
@@ -38,7 +40,9 @@ public:
 		FR_UNIT_DESPAWN,
 		FR_UNIT_UPDATE,
 		FR_UNIT_MOVE,
+		FR_BASE_POP_DEFINE,
 		FR_BASE_SPAWN,
+		FR_BASE_UPDATE
 	};
 	FrontendRequest( const request_type_t type );
 	FrontendRequest( const FrontendRequest& other );
@@ -56,6 +60,14 @@ public:
 
 	typedef std::vector< std::pair< backend::map::tile::Tile*, backend::map::tile::TileState* > > tile_updates_t;
 
+	struct base_pop_t {
+		std::string type;
+		uint8_t variant;
+	};
+	typedef std::vector< base_pop_t > base_pops_t;
+
+	typedef std::vector< std::pair< std::string, size_t > > tile_yields_t;
+
 	union {
 		struct {
 			const std::string* reason;
@@ -70,6 +82,11 @@ public:
 		struct {
 			const tile_updates_t* tile_updates;
 		} update_tiles;
+		struct {
+			size_t tile_x;
+			size_t tile_y;
+			const tile_yields_t* tile_yields;
+		} tile_data;
 		struct {
 			backend::turn::turn_status_t status;
 		} turn_status;
@@ -141,6 +158,9 @@ public:
 			} dst_tile_coords;
 		} unit_move;
 		struct {
+			const std::string* serialized_popdef;
+		} base_pop_define;
+		struct {
 			size_t base_id;
 			size_t slot_index;
 			struct {
@@ -152,11 +172,15 @@ public:
 				float y;
 				float z;
 			} render_coords;
-			struct {
-				const std::string* name;
-				size_t population;
-			} base_info;
+			const std::string* name;
 		} base_spawn;
+		struct {
+			size_t base_id;
+			size_t slot_index;
+			const std::string* faction_id;
+			const std::string* name;
+			base_pops_t* pops;
+		} base_update;
 	} data;
 };
 

@@ -1,5 +1,6 @@
 #include "TileManager.h"
 
+#include "game/frontend/Game.h"
 #include "game/backend/map/Consts.h"
 #include "util/FS.h"
 
@@ -99,7 +100,10 @@ Tile* TileManager::GetSelectedTile() const {
 }
 
 void TileManager::SelectTile( Tile* tile ) {
-	m_selected_tile = tile;
+	if ( tile != m_selected_tile ) {
+		m_selected_tile = tile;
+		m_game->SendGetTileData( tile );
+	}
 }
 
 void TileManager::DeselectTile() {

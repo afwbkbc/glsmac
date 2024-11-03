@@ -10,6 +10,8 @@
 #include "game/frontend/text/InstancedTextManager.h"
 #include "game/frontend/text/InstancedText.h"
 #include "game/frontend/faction/Faction.h"
+#include "game/backend/base/PopDef.h"
+#include "PopDef.h"
 #include "types/mesh/Rectangle.h"
 #include "engine/Engine.h"
 #include "loader/font/FontLoader.h"
@@ -31,6 +33,9 @@ BaseManager::~BaseManager() {
 	for ( const auto& it : m_bases ) {
 		delete it.second;
 	}
+	for ( const auto& it : m_popdefs ) {
+		delete it.second;
+	}
 }
 
 base::Base* BaseManager::GetBaseById( const size_t id ) const {
@@ -38,12 +43,36 @@ base::Base* BaseManager::GetBaseById( const size_t id ) const {
 	return m_bases.at( id );
 }
 
+void BaseManager::DefinePop( const backend::base::PopDef* def ) {
+	ASSERT( m_popdefs.find( def->m_id ) == m_popdefs.end(), "popdef already defined: " + def->m_id );
+	m_popdefs_order.push_back( def->m_id );
+	m_popdefs.insert(
+		{
+			def->m_id,
+			new PopDef(
+				def->m_name,
+				def->m_renders_human,
+				def->m_renders_progenitor
+			)
+		}
+	);
+}
+
+const std::vector< std::string >& BaseManager::GetPopDefOrder() const {
+	return m_popdefs_order;
+}
+
+PopDef* BaseManager::GetPopDef( const std::string& id ) const {
+	ASSERT( m_popdefs.find( id ) != m_popdefs.end(), "popdef not defined: " + id );
+	return m_popdefs.at( id );
+}
+
 void BaseManager::SpawnBase(
 	const size_t base_id,
 	const size_t slot_index,
 	const types::Vec2< size_t >& tile_coords,
 	const types::Vec3& render_coords,
-	const backend::base::BaseData& data
+	const std::string& name
 ) {
 
 	ASSERT( m_bases.find( base_id ) == m_bases.end(), "base id already exists" );
@@ -52,25 +81,26 @@ void BaseManager::SpawnBase(
 	auto* slot = m_game->GetSlot( slot_index );
 	auto* faction = slot->GetFaction();
 
+	auto* base = new base::Base(
+		this,
+		base_id,
+		name,
+		slot,
+		tile,
+		slot_index == m_game->GetMySlotIndex(),
+		render_coords,
+		m_game->GetITM()->CreateInstancedText(
+			name,
+			m_name_font,
+			faction->m_colors.text,
+			faction->m_colors.text_shadow
+		)
+	);
+
 	m_bases.insert(
 		{
 			base_id,
-			new base::Base(
-				this,
-				base_id,
-				data.name,
-				slot,
-				tile,
-				slot_index == m_game->GetMySlotIndex(),
-				render_coords,
-				m_game->GetITM()->CreateInstancedText(
-					data.name,
-					m_name_font,
-					faction->m_colors.text,
-					faction->m_colors.text_shadow
-				),
-				data.population
-			)
+			base
 		}
 	);
 	auto it = m_faction_base_ids.find( faction );
@@ -85,8 +115,11 @@ void BaseManager::SpawnBase(
 	ASSERT( it->second.find( base_id ) == it->second.end(), "faction base id already exists" );
 	it->second.insert( base_id );
 
-	m_game->RenderTile( tile, m_game->GetUM()->GetSelectedUnit() );
+	RefreshBase( base );
+}
 
+void BaseManager::RefreshBase( Base* base ) {
+	m_game->RenderTile( base->GetTile(), m_game->GetUM()->GetSelectedUnit() );
 }
 
 /* TODO void BaseManager::DespawnBase( const size_t base_id ) {

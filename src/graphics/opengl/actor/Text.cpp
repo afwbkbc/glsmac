@@ -151,7 +151,7 @@ void Text::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* c
 		}
 
 		glUniform1i( sp->uniforms.texture, 0 );
-		glUniform4fv( sp->uniforms.color, 1, (const GLfloat*)&text_actor->GetColor() );
+		glUniform4fv( sp->uniforms.color, 1, (const GLfloat*)&text_actor->GetColor().value );
 		auto position = m_actor->GetPosition();
 		glUniform1f( sp->uniforms.z_index, position.z );
 

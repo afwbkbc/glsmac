@@ -8,35 +8,40 @@
 #include "util/FS.h"
 #include "types/Buffer.h"
 #include "State.h"
-#include "game/backend/map_editor/MapEditor.h"
-#include "game/backend/event/FinalizeTurn.h"
-#include "game/backend/event/TurnFinalized.h"
-#include "game/backend/event/AdvanceTurn.h"
-#include "game/backend/event/DespawnUnit.h"
-#include "game/backend/event/RequestTileLocks.h"
-#include "game/backend/event/LockTiles.h"
-#include "game/backend/event/RequestTileUnlocks.h"
-#include "game/backend/event/UnlockTiles.h"
+#include "map_editor/MapEditor.h"
+#include "event/FinalizeTurn.h"
+#include "event/TurnFinalized.h"
+#include "event/AdvanceTurn.h"
+#include "event/DespawnUnit.h"
+#include "event/RequestTileLocks.h"
+#include "event/LockTiles.h"
+#include "event/RequestTileUnlocks.h"
+#include "event/UnlockTiles.h"
 #include "util/random/Random.h"
 #include "config/Config.h"
-#include "game/backend/slot/Slots.h"
+#include "slot/Slots.h"
 #include "Player.h"
-#include "game/backend/connection/Connection.h"
-#include "game/backend/connection/Server.h"
-#include "game/backend/connection/Client.h"
-#include "game/backend/map/Map.h"
-#include "game/backend/map/Consts.h"
+#include "connection/Connection.h"
+#include "connection/Server.h"
+#include "connection/Client.h"
+#include "map/Map.h"
+#include "map/Consts.h"
 #include "gse/type/String.h"
+#include "gse/type/Int.h"
+#include "gse/type/Undefined.h"
+#include "gse/type/Array.h"
 #include "ui/UI.h"
-#include "game/backend/map/tile/Tiles.h"
-#include "game/backend/map/MapState.h"
-#include "game/backend/bindings/Bindings.h"
+#include "map/tile/Tiles.h"
+#include "map/MapState.h"
+#include "bindings/Bindings.h"
 #include "graphics/Graphics.h"
-#include "game/backend/animation/Def.h"
-#include "game/backend/unit/Def.h"
-#include "game/backend/unit/Unit.h"
-#include "game/backend/unit/MoraleSet.h"
-#include "game/backend/base/Base.h"
+#include "Resource.h"
+#include "animation/Def.h"
+#include "unit/Def.h"
+#include "unit/Unit.h"
+#include "unit/MoraleSet.h"
+#include "base/PopDef.h"
+#include "base/Base.h"
 
 namespace game {
 namespace backend {
@@ -165,12 +170,10 @@ void Game::Start() {
 
 	NEW( m_random, util::random::Random );
 
-#ifdef DEBUG
 	const auto* config = g_engine->GetConfig();
-	if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_SEED ) ) {
+	if ( config->HasLaunchFlag( config::Config::LF_QUICKSTART_SEED ) ) {
 		m_random->SetState( config->GetQuickstartSeed() );
 	}
-#endif
 
 	// init map editor
 	NEW( m_map_editor, map_editor::MapEditor, this );
@@ -588,21 +591,80 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			break;
 		}
 		case OP_SEND_BACKEND_REQUESTS: {
-			for ( const auto& r : *request.data.send_backend_requests.requests ) {
-				switch ( r.type ) {
-					case BackendRequest::BR_ANIMATION_FINISHED: {
-						const auto& it = m_running_animations_callbacks.find( r.data.animation_finished.animation_id );
-						ASSERT( it != m_running_animations_callbacks.end(), "animation " + std::to_string( r.data.animation_finished.animation_id ) + " is not running" );
-						const auto on_complete = it->second;
-						m_running_animations_callbacks.erase( it );
-						on_complete();
-						break;
+			try {
+				for ( const auto& r : *request.data.send_backend_requests.requests ) {
+					switch ( r.type ) {
+						case BackendRequest::BR_GET_TILE_DATA: {
+							const auto& tile = m_map->GetTile( r.data.get_tile_data.tile_x, r.data.get_tile_data.tile_y );
+							const auto result = m_state->m_bindings->Call(
+								bindings::Bindings::CS_ON_GET_TILE_YIELDS, {
+									{
+										"tile",
+										tile->Wrap()
+									},
+									{
+										"player",
+										m_slot->Wrap()
+									},
+								}
+							);
+							if ( result.Get()->type != gse::type::Type::T_OBJECT ) {
+								THROW( "unexpected return type: expected Object, got " + result.GetTypeString() );
+							}
+							const auto& values = ( (gse::type::Object*)result.Get() )->value;
+							for ( const auto& v : values ) {
+								if ( m_resources.find( v.first ) == m_resources.end() ) {
+									THROW( "unknown resource type: " + v.first );
+								}
+							}
+							NEWV( yields, FrontendRequest::tile_yields_t, {} );
+							yields->reserve( m_resource_idx.size() );
+							for ( const auto& idx : m_resource_idx ) {
+								const auto& v = values.find( idx );
+								if ( v == values.end() ) {
+									DELETE( yields );
+									THROW( "missing yields for resource: " + idx );
+								}
+								if ( v->second.Get()->type != gse::type::Type::T_INT ) {
+									DELETE( yields );
+									THROW( "invalid resource value, expected Int, got " + v->second.GetTypeString() + ": " + v->second.ToString() );
+								}
+								yields->push_back(
+									{
+										idx,
+										( (gse::type::Int*)v->second.Get() )->value
+									}
+								);
+							}
+							auto fr = FrontendRequest( FrontendRequest::FR_TILE_DATA );
+							fr.data.tile_data.tile_x = tile->coord.x;
+							fr.data.tile_data.tile_y = tile->coord.y;
+							fr.data.tile_data.tile_yields = yields;
+							AddFrontendRequest( fr );
+							break;
+						}
+						case BackendRequest::BR_ANIMATION_FINISHED: {
+							const auto& it = m_running_animations_callbacks.find( r.data.animation_finished.animation_id );
+							ASSERT( it != m_running_animations_callbacks.end(), "animation " + std::to_string( r.data.animation_finished.animation_id ) + " is not running" );
+							const auto on_complete = it->second;
+							m_running_animations_callbacks.erase( it );
+							on_complete();
+							break;
+						}
+						default:
+							THROW( "unknown backend request type: " + std::to_string( r.type ) );
 					}
-					default:
-						THROW( "unknown backend request type: " + std::to_string( r.type ) );
 				}
+				response.result = R_SUCCESS;
 			}
-			response.result = R_SUCCESS;
+			catch ( gse::Exception& e ) {
+				OnGSEError( e );
+				response.result = R_ERROR;
+			}
+			catch ( std::runtime_error& e ) {
+				OnError( e );
+				response.result = R_ERROR;
+			}
 			break;
 		}
 		case OP_ADD_EVENT: {
@@ -716,6 +778,13 @@ void Game::Quit( const std::string& reason ) {
 	AddFrontendRequest( fr );
 }
 
+void Game::OnError( std::runtime_error& err ) {
+	auto fr = FrontendRequest( FrontendRequest::FR_ERROR );
+	NEW( fr.data.error.what, std::string, (std::string)"Script error: " + err.what() );
+	fr.data.error.stacktrace = nullptr;
+	AddFrontendRequest( fr );
+}
+
 void Game::OnGSEError( gse::Exception& err ) {
 	auto fr = FrontendRequest( FrontendRequest::FR_ERROR );
 	NEW( fr.data.error.what, std::string, (std::string)"Script error: " + err.what() );
@@ -749,14 +818,36 @@ unit::Def* Game::GetUnitDef( const std::string& name ) const {
 	}
 }
 
-void Game::AddEvent( event::Event* event ) {
+base::PopDef* Game::GetPopDef( const std::string& id ) const {
+	const auto& it = m_base_popdefs.find( id );
+	if ( it != m_base_popdefs.end() ) {
+		return it->second;
+	}
+	else {
+		return nullptr;
+	}
+}
+
+base::Base* Game::GetBase( const size_t id ) const {
+	const auto& it = m_bases.find( id );
+	if ( it != m_bases.end() ) {
+		return it->second;
+	}
+	else {
+		return nullptr;
+	}
+}
+
+const gse::Value Game::AddEvent( event::Event* event ) {
 	ASSERT( event->m_initiator_slot == m_slot_num, "initiator slot mismatch" );
 	if ( m_connection ) {
 		m_connection->SendGameEvent( event );
 	}
 	if ( m_state->IsMaster() ) {
-		ProcessEvent( event );
+		// note that this will work only on master, do slaves need return values too? i.e. for callbacks
+		return ProcessEvent( event );
 	}
+	return VALUE( gse::type::Undefined );
 }
 
 void Game::RefreshUnit( const unit::Unit* unit ) {
@@ -771,7 +862,7 @@ void Game::RefreshUnit( const unit::Unit* unit ) {
 }
 
 void Game::RefreshBase( const base::Base* base ) {
-	// TODO
+	QueueBaseUpdate( base, BUO_REFRESH );
 }
 
 void Game::DefineAnimation( animation::Def* def ) {
@@ -817,6 +908,26 @@ const std::string* Game::ShowAnimationOnTile( const std::string& animation_id, m
 	};
 	AddFrontendRequest( fr );
 	return nullptr; // no error
+}
+
+void Game::DefineResource( Resource* resource ) {
+	Log( "Defining resource ('" + resource->m_id + "')" );
+
+	ASSERT( m_resources.find( resource->m_id ) == m_resources.end(), "Resource '" + resource->m_id + "' already exists" );
+
+	m_resources.insert(
+		{
+			resource->m_id,
+			resource
+		}
+	);
+	m_resource_idx_map.insert(
+		{
+			resource->m_id,
+			m_resource_idx.size()
+		}
+	);
+	m_resource_idx.push_back( resource->m_id );
 }
 
 void Game::DefineMoraleSet( unit::MoraleSet* moraleset ) {
@@ -920,6 +1031,24 @@ void Game::DespawnUnit( const size_t unit_id ) {
 	delete unit;
 }
 
+void Game::DefinePop( base::PopDef* pop_def ) {
+	Log( "Defining base pop ('" + pop_def->m_id + "')" );
+
+	ASSERT( m_base_popdefs.find( pop_def->m_id ) == m_base_popdefs.end(), "Base pop def '" + pop_def->m_id + "' already exists" );
+
+	m_base_popdefs.insert(
+		{
+			pop_def->m_id,
+			pop_def
+		}
+	);
+
+	auto fr = FrontendRequest( FrontendRequest::FR_BASE_POP_DEFINE );
+	NEW( fr.data.base_pop_define.serialized_popdef, std::string, base::PopDef::Serialize( pop_def ).ToString() );
+	AddFrontendRequest( fr );
+
+}
+
 void Game::SpawnBase( base::Base* base ) {
 	if ( m_game_state != GS_RUNNING ) {
 		m_unprocessed_bases.push_back( base );
@@ -930,14 +1059,14 @@ void Game::SpawnBase( base::Base* base ) {
 
 	// validate and fix name if needed (or assign if empty)
 	std::vector< std::string > names_to_try = {};
-	if ( base->m_data.name.empty() ) {
+	if ( base->m_name.empty() ) {
 		const auto& names = base->m_owner->GetPlayer()->GetFaction()->m_base_names;
 		names_to_try = tile->is_water_tile
 			? names.water
 			: names.land;
 	}
-	else if ( m_registered_base_names.find( base->m_data.name ) != m_registered_base_names.end() ) {
-		names_to_try = { base->m_data.name };
+	else if ( m_registered_base_names.find( base->m_name ) != m_registered_base_names.end() ) {
+		names_to_try = { base->m_name };
 	}
 	if ( !names_to_try.empty() ) {
 		size_t cycle = 0;
@@ -945,19 +1074,19 @@ void Game::SpawnBase( base::Base* base ) {
 		while ( !found ) {
 			cycle++;
 			for ( const auto& name_to_try : names_to_try ) {
-				base->m_data.name = cycle == 1
+				base->m_name = cycle == 1
 					? name_to_try
 					: name_to_try + " " + std::to_string( cycle );
-				if ( m_registered_base_names.find( base->m_data.name ) == m_registered_base_names.end() ) {
+				if ( m_registered_base_names.find( base->m_name ) == m_registered_base_names.end() ) {
 					found = true;
 					break;
 				}
 			}
 		}
 	}
-	m_registered_base_names.insert( base->m_data.name );
+	m_registered_base_names.insert( base->m_name );
 
-	Log( "Spawning base #" + std::to_string( base->m_id ) + " ( " + base->m_data.name + ", " + std::to_string( base->m_data.population ) + " ) at " + base->GetTile()->ToString() );
+	Log( "Spawning base #" + std::to_string( base->m_id ) + " ( " + base->m_name + " ) at " + base->GetTile()->ToString() );
 
 	ASSERT( m_bases.find( base->m_id ) == m_bases.end(), "duplicate base id" );
 	m_bases.insert_or_assign( base->m_id, base );
@@ -1401,6 +1530,12 @@ void Game::UnlockTiles( const size_t initiator_slot, const map::tile::positions_
 	}
 }
 
+rules::Faction* Game::GetFaction( const std::string& id ) const {
+	const auto& it = m_state->m_settings.global.game_rules.m_factions.find( id ); // TODO: store factions in Game itself?
+	ASSERT( it != m_state->m_settings.global.game_rules.m_factions.end(), "faction not found: " + id );
+	return &it->second;
+}
+
 void Game::ValidateEvent( event::Event* event ) {
 	if ( !event->m_is_validated ) {
 		const auto* errmsg = event->Validate( this );
@@ -1445,6 +1580,31 @@ const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
 	};
 }
 
+void Game::SerializeResources( types::Buffer& buf ) const {
+	Log( "Serializing " + std::to_string( m_resources.size() ) + " resources" );
+	buf.WriteInt( m_resources.size() );
+	for ( const auto& it : m_resource_idx ) {
+		ASSERT( m_resources.find( it ) != m_resources.end(), "invalid resource idx" );
+		const auto& res = m_resources.at( it );
+		buf.WriteString( res->m_id );
+		buf.WriteString( Resource::Serialize( res ).ToString() );
+	}
+}
+
+void Game::UnserializeResources( types::Buffer& buf ) {
+	ASSERT( m_resources.empty(), "resources not empty" );
+	size_t sz = buf.ReadInt();
+	Log( "Unserializing " + std::to_string( sz ) + " resources" );
+	m_resources.reserve( sz );
+	m_resource_idx.reserve( sz );
+	m_resource_idx_map.reserve( sz );
+	for ( size_t i = 0 ; i < sz ; i++ ) {
+		const auto name = buf.ReadString();
+		auto b = types::Buffer( buf.ReadString() );
+		DefineResource( Resource::Unserialize( b ) );
+	}
+}
+
 void Game::SerializeUnits( types::Buffer& buf ) const {
 
 	Log( "Serializing " + std::to_string( m_unit_moralesets.size() ) + " unit moralesets" );
@@ -1476,9 +1636,11 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 	ASSERT( m_unit_moralesets.empty(), "unit moralesets not empty" );
 	ASSERT( m_unit_defs.empty(), "unit defs not empty" );
 	ASSERT( m_units.empty(), "units not empty" );
+	ASSERT( m_unprocessed_units.empty(), "unprocessed units not empty" );
 
 	size_t sz = buf.ReadInt();
 	Log( "Unserializing " + std::to_string( sz ) + " unit moralesets" );
+	m_unit_moralesets.reserve( sz );
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
@@ -1487,6 +1649,7 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 
 	sz = buf.ReadInt();
 	Log( "Unserializing " + std::to_string( sz ) + " unit defs" );
+	m_unit_defs.reserve( sz );
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
@@ -1495,7 +1658,9 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 
 	sz = buf.ReadInt();
 	Log( "Unserializing " + std::to_string( sz ) + " units" );
-	ASSERT( m_unprocessed_units.empty(), "unprocessed units not empty" );
+	if ( m_game_state != GS_RUNNING ) {
+		m_unprocessed_units.reserve( sz );
+	}
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto unit_id = buf.ReadInt();
 		auto b = types::Buffer( buf.ReadString() );
@@ -1507,6 +1672,13 @@ void Game::UnserializeUnits( types::Buffer& buf ) {
 }
 
 void Game::SerializeBases( types::Buffer& buf ) const {
+
+	Log( "Serializing " + std::to_string( m_base_popdefs.size() ) + " base pop defs" );
+	buf.WriteInt( m_base_popdefs.size() );
+	for ( const auto& it : m_base_popdefs ) {
+		buf.WriteString( it.first );
+		buf.WriteString( base::PopDef::Serialize( it.second ).ToString() );
+	}
 
 	Log( "Serializing " + std::to_string( m_bases.size() ) + " bases" );
 	buf.WriteInt( m_bases.size() );
@@ -1520,11 +1692,24 @@ void Game::SerializeBases( types::Buffer& buf ) const {
 }
 
 void Game::UnserializeBases( types::Buffer& buf ) {
+	ASSERT( m_base_popdefs.empty(), "base pop defs not empty" );
 	ASSERT( m_bases.empty(), "bases not empty" );
-
-	const size_t sz = buf.ReadInt();
-	Log( "Unserializing " + std::to_string( sz ) + " bases" );
 	ASSERT( m_unprocessed_bases.empty(), "unprocessed bases not empty" );
+
+	size_t sz = buf.ReadInt();
+	m_base_popdefs.reserve( sz );
+	Log( "Unserializing " + std::to_string( sz ) + " base pop defs" );
+	for ( size_t i = 0 ; i < sz ; i++ ) {
+		const auto name = buf.ReadString();
+		auto b = types::Buffer( buf.ReadString() );
+		DefinePop( base::PopDef::Unserialize( b ) );
+	}
+
+	sz = buf.ReadInt();
+	Log( "Unserializing " + std::to_string( sz ) + " bases" );
+	if ( m_game_state != GS_RUNNING ) {
+		m_unprocessed_bases.reserve( sz );
+	}
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto base_id = buf.ReadInt();
 		auto b = types::Buffer( buf.ReadString() );
@@ -1545,8 +1730,10 @@ void Game::SerializeAnimations( types::Buffer& buf ) const {
 }
 
 void Game::UnserializeAnimations( types::Buffer& buf ) {
+	ASSERT( m_animation_defs.empty(), "animation defs not empty" );
 	size_t sz = buf.ReadInt();
 	Log( "Unserializing " + std::to_string( sz ) + " animation defs" );
+	m_animation_defs.reserve( sz );
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
@@ -1646,6 +1833,13 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 					// map
 					m_map->SaveToBuffer( buf );
+
+					// resources
+					{
+						types::Buffer b;
+						SerializeResources( b );
+						buf.WriteString( b.ToString() );
+					}
 
 					// units
 					{
@@ -1749,9 +1943,9 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		}
 		NEW( m_map, map::Map, this );
 
-#ifdef DEBUG
 		const auto* config = g_engine->GetConfig();
 
+#ifdef DEBUG
 		// if crash happens - it's handy to have a seed to reproduce it
 		util::FS::WriteFile( config->GetDebugPath() + map::s_consts.debug.lastseed_filename, m_random->GetStateString() );
 #endif
@@ -1770,14 +1964,11 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		else
 #endif
 		{
-#ifdef DEBUG
-			if ( !m_connection && config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) {
+			if ( !m_connection && config->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_FILE ) ) {
 				const std::string& filename = config->GetQuickstartMapFile();
 				ec = m_map->LoadFromFile( filename );
 			}
-			else
-#endif
-			{
+			else {
 				auto& map_settings = m_state->m_settings.global.map;
 				if ( map_settings.type == settings::MapSettings::MT_MAPFILE ) {
 					ASSERT( !map_settings.filename.empty(), "loading map requested but map file not specified" );
@@ -1836,6 +2027,12 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 						NEW( m_map, map::Map, this );
 						const auto ec = m_map->LoadFromBuffer( b );
 						if ( ec == map::Map::EC_NONE ) {
+
+							// resources
+							{
+								auto ub = types::Buffer( buf.ReadString() );
+								UnserializeResources( ub );
+							}
 
 							// units
 							{
@@ -1916,6 +2113,13 @@ void Game::ResetGame() {
 	m_running_animations_callbacks.clear();
 	m_next_running_animation_id = 1;
 
+	for ( auto& it : m_resources ) {
+		delete it.second;
+	}
+	m_resources.clear();
+	m_resource_idx.clear();
+	m_resource_idx_map.clear();
+
 	for ( auto& it : m_unit_moralesets ) {
 		delete it.second;
 	}
@@ -1931,6 +2135,10 @@ void Game::ResetGame() {
 	}
 	m_unit_defs.clear();
 
+	for ( auto& it : m_base_popdefs ) {
+		delete it.second;
+	}
+	m_base_popdefs.clear();
 	for ( auto& it : m_bases ) {
 		delete it.second;
 	}
@@ -2117,7 +2325,7 @@ void Game::PushBaseUpdates() {
 			const auto& base = bu.base;
 			if ( bu.ops & BUO_SPAWN ) {
 				auto fr = FrontendRequest( FrontendRequest::FR_BASE_SPAWN );
-				fr.data.unit_spawn.unit_id = base->m_id;
+				fr.data.base_spawn.base_id = base->m_id;
 				fr.data.base_spawn.slot_index = base->m_owner->GetIndex();
 				const auto* tile = base->GetTile();
 				fr.data.base_spawn.tile_coords = {
@@ -2130,12 +2338,25 @@ void Game::PushBaseUpdates() {
 					c.y,
 					c.z
 				};
-				NEW( fr.data.base_spawn.base_info.name, std::string, base->m_data.name );
-				fr.data.base_spawn.base_info.population = base->m_data.population;
+				NEW( fr.data.base_spawn.name, std::string, base->m_name );
 				AddFrontendRequest( fr );
 			}
 			if ( bu.ops & BUO_REFRESH ) {
-				THROW( "TODO: BASE REFRESH" );
+				auto fr = FrontendRequest( FrontendRequest::FR_BASE_UPDATE );
+				fr.data.base_update.base_id = base->m_id;
+				fr.data.base_update.slot_index = base->m_owner->GetIndex();
+				NEW( fr.data.base_update.name, std::string, base->m_name );
+				NEW( fr.data.base_update.faction_id, std::string, base->m_faction->m_id );
+				NEW( fr.data.base_update.pops, FrontendRequest::base_pops_t, {} );
+				for ( const auto& pop : base->m_pops ) {
+					fr.data.base_update.pops->push_back(
+						{
+							pop.m_def->m_id,
+							pop.m_variant
+						}
+					);
+				}
+				AddFrontendRequest( fr );
 			}
 			if ( bu.ops & UUO_DESPAWN ) {
 				THROW( "TODO: BASE DESPAWN" );

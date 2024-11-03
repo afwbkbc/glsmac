@@ -1,5 +1,6 @@
 #include "Event.h"
 
+#include "DefineResource.h"
 #include "DefineAnimation.h"
 #include "DefineMorales.h"
 #include "DefineUnit.h"
@@ -8,6 +9,7 @@
 #include "MoveUnit.h"
 #include "AttackUnit.h"
 #include "SkipUnitTurn.h"
+#include "DefinePop.h"
 #include "SpawnBase.h"
 #include "CompleteTurn.h"
 #include "UncompleteTurn.h"
@@ -39,6 +41,7 @@ const types::Buffer Event::Serialize( const Event* event ) {
         break; \
     }
 	switch ( event->m_type ) {
+		SERIALIZE( ET_RESOURCE_DEFINE, DefineResource )
 		SERIALIZE( ET_ANIMATION_DEFINE, DefineAnimation )
 		SERIALIZE( ET_UNIT_DEFINE_MORALES, DefineMorales )
 		SERIALIZE( ET_UNIT_DEFINE, DefineUnit )
@@ -47,6 +50,7 @@ const types::Buffer Event::Serialize( const Event* event ) {
 		SERIALIZE( ET_UNIT_MOVE, MoveUnit )
 		SERIALIZE( ET_UNIT_ATTACK, AttackUnit )
 		SERIALIZE( ET_UNIT_SKIP_TURN, SkipUnitTurn )
+		SERIALIZE( ET_BASE_DEFINE_POP, DefinePop )
 		SERIALIZE( ET_BASE_SPAWN, SpawnBase )
 		SERIALIZE( ET_COMPLETE_TURN, CompleteTurn )
 		SERIALIZE( ET_UNCOMPLETE_TURN, UncompleteTurn )
@@ -74,6 +78,7 @@ Event* Event::Unserialize( types::Buffer& buf ) {
         break; \
     }
 	switch ( type ) {
+		UNSERIALIZE( ET_RESOURCE_DEFINE, DefineResource )
 		UNSERIALIZE( ET_ANIMATION_DEFINE, DefineAnimation )
 		UNSERIALIZE( ET_UNIT_DEFINE_MORALES, DefineMorales )
 		UNSERIALIZE( ET_UNIT_DEFINE, DefineUnit )
@@ -82,6 +87,7 @@ Event* Event::Unserialize( types::Buffer& buf ) {
 		UNSERIALIZE( ET_UNIT_MOVE, MoveUnit )
 		UNSERIALIZE( ET_UNIT_ATTACK, AttackUnit )
 		UNSERIALIZE( ET_UNIT_SKIP_TURN, SkipUnitTurn )
+		UNSERIALIZE( ET_BASE_DEFINE_POP, DefinePop )
 		UNSERIALIZE( ET_BASE_SPAWN, SpawnBase )
 		UNSERIALIZE( ET_COMPLETE_TURN, CompleteTurn )
 		UNSERIALIZE( ET_UNCOMPLETE_TURN, UncompleteTurn )

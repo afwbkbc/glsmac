@@ -10,6 +10,7 @@
 #include "../../ui/UI.h" // TODO: fix path
 #include "game/backend/Game.h"
 #include "game/backend/unit/Def.h"
+#include "game/backend/base/PopDef.h"
 #include "game/backend/animation/Def.h"
 #include "game/backend/connection/Connection.h"
 #include "task/mainmenu/MainMenu.h"
@@ -30,6 +31,7 @@
 #include "game/frontend/base/BaseManager.h"
 #include "game/frontend/base/Base.h"
 #include "game/frontend/faction/FactionManager.h"
+#include "game/frontend/faction/Faction.h"
 #include "game/frontend/sprite/InstancedSpriteManager.h"
 #include "game/frontend/text/InstancedTextManager.h"
 #include "Animation.h"
@@ -86,13 +88,10 @@ void Game::Start() {
 	auto* config = g_engine->GetConfig();
 
 	if ( m_state->IsMaster() ) {
-#ifdef DEBUG
-		if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) {
+		if ( config->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_FILE ) ) {
 			m_state->m_settings.global.map.type = backend::settings::MapSettings::MT_MAPFILE;
 			m_state->m_settings.global.map.filename = config->GetQuickstartMapFile();
 		}
-#endif
-
 		if ( m_state->m_settings.global.map.type == backend::settings::MapSettings::MT_MAPFILE ) {
 			m_map_data.filename = util::FS::GetBaseName( m_state->m_settings.global.map.filename );
 			m_map_data.last_directory = util::FS::GetDirName( m_state->m_settings.global.map.filename );
@@ -337,13 +336,13 @@ void Game::Iterate() {
 		}
 	}
 
-	if ( m_is_initialized ) {
+	if ( m_is_initialized ) { // do not check anything else if error
 
 		// check if previous backend requests were sent successfully
 		if ( m_mt_ids.send_backend_requests ) {
 			auto response = game->MT_GetResponse( m_mt_ids.send_backend_requests );
 			if ( response.result != backend::R_NONE ) {
-				ASSERT( response.result == backend::R_SUCCESS, "backend requests result not successful" );
+				//ASSERT( response.result == backend::R_SUCCESS, "backend requests result not successful" );
 				m_mt_ids.send_backend_requests = 0;
 			}
 		}
@@ -777,12 +776,10 @@ void Game::SaveMap( const std::string& path ) {
 }
 
 void Game::ConfirmExit( ::ui::ui_handler_t on_confirm ) {
-#ifdef DEBUG
-	if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
+	if ( g_engine->GetConfig()->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
 		on_confirm();
 		return;
 	}
-#endif
 	NEWV( popup, ui::popup::PleaseDontGo, this, on_confirm );
 	m_map_control.edge_scrolling.timer.Stop();
 	popup->Open();
@@ -884,36 +881,44 @@ void Game::DefineAnimation( const backend::animation::Def* def ) {
 
 void Game::ProcessRequest( const FrontendRequest* request ) {
 	//Log( "Received frontend request (type=" + std::to_string( request->type ) + ")" ); // spammy
-	const auto f_exit = [ this, request ]() -> void {
-		const auto quit_reason = request->data.quit.reason
-			? *request->data.quit.reason
-			: "";
+	const auto f_exit = [ this ]( const std::string& quit_reason ) -> void {
 		ExitGame(
 			[ this, quit_reason ]() -> void {
-#ifdef DEBUG
-				if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
+				if ( g_engine->GetConfig()->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
 					g_engine->ShutDown();
 				}
-				else
-#endif
-				{
+				else {
 					ReturnToMainMenu( quit_reason );
 				}
 			}
 		);
 	};
-	switch ( request->type ) {
+	switch ( request
+		? request->type
+		: FrontendRequest::FR_QUIT ) {
 		case FrontendRequest::FR_QUIT: {
-			f_exit();
+			f_exit(
+				request && request->data.quit.reason
+					? *request->data.quit.reason
+					: ""
+			);
 			break;
 		}
 		case FrontendRequest::FR_ERROR: {
-			Log( *request->data.error.stacktrace );
-			g_engine->GetUI()->ShowError(
-				*request->data.error.what, UH( f_exit ) {
-					f_exit();
+			if ( !g_engine->GetUI()->HasErrorPopup() ) { // show first error only
+				const auto& errmsg = *request->data.error.what;
+				if ( request->data.error.stacktrace ) {
+					Log( *request->data.error.stacktrace );
 				}
-			);
+				else {
+					Log( errmsg );
+				}
+				g_engine->GetUI()->ShowError(
+					errmsg, UH( f_exit, errmsg ) {
+						f_exit( errmsg );
+					}
+				);
+			}
 		}
 		case FrontendRequest::FR_GLOBAL_MESSAGE: {
 			AddMessage( *request->data.global_message.message );
@@ -931,6 +936,16 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 
 				Log( "Updating tile: " + tile->GetCoords().ToString() );
 				tile->Update( *t, *ts );
+			}
+			break;
+		}
+		case FrontendRequest::FR_TILE_DATA: {
+			const auto& d = request->data.tile_data;
+			if ( m_ui.bottom_bar ) {
+				const auto& sc = m_tm->GetSelectedTile()->m_coords;
+				if ( d.tile_x == sc.x && d.tile_y == sc.y ) {
+					m_ui.bottom_bar->SetTileYields( *d.tile_yields );
+				}
 			}
 			break;
 		}
@@ -1074,6 +1089,13 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			m_um->MoveUnit( unit, dst_tile, d.running_animation_id );
 			break;
 		}
+		case FrontendRequest::FR_BASE_POP_DEFINE: {
+			types::Buffer buf( *request->data.base_pop_define.serialized_popdef );
+			const auto* popdef = backend::base::PopDef::Unserialize( buf );
+			m_bm->DefinePop( popdef );
+			delete popdef;
+			break;
+		}
 		case FrontendRequest::FR_BASE_SPAWN: {
 			const auto& d = request->data.base_spawn;
 			const auto& tc = d.tile_coords;
@@ -1090,11 +1112,31 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 					rc.y,
 					rc.z
 				},
-				{
-					*d.base_info.name,
-					d.base_info.population
-				}
+				*d.name
 			);
+			break;
+		}
+		case FrontendRequest::FR_BASE_UPDATE: {
+			const auto& d = request->data.base_update;
+			auto* base = m_bm->GetBaseById( d.base_id );
+			base->SetName( *d.name );
+			// TODO: update slot index
+			if ( base->GetFaction()->m_id != *d.faction_id ) {
+				THROW( "TODO: UPDATE FACTION" );
+			}
+			base::Base::pops_t pops = {};
+			pops.reserve( d.pops->size() );
+			for ( const auto& pop : *d.pops ) {
+				pops.push_back(
+					base::Pop{
+						base,
+						m_bm->GetPopDef( pop.type ),
+						pop.variant
+					}
+				);
+			}
+			base->SetPops( pops );
+			m_bm->RefreshBase( base );
 			break;
 		}
 		default: {
@@ -1248,7 +1290,7 @@ void Game::Initialize(
 	for ( size_t y = 0 ; y < m_map_data.height ; y++ ) {
 		for ( size_t x = y & 1 ; x < m_map_data.width ; x += 2 ) {
 			auto* tile = m_tm->GetTile( x, y );
-			Log( "Initializing tile: " + tile->GetCoords().ToString() );
+			//Log( "Initializing tile: " + tile->GetCoords().ToString() );
 			tile->Update( tiles->at( y * m_map_data.width + x / 2 ), tile_states->at( y * m_map_data.width + x / 2 ) );
 		}
 	}
@@ -2220,10 +2262,6 @@ void Game::CancelRequests() {
 		game->MT_Cancel( m_mt_ids.reset );
 		m_mt_ids.reset = 0;
 	}
-	for ( const auto& mt_id : m_mt_ids.select_tile ) {
-		game->MT_Cancel( mt_id );
-	}
-	m_mt_ids.select_tile.clear();
 	if ( m_mt_ids.get_frontend_requests ) {
 		game->MT_Cancel( m_mt_ids.get_frontend_requests );
 		m_mt_ids.get_frontend_requests = 0;
@@ -2311,6 +2349,7 @@ void Game::RenderTile( tile::Tile* tile, const unit::Unit* selected_unit ) {
 			? selected_unit->GetId()
 			: 0
 	);
+	RefreshSelectedTileIf( tile, selected_unit );
 	/*
 	if ( m_selected_unit && m_selected_unit->IsActive() ) {
 		m_selected_unit->StartBadgeBlink();
@@ -2320,6 +2359,13 @@ void Game::RenderTile( tile::Tile* tile, const unit::Unit* selected_unit ) {
 void Game::SendAnimationFinished( const size_t animation_id ) {
 	auto br = BackendRequest( BackendRequest::BR_ANIMATION_FINISHED );
 	br.data.animation_finished.animation_id = animation_id;
+	SendBackendRequest( &br );
+}
+
+void Game::SendGetTileData( const tile::Tile* tile ) {
+	auto br = BackendRequest( BackendRequest::BR_GET_TILE_DATA );
+	br.data.get_tile_data.tile_x = tile->m_coords.x;
+	br.data.get_tile_data.tile_y = tile->m_coords.y;
 	SendBackendRequest( &br );
 }
 
@@ -2344,12 +2390,18 @@ void Game::RefreshSelectedTile( unit::Unit* selected_unit ) {
 				: 0
 		);
 	}
+	SendGetTileData( selected_tile );
 }
 
-void Game::RefreshSelectedTileIf( tile::Tile* if_tile, unit::Unit* selected_unit ) {
+void Game::RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* selected_unit ) {
 	auto* selected_tile = m_tm->GetSelectedTile();
 	if ( selected_tile && selected_tile == if_tile ) {
-		RefreshSelectedTile( selected_unit );
+		m_ui.bottom_bar->PreviewTile(
+			selected_tile, selected_unit
+				? selected_unit->GetId()
+				: 0
+		);
+		SendGetTileData( selected_tile );
 	}
 }
 

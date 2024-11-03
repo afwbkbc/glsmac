@@ -120,6 +120,11 @@ const types::Buffer Tile::Serialize() const {
 	buf.WriteInt( features );
 	buf.WriteInt( terraforming );
 
+	buf.WriteInt( yields.size() );
+	for ( const auto& y : yields ) {
+		buf.WriteInt( y );
+	}
+
 	return buf;
 }
 
@@ -140,6 +145,13 @@ void Tile::Unserialize( types::Buffer buf ) {
 
 	features = buf.ReadInt();
 	terraforming = buf.ReadInt();
+
+	ASSERT_NOLOG( yields.empty(), "yields not empty" );
+	const auto yields_size = buf.ReadInt();
+	yields.reserve( yields_size );
+	for ( size_t i = 0 ; i < yields_size ; i++ ) {
+		yields.push_back( buf.ReadInt() );
+	}
 
 	Update();
 }
@@ -171,6 +183,18 @@ WRAPIMPL_BEGIN( Tile, CLASS_TILE )
 		{
 			"is_land",
 			VALUE( gse::type::Bool, !is_water_tile )
+		},
+		{
+			"moisture",
+			VALUE( gse::type::Int, moisture )
+		},
+		{
+			"rockiness",
+			VALUE( gse::type::Int, rockiness )
+		},
+		{
+			"elevation",
+			VALUE( gse::type::Int, *elevation.center )
 		},
 		{
 			"is_rocky",

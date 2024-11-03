@@ -4,20 +4,46 @@
 
 namespace types {
 
-Color::Color() {
+Color::color_t::color_t( const color_t& color ) {
+	*this = color;
+}
+Color::color_t::color_t( const Color& color ) {
+	*this = color.value;
+}
+void Color::color_t::operator=( const Color& color ) {
+	*this = color.value;
+}
+Color::color_t::color_t( const channel_t red, const channel_t green, const channel_t blue, const channel_t alpha ) {
+	this->red = red;
+	this->green = green;
+	this->blue = blue;
+	this->alpha = alpha;
+}
+
+Color::color_t::color_t( const channel_t red, const channel_t green, const channel_t blue ) {
+	this->red = red;
+	this->green = green;
+	this->blue = blue;
+}
+
+Color::Color()
+	: gse::Wrappable() {
 	//
 };
 
-Color::Color( const channel_t red, const channel_t green, const channel_t blue, const channel_t alpha ) {
+Color::Color( const channel_t red, const channel_t green, const channel_t blue, const channel_t alpha )
+	: gse::Wrappable() {
 	Set( red, green, blue, alpha );
 };
 
-Color::Color( const channel_t red, const channel_t green, const channel_t blue ) {
+Color::Color( const channel_t red, const channel_t green, const channel_t blue )
+	: gse::Wrappable() {
 	Set( red, green, blue, 1.0 );
 };
 
-Color::Color( const color_t& color ) {
-	memcpy( &value, &color, sizeof( color ) );
+Color::Color( const color_t& color )
+	: gse::Wrappable() {
+	value = color;
 }
 
 void Color::Set( channel_t red, channel_t green, channel_t blue, channel_t alpha ) {
@@ -28,7 +54,7 @@ void Color::Set( channel_t red, channel_t green, channel_t blue, channel_t alpha
 };
 
 void Color::operator=( const color_t& color ) {
-	memcpy( &value, &color, sizeof( color ) );
+	value = color;
 }
 
 bool Color::operator==( Color& other ) const {
