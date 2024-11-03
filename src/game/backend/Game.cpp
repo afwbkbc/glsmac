@@ -170,12 +170,10 @@ void Game::Start() {
 
 	NEW( m_random, util::random::Random );
 
-#ifdef DEBUG
 	const auto* config = g_engine->GetConfig();
-	if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_SEED ) ) {
+	if ( config->HasLaunchFlag( config::Config::LF_QUICKSTART_SEED ) ) {
 		m_random->SetState( config->GetQuickstartSeed() );
 	}
-#endif
 
 	// init map editor
 	NEW( m_map_editor, map_editor::MapEditor, this );
@@ -1945,9 +1943,9 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		}
 		NEW( m_map, map::Map, this );
 
-#ifdef DEBUG
 		const auto* config = g_engine->GetConfig();
 
+#ifdef DEBUG
 		// if crash happens - it's handy to have a seed to reproduce it
 		util::FS::WriteFile( config->GetDebugPath() + map::s_consts.debug.lastseed_filename, m_random->GetStateString() );
 #endif
@@ -1966,14 +1964,11 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		else
 #endif
 		{
-#ifdef DEBUG
-			if ( !m_connection && config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) {
+			if ( !m_connection && config->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_FILE ) ) {
 				const std::string& filename = config->GetQuickstartMapFile();
 				ec = m_map->LoadFromFile( filename );
 			}
-			else
-#endif
-			{
+			else {
 				auto& map_settings = m_state->m_settings.global.map;
 				if ( map_settings.type == settings::MapSettings::MT_MAPFILE ) {
 					ASSERT( !map_settings.filename.empty(), "loading map requested but map file not specified" );

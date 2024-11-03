@@ -48,16 +48,14 @@
 
 #include "task/common/Common.h"
 
-#if defined(DEBUG)
-
+#ifdef DEBUG
 #include "task/gseprompt/GSEPrompt.h"
 #include "task/gsetests/GSETests.h"
-#include "task/game/Game.h"
-
 #endif
 
 #include "task/intro/Intro.h"
 #include "task/mainmenu/MainMenu.h"
+#include "task/game/Game.h"
 
 #include "game/backend/Game.h"
 
@@ -277,15 +275,14 @@ int main( const int argc, const char* argv[] ) {
 				&game
 			);
 
-#ifdef DEBUG
-			if ( config.HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
+			if ( config.HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
 				NEWV( state, game::backend::State ); // TODO: initialize settings randomly
 				state->m_settings.global.game_rules.Initialize();
 				state->InitBindings();
 				state->Configure();
 				const auto& rules = state->m_settings.global.game_rules;
 				std::optional< game::backend::rules::Faction > faction = {};
-				if ( config.HasDebugFlag( config::Config::DF_QUICKSTART_FACTION ) ) {
+				if ( config.HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
 					const auto& f = state->m_settings.global.game_rules.m_factions;
 					const auto it = f.find( config.GetQuickstartFaction() );
 					if ( it == f.end() ) {
@@ -314,9 +311,7 @@ int main( const int argc, const char* argv[] ) {
 					g_engine->ShutDown();
 				} );
 			}
-			else
-#endif
-			if ( config.HasLaunchFlag( config::Config::LF_SKIPINTRO ) ) {
+			else if ( config.HasLaunchFlag( config::Config::LF_SKIPINTRO ) ) {
 				NEW( task, task::mainmenu::MainMenu );
 			}
 			else {

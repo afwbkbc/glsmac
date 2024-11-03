@@ -88,13 +88,10 @@ void Game::Start() {
 	auto* config = g_engine->GetConfig();
 
 	if ( m_state->IsMaster() ) {
-#ifdef DEBUG
-		if ( config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) {
+		if ( config->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_FILE ) ) {
 			m_state->m_settings.global.map.type = backend::settings::MapSettings::MT_MAPFILE;
 			m_state->m_settings.global.map.filename = config->GetQuickstartMapFile();
 		}
-#endif
-
 		if ( m_state->m_settings.global.map.type == backend::settings::MapSettings::MT_MAPFILE ) {
 			m_map_data.filename = util::FS::GetBaseName( m_state->m_settings.global.map.filename );
 			m_map_data.last_directory = util::FS::GetDirName( m_state->m_settings.global.map.filename );
@@ -779,12 +776,10 @@ void Game::SaveMap( const std::string& path ) {
 }
 
 void Game::ConfirmExit( ::ui::ui_handler_t on_confirm ) {
-#ifdef DEBUG
-	if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
+	if ( g_engine->GetConfig()->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
 		on_confirm();
 		return;
 	}
-#endif
 	NEWV( popup, ui::popup::PleaseDontGo, this, on_confirm );
 	m_map_control.edge_scrolling.timer.Stop();
 	popup->Open();
@@ -889,13 +884,10 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 	const auto f_exit = [ this ]( const std::string& quit_reason ) -> void {
 		ExitGame(
 			[ this, quit_reason ]() -> void {
-#ifdef DEBUG
-				if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
+				if ( g_engine->GetConfig()->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
 					g_engine->ShutDown();
 				}
-				else
-#endif
-				{
+				else {
 					ReturnToMainMenu( quit_reason );
 				}
 			}

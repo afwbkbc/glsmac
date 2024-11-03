@@ -617,25 +617,25 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 #ifdef DEBUG
 	util::Timer timer;
 	timer.Start();
+#endif
 	const auto* c = g_engine->GetConfig();
-	if ( c->HasDebugFlag( config::Config::DF_QUICKSTART ) ) {
-		if ( c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_SIZE ) ) {
+	if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
+		if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_SIZE ) ) {
 			size = c->GetQuickstartMapSize();
 		}
-		map_settings->ocean = c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_OCEAN )
+		map_settings->ocean = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_OCEAN )
 			? map_settings->ocean = c->GetQuickstartMapOcean()
 			: map_settings->ocean = random->GetUInt( 1, 3 );
-		map_settings->erosive = c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_EROSIVE )
+		map_settings->erosive = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_EROSIVE )
 			? map_settings->erosive = c->GetQuickstartMapErosive()
 			: map_settings->erosive = random->GetUInt( 1, 3 );
-		map_settings->lifeforms = c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_LIFEFORMS )
+		map_settings->lifeforms = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_LIFEFORMS )
 			? map_settings->lifeforms = c->GetQuickstartMapLifeforms()
 			: map_settings->lifeforms = random->GetUInt( 1, 3 );
-		map_settings->clouds = c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_CLOUDS )
+		map_settings->clouds = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_CLOUDS )
 			? map_settings->clouds = c->GetQuickstartMapClouds()
 			: map_settings->clouds = random->GetUInt( 1, 3 );
 	}
-#endif
 	Log( "Generating map of size " + size.ToString() );
 	ASSERT( !m_tiles, "tiles already set" );
 	NEW( m_tiles, tile::Tiles, size.x, size.y );
@@ -649,7 +649,7 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 #ifdef DEBUG
 	Log( "Map generation took " + std::to_string( timer.GetElapsed().count() ) + "ms" );
 	// if crash happens - it's handy to have a map file to reproduce it
-	if ( !c->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_FILE ) ) { // no point saving if we just loaded it
+	if ( !c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_FILE ) ) { // no point saving if we just loaded it
 		Log( (std::string)"Saving map to " + c->GetDebugPath() + s_consts.debug.lastmap_filename );
 		util::FS::WriteFile( c->GetDebugPath() + s_consts.debug.lastmap_filename, m_tiles->Serialize().ToString() );
 	}
