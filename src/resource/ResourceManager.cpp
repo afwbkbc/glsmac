@@ -230,8 +230,14 @@ ResourceManager::ResourceManager()
 	}
 }
 
-void ResourceManager::Init( std::vector< std::string > possible_smac_paths, const config::smac_type_t smac_type ) {
+void ResourceManager::Init( const std::vector< std::string >& possible_smac_paths, const config::smac_type_t smac_type, const std::string& data_path ) {
 	const bool print_errors = smac_type != config::ST_AUTO;
+	m_data_path = util::FS::GeneratePath(
+		{
+			data_path,
+			"default"
+		}
+	);
 	for ( const auto& path : possible_smac_paths ) {
 
 		// GOG / Steam
@@ -362,14 +368,25 @@ const std::string& ResourceManager::GetCustomPath( const std::string& path ) {
 	std::string key = "";
 	key.resize( path.length() );
 	std::transform( path.begin(), path.end(), key.begin(), ::tolower );
-	const auto& it = m_custom_resource_paths.find( key );
-	if ( it != m_custom_resource_paths.end() ) {
-		return it->second;
+
+	// look in datadir
+	auto resolved_file = util::FS::GetExistingCaseSensitivePath( m_data_path, path );
+
+	if ( resolved_file.empty() ) {
+
+		// look in builtin paths
+		const auto& it = m_custom_resource_paths.find( key );
+		if ( it != m_custom_resource_paths.end() ) {
+			return it->second;
+		}
+
+		// look in SMAC dir
+		resolved_file = util::FS::GetExistingCaseSensitivePath( m_smac_path, GetFixedPath( path, m_extension_path_map, m_path_modifiers ) );
 	}
-	const auto resolved_file = util::FS::GetExistingCaseSensitivePath( m_smac_path, GetFixedPath( path, m_extension_path_map, m_path_modifiers ) );
 	if ( resolved_file.empty() ) {
 		THROW( "could not resolve resource (path does not exist: " + path + ")" );
 	}
+
 	if ( !util::FS::IsFile( resolved_file ) ) {
 		THROW( "could not resolve resource (path is not a file: " + path + ")" );
 	}

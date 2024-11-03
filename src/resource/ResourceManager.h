@@ -14,7 +14,7 @@ CLASS( ResourceManager, common::Module )
 
 	ResourceManager();
 
-	void Init( std::vector< std::string > possible_smac_paths, const config::smac_type_t smac_type );
+	void Init( const std::vector< std::string >& possible_smac_paths, const config::smac_type_t smac_type, const std::string& data_path );
 
 	const config::smac_type_t GetDetectedSMACType() const;
 	const resource_t GetResource( const std::string& filename ) const;
@@ -25,6 +25,7 @@ CLASS( ResourceManager, common::Module )
 private:
 
 	config::smac_type_t m_detected_smac_type = config::ST_AUTO;
+	std::string m_data_path = "";
 
 	const std::unordered_map< resource_t, std::string > m_resources_to_filenames = {};
 	std::unordered_map< std::string, resource_t > m_filenames_to_resources = {};
