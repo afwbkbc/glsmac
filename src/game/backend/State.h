@@ -15,6 +15,7 @@ namespace game {
 namespace backend {
 
 class System;
+class Factions;
 class Game;
 class Player;
 
@@ -66,11 +67,16 @@ CLASS2( State, common::Class, gse::Wrappable )
 	void DetachConnection();
 
 	System* GetSystem() const;
+	Factions* GetFactions() const;
 
 	WRAPDEFS_PTR( State )
 
+	const types::Buffer Serialize() const;
+	void Unserialize( types::Buffer buf );
+
 private:
 	System* m_system = nullptr;
+	Factions* m_factions = nullptr;
 	Game* m_game = nullptr;
 
 	std::unordered_set< Player* > m_players = {}; // persistent

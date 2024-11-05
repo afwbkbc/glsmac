@@ -6,7 +6,9 @@ const bases = #include('bases');
 
 #system.on('configure', (e) => {
 
-	factions.define();
+	factions.configure(e.state.factions);
+
+	units.configure();
 
 	// will be populated on start
 	let players = [];
@@ -38,8 +40,6 @@ const bases = #include('bases');
 			});
 		}
 	};
-
-	units.init();
 
 	let all_bases = [];
 
@@ -145,5 +145,5 @@ const bases = #include('bases');
 	#game.on.unit_despawn((e) => {
 		//
 	});
-	
+
 });

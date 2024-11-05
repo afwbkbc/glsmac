@@ -10,7 +10,7 @@ Player::Player( types::Buffer buf ) {
 Player::Player(
 	const std::string& name,
 	const role_t role,
-	const std::optional< rules::Faction >& faction,
+	Faction* faction,
 	const rules::DifficultyLevel& difficulty_level
 )
 	: m_name( name )
@@ -42,7 +42,7 @@ const bool Player::IsConnected() const {
 	return m_is_connected;
 }
 
-void Player::SetFaction( const rules::Faction& faction ) {
+void Player::SetFaction( Faction* faction ) {
 	// TODO: validate?
 	m_faction = faction;
 }
@@ -51,7 +51,7 @@ void Player::ClearFaction() {
 	m_faction = {};
 }
 
-std::optional< rules::Faction >& Player::GetFaction() {
+Faction* Player::GetFaction() {
 	return m_faction;
 }
 
@@ -93,8 +93,8 @@ const types::Buffer Player::Serialize() const {
 
 	buf.WriteString( m_name );
 	buf.WriteInt( m_role );
-	buf.WriteBool( m_faction.has_value() );
-	if ( m_faction.has_value() ) {
+	buf.WriteBool( m_faction != nullptr );
+	if ( m_faction ) {
 		buf.WriteString( m_faction->Serialize().ToString() );
 	}
 	buf.WriteString( m_difficulty_level.Serialize().ToString() );
@@ -108,7 +108,7 @@ void Player::Unserialize( types::Buffer buf ) {
 	m_role = (role_t)buf.ReadInt();
 	m_faction = {};
 	if ( buf.ReadBool() ) {
-		m_faction = rules::Faction{};
+		m_faction = new Faction();
 		m_faction->Unserialize( buf.ReadString() );
 	}
 	m_difficulty_level.Unserialize( buf.ReadString() );

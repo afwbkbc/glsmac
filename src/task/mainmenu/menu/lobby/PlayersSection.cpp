@@ -3,6 +3,9 @@
 #include "engine/Engine.h"
 
 #include "game/backend/slot/Slot.h"
+#include "game/backend/State.h"
+#include "game/backend/Factions.h"
+#include "game/backend/Faction.h"
 
 #include "PlayersSectionRow.h"
 #include "Lobby.h"
@@ -65,13 +68,11 @@ void PlayersSection::UpdateSlots( std::vector< game::backend::slot::Slot >& slot
 			"Random"
 		}
 	);
-	for ( auto& id : game_rules.m_factions_order ) {
-		ASSERT( game_rules.m_factions.find( id ) != game_rules.m_factions.end(), "faction not found: " + id );
-		const auto& faction = game_rules.m_factions.at( id );
+	for ( const auto& faction : GetLobby()->GetState()->GetFactions()->GetAll() ) {
 		m_choices.factions.push_back(
 			{
-				id,
-				faction.m_name
+				faction->m_id,
+				faction->m_name
 			}
 		);
 	}

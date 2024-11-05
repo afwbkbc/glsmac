@@ -14,13 +14,6 @@ void Rules::Initialize() {
 const types::Buffer Rules::Serialize() const {
 	types::Buffer buf;
 
-	buf.WriteInt( m_factions_order.size() );
-	for ( auto& id : m_factions_order ) {
-		const auto& faction = m_factions.at( id );
-		buf.WriteString( id );
-		buf.WriteString( faction.Serialize().ToString() );
-	}
-
 	buf.WriteInt( m_difficulty_levels.size() );
 	for ( auto& difficulty_level : m_difficulty_levels ) {
 		buf.WriteInt( difficulty_level.first );
@@ -31,15 +24,6 @@ const types::Buffer Rules::Serialize() const {
 }
 
 void Rules::Unserialize( types::Buffer buf ) {
-
-	m_factions.clear();
-	m_factions_order.clear();
-	const size_t factions_count = buf.ReadInt();
-	for ( size_t i = 0 ; i < factions_count ; i++ ) {
-		const auto faction_id = buf.ReadString();
-		m_factions[ faction_id ].Unserialize( buf.ReadString() );
-		m_factions_order.push_back( faction_id );
-	}
 
 	m_difficulty_levels.clear();
 	const size_t difficulty_levels_count = buf.ReadInt();

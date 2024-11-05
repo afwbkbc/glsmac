@@ -8,6 +8,7 @@
 #include "util/FS.h"
 #include "types/Buffer.h"
 #include "State.h"
+#include "Factions.h"
 #include "map_editor/MapEditor.h"
 #include "event/FinalizeTurn.h"
 #include "event/TurnFinalized.h"
@@ -329,10 +330,10 @@ void Game::Iterate() {
 					}
 
 					{
-						const auto& factions = m_state->m_settings.global.game_rules.m_factions;
+						const auto factions = m_state->GetFactions()->GetAll();
 						auto* faction_defines = new FrontendRequest::faction_defines_t();
-						for ( const auto& it : factions ) {
-							faction_defines->push_back( &it.second );
+						for ( const auto& faction : factions ) {
+							faction_defines->push_back( faction );
 						}
 						auto fr = FrontendRequest( FrontendRequest::FR_FACTION_DEFINE );
 						fr.data.faction_define.factiondefs = faction_defines;
@@ -1538,10 +1539,10 @@ void Game::UnlockTiles( const size_t initiator_slot, const map::tile::positions_
 	}
 }
 
-rules::Faction* Game::GetFaction( const std::string& id ) const {
-	const auto& it = m_state->m_settings.global.game_rules.m_factions.find( id ); // TODO: store factions in Game itself?
-	ASSERT( it != m_state->m_settings.global.game_rules.m_factions.end(), "faction not found: " + id );
-	return &it->second;
+Faction* Game::GetFaction( const std::string& id ) const {
+	auto* faction = m_state->GetFactions()->Get( id ); // TODO: store factions in Game itself?
+	ASSERT( faction, "faction not found: " + id );
+	return faction;
 }
 
 void Game::ValidateEvent( event::Event* event ) {
@@ -1772,22 +1773,23 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	if ( m_state->IsMaster() ) {
 
 		// assign random factions to players
-		const auto& factions = m_state->m_settings.global.game_rules.m_factions;
-		std::vector< std::string > m_available_factions = {};
+		auto factions = m_state->GetFactions()->GetAll();
+		std::vector< size_t > m_available_factions = {};
 		const auto& slots = m_state->m_slots->GetSlots();
 		for ( const auto& slot : slots ) {
 			if ( slot.GetState() == slot::Slot::SS_PLAYER ) {
 				auto* player = slot.GetPlayer();
 				ASSERT( player, "player not set" );
-				if ( !player->GetFaction().has_value() ) {
+				if ( !player->GetFaction() ) {
 					if ( m_available_factions.empty() ) {
 						// (re)load factions list
-						for ( const auto& it : factions ) {
-							m_available_factions.push_back( it.first );
+						for ( size_t i = 0 ; i < factions.size() ; i++ ) {
+						//for ( const auto& faction : factions ) {
+							m_available_factions.push_back( i );
 						}
 						ASSERT( !m_available_factions.empty(), "no factions found" );
 					}
-					const std::vector< std::string >::iterator it = m_available_factions.begin() + m_random->GetUInt( 0, m_available_factions.size() - 1 );
+					const auto it = m_available_factions.begin() + m_random->GetUInt( 0, m_available_factions.size() - 1 );
 					player->SetFaction( factions.at( *it ) );
 					m_available_factions.erase( it );
 				}

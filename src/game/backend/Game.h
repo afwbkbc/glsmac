@@ -373,7 +373,7 @@ public:
 	void RequestTileUnlocks( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
 	void UnlockTiles( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
 
-	rules::Faction* GetFaction( const std::string& id ) const;
+	Faction* GetFaction( const std::string& id ) const;
 
 private:
 

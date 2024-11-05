@@ -1,6 +1,6 @@
 return {
 
-	define: () => {
+	configure: (factions) => {
 		for (faction of [
 			'gaians',
 			'hive',
@@ -17,7 +17,7 @@ return {
 			'caretakers',
 			'usurpers'
 		]) {
-			#game.factions.define(#to_uppercase(faction), #include('./factions/' + faction));
+			factions.add(#to_uppercase(faction), #include('./factions/' + faction));
 		}
 	},
 

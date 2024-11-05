@@ -9,7 +9,6 @@
 
 namespace game {
 namespace backend {
-namespace rules {
 
 Faction::Faction() {
 	//
@@ -79,13 +78,12 @@ WRAPIMPL_BEGIN( Faction, CLASS_FACTION )
 		},
 		{
 			"is_progenitor",
-			VALUE( gse::type::Bool, ( m_flags & rules::Faction::FF_PROGENITOR ) == rules::Faction::FF_PROGENITOR )
+			VALUE( gse::type::Bool, ( m_flags & Faction::FF_PROGENITOR ) == Faction::FF_PROGENITOR )
 		},
 	};
 WRAPIMPL_END_PTR( Faction )
 
 UNWRAPIMPL_PTR( Faction )
 
-}
 }
 }

@@ -4,11 +4,12 @@
 
 #include "common/Common.h"
 
-namespace game::backend::rules {
+namespace game {
+
+namespace backend {
 class Faction;
 }
 
-namespace game {
 namespace frontend {
 
 class Game;
@@ -21,7 +22,7 @@ CLASS( FactionManager, common::Class )
 
 	FactionManager( Game* game );
 
-	void DefineFaction( const backend::rules::Faction* def );
+	void DefineFaction( const backend::Faction* def );
 
 	Faction* GetFactionById( const std::string& id ) const;
 

@@ -1,6 +1,7 @@
 #include "State.h"
 
 #include "System.h"
+#include "Factions.h"
 #include "Game.h"
 #include "game/backend/connection/Connection.h"
 #include "game/backend/bindings/Bindings.h"
@@ -13,6 +14,7 @@ namespace backend {
 State::State()
 	: m_slots( new slot::Slots( this ) ) {
 	NEW( m_system, System );
+	NEW( m_factions, Factions );
 }
 
 State::~State() {
@@ -21,7 +23,8 @@ State::~State() {
 		delete m_bindings;
 	}
 	delete m_slots;
-	delete m_system;
+	DELETE( m_system );
+	DELETE( m_factions );
 }
 
 void State::SetGame( Game* game ) {
@@ -127,16 +130,15 @@ void State::Configure() {
 	Log( "Configuring state" );
 
 	// reset
-	m_settings.global.game_rules.m_factions.clear();
-	m_settings.global.game_rules.m_factions_order.clear();
+	m_factions->Clear();
 
 	// configure
 	m_bindings->Configure();
-	//m_bindings->Call( bindings::Bindings::CS_ON_CONFIGURE );
 
 	// check
-	ASSERT( !m_settings.global.game_rules.m_factions.empty(), "no factions were defined" );
-	ASSERT( m_settings.global.game_rules.m_factions_order.size() == m_settings.global.game_rules.m_factions.size(), "factions order size mismatch" );
+	if ( m_factions->GetAll().empty() ) {
+		THROW( "no factions were defined" );
+	}
 }
 
 void State::Reset() {
@@ -170,13 +172,34 @@ System* State::GetSystem() const {
 	return m_system;
 }
 
+Factions* State::GetFactions() const {
+	return m_factions;
+}
+
 WRAPIMPL_BEGIN( State, CLASS_STATE )
 	WRAPIMPL_PROPS
-
+		{
+			"factions",
+			m_factions->Wrap( true )
+		}
 	};
 WRAPIMPL_END_PTR( State )
 
 UNWRAPIMPL_PTR( State )
+
+const types::Buffer State::Serialize() const {
+	types::Buffer buf;
+
+	buf.WriteString( m_settings.global.Serialize().ToString() );
+	buf.WriteString( m_factions->Serialize().ToString() );
+
+	return buf;
+}
+
+void State::Unserialize( types::Buffer buf ) {
+	m_settings.global.Unserialize( buf.ReadString() );
+	m_factions->Unserialize( buf.ReadString() );
+}
 
 }
 }

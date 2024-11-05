@@ -11,7 +11,6 @@
 
 namespace game {
 namespace backend {
-namespace rules {
 
 CLASS2( Faction, types::Serializable, gse::Wrappable )
 
@@ -38,7 +37,7 @@ CLASS2( Faction, types::Serializable, gse::Wrappable )
 		std::vector< std::string > water = {};
 	} m_base_names = {};
 
-	bases_render_info_t m_bases_render = {};
+	faction_bases_render_info_t m_bases_render = {};
 
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;
@@ -47,6 +46,5 @@ CLASS2( Faction, types::Serializable, gse::Wrappable )
 
 };
 
-}
 }
 }

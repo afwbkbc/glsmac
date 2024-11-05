@@ -46,7 +46,7 @@ const gse::Value SpawnBase::Apply( Game* game ) const {
 		game,
 		base::Base::GetNextId(),
 		&owner,
-		&owner.GetPlayer()->GetFaction().value(),
+		owner.GetPlayer()->GetFaction(),
 		tile,
 		m_name,
 		{} // will be added later
