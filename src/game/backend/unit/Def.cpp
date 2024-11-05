@@ -51,7 +51,7 @@ Def* Def::Unserialize( types::Buffer& buf ) {
 }
 
 WRAPIMPL_BEGIN( Def, CLASS_UNITDEF )
-	WRAPIMPL_PROPS {
+	WRAPIMPL_PROPS
 		{
 			"name",
 			VALUE( gse::type::String, m_name )

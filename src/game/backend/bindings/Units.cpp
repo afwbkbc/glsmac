@@ -24,19 +24,19 @@ namespace game {
 namespace backend {
 namespace bindings {
 
-const unit::morale_t GetMorale( const int64_t& morale, gse::context::Context* ctx, const gse::si_t& call_si ) {
+const unit::morale_t GetMorale( GSE_CALLABLE, const int64_t& morale ) {
 	if ( morale < unit::MORALE_MIN || morale > unit::MORALE_MAX ) {
-		ERROR( gse::EC.INVALID_CALL, "Invalid morale value: " + std::to_string( morale ) + " (should be between " + std::to_string( unit::MORALE_MIN ) + " and " + std::to_string( unit::MORALE_MAX ) + ", inclusive)" );
+		GSE_ERROR( gse::EC.INVALID_CALL, "Invalid morale value: " + std::to_string( morale ) + " (should be between " + std::to_string( unit::MORALE_MIN ) + " and " + std::to_string( unit::MORALE_MAX ) + ", inclusive)" );
 	}
 	return (unit::morale_t)morale;
 }
 
-const unit::health_t GetHealth( const float health, gse::context::Context* ctx, const gse::si_t& call_si ) {
+const unit::health_t GetHealth( GSE_CALLABLE, const float health ) {
 	if ( health < unit::Unit::MINIMUM_HEALTH_TO_KEEP || health > unit::StaticDef::HEALTH_MAX ) {
-		ERROR( gse::EC.INVALID_CALL, "Invalid health value: " + std::to_string( health ) + " (should be between " + std::to_string( unit::Unit::MINIMUM_HEALTH_TO_KEEP ) + " and " + std::to_string( unit::StaticDef::HEALTH_MAX ) + ", inclusive)" );
+		GSE_ERROR( gse::EC.INVALID_CALL, "Invalid health value: " + std::to_string( health ) + " (should be between " + std::to_string( unit::Unit::MINIMUM_HEALTH_TO_KEEP ) + " and " + std::to_string( unit::StaticDef::HEALTH_MAX ) + ", inclusive)" );
 	}
 	if ( health == 0 ) {
-		ERROR( gse::EC.INVALID_CALL, "Invalid health value: " + std::to_string( health ) + " (you can't spawn a dead unit)" );
+		GSE_ERROR( gse::EC.INVALID_CALL, "Invalid health value: " + std::to_string( health ) + " (you can't spawn a dead unit)" );
 	}
 	return (unit::health_t)health;
 }
@@ -51,12 +51,12 @@ BINDING_IMPL( units ) {
 				N_GETVALUE( arr, 1, Array );
 				const uint8_t expected_count = unit::MORALE_MAX - unit::MORALE_MIN + 1;
 				if ( arr.size() != expected_count ) {
-					ERROR( gse::EC.INVALID_CALL, "Morale set must have exactly " + std::to_string( expected_count ) + " values (found " + std::to_string( arr.size() ) + ")");
+					GSE_ERROR( gse::EC.INVALID_CALL, "Morale set must have exactly " + std::to_string( expected_count ) + " values (found " + std::to_string( arr.size() ) + ")");
 				}
 				unit::MoraleSet::morale_values_t values = {};
 				for ( const auto& v : arr ) {
 					if ( v.Get()->type != gse::type::Type::T_OBJECT ) {
-						ERROR( gse::EC.INVALID_CALL, "Morale set elements must be objects");
+						GSE_ERROR( gse::EC.INVALID_CALL, "Morale set elements must be objects");
 					}
 					const auto* obj = (gse::type::Object*)v.Get();
 					N_GETPROP( name, obj->value, "name", String );
@@ -91,7 +91,7 @@ BINDING_IMPL( units ) {
 						movement_type = unit::MT_IMMOVABLE;
 					}
 					else {
-						ERROR( gse::EC.INVALID_CALL, "Invalid movement type: " + movement_type_str + ". Specify one of: land water air immovable");
+						GSE_ERROR( gse::EC.INVALID_CALL, "Invalid movement type: " + movement_type_str + ". Specify one of: land water air immovable");
 					}
 					N_GETPROP( movement_per_turn, unit_def, "movement_per_turn", Int );
 					N_GETPROP( render_def, unit_def, "render", Object );
@@ -108,7 +108,7 @@ BINDING_IMPL( units ) {
 						auto* game = GAME;
 						const auto* moraleset = game->GetMoraleSet( morale );
 						if ( !moraleset ) {
-							ERROR( gse::EC.INVALID_CALL, "Morale type '" + morale + "' is not defined");
+							GSE_ERROR( gse::EC.INVALID_CALL, "Morale type '" + morale + "' is not defined");
 						}
 						auto* def = new unit::StaticDef(
 							id,
@@ -130,11 +130,11 @@ BINDING_IMPL( units ) {
 						return game->AddEvent( new event::DefineUnit( game->GetSlotNum(), def ) );
 					}
 					else {
-						ERROR( gse::EC.GAME_ERROR, "Unsupported render type: " + render_type );
+						GSE_ERROR( gse::EC.GAME_ERROR, "Unsupported render type: " + render_type );
 					}
 				}
 				else {
-					ERROR( gse::EC.GAME_ERROR, "Unsupported unit type: " + unit_type );
+					GSE_ERROR( gse::EC.GAME_ERROR, "Unsupported unit type: " + unit_type );
 				}
 			})
 		},
@@ -154,8 +154,8 @@ BINDING_IMPL( units ) {
 					owner->GetIndex(),
 					tile->coord.x,
 					tile->coord.y,
-					GetMorale( morale, ctx, call_si ),
-					GetHealth( health, ctx, call_si )
+					GetMorale( ctx, call_si, morale ),
+					GetHealth( ctx, call_si, health )
 				) );
 			})
 		},

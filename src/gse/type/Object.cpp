@@ -28,6 +28,18 @@ static const std::unordered_map< Object::object_class_t, std::string > s_object_
 		"#color"
 	},
 	{
+		Object::CLASS_SYSTEM,
+		"#system"
+	},
+	{
+		Object::CLASS_STATE,
+		"#state"
+	},
+	{
+		Object::CLASS_GAME,
+		"#game"
+	},
+	{
 		Object::CLASS_TILE,
 		"#tile"
 	},

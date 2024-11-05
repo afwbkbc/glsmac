@@ -71,7 +71,7 @@ BINDING_IMPL( resources ) {
 					return game->AddEvent( new event::DefineResource( game->GetSlotNum(), resource ) );
 				}
 				else {
-					ERROR( gse::EC.GAME_ERROR, "Unsupported resource type: " + type );
+					GSE_ERROR( gse::EC.GAME_ERROR, "Unsupported resource type: " + type );
 				}
 
 				return VALUE( gse::type::Undefined );

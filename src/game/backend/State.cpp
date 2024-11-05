@@ -1,5 +1,6 @@
 #include "State.h"
 
+#include "System.h"
 #include "Game.h"
 #include "game/backend/connection/Connection.h"
 #include "game/backend/bindings/Bindings.h"
@@ -11,7 +12,7 @@ namespace backend {
 
 State::State()
 	: m_slots( new slot::Slots( this ) ) {
-
+	NEW( m_system, System );
 }
 
 State::~State() {
@@ -20,6 +21,7 @@ State::~State() {
 		delete m_bindings;
 	}
 	delete m_slots;
+	delete m_system;
 }
 
 void State::SetGame( Game* game ) {
@@ -129,7 +131,8 @@ void State::Configure() {
 	m_settings.global.game_rules.m_factions_order.clear();
 
 	// configure
-	m_bindings->Call( bindings::Bindings::CS_ON_CONFIGURE );
+	m_bindings->Configure();
+	//m_bindings->Call( bindings::Bindings::CS_ON_CONFIGURE );
 
 	// check
 	ASSERT( !m_settings.global.game_rules.m_factions.empty(), "no factions were defined" );
@@ -162,6 +165,18 @@ void State::DetachConnection() {
 	ASSERT( m_connection, "state connection not set" );
 	m_connection = nullptr;
 }
+
+System* State::GetSystem() const {
+	return m_system;
+}
+
+WRAPIMPL_BEGIN( State, CLASS_STATE )
+	WRAPIMPL_PROPS
+
+	};
+WRAPIMPL_END_PTR( State )
+
+UNWRAPIMPL_PTR( State )
 
 }
 }

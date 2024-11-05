@@ -52,8 +52,6 @@ protected:
 
 #define GAME m_bindings->GetGame( ctx, call_si )
 
-#define ERROR( _type, _text ) throw gse::Exception( _type, _text, ctx, call_si );
-
 #define CALLBACK( _type ) NATIVE_CALL( this ) { \
     N_EXPECT_ARGS( 1 ); \
     N_GET( cb, 0 ); \

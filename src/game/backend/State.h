@@ -14,6 +14,7 @@
 namespace game {
 namespace backend {
 
+class System;
 class Game;
 class Player;
 
@@ -27,7 +28,7 @@ namespace slot {
 class Slots;
 }
 
-CLASS( State, common::Class )
+CLASS2( State, common::Class, gse::Wrappable )
 
 	State();
 	virtual ~State();
@@ -64,7 +65,12 @@ CLASS( State, common::Class )
 	void Reset();
 	void DetachConnection();
 
+	System* GetSystem() const;
+
+	WRAPDEFS_PTR( State )
+
 private:
+	System* m_system = nullptr;
 	Game* m_game = nullptr;
 
 	std::unordered_set< Player* > m_players = {}; // persistent

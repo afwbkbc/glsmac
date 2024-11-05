@@ -45,7 +45,7 @@ BINDING_IMPL( animations ) {
 					N_GETPROP( duration_ms, animation_def, "duration_ms", Int );
 					N_GETPROP( sound, animation_def, "sound", String );
 					if ( !g_engine->GetSoundLoader()->LoadCustomSound( sound ) ) {
-						ERROR( gse::EC.GAME_ERROR, "Failed to load animation sound '" + sound + "'" );
+						GSE_ERROR( gse::EC.GAME_ERROR, "Failed to load animation sound '" + sound + "'" );
 					}
 					auto* def = new animation::FramesRow(
 						id,
@@ -68,7 +68,7 @@ BINDING_IMPL( animations ) {
 					return game->AddEvent( new event::DefineAnimation( game->GetSlotNum(), def ) );
 				}
 				else {
-					ERROR( gse::EC.GAME_ERROR, "Unsupported animation type: " + type );
+					GSE_ERROR( gse::EC.GAME_ERROR, "Unsupported animation type: " + type );
 				}
 			})
 		},
@@ -84,7 +84,7 @@ BINDING_IMPL( animations ) {
 					N_UNPERSIST_CALLABLE( on_complete );
 				});
 				if ( errmsg ) {
-					ERROR( gse::EC.GAME_ERROR, *errmsg );
+					GSE_ERROR( gse::EC.GAME_ERROR, *errmsg );
 					delete errmsg;
 				}
 				return VALUE( gse::type::Undefined );

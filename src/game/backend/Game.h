@@ -262,7 +262,7 @@ public:
 	InvalidEvent( const std::string& reason, const event::Event* event );
 };
 
-CLASS( Game, MTModule )
+CLASS2( Game, MTModule, gse::Wrappable )
 
 	// returns success as soon as this thread is ready (not busy with previous requests)
 	common::mt_id_t MT_Ping();
@@ -310,6 +310,8 @@ CLASS( Game, MTModule )
 	State* GetState() const;
 	const Player* GetPlayer() const;
 	const size_t GetSlotNum() const;
+
+	WRAPDEFS_PTR( Game )
 
 protected:
 

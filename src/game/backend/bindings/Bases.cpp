@@ -40,7 +40,7 @@ BINDING_IMPL( bases ) {
 				out.reserve( renders.size() );
 				for ( const auto& v : renders ) {
 					if ( v.Get()->type != gse::type::Type::T_OBJECT ) {
-						ERROR( gse::EC.INVALID_CALL, "Pop render elements must be objects" );
+						GSE_ERROR( gse::EC.INVALID_CALL, "Pop render elements must be objects" );
 					}
 					const auto* obj = (gse::type::Object*)v.Get();
 					const auto& ov = obj->value;
@@ -62,7 +62,7 @@ BINDING_IMPL( bases ) {
 						);
 					}
 					else {
-						ERROR( gse::EC.INVALID_CALL, "Only sprite pops are supported for now" );
+						GSE_ERROR( gse::EC.INVALID_CALL, "Only sprite pops are supported for now" );
 					}
 
 				}

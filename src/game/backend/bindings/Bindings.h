@@ -22,6 +22,7 @@ class GlobalContext;
 namespace game {
 namespace backend {
 
+class System;
 class Game;
 class State;
 
@@ -58,8 +59,10 @@ public:
 	typedef std::map< std::string, gse::Value > callback_arguments_t;
 	gse::Value Call( const callback_slot_t slot, const callback_arguments_t& arguments = {} );
 
+	void Configure();
+
 	State* GetState() const;
-	Game* GetGame( gse::context::Context* ctx, const gse::si_t& call_si ) const;
+	Game* GetGame( GSE_CALLABLE ) const;
 	void SetCallback( const callback_slot_t slot, const gse::Value& callback, gse::context::Context* context, const gse::si_t& si );
 
 private:

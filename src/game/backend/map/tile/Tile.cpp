@@ -167,7 +167,7 @@ const std::string Tile::ToString() const {
 }
 
 WRAPIMPL_BEGIN( Tile, CLASS_TILE )
-	WRAPIMPL_PROPS {
+	WRAPIMPL_PROPS
 		{
 			"x",
 			VALUE( gse::type::Int, coord.x )

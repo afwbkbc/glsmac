@@ -164,7 +164,7 @@ void Slot::Unserialize( types::Buffer buf ) {
 WRAPIMPL_BEGIN( Slot, CLASS_PLAYER )
 	ASSERT_NOLOG( m_slot_state == SS_PLAYER, "only player slots can be wrapped for now" );
 	auto* player = m_player_data.player;
-	WRAPIMPL_PROPS {
+	WRAPIMPL_PROPS
 		{
 			"id",
 			VALUE( gse::type::Int, m_player_data.cid )

@@ -106,7 +106,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base, CLASS_BASE )
 		N_GETPROP( poptype, data, "type", String );
 		auto* def = m_game->GetPopDef( poptype );
 		if ( !def ) {
-			ERROR( gse::EC.INVALID_DEFINITION, "Unknown pop type: " + poptype );
+			GSE_ERROR( gse::EC.INVALID_DEFINITION, "Unknown pop type: " + poptype );
 		}
 		const auto max_variants = (m_faction->m_flags & rules::Faction::FF_PROGENITOR)
 			? 1 // aliens have 1 gender

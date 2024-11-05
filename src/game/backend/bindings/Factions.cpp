@@ -74,7 +74,7 @@ BINDING_IMPL( factions ) {
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( id, 0, String );
 				if ( factions.find( id ) != factions.end() ) {
-					ERROR( gse::EC.GAME_ERROR, "Faction '" + id + "' already exists" );
+					GSE_ERROR( gse::EC.GAME_ERROR, "Faction '" + id + "' already exists" );
 				}
 				N_GETVALUE( faction_def, 1, Object );
 				N_GETPROP( name, faction_def, "name", String );
@@ -129,7 +129,7 @@ BINDING_IMPL( factions ) {
 					};
 				}
 				else {
-					ERROR( gse::EC.GAME_ERROR, "Unsupported bases render type: " + bases_render_type );
+					GSE_ERROR( gse::EC.GAME_ERROR, "Unsupported bases render type: " + bases_render_type );
 				}
 
 				N_GETPROP( base_names, bases_def, "names", Object );

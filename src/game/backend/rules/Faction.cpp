@@ -68,7 +68,7 @@ void Faction::Unserialize( types::Buffer buf ) {
 }
 
 WRAPIMPL_BEGIN( Faction, CLASS_FACTION )
-	WRAPIMPL_PROPS {
+	WRAPIMPL_PROPS
 		{
 			"id",
 			VALUE( gse::type::String, m_id )

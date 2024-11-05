@@ -1,5 +1,7 @@
 #include "Bindings.h"
 
+#include <iostream>
+
 #include "util/FS.h"
 
 #include "game/backend/Game.h"
@@ -11,9 +13,11 @@
 #include "gse/type/Object.h"
 #include "gse/type/Callable.h"
 #include "gse/type/Undefined.h"
+#include "gse/callable/Native.h"
 #include "engine/Engine.h"
 #include "config/Config.h"
 #include "game/backend/State.h"
+#include "game/backend/System.h"
 
 namespace game {
 namespace backend {
@@ -67,6 +71,7 @@ void Bindings::AddToContext( gse::context::Context* ctx ) {
 		it->Add( methods );
 	}
 	ctx->CreateBuiltin( "game", VALUE( gse::type::Object, methods ) );
+	ctx->CreateBuiltin( "system", m_state->GetSystem()->Wrap( true ) );
 }
 
 void Bindings::RunMain() {
@@ -105,14 +110,25 @@ gse::Value Bindings::Call( const callback_slot_t slot, const callback_arguments_
 	return VALUE( gse::type::Undefined );
 }
 
+void Bindings::Configure() {
+	m_state->GetSystem()->Trigger(
+		m_gse_context, m_si_internal, "configure", {
+			{
+				"state",
+				m_state->Wrap()
+			}
+		}
+	);
+}
+
 State* Bindings::GetState() const {
 	return m_state;
 }
 
-Game* Bindings::GetGame( gse::context::Context* ctx, const gse::si_t& call_si ) const {
+Game* Bindings::GetGame( GSE_CALLABLE ) const {
 	auto* game = m_state->GetGame();
 	if ( !game ) {
-		ERROR( gse::EC.GAME_ERROR, "Game not started yet" );
+		GSE_ERROR( gse::EC.GAME_ERROR, "Game not started yet" );
 	}
 	return game;
 }

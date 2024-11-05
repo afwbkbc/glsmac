@@ -8,7 +8,7 @@
 namespace gse {
 namespace callable {
 
-#define NATIVE_CALL( ... ) VALUE( gse::callable::Native, [ __VA_ARGS__ ]( gse::context::Context* ctx, const gse::si_t& call_si, const gse::type::function_arguments_t& arguments ) -> gse::Value
+#define NATIVE_CALL( ... ) VALUE( gse::callable::Native, [ __VA_ARGS__ ]( GSE_CALLABLE, const gse::type::function_arguments_t& arguments ) -> gse::Value
 
 // TODO: refactor these
 #define N_ARGS \
@@ -20,6 +20,11 @@ namespace callable {
 #define N_EXPECT_ARGS( _count ) \
     if ( arguments.size() != _count ) { \
         throw gse::Exception( gse::EC.INVALID_CALL, "Expected " + std::to_string( _count ) + " arguments, found " + std::to_string( arguments.size() ), ctx, call_si ); \
+    } \
+    N_ARGS
+#define N_EXPECT_ARGS_MIN( _min ) \
+    if ( arguments.size() < _min ) { \
+        throw gse::Exception( gse::EC.INVALID_CALL, "Expected at least " + std::to_string( _min ) + " arguments, found " + std::to_string( arguments.size() ), ctx, call_si ); \
     } \
     N_ARGS
 #define N_EXPECT_ARGS_MIN_MAX( _min, _max ) \

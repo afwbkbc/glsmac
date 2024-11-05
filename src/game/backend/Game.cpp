@@ -449,6 +449,14 @@ const size_t Game::GetSlotNum() const {
 	return m_slot_num;
 }
 
+WRAPIMPL_BEGIN( Game, CLASS_GAME )
+	WRAPIMPL_PROPS
+
+		};
+WRAPIMPL_END_PTR( Game )
+
+UNWRAPIMPL_PTR( Game )
+
 const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE ) {
 	MT_Response response = {};
 	response.op = request.op;

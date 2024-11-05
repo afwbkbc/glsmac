@@ -13,6 +13,7 @@ SUBDIR( turn )
 
 SET( SRC ${SRC}
 
+	${PWD}/System.cpp
 	${PWD}/Game.cpp
 	${PWD}/State.cpp
 	${PWD}/Account.cpp

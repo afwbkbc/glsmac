@@ -83,7 +83,7 @@ StaticDef* StaticDef::Unserialize( types::Buffer& buf, const std::string& id, co
 }
 
 WRAPIMPL_BEGIN( StaticDef, CLASS_UNITDEF )
-	WRAPIMPL_PROPS {
+	WRAPIMPL_PROPS
 		WRAPIMPL_GET( "is_immovable", Bool, m_movement_type == MT_IMMOVABLE )
 		WRAPIMPL_GET( "is_land", Bool, m_movement_type == MT_LAND )
 		WRAPIMPL_GET( "is_water", Bool, m_movement_type == MT_WATER )

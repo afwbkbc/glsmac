@@ -40,7 +40,7 @@ void Pop::Unserialize( types::Buffer& buf, Game* game ) {
 }
 
 WRAPIMPL_BEGIN( Pop, CLASS_BASE_POP )
-	WRAPIMPL_PROPS {
+	WRAPIMPL_PROPS
 		{
 			"type",
 			VALUE( gse::type::String, m_def->m_id )
