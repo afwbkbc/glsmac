@@ -2,6 +2,7 @@
 
 #include "game/backend/State.h"
 #include "game/backend/Player.h"
+#include "game/backend/faction/Faction.h"
 
 #include "gse/type/String.h"
 #include "gse/type/Int.h"

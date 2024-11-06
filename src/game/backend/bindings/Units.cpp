@@ -10,6 +10,7 @@
 #include "gse/type/Undefined.h"
 #include "game/backend/Game.h"
 #include "game/backend/slot/Slot.h"
+#include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/MoraleSet.h"
 #include "game/backend/unit/StaticDef.h"
 #include "game/backend/unit/SpriteRender.h"
@@ -106,7 +107,7 @@ BINDING_IMPL( units ) {
 						N_GETPROP( sprite_cy, render_def, "cy", Int );
 						N_GETPROP_OPT_INT( sprite_morale_based_xshift, render_def, "morale_based_xshift" );
 						auto* game = GAME;
-						const auto* moraleset = game->GetMoraleSet( morale );
+						const auto* moraleset = game->GetUM()->GetMoraleSet( morale );
 						if ( !moraleset ) {
 							GSE_ERROR( gse::EC.INVALID_CALL, "Morale type '" + morale + "' is not defined");
 						}

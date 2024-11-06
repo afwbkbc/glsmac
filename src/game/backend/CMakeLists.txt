@@ -4,6 +4,7 @@ SUBDIR( rules )
 SUBDIR( settings )
 SUBDIR( slot )
 SUBDIR( connection )
+SUBDIR( faction )
 SUBDIR( animation )
 SUBDIR( unit )
 SUBDIR( base )
@@ -16,8 +17,6 @@ SET( SRC ${SRC}
 	${PWD}/System.cpp
 	${PWD}/Game.cpp
 	${PWD}/State.cpp
-	${PWD}/Faction.cpp
-	${PWD}/Factions.cpp
 	${PWD}/Account.cpp
 	${PWD}/Player.cpp
 	${PWD}/MapObject.cpp

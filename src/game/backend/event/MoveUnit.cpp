@@ -1,6 +1,7 @@
 #include "MoveUnit.h"
 
 #include "game/backend/Game.h"
+#include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/StaticDef.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/slot/Slot.h"
@@ -19,7 +20,7 @@ MoveUnit::MoveUnit( const size_t initiator_slot, const size_t unit_id, const bac
 }
 
 const std::string* MoveUnit::Validate( Game* game ) const {
-	auto* unit = game->GetUnit( m_unit_id );
+	auto* unit = game->GetUM()->GetUnit( m_unit_id );
 	if ( !unit ) {
 		return Error( "Unit not found" );
 	}
@@ -39,24 +40,24 @@ const std::string* MoveUnit::Validate( Game* game ) const {
 		return Error( "Destination tile is locked" );
 	}
 
-	return game->MoveUnitValidate( unit, dst_tile );
+	return game->GetUM()->MoveUnitValidate( unit, dst_tile );
 }
 
 void MoveUnit::Resolve( Game* game ) {
-	auto* unit = game->GetUnit( m_unit_id );
+	auto* unit = game->GetUM()->GetUnit( m_unit_id );
 	ASSERT_NOLOG( unit, "unit not found" );
 	auto* src_tile = unit->GetTile();
 	ASSERT_NOLOG( src_tile, "src tile not set" );
 	auto* dst_tile = src_tile->GetNeighbour( m_direction );
 	ASSERT_NOLOG( dst_tile, "dst tile not set" );
 
-	m_resolutions = game->MoveUnitResolve( unit, dst_tile );
+	m_resolutions = game->GetUM()->MoveUnitResolve( unit, dst_tile );
 }
 
 const gse::Value MoveUnit::Apply( Game* game ) const {
-	auto* unit = game->GetUnit( m_unit_id );
+	auto* unit = game->GetUM()->GetUnit( m_unit_id );
 	ASSERT_NOLOG( unit, "unit not found" );
-	game->MoveUnitApply( unit, unit->GetTile()->GetNeighbour( m_direction ), m_resolutions );
+	game->GetUM()->MoveUnitApply( unit, unit->GetTile()->GetNeighbour( m_direction ), m_resolutions );
 	return VALUE( gse::type::Undefined );
 }
 

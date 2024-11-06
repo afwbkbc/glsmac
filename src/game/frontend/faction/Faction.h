@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-#include "game/backend/Types.h"
+#include "game/backend/faction/Types.h"
 #include "types/Color.h"
 #include "game/frontend/sprite/Sprite.h"
 
@@ -16,7 +16,7 @@ class Texture;
 
 namespace game {
 
-namespace backend {
+namespace backend::faction {
 class Faction;
 }
 
@@ -31,7 +31,7 @@ namespace faction {
 
 class Faction {
 public:
-	Faction( const backend::Faction* def, sprite::InstancedSpriteManager* ism );
+	Faction( const backend::faction::Faction* def, sprite::InstancedSpriteManager* ism );
 
 	sprite::Sprite* GetBaseSprite( const bool is_water, const uint8_t size, const uint8_t perimeter_level );
 
@@ -55,7 +55,7 @@ private:
 	sprite::InstancedSpriteManager* m_ism = nullptr;
 
 	struct {
-		backend::faction_bases_render_info_t bases_render;
+		backend::faction::bases_render_info_t bases_render;
 	} m_render = {};
 
 	types::texture::Texture* m_base_grid_texture = nullptr;

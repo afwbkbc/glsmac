@@ -1,6 +1,7 @@
 #include "SkipUnitTurn.h"
 
 #include "game/backend/Game.h"
+#include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/slot/Slot.h"
 #include "gse/type/Undefined.h"
@@ -16,7 +17,7 @@ SkipUnitTurn::SkipUnitTurn( const size_t initiator_slot, const size_t unit_id )
 }
 
 const std::string* SkipUnitTurn::Validate( Game* game ) const {
-	const auto* unit = game->GetUnit( m_unit_id );
+	const auto* unit = game->GetUM()->GetUnit( m_unit_id );
 	if ( !unit ) {
 		return Error( "Unit not found" );
 	}
@@ -37,7 +38,7 @@ const std::string* SkipUnitTurn::Validate( Game* game ) const {
 }
 
 const gse::Value SkipUnitTurn::Apply( Game* game ) const {
-	game->SkipUnitTurn( m_unit_id );
+	game->GetUM()->SkipUnitTurn( m_unit_id );
 	return VALUE( gse::type::Undefined );
 }
 

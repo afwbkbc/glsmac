@@ -6,7 +6,7 @@
 
 namespace game {
 
-namespace backend {
+namespace backend::faction {
 class Faction;
 }
 
@@ -22,7 +22,7 @@ CLASS( FactionManager, common::Class )
 
 	FactionManager( Game* game );
 
-	void DefineFaction( const backend::Faction* def );
+	void DefineFaction( const backend::faction::Faction* def );
 
 	Faction* GetFactionById( const std::string& id ) const;
 

@@ -11,7 +11,7 @@
 #include "game/backend/slot/Slot.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
-#include "game/backend/Faction.h"
+#include "game/backend/faction/Faction.h"
 #include "Pop.h"
 #include "game/backend/bindings/Binding.h"
 #include "PopDef.h"
@@ -33,7 +33,7 @@ Base::Base(
 	Game* game,
 	const size_t id,
 	slot::Slot* owner,
-	Faction* faction,
+	faction::Faction* faction,
 	map::tile::Tile* tile,
 	const std::string& name,
 	const pops_t& pops
@@ -109,7 +109,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base, CLASS_BASE )
 		if ( !def ) {
 			GSE_ERROR( gse::EC.INVALID_DEFINITION, "Unknown pop type: " + poptype );
 		}
-		const auto max_variants = (m_faction->m_flags & Faction::FF_PROGENITOR)
+		const auto max_variants = (m_faction->m_flags & faction::Faction::FF_PROGENITOR)
 			? 1 // aliens have 1 gender
 			: 2; // humans have 2
 		ASSERT_NOLOG( max_variants > 0, "no variants found for pop type: " + poptype );

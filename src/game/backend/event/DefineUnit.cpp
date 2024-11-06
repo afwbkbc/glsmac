@@ -1,6 +1,7 @@
 #include "DefineUnit.h"
 
 #include "game/backend/Game.h"
+#include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/Def.h"
 
 namespace game {
@@ -21,7 +22,7 @@ const std::string* DefineUnit::Validate( Game* game ) const {
 }
 
 const gse::Value DefineUnit::Apply( Game* game ) const {
-	game->DefineUnit( m_def );
+	game->GetUM()->DefineUnit( m_def );
 	return m_def->Wrap();
 }
 

@@ -17,7 +17,9 @@ class Game;
 namespace slot {
 class Slot;
 }
+namespace faction {
 class Faction;
+}
 namespace map::tile {
 class Tile;
 }
@@ -36,7 +38,7 @@ public:
 		Game* game,
 		const size_t id,
 		slot::Slot* owner,
-		Faction* faction, // faction may differ from owner's faction in some cases, i.e. after being conquered
+		faction::Faction* faction, // faction may differ from owner's faction in some cases, i.e. after being conquered
 		map::tile::Tile* tile,
 		const std::string& name,
 		const pops_t& pops
@@ -47,7 +49,7 @@ public:
 
 	const size_t m_id;
 	slot::Slot* m_owner;
-	Faction* m_faction;
+	faction::Faction* m_faction;
 	std::string m_name;
 	pops_t m_pops;
 

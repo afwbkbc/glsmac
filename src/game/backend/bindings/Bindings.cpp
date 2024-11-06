@@ -5,6 +5,7 @@
 #include "util/FS.h"
 
 #include "game/backend/Game.h"
+#include "game/backend/unit/UnitManager.h"
 #include "Binding.h"
 #include "gse/GSE.h"
 #include "gse/context/GlobalContext.h"
@@ -90,7 +91,7 @@ gse::Value Bindings::Call( const callback_slot_t slot, const callback_arguments_
 			);
 			auto* game = m_state->GetGame();
 			if ( game ) {
-				game->PushUnitUpdates();
+				game->GetUM()->PushUnitUpdates();
 			}
 			if ( result.Get()->type == gse::type::Type::T_NOTHING ) {
 				// return undefined by default
@@ -110,15 +111,8 @@ gse::Value Bindings::Call( const callback_slot_t slot, const callback_arguments_
 	return VALUE( gse::type::Undefined );
 }
 
-void Bindings::Configure() {
-	m_state->GetSystem()->Trigger(
-		m_gse_context, m_si_internal, "configure", {
-			{
-				"state",
-				m_state->Wrap()
-			}
-		}
-	);
+void Bindings::Trigger( gse::Wrappable* object, const std::string& event, const gse::type::object_properties_t& args ) {
+	object->Trigger( m_gse_context, m_si_internal, event, args );
 }
 
 State* Bindings::GetState() const {

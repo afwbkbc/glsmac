@@ -1,4 +1,4 @@
-#include "Factions.h"
+#include "FactionManager.h"
 
 #include "Faction.h"
 
@@ -9,22 +9,23 @@
 
 namespace game {
 namespace backend {
+namespace faction {
 
-Factions::Factions() {
+FactionManager::FactionManager() {
 	//
 }
 
-Factions::~Factions() {
+FactionManager::~FactionManager() {
 	Clear();
 }
 
-void Factions::Add( Faction* faction ) {
+void FactionManager::Add( Faction* faction ) {
 	Remove( faction->m_id );
 	m_factions.insert( { faction->m_id, { faction, ++m_next_faction_idx } } );
 	m_factions_order.insert({ m_next_faction_idx, faction->m_id });
 }
 
-void Factions::Remove( const std::string& id ) {
+void FactionManager::Remove( const std::string& id ) {
 	const auto& it = m_factions.find( id );
 	if ( it != m_factions.end() ) {
 		delete it->second.faction;
@@ -33,7 +34,7 @@ void Factions::Remove( const std::string& id ) {
 	}
 }
 
-void Factions::Clear() {
+void FactionManager::Clear() {
 	for ( const auto& it : m_factions ) {
 		delete it.second.faction;
 	}
@@ -42,7 +43,7 @@ void Factions::Clear() {
 	m_next_faction_idx = 0;
 }
 
-Faction* Factions::Get( const std::string& id ) const {
+Faction* FactionManager::Get( const std::string& id ) const {
 	const auto& it = m_factions.find( id );
 	if ( it != m_factions.end() ) {
 		return it->second.faction;
@@ -50,7 +51,7 @@ Faction* Factions::Get( const std::string& id ) const {
 	return nullptr;
 }
 
-const std::vector< Faction* > Factions::GetAll() const {
+const std::vector< Faction* > FactionManager::GetAll() const {
 	ASSERT_NOLOG( m_factions.size() == m_factions_order.size(), "factions order size mismatch" );
 	std::vector< Faction* > result = {};
 	result.reserve( m_factions.size() );
@@ -61,7 +62,7 @@ const std::vector< Faction* > Factions::GetAll() const {
 	return result;
 }
 
-WRAPIMPL_BEGIN( Factions, CLASS_FACTIONS )
+WRAPIMPL_BEGIN( FactionManager, CLASS_FACTIONS )
 	WRAPIMPL_PROPS
 		{
 			"add",
@@ -146,11 +147,11 @@ WRAPIMPL_BEGIN( Factions, CLASS_FACTIONS )
 			} )
 		},
 	};
-WRAPIMPL_END_PTR( Factions )
+WRAPIMPL_END_PTR( FactionManager )
 
-UNWRAPIMPL_PTR( Factions )
+UNWRAPIMPL_PTR( FactionManager )
 
-const types::Buffer Factions::Serialize() const {
+const types::Buffer FactionManager::Serialize() const {
 	types::Buffer buf;
 
 	buf.WriteInt( m_factions_order.size() );
@@ -163,7 +164,7 @@ const types::Buffer Factions::Serialize() const {
 	return buf;
 }
 
-void Factions::Unserialize( types::Buffer buf ) {
+void FactionManager::Unserialize( types::Buffer buf ) {
 	Clear();
 
 	const size_t factions_count = buf.ReadInt();
@@ -176,5 +177,6 @@ void Factions::Unserialize( types::Buffer buf ) {
 }
 
 
+}
 }
 }

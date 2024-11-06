@@ -1,7 +1,7 @@
 #include "State.h"
 
 #include "System.h"
-#include "Factions.h"
+#include "game/backend/faction/FactionManager.h"
 #include "Game.h"
 #include "game/backend/connection/Connection.h"
 #include "game/backend/bindings/Bindings.h"
@@ -14,7 +14,7 @@ namespace backend {
 State::State()
 	: m_slots( new slot::Slots( this ) ) {
 	NEW( m_system, System );
-	NEW( m_factions, Factions );
+	NEW( m_fm, faction::FactionManager );
 }
 
 State::~State() {
@@ -24,7 +24,7 @@ State::~State() {
 	}
 	delete m_slots;
 	DELETE( m_system );
-	DELETE( m_factions );
+	DELETE( m_fm );
 }
 
 void State::SetGame( Game* game ) {
@@ -33,6 +33,12 @@ void State::SetGame( Game* game ) {
 	m_on_gse_error = [ this ]( gse::Exception& e ) -> void {
 		m_game->OnGSEError( e );
 	};
+	m_bindings->Trigger( this, "start", {
+		{
+			"game",
+			m_game->Wrap()
+		}
+	});
 }
 
 void State::UnsetGame() {
@@ -129,14 +135,16 @@ void State::Configure() {
 
 	Log( "Configuring state" );
 
-	// reset
-	m_factions->Clear();
+	m_fm->Clear();
 
-	// configure
-	m_bindings->Configure();
+	m_bindings->Trigger( m_system, "configure", {
+		{
+			"lobby",
+			Wrap()
+		}
+	});
 
-	// check
-	if ( m_factions->GetAll().empty() ) {
+	if ( m_fm->GetAll().empty() ) {
 		THROW( "no factions were defined" );
 	}
 }
@@ -172,16 +180,16 @@ System* State::GetSystem() const {
 	return m_system;
 }
 
-Factions* State::GetFactions() const {
-	return m_factions;
+faction::FactionManager* State::GetFM() const {
+	return m_fm;
 }
 
 WRAPIMPL_BEGIN( State, CLASS_STATE )
 	WRAPIMPL_PROPS
 		{
 			"factions",
-			m_factions->Wrap( true )
-		}
+			m_fm->Wrap( true )
+		},
 	};
 WRAPIMPL_END_PTR( State )
 
@@ -191,14 +199,14 @@ const types::Buffer State::Serialize() const {
 	types::Buffer buf;
 
 	buf.WriteString( m_settings.global.Serialize().ToString() );
-	buf.WriteString( m_factions->Serialize().ToString() );
+	buf.WriteString( m_fm->Serialize().ToString() );
 
 	return buf;
 }
 
 void State::Unserialize( types::Buffer buf ) {
 	m_settings.global.Unserialize( buf.ReadString() );
-	m_factions->Unserialize( buf.ReadString() );
+	m_fm->Unserialize( buf.ReadString() );
 }
 
 }

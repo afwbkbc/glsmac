@@ -12,7 +12,6 @@
 namespace game {
 namespace backend {
 
-class Game;
 namespace slot {
 class Slot;
 }
@@ -23,6 +22,7 @@ class Tile;
 namespace unit {
 
 class Def;
+class UnitManager;
 
 class Unit : public gse::Wrappable, public MapObject {
 public:
@@ -31,7 +31,7 @@ public:
 	static const void SetNextId( const size_t id );
 
 	Unit(
-		Game* game,
+		UnitManager* um,
 		const size_t id,
 		Def* def,
 		slot::Slot* owner,
@@ -61,12 +61,12 @@ public:
 	void SetTile( map::tile::Tile* tile );
 
 	static const types::Buffer Serialize( const Unit* unit );
-	static Unit* Unserialize( types::Buffer& buf, Game* game );
+	static Unit* Unserialize( types::Buffer& buf, UnitManager* units );
 
 	WRAPDEFS_DYNAMIC( Unit );
 
 private:
-	Game* const m_game;
+	UnitManager* const m_um;
 
 };
 

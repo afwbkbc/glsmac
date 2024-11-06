@@ -44,10 +44,15 @@ namespace animation {
 class Def;
 }
 
+namespace faction {
+class Faction;
+}
+
 namespace unit {
 class MoraleSet;
 class Def;
 class Unit;
+class UnitManager;
 }
 
 namespace base {
@@ -327,31 +332,15 @@ public:
 	void Quit( const std::string& reason );
 	void OnError( std::runtime_error& err );
 	void OnGSEError( gse::Exception& e );
-	unit::MoraleSet* GetMoraleSet( const std::string& name ) const;
-	unit::Unit* GetUnit( const size_t id ) const;
-	unit::Def* GetUnitDef( const std::string& name ) const;
 	base::PopDef* GetPopDef( const std::string& id ) const;
 	base::Base* GetBase( const size_t id ) const;
 	const gse::Value AddEvent( event::Event* event );
-	void RefreshUnit( const unit::Unit* unit );
 	void RefreshBase( const base::Base* base );
 	void DefineAnimation( animation::Def* def );
 	const std::string* ShowAnimationOnTile( const std::string& animation_id, map::tile::Tile* tile, const cb_oncomplete& on_complete );
 	void DefineResource( Resource* resource );
-	void DefineMoraleSet( unit::MoraleSet* moraleset );
-	void DefineUnit( unit::Def* def );
-	void SpawnUnit( unit::Unit* unit );
-	void SkipUnitTurn( const size_t unit_id );
-	void DespawnUnit( const size_t unit_id );
 	void DefinePop( base::PopDef* pop_def );
 	void SpawnBase( base::Base* base );
-	const std::string* MoveUnitValidate( unit::Unit* unit, map::tile::Tile* dst_tile );
-	const gse::Value MoveUnitResolve( unit::Unit* unit, map::tile::Tile* dst_tile );
-	void MoveUnitApply( unit::Unit* unit, map::tile::Tile* dst_tile, const gse::Value resolutions );
-	const std::string* MoveUnitToTile( unit::Unit* unit, map::tile::Tile* dst_tile, const cb_oncomplete& on_complete );
-	const std::string* AttackUnitValidate( unit::Unit* attacker, unit::Unit* defender );
-	const gse::Value AttackUnitResolve( unit::Unit* attacker, unit::Unit* defender );
-	void AttackUnitApply( unit::Unit* attacker, unit::Unit* defender, const gse::Value resolutions );
 	const size_t GetTurnId() const;
 	const bool IsTurnActive() const;
 	const bool IsTurnCompleted( const size_t slot_num ) const;
@@ -373,7 +362,9 @@ public:
 	void RequestTileUnlocks( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
 	void UnlockTiles( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
 
-	Faction* GetFaction( const std::string& id ) const;
+	faction::Faction* GetFaction( const std::string& id ) const;
+
+	unit::UnitManager* GetUM() const;
 
 private:
 
@@ -388,11 +379,7 @@ private:
 	void SerializeResources( types::Buffer& buf ) const;
 	void UnserializeResources( types::Buffer& buf );
 
-	std::unordered_map< std::string, unit::MoraleSet* > m_unit_moralesets = {};
-	std::unordered_map< std::string, unit::Def* > m_unit_defs = {};
-	std::map< size_t, unit::Unit* > m_units = {};
-	void SerializeUnits( types::Buffer& buf ) const;
-	void UnserializeUnits( types::Buffer& buf );
+	unit::UnitManager* m_um = nullptr;
 
 	std::unordered_map< std::string, base::PopDef* > m_base_popdefs = {};
 	std::map< size_t, base::Base* > m_bases = {};
@@ -423,7 +410,6 @@ private:
 	std::unordered_set< size_t > m_verified_turn_checksum_slots = {};
 
 	std::vector< FrontendRequest >* m_pending_frontend_requests = nullptr;
-	void AddFrontendRequest( const FrontendRequest& request );
 
 	void InitGame( MT_Response& response, MT_CANCELABLE );
 	void ResetGame();
@@ -439,7 +425,6 @@ private:
 
 	std::vector< backend::event::Event* > m_unprocessed_events = {};
 	// TODO: refactor these?
-	std::vector< unit::Unit* > m_unprocessed_units = {};
 	std::vector< base::Base* > m_unprocessed_bases = {};
 
 	turn::Turn m_current_turn = {};
@@ -449,19 +434,6 @@ private:
 
 	size_t m_next_running_animation_id = 1;
 	std::unordered_map< size_t, cb_oncomplete > m_running_animations_callbacks = {};
-
-	enum unit_update_op_t : uint8_t {
-		UUO_NONE = 0,
-		UUO_SPAWN = 1 << 0,
-		UUO_REFRESH = 1 << 1,
-		UUO_DESPAWN = 1 << 2,
-	};
-	struct unit_update_t {
-		unit_update_op_t ops = UUO_NONE;
-		const unit::Unit* unit = nullptr;
-	};
-	std::unordered_map< size_t, unit_update_t > m_unit_updates = {};
-	void QueueUnitUpdate( const unit::Unit* unit, const unit_update_op_t op );
 
 	enum base_update_op_t : uint8_t {
 		BUO_NONE = 0,
@@ -494,8 +466,14 @@ private:
 
 private:
 	friend class bindings::Bindings;
-	void PushUnitUpdates();
 	void PushBaseUpdates();
+
+private:
+	friend class unit::UnitManager;
+	void AddFrontendRequest( const FrontendRequest& request );
+
+	const bool IsRunning() const;
+	const size_t AddAnimationCallback( const cb_oncomplete& on_complete );
 
 };
 

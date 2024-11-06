@@ -7,7 +7,7 @@
 #include "game/backend/State.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/Player.h"
-#include "game/backend/Factions.h"
+#include "game/backend/faction/FactionManager.h"
 
 namespace game {
 namespace backend {

@@ -5,13 +5,14 @@
 
 namespace game {
 namespace backend {
+namespace faction {
 
 class Faction;
 
-class Factions : public gse::Wrappable {
+class FactionManager : public gse::Wrappable {
 public:
-	Factions();
-	~Factions();
+	FactionManager();
+	~FactionManager();
 
 	void Add( Faction* faction );
 	void Remove( const std::string& id );
@@ -19,7 +20,7 @@ public:
 	Faction* Get( const std::string& id ) const;
 	const std::vector< Faction* > GetAll() const;
 
-	WRAPDEFS_PTR( Factions )
+	WRAPDEFS_PTR( FactionManager )
 
 	const types::Buffer Serialize() const;
 	void Unserialize( types::Buffer buf );
@@ -36,5 +37,6 @@ private:
 
 };
 
+}
 }
 }

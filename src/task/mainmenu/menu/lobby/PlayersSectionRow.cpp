@@ -3,8 +3,8 @@
 #include "engine/Engine.h"
 #include "game/backend/slot/Slot.h"
 #include "game/backend/State.h"
-#include "game/backend/Factions.h"
-#include "game/backend/Faction.h"
+#include "game/backend/faction/FactionManager.h"
+#include "game/backend/faction/Faction.h"
 #include "PlayersSection.h"
 #include "Lobby.h"
 #include "game/backend/settings/Settings.h"
@@ -94,7 +94,7 @@ void PlayersSectionRow::Create() {
 					player->ClearFaction();
 				}
 				else {
-					auto* faction = m_parent->GetLobby()->GetState()->GetFactions()->Get( faction_id );
+					auto* faction = m_parent->GetLobby()->GetState()->GetFM()->Get( faction_id );
 					ASSERT( faction, "faction not found: " + faction_id );
 					player->SetFaction( faction );
 				}

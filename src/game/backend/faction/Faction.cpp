@@ -9,6 +9,7 @@
 
 namespace game {
 namespace backend {
+namespace faction {
 
 Faction::Faction() {
 	//
@@ -85,5 +86,6 @@ WRAPIMPL_END_PTR( Faction )
 
 UNWRAPIMPL_PTR( Faction )
 
+}
 }
 }

@@ -6,11 +6,12 @@
 #include "types/Serializable.h"
 #include "gse/Wrappable.h"
 
-#include "Types.h"
+#include "game/backend/faction/Types.h"
 #include "types/Color.h"
 
 namespace game {
 namespace backend {
+namespace faction {
 
 CLASS2( Faction, types::Serializable, gse::Wrappable )
 
@@ -37,7 +38,7 @@ CLASS2( Faction, types::Serializable, gse::Wrappable )
 		std::vector< std::string > water = {};
 	} m_base_names = {};
 
-	faction_bases_render_info_t m_bases_render = {};
+	faction::bases_render_info_t m_bases_render = {};
 
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;
@@ -46,5 +47,6 @@ CLASS2( Faction, types::Serializable, gse::Wrappable )
 
 };
 
+}
 }
 }

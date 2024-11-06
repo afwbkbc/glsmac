@@ -14,7 +14,9 @@ namespace map::tile {
 class Tile;
 class TileState;
 }
+namespace faction {
 class Faction;
+}
 }
 
 class FrontendRequest {
@@ -48,7 +50,7 @@ public:
 
 	const request_type_t type = FR_NONE;
 
-	typedef std::vector< const backend::Faction* > faction_defines_t;
+	typedef std::vector< const backend::faction::Faction* > faction_defines_t;
 
 	struct slot_define_t {
 		size_t slot_index;

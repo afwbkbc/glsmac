@@ -6,7 +6,7 @@ const animations = #include('units/animations');
 
 const result = {
 
-	configure: () => {
+	configure: (units) => {
 		movement.init();
 		combat.init(animations);
 		turns.init();

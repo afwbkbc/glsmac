@@ -15,7 +15,11 @@ namespace game {
 namespace backend {
 
 class System;
-class Factions;
+
+namespace faction {
+class FactionManager;
+}
+
 class Game;
 class Player;
 
@@ -67,7 +71,7 @@ CLASS2( State, common::Class, gse::Wrappable )
 	void DetachConnection();
 
 	System* GetSystem() const;
-	Factions* GetFactions() const;
+	faction::FactionManager* GetFM() const;
 
 	WRAPDEFS_PTR( State )
 
@@ -76,7 +80,7 @@ CLASS2( State, common::Class, gse::Wrappable )
 
 private:
 	System* m_system = nullptr;
-	Factions* m_factions = nullptr;
+	faction::FactionManager* m_fm = nullptr;
 	Game* m_game = nullptr;
 
 	std::unordered_set< Player* > m_players = {}; // persistent

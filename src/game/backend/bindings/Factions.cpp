@@ -16,8 +16,8 @@
 #include "loader/txt/FactionTXTLoader.h"
 #include "loader/texture/TextureLoader.h"
 #include "types/texture/Texture.h"
-#include "game/backend/Faction.h"
-#include "game/backend/Factions.h"
+#include "game/backend/faction/Faction.h"
+#include "game/backend/faction/FactionManager.h"
 
 #include "types/Color.h"
 
@@ -26,7 +26,6 @@ namespace backend {
 namespace bindings {
 
 BINDING_IMPL( factions ) {
-	auto* factions = m_bindings->GetState()->GetFactions();
 	const gse::type::object_properties_t properties = {
 		{
 			"import_base_names",

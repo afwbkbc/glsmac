@@ -4,8 +4,8 @@
 
 #include "game/backend/slot/Slot.h"
 #include "game/backend/State.h"
-#include "game/backend/Factions.h"
-#include "game/backend/Faction.h"
+#include "game/backend/faction/FactionManager.h"
+#include "game/backend/faction/Faction.h"
 
 #include "PlayersSectionRow.h"
 #include "Lobby.h"
@@ -68,7 +68,7 @@ void PlayersSection::UpdateSlots( std::vector< game::backend::slot::Slot >& slot
 			"Random"
 		}
 	);
-	for ( const auto& faction : GetLobby()->GetState()->GetFactions()->GetAll() ) {
+	for ( const auto& faction : GetLobby()->GetState()->GetFM()->GetAll() ) {
 		m_choices.factions.push_back(
 			{
 				faction->m_id,
