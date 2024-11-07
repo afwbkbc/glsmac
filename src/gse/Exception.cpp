@@ -19,6 +19,7 @@ const exception_ec_t EC = {
 	"GSEConversionError",
 	"GSEGameError",
 	"GSEInvalidEvent",
+	"GSEInvalidHandler",
 };
 
 const Exception::backtrace_t Exception::GetBacktraceAndCleanup( const context::Context* const current_ctx ) {

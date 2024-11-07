@@ -111,8 +111,24 @@ gse::Value Bindings::Call( const callback_slot_t slot, const callback_arguments_
 	return VALUE( gse::type::Undefined );
 }
 
-void Bindings::Trigger( gse::Wrappable* object, const std::string& event, const gse::type::object_properties_t& args ) {
-	object->Trigger( m_gse_context, m_si_internal, event, args );
+const gse::Value Bindings::Trigger( gse::Wrappable* object, const std::string& event, const gse::type::object_properties_t& args ) {
+	auto result = VALUE( gse::type::Undefined );
+	try {
+		result = object->Trigger( m_gse_context, m_si_internal, event, args );
+		if ( result.Get()->type == gse::type::Type::T_NOTHING ) {
+			// return undefined by default
+			return VALUE( gse::type::Undefined );
+		}
+	}
+	catch ( gse::Exception& e ) {
+		if ( m_state->m_on_gse_error ) {
+			m_state->m_on_gse_error( e );
+		}
+		else {
+			throw std::runtime_error( e.ToStringAndCleanup() );
+		}
+	}
+	return result;
 }
 
 State* Bindings::GetState() const {

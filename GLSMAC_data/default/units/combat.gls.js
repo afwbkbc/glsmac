@@ -29,9 +29,9 @@ const get_unit_defence_power = (unit) => {
 
 const result = {
 
-	init: (animations) => {
+	configure: (um, animations) => {
 
-		#game.on.unit_attack_validate((e) => {
+		um.on('unit_attack_validate', (e) => {
 
 			if (e.attacker.is_immovable) {
 				return 'Unit is immovable';
@@ -60,7 +60,7 @@ const result = {
 			}
 		});
 
-		#game.on.unit_attack_resolve((e) => {
+		um.on('unit_attack_resolve', (e) => {
 
 			let attack_power = get_unit_attack_power(e.attacker);
 			let defence_power = get_unit_defence_power(e.defender);
@@ -86,12 +86,12 @@ const result = {
 			return damage_sequence;
 		});
 
-		#game.on.unit_attack_apply((e) => {
+		um.on('unit_attack_apply', (e) => {
 
 			let attacker_tile = e.attacker.get_tile();
 			let defender_tile = e.defender.get_tile();
 
-			#game.tiles.lock([attacker_tile, defender_tile], (unlock) => {
+			um.lock_tiles([attacker_tile, defender_tile], (unlock) => {
 
 				let damages_sz = #size(e.resolutions);
 

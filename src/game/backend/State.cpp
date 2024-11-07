@@ -139,7 +139,7 @@ void State::Configure() {
 
 	m_bindings->Trigger( m_system, "configure", {
 		{
-			"lobby",
+			"gm",
 			Wrap()
 		}
 	});
@@ -187,7 +187,7 @@ faction::FactionManager* State::GetFM() const {
 WRAPIMPL_BEGIN( State, CLASS_STATE )
 	WRAPIMPL_PROPS
 		{
-			"factions",
+			"fm",
 			m_fm->Wrap( true )
 		},
 	};

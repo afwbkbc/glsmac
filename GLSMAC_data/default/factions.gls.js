@@ -1,6 +1,6 @@
 return {
 
-	configure: (factions) => {
+	configure: (fm) => {
 		for (faction of [
 			'gaians',
 			'hive',
@@ -17,7 +17,7 @@ return {
 			'caretakers',
 			'usurpers'
 		]) {
-			factions.add(#to_uppercase(faction), #include('./factions/' + faction));
+			fm.add(#to_uppercase(faction), #include('./factions/' + faction));
 		}
 	},
 

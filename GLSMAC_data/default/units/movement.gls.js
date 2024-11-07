@@ -35,9 +35,9 @@ const get_movement_aftercost = (unit, src_tile, dst_tile) => {
 
 const result = {
 
-	init: () => {
+	configure: (um) => {
 
-		#game.on.unit_move_validate((e) => {
+		um.on('unit_move_validate', (e) => {
 			if (e.unit.is_immovable) {
 				return 'Unit is immovable';
 			}
@@ -71,7 +71,7 @@ const result = {
 
 		});
 
-		#game.on.unit_move_resolve((e) => {
+		um.on('unit_move_resolve', (e) => {
 			if (e.unit.movement == 0.0) {
 				// no moves left
 				return false;
@@ -85,10 +85,10 @@ const result = {
 			};
 		});
 
-		#game.on.unit_move_apply((e) => {
+		um.on('unit_move_apply', (e) => {
 			let src_tile = e.unit.get_tile();
 
-			#game.tiles.lock([src_tile, e.dst_tile], (unlock) => {
+			um.lock_tiles([src_tile, e.dst_tile], (unlock) => {
 
 				let movement_cost = get_movement_cost(e.unit, src_tile, e.dst_tile) + get_movement_aftercost(e.unit, e.unit.get_tile(), e.dst_tile);
 

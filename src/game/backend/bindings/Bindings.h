@@ -60,7 +60,7 @@ public:
 	typedef std::map< std::string, gse::Value > callback_arguments_t;
 	gse::Value Call( const callback_slot_t slot, const callback_arguments_t& arguments = {} );
 
-	void Trigger( gse::Wrappable* object, const std::string& event, const gse::type::object_properties_t& args );
+	const gse::Value Trigger( gse::Wrappable* object, const std::string& event, const gse::type::object_properties_t& args );
 
 	State* GetState() const;
 	Game* GetGame( GSE_CALLABLE ) const;

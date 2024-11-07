@@ -457,7 +457,7 @@ const size_t Game::GetSlotNum() const {
 WRAPIMPL_BEGIN( Game, CLASS_GAME )
 	WRAPIMPL_PROPS
 		{
-			"units",
+			"um",
 			m_um->Wrap( true )
 		},
 	};
@@ -1061,14 +1061,12 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 
 	for ( auto& it : m_um->GetUnits() ) {
 		auto* unit = it.second;
-		m_state->m_bindings->Call(
-			bindings::Bindings::CS_ON_UNIT_TURN, {
-				{
-					"unit",
-					unit->Wrap( true )
-				},
-			}
-		);
+		m_state->m_bindings->Trigger( m_um, "unit_turn", {
+			{
+				"unit",
+				unit->Wrap( true )
+			},
+		});
 		unit->m_moved_this_turn = false;
 		m_um->RefreshUnit( unit );
 	}

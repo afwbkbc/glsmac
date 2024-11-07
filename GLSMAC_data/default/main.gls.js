@@ -6,13 +6,13 @@ const bases = #include('bases');
 
 #system.on('configure', (e) => {
 
-	factions.configure(e.lobby.factions);
+	factions.configure(e.gm.fm);
 
-	e.lobby.on('start', (e) => {
+	e.gm.on('start', (e) => {
 
 		e.game.on('configure', (e) => {
 
-			units.configure(e.game.units);
+			units.configure(e.game.um);
 
 			// will be populated on start
 			let players = [];

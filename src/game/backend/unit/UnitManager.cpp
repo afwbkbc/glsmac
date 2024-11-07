@@ -10,6 +10,7 @@
 #include "game/backend/slot/Slots.h"
 #include "game/backend/event/DespawnUnit.h"
 
+#include "gse/context/Context.h"
 #include "gse/callable/Native.h"
 #include "gse/type/Bool.h"
 #include "gse/type/Float.h"
@@ -253,6 +254,35 @@ void UnitManager::PushUnitUpdates() {
 
 WRAPIMPL_BEGIN( UnitManager, CLASS_UNITS )
 	WRAPIMPL_PROPS
+		{
+			"lock_tiles",
+				NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 2 );
+				N_GETVALUE( tiles, 0, Array );
+				N_PERSIST_CALLABLE( on_complete, 1 );
+				map::tile::positions_t tile_positions = {};
+				tile_positions.reserve( tiles.size() );
+				for ( const auto& tileobj : tiles ) {
+					N_UNWRAP( tile, tileobj, map::tile::Tile );
+					tile_positions.push_back( tile->coord );
+				}
+				m_game->SendTileLockRequest( tile_positions, [ this, on_complete, tile_positions, ctx, call_si ]() {
+					on_complete->Run( ctx, call_si, {
+						VALUE( gse::callable::Native, [ this, tile_positions ](
+							gse::context::Context* ctx,
+							const gse::si_t& call_si,
+							const gse::type::function_arguments_t& arguments
+						) -> gse::Value {
+							m_game->SendTileUnlockRequest( tile_positions );
+							return VALUE( gse::type::Undefined );
+						}),
+					});
+					N_UNPERSIST_CALLABLE( on_complete );
+				});
+				return VALUE( gse::type::Undefined );
+			})
+
+		},
 /*		{
 			"add",
 			NATIVE_CALL( this ) {
@@ -433,22 +463,20 @@ void UnitManager::QueueUnitUpdate( const Unit* unit, const unit_update_op_t op )
 }
 
 const std::string* UnitManager::MoveUnitValidate( Unit* unit, map::tile::Tile* dst_tile ) {
-	const auto result = m_game->GetState()->m_bindings->Call(
-		bindings::Bindings::CS_ON_UNIT_MOVE_VALIDATE, {
-			{
-				"unit",
-				unit->Wrap()
-			},
-			{
-				"src_tile",
-				unit->GetTile()->Wrap()
-			},
-			{
-				"dst_tile",
-				dst_tile->Wrap()
-			},
-		}
-	);
+	const auto result = m_game->GetState()->m_bindings->Trigger( this, "unit_move_validate", {
+		{
+			"unit",
+			unit->Wrap()
+		},
+		{
+			"src_tile",
+			unit->GetTile()->Wrap()
+		},
+		{
+			"dst_tile",
+			dst_tile->Wrap()
+		},
+	});
 	switch ( result.Get()->type ) {
 		case gse::type::Type::T_NULL:
 		case gse::type::Type::T_UNDEFINED:
@@ -461,54 +489,54 @@ const std::string* UnitManager::MoveUnitValidate( Unit* unit, map::tile::Tile* d
 }
 
 const gse::Value UnitManager::MoveUnitResolve( Unit* unit, map::tile::Tile* dst_tile ) {
-	return m_game->GetState()->m_bindings->Call(
-		bindings::Bindings::CS_ON_UNIT_MOVE_RESOLVE, {
-			{
-				"unit",
-				unit->Wrap()
-			},
-			{
-				"src_tile",
-				unit->GetTile()->Wrap()
-			},
-			{
-				"dst_tile",
-				dst_tile->Wrap()
-			},
-		}
-	);
+	return m_game->GetState()->m_bindings->Trigger(this, "unit_move_resolve", {
+		{
+			"unit",
+			unit->Wrap()
+		},
+		{
+			"src_tile",
+			unit->GetTile()->Wrap()
+		},
+		{
+			"dst_tile",
+			dst_tile->Wrap()
+		},
+	});
 }
 
 void UnitManager::MoveUnitApply( Unit* unit, map::tile::Tile* dst_tile, const gse::Value resolutions ) {
+	auto* src_tile = unit->GetTile();
 	ASSERT( dst_tile, "dst tile not set" );
+
+	if ( src_tile == dst_tile ) {
+		return;
+	}
 
 	Log( "Moving unit #" + std::to_string( unit->m_id ) + " to " + dst_tile->coord.ToString() );
 
-	auto* src_tile = unit->GetTile();
 	ASSERT( src_tile, "src tile not set" );
 	ASSERT( src_tile->units.find( unit->m_id ) != src_tile->units.end(), "src tile does not contain this unit" );
 	ASSERT( dst_tile->units.find( unit->m_id ) == dst_tile->units.end(), "dst tile already contains this unit" );
 
-	const auto result = m_game->GetState()->m_bindings->Call(
-		bindings::Bindings::CS_ON_UNIT_MOVE_APPLY, {
-			{
-				"unit",
-				unit->Wrap( true )
-			},
-			{
-				"src_tile",
-				src_tile->Wrap()
-			},
-			{
-				"dst_tile",
-				dst_tile->Wrap()
-			},
-			{
-				"resolutions",
-				resolutions
-			}
+	m_game->GetState()->m_bindings->Trigger( this, "unit_move_apply", {
+		{
+			"unit",
+			unit->Wrap( true )
+		},
+		{
+			"src_tile",
+			src_tile->Wrap()
+		},
+		{
+			"dst_tile",
+			dst_tile->Wrap()
+		},
+		{
+			"resolutions",
+			resolutions
 		}
-	);
+	});
 }
 
 const std::string* UnitManager::MoveUnitToTile( Unit* unit, map::tile::Tile* dst_tile, const cb_oncomplete& on_complete ) {
@@ -539,18 +567,16 @@ const std::string* UnitManager::MoveUnitToTile( Unit* unit, map::tile::Tile* dst
 }
 
 const std::string* UnitManager::AttackUnitValidate( Unit* attacker, Unit* defender ) {
-	const auto result = m_game->GetState()->m_bindings->Call(
-		bindings::Bindings::CS_ON_UNIT_ATTACK_VALIDATE, {
-			{
-				"attacker",
-				attacker->Wrap()
-			},
-			{
-				"defender",
-				defender->Wrap()
-			},
-		}
-	);
+	const auto result = m_game->GetState()->m_bindings->Trigger( this, "unit_attack_validate", {
+		{
+			"attacker",
+			attacker->Wrap()
+		},
+		{
+			"defender",
+			defender->Wrap()
+		},
+	});
 	switch ( result.Get()->type ) {
 		case gse::type::Type::T_NULL:
 		case gse::type::Type::T_UNDEFINED:
@@ -560,42 +586,37 @@ const std::string* UnitManager::AttackUnitValidate( Unit* attacker, Unit* defend
 		default:
 			THROW( "unexpected validation result type: " + gse::type::Type::GetTypeString( result.Get()->type ) );
 	}
-	return nullptr;
 }
 
 const gse::Value UnitManager::AttackUnitResolve( Unit* attacker, Unit* defender ) {
-	return m_game->GetState()->m_bindings->Call(
-		bindings::Bindings::CS_ON_UNIT_ATTACK_RESOLVE, {
-			{
-				"attacker",
-				attacker->Wrap()
-			},
-			{
-				"defender",
-				defender->Wrap()
-			},
-		}
-	);
+	return m_game->GetState()->m_bindings->Trigger( this, "unit_attack_resolve", {
+		{
+			"attacker",
+			attacker->Wrap()
+		},
+		{
+			"defender",
+			defender->Wrap()
+		},
+	});
 }
 
 void UnitManager::AttackUnitApply( Unit* attacker, Unit* defender, const gse::Value resolutions ) {
 	auto* state = m_game->GetState();
-	state->m_bindings->Call(
-		bindings::Bindings::CS_ON_UNIT_ATTACK_APPLY, {
-			{
-				"attacker",
-				attacker->Wrap( true )
-			},
-			{
-				"defender",
-				defender->Wrap( true )
-			},
-			{
-				"resolutions",
-				resolutions
-			}
+	state->m_bindings->Trigger( this, "unit_attack_apply",{
+		{
+			"attacker",
+			attacker->Wrap( true )
+		},
+		{
+			"defender",
+			defender->Wrap( true )
+		},
+		{
+			"resolutions",
+			resolutions
 		}
-	);
+	});
 	if ( attacker->m_health <= 0.0f ) {
 		if ( state->IsMaster() ) {
 			m_game->AddEvent( new event::DespawnUnit( m_game->GetSlotNum(), attacker->m_id ) );

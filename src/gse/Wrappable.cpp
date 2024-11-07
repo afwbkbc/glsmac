@@ -61,14 +61,18 @@ void Wrappable::Off( GSE_CALLABLE, const std::string& event, const callback_id_t
 
 const Value Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const type::object_properties_t& args ) {
 	const auto& it = m_callbacks.find( event );
+	Value result = VALUE( gse::type::Undefined );
 	if ( it != m_callbacks.end() ) {
 		auto e = VALUE( gse::type::Object, args );
 		for ( const auto& it2 : it->second ) {
 			ASSERT_NOLOG( it2.second.Get()->type == type::Type::T_CALLABLE, "callback not callable" );
-			( (type::Callable*)it2.second.Get() )->Run( ctx, call_si, { e } );
+			if ( result.Get()->type != type::Type::T_UNDEFINED ) {
+				// TODO: resolve result conflicts somehow
+			}
+			result = ( (type::Callable*)it2.second.Get() )->Run( ctx, call_si, { e } );
 		}
 	}
-	return VALUE( gse::type::Undefined );
+	return result;
 }
 
 }
