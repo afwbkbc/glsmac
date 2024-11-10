@@ -31,15 +31,17 @@ public:
 		CLASS_SYSTEM,
 		CLASS_STATE,
 		CLASS_GAME,
+		CLASS_TM,
 		CLASS_TILE,
 		CLASS_PLAYER,
 		CLASS_FACTION,
 		CLASS_FACTIONS,
-		CLASS_UNITS,
+		CLASS_UM,
 		CLASS_UNITDEF,
 		CLASS_UNIT,
 		CLASS_BASE,
 		CLASS_BASE_POP,
+		CLASS_AM,
 	};
 	static const std::string& GetClassString( const object_class_t object_class );
 

@@ -7,6 +7,7 @@
 #include "gse/type/Object.h"
 #include "gse/type/Undefined.h"
 #include "game/backend/Game.h"
+#include "game/backend/map/tile/TileManager.h"
 #include "game/backend/event/RequestTileLocks.h"
 #include "game/backend/map/tile/Tile.h"
 #include "Bindings.h"
@@ -30,14 +31,14 @@ BINDING_IMPL( tiles ) {
 					tile_positions.push_back( tile->coord );
 				}
 
-				GAME->SendTileLockRequest( tile_positions, [ this, on_complete, tile_positions, ctx, call_si ]() {
+				GAME->GetTM()->SendTileLockRequest( tile_positions, [ this, on_complete, tile_positions, ctx, call_si ]() {
 					on_complete->Run( ctx, call_si, {
 						VALUE( gse::callable::Native, [ this, tile_positions ](
 							gse::context::Context* ctx,
 							const gse::si_t& call_si,
 							const gse::type::function_arguments_t& arguments
 						) -> gse::Value {
-							GAME->SendTileUnlockRequest( tile_positions );
+							GAME->GetTM()->SendTileUnlockRequest( tile_positions );
 							return VALUE( gse::type::Undefined );
 						}),
 					});

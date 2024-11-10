@@ -19,6 +19,10 @@
 #include "ui/UI.h"
 #include "game/backend/Game.h"
 
+#ifdef DEBUG
+#include "util/Timer.h"
+#endif
+
 // TODO: move to config
 const size_t g_max_fps = 500;
 

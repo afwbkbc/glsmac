@@ -4,6 +4,7 @@
 
 #include "engine/Engine.h"
 #include "loader/sound/SoundLoader.h"
+#include "game/backend/animation/AnimationManager.h"
 #include "game/backend/animation/Def.h"
 #include "gse/type/Undefined.h"
 
@@ -28,7 +29,7 @@ const std::string* DefineAnimation::Validate( Game* game ) const {
 }
 
 const gse::Value DefineAnimation::Apply( Game* game ) const {
-	game->DefineAnimation( m_def );
+	game->GetAM()->DefineAnimation( m_def );
 	return VALUE( gse::type::Undefined );
 }
 

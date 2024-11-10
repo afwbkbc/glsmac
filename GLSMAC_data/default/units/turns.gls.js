@@ -1,8 +1,8 @@
 const result = {
 
-	configure: (um) => {
+	configure: (game) => {
 
-		um.on('unit_turn', (e) => {
+		game.um.on('unit_turn', (e) => {
 			const def = e.unit.get_def();
 			if (!e.unit.moved_this_turn) {
 				if (e.unit.health < def.health_max) {

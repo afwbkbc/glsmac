@@ -29,9 +29,9 @@ const get_unit_defence_power = (unit) => {
 
 const result = {
 
-	configure: (um, animations) => {
+	configure: (game, animations) => {
 
-		um.on('unit_attack_validate', (e) => {
+		game.um.on('unit_attack_validate', (e) => {
 
 			if (e.attacker.is_immovable) {
 				return 'Unit is immovable';
@@ -60,7 +60,7 @@ const result = {
 			}
 		});
 
-		um.on('unit_attack_resolve', (e) => {
+		game.um.on('unit_attack_resolve', (e) => {
 
 			let attack_power = get_unit_attack_power(e.attacker);
 			let defence_power = get_unit_defence_power(e.defender);
@@ -86,12 +86,12 @@ const result = {
 			return damage_sequence;
 		});
 
-		um.on('unit_attack_apply', (e) => {
+		game.um.on('unit_attack_apply', (e) => {
 
 			let attacker_tile = e.attacker.get_tile();
 			let defender_tile = e.defender.get_tile();
 
-			um.lock_tiles([attacker_tile, defender_tile], (unlock) => {
+			game.tm.lock_tiles([attacker_tile, defender_tile], (unlock) => {
 
 				let damages_sz = #size(e.resolutions);
 
@@ -102,19 +102,19 @@ const result = {
 					if (damage_index < damages_sz) {
 						const damages = e.resolutions[damage_index];
 						if (damages[0]) {
-							#game.animations.show_on_tile(animations.ATTACK_PSI, defender_tile, () => {
+							game.am.show_animation(animations.ATTACK_PSI, defender_tile, () => {
 								e.defender.health = e.defender.health - damages[1];
 								if (e.defender.health == 0.0) {
-									#game.animations.show_on_tile(animations.DEATH_PSI, defender_tile, next);
+									game.am.show_animation(animations.DEATH_PSI, defender_tile, next);
 								} else {
 									next();
 								}
 							});
 						} else {
-							#game.animations.show_on_tile(animations.ATTACK_PSI, attacker_tile, () => {
+							game.am.show_animation(animations.ATTACK_PSI, attacker_tile, () => {
 								e.attacker.health = e.attacker.health - damages[1];
 								if (e.attacker.health == 0.0) {
-									#game.animations.show_on_tile(animations.DEATH_PSI, attacker_tile, next);
+									game.am.show_animation(animations.DEATH_PSI, attacker_tile, next);
 								} else {
 									next();
 								}

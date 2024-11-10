@@ -17,7 +17,6 @@
 #include "game/FrontendRequest.h"
 #include "game/BackendRequest.h"
 #include "game/backend/turn/Turn.h"
-#include "TileLock.h"
 
 // TODO: remove those
 #include "game/backend/map/tile/Tile.h"
@@ -48,6 +47,12 @@ namespace faction {
 class Faction;
 }
 
+namespace map {
+namespace tile {
+class TileManager;
+}
+}
+
 namespace unit {
 class MoraleSet;
 class Def;
@@ -58,6 +63,10 @@ class UnitManager;
 namespace base {
 class PopDef;
 class Base;
+}
+
+namespace animation {
+class AnimationManager;
 }
 
 class Resource;
@@ -336,8 +345,6 @@ public:
 	base::Base* GetBase( const size_t id ) const;
 	const gse::Value AddEvent( event::Event* event );
 	void RefreshBase( const base::Base* base );
-	void DefineAnimation( animation::Def* def );
-	const std::string* ShowAnimationOnTile( const std::string& animation_id, map::tile::Tile* tile, const cb_oncomplete& on_complete );
 	void DefineResource( Resource* resource );
 	void DefinePop( base::PopDef* pop_def );
 	void SpawnBase( base::Base* base );
@@ -354,17 +361,11 @@ public:
 	void GlobalProcessTurnFinalized( const size_t slot_num, const util::crc32::crc_t checksum );
 	void GlobalAdvanceTurn();
 
-	void SendTileLockRequest( const map::tile::positions_t& tile_positions, const cb_oncomplete& on_complete );
-	void RequestTileLocks( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
-	void LockTiles( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
-
-	void SendTileUnlockRequest( const map::tile::positions_t& tile_positions );
-	void RequestTileUnlocks( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
-	void UnlockTiles( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
-
 	faction::Faction* GetFaction( const std::string& id ) const;
 
+	map::tile::TileManager* GetTM() const;
 	unit::UnitManager* GetUM() const;
+	animation::AnimationManager* GetAM() const;
 
 private:
 
@@ -379,16 +380,14 @@ private:
 	void SerializeResources( types::Buffer& buf ) const;
 	void UnserializeResources( types::Buffer& buf );
 
+	map::tile::TileManager* m_tm = nullptr;
 	unit::UnitManager* m_um = nullptr;
+	animation::AnimationManager* m_am = nullptr;
 
 	std::unordered_map< std::string, base::PopDef* > m_base_popdefs = {};
 	std::map< size_t, base::Base* > m_bases = {};
 	void SerializeBases( types::Buffer& buf ) const;
 	void UnserializeBases( types::Buffer& buf );
-
-	std::unordered_map< std::string, animation::Def* > m_animation_defs = {};
-	void SerializeAnimations( types::Buffer& buf ) const;
-	void UnserializeAnimations( types::Buffer& buf );
 
 	enum game_state_t {
 		GS_NONE,
@@ -432,9 +431,6 @@ private:
 	bool m_is_turn_complete = false;
 	void CheckTurnComplete();
 
-	size_t m_next_running_animation_id = 1;
-	std::unordered_map< size_t, cb_oncomplete > m_running_animations_callbacks = {};
-
 	enum base_update_op_t : uint8_t {
 		BUO_NONE = 0,
 		BUO_SPAWN = 1 << 0,
@@ -448,20 +444,6 @@ private:
 	std::unordered_map< size_t, base_update_t > m_base_updates = {};
 	void QueueBaseUpdate( const base::Base* base, const base_update_op_t op );
 
-	// server-side lock tracking
-	struct tile_lock_request_t {
-		const bool is_lock; // lock or unlock
-		const size_t initiator_slot;
-		const map::tile::positions_t tile_positions;
-	};
-	typedef std::vector< tile_lock_request_t > tile_lock_requests_t;  // requests fifo
-	tile_lock_requests_t m_tile_lock_requests = {};
-	void AddTileLockRequest( const bool is_lock, const size_t initiator_slot, const map::tile::positions_t& tile_positions );
-	std::unordered_map< size_t, std::vector< TileLock > > m_tile_locks = {}; // slot id, locks
-	void ProcessTileLockRequests();
-
-	std::vector< std::pair< map::tile::positions_t, cb_oncomplete > > m_tile_lock_callbacks = {}; // tile positions (for matching), callback
-
 	std::unordered_set< std::string > m_registered_base_names = {};
 
 private:
@@ -469,11 +451,12 @@ private:
 	void PushBaseUpdates();
 
 private:
+	friend class map::tile::TileManager;
 	friend class unit::UnitManager;
+	friend class animation::AnimationManager;
 	void AddFrontendRequest( const FrontendRequest& request );
 
 	const bool IsRunning() const;
-	const size_t AddAnimationCallback( const cb_oncomplete& on_complete );
 
 };
 

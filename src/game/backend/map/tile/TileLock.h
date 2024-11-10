@@ -8,6 +8,9 @@ namespace backend {
 
 class Game;
 
+namespace map {
+namespace tile {
+
 class TileLock {
 public:
 	static const size_t MAX_WAIT_MS;
@@ -23,5 +26,7 @@ private:
 	util::Timer m_expiration_timer;
 };
 
+}
+}
 }
 }

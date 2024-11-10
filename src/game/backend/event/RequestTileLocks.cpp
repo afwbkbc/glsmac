@@ -2,6 +2,7 @@
 
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
+#include "game/backend/map/tile/TileManager.h"
 #include "gse/type/Undefined.h"
 
 namespace game {
@@ -22,7 +23,7 @@ const std::string* RequestTileLocks::Validate( Game* game ) const {
 }
 
 const gse::Value RequestTileLocks::Apply( Game* game ) const {
-	game->RequestTileLocks( m_initiator_slot, m_tile_positions );
+	game->GetTM()->RequestTileLocks( m_initiator_slot, m_tile_positions );
 	return VALUE( gse::type::Undefined );
 }
 

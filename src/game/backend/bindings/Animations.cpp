@@ -9,6 +9,7 @@
 #include "gse/type/Object.h"
 #include "gse/type/Undefined.h"
 #include "game/backend/Game.h"
+#include "game/backend/animation/AnimationManager.h"
 #include "Bindings.h"
 #include "game/backend/event/DefineAnimation.h"
 #include "game/backend/animation/FramesRow.h"
@@ -79,7 +80,7 @@ BINDING_IMPL( animations ) {
 				N_GETVALUE( id, 0, String );
 				N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
 				N_PERSIST_CALLABLE( on_complete, 2 );
-				const auto* errmsg = GAME->ShowAnimationOnTile( id, tile, [ on_complete, ctx, call_si ]() {
+				const auto* errmsg = GAME->GetAM()->ShowAnimation( id, tile, [ on_complete, ctx, call_si ]() {
 					on_complete->Run( ctx, call_si, {} );
 					N_UNPERSIST_CALLABLE( on_complete );
 				});

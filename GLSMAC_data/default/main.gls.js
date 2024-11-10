@@ -12,7 +12,7 @@ const bases = #include('bases');
 
 		e.game.on('configure', (e) => {
 
-			units.configure(e.game.um);
+			units.configure(e.game);
 
 			// will be populated on start
 			let players = [];

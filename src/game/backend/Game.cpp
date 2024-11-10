@@ -14,11 +14,6 @@
 #include "event/FinalizeTurn.h"
 #include "event/TurnFinalized.h"
 #include "event/AdvanceTurn.h"
-#include "event/DespawnUnit.h"
-#include "event/RequestTileLocks.h"
-#include "event/LockTiles.h"
-#include "event/RequestTileUnlocks.h"
-#include "event/UnlockTiles.h"
 #include "util/random/Random.h"
 #include "config/Config.h"
 #include "slot/Slots.h"
@@ -33,6 +28,7 @@
 #include "gse/type/Undefined.h"
 #include "gse/type/Array.h"
 #include "ui/UI.h"
+#include "map/tile/TileManager.h"
 #include "map/tile/Tiles.h"
 #include "map/MapState.h"
 #include "bindings/Bindings.h"
@@ -40,11 +36,12 @@
 #include "Resource.h"
 #include "animation/Def.h"
 #include "unit/Def.h"
-#include "unit/Unit.h"
 #include "unit/UnitManager.h"
+#include "unit/Unit.h"
 #include "unit/MoraleSet.h"
 #include "base/PopDef.h"
 #include "base/Base.h"
+#include "animation/AnimationManager.h"
 
 namespace game {
 namespace backend {
@@ -181,7 +178,9 @@ void Game::Start() {
 	// init map editor
 	NEW( m_map_editor, map_editor::MapEditor, this );
 
+	NEW( m_tm, map::tile::TileManager, this );
 	NEW( m_um, unit::UnitManager, this );
+	NEW( m_am, animation::AnimationManager, this );
 }
 
 void Game::Stop() {
@@ -198,8 +197,14 @@ void Game::Stop() {
 	DELETE( m_map_editor );
 	m_map_editor = nullptr;
 
+	DELETE( m_tm );
+	m_tm = nullptr;
+
 	DELETE( m_um );
 	m_um = nullptr;
+
+	DELETE( m_am );
+	m_am = nullptr;
 
 	MTModule::Stop();
 }
@@ -424,7 +429,7 @@ void Game::Iterate() {
 	}
 	m_um->PushUnitUpdates();
 	PushBaseUpdates();
-	ProcessTileLockRequests();
+	m_tm->ProcessTileLockRequests();
 }
 
 util::random::Random* Game::GetRandom() const {
@@ -457,8 +462,16 @@ const size_t Game::GetSlotNum() const {
 WRAPIMPL_BEGIN( Game, CLASS_GAME )
 	WRAPIMPL_PROPS
 		{
+			"tm",
+			m_tm->Wrap( true )
+		},
+		{
 			"um",
 			m_um->Wrap( true )
+		},
+		{
+			"am",
+			m_am->Wrap( true )
 		},
 	};
 WRAPIMPL_END_PTR( Game )
@@ -660,11 +673,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 							break;
 						}
 						case BackendRequest::BR_ANIMATION_FINISHED: {
-							const auto& it = m_running_animations_callbacks.find( r.data.animation_finished.animation_id );
-							ASSERT( it != m_running_animations_callbacks.end(), "animation " + std::to_string( r.data.animation_finished.animation_id ) + " is not running" );
-							const auto on_complete = it->second;
-							m_running_animations_callbacks.erase( it );
-							on_complete();
+							m_am->FinishAnimation( r.data.animation_finished.animation_id );
 							break;
 						}
 						default:
@@ -842,44 +851,6 @@ const gse::Value Game::AddEvent( event::Event* event ) {
 
 void Game::RefreshBase( const base::Base* base ) {
 	QueueBaseUpdate( base, BUO_REFRESH );
-}
-
-void Game::DefineAnimation( animation::Def* def ) {
-	Log( "Defining animation ('" + def->m_id + "')" );
-
-	ASSERT( m_animation_defs.find( def->m_id ) == m_animation_defs.end(), "Animation definition '" + def->m_id + "' already exists" );
-
-	// backend doesn't need any animation details, just keep track of it's existence for validations
-	m_animation_defs.insert(
-		{
-			def->m_id,
-			def
-		}
-	);
-
-	auto fr = FrontendRequest( FrontendRequest::FR_ANIMATION_DEFINE );
-	NEW( fr.data.animation_define.serialized_animation, std::string, animation::Def::Serialize( def ).ToString() );
-	AddFrontendRequest( fr );
-}
-
-const std::string* Game::ShowAnimationOnTile( const std::string& animation_id, map::tile::Tile* tile, const cb_oncomplete& on_complete ) {
-	if ( m_animation_defs.find( animation_id ) == m_animation_defs.end() ) {
-		return new std::string( "Animation '" + animation_id + "' is not defined" );
-	}
-	if ( !tile->IsLocked() ) {
-		return new std::string( "Tile must be locked before showing animation" );
-	}
-	auto fr = FrontendRequest( FrontendRequest::FR_ANIMATION_SHOW );
-	NEW( fr.data.animation_show.animation_id, std::string, animation_id );
-	fr.data.animation_show.running_animation_id = AddAnimationCallback( on_complete );
-	const auto c = GetTileRenderCoords( tile );
-	fr.data.animation_show.render_coords = {
-		c.x,
-		c.y,
-		c.z,
-	};
-	AddFrontendRequest( fr );
-	return nullptr; // no error
 }
 
 void Game::DefineResource( Resource* resource ) {
@@ -1145,82 +1116,22 @@ void Game::GlobalAdvanceTurn() {
 	AddEvent( new event::AdvanceTurn( m_slot_num, s_turn_id ) );
 }
 
-void Game::SendTileLockRequest( const map::tile::positions_t& tile_positions, const cb_oncomplete& on_complete ) {
-	// testing
-	/*m_tile_lock_callbacks.push_back(
-		{
-			tile_positions,
-			on_complete
-		}
-	);*/
-	LockTiles( m_slot_num, tile_positions );
-	on_complete();
-	//AddEvent( new event::RequestTileLocks( m_slot_num, tile_positions ) );
-}
-
-void Game::RequestTileLocks( const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
-	if ( m_state->IsMaster() ) {
-		Log( "Tile locks request from " + std::to_string( initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( tile_positions, "" ) );
-		AddTileLockRequest( true, initiator_slot, tile_positions );
-	}
-}
-
-void Game::LockTiles( const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
-	for ( const auto& pos : tile_positions ) {
-		auto* tile = m_map->GetTile( pos.x, pos.y );
-		ASSERT_NOLOG( !tile->IsLocked(), "tile " + pos.ToString() + " is already locked" );
-		tile->Lock( initiator_slot );
-	}
-	for ( auto it = m_tile_lock_callbacks.begin() ; it != m_tile_lock_callbacks.end() ; it++ ) {
-		const auto& it_positions = it->first;
-		const auto sz = it_positions.size();
-		if ( sz == tile_positions.size() ) {
-			bool match = true;
-			for ( size_t i = 0 ; i < sz ; i++ ) {
-				if ( tile_positions.at( i ) != it_positions.at( i ) ) {
-					match = false;
-					break;
-				}
-			}
-			if ( match ) {
-				const auto cb = it->second;
-				m_tile_lock_callbacks.erase( it );
-				cb();
-				break;
-			}
-		}
-	}
-}
-
-void Game::SendTileUnlockRequest( const map::tile::positions_t& tile_positions ) {
-	// testing
-	UnlockTiles( m_slot_num, tile_positions );
-	//AddEvent( new event::RequestTileUnlocks( m_slot_num, tile_positions ) );
-}
-
-void Game::RequestTileUnlocks( const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
-	if ( m_state->IsMaster() ) {
-		Log( "Tile unlocks request from " + std::to_string( initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( tile_positions, "" ) );
-		AddTileLockRequest( false, initiator_slot, tile_positions );
-	}
-}
-
-void Game::UnlockTiles( const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
-	for ( const auto& pos : tile_positions ) {
-		auto* tile = m_map->GetTile( pos.x, pos.y );
-		ASSERT_NOLOG( tile->IsLockedBy( initiator_slot ), "tile " + pos.ToString() + " is not locked by " + std::to_string( initiator_slot ) );
-		tile->Unlock();
-	}
-}
-
 faction::Faction* Game::GetFaction( const std::string& id ) const {
 	auto* faction = m_state->GetFM()->Get( id ); // TODO: store factions in Game itself?
 	ASSERT( faction, "faction not found: " + id );
 	return faction;
 }
 
+map::tile::TileManager* Game::GetTM() const {
+	return m_tm;
+}
+
 unit::UnitManager* Game::GetUM() const {
 	return m_um;
+}
+
+animation::AnimationManager* Game::GetAM() const {
+	return m_am;
 }
 
 void Game::ValidateEvent( event::Event* event ) {
@@ -1341,27 +1252,6 @@ void Game::UnserializeBases( types::Buffer& buf ) {
 	Log( "Restored next base id: " + std::to_string( base::Base::GetNextId() ) );
 }
 
-void Game::SerializeAnimations( types::Buffer& buf ) const {
-	Log( "Serializing " + std::to_string( m_animation_defs.size() ) + " animation defs" );
-	buf.WriteInt( m_animation_defs.size() );
-	for ( const auto& it : m_animation_defs ) {
-		buf.WriteString( it.first );
-		buf.WriteString( animation::Def::Serialize( it.second ).ToString() );
-	}
-}
-
-void Game::UnserializeAnimations( types::Buffer& buf ) {
-	ASSERT( m_animation_defs.empty(), "animation defs not empty" );
-	size_t sz = buf.ReadInt();
-	Log( "Unserializing " + std::to_string( sz ) + " animation defs" );
-	m_animation_defs.reserve( sz );
-	for ( size_t i = 0 ; i < sz ; i++ ) {
-		const auto name = buf.ReadString();
-		auto b = types::Buffer( buf.ReadString() );
-		DefineAnimation( animation::Def::Unserialize( b ) );
-	}
-}
-
 void Game::AddFrontendRequest( const FrontendRequest& request ) {
 	//Log( "Sending frontend request (type=" + std::to_string( request.type ) + ")" ); // spammy
 	m_pending_frontend_requests->push_back( request );
@@ -1445,11 +1335,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				connection->m_on_player_leave = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const Player* player ) -> void {
 					Log( "Player " + player->GetFullName() + " left the game." );
 					connection->GlobalMessage( player->GetFullName() + " left the game." );
-					const auto& it = m_tile_locks.find( slot_num );
-					if ( it != m_tile_locks.end() ) {
-						Log( "Releasing " + std::to_string( it->second.size() ) + " tile locks" );
-						m_tile_locks.erase( it );
-					}
+					m_tm->ReleaseTileLocks( slot_num );
 				};
 
 				connection->m_on_download_request = [ this ]() -> const std::string {
@@ -1487,7 +1373,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					// animations
 					{
 						types::Buffer b;
-						SerializeAnimations( b );
+						m_am->Serialize( b );
 						buf.WriteString( b.ToString() );
 					}
 
@@ -1678,7 +1564,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 							// animations
 							{
 								auto ab = types::Buffer( buf.ReadString() );
-								UnserializeAnimations( ab );
+								m_am->Unserialize( ab );
 							}
 
 							// get turn info
@@ -1729,15 +1615,14 @@ void Game::ResetGame() {
 	m_slot_num = 0;
 	m_slot = nullptr;
 
-	m_um->Clear();
-
 	for ( auto& it : m_unprocessed_events ) {
 		delete it;
 	}
 	m_unprocessed_events.clear();
 
-	m_running_animations_callbacks.clear();
-	m_next_running_animation_id = 0;
+	m_tm->Clear();
+	m_um->Clear();
+	m_am->Clear();
 
 	for ( auto& it : m_resources ) {
 		delete it.second;
@@ -1755,11 +1640,6 @@ void Game::ResetGame() {
 	}
 	m_bases.clear();
 
-	for ( auto& it : m_animation_defs ) {
-		delete it.second;
-	}
-	m_animation_defs.clear();
-
 	if ( m_map ) {
 		Log( "Resetting map" );
 		DELETE( m_map );
@@ -1770,11 +1650,6 @@ void Game::ResetGame() {
 	m_pending_frontend_requests->clear();
 
 	m_base_updates.clear();
-
-	m_tile_lock_requests.clear();
-	m_tile_locks.clear();
-
-	m_tile_lock_callbacks.clear();
 
 	m_current_turn.Reset();
 	m_is_turn_complete = false;
@@ -1892,84 +1767,8 @@ void Game::PushBaseUpdates() {
 	}
 }
 
-void Game::AddTileLockRequest( const bool is_lock, const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
-	ASSERT_NOLOG( m_state && m_state->IsMaster(), "only master can manage tile locks" );
-	m_tile_lock_requests.push_back(
-		{
-			is_lock,
-			initiator_slot,
-			tile_positions
-		}
-	);
-}
-
-void Game::ProcessTileLockRequests() {
-	if ( m_state && m_game_state == GS_RUNNING && m_state->IsMaster() && !m_tile_lock_requests.empty() ) {
-		const auto tile_lock_requests = m_tile_lock_requests;
-		m_tile_lock_requests.clear();
-		for ( const auto& req : tile_lock_requests ) {
-			const auto state = m_state->m_slots->GetSlot( req.initiator_slot ).GetState();
-			if ( state != slot::Slot::SS_PLAYER ) {
-				// player disconnected?
-				Log( "Skipping tile locks/unlocks for slot " + std::to_string( req.initiator_slot ) + " (invalid slot state: " + std::to_string( state ) + ")" );
-				continue;
-			}
-			auto it = m_tile_locks.find( req.initiator_slot );
-			if ( it == m_tile_locks.end() ) {
-				it = m_tile_locks.insert(
-					{
-						req.initiator_slot,
-						{}
-					}
-				).first;
-			}
-			auto& locks = it->second;
-			if ( req.is_lock ) {
-				// lock
-				Log( "Locking tiles for " + std::to_string( req.initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( req.tile_positions ) );
-				locks.push_back( TileLock{ req.tile_positions } );
-				auto e = new event::LockTiles( m_slot_num, req.tile_positions, req.initiator_slot );
-				e->SetDestinationSlot( req.initiator_slot );
-				AddEvent( e );
-			}
-			else {
-				// unlock
-				bool found = false;
-				for ( auto locks_it = locks.begin() ; locks_it != locks.end() ; locks_it++ ) {
-					if ( locks_it->Matches( req.tile_positions ) ) {
-						found = true;
-						Log( "Unlocking tiles for " + std::to_string( req.initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( req.tile_positions ) );
-						locks.erase( locks_it );
-						if ( locks.empty() ) {
-							m_tile_locks.erase( it );
-						}
-						auto e = new event::UnlockTiles( m_slot_num, req.tile_positions, req.initiator_slot );
-						e->SetDestinationSlot( req.initiator_slot );
-						AddEvent( e );
-						break;
-					}
-				}
-				if ( !found ) {
-					Log( "Could not find matching tile locks for " + std::to_string( req.initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( req.tile_positions ) );
-				}
-			}
-		}
-	}
-}
-
 const bool Game::IsRunning() const {
 	return m_game_state == GS_RUNNING;
-}
-
-const size_t Game::AddAnimationCallback( const game::backend::Game::cb_oncomplete& on_complete ) {
-	const auto running_animation_id = ++m_next_running_animation_id;
-	m_running_animations_callbacks.insert(
-		{
-			running_animation_id,
-			on_complete
-		}
-	);
-	return running_animation_id;
 }
 
 }

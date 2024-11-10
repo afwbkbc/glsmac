@@ -6,10 +6,10 @@ const animations = #include('units/animations');
 
 const result = {
 
-	configure: (um) => {
-		movement.configure(um);
-		combat.configure(um, animations);
-		turns.configure(um);
+	configure: (game) => {
+		movement.configure(game);
+		combat.configure(game, animations);
+		turns.configure(game);
 	},
 
 	define: () => {

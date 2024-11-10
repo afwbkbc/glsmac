@@ -1,9 +1,11 @@
 #include "TileLock.h"
 
-#include "Game.h"
+#include "game/backend/Game.h"
 
 namespace game {
 namespace backend {
+namespace map {
+namespace tile {
 
 const size_t TileLock::MAX_WAIT_MS = 10000;
 
@@ -26,5 +28,7 @@ TileLock& TileLock::operator=( const TileLock& other ) {
 	return *this;
 }
 
+}
+}
 }
 }

@@ -5,6 +5,7 @@
 #include "Unit.h"
 
 #include "game/backend/Game.h"
+#include "game/backend/animation/AnimationManager.h"
 #include "game/backend/State.h"
 #include "game/backend/bindings/Bindings.h"
 #include "game/backend/slot/Slots.h"
@@ -252,37 +253,8 @@ void UnitManager::PushUnitUpdates() {
 	}
 }
 
-WRAPIMPL_BEGIN( UnitManager, CLASS_UNITS )
+WRAPIMPL_BEGIN( UnitManager, CLASS_UM )
 	WRAPIMPL_PROPS
-		{
-			"lock_tiles",
-				NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 2 );
-				N_GETVALUE( tiles, 0, Array );
-				N_PERSIST_CALLABLE( on_complete, 1 );
-				map::tile::positions_t tile_positions = {};
-				tile_positions.reserve( tiles.size() );
-				for ( const auto& tileobj : tiles ) {
-					N_UNWRAP( tile, tileobj, map::tile::Tile );
-					tile_positions.push_back( tile->coord );
-				}
-				m_game->SendTileLockRequest( tile_positions, [ this, on_complete, tile_positions, ctx, call_si ]() {
-					on_complete->Run( ctx, call_si, {
-						VALUE( gse::callable::Native, [ this, tile_positions ](
-							gse::context::Context* ctx,
-							const gse::si_t& call_si,
-							const gse::type::function_arguments_t& arguments
-						) -> gse::Value {
-							m_game->SendTileUnlockRequest( tile_positions );
-							return VALUE( gse::type::Undefined );
-						}),
-					});
-					N_UNPERSIST_CALLABLE( on_complete );
-				});
-				return VALUE( gse::type::Undefined );
-			})
-
-		},
 /*		{
 			"add",
 			NATIVE_CALL( this ) {
@@ -556,7 +528,7 @@ const std::string* UnitManager::MoveUnitToTile( Unit* unit, map::tile::Tile* dst
 		dst_tile->coord.x,
 		dst_tile->coord.y
 	};
-	fr.data.unit_move.running_animation_id = m_game->AddAnimationCallback(
+	fr.data.unit_move.running_animation_id = m_game->GetAM()->AddAnimationCallback(
 		[ on_complete, unit, dst_tile ]() {
 			unit->SetTile( dst_tile );
 			on_complete();
