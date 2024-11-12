@@ -70,15 +70,15 @@ const result = {
 
 			let damage_sequence = [];
 			while (attacker_health > 0.0 && defender_health > 0.0) {
-				let attack_roll = #game.random.get_float(0.0, attack_power);
-				let defence_roll = #game.random.get_float(0.0, defence_power);
+				let attack_roll = game.random.get_float(0.0, attack_power);
+				let defence_roll = game.random.get_float(0.0, defence_power);
 				if (attack_roll >= defence_roll) {
-					let damage = #min(defender_health, #game.random.get_float(MIN_DAMAGE_VALUE, MAX_DAMAGE_VALUE));
+					let damage = #min(defender_health, game.random.get_float(MIN_DAMAGE_VALUE, MAX_DAMAGE_VALUE));
 					damage_sequence [] = [true, damage];
 					defender_health -= damage;
 				}
 				if (defence_roll >= attack_roll) {
-					let damage = #min(attacker_health, #game.random.get_float(MIN_DAMAGE_VALUE, MAX_DAMAGE_VALUE));
+					let damage = #min(attacker_health, game.random.get_float(MIN_DAMAGE_VALUE, MAX_DAMAGE_VALUE));
 					damage_sequence [] = [false, damage];
 					attacker_health -= damage;
 				}

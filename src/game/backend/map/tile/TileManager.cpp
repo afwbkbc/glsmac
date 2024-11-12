@@ -169,6 +169,47 @@ void TileManager::ReleaseTileLocks( const size_t initiator_slot ) {
 WRAPIMPL_BEGIN( TileManager, CLASS_TM )
 	WRAPIMPL_PROPS
 		{
+			"get_map_width",
+			NATIVE_CALL( this ) {
+				const auto* m = m_game->GetMap();
+				return VALUE( gse::type::Int, m->GetWidth() );
+			} )
+		},
+		{
+			"get_map_height",
+			NATIVE_CALL( this ) {
+				const auto* m = m_game->GetMap();
+				return VALUE( gse::type::Int, m->GetHeight() );
+			})
+		},
+		{
+			"get_tile",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 2 );
+				N_GETVALUE( x, 0, Int );
+				N_GETVALUE( y, 1, Int );
+				const auto* m = m_game->GetMap();
+				const auto w = m->GetWidth();
+				const auto h = m->GetHeight();
+				if ( x >= w ) {
+					GSE_ERROR( gse::EC.INVALID_CALL, "X coordinate exceeds map width ( " + std::to_string( x ) + " >= " + std::to_string( w ) + " )" );
+				}
+				if ( y >= h ) {
+					GSE_ERROR( gse::EC.INVALID_CALL, "Y coordinate exceeds map height ( " + std::to_string( y ) + " >= " + std::to_string( h ) + " )" );
+				}
+				if ( x < 0 ) {
+					GSE_ERROR( gse::EC.INVALID_CALL, "X coordinate can't be negative ( " + std::to_string( x ) + " < 0" );
+				}
+				if ( y < 0 ) {
+					GSE_ERROR( gse::EC.INVALID_CALL, "Y coordinate can't be negative ( " + std::to_string( y ) + " < 0" );
+				}
+				if ( x % 2 != y % 2 ) {
+					GSE_ERROR( gse::EC.INVALID_CALL, "X and Y oddity differs ( " + std::to_string( x ) + " % 2 != " + std::to_string( y ) + " % 2 )" );
+				}
+				return m->GetTile( x, y )->Wrap();
+			} )
+		},
+		{
 			"lock_tiles",
 				NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 2 );
@@ -189,13 +230,12 @@ WRAPIMPL_BEGIN( TileManager, CLASS_TM )
 						) -> gse::Value {
 							SendTileUnlockRequest( tile_positions );
 							return VALUE( gse::type::Undefined );
-						}),
+						} )
 					});
 					N_UNPERSIST_CALLABLE( on_complete );
 				});
 				return VALUE( gse::type::Undefined );
 			})
-
 		},
 	};
 WRAPIMPL_END_PTR( TileManager )

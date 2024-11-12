@@ -12,10 +12,10 @@
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/faction/Faction.h"
+#include "game/backend/base/BaseManager.h"
 #include "Pop.h"
-#include "game/backend/bindings/Binding.h"
 #include "PopDef.h"
-#include "util/random/Random.h"
+#include "game/backend/Random.h"
 
 namespace game {
 namespace backend {
@@ -55,7 +55,7 @@ Base::Base(
 
 void Base::AddPop( const Pop& pop ) {
 	m_pops.push_back( pop );
-	m_game->RefreshBase( this );
+	m_game->GetBM()->RefreshBase( this );
 }
 
 const types::Buffer Base::Serialize( const Base* base ) {
@@ -105,7 +105,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base, CLASS_BASE )
 		N_EXPECT_ARGS( 1 );
 		N_GETVALUE( data, 0, Object );
 		N_GETPROP( poptype, data, "type", String );
-		auto* def = m_game->GetPopDef( poptype );
+		auto* def = m_game->GetBM()->GetPopDef( poptype );
 		if ( !def ) {
 			GSE_ERROR( gse::EC.INVALID_DEFINITION, "Unknown pop type: " + poptype );
 		}

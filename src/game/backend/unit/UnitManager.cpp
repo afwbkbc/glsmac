@@ -2,6 +2,7 @@
 
 #include "MoraleSet.h"
 #include "Def.h"
+#include "StaticDef.h"
 #include "Unit.h"
 
 #include "game/backend/Game.h"
@@ -9,6 +10,7 @@
 #include "game/backend/State.h"
 #include "game/backend/bindings/Bindings.h"
 #include "game/backend/slot/Slots.h"
+#include "game/backend/event/SpawnUnit.h"
 #include "game/backend/event/DespawnUnit.h"
 
 #include "gse/context/Context.h"
@@ -36,15 +38,15 @@ void UnitManager::Clear() {
 	}
 	m_unprocessed_units.clear();
 
-	for ( auto& it : m_unit_moralesets ) {
-		delete it.second;
-	}
-	m_unit_moralesets.clear();
-
 	for ( auto& it : m_units ) {
 		delete it.second;
 	}
 	m_units.clear();
+
+	for ( auto& it : m_unit_moralesets ) {
+		delete it.second;
+	}
+	m_unit_moralesets.clear();
 
 	for ( auto& it : m_unit_defs ) {
 		delete it.second;
@@ -54,7 +56,7 @@ void UnitManager::Clear() {
 	m_unit_updates.clear();
 }
 
-void UnitManager::DefineMoraleSet( unit::MoraleSet* moraleset ) {
+void UnitManager::DefineMoraleSet( MoraleSet* moraleset ) {
 	Log( "Defining unit moraleset ('" + moraleset->m_id + "')" );
 
 	ASSERT( m_unit_moralesets.find( moraleset->m_id ) == m_unit_moralesets.end(), "Unit moraleset '" + moraleset->m_id + "' already exists" );
@@ -67,7 +69,7 @@ void UnitManager::DefineMoraleSet( unit::MoraleSet* moraleset ) {
 	);
 }
 
-void UnitManager::DefineUnit( unit::Def* def ) {
+void UnitManager::DefineUnit( Def* def ) {
 	Log( "Defining unit ('" + def->m_id + "')" );
 
 	ASSERT( m_unit_defs.find( def->m_id ) == m_unit_defs.end(), "Unit definition '" + def->m_id + "' already exists" );
@@ -80,7 +82,7 @@ void UnitManager::DefineUnit( unit::Def* def ) {
 	);
 
 	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_DEFINE );
-	NEW( fr.data.unit_define.serialized_unitdef, std::string, unit::Def::Serialize( def ).ToString() );
+	NEW( fr.data.unit_define.serialized_unitdef, std::string, Def::Serialize( def ).ToString() );
 	m_game->AddFrontendRequest( fr );
 }
 
@@ -101,14 +103,12 @@ void UnitManager::SpawnUnit( Unit* unit ) {
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
-		state->m_bindings->Call(
-			bindings::Bindings::CS_ON_UNIT_SPAWN, {
-				{
-					"unit",
-					unit->Wrap()
-				},
-			}
-		);
+		state->m_bindings->Trigger( this, "unit_spawn",{
+			{
+				"unit",
+				unit->Wrap()
+			},
+		});
 	}
 }
 
@@ -132,14 +132,12 @@ void UnitManager::DespawnUnit( const size_t unit_id ) {
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
-		state->m_bindings->Call(
-			bindings::Bindings::CS_ON_UNIT_DESPAWN, {
-				{
-					"unit",
-					unit->Wrap()
-				}
+		state->m_bindings->Trigger( this, "unit_despawn", {
+			{
+				"unit",
+				unit->Wrap()
 			}
-		);
+		});
 	}
 
 	delete unit;
@@ -157,7 +155,7 @@ void UnitManager::SkipUnitTurn( const size_t unit_id ) {
 	RefreshUnit( unit );
 }
 
-unit::MoraleSet* UnitManager::GetMoraleSet( const std::string& name ) const {
+MoraleSet* UnitManager::GetMoraleSet( const std::string& name ) const {
 	const auto& it = m_unit_moralesets.find( name );
 	if ( it != m_unit_moralesets.end() ) {
 		return it->second;
@@ -165,7 +163,7 @@ unit::MoraleSet* UnitManager::GetMoraleSet( const std::string& name ) const {
 	return nullptr;
 }
 
-unit::Unit* UnitManager::GetUnit( const size_t id ) const {
+Unit* UnitManager::GetUnit( const size_t id ) const {
 	const auto& it = m_units.find( id );
 	if ( it != m_units.end() ) {
 		return it->second;
@@ -173,7 +171,7 @@ unit::Unit* UnitManager::GetUnit( const size_t id ) const {
 	return nullptr;
 }
 
-unit::Def* UnitManager::GetUnitDef( const std::string& name ) const {
+Def* UnitManager::GetUnitDef( const std::string& name ) const {
 	const auto& it = m_unit_defs.find( name );
 	if ( it != m_unit_defs.end() ) {
 		return it->second;
@@ -195,7 +193,7 @@ void UnitManager::ProcessUnprocessed() {
 	m_unprocessed_units.clear();
 }
 
-void UnitManager::PushUnitUpdates() {
+void UnitManager::PushUpdates() {
 	if ( m_game->IsRunning() && !m_unit_updates.empty() ) {
 		for ( const auto& it : m_unit_updates ) {
 			const auto unit_id = it.first;
@@ -255,88 +253,34 @@ void UnitManager::PushUnitUpdates() {
 
 WRAPIMPL_BEGIN( UnitManager, CLASS_UM )
 	WRAPIMPL_PROPS
-/*		{
-			"add",
+		{
+			"spawn_unit",
 			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 2 );
-				N_GETVALUE( id, 0, String );
-
-				N_GETVALUE( faction_def, 1, Object );
-				N_GETPROP( name, faction_def, "name", String );
-
-				auto* faction = new Faction( id, name );
-
-				N_GETPROP( colors, faction_def, "colors", Object );
-				N_GETPROP_UNWRAP( colors_text, colors, "text", types::Color );
-				N_GETPROP_UNWRAP( colors_text_shadow, colors, "text_shadow", types::Color );
-				N_GETPROP_UNWRAP( colors_border, colors, "border", types::Color );
-				faction->m_colors = {
-					colors_text,
-					colors_text_shadow,
-					colors_border
-				};
-
-				N_GETPROP_OPT_BOOL( is_naval, faction_def, "is_naval")
-				if ( is_naval ) {
-					faction->m_flags |= Faction::FF_NAVAL;
-				}
-				N_GETPROP_OPT_BOOL( is_progenitor, faction_def, "is_progenitor")
-				if ( is_progenitor ) {
-					faction->m_flags |= Faction::FF_PROGENITOR;
-				}
-
-				N_GETPROP( bases_def, faction_def, "bases", Object );
-				N_GETPROP( bases_render_def, bases_def, "render", Object );
-
-				N_GETPROP( bases_render_type, bases_render_def, "type", String );
-				if ( bases_render_type == "sprite_grid" ) {
-					N_GETPROP( file, bases_render_def, "file", String );
-					N_GETPROP( grid_x, bases_render_def, "grid_x", Int );
-					N_GETPROP( grid_y, bases_render_def, "grid_y", Int );
-					N_GETPROP( cell_width, bases_render_def, "cell_width", Int );
-					N_GETPROP( cell_height, bases_render_def, "cell_height", Int );
-					N_GETPROP_OPT( size_t, cell_cx, bases_render_def, "cell_cx", Int, cell_width / 2 );
-					N_GETPROP_OPT( size_t, cell_cy, bases_render_def, "cell_cy", Int, cell_height / 2 );
-					N_GETPROP( cell_padding, bases_render_def, "cell_padding", Int );
-					N_GETPROP_OPT( float, scale_x, bases_render_def, "scale_x", Float, 1.0f );
-					N_GETPROP_OPT( float, scale_y, bases_render_def, "scale_y", Float, 1.0f );
-					faction->m_bases_render = {
-						file,
-						(size_t)grid_x,
-						(size_t)grid_y,
-						(size_t)cell_width,
-						(size_t)cell_height,
-						cell_cx,
-						cell_cy,
-						(size_t)cell_padding,
-						scale_x,
-						scale_y
-					};
-				}
-				else {
-					delete faction;
-					GSE_ERROR( gse::EC.GAME_ERROR, "Unsupported bases render type: " + bases_render_type );
-				}
-
-				N_GETPROP( base_names, bases_def, "names", Object );
-				N_GETPROP( base_names_land, base_names, "land", Array );
-				faction->m_base_names.land.reserve( base_names_land.size() );
-				for ( size_t i = 0  ; i < base_names_land.size() ; i++ ) {
-					N_GETELEMENT( v, base_names_land, i, String );
-					faction->m_base_names.land.push_back( v );
-				}
-
-				N_GETPROP( base_names_water, base_names, "water", Array );
-				faction->m_base_names.water.reserve( base_names_water.size() );
-				for ( size_t i = 0  ; i < base_names_water.size() ; i++ ) {
-					N_GETELEMENT( v, base_names_water, i, String );
-					faction->m_base_names.water.push_back( v );
-				}
-
-				Add( faction );
-				return faction->Wrap();
-			} )
-		},*/
+				N_EXPECT_ARGS( 5 );
+				N_GETVALUE( def_name, 0, String );
+				N_GETVALUE_UNWRAP( owner, 1, slot::Slot );
+				N_GETVALUE_UNWRAP( tile, 2, map::tile::Tile );
+				N_GETVALUE( morale, 3, Int );
+				N_GETVALUE( health, 4, Float );
+				return m_game->AddEvent( new event::SpawnUnit(
+					m_game->GetSlotNum(),
+					def_name,
+					owner->GetIndex(),
+					tile->coord.x,
+					tile->coord.y,
+					GetMorale( ctx, call_si, morale ),
+					GetHealth( ctx, call_si, health )
+				) );
+			})
+		},
+		{
+			"despawn_unit",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE_UNWRAP( unit, 0, Unit );
+				return m_game->AddEvent( new event::DespawnUnit( m_game->GetSlotNum(), unit->m_id ) );
+			})
+		},
 	};
 WRAPIMPL_END_PTR( UnitManager )
 
@@ -381,7 +325,7 @@ void UnitManager::Unserialize( types::Buffer& buf ) {
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
-		DefineMoraleSet( unit::MoraleSet::Unserialize( b ) );
+		DefineMoraleSet( MoraleSet::Unserialize( b ) );
 	}
 
 	sz = buf.ReadInt();
@@ -390,7 +334,7 @@ void UnitManager::Unserialize( types::Buffer& buf ) {
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
-		DefineUnit( unit::Def::Unserialize( b ) );
+		DefineUnit( Def::Unserialize( b ) );
 	}
 
 	sz = buf.ReadInt();
@@ -432,6 +376,23 @@ void UnitManager::QueueUnitUpdate( const Unit* unit, const unit_update_op_t op )
 	}
 	// add to operations list
 	update.ops = (unit_update_op_t)( (uint8_t)update.ops | (uint8_t)op );
+}
+
+const morale_t UnitManager::GetMorale( GSE_CALLABLE, const int64_t& morale ) {
+	if ( morale < MORALE_MIN || morale > MORALE_MAX ) {
+		GSE_ERROR( gse::EC.INVALID_CALL, "Invalid morale value: " + std::to_string( morale ) + " (should be between " + std::to_string( MORALE_MIN ) + " and " + std::to_string( MORALE_MAX ) + ", inclusive)" );
+	}
+	return (morale_t)morale;
+}
+
+const health_t UnitManager::GetHealth( GSE_CALLABLE, const float health ) {
+	if ( health < Unit::MINIMUM_HEALTH_TO_KEEP || health > StaticDef::HEALTH_MAX ) {
+		GSE_ERROR( gse::EC.INVALID_CALL, "Invalid health value: " + std::to_string( health ) + " (should be between " + std::to_string( Unit::MINIMUM_HEALTH_TO_KEEP ) + " and " + std::to_string( StaticDef::HEALTH_MAX ) + ", inclusive)" );
+	}
+	if ( health == 0 ) {
+		GSE_ERROR( gse::EC.INVALID_CALL, "Invalid health value: " + std::to_string( health ) + " (you can't spawn a dead unit)" );
+	}
+	return (health_t)health;
 }
 
 const std::string* UnitManager::MoveUnitValidate( Unit* unit, map::tile::Tile* dst_tile ) {
@@ -607,7 +568,7 @@ void UnitManager::AttackUnitApply( Unit* attacker, Unit* defender, const gse::Va
 	}
 }
 
-void UnitManager::RefreshUnit( const unit::Unit* unit ) {
+void UnitManager::RefreshUnit( const Unit* unit ) {
 	if ( unit->m_health <= 0.0f ) {
 		if ( m_game->GetState()->IsMaster() ) {
 			m_game->AddEvent( new event::DespawnUnit( m_game->GetSlotNum(), unit->m_id ) );

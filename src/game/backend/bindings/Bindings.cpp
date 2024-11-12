@@ -6,6 +6,7 @@
 
 #include "game/backend/Game.h"
 #include "game/backend/unit/UnitManager.h"
+#include "game/backend/base/BaseManager.h"
 #include "Binding.h"
 #include "gse/GSE.h"
 #include "gse/context/GlobalContext.h"
@@ -91,7 +92,8 @@ gse::Value Bindings::Call( const callback_slot_t slot, const callback_arguments_
 			);
 			auto* game = m_state->GetGame();
 			if ( game ) {
-				game->GetUM()->PushUnitUpdates();
+				game->GetUM()->PushUpdates();
+				game->GetBM()->PushUpdates();
 			}
 			if ( result.Get()->type == gse::type::Type::T_NOTHING ) {
 				// return undefined by default
@@ -115,6 +117,11 @@ const gse::Value Bindings::Trigger( gse::Wrappable* object, const std::string& e
 	auto result = VALUE( gse::type::Undefined );
 	try {
 		result = object->Trigger( m_gse_context, m_si_internal, event, args );
+		auto* game = m_state->GetGame();
+		if ( game ) {
+			game->GetUM()->PushUpdates();
+			game->GetBM()->PushUpdates();
+		}
 		if ( result.Get()->type == gse::type::Type::T_NOTHING ) {
 			// return undefined by default
 			return VALUE( gse::type::Undefined );

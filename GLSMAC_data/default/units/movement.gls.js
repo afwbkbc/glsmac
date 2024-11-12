@@ -81,7 +81,7 @@ const result = {
 				is_movement_successful:
 					(e.unit.movement >= movement_cost) // unit has enough moves
 					||
-					(#game.random.get_float(0.0, movement_cost) < e.unit.movement) // unit doesn't have enough moves but was lucky
+					(game.random.get_float(0.0, movement_cost) < e.unit.movement) // unit doesn't have enough moves but was lucky
 			};
 		});
 

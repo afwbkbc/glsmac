@@ -5,6 +5,8 @@
 #include "gse/Wrappable.h"
 #include "gse/type/Object.h"
 
+#include "Types.h"
+
 namespace game {
 namespace backend {
 
@@ -33,19 +35,19 @@ public:
 	~UnitManager();
 
 	void Clear();
-	void DefineMoraleSet( unit::MoraleSet* moraleset );
-	void DefineUnit( unit::Def* def );
+	void DefineMoraleSet( MoraleSet* moraleset );
+	void DefineUnit( Def* def );
 	void SpawnUnit( Unit* unit );
 	void DespawnUnit( const size_t unit_id );
 	void SkipUnitTurn( const size_t unit_id );
 
-	unit::MoraleSet* GetMoraleSet( const std::string& name ) const;
-	unit::Unit* GetUnit( const size_t id ) const;
-	unit::Def* GetUnitDef( const std::string& name ) const;
+	MoraleSet* GetMoraleSet( const std::string& name ) const;
+	Unit* GetUnit( const size_t id ) const;
+	Def* GetUnitDef( const std::string& name ) const;
 	const std::map< size_t, Unit* >& GetUnits() const;
 
 	void ProcessUnprocessed();
-	void PushUnitUpdates();
+	void PushUpdates();
 
 	WRAPDEFS_PTR( UnitManager )
 
@@ -84,6 +86,9 @@ private:
 	};
 	std::unordered_map< size_t, unit_update_t > m_unit_updates = {};
 	void QueueUnitUpdate( const Unit* unit, const unit_update_op_t op );
+
+	const morale_t GetMorale( GSE_CALLABLE, const int64_t& morale );
+	const health_t GetHealth( GSE_CALLABLE, const float health );
 
 private:
 	friend class Unit;

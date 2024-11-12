@@ -1,8 +1,8 @@
 #include "DefinePop.h"
 
 #include "game/backend/Game.h"
-
 #include "game/backend/base/PopDef.h"
+#include "game/backend/base/BaseManager.h"
 #include "gse/type/Undefined.h"
 
 namespace game {
@@ -23,7 +23,7 @@ const std::string* DefinePop::Validate( Game* game ) const {
 }
 
 const gse::Value DefinePop::Apply( Game* game ) const {
-	game->DefinePop( m_pop_def );
+	game->GetBM()->DefinePop( m_pop_def );
 	return VALUE( gse::type::Undefined );
 }
 

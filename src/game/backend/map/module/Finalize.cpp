@@ -5,7 +5,7 @@
 #include "game/backend/map/Consts.h"
 #include "game/backend/map/tile/Tile.h"
 #include "game/backend/map/tile/TileState.h"
-#include "util/random/Random.h"
+#include "game/backend/Random.h"
 #include "types/mesh/Render.h"
 #include "types/mesh/Data.h"
 

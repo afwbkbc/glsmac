@@ -1,21 +1,21 @@
+#include "Random.h"
+
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
-#include "Bindings.h"
-#include "gse/callable/Native.h"
-#include "gse/type/Object.h"
 #include "gse/type/Int.h"
 #include "gse/type/Float.h"
-#include "gse/type/Undefined.h"
-#include "game/backend/Random.h"
-
-#include "Binding.h"
 
 namespace game {
 namespace backend {
-namespace bindings {
 
-BINDING_IMPL( random ) {
-	const gse::type::object_properties_t properties = {
+Random::Random( Game* game, const util::random::value_t seed )
+	: util::random::Random( seed )
+	, m_game( game ) {
+	//
+}
+
+WRAPIMPL_BEGIN( Random, CLASS_RANDOM )
+	WRAPIMPL_PROPS
 		{
 			"get_int",
 			NATIVE_CALL( this ) {
@@ -25,10 +25,10 @@ BINDING_IMPL( random ) {
 				if ( max < min ) {
 					GSE_ERROR( gse::EC.INVALID_CALL, "Maximum value is smaller than minimum ( " + std::to_string( max ) + " < " + std::to_string( min ) + " )" );
 				}
-				if ( !GAME->GetState()->IsMaster() ) {
+				if ( !m_game->GetState()->IsMaster() ) {
 					GSE_ERROR( gse::EC.INVALID_CALL, "Only master is allowed to generate random values" );
 				}
-				return VALUE( gse::type::Int, GAME->GetRandom()->GetInt64( min, max ) );
+				return VALUE( gse::type::Int, m_game->GetRandom()->GetInt64( min, max ) );
 			})
 		},
 		{
@@ -40,16 +40,16 @@ BINDING_IMPL( random ) {
 				if ( max < min ) {
 					GSE_ERROR( gse::EC.INVALID_CALL, "Maximum value is smaller than minimum ( " + std::to_string( max ) + " < " + std::to_string( min ) + " )" );
 				}
-				if ( !GAME->GetState()->IsMaster() ) {
+				if ( !m_game->GetState()->IsMaster() ) {
 					GSE_ERROR( gse::EC.INVALID_CALL, "Only master is allowed to generate random values" );
 				}
-				return VALUE( gse::type::Float, GAME->GetRandom()->GetFloat( min, max ) );
+				return VALUE( gse::type::Float, m_game->GetRandom()->GetFloat( min, max ) );
 			})
 		},
 	};
-	return VALUE( gse::type::Object, properties );
-}
+WRAPIMPL_END_PTR( Random )
 
-}
+UNWRAPIMPL_PTR( Random )
+
 }
 }

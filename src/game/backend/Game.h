@@ -32,12 +32,10 @@ class Data;
 }
 }
 
-namespace util::random {
-class Random;
-}
-
 namespace game {
 namespace backend {
+
+class Random;
 
 namespace animation {
 class Def;
@@ -54,15 +52,11 @@ class TileManager;
 }
 
 namespace unit {
-class MoraleSet;
-class Def;
-class Unit;
 class UnitManager;
 }
 
 namespace base {
-class PopDef;
-class Base;
+class BaseManager;
 }
 
 namespace animation {
@@ -319,7 +313,7 @@ CLASS2( Game, MTModule, gse::Wrappable )
 	void Stop() override;
 	void Iterate() override;
 
-	util::random::Random* GetRandom() const;
+	Random* GetRandom() const;
 	map::Map* GetMap() const;
 	State* GetState() const;
 	const Player* GetPlayer() const;
@@ -341,13 +335,8 @@ public:
 	void Quit( const std::string& reason );
 	void OnError( std::runtime_error& err );
 	void OnGSEError( gse::Exception& e );
-	base::PopDef* GetPopDef( const std::string& id ) const;
-	base::Base* GetBase( const size_t id ) const;
 	const gse::Value AddEvent( event::Event* event );
-	void RefreshBase( const base::Base* base );
 	void DefineResource( Resource* resource );
-	void DefinePop( base::PopDef* pop_def );
-	void SpawnBase( base::Base* base );
 	const size_t GetTurnId() const;
 	const bool IsTurnActive() const;
 	const bool IsTurnCompleted( const size_t slot_num ) const;
@@ -365,6 +354,7 @@ public:
 
 	map::tile::TileManager* GetTM() const;
 	unit::UnitManager* GetUM() const;
+	base::BaseManager* GetBM() const;
 	animation::AnimationManager* GetAM() const;
 
 private:
@@ -382,12 +372,8 @@ private:
 
 	map::tile::TileManager* m_tm = nullptr;
 	unit::UnitManager* m_um = nullptr;
+	base::BaseManager* m_bm = nullptr;
 	animation::AnimationManager* m_am = nullptr;
-
-	std::unordered_map< std::string, base::PopDef* > m_base_popdefs = {};
-	std::map< size_t, base::Base* > m_bases = {};
-	void SerializeBases( types::Buffer& buf ) const;
-	void UnserializeBases( types::Buffer& buf );
 
 	enum game_state_t {
 		GS_NONE,
@@ -414,7 +400,7 @@ private:
 	void ResetGame();
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)
-	util::random::Random* m_random = nullptr;
+	Random* m_random = nullptr;
 	State* m_state = nullptr;
 	connection::Connection* m_connection = nullptr;
 
@@ -423,36 +409,16 @@ private:
 	map_editor::MapEditor* m_map_editor = nullptr;
 
 	std::vector< backend::event::Event* > m_unprocessed_events = {};
-	// TODO: refactor these?
-	std::vector< base::Base* > m_unprocessed_bases = {};
 
 	turn::Turn m_current_turn = {};
 
 	bool m_is_turn_complete = false;
 	void CheckTurnComplete();
 
-	enum base_update_op_t : uint8_t {
-		BUO_NONE = 0,
-		BUO_SPAWN = 1 << 0,
-		BUO_REFRESH = 1 << 1,
-		BUO_DESPAWN = 1 << 2,
-	};
-	struct base_update_t {
-		base_update_op_t ops = BUO_NONE;
-		const base::Base* base = nullptr;
-	};
-	std::unordered_map< size_t, base_update_t > m_base_updates = {};
-	void QueueBaseUpdate( const base::Base* base, const base_update_op_t op );
-
-	std::unordered_set< std::string > m_registered_base_names = {};
-
-private:
-	friend class bindings::Bindings;
-	void PushBaseUpdates();
-
 private:
 	friend class map::tile::TileManager;
 	friend class unit::UnitManager;
+	friend class base::BaseManager;
 	friend class animation::AnimationManager;
 	void AddFrontendRequest( const FrontendRequest& request );
 

@@ -8,6 +8,7 @@
 #include "game/backend/unit/Unit.h"
 #include "game/backend/base/Base.h"
 #include "game/backend/base/Pop.h"
+#include "game/backend/base/BaseManager.h"
 #include "gse/type/Undefined.h"
 #include "game/backend/Player.h"
 
@@ -51,7 +52,7 @@ const gse::Value SpawnBase::Apply( Game* game ) const {
 		m_name,
 		{} // will be added later
 	);
-	game->SpawnBase( base );
+	game->GetBM()->SpawnBase( base );
 	return base->Wrap();
 }
 

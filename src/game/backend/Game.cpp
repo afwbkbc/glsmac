@@ -14,7 +14,7 @@
 #include "event/FinalizeTurn.h"
 #include "event/TurnFinalized.h"
 #include "event/AdvanceTurn.h"
-#include "util/random/Random.h"
+#include "Random.h"
 #include "config/Config.h"
 #include "slot/Slots.h"
 #include "Player.h"
@@ -39,6 +39,7 @@
 #include "unit/UnitManager.h"
 #include "unit/Unit.h"
 #include "unit/MoraleSet.h"
+#include "base/BaseManager.h"
 #include "base/PopDef.h"
 #include "base/Base.h"
 #include "animation/AnimationManager.h"
@@ -168,7 +169,7 @@ void Game::Start() {
 	ASSERT( !m_pending_frontend_requests, "frontend requests already set" );
 	NEW( m_pending_frontend_requests, std::vector< FrontendRequest > );
 
-	NEW( m_random, util::random::Random );
+	NEW( m_random, Random, this );
 
 	const auto* config = g_engine->GetConfig();
 	if ( config->HasLaunchFlag( config::Config::LF_QUICKSTART_SEED ) ) {
@@ -180,6 +181,7 @@ void Game::Start() {
 
 	NEW( m_tm, map::tile::TileManager, this );
 	NEW( m_um, unit::UnitManager, this );
+	NEW( m_bm, base::BaseManager, this );
 	NEW( m_am, animation::AnimationManager, this );
 }
 
@@ -202,6 +204,9 @@ void Game::Stop() {
 
 	DELETE( m_um );
 	m_um = nullptr;
+
+	DELETE( m_bm );
+	m_bm = nullptr;
 
 	DELETE( m_am );
 	m_am = nullptr;
@@ -379,11 +384,8 @@ void Game::Iterate() {
 					if ( m_game_state == GS_RUNNING ) {
 
 						m_um->ProcessUnprocessed();
+						m_bm->ProcessUnprocessed();
 
-						for ( auto& it : m_unprocessed_bases ) {
-							SpawnBase( it );
-						}
-						m_unprocessed_bases.clear();
 						for ( auto& it : m_unprocessed_events ) {
 							ASSERT( m_connection, "connection not set" );
 							try {
@@ -405,7 +407,12 @@ void Game::Iterate() {
 						g_engine->GetUI()->SetLoaderText( "Starting game...", false );
 						if ( m_state->IsMaster() ) {
 							try {
-								m_state->m_bindings->Call( bindings::Bindings::CS_ON_START );
+								m_state->m_bindings->Trigger( this, "start", {
+									{
+										"game",
+										Wrap()
+									},
+								});
 							}
 							catch ( gse::Exception& e ) {
 								Log( (std::string)"Initialization failed: " + e.ToStringAndCleanup() );
@@ -427,12 +434,12 @@ void Game::Iterate() {
 		Log( (std::string)e.what() );
 		Quit( "Event validation error" ); // TODO: fix reason
 	}
-	m_um->PushUnitUpdates();
-	PushBaseUpdates();
+	m_um->PushUpdates();
+	m_bm->PushUpdates();
 	m_tm->ProcessTileLockRequests();
 }
 
-util::random::Random* Game::GetRandom() const {
+Random* Game::GetRandom() const {
 	return m_random;
 }
 
@@ -462,16 +469,49 @@ const size_t Game::GetSlotNum() const {
 WRAPIMPL_BEGIN( Game, CLASS_GAME )
 	WRAPIMPL_PROPS
 		{
+			"random",
+			m_random->Wrap()
+		},
+		{
 			"tm",
-			m_tm->Wrap( true )
+			m_tm->Wrap()
 		},
 		{
 			"um",
-			m_um->Wrap( true )
+			m_um->Wrap()
+		},
+		{
+			"bm",
+			m_bm->Wrap(),
 		},
 		{
 			"am",
-			m_am->Wrap( true )
+			m_am->Wrap()
+		},
+		{
+		"message",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( text, 0, String );
+				Message( text );
+				return VALUE( gse::type::Undefined );
+			})
+		},
+		{
+			"get_players",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				auto& slots = m_state->m_slots->GetSlots();
+				gse::type::array_elements_t elements = {};
+				for ( auto& slot : slots ) {
+					const auto state = slot.GetState();
+					if ( state == slot::Slot::SS_OPEN || state == slot::Slot::SS_CLOSED ) {
+						continue; // skip
+					}
+					elements.push_back( slot.Wrap() );
+				}
+				return VALUE( gse::type::Array, elements );
+			} )
 		},
 	};
 WRAPIMPL_END_PTR( Game )
@@ -817,26 +857,6 @@ void Game::OnGSEError( gse::Exception& err ) {
 	AddFrontendRequest( fr );
 }
 
-base::PopDef* Game::GetPopDef( const std::string& id ) const {
-	const auto& it = m_base_popdefs.find( id );
-	if ( it != m_base_popdefs.end() ) {
-		return it->second;
-	}
-	else {
-		return nullptr;
-	}
-}
-
-base::Base* Game::GetBase( const size_t id ) const {
-	const auto& it = m_bases.find( id );
-	if ( it != m_bases.end() ) {
-		return it->second;
-	}
-	else {
-		return nullptr;
-	}
-}
-
 const gse::Value Game::AddEvent( event::Event* event ) {
 	ASSERT( event->m_initiator_slot == m_slot_num, "initiator slot mismatch" );
 	if ( m_connection ) {
@@ -847,10 +867,6 @@ const gse::Value Game::AddEvent( event::Event* event ) {
 		return ProcessEvent( event );
 	}
 	return VALUE( gse::type::Undefined );
-}
-
-void Game::RefreshBase( const base::Base* base ) {
-	QueueBaseUpdate( base, BUO_REFRESH );
 }
 
 void Game::DefineResource( Resource* resource ) {
@@ -871,82 +887,6 @@ void Game::DefineResource( Resource* resource ) {
 		}
 	);
 	m_resource_idx.push_back( resource->m_id );
-}
-
-void Game::DefinePop( base::PopDef* pop_def ) {
-	Log( "Defining base pop ('" + pop_def->m_id + "')" );
-
-	ASSERT( m_base_popdefs.find( pop_def->m_id ) == m_base_popdefs.end(), "Base pop def '" + pop_def->m_id + "' already exists" );
-
-	m_base_popdefs.insert(
-		{
-			pop_def->m_id,
-			pop_def
-		}
-	);
-
-	auto fr = FrontendRequest( FrontendRequest::FR_BASE_POP_DEFINE );
-	NEW( fr.data.base_pop_define.serialized_popdef, std::string, base::PopDef::Serialize( pop_def ).ToString() );
-	AddFrontendRequest( fr );
-
-}
-
-void Game::SpawnBase( base::Base* base ) {
-	if ( m_game_state != GS_RUNNING ) {
-		m_unprocessed_bases.push_back( base );
-		return;
-	}
-
-	auto* tile = base->GetTile();
-
-	// validate and fix name if needed (or assign if empty)
-	std::vector< std::string > names_to_try = {};
-	if ( base->m_name.empty() ) {
-		const auto& names = base->m_owner->GetPlayer()->GetFaction()->m_base_names;
-		names_to_try = tile->is_water_tile
-			? names.water
-			: names.land;
-	}
-	else if ( m_registered_base_names.find( base->m_name ) != m_registered_base_names.end() ) {
-		names_to_try = { base->m_name };
-	}
-	if ( !names_to_try.empty() ) {
-		size_t cycle = 0;
-		bool found = false;
-		while ( !found ) {
-			cycle++;
-			for ( const auto& name_to_try : names_to_try ) {
-				base->m_name = cycle == 1
-					? name_to_try
-					: name_to_try + " " + std::to_string( cycle );
-				if ( m_registered_base_names.find( base->m_name ) == m_registered_base_names.end() ) {
-					found = true;
-					break;
-				}
-			}
-		}
-	}
-	m_registered_base_names.insert( base->m_name );
-
-	Log( "Spawning base #" + std::to_string( base->m_id ) + " ( " + base->m_name + " ) at " + base->GetTile()->ToString() );
-
-	ASSERT( m_bases.find( base->m_id ) == m_bases.end(), "duplicate base id" );
-	m_bases.insert_or_assign( base->m_id, base );
-
-	QueueBaseUpdate( base, BUO_SPAWN );
-
-	if ( m_state->IsMaster() ) {
-		m_state->m_bindings->Call(
-			bindings::Bindings::CS_ON_BASE_SPAWN, {
-				{
-					"base",
-					base->Wrap()
-				},
-			}
-		);
-	}
-
-	RefreshBase( base );
 }
 
 const size_t Game::GetTurnId() const {
@@ -1042,20 +982,23 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		m_um->RefreshUnit( unit );
 	}
 
-	for ( auto& it : m_bases ) {
+	for ( auto& it : m_bm->GetBases() ) {
 		auto* base = it.second;
-		m_state->m_bindings->Call(
-			bindings::Bindings::CS_ON_BASE_TURN, {
-				{
-					"base",
-					base->Wrap( true )
-				},
-			}
-		);
-		RefreshBase( base );
+		m_state->m_bindings->Trigger( m_bm, "base_turn", {
+			{
+				"base",
+				base->Wrap( true )
+			},
+		});
+		m_bm->RefreshBase( base );
 	}
 
-	m_state->m_bindings->Call( bindings::Bindings::CS_ON_TURN );
+	m_state->m_bindings->Trigger( this, "turn", {
+		{
+			"game",
+			Wrap()
+		}
+	});
 
 	for ( const auto& slot : m_state->m_slots->GetSlots() ) {
 		if ( slot.GetState() == slot::Slot::SS_PLAYER ) {
@@ -1130,6 +1073,10 @@ unit::UnitManager* Game::GetUM() const {
 	return m_um;
 }
 
+base::BaseManager* Game::GetBM() const {
+	return m_bm;
+}
+
 animation::AnimationManager* Game::GetAM() const {
 	return m_am;
 }
@@ -1201,55 +1148,6 @@ void Game::UnserializeResources( types::Buffer& buf ) {
 		auto b = types::Buffer( buf.ReadString() );
 		DefineResource( Resource::Unserialize( b ) );
 	}
-}
-
-void Game::SerializeBases( types::Buffer& buf ) const {
-
-	Log( "Serializing " + std::to_string( m_base_popdefs.size() ) + " base pop defs" );
-	buf.WriteInt( m_base_popdefs.size() );
-	for ( const auto& it : m_base_popdefs ) {
-		buf.WriteString( it.first );
-		buf.WriteString( base::PopDef::Serialize( it.second ).ToString() );
-	}
-
-	Log( "Serializing " + std::to_string( m_bases.size() ) + " bases" );
-	buf.WriteInt( m_bases.size() );
-	for ( const auto& it : m_bases ) {
-		buf.WriteInt( it.first );
-		buf.WriteString( base::Base::Serialize( it.second ).ToString() );
-	}
-	buf.WriteInt( base::Base::GetNextId() );
-
-	Log( "Saved next base id: " + std::to_string( base::Base::GetNextId() ) );
-}
-
-void Game::UnserializeBases( types::Buffer& buf ) {
-	ASSERT( m_base_popdefs.empty(), "base pop defs not empty" );
-	ASSERT( m_bases.empty(), "bases not empty" );
-	ASSERT( m_unprocessed_bases.empty(), "unprocessed bases not empty" );
-
-	size_t sz = buf.ReadInt();
-	m_base_popdefs.reserve( sz );
-	Log( "Unserializing " + std::to_string( sz ) + " base pop defs" );
-	for ( size_t i = 0 ; i < sz ; i++ ) {
-		const auto name = buf.ReadString();
-		auto b = types::Buffer( buf.ReadString() );
-		DefinePop( base::PopDef::Unserialize( b ) );
-	}
-
-	sz = buf.ReadInt();
-	Log( "Unserializing " + std::to_string( sz ) + " bases" );
-	if ( m_game_state != GS_RUNNING ) {
-		m_unprocessed_bases.reserve( sz );
-	}
-	for ( size_t i = 0 ; i < sz ; i++ ) {
-		const auto base_id = buf.ReadInt();
-		auto b = types::Buffer( buf.ReadString() );
-		SpawnBase( base::Base::Unserialize( b, this ) );
-	}
-
-	base::Base::SetNextId( buf.ReadInt() );
-	Log( "Restored next base id: " + std::to_string( base::Base::GetNextId() ) );
 }
 
 void Game::AddFrontendRequest( const FrontendRequest& request ) {
@@ -1366,7 +1264,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					// bases
 					{
 						types::Buffer b;
-						SerializeBases( b );
+						m_bm->Serialize( b );
 						buf.WriteString( b.ToString() );
 					}
 
@@ -1558,7 +1456,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 							// bases
 							{
 								auto bb = types::Buffer( buf.ReadString() );
-								UnserializeBases( bb );
+								m_bm->Unserialize( bb );
 							}
 
 							// animations
@@ -1622,6 +1520,7 @@ void Game::ResetGame() {
 
 	m_tm->Clear();
 	m_um->Clear();
+	m_bm->Clear();
 	m_am->Clear();
 
 	for ( auto& it : m_resources ) {
@@ -1631,15 +1530,6 @@ void Game::ResetGame() {
 	m_resource_idx.clear();
 	m_resource_idx_map.clear();
 
-	for ( auto& it : m_base_popdefs ) {
-		delete it.second;
-	}
-	m_base_popdefs.clear();
-	for ( auto& it : m_bases ) {
-		delete it.second;
-	}
-	m_bases.clear();
-
 	if ( m_map ) {
 		Log( "Resetting map" );
 		DELETE( m_map );
@@ -1648,8 +1538,6 @@ void Game::ResetGame() {
 
 	ASSERT( m_pending_frontend_requests, "pending events not set" );
 	m_pending_frontend_requests->clear();
-
-	m_base_updates.clear();
 
 	m_current_turn.Reset();
 	m_is_turn_complete = false;
@@ -1689,81 +1577,6 @@ void Game::CheckTurnComplete() {
 			? turn::TS_TURN_COMPLETE
 			: turn::TS_TURN_ACTIVE;
 		AddFrontendRequest( fr );
-	}
-}
-
-void Game::QueueBaseUpdate( const base::Base* base, const base_update_op_t op ) {
-	auto it = m_base_updates.find( base->m_id );
-	if ( it == m_base_updates.end() ) {
-		it = m_base_updates.insert(
-			{
-				base->m_id,
-				{
-					{},
-					base,
-				}
-			}
-		).first;
-	}
-	auto& update = it->second;
-	if ( op == BUO_DESPAWN ) {
-		if ( op & BUO_SPAWN ) {
-			// if base is despawned immediately after spawning - frontend doesn't need to know
-			m_base_updates.erase( it );
-			return;
-		}
-		update.ops = BUO_NONE; // clear other actions if base was despawned
-	}
-	// add to operations list
-	update.ops = (base_update_op_t)( (uint8_t)update.ops | (uint8_t)op );
-}
-
-void Game::PushBaseUpdates() {
-	if ( m_game_state == GS_RUNNING && !m_base_updates.empty() ) {
-		for ( const auto& it : m_base_updates ) {
-			const auto base_id = it.first;
-			const auto& bu = it.second;
-			const auto& base = bu.base;
-			if ( bu.ops & BUO_SPAWN ) {
-				auto fr = FrontendRequest( FrontendRequest::FR_BASE_SPAWN );
-				fr.data.base_spawn.base_id = base->m_id;
-				fr.data.base_spawn.slot_index = base->m_owner->GetIndex();
-				const auto* tile = base->GetTile();
-				fr.data.base_spawn.tile_coords = {
-					tile->coord.x,
-					tile->coord.y
-				};
-				const auto c = base->GetRenderCoords();
-				fr.data.base_spawn.render_coords = {
-					c.x,
-					c.y,
-					c.z
-				};
-				NEW( fr.data.base_spawn.name, std::string, base->m_name );
-				AddFrontendRequest( fr );
-			}
-			if ( bu.ops & BUO_REFRESH ) {
-				auto fr = FrontendRequest( FrontendRequest::FR_BASE_UPDATE );
-				fr.data.base_update.base_id = base->m_id;
-				fr.data.base_update.slot_index = base->m_owner->GetIndex();
-				NEW( fr.data.base_update.name, std::string, base->m_name );
-				NEW( fr.data.base_update.faction_id, std::string, base->m_faction->m_id );
-				NEW( fr.data.base_update.pops, FrontendRequest::base_pops_t, {} );
-				for ( const auto& pop : base->m_pops ) {
-					fr.data.base_update.pops->push_back(
-						{
-							pop.m_def->m_id,
-							pop.m_variant
-						}
-					);
-				}
-				AddFrontendRequest( fr );
-			}
-			if ( bu.ops & BUO_DESPAWN ) {
-				THROW( "TODO: BASE DESPAWN" );
-			}
-		}
-		m_base_updates.clear();
 	}
 }
 

@@ -14,6 +14,7 @@ SUBDIR( turn )
 
 SET( SRC ${SRC}
 
+	${PWD}/Random.cpp
 	${PWD}/System.cpp
 	${PWD}/Game.cpp
 	${PWD}/State.cpp

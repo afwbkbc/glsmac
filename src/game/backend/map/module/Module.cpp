@@ -1,6 +1,6 @@
 #include "Module.h"
 
-#include "util/random/Random.h"
+#include "game/backend/Random.h"
 #include "game/backend/map/Map.h"
 
 namespace game {

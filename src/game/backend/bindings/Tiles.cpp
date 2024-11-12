@@ -40,7 +40,7 @@ BINDING_IMPL( tiles ) {
 						) -> gse::Value {
 							GAME->GetTM()->SendTileUnlockRequest( tile_positions );
 							return VALUE( gse::type::Undefined );
-						}),
+						} )
 					});
 					N_UNPERSIST_CALLABLE( on_complete );
 				});
