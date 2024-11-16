@@ -2,14 +2,15 @@
 
 #include "game/backend/Game.h"
 
-#include "game/backend/Resource.h"
+#include "game/backend/resource/ResourceManager.h"
+#include "game/backend/resource/Resource.h"
 #include "gse/type/Undefined.h"
 
 namespace game {
 namespace backend {
 namespace event {
 
-DefineResource::DefineResource( const size_t initiator_slot, Resource* resource )
+DefineResource::DefineResource( const size_t initiator_slot, resource::Resource* resource )
 	: Event( initiator_slot, ET_RESOURCE_DEFINE )
 	, m_resource( resource ) {
 	//
@@ -23,7 +24,7 @@ const std::string* DefineResource::Validate( Game* game ) const {
 }
 
 const gse::Value DefineResource::Apply( Game* game ) const {
-	game->DefineResource( m_resource );
+	game->GetRM()->DefineResource( m_resource );
 	return VALUE( gse::type::Undefined );
 }
 
@@ -34,12 +35,12 @@ TS_BEGIN( DefineResource )
 TS_END()
 
 void DefineResource::Serialize( types::Buffer& buf, const DefineResource* event ) {
-	buf.WriteString( Resource::Serialize( event->m_resource ).ToString() );
+	buf.WriteString( resource::Resource::Serialize( event->m_resource ).ToString() );
 }
 
 DefineResource* DefineResource::Unserialize( types::Buffer& buf, const size_t initiator_slot ) {
 	auto b = types::Buffer( buf.ReadString() );
-	return new DefineResource( initiator_slot, Resource::Unserialize( b ) );
+	return new DefineResource( initiator_slot, resource::Resource::Unserialize( b ) );
 }
 
 }

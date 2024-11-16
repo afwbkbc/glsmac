@@ -9,7 +9,7 @@
 #include "gse/Exception.h"
 #include "gse/type/Undefined.h"
 
-#include "game/backend/Resource.h"
+#include "game/backend/resource/Resource.h"
 #include "game/backend/event/DefineResource.h"
 
 namespace game {
@@ -48,7 +48,7 @@ BINDING_IMPL( resources ) {
 					X( plus )
 					X( minus )
 
-					auto* resource = new Resource(
+					auto* resource = new resource::Resource(
 						id,
 						name,
 						{

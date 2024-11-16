@@ -5,13 +5,15 @@
 namespace game {
 namespace backend {
 
+namespace resource {
 class Resource;
+}
 
 namespace event {
 
 class DefineResource : public Event {
 public:
-	DefineResource( const size_t initiator_slot, Resource* resource );
+	DefineResource( const size_t initiator_slot, resource::Resource* resource );
 
 	const std::string* Validate( Game* game ) const override;
 	const gse::Value Apply( Game* game ) const override;
@@ -24,7 +26,7 @@ private:
 	static DefineResource* Unserialize( types::Buffer& buf, const size_t initiator_slot );
 
 private:
-	Resource* m_resource;
+	resource::Resource* m_resource;
 };
 
 }

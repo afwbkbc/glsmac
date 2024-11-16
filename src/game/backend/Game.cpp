@@ -31,9 +31,9 @@
 #include "map/tile/TileManager.h"
 #include "map/tile/Tiles.h"
 #include "map/MapState.h"
+#include "resource/ResourceManager.h"
 #include "bindings/Bindings.h"
 #include "graphics/Graphics.h"
-#include "Resource.h"
 #include "animation/Def.h"
 #include "unit/Def.h"
 #include "unit/UnitManager.h"
@@ -180,6 +180,7 @@ void Game::Start() {
 	NEW( m_map_editor, map_editor::MapEditor, this );
 
 	NEW( m_tm, map::tile::TileManager, this );
+	NEW( m_rm, resource::ResourceManager, this );
 	NEW( m_um, unit::UnitManager, this );
 	NEW( m_bm, base::BaseManager, this );
 	NEW( m_am, animation::AnimationManager, this );
@@ -201,6 +202,9 @@ void Game::Stop() {
 
 	DELETE( m_tm );
 	m_tm = nullptr;
+
+	DELETE( m_rm );
+	m_rm = nullptr;
 
 	DELETE( m_um );
 	m_um = nullptr;
@@ -477,6 +481,10 @@ WRAPIMPL_BEGIN( Game, CLASS_GAME )
 			m_tm->Wrap()
 		},
 		{
+			"rm",
+			m_rm->Wrap()
+		},
+		{
 			"um",
 			m_um->Wrap()
 		},
@@ -665,46 +673,12 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 					switch ( r.type ) {
 						case BackendRequest::BR_GET_TILE_DATA: {
 							const auto& tile = m_map->GetTile( r.data.get_tile_data.tile_x, r.data.get_tile_data.tile_y );
-							const auto result = m_state->m_bindings->Call(
-								bindings::Bindings::CS_ON_GET_TILE_YIELDS, {
-									{
-										"tile",
-										tile->Wrap()
-									},
-									{
-										"player",
-										m_slot->Wrap()
-									},
-								}
-							);
-							if ( result.Get()->type != gse::type::Type::T_OBJECT ) {
-								break; // TMP //THROW( "unexpected return type: expected Object, got " + result.GetTypeString() );
-							}
-							const auto& values = ( (gse::type::Object*)result.Get() )->value;
-							for ( const auto& v : values ) {
-								if ( m_resources.find( v.first ) == m_resources.end() ) {
-									THROW( "unknown resource type: " + v.first );
-								}
-							}
-							NEWV( yields, FrontendRequest::tile_yields_t, {} );
-							yields->reserve( m_resource_idx.size() );
-							for ( const auto& idx : m_resource_idx ) {
-								const auto& v = values.find( idx );
-								if ( v == values.end() ) {
-									DELETE( yields );
-									THROW( "missing yields for resource: " + idx );
-								}
-								if ( v->second.Get()->type != gse::type::Type::T_INT ) {
-									DELETE( yields );
-									THROW( "invalid resource value, expected Int, got " + v->second.GetTypeString() + ": " + v->second.ToString() );
-								}
-								yields->push_back(
-									{
-										idx,
-										( (gse::type::Int*)v->second.Get() )->value
-									}
-								);
-							}
+
+							NEWV( yields, FrontendRequest::tile_yields_t, m_rm->GetYields(
+								tile,
+								m_slot
+							) );
+
 							auto fr = FrontendRequest( FrontendRequest::FR_TILE_DATA );
 							fr.data.tile_data.tile_x = tile->coord.x;
 							fr.data.tile_data.tile_y = tile->coord.y;
@@ -867,26 +841,6 @@ const gse::Value Game::AddEvent( event::Event* event ) {
 		return ProcessEvent( event );
 	}
 	return VALUE( gse::type::Undefined );
-}
-
-void Game::DefineResource( Resource* resource ) {
-	Log( "Defining resource ('" + resource->m_id + "')" );
-
-	ASSERT( m_resources.find( resource->m_id ) == m_resources.end(), "Resource '" + resource->m_id + "' already exists" );
-
-	m_resources.insert(
-		{
-			resource->m_id,
-			resource
-		}
-	);
-	m_resource_idx_map.insert(
-		{
-			resource->m_id,
-			m_resource_idx.size()
-		}
-	);
-	m_resource_idx.push_back( resource->m_id );
 }
 
 const size_t Game::GetTurnId() const {
@@ -1069,6 +1023,10 @@ map::tile::TileManager* Game::GetTM() const {
 	return m_tm;
 }
 
+resource::ResourceManager* Game::GetRM() const {
+	return m_rm;
+}
+
 unit::UnitManager* Game::GetUM() const {
 	return m_um;
 }
@@ -1123,31 +1081,6 @@ const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
 		-c.y,
 		c.z
 	};
-}
-
-void Game::SerializeResources( types::Buffer& buf ) const {
-	Log( "Serializing " + std::to_string( m_resources.size() ) + " resources" );
-	buf.WriteInt( m_resources.size() );
-	for ( const auto& it : m_resource_idx ) {
-		ASSERT( m_resources.find( it ) != m_resources.end(), "invalid resource idx" );
-		const auto& res = m_resources.at( it );
-		buf.WriteString( res->m_id );
-		buf.WriteString( Resource::Serialize( res ).ToString() );
-	}
-}
-
-void Game::UnserializeResources( types::Buffer& buf ) {
-	ASSERT( m_resources.empty(), "resources not empty" );
-	size_t sz = buf.ReadInt();
-	Log( "Unserializing " + std::to_string( sz ) + " resources" );
-	m_resources.reserve( sz );
-	m_resource_idx.reserve( sz );
-	m_resource_idx_map.reserve( sz );
-	for ( size_t i = 0 ; i < sz ; i++ ) {
-		const auto name = buf.ReadString();
-		auto b = types::Buffer( buf.ReadString() );
-		DefineResource( Resource::Unserialize( b ) );
-	}
 }
 
 void Game::AddFrontendRequest( const FrontendRequest& request ) {
@@ -1250,7 +1183,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					// resources
 					{
 						types::Buffer b;
-						SerializeResources( b );
+						m_rm->Serialize( b );
 						buf.WriteString( b.ToString() );
 					}
 
@@ -1444,7 +1377,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 							// resources
 							{
 								auto ub = types::Buffer( buf.ReadString() );
-								UnserializeResources( ub );
+								m_rm->Unserialize( ub );
 							}
 
 							// units
@@ -1519,16 +1452,10 @@ void Game::ResetGame() {
 	m_unprocessed_events.clear();
 
 	m_tm->Clear();
+	m_rm->Clear();
 	m_um->Clear();
 	m_bm->Clear();
 	m_am->Clear();
-
-	for ( auto& it : m_resources ) {
-		delete it.second;
-	}
-	m_resources.clear();
-	m_resource_idx.clear();
-	m_resource_idx_map.clear();
 
 	if ( m_map ) {
 		Log( "Resetting map" );

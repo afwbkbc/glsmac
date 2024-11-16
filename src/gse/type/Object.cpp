@@ -52,7 +52,7 @@ static const std::unordered_map< Object::object_class_t, std::string > s_object_
 		"#faction"
 	},
 	{
-		Object::CLASS_FACTIONS,
+		Object::CLASS_FM,
 		"#factions"
 	},
 	{

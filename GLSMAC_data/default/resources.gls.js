@@ -1,6 +1,6 @@
-const define = (id, levels_y, minusplus_y) => {
+const define = (rm, id, levels_y, minusplus_y) => {
 
-	#game.resources.define(id, {
+	rm.define(id, {
 		name: id,
 		render: {
 			type: 'sprite_map',
@@ -23,10 +23,10 @@ const define = (id, levels_y, minusplus_y) => {
 };
 
 const result = {
-	define: () => {
-		define('Nutrients', 304, 13);
-		define('Minerals', 345, 36);
-		define('Energy', 386, 59);
+	define: (rm) => {
+		define(rm, 'Nutrients', 304, 13);
+		define(rm, 'Minerals', 345, 36);
+		define(rm, 'Energy', 386, 59);
 	},
 };
 

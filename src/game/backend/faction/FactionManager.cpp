@@ -62,7 +62,7 @@ const std::vector< Faction* > FactionManager::GetAll() const {
 	return result;
 }
 
-WRAPIMPL_BEGIN( FactionManager, CLASS_FACTIONS )
+WRAPIMPL_BEGIN( FactionManager, CLASS_FM )
 	WRAPIMPL_PROPS
 		{
 			"add",

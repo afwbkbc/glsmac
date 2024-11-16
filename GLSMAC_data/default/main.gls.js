@@ -52,7 +52,7 @@ const bases = #include('bases');
 		e.game.on('start', (e) => {
 
 			// init game data
-			resources.define();
+			resources.define(e.game.rm);
 			map.define();
 			units.define();
 			bases.define();

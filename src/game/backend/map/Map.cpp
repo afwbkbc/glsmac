@@ -94,8 +94,8 @@ Map::Map( Game* game )
 	);
 
 	// main source textures
-	m_textures.source.texture_pcx = g_engine->GetTextureLoader()->LoadTexture( resource::PCX_TEXTURE );
-	m_textures.source.ter1_pcx = g_engine->GetTextureLoader()->LoadTexture( resource::PCX_TER1 );
+	m_textures.source.texture_pcx = g_engine->GetTextureLoader()->LoadTexture( ::resource::PCX_TEXTURE );
+	m_textures.source.ter1_pcx = g_engine->GetTextureLoader()->LoadTexture( ::resource::PCX_TER1 );
 
 	// add map modules
 	//   order of passes is important

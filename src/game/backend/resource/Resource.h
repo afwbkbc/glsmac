@@ -7,6 +7,7 @@
 
 namespace game {
 namespace backend {
+namespace resource {
 
 class Resource {
 public:
@@ -46,5 +47,6 @@ public:
 
 };
 
+}
 }
 }

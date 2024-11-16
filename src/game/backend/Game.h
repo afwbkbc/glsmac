@@ -51,6 +51,10 @@ class TileManager;
 }
 }
 
+namespace resource {
+class ResourceManager;
+}
+
 namespace unit {
 class UnitManager;
 }
@@ -62,8 +66,6 @@ class BaseManager;
 namespace animation {
 class AnimationManager;
 }
-
-class Resource;
 
 namespace event {
 class Event;
@@ -336,7 +338,6 @@ public:
 	void OnError( std::runtime_error& err );
 	void OnGSEError( gse::Exception& e );
 	const gse::Value AddEvent( event::Event* event );
-	void DefineResource( Resource* resource );
 	const size_t GetTurnId() const;
 	const bool IsTurnActive() const;
 	const bool IsTurnCompleted( const size_t slot_num ) const;
@@ -353,6 +354,7 @@ public:
 	faction::Faction* GetFaction( const std::string& id ) const;
 
 	map::tile::TileManager* GetTM() const;
+	resource::ResourceManager* GetRM() const;
 	unit::UnitManager* GetUM() const;
 	base::BaseManager* GetBM() const;
 	animation::AnimationManager* GetAM() const;
@@ -364,13 +366,8 @@ private:
 
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
 
-	std::unordered_map< std::string, Resource* > m_resources = {};
-	std::vector< std::string > m_resource_idx = {};
-	std::unordered_map< std::string, size_t > m_resource_idx_map = {};
-	void SerializeResources( types::Buffer& buf ) const;
-	void UnserializeResources( types::Buffer& buf );
-
 	map::tile::TileManager* m_tm = nullptr;
+	resource::ResourceManager* m_rm = nullptr;
 	unit::UnitManager* m_um = nullptr;
 	base::BaseManager* m_bm = nullptr;
 	animation::AnimationManager* m_am = nullptr;
@@ -417,6 +414,7 @@ private:
 
 private:
 	friend class map::tile::TileManager;
+	friend class resource::ResourceManager;
 	friend class unit::UnitManager;
 	friend class base::BaseManager;
 	friend class animation::AnimationManager;

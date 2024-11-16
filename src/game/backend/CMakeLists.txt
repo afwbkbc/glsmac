@@ -1,5 +1,6 @@
 SUBDIR( map )
 SUBDIR( map_editor )
+SUBDIR( resource )
 SUBDIR( rules )
 SUBDIR( settings )
 SUBDIR( slot )
@@ -21,6 +22,5 @@ SET( SRC ${SRC}
 	${PWD}/Account.cpp
 	${PWD}/Player.cpp
 	${PWD}/MapObject.cpp
-	${PWD}/Resource.cpp
 
 	PARENT_SCOPE )

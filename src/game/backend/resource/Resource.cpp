@@ -2,6 +2,7 @@
 
 namespace game {
 namespace backend {
+namespace resource {
 
 Resource::Resource( const std::string& id, const std::string& name, const render_info_t& render_info )
 	: m_id( id )
@@ -94,5 +95,6 @@ Resource* Resource::Unserialize( types::Buffer& buf ) {
 	return new Resource( id, name, render_info );
 }
 
+}
 }
 }
