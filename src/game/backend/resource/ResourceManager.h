@@ -33,7 +33,7 @@ CLASS2( ResourceManager, common::Class, gse::Wrappable )
 	void DefineResource( resource::Resource* resource );
 
 	typedef std::vector< std::pair< std::string, size_t > > yields_t;
-	const yields_t GetYields( map::tile::Tile* tile, slot::Slot* slot ) const;
+	const yields_t GetYields( map::tile::Tile* tile, slot::Slot* slot );
 
 	WRAPDEFS_PTR( ResourceManager )
 

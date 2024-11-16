@@ -51,9 +51,8 @@ void ResourceManager::DefineResource( resource::Resource* resource ) {
 	m_resource_idx.push_back( resource->m_id );
 }
 
-const ResourceManager::yields_t ResourceManager::GetYields( map::tile::Tile* tile, slot::Slot* slot ) const {
-	const auto result = m_game->GetState()->m_bindings->Call(
-		bindings::Bindings::CS_ON_GET_TILE_YIELDS, {
+const ResourceManager::yields_t ResourceManager::GetYields( map::tile::Tile* tile, slot::Slot* slot ) {
+	const auto result = m_game->GetState()->m_bindings->Trigger( this, "get_yields", {
 			{
 				"tile",
 				tile->Wrap()
