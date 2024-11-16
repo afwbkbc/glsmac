@@ -18,7 +18,7 @@ void Include::AddToContext( context::Context* ctx ) {
 		N_EXPECT_ARGS( 1 );
 		N_GETVALUE( path, 0, String );
 		const auto full_path = ctx->GetScriptInfo().directory + GSE::PATH_SEPARATOR + path;
-		return ctx->GetGSE()->GetInclude( ctx, call_si, full_path );
+		return ctx->GetGSE()->RunScript( ctx, call_si, full_path );
 	} ) );
 
 }

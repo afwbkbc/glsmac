@@ -3,6 +3,7 @@
 #include "game/backend/Game.h"
 #include "game/backend/base/Base.h"
 #include "game/backend/base/PopDef.h"
+#include "game/backend/base/BaseManager.h"
 #include "gse/type/String.h"
 #include "gse/type/Int.h"
 #include "gse/type/Undefined.h"
@@ -32,15 +33,15 @@ void Pop::Unserialize( types::Buffer& buf, Game* game ) {
 	ASSERT_NOLOG( !m_base, "pop base is not null" );
 	ASSERT_NOLOG( !m_def, "pop def is not null" );
 
-	m_base = game->GetBase( buf.ReadInt() );
+	m_base = game->GetBM()->GetBase( buf.ReadInt() );
 	ASSERT_NOLOG( m_base, "base not found" );
-	m_def = game->GetPopDef( buf.ReadString() );
+	m_def = game->GetBM()->GetPopDef( buf.ReadString() );
 	ASSERT_NOLOG( m_def, "pop def not found" );
 	m_variant = buf.ReadInt();
 }
 
 WRAPIMPL_BEGIN( Pop, CLASS_BASE_POP )
-	WRAPIMPL_PROPS {
+	WRAPIMPL_PROPS
 		{
 			"type",
 			VALUE( gse::type::String, m_def->m_id )

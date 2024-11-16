@@ -1,15 +1,17 @@
 #pragma once
 
 #include <string>
-#include <optional>
 
 #include "types/Serializable.h"
 
-#include "game/backend/rules/Faction.h"
 #include "game/backend/rules/DifficultyLevel.h"
 
 namespace game {
 namespace backend {
+
+namespace faction {
+class Faction;
+}
 
 namespace slot {
 class Slot;
@@ -28,7 +30,7 @@ CLASS( Player, types::Serializable )
 	Player(
 		const std::string& name,
 		const role_t role,
-		const std::optional< rules::Faction >& faction,
+		faction::Faction* faction,
 		const rules::DifficultyLevel& difficulty_level
 	);
 
@@ -39,9 +41,9 @@ CLASS( Player, types::Serializable )
 	void Disconnect();
 	const bool IsConnected() const;
 
-	void SetFaction( const rules::Faction& faction );
+	void SetFaction( faction::Faction* faction );
 	void ClearFaction();
-	std::optional< rules::Faction >& GetFaction();
+	faction::Faction* GetFaction();
 
 	void SetDifficultyLevel( const rules::DifficultyLevel& difficulty_level );
 	const rules::DifficultyLevel& GetDifficultyLevel() const;
@@ -67,8 +69,7 @@ private:
 
 	slot::Slot* m_slot = nullptr;
 
-	// EXPERIMENTAL
-	std::optional< rules::Faction > m_faction = {};
+	faction::Faction* m_faction = {};
 	rules::DifficultyLevel m_difficulty_level = {};
 
 	bool m_is_turn_completed = false;

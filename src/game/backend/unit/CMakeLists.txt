@@ -1,5 +1,6 @@
 SET( SRC ${SRC}
 
+	${PWD}/UnitManager.cpp
 	${PWD}/Def.cpp
 	${PWD}/StaticDef.cpp
 	${PWD}/Render.cpp

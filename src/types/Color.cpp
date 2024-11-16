@@ -147,7 +147,7 @@ const std::string Color::ToString() const {
 }
 
 WRAPIMPL_BEGIN( Color, CLASS_COLOR )
-	WRAPIMPL_PROPS {
+	WRAPIMPL_PROPS
 		{
 			"r",
 			VALUE( gse::type::Float, value.red )

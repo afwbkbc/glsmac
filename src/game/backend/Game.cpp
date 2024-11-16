@@ -8,16 +8,13 @@
 #include "util/FS.h"
 #include "types/Buffer.h"
 #include "State.h"
+#include "game/backend/faction/Faction.h"
+#include "game/backend/faction/FactionManager.h"
 #include "map_editor/MapEditor.h"
 #include "event/FinalizeTurn.h"
 #include "event/TurnFinalized.h"
 #include "event/AdvanceTurn.h"
-#include "event/DespawnUnit.h"
-#include "event/RequestTileLocks.h"
-#include "event/LockTiles.h"
-#include "event/RequestTileUnlocks.h"
-#include "event/UnlockTiles.h"
-#include "util/random/Random.h"
+#include "Random.h"
 #include "config/Config.h"
 #include "slot/Slots.h"
 #include "Player.h"
@@ -31,17 +28,21 @@
 #include "gse/type/Undefined.h"
 #include "gse/type/Array.h"
 #include "ui/UI.h"
+#include "map/tile/TileManager.h"
 #include "map/tile/Tiles.h"
 #include "map/MapState.h"
-#include "bindings/Bindings.h"
+#include "resource/ResourceManager.h"
+#include "Bindings.h"
 #include "graphics/Graphics.h"
-#include "Resource.h"
 #include "animation/Def.h"
 #include "unit/Def.h"
+#include "unit/UnitManager.h"
 #include "unit/Unit.h"
 #include "unit/MoraleSet.h"
+#include "base/BaseManager.h"
 #include "base/PopDef.h"
 #include "base/Base.h"
+#include "animation/AnimationManager.h"
 
 namespace game {
 namespace backend {
@@ -168,7 +169,7 @@ void Game::Start() {
 	ASSERT( !m_pending_frontend_requests, "frontend requests already set" );
 	NEW( m_pending_frontend_requests, std::vector< FrontendRequest > );
 
-	NEW( m_random, util::random::Random );
+	NEW( m_random, Random, this );
 
 	const auto* config = g_engine->GetConfig();
 	if ( config->HasLaunchFlag( config::Config::LF_QUICKSTART_SEED ) ) {
@@ -178,6 +179,11 @@ void Game::Start() {
 	// init map editor
 	NEW( m_map_editor, map_editor::MapEditor, this );
 
+	NEW( m_tm, map::tile::TileManager, this );
+	NEW( m_rm, resource::ResourceManager, this );
+	NEW( m_um, unit::UnitManager, this );
+	NEW( m_bm, base::BaseManager, this );
+	NEW( m_am, animation::AnimationManager, this );
 }
 
 void Game::Stop() {
@@ -193,6 +199,21 @@ void Game::Stop() {
 
 	DELETE( m_map_editor );
 	m_map_editor = nullptr;
+
+	DELETE( m_tm );
+	m_tm = nullptr;
+
+	DELETE( m_rm );
+	m_rm = nullptr;
+
+	DELETE( m_um );
+	m_um = nullptr;
+
+	DELETE( m_bm );
+	m_bm = nullptr;
+
+	DELETE( m_am );
+	m_am = nullptr;
 
 	MTModule::Stop();
 }
@@ -329,10 +350,10 @@ void Game::Iterate() {
 					}
 
 					{
-						const auto& factions = m_state->m_settings.global.game_rules.m_factions;
+						const auto factions = m_state->GetFM()->GetAll();
 						auto* faction_defines = new FrontendRequest::faction_defines_t();
-						for ( const auto& it : factions ) {
-							faction_defines->push_back( &it.second );
+						for ( const auto& faction : factions ) {
+							faction_defines->push_back( faction );
 						}
 						auto fr = FrontendRequest( FrontendRequest::FR_FACTION_DEFINE );
 						fr.data.faction_define.factiondefs = faction_defines;
@@ -366,14 +387,9 @@ void Game::Iterate() {
 
 					if ( m_game_state == GS_RUNNING ) {
 
-						for ( auto& it : m_unprocessed_units ) {
-							SpawnUnit( it );
-						}
-						m_unprocessed_units.clear();
-						for ( auto& it : m_unprocessed_bases ) {
-							SpawnBase( it );
-						}
-						m_unprocessed_bases.clear();
+						m_um->ProcessUnprocessed();
+						m_bm->ProcessUnprocessed();
+
 						for ( auto& it : m_unprocessed_events ) {
 							ASSERT( m_connection, "connection not set" );
 							try {
@@ -395,7 +411,12 @@ void Game::Iterate() {
 						g_engine->GetUI()->SetLoaderText( "Starting game...", false );
 						if ( m_state->IsMaster() ) {
 							try {
-								m_state->m_bindings->Call( bindings::Bindings::CS_ON_START );
+								m_state->m_bindings->Trigger( this, "start", {
+									{
+										"game",
+										Wrap()
+									},
+								});
 							}
 							catch ( gse::Exception& e ) {
 								Log( (std::string)"Initialization failed: " + e.ToStringAndCleanup() );
@@ -417,12 +438,12 @@ void Game::Iterate() {
 		Log( (std::string)e.what() );
 		Quit( "Event validation error" ); // TODO: fix reason
 	}
-	PushUnitUpdates();
-	PushBaseUpdates();
-	ProcessTileLockRequests();
+	m_um->PushUpdates();
+	m_bm->PushUpdates();
+	m_tm->ProcessTileLockRequests();
 }
 
-util::random::Random* Game::GetRandom() const {
+Random* Game::GetRandom() const {
 	return m_random;
 }
 
@@ -448,6 +469,66 @@ const Player* Game::GetPlayer() const {
 const size_t Game::GetSlotNum() const {
 	return m_slot_num;
 }
+
+WRAPIMPL_BEGIN( Game, CLASS_GAME )
+	WRAPIMPL_PROPS
+		{
+			"year",
+			VALUE( gse::type::Int, 2100/*tmp*/ + m_current_turn.GetId() )
+		},
+		{
+			"random",
+			m_random->Wrap()
+		},
+		{
+			"tm",
+			m_tm->Wrap()
+		},
+		{
+			"rm",
+			m_rm->Wrap()
+		},
+		{
+			"um",
+			m_um->Wrap()
+		},
+		{
+			"bm",
+			m_bm->Wrap(),
+		},
+		{
+			"am",
+			m_am->Wrap()
+		},
+		{
+		"message",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( text, 0, String );
+				Message( text );
+				return VALUE( gse::type::Undefined );
+			})
+		},
+		{
+			"get_players",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				auto& slots = m_state->m_slots->GetSlots();
+				gse::type::array_elements_t elements = {};
+				for ( auto& slot : slots ) {
+					const auto state = slot.GetState();
+					if ( state == slot::Slot::SS_OPEN || state == slot::Slot::SS_CLOSED ) {
+						continue; // skip
+					}
+					elements.push_back( slot.Wrap() );
+				}
+				return VALUE( gse::type::Array, elements );
+			} )
+		},
+	};
+WRAPIMPL_END_PTR( Game )
+
+UNWRAPIMPL_PTR( Game )
 
 const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE ) {
 	MT_Response response = {};
@@ -596,46 +677,12 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 					switch ( r.type ) {
 						case BackendRequest::BR_GET_TILE_DATA: {
 							const auto& tile = m_map->GetTile( r.data.get_tile_data.tile_x, r.data.get_tile_data.tile_y );
-							const auto result = m_state->m_bindings->Call(
-								bindings::Bindings::CS_ON_GET_TILE_YIELDS, {
-									{
-										"tile",
-										tile->Wrap()
-									},
-									{
-										"player",
-										m_slot->Wrap()
-									},
-								}
-							);
-							if ( result.Get()->type != gse::type::Type::T_OBJECT ) {
-								THROW( "unexpected return type: expected Object, got " + result.GetTypeString() );
-							}
-							const auto& values = ( (gse::type::Object*)result.Get() )->value;
-							for ( const auto& v : values ) {
-								if ( m_resources.find( v.first ) == m_resources.end() ) {
-									THROW( "unknown resource type: " + v.first );
-								}
-							}
-							NEWV( yields, FrontendRequest::tile_yields_t, {} );
-							yields->reserve( m_resource_idx.size() );
-							for ( const auto& idx : m_resource_idx ) {
-								const auto& v = values.find( idx );
-								if ( v == values.end() ) {
-									DELETE( yields );
-									THROW( "missing yields for resource: " + idx );
-								}
-								if ( v->second.Get()->type != gse::type::Type::T_INT ) {
-									DELETE( yields );
-									THROW( "invalid resource value, expected Int, got " + v->second.GetTypeString() + ": " + v->second.ToString() );
-								}
-								yields->push_back(
-									{
-										idx,
-										( (gse::type::Int*)v->second.Get() )->value
-									}
-								);
-							}
+
+							NEWV( yields, FrontendRequest::tile_yields_t, m_rm->GetYields(
+								tile,
+								m_slot
+							) );
+
 							auto fr = FrontendRequest( FrontendRequest::FR_TILE_DATA );
 							fr.data.tile_data.tile_x = tile->coord.x;
 							fr.data.tile_data.tile_y = tile->coord.y;
@@ -644,11 +691,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 							break;
 						}
 						case BackendRequest::BR_ANIMATION_FINISHED: {
-							const auto& it = m_running_animations_callbacks.find( r.data.animation_finished.animation_id );
-							ASSERT( it != m_running_animations_callbacks.end(), "animation " + std::to_string( r.data.animation_finished.animation_id ) + " is not running" );
-							const auto on_complete = it->second;
-							m_running_animations_callbacks.erase( it );
-							on_complete();
+							m_am->FinishAnimation( r.data.animation_finished.animation_id );
 							break;
 						}
 						default:
@@ -792,52 +835,6 @@ void Game::OnGSEError( gse::Exception& err ) {
 	AddFrontendRequest( fr );
 }
 
-unit::MoraleSet* Game::GetMoraleSet( const std::string& name ) const {
-	const auto& it = m_unit_moralesets.find( name );
-	if ( it != m_unit_moralesets.end() ) {
-		return it->second;
-	}
-	return nullptr;
-}
-
-unit::Unit* Game::GetUnit( const size_t id ) const {
-	const auto& it = m_units.find( id );
-	if ( it != m_units.end() ) {
-		return it->second;
-	}
-	return nullptr;
-}
-
-unit::Def* Game::GetUnitDef( const std::string& name ) const {
-	const auto& it = m_unit_defs.find( name );
-	if ( it != m_unit_defs.end() ) {
-		return it->second;
-	}
-	else {
-		return nullptr;
-	}
-}
-
-base::PopDef* Game::GetPopDef( const std::string& id ) const {
-	const auto& it = m_base_popdefs.find( id );
-	if ( it != m_base_popdefs.end() ) {
-		return it->second;
-	}
-	else {
-		return nullptr;
-	}
-}
-
-base::Base* Game::GetBase( const size_t id ) const {
-	const auto& it = m_bases.find( id );
-	if ( it != m_bases.end() ) {
-		return it->second;
-	}
-	else {
-		return nullptr;
-	}
-}
-
 const gse::Value Game::AddEvent( event::Event* event ) {
 	ASSERT( event->m_initiator_slot == m_slot_num, "initiator slot mismatch" );
 	if ( m_connection ) {
@@ -848,449 +845,6 @@ const gse::Value Game::AddEvent( event::Event* event ) {
 		return ProcessEvent( event );
 	}
 	return VALUE( gse::type::Undefined );
-}
-
-void Game::RefreshUnit( const unit::Unit* unit ) {
-	if ( unit->m_health <= 0.0f ) {
-		if ( GetState()->IsMaster() ) {
-			AddEvent( new event::DespawnUnit( GetSlotNum(), unit->m_id ) );
-		}
-	}
-	else {
-		QueueUnitUpdate( unit, UUO_REFRESH );
-	}
-}
-
-void Game::RefreshBase( const base::Base* base ) {
-	QueueBaseUpdate( base, BUO_REFRESH );
-}
-
-void Game::DefineAnimation( animation::Def* def ) {
-	Log( "Defining animation ('" + def->m_id + "')" );
-
-	ASSERT( m_animation_defs.find( def->m_id ) == m_animation_defs.end(), "Animation definition '" + def->m_id + "' already exists" );
-
-	// backend doesn't need any animation details, just keep track of it's existence for validations
-	m_animation_defs.insert(
-		{
-			def->m_id,
-			def
-		}
-	);
-
-	auto fr = FrontendRequest( FrontendRequest::FR_ANIMATION_DEFINE );
-	NEW( fr.data.animation_define.serialized_animation, std::string, animation::Def::Serialize( def ).ToString() );
-	AddFrontendRequest( fr );
-}
-
-const std::string* Game::ShowAnimationOnTile( const std::string& animation_id, map::tile::Tile* tile, const cb_oncomplete& on_complete ) {
-	if ( m_animation_defs.find( animation_id ) == m_animation_defs.end() ) {
-		return new std::string( "Animation '" + animation_id + "' is not defined" );
-	}
-	if ( !tile->IsLocked() ) {
-		return new std::string( "Tile must be locked before showing animation" );
-	}
-	const auto running_animation_id = m_next_running_animation_id++;
-	m_running_animations_callbacks.insert(
-		{
-			running_animation_id,
-			on_complete
-		}
-	);
-	auto fr = FrontendRequest( FrontendRequest::FR_ANIMATION_SHOW );
-	NEW( fr.data.animation_show.animation_id, std::string, animation_id );
-	fr.data.animation_show.running_animation_id = running_animation_id;
-	const auto c = GetTileRenderCoords( tile );
-	fr.data.animation_show.render_coords = {
-		c.x,
-		c.y,
-		c.z,
-	};
-	AddFrontendRequest( fr );
-	return nullptr; // no error
-}
-
-void Game::DefineResource( Resource* resource ) {
-	Log( "Defining resource ('" + resource->m_id + "')" );
-
-	ASSERT( m_resources.find( resource->m_id ) == m_resources.end(), "Resource '" + resource->m_id + "' already exists" );
-
-	m_resources.insert(
-		{
-			resource->m_id,
-			resource
-		}
-	);
-	m_resource_idx_map.insert(
-		{
-			resource->m_id,
-			m_resource_idx.size()
-		}
-	);
-	m_resource_idx.push_back( resource->m_id );
-}
-
-void Game::DefineMoraleSet( unit::MoraleSet* moraleset ) {
-	Log( "Defining unit moraleset ('" + moraleset->m_id + "')" );
-
-	ASSERT( m_unit_moralesets.find( moraleset->m_id ) == m_unit_moralesets.end(), "Unit moraleset '" + moraleset->m_id + "' already exists" );
-
-	m_unit_moralesets.insert(
-		{
-			moraleset->m_id,
-			moraleset
-		}
-	);
-}
-
-void Game::DefineUnit( unit::Def* def ) {
-	Log( "Defining unit ('" + def->m_id + "')" );
-
-	ASSERT( m_unit_defs.find( def->m_id ) == m_unit_defs.end(), "Unit definition '" + def->m_id + "' already exists" );
-
-	m_unit_defs.insert(
-		{
-			def->m_id,
-			def
-		}
-	);
-
-	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_DEFINE );
-	NEW( fr.data.unit_define.serialized_unitdef, std::string, unit::Def::Serialize( def ).ToString() );
-	AddFrontendRequest( fr );
-}
-
-void Game::SpawnUnit( unit::Unit* unit ) {
-	if ( m_game_state != GS_RUNNING ) {
-		m_unprocessed_units.push_back( unit );
-		return;
-	}
-
-	auto* tile = unit->GetTile();
-
-	Log( "Spawning unit #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + tile->ToString() );
-
-	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
-	m_units.insert_or_assign( unit->m_id, unit );
-
-	QueueUnitUpdate( unit, UUO_SPAWN );
-
-	if ( m_state->IsMaster() ) {
-		m_state->m_bindings->Call(
-			bindings::Bindings::CS_ON_UNIT_SPAWN, {
-				{
-					"unit",
-					unit->Wrap()
-				},
-			}
-		);
-	}
-}
-
-void Game::SkipUnitTurn( const size_t unit_id ) {
-	const auto& it = m_units.find( unit_id );
-	ASSERT( it != m_units.end(), "unit id not found" );
-	auto* unit = it->second;
-
-	Log( "Skipping unit turn #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->GetTile()->ToString() );
-
-	unit->m_movement = 0.0f;
-
-	RefreshUnit( unit );
-}
-
-void Game::DespawnUnit( const size_t unit_id ) {
-
-	const auto& it = m_units.find( unit_id );
-	ASSERT( it != m_units.end(), "unit id not found" );
-	auto* unit = it->second;
-
-	Log( "Despawning unit #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->GetTile()->ToString() );
-
-	QueueUnitUpdate( unit, UUO_DESPAWN );
-
-	auto* tile = unit->GetTile();
-	ASSERT( tile, "unit tile not set" );
-	const auto& tile_it = tile->units.find( unit->m_id );
-	ASSERT( tile_it != tile->units.end(), "unit id not found in tile" );
-	tile->units.erase( tile_it );
-
-	m_units.erase( it );
-
-	if ( m_state->IsMaster() ) {
-		m_state->m_bindings->Call(
-			bindings::Bindings::CS_ON_UNIT_DESPAWN, {
-				{
-					"unit",
-					unit->Wrap()
-				}
-			}
-		);
-	}
-
-	delete unit;
-}
-
-void Game::DefinePop( base::PopDef* pop_def ) {
-	Log( "Defining base pop ('" + pop_def->m_id + "')" );
-
-	ASSERT( m_base_popdefs.find( pop_def->m_id ) == m_base_popdefs.end(), "Base pop def '" + pop_def->m_id + "' already exists" );
-
-	m_base_popdefs.insert(
-		{
-			pop_def->m_id,
-			pop_def
-		}
-	);
-
-	auto fr = FrontendRequest( FrontendRequest::FR_BASE_POP_DEFINE );
-	NEW( fr.data.base_pop_define.serialized_popdef, std::string, base::PopDef::Serialize( pop_def ).ToString() );
-	AddFrontendRequest( fr );
-
-}
-
-void Game::SpawnBase( base::Base* base ) {
-	if ( m_game_state != GS_RUNNING ) {
-		m_unprocessed_bases.push_back( base );
-		return;
-	}
-
-	auto* tile = base->GetTile();
-
-	// validate and fix name if needed (or assign if empty)
-	std::vector< std::string > names_to_try = {};
-	if ( base->m_name.empty() ) {
-		const auto& names = base->m_owner->GetPlayer()->GetFaction()->m_base_names;
-		names_to_try = tile->is_water_tile
-			? names.water
-			: names.land;
-	}
-	else if ( m_registered_base_names.find( base->m_name ) != m_registered_base_names.end() ) {
-		names_to_try = { base->m_name };
-	}
-	if ( !names_to_try.empty() ) {
-		size_t cycle = 0;
-		bool found = false;
-		while ( !found ) {
-			cycle++;
-			for ( const auto& name_to_try : names_to_try ) {
-				base->m_name = cycle == 1
-					? name_to_try
-					: name_to_try + " " + std::to_string( cycle );
-				if ( m_registered_base_names.find( base->m_name ) == m_registered_base_names.end() ) {
-					found = true;
-					break;
-				}
-			}
-		}
-	}
-	m_registered_base_names.insert( base->m_name );
-
-	Log( "Spawning base #" + std::to_string( base->m_id ) + " ( " + base->m_name + " ) at " + base->GetTile()->ToString() );
-
-	ASSERT( m_bases.find( base->m_id ) == m_bases.end(), "duplicate base id" );
-	m_bases.insert_or_assign( base->m_id, base );
-
-	QueueBaseUpdate( base, BUO_SPAWN );
-
-	if ( m_state->IsMaster() ) {
-		m_state->m_bindings->Call(
-			bindings::Bindings::CS_ON_BASE_SPAWN, {
-				{
-					"base",
-					base->Wrap()
-				},
-			}
-		);
-	}
-
-	RefreshBase( base );
-}
-
-const std::string* Game::MoveUnitValidate( unit::Unit* unit, map::tile::Tile* dst_tile ) {
-	const auto result = m_state->m_bindings->Call(
-		bindings::Bindings::CS_ON_UNIT_MOVE_VALIDATE, {
-			{
-				"unit",
-				unit->Wrap()
-			},
-			{
-				"src_tile",
-				unit->GetTile()->Wrap()
-			},
-			{
-				"dst_tile",
-				dst_tile->Wrap()
-			},
-		}
-	);
-	switch ( result.Get()->type ) {
-		case gse::type::Type::T_NULL:
-		case gse::type::Type::T_UNDEFINED:
-			return nullptr; // no errors
-		case gse::type::Type::T_STRING:
-			return new std::string( ( (gse::type::String*)result.Get() )->value ); // error
-		default:
-			THROW( "unexpected validation result type: " + gse::type::Type::GetTypeString( result.Get()->type ) );
-	}
-}
-
-const gse::Value Game::MoveUnitResolve( unit::Unit* unit, map::tile::Tile* dst_tile ) {
-	return m_state->m_bindings->Call(
-		bindings::Bindings::CS_ON_UNIT_MOVE_RESOLVE, {
-			{
-				"unit",
-				unit->Wrap()
-			},
-			{
-				"src_tile",
-				unit->GetTile()->Wrap()
-			},
-			{
-				"dst_tile",
-				dst_tile->Wrap()
-			},
-		}
-	);
-}
-
-void Game::MoveUnitApply( unit::Unit* unit, map::tile::Tile* dst_tile, const gse::Value resolutions ) {
-	ASSERT( dst_tile, "dst tile not set" );
-
-	Log( "Moving unit #" + std::to_string( unit->m_id ) + " to " + dst_tile->coord.ToString() );
-
-	auto* src_tile = unit->GetTile();
-	ASSERT( src_tile, "src tile not set" );
-	ASSERT( src_tile->units.find( unit->m_id ) != src_tile->units.end(), "src tile does not contain this unit" );
-	ASSERT( dst_tile->units.find( unit->m_id ) == dst_tile->units.end(), "dst tile already contains this unit" );
-
-	const auto result = m_state->m_bindings->Call(
-		bindings::Bindings::CS_ON_UNIT_MOVE_APPLY, {
-			{
-				"unit",
-				unit->Wrap( true )
-			},
-			{
-				"src_tile",
-				src_tile->Wrap()
-			},
-			{
-				"dst_tile",
-				dst_tile->Wrap()
-			},
-			{
-				"resolutions",
-				resolutions
-			}
-		}
-	);
-}
-
-const std::string* Game::MoveUnitToTile( unit::Unit* unit, map::tile::Tile* dst_tile, const cb_oncomplete& on_complete ) {
-	const auto* src_tile = unit->GetTile();
-	if ( src_tile == dst_tile ) {
-		return new std::string( "Unit can't move because it's already on target tile" );
-	}
-	if ( !src_tile->IsLocked() ) {
-		return new std::string( "Source tile must be locked before moving unit" );
-	}
-	if ( !dst_tile->IsLocked() ) {
-		return new std::string( "Destination tile must be locked before moving unit" );
-	}
-	const auto running_animation_id = m_next_running_animation_id++;
-	m_running_animations_callbacks.insert(
-		{
-			running_animation_id,
-			[ this, on_complete, unit, dst_tile ]() {
-				unit->SetTile( dst_tile );
-				on_complete();
-			}
-		}
-	);
-	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_MOVE );
-	fr.data.unit_move.unit_id = unit->m_id;
-	fr.data.unit_move.dst_tile_coords = {
-		dst_tile->coord.x,
-		dst_tile->coord.y
-	};
-	fr.data.unit_move.running_animation_id = running_animation_id;
-	AddFrontendRequest( fr );
-	return nullptr; // no error
-}
-
-const std::string* Game::AttackUnitValidate( unit::Unit* attacker, unit::Unit* defender ) {
-	const auto result = m_state->m_bindings->Call(
-		bindings::Bindings::CS_ON_UNIT_ATTACK_VALIDATE, {
-			{
-				"attacker",
-				attacker->Wrap()
-			},
-			{
-				"defender",
-				defender->Wrap()
-			},
-		}
-	);
-	switch ( result.Get()->type ) {
-		case gse::type::Type::T_NULL:
-		case gse::type::Type::T_UNDEFINED:
-			return nullptr; // no errors
-		case gse::type::Type::T_STRING:
-			return new std::string( ( (gse::type::String*)result.Get() )->value ); // error
-		default:
-			THROW( "unexpected validation result type: " + gse::type::Type::GetTypeString( result.Get()->type ) );
-	}
-	return nullptr;
-}
-
-const gse::Value Game::AttackUnitResolve( unit::Unit* attacker, unit::Unit* defender ) {
-	return m_state->m_bindings->Call(
-		bindings::Bindings::CS_ON_UNIT_ATTACK_RESOLVE, {
-			{
-				"attacker",
-				attacker->Wrap()
-			},
-			{
-				"defender",
-				defender->Wrap()
-			},
-		}
-	);
-}
-
-void Game::AttackUnitApply( unit::Unit* attacker, unit::Unit* defender, const gse::Value resolutions ) {
-	m_state->m_bindings->Call(
-		bindings::Bindings::CS_ON_UNIT_ATTACK_APPLY, {
-			{
-				"attacker",
-				attacker->Wrap( true )
-			},
-			{
-				"defender",
-				defender->Wrap( true )
-			},
-			{
-				"resolutions",
-				resolutions
-			}
-		}
-	);
-	if ( attacker->m_health <= 0.0f ) {
-		if ( GetState()->IsMaster() ) {
-			AddEvent( new event::DespawnUnit( GetSlotNum(), attacker->m_id ) );
-		}
-	}
-	else {
-		RefreshUnit( attacker );
-	}
-	if ( defender->m_health <= 0.0f ) {
-		if ( GetState()->IsMaster() ) {
-			AddEvent( new event::DespawnUnit( GetSlotNum(), defender->m_id ) );
-		}
-	}
-	else {
-		RefreshUnit( defender );
-	}
 }
 
 const size_t Game::GetTurnId() const {
@@ -1374,34 +928,35 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		AddFrontendRequest( fr );
 	}
 
-	for ( auto& it : m_units ) {
+	for ( auto& it : m_um->GetUnits() ) {
 		auto* unit = it.second;
-		m_state->m_bindings->Call(
-			bindings::Bindings::CS_ON_UNIT_TURN, {
-				{
-					"unit",
-					unit->Wrap( true )
-				},
-			}
-		);
+		m_state->m_bindings->Trigger( m_um, "unit_turn", {
+			{
+				"unit",
+				unit->Wrap( true )
+			},
+		});
 		unit->m_moved_this_turn = false;
-		RefreshUnit( unit );
+		m_um->RefreshUnit( unit );
 	}
 
-	for ( auto& it : m_bases ) {
+	for ( auto& it : m_bm->GetBases() ) {
 		auto* base = it.second;
-		m_state->m_bindings->Call(
-			bindings::Bindings::CS_ON_BASE_TURN, {
-				{
-					"base",
-					base->Wrap( true )
-				},
-			}
-		);
-		RefreshBase( base );
+		m_state->m_bindings->Trigger( m_bm, "base_turn", {
+			{
+				"base",
+				base->Wrap( true )
+			},
+		});
+		m_bm->RefreshBase( base );
 	}
 
-	m_state->m_bindings->Call( bindings::Bindings::CS_ON_TURN );
+	m_state->m_bindings->Trigger( this, "turn", {
+		{
+			"game",
+			Wrap()
+		}
+	});
 
 	for ( const auto& slot : m_state->m_slots->GetSlots() ) {
 		if ( slot.GetState() == slot::Slot::SS_PLAYER ) {
@@ -1462,78 +1017,30 @@ void Game::GlobalAdvanceTurn() {
 	AddEvent( new event::AdvanceTurn( m_slot_num, s_turn_id ) );
 }
 
-void Game::SendTileLockRequest( const map::tile::positions_t& tile_positions, const cb_oncomplete& on_complete ) {
-	// testing
-	/*m_tile_lock_callbacks.push_back(
-		{
-			tile_positions,
-			on_complete
-		}
-	);*/
-	LockTiles( m_slot_num, tile_positions );
-	on_complete();
-	//AddEvent( new event::RequestTileLocks( m_slot_num, tile_positions ) );
+faction::Faction* Game::GetFaction( const std::string& id ) const {
+	auto* faction = m_state->GetFM()->Get( id ); // TODO: store factions in Game itself?
+	ASSERT( faction, "faction not found: " + id );
+	return faction;
 }
 
-void Game::RequestTileLocks( const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
-	if ( m_state->IsMaster() ) {
-		Log( "Tile locks request from " + std::to_string( initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( tile_positions, "" ) );
-		AddTileLockRequest( true, initiator_slot, tile_positions );
-	}
+map::tile::TileManager* Game::GetTM() const {
+	return m_tm;
 }
 
-void Game::LockTiles( const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
-	for ( const auto& pos : tile_positions ) {
-		auto* tile = m_map->GetTile( pos.x, pos.y );
-		ASSERT_NOLOG( !tile->IsLocked(), "tile " + pos.ToString() + " is already locked" );
-		tile->Lock( initiator_slot );
-	}
-	for ( auto it = m_tile_lock_callbacks.begin() ; it != m_tile_lock_callbacks.end() ; it++ ) {
-		const auto& it_positions = it->first;
-		const auto sz = it_positions.size();
-		if ( sz == tile_positions.size() ) {
-			bool match = true;
-			for ( size_t i = 0 ; i < sz ; i++ ) {
-				if ( tile_positions.at( i ) != it_positions.at( i ) ) {
-					match = false;
-					break;
-				}
-			}
-			if ( match ) {
-				const auto cb = it->second;
-				m_tile_lock_callbacks.erase( it );
-				cb();
-				break;
-			}
-		}
-	}
+resource::ResourceManager* Game::GetRM() const {
+	return m_rm;
 }
 
-void Game::SendTileUnlockRequest( const map::tile::positions_t& tile_positions ) {
-	// testing
-	UnlockTiles( m_slot_num, tile_positions );
-	//AddEvent( new event::RequestTileUnlocks( m_slot_num, tile_positions ) );
+unit::UnitManager* Game::GetUM() const {
+	return m_um;
 }
 
-void Game::RequestTileUnlocks( const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
-	if ( m_state->IsMaster() ) {
-		Log( "Tile unlocks request from " + std::to_string( initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( tile_positions, "" ) );
-		AddTileLockRequest( false, initiator_slot, tile_positions );
-	}
+base::BaseManager* Game::GetBM() const {
+	return m_bm;
 }
 
-void Game::UnlockTiles( const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
-	for ( const auto& pos : tile_positions ) {
-		auto* tile = m_map->GetTile( pos.x, pos.y );
-		ASSERT_NOLOG( tile->IsLockedBy( initiator_slot ), "tile " + pos.ToString() + " is not locked by " + std::to_string( initiator_slot ) );
-		tile->Unlock();
-	}
-}
-
-rules::Faction* Game::GetFaction( const std::string& id ) const {
-	const auto& it = m_state->m_settings.global.game_rules.m_factions.find( id ); // TODO: store factions in Game itself?
-	ASSERT( it != m_state->m_settings.global.game_rules.m_factions.end(), "faction not found: " + id );
-	return &it->second;
+animation::AnimationManager* Game::GetAM() const {
+	return m_am;
 }
 
 void Game::ValidateEvent( event::Event* event ) {
@@ -1580,167 +1087,6 @@ const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
 	};
 }
 
-void Game::SerializeResources( types::Buffer& buf ) const {
-	Log( "Serializing " + std::to_string( m_resources.size() ) + " resources" );
-	buf.WriteInt( m_resources.size() );
-	for ( const auto& it : m_resource_idx ) {
-		ASSERT( m_resources.find( it ) != m_resources.end(), "invalid resource idx" );
-		const auto& res = m_resources.at( it );
-		buf.WriteString( res->m_id );
-		buf.WriteString( Resource::Serialize( res ).ToString() );
-	}
-}
-
-void Game::UnserializeResources( types::Buffer& buf ) {
-	ASSERT( m_resources.empty(), "resources not empty" );
-	size_t sz = buf.ReadInt();
-	Log( "Unserializing " + std::to_string( sz ) + " resources" );
-	m_resources.reserve( sz );
-	m_resource_idx.reserve( sz );
-	m_resource_idx_map.reserve( sz );
-	for ( size_t i = 0 ; i < sz ; i++ ) {
-		const auto name = buf.ReadString();
-		auto b = types::Buffer( buf.ReadString() );
-		DefineResource( Resource::Unserialize( b ) );
-	}
-}
-
-void Game::SerializeUnits( types::Buffer& buf ) const {
-
-	Log( "Serializing " + std::to_string( m_unit_moralesets.size() ) + " unit moralesets" );
-	buf.WriteInt( m_unit_moralesets.size() );
-	for ( const auto& it : m_unit_moralesets ) {
-		buf.WriteString( it.first );
-		buf.WriteString( unit::MoraleSet::Serialize( it.second ).ToString() );
-	}
-
-	Log( "Serializing " + std::to_string( m_unit_defs.size() ) + " unit defs" );
-	buf.WriteInt( m_unit_defs.size() );
-	for ( const auto& it : m_unit_defs ) {
-		buf.WriteString( it.first );
-		buf.WriteString( unit::Def::Serialize( it.second ).ToString() );
-	}
-
-	Log( "Serializing " + std::to_string( m_units.size() ) + " units" );
-	buf.WriteInt( m_units.size() );
-	for ( const auto& it : m_units ) {
-		buf.WriteInt( it.first );
-		buf.WriteString( unit::Unit::Serialize( it.second ).ToString() );
-	}
-	buf.WriteInt( unit::Unit::GetNextId() );
-
-	Log( "Saved next unit id: " + std::to_string( unit::Unit::GetNextId() ) );
-}
-
-void Game::UnserializeUnits( types::Buffer& buf ) {
-	ASSERT( m_unit_moralesets.empty(), "unit moralesets not empty" );
-	ASSERT( m_unit_defs.empty(), "unit defs not empty" );
-	ASSERT( m_units.empty(), "units not empty" );
-	ASSERT( m_unprocessed_units.empty(), "unprocessed units not empty" );
-
-	size_t sz = buf.ReadInt();
-	Log( "Unserializing " + std::to_string( sz ) + " unit moralesets" );
-	m_unit_moralesets.reserve( sz );
-	for ( size_t i = 0 ; i < sz ; i++ ) {
-		const auto name = buf.ReadString();
-		auto b = types::Buffer( buf.ReadString() );
-		DefineMoraleSet( unit::MoraleSet::Unserialize( b ) );
-	}
-
-	sz = buf.ReadInt();
-	Log( "Unserializing " + std::to_string( sz ) + " unit defs" );
-	m_unit_defs.reserve( sz );
-	for ( size_t i = 0 ; i < sz ; i++ ) {
-		const auto name = buf.ReadString();
-		auto b = types::Buffer( buf.ReadString() );
-		DefineUnit( unit::Def::Unserialize( b ) );
-	}
-
-	sz = buf.ReadInt();
-	Log( "Unserializing " + std::to_string( sz ) + " units" );
-	if ( m_game_state != GS_RUNNING ) {
-		m_unprocessed_units.reserve( sz );
-	}
-	for ( size_t i = 0 ; i < sz ; i++ ) {
-		const auto unit_id = buf.ReadInt();
-		auto b = types::Buffer( buf.ReadString() );
-		SpawnUnit( unit::Unit::Unserialize( b, this ) );
-	}
-
-	unit::Unit::SetNextId( buf.ReadInt() );
-	Log( "Restored next unit id: " + std::to_string( unit::Unit::GetNextId() ) );
-}
-
-void Game::SerializeBases( types::Buffer& buf ) const {
-
-	Log( "Serializing " + std::to_string( m_base_popdefs.size() ) + " base pop defs" );
-	buf.WriteInt( m_base_popdefs.size() );
-	for ( const auto& it : m_base_popdefs ) {
-		buf.WriteString( it.first );
-		buf.WriteString( base::PopDef::Serialize( it.second ).ToString() );
-	}
-
-	Log( "Serializing " + std::to_string( m_bases.size() ) + " bases" );
-	buf.WriteInt( m_bases.size() );
-	for ( const auto& it : m_bases ) {
-		buf.WriteInt( it.first );
-		buf.WriteString( base::Base::Serialize( it.second ).ToString() );
-	}
-	buf.WriteInt( base::Base::GetNextId() );
-
-	Log( "Saved next base id: " + std::to_string( base::Base::GetNextId() ) );
-}
-
-void Game::UnserializeBases( types::Buffer& buf ) {
-	ASSERT( m_base_popdefs.empty(), "base pop defs not empty" );
-	ASSERT( m_bases.empty(), "bases not empty" );
-	ASSERT( m_unprocessed_bases.empty(), "unprocessed bases not empty" );
-
-	size_t sz = buf.ReadInt();
-	m_base_popdefs.reserve( sz );
-	Log( "Unserializing " + std::to_string( sz ) + " base pop defs" );
-	for ( size_t i = 0 ; i < sz ; i++ ) {
-		const auto name = buf.ReadString();
-		auto b = types::Buffer( buf.ReadString() );
-		DefinePop( base::PopDef::Unserialize( b ) );
-	}
-
-	sz = buf.ReadInt();
-	Log( "Unserializing " + std::to_string( sz ) + " bases" );
-	if ( m_game_state != GS_RUNNING ) {
-		m_unprocessed_bases.reserve( sz );
-	}
-	for ( size_t i = 0 ; i < sz ; i++ ) {
-		const auto base_id = buf.ReadInt();
-		auto b = types::Buffer( buf.ReadString() );
-		SpawnBase( base::Base::Unserialize( b, this ) );
-	}
-
-	base::Base::SetNextId( buf.ReadInt() );
-	Log( "Restored next base id: " + std::to_string( base::Base::GetNextId() ) );
-}
-
-void Game::SerializeAnimations( types::Buffer& buf ) const {
-	Log( "Serializing " + std::to_string( m_animation_defs.size() ) + " animation defs" );
-	buf.WriteInt( m_animation_defs.size() );
-	for ( const auto& it : m_animation_defs ) {
-		buf.WriteString( it.first );
-		buf.WriteString( animation::Def::Serialize( it.second ).ToString() );
-	}
-}
-
-void Game::UnserializeAnimations( types::Buffer& buf ) {
-	ASSERT( m_animation_defs.empty(), "animation defs not empty" );
-	size_t sz = buf.ReadInt();
-	Log( "Unserializing " + std::to_string( sz ) + " animation defs" );
-	m_animation_defs.reserve( sz );
-	for ( size_t i = 0 ; i < sz ; i++ ) {
-		const auto name = buf.ReadString();
-		auto b = types::Buffer( buf.ReadString() );
-		DefineAnimation( animation::Def::Unserialize( b ) );
-	}
-}
-
 void Game::AddFrontendRequest( const FrontendRequest& request ) {
 	//Log( "Sending frontend request (type=" + std::to_string( request.type ) + ")" ); // spammy
 	m_pending_frontend_requests->push_back( request );
@@ -1753,6 +1099,13 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 	Log( "Initializing game" );
 
+	m_state->m_bindings->Trigger( this, "configure", {
+		{
+			"game",
+			Wrap()
+		},
+	});
+
 	ASSERT( m_pending_frontend_requests, "pending events not set" );
 	m_pending_frontend_requests->clear();
 
@@ -1764,22 +1117,23 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	if ( m_state->IsMaster() ) {
 
 		// assign random factions to players
-		const auto& factions = m_state->m_settings.global.game_rules.m_factions;
-		std::vector< std::string > m_available_factions = {};
+		auto factions = m_state->GetFM()->GetAll();
+		std::vector< size_t > m_available_factions = {};
 		const auto& slots = m_state->m_slots->GetSlots();
 		for ( const auto& slot : slots ) {
 			if ( slot.GetState() == slot::Slot::SS_PLAYER ) {
 				auto* player = slot.GetPlayer();
 				ASSERT( player, "player not set" );
-				if ( !player->GetFaction().has_value() ) {
+				if ( !player->GetFaction() ) {
 					if ( m_available_factions.empty() ) {
 						// (re)load factions list
-						for ( const auto& it : factions ) {
-							m_available_factions.push_back( it.first );
+						for ( size_t i = 0 ; i < factions.size() ; i++ ) {
+						//for ( const auto& faction : factions ) {
+							m_available_factions.push_back( i );
 						}
 						ASSERT( !m_available_factions.empty(), "no factions found" );
 					}
-					const std::vector< std::string >::iterator it = m_available_factions.begin() + m_random->GetUInt( 0, m_available_factions.size() - 1 );
+					const auto it = m_available_factions.begin() + m_random->GetUInt( 0, m_available_factions.size() - 1 );
 					player->SetFaction( factions.at( *it ) );
 					m_available_factions.erase( it );
 				}
@@ -1816,11 +1170,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				connection->m_on_player_leave = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const Player* player ) -> void {
 					Log( "Player " + player->GetFullName() + " left the game." );
 					connection->GlobalMessage( player->GetFullName() + " left the game." );
-					const auto& it = m_tile_locks.find( slot_num );
-					if ( it != m_tile_locks.end() ) {
-						Log( "Releasing " + std::to_string( it->second.size() ) + " tile locks" );
-						m_tile_locks.erase( it );
-					}
+					m_tm->ReleaseTileLocks( slot_num );
 				};
 
 				connection->m_on_download_request = [ this ]() -> const std::string {
@@ -1837,28 +1187,28 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					// resources
 					{
 						types::Buffer b;
-						SerializeResources( b );
+						m_rm->Serialize( b );
 						buf.WriteString( b.ToString() );
 					}
 
 					// units
 					{
 						types::Buffer b;
-						SerializeUnits( b );
+						m_um->Serialize( b );
 						buf.WriteString( b.ToString() );
 					}
 
 					// bases
 					{
 						types::Buffer b;
-						SerializeBases( b );
+						m_bm->Serialize( b );
 						buf.WriteString( b.ToString() );
 					}
 
 					// animations
 					{
 						types::Buffer b;
-						SerializeAnimations( b );
+						m_am->Serialize( b );
 						buf.WriteString( b.ToString() );
 					}
 
@@ -2031,25 +1381,25 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 							// resources
 							{
 								auto ub = types::Buffer( buf.ReadString() );
-								UnserializeResources( ub );
+								m_rm->Unserialize( ub );
 							}
 
 							// units
 							{
 								auto ub = types::Buffer( buf.ReadString() );
-								UnserializeUnits( ub );
+								m_um->Unserialize( ub );
 							}
 
 							// bases
 							{
 								auto bb = types::Buffer( buf.ReadString() );
-								UnserializeBases( bb );
+								m_bm->Unserialize( bb );
 							}
 
 							// animations
 							{
 								auto ab = types::Buffer( buf.ReadString() );
-								UnserializeAnimations( ab );
+								m_am->Unserialize( ab );
 							}
 
 							// get turn info
@@ -2100,54 +1450,16 @@ void Game::ResetGame() {
 	m_slot_num = 0;
 	m_slot = nullptr;
 
-	for ( auto& it : m_unprocessed_units ) {
-		delete it;
-	}
-	m_unprocessed_units.clear();
-
 	for ( auto& it : m_unprocessed_events ) {
 		delete it;
 	}
 	m_unprocessed_events.clear();
 
-	m_running_animations_callbacks.clear();
-	m_next_running_animation_id = 1;
-
-	for ( auto& it : m_resources ) {
-		delete it.second;
-	}
-	m_resources.clear();
-	m_resource_idx.clear();
-	m_resource_idx_map.clear();
-
-	for ( auto& it : m_unit_moralesets ) {
-		delete it.second;
-	}
-	m_unit_moralesets.clear();
-
-	for ( auto& it : m_units ) {
-		delete it.second;
-	}
-	m_units.clear();
-
-	for ( auto& it : m_unit_defs ) {
-		delete it.second;
-	}
-	m_unit_defs.clear();
-
-	for ( auto& it : m_base_popdefs ) {
-		delete it.second;
-	}
-	m_base_popdefs.clear();
-	for ( auto& it : m_bases ) {
-		delete it.second;
-	}
-	m_bases.clear();
-
-	for ( auto& it : m_animation_defs ) {
-		delete it.second;
-	}
-	m_animation_defs.clear();
+	m_tm->Clear();
+	m_rm->Clear();
+	m_um->Clear();
+	m_bm->Clear();
+	m_am->Clear();
 
 	if ( m_map ) {
 		Log( "Resetting map" );
@@ -2157,14 +1469,6 @@ void Game::ResetGame() {
 
 	ASSERT( m_pending_frontend_requests, "pending events not set" );
 	m_pending_frontend_requests->clear();
-
-	m_unit_updates.clear();
-	m_base_updates.clear();
-
-	m_tile_lock_requests.clear();
-	m_tile_locks.clear();
-
-	m_tile_lock_callbacks.clear();
 
 	m_current_turn.Reset();
 	m_is_turn_complete = false;
@@ -2189,7 +1493,7 @@ void Game::CheckTurnComplete() {
 
 	bool is_turn_complete = true;
 
-	for ( const auto& unit : m_units ) {
+	for ( const auto& unit : m_um->GetUnits() ) {
 		if ( unit.second->m_owner == m_slot && unit.second->HasMovesLeft() ) {
 			is_turn_complete = false;
 			break;
@@ -2207,228 +1511,8 @@ void Game::CheckTurnComplete() {
 	}
 }
 
-void Game::QueueUnitUpdate( const unit::Unit* unit, const unit_update_op_t op ) {
-	auto it = m_unit_updates.find( unit->m_id );
-	if ( it == m_unit_updates.end() ) {
-		it = m_unit_updates.insert(
-			{
-				unit->m_id,
-				{
-					{},
-					unit,
-				}
-			}
-		).first;
-	}
-	auto& update = it->second;
-	if ( op == UUO_DESPAWN ) {
-		if ( op & UUO_SPAWN ) {
-			// if unit is despawned immediately after spawning - frontend doesn't need to know
-			m_unit_updates.erase( it );
-			return;
-		}
-		update.ops = UUO_NONE; // clear other actions if unit was despawned
-	}
-	// add to operations list
-	update.ops = (unit_update_op_t)( (uint8_t)update.ops | (uint8_t)op );
-}
-
-void Game::QueueBaseUpdate( const base::Base* base, const base_update_op_t op ) {
-	auto it = m_base_updates.find( base->m_id );
-	if ( it == m_base_updates.end() ) {
-		it = m_base_updates.insert(
-			{
-				base->m_id,
-				{
-					{},
-					base,
-				}
-			}
-		).first;
-	}
-	auto& update = it->second;
-	if ( op == BUO_DESPAWN ) {
-		if ( op & BUO_SPAWN ) {
-			// if base is despawned immediately after spawning - frontend doesn't need to know
-			m_base_updates.erase( it );
-			return;
-		}
-		update.ops = BUO_NONE; // clear other actions if base was despawned
-	}
-	// add to operations list
-	update.ops = (base_update_op_t)( (uint8_t)update.ops | (uint8_t)op );
-}
-
-void Game::PushUnitUpdates() {
-	if ( m_game_state == GS_RUNNING && !m_unit_updates.empty() ) {
-		for ( const auto& it : m_unit_updates ) {
-			const auto unit_id = it.first;
-			const auto& uu = it.second;
-			const auto& unit = uu.unit;
-			if ( uu.ops & UUO_SPAWN ) {
-				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_SPAWN );
-				fr.data.unit_spawn.unit_id = unit->m_id;
-				NEW( fr.data.unit_spawn.unitdef_id, std::string, unit->m_def->m_id );
-				fr.data.unit_spawn.slot_index = unit->m_owner->GetIndex();
-				const auto* tile = unit->GetTile();
-				fr.data.unit_spawn.tile_coords = {
-					tile->coord.x,
-					tile->coord.y
-				};
-				const auto c = unit->GetRenderCoords();
-				fr.data.unit_spawn.render_coords = {
-					c.x,
-					c.y,
-					c.z
-				};
-
-				fr.data.unit_spawn.movement = unit->m_movement;
-				fr.data.unit_spawn.morale = unit->m_morale;
-				NEW( fr.data.unit_spawn.morale_string, std::string, unit->GetMoraleString() );
-				fr.data.unit_spawn.health = unit->m_health;
-				AddFrontendRequest( fr );
-			}
-			if ( uu.ops & UUO_REFRESH ) {
-				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_UPDATE );
-				fr.data.unit_update.unit_id = unit->m_id;
-				fr.data.unit_update.movement = unit->m_movement;
-				fr.data.unit_update.health = unit->m_health;
-				const auto* tile = unit->GetTile();
-				fr.data.unit_update.tile_coords = {
-					tile->coord.x,
-					tile->coord.y
-				};
-				const auto c = unit->GetRenderCoords();
-				fr.data.unit_update.render_coords = {
-					c.x,
-					c.y,
-					c.z
-				};
-				AddFrontendRequest( fr );
-			}
-			if ( uu.ops & UUO_DESPAWN ) {
-				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_DESPAWN );
-				fr.data.unit_despawn.unit_id = unit_id;
-				AddFrontendRequest( fr );
-			}
-		}
-		m_unit_updates.clear();
-		CheckTurnComplete();
-	}
-}
-
-void Game::PushBaseUpdates() {
-	if ( m_game_state == GS_RUNNING && !m_base_updates.empty() ) {
-		for ( const auto& it : m_base_updates ) {
-			const auto base_id = it.first;
-			const auto& bu = it.second;
-			const auto& base = bu.base;
-			if ( bu.ops & BUO_SPAWN ) {
-				auto fr = FrontendRequest( FrontendRequest::FR_BASE_SPAWN );
-				fr.data.base_spawn.base_id = base->m_id;
-				fr.data.base_spawn.slot_index = base->m_owner->GetIndex();
-				const auto* tile = base->GetTile();
-				fr.data.base_spawn.tile_coords = {
-					tile->coord.x,
-					tile->coord.y
-				};
-				const auto c = base->GetRenderCoords();
-				fr.data.base_spawn.render_coords = {
-					c.x,
-					c.y,
-					c.z
-				};
-				NEW( fr.data.base_spawn.name, std::string, base->m_name );
-				AddFrontendRequest( fr );
-			}
-			if ( bu.ops & BUO_REFRESH ) {
-				auto fr = FrontendRequest( FrontendRequest::FR_BASE_UPDATE );
-				fr.data.base_update.base_id = base->m_id;
-				fr.data.base_update.slot_index = base->m_owner->GetIndex();
-				NEW( fr.data.base_update.name, std::string, base->m_name );
-				NEW( fr.data.base_update.faction_id, std::string, base->m_faction->m_id );
-				NEW( fr.data.base_update.pops, FrontendRequest::base_pops_t, {} );
-				for ( const auto& pop : base->m_pops ) {
-					fr.data.base_update.pops->push_back(
-						{
-							pop.m_def->m_id,
-							pop.m_variant
-						}
-					);
-				}
-				AddFrontendRequest( fr );
-			}
-			if ( bu.ops & UUO_DESPAWN ) {
-				THROW( "TODO: BASE DESPAWN" );
-			}
-		}
-		m_base_updates.clear();
-	}
-}
-
-void Game::AddTileLockRequest( const bool is_lock, const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
-	ASSERT_NOLOG( m_state && m_state->IsMaster(), "only master can manage tile locks" );
-	m_tile_lock_requests.push_back(
-		{
-			is_lock,
-			initiator_slot,
-			tile_positions
-		}
-	);
-}
-
-void Game::ProcessTileLockRequests() {
-	if ( m_state && m_game_state == GS_RUNNING && m_state->IsMaster() && !m_tile_lock_requests.empty() ) {
-		const auto tile_lock_requests = m_tile_lock_requests;
-		m_tile_lock_requests.clear();
-		for ( const auto& req : tile_lock_requests ) {
-			const auto state = m_state->m_slots->GetSlot( req.initiator_slot ).GetState();
-			if ( state != slot::Slot::SS_PLAYER ) {
-				// player disconnected?
-				Log( "Skipping tile locks/unlocks for slot " + std::to_string( req.initiator_slot ) + " (invalid slot state: " + std::to_string( state ) + ")" );
-				continue;
-			}
-			auto it = m_tile_locks.find( req.initiator_slot );
-			if ( it == m_tile_locks.end() ) {
-				it = m_tile_locks.insert(
-					{
-						req.initiator_slot,
-						{}
-					}
-				).first;
-			}
-			auto& locks = it->second;
-			if ( req.is_lock ) {
-				// lock
-				Log( "Locking tiles for " + std::to_string( req.initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( req.tile_positions ) );
-				locks.push_back( TileLock{ req.tile_positions } );
-				auto e = new event::LockTiles( m_slot_num, req.tile_positions, req.initiator_slot );
-				e->SetDestinationSlot( req.initiator_slot );
-				AddEvent( e );
-			}
-			else {
-				// unlock
-				bool found = false;
-				for ( auto locks_it = locks.begin() ; locks_it != locks.end() ; locks_it++ ) {
-					if ( locks_it->Matches( req.tile_positions ) ) {
-						found = true;
-						Log( "Unlocking tiles for " + std::to_string( req.initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( req.tile_positions ) );
-						locks.erase( locks_it );
-						if ( locks.empty() ) {
-							m_tile_locks.erase( it );
-						}
-						auto e = new event::UnlockTiles( m_slot_num, req.tile_positions, req.initiator_slot );
-						e->SetDestinationSlot( req.initiator_slot );
-						AddEvent( e );
-						break;
-					}
-				}
-				if ( !found ) {
-					Log( "Could not find matching tile locks for " + std::to_string( req.initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( req.tile_positions ) );
-				}
-			}
-		}
-	}
+const bool Game::IsRunning() const {
+	return m_game_state == GS_RUNNING;
 }
 
 }

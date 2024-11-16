@@ -2,6 +2,9 @@
 
 #include "engine/Engine.h"
 #include "game/backend/slot/Slot.h"
+#include "game/backend/State.h"
+#include "game/backend/faction/FactionManager.h"
+#include "game/backend/faction/Faction.h"
 #include "PlayersSection.h"
 #include "Lobby.h"
 #include "game/backend/settings/Settings.h"
@@ -50,9 +53,9 @@ void PlayersSectionRow::Create() {
 
 		const auto& faction = player->GetFaction();
 
-		const auto faction_color = !faction.has_value()
-			? types::Color( 1.0f, 1.0f, 1.0f )
-			: faction->m_colors.text;
+		const auto faction_color = faction
+			? faction->m_colors.text
+			: types::Color( 1.0f, 1.0f, 1.0f ); // random
 
 		if ( is_it_ready ) {
 			NEW( m_elements.ready, ui::object::Surface );
@@ -69,14 +72,14 @@ void PlayersSectionRow::Create() {
 		if ( allowed_to_change ) {
 			m_elements.faction->SetChoices( m_parent->GetFactionChoices() );
 			m_elements.faction->SetValueByKey(
-				faction.has_value()
+				faction
 					? faction->m_id
 					: "RANDOM"
 			);
 		}
 		else {
 			m_elements.faction->SetValue(
-				faction.has_value()
+				faction
 					? faction->m_name
 					: "Random"
 			);
@@ -91,8 +94,9 @@ void PlayersSectionRow::Create() {
 					player->ClearFaction();
 				}
 				else {
-					ASSERT( rules.m_factions.find( faction_id ) != rules.m_factions.end(), "faction not found: " + faction_id );
-					player->SetFaction( rules.m_factions.at( faction_id ) );
+					auto* faction = m_parent->GetLobby()->GetState()->GetFM()->Get( faction_id );
+					ASSERT( faction, "faction not found: " + faction_id );
+					player->SetFaction( faction );
 				}
 				m_parent->GetLobby()->UpdateSlot( m_slot_num, m_slot );
 				return true;

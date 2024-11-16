@@ -29,9 +29,9 @@ const get_unit_defence_power = (unit) => {
 
 const result = {
 
-	init: (animations) => {
+	configure: (game, animations) => {
 
-		#game.on.unit_attack_validate((e) => {
+		game.um.on('unit_attack_validate', (e) => {
 
 			if (e.attacker.is_immovable) {
 				return 'Unit is immovable';
@@ -60,7 +60,7 @@ const result = {
 			}
 		});
 
-		#game.on.unit_attack_resolve((e) => {
+		game.um.on('unit_attack_resolve', (e) => {
 
 			let attack_power = get_unit_attack_power(e.attacker);
 			let defence_power = get_unit_defence_power(e.defender);
@@ -70,15 +70,15 @@ const result = {
 
 			let damage_sequence = [];
 			while (attacker_health > 0.0 && defender_health > 0.0) {
-				let attack_roll = #game.random.get_float(0.0, attack_power);
-				let defence_roll = #game.random.get_float(0.0, defence_power);
+				let attack_roll = game.random.get_float(0.0, attack_power);
+				let defence_roll = game.random.get_float(0.0, defence_power);
 				if (attack_roll >= defence_roll) {
-					let damage = #min(defender_health, #game.random.get_float(MIN_DAMAGE_VALUE, MAX_DAMAGE_VALUE));
+					let damage = #min(defender_health, game.random.get_float(MIN_DAMAGE_VALUE, MAX_DAMAGE_VALUE));
 					damage_sequence [] = [true, damage];
 					defender_health -= damage;
 				}
 				if (defence_roll >= attack_roll) {
-					let damage = #min(attacker_health, #game.random.get_float(MIN_DAMAGE_VALUE, MAX_DAMAGE_VALUE));
+					let damage = #min(attacker_health, game.random.get_float(MIN_DAMAGE_VALUE, MAX_DAMAGE_VALUE));
 					damage_sequence [] = [false, damage];
 					attacker_health -= damage;
 				}
@@ -86,12 +86,12 @@ const result = {
 			return damage_sequence;
 		});
 
-		#game.on.unit_attack_apply((e) => {
+		game.um.on('unit_attack_apply', (e) => {
 
 			let attacker_tile = e.attacker.get_tile();
 			let defender_tile = e.defender.get_tile();
 
-			#game.tiles.lock([attacker_tile, defender_tile], (unlock) => {
+			game.tm.lock_tiles([attacker_tile, defender_tile], (unlock) => {
 
 				let damages_sz = #size(e.resolutions);
 
@@ -102,19 +102,19 @@ const result = {
 					if (damage_index < damages_sz) {
 						const damages = e.resolutions[damage_index];
 						if (damages[0]) {
-							#game.animations.show_on_tile(animations.ATTACK_PSI, defender_tile, () => {
+							game.am.show_animation(animations.ATTACK_PSI, defender_tile, () => {
 								e.defender.health = e.defender.health - damages[1];
 								if (e.defender.health == 0.0) {
-									#game.animations.show_on_tile(animations.DEATH_PSI, defender_tile, next);
+									game.am.show_animation(animations.DEATH_PSI, defender_tile, next);
 								} else {
 									next();
 								}
 							});
 						} else {
-							#game.animations.show_on_tile(animations.ATTACK_PSI, attacker_tile, () => {
+							game.am.show_animation(animations.ATTACK_PSI, attacker_tile, () => {
 								e.attacker.health = e.attacker.health - damages[1];
 								if (e.attacker.health == 0.0) {
-									#game.animations.show_on_tile(animations.DEATH_PSI, attacker_tile, next);
+									game.am.show_animation(animations.DEATH_PSI, attacker_tile, next);
 								} else {
 									next();
 								}

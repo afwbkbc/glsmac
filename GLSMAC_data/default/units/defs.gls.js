@@ -39,14 +39,14 @@ const units = [
 ];
 
 const result = {
-	define: () => {
+	define: (um) => {
 
 		for (morale of morales) {
-			#game.units.define_morales(morale[0], morale[1]);
+			um.define_morales(morale[0], morale[1]);
 		}
 
 		for (unit of units) {
-			#game.units.define(unit[0], unit[1]);
+			um.define_unit(unit[0], unit[1]);
 		}
 
 	},

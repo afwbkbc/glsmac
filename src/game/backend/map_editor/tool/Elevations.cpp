@@ -3,7 +3,7 @@
 #include "game/backend/Game.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/Consts.h"
-#include "util/random/Random.h"
+#include "game/backend/Random.h"
 
 namespace game {
 namespace backend {

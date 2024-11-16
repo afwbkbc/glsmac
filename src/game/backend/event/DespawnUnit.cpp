@@ -1,6 +1,7 @@
 #include "DespawnUnit.h"
 
 #include "game/backend/Game.h"
+#include "game/backend/unit/UnitManager.h"
 
 #include "gse/type/Undefined.h"
 
@@ -22,7 +23,7 @@ const std::string* DespawnUnit::Validate( Game* game ) const {
 }
 
 const gse::Value DespawnUnit::Apply( Game* game ) const {
-	game->DespawnUnit( m_unit_id );
+	game->GetUM()->DespawnUnit( m_unit_id );
 	return VALUE( gse::type::Undefined );
 }
 

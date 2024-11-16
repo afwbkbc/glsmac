@@ -1,6 +1,7 @@
 #include "AttackUnit.h"
 
 #include "game/backend/Game.h"
+#include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/StaticDef.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/slot/Slot.h"
@@ -19,7 +20,7 @@ AttackUnit::AttackUnit( const size_t initiator_slot, const size_t attacker_unit_
 }
 
 const std::string* AttackUnit::Validate( Game* game ) const {
-	auto* attacker = game->GetUnit( m_attacker_unit_id );
+	auto* attacker = game->GetUM()->GetUnit( m_attacker_unit_id );
 	if ( !attacker ) {
 		return Error( "Attacker unit not found" );
 	}
@@ -29,32 +30,32 @@ const std::string* AttackUnit::Validate( Game* game ) const {
 	if ( attacker->GetTile()->IsLocked() ) {
 		return Error( "Attacker tile is locked" );
 	}
-	auto* defender = game->GetUnit( m_defender_unit_id );
+	auto* defender = game->GetUM()->GetUnit( m_defender_unit_id );
 	if ( !defender ) {
 		return Error( "Defender unit not found" );
 	}
 	if ( defender->GetTile()->IsLocked() ) {
 		return Error( "Attacker tile is locked" );
 	}
-	return game->AttackUnitValidate( attacker, defender );
+	return game->GetUM()->AttackUnitValidate( attacker, defender );
 }
 
 void AttackUnit::Resolve( Game* game ) {
-	auto* attacker = game->GetUnit( m_attacker_unit_id );
+	auto* attacker = game->GetUM()->GetUnit( m_attacker_unit_id );
 	ASSERT_NOLOG( attacker, "attacker unit not found" );
-	auto* defender = game->GetUnit( m_defender_unit_id );
+	auto* defender = game->GetUM()->GetUnit( m_defender_unit_id );
 	ASSERT_NOLOG( defender, "defender unit not found" );
 
-	m_resolutions = game->AttackUnitResolve( attacker, defender );
+	m_resolutions = game->GetUM()->AttackUnitResolve( attacker, defender );
 }
 
 const gse::Value AttackUnit::Apply( Game* game ) const {
-	auto* attacker = game->GetUnit( m_attacker_unit_id );
+	auto* attacker = game->GetUM()->GetUnit( m_attacker_unit_id );
 	ASSERT_NOLOG( attacker, "attacker unit not found" );
-	auto* defender = game->GetUnit( m_defender_unit_id );
+	auto* defender = game->GetUM()->GetUnit( m_defender_unit_id );
 	ASSERT_NOLOG( defender, "defender unit not found" );
 
-	game->AttackUnitApply( attacker, defender, m_resolutions );
+	game->GetUM()->AttackUnitApply( attacker, defender, m_resolutions );
 	return VALUE( gse::type::Undefined );
 }
 

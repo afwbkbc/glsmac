@@ -28,6 +28,7 @@ struct exception_ec_t {
 	const std::string MAP_ERROR;
 	const std::string INVALID_EVENT;
 	const std::string INVALID_DEFINITION;
+	const std::string INVALID_HANDLER;
 };
 extern const exception_ec_t EC;
 

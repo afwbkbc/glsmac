@@ -80,7 +80,7 @@ void GSE::Run() {
 	Log( "GSE finished" );
 }
 
-const Value GSE::GetInclude( context::Context* ctx, const si_t& si, const std::string& path ) {
+const Value GSE::RunScript( context::Context* ctx, const si_t& si, const std::string& path ) {
 	const auto& it = m_include_cache.find( path );
 	if ( it != m_include_cache.end() ) {
 		return it->second.result;

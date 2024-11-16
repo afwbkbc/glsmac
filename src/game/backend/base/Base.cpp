@@ -11,10 +11,11 @@
 #include "game/backend/slot/Slot.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
+#include "game/backend/faction/Faction.h"
+#include "game/backend/base/BaseManager.h"
 #include "Pop.h"
-#include "game/backend/bindings/Binding.h"
 #include "PopDef.h"
-#include "util/random/Random.h"
+#include "game/backend/Random.h"
 
 namespace game {
 namespace backend {
@@ -32,7 +33,7 @@ Base::Base(
 	Game* game,
 	const size_t id,
 	slot::Slot* owner,
-	rules::Faction* faction,
+	faction::Faction* faction,
 	map::tile::Tile* tile,
 	const std::string& name,
 	const pops_t& pops
@@ -54,7 +55,7 @@ Base::Base(
 
 void Base::AddPop( const Pop& pop ) {
 	m_pops.push_back( pop );
-	m_game->RefreshBase( this );
+	m_game->GetBM()->RefreshBase( this );
 }
 
 const types::Buffer Base::Serialize( const Base* base ) {
@@ -104,11 +105,11 @@ WRAPIMPL_DYNAMIC_GETTERS( Base, CLASS_BASE )
 		N_EXPECT_ARGS( 1 );
 		N_GETVALUE( data, 0, Object );
 		N_GETPROP( poptype, data, "type", String );
-		auto* def = m_game->GetPopDef( poptype );
+		auto* def = m_game->GetBM()->GetPopDef( poptype );
 		if ( !def ) {
-			ERROR( gse::EC.INVALID_DEFINITION, "Unknown pop type: " + poptype );
+			GSE_ERROR( gse::EC.INVALID_DEFINITION, "Unknown pop type: " + poptype );
 		}
-		const auto max_variants = (m_faction->m_flags & rules::Faction::FF_PROGENITOR)
+		const auto max_variants = (m_faction->m_flags & faction::Faction::FF_PROGENITOR)
 			? 1 // aliens have 1 gender
 			: 2; // humans have 2
 		ASSERT_NOLOG( max_variants > 0, "no variants found for pop type: " + poptype );

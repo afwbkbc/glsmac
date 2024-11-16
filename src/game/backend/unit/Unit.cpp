@@ -14,6 +14,7 @@
 #include "game/backend/map/Map.h"
 #include "MoraleSet.h"
 #include "StaticDef.h"
+#include "UnitManager.h"
 
 namespace game {
 namespace backend {
@@ -28,7 +29,7 @@ const void Unit::SetNextId( const size_t id ) {
 }
 
 Unit::Unit(
-	Game* game,
+	UnitManager* um,
 	const size_t id,
 	Def* def,
 	slot::Slot* owner,
@@ -38,8 +39,8 @@ Unit::Unit(
 	const health_t health,
 	const bool moved_this_turn
 )
-	: MapObject( game->GetMap(), tile )
-	, m_game( game )
+	: MapObject( um->GetMap(), tile )
+	, m_um( um )
 	, m_id( id )
 	, m_def( def )
 	, m_owner( owner )
@@ -76,7 +77,7 @@ void Unit::SetTile( map::tile::Tile* tile ) {
 		}
 	);
 	m_tile = tile;
-	m_game->RefreshUnit( this );
+	m_um->RefreshUnit( this );
 }
 
 const types::Buffer Unit::Serialize( const Unit* unit ) {
@@ -93,19 +94,19 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 	return buf;
 }
 
-Unit* Unit::Unserialize( types::Buffer& buf, Game* game ) {
+Unit* Unit::Unserialize( types::Buffer& buf, UnitManager* units ) {
 	const auto id = buf.ReadInt();
 	auto defbuf = types::Buffer( buf.ReadString() );
 	auto* def = Def::Unserialize( defbuf );
-	auto* slot = game ? &game->GetState()->m_slots->GetSlot( buf.ReadInt() ) : nullptr;
+	auto* slot = units ? units->GetSlot( buf.ReadInt() ) : nullptr;
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
-	auto* tile = game ? game->GetMap()->GetTile( pos_x, pos_y ) : nullptr;
+	auto* tile = units ? units->GetMap()->GetTile( pos_x, pos_y ) : nullptr;
 	const auto movement = (movement_t)buf.ReadFloat();
 	const auto morale = (morale_t)buf.ReadInt();
 	const auto health = (health_t)buf.ReadFloat();
 	const auto moved_this_turn = buf.ReadBool();
-	return new Unit( game, id, def, slot, tile, movement, morale, health, moved_this_turn );
+	return new Unit( units, id, def, slot, tile, movement, morale, health, moved_this_turn );
 }
 
 WRAPIMPL_DYNAMIC_GETTERS( Unit, CLASS_UNIT )
@@ -138,7 +139,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit, CLASS_UNIT )
 			N_EXPECT_ARGS( 2 );
 			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
 			N_PERSIST_CALLABLE( on_complete, 1 );
-			const auto* errmsg = m_game->MoveUnitToTile( this, tile, [ on_complete, ctx, call_si ]() {
+			const auto* errmsg = m_um->MoveUnitToTile( this, tile, [ on_complete, ctx, call_si ]() {
 				on_complete->Run( ctx, call_si, {} );
 				N_UNPERSIST_CALLABLE( on_complete );
 			});
@@ -156,7 +157,7 @@ WRAPIMPL_DYNAMIC_SETTERS( Unit )
 WRAPIMPL_DYNAMIC_ON_SET( Unit )
 	// this is potentially risky because if it gets zero health it will be despawned without script's awareness, how to handle it?
 	// maybe despawn unit from within script? but then it would be script's responsibility to ensure there are no zero-health units walking around
-	m_game->RefreshUnit( this );
+	m_um->RefreshUnit( this );
 WRAPIMPL_DYNAMIC_END()
 
 UNWRAPIMPL_PTR( Unit )

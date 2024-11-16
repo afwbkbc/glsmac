@@ -4,6 +4,7 @@
 #include "game/backend/State.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
+#include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/StaticDef.h"
 #include "game/backend/unit/Unit.h"
 
@@ -38,14 +39,14 @@ const std::string* SpawnUnit::Validate( Game* game ) const {
 }
 
 const gse::Value SpawnUnit::Apply( Game* game ) const {
-	auto* def = game->GetUnitDef( m_unit_def );
+	auto* def = game->GetUM()->GetUnitDef( m_unit_def );
 	ASSERT_NOLOG( def, "unit def '" + m_unit_def + "' not found" );
 	ASSERT_NOLOG( def->m_type == unit::DT_STATIC, "only static defs are supported" );
 	const auto* staticdef = (unit::StaticDef*)def;
 	auto& owner = game->GetState()->m_slots->GetSlot( m_owner_slot );
 	auto* tile = game->GetMap()->GetTile( m_pos_x, m_pos_y );
 	auto* unit = new unit::Unit(
-		game,
+		game->GetUM(),
 		unit::Unit::GetNextId(),
 		def,
 		&owner,
@@ -55,7 +56,7 @@ const gse::Value SpawnUnit::Apply( Game* game ) const {
 		m_health,
 		false
 	);
-	game->SpawnUnit( unit );
+	game->GetUM()->SpawnUnit( unit );
 	return unit->Wrap();
 }
 

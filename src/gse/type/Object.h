@@ -27,14 +27,24 @@ public:
 	enum object_class_t {
 		CLASS_NONE,
 		CLASS_EXCEPTION,
+		CLASS_RANDOM,
 		CLASS_COLOR,
+		CLASS_SYSTEM,
+		CLASS_STATE,
+		CLASS_GAME,
+		CLASS_RM,
+		CLASS_TM,
 		CLASS_TILE,
 		CLASS_PLAYER,
 		CLASS_FACTION,
+		CLASS_FM,
+		CLASS_UM,
 		CLASS_UNITDEF,
 		CLASS_UNIT,
+		CLASS_BM,
 		CLASS_BASE,
 		CLASS_BASE_POP,
+		CLASS_AM,
 	};
 	static const std::string& GetClassString( const object_class_t object_class );
 

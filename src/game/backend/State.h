@@ -14,20 +14,22 @@
 namespace game {
 namespace backend {
 
+namespace faction {
+class FactionManager;
+}
+
+class Bindings;
 class Game;
 class Player;
 
 namespace connection {
 class Connection;
 }
-namespace bindings {
-class Bindings;
-}
 namespace slot {
 class Slots;
 }
 
-CLASS( State, common::Class )
+CLASS2( State, common::Class, gse::Wrappable )
 
 	State();
 	virtual ~State();
@@ -39,7 +41,7 @@ CLASS( State, common::Class )
 	settings::Settings m_settings = {};
 	slot::Slots* m_slots;
 
-	bindings::Bindings* m_bindings = nullptr;
+	Bindings* m_bindings = nullptr;
 
 	std::function< void( gse::Exception& ) > m_on_gse_error = nullptr;
 
@@ -64,7 +66,15 @@ CLASS( State, common::Class )
 	void Reset();
 	void DetachConnection();
 
+	faction::FactionManager* GetFM() const;
+
+	WRAPDEFS_PTR( State )
+
+	const types::Buffer Serialize() const;
+	void Unserialize( types::Buffer buf );
+
 private:
+	faction::FactionManager* m_fm = nullptr;
 	Game* m_game = nullptr;
 
 	std::unordered_set< Player* > m_players = {}; // persistent

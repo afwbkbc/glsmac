@@ -46,6 +46,7 @@ CLASS( Lobby, PopupMenu )
 
 	::game::backend::settings::Settings* GetSettings();
 	const ::game::backend::Player* GetPlayer();
+	::game::backend::State* GetState() const;
 
 	void Message( const std::string& message );
 

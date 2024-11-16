@@ -64,6 +64,8 @@
 #include "version.h"
 
 #include "game/backend/State.h"
+#include "game/backend/faction/Faction.h"
+#include "game/backend/faction/FactionManager.h"
 #include "game/backend/Player.h"
 #include "game/backend/slot/Slots.h"
 
@@ -281,18 +283,16 @@ int main( const int argc, const char* argv[] ) {
 				state->InitBindings();
 				state->Configure();
 				const auto& rules = state->m_settings.global.game_rules;
-				std::optional< game::backend::rules::Faction > faction = {};
+				game::backend::faction::Faction* faction = nullptr;
 				if ( config.HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
-					const auto& f = state->m_settings.global.game_rules.m_factions;
-					const auto it = f.find( config.GetQuickstartFaction() );
-					if ( it == f.end() ) {
+					faction = state->GetFM()->Get( config.GetQuickstartFaction() );
+					if ( !faction ) {
 						std::string errmsg = "Faction \"" + config.GetQuickstartFaction() + "\" does not exist. Available factions:";
-						for ( const auto& f_it : f ) {
-							errmsg += " " + f_it.second.m_id;
+						for ( const auto& f : state->GetFM()->GetAll() ) {
+							errmsg += " " + f->m_id;
 						}
 						THROW( errmsg );
 					}
-					faction = it->second;
 				}
 				NEWV(
 					player, game::backend::Player,

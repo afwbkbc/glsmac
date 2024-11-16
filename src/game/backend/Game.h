@@ -17,7 +17,6 @@
 #include "game/FrontendRequest.h"
 #include "game/BackendRequest.h"
 #include "game/backend/turn/Turn.h"
-#include "TileLock.h"
 
 // TODO: remove those
 #include "game/backend/map/tile/Tile.h"
@@ -33,29 +32,40 @@ class Data;
 }
 }
 
-namespace util::random {
-class Random;
-}
-
 namespace game {
 namespace backend {
+
+class Random;
 
 namespace animation {
 class Def;
 }
 
+namespace faction {
+class Faction;
+}
+
+namespace map {
+namespace tile {
+class TileManager;
+}
+}
+
+namespace resource {
+class ResourceManager;
+}
+
 namespace unit {
-class MoraleSet;
-class Def;
-class Unit;
+class UnitManager;
 }
 
 namespace base {
-class PopDef;
-class Base;
+class BaseManager;
 }
 
-class Resource;
+namespace animation {
+class AnimationManager;
+}
 
 namespace event {
 class Event;
@@ -262,7 +272,7 @@ public:
 	InvalidEvent( const std::string& reason, const event::Event* event );
 };
 
-CLASS( Game, MTModule )
+CLASS2( Game, MTModule, gse::Wrappable )
 
 	// returns success as soon as this thread is ready (not busy with previous requests)
 	common::mt_id_t MT_Ping();
@@ -305,11 +315,13 @@ CLASS( Game, MTModule )
 	void Stop() override;
 	void Iterate() override;
 
-	util::random::Random* GetRandom() const;
+	Random* GetRandom() const;
 	map::Map* GetMap() const;
 	State* GetState() const;
 	const Player* GetPlayer() const;
 	const size_t GetSlotNum() const;
+
+	WRAPDEFS_PTR( Game )
 
 protected:
 
@@ -325,31 +337,7 @@ public:
 	void Quit( const std::string& reason );
 	void OnError( std::runtime_error& err );
 	void OnGSEError( gse::Exception& e );
-	unit::MoraleSet* GetMoraleSet( const std::string& name ) const;
-	unit::Unit* GetUnit( const size_t id ) const;
-	unit::Def* GetUnitDef( const std::string& name ) const;
-	base::PopDef* GetPopDef( const std::string& id ) const;
-	base::Base* GetBase( const size_t id ) const;
 	const gse::Value AddEvent( event::Event* event );
-	void RefreshUnit( const unit::Unit* unit );
-	void RefreshBase( const base::Base* base );
-	void DefineAnimation( animation::Def* def );
-	const std::string* ShowAnimationOnTile( const std::string& animation_id, map::tile::Tile* tile, const cb_oncomplete& on_complete );
-	void DefineResource( Resource* resource );
-	void DefineMoraleSet( unit::MoraleSet* moraleset );
-	void DefineUnit( unit::Def* def );
-	void SpawnUnit( unit::Unit* unit );
-	void SkipUnitTurn( const size_t unit_id );
-	void DespawnUnit( const size_t unit_id );
-	void DefinePop( base::PopDef* pop_def );
-	void SpawnBase( base::Base* base );
-	const std::string* MoveUnitValidate( unit::Unit* unit, map::tile::Tile* dst_tile );
-	const gse::Value MoveUnitResolve( unit::Unit* unit, map::tile::Tile* dst_tile );
-	void MoveUnitApply( unit::Unit* unit, map::tile::Tile* dst_tile, const gse::Value resolutions );
-	const std::string* MoveUnitToTile( unit::Unit* unit, map::tile::Tile* dst_tile, const cb_oncomplete& on_complete );
-	const std::string* AttackUnitValidate( unit::Unit* attacker, unit::Unit* defender );
-	const gse::Value AttackUnitResolve( unit::Unit* attacker, unit::Unit* defender );
-	void AttackUnitApply( unit::Unit* attacker, unit::Unit* defender, const gse::Value resolutions );
 	const size_t GetTurnId() const;
 	const bool IsTurnActive() const;
 	const bool IsTurnCompleted( const size_t slot_num ) const;
@@ -363,15 +351,13 @@ public:
 	void GlobalProcessTurnFinalized( const size_t slot_num, const util::crc32::crc_t checksum );
 	void GlobalAdvanceTurn();
 
-	void SendTileLockRequest( const map::tile::positions_t& tile_positions, const cb_oncomplete& on_complete );
-	void RequestTileLocks( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
-	void LockTiles( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
+	faction::Faction* GetFaction( const std::string& id ) const;
 
-	void SendTileUnlockRequest( const map::tile::positions_t& tile_positions );
-	void RequestTileUnlocks( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
-	void UnlockTiles( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
-
-	rules::Faction* GetFaction( const std::string& id ) const;
+	map::tile::TileManager* GetTM() const;
+	resource::ResourceManager* GetRM() const;
+	unit::UnitManager* GetUM() const;
+	base::BaseManager* GetBM() const;
+	animation::AnimationManager* GetAM() const;
 
 private:
 
@@ -380,26 +366,11 @@ private:
 
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
 
-	std::unordered_map< std::string, Resource* > m_resources = {};
-	std::vector< std::string > m_resource_idx = {};
-	std::unordered_map< std::string, size_t > m_resource_idx_map = {};
-	void SerializeResources( types::Buffer& buf ) const;
-	void UnserializeResources( types::Buffer& buf );
-
-	std::unordered_map< std::string, unit::MoraleSet* > m_unit_moralesets = {};
-	std::unordered_map< std::string, unit::Def* > m_unit_defs = {};
-	std::map< size_t, unit::Unit* > m_units = {};
-	void SerializeUnits( types::Buffer& buf ) const;
-	void UnserializeUnits( types::Buffer& buf );
-
-	std::unordered_map< std::string, base::PopDef* > m_base_popdefs = {};
-	std::map< size_t, base::Base* > m_bases = {};
-	void SerializeBases( types::Buffer& buf ) const;
-	void UnserializeBases( types::Buffer& buf );
-
-	std::unordered_map< std::string, animation::Def* > m_animation_defs = {};
-	void SerializeAnimations( types::Buffer& buf ) const;
-	void UnserializeAnimations( types::Buffer& buf );
+	map::tile::TileManager* m_tm = nullptr;
+	resource::ResourceManager* m_rm = nullptr;
+	unit::UnitManager* m_um = nullptr;
+	base::BaseManager* m_bm = nullptr;
+	animation::AnimationManager* m_am = nullptr;
 
 	enum game_state_t {
 		GS_NONE,
@@ -421,13 +392,12 @@ private:
 	std::unordered_set< size_t > m_verified_turn_checksum_slots = {};
 
 	std::vector< FrontendRequest >* m_pending_frontend_requests = nullptr;
-	void AddFrontendRequest( const FrontendRequest& request );
 
 	void InitGame( MT_Response& response, MT_CANCELABLE );
 	void ResetGame();
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)
-	util::random::Random* m_random = nullptr;
+	Random* m_random = nullptr;
 	State* m_state = nullptr;
 	connection::Connection* m_connection = nullptr;
 
@@ -436,64 +406,21 @@ private:
 	map_editor::MapEditor* m_map_editor = nullptr;
 
 	std::vector< backend::event::Event* > m_unprocessed_events = {};
-	// TODO: refactor these?
-	std::vector< unit::Unit* > m_unprocessed_units = {};
-	std::vector< base::Base* > m_unprocessed_bases = {};
 
 	turn::Turn m_current_turn = {};
 
 	bool m_is_turn_complete = false;
 	void CheckTurnComplete();
 
-	size_t m_next_running_animation_id = 1;
-	std::unordered_map< size_t, cb_oncomplete > m_running_animations_callbacks = {};
-
-	enum unit_update_op_t : uint8_t {
-		UUO_NONE = 0,
-		UUO_SPAWN = 1 << 0,
-		UUO_REFRESH = 1 << 1,
-		UUO_DESPAWN = 1 << 2,
-	};
-	struct unit_update_t {
-		unit_update_op_t ops = UUO_NONE;
-		const unit::Unit* unit = nullptr;
-	};
-	std::unordered_map< size_t, unit_update_t > m_unit_updates = {};
-	void QueueUnitUpdate( const unit::Unit* unit, const unit_update_op_t op );
-
-	enum base_update_op_t : uint8_t {
-		BUO_NONE = 0,
-		BUO_SPAWN = 1 << 0,
-		BUO_REFRESH = 1 << 1,
-		BUO_DESPAWN = 1 << 2,
-	};
-	struct base_update_t {
-		base_update_op_t ops = BUO_NONE;
-		const base::Base* base = nullptr;
-	};
-	std::unordered_map< size_t, base_update_t > m_base_updates = {};
-	void QueueBaseUpdate( const base::Base* base, const base_update_op_t op );
-
-	// server-side lock tracking
-	struct tile_lock_request_t {
-		const bool is_lock; // lock or unlock
-		const size_t initiator_slot;
-		const map::tile::positions_t tile_positions;
-	};
-	typedef std::vector< tile_lock_request_t > tile_lock_requests_t;  // requests fifo
-	tile_lock_requests_t m_tile_lock_requests = {};
-	void AddTileLockRequest( const bool is_lock, const size_t initiator_slot, const map::tile::positions_t& tile_positions );
-	std::unordered_map< size_t, std::vector< TileLock > > m_tile_locks = {}; // slot id, locks
-	void ProcessTileLockRequests();
-
-	std::vector< std::pair< map::tile::positions_t, cb_oncomplete > > m_tile_lock_callbacks = {}; // tile positions (for matching), callback
-
-	std::unordered_set< std::string > m_registered_base_names = {};
-
 private:
-	friend class bindings::Bindings;
-	void PushUnitUpdates();
-	void PushBaseUpdates();
+	friend class map::tile::TileManager;
+	friend class resource::ResourceManager;
+	friend class unit::UnitManager;
+	friend class base::BaseManager;
+	friend class animation::AnimationManager;
+	void AddFrontendRequest( const FrontendRequest& request );
+
+	const bool IsRunning() const;
 
 };
 

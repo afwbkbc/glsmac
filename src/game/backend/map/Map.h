@@ -24,9 +24,6 @@ class Data;
 }
 
 namespace util {
-namespace random {
-class Random;
-}
 class Perlin;
 }
 
@@ -34,6 +31,7 @@ namespace game {
 namespace backend {
 
 class Game;
+class Random;
 
 namespace settings {
 class MapSettings;
@@ -113,7 +111,7 @@ CLASS( Map, types::Serializable )
 	void SetTexture( const tile::tile_layer_type_t tile_layer, types::texture::Texture* src_texture, const types::texture::add_flag_t mode, const uint8_t rotate = 0, const float alpha = 1.0f );
 
 	const tile_texture_info_t GetTileTextureInfo( const texture_variants_type_t type, const tile::Tile* tile, const tile_grouping_criteria_t criteria, const tile::feature_t feature = tile::FEATURE_NONE ) const;
-	util::random::Random* GetRandom() const;
+	Random* GetRandom() const;
 
 	const size_t GetWidth() const;
 	const size_t GetHeight() const;

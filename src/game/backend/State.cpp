@@ -1,8 +1,9 @@
 #include "State.h"
 
+#include "game/backend/faction/FactionManager.h"
 #include "Game.h"
 #include "game/backend/connection/Connection.h"
-#include "game/backend/bindings/Bindings.h"
+#include "Bindings.h"
 #include "game/backend/slot/Slots.h"
 #include "Player.h"
 
@@ -11,7 +12,7 @@ namespace backend {
 
 State::State()
 	: m_slots( new slot::Slots( this ) ) {
-
+	NEW( m_fm, faction::FactionManager );
 }
 
 State::~State() {
@@ -20,6 +21,7 @@ State::~State() {
 		delete m_bindings;
 	}
 	delete m_slots;
+	DELETE( m_fm );
 }
 
 void State::SetGame( Game* game ) {
@@ -28,6 +30,12 @@ void State::SetGame( Game* game ) {
 	m_on_gse_error = [ this ]( gse::Exception& e ) -> void {
 		m_game->OnGSEError( e );
 	};
+	m_bindings->Trigger( this, "start", {
+		{
+			"game",
+			m_game->Wrap()
+		}
+	});
 }
 
 void State::UnsetGame() {
@@ -104,9 +112,9 @@ connection::Connection* State::GetConnection() const {
 void State::InitBindings() {
 	if ( !m_bindings ) {
 		Log( "Initializing bindings" );
-		m_bindings = new bindings::Bindings( this );
+		m_bindings = new Bindings( this );
 		try {
-			m_bindings->RunMain();
+			m_bindings->RunMainScript();
 		}
 		catch ( gse::Exception& err ) {
 			if ( m_game ) {
@@ -124,16 +132,13 @@ void State::Configure() {
 
 	Log( "Configuring state" );
 
-	// reset
-	m_settings.global.game_rules.m_factions.clear();
-	m_settings.global.game_rules.m_factions_order.clear();
+	m_fm->Clear();
 
-	// configure
-	m_bindings->Call( bindings::Bindings::CS_ON_CONFIGURE );
+	m_bindings->RunMain();
 
-	// check
-	ASSERT( !m_settings.global.game_rules.m_factions.empty(), "no factions were defined" );
-	ASSERT( m_settings.global.game_rules.m_factions_order.size() == m_settings.global.game_rules.m_factions.size(), "factions order size mismatch" );
+	if ( m_fm->GetAll().empty() ) {
+		THROW( "no factions were defined" );
+	}
 }
 
 void State::Reset() {
@@ -161,6 +166,35 @@ void State::Reset() {
 void State::DetachConnection() {
 	ASSERT( m_connection, "state connection not set" );
 	m_connection = nullptr;
+}
+
+faction::FactionManager* State::GetFM() const {
+	return m_fm;
+}
+
+WRAPIMPL_BEGIN( State, CLASS_STATE )
+	WRAPIMPL_PROPS
+		{
+			"fm",
+			m_fm->Wrap( true )
+		},
+	};
+WRAPIMPL_END_PTR( State )
+
+UNWRAPIMPL_PTR( State )
+
+const types::Buffer State::Serialize() const {
+	types::Buffer buf;
+
+	buf.WriteString( m_settings.global.Serialize().ToString() );
+	buf.WriteString( m_fm->Serialize().ToString() );
+
+	return buf;
+}
+
+void State::Unserialize( types::Buffer buf ) {
+	m_settings.global.Unserialize( buf.ReadString() );
+	m_fm->Unserialize( buf.ReadString() );
 }
 
 }

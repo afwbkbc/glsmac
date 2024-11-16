@@ -39,6 +39,7 @@ CLASS( Config, common::Module )
 		LF_QUICKSTART_MAP_LIFEFORMS = 1 << 12,
 		LF_QUICKSTART_MAP_CLOUDS = 1 << 13,
 		LF_QUICKSTART_FACTION = 1 << 14,
+		LF_MODS = 1 << 15,
 	};
 
 #ifdef DEBUG
@@ -81,6 +82,8 @@ CLASS( Config, common::Module )
 	const game::backend::settings::map_config_value_t GetQuickstartMapClouds() const;
 	const std::string& GetQuickstartFaction() const;
 
+	const std::vector< std::string >& GetModPaths() const;
+
 #ifdef DEBUG
 
 	const bool HasDebugFlag( const debug_flag_t flag ) const;
@@ -120,6 +123,8 @@ private:
 	game::backend::settings::map_config_value_t m_quickstart_map_lifeforms = game::backend::settings::MAP_CONFIG_LIFEFORMS_AVERAGE;
 	game::backend::settings::map_config_value_t m_quickstart_map_clouds = game::backend::settings::MAP_CONFIG_CLOUDS_AVERAGE;
 	std::string m_quickstart_faction = "";
+
+	std::vector< std::string > m_mod_paths = {};
 
 #ifdef DEBUG
 

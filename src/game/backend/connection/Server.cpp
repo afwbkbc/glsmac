@@ -7,6 +7,7 @@
 #include "game/backend/State.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/Player.h"
+#include "game/backend/faction/FactionManager.h"
 
 namespace game {
 namespace backend {
@@ -529,7 +530,7 @@ void Server::Error( const network::cid_t cid, const std::string& reason ) {
 void Server::SendGlobalSettings( network::cid_t cid ) {
 	Log( "Sending global settings to " + std::to_string( cid ) );
 	types::Packet p( types::Packet::PT_GLOBAL_SETTINGS );
-	p.data.str = m_state->m_settings.global.Serialize().ToString();
+	p.data.str = m_state->Serialize().ToString();
 	m_network->MT_SendPacket( &p, cid );
 }
 

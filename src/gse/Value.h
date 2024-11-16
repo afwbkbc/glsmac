@@ -8,6 +8,10 @@
 
 namespace gse {
 
+#define GSE_ERROR( _type, _text ) throw gse::Exception( _type, _text, ctx, call_si );
+
+#define GSE_CALLABLE gse::context::Context* ctx, const gse::si_t& call_si
+
 #define VALUE( _type, ... ) gse::Value( std::make_shared<_type>( __VA_ARGS__ ) )
 #ifdef DEBUG
 #define VALUE_DATA( _type, _var ) ( _var.Get()->type == _type::GetType() ? ((_type*)_var.Get()) : THROW( "invalid GSE value type (expected " + type::Type::GetTypeString( _type::GetType() ) + ", got " + type::Type::GetTypeString( _var.Get()->type ) + ")" ) )
@@ -45,7 +49,47 @@ namespace gse {
 #define WRAPIMPL_DYNAMIC_GETTERS( _type, _class ) \
     WRAPIMPL_DYNAMIC_BEGIN( _type, _class ) \
     const gse::type::object_properties_t properties = {
-#define WRAPIMPL_PROPS gse::type::object_properties_t properties =
+#define WRAPIMPL_PROPS gse::type::object_properties_t properties = { \
+    { \
+        "on", \
+        NATIVE_CALL( this ) { \
+            N_EXPECT_ARGS( 2 ); \
+            N_GETVALUE( event, 0, String ); \
+            N_GET( cb, 1 ); \
+            N_CHECKARG( cb.Get(), 1, Callable ); \
+            return VALUE( gse::type::Int, On( ctx, call_si, event, cb ) ); \
+        } ) \
+    }, \
+    { \
+        "off", \
+        NATIVE_CALL( this ) { \
+            N_EXPECT_ARGS_MIN_MAX( 1, 2 ); \
+            N_GETVALUE( event, 0, String ); \
+            if ( arguments.size() == 2 ) { \
+                N_GETVALUE( handler_id, 1, Int ); \
+                Off( ctx, call_si, event, handler_id ); \
+            } \
+            else { \
+                Off( ctx, call_si, event, 0 ); \
+            } \
+            return VALUE( gse::type::Undefined ); \
+        } ) \
+    }, \
+    { \
+        "trigger", \
+        NATIVE_CALL( this ) { \
+            N_EXPECT_ARGS_MIN_MAX( 1, 2 ); \
+            N_GETVALUE( event, 0, String ); \
+            if ( arguments.size() == 2 ) { \
+                N_GETVALUE( args, 1, Object ); \
+                return Trigger( ctx, call_si, event, args ); \
+            } \
+            else { \
+                return Trigger( ctx, call_si, event, {} ); \
+            } \
+        } ) \
+    },
+
 #define WRAPIMPL_PROPS_EXTEND( _parent ) \
     const auto wrapped_parent = _parent::Wrap(); \
     const auto& wrapped_parent_props = ( (gse::type::Object*)wrapped_parent.Get() )->value; \

@@ -5,7 +5,7 @@
 #include "game/backend/map/generator/SimplePerlin.h"
 #include "engine/Engine.h"
 #include "config/Config.h"
-#include "util/random/Random.h"
+#include "game/backend/Random.h"
 #include "util/FS.h"
 #include "ui/UI.h"
 #include "loader/texture/TextureLoader.h"
@@ -94,8 +94,8 @@ Map::Map( Game* game )
 	);
 
 	// main source textures
-	m_textures.source.texture_pcx = g_engine->GetTextureLoader()->LoadTexture( resource::PCX_TEXTURE );
-	m_textures.source.ter1_pcx = g_engine->GetTextureLoader()->LoadTexture( resource::PCX_TER1 );
+	m_textures.source.texture_pcx = g_engine->GetTextureLoader()->LoadTexture( ::resource::PCX_TEXTURE );
+	m_textures.source.ter1_pcx = g_engine->GetTextureLoader()->LoadTexture( ::resource::PCX_TER1 );
 
 	// add map modules
 	//   order of passes is important
@@ -513,7 +513,7 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_t
 	return info;
 }
 
-util::random::Random* Map::GetRandom() const {
+Random* Map::GetRandom() const {
 	return m_game->GetRandom();
 }
 

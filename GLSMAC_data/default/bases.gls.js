@@ -6,8 +6,8 @@ const result = {
 		//pops.init();
 	},
 
-	define: () => {
-		pops.define();
+	define: (bm) => {
+		pops.define(bm);
 	},
 
 };

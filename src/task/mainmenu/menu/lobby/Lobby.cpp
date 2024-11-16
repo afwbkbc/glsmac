@@ -247,6 +247,10 @@ const ::game::backend::Player* Lobby::GetPlayer() {
 	return connection->GetPlayer();
 }
 
+::game::backend::State* Lobby::GetState() const {
+	return m_state;
+}
+
 void Lobby::Message( const std::string& message ) {
 	Log( "Sending message: " + message );
 	m_connection->SendMessage( message );
