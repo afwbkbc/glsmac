@@ -4,7 +4,7 @@ const result = {
 
 	DEATH_PSI: 'DEATH_PSI',
 
-	define: () => {
+	define: (am) => {
 
 		const animations = [
 
@@ -39,7 +39,7 @@ const result = {
 		];
 
 		for (animation of animations) {
-			#game.animations.define(animation[0], animation[1]);
+			am.define_animation(animation[0], animation[1]);
 		}
 
 	},

@@ -52,8 +52,8 @@ const bases = #include('bases');
 
 			// init game data
 			resources.define(e.game.rm);
-			units.define();
-			bases.define();
+			units.define(e.game);
+			bases.define(e.game.bm);
 
 			// init players
 			players = e.game.get_players();

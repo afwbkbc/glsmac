@@ -78,8 +78,12 @@ WRAPIMPL_BEGIN( Faction, CLASS_FACTION )
 			VALUE( gse::type::String, m_name )
 		},
 		{
+			"is_naval",
+			VALUE( gse::type::Bool, m_flags & Faction::FF_NAVAL )
+		},
+		{
 			"is_progenitor",
-			VALUE( gse::type::Bool, ( m_flags & Faction::FF_PROGENITOR ) == Faction::FF_PROGENITOR )
+			VALUE( gse::type::Bool, m_flags & Faction::FF_PROGENITOR )
 		},
 	};
 WRAPIMPL_END_PTR( Faction )

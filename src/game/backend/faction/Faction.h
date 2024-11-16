@@ -20,8 +20,8 @@ CLASS2( Faction, types::Serializable, gse::Wrappable )
 
 	typedef uint8_t faction_flag_t;
 	static constexpr Faction::faction_flag_t FF_NONE = 0;
-	static constexpr Faction::faction_flag_t FF_PROGENITOR = 1 << 0;
-	static constexpr Faction::faction_flag_t FF_NAVAL = 1 << 1;
+	static constexpr Faction::faction_flag_t FF_NAVAL = 1 << 0;
+	static constexpr Faction::faction_flag_t FF_PROGENITOR = 1 << 1;
 
 	std::string m_id = "";
 	std::string m_name = "";

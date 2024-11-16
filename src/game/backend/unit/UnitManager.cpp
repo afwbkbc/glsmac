@@ -10,8 +10,11 @@
 #include "game/backend/State.h"
 #include "game/backend/bindings/Bindings.h"
 #include "game/backend/slot/Slots.h"
+#include "game/backend/event/DefineMorales.h"
+#include "game/backend/event/DefineUnit.h"
 #include "game/backend/event/SpawnUnit.h"
 #include "game/backend/event/DespawnUnit.h"
+#include "game/backend/unit/SpriteRender.h"
 
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
@@ -253,6 +256,99 @@ void UnitManager::PushUpdates() {
 
 WRAPIMPL_BEGIN( UnitManager, CLASS_UM )
 	WRAPIMPL_PROPS
+		{
+			"define_morales",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 2 );
+				N_GETVALUE( id, 0, String );
+				N_GETVALUE( arr, 1, Array );
+				const uint8_t expected_count = unit::MORALE_MAX - unit::MORALE_MIN + 1;
+				if ( arr.size() != expected_count ) {
+					GSE_ERROR( gse::EC.INVALID_CALL, "Morale set must have exactly " + std::to_string( expected_count ) + " values (found " + std::to_string( arr.size() ) + ")");
+				}
+				unit::MoraleSet::morale_values_t values = {};
+				for ( const auto& v : arr ) {
+					if ( v.Get()->type != gse::type::Type::T_OBJECT ) {
+						GSE_ERROR( gse::EC.INVALID_CALL, "Morale set elements must be objects");
+					}
+					const auto* obj = (gse::type::Object*)v.Get();
+					N_GETPROP( name, obj->value, "name", String );
+					values.push_back( unit::Morale{ name } );
+				}
+				return m_game->AddEvent( new event::DefineMorales( m_game->GetSlotNum(), new unit::MoraleSet( id, values ) ) );
+			} )
+		},
+		{
+			"define_unit",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 2 );
+				N_GETVALUE( id, 0, String );
+				N_GETVALUE( unit_def, 1, Object );
+				N_GETPROP( name, unit_def, "name", String );
+				N_GETPROP( morale, unit_def, "morale", String );
+				N_GETPROP( unit_type, unit_def, "type", String );
+				if ( unit_type == "static" ) {
+					N_GETPROP( movement_type_str, unit_def, "movement_type", String );
+					unit::movement_type_t movement_type;
+					if ( movement_type_str == "land" ) {
+						movement_type = unit::MT_LAND;
+					}
+					else if ( movement_type_str == "water" ) {
+						movement_type = unit::MT_WATER;
+					}
+					else if ( movement_type_str == "air" ) {
+						movement_type = unit::MT_AIR;
+					}
+					else if ( movement_type_str == "immovable" ) {
+						movement_type = unit::MT_IMMOVABLE;
+					}
+					else {
+						GSE_ERROR( gse::EC.INVALID_CALL, "Invalid movement type: " + movement_type_str + ". Specify one of: land water air immovable");
+					}
+					N_GETPROP( movement_per_turn, unit_def, "movement_per_turn", Int );
+					N_GETPROP( render_def, unit_def, "render", Object );
+					N_GETPROP( render_type, render_def, "type", String );
+					if ( render_type == "sprite" ) {
+						N_GETPROP( sprite_file, render_def, "file", String );
+						N_GETPROP( sprite_x, render_def, "x", Int );
+						N_GETPROP( sprite_y, render_def, "y", Int );
+						N_GETPROP( sprite_w, render_def, "w", Int );
+						N_GETPROP( sprite_h, render_def, "h", Int );
+						N_GETPROP( sprite_cx, render_def, "cx", Int );
+						N_GETPROP( sprite_cy, render_def, "cy", Int );
+						N_GETPROP_OPT_INT( sprite_morale_based_xshift, render_def, "morale_based_xshift" );
+						const auto* moraleset = m_game->GetUM()->GetMoraleSet( morale );
+						if ( !moraleset ) {
+							GSE_ERROR( gse::EC.INVALID_CALL, "Morale type '" + morale + "' is not defined");
+						}
+						auto* def = new unit::StaticDef(
+							id,
+							moraleset,
+							name,
+							movement_type,
+							movement_per_turn,
+							new unit::SpriteRender(
+								sprite_file,
+								sprite_x,
+								sprite_y,
+								sprite_w,
+								sprite_h,
+								sprite_cx,
+								sprite_cy,
+								sprite_morale_based_xshift
+							)
+						);
+						return m_game->AddEvent( new event::DefineUnit( m_game->GetSlotNum(), def ) );
+					}
+					else {
+						GSE_ERROR( gse::EC.GAME_ERROR, "Unsupported render type: " + render_type );
+					}
+				}
+				else {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Unsupported unit type: " + unit_type );
+				}
+			})
+		},
 		{
 			"spawn_unit",
 			NATIVE_CALL( this ) {

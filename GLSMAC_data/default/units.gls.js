@@ -12,9 +12,9 @@ const result = {
 		turns.configure(game);
 	},
 
-	define: () => {
-		defs.define();
-		animations.define();
+	define: (game) => {
+		defs.define(game.um);
+		animations.define(game.am);
 	},
 
 };

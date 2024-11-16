@@ -52,14 +52,6 @@ protected:
 
 #define GAME m_bindings->GetGame( ctx, call_si )
 
-#define CALLBACK( _type ) NATIVE_CALL( this ) { \
-    N_EXPECT_ARGS( 1 ); \
-    N_GET( cb, 0 ); \
-    N_CHECKARG( cb.Get(), 0, Callable ); \
-    m_bindings->SetCallback( _type, cb, ctx, call_si ); \
-    return VALUE( gse::type::Undefined ); \
-})
-
 namespace game {
 namespace backend {
 namespace bindings {

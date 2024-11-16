@@ -4,6 +4,7 @@
 #include "game/backend/State.h"
 #include "game/backend/bindings/Bindings.h"
 #include "game/backend/slot/Slots.h"
+#include "game/backend/event/DefinePop.h"
 #include "game/backend/event/SpawnBase.h"
 #include "game/backend/Player.h"
 #include "game/backend/faction/Faction.h"
@@ -199,6 +200,64 @@ void BaseManager::PushUpdates() {
 
 WRAPIMPL_BEGIN( BaseManager, CLASS_BM )
 	WRAPIMPL_PROPS
+		{
+			"define_pop",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 2 );
+				N_GETVALUE( id, 0, String );
+				N_GETVALUE( def, 1, Object );
+
+				N_GETPROP( name, def, "name", String );
+
+				base::pop_render_infos_t rh = {};
+				base::pop_render_infos_t rp = {};
+				const auto& f_read_renders = [ &def, &arg, &call_si, &ctx, &getprop_val, &obj_it ]( const std::string& key, base::pop_render_infos_t& out ) {
+					N_GETPROP( renders, def, key, Array );
+					out.reserve( renders.size() );
+					for ( const auto& v : renders ) {
+						if ( v.Get()->type != gse::type::Type::T_OBJECT ) {
+							GSE_ERROR( gse::EC.INVALID_CALL, "Pop render elements must be objects" );
+						}
+						const auto* obj = (gse::type::Object*)v.Get();
+						const auto& ov = obj->value;
+						N_GETPROP( type, ov, "type", String );
+						if ( type == "sprite" ) {
+							N_GETPROP( file, ov, "file", String );
+							N_GETPROP( x, ov, "x", Int );
+							N_GETPROP( y, ov, "y", Int );
+							N_GETPROP( w, ov, "w", Int );
+							N_GETPROP( h, ov, "h", Int );
+							out.push_back(
+								base::pop_render_info_t{
+									file,
+									(uint16_t)x,
+									(uint16_t)y,
+									(uint16_t)w,
+									(uint16_t)h
+								}
+							);
+						}
+						else {
+							GSE_ERROR( gse::EC.INVALID_CALL, "Only sprite pops are supported for now" );
+						}
+
+					}
+				};
+				f_read_renders( "renders_human", rh );
+				f_read_renders( "renders_progenitor", rp );
+
+				base::PopDef::pop_flags_t flags = base::PopDef::PF_NONE;
+				N_GETPROP_OPT( bool, can_work_tiles, def, "tile_worker", Bool, false );
+				if ( can_work_tiles ) {
+					flags |= base::PopDef::PF_TILE_WORKER;
+				}
+
+				return m_game->AddEvent( new event::DefinePop(
+					m_game->GetSlotNum(),
+					new base::PopDef( id, name, rh, rp, flags )
+				) );
+			} )
+		},
 		{
 			"spawn_base",
 			NATIVE_CALL( this ) {

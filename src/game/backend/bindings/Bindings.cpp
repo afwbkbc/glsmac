@@ -80,39 +80,6 @@ void Bindings::RunMain() {
 	m_gse->GetInclude( m_gse_context, m_si_internal, m_entry_script );
 }
 
-gse::Value Bindings::Call( const callback_slot_t slot, const callback_arguments_t& arguments ) {
-	const auto& it = m_callbacks.find( slot );
-	if ( it != m_callbacks.end() ) {
-		try {
-			gse::type::object_properties_t properties = arguments;
-			const gse::Value result = ( (gse::type::Callable*)it->second.Get() )->Run(
-				m_gse_context, m_si_internal, {
-					VALUE( gse::type::Object, properties ),
-				}
-			);
-			auto* game = m_state->GetGame();
-			if ( game ) {
-				game->GetUM()->PushUpdates();
-				game->GetBM()->PushUpdates();
-			}
-			if ( result.Get()->type == gse::type::Type::T_NOTHING ) {
-				// return undefined by default
-				return VALUE( gse::type::Undefined );
-			}
-			return result;
-		}
-		catch ( gse::Exception& e ) {
-			if ( m_state->m_on_gse_error ) {
-				m_state->m_on_gse_error( e );
-			}
-			else {
-				throw std::runtime_error( e.ToStringAndCleanup() );
-			}
-		}
-	}
-	return VALUE( gse::type::Undefined );
-}
-
 const gse::Value Bindings::Trigger( gse::Wrappable* object, const std::string& event, const gse::type::object_properties_t& args ) {
 	auto result = VALUE( gse::type::Undefined );
 	try {
@@ -148,13 +115,6 @@ Game* Bindings::GetGame( GSE_CALLABLE ) const {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game not started yet" );
 	}
 	return game;
-}
-
-void Bindings::SetCallback( const callback_slot_t slot, const gse::Value& callback, gse::context::Context* context, const gse::si_t& si ) {
-	if ( m_callbacks.find( slot ) != m_callbacks.end() ) {
-		throw gse::Exception( gse::EC.GAME_ERROR, "Callback slot already in use", context, si );
-	}
-	m_callbacks.insert_or_assign( slot, callback );
 }
 
 }

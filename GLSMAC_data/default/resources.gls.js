@@ -58,7 +58,7 @@ const result = {
 				} else {
 					//result.Nutrients++;
 					result.Nutrients = result.Energy + 1;
-					if (e.player.faction.id == 'PIRATES') { // tmp
+					if (e.player.faction.is_naval) { // tmp
 						//result.Minerals++;
 						result.Minerals = result.Minerals + 1;
 					}
