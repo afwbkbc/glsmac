@@ -1,10 +1,9 @@
 #include "State.h"
 
-#include "System.h"
 #include "game/backend/faction/FactionManager.h"
 #include "Game.h"
 #include "game/backend/connection/Connection.h"
-#include "game/backend/bindings/Bindings.h"
+#include "Bindings.h"
 #include "game/backend/slot/Slots.h"
 #include "Player.h"
 
@@ -13,7 +12,6 @@ namespace backend {
 
 State::State()
 	: m_slots( new slot::Slots( this ) ) {
-	NEW( m_system, System );
 	NEW( m_fm, faction::FactionManager );
 }
 
@@ -23,7 +21,6 @@ State::~State() {
 		delete m_bindings;
 	}
 	delete m_slots;
-	DELETE( m_system );
 	DELETE( m_fm );
 }
 
@@ -115,9 +112,9 @@ connection::Connection* State::GetConnection() const {
 void State::InitBindings() {
 	if ( !m_bindings ) {
 		Log( "Initializing bindings" );
-		m_bindings = new bindings::Bindings( this );
+		m_bindings = new Bindings( this );
 		try {
-			m_bindings->RunMain();
+			m_bindings->RunMainScript();
 		}
 		catch ( gse::Exception& err ) {
 			if ( m_game ) {
@@ -137,12 +134,7 @@ void State::Configure() {
 
 	m_fm->Clear();
 
-	m_bindings->Trigger( m_system, "configure", {
-		{
-			"gm",
-			Wrap()
-		}
-	});
+	m_bindings->RunMain();
 
 	if ( m_fm->GetAll().empty() ) {
 		THROW( "no factions were defined" );
@@ -174,10 +166,6 @@ void State::Reset() {
 void State::DetachConnection() {
 	ASSERT( m_connection, "state connection not set" );
 	m_connection = nullptr;
-}
-
-System* State::GetSystem() const {
-	return m_system;
 }
 
 faction::FactionManager* State::GetFM() const {

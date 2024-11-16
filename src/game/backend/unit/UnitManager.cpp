@@ -8,7 +8,7 @@
 #include "game/backend/Game.h"
 #include "game/backend/animation/AnimationManager.h"
 #include "game/backend/State.h"
-#include "game/backend/bindings/Bindings.h"
+#include "game/backend/Bindings.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/event/DefineMorales.h"
 #include "game/backend/event/DefineUnit.h"

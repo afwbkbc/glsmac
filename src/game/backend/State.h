@@ -14,20 +14,16 @@
 namespace game {
 namespace backend {
 
-class System;
-
 namespace faction {
 class FactionManager;
 }
 
+class Bindings;
 class Game;
 class Player;
 
 namespace connection {
 class Connection;
-}
-namespace bindings {
-class Bindings;
 }
 namespace slot {
 class Slots;
@@ -45,7 +41,7 @@ CLASS2( State, common::Class, gse::Wrappable )
 	settings::Settings m_settings = {};
 	slot::Slots* m_slots;
 
-	bindings::Bindings* m_bindings = nullptr;
+	Bindings* m_bindings = nullptr;
 
 	std::function< void( gse::Exception& ) > m_on_gse_error = nullptr;
 
@@ -70,7 +66,6 @@ CLASS2( State, common::Class, gse::Wrappable )
 	void Reset();
 	void DetachConnection();
 
-	System* GetSystem() const;
 	faction::FactionManager* GetFM() const;
 
 	WRAPDEFS_PTR( State )
@@ -79,7 +74,6 @@ CLASS2( State, common::Class, gse::Wrappable )
 	void Unserialize( types::Buffer buf );
 
 private:
-	System* m_system = nullptr;
 	faction::FactionManager* m_fm = nullptr;
 	Game* m_game = nullptr;
 

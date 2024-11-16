@@ -27,10 +27,6 @@ class System;
 class Game;
 class State;
 
-namespace bindings {
-
-class Binding;
-
 class Bindings : public gse::Bindings {
 public:
 	Bindings( State* state );
@@ -38,9 +34,9 @@ public:
 
 	void AddToContext( gse::context::Context* ctx ) override;
 
+	void RunMainScript();
 	void RunMain();
 
-	typedef std::map< std::string, gse::Value > callback_arguments_t;
 	const gse::Value Trigger( gse::Wrappable* object, const std::string& event, const gse::type::object_properties_t& args );
 
 	State* GetState() const;
@@ -48,7 +44,7 @@ public:
 
 private:
 
-	std::vector< Binding* > m_bindings = {};
+	std::vector< gse::Value > m_main_callables = {};
 
 	const gse::si_t m_si_internal = { "" };
 	const gse::type::function_arguments_t m_no_arguments = {};
@@ -61,6 +57,5 @@ private:
 	gse::context::GlobalContext* m_gse_context = nullptr;
 };
 
-}
 }
 }

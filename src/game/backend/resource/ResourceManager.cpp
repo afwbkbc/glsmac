@@ -6,7 +6,7 @@
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
 #include "game/backend/slot/Slot.h"
-#include "game/backend/bindings/Bindings.h"
+#include "game/backend/Bindings.h"
 #include "game/backend/event/DefineResource.h"
 
 namespace game {

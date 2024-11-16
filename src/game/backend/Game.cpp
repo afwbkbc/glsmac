@@ -32,7 +32,7 @@
 #include "map/tile/Tiles.h"
 #include "map/MapState.h"
 #include "resource/ResourceManager.h"
-#include "bindings/Bindings.h"
+#include "Bindings.h"
 #include "graphics/Graphics.h"
 #include "animation/Def.h"
 #include "unit/Def.h"

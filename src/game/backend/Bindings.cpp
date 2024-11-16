@@ -1,29 +1,23 @@
 #include "Bindings.h"
 
-#include <iostream>
-
 #include "util/FS.h"
 
 #include "game/backend/Game.h"
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/base/BaseManager.h"
-#include "Binding.h"
 #include "gse/GSE.h"
 #include "gse/context/GlobalContext.h"
 #include "gse/Exception.h"
 #include "gse/type/String.h"
-#include "gse/type/Object.h"
 #include "gse/type/Callable.h"
 #include "gse/type/Undefined.h"
 #include "gse/callable/Native.h"
 #include "engine/Engine.h"
 #include "config/Config.h"
 #include "game/backend/State.h"
-#include "game/backend/System.h"
 
 namespace game {
 namespace backend {
-namespace bindings {
 
 Bindings::Bindings( State* state )
 	: m_state( state )
@@ -41,43 +35,33 @@ Bindings::Bindings( State* state )
 	m_gse_context = m_gse->CreateGlobalContext();
 	m_gse_context->IncRefs();
 
-#define B( _name ) new BINDING( _name )( this )
-	m_bindings = {
-		B( message ),
-		B( exit ),
-		B( random ),
-		B( on ),
-		B( players ),
-		B( factions ),
-		B( tiles ),
-		B( units ),
-		B( bases ),
-		B( animations ),
-		B( map ),
-		B( resources ),
-	};
-#undef B
 }
 
 Bindings::~Bindings() {
-	for ( auto& it : m_bindings ) {
-		delete it;
-	}
 	m_gse_context->DecRefs();
 	DELETE( m_gse );
 }
 
 void Bindings::AddToContext( gse::context::Context* ctx ) {
-	gse::type::object_properties_t methods = {};
-	for ( auto& it : m_bindings ) {
-		it->Add( methods );
-	}
-	ctx->CreateBuiltin( "game", VALUE( gse::type::Object, methods ) );
-	ctx->CreateBuiltin( "system", m_state->GetSystem()->Wrap( true ) );
+	ctx->CreateBuiltin( "main", NATIVE_CALL(this) {
+		N_EXPECT_ARGS( 1 );
+		const auto& main = arguments.at(0);
+		N_CHECKARG( main.Get(), 0, Callable );
+		m_main_callables.push_back( main );
+		return VALUE( gse::type::Undefined );
+	} ) );
+}
+
+void Bindings::RunMainScript() {
+	m_gse->GetInclude( m_gse_context, m_si_internal, m_entry_script );
 }
 
 void Bindings::RunMain() {
-	m_gse->GetInclude( m_gse_context, m_si_internal, m_entry_script );
+	for ( const auto& main : m_main_callables ) {
+		ASSERT_NOLOG( main.Get()->type == gse::type::Type::T_CALLABLE, "main not callable" );
+		auto gm = m_state->Wrap();
+		((gse::type::Callable*)main.Get())->Run( m_gse_context, m_si_internal, { gm });
+	}
 }
 
 const gse::Value Bindings::Trigger( gse::Wrappable* object, const std::string& event, const gse::type::object_properties_t& args ) {
@@ -117,6 +101,5 @@ Game* Bindings::GetGame( GSE_CALLABLE ) const {
 	return game;
 }
 
-}
 }
 }

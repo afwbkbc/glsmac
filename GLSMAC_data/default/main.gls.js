@@ -3,11 +3,11 @@ const resources = #include('resources');
 const units = #include('units');
 const bases = #include('bases');
 
-#system.on('configure', (e) => {
+#main((gm) => {
 
-	factions.configure(e.gm.fm);
+	factions.configure(gm.fm);
 
-	e.gm.on('start', (e) => {
+	gm.on('start', (e) => {
 
 		let players = [];
 		let players_sz = 0;

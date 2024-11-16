@@ -9,16 +9,15 @@ SUBDIR( faction )
 SUBDIR( animation )
 SUBDIR( unit )
 SUBDIR( base )
-SUBDIR( bindings )
 SUBDIR( event )
 SUBDIR( turn )
 
 SET( SRC ${SRC}
 
 	${PWD}/Random.cpp
-	${PWD}/System.cpp
-	${PWD}/Game.cpp
+	${PWD}/Bindings.cpp
 	${PWD}/State.cpp
+	${PWD}/Game.cpp
 	${PWD}/Account.cpp
 	${PWD}/Player.cpp
 	${PWD}/MapObject.cpp

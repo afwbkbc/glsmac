@@ -2,7 +2,7 @@
 
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
-#include "game/backend/bindings/Bindings.h"
+#include "game/backend/Bindings.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/event/DefinePop.h"
 #include "game/backend/event/SpawnBase.h"
