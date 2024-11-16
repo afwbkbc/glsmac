@@ -473,6 +473,10 @@ const size_t Game::GetSlotNum() const {
 WRAPIMPL_BEGIN( Game, CLASS_GAME )
 	WRAPIMPL_PROPS
 		{
+			"year",
+			VALUE( gse::type::Int, 2100/*tmp*/ + m_current_turn.GetId() )
+		},
+		{
 			"random",
 			m_random->Wrap()
 		},

@@ -192,6 +192,18 @@ WRAPIMPL_BEGIN( FactionManager, CLASS_FM )
 				return faction->Wrap();
 			} )
 		},
+		{
+			"remove",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( id, 0, String );
+				if ( !Get( id ) ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Unknown faction: " + id );
+				}
+				Remove( id );
+				return VALUE( gse::type::Undefined );
+			} )
+		},
 	};
 WRAPIMPL_END_PTR( FactionManager )
 

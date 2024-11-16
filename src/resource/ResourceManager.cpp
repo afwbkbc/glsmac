@@ -5,6 +5,9 @@
 
 #include "util/FS.h"
 
+#include "engine/Engine.h"
+#include "config/Config.h"
+
 namespace resource {
 
 ResourceManager::ResourceManager()
@@ -369,8 +372,17 @@ const std::string& ResourceManager::GetCustomPath( const std::string& path ) {
 	key.resize( path.length() );
 	std::transform( path.begin(), path.end(), key.begin(), ::tolower );
 
-	// look in datadir
-	auto resolved_file = util::FS::GetExistingCaseSensitivePath( m_data_path, path );
+	std::string resolved_file = "";
+
+	// look in mod dirs
+	for ( const auto& mod_path : g_engine->GetConfig()->GetModPaths() ) {
+		resolved_file = util::FS::GetExistingCaseSensitivePath( mod_path, path );
+	}
+
+	if ( resolved_file.empty() ) {
+		// look in datadir
+		resolved_file = util::FS::GetExistingCaseSensitivePath( m_data_path, path );
+	}
 
 	if ( resolved_file.empty() ) {
 

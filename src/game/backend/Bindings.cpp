@@ -53,7 +53,10 @@ void Bindings::AddToContext( gse::context::Context* ctx ) {
 }
 
 void Bindings::RunMainScript() {
-	m_gse->GetInclude( m_gse_context, m_si_internal, m_entry_script );
+	m_gse->RunScript( m_gse_context, m_si_internal, m_entry_script );
+	for ( const auto& mod_path : g_engine->GetConfig()->GetModPaths() ) {
+		m_gse->RunScript( m_gse_context, m_si_internal, util::FS::GeneratePath({ mod_path, "main" }));
+	}
 }
 
 void Bindings::RunMain() {

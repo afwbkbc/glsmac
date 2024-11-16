@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdexcept>
+#include <sstream>
 
 #include "Config.h"
 
@@ -242,6 +243,32 @@ Config::Config( const int argc, const char* argv[] )
 			m_launch_flags |= LF_QUICKSTART_FACTION;
 		}
 	);
+	m_parser->AddRule(
+		"mods", "MODS", "Comma-separated list of mods to load", AH( this ) {
+			std::stringstream ss( value );
+			while ( ss.good() ) {
+				std::string mod_name;
+				getline( ss, mod_name, ',' );
+				if ( !mod_name.empty() ) {
+					const auto mod_path = util::FS::GeneratePath(
+						{
+							m_data_path,
+							"mods",
+							mod_name
+						}
+					);
+					if ( !util::FS::DirectoryExists( mod_path ) ) {
+						Error( "Mod path does not exist or is not a directory: " + mod_path );
+					}
+					m_mod_paths.push_back( mod_path );
+				}
+			}
+			if ( m_mod_paths.empty() ) {
+				Error( "No mod paths were defined" );
+			}
+			m_launch_flags |= LF_MODS;
+		}
+	);
 
 #ifdef DEBUG
 	m_parser->AddRule(
@@ -403,6 +430,10 @@ const game::backend::settings::map_config_value_t Config::GetQuickstartMapClouds
 
 const std::string& Config::GetQuickstartFaction() const {
 	return m_quickstart_faction;
+}
+
+const std::vector< std::string >& Config::GetModPaths() const {
+	return m_mod_paths;
 }
 
 #ifdef DEBUG

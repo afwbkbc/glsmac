@@ -24,6 +24,10 @@ static const std::unordered_map< Object::object_class_t, std::string > s_object_
 		"#exception"
 	},
 	{
+		Object::CLASS_RANDOM,
+		"#random"
+	},
+	{
 		Object::CLASS_COLOR,
 		"#color"
 	},
@@ -40,6 +44,14 @@ static const std::unordered_map< Object::object_class_t, std::string > s_object_
 		"#game"
 	},
 	{
+		Object::CLASS_RM,
+		"#rm"
+	},
+	{
+		Object::CLASS_TM,
+		"#tm"
+	},
+	{
 		Object::CLASS_TILE,
 		"#tile"
 	},
@@ -53,7 +65,11 @@ static const std::unordered_map< Object::object_class_t, std::string > s_object_
 	},
 	{
 		Object::CLASS_FM,
-		"#factions"
+		"#fm"
+	},
+	{
+		Object::CLASS_UM,
+		"#um"
 	},
 	{
 		Object::CLASS_UNITDEF,
@@ -64,9 +80,21 @@ static const std::unordered_map< Object::object_class_t, std::string > s_object_
 		"#unit"
 	},
 	{
+		Object::CLASS_BM,
+		"#bm"
+	},
+	{
 		Object::CLASS_BASE,
 		"#base"
 	},
+	{
+		Object::CLASS_BASE_POP,
+		"#basepop"
+	},
+	{
+		Object::CLASS_AM,
+		"#am"
+	}
 };
 const std::string& Object::GetClassString( const object_class_t object_class ) {
 	const auto& it = s_object_class_str.find( object_class );
