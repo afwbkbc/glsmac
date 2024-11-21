@@ -334,7 +334,11 @@ void Game::Iterate() {
 					m_response_map_data->sprites.actors = &m_map->m_sprite_actors;
 					m_response_map_data->sprites.instances = &m_map->m_sprite_instances;
 
+					for ( auto& tile : m_map->m_tiles->GetVector( m_init_cancel ) ) {
+						UpdateYields( tile );
+					}
 					m_response_map_data->tiles = m_map->GetTilesPtr()->GetTilesPtr();
+
 					m_response_map_data->tile_states = m_map->GetMapState()->GetTileStatesPtr();
 
 					if ( m_old_map ) {
@@ -675,21 +679,6 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			try {
 				for ( const auto& r : *request.data.send_backend_requests.requests ) {
 					switch ( r.type ) {
-						case BackendRequest::BR_GET_TILE_DATA: {
-							const auto& tile = m_map->GetTile( r.data.get_tile_data.tile_x, r.data.get_tile_data.tile_y );
-
-							NEWV( yields, FrontendRequest::tile_yields_t, m_rm->GetYields(
-								tile,
-								m_slot
-							) );
-
-							auto fr = FrontendRequest( FrontendRequest::FR_TILE_DATA );
-							fr.data.tile_data.tile_x = tile->coord.x;
-							fr.data.tile_data.tile_y = tile->coord.y;
-							fr.data.tile_data.tile_yields = yields;
-							AddFrontendRequest( fr );
-							break;
-						}
 						case BackendRequest::BR_ANIMATION_FINISHED: {
 							m_am->FinishAnimation( r.data.animation_finished.animation_id );
 							break;
@@ -1085,6 +1074,13 @@ const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
 		-c.y,
 		c.z
 	};
+}
+
+void Game::UpdateYields( map::tile::Tile* tile ) const {
+	tile->yields = m_rm->GetYields(
+		tile,
+		m_slot
+	);
 }
 
 void Game::AddFrontendRequest( const FrontendRequest& request ) {

@@ -56,8 +56,9 @@ void TilePreview::PreviewTile( const tile::Tile* tile ) {
 	}
 	AddChild( m_pages.normal );
 
-	// print lines
 	size_t label_top = 2;
+
+	// print lines
 	for ( auto& line : render.preview_lines ) {
 		NEWV( label, ::ui::object::Label, "BBTilePreviewTextLine" );
 		label->SetText( line );
@@ -73,6 +74,31 @@ void TilePreview::PreviewTile( const tile::Tile* tile ) {
 		m_pages.yields->Hide();
 	}
 	AddChild( m_pages.yields );
+
+	label_top = 2;
+	const auto& yields = tile->GetYields();
+	const bool need_to_add = m_texts.yields.empty();
+	if ( !need_to_add ) {
+		ASSERT_NOLOG( m_texts.yields.size() == yields.size(), "yields lines count mismatch" );
+	}
+	for ( size_t i = 0 ; i < yields.size() ; i++ ) {
+		const auto& y = yields.at( i );
+		const auto text = y.first + ": " + std::to_string( y.second );
+		::ui::object::Label* label;
+		if ( need_to_add ) {
+			NEW( label, ::ui::object::Label, "BBTilePreviewTextLine" );
+		}
+		else {
+			label = m_texts.yields.at( i );
+		}
+		label->SetText( text );
+		if ( need_to_add ) {
+			label->SetTop( label_top );
+			m_texts.yields.push_back( label );
+			m_pages.yields->AddChild( label );
+			label_top += label->GetHeight() * 2; // TODO: 'with farm:' etc
+		}
+	}
 
 	// print tile coordinates
 	NEWV( label, ::ui::object::Label, "BBTilePreviewTextFooter" );
@@ -148,34 +174,6 @@ void TilePreview::HideTilePreview() {
 		RemoveChild( preview_layer.object );
 	}
 	m_preview_layers.clear();
-}
-
-void TilePreview::SetTileYields( const std::vector< std::pair< std::string, size_t > >& yields ) {
-	if ( m_pages.yields ) {
-		const bool need_to_add = m_texts.yields.empty();
-		if ( !need_to_add ) {
-			ASSERT_NOLOG( m_texts.yields.size() == yields.size(), "yields lines count mismatch" );
-		}
-		size_t label_top = 2;
-		for ( size_t i = 0 ; i < yields.size() ; i++ ) {
-			const auto& y = yields.at( i );
-			const auto text = y.first + ": " + std::to_string( y.second );
-			::ui::object::Label* label;
-			if ( need_to_add ) {
-				NEW( label, ::ui::object::Label, "BBTilePreviewTextLine" );
-			}
-			else {
-				label = m_texts.yields.at( i );
-			}
-			label->SetText( text );
-			if ( need_to_add ) {
-				label->SetTop( label_top );
-				m_texts.yields.push_back( label );
-				m_pages.yields->AddChild( label );
-				label_top += label->GetHeight() * 2; // TODO: 'with farm:' etc
-			}
-		}
-	}
 }
 
 void TilePreview::HideYields() {

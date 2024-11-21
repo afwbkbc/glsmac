@@ -10,7 +10,6 @@ public:
 
 	enum request_type_t {
 		BR_NONE,
-		BR_GET_TILE_DATA,
 		BR_ANIMATION_FINISHED,
 	};
 	BackendRequest( const request_type_t type );

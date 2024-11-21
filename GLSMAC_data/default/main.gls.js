@@ -45,13 +45,13 @@ const bases = #include('bases');
 		e.game.on('configure', (e) => {
 
 			units.configure(e.game);
+			resources.configure(e.game.rm);
 
 		});
 
 		e.game.on('start', (e) => {
 
 			// init game data
-			resources.define(e.game.rm);
 			units.define(e.game);
 			bases.define(e.game.bm);
 

@@ -31,7 +31,6 @@ CLASS( TilePreview, BBSection )
 
 	void PreviewTile( const tile::Tile* tile );
 	void HideTilePreview();
-	void SetTileYields( const std::vector< std::pair< std::string, size_t > >& yields );
 
 private:
 

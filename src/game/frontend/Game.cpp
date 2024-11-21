@@ -939,16 +939,6 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			}
 			break;
 		}
-		case FrontendRequest::FR_TILE_DATA: {
-			const auto& d = request->data.tile_data;
-			if ( m_ui.bottom_bar ) {
-				const auto& sc = m_tm->GetSelectedTile()->m_coords;
-				if ( d.tile_x == sc.x && d.tile_y == sc.y ) {
-					m_ui.bottom_bar->SetTileYields( *d.tile_yields );
-				}
-			}
-			break;
-		}
 		case FrontendRequest::FR_TURN_STATUS: {
 			m_turn_status = request->data.turn_status.status;
 			ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
@@ -2362,13 +2352,6 @@ void Game::SendAnimationFinished( const size_t animation_id ) {
 	SendBackendRequest( &br );
 }
 
-void Game::SendGetTileData( const tile::Tile* tile ) {
-	auto br = BackendRequest( BackendRequest::BR_GET_TILE_DATA );
-	br.data.get_tile_data.tile_x = tile->m_coords.x;
-	br.data.get_tile_data.tile_y = tile->m_coords.y;
-	SendBackendRequest( &br );
-}
-
 const bool Game::IsTurnActive() const {
 	return m_is_turn_active;
 }
@@ -2390,7 +2373,6 @@ void Game::RefreshSelectedTile( unit::Unit* selected_unit ) {
 				: 0
 		);
 	}
-	SendGetTileData( selected_tile );
 }
 
 void Game::RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* selected_unit ) {
@@ -2401,7 +2383,6 @@ void Game::RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* selecte
 				? selected_unit->GetId()
 				: 0
 		);
-		SendGetTileData( selected_tile );
 	}
 }
 

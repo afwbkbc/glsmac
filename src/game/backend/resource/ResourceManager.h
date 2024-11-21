@@ -7,6 +7,8 @@
 #include "gse/Wrappable.h"
 #include "gse/type/Object.h"
 
+#include "game/backend/map/tile/Types.h"
+
 namespace game {
 namespace backend {
 
@@ -32,8 +34,7 @@ CLASS2( ResourceManager, common::Class, gse::Wrappable )
 	void Clear();
 	void DefineResource( resource::Resource* resource );
 
-	typedef std::vector< std::pair< std::string, size_t > > yields_t;
-	const yields_t GetYields( map::tile::Tile* tile, slot::Slot* slot );
+	const map::tile::yields_t GetYields( map::tile::Tile* tile, slot::Slot* slot );
 
 	WRAPDEFS_PTR( ResourceManager )
 

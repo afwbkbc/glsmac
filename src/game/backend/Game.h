@@ -366,6 +366,8 @@ private:
 
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
 
+	void UpdateYields( map::tile::Tile* tile ) const;
+
 	map::tile::TileManager* m_tm = nullptr;
 	resource::ResourceManager* m_rm = nullptr;
 	unit::UnitManager* m_um = nullptr;

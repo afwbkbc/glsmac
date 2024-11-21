@@ -36,10 +36,6 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.update_tiles.tile_updates, tile_updates_t, *other.data.update_tiles.tile_updates );
 			break;
 		}
-		case FR_TILE_DATA: {
-			NEW( data.tile_data.tile_yields, tile_yields_t, *other.data.tile_data.tile_yields );
-			break;
-		}
 		case FR_FACTION_DEFINE: {
 			NEW( data.faction_define.factiondefs, faction_defines_t, *other.data.faction_define.factiondefs );
 			break;
@@ -105,10 +101,6 @@ FrontendRequest::~FrontendRequest() {
 		}
 		case FR_UPDATE_TILES: {
 			DELETE( data.update_tiles.tile_updates );
-			break;
-		}
-		case FR_TILE_DATA: {
-			DELETE( data.tile_data.tile_yields );
 			break;
 		}
 		case FR_FACTION_DEFINE: {

@@ -51,7 +51,7 @@ void ResourceManager::DefineResource( resource::Resource* resource ) {
 	m_resource_idx.push_back( resource->m_id );
 }
 
-const ResourceManager::yields_t ResourceManager::GetYields( map::tile::Tile* tile, slot::Slot* slot ) {
+const map::tile::yields_t ResourceManager::GetYields( map::tile::Tile* tile, slot::Slot* slot ) {
 	const auto result = m_game->GetState()->m_bindings->Trigger( this, "get_yields", {
 			{
 				"tile",
@@ -72,7 +72,7 @@ const ResourceManager::yields_t ResourceManager::GetYields( map::tile::Tile* til
 			THROW( "unknown resource type: " + v.first );
 		}
 	}
-	yields_t yields = {};
+	map::tile::yields_t yields = {};
 	yields.reserve( m_resource_idx.size() );
 	for ( const auto& idx : m_resource_idx ) {
 		const auto& v = values.find( idx );

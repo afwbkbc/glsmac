@@ -474,10 +474,6 @@ private:
 	tile::Tile* m_tile_selected_before_base_popup = nullptr;
 
 private:
-	friend class tile::TileManager;
-	void SendGetTileData( const tile::Tile* tile );
-
-private:
 	friend class unit::UnitManager;
 	friend class base::BaseManager;
 

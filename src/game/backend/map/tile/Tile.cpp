@@ -122,7 +122,8 @@ const types::Buffer Tile::Serialize() const {
 
 	buf.WriteInt( yields.size() );
 	for ( const auto& y : yields ) {
-		buf.WriteInt( y );
+		buf.WriteString( y.first );
+		buf.WriteInt( y.second );
 	}
 
 	return buf;
@@ -150,7 +151,10 @@ void Tile::Unserialize( types::Buffer buf ) {
 	const auto yields_size = buf.ReadInt();
 	yields.reserve( yields_size );
 	for ( size_t i = 0 ; i < yields_size ; i++ ) {
-		yields.push_back( buf.ReadInt() );
+		yields.push_back({
+			buf.ReadString(),
+			buf.ReadInt()
+		});
 	}
 
 	Update();

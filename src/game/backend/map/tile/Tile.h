@@ -78,7 +78,7 @@ public:
 	feature_t features;
 	terraforming_t terraforming;
 
-	std::vector< uint16_t > yields = {};
+	yields_t yields = {};
 
 	// units (id -> unit)
 	std::map< size_t, unit::Unit* > units = {};
