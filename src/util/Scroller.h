@@ -36,9 +36,10 @@ CLASS( Scroller, util::Util )
 		const bool ticked = m_timer.HasTicked();
 
 		if ( ticked ) {
-			ASSERT( m_steps_left, "no scrolling steps but timer running" );
 
-			m_position += m_step;
+			if ( m_steps_left ) {
+				m_position += m_step;
+			}
 
 			if ( !--m_steps_left ) {
 				Stop();

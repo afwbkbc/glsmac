@@ -23,6 +23,7 @@ CLASS( UIEvent, common::Class )
 
 	// copy from other event
 	UIEvent( const UIEvent* other );
+	UIEvent( const event_type_t type, const event_data_t* data );
 
 protected:
 	UIEvent( const event_type_t type );

@@ -4,8 +4,6 @@
 #include <unordered_map>
 #include <atomic>
 
-#include "common/Common.h"
-
 // TODO: move to config
 extern const size_t g_max_fps;
 
@@ -74,12 +72,13 @@ class UI;
 
 namespace engine {
 
-CLASS( Engine, common::Class );
+class Engine {
+public:
 
 	Engine(
 		config::Config* config,
 		error_handler::ErrorHandler* error_handler,
-		logger::Logger* logger,
+		const std::vector< logger::Logger* >& loggers,
 		resource::ResourceManager* resource_manager,
 		loader::font::FontLoader* font_loader,
 		loader::texture::TextureLoader* texture_loader,
@@ -99,7 +98,6 @@ CLASS( Engine, common::Class );
 	void ShutDown();
 
 	config::Config* GetConfig() const { return m_config; }
-	logger::Logger* GetLogger() const { return m_logger; }
 	resource::ResourceManager* GetResourceManager() const { return m_resource_manager; }
 	loader::font::FontLoader* GetFontLoader() const { return m_font_loader; }
 	loader::texture::TextureLoader* GetTextureLoader() const { return m_texture_loader; }
@@ -113,6 +111,8 @@ CLASS( Engine, common::Class );
 	ui::UI* GetUI() const { return m_ui; }
 	game::backend::Game* GetGame() const { return m_game; }
 
+	void Log( const std::string& text ) const;
+
 protected:
 
 	std::atomic< bool > m_is_shutting_down = false;
@@ -121,7 +121,7 @@ protected:
 
 	config::Config* const m_config = nullptr;
 	error_handler::ErrorHandler* m_error_handler = nullptr;
-	logger::Logger* m_logger = nullptr;
+	const std::vector< logger::Logger* > m_loggers = {};
 	resource::ResourceManager* m_resource_manager = nullptr;
 	loader::font::FontLoader* m_font_loader = nullptr;
 	loader::texture::TextureLoader* m_texture_loader = nullptr;

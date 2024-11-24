@@ -18,7 +18,7 @@
 
 #endif
 
-#include "logger/Noop.h"
+#include "logger/Console.h"
 
 #ifdef DEBUG
 
@@ -52,6 +52,8 @@
 #include "task/gseprompt/GSEPrompt.h"
 #include "task/gsetests/GSETests.h"
 #endif
+
+#include "task/console/Console.h"
 
 #include "task/intro/Intro.h"
 #include "task/mainmenu/MainMenu.h"
@@ -143,187 +145,188 @@ int main( const int argc, const char* argv[] ) {
 
 	// logger needs to be outside of scope to be destroyed last
 
+	std::vector< logger::Logger* > loggers = {};
+
 #ifdef DEBUG
-	logger::Logger* logger;
-	if ( config.HasDebugFlag( config::Config::DF_QUIET ) ) {
-		NEW( logger, logger::Noop );
+	if ( !config.HasDebugFlag( config::Config::DF_QUIET ) ) {
+		loggers.push_back( new logger::Stdout() );
 	}
-	else {
-		NEW( logger, logger::Stdout );
-	}
-#else
-	NEWV( logger, logger::Noop );
+	loggers.push_back( new logger::Console() );
 #endif
-	{
 
 #ifdef _WIN32
-		error_handler::Win32 error_handler;
+	error_handler::Win32 error_handler;
 #else
-		error_handler::Stdout error_handler;
+	error_handler::Stdout error_handler;
 #endif
 
-		auto title = GLSMAC_VERSION_FULL;
+	auto title = GLSMAC_VERSION_FULL;
 #ifdef DEBUG
-		title += "-debug";
+	title += "-debug";
 #elif PORTABLE
-		title += "-portable";
+	title += "-portable";
 #endif
 
-		network::simpletcp::SimpleTCP network;
-		ui::Default ui;
-		scheduler::Simple scheduler;
+	network::simpletcp::SimpleTCP network;
+	ui::Default ui;
+	scheduler::Simple scheduler;
 
 #ifdef DEBUG
-		if ( config.HasDebugFlag( config::Config::DF_GSE_ONLY ) ) {
+	if ( config.HasDebugFlag( config::Config::DF_GSE_ONLY ) ) {
 
-			loader::font::Null font_loader;
-			loader::texture::Null texture_loader;
-			loader::sound::Null sound_loader;
-			input::Null input;
-			graphics::Null graphics;
-			audio::Null audio;
+		loader::font::Null font_loader;
+		loader::texture::Null texture_loader;
+		loader::sound::Null sound_loader;
+		input::Null input;
+		graphics::Null graphics;
+		audio::Null audio;
 
-			if ( config.HasDebugFlag( config::Config::DF_GSE_TESTS ) ) {
-				NEWV( task, task::gsetests::GSETests );
-				scheduler.AddTask( task );
-			}
-			else if ( config.HasDebugFlag( config::Config::DF_GSE_PROMPT_JS ) ) {
-				NEWV( task, task::gseprompt::GSEPrompt, "js" );
-				scheduler.AddTask( task );
-			}
-
-			engine::Engine engine(
-				&config,
-				&error_handler,
-				logger,
-				nullptr,
-				&font_loader,
-				&texture_loader,
-				&sound_loader,
-				nullptr,
-				&scheduler,
-				&input,
-				&graphics,
-				&audio,
-				&network,
-				&ui,
-				nullptr
-			);
-
-			result = engine.Run();
-		}
-		else
-#endif
-		{
-			game::backend::Game game;
-
-			resource::ResourceManager resource_manager;
-
-			loader::font::FreeType font_loader;
-			loader::texture::SDL2 texture_loader;
-			loader::sound::SDL2 sound_loader;
-			loader::txt::TXTLoaders txt_loaders;
-
-			input::sdl2::SDL2 input;
-			bool vsync = VSYNC;
-			if ( config.HasLaunchFlag( config::Config::LF_BENCHMARK ) ) {
-				vsync = false;
-			}
-			types::Vec2< size_t > window_size;
-			if ( config.HasLaunchFlag( config::Config::LF_WINDOW_SIZE ) ) {
-				window_size = config.GetWindowSize();
-			}
-			else {
-				window_size = {
-					WINDOW_WIDTH,
-					WINDOW_HEIGHT
-				};
-			}
-			bool start_fullscreen = START_FULLSCREEN;
-			if ( config.HasLaunchFlag( config::Config::LF_WINDOWED ) ) {
-				start_fullscreen = false;
-			}
-
-			graphics::opengl::OpenGL graphics( title, window_size.x, window_size.y, vsync, start_fullscreen );
-			audio::sdl2::SDL2 audio;
-
-#ifdef DEBUG
-			NEWV( debug_overlay, debug::DebugOverlay );
-			scheduler.AddTask( debug_overlay );
-#endif
-
-			// game common stuff
-			NEWV( task_common, task::Common );
-			scheduler.AddTask( task_common );
-
-			// game entry point
-			common::Task* task = nullptr;
-
-			engine::Engine engine(
-				&config,
-				&error_handler,
-				logger,
-				&resource_manager,
-				&font_loader,
-				&texture_loader,
-				&sound_loader,
-				&txt_loaders,
-				&scheduler,
-				&input,
-				&graphics,
-				&audio,
-				&network,
-				&ui,
-				&game
-			);
-
-			if ( config.HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
-				NEWV( state, game::backend::State ); // TODO: initialize settings randomly
-				state->m_settings.global.game_rules.Initialize();
-				state->InitBindings();
-				state->Configure();
-				const auto& rules = state->m_settings.global.game_rules;
-				game::backend::faction::Faction* faction = nullptr;
-				if ( config.HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
-					faction = state->GetFM()->Get( config.GetQuickstartFaction() );
-					if ( !faction ) {
-						std::string errmsg = "Faction \"" + config.GetQuickstartFaction() + "\" does not exist. Available factions:";
-						for ( const auto& f : state->GetFM()->GetAll() ) {
-							errmsg += " " + f->m_id;
-						}
-						THROW( errmsg );
-					}
-				}
-				NEWV(
-					player, game::backend::Player,
-					"Player",
-					game::backend::Player::PR_HOST,
-					faction,
-					rules.GetDefaultDifficultyLevel()
-				);
-				state->AddPlayer( player );
-				state->AddCIDSlot( 0, 0 );
-				state->m_slots->Resize( 1 );
-				auto& slot = state->m_slots->GetSlot( 0 );
-				slot.SetPlayer( player, 0, "" );
-				slot.SetLinkedGSID( state->m_settings.local.account.GetGSID() );
-				NEW( task, task::game::Game, state, 0, UH() {
-					g_engine->ShutDown();
-				} );
-			}
-			else if ( config.HasLaunchFlag( config::Config::LF_SKIPINTRO ) ) {
-				NEW( task, task::mainmenu::MainMenu );
-			}
-			else {
-				NEW( task, task::intro::Intro );
-			}
-
+		if ( config.HasDebugFlag( config::Config::DF_GSE_TESTS ) ) {
+			NEWV( task, task::gsetests::GSETests );
 			scheduler.AddTask( task );
-
-			result = engine.Run();
 		}
+		else if ( config.HasDebugFlag( config::Config::DF_GSE_PROMPT_JS ) ) {
+			NEWV( task, task::gseprompt::GSEPrompt, "js" );
+			scheduler.AddTask( task );
+		}
+
+		engine::Engine engine(
+			&config,
+			&error_handler,
+			loggers,
+			nullptr,
+			&font_loader,
+			&texture_loader,
+			&sound_loader,
+			nullptr,
+			&scheduler,
+			&input,
+			&graphics,
+			&audio,
+			&network,
+			&ui,
+			nullptr
+		);
+
+		result = engine.Run();
 	}
-	DELETE( logger );
+	else
+#endif
+	{
+		game::backend::Game game;
+
+		resource::ResourceManager resource_manager;
+
+		loader::font::FreeType font_loader;
+		loader::texture::SDL2 texture_loader;
+		loader::sound::SDL2 sound_loader;
+		loader::txt::TXTLoaders txt_loaders;
+
+		input::sdl2::SDL2 input;
+		bool vsync = VSYNC;
+		if ( config.HasLaunchFlag( config::Config::LF_BENCHMARK ) ) {
+			vsync = false;
+		}
+		types::Vec2< size_t > window_size;
+		if ( config.HasLaunchFlag( config::Config::LF_WINDOW_SIZE ) ) {
+			window_size = config.GetWindowSize();
+		}
+		else {
+			window_size = {
+				WINDOW_WIDTH,
+				WINDOW_HEIGHT
+			};
+		}
+		bool start_fullscreen = START_FULLSCREEN;
+		if ( config.HasLaunchFlag( config::Config::LF_WINDOWED ) ) {
+			start_fullscreen = false;
+		}
+
+		graphics::opengl::OpenGL graphics( title, window_size.x, window_size.y, vsync, start_fullscreen );
+		audio::sdl2::SDL2 audio;
+
+#ifdef DEBUG
+		NEWV( debug_overlay, debug::DebugOverlay );
+		scheduler.AddTask( debug_overlay );
+#endif
+
+		// game common stuff
+		NEWV( task_common, task::Common );
+		scheduler.AddTask( task_common );
+
+		// game entry point
+		common::Task* task = nullptr;
+
+		engine::Engine engine(
+			&config,
+			&error_handler,
+			loggers,
+			&resource_manager,
+			&font_loader,
+			&texture_loader,
+			&sound_loader,
+			&txt_loaders,
+			&scheduler,
+			&input,
+			&graphics,
+			&audio,
+			&network,
+			&ui,
+			&game
+		);
+
+		NEWV( console_task, task::console::Console );
+		scheduler.AddTask( console_task );
+
+		if ( config.HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
+			NEWV( state, game::backend::State ); // TODO: initialize settings randomly
+			state->m_settings.global.game_rules.Initialize();
+			state->InitBindings();
+			state->Configure();
+			const auto& rules = state->m_settings.global.game_rules;
+			game::backend::faction::Faction* faction = nullptr;
+			if ( config.HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
+				faction = state->GetFM()->Get( config.GetQuickstartFaction() );
+				if ( !faction ) {
+					std::string errmsg = "Faction \"" + config.GetQuickstartFaction() + "\" does not exist. Available factions:";
+					for ( const auto& f : state->GetFM()->GetAll() ) {
+						errmsg += " " + f->m_id;
+					}
+					THROW( errmsg );
+				}
+			}
+			NEWV(
+				player, game::backend::Player,
+				"Player",
+				game::backend::Player::PR_HOST,
+				faction,
+				rules.GetDefaultDifficultyLevel()
+			);
+			state->AddPlayer( player );
+			state->AddCIDSlot( 0, 0 );
+			state->m_slots->Resize( 1 );
+			auto& slot = state->m_slots->GetSlot( 0 );
+			slot.SetPlayer( player, 0, "" );
+			slot.SetLinkedGSID( state->m_settings.local.account.GetGSID() );
+			NEW( task, task::game::Game, state, 0, UH() {
+				g_engine->ShutDown();
+			} );
+		}
+		else if ( config.HasLaunchFlag( config::Config::LF_SKIPINTRO ) ) {
+			NEW( task, task::mainmenu::MainMenu );
+		}
+		else {
+			NEW( task, task::intro::Intro );
+		}
+
+		scheduler.AddTask( task );
+
+		result = engine.Run();
+	}
+
+	for ( const auto& logger : loggers ) {
+		delete logger;
+	}
 
 	return result;
 }

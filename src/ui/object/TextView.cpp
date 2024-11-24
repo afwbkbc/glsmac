@@ -371,6 +371,7 @@ void TextView::AddItem( const size_t index, const line_t& line ) {
 			SelectItem( index );
 		}
 	}
+
 }
 
 void TextView::AlignItem( UIObject* item, const size_t top ) {

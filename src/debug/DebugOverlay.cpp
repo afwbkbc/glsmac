@@ -34,7 +34,7 @@ void DebugOverlay::Start() {
 
 	m_toggle_handler = g_engine->GetUI()->AddGlobalEventHandler(
 		ui::event::EV_KEY_DOWN, EH( this ) {
-			if ( data->key.code == ui::event::K_GRAVE && !data->key.modifiers ) {
+			if ( data->key.code == ui::event::K_GRAVE && ( data->key.modifiers & ui::event::KM_SHIFT ) ) {
 				Toggle();
 				return true;
 			}

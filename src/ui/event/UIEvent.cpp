@@ -13,6 +13,13 @@ UIEvent::UIEvent( const UIEvent* other )
 	ASSERT( !other->IsProcessed(), "copying from processed event" );
 }
 
+UIEvent::UIEvent( const event_type_t type, const event_data_t* data )
+	: common::Class()
+	, m_type( type )
+	, m_data( *data ) {
+
+}
+
 UIEvent::UIEvent( const event_type_t type )
 	: common::Class()
 	, m_type( type ) {

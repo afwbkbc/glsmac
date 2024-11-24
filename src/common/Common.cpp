@@ -52,7 +52,7 @@ void Class::Log( const std::string& text ) const {
 			: 0;
 		last_time = time;
 #endif
-		g_engine->GetLogger()->Log(
+		g_engine->Log(
 #ifdef DEBUG
 			"[+" + std::to_string( duration ) + "ns] " +
 #endif
