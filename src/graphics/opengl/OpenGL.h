@@ -3,6 +3,8 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <stack>
+#include <functional>
 
 #define SDL_MAIN_HANDLED 1
 #include <SDL.h>
@@ -59,6 +61,10 @@ CLASS( OpenGL, Graphics )
 	FBO* CreateFBO();
 	void DestroyFBO( FBO* fbo );
 
+	void BindFramebufferBegin( const GLenum target, const GLuint buffer );
+	void BindFramebuffer( const GLenum target, const GLuint buffer, const std::function< void() >& f );
+	void BindFramebufferEnd( const GLenum target );
+
 	const bool IsFullscreen() const override;
 	void SetFullscreen() override;
 	void SetWindowed() override;
@@ -107,6 +113,9 @@ private:
 	bool m_is_fullscreen = false;
 
 	void UpdateViewportSize( const size_t width, const size_t height );
+
+	std::unordered_map< GLenum, std::stack< GLuint > > m_framebuffer_binds = {};
+
 };
 
 }

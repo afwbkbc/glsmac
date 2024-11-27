@@ -764,7 +764,7 @@ void MemoryWatcher::GLBindFramebuffer( GLenum target, GLuint buffer, const std::
 	if ( buffer ) {
 		auto it = m_opengl.framebuffers.find( buffer );
 		ASSERT( it != m_opengl.framebuffers.end(), "glBindFramebuffer framebuffer " + std::to_string( buffer ) + " was not generated @" + source );
-		ASSERT( m_opengl.current_framebuffer_mode == FM_NONE, "glBindFramebuffer op non-empty on bind @" + source );
+		//ASSERT( m_opengl.current_framebuffer_mode == FM_NONE, "glBindFramebuffer op non-empty on bind @" + source );
 		if ( it->second.textures.render ) {
 			ASSERT( it->second.textures.render != m_opengl.current_texture, "glBindTexture tried to bind framebuffer but render texture is bound too @" + source );
 		}
@@ -793,9 +793,9 @@ void MemoryWatcher::GLBindFramebuffer( GLenum target, GLuint buffer, const std::
 	);
 
 	if ( buffer != 0 ) {
-		ASSERT( m_opengl.current_framebuffer == 0,
+		/*ASSERT( m_opengl.current_framebuffer == 0,
 			"glBindFramebuffer called on already bound framebuffer ( " + std::to_string( m_opengl.current_framebuffer ) + ", " + std::to_string( buffer ) + " ) @" + source
-		);
+		);*/
 		//Log("Binding to opengl framebuffer " + std::to_string( buffer ) + " @" + source );
 	}
 	else {

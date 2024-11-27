@@ -17,6 +17,7 @@ class Scene;
 namespace graphics {
 namespace opengl {
 
+class OpenGL;
 class Texture;
 
 namespace shader_program {
@@ -28,7 +29,7 @@ class Routine;
 }
 
 CLASS( Scene, common::Class )
-	Scene( scene::Scene* scene, routine::Routine* routine );
+	Scene( OpenGL* opengl, scene::Scene* scene, routine::Routine* routine );
 	~Scene();
 	scene::Scene* GetScene() const;
 	Texture* GetSkyboxTexture() const;
@@ -41,6 +42,7 @@ CLASS( Scene, common::Class )
 	void OnWindowResize();
 
 protected:
+	OpenGL* m_opengl;
 	scene::Scene* m_scene;
 	routine::Routine* m_routine;
 

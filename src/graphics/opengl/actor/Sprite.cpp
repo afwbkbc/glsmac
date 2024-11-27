@@ -20,8 +20,8 @@
 namespace graphics {
 namespace opengl {
 
-Sprite::Sprite( scene::actor::Actor* actor )
-	: Actor( actor ) {
+Sprite::Sprite( OpenGL* opengl, scene::actor::Actor* actor )
+	: Actor( opengl, actor ) {
 
 	//Log( "Creating OpenGL actor for " + actor->GetName() );
 
@@ -102,7 +102,7 @@ scene::actor::Sprite* Sprite::GetSpriteActor() const {
 	}
 }
 
-void Sprite::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
+void Sprite::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
 
 	auto* sprite_actor = GetSpriteActor();
 

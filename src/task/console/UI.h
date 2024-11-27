@@ -34,7 +34,7 @@ public:
 
 private:
 	static constexpr size_t SLIDE_DURATION_MS = 100;
-	static constexpr size_t HISTORY_LINES_LIMIT = 40; // TODO: fix FPS with greater values
+	static constexpr size_t HISTORY_LINES_LIMIT = 1000;
 	static const std::string PROMPT_STR;
 
 	bool m_is_active = false;

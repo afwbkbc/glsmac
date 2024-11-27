@@ -83,6 +83,10 @@ void Font::DisableAttributes() const {
 	glDisableVertexAttribArray( attributes.coord );
 };
 
+void Font::ClearFlags() {
+	//glUniform1ui( uniforms.flags, 0 );
+}
+
 }
 }
 }

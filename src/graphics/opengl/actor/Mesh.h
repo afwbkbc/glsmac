@@ -17,9 +17,11 @@ class Mesh;
 namespace graphics {
 namespace opengl {
 
+class OpenGL;
+
 CLASS( Mesh, Actor )
 
-	Mesh( scene::actor::Actor* actor );
+	Mesh( OpenGL* opengl, scene::actor::Actor* actor );
 	~Mesh();
 
 	bool MeshReloadNeeded() override;
@@ -28,7 +30,7 @@ CLASS( Mesh, Actor )
 	void LoadMesh() override;
 	void LoadTexture() override;
 
-	void Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) override;
+	void DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) override;
 
 	void OnWindowResize() override;
 

@@ -16,8 +16,9 @@
 namespace graphics {
 namespace opengl {
 
-Scene::Scene( scene::Scene* scene, routine::Routine* routine )
-	: m_scene( scene )
+Scene::Scene( OpenGL* opengl, scene::Scene* scene, routine::Routine* routine )
+	: m_opengl( opengl )
+	, m_scene( scene )
 	, m_routine( routine ) {
 	m_name = scene->GetLocalName();
 }
@@ -128,12 +129,12 @@ void Scene::Update() {
 			switch ( actor_type ) {
 				case scene::actor::Actor::TYPE_SPRITE:
 				case scene::actor::Actor::TYPE_INSTANCED_SPRITE: {
-					NEW( gl_actor, Sprite, (scene::actor::Sprite*)*it );
+					NEW( gl_actor, Sprite, m_opengl, (scene::actor::Sprite*)*it );
 					break;
 				}
 				case scene::actor::Actor::TYPE_MESH:
 				case scene::actor::Actor::TYPE_INSTANCED_MESH: {
-					NEW( gl_actor, Mesh, (scene::actor::Mesh*)*it );
+					NEW( gl_actor, Mesh, m_opengl, (scene::actor::Mesh*)*it );
 					break;
 				}
 				default: {

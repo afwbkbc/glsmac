@@ -28,6 +28,9 @@ CLASS( ShaderProgram, common::Module )
 	void Stop() override;
 	void Enable();
 	void Disable();
+
+	virtual void ClearFlags() = 0;
+
 protected:
 	const type_t m_type;
 

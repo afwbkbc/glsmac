@@ -5,7 +5,10 @@
 namespace logger {
 
 void Console::Log( const std::string& text ) {
-	task::console::Console::Log( text );
+	// stress-test
+	/*for ( size_t i = 0 ; i < 10 ; i++ ) {
+		task::console::Console::Log( text );
+	}*/
 }
 
 }

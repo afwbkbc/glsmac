@@ -146,6 +146,10 @@ void Orthographic::DisableAttributes() const {
 	glDisableVertexAttribArray( attributes.normal );
 };
 
+void Orthographic::ClearFlags() {
+	//glUniform1ui( uniforms.flags, 0 );
+}
+
 }
 }
 }

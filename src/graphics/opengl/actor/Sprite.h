@@ -18,9 +18,11 @@ class Sprite;
 namespace graphics {
 namespace opengl {
 
+class OpenGL;
+
 CLASS( Sprite, Actor )
 
-	Sprite( scene::actor::Actor* actor );
+	Sprite( OpenGL* opengl, scene::actor::Actor* actor );
 	~Sprite();
 
 	bool MeshReloadNeeded() override;
@@ -29,7 +31,7 @@ CLASS( Sprite, Actor )
 	void LoadMesh() override;
 	void LoadTexture() override;
 
-	void Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) override;
+	void DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) override;
 
 protected:
 

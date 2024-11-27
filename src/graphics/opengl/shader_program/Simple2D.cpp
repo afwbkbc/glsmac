@@ -96,6 +96,10 @@ void Simple2D::DisableAttributes() const {
 	glDisableVertexAttribArray( attributes.tex_coord );
 };
 
+void Simple2D::ClearFlags() {
+	glUniform1ui( uniforms.flags, 0 );
+}
+
 }
 }
 }

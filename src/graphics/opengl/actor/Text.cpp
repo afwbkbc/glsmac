@@ -8,8 +8,8 @@
 namespace graphics {
 namespace opengl {
 
-Text::Text( scene::actor::Text* actor, types::Font* font )
-	: Actor( actor )
+Text::Text( OpenGL* opengl, scene::actor::Text* actor, types::Font* font )
+	: Actor( opengl, actor )
 	, m_font( font ) {
 	//Log( "Creating OpenGL text '" + actor->GetText() + "' with font " + font->m_name );
 	glGenBuffers( 1, &m_vbo );
@@ -124,7 +124,7 @@ void Text::Update( types::Font* font, const std::string& text, const float x, co
 	}
 }
 
-void Text::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
+void Text::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
 	if ( m_boxes_count > 0 ) {
 		auto* sp = (shader_program::Font*)shader_program;
 

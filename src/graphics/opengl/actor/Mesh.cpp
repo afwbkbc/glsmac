@@ -25,8 +25,8 @@
 namespace graphics {
 namespace opengl {
 
-Mesh::Mesh( scene::actor::Actor* actor )
-	: Actor( actor ) {
+Mesh::Mesh( OpenGL* opengl, scene::actor::Actor* actor )
+	: Actor( opengl, actor ) {
 
 	//Log( "Creating OpenGL actor for " + actor->GetName() );
 
@@ -42,12 +42,14 @@ Mesh::~Mesh() {
 	glDeleteBuffers( 1, &m_vbo );
 
 	if ( m_data.is_allocated ) {
-		glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
-		glDeleteTextures( 1, &m_data.picking_texture );
-		glDeleteTextures( 1, &m_data.depth_texture );
-		glDeleteBuffers( 1, &m_data.vbo );
-		glDeleteBuffers( 1, &m_data.ibo );
-		glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+		m_opengl->BindFramebuffer(
+			GL_FRAMEBUFFER, m_data.fbo, [ this ] {
+				glDeleteTextures( 1, &m_data.picking_texture );
+				glDeleteTextures( 1, &m_data.depth_texture );
+				glDeleteBuffers( 1, &m_data.vbo );
+				glDeleteBuffers( 1, &m_data.ibo );
+			}
+		);
 		glDeleteFramebuffers( 1, &m_data.fbo );
 	}
 }
@@ -155,56 +157,58 @@ void Mesh::PrepareDataMesh() {
 			Log( "Initializing data mesh" );
 
 			glGenFramebuffers( 1, &m_data.fbo );
-			glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
 
-			glGenBuffers( 1, &m_data.vbo );
-			glGenBuffers( 1, &m_data.ibo );
-
-			glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+			m_opengl->BindFramebuffer(
+				GL_FRAMEBUFFER, m_data.fbo, [ this ] {
+					glGenBuffers( 1, &m_data.vbo );
+					glGenBuffers( 1, &m_data.ibo );
+				}
+			);
 
 			m_data.ibo_size = data_mesh->GetIndexCount();
 		}
 
-		glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
+		m_opengl->BindFramebuffer(
+			GL_FRAMEBUFFER, m_data.fbo, [ this, &data_mesh ] {
 
-		glBindBuffer( GL_ARRAY_BUFFER, m_data.vbo );
-		glBufferData( GL_ARRAY_BUFFER, data_mesh->GetVertexDataSize(), (GLvoid*)ptr( data_mesh->GetVertexData(), 0, data_mesh->GetVertexDataSize() ), GL_STATIC_DRAW );
-		glBindBuffer( GL_ARRAY_BUFFER, 0 );
+				glBindBuffer( GL_ARRAY_BUFFER, m_data.vbo );
+				glBufferData( GL_ARRAY_BUFFER, data_mesh->GetVertexDataSize(), (GLvoid*)ptr( data_mesh->GetVertexData(), 0, data_mesh->GetVertexDataSize() ), GL_STATIC_DRAW );
+				glBindBuffer( GL_ARRAY_BUFFER, 0 );
 
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_data.ibo );
-		glBufferData( GL_ELEMENT_ARRAY_BUFFER, data_mesh->GetIndexDataSize(), (GLvoid*)ptr( data_mesh->GetIndexData(), 0, data_mesh->GetIndexDataSize() ), GL_STATIC_DRAW );
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+				glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_data.ibo );
+				glBufferData( GL_ELEMENT_ARRAY_BUFFER, data_mesh->GetIndexDataSize(), (GLvoid*)ptr( data_mesh->GetIndexData(), 0, data_mesh->GetIndexDataSize() ), GL_STATIC_DRAW );
+				glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 
-		size_t w = g_engine->GetGraphics()->GetViewportWidth();
-		size_t h = g_engine->GetGraphics()->GetViewportHeight();
+				size_t w = g_engine->GetGraphics()->GetViewportWidth();
+				size_t h = g_engine->GetGraphics()->GetViewportHeight();
 
-		Log( "(re)loading data mesh (viewport size: " + std::to_string( w ) + "x" + std::to_string( h ) + ")" );
+				Log( "(re)loading data mesh (viewport size: " + std::to_string( w ) + "x" + std::to_string( h ) + ")" );
 
-		if ( !m_data.is_allocated ) {
-			glGenTextures( 1, &m_data.picking_texture );
-		}
-		glBindTexture( GL_TEXTURE_2D, m_data.picking_texture );
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_R32UI, w, h, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-		glBindTexture( GL_TEXTURE_2D, 0 );
-		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_data.picking_texture, 0 );
+				if ( !m_data.is_allocated ) {
+					glGenTextures( 1, &m_data.picking_texture );
+				}
+				glBindTexture( GL_TEXTURE_2D, m_data.picking_texture );
+				glTexImage2D( GL_TEXTURE_2D, 0, GL_R32UI, w, h, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+				glBindTexture( GL_TEXTURE_2D, 0 );
+				glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_data.picking_texture, 0 );
 
-		if ( !m_data.is_allocated ) {
-			glGenTextures( 1, &m_data.depth_texture );
-		}
-		glBindTexture( GL_TEXTURE_2D, m_data.depth_texture );
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL );
-		glBindTexture( GL_TEXTURE_2D, 0 );
-		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_data.depth_texture, 0 );
+				if ( !m_data.is_allocated ) {
+					glGenTextures( 1, &m_data.depth_texture );
+				}
+				glBindTexture( GL_TEXTURE_2D, m_data.depth_texture );
+				glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL );
+				glBindTexture( GL_TEXTURE_2D, 0 );
+				glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_data.depth_texture, 0 );
 
 #ifdef DEBUG
-		GLenum status = glCheckFramebufferStatus( GL_FRAMEBUFFER );
-		ASSERT( status == GL_FRAMEBUFFER_COMPLETE, "FB error, status: " + std::to_string( status ) );
+				GLenum status = glCheckFramebufferStatus( GL_FRAMEBUFFER );
+				ASSERT( status == GL_FRAMEBUFFER_COMPLETE, "FB error, status: " + std::to_string( status ) );
 #endif
 
-		glBindFramebuffer( GL_FRAMEBUFFER, 0 );
-
+			}
+		);
 		m_data.is_up_to_date = true;
 		if ( !m_data.is_allocated ) {
 			m_data.is_allocated = true;
@@ -213,7 +217,7 @@ void Mesh::PrepareDataMesh() {
 
 }
 
-void Mesh::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
+void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
 
 	l_draw_begin:
 
@@ -229,7 +233,7 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* c
 			return; // nothing to do
 		}
 		PrepareDataMesh();
-		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, m_data.fbo );
+		m_opengl->BindFramebufferBegin( GL_DRAW_FRAMEBUFFER, m_data.fbo );
 		glDrawBuffer( GL_COLOR_ATTACHMENT0 );
 		glBindBuffer( GL_ARRAY_BUFFER, m_data.vbo );
 		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_data.ibo );
@@ -247,7 +251,7 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* c
 			capture_request = mesh_actor->RR_GetRequests< rr::Capture >().front();
 			ASSERT( capture_request->camera, "capture request without camera" );
 
-			NEW( fbo, FBO, capture_request->texture_width, capture_request->texture_height );
+			NEW( fbo, FBO, m_opengl, capture_request->texture_width, capture_request->texture_height );
 			fbo->WriteBegin();
 
 		}
@@ -420,19 +424,21 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* c
 		glBindBuffer( GL_ARRAY_BUFFER, 0 );
 
 		glDrawBuffer( GL_NONE );
-		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
+		m_opengl->BindFramebufferEnd( GL_DRAW_FRAMEBUFFER );
 
-		glBindFramebuffer( GL_READ_FRAMEBUFFER, m_data.fbo );
-		glReadBuffer( GL_COLOR_ATTACHMENT0 );
+		m_opengl->BindFramebuffer(
+			GL_READ_FRAMEBUFFER, m_data.fbo, [ this, &mesh_actor ] {
+				glReadBuffer( GL_COLOR_ATTACHMENT0 );
 
-		auto requests = mesh_actor->RR_GetRequests< rr::GetData >();
-		for ( auto& r : requests ) {
-			r->data = GetDataAt( r->screen_x, r->screen_inverse_y );
-			r->SetProcessed();
-		}
+				auto requests = mesh_actor->RR_GetRequests< rr::GetData >();
+				for ( auto& r : requests ) {
+					r->data = GetDataAt( r->screen_x, r->screen_inverse_y );
+					r->SetProcessed();
+				}
 
-		glReadBuffer( GL_NONE );
-		glBindFramebuffer( GL_READ_FRAMEBUFFER, 0 );
+				glReadBuffer( GL_NONE );
+			}
+		);
 
 	}
 	else {

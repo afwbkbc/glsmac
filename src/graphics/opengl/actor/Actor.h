@@ -14,13 +14,16 @@ class Camera;
 namespace graphics {
 namespace opengl {
 
+class OpenGL;
+class FBO;
+
 namespace shader_program {
 class ShaderProgram;
 }
 
 CLASS( Actor, common::Class )
 
-	Actor( scene::actor::Actor* actor );
+	Actor( OpenGL* opengl, scene::actor::Actor* actor );
 	~Actor();
 
 	virtual void LoadMesh() {};
@@ -30,7 +33,8 @@ CLASS( Actor, common::Class )
 	virtual bool MeshReloadNeeded() { return false; }
 	virtual bool TextureReloadNeeded() { return false; }
 
-	virtual void Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) = 0;
+	void Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr );
+
 	scene::actor::Actor* GetActor() const {
 		return m_actor;
 	}
@@ -43,10 +47,17 @@ CLASS( Actor, common::Class )
 	virtual void OnWindowResize() {};
 
 protected:
+	virtual void DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) = 0;
+
 	scene::actor::Actor* m_actor;
 
 	float m_z_index = 0.0f;
 
+	OpenGL* m_opengl;
+	
+private:
+	bool m_is_redraw_needed = true;
+	FBO* m_fbo = nullptr;
 };
 
 }

@@ -2,12 +2,14 @@
 
 #include "types/mesh/Simple.h"
 #include "types/texture/Texture.h"
+#include "graphics/opengl/OpenGL.h"
 #include "graphics/opengl/shader_program/Simple2D.h"
 
 namespace graphics {
 namespace opengl {
 
-FBO::FBO( const size_t width, const size_t height ) {
+FBO::FBO( OpenGL* opengl, const size_t width, const size_t height )
+	: m_opengl( opengl ) {
 
 	// texture render buffers
 	glGenBuffers( 1, &m_vbo );
@@ -84,17 +86,18 @@ FBO::FBO( const size_t width, const size_t height ) {
 
 	// framebuffer
 	glGenFramebuffers( 1, &m_fbo );
-	glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
 
+	m_opengl->BindFramebuffer(
+		GL_FRAMEBUFFER, m_fbo, [ this ]() {
 #ifdef DEBUG
-	GLenum status = glCheckFramebufferStatus( GL_FRAMEBUFFER );
-	ASSERT( GL_FRAMEBUFFER_COMPLETE, "FB error, status: " + std::to_string( status ) );
+			GLenum status = glCheckFramebufferStatus( GL_FRAMEBUFFER );
+			ASSERT( GL_FRAMEBUFFER_COMPLETE, "FB error, status: " + std::to_string( status ) );
 #endif
 
-	glGenTextures( 1, &m_textures.render );
-	glGenTextures( 1, &m_textures.depth );
-
-	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+			glGenTextures( 1, &m_textures.render );
+			glGenTextures( 1, &m_textures.depth );
+		}
+	);
 
 	m_width = m_height = 0;
 	Resize( width, height );
@@ -105,10 +108,13 @@ FBO::~FBO() {
 	glDeleteBuffers( 1, &m_vbo );
 	glDeleteBuffers( 1, &m_ibo );
 
-	glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
-	glDeleteTextures( 1, &m_textures.render );
-	glDeleteTextures( 1, &m_textures.depth );
-	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+	m_opengl->BindFramebuffer(
+		GL_FRAMEBUFFER, m_fbo, [ this ]() {
+			glDeleteTextures( 1, &m_textures.render );
+			glDeleteTextures( 1, &m_textures.depth );
+		}
+	);
+
 	glDeleteFramebuffers( 1, &m_fbo );
 
 	DELETE( m_mesh );
@@ -128,21 +134,21 @@ void FBO::Resize( size_t width, size_t height ) {
 		m_width = width;
 		m_height = height;
 
-		glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+		m_opengl->BindFramebuffer(
+			GL_FRAMEBUFFER, m_fbo, [ this ] {
+				glBindTexture( GL_TEXTURE_2D, m_textures.render );
+				glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+				glBindTexture( GL_TEXTURE_2D, 0 );
+				glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_textures.render, 0 );
 
-		glBindTexture( GL_TEXTURE_2D, m_textures.render );
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-		glBindTexture( GL_TEXTURE_2D, 0 );
-		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_textures.render, 0 );
-
-		glBindTexture( GL_TEXTURE_2D, m_textures.depth );
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, m_width, m_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL );
-		glBindTexture( GL_TEXTURE_2D, 0 );
-		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_textures.depth, 0 );
-
-		glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+				glBindTexture( GL_TEXTURE_2D, m_textures.depth );
+				glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, m_width, m_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL );
+				glBindTexture( GL_TEXTURE_2D, 0 );
+				glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_textures.depth, 0 );
+			}
+		);
 
 	}
 }
@@ -152,7 +158,7 @@ void FBO::WriteBegin() {
 	ASSERT( m_width > 0, "fbo width is zero" );
 	ASSERT( m_height > 0, "fbo height is zero" );
 
-	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, m_fbo );
+	m_opengl->BindFramebufferBegin( GL_DRAW_FRAMEBUFFER, m_fbo );
 	glDrawBuffer( GL_COLOR_ATTACHMENT0 );
 
 	if ( INTERNAL_RESOLUTION_MULTIPLIER != 1 ) {
@@ -171,24 +177,29 @@ void FBO::WriteBegin() {
 	m_is_enabled = true;
 }
 
+void FBO::Write( const std::function< void() >& f ) {
+	WriteBegin();
+	f();
+	WriteEnd();
+}
+
 void FBO::WriteEnd() {
-	ASSERT( m_is_enabled, "fbo already disabled" );
+	m_is_enabled = false;
 
 	// restore default
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
 	glDrawBuffer( GL_NONE );
-	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
 
 	if ( INTERNAL_RESOLUTION_MULTIPLIER != 1 ) {
 		// restore
 		glViewport( 0, 0, m_width / INTERNAL_RESOLUTION_MULTIPLIER, m_height / INTERNAL_RESOLUTION_MULTIPLIER );
 	}
 
-	m_is_enabled = false;
+	m_opengl->BindFramebufferEnd( GL_DRAW_FRAMEBUFFER );
 }
 
-void FBO::Draw( shader_program::Simple2D* sp ) {
+void FBO::Draw( shader_program::ShaderProgram* sp ) {
 	ASSERT( !m_is_enabled, "can't draw fbo that is being written to" );
 	ASSERT( m_width > 0, "fbo width is zero" );
 	ASSERT( m_height > 0, "fbo height is zero" );
@@ -201,7 +212,7 @@ void FBO::Draw( shader_program::Simple2D* sp ) {
 
 	sp->Enable();
 
-	glUniform1ui( sp->uniforms.flags, 0 );
+	sp->ClearFlags();
 
 	glBindTexture( GL_TEXTURE_2D, m_textures.render );
 	glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void*)( 0 ) );
@@ -227,13 +238,13 @@ types::texture::Texture* FBO::CaptureToTexture() {
 
 	NEWV( texture, types::texture::Texture, "FBOCapture", width, height );
 
-	glBindFramebuffer( GL_READ_FRAMEBUFFER, m_fbo );
-	glReadBuffer( GL_COLOR_ATTACHMENT0 );
-
-	glReadPixels( 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, texture->m_bitmap );
-
-	glReadBuffer( GL_NONE );
-	glBindFramebuffer( GL_READ_FRAMEBUFFER, 0 );
+	m_opengl->BindFramebuffer(
+		GL_READ_FRAMEBUFFER, m_fbo, [ &width, &height, &texture ] {
+			glReadBuffer( GL_COLOR_ATTACHMENT0 );
+			glReadPixels( 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, texture->m_bitmap );
+			glReadBuffer( GL_NONE );
+		}
+	);
 
 	return texture;
 }

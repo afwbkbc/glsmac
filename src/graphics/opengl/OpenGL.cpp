@@ -504,7 +504,7 @@ void OpenGL::DisableTexture() {
 }
 
 FBO* OpenGL::CreateFBO() {
-	NEWV( fbo, FBO, m_options.viewport_width, m_options.viewport_height );
+	NEWV( fbo, FBO, this, m_options.viewport_width, m_options.viewport_height );
 	Log( "Created FBO " + fbo->GetName() );
 	m_fbos.insert( fbo );
 	return fbo;
@@ -516,6 +516,37 @@ void OpenGL::DestroyFBO( FBO* fbo ) {
 	m_fbos.erase( it );
 	Log( "Destroyed FBO " + fbo->GetName() );
 	DELETE( fbo );
+}
+
+void OpenGL::BindFramebufferBegin( const GLenum target, const GLuint buffer ) {
+	auto it = m_framebuffer_binds.find( target );
+	if ( it == m_framebuffer_binds.end() ) {
+		it = m_framebuffer_binds.insert(
+			{
+				target,
+				{}
+			}
+		).first;
+	}
+	it->second.push( buffer );
+	glBindFramebuffer( target, buffer );
+}
+
+void OpenGL::BindFramebuffer( const GLenum target, const GLuint buffer, const std::function< void() >& f ) {
+	BindFramebufferBegin( target, buffer );
+	f();
+	BindFramebufferEnd( target );
+}
+
+void OpenGL::BindFramebufferEnd( const GLenum target ) {
+	ASSERT( m_framebuffer_binds.find( target ) != m_framebuffer_binds.end(), "framebuffer target not found" );
+	auto& binds = m_framebuffer_binds.at( target );
+	ASSERT( !binds.empty(), "framebuffer binds empty" );
+	binds.pop();
+	const auto lastbuffer = binds.empty()
+		? 0
+		: binds.top();
+	glBindFramebuffer( target, lastbuffer );
 }
 
 void OpenGL::ResizeWindow( const size_t width, const size_t height ) {

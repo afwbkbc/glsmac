@@ -30,6 +30,8 @@ protected:
 	void Initialize() override;
 	void EnableAttributes() const override;
 	void DisableAttributes() const override;
+
+	void ClearFlags() override {}
 };
 
 }
