@@ -20,7 +20,7 @@ namespace opengl {
 
 CLASS( Sprite, Actor )
 
-	Sprite( scene::actor::Actor* actor );
+	Sprite( OpenGL* opengl, scene::actor::Actor* actor );
 	~Sprite();
 
 	bool MeshReloadNeeded() override;

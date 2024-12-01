@@ -14,13 +14,15 @@ class Camera;
 namespace graphics {
 namespace opengl {
 
+class OpenGL;
+
 namespace shader_program {
 class ShaderProgram;
 }
 
 CLASS( Actor, common::Class )
 
-	Actor( scene::actor::Actor* actor );
+	Actor( OpenGL* opengl, scene::actor::Actor* actor );
 	~Actor();
 
 	virtual void LoadMesh() {};
@@ -43,6 +45,7 @@ CLASS( Actor, common::Class )
 	virtual void OnWindowResize() {};
 
 protected:
+	OpenGL* m_opengl;
 	scene::actor::Actor* m_actor;
 
 	float m_z_index = 0.0f;

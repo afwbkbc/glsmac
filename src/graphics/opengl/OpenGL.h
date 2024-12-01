@@ -53,8 +53,8 @@ CLASS( OpenGL, Graphics )
 
 	void LoadTexture( types::texture::Texture* texture ) override;
 	void UnloadTexture( const types::texture::Texture* texture ) override;
-	void EnableTexture( const types::texture::Texture* texture ) override;
-	void DisableTexture() override;
+
+	void WithTexture( const types::texture::Texture* texture, const f_t& f ) override;
 
 	FBO* CreateFBO();
 	void DestroyFBO( FBO* fbo );
@@ -69,6 +69,13 @@ CLASS( OpenGL, Graphics )
 
 	void ResizeViewport( const size_t width, const size_t height );
 	void ResizeWindow( const size_t width, const size_t height ) override;
+
+	void WithBindBuffer( GLenum target, GLuint buffer, const f_t& f ) const;
+	void WithBindBuffers( GLuint vbo, GLuint ibo, const f_t& f ) const;
+	void WithBindTexture( GLuint texture, const f_t& f ) const;
+	void WithBindFramebufferBegin( GLenum target, GLuint buffer ) const;
+	void WithBindFramebuffer( GLenum target, GLuint buffer, const f_t& f ) const;
+	void WithBindFramebufferEnd( GLenum target ) const;
 
 protected:
 	struct {

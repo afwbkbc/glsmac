@@ -38,8 +38,6 @@ CLASS( Scene, common::Class )
 	Camera* GetCamera() const;
 	void AddLight( Light* light );
 	std::unordered_set< Light* >* GetLights();
-	void SetSkyboxTexture( types::texture::Texture* skybox_texture );
-	types::texture::Texture* GetSkyboxTexture();
 
 	void SetWorldInstancePositions( const instance_positions_t& world_instance_positions );
 	const instance_positions_t& GetWorldInstancePositions() const;

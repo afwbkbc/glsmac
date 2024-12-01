@@ -1200,7 +1200,9 @@ void UIObject::SetFocusable( bool is_focusable ) {
 }
 
 void UIObject::Refresh() {
-	g_engine->GetUI()->Redraw(); // TODO: partial updates
+	if ( m_is_actually_visible ) {
+		g_engine->GetUI()->Redraw(); // TODO: partial updates
+	}
 }
 
 void UIObject::UpdateAreaLimits() {

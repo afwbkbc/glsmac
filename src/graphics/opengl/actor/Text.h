@@ -21,7 +21,7 @@ class FontTexture;
 
 CLASS( Text, Actor )
 
-	Text( scene::actor::Text* actor, types::Font* font );
+	Text( OpenGL* opengl, scene::actor::Text* actor, types::Font* font );
 	~Text();
 
 	void Update( types::Font* font, const std::string& text, const float x, const float y );

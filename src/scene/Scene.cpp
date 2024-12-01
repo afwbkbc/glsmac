@@ -49,14 +49,6 @@ std::unordered_set< Light* >* Scene::GetLights() {
 	return &m_lights;
 }
 
-void Scene::SetSkyboxTexture( types::texture::Texture* skybox_texture ) {
-	m_skybox_texture = skybox_texture;
-}
-
-types::texture::Texture* Scene::GetSkyboxTexture() {
-	return m_skybox_texture;
-}
-
 void Scene::SetWorldInstancePositions( const instance_positions_t& world_instance_positions ) {
 	Log( "Setting " + std::to_string( world_instance_positions.size() ) + " world instances" );
 	m_game_instance_positions = world_instance_positions;

@@ -9,7 +9,6 @@
 #include "scene/Scene.h"
 #include "scene/Camera.h"
 #include "routine/Overlay.h"
-#include "routine/Skybox.h"
 #include "routine/World.h"
 #include "FBO.h"
 #include "types/texture/Texture.h"
@@ -27,17 +26,6 @@ OpenGL::OpenGL( const std::string title, const unsigned short window_width, cons
 	m_options.vsync = vsync;
 
 	m_is_fullscreen = fullscreen;
-
-/*	NEWV( sp_skybox, shader_program::Skybox );
-	m_shader_programs.push_back( sp_skybox );
-	NEWV( r_skybox, routine::Skybox, sp_skybox );
-	m_routines.push_back( r_skybox );
-
-	NEWV( sp_world, shader_program::World );
-	m_shader_programs.push_back( sp_world );
-	NEWV( r_world, routine::World, sp_world );
-	m_routines.push_back( r_world );
-*/
 
 	// shader programs
 	NEWV( sp_orthographic, shader_program::Orthographic );
@@ -158,13 +146,13 @@ void OpenGL::Start() {
 	glActiveTexture( GL_TEXTURE0 );
 	glGenTextures( 1, &m_no_texture );
 
-	glBindTexture( GL_TEXTURE_2D, m_no_texture );
-
-	uint32_t nothing = 0;
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &nothing );
-	ASSERT( !glGetError(), "Error loading texture" );
-
-	glBindTexture( GL_TEXTURE_2D, 0 );
+	WithBindTexture(
+		m_no_texture, [ this ]() {
+			uint32_t nothing = 0;
+			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &nothing );
+			ASSERT( !glGetError(), "Error loading texture" );
+		}
+	);
 
 	OnWindowResize();
 }
@@ -320,159 +308,160 @@ void OpenGL::LoadTexture( types::texture::Texture* texture ) {
 	if ( is_reload_needed ) {
 		//Log( "Loading texture '" + texture->m_name + "'" );
 
-		glBindTexture( GL_TEXTURE_2D, t.obj );
+		WithBindTexture(
+			t.obj, [ this, &need_full_update, &texture ]() {
 
-		if ( need_full_update ) {
-			ASSERT( !glGetError(), "Texture parameter error" );
-			glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+				if ( need_full_update ) {
+					ASSERT( !glGetError(), "Texture parameter error" );
+					glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
 
-			glTexImage2D(
-				GL_TEXTURE_2D,
-				0,
-				GL_RGBA8,
-				(GLsizei)texture->m_width,
-				(GLsizei)texture->m_height,
-				0,
-				GL_RGBA,
-				GL_UNSIGNED_BYTE,
-				ptr( texture->m_bitmap, 0, texture->m_width * texture->m_height * 4 )
-			);
-
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-		}
-		else if ( !texture->GetUpdatedAreas().empty() ) {
-
-			// combine multiple updates into one or fewer
-
-			types::texture::Texture::updated_areas_t areas = {};
-
-			const auto& updated_areas = texture->GetUpdatedAreas();
-
-			const uint8_t od = 1; // overlap distance
-
-			const auto f_are_combineable = []( const types::texture::Texture::updated_area_t& first, const types::texture::Texture::updated_area_t& second ) -> bool {
-				return
-					(
-						( first.left + od >= second.left && first.left - od <= second.right ) ||
-							( first.right + od >= second.left && first.right - od <= second.right )
-					) &&
-						(
-							( first.top + od >= second.top && first.top - od <= second.bottom ) ||
-								( first.bottom + od >= second.top && first.bottom - od <= second.bottom )
-						);
-			};
-
-			const auto f_combine = []( types::texture::Texture::updated_area_t& first, const types::texture::Texture::updated_area_t& second ) -> void {
-				//Log( "Merging texture area " + second.ToString() + " into " + first.ToString() );
-				first.left = std::min< size_t >( first.left, second.left );
-				first.top = std::min< size_t >( first.top, second.top );
-				first.right = std::max< size_t >( first.right, second.right );
-				first.bottom = std::max< size_t >( first.bottom, second.bottom );
-			};
-
-			// mark area as removed (merged into another)
-			const auto f_remove = []( types::texture::Texture::updated_area_t& area ) -> void {
-				area.right = area.top = 0; // hackish but no actual area would have these coordinates at 0
-			};
-
-			// check if area was marked as removed (to skip)
-			const auto f_is_removed = []( const types::texture::Texture::updated_area_t& area ) -> bool {
-				return area.right == 0 && area.top == 0;
-			};
-
-			for ( auto& updated_area : updated_areas ) {
-				//Log( "Processing texture area " + updated_area.ToString() );
-				// try to merge with existing one
-				auto it = areas.begin();
-				while ( it != areas.end() ) {
-					// if it overlaps then we can merge with existing (TODO: can optimize further by measuring overlap size)
-					if ( f_are_combineable( updated_area, *it ) ) {
-						// extend area to fit both new one and old one
-						f_combine( *it, updated_area );
-						break;
-					}
-					it++;
-				}
-				if ( it == areas.end() ) {
-					// couldn't find any suitable areas, add new one
-					//Log( "Adding texture area " + updated_area.ToString() );
-					areas.push_back(
-						{
-							updated_area.left,
-							updated_area.top,
-							updated_area.right,
-							updated_area.bottom
-						}
+					glTexImage2D(
+						GL_TEXTURE_2D,
+						0,
+						GL_RGBA8,
+						(GLsizei)texture->m_width,
+						(GLsizei)texture->m_height,
+						0,
+						GL_RGBA,
+						GL_UNSIGNED_BYTE,
+						ptr( texture->m_bitmap, 0, texture->m_width * texture->m_height * 4 )
 					);
-				}
-			}
 
-			// keep combining until can't combine anymore
-			bool combined = true;
-			do {
-				combined = false;
-				for ( auto it_dst = areas.begin() ; it_dst < areas.end() ; it_dst++ ) {
-					if ( f_is_removed( *it_dst ) ) {
-						continue;
+					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+				}
+				else if ( !texture->GetUpdatedAreas().empty() ) {
+
+					// combine multiple updates into one or fewer
+
+					types::texture::Texture::updated_areas_t areas = {};
+
+					const auto& updated_areas = texture->GetUpdatedAreas();
+
+					const uint8_t od = 1; // overlap distance
+
+					const auto f_are_combineable = []( const types::texture::Texture::updated_area_t& first, const types::texture::Texture::updated_area_t& second ) -> bool {
+						return
+							(
+								( first.left + od >= second.left && first.left - od <= second.right ) ||
+									( first.right + od >= second.left && first.right - od <= second.right )
+							) &&
+								(
+									( first.top + od >= second.top && first.top - od <= second.bottom ) ||
+										( first.bottom + od >= second.top && first.bottom - od <= second.bottom )
+								);
+					};
+
+					const auto f_combine = []( types::texture::Texture::updated_area_t& first, const types::texture::Texture::updated_area_t& second ) -> void {
+						//Log( "Merging texture area " + second.ToString() + " into " + first.ToString() );
+						first.left = std::min< size_t >( first.left, second.left );
+						first.top = std::min< size_t >( first.top, second.top );
+						first.right = std::max< size_t >( first.right, second.right );
+						first.bottom = std::max< size_t >( first.bottom, second.bottom );
+					};
+
+					// mark area as removed (merged into another)
+					const auto f_remove = []( types::texture::Texture::updated_area_t& area ) -> void {
+						area.right = area.top = 0; // hackish but no actual area would have these coordinates at 0
+					};
+
+					// check if area was marked as removed (to skip)
+					const auto f_is_removed = []( const types::texture::Texture::updated_area_t& area ) -> bool {
+						return area.right == 0 && area.top == 0;
+					};
+
+					for ( auto& updated_area : updated_areas ) {
+						//Log( "Processing texture area " + updated_area.ToString() );
+						// try to merge with existing one
+						auto it = areas.begin();
+						while ( it != areas.end() ) {
+							// if it overlaps then we can merge with existing (TODO: can optimize further by measuring overlap size)
+							if ( f_are_combineable( updated_area, *it ) ) {
+								// extend area to fit both new one and old one
+								f_combine( *it, updated_area );
+								break;
+							}
+							it++;
+						}
+						if ( it == areas.end() ) {
+							// couldn't find any suitable areas, add new one
+							//Log( "Adding texture area " + updated_area.ToString() );
+							areas.push_back(
+								{
+									updated_area.left,
+									updated_area.top,
+									updated_area.right,
+									updated_area.bottom
+								}
+							);
+						}
 					}
-					for ( auto it_src = it_dst + 1 ; it_src < areas.end() ; it_src++ ) {
-						if ( f_is_removed( *it_src ) ) {
+
+					// keep combining until can't combine anymore
+					bool combined = true;
+					do {
+						combined = false;
+						for ( auto it_dst = areas.begin() ; it_dst < areas.end() ; it_dst++ ) {
+							if ( f_is_removed( *it_dst ) ) {
+								continue;
+							}
+							for ( auto it_src = it_dst + 1 ; it_src < areas.end() ; it_src++ ) {
+								if ( f_is_removed( *it_src ) ) {
+									continue;
+								}
+								if ( f_are_combineable( *it_dst, *it_src ) ) {
+									//Log( "Merging texture area " + it_src->ToString() + " into " + it_dst->ToString() );
+									f_combine( *it_dst, *it_src );
+									f_remove( *it_src );
+									combined = true;
+								}
+							}
+						}
+					}
+					while ( combined );
+
+					// reload areas into opengl
+					for ( auto& area : areas ) {
+						if ( f_is_removed( area ) ) {
 							continue;
 						}
-						if ( f_are_combineable( *it_dst, *it_src ) ) {
-							//Log( "Merging texture area " + it_src->ToString() + " into " + it_dst->ToString() );
-							f_combine( *it_dst, *it_src );
-							f_remove( *it_src );
-							combined = true;
-						}
+
+						//Log( "Reloading texture area " + area.ToString() );
+
+						const size_t w = area.right - area.left;
+						const size_t h = area.bottom - area.top;
+
+						auto* bitmap = texture->CopyBitmap(
+							area.left,
+							area.top,
+							area.right,
+							area.bottom
+						);
+
+						glTexSubImage2D(
+							GL_TEXTURE_2D,
+							0,
+							area.left,
+							area.top,
+							w,
+							h,
+							GL_RGBA,
+							GL_UNSIGNED_BYTE,
+							ptr( bitmap, 0, w * h * 4 )
+						);
+
+						free( bitmap );
 					}
 				}
+				texture->ClearUpdatedAreas();
+
+				ASSERT( !glGetError(), "Error loading texture" );
+
+				glGenerateMipmap( GL_TEXTURE_2D );
 			}
-			while ( combined );
-
-			// reload areas into opengl
-			for ( auto& area : areas ) {
-				if ( f_is_removed( area ) ) {
-					continue;
-				}
-
-				//Log( "Reloading texture area " + area.ToString() );
-
-				const size_t w = area.right - area.left;
-				const size_t h = area.bottom - area.top;
-
-				auto* bitmap = texture->CopyBitmap(
-					area.left,
-					area.top,
-					area.right,
-					area.bottom
-				);
-
-				glTexSubImage2D(
-					GL_TEXTURE_2D,
-					0,
-					area.left,
-					area.top,
-					w,
-					h,
-					GL_RGBA,
-					GL_UNSIGNED_BYTE,
-					ptr( bitmap, 0, w * h * 4 )
-				);
-
-				free( bitmap );
-			}
-		}
-		texture->ClearUpdatedAreas();
-
-		ASSERT( !glGetError(), "Error loading texture" );
-
-		glGenerateMipmap( GL_TEXTURE_2D );
-
-		glBindTexture( GL_TEXTURE_2D, 0 );
+		);
 
 		ASSERT( !glGetError(), "Error somewhere while loading texture" );
 	}
@@ -488,23 +477,21 @@ void OpenGL::UnloadTexture( const types::texture::Texture* texture ) {
 	}
 }
 
-void OpenGL::EnableTexture( const types::texture::Texture* texture ) {
+void OpenGL::WithTexture( const types::texture::Texture* texture, const f_t& f ) {
+	GLuint obj;
 	if ( texture ) {
 		auto it = m_textures.find( texture );
 		ASSERT( it != m_textures.end(), "texture to be enabled ( " + texture->m_name + " ) not found" );
-		glBindTexture( GL_TEXTURE_2D, it->second.obj );
+		obj = it->second.obj;
 	}
 	else {
-		glBindTexture( GL_TEXTURE_2D, m_no_texture );
+		obj = m_no_texture;
 	}
-}
-
-void OpenGL::DisableTexture() {
-	glBindTexture( GL_TEXTURE_2D, 0 );
+	WithBindTexture( obj, f );
 }
 
 FBO* OpenGL::CreateFBO() {
-	NEWV( fbo, FBO, m_options.viewport_width, m_options.viewport_height );
+	NEWV( fbo, FBO, this, m_options.viewport_width, m_options.viewport_height );
 	Log( "Created FBO " + fbo->GetName() );
 	m_fbos.insert( fbo );
 	return fbo;
@@ -527,6 +514,40 @@ void OpenGL::ResizeWindow( const size_t width, const size_t height ) {
 		m_window_size.y = height;
 		ResizeViewport( width, height );
 	}
+}
+
+void OpenGL::WithBindBuffer( GLenum target, GLuint buffer, const f_t& f ) const {
+	glBindBuffer( target, buffer );
+	f();
+	glBindBuffer( target, 0 );
+}
+
+void OpenGL::WithBindBuffers( GLuint vbo, GLuint ibo, const graphics::Graphics::f_t& f ) const {
+	glBindBuffer( GL_ARRAY_BUFFER, vbo );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, ibo );
+	f();
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+}
+
+void OpenGL::WithBindTexture( GLuint texture, const f_t& f ) const {
+	glBindTexture( GL_TEXTURE_2D, texture );
+	f();
+	glBindTexture( GL_TEXTURE_2D, 0 );
+}
+
+void OpenGL::WithBindFramebufferBegin( GLenum target, GLuint buffer ) const {
+	glBindFramebuffer( target, buffer );
+}
+
+void OpenGL::WithBindFramebuffer( GLenum target, GLuint buffer, const graphics::Graphics::f_t& f ) const {
+	glBindFramebuffer( target, buffer );
+	f();
+	glBindFramebuffer( target, 0 );
+}
+
+void OpenGL::WithBindFramebufferEnd( GLenum target ) const {
+	glBindFramebuffer( target, 0 );
 }
 
 void OpenGL::ResizeViewport( const size_t width, const size_t height ) {

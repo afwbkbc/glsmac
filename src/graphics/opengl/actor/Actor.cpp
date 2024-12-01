@@ -5,8 +5,9 @@
 namespace graphics {
 namespace opengl {
 
-Actor::Actor( scene::actor::Actor* actor )
-	: m_actor( actor ) {
+Actor::Actor( OpenGL* opengl, scene::actor::Actor* actor )
+	: m_opengl( opengl )
+	, m_actor( actor ) {
 	m_name = actor->GetLocalName();
 }
 

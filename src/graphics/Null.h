@@ -18,8 +18,7 @@ CLASS( Null, Graphics )
 
 	void LoadTexture( types::texture::Texture* texture ) override {};
 	void UnloadTexture( const types::texture::Texture* texture ) override {};
-	void EnableTexture( const types::texture::Texture* texture ) override {};
-	void DisableTexture() override {};
+	void WithTexture( const types::texture::Texture* texture, const f_t& f ) override {};
 
 	const bool IsFullscreen() const override { return false; }
 	void SetFullscreen() override {}

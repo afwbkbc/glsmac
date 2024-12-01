@@ -20,7 +20,7 @@ bool Routine::AddScene( scene::Scene* scene ) {
 
 		m_scenes.push_back( scene );
 
-		NEWV( gl_scene, opengl::Scene, scene, this );
+		NEWV( gl_scene, opengl::Scene, m_opengl, scene, this );
 
 		m_gl_scenes.push_back( gl_scene );
 

@@ -13,9 +13,11 @@
 namespace graphics {
 namespace opengl {
 
+class OpenGL;
+
 CLASS( FontTexture, common::Class )
 
-	FontTexture( types::Font* font );
+	FontTexture( OpenGL* opengl, types::Font* font );
 	~FontTexture();
 
 	// ascii only for now
