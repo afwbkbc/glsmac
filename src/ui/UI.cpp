@@ -162,6 +162,10 @@ scene::Scene* UI::GetTextScene() {
 	return m_shape_scene_simple2d;
 }
 
+scene::Scene* UI::GetCacheScene() {
+	return m_shape_scene_simple2d;
+}
+
 void UI::SetWorldUIMatrix( const types::Matrix44& matrix ) {
 	m_game_ui_matrix = matrix;
 }

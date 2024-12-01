@@ -2,6 +2,7 @@ SET( SRC ${SRC}
 
 	${PWD}/UIObject.cpp
 	${PWD}/UIContainer.cpp
+	${PWD}/Root.cpp
 	${PWD}/Mesh.cpp
 	${PWD}/Surface.cpp
 	${PWD}/Panel.cpp

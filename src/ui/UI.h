@@ -66,6 +66,7 @@ CLASS( UI, common::Module )
 
 	scene::Scene* GetShapeScene( const types::mesh::Mesh* mesh );
 	scene::Scene* GetTextScene();
+	scene::Scene* GetCacheScene();
 
 	void SetWorldUIMatrix( const types::Matrix44& matrix );
 	const types::Matrix44& GetWorldUIMatrix() const;

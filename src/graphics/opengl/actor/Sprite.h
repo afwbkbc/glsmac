@@ -29,9 +29,9 @@ CLASS( Sprite, Actor )
 	void LoadMesh() override;
 	void LoadTexture() override;
 
-	void Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) override;
-
 protected:
+
+	void DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) override;
 
 	scene::actor::Sprite* GetSpriteActor() const;
 

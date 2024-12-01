@@ -2,6 +2,7 @@
 
 #include "scene/Scene.h"
 #include "scene/Camera.h"
+#include "scene/actor/Cache.h"
 #include "common/ObjectLink.h"
 
 namespace scene {
@@ -77,6 +78,16 @@ void Actor::SetRenderFlags( const render_flag_t render_flags ) {
 
 const Actor::render_flag_t Actor::GetRenderFlags() const {
 	return m_render_flags;
+}
+
+void Actor::SetCacheParent( Cache* cache ) {
+	ASSERT( !m_cache, "cache parent already set" );
+	m_cache = cache;
+	m_cache->AddCacheChild( this );
+}
+
+const Cache* Actor::GetCacheParent() const {
+	return m_cache;
 }
 
 const types::Buffer Actor::Serialize() const {

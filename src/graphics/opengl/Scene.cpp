@@ -193,7 +193,11 @@ void Scene::Draw( shader_program::ShaderProgram* shader_program, shader_program:
 					actor->Draw( shader_program, m_scene->GetCamera() );
 				}
 			}
+			const auto err = glGetError();
+			ASSERT( !err, (std::string)"Actor draw error: " + (char*)glewGetErrorString( err ) );
 		}
+		const auto err = glGetError();
+		ASSERT( !err, (std::string)"Scene draw error: " + (char*)glewGetErrorString( err ) );
 	}
 
 }

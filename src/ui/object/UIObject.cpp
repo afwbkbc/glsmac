@@ -133,18 +133,16 @@ void UIObject::UpdateZIndex() {
 }
 
 scene::Scene* UIObject::GetSceneOfActor( const scene::actor::Actor* actor ) const {
-	scene::Scene* scene;
 	switch ( actor->GetType() ) {
 		case ( scene::actor::Actor::TYPE_MESH ):
-			scene = g_engine->GetUI()->GetShapeScene( ( (scene::actor::Mesh*)actor )->GetMesh() );
-			break;
+			return g_engine->GetUI()->GetShapeScene( ( (scene::actor::Mesh*)actor )->GetMesh() );
 		case ( scene::actor::Actor::TYPE_TEXT ):
-			scene = g_engine->GetUI()->GetTextScene();
-			break;
+			return g_engine->GetUI()->GetTextScene();
+		case ( scene::actor::Actor::TYPE_CACHE ):
+			return g_engine->GetUI()->GetCacheScene();
 		default:
 			THROW( "unsupported actor type" );
 	}
-	return scene;
 }
 
 void UIObject::ApplyStyle() {

@@ -221,7 +221,7 @@ void Mesh::PrepareDataMesh() {
 
 }
 
-void Mesh::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
+void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
 
 	l_draw_begin:
 

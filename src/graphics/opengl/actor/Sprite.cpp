@@ -100,7 +100,7 @@ scene::actor::Sprite* Sprite::GetSpriteActor() const {
 	}
 }
 
-void Sprite::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
+void Sprite::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
 
 	auto* sprite_actor = GetSpriteActor();
 

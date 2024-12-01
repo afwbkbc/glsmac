@@ -124,7 +124,8 @@ void Text::Update( types::Font* font, const std::string& text, const float x, co
 	}
 }
 
-void Text::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
+void Text::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
+	ASSERT( shader_program->GetType() == shader_program::ShaderProgram::TYPE_FONT, "unexpected shader program" );
 	if ( m_boxes_count > 0 ) {
 		auto* sp = (shader_program::Font*)shader_program;
 

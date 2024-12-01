@@ -15,7 +15,7 @@ void Style::AddStyles() {
 			s->Set( ui::A_TOP, 0 );
 			s->Set( ui::A_LEFT, 0 );
 			s->Set( ui::A_RIGHT, 0 );
-			s->Set( ui::A_Z_INDEX, 0.9f );
+			s->Set( ui::A_Z_INDEX, 0.7f );
 		}
 	);
 

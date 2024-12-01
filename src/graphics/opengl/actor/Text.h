@@ -25,10 +25,11 @@ CLASS( Text, Actor )
 	~Text();
 
 	void Update( types::Font* font, const std::string& text, const float x, const float y );
-	void Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) override;
 
 protected:
 
+	void DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) override;
+	
 	struct vertex_t {
 		GLfloat x;
 		GLfloat y;

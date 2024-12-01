@@ -28,11 +28,11 @@ CLASS( Mesh, Actor )
 	void LoadMesh() override;
 	void LoadTexture() override;
 
-	void Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) override;
-
 	void OnWindowResize() override;
 
 protected:
+
+	void DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) override;
 
 	scene::actor::Mesh* GetMeshActor() const;
 

@@ -3,11 +3,13 @@
 #include "graphics/opengl/OpenGL.h"
 #include "graphics/opengl/FBO.h"
 #include "graphics/opengl/actor/Text.h"
+#include "graphics/opengl/actor/Cache.h"
 #include "graphics/opengl/shader_program/Simple2D.h"
 #include "graphics/opengl/shader_program/Font.h"
 #include "scene/Scene.h"
 #include "scene/actor/Actor.h"
 #include "scene/actor/Text.h"
+#include "scene/actor/Cache.h"
 
 namespace graphics {
 namespace opengl {
@@ -51,7 +53,8 @@ void Overlay::Iterate() {
 							THROW( "unknown scene type " + std::to_string( scene->GetScene()->GetType() ) );
 						}
 					}
-					ASSERT( !glGetError(), "Overlay draw error" );
+					const auto err = glGetError();
+					ASSERT( !err, (std::string)"Overlay draw error: " + (char*)glewGetErrorString( err ) );
 				}
 			}
 		);
@@ -70,6 +73,10 @@ opengl::Actor* Overlay::AddCustomActor( scene::actor::Actor* actor ) {
 		case scene::actor::Actor::TYPE_TEXT: {
 			auto* text_actor = (scene::actor::Text*)actor;
 			NEWV( result, Text, m_opengl, text_actor, text_actor->GetFont() );
+			return result;
+		}
+		case scene::actor::Actor::TYPE_CACHE: {
+			NEWV( result, Cache, m_opengl, (scene::actor::Cache*)actor );
 			return result;
 		}
 		default: {

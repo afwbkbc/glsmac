@@ -4,6 +4,10 @@
 
 #include "UIObject.h"
 
+namespace scene::actor {
+class Cache;
+}
+
 namespace ui {
 
 namespace event {
@@ -72,6 +76,8 @@ protected:
 	coord_t m_padding = 0;
 
 private:
+	scene::actor::Cache* m_cache = nullptr;
+
 	void CreateChild( UIObject* object );
 	void DestroyChild( UIObject* object );
 

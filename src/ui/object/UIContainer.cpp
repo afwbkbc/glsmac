@@ -2,6 +2,8 @@
 
 #include "UIContainer.h"
 
+#include "scene/actor/Cache.h"
+
 #include "ui/UI.h"
 #include "ui/event/UIEvent.h"
 
@@ -17,6 +19,15 @@ UIContainer::UIContainer( const std::string& class_name )
 void UIContainer::Create() {
 	UIObject::Create();
 
+	std::string cls = "UI::Cache";
+	std::string style_class = GetStyleClass();
+	if ( !style_class.empty() ) {
+		cls += "::" + style_class;
+	}
+
+	NEW( m_cache, scene::actor::Cache, cls );
+	AddActor( m_cache );
+
 	for ( auto& child : m_child_objects ) {
 		CreateChild( child );
 	}
@@ -28,6 +39,10 @@ void UIContainer::Destroy() {
 	}
 
 	ASSERT( m_child_objects.empty(), "some children still alive upon parent destruction!" );
+
+	RemoveActor( m_cache );
+	DELETE( m_cache );
+	m_cache = nullptr;
 
 	UIObject::Destroy();
 }
@@ -43,6 +58,9 @@ void UIContainer::Iterate() {
 void UIContainer::CreateChild( UIObject* object ) {
 	object->ApplyStyleIfNotLoaded();
 	object->Create();
+	for ( auto& actor : object->m_actors ) {
+		actor->SetCacheParent( m_cache );
+	}
 	object->AddStyleModifier( m_style_modifiers );
 	object->Realign();
 	object->EnableActors();
