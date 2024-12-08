@@ -4,6 +4,7 @@
 #include "scene/actor/Text.h"
 #include "graphics/opengl/OpenGL.h"
 #include "graphics/opengl/texture/FontTexture.h"
+#include "graphics/opengl/shader_program/Simple2D.h"
 
 namespace graphics {
 namespace opengl {
@@ -93,10 +94,10 @@ void Text::Update( types::Font* font, const std::string& text, const float x, co
 
 				boxes.push_back(
 					{
-						{ x2,     -y2,     tbx1, tby1 },
-						{ x2 + w, -y2,     tbx2, tby1 },
-						{ x2,     -y2 - h, tbx1, tby2 },
-						{ x2 + w, -y2 - h, tbx2, tby2 },
+						{ x2,     -y2,     0, tbx1, tby1 },
+						{ x2 + w, -y2,     0, tbx2, tby1 },
+						{ x2,     -y2 - h, 0, tbx1, tby2 },
+						{ x2 + w, -y2 - h, 0, tbx2, tby2 },
 					}
 				);
 
@@ -125,8 +126,9 @@ void Text::Update( types::Font* font, const std::string& text, const float x, co
 }
 
 void Text::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
+	ASSERT( shader_program->GetType() == shader_program::ShaderProgram::TYPE_SIMPLE2D, "unexpected shader program" );
 	if ( m_boxes_count > 0 ) {
-		auto* sp = (shader_program::Font*)shader_program;
+		auto* sp = (shader_program::Simple2D*)shader_program;
 
 		auto* text_actor = (const scene::actor::Text*)m_actor;
 
@@ -138,31 +140,33 @@ void Text::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* c
 				m_opengl->WithBindTexture(
 					m_texture->m_texture, [ this, &text_actor, &sp ]() {
 
-						sp->Enable();
+						m_opengl->WithShaderProgram(
+							sp, [ this, &text_actor, &sp ]() {
 
-						auto flags = text_actor->GetRenderFlags();
+								auto flags = text_actor->GetRenderFlags() | scene::actor::Actor::RF_USE_TINT;
 
-						glUniform1ui( sp->uniforms.flags, flags );
-						if ( flags & scene::actor::Actor::RF_USE_AREA_LIMITS ) {
-							const auto& limits = text_actor->GetAreaLimits();
-							glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
-							glUniform3fv( sp->uniforms.area_limits.max, 1, (const GLfloat*)&limits.second );
-						}
+								glUniform1ui( sp->uniforms.flags, flags );
+								if ( flags & scene::actor::Actor::RF_USE_AREA_LIMITS ) {
+									const auto& limits = text_actor->GetAreaLimits();
+									glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
+									glUniform3fv( sp->uniforms.area_limits.max, 1, (const GLfloat*)&limits.second );
+								}
 
-						if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
-							glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&m_coords );
-						}
+								if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
+									glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&m_coords );
+								}
 
-						glUniform1i( sp->uniforms.texture, 0 );
-						glUniform4fv( sp->uniforms.color, 1, (const GLfloat*)&text_actor->GetColor().value );
-						auto position = m_actor->GetPosition();
-						glUniform1f( sp->uniforms.z_index, position.z );
+								glUniform1i( sp->uniforms.texture, 0 );
+								glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&text_actor->GetColor().value );
+								//auto position = m_actor->GetPosition();
+								//glUniform1f( sp->uniforms.z_index, position.z );
 
-						for ( size_t c = 0 ; c < m_boxes_count ; c++ ) {
-							glDrawArrays( GL_TRIANGLE_STRIP, c * 4, 4 );
-						}
+								for ( size_t c = 0 ; c < m_boxes_count ; c++ ) {
+									glDrawArrays( GL_TRIANGLE_STRIP, c * 4, 4 );
+								}
 
-						sp->Disable();
+							}
+						);
 
 					}
 				);

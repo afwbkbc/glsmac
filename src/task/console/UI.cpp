@@ -217,6 +217,7 @@ void UI::ToggleAndSlide() {
 	m_is_active = !m_is_active;
 	const auto to = GetTopTarget();
 	const auto duration = fabs( from - to ) / m_last_height * SLIDE_DURATION_MS;
+	SetTop( from );
 	m_slide.Scroll( from, to, duration );
 }
 

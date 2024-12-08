@@ -109,93 +109,86 @@ void Sprite::Draw( shader_program::ShaderProgram* shader_program, scene::Camera*
 	m_opengl->WithBindBuffers(
 		m_vbo, m_ibo, [ this, &shader_program, &sprite_actor, &camera ]() {
 
-			shader_program->Enable();
+			m_opengl->WithShaderProgram(
+				shader_program, [ this, &shader_program, &sprite_actor, &camera ]() {
 
-			const auto* texture = sprite_actor->GetTexture();
+					const auto* texture = sprite_actor->GetTexture();
 
-			g_engine->GetGraphics()->WithTexture(
-				texture, [ this, &shader_program, &sprite_actor, &camera ]() {
+					g_engine->GetGraphics()->WithTexture(
+						texture, [ this, &shader_program, &sprite_actor, &camera ]() {
 
-					switch ( shader_program->GetType() ) {
-						case ( shader_program::ShaderProgram::TYPE_ORTHO_DATA ): {
-							// no data for sprites
-							break;
-						}
-						case ( shader_program::ShaderProgram::TYPE_ORTHO ): {
-							auto* sp = (shader_program::Orthographic*)shader_program;
-
-							auto flags = sprite_actor->GetRenderFlags();
-							glUniform1ui( sp->uniforms.flags, flags );
-							if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
-								const types::Vec3 pos = sprite_actor->NormalizePosition( sprite_actor->GetPosition() );
-								glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&pos );
-							}
-
-							auto* lights = m_actor->GetScene()->GetLights();
-							if ( !lights->empty() ) {
-								types::Vec3 light_pos[lights->size()];
-								types::Color::color_t light_color[lights->size()];
-								size_t i = 0;
-								for ( auto& light : *lights ) {
-									light_pos[ i ] = light->GetPosition();
-									light_color[ i ] = light->GetColor();
-									i++;
+							switch ( shader_program->GetType() ) {
+								case ( shader_program::ShaderProgram::TYPE_ORTHO_DATA ): {
+									// no data for sprites
+									break;
 								}
-								glUniform3fv( sp->uniforms.light_pos, lights->size(), (const GLfloat*)light_pos );
-								glUniform4fv( sp->uniforms.light_color, lights->size(), (const GLfloat*)light_color );
-							}
+								case ( shader_program::ShaderProgram::TYPE_ORTHO ): {
+									auto* sp = (shader_program::Orthographic*)shader_program;
 
-							if ( !( flags & scene::actor::Actor::RF_SPRITES_DEPTH ) ) {
-								glDisable( GL_DEPTH_TEST );
-							}
+									auto flags = sprite_actor->GetRenderFlags();
+									glUniform1ui( sp->uniforms.flags, flags );
+									if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
+										const types::Vec3 pos = sprite_actor->NormalizePosition( sprite_actor->GetPosition() );
+										glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&pos );
+									}
 
-							glUniformMatrix4fv( sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)&camera->GetMatrix() );
+									auto* lights = m_actor->GetScene()->GetLights();
+									if ( !lights->empty() ) {
+										types::Vec3 light_pos[lights->size()];
+										types::Color::color_t light_color[lights->size()];
+										size_t i = 0;
+										for ( auto& light : *lights ) {
+											light_pos[ i ] = light->GetPosition();
+											light_color[ i ] = light->GetColor();
+											i++;
+										}
+										glUniform3fv( sp->uniforms.light_pos, lights->size(), (const GLfloat*)light_pos );
+										glUniform4fv( sp->uniforms.light_color, lights->size(), (const GLfloat*)light_color );
+									}
 
-							if ( m_actor->GetType() == scene::actor::Actor::TYPE_SPRITE ) {
-								types::Matrix44 matrix = m_actor->GetWorldMatrix();
-								glUniformMatrix4fv( sp->uniforms.instances, 1, GL_TRUE, (const GLfloat*)( &matrix ) );
-								glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void*)( 0 ) );
-							}
-							else if ( m_actor->GetType() == scene::actor::Actor::TYPE_INSTANCED_SPRITE ) {
-								auto* instanced = (scene::actor::Instanced*)m_actor;
-								auto& matrices = instanced->GetInstanceMatrices();
-								const auto sz = matrices.size();
-								GLsizei i = 0;
-								GLsizei c;
-								for ( auto i = 0 ; i < sz ; i += OpenGL::MAX_INSTANCES ) {
-									c = std::min< size_t >( OpenGL::MAX_INSTANCES, sz - i );
-									glUniformMatrix4fv( sp->uniforms.instances, c, GL_TRUE, (const GLfloat*)( matrices.data() + i ) );
-									glDrawElementsInstanced( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void*)( 0 ), c );
+									if ( !( flags & scene::actor::Actor::RF_SPRITES_DEPTH ) ) {
+										glDisable( GL_DEPTH_TEST );
+									}
+
+									glUniformMatrix4fv( sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)&camera->GetMatrix() );
+
+									if ( m_actor->GetType() == scene::actor::Actor::TYPE_SPRITE ) {
+										types::Matrix44 matrix = m_actor->GetWorldMatrix();
+										glUniformMatrix4fv( sp->uniforms.instances, 1, GL_TRUE, (const GLfloat*)( &matrix ) );
+										glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void*)( 0 ) );
+									}
+									else if ( m_actor->GetType() == scene::actor::Actor::TYPE_INSTANCED_SPRITE ) {
+										auto* instanced = (scene::actor::Instanced*)m_actor;
+										auto& matrices = instanced->GetInstanceMatrices();
+										const auto sz = matrices.size();
+										GLsizei i = 0;
+										GLsizei c;
+										for ( auto i = 0 ; i < sz ; i += OpenGL::MAX_INSTANCES ) {
+											c = std::min< size_t >( OpenGL::MAX_INSTANCES, sz - i );
+											glUniformMatrix4fv( sp->uniforms.instances, c, GL_TRUE, (const GLfloat*)( matrices.data() + i ) );
+											glDrawElementsInstanced( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void*)( 0 ), c );
+										}
+									}
+									else {
+										THROW( "unknown actor type " + std::to_string( m_actor->GetType() ) );
+									}
+
+									if ( !( flags & scene::actor::Actor::RF_SPRITES_DEPTH ) ) {
+										glEnable( GL_DEPTH_TEST );
+									}
+
+									break;
+								}
+
+								default: {
+									THROW( "shader program type " + std::to_string( shader_program->GetType() ) + " not implemented" );
 								}
 							}
-							else {
-								THROW( "unknown actor type " + std::to_string( m_actor->GetType() ) );
-							}
 
-							if ( !( flags & scene::actor::Actor::RF_SPRITES_DEPTH ) ) {
-								glEnable( GL_DEPTH_TEST );
-							}
-
-							break;
 						}
-
-/*		case ( shader_program::ShaderProgram::TYPE_PERSP ): {
-
-			// TODO
-			THROW( "perspective projection not implemented yet" );
-			
-			break;
-
-		}*/
-						default: {
-							THROW( "shader program type " + std::to_string( shader_program->GetType() ) + " not implemented" );
-						}
-					}
-
+					);
 				}
 			);
-
-			shader_program->Disable();
 
 		}
 	);

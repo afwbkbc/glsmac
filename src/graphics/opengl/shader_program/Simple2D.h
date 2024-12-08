@@ -6,7 +6,7 @@ namespace graphics {
 namespace opengl {
 
 class Mesh;
-
+class Text;
 class FBO;
 
 namespace shader_program {
@@ -16,6 +16,7 @@ CLASS( Simple2D, ShaderProgram )
 		: ShaderProgram( TYPE_SIMPLE2D ) {};
 protected:
 	friend class opengl::Mesh;
+	friend class opengl::Text;
 	friend class opengl::FBO;
 
 	struct {

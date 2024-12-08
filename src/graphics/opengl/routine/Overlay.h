@@ -7,7 +7,6 @@ namespace opengl {
 
 namespace shader_program {
 class Simple2D;
-class Font;
 }
 
 class FBO;
@@ -15,7 +14,7 @@ class FBO;
 namespace routine {
 
 CLASS( Overlay, Routine )
-	Overlay( OpenGL* opengl, shader_program::Simple2D* shader_program, shader_program::Font* shader_program_font );
+	Overlay( OpenGL* opengl, shader_program::Simple2D* shader_program );
 
 	void Start() override;
 	void Stop() override;
@@ -32,7 +31,6 @@ protected:
 	bool m_is_redraw_needed = false;
 
 	shader_program::Simple2D* m_shader_program = nullptr;
-	shader_program::Font* m_shader_program_font = nullptr;
 
 	FBO* m_fbo = nullptr;
 };

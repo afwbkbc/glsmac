@@ -4,7 +4,6 @@
 #include "graphics/opengl/FBO.h"
 #include "graphics/opengl/actor/Text.h"
 #include "graphics/opengl/shader_program/Simple2D.h"
-#include "graphics/opengl/shader_program/Font.h"
 #include "scene/Scene.h"
 #include "scene/actor/Actor.h"
 #include "scene/actor/Text.h"
@@ -13,10 +12,9 @@ namespace graphics {
 namespace opengl {
 namespace routine {
 
-Overlay::Overlay( OpenGL* opengl, shader_program::Simple2D* shader_program, shader_program::Font* shader_program_font )
+Overlay::Overlay( OpenGL* opengl, shader_program::Simple2D* shader_program )
 	: Routine( opengl )
-	, m_shader_program( shader_program )
-	, m_shader_program_font( shader_program_font ) {
+	, m_shader_program( shader_program ) {
 	//
 }
 
@@ -44,7 +42,7 @@ void Overlay::Iterate() {
 				for ( auto& scene : m_gl_scenes ) {
 					switch ( scene->GetScene()->GetType() ) {
 						case scene::SCENE_TYPE_SIMPLE2D: {
-							scene->Draw( m_shader_program, m_shader_program_font );
+							scene->Draw( m_shader_program );
 							break;
 						}
 						default: {

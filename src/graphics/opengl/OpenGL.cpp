@@ -5,7 +5,6 @@
 #include "shader_program/Simple2D.h"
 #include "shader_program/Orthographic.h"
 #include "shader_program/OrthographicData.h"
-#include "shader_program/Font.h"
 #include "scene/Scene.h"
 #include "scene/Camera.h"
 #include "routine/Overlay.h"
@@ -34,13 +33,11 @@ OpenGL::OpenGL( const std::string title, const unsigned short window_width, cons
 	m_shader_programs.push_back( sp_orthographic_data );
 	NEWV( sp_simple2d, shader_program::Simple2D );
 	m_shader_programs.push_back( sp_simple2d );
-	NEWV( sp_font, shader_program::Font );
-	m_shader_programs.push_back( sp_font );
 
 	// routines ( order is important )
 	NEWV( r_world, routine::World, this, scene::SCENE_TYPE_ORTHO, sp_orthographic, sp_orthographic_data );
 	m_routines.push_back( r_world );
-	NEWV( r_overlay, routine::Overlay, this, sp_simple2d, sp_font );
+	NEWV( r_overlay, routine::Overlay, this, sp_simple2d );
 	m_routines.push_back( r_overlay );
 	NEWV( r_world_ui, routine::World, this, scene::SCENE_TYPE_ORTHO_UI, sp_orthographic, sp_orthographic_data );
 	m_routines.push_back( r_world_ui );
@@ -548,6 +545,12 @@ void OpenGL::WithBindFramebuffer( GLenum target, GLuint buffer, const graphics::
 
 void OpenGL::WithBindFramebufferEnd( GLenum target ) const {
 	glBindFramebuffer( target, 0 );
+}
+
+void OpenGL::WithShaderProgram( shader_program::ShaderProgram* sp, const f_t& f ) const {
+	sp->Enable();
+	f();
+	sp->Disable();
 }
 
 void OpenGL::ResizeViewport( const size_t width, const size_t height ) {

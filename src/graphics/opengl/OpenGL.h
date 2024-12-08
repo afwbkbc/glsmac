@@ -76,6 +76,7 @@ CLASS( OpenGL, Graphics )
 	void WithBindFramebufferBegin( GLenum target, GLuint buffer ) const;
 	void WithBindFramebuffer( GLenum target, GLuint buffer, const f_t& f ) const;
 	void WithBindFramebufferEnd( GLenum target ) const;
+	void WithShaderProgram( shader_program::ShaderProgram* sp, const f_t& f ) const;
 
 protected:
 	struct {

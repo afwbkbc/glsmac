@@ -32,6 +32,7 @@ protected:
 	struct vertex_t {
 		GLfloat x;
 		GLfloat y;
+		GLfloat z; // ignored
 		GLfloat tx;
 		GLfloat ty;
 	};

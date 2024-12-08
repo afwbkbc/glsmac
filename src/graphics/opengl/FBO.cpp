@@ -219,17 +219,20 @@ void FBO::Draw( shader_program::Simple2D* sp ) {
 
 	m_opengl->WithBindBuffers(
 		m_vbo, m_ibo, [ this, &sp ]() {
-			sp->Enable();
 
-			glUniform1ui( sp->uniforms.flags, 0 );
+			m_opengl->WithShaderProgram(
+				sp, [ this, &sp ]() {
 
-			m_opengl->WithBindTexture(
-				m_textures.render, [ this ]() {
-					glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void*)( 0 ) );
+					glUniform1ui( sp->uniforms.flags, 0 );
+
+					m_opengl->WithBindTexture(
+						m_textures.render, [ this ]() {
+							glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void*)( 0 ) );
+						}
+					);
+
 				}
 			);
-
-			sp->Disable();
 		}
 	);
 

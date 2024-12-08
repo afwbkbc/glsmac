@@ -4,7 +4,6 @@ SET( SRC ${SRC}
 	${PWD}/Simple2D.cpp
 	${PWD}/Orthographic.cpp
 	${PWD}/OrthographicData.cpp
-	${PWD}/Font.cpp
 	${PWD}/World.cpp
 
 	PARENT_SCOPE )

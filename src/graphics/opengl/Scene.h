@@ -32,8 +32,8 @@ CLASS( Scene, common::Class )
 	Scene( OpenGL* opengl, scene::Scene* scene, routine::Routine* routine );
 	~Scene();
 	scene::Scene* GetScene() const;
-	// other_shader_program is used for fonts in Overlay routine // TODO: refactor
-	void Draw( shader_program::ShaderProgram* shader_program, shader_program::ShaderProgram* other_shader_program = nullptr );
+
+	void Draw( shader_program::ShaderProgram* shader_program );
 	void Update();
 
 	void OnWindowResize();
