@@ -5,7 +5,7 @@
 
 #include "common/Task.h"
 
-namespace ui {
+namespace ui_legacy {
 namespace theme {
 class Theme;
 }
@@ -26,7 +26,7 @@ CLASS( Console, common::Task )
 
 private:
 	UI* m_ui;
-	::ui::theme::Theme* m_theme;
+	::ui_legacy::theme::Theme* m_theme;
 	Style* m_style;
 
 };

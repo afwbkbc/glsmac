@@ -1,4 +1,4 @@
-SUBDIR( ui )
+SUBDIR( ui_legacy )
 
 SET( SRC ${SRC}
 

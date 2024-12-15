@@ -20,7 +20,7 @@ class Settings;
 }
 }
 
-namespace ui::object {
+namespace ui_legacy::object {
 class Button;
 class Section;
 }
@@ -68,10 +68,10 @@ protected:
 
 	GameSettingsSection* m_game_settings_section = nullptr;
 	PlayersSection* m_players_section = nullptr;
-	ui::object::Button* m_ready_button = nullptr;
-	ui::object::Button* m_cancel_button = nullptr;
+	ui_legacy::object::Button* m_ready_button = nullptr;
+	ui_legacy::object::Button* m_cancel_button = nullptr;
 	ChatSection* m_chat_section = nullptr;
-	ui::object::Section* m_game_options_section = nullptr;
+	ui_legacy::object::Section* m_game_options_section = nullptr;
 
 	::game::backend::State* m_state = nullptr;
 

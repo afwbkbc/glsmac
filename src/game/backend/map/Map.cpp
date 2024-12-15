@@ -7,7 +7,7 @@
 #include "config/Config.h"
 #include "game/backend/Random.h"
 #include "util/FS.h"
-#include "ui/UI.h"
+#include "ui_legacy/UI.h"
 #include "loader/texture/TextureLoader.h"
 #include "game/backend/map/module/Prepare.h"
 #include "game/backend/map/module/LandMoisture.h"

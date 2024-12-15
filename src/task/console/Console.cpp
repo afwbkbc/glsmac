@@ -3,8 +3,8 @@
 #include <mutex>
 
 #include "engine/Engine.h"
-#include "ui/UI.h"
-#include "ui/theme/Theme.h"
+#include "ui_legacy/UI.h"
+#include "ui_legacy/theme/Theme.h"
 #include "UI.h"
 #include "Style.h"
 
@@ -25,7 +25,7 @@ void Console::Start() {
 
 	auto* ui = g_engine->GetUI();
 
-	NEW( m_theme, ::ui::theme::Theme );
+	NEW( m_theme, ::ui_legacy::theme::Theme );
 	NEW( m_style, Style );
 	m_theme->AddStyleSheet( m_style );
 	ui->AddTheme( m_theme );

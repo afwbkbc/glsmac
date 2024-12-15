@@ -5,9 +5,9 @@
 #include "Host.h"
 #include "Join.h"
 
-#include "ui/object/Panel.h"
-#include "ui/object/Section.h"
-#include "ui/object/ChoiceList.h"
+#include "ui_legacy/object/Panel.h"
+#include "ui_legacy/object/Section.h"
+#include "ui_legacy/object/ChoiceList.h"
 
 #include "task/mainmenu/MainMenu.h"
 #include "game/backend/State.h"
@@ -34,11 +34,11 @@ HostJoin::~HostJoin() {
 void HostJoin::Show() {
 	PopupMenu::Show();
 
-	NEW( m_section, ui::object::Section, "PopupSection" );
+	NEW( m_section, ui_legacy::object::Section, "PopupSection" );
 	m_section->SetTitleText( "Would you like to host a new game or join an existing one?" );
 	m_body->AddChild( m_section );
 
-	NEW( m_choices, ui::object::NumChoiceList, "PopupButtonList" );
+	NEW( m_choices, ui_legacy::object::NumChoiceList, "PopupButtonList" );
 	m_choices->SetImmediateMode( false );
 	m_choices->SetMargin( 3 );
 	m_choices->SetChoicesV(
@@ -48,7 +48,7 @@ void HostJoin::Show() {
 		}
 	);
 	m_choices->On(
-		ui::event::EV_SELECT, EH( this ) {
+		ui_legacy::event::EV_SELECT, EH( this ) {
 			OnNext();
 			return true;
 		}

@@ -4,7 +4,7 @@ namespace task {
 namespace intro {
 
 Theme::Theme()
-	: ui::theme::Theme() {
+	: ui_legacy::theme::Theme() {
 	AddStyleSheet( &m_style );
 }
 

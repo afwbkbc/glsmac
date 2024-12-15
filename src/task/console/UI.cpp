@@ -1,47 +1,47 @@
 #include "UI.h"
 
-#include "ui/object/Surface.h"
-#include "ui/object/Label.h"
-#include "ui/object/Input.h"
-#include "ui/object/TextView.h"
-#include "ui/event/KeyDown.h"
+#include "ui_legacy/object/Surface.h"
+#include "ui_legacy/object/Label.h"
+#include "ui_legacy/object/Input.h"
+#include "ui_legacy/object/TextView.h"
+#include "ui_legacy/event/KeyDown.h"
 #include "engine/Engine.h"
 #include "graphics/Graphics.h"
-#include "ui/UI.h"
+#include "ui_legacy/UI.h"
 
 namespace task {
 namespace console {
 
 const std::string UI::PROMPT_STR = "> ";
 
-static const std::vector< ::ui::event::event_type_t > s_events_to_block = {
-	::ui::event::EV_MOUSE_MOVE,
-	::ui::event::EV_MOUSE_OVER,
-	::ui::event::EV_MOUSE_OUT,
-	::ui::event::EV_MOUSE_DOWN,
-	::ui::event::EV_MOUSE_UP,
-	::ui::event::EV_MOUSE_SCROLL,
+static const std::vector< ::ui_legacy::event::event_type_t > s_events_to_block = {
+	::ui_legacy::event::EV_MOUSE_MOVE,
+	::ui_legacy::event::EV_MOUSE_OVER,
+	::ui_legacy::event::EV_MOUSE_OUT,
+	::ui_legacy::event::EV_MOUSE_DOWN,
+	::ui_legacy::event::EV_MOUSE_UP,
+	::ui_legacy::event::EV_MOUSE_SCROLL,
 };
 
 UI::UI()
-	: ::ui::object::UIContainer( "Console" ) {}
+	: ::ui_legacy::object::UIContainer( "Console" ) {}
 
 void UI::Create() {
-	::ui::object::UIContainer::Create();
+	::ui_legacy::object::UIContainer::Create();
 
 	m_toggle_handler = g_engine->GetUI()->AddGlobalEventHandler(
-		ui::event::EV_KEY_DOWN, EH( this ) {
-			if ( data->key.code == ui::event::K_GRAVE && !data->key.modifiers ) {
+		ui_legacy::event::EV_KEY_DOWN, EH( this ) {
+			if ( data->key.code == ui_legacy::event::K_GRAVE && !data->key.modifiers ) {
 				Toggle();
 				return true;
 			}
 			if ( m_is_active ) {
 				switch ( data->key.code ) {
-					case ui::event::K_ESCAPE: {
+					case ui_legacy::event::K_ESCAPE: {
 						HideConsole();
 						break;
 					}
-					case ui::event::K_ENTER: {
+					case ui_legacy::event::K_ENTER: {
 						const auto& v = m_input->GetValue();
 						if ( !v.empty() ) {
 
@@ -55,7 +55,7 @@ void UI::Create() {
 						break;
 					}
 					default: {
-						NEWV( e, ::ui::event::KeyDown, data->key.code, data->key.key, data->key.modifiers );
+						NEWV( e, ::ui_legacy::event::KeyDown, data->key.code, data->key.key, data->key.modifiers );
 						m_input->ProcessEvent( e );
 						DELETE( e );
 					}
@@ -63,24 +63,24 @@ void UI::Create() {
 				return true;
 			}
 			return false;
-		}, ui::UI::GH_BEFORE
+		}, ui_legacy::UI::GH_BEFORE
 	);
 
-	NEW( m_background, ::ui::object::Surface, SubClass( "Background" ) );
+	NEW( m_background, ::ui_legacy::object::Surface, SubClass( "Background" ) );
 	AddChild( m_background );
 
-	NEW( m_border, ::ui::object::Surface, SubClass( "Border" ) );
+	NEW( m_border, ::ui_legacy::object::Surface, SubClass( "Border" ) );
 	AddChild( m_border );
 
-	NEW( m_prompt, ::ui::object::Label, SubClass( "Prompt" ) );
+	NEW( m_prompt, ::ui_legacy::object::Label, SubClass( "Prompt" ) );
 	m_prompt->SetText( PROMPT_STR );
 	AddChild( m_prompt );
 
-	NEW( m_input, ::ui::object::Input, SubClass( "Input" ) );
+	NEW( m_input, ::ui_legacy::object::Input, SubClass( "Input" ) );
 	m_input->SetMaxLength( 128 ); // TODO: infinite/automatic length
 	AddChild( m_input );
 
-	NEW( m_history, ::ui::object::TextView, SubClass( "History" ) );
+	NEW( m_history, ::ui_legacy::object::TextView, SubClass( "History" ) );
 	m_history->SetLinesLimit( HISTORY_LINES_LIMIT );
 	AddChild( m_history );
 
@@ -88,7 +88,7 @@ void UI::Create() {
 }
 
 void UI::Align() {
-	::ui::object::UIContainer::Align();
+	::ui_legacy::object::UIContainer::Align();
 
 	const auto h = g_engine->GetGraphics()->GetViewportHeight() / 2;
 	if ( m_last_height != h ) {
@@ -102,7 +102,7 @@ void UI::Align() {
 }
 
 void UI::Iterate() {
-	::ui::object::UIContainer::Iterate();
+	::ui_legacy::object::UIContainer::Iterate();
 
 	if ( m_slide.IsRunning() ) {
 		while ( m_slide.HasTicked() ) {
@@ -132,7 +132,7 @@ void UI::Destroy() {
 
 	g_engine->GetUI()->RemoveGlobalEventHandler( m_toggle_handler );
 
-	::ui::object::UIContainer::Destroy();
+	::ui_legacy::object::UIContainer::Destroy();
 }
 
 void UI::Log( const std::string& text ) {
@@ -149,18 +149,18 @@ void UI::ShowConsole() {
 				ui->AddGlobalEventHandler(
 					s, EH( this ) {
 						// forward to history to allow scrolling
-						::ui::event::UIEvent e = {
+						::ui_legacy::event::UIEvent e = {
 							event_type,
 							data
 						};
-						e.m_flags |= ::ui::event::EF_MOUSE;
-						if ( e.m_type == ::ui::event::EV_MOUSE_DOWN ) {
+						e.m_flags |= ::ui_legacy::event::EF_MOUSE;
+						if ( e.m_type == ::ui_legacy::event::EV_MOUSE_DOWN ) {
 							int a = 5;
 							a++;
 						}
 						m_history->ProcessEvent( &e );
 						return true;
-					}, ui::UI::GH_BEFORE
+					}, ui_legacy::UI::GH_BEFORE
 				)
 			);
 		}

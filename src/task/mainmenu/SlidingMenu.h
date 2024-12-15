@@ -4,7 +4,7 @@
 
 #include "MenuObject.h"
 
-#include "ui/slidingmenu/Types.h"
+#include "ui_legacy/slidingmenu/Types.h"
 
 namespace task {
 namespace mainmenu {

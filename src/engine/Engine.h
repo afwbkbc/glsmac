@@ -66,7 +66,7 @@ namespace scheduler {
 class Scheduler;
 }
 
-namespace ui {
+namespace ui_legacy {
 class UI;
 }
 
@@ -89,7 +89,7 @@ public:
 		graphics::Graphics* graphics,
 		audio::Audio* audio,
 		network::Network* network,
-		ui::UI* ui,
+		ui_legacy::UI* ui,
 		game::backend::Game* game
 	);
 
@@ -108,7 +108,7 @@ public:
 	audio::Audio* GetAudio() const { return m_audio; }
 	network::Network* GetNetwork() const { return m_network; }
 	scheduler::Scheduler* GetScheduler() const { return m_scheduler; }
-	ui::UI* GetUI() const { return m_ui; }
+	ui_legacy::UI* GetUI() const { return m_ui; }
 	game::backend::Game* GetGame() const { return m_game; }
 
 	void Log( const std::string& text ) const;
@@ -132,7 +132,7 @@ protected:
 	graphics::Graphics* m_graphics = nullptr;
 	audio::Audio* m_audio = nullptr;
 	network::Network* m_network = nullptr;
-	ui::UI* m_ui = nullptr;
+	ui_legacy::UI* m_ui = nullptr;
 	game::backend::Game* m_game = nullptr;
 
 };

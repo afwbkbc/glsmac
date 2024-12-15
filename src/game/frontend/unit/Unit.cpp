@@ -14,10 +14,10 @@
 #include "types/mesh/Rectangle.h"
 #include "scene/actor/Sprite.h"
 #include "types/texture/Texture.h"
-#include "ui/object/Mesh.h"
-#include "ui/object/Label.h"
-#include "../ui/bottom_bar/objects_list/ObjectsListItem.h"
-#include "../ui/bottom_bar/ObjectPreview.h"
+#include "ui_legacy/object/Mesh.h"
+#include "ui_legacy/object/Label.h"
+#include "../ui_legacy/bottom_bar/objects_list/ObjectsListItem.h"
+#include "../ui_legacy/bottom_bar/ObjectPreview.h"
 
 namespace game {
 namespace frontend {
@@ -345,17 +345,17 @@ const Unit::render_data_t& Unit::GetRenderData() const {
 	return m_render_data;
 }
 
-void* Unit::CreateOnBottomBarList( ui::ObjectsListItem* element ) const {
-	NEWV( ui_elements, std::vector< ::ui::object::UIObject* >, {} );
+void* Unit::CreateOnBottomBarList( ui_legacy::ObjectsListItem* element ) const {
+	NEWV( ui_elements, std::vector< ::ui_legacy::object::UIObject* >, {} );
 
 	const auto& render = GetRenderData();
 
 	const types::mesh::Mesh* mesh;
-	::ui::object::Mesh* ui_mesh;
+	::ui_legacy::object::Mesh* ui_mesh;
 #define X( _key, _class ) \
     ASSERT_NOLOG( render._key.mesh, #_key " mesh not defined" ); \
     NEW( mesh, types::mesh::Mesh, *render._key.mesh ); /* make a copy */ \
-    NEW( ui_mesh, ::ui::object::Mesh, "BBObjectsListPreview" _class ); \
+    NEW( ui_mesh, ::ui_legacy::object::Mesh, "BBObjectsListPreview" _class ); \
     ui_mesh->SetMesh( mesh ); \
     ui_mesh->SetTexture( render._key.texture ); \
     element->AddChild( ui_mesh ); \
@@ -368,7 +368,7 @@ void* Unit::CreateOnBottomBarList( ui::ObjectsListItem* element ) const {
 
 #undef X
 
-	NEWV( label, ::ui::object::Label, "BBObjectsListPreviewLabel" );
+	NEWV( label, ::ui_legacy::object::Label, "BBObjectsListPreviewLabel" );
 	label->SetTop( 0 );
 	label->SetText( GetStatsString() );
 	element->AddChild( label );
@@ -377,8 +377,8 @@ void* Unit::CreateOnBottomBarList( ui::ObjectsListItem* element ) const {
 	return ui_elements;
 }
 
-void Unit::DestroyOnBottomBarList( ui::ObjectsListItem* element, void* state ) const {
-	auto* ui_elements = (std::vector< ::ui::object::UIObject* >*)state;
+void Unit::DestroyOnBottomBarList( ui_legacy::ObjectsListItem* element, void* state ) const {
+	auto* ui_elements = (std::vector< ::ui_legacy::object::UIObject* >*)state;
 
 	for ( const auto& e : *ui_elements ) {
 		element->RemoveChild( e );
@@ -387,16 +387,16 @@ void Unit::DestroyOnBottomBarList( ui::ObjectsListItem* element, void* state ) c
 	DELETE( ui_elements );
 }
 
-void* Unit::CreateOnBottomBarPreview( ui::ObjectPreview* element ) const {
-	NEWV( ui_elements, std::vector< ::ui::object::UIObject* >, {} );
+void* Unit::CreateOnBottomBarPreview( ui_legacy::ObjectPreview* element ) const {
+	NEWV( ui_elements, std::vector< ::ui_legacy::object::UIObject* >, {} );
 
 	const auto& render = GetRenderData();
 
 	const types::mesh::Mesh* mesh;
-	::ui::object::Mesh* ui_mesh;
+	::ui_legacy::object::Mesh* ui_mesh;
 #define X( _key, _class ) \
     NEW( mesh, types::mesh::Mesh, *render._key.mesh ); /* make a copy */ \
-    NEW( ui_mesh, ::ui::object::Mesh, "BBObjectPreview" _class ); \
+    NEW( ui_mesh, ::ui_legacy::object::Mesh, "BBObjectPreview" _class ); \
     ui_mesh->SetMesh( mesh ); \
     ui_mesh->SetTexture( render._key.texture ); \
     element->AddChild( ui_mesh ); \
@@ -410,10 +410,10 @@ void* Unit::CreateOnBottomBarPreview( ui::ObjectPreview* element ) const {
 #undef X
 
 	size_t top = 86;
-	::ui::object::Label* label;
+	::ui_legacy::object::Label* label;
 #define X( _text, _align ) \
     if ( !(_text).empty() ) { \
-        NEW( label, ::ui::object::Label, "BBObjectPreviewLabel" #_align ); \
+        NEW( label, ::ui_legacy::object::Label, "BBObjectPreviewLabel" #_align ); \
         label->SetText( _text ); \
         label->SetTop( top ); \
         element->AddChild( label ); \
@@ -435,8 +435,8 @@ void* Unit::CreateOnBottomBarPreview( ui::ObjectPreview* element ) const {
 	return ui_elements;
 }
 
-void Unit::DestroyOnBottomBarPreview( ui::ObjectPreview* element, void* state ) const {
-	auto* ui_elements = (std::vector< ::ui::object::UIObject* >*)state;
+void Unit::DestroyOnBottomBarPreview( ui_legacy::ObjectPreview* element, void* state ) const {
+	auto* ui_elements = (std::vector< ::ui_legacy::object::UIObject* >*)state;
 
 	for ( const auto& e : *ui_elements ) {
 		element->RemoveChild( e );

@@ -15,11 +15,11 @@
 #include "menu/Error.h"
 #include "game/backend/State.h"
 #include "util/random/Random.h"
-#include "ui/Theme.h"
-#include "ui/UI.h"
-#include "ui/object/Surface.h"
-#include "ui/object/Label.h"
-#include "ui/object/SoundEffect.h"
+#include "ui_legacy/Theme.h"
+#include "ui_legacy/UI.h"
+#include "ui_legacy/object/Surface.h"
+#include "ui_legacy/object/Label.h"
+#include "ui_legacy/object/SoundEffect.h"
 
 #include "version.h"
 
@@ -38,48 +38,48 @@ void MainMenu::Start() {
 	ui->AddTheme( m_theme );
 
 	// background
-	NEW( m_background, ui::object::Surface, "MainMenuBackground" );
+	NEW( m_background, ui_legacy::object::Surface, "MainMenuBackground" );
 	ui->AddObject( m_background );
 
 	// preview image for 'customize map'
-	NEW( m_customize_map_preview, ui::object::Surface, "MainMenuCustomizeMapPreview" );
+	NEW( m_customize_map_preview, ui_legacy::object::Surface, "MainMenuCustomizeMapPreview" );
 	m_customize_map_preview->Hide();
 	ui->AddObject( m_customize_map_preview );
 	SetCustomizeMapPreview( "S2L2C2" ); // average preview by default
 
-	NEW( m_customize_map_moons, ui::object::Surface, "MainMenuCustomizeMapMoons" );
+	NEW( m_customize_map_moons, ui_legacy::object::Surface, "MainMenuCustomizeMapMoons" );
 	m_customize_map_moons->Hide();
 	ui->AddObject( m_customize_map_moons );
 
 	ResizeCustomizeMapPreview();
 
-	NEW( m_glsmac_logo, ui::object::Label, "MainMenuGLSMACLogo" );
+	NEW( m_glsmac_logo, ui_legacy::object::Label, "MainMenuGLSMACLogo" );
 	m_glsmac_logo->SetText( GLSMAC_VERSION_FULL );
 	ui->AddObject( m_glsmac_logo );
 
 	m_mouse_handler = ui->AddGlobalEventHandler(
-		ui::event::EV_MOUSE_DOWN, EH( this ) {
+		ui_legacy::event::EV_MOUSE_DOWN, EH( this ) {
 			// rightclick = back
-			if ( data->mouse.button == ui::event::M_RIGHT && m_menu_object ) {
+			if ( data->mouse.button == ui_legacy::event::M_RIGHT && m_menu_object ) {
 				if ( !m_menu_history.empty() ) { // don't exit game on right-click
 					return m_menu_object->MaybeClose(); // only sliding menus will close on right click
 				}
 			}
 			return false;
-		}, ui::UI::GH_BEFORE
+		}, ui_legacy::UI::GH_BEFORE
 	);
 
 	m_key_handler = ui->AddGlobalEventHandler(
-		ui::event::EV_KEY_DOWN, EH( this ) {
+		ui_legacy::event::EV_KEY_DOWN, EH( this ) {
 			// escape = back
-			if ( !data->key.modifiers && data->key.code == ui::event::K_ESCAPE && m_menu_object ) {
+			if ( !data->key.modifiers && data->key.code == ui_legacy::event::K_ESCAPE && m_menu_object ) {
 				return m_menu_object->MaybeClose(); // popups have their own escape handler
 			}
 			return false;
-		}, ui::UI::GH_BEFORE
+		}, ui_legacy::UI::GH_BEFORE
 	);
 
-	NEW( m_music, ui::object::SoundEffect, "MainMenuMusic" );
+	NEW( m_music, ui_legacy::object::SoundEffect, "MainMenuMusic" );
 	g_engine->GetUI()->AddObject( m_music );
 
 	g_engine->GetGraphics()->AddOnWindowResizeHandler(

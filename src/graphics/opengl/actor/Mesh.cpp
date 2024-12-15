@@ -20,7 +20,7 @@
 #include "types/mesh/Mesh.h"
 #include "types/mesh/Data.h"
 #include "engine/Engine.h"
-#include "ui/UI.h"
+#include "ui_legacy/UI.h"
 
 namespace graphics {
 namespace opengl {

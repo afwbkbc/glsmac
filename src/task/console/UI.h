@@ -2,11 +2,11 @@
 
 #include <mutex>
 
-#include "ui/object/UIContainer.h"
+#include "ui_legacy/object/UIContainer.h"
 
 #include "util/Scroller.h"
 
-namespace ui {
+namespace ui_legacy {
 namespace object {
 class Surface;
 class Label;
@@ -21,7 +21,7 @@ class UIEventHandler;
 namespace task {
 namespace console {
 
-class UI : public ::ui::object::UIContainer {
+class UI : public ::ui_legacy::object::UIContainer {
 public:
 	UI();
 
@@ -40,16 +40,16 @@ private:
 	bool m_is_active = false;
 	bool m_is_visible = false;
 	size_t m_last_height = 0;
-	const ::ui::event::UIEventHandler* m_toggle_handler = nullptr;
-	std::vector< const ::ui::event::UIEventHandler* > m_event_block_handlers = {};
+	const ::ui_legacy::event::UIEventHandler* m_toggle_handler = nullptr;
+	std::vector< const ::ui_legacy::event::UIEventHandler* > m_event_block_handlers = {};
 
 	util::Scroller< coord_t > m_slide;
 
-	::ui::object::Surface* m_background;
-	::ui::object::Surface* m_border;
-	::ui::object::Label* m_prompt;
-	::ui::object::Input* m_input;
-	::ui::object::TextView* m_history;
+	::ui_legacy::object::Surface* m_background;
+	::ui_legacy::object::Surface* m_border;
+	::ui_legacy::object::Label* m_prompt;
+	::ui_legacy::object::Input* m_input;
+	::ui_legacy::object::TextView* m_history;
 
 	std::mutex m_history_mutex;
 	std::vector< std::string > m_history_buffer;

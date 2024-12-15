@@ -16,7 +16,7 @@
 #include "graphics/Graphics.h"
 #include "audio/Audio.h"
 #include "network/Network.h"
-#include "ui/UI.h"
+#include "ui_legacy/UI.h"
 #include "game/backend/Game.h"
 
 #ifdef DEBUG
@@ -44,7 +44,7 @@ Engine::Engine(
 	graphics::Graphics* graphics,
 	audio::Audio* audio,
 	network::Network* network,
-	ui::UI* ui,
+	ui_legacy::UI* ui,
 	game::backend::Game* game
 )
 	:

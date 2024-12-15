@@ -44,7 +44,7 @@
 #include "network/simpletcp/SimpleTCP.h"
 
 #include "scheduler/Simple.h"
-#include "ui/Default.h"
+#include "ui_legacy/Default.h"
 
 #include "task/common/Common.h"
 
@@ -168,7 +168,7 @@ int main( const int argc, const char* argv[] ) {
 #endif
 
 	network::simpletcp::SimpleTCP network;
-	ui::Default ui;
+	ui_legacy::Default ui;
 	scheduler::Simple scheduler;
 
 #ifdef DEBUG

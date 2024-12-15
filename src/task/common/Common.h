@@ -4,7 +4,7 @@
 
 namespace task {
 
-namespace ui {
+namespace ui_legacy {
 class FPSCounter;
 }
 namespace style {
@@ -19,7 +19,7 @@ CLASS( Common, common::Task )
 protected:
 	style::Theme* m_theme;
 
-	ui::FPSCounter* m_fps_counter = nullptr;
+	ui_legacy::FPSCounter* m_fps_counter = nullptr;
 
 };
 

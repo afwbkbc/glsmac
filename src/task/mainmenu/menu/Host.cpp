@@ -2,9 +2,9 @@
 
 #include "engine/Engine.h"
 #include "game/backend/connection/Server.h"
-#include "ui/object/Section.h"
-#include "ui/object/Input.h"
-#include "ui/object/Label.h"
+#include "ui_legacy/object/Section.h"
+#include "ui_legacy/object/Input.h"
+#include "ui_legacy/object/Label.h"
 #include "task/mainmenu/MainMenu.h"
 #include "game/backend/State.h"
 
@@ -29,19 +29,19 @@ Host::~Host() {
 void Host::Show() {
 	PopupMenu::Show();
 
-	NEW( m_section, ui::object::Section, "PopupSection" );
+	NEW( m_section, ui_legacy::object::Section, "PopupSection" );
 	m_section->SetMargin( 4 );
 	m_body->AddChild( m_section );
 
-	NEW( m_label_yourname, ui::object::Label, "PopupLabel" );
-	m_label_yourname->SetAlign( ui::ALIGN_LEFT | ui::ALIGN_TOP );
+	NEW( m_label_yourname, ui_legacy::object::Label, "PopupLabel" );
+	m_label_yourname->SetAlign( ui_legacy::ALIGN_LEFT | ui_legacy::ALIGN_TOP );
 	m_label_yourname->SetLeft( 12 );
 	m_label_yourname->SetTop( 5 );
 	m_label_yourname->SetText( "Enter your name:" );
 	m_section->AddChild( m_label_yourname );
 
-	NEW( m_input_yourname, ui::object::Input, "PopupInput" );
-	m_input_yourname->SetAlign( ui::ALIGN_LEFT | ui::ALIGN_TOP );
+	NEW( m_input_yourname, ui_legacy::object::Input, "PopupInput" );
+	m_input_yourname->SetAlign( ui_legacy::ALIGN_LEFT | ui_legacy::ALIGN_TOP );
 	m_input_yourname->SetLeft( 144 );
 	m_input_yourname->SetTop( 5 );
 	m_input_yourname->SetRight( 12 );
@@ -49,15 +49,15 @@ void Host::Show() {
 	m_input_yourname->SetMaxLength( 20 ); // TODO: determine by rendered width
 	m_section->AddChild( m_input_yourname );
 
-	NEW( m_label_gamename, ui::object::Label, "PopupLabel" );
-	m_label_gamename->SetAlign( ui::ALIGN_LEFT | ui::ALIGN_TOP );
+	NEW( m_label_gamename, ui_legacy::object::Label, "PopupLabel" );
+	m_label_gamename->SetAlign( ui_legacy::ALIGN_LEFT | ui_legacy::ALIGN_TOP );
 	m_label_gamename->SetLeft( 12 );
 	m_label_gamename->SetTop( 34 );
 	m_label_gamename->SetText( "Enter game name:" );
 	m_section->AddChild( m_label_gamename );
 
-	NEW( m_input_gamename, ui::object::Input, "PopupInput" );
-	m_input_gamename->SetAlign( ui::ALIGN_LEFT | ui::ALIGN_TOP );
+	NEW( m_input_gamename, ui_legacy::object::Input, "PopupInput" );
+	m_input_gamename->SetAlign( ui_legacy::ALIGN_LEFT | ui_legacy::ALIGN_TOP );
 	m_input_gamename->SetLeft( 144 );
 	m_input_gamename->SetTop( 34 );
 	m_input_gamename->SetRight( 12 );

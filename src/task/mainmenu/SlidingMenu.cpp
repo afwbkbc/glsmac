@@ -2,8 +2,8 @@
 
 #include "game/backend/settings/Settings.h"
 #include "engine/Engine.h"
-#include "ui/slidingmenu/MenuBlock.h"
-#include "ui/UI.h"
+#include "ui_legacy/slidingmenu/MenuBlock.h"
+#include "ui_legacy/UI.h"
 
 namespace task {
 namespace mainmenu {

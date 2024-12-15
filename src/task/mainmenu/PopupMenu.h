@@ -6,7 +6,7 @@
 
 #include "MenuObject.h"
 
-namespace ui::object {
+namespace ui_legacy::object {
 class Panel;
 class Section;
 class Button;
@@ -38,17 +38,17 @@ protected:
 	void SetWidth( const size_t width );
 	void SetHeight( const size_t height );
 
-	ui::object::Panel* m_body = nullptr; // child classes can add elements here
+	ui_legacy::object::Panel* m_body = nullptr; // child classes can add elements here
 
 	void Resize();
 
 	const bool IsShown() const;
 
-	ui::object::Section* m_frame = nullptr;
+	ui_legacy::object::Section* m_frame = nullptr;
 
 private:
-	ui::object::Button* m_button_ok = nullptr;
-	ui::object::Button* m_button_cancel = nullptr;
+	ui_legacy::object::Button* m_button_ok = nullptr;
+	ui_legacy::object::Button* m_button_cancel = nullptr;
 
 	std::unordered_set< popup_flag_t > m_flags = {};
 	size_t m_width = 0;

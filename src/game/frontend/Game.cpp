@@ -7,7 +7,7 @@
 #include "util/random/Random.h"
 #include "config/Config.h"
 #include "scheduler/Scheduler.h"
-#include "../../ui/UI.h" // TODO: fix path
+#include "../../ui_legacy/UI.h" // TODO: fix path
 #include "game/backend/Game.h"
 #include "game/backend/unit/Def.h"
 #include "game/backend/base/PopDef.h"
@@ -16,7 +16,7 @@
 #include "task/mainmenu/MainMenu.h"
 #include "graphics/Graphics.h"
 #include "util/FS.h"
-#include "game/frontend/ui/popup/PleaseDontGo.h"
+#include "game/frontend/ui_legacy/popup/PleaseDontGo.h"
 #include "game/backend/State.h"
 #include "Types.h"
 #include "game/backend/event/MoveUnit.h"
@@ -24,7 +24,7 @@
 #include "game/backend/event/SkipUnitTurn.h"
 #include "game/backend/event/CompleteTurn.h"
 #include "game/backend/event/UncompleteTurn.h"
-#include "game/frontend/ui/bottom_bar/BottomBar.h"
+#include "game/frontend/ui_legacy/bottom_bar/BottomBar.h"
 #include "game/frontend/tile/TileManager.h"
 #include "game/frontend/unit/UnitManager.h"
 #include "game/frontend/unit/Unit.h"
@@ -51,10 +51,10 @@
 #include "types/texture/Texture.h"
 #include "types/mesh/Render.h"
 #include "types/mesh/Data.h"
-#include "game/frontend/ui/style/Theme.h"
+#include "game/frontend/ui_legacy/style/Theme.h"
 #include "game/backend/map/Consts.h"
 #include "task/game/Game.h"
-#include "game/frontend/ui/popup/base_popup/BasePopup.h"
+#include "game/frontend/ui_legacy/popup/base_popup/BasePopup.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -63,7 +63,7 @@ namespace frontend {
 
 const Game::consts_t Game::s_consts = {};
 
-Game::Game( task::game::Game* task, backend::State* state, ::ui::ui_handler_t on_start, ::ui::ui_handler_t on_cancel )
+Game::Game( task::game::Game* task, backend::State* state, ::ui_legacy::ui_handler_t on_start, ::ui_legacy::ui_handler_t on_cancel )
 	: m_task( task )
 	, m_state( state )
 	, m_on_start( on_start )
@@ -775,12 +775,12 @@ void Game::SaveMap( const std::string& path ) {
 	m_mt_ids.save_map = game->MT_SaveMap( path );
 }
 
-void Game::ConfirmExit( ::ui::ui_handler_t on_confirm ) {
+void Game::ConfirmExit( ::ui_legacy::ui_handler_t on_confirm ) {
 	if ( g_engine->GetConfig()->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
 		on_confirm();
 		return;
 	}
-	NEWV( popup, ui::popup::PleaseDontGo, this, on_confirm );
+	NEWV( popup, ui_legacy::popup::PleaseDontGo, this, on_confirm );
 	m_map_control.edge_scrolling.timer.Stop();
 	popup->Open();
 }
@@ -1286,9 +1286,9 @@ void Game::Initialize(
 	}
 
 	// UI
-	NEW( m_ui.theme, ui::style::Theme );
+	NEW( m_ui.theme, ui_legacy::style::Theme );
 	ui->AddTheme( m_ui.theme );
-	NEW( m_ui.bottom_bar, ui::BottomBar, this );
+	NEW( m_ui.bottom_bar, ui_legacy::BottomBar, this );
 	ui->AddObject( m_ui.bottom_bar );
 
 	m_viewport.bottom_bar_overlap = 32; // it has transparent area on top so let map render through it
@@ -1298,21 +1298,21 @@ void Game::Initialize(
 	auto* game = g_engine->GetGame();
 
 	m_handlers.keydown_before = ui->AddGlobalEventHandler(
-		::ui::event::EV_KEY_DOWN, EH( this, ui ) {
+		::ui_legacy::event::EV_KEY_DOWN, EH( this, ui ) {
 			if (
 				ui->HasPopup() &&
 					!data->key.modifiers &&
-					data->key.code == ::ui::event::K_ESCAPE
+					data->key.code == ::ui_legacy::event::K_ESCAPE
 				) {
 				ui->CloseLastPopup();
 				return true;
 			}
 			return false;
-		}, ::ui::UI::GH_BEFORE
+		}, ::ui_legacy::UI::GH_BEFORE
 	);
 
 	m_handlers.keydown_after = ui->AddGlobalEventHandler(
-		::ui::event::EV_KEY_DOWN, EH( this, ui, game ) {
+		::ui_legacy::event::EV_KEY_DOWN, EH( this, ui, game ) {
 
 			if ( ui->HasPopup() ) {
 				return false;
@@ -1329,8 +1329,8 @@ void Game::Initialize(
 
 					switch ( data->key.code ) {
 #define X( _key, _altkey, _direction ) \
-                        case ::ui::event::_key: \
-                        case ::ui::event::_altkey: { \
+                        case ::ui_legacy::event::_key: \
+                        case ::ui_legacy::event::_altkey: { \
                             td = backend::map::tile::_direction; \
                             is_tile_selected = true; \
                             break; \
@@ -1344,11 +1344,11 @@ void Game::Initialize(
 						X( K_PAGEUP, K_KP_RIGHT_UP, D_NE )
 						X( K_PAGEDOWN, K_KP_RIGHT_DOWN, D_SE )
 #undef X
-						case ::ui::event::K_TAB: {
+						case ::ui_legacy::event::K_TAB: {
 							m_um->SelectNextUnitMaybe();
 							break;
 						}
-						case ::ui::event::K_SPACE: {
+						case ::ui_legacy::event::K_SPACE: {
 							auto* unit = m_um->GetSelectedUnit();
 							if ( unit ) {
 								const auto event = backend::event::SkipUnitTurn( m_slot_index, unit->GetId() );
@@ -1356,7 +1356,7 @@ void Game::Initialize(
 							}
 							break;
 						}
-						case ::ui::event::K_ENTER: {
+						case ::ui_legacy::event::K_ENTER: {
 							if ( m_turn_status == backend::turn::TS_TURN_COMPLETE ) {
 								CompleteTurn();
 								break;
@@ -1436,7 +1436,7 @@ void Game::Initialize(
 					return true;
 				}
 
-				if ( data->key.code == ::ui::event::K_ESCAPE ) {
+				if ( data->key.code == ::ui_legacy::event::K_ESCAPE ) {
 					if ( !g_engine->GetUI()->HasPopup() ) { // close all other popups first (including same one)
 						ConfirmExit(
 							UH( this ) {
@@ -1451,33 +1451,33 @@ void Game::Initialize(
 					return true;
 				}
 			}
-			else if ( m_is_map_editing_allowed && data->key.code == ::ui::event::K_CTRL ) {
+			else if ( m_is_map_editing_allowed && data->key.code == ::ui_legacy::event::K_CTRL ) {
 				m_is_editing_mode = true;
 			}
 
 			return false;
-		}, ::ui::UI::GH_AFTER
+		}, ::ui_legacy::UI::GH_AFTER
 	);
 
 	m_handlers.keyup = ui->AddGlobalEventHandler(
-		::ui::event::EV_KEY_UP, EH( this ) {
+		::ui_legacy::event::EV_KEY_UP, EH( this ) {
 			if ( data->key.key == 'z' || data->key.key == 'x' ) {
 				if ( m_map_control.key_zooming ) {
 					m_map_control.key_zooming = 0;
 					m_scroller.Stop();
 				}
 			}
-			else if ( m_is_map_editing_allowed && data->key.code == ::ui::event::K_CTRL ) {
+			else if ( m_is_map_editing_allowed && data->key.code == ::ui_legacy::event::K_CTRL ) {
 				m_is_editing_mode = false;
 				m_editing_draw_timer.Stop();
 				m_editor_draw_mode = backend::map_editor::DM_NONE;
 			}
 			return false;
-		}, ::ui::UI::GH_BEFORE
+		}, ::ui_legacy::UI::GH_BEFORE
 	);
 
 	m_handlers.mousedown = ui->AddGlobalEventHandler(
-		::ui::event::EV_MOUSE_DOWN, EH( this, ui ) {
+		::ui_legacy::event::EV_MOUSE_DOWN, EH( this, ui ) {
 			if ( ui->HasPopup() ) {
 				return false;
 			}
@@ -1486,11 +1486,11 @@ void Game::Initialize(
 
 			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
 				switch ( data->mouse.button ) {
-					case ::ui::event::M_LEFT: {
+					case ::ui_legacy::event::M_LEFT: {
 						m_editor_draw_mode = backend::map_editor::DM_INC;
 						break;
 					}
-					case ::ui::event::M_RIGHT: {
+					case ::ui_legacy::event::M_RIGHT: {
 						m_editor_draw_mode = backend::map_editor::DM_DEC;
 						break;
 					}
@@ -1504,7 +1504,7 @@ void Game::Initialize(
 			}
 			else {
 				switch ( data->mouse.button ) {
-					case ::ui::event::M_LEFT: {
+					case ::ui_legacy::event::M_LEFT: {
 						SelectTileAtPoint(
 							backend::TQP_OBJECT_SELECT,
 							data->mouse.absolute.x,
@@ -1512,7 +1512,7 @@ void Game::Initialize(
 						); // async
 						break;
 					}
-					case ::ui::event::M_MIDDLE: {
+					case ::ui_legacy::event::M_MIDDLE: {
 						m_scroller.Stop();
 						m_map_control.is_dragging = true;
 						m_map_control.last_drag_position = {
@@ -1524,11 +1524,11 @@ void Game::Initialize(
 				}
 			}
 			return true;
-		}, ::ui::UI::GH_AFTER
+		}, ::ui_legacy::UI::GH_AFTER
 	);
 
 	m_handlers.mousemove = ui->AddGlobalEventHandler(
-		::ui::event::EV_MOUSE_MOVE, EH( this, ui ) {
+		::ui_legacy::event::EV_MOUSE_MOVE, EH( this, ui ) {
 			m_map_control.last_mouse_position = {
 				GetFixedX( data->mouse.absolute.x ),
 				(float)data->mouse.absolute.y
@@ -1595,13 +1595,13 @@ void Game::Initialize(
 				}
 			}
 			return true;
-		}, ::ui::UI::GH_AFTER
+		}, ::ui_legacy::UI::GH_AFTER
 	);
 
 	m_handlers.mouseup = ui->AddGlobalEventHandler(
-		::ui::event::EV_MOUSE_UP, EH( this ) {
+		::ui_legacy::event::EV_MOUSE_UP, EH( this ) {
 			switch ( data->mouse.button ) {
-				case ::ui::event::M_MIDDLE: {
+				case ::ui_legacy::event::M_MIDDLE: {
 					m_map_control.is_dragging = false;
 					break;
 				}
@@ -1611,18 +1611,18 @@ void Game::Initialize(
 				m_editor_draw_mode = backend::map_editor::DM_NONE;
 			}
 			return true;
-		}, ::ui::UI::GH_AFTER
+		}, ::ui_legacy::UI::GH_AFTER
 	);
 
 	m_handlers.mousescroll = ui->AddGlobalEventHandler(
-		::ui::event::EV_MOUSE_SCROLL, EH( this, ui ) {
+		::ui_legacy::event::EV_MOUSE_SCROLL, EH( this, ui ) {
 			if ( ui->HasPopup() ) {
 				return false;
 			}
 
 			SmoothScroll( m_map_control.last_mouse_position, data->mouse.scroll_y );
 			return true;
-		}, ::ui::UI::GH_AFTER
+		}, ::ui_legacy::UI::GH_AFTER
 	);
 
 	// other stuff
@@ -1926,7 +1926,7 @@ void Game::OpenBasePopup( base::Base* base ) {
 	if ( !m_base_popup ) {
 		m_tile_selected_before_base_popup = m_tm->GetPreviouslyDeselectedTile();
 		m_unit_selected_before_base_popup = m_um->GetPreviouslyDeselectedUnit();
-		NEW( m_base_popup, ui::popup::base_popup::BasePopup, this, base );
+		NEW( m_base_popup, ui_legacy::popup::base_popup::BasePopup, this, base );
 		m_base_popup->Open();
 	}
 }

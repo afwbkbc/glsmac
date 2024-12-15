@@ -2,7 +2,7 @@
 
 #include "LobbySection.h"
 
-namespace ui::object {
+namespace ui_legacy::object {
 class Input;
 class TextView;
 }
@@ -22,8 +22,8 @@ CLASS( ChatSection, LobbySection )
 	void AddMessage( const std::string& message );
 
 private:
-	::ui::object::TextView* m_log = nullptr;
-	::ui::object::Input* m_input = nullptr;
+	::ui_legacy::object::TextView* m_log = nullptr;
+	::ui_legacy::object::Input* m_input = nullptr;
 
 };
 

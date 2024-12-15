@@ -8,8 +8,8 @@
 #include "game/backend/slot/Slots.h"
 #include "GameSettingsSection.h"
 #include "PlayersSection.h"
-#include "ui/object/Button.h"
-#include "ui/object/Section.h"
+#include "ui_legacy/object/Button.h"
+#include "ui_legacy/object/Section.h"
 #include "ChatSection.h"
 #include "game/backend/connection/Client.h"
 
@@ -61,10 +61,10 @@ Lobby::Lobby( MainMenu* mainmenu, ::game::backend::connection::Connection* conne
 
 			// update 'ready' button to match
 			if ( is_ready ) {
-				m_ready_button->AddStyleModifier( ui::M_SELECTED );
+				m_ready_button->AddStyleModifier( ui_legacy::M_SELECTED );
 			}
 			else if ( !is_ready ) {
-				m_ready_button->RemoveStyleModifier( ui::M_SELECTED );
+				m_ready_button->RemoveStyleModifier( ui_legacy::M_SELECTED );
 			}
 
 			if ( slot->GetPlayer()->GetRole() == ::game::backend::Player::PR_HOST ) {
@@ -147,15 +147,15 @@ void Lobby::Show() {
 	NEW( m_players_section, PlayersSection, this );
 	m_body->AddChild( m_players_section );
 
-	NEW( m_ready_button, ui::object::Button, "PopupButtonOkCancel" ); // TODO: correct style
-	m_ready_button->SetAlign( ui::ALIGN_LEFT | ui::ALIGN_BOTTOM );
+	NEW( m_ready_button, ui_legacy::object::Button, "PopupButtonOkCancel" ); // TODO: correct style
+	m_ready_button->SetAlign( ui_legacy::ALIGN_LEFT | ui_legacy::ALIGN_BOTTOM );
 	m_ready_button->SetLeft( 8 );
 	m_ready_button->SetBottom( 4 );
 	m_ready_button->SetWidth( 234 );
 	m_ready_button->SetHeight( 22 );
 	m_ready_button->SetLabel( "READY" );
 	m_ready_button->On(
-		ui::event::EV_BUTTON_CLICK, EH( this ) {
+		ui_legacy::event::EV_BUTTON_CLICK, EH( this ) {
 			ASSERT( m_connection, "connection not set" );
 			auto* slot = GetPlayer()->GetSlot();
 			if ( !slot->HasPlayerFlag( ::game::backend::slot::PF_READY ) ) {
@@ -170,15 +170,15 @@ void Lobby::Show() {
 	);
 	m_players_section->AddChild( m_ready_button );
 
-	NEW( m_cancel_button, ui::object::Button, "PopupButtonOkCancel" ); // TODO: correct style
-	m_cancel_button->SetAlign( ui::ALIGN_RIGHT | ui::ALIGN_BOTTOM );
+	NEW( m_cancel_button, ui_legacy::object::Button, "PopupButtonOkCancel" ); // TODO: correct style
+	m_cancel_button->SetAlign( ui_legacy::ALIGN_RIGHT | ui_legacy::ALIGN_BOTTOM );
 	m_cancel_button->SetRight( 8 );
 	m_cancel_button->SetBottom( 4 );
 	m_cancel_button->SetWidth( 234 );
 	m_cancel_button->SetHeight( 22 );
 	m_cancel_button->SetLabel( "CANCEL" );
 	m_cancel_button->On(
-		ui::event::EV_BUTTON_CLICK, EH( this ) {
+		ui_legacy::event::EV_BUTTON_CLICK, EH( this ) {
 			m_connection->Disconnect();
 			return true;
 		}
@@ -188,9 +188,9 @@ void Lobby::Show() {
 	NEW( m_chat_section, ChatSection, this );
 	m_body->AddChild( m_chat_section );
 
-	NEW( m_game_options_section, ui::object::Section, "PopupSection" );
+	NEW( m_game_options_section, ui_legacy::object::Section, "PopupSection" );
 	m_game_options_section->SetTitleText( "CUSTOM GAME OPTIONS" );
-	m_game_options_section->SetAlign( ui::ALIGN_BOTTOM );
+	m_game_options_section->SetAlign( ui_legacy::ALIGN_BOTTOM );
 	m_game_options_section->SetHeight( 210 );
 	m_body->AddChild( m_game_options_section );
 

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "ui/theme/StyleSheet.h"
+#include "ui_legacy/theme/StyleSheet.h"
 
 namespace task {
 namespace intro {
 
-CLASS( Style, ::ui::theme::StyleSheet )
+CLASS( Style, ::ui_legacy::theme::StyleSheet )
 	void AddStyles() override;
 };
 

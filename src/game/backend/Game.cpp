@@ -27,7 +27,7 @@
 #include "gse/type/Int.h"
 #include "gse/type/Undefined.h"
 #include "gse/type/Array.h"
-#include "ui/UI.h"
+#include "ui_legacy/UI.h"
 #include "map/tile/TileManager.h"
 #include "map/tile/Tiles.h"
 #include "map/MapState.h"
