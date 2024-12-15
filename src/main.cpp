@@ -55,6 +55,7 @@
 
 #include "task/console/Console.h"
 
+#include "task/main/Main.h"
 #include "task/intro/Intro.h"
 #include "task/mainmenu/MainMenu.h"
 #include "task/game/Game.h"
@@ -100,6 +101,9 @@ int main( const int argc, const char* argv[] ) {
 	config::Config config( argc, argv );
 
 	config.Init();
+
+	// this changes the whole flow
+	const auto newui = config.HasLaunchFlag( config::Config::LF_NEWUI );
 
 #ifdef DEBUG
 	if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
@@ -151,7 +155,9 @@ int main( const int argc, const char* argv[] ) {
 	if ( !config.HasDebugFlag( config::Config::DF_QUIET ) ) {
 		loggers.push_back( new logger::Stdout() );
 	}
-	loggers.push_back( new logger::Console() );
+	if ( !newui ) {
+		loggers.push_back( new logger::Console() );
+	}
 #endif
 
 #ifdef _WIN32
@@ -245,14 +251,16 @@ int main( const int argc, const char* argv[] ) {
 		graphics::opengl::OpenGL graphics( title, window_size.x, window_size.y, vsync, start_fullscreen );
 		audio::sdl2::SDL2 audio;
 
+		if ( !newui ) {
 #ifdef DEBUG
-		NEWV( debug_overlay, debug::DebugOverlay );
-		scheduler.AddTask( debug_overlay );
+			NEWV( debug_overlay, debug::DebugOverlay );
+			scheduler.AddTask( debug_overlay );
 #endif
 
-		// game common stuff
-		NEWV( task_common, task::Common );
-		scheduler.AddTask( task_common );
+			// game common stuff
+			NEWV( task_common, task::Common );
+			scheduler.AddTask( task_common );
+		}
 
 		// game entry point
 		common::Task* task = nullptr;
@@ -275,10 +283,15 @@ int main( const int argc, const char* argv[] ) {
 			&game
 		);
 
-		NEWV( console_task, task::console::Console );
-		scheduler.AddTask( console_task );
+		if ( !newui ) {
+			NEWV( console_task, task::console::Console );
+			scheduler.AddTask( console_task );
+		}
 
-		if ( config.HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
+		if ( newui ) {
+			NEW( task, task::main::Main );
+		}
+		else if ( config.HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
 			NEWV( state, game::backend::State ); // TODO: initialize settings randomly
 			state->m_settings.global.game_rules.Initialize();
 			state->InitBindings();

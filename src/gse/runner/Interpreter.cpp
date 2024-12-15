@@ -678,6 +678,18 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 					const auto refv = EvaluateExpression( ctx, (Expression*)expression->a );
 					const auto* ref = refv.Get();
 					switch ( ref->type ) {
+						case Type::T_STRING: {
+							const auto& v = ( (type::String*)ref )->value;
+							const auto f = from.has_value()
+								? from.value()
+								: 0;
+							if ( to.has_value() ) {
+								return VALUE( String, v.substr( f, to.value() - f ) );
+							}
+							else {
+								return VALUE( String, v.substr( f ) );
+							}
+						}
 						case Type::T_ARRAY: {
 							if ( index.has_value() ) {
 								return ( (type::Array*)ref )->Get( index.value() );

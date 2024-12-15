@@ -109,7 +109,7 @@ const Value GSE::RunScript( context::Context* ctx, const si_t& si, const std::st
 		cache.context->IncRefs();
 #ifdef DEBUG
 		// copy mocks
-		if ( ctx->HasVariable( "test" ) ) {
+		if ( ctx && ctx->HasVariable( "test" ) ) {
 			cache.context->CreateVariable( "test", ctx->GetVariable( "test", &si ), &si );
 		}
 #endif

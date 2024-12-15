@@ -22,7 +22,7 @@ CLASS( Config, common::Module )
 
 	void Init();
 
-	enum launch_flag_t : uint16_t {
+	enum launch_flag_t : uint32_t {
 		LF_NONE = 0,
 		LF_BENCHMARK = 1 << 0,
 		LF_SHOWFPS = 1 << 1,
@@ -40,6 +40,7 @@ CLASS( Config, common::Module )
 		LF_QUICKSTART_MAP_CLOUDS = 1 << 13,
 		LF_QUICKSTART_FACTION = 1 << 14,
 		LF_MODS = 1 << 15,
+		LF_NEWUI = 1 << 16,
 	};
 
 #ifdef DEBUG
@@ -112,7 +113,7 @@ private:
 	std::string m_smac_path;
 	smac_type_t m_smac_type = ST_AUTO;
 
-	uint16_t m_launch_flags = LF_NONE;
+	uint32_t m_launch_flags = LF_NONE;
 	types::Vec2< size_t > m_window_size = {};
 
 	util::random::state_t m_quickstart_seed = {};

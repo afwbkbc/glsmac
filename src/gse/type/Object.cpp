@@ -32,6 +32,10 @@ static const std::unordered_map< Object::object_class_t, std::string > s_object_
 		"#color"
 	},
 	{
+		Object::CLASS_GLSMAC,
+		"#glsmac"
+	},
+	{
 		Object::CLASS_SYSTEM,
 		"#system"
 	},

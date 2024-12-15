@@ -1,4 +1,5 @@
 SUBDIR( common )
+SUBDIR( main )
 SUBDIR( intro )
 SUBDIR( mainmenu )
 SUBDIR( game )

@@ -103,4 +103,8 @@ class _name : public _parent { \
 class _name : public _parent1, public _parent2 { \
     CLASS_HEADER( _name, _parent1 )
 
+#define CLASS3( _name, _parent1, _parent2, _parent3 ) \
+class _name : public _parent1, public _parent2, public _parent3 { \
+    CLASS_HEADER( _name, _parent1 )
+
 }

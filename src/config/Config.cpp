@@ -269,6 +269,11 @@ Config::Config( const int argc, const char* argv[] )
 			m_launch_flags |= LF_MODS;
 		}
 	);
+	m_parser->AddRule(
+		"newui", "Use new (experimental/unfinished) UI, development purposes only", AH( this ) {
+			m_launch_flags |= LF_NEWUI;
+		}
+	);
 
 #ifdef DEBUG
 	m_parser->AddRule(

@@ -25,6 +25,7 @@ ENDIF ()
 
 SET( SRC ${SRC}
 
+	${PWD}/GLSMAC.cpp
 	${PWD}/main.cpp
 
 	PARENT_SCOPE )
