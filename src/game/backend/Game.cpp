@@ -474,7 +474,7 @@ const size_t Game::GetSlotNum() const {
 	return m_slot_num;
 }
 
-WRAPIMPL_BEGIN( Game, CLASS_GAME )
+WRAPIMPL_BEGIN( Game )
 	WRAPIMPL_PROPS
 		{
 			"year",

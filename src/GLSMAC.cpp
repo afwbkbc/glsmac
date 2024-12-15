@@ -4,6 +4,8 @@
 #include "engine/Engine.h"
 #include "config/Config.h"
 
+#include "ui/UI.h"
+
 #include "gse/GSE.h"
 #include "gse/context/GlobalContext.h"
 #include "gse/callable/Native.h"
@@ -18,6 +20,9 @@ GLSMAC::GLSMAC() {
 	s_glsmac = this;
 
 	Log( "Creating global state" );
+
+	// global objects
+	NEW( m_ui, ui::UI );
 
 	// scripting stuff
 	NEW( m_gse, gse::GSE );
@@ -50,13 +55,13 @@ GLSMAC::~GLSMAC() {
 	s_glsmac = nullptr;
 }
 
-WRAPIMPL_BEGIN( GLSMAC, CLASS_GLSMAC )
+WRAPIMPL_BEGIN( GLSMAC )
 	WRAPIMPL_PROPS
-			/*{
-				"fm",
-				m_fm->Wrap( true )
-			},*/
-		};
+		{
+			"ui",
+			m_ui->Wrap( true )
+		},
+	};
 WRAPIMPL_END_PTR( GLSMAC )
 
 UNWRAPIMPL_PTR( GLSMAC )

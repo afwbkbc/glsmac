@@ -10,6 +10,10 @@
 #include "gse/GSE.h"
 #include "gse/type/Object.h"
 
+namespace ui {
+class UI;
+}
+
 namespace task::main {
 class Main;
 }
@@ -25,6 +29,8 @@ private:
 	gse::context::GlobalContext* m_ctx = nullptr;
 
 	std::vector< gse::Value > m_main_callables = {};
+
+	ui::UI* m_ui = nullptr;
 
 private:
 	friend class task::main::Main;

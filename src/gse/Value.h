@@ -38,16 +38,16 @@ namespace gse {
     WRAPDEFS_CLASS() \
     virtual const gse::Value Wrap( const bool dynamic = false ) override; \
     static _type Unwrap( const gse::Value& value );
-#define WRAPIMPL_CLASS( _type, _class ) \
-    const gse::type::Object::object_class_t _type::WRAP_CLASS = gse::type::Object::_class;
-#define WRAPIMPL_BEGIN( _type, _class ) \
-    WRAPIMPL_CLASS( _type, _class ) \
+#define WRAPIMPL_CLASS( _type ) \
+    const gse::type::Object::object_class_t _type::WRAP_CLASS = #_type;
+#define WRAPIMPL_BEGIN( _type ) \
+    WRAPIMPL_CLASS( _type ) \
     const gse::Value _type::Wrap( const bool dynamic ) {
-#define WRAPIMPL_DYNAMIC_BEGIN( _type, _class ) \
-    WRAPIMPL_CLASS( _type, _class ) \
+#define WRAPIMPL_DYNAMIC_BEGIN( _type ) \
+    WRAPIMPL_CLASS( _type ) \
     const gse::Value _type::Wrap( const bool dynamic ) {
-#define WRAPIMPL_DYNAMIC_GETTERS( _type, _class ) \
-    WRAPIMPL_DYNAMIC_BEGIN( _type, _class ) \
+#define WRAPIMPL_DYNAMIC_GETTERS( _type ) \
+    WRAPIMPL_DYNAMIC_BEGIN( _type ) \
     const gse::type::object_properties_t properties = {
 #define WRAPIMPL_PROPS gse::type::object_properties_t properties = { \
     { \
@@ -142,7 +142,7 @@ _type* _type::Unwrap( const gse::Value& value ) { \
     const auto* valueobj = value.Get()->Deref(); \
     ASSERT_NOLOG( valueobj->type == gse::type::Type::T_OBJECT, "can't unwrap non-object: " + valueobj->Dump() ); \
     const auto* obj = (gse::type::Object*)valueobj; \
-    ASSERT_NOLOG( obj->object_class == WRAP_CLASS, "can't unwrap object of different class ( " + gse::type::Object::GetClassString( obj->object_class ) + " != " + gse::type::Object::GetClassString( WRAP_CLASS ) + " )" ); \
+    ASSERT_NOLOG( obj->object_class == WRAP_CLASS, "can't unwrap object of different class ( " + obj->object_class + " != " + WRAP_CLASS + " )" ); \
     ASSERT_NOLOG( obj->wrapobj, "can't unwrap object without internal link" ); \
     return (_type*)obj->wrapobj; \
 }

@@ -170,7 +170,7 @@ const std::string Tile::ToString() const {
 	NATIVE_CALL( this ) { return _n->Wrap(); } ) \
 }
 
-WRAPIMPL_BEGIN( Tile, CLASS_TILE )
+WRAPIMPL_BEGIN( Tile )
 	WRAPIMPL_PROPS
 		{
 			"x",

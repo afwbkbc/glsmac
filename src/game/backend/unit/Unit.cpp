@@ -109,7 +109,7 @@ Unit* Unit::Unserialize( types::Buffer& buf, UnitManager* units ) {
 	return new Unit( units, id, def, slot, tile, movement, morale, health, moved_this_turn );
 }
 
-WRAPIMPL_DYNAMIC_GETTERS( Unit, CLASS_UNIT )
+WRAPIMPL_DYNAMIC_GETTERS( Unit )
 	WRAPIMPL_GET( "id", Int, m_id )
 	WRAPIMPL_GET( "movement", Float, m_movement )
 	WRAPIMPL_GET( "morale", Int, m_morale )

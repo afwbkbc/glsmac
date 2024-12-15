@@ -18,7 +18,7 @@ Exception::Exception( const gse::Exception& exception, const std::vector< std::s
 			VALUE( type::String, exception.reason )
 		},
 	},
-	Object::CLASS_EXCEPTION
+	"Exception"
 ) {
 	array_elements_t bt = {};
 	for ( const auto& it : backtrace ) {

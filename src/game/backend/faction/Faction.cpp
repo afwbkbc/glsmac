@@ -67,7 +67,7 @@ void Faction::Unserialize( types::Buffer buf ) {
 
 }
 
-WRAPIMPL_BEGIN( Faction, CLASS_FACTION )
+WRAPIMPL_BEGIN( Faction )
 	WRAPIMPL_PROPS
 		{
 			"id",

@@ -198,7 +198,7 @@ void BaseManager::PushUpdates() {
 	}
 }
 
-WRAPIMPL_BEGIN( BaseManager, CLASS_BM )
+WRAPIMPL_BEGIN( BaseManager )
 	WRAPIMPL_PROPS
 		{
 			"define_pop",

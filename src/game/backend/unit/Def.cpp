@@ -50,7 +50,7 @@ Def* Def::Unserialize( types::Buffer& buf ) {
 	}
 }
 
-WRAPIMPL_BEGIN( Def, CLASS_UNITDEF )
+WRAPIMPL_BEGIN( Def )
 	WRAPIMPL_PROPS
 		{
 			"name",

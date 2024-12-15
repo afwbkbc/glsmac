@@ -22,6 +22,15 @@ void Common::AddToContext( context::Context* ctx ) {
 		return VALUE( type::String, type::Type::GetTypeString( v->type ) );
 	} ) );
 
+	ctx->CreateBuiltin( "classof", NATIVE_CALL() {
+		N_EXPECT_ARGS( 1 );
+		N_GETPTR( v, 0 );
+		if ( v->type == type::Type::T_OBJECT ) {
+			return VALUE( type::String, ( ( type::Object*)v )->object_class );
+		}
+		return VALUE( type::Undefined );
+	} ) );
+
 	ctx->CreateBuiltin( "size", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GETPTR( v, 0 );

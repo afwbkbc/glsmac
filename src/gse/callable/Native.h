@@ -71,7 +71,7 @@ namespace callable {
     arg = _value.Get()->Deref(); \
     N_CHECKTYPE( arg, Object ); \
     if ( ((gse::type::Object*)arg)->object_class != _class ) { \
-        throw gse::Exception( gse::EC.INVALID_CALL, "Value is expected to be object of class " + gse::type::Object::GetClassString( _class ) + ", found class: " + gse::type::Object::GetClassString( ((gse::type::Object*)arg)->object_class ), ctx, call_si ); \
+        throw gse::Exception( gse::EC.INVALID_CALL, "Value is expected to be object of class " + _class + ", found class: " + ((gse::type::Object*)arg)->object_class, ctx, call_si ); \
     } \
     obj_val = _value;
 #define N_UNWRAP( _var, _value, _type ) \
@@ -82,7 +82,7 @@ namespace callable {
     arg = arguments.at( _index ).Get()->Deref(); \
     N_CHECKARG( arg, _index, Object ); \
     if ( ((gse::type::Object*)arg)->object_class != _class ) { \
-        throw gse::Exception( gse::EC.INVALID_CALL, "Argument " + std::to_string( _index ) + " is expected to be object of class " + gse::type::Object::GetClassString( _class ) + ", found class: " + gse::type::Object::GetClassString( ((gse::type::Object*)arg)->object_class ), ctx, call_si ); \
+        throw gse::Exception( gse::EC.INVALID_CALL, "Argument " + std::to_string( _index ) + " is expected to be object of class " + _class + ", found class: " + ((gse::type::Object*)arg)->object_class, ctx, call_si ); \
     } \
     obj_val = arguments.at( _index );
 #define N_GETVALUE_UNWRAP( _var, _index, _type ) \
@@ -90,7 +90,7 @@ namespace callable {
     auto* _var = _type::Unwrap( obj_val );
 #define N_CHECK_OBJECT_CLASS( _var, _class ) \
     if ( ((gse::type::Object*)_var)->object_class != _class ) { \
-        throw gse::Exception( gse::EC.INVALID_CALL, "Value is expected to be object of class " + gse::type::Object::GetClassString( _class ) + ", found class: " + gse::type::Object::GetClassString( ((gse::type::Object*)_var)->object_class ), ctx, call_si ); \
+        throw gse::Exception( gse::EC.INVALID_CALL, "Value is expected to be object of class " + _class + ", found class: " + ((gse::type::Object*)_var)->object_class, ctx, call_si ); \
     }
 #define N_GETPROP_VAL( _obj, _key, _type ) \
     obj_it = _obj.find( _key ); \

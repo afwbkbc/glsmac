@@ -14,98 +14,6 @@ namespace type {
 
 static Value s_undefined = VALUE( type::Undefined );
 
-static const std::unordered_map< Object::object_class_t, std::string > s_object_class_str = {
-	{
-		Object::CLASS_NONE,
-		""
-	},
-	{
-		Object::CLASS_EXCEPTION,
-		"#exception"
-	},
-	{
-		Object::CLASS_RANDOM,
-		"#random"
-	},
-	{
-		Object::CLASS_COLOR,
-		"#color"
-	},
-	{
-		Object::CLASS_GLSMAC,
-		"#glsmac"
-	},
-	{
-		Object::CLASS_SYSTEM,
-		"#system"
-	},
-	{
-		Object::CLASS_STATE,
-		"#state"
-	},
-	{
-		Object::CLASS_GAME,
-		"#game"
-	},
-	{
-		Object::CLASS_RM,
-		"#rm"
-	},
-	{
-		Object::CLASS_TM,
-		"#tm"
-	},
-	{
-		Object::CLASS_TILE,
-		"#tile"
-	},
-	{
-		Object::CLASS_PLAYER,
-		"#player"
-	},
-	{
-		Object::CLASS_FACTION,
-		"#faction"
-	},
-	{
-		Object::CLASS_FM,
-		"#fm"
-	},
-	{
-		Object::CLASS_UM,
-		"#um"
-	},
-	{
-		Object::CLASS_UNITDEF,
-		"#unitdef"
-	},
-	{
-		Object::CLASS_UNIT,
-		"#unit"
-	},
-	{
-		Object::CLASS_BM,
-		"#bm"
-	},
-	{
-		Object::CLASS_BASE,
-		"#base"
-	},
-	{
-		Object::CLASS_BASE_POP,
-		"#basepop"
-	},
-	{
-		Object::CLASS_AM,
-		"#am"
-	}
-};
-const std::string& Object::GetClassString( const object_class_t object_class ) {
-	const auto& it = s_object_class_str.find( object_class );
-	ASSERT_NOLOG( it != s_object_class_str.end(), "unknown/unsupported object class type: " + std::to_string( object_class ) );
-	return it->second;
-}
-
 Object::Object( object_properties_t initial_value, const object_class_t object_class, Wrappable* wrapobj, wrapsetter_t* wrapsetter )
 	: Type( GetType() )
 	, value( initial_value )
@@ -147,6 +55,7 @@ const Value Object::GetRef( const object_key_t& key ) {
 void Object::Unlink() {
 	ASSERT_NOLOG( wrapobj, "wrapobj not linked" );
 	wrapobj = nullptr;
+	wrapsetter = nullptr;
 }
 
 }

@@ -92,7 +92,7 @@ const Value Value::New( const type::Type* type ) const {
 			for ( const auto& it : obj->value ) {
 				properties.insert_or_assign( it.first, it.second.Clone() );
 			}
-			return VALUE( type::Object, properties, obj->object_class, obj->wrapobj );
+			return VALUE( type::Object, properties, obj->object_class, obj->wrapobj, obj->wrapsetter );
 		}
 		case type::Type::T_CALLABLE:
 			return *this;

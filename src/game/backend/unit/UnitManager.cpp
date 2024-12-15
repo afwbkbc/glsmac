@@ -254,7 +254,7 @@ void UnitManager::PushUpdates() {
 	}
 }
 
-WRAPIMPL_BEGIN( UnitManager, CLASS_UM )
+WRAPIMPL_BEGIN( UnitManager )
 	WRAPIMPL_PROPS
 		{
 			"define_morales",

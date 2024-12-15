@@ -80,7 +80,7 @@ void AnimationManager::FinishAnimation( const size_t animation_id ) {
 	on_complete();
 }
 
-WRAPIMPL_BEGIN( AnimationManager, CLASS_AM )
+WRAPIMPL_BEGIN( AnimationManager )
 	WRAPIMPL_PROPS
 		{
 			"define_animation",

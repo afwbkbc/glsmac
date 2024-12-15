@@ -107,7 +107,7 @@ const std::string Type::ToString() const {
 		case T_OBJECT: {
 			const auto* obj = (Object*)this;
 			std::string str = "";
-			str.append( Object::GetClassString( obj->object_class ) + "{ " );
+			str.append( obj->object_class + "{ " );
 			bool first = true;
 			for ( const auto& it : obj->value ) {
 				if ( first ) {
@@ -198,7 +198,7 @@ const std::string Type::Dump() const {
 		case T_OBJECT: {
 			const auto* obj = (Object*)this;
 			std::string str = "";
-			str.append( "object" + Object::GetClassString( obj->object_class ) + "{" );
+			str.append( "object(" + obj->object_class + "){" );
 			bool first = true;
 			for ( const auto& it : obj->value ) {
 				if ( first ) {
@@ -404,7 +404,7 @@ void Type::Serialize( types::Buffer* buf, const Type* type ) {
 		}
 		case T_OBJECT: {
 			const auto* obj = (Object*)type;
-			ASSERT_NOLOG( obj->object_class == Object::CLASS_NONE, "serialization of custom object classes is not supported" );
+			ASSERT_NOLOG( obj->object_class.empty(), "serialization of custom object classes is not supported" );
 			ASSERT_NOLOG( !obj->wrapobj, "serialization of objects with wrapobj is not supported" );
 			ASSERT_NOLOG( !obj->wrapsetter, "serialization of objects with wrapsetter is not supported" );
 			const auto& properties = obj->value;

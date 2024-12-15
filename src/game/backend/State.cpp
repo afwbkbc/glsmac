@@ -172,7 +172,7 @@ faction::FactionManager* State::GetFM() const {
 	return m_fm;
 }
 
-WRAPIMPL_BEGIN( State, CLASS_STATE )
+WRAPIMPL_BEGIN( State )
 	WRAPIMPL_PROPS
 		{
 			"fm",

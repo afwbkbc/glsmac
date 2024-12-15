@@ -92,7 +92,7 @@ const map::tile::yields_t ResourceManager::GetYields( map::tile::Tile* tile, slo
 	return yields;
 }
 
-WRAPIMPL_BEGIN( ResourceManager, CLASS_RM )
+WRAPIMPL_BEGIN( ResourceManager )
 	WRAPIMPL_PROPS
 		{
 			"define",

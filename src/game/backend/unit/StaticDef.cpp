@@ -82,7 +82,7 @@ StaticDef* StaticDef::Unserialize( types::Buffer& buf, const std::string& id, co
 	return new StaticDef( id, moraleset, name, movement_type, movement_per_turn, Render::Unserialize( buf ) );
 }
 
-WRAPIMPL_BEGIN( StaticDef, CLASS_UNITDEF )
+WRAPIMPL_BEGIN( StaticDef )
 	WRAPIMPL_PROPS
 		WRAPIMPL_GET( "is_immovable", Bool, m_movement_type == MT_IMMOVABLE )
 		WRAPIMPL_GET( "is_land", Bool, m_movement_type == MT_LAND )

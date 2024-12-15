@@ -40,7 +40,7 @@ void Pop::Unserialize( types::Buffer& buf, Game* game ) {
 	m_variant = buf.ReadInt();
 }
 
-WRAPIMPL_BEGIN( Pop, CLASS_BASE_POP )
+WRAPIMPL_BEGIN( Pop )
 	WRAPIMPL_PROPS
 		{
 			"type",

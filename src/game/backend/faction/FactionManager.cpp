@@ -68,7 +68,7 @@ const std::vector< Faction* > FactionManager::GetAll() const {
 	return result;
 }
 
-WRAPIMPL_BEGIN( FactionManager, CLASS_FM )
+WRAPIMPL_BEGIN( FactionManager )
 	WRAPIMPL_PROPS
 		{
 			"import_base_names",
