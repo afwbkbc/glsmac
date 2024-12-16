@@ -31,7 +31,7 @@ void Common::AddToContext( context::Context* ctx ) {
 		return VALUE( type::Undefined );
 	} ) );
 
-	ctx->CreateBuiltin( "size", NATIVE_CALL() {
+	ctx->CreateBuiltin( "sizeof", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GETPTR( v, 0 );
 		size_t size = 0;
@@ -69,6 +69,18 @@ void Common::AddToContext( context::Context* ctx ) {
 		return VALUE( type::Bool, is_empty );
 	} ) );
 
+	ctx->CreateBuiltin( "clone", NATIVE_CALL()
+	{
+		N_EXPECT_ARGS( 1 );
+		const auto& v = arguments.at(0);
+		switch ( v.Get()->type ) {
+			case type::Type::T_OBJECT:
+			case type::Type::T_ARRAY:
+				return v.Clone();
+			default:
+				throw Exception( EC.OPERATION_NOT_SUPPORTED, "Cloning of type " + v.GetTypeString() + " is not supported", ctx, call_si );
+		}
+	} ) );
 }
 
 }

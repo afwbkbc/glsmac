@@ -354,7 +354,7 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 		}
 		case OT_ASSIGN: {
 			ASSERT( expression->a, "missing assignment target" );
-			auto result = Deref( ctx, expression->b->m_si, EvaluateOperand( ctx, expression->b ) ).Clone(); // for now always copy on assignment
+			auto result = Deref( ctx, expression->b->m_si, EvaluateOperand( ctx, expression->b ) );
 			switch ( expression->a->type ) {
 				case Operand::OT_VARIABLE: {
 					const auto* var = (Variable*)expression->a;

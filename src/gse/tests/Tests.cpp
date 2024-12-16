@@ -97,7 +97,7 @@ const std::string& GetTestSource() {
 									  "testarr1 []= 1 + 2 + 3;\n"
 									  "testarr1 += testarr2;\n"
 									  "testarr1 []= testarr2;\n"
-									  "let testarr3 = testarr1;\n"
+									  "let testarr3 = #clone(testarr1);\n"
 									  "testarr3[1] = 'SECOND';\n"
 									  "testarr3[ testmethod2(a, b, c) + 61 ] = 'FIRST';\n"
 									  "testarr3[2:5] = testarr1[0:1] + testarr2[0:1];\n"
@@ -525,12 +525,24 @@ const Program* GetTestProgram() {
 					)
 				),
 				new Statement(
-					SI( 39, 1, 39, 24 ),
+					SI( 39, 1, 39, 32 ),
 					new Expression(
-						SI( 39, 5, 39, 24 ),
+						SI( 39, 5, 39, 32 ),
 						new Variable( SI( 39, 5, 39, 13 ), "testarr3", VH_CREATE_VAR ),
 						new Operator( SI( 39, 14, 39, 15 ), OT_ASSIGN ),
-						new Variable( SI( 39, 16, 39, 24 ), "testarr1" )
+						new Call(
+							SI( 39, 16, 39, 32 ),
+							new Expression(
+								SI( 39, 16, 39, 22 ),
+								new Variable( SI( 39, 16, 39, 22 ), "#clone" )
+							),
+							{
+								new Expression(
+									SI( 39, 23, 39, 31 ),
+									new Variable( SI( 39, 23, 39, 31 ), "testarr1" )
+								),
+							}
+						)
 					)
 				),
 				new Statement(

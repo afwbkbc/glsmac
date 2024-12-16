@@ -52,7 +52,7 @@ testarr1 [] = 'second';
 testarr1 [] = 1 + 2 + 3;
 testarr1 += testarr2;
 testarr1 [] = testarr2;
-let testarr3 = testarr1;
+let testarr3 = #clone(testarr1);
 testarr3[1] = 'SECOND';
 testarr3[testmethod2(a, b, c) + 61] = 'FIRST';
 testarr3[2:5] = testarr1[0:1] + testarr2[0:1];
@@ -353,9 +353,7 @@ try {
 	UnknownError: (e) => {
 		arr [] = 'shouldnt catch this';
 	},
-		TestError
-:
-	(e) => {
+	TestError: (e) => {
 		arr [] = 'CAUGHT ' + e.type + ' : ' + e.reason;
 		arr += e.backtrace;
 	}
@@ -395,6 +393,56 @@ test.assert(15.0 != 15);
 test.assert(#round(15.0) == 15);
 test.assert(#round(15.4) == 15);
 test.assert(#round(15.6) == 16);
+
+
+let testobj = {
+	key1: 'value1',
+	key2: {
+		k1: 'v1',
+		k2: 'v2',
+	}
+};
+let testref = testobj;
+let testclone = #clone(testobj);
+testref.key1 = 'VALUE1';
+test.assert(testobj.key1 == 'VALUE1');
+test.assert(testref.key1 == 'VALUE1');
+test.assert(testclone.key1 == 'value1');
+testclone.key1 = 'VaLuE1';
+test.assert(testobj.key1 == 'VALUE1');
+test.assert(testref.key1 == 'VALUE1');
+test.assert(testclone.key1 == 'VaLuE1');
+testref = testclone;
+test.assert(testobj.key1 == 'VALUE1');
+test.assert(testref.key1 == 'VaLuE1');
+test.assert(testclone.key1 == 'VaLuE1');
+testref.key1 = 'value1';
+test.assert(testobj.key1 == 'VALUE1');
+test.assert(testref.key1 == 'value1');
+test.assert(testclone.key1 == 'value1');
+
+let testint = 5;
+let testcopy = testint;
+test.assert(testint == 5);
+test.assert(testcopy == 5);
+testcopy = 4;
+test.assert(testint == 5);
+test.assert(testcopy == 4);
+testint = 6;
+test.assert(testint == 6);
+test.assert(testcopy == 4);
+
+let invalidclone = null;
+let was_caught = false;
+try {
+	invalidclone = #clone(testint);
+} catch {
+	: (e) => {
+		was_caught = true;
+	}
+}
+test.assert(invalidclone == null);
+test.assert(was_caught == true);
 
 ;
 ;

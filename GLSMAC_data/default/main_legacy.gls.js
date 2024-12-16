@@ -33,7 +33,7 @@ return ( (gm) => {
 
 		let add_pops = (base, count) => {
 			for (let i = 0; i < count; i++) {
-				const type = pop_types[(e.game.random.get_int(0, #size(pop_types) - 1))];
+				const type = pop_types[(e.game.random.get_int(0, #sizeof(pop_types) - 1))];
 				base.create_pop({
 					type: type,
 				});
@@ -57,7 +57,7 @@ return ( (gm) => {
 
 			// init players
 			players = e.game.get_players();
-			players_sz = #size(players);
+			players_sz = #sizeof(players);
 
 			// spawn units
 
