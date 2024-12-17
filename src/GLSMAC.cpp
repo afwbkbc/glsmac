@@ -1,5 +1,7 @@
 #include "GLSMAC.h"
 
+#include <iostream>
+
 #include "util/FS.h"
 #include "engine/Engine.h"
 #include "config/Config.h"
@@ -67,9 +69,14 @@ WRAPIMPL_END_PTR( GLSMAC )
 UNWRAPIMPL_PTR( GLSMAC )
 
 void GLSMAC::RunMain() {
-	for ( const auto& main : m_main_callables ) {
-		ASSERT_NOLOG( main.Get()->type == gse::type::Type::T_CALLABLE, "main not callable" );
-		((gse::type::Callable*)main.Get())->Run( m_ctx, {}, { Wrap() });
+	try {
+		for ( const auto& main : m_main_callables ) {
+			ASSERT_NOLOG( main.Get()->type == gse::type::Type::T_CALLABLE, "main not callable" );
+			( (gse::type::Callable*)main.Get() )->Run( m_ctx, {}, { Wrap() } );
+		}
+	} catch ( gse::Exception& e ) {
+		std::cout << e.ToStringAndCleanup() << std::endl;
+		throw e;
 	}
 }
 

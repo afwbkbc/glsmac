@@ -6,7 +6,8 @@ namespace ui {
 namespace dom {
 
 class Root : public Container {
-
+public:
+	Root();
 };
 
 }

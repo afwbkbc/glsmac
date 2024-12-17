@@ -344,6 +344,11 @@ const bool Type::operator==( const Type& other ) const {
 			}
 			return true;
 		}
+		case T_CALLABLE: {
+			const auto* obj_a = (const Callable*)this;
+			const auto* obj_b = (const Callable*)&other;
+			return obj_a == obj_b;
+		}
 		DEFAULT_COMPARE( == )
 	}
 }
