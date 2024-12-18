@@ -23,14 +23,14 @@ GLSMAC::GLSMAC() {
 
 	Log( "Creating global state" );
 
-	// global objects
-	NEW( m_ui, ui::UI );
-
 	// scripting stuff
 	NEW( m_gse, gse::GSE );
 	m_gse->AddBindings( this );
 	m_ctx = m_gse->CreateGlobalContext();
 	m_ctx->IncRefs();
+
+	// global objects
+	NEW( m_ui, ui::UI, m_ctx, {""} );
 
 	const auto entry_script =
 		util::FS::GeneratePath(

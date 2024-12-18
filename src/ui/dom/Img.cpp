@@ -3,9 +3,9 @@
 namespace ui {
 namespace dom {
 
-Img::Img( Object* const parent, const properties_t& properties )
-	: Object( "img", parent, properties ) {
-	Property( "src", gse::type::Type::T_STRING );
+Img::Img( GSE_CALLABLE, UI* const ui, Object* const parent, const properties_t& properties )
+	: Surface( ctx, call_si, ui, "img", parent, properties ) {
+	Property( ctx, call_si, "src", gse::type::Type::T_STRING );
 }
 
 }

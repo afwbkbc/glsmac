@@ -7,6 +7,10 @@
 #include "gse/type/Object.h"
 
 namespace ui {
+
+class UI;
+class Geometry;
+
 namespace dom {
 
 typedef uint64_t id_t;
@@ -16,26 +20,30 @@ public:
 
 	typedef std::map< std::string, gse::Value > properties_t;
 
-	Object( const std::string& cls, Object* const parent, const properties_t& properties );
+	Object( GSE_CALLABLE, UI* const ui, const std::string& tag, Object* const parent, const properties_t& properties );
 
 	virtual const gse::Value Wrap( const bool dynamic = false ) override;
 	static void WrapSet( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& si );
-	void OnWrapSet( const std::string& property_name );
 
-	const std::string m_class;
+	const std::string m_tag;
 	Object* const m_parent;
 	const id_t m_id;
 
+	virtual Geometry* const GetGeometry() const;
+
 protected:
 
+	UI* const m_ui;
 	const properties_t& m_initial_properties;
 
 	enum property_flag_t : uint8_t {
 		PF_NONE = 0,
 		PF_READONLY = 1 << 0,
 	};
-	void Property( const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value = VALUE( gse::type::Undefined ), const property_flag_t flags = PF_NONE );
-	void Method( const std::string& name, const gse::Value& callable );
+	typedef std::function< void( const gse::Value& ) > f_on_set_t;
+
+	void Property( GSE_CALLABLE, const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value = VALUE( gse::type::Undefined ), const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr );
+	void Method( GSE_CALLABLE, const std::string& name, const gse::Value& callable );
 
 private:
 
@@ -43,9 +51,15 @@ private:
 		gse::type::Type::type_t type;
 		gse::Value value;
 		property_flag_t flags;
+		f_on_set_t f_on_set;
 	};
 	std::map< std::string, property_t > m_properties = {};
 	std::unordered_set< std::string > m_changes = {};
+
+private:
+	friend class Container;
+	void Validate( GSE_CALLABLE ) const;
+
 };
 
 }

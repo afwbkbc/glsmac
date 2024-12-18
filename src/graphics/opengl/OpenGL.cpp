@@ -8,6 +8,7 @@
 #include "scene/Scene.h"
 #include "scene/Camera.h"
 #include "routine/Overlay.h"
+#include "routine/UI.h"
 #include "routine/World.h"
 #include "FBO.h"
 #include "types/texture/Texture.h"
@@ -26,33 +27,9 @@ OpenGL::OpenGL( const std::string title, const unsigned short window_width, cons
 
 	m_is_fullscreen = fullscreen;
 
-	// shader programs
-	NEWV( sp_orthographic, shader_program::Orthographic );
-	m_shader_programs.push_back( sp_orthographic );
-	NEWV( sp_orthographic_data, shader_program::OrthographicData );
-	m_shader_programs.push_back( sp_orthographic_data );
-	NEWV( sp_simple2d, shader_program::Simple2D );
-	m_shader_programs.push_back( sp_simple2d );
-
-	// routines ( order is important )
-	NEWV( r_world, routine::World, this, scene::SCENE_TYPE_ORTHO, sp_orthographic, sp_orthographic_data );
-	m_routines.push_back( r_world );
-	NEWV( r_overlay, routine::Overlay, this, sp_simple2d );
-	m_routines.push_back( r_overlay );
-	NEWV( r_world_ui, routine::World, this, scene::SCENE_TYPE_ORTHO_UI, sp_orthographic, sp_orthographic_data );
-	m_routines.push_back( r_world_ui );
-
-	// some routines are special
-	m_routine_overlay = r_overlay;
 }
 
 OpenGL::~OpenGL() {
-	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it ) {
-		DELETE( *it );
-	}
-	for ( auto it = m_shader_programs.begin() ; it != m_shader_programs.end() ; ++it ) {
-		DELETE( *it );
-	}
 }
 
 void OpenGL::Start() {
@@ -119,6 +96,27 @@ void OpenGL::Start() {
 		);
 	}
 
+	// shader programs
+	NEWV( sp_orthographic, shader_program::Orthographic );
+	m_shader_programs.push_back( sp_orthographic );
+	NEWV( sp_orthographic_data, shader_program::OrthographicData );
+	m_shader_programs.push_back( sp_orthographic_data );
+	NEWV( sp_simple2d, shader_program::Simple2D );
+	m_shader_programs.push_back( sp_simple2d );
+
+	// routines ( order is important )
+	NEWV( r_world, routine::World, this, scene::SCENE_TYPE_ORTHO, sp_orthographic, sp_orthographic_data );
+	m_routines.push_back( r_world );
+	NEWV( r_overlay, routine::Overlay, this, sp_simple2d );
+	m_routines.push_back( r_overlay );
+	NEWV( r_ui, routine::UI, this, sp_simple2d );
+	m_routines.push_back( r_ui );
+	NEWV( r_world_ui, routine::World, this, scene::SCENE_TYPE_ORTHO_UI, sp_orthographic, sp_orthographic_data );
+	m_routines.push_back( r_world_ui );
+
+	// some routines are special
+	m_routine_overlay = r_overlay;
+
 	for ( auto it = m_shader_programs.begin() ; it != m_shader_programs.end() ; ++it ) {
 		( *it )->Start();
 	}
@@ -166,6 +164,15 @@ void OpenGL::Stop() {
 	for ( auto it = m_shader_programs.begin() ; it != m_shader_programs.end() ; ++it ) {
 		( *it )->Stop();
 	}
+
+	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it ) {
+		DELETE( *it );
+	}
+	m_routines.clear();
+	for ( auto it = m_shader_programs.begin() ; it != m_shader_programs.end() ; ++it ) {
+		DELETE( *it );
+	}
+	m_shader_programs.clear();
 
 	for ( auto& texture : m_textures ) {
 		glDeleteTextures( 1, &texture.second.obj );
