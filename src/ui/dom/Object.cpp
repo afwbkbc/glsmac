@@ -7,7 +7,7 @@ namespace dom {
 
 static std::atomic< id_t > s_next_id = 0;
 
-Object::Object( GSE_CALLABLE, UI* const ui, const std::string& tag, Object* const parent, const properties_t& properties )
+Object::Object( DOM_ARGS_T )
 	: m_ui( ui )
 	, m_tag( "$" + tag )
 	, m_id( ++s_next_id )
@@ -51,7 +51,7 @@ void Object::WrapSet( gse::Wrappable* wrapobj, const std::string& key, const gse
 		it->second.value = value;
 		obj->m_changes.insert( key );
 		if ( it->second.f_on_set ) {
-			it->second.f_on_set( value );
+			it->second.f_on_set( ctx, si, value );
 		}
 	}
 }
@@ -72,7 +72,7 @@ void Object::Property( GSE_CALLABLE, const std::string& name, const gse::type::T
 	}
 	const gse::Value& v = it == m_initial_properties.end()
 		? default_value
-		: it->second;
+		: *value;
 	m_properties.insert(
 		{
 			name,
@@ -84,8 +84,10 @@ void Object::Property( GSE_CALLABLE, const std::string& name, const gse::type::T
 			}
 		}
 	);
-	if ( f_on_set ) {
-		f_on_set( v );
+	if ( v.Get()->type != gse::type::Type::T_UNDEFINED ) {
+		if ( f_on_set ) {
+			f_on_set( ctx, call_si, v );
+		}
 	}
 }
 

@@ -85,6 +85,8 @@ CLASS( Config, common::Module )
 
 	const std::vector< std::string >& GetModPaths() const;
 
+	const std::string& GetNewUIMainScript() const;
+
 #ifdef DEBUG
 
 	const bool HasDebugFlag( const debug_flag_t flag ) const;
@@ -126,6 +128,8 @@ private:
 	std::string m_quickstart_faction = "";
 
 	std::vector< std::string > m_mod_paths = {};
+
+	std::string m_newui_mainscript = "main";
 
 #ifdef DEBUG
 

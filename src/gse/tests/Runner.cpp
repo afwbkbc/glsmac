@@ -31,7 +31,7 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 
 			context::GlobalContext* context = gse->CreateGlobalContext();
 			context->IncRefs();
-			context->AddSourceLines( util::String::SplitToLines( GetTestSource() ) );
+			context->AddSourceLines( util::String::Split( GetTestSource(), '\n' ) );
 			mocks::AddMocks( context, {} );
 
 			gse->LogCaptureStart();

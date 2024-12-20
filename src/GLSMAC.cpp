@@ -32,12 +32,14 @@ GLSMAC::GLSMAC() {
 	// global objects
 	NEW( m_ui, ui::UI, m_ctx, {""} );
 
+	const auto& c = g_engine->GetConfig();
+
 	const auto entry_script =
 		util::FS::GeneratePath(
 			{
-				g_engine->GetConfig()->GetDataPath(),
+				c->GetDataPath(),
 				"default", // only 'default' mod for now
-				"main" // script name (extension is appended automatically)
+				c->GetNewUIMainScript() // script name (extension is appended automatically)
 			}, gse::GSE::PATH_SEPARATOR
 		)
 	;

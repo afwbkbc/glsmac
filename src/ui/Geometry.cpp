@@ -6,10 +6,9 @@
 
 namespace ui {
 
-Geometry::Geometry( const UI* const ui, Geometry* const parent, types::mesh::Rectangle* const mesh )
+Geometry::Geometry( const UI* const ui, Geometry* const parent )
 	: m_ui( ui )
-	, m_parent( parent )
-	, m_mesh( mesh ) {
+	, m_parent( parent ) {
 	if ( m_parent ) {
 		m_parent->m_children.insert( this );
 	}
@@ -20,6 +19,11 @@ Geometry::~Geometry() {
 	if ( m_parent ) {
 		m_parent->m_children.erase( this );
 	}
+}
+
+void Geometry::SetMesh( types::mesh::Rectangle* const mesh ) {
+	m_mesh = mesh;
+	UpdateMesh();
 }
 
 void Geometry::SetLeft( const coord_t px ) {
@@ -88,23 +92,7 @@ void Geometry::NeedUpdate() {
 
 void Geometry::Update() {
 	UpdateArea();
-	if ( m_mesh ) {
-		m_mesh->SetCoords(
-			m_ui->Clamp(
-				{
-					m_area.left,
-					m_area.top,
-				}
-			),
-			m_ui->Clamp(
-				{
-					m_area.right,
-					m_area.bottom,
-				}
-			),
-			0.5f
-		);
-	}
+	UpdateMesh();
 	for ( const auto& geometry : m_children ) {
 		geometry->Update();
 	}
@@ -241,6 +229,26 @@ void Geometry::UpdateArea() {
 			g_engine->GetUI()->ResizeDebugFrame( this );
 		}
 #endif*/
+	}
+}
+
+void Geometry::UpdateMesh() {
+	if ( m_mesh ) {
+		m_mesh->SetCoords(
+			m_ui->Clamp(
+				{
+					m_area.left,
+					m_area.top,
+				}
+			),
+			m_ui->Clamp(
+				{
+					m_area.right,
+					m_area.bottom,
+				}
+			),
+			0.5f
+		);
 	}
 }
 

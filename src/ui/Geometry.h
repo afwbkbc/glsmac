@@ -19,7 +19,7 @@ class UI;
 
 class Geometry {
 public:
-	Geometry( const UI* const ui, Geometry* const parent, types::mesh::Rectangle* const mesh );
+	Geometry( const UI* const ui, Geometry* const parent );
 	~Geometry();
 
 	enum align_t : uint8_t {
@@ -32,6 +32,8 @@ public:
 		ALIGN_VCENTER = ALIGN_TOP | ALIGN_BOTTOM,
 		ALIGN_CENTER = ALIGN_HCENTER | ALIGN_VCENTER,
 	};
+
+	void SetMesh( types::mesh::Rectangle* const mesh );
 
 	void SetLeft( const coord_t px );
 	void SetTop( const coord_t px );
@@ -50,7 +52,7 @@ private:
 	const UI* const m_ui;
 	Geometry* const m_parent;
 	std::unordered_set< Geometry* > m_children = {};
-	types::mesh::Rectangle* const m_mesh;
+	types::mesh::Rectangle* m_mesh = nullptr;
 
 	struct area_t {
 		coord_t left;
@@ -86,6 +88,7 @@ private:
 	uint8_t m_stick_bits = STICK_NONE;
 
 	void UpdateArea();
+	void UpdateMesh();
 
 private:
 	types::Vec2< types::mesh::coord_t > top_left;

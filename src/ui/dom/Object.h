@@ -6,6 +6,11 @@
 #include "gse/Wrappable.h"
 #include "gse/type/Object.h"
 
+#define DOM_ARGS GSE_CALLABLE, UI* const ui, Object* const parent, const properties_t& properties
+#define DOM_ARGS_T DOM_ARGS, const std::string& tag
+#define DOM_ARGS_PASS ctx, call_si, ui, parent, properties
+#define DOM_ARGS_PASS_T DOM_ARGS_PASS, tag
+
 namespace ui {
 
 class UI;
@@ -20,7 +25,7 @@ public:
 
 	typedef std::map< std::string, gse::Value > properties_t;
 
-	Object( GSE_CALLABLE, UI* const ui, const std::string& tag, Object* const parent, const properties_t& properties );
+	Object( DOM_ARGS_T );
 
 	virtual const gse::Value Wrap( const bool dynamic = false ) override;
 	static void WrapSet( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& si );
@@ -40,7 +45,7 @@ protected:
 		PF_NONE = 0,
 		PF_READONLY = 1 << 0,
 	};
-	typedef std::function< void( const gse::Value& ) > f_on_set_t;
+	typedef std::function< void( GSE_CALLABLE, const gse::Value& ) > f_on_set_t;
 
 	void Property( GSE_CALLABLE, const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value = VALUE( gse::type::Undefined ), const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr );
 	void Method( GSE_CALLABLE, const std::string& name, const gse::Value& callable );

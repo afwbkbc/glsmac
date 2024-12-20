@@ -14,8 +14,8 @@
 namespace ui {
 namespace dom {
 
-Surface::Surface( GSE_CALLABLE, UI* const ui, const std::string& tag, ui::dom::Object* const parent, const ui::dom::Object::properties_t& properties )
-	: Object( ctx, call_si, ui, tag, parent, properties ) {
+Surface::Surface( DOM_ARGS_T )
+	: Area( DOM_ARGS_PASS_T ) {
 
 	std::string cls = "UI::Mesh::Surface";
 	NEW( m_mesh, types::mesh::Rectangle );
@@ -30,32 +30,15 @@ Surface::Surface( GSE_CALLABLE, UI* const ui, const std::string& tag, ui::dom::O
 			}
 		)
 	);
-
+	m_geometry->SetMesh( m_mesh );
 	m_ui->m_scene->AddActor( m_actor );
-	NEW( m_geometry, Geometry, ui, m_parent
-		? m_parent->GetGeometry()
-		: nullptr, m_mesh );
-
-#define GEOMPROP( _key, _method ) \
-    Property( \
-        ctx, call_si, _key, gse::type::Type::T_INT, VALUE( gse::type::Int, 0 ), PF_NONE, [ this ]( const gse::Value& v ) { \
-            m_geometry->_method( ( (gse::type::Int*)v.Get() )->value ); \
-        } \
-    )
-	GEOMPROP( "width", SetWidth );
-	GEOMPROP( "height", SetHeight );
-	GEOMPROP( "left", SetLeft );
-	GEOMPROP( "top", SetTop );
-	GEOMPROP( "right", SetRight );
-	GEOMPROP( "bottom", SetBottom );
-#undef GEOMPROP
 
 }
 
 Surface::~Surface() {
 	m_ui->m_scene->RemoveActor( m_actor );
+	m_geometry->SetMesh( nullptr );
 	delete m_actor;
-	delete m_geometry;
 }
 
 }

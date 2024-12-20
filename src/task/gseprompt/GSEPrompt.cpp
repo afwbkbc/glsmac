@@ -102,7 +102,7 @@ void GSEPrompt::Iterate() {
 					ProcessInput();
 				}
 			}
-			m_gse_context->AddSourceLines( util::String::SplitToLines( m_input ) );
+			m_gse_context->AddSourceLines( util::String::Split( m_input, '\n' ) );
 			PrintPrompt();
 		}
 	}

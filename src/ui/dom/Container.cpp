@@ -8,18 +8,10 @@
 namespace ui {
 namespace dom {
 
-Container::Container( GSE_CALLABLE, UI* const ui,const std::string& tag, Object* const parent, const properties_t& properties )
-	: Object( ctx, call_si, ui, tag, parent, properties ) {
+Container::Container( DOM_ARGS_T )
+	: Area( DOM_ARGS_PASS_T ) {
 
-	NEW( m_geometry, Geometry, ui, m_parent
-		? m_parent->GetGeometry()
-		: nullptr, nullptr );
-
-	//FACTORY( "img", Img );
-	Factory( ctx, call_si, "img", [ this ]( gse::context::Context* ctx, const gse::si_t& call_si, const properties_t& p ) {
-		return new Img( ctx, call_si, m_ui, this, p );
-	});
-
+	FACTORY( "img", Img );
 
 }
 
@@ -27,12 +19,6 @@ Container::~Container() {
 	for ( const auto& it : m_children ) {
 		delete it.second;
 	}
-
-	DELETE( m_geometry );
-}
-
-Geometry* const Container::GetGeometry() const {
-	return m_geometry;
 }
 
 void Container::Factory( GSE_CALLABLE, const std::string& name, const std::function< Object*( GSE_CALLABLE, const properties_t& ) >& f ) {

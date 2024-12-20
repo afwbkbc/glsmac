@@ -6,16 +6,16 @@
 
 namespace util {
 
-const std::vector< std::string > String::SplitToLines( const std::string& input ) {
-	std::vector< std::string > lines = {};
+const std::vector< std::string > String::Split( const std::string& input, const char delimiter ) {
+	std::vector< std::string > result = {};
 	auto ss = std::stringstream{ input };
-	for ( std::string line ; std::getline( ss, line, '\n' ) ; ) {
-		if ( !line.empty() && line.back() == '\r' ) {
-			line.erase( line.end() - 1 );
+	for ( std::string part ; std::getline( ss, part, delimiter ) ; ) {
+		if ( delimiter == '\n' && !part.empty() && part.back() == '\r' ) {
+			part.erase( part.end() - 1 );
 		}
-		lines.push_back( line );
+		result.push_back( part );
 	}
-	return lines;
+	return result;
 }
 
 // trim from start (in place)

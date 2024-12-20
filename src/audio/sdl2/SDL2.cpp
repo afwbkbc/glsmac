@@ -33,7 +33,7 @@ void SDL2::Start() {
 		return;
 	}
 
-	Log( "Initializing SDL2" );
+	Log( "Initializing SDL2 Audio" );
 
 	if ( SDL_Init( SDL_INIT_AUDIO ) ) {
 		Log( "Failed to enable audio, game will start without sound." );

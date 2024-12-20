@@ -17,7 +17,6 @@ IF ( NOT WIN32 )
 		TARGET glsmac_version PRE_BUILD
 		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 		COMMAND git show -s --format='\#define GLSMAC_LAST_COMMIT \"%h\"' > ${PROJECT_SOURCE_DIR}/src/tmp/last_commit.h
-		DEPENDS .git/COMMIT_EDITMSG
 	)
 ENDIF ()
 
@@ -141,7 +140,7 @@ ENDIF ()
 
 IF ( WIN32 )
 	TARGET_LINK_OPTIONS( ${PROJECT_NAME} PRIVATE -lws2_32 )
-ENDIF()
+ENDIF ()
 
 SET( CMAKE_CXX_FLAGS " -std=c++17 ${CMAKE_CXX_FLAGS} -Wno-pointer-arith -Wno-vla-cxx-extension" )
 

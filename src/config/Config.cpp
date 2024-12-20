@@ -274,6 +274,14 @@ Config::Config( const int argc, const char* argv[] )
 			m_launch_flags |= LF_NEWUI;
 		}
 	);
+	m_parser->AddRule(
+		"newui-mainscript", "SCRIPT_NAME", "Specify alternate main script to run (default: main)", AH( this ) {
+			if ( !HasLaunchFlag( LF_NEWUI ) ) {
+				Error( "--newui-mainscript requires --newui argument!" );
+			}
+			m_newui_mainscript = value;
+		}
+	);
 
 #ifdef DEBUG
 	m_parser->AddRule(
@@ -439,6 +447,10 @@ const std::string& Config::GetQuickstartFaction() const {
 
 const std::vector< std::string >& Config::GetModPaths() const {
 	return m_mod_paths;
+}
+
+const std::string& Config::GetNewUIMainScript() const {
+	return m_newui_mainscript;
 }
 
 #ifdef DEBUG

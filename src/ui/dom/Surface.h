@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Object.h"
+#include "Area.h"
 
 namespace types::mesh {
 class Rectangle;
@@ -16,15 +16,14 @@ class Geometry;
 
 namespace dom {
 
-class Surface : public Object {
+class Surface : public Area {
 public:
-	Surface( GSE_CALLABLE, UI* const ui, const std::string& tag, Object* const parent, const properties_t& properties );
+	Surface( DOM_ARGS_T );
 	virtual ~Surface();
 
 private:
 	types::mesh::Rectangle* m_mesh = nullptr;
 	scene::actor::Mesh* m_actor = nullptr;
-	Geometry* m_geometry = nullptr;
 };
 
 }

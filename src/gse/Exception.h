@@ -29,6 +29,7 @@ struct exception_ec_t {
 	const std::string INVALID_EVENT;
 	const std::string INVALID_DEFINITION;
 	const std::string INVALID_HANDLER;
+	const std::string UI_ERROR;
 };
 extern const exception_ec_t EC;
 
