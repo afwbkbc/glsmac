@@ -5,6 +5,8 @@
 
 #include "Util.h"
 
+#include "types/Color.h"
+
 namespace util {
 
 CLASS( String, Util )
@@ -17,6 +19,8 @@ CLASS( String, Util )
 
 	static const std::string ToUpperCase( const std::string& s );
 	static const std::string ToLowerCase( const std::string& s );
+
+	static const bool ParseColor( const std::string& s, types::Color& color );
 
 };
 

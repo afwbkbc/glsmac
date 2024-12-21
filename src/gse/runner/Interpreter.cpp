@@ -810,7 +810,7 @@ const gse::Value Interpreter::EvaluateOperand( context::Context* ctx, const Oper
 				if ( it.first == "this" ) {
 					throw gse::Exception( EC.INVALID_ASSIGNMENT, "'this' can't be overwritten", ctx, it.second->m_si );
 				}
-				properties.insert_or_assign( it.first, EvaluateExpression( objctx, it.second ) );
+				properties.insert_or_assign( it.first, EvaluateExpression( objctx, it.second ).Clone() );
 			}
 			objctx->DecRefs();
 			return result;

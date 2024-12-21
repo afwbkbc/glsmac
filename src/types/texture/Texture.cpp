@@ -19,6 +19,12 @@ Texture::Texture() {
 	// nothing
 }
 
+Texture::Texture( const size_t width, const size_t height ) {
+	if ( width > 0 && height > 0 ) {
+		Resize( width, height );
+	}
+}
+
 Texture::Texture( const std::string& name, const size_t width, const size_t height )
 	: m_name( name ) {
 	if ( width > 0 && height > 0 ) {
