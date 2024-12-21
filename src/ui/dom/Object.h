@@ -6,6 +6,8 @@
 #include "gse/Wrappable.h"
 #include "gse/type/Object.h"
 
+#include "types/Color.h"
+
 #define DOM_ARGS GSE_CALLABLE, UI* const ui, Object* const parent, const properties_t& properties
 #define DOM_ARGS_T DOM_ARGS, const std::string& tag
 #define DOM_ARGS_PASS ctx, call_si, ui, parent, properties
@@ -49,6 +51,8 @@ protected:
 
 	void Property( GSE_CALLABLE, const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value = VALUE( gse::type::Undefined ), const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr );
 	void Method( GSE_CALLABLE, const std::string& name, const gse::Value& callable );
+
+	void ParseColor( GSE_CALLABLE, const std::string& str, types::Color& color ) const;
 
 private:
 

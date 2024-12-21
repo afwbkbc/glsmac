@@ -4,6 +4,7 @@
 #include "ui/Geometry.h"
 
 #include "Img.h"
+#include "Text.h"
 
 namespace ui {
 namespace dom {
@@ -12,6 +13,7 @@ Container::Container( DOM_ARGS_T )
 	: Area( DOM_ARGS_PASS_T ) {
 
 	FACTORY( "img", Img );
+	FACTORY( "text", Text );
 
 }
 

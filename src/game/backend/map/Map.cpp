@@ -679,7 +679,7 @@ const Map::error_code_t Map::LoadFromFile( const std::string& path ) {
 	ASSERT( util::FS::FileExists( path ), "map file \"" + path + "\" not found" );
 
 	Log( "Loading map from " + path );
-	auto b = types::Buffer( util::FS::ReadFile( path ) );
+	auto b = types::Buffer( util::FS::ReadTextFile( path ) );
 	return LoadFromBuffer( b );
 }
 

@@ -12,7 +12,7 @@ const TXTLoader::txt_data_t& TXTLoader::GetTXTData( const std::string& path ) {
 		it = m_txt_data.insert(
 			{
 				path,
-				txt_data_t{ util::FS::ReadFile( path ) }
+				txt_data_t{ util::FS::ReadTextFile( path ) }
 			}
 		).first;
 	}

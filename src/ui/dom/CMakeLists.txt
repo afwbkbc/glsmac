@@ -6,5 +6,6 @@ SET( SRC ${SRC}
 	${PWD}/Root.cpp
 	${PWD}/Surface.cpp
 	${PWD}/Img.cpp
+	${PWD}/Text.cpp
 
 	PARENT_SCOPE )

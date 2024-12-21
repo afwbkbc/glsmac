@@ -4,12 +4,14 @@
 
 #include "actor/Sprite.h"
 #include "actor/Mesh.h"
+#include "actor/Text.h"
 #include "common/ObjectLink.h"
 #include "scene/Scene.h"
 #include "scene/actor/Actor.h"
 #include "scene/actor/Mesh.h"
 #include "scene/actor/Sprite.h"
 #include "scene/actor/Instanced.h"
+#include "scene/actor/Text.h"
 #include "routine/Routine.h"
 
 namespace graphics {
@@ -134,6 +136,11 @@ void Scene::Update() {
 				case scene::actor::Actor::TYPE_MESH:
 				case scene::actor::Actor::TYPE_INSTANCED_MESH: {
 					NEW( gl_actor, Mesh, m_opengl, (scene::actor::Mesh*)*it );
+					break;
+				}
+				case scene::actor::Actor::TYPE_TEXT: {
+					auto* text_actor = (scene::actor::Text*)*it;
+					NEW( gl_actor, Text, m_opengl, text_actor, text_actor->GetFont() );
 					break;
 				}
 				default: {

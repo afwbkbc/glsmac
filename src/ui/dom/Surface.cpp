@@ -31,9 +31,7 @@ Surface::Surface( DOM_ARGS_T )
 			}
 			if ( str.at( 0 ) == '#' ) {
 				types::Color color;
-				if ( !util::String::ParseColor( str, color ) ) {
-					throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property 'background' has invalid color format. Expected hex values ( #RRGGBB or #RRGGBBAA ), got: " + str, ctx, call_si );
-				}
+				ParseColor( ctx, call_si, str, color );
 				if ( !m_background.texture ) {
 					m_background.texture = new types::texture::Texture( 1, 1 );
 				}

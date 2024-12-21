@@ -18,11 +18,16 @@
 		imgs []= root.img({
 			align: a[0],
 			background: a[1],
-			width: 50,
-			height: 50,
+			width: 20,
+			height: 20,
 		});
 	}
 	#print('images', imgs);
 	imgs[4].background = '#ffffff'; // make center visible
+
+	let text = root.text({
+		color: '#ff0000',
+		text: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 !@#$%^&*()-=_+.,<>{}[];:\'"\|`~',
+	});
 
 });

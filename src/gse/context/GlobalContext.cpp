@@ -20,7 +20,7 @@ GlobalContext::GlobalContext( GSE* gse, const std::string& source_path )
 	, m_source_lines(
 		source_path.empty()
 			? source_lines_t{}
-			: util::String::Split( util::FS::ReadFile( source_path, GSE::PATH_SEPARATOR ), '\n' )
+			: util::String::Split( util::FS::ReadTextFile( source_path, GSE::PATH_SEPARATOR ), '\n' )
 	) {}
 
 Context* GlobalContext::GetParentContext() const {

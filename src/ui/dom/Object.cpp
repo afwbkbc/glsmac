@@ -2,6 +2,8 @@
 
 #include <atomic>
 
+#include "util/String.h"
+
 namespace ui {
 namespace dom {
 
@@ -94,6 +96,12 @@ void Object::Property( GSE_CALLABLE, const std::string& name, const gse::type::T
 void Object::Method( GSE_CALLABLE, const std::string& name, const gse::Value& callable ) {
 	ASSERT_NOLOG( callable.Get()->type == gse::type::Type::T_CALLABLE, "method is not callable: " + callable.ToString() );
 	Property( ctx, call_si, name, gse::type::Type::T_CALLABLE, callable, PF_READONLY );
+}
+
+void Object::ParseColor( GSE_CALLABLE, const std::string& str, types::Color& color ) const {
+	if ( !util::String::ParseColor( str, color ) ) {
+		throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property 'color' has invalid color format. Expected hex values ( #RRGGBB or #RRGGBBAA ), got: " + str, ctx, call_si );
+	}
 }
 
 /*Object* Object::Unwrap( const gse::Value& value ) {

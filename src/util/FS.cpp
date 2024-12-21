@@ -11,6 +11,9 @@
 #define Log( _text )
 #endif
 
+const std::unordered_map< std::string, std::vector< unsigned char > >& GetEmbeddedFiles();
+static const std::unordered_map< std::string, std::vector< unsigned char > >& s_embedded_files = GetEmbeddedFiles();
+
 namespace util {
 
 const char FS::PATH_SEPARATOR =
@@ -328,7 +331,19 @@ std::vector< std::string > FS::ListDirectory( const std::string& directory, cons
 	return result;
 }
 
-const std::string FS::ReadFile( const std::string& path, const char path_separator ) {
+void FS::ReadFile( std::vector< unsigned char >& buffer, const std::string& path, const char path_separator ) {
+	//Log( "Reading file: " + path );
+	ASSERT_NOLOG( FileExists( path, path_separator ), "file \"" + path + "\" does not exist or is not a file" );
+	std::ifstream in( NormalizePath( path, path_separator ), std::ios_base::binary );
+	in.seekg( 0, std::ios::end );
+	const auto sz = in.tellg();
+	in.seekg( 0, std::ios::beg );
+	buffer.resize( sz );
+	in.read( (char*)&buffer[ 0 ], sz );
+	in.close();
+}
+
+const std::string FS::ReadTextFile( const std::string& path, const char path_separator ) {
 	//Log( "Reading file: " + path );
 	ASSERT_NOLOG( FileExists( path, path_separator ), "file \"" + path + "\" does not exist or is not a file" );
 	std::stringstream data;
@@ -345,5 +360,10 @@ const void FS::WriteFile( const std::string& path, const std::string& data, cons
 	out.close();
 }
 
+const std::vector< unsigned char >& FS::GetEmbeddedFile( const std::string& key ) {
+	//Log( "Reading embedded file: " + key );
+	ASSERT_NOLOG( s_embedded_files.find( key ) != s_embedded_files.end(), "embedded file \"" + key + "\" does not exist" );
+	return s_embedded_files.at( key );
 }
 
+}

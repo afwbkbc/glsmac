@@ -10,8 +10,9 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 /bin
+/tools/bin
 /nbproject
-/src/tmp/last_commit.h
+/src/tmp
 /debug.log
 /build
 /build_release

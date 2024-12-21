@@ -2,8 +2,6 @@
 
 #include "Area.h"
 
-#include "types/Color.h"
-
 namespace types {
 namespace mesh {
 class Rectangle;

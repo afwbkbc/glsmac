@@ -1304,7 +1304,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			ASSERT( util::FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
 			Log( (std::string)"Loading map dump from " + filename );
 			ui->SetLoaderText( "Loading dump", false );
-			m_map->Unserialize( types::Buffer( util::FS::ReadFile( filename ) ) );
+			m_map->Unserialize( types::Buffer( util::FS::ReadTextFile( filename ) ) );
 			ec = map::Map::EC_NONE;
 		}
 		else

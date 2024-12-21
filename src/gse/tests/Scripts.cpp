@@ -58,7 +58,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 
 				std::string last_error = "";
 				try {
-					const auto source = util::FS::ReadFile( script, GSE::PATH_SEPARATOR );
+					const auto source = util::FS::ReadTextFile( script, GSE::PATH_SEPARATOR );
 					parser = gse->GetParser( script, source );
 					context = gse->CreateGlobalContext( script );
 					context->IncRefs();

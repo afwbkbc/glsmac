@@ -20,6 +20,23 @@ IF ( NOT WIN32 )
 	)
 ENDIF ()
 
+IF ( NOT WIN32 )
+	SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread" )
+ENDIF ()
+SET( CMAKE_CXX_FLAGS " -std=c++17 ${CMAKE_CXX_FLAGS} -Wno-pointer-arith -Wno-vla-cxx-extension" )
+
+ADD_SUBDIRECTORY( tools )
+SET( EMBED_CPP "src/tmp/embed.cpp" )
+SET( EMBED_FILES
+	"./resource/font/terminus/TerminusTTF-4.49.3-minified.ttf"
+)
+ADD_CUSTOM_COMMAND(
+	OUTPUT ${EMBED_CPP}
+	DEPENDS ${EMBED_FILES}
+	COMMAND ./tools/bin/embedder "${EMBED_CPP}" "${EMBED_FILES}"
+)
+ADD_CUSTOM_TARGET( embed ALL DEPENDS ${EMBED_CPP} )
+
 FUNCTION( SUBDIR DIR )
 	SET( PWD "${PWD}/${DIR}" )
 	ADD_SUBDIRECTORY( ${DIR} )
@@ -29,6 +46,7 @@ ENDFUNCTION( SUBDIR )
 SUBDIR( src )
 ADD_EXECUTABLE( ${PROJECT_NAME}
 	${SRC}
+	${EMBED_CPP}
 )
 
 IF ( NOT WIN32 )
@@ -128,9 +146,6 @@ ENDIF ()
 
 IF ( NOT WIN32 )
 	ADD_DEPENDENCIES( ${PROJECT_NAME} glsmac_version )
-
-	SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread" )
-
 	TARGET_LINK_OPTIONS( ${PROJECT_NAME} PRIVATE ${FT2_LDFLAGS} ${GLEW_LDFLAGS} ${SDL2_LDFLAGS} ${SDL2IMAGE_LDFLAGS} )
 ENDIF ()
 
@@ -141,8 +156,6 @@ ENDIF ()
 IF ( WIN32 )
 	TARGET_LINK_OPTIONS( ${PROJECT_NAME} PRIVATE -lws2_32 )
 ENDIF ()
-
-SET( CMAKE_CXX_FLAGS " -std=c++17 ${CMAKE_CXX_FLAGS} -Wno-pointer-arith -Wno-vla-cxx-extension" )
 
 IF (
 	CMAKE_BUILD_TYPE STREQUAL "Release" OR

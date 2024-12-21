@@ -97,7 +97,7 @@ const Value GSE::RunScript( context::Context* ctx, const si_t& si, const std::st
 	if ( full_path.empty() ) {
 		throw Exception( EC.LOADER_ERROR, "Could not find script for include '" + path + "'", ctx, si );
 	}
-	const auto source = util::FS::ReadFile( full_path, PATH_SEPARATOR );
+	const auto source = util::FS::ReadTextFile( full_path, PATH_SEPARATOR );
 	include_cache_t cache = {
 		VALUE( type::Undefined ),
 		nullptr,
