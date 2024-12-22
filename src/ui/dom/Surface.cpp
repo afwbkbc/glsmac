@@ -6,16 +6,14 @@
 #include "ui/Geometry.h"
 #include "scene/Scene.h"
 #include "engine/Engine.h"
-#include "loader/texture/TextureLoader.h"
 #include "graphics/Graphics.h"
-#include "util/String.h"
 #include "types/texture/Texture.h"
 
 namespace ui {
 namespace dom {
 
-Surface::Surface( DOM_ARGS_T )
-	: Area( DOM_ARGS_PASS_T ) {
+Surface::Surface( DOM_ARGS )
+	: Area( DOM_ARGS_PASS, "surface" ) {
 
 	std::string cls = "UI::Mesh::Surface";
 	NEW( m_mesh, types::mesh::Rectangle );

@@ -23,7 +23,7 @@ namespace dom {
 
 class Surface : public Area {
 public:
-	Surface( DOM_ARGS_T );
+	Surface( DOM_ARGS );
 	virtual ~Surface();
 
 private:
