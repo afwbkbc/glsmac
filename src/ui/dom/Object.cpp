@@ -39,6 +39,11 @@ const gse::Value Object::Wrap( const bool dynamic ) {
 void Object::WrapSet( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& si ) {
 	ASSERT_NOLOG( wrapobj, "wrapobj not set" );
 	auto* obj = (Object*)wrapobj;
+	auto forward_it = obj->m_forwarded_properties.find( key );
+	if ( forward_it != obj->m_forwarded_properties.end() ) {
+		WrapSet( forward_it->second, key, value, ctx, si );
+		return;
+	}
 	auto it = obj->m_properties.find( key );
 	if ( it == obj->m_properties.end() ) {
 		throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property '" + key + "' does not exist", ctx, si );
@@ -64,6 +69,7 @@ Geometry* const Object::GetGeometry() const {
 
 void Object::Property( GSE_CALLABLE, const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value, const property_flag_t flags, const f_on_set_t& f_on_set ) {
 	ASSERT_NOLOG( m_properties.find( name ) == m_properties.end(), "property '" + name + "' already exists" );
+	ASSERT_NOLOG( m_forwarded_properties.find( name ) == m_forwarded_properties.end(), "property '" + name + "' already exists (forwarded)" );
 	const auto& it = m_initial_properties.find( name );
 	const gse::Value* value = &default_value;
 	if ( it != m_initial_properties.end() ) {
@@ -98,6 +104,22 @@ void Object::Method( GSE_CALLABLE, const std::string& name, const gse::Value& ca
 	Property( ctx, call_si, name, gse::type::Type::T_CALLABLE, callable, PF_READONLY );
 }
 
+void Object::ForwardProperty( GSE_CALLABLE, const std::string& name, Object* const target ) {
+	ASSERT_NOLOG( m_forwarded_properties.find( name ) == m_forwarded_properties.end(), "property '" + name + "' already forwarded" );
+	ASSERT_NOLOG( m_properties.find( name ) == m_properties.end(), "property '" + name + "' already taken (exists)" );
+	ASSERT_NOLOG( target->m_parent == this, "can only forward properties to direct children" );
+	m_forwarded_properties.insert(
+		{
+			name,
+			target
+		}
+	);
+	const auto& it = m_initial_properties.find( name );
+	if ( it != m_initial_properties.end() ) {
+		WrapSet( target, it->first, it->second, ctx, call_si );
+	}
+}
+
 void Object::ParseColor( GSE_CALLABLE, const std::string& str, types::Color& color ) const {
 	if ( !util::String::ParseColor( str, color ) ) {
 		throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property 'color' has invalid color format. Expected hex values ( #RRGGBB or #RRGGBBAA ), got: " + str, ctx, call_si );
@@ -115,7 +137,7 @@ void Object::ParseColor( GSE_CALLABLE, const std::string& str, types::Color& col
 
 void Object::Validate( GSE_CALLABLE ) const {
 	for ( const auto& p : m_initial_properties ) {
-		if ( m_properties.find( p.first ) == m_properties.end() ) {
+		if ( m_properties.find( p.first ) == m_properties.end() && m_forwarded_properties.find( p.first ) == m_forwarded_properties.end() ) {
 			throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property '" + p.first + "' does not exist", ctx, call_si );
 		}
 	}

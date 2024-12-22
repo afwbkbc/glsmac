@@ -5,6 +5,7 @@ SET( SRC ${SRC}
 	${PWD}/Container.cpp
 	${PWD}/Root.cpp
 	${PWD}/Surface.cpp
+	${PWD}/Panel.cpp
 	${PWD}/Text.cpp
 
 	PARENT_SCOPE )

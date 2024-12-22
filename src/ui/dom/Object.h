@@ -51,6 +51,7 @@ protected:
 
 	void Property( GSE_CALLABLE, const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value = VALUE( gse::type::Undefined ), const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr );
 	void Method( GSE_CALLABLE, const std::string& name, const gse::Value& callable );
+	void ForwardProperty( GSE_CALLABLE, const std::string& name, Object* const target );
 
 	void ParseColor( GSE_CALLABLE, const std::string& str, types::Color& color ) const;
 
@@ -63,6 +64,7 @@ private:
 		f_on_set_t f_on_set;
 	};
 	std::map< std::string, property_t > m_properties = {};
+	std::map< std::string, Object* > m_forwarded_properties = {};
 	std::unordered_set< std::string > m_changes = {};
 
 private:

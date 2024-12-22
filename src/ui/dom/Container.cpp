@@ -4,6 +4,7 @@
 #include "ui/Geometry.h"
 
 #include "Surface.h"
+#include "Panel.h"
 #include "Text.h"
 
 namespace ui {
@@ -13,6 +14,7 @@ Container::Container( DOM_ARGS_T )
 	: Area( DOM_ARGS_PASS_T ) {
 
 	FACTORY( "surface", Surface );
+	FACTORY( "panel", Panel );
 	FACTORY( "text", Text );
 
 }
