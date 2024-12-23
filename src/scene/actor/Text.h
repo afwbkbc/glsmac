@@ -26,6 +26,8 @@ CLASS( Text, Actor )
 	types::Font* GetFont() const;
 	const std::string& GetText() const;
 	const types::Color& GetColor() const;
+	const size_t GetWidth() const;
+	const size_t GetHeight() const;
 
 	void SetText( const std::string& text );
 	void SetColor( const types::Color& color );

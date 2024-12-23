@@ -63,7 +63,7 @@ void Object::WrapSet( gse::Wrappable* wrapobj, const std::string& key, const gse
 	}
 }
 
-Geometry* const Object::GetGeometry() const {
+geometry::Geometry* const Object::GetGeometry() const {
 	return nullptr;
 }
 

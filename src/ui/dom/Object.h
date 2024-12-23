@@ -16,7 +16,10 @@
 namespace ui {
 
 class UI;
+
+namespace geometry {
 class Geometry;
+}
 
 namespace dom {
 
@@ -36,7 +39,7 @@ public:
 	Object* const m_parent;
 	const id_t m_id;
 
-	virtual Geometry* const GetGeometry() const;
+	virtual geometry::Geometry* const GetGeometry() const;
 
 protected:
 

@@ -32,6 +32,14 @@ const types::Color& Text::GetColor() const {
 	return m_color;
 }
 
+const size_t Text::GetWidth() const {
+	return m_font->GetTextWidth( m_text.c_str() );
+}
+
+const size_t Text::GetHeight() const {
+	return m_font->GetTextHeight( m_text.c_str() );
+}
+
 void Text::SetText( const std::string& text ) {
 	if ( text != m_text ) {
 		m_text = text;

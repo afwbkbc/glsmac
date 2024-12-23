@@ -1,18 +1,18 @@
 #include "Geometry.h"
 
-#include "types/mesh/Rectangle.h"
-
-#include "ui/UI.h"
+#include "common/Assert.h"
 
 namespace ui {
+namespace geometry {
 
-Geometry::Geometry( const UI* const ui, Geometry* const parent )
+Geometry::Geometry( const UI* const ui, Geometry* const parent, const geometry_type_t type )
 	: m_ui( ui )
-	, m_parent( parent ) {
+	, m_parent( parent )
+	, m_type( type ) {
 	if ( m_parent ) {
 		m_parent->m_children.insert( this );
 	}
-	Update();
+	UpdateArea();
 }
 
 Geometry::~Geometry() {
@@ -21,9 +21,14 @@ Geometry::~Geometry() {
 	}
 }
 
-void Geometry::SetMesh( types::mesh::Rectangle* const mesh ) {
-	m_mesh = mesh;
-	UpdateMesh();
+Rectangle* Geometry::AsRectangle() const {
+	ASSERT_NOLOG( m_type == GT_RECTANGLE, "invalid geometry type" );
+	return (Rectangle*)this;
+}
+
+Text* Geometry::AsText() const {
+	ASSERT_NOLOG( m_type == GT_TEXT, "invalid geometry type" );
+	return (Text*)this;
 }
 
 void Geometry::SetLeft( const coord_t px ) {
@@ -92,7 +97,7 @@ void Geometry::NeedUpdate() {
 
 void Geometry::Update() {
 	UpdateArea();
-	UpdateMesh();
+	UpdateImpl();
 	for ( const auto& geometry : m_children ) {
 		geometry->Update();
 	}
@@ -232,24 +237,5 @@ void Geometry::UpdateArea() {
 	}
 }
 
-void Geometry::UpdateMesh() {
-	if ( m_mesh ) {
-		m_mesh->SetCoords(
-			m_ui->Clamp(
-				{
-					m_area.left,
-					m_area.top,
-				}
-			),
-			m_ui->Clamp(
-				{
-					m_area.right,
-					m_area.bottom,
-				}
-			),
-			0.5f
-		);
-	}
 }
-
 }

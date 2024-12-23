@@ -4,23 +4,30 @@
 #include <cstring>
 #include <unordered_set>
 
-#include "Types.h"
+#include "ui/Types.h"
 #include "types/mesh/Types.h"
 
 #include "types/Vec2.h"
-
-namespace types::mesh {
-class Rectangle;
-}
 
 namespace ui {
 
 class UI;
 
+namespace geometry {
+
+class Rectangle;
+class Text;
+
 class Geometry {
 public:
-	Geometry( const UI* const ui, Geometry* const parent );
-	~Geometry();
+
+	enum geometry_type_t {
+		GT_RECTANGLE,
+		GT_TEXT,
+	};
+
+	Geometry( const UI* const ui, Geometry* const parent, const geometry_type_t type );
+	virtual ~Geometry();
 
 	enum align_t : uint8_t {
 		ALIGN_NONE = 0,
@@ -33,7 +40,8 @@ public:
 		ALIGN_CENTER = ALIGN_HCENTER | ALIGN_VCENTER,
 	};
 
-	void SetMesh( types::mesh::Rectangle* const mesh );
+	Rectangle* AsRectangle() const;
+	Text* AsText() const;
 
 	void SetLeft( const coord_t px );
 	void SetTop( const coord_t px );
@@ -45,14 +53,11 @@ public:
 
 	void NeedUpdate();
 
-private:
+protected:
 
-	void Update();
+	virtual void UpdateImpl() = 0;
 
 	const UI* const m_ui;
-	Geometry* const m_parent;
-	std::unordered_set< Geometry* > m_children = {};
-	types::mesh::Rectangle* m_mesh = nullptr;
 
 	struct area_t {
 		coord_t left;
@@ -65,16 +70,15 @@ private:
 			return memcmp( this, &other, sizeof( other ) ) != 0;
 		}
 	};
-
-	coord_t m_left = 0;
-	coord_t m_top = 0;
-	coord_t m_right = 0;
-	coord_t m_bottom = 0;
-	coord_t m_width = 0;
-	coord_t m_height = 0;
-	uint8_t m_align = ALIGN_LEFT | ALIGN_TOP;
-
 	area_t m_area = {};
+
+private:
+	const geometry_type_t m_type;
+
+	void Update();
+
+	Geometry* const m_parent;
+	std::unordered_set< Geometry* > m_children = {};
 
 	enum stick_bits_t : uint8_t {
 		STICK_NONE = 0,
@@ -87,14 +91,17 @@ private:
 	};
 	uint8_t m_stick_bits = STICK_NONE;
 
-	void UpdateArea();
-	void UpdateMesh();
+	coord_t m_left = 0;
+	coord_t m_top = 0;
+	coord_t m_right = 0;
+	coord_t m_bottom = 0;
+	coord_t m_width = 0;
+	coord_t m_height = 0;
+	uint8_t m_align = ALIGN_LEFT | ALIGN_TOP;
 
-private:
-	types::Vec2< types::mesh::coord_t > top_left;
-	types::Vec2< types::mesh::coord_t > bottom_right;
-	types::mesh::coord_t z;
+	void UpdateArea();
 
 };
 
+}
 }

@@ -16,7 +16,9 @@ class Scene;
 
 namespace ui {
 
+namespace geometry {
 class Geometry;
+}
 
 namespace dom {
 class Root;
@@ -31,6 +33,10 @@ CLASS2( UI, common::Class, gse::Wrappable )
 
 	scene::Scene* const m_scene = nullptr;
 
+	const types::mesh::coord_t ClampX( const coord_t& x ) const;
+	const types::mesh::coord_t ClampY( const coord_t& y ) const;
+	const types::Vec2< types::mesh::coord_t > ClampXY( const types::Vec2< coord_t >& xy ) const;
+
 private:
 	dom::Root* m_root;
 
@@ -40,10 +46,6 @@ private:
 	} m_clamp = {};
 
 	void Resize();
-
-private:
-	friend class Geometry;
-	const types::Vec2< types::mesh::coord_t > Clamp( const types::Vec2< coord_t >& xy ) const;
 
 };
 

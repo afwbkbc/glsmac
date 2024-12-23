@@ -1,6 +1,6 @@
 #include "Root.h"
 
-#include "ui/Geometry.h"
+#include "ui/geometry/Rectangle.h"
 
 namespace ui {
 namespace dom {

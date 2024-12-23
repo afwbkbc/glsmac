@@ -90,9 +90,65 @@
 	child1child2.background = '#00cc00';
 	child1child4.background = '#00ee00';
 
-	let text = root.text({
-		color: '#ff0000',
-		text: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 !@#$%^&*()-=_+.,<>{}[];:\'"\|`~',
+	const texts = root.panel({
+		left: 40,
+		top: 40,
+		right: 270,
+		height: 120,
+		background: '#000044',
 	});
+	texts.text({
+		align: 'top left',
+		text: 'TOP LEFT',
+		color: '#ffff00',
+		font: ':16',
+	});
+	texts.text({
+		align: 'top right',
+		text: 'TOP RIGHT',
+		color: '#ffff00',
+		font: ':16',
+	});
+	texts.text({
+		align: 'bottom left',
+		text: 'BOTTOM LEFT',
+		color: '#ffff00',
+		font: ':16',
+	});
+	texts.text({
+		align: 'bottom right',
+		text: 'BOTTOM RIGHT',
+		color: '#ffff00',
+		font: ':16',
+	});
+	texts.text({
+		align: 'top center',
+		text: 'TOP',
+		top: 10,
+		color: '#ffffff',
+		font: ':24',
+	});
+	texts.text({
+		align: 'bottom center',
+		text: 'BOTTOM',
+		bottom: 10,
+		color: '#ffffff',
+		font: ':24',
+	});
+	texts.text({
+		align: 'left center',
+		text: 'LEFT',
+		left: 10,
+		color: '#ffffff',
+		font: ':32',
+	});
+	texts.text({
+		align: 'right center',
+		text: 'RIGHT',
+		right: 10,
+		color: '#ffffff',
+		font: ':32',
+	});
+	texts.bottom = 50;
 
 });

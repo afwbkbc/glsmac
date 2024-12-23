@@ -1,33 +1,35 @@
 #include "Text.h"
 
 #include "ui/UI.h"
+#include "ui/geometry/Text.h"
 #include "scene/Scene.h"
 #include "scene/actor/Text.h"
-
 #include "engine/Engine.h"
 #include "loader/font/FontLoader.h"
+#include "util/String.h"
 
 namespace ui {
 namespace dom {
 
 Text::Text( DOM_ARGS )
-	: Object( DOM_ARGS_PASS, "text" ) {
+	: Drawable(
+	DOM_ARGS_PASS, "text", new geometry::Text(
+		ui, parent
+			? parent->GetGeometry()
+			: nullptr
+	)
+) {
 
-	const auto color = types::Color::FromRGB( 255, 0, 255 );
-	auto* font = g_engine->GetFontLoader()->GetBuiltinFont( 32 );
-	NEW( m_actor, scene::actor::Text, font, "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz", color );
-	m_actor->SetPosition(
-		{
-			-0.84f,
-			0.25f,
-			0.7f
-		}
-	);
+	NEW( m_actor, scene::actor::Text, nullptr, "" );
+	UpdateFont();
+	m_geometry->AsText()->SetActor( m_actor );
 	m_ui->m_scene->AddActor( m_actor );
 
 	Property(
 		ctx, call_si, "text", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v ) {
-			// TODO
+			m_actor->SetText( ( (gse::type::String*)v.Get() )->value );
+			m_geometry->SetWidth( m_actor->GetWidth() );
+			m_geometry->SetHeight( m_actor->GetHeight() );
 		}
 	);
 
@@ -35,7 +37,23 @@ Text::Text( DOM_ARGS )
 		ctx, call_si, "color", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v ) {
 			types::Color color;
 			ParseColor( ctx, call_si, ( (gse::type::String*)v.Get() )->value, color );
-			// TODO
+			m_actor->SetColor( color );
+		}
+	);
+
+	Property(
+		ctx, call_si, "font", gse::type::Type::T_STRING, VALUE( gse::type::String, ":32" ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v ) {
+			const auto parts = util::String::Split( ( (gse::type::String*)v.Get() )->value, ':' );
+			if ( parts.size() != 2 ) {
+				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property 'font' is expected to be font string ('<fontname>:<size>' ), got: " + v.ToString(), ctx, call_si );
+			}
+			const auto sz = strtoul( parts.at( 1 ).c_str(), nullptr, 10 );
+			if ( !sz || sz > 255 ) {
+				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Invalid font size: " + v.ToString(), ctx, call_si );
+			}
+			m_fontname = parts.at( 0 );
+			m_fontsize = sz;
+			UpdateFont();
 		}
 	);
 
@@ -46,6 +64,21 @@ Text::~Text() {
 		m_ui->m_scene->RemoveActor( m_actor );
 		delete m_actor;
 	}
+}
+
+void Text::UpdateFont() {
+	ASSERT_NOLOG( m_fontsize, "font size is zero" );
+	ASSERT_NOLOG( m_fontname.empty(), "font loading not supported yet" );
+	types::Font* font;
+	if ( m_fontname.empty() ) {
+		font = g_engine->GetFontLoader()->GetBuiltinFont( m_fontsize );
+	}
+	else {
+		// TODO
+	}
+	m_actor->SetFont( font );
+	m_geometry->SetWidth( m_actor->GetWidth() );
+	m_geometry->SetHeight( m_actor->GetHeight() );
 }
 
 }

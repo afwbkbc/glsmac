@@ -82,7 +82,15 @@ void UI::Resize() {
 
 }
 
-const types::Vec2< types::mesh::coord_t > UI::Clamp( const types::Vec2< coord_t >& xy ) const {
+const types::mesh::coord_t UI::ClampX( const coord_t& x ) const {
+	return m_clamp.x.Clamp( x );
+}
+
+const types::mesh::coord_t UI::ClampY( const coord_t& y ) const {
+	return m_clamp.y.Clamp( y );
+}
+
+const types::Vec2< types::mesh::coord_t > UI::ClampXY( const types::Vec2< coord_t >& xy ) const {
 	return {
 		m_clamp.x.Clamp( xy.x ),
 		m_clamp.y.Clamp( xy.y ),

@@ -1,6 +1,7 @@
 SET( SRC ${SRC}
 
 	${PWD}/Object.cpp
+	${PWD}/Drawable.cpp
 	${PWD}/Area.cpp
 	${PWD}/Container.cpp
 	${PWD}/Root.cpp

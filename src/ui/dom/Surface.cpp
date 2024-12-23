@@ -3,7 +3,7 @@
 #include "types/mesh/Rectangle.h"
 #include "scene/actor/Mesh.h"
 #include "ui/UI.h"
-#include "ui/Geometry.h"
+#include "ui/geometry/Rectangle.h"
 #include "scene/Scene.h"
 #include "engine/Engine.h"
 #include "graphics/Graphics.h"
@@ -18,7 +18,7 @@ Surface::Surface( DOM_ARGS )
 	std::string cls = "UI::Mesh::Surface";
 	NEW( m_mesh, types::mesh::Rectangle );
 	NEW( m_actor, scene::actor::Mesh, cls, m_mesh );
-	m_geometry->SetMesh( m_mesh );
+	m_geometry->AsRectangle()->SetMesh( m_mesh );
 	m_ui->m_scene->AddActor( m_actor );
 
 	Property(
@@ -48,7 +48,6 @@ Surface::~Surface() {
 	if ( m_background.color_texture ) {
 		delete m_background.color_texture;
 	}
-	m_geometry->SetMesh( nullptr );
 	delete m_actor;
 }
 
