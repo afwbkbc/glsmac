@@ -18,6 +18,7 @@ namespace graphics {
 namespace opengl {
 
 class OpenGL;
+
 class Texture;
 
 namespace shader_program {
@@ -49,6 +50,8 @@ protected:
 
 private:
 	OpenGL* m_opengl;
+
+	Actor* CreateActor( scene::actor::Actor* const actor ) const;
 
 	void RemoveActor( common::ObjectLink* link );
 	void AddActorToZIndexSet( Actor* gl_actor );

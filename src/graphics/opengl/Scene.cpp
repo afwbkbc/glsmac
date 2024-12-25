@@ -5,6 +5,7 @@
 #include "actor/Sprite.h"
 #include "actor/Mesh.h"
 #include "actor/Text.h"
+#include "actor/Cache.h"
 #include "common/ObjectLink.h"
 #include "scene/Scene.h"
 #include "scene/actor/Actor.h"
@@ -12,6 +13,7 @@
 #include "scene/actor/Sprite.h"
 #include "scene/actor/Instanced.h"
 #include "scene/actor/Text.h"
+#include "scene/actor/Cache.h"
 #include "routine/Routine.h"
 
 namespace graphics {
@@ -25,10 +27,53 @@ Scene::Scene( OpenGL* opengl, scene::Scene* scene, routine::Routine* routine )
 }
 
 Scene::~Scene() {
-	for ( auto it = m_gl_actors.begin() ; it < m_gl_actors.end() ; ++it ) {
+	for ( auto it = m_gl_actors.rbegin() ; it < m_gl_actors.rend() ; ++it ) {
 		RemoveActor( *it );
 	}
 
+}
+
+Actor* Scene::CreateActor( scene::actor::Actor* const actor ) const {
+	Actor* gl_actor = nullptr;
+	switch ( actor->GetType() ) {
+		case scene::actor::Actor::TYPE_SPRITE:
+		case scene::actor::Actor::TYPE_INSTANCED_SPRITE: {
+			NEW( gl_actor, Sprite, m_opengl, (scene::actor::Sprite*)actor );
+			break;
+		}
+		case scene::actor::Actor::TYPE_MESH:
+		case scene::actor::Actor::TYPE_INSTANCED_MESH: {
+			NEW( gl_actor, Mesh, m_opengl, (scene::actor::Mesh*)actor );
+			break;
+		}
+		case scene::actor::Actor::TYPE_TEXT: {
+			auto* text_actor = (scene::actor::Text*)actor;
+			NEW( gl_actor, Text, m_opengl, text_actor, text_actor->GetFont() );
+			break;
+		}
+		case scene::actor::Actor::TYPE_CACHE: {
+			auto* cache_actor = (scene::actor::Cache*)actor;
+			NEW( gl_actor, Cache, m_opengl, cache_actor );
+			break;
+		}
+		default: {
+			gl_actor = m_routine->AddCustomActor( actor );
+		}
+	}
+
+	if ( gl_actor ) {
+		gl_actor->LoadMesh();
+		gl_actor->LoadTexture();
+		auto* cache_parent = actor->GetCacheParent();
+		if ( cache_parent ) {
+			ASSERT( cache_parent->m_graphics_object && cache_parent->m_graphics_object, "cache parent has no graphics object link" );
+			auto* gl_cache_parent = cache_parent->m_graphics_object->GetDstObject< Cache >();
+			ASSERT( gl_cache_parent, "gl cache parent not set" );
+			gl_actor->SetCacheParent( gl_cache_parent );
+		}
+	}
+
+	return gl_actor;
 }
 
 void Scene::RemoveActor( common::ObjectLink* link ) {
@@ -70,7 +115,6 @@ void Scene::RemoveActorFromZIndexSet( Actor* gl_actor ) {
 }
 
 void Scene::Update() {
-	common::ObjectLink* obj;
 
 	for ( auto it = m_gl_actors.begin() ; it < m_gl_actors.end() ; ++it ) {
 		Actor* gl_actor = ( *it )->GetDstObject< Actor >();
@@ -119,43 +163,22 @@ void Scene::Update() {
 	}
 
 	// add new actors
+	common::ObjectLink* obj;
+
 	auto* actors = GetScene()->GetActors();
 	for ( auto it = actors->begin() ; it < actors->end() ; it++ ) {
 		obj = ( *it )->m_graphics_object;
 		if ( obj == NULL ) {
 
-			Actor* gl_actor = NULL;
-
-			auto actor_type = ( *it )->GetType();
-			switch ( actor_type ) {
-				case scene::actor::Actor::TYPE_SPRITE:
-				case scene::actor::Actor::TYPE_INSTANCED_SPRITE: {
-					NEW( gl_actor, Sprite, m_opengl, (scene::actor::Sprite*)*it );
-					break;
-				}
-				case scene::actor::Actor::TYPE_MESH:
-				case scene::actor::Actor::TYPE_INSTANCED_MESH: {
-					NEW( gl_actor, Mesh, m_opengl, (scene::actor::Mesh*)*it );
-					break;
-				}
-				case scene::actor::Actor::TYPE_TEXT: {
-					auto* text_actor = (scene::actor::Text*)*it;
-					NEW( gl_actor, Text, m_opengl, text_actor, text_actor->GetFont() );
-					break;
-				}
-				default: {
-					gl_actor = m_routine->AddCustomActor( *it );
-				}
-			}
+			auto* gl_actor = CreateActor( *it );
 
 			if ( gl_actor ) {
-				gl_actor->LoadMesh();
-				gl_actor->LoadTexture();
-				NEW( obj, common::ObjectLink, ( *it ), gl_actor );
+				NEWV( obj, common::ObjectLink, *it, gl_actor );
+				( *it )->m_graphics_object = obj;
 				m_gl_actors.push_back( obj );
 				AddActorToZIndexSet( gl_actor ); // TODO: only Simple2D
-				( *it )->m_graphics_object = obj;
 			}
+
 		}
 	}
 
@@ -173,6 +196,7 @@ void Scene::Update() {
 scene::Scene* Scene::GetScene() const {
 	return m_scene;
 }
+
 void Scene::Draw( shader_program::ShaderProgram* shader_program ) {
 
 #ifdef DEBUG

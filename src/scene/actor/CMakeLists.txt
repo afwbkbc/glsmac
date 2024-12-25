@@ -6,5 +6,6 @@ SET( SRC ${SRC}
 	${PWD}/Mesh.cpp
 	${PWD}/Text.cpp
 	${PWD}/Sound.cpp
+	${PWD}/Cache.cpp
 
 	PARENT_SCOPE )

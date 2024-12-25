@@ -1,5 +1,6 @@
 #include "Area.h"
 
+#include "Container.h"
 #include "ui/geometry/Rectangle.h"
 
 namespace ui {

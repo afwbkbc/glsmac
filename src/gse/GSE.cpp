@@ -95,6 +95,7 @@ const Value GSE::RunScript( context::Context* ctx, const si_t& si, const std::st
 		}
 	}
 	if ( full_path.empty() ) {
+		Log( "Could not find script for include '" + path + "'" );
 		throw Exception( EC.LOADER_ERROR, "Could not find script for include '" + path + "'", ctx, si );
 	}
 	const auto source = util::FS::ReadTextFile( full_path, PATH_SEPARATOR );
@@ -140,6 +141,7 @@ void GSE::SetGlobal( const std::string& identifier, Value variable ) {
 }
 
 const static Value s_undefined_value = VALUE( type::Undefined );
+
 const Value& GSE::GetGlobal( const std::string& identifier ) {
 	Log( "Get global: " + identifier );
 	const auto& it = m_globals.find( identifier );

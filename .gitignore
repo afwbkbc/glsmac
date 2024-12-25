@@ -29,3 +29,4 @@ _deps
 /cmake-build-debug
 /GLSMAC.cbp
 /GLSMAC_data/mods
+*.core

@@ -4,6 +4,8 @@
 #include "scene/Camera.h"
 #include "common/ObjectLink.h"
 
+#include "scene/actor/Cache.h"
+
 namespace scene {
 namespace actor {
 
@@ -16,6 +18,9 @@ Actor::Actor( type_t type, const std::string& name )
 Actor::~Actor() {
 	if ( m_graphics_object ) {
 		m_graphics_object->Remove();
+	}
+	if ( m_cache_parent ) {
+		m_cache_parent->RemoveCacheChild( this );
 	}
 }
 
@@ -77,6 +82,16 @@ void Actor::SetRenderFlags( const render_flag_t render_flags ) {
 
 const Actor::render_flag_t Actor::GetRenderFlags() const {
 	return m_render_flags;
+}
+
+void Actor::SetCacheParent( Cache* const cache_parent ) {
+	ASSERT( !m_cache_parent, "cache parent already set" );
+	m_cache_parent = cache_parent;
+	m_cache_parent->AddCacheChild( this );
+}
+
+const Cache* const Actor::GetCacheParent() const {
+	return m_cache_parent;
 }
 
 const types::Buffer Actor::Serialize() const {

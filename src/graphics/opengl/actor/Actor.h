@@ -16,6 +16,8 @@ namespace opengl {
 
 class OpenGL;
 
+class Cache;
+
 namespace shader_program {
 class ShaderProgram;
 }
@@ -32,7 +34,8 @@ CLASS( Actor, common::Class )
 	virtual bool MeshReloadNeeded() { return false; }
 	virtual bool TextureReloadNeeded() { return false; }
 
-	virtual void Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) = 0;
+	void Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr );
+
 	scene::actor::Actor* GetActor() const {
 		return m_actor;
 	}
@@ -42,13 +45,23 @@ CLASS( Actor, common::Class )
 	const float GetZIndex() const;
 	void SetZIndex( const float z_index );
 
+	void SetCacheParent( Cache* cache_parent );
+
 	virtual void OnWindowResize() {};
 
 protected:
+	friend class Cache;
+	virtual void DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) = 0;
+
+protected:
+
 	OpenGL* m_opengl;
 	scene::actor::Actor* m_actor;
 
 	float m_z_index = 0.0f;
+
+private:
+	Cache* m_cache_parent = nullptr;
 
 };
 

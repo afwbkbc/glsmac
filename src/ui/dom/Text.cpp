@@ -1,5 +1,6 @@
 #include "Text.h"
 
+#include "Container.h"
 #include "ui/UI.h"
 #include "ui/geometry/Text.h"
 #include "scene/Scene.h"
@@ -20,10 +21,10 @@ Text::Text( DOM_ARGS )
 	)
 ) {
 
-	NEW( m_actor, scene::actor::Text, nullptr, "" );
+	m_actor = new scene::actor::Text( nullptr, "" );
 	UpdateFont();
 	m_geometry->AsText()->SetActor( m_actor );
-	m_ui->m_scene->AddActor( m_actor );
+	Actor( m_actor );
 
 	Property(
 		ctx, call_si, "text", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v ) {
@@ -60,10 +61,6 @@ Text::Text( DOM_ARGS )
 }
 
 Text::~Text() {
-	if ( m_actor ) {
-		m_ui->m_scene->RemoveActor( m_actor );
-		delete m_actor;
-	}
 }
 
 void Text::UpdateFont() {

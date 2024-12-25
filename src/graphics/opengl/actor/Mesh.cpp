@@ -221,7 +221,13 @@ void Mesh::PrepareDataMesh() {
 
 }
 
-void Mesh::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
+void Mesh::OnWindowResize() {
+	if ( m_data.is_allocated ) {
+		m_data.is_up_to_date = false; // need to recreate fbo for new window size
+	}
+}
+
+void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
 
 	l_draw_begin:
 
@@ -468,12 +474,6 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* c
 			// this draw was captured into texture, draw for real now (or process next capture if there are more)
 			goto l_draw_begin;
 		}
-	}
-}
-
-void Mesh::OnWindowResize() {
-	if ( m_data.is_allocated ) {
-		m_data.is_up_to_date = false; // need to recreate fbo for new window size
 	}
 }
 

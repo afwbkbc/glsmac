@@ -1,30 +1,22 @@
 #pragma once
 
 #include <GL/glew.h>
+#include <unordered_set>
+#include <map>
 
 #include "Actor.h"
-
-#include "types/Vec2.h"
-
-namespace types {
-class Font;
-}
-
-namespace scene::actor {
-class Text;
-}
 
 namespace graphics {
 namespace opengl {
 
-class FontTexture;
+CLASS( Cache, Actor )
 
-CLASS( Text, Actor )
+	Cache( OpenGL* opengl, scene::actor::Actor* actor );
+	~Cache();
 
-	Text( OpenGL* opengl, scene::actor::Text* actor, types::Font* font );
-	~Text();
-
-	void Update( types::Font* font, const std::string& text, const float x, const float y );
+	void AddCacheChild( Actor* cache_child );
+	void RemoveCacheChild( Actor* cache_child );
+	void SetCacheChildZIndex( Actor* cache_child, const float zindex );
 
 protected:
 
@@ -51,14 +43,16 @@ protected:
 	GLuint m_vbo = 0;
 	size_t m_boxes_count = 0;
 
-	types::Font* m_font = nullptr;
-	std::string m_text = "";
 	types::Vec2< size_t > m_last_window_size = {
 		0,
 		0
 	};
 
-	FontTexture* m_texture = nullptr;
+	std::unordered_set< Actor* > m_cache_children = {};
+	std::map< float, std::vector< Actor* > > m_cache_children_by_zindex;
+
+	void AddCacheChildToZIndexSet( Actor* gl_actor, const float zindex );
+	void RemoveCacheChildFromZIndexSet( Actor* gl_actor, const float zindex );
 };
 
 }

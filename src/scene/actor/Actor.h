@@ -14,6 +14,8 @@ class Scene;
 
 namespace actor {
 
+class Cache;
+
 CLASS( Actor, Entity )
 
 	typedef float coord_t;
@@ -26,6 +28,7 @@ CLASS( Actor, Entity )
 		TYPE_INSTANCED_MESH,
 		TYPE_TEXT,
 		TYPE_SOUND,
+		TYPE_CACHE,
 	};
 
 	Actor( const type_t type, const std::string& name );
@@ -64,6 +67,9 @@ CLASS( Actor, Entity )
 	void SetRenderFlags( const render_flag_t render_flags );
 	const render_flag_t GetRenderFlags() const;
 
+	void SetCacheParent( Cache* const cache_parent );
+	const Cache* const GetCacheParent() const;
+
 	virtual const types::Buffer Serialize() const override;
 	virtual void Unserialize( types::Buffer buf ) override;
 
@@ -80,6 +86,9 @@ protected:
 
 	render_flag_t m_render_flags = RF_NONE;
 	area_limits_t m_area_limits = {};
+
+private:
+	Cache* m_cache_parent = nullptr;
 
 };
 
