@@ -1,6 +1,7 @@
 #include "Container.h"
 
 #include "ui/geometry/Geometry.h"
+#include "ui/UI.h"
 
 #include "Surface.h"
 #include "Panel.h"
@@ -15,6 +16,14 @@ Container::Container( DOM_ARGS_T )
 	, m_cache( new scene::actor::Cache( "UI::Cache" ) ) {
 
 	Actor( m_cache );
+
+	m_geometry->m_on_effective_area_update = [ this ]( const geometry::Geometry::area_t& area ) {
+		m_cache->SetEffectiveArea(
+		m_ui->ClampXY({ area.left, area.top}),
+		m_ui->ClampXY({ area.right, area.bottom}),
+		area.zindex
+		);
+	};
 
 	FACTORY( "surface", Surface );
 	FACTORY( "panel", Panel );

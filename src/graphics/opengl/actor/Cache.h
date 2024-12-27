@@ -6,8 +6,20 @@
 
 #include "Actor.h"
 
+#include "types/mesh/Types.h"
+
+namespace types::texture {
+class Texture;
+}
+
+namespace types::mesh {
+class Rectangle;
+}
+
 namespace graphics {
 namespace opengl {
+
+class FBO;
 
 CLASS( Cache, Actor )
 
@@ -18,41 +30,38 @@ CLASS( Cache, Actor )
 	void RemoveCacheChild( Actor* cache_child );
 	void SetCacheChildZIndex( Actor* cache_child, const float zindex );
 
+	void UpdateCache();
+
+	void OnWindowResize() override;
+
+	void SetEffectiveArea( const types::Vec2< types::mesh::coord_t >& top_left, const types::Vec2< types::mesh::coord_t >& bottom_right, const types::mesh::coord_t z );
+
 protected:
 
 	void DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) override;
 
-	struct vertex_t {
-		GLfloat x;
-		GLfloat y;
-		GLfloat z; // ignored
-		GLfloat tx;
-		GLfloat ty;
-	};
-	struct vertex_box_t {
-		vertex_t v1;
-		vertex_t v2;
-		vertex_t v3;
-		vertex_t v4;
-	};
-	types::Vec2< float > m_coords = {
-		0,
-		0
-	};
-
-	GLuint m_vbo = 0;
-	size_t m_boxes_count = 0;
-
-	types::Vec2< size_t > m_last_window_size = {
-		0,
-		0
-	};
+private:
+	bool m_is_update_needed = true;
 
 	std::unordered_set< Actor* > m_cache_children = {};
 	std::map< float, std::vector< Actor* > > m_cache_children_by_zindex;
 
 	void AddCacheChildToZIndexSet( Actor* gl_actor, const float zindex );
 	void RemoveCacheChildFromZIndexSet( Actor* gl_actor, const float zindex );
+
+	types::Vec2< uint16_t > m_fbo_size = {
+		0,
+		0
+	};
+	FBO* m_fbo;
+
+	types::texture::Texture* m_texture = nullptr;
+	types::mesh::Rectangle* m_mesh = nullptr;
+
+private:
+	friend class Actor;
+	void UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr );
+
 };
 
 }

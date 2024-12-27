@@ -6,8 +6,9 @@
 namespace graphics {
 namespace opengl {
 
-Actor::Actor( OpenGL* opengl, scene::actor::Actor* actor )
-	: m_opengl( opengl )
+Actor::Actor( const type_t type, OpenGL* opengl, scene::actor::Actor* actor )
+	: m_type( type )
+	, m_opengl( opengl )
 	, m_actor( actor ) {
 	m_name = actor->GetLocalName();
 }
@@ -20,6 +21,9 @@ Actor::~Actor() {
 
 void Actor::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
 	if ( !m_cache_parent ) { // otherwise cache parent will initiate draws when needed
+		if ( m_type == AT_CACHE ) {
+			( (Cache*)this )->UpdateCacheImpl( shader_program, camera );
+		}
 		DrawImpl( shader_program, camera );
 	}
 }

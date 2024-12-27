@@ -24,7 +24,15 @@ class ShaderProgram;
 
 CLASS( Actor, common::Class )
 
-	Actor( OpenGL* opengl, scene::actor::Actor* actor );
+	enum type_t {
+		AT_NONE,
+		AT_MESH,
+		AT_SPRITE,
+		AT_TEXT,
+		AT_CACHE,
+	};
+
+	Actor( const type_t type, OpenGL* opengl, scene::actor::Actor* actor );
 	~Actor();
 
 	virtual void LoadMesh() {};
@@ -48,6 +56,8 @@ CLASS( Actor, common::Class )
 	void SetCacheParent( Cache* cache_parent );
 
 	virtual void OnWindowResize() {};
+
+	const type_t m_type;
 
 protected:
 	friend class Cache;

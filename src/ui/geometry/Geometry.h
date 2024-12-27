@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstring>
 #include <unordered_set>
+#include <functional>
 
 #include "ui/Types.h"
 #include "types/mesh/Types.h"
@@ -50,14 +51,9 @@ public:
 	void SetWidth( const coord_t px );
 	void SetHeight( const coord_t px );
 	void SetAlign( const align_t align );
+	void SetZIndex( const coord_t zindex );
 
 	void NeedUpdate();
-
-protected:
-
-	virtual void UpdateImpl() = 0;
-
-	const UI* const m_ui;
 
 	struct area_t {
 		coord_t left;
@@ -66,11 +62,47 @@ protected:
 		coord_t bottom;
 		coord_t width;
 		coord_t height;
+		coord_t zindex;
 		bool operator!=( const area_t& other ) const {
 			return memcmp( this, &other, sizeof( other ) ) != 0;
 		}
+		const bool EnlargeTo( const area_t& other ) {
+			bool changed = false;
+			if ( top > other.top ) {
+				top = other.top;
+				changed = true;
+			}
+			if ( left > other.left ) {
+				left = other.left;
+				changed = true;
+			}
+			if ( bottom < other.bottom ) {
+				bottom = other.bottom;
+				changed = true;
+			}
+			if ( right < other.right ) {
+				right = other.right;
+				changed = true;
+			}
+			if ( changed ) {
+				width = right - left;
+				height = bottom - top;
+			}
+			return changed;
+		}
 	};
 	area_t m_area = {};
+
+	// this includes children than may get outside of geometry's area (i.e. with negative coordinates)
+	const area_t& GetEffectiveArea() const;
+
+	std::function< void( const area_t& ) > m_on_effective_area_update = nullptr;
+
+protected:
+
+	virtual void UpdateImpl() = 0;
+
+	const UI* const m_ui;
 
 private:
 	const geometry_type_t m_type;
@@ -98,9 +130,12 @@ private:
 	coord_t m_width = 0;
 	coord_t m_height = 0;
 	uint8_t m_align = ALIGN_LEFT | ALIGN_TOP;
+	coord_t m_zindex = 0.5f;
 
 	void UpdateArea();
+	void UpdateEffectiveArea();
 
+	area_t m_effective_area = {};
 };
 
 }

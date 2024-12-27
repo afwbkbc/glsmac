@@ -26,7 +26,7 @@ namespace graphics {
 namespace opengl {
 
 Mesh::Mesh( OpenGL* opengl, scene::actor::Actor* actor )
-	: Actor( opengl, actor ) {
+	: Actor( AT_MESH, opengl, actor ) {
 
 	//Log( "Creating OpenGL actor for " + actor->GetName() );
 

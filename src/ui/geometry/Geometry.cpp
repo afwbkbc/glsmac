@@ -9,10 +9,12 @@ Geometry::Geometry( const UI* const ui, Geometry* const parent, const geometry_t
 	: m_ui( ui )
 	, m_parent( parent )
 	, m_type( type ) {
+	UpdateArea();
+	m_effective_area = m_area;
 	if ( m_parent ) {
 		m_parent->m_children.insert( this );
+		m_parent->UpdateEffectiveArea();
 	}
-	UpdateArea();
 }
 
 Geometry::~Geometry() {
@@ -90,9 +92,20 @@ void Geometry::SetAlign( const align_t align ) {
 	NeedUpdate();
 }
 
+void Geometry::SetZIndex( const coord_t zindex ) {
+	if ( m_zindex != zindex ) {
+		m_zindex = zindex;
+		NeedUpdate();
+	}
+}
+
 void Geometry::NeedUpdate() {
 	// for now update immediately, later queue and execute it once after
 	Update();
+}
+
+const Geometry::area_t& Geometry::GetEffectiveArea() const {
+	return m_effective_area;
 }
 
 void Geometry::Update() {
@@ -101,11 +114,13 @@ void Geometry::Update() {
 	for ( const auto& geometry : m_children ) {
 		geometry->Update();
 	}
+	UpdateEffectiveArea();
 }
 
 void Geometry::UpdateArea() {
 	//Log( "Stick bits = " + std::to_string( m_stick_bits ) );
 	area_t object_area = {};
+	object_area.zindex = m_zindex;
 	if ( m_parent != nullptr ) {
 		const auto area = m_parent->m_area;
 		object_area.left = area.left + m_left;
@@ -219,6 +234,8 @@ void Geometry::UpdateArea() {
 
 		m_area = object_area;
 
+		UpdateEffectiveArea();
+
 /*		if ( m_created ) {
 			// process any mouseover/mouseout events
 			// mouse may not being moved, but if object area has changed - they should be able to fire too
@@ -234,6 +251,22 @@ void Geometry::UpdateArea() {
 			g_engine->GetUI()->ResizeDebugFrame( this );
 		}
 #endif*/
+	}
+}
+
+void Geometry::UpdateEffectiveArea() {
+	area_t effective_area = m_area;
+	for ( const auto& child : m_children ) {
+		effective_area.EnlargeTo( child->GetEffectiveArea() );
+	}
+	if ( effective_area != m_effective_area ) {
+		m_effective_area = effective_area;
+		if ( m_parent ) {
+			m_parent->UpdateEffectiveArea();
+		}
+		if ( m_on_effective_area_update ) {
+			m_on_effective_area_update( m_effective_area );
+		}
 	}
 }
 

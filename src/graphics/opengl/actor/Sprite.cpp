@@ -21,7 +21,7 @@ namespace graphics {
 namespace opengl {
 
 Sprite::Sprite( OpenGL* opengl, scene::actor::Actor* actor )
-	: Actor( opengl, actor ) {
+	: Actor( AT_SPRITE, opengl, actor ) {
 
 	//Log( "Creating OpenGL actor for " + actor->GetName() );
 

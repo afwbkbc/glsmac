@@ -24,8 +24,26 @@ void Cache::RemoveCacheChild( Actor* actor ) {
 	m_cache_children.erase( actor );
 }
 
-const std::unordered_set< Actor* >& Cache::GetCacheChildren() const {
-	return m_cache_children;
+void Cache::SetEffectiveArea( const types::Vec2< types::mesh::coord_t >& top_left, const types::Vec2< types::mesh::coord_t >& bottom_right, const types::mesh::coord_t z ) {
+	if ( m_top_left != top_left || m_bottom_right != bottom_right || m_z != z ) {
+		m_top_left = top_left;
+		m_bottom_right = bottom_right;
+		m_z = z;
+		m_is_changed = true;
+	}
+}
+
+const bool Cache::GetEffectiveAreaIfChanged( types::Vec2< types::mesh::coord_t >& top_left, types::Vec2< types::mesh::coord_t >& bottom_right, types::mesh::coord_t& z ) {
+	if ( m_is_changed ) {
+		m_is_changed = false;
+		top_left = m_top_left;
+		bottom_right = m_bottom_right;
+		z = m_z;
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 }

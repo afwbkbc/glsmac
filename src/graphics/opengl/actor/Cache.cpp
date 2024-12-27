@@ -1,17 +1,22 @@
 #include "Cache.h"
 
+#include <algorithm>
+
 #include "engine/Engine.h"
 #include "graphics/opengl/OpenGL.h"
+#include "graphics/opengl/FBO.h"
 #include "graphics/opengl/shader_program/Simple2D.h"
 #include "scene/actor/Cache.h"
+#include "types/mesh/Rectangle.h"
+#include "types/texture/Texture.h"
 
 namespace graphics {
 namespace opengl {
 
 Cache::Cache( OpenGL* opengl, scene::actor::Actor* actor )
-	: Actor( opengl, actor ) {
-	//Log( "Creating OpenGL text '" + actor->GetText() + "' with font " + font->m_name );
-	//glGenBuffers( 1, &m_vbo );
+	: Actor( AT_CACHE, opengl, actor ) {
+	m_fbo = m_opengl->CreateFBO();
+	m_mesh = new types::mesh::Rectangle();
 }
 
 Cache::~Cache() {
@@ -21,8 +26,11 @@ Cache::~Cache() {
 			Log( c->GetName() );
 		}
 	}
-	//Log( "Destroying OpenGL text" );
-	//glDeleteBuffers( 1, &m_vbo );
+	if ( m_texture ) {
+		delete m_texture;
+	}
+	delete m_mesh;
+	m_opengl->DestroyFBO( m_fbo );
 }
 
 void Cache::AddCacheChild( Actor* cache_child ) {
@@ -42,17 +50,52 @@ void Cache::SetCacheChildZIndex( Actor* cache_child, const float zindex ) {
 	AddCacheChildToZIndexSet( cache_child, zindex );
 }
 
-void Cache::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
-	ASSERT( shader_program->GetType() == shader_program::ShaderProgram::TYPE_SIMPLE2D, "unexpected shader program" );
-
-	// TODO: cache
-
-	for ( const auto& it : m_cache_children_by_zindex ) {
-		for ( const auto& child : it.second ) {
-			child->DrawImpl( shader_program, camera );
-		}
+void Cache::UpdateCache() {
+	if ( !m_is_update_needed ) {
+		m_is_update_needed = true;
 	}
+}
 
+void Cache::OnWindowResize() {
+	UpdateCache();
+}
+
+void Cache::SetEffectiveArea( const types::Vec2< types::mesh::coord_t >& top_left, const types::Vec2< types::mesh::coord_t >& bottom_right, const types::mesh::coord_t z ) {
+	m_mesh->SetCoords( top_left, bottom_right, z );
+}
+
+void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
+
+	if ( m_is_update_needed ) {
+
+		m_is_update_needed = false;
+		Log( "UPDATE" );
+
+		for ( const auto& it : m_cache_children_by_zindex ) {
+			for ( const auto& child : it.second ) {
+				if ( child->m_type == AT_CACHE ) {
+					( (Cache*)child )->UpdateCacheImpl( shader_program, camera );
+				}
+			}
+		}
+
+		m_fbo->Write(
+			[ this, &shader_program, &camera ]() {
+				for ( const auto& it : m_cache_children_by_zindex ) {
+					for ( const auto& child : it.second ) {
+						child->DrawImpl( shader_program, camera );
+					}
+				}
+			}
+		);
+
+	}
+}
+
+void Cache::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
+	ASSERT( shader_program->GetType() == shader_program::ShaderProgram::TYPE_SIMPLE2D, "invalid shader program type" );
+
+	m_fbo->Draw( (shader_program::Simple2D*)shader_program );
 }
 
 void Cache::AddCacheChildToZIndexSet( Actor* gl_actor, const float zindex ) {

@@ -10,7 +10,7 @@ namespace graphics {
 namespace opengl {
 
 Text::Text( OpenGL* opengl, scene::actor::Text* actor, types::Font* font )
-	: Actor( opengl, actor )
+	: Actor( AT_TEXT, opengl, actor )
 	, m_font( font ) {
 	//Log( "Creating OpenGL text '" + actor->GetText() + "' with font " + font->m_name );
 	glGenBuffers( 1, &m_vbo );
