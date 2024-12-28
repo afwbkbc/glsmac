@@ -1,6 +1,6 @@
 #include "FBO.h"
 
-#include "types/mesh/Simple.h"
+#include "types/mesh/Rectangle.h"
 #include "types/texture/Texture.h"
 #include "graphics/opengl/OpenGL.h"
 #include "graphics/opengl/shader_program/Simple2D.h"
@@ -16,42 +16,27 @@ FBO::FBO( OpenGL* opengl, const size_t width, const size_t height )
 	glGenBuffers( 1, &m_ibo );
 
 	NEW( m_mesh, types::mesh::Simple, 4, 2 ); // TODO: quad mesh
+
 	auto top_left = m_mesh->AddVertex(
-		{
-			-1,
-			-1,
-			-1
-		}, {
+		types::Vec3{}, {
 			0.0f,
 			0.0f
 		}
 	);
 	auto top_right = m_mesh->AddVertex(
-		{
-			1,
-			-1,
-			-1
-		}, {
+		types::Vec3{}, {
 			1.0f,
 			0.0f
 		}
 	);
 	auto bottom_right = m_mesh->AddVertex(
-		{
-			1,
-			1,
-			-1
-		}, {
+		types::Vec3{}, {
 			1.0f,
 			1.0f
 		}
 	);
 	auto bottom_left = m_mesh->AddVertex(
-		{
-			-1,
-			1,
-			-1
-		}, {
+		types::Vec3{}, {
 			0.0f,
 			1.0f
 		}
@@ -73,12 +58,6 @@ FBO::FBO( OpenGL* opengl, const size_t width, const size_t height )
 	);
 
 	m_mesh->Finalize();
-
-	m_opengl->WithBindBuffer(
-		GL_ARRAY_BUFFER, m_vbo, [ this ]() {
-			glBufferData( GL_ARRAY_BUFFER, m_mesh->GetVertexDataSize(), (GLvoid*)ptr( m_mesh->GetVertexData(), 0, m_mesh->GetVertexDataSize() ), GL_STATIC_DRAW );
-		}
-	);
 
 	m_opengl->WithBindBuffer(
 		GL_ELEMENT_ARRAY_BUFFER, m_ibo, [ this ]() {
@@ -104,7 +83,18 @@ FBO::FBO( OpenGL* opengl, const size_t width, const size_t height )
 	);
 
 	m_width = m_height = 0;
-	Resize( width, height );
+	if ( width > 0 || height > 0 ) {
+		Resize( width, height );
+		Align(
+			{
+				0,
+				0
+			}, {
+				width,
+				height,
+			}
+		);
+	}
 }
 
 FBO::~FBO() {
@@ -121,6 +111,56 @@ FBO::~FBO() {
 	glDeleteFramebuffers( 1, &m_fbo );
 
 	DELETE( m_mesh );
+}
+
+void FBO::Align( const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right ) {
+	if ( top_left != m_top_left || bottom_right != m_bottom_right ) {
+		m_top_left = top_left;
+		m_bottom_right = bottom_right;
+
+		const auto tl = m_opengl->GetGLCoords( m_top_left );
+		const auto br = m_opengl->GetGLCoords( m_bottom_right );
+		
+		m_mesh->SetVertexCoord(
+			0,
+			{
+				tl.x,
+				tl.y,
+				-1
+			}
+		);
+		m_mesh->SetVertexCoord(
+			1,
+			{
+				br.x,
+				tl.y,
+				-1
+			}
+		);
+		m_mesh->SetVertexCoord(
+			2,
+			{
+				br.x,
+				br.y,
+				-1
+			}
+		);
+		m_mesh->SetVertexCoord(
+			3,
+			{
+				tl.x,
+				br.y,
+				-1
+			}
+		);
+
+		m_opengl->WithBindBuffer(
+			GL_ARRAY_BUFFER, m_vbo, [ this ]() {
+				glBufferData( GL_ARRAY_BUFFER, m_mesh->GetVertexDataSize(), (GLvoid*)ptr( m_mesh->GetVertexData(), 0, m_mesh->GetVertexDataSize() ), GL_STATIC_DRAW );
+			}
+		);
+
+	}
 }
 
 void FBO::Resize( size_t width, size_t height ) {
@@ -170,10 +210,10 @@ void FBO::WriteBegin() {
 	m_opengl->WithBindFramebufferBegin( GL_DRAW_FRAMEBUFFER, m_fbo );
 	glDrawBuffer( GL_COLOR_ATTACHMENT0 );
 
-	if ( INTERNAL_RESOLUTION_MULTIPLIER != 1 ) {
-		// upscale
-		glViewport( 0, 0, m_width, m_height );
-	}
+	//if ( INTERNAL_RESOLUTION_MULTIPLIER != 1 ) {
+	// upscale
+	glViewport( 0, 0, m_width, m_height );
+	//}
 
 	// start with clean state
 	// TODO: partial redraws?
@@ -187,6 +227,9 @@ void FBO::WriteBegin() {
 }
 
 void FBO::Write( const std::function< void() >& f ) {
+	if ( !m_width || !m_height ) {
+		return;
+	}
 	WriteBegin();
 	f();
 	WriteEnd();
@@ -211,8 +254,9 @@ void FBO::WriteEnd() {
 
 void FBO::Draw( shader_program::Simple2D* sp ) {
 	ASSERT( !m_is_enabled, "can't draw fbo that is being written to" );
-	ASSERT( m_width > 0, "fbo width is zero" );
-	ASSERT( m_height > 0, "fbo height is zero" );
+	if ( !m_width || !m_height ) {
+		return;
+	}
 
 	// blending fix
 	glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );

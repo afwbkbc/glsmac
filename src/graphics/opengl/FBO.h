@@ -4,6 +4,7 @@
 #include <GL/glew.h>
 
 #include "common/Common.h"
+#include "types/Vec2.h"
 
 namespace types {
 namespace texture {
@@ -31,6 +32,7 @@ CLASS( FBO, common::Class )
 	FBO( OpenGL* opengl, const size_t width, const size_t height );
 	~FBO();
 
+	void Align( const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right );
 	void Resize( size_t width, size_t height );
 
 	void WriteBegin();
@@ -44,6 +46,9 @@ CLASS( FBO, common::Class )
 protected:
 
 	bool m_is_enabled = false;
+
+	types::Vec2< size_t > m_top_left = {};
+	types::Vec2< size_t > m_bottom_right = {};
 
 	size_t m_width = 0;
 	size_t m_height = 0;

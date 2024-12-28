@@ -14,9 +14,9 @@ Surface::Surface( DOM_ARGS )
 	: Area( DOM_ARGS_PASS, "surface" ) {
 
 	NEW( m_mesh, types::mesh::Rectangle );
-	m_geometry->AsRectangle()->SetMesh( m_mesh );
 	m_actor = new scene::actor::Mesh( "UI::Surface", m_mesh );
 	Actor( m_actor );
+	m_geometry->AsRectangle()->SetActorAndMesh( m_actor, m_mesh );
 
 	Property(
 		ctx, call_si, "background", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v ) {

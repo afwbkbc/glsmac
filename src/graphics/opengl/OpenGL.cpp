@@ -27,6 +27,21 @@ OpenGL::OpenGL( const std::string title, const unsigned short window_width, cons
 
 	m_is_fullscreen = fullscreen;
 
+	m_px_to_gl_clamp.x.SetRange(
+		{
+			{ 0.0,  (float)window_width },
+			{ -1.0, 1.0 }
+		}
+	);
+	m_px_to_gl_clamp.x.SetOverflowAllowed( true );
+
+	m_px_to_gl_clamp.y.SetRange(
+		{
+			{ 0.0,  (float)window_height },
+			{ -1.0, 1.0 }
+		}
+	);
+	m_px_to_gl_clamp.y.SetOverflowAllowed( true );
 }
 
 OpenGL::~OpenGL() {
@@ -269,10 +284,31 @@ const unsigned short OpenGL::GetViewportHeight() const {
 void OpenGL::OnWindowResize() {
 	Graphics::OnWindowResize();
 
+	m_px_to_gl_clamp.x.SetSrcRange(
+		{
+			0.0,
+			(float)m_viewport_size.x
+		}
+	);
+	m_px_to_gl_clamp.y.SetSrcRange(
+		{
+			0.0,
+			(float)m_viewport_size.y
+		}
+	);
+
 	for ( auto& f : m_fbos ) {
+		f->Align(
+			{
+				0,
+				0
+			}, {
+				(size_t)m_viewport_size.x,
+				(size_t)m_viewport_size.y
+			}
+		);
 		f->Resize( m_viewport_size.x, m_viewport_size.y );
 	}
-
 	for ( auto& r : m_routines ) {
 		r->OnWindowResize();
 	}
@@ -558,6 +594,13 @@ void OpenGL::WithShaderProgram( shader_program::ShaderProgram* sp, const f_t& f 
 	sp->Enable();
 	f();
 	sp->Disable();
+}
+
+const types::Vec2< types::mesh::coord_t > OpenGL::GetGLCoords( const types::Vec2< size_t >& xy ) const {
+	return {
+		m_px_to_gl_clamp.x.Clamp( xy.x ),
+		m_px_to_gl_clamp.y.Clamp( xy.y ),
+	};
 }
 
 void OpenGL::ResizeViewport( const size_t width, const size_t height ) {

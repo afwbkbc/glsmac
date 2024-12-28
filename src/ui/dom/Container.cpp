@@ -17,13 +17,10 @@ Container::Container( DOM_ARGS_T )
 
 	Actor( m_cache );
 
-	m_geometry->m_on_effective_area_update = [ this ]( const geometry::Geometry::area_t& area ) {
-		m_cache->SetEffectiveArea(
-		m_ui->ClampXY({ area.left, area.top}),
-		m_ui->ClampXY({ area.right, area.bottom}),
-		area.zindex
-		);
+	m_geometry->m_on_effective_area_update = [ this ]( const area_t& area ) {
+		m_cache->SetEffectiveArea( area );
 	};
+	m_cache->SetEffectiveArea( m_geometry->GetEffectiveArea() );
 
 	FACTORY( "surface", Surface );
 	FACTORY( "panel", Panel );

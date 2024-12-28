@@ -55,45 +55,10 @@ public:
 
 	void NeedUpdate();
 
-	struct area_t {
-		coord_t left;
-		coord_t right;
-		coord_t top;
-		coord_t bottom;
-		coord_t width;
-		coord_t height;
-		coord_t zindex;
-		bool operator!=( const area_t& other ) const {
-			return memcmp( this, &other, sizeof( other ) ) != 0;
-		}
-		const bool EnlargeTo( const area_t& other ) {
-			bool changed = false;
-			if ( top > other.top ) {
-				top = other.top;
-				changed = true;
-			}
-			if ( left > other.left ) {
-				left = other.left;
-				changed = true;
-			}
-			if ( bottom < other.bottom ) {
-				bottom = other.bottom;
-				changed = true;
-			}
-			if ( right < other.right ) {
-				right = other.right;
-				changed = true;
-			}
-			if ( changed ) {
-				width = right - left;
-				height = bottom - top;
-			}
-			return changed;
-		}
-	};
-	area_t m_area = {};
+	// this includes only area of this geometry
+	const area_t& GetArea() const;
 
-	// this includes children than may get outside of geometry's area (i.e. with negative coordinates)
+	// this also includes children than may get outside of geometry's area (i.e. with negative coordinates)
 	const area_t& GetEffectiveArea() const;
 
 	std::function< void( const area_t& ) > m_on_effective_area_update = nullptr;
@@ -103,6 +68,9 @@ protected:
 	virtual void UpdateImpl() = 0;
 
 	const UI* const m_ui;
+
+	area_t m_area = {};
+	area_t m_effective_area = {};
 
 private:
 	const geometry_type_t m_type;
@@ -135,7 +103,6 @@ private:
 	void UpdateArea();
 	void UpdateEffectiveArea();
 
-	area_t m_effective_area = {};
 };
 
 }

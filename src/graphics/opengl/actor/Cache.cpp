@@ -15,7 +15,9 @@ namespace opengl {
 
 Cache::Cache( OpenGL* opengl, scene::actor::Actor* actor )
 	: Actor( AT_CACHE, opengl, actor ) {
-	m_fbo = m_opengl->CreateFBO();
+	ASSERT( actor->GetType() == scene::actor::Actor::TYPE_CACHE, "invalid actor type" );
+
+	m_fbo = new FBO( m_opengl, 0, 0 );
 	m_mesh = new types::mesh::Rectangle();
 }
 
@@ -30,7 +32,7 @@ Cache::~Cache() {
 		delete m_texture;
 	}
 	delete m_mesh;
-	m_opengl->DestroyFBO( m_fbo );
+	delete m_fbo;
 }
 
 void Cache::AddCacheChild( Actor* cache_child ) {
@@ -76,6 +78,32 @@ void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scen
 				if ( child->m_type == AT_CACHE ) {
 					( (Cache*)child )->UpdateCacheImpl( shader_program, camera );
 				}
+			}
+		}
+
+		{
+			const auto& area = ( (scene::actor::Cache*)m_actor )->GetEffectiveArea();
+			if ( area.width && area.height ) {
+				m_fbo->Align(
+					/*{
+						(size_t)area.left,
+						(size_t)area.top,
+					}, {
+						(size_t)area.right,
+						(size_t)area.bottom,
+					}*/
+					{
+						(size_t)area.left,
+						(size_t)area.top,
+					},
+					{
+						(size_t)area.right,
+						(size_t)area.bottom,
+					}
+				);
+				//m_fbo->Resize( m_opengl->GetViewportWidth(), m_opengl->GetViewportHeight() );
+				//m_fbo->Resize( m_opengl->GetViewportWidth() - 100, m_opengl->GetViewportHeight() - 100 );
+				m_fbo->Resize( area.width, area.height );
 			}
 		}
 

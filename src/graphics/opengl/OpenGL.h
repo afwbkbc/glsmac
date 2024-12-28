@@ -11,6 +11,8 @@
 #include "graphics/Graphics.h"
 
 #include "types/Vec2.h"
+#include "types/mesh/Types.h"
+#include "util/Clamper.h"
 
 namespace graphics {
 namespace opengl {
@@ -78,6 +80,8 @@ CLASS( OpenGL, Graphics )
 	void WithBindFramebufferEnd( GLenum target ) const;
 	void WithShaderProgram( shader_program::ShaderProgram* sp, const f_t& f ) const;
 
+	const types::Vec2< types::mesh::coord_t > GetGLCoords( const types::Vec2< size_t >& xy ) const;
+
 protected:
 	struct {
 		std::string title;
@@ -115,6 +119,11 @@ private:
 	bool m_is_fullscreen = false;
 
 	void UpdateViewportSize( const size_t width, const size_t height );
+
+	struct {
+		util::Clamper< float > x;
+		util::Clamper< float > y;
+	} m_px_to_gl_clamp = {};
 };
 
 }
