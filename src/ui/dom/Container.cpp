@@ -19,8 +19,8 @@ Container::Container( DOM_ARGS_T )
 
 	m_geometry->m_on_effective_area_update = [ this ]( const geometry::Geometry::area_t& area ) {
 		m_cache->SetEffectiveArea(
-		m_ui->ClampXY({ area.left, area.top}),
-		m_ui->ClampXY({ area.right, area.bottom}),
+		{ (size_t)area.left, (size_t)area.top },
+		{ (size_t)area.right, (size_t)area.bottom },
 		area.zindex
 		);
 	};

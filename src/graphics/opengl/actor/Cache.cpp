@@ -15,8 +15,10 @@ namespace opengl {
 
 Cache::Cache( OpenGL* opengl, scene::actor::Actor* actor )
 	: Actor( AT_CACHE, opengl, actor ) {
-	m_fbo = m_opengl->CreateFBO();
+	ASSERT( actor->GetType() == scene::actor::Actor::TYPE_CACHE, "invalid actor type" );
 	m_mesh = new types::mesh::Rectangle();
+	glGenBuffers( 1, &m_vbo );
+	glGenBuffers( 1, &m_ibo );
 }
 
 Cache::~Cache() {
@@ -26,28 +28,33 @@ Cache::~Cache() {
 			Log( c->GetName() );
 		}
 	}
+	glDeleteBuffers( 1, &m_ibo );
+	glDeleteBuffers( 1, &m_vbo );
 	if ( m_texture ) {
+		m_opengl->UnloadTexture( m_texture );
 		delete m_texture;
 	}
 	delete m_mesh;
-	m_opengl->DestroyFBO( m_fbo );
 }
 
 void Cache::AddCacheChild( Actor* cache_child ) {
 	ASSERT( m_cache_children.find( cache_child ) == m_cache_children.end(), "duplicate cache child" );
 	m_cache_children.insert( cache_child );
 	AddCacheChildToZIndexSet( cache_child, cache_child->GetZIndex() );
+	UpdateCache();
 }
 
 void Cache::RemoveCacheChild( Actor* cache_child ) {
 	ASSERT( m_cache_children.find( cache_child ) != m_cache_children.end(), "cache child not found" );
 	RemoveCacheChildFromZIndexSet( cache_child, cache_child->GetZIndex() );
 	m_cache_children.erase( cache_child );
+	UpdateCache();
 }
 
 void Cache::SetCacheChildZIndex( Actor* cache_child, const float zindex ) {
 	RemoveCacheChildFromZIndexSet( cache_child, cache_child->GetZIndex() );
 	AddCacheChildToZIndexSet( cache_child, zindex );
+	UpdateCache();
 }
 
 void Cache::UpdateCache() {
@@ -58,10 +65,6 @@ void Cache::UpdateCache() {
 
 void Cache::OnWindowResize() {
 	UpdateCache();
-}
-
-void Cache::SetEffectiveArea( const types::Vec2< types::mesh::coord_t >& top_left, const types::Vec2< types::mesh::coord_t >& bottom_right, const types::mesh::coord_t z ) {
-	m_mesh->SetCoords( top_left, bottom_right, z );
 }
 
 void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
@@ -79,8 +82,43 @@ void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scen
 			}
 		}
 
-		m_fbo->Write(
-			[ this, &shader_program, &camera ]() {
+		types::Vec2< size_t > top_left, bottom_right;
+		( (scene::actor::Cache*)m_actor )->GetEffectiveArea( top_left, bottom_right );
+
+		if ( !m_texture || top_left != m_top_left || bottom_right != m_bottom_right ) {
+			m_top_left = top_left;
+			m_bottom_right = bottom_right;
+			if ( !m_texture ) {
+				m_texture = new types::texture::Texture();
+			}
+
+			auto tl = m_opengl->GetGLCoords( m_top_left );
+			auto br = m_opengl->GetGLCoords( m_bottom_right );
+
+			// TODO: investigate and fix properly
+			const auto tmp = br.y;
+			br.y = tl.y;
+			tl.y = tmp;
+
+			m_mesh->SetCoords( tl, br, m_z_index );
+			m_opengl->WithBindBuffers(
+				m_vbo, m_ibo, [ this ]() {
+					glBufferData( GL_ARRAY_BUFFER, m_mesh->GetVertexDataSize(), (GLvoid*)ptr( m_mesh->GetVertexData(), 0, m_mesh->GetVertexDataSize() ), GL_STATIC_DRAW );
+					glBufferData( GL_ELEMENT_ARRAY_BUFFER, m_mesh->GetIndexDataSize(), (GLvoid*)ptr( m_mesh->GetIndexData(), 0, m_mesh->GetIndexDataSize() ), GL_STATIC_DRAW );
+				}
+			);
+			m_ibo_size = m_mesh->GetIndexCount();
+		}
+
+		// TODO: investigate and fix properly
+		auto tl = m_top_left;
+		auto br = m_bottom_right;
+		const auto tmp = br.y;
+		br.y = m_opengl->GetViewportHeight() - tl.y;
+		tl.y = m_opengl->GetViewportHeight() - tmp;
+
+		m_opengl->CaptureToTexture(
+			m_texture, tl, br, [ this, &shader_program, &camera ]() {
 				for ( const auto& it : m_cache_children_by_zindex ) {
 					for ( const auto& child : it.second ) {
 						child->DrawImpl( shader_program, camera );
@@ -89,13 +127,63 @@ void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scen
 			}
 		);
 
+		if ( !m_texture->IsEmpty() ) {
+/*			const types::Color c = {
+				1.0f,
+				1.0f,
+				1.0f,
+				1.0f
+			};
+			for ( auto y = 0 ; y < m_texture->m_height ; y++ ) {
+				m_texture->SetPixel( 0, y, c );
+				m_texture->SetPixel( m_texture->m_width - 1, y, c );
+			}
+			for ( auto x = 0 ; x < m_texture->m_width ; x++ ) {
+				m_texture->SetPixel( x, 0, c );
+				m_texture->SetPixel( x, m_texture->m_height - 1, c );
+			}*/
+			m_opengl->LoadTexture( m_texture, false );
+		}
 	}
 }
 
 void Cache::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
 	ASSERT( shader_program->GetType() == shader_program::ShaderProgram::TYPE_SIMPLE2D, "invalid shader program type" );
 
-	m_fbo->Draw( (shader_program::Simple2D*)shader_program );
+	if ( m_texture && !m_texture->IsEmpty() ) {
+		m_opengl->WithBindBuffers(
+			m_vbo, m_ibo, [ this, &shader_program, &camera ]() {
+
+				m_opengl->WithShaderProgram(
+					shader_program, [ this, &shader_program, &camera ]() {
+
+						auto flags = scene::actor::Actor::RF_NONE;
+
+						g_engine->GetGraphics()->WithTexture(
+							m_texture, [ this, &shader_program, &flags, &camera ]() {
+
+								auto* sp = (shader_program::Simple2D*)shader_program;
+								glUniform1ui( sp->uniforms.flags, flags );
+								/*if ( flags & scene::actor::Actor::RF_USE_TINT ) {
+									glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&mesh_actor->GetTintColor().value );
+								}
+								if ( flags & scene::actor::Actor::RF_USE_AREA_LIMITS ) {
+									const auto& limits = mesh_actor->GetAreaLimits();
+									glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
+									glUniform3fv( sp->uniforms.area_limits.max, 1, (const GLfloat*)&limits.second );
+								}
+								if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
+									glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&mesh_actor->GetPosition() );
+								}*/
+								glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void*)( 0 ) );
+
+							}
+						);
+					}
+				);
+			}
+		);
+	}
 }
 
 void Cache::AddCacheChildToZIndexSet( Actor* gl_actor, const float zindex ) {

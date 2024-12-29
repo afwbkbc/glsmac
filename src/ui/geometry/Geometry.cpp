@@ -234,8 +234,6 @@ void Geometry::UpdateArea() {
 
 		m_area = object_area;
 
-		UpdateEffectiveArea();
-
 /*		if ( m_created ) {
 			// process any mouseover/mouseout events
 			// mouse may not being moved, but if object area has changed - they should be able to fire too

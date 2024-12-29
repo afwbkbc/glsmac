@@ -240,6 +240,28 @@ void FBO::Draw( shader_program::Simple2D* sp ) {
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 }
 
+void FBO::CaptureToTexture( types::texture::Texture* const texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right ) {
+	ASSERT( !m_is_enabled, "can't read fbo that is being written to" );
+	ASSERT( m_width > 0, "fbo width is zero" );
+	ASSERT( m_height > 0, "fbo height is zero" );
+
+	const auto w = bottom_right.x - top_left.x;
+	const auto h = bottom_right.y - top_left.y;
+	texture->Resize( w, h );
+
+	if ( w > 0 && h > 0 ) {
+		m_opengl->WithBindFramebuffer(
+			GL_READ_FRAMEBUFFER, m_fbo, [ &w, &h, &top_left, &texture ]() {
+				glReadBuffer( GL_COLOR_ATTACHMENT0 );
+
+				glReadPixels( top_left.x, top_left.y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, texture->m_bitmap );
+
+				glReadBuffer( GL_NONE );
+			}
+		);
+	}
+}
+
 types::texture::Texture* FBO::CaptureToTexture() {
 	ASSERT( !m_is_enabled, "can't read fbo that is being written to" );
 	ASSERT( m_width > 0, "fbo width is zero" );
@@ -251,13 +273,13 @@ types::texture::Texture* FBO::CaptureToTexture() {
 
 	NEWV( texture, types::texture::Texture, "FBOCapture", width, height );
 
-	m_opengl->WithBindFramebuffer(
-		GL_READ_FRAMEBUFFER, m_fbo, [ &width, &height, &texture ]() {
-			glReadBuffer( GL_COLOR_ATTACHMENT0 );
-
-			glReadPixels( 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, texture->m_bitmap );
-
-			glReadBuffer( GL_NONE );
+	CaptureToTexture(
+		texture, {
+			0,
+			0
+		}, {
+			width,
+			height
 		}
 	);
 

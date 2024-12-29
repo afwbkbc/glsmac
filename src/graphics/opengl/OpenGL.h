@@ -11,6 +11,8 @@
 #include "graphics/Graphics.h"
 
 #include "types/Vec2.h"
+#include "types/mesh/Types.h"
+#include "util/Clamper.h"
 
 namespace graphics {
 namespace opengl {
@@ -51,7 +53,7 @@ CLASS( OpenGL, Graphics )
 	const unsigned short GetViewportWidth() const override;
 	const unsigned short GetViewportHeight() const override;
 
-	void LoadTexture( types::texture::Texture* texture ) override;
+	void LoadTexture( types::texture::Texture* texture, const bool smoothen = true ) override;
 	void UnloadTexture( const types::texture::Texture* texture ) override;
 
 	void WithTexture( const types::texture::Texture* texture, const f_t& f ) override;
@@ -77,6 +79,9 @@ CLASS( OpenGL, Graphics )
 	void WithBindFramebuffer( GLenum target, GLuint buffer, const f_t& f ) const;
 	void WithBindFramebufferEnd( GLenum target ) const;
 	void WithShaderProgram( shader_program::ShaderProgram* sp, const f_t& f ) const;
+
+	void CaptureToTexture( types::texture::Texture* const texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right, const f_t& f );
+	const types::Vec2< types::mesh::coord_t > GetGLCoords( const types::Vec2< size_t >& xy ) const;
 
 protected:
 	struct {
@@ -113,6 +118,13 @@ private:
 	std::unordered_set< FBO* > m_fbos = {};
 
 	bool m_is_fullscreen = false;
+
+	FBO* m_capture_to_texture_fbo = nullptr;
+
+	struct {
+		util::Clamper< float > x;
+		util::Clamper< float > y;
+	} m_px_to_gl_clamp = {};
 
 	void UpdateViewportSize( const size_t width, const size_t height );
 };

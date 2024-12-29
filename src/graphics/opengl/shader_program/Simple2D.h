@@ -8,6 +8,7 @@ namespace opengl {
 class Mesh;
 class Text;
 class FBO;
+class Cache;
 
 namespace shader_program {
 
@@ -18,6 +19,7 @@ protected:
 	friend class opengl::Mesh;
 	friend class opengl::Text;
 	friend class opengl::FBO;
+	friend class opengl::Cache;
 
 	struct {
 		GLuint flags;

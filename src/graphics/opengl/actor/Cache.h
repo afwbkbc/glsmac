@@ -34,8 +34,6 @@ CLASS( Cache, Actor )
 
 	void OnWindowResize() override;
 
-	void SetEffectiveArea( const types::Vec2< types::mesh::coord_t >& top_left, const types::Vec2< types::mesh::coord_t >& bottom_right, const types::mesh::coord_t z );
-
 protected:
 
 	void DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) override;
@@ -49,14 +47,13 @@ private:
 	void AddCacheChildToZIndexSet( Actor* gl_actor, const float zindex );
 	void RemoveCacheChildFromZIndexSet( Actor* gl_actor, const float zindex );
 
-	types::Vec2< uint16_t > m_fbo_size = {
-		0,
-		0
-	};
-	FBO* m_fbo;
-
+	types::Vec2< size_t > m_top_left = {};
+	types::Vec2< size_t > m_bottom_right = {};
 	types::texture::Texture* m_texture = nullptr;
 	types::mesh::Rectangle* m_mesh = nullptr;
+	GLuint m_vbo = 0;
+	GLuint m_ibo = 0;
+	GLuint m_ibo_size = 0;
 
 private:
 	friend class Actor;

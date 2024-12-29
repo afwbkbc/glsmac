@@ -27,6 +27,22 @@ OpenGL::OpenGL( const std::string title, const unsigned short window_width, cons
 
 	m_is_fullscreen = fullscreen;
 
+	m_px_to_gl_clamp.x.SetRange(
+		{
+			{ 0.0,  (float)window_width },
+			{ -1.0, 1.0 }
+		}
+	);
+	m_px_to_gl_clamp.x.SetOverflowAllowed( true );
+
+	m_px_to_gl_clamp.y.SetRange(
+		{
+			{ 0.0,  (float)window_height },
+			{ -1.0, 1.0 }
+		}
+	);
+	m_px_to_gl_clamp.y.SetOverflowAllowed( true );
+	m_px_to_gl_clamp.y.SetInversed( true );
 }
 
 OpenGL::~OpenGL() {
@@ -149,11 +165,15 @@ void OpenGL::Start() {
 		}
 	);
 
+	m_capture_to_texture_fbo = CreateFBO();
+
 	OnWindowResize();
 }
 
 void OpenGL::Stop() {
 	Log( "Uninitializing OpenGL" );
+
+	DestroyFBO( m_capture_to_texture_fbo );
 
 	glDeleteTextures( 1, &m_no_texture );
 
@@ -269,6 +289,19 @@ const unsigned short OpenGL::GetViewportHeight() const {
 void OpenGL::OnWindowResize() {
 	Graphics::OnWindowResize();
 
+	m_px_to_gl_clamp.x.SetSrcRange(
+		{
+			0.0,
+			(float)m_viewport_size.x
+		}
+	);
+	m_px_to_gl_clamp.y.SetSrcRange(
+		{
+			0.0,
+			(float)m_viewport_size.y
+		}
+	);
+
 	for ( auto& f : m_fbos ) {
 		f->Resize( m_viewport_size.x, m_viewport_size.y );
 	}
@@ -278,42 +311,51 @@ void OpenGL::OnWindowResize() {
 	}
 }
 
-void OpenGL::LoadTexture( types::texture::Texture* texture ) {
+void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen ) {
 	ASSERT( texture, "texture is null" );
 
 	bool is_reload_needed = false;
 
 	const size_t texture_update_counter = texture->UpdatedCount();
 
-	m_textures_map::iterator it = m_textures.find( texture );
+	auto it = m_textures.find( texture );
 	bool need_full_update = false;
+
+	glActiveTexture( GL_TEXTURE0 );
+
 	if ( it == m_textures.end() ) {
 
 		//Log( "Initializing texture '" + texture->m_name + "'" );
-		m_textures[ texture ] = {
-			0,
-			texture->UpdatedCount()
-		};
+		it = m_textures.insert(
+			{
+				texture,
+				{
+					0,
+					texture->UpdatedCount()
+				}
+			}
+		).first;
 
-		glActiveTexture( GL_TEXTURE0 );
-		glGenTextures( 1, &m_textures[ texture ].obj );
+		glGenTextures( 1, &it->second.obj );
 
 		is_reload_needed = true;
 		need_full_update = true;
 	}
 
-	auto& t = m_textures[ texture ];
+	auto& t = it->second;
 
 	if ( t.last_texture_update_counter != texture_update_counter ) {
 		t.last_texture_update_counter = texture_update_counter;
 		is_reload_needed = true;
 	}
 
+	need_full_update = true; // TODO: partial updates are broken for some reason, investigate
+
 	if ( is_reload_needed ) {
 		//Log( "Loading texture '" + texture->m_name + "'" );
 
 		WithBindTexture(
-			t.obj, [ this, &need_full_update, &texture ]() {
+			t.obj, [ this, &need_full_update, &texture, &smoothen ]() {
 
 				if ( need_full_update ) {
 					ASSERT( !glGetError(), "Texture parameter error" );
@@ -331,8 +373,15 @@ void OpenGL::LoadTexture( types::texture::Texture* texture ) {
 						ptr( texture->m_bitmap, 0, texture->m_width * texture->m_height * 4 )
 					);
 
-					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+					if ( smoothen ) {
+						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+					}
+					else {
+						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST );
+					}
+
 					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
 					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
 				}
@@ -461,7 +510,8 @@ void OpenGL::LoadTexture( types::texture::Texture* texture ) {
 				}
 				texture->ClearUpdatedAreas();
 
-				ASSERT( !glGetError(), "Error loading texture" );
+				const auto err = glGetError();
+				ASSERT( !err, "Error loading texture: " + std::to_string( err ) );
 
 				glGenerateMipmap( GL_TEXTURE_2D );
 			}
@@ -558,6 +608,18 @@ void OpenGL::WithShaderProgram( shader_program::ShaderProgram* sp, const f_t& f 
 	sp->Enable();
 	f();
 	sp->Disable();
+}
+
+void OpenGL::CaptureToTexture( types::texture::Texture* const texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right, const f_t& f ) {
+	m_capture_to_texture_fbo->Write( f );
+	m_capture_to_texture_fbo->CaptureToTexture( texture, top_left, bottom_right );
+}
+
+const types::Vec2< types::mesh::coord_t > OpenGL::GetGLCoords( const types::Vec2< size_t >& xy ) const {
+	return {
+		m_px_to_gl_clamp.x.Clamp( xy.x ),
+		m_px_to_gl_clamp.y.Clamp( xy.y ),
+	};
 }
 
 void OpenGL::ResizeViewport( const size_t width, const size_t height ) {

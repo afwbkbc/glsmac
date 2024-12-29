@@ -16,7 +16,7 @@ CLASS( Null, Graphics )
 	const unsigned short GetViewportWidth() const override { return 0; }
 	const unsigned short GetViewportHeight() const override { return 0; };
 
-	void LoadTexture( types::texture::Texture* texture ) override {};
+	void LoadTexture( types::texture::Texture* texture, const bool smoothen = true ) override {};
 	void UnloadTexture( const types::texture::Texture* texture ) override {};
 	void WithTexture( const types::texture::Texture* texture, const f_t& f ) override {};
 

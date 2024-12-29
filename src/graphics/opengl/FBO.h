@@ -4,6 +4,7 @@
 #include <GL/glew.h>
 
 #include "common/Common.h"
+#include "types/Vec2.h"
 
 namespace types {
 namespace texture {
@@ -39,6 +40,7 @@ CLASS( FBO, common::Class )
 
 	void Draw( shader_program::Simple2D* sp );
 
+	void CaptureToTexture( types::texture::Texture* const texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right );
 	types::texture::Texture* CaptureToTexture();
 
 protected:
