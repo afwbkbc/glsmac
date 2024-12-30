@@ -78,6 +78,7 @@ geometry::Geometry* const Object::GetGeometry() const {
 }
 
 void Object::Actor( scene::actor::Actor* actor ) {
+	actor->SetPositionZ( 0.5f ); // TODO: proper zindex logic
 	if ( m_parent ) {
 		actor->SetCacheParent( m_parent->m_cache );
 	}
@@ -109,11 +110,6 @@ void Object::Property( GSE_CALLABLE, const std::string& name, const gse::type::T
 			}
 		}
 	);
-	if ( v.Get()->type != gse::type::Type::T_UNDEFINED ) {
-		if ( f_on_set ) {
-			f_on_set( ctx, call_si, v );
-		}
-	}
 }
 
 void Object::Method( GSE_CALLABLE, const std::string& name, const gse::Value& callable ) {
@@ -136,10 +132,22 @@ void Object::ParseColor( GSE_CALLABLE, const std::string& str, types::Color& col
 	return (Object*)obj->wrapobj;
 }*/
 
-void Object::Validate( GSE_CALLABLE ) const {
+void Object::InitAndValidate( GSE_CALLABLE ) const {
+	InitProperties( ctx, call_si );
 	for ( const auto& p : m_initial_properties ) {
 		if ( m_properties.find( p.first ) == m_properties.end() ) {
 			throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property '" + p.first + "' does not exist", ctx, call_si );
+		}
+	}
+}
+
+void Object::InitProperties( GSE_CALLABLE ) const {
+	for ( const auto& it : m_properties ) {
+		const auto& v = it.second.value;
+		if ( v.Get()->type != gse::type::Type::T_UNDEFINED ) {
+			if ( it.second.f_on_set ) {
+				it.second.f_on_set( ctx, call_si, v );
+			}
 		}
 	}
 }

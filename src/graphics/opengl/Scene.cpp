@@ -132,7 +132,7 @@ void Scene::Update() {
 			bool mesh_reload_needed = gl_actor->MeshReloadNeeded();
 			bool texture_reload_needed = gl_actor->TextureReloadNeeded();
 
-			float z_index = 0.0f;
+			float z_index = 0.5f;
 			const auto* actor = gl_actor->GetActor();
 			if (
 				actor->GetType() != scene::actor::Actor::TYPE_INSTANCED_MESH &&

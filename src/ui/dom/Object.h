@@ -85,7 +85,8 @@ private:
 private:
 	friend class Container;
 
-	virtual void Validate( GSE_CALLABLE ) const;
+	virtual void InitAndValidate( GSE_CALLABLE ) const;
+	void InitProperties( GSE_CALLABLE ) const;
 
 };
 

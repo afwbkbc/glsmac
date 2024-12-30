@@ -28,10 +28,12 @@ protected:
 	void Factory( GSE_CALLABLE, const std::string& name, const std::function< Object*( GSE_CALLABLE, const properties_t& ) >& f );
 
 private:
+	friend class Root;
+
 	std::unordered_map< id_t, Object* > m_children = {};
 	std::map< std::string, Object* > m_forwarded_properties = {};
 
-	void Validate( GSE_CALLABLE ) const override;
+	void InitAndValidate( GSE_CALLABLE ) const override;
 };
 
 }

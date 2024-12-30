@@ -68,7 +68,7 @@ protected:
 	OpenGL* m_opengl;
 	scene::actor::Actor* m_actor;
 
-	float m_z_index = 0.0f;
+	float m_z_index = 0.5f;
 
 private:
 	Cache* m_cache_parent = nullptr;

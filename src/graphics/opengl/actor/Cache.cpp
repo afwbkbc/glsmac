@@ -72,7 +72,8 @@ void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scen
 	if ( m_is_update_needed ) {
 
 		m_is_update_needed = false;
-		Log( "UPDATE" );
+
+		Log( "Updating texture" );
 
 		for ( const auto& it : m_cache_children_by_zindex ) {
 			for ( const auto& child : it.second ) {
@@ -144,6 +145,7 @@ void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scen
 			}*/
 			m_opengl->LoadTexture( m_texture, false );
 		}
+
 	}
 }
 
@@ -152,29 +154,16 @@ void Cache::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Came
 
 	if ( m_texture && !m_texture->IsEmpty() ) {
 		m_opengl->WithBindBuffers(
-			m_vbo, m_ibo, [ this, &shader_program, &camera ]() {
+			m_vbo, m_ibo, [ this, &shader_program ]() {
 
 				m_opengl->WithShaderProgram(
-					shader_program, [ this, &shader_program, &camera ]() {
+					shader_program, [ this, &shader_program ]() {
 
-						auto flags = scene::actor::Actor::RF_NONE;
-
-						g_engine->GetGraphics()->WithTexture(
-							m_texture, [ this, &shader_program, &flags, &camera ]() {
+						m_opengl->WithTexture(
+							m_texture, [ this, &shader_program ]() {
 
 								auto* sp = (shader_program::Simple2D*)shader_program;
-								glUniform1ui( sp->uniforms.flags, flags );
-								/*if ( flags & scene::actor::Actor::RF_USE_TINT ) {
-									glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&mesh_actor->GetTintColor().value );
-								}
-								if ( flags & scene::actor::Actor::RF_USE_AREA_LIMITS ) {
-									const auto& limits = mesh_actor->GetAreaLimits();
-									glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
-									glUniform3fv( sp->uniforms.area_limits.max, 1, (const GLfloat*)&limits.second );
-								}
-								if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
-									glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&mesh_actor->GetPosition() );
-								}*/
+								glUniform1ui( sp->uniforms.flags, scene::actor::Actor::RF_NONE );
 								glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void*)( 0 ) );
 
 							}

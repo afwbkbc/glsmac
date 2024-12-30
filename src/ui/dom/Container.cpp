@@ -80,13 +80,14 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 			initial_properties = ((gse::type::Object*)v)->value;
 		}
 		auto* obj = f( ctx, call_si, initial_properties );
-		obj->Validate( ctx, call_si );
+		obj->InitAndValidate( ctx, call_si );
 		m_children.insert({ obj->m_id, obj });
 		return obj->Wrap( true );
 	} ) );
 }
 
-void Container::Validate( GSE_CALLABLE ) const {
+void Container::InitAndValidate( GSE_CALLABLE ) const {
+	InitProperties( ctx, call_si );
 	for ( const auto& p : m_initial_properties ) {
 		if ( m_properties.find( p.first ) == m_properties.end() && m_forwarded_properties.find( p.first ) == m_forwarded_properties.end() ) {
 			throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property '" + p.first + "' does not exist", ctx, call_si );
