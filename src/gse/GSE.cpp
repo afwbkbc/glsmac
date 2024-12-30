@@ -6,8 +6,8 @@
 #include "Exception.h"
 #include "type/Undefined.h"
 #include "program/Program.h"
-
 #include "util/FS.h"
+#include "Async.h"
 
 namespace gse {
 
@@ -16,9 +16,12 @@ const char GSE::PATH_SEPARATOR = '/';
 
 GSE::GSE() {
 	m_bindings.push_back( &m_builtins );
+	m_async = new Async();
 }
 
 GSE::~GSE() {
+	m_async->ProcessAndExit();
+	delete m_async;
 	for ( auto& it : m_modules ) {
 		DELETE( it.second );
 	}
@@ -151,6 +154,10 @@ const Value& GSE::GetGlobal( const std::string& identifier ) {
 	else {
 		return s_undefined_value;
 	}
+}
+
+Async* GSE::GetAsync() {
+	return m_async;
 }
 
 void GSE::include_cache_t::Cleanup() {

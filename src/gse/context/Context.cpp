@@ -2,11 +2,17 @@
 
 #include "ChildContext.h"
 #include "gse/Exception.h"
-
 #include "common/Common.h"
 
 namespace gse {
 namespace context {
+
+Context::Context( gse::GSE* gse )
+	: m_gse( gse ) {
+}
+
+Context::~Context() {
+}
 
 GSE* Context::GetGSE() const {
 	return m_gse;

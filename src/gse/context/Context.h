@@ -30,9 +30,8 @@ protected:
 	};
 
 public:
-	Context( GSE* gse )
-		: m_gse( gse ) {}
-	virtual ~Context() = default;
+	Context( GSE* gse );
+	virtual ~Context();
 
 	GSE* GetGSE() const;
 
@@ -76,6 +75,7 @@ protected:
 	ref_contexts_t m_ref_contexts = {};
 
 	std::unordered_map< const type::Type*, Value > m_persisted_values = {};
+
 };
 
 }

@@ -8,6 +8,7 @@
 #include "gse/parser/Parser.h"
 #include "gse/runner/Runner.h"
 #include "gse/program/Program.h"
+#include "gse/Async.h"
 #include "config/Config.h"
 #include "task/gsetests/GSETests.h"
 #include "util/FS.h"
@@ -76,6 +77,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 				};
 
 				if ( context ) {
+					gse->GetAsync()->ProcessAndExit();
 					context->DecRefs();
 				}
 				if ( program ) {

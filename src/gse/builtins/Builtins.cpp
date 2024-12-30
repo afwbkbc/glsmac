@@ -10,6 +10,7 @@ void Builtins::AddToContext( context::Context* ctx ) {
 	m_conversions.AddToContext( ctx );
 	m_math.AddToContext( ctx );
 	m_string.AddToContext( ctx );
+	m_async.AddToContext( ctx );
 }
 
 }

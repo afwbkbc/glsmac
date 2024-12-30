@@ -36,6 +36,8 @@ namespace type {
 class Callable;
 }
 
+class Async;
+
 CLASS( GSE, common::Class )
 	GSE();
 	virtual ~GSE();
@@ -56,6 +58,8 @@ CLASS( GSE, common::Class )
 
 	void SetGlobal( const std::string& identifier, Value variable );
 	const Value& GetGlobal( const std::string& identifier );
+
+	Async* GetAsync();
 
 #ifdef DEBUG
 	void LogCaptureStart() const { m_builtins.LogCaptureStart(); }
@@ -85,6 +89,7 @@ private:
 	};
 	std::unordered_map< std::string, include_cache_t > m_include_cache = {};
 
+	Async* m_async = nullptr;
 };
 
 }

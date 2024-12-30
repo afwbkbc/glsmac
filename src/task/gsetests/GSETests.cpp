@@ -3,6 +3,7 @@
 #include "GSETests.h"
 
 #include "gse/GSE.h"
+#include "gse/Async.h"
 #include "gse/tests/Tests.h"
 #include "engine/Engine.h"
 

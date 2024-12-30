@@ -16,7 +16,8 @@ SET( SRC ${SRC}
 	${PWD}/Value.cpp
 	${PWD}/Exception.cpp
 	${PWD}/Wrappable.cpp
+	${PWD}/Async.cpp
 
-	)
+)
 
 SET( SRC ${SRC} PARENT_SCOPE )
