@@ -6,7 +6,7 @@
 #include "gse/type/Callable.h"
 #include "gse/type/Bool.h"
 #include "gse/type/Int.h"
-#include "gse/context/Context.h"
+#include "gse/context/ChildContext.h"
 #include "Exception.h"
 
 namespace gse {
@@ -16,18 +16,17 @@ namespace gse {
 
 void Async::AddTimer( const size_t ms, const Value& f, context::Context* const ctx, const si_t& si ) {
 	ASSERT( f.Get()->type == type::Type::T_CALLABLE, "invalid callable type: " + f.GetTypeString() );
-	ValidateMs( ms, ctx, si );
 	ctx->IncRefs();
-	ctx->PersistValue( f );
-	m_timers.insert(
+	auto* subctx = ctx->ForkContext( ctx, si, true );
+	ValidateMs( ms, subctx, si );
+	subctx->IncRefs();
+	subctx->PersistValue( f );
+	m_timers[ Now() + ms ].push_back(
 		{
-			Now() + ms,
-			{
-				ms,
-				f,
-				ctx,
-				si
-			}
+			ms,
+			f,
+			subctx,
+			si
 		}
 	);
 }
@@ -45,53 +44,62 @@ void Async::ProcessAndExit() {
 			std::this_thread::sleep_for( std::chrono::milliseconds( sleep_for ) );
 		}
 
-		auto* ctx = it->second.ctx;
-		const auto f = it->second.callable;
-		const auto call_si = it->second.si;
-		const auto result = ( (type::Callable*)f.Get() )->Run( ctx, call_si, {} );
+		std::map< uint64_t, std::vector< timer_t > > timers_new = {};
 
-		size_t ms = 0;
-		bool repeat = false;
+		for ( const auto& timer : it->second ) {
 
-		const auto& r = result.Get();
-		switch ( r->type ) {
-			case type::Type::T_UNDEFINED:
-			case type::Type::T_NULL:
-				break;
-			case type::Type::T_BOOL: {
-				if ( ( (type::Bool*)r )->value ) {
-					repeat = true;
-					ms = it->second.ms;
+			auto* ctx = timer.ctx;
+			const auto f = timer.callable;
+			const auto call_si = timer.si;
+			const auto result = ( (type::Callable*)f.Get() )->Run( ctx, call_si, {} );
+
+			size_t ms = 0;
+			bool repeat = false;
+
+			const auto& r = result.Get();
+			switch ( r->type ) {
+				case type::Type::T_NOTHING:
+				case type::Type::T_UNDEFINED:
+				case type::Type::T_NULL:
+					break;
+				case type::Type::T_BOOL: {
+					if ( ( (type::Bool*)r )->value ) {
+						repeat = true;
+						ms = timer.ms;
+					}
+					break;
 				}
-				break;
+				case type::Type::T_INT: {
+					ms = ( (type::Int*)r )->value;
+					ValidateMs( ms, ctx, call_si );
+					repeat = true;
+					break;
+				}
+				default:
+					GSE_ERROR( EC.INVALID_HANDLER, "Unexpected async return type. Expected: Nothing, Undefined, Null, Bool or Int, got: " + result.GetTypeString() );
 			}
-			case type::Type::T_INT: {
-				ms = ( (type::Int*)r )->value;
-				ValidateMs( ms, ctx, call_si );
-				repeat = true;
-				break;
-			}
-			default:
-				GSE_ERROR( EC.INVALID_HANDLER, "Unexpected async return type. Expected: Undefined, Null, Bool or Int, got: " + result.GetTypeString() );
-		}
 
-		m_timers.erase( it );
-		if ( repeat ) {
-			m_timers.insert(
-				{
-					Now() + ms,
+			if ( repeat ) {
+				timers_new[ Now() + ms ].push_back(
 					{
 						ms,
 						f,
 						ctx,
 						call_si
 					}
-				}
-			);
+				);
+			}
+			else {
+				ctx->UnpersistValue( f );
+				ctx->DecRefs();
+			}
 		}
-		else {
-			ctx->UnpersistValue( f );
-			ctx->DecRefs();
+
+		m_timers.erase( it );
+		for ( const auto& it_new : timers_new ) {
+			for ( const auto& timer : it_new.second ) {
+				m_timers[ it_new.first ].push_back( timer );
+			}
 		}
 	}
 }

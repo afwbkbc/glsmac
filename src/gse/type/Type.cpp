@@ -22,6 +22,7 @@
 namespace gse {
 namespace type {
 
+static const std::string s_t_nothing = "Nothing";
 static const std::string s_t_undefined = "Undefined";
 static const std::string s_t_null = "Null";
 static const std::string s_t_bool = "Bool";
@@ -39,6 +40,8 @@ static const std::string s_t_loopcontrol = "LoopControl";
 static const std::string s_t_unknown = "Unknown";
 const std::string& Type::GetTypeString( const type_t type ) {
 	switch ( type ) {
+		case T_NOTHING:
+			return s_t_nothing;
 		case T_UNDEFINED:
 			return s_t_undefined;
 		case T_NULL:
