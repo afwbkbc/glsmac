@@ -9,6 +9,7 @@
 #include "ui/UI.h"
 
 #include "gse/GSE.h"
+#include "gse/Async.h"
 #include "gse/context/GlobalContext.h"
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
@@ -55,8 +56,15 @@ GLSMAC::~GLSMAC() {
 	Log( "Destroying global state" );
 
 	m_ctx->DecRefs();
+
+	m_gse->GetAsync()->StopTimers();
+
 	DELETE( m_gse );
 	s_glsmac = nullptr;
+}
+
+void GLSMAC::Iterate() {
+	m_gse->Iterate();
 }
 
 WRAPIMPL_BEGIN( GLSMAC )

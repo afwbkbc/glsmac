@@ -44,6 +44,8 @@ CLASS( GSE, common::Class )
 
 	static const char PATH_SEPARATOR;
 
+	void Iterate();
+
 	parser::Parser* GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num = 1 ) const;
 	runner::Runner* GetRunner() const;
 

@@ -20,7 +20,7 @@ void Main::Stop() {
 }
 
 void Main::Iterate() {
-
+	m_glsmac->Iterate();
 }
 
 }

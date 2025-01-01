@@ -30,6 +30,10 @@ GSE::~GSE() {
 	}
 }
 
+void GSE::Iterate() {
+	m_async->Iterate();
+}
+
 parser::Parser* GSE::GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num ) const {
 	parser::Parser* parser = nullptr;
 	const auto extensions = util::FS::GetExtensions( filename, PATH_SEPARATOR );

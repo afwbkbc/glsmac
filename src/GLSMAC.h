@@ -22,6 +22,8 @@ CLASS3( GLSMAC, common::Class, gse::Bindings, gse::Wrappable )
 	GLSMAC();
 	~GLSMAC();
 
+	void Iterate();
+
 	WRAPDEFS_PTR( GLSMAC )
 
 private:
