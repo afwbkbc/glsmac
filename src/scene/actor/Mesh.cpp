@@ -51,8 +51,9 @@ const types::mesh::Data* Mesh::GetDataMesh() const {
 }
 
 void Mesh::SetTexture( types::texture::Texture* texture ) {
-	ASSERT( texture, "texture is null" );
-	const auto counter = texture->UpdatedCount();
+	const auto counter = texture
+		? texture->UpdatedCount()
+		: 0;
 	if ( m_texture != texture || counter != m_texture_update_counter ) {
 		m_texture = texture;
 		m_texture_update_counter = counter;

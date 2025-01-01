@@ -331,7 +331,11 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 				texture,
 				{
 					0,
-					texture->UpdatedCount()
+					texture->UpdatedCount(),
+					{
+						texture->m_width,
+						texture->m_height,
+					}
 				}
 			}
 		).first;
@@ -343,6 +347,12 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 	}
 
 	auto& t = it->second;
+	if ( t.last_dimensions.x != texture->m_width || t.last_dimensions.y != texture->m_height ) {
+		is_reload_needed = true;
+		need_full_update = true;
+		t.last_dimensions.x = texture->m_width;
+		t.last_dimensions.y = texture->m_height;
+	}
 
 	if ( t.last_texture_update_counter != texture_update_counter ) {
 		t.last_texture_update_counter = texture_update_counter;
@@ -351,8 +361,6 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 
 	if ( is_reload_needed ) {
 		//Log( "Loading texture '" + texture->m_name + "'" );
-
-		need_full_update = true; // TODO: partial updates are broken for some reason, investigate
 
 		WithBindTexture(
 			t.obj, [ this, &need_full_update, &texture, &smoothen ]() {

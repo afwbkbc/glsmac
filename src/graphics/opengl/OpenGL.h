@@ -108,6 +108,7 @@ private:
 	struct texture_data_t {
 		GLuint obj = 0;
 		size_t last_texture_update_counter = 0;
+		types::Vec2< size_t > last_dimensions = {};
 	};
 	typedef std::unordered_map< const types::texture::Texture*, texture_data_t > m_textures_map;
 	m_textures_map m_textures = {};
