@@ -96,7 +96,10 @@ public:
 	// this includes children than may get outside of geometry's area (i.e. with negative coordinates)
 	const area_t& GetEffectiveArea() const;
 
+	void OnChildUpdate();
+
 	std::function< void( const area_t& ) > m_on_effective_area_update = nullptr;
+	std::function< void() > m_on_child_update = nullptr;
 
 protected:
 

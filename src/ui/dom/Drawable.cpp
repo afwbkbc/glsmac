@@ -33,7 +33,7 @@ static const std::unordered_map< std::string, geometry::Geometry::align_t > s_al
 Drawable::Drawable( DOM_ARGS_T, geometry::Geometry* const geometry )
 	: Object( DOM_ARGS_PASS_T )
 	, m_geometry( geometry ) {
-
+	
 #define GEOMSETTER( _key, _type ) \
     Property( \
         ctx, call_si, _key, gse::type::Type::_type, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v )

@@ -108,6 +108,16 @@ const Geometry::area_t& Geometry::GetEffectiveArea() const {
 	return m_effective_area;
 }
 
+void Geometry::OnChildUpdate() {
+	UpdateEffectiveArea();
+	if ( m_on_child_update ) {
+		m_on_child_update();
+	}
+	if ( m_parent ) {
+		m_parent->OnChildUpdate();
+	}
+}
+
 void Geometry::Update() {
 	UpdateArea();
 	UpdateImpl();
@@ -260,7 +270,7 @@ void Geometry::UpdateEffectiveArea() {
 	if ( effective_area != m_effective_area ) {
 		m_effective_area = effective_area;
 		if ( m_parent ) {
-			m_parent->UpdateEffectiveArea();
+			m_parent->OnChildUpdate();
 		}
 		if ( m_on_effective_area_update ) {
 			m_on_effective_area_update( m_effective_area );

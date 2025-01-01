@@ -349,10 +349,10 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 		is_reload_needed = true;
 	}
 
-	need_full_update = true; // TODO: partial updates are broken for some reason, investigate
-
 	if ( is_reload_needed ) {
 		//Log( "Loading texture '" + texture->m_name + "'" );
+
+		need_full_update = true; // TODO: partial updates are broken for some reason, investigate
 
 		WithBindTexture(
 			t.obj, [ this, &need_full_update, &texture, &smoothen ]() {

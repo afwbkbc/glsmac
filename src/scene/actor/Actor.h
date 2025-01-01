@@ -88,6 +88,7 @@ protected:
 	area_limits_t m_area_limits = {};
 
 private:
+	friend class Cache;
 	Cache* m_cache_parent = nullptr;
 
 };

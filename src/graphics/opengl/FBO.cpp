@@ -260,6 +260,8 @@ void FBO::CaptureToTexture( types::texture::Texture* const texture, const types:
 			}
 		);
 	}
+
+	texture->FullUpdate(); // TODO: partial updates
 }
 
 types::texture::Texture* FBO::CaptureToTexture() {

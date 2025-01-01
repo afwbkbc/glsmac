@@ -3,6 +3,7 @@
 #include <GL/glew.h>
 #include <unordered_set>
 #include <map>
+#include <vector>
 
 #include "Actor.h"
 
@@ -39,7 +40,7 @@ protected:
 	void DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) override;
 
 private:
-	bool m_is_update_needed = true;
+	bool m_is_update_needed = false;
 
 	std::unordered_set< Actor* > m_cache_children = {};
 	std::map< float, std::vector< Actor* > > m_cache_children_by_zindex;
@@ -54,6 +55,8 @@ private:
 	GLuint m_vbo = 0;
 	GLuint m_ibo = 0;
 	GLuint m_ibo_size = 0;
+
+	size_t m_update_counter = 0;
 
 private:
 	friend class Actor;

@@ -127,8 +127,8 @@ void Scene::Update() {
 			it--;
 		}
 		else {
-			// reload actors when needed
 
+			// reload actors when needed
 			bool mesh_reload_needed = gl_actor->MeshReloadNeeded();
 			bool texture_reload_needed = gl_actor->TextureReloadNeeded();
 

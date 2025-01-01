@@ -71,6 +71,7 @@ protected:
 	float m_z_index = 0.5f;
 
 private:
+	friend class Cache;
 	Cache* m_cache_parent = nullptr;
 
 };

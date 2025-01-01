@@ -25,6 +25,10 @@ Container::Container( DOM_ARGS_T )
 		);
 	};
 
+	m_geometry->m_on_child_update = [ this ]() {
+		m_cache->Update();
+	};
+
 	FACTORY( "surface", Surface );
 	FACTORY( "panel", Panel );
 	FACTORY( "text", Text );

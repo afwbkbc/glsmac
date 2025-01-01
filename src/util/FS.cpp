@@ -2,6 +2,7 @@
 #include <sstream>
 #include <filesystem>
 #include <algorithm>
+#include <unordered_map>
 
 #include "FS.h"
 

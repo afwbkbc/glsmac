@@ -69,11 +69,26 @@ void Cache::OnWindowResize() {
 
 void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
 
+	auto* actor = (scene::actor::Cache*)m_actor;
+	if ( m_is_update_needed ) {
+		for ( const auto& it : m_cache_children_by_zindex ) {
+			for ( const auto& child : it.second ) {
+				if ( child->m_type == AT_CACHE ) {
+					( (Cache*)child )->UpdateCacheImpl( shader_program, camera );
+				}
+			}
+		}
+	}
+	else {
+		const auto update_counter = actor->GetUpdateCounter();
+		if ( update_counter != m_update_counter ) {
+			m_update_counter = update_counter;
+			m_is_update_needed = true;
+		}
+	}
 	if ( m_is_update_needed ) {
 
 		m_is_update_needed = false;
-
-		Log( "Updating texture" );
 
 		for ( const auto& it : m_cache_children_by_zindex ) {
 			for ( const auto& child : it.second ) {
@@ -84,9 +99,12 @@ void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scen
 		}
 
 		types::Vec2< size_t > top_left, bottom_right;
-		( (scene::actor::Cache*)m_actor )->GetEffectiveArea( top_left, bottom_right );
+		actor->GetEffectiveArea( top_left, bottom_right );
 
 		if ( !m_texture || top_left != m_top_left || bottom_right != m_bottom_right ) {
+
+			Log( "Resizing/realigning cache" );
+
 			m_top_left = top_left;
 			m_bottom_right = bottom_right;
 			if ( !m_texture ) {
@@ -111,6 +129,8 @@ void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scen
 			m_ibo_size = m_mesh->GetIndexCount();
 		}
 
+		Log( "Updating cache texture" );
+
 		// TODO: investigate and fix properly
 		auto tl = m_top_left;
 		auto br = m_bottom_right;
@@ -129,12 +149,7 @@ void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scen
 		);
 
 		if ( !m_texture->IsEmpty() ) {
-/*			const types::Color c = {
-				1.0f,
-				1.0f,
-				1.0f,
-				1.0f
-			};
+/*			const types::Color c = types::Color::FromRGB( rand() % 256, rand() % 256, rand() % 256 );
 			for ( auto y = 0 ; y < m_texture->m_height ; y++ ) {
 				m_texture->SetPixel( 0, y, c );
 				m_texture->SetPixel( m_texture->m_width - 1, y, c );
