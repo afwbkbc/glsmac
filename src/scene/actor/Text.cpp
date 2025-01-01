@@ -3,6 +3,7 @@
 #include "types/Font.h"
 #include "common/ObjectLink.h"
 #include "graphics/opengl/actor/Text.h"
+#include "Cache.h"
 
 namespace scene {
 namespace actor {
@@ -43,7 +44,6 @@ const size_t Text::GetHeight() const {
 void Text::SetText( const std::string& text ) {
 	if ( text != m_text ) {
 		m_text = text;
-
 		Redraw();
 	}
 }
@@ -51,7 +51,6 @@ void Text::SetText( const std::string& text ) {
 void Text::SetColor( const types::Color& color ) {
 	if ( color != m_color ) {
 		m_color = color;
-
 		Redraw();
 	}
 }
@@ -59,24 +58,22 @@ void Text::SetColor( const types::Color& color ) {
 void Text::SetFont( types::Font* font ) {
 	if ( font != m_font ) {
 		m_font = font;
-
 		Redraw();
 	}
 }
 
 void Text::UpdatePosition() {
 	Actor::UpdatePosition();
-
 	Redraw();
 }
 
 void Text::Redraw() {
 	if ( m_graphics_object ) {
 		ASSERT( !m_graphics_object->Removed(), "textactor graphics object removed" );
-
 		auto* gl_actor = m_graphics_object->GetDstObject< graphics::opengl::Text >();
 		gl_actor->Update( m_font, m_text, m_position.x, m_position.y );
 	}
+	UpdateCache();
 }
 
 }

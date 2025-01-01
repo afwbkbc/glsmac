@@ -87,8 +87,9 @@ protected:
 	render_flag_t m_render_flags = RF_NONE;
 	area_limits_t m_area_limits = {};
 
+	void UpdateCache();
+
 private:
-	friend class Cache;
 	Cache* m_cache_parent = nullptr;
 
 };

@@ -114,5 +114,11 @@ void Actor::Unserialize( types::Buffer buf ) {
 	UpdateMatrix();
 }
 
+void Actor::UpdateCache() {
+	if ( m_cache_parent ) {
+		m_cache_parent->Update();
+	}
+}
+
 }
 }

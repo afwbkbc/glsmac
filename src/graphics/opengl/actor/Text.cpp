@@ -114,6 +114,7 @@ void Text::Update( types::Font* font, const std::string& text, const float x, co
 				}
 			);
 		}
+
 	}
 
 	if ( m_coords.x != x || m_coords.y != y ) {

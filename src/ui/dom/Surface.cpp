@@ -31,6 +31,7 @@ Surface::Surface( DOM_ARGS )
 					m_background.texture = new types::texture::Texture( 1, 1 );
 				}
 				m_background.texture->SetPixel( 0, 0, color );
+				m_background.texture->FullUpdate();
 				m_actor->SetTexture( m_background.texture );
 			}
 			else {

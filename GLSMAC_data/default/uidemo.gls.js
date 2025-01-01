@@ -152,6 +152,7 @@
 	texts.bottom = 50;
 
 	// 'bouncing ball' animation
+
 	let ballarea = [180, 420];
 	let ballareaobj = root.panel({
 		align: 'bottom right',
@@ -226,4 +227,32 @@
 		});
 	}
 
+	// count async timer iterations
+	let iterations = 0;
+	const counterbox = texts.panel({
+		align: 'center',
+		width: 200,
+		height: 60,
+	});
+	const counter = counterbox.text({
+		align: 'center',
+		color: '#ffffff',
+		font: ':20',
+	});
+	#async(10, () => {
+		counter.text = 'ITERATIONS: ' + #to_string( ++iterations );
+		return true;
+	});
+	// cycle colors a bit
+	let is_blue = false;
+	#async(200, () => {
+		if ( is_blue ) {
+			counterbox.background = '#ff000077';
+		}
+		else {
+			counterbox.background = '#0000ff77';
+		}
+		is_blue = !is_blue;
+		return true;
+	});
 });

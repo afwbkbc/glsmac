@@ -103,7 +103,7 @@ void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scen
 
 		if ( !m_texture || top_left != m_top_left || bottom_right != m_bottom_right ) {
 
-			Log( "Resizing/realigning cache" );
+			//Log( "Resizing/realigning cache" );
 
 			m_top_left = top_left;
 			m_bottom_right = bottom_right;
@@ -129,7 +129,7 @@ void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scen
 			m_ibo_size = m_mesh->GetIndexCount();
 		}
 
-		Log( "Updating cache texture" );
+		//Log( "Updating cache texture" );
 
 		// TODO: investigate and fix properly
 		auto tl = m_top_left;
@@ -197,12 +197,12 @@ void Cache::AddCacheChildToZIndexSet( Actor* gl_actor, const float zindex ) {
 		it = m_cache_children_by_zindex.find( zindex );
 	}
 	ASSERT( std::find( it->second.begin(), it->second.end(), gl_actor ) == it->second.end(), "actor already found in zindex set" );
-	Log( "Adding actor " + gl_actor->GetName() + " to zindex set " + std::to_string( zindex ) );
+	//Log( "Adding actor " + gl_actor->GetName() + " to zindex set " + std::to_string( zindex ) );
 	it->second.push_back( gl_actor );
 }
 
 void Cache::RemoveCacheChildFromZIndexSet( Actor* gl_actor, const float zindex ) {
-	Log( "Removing actor " + gl_actor->GetName() + " from zindex set " + std::to_string( zindex ) );
+	//Log( "Removing actor " + gl_actor->GetName() + " from zindex set " + std::to_string( zindex ) );
 	auto it = m_cache_children_by_zindex.find( zindex );
 	ASSERT( it != m_cache_children_by_zindex.end(), "zindex set not found" );
 	auto actor_it = find( it->second.begin(), it->second.end(), gl_actor );

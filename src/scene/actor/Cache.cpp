@@ -49,9 +49,7 @@ void Cache::Update() {
 		m_update_counter = 0;
 	}
 	m_update_counter++;
-	if ( m_cache_parent ) {
-		//m_cache_parent->Update(); // not needed?
-	}
+	UpdateCache();
 }
 
 }
