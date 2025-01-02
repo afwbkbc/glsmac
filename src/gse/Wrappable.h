@@ -32,9 +32,10 @@ public:
 	void Off( GSE_CALLABLE, const std::string& event, const callback_id_t callback_id );
 	const Value Trigger( GSE_CALLABLE, const std::string& event, const type::object_properties_t& args );
 
-private:
+protected:
 	std::unordered_set< type::Object* > m_wrapobjs = {};
 
+private:
 	typedef std::unordered_map< std::string, std::map< uint16_t, gse::Value > > callbacks_t;
 	callbacks_t m_callbacks = {};
 	callback_id_t m_next_callback_id = 0;

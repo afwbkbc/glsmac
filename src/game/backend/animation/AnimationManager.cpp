@@ -151,7 +151,7 @@ WRAPIMPL_BEGIN( AnimationManager )
 		} )
 		}
 	};
-WRAPIMPL_END_PTR( AnimationManager )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( AnimationManager )
 

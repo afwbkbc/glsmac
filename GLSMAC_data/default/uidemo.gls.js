@@ -2,6 +2,11 @@
 
 	const root = glsmac.ui.root;
 
+	glsmac.ui.class('side-square').set({
+		width: 20,
+		height: 20,
+	});
+
 	let surfaces = [];
 	for (a of [
 		['top left', '#60a06080'],
@@ -15,10 +20,9 @@
 		['bottom right', '#a060a080'],
 	]) {
 		surfaces []= root.surface({
+			class: 'side-square',
 			align: a[0],
 			background: a[1],
-			width: 20,
-			height: 20,
 		});
 	}
 	surfaces[4].background = '#ffffff'; // make center visible
@@ -90,6 +94,10 @@
 	child1child2.background = '#00cc00';
 	child1child4.background = '#00ee00';
 
+	const textcls1 = glsmac.ui.class('text1');
+	const textcls2 = glsmac.ui.class('text2');
+	const textcls3 = glsmac.ui.class('text3');
+
 	const texts = root.panel({
 		left: 40,
 		top: 40,
@@ -100,56 +108,75 @@
 	texts.text({
 		align: 'top left',
 		text: 'TOP LEFT',
-		color: '#ffff00',
-		font: ':16',
+		class: 'text1',
 	});
 	texts.text({
 		align: 'top right',
 		text: 'TOP RIGHT',
-		color: '#ffff00',
-		font: ':16',
+		class: 'text1',
 	});
 	texts.text({
 		align: 'bottom left',
 		text: 'BOTTOM LEFT',
-		color: '#ffff00',
-		font: ':16',
+		class: 'text1',
 	});
 	texts.text({
 		align: 'bottom right',
 		text: 'BOTTOM RIGHT',
-		color: '#ffff00',
-		font: ':16',
+		class: 'text1',
 	});
 	texts.text({
 		align: 'top center',
 		text: 'TOP',
 		top: 10,
-		color: '#ffffff',
-		font: ':24',
+		class: 'text2',
 	});
 	texts.text({
 		align: 'bottom center',
 		text: 'BOTTOM',
 		bottom: 10,
-		color: '#ffffff',
-		font: ':24',
+		class: 'text2',
 	});
 	texts.text({
 		align: 'left center',
 		text: 'LEFT',
 		left: 10,
-		color: '#ffffff',
-		font: ':32',
+		class: 'text3',
 	});
 	texts.text({
 		align: 'right center',
 		text: 'RIGHT',
 		right: 10,
-		color: '#ffffff',
-		font: ':32',
+		class: 'text3',
 	});
 	texts.bottom = 50;
+
+	// change color and font in text1 class, should update all related objects
+	textcls1.set({
+		font: ':16',
+	});
+	textcls2.set({
+		color: '#ffffff',
+		font: ':24',
+	});
+	textcls3.color = textcls2.color; // this should work too
+	textcls3.set({
+		font: ':8', // will be unset later
+	});
+	textcls3.unset(['font']); // unset so that default font size is used
+
+	// blink corner texts
+	let visible = false;
+	#async(1000, () => {
+		visible = !visible;
+		if ( visible ) {
+			textcls1.color = '#ffff00ff';
+		}
+		else {
+			textcls1.color = '#00000000';
+		}
+		return true;
+	});
 
 	// 'bouncing ball' animation
 
@@ -163,23 +190,24 @@
 		background: '#ffffff44',
 	});
 
+	glsmac.ui.class('balltext').set({
+		align: 'center',
+		text: 'ball',
+		color: '#ffffff',
+	});
+
 	const addball = (ball) => {
 		let ballobj = ballareaobj.panel({
-			background: ball.color,
+			class: ball.class,
 			left: ball.pos[0],
 			top: ball.pos[1],
-			width: ball.size[0],
-			height: ball.size[1],
 		});
 		ballobj.text({
-			align: 'center',
-			text: 'ball',
-			color: '#ffffff',
-			font: ':' + #to_string(ball.size[0]),
+			class: ball.class + 'text',
 		});
 		#async( 10, () => {
-			const maxleft = ballarea[0] - ball.size[0] - 1;
-			const maxtop = ballarea[1] - ball.size[1] - 1;
+			const maxleft = ballarea[0] - ballobj.width - 1;
+			const maxtop = ballarea[1] - ballobj.height - 1;
 			if ( ballobj.left <= 0 || ballobj.left >= maxleft ) {
 				if ( ballobj.left < 0 ) {
 					ballobj.left = 0;
@@ -204,26 +232,48 @@
 		});
 	};
 
+	glsmac.ui.class('ball1', { // set in constructor is possible too
+		width: 20,
+		height: 20,
+		background: '#ff0000',
+	});
+	glsmac.ui.class('ball1text', 'balltext', { // extend in constructor
+		font: ':16',
+	});
+	glsmac.ui.class('ball2', {
+		width: 30,
+		height: 30,
+		background: '#006600',
+	});
+	glsmac.ui.class('ball2text').extend('balltext').set({ // extend after constructor is possible too
+		font: ':20',
+	});
+	glsmac.ui.class('ball3', {
+		width: 40,
+		height: 40,
+		background: '#0000ff',
+	});
+	glsmac.ui.class('ball3text', {
+		font: ':32',
+	}).extend('balltext'); // extend can be done later too
+
 	for ( y of [0, 30, 40, 70, 80, 120, 150, 160, 170]) {
 		addball({
-			size: [20, 20],
+			class: 'ball1',
 			pos: [60 + y, 100 + y * 2],
 			speed: [(-3) - (y / 40), (-2) - (y / 40)],
-			color: '#ff0000',
 		});
 
 		addball({
-			size: [30, 30],
+			class: 'ball2',
 			pos: [60 + y, 100 + y * 3],
 			speed: [(-1) - (y / 40), (-3) - (y / 40)],
-			color: '#00ff00',
 		});
 
 		addball({
-			size: [40, 40],
+			class: 'ball3',
 			pos: [30 + y, 0 + y],
 			speed: [(-2) - (y / 40), (-1) - (y / 40)],
-			color: '#0000ff',
 		});
 	}
 
@@ -255,4 +305,5 @@
 		is_blue = !is_blue;
 		return true;
 	});
+
 });

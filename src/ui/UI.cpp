@@ -5,6 +5,7 @@
 #include "scene/Scene.h"
 #include "engine/Engine.h"
 #include "graphics/Graphics.h"
+#include "Class.h"
 
 namespace ui {
 
@@ -43,6 +44,11 @@ UI::~UI() {
 
 	delete m_root;
 
+	for ( const auto& it : m_classes ) {
+		Log( "Destroying UI class: " + it.first );
+		delete it.second;
+	}
+
 	g_engine->GetGraphics()->RemoveScene( m_scene );
 	DELETE( m_scene );
 
@@ -56,8 +62,51 @@ WRAPIMPL_BEGIN( UI )
 				"root",
 				m_root->Wrap( true )
 			},
+			{
+				"class",
+				NATIVE_CALL( this ) {
+					N_EXPECT_ARGS_MIN_MAX( 1, 3 ); // .class(name) or .class(name, properties) or .class(name, parent) or .class(name, parent, properties)
+					N_GETVALUE( name, 0, String );
+					auto it = m_classes.find( name );
+					if ( it == m_classes.end() ) {
+						Log( "Creating UI class: " + name );
+						it = m_classes.insert({ name, new ui::Class( this ) }).first;
+						if ( arguments.size() >= 2 ) {
+							const gse::type::object_properties_t* properties = nullptr;
+							const std::string* parent_class = nullptr;
+							if ( arguments.size() == 2 ) {
+								if ( arguments.at(1).Get()->type == gse::type::Type::T_STRING ) {
+									N_GETVALUE( s, 1, String );
+									parent_class = &s;
+								}
+								else {
+									N_GETVALUE( p, 1, Object );
+									properties = &p;
+								}
+							}
+							else {
+								N_GETVALUE( s, 1, String );
+								N_GETVALUE( p, 2, Object );
+								parent_class = &s;
+								properties = &p;
+							}
+							if ( parent_class ) {
+								it->second->SetParentClass( ctx, call_si, *parent_class );
+							}
+							if ( properties ) {
+								it->second->SetProperties( ctx, call_si, *properties );
+							}
+						}
+					}
+					else if ( arguments.size() >= 2 ) {
+						// passing parent class or properties in constructor works only if class didn't exist yet
+						GSE_ERROR( gse::EC.UI_ERROR, "Class '" + name + "' already exists. Use .set() instead of constructor to update properties of existing classes." );
+					}
+					return it->second->Wrap( true );
+				} )
+			},
 		};
-WRAPIMPL_END_PTR( GLSMAC )
+WRAPIMPL_END_PTR()
 
 void UI::Resize() {
 	const auto& g = g_engine->GetGraphics();
@@ -95,6 +144,16 @@ const types::Vec2< types::mesh::coord_t > UI::ClampXY( const types::Vec2< coord_
 		m_clamp.x.Clamp( xy.x ),
 		m_clamp.y.Clamp( xy.y ),
 	};
+}
+
+ui::Class* const UI::GetClass( const std::string& name ) const {
+	const auto& it = m_classes.find( name );
+	if ( it != m_classes.end() ) {
+		return it->second;
+	}
+	else {
+		return nullptr;
+	}
 }
 
 }

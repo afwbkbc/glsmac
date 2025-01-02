@@ -86,7 +86,7 @@ WRAPIMPL_BEGIN( Faction )
 			VALUE( gse::type::Bool, m_flags & Faction::FF_PROGENITOR )
 		},
 	};
-WRAPIMPL_END_PTR( Faction )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Faction )
 

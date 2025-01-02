@@ -378,7 +378,7 @@ WRAPIMPL_BEGIN( UnitManager )
 			})
 		},
 	};
-WRAPIMPL_END_PTR( UnitManager )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( UnitManager )
 

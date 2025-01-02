@@ -238,7 +238,7 @@ WRAPIMPL_BEGIN( TileManager )
 			})
 		},
 	};
-WRAPIMPL_END_PTR( TileManager )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( TileManager )
 

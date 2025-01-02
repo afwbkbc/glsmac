@@ -41,19 +41,22 @@ Container::~Container() {
 	}
 }
 
-void Container::WrapSet( const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& si ) {
-	auto forward_it = m_forwarded_properties.find( key );
-	if ( forward_it != m_forwarded_properties.end() ) {
-		forward_it->second->WrapSet( key, value, ctx, si );
+#define FORWARD_CALL( _method, ... ) \
+	auto forward_it = m_forwarded_properties.find( key ); \
+	if ( forward_it != m_forwarded_properties.end() ) { \
+		forward_it->second->_method( __VA_ARGS__ ); \
+	} \
+	else { \
+		Object::_method( __VA_ARGS__ ); \
 	}
-	else {
-		Object::WrapSet( key, value, ctx, si );
-	}
+
+void Container::WrapSet( const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& call_si ) {
+	FORWARD_CALL( WrapSet, key, value, ctx, call_si )
 }
 
-void Container::Property( GSE_CALLABLE, const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value, const property_flag_t flags, const f_on_set_t& f_on_set ) {
+void Container::Property( GSE_CALLABLE, const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value, const property_flag_t flags, const f_on_set_t& f_on_set, const f_on_unset_t& f_on_unset ) {
 	ASSERT_NOLOG( m_forwarded_properties.find( name ) == m_forwarded_properties.end(), "property '" + name + "' already exists (forwarded)" );
-	Object::Property( ctx, call_si, name, type, default_value, flags, f_on_set );
+	Object::Property( ctx, call_si, name, type, default_value, flags, f_on_set, f_on_unset );
 }
 
 void Container::ForwardProperty( GSE_CALLABLE, const std::string& name, Object* const target ) {
@@ -72,6 +75,11 @@ void Container::ForwardProperty( GSE_CALLABLE, const std::string& name, Object* 
 	}
 }
 
+void Container::Embed( Object* object ) {
+	ASSERT_NOLOG( !m_is_initialized, "container already initialized" );
+	m_embedded_objects.push_back( object );
+}
+
 void Container::Factory( GSE_CALLABLE, const std::string& name, const std::function< Object*( GSE_CALLABLE, const properties_t& ) >& f ) {
 	Method( ctx, call_si, name, NATIVE_CALL( this, f ) {
 		N_EXPECT_ARGS_MIN_MAX(0, 1);
@@ -79,24 +87,46 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 		if ( arguments.size() == 1 ) {
 			const auto& v = arguments.at(0).Get();
 			if ( v->type != gse::type::Type::T_OBJECT ) {
-				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Expected properties object, got " + v->GetTypeString( v->type ), ctx, call_si );
+				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Expected properties object, got " + v->GetTypeString( v->type ) );
 			}
 			initial_properties = ((gse::type::Object*)v)->value;
 		}
 		auto* obj = f( ctx, call_si, initial_properties );
+		ASSERT_NOLOG( obj, "object not created" );
 		obj->InitAndValidate( ctx, call_si );
 		m_children.insert({ obj->m_id, obj });
 		return obj->Wrap( true );
 	} ) );
 }
 
-void Container::InitAndValidate( GSE_CALLABLE ) const {
+void Container::OnPropertyChange( GSE_CALLABLE, const std::string& key, const gse::Value& value ) const {
+	FORWARD_CALL( OnPropertyChange, ctx, call_si, key, value )
+}
+
+void Container::OnPropertyRemove( GSE_CALLABLE, const std::string& key ) const {
+	FORWARD_CALL( OnPropertyRemove, ctx, call_si, key )
+}
+
+void Container::InitAndValidate( GSE_CALLABLE ) {
+	for ( const auto& obj : m_embedded_objects ) {
+		obj->InitAndValidate( ctx, call_si );
+		m_children.insert({ obj->m_id, obj });
+	}
+	m_embedded_objects.clear();
 	InitProperties( ctx, call_si );
 	for ( const auto& p : m_initial_properties ) {
 		if ( m_properties.find( p.first ) == m_properties.end() && m_forwarded_properties.find( p.first ) == m_forwarded_properties.end() ) {
-			throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property '" + p.first + "' does not exist", ctx, call_si );
+			GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property '" + p.first + "' does not exist" );
 		}
 	}
+}
+
+void Container::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value ) {
+	FORWARD_CALL( SetPropertyFromClass, ctx, call_si, key, value );
+}
+
+void Container::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
+	FORWARD_CALL( UnsetPropertyFromClass, ctx, call_si, key );
 }
 
 }

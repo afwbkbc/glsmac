@@ -61,7 +61,7 @@ WRAPIMPL_BEGIN( Def )
 			VALUE( gse::type::String, "static" ) // TODO
 		},
 	};
-WRAPIMPL_END_PTR( Def )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Def )
 

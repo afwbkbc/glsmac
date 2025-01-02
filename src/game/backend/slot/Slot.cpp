@@ -183,7 +183,7 @@ WRAPIMPL_BEGIN( Slot )
 			player->GetFaction()->Wrap()
 		},
 	};
-WRAPIMPL_END_PTR( Slot )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Slot )
 

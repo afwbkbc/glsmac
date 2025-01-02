@@ -205,7 +205,7 @@ WRAPIMPL_BEGIN( FactionManager )
 			} )
 		},
 	};
-WRAPIMPL_END_PTR( FactionManager )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( FactionManager )
 

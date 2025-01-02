@@ -47,7 +47,7 @@ WRAPIMPL_BEGIN( Random )
 			})
 		},
 	};
-WRAPIMPL_END_PTR( Random )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Random )
 

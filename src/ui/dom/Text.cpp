@@ -36,7 +36,7 @@ Text::Text( DOM_ARGS )
 
 	Property(
 		ctx, call_si, "color", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v ) {
-			types::Color color;
+			types::Color color = {};
 			ParseColor( ctx, call_si, ( (gse::type::String*)v.Get() )->value, color );
 			m_actor->SetColor( color );
 		}

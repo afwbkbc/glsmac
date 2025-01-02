@@ -282,7 +282,7 @@ WRAPIMPL_BEGIN( BaseManager )
 			})
 		},
 	};
-WRAPIMPL_END_PTR( BaseManager )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( BaseManager )
 

@@ -597,7 +597,8 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 					}
 					return ( (type::Object*)obj )->GetRef( childname );
 				}
-				case Operand::OT_OBJECT: {
+				case Operand::OT_OBJECT:
+				case Operand::OT_CALL: {
 					const auto objv = EvaluateOperand( ctx, expression->a );
 					const auto* obj = objv.Get();
 					ASSERT( obj->type == Type::T_OBJECT, "parent is not object: " + obj->Dump() );

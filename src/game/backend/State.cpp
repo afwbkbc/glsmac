@@ -179,7 +179,7 @@ WRAPIMPL_BEGIN( State )
 			m_fm->Wrap( true )
 		},
 	};
-WRAPIMPL_END_PTR( State )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( State )
 

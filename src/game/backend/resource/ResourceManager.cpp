@@ -153,7 +153,7 @@ WRAPIMPL_BEGIN( ResourceManager )
 			} )
 		},
 	};
-WRAPIMPL_END_PTR( ResourceManager )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( ResourceManager )
 

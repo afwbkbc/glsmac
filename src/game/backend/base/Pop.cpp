@@ -59,7 +59,7 @@ WRAPIMPL_BEGIN( Pop )
 			} )
 		},
 	};
-WRAPIMPL_END_PTR( Pop )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Pop )
 

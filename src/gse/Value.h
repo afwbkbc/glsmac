@@ -94,7 +94,7 @@ namespace gse {
     const auto wrapped_parent = _parent::Wrap(); \
     const auto& wrapped_parent_props = ( (gse::type::Object*)wrapped_parent.Get() )->value; \
     properties.insert( wrapped_parent_props.begin(), wrapped_parent_props.end() );
-#define WRAPIMPL_END_PTR( _type ) \
+#define WRAPIMPL_END_PTR() \
     return VALUE( gse::type::Object, properties, WRAP_CLASS, this ); \
 }
 #define WRAPIMPL_DYNAMIC_SETTERS( _type ) \

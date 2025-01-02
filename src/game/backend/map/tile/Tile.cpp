@@ -263,7 +263,7 @@ WRAPIMPL_BEGIN( Tile )
 			} )
 		},
 	};
-WRAPIMPL_END_PTR( Tile )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Tile )
 

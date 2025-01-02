@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_map>
+
 #include "common/Common.h"
 #include "gse/Wrappable.h"
 
@@ -24,6 +26,8 @@ namespace dom {
 class Root;
 }
 
+class Class;
+
 CLASS2( UI, common::Class, gse::Wrappable )
 
 	UI( GSE_CALLABLE );
@@ -37,6 +41,8 @@ CLASS2( UI, common::Class, gse::Wrappable )
 	const types::mesh::coord_t ClampY( const coord_t& y ) const;
 	const types::Vec2< types::mesh::coord_t > ClampXY( const types::Vec2< coord_t >& xy ) const;
 
+	ui::Class* const GetClass( const std::string& name ) const;
+
 private:
 	dom::Root* m_root;
 
@@ -44,6 +50,8 @@ private:
 		util::Clamper< float > x;
 		util::Clamper< float > y;
 	} m_clamp = {};
+
+	std::unordered_map< std::string, ui::Class* > m_classes = {};
 
 	void Resize();
 

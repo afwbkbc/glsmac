@@ -530,7 +530,7 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 	};
-WRAPIMPL_END_PTR( Game )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Game )
 

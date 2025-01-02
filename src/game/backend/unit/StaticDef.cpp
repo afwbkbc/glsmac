@@ -93,7 +93,7 @@ WRAPIMPL_BEGIN( StaticDef )
 		WRAPIMPL_GET( "health_max", Float, HEALTH_MAX )
 	};
 	WRAPIMPL_PROPS_EXTEND( Def )
-WRAPIMPL_END_PTR( StaticDef )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( StaticDef )
 
