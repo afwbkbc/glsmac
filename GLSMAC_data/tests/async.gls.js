@@ -4,7 +4,7 @@ let value = 1;
 let values = [];
 
 // increment value every 150ms
-#async(150, () => {
+#async(155, () => {
 	value++;
 	#print('async1 ' + #to_string(value));
 	values [] = value;
@@ -12,7 +12,7 @@ let values = [];
 });
 
 // double value every 700ms
-#async(700, () => {
+#async(705, () => {
 	value *= 2;
 	#print('async2 ' + #to_string(value));
 	values []= value;
@@ -52,11 +52,11 @@ let values = [];
 
 	// recursive async should work too
 	let result = [];
-	#async(500, () => {
+	#async(505, () => {
 		#print('async parent begin');
 		let i = 0;
 		result []= 'P';
-		#async(200, () => {
+		#async(205, () => {
 			const value = i;
 			result []= 'C' + #to_string(i);
 			#print('async child begin', value);
@@ -75,11 +75,34 @@ let values = [];
 	// check result
 	#async( 3000, () => {
 		#print(result);
-		test.assert(result == [ 'P', 'C0', 'CC0', 'CC0', 'CC0', 'C1', 'CC0', 'CC1', 'CC0', 'CC1', 'CC0', 'CC1', 'CC0', 'C2', 'CC1', 'CC0', 'CC2', 'CC1', 'CC2', 'CC1', 'CC2', 'CC1', 'C3', 'CC2', 'CC1', 'CC3', 'CC2', 'CC3', 'CC2', 'CC3', 'CC2', 'C4', 'CC3', 'CC2', 'CC4', 'CC3', 'CC4', 'CC3', 'CC4', 'CC3', 'CC4', 'CC3', 'CC4', 'CC4', 'CC4', 'CC4' ] );
+		test.assert(result == [ 'P', 'C0', 'CC0', 'CC0', 'CC0', 'CC0', 'C1', 'CC0', 'CC1', 'CC0', 'CC1', 'CC0', 'CC1', 'CC0', 'CC1', 'C2', 'CC1', 'CC2', 'CC1', 'CC2', 'CC1', 'CC2', 'CC1', 'CC2', 'C3', 'CC2', 'CC3', 'CC2', 'CC3', 'CC2', 'CC3', 'CC2', 'CC3', 'C4', 'CC3', 'CC4', 'CC3', 'CC4', 'CC3', 'CC4', 'CC3', 'CC4', 'CC4', 'CC4', 'CC4', 'CC4', ]);
+
+		// next tests
+
+		// test if async timers are stopped correctly
+		result = [];
+
+		let value2 = 1;
+		const timer = #async(120, () => {
+			value2++;
+			#print(value2);
+			result []= value2;
+			return true;
+		});
+
+		// stop it after 1 second
+		#async(1000, () => {
+			timer.stop();
+		});
+
+		// after 2 seconds check if it was actually stopped
+		#async( 2000, () => {
+			#print(result);
+			test.assert(result == [ 2, 3, 4, 5, 6, 7, 8, 9 ]);
+		});
+
 	});
 
-
-	return false;
 });
 
 #print('main end');

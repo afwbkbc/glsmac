@@ -20,31 +20,69 @@ void Async::Iterate() {
 	}
 }
 
-void Async::AddTimer( const size_t ms, const Value& f, context::Context* const ctx, const si_t& si ) {
+static Async::timer_id_t s_next_id = 0;
+
+const Async::timer_id_t Async::StartTimer( const size_t ms, const Value& f, context::Context* const ctx, const si_t& si ) {
 	ASSERT( f.Get()->type == type::Type::T_CALLABLE, "invalid callable type: " + f.GetTypeString() );
+	if ( s_next_id == SIZE_MAX - 1 ) {
+		s_next_id = 0;
+	}
+	s_next_id++;
 	ctx->IncRefs();
 	auto* subctx = ctx->ForkContext( ctx, si, true );
 	ValidateMs( ms, subctx, si );
 	subctx->IncRefs();
 	subctx->PersistValue( f );
-	m_timers[ Now() + ms ].push_back(
+	const auto time = Now() + ms;
+	m_timers[ time ].insert(
 		{
-			ms,
-			f,
-			subctx,
-			si
+			s_next_id,
+			{
+				ms,
+				f,
+				subctx,
+				si
+			}
 		}
 	);
+	m_timers_ms.insert(
+		{
+			s_next_id,
+			time
+		}
+	);
+	return s_next_id;
+}
+
+const bool Async::StopTimer( const gse::Async::timer_id_t id ) {
+	const auto& it = m_timers_ms.find( id );
+	if ( it == m_timers_ms.end() ) {
+		return false;
+	}
+	const auto& time = it->second;
+	ASSERT( m_timers.find( time ) != m_timers.end(), "timers not found" );
+	auto& timers = m_timers.at( time );
+	ASSERT( timers.find( id ) != timers.end(), "timer not found" );
+	const auto& timer = timers.at( id );
+	timer.ctx->UnpersistValue( timer.callable );
+	timer.ctx->DecRefs();
+	timers.erase( id );
+	if ( timers.empty() ) {
+		m_timers.erase( time );
+	}
+	m_timers_ms.erase( id );
+	return true;
 }
 
 void Async::StopTimers() {
 	for ( const auto& it : m_timers ) {
-		for ( const auto& timer : it.second ) {
-			timer.ctx->UnpersistValue( timer.callable );
-			timer.ctx->DecRefs();
+		for ( const auto& it2 : it.second ) {
+			it2.second.ctx->UnpersistValue( it2.second.callable );
+			it2.second.ctx->DecRefs();
 		}
 	}
 	m_timers.clear();
+	m_timers_ms.clear();
 }
 
 void Async::ProcessAndExit() {
@@ -80,9 +118,10 @@ void Async::ValidateMs( const int64_t ms, context::Context* ctx, const si_t& cal
 }
 
 void Async::ProcessTimers( const timers_t::iterator& it ) {
-	std::map< uint64_t, std::vector< timer_t > > timers_new = {};
+	std::map< uint64_t, std::map< timer_id_t, timer_t > > timers_new = {};
 
-	for ( const auto& timer : it->second ) {
+	for ( const auto& it2 : it->second ) {
+		const auto& timer = it2.second;
 
 		auto* ctx = timer.ctx;
 		const auto f = timer.callable;
@@ -116,12 +155,15 @@ void Async::ProcessTimers( const timers_t::iterator& it ) {
 		}
 
 		if ( repeat ) {
-			timers_new[ Now() + ms ].push_back(
+			timers_new[ Now() + ms ].insert(
 				{
-					ms,
-					f,
-					ctx,
-					call_si
+					it2.first,
+					{
+						ms,
+						f,
+						ctx,
+						call_si,
+					}
 				}
 			);
 		}
@@ -129,12 +171,20 @@ void Async::ProcessTimers( const timers_t::iterator& it ) {
 			ctx->UnpersistValue( f );
 			ctx->DecRefs();
 		}
+		ASSERT( m_timers_ms.find( it2.first ) != m_timers_ms.end(), "related timers_ms entry not found" );
+		m_timers_ms.erase( it2.first );
 	}
 
 	m_timers.erase( it );
 	for ( const auto& it_new : timers_new ) {
 		for ( const auto& timer : it_new.second ) {
-			m_timers[ it_new.first ].push_back( timer );
+			m_timers[ it_new.first ].insert( timer );
+			m_timers_ms.insert(
+				{
+					timer.first,
+					it_new.first
+				}
+			);
 		}
 	}
 }

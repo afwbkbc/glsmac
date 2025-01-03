@@ -16,11 +16,14 @@ class Context;
 
 CLASS( Async, common::Class )
 
+	typedef size_t timer_id_t;
+
 	void Iterate();
 
-	void AddTimer( const size_t ms, const gse::Value& f, gse::context::Context* const ctx, const gse::si_t& si );
+	const timer_id_t StartTimer( const size_t ms, const gse::Value& f, gse::context::Context* const ctx, const gse::si_t& si );
+	const bool StopTimer( const timer_id_t id );
 	void StopTimers();
-	
+
 	void ProcessAndExit();
 
 private:
@@ -32,8 +35,9 @@ private:
 		gse::si_t si;
 	};
 
-	typedef std::map< uint64_t, std::vector< timer_t > > timers_t;
+	typedef std::map< uint64_t, std::map< timer_id_t, timer_t > > timers_t;
 	timers_t m_timers = {};
+	std::map< timer_id_t, uint64_t > m_timers_ms = {};
 
 	const uint64_t Now() const;
 	void ValidateMs( const int64_t ms, context::Context* ctx, const si_t& call_si ) const;

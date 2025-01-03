@@ -17,9 +17,23 @@ void Async::AddToContext( context::Context* ctx ) {
 		N_EXPECT_ARGS( 2 );
 		N_GETVALUE( ms, 0, Int );
 
-		ctx->GetGSE()->GetAsync()->AddTimer( ms, arguments.at(1 ), ctx, call_si );
+		const auto timer_id = ctx->GetGSE()->GetAsync()->StartTimer( ms, arguments.at(1 ), ctx, call_si );
 
-		return VALUE( type::Undefined );
+		const gse::type::object_properties_t properties = {
+			{
+				"stop",
+				// recursive NATIVE_CALL doesn't work
+				gse::Value( std::make_shared< gse::callable::Native >([ timer_id ]( gse::context::Context* ctx, const gse::si_t& call_si, const gse::type::function_arguments_t& arguments ) -> gse::Value {
+					N_EXPECT_ARGS( 0 );
+					if ( !ctx->GetGSE()->GetAsync()->StopTimer( timer_id ) ) {
+						GSE_ERROR( EC.OPERATION_FAILED, "Timer is already stopped" );
+					}
+					return VALUE( type::Undefined );
+				} ) ),
+			}
+		};
+
+		return VALUE( type::Object, properties, "async" );
 	} ) );
 
 }
