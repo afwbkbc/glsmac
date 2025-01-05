@@ -28,7 +28,7 @@ SET( CMAKE_CXX_FLAGS " -std=c++17 ${CMAKE_CXX_FLAGS} -Wno-pointer-arith -Wno-vla
 ADD_SUBDIRECTORY( tools )
 SET( EMBED_CPP "src/tmp/embed.cpp" )
 SET( EMBED_FILES
-	"./resource/font/terminus/TerminusTTF-4.49.3-minified.ttf"
+	"${PROJECT_SOURCE_DIR}/resource/font/terminus/TerminusTTF-4.49.3-minified.ttf"
 )
 ADD_CUSTOM_COMMAND(
 	OUTPUT ${EMBED_CPP}
