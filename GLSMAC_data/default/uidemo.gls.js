@@ -2,6 +2,12 @@
 
 	const root = glsmac.ui.root;
 
+	root.on('keydown', (e) => {
+		if ( e.code == 'ESCAPE' ) {
+			glsmac.exit();
+		}
+	});
+
 	glsmac.ui.class('side-square').set({
 		width: 20,
 		height: 20,

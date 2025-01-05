@@ -5,6 +5,7 @@
 #include "scene/Scene.h"
 #include "engine/Engine.h"
 #include "graphics/Graphics.h"
+#include "input/Input.h"
 #include "Class.h"
 
 namespace ui {
@@ -38,9 +39,31 @@ UI::UI( GSE_CALLABLE )
 	g_engine->GetGraphics()->AddScene( m_scene );
 	m_root = new dom::Root( ctx, call_si, this );
 	Resize();
+
+	g_engine->GetInput()->AddHandler( this, [this, ctx, call_si]( const input::Event& event ) {
+		// create js object
+		gse::type::object_properties_t e = {};
+		switch ( event.type ) {
+			case input::Event::EV_KEY_DOWN: {
+				if ( event.data.key.is_printable ) {
+					e.insert( { "key", VALUE( gse::type::String, std::string(1, event.data.key.key ) ) } );
+				}
+				e.insert({ "code", VALUE( gse::type::String, event.GetKeyCodeStr() ) } );
+				break;
+			}
+			default: {
+				ASSERT( false, "unknown event type: " + std::to_string( event.type ) );
+				return;
+			}
+		}
+		m_root->Trigger( ctx, call_si, event.GetTypeStr(), e );
+		//Log( "EVENT: " + event.ToString() );
+	});
 }
 
 UI::~UI() {
+
+	g_engine->GetInput()->RemoveHandler( this );
 
 	delete m_root;
 

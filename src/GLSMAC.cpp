@@ -73,6 +73,13 @@ WRAPIMPL_BEGIN( GLSMAC )
 			"ui",
 			m_ui->Wrap( true )
 		},
+		{
+			"exit",
+			NATIVE_CALL( this ) {
+				g_engine->ShutDown();
+				return VALUE( gse::type::Undefined );
+			} )
+		},
 	};
 WRAPIMPL_END_PTR()
 

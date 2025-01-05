@@ -40,7 +40,10 @@ void SDL2::Stop() {
 void SDL2::Iterate() {
 	SDL_Event event;
 
+	input::Event e = {};
+
 	while ( SDL_PollEvent( &event ) ) {
+		e.type = Event::EV_NONE;
 		switch ( event.type ) {
 			case SDL_QUIT: {
 				g_engine->ShutDown();
@@ -107,10 +110,18 @@ void SDL2::Iterate() {
 				auto scancode = GetScanCode( event.key.keysym.scancode, modifiers );
 				char keycode = GetKeyCode( event.key.keysym.sym, modifiers );
 				if ( scancode || keycode ) {
+					// legacy ui
 					ui_legacy::event::key_modifier_t keymodifiers = GetModifiers( modifiers );
-					NEWV( ui_event, ui_legacy::event::KeyDown, scancode, keycode, keymodifiers );
+					NEWV( ui_event, ui_legacy::event::KeyDown, (ui_legacy::event::key_code_t)scancode, keycode, keymodifiers );
 					g_engine->GetUI()->ProcessEvent( ui_event );
 					DELETE( ui_event );
+
+					// new ui
+					e.type = Event::EV_KEY_DOWN;
+					e.data.key.key = keycode;
+					e.data.key.code = scancode;
+					e.data.key.is_printable = keycode > 0;
+					e.data.key.modifiers = modifiers;
 				}
 				break;
 			}
@@ -120,7 +131,7 @@ void SDL2::Iterate() {
 				char keycode = GetKeyCode( event.key.keysym.sym, modifiers );
 				if ( scancode || keycode ) {
 					ui_legacy::event::key_modifier_t keymodifiers = GetModifiers( modifiers );
-					NEWV( ui_event, ui_legacy::event::KeyUp, scancode, keycode, keymodifiers );
+					NEWV( ui_event, ui_legacy::event::KeyUp, (ui_legacy::event::key_code_t)scancode, keycode, keymodifiers );
 					g_engine->GetUI()->ProcessEvent( ui_event );
 					DELETE( ui_event );
 				}
@@ -128,24 +139,27 @@ void SDL2::Iterate() {
 			}
 				// TODO: keypress?
 		}
+		if ( e.type != Event::EV_NONE ) {
+			ProcessEvent( e );
+		}
 	}
 
 }
 
-ui_legacy::event::mouse_button_t SDL2::GetMouseButton( uint8_t sdl_mouse_button ) const {
+Event::mouse_button_t SDL2::GetMouseButton( uint8_t sdl_mouse_button ) const {
 	switch ( sdl_mouse_button ) {
 		case SDL_BUTTON_LEFT: {
-			return ui_legacy::event::M_LEFT;
+			return Event::M_LEFT;
 		}
 		case SDL_BUTTON_MIDDLE: {
-			return ui_legacy::event::M_MIDDLE;
+			return Event::M_MIDDLE;
 		}
 		case SDL_BUTTON_RIGHT: {
-			return ui_legacy::event::M_RIGHT;
+			return Event::M_RIGHT;
 		}
 		default: {
 			Log( "unsupported mouse button " + std::to_string( sdl_mouse_button ) );
-			return ui_legacy::event::M_NONE;
+			return Event::M_NONE;
 		}
 	}
 }
@@ -230,87 +244,87 @@ char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 	}
 }
 
-ui_legacy::event::key_code_t SDL2::GetScanCode( SDL_Scancode code, SDL_Keymod modifiers ) const {
+Event::key_code_t SDL2::GetScanCode( SDL_Scancode code, SDL_Keymod modifiers ) const {
 	//Log( "Scan code: " + std::to_string( code ) + " (modifiers: " + std::to_string( modifiers ) + ")" );
 	switch ( code ) {
 		case SDL_SCANCODE_RIGHT: {
-			return ui_legacy::event::K_RIGHT;
+			return Event::K_RIGHT;
 		}
 		case SDL_SCANCODE_LEFT: {
-			return ui_legacy::event::K_LEFT;
+			return Event::K_LEFT;
 		}
 		case SDL_SCANCODE_DOWN: {
-			return ui_legacy::event::K_DOWN;
+			return Event::K_DOWN;
 		}
 		case SDL_SCANCODE_UP: {
-			return ui_legacy::event::K_UP;
+			return Event::K_UP;
 		}
 		case SDL_SCANCODE_RETURN: {
-			return ui_legacy::event::K_ENTER;
+			return Event::K_ENTER;
 		}
 		case SDL_SCANCODE_SPACE: {
-			return ui_legacy::event::K_SPACE;
+			return Event::K_SPACE;
 		}
 		case SDL_SCANCODE_TAB: {
-			return ui_legacy::event::K_TAB;
+			return Event::K_TAB;
 		}
 		case SDL_SCANCODE_BACKSPACE: {
-			return ui_legacy::event::K_BACKSPACE;
+			return Event::K_BACKSPACE;
 		}
 		case SDL_SCANCODE_ESCAPE: {
-			return ui_legacy::event::K_ESCAPE;
+			return Event::K_ESCAPE;
 		}
 		case SDL_SCANCODE_GRAVE: {
-			return ui_legacy::event::K_GRAVE;
+			return Event::K_GRAVE;
 		}
 		case SDL_SCANCODE_PAGEUP: {
-			return ui_legacy::event::K_PAGEUP;
+			return Event::K_PAGEUP;
 		}
 		case SDL_SCANCODE_PAGEDOWN: {
-			return ui_legacy::event::K_PAGEDOWN;
+			return Event::K_PAGEDOWN;
 		}
 		case SDL_SCANCODE_HOME: {
-			return ui_legacy::event::K_HOME;
+			return Event::K_HOME;
 		}
 		case SDL_SCANCODE_END: {
-			return ui_legacy::event::K_END;
+			return Event::K_END;
 		}
 		case SDL_SCANCODE_KP_4: {
-			return ui_legacy::event::K_KP_LEFT;
+			return Event::K_KP_LEFT;
 		}
 		case SDL_SCANCODE_KP_7: {
-			return ui_legacy::event::K_KP_LEFT_UP;
+			return Event::K_KP_LEFT_UP;
 		}
 		case SDL_SCANCODE_KP_8: {
-			return ui_legacy::event::K_KP_UP;
+			return Event::K_KP_UP;
 		}
 		case SDL_SCANCODE_KP_9: {
-			return ui_legacy::event::K_KP_RIGHT_UP;
+			return Event::K_KP_RIGHT_UP;
 		}
 		case SDL_SCANCODE_KP_6: {
-			return ui_legacy::event::K_KP_RIGHT;
+			return Event::K_KP_RIGHT;
 		}
 		case SDL_SCANCODE_KP_3: {
-			return ui_legacy::event::K_KP_RIGHT_DOWN;
+			return Event::K_KP_RIGHT_DOWN;
 		}
 		case SDL_SCANCODE_KP_2: {
-			return ui_legacy::event::K_KP_DOWN;
+			return Event::K_KP_DOWN;
 		}
 		case SDL_SCANCODE_KP_1: {
-			return ui_legacy::event::K_KP_LEFT_DOWN;
+			return Event::K_KP_LEFT_DOWN;
 		}
 		case SDL_SCANCODE_LCTRL: // do we need to differentiate?
 		case SDL_SCANCODE_RCTRL: {
-			return ui_legacy::event::K_CTRL;
+			return Event::K_CTRL;
 		}
 		default: {
-			return ui_legacy::event::K_NONE;
+			return Event::K_NONE;
 		}
 	}
-	return ui_legacy::event::K_NONE;
+	return Event::K_NONE;
 }
 
-ui_legacy::event::key_modifier_t SDL2::GetModifiers( SDL_Keymod modifiers ) const {
+Event::key_modifier_t SDL2::GetModifiers( SDL_Keymod modifiers ) const {
 	ui_legacy::event::key_modifier_t result = ui_legacy::event::KM_NONE;
 
 	if ( ( modifiers & KMOD_LSHIFT ) || ( modifiers & KMOD_RSHIFT ) ) {

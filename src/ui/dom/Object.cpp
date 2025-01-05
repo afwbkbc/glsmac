@@ -36,7 +36,8 @@ Object::~Object() {
 };
 
 const gse::Value Object::Wrap( const bool dynamic ) {
-	gse::type::object_properties_t properties = {};
+	WRAPIMPL_PROPS
+	};
 	for ( const auto& p : m_properties ) {
 		properties.insert(
 			{

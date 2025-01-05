@@ -30,10 +30,10 @@ private:
 		0
 	};
 
-	ui_legacy::event::mouse_button_t GetMouseButton( uint8_t sdl_mouse_button ) const;
+	Event::mouse_button_t GetMouseButton( uint8_t sdl_mouse_button ) const;
 	char GetKeyCode( SDL_Keycode sdl_key_code, SDL_Keymod modifiers ) const;
-	ui_legacy::event::key_code_t GetScanCode( SDL_Scancode code, SDL_Keymod modifiers ) const;
-	ui_legacy::event::key_modifier_t GetModifiers( SDL_Keymod modifiers ) const;
+	Event::key_code_t GetScanCode( SDL_Scancode code, SDL_Keymod modifiers ) const;
+	Event::key_modifier_t GetModifiers( SDL_Keymod modifiers ) const;
 
 	std::unordered_map< uint8_t, types::Vec2< ssize_t > > m_active_mousedowns;
 
