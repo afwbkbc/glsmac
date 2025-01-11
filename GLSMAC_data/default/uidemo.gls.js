@@ -33,6 +33,8 @@
 	}
 	surfaces[4].background = '#ffffff'; // make center visible
 
+	const tex = 'textures/demotex.png';
+
 	// recursive panels
 	const parent = root.panel({
 		align: 'top right',
@@ -40,14 +42,14 @@
 		top: 40,
 		width: 200,
 		height: 200,
-		background: '#004400',
+		background: tex + ':tint(#00ff00,0.08):stretch',
 	});
 	const child1 = parent.panel({
 		left: 0,
 		top: 0,
 		width: 100,
 		height: 100,
-		background: '#006600',
+		background: tex + ':tint(#006600,0.5)',
 	});
 	const child1child1 = child1.panel({
 		align: 'bottom right',
@@ -55,7 +57,7 @@
 		bottom: 0,
 		width: 40,
 		height: 40,
-		background: '#008800',
+		background: tex + ':tint(#008800,0.6)',
 	});
 	const child1child2 = child1.panel({
 		align: 'top right',
@@ -63,7 +65,7 @@
 		bottom: 0,
 		width: 40,
 		height: 40,
-		background: '#008800',
+		background: tex + ':tint(#008800,0.6)',
 	});
 	const child1child3 = child1.panel({
 		align: 'top left',
@@ -71,7 +73,7 @@
 		bottom: 0,
 		width: 40,
 		height: 40,
-		background: '#008800',
+		background: tex + ':tint(#008800,0.6)',
 	});
 	const child1child4 = child1.panel({
 		align: 'bottom left',
@@ -79,7 +81,7 @@
 		bottom: 0,
 		width: 40,
 		height: 40,
-		background: '#008800',
+		background: tex + ':tint(#008800,0.6)',
 	});
 	const child2 = parent.panel({
 		align: 'bottom right',
@@ -87,7 +89,7 @@
 		bottom: 10,
 		width: 60,
 		height: 60,
-		background: '#00aa00',
+		background: tex + ':tint(#aa0000,0.2)',
 	});
 	const child3 = parent.panel({
 		align: 'top right',
@@ -95,7 +97,7 @@
 		top: -10,
 		width: 60,
 		height: 60,
-		background: '#00aa00',
+		background: tex + ':tint(#0000ff,0.2):crop(5,5,8,8)',
 	});
 	child1child2.background = '#00cc00';
 	child1child4.background = '#00ee00';
@@ -109,7 +111,7 @@
 		top: 40,
 		right: 270,
 		height: 120,
-		background: '#000044',
+		background: 'textures/demotex.png',
 	});
 	texts.text({
 		align: 'top left',

@@ -28,6 +28,22 @@ public:
 		color_t( const color_t& color );
 		color_t( const Color& color );
 		void operator=( const Color& color );
+		const color_t operator*( float other ) const {
+			return {
+				red * other,
+				green * other,
+				blue * other,
+				alpha * other,
+			};
+		}
+		const color_t operator+( const color_t& other ) const {
+			return {
+				red + other.red,
+				green + other.green,
+				blue + other.blue,
+				alpha + other.alpha,
+			};
+		}
 		color_t( const channel_t red, const channel_t green, const channel_t blue, const channel_t alpha );
 		color_t( const channel_t red, const channel_t green, const channel_t blue );
 	};
@@ -57,6 +73,9 @@ public:
 	static Color FromRGB( const uint8_t red, const uint8_t green, const uint8_t blue );
 	static rgba_t RGBA( const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha );
 	static rgba_t RGB( const uint8_t red, const uint8_t green, const uint8_t blue );
+
+	static void Convert( const color_t& in, rgba_t& out );
+	static void Convert( const rgba_t& in, color_t& out );
 
 	const std::string ToString() const;
 

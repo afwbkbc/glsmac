@@ -97,7 +97,19 @@ const std::string String::ToLowerCase( const std::string& s ) {
 	return result;
 }
 
-const bool String::ParseColor( const std::string& s, types::Color& color ) {
+const bool String::ParseInt( const std::string& s, long int& result ) {
+	char* r = nullptr;
+	result = strtol( s.c_str(), &r, 10 );
+	return r && *r == '\0';
+}
+
+const bool String::ParseFloat( const std::string& s, float& result ) {
+	char* r = nullptr;
+	result = strtof( s.c_str(), &r );
+	return r && *r == '\0';
+}
+
+const bool String::ParseColor( const std::string& s, types::Color& result ) {
 	if ( s.empty() || s.at( 0 ) != '#' ) {
 		return false;
 	}
@@ -107,15 +119,14 @@ const bool String::ParseColor( const std::string& s, types::Color& color ) {
 	}
 	const auto& str = s.c_str();
 	for ( const char* c = str + 1 ; *c ; c++ ) {
-		const auto cc = *c;
 		if ( ( *c < '0' || *c > '9' ) && ( *c < 'a' || *c > 'f' ) && ( *c < 'A' || *c > 'F' ) ) {
 			return false;
 		}
 	}
-	color.value.red = gethexfloat( str + 1 );
-	color.value.green = gethexfloat( str + 3 );
-	color.value.blue = gethexfloat( str + 5 );
-	color.value.alpha = has_alpha
+	result.value.red = gethexfloat( str + 1 );
+	result.value.green = gethexfloat( str + 3 );
+	result.value.blue = gethexfloat( str + 5 );
+	result.value.alpha = has_alpha
 		? gethexfloat( str + 7 )
 		: 1.0f;
 	return true;

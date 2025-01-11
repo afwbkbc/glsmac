@@ -221,7 +221,7 @@ int main( const int argc, const char* argv[] ) {
 	{
 		game::backend::Game game;
 
-		resource::ResourceManager resource_manager;
+		resource::ResourceManager resource_manager( config.GetDataPath() );
 
 		loader::font::FreeType font_loader;
 		loader::texture::SDL2 texture_loader;

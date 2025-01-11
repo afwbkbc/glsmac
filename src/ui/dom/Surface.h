@@ -31,8 +31,8 @@ private:
 	scene::actor::Mesh* m_actor = nullptr;
 
 	struct {
-		types::texture::Texture* color_texture = nullptr; // this one is owned
-		types::texture::Texture* texture = nullptr; // this one isn't
+		types::texture::Texture* texture = nullptr;
+		bool is_texture_owned = false;
 	} m_background = {};
 
 };

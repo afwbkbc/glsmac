@@ -142,6 +142,24 @@ Color::rgba_t Color::RGB( const uint8_t red, const uint8_t green, const uint8_t 
 	return RGBA( red, green, blue, 255 );
 }
 
+void Color::Convert( const color_t& in, rgba_t& out ) {
+	out =
+		( (uint8_t)(in.red * 255) ) |
+		( (uint8_t)( in.green * 255 ) << 8 ) |
+		( (uint8_t)(in.blue * 255 ) << 16 ) |
+		( (uint8_t)(in.alpha * 255 ) << 24 )
+	;
+}
+
+void Color::Convert( const rgba_t& in, color_t& out ) {
+	out = color_t{
+		(channel_t)( ( in ) & 0xff ) / 255,
+		(channel_t)( ( in >> 8 ) & 0xff ) / 255,
+		(channel_t)( ( in >> 16 ) & 0xff ) / 255,
+		(channel_t)( ( in >> 24 ) & 0xff ) / 255
+	};
+}
+
 const std::string Color::ToString() const {
 	return "{" + std::to_string( value.red ) + ":" + std::to_string( value.green ) + ":" + std::to_string( value.blue ) + ":" + std::to_string( value.alpha ) + "}";
 }

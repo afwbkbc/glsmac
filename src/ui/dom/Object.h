@@ -51,7 +51,7 @@ public:
 	const id_t m_id;
 
 	virtual geometry::Geometry* const GetGeometry() const;
-
+	
 protected:
 
 	UI* const m_ui;

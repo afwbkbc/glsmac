@@ -88,7 +88,7 @@ Engine::Engine(
 	{
 		if ( !m_config->HasLaunchFlag( config::Config::LF_NEWUI ) ) {
 			// with new ui this will happen in script
-			m_resource_manager->Init( m_config->GetPossibleSMACPaths(), m_config->GetSMACType(), m_config->GetDataPath() );
+			m_resource_manager->Init( m_config->GetPossibleSMACPaths(), m_config->GetSMACType() );
 		}
 		t_main->AddModule( m_resource_manager );
 	}

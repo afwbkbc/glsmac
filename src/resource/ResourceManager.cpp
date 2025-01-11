@@ -10,7 +10,7 @@
 
 namespace resource {
 
-ResourceManager::ResourceManager()
+ResourceManager::ResourceManager( const std::string& data_path )
 	: m_resources_to_filenames(
 	{
 
@@ -223,6 +223,14 @@ ResourceManager::ResourceManager()
 
 	}
 ) {
+
+	m_data_path = util::FS::GeneratePath(
+		{
+			data_path,
+			"default"
+		}
+	);
+
 	for ( const auto& it : m_resources_to_filenames ) {
 		m_filenames_to_resources.insert(
 			{
@@ -233,14 +241,8 @@ ResourceManager::ResourceManager()
 	}
 }
 
-void ResourceManager::Init( const std::vector< std::string >& possible_smac_paths, const config::smac_type_t smac_type, const std::string& data_path ) {
+void ResourceManager::Init( const std::vector< std::string >& possible_smac_paths, const config::smac_type_t smac_type ) {
 	const bool print_errors = smac_type != config::ST_AUTO;
-	m_data_path = util::FS::GeneratePath(
-		{
-			data_path,
-			"default"
-		}
-	);
 	for ( const auto& path : possible_smac_paths ) {
 
 		// GOG / Steam
