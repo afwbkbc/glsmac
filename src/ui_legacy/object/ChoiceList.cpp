@@ -103,6 +103,7 @@ void ChoiceList< size_t >::SetChoicesV( const std::vector< std::string >& labels
 	}
 	SetChoices( choices );
 }
+
 template<>
 void ChoiceList< std::string >::SetChoicesV( const std::vector< std::string >& labels ) {
 	THROW( "SetChoicesV not implemented for AssocChoiceList" );
@@ -148,7 +149,7 @@ void ChoiceList< KEY_TYPE >::Align() {
 
 /*template< typename KEY_TYPE >
 void ChoiceList< KEY_TYPE >::OnChange( handler_function_t func ) {
-	On( event::EV_CHANGE, func );
+	On( EV_CHANGE, func );
 }*/
 
 template< typename KEY_TYPE >

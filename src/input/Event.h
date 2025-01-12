@@ -3,35 +3,12 @@
 #include <string>
 #include <cstdint>
 
+#include "Types.h"
+
 namespace input {
 
 class Event {
 public:
-/*
-	typedef uint8_t flag_t;
-	const static flag_t EF_NONE = 0;
-	const static flag_t EF_MOUSE = 1 << 0;
-	const static flag_t EF_KEYBOARD = 1 << 1;*/
-
-	enum type_t {
-		EV_NONE,
-		EV_MOUSE_MOVE,
-		EV_MOUSE_OVER,
-		EV_MOUSE_OUT,
-		EV_MOUSE_DOWN,
-		EV_MOUSE_UP,
-		EV_MOUSE_SCROLL,
-		EV_KEY_DOWN,
-		EV_KEY_UP,
-		EV_KEY_PRESS,
-		EV_BUTTON_CLICK,
-		EV_BUTTON_DOUBLE_CLICK,
-		EV_CHANGE,
-		EV_SELECT,
-		EV_RESIZE,
-		EV_CONFIRM,
-		EV_OFFCLICK,
-	};
 
 	enum mouse_button_t : uint8_t {
 		M_NONE,
@@ -102,13 +79,19 @@ public:
 		} value;
 	} event_data_t;
 
-	type_t type = EV_NONE;
-//	flag_t m_flags = EF_NONE;
+	const event_type_t& type = m_type;
+	const event_flag_t& flags = m_flags;
 	event_data_t data = {};
+
+	void SetType( const event_type_t type );
 
 	const std::string& GetKeyCodeStr() const;
 	const std::string& GetTypeStr() const;
 	const std::string ToString() const;
+
+private:
+	event_type_t m_type = EV_NONE;
+	event_flag_t m_flags = EF_NONE;
 };
 
 }

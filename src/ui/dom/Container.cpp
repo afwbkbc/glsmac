@@ -7,6 +7,7 @@
 #include "Panel.h"
 #include "Text.h"
 #include "scene/actor/Cache.h"
+#include "input/Event.h"
 
 namespace ui {
 namespace dom {
@@ -39,6 +40,21 @@ Container::~Container() {
 	for ( const auto& it : m_children ) {
 		delete it.second;
 	}
+}
+
+const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
+	for ( const auto& child : m_children ) {
+		if (
+			child.second->IsEventRelevant( event ) &&
+			child.second->ProcessEvent( ctx, call_si, event )
+		) {
+			return true;
+		}
+	}
+	if ( event.type == input::EV_MOUSE_MOVE ) {
+		// TODO
+	}
+	return Area::ProcessEvent( ctx, call_si, event );
 }
 
 #define FORWARD_CALL( _method, ... ) \

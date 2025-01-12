@@ -40,24 +40,15 @@ UI::UI( GSE_CALLABLE )
 	m_root = new dom::Root( ctx, call_si, this );
 	Resize();
 
-	g_engine->GetInput()->AddHandler( this, [this, ctx, call_si]( const input::Event& event ) {
-		// create js object
-		gse::type::object_properties_t e = {};
-		switch ( event.type ) {
-			case input::Event::EV_KEY_DOWN: {
-				if ( event.data.key.is_printable ) {
-					e.insert( { "key", VALUE( gse::type::String, std::string(1, event.data.key.key ) ) } );
-				}
-				e.insert({ "code", VALUE( gse::type::String, event.GetKeyCodeStr() ) } );
-				break;
-			}
-			default: {
-				ASSERT( false, "unknown event type: " + std::to_string( event.type ) );
-				return;
-			}
+	g_engine->GetInput()->AddHandler( this, [ this, ctx, call_si ]( const input::Event& event ){
+		try {
+			m_root->ProcessEvent( ctx, call_si, event );
 		}
-		m_root->Trigger( ctx, call_si, event.GetTypeStr(), e );
-		//Log( "EVENT: " + event.ToString() );
+		catch ( gse::Exception& e ) {
+			const auto msg = e.ToStringAndCleanup();
+			Log( msg );
+			throw std::runtime_error( msg );
+		}
 	});
 }
 
@@ -151,7 +142,6 @@ void UI::Resize() {
 		}
 	);
 	m_root->Resize( g->GetViewportWidth(), g->GetViewportHeight() );
-
 }
 
 const types::mesh::coord_t UI::ClampX( const coord_t& x ) const {

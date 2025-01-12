@@ -4,76 +4,85 @@
 
 namespace input {
 
-const std::unordered_map< Event::type_t, std::string > g_type_str = {
+void Event::SetType( const event_type_t type ) {
+	m_type = type;
+	m_flags = EF_NONE;
+	if ( m_type == EV_MOUSE_MOVE || m_type == EV_MOUSE_DOWN || m_type == EV_MOUSE_UP || m_type == EV_MOUSE_OVER || m_type == EV_MOUSE_OUT || m_type == EV_MOUSE_SCROLL ) {
+		m_flags = (event_flag_t)( m_flags | EF_MOUSE );
+	}
+}
+
+const std::unordered_map< event_type_t, std::string > g_type_str = {
 	{
-		Event::EV_NONE,
+		EV_NONE,
 		"",
 	},
 	{
-		Event::EV_MOUSE_MOVE,
+		EV_MOUSE_MOVE,
 		"mousemove"
 	},
 	{
-		Event::EV_MOUSE_OVER,
+		EV_MOUSE_OVER,
 		"mouseover"
 	},
 	{
-		Event::EV_MOUSE_OUT,
+		EV_MOUSE_OUT,
 		"mouseout"
 	},
 	{
-		Event::EV_MOUSE_DOWN,
+		EV_MOUSE_DOWN,
 		"mousedown"
 	},
 	{
-		Event::EV_MOUSE_UP,
+		EV_MOUSE_UP,
 		"mouseup"
 	},
 	{
-		Event::EV_MOUSE_SCROLL,
+		EV_MOUSE_SCROLL,
 		"mousescroll"
 	},
 	{
-		Event::EV_KEY_DOWN,
+		EV_KEY_DOWN,
 		"keydown"
 	},
 	{
-		Event::EV_KEY_UP,
+		EV_KEY_UP,
 		"keyup"
 	},
 	{
-		Event::EV_KEY_PRESS,
+		EV_KEY_PRESS,
 		"keypress"
 	},
 	{
-		Event::EV_BUTTON_CLICK,
+		EV_BUTTON_CLICK,
 		"click"
 	},
 	{
-		Event::EV_BUTTON_DOUBLE_CLICK,
+		EV_BUTTON_DOUBLE_CLICK,
 		"dblclick"
 	},
 	{
-		Event::EV_CHANGE,
+		EV_CHANGE,
 		"change"
 	},
 	{
-		Event::EV_SELECT,
+		EV_SELECT,
 		"select"
 	},
 	{
-		Event::EV_RESIZE,
+		EV_RESIZE,
 		"resize"
 	},
 	{
-		Event::EV_CONFIRM,
+		EV_CONFIRM,
 		"confirm"
 	},
 	{
-		Event::EV_OFFCLICK,
+		EV_OFFCLICK,
 		"offclick"
 	},
 };
+
 const std::string& Event::GetTypeStr() const {
 	ASSERT_NOLOG( g_type_str.find( type ) != g_type_str.end(), "code str not found: " + std::to_string( type ) );
 	return g_type_str.at( type );
@@ -177,6 +186,7 @@ const std::unordered_map< Event::key_code_t, std::string > g_keycode_str = {
 		"CTRL"
 	},
 };
+
 const std::string& Event::GetKeyCodeStr() const {
 	ASSERT_NOLOG( g_keycode_str.find( data.key.code ) != g_keycode_str.end(), "code str not found: " + std::to_string( data.key.code ) );
 	return g_keycode_str.at( data.key.code );

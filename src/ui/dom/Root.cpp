@@ -7,6 +7,13 @@ namespace dom {
 
 Root::Root( GSE_CALLABLE, UI* const ui )
 	: Container( ctx, call_si, ui, nullptr, {}, "root" ) { // the only dom object without parent
+
+	Events(
+		{
+			input::EV_KEY_DOWN,
+		}
+	);
+
 	InitAndValidate( ctx, call_si );
 }
 

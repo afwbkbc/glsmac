@@ -126,6 +126,7 @@ static const std::unordered_map< backend::turn::turn_status_t, std::string > s_s
 		"WAITING FOR PLAYERS",
 	}
 };
+
 void StatusButton::SetStatus( const backend::turn::turn_status_t status ) {
 	if ( m_status_type != status ) {
 		m_status_type = status;

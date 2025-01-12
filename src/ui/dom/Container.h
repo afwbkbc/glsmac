@@ -18,6 +18,8 @@ public:
 
 	scene::actor::Cache* const m_cache;
 
+	virtual const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
+
 protected:
 
 	void WrapSet( const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& call_si ) override;
@@ -42,8 +44,12 @@ private:
 
 protected:
 	friend class ui::Class;
+
 	void SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value ) override;
 	void UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) override;
+
+private:
+	std::unordered_set< Object* > m_mouse_over_objects = {};
 
 };
 

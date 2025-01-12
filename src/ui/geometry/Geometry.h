@@ -17,6 +17,7 @@ class UI;
 namespace geometry {
 
 class Rectangle;
+
 class Text;
 
 class Geometry {
@@ -63,9 +64,11 @@ public:
 		coord_t width;
 		coord_t height;
 		coord_t zindex;
+
 		bool operator!=( const area_t& other ) const {
 			return memcmp( this, &other, sizeof( other ) ) != 0;
 		}
+
 		const bool EnlargeTo( const area_t& other ) {
 			bool changed = false;
 			if ( top > other.top ) {
@@ -91,6 +94,7 @@ public:
 			return changed;
 		}
 	};
+
 	area_t m_area = {};
 
 	// this includes children than may get outside of geometry's area (i.e. with negative coordinates)
@@ -100,6 +104,8 @@ public:
 
 	std::function< void( const area_t& ) > m_on_effective_area_update = nullptr;
 	std::function< void() > m_on_child_update = nullptr;
+
+	const bool Contains( const types::Vec2< ssize_t >& position ) const;
 
 protected:
 

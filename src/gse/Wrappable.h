@@ -3,6 +3,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <map>
+#include <optional>
 
 #include "type/Types.h"
 #include "type/Int.h"
@@ -30,13 +31,20 @@ public:
 	typedef uint16_t callback_id_t;
 	const callback_id_t On( GSE_CALLABLE, const std::string& event, const gse::Value& callback );
 	void Off( GSE_CALLABLE, const std::string& event, const callback_id_t callback_id );
-	const Value Trigger( GSE_CALLABLE, const std::string& event, const type::object_properties_t& args );
+
+	const bool HasHandlers( const std::string& event ) const;
+	const Value Trigger( GSE_CALLABLE, const std::string& event, const type::object_properties_t& args, const std::optional< type::Type::type_t > expected_return_type = {} );
 
 protected:
 	std::unordered_set< type::Object* > m_wrapobjs = {};
 
 private:
-	typedef std::unordered_map< std::string, std::map< uint16_t, gse::Value > > callbacks_t;
+	struct callback_t {
+		gse::Value callable;
+		gse::context::Context* ctx;
+		si_t si;
+	};
+	typedef std::unordered_map< std::string, std::map< uint16_t, callback_t > > callbacks_t;
 	callbacks_t m_callbacks = {};
 	callback_id_t m_next_callback_id = 0;
 };

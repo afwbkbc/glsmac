@@ -8,6 +8,7 @@
 
 #include "ui/Types.h"
 #include "types/Color.h"
+#include "input/Types.h"
 
 #define DOM_ARGS GSE_CALLABLE, UI* const ui, Container* const parent, const properties_t& properties
 #define DOM_ARGS_T DOM_ARGS, const std::string& tag
@@ -18,6 +19,10 @@ namespace scene {
 namespace actor {
 class Actor;
 }
+}
+
+namespace input {
+class Event;
 }
 
 namespace ui {
@@ -51,7 +56,10 @@ public:
 	const id_t m_id;
 
 	virtual geometry::Geometry* const GetGeometry() const;
-	
+
+	virtual const bool IsEventRelevant( const input::Event& event ) const;
+	virtual const bool ProcessEvent( GSE_CALLABLE, const input::Event& event );
+
 protected:
 
 	UI* const m_ui;
@@ -68,13 +76,18 @@ protected:
 
 	virtual void Property( GSE_CALLABLE, const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value = VALUE( gse::type::Undefined ), const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr, const f_on_unset_t& f_on_unset = nullptr );
 	void Method( GSE_CALLABLE, const std::string& name, const gse::Value& callable );
+	void Events( const std::unordered_set< input::event_type_t >& events );
 
 	void ParseColor( GSE_CALLABLE, const std::string& str, types::Color& color ) const;
 
 	virtual void OnPropertyChange( GSE_CALLABLE, const std::string& key, const gse::Value& value ) const;
 	virtual void OnPropertyRemove( GSE_CALLABLE, const std::string& key ) const;
 
+	virtual void SerializeEvent( const input::Event& event, gse::type::object_properties_t& event_data ) const;
+
 private:
+
+	std::unordered_set< input::event_type_t > m_supported_events = {};
 
 	bool m_is_initialized = false;
 
@@ -108,6 +121,7 @@ private:
 
 protected:
 	friend class ui::Class;
+
 	virtual void SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value );
 	virtual void UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key );
 

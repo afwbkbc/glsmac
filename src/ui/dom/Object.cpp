@@ -8,6 +8,8 @@
 #include "ui/UI.h"
 #include "ui/Class.h"
 #include "scene/Scene.h"
+#include "input/Event.h"
+#include "gse/type/Bool.h"
 
 namespace ui {
 namespace dom {
@@ -76,6 +78,22 @@ geometry::Geometry* const Object::GetGeometry() const {
 	return nullptr;
 }
 
+const bool Object::IsEventRelevant( const input::Event& event ) const {
+	return m_supported_events.find( event.type ) != m_supported_events.end();
+}
+
+const bool Object::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
+	ASSERT_NOLOG( IsEventRelevant( event ), "event irrelevant" );
+	const auto& event_type = event.GetTypeStr();
+	if ( HasHandlers( event_type ) ) {
+		gse::type::object_properties_t event_data = {};
+		SerializeEvent( event, event_data );
+		const auto result = Trigger( ctx, call_si, event_type, event_data, gse::type::Type::T_BOOL );
+		return ( (gse::type::Bool*)result.Get() )->value;
+	}
+	return false;
+}
+
 void Object::Actor( scene::actor::Actor* actor ) {
 	actor->SetPositionZ( 0.5f ); // TODO: proper zindex logic
 	if ( m_parent ) {
@@ -124,6 +142,13 @@ void Object::Method( GSE_CALLABLE, const std::string& name, const gse::Value& ca
 	Property( ctx, call_si, name, gse::type::Type::T_CALLABLE, callable, PF_READONLY );
 }
 
+void Object::Events( const std::unordered_set< input::event_type_t >& events ) {
+	for ( const auto& event : events ) {
+		ASSERT_NOLOG( m_supported_events.find( event ) == m_supported_events.end(), "event already handled: " + std::to_string( event ) );
+		m_supported_events.insert( event );
+	}
+}
+
 void Object::ParseColor( GSE_CALLABLE, const std::string& str, types::Color& color ) const {
 	if ( !util::String::ParseColor( str, color ) ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property 'color' has invalid color format. Expected hex values ( #RRGGBB or #RRGGBBAA ), got: " + str );
@@ -152,14 +177,30 @@ void Object::OnPropertyRemove( GSE_CALLABLE, const std::string& key ) const {
 	}
 }
 
-/*Object* Object::Unwrap( const gse::Value& value ) {
-	const auto* valueobj = value.Get()->Deref();
-	if ( !( valueobj->type == gse::type::Type::T_OBJECT ) ) { throw std::runtime_error( "can't unwrap non-object: " + valueobj->Dump() ); };
-	const auto* obj = (gse::type::Object*)valueobj;
-	if ( !( obj->object_class == WRAP_CLASS ) ) { throw std::runtime_error( "can't unwrap object of different class ( " + obj->object_class + " != " + WRAP_CLASS + " )" ); };
-	if ( !( obj->wrapobj ) ) { throw std::runtime_error( "can't unwrap object without internal link" ); };
-	return (Object*)obj->wrapobj;
-}*/
+void Object::SerializeEvent( const input::Event& e, gse::type::object_properties_t& obj ) const {
+	switch ( e.type ) {
+		case input::EV_KEY_DOWN: {
+			if ( e.data.key.is_printable ) {
+				obj.insert(
+					{
+						"key",
+						VALUE( gse::type::String, std::string( 1, e.data.key.key ) )
+					}
+				);
+			}
+			obj.insert(
+				{
+					"code",
+					VALUE( gse::type::String, e.GetKeyCodeStr() )
+				}
+			);
+			break;
+		}
+		default: {
+			ASSERT_NOLOG( false, "unknown event type: " + e.GetTypeStr() );
+		}
+	}
+}
 
 void Object::InitAndValidate( GSE_CALLABLE ) {
 	for ( const auto& p : m_initial_properties ) {

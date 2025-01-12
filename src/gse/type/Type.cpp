@@ -38,6 +38,7 @@ static const std::string s_t_objectref = "Objectref";
 static const std::string s_t_range = "Range";
 static const std::string s_t_loopcontrol = "LoopControl";
 static const std::string s_t_unknown = "Unknown";
+
 const std::string& Type::GetTypeString( const type_t type ) {
 	switch ( type ) {
 		case T_NOTHING:
@@ -77,6 +78,8 @@ const std::string& Type::GetTypeString( const type_t type ) {
 
 const std::string Type::ToString() const {
 	switch ( type ) {
+		case T_NOTHING:
+			return "nothing";
 		case T_UNDEFINED:
 			return "undefined";
 		case T_NULL:

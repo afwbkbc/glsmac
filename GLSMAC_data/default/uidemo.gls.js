@@ -6,6 +6,7 @@
 		if ( e.code == 'ESCAPE' ) {
 			glsmac.exit();
 		}
+		return true;
 	});
 
 	glsmac.ui.class('side-square').set({
@@ -25,11 +26,27 @@
 		['bottom center', '#0000ff'],
 		['bottom right', '#a060a080'],
 	]) {
-		surfaces []= root.surface({
+		const surface = root.surface({
 			class: 'side-square',
 			align: a[0],
 			background: a[1],
 		});
+		surface.on('mousemove', (e) => {
+			#print('MOUSE MOVE', e);
+			return true;
+		});
+		surface.on('mouseover', (e) => {
+			#print('IN', a[0], e);
+			return true;
+		});
+		surface.on('mouseout', (e) => {
+			#print('OUT', a[0], e);
+			return true;
+		});
+		surface.on('mousedown', (e) => {
+			#print('MOUSEDOWN', a[0], e);
+		});
+		surfaces []= surface;
 	}
 	surfaces[4].background = '#ffffff'; // make center visible
 
@@ -187,6 +204,8 @@
 	});
 
 	// 'bouncing ball' animation
+
+	return;
 
 	let ballarea = [180, 420];
 	let ballareaobj = root.panel({

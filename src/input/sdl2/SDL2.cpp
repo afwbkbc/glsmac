@@ -43,7 +43,7 @@ void SDL2::Iterate() {
 	input::Event e = {};
 
 	while ( SDL_PollEvent( &event ) ) {
-		e.type = Event::EV_NONE;
+		e.SetType( EV_NONE );
 		switch ( event.type ) {
 			case SDL_QUIT: {
 				g_engine->ShutDown();
@@ -60,9 +60,16 @@ void SDL2::Iterate() {
 					event.motion.x,
 					event.motion.y
 				};
+				// legacy
 				NEWV( ui_event, ui_legacy::event::MouseMove, event.motion.x, event.motion.y );
 				g_engine->GetUI()->ProcessEvent( ui_event );
 				DELETE( ui_event );
+				// new ui
+				e.SetType( EV_MOUSE_MOVE );
+				e.data.mouse.absolute = {
+					event.motion.x,
+					event.motion.y
+				};
 				break;
 			}
 			case SDL_MOUSEBUTTONDOWN: {
@@ -117,7 +124,7 @@ void SDL2::Iterate() {
 					DELETE( ui_event );
 
 					// new ui
-					e.type = Event::EV_KEY_DOWN;
+					e.SetType( EV_KEY_DOWN );
 					e.data.key.key = keycode;
 					e.data.key.code = scancode;
 					e.data.key.is_printable = keycode > 0;
@@ -139,7 +146,7 @@ void SDL2::Iterate() {
 			}
 				// TODO: keypress?
 		}
-		if ( e.type != Event::EV_NONE ) {
+		if ( e.type != EV_NONE ) {
 			ProcessEvent( e );
 		}
 	}

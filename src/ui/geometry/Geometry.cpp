@@ -118,6 +118,14 @@ void Geometry::OnChildUpdate() {
 	}
 }
 
+const bool Geometry::Contains( const types::Vec2< ssize_t >& position ) const {
+	return
+		position.x >= m_effective_area.left &&
+			position.y >= m_effective_area.top &&
+			position.x <= ( m_effective_area.left + m_effective_area.width ) &&
+			position.y <= ( m_effective_area.top + m_effective_area.height );
+}
+
 void Geometry::Update() {
 	UpdateArea();
 	UpdateImpl();
