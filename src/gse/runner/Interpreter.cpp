@@ -1035,6 +1035,7 @@ Interpreter::Function::Function(
 
 Interpreter::Function::~Function() {
 	context->DecRefs();
+	delete program;
 }
 
 gse::Value Interpreter::Function::Run( context::Context* ctx, const si_t& call_si, const function_arguments_t& arguments ) {

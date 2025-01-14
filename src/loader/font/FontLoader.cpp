@@ -39,7 +39,7 @@ types::Font* FontLoader::GetBuiltinFont( const unsigned char size ) {
 		it = m_builtin_fonts.insert(
 			{
 				size,
-				LoadFontImpl( "<BUILTIN>", util::FS::GetEmbeddedFile( "_resource_font_terminus_TerminusTTF_4_49_3_minified_ttf" ), size )
+				LoadFontImpl( "<BUILTIN>", util::FS::GetEmbeddedFile( "resource_font_terminus_TerminusTTF_4_49_3_minified_ttf" ), size )
 			}
 		).first;
 	}

@@ -19,6 +19,8 @@ namespace texture {
 
 CLASS( TextureLoader, Loader )
 
+	virtual ~TextureLoader();
+
 	typedef std::unordered_set< types::Color::rgba_t > transparent_colors_t;
 
 	// load full texture

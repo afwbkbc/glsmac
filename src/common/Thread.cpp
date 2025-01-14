@@ -39,7 +39,17 @@ void Thread::T_Start() {
 }
 
 bool Thread::T_IsRunning() {
-	return m_state != STATE_INACTIVE;
+	if ( m_state != STATE_INACTIVE ) {
+		return true;
+	}
+	else {
+		if ( m_thread ) {
+			m_thread->join();
+			delete m_thread;
+			m_thread = nullptr;
+		}
+		return false;
+	}
 }
 
 void Thread::T_Stop() {

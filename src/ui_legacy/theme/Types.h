@@ -94,7 +94,7 @@ struct attribute_t {
 		float scalar;
 		types::Color::color_t color;
 		const void* ptr;
-	} value;
+	} value = {};
 };
 typedef attribute_t attributes_t[ATTRIBUTE_TYPE_MAX];
 

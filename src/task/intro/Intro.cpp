@@ -38,9 +38,9 @@ void Intro::Stop() {
 
 	if ( m_theme ) {
 		g_engine->GetUI()->RemoveTheme( m_theme );
+		DELETE( m_theme );
 		m_theme = nullptr;
 	}
-	DELETE( m_theme );
 }
 
 void Intro::Iterate() {

@@ -8,7 +8,7 @@ namespace program {
 Program::Program( const Scope* body )
 	: body( body ) {}
 Program::~Program() {
-	delete body;
+	//delete body; // ?
 }
 
 const std::string Program::Dump() const {

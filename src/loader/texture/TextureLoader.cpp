@@ -247,6 +247,12 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 };
 static const TextureLoader::transparent_colors_t s_no_transparent_colors = {};
 
+TextureLoader::~TextureLoader() {
+	for ( const auto& it : m_color_textures ) {
+		DELETE( it.second );
+	}
+}
+
 const TextureLoader::transparent_colors_t& TextureLoader::GetTCs( const resource::resource_t res ) {
 	const auto& transparent_colors_it = s_tcs.find( res );
 	if ( transparent_colors_it != s_tcs.end() ) {

@@ -241,7 +241,7 @@
 			ballobj.background = #undefined;
 			return true;
 		});
-		#async( 50, () => {
+		#async( 500000, () => {
 			const maxleft = ballarea[0] - ballobj.width - 1;
 			const maxtop = ballarea[1] - ballobj.height - 1;
 			if ( ballobj.left <= 0 || ballobj.left >= maxleft ) {

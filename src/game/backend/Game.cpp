@@ -215,6 +215,12 @@ void Game::Stop() {
 	DELETE( m_am );
 	m_am = nullptr;
 
+	DELETE( m_pending_frontend_requests );
+	m_pending_frontend_requests = nullptr;
+
+	DELETE( m_random );
+	m_random = nullptr;
+
 	MTModule::Stop();
 }
 
