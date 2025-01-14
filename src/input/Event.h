@@ -52,13 +52,10 @@ public:
 
 	typedef union {
 		struct {
-			struct {
-				ssize_t x;
-				ssize_t y;
-			} absolute, relative;
+			ssize_t x;
+			ssize_t y;
 			uint8_t button;
 			ssize_t scroll_y;
-			bool is_outside_parent;
 		} mouse;
 		struct {
 			bool is_printable;

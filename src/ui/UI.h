@@ -43,6 +43,8 @@ CLASS2( UI, common::Class, gse::Wrappable )
 
 	ui::Class* const GetClass( const std::string& name ) const;
 
+	const types::Vec2< ssize_t >& GetLastMousePosition() const;
+
 private:
 	dom::Root* m_root;
 
@@ -50,6 +52,8 @@ private:
 		util::Clamper< float > x;
 		util::Clamper< float > y;
 	} m_clamp = {};
+
+	types::Vec2< ssize_t > m_last_mouse_position = {};
 
 	std::unordered_map< std::string, ui::Class* > m_classes = {};
 

@@ -81,6 +81,8 @@ void Common::AddToContext( context::Context* ctx ) {
 				throw Exception( EC.OPERATION_NOT_SUPPORTED, "Cloning of type " + v.GetTypeString() + " is not supported", ctx, call_si );
 		}
 	} ) );
+
+	ctx->CreateBuiltin( "undefined", VALUE( type::Undefined ) );
 }
 
 }

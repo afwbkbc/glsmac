@@ -444,6 +444,17 @@ try {
 test.assert(invalidclone == null);
 test.assert(was_caught == true);
 
+const testobj6 = {
+	key1: 'value1',
+	key2: 'value2',
+	key3: null,
+};
+test.assert(#to_string(testobj6) == '{ key1: value1, key2: value2, key3: null }');
+
+testobj6.key2 = #undefined;
+test.assert(#to_string(testobj6) == '{ key1: value1, key3: null }');
+
+
 ;
 ;
 ;

@@ -120,10 +120,10 @@ void Geometry::OnChildUpdate() {
 
 const bool Geometry::Contains( const types::Vec2< ssize_t >& position ) const {
 	return
-		position.x >= m_effective_area.left &&
-			position.y >= m_effective_area.top &&
-			position.x <= ( m_effective_area.left + m_effective_area.width ) &&
-			position.y <= ( m_effective_area.top + m_effective_area.height );
+		position.x > m_effective_area.left &&
+			position.y > m_effective_area.top &&
+			position.x <= ( m_effective_area.left + m_effective_area.width + 1 ) &&
+			position.y <= ( m_effective_area.top + m_effective_area.height + 1 );
 }
 
 void Geometry::Update() {
@@ -139,7 +139,7 @@ void Geometry::UpdateArea() {
 	//Log( "Stick bits = " + std::to_string( m_stick_bits ) );
 	area_t object_area = {};
 	object_area.zindex = m_zindex;
-	if ( m_parent != nullptr ) {
+	if ( m_parent ) {
 		const auto area = m_parent->m_area;
 		object_area.left = area.left + m_left;
 		object_area.right = area.right - m_right;

@@ -1,5 +1,6 @@
 #include "Drawable.h"
 
+#include "Container.h"
 #include "ui/geometry/Rectangle.h"
 
 #include "util/String.h"
@@ -33,7 +34,7 @@ static const std::unordered_map< std::string, geometry::Geometry::align_t > s_al
 Drawable::Drawable( DOM_ARGS_T, geometry::Geometry* const geometry )
 	: Object( DOM_ARGS_PASS_T )
 	, m_geometry( geometry ) {
-	
+
 #define GEOMSETTER( _key, _type ) \
     Property( \
         ctx, call_si, _key, gse::type::Type::_type, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v )
@@ -41,6 +42,9 @@ Drawable::Drawable( DOM_ARGS_T, geometry::Geometry* const geometry )
 #define GEOMPROP( _key, _method ) \
     GEOMSETTER( _key, T_INT ) { \
         m_geometry->_method( ( (gse::type::Int*)v.Get() )->value ); \
+        if ( m_parent ) { \
+            m_parent->UpdateMouseOver( ctx, call_si, this ); \
+        } \
     } )
 	GEOMPROP( "left", SetLeft );
 	GEOMPROP( "top", SetTop );
@@ -80,8 +84,10 @@ Drawable::Drawable( DOM_ARGS_T, geometry::Geometry* const geometry )
 			align |= a;
 		}
 		m_geometry->SetAlign( (geometry::Geometry::align_t)align );
+		if ( m_parent ) {
+			m_parent->UpdateMouseOver( ctx, call_si, this );
+		}
 	} );
-
 }
 
 Drawable::~Drawable() {

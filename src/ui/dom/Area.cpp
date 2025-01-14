@@ -16,7 +16,13 @@ Area::Area( DOM_ARGS_T )
 	)
 ) {
 
-	Events( { input::EV_MOUSE_MOVE } );
+	Events(
+		{
+			input::EV_MOUSE_MOVE,
+			input::EV_MOUSE_OVER,
+			input::EV_MOUSE_OUT,
+		}
+	);
 
 #define GEOMSETTER( _key, _type ) \
     Property( \
@@ -25,6 +31,9 @@ Area::Area( DOM_ARGS_T )
 #define GEOMPROP( _key, _method ) \
     GEOMSETTER( _key, T_INT ) { \
         m_geometry->_method( ( (gse::type::Int*)v.Get() )->value ); \
+        if ( m_parent ) { \
+            m_parent->UpdateMouseOver( ctx, call_si, this ); \
+        } \
     } )
 	GEOMPROP( "width", SetWidth );
 	GEOMPROP( "height", SetHeight );
@@ -34,10 +43,10 @@ Area::Area( DOM_ARGS_T )
 
 const bool Area::IsEventRelevant( const input::Event& event ) const {
 	if ( event.flags & input::EF_MOUSE ) {
-		if ( !m_geometry->Contains(
+		if ( ( event.type == input::EV_MOUSE_OUT ) == m_geometry->Contains(
 			{
-				event.data.mouse.absolute.x,
-				event.data.mouse.absolute.y
+				event.data.mouse.x,
+				event.data.mouse.y
 			}
 		) ) {
 			return false;
@@ -48,30 +57,32 @@ const bool Area::IsEventRelevant( const input::Event& event ) const {
 
 void Area::SerializeEvent( const input::Event& e, gse::type::object_properties_t& obj ) const {
 	switch ( e.type ) {
-		case input::EV_MOUSE_MOVE: {
+		case input::EV_MOUSE_MOVE:
+		case input::EV_MOUSE_OVER:
+		case input::EV_MOUSE_OUT: {
 			const auto& area = m_geometry->GetEffectiveArea();
 			obj.insert(
 				{
 					"x",
-					VALUE( gse::type::Int, e.data.mouse.absolute.x - area.left )
+					VALUE( gse::type::Int, e.data.mouse.x - area.left )
 				}
 			);
 			obj.insert(
 				{
 					"y",
-					VALUE( gse::type::Int, e.data.mouse.absolute.y - area.top )
+					VALUE( gse::type::Int, e.data.mouse.y - area.top )
 				}
 			);
 			obj.insert(
 				{
 					"ax",
-					VALUE( gse::type::Int, e.data.mouse.absolute.x )
+					VALUE( gse::type::Int, e.data.mouse.x )
 				}
 			);
 			obj.insert(
 				{
 					"ay",
-					VALUE( gse::type::Int, e.data.mouse.absolute.y )
+					VALUE( gse::type::Int, e.data.mouse.y )
 				}
 			);
 			break;

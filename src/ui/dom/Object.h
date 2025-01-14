@@ -57,10 +57,12 @@ public:
 
 	virtual geometry::Geometry* const GetGeometry() const;
 
-	virtual const bool IsEventRelevant( const input::Event& event ) const;
-	virtual const bool ProcessEvent( GSE_CALLABLE, const input::Event& event );
+	const bool ProcessEvent( GSE_CALLABLE, const input::Event& event );
 
 protected:
+
+	virtual const bool IsEventRelevant( const input::Event& event ) const;
+	virtual const bool ProcessEventImpl( GSE_CALLABLE, const input::Event& event );
 
 	UI* const m_ui;
 	const properties_t m_initial_properties;

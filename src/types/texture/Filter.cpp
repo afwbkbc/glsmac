@@ -85,7 +85,7 @@ void Filter::Crop( const size_t x1, const size_t y1, const size_t x2, const size
 		memcpy( colormap + y * w, m_colormap + ( y1 + y ) * w, w * sizeof( types::Color::color_t ) );
 	}
 
-	delete ( m_colormap );
+	free( m_colormap );
 	m_colormap = colormap;
 	m_width = w;
 	m_height = h;

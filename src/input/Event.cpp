@@ -1,5 +1,7 @@
 #include "Event.h"
 
+#include <unordered_map>
+
 #include "common/Common.h"
 
 namespace input {

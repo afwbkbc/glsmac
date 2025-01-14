@@ -66,10 +66,8 @@ void SDL2::Iterate() {
 				DELETE( ui_event );
 				// new ui
 				e.SetType( EV_MOUSE_MOVE );
-				e.data.mouse.absolute = {
-					event.motion.x,
-					event.motion.y
-				};
+				e.data.mouse.x = event.motion.x;
+				e.data.mouse.y = event.motion.y;
 				break;
 			}
 			case SDL_MOUSEBUTTONDOWN: {

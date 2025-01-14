@@ -65,8 +65,14 @@ void Object::WrapSet( const std::string& key, const gse::Value& value, gse::cont
 	if ( def_it->second.flags & PF_READONLY ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' is read-only" );
 	}
-	SetProperty( ctx, call_si, &m_manual_properties, key, value );
-	SetProperty( ctx, call_si, &m_properties, key, value );
+	if ( value.Get()->type != gse::type::Type::T_UNDEFINED ) {
+		SetProperty( ctx, call_si, &m_manual_properties, key, value );
+		SetProperty( ctx, call_si, &m_properties, key, value );
+	}
+	else {
+		UnsetProperty( ctx, call_si, &m_manual_properties, key );
+		UnsetProperty( ctx, call_si, &m_properties, key );
+	}
 }
 
 void Object::WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& call_si ) {
@@ -78,11 +84,24 @@ geometry::Geometry* const Object::GetGeometry() const {
 	return nullptr;
 }
 
+const bool Object::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
+	if ( IsEventRelevant( event ) ) {
+		if ( event.type == input::EV_MOUSE_OUT ) {
+			int a = 5;
+			a++;
+		}
+		return ProcessEventImpl( ctx, call_si, event );
+	}
+	else {
+		return false;
+	}
+}
+
 const bool Object::IsEventRelevant( const input::Event& event ) const {
 	return m_supported_events.find( event.type ) != m_supported_events.end();
 }
 
-const bool Object::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
+const bool Object::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 	ASSERT_NOLOG( IsEventRelevant( event ), "event irrelevant" );
 	const auto& event_type = event.GetTypeStr();
 	if ( HasHandlers( event_type ) ) {
@@ -245,6 +264,13 @@ void Object::SetProperty( GSE_CALLABLE, properties_t* const properties, const st
 void Object::UnsetProperty( gse::context::Context* ctx, const gse::si_t& call_si, properties_t* const properties, const std::string& key ) {
 	const auto& it = properties->find( key );
 	if ( it != properties->end() && it->second.Get()->type != gse::type::Type::T_UNDEFINED ) {
+		if ( properties == &m_properties && m_class ) {
+			const auto& it2 = m_class->GetProperties().find( key );
+			if ( it2 != m_class->GetProperties().end() ) {
+				SetProperty( ctx, call_si, properties, it2->first, it2->second );
+				return;
+			}
+		}
 		properties->erase( it );
 		if ( m_is_initialized && properties == &m_properties ) {
 			OnPropertyRemove( ctx, call_si, key );
@@ -263,6 +289,10 @@ void Object::UnsetClass( GSE_CALLABLE ) {
 void Object::SetClass( GSE_CALLABLE, const std::string& name ) {
 	if ( m_class ) {
 		UnsetClass( ctx, call_si );
+	}
+	if ( name == "ball1" ) {
+		int a = 5;
+		a++;
 	}
 	m_class = m_ui->GetClass( name );
 	if ( !m_class ) {

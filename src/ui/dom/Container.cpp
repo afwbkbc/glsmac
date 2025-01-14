@@ -2,6 +2,7 @@
 
 #include "ui/geometry/Geometry.h"
 #include "ui/UI.h"
+#include "ui/Class.h"
 
 #include "Surface.h"
 #include "Panel.h"
@@ -42,19 +43,112 @@ Container::~Container() {
 	}
 }
 
-const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
+void Container::UpdateMouseOver( GSE_CALLABLE, Object* child ) {
+	if ( m_processing_mouse_overs || m_children.find( child->m_id ) == m_children.end() ) {
+		// maybe during initialization
+		return;
+	}
+	const auto& last_mouse_pos = m_ui->GetLastMousePosition();
+	const auto is_mouseover = child->GetGeometry()->Contains( last_mouse_pos );
+	const auto was_mouseover = m_mouse_over_objects.find( child ) != m_mouse_over_objects.end();
+	if ( is_mouseover != was_mouseover ) {
+		input::Event e;
+		if ( is_mouseover ) {
+			e.SetType( input::EV_MOUSE_OVER );
+			m_mouse_over_objects.insert( child );
+		}
+		else {
+			e.SetType( input::EV_MOUSE_OUT );
+			m_mouse_over_objects.erase( child );
+		}
+		e.data.mouse = { last_mouse_pos.x, last_mouse_pos.y };
+		child->ProcessEvent( ctx, call_si, e );
+	}
+}
+
+const bool Container::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
+	switch ( event.type ) {
+		case input::EV_MOUSE_OUT: {
+			input::Event e = {};
+			m_processing_mouse_overs = true;
+			for ( const auto& object : m_mouse_over_objects ) {
+				ASSERT_NOLOG( object->GetGeometry(), "object has no geometry on mouseout" );
+				if ( e.type == input::EV_NONE ) {
+					e.SetType( input::EV_MOUSE_OUT );
+					e.data.mouse = {
+						event.data.mouse.x,
+						event.data.mouse.y
+					};
+				}
+				object->ProcessEvent( ctx, call_si, e );
+			}
+			m_processing_mouse_overs = false;
+			m_mouse_over_objects.clear();
+			break;
+		}
+		case input::EV_MOUSE_MOVE: {
+			const types::Vec2< ssize_t > mouse_coords = {
+				event.data.mouse.x,
+				event.data.mouse.y
+			};
+			std::unordered_set< Object* > mouse_out_objects = {};
+			std::unordered_set< Object* > mouse_over_objects = {};
+			{
+				input::Event e = {};
+				m_processing_mouse_overs = true;
+				for ( const auto& object : m_mouse_over_objects ) {
+					ASSERT_NOLOG( object->GetGeometry(), "object has no geometry on mouseout" );
+					if ( !object->GetGeometry()->Contains( mouse_coords ) ) {
+						if ( e.type == input::EV_NONE ) {
+							e.SetType( input::EV_MOUSE_OUT );
+							e.data.mouse = event.data.mouse;
+						}
+						mouse_out_objects.insert( object );
+						object->ProcessEvent( ctx, call_si, e );
+					}
+					else {
+						mouse_over_objects.insert( object );
+					}
+				}
+				if ( mouse_over_objects.size() != m_mouse_over_objects.size() ) {
+					m_mouse_over_objects = mouse_over_objects;
+				}
+				m_processing_mouse_overs = false;
+			}
+			{
+				input::Event e = {};
+				m_processing_mouse_overs = true;
+				for ( const auto& it : m_children ) {
+					auto* object = it.second;
+					const auto* geometry = object->GetGeometry();
+					if (
+						geometry &&
+							m_mouse_over_objects.find( object ) == m_mouse_over_objects.end() &&
+							mouse_out_objects.find( object ) == mouse_out_objects.end() &&
+							geometry->Contains( mouse_coords )
+						) {
+						if ( e.type == input::EV_NONE ) {
+							e.SetType( input::EV_MOUSE_OVER );
+							e.data.mouse = event.data.mouse;
+						}
+						m_mouse_over_objects.insert( object );
+						object->ProcessEvent( ctx, call_si, e );
+					}
+				}
+				m_processing_mouse_overs = false;
+			}
+			break;
+		}
+		default: {}
+	}
 	for ( const auto& child : m_children ) {
 		if (
-			child.second->IsEventRelevant( event ) &&
 			child.second->ProcessEvent( ctx, call_si, event )
-		) {
+			) {
 			return true;
 		}
 	}
-	if ( event.type == input::EV_MOUSE_MOVE ) {
-		// TODO
-	}
-	return Area::ProcessEvent( ctx, call_si, event );
+	return Area::ProcessEventImpl( ctx, call_si, event );
 }
 
 #define FORWARD_CALL( _method, ... ) \
@@ -67,7 +161,20 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	}
 
 void Container::WrapSet( const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& call_si ) {
-	FORWARD_CALL( WrapSet, key, value, ctx, call_si )
+	auto forward_it = m_forwarded_properties.find( key );
+	if ( forward_it != m_forwarded_properties.end() ) {
+		if ( value.Get()->type == gse::type::Type::T_UNDEFINED && m_class ) {
+			const auto it = m_class->GetProperties().find( key );
+			if ( it != m_class->GetProperties().end() ) {
+				forward_it->second->WrapSet( it->first, it->second, ctx, call_si );
+				return;
+			}
+		}
+		forward_it->second->WrapSet( key, value, ctx, call_si );
+	}
+	else {
+		Object::WrapSet( key, value, ctx, call_si );
+	}
 }
 
 void Container::Property( GSE_CALLABLE, const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value, const property_flag_t flags, const f_on_set_t& f_on_set, const f_on_unset_t& f_on_unset ) {

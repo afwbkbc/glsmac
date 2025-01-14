@@ -41,6 +41,12 @@ UI::UI( GSE_CALLABLE )
 	Resize();
 
 	g_engine->GetInput()->AddHandler( this, [ this, ctx, call_si ]( const input::Event& event ){
+		if ( event.type == input::EV_MOUSE_MOVE ) {
+			m_last_mouse_position = {
+				event.data.mouse.x,
+				event.data.mouse.y
+			};
+		}
 		try {
 			m_root->ProcessEvent( ctx, call_si, event );
 		}
@@ -167,6 +173,10 @@ ui::Class* const UI::GetClass( const std::string& name ) const {
 	else {
 		return nullptr;
 	}
+}
+
+const types::Vec2< ssize_t >& UI::GetLastMousePosition() const {
+	return m_last_mouse_position;
 }
 
 }

@@ -39,13 +39,25 @@ const Value& Object::Get( const object_key_t& key ) const {
 }
 
 void Object::Set( const object_key_t& key, const Value& new_value, context::Context* ctx, const si_t& si ) {
-	if ( wrapobj ) {
-		if ( !wrapsetter ) {
-			throw gse::Exception( EC.INVALID_ASSIGNMENT, "Property is read-only", ctx, si );
+	const bool has_value = new_value.Get()->type != T_UNDEFINED;
+	const auto it = value.find( key );
+	if (
+		( has_value && ( it == value.end() || new_value != it->second ) ) ||
+			( !has_value && it != value.end() )
+		) {
+		if ( wrapobj ) {
+			if ( !wrapsetter ) {
+				throw gse::Exception( EC.INVALID_ASSIGNMENT, "Property is read-only", ctx, si );
+			}
+			wrapsetter( wrapobj, key, new_value, ctx, si );
 		}
-		wrapsetter( wrapobj, key, new_value, ctx, si );
+		if ( has_value ) {
+			value.insert_or_assign( key, new_value );
+		}
+		else {
+			value.erase( key );
+		}
 	}
-	value.insert_or_assign( key, new_value );
 }
 
 const Value Object::GetRef( const object_key_t& key ) {

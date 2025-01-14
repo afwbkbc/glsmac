@@ -18,9 +18,11 @@ public:
 
 	scene::actor::Cache* const m_cache;
 
-	virtual const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
+	void UpdateMouseOver( GSE_CALLABLE, Object* child );
 
 protected:
+
+	virtual const bool ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) override;
 
 	void WrapSet( const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& call_si ) override;
 
@@ -50,6 +52,7 @@ protected:
 
 private:
 	std::unordered_set< Object* > m_mouse_over_objects = {};
+	bool m_processing_mouse_overs = false;
 
 };
 

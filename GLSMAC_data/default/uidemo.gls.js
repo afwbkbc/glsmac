@@ -31,20 +31,22 @@
 			align: a[0],
 			background: a[1],
 		});
-		surface.on('mousemove', (e) => {
-			#print('MOUSE MOVE', e);
-			return true;
-		});
+		const orig_color = a[1];
 		surface.on('mouseover', (e) => {
-			#print('IN', a[0], e);
+			surface.background = '#ffffff';
+			surface.width = 30;
+			surface.height = 30;
 			return true;
 		});
 		surface.on('mouseout', (e) => {
-			#print('OUT', a[0], e);
+			surface.background = orig_color;
+			surface.width = #undefined;
+			surface.height = #undefined;
 			return true;
 		});
 		surface.on('mousedown', (e) => {
-			#print('MOUSEDOWN', a[0], e);
+			#print('MOUSEDOWN', surface.align, e);
+			return true;
 		});
 		surfaces []= surface;
 	}
@@ -205,8 +207,6 @@
 
 	// 'bouncing ball' animation
 
-	return;
-
 	let ballarea = [180, 420];
 	let ballareaobj = root.panel({
 		align: 'bottom right',
@@ -232,7 +232,16 @@
 		ballobj.text({
 			class: ball.class + 'text',
 		});
-		#async( 10, () => {
+
+		ballobj.on('mouseover', (e) => {
+			ballobj.background = '#ffffff';
+			return true;
+		});
+		ballobj.on('mouseout', (e) => {
+			ballobj.background = #undefined;
+			return true;
+		});
+		#async( 50, () => {
 			const maxleft = ballarea[0] - ballobj.width - 1;
 			const maxtop = ballarea[1] - ballobj.height - 1;
 			if ( ballobj.left <= 0 || ballobj.left >= maxleft ) {
