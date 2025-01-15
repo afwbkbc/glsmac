@@ -11,8 +11,7 @@ Context::Context( gse::GSE* gse )
 	: m_gse( gse ) {
 }
 
-Context::~Context() {
-}
+Context::~Context() {}
 
 GSE* Context::GetGSE() const {
 	return m_gse;
@@ -22,11 +21,13 @@ void Context::IncRefs() {
 	m_refs++;
 }
 
-void Context::DecRefs() {
+const bool Context::DecRefs() {
 	ASSERT_NOLOG( m_refs > 0, "refs not positive" );
 	if ( !--m_refs ) {
 		DELETE( this );
+		return true;
 	}
+	return false;
 }
 
 const bool Context::HasVariable( const std::string& name ) {

@@ -14,6 +14,7 @@ class ChildContext : public Context {
 public:
 
 	ChildContext( GSE* gse, Context* parent_context, Context* caller_context, const si_t& si, const bool is_traceable = true );
+	~ChildContext();
 
 	Context* GetParentContext() const override;
 	Context* GetCallerContext() const override;

@@ -11,6 +11,11 @@ ChildContext::ChildContext( GSE* gse, Context* parent_context, Context* caller_c
 	, m_caller_context( caller_context )
 	, m_si( si )
 	, m_is_traceable( is_traceable ) {
+	m_caller_context->IncRefs();
+}
+
+ChildContext::~ChildContext() {
+	m_caller_context->DecRefs();
 }
 
 Context* ChildContext::GetParentContext() const {

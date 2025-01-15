@@ -70,6 +70,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 				}
 				catch ( Exception& e ) {
 					last_error = e.ToStringAndCleanup();
+					DELETE( context );
 					context = nullptr;
 				}
 				catch ( std::runtime_error const& e ) {

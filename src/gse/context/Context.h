@@ -36,7 +36,7 @@ public:
 	GSE* GetGSE() const;
 
 	void IncRefs();
-	void DecRefs();
+	const bool DecRefs();
 
 	const bool HasVariable( const std::string& name );
 	const Value GetVariable( const std::string& name, const si_t* si );

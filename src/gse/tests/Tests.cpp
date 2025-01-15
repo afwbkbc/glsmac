@@ -1900,7 +1900,7 @@ const Program* GetTestProgram() {
 					}
 				),
 			}
-		)
+		), true
 	);
 	return program;
 }

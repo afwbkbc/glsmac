@@ -55,7 +55,6 @@ const gse::Value Interpreter::Execute( context::Context* ctx, const Program* pro
 }
 
 const gse::Value Interpreter::EvaluateScope( context::Context* ctx, const Scope* scope ) const {
-	ctx->IncRefs(); // TODO: fix/improve context memory management
 	const auto subctx = ctx->ForkContext( ctx, scope->m_si, false );
 	subctx->IncRefs();
 
@@ -800,7 +799,6 @@ const gse::Value Interpreter::EvaluateOperand( context::Context* ctx, const Oper
 			return VALUE( type::Array, elements );
 		}
 		case Operand::OT_OBJECT: {
-			ctx->IncRefs(); // TODO: cleanup
 			const auto objctx = ctx->ForkContext( ctx, operand->m_si, false );
 			objctx->IncRefs();
 			auto result = VALUE( type::Object, object_properties_t{} );
@@ -829,7 +827,7 @@ const gse::Value Interpreter::EvaluateOperand( context::Context* ctx, const Oper
 				ASSERT( it->hints == VH_NONE, "function parameters can't have modifiers" );
 				parameters.push_back( it->name );
 			}
-			return VALUE( Function, this, ctx, parameters, new Program( func->body ) );
+			return VALUE( Function, this, ctx, parameters, new Program( func->body, false ) );
 		}
 		case Operand::OT_CALL: {
 			const auto* call = (Call*)operand;
@@ -1034,17 +1032,15 @@ Interpreter::Function::Function(
 }
 
 Interpreter::Function::~Function() {
-	context->DecRefs();
 	delete program;
+	context->DecRefs();
 }
 
 gse::Value Interpreter::Function::Run( context::Context* ctx, const si_t& call_si, const function_arguments_t& arguments ) {
-	ctx->IncRefs();
 	auto* subctx = context->ForkContext( ctx, call_si, true, parameters, arguments );
 	subctx->IncRefs();
 	const auto result = runner->Execute( subctx, program );
 	subctx->DecRefs();
-	ctx->DecRefs();
 	return result;
 }
 

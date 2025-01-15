@@ -114,7 +114,6 @@ const Value GSE::RunScript( context::Context* ctx, const si_t& si, const std::st
 	};
 	try {
 		cache.context = CreateGlobalContext( full_path );
-		cache.context->IncRefs();
 #ifdef DEBUG
 		// copy mocks
 		if ( ctx && ctx->HasVariable( "test" ) ) {
@@ -127,7 +126,7 @@ const Value GSE::RunScript( context::Context* ctx, const si_t& si, const std::st
 		cache.runner = GetRunner();
 		cache.context->IncRefs();
 		cache.result = cache.runner->Execute( cache.context, cache.program );
-		cache.context->DecRefs();
+		cache.Cleanup();
 		m_include_cache.insert_or_assign( path, cache );
 		return cache.result;
 	}
@@ -167,8 +166,9 @@ Async* GSE::GetAsync() {
 void GSE::include_cache_t::Cleanup() {
 	{
 		if ( context ) {
-			context->DecRefs();
-			context = nullptr;
+			if ( context->DecRefs() ) {
+				context = nullptr;
+			}
 		}
 		if ( program ) {
 			DELETE( program );
