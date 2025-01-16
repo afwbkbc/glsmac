@@ -3,6 +3,7 @@
 #include "ChildContext.h"
 #include "gse/Exception.h"
 #include "common/Common.h"
+#include "gse/type/Callable.h"
 
 namespace gse {
 namespace context {
@@ -11,10 +12,45 @@ Context::Context( gse::GSE* gse )
 	: m_gse( gse ) {
 }
 
-Context::~Context() {}
+Context::~Context() {
+	/*{
+		const auto children = m_child_contexts;
+		m_child_contexts.clear();
+		for ( const auto& c : children ) {
+			DELETE( c );
+		}
+	}
+	{
+		const auto children = m_child_objects;
+		m_child_objects.clear();
+		for ( const auto& c : children ) {
+			DELETE( c );
+		}
+	}*/
+}
 
 GSE* Context::GetGSE() const {
 	return m_gse;
+}
+
+void Context::Begin() {
+	IncRefs();
+}
+
+const bool Context::End() {
+	std::vector< std::string > callables_to_remove = {};
+	for ( const auto& v : m_variables ) {
+		if ( v.second.value.Get()->type == type::Type::T_CALLABLE ) {
+			auto* c = (type::Callable*)v.second.value.Get();
+			if ( c->m_cleanup_needed ) {
+				callables_to_remove.push_back( v.first );
+			}
+		}
+	}
+	for ( const auto& c : callables_to_remove ) {
+		m_variables.erase( c );
+	}
+	return DecRefs();
 }
 
 void Context::IncRefs() {
@@ -167,6 +203,34 @@ ChildContext* const Context::ForkContext(
 		result->CreateVariable( parameters[ i ], arguments[ i ], &call_si );
 	}
 	return result;
+}
+
+void Context::AddChildContext( ChildContext* const child ) {
+	ASSERT_NOLOG( m_child_contexts.find( child ) == m_child_contexts.end(), "child context already added" );
+	IncRefs();
+	m_child_contexts.insert( child );
+}
+
+void Context::RemoveChildContext( ChildContext* const child ) {
+	if ( !m_child_contexts.empty() ) {
+		ASSERT_NOLOG( m_child_contexts.find( child ) != m_child_contexts.end(), "child context not found" );
+		m_child_contexts.erase( child );
+		DecRefs();
+	}
+}
+
+void Context::AddChildObject( type::Type* const child ) {
+	ASSERT_NOLOG( m_child_objects.find( child ) == m_child_objects.end(), "child context already added" );
+	IncRefs();
+	m_child_objects.insert( child );
+}
+
+void Context::RemoveChildObject( type::Type* const child ) {
+	if ( !m_child_objects.empty() ) {
+		ASSERT_NOLOG( m_child_objects.find( child ) != m_child_objects.end(), "child context not found" );
+		m_child_objects.erase( child );
+		DecRefs();
+	}
 }
 
 }

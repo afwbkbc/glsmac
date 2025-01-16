@@ -26,7 +26,7 @@ GSE::~GSE() {
 		DELETE( it.second );
 	}
 	for ( auto& it : m_include_cache ) {
-		it.second.Cleanup();
+		it.second.Cleanup( true );
 	}
 }
 
@@ -124,9 +124,8 @@ const Value GSE::RunScript( context::Context* ctx, const si_t& si, const std::st
 		cache.program = parser->Parse();
 		DELETE( parser );
 		cache.runner = GetRunner();
-		cache.context->IncRefs();
+		cache.context->Begin();
 		cache.result = cache.runner->Execute( cache.context, cache.program );
-		cache.Cleanup();
 		m_include_cache.insert_or_assign( path, cache );
 		return cache.result;
 	}
@@ -163,10 +162,19 @@ Async* GSE::GetAsync() {
 	return m_async;
 }
 
-void GSE::include_cache_t::Cleanup() {
+void GSE::include_cache_t::Cleanup( const bool force ) {
 	{
+		if ( force ) {
+			result = VALUE( type::Undefined );
+		}
 		if ( context ) {
-			if ( context->DecRefs() ) {
+			if ( !force ) {
+				if ( context->End() ) {
+					context = nullptr;
+				}
+			}
+			else {
+				DELETE( context );
 				context = nullptr;
 			}
 		}

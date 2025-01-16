@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "gse/Types.h"
 #include "gse/type/Types.h"
@@ -12,6 +13,10 @@
 namespace gse {
 
 class GSE;
+
+namespace type {
+class Object;
+}
 
 namespace context {
 
@@ -34,6 +39,9 @@ public:
 	virtual ~Context();
 
 	GSE* GetGSE() const;
+
+	void Begin();
+	const bool End();
 
 	void IncRefs();
 	const bool DecRefs();
@@ -75,6 +83,20 @@ protected:
 	ref_contexts_t m_ref_contexts = {};
 
 	std::unordered_map< const type::Type*, Value > m_persisted_values = {};
+
+private:
+	std::unordered_set< ChildContext* > m_child_contexts = {};
+	std::unordered_set< type::Type* > m_child_objects = {};
+
+private:
+	friend class ChildContext;
+	void AddChildContext( ChildContext* const child );
+	void RemoveChildContext( ChildContext* const child );
+
+private:
+	friend class type::Object;
+	void AddChildObject( type::Type* const child );
+	void RemoveChildObject( type::Type* const child );
 
 };
 

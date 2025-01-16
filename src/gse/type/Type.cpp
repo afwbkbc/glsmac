@@ -13,6 +13,7 @@
 #include "ArrayRef.h"
 #include "ArrayRangeRef.h"
 #include "ObjectRef.h"
+#include "ValueRef.h"
 #include "Range.h"
 #include "Exception.h"
 #include "LoopControl.h"
@@ -35,6 +36,7 @@ static const std::string s_t_callable = "Callable";
 static const std::string s_t_arrayref = "Arrayref";
 static const std::string s_t_arrayrangeref = "Arrayrangeref";
 static const std::string s_t_objectref = "Objectref";
+static const std::string s_t_valueref = "Valueref";
 static const std::string s_t_range = "Range";
 static const std::string s_t_loopcontrol = "LoopControl";
 static const std::string s_t_unknown = "Unknown";
@@ -67,6 +69,8 @@ const std::string& Type::GetTypeString( const type_t type ) {
 			return s_t_arrayrangeref;
 		case T_OBJECTREF:
 			return s_t_objectref;
+		case T_VALUEREF:
+			return s_t_valueref;
 		case T_RANGE:
 			return s_t_range;
 		case T_LOOPCONTROL:
@@ -140,6 +144,10 @@ const std::string Type::ToString() const {
 		case T_OBJECTREF: {
 			const auto* that = (ObjectRef*)this;
 			return that->object->Get( that->key ).ToString();
+		}
+		case T_VALUEREF: {
+			const auto* that = (ValueRef*)this;
+			return that->target->ToString();
 		}
 		case T_RANGE: {
 			const auto* that = (Range*)this;
@@ -240,6 +248,10 @@ const std::string Type::Dump() const {
 			const auto* that = (ObjectRef*)this;
 			return "objectref{" + std::to_string( (ptr_int_t)that->object ) + "," + that->key + "}";
 		}
+		case T_VALUEREF: {
+			const auto* that = (ValueRef*)this;
+			return "valueref{" + std::to_string( (ptr_int_t)that->target ) + "}";
+		}
 		case T_RANGE: {
 			const auto* that = (Range*)this;
 			return "range{" + (
@@ -272,6 +284,10 @@ const Type* Type::Deref() const {
 		case T_OBJECTREF: {
 			const auto* that = (ObjectRef*)this;
 			return that->object->Get( that->key ).Get();
+		}
+		case T_VALUEREF: {
+			const auto* that = (ValueRef*)this;
+			return that->target;
 		}
 		default:
 			return this;
@@ -467,7 +483,7 @@ Value Type::Unserialize( types::Buffer* buf ) {
 					}
 				);
 			}
-			return VALUE( Object, properties );
+			return VALUE( Object, nullptr, properties );
 		}
 		default:
 			THROW( "invalid/unsupported type for unserialization: " + GetTypeString( type ) );

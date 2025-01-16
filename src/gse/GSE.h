@@ -87,7 +87,7 @@ private:
 		// TODO: why can't we delete these two upon getting result?
 		const program::Program* program;
 		const runner::Runner* runner;
-		void Cleanup();
+		void Cleanup( const bool force = false );
 	};
 	std::unordered_map< std::string, include_cache_t > m_include_cache = {};
 

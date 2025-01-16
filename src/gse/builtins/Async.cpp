@@ -33,7 +33,7 @@ void Async::AddToContext( context::Context* ctx ) {
 			}
 		};
 
-		return VALUE( type::Object, properties, "async" );
+		return VALUE( type::Object, nullptr, properties, "async" );
 	} ) );
 
 }

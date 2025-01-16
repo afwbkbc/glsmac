@@ -62,7 +62,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 					const auto source = util::FS::ReadTextFile( script, GSE::PATH_SEPARATOR );
 					parser = gse->GetParser( script, source );
 					context = gse->CreateGlobalContext( script );
-					context->IncRefs();
+					context->Begin();
 					mocks::AddMocks( context, { script } );
 					program = parser->Parse();
 					runner = gse->GetRunner();
@@ -70,8 +70,10 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 				}
 				catch ( Exception& e ) {
 					last_error = e.ToStringAndCleanup();
-					DELETE( context );
-					context = nullptr;
+					if ( context ) {
+						DELETE( context );
+						context = nullptr;
+					}
 				}
 				catch ( std::runtime_error const& e ) {
 					last_error = (std::string)"Internal error: " + e.what();
@@ -79,7 +81,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 
 				if ( context ) {
 					gse->GetAsync()->ProcessAndExit();
-					context->DecRefs();
+					DELETE( context );
 				}
 				if ( program ) {
 					DELETE( program );

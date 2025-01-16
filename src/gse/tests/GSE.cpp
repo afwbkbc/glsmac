@@ -15,6 +15,9 @@ namespace tests {
 void AddGSETests( task::gsetests::GSETests* task ) {
 
 	class Sum : public type::Callable {
+	public:
+		Sum()
+			: type::Callable( false ) {}
 		Value Run( context::Context* ctx, const si_t& call_si, const type::function_arguments_t& arguments ) override {
 			int64_t result = 0;
 			for ( const auto& it : arguments ) {
@@ -40,6 +43,9 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 			static std::string modules_run_order = "";
 
 			class TestModuleY : public type::Callable {
+			public:
+				TestModuleY()
+					: Callable( false ) {}
 				Value Run( context::Context* ctx, const si_t& call_si, const type::function_arguments_t& arguments ) override {
 					modules_run_order += 'Y';
 					return VALUE( type::Null );
@@ -49,6 +55,9 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 			gse->AddModule( "test_module_y", test_module_y );
 
 			class TestModuleX : public type::Callable {
+			public:
+				TestModuleX()
+					: Callable( false ) {}
 				Value Run( context::Context* ctx, const si_t& call_si, const type::function_arguments_t& arguments ) override {
 					modules_run_order += 'X';
 					return VALUE( type::Null );
@@ -71,7 +80,8 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 			class SetVariables : public type::Callable {
 			public:
 				SetVariables( GSE* gse )
-					: gse( gse ) {}
+					: type::Callable( false )
+					, gse( gse ) {}
 				GSE* gse;
 				Value Run( context::Context* ctx, const si_t& call_si, const type::function_arguments_t& arguments ) override {
 					gse->SetGlobal( "testvar_null", VALUE( type::Null ) );
@@ -93,7 +103,8 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 			class CheckVariables : public type::Callable {
 			public:
 				CheckVariables( GSE* gse )
-					: gse( gse ) {}
+					: type::Callable( false )
+					, gse( gse ) {}
 				GSE* gse;
 				Value Run( context::Context* ctx, const si_t& call_si, const type::function_arguments_t& arguments ) override {
 					const auto validate = [ this ]() -> std::string {
@@ -145,10 +156,14 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 			class SetMethods : public type::Callable {
 			public:
 				SetMethods( GSE* gse )
-					: gse( gse ) {}
+					: type::Callable( false )
+					, gse( gse ) {}
 				GSE* gse;
 
 				class TestMethod : public type::Callable {
+				public:
+					TestMethod()
+						: type::Callable( false ) {}
 					Value Run( context::Context* ctx, const si_t& call_si, const type::function_arguments_t& arguments ) override {
 						wasTestMethodCalled = true;
 						return VALUE( type::Null );
@@ -221,7 +236,8 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 			class SetVariables : public type::Callable {
 			public:
 				SetVariables( GSE* gse )
-					: gse( gse ) {}
+					: type::Callable( false )
+					, gse( gse ) {}
 				GSE* gse;
 				Value Run( context::Context* ctx, const si_t& call_si, const type::function_arguments_t& arguments ) override {
 
@@ -237,9 +253,9 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 					VALUE_SET( type::Int, val3, 20 ); // this should not update testvar_second
 					gse->SetGlobal( "testvar_third", val3 );
 
-					gse->SetGlobal( "testvar_obj1", VALUE( type::Object ) );
+					gse->SetGlobal( "testvar_obj1", VALUE( type::Object, nullptr ) );
 
-					auto obj2 = VALUE( type::Object );
+					auto obj2 = VALUE( type::Object, nullptr );
 					auto data2 = VALUE_DATA( type::Object, obj2 );
 					data2->Set( "property_int", VALUE( type::Int, 555 ), ctx, call_si );
 					data2->Set( "property_bool", VALUE( type::Bool, false ), ctx, call_si );
@@ -251,7 +267,7 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 						{ "property_sum",    VALUE( Sum ) },
 						{ "property_string", VALUE( type::String, "STRING" ) },
 					};
-					gse->SetGlobal( "testvar_obj3", VALUE( type::Object, properties ) );
+					gse->SetGlobal( "testvar_obj3", VALUE( type::Object, nullptr, properties ) );
 
 					VALUE_SET( type::Int, val3, 30 ); // this should update testvar_third and testvar_obj3.property_int
 

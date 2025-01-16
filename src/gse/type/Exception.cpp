@@ -8,6 +8,7 @@ namespace type {
 
 Exception::Exception( const gse::Exception& exception, const std::vector< std::string >& backtrace )
 	: Object(
+	nullptr,
 	{
 		{
 			"type",

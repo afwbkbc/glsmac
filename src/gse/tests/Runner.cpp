@@ -30,7 +30,7 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 			runner::Interpreter interpreter;
 
 			context::GlobalContext* context = gse->CreateGlobalContext();
-			context->IncRefs();
+			context->Begin();
 			context->AddSourceLines( util::String::Split( GetTestSource(), '\n' ) );
 			mocks::AddMocks( context, {} );
 
@@ -40,7 +40,7 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 
 			VALIDATE();
 
-			context->DecRefs();
+			context->End();
 
 			GT_OK();
 		}

@@ -95,17 +95,17 @@ namespace gse {
     const auto& wrapped_parent_props = ( (gse::type::Object*)wrapped_parent.Get() )->value; \
     properties.insert( wrapped_parent_props.begin(), wrapped_parent_props.end() );
 #define WRAPIMPL_END_PTR() \
-    return VALUE( gse::type::Object, properties, WRAP_CLASS, this ); \
+    return VALUE( gse::type::Object, nullptr, properties, WRAP_CLASS, this ); \
 }
 #define WRAPIMPL_DYNAMIC_SETTERS( _type ) \
     }; \
-    return VALUE( gse::type::Object, properties, WRAP_CLASS, this, dynamic ? &_type::WrapSet : nullptr ); \
+    return VALUE( gse::type::Object, nullptr, properties, WRAP_CLASS, this, dynamic ? &_type::WrapSet : nullptr ); \
 } \
 void _type::WrapSet( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& si ) { \
     auto* obj = (_type*)wrapobj; \
     if ( !obj ) {}
 #define WRAPIMPL_END_NOPTR( _type ) \
-    return VALUE( gse::type::Object, properties, WRAP_CLASS ); \
+    return VALUE( gse::type::Object, nullptr, properties, WRAP_CLASS ); \
 }
 #define WRAPIMPL_DYNAMIC_ON_SET( _type ) \
     else { \

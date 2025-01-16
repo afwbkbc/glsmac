@@ -50,7 +50,7 @@ const gse::Value Object::Wrap( const bool dynamic ) {
 	}
 	return gse::Value(
 		std::make_shared< gse::type::Object >(
-			properties, m_tag, this, dynamic
+			nullptr, properties, m_tag, this, dynamic
 				? &Object::WrapSetStatic
 				: nullptr
 		)

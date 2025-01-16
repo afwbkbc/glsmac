@@ -8,18 +8,23 @@
 #include "String.h"
 
 #include "gse/Wrappable.h"
+#include "gse/context/ChildContext.h"
 
 namespace gse {
 namespace type {
 
 static Value s_undefined = VALUE( type::Undefined );
 
-Object::Object( object_properties_t initial_value, const object_class_t object_class, Wrappable* wrapobj, wrapsetter_t* wrapsetter )
+Object::Object( context::ChildContext* const ctx, object_properties_t initial_value, const object_class_t object_class, Wrappable* wrapobj, wrapsetter_t* wrapsetter )
 	: Type( GetType() )
+	, m_ctx( ctx )
 	, value( initial_value )
 	, object_class( object_class )
 	, wrapobj( wrapobj )
 	, wrapsetter( wrapsetter ) {
+	if ( m_ctx ) {
+		m_ctx->IncRefs();
+	}
 	if ( wrapobj ) {
 		wrapobj->Link( this );
 	}
@@ -28,6 +33,9 @@ Object::Object( object_properties_t initial_value, const object_class_t object_c
 Object::~Object() {
 	if ( wrapobj ) {
 		wrapobj->Unlink( this );
+	}
+	if ( m_ctx ) {
+		m_ctx->DecRefs();
 	}
 }
 

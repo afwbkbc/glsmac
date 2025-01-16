@@ -75,7 +75,7 @@ const gse::Value Class::Wrap( const bool dynamic ) {
 	}
 	return gse::Value(
 		std::make_shared< gse::type::Object >(
-			properties, "class", this, dynamic
+			nullptr, properties, "class", this, dynamic
 				? &Class::WrapSetStatic
 				: nullptr
 		)

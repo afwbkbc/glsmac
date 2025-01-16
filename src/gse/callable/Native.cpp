@@ -6,7 +6,8 @@ namespace gse {
 namespace callable {
 
 Native::Native( const executor_t& executor )
-	: m_executor( executor ) {
+	: Callable( false )
+	, m_executor( executor ) {
 	//
 }
 

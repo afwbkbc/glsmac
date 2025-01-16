@@ -37,6 +37,7 @@
 #include "gse/type/ArrayRef.h"
 #include "gse/type/ArrayRangeRef.h"
 #include "gse/type/ObjectRef.h"
+#include "gse/type/ValueRef.h"
 #include "gse/type/Callable.h"
 #include "gse/type/Range.h"
 #include "gse/type/LoopControl.h"
@@ -56,7 +57,7 @@ const gse::Value Interpreter::Execute( context::Context* ctx, const Program* pro
 
 const gse::Value Interpreter::EvaluateScope( context::Context* ctx, const Scope* scope ) const {
 	const auto subctx = ctx->ForkContext( ctx, scope->m_si, false );
-	subctx->IncRefs();
+	subctx->Begin();
 
 	gse::Value result = VALUE( Nothing );
 	for ( const auto& it : scope->body ) {
@@ -84,7 +85,7 @@ const gse::Value Interpreter::EvaluateScope( context::Context* ctx, const Scope*
 	}
 #endif
 
-	subctx->DecRefs();
+	subctx->End();
 	return result;
 }
 
@@ -178,7 +179,7 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 					const auto* condition = (ForConditionInOf*)c->condition;
 					const auto target = Deref( ctx, condition->m_si, EvaluateExpression( ctx, condition->expression ) );
 					const auto forctx = ctx->ForkContext( ctx, condition->m_si, false );
-					forctx->IncRefs();
+					forctx->Begin();
 					switch ( target.Get()->type ) {
 						case Type::T_ARRAY: {
 							const auto* arr = (type::Array*)target.Get();
@@ -240,7 +241,7 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 						default:
 							THROW( "unexpected type for iteration (" + target.GetTypeString() + "): " + target.ToString() );
 					}
-					forctx->DecRefs();
+					forctx->End();
 					break;
 				}
 				default:
@@ -458,7 +459,7 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 						}
 						properties.insert_or_assign( it.first, it.second );
 					}
-					return VALUE( type::Object, properties );
+					return VALUE( type::Object, nullptr, properties );
 				}
 			MATH_OP_END()
 		}
@@ -560,7 +561,7 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 						}
 						properties.insert_or_assign( it.first, it.second );
 					}
-					return VALUE( type::Object, properties );
+					return VALUE( type::Object, nullptr, properties );
 				}
 			MATH_OP_END()
 		}
@@ -591,6 +592,9 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 				case Operand::OT_VARIABLE: {
 					const auto objv = ctx->GetVariable( ( (Variable*)expression->a )->name, &expression->a->m_si );
 					const auto* obj = objv.Get();
+					if ( obj->type == Type::T_VALUEREF ) {
+						obj = ( (ValueRef*)obj )->target;
+					}
 					if ( obj->type != Type::T_OBJECT ) {
 						throw not_an_object( obj->ToString(), expression->a->m_si );
 					}
@@ -731,6 +735,9 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 								return ( (type::Array*)arr )->GetRangeRef( from, to );
 							}
 						}
+						case Type::T_VALUEREF: {
+							THROW( "TODO: T_VALUEREF" );
+						}
 						default:
 							throw not_an_array( ref->ToString(), expression->a->m_si );
 					}
@@ -800,10 +807,9 @@ const gse::Value Interpreter::EvaluateOperand( context::Context* ctx, const Oper
 		}
 		case Operand::OT_OBJECT: {
 			const auto objctx = ctx->ForkContext( ctx, operand->m_si, false );
-			objctx->IncRefs();
-			auto result = VALUE( type::Object, object_properties_t{} );
+			auto result = VALUE( type::Object, objctx, object_properties_t{} );
 			auto& properties = ( (type::Object*)result.Get() )->value;
-			objctx->CreateConst( "this", result, &operand->m_si );
+			objctx->CreateConst( "this", VALUE( ValueRef, result.Get() ), &operand->m_si );
 			const auto* obj = (program::Object*)operand;
 			for ( const auto& it : obj->ordered_properties ) {
 				if ( it.first == "this" ) {
@@ -811,7 +817,6 @@ const gse::Value Interpreter::EvaluateOperand( context::Context* ctx, const Oper
 				}
 				properties.insert_or_assign( it.first, EvaluateExpression( objctx, it.second ).Clone() );
 			}
-			objctx->DecRefs();
 			return result;
 		}
 		case Operand::OT_SCOPE: {
@@ -942,6 +947,9 @@ const gse::Value Interpreter::Deref( context::Context* ctx, const si_t& si, cons
 			const auto* ref = (ObjectRef*)value.Get();
 			return ref->object->Get( ref->key );
 		}
+		case Type::T_VALUEREF: {
+			THROW( "TODO: T_VALUEREF" );
+		}
 		default:
 			return value;
 	}
@@ -964,6 +972,9 @@ void Interpreter::WriteByRef( context::Context* ctx, const si_t& si, const gse::
 			ValidateRange( ctx, si, r->array, r->from, r->to );
 			r->array->SetSubArray( r->from, r->to, value );
 			break;
+		}
+		case Type::T_VALUEREF: {
+			THROW( "TODO: T_VALUEREF" );
 		}
 		default:
 			THROW( "reference expected, found " + ref.ToString() );
@@ -1024,7 +1035,8 @@ Interpreter::Function::Function(
 	const std::vector< std::string >& parameters,
 	const Program* const program
 )
-	: runner( runner )
+	: type::Callable( true )
+	, runner( runner )
 	, context( context )
 	, parameters( parameters )
 	, program( program ) {
@@ -1038,9 +1050,9 @@ Interpreter::Function::~Function() {
 
 gse::Value Interpreter::Function::Run( context::Context* ctx, const si_t& call_si, const function_arguments_t& arguments ) {
 	auto* subctx = context->ForkContext( ctx, call_si, true, parameters, arguments );
-	subctx->IncRefs();
+	subctx->Begin();
 	const auto result = runner->Execute( subctx, program );
-	subctx->DecRefs();
+	subctx->End();
 	return result;
 }
 

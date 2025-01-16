@@ -83,7 +83,7 @@ void Test::AddMocks( context::GlobalContext* ctx, const test_info_t& test_info )
 			} )
 		},
 	};
-	ctx->CreateVariable( "test", VALUE( type::Object, mocks ), nullptr );
+	ctx->CreateVariable( "test", VALUE( type::Object, nullptr, mocks ), nullptr );
 }
 
 }

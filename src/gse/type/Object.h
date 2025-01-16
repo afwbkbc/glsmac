@@ -16,6 +16,7 @@ class Wrappable;
 
 namespace context {
 class Context;
+class ChildContext;
 }
 
 namespace type {
@@ -29,7 +30,7 @@ public:
 	static const type_t GetType() { return Type::T_OBJECT; }
 
 	typedef void (wrapsetter_t)( Wrappable*, const std::string&, const Value&, context::Context* ctx, const si_t& si ); // ( obj, key, value, ctx, si )
-	Object( object_properties_t initial_value = {}, const object_class_t object_class = "", Wrappable* wrapobj = nullptr, wrapsetter_t* wrapsetter = nullptr );
+	Object( context::ChildContext* const ctx, object_properties_t initial_value = {}, const object_class_t object_class = "", Wrappable* wrapobj = nullptr, wrapsetter_t* wrapsetter = nullptr );
 	~Object();
 
 	const Value& Get( const object_key_t& key ) const;
@@ -44,6 +45,8 @@ public:
 	Wrappable* wrapobj;
 	wrapsetter_t* wrapsetter;
 
+private:
+	context::ChildContext* const m_ctx;
 };
 
 }

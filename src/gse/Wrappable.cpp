@@ -71,7 +71,7 @@ const Value Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const ty
 	const auto& it = m_callbacks.find( event );
 	Value result = VALUE( gse::type::Undefined );
 	if ( it != m_callbacks.end() ) {
-		auto e = VALUE( gse::type::Object, args );
+		auto e = VALUE( gse::type::Object, nullptr, args );
 		for ( const auto& it2 : it->second ) {
 			const auto& cb = it2.second.callable;
 			ASSERT_NOLOG( cb.Get()->type == type::Type::T_CALLABLE, "callback not callable" );

@@ -90,7 +90,7 @@ WRAPIMPL_BEGIN( FactionManager )
 					{ "land", VALUE( gse::type::Array, land_names ) },
 					{ "water", VALUE( gse::type::Array, water_names ) },
 				};
-				return VALUE( gse::type::Object, properties );
+				return VALUE( gse::type::Object, nullptr, properties );
 			} )
 			},
 			{
@@ -108,7 +108,7 @@ WRAPIMPL_BEGIN( FactionManager )
 					{ "border_alpha", types::Color::FromRGBA( texture->GetPixel( 161, 757 ) ).Wrap() },
 					{ "vehicle", types::Color::FromRGBA( texture->GetPixel( 435, 744 ) ).Wrap() },
 				};
-				return VALUE( gse::type::Object, properties );
+				return VALUE( gse::type::Object, nullptr, properties );
 			} )
 		},
 		{
