@@ -28,7 +28,6 @@ const Async::timer_id_t Async::StartTimer( const size_t ms, const Value& f, cont
 		s_next_id = 0;
 	}
 	s_next_id++;
-	ctx->IncRefs();
 	auto* subctx = ctx->ForkContext( ctx, si, true );
 	ValidateMs( ms, subctx, si );
 	subctx->IncRefs();
