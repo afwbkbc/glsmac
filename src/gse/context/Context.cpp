@@ -12,22 +12,7 @@ Context::Context( gse::GSE* gse )
 	: m_gse( gse ) {
 }
 
-Context::~Context() {
-	/*{
-		const auto children = m_child_contexts;
-		m_child_contexts.clear();
-		for ( const auto& c : children ) {
-			DELETE( c );
-		}
-	}
-	{
-		const auto children = m_child_objects;
-		m_child_objects.clear();
-		for ( const auto& c : children ) {
-			DELETE( c );
-		}
-	}*/
-}
+Context::~Context() {}
 
 GSE* Context::GetGSE() const {
 	return m_gse;
@@ -203,6 +188,17 @@ ChildContext* const Context::ForkContext(
 		result->CreateVariable( parameters[ i ], arguments[ i ], &call_si );
 	}
 	return result;
+}
+
+void Context::Clear() {
+	IncRefs();
+	const auto children = m_child_contexts;
+	for ( const auto& c : children ) {
+		c->Clear();
+	}
+	m_persisted_values.clear();
+	m_variables.clear();
+	DecRefs();
 }
 
 void Context::AddChildContext( ChildContext* const child ) {

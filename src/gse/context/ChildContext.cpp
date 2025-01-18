@@ -12,11 +12,11 @@ ChildContext::ChildContext( GSE* gse, Context* parent_context, Context* caller_c
 	, m_si( si )
 	, m_is_traceable( is_traceable ) {
 	ASSERT_NOLOG( m_parent_context->GetParentContext() != this, "circular context dependency" );
-	m_caller_context->AddChildContext( this );
+	m_parent_context->AddChildContext( this );
 }
 
 ChildContext::~ChildContext() {
-	m_caller_context->RemoveChildContext( this );
+	m_parent_context->RemoveChildContext( this );
 }
 
 Context* ChildContext::GetParentContext() const {

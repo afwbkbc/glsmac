@@ -66,6 +66,8 @@ public:
 		const type::function_arguments_t& arguments = {}
 	);
 
+	void Clear();
+
 	virtual Context* GetParentContext() const = 0;
 	virtual Context* GetCallerContext() const = 0;
 	virtual const bool IsTraceable() const = 0;

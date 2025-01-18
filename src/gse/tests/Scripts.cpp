@@ -81,7 +81,8 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 
 				if ( context ) {
 					gse->GetAsync()->ProcessAndExit();
-					DELETE( context );
+					context->Clear();
+					context->DecRefs();
 				}
 				if ( program ) {
 					DELETE( program );

@@ -174,7 +174,8 @@ void GSE::include_cache_t::Cleanup( const bool force ) {
 				}
 			}
 			else {
-				DELETE( context );
+				context->Clear();
+				context->DecRefs();
 				context = nullptr;
 			}
 		}
