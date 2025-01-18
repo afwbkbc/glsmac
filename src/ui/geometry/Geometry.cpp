@@ -81,6 +81,13 @@ void Geometry::SetHeight( const coord_t px ) {
 	NeedUpdate();
 }
 
+void Geometry::SetPadding( const coord_t px ) {
+	if ( m_padding != px ) {
+		m_padding = px;
+		NeedUpdate();
+	}
+}
+
 void Geometry::SetAlign( const align_t align ) {
 	m_align = align;
 	if ( !( m_align & ALIGN_HCENTER ) ) {
@@ -141,10 +148,10 @@ void Geometry::UpdateArea() {
 	object_area.zindex = m_zindex;
 	if ( m_parent ) {
 		const auto area = m_parent->m_area;
-		object_area.left = area.left + m_left;
-		object_area.right = area.right - m_right;
-		object_area.top = area.top + m_top;
-		object_area.bottom = area.bottom - m_bottom;
+		object_area.left = area.left + m_padding + m_left;
+		object_area.right = area.right - m_padding - m_right;
+		object_area.top = area.top + m_padding + m_top;
+		object_area.bottom = area.bottom - m_padding - m_bottom;
 		if ( m_stick_bits & STICK_WIDTH ) {
 			if ( ( m_align & ALIGN_HCENTER ) == ALIGN_HCENTER ) {
 				coord_t parent_center = ( area.left + area.right ) / 2;
@@ -251,6 +258,10 @@ void Geometry::UpdateArea() {
 	if ( object_area != m_area ) {
 
 		m_area = object_area;
+
+		if ( m_on_area_update ) {
+			m_on_area_update( m_area );
+		}
 
 /*		if ( m_created ) {
 			// process any mouseover/mouseout events

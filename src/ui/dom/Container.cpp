@@ -236,12 +236,12 @@ void Container::InitAndValidate( GSE_CALLABLE ) {
 		m_children.insert({ obj->m_id, obj });
 	}
 	m_embedded_objects.clear();
-	InitProperties( ctx, call_si );
 	for ( const auto& p : m_initial_properties ) {
 		if ( m_properties.find( p.first ) == m_properties.end() && m_forwarded_properties.find( p.first ) == m_forwarded_properties.end() ) {
 			GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property '" + p.first + "' does not exist" );
 		}
 	}
+	InitProperties( ctx, call_si );
 }
 
 void Container::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value ) {

@@ -313,6 +313,16 @@
 		});
 	}
 
+	let button = root.panel({
+		align: 'bottom right',
+		width: 200,
+		height: 24,
+		bottom: 480,
+		right: 40,
+		background: '#333333',
+		border: '#66aaff,3',
+	});
+
 	// count async timer iterations
 	let iterations = 0;
 	const counterbox = texts.panel({

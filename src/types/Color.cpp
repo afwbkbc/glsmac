@@ -65,15 +65,7 @@ bool Color::operator==( Color& other ) const {
 			( value.alpha == other.value.alpha );
 };
 
-bool Color::operator!=( Color& other ) const {
-	return
-		( value.red != other.value.red ) ||
-			( value.green != other.value.green ) ||
-			( value.blue != other.value.blue ) ||
-			( value.alpha != other.value.alpha );
-};
-
-bool Color::operator!=( const Color& other ) {
+bool Color::operator!=( const Color& other ) const {
 	return
 		( value.red != other.value.red ) ||
 			( value.green != other.value.green ) ||

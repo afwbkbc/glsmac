@@ -154,5 +154,14 @@ Surface::~Surface() {
 	}
 }
 
+types::texture::Texture* Surface::GetTexturePtr() {
+	if ( !m_background.texture || !m_background.is_texture_owned ) {
+		m_background.texture = new types::texture::Texture();
+	}
+	m_background.is_texture_owned = true;
+	m_actor->SetTexture( m_background.texture );
+	return m_background.texture;
+}
+
 }
 }

@@ -51,6 +51,7 @@ public:
 	void SetBottom( const coord_t px );
 	void SetWidth( const coord_t px );
 	void SetHeight( const coord_t px );
+	void SetPadding( const coord_t px );
 	void SetAlign( const align_t align );
 	void SetZIndex( const coord_t zindex );
 
@@ -102,6 +103,7 @@ public:
 
 	void OnChildUpdate();
 
+	std::function< void( const area_t& ) > m_on_area_update = nullptr;
 	std::function< void( const area_t& ) > m_on_effective_area_update = nullptr;
 	std::function< void() > m_on_child_update = nullptr;
 
@@ -138,6 +140,7 @@ private:
 	coord_t m_bottom = 0;
 	coord_t m_width = 0;
 	coord_t m_height = 0;
+	coord_t m_padding = 0;
 	uint8_t m_align = ALIGN_LEFT | ALIGN_TOP;
 	coord_t m_zindex = 0.5f;
 

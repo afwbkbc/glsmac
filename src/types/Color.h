@@ -60,8 +60,7 @@ public:
 
 	void operator=( const color_t& color );
 	bool operator==( Color& other ) const;
-	bool operator!=( Color& other ) const;
-	bool operator!=( const Color& other );
+	bool operator!=( const Color& other ) const;
 	const Color operator*( const float operand ) const;
 	const Color operator/( const float operand ) const;
 
