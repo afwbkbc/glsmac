@@ -91,3 +91,23 @@ test.assert('X' + f() == 'XY');
 	func1(12);
 	func2(34);
 }
+
+let called1 = false;
+let called2 = false;
+const testfunc = () => {
+	called2 = true;
+};
+
+const testobjfunc = () => {
+	return {
+		key: 'value',
+		func: () => {
+			called1 = true;
+			testfunc();
+		}
+	};
+};
+
+testobjfunc().func();
+test.assert(called1);
+test.assert(called2);

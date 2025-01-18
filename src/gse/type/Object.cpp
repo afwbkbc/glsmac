@@ -1,11 +1,8 @@
 #include "Object.h"
 
-#include <unordered_map>
-
 #include "Undefined.h"
 #include "ObjectRef.h"
 #include "Exception.h"
-#include "String.h"
 
 #include "gse/Wrappable.h"
 #include "gse/context/ChildContext.h"

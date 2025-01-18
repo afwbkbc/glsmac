@@ -57,7 +57,7 @@ const gse::Value Interpreter::Execute( context::Context* ctx, const Program* pro
 
 const gse::Value Interpreter::EvaluateScope( context::Context* ctx, const Scope* scope ) const {
 	const auto subctx = ctx->ForkContext( ctx, scope->m_si, false );
-	subctx->Begin();
+	subctx->IncRefs();
 
 	gse::Value result = VALUE( Nothing );
 	for ( const auto& it : scope->body ) {
@@ -85,7 +85,7 @@ const gse::Value Interpreter::EvaluateScope( context::Context* ctx, const Scope*
 	}
 #endif
 
-	subctx->End();
+	subctx->DecRefs();
 	return result;
 }
 
@@ -179,7 +179,7 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 					const auto* condition = (ForConditionInOf*)c->condition;
 					const auto target = Deref( ctx, condition->m_si, EvaluateExpression( ctx, condition->expression ) );
 					const auto forctx = ctx->ForkContext( ctx, condition->m_si, false );
-					forctx->Begin();
+					forctx->IncRefs();
 					switch ( target.Get()->type ) {
 						case Type::T_ARRAY: {
 							const auto* arr = (type::Array*)target.Get();
@@ -241,7 +241,7 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 						default:
 							THROW( "unexpected type for iteration (" + target.GetTypeString() + "): " + target.ToString() );
 					}
-					forctx->End();
+					forctx->DecRefs();
 					break;
 				}
 				default:
@@ -1050,9 +1050,9 @@ Interpreter::Function::~Function() {
 
 gse::Value Interpreter::Function::Run( context::Context* ctx, const si_t& call_si, const function_arguments_t& arguments ) {
 	auto* subctx = context->ForkContext( ctx, call_si, true, parameters, arguments );
-	subctx->Begin();
+	subctx->IncRefs();
 	const auto result = runner->Execute( subctx, program );
-	subctx->End();
+	subctx->DecRefs();
 	return result;
 }
 
