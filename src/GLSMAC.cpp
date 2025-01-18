@@ -59,6 +59,8 @@ GLSMAC::~GLSMAC() {
 
 	m_gse->GetAsync()->StopTimers();
 
+	DELETE( m_ui );
+
 	DELETE( m_gse );
 	s_glsmac = nullptr;
 }

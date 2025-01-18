@@ -48,10 +48,7 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename ) {
 		}
 
 		NEWV( texture, types::texture::Texture, filename, image->w, image->h );
-		texture->m_aspect_ratio = (float)texture->m_height / texture->m_width;
-		texture->m_bpp = image->format->BitsPerPixel / 8;
-		texture->m_bitmap_size = image->w * image->h * texture->m_bpp;
-		texture->m_bitmap = (unsigned char*)malloc( texture->m_bitmap_size );
+		ASSERT( texture->m_bpp == image->format->BitsPerPixel / 8, "unsupported texture bpp" );
 		memcpy( ptr( texture->m_bitmap, 0, texture->m_bitmap_size ), image->pixels, texture->m_bitmap_size );
 		SDL_FreeSurface( image );
 
@@ -60,7 +57,12 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename ) {
 		FixTransparency( texture );
 		FixYellowShadows( texture );
 
-		m_textures[ filename ] = texture;
+		m_textures.insert(
+			{
+				filename,
+				texture
+			}
+		);
 
 		DEBUG_STAT_INC( textures_loaded );
 
