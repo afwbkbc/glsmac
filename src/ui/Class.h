@@ -19,7 +19,14 @@ class Object;
 
 class Class : public gse::Wrappable {
 public:
-	Class( const UI* const ui );
+	Class( const UI* const ui, const bool is_master );
+	~Class();
+
+	enum modifier_t {
+		CM_HOVER,
+		CM_ACTIVE,
+		CM_FOCUS,
+	};
 
 	const properties_t& GetProperties() const;
 
@@ -32,6 +39,8 @@ public:
 
 private:
 	const UI* const m_ui;
+
+	const bool m_is_master;
 
 	properties_t m_local_properties = {};
 	properties_t m_properties = {};
@@ -47,10 +56,12 @@ private:
 	std::unordered_set< dom::Object* > m_objects = {};
 	void UpdateObject( GSE_CALLABLE, dom::Object* const object );
 
-	ui::Class* m_parent_class = nullptr;
-	std::unordered_set< ui::Class* > m_child_classes = {};
-	void AddChildClass( GSE_CALLABLE, ui::Class* const cls );
-	void RemoveChildClass( GSE_CALLABLE, ui::Class* const cls );
+	Class* m_parent_class = nullptr;
+	std::unordered_set< Class* > m_child_classes = {};
+	void AddChildClass( GSE_CALLABLE, Class* const cls );
+	void RemoveChildClass( GSE_CALLABLE, Class* const cls );
+
+	std::unordered_map< modifier_t, Class* > m_subclasses = {};
 
 private:
 	friend class UI;

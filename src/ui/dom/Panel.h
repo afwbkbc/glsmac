@@ -9,8 +9,7 @@ class Surface;
 
 class Panel : public Container {
 public:
-	Panel( DOM_ARGS );
-	virtual ~Panel();
+	Panel( DOM_ARGS_TD( "panel" ), const bool factories_allowed = true );
 
 private:
 	Surface* m_surface;

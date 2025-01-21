@@ -7,13 +7,14 @@
 #include "Surface.h"
 #include "Panel.h"
 #include "Text.h"
+#include "Button.h"
 #include "scene/actor/Cache.h"
 #include "input/Event.h"
 
 namespace ui {
 namespace dom {
 
-Container::Container( DOM_ARGS_T )
+Container::Container( DOM_ARGS_T, const bool factories_allowed )
 	: Area( DOM_ARGS_PASS_T )
 	, m_cache( new scene::actor::Cache( "UI::Cache" ) ) {
 
@@ -31,10 +32,12 @@ Container::Container( DOM_ARGS_T )
 		m_cache->Update();
 	};
 
-	FACTORY( "surface", Surface );
-	FACTORY( "panel", Panel );
-	FACTORY( "text", Text );
-
+	if ( factories_allowed ) {
+		FACTORY( "surface", Surface );
+		FACTORY( "panel", Panel );
+		FACTORY( "text", Text );
+		FACTORY( "button", Button );
+	}
 }
 
 Container::~Container() {
@@ -163,11 +166,13 @@ const bool Container::ProcessEventImpl( GSE_CALLABLE, const input::Event& event 
 void Container::WrapSet( const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& call_si ) {
 	auto forward_it = m_forwarded_properties.find( key );
 	if ( forward_it != m_forwarded_properties.end() ) {
-		if ( value.Get()->type == gse::type::Type::T_UNDEFINED && m_class ) {
-			const auto it = m_class->GetProperties().find( key );
-			if ( it != m_class->GetProperties().end() ) {
-				forward_it->second->WrapSet( it->first, it->second, ctx, call_si );
-				return;
+		if ( value.Get()->type == gse::type::Type::T_UNDEFINED && !m_classes.empty() ) {
+			for ( const auto& c : m_classes ) {
+				const auto it = c->GetProperties().find( key );
+				if ( it != c->GetProperties().end() ) {
+					forward_it->second->WrapSet( it->first, it->second, ctx, call_si );
+					return;
+				}
 			}
 		}
 		forward_it->second->WrapSet( key, value, ctx, call_si );

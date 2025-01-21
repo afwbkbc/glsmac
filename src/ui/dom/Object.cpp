@@ -25,7 +25,16 @@ Object::Object( DOM_ARGS_T )
 	Property( ctx, call_si, "id", gse::type::Type::T_STRING );
 	Property(
 		ctx, call_si, "class", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& value ) {
-			SetClass( ctx, call_si, ( (gse::type::String*)value.Get() )->value );
+			const auto names = util::String::Split( ( (gse::type::String*)value.Get() )->value, ' ' );
+			// check for duplicates
+			std::unordered_set< std::string > names_set = {};
+			for ( const auto& n : names ) {
+				if ( names_set.find( n ) != names_set.end() ) {
+					GSE_ERROR( gse::EC.UI_ERROR, "Duplicate class: " + n );
+				}
+				names_set.insert( n );
+			}
+			SetClasses( ctx, call_si, names );
 		}
 	);
 }
@@ -264,11 +273,13 @@ void Object::SetProperty( GSE_CALLABLE, properties_t* const properties, const st
 void Object::UnsetProperty( gse::context::Context* ctx, const gse::si_t& call_si, properties_t* const properties, const std::string& key ) {
 	const auto& it = properties->find( key );
 	if ( it != properties->end() && it->second.Get()->type != gse::type::Type::T_UNDEFINED ) {
-		if ( properties == &m_properties && m_class ) {
-			const auto& it2 = m_class->GetProperties().find( key );
-			if ( it2 != m_class->GetProperties().end() ) {
-				SetProperty( ctx, call_si, properties, it2->first, it2->second );
-				return;
+		if ( properties == &m_properties && !m_classes.empty() ) {
+			for ( const auto& c : m_classes ) {
+				const auto& it2 = c->GetProperties().find( key );
+				if ( it2 != c->GetProperties().end() ) {
+					SetProperty( ctx, call_si, properties, it2->first, it2->second );
+					return;
+				}
 			}
 		}
 		properties->erase( it );
@@ -278,28 +289,26 @@ void Object::UnsetProperty( gse::context::Context* ctx, const gse::si_t& call_si
 	}
 }
 
-void Object::UnsetClass( GSE_CALLABLE ) {
-	ASSERT_NOLOG( m_class, "class not set" );
+void Object::SetClasses( GSE_CALLABLE, const std::vector< std::string >& names ) {
 	if ( m_is_initialized ) {
-		m_class->RemoveObject( ctx, call_si, this );
+		for ( const auto& c : m_classes ) {
+			c->RemoveObject( ctx, call_si, this );
+		}
+		m_classes.clear();
 	}
-	m_class = nullptr;
-}
-
-void Object::SetClass( GSE_CALLABLE, const std::string& name ) {
-	if ( m_class ) {
-		UnsetClass( ctx, call_si );
+	else {
+		ASSERT_NOLOG( m_classes.empty(), "not initialized but classes not empty" );
 	}
-	if ( name == "ball1" ) {
-		int a = 5;
-		a++;
-	}
-	m_class = m_ui->GetClass( name );
-	if ( !m_class ) {
-		GSE_ERROR( gse::EC.UI_ERROR, "Class '" + name + "' does not exist" );
-	}
-	if ( m_is_initialized ) {
-		m_class->AddObject( ctx, call_si, this );
+	m_classes.reserve( names.size() );
+	for ( const auto& name : names ) {
+		auto* c = m_ui->GetClass( name );
+		if ( !c ) {
+			GSE_ERROR( gse::EC.UI_ERROR, "Class '" + name + "' does not exist" );
+		}
+		m_classes.push_back( c );
+		if ( m_is_initialized ) {
+			c->AddObject( ctx, call_si, this );
+		}
 	}
 }
 

@@ -313,14 +313,39 @@
 		});
 	}
 
-	let button = root.panel({
+	glsmac.ui.class('button1')
+		.set({
+			background: '#112211',
+			border: '#666666,3',
+			color: '#aaffaa',
+		})
+	;
+	glsmac.ui.class('button2')
+		.set({
+			font: ':20',
+			_hover: {
+				color: '#ffffff',
+				border: '#ffffff,3',
+				background: '#224411',
+			},
+		})
+	;
+	let button = root.button({
+		class: 'button1 button2',
 		align: 'bottom right',
 		width: 200,
 		height: 24,
 		bottom: 480,
 		right: 40,
-		background: '#333333',
-		border: '#66aaff,3',
+		text: 'START',
+	});
+	button.on('mouseover', (e) => {
+		button.border = '#ffffff,3';
+		return true;
+	});
+	button.on('mouseout', (e) => {
+		button.border = #undefined;
+		return true;
 	});
 
 	// count async timer iterations

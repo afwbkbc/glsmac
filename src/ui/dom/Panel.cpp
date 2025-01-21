@@ -8,8 +8,8 @@
 namespace ui {
 namespace dom {
 
-Panel::Panel( DOM_ARGS )
-	: Container( DOM_ARGS_PASS, "panel" ) {
+Panel::Panel( DOM_ARGS_T, const bool factories_allowed )
+	: Container( DOM_ARGS_PASS_T, factories_allowed ) {
 
 	m_surface = new Surface( ctx, call_si, ui, this, {} );
 	Embed( m_surface );
@@ -52,8 +52,6 @@ Panel::Panel( DOM_ARGS )
 		UpdateBorderTexture();
 	};
 }
-
-Panel::~Panel() {}
 
 void Panel::UpdateBorderTexture() {
 	m_surface->GetGeometry()->SetPadding( m_border_corners / 2 );

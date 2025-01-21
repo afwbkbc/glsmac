@@ -12,6 +12,7 @@
 
 #define DOM_ARGS GSE_CALLABLE, UI* const ui, Container* const parent, const properties_t& properties
 #define DOM_ARGS_T DOM_ARGS, const std::string& tag
+#define DOM_ARGS_TD( _tag ) DOM_ARGS, const std::string& tag = _tag
 #define DOM_ARGS_PASS ctx, call_si, ui, parent, properties
 #define DOM_ARGS_PASS_T DOM_ARGS_PASS, tag
 
@@ -105,15 +106,14 @@ private:
 	properties_t m_properties = {};
 	properties_t m_manual_properties = {};
 	properties_t m_default_properties = {};
-	ui::Class* m_class = nullptr;
+	std::vector< ui::Class* > m_classes = {};
 
 	std::vector< scene::actor::Actor* > m_actors = {};
 
 	void SetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key, const gse::Value& value );
 	void UnsetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key );
 
-	void UnsetClass( GSE_CALLABLE );
-	void SetClass( GSE_CALLABLE, const std::string& name );
+	void SetClasses( GSE_CALLABLE, const std::vector< std::string >& names );
 
 private:
 	friend class Container;

@@ -13,7 +13,7 @@ namespace dom {
 
 class Container : public Area {
 public:
-	Container( DOM_ARGS_T );
+	Container( DOM_ARGS_T, const bool factories_allowed );
 	virtual ~Container();
 
 	scene::actor::Cache* const m_cache;

@@ -8,5 +8,6 @@ SET( SRC ${SRC}
 	${PWD}/Surface.cpp
 	${PWD}/Panel.cpp
 	${PWD}/Text.cpp
+	${PWD}/Button.cpp
 
 	PARENT_SCOPE )

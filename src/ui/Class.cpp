@@ -6,8 +6,37 @@
 
 namespace ui {
 
-Class::Class( const ui::UI* const ui )
-	: m_ui( ui ) {}
+static const std::unordered_map< std::string, Class::modifier_t > s_name_to_modifier = {
+	{ "_hover", Class::CM_HOVER },
+	{ "_active", Class::CM_ACTIVE },
+	{ "_focus", Class::CM_FOCUS },
+};
+
+static const std::unordered_map< Class::modifier_t, std::string > s_modifier_to_name = {
+	{ Class::CM_HOVER, "_hover" },
+	{ Class::CM_ACTIVE, "_active" },
+	{ Class::CM_FOCUS, "_focus" },
+};
+
+Class::Class( const UI* const ui,  const bool is_master )
+	: m_ui( ui )
+	, m_is_master( is_master ) {
+	if ( m_is_master ) {
+		m_subclasses = {
+			{ CM_HOVER, new Class( ui, false ) },
+			{ CM_ACTIVE, new Class( ui, false ) },
+			{ CM_FOCUS, new Class( ui, false ) },
+		};
+	}
+}
+
+Class::~Class() {
+	if ( m_is_master ) {
+		for ( const auto& it : m_subclasses ) {
+			delete it.second;
+		}
+	}
+}
 
 const properties_t& Class::GetProperties() const {
 	return m_properties;
@@ -72,6 +101,11 @@ const gse::Value Class::Wrap( const bool dynamic ) {
 				p.second
 			}
 		);
+	}
+	if ( m_is_master ) {
+		for ( const auto& c : m_subclasses ) {
+			properties.insert({ s_modifier_to_name.at( c.first ), c.second->Wrap( dynamic ) });
+		}
 	}
 	return gse::Value(
 		std::make_shared< gse::type::Object >(
@@ -168,17 +202,25 @@ void Class::UnsetPropertiesFromParent( GSE_CALLABLE ) {
 
 void Class::UpdateObject( GSE_CALLABLE, dom::Object* const object ) {
 	for ( const auto& property : m_properties ) {
+		if ( m_is_master ) {
+			const auto it = s_name_to_modifier.find( property.first );
+			if ( it != s_name_to_modifier.end() ) {
+				ASSERT_NOLOG( m_subclasses.find( it->second ) != m_subclasses.end(), "subclass not found" );
+				//m_subclasses.at( it->second )->UpdateObject()
+				continue;
+			}
+		}
 		object->SetPropertyFromClass( ctx, call_si, property.first, property.second );
 	}
 }
 
-void Class::AddChildClass( GSE_CALLABLE, ui::Class* const cls ) {
+void Class::AddChildClass( GSE_CALLABLE, Class* const cls ) {
 	ASSERT_NOLOG( m_child_classes.find( cls ) == m_child_classes.end(), "child class already exists" );
 	m_child_classes.insert( cls );
 	cls->SetPropertiesFromParent( ctx, call_si );
 }
 
-void Class::RemoveChildClass( GSE_CALLABLE, ui::Class* const cls ) {
+void Class::RemoveChildClass( GSE_CALLABLE, Class* const cls ) {
 	ASSERT_NOLOG( m_child_classes.find( cls ) != m_child_classes.end(), "child class not found" );
 	cls->UnsetPropertiesFromParent( ctx, call_si );
 	m_child_classes.erase( cls );
