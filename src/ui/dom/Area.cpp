@@ -21,6 +21,8 @@ Area::Area( DOM_ARGS_T )
 			input::EV_MOUSE_MOVE,
 			input::EV_MOUSE_OVER,
 			input::EV_MOUSE_OUT,
+			input::EV_MOUSE_DOWN,
+			input::EV_MOUSE_UP,
 		}
 	);
 
@@ -59,7 +61,9 @@ void Area::SerializeEvent( const input::Event& e, gse::type::object_properties_t
 	switch ( e.type ) {
 		case input::EV_MOUSE_MOVE:
 		case input::EV_MOUSE_OVER:
-		case input::EV_MOUSE_OUT: {
+		case input::EV_MOUSE_OUT:
+		case input::EV_MOUSE_DOWN:
+		case input::EV_MOUSE_UP: {
 			const auto& area = m_geometry->GetEffectiveArea();
 			obj.insert(
 				{
@@ -85,6 +89,32 @@ void Area::SerializeEvent( const input::Event& e, gse::type::object_properties_t
 					VALUE( gse::type::Int, e.data.mouse.y )
 				}
 			);
+			if ( e.type == input::EV_MOUSE_DOWN || e.type == input::EV_MOUSE_UP ) {
+				std::string buttonstr = "";
+				switch ( e.data.mouse.button ) {
+					case input::MB_LEFT: {
+						buttonstr = "left";
+						break;
+					}
+					case input::MB_RIGHT: {
+						buttonstr = "right";
+						break;
+					}
+					case input::MB_MIDDLE: {
+						buttonstr = "middle";
+						break;
+					}
+					default: {
+						ASSERT_NOLOG( false, "unknown button: " + std::to_string( e.data.mouse.button ) );
+					}
+				}
+				obj.insert(
+					{
+						"button",
+						VALUE( gse::type::String, buttonstr )
+					}
+				);
+			}
 			break;
 		}
 		default: {

@@ -31,19 +31,30 @@ Text::Text( DOM_ARGS )
 			m_actor->SetText( ( (gse::type::String*)v.Get() )->value );
 			m_geometry->SetWidth( m_actor->GetWidth() );
 			m_geometry->SetHeight( m_actor->GetHeight() );
+		},
+		[ this ]( GSE_CALLABLE ) {
+			m_actor->SetText( "" );
+			m_geometry->SetWidth( 0 );
+			m_geometry->SetHeight( 0 );
 		}
 	);
 
 	Property(
-		ctx, call_si, "color", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v ) {
+		ctx, call_si, "color", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
+		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
 			types::Color color = {};
 			ParseColor( ctx, call_si, ( (gse::type::String*)v.Get() )->value, color );
+			m_actor->SetColor( color );
+		},
+		[ this ]( GSE_CALLABLE ) {
+			types::Color color = {};
 			m_actor->SetColor( color );
 		}
 	);
 
 	Property(
-		ctx, call_si, "font", gse::type::Type::T_STRING, VALUE( gse::type::String, ":32" ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v ) {
+		ctx, call_si, "font", gse::type::Type::T_STRING, VALUE( gse::type::String, ":32" ), PF_NONE,
+		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
 			const auto parts = util::String::Split( ( (gse::type::String*)v.Get() )->value, ':' );
 			if ( parts.size() != 2 ) {
 				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property 'font' is expected to be font string ('<fontname>:<size>' ), got: " + v.ToString(), ctx, call_si );
@@ -54,6 +65,10 @@ Text::Text( DOM_ARGS )
 			}
 			m_fontname = parts.at( 0 );
 			m_fontsize = sz;
+			UpdateFont();
+		},
+		[ this ]( GSE_CALLABLE ) {
+			m_fontname = 32;
 			UpdateFont();
 		}
 	);

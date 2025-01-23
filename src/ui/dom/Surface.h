@@ -35,9 +35,12 @@ private:
 		bool is_texture_owned = false;
 	} m_background = {};
 
+	void CreateTexture();
+	void ClearTexture();
+
 private:
 	friend class Panel;
-	types::texture::Texture* GetTexturePtr();
+	types::texture::Texture* GetOwnedTexturePtr();
 
 };
 

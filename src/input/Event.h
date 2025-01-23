@@ -10,13 +10,6 @@ namespace input {
 class Event {
 public:
 
-	enum mouse_button_t : uint8_t {
-		M_NONE,
-		M_LEFT,
-		M_RIGHT,
-		M_MIDDLE,
-	};
-
 	enum key_code_t {
 		K_NONE,
 		K_LEFT,
@@ -54,7 +47,7 @@ public:
 		struct {
 			ssize_t x;
 			ssize_t y;
-			uint8_t button;
+			mouse_button_t button;
 			ssize_t scroll_y;
 		} mouse;
 		struct {

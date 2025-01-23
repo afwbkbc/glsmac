@@ -95,9 +95,16 @@ geometry::Geometry* const Object::GetGeometry() const {
 
 const bool Object::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	if ( IsEventRelevant( event ) ) {
-		if ( event.type == input::EV_MOUSE_OUT ) {
-			int a = 5;
-			a++;
+		switch ( event.type ) {
+			case input::EV_MOUSE_OVER: {
+				AddModifier( ctx, call_si, CM_HOVER );
+				break;
+			}
+			case input::EV_MOUSE_OUT: {
+				RemoveModifier( ctx, call_si, CM_HOVER );
+				break;
+			}
+			default: {}
 		}
 		return ProcessEventImpl( ctx, call_si, event );
 	}
@@ -230,6 +237,24 @@ void Object::SerializeEvent( const input::Event& e, gse::type::object_properties
 	}
 }
 
+void Object::AddModifier( GSE_CALLABLE, const class_modifier_t& modifier ) {
+	if ( m_modifiers.find( modifier ) == m_modifiers.end() ) {
+		m_modifiers.insert( modifier );
+		for ( const auto& c : m_classes ) {
+			c->AddObjectModifier( ctx, call_si, this, modifier );
+		}
+	}
+}
+
+void Object::RemoveModifier( GSE_CALLABLE , const class_modifier_t& modifier ) {
+	if ( m_modifiers.find( modifier ) != m_modifiers.end() ) {
+		m_modifiers.erase( modifier );
+		for ( const auto& c : m_classes ) {
+			c->RemoveObjectModifier( ctx, call_si, this, modifier );
+		}
+	}
+}
+
 void Object::InitAndValidate( GSE_CALLABLE ) {
 	for ( const auto& p : m_initial_properties ) {
 		if ( m_properties.find( p.first ) == m_properties.end() ) {
@@ -307,7 +332,7 @@ void Object::SetClasses( GSE_CALLABLE, const std::vector< std::string >& names )
 		}
 		m_classes.push_back( c );
 		if ( m_is_initialized ) {
-			c->AddObject( ctx, call_si, this );
+			c->AddObject( ctx, call_si, this, m_modifiers );
 		}
 	}
 }
@@ -325,14 +350,38 @@ void Object::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const g
 void Object::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
 	const auto& def_it = m_property_defs.find( key );
 	ASSERT_NOLOG( def_it != m_property_defs.end(), "property def not found: " + key );
-	if ( m_manual_properties.find( key ) == m_manual_properties.end() ) {
+
+	auto v = VALUE( gse::type::Undefined );
+
+	// search in manual properties
+	const auto& it = m_manual_properties.find( key );
+	if ( it != m_manual_properties.end() ) {
+		v = it->second;
+	}
+
+	if ( v.Get()->type == gse::type::Type::T_UNDEFINED ) {
+		// search in other classes
+		for ( auto it = m_classes.rbegin() ; it != m_classes.rend() ; it++ ) {
+			v = ( *it )->GetProperty( key, m_modifiers );
+			if ( v.Get()->type != gse::type::Type::T_UNDEFINED ) {
+				break;
+			}
+		}
+	}
+
+	if ( v.Get()->type == gse::type::Type::T_UNDEFINED ) {
+		// search in default properties
 		const auto& it = m_default_properties.find( key );
 		if ( it != m_default_properties.end() ) {
-			SetProperty( ctx, call_si, &m_properties, key, it->second );
+			v = it->second;
 		}
-		else {
-			UnsetProperty( ctx, call_si, &m_properties, key );
-		}
+	}
+
+	if ( v.Get()->type != gse::type::Type::T_UNDEFINED ) {
+		SetProperty( ctx, call_si, &m_properties, key, v );
+	}
+	else {
+		UnsetProperty( ctx, call_si, &m_properties, key );
 	}
 }
 

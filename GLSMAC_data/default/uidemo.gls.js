@@ -13,6 +13,10 @@
 		width: 20,
 		height: 20,
 	});
+	glsmac.ui.class('side-square-alt').set({
+		width: 30,
+		height: 30,
+	});
 
 	let surfaces = [];
 	for (a of [
@@ -42,10 +46,6 @@
 			surface.background = orig_color;
 			surface.width = #undefined;
 			surface.height = #undefined;
-			return true;
-		});
-		surface.on('mousedown', (e) => {
-			#print('MOUSEDOWN', surface.align, e);
 			return true;
 		});
 		surfaces []= surface;
@@ -223,6 +223,38 @@
 		color: '#ffffff',
 	});
 
+	let balls = [];
+
+	const f_move_balls = () => {
+		for ( ball of balls ) {
+			const ballobj = ball.obj;
+			const maxleft = ballarea[0] - ballobj.width - 1;
+			const maxtop = ballarea[1] - ballobj.height - 1;
+			if (ballobj.left <= 0 || ballobj.left >= maxleft) {
+				if (ballobj.left < 0) {
+					ballobj.left = 0;
+				}
+				if (ballobj.left > maxleft) {
+					ballobj.left = maxleft;
+				}
+				ball.speed[0] = ball.speed[0] * -1;
+			}
+			if (ballobj.top <= 0 || ballobj.top >= maxtop) {
+				if (ballobj.top < 0) {
+					ballobj.top = 0;
+				}
+				if (ballobj.top > maxtop) {
+					ballobj.top = maxtop;
+				}
+				ball.speed[1] = ball.speed[1] * -1;
+			}
+			ballobj.left = ballobj.left + ball.speed[0];
+			ballobj.top = ballobj.top + ball.speed[1];
+		}
+		return true;
+	};
+	let balls_timer = null;
+
 	const addball = (ball) => {
 		let ballobj = ballareaobj.panel({
 			class: ball.class,
@@ -241,31 +273,8 @@
 			ballobj.background = #undefined;
 			return true;
 		});
-		#async( 500000, () => {
-			const maxleft = ballarea[0] - ballobj.width - 1;
-			const maxtop = ballarea[1] - ballobj.height - 1;
-			if ( ballobj.left <= 0 || ballobj.left >= maxleft ) {
-				if ( ballobj.left < 0 ) {
-					ballobj.left = 0;
-				}
-				if ( ballobj.left > maxleft ) {
-					ballobj.left = maxleft;
-				}
-				ball.speed[0] = ball.speed[0] * -1;
-			}
-			if ( ballobj.top <= 0 || ballobj.top >= maxtop ) {
-				if ( ballobj.top < 0 ) {
-					ballobj.top = 0;
-				}
-				if ( ballobj.top > maxtop ) {
-					ballobj.top = maxtop;
-				}
-				ball.speed[1] = ball.speed[1] * -1;
-			}
-			ballobj.left = ballobj.left + ball.speed[0];
-			ballobj.top = ballobj.top + ball.speed[1];
-			return true;
-		});
+		ball.obj = ballobj;
+		balls []= ball;
 	};
 
 	glsmac.ui.class('ball1', { // set in constructor is possible too
@@ -318,6 +327,9 @@
 			background: '#112211',
 			border: '#666666,3',
 			color: '#aaffaa',
+			_active: {
+				background: '#446644',
+			},
 		})
 	;
 	glsmac.ui.class('button2')
@@ -327,6 +339,9 @@
 				color: '#ffffff',
 				border: '#ffffff,3',
 				background: '#224411',
+			},
+			_active: {
+				color: '#00ff00',
 			},
 		})
 	;
@@ -340,11 +355,27 @@
 		text: 'START',
 	});
 	button.on('mouseover', (e) => {
-		button.border = '#ffffff,3';
+		for ( surface of surfaces ) {
+			surface.class = 'side-square-alt';
+		}
 		return true;
 	});
 	button.on('mouseout', (e) => {
-		button.border = #undefined;
+		for ( surface of surfaces ) {
+			surface.class = 'side-square';
+		}
+		return true;
+	});
+	button.on('click', (e) => {
+		if ( balls_timer != null ) {
+			balls_timer.stop();
+			balls_timer = null;
+			button.text = 'START';
+		}
+		else {
+			button.text = 'STOP';
+			balls_timer = #async( 10, f_move_balls );
+		}
 		return true;
 	});
 

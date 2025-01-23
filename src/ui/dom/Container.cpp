@@ -254,6 +254,15 @@ void Container::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, cons
 }
 
 void Container::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
+	// check in other classes
+	for ( auto it = m_classes.rbegin() ; it != m_classes.rend() ; it++ ) {
+		const auto value = (*it)->GetProperty( key, m_modifiers );
+		if ( value.Get()->type != gse::type::Type::T_UNDEFINED ) {
+			FORWARD_CALL( SetPropertyFromClass, ctx, call_si, key, value );
+			return;
+		}
+	}
+	// not found
 	FORWARD_CALL( UnsetPropertyFromClass, ctx, call_si, key );
 }
 

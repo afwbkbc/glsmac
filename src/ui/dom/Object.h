@@ -88,6 +88,8 @@ protected:
 
 	virtual void SerializeEvent( const input::Event& event, gse::type::object_properties_t& event_data ) const;
 
+	void AddModifier( GSE_CALLABLE, const class_modifier_t& modifier );
+	void RemoveModifier( GSE_CALLABLE, const class_modifier_t& modifier );
 private:
 
 	std::unordered_set< input::event_type_t > m_supported_events = {};
@@ -114,6 +116,8 @@ private:
 	void UnsetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key );
 
 	void SetClasses( GSE_CALLABLE, const std::vector< std::string >& names );
+
+	class_modifiers_t m_modifiers = {};
 
 private:
 	friend class Container;

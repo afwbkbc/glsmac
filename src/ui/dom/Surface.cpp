@@ -22,7 +22,8 @@ Surface::Surface( DOM_ARGS )
 	Actor( m_actor );
 
 	Property(
-		ctx, call_si, "background", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v ) {
+		ctx, call_si, "background", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
+		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
 			const auto& str = ( (gse::type::String*)v.Get() )->value;
 			if ( str.empty() ) {
 				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property 'background' expects color code or texture path", ctx, call_si );
@@ -30,14 +31,14 @@ Surface::Surface( DOM_ARGS )
 			bool is_tiled = true;
 			if ( str.at( 0 ) == '#' ) {
 				types::Color color;
-				ParseColor( ctx, call_si, str, color );
-				if ( !m_background.texture || !m_background.is_texture_owned ) {
-					m_background.texture = new types::texture::Texture();
+				if ( str == "#1fffff" || str == "#1000ff" ) {
+					int a = 5;
+					a++;
 				}
-				m_background.is_texture_owned = true;
+				ParseColor( ctx, call_si, str, color );
+				CreateTexture();
 				m_background.texture->Resize( 1, 1 );
 				m_background.texture->SetPixel( 0, 0, color );
-				m_background.texture->FullUpdate();
 				is_tiled = false;
 			}
 			else {
@@ -132,6 +133,7 @@ Surface::Surface( DOM_ARGS )
 				m_background.texture = result.texture;
 				m_background.is_texture_owned = result.is_owned;
 			}
+			m_background.texture->FullUpdate(); // TODO: optimize?
 			m_actor->SetTexture( m_background.texture );
 			if ( is_tiled ) {
 				m_geometry->AsRectangle()->SetTiled(
@@ -144,6 +146,9 @@ Surface::Surface( DOM_ARGS )
 			else {
 				m_geometry->AsRectangle()->SetStretched();
 			}
+		},
+		[ this ]( GSE_CALLABLE ) {
+			ClearTexture();
 		}
 	);
 }
@@ -154,12 +159,30 @@ Surface::~Surface() {
 	}
 }
 
-types::texture::Texture* Surface::GetTexturePtr() {
+void Surface::CreateTexture() {
 	if ( !m_background.texture || !m_background.is_texture_owned ) {
 		m_background.texture = new types::texture::Texture();
+		m_background.is_texture_owned = true;
+		m_actor->SetTexture( m_background.texture );
 	}
-	m_background.is_texture_owned = true;
-	m_actor->SetTexture( m_background.texture );
+}
+
+void Surface::ClearTexture() {
+	m_actor->SetTexture( nullptr );
+	if ( m_background.texture && m_background.is_texture_owned ) {
+		delete m_background.texture;
+	}
+	m_background.texture = nullptr;
+	m_background.is_texture_owned = false;
+}
+
+types::texture::Texture* Surface::GetOwnedTexturePtr() {
+	if ( !m_background.texture ) {
+		CreateTexture();
+	}
+	else {
+		ASSERT_NOLOG( m_background.is_texture_owned, "GetOwnedTexturePtr on non-owned texture" );
+	}
 	return m_background.texture;
 }
 

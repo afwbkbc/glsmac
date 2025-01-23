@@ -6,16 +6,16 @@
 
 namespace ui {
 
-static const std::unordered_map< std::string, Class::modifier_t > s_name_to_modifier = {
-	{ "_hover", Class::CM_HOVER },
-	{ "_active", Class::CM_ACTIVE },
-	{ "_focus", Class::CM_FOCUS },
+static const std::unordered_map< std::string, class_modifier_t > s_name_to_modifier = {
+	{ "_focus", CM_FOCUS },
+	{ "_hover", CM_HOVER },
+	{ "_active", CM_ACTIVE },
 };
 
-static const std::unordered_map< Class::modifier_t, std::string > s_modifier_to_name = {
-	{ Class::CM_HOVER, "_hover" },
-	{ Class::CM_ACTIVE, "_active" },
-	{ Class::CM_FOCUS, "_focus" },
+static const std::unordered_map< class_modifier_t, std::string > s_modifier_to_name = {
+	{ CM_FOCUS, "_focus" },
+	{ CM_HOVER, "_hover" },
+	{ CM_ACTIVE, "_active" },
 };
 
 Class::Class( const UI* const ui,  const bool is_master )
@@ -38,22 +38,127 @@ Class::~Class() {
 	}
 }
 
+const gse::Value Class::GetProperty( const std::string& key, const class_modifiers_t& modifiers ) const {
+	auto v = VALUE( gse::type::Undefined );
+
+	if ( m_is_master ) {
+		// search in modifiers
+		for ( const auto& m : modifiers ) {
+			ASSERT_NOLOG( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
+			v = m_subclasses.at( m )->GetProperty( key, {} );
+			if ( v.Get()->type != gse::type::Type::T_UNDEFINED ) {
+				return v;
+			}
+		}
+	}
+	else {
+		ASSERT_NOLOG( modifiers.empty(), "modifiers passed to non-master class" );
+	}
+
+	// search in own properties
+	const auto& it = m_properties.find( key );
+	if ( it != m_properties.end() ) {
+		return it->second;
+	}
+
+	// not found
+	return v;
+}
+
 const properties_t& Class::GetProperties() const {
 	return m_properties;
 }
 
-void Class::AddObject( GSE_CALLABLE, dom::Object* object ) {
+void Class::AddObject( GSE_CALLABLE, dom::Object* object, const class_modifiers_t& modifiers ) {
 	ASSERT_NOLOG( m_objects.find( object ) == m_objects.end(), "object already exists in class" );
-	m_objects.insert( object );
-	UpdateObject( ctx, call_si, object );
+	m_objects.insert( { object, modifiers } );
+	if ( m_is_master ) {
+		for ( const auto& m : modifiers ) {
+			ASSERT_NOLOG( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
+			m_subclasses.at( m )->AddObject( ctx, call_si, object, {} );
+		}
+		UpdateObject( ctx, call_si, object );
+	}
 }
 
 void Class::RemoveObject( GSE_CALLABLE, dom::Object* object ) {
 	ASSERT_NOLOG( m_objects.find( object ) != m_objects.end(), "object not found in class" );
-	for ( const auto& property : m_properties ) {
-		object->UnsetPropertyFromClass( ctx, call_si, property.first );
+	if ( m_is_master ) {
+		for ( const auto& m : m_objects.at( object ) ) {
+			ASSERT_NOLOG( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
+			m_subclasses.at( m )->RemoveObject( ctx, call_si, object );
+		}
+	}
+	if ( m_is_master ) {
+		for ( const auto& property : m_properties ) {
+			object->UnsetPropertyFromClass( ctx, call_si, property.first );
+		}
 	}
 	m_objects.erase( object );
+}
+
+void Class::UpdateObject( GSE_CALLABLE, dom::Object* const object ) {
+	for ( const auto& property : m_properties ) {
+		if ( s_name_to_modifier.find( property.first ) != s_name_to_modifier.end() ) {
+			ASSERT_NOLOG( m_is_master, "modifier received by non-master" );
+			continue;
+		}
+		object->SetPropertyFromClass( ctx, call_si, property.first, property.second );
+	}
+	if ( m_is_master ) {
+		ASSERT_NOLOG( m_objects.find( object ) != m_objects.end(), "object not found" );
+		for ( const auto& m : m_objects.at( object ) ) {
+			ASSERT_NOLOG( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
+			m_subclasses.at( m )->UpdateObject( ctx, call_si, object );
+		}
+	}
+}
+
+void Class::AddObjectModifier( GSE_CALLABLE, dom::Object* object, const class_modifier_t modifier ) {
+	ASSERT_NOLOG( m_objects.find( object ) != m_objects.end(), "object not found" );
+	auto& modifiers = m_objects.at( object );
+	if ( modifiers.find( modifier ) == modifiers.end() ) {
+		ASSERT_NOLOG( m_subclasses.find( modifier ) != m_subclasses.end(), "subclass not found" );
+		modifiers.insert( modifier );
+		const auto& cls = m_subclasses.at( modifier );
+		cls->AddObject( ctx, call_si, object, {} );
+		cls->UpdateObject( ctx, call_si, object );
+	}
+}
+
+void Class::RemoveObjectModifier( GSE_CALLABLE, dom::Object* object, const class_modifier_t modifier ) {
+	ASSERT_NOLOG( m_objects.find( object ) != m_objects.end(), "object not found" );
+	auto& modifiers = m_objects.at( object );
+	if ( modifiers.find( modifier ) != modifiers.end() ) {
+		ASSERT_NOLOG( m_subclasses.find( modifier ) != m_subclasses.end(), "subclass not found" );
+		modifiers.erase( modifier );
+		const auto& cls = m_subclasses.at( modifier );
+		m_subclasses.at( modifier )->RemoveObject( ctx, call_si, object );
+		for ( const auto& p : cls->m_properties ) {
+			auto v = VALUE( gse::type::Undefined );
+			// check if this property exists outside of subclass
+			for ( auto it = modifiers.rbegin() ; it != modifiers.rend() ; it++ ) {
+				const auto& pp = m_subclasses.at( *it )->m_properties;
+				const auto& it_p = pp.find( p.first );
+				if ( it_p != pp.end() && it_p->second.Get()->type != gse::type::Type::T_UNDEFINED ) {
+					v = it_p->second;
+					break;
+				}
+			}
+			if ( v.Get()->type == gse::type::Type::T_UNDEFINED ) {
+				const auto& it_p = m_properties.find( p.first );
+				if ( it_p != m_properties.end() && it_p->second.Get()->type != gse::type::Type::T_UNDEFINED ) {
+					v = it_p->second;
+				}
+			}
+			if ( v.Get()->type == gse::type::Type::T_UNDEFINED ) {
+				object->UnsetPropertyFromClass( ctx, call_si, p.first );
+			}
+			else {
+				object->SetPropertyFromClass( ctx, call_si, p.first, v );
+			}
+		}
+	}
 }
 
 const gse::Value Class::Wrap( const bool dynamic ) {
@@ -128,6 +233,17 @@ void Class::WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, cons
 void Class::SetProperty( gse::context::Context* ctx, const gse::si_t& call_si, const std::string& name, const gse::Value& value ) {
 	const auto& it_old = m_properties.find( name );
 	if ( it_old == m_properties.end() || it_old->second != value ) {
+		const auto& it = s_name_to_modifier.find( name );
+		if ( it != s_name_to_modifier.end() ) {
+			ASSERT_NOLOG( m_subclasses.find( it->second ) != m_subclasses.end(), "subclass not found" );
+			if ( value.Get()->type != gse::type::Type::T_OBJECT ) {
+				GSE_ERROR( gse::EC.UI_ERROR, "Class " + name + " definition must be Object, found " + value.GetTypeString() + ": " + value.ToString() );
+			}
+			const auto& cls = m_subclasses.at( it->second );
+			for ( const auto& p : ((gse::type::Object*)value.Get())->value ) {
+				cls->SetProperty( ctx, call_si, p.first, p.second );
+			}
+		}
 		m_properties.insert_or_assign( name, value );
 		for ( const auto& obj : m_wrapobjs ) {
 			obj->value.insert_or_assign( name, value );
@@ -136,7 +252,7 @@ void Class::SetProperty( gse::context::Context* ctx, const gse::si_t& call_si, c
 			cls->SetPropertyFromParent( ctx, call_si, name, value );
 		}
 		for ( const auto& object : m_objects ) {
-			object->SetPropertyFromClass( ctx, call_si, name, value );
+			object.first->SetPropertyFromClass( ctx, call_si, name, value );
 		}
 	}
 }
@@ -163,7 +279,7 @@ void Class::UnsetProperty( GSE_CALLABLE, const std::string& name ) {
 			cls->UnsetPropertyFromParent( ctx, call_si, name );
 		}
 		for ( const auto& object : m_objects ) {
-			object->UnsetPropertyFromClass( ctx, call_si, name );
+			object.first->UnsetPropertyFromClass( ctx, call_si, name );
 		}
 	}
 }
@@ -197,20 +313,6 @@ void Class::UnsetPropertiesFromParent( GSE_CALLABLE ) {
 	ASSERT_NOLOG( m_parent_class, "parent class not set" );
 	for ( const auto& it : m_parent_class->m_properties ) {
 		UnsetPropertyFromParent( ctx, call_si, it.first );
-	}
-}
-
-void Class::UpdateObject( GSE_CALLABLE, dom::Object* const object ) {
-	for ( const auto& property : m_properties ) {
-		if ( m_is_master ) {
-			const auto it = s_name_to_modifier.find( property.first );
-			if ( it != s_name_to_modifier.end() ) {
-				ASSERT_NOLOG( m_subclasses.find( it->second ) != m_subclasses.end(), "subclass not found" );
-				//m_subclasses.at( it->second )->UpdateObject()
-				continue;
-			}
-		}
-		object->SetPropertyFromClass( ctx, call_si, property.first, property.second );
 	}
 }
 

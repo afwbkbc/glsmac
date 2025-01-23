@@ -75,8 +75,8 @@ void SDL2::Iterate() {
 					event.motion.x,
 					event.motion.y
 				};
-				NEWV( ui_event, ui_legacy::event::MouseDown, event.motion.x, event.motion.y, GetMouseButton( event.button.button ) );
-				g_engine->GetUI()->ProcessEvent( ui_event );
+				const auto button = GetMouseButton( event.button.button );
+
 				ASSERT( m_active_mousedowns.find( event.button.button ) == m_active_mousedowns.end(),
 					"duplicate mousedown (button=" + std::to_string( event.button.button ) + ")"
 				);
@@ -84,12 +84,19 @@ void SDL2::Iterate() {
 					event.motion.x,
 					event.motion.y
 				};
+				// legacy
+				NEWV( ui_event, ui_legacy::event::MouseDown, event.motion.x, event.motion.y, button );
+				g_engine->GetUI()->ProcessEvent( ui_event );
 				DELETE( ui_event );
+				// new ui
+				e.SetType( EV_MOUSE_DOWN );
+				e.data.mouse.x = event.motion.x;
+				e.data.mouse.y = event.motion.y;
+				e.data.mouse.button = button;
 				break;
 			}
 			case SDL_MOUSEBUTTONUP: {
-				NEWV( ui_event, ui_legacy::event::MouseUp, event.motion.x, event.motion.y, GetMouseButton( event.button.button ) );
-				g_engine->GetUI()->ProcessEvent( ui_event );
+				const auto button = GetMouseButton( event.button.button );
 				auto it = m_active_mousedowns.find( event.button.button );
 				if ( it != m_active_mousedowns.end() ) { // sometimes touchscreen sends mouseup without or before mousedown, just ignore it
 					auto& mousedown_data = m_active_mousedowns.at( event.button.button );
@@ -101,7 +108,15 @@ void SDL2::Iterate() {
 					}
 					m_active_mousedowns.erase( event.button.button );
 				}
+				// legacy
+				NEWV( ui_event, ui_legacy::event::MouseUp, event.motion.x, event.motion.y, button );
+				g_engine->GetUI()->ProcessEvent( ui_event );
 				DELETE( ui_event );
+				// new ui
+				e.SetType( EV_MOUSE_UP );
+				e.data.mouse.x = event.motion.x;
+				e.data.mouse.y = event.motion.y;
+				e.data.mouse.button = button;
 				break;
 			}
 			case SDL_MOUSEWHEEL: {
@@ -151,20 +166,20 @@ void SDL2::Iterate() {
 
 }
 
-Event::mouse_button_t SDL2::GetMouseButton( uint8_t sdl_mouse_button ) const {
+mouse_button_t SDL2::GetMouseButton( uint8_t sdl_mouse_button ) const {
 	switch ( sdl_mouse_button ) {
 		case SDL_BUTTON_LEFT: {
-			return Event::M_LEFT;
+			return MB_LEFT;
 		}
 		case SDL_BUTTON_MIDDLE: {
-			return Event::M_MIDDLE;
+			return MB_MIDDLE;
 		}
 		case SDL_BUTTON_RIGHT: {
-			return Event::M_RIGHT;
+			return MB_RIGHT;
 		}
 		default: {
 			Log( "unsupported mouse button " + std::to_string( sdl_mouse_button ) );
-			return Event::M_NONE;
+			return MB_NONE;
 		}
 	}
 }

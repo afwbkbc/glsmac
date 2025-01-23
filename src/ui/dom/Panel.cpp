@@ -20,7 +20,8 @@ Panel::Panel( DOM_ARGS_T, const bool factories_allowed )
 	ForwardProperty( ctx, call_si, "background", m_surface );
 
 	Property(
-		ctx, call_si, "border", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v ) {
+		ctx, call_si, "border", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
+		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
 			const auto& str = ( (gse::type::String*)v.Get() )->value;
 			const auto parts = util::String::Split( str, ',' );
 			if ( parts.empty() ) {
@@ -45,6 +46,11 @@ Panel::Panel( DOM_ARGS_T, const bool factories_allowed )
 				UpdateBorderTexture();
 			}
 
+		},
+		[ this ]( GSE_CALLABLE ) {
+			m_border_corners = 0;
+			m_border_color = types::Color{};
+			m_border_surface->ClearTexture();
 		}
 	);
 	UpdateBorderTexture();
@@ -55,7 +61,7 @@ Panel::Panel( DOM_ARGS_T, const bool factories_allowed )
 
 void Panel::UpdateBorderTexture() {
 	m_surface->GetGeometry()->SetPadding( m_border_corners / 2 );
-	auto* texture = m_border_surface->GetTexturePtr();
+	auto* texture = m_border_surface->GetOwnedTexturePtr();
 	const auto& a = m_geometry->AsRectangle()->m_area;
 	texture->Resize( a.width, a.height );
 	memset( texture->m_bitmap, 0, texture->m_bitmap_size );
@@ -69,7 +75,6 @@ void Panel::UpdateBorderTexture() {
 			texture->SetPixel( 0, y, m_border_color );
 			texture->SetPixel( a.width - 1, y, m_border_color );
 		}
-		//r = ( r + 1 ) / 2;
 		for ( auto i = 0 ; i < r ; i++ ) {
 			texture->SetPixel( i, r - i, m_border_color );
 			texture->SetPixel( r - i, i, m_border_color );
@@ -81,7 +86,7 @@ void Panel::UpdateBorderTexture() {
 			texture->SetPixel( r - i, a.height - 1 - i, m_border_color );
 		}
 	}
-	texture->FullUpdate();
+	texture->FullUpdate(); // TODO: optimize?
 }
 
 }

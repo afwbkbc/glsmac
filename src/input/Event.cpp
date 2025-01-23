@@ -9,7 +9,14 @@ namespace input {
 void Event::SetType( const event_type_t type ) {
 	m_type = type;
 	m_flags = EF_NONE;
-	if ( m_type == EV_MOUSE_MOVE || m_type == EV_MOUSE_DOWN || m_type == EV_MOUSE_UP || m_type == EV_MOUSE_OVER || m_type == EV_MOUSE_OUT || m_type == EV_MOUSE_SCROLL ) {
+	if (
+		m_type == EV_MOUSE_MOVE ||
+			m_type == EV_MOUSE_DOWN ||
+			m_type == EV_MOUSE_UP ||
+			m_type == EV_MOUSE_OVER ||
+			m_type == EV_MOUSE_OUT ||
+			m_type == EV_MOUSE_SCROLL
+		) {
 		m_flags = (event_flag_t)( m_flags | EF_MOUSE );
 	}
 }
@@ -56,11 +63,11 @@ const std::unordered_map< event_type_t, std::string > g_type_str = {
 		"keypress"
 	},
 	{
-		EV_BUTTON_CLICK,
+		EV_CLICK,
 		"click"
 	},
 	{
-		EV_BUTTON_DOUBLE_CLICK,
+		EV_DOUBLE_CLICK,
 		"dblclick"
 	},
 	{
