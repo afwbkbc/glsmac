@@ -345,6 +345,17 @@
 			},
 		})
 	;
+	glsmac.ui.class('button-active')
+		.set({
+			background: '#221111',
+			_hover: {
+				background: '#442211',
+			},
+			_active: {
+				background: '#664444',
+			},
+		})
+	;
 	let button = root.button({
 		class: 'button1 button2',
 		align: 'bottom right',
@@ -368,6 +379,7 @@
 	});
 	button.on('click', (e) => {
 		if ( balls_timer != null ) {
+			button.removeclass('button-active');
 			balls_timer.stop();
 			balls_timer = null;
 			button.text = 'START';
@@ -375,6 +387,7 @@
 		else {
 			button.text = 'STOP';
 			balls_timer = #async( 10, f_move_balls );
+			button.addclass('button-active');
 		}
 		return true;
 	});

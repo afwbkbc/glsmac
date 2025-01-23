@@ -18,14 +18,15 @@ static const std::unordered_map< class_modifier_t, std::string > s_modifier_to_n
 	{ CM_ACTIVE, "_active" },
 };
 
-Class::Class( const UI* const ui,  const bool is_master )
+Class::Class( const UI* const ui, const std::string& name, const bool is_master )
 	: m_ui( ui )
+	, m_name( name )
 	, m_is_master( is_master ) {
 	if ( m_is_master ) {
 		m_subclasses = {
-			{ CM_HOVER, new Class( ui, false ) },
-			{ CM_ACTIVE, new Class( ui, false ) },
-			{ CM_FOCUS, new Class( ui, false ) },
+			{ CM_HOVER, new Class( ui, name + "._hover", false ) },
+			{ CM_ACTIVE, new Class( ui, name + "._active", false ) },
+			{ CM_FOCUS, new Class( ui, name + "._focus", false ) },
 		};
 	}
 }
@@ -36,6 +37,10 @@ Class::~Class() {
 			delete it.second;
 		}
 	}
+}
+
+const std::string& Class::GetName() const {
+	return m_name;
 }
 
 const gse::Value Class::GetProperty( const std::string& key, const class_modifiers_t& modifiers ) const {
@@ -90,8 +95,10 @@ void Class::RemoveObject( GSE_CALLABLE, dom::Object* object ) {
 		}
 	}
 	if ( m_is_master ) {
-		for ( const auto& property : m_properties ) {
-			object->UnsetPropertyFromClass( ctx, call_si, property.first );
+		for ( const auto& it : m_properties ) {
+			if ( s_name_to_modifier.find( it.first ) == s_name_to_modifier.end() ) {
+				object->UnsetPropertyFromClass( ctx, call_si, it.first );
+			}
 		}
 	}
 	m_objects.erase( object );

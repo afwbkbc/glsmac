@@ -1,6 +1,7 @@
 #include "Object.h"
 
 #include <atomic>
+#include <algorithm>
 
 #include "Container.h"
 #include "util/String.h"
@@ -23,6 +24,7 @@ Object::Object( DOM_ARGS_T )
 	, m_parent( parent )
 	, m_initial_properties( properties ) {
 	Property( ctx, call_si, "id", gse::type::Type::T_STRING );
+
 	Property(
 		ctx, call_si, "class", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& value ) {
 			const auto names = util::String::Split( ( (gse::type::String*)value.Get() )->value, ' ' );
@@ -37,6 +39,37 @@ Object::Object( DOM_ARGS_T )
 			SetClasses( ctx, call_si, names );
 		}
 	);
+	Method( ctx, call_si, "addclass", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 1 );
+		N_GETVALUE( name, 0, String );
+		ASSERT_NOLOG( m_properties.at("class").Get()->type == gse::type::Type::T_STRING, "class is not string" );
+		auto names = util::String::Split( ((gse::type::String*)m_properties.at("class").Get())->value, ' ' );
+		if ( std::find( names.begin(), names.end(), name ) == names.end() ) {
+			names.push_back( name );
+			UpdateProperty( "class", VALUE( gse::type::String, util::String::Join( names, ' ' ) ) );
+			SetClasses( ctx, call_si, names );
+		}
+		return VALUE( gse::type::Undefined );
+	} ) );
+	Method( ctx, call_si, "removeclass", NATIVE_CALL( this )
+	{
+		N_EXPECT_ARGS( 1 );
+		N_GETVALUE( name, 0, String );
+		ASSERT_NOLOG( m_properties.at( "class" ).Get()->type == gse::type::Type::T_STRING, "class is not string" );
+		const auto names = util::String::Split( ( (gse::type::String*)m_properties.at( "class" ).Get() )->value, ' ' );
+		if ( std::find( names.begin(), names.end(), name ) != names.end() ) {
+			std::vector< std::string > names_new = {};
+			names_new.reserve( names.size() - 1 );
+			for ( const auto& n : names ) {
+				if ( n != name ) {
+					names_new.push_back( n );
+				}
+			}
+			UpdateProperty( "class", VALUE( gse::type::String, util::String::Join( names_new, ' ' ) ) );
+			SetClasses( ctx, call_si, names_new );
+		}
+		return VALUE( gse::type::Undefined );
+	} ) );
 }
 
 Object::~Object() {
@@ -47,23 +80,24 @@ Object::~Object() {
 };
 
 const gse::Value Object::Wrap( const bool dynamic ) {
-	WRAPIMPL_PROPS
-	};
-	for ( const auto& p : m_properties ) {
-		properties.insert(
-			{
-				p.first,
-				p.second
-			}
-		);
-	}
-	return gse::Value(
-		std::make_shared< gse::type::Object >(
+	if ( !m_wrapobj ) {
+		WRAPIMPL_PROPS
+			};
+		for ( const auto& p : m_properties ) {
+			properties.insert(
+				{
+					p.first,
+					p.second
+				}
+			);
+		}
+		m_wrapobj = std::make_shared< gse::type::Object >(
 			nullptr, properties, m_tag, this, dynamic
 				? &Object::WrapSetStatic
 				: nullptr
-		)
-	);
+		);
+	}
+	return gse::Value( m_wrapobj );
 }
 
 void Object::WrapSet( const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& call_si ) {
@@ -127,6 +161,13 @@ const bool Object::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 		return ( (gse::type::Bool*)result.Get() )->value;
 	}
 	return false;
+}
+
+void Object::UpdateProperty( const std::string& k, const gse::Value& v ) {
+	m_properties.insert_or_assign( k, v );
+	if ( m_wrapobj ) {
+		m_wrapobj->value.insert_or_assign( k, v );
+	}
 }
 
 void Object::Actor( scene::actor::Actor* actor ) {
@@ -275,12 +316,17 @@ void Object::InitProperties( GSE_CALLABLE ) {
 void Object::SetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key, const gse::Value& value ) {
 	const auto& it = properties->find( key );
 	if ( it == properties->end() ) {
-		properties->insert(
-			{
-				key,
-				value
-			}
-		);
+		if ( properties == &m_properties ) {
+			UpdateProperty( key, value );
+		}
+		else {
+			properties->insert(
+				{
+					key,
+					value
+				}
+			);
+		}
 		if ( m_is_initialized && properties == &m_properties ) {
 			OnPropertyChange( ctx, call_si, key, value );
 		}
@@ -308,6 +354,11 @@ void Object::UnsetProperty( gse::context::Context* ctx, const gse::si_t& call_si
 			}
 		}
 		properties->erase( it );
+		if ( properties == &m_properties ) {
+			if ( m_wrapobj ) {
+				m_wrapobj->value.erase( key );
+			}
+		}
 		if ( m_is_initialized && properties == &m_properties ) {
 			OnPropertyRemove( ctx, call_si, key );
 		}

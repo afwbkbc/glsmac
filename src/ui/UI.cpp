@@ -90,7 +90,7 @@ WRAPIMPL_BEGIN( UI )
 					auto it = m_classes.find( name );
 					if ( it == m_classes.end() ) {
 						Log( "Creating UI class: " + name );
-						it = m_classes.insert({ name, new ui::Class( this, true ) }).first;
+						it = m_classes.insert({ name, new ui::Class( this, name, true ) }).first;
 						if ( arguments.size() >= 2 ) {
 							const gse::type::object_properties_t* properties = nullptr;
 							const std::string* parent_class = nullptr;

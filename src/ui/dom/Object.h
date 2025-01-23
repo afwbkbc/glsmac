@@ -65,6 +65,8 @@ protected:
 	virtual const bool IsEventRelevant( const input::Event& event ) const;
 	virtual const bool ProcessEventImpl( GSE_CALLABLE, const input::Event& event );
 
+	void UpdateProperty( const std::string& name, const gse::Value& v );
+
 	UI* const m_ui;
 	const properties_t m_initial_properties;
 
@@ -118,6 +120,8 @@ private:
 	void SetClasses( GSE_CALLABLE, const std::vector< std::string >& names );
 
 	class_modifiers_t m_modifiers = {};
+
+	std::shared_ptr< gse::type::Object > m_wrapobj = nullptr;
 
 private:
 	friend class Container;

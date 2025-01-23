@@ -19,9 +19,10 @@ class Object;
 
 class Class : public gse::Wrappable {
 public:
-	Class( const UI* const ui, const bool is_master );
+	Class( const UI* const ui, const std::string& name, const bool is_master );
 	~Class();
 
+	const std::string& GetName() const;
 	const gse::Value GetProperty( const std::string& key, const class_modifiers_t& modifiers ) const;
 	const properties_t& GetProperties() const;
 
@@ -37,7 +38,7 @@ public:
 
 private:
 	const UI* const m_ui;
-
+	const std::string m_name;
 	const bool m_is_master;
 
 	properties_t m_local_properties = {};

@@ -12,6 +12,7 @@ namespace util {
 CLASS( String, Util )
 
 	static const std::vector< std::string > Split( const std::string& input, const char delimiter );
+	static const std::string Join( const std::vector< std::string >& input, const char delimiter );
 
 	static void Trim( std::string& s );
 	static const std::string TrimCopy( const std::string& s );

@@ -40,6 +40,17 @@ const std::vector< std::string > String::Split( const std::string& input, const 
 	return result;
 }
 
+const std::string String::Join( const std::vector< std::string >& input, const char delimiter ) {
+	std::string result = "";
+	for ( const auto& s : input ) {
+		if ( !result.empty() ) {
+			result += " ";
+		}
+		result += s;
+	}
+	return result;
+}
+
 // trim from start (in place)
 static inline void ltrim( std::string& s ) {
 	s.erase(
