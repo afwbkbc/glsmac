@@ -47,7 +47,7 @@ private:
 protected:
 	friend class ui::Class;
 
-	void SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value ) override;
+	void SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value, const class_modifier_t modifier ) override;
 	void UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) override;
 
 private:

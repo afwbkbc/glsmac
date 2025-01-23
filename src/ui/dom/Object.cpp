@@ -12,6 +12,8 @@
 #include "input/Event.h"
 #include "gse/type/Bool.h"
 
+#include "Object.colormap.cpp"
+
 namespace ui {
 namespace dom {
 
@@ -225,9 +227,46 @@ void Object::Events( const std::unordered_set< input::event_type_t >& events ) {
 	}
 }
 
-void Object::ParseColor( GSE_CALLABLE, const std::string& str, types::Color& color ) const {
-	if ( !util::String::ParseColor( str, color ) ) {
-		GSE_ERROR( gse::EC.UI_ERROR, "Property 'color' has invalid color format. Expected hex values ( #RRGGBB or #RRGGBBAA ), got: " + str );
+const bool Object::TryParseColor( GSE_CALLABLE, const std::string& str, types::Color& color ) const {
+	// color names
+	const auto it = s_color_map.find( str );
+	if ( it != s_color_map.end() ) {
+		color = it->second;
+		return true;
+	}
+	const auto is_rgb = str.substr( 0, 4 ) == "rgb(";
+	const auto is_rgba = str.substr( 0, 5 ) == "rgba(";
+	if ( is_rgb || is_rgba ) {
+		const auto begin = is_rgb ? 4 : 5;
+		const auto end = str.rfind( ')' );
+		if ( end != std::string::npos ) {
+			const auto parts = util::String::Split( str.substr(begin, end - begin ), ',' );
+			if ( parts.size() != ( is_rgb ? 3 : 4 ) ) {
+				return false;
+			}
+			long int r, g, b, a;
+			if (
+				!util::String::ParseInt( parts.at( 0 ), r ) ||
+				!util::String::ParseInt( parts.at( 1 ), g ) ||
+				!util::String::ParseInt( parts.at( 2 ), b ) ||
+				( is_rgba && !util::String::ParseInt( parts.at( 3 ), a ) )
+			) {
+				return false;
+			}
+			color = is_rgb
+				? types::Color::FromRGB( r, g, b )
+				: types::Color::FromRGBA( r, g, b, a )
+			;
+			return true;
+		}
+	}
+	// hex values
+	return util::String::ParseColorHex( str, color );
+}
+
+void Object::ParseColor( gse::context::Context* ctx, const gse::si_t& call_si, const std::string& str, types::Color& color ) const {
+	if ( !TryParseColor( ctx, call_si, str, color ) ) {
+		GSE_ERROR( gse::EC.UI_ERROR, "Property has invalid color format. Expected color name ('green', 'red', ...), rgb values ('rgb(0,255,0)', 'rgb(100,100,20)', ...) or hex value ('#ff0000', '#227748', ...), got: " + str );
 	}
 }
 
@@ -388,12 +427,19 @@ void Object::SetClasses( GSE_CALLABLE, const std::vector< std::string >& names )
 	}
 }
 
-void Object::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value ) {
+void Object::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value, const class_modifier_t modifier ) {
 	const auto& def_it = m_property_defs.find( key );
 	if ( def_it == m_property_defs.end() ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' does not exist" );
 	}
 	if ( m_manual_properties.find( key ) == m_manual_properties.end() ) {
+		// check if property was set by any of previous classes with higher modifier
+		for ( const auto& c : m_classes ) {
+			const auto kv = c->GetProperty( key, m_modifiers );
+			if ( kv.first.Get()->type != gse::type::Type::T_UNDEFINED && kv.second > modifier ) {
+				return;
+			}
+		}
 		SetProperty( ctx, call_si, &m_properties, key, value );
 	}
 }
@@ -413,7 +459,8 @@ void Object::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
 	if ( v.Get()->type == gse::type::Type::T_UNDEFINED ) {
 		// search in other classes
 		for ( auto it = m_classes.rbegin() ; it != m_classes.rend() ; it++ ) {
-			v = ( *it )->GetProperty( key, m_modifiers );
+			const auto kv = ( *it )->GetProperty( key, m_modifiers );
+			v = kv.first;
 			if ( v.Get()->type != gse::type::Type::T_UNDEFINED ) {
 				break;
 			}

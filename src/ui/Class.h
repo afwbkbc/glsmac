@@ -23,12 +23,12 @@ public:
 	~Class();
 
 	const std::string& GetName() const;
-	const gse::Value GetProperty( const std::string& key, const class_modifiers_t& modifiers ) const;
+	const std::pair< gse::Value, class_modifier_t > GetProperty( const std::string& key, const class_modifiers_t& modifiers ) const;
 	const properties_t& GetProperties() const;
 
 	void AddObject( GSE_CALLABLE, dom::Object* object, const class_modifiers_t& modifiers );
 	void RemoveObject( GSE_CALLABLE, dom::Object* object );
-	void UpdateObject( GSE_CALLABLE, dom::Object* const object );
+	void UpdateObject( GSE_CALLABLE, dom::Object* const object, const class_modifier_t modifier );
 	void AddObjectModifier( GSE_CALLABLE, dom::Object* object, const class_modifier_t modifier );
 	void RemoveObjectModifier( GSE_CALLABLE, dom::Object* object, const class_modifier_t modifier );
 

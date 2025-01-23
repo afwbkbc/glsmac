@@ -280,7 +280,7 @@
 	glsmac.ui.class('ball1', { // set in constructor is possible too
 		width: 20,
 		height: 20,
-		background: '#ff0000',
+		background: 'blue',
 	});
 	glsmac.ui.class('ball1text', 'balltext', { // extend in constructor
 		font: ':16',
@@ -288,7 +288,7 @@
 	glsmac.ui.class('ball2', {
 		width: 30,
 		height: 30,
-		background: '#006600',
+		background: 'rgb(0, 255, 0)',
 	});
 	glsmac.ui.class('ball2text').extend('balltext').set({ // extend after constructor is possible too
 		font: ':20',
@@ -336,8 +336,8 @@
 		.set({
 			font: ':20',
 			_hover: {
-				color: '#ffffff',
-				border: '#ffffff,3',
+				color: 'white',
+				border: 'white,3',
 				background: '#224411',
 			},
 			_active: {
@@ -348,6 +348,7 @@
 	glsmac.ui.class('button-active')
 		.set({
 			background: '#221111',
+			color: 'red',
 			_hover: {
 				background: '#442211',
 			},
@@ -411,13 +412,13 @@
 	// cycle colors a bit
 	let is_blue = false;
 	#async(200, () => {
+		is_blue = !is_blue;
 		if ( is_blue ) {
-			counterbox.background = '#ff000077';
-		}
-		else {
 			counterbox.background = '#0000ff77';
 		}
-		is_blue = !is_blue;
+		else {
+			counterbox.background = 'rgba(255, 0, 0, 127)';
+		}
 		return true;
 	});
 

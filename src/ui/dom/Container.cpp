@@ -249,16 +249,23 @@ void Container::InitAndValidate( GSE_CALLABLE ) {
 	InitProperties( ctx, call_si );
 }
 
-void Container::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value ) {
-	FORWARD_CALL( SetPropertyFromClass, ctx, call_si, key, value );
+void Container::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value, const class_modifier_t modifier ) {
+	// check if property was set by any of previous classes with higher modifier
+	for ( const auto& c : m_classes ) {
+		const auto kv = c->GetProperty( key, m_modifiers );
+		if ( kv.first.Get()->type != gse::type::Type::T_UNDEFINED && kv.second > modifier ) {
+			return;
+		}
+	}
+	FORWARD_CALL( SetPropertyFromClass, ctx, call_si, key, value, modifier );
 }
 
 void Container::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
 	// check in other classes
 	for ( auto it = m_classes.rbegin() ; it != m_classes.rend() ; it++ ) {
-		const auto value = (*it)->GetProperty( key, m_modifiers );
-		if ( value.Get()->type != gse::type::Type::T_UNDEFINED ) {
-			FORWARD_CALL( SetPropertyFromClass, ctx, call_si, key, value );
+		const auto kv = (*it)->GetProperty( key, m_modifiers );
+		if ( kv.first.Get()->type != gse::type::Type::T_UNDEFINED ) {
+			FORWARD_CALL( SetPropertyFromClass, ctx, call_si, key, kv.first, kv.second );
 			return;
 		}
 	}

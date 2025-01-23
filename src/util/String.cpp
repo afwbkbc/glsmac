@@ -28,29 +28,6 @@ inline const float gethexfloat( const char* str ) {
 	return (float)gethex( str ) / 255.0f;
 }
 
-const std::vector< std::string > String::Split( const std::string& input, const char delimiter ) {
-	std::vector< std::string > result = {};
-	auto ss = std::stringstream{ input };
-	for ( std::string part ; std::getline( ss, part, delimiter ) ; ) {
-		if ( delimiter == '\n' && !part.empty() && part.back() == '\r' ) {
-			part.erase( part.end() - 1 );
-		}
-		result.push_back( part );
-	}
-	return result;
-}
-
-const std::string String::Join( const std::vector< std::string >& input, const char delimiter ) {
-	std::string result = "";
-	for ( const auto& s : input ) {
-		if ( !result.empty() ) {
-			result += " ";
-		}
-		result += s;
-	}
-	return result;
-}
-
 // trim from start (in place)
 static inline void ltrim( std::string& s ) {
 	s.erase(
@@ -77,6 +54,32 @@ static inline void rtrim( std::string& s ) {
 static inline void trim( std::string& s ) {
 	rtrim( s );
 	ltrim( s );
+}
+
+const std::vector< std::string > String::Split( const std::string& input, const char delimiter ) {
+	std::vector< std::string > result = {};
+	auto ss = std::stringstream{ input };
+	for ( std::string part ; std::getline( ss, part, delimiter ) ; ) {
+		if ( delimiter == '\n' && !part.empty() && part.back() == '\r' ) {
+			part.erase( part.end() - 1 );
+		}
+		if ( delimiter == ',' ) {
+			trim( part );
+		}
+		result.push_back( part );
+	}
+	return result;
+}
+
+const std::string String::Join( const std::vector< std::string >& input, const char delimiter ) {
+	std::string result = "";
+	for ( const auto& s : input ) {
+		if ( !result.empty() ) {
+			result.push_back( delimiter );
+		}
+		result += s;
+	}
+	return result;
 }
 
 void String::Trim( std::string& s ) {
@@ -120,7 +123,7 @@ const bool String::ParseFloat( const std::string& s, float& result ) {
 	return r && *r == '\0';
 }
 
-const bool String::ParseColor( const std::string& s, types::Color& result ) {
+const bool String::ParseColorHex( const std::string& s, types::Color& result ) {
 	if ( s.empty() || s.at( 0 ) != '#' ) {
 		return false;
 	}

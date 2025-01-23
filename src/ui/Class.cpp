@@ -43,15 +43,16 @@ const std::string& Class::GetName() const {
 	return m_name;
 }
 
-const gse::Value Class::GetProperty( const std::string& key, const class_modifiers_t& modifiers ) const {
-	auto v = VALUE( gse::type::Undefined );
+const std::pair< gse::Value, class_modifier_t > Class::GetProperty( const std::string& key, const class_modifiers_t& modifiers ) const {
+	auto v = std::make_pair( VALUE( gse::type::Undefined ), CM_NONE );
 
 	if ( m_is_master ) {
 		// search in modifiers
 		for ( const auto& m : modifiers ) {
 			ASSERT_NOLOG( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
 			v = m_subclasses.at( m )->GetProperty( key, {} );
-			if ( v.Get()->type != gse::type::Type::T_UNDEFINED ) {
+			if ( v.first.Get()->type != gse::type::Type::T_UNDEFINED ) {
+				v.second = m;
 				return v;
 			}
 		}
@@ -63,10 +64,12 @@ const gse::Value Class::GetProperty( const std::string& key, const class_modifie
 	// search in own properties
 	const auto& it = m_properties.find( key );
 	if ( it != m_properties.end() ) {
-		return it->second;
+		v.first = it->second;
+		v.second = CM_NONE;
+		return v;
 	}
 
-	// not found
+	// nothing found
 	return v;
 }
 
@@ -82,7 +85,7 @@ void Class::AddObject( GSE_CALLABLE, dom::Object* object, const class_modifiers_
 			ASSERT_NOLOG( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
 			m_subclasses.at( m )->AddObject( ctx, call_si, object, {} );
 		}
-		UpdateObject( ctx, call_si, object );
+		UpdateObject( ctx, call_si, object, CM_NONE );
 	}
 }
 
@@ -104,19 +107,19 @@ void Class::RemoveObject( GSE_CALLABLE, dom::Object* object ) {
 	m_objects.erase( object );
 }
 
-void Class::UpdateObject( GSE_CALLABLE, dom::Object* const object ) {
+void Class::UpdateObject( GSE_CALLABLE, dom::Object* const object, const class_modifier_t modifier ) {
 	for ( const auto& property : m_properties ) {
 		if ( s_name_to_modifier.find( property.first ) != s_name_to_modifier.end() ) {
 			ASSERT_NOLOG( m_is_master, "modifier received by non-master" );
 			continue;
 		}
-		object->SetPropertyFromClass( ctx, call_si, property.first, property.second );
+		object->SetPropertyFromClass( ctx, call_si, property.first, property.second, modifier );
 	}
 	if ( m_is_master ) {
 		ASSERT_NOLOG( m_objects.find( object ) != m_objects.end(), "object not found" );
 		for ( const auto& m : m_objects.at( object ) ) {
 			ASSERT_NOLOG( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
-			m_subclasses.at( m )->UpdateObject( ctx, call_si, object );
+			m_subclasses.at( m )->UpdateObject( ctx, call_si, object, m );
 		}
 	}
 }
@@ -129,7 +132,7 @@ void Class::AddObjectModifier( GSE_CALLABLE, dom::Object* object, const class_mo
 		modifiers.insert( modifier );
 		const auto& cls = m_subclasses.at( modifier );
 		cls->AddObject( ctx, call_si, object, {} );
-		cls->UpdateObject( ctx, call_si, object );
+		cls->UpdateObject( ctx, call_si, object, modifier );
 	}
 }
 
@@ -162,7 +165,7 @@ void Class::RemoveObjectModifier( GSE_CALLABLE, dom::Object* object, const class
 				object->UnsetPropertyFromClass( ctx, call_si, p.first );
 			}
 			else {
-				object->SetPropertyFromClass( ctx, call_si, p.first, v );
+				object->SetPropertyFromClass( ctx, call_si, p.first, v, CM_NONE );
 			}
 		}
 	}
@@ -259,7 +262,7 @@ void Class::SetProperty( gse::context::Context* ctx, const gse::si_t& call_si, c
 			cls->SetPropertyFromParent( ctx, call_si, name, value );
 		}
 		for ( const auto& object : m_objects ) {
-			object.first->SetPropertyFromClass( ctx, call_si, name, value );
+			object.first->SetPropertyFromClass( ctx, call_si, name, value, CM_NONE );
 		}
 	}
 }

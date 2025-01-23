@@ -29,13 +29,8 @@ Surface::Surface( DOM_ARGS )
 				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property 'background' expects color code or texture path", ctx, call_si );
 			}
 			bool is_tiled = true;
-			if ( str.at( 0 ) == '#' ) {
-				types::Color color;
-				if ( str == "#1fffff" || str == "#1000ff" ) {
-					int a = 5;
-					a++;
-				}
-				ParseColor( ctx, call_si, str, color );
+			types::Color color = {};
+			if ( TryParseColor( ctx, call_si, str, color ) ) {
 				CreateTexture();
 				m_background.texture->Resize( 1, 1 );
 				m_background.texture->SetPixel( 0, 0, color );

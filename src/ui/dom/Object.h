@@ -83,6 +83,7 @@ protected:
 	void Method( GSE_CALLABLE, const std::string& name, const gse::Value& callable );
 	void Events( const std::unordered_set< input::event_type_t >& events );
 
+	const bool TryParseColor( GSE_CALLABLE, const std::string& str, types::Color& color ) const;
 	void ParseColor( GSE_CALLABLE, const std::string& str, types::Color& color ) const;
 
 	virtual void OnPropertyChange( GSE_CALLABLE, const std::string& key, const gse::Value& value ) const;
@@ -132,7 +133,7 @@ private:
 protected:
 	friend class ui::Class;
 
-	virtual void SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value );
+	virtual void SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value, const class_modifier_t modifier );
 	virtual void UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key );
 
 };
