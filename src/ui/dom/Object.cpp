@@ -75,6 +75,9 @@ Object::Object( DOM_ARGS_T )
 }
 
 Object::~Object() {
+	if ( m_is_iterable_set ) {
+		m_ui->RemoveIterable( this );
+	}
 	for ( const auto& actor : m_actors ) {
 		m_ui->m_scene->RemoveActor( actor );
 		delete actor;
@@ -225,6 +228,12 @@ void Object::Events( const std::unordered_set< input::event_type_t >& events ) {
 		ASSERT_NOLOG( m_supported_events.find( event ) == m_supported_events.end(), "event already handled: " + std::to_string( event ) );
 		m_supported_events.insert( event );
 	}
+}
+
+void Object::Iterable( const std::function< void() >& f ) {
+	ASSERT_NOLOG( !m_is_iterable_set, "iterable already set" );
+	m_is_iterable_set = true;
+	m_ui->AddIterable( this, f );
 }
 
 const bool Object::TryParseColor( GSE_CALLABLE, const std::string& str, types::Color& color ) const {

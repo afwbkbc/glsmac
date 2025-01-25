@@ -58,7 +58,7 @@ public:
 
 	virtual geometry::Geometry* const GetGeometry() const;
 
-	const bool ProcessEvent( GSE_CALLABLE, const input::Event& event );
+	virtual const bool ProcessEvent( GSE_CALLABLE, const input::Event& event );
 
 protected:
 
@@ -82,6 +82,7 @@ protected:
 	virtual void Property( GSE_CALLABLE, const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value = VALUE( gse::type::Undefined ), const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr, const f_on_unset_t& f_on_unset = nullptr );
 	void Method( GSE_CALLABLE, const std::string& name, const gse::Value& callable );
 	void Events( const std::unordered_set< input::event_type_t >& events );
+	void Iterable( const std::function< void() >& f );
 
 	const bool TryParseColor( GSE_CALLABLE, const std::string& str, types::Color& color ) const;
 	void ParseColor( GSE_CALLABLE, const std::string& str, types::Color& color ) const;
@@ -123,6 +124,8 @@ private:
 	class_modifiers_t m_modifiers = {};
 
 	std::shared_ptr< gse::type::Object > m_wrapobj = nullptr;
+
+	bool m_is_iterable_set = false;
 
 private:
 	friend class Container;

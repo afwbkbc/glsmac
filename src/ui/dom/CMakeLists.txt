@@ -9,5 +9,6 @@ SET( SRC ${SRC}
 	${PWD}/Panel.cpp
 	${PWD}/Text.cpp
 	${PWD}/Button.cpp
+	${PWD}/Input.cpp
 
 	PARENT_SCOPE )

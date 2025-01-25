@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <functional>
 
 #include "common/Common.h"
 #include "gse/Wrappable.h"
@@ -24,6 +25,8 @@ class Geometry;
 
 namespace dom {
 class Root;
+
+class Object;
 }
 
 class Class;
@@ -32,6 +35,8 @@ CLASS2( UI, common::Class, gse::Wrappable )
 
 	UI( GSE_CALLABLE );
 	~UI();
+
+	void Iterate();
 
 	WRAPDEFS_PTR( UI );
 
@@ -44,6 +49,12 @@ CLASS2( UI, common::Class, gse::Wrappable )
 	ui::Class* const GetClass( const std::string& name ) const;
 
 	const types::Vec2< ssize_t >& GetLastMousePosition() const;
+
+private:
+	friend class dom::Object;
+	typedef std::function< void() > f_iterable_t;
+	void AddIterable( const dom::Object* const obj, const f_iterable_t& f );
+	void RemoveIterable( const dom::Object* const obj );
 
 private:
 	dom::Root* m_root;
@@ -59,6 +70,7 @@ private:
 
 	void Resize();
 
+	std::unordered_map< const dom::Object*, f_iterable_t > m_iterables = {};
 };
 
 }

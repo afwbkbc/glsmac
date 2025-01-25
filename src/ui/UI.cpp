@@ -76,6 +76,12 @@ UI::~UI() {
 
 }
 
+void UI::Iterate() {
+	for ( const auto& it : m_iterables ) {
+		it.second();
+	}
+}
+
 WRAPIMPL_BEGIN( UI )
 	WRAPIMPL_PROPS
 			{
@@ -177,6 +183,16 @@ ui::Class* const UI::GetClass( const std::string& name ) const {
 
 const types::Vec2< ssize_t >& UI::GetLastMousePosition() const {
 	return m_last_mouse_position;
+}
+
+void UI::AddIterable( const dom::Object* const obj, const f_iterable_t& f ) {
+	ASSERT( m_iterables.find( obj ) == m_iterables.end(), "iterable already exists" );
+	m_iterables.insert( {obj, f } );
+}
+
+void UI::RemoveIterable( const dom::Object* const obj ) {
+	ASSERT( m_iterables.find( obj ) != m_iterables.end(), "iterable not found" );
+	m_iterables.erase( obj );
 }
 
 }

@@ -8,6 +8,7 @@
 #include "Panel.h"
 #include "Text.h"
 #include "Button.h"
+#include "Input.h"
 #include "scene/actor/Cache.h"
 #include "input/Event.h"
 
@@ -37,6 +38,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 		FACTORY( "panel", Panel );
 		FACTORY( "text", Text );
 		FACTORY( "button", Button );
+		FACTORY( "input", Input );
 	}
 }
 
@@ -67,6 +69,17 @@ void Container::UpdateMouseOver( GSE_CALLABLE, Object* child ) {
 		e.data.mouse = { last_mouse_pos.x, last_mouse_pos.y };
 		child->ProcessEvent( ctx, call_si, e );
 	}
+}
+
+const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
+	for ( const auto& child : m_children ) {
+		if (
+			child.second->ProcessEvent( ctx, call_si, event )
+			) {
+			return true;
+		}
+	}
+	return Object::ProcessEvent( ctx, call_si, event );
 }
 
 const bool Container::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
@@ -143,13 +156,6 @@ const bool Container::ProcessEventImpl( GSE_CALLABLE, const input::Event& event 
 			break;
 		}
 		default: {}
-	}
-	for ( const auto& child : m_children ) {
-		if (
-			child.second->ProcessEvent( ctx, call_si, event )
-			) {
-			return true;
-		}
 	}
 	return Area::ProcessEventImpl( ctx, call_si, event );
 }

@@ -20,6 +20,8 @@ public:
 
 	void UpdateMouseOver( GSE_CALLABLE, Object* child );
 
+	const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
+
 protected:
 
 	virtual const bool ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) override;

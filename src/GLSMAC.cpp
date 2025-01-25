@@ -67,6 +67,7 @@ GLSMAC::~GLSMAC() {
 
 void GLSMAC::Iterate() {
 	m_gse->Iterate();
+	m_ui->Iterate();
 }
 
 WRAPIMPL_BEGIN( GLSMAC )

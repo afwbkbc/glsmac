@@ -28,14 +28,10 @@ Text::Text( DOM_ARGS )
 
 	Property(
 		ctx, call_si, "text", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v ) {
-			m_actor->SetText( ( (gse::type::String*)v.Get() )->value );
-			m_geometry->SetWidth( m_actor->GetWidth() );
-			m_geometry->SetHeight( m_actor->GetHeight() );
+			SetText( ( (gse::type::String*)v.Get() )->value );
 		},
 		[ this ]( GSE_CALLABLE ) {
-			m_actor->SetText( "" );
-			m_geometry->SetWidth( 0 );
-			m_geometry->SetHeight( 0 );
+			SetText( "" );
 		}
 	);
 
@@ -76,6 +72,15 @@ Text::Text( DOM_ARGS )
 }
 
 Text::~Text() {
+}
+
+void Text::SetText( const std::string& text ) {
+	if ( text != m_text ) {
+		m_text = text;
+		m_actor->SetText( m_text );
+		m_geometry->SetWidth( m_actor->GetWidth() );
+		m_geometry->SetHeight( m_actor->GetHeight() );
+	}
 }
 
 void Text::UpdateFont() {
