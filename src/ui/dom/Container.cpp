@@ -33,6 +33,26 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 		m_cache->Update();
 	};
 
+	Property(
+		ctx, call_si, "overflow", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
+		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
+			const auto& value = ((gse::type::String*)v.Get())->value;
+			if ( value == "visible" ) {
+				m_geometry->SetOverflowAllowed( true );
+			}
+			else if ( value == "hidden" ) {
+				m_geometry->SetOverflowAllowed( false );
+			}
+			else {
+				GSE_ERROR( gse::EC.UI_ERROR, "Invalid overflow value. Expected: visible or hidden, got: " + value );
+			};
+			return VALUE( gse::type::Undefined );
+		},
+		[ this ]( GSE_CALLABLE ) {
+			m_geometry->SetOverflowAllowed( true );
+		}
+	);
+
 	if ( factories_allowed ) {
 		FACTORY( "surface", Surface );
 		FACTORY( "panel", Panel );

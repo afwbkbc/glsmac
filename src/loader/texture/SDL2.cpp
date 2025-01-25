@@ -41,7 +41,7 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename ) {
 		ASSERT( image, IMG_GetError() );
 		if ( image->format->format != SDL_PIXELFORMAT_RGBA32 ) {
 			// we must have all images in same format
-			SDL_Surface * old = image;
+			SDL_Surface* old = image;
 			image = SDL_ConvertSurfaceFormat( old, SDL_PIXELFORMAT_RGBA32, 0 );
 			ASSERT( image, IMG_GetError() );
 			SDL_FreeSurface( old );
@@ -140,6 +140,7 @@ void SDL2::FixTransparency( types::texture::Texture* texture ) const {
 
 static const types::Color::rgba_t s_yellow_shadow_src = types::Color::RGB( 253, 189, 118 );
 static const types::Color::rgba_t s_yellow_shadow_dst = types::Color::RGBA( 0, 0, 0, 127 );
+
 void SDL2::FixYellowShadows( types::texture::Texture* texture ) const {
 	if ( m_fix_yellow_shadows ) {
 		void* at = nullptr;

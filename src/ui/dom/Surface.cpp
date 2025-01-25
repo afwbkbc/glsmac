@@ -42,7 +42,11 @@ Surface::Surface( DOM_ARGS )
 				//   texture.pcx:filter1(arg1,arg2,...):filter2():...
 				const auto params = util::String::Split( str, ':' );
 				ASSERT_NOLOG( !params.empty(), "texture params empty" );
-				types::texture::Filter filter( g_engine->GetTextureLoader()->LoadCustomTexture( params.front() ) );
+				auto* texture = g_engine->GetTextureLoader()->TryLoadCustomTexture( params.front() );
+				if ( !texture ) {
+					GSE_ERROR( gse::EC.LOADER_ERROR, "Could not load texture: " + params.front() );
+				}
+				types::texture::Filter filter( texture );
 				std::vector< std::string > args = {};
 				for ( auto it = params.begin() + 1 ; it != params.end() ; it++ ) {
 					const auto brackets_begin = it->find( '(' );

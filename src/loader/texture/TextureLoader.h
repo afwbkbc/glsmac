@@ -25,6 +25,7 @@ CLASS( TextureLoader, Loader )
 
 	// load full texture
 	types::texture::Texture* LoadTexture( const resource::resource_t res );
+	types::texture::Texture* TryLoadCustomTexture( const std::string& filename );
 	types::texture::Texture* LoadCustomTexture( const std::string& filename );
 
 	// load part of texture

@@ -246,21 +246,24 @@ const bool Object::TryParseColor( GSE_CALLABLE, const std::string& str, types::C
 	const auto is_rgb = str.substr( 0, 4 ) == "rgb(";
 	const auto is_rgba = str.substr( 0, 5 ) == "rgba(";
 	if ( is_rgb || is_rgba ) {
+		const auto f_error = [ &ctx, &call_si, &is_rgb, &str ]() {
+			GSE_ERROR( gse::EC.UI_ERROR, (std::string)"Property has invalid color format. Method " + ( is_rgb ? "rgb expects 3" : "rgba expects 4" ) + " values (0 to 255), got: " + str );
+		};
 		const auto begin = is_rgb ? 4 : 5;
 		const auto end = str.rfind( ')' );
 		if ( end != std::string::npos ) {
 			const auto parts = util::String::Split( str.substr(begin, end - begin ), ',' );
 			if ( parts.size() != ( is_rgb ? 3 : 4 ) ) {
-				return false;
+				f_error();
 			}
 			long int r, g, b, a;
 			if (
-				!util::String::ParseInt( parts.at( 0 ), r ) ||
-				!util::String::ParseInt( parts.at( 1 ), g ) ||
-				!util::String::ParseInt( parts.at( 2 ), b ) ||
-				( is_rgba && !util::String::ParseInt( parts.at( 3 ), a ) )
+				!util::String::ParseInt( parts.at( 0 ), r ) || r < 0 || r > 255 ||
+				!util::String::ParseInt( parts.at( 1 ), g ) || g < 0 || g > 255 ||
+				!util::String::ParseInt( parts.at( 2 ), b ) || b < 0 || b > 255 ||
+				( is_rgba && ( !util::String::ParseInt( parts.at( 3 ), a ) || a < 0 || a > 255 ) )
 			) {
-				return false;
+				f_error();
 			}
 			color = is_rgb
 				? types::Color::FromRGB( r, g, b )

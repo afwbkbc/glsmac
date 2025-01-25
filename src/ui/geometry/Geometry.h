@@ -62,6 +62,7 @@ public:
 	void SetPadding( const coord_t px );
 	void SetAlign( const align_t align );
 	void SetZIndex( const coord_t zindex );
+	void SetOverflowAllowed( const bool is_overflow_allowed );
 
 	void NeedUpdate();
 
@@ -151,6 +152,7 @@ private:
 	coord_t m_padding = 0;
 	uint8_t m_align = ALIGN_LEFT | ALIGN_TOP;
 	coord_t m_zindex = 0.5f;
+	bool m_is_overflow_allowed = true;
 
 	void UpdateArea();
 	void UpdateEffectiveArea();

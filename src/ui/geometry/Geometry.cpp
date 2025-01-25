@@ -106,6 +106,13 @@ void Geometry::SetZIndex( const coord_t zindex ) {
 	}
 }
 
+void Geometry::SetOverflowAllowed( const bool is_overflow_allowed ) {
+	if ( is_overflow_allowed != m_is_overflow_allowed ) {
+		m_is_overflow_allowed = is_overflow_allowed;
+		NeedUpdate();
+	}
+}
+
 void Geometry::NeedUpdate() {
 	// for now update immediately, later queue and execute it once after
 	Update();
@@ -283,8 +290,10 @@ void Geometry::UpdateArea() {
 
 void Geometry::UpdateEffectiveArea() {
 	area_t effective_area = m_area;
-	for ( const auto& child : m_children ) {
-		effective_area.EnlargeTo( child->GetEffectiveArea() );
+	if ( m_is_overflow_allowed ) {
+		for ( const auto& child : m_children ) {
+			effective_area.EnlargeTo( child->GetEffectiveArea() );
+		}
 	}
 	if ( effective_area != m_effective_area ) {
 		m_effective_area = effective_area;

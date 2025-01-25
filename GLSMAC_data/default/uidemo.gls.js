@@ -423,6 +423,57 @@
         return true;
     });
 
+    glsmac.ui.class('ot').set({
+        width: 100,
+        height: 25,
+    });
+    const overflowtest = root.panel({
+        class: 'ot',
+        align: 'bottom left',
+        bottom: 100,
+        left: 100,
+        height: 100,
+        background: 'rgba(128, 255, 128, 128)',
+        overflow: 'hidden',
+    });
+    overflowtest.surface({
+        class: 'ot',
+        align: 'top left',
+        left: -50,
+        background: 'red',
+    });
+    overflowtest.surface({
+        class: 'ot',
+        align: 'top right',
+        right: -50,
+        background: 'green',
+        top: 25,
+    });
+    overflowtest.surface({
+        class: 'ot',
+        align: 'top left',
+        left: -50,
+        background: 'blue',
+        top: 50,
+    });
+    overflowtest.surface({
+        class: 'ot',
+        align: 'top right',
+        right: -50,
+        background: 'gray',
+        top: 75,
+    });
+    #async( 1000, () => {
+        if ( overflowtest.overflow == 'hidden' ) {
+            overflowtest.overflow = 'visible';
+        }
+        else {
+            overflowtest.overflow = 'hidden';
+        }
+        return true;
+    });
+
+
     texts.panel({
         align: 'center',
         width: 300,

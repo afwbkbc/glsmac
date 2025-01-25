@@ -310,7 +310,7 @@ std::vector< std::string > FS::ListDirectory( const std::string& directory, cons
 
 		for ( const auto& item : items ) {
 			const auto item_str = item.string();
-			const uint8_t prefix_len = directory[ directory.size() - 1 ] == path_separator
+			const uint8_t prefix_len = ( directory.empty() || directory[ directory.size() - 1 ] == path_separator )
 				? 0
 				: 1;
 			ASSERT_NOLOG( item_str.substr( 0, directory.size() ) == directory, "unexpected path in directory list results: " + item_str );

@@ -20,6 +20,7 @@ CLASS( ResourceManager, common::Module )
 	const resource_t GetResource( const std::string& filename ) const;
 	const std::string& GetFilename( const resource_t res ) const;
 	const std::string& GetPath( const resource_t res ) const;
+	const std::string& TryGetCustomPath( const std::string& path );
 	const std::string& GetCustomPath( const std::string& path );
 
 private:
