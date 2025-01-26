@@ -166,6 +166,16 @@ void SDL2::Iterate() {
 
 }
 
+const std::string SDL2::GetClipboardText() const {
+	std::string result = "";
+	auto* t = SDL_GetClipboardText();
+	if ( t ) {
+		result = t;
+		SDL_free( t );
+	}
+	return result;
+}
+
 mouse_button_t SDL2::GetMouseButton( uint8_t sdl_mouse_button ) const {
 	switch ( sdl_mouse_button ) {
 		case SDL_BUTTON_LEFT: {
@@ -202,15 +212,18 @@ char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 				code == '.' ||
 				code == '-' ||
 				code == '=' ||
+				code == ':' ||
 				code == ';' ||
-				code == '/'
+				code == '/' ||
+				code == '\\' ||
+				code == '\''
 		) ) {
 			result = code;
 		}
 		else if ( is_shift ) {
 			switch ( code ) {
-				case ':':
-					result = ';';
+				case ';':
+					result = ':';
 					break;
 				case '/':
 					result = '?';
@@ -250,6 +263,9 @@ char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 					break;
 				case '=':
 					result = '+';
+					break;
+				case '\'':
+					result = '"';
 					break;
 			}
 		}
@@ -309,6 +325,12 @@ key_code_t SDL2::GetScanCode( SDL_Scancode code, SDL_Keymod modifiers ) const {
 		case SDL_SCANCODE_END: {
 			return K_END;
 		}
+		case SDL_SCANCODE_INSERT: {
+			return K_INSERT;
+		}
+		case SDL_SCANCODE_DELETE: {
+			return K_DELETE;
+		}
 		case SDL_SCANCODE_KP_4: {
 			return K_KP_LEFT;
 		}
@@ -344,7 +366,7 @@ key_code_t SDL2::GetScanCode( SDL_Scancode code, SDL_Keymod modifiers ) const {
 	return K_NONE;
 }
 
-Event::key_modifier_t SDL2::GetModifiers( SDL_Keymod modifiers ) const {
+key_modifier_t SDL2::GetModifiers( SDL_Keymod modifiers ) const {
 	ui_legacy::event::key_modifier_t result = ui_legacy::event::KM_NONE;
 
 	if ( ( modifiers & KMOD_LSHIFT ) || ( modifiers & KMOD_RSHIFT ) ) {

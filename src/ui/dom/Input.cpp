@@ -2,7 +2,10 @@
 
 #include "Text.h"
 #include "ui/geometry/Geometry.h"
+#include "engine/Engine.h"
+#include "input/Input.h"
 #include "input/Event.h"
+#include "util/String.h"
 
 namespace ui {
 namespace dom {
@@ -73,6 +76,12 @@ const bool Input::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 					delete e.data.value.change_select.text;
 					break;
 				}
+				case input::K_INSERT: {
+					if ( event.data.key.modifiers & input::KM_SHIFT ) {
+						SetValue( GSE_CALL, m_value + util::String::FilterPrintable( g_engine->GetInput()->GetClipboardText() ) );
+						break;
+					}
+				}
 				default: {
 					if ( event.data.key.is_printable ) {
 						SetValue( GSE_CALL, m_value + std::string( 1, event.data.key.key ) );
@@ -115,12 +124,12 @@ void Input::SetValue( GSE_CALLABLE, const std::string& value ) {
 				: " "
 			)
 		);
-		FixAlign();
 		input::Event e;
 		e.SetType( input::EV_CHANGE );
 		e.data.value.change_select.text = new std::string( m_value );
 		ProcessEvent( GSE_CALL, e );
 		delete e.data.value.change_select.text;
+		FixAlign();
 	}
 }
 

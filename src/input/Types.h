@@ -25,6 +25,8 @@ enum key_code_t {
 	K_PAGEDOWN,
 	K_HOME,
 	K_END,
+	K_INSERT,
+	K_DELETE,
 	K_KP_LEFT,
 	K_KP_LEFT_UP,
 	K_KP_UP,
@@ -35,6 +37,12 @@ enum key_code_t {
 	K_KP_LEFT_DOWN,
 	K_CTRL
 };
+
+typedef uint8_t key_modifier_t;
+const static key_modifier_t KM_NONE = 0;
+const static key_modifier_t KM_SHIFT = 1 << 0;
+const static key_modifier_t KM_CTRL = 1 << 1;
+const static key_modifier_t KM_ALT = 1 << 2;
 
 enum event_type_t {
 	EV_NONE,

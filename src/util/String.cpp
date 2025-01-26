@@ -111,6 +111,115 @@ const std::string String::ToLowerCase( const std::string& s ) {
 	return result;
 }
 
+static const std::unordered_set< char > s_printable = {
+	'a',
+	's',
+	'd',
+	'f',
+	'g',
+	'h',
+	'j',
+	'k',
+	'l',
+	'q',
+	'w',
+	'e',
+	'r',
+	't',
+	'y',
+	'u',
+	'i',
+	'o',
+	'p',
+	'z',
+	'x',
+	'c',
+	'v',
+	'b',
+	'n',
+	'm',
+	'A',
+	'S',
+	'D',
+	'F',
+	'G',
+	'H',
+	'J',
+	'K',
+	'L',
+	'Q',
+	'W',
+	'E',
+	'R',
+	'T',
+	'Y',
+	'U',
+	'I',
+	'O',
+	'P',
+	'1',
+	'2',
+	'3',
+	'4',
+	'5',
+	'6',
+	'7',
+	'8',
+	'9',
+	'0',
+	'Z',
+	'X',
+	'C',
+	'V',
+	'B',
+	'N',
+	'M',
+	'`',
+	'-',
+	'=',
+	'~',
+	'@',
+	'#',
+	'$',
+	'%',
+	'^',
+	'&',
+	'*',
+	'(',
+	')',
+	'_',
+	'+',
+	'[',
+	']',
+	'\\',
+	'{',
+	'}',
+	'|',
+	';',
+	'\'',
+	':',
+	'"',
+	'.',
+	'/',
+	'<',
+	'>',
+	'?'
+};
+const std::string String::FilterPrintable( const std::string& s ) {
+	// TODO: improve
+	auto* r = (char*)malloc( s.length() + 1 );
+	auto* cc = r;
+	for ( const char* c = s.c_str() ; *c ; c++ ) {
+		if ( s_printable.find( *c ) != s_printable.end() ) {
+			*( cc++ ) = *c;
+		}
+	}
+	*cc = '\0';
+	std::string result = r;
+	free( r );
+	return result;
+}
+
 const bool String::ParseInt( const std::string& s, long int& result ) {
 	char* r = nullptr;
 	result = strtol( s.c_str(), &r, 10 );

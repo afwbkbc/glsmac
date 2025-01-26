@@ -173,6 +173,14 @@ const std::unordered_map< key_code_t, std::string > g_keycode_str = {
 		"END"
 	},
 	{
+		K_INSERT,
+		"INSERT",
+	},
+	{
+		K_DELETE,
+		"DELETE",
+	},
+	{
 		K_KP_LEFT,
 		"KP_LEFT"
 	},
@@ -215,15 +223,15 @@ const std::string& Event::GetKeyCodeStr() const {
 	return g_keycode_str.at( data.key.code );
 }
 
-const std::string GetModifiersStr( const Event::key_modifier_t modifiers ) {
+const std::string GetModifiersStr( const key_modifier_t modifiers ) {
 	std::string result = "";
-	if ( modifiers & Event::KM_SHIFT ) {
+	if ( modifiers & KM_SHIFT ) {
 		result += "SHIFT,";
 	}
-	if ( modifiers & Event::KM_CTRL ) {
+	if ( modifiers & KM_CTRL ) {
 		result += "CTRL,";
 	}
-	if ( modifiers & Event::KM_ALT ) {
+	if ( modifiers & KM_ALT ) {
 		result += "ALT,";
 	}
 	return result.substr( 0, result.size() - 1 );

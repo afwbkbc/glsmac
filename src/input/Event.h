@@ -10,12 +10,6 @@ namespace input {
 class Event {
 public:
 
-	typedef uint8_t key_modifier_t;
-	const static key_modifier_t KM_NONE = 0;
-	const static key_modifier_t KM_SHIFT = 1 << 0;
-	const static key_modifier_t KM_CTRL = 1 << 1;
-	const static key_modifier_t KM_ALT = 1 << 2;
-
 	typedef union {
 		struct {
 			ssize_t x;

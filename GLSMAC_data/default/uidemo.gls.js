@@ -473,7 +473,6 @@
         return true;
     });
 
-
     const input = texts.panel({
         align: 'center',
         width: 300,

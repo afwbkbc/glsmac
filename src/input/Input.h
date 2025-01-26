@@ -16,6 +16,8 @@ CLASS( Input, common::Module )
 	void AddHandler( const void* const owner, const input_handler_t& handler );
 	void RemoveHandler( const void* const owner );
 
+	virtual const std::string GetClipboardText() const = 0;
+
 protected:
 	void ProcessEvent( const Event& event );
 
