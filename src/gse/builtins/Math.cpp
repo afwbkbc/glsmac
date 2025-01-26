@@ -21,13 +21,13 @@ void Math::AddToContext( context::Context* ctx ) {
 		for ( uint8_t i = 0 ; i < 2 ; i++ ) { \
 			const auto& value = arguments.at(i).Get(); \
 			if ( value->type != type::Type::T_INT && value->type != type::Type::T_FLOAT ) { \
-				throw Exception( EC.INVALID_CALL, "Argument " + std::to_string( i ) + " is expected to be " + type::Type::GetTypeString( type::Type::T_INT ) + " or " + type::Type::GetTypeString( type::Type::T_FLOAT ) + ", found: " + type::Type::GetTypeString( value->type ), ctx, call_si ); \
+				throw Exception( EC.INVALID_CALL, "Argument " + std::to_string( i ) + " is expected to be " + type::Type::GetTypeString( type::Type::T_INT ) + " or " + type::Type::GetTypeString( type::Type::T_FLOAT ) + ", found: " + type::Type::GetTypeString( value->type ), GSE_CALL ); \
 			} \
 		} \
 		const auto& a = arguments.at(0).Get(); \
 		const auto& b = arguments.at(1).Get(); \
 		if ( a->type != b->type ) { \
-			throw Exception( EC.INVALID_CALL, "Arguments are of different types: " + type::Type::GetTypeString( a->type ) + ", " + type::Type::GetTypeString( b->type ), ctx, call_si ); \
+			throw Exception( EC.INVALID_CALL, "Arguments are of different types: " + type::Type::GetTypeString( a->type ) + ", " + type::Type::GetTypeString( b->type ), GSE_CALL ); \
 		} \
 		switch ( a->type ) { \
 			case type::Type::T_INT: \

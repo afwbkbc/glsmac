@@ -124,12 +124,41 @@ const Geometry::area_t& Geometry::GetEffectiveArea() const {
 
 void Geometry::OnChildUpdate() {
 	UpdateEffectiveArea();
-	if ( m_on_child_update ) {
-		m_on_child_update();
-	}
+	RunHandlers( GH_ON_CHILD_UPDATE );
 	if ( m_parent ) {
 		m_parent->OnChildUpdate();
 	}
+}
+
+const geometry_handler_id_t Geometry::AddHandler( const geometry_handler_type_t type, const std::function< void() >& f ) {
+	if ( m_next_handler_id >= 255 ) {
+		THROW( "bug: too many handlers" );
+	}
+	m_next_handler_id++;
+	ASSERT_NOLOG( m_handlers[ type ].find( m_next_handler_id ) == m_handlers[ type ].end(), "handler id already exists" );
+	ASSERT_NOLOG( m_handler_types.find( m_next_handler_id ) == m_handler_types.end(), "handler id already exists" );
+	m_handlers[ type ].insert(
+		{
+			m_next_handler_id,
+			f
+		}
+	);
+	m_handler_types.insert(
+		{
+			m_next_handler_id,
+			type
+		}
+	);
+	return m_next_handler_id;
+}
+
+void Geometry::RemoveHandler( const geometry_handler_id_t id ) {
+	ASSERT_NOLOG( m_handler_types.find( id ) != m_handler_types.end(), "handler id not found" );
+	const auto type = m_handler_types.at( id );
+	ASSERT_NOLOG( m_handlers.find( type ) != m_handlers.end(), "handler type not found" );
+	ASSERT_NOLOG( m_handlers.at( type ).find( id ) != m_handlers.at( type ).end(), "handler id not found" );
+	m_handlers.at( type ).erase( id );
+	m_handler_types.erase( id );
 }
 
 const bool Geometry::Contains( const types::Vec2< ssize_t >& position ) const {
@@ -266,9 +295,7 @@ void Geometry::UpdateArea() {
 
 		m_area = object_area;
 
-		if ( m_on_area_update ) {
-			m_on_area_update( m_area );
-		}
+		RunHandlers( GH_ON_AREA_UPDATE );
 
 /*		if ( m_created ) {
 			// process any mouseover/mouseout events
@@ -300,8 +327,15 @@ void Geometry::UpdateEffectiveArea() {
 		if ( m_parent ) {
 			m_parent->OnChildUpdate();
 		}
-		if ( m_on_effective_area_update ) {
-			m_on_effective_area_update( m_effective_area );
+		RunHandlers( GH_ON_EFFECTIVE_AREA_UPDATE );
+	}
+}
+
+void Geometry::RunHandlers( const geometry_handler_type_t type ) const {
+	const auto& it = m_handlers.find( type );
+	if ( it != m_handlers.end() ) {
+		for ( const auto& it2 : it->second ) {
+			it2.second();
 		}
 	}
 }

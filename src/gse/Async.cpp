@@ -125,7 +125,7 @@ void Async::ProcessTimers( const timers_t::iterator& it ) {
 		auto* ctx = timer.ctx;
 		const auto f = timer.callable;
 		const auto call_si = timer.si;
-		const auto result = ( (type::Callable*)f.Get() )->Run( ctx, call_si, {} );
+		const auto result = ( (type::Callable*)f.Get() )->Run( GSE_CALL, {} );
 
 		size_t ms = 0;
 		bool repeat = false;
@@ -145,7 +145,7 @@ void Async::ProcessTimers( const timers_t::iterator& it ) {
 			}
 			case type::Type::T_INT: {
 				ms = ( (type::Int*)r )->value;
-				ValidateMs( ms, ctx, call_si );
+				ValidateMs( ms, GSE_CALL );
 				repeat = true;
 				break;
 			}

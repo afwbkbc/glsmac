@@ -177,7 +177,7 @@ static const std::unordered_map< std::string, types::Color > s_color_map = {
 	C( white, 255, 255, 255 ),
 	C( whitesmoke, 245, 245, 245 ),
 	C( yellowgreen, 154, 205, 50 ),
-	
+
 };
 
 #undef C

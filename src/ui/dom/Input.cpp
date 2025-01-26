@@ -10,20 +10,25 @@ namespace dom {
 Input::Input( DOM_ARGS )
 	: Panel( DOM_ARGS_PASS, "Input", false ) {
 
-	m_text = new Text( ctx, call_si, ui, this, {} );
+	m_text = new Text( GSE_CALL, ui, this, {} );
 	m_text->GetGeometry()->SetAlign( geometry::Geometry::ALIGN_LEFT_CENTER );
 	m_text->GetGeometry()->SetLeft( 4 ); // TODO: configurable?
+	m_text->GetGeometry()->SetRight( 4 ); // TODO: configurable?
 	Embed( m_text );
 
-	m_value = "test input text"; // TMP
+	m_geometry->SetOverflowAllowed( false );
+
+	m_value = "";
 	m_text->SetText( m_value );
 
-	ForwardProperty( ctx, call_si, "color", m_text );
-	ForwardProperty( ctx, call_si, "font", m_text );
+	ForwardProperty( GSE_CALL, "color", m_text );
+	ForwardProperty( GSE_CALL, "font", m_text );
 
 	Events(
 		{
-			input::EV_KEY_DOWN
+			input::EV_KEY_DOWN,
+			input::EV_CHANGE,
+			input::EV_SELECT,
 		}
 	);
 
@@ -35,44 +40,64 @@ Input::Input( DOM_ARGS )
 				m_text->SetText(
 					m_value + ( m_is_blink_cursor_visible
 						? "_"
-						: ""
+						: " "
 					)
 				);
 			}
 		}
 	);
+
+	m_geometry->AddHandler(
+		GH_ON_AREA_UPDATE, [ this ]() {
+			FixAlign();
+		}
+	);
+
 }
 
 const bool Input::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 	switch ( event.type ) {
 		case input::EV_KEY_DOWN: {
-			if ( event.data.key.code == input::Event::K_BACKSPACE ) {
-				if ( !m_value.empty() ) {
-					SetValue( m_value.substr( 0, m_value.size() - 1 ) );
+			switch ( event.data.key.code ) {
+				case input::K_BACKSPACE: {
+					if ( !m_value.empty() ) {
+						SetValue( GSE_CALL, m_value.substr( 0, m_value.size() - 1 ) );
+					}
+					break;
 				}
-			}
-			else if ( event.data.key.is_printable ) {
-				SetValue( m_value + std::string( 1, event.data.key.key ) );
+				case input::K_ENTER: {
+					input::Event e;
+					e.SetType( input::EV_SELECT );
+					e.data.value.change_select.text = new std::string( m_value );
+					ProcessEvent( GSE_CALL, e );
+					delete e.data.value.change_select.text;
+					break;
+				}
+				default: {
+					if ( event.data.key.is_printable ) {
+						SetValue( GSE_CALL, m_value + std::string( 1, event.data.key.key ) );
+					}
+				}
 			}
 			break;
 		}
 		default: {
 		}
 	}
-	return Panel::ProcessEventImpl( ctx, call_si, event );
+	return Panel::ProcessEventImpl( GSE_CALL, event );
 }
 
 void Input::SerializeEvent( const input::Event& e, gse::type::object_properties_t& obj ) const {
 	switch ( e.type ) {
-		case input::EV_CHANGE: {
-			std::string Inputstr = "";
-/*			obj.insert(
+		case input::EV_CHANGE:
+		case input::EV_SELECT: {
+			ASSERT_NOLOG( e.data.value.change_select.text, "change text not set" );
+			obj.insert(
 				{
-					"Input",
-					VALUE( gse::type::String, Inputstr )
+					"value",
+					VALUE( gse::type::String, *e.data.value.change_select.text )
 				}
-			);*/
-			THROW( "TODO: SERIALIZE ONCHANGE" );
+			);
 			break;
 		}
 		default: {
@@ -81,15 +106,31 @@ void Input::SerializeEvent( const input::Event& e, gse::type::object_properties_
 	}
 }
 
-void Input::SetValue( const std::string& value ) {
+void Input::SetValue( GSE_CALLABLE, const std::string& value ) {
 	if ( value != m_value ) {
 		m_value = value;
 		m_text->SetText(
 			value + ( m_is_blink_cursor_visible
 				? "_"
-				: ""
+				: " "
 			)
 		);
+		FixAlign();
+		input::Event e;
+		e.SetType( input::EV_CHANGE );
+		e.data.value.change_select.text = new std::string( m_value );
+		ProcessEvent( GSE_CALL, e );
+		delete e.data.value.change_select.text;
+	}
+}
+
+void Input::FixAlign() {
+	auto* g = m_text->GetGeometry();
+	if ( g->m_area.width < m_geometry->m_area.width ) {
+		g->SetAlign( geometry::Geometry::ALIGN_LEFT_CENTER );
+	}
+	else {
+		g->SetAlign( geometry::Geometry::ALIGN_RIGHT_CENTER );
 	}
 }
 

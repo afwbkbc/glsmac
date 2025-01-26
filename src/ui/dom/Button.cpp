@@ -10,13 +10,13 @@ namespace dom {
 Button::Button( DOM_ARGS )
 	: Panel( DOM_ARGS_PASS, "button", false ) {
 
-	m_label = new Text( ctx, call_si, ui, this, {} );
+	m_label = new Text( GSE_CALL, ui, this, {} );
 	m_label->GetGeometry()->SetAlign( geometry::Geometry::ALIGN_CENTER );
 	Embed( m_label );
 
-	ForwardProperty( ctx, call_si, "text", m_label );
-	ForwardProperty( ctx, call_si, "color", m_label );
-	ForwardProperty( ctx, call_si, "font", m_label );
+	ForwardProperty( GSE_CALL, "text", m_label );
+	ForwardProperty( GSE_CALL, "color", m_label );
+	ForwardProperty( GSE_CALL, "font", m_label );
 
 	Events(
 		{
@@ -28,19 +28,19 @@ Button::Button( DOM_ARGS )
 const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 	switch ( event.type ) {
 		case input::EV_MOUSE_DOWN: {
-			AddModifier( ctx, call_si, CM_ACTIVE );
+			AddModifier( GSE_CALL, CM_ACTIVE );
 			m_last_button = event.data.mouse.button;
 			break;
 		}
 		case input::EV_MOUSE_UP:
 		case input::EV_MOUSE_OUT: {
-			RemoveModifier( ctx, call_si, CM_ACTIVE );
+			RemoveModifier( GSE_CALL, CM_ACTIVE );
 			if ( event.type == input::EV_MOUSE_UP && m_last_button != input::MB_NONE ) {
 				// actual click happened
 				input::Event e;
 				e.SetType( input::EV_CLICK );
 				e.data.mouse = event.data.mouse;
-				ProcessEvent( ctx, call_si, e );
+				ProcessEvent( GSE_CALL, e );
 			}
 			m_last_button = input::MB_NONE;
 			break;
@@ -48,7 +48,7 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 		default: {
 		}
 	}
-	return Panel::ProcessEventImpl( ctx, call_si, event );
+	return Panel::ProcessEventImpl( GSE_CALL, event );
 }
 
 void Button::SerializeEvent( const input::Event& e, gse::type::object_properties_t& obj ) const {

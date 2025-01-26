@@ -41,7 +41,7 @@ void Common::AddToContext( context::Context* ctx ) {
 				break;
 			}
 			default:
-				throw Exception( EC.OPERATION_NOT_SUPPORTED, "Could not get size of " + v->GetTypeString( v->type ) + ": " + v->ToString(), ctx, call_si );
+				throw Exception( EC.OPERATION_NOT_SUPPORTED, "Could not get size of " + v->GetTypeString( v->type ) + ": " + v->ToString(), GSE_CALL );
 		}
 		return VALUE( type::Int, size );
 	} ) );
@@ -64,7 +64,7 @@ void Common::AddToContext( context::Context* ctx ) {
 				break;
 			}
 			default:
-				throw Exception( EC.OPERATION_NOT_SUPPORTED, "Could not get size of " + v->GetTypeString( v->type ) + ": " + v->ToString(), ctx, call_si );
+				throw Exception( EC.OPERATION_NOT_SUPPORTED, "Could not get size of " + v->GetTypeString( v->type ) + ": " + v->ToString(), GSE_CALL );
 		}
 		return VALUE( type::Bool, is_empty );
 	} ) );
@@ -78,7 +78,7 @@ void Common::AddToContext( context::Context* ctx ) {
 			case type::Type::T_ARRAY:
 				return v.Clone();
 			default:
-				throw Exception( EC.OPERATION_NOT_SUPPORTED, "Cloning of type " + v.GetTypeString() + " is not supported", ctx, call_si );
+				throw Exception( EC.OPERATION_NOT_SUPPORTED, "Cloning of type " + v.GetTypeString() + " is not supported", GSE_CALL );
 		}
 	} ) );
 

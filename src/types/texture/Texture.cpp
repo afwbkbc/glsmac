@@ -56,15 +56,22 @@ void Texture::Resize( const size_t width, const size_t height ) {
 		m_width = width;
 		m_height = height;
 
-		m_aspect_ratio = m_height / m_width;
-
 		if ( m_bitmap ) {
 			free( m_bitmap );
 		}
-		m_bitmap_size = m_width * m_height * m_bpp;
-		m_bitmap = (unsigned char*)malloc( m_bitmap_size );
-		memset( ptr( m_bitmap, 0, m_bitmap_size ), 0, m_bitmap_size );
 
+		m_bitmap_size = m_width * m_height * m_bpp;
+
+		if ( m_height > 0 && m_width > 0 ) {
+
+			m_aspect_ratio = m_height / m_width;
+
+			m_bitmap = (unsigned char*)malloc( m_bitmap_size );
+			memset( ptr( m_bitmap, 0, m_bitmap_size ), 0, m_bitmap_size );
+		}
+		else {
+			m_bitmap = nullptr;
+		}
 		FullUpdate();
 	}
 }

@@ -9,15 +9,29 @@ namespace input {
 void Event::SetType( const event_type_t type ) {
 	m_type = type;
 	m_flags = EF_NONE;
-	if (
-		m_type == EV_MOUSE_MOVE ||
-			m_type == EV_MOUSE_DOWN ||
-			m_type == EV_MOUSE_UP ||
-			m_type == EV_MOUSE_OVER ||
-			m_type == EV_MOUSE_OUT ||
-			m_type == EV_MOUSE_SCROLL
-		) {
-		m_flags = (event_flag_t)( m_flags | EF_MOUSE );
+	switch ( m_type ) {
+		case EV_MOUSE_MOVE:
+		case EV_MOUSE_DOWN:
+		case EV_MOUSE_UP:
+		case EV_MOUSE_OVER:
+		case EV_MOUSE_OUT:
+		case EV_MOUSE_SCROLL: {
+			m_flags = (event_flag_t)( m_flags | EF_MOUSE );
+			break;
+		}
+		case EV_KEY_DOWN:
+		case EV_KEY_UP: {
+			m_flags = (event_flag_t)( m_flags | EF_KEYBOARD );
+			break;
+		}
+		case EV_CLICK:
+		case EV_CHANGE:
+		case EV_SELECT: {
+			m_flags = (event_flag_t)( m_flags | EF_SYNTHETIC );
+			break;
+		}
+		default: {
+		}
 	}
 }
 
@@ -97,101 +111,101 @@ const std::string& Event::GetTypeStr() const {
 	return g_type_str.at( type );
 }
 
-const std::unordered_map< Event::key_code_t, std::string > g_keycode_str = {
+const std::unordered_map< key_code_t, std::string > g_keycode_str = {
 	{
-		Event::K_NONE,
+		K_NONE,
 		"",
 	},
 	{
-		Event::K_LEFT,
+		K_LEFT,
 		"LEFT"
 	},
 	{
-		Event::K_UP,
+		K_UP,
 		"UP"
 	},
 	{
-		Event::K_RIGHT,
+		K_RIGHT,
 		"RIGHT"
 	},
 	{
-		Event::K_DOWN,
+		K_DOWN,
 		"DOWN"
 	},
 	{
-		Event::K_ENTER,
+		K_ENTER,
 		"ENTER"
 	},
 	{
-		Event::K_SPACE,
+		K_SPACE,
 		"SPACE"
 	},
 	{
-		Event::K_TAB,
+		K_TAB,
 		"TAB"
 	},
 	{
-		Event::K_BACKSPACE,
+		K_BACKSPACE,
 		"BACKSPACE"
 	},
 	{
-		Event::K_ESCAPE,
+		K_ESCAPE,
 		"ESCAPE"
 	},
 	{
-		Event::K_GRAVE,
+		K_GRAVE,
 		"GRAVE"
 	},
 	{
-		Event::K_PAGEUP,
+		K_PAGEUP,
 		"PAGEUP"
 	},
 	{
-		Event::K_PAGEDOWN,
+		K_PAGEDOWN,
 		"PAGEDOWN"
 	},
 	{
-		Event::K_HOME,
+		K_HOME,
 		"HOME"
 	},
 	{
-		Event::K_END,
+		K_END,
 		"END"
 	},
 	{
-		Event::K_KP_LEFT,
+		K_KP_LEFT,
 		"KP_LEFT"
 	},
 	{
-		Event::K_KP_LEFT_UP,
+		K_KP_LEFT_UP,
 		"KP_LEFT_UP"
 	},
 	{
-		Event::K_KP_UP,
+		K_KP_UP,
 		"KP_UP"
 	},
 	{
-		Event::K_KP_RIGHT_UP,
+		K_KP_RIGHT_UP,
 		"KP_RIGHT_UP"
 	},
 	{
-		Event::K_KP_RIGHT,
+		K_KP_RIGHT,
 		"KP_RIGHT"
 	},
 	{
-		Event::K_KP_RIGHT_DOWN,
+		K_KP_RIGHT_DOWN,
 		"KP_RIGHT_DOWN"
 	},
 	{
-		Event::K_KP_DOWN,
+		K_KP_DOWN,
 		"KP_DOWN"
 	},
 	{
-		Event::K_KP_LEFT_DOWN,
+		K_KP_LEFT_DOWN,
 		"KP_LEFT_DOWN"
 	},
 	{
-		Event::K_CTRL,
+		K_CTRL,
 		"CTRL"
 	},
 };

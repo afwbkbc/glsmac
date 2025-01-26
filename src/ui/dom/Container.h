@@ -9,7 +9,7 @@ class Cache;
 namespace ui {
 namespace dom {
 
-#define FACTORY( _name, _class ) Factory( ctx, call_si, _name, [ this ]( GSE_CALLABLE, const properties_t& p ) { return new _class( ctx, call_si, m_ui, this, p ); })
+#define FACTORY( _name, _class ) Factory( GSE_CALL, _name, [ this ]( GSE_CALLABLE, const properties_t& p ) { return new _class( GSE_CALL, m_ui, this, p ); })
 
 class Container : public Area {
 public:

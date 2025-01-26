@@ -13,7 +13,7 @@
 #define DOM_ARGS GSE_CALLABLE, UI* const ui, Container* const parent, const properties_t& properties
 #define DOM_ARGS_T DOM_ARGS, const std::string& tag
 #define DOM_ARGS_TD( _tag ) DOM_ARGS, const std::string& tag = _tag
-#define DOM_ARGS_PASS ctx, call_si, ui, parent, properties
+#define DOM_ARGS_PASS GSE_CALL, ui, parent, properties
 #define DOM_ARGS_PASS_T DOM_ARGS_PASS, tag
 
 namespace scene {

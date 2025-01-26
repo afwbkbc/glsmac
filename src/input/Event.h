@@ -10,33 +10,6 @@ namespace input {
 class Event {
 public:
 
-	enum key_code_t {
-		K_NONE,
-		K_LEFT,
-		K_UP,
-		K_RIGHT,
-		K_DOWN,
-		K_ENTER,
-		K_SPACE,
-		K_TAB,
-		K_BACKSPACE,
-		K_ESCAPE,
-		K_GRAVE,
-		K_PAGEUP,
-		K_PAGEDOWN,
-		K_HOME,
-		K_END,
-		K_KP_LEFT,
-		K_KP_LEFT_UP,
-		K_KP_UP,
-		K_KP_RIGHT_UP,
-		K_KP_RIGHT,
-		K_KP_RIGHT_DOWN,
-		K_KP_DOWN,
-		K_KP_LEFT_DOWN,
-		K_CTRL
-	};
-
 	typedef uint8_t key_modifier_t;
 	const static key_modifier_t KM_NONE = 0;
 	const static key_modifier_t KM_SHIFT = 1 << 0;
@@ -65,7 +38,7 @@ public:
 				size_t id_num;
 				const std::string* id_str;
 				const std::string* text;
-			} change;
+			} change_select;
 		} value;
 	} event_data_t;
 

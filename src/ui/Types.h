@@ -22,4 +22,11 @@ enum class_modifier_t : uint8_t {
 };
 typedef std::set< class_modifier_t > class_modifiers_t;
 
+enum geometry_handler_type_t {
+	GH_ON_AREA_UPDATE,
+	GH_ON_EFFECTIVE_AREA_UPDATE,
+	GH_ON_CHILD_UPDATE,
+};
+typedef uint8_t geometry_handler_id_t;
+
 }

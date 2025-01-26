@@ -27,7 +27,7 @@ Text::Text( DOM_ARGS )
 	Actor( m_actor );
 
 	Property(
-		ctx, call_si, "text", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v ) {
+		GSE_CALL, "text", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v ) {
 			SetText( ( (gse::type::String*)v.Get() )->value );
 		},
 		[ this ]( GSE_CALLABLE ) {
@@ -36,10 +36,10 @@ Text::Text( DOM_ARGS )
 	);
 
 	Property(
-		ctx, call_si, "color", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
+		GSE_CALL, "color", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
 		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
 			types::Color color = {};
-			ParseColor( ctx, call_si, ( (gse::type::String*)v.Get() )->value, color );
+			ParseColor( GSE_CALL, ( (gse::type::String*)v.Get() )->value, color );
 			m_actor->SetColor( color );
 		},
 		[ this ]( GSE_CALLABLE ) {
@@ -49,15 +49,15 @@ Text::Text( DOM_ARGS )
 	);
 
 	Property(
-		ctx, call_si, "font", gse::type::Type::T_STRING, VALUE( gse::type::String, ":32" ), PF_NONE,
+		GSE_CALL, "font", gse::type::Type::T_STRING, VALUE( gse::type::String, ":32" ), PF_NONE,
 		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
 			const auto parts = util::String::Split( ( (gse::type::String*)v.Get() )->value, ':' );
 			if ( parts.size() != 2 ) {
-				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property 'font' is expected to be font string ('<fontname>:<size>' ), got: " + v.ToString(), ctx, call_si );
+				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property 'font' is expected to be font string ('<fontname>:<size>' ), got: " + v.ToString(), GSE_CALL );
 			}
 			const auto sz = strtoul( parts.at( 1 ).c_str(), nullptr, 10 );
 			if ( !sz || sz > 255 ) {
-				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Invalid font size: " + v.ToString(), ctx, call_si );
+				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Invalid font size: " + v.ToString(), GSE_CALL );
 			}
 			m_fontname = parts.at( 0 );
 			m_fontsize = sz;

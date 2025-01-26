@@ -17,7 +17,7 @@ void Async::AddToContext( context::Context* ctx ) {
 		N_EXPECT_ARGS( 2 );
 		N_GETVALUE( ms, 0, Int );
 
-		const auto timer_id = ctx->GetGSE()->GetAsync()->StartTimer( ms, arguments.at(1 ), ctx, call_si );
+		const auto timer_id = ctx->GetGSE()->GetAsync()->StartTimer( ms, arguments.at(1 ), GSE_CALL );
 
 		const gse::type::object_properties_t properties = {
 			{

@@ -26,7 +26,8 @@ private:
 	bool m_is_blink_cursor_visible = false;
 	util::Timer m_blinker;
 
-	void SetValue( const std::string& value );
+	void SetValue( GSE_CALLABLE, const std::string& value );
+	void FixAlign();
 
 };
 

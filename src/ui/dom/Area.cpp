@@ -28,13 +28,13 @@ Area::Area( DOM_ARGS_T )
 
 #define GEOMSETTER( _key, _type ) \
     Property( \
-        ctx, call_si, _key, gse::type::Type::_type, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v )
+        GSE_CALL, _key, gse::type::Type::_type, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v )
 
 #define GEOMPROP( _key, _method ) \
     GEOMSETTER( _key, T_INT ) { \
         m_geometry->_method( ( (gse::type::Int*)v.Get() )->value ); \
         if ( m_parent ) { \
-            m_parent->UpdateMouseOver( ctx, call_si, this ); \
+            m_parent->UpdateMouseOver( GSE_CALL, this ); \
         } \
     } )
 	GEOMPROP( "width", SetWidth );

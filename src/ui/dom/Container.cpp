@@ -21,20 +21,21 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 
 	Actor( m_cache );
 
-	m_geometry->m_on_effective_area_update = [ this ]( const geometry::Geometry::area_t& area ) {
+	GeometryHandler( GH_ON_EFFECTIVE_AREA_UPDATE, [ this ]() {
+		const auto& area = m_geometry->GetEffectiveArea();
 		m_cache->SetEffectiveArea(
 		{ (size_t)area.left, (size_t)area.top },
 		{ (size_t)area.right, (size_t)area.bottom },
 		area.zindex
 		);
-	};
+	});
 
-	m_geometry->m_on_child_update = [ this ]() {
+	GeometryHandler( GH_ON_CHILD_UPDATE, [ this ]() {
 		m_cache->Update();
-	};
+	});
 
 	Property(
-		ctx, call_si, "overflow", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
+		GSE_CALL, "overflow", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
 		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
 			const auto& value = ((gse::type::String*)v.Get())->value;
 			if ( value == "visible" ) {
@@ -87,19 +88,19 @@ void Container::UpdateMouseOver( GSE_CALLABLE, Object* child ) {
 			m_mouse_over_objects.erase( child );
 		}
 		e.data.mouse = { last_mouse_pos.x, last_mouse_pos.y };
-		child->ProcessEvent( ctx, call_si, e );
+		child->ProcessEvent( GSE_CALL, e );
 	}
 }
 
 const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	for ( const auto& child : m_children ) {
 		if (
-			child.second->ProcessEvent( ctx, call_si, event )
+			child.second->ProcessEvent( GSE_CALL, event )
 			) {
 			return true;
 		}
 	}
-	return Object::ProcessEvent( ctx, call_si, event );
+	return Object::ProcessEvent( GSE_CALL, event );
 }
 
 const bool Container::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
@@ -116,7 +117,7 @@ const bool Container::ProcessEventImpl( GSE_CALLABLE, const input::Event& event 
 						event.data.mouse.y
 					};
 				}
-				object->ProcessEvent( ctx, call_si, e );
+				object->ProcessEvent( GSE_CALL, e );
 			}
 			m_processing_mouse_overs = false;
 			m_mouse_over_objects.clear();
@@ -140,7 +141,7 @@ const bool Container::ProcessEventImpl( GSE_CALLABLE, const input::Event& event 
 							e.data.mouse = event.data.mouse;
 						}
 						mouse_out_objects.insert( object );
-						object->ProcessEvent( ctx, call_si, e );
+						object->ProcessEvent( GSE_CALL, e );
 					}
 					else {
 						mouse_over_objects.insert( object );
@@ -168,7 +169,7 @@ const bool Container::ProcessEventImpl( GSE_CALLABLE, const input::Event& event 
 							e.data.mouse = event.data.mouse;
 						}
 						m_mouse_over_objects.insert( object );
-						object->ProcessEvent( ctx, call_si, e );
+						object->ProcessEvent( GSE_CALL, e );
 					}
 				}
 				m_processing_mouse_overs = false;
@@ -177,7 +178,7 @@ const bool Container::ProcessEventImpl( GSE_CALLABLE, const input::Event& event 
 		}
 		default: {}
 	}
-	return Area::ProcessEventImpl( ctx, call_si, event );
+	return Area::ProcessEventImpl( GSE_CALL, event );
 }
 
 #define FORWARD_CALL( _method, ... ) \
@@ -196,21 +197,21 @@ void Container::WrapSet( const std::string& key, const gse::Value& value, gse::c
 			for ( const auto& c : m_classes ) {
 				const auto it = c->GetProperties().find( key );
 				if ( it != c->GetProperties().end() ) {
-					forward_it->second->WrapSet( it->first, it->second, ctx, call_si );
+					forward_it->second->WrapSet( it->first, it->second, GSE_CALL );
 					return;
 				}
 			}
 		}
-		forward_it->second->WrapSet( key, value, ctx, call_si );
+		forward_it->second->WrapSet( key, value, GSE_CALL );
 	}
 	else {
-		Object::WrapSet( key, value, ctx, call_si );
+		Object::WrapSet( key, value, GSE_CALL );
 	}
 }
 
 void Container::Property( GSE_CALLABLE, const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value, const property_flag_t flags, const f_on_set_t& f_on_set, const f_on_unset_t& f_on_unset ) {
 	ASSERT_NOLOG( m_forwarded_properties.find( name ) == m_forwarded_properties.end(), "property '" + name + "' already exists (forwarded)" );
-	Object::Property( ctx, call_si, name, type, default_value, flags, f_on_set, f_on_unset );
+	Object::Property( GSE_CALL, name, type, default_value, flags, f_on_set, f_on_unset );
 }
 
 void Container::ForwardProperty( GSE_CALLABLE, const std::string& name, Object* const target ) {
@@ -225,7 +226,7 @@ void Container::ForwardProperty( GSE_CALLABLE, const std::string& name, Object* 
 	);
 	const auto& it = m_initial_properties.find( name );
 	if ( it != m_initial_properties.end() ) {
-		target->WrapSet( it->first, it->second, ctx, call_si );
+		target->WrapSet( it->first, it->second, GSE_CALL );
 	}
 }
 
@@ -235,7 +236,7 @@ void Container::Embed( Object* object ) {
 }
 
 void Container::Factory( GSE_CALLABLE, const std::string& name, const std::function< Object*( GSE_CALLABLE, const properties_t& ) >& f ) {
-	Method( ctx, call_si, name, NATIVE_CALL( this, f ) {
+	Method( GSE_CALL, name, NATIVE_CALL( this, f ) {
 		N_EXPECT_ARGS_MIN_MAX(0, 1);
 		properties_t initial_properties = {};
 		if ( arguments.size() == 1 ) {
@@ -245,25 +246,25 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 			}
 			initial_properties = ((gse::type::Object*)v)->value;
 		}
-		auto* obj = f( ctx, call_si, initial_properties );
+		auto* obj = f( GSE_CALL, initial_properties );
 		ASSERT_NOLOG( obj, "object not created" );
-		obj->InitAndValidate( ctx, call_si );
+		obj->InitAndValidate( GSE_CALL );
 		m_children.insert({ obj->m_id, obj });
 		return obj->Wrap( true );
 	} ) );
 }
 
 void Container::OnPropertyChange( GSE_CALLABLE, const std::string& key, const gse::Value& value ) const {
-	FORWARD_CALL( OnPropertyChange, ctx, call_si, key, value )
+	FORWARD_CALL( OnPropertyChange, GSE_CALL, key, value )
 }
 
 void Container::OnPropertyRemove( GSE_CALLABLE, const std::string& key ) const {
-	FORWARD_CALL( OnPropertyRemove, ctx, call_si, key )
+	FORWARD_CALL( OnPropertyRemove, GSE_CALL, key )
 }
 
 void Container::InitAndValidate( GSE_CALLABLE ) {
 	for ( const auto& obj : m_embedded_objects ) {
-		obj->InitAndValidate( ctx, call_si );
+		obj->InitAndValidate( GSE_CALL );
 		m_children.insert({ obj->m_id, obj });
 	}
 	m_embedded_objects.clear();
@@ -272,7 +273,7 @@ void Container::InitAndValidate( GSE_CALLABLE ) {
 			GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property '" + p.first + "' does not exist" );
 		}
 	}
-	InitProperties( ctx, call_si );
+	InitProperties( GSE_CALL );
 }
 
 void Container::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value, const class_modifier_t modifier ) {
@@ -283,7 +284,7 @@ void Container::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, cons
 			return;
 		}
 	}
-	FORWARD_CALL( SetPropertyFromClass, ctx, call_si, key, value, modifier );
+	FORWARD_CALL( SetPropertyFromClass, GSE_CALL, key, value, modifier );
 }
 
 void Container::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
@@ -291,12 +292,12 @@ void Container::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
 	for ( auto it = m_classes.rbegin() ; it != m_classes.rend() ; it++ ) {
 		const auto kv = (*it)->GetProperty( key, m_modifiers );
 		if ( kv.first.Get()->type != gse::type::Type::T_UNDEFINED ) {
-			FORWARD_CALL( SetPropertyFromClass, ctx, call_si, key, kv.first, kv.second );
+			FORWARD_CALL( SetPropertyFromClass, GSE_CALL, key, kv.first, kv.second );
 			return;
 		}
 	}
 	// not found
-	FORWARD_CALL( UnsetPropertyFromClass, ctx, call_si, key );
+	FORWARD_CALL( UnsetPropertyFromClass, GSE_CALL, key );
 }
 
 }

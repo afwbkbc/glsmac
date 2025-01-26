@@ -37,10 +37,10 @@ UI::UI( GSE_CALLABLE )
 	);
 
 	g_engine->GetGraphics()->AddScene( m_scene );
-	m_root = new dom::Root( ctx, call_si, this );
+	m_root = new dom::Root( GSE_CALL, this );
 	Resize();
 
-	g_engine->GetInput()->AddHandler( this, [ this, ctx, call_si ]( const input::Event& event ){
+	g_engine->GetInput()->AddHandler( this, [ this, GSE_CALL ]( const input::Event& event ){
 		if ( event.type == input::EV_MOUSE_MOVE ) {
 			m_last_mouse_position = {
 				event.data.mouse.x,
@@ -48,7 +48,7 @@ UI::UI( GSE_CALLABLE )
 			};
 		}
 		try {
-			m_root->ProcessEvent( ctx, call_si, event );
+			m_root->ProcessEvent( GSE_CALL, event );
 		}
 		catch ( gse::Exception& e ) {
 			const auto msg = e.ToStringAndCleanup();
@@ -117,10 +117,10 @@ WRAPIMPL_BEGIN( UI )
 								properties = &p;
 							}
 							if ( parent_class ) {
-								it->second->SetParentClass( ctx, call_si, *parent_class );
+								it->second->SetParentClass( GSE_CALL, *parent_class );
 							}
 							if ( properties ) {
-								it->second->SetProperties( ctx, call_si, *properties );
+								it->second->SetProperties( GSE_CALL, *properties );
 							}
 						}
 					}

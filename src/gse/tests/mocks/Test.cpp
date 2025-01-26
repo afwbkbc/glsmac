@@ -25,14 +25,14 @@ void Test::AddMocks( context::GlobalContext* ctx, const test_info_t& test_info )
 			"assert",
 			NATIVE_CALL() {
 				if ( arguments.size() < 1 ) {
-					throw Exception( EC.INVALID_CALL, "Condition to test.assert is missing", ctx, call_si );
+					throw Exception( EC.INVALID_CALL, "Condition to test.assert is missing", GSE_CALL );
 				}
 				if ( arguments.size() > 2 ) {
-					throw Exception( EC.INVALID_CALL, "Expected 1 or 2 arguments to test.assert, found: " + std::to_string( arguments.size() ), ctx, call_si );
+					throw Exception( EC.INVALID_CALL, "Expected 1 or 2 arguments to test.assert, found: " + std::to_string( arguments.size() ), GSE_CALL );
 				}
 				const auto& condition = arguments.at( 0 );
 				if ( condition.Get()->type != type::Type::T_BOOL ) {
-					throw Exception( EC.INVALID_CALL, "Condition to test.assert is not boolean: " + condition.ToString(), ctx, call_si );
+					throw Exception( EC.INVALID_CALL, "Condition to test.assert is not boolean: " + condition.ToString(), GSE_CALL );
 				}
 				if ( !( (type::Bool*)condition.Get() )->value ) {
 					std::string reason = "";
@@ -41,7 +41,7 @@ void Test::AddMocks( context::GlobalContext* ctx, const test_info_t& test_info )
 						ASSERT_NOLOG( reasonv.Get()->type == type::Type::T_STRING, "test.assert reason is not string: " + reasonv.ToString() );
 						reason = ( (type::String*)reasonv.Get() )->value;
 					}
-					throw Exception( "TestError", "Assertion failed: " + reason, ctx, call_si );
+					throw Exception( "TestError", "Assertion failed: " + reason, GSE_CALL );
 				}
 				return VALUE( type::Undefined );
 			} )

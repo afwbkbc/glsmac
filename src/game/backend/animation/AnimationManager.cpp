@@ -139,8 +139,8 @@ WRAPIMPL_BEGIN( AnimationManager )
 			N_GETVALUE( id, 0, String );
 			N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
 			N_PERSIST_CALLABLE( on_complete, 2 );
-			const auto* errmsg = ShowAnimation( id, tile, [ on_complete, ctx, call_si ]() {
-				on_complete->Run( ctx, call_si, {} );
+			const auto* errmsg = ShowAnimation( id, tile, [ on_complete, GSE_CALL ]() {
+				on_complete->Run( GSE_CALL, {} );
 				N_UNPERSIST_CALLABLE( on_complete );
 			});
 			if ( errmsg ) {

@@ -257,9 +257,9 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 
 					auto obj2 = VALUE( type::Object, nullptr );
 					auto data2 = VALUE_DATA( type::Object, obj2 );
-					data2->Set( "property_int", VALUE( type::Int, 555 ), ctx, call_si );
-					data2->Set( "property_bool", VALUE( type::Bool, false ), ctx, call_si );
-					data2->Set( "property_bool", VALUE( type::Bool, true ), ctx, call_si ); // this should overwrite previous value
+					data2->Set( "property_int", VALUE( type::Int, 555 ), GSE_CALL );
+					data2->Set( "property_bool", VALUE( type::Bool, false ), GSE_CALL );
+					data2->Set( "property_bool", VALUE( type::Bool, true ), GSE_CALL ); // this should overwrite previous value
 					gse->SetGlobal( "testvar_obj2", obj2 );
 
 					auto properties = type::object_properties_t{

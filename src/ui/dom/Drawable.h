@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "Object.h"
 
 namespace ui {
@@ -19,8 +21,13 @@ public:
 
 	geometry::Geometry* const GetGeometry() const override;
 
+	void GeometryHandler( const geometry_handler_type_t type, const std::function< void() >& f );
+
 protected:
 	geometry::Geometry* const m_geometry = nullptr;
+
+private:
+	std::vector< geometry_handler_id_t > m_geometry_handler_ids = {};
 
 };
 

@@ -474,7 +474,7 @@
     });
 
 
-    texts.panel({
+    const input = texts.panel({
         align: 'center',
         width: 300,
         height: 120,
@@ -485,7 +485,12 @@
         background: '#111116',
         color: 'white',
         font: ':16',
-        border: 'gray',
+        border: 'silver,2',
     });
+
+	input.on('select', (e) => {
+		#print('SELECT', e);
+		return true;
+	});
 
 });

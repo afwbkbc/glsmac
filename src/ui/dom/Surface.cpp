@@ -22,15 +22,15 @@ Surface::Surface( DOM_ARGS )
 	Actor( m_actor );
 
 	Property(
-		ctx, call_si, "background", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
+		GSE_CALL, "background", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
 		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
 			const auto& str = ( (gse::type::String*)v.Get() )->value;
 			if ( str.empty() ) {
-				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property 'background' expects color code or texture path", ctx, call_si );
+				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property 'background' expects color code or texture path", GSE_CALL );
 			}
 			bool is_tiled = true;
 			types::Color color = {};
-			if ( TryParseColor( ctx, call_si, str, color ) ) {
+			if ( TryParseColor( GSE_CALL, str, color ) ) {
 				CreateTexture();
 				m_background.texture->Resize( 1, 1 );
 				m_background.texture->SetPixel( 0, 0, color );
@@ -84,7 +84,7 @@ Surface::Surface( DOM_ARGS )
 						f_expect_args( 2 );
 						types::Color color;
 						float intensity;
-						ParseColor( ctx, call_si, args.at( 0 ), color );
+						ParseColor( GSE_CALL, args.at( 0 ), color );
 						if ( !util::String::ParseFloat( args.at( 1 ), intensity ) ) {
 							GSE_ERROR( gse::EC.UI_ERROR, "Invalid tint parameters (expected float, got " + args.at( 1 ) + "): " + *it );
 						}

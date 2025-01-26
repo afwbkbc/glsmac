@@ -83,9 +83,9 @@ void Class::AddObject( GSE_CALLABLE, dom::Object* object, const class_modifiers_
 	if ( m_is_master ) {
 		for ( const auto& m : modifiers ) {
 			ASSERT_NOLOG( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
-			m_subclasses.at( m )->AddObject( ctx, call_si, object, {} );
+			m_subclasses.at( m )->AddObject( GSE_CALL, object, {} );
 		}
-		UpdateObject( ctx, call_si, object, CM_NONE );
+		UpdateObject( GSE_CALL, object, CM_NONE );
 	}
 }
 
@@ -94,13 +94,13 @@ void Class::RemoveObject( GSE_CALLABLE, dom::Object* object ) {
 	if ( m_is_master ) {
 		for ( const auto& m : m_objects.at( object ) ) {
 			ASSERT_NOLOG( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
-			m_subclasses.at( m )->RemoveObject( ctx, call_si, object );
+			m_subclasses.at( m )->RemoveObject( GSE_CALL, object );
 		}
 	}
 	if ( m_is_master ) {
 		for ( const auto& it : m_properties ) {
 			if ( s_name_to_modifier.find( it.first ) == s_name_to_modifier.end() ) {
-				object->UnsetPropertyFromClass( ctx, call_si, it.first );
+				object->UnsetPropertyFromClass( GSE_CALL, it.first );
 			}
 		}
 	}
@@ -113,13 +113,13 @@ void Class::UpdateObject( GSE_CALLABLE, dom::Object* const object, const class_m
 			ASSERT_NOLOG( m_is_master, "modifier received by non-master" );
 			continue;
 		}
-		object->SetPropertyFromClass( ctx, call_si, property.first, property.second, modifier );
+		object->SetPropertyFromClass( GSE_CALL, property.first, property.second, modifier );
 	}
 	if ( m_is_master ) {
 		ASSERT_NOLOG( m_objects.find( object ) != m_objects.end(), "object not found" );
 		for ( const auto& m : m_objects.at( object ) ) {
 			ASSERT_NOLOG( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
-			m_subclasses.at( m )->UpdateObject( ctx, call_si, object, m );
+			m_subclasses.at( m )->UpdateObject( GSE_CALL, object, m );
 		}
 	}
 }
@@ -131,8 +131,8 @@ void Class::AddObjectModifier( GSE_CALLABLE, dom::Object* object, const class_mo
 		ASSERT_NOLOG( m_subclasses.find( modifier ) != m_subclasses.end(), "subclass not found" );
 		modifiers.insert( modifier );
 		const auto& cls = m_subclasses.at( modifier );
-		cls->AddObject( ctx, call_si, object, {} );
-		cls->UpdateObject( ctx, call_si, object, modifier );
+		cls->AddObject( GSE_CALL, object, {} );
+		cls->UpdateObject( GSE_CALL, object, modifier );
 	}
 }
 
@@ -143,7 +143,7 @@ void Class::RemoveObjectModifier( GSE_CALLABLE, dom::Object* object, const class
 		ASSERT_NOLOG( m_subclasses.find( modifier ) != m_subclasses.end(), "subclass not found" );
 		modifiers.erase( modifier );
 		const auto& cls = m_subclasses.at( modifier );
-		m_subclasses.at( modifier )->RemoveObject( ctx, call_si, object );
+		m_subclasses.at( modifier )->RemoveObject( GSE_CALL, object );
 		for ( const auto& p : cls->m_properties ) {
 			auto v = VALUE( gse::type::Undefined );
 			// check if this property exists outside of subclass
@@ -162,10 +162,10 @@ void Class::RemoveObjectModifier( GSE_CALLABLE, dom::Object* object, const class
 				}
 			}
 			if ( v.Get()->type == gse::type::Type::T_UNDEFINED ) {
-				object->UnsetPropertyFromClass( ctx, call_si, p.first );
+				object->UnsetPropertyFromClass( GSE_CALL, p.first );
 			}
 			else {
-				object->SetPropertyFromClass( ctx, call_si, p.first, v, CM_NONE );
+				object->SetPropertyFromClass( GSE_CALL, p.first, v, CM_NONE );
 			}
 		}
 	}
@@ -178,7 +178,7 @@ const gse::Value Class::Wrap( const bool dynamic ) {
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( name, 0, String );
-				SetParentClass( ctx, call_si, name );
+				SetParentClass( GSE_CALL, name );
 				return Wrap( true );
 			} )
 		},
@@ -187,7 +187,7 @@ const gse::Value Class::Wrap( const bool dynamic ) {
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( properties, 0, Object );
-				SetProperties( ctx, call_si, properties );
+				SetProperties( GSE_CALL, properties );
 				return Wrap( true );
 			} )
 		},
@@ -204,7 +204,7 @@ const gse::Value Class::Wrap( const bool dynamic ) {
 					}
 					names.push_back( ((gse::type::String*)v.Get())->value );
 				}
-				UnsetProperties( ctx, call_si, names );
+				UnsetProperties( GSE_CALL, names );
 				return Wrap( true );
 			} )
 		},
@@ -232,12 +232,12 @@ const gse::Value Class::Wrap( const bool dynamic ) {
 }
 
 void Class::WrapSet( const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& call_si ) {
-	SetProperty( ctx, call_si, key, value );
+	SetProperty( GSE_CALL, key, value );
 }
 
 void Class::WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& call_si ) {
 	ASSERT_NOLOG( wrapobj, "wrapobj not set" );
-	( (Class*)wrapobj )->WrapSet( key, value, ctx, call_si );
+	( (Class*)wrapobj )->WrapSet( key, value, GSE_CALL );
 }
 
 void Class::SetProperty( gse::context::Context* ctx, const gse::si_t& call_si, const std::string& name, const gse::Value& value ) {
@@ -251,7 +251,7 @@ void Class::SetProperty( gse::context::Context* ctx, const gse::si_t& call_si, c
 			}
 			const auto& cls = m_subclasses.at( it->second );
 			for ( const auto& p : ((gse::type::Object*)value.Get())->value ) {
-				cls->SetProperty( ctx, call_si, p.first, p.second );
+				cls->SetProperty( GSE_CALL, p.first, p.second );
 			}
 		}
 		m_properties.insert_or_assign( name, value );
@@ -259,10 +259,10 @@ void Class::SetProperty( gse::context::Context* ctx, const gse::si_t& call_si, c
 			obj->value.insert_or_assign( name, value );
 		}
 		for ( const auto& cls : m_child_classes ) {
-			cls->SetPropertyFromParent( ctx, call_si, name, value );
+			cls->SetPropertyFromParent( GSE_CALL, name, value );
 		}
 		for ( const auto& object : m_objects ) {
-			object.first->SetPropertyFromClass( ctx, call_si, name, value, CM_NONE );
+			object.first->SetPropertyFromClass( GSE_CALL, name, value, CM_NONE );
 		}
 	}
 }
@@ -270,14 +270,14 @@ void Class::SetProperty( gse::context::Context* ctx, const gse::si_t& call_si, c
 void Class::SetPropertyFromParent( GSE_CALLABLE, const std::string& name, const gse::Value& value ) {
 	const auto& local_it = m_local_properties.find( name );
 	if ( local_it == m_local_properties.end() ) { // local properties should have priority
-		SetProperty( ctx, call_si, name, value );
+		SetProperty( GSE_CALL, name, value );
 	}
 }
 
 void Class::SetPropertiesFromParent( GSE_CALLABLE ) {
 	ASSERT_NOLOG( m_parent_class, "parent class not set" );
 	for ( const auto& it : m_parent_class->m_properties ) {
-		SetPropertyFromParent( ctx, call_si, it.first, it.second );
+		SetPropertyFromParent( GSE_CALL, it.first, it.second );
 	}
 }
 
@@ -286,10 +286,10 @@ void Class::UnsetProperty( GSE_CALLABLE, const std::string& name ) {
 	if ( it != m_properties.end() ) {
 		m_properties.erase( it );
 		for ( const auto& cls : m_child_classes ) {
-			cls->UnsetPropertyFromParent( ctx, call_si, name );
+			cls->UnsetPropertyFromParent( GSE_CALL, name );
 		}
 		for ( const auto& object : m_objects ) {
-			object.first->UnsetPropertyFromClass( ctx, call_si, name );
+			object.first->UnsetPropertyFromClass( GSE_CALL, name );
 		}
 	}
 }
@@ -297,7 +297,7 @@ void Class::UnsetProperty( GSE_CALLABLE, const std::string& name ) {
 void Class::UnsetPropertyFromParent( GSE_CALLABLE, const std::string& name ) {
 	const auto& local_it = m_local_properties.find( name );
 	if ( local_it == m_local_properties.end() ) { // otherwise it would have been overridden by local property anyway
-		UnsetProperty( ctx, call_si, name );
+		UnsetProperty( GSE_CALL, name );
 	}
 }
 
@@ -310,11 +310,11 @@ void Class::UnsetProperties( GSE_CALLABLE, const std::vector< std::string >& pro
 				const auto& parent_it = m_parent_class->m_properties.find( name );
 				if ( parent_it != m_parent_class->m_properties.end() ) {
 					// inherit from parent
-					SetProperty( ctx, call_si, name, parent_it->second );
+					SetProperty( GSE_CALL, name, parent_it->second );
 					continue;
 				}
 			}
-			UnsetProperty( ctx, call_si, name );
+			UnsetProperty( GSE_CALL, name );
 		}
 	}
 }
@@ -322,26 +322,26 @@ void Class::UnsetProperties( GSE_CALLABLE, const std::vector< std::string >& pro
 void Class::UnsetPropertiesFromParent( GSE_CALLABLE ) {
 	ASSERT_NOLOG( m_parent_class, "parent class not set" );
 	for ( const auto& it : m_parent_class->m_properties ) {
-		UnsetPropertyFromParent( ctx, call_si, it.first );
+		UnsetPropertyFromParent( GSE_CALL, it.first );
 	}
 }
 
 void Class::AddChildClass( GSE_CALLABLE, Class* const cls ) {
 	ASSERT_NOLOG( m_child_classes.find( cls ) == m_child_classes.end(), "child class already exists" );
 	m_child_classes.insert( cls );
-	cls->SetPropertiesFromParent( ctx, call_si );
+	cls->SetPropertiesFromParent( GSE_CALL );
 }
 
 void Class::RemoveChildClass( GSE_CALLABLE, Class* const cls ) {
 	ASSERT_NOLOG( m_child_classes.find( cls ) != m_child_classes.end(), "child class not found" );
-	cls->UnsetPropertiesFromParent( ctx, call_si );
+	cls->UnsetPropertiesFromParent( GSE_CALL );
 	m_child_classes.erase( cls );
 }
 
 void Class::SetProperties( GSE_CALLABLE, const properties_t& properties ) {
 	for ( const auto& it : properties ) {
 		m_local_properties.insert_or_assign( it.first, it.second );
-		SetProperty( ctx, call_si, it.first, it.second );
+		SetProperty( GSE_CALL, it.first, it.second );
 	}
 }
 
@@ -352,11 +352,11 @@ void Class::SetParentClass( GSE_CALLABLE, const std::string& name ) {
 	}
 	if ( m_parent_class != cls ) {
 		if ( m_parent_class ) {
-			m_parent_class->RemoveChildClass( ctx, call_si, this );
+			m_parent_class->RemoveChildClass( GSE_CALL, this );
 		}
 		m_parent_class = cls;
 		if ( cls != nullptr ) {
-			m_parent_class->AddChildClass( ctx, call_si, this );
+			m_parent_class->AddChildClass( GSE_CALL, this );
 		}
 	}
 }

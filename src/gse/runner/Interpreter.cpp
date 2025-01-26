@@ -1049,7 +1049,7 @@ Interpreter::Function::~Function() {
 }
 
 gse::Value Interpreter::Function::Run( context::Context* ctx, const si_t& call_si, const function_arguments_t& arguments ) {
-	auto* subctx = context->ForkContext( ctx, call_si, true, parameters, arguments );
+	auto* subctx = context->ForkContext( GSE_CALL, true, parameters, arguments );
 	subctx->IncRefs();
 	const auto result = runner->Execute( subctx, program );
 	subctx->DecRefs();

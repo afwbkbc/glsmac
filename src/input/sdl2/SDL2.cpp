@@ -264,84 +264,84 @@ char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 	}
 }
 
-Event::key_code_t SDL2::GetScanCode( SDL_Scancode code, SDL_Keymod modifiers ) const {
+key_code_t SDL2::GetScanCode( SDL_Scancode code, SDL_Keymod modifiers ) const {
 	//Log( "Scan code: " + std::to_string( code ) + " (modifiers: " + std::to_string( modifiers ) + ")" );
 	switch ( code ) {
 		case SDL_SCANCODE_RIGHT: {
-			return Event::K_RIGHT;
+			return K_RIGHT;
 		}
 		case SDL_SCANCODE_LEFT: {
-			return Event::K_LEFT;
+			return K_LEFT;
 		}
 		case SDL_SCANCODE_DOWN: {
-			return Event::K_DOWN;
+			return K_DOWN;
 		}
 		case SDL_SCANCODE_UP: {
-			return Event::K_UP;
+			return K_UP;
 		}
 		case SDL_SCANCODE_RETURN: {
-			return Event::K_ENTER;
+			return K_ENTER;
 		}
 		case SDL_SCANCODE_SPACE: {
-			return Event::K_SPACE;
+			return K_SPACE;
 		}
 		case SDL_SCANCODE_TAB: {
-			return Event::K_TAB;
+			return K_TAB;
 		}
 		case SDL_SCANCODE_BACKSPACE: {
-			return Event::K_BACKSPACE;
+			return K_BACKSPACE;
 		}
 		case SDL_SCANCODE_ESCAPE: {
-			return Event::K_ESCAPE;
+			return K_ESCAPE;
 		}
 		case SDL_SCANCODE_GRAVE: {
-			return Event::K_GRAVE;
+			return K_GRAVE;
 		}
 		case SDL_SCANCODE_PAGEUP: {
-			return Event::K_PAGEUP;
+			return K_PAGEUP;
 		}
 		case SDL_SCANCODE_PAGEDOWN: {
-			return Event::K_PAGEDOWN;
+			return K_PAGEDOWN;
 		}
 		case SDL_SCANCODE_HOME: {
-			return Event::K_HOME;
+			return K_HOME;
 		}
 		case SDL_SCANCODE_END: {
-			return Event::K_END;
+			return K_END;
 		}
 		case SDL_SCANCODE_KP_4: {
-			return Event::K_KP_LEFT;
+			return K_KP_LEFT;
 		}
 		case SDL_SCANCODE_KP_7: {
-			return Event::K_KP_LEFT_UP;
+			return K_KP_LEFT_UP;
 		}
 		case SDL_SCANCODE_KP_8: {
-			return Event::K_KP_UP;
+			return K_KP_UP;
 		}
 		case SDL_SCANCODE_KP_9: {
-			return Event::K_KP_RIGHT_UP;
+			return K_KP_RIGHT_UP;
 		}
 		case SDL_SCANCODE_KP_6: {
-			return Event::K_KP_RIGHT;
+			return K_KP_RIGHT;
 		}
 		case SDL_SCANCODE_KP_3: {
-			return Event::K_KP_RIGHT_DOWN;
+			return K_KP_RIGHT_DOWN;
 		}
 		case SDL_SCANCODE_KP_2: {
-			return Event::K_KP_DOWN;
+			return K_KP_DOWN;
 		}
 		case SDL_SCANCODE_KP_1: {
-			return Event::K_KP_LEFT_DOWN;
+			return K_KP_LEFT_DOWN;
 		}
 		case SDL_SCANCODE_LCTRL: // do we need to differentiate?
 		case SDL_SCANCODE_RCTRL: {
-			return Event::K_CTRL;
+			return K_CTRL;
 		}
 		default: {
-			return Event::K_NONE;
+			return K_NONE;
 		}
 	}
-	return Event::K_NONE;
+	return K_NONE;
 }
 
 Event::key_modifier_t SDL2::GetModifiers( SDL_Keymod modifiers ) const {

@@ -112,9 +112,8 @@ public:
 
 	void OnChildUpdate();
 
-	std::function< void( const area_t& ) > m_on_area_update = nullptr;
-	std::function< void( const area_t& ) > m_on_effective_area_update = nullptr;
-	std::function< void() > m_on_child_update = nullptr;
+	const geometry_handler_id_t AddHandler( const geometry_handler_type_t type, const std::function< void() >& f );
+	void RemoveHandler( const geometry_handler_id_t id );
 
 	const bool Contains( const types::Vec2< ssize_t >& position ) const;
 
@@ -158,6 +157,11 @@ private:
 	void UpdateEffectiveArea();
 
 	area_t m_effective_area = {};
+
+	geometry_handler_id_t m_next_handler_id = 0;
+	std::unordered_map< geometry_handler_type_t, std::unordered_map< geometry_handler_id_t, std::function< void() > > > m_handlers = {};
+	std::unordered_map< geometry_handler_id_t, geometry_handler_type_t > m_handler_types = {};
+	void RunHandlers( const geometry_handler_type_t type ) const;
 };
 
 }

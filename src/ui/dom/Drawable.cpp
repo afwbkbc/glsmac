@@ -37,13 +37,13 @@ Drawable::Drawable( DOM_ARGS_T, geometry::Geometry* const geometry )
 
 #define GEOMSETTER( _key, _type ) \
     Property( \
-        ctx, call_si, _key, gse::type::Type::_type, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v )
+        GSE_CALL, _key, gse::type::Type::_type, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v )
 
 #define GEOMPROP( _key, _method ) \
     GEOMSETTER( _key, T_INT ) { \
         m_geometry->_method( ( (gse::type::Int*)v.Get() )->value ); \
         if ( m_parent ) { \
-            m_parent->UpdateMouseOver( ctx, call_si, this ); \
+            m_parent->UpdateMouseOver( GSE_CALL, this ); \
         } \
     } )
 	GEOMPROP( "left", SetLeft );
@@ -58,7 +58,7 @@ Drawable::Drawable( DOM_ARGS_T, geometry::Geometry* const geometry )
 		for ( const auto& str : strs ) {
 			const auto& it = s_align_strs.find( str );
 			if ( it == s_align_strs.end() ) {
-				throw gse::Exception( gse::EC.UI_ERROR, "Invalid align value: " + str, ctx, call_si );
+				throw gse::Exception( gse::EC.UI_ERROR, "Invalid align value: " + str, GSE_CALL );
 			}
 			auto a = it->second;
 			if ( a == geometry::Geometry::ALIGN_CENTER ) {
@@ -85,17 +85,24 @@ Drawable::Drawable( DOM_ARGS_T, geometry::Geometry* const geometry )
 		}
 		m_geometry->SetAlign( (geometry::Geometry::align_t)align );
 		if ( m_parent ) {
-			m_parent->UpdateMouseOver( ctx, call_si, this );
+			m_parent->UpdateMouseOver( GSE_CALL, this );
 		}
 	} );
 }
 
 Drawable::~Drawable() {
+	for ( const auto& id : m_geometry_handler_ids ) {
+		m_geometry->RemoveHandler( id );
+	}
 	delete m_geometry;
 }
 
 geometry::Geometry* const Drawable::GetGeometry() const {
 	return m_geometry;
+}
+
+void Drawable::GeometryHandler( const geometry_handler_type_t type, const std::function< void() >& f ) {
+	m_geometry_handler_ids.push_back( m_geometry->AddHandler( type, f ) );
 }
 
 }

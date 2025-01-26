@@ -494,26 +494,28 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 						const size_t w = area.right - area.left;
 						const size_t h = area.bottom - area.top;
 
-						auto* bitmap = texture->CopyBitmap(
-							area.left,
-							area.top,
-							area.right,
-							area.bottom
-						);
+						if ( w > 0 && h > 0 ) {
+							auto* bitmap = texture->CopyBitmap(
+								area.left,
+								area.top,
+								area.right,
+								area.bottom
+							);
 
-						glTexSubImage2D(
-							GL_TEXTURE_2D,
-							0,
-							area.left,
-							area.top,
-							w,
-							h,
-							GL_RGBA,
-							GL_UNSIGNED_BYTE,
-							ptr( bitmap, 0, w * h * 4 )
-						);
-
-						free( bitmap );
+							glTexSubImage2D(
+								GL_TEXTURE_2D,
+								0,
+								area.left,
+								area.top,
+								w,
+								h,
+								GL_RGBA,
+								GL_UNSIGNED_BYTE,
+								ptr( bitmap, 0, w * h * 4 )
+							);
+							
+							free( bitmap );
+						}
 					}
 				}
 				texture->ClearUpdatedAreas();

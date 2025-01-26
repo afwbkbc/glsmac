@@ -364,8 +364,8 @@ WRAPIMPL_BEGIN( UnitManager )
 					owner->GetIndex(),
 					tile->coord.x,
 					tile->coord.y,
-					GetMorale( ctx, call_si, morale ),
-					GetHealth( ctx, call_si, health )
+					GetMorale( GSE_CALL, morale ),
+					GetHealth( GSE_CALL, health )
 				) );
 			})
 		},

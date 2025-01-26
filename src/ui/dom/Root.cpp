@@ -6,7 +6,7 @@ namespace ui {
 namespace dom {
 
 Root::Root( GSE_CALLABLE, UI* const ui )
-	: Container( ctx, call_si, ui, nullptr, {}, "root", true ) { // the only dom object without parent
+	: Container( GSE_CALL, ui, nullptr, {}, "root", true ) { // the only dom object without parent
 
 	Events(
 		{
@@ -14,7 +14,7 @@ Root::Root( GSE_CALLABLE, UI* const ui )
 		}
 	);
 
-	InitAndValidate( ctx, call_si );
+	InitAndValidate( GSE_CALL );
 }
 
 void Root::Resize( const uint16_t window_width, const uint16_t window_height ) {
