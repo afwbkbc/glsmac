@@ -61,6 +61,8 @@ CLASS( GSE, common::Class )
 	void SetGlobal( const std::string& identifier, Value variable );
 	const Value& GetGlobal( const std::string& identifier );
 
+	context::Context* GetContextByPath( const std::string& path ) const;
+
 	Async* GetAsync();
 
 #ifdef DEBUG
@@ -89,6 +91,7 @@ private:
 		const runner::Runner* runner;
 		void Cleanup( const bool force = false );
 	};
+	std::unordered_map< std::string, std::string > m_include_paths = {};
 	std::unordered_map< std::string, include_cache_t > m_include_cache = {};
 
 	Async* m_async = nullptr;

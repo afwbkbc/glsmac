@@ -93,6 +93,8 @@ void Container::UpdateMouseOver( GSE_CALLABLE, Object* child ) {
 }
 
 const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
+	ASSERT_NOLOG( !m_is_processing_children_events, "already processing children events" );
+	m_is_processing_children_events = true;
 	for ( const auto& child : m_children ) {
 		if (
 			child.second->ProcessEvent( GSE_CALL, event )
@@ -100,6 +102,9 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 			return true;
 		}
 	}
+	ASSERT_NOLOG( m_is_processing_children_events, "not processing children events" );
+	m_is_processing_children_events = false;
+	ProcessPendingDeletes( GSE_CALL );
 	return Object::ProcessEvent( GSE_CALL, event );
 }
 
@@ -276,6 +281,14 @@ void Container::InitAndValidate( GSE_CALLABLE ) {
 	InitProperties( GSE_CALL );
 }
 
+void Container::ProcessPendingDeletes( GSE_CALLABLE ) {
+	for ( const auto& obj : m_children_to_delete ) {
+		ASSERT_NOLOG( !m_is_processing_children_events, "can't process pending deletes within event processing" );
+		DeleteChild( GSE_CALL, obj );
+	}
+	m_children_to_delete.clear();
+}
+
 void Container::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value, const class_modifier_t modifier ) {
 	// check if property was set by any of previous classes with higher modifier
 	for ( const auto& c : m_classes ) {
@@ -298,6 +311,28 @@ void Container::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
 	}
 	// not found
 	FORWARD_CALL( UnsetPropertyFromClass, GSE_CALL, key );
+}
+
+void Container::DeleteChild( GSE_CALLABLE, Object* obj ) {
+	const bool can_delete_immediately = !m_is_processing_children_events;
+	if ( can_delete_immediately ) {
+		ASSERT_NOLOG( m_children.find( obj->m_id ) != m_children.end(), "child not found" );
+		m_children.erase( obj->m_id );
+		const auto& it = m_mouse_over_objects.find( obj );
+		if ( it != m_mouse_over_objects.end() ) {
+			const auto& last_mouse_pos = m_ui->GetLastMousePosition();
+			input::Event e;
+			e.SetType( input::EV_MOUSE_OUT );
+			m_mouse_over_objects.erase( obj );
+			e.data.mouse = { last_mouse_pos.x, last_mouse_pos.y };
+			obj->ProcessEvent( GSE_CALL, e );
+		}
+		delete obj;
+	}
+	else {
+		ASSERT_NOLOG( m_children_to_delete.find( obj ) == m_children_to_delete.end(), "child already queued for deletion" );
+		m_children_to_delete.insert( obj );
+	}
 }
 
 }

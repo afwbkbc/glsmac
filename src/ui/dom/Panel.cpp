@@ -23,20 +23,24 @@ Panel::Panel( DOM_ARGS_T, const bool factories_allowed )
 		GSE_CALL, "border", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
 		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
 			const auto& str = ( (gse::type::String*)v.Get() )->value;
-			const auto parts = util::String::Split( str, ',' );
-			if ( parts.empty() ) {
-				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property 'border' expects color code and (optionally) corners" );
+
+			// TODO: refactor
+			auto commapos = str.rfind( ',' );
+			auto bracketclosepos = str.find( ')' );
+			if ( bracketclosepos != std::string::npos && commapos < bracketclosepos ) {
+				commapos = std::string::npos;
 			}
 
 			types::Color border_color;
 			long int border_corners;
-			ParseColor( GSE_CALL, parts.at( 0 ), border_color );
-			if ( parts.size() >= 2 ) {
-				if ( !util::String::ParseInt( parts.at( 1 ), border_corners ) || border_corners < 0 ) {
+			if ( commapos != std::string::npos ) {
+				ParseColor( GSE_CALL, str.substr( 0, commapos ), border_color );
+				if ( !util::String::ParseInt( str.substr( commapos + 1 ), border_corners ) || border_corners < 0 ) {
 					GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Border corners must be numeric and not negative" );
 				}
 			}
 			else {
+				ParseColor( GSE_CALL, str, border_color );
 				border_corners = 0;
 			}
 

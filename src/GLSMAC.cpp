@@ -5,6 +5,7 @@
 #include "util/FS.h"
 #include "engine/Engine.h"
 #include "config/Config.h"
+#include "resource/ResourceManager.h"
 
 #include "ui/UI.h"
 
@@ -14,6 +15,7 @@
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
 #include "gse/type/Undefined.h"
+#include "gse/type/Bool.h"
 
 static GLSMAC* s_glsmac = nullptr;
 
@@ -77,10 +79,29 @@ WRAPIMPL_BEGIN( GLSMAC )
 			m_ui->Wrap( true )
 		},
 		{
+			"init",
+			NATIVE_CALL( this ) {
+				const auto& c = g_engine->GetConfig();
+				try {
+					g_engine->GetResourceManager()->Init( c->GetPossibleSMACPaths(), c->GetSMACType() );
+				} catch ( const std::runtime_error& e ) {
+					GSE_ERROR( gse::EC.LOADER_ERROR, e.what() );
+				}
+				return VALUE( gse::type::Undefined );
+			} )
+		},
+		{
 			"exit",
 			NATIVE_CALL( this ) {
 				g_engine->ShutDown();
 				return VALUE( gse::type::Undefined );
+			} )
+		},
+		{
+			"is_smacpath_set",
+			NATIVE_CALL( this ) {
+
+				return VALUE( gse::type::Bool, false );
 			} )
 		},
 	};
@@ -95,7 +116,7 @@ void GLSMAC::RunMain() {
 			( (gse::type::Callable*)main.Get() )->Run( m_ctx, {}, { Wrap() } );
 		}
 	} catch ( gse::Exception& e ) {
-		std::cout << e.ToStringAndCleanup() << std::endl;
+		std::cout << e.ToString() << std::endl;
 		throw e;
 	}
 }

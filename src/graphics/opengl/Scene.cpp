@@ -116,17 +116,16 @@ void Scene::RemoveActorFromZIndexSet( Actor* gl_actor ) {
 
 void Scene::Update() {
 
-	for ( auto it = m_gl_actors.begin() ; it < m_gl_actors.end() ; ++it ) {
-		Actor* gl_actor = ( *it )->GetDstObject< Actor >();
-		if ( ( *it )->Removed() ) {
-			// remove missing actors
+	std::vector< common::ObjectLink* > actors_to_remove = {};
 
-			RemoveActorFromZIndexSet( gl_actor );
-			RemoveActor( *it );
-			m_gl_actors.erase( it, it + 1 );
-			it--;
+	for ( auto it = m_gl_actors.begin() ; it < m_gl_actors.end() ; ++it ) {
+		if ( ( *it )->Removed() ) {
+			actors_to_remove.push_back( *it );
+			m_gl_actors.erase( it-- );
 		}
 		else {
+
+			Actor* gl_actor = ( *it )->GetDstObject< Actor >();
 
 			// reload actors when needed
 			bool mesh_reload_needed = gl_actor->MeshReloadNeeded();
@@ -160,6 +159,18 @@ void Scene::Update() {
 				gl_actor->LoadTexture();
 			}
 		}
+	}
+
+	// remove missing actors
+	for ( const auto& o : actors_to_remove ) {
+		int a = 5;
+	}
+
+	for ( auto it = actors_to_remove.rbegin() ; it != actors_to_remove.rend() ; it++ ) {
+		auto& o = *it;
+		Actor* gl_actor = o->GetDstObject< Actor >();
+		RemoveActorFromZIndexSet( gl_actor );
+		RemoveActor( *it );
 	}
 
 	// add new actors

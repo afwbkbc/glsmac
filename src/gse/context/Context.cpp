@@ -4,6 +4,7 @@
 #include "gse/Exception.h"
 #include "common/Common.h"
 #include "gse/type/Callable.h"
+#include "gse/type/Undefined.h"
 
 namespace gse {
 namespace context {
@@ -49,6 +50,32 @@ const bool Context::DecRefs() {
 		return true;
 	}
 	return false;
+}
+
+void Context::WithRefs( const std::function< void() >& f ) {
+	IncRefs();
+	try {
+		f();
+	}
+	catch ( const std::exception& e ) {
+		DecRefs();
+		throw;
+	}
+	DecRefs();
+}
+
+const gse::Value Context::WithRefsV( const std::function< const gse::Value() >& f ) {
+	IncRefs();
+	auto result = VALUE( type::Undefined );
+	try {
+		result = f();
+	}
+	catch ( const std::exception& e ) {
+		DecRefs();
+		throw;
+	}
+	DecRefs();
+	return result;
 }
 
 const bool Context::HasVariable( const std::string& name ) {
@@ -142,22 +169,24 @@ void Context::PersistValue( const Value& value ) {
 			value
 		}
 	);
-	// this context chain must live until all variables are unpersisted
+	/*// this context chain must live until all variables are unpersisted
 	Context* ctx = this;
 	while ( ctx ) {
 		ctx->IncRefs();
 		ctx = ctx->GetParentContext();
-	}
+	}*/
+	IncRefs();
 }
 
 void Context::UnpersistValue( const Value& value ) {
 	ASSERT_NOLOG( m_persisted_values.find( value.Get() ) != m_persisted_values.end(), "value was not persisted" );
 	m_persisted_values.erase( value.Get() );
-	Context* ctx = this;
+	/*Context* ctx = this;
 	while ( ctx ) {
 		ctx->DecRefs();
 		ctx = ctx->GetParentContext();
-	}
+	}*/
+	DecRefs();
 }
 
 void Context::UnpersistValue( const type::Type* type ) {
@@ -191,14 +220,16 @@ ChildContext* const Context::ForkContext(
 }
 
 void Context::Clear() {
-	IncRefs();
-	const auto children = m_child_contexts;
-	for ( const auto& c : children ) {
-		c->Clear();
-	}
-	m_persisted_values.clear();
-	m_variables.clear();
-	DecRefs();
+	WithRefs(
+		[ this ]() {
+			const auto children = m_child_contexts;
+			for ( const auto& c : children ) {
+				c->Clear();
+			}
+			m_persisted_values.clear();
+			m_variables.clear();
+		}
+	);
 }
 
 void Context::AddChildContext( ChildContext* const child ) {

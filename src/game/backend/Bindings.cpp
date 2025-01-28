@@ -86,7 +86,7 @@ const gse::Value Bindings::Trigger( gse::Wrappable* object, const std::string& e
 			m_state->m_on_gse_error( e );
 		}
 		else {
-			throw std::runtime_error( e.ToStringAndCleanup() );
+			throw std::runtime_error( e.ToString() );
 		}
 	}
 	return result;

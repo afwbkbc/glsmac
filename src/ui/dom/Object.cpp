@@ -53,8 +53,7 @@ Object::Object( DOM_ARGS_T )
 		}
 		return VALUE( gse::type::Undefined );
 	} ) );
-	Method( GSE_CALL, "removeclass", NATIVE_CALL( this )
-	{
+	Method( GSE_CALL, "removeclass", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 1 );
 		N_GETVALUE( name, 0, String );
 		ASSERT_NOLOG( m_properties.at( "class" ).Get()->type == gse::type::Type::T_STRING, "class is not string" );
@@ -70,6 +69,14 @@ Object::Object( DOM_ARGS_T )
 			UpdateProperty( "class", VALUE( gse::type::String, util::String::Join( names_new, ' ' ) ) );
 			SetClasses( GSE_CALL, names_new );
 		}
+		return VALUE( gse::type::Undefined );
+	} ) );
+	Method( GSE_CALL, "delete", NATIVE_CALL( this ) {
+		ASSERT_NOLOG( m_parent, "delete without parent" );
+		if ( m_is_initialized ) {
+			SetClasses( GSE_CALL, {} );
+		}
+		m_parent->DeleteChild( GSE_CALL, this );
 		return VALUE( gse::type::Undefined );
 	} ) );
 }

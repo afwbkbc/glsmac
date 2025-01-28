@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_set>
+
 #include "Area.h"
 
 namespace scene::actor {
@@ -40,11 +42,16 @@ protected:
 private:
 	friend class Root;
 
+	bool m_is_processing_children_events = false;
+
 	std::unordered_map< id_t, Object* > m_children = {};
 	std::vector< Object* > m_embedded_objects = {};
 	std::map< std::string, Object* > m_forwarded_properties = {};
 
 	void InitAndValidate( GSE_CALLABLE ) override;
+
+	std::unordered_set< Object* > m_children_to_delete = {};
+	void ProcessPendingDeletes( GSE_CALLABLE );
 
 protected:
 	friend class ui::Class;
@@ -55,6 +62,10 @@ protected:
 private:
 	std::unordered_set< Object* > m_mouse_over_objects = {};
 	bool m_processing_mouse_overs = false;
+
+private:
+	friend class Object;
+	void DeleteChild( GSE_CALLABLE, Object* obj );
 
 };
 

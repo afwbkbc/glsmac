@@ -24,6 +24,14 @@ Input::Input( DOM_ARGS )
 	m_value = "";
 	m_text->SetText( m_value );
 
+	Property(
+		GSE_CALL, "value", gse::type::Type::T_STRING, VALUE( gse::type::String, "" ), PF_NONE,
+		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
+			SetValue( GSE_CALL, ( (gse::type::String*)v.Get() )->value );
+			return VALUE( gse::type::Undefined );
+		}
+	);
+
 	ForwardProperty( GSE_CALL, "color", m_text );
 	ForwardProperty( GSE_CALL, "font", m_text );
 
@@ -124,6 +132,7 @@ void Input::SetValue( GSE_CALLABLE, const std::string& value ) {
 				: " "
 			)
 		);
+		UpdateProperty( "value", VALUE( gse::type::String, value ) );
 		input::Event e;
 		e.SetType( input::EV_CHANGE );
 		e.data.value.change_select.text = new std::string( m_value );

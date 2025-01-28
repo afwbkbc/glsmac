@@ -69,7 +69,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 					runner->Execute( context, program );
 				}
 				catch ( Exception& e ) {
-					last_error = e.ToStringAndCleanup();
+					last_error = e.ToString();
 					if ( context ) {
 						DELETE( context );
 						context = nullptr;
@@ -82,7 +82,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 				if ( context ) {
 					gse->GetAsync()->ProcessAndExit();
 					context->Clear();
-					context->DecRefs();
+					context->End();
 				}
 				if ( program ) {
 					DELETE( program );

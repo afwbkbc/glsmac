@@ -429,7 +429,7 @@ void Game::Iterate() {
 								});
 							}
 							catch ( gse::Exception& e ) {
-								Log( (std::string)"Initialization failed: " + e.ToStringAndCleanup() );
+								Log( (std::string)"Initialization failed: " + e.ToString() );
 								f_init_failed( e.what() );
 							}
 							GlobalAdvanceTurn();
@@ -826,7 +826,7 @@ void Game::OnError( std::runtime_error& err ) {
 void Game::OnGSEError( gse::Exception& err ) {
 	auto fr = FrontendRequest( FrontendRequest::FR_ERROR );
 	NEW( fr.data.error.what, std::string, (std::string)"Script error: " + err.what() );
-	NEW( fr.data.error.stacktrace, std::string, err.ToStringAndCleanup() );
+	NEW( fr.data.error.stacktrace, std::string, err.ToString() );
 	AddFrontendRequest( fr );
 }
 

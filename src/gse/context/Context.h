@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <functional>
 
 #include "gse/Types.h"
 #include "gse/type/Types.h"
@@ -45,6 +46,9 @@ public:
 
 	void IncRefs();
 	const bool DecRefs();
+
+	void WithRefs( const std::function< void() >& f );
+	const gse::Value WithRefsV( const std::function< const gse::Value() >& f );
 
 	const bool HasVariable( const std::string& name );
 	const Value GetVariable( const std::string& name, const si_t* si );

@@ -46,6 +46,18 @@ void Common::AddToContext( context::Context* ctx ) {
 		return VALUE( type::Int, size );
 	} ) );
 
+	ctx->CreateBuiltin("is_defined", NATIVE_CALL() {
+		N_EXPECT_ARGS( 1 );
+		N_GETPTR( v, 0 );
+		switch ( v->type ) {
+			case type::Type::T_NOTHING:
+			case type::Type::T_UNDEFINED:
+				return VALUE( gse::type::Bool, false );
+			default:
+				return VALUE( gse::type::Bool, true );
+		}
+	} ) );
+
 	ctx->CreateBuiltin( "is_empty", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GETPTR( v, 0 );

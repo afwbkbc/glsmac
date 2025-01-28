@@ -57,36 +57,41 @@ const gse::Value Interpreter::Execute( context::Context* ctx, const Program* pro
 
 const gse::Value Interpreter::EvaluateScope( context::Context* ctx, const Scope* scope ) const {
 	const auto subctx = ctx->ForkContext( ctx, scope->m_si, false );
-	subctx->IncRefs();
 
-	gse::Value result = VALUE( Nothing );
-	for ( const auto& it : scope->body ) {
-		switch ( it->control_type ) {
-			case Control::CT_STATEMENT: {
-				result = EvaluateStatement( subctx, (Statement*)it );
-				break;
+	return subctx->WithRefsV(
+		[ this, &subctx, &scope ]() {
+
+			gse::Value result = VALUE( Nothing );
+
+			for ( const auto& it : scope->body ) {
+				switch ( it->control_type ) {
+					case Control::CT_STATEMENT: {
+						result = EvaluateStatement( subctx, (Statement*)it );
+						break;
+					}
+					case Control::CT_CONDITIONAL: {
+						result = EvaluateConditional( subctx, (Conditional*)it );
+						break;
+					}
+					default:
+						THROW( "unexpected control type: " + it->Dump() );
+				}
+				if ( result.Get()->type != Type::T_NOTHING ) {
+					// got return statement
+					break;
+				}
 			}
-			case Control::CT_CONDITIONAL: {
-				result = EvaluateConditional( subctx, (Conditional*)it );
-				break;
-			}
-			default:
-				THROW( "unexpected control type: " + it->Dump() );
-		}
-		if ( result.Get()->type != Type::T_NOTHING ) {
-			// got return statement
-			break;
-		}
-	}
 
 #ifdef DEBUG
-	if ( m_are_scope_context_joins_enabled ) {
-		subctx->JoinContext();
-	}
+			if ( m_are_scope_context_joins_enabled ) {
+				subctx->JoinContext();
+			}
 #endif
 
-	subctx->DecRefs();
-	return result;
+			return result;
+		}
+	);
+
 }
 
 const gse::Value Interpreter::EvaluateStatement( context::Context* ctx, const Statement* statement ) const {
@@ -179,69 +184,71 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 					const auto* condition = (ForConditionInOf*)c->condition;
 					const auto target = Deref( ctx, condition->m_si, EvaluateExpression( ctx, condition->expression ) );
 					const auto forctx = ctx->ForkContext( ctx, condition->m_si, false );
-					forctx->IncRefs();
-					switch ( target.Get()->type ) {
-						case Type::T_ARRAY: {
-							const auto* arr = (type::Array*)target.Get();
-							switch ( condition->for_inof_type ) {
-								case ForConditionInOf::FIC_IN: {
-									for ( size_t i = 0 ; i < arr->value.size() ; i++ ) {
-										forctx->CreateConst( condition->variable->name, VALUE( Int, i ), &condition->m_si );
-										result = EvaluateScope( forctx, c->body );
-										forctx->DestroyVariable( condition->variable->name, &condition->m_si );
-										CheckBreakCondition( result, &need_break, &need_clear );
-										if ( need_break ) {
-											if ( need_clear ) {
-												result = VALUE( Nothing );
+					forctx->WithRefs(
+						[ this, &forctx, &target, &condition, &result, &need_break, &need_clear, &c ]() {
+							switch ( target.Get()->type ) {
+								case Type::T_ARRAY: {
+									const auto* arr = (type::Array*)target.Get();
+									switch ( condition->for_inof_type ) {
+										case ForConditionInOf::FIC_IN: {
+											for ( size_t i = 0 ; i < arr->value.size() ; i++ ) {
+												forctx->CreateConst( condition->variable->name, VALUE( Int, i ), &condition->m_si );
+												result = EvaluateScope( forctx, c->body );
+												forctx->DestroyVariable( condition->variable->name, &condition->m_si );
+												CheckBreakCondition( result, &need_break, &need_clear );
+												if ( need_break ) {
+													if ( need_clear ) {
+														result = VALUE( Nothing );
+													}
+													break;
+												}
 											}
 											break;
 										}
+										case ForConditionInOf::FIC_OF: {
+											for ( const auto& v : arr->value ) {
+												forctx->CreateConst( condition->variable->name, v, &condition->m_si );
+												result = EvaluateScope( forctx, c->body );
+												forctx->DestroyVariable( condition->variable->name, &condition->m_si );
+												CheckBreakCondition( result, &need_break, &need_clear );
+												if ( need_break ) {
+													if ( need_clear ) {
+														result = VALUE( Nothing );
+													}
+													break;
+												}
+											}
+											break;
+										}
+										default:
+											THROW( "unexpected for in_of condition type: " + std::to_string( condition->for_inof_type ) );
 									}
 									break;
 								}
-								case ForConditionInOf::FIC_OF: {
-									for ( const auto& v : arr->value ) {
-										forctx->CreateConst( condition->variable->name, v, &condition->m_si );
+								case Type::T_OBJECT: {
+									const auto* obj = (type::Object*)target.Get();
+									if ( condition->for_inof_type != ForConditionInOf::FIC_IN && condition->for_inof_type != ForConditionInOf::FIC_OF ) {
+										THROW( "unexpected for in_of condition type: " + std::to_string( condition->for_inof_type ) );
+									}
+									for ( const auto& v : obj->value ) {
+										forctx->CreateConst(
+											condition->variable->name, condition->for_inof_type == ForConditionInOf::FIC_IN
+												? VALUE( String, v.first )
+												: v.second, &condition->m_si
+										);
 										result = EvaluateScope( forctx, c->body );
 										forctx->DestroyVariable( condition->variable->name, &condition->m_si );
-										CheckBreakCondition( result, &need_break, &need_clear );
-										if ( need_break ) {
-											if ( need_clear ) {
-												result = VALUE( Nothing );
-											}
+										if ( result.Get()->type != Type::T_NOTHING ) {
 											break;
 										}
 									}
 									break;
 								}
 								default:
-									THROW( "unexpected for in_of condition type: " + std::to_string( condition->for_inof_type ) );
+									THROW( "unexpected type for iteration (" + target.GetTypeString() + "): " + target.ToString() );
 							}
-							break;
 						}
-						case Type::T_OBJECT: {
-							const auto* obj = (type::Object*)target.Get();
-							if ( condition->for_inof_type != ForConditionInOf::FIC_IN && condition->for_inof_type != ForConditionInOf::FIC_OF ) {
-								THROW( "unexpected for in_of condition type: " + std::to_string( condition->for_inof_type ) );
-							}
-							for ( const auto& v : obj->value ) {
-								forctx->CreateConst(
-									condition->variable->name, condition->for_inof_type == ForConditionInOf::FIC_IN
-										? VALUE( String, v.first )
-										: v.second, &condition->m_si
-								);
-								result = EvaluateScope( forctx, c->body );
-								forctx->DestroyVariable( condition->variable->name, &condition->m_si );
-								if ( result.Get()->type != Type::T_NOTHING ) {
-									break;
-								}
-							}
-							break;
-						}
-						default:
-							THROW( "unexpected type for iteration (" + target.GetTypeString() + "): " + target.ToString() );
-					}
-					forctx->DecRefs();
+					);
 					break;
 				}
 				default:
@@ -275,7 +282,7 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 						ctx,
 						it->second->m_si,
 						{
-							VALUE( type::Exception, e, e.GetBacktraceAndCleanup( ctx ) )
+							VALUE( type::Exception, e, e.GetBacktrace( ctx ) )
 						}
 					);
 					return result;
@@ -1050,10 +1057,11 @@ Interpreter::Function::~Function() {
 
 gse::Value Interpreter::Function::Run( context::Context* ctx, const si_t& call_si, const function_arguments_t& arguments ) {
 	auto* subctx = context->ForkContext( GSE_CALL, true, parameters, arguments );
-	subctx->IncRefs();
-	const auto result = runner->Execute( subctx, program );
-	subctx->DecRefs();
-	return result;
+	return subctx->WithRefsV(
+		[ this, &subctx ]() {
+			return runner->Execute( subctx, program );
+		}
+	);
 }
 
 }

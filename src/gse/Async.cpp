@@ -30,7 +30,6 @@ const Async::timer_id_t Async::StartTimer( const size_t ms, const Value& f, cont
 	s_next_id++;
 	auto* subctx = ctx->ForkContext( ctx, si, true );
 	ValidateMs( ms, subctx, si );
-	subctx->IncRefs();
 	subctx->PersistValue( f );
 	const auto time = Now() + ms;
 	m_timers[ time ].insert(
@@ -64,7 +63,6 @@ const bool Async::StopTimer( const gse::Async::timer_id_t id ) {
 	ASSERT( timers.find( id ) != timers.end(), "timer not found" );
 	const auto& timer = timers.at( id );
 	timer.ctx->UnpersistValue( timer.callable );
-	timer.ctx->DecRefs();
 	timers.erase( id );
 	if ( timers.empty() ) {
 		m_timers.erase( time );
@@ -77,7 +75,6 @@ void Async::StopTimers() {
 	for ( const auto& it : m_timers ) {
 		for ( const auto& it2 : it.second ) {
 			it2.second.ctx->UnpersistValue( it2.second.callable );
-			it2.second.ctx->DecRefs();
 		}
 	}
 	m_timers.clear();
@@ -168,7 +165,6 @@ void Async::ProcessTimers( const timers_t::iterator& it ) {
 		}
 		else {
 			ctx->UnpersistValue( f );
-			ctx->DecRefs();
 		}
 		ASSERT( m_timers_ms.find( it2.first ) != m_timers_ms.end(), "related timers_ms entry not found" );
 		m_timers_ms.erase( it2.first );

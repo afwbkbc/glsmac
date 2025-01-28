@@ -156,7 +156,7 @@ void GSEPrompt::ProcessInput() {
 		std::cout << result.Dump() << std::endl;
 	}
 	catch ( gse::Exception& e ) {
-		std::cout << e.ToStringAndCleanup() << std::endl;
+		std::cout << e.ToString() << std::endl;
 		context = nullptr;
 	}
 	catch ( std::runtime_error& e ) {

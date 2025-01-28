@@ -88,22 +88,36 @@ void GSE::Run() {
 }
 
 const Value GSE::RunScript( context::Context* ctx, const si_t& si, const std::string& path ) {
-	const auto& it = m_include_cache.find( path );
-	if ( it != m_include_cache.end() ) {
-		return it->second.result;
-	}
 	std::string full_path = "";
-	for ( const auto& it : m_supported_extensions ) {
-		if ( util::FS::FileExists( path + it, PATH_SEPARATOR ) ) {
-			if ( !full_path.empty() ) {
-				throw Exception( EC.LOADER_ERROR, "Multiple candidates found for include '" + path + "': '" + std::string( full_path ) + "', '" + path + it + "', ...", ctx, si );
+	{
+		const auto& it = m_include_paths.find( path );
+		if ( it != m_include_paths.end() ) {
+			full_path = it->second;
+		}
+		else {
+			for ( const auto& it : m_supported_extensions ) {
+				if ( util::FS::FileExists( path + it, PATH_SEPARATOR ) ) {
+					if ( !full_path.empty() ) {
+						throw Exception( EC.LOADER_ERROR, "Multiple candidates found for include '" + path + "': '" + std::string( full_path ) + "', '" + path + it + "', ...", ctx, si );
+					}
+					full_path = path + it;
+				}
 			}
-			full_path = path + it;
+			m_include_paths.insert(
+				{
+					path,
+					full_path
+				}
+			);
 		}
 	}
 	if ( full_path.empty() ) {
 		Log( "Could not find script for include '" + path + "'" );
 		throw Exception( EC.LOADER_ERROR, "Could not find script for include '" + path + "'", ctx, si );
+	}
+	const auto& it = m_include_cache.find( full_path );
+	if ( it != m_include_cache.end() ) {
+		return it->second.result;
 	}
 	const auto source = util::FS::ReadTextFile( full_path, PATH_SEPARATOR );
 	include_cache_t cache = {
@@ -120,22 +134,18 @@ const Value GSE::RunScript( context::Context* ctx, const si_t& si, const std::st
 			cache.context->CreateVariable( "test", ctx->GetVariable( "test", &si ), &si );
 		}
 #endif
+		cache.context->Begin();
 		const auto parser = GetParser( full_path, source );
 		cache.program = parser->Parse();
 		DELETE( parser );
 		cache.runner = GetRunner();
-		cache.context->Begin();
 		cache.result = cache.runner->Execute( cache.context, cache.program );
-		m_include_cache.insert_or_assign( path, cache );
+		m_include_cache.insert_or_assign( full_path, cache );
 		return cache.result;
-	}
-	catch ( Exception& e ) {
-		cache.Cleanup();
-		throw e;
 	}
 	catch ( std::runtime_error& e ) {
 		cache.Cleanup();
-		throw e;
+		throw;
 	}
 }
 
@@ -156,6 +166,14 @@ const Value& GSE::GetGlobal( const std::string& identifier ) {
 	else {
 		return s_undefined_value;
 	}
+}
+
+context::Context* GSE::GetContextByPath( const std::string& path ) const {
+	const auto& it = m_include_cache.find( path );
+	if ( it != m_include_cache.end() ) {
+		return it->second.context;
+	}
+	return nullptr;
 }
 
 Async* GSE::GetAsync() {

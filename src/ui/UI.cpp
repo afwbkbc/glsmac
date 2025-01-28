@@ -51,7 +51,7 @@ UI::UI( GSE_CALLABLE )
 			m_root->ProcessEvent( GSE_CALL, event );
 		}
 		catch ( gse::Exception& e ) {
-			const auto msg = e.ToStringAndCleanup();
+			const auto msg = e.ToString();
 			Log( msg );
 			throw std::runtime_error( msg );
 		}

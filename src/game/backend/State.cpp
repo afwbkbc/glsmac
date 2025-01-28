@@ -121,7 +121,7 @@ void State::InitBindings() {
 				m_game->OnGSEError( err );
 			}
 			else {
-				throw std::runtime_error( err.ToStringAndCleanup() );
+				throw std::runtime_error( err.ToString() );
 			}
 		}
 	}
