@@ -11,16 +11,16 @@
 #include "Types.h"
 
 namespace util {
-class ArgParser;
+class ConfigParser;
 }
 
 namespace config {
 
 CLASS( Config, common::Module )
-	Config( const int argc, const char* argv[] );
+	Config( const std::string& path );
 	~Config();
 
-	void Init();
+	void Init( const int argc, const char* argv[] );
 
 	enum launch_flag_t : uint32_t {
 		LF_NONE = 0,
@@ -97,7 +97,7 @@ CLASS( Config, common::Module )
 
 private:
 
-	util::ArgParser* m_parser = nullptr;
+	util::ConfigParser* m_parser = nullptr;
 
 	void Error( const std::string& error );
 	const types::Vec2< size_t > ParseSize( const std::string& value );

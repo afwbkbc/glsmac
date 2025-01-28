@@ -98,9 +98,9 @@
 
 int main( const int argc, const char* argv[] ) {
 
-	config::Config config( argc, argv );
+	config::Config config( argv[ 0 ] );
 
-	config.Init();
+	config.Init( argc, argv );
 
 	// this changes the whole flow
 	const auto newui = config.HasLaunchFlag( config::Config::LF_NEWUI );

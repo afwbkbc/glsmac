@@ -3,6 +3,7 @@
 #include <string>
 #include <functional>
 #include <map>
+#include <optional>
 
 #include "Util.h"
 
@@ -10,9 +11,9 @@ namespace util {
 
 #define AH( ... ) [ __VA_ARGS__ ]( const std::string& value ) -> void
 
-CLASS( ArgParser, Util )
+CLASS( ConfigParser, Util )
 
-	ArgParser( const int argc, const char* argv[] );
+	ConfigParser( const std::string& path );
 
 	typedef std::function< void( const std::string& value ) > arg_handler_t;
 
@@ -28,16 +29,19 @@ CLASS( ArgParser, Util )
 	void AddRule( const std::string& argument, const std::string& value_name, const std::string& description, const arg_handler_t handler );
 	const std::string GetHelpString() const;
 	const std::string GetUnknownArgumentNote() const;
-	void Parse();
+
+	void ParseArgs( const int argc, const char* argv[] );
+	void ParseFile( const std::string& path );
 
 private:
-	const int m_argc = 0;
-	const char** const m_argv = nullptr;
+
+	const std::string m_path;
 
 	std::map< std::string, arg_rule_t > m_arg_rules;
 	const size_t m_offset_step = 8;
 	size_t m_offset = 0;
 
+	const std::map< std::string, arg_rule_t >::iterator Set( const std::string& k, const std::optional< std::string >& v, const std::string& err_prefix );
 };
 
 }

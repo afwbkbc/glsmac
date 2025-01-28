@@ -6,11 +6,9 @@
 
 #include "version.h"
 
-#include "util/ArgParser.h"
+#include "util/ConfigParser.h"
 #include "util/FS.h"
 #include "util/random/Random.h"
-
-#include "game/backend/settings/Settings.h"
 
 namespace config {
 
@@ -40,12 +38,12 @@ const types::Vec2< size_t > Config::ParseSize( const std::string& value ) {
 	return result;
 };
 
-Config::Config( const int argc, const char* argv[] )
+Config::Config( const std::string& path )
 	: m_smac_path( "" )
 	, m_data_path( "GLSMAC_data" )
 	, m_prefix( DEFAULT_GLSMAC_PREFIX + util::FS::PATH_SEPARATOR ) {
 
-	m_parser = new util::ArgParser( argc, argv );
+	m_parser = new util::ConfigParser( path );
 
 	m_parser->AddRule(
 		"benchmark", "Disable VSync and FPS limit", AH( this ) {
@@ -351,10 +349,11 @@ Config::~Config() {
 	}
 }
 
-void Config::Init() {
+void Config::Init( const int argc, const char* argv[] ) {
 	ASSERT( m_parser, "parser not set" );
 	try {
-		m_parser->Parse();
+		m_parser->ParseFile( GetPrefix() + "config.yml" );
+		m_parser->ParseArgs( argc, argv );
 	}
 	catch ( std::runtime_error& e ) {
 		Error( e.what() );
