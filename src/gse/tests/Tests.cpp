@@ -185,7 +185,7 @@ const std::string& GetTestSource() {
 									  "  },\n"
 									  "  TestError: (e) => {\n"
 									  "         #print('CAUGHT ' + e.type + ' : ' + e.reason);\n"
-									  "         #print(e.backtrace);\n"
+									  "         #print(e.stacktrace);\n"
 									  "  }\n"
 									  "};\n"
 									  "\n"
@@ -1837,7 +1837,7 @@ const Program* GetTestProgram() {
 											{
 												new Variable( SI( 125, 15, 125, 16 ), "e" )
 											}, new Scope(
-												SI( 126, 10, 127, 30 ),
+												SI( 126, 10, 127, 31 ),
 												{
 													print(
 														126, 10,
@@ -1874,10 +1874,10 @@ const Program* GetTestProgram() {
 														127, 10,
 														{
 															new Expression(
-																SI( 127, 17, 127, 28 ),
+																SI( 127, 17, 127, 29 ),
 																new Variable( SI( 127, 17, 127, 18 ), "e" ),
 																new Operator( SI( 127, 18, 127, 19 ), OT_CHILD ),
-																new Variable( SI( 127, 19, 127, 28 ), "backtrace" )
+																new Variable( SI( 127, 19, 127, 29 ), "stacktrace" )
 															)
 														}
 													)

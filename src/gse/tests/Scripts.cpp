@@ -13,6 +13,7 @@
 #include "task/gsetests/GSETests.h"
 #include "util/FS.h"
 #include "util/String.h"
+#include "gse/ExecutionPointer.h"
 
 #include "engine/Engine.h"
 
@@ -66,7 +67,10 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 					mocks::AddMocks( context, { script } );
 					program = parser->Parse();
 					runner = gse->GetRunner();
-					runner->Execute( context, program );
+					{
+						ExecutionPointer ep;
+						runner->Execute( context, ep, program );
+					}
 				}
 				catch ( Exception& e ) {
 					last_error = e.ToString();
@@ -80,7 +84,8 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 				};
 
 				if ( context ) {
-					gse->GetAsync()->ProcessAndExit();
+					ExecutionPointer ep;
+					gse->GetAsync()->ProcessAndExit( ep );
 					context->Clear();
 					context->End();
 				}

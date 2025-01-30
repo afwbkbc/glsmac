@@ -5,6 +5,7 @@
 #include "types/Exception.h"
 
 #include "gse/Types.h"
+#include "Value.h"
 
 namespace gse {
 
@@ -36,20 +37,18 @@ extern const exception_ec_t EC;
 class Exception : public types::Exception {
 public:
 
-	typedef std::vector< std::string > backtrace_t;
+	typedef std::vector< std::string > stacktrace_t;
 
-	Exception( const std::string& class_name, const std::string& reason, context::Context* context, const si_t& si );
+	Exception( const std::string& class_name, const std::string& reason, GSE_CALLABLE );
 
 	const std::string class_name;
 	const std::string reason;
-	context::Context* context;
-	const si_t si;
 
-	const backtrace_t& GetBacktrace( const context::Context* const current_ctx );
+	const stacktrace_t& GetBacktrace( const context::Context* const current_ctx );
 	const std::string ToString();
 
 private:
-	backtrace_t m_backtrace = {};
+	stacktrace_t m_stacktrace = {};
 
 };
 

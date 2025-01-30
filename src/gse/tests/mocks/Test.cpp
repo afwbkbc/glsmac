@@ -12,6 +12,7 @@
 #include "gse/type/Int.h"
 #include "gse/type/String.h"
 #include "gse/tests/Tests.h"
+#include "gse/ExecutionPointer.h"
 
 namespace gse {
 namespace tests {
@@ -83,7 +84,10 @@ void Test::AddMocks( context::GlobalContext* ctx, const test_info_t& test_info )
 			} )
 		},
 	};
-	ctx->CreateVariable( "test", VALUE( type::Object, nullptr, mocks ), nullptr );
+	{
+		ExecutionPointer ep;
+		ctx->CreateVariable( "test", VALUE( type::Object, nullptr, mocks ), {}, ep );
+	}
 }
 
 }

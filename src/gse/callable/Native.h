@@ -131,10 +131,10 @@ namespace callable {
 
 class Native : public type::Callable {
 public:
-	typedef std::function< Value( context::Context* ctx, const si_t& call_si, const type::function_arguments_t& arguments ) > executor_t;
+	typedef std::function< Value( GSE_CALLABLE, const type::function_arguments_t& arguments ) > executor_t;
 	Native() = delete;
 	Native( const executor_t& executor );
-	virtual Value Run( context::Context* ctx, const si_t& call_si, const type::function_arguments_t& arguments ) override;
+	virtual Value Run( GSE_CALLABLE, const type::function_arguments_t& arguments ) override;
 
 private:
 	const executor_t m_executor;

@@ -5,10 +5,9 @@
 namespace gse {
 namespace context {
 
-ChildContext::ChildContext( GSE* gse, Context* parent_context, Context* caller_context, const si_t& si, const bool is_traceable )
+ChildContext::ChildContext( GSE* gse, Context* parent_context, const si_t& si, const bool is_traceable )
 	: Context( gse )
 	, m_parent_context( parent_context )
-	, m_caller_context( caller_context )
 	, m_si( si )
 	, m_is_traceable( is_traceable ) {
 	ASSERT_NOLOG( m_parent_context->GetParentContext() != this, "circular context dependency" );
@@ -21,10 +20,6 @@ ChildContext::~ChildContext() {
 
 Context* ChildContext::GetParentContext() const {
 	return m_parent_context;
-}
-
-Context* ChildContext::GetCallerContext() const {
-	return m_caller_context;
 }
 
 const si_t& ChildContext::GetSI() const {

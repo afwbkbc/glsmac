@@ -13,6 +13,9 @@ try {
 
 } catch {
 	TestError: (e) => {
+		test.assert(e.stacktrace == [
+			'\tat ./GLSMAC_data/tests/exceptions.gls.js:12: test.assert(false, \'assert failed!\');',
+		]);
 		was_caught = true;
 	}
 }
@@ -184,3 +187,65 @@ testcatch('GSEMathError', () => {
 testcatch('GSEMathError', () => {
 	5.0 / 0.0;
 });
+
+// test stacktraces
+const obj1 = {
+	func1: () => {
+		const arr = [
+			() => {
+				const obj = {
+					func3: () => {
+						throw ErrorFromTheDeep('some error message');
+					}
+				};
+				obj.func3();
+			}
+		];
+		arr[0]();
+	}
+};
+was_caught = false;
+try {
+	obj1.func1();
+} catch {
+	ErrorFromTheDeep: (e) => {
+		was_caught = true;
+		test.assert(e.stacktrace == [
+			'\tat ./GLSMAC_data/tests/exceptions.gls.js:198: throw ErrorFromTheDeep(\'some error message\');',
+			'\tat ./GLSMAC_data/tests/exceptions.gls.js:201: obj.func3();',
+			'\tat ./GLSMAC_data/tests/exceptions.gls.js:204: arr[0]();',
+			'\tat ./GLSMAC_data/tests/exceptions.gls.js:209: obj1.func1();',
+		]);
+	}
+}
+test.assert(was_caught, 'exception not caught');
+
+was_caught = false;
+try {
+	try {
+		const func = () => {
+			throw Error1('test err');
+		};
+		func();
+	} catch {
+		Error1: (e) => {
+			test.assert(e.stacktrace == [
+				'\tat ./GLSMAC_data/tests/exceptions.gls.js:227: throw Error1(\'test err\');',
+				'\tat ./GLSMAC_data/tests/exceptions.gls.js:229: func();',
+			]);
+			throw Error2('test err2');
+		}
+	}
+} catch {
+	Error1: (e) => {
+		test.assert(false, 'should not catch this');
+	},
+	Error2: (e) => {
+		test.assert(e.stacktrace == [
+			'\tat ./GLSMAC_data/tests/exceptions.gls.js:236: throw Error2(\'test err2\');',
+			'\tat ./GLSMAC_data/tests/exceptions.gls.js:231: Error1: (e) => {',
+		]);
+		was_caught = true;sd
+	},
+}
+test.assert(was_caught, 'exception not caught');

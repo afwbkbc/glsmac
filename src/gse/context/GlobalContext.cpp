@@ -27,10 +27,6 @@ Context* GlobalContext::GetParentContext() const {
 	return nullptr;
 }
 
-Context* GlobalContext::GetCallerContext() const {
-	return nullptr;
-}
-
 const bool GlobalContext::IsTraceable() const {
 	return false;
 }

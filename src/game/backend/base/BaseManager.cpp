@@ -211,7 +211,7 @@ WRAPIMPL_BEGIN( BaseManager )
 
 				base::pop_render_infos_t rh = {};
 				base::pop_render_infos_t rp = {};
-				const auto& f_read_renders = [ &def, &arg, &call_si, &ctx, &getprop_val, &obj_it ]( const std::string& key, base::pop_render_infos_t& out ) {
+				const auto& f_read_renders = [ &def, &arg, &ctx, &si, &ep, &getprop_val, &obj_it ]( const std::string& key, base::pop_render_infos_t& out ) {
 					N_GETPROP( renders, def, key, Array );
 					out.reserve( renders.size() );
 					for ( const auto& v : renders ) {

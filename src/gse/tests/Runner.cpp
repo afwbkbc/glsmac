@@ -6,6 +6,7 @@
 #include "gse/GSE.h"
 #include "gse/context/GlobalContext.h"
 #include "gse/runner/Interpreter.h"
+#include "gse/ExecutionPointer.h"
 
 #include "mocks/Mocks.h"
 
@@ -35,7 +36,10 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 			mocks::AddMocks( context, {} );
 
 			gse->LogCaptureStart();
-			interpreter.Execute( context, g_test_program );
+			{
+				ExecutionPointer ep;
+				interpreter.Execute( context, ep, g_test_program );
+			}
 			const auto actual_output = gse->LogCaptureStopGet();
 
 			VALIDATE();

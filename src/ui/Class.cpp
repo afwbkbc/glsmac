@@ -231,16 +231,16 @@ const gse::Value Class::Wrap( const bool dynamic ) {
 	);
 }
 
-void Class::WrapSet( const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& call_si ) {
+void Class::WrapSet( const std::string& key, const gse::Value& value, GSE_CALLABLE ) {
 	SetProperty( GSE_CALL, key, value );
 }
 
-void Class::WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& call_si ) {
+void Class::WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, GSE_CALLABLE ) {
 	ASSERT_NOLOG( wrapobj, "wrapobj not set" );
 	( (Class*)wrapobj )->WrapSet( key, value, GSE_CALL );
 }
 
-void Class::SetProperty( gse::context::Context* ctx, const gse::si_t& call_si, const std::string& name, const gse::Value& value ) {
+void Class::SetProperty( GSE_CALLABLE, const std::string& name, const gse::Value& value ) {
 	const auto& it_old = m_properties.find( name );
 	if ( it_old == m_properties.end() || it_old->second != value ) {
 		const auto& it = s_name_to_modifier.find( name );

@@ -11,7 +11,7 @@
 namespace gse {
 namespace builtins {
 
-void Async::AddToContext( context::Context* ctx ) {
+void Async::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 
 	ctx->CreateBuiltin( "async", NATIVE_CALL() {
 		N_EXPECT_ARGS( 2 );
@@ -23,7 +23,7 @@ void Async::AddToContext( context::Context* ctx ) {
 			{
 				"stop",
 				// recursive NATIVE_CALL doesn't work
-				gse::Value( std::make_shared< gse::callable::Native >([ timer_id ]( gse::context::Context* ctx, const gse::si_t& call_si, const gse::type::function_arguments_t& arguments ) -> gse::Value {
+				gse::Value( std::make_shared< gse::callable::Native >([ timer_id ]( GSE_CALLABLE, const gse::type::function_arguments_t& arguments ) -> gse::Value {
 					N_EXPECT_ARGS( 0 );
 					if ( !ctx->GetGSE()->GetAsync()->StopTimer( timer_id ) ) {
 						GSE_ERROR( EC.OPERATION_FAILED, "Timer is already stopped" );
@@ -34,7 +34,7 @@ void Async::AddToContext( context::Context* ctx ) {
 		};
 
 		return VALUE( type::Object, nullptr, properties, "async" );
-	} ) );
+	} ), ep );
 
 }
 

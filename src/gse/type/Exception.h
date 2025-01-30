@@ -12,7 +12,7 @@ namespace type {
 class Exception : public Object {
 public:
 
-	Exception( const gse::Exception& exception, const std::vector< std::string >& backtrace );
+	Exception( const gse::Exception& exception, const std::vector< std::string >& stacktrace );
 
 };
 

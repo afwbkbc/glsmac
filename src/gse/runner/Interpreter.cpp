@@ -43,6 +43,7 @@
 #include "gse/type/LoopControl.h"
 #include "gse/type/Exception.h"
 #include "gse/type/Undefined.h"
+#include "gse/ExecutionPointer.h"
 
 namespace gse {
 
@@ -51,26 +52,26 @@ using namespace type;
 
 namespace runner {
 
-const gse::Value Interpreter::Execute( context::Context* ctx, const Program* program ) const {
-	return EvaluateScope( ctx, program->body );
+const gse::Value Interpreter::Execute( context::Context* ctx, ExecutionPointer& ep, const Program* program ) const {
+	return EvaluateScope( ctx, ep, program->body );
 }
 
-const gse::Value Interpreter::EvaluateScope( context::Context* ctx, const Scope* scope ) const {
-	const auto subctx = ctx->ForkContext( ctx, scope->m_si, false );
+const gse::Value Interpreter::EvaluateScope( context::Context* ctx, ExecutionPointer& ep, const Scope* scope ) const {
+	const auto subctx = ctx->ForkContext( ctx, scope->m_si, ep, false );
 
 	return subctx->WithRefsV(
-		[ this, &subctx, &scope ]() {
+		[ this, &subctx, &ep, &scope ]() {
 
 			gse::Value result = VALUE( Nothing );
 
 			for ( const auto& it : scope->body ) {
 				switch ( it->control_type ) {
 					case Control::CT_STATEMENT: {
-						result = EvaluateStatement( subctx, (Statement*)it );
+						result = EvaluateStatement( subctx, ep, (Statement*)it );
 						break;
 					}
 					case Control::CT_CONDITIONAL: {
-						result = EvaluateConditional( subctx, (Conditional*)it );
+						result = EvaluateConditional( subctx, ep, (Conditional*)it );
 						break;
 					}
 					default:
@@ -94,24 +95,24 @@ const gse::Value Interpreter::EvaluateScope( context::Context* ctx, const Scope*
 
 }
 
-const gse::Value Interpreter::EvaluateStatement( context::Context* ctx, const Statement* statement ) const {
+const gse::Value Interpreter::EvaluateStatement( context::Context* ctx, ExecutionPointer& ep, const Statement* statement ) const {
 	bool returnflag = false;
-	const auto result = EvaluateExpression( ctx, statement->body, &returnflag );
+	const auto result = EvaluateExpression( ctx, ep, statement->body, &returnflag );
 	if ( returnflag ) {
 		return result;
 	}
 	return VALUE( Nothing );
 }
 
-const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const Conditional* conditional, bool is_nested ) const {
+const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, ExecutionPointer& ep, const Conditional* conditional, bool is_nested ) const {
 	switch ( conditional->conditional_type ) {
 		case Conditional::CT_IF: {
 			const auto* c = (If*)conditional;
-			if ( EvaluateBool( ctx, c->condition->expression ) ) {
-				return EvaluateScope( ctx, c->body );
+			if ( EvaluateBool( ctx, ep, c->condition->expression ) ) {
+				return EvaluateScope( ctx, ep, c->body );
 			}
 			else if ( c->els ) {
-				return EvaluateConditional( ctx, c->els, true );
+				return EvaluateConditional( ctx, ep, c->els, true );
 			}
 			else {
 				return VALUE( Nothing );
@@ -120,14 +121,14 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 		case Conditional::CT_ELSEIF: {
 			if ( !is_nested ) {
 				// TODO: move check to parser
-				throw gse::Exception( EC.PARSE_ERROR, "Unexpected elseif without if", ctx, conditional->m_si );
+				throw gse::Exception( EC.PARSE_ERROR, "Unexpected elseif without if", ctx, conditional->m_si, ep );
 			}
 			const auto* c = (ElseIf*)conditional;
-			if ( EvaluateBool( ctx, c->condition->expression ) ) {
-				return EvaluateScope( ctx, c->body );
+			if ( EvaluateBool( ctx, ep, c->condition->expression ) ) {
+				return EvaluateScope( ctx, ep, c->body );
 			}
 			else if ( c->els ) {
-				return EvaluateConditional( ctx, c->els, true );
+				return EvaluateConditional( ctx, ep, c->els, true );
 			}
 			else {
 				return VALUE( Nothing );
@@ -136,18 +137,18 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 		case Conditional::CT_ELSE: {
 			if ( !is_nested ) {
 				// TODO: move check to parser
-				throw gse::Exception( EC.PARSE_ERROR, "Unexpected else without if", ctx, conditional->m_si );
+				throw gse::Exception( EC.PARSE_ERROR, "Unexpected else without if", ctx, conditional->m_si, ep );
 			}
 			const auto* c = (Else*)conditional;
-			return EvaluateScope( ctx, c->body );
+			return EvaluateScope( ctx, ep, c->body );
 		}
 		case Conditional::CT_WHILE: {
 			const auto* c = (While*)conditional;
 			gse::Value result = VALUE( Nothing );
 			bool need_break = false;
 			bool need_clear = false;
-			while ( EvaluateBool( ctx, c->condition->expression ) ) {
-				result = EvaluateScope( ctx, c->body );
+			while ( EvaluateBool( ctx, ep, c->condition->expression ) ) {
+				result = EvaluateScope( ctx, ep, c->body );
 				CheckBreakCondition( result, &need_break, &need_clear );
 				if ( need_clear ) {
 					result = VALUE( Nothing );
@@ -166,9 +167,9 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 			switch ( c->condition->for_type ) {
 				case ForCondition::FCT_EXPRESSIONS: {
 					const auto* condition = (ForConditionExpressions*)c->condition;
-					EvaluateExpression( ctx, condition->init );
-					while ( EvaluateBool( ctx, condition->check ) ) {
-						result = EvaluateScope( ctx, c->body );
+					EvaluateExpression( ctx, ep, condition->init );
+					while ( EvaluateBool( ctx, ep, condition->check ) ) {
+						result = EvaluateScope( ctx, ep, c->body );
 						CheckBreakCondition( result, &need_break, &need_clear );
 						if ( need_break ) {
 							if ( need_clear ) {
@@ -176,25 +177,25 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 							}
 							break;
 						}
-						EvaluateExpression( ctx, condition->iterate );
+						EvaluateExpression( ctx, ep, condition->iterate );
 					}
 					break;
 				}
 				case ForCondition::FCT_IN_OF: {
 					const auto* condition = (ForConditionInOf*)c->condition;
-					const auto target = Deref( ctx, condition->m_si, EvaluateExpression( ctx, condition->expression ) );
-					const auto forctx = ctx->ForkContext( ctx, condition->m_si, false );
+					const auto target = Deref( ctx, condition->m_si, ep, EvaluateExpression( ctx, ep, condition->expression ) );
+					const auto forctx = ctx->ForkContext( ctx, condition->m_si, ep, false );
 					forctx->WithRefs(
-						[ this, &forctx, &target, &condition, &result, &need_break, &need_clear, &c ]() {
+						[ this, &forctx, &target, &condition, &ep, &result, &need_break, &need_clear, &c ]() {
 							switch ( target.Get()->type ) {
 								case Type::T_ARRAY: {
 									const auto* arr = (type::Array*)target.Get();
 									switch ( condition->for_inof_type ) {
 										case ForConditionInOf::FIC_IN: {
 											for ( size_t i = 0 ; i < arr->value.size() ; i++ ) {
-												forctx->CreateConst( condition->variable->name, VALUE( Int, i ), &condition->m_si );
-												result = EvaluateScope( forctx, c->body );
-												forctx->DestroyVariable( condition->variable->name, &condition->m_si );
+												forctx->CreateConst( condition->variable->name, VALUE( Int, i ), condition->m_si, ep );
+												result = EvaluateScope( forctx, ep, c->body );
+												forctx->DestroyVariable( condition->variable->name, condition->m_si, ep );
 												CheckBreakCondition( result, &need_break, &need_clear );
 												if ( need_break ) {
 													if ( need_clear ) {
@@ -207,9 +208,9 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 										}
 										case ForConditionInOf::FIC_OF: {
 											for ( const auto& v : arr->value ) {
-												forctx->CreateConst( condition->variable->name, v, &condition->m_si );
-												result = EvaluateScope( forctx, c->body );
-												forctx->DestroyVariable( condition->variable->name, &condition->m_si );
+												forctx->CreateConst( condition->variable->name, v, condition->m_si, ep );
+												result = EvaluateScope( forctx, ep, c->body );
+												forctx->DestroyVariable( condition->variable->name, condition->m_si, ep );
 												CheckBreakCondition( result, &need_break, &need_clear );
 												if ( need_break ) {
 													if ( need_clear ) {
@@ -234,10 +235,10 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 										forctx->CreateConst(
 											condition->variable->name, condition->for_inof_type == ForConditionInOf::FIC_IN
 												? VALUE( String, v.first )
-												: v.second, &condition->m_si
+												: v.second, condition->m_si, ep
 										);
-										result = EvaluateScope( forctx, c->body );
-										forctx->DestroyVariable( condition->variable->name, &condition->m_si );
+										result = EvaluateScope( forctx, ep, c->body );
+										forctx->DestroyVariable( condition->variable->name, condition->m_si, ep );
 										if ( result.Get()->type != Type::T_NOTHING ) {
 											break;
 										}
@@ -262,7 +263,7 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 		case Conditional::CT_TRY: {
 			const auto* c = (Try*)conditional;
 			try {
-				return EvaluateScope( ctx, c->body );
+				return EvaluateScope( ctx, ep, c->body );
 			}
 			catch ( gse::Exception& e ) {
 				const auto* h = c->handlers->handlers;
@@ -271,16 +272,17 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 					it = h->properties.find( "" ); // check for default handler too
 				}
 				if ( it != h->properties.end() ) {
-					const auto f = EvaluateExpression( ctx, it->second );
+					const auto f = EvaluateExpression( ctx, ep, it->second );
 					if ( f.Get()->type != Type::T_CALLABLE ) {
 						// TODO: check move to parser
-						throw gse::Exception( EC.PARSE_ERROR, "Expected catch block, found: " + f.ToString(), ctx, it->second->m_si );
+						throw gse::Exception( EC.PARSE_ERROR, "Expected catch block, found: " + f.ToString(), ctx, it->second->m_si, ep );
 					}
 
 					auto* func = (Function*)f.Get();
 					const auto result = func->Run(
 						ctx,
 						it->second->m_si,
+						ep,
 						{
 							VALUE( type::Exception, e, e.GetBacktrace( ctx ) )
 						}
@@ -297,17 +299,17 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, const 
 	}
 }
 
-const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const Expression* expression, bool* returnflag ) const {
+const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, ExecutionPointer& ep, const Expression* expression, bool* returnflag ) const {
 	if ( !expression->op ) {
 		ASSERT( !expression->b, "expression has second operand but no operator" );
 		ASSERT( expression->a, "expression is empty" );
-		return EvaluateOperand( ctx, expression->a );
+		return EvaluateOperand( ctx, ep, expression->a );
 	}
-	const auto& operation_not_supported = [ &expression, &ctx ]( const std::string& a, const std::string& b ) -> gse::Exception {
-		return gse::Exception( EC.OPERATION_NOT_SUPPORTED, "Operation " + expression->op->ToString() + " is not supported between " + a + " and " + b, ctx, expression->op->m_si );
+	const auto& operation_not_supported = [ expression, &ctx, &ep ]( const std::string& a, const std::string& b ) -> gse::Exception {
+		return gse::Exception( EC.OPERATION_NOT_SUPPORTED, "Operation " + expression->op->ToString() + " is not supported between " + a + " and " + b, ctx, expression->op->m_si, ep );
 	};
-	const auto& math_error = [ &expression, &ctx ]( const std::string& reason ) -> gse::Exception {
-		return gse::Exception( EC.MATH_ERROR, reason, ctx, expression->op->m_si );
+	const auto& math_error = [ expression, &ctx, &ep ]( const std::string& reason ) -> gse::Exception {
+		return gse::Exception( EC.MATH_ERROR, reason, ctx, expression->op->m_si, ep );
 	};
 	switch ( expression->op->op ) {
 		case OT_RETURN: {
@@ -316,24 +318,24 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 			ASSERT( !expression->a, "unexpected left operand before return" );
 			ASSERT( expression->b, "return value or expression expected" );
 			*returnflag = true;
-			return Deref( ctx, expression->b->m_si, EvaluateOperand( ctx, expression->b ) );
+			return Deref( ctx, expression->b->m_si, ep, EvaluateOperand( ctx, ep, expression->b ) );
 		}
 		case OT_BREAK: {
 			ASSERT( returnflag, "break keyword not allowed here" );
 			ASSERT( !*returnflag, "already returning" );
 			*returnflag = true;
-			return EvaluateOperand( ctx, expression->b );
+			return EvaluateOperand( ctx, ep, expression->b );
 		}
 		case OT_CONTINUE: {
 			ASSERT( returnflag, "continue keyword not allowed here" );
 			ASSERT( !*returnflag, "already returning" );
 			*returnflag = true;
-			return EvaluateOperand( ctx, expression->b );
+			return EvaluateOperand( ctx, ep, expression->b );
 		}
 		case OT_THROW: {
 			ASSERT( !expression->a, "unexpected left operand before throw" );
-			const auto& invalid_error_definition = [ &expression, &ctx ]() -> gse::Exception {
-				return gse::Exception( EC.INVALID_CALL, "Invalid error definition. Expected: ErrorType(reason), found: " + expression->b->ToString(), ctx, expression->b->m_si );
+			const auto& invalid_error_definition = [ expression, &ctx, &ep ]() -> gse::Exception {
+				return gse::Exception( EC.INVALID_CALL, "Invalid error definition. Expected: ErrorType(reason), found: " + expression->b->ToString(), ctx, expression->b->m_si, ep );
 			};
 			if ( !expression->b || expression->b->type != Operand::OT_CALL ) {
 				throw invalid_error_definition();
@@ -347,7 +349,7 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 					e->arguments.size() != 1 ) {
 				throw invalid_error_definition();
 			}
-			const auto reason = EvaluateExpression( ctx, e->arguments[ 0 ] );
+			const auto reason = EvaluateExpression( ctx, ep, e->arguments[ 0 ] );
 			if ( reason.Get()->type != Type::T_STRING ) {
 				throw invalid_error_definition();
 			}
@@ -356,49 +358,50 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 				( (Variable*)e->callable->a )->name,
 				( (String*)reason.Get() )->value,
 				ctx,
-				expression->op->m_si
+				expression->op->m_si,
+				ep
 			);
 		}
 		case OT_ASSIGN: {
 			ASSERT( expression->a, "missing assignment target" );
-			auto result = Deref( ctx, expression->b->m_si, EvaluateOperand( ctx, expression->b ) );
+			auto result = Deref( ctx, expression->b->m_si, ep, EvaluateOperand( ctx, ep, expression->b ) );
 			switch ( expression->a->type ) {
 				case Operand::OT_VARIABLE: {
 					const auto* var = (Variable*)expression->a;
 					if ( var->name[ 0 ] == '#' ) {
-						throw gse::Exception( EC.INVALID_ASSIGNMENT, "Can't assign to builtin: " + var->name, ctx, var->m_si );
+						throw gse::Exception( EC.INVALID_ASSIGNMENT, "Can't assign to builtin: " + var->name, ctx, var->m_si, ep );
 					}
 					if ( var->hints & VH_CREATE_VAR ) {
-						ctx->CreateVariable( var->name, result, &expression->a->m_si );
+						ctx->CreateVariable( var->name, result, expression->a->m_si, ep );
 					}
 					else if ( var->hints & VH_CREATE_CONST ) {
-						ctx->CreateConst( var->name, result, &expression->a->m_si );
+						ctx->CreateConst( var->name, result, expression->a->m_si, ep );
 					}
 					else {
-						ctx->UpdateVariable( var->name, result, &expression->a->m_si );
+						ctx->UpdateVariable( var->name, result, expression->a->m_si, ep );
 					}
 					break;
 				}
 				case Operand::OT_EXPRESSION: {
 					// property of object?
-					const auto target = EvaluateExpression( ctx, (Expression*)expression->a );
+					const auto target = EvaluateExpression( ctx, ep, (Expression*)expression->a );
 					// assign to reference
-					WriteByRef( ctx, expression->a->m_si, target, result );
+					WriteByRef( ctx, expression->a->m_si, ep, target, result );
 					break;
 				}
 				default:
-					throw gse::Exception( EC.INVALID_ASSIGNMENT, (std::string)"Can't assign " + result.ToString() + " to " + expression->a->ToString(), ctx, expression->a->m_si );
+					throw gse::Exception( EC.INVALID_ASSIGNMENT, (std::string)"Can't assign " + result.ToString() + " to " + expression->a->ToString(), ctx, expression->a->m_si, ep );
 			}
 			return result;
 		}
 		case OT_NOT: {
 			ASSERT( !expression->a, "unary not may not have left operand" );
-			return VALUE( Bool, !EvaluateBool( ctx, expression->b ) );
+			return VALUE( Bool, !EvaluateBool( ctx, ep, expression->b ) );
 		}
 #define CMP_OP( _op ) { \
         return VALUE( Bool, \
-            Deref( ctx, expression->a->m_si, EvaluateOperand( ctx, expression->a ) ) _op \
-                Deref( ctx, expression->b->m_si, EvaluateOperand( ctx, expression->b ) ) \
+            Deref( ctx, expression->a->m_si, ep, EvaluateOperand( ctx, ep, expression->a ) ) _op \
+                Deref( ctx, expression->b->m_si, ep, EvaluateOperand( ctx, ep, expression->b ) ) \
             ); \
 }
 		case OT_EQ: CMP_OP( == )
@@ -410,16 +413,16 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 #undef CMP_OP
 #define CMP_BOOL( _op ) { \
         return VALUE( Bool, \
-            EvaluateBool( ctx, expression->a ) _op \
-                EvaluateBool( ctx, expression->b ) \
+            EvaluateBool( ctx, ep, expression->a ) _op \
+                EvaluateBool( ctx, ep, expression->b ) \
             ); \
 }
 		case OT_AND: CMP_BOOL( && )
 		case OT_OR: CMP_BOOL( || )
 #undef CMP_BOOL
 #define MATH_OP_BEGIN( _op, _allow_b_zero ) \
-            const auto av = Deref( ctx, expression->a->m_si, EvaluateOperand( ctx, expression->a ) ); \
-            const auto bv = Deref( ctx, expression->b->m_si, EvaluateOperand( ctx, expression->b ) ); \
+            const auto av = Deref( ctx, expression->a->m_si, ep, EvaluateOperand( ctx, ep, expression->a ) ); \
+            const auto bv = Deref( ctx, expression->b->m_si, ep, EvaluateOperand( ctx, ep, expression->b ) ); \
             const auto* a = av.Get(); \
             const auto* b = bv.Get(); \
             if ( a->type != b->type ) { \
@@ -462,7 +465,7 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 					object_properties_t properties = ( (type::Object*)a )->value;
 					for ( const auto& it : ( (type::Object*)b )->value ) {
 						if ( properties.find( it.first ) != properties.end() ) {
-							throw gse::Exception( EC.OPERATION_FAILED, "Can't concatenate objects - duplicate key found: " + it.first, ctx, expression->op->m_si );
+							throw gse::Exception( EC.OPERATION_FAILED, "Can't concatenate objects - duplicate key found: " + it.first, ctx, expression->op->m_si, ep );
 						}
 						properties.insert_or_assign( it.first, it.second );
 					}
@@ -490,22 +493,22 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 #define MATH_OP( _op ) \
         if ( expression->a ) { \
             ASSERT( !expression->b, "only one operand required, found two" ); \
-            const auto varname = EvaluateVarName( ctx, expression->a ); \
-            const auto value = ctx->GetVariable( varname, &expression->a->m_si ); \
+            const auto varname = EvaluateVarName( ctx, ep, expression->a ); \
+            const auto value = ctx->GetVariable( varname, expression->a->m_si, ep ); \
             if ( value.Get()->type != Type::T_INT ) { \
-                throw gse::Exception( EC.TYPE_ERROR, "Expected int, found: " + expression->a->ToString(), ctx, expression->a->m_si ); \
+                throw gse::Exception( EC.TYPE_ERROR, "Expected int, found: " + expression->a->ToString(), ctx, expression->a->m_si, ep ); \
             } \
-            ctx->UpdateVariable( varname, VALUE( Int, ( (Int*)value.Get() )->value _op 1 ), &expression->a->m_si ); \
+            ctx->UpdateVariable( varname, VALUE( Int, ( (Int*)value.Get() )->value _op 1 ), expression->a->m_si, ep ); \
             return value; \
         } \
         else if ( expression->b ) { \
-            const auto varname = EvaluateVarName( ctx, expression->b ); \
-            const auto value = ctx->GetVariable( varname, &expression->b->m_si ); \
+            const auto varname = EvaluateVarName( ctx, ep, expression->b ); \
+            const auto value = ctx->GetVariable( varname, expression->b->m_si, ep ); \
             if ( value.Get()->type != Type::T_INT ) { \
-                throw gse::Exception( EC.TYPE_ERROR, "Expected int, found: " + expression->b->ToString(), ctx, expression->b->m_si ); \
+                throw gse::Exception( EC.TYPE_ERROR, "Expected int, found: " + expression->b->ToString(), ctx, expression->b->m_si, ep ); \
             } \
             const auto result = VALUE( Int, ( (Int*)value.Get() )->value _op 1 ); \
-            ctx->UpdateVariable( varname, result, &expression->b->m_si ); \
+            ctx->UpdateVariable( varname, result, expression->b->m_si, ep ); \
             return result; \
         } \
         else { \
@@ -519,9 +522,9 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 		}
 #undef MATH_OP
 #define MATH_OP_BEGIN( _op ) \
-        const auto varname = EvaluateVarName( ctx, expression->a ); \
-        const auto av = Deref( ctx, expression->a->m_si, ctx->GetVariable( varname, &expression->a->m_si ) ); \
-        const auto bv = Deref( ctx, expression->b->m_si, EvaluateOperand( ctx, expression->b ) ); \
+        const auto varname = EvaluateVarName( ctx, ep, expression->a ); \
+        const auto av = Deref( ctx, expression->a->m_si, ep, ctx->GetVariable( varname, expression->a->m_si, ep ) ); \
+        const auto bv = Deref( ctx, expression->b->m_si, ep, EvaluateOperand( ctx, ep, expression->b ) ); \
         const auto* a = av.Get(); \
         const auto* b = bv.Get(); \
         if ( a->type != b->type ) {                                 \
@@ -543,7 +546,7 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
             default:  \
                 throw operation_not_supported( a->ToString(), b->ToString() ); \
         } \
-        ctx->UpdateVariable( varname, result, &expression->a->m_si ); \
+        ctx->UpdateVariable( varname, result, expression->a->m_si, ep ); \
         return result;
 #define MATH_OP( _op ) \
         MATH_OP_BEGIN_F( _op ) \
@@ -564,7 +567,7 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 					object_properties_t properties = ( (type::Object*)a )->value;
 					for ( const auto& it : ( (type::Object*)b )->value ) {
 						if ( properties.find( it.first ) != properties.end() ) {
-							throw gse::Exception( EC.OPERATION_FAILED, "Can't append object - duplicate key found: " + it.first, ctx, expression->op->m_si );
+							throw gse::Exception( EC.OPERATION_FAILED, "Can't append object - duplicate key found: " + it.first, ctx, expression->op->m_si, ep );
 						}
 						properties.insert_or_assign( it.first, it.second );
 					}
@@ -591,13 +594,13 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 #undef MATH_OP_END
 		case OT_CHILD: {
 			ASSERT( expression->a, "parent object expected" );
-			const auto childname = EvaluateVarName( ctx, expression->b );
-			const auto& not_an_object = [ &ctx, &expression, &childname ]( const std::string& what, const si_t& si ) -> gse::Exception {
-				return gse::Exception( EC.INVALID_DEREFERENCE, "Could not get ." + childname + " of non-object: " + what, ctx, expression->op->m_si );
+			const auto childname = EvaluateVarName( ctx, ep, expression->b );
+			const auto& not_an_object = [ &ctx, expression, &ep, &childname ]( const std::string& what, const si_t& si ) -> gse::Exception {
+				return gse::Exception( EC.INVALID_DEREFERENCE, "Could not get ." + childname + " of non-object: " + what, ctx, expression->op->m_si, ep );
 			};
 			switch ( expression->a->type ) {
 				case Operand::OT_VARIABLE: {
-					const auto objv = ctx->GetVariable( ( (Variable*)expression->a )->name, &expression->a->m_si );
+					const auto objv = ctx->GetVariable( ( (Variable*)expression->a )->name, expression->a->m_si, ep );
 					const auto* obj = objv.Get();
 					if ( obj->type == Type::T_VALUEREF ) {
 						obj = ( (ValueRef*)obj )->target;
@@ -609,13 +612,13 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 				}
 				case Operand::OT_OBJECT:
 				case Operand::OT_CALL: {
-					const auto objv = EvaluateOperand( ctx, expression->a );
+					const auto objv = EvaluateOperand( ctx, ep, expression->a );
 					const auto* obj = objv.Get();
 					ASSERT( obj->type == Type::T_OBJECT, "parent is not object: " + obj->Dump() );
 					return ( (type::Object*)obj )->Get( childname );
 				}
 				case Operand::OT_EXPRESSION: {
-					const auto objv = Deref( ctx, expression->a->m_si, EvaluateExpression( ctx, (Expression*)expression->a ) );
+					const auto objv = Deref( ctx, expression->a->m_si, ep, EvaluateExpression( ctx, ep, (Expression*)expression->a ) );
 					const auto* obj = objv.Get();
 					if ( obj->type != Type::T_OBJECT ) {
 						throw not_an_object( obj->ToString(), expression->a->m_si );
@@ -630,7 +633,7 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 		case OT_AT: {
 			ASSERT( expression->a, "parent array expected" );
 			std::optional< size_t > index, from, to;
-			const auto valv = EvaluateRange( ctx, expression->b );
+			const auto valv = EvaluateRange( ctx, ep, expression->b );
 			const auto* val = valv.Get();
 			switch ( val->type ) {
 				case Type::T_INT: {
@@ -649,19 +652,19 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 				default:
 					THROW( "unexpected index type: " + val->ToString() );
 			}
-			const auto& not_an_array = [ &ctx, &index, &from, &to ]( const std::string& what, const si_t& si ) -> gse::Exception {
+			const auto& not_an_array = [ &ctx, &ep, &index, &from, &to ]( const std::string& what, const si_t& si ) -> gse::Exception {
 				return gse::Exception(
 					EC.INVALID_DEREFERENCE, "Could not get " +
 						( index.has_value()
 							? "index " + std::to_string( index.value() )
 							: "range [ " + std::to_string( from.value() ) + " : " + std::to_string( to.value() )
 						) +
-						" of non-array: " + what, ctx, si
+						" of non-array: " + what, ctx, si, ep
 				);
 			};
 			switch ( expression->a->type ) {
 				case Operand::OT_VARIABLE: {
-					const auto arrv = ctx->GetVariable( ( (Variable*)expression->a )->name, &expression->a->m_si );
+					const auto arrv = ctx->GetVariable( ( (Variable*)expression->a )->name, expression->a->m_si, ep );
 					const auto* arr = arrv.Get();
 					if ( arr->type != Type::T_ARRAY ) {
 						throw not_an_array( arr->ToString(), expression->a->m_si );
@@ -674,19 +677,19 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 					}
 				}
 				case Operand::OT_ARRAY: {
-					const auto arrv = EvaluateOperand( ctx, expression->a );
+					const auto arrv = EvaluateOperand( ctx, ep, expression->a );
 					const auto* arr = arrv.Get();
 					ASSERT( arr->type == Type::T_ARRAY, "parent is not array: " + arr->Dump() );
 					if ( index.has_value() ) {
 						return ( (type::Array*)arr )->Get( index.value() );
 					}
 					else {
-						ValidateRange( ctx, expression->b->m_si, (type::Array*)arr, from, to );
+						ValidateRange( ctx, expression->b->m_si, ep, (type::Array*)arr, from, to );
 						return ( (type::Array*)arr )->GetSubArray( from, to );
 					}
 				}
 				case Operand::OT_EXPRESSION: {
-					const auto refv = EvaluateExpression( ctx, (Expression*)expression->a );
+					const auto refv = EvaluateExpression( ctx, ep, (Expression*)expression->a );
 					const auto* ref = refv.Get();
 					switch ( ref->type ) {
 						case Type::T_STRING: {
@@ -730,7 +733,7 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 							THROW( "TODO: T_LOOPCONTROL" );
 						}
 						case Type::T_OBJECTREF: {
-							const auto arrv = Deref( ctx, expression->a->m_si, refv );
+							const auto arrv = Deref( ctx, expression->a->m_si, ep, refv );
 							const auto* arr = arrv.Get();
 							if ( arr->type != Type::T_ARRAY ) {
 								throw not_an_array( arr->ToString(), expression->a->m_si );
@@ -756,12 +759,12 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 		case OT_APPEND: {
 			switch ( expression->a->type ) {
 				case Operand::OT_VARIABLE: {
-					const auto arrv = ctx->GetVariable( ( (Variable*)expression->a )->name, &expression->a->m_si );
+					const auto arrv = ctx->GetVariable( ( (Variable*)expression->a )->name, expression->a->m_si, ep );
 					const auto* arr = arrv.Get();
 					if ( arr->type != Type::T_ARRAY ) {
 						throw operation_not_supported( arr->ToString(), expression->b->ToString() );
 					}
-					const auto value = EvaluateOperand( ctx, expression->b );
+					const auto value = EvaluateOperand( ctx, ep, expression->b );
 					( (type::Array*)arr )->Append( value );
 					return value;
 				}
@@ -775,13 +778,13 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 			std::optional< size_t > to = std::nullopt;
 
 			if ( expression->a ) {
-				const auto fromv = EvaluateRange( ctx, expression->a, true );
+				const auto fromv = EvaluateRange( ctx, ep, expression->a, true );
 				const auto* fromr = fromv.Get();
 				ASSERT( fromr->type == Type::T_INT, "int expected here" );
 				from = ( (Int*)fromr )->value;
 			}
 			if ( expression->b ) {
-				const auto tov = EvaluateRange( ctx, expression->b, true );
+				const auto tov = EvaluateRange( ctx, ep, expression->b, true );
 				const auto* tor = tov.Get();
 				ASSERT( tor->type == Type::T_INT, "int expected here" );
 				to = ( (Int*)tor )->value;
@@ -795,42 +798,42 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, const E
 	}
 }
 
-const gse::Value Interpreter::EvaluateOperand( context::Context* ctx, const Operand* operand ) const {
+const gse::Value Interpreter::EvaluateOperand( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) const {
 	ASSERT( operand, "operand is null" );
 	switch ( operand->type ) {
 		case Operand::OT_VALUE: {
 			return ( (program::Value*)operand )->value;
 		}
 		case Operand::OT_VARIABLE: {
-			return ctx->GetVariable( ( (Variable*)operand )->name, &operand->m_si );
+			return ctx->GetVariable( ( (Variable*)operand )->name, operand->m_si, ep );
 		}
 		case Operand::OT_ARRAY: {
 			auto* arr = (program::Array*)operand;
 			array_elements_t elements;
 			for ( const auto& it : arr->elements ) {
-				elements.push_back( EvaluateExpression( ctx, it ) );
+				elements.push_back( EvaluateExpression( ctx, ep, it ) );
 			}
 			return VALUE( type::Array, elements );
 		}
 		case Operand::OT_OBJECT: {
-			const auto objctx = ctx->ForkContext( ctx, operand->m_si, false );
+			const auto objctx = ctx->ForkContext( ctx, operand->m_si, ep, false );
 			auto result = VALUE( type::Object, objctx, object_properties_t{} );
 			auto& properties = ( (type::Object*)result.Get() )->value;
-			objctx->CreateConst( "this", VALUE( ValueRef, result.Get() ), &operand->m_si );
+			objctx->CreateConst( "this", VALUE( ValueRef, result.Get() ), operand->m_si, ep );
 			const auto* obj = (program::Object*)operand;
 			for ( const auto& it : obj->ordered_properties ) {
 				if ( it.first == "this" ) {
-					throw gse::Exception( EC.INVALID_ASSIGNMENT, "'this' can't be overwritten", ctx, it.second->m_si );
+					throw gse::Exception( EC.INVALID_ASSIGNMENT, "'this' can't be overwritten", ctx, it.second->m_si, ep );
 				}
-				properties.insert_or_assign( it.first, EvaluateExpression( objctx, it.second ).Clone() );
+				properties.insert_or_assign( it.first, EvaluateExpression( objctx, ep, it.second ).Clone() );
 			}
 			return result;
 		}
 		case Operand::OT_SCOPE: {
-			return EvaluateScope( ctx, (Scope*)operand );
+			return EvaluateScope( ctx, ep, (Scope*)operand );
 		}
 		case Operand::OT_EXPRESSION: {
-			return EvaluateExpression( ctx, ( (Expression*)operand ) );
+			return EvaluateExpression( ctx, ep, ( (Expression*)operand ) );
 		}
 		case Operand::OT_FUNCTION: {
 			const auto* func = (program::Function*)operand;
@@ -843,14 +846,14 @@ const gse::Value Interpreter::EvaluateOperand( context::Context* ctx, const Oper
 		}
 		case Operand::OT_CALL: {
 			const auto* call = (Call*)operand;
-			const auto callable = Deref( ctx, call->m_si, EvaluateExpression( ctx, call->callable ) );
+			const auto callable = Deref( ctx, call->m_si, ep, EvaluateExpression( ctx, ep, call->callable ) );
 			switch ( callable.Get()->type ) {
 				case Type::T_CALLABLE: {
 					function_arguments_t arguments = {};
 					for ( const auto& it : call->arguments ) {
-						arguments.push_back( Deref( ctx, it->m_si, EvaluateExpression( ctx, it ) ) );
+						arguments.push_back( Deref( ctx, it->m_si, ep, EvaluateExpression( ctx, ep, it ) ) );
 					}
-					const auto result = ( (Callable*)callable.Get() )->Run( ctx, call->m_si, arguments );
+					const auto result = ( (Callable*)callable.Get() )->Run( ctx, call->m_si, ep, arguments );
 					if ( result.Get()->type == Type::T_NOTHING ) {
 						// function will return undefined by default
 						return VALUE( Undefined );
@@ -858,7 +861,7 @@ const gse::Value Interpreter::EvaluateOperand( context::Context* ctx, const Oper
 					return result;
 				}
 				default:
-					throw gse::Exception( EC.INVALID_CALL, "Callable expected, found: " + callable.ToString(), ctx, call->m_si );
+					throw gse::Exception( EC.INVALID_CALL, "Callable expected, found: " + callable.ToString(), ctx, call->m_si, ep );
 			}
 		}
 		case Operand::OT_LOOP_CONTROL: {
@@ -870,23 +873,23 @@ const gse::Value Interpreter::EvaluateOperand( context::Context* ctx, const Oper
 	}
 }
 
-const std::string Interpreter::EvaluateString( context::Context* ctx, const Operand* operand ) const {
-	const auto result = Deref( ctx, operand->m_si, EvaluateOperand( ctx, operand ) );
+const std::string Interpreter::EvaluateString( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) const {
+	const auto result = Deref( ctx, operand->m_si, ep, EvaluateOperand( ctx, ep, operand ) );
 	if ( result.Get()->type != Type::T_STRING ) {
-		throw gse::Exception( EC.TYPE_ERROR, "Expected string, found: " + operand->ToString(), ctx, operand->m_si );
+		throw gse::Exception( EC.TYPE_ERROR, "Expected string, found: " + operand->ToString(), ctx, operand->m_si, ep );
 	}
 	return ( (String*)result.Get() )->value;
 }
 
-const gse::Value Interpreter::EvaluateRange( context::Context* ctx, const Operand* operand, const bool only_index ) const {
+const gse::Value Interpreter::EvaluateRange( context::Context* ctx, ExecutionPointer& ep, const Operand* operand, const bool only_index ) const {
 	ASSERT( operand, "index operand missing" );
-	const auto& get_index = [ &ctx, &operand ]( const gse::Value& value ) -> size_t {
+	const auto& get_index = [ &ctx, &ep, &operand ]( const gse::Value& value ) -> size_t {
 		const auto* val = value.Get();
 		if ( val->type != Type::T_INT ) {
-			throw gse::Exception( EC.INVALID_DEREFERENCE, "Invalid range - index must be int: " + val->ToString(), ctx, operand->m_si );
+			throw gse::Exception( EC.INVALID_DEREFERENCE, "Invalid range - index must be int: " + val->ToString(), ctx, operand->m_si, ep );
 		}
 		if ( ( (Int*)val )->value < 0 ) {
-			throw gse::Exception( EC.INVALID_DEREFERENCE, "Invalid range - index must be positive: " + val->ToString(), ctx, operand->m_si );
+			throw gse::Exception( EC.INVALID_DEREFERENCE, "Invalid range - index must be positive: " + val->ToString(), ctx, operand->m_si, ep );
 		}
 		return ( (Int*)val )->value;
 	};
@@ -895,10 +898,10 @@ const gse::Value Interpreter::EvaluateRange( context::Context* ctx, const Operan
 			return VALUE( Int, get_index( ( (program::Value*)operand )->value ) );
 		}
 		case Operand::OT_VARIABLE: {
-			return VALUE( Int, get_index( ctx->GetVariable( ( (Variable*)operand )->name, &operand->m_si ) ) );
+			return VALUE( Int, get_index( ctx->GetVariable( ( (Variable*)operand )->name, operand->m_si, ep ) ) );
 		}
 		case Operand::OT_EXPRESSION: {
-			const auto result = Deref( ctx, operand->m_si, EvaluateExpression( ctx, (Expression*)operand ) );
+			const auto result = Deref( ctx, operand->m_si, ep, EvaluateExpression( ctx, ep, (Expression*)operand ) );
 			switch ( result.Get()->type ) {
 				case Type::T_INT: {
 					return VALUE( Int, get_index( result ) );
@@ -918,28 +921,28 @@ const gse::Value Interpreter::EvaluateRange( context::Context* ctx, const Operan
 	}
 }
 
-const bool Interpreter::EvaluateBool( context::Context* ctx, const Operand* operand ) const {
-	const auto result = Deref( ctx, operand->m_si, EvaluateOperand( ctx, operand ) );
+const bool Interpreter::EvaluateBool( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) const {
+	const auto result = Deref( ctx, operand->m_si, ep, EvaluateOperand( ctx, ep, operand ) );
 	if ( result.Get()->type != Type::T_BOOL ) {
-		throw gse::Exception( EC.TYPE_ERROR, "Expected bool, found: " + operand->ToString(), ctx, operand->m_si );
+		throw gse::Exception( EC.TYPE_ERROR, "Expected bool, found: " + operand->ToString(), ctx, operand->m_si, ep );
 	}
 	return ( (Bool*)result.Get() )->value;
 }
 
-const Variable* Interpreter::EvaluateVariable( context::Context* ctx, const Operand* operand ) const {
+const Variable* Interpreter::EvaluateVariable( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) const {
 	if ( operand->type != Operand::OT_VARIABLE ) {
-		throw gse::Exception( EC.REFERENCE_ERROR, "Expected variable, found: " + operand->ToString(), ctx, operand->m_si );
+		throw gse::Exception( EC.REFERENCE_ERROR, "Expected variable, found: " + operand->ToString(), ctx, operand->m_si, ep );
 	}
 	return (Variable*)operand;
 }
 
-const std::string Interpreter::EvaluateVarName( context::Context* ctx, const Operand* operand ) const {
-	const auto* var = EvaluateVariable( ctx, operand );
+const std::string Interpreter::EvaluateVarName( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) const {
+	const auto* var = EvaluateVariable( ctx, ep, operand );
 	ASSERT( var->hints == VH_NONE, "unexpected variable hints" );
 	return var->name;
 }
 
-const gse::Value Interpreter::Deref( context::Context* ctx, const si_t& si, const gse::Value& value ) const {
+const gse::Value Interpreter::Deref( context::Context* ctx, const si_t& si, ExecutionPointer& ep, const gse::Value& value ) const {
 	switch ( value.Get()->type ) {
 		case Type::T_ARRAYREF: {
 			const auto* ref = (ArrayRef*)value.Get();
@@ -947,7 +950,7 @@ const gse::Value Interpreter::Deref( context::Context* ctx, const si_t& si, cons
 		}
 		case Type::T_ARRAYRANGEREF: {
 			const auto* ref = (ArrayRangeRef*)value.Get();
-			ValidateRange( ctx, si, ref->array, ref->from, ref->to );
+			ValidateRange( ctx, si, ep, ref->array, ref->from, ref->to );
 			return ref->array->GetSubArray( ref->from, ref->to );
 		}
 		case Type::T_OBJECTREF: {
@@ -962,11 +965,11 @@ const gse::Value Interpreter::Deref( context::Context* ctx, const si_t& si, cons
 	}
 }
 
-void Interpreter::WriteByRef( context::Context* ctx, const si_t& si, const gse::Value& ref, const gse::Value& value ) const {
+void Interpreter::WriteByRef( context::Context* ctx, const si_t& si, ExecutionPointer& ep, const gse::Value& ref, const gse::Value& value ) const {
 	switch ( ref.Get()->type ) {
 		case Type::T_OBJECTREF: {
 			const auto* r = (ObjectRef*)ref.Get();
-			r->object->Set( r->key, value, ctx, si );
+			r->object->Set( r->key, value, GSE_CALL );
 			break;
 		}
 		case Type::T_ARRAYREF: {
@@ -976,7 +979,7 @@ void Interpreter::WriteByRef( context::Context* ctx, const si_t& si, const gse::
 		}
 		case Type::T_ARRAYRANGEREF: {
 			const auto* r = (ArrayRangeRef*)ref.Get();
-			ValidateRange( ctx, si, r->array, r->from, r->to );
+			ValidateRange( ctx, si, ep, r->array, r->from, r->to );
 			r->array->SetSubArray( r->from, r->to, value );
 			break;
 		}
@@ -988,20 +991,20 @@ void Interpreter::WriteByRef( context::Context* ctx, const si_t& si, const gse::
 	}
 }
 
-void Interpreter::ValidateRange( context::Context* ctx, const si_t& si, const type::Array* array, const std::optional< size_t > from, const std::optional< size_t > to ) const {
+void Interpreter::ValidateRange( context::Context* ctx, const si_t& si, ExecutionPointer& ep, const type::Array* array, const std::optional< size_t > from, const std::optional< size_t > to ) const {
 	const auto& max = array->value.size() - 1;
 	if ( from.has_value() ) {
 		if ( from.value() > max ) {
-			throw gse::Exception( EC.INVALID_DEREFERENCE, "Invalid range - opening index is behind last element ( " + std::to_string( from.value() ) + " > " + std::to_string( max ) + " )", ctx, si );
+			throw gse::Exception( EC.INVALID_DEREFERENCE, "Invalid range - opening index is behind last element ( " + std::to_string( from.value() ) + " > " + std::to_string( max ) + " )", GSE_CALL );
 		}
 	}
 	if ( to.has_value() ) {
 		if ( to.value() > max ) {
-			throw gse::Exception( EC.INVALID_DEREFERENCE, "Invalid range - closing index is behind last element ( " + std::to_string( to.value() ) + " > " + std::to_string( max ) + " )", ctx, si );
+			throw gse::Exception( EC.INVALID_DEREFERENCE, "Invalid range - closing index is behind last element ( " + std::to_string( to.value() ) + " > " + std::to_string( max ) + " )", GSE_CALL );
 		}
 		if ( from.has_value() ) {
 			if ( from.value() > to.value() ) {
-				throw gse::Exception( EC.INVALID_DEREFERENCE, "Invalid range - opening index is behind closing index ( " + std::to_string( from.value() ) + " > " + std::to_string( to.value() ) + " )", ctx, si );
+				throw gse::Exception( EC.INVALID_DEREFERENCE, "Invalid range - opening index is behind closing index ( " + std::to_string( from.value() ) + " > " + std::to_string( to.value() ) + " )", GSE_CALL );
 			}
 		}
 	}
@@ -1055,11 +1058,17 @@ Interpreter::Function::~Function() {
 	context->DecRefs();
 }
 
-gse::Value Interpreter::Function::Run( context::Context* ctx, const si_t& call_si, const function_arguments_t& arguments ) {
+gse::Value Interpreter::Function::Run( GSE_CALLABLE, const function_arguments_t& arguments ) {
 	auto* subctx = context->ForkContext( GSE_CALL, true, parameters, arguments );
 	return subctx->WithRefsV(
-		[ this, &subctx ]() {
-			return runner->Execute( subctx, program );
+		[ this, &subctx, &ep, &si ]() {
+			auto result = VALUE( gse::type::Undefined );
+			ep.WithSI(
+				si, [ this, &result, &subctx, &ep ]() {
+					result = runner->Execute( subctx, ep, program );
+				}
+			);
+			return result;
 		}
 	);
 }

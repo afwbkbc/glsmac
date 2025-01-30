@@ -221,11 +221,10 @@ WRAPIMPL_BEGIN( TileManager )
 					N_UNWRAP( tile, tileobj, map::tile::Tile );
 					tile_positions.push_back( tile->coord );
 				}
-				SendTileLockRequest( tile_positions, [ this, on_complete, tile_positions, GSE_CALL ]() {
+				SendTileLockRequest( tile_positions, [ this, on_complete, tile_positions, &ctx, &si, &ep ]() {
 					on_complete->Run( GSE_CALL, {
 						VALUE( gse::callable::Native, [ this, tile_positions ](
-							gse::context::Context* ctx,
-							const gse::si_t& call_si,
+							GSE_CALLABLE,
 							const gse::type::function_arguments_t& arguments
 						) -> gse::Value {
 							SendTileUnlockRequest( tile_positions );

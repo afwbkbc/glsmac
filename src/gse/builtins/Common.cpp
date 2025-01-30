@@ -14,13 +14,13 @@
 namespace gse {
 namespace builtins {
 
-void Common::AddToContext( context::Context* ctx ) {
+void Common::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 
 	ctx->CreateBuiltin( "typeof", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GETPTR( v, 0 );
 		return VALUE( type::String, type::Type::GetTypeString( v->type ) );
-	} ) );
+	} ), ep );
 
 	ctx->CreateBuiltin( "classof", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
@@ -29,7 +29,7 @@ void Common::AddToContext( context::Context* ctx ) {
 			return VALUE( type::String, ( ( type::Object*)v )->object_class );
 		}
 		return VALUE( type::Undefined );
-	} ) );
+	} ), ep );
 
 	ctx->CreateBuiltin( "sizeof", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
@@ -44,7 +44,7 @@ void Common::AddToContext( context::Context* ctx ) {
 				throw Exception( EC.OPERATION_NOT_SUPPORTED, "Could not get size of " + v->GetTypeString( v->type ) + ": " + v->ToString(), GSE_CALL );
 		}
 		return VALUE( type::Int, size );
-	} ) );
+	} ), ep );
 
 	ctx->CreateBuiltin("is_defined", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
@@ -56,7 +56,7 @@ void Common::AddToContext( context::Context* ctx ) {
 			default:
 				return VALUE( gse::type::Bool, true );
 		}
-	} ) );
+	} ), ep );
 
 	ctx->CreateBuiltin( "is_empty", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
@@ -79,7 +79,7 @@ void Common::AddToContext( context::Context* ctx ) {
 				throw Exception( EC.OPERATION_NOT_SUPPORTED, "Could not get size of " + v->GetTypeString( v->type ) + ": " + v->ToString(), GSE_CALL );
 		}
 		return VALUE( type::Bool, is_empty );
-	} ) );
+	} ), ep );
 
 	ctx->CreateBuiltin( "clone", NATIVE_CALL()
 	{
@@ -92,9 +92,9 @@ void Common::AddToContext( context::Context* ctx ) {
 			default:
 				throw Exception( EC.OPERATION_NOT_SUPPORTED, "Cloning of type " + v.GetTypeString() + " is not supported", GSE_CALL );
 		}
-	} ) );
+	} ), ep );
 
-	ctx->CreateBuiltin( "undefined", VALUE( type::Undefined ) );
+	ctx->CreateBuiltin( "undefined", VALUE( type::Undefined ), ep );
 }
 
 }

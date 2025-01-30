@@ -355,7 +355,7 @@ try {
 	},
 	TestError: (e) => {
 		arr [] = 'CAUGHT ' + e.type + ' : ' + e.reason;
-		arr += e.backtrace;
+		arr += e.stacktrace;
 	}
 };
 

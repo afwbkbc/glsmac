@@ -8,6 +8,7 @@
 #include "program/Program.h"
 #include "util/FS.h"
 #include "Async.h"
+#include "ExecutionPointer.h"
 
 namespace gse {
 
@@ -20,7 +21,10 @@ GSE::GSE() {
 }
 
 GSE::~GSE() {
-	m_async->ProcessAndExit();
+	{
+		ExecutionPointer ep;
+		m_async->ProcessAndExit( ep );
+	}
 	delete m_async;
 	for ( auto& it : m_modules ) {
 		DELETE( it.second );
@@ -31,7 +35,8 @@ GSE::~GSE() {
 }
 
 void GSE::Iterate() {
-	m_async->Iterate();
+	ExecutionPointer ep;
+	m_async->Iterate( ep );
 }
 
 parser::Parser* GSE::GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num ) const {
@@ -56,15 +61,19 @@ void GSE::AddBindings( Bindings* bindings ) {
 
 context::GlobalContext* GSE::CreateGlobalContext( const std::string& source_path ) {
 	NEWV( context, context::GlobalContext, this, source_path );
-	for ( const auto& it : m_bindings ) {
-		it->AddToContext( context );
+	{
+		gse::ExecutionPointer ep;
+		for ( const auto& it : m_bindings ) {
+			it->AddToContext( context, ep );
+		}
 	}
 	return context;
 }
 
 void GSE::AddModule( const std::string& path, type::Callable* module ) {
 	if ( m_modules.find( path ) != m_modules.end() ) {
-		throw Exception( "GSE_InternalError", "module path '" + path + "' already taken", nullptr, {} ); // ?
+		ExecutionPointer ep;
+		throw Exception( "GSE_InternalError", "module path '" + path + "' already taken", nullptr, {}, ep ); // ?
 	}
 	Log( "Adding module: " + path );
 	m_modules[ path ] = module;
@@ -80,14 +89,16 @@ void GSE::Run() {
 		ASSERT( it != m_modules.end(), "required module missing: " + i );
 		Log( "Executing module: " + it->first );
 		context::GlobalContext context( this, {} );
-		it->second->Run( &context, {}, {} );
-		// TODO: cleanup context properly or don't
+		{
+			ExecutionPointer ep;
+			it->second->Run( &context, {}, ep, {} );
+		}
 	}
 
 	Log( "GSE finished" );
 }
 
-const Value GSE::RunScript( context::Context* ctx, const si_t& si, const std::string& path ) {
+const Value GSE::RunScript( GSE_CALLABLE, const std::string& path ) {
 	std::string full_path = "";
 	{
 		const auto& it = m_include_paths.find( path );
@@ -95,12 +106,12 @@ const Value GSE::RunScript( context::Context* ctx, const si_t& si, const std::st
 			full_path = it->second;
 		}
 		else {
-			for ( const auto& it : m_supported_extensions ) {
-				if ( util::FS::FileExists( path + it, PATH_SEPARATOR ) ) {
+			for ( const auto& it2 : m_supported_extensions ) {
+				if ( util::FS::FileExists( path + it2, PATH_SEPARATOR ) ) {
 					if ( !full_path.empty() ) {
-						throw Exception( EC.LOADER_ERROR, "Multiple candidates found for include '" + path + "': '" + std::string( full_path ) + "', '" + path + it + "', ...", ctx, si );
+						throw Exception( EC.LOADER_ERROR, "Multiple candidates found for include '" + path + "': '" + std::string( full_path ) + "', '" + path + it2 + "', ...", GSE_CALL );
 					}
-					full_path = path + it;
+					full_path = path + it2;
 				}
 			}
 			m_include_paths.insert(
@@ -113,7 +124,7 @@ const Value GSE::RunScript( context::Context* ctx, const si_t& si, const std::st
 	}
 	if ( full_path.empty() ) {
 		Log( "Could not find script for include '" + path + "'" );
-		throw Exception( EC.LOADER_ERROR, "Could not find script for include '" + path + "'", ctx, si );
+		throw Exception( EC.LOADER_ERROR, "Could not find script for include '" + path + "'", GSE_CALL );
 	}
 	const auto& it = m_include_cache.find( full_path );
 	if ( it != m_include_cache.end() ) {
@@ -131,7 +142,7 @@ const Value GSE::RunScript( context::Context* ctx, const si_t& si, const std::st
 #ifdef DEBUG
 		// copy mocks
 		if ( ctx && ctx->HasVariable( "test" ) ) {
-			cache.context->CreateVariable( "test", ctx->GetVariable( "test", &si ), &si );
+			cache.context->CreateVariable( "test", ctx->GetVariable( "test", si, ep ), si, ep );
 		}
 #endif
 		cache.context->Begin();
@@ -139,7 +150,10 @@ const Value GSE::RunScript( context::Context* ctx, const si_t& si, const std::st
 		cache.program = parser->Parse();
 		DELETE( parser );
 		cache.runner = GetRunner();
-		cache.result = cache.runner->Execute( cache.context, cache.program );
+		{
+			ExecutionPointer ep;
+			cache.result = cache.runner->Execute( cache.context, ep, cache.program );
+		}
 		m_include_cache.insert_or_assign( full_path, cache );
 		return cache.result;
 	}

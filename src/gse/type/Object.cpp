@@ -43,7 +43,7 @@ const Value& Object::Get( const object_key_t& key ) const {
 		: it->second;
 }
 
-void Object::Set( const object_key_t& key, const Value& new_value, context::Context* ctx, const si_t& si ) {
+void Object::Set( const object_key_t& key, const Value& new_value, GSE_CALLABLE ) {
 	const bool has_value = new_value.Get()->type != T_UNDEFINED;
 	const auto it = value.find( key );
 	if (
@@ -52,9 +52,9 @@ void Object::Set( const object_key_t& key, const Value& new_value, context::Cont
 		) {
 		if ( wrapobj ) {
 			if ( !wrapsetter ) {
-				throw gse::Exception( EC.INVALID_ASSIGNMENT, "Property is read-only", ctx, si );
+				throw gse::Exception( EC.INVALID_ASSIGNMENT, "Property is read-only", GSE_CALL );
 			}
-			wrapsetter( wrapobj, key, new_value, ctx, si );
+			wrapsetter( wrapobj, key, new_value, GSE_CALL );
 		}
 		if ( has_value ) {
 			value.insert_or_assign( key, new_value );

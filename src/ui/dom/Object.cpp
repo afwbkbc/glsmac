@@ -112,7 +112,7 @@ const gse::Value Object::Wrap( const bool dynamic ) {
 	return gse::Value( m_wrapobj );
 }
 
-void Object::WrapSet( const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& call_si ) {
+void Object::WrapSet( const std::string& key, const gse::Value& value, GSE_CALLABLE ) {
 	auto def_it = m_property_defs.find( key );
 	if ( def_it == m_property_defs.end() ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' does not exist" );
@@ -130,7 +130,7 @@ void Object::WrapSet( const std::string& key, const gse::Value& value, gse::cont
 	}
 }
 
-void Object::WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& call_si ) {
+void Object::WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, GSE_CALLABLE ) {
 	ASSERT_NOLOG( wrapobj, "wrapobj not set" );
 	( (Object*)wrapobj )->WrapSet( key, value, GSE_CALL );
 }
@@ -253,7 +253,7 @@ const bool Object::TryParseColor( GSE_CALLABLE, const std::string& str, types::C
 	const auto is_rgb = str.substr( 0, 4 ) == "rgb(";
 	const auto is_rgba = str.substr( 0, 5 ) == "rgba(";
 	if ( is_rgb || is_rgba ) {
-		const auto f_error = [ &ctx, &call_si, &is_rgb, &str ]() {
+		const auto f_error = [ &ctx, &si, &ep, &is_rgb, &str ]() {
 			GSE_ERROR( gse::EC.UI_ERROR, (std::string)"Property has invalid color format. Method " + ( is_rgb ? "rgb expects 3" : "rgba expects 4" ) + " values (0 to 255), got: " + str );
 		};
 		const auto begin = is_rgb ? 4 : 5;
@@ -283,7 +283,7 @@ const bool Object::TryParseColor( GSE_CALLABLE, const std::string& str, types::C
 	return util::String::ParseColorHex( str, color );
 }
 
-void Object::ParseColor( gse::context::Context* ctx, const gse::si_t& call_si, const std::string& str, types::Color& color ) const {
+void Object::ParseColor( GSE_CALLABLE, const std::string& str, types::Color& color ) const {
 	if ( !TryParseColor( GSE_CALL, str, color ) ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property has invalid color format. Expected color name ('green', 'red', ...), rgb values ('rgb(0,255,0)', 'rgb(100,100,20)', ...) or hex value ('#ff0000', '#227748', ...), got: " + str );
 	}
@@ -399,7 +399,7 @@ void Object::SetProperty( GSE_CALLABLE, properties_t* const properties, const st
 	}
 }
 
-void Object::UnsetProperty( gse::context::Context* ctx, const gse::si_t& call_si, properties_t* const properties, const std::string& key ) {
+void Object::UnsetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key ) {
 	const auto& it = properties->find( key );
 	if ( it != properties->end() && it->second.Get()->type != gse::type::Type::T_UNDEFINED ) {
 		if ( properties == &m_properties && !m_classes.empty() ) {

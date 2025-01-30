@@ -29,12 +29,12 @@ public:
 
 	static const type_t GetType() { return Type::T_OBJECT; }
 
-	typedef void (wrapsetter_t)( Wrappable*, const std::string&, const Value&, context::Context* ctx, const si_t& si ); // ( obj, key, value, ctx, si )
+	typedef void (wrapsetter_t)( Wrappable*, const std::string&, const Value&, GSE_CALLABLE ); // ( obj, key, value, GSE_CALL )
 	Object( context::ChildContext* const ctx, object_properties_t initial_value = {}, const object_class_t object_class = "", Wrappable* wrapobj = nullptr, wrapsetter_t* wrapsetter = nullptr );
 	~Object();
 
 	const Value& Get( const object_key_t& key ) const;
-	void Set( const object_key_t& key, const Value& value, context::Context* ctx, const si_t& si );
+	void Set( const object_key_t& key, const Value& value, GSE_CALLABLE );
 
 	const Value GetRef( const object_key_t& key );
 

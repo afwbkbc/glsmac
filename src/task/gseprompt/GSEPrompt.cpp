@@ -20,6 +20,7 @@
 #include "gse/runner/Runner.h"
 #include "gse/parser/Parser.h"
 #include "gse/program/Program.h"
+#include "gse/ExecutionPointer.h"
 
 namespace task {
 namespace gseprompt {
@@ -143,13 +144,21 @@ void GSEPrompt::ProcessInput() {
 					1
 				}
 			};
-			context = m_gse_context->ForkContext( nullptr, si, {}, {} );
+			{
+				gse::ExecutionPointer ep;
+				context = m_gse_context->ForkContext( nullptr, si, ep, {} );
+			}
 			context->IncRefs();
 		}
 		else {
 			context = m_gse_context;
 		}
-		const auto result = m_runner->Execute( context, program );
+		auto result = VALUE( gse::type::Undefined );
+		{
+			gse::ExecutionPointer ep;
+			result = m_runner->Execute( context, ep, program );
+		}
+
 		if ( m_is_tty ) {
 			( (gse::context::ChildContext*)context )->JoinContext();
 		}

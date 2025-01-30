@@ -7,6 +7,7 @@
 #include "graphics/Graphics.h"
 #include "input/Input.h"
 #include "Class.h"
+#include "gse/ExecutionPointer.h"
 
 namespace ui {
 
@@ -40,7 +41,7 @@ UI::UI( GSE_CALLABLE )
 	m_root = new dom::Root( GSE_CALL, this );
 	Resize();
 
-	g_engine->GetInput()->AddHandler( this, [ this, GSE_CALL ]( const input::Event& event ){
+	g_engine->GetInput()->AddHandler( this, [ this, &ctx, &si ]( const input::Event& event ){
 		if ( event.type == input::EV_MOUSE_MOVE ) {
 			m_last_mouse_position = {
 				event.data.mouse.x,
@@ -48,6 +49,7 @@ UI::UI( GSE_CALLABLE )
 			};
 		}
 		try {
+			gse::ExecutionPointer ep;
 			m_root->ProcessEvent( GSE_CALL, event );
 		}
 		catch ( gse::Exception& e ) {

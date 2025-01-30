@@ -3,6 +3,7 @@
 #include <unordered_set>
 
 #include "Area.h"
+#include "gse/Value.h"
 
 namespace scene::actor {
 class Cache;
@@ -28,7 +29,7 @@ protected:
 
 	virtual const bool ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) override;
 
-	void WrapSet( const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& call_si ) override;
+	void WrapSet( const std::string& key, const gse::Value& value, GSE_CALLABLE ) override;
 
 	void Property( GSE_CALLABLE, const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value = VALUE( gse::type::Undefined ), const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr, const f_on_unset_t& f_on_unset = nullptr ) override;
 	void ForwardProperty( GSE_CALLABLE, const std::string& name, Object* const target );

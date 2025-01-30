@@ -49,8 +49,8 @@ public:
 	virtual ~Object();
 
 	virtual const gse::Value Wrap( const bool dynamic = false ) override;
-	virtual void WrapSet( const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& call_si );
-	static void WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& call_si );
+	virtual void WrapSet( const std::string& key, const gse::Value& value, GSE_CALLABLE );
+	static void WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, GSE_CALLABLE );
 
 	const std::string m_tag;
 	Container* const m_parent;

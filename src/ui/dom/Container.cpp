@@ -195,7 +195,7 @@ const bool Container::ProcessEventImpl( GSE_CALLABLE, const input::Event& event 
 		Object::_method( __VA_ARGS__ ); \
 	}
 
-void Container::WrapSet( const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& call_si ) {
+void Container::WrapSet( const std::string& key, const gse::Value& value, GSE_CALLABLE ) {
 	auto forward_it = m_forwarded_properties.find( key );
 	if ( forward_it != m_forwarded_properties.end() ) {
 		if ( value.Get()->type == gse::type::Type::T_UNDEFINED && !m_classes.empty() ) {

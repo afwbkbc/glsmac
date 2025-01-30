@@ -51,20 +51,19 @@ public:
 	const gse::Value WithRefsV( const std::function< const gse::Value() >& f );
 
 	const bool HasVariable( const std::string& name );
-	const Value GetVariable( const std::string& name, const si_t* si );
+	const Value GetVariable( const std::string& name, const si_t& si, gse::ExecutionPointer& ep );
 	void SetVariable( const std::string& name, const var_info_t& var_info );
-	void CreateVariable( const std::string& name, const Value& value, const si_t* si );
-	void CreateConst( const std::string& name, const Value& value, const si_t* si );
-	void UpdateVariable( const std::string& name, const Value& value, const si_t* si );
-	void DestroyVariable( const std::string& name, const si_t* si );
-	void CreateBuiltin( const std::string& name, const Value& value );
+	void CreateVariable( const std::string& name, const Value& value, const si_t& si, gse::ExecutionPointer& ep );
+	void CreateConst( const std::string& name, const Value& value, const si_t& si, gse::ExecutionPointer& ep );
+	void UpdateVariable( const std::string& name, const Value& value, const si_t& si, gse::ExecutionPointer& ep );
+	void DestroyVariable( const std::string& name, const si_t& si, gse::ExecutionPointer& ep );
+	void CreateBuiltin( const std::string& name, const Value& value, gse::ExecutionPointer& ep );
 	void PersistValue( const Value& value );
 	void UnpersistValue( const Value& value );
 	void UnpersistValue( const type::Type* type );
 
 	ChildContext* const ForkContext(
-		Context* caller_context,
-		const si_t& call_si,
+		GSE_CALLABLE,
 		const bool is_traceable,
 		const std::vector< std::string > parameters = {},
 		const type::function_arguments_t& arguments = {}
@@ -73,7 +72,6 @@ public:
 	void Clear();
 
 	virtual Context* GetParentContext() const = 0;
-	virtual Context* GetCallerContext() const = 0;
 	virtual const bool IsTraceable() const = 0;
 	virtual const std::string& GetSourceLine( const size_t line_num ) const = 0;
 	virtual const si_t& GetSI() const = 0;

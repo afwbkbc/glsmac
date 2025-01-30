@@ -13,7 +13,7 @@
 namespace gse {
 namespace builtins {
 
-void Math::AddToContext( context::Context* ctx ) {
+void Math::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 
 #define AB( _name, _f_int, _f_float ) \
 	ctx->CreateBuiltin( _name, NATIVE_CALL() { \
@@ -37,7 +37,7 @@ void Math::AddToContext( context::Context* ctx ) {
 			default: \
 				THROW( "unexpected type: " + type::Type::GetTypeString( a->type ) ); \
 		} \
-	} ) );
+	} ), ep );
 	AB( "min", std::min, std::fmin )
 	AB( "max", std::max, std::fmax )
 #undef AB
@@ -47,7 +47,7 @@ void Math::AddToContext( context::Context* ctx ) {
 		N_EXPECT_ARGS( 1 ); \
 		N_GETVALUE( v, 0, _in_type ); \
 		return VALUE( type::_out_type, std::_func( v ) ); \
-	} ) );
+	} ), ep );
 	F( floor, Float, Int )
 	F( round, Float, Int )
 	F( ceil, Float, Int )

@@ -5,6 +5,7 @@
 #endif
 
 #include "gse/context/Context.h"
+#include "gse/ExecutionPointer.h"
 #include "gse/GSE.h"
 #include "util/String.h"
 
@@ -27,44 +28,43 @@ const exception_ec_t EC = {
 	"GSEInvalidHandler",
 };
 
-Exception::Exception( const std::string& class_name, const std::string& reason, context::Context* context, const si_t& si )
+Exception::Exception( const std::string& class_name, const std::string& reason, GSE_CALLABLE )
 	: types::Exception( class_name, reason )
 	, class_name( class_name )
-	, reason( reason )
-	, context( context )
-	, si( si ) {
-	auto* ctx = context;
-
-#ifdef DEBUG
-	std::unordered_set< const gse::context::Context* > existing_contexts = { ctx };
-#endif
-
-#define FORMAT_SI( _si ) "\tat " + (_si).file + ":" + std::to_string( (_si).from.line ) + ": " + util::String::TrimCopy( ctx ? ctx->GetSourceLine( (_si).from.line ) : "" )
-	m_backtrace.push_back( FORMAT_SI( si ) );
-	while ( ctx ) {
-		if ( ctx->IsTraceable() ) {
-			const auto& s = ctx->GetSI();
-			m_backtrace.push_back( FORMAT_SI( s ) );
+	, reason( reason ) {
+	ep.WithSI(
+		si, [ this, &ep, &ctx, &si ]() {
+			const auto& st = ep.GetStackTrace();
+			const auto& ctx_si = ctx
+				? ctx->GetSI()
+				: si;
+			for ( auto s = st.rbegin() ; s != st.rend() ; s++ ) {
+				auto* c = s->file == ctx_si.file
+					? ctx
+					: !s->file.empty()
+						? ctx->GetGSE()->GetContextByPath( s->file )
+						: nullptr;
+				m_stacktrace.push_back(
+					"\tat " + s->file + ":" + std::to_string( s->from.line ) + ": " + util::String::TrimCopy(
+						c
+							? c->GetSourceLine( s->from.line )
+							: ""
+					)
+				);
+			}
 		}
-		ASSERT_NOLOG( ctx != ctx->GetCallerContext(), "ctx is caller of itself" );
-		ctx = ctx->GetCallerContext();
-#ifdef DEBUG
-		ASSERT_NOLOG( existing_contexts.find( ctx ) == existing_contexts.end(), "duplicate ctx in caller chain" );
-		existing_contexts.insert( ctx );
-#endif
-	}
-#undef FORMAT_SI
+	);
 
 }
 
-const Exception::backtrace_t& Exception::GetBacktrace( const context::Context* const current_ctx ) {
-	return m_backtrace;
+const Exception::stacktrace_t& Exception::GetBacktrace( const context::Context* const current_ctx ) {
+	return m_stacktrace;
 }
 
 const std::string Exception::ToString() {
 	std::string result = "Unhandled exception (" + class_name + "): " + reason + "\n";
 	bool is_first = true;
-	for ( const auto& it : m_backtrace ) {
+	for ( const auto& it : m_stacktrace ) {
 		if ( is_first ) {
 			is_first = false;
 		}

@@ -27,7 +27,7 @@ public:
 
 	virtual ~Callable() {}
 
-	virtual Value Run( context::Context* ctx, const si_t& call_si, const function_arguments_t& arguments ) = 0;
+	virtual Value Run( GSE_CALLABLE, const function_arguments_t& arguments ) = 0;
 
 	const bool m_cleanup_needed;
 

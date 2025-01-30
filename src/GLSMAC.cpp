@@ -10,6 +10,7 @@
 #include "ui/UI.h"
 
 #include "gse/GSE.h"
+#include "gse/ExecutionPointer.h"
 #include "gse/Async.h"
 #include "gse/context/GlobalContext.h"
 #include "gse/callable/Native.h"
@@ -32,9 +33,6 @@ GLSMAC::GLSMAC() {
 	m_ctx = m_gse->CreateGlobalContext();
 	m_ctx->IncRefs();
 
-	// global objects
-	NEW( m_ui, ui::UI, m_ctx, {""} );
-
 	const auto& c = g_engine->GetConfig();
 
 	const auto entry_script =
@@ -46,11 +44,26 @@ GLSMAC::GLSMAC() {
 			}, gse::GSE::PATH_SEPARATOR
 		)
 	;
-	m_gse->RunScript( m_ctx, { }, entry_script );
-	for ( const auto& mod_path : g_engine->GetConfig()->GetModPaths() ) {
-		m_gse->RunScript( m_ctx, {}, util::FS::GeneratePath({ mod_path, "main" }));
-	}
 
+	{
+		gse::ExecutionPointer ep;
+
+		// global objects
+		NEW( m_ui, ui::UI, m_ctx, { "" }, ep );
+
+		// run main(s)
+		m_gse->RunScript( m_ctx, {}, ep, entry_script );
+		for ( const auto& mod_path : g_engine->GetConfig()->GetModPaths() ) {
+			m_gse->RunScript(
+				m_ctx, {}, ep, util::FS::GeneratePath(
+					{
+						mod_path,
+						"main"
+					}
+				)
+			);
+		}
+	}
 }
 
 GLSMAC::~GLSMAC() {
@@ -62,8 +75,8 @@ GLSMAC::~GLSMAC() {
 	m_gse->GetAsync()->StopTimers();
 
 	DELETE( m_ui );
-
 	DELETE( m_gse );
+
 	s_glsmac = nullptr;
 }
 
@@ -113,7 +126,8 @@ void GLSMAC::RunMain() {
 	try {
 		for ( const auto& main : m_main_callables ) {
 			ASSERT_NOLOG( main.Get()->type == gse::type::Type::T_CALLABLE, "main not callable" );
-			( (gse::type::Callable*)main.Get() )->Run( m_ctx, {}, { Wrap() } );
+			gse::ExecutionPointer ep;
+			( (gse::type::Callable*)main.Get() )->Run( m_ctx, {}, ep, { Wrap() } );
 		}
 	} catch ( gse::Exception& e ) {
 		std::cout << e.ToString() << std::endl;
@@ -121,12 +135,12 @@ void GLSMAC::RunMain() {
 	}
 }
 
-void GLSMAC::AddToContext( gse::context::Context* ctx ) {
+void GLSMAC::AddToContext( gse::context::Context* ctx, gse::ExecutionPointer& ep ) {
 	ctx->CreateBuiltin( "main", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 1 );
 		const auto& main = arguments.at(0);
 		N_CHECKARG( main.Get(), 0, Callable );
 		m_main_callables.push_back( main );
 		return VALUE( gse::type::Undefined );
-	} ) );
+	} ), ep );
 }

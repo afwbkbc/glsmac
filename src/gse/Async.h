@@ -18,13 +18,13 @@ CLASS( Async, common::Class )
 
 	typedef size_t timer_id_t;
 
-	void Iterate();
+	void Iterate( ExecutionPointer& ep );
 
-	const timer_id_t StartTimer( const size_t ms, const gse::Value& f, gse::context::Context* const ctx, const gse::si_t& si );
+	const timer_id_t StartTimer( const size_t ms, const gse::Value& f, GSE_CALLABLE );
 	const bool StopTimer( const timer_id_t id );
 	void StopTimers();
 
-	void ProcessAndExit();
+	void ProcessAndExit( ExecutionPointer& ep );
 
 private:
 
@@ -40,8 +40,8 @@ private:
 	std::map< timer_id_t, uint64_t > m_timers_ms = {};
 
 	const uint64_t Now() const;
-	void ValidateMs( const int64_t ms, context::Context* ctx, const si_t& call_si ) const;
-	void ProcessTimers( const timers_t::iterator& it );
+	void ValidateMs( const int64_t ms, GSE_CALLABLE ) const;
+	void ProcessTimers( const timers_t::iterator& it, ExecutionPointer& ep );
 };
 
 }

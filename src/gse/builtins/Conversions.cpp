@@ -14,7 +14,7 @@
 namespace gse {
 namespace builtins {
 
-void Conversions::AddToContext( context::Context* ctx ) {
+void Conversions::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 
 #define CONVERSION_ERROR( _type ) throw Exception( EC.CONVERSION_ERROR, "Could not convert " + v->GetTypeString(v->type) + " to " + _type + ": " + v->ToString(), GSE_CALL );
 
@@ -37,13 +37,13 @@ void Conversions::AddToContext( context::Context* ctx ) {
 		N_EXPECT_ARGS( 1 );
 		N_GET( v, 0 );
 		return VALUE( type::String, v.ToString() );
-	} ) );
+	} ), ep );
 
 	ctx->CreateBuiltin( "to_dump", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GET( v, 0 );
 		return VALUE( type::String, v.Dump() );
-	} ) );
+	} ), ep );
 
 	ctx->CreateBuiltin( "to_int", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
@@ -67,7 +67,7 @@ void Conversions::AddToContext( context::Context* ctx ) {
 				CONVERSION_ERROR( "Int" );
 		}
 		return VALUE( type::Int, value );
-	} ) );
+	} ), ep );
 
 	ctx->CreateBuiltin( "to_float", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
@@ -95,11 +95,11 @@ void Conversions::AddToContext( context::Context* ctx ) {
 				CONVERSION_ERROR( "Float" );
 		}
 		return VALUE( type::Float, value );
-	} ) );
+	} ), ep );
 
 	ctx->CreateBuiltin( "to_color", NATIVE_CALL() {
 		N_EXPECT_ARGS_MIN_MAX( 3, 4 );
-		const auto f_err = [ &ctx, &call_si ] () {
+		const auto f_err = [ &ctx, &si, &ep ] () {
 			throw Exception( EC.INVALID_CALL, "Color can be specified either by floats (0.0 to 1.0) or by ints (0 to 255)", GSE_CALL );
 		};
 
@@ -110,7 +110,7 @@ void Conversions::AddToContext( context::Context* ctx ) {
 				f_err();
 		}
 		return VALUE( type::Undefined );
-	} ) );
+	} ), ep );
 
 #undef CONVERT_COLOR
 

@@ -37,7 +37,7 @@ const Wrappable::callback_id_t Wrappable::On( GSE_CALLABLE, const std::string& e
 			{
 				callback,
 				ctx,
-				call_si
+				si
 			}
 		}
 	).first->first;
@@ -75,10 +75,10 @@ const Value Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const ty
 		for ( const auto& it2 : it->second ) {
 			const auto& cb = it2.second.callable;
 			ASSERT_NOLOG( cb.Get()->type == type::Type::T_CALLABLE, "callback not callable" );
-			result = ( (type::Callable*)cb.Get() )->Run( it2.second.ctx, it2.second.si, { e } );
+			result = ( (type::Callable*)cb.Get() )->Run( it2.second.ctx, it2.second.si, ep, { e } );
 			if ( expected_return_type.has_value() ) {
 				if ( result.Get()->type != expected_return_type.value() ) {
-					throw gse::Exception( gse::EC.INVALID_HANDLER, "Event handler is expected to return " + type::Type::GetTypeString( expected_return_type.value() ) + ", got " + result.GetTypeString() + ": " + result.ToString(), it2.second.ctx, it2.second.si );
+					throw gse::Exception( gse::EC.INVALID_HANDLER, "Event handler is expected to return " + type::Type::GetTypeString( expected_return_type.value() ) + ", got " + result.GetTypeString() + ": " + result.ToString(), it2.second.ctx, it2.second.si, ep );
 				}
 			}
 			if ( result.Get()->type != type::Type::T_UNDEFINED ) {

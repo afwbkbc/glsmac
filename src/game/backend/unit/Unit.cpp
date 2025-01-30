@@ -139,7 +139,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 			N_EXPECT_ARGS( 2 );
 			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
 			N_PERSIST_CALLABLE( on_complete, 1 );
-			const auto* errmsg = m_um->MoveUnitToTile( this, tile, [ on_complete, GSE_CALL ]() {
+			const auto* errmsg = m_um->MoveUnitToTile( this, tile, [ on_complete, &ctx, &si, &ep ]() {
 				on_complete->Run( GSE_CALL, {} );
 				N_UNPERSIST_CALLABLE( on_complete );
 			});

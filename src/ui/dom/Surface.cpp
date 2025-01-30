@@ -64,7 +64,7 @@ Surface::Surface( DOM_ARGS )
 						f = *it;
 					}
 
-					const auto f_expect_args_fromto = [ &ctx, &call_si, &f, &args, &it ]( const uint8_t args_min, const uint8_t args_max ) {
+					const auto f_expect_args_fromto = [ &ctx, &si, &ep, &f, &args, &it ]( const uint8_t args_min, const uint8_t args_max ) {
 						if ( args.size() < args_min || args.size() > args_max ) {
 							GSE_ERROR( gse::EC.UI_ERROR, "Texture filter '" + f + "' expects " + ( args_min == args_max
 								? std::to_string( args_min )

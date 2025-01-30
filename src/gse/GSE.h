@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <map>
 #include <vector>
+#include <functional>
 
 #include "common/Common.h"
 
@@ -56,7 +57,7 @@ CLASS( GSE, common::Class )
 	void AddModule( const std::string& path, type::Callable* module );
 
 	void Run();
-	const Value RunScript( context::Context* ctx, const si_t& si, const std::string& path );
+	const Value RunScript( GSE_CALLABLE, const std::string& path );
 
 	void SetGlobal( const std::string& identifier, Value variable );
 	const Value& GetGlobal( const std::string& identifier );

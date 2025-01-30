@@ -2,6 +2,8 @@
 
 #include <cstring>
 
+#include "gse/ExecutionPointer.h"
+
 namespace gse {
 namespace parser {
 
@@ -13,6 +15,11 @@ Parser::Parser( const std::string& filename, const std::string& source, const si
 	m_ptr = m_begin;
 	m_si_pos.line = initial_line_num;
 	m_si_pos.col = 1;
+	m_ep = new gse::ExecutionPointer();
+}
+
+Parser::~Parser() {
+	delete m_ep;
 }
 
 const program::Program* Parser::Parse() {

@@ -14,22 +14,22 @@ namespace gse {
 // just a precaution
 #define MAX_SLEEP_MS ( 1000 * 3600 )
 
-void Async::Iterate() {
+void Async::Iterate( ExecutionPointer& ep ) {
 	while ( !m_timers.empty() && Now() >= m_timers.begin()->first ) {
-		ProcessTimers( m_timers.begin() );
+		ProcessTimers( m_timers.begin(), ep );
 	}
 }
 
 static Async::timer_id_t s_next_id = 0;
 
-const Async::timer_id_t Async::StartTimer( const size_t ms, const Value& f, context::Context* const ctx, const si_t& si ) {
+const Async::timer_id_t Async::StartTimer( const size_t ms, const Value& f, GSE_CALLABLE ) {
 	ASSERT( f.Get()->type == type::Type::T_CALLABLE, "invalid callable type: " + f.GetTypeString() );
 	if ( s_next_id == SIZE_MAX - 1 ) {
 		s_next_id = 0;
 	}
 	s_next_id++;
-	auto* subctx = ctx->ForkContext( ctx, si, true );
-	ValidateMs( ms, subctx, si );
+	auto* subctx = ctx->ForkContext( GSE_CALL, true );
+	ValidateMs( ms, subctx, si, ep );
 	subctx->PersistValue( f );
 	const auto time = Now() + ms;
 	m_timers[ time ].insert(
@@ -81,7 +81,7 @@ void Async::StopTimers() {
 	m_timers_ms.clear();
 }
 
-void Async::ProcessAndExit() {
+void Async::ProcessAndExit( ExecutionPointer& ep ) {
 	while ( !m_timers.empty() ) {
 		const auto& it = m_timers.begin();
 		const auto now = Now();
@@ -94,7 +94,7 @@ void Async::ProcessAndExit() {
 			std::this_thread::sleep_for( std::chrono::milliseconds( sleep_for ) );
 		}
 
-		ProcessTimers( it );
+		ProcessTimers( it, ep );
 	}
 }
 
@@ -104,7 +104,7 @@ const uint64_t Async::Now() const {
 	).count();
 }
 
-void Async::ValidateMs( const int64_t ms, context::Context* ctx, const si_t& call_si ) const {
+void Async::ValidateMs( const int64_t ms, GSE_CALLABLE ) const {
 	if ( ms < 0 ) {
 		GSE_ERROR( EC.OPERATION_FAILED, "Timeout can't be negative: " + std::to_string( ms ) );
 	}
@@ -113,7 +113,7 @@ void Async::ValidateMs( const int64_t ms, context::Context* ctx, const si_t& cal
 	}
 }
 
-void Async::ProcessTimers( const timers_t::iterator& it ) {
+void Async::ProcessTimers( const timers_t::iterator& it, ExecutionPointer& ep ) {
 	std::map< uint64_t, std::map< timer_id_t, timer_t > > timers_new = {};
 
 	for ( const auto& it2 : it->second ) {
@@ -121,7 +121,7 @@ void Async::ProcessTimers( const timers_t::iterator& it ) {
 
 		auto* ctx = timer.ctx;
 		const auto f = timer.callable;
-		const auto call_si = timer.si;
+		const auto si = timer.si;
 		const auto result = ( (type::Callable*)f.Get() )->Run( GSE_CALL, {} );
 
 		size_t ms = 0;
@@ -158,7 +158,7 @@ void Async::ProcessTimers( const timers_t::iterator& it ) {
 						ms,
 						f,
 						ctx,
-						call_si,
+						si,
 					}
 				}
 			);

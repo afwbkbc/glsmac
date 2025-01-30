@@ -16,7 +16,7 @@ namespace builtins {
 
 class Builtins : public Bindings {
 public:
-	void AddToContext( context::Context* ctx ) override;
+	void AddToContext( context::Context* ctx, ExecutionPointer& ep ) override;
 
 #ifdef DEBUG
 	void LogCaptureStart() const { m_console.CaptureStart(); }

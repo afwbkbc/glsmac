@@ -40,6 +40,6 @@ private:
 
 private:
 	friend class gse::GSE;
-	void AddToContext( gse::context::Context* ctx ) override;
+	void AddToContext( gse::context::Context* ctx, gse::ExecutionPointer& ep ) override;
 
 };

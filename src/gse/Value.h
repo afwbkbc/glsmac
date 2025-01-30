@@ -10,8 +10,8 @@ namespace gse {
 
 #define GSE_ERROR( _type, _text ) throw gse::Exception( _type, _text, GSE_CALL );
 
-#define GSE_CALLABLE gse::context::Context* ctx, const gse::si_t& call_si
-#define GSE_CALL ctx, call_si
+#define GSE_CALLABLE gse::context::Context* ctx, const gse::si_t& si, gse::ExecutionPointer& ep
+#define GSE_CALL ctx, si, ep
 
 #define VALUE( _type, ... ) gse::Value( std::make_shared<_type>( __VA_ARGS__ ) )
 #ifdef DEBUG
@@ -33,7 +33,7 @@ namespace gse {
     WRAPDEFS_CLASS() \
     virtual const gse::Value Wrap( const bool dynamic = false ) override; \
     static _type* Unwrap( const gse::Value& value ); \
-    static void WrapSet( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& si ); \
+    static void WrapSet( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, GSE_CALLABLE ); \
     void OnWrapSet( const std::string& property_name );
 #define WRAPDEFS_NOPTR( _type ) \
     WRAPDEFS_CLASS() \
@@ -102,7 +102,7 @@ namespace gse {
     }; \
     return VALUE( gse::type::Object, nullptr, properties, WRAP_CLASS, this, dynamic ? &_type::WrapSet : nullptr ); \
 } \
-void _type::WrapSet( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, gse::context::Context* ctx, const gse::si_t& si ) { \
+void _type::WrapSet( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, GSE_CALLABLE ) { \
     auto* obj = (_type*)wrapobj; \
     if ( !obj ) {}
 #define WRAPIMPL_END_NOPTR( _type ) \
@@ -110,7 +110,7 @@ void _type::WrapSet( gse::Wrappable* wrapobj, const std::string& key, const gse:
 }
 #define WRAPIMPL_DYNAMIC_ON_SET( _type ) \
     else { \
-        throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property does not exist", ctx, si ); \
+        throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property does not exist", GSE_CALL ); \
     } \
 } \
 void _type::OnWrapSet( const std::string& property_name ) {
@@ -132,7 +132,7 @@ void _type::OnWrapSet( const std::string& property_name ) {
 #define WRAPIMPL_SET( _key, _type, _property ) \
     else if ( key == _key ) { \
         if ( value.Get()->type != gse::type::_type::GetType() ) { \
-            throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Invalid assignment value type, expected: " + gse::type::Type::GetTypeString( gse::type::_type::GetType() ) + ", got: " + gse::type::Type::GetTypeString( value.Get()->type ), ctx, si ); \
+            throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Invalid assignment value type, expected: " + gse::type::Type::GetTypeString( gse::type::_type::GetType() ) + ", got: " + gse::type::Type::GetTypeString( value.Get()->type ), GSE_CALL ); \
         } \
         obj->_property = ((gse::type::_type*)value.Get())->value; \
         obj->OnWrapSet( _key ); \
