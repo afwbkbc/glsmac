@@ -99,6 +99,7 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 		if (
 			child.second->ProcessEvent( GSE_CALL, event )
 			) {
+			m_is_processing_children_events = false;
 			return true;
 		}
 	}
