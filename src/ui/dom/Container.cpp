@@ -100,6 +100,7 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 			child.second->ProcessEvent( GSE_CALL, event )
 			) {
 			m_is_processing_children_events = false;
+			ProcessPendingDeletes( GSE_CALL );
 			return true;
 		}
 	}
