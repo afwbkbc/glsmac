@@ -245,7 +245,7 @@ try {
 			'\tat ./GLSMAC_data/tests/exceptions.gls.js:236: throw Error2(\'test err2\');',
 			'\tat ./GLSMAC_data/tests/exceptions.gls.js:231: Error1: (e) => {',
 		]);
-		was_caught = true;sd
+		was_caught = true;
 	},
 }
 test.assert(was_caught, 'exception not caught');
