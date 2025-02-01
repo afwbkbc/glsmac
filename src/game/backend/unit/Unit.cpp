@@ -15,6 +15,7 @@
 #include "MoraleSet.h"
 #include "StaticDef.h"
 #include "UnitManager.h"
+#include "gse/ExecutionPointer.h"
 
 namespace game {
 namespace backend {
@@ -135,12 +136,13 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 	},
 	{
 		"move_to_tile",
-		NATIVE_CALL(this) {
+		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 2 );
 			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
 			N_PERSIST_CALLABLE( on_complete, 1 );
-			const auto* errmsg = m_um->MoveUnitToTile( this, tile, [ on_complete, &ctx, &si, &ep ]() {
-				on_complete->Run( GSE_CALL, {} );
+			const auto* errmsg = m_um->MoveUnitToTile( this, tile, [ on_complete, ctx, si, ep ]() {
+				auto ep2 = ep;
+				on_complete->Run( ctx, si, ep2, {} );
 				N_UNPERSIST_CALLABLE( on_complete );
 			});
 			if ( errmsg ) {
