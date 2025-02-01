@@ -47,11 +47,13 @@ Button::Button( DOM_ARGS )
 }
 
 const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
+	bool result = false;
 	switch ( event.type ) {
 		case input::EV_MOUSE_DOWN: {
 			AddModifier( GSE_CALL, CM_ACTIVE );
 			m_last_button = event.data.mouse.button;
-			return true;
+			result = true;
+			break;
 		}
 		case input::EV_MOUSE_UP:
 		case input::EV_MOUSE_OUT: {
@@ -64,7 +66,8 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 				ProcessEvent( GSE_CALL, e );
 			}
 			m_last_button = input::MB_NONE;
-			return true;
+			result = true;
+			break;
 		}
 		case input::EV_KEY_DOWN: {
 			if (
@@ -75,13 +78,15 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 				e.SetType( input::EV_CLICK );
 				e.data.mouse.button = input::MB_LEFT;
 				ProcessEvent( GSE_CALL, e );
-				return true;
+				result = true;
 			}
+			break;
 		}
 		default: {
 		}
 	}
-	return Panel::ProcessEventImpl( GSE_CALL, event );
+	result |= Panel::ProcessEventImpl( GSE_CALL, event );
+	return result;
 }
 
 void Button::SerializeEvent( const input::Event& e, gse::type::object_properties_t& obj ) const {
