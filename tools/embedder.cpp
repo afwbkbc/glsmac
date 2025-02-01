@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <filesystem>
 
+namespace fs = std::filesystem;
+
 int main( int argc, char* argv[] ) {
 
 	if ( argc < 3 ) {
@@ -15,14 +17,13 @@ int main( int argc, char* argv[] ) {
 	std::string dir = path.substr( 0, path.length() - 8 );
 	const std::string sep = dir.substr( dir.length() - 1 );
 
-	const std::string out_file = argv[ 1 ];
-	const std::string out_dir = out_file.substr( 0, out_file.rfind( sep ) );
+	const fs::path out_file = argv[ 1 ];
+	const fs::path out_dir = out_file.parent_path();
+	const fs::path srcdir = argv[ 2 ];
 
-	const std::string srcdir = argv[ 2 ] + sep;
+	fs::create_directory( out_dir );
 
-	std::filesystem::create_directories( out_dir );
-
-	std::ofstream out( out_file );
+	std::ofstream out( out_file.native() );
 	if ( !out.is_open() ) {
 		std::cout << "Could not open file for writing: " << out_file << std::endl;
 		exit( 1 );
@@ -57,9 +58,9 @@ static const std::unordered_map< std::string, std::vector< unsigned char > > s_e
 
 		out << "	{ \"" + key + "\", {";
 
-		std::ifstream in( srcdir + filename );
+		std::ifstream in( srcdir / filename );
 		if ( !in.is_open() ) {
-			std::cout << "Could not open file for reading: " << ( srcdir + filename ) << std::endl;
+			std::cout << "Could not open file for reading: " << ( srcdir / filename ) << std::endl;
 			exit( 1 );
 		}
 		std::stringstream buffer;
