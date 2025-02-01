@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <atomic>
+#include <string>
 
 // TODO: move to config
 extern const size_t g_max_fps;

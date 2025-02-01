@@ -289,7 +289,7 @@ int main( const int argc, const char* argv[] ) {
 		}
 
 		if ( newui ) {
-			NEW( task, task::main::Main );
+			NEW( task, task::principal::Main );
 		}
 		else if ( config.HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
 			NEWV( state, game::backend::State ); // TODO: initialize settings randomly

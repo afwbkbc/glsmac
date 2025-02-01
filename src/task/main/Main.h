@@ -7,7 +7,7 @@
 class GLSMAC;
 
 namespace task {
-namespace main {
+namespace principal {
 
 CLASS( Main, common::Task )
 	void Start() override;

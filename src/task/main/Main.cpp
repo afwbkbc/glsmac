@@ -3,7 +3,7 @@
 #include "GLSMAC.h"
 
 namespace task {
-namespace main {
+namespace principal {
 
 void Main::Start() {
 

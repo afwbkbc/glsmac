@@ -161,7 +161,7 @@ void Geometry::RemoveHandler( const geometry_handler_id_t id ) {
 	m_handler_types.erase( id );
 }
 
-const bool Geometry::Contains( const types::Vec2< ssize_t >& position ) const {
+const bool Geometry::Contains( const types::Vec2< ptrdiff_t >& position ) const {
 	return
 		position.x > m_effective_area.left &&
 			position.y > m_effective_area.top &&

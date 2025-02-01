@@ -14,7 +14,7 @@ namespace ui {
 class UI;
 }
 
-namespace task::main {
+namespace task::principal {
 class Main;
 }
 
@@ -35,7 +35,7 @@ private:
 	ui::UI* m_ui = nullptr;
 
 private:
-	friend class task::main::Main;
+	friend class task::principal::Main;
 	void RunMain();
 
 private:

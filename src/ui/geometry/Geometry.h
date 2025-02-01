@@ -115,7 +115,7 @@ public:
 	const geometry_handler_id_t AddHandler( const geometry_handler_type_t type, const std::function< void() >& f );
 	void RemoveHandler( const geometry_handler_id_t id );
 
-	const bool Contains( const types::Vec2< ssize_t >& position ) const;
+	const bool Contains( const types::Vec2< ptrdiff_t >& position ) const;
 
 protected:
 

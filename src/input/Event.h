@@ -12,10 +12,10 @@ public:
 
 	typedef union {
 		struct {
-			ssize_t x;
-			ssize_t y;
+			ptrdiff_t x;
+			ptrdiff_t y;
 			mouse_button_t button;
-			ssize_t scroll_y;
+			ptrdiff_t scroll_y;
 		} mouse;
 		struct {
 			bool is_printable;
