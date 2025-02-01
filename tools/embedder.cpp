@@ -6,28 +6,28 @@
 
 int main( int argc, char* argv[] ) {
 
+	if ( argc < 3 ) {
+		std::cout << "Usage: " << argv[ 0 ] << " <out_file> <src_dir> [<src_file>] [<src_file>] [...]" << std::endl;
+		exit( 1 );
+	}
+
 	const std::string path = argv[ 0 ];
 	std::string dir = path.substr( 0, path.length() - 8 );
 	const std::string sep = dir.substr( dir.length() - 1 );
 
-	dir += ".." + sep + ".." + sep;
-
 	const std::string out_file = argv[ 1 ];
 	const std::string out_dir = out_file.substr( 0, out_file.rfind( sep ) );
 
-	std::filesystem::create_directories( out_dir );
+	const std::string srcdir = argv[ 2 ] + sep;
 
-	if ( argc < 2 ) {
-		std::cout << "Usage: " << argv[ 0 ] << " <out> [<file>] [<file>] [...]" << std::endl;
-		exit( 1 );
-	}
+	std::filesystem::create_directories( out_dir );
 
 	std::ofstream out( out_file );
 	if ( !out.is_open() ) {
 		std::cout << "Could not open file for writing: " << out_file << std::endl;
 		exit( 1 );
 	}
-	std::cout << "Creating " << argv[ 1 ] << "..." << std::endl;
+	std::cout << "Creating " << out_file << "..." << std::endl;
 
 	out << R"(#include <unordered_map>
 #include <string>
@@ -36,7 +36,7 @@ int main( int argc, char* argv[] ) {
 static const std::unordered_map< std::string, std::vector< unsigned char > > s_embedded_files = {
 )";
 
-	for ( size_t i = 2 ; i < argc ; i++ ) {
+	for ( size_t i = 3 ; i < argc ; i++ ) {
 		const std::string filename = argv[ i ];
 		std::string key = "";
 		key.reserve( filename.size() );
@@ -57,9 +57,9 @@ static const std::unordered_map< std::string, std::vector< unsigned char > > s_e
 
 		out << "	{ \"" + key + "\", {";
 
-		std::ifstream in( dir + filename );
+		std::ifstream in( srcdir + filename );
 		if ( !in.is_open() ) {
-			std::cout << "Could not open file for reading: " << ( dir + filename ) << std::endl;
+			std::cout << "Could not open file for reading: " << ( srcdir + filename ) << std::endl;
 			exit( 1 );
 		}
 		std::stringstream buffer;
