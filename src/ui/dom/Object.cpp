@@ -71,11 +71,9 @@ Object::Object( DOM_ARGS_T )
 		}
 		return VALUE( gse::type::Undefined );
 	} ) );
-	Method( GSE_CALL, "delete", NATIVE_CALL( this ) {
-		ASSERT_NOLOG( m_parent, "delete without parent" );
-		if ( m_is_initialized ) {
-			SetClasses( GSE_CALL, {} );
-		}
+	Method( GSE_CALL, "remove", NATIVE_CALL( this ) {
+		ASSERT_NOLOG( m_parent, "remove without parent" );
+		SetClasses( GSE_CALL, {} );
 		m_parent->DeleteChild( GSE_CALL, this );
 		return VALUE( gse::type::Undefined );
 	} ) );

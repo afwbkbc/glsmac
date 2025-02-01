@@ -41,7 +41,9 @@ enum operator_type_t {
 	OT_MOD_BY,
 	OT_CHILD,
 	OT_AT,
-	OT_APPEND,
+	OT_PUSH,
+	OT_POP,
+	OT_ERASE,
 	OT_RANGE,
 };
 

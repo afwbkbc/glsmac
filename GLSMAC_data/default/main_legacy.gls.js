@@ -123,7 +123,7 @@ return ( (gm) => {
 									}
 								);
 								add_pops(base, e.game.random.get_int(1, 7));
-								all_bases []= base;
+								all_bases :+ base;
 								bases_spawned++;
 							}
 						}

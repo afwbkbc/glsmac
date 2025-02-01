@@ -216,46 +216,46 @@ const data = ['a', 'b', 'c'];
 
 arr = [];
 for (i in data) {
-	arr []= #to_string(i) + '_' + data[i];
+	arr :+ #to_string(i) + '_' + data[i];
 }
 test.assert(arr == ['0_a', '1_b', '2_c']);
 for (i in ['asd', 'qwe', 'zxc']) {
-	arr []= i;
+	arr :+ i;
 }
 test.assert(arr == ['0_a', '1_b', '2_c', 0, 1, 2]);
 for (i in {
 	key1: 'value1',
 	key2: 'value2',
 }) {
-	arr []= i;
+	arr :+ i;
 }
 test.assert(arr == ['0_a', '1_b', '2_c', 0, 1, 2, 'key1', 'key2']);
 
 arr = [];
 for (v of data) {
-	arr []= 'of_' + v;
+	arr :+ 'of_' + v;
 }
 test.assert(arr == ['of_a', 'of_b', 'of_c']);
 for (v of ['asd', 'qwe', 'zxc', (5 + 10), {k: 'v'}, ((x) => { return x * 2 })(5)]) {
-	arr []= v;
+	arr :+ v;
 }
 test.assert(arr == [ 'of_a', 'of_b', 'of_c', 'asd', 'qwe', 'zxc', 15, {k: 'v'}, 10]);
 for (i of {
 	key1: 'value1',
 	key2: 'value2',
 }) {
-	arr []= i;
+	arr :+ i;
 }
 test.assert(arr == [ 'of_a', 'of_b', 'of_c', 'asd', 'qwe', 'zxc', 15, {k: 'v'}, 10, 'value1', 'value2']);
 
 arr = [];
 for (let ii = 2 ; ii > 0 ; ii--) {
-	arr []= 'i_' + data[ii];
+	arr :+ 'i_' + data[ii];
 }
 test.assert(arr == ['i_c', 'i_b']);
 
 for (i = 5 ; i <= 10 ; i++) {
-	arr []= i;
+	arr :+ i;
 }
 test.assert(arr == ['i_c', 'i_b', 5, 6, 7, 8, 9, 10 ]);
 
@@ -270,16 +270,16 @@ test.assert(for_func() == 6);
 
 arr = [];
 for ( i = 0 ; i < 10 ; i++ ) {
-	arr []= i;
+	arr :+ i;
 	if (i >= 3) {
-		arr []= 'x';
+		arr :+ 'x';
 		for ( i = 5 ; i < 10 ; i++ ) {
 			if ( i == 7 ) {
 				break;
 			}
-			arr []= i;
+			arr :+ i;
 		}
-		arr []= 'y';
+		arr :+ 'y';
 		break;
 	}
 }
@@ -291,7 +291,7 @@ while (i > 0) {
 	if (i == 2 ) {
 		break;
 	}
-	arr []= i;
+	arr :+ i;
 	i--;
 }
 test.assert(arr == [5, 4, 3]);
@@ -301,7 +301,7 @@ for ( i of [4, 7, 1, 5] ) {
 	if ( i == 1 ) {
 		break;
 	}
-	arr []= i;
+	arr :+ i;
 }
 test.assert(arr == [4, 7]);
 
@@ -310,7 +310,7 @@ for ( i = 0 ; i < 10 ; i++ ) {
 	if ( i < 5 || i > 8 ) {
 		continue;
 	}
-	arr []= i;
+	arr :+ i;
 }
 test.assert(arr == [5, 6, 7, 8]);
 
@@ -326,11 +326,11 @@ while (i > 0) {
 			elseif (ii == 'e') {
 				break;
 			}
-			arr []= ii;
+			arr :+ ii;
 		}
 		continue;
 	}
-	arr []= i;
+	arr :+ i;
 }
 test.assert(arr == ['b', 'd', 'b', 'd', 7, 6, 5, 4, 3, 'b', 'd', 'b', 'd', 'b', 'd']);
 
@@ -454,6 +454,33 @@ test.assert(#to_string(testobj6) == '{ key1: value1, key2: value2, key3: null }'
 testobj6.key2 = #undefined;
 test.assert(#to_string(testobj6) == '{ key1: value1, key3: null }');
 
+{
+	let pushpop = ['asd', 'qwe'];
+	pushpop :+ 'zxc';
+	test.assert(pushpop == ['asd', 'qwe', 'zxc']);
+	let val = pushpop:~;
+	test.assert(val == 'zxc');
+	test.assert(pushpop == ['asd', 'qwe']);
+	val = pushpop:~;
+	test.assert(val == 'qwe');
+	test.assert(pushpop == ['asd']);
+	val = pushpop:~;
+	test.assert(val == 'asd');
+	test.assert(pushpop == []);
+	val = pushpop:~;
+	test.assert(!#is_defined(val));
+	test.assert(pushpop == []);
+}
+
+{
+	let arr = [ 'first', 'second', 'third' ];
+	let val = arr :- 1;
+	test.assert(val == 'second');
+	test.assert(arr == ['first', 'third']);
+	val = arr :- 0;
+	test.assert(val == 'first');
+	test.assert(arr == ['third']);
+}
 
 ;
 ;

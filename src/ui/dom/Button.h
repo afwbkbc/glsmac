@@ -20,6 +20,9 @@ private:
 	Text* m_label;
 	input::mouse_button_t m_last_button = input::MB_NONE;
 
+	bool m_is_ok = false;
+	bool m_is_cancel = false;
+
 };
 
 }

@@ -22,7 +22,7 @@ return {
 			class: 'system-popup-body',
 		});
 
-		popups []= popup;
+		popups :+ popup;
 
 		return [popup, body];
 	},
@@ -44,6 +44,8 @@ return {
 
 		body.button({
 			class: 'system-popup-button-ok',
+			is_ok: true,
+			is_cancel: true,
 			text: 'OK',
 			align: 'top center',
 			top: top + 20,
@@ -76,26 +78,11 @@ return {
 			left: 20,
 			right: 10,
 		});
-		input.on('keydown', (e) => {
-			if (e.code == 'ESCAPE') {
-				if (#is_defined(p.on_cancel)) {
-					p.on_cancel();
-				}
-				return true;
-			}
-			return false;
-		});
-
-		input.on('select', (e) => {
-			if (#is_defined(p.on_ok)) {
-				p.on_ok(input.value);
-			}
-			return true;
-		});
 
 		if (#is_defined(p.oktext)) {
 			body.button({
 				class: 'system-popup-button-ok',
+				is_ok: true,
 				text: p.oktext,
 				align: 'top right',
 				top: 60,
@@ -113,6 +100,7 @@ return {
 		if (#is_defined(p.canceltext)) {
 			body.button({
 				class: 'system-popup-button-cancel',
+				is_cancel: true,
 				text: p.canceltext,
 				align: 'top left',
 				top: 60,

@@ -18,15 +18,14 @@ let escape_handler_id = 0;
 	#include('ui/styles/system')(glsmac.ui);
 	const ui_utils = #include('ui/utils/utils');
 
-	const f_quit_on_escape = (e) => {
+	/*const f_quit_on_escape = (e) => {
 		if (e.code == 'ESCAPE') {
 			glsmac.exit();
 			return true;
 		}
 		return false;
 	};
-
-	escape_handler_id = glsmac.ui.root.on('keydown', f_quit_on_escape);
+	escape_handler_id = glsmac.ui.root.on('keydown', f_quit_on_escape);*/
 
 	glsmac.on('init', () => {
 		#print('STARTED');
@@ -50,25 +49,21 @@ let escape_handler_id = 0;
 					oktext: 'OK',
 					canceltext: 'Cancel',
 					on_ok: (value) => {
-						if (error != null) {
-							error.delete();
-							error = null;
-						} else {
-							try {
-								glsmac.init();
-							} catch {
-								GSELoaderError: (e) => {
-									error = ui_utils.system_popup.error(glsmac.ui, {
-										texts: [
-											'Invalid SMAC path: ' + value,
-											'  (check that terranx.exe exists in it)'
-										],
-										on_close: () => {
-											error.delete();
-											error = null;
-										},
-									});
-								}
+						try {
+							glsmac.init();
+						} catch {
+							GSELoaderError: (e) => {
+								error = ui_utils.system_popup.error(glsmac.ui, {
+									texts: [
+										'Invalid SMAC path: ' + value,
+										'  (check that it contains terranx.exe)'
+									],
+									on_close: () => {
+										#print('REMOVE', error);
+										error.remove();
+										error = null;
+									},
+								});
 							}
 						}
 					},

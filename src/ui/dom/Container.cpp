@@ -93,24 +93,6 @@ void Container::UpdateMouseOver( GSE_CALLABLE, Object* child ) {
 }
 
 const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
-	ASSERT_NOLOG( !m_is_processing_children_events, "already processing children events" );
-	m_is_processing_children_events = true;
-	for ( const auto& child : m_children ) {
-		if (
-			child.second->ProcessEvent( GSE_CALL, event )
-			) {
-			m_is_processing_children_events = false;
-			ProcessPendingDeletes( GSE_CALL );
-			return true;
-		}
-	}
-	ASSERT_NOLOG( m_is_processing_children_events, "not processing children events" );
-	m_is_processing_children_events = false;
-	ProcessPendingDeletes( GSE_CALL );
-	return Object::ProcessEvent( GSE_CALL, event );
-}
-
-const bool Container::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 	switch ( event.type ) {
 		case input::EV_MOUSE_OUT: {
 			input::Event e = {};
@@ -185,7 +167,19 @@ const bool Container::ProcessEventImpl( GSE_CALLABLE, const input::Event& event 
 		}
 		default: {}
 	}
-	return Area::ProcessEventImpl( GSE_CALL, event );
+	ASSERT_NOLOG( !m_is_processing_children_events, "already processing children events" );
+	m_is_processing_children_events = true;
+	for ( const auto& child : m_children ) {
+		if ( child.second->ProcessEvent( GSE_CALL, event ) ) {
+			m_is_processing_children_events = false;
+			ProcessPendingDeletes( GSE_CALL );
+			return true;
+		}
+	}
+	ASSERT_NOLOG( m_is_processing_children_events, "not processing children events" );
+	m_is_processing_children_events = false;
+	ProcessPendingDeletes( GSE_CALL );
+	return Object::ProcessEvent( GSE_CALL, event );
 }
 
 #define FORWARD_CALL( _method, ... ) \
@@ -210,6 +204,8 @@ void Container::WrapSet( const std::string& key, const gse::Value& value, GSE_CA
 			}
 		}
 		forward_it->second->WrapSet( key, value, GSE_CALL );
+		m_manual_properties.insert_or_assign( key, value );
+		m_properties.insert_or_assign( key, value );
 	}
 	else {
 		Object::WrapSet( key, value, GSE_CALL );
@@ -234,6 +230,8 @@ void Container::ForwardProperty( GSE_CALLABLE, const std::string& name, Object* 
 	const auto& it = m_initial_properties.find( name );
 	if ( it != m_initial_properties.end() ) {
 		target->WrapSet( it->first, it->second, GSE_CALL );
+		m_manual_properties.insert_or_assign( it->first, it->second );
+		m_properties.insert_or_assign( it->first, it->second );
 	}
 }
 

@@ -3,6 +3,7 @@
 #include "Text.h"
 #include "ui/geometry/Geometry.h"
 #include "input/Event.h"
+#include "gse/type/Bool.h"
 
 namespace ui {
 namespace dom {
@@ -20,7 +21,27 @@ Button::Button( DOM_ARGS )
 
 	Events(
 		{
-			input::EV_CLICK
+			input::EV_CLICK,
+			input::EV_KEY_DOWN,
+		}
+	);
+
+	Property(
+		GSE_CALL, "is_ok", gse::type::Type::T_BOOL, VALUE( gse::type::Undefined ), PF_NONE,
+		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
+			m_is_ok = ( (gse::type::Bool*)v.Get() )->value;
+		},
+		[ this ]( GSE_CALLABLE ) {
+			m_is_ok = false;
+		}
+	);
+	Property(
+		GSE_CALL, "is_cancel", gse::type::Type::T_BOOL, VALUE( gse::type::Undefined ), PF_NONE,
+		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
+			m_is_cancel = ( (gse::type::Bool*)v.Get() )->value;
+		},
+		[ this ]( GSE_CALLABLE ) {
+			m_is_cancel = false;
 		}
 	);
 }
@@ -30,7 +51,7 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 		case input::EV_MOUSE_DOWN: {
 			AddModifier( GSE_CALL, CM_ACTIVE );
 			m_last_button = event.data.mouse.button;
-			break;
+			return true;
 		}
 		case input::EV_MOUSE_UP:
 		case input::EV_MOUSE_OUT: {
@@ -43,7 +64,19 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 				ProcessEvent( GSE_CALL, e );
 			}
 			m_last_button = input::MB_NONE;
-			break;
+			return true;
+		}
+		case input::EV_KEY_DOWN: {
+			if (
+				( m_is_ok && event.data.key.code == input::K_ENTER ) ||
+					( m_is_cancel && event.data.key.code == input::K_ESCAPE )
+				) {
+				input::Event e;
+				e.SetType( input::EV_CLICK );
+				e.data.mouse.button = input::MB_LEFT;
+				ProcessEvent( GSE_CALL, e );
+				return true;
+			}
 		}
 		default: {
 		}

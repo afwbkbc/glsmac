@@ -848,9 +848,9 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 											( *( it_end + 1 ) )->m_type == SourceElement::ET_OPERATOR &&
 											( (Operator*)( *( it_end + 1 ) ) )->m_op == "="
 										) {
-										// 'append' operator ( []= )
+										// 'append' operator ( :+ )
 										ASSERT( it + 2 != end, "value expected after append operator" );
-										elements.push_back( new program::Operator( GetSI( it, it_end + 2 ), program::OT_APPEND ) );
+										elements.push_back( new program::Operator( GetSI( it, it_end + 2 ), program::OT_PUSH ) );
 										it_end++;
 									}
 									else {
@@ -889,6 +889,9 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 		}
 	}
 
+	if ( elements.empty() ) {
+		throw Exception( EC.PARSE_ERROR, "Could not parse expression (forgot ; or operator?)", nullptr, ( *begin )->m_si, *m_ep );
+	}
 	return get_operand( elements.begin(), elements.end() );
 }
 

@@ -1,8 +1,8 @@
 const define = (bm, id, name, renders_human_x, renders_progenitor_x, properties) => {
 	// TODO: if (!properties) { ... }
 	let rh = [];
-	for ( x of renders_human_x ) {
-		rh []= {
+	for (x of renders_human_x) {
+		rh :+{
 			type: 'sprite',
 			file: 'newicons.pcx',
 			x: x, y: 501,
@@ -10,8 +10,8 @@ const define = (bm, id, name, renders_human_x, renders_progenitor_x, properties)
 		};
 	}
 	let rp = [];
-	for ( x of renders_progenitor_x ) {
-		rp []= {
+	for (x of renders_progenitor_x) {
+		rp :+{
 			type: 'sprite',
 			file: 'aliencit.pcx',
 			x: x, y: 41,

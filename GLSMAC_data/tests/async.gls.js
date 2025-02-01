@@ -12,13 +12,11 @@ let values = [];
 	//return value < 75;
 });
 
-return;
-
 // double value every 700ms
 #async(705, () => {
 	value *= 2;
 	#print('async2 ' + #to_string(value));
-	values []= value;
+	values :+ value;
 	return value < 50;
 });
 
@@ -58,14 +56,14 @@ return;
 	#async(505, () => {
 		#print('async parent begin');
 		let i = 0;
-		result []= 'P';
+		result :+ 'P';
 		#async(205, () => {
 			const value = i;
-			result []= 'C' + #to_string(i);
+			result :+ 'C' + #to_string(i);
 			#print('async child begin', value);
 			let ii = 0;
 			#async(50, () => {
-				result []= 'CC' + #to_string(value);
+				result :+ 'CC' + #to_string(value);
 				#print('async child child', value);
 				return ++ii < 8;
 			});
@@ -89,7 +87,7 @@ return;
 		const timer = #async(120, () => {
 			value2++;
 			#print(value2);
-			result []= value2;
+			result :+ value2;
 			return true;
 		});
 

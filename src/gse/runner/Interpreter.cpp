@@ -308,6 +308,9 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, Executi
 	const auto& operation_not_supported = [ expression, &ctx, &ep ]( const std::string& a, const std::string& b ) -> gse::Exception {
 		return gse::Exception( EC.OPERATION_NOT_SUPPORTED, "Operation " + expression->op->ToString() + " is not supported between " + a + " and " + b, ctx, expression->op->m_si, ep );
 	};
+	const auto& operation_not_supported_not_array = [ expression, &ctx, &ep ]( const std::string& a ) -> gse::Exception {
+		return gse::Exception( EC.OPERATION_NOT_SUPPORTED, "Operation " + expression->op->ToString() + " is not supported: " + a + " is not array", ctx, expression->op->m_si, ep );
+	};
 	const auto& math_error = [ expression, &ctx, &ep ]( const std::string& reason ) -> gse::Exception {
 		return gse::Exception( EC.MATH_ERROR, reason, ctx, expression->op->m_si, ep );
 	};
@@ -756,20 +759,68 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, Executi
 					throw not_an_array( expression->a->ToString(), expression->a->m_si );
 			}
 		}
-		case OT_APPEND: {
+		case OT_PUSH: {
 			switch ( expression->a->type ) {
 				case Operand::OT_VARIABLE: {
 					const auto arrv = ctx->GetVariable( ( (Variable*)expression->a )->name, expression->a->m_si, ep );
 					const auto* arr = arrv.Get();
 					if ( arr->type != Type::T_ARRAY ) {
-						throw operation_not_supported( arr->ToString(), expression->b->ToString() );
+						throw operation_not_supported_not_array( expression->a->ToString() );
 					}
 					const auto value = EvaluateOperand( ctx, ep, expression->b );
 					( (type::Array*)arr )->Append( value );
 					return value;
 				}
 				default:
-					throw operation_not_supported( expression->a->ToString(), expression->b->ToString() );
+					throw operation_not_supported_not_array( expression->a->ToString() );
+			}
+		}
+		case OT_POP: {
+			switch ( expression->a->type ) {
+				case Operand::OT_VARIABLE: {
+					const auto arrv = ctx->GetVariable( ( (Variable*)expression->a )->name, expression->a->m_si, ep );
+					const auto* arr = arrv.Get();
+					if ( arr->type != Type::T_ARRAY ) {
+						throw operation_not_supported_not_array( expression->a->ToString() );
+					}
+					auto& a = ( (type::Array*)arr )->value;
+					auto value = VALUE( Undefined );
+					if ( !a.empty() ) {
+						value = a.back();
+						a.pop_back();
+					}
+					return value;
+				}
+				default:
+					throw operation_not_supported_not_array( expression->a->ToString() );
+			}
+		}
+		case OT_ERASE: {
+			switch ( expression->a->type ) {
+				case Operand::OT_VARIABLE: {
+					const auto arrv = ctx->GetVariable( ( (Variable*)expression->a )->name, expression->a->m_si, ep );
+					const auto* arr = arrv.Get();
+					if ( arr->type != Type::T_ARRAY ) {
+						throw operation_not_supported_not_array( expression->a->ToString() );
+					}
+					auto& a = ( (type::Array*)arr )->value;
+					const auto idxval = EvaluateOperand( ctx, ep, expression->b );
+					if ( idxval.Get()->type != type::Type::T_INT ) {
+						throw operation_not_supported( expression->a->ToString(), idxval.ToString() );
+					}
+					const auto idx = ( (type::Int*)idxval.Get() )->value;
+					if ( idx < 0 ) {
+						throw operation_not_supported( expression->a->ToString(), idxval.ToString() );
+					}
+					auto value = VALUE( Undefined );
+					if ( idx < a.size() ) {
+						value = a.at( idx );
+						a.erase( a.begin() + idx );
+					}
+					return value;
+				}
+				default:
+					throw operation_not_supported_not_array( expression->a->ToString() );
 			}
 		}
 		case OT_RANGE: {

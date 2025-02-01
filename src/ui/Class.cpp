@@ -165,7 +165,7 @@ void Class::RemoveObjectModifier( GSE_CALLABLE, dom::Object* object, const class
 				object->UnsetPropertyFromClass( GSE_CALL, p.first );
 			}
 			else {
-				object->SetPropertyFromClass( GSE_CALL, p.first, v, CM_NONE );
+				object->SetPropertyFromClass( GSE_CALL, p.first, v, modifier );
 			}
 		}
 	}
