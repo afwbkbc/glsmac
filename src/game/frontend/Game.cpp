@@ -55,6 +55,7 @@
 #include "game/backend/map/Consts.h"
 #include "task/game/Game.h"
 #include "game/frontend/ui_legacy/popup/base_popup/BasePopup.h"
+#include "input/Types.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -1302,7 +1303,7 @@ void Game::Initialize(
 			if (
 				ui->HasPopup() &&
 					!data->key.modifiers &&
-					data->key.code == ::ui_legacy::event::K_ESCAPE
+					data->key.code == input::K_ESCAPE
 				) {
 				ui->CloseLastPopup();
 				return true;
@@ -1344,11 +1345,11 @@ void Game::Initialize(
 						X( K_PAGEUP, K_KP_RIGHT_UP, D_NE )
 						X( K_PAGEDOWN, K_KP_RIGHT_DOWN, D_SE )
 #undef X
-						case ::ui_legacy::event::K_TAB: {
+						case input::K_TAB: {
 							m_um->SelectNextUnitMaybe();
 							break;
 						}
-						case ::ui_legacy::event::K_SPACE: {
+						case input::K_SPACE: {
 							auto* unit = m_um->GetSelectedUnit();
 							if ( unit ) {
 								const auto event = backend::event::SkipUnitTurn( m_slot_index, unit->GetId() );
@@ -1356,7 +1357,7 @@ void Game::Initialize(
 							}
 							break;
 						}
-						case ::ui_legacy::event::K_ENTER: {
+						case input::K_ENTER: {
 							if ( m_turn_status == backend::turn::TS_TURN_COMPLETE ) {
 								CompleteTurn();
 								break;
@@ -1436,7 +1437,7 @@ void Game::Initialize(
 					return true;
 				}
 
-				if ( data->key.code == ::ui_legacy::event::K_ESCAPE ) {
+				if ( data->key.code == input::K_ESCAPE ) {
 					if ( !g_engine->GetUI()->HasPopup() ) { // close all other popups first (including same one)
 						ConfirmExit(
 							UH( this ) {
@@ -1451,7 +1452,7 @@ void Game::Initialize(
 					return true;
 				}
 			}
-			else if ( m_is_map_editing_allowed && data->key.code == ::ui_legacy::event::K_CTRL ) {
+			else if ( m_is_map_editing_allowed && data->key.code == input::K_CTRL ) {
 				m_is_editing_mode = true;
 			}
 
@@ -1467,7 +1468,7 @@ void Game::Initialize(
 					m_scroller.Stop();
 				}
 			}
-			else if ( m_is_map_editing_allowed && data->key.code == ::ui_legacy::event::K_CTRL ) {
+			else if ( m_is_map_editing_allowed && data->key.code == input::K_CTRL ) {
 				m_is_editing_mode = false;
 				m_editing_draw_timer.Stop();
 				m_editor_draw_mode = backend::map_editor::DM_NONE;
