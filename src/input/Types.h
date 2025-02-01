@@ -1,4 +1,6 @@
 #pragma once
+#include <cstdint>
+#undef MB_RIGHT
 
 namespace input {
 
