@@ -11,7 +11,6 @@ namespace ui {
 typedef float coord_t;
 
 typedef std::map< std::string, gse::Value > properties_t;
-typedef std::vector< std::pair< std::string, gse::Value > > ordered_properties_t;
 
 // order is important, from lowest priority to highest
 enum class_modifier_t : uint8_t {

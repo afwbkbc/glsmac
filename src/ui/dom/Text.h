@@ -17,9 +17,11 @@ namespace dom {
 class Text : public Drawable {
 public:
 	Text( DOM_ARGS );
-	~Text();
 
 	void SetText( const std::string& text );
+
+protected:
+	virtual ~Text();
 
 private:
 	std::string m_text = "";

@@ -94,12 +94,23 @@ WRAPIMPL_BEGIN( GLSMAC )
 		{
 			"init",
 			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS_MIN_MAX(0, 1);
 				const auto& c = g_engine->GetConfig();
 				try {
-					g_engine->GetResourceManager()->Init( c->GetPossibleSMACPaths(), c->GetSMACType() );
+					if ( arguments.empty() ) {
+						g_engine->GetResourceManager()->Init( c->GetPossibleSMACPaths(), c->GetSMACType() );
+					}
+					else {
+						N_GETVALUE( path, 0, String );
+						g_engine->GetResourceManager()->Init( { path }, config::ST_AUTO );
+					}
 				} catch ( const std::runtime_error& e ) {
 					GSE_ERROR( gse::EC.LOADER_ERROR, e.what() );
 				}
+				if ( !arguments.empty() ) {
+					// TODO: update in config
+				}
+				Trigger( GSE_CALL, "init", {} );
 				return VALUE( gse::type::Undefined );
 			} )
 		},

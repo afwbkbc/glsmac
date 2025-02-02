@@ -46,7 +46,6 @@ class Object : public gse::Wrappable {
 public:
 
 	Object( DOM_ARGS_T );
-	virtual ~Object();
 
 	virtual const gse::Value Wrap( const bool dynamic = false ) override;
 	virtual void WrapSet( const std::string& key, const gse::Value& value, GSE_CALLABLE );
@@ -60,7 +59,11 @@ public:
 
 	virtual const bool ProcessEvent( GSE_CALLABLE, const input::Event& event );
 
+	virtual void Destroy( GSE_CALLABLE );
+
 protected:
+
+	virtual ~Object();
 
 	virtual const bool IsEventRelevant( const input::Event& event ) const;
 	virtual const bool ProcessEventImpl( GSE_CALLABLE, const input::Event& event );
@@ -92,8 +95,8 @@ protected:
 
 	virtual void SerializeEvent( const input::Event& event, gse::type::object_properties_t& event_data ) const;
 
-	void AddModifier( GSE_CALLABLE, const class_modifier_t& modifier );
-	void RemoveModifier( GSE_CALLABLE, const class_modifier_t& modifier );
+	void AddModifier( GSE_CALLABLE, const class_modifier_t modifier );
+	void RemoveModifier( GSE_CALLABLE, const class_modifier_t modifier );
 private:
 
 	std::unordered_set< input::event_type_t > m_supported_events = {};

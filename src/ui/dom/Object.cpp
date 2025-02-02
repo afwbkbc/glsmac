@@ -73,8 +73,7 @@ Object::Object( DOM_ARGS_T )
 	} ) );
 	Method( GSE_CALL, "remove", NATIVE_CALL( this ) {
 		ASSERT_NOLOG( m_parent, "remove without parent" );
-		SetClasses( GSE_CALL, {} );
-		m_parent->DeleteChild( GSE_CALL, this );
+		m_parent->RemoveChild( GSE_CALL, this );
 		return VALUE( gse::type::Undefined );
 	} ) );
 }
@@ -92,7 +91,7 @@ Object::~Object() {
 const gse::Value Object::Wrap( const bool dynamic ) {
 	if ( !m_wrapobj ) {
 		WRAPIMPL_PROPS
-			};
+		};
 		for ( const auto& p : m_properties ) {
 			properties.insert(
 				{
@@ -155,6 +154,11 @@ const bool Object::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	else {
 		return false;
 	}
+}
+
+void Object::Destroy( GSE_CALLABLE ) {
+	SetClasses( GSE_CALL, {} );
+	delete this;
 }
 
 const bool Object::IsEventRelevant( const input::Event& event ) const {
@@ -334,7 +338,7 @@ void Object::SerializeEvent( const input::Event& e, gse::type::object_properties
 	}
 }
 
-void Object::AddModifier( GSE_CALLABLE, const class_modifier_t& modifier ) {
+void Object::AddModifier( GSE_CALLABLE, const class_modifier_t modifier ) {
 	if ( m_modifiers.find( modifier ) == m_modifiers.end() ) {
 		m_modifiers.insert( modifier );
 		for ( const auto& c : m_classes ) {
@@ -343,7 +347,7 @@ void Object::AddModifier( GSE_CALLABLE, const class_modifier_t& modifier ) {
 	}
 }
 
-void Object::RemoveModifier( GSE_CALLABLE , const class_modifier_t& modifier ) {
+void Object::RemoveModifier( GSE_CALLABLE , const class_modifier_t modifier ) {
 	if ( m_modifiers.find( modifier ) != m_modifiers.end() ) {
 		m_modifiers.erase( modifier );
 		for ( const auto& c : m_classes ) {

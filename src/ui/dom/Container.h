@@ -17,7 +17,6 @@ namespace dom {
 class Container : public Area {
 public:
 	Container( DOM_ARGS_T, const bool factories_allowed );
-	virtual ~Container();
 
 	scene::actor::Cache* const m_cache;
 
@@ -25,7 +24,11 @@ public:
 
 	const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
 
+	void Destroy( GSE_CALLABLE ) override;
+
 protected:
+
+	virtual ~Container();
 
 	void WrapSet( const std::string& key, const gse::Value& value, GSE_CALLABLE ) override;
 
@@ -49,7 +52,7 @@ private:
 
 	void InitAndValidate( GSE_CALLABLE ) override;
 
-	std::unordered_set< Object* > m_children_to_delete = {};
+	std::unordered_set< Object* > m_children_to_remove = {};
 	void ProcessPendingDeletes( GSE_CALLABLE );
 
 protected:
@@ -64,7 +67,7 @@ private:
 
 private:
 	friend class Object;
-	void DeleteChild( GSE_CALLABLE, Object* obj );
+	void RemoveChild( GSE_CALLABLE, Object* obj );
 
 };
 
