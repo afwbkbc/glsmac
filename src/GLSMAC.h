@@ -34,6 +34,8 @@ private:
 
 	ui::UI* m_ui = nullptr;
 
+	std::function< void( GSE_CALLABLE, const std::optional< std::string >& ) > m_f_try_smacpath;
+
 private:
 	friend class task::main::Main;
 	void RunMain();

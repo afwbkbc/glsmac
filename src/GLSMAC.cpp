@@ -45,6 +45,38 @@ GLSMAC::GLSMAC() {
 		)
 	;
 
+	m_f_try_smacpath = [ this ]( GSE_CALLABLE, const std::optional< std::string >& path ) {
+		const auto& c = g_engine->GetConfig();
+		try {
+			if ( path.has_value() ) {
+				g_engine->GetResourceManager()->Init( { path.value() }, config::ST_AUTO );
+			}
+			else {
+				g_engine->GetResourceManager()->Init( c->GetPossibleSMACPaths(), c->GetSMACType() );
+			}
+		} catch ( const std::runtime_error& e ) {
+			gse::type::object_properties_t args = {
+				{
+					"set_smacpath", VALUE( gse::callable::Native, [ this ]( GSE_CALLABLE, const gse::type::function_arguments_t& arguments ) -> gse::Value {
+					N_EXPECT_ARGS( 1 );
+					N_GETVALUE( path, 0, String );
+					m_f_try_smacpath( GSE_CALL, path );
+					return VALUE( gse::type::Undefined );
+				} )
+				}
+			};
+			if ( path.has_value() ) {
+				args.insert({ "last_failed_path", VALUE( gse::type::String, path.value() ) } );
+			}
+			Trigger( GSE_CALL, "smacpath_prompt", args );
+			return;
+		}
+		if ( path.has_value() ) {
+			c->SetSMACPath( path.value() );
+		}
+		Trigger( GSE_CALL, "init", {} );
+	};
+
 	{
 		gse::ExecutionPointer ep;
 
@@ -92,25 +124,9 @@ WRAPIMPL_BEGIN( GLSMAC )
 			m_ui->Wrap( true )
 		},
 		{
-			"init",
+			"start",
 			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS_MIN_MAX(0, 1);
-				const auto& c = g_engine->GetConfig();
-				try {
-					if ( arguments.empty() ) {
-						g_engine->GetResourceManager()->Init( c->GetPossibleSMACPaths(), c->GetSMACType() );
-					}
-					else {
-						N_GETVALUE( path, 0, String );
-						g_engine->GetResourceManager()->Init( { path }, config::ST_AUTO );
-					}
-				} catch ( const std::runtime_error& e ) {
-					GSE_ERROR( gse::EC.LOADER_ERROR, e.what() );
-				}
-				if ( !arguments.empty() ) {
-					// TODO: update in config
-				}
-				Trigger( GSE_CALL, "init", {} );
+				m_f_try_smacpath( GSE_CALL, {} );
 				return VALUE( gse::type::Undefined );
 			} )
 		},
@@ -119,13 +135,6 @@ WRAPIMPL_BEGIN( GLSMAC )
 			NATIVE_CALL( this ) {
 				g_engine->ShutDown();
 				return VALUE( gse::type::Undefined );
-			} )
-		},
-		{
-			"is_smacpath_set",
-			NATIVE_CALL( this ) {
-
-				return VALUE( gse::type::Bool, false );
 			} )
 		},
 	};

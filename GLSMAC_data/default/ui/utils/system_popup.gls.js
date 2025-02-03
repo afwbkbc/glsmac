@@ -22,7 +22,7 @@ return {
 			class: 'system-popup-body',
 		});
 
-		popups :+ popup;
+		popups :+popup;
 
 		return [popup, body];
 	},
@@ -77,6 +77,7 @@ return {
 			top: 30,
 			left: 20,
 			right: 10,
+			value: p.value,
 		});
 
 		if (#is_defined(p.oktext)) {

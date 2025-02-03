@@ -11,7 +11,7 @@
 #include "Types.h"
 
 namespace util {
-class ConfigParser;
+class ConfigManager;
 }
 
 namespace config {
@@ -66,6 +66,8 @@ CLASS( Config, common::Module )
 
 	const smac_type_t GetSMACType() const;
 
+	void SetSMACPath( const std::string& path ) const;
+
 #ifdef DEBUG
 
 	const std::string GetDebugPath() const; // to store debug stuff like dumps
@@ -97,7 +99,7 @@ CLASS( Config, common::Module )
 
 private:
 
-	util::ConfigParser* m_parser = nullptr;
+	util::ConfigManager* m_manager = nullptr;
 
 	void Error( const std::string& error );
 	const types::Vec2< size_t > ParseSize( const std::string& value );

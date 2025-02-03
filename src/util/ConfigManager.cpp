@@ -1,15 +1,17 @@
-#include "ConfigParser.h"
+#include "ConfigManager.h"
 
 #include <yaml-cpp/yaml.h>
 
 #include "util/FS.h"
+#include "util/String.h"
 
 namespace util {
 
-ConfigParser::ConfigParser( const std::string& path )
-	: m_path( path ) {}
+ConfigManager::ConfigManager( const std::string& path, const std::string& config_path )
+	: m_path( path )
+	, m_config_path( config_path ) {}
 
-void ConfigParser::AddRule( const std::string& argument, const std::string& description, const arg_handler_t handler ) {
+void ConfigManager::AddRule( const std::string& argument, const std::string& description, const arg_handler_t handler ) {
 	m_arg_rules[ argument ] = {
 		argument,
 		false,
@@ -23,7 +25,7 @@ void ConfigParser::AddRule( const std::string& argument, const std::string& desc
 	}
 }
 
-void ConfigParser::AddRule( const std::string& argument, const std::string& value_name, const std::string& description, const arg_handler_t handler ) {
+void ConfigManager::AddRule( const std::string& argument, const std::string& value_name, const std::string& description, const arg_handler_t handler ) {
 	m_arg_rules[ argument ] = {
 		argument,
 		true,
@@ -37,7 +39,7 @@ void ConfigParser::AddRule( const std::string& argument, const std::string& valu
 	}
 }
 
-const std::string ConfigParser::GetHelpString() const {
+const std::string ConfigManager::GetHelpString() const {
 	std::string result = (std::string)"\n" +
 		"Usage:\n\t" + m_path + " [options]\n" +
 		"\n" +
@@ -55,12 +57,12 @@ const std::string ConfigParser::GetHelpString() const {
 	return result;
 }
 
-const std::string ConfigParser::GetUnknownArgumentNote() const {
+const std::string ConfigManager::GetUnknownArgumentNote() const {
 	return (std::string)"Run\n\t" + m_path + " --help\nfor list of supported options.";
 }
 
 static const std::string s_errprefix_args = "argument --";
-void ConfigParser::ParseArgs( const int argc, const char* argv[] ) {
+void ConfigManager::ParseArgs( const int argc, const char* argv[] ) {
 	ASSERT( argc >= 1, "argc is zero" );
 
 	const char* c;
@@ -88,30 +90,38 @@ void ConfigParser::ParseArgs( const int argc, const char* argv[] ) {
 				v = {};
 			}
 		}
-		const auto& it = Set( k, v, s_errprefix_args );
+		const auto& it = Set( k, v, s_errprefix_args, false );
 		if ( it->second.has_value ) {
 			i++;
 		}
 	}
 }
 
-void ConfigParser::ParseFile( const std::string& path ) {
-	if ( util::FS::FileExists( path ) ) {
-		const auto errprefix = "setting " + path + ": ";
-		YAML::Node root = YAML::LoadFile( path );
+void ConfigManager::ParseFile( const std::string& path ) {
+	const auto& p = path.empty()
+		? m_config_path
+		: path;
+	if ( util::FS::FileExists( p ) ) {
+		const auto errprefix = "setting " + p + ": ";
+		YAML::Node root = YAML::LoadFile( p );
 		for ( const auto& it : root ) {
 			const auto& k = it.first.as< std::string >();
 			if ( !it.second.IsNull() ) {
-				Set( k, it.second.as< std::string >(), errprefix );
+				Set( k, it.second.as< std::string >(), errprefix, true );
 			}
 			else {
-				Set( k, {}, errprefix );
+				Set( k, {}, errprefix, true );
 			}
 		}
 	}
 }
 
-const std::map< std::string, ConfigParser::arg_rule_t >::iterator ConfigParser::Set( const std::string& k, const std::optional< std::string >& v, const std::string& err_prefix ) {
+void ConfigManager::UpdateSetting( const std::string& key, const std::string& value ) {
+	m_settings.insert_or_assign( key, std::make_pair( true, value ) );
+	Save();
+}
+
+const std::map< std::string, ConfigManager::arg_rule_t >::iterator ConfigManager::Set( const std::string& k, const std::optional< std::string >& v, const std::string& err_prefix, const bool is_saveable ) {
 	const auto& it = m_arg_rules.find( k );
 	if ( it == m_arg_rules.end() ) {
 		throw std::runtime_error( (std::string)"invalid " + err_prefix + k );
@@ -120,7 +130,23 @@ const std::map< std::string, ConfigParser::arg_rule_t >::iterator ConfigParser::
 		throw std::runtime_error( (std::string)err_prefix + k + " requires a value!" );
 	}
 	it->second.handler( v.value_or( "" ) );
+	m_settings.insert_or_assign(
+		k, std::make_pair(
+			is_saveable,
+			v.value_or( "" )
+		)
+	);
 	return it;
+}
+
+void ConfigManager::Save() {
+	YAML::Node root;
+	for ( const auto& kv : m_settings ) {
+		if ( kv.second.first ) {
+			root[ kv.first ] = kv.second.second;
+		}
+	}
+	util::FS::WriteFile( m_config_path, Dump( root ) + util::String::EOLN() );
 }
 
 }

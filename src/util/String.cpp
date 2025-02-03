@@ -56,6 +56,17 @@ static inline void trim( std::string& s ) {
 	ltrim( s );
 }
 
+const std::string& String::EOLN() {
+	static const std::string s_eoln =
+#ifdef _WIN32
+		"\r\n"
+#else
+		"\n"
+#endif
+	;
+	return s_eoln;
+}
+
 const std::vector< std::string > String::Split( const std::string& input, const char delimiter ) {
 	std::vector< std::string > result = {};
 	auto ss = std::stringstream{ input };

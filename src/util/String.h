@@ -11,6 +11,8 @@ namespace util {
 
 CLASS( String, Util )
 
+	static const std::string& EOLN();
+
 	static const std::vector< std::string > Split( const std::string& input, const char delimiter );
 	static const std::string Join( const std::vector< std::string >& input, const char delimiter );
 
