@@ -57,11 +57,11 @@ Exception::Exception( const std::string& class_name, const std::string& reason, 
 
 }
 
-const Exception::stacktrace_t& Exception::GetBacktrace( const context::Context* const current_ctx ) {
+const Exception::stacktrace_t& Exception::GetStackTrace() const {
 	return m_stacktrace;
 }
 
-const std::string Exception::ToString() {
+const std::string Exception::ToString() const {
 	std::string result = "Unhandled exception (" + class_name + "): " + reason + "\n";
 	bool is_first = true;
 	for ( const auto& it : m_stacktrace ) {

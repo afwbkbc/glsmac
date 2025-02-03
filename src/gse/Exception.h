@@ -44,8 +44,8 @@ public:
 	const std::string class_name;
 	const std::string reason;
 
-	const stacktrace_t& GetBacktrace( const context::Context* const current_ctx );
-	const std::string ToString();
+	const stacktrace_t& GetStackTrace() const;
+	const std::string ToString() const;
 
 private:
 	stacktrace_t m_stacktrace = {};

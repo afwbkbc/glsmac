@@ -284,7 +284,7 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, Execut
 						it->second->m_si,
 						ep,
 						{
-							VALUE( type::Exception, e, e.GetBacktrace( ctx ) )
+							VALUE( type::Exception, e, e.GetStackTrace() )
 						}
 					);
 					return result;

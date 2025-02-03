@@ -157,7 +157,12 @@ const Value GSE::RunScript( GSE_CALLABLE, const std::string& path ) {
 		m_include_cache.insert_or_assign( full_path, cache );
 		return cache.result;
 	}
-	catch ( std::runtime_error& e ) {
+	catch ( const Exception& e ) {
+		cache.Cleanup();
+		Log( e.ToString() );
+		throw;
+	}
+	catch ( const std::runtime_error& e ) {
 		cache.Cleanup();
 		throw;
 	}

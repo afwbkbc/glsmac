@@ -16,7 +16,6 @@
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
 #include "gse/type/Undefined.h"
-#include "gse/type/Bool.h"
 
 static GLSMAC* s_glsmac = nullptr;
 
@@ -44,38 +43,6 @@ GLSMAC::GLSMAC() {
 			}, gse::GSE::PATH_SEPARATOR
 		)
 	;
-
-	m_f_try_smacpath = [ this ]( GSE_CALLABLE, const std::optional< std::string >& path ) {
-		const auto& c = g_engine->GetConfig();
-		try {
-			if ( path.has_value() ) {
-				g_engine->GetResourceManager()->Init( { path.value() }, config::ST_AUTO );
-			}
-			else {
-				g_engine->GetResourceManager()->Init( c->GetPossibleSMACPaths(), c->GetSMACType() );
-			}
-		} catch ( const std::runtime_error& e ) {
-			gse::type::object_properties_t args = {
-				{
-					"set_smacpath", VALUE( gse::callable::Native, [ this ]( GSE_CALLABLE, const gse::type::function_arguments_t& arguments ) -> gse::Value {
-					N_EXPECT_ARGS( 1 );
-					N_GETVALUE( path, 0, String );
-					m_f_try_smacpath( GSE_CALL, path );
-					return VALUE( gse::type::Undefined );
-				} )
-				}
-			};
-			if ( path.has_value() ) {
-				args.insert({ "last_failed_path", VALUE( gse::type::String, path.value() ) } );
-			}
-			Trigger( GSE_CALL, "smacpath_prompt", args );
-			return;
-		}
-		if ( path.has_value() ) {
-			c->SetSMACPath( path.value() );
-		}
-		Trigger( GSE_CALL, "init", {} );
-	};
 
 	{
 		gse::ExecutionPointer ep;
@@ -126,7 +93,7 @@ WRAPIMPL_BEGIN( GLSMAC )
 		{
 			"start",
 			NATIVE_CALL( this ) {
-				m_f_try_smacpath( GSE_CALL, {} );
+				S_Init( GSE_CALL, {} );
 				return VALUE( gse::type::Undefined );
 			} )
 		},
@@ -141,6 +108,55 @@ WRAPIMPL_BEGIN( GLSMAC )
 WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( GLSMAC )
+
+void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
+	const auto& c = g_engine->GetConfig();
+	try {
+		if ( path.has_value() ) {
+			g_engine->GetResourceManager()->Init( { path.value() }, config::ST_AUTO );
+		}
+		else {
+			g_engine->GetResourceManager()->Init( c->GetPossibleSMACPaths(), c->GetSMACType() );
+		}
+	} catch ( const std::runtime_error& e ) {
+		gse::type::object_properties_t args = {
+			{
+				"set_smacpath", VALUE( gse::callable::Native, [ this ]( GSE_CALLABLE, const gse::type::function_arguments_t& arguments ) -> gse::Value {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( path, 0, String );
+				S_Init( GSE_CALL, path );
+				return VALUE( gse::type::Undefined );
+			} )
+			}
+		};
+		if ( path.has_value() ) {
+			args.insert({ "last_failed_path", VALUE( gse::type::String, path.value() ) } );
+		}
+		Trigger( GSE_CALL, "smacpath_prompt", args );
+		return;
+	}
+	if ( path.has_value() ) {
+		c->SetSMACPath( path.value() );
+	}
+
+	if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
+		THROW( "TODO: QUICKSTART" );
+	}
+	else if ( c->HasLaunchFlag( config::Config::LF_SKIPINTRO ) ) {
+		S_MainMenu( GSE_CALL );
+	}
+	else {
+		S_Intro( GSE_CALL );
+	}
+}
+
+void GLSMAC::S_Intro( GSE_CALLABLE ) {
+	Trigger( GSE_CALL, "intro", {} );
+}
+
+void GLSMAC::S_MainMenu( GSE_CALLABLE ) {
+	Trigger( GSE_CALL, "mainmenu", {} );
+}
 
 void GLSMAC::RunMain() {
 	try {
