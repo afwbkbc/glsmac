@@ -36,7 +36,17 @@ GSE::~GSE() {
 
 void GSE::Iterate() {
 	ExecutionPointer ep;
-	m_async->Iterate( ep );
+	try {
+		m_async->Iterate( ep );
+	}
+	catch ( const Exception& e ) {
+		Log( e.ToString() );
+		throw;
+	}
+	catch ( const std::exception& e ) {
+		Log( e.what() );
+		throw;
+	}
 }
 
 parser::Parser* GSE::GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num ) const {

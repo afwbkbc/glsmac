@@ -5,13 +5,14 @@ return (glsmac) => {
 	const m = {
 		utils: #include('utils/utils'),
 		glsmac: glsmac,
+		root: glsmac.ui.root,
 	};
-	for (module of [
+	for (step of [
 		'smacpath_prompt',
 		'intro',
 		'mainmenu',
 	]) {
-		#include('modules/' + module)(m);
+		#include('steps/' + step)(m);
 	}
 
 };

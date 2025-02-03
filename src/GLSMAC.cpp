@@ -111,22 +111,23 @@ UNWRAPIMPL_PTR( GLSMAC )
 
 void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 	const auto& c = g_engine->GetConfig();
+	auto* r = g_engine->GetResourceManager();
 	try {
 		if ( path.has_value() ) {
-			g_engine->GetResourceManager()->Init( { path.value() }, config::ST_AUTO );
+			r->Init( { path.value() }, config::ST_AUTO );
 		}
 		else {
-			g_engine->GetResourceManager()->Init( c->GetPossibleSMACPaths(), c->GetSMACType() );
+			r->Init( c->GetPossibleSMACPaths(), c->GetSMACType() );
 		}
 	} catch ( const std::runtime_error& e ) {
 		gse::type::object_properties_t args = {
 			{
 				"set_smacpath", VALUE( gse::callable::Native, [ this ]( GSE_CALLABLE, const gse::type::function_arguments_t& arguments ) -> gse::Value {
-				N_EXPECT_ARGS( 1 );
-				N_GETVALUE( path, 0, String );
-				S_Init( GSE_CALL, path );
-				return VALUE( gse::type::Undefined );
-			} )
+					N_EXPECT_ARGS( 1 );
+					N_GETVALUE( path, 0, String );
+					S_Init( GSE_CALL, path );
+					return VALUE( gse::type::Undefined );
+				} )
 			}
 		};
 		if ( path.has_value() ) {
@@ -142,7 +143,10 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 	if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
 		THROW( "TODO: QUICKSTART" );
 	}
-	else if ( c->HasLaunchFlag( config::Config::LF_SKIPINTRO ) ) {
+	else if (
+		c->HasLaunchFlag( config::Config::LF_SKIPINTRO ) ||
+		r->GetDetectedSMACType() == config::ST_LEGACY // it doesn't have firaxis logo image
+	) {
 		S_MainMenu( GSE_CALL );
 	}
 	else {
@@ -151,7 +155,16 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 }
 
 void GLSMAC::S_Intro( GSE_CALLABLE ) {
-	Trigger( GSE_CALL, "intro", {} );
+	Trigger( GSE_CALL, "intro", {
+		{
+			"mainmenu",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				S_MainMenu( GSE_CALL );
+				return VALUE( gse::type::Undefined );
+			} )
+		}
+	} );
 }
 
 void GLSMAC::S_MainMenu( GSE_CALLABLE ) {
