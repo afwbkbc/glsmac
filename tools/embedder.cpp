@@ -56,13 +56,14 @@ static const std::unordered_map< std::string, std::vector< unsigned char > > s_e
 
 		out << "	{ \"" + key + "\", {";
 
-		std::ifstream in( srcdir / filename );
+		std::ifstream in( srcdir / filename, std::ios::binary );
 		if ( !in.is_open() ) {
 			std::cout << "Could not open file for reading: " << ( srcdir / filename ) << std::endl;
 			exit( 1 );
 		}
 		std::stringstream buffer;
 		buffer << in.rdbuf();
+		in.close();
 		const auto& str = buffer.str();
 		std::cout << "	Embedding " << filename << " as " << key << " (" << std::to_string( str.size() ) << " bytes)" << std::endl;
 

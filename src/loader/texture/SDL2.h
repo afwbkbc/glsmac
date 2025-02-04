@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 
+#define SDL_MAIN_HANDLED 1
 #include <SDL_image.h>
 
 #include "TextureLoader.h"

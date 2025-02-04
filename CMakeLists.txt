@@ -23,7 +23,7 @@ ENDIF ()
 IF ( NOT WIN32 )
 	SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread" )
 ENDIF ()
-SET( CMAKE_CXX_FLAGS " -std=c++17 ${CMAKE_CXX_FLAGS} -Wno-pointer-arith -Wno-vla-cxx-extension" )
+SET( CMAKE_CXX_FLAGS " -std=c++17 ${CMAKE_CXX_FLAGS} -Wno-pointer-arith -Wno-vla-extension" )
 
 ADD_SUBDIRECTORY( tools )
 SET( EMBED_CPP "src/tmp/embed.cpp" )

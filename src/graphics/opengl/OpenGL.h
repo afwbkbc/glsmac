@@ -6,6 +6,7 @@
 
 #define SDL_MAIN_HANDLED 1
 #include <SDL.h>
+
 #include <GL/glew.h>
 
 #include "graphics/Graphics.h"

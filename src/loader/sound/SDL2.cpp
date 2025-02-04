@@ -1,5 +1,4 @@
 #define SDL_MAIN_HANDLED 1
-
 #include <SDL.h>
 
 #include "SDL2.h"

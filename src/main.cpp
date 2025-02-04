@@ -92,10 +92,6 @@
 
 #endif
 
-#ifdef main
-#undef main
-#endif
-
 int main( const int argc, const char* argv[] ) {
 
 	config::Config config( argv[ 0 ] );

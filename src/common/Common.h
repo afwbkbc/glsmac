@@ -1,20 +1,10 @@
 #pragma once
 
-#ifdef _WIN32
-#include "env/Win32.h"
-#else
-#include "env/Posix.h"
-#endif
+#include "env/Env.h"
 
 #include <string>
 
 #include "Assert.h"
-
-#ifdef DEBUG
-#include "env/Debug.h"
-#else
-#include "env/Release.h"
-#endif
 
 // used in multiline ToString() implementations
 
