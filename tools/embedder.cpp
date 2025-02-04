@@ -4,8 +4,6 @@
 #include <algorithm>
 #include <filesystem>
 
-namespace fs = std::filesystem;
-
 int main( int argc, char* argv[] ) {
 
 	if ( argc < 3 ) {
@@ -17,11 +15,11 @@ int main( int argc, char* argv[] ) {
 	std::string dir = path.substr( 0, path.length() - 8 );
 	const std::string sep = dir.substr( dir.length() - 1 );
 
-	const fs::path out_file = argv[ 1 ];
-	const fs::path out_dir = out_file.parent_path();
-	const fs::path srcdir = argv[ 2 ];
+	const std::filesystem::path out_file = argv[ 1 ];
+	const std::filesystem::path out_dir = out_file.parent_path();
+	const std::filesystem::path srcdir = argv[ 2 ];
 
-	fs::create_directory( out_dir );
+	std::filesystem::create_directory( out_dir );
 
 	std::ofstream out( out_file.native() );
 	if ( !out.is_open() ) {
