@@ -33,4 +33,7 @@ typedef long long ptr_int_t;
 #undef ERROR
 #undef CALLBACK
 
+// even more collisions
+#undef MB_RIGHT
+
 #endif
