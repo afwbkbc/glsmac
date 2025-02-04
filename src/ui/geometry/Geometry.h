@@ -158,6 +158,8 @@ private:
 	void UpdateArea();
 	void UpdateEffectiveArea();
 
+	void FixArea( area_t& area );
+
 	area_t m_effective_area = {};
 
 	geometry_handler_id_t m_next_handler_id = 0;

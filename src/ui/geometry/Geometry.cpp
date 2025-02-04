@@ -2,6 +2,9 @@
 
 #include "common/Assert.h"
 
+#include "engine/Engine.h"
+#include "graphics/Graphics.h"
+
 namespace ui {
 namespace geometry {
 
@@ -321,13 +324,33 @@ void Geometry::UpdateEffectiveArea() {
 		for ( const auto& child : m_children ) {
 			effective_area.EnlargeTo( child->GetEffectiveArea() );
 		}
+		FixArea( effective_area );
 	}
+
 	if ( effective_area != m_effective_area ) {
 		m_effective_area = effective_area;
 		if ( m_parent ) {
 			m_parent->OnChildUpdate();
 		}
 		RunHandlers( GH_ON_EFFECTIVE_AREA_UPDATE );
+	}
+}
+
+void Geometry::FixArea( area_t& area ) {
+	const auto& g = g_engine->GetGraphics();
+	const auto maxx = g->GetViewportWidth() - 1;
+	const auto maxy = g->GetViewportHeight() - 1;
+	if ( area.left < 0 ) {
+		area.left = 0;
+	}
+	if ( area.right > maxx ) {
+		area.right = maxx;
+	}
+	if ( area.top < 0 ) {
+		area.top = 0;
+	}
+	if ( area.bottom > maxy ) {
+		area.bottom = maxy;
 	}
 }
 

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <unordered_set>
+#include <map>
+#include <vector>
 
 #include "Area.h"
 #include "gse/Value.h"
@@ -46,7 +48,7 @@ private:
 
 	bool m_is_processing_children_events = false;
 
-	std::unordered_map< id_t, Object* > m_children = {};
+	std::map< id_t, Object* > m_children = {};
 	std::vector< Object* > m_embedded_objects = {};
 	std::map< std::string, Object* > m_forwarded_properties = {};
 

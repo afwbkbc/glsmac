@@ -63,11 +63,17 @@ return (ui) => {
 		_hover: {
 			background: '#004400',
 		},
+		_active: {
+			background: '#228822',
+		},
 	});
 	ui.class('system-popup-button-cancel').extend('system-popup-button').set({
 		background: '#220000',
 		_hover: {
 			background: '#440000',
+		},
+		_active: {
+			background: '#882222',
 		},
 	});
 

@@ -63,11 +63,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 	}
 }
 
-Container::~Container() {
-	/*for ( const auto& it : m_children ) {
-		delete it.second;
-	}*/
-}
+Container::~Container() {}
 
 void Container::UpdateMouseOver( GSE_CALLABLE, Object* child ) {
 	if ( m_processing_mouse_overs || m_children.find( child->m_id ) == m_children.end() ) {
@@ -169,8 +165,9 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	}
 	ASSERT_NOLOG( !m_is_processing_children_events, "already processing children events" );
 	m_is_processing_children_events = true;
-	for ( const auto& child : m_children ) {
-		if ( child.second->ProcessEvent( GSE_CALL, event ) ) {
+	for ( auto it = m_children.rbegin() ; it != m_children.rend() ; it++ ) { // newer have priority
+		const auto& child = it->second;
+		if ( child->ProcessEvent( GSE_CALL, event ) ) {
 			m_is_processing_children_events = false;
 			ProcessPendingDeletes( GSE_CALL );
 			return true;
