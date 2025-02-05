@@ -11,6 +11,7 @@
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
 #include "gse/type/Array.h"
+#include "gse/ExecutionPointer.h"
 
 namespace game {
 namespace backend {
@@ -221,8 +222,9 @@ WRAPIMPL_BEGIN( TileManager )
 					N_UNWRAP( tile, tileobj, map::tile::Tile );
 					tile_positions.push_back( tile->coord );
 				}
-				SendTileLockRequest( tile_positions, [ this, on_complete, tile_positions, &ctx, &si, &ep ]() {
-					on_complete->Run( GSE_CALL, {
+				SendTileLockRequest( tile_positions, [ this, on_complete, tile_positions, ctx, si, ep ]() {
+					auto ep2 = ep;
+					on_complete->Run( ctx, si, ep2, {
 						VALUE( gse::callable::Native, [ this, tile_positions ](
 							GSE_CALLABLE,
 							const gse::type::function_arguments_t& arguments

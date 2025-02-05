@@ -3,11 +3,15 @@ const resources = #include('resources');
 const units = #include('units');
 const bases = #include('bases');
 
-return ( (gm) => {
+return ((gm) => {
+
+	#print('MAIN SCRIPT');
 
 	factions.configure(gm.fm);
 
 	gm.on('start', (e) => {
+
+		#print('GM ON START');
 
 		let players = [];
 		let players_sz = 0;
@@ -43,6 +47,8 @@ return ( (gm) => {
 		let all_bases = [];
 
 		e.game.on('configure', (e) => {
+
+			#print('E GAME ON CONFIGURE');
 
 			units.configure(e.game);
 			resources.configure(e.game.rm);
@@ -123,7 +129,7 @@ return ( (gm) => {
 									}
 								);
 								add_pops(base, e.game.random.get_int(1, 7));
-								all_bases :+ base;
+								all_bases :+base;
 								bases_spawned++;
 							}
 						}
@@ -136,7 +142,7 @@ return ( (gm) => {
 		});
 
 		e.game.on('turn', (e) => {
-			for ( base of all_bases ) {
+			for (base of all_bases) {
 				add_pops(base, 1);
 			}
 			//

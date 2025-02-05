@@ -23,9 +23,8 @@ Lobby::Lobby( MainMenu* mainmenu, ::game::backend::connection::Connection* conne
 	ASSERT( connection, "connection is null" );
 
 	m_state->InitBindings();
-	if ( m_state->IsMaster() ) {
-		m_state->Configure();
-	} // slave will receive config from master
+	
+	m_state->Configure();
 
 	SetWidth( 800 );
 	SetHeight( 600 );
