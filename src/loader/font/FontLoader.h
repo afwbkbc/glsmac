@@ -19,6 +19,7 @@ CLASS( FontLoader, Loader )
 	virtual ~FontLoader();
 
 	types::Font* LoadFont( const resource::resource_t res, const unsigned char size );
+	types::Font* LoadCustomFont( const std::string& name, const unsigned char size );
 	types::Font* GetBuiltinFont( const unsigned char size );
 
 protected:

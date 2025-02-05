@@ -23,6 +23,10 @@ public:
 
 	void Tint( const types::Color& color, const float intensity );
 	void Crop( const size_t x1, const size_t y1, const size_t x2, const size_t y2 );
+	void Rotate();
+	void FlipV();
+	void FlipH();
+	void Contrast( const float value );
 
 private:
 

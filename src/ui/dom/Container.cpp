@@ -5,6 +5,7 @@
 #include "ui/Class.h"
 
 #include "Surface.h"
+#include "Group.h"
 #include "Panel.h"
 #include "Text.h"
 #include "Button.h"
@@ -56,6 +57,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 
 	if ( factories_allowed ) {
 		FACTORY( "surface", Surface );
+		FACTORY( "group", Group );
 		FACTORY( "panel", Panel );
 		FACTORY( "text", Text );
 		FACTORY( "button", Button );

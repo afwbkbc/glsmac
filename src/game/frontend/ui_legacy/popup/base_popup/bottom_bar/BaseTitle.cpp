@@ -57,7 +57,7 @@ void BaseTitle::Destroy() {
 }
 
 void BaseTitle::Update( base::Base* base ) {
-	m_label->SetText( util::String::ToUpperCase( base->GetName() ) );
+	m_label->SetText( util::String::GetUpperCase( base->GetName() ) );
 	m_label->SetTextColor( base->GetFaction()->m_colors.text );
 }
 

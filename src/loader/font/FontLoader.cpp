@@ -32,6 +32,23 @@ types::Font* FontLoader::LoadFont( const resource::resource_t res, const unsigne
 	return it->second;
 }
 
+types::Font* FontLoader::LoadCustomFont( const std::string& name, const unsigned char size ) {
+	const auto key = name + ":" + std::to_string( size );
+	auto it = m_fonts.find( key );
+	if ( it == m_fonts.end() ) {
+		std::vector< unsigned char > data = {};
+		const auto path = GetCustomFilename( name );
+		util::FS::ReadFile( data, path );
+		it = m_fonts.insert(
+			{
+				key,
+				LoadFontImpl( path, data, size )
+			}
+		).first;
+	}
+	return it->second;
+}
+
 types::Font* FontLoader::GetBuiltinFont( const unsigned char size ) {
 	auto it = m_builtin_fonts.find( size );
 	if ( it == m_builtin_fonts.end() ) {

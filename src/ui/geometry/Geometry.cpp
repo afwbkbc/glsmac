@@ -13,7 +13,6 @@ Geometry::Geometry( const UI* const ui, Geometry* const parent, const geometry_t
 	, m_parent( parent )
 	, m_type( type ) {
 	UpdateArea();
-	m_effective_area = m_area;
 	if ( m_parent ) {
 		m_parent->m_children.insert( this );
 		m_parent->UpdateEffectiveArea();

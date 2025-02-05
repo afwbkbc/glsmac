@@ -136,10 +136,10 @@ Color::rgba_t Color::RGB( const uint8_t red, const uint8_t green, const uint8_t 
 
 void Color::Convert( const color_t& in, rgba_t& out ) {
 	out =
-		( (uint8_t)(in.red * 255) ) |
-		( (uint8_t)( in.green * 255 ) << 8 ) |
-		( (uint8_t)(in.blue * 255 ) << 16 ) |
-		( (uint8_t)(in.alpha * 255 ) << 24 )
+		( (uint8_t)( std::min( in.red, 1.0f ) * 255) ) |
+		( (uint8_t)( std::min( in.green, 1.0f ) * 255 ) << 8 ) |
+		( (uint8_t)( std::min( in.blue, 1.0f ) * 255 ) << 16 ) |
+		( (uint8_t)( std::min( in.alpha, 1.0f ) * 255 ) << 24 )
 	;
 }
 

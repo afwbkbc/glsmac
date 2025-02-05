@@ -80,15 +80,85 @@ void Filter::Crop( const size_t x1, const size_t y1, const size_t x2, const size
 	Prepare();
 
 	auto* colormap = (types::Color::color_t*)malloc( h * w * sizeof( types::Color::color_t ) );
-
 	for ( auto y = 0 ; y < h ; y++ ) {
-		memcpy( colormap + y * w, m_colormap + ( y1 + y ) * w, w * sizeof( types::Color::color_t ) );
+		for ( auto x = 0 ; x < w ; x++ ) {
+			colormap[ y * w + x ] = m_colormap[ ( y1 + y ) * m_width + ( x1 + x ) ];
+		}
 	}
 
 	free( m_colormap );
 	m_colormap = colormap;
 	m_width = w;
 	m_height = h;
+}
+
+void Filter::Rotate() {
+	Prepare();
+
+	auto* colormap = (types::Color::color_t*)malloc( m_height * m_width * sizeof( types::Color::color_t ) );
+	for ( auto y = 0 ; y < m_height ; y++ ) {
+		const auto yw = y * m_width;
+		for ( auto x = 0 ; x < m_width ; x++ ) {
+			colormap[ x * m_height + y ] = m_colormap[ yw + x ];
+		}
+	}
+
+	free( m_colormap );
+	m_colormap = colormap;
+	const auto newh = m_width;
+	m_width = m_height;
+	m_height = newh;
+}
+
+void Filter::FlipV() {
+	Prepare();
+
+	auto* colormap = (types::Color::color_t*)malloc( m_height * m_width * sizeof( types::Color::color_t ) );
+	for ( auto y = 0 ; y < m_height ; y++ ) {
+		memcpy( colormap + y * m_width, m_colormap + ( m_height - y - 1 ) * m_width, m_width * sizeof( types::Color::color_t ) );
+	}
+
+	free( m_colormap );
+	m_colormap = colormap;
+}
+
+void Filter::FlipH() {
+	Prepare();
+
+	auto* colormap = (types::Color::color_t*)malloc( m_height * m_width * sizeof( types::Color::color_t ) );
+	for ( auto y = 0 ; y < m_height ; y++ ) {
+		const auto yw = y * m_width;
+		for ( auto x = 0 ; x < m_width ; x++ ) {
+			colormap[ yw + x ] = m_colormap[ yw + ( m_width - x - 1 ) ];
+		}
+	}
+
+	free( m_colormap );
+	m_colormap = colormap;
+}
+
+void Filter::Contrast( const float value ) {
+	ASSERT_NOLOG( value >= 0.0f && value <= 10.0f, "contrast overflow" );
+
+	Prepare();
+
+	auto* colormap = (types::Color::color_t*)malloc( m_height * m_width * sizeof( types::Color::color_t ) );
+	for ( auto y = 0 ; y < m_height ; y++ ) {
+		const auto yw = y * m_width;
+		for ( auto x = 0 ; x < m_width ; x++ ) {
+			const auto xy = yw + x;
+			const auto& c = m_colormap[ xy ];
+			colormap[ xy ] = types::Color::color_t{
+				c.red * value,
+				c.green * value,
+				c.blue * value,
+				c.alpha,
+			};
+		}
+	}
+
+	free( m_colormap );
+	m_colormap = colormap;
 }
 
 void Filter::Prepare() {

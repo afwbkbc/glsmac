@@ -16,6 +16,7 @@ Button::Button( DOM_ARGS )
 	Embed( m_label );
 
 	ForwardProperty( GSE_CALL, "text", m_label );
+	ForwardProperty( GSE_CALL, "transform", m_label );
 	ForwardProperty( GSE_CALL, "color", m_label );
 	ForwardProperty( GSE_CALL, "font", m_label );
 

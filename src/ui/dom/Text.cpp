@@ -36,6 +36,24 @@ Text::Text( DOM_ARGS )
 	);
 
 	Property(
+		GSE_CALL, "transform", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v ) {
+			const auto& value = ( (gse::type::String*)v.Get() )->value;
+			if ( value == "lowercase" ) {
+				SetTransform( T_LOWERCASE );
+			}
+			else if ( value == "uppercase" ) {
+				SetTransform( T_UPPERCASE );
+			}
+			else {
+				GSE_ERROR( gse::EC.UI_ERROR, "Unknown transform, expected: uppercase or lowercase, got: " + value );
+			}
+		},
+		[ this ]( GSE_CALLABLE ) {
+			SetTransform( T_NONE );
+		}
+	);
+
+	Property(
 		GSE_CALL, "color", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
 		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
 			types::Color color = {};
@@ -75,23 +93,42 @@ Text::~Text() {
 }
 
 void Text::SetText( const std::string& text ) {
-	if ( text != m_text ) {
-		m_text = text;
+	std::string transformed_text = text;
+	switch ( m_transform ) {
+		case T_LOWERCASE: {
+			util::String::ToLowerCase( transformed_text );
+			break;
+		}
+		case T_UPPERCASE: {
+			util::String::ToUpperCase( transformed_text );
+			break;
+		}
+		default: {
+		}
+	}
+	if ( transformed_text != m_text ) {
+		m_text = transformed_text;
 		m_actor->SetText( m_text );
 		m_geometry->SetWidth( m_actor->GetWidth() );
 		m_geometry->SetHeight( m_actor->GetHeight() );
 	}
 }
 
+void Text::SetTransform( const transform_t transform ) {
+	if ( transform != m_transform ) {
+		m_transform = transform;
+		SetText( m_text );
+	}
+}
+
 void Text::UpdateFont() {
 	ASSERT_NOLOG( m_fontsize, "font size is zero" );
-	ASSERT_NOLOG( m_fontname.empty(), "font loading not supported yet" );
 	types::Font* font;
 	if ( m_fontname.empty() ) {
 		font = g_engine->GetFontLoader()->GetBuiltinFont( m_fontsize );
 	}
 	else {
-		// TODO
+		font = g_engine->GetFontLoader()->LoadCustomFont( m_fontname, m_fontsize );
 	}
 	m_actor->SetFont( font );
 	m_geometry->SetWidth( m_actor->GetWidth() );

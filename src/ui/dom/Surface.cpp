@@ -124,6 +124,29 @@ Surface::Surface( DOM_ARGS )
 						}
 						filter.Crop( x1, y1, x2, y2 );
 					}
+					else if ( f == "rotate" ) {
+						f_expect_args( 0 );
+						filter.Rotate();
+					}
+					else if ( f == "flipv" ) {
+						f_expect_args( 0 );
+						filter.FlipV();
+					}
+					else if ( f == "fliph" ) {
+						f_expect_args( 0 );
+						filter.FlipH();
+					}
+					else if ( f == "contrast" ) {
+						f_expect_args( 1 );
+						float value;
+						if ( !util::String::ParseFloat( args.at( 0 ), value ) ) {
+							GSE_ERROR( gse::EC.UI_ERROR, "Invalid contrast value (expected float, got " + args.at( 0 ) + "): " + *it );
+						}
+						if ( value < 0.0f || value > 10.0f ) {
+							GSE_ERROR( gse::EC.UI_ERROR, "Invalid contrast value (must be between 0.0 and 10.0):" + *it );
+						}
+						filter.Contrast( value );
+					}
 					else {
 						GSE_ERROR( gse::EC.UI_ERROR, "Unknown texture filter: " + f );
 					}

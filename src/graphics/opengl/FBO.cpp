@@ -245,8 +245,12 @@ void FBO::CaptureToTexture( types::texture::Texture* const texture, const types:
 	ASSERT( m_width > 0, "fbo width is zero" );
 	ASSERT( m_height > 0, "fbo height is zero" );
 
-	const auto w = bottom_right.x - top_left.x;
-	const auto h = bottom_right.y - top_left.y;
+	const auto w = bottom_right.x > top_left.x
+		? bottom_right.x - top_left.x
+		: 0;
+	const auto h = bottom_right.y > top_left.y
+		? bottom_right.y - top_left.y
+		: 0;
 	texture->Resize( w, h );
 
 	if ( w > 0 && h > 0 ) {
@@ -259,9 +263,9 @@ void FBO::CaptureToTexture( types::texture::Texture* const texture, const types:
 				glReadBuffer( GL_NONE );
 			}
 		);
-	}
 
-	texture->FullUpdate(); // TODO: partial updates
+		texture->FullUpdate(); // TODO: partial updates
+	}
 }
 
 types::texture::Texture* FBO::CaptureToTexture() {

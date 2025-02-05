@@ -110,15 +110,22 @@ const std::string String::ApproximateFloat( const float value ) {
 	return result;
 }
 
-const std::string String::ToUpperCase( const std::string& s ) {
+void String::ToUpperCase( std::string& s ) {
+	std::transform( s.begin(), s.end(), s.begin(), ::toupper );
+}
+const std::string String::GetUpperCase( const std::string& s ) {
 	std::string result = s;
-	std::transform( s.begin(), s.end(), result.begin(), ::toupper );
+	ToUpperCase( result );
 	return result;
 }
 
-const std::string String::ToLowerCase( const std::string& s ) {
+void String::ToLowerCase( std::string& s ) {
+	std::transform( s.begin(), s.end(), s.begin(), ::tolower );
+}
+
+const std::string String::GetLowerCase( const std::string& s ) {
 	std::string result = s;
-	std::transform( s.begin(), s.end(), result.begin(), ::tolower );
+	ToLowerCase( result );
 	return result;
 }
 
