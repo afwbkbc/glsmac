@@ -26,7 +26,6 @@ return (m) => {
 
 			main: () => {
 				m.glsmac.deinit();
-				z
 				menublock.show([
 					['Start Game', () => {
 						m.glsmac.init_single_player();
