@@ -6,6 +6,9 @@
 #include "engine/Engine.h"
 #include "config/Config.h"
 #include "resource/ResourceManager.h"
+#include "task/game/Game.h"
+#include "task/common/Common.h"
+#include "scheduler/Scheduler.h"
 
 #include "ui/UI.h"
 
@@ -16,6 +19,10 @@
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
 #include "gse/type/Undefined.h"
+
+#include "game/backend/State.h"
+#include "game/backend/slot/Slots.h"
+#include "game/backend/Player.h"
 
 static GLSMAC* s_glsmac = nullptr;
 
@@ -69,6 +76,10 @@ GLSMAC::~GLSMAC() {
 
 	Log( "Destroying global state" );
 
+	if ( m_state ) {
+		delete m_state;
+	}
+
 	m_ctx->DecRefs();
 
 	m_gse->GetAsync()->StopTimers();
@@ -91,8 +102,9 @@ WRAPIMPL_BEGIN( GLSMAC )
 			m_ui->Wrap( true )
 		},
 		{
-			"start",
+			"run",
 			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
 				S_Init( GSE_CALL, {} );
 				return VALUE( gse::type::Undefined );
 			} )
@@ -100,7 +112,47 @@ WRAPIMPL_BEGIN( GLSMAC )
 		{
 			"exit",
 			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
 				g_engine->ShutDown();
+				return VALUE( gse::type::Undefined );
+			} )
+		},
+		{
+			"deinit",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				DeinitGameState( GSE_CALL );
+				return VALUE( gse::type::Undefined );
+			} )
+		},
+		{
+			"init_single_player",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				InitGameState( GSE_CALL );
+				m_state->m_settings.local.game_mode = game::backend::settings::LocalSettings::GM_SINGLEPLAYER;
+				m_state->m_settings.global.Initialize();
+				return VALUE( gse::type::Undefined );
+			} )
+		},
+		{
+			"randomize_settings",
+			NATIVE_CALL( this ) {
+				RandomizeSettings( GSE_CALL );
+				return VALUE( gse::type::Undefined );
+			} )
+		},
+		{
+			"start_game",
+			NATIVE_CALL( this ) {
+				if ( !m_state ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Game not initialized" );
+				}
+				if ( m_is_game_running ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
+				}
+				AddSinglePlayerSlot();
+				StartGame( GSE_CALL );
 				return VALUE( gse::type::Undefined );
 			} )
 		},
@@ -169,6 +221,79 @@ void GLSMAC::S_Intro( GSE_CALLABLE ) {
 
 void GLSMAC::S_MainMenu( GSE_CALLABLE ) {
 	Trigger( GSE_CALL, "mainmenu", {} );
+}
+
+void GLSMAC::S_Game( GSE_CALLABLE ) {
+	Trigger( GSE_CALL, "game", {} );
+}
+
+void GLSMAC::DeinitGameState( GSE_CALLABLE ) {
+	if ( m_state ) {
+		if ( m_is_game_running ) {
+			GSE_ERROR( gse::EC.GAME_ERROR, "Game is still running" );
+		}
+		delete m_state;
+		m_state = nullptr;
+	}
+}
+
+void GLSMAC::InitGameState( GSE_CALLABLE ) {
+	if ( m_state ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already initialized" );
+	}
+	if ( m_is_game_running ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
+	}
+	m_state = new game::backend::State();
+	m_state->InitBindings();
+	m_state->Configure();
+}
+
+void GLSMAC::RandomizeSettings( GSE_CALLABLE ) {
+	if ( !m_state ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Game is not initialized" );
+	}
+	if ( m_is_game_running ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
+	}
+}
+
+void GLSMAC::AddSinglePlayerSlot() {
+	m_state->m_slots->Resize( 7 ); // TODO: make dynamic?
+	const auto& rules = m_state->m_settings.global.game_rules;
+	m_state->m_settings.local.player_name = "Player";
+	NEWV( player, ::game::backend::Player,
+		m_state->m_settings.local.player_name,
+		::game::backend::Player::PR_SINGLE,
+		{},
+		rules.GetDefaultDifficultyLevel() // TODO: make configurable
+	);
+	m_state->AddPlayer( player );
+	size_t slot_num = 0; // player always has slot 0
+	m_state->AddCIDSlot( 0, slot_num ); // for consistency
+	auto& slot = m_state->m_slots->GetSlot( slot_num );
+	slot.SetPlayer( player, 0, "" );
+	slot.SetPlayerFlag( ::game::backend::slot::PF_READY );
+}
+
+void GLSMAC::StartGame( GSE_CALLABLE ) {
+	// real state belongs to game task now
+	// save it as backup, then make temporary shallow copy (no connection, players etc)
+	//   just for the sake of passing settings to previous menu
+	auto* real_state = m_state;
+	m_state = nullptr;
+	m_is_game_running = true;
+
+	// TODO: don't spawn new tasks
+	NEWV( task, task::Common );
+	g_engine->GetScheduler()->AddTask( task );
+	NEWV( task2, task::game::Game, real_state, UH( this ) {
+		//g_engine->GetScheduler()->RemoveTask( this );
+	}, UH( this, real_state ) {
+		//m_menu_object->MaybeClose();
+	} );
+	g_engine->GetScheduler()->AddTask( task2 );
+	S_Game( GSE_CALL );
 }
 
 void GLSMAC::RunMain() {

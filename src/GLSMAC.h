@@ -18,6 +18,10 @@ namespace task::main {
 class Main;
 }
 
+namespace game::backend {
+class State;
+}
+
 CLASS3( GLSMAC, common::Class, gse::Bindings, gse::Wrappable )
 	GLSMAC();
 	~GLSMAC();
@@ -38,6 +42,17 @@ private:
 	void S_Init( GSE_CALLABLE, const std::optional< std::string >& path );
 	void S_Intro( GSE_CALLABLE );
 	void S_MainMenu( GSE_CALLABLE );
+	void S_Game( GSE_CALLABLE );
+
+	game::backend::State* m_state = nullptr;
+	bool m_is_game_running = false;
+
+	void DeinitGameState( GSE_CALLABLE );
+	void InitGameState( GSE_CALLABLE );
+	void RandomizeSettings( GSE_CALLABLE );
+
+	void AddSinglePlayerSlot();
+	void StartGame( GSE_CALLABLE );
 
 private:
 	friend class task::main::Main;

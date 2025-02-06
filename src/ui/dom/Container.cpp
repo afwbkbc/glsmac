@@ -4,14 +4,16 @@
 #include "ui/UI.h"
 #include "ui/Class.h"
 
+#include "scene/actor/Cache.h"
+#include "input/Event.h"
+
 #include "Surface.h"
 #include "Group.h"
 #include "Panel.h"
 #include "Text.h"
 #include "Button.h"
 #include "Input.h"
-#include "scene/actor/Cache.h"
-#include "input/Event.h"
+#include "Sound.h"
 
 namespace ui {
 namespace dom {
@@ -62,7 +64,17 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 		FACTORY( "text", Text );
 		FACTORY( "button", Button );
 		FACTORY( "input", Input );
+		FACTORY( "sound", Sound );
 	}
+
+	Method( GSE_CALL, "clear", NATIVE_CALL( this ) {
+		const auto children = m_children;
+		for ( const auto& it : children ) {
+			RemoveChild( GSE_CALL,it.second );
+		}
+		return VALUE( gse::type::Undefined );
+	} ) );
+
 }
 
 Container::~Container() {}

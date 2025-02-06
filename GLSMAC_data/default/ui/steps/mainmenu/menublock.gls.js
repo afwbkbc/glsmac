@@ -112,6 +112,13 @@ return (m) => {
 			current_menublock = m.root.group({
 				class: 'menublock-items',
 			});
+
+			current_menublock.sound({
+				sound: 'menu out.wav',
+				volume: 0.7,
+				autoplay: true,
+			});
+
 			current_menublock.on('keydown', (e) => {
 				// TODO: switch
 				if (e.code == 'ESCAPE') {
@@ -186,7 +193,6 @@ return (m) => {
 			current_menublock.right = -354;
 			menublock_animation = #async(10, () => {
 				current_menublock.right = current_menublock.right + 40;
-
 				if (current_menublock.right < 0) {
 					return true;
 				} else {

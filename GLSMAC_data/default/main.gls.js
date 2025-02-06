@@ -8,6 +8,6 @@
 
 	#include('ui/ui')(glsmac);
 
-	glsmac.start();
+	glsmac.run();
 
 });

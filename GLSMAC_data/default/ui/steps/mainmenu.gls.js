@@ -11,33 +11,77 @@ return (m) => {
 			background: 'openinga.pcx:stretch()',
 		});
 
+		m.root.sound({
+			id: 'mainmenu-music',
+			sound: 'opening menu.wav',
+			autoplay: true,
+			repeat: true,
+			volume: 0.8,
+		});
+
 		const menublock = #include('mainmenu/menublock')(m);
 
-		menublock.show([
-			['Start Game', () => {
-				#print('START GAME');
-			}],
-			['Quick Start', () => {
+		let steps = null;
+		steps = {
 
-			}],
-			['Scenario', () => {
+			main: () => {
+				m.glsmac.deinit();
+				z
+				menublock.show([
+					['Start Game', () => {
+						m.glsmac.init_single_player();
+						steps.start_game();
+					}],
+					['Quick Start', () => {
+						m.glsmac.init_single_player();
+						m.glsmac.randomize_settings();
+						m.glsmac.start_game();
+					}],
+					['Scenario', () => {
 
-			}],
-			['Load Game', () => {
+					}],
+					['Load Game', () => {
 
-			}],
-			['Multiplayer', () => {
+					}],
+					['Multiplayer', () => {
 
-			}],
-			['View Credits', () => {
+					}],
+					['View Credits', () => {
 
-			}],
-			['Exit Game', () => {
-				m.glsmac.exit();
-			}],
-		], () => {
-			m.glsmac.exit();
-		});
+					}],
+					['Exit Game', () => {
+						m.glsmac.exit();
+					}],
+				], () => {
+					m.glsmac.exit();
+				});
+			},
+
+			start_game: () => {
+				menublock.show([
+					['Make Random Map', () => {
+
+					}],
+					['Customize Random Map', () => {
+
+					}],
+					['The Map of Planet', () => {
+
+					}],
+					['Huge Map of Planet', () => {
+
+					}],
+					['Load Map File', () => {
+
+					}],
+				], () => {
+					return steps.main();
+				});
+			},
+
+		};
+
+		steps.main();
 
 	});
 
