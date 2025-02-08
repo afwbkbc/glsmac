@@ -1,20 +1,17 @@
 name: GLSMAC autobuild
 
-on:
-  push:
-    branches: [ "stable" ]
-  pull_request:
-    branches: [ "stable" ]
+on: [push, pull_request]
 
 jobs:
 
-  prepare:
-    runs-on: ubuntu-latest
+  release:
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
       release_id: ${{ steps.create_release.outputs.id }}
       ver: ${{ steps.info.outputs.ver }}
       sha: ${{ steps.info.outputs.sha }}
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/stable'
     steps:
       - uses: benjlevesque/short-sha@v2.1
         id: short-sha
@@ -45,11 +42,82 @@ jobs:
           release_name: ${{ steps.info.outputs.ver }}-${{ steps.info.outputs.sha }}
           draft: false
           prerelease: false
-
+          
+  prerelease:
+    outputs:
+      upload_url: ${{ steps.create_prerelease.outputs.upload_url }}
+      release_id: ${{ steps.create_prerelease.outputs.id }}
+      ver: ${{ steps.info.outputs.ver }}
+      sha: ${{ steps.info.outputs.sha }}
+    steps:
+      - uses: benjlevesque/short-sha@v2.1
+        id: short-sha
+        with:
+          length: 7
+      - uses: dev-drprasad/delete-older-releases@v0.2.0
+        with:
+          keep_latest: 4
+          delete_tags: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: info
+        id: info
+        env:
+          ver: v0.3
+          sha: ${{ steps.short-sha.outputs.sha }}
+        run: |
+          echo ${{ env.ver }} ${{ env.sha }}
+          echo "ver=${{ env.ver }}" >> $GITHUB_OUTPUT
+          echo "sha=${{ env.sha }}" >> $GITHUB_OUTPUT
+      - name: create-prerelease
+        id: create_prerelease
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: pre-${{ steps.info.outputs.ver }}-${{ steps.info.outputs.sha }}
+          release_name: pre-${{ steps.info.outputs.ver }}-${{ steps.info.outputs.sha }}
+          draft: false
+          prerelease: true
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+      
+          
+  scanbuild_ubuntu:
+    needs: [prerelease]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+      - name: install_dependencies
+        run: |
+          sudo apt-get update -yq
+          sudo apt-get install -yq libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev clang-tools-19 clang++-19
+      - name: cmake
+        run: scan-build-19 cmake .
+      - name: make
+        run: scan-build-19 -o scanbuild-report make -j6 | tee scanbuild-output.txt
+      - name: determine the bug number and zip the report
+        run: |
+          BUGS_FOUND=$(grep -oP 'scan-build: \K(\w+)(?= bugs found)' scanbuild-output.txt)
+          echo "BUGS_FOUND=$BUGS_FOUND" >> "$GITHUB_ENV"
+          mkdir -p scanbuild-report
+          cp scanbuild-output.txt scanbuild-report
+          zip -u scanbuild-report.zip scanbuild-report
+      - name: upload
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.prerelease.outputs.upload_url }}
+          asset_path: scanbuild-report.zip
+          asset_name: GLSMAC-${{ needs.prerelease.outputs.ver }}-ubuntu64-${{ needs.prerelease.outputs.sha }}-scanbuild-report-${{ env.BUGS_FOUND }}-bugs.zip
+          asset_content_type: application/zip
 
   build_ubuntu:
-    needs: [prepare]
+    needs: [release]
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/stable'
     steps:
       - uses: actions/checkout@v3
       - name: install_dependencies
@@ -72,7 +140,7 @@ jobs:
         working-directory: ./build
         run: tar -C bin -zcvf GLSMAC.tar.gz GLSMAC GLSMAC_data
       - name: publish
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: GLSMAC-ubuntu64-bin
           path: |
@@ -82,15 +150,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.prepare.outputs.upload_url }}
+          upload_url: ${{ needs.release.outputs.upload_url }}
           asset_path: ./build/GLSMAC.tar.gz
-          asset_name: GLSMAC-${{ needs.prepare.outputs.ver }}-ubuntu64-${{ needs.prepare.outputs.sha }}.tar.gz
+          asset_name: GLSMAC-${{ needs.release.outputs.ver }}-ubuntu64-${{ needs.release.outputs.sha }}.tar.gz
           asset_content_type: application/gzip
 
 
   build_windows:
-    needs: [prepare]
+    needs: [release]
     runs-on: windows-latest
+    if: github.ref == 'refs/heads/stable'
     steps:
       - uses: actions/checkout@v3
       - name: install_dependencies
@@ -112,7 +181,7 @@ jobs:
         working-directory: ./build/bin
         run: Compress-Archive -Path GLSMAC.exe,GLSMAC_data -Destination ../GLSMAC.zip
       - name: publish
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: GLSMAC-windows64-bin
           path: |
@@ -122,7 +191,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.prepare.outputs.upload_url }}
+          upload_url: ${{ needs.release.outputs.upload_url }}
           asset_path: ./build/GLSMAC.zip
-          asset_name: GLSMAC-${{ needs.prepare.outputs.ver }}-win64-${{ needs.prepare.outputs.sha }}.zip
+          asset_name: GLSMAC-${{ needs.release.outputs.ver }}-win64-${{ needs.release.outputs.sha }}.zip
           asset_content_type: application/gzip
