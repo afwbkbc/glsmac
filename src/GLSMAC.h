@@ -44,6 +44,10 @@ private:
 	void S_MainMenu( GSE_CALLABLE );
 	void S_Game( GSE_CALLABLE );
 
+	void ShowLoader( GSE_CALLABLE, const std::string& text );
+	void LoaderText( GSE_CALLABLE, const std::string& text );
+	void HideLoader( GSE_CALLABLE );
+
 	game::backend::State* m_state = nullptr;
 	bool m_is_game_running = false;
 

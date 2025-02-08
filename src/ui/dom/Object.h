@@ -97,6 +97,7 @@ protected:
 
 	void AddModifier( GSE_CALLABLE, const class_modifier_t modifier );
 	void RemoveModifier( GSE_CALLABLE, const class_modifier_t modifier );
+	
 private:
 
 	std::unordered_set< input::event_type_t > m_supported_events = {};

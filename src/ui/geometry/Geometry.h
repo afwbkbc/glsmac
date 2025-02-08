@@ -52,6 +52,11 @@ public:
 		ALIGN_BOTTOM_CENTER = ALIGN_BOTTOM | ALIGN_HCENTER,
 	};
 
+	enum position_t {
+		POSITION_RELATIVE,
+		POSITION_ABSOLUTE,
+	};
+
 	Rectangle* AsRectangle() const;
 	Text* AsText() const;
 
@@ -63,6 +68,7 @@ public:
 	void SetHeight( const coord_t px );
 	void SetPadding( const coord_t px );
 	void SetAlign( const align_t align );
+	void SetPosition( const position_t position );
 	void SetZIndex( const coord_t zindex );
 	void SetOverflowAllowed( const bool is_overflow_allowed );
 
@@ -152,6 +158,7 @@ private:
 	coord_t m_height = 0;
 	coord_t m_padding = 0;
 	uint8_t m_align = ALIGN_LEFT | ALIGN_TOP;
+	position_t m_position = POSITION_RELATIVE;
 	coord_t m_zindex = 0.5f;
 	bool m_is_overflow_allowed = true;
 

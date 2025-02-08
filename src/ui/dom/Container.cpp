@@ -77,6 +77,26 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 
 }
 
+void Container::ForwardFactories( GSE_CALLABLE, Object* child ) {
+	for ( const auto& key : {
+		"surface",
+		"group",
+		"panel",
+		"window",
+		"text",
+		"button",
+		"input",
+		"sound",
+	} ) {
+		ForwardProperty( GSE_CALL, key, child );
+	}
+}
+
+void Container::Embed( Object* object ) {
+	ASSERT_NOLOG( !m_is_initialized, "container already initialized" );
+	m_embedded_objects.push_back( object );
+}
+
 Container::~Container() {}
 
 void Container::UpdateMouseOver( GSE_CALLABLE, Object* child ) {
@@ -212,11 +232,11 @@ void Container::Destroy( GSE_CALLABLE ) {
 	auto forward_it = m_forwarded_properties.find( key ); \
 	if ( forward_it != m_forwarded_properties.end() ) { \
         if ( !m_children.empty() /* otherwise it means container is in the process of removal */ ) { \
-            forward_it->second->_method( __VA_ARGS__ ); \
+            forward_it->second.first->_method( GSE_CALL, forward_it->second.second __VA_ARGS__ ); \
         } \
 	} \
 	else { \
-		Object::_method( __VA_ARGS__ ); \
+		Object::_method( GSE_CALL, key __VA_ARGS__ ); \
 	}
 
 void Container::WrapSet( const std::string& key, const gse::Value& value, GSE_CALLABLE ) {
@@ -226,12 +246,12 @@ void Container::WrapSet( const std::string& key, const gse::Value& value, GSE_CA
 			for ( const auto& c : m_classes ) {
 				const auto it = c->GetProperties().find( key );
 				if ( it != c->GetProperties().end() ) {
-					forward_it->second->WrapSet( it->first, it->second, GSE_CALL );
+					forward_it->second.first->WrapSet( forward_it->second.second, it->second, GSE_CALL );
 					return;
 				}
 			}
 		}
-		forward_it->second->WrapSet( key, value, GSE_CALL );
+		forward_it->second.first->WrapSet( forward_it->second.second, value, GSE_CALL );
 		m_manual_properties.insert_or_assign( key, value );
 		m_properties.insert_or_assign( key, value );
 	}
@@ -246,26 +266,29 @@ void Container::Property( GSE_CALLABLE, const std::string& name, const gse::type
 }
 
 void Container::ForwardProperty( GSE_CALLABLE, const std::string& name, Object* const target ) {
-	ASSERT_NOLOG( m_forwarded_properties.find( name ) == m_forwarded_properties.end(), "property '" + name + "' already forwarded" );
-	ASSERT_NOLOG( m_properties.find( name ) == m_properties.end(), "property '" + name + "' already taken (exists)" );
-	ASSERT_NOLOG( target->m_parent == this, "can only forward properties to direct children" );
-	m_forwarded_properties.insert(
-		{
-			name,
-			target
-		}
-	);
-	const auto& it = m_initial_properties.find( name );
-	if ( it != m_initial_properties.end() ) {
-		target->WrapSet( it->first, it->second, GSE_CALL );
-		m_manual_properties.insert_or_assign( it->first, it->second );
-		m_properties.insert_or_assign( it->first, it->second );
-	}
+	ForwardProperty( GSE_CALL, name, name, target );
 }
 
-void Container::Embed( Object* object ) {
-	ASSERT_NOLOG( !m_is_initialized, "container already initialized" );
-	m_embedded_objects.push_back( object );
+void Container::ForwardProperty( GSE_CALLABLE, const std::string& srcname, const std::string& dstname, Object* const target ) {
+	ASSERT_NOLOG( m_forwarded_properties.find( srcname ) == m_forwarded_properties.end(), "property '" + srcname + "' already forwarded" );
+	ASSERT_NOLOG( m_properties.find( srcname ) == m_properties.end(), "property '" + srcname + "' already taken (exists)" );
+	//ASSERT_NOLOG( target->m_parent == this, "can only forward properties to direct children" ); // ?
+	m_forwarded_properties.insert(
+		{
+			srcname,
+			{ target, dstname },
+		}
+	);
+	const auto& targetprop = target->m_properties.find( dstname );
+	if ( targetprop != target->m_properties.end() ) {
+		UpdateProperty( srcname, targetprop->second );
+	}
+	const auto& it = m_initial_properties.find( srcname );
+	if ( it != m_initial_properties.end() ) {
+		target->WrapSet( dstname, it->second, GSE_CALL );
+		m_manual_properties.insert_or_assign( srcname, it->second );
+		m_properties.insert_or_assign( srcname, it->second );
+	}
 }
 
 void Container::Factory( GSE_CALLABLE, const std::string& name, const std::function< Object*( GSE_CALLABLE, const properties_t& ) >& f ) {
@@ -288,11 +311,11 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 }
 
 void Container::OnPropertyChange( GSE_CALLABLE, const std::string& key, const gse::Value& value ) const {
-	FORWARD_CALL( OnPropertyChange, GSE_CALL, key, value )
+	FORWARD_CALL( OnPropertyChange,, value )
 }
 
 void Container::OnPropertyRemove( GSE_CALLABLE, const std::string& key ) const {
-	FORWARD_CALL( OnPropertyRemove, GSE_CALL, key )
+	FORWARD_CALL( OnPropertyRemove )
 }
 
 void Container::InitAndValidate( GSE_CALLABLE ) {
@@ -325,7 +348,7 @@ void Container::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, cons
 			return;
 		}
 	}
-	FORWARD_CALL( SetPropertyFromClass, GSE_CALL, key, value, modifier );
+	FORWARD_CALL( SetPropertyFromClass,, value, modifier );
 }
 
 void Container::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
@@ -333,12 +356,12 @@ void Container::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
 	for ( auto it = m_classes.rbegin() ; it != m_classes.rend() ; it++ ) {
 		const auto kv = (*it)->GetProperty( key, m_modifiers );
 		if ( kv.first.Get()->type != gse::type::Type::T_UNDEFINED ) {
-			FORWARD_CALL( SetPropertyFromClass, GSE_CALL, key, kv.first, kv.second );
+			FORWARD_CALL( SetPropertyFromClass,, kv.first, kv.second );
 			return;
 		}
 	}
 	// not found
-	FORWARD_CALL( UnsetPropertyFromClass, GSE_CALL, key );
+	FORWARD_CALL( UnsetPropertyFromClass );
 }
 
 void Container::RemoveChild( GSE_CALLABLE, Object* obj ) {

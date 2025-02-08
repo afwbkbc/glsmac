@@ -220,11 +220,29 @@ void GLSMAC::S_Intro( GSE_CALLABLE ) {
 }
 
 void GLSMAC::S_MainMenu( GSE_CALLABLE ) {
-	Trigger( GSE_CALL, "mainmenu", {} );
+	Trigger( GSE_CALL, "mainmenu_show", {} );
 }
 
 void GLSMAC::S_Game( GSE_CALLABLE ) {
+	Trigger( GSE_CALL, "mainmenu_hide", {} );
 	Trigger( GSE_CALL, "game", {} );
+}
+
+void GLSMAC::ShowLoader( GSE_CALLABLE, const std::string& text ) {
+	Trigger( GSE_CALL, "loader_show", {} );
+	LoaderText( GSE_CALL, text );
+}
+
+void GLSMAC::LoaderText( GSE_CALLABLE, const std::string& text ) {
+	Trigger( GSE_CALL, "loader_text", {
+		{
+			"text", VALUE( gse::type::String, text )
+		}
+	} );
+}
+
+void GLSMAC::HideLoader( GSE_CALLABLE ) {
+	Trigger( GSE_CALL, "loader_hide", {} );
 }
 
 void GLSMAC::DeinitGameState( GSE_CALLABLE ) {
@@ -244,9 +262,11 @@ void GLSMAC::InitGameState( GSE_CALLABLE ) {
 	if ( m_is_game_running ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
 	}
+	ShowLoader( GSE_CALL, "Initializing game state" );
 	m_state = new game::backend::State();
 	m_state->InitBindings();
 	m_state->Configure();
+	HideLoader( GSE_CALL );
 }
 
 void GLSMAC::RandomizeSettings( GSE_CALLABLE ) {

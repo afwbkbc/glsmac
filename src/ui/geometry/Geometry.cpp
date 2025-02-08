@@ -91,14 +91,23 @@ void Geometry::SetPadding( const coord_t px ) {
 }
 
 void Geometry::SetAlign( const align_t align ) {
-	m_align = align;
-	if ( !( m_align & ALIGN_HCENTER ) ) {
-		m_align |= ALIGN_LEFT;
+	if ( align != m_align ) {
+		m_align = align;
+		if ( !( m_align & ALIGN_HCENTER ) ) {
+			m_align |= ALIGN_LEFT;
+		}
+		if ( !( m_align & ALIGN_VCENTER ) ) {
+			m_align |= ALIGN_TOP;
+		}
+		NeedUpdate();
 	}
-	if ( !( m_align & ALIGN_VCENTER ) ) {
-		m_align |= ALIGN_TOP;
+}
+
+void Geometry::SetPosition( const position_t position ) {
+	if ( m_position != position ) {
+		m_position = position;
+		NeedUpdate();
 	}
-	NeedUpdate();
 }
 
 void Geometry::SetZIndex( const coord_t zindex ) {
@@ -185,7 +194,23 @@ void Geometry::UpdateArea() {
 	area_t object_area = {};
 	object_area.zindex = m_zindex;
 	if ( m_parent ) {
-		const auto area = m_parent->m_area;
+		area_t area;
+		switch ( m_position ) {
+			case POSITION_RELATIVE: {
+				area = m_parent->m_area;
+				break;
+			}
+			case POSITION_ABSOLUTE: {
+				const auto& g = g_engine->GetGraphics();
+				area.left = 0;
+				area.top = 0;
+				area.right = area.width = g->GetViewportWidth() - 1;
+				area.bottom = area.height = g->GetViewportHeight() - 1;
+				break;
+			}
+			default:
+				THROW( "unknown position: " + std::to_string( m_position ) );
+		}
 		object_area.left = area.left + m_padding + m_left;
 		object_area.right = area.right - m_padding - m_right;
 		object_area.top = area.top + m_padding + m_top;

@@ -8,6 +8,7 @@ SET( SRC ${SRC}
 	${PWD}/Root.cpp
 	${PWD}/Surface.cpp
 	${PWD}/Panel.cpp
+	${PWD}/Window.cpp
 	${PWD}/Text.cpp
 	${PWD}/Button.cpp
 	${PWD}/Input.cpp

@@ -2,6 +2,8 @@
 
 #include "ui/geometry/Rectangle.h"
 
+#include "Window.h"
+
 namespace ui {
 namespace dom {
 
@@ -13,6 +15,8 @@ Root::Root( GSE_CALLABLE, UI* const ui )
 			input::EV_KEY_DOWN,
 		}
 	);
+
+	FACTORY( "window", Window );
 
 	InitAndValidate( GSE_CALL );
 }

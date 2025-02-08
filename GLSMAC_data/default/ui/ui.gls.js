@@ -11,9 +11,10 @@ return (glsmac) => {
 		'smacpath_prompt',
 		'intro',
 		'mainmenu',
+		'loader',
 		'game',
 	]) {
-		#include('steps/' + step)(m);
+		#include('parts/' + step)(m);
 	}
 
 };

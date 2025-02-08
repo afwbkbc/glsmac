@@ -1,8 +1,12 @@
 return (m) => {
 
-	m.glsmac.on('mainmenu', (e) => {
+	const menublock = #include('mainmenu/menublock')(m);
+	let background = null;
+	let music = null;
 
-		m.root.surface({
+	m.glsmac.on('mainmenu_show', (e) => {
+
+		background = m.root.surface({
 			id: 'mainmenu-background',
 			top: 0,
 			left: 0,
@@ -11,15 +15,13 @@ return (m) => {
 			background: 'openinga.pcx:stretch()',
 		});
 
-		m.root.sound({
+		music = m.root.sound({
 			id: 'mainmenu-music',
 			sound: 'opening menu.wav',
 			autoplay: true,
 			repeat: true,
 			volume: 0.8,
 		});
-
-		const menublock = #include('mainmenu/menublock')(m);
 
 		let steps = null;
 		steps = {
@@ -82,6 +84,18 @@ return (m) => {
 
 		steps.main();
 
+	});
+
+	m.glsmac.on('mainmenu_hide', (e) => {
+		if (background != null) {
+			background.remove();
+			background = null;
+		}
+		if (music != null) {
+			music.remove();
+			music = null;
+		}
+		menublock.hide();
 	});
 
 };

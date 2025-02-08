@@ -135,8 +135,13 @@ void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scen
 		auto tl = m_top_left;
 		auto br = m_bottom_right;
 		const auto tmp = br.y;
-		br.y = m_opengl->GetViewportHeight() - tl.y;
-		tl.y = m_opengl->GetViewportHeight() - tmp;
+		const auto vh = m_opengl->GetViewportHeight();
+		br.y = vh > tl.y
+			? vh - tl.y
+			: 0;
+		tl.y = vh > tmp
+			? vh - tmp
+			: 0;
 
 		m_opengl->CaptureToTexture(
 			m_texture, tl, br, [ this, &shader_program, &camera ]() {

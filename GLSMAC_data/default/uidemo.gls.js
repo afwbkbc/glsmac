@@ -532,5 +532,54 @@
 		return true;
 	});
 
+	let window = null;
+	const windowbtn = texts.button({
+		class: 'button1 button2',
+		align: 'bottom right',
+		bottom: 60,
+		right: 100,
+		height: 40,
+		width: 160,
+		text: 'Show Window',
+	});
+	windowbtn.on('click', (e) => {
+		if (window == null) {
+			window = root.window({
+				width: 300,
+				height: 200,
+				background: '#333333',
+				border: 'gray',
+				title: 'Test Window',
+				header_border: 'white',
+				header_height: 30,
+				header_color: 'white',
+				header_font: ':24',
+				header_background: 'navy',
+				align: 'center',
+				blocker: 'rgba(0, 0, 0, 127)',
+			});
+			window.text({
+				align: 'center',
+				text: 'WINDOW',
+				class: 'balltext',
+			});
+			window.button({
+				class: 'button1 button2 button-active',
+				align: 'bottom right',
+				height: 30,
+				width: 100,
+				right: 10,
+				bottom: 10,
+				text: 'CLOSE',
+			})
+				.on('click', (e) => {
+					window.remove();
+					window = null;
+					return true;
+				})
+			;
+		}
+		return true;
+	});
 
 });

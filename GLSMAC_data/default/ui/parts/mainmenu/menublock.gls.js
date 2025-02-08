@@ -79,7 +79,7 @@ return (m) => {
 		if (menublock_animation == null) {
 			menublock_animation = #async(10, () => {
 				current_menublock.right = current_menublock.right - 40;
-				if (current_menublock.right > -354) {
+				if (current_menublock.right > -394) {
 					return true;
 				} else {
 					menublock_animation = null;
@@ -204,6 +204,10 @@ return (m) => {
 
 			return {};
 
+		},
+
+		hide: () => {
+			remove_active_menublock();
 		},
 
 	};
