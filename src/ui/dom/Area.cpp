@@ -45,12 +45,18 @@ Area::Area( DOM_ARGS_T )
 
 const bool Area::IsEventRelevant( const input::Event& event ) const {
 	if ( event.flags & input::EF_MOUSE ) {
-		if ( ( event.type != input::EV_MOUSE_OUT ) && !m_geometry->Contains(
-			{
-				event.data.mouse.x,
-				event.data.mouse.y
-			}
-		) ) {
+		if (
+			event.type != input::EV_MOUSE_OUT &&
+				(
+					!m_is_visible ||
+						!m_geometry->Contains(
+							{
+								event.data.mouse.x,
+								event.data.mouse.y
+							}
+						)
+				)
+			) {
 			return false;
 		}
 	}

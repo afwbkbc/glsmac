@@ -119,5 +119,19 @@ const bool Drawable::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	return Object::ProcessEvent( GSE_CALL, event );
 }
 
+void Drawable::Show() {
+	if ( !m_is_visible ) {
+		Object::Show();
+		m_geometry->Show();
+	}
+}
+
+void Drawable::Hide() {
+	if ( m_is_visible ) {
+		m_geometry->Hide();
+		Object::Hide();
+	}
+}
+
 }
 }

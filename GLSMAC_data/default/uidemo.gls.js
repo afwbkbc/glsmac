@@ -556,14 +556,13 @@
 				header_font: ':24',
 				header_background: 'navy',
 				align: 'center',
-				blocker: 'rgba(0, 0, 0, 127)',
 			});
 			window.text({
 				align: 'center',
 				text: 'WINDOW',
 				class: 'balltext',
 			});
-			window.button({
+			const closebtn = window.button({
 				class: 'button1 button2 button-active',
 				align: 'bottom right',
 				height: 30,
@@ -571,13 +570,33 @@
 				right: 10,
 				bottom: 10,
 				text: 'CLOSE',
-			})
-				.on('click', (e) => {
+			});
+			closebtn.on('click', (e) => {
 					window.remove();
 					window = null;
 					return true;
 				})
 			;
+			const blockbtn = window.button({
+				class: 'button1 button2',
+				align: 'bottom left',
+				height: 30,
+				width: 100,
+				left: 10,
+				bottom: 10,
+				text: 'BLOCK',
+			});
+			blockbtn.on('click', (e) => {
+				if (window.blocker == #undefined) {
+					window.blocker = 'rgba(0, 0, 0, 120)';
+					blockbtn.text = 'UNBLOCK';
+				}
+				else {
+					window.blocker = #undefined;
+					blockbtn.text = 'BLOCK';
+				}
+				return true;
+			});
 		}
 		return true;
 	});

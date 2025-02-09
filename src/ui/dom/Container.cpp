@@ -92,9 +92,9 @@ void Container::ForwardFactories( GSE_CALLABLE, Object* child ) {
 	}
 }
 
-void Container::Embed( Object* object ) {
+void Container::Embed( Object* object, const bool is_visible ) {
 	ASSERT_NOLOG( !m_is_initialized, "container already initialized" );
-	m_embedded_objects.push_back( object );
+	m_embedded_objects.push_back( { object, is_visible } );
 }
 
 Container::~Container() {}
@@ -106,13 +106,20 @@ void Container::UpdateMouseOver( GSE_CALLABLE ) {
 		for ( auto it = m_children.rbegin() ; it != m_children.rend() ; it++ ) { // later children have priority
 			auto* object = it->second;
 			const auto* geometry = object->GetGeometry();
-			if ( geometry && geometry->Contains( mouse_coords ) ) {
+			if ( object->m_is_visible && geometry && geometry->Contains( mouse_coords ) ) {
 				SetMouseOverChild( GSE_CALL, object, mouse_coords );
 				m_processing_mouse_overs = false;
 				return;
 			}
 		}
-		if ( m_mouse_over_object && ( !m_is_mouse_over || !m_mouse_over_object->GetGeometry()->Contains( mouse_coords ) ) ) {
+		if (
+			m_mouse_over_object &&
+			(
+				!m_is_mouse_over ||
+				!m_mouse_over_object->m_is_visible ||
+				!m_mouse_over_object->GetGeometry()->Contains( mouse_coords )
+			)
+		) {
 			SetMouseOverChild( GSE_CALL, nullptr, mouse_coords );
 		}
 	}
@@ -133,7 +140,7 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 			break;
 		}
 		case input::EV_MOUSE_MOVE: {
-			m_is_mouse_over = m_geometry->Contains( { event.data.mouse.x, event.data.mouse.y } );
+			m_is_mouse_over = m_is_visible && m_geometry->Contains( { event.data.mouse.x, event.data.mouse.y } );
 			UpdateMouseOver( GSE_CALL );
 			break;
 		}
@@ -153,7 +160,11 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	m_is_processing_children_events = false;
 	ProcessPendingDeletes( GSE_CALL );
 	auto result = Area::ProcessEvent( GSE_CALL, event );
-	if ( ( event.flags & input::EF_MOUSE ) && m_geometry->Contains( { event.data.mouse.x, event.data.mouse.y }) ) {
+	if (
+		( event.flags & input::EF_MOUSE ) &&
+		m_is_visible &&
+		m_geometry->Contains( { event.data.mouse.x, event.data.mouse.y } )
+	) {
 		result = true; // only one child can handle mouse event, regardless of processing result
 	}
 	return result;
@@ -250,6 +261,7 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 		}
 		auto* obj = f( GSE_CALL, initial_properties );
 		ASSERT_NOLOG( obj, "object not created" );
+		obj->Show();
 		obj->InitAndValidate( GSE_CALL );
 		m_children.insert({ obj->m_id, obj });
 		return obj->Wrap( true );
@@ -265,7 +277,11 @@ void Container::OnPropertyRemove( GSE_CALLABLE, const std::string& key ) const {
 }
 
 void Container::InitAndValidate( GSE_CALLABLE ) {
-	for ( const auto& obj : m_embedded_objects ) {
+	for ( const auto& it : m_embedded_objects ) {
+		auto* obj = it.first;
+		if ( m_is_visible && it.second ) {
+			obj->Show();
+		}
 		obj->InitAndValidate( GSE_CALL );
 		m_children.insert({ obj->m_id, obj });
 	}

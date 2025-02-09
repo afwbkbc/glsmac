@@ -84,7 +84,11 @@ GLSMAC::~GLSMAC() {
 
 	m_gse->GetAsync()->StopTimers();
 
-	DELETE( m_ui );
+	{
+		gse::ExecutionPointer ep;
+		m_ui->Destroy( m_ctx, { "" }, ep );
+	}
+
 	DELETE( m_gse );
 
 	s_glsmac = nullptr;

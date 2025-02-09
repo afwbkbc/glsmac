@@ -23,7 +23,7 @@ public:
 	Container( DOM_ARGS_T, const bool factories_allowed );
 
 	void ForwardFactories( GSE_CALLABLE, Object* child );
-	void Embed( Object* object );
+	void Embed( Object* object, const bool is_visible = true );
 
 	scene::actor::Cache* const m_cache;
 
@@ -54,7 +54,7 @@ private:
 	bool m_is_processing_children_events = false;
 
 	std::map< id_t, Object* > m_children = {};
-	std::vector< Object* > m_embedded_objects = {};
+	std::vector< std::pair< Object*, bool > > m_embedded_objects = {};
 	std::map< std::string, std::pair< Object*, std::string > > m_forwarded_properties = {};
 
 	void InitAndValidate( GSE_CALLABLE ) override;

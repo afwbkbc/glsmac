@@ -64,8 +64,6 @@ UI::~UI() {
 
 	g_engine->GetInput()->RemoveHandler( this );
 
-	delete m_root;
-
 	for ( const auto& it : m_classes ) {
 		Log( "Destroying UI class: " + it.first );
 		delete it.second;
@@ -185,6 +183,11 @@ ui::Class* const UI::GetClass( const std::string& name ) const {
 
 const types::Vec2< ssize_t >& UI::GetLastMousePosition() const {
 	return m_last_mouse_position;
+}
+
+void UI::Destroy( GSE_CALLABLE ) {
+	m_root->Destroy( GSE_CALL );
+	delete this;
 }
 
 void UI::AddIterable( const dom::Object* const obj, const f_iterable_t& f ) {

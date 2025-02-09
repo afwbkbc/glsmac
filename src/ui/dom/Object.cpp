@@ -79,6 +79,7 @@ Object::Object( DOM_ARGS_T )
 }
 
 Object::~Object() {
+	Hide();
 	if ( m_is_iterable_set ) {
 		m_ui->RemoveIterable( this );
 	}
@@ -161,8 +162,29 @@ void Object::Destroy( GSE_CALLABLE ) {
 	delete this;
 }
 
+void Object::Show() {
+	if ( !m_is_visible ) {
+		for ( const auto& actor : m_actors ) {
+			actor->Show();
+		}
+		m_is_visible = true;
+	}
+}
+
+void Object::Hide() {
+	if ( m_is_visible ) {
+		for ( const auto& actor : m_actors ) {
+			actor->Hide();
+		}
+		m_is_visible = false;
+	}
+}
+
 const bool Object::IsEventRelevant( const input::Event& event ) const {
-	return m_supported_events.find( event.type ) != m_supported_events.end();
+	return
+		m_is_visible &&
+		m_supported_events.find( event.type ) != m_supported_events.end()
+	;
 }
 
 const bool Object::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {

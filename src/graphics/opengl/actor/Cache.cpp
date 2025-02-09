@@ -147,7 +147,9 @@ void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scen
 			m_texture, tl, br, [ this, &shader_program, &camera ]() {
 				for ( const auto& it : m_cache_children_by_zindex ) {
 					for ( const auto& child : it.second ) {
-						child->DrawImpl( shader_program, camera );
+						if ( child->GetActor()->IsVisible() ) {
+							child->DrawImpl( shader_program, camera );
+						}
 					}
 				}
 			}

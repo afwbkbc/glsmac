@@ -75,11 +75,11 @@ void SDL2::Stop() {
 		return;
 	}
 
-	free( m_buffer );
-	free( m_mix_buffer );
-
 	Log( "Deinitializing SDL2" );
 	SDL_CloseAudio();
+
+	free( m_buffer );
+	free( m_mix_buffer );
 
 }
 

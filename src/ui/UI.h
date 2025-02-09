@@ -50,6 +50,8 @@ CLASS2( UI, common::Class, gse::Wrappable )
 
 	const types::Vec2< ssize_t >& GetLastMousePosition() const;
 
+	void Destroy( GSE_CALLABLE );
+
 private:
 	friend class dom::Object;
 	typedef std::function< void() > f_iterable_t;

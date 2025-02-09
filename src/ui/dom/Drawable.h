@@ -24,6 +24,9 @@ public:
 
 	virtual const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
 
+	void Show() override;
+	void Hide() override;
+
 protected:
 
 	virtual ~Drawable();

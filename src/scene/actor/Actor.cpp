@@ -94,6 +94,20 @@ const Cache* const Actor::GetCacheParent() const {
 	return m_cache_parent;
 }
 
+void Actor::Show() {
+	if ( !m_is_visible ) {
+		Entity::Show();
+		UpdateCache();
+	}
+}
+
+void Actor::Hide() {
+	if ( m_is_visible ) {
+		Entity::Hide();
+		UpdateCache();
+	}
+}
+
 const types::Buffer Actor::Serialize() const {
 	types::Buffer buf = Entity::Serialize();
 

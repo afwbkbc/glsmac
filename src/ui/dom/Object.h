@@ -61,6 +61,9 @@ public:
 
 	virtual void Destroy( GSE_CALLABLE );
 
+	virtual void Show();
+	virtual void Hide();
+
 protected:
 
 	virtual ~Object();
@@ -97,7 +100,9 @@ protected:
 
 	void AddModifier( GSE_CALLABLE, const class_modifier_t modifier );
 	void RemoveModifier( GSE_CALLABLE, const class_modifier_t modifier );
-	
+
+	bool m_is_visible = false;
+
 private:
 
 	std::unordered_set< input::event_type_t > m_supported_events = {};

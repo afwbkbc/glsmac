@@ -18,7 +18,7 @@ Window::Window( DOM_ARGS )
 
 	{
 		m_blocker = new Surface( GSE_CALL, ui, this, {} );
-		Embed( m_blocker );
+		Embed( m_blocker, false );
 		auto* g = m_blocker->GetGeometry();
 		g->SetPosition( geometry::Geometry::POSITION_ABSOLUTE );
 		g->SetTop( 0 );
@@ -52,7 +52,6 @@ Window::Window( DOM_ARGS )
 			g->SetRight( 0 );
 			g->SetTop( 0 );
 			g->SetBottom( 0 );
-			m_title->SetText( "ASDASD" );
 		}
 	}
 
@@ -62,9 +61,10 @@ Window::Window( DOM_ARGS )
 		GSE_CALL, "blocker", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
 		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
 			WrapSetStatic( m_blocker, "background", v, GSE_CALL );
+			m_blocker->Show();
 		},
 		[ this ]( GSE_CALLABLE ) {
-			WrapSetStatic( m_blocker, "background", VALUE( gse::type::Undefined ), GSE_CALL );
+			m_blocker->Hide();
 		}
 	);
 

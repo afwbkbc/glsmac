@@ -174,10 +174,25 @@ void Geometry::RemoveHandler( const geometry_handler_id_t id ) {
 
 const bool Geometry::Contains( const types::Vec2< ssize_t >& position ) const {
 	return
-		position.x > m_effective_area.left &&
+		m_is_visible &&
+			position.x > m_effective_area.left &&
 			position.y > m_effective_area.top &&
 			position.x <= ( m_effective_area.left + m_effective_area.width + 1 ) &&
 			position.y <= ( m_effective_area.top + m_effective_area.height + 1 );
+}
+
+void Geometry::Show() {
+	if ( !m_is_visible ) {
+		m_is_visible = true;
+		NeedUpdate();
+	}
+}
+
+void Geometry::Hide() {
+	if ( m_is_visible ) {
+		m_is_visible = false;
+		NeedUpdate();
+	}
 }
 
 void Geometry::Update() {
@@ -343,12 +358,17 @@ void Geometry::UpdateArea() {
 }
 
 void Geometry::UpdateEffectiveArea() {
-	area_t effective_area = m_area;
-	if ( m_is_overflow_allowed ) {
-		for ( const auto& child : m_children ) {
-			effective_area.EnlargeTo( child->GetEffectiveArea() );
+	area_t effective_area = {};
+	if ( m_is_visible ) {
+		effective_area = m_area;
+		if ( m_is_overflow_allowed ) {
+			for ( const auto& child : m_children ) {
+				if ( child->m_is_visible ) {
+					effective_area.EnlargeTo( child->GetEffectiveArea() );
+				}
+			}
+			FixArea( effective_area );
 		}
-		FixArea( effective_area );
 	}
 
 	if ( effective_area != m_effective_area ) {

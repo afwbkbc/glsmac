@@ -19,6 +19,8 @@ Root::Root( GSE_CALLABLE, UI* const ui )
 	FACTORY( "window", Window );
 
 	InitAndValidate( GSE_CALL );
+
+	Show();
 }
 
 void Root::Resize( const uint16_t window_width, const uint16_t window_height ) {

@@ -125,6 +125,9 @@ public:
 
 	const bool Contains( const types::Vec2< ssize_t >& position ) const;
 
+	void Show();
+	void Hide();
+
 protected:
 
 	virtual void UpdateImpl() = 0;
@@ -132,6 +135,7 @@ protected:
 	const UI* const m_ui;
 
 private:
+	bool m_is_visible = false;
 	const geometry_type_t m_type;
 
 	void Update();
