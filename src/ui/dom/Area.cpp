@@ -34,7 +34,7 @@ Area::Area( DOM_ARGS_T )
     GEOMSETTER( _key, T_INT ) { \
         m_geometry->_method( ( (gse::type::Int*)v.Get() )->value ); \
         if ( m_parent ) { \
-            m_parent->UpdateMouseOver( GSE_CALL, this ); \
+            m_parent->UpdateMouseOver( GSE_CALL ); \
         } \
     } )
 	GEOMPROP( "width", SetWidth );
@@ -45,7 +45,7 @@ Area::Area( DOM_ARGS_T )
 
 const bool Area::IsEventRelevant( const input::Event& event ) const {
 	if ( event.flags & input::EF_MOUSE ) {
-		if ( ( event.type == input::EV_MOUSE_OUT ) == m_geometry->Contains(
+		if ( ( event.type != input::EV_MOUSE_OUT ) && !m_geometry->Contains(
 			{
 				event.data.mouse.x,
 				event.data.mouse.y

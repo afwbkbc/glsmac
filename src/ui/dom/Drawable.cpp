@@ -2,7 +2,7 @@
 
 #include "Container.h"
 #include "ui/geometry/Rectangle.h"
-
+#include "input/Event.h"
 #include "util/String.h"
 
 namespace ui {
@@ -43,7 +43,7 @@ Drawable::Drawable( DOM_ARGS_T, geometry::Geometry* const geometry )
     GEOMSETTER( _key, T_INT ) { \
         m_geometry->_method( ( (gse::type::Int*)v.Get() )->value ); \
         if ( m_parent ) { \
-            m_parent->UpdateMouseOver( GSE_CALL, this ); \
+            m_parent->UpdateMouseOver( GSE_CALL ); \
         } \
     } )
 	GEOMPROP( "left", SetLeft );
@@ -85,7 +85,7 @@ Drawable::Drawable( DOM_ARGS_T, geometry::Geometry* const geometry )
 		}
 		m_geometry->SetAlign( (geometry::Geometry::align_t)align );
 		if ( m_parent ) {
-			m_parent->UpdateMouseOver( GSE_CALL, this );
+			m_parent->UpdateMouseOver( GSE_CALL );
 		}
 	} );
 }
@@ -103,6 +103,20 @@ geometry::Geometry* const Drawable::GetGeometry() const {
 
 void Drawable::GeometryHandler( const geometry_handler_type_t type, const std::function< void() >& f ) {
 	m_geometry_handler_ids.push_back( m_geometry->AddHandler( type, f ) );
+}
+
+const bool Drawable::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
+	switch ( event.type ) {
+		case input::EV_MOUSE_OVER: {
+			m_is_mouse_over = true;
+			break;
+		}
+		case input::EV_MOUSE_OUT: {
+			m_is_mouse_over = false;
+			break;
+		}
+	}
+	return Object::ProcessEvent( GSE_CALL, event );
 }
 
 }

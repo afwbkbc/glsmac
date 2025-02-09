@@ -7,6 +7,8 @@
 #include "Area.h"
 #include "gse/Value.h"
 
+#include "types/Vec2.h"
+
 namespace scene::actor {
 class Cache;
 }
@@ -25,7 +27,7 @@ public:
 
 	scene::actor::Cache* const m_cache;
 
-	void UpdateMouseOver( GSE_CALLABLE, Object* child );
+	void UpdateMouseOver( GSE_CALLABLE );
 
 	const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
 
@@ -67,8 +69,10 @@ protected:
 	void UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) override;
 
 private:
-	std::unordered_set< Object* > m_mouse_over_objects = {};
+	Object* m_mouse_over_object = nullptr;
 	bool m_processing_mouse_overs = false;
+
+	void SetMouseOverChild( GSE_CALLABLE, Object* obj, const types::Vec2< ssize_t >& mouse_coords );
 
 private:
 	friend class Object;

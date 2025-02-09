@@ -99,100 +99,42 @@ void Container::Embed( Object* object ) {
 
 Container::~Container() {}
 
-void Container::UpdateMouseOver( GSE_CALLABLE, Object* child ) {
-	if ( m_processing_mouse_overs || m_children.find( child->m_id ) == m_children.end() ) {
-		// maybe during initialization
-		return;
-	}
-	const auto& last_mouse_pos = m_ui->GetLastMousePosition();
-	const auto is_mouseover = child->GetGeometry()->Contains( last_mouse_pos );
-	const auto was_mouseover = m_mouse_over_objects.find( child ) != m_mouse_over_objects.end();
-	if ( is_mouseover != was_mouseover ) {
-		input::Event e;
-		if ( is_mouseover ) {
-			e.SetType( input::EV_MOUSE_OVER );
-			m_mouse_over_objects.insert( child );
+void Container::UpdateMouseOver( GSE_CALLABLE ) {
+	const auto& mouse_coords = m_ui->GetLastMousePosition();
+	m_processing_mouse_overs = true;
+	if ( m_is_mouse_over ) {
+		for ( auto it = m_children.rbegin() ; it != m_children.rend() ; it++ ) { // later children have priority
+			auto* object = it->second;
+			const auto* geometry = object->GetGeometry();
+			if ( geometry && geometry->Contains( mouse_coords ) ) {
+				SetMouseOverChild( GSE_CALL, object, mouse_coords );
+				m_processing_mouse_overs = false;
+				return;
+			}
 		}
-		else {
-			e.SetType( input::EV_MOUSE_OUT );
-			m_mouse_over_objects.erase( child );
+		if ( m_mouse_over_object && ( !m_is_mouse_over || !m_mouse_over_object->GetGeometry()->Contains( mouse_coords ) ) ) {
+			SetMouseOverChild( GSE_CALL, nullptr, mouse_coords );
 		}
-		e.data.mouse = { last_mouse_pos.x, last_mouse_pos.y };
-		child->ProcessEvent( GSE_CALL, e );
 	}
+	m_processing_mouse_overs = false;
 }
 
 const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	switch ( event.type ) {
 		case input::EV_MOUSE_OUT: {
-			input::Event e = {};
-			m_processing_mouse_overs = true;
-			for ( const auto& object : m_mouse_over_objects ) {
-				ASSERT_NOLOG( object->GetGeometry(), "object has no geometry on mouseout" );
-				if ( e.type == input::EV_NONE ) {
-					e.SetType( input::EV_MOUSE_OUT );
-					e.data.mouse = {
-						event.data.mouse.x,
-						event.data.mouse.y
-					};
-				}
-				object->ProcessEvent( GSE_CALL, e );
+			if ( m_mouse_over_object ) {
+				SetMouseOverChild( GSE_CALL, nullptr, { event.data.mouse.x, event.data.mouse.y } );
 			}
-			m_processing_mouse_overs = false;
-			m_mouse_over_objects.clear();
+			m_is_mouse_over = false;
+			break;
+		}
+		case input::EV_MOUSE_OVER: {
+			m_is_mouse_over = true;
 			break;
 		}
 		case input::EV_MOUSE_MOVE: {
-			const types::Vec2< ssize_t > mouse_coords = {
-				event.data.mouse.x,
-				event.data.mouse.y
-			};
-			std::unordered_set< Object* > mouse_out_objects = {};
-			std::unordered_set< Object* > mouse_over_objects = {};
-			{
-				input::Event e = {};
-				m_processing_mouse_overs = true;
-				for ( const auto& object : m_mouse_over_objects ) {
-					ASSERT_NOLOG( object->GetGeometry(), "object has no geometry on mouseout" );
-					if ( !object->GetGeometry()->Contains( mouse_coords ) ) {
-						if ( e.type == input::EV_NONE ) {
-							e.SetType( input::EV_MOUSE_OUT );
-							e.data.mouse = event.data.mouse;
-						}
-						mouse_out_objects.insert( object );
-						object->ProcessEvent( GSE_CALL, e );
-					}
-					else {
-						mouse_over_objects.insert( object );
-					}
-				}
-				if ( mouse_over_objects.size() != m_mouse_over_objects.size() ) {
-					m_mouse_over_objects = mouse_over_objects;
-				}
-				m_processing_mouse_overs = false;
-			}
-			{
-				input::Event e = {};
-				m_processing_mouse_overs = true;
-				for ( const auto& it : m_children ) {
-					auto* object = it.second;
-					const auto* geometry = object->GetGeometry();
-					if (
-						geometry &&
-							m_mouse_over_objects.find( object ) == m_mouse_over_objects.end() &&
-							mouse_out_objects.find( object ) == mouse_out_objects.end() &&
-							geometry->Contains( mouse_coords )
-						) {
-						if ( e.type == input::EV_NONE ) {
-							e.SetType( input::EV_MOUSE_OVER );
-							e.data.mouse = event.data.mouse;
-						}
-						m_mouse_over_objects.insert( object );
-						object->ProcessEvent( GSE_CALL, e );
-					}
-				}
-				m_processing_mouse_overs = false;
-			}
+			m_is_mouse_over = m_geometry->Contains( { event.data.mouse.x, event.data.mouse.y } );
+			UpdateMouseOver( GSE_CALL );
 			break;
 		}
 		default: {}
@@ -210,7 +152,11 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	ASSERT_NOLOG( m_is_processing_children_events, "not processing children events" );
 	m_is_processing_children_events = false;
 	ProcessPendingDeletes( GSE_CALL );
-	return Object::ProcessEvent( GSE_CALL, event );
+	auto result = Area::ProcessEvent( GSE_CALL, event );
+	if ( ( event.flags & input::EF_MOUSE ) && m_geometry->Contains( { event.data.mouse.x, event.data.mouse.y }) ) {
+		result = true; // only one child can handle mouse event, regardless of processing result
+	}
+	return result;
 }
 
 void Container::Destroy( GSE_CALLABLE ) {
@@ -223,7 +169,7 @@ void Container::Destroy( GSE_CALLABLE ) {
 	}
 	ASSERT_NOLOG( m_children_to_remove.empty(), "destruction is requested but got pending children removals" );
 	ASSERT_NOLOG( m_children.empty(), "destruction is requested but was unable to remove all children" );
-	ASSERT_NOLOG( m_mouse_over_objects.empty(), "destruction is requested but mouse overs not empty" );
+	ASSERT_NOLOG( !m_mouse_over_object, "destruction is requested but mouse over not empty" );
 
 	Area::Destroy( GSE_CALL );
 }
@@ -364,19 +310,29 @@ void Container::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
 	FORWARD_CALL( UnsetPropertyFromClass );
 }
 
+void Container::SetMouseOverChild( GSE_CALLABLE, Object* obj, const types::Vec2< ssize_t >& mouse_coords ) {
+	if ( m_mouse_over_object != obj ) {
+		input::Event e;
+		e.data.mouse = { mouse_coords.x, mouse_coords.y };
+		if ( m_mouse_over_object ) {
+			e.SetType( input::EV_MOUSE_OUT );
+			m_mouse_over_object->ProcessEvent( GSE_CALL, e );
+		}
+		m_mouse_over_object = obj;
+		if ( m_mouse_over_object ) {
+			e.SetType( input::EV_MOUSE_OVER );
+			m_mouse_over_object->ProcessEvent( GSE_CALL, e );
+		}
+	}
+}
+
 void Container::RemoveChild( GSE_CALLABLE, Object* obj ) {
 	const bool can_delete_immediately = !m_is_processing_children_events;
 	if ( can_delete_immediately ) {
 		ASSERT_NOLOG( m_children.find( obj->m_id ) != m_children.end(), "child not found" );
 		m_children.erase( obj->m_id );
-		const auto& it = m_mouse_over_objects.find( obj );
-		if ( it != m_mouse_over_objects.end() ) {
-			const auto& last_mouse_pos = m_ui->GetLastMousePosition();
-			input::Event e;
-			e.SetType( input::EV_MOUSE_OUT );
-			m_mouse_over_objects.erase( obj );
-			e.data.mouse = { last_mouse_pos.x, last_mouse_pos.y };
-			obj->ProcessEvent( GSE_CALL, e );
+		if ( m_mouse_over_object == obj ) {
+			SetMouseOverChild( GSE_CALL, nullptr, m_ui->GetLastMousePosition() );
 		}
 		obj->Destroy( GSE_CALL );
 	}
