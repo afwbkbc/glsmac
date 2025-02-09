@@ -234,8 +234,6 @@ void Game::Iterate() {
 
 		if ( m_game_state == GS_INITIALIZING ) {
 
-			auto* ui = g_engine->GetUI();
-
 			bool ready = true;
 
 			if ( m_state->IsMaster() ) {
@@ -316,7 +314,7 @@ void Game::Iterate() {
 							!config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) // no point saving if we just loaded it
 						) {
 						Log( (std::string)"Saving map dump to " + config->GetDebugPath() + map::s_consts.debug.lastdump_filename );
-						ui->SetLoaderText( "Saving dump", false );
+						g_engine->GetUI()->SetLoaderText( "Saving dump", false );
 						util::FS::WriteFile( config->GetDebugPath() + map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
 					}
 #endif

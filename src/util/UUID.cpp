@@ -17,7 +17,7 @@ struct uuid_state_t {
 	uuid_state_t() {
 		uuid_rc_t rc;
 		if ( ( rc = uuid_create( &ctx ) ) != UUID_RC_OK ) {
-			THROW( "unable to initialize UUID generator" );
+			THROW( "unable to initialize UUID generator: " + std::to_string( rc ) );
 		}
 	}
 	~uuid_state_t() {

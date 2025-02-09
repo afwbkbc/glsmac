@@ -230,7 +230,7 @@ void OpenGL::Iterate() {
 
 	GLenum errcode;
 	if ( ( errcode = glGetError() ) != GL_NO_ERROR ) {
-		THROW( "OpenGL error occured in render loop, aborting" );
+		THROW( "OpenGL error occured in render loop, aborting: " + std::to_string( errcode ) );
 	}
 
 	Unlock();
@@ -241,12 +241,16 @@ void OpenGL::Iterate() {
 void OpenGL::AddScene( scene::Scene* scene ) {
 	Log( "Adding scene [" + scene->GetName() + "]" );
 
+#ifdef DEBUG
 	bool added = false;
+#endif
 
 	auto it = m_routines.begin();
 	for ( ; it < m_routines.end() ; it++ ) {
 		if ( ( *it )->AddScene( scene ) ) {
+#ifdef DEBUG
 			added = true;
+#endif
 		}
 	}
 
@@ -256,12 +260,16 @@ void OpenGL::AddScene( scene::Scene* scene ) {
 void OpenGL::RemoveScene( scene::Scene* scene ) {
 	Log( "Removing scene [" + scene->GetName() + "]" );
 
+#ifdef DEBUG
 	bool removed = false;
+#endif
 
 	auto it = m_routines.begin();
 	for ( ; it < m_routines.end() ; it++ ) {
 		if ( ( *it )->RemoveScene( scene ) ) {
+#ifdef DEBUG
 			removed = true;
+#endif
 		}
 	}
 
@@ -513,7 +521,7 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 								GL_UNSIGNED_BYTE,
 								ptr( bitmap, 0, w * h * 4 )
 							);
-							
+
 							free( bitmap );
 						}
 					}

@@ -131,7 +131,6 @@ void Game::Iterate() {
 
 	auto* game = g_engine->GetGame();
 	auto* ui = g_engine->GetUI();
-	auto* config = g_engine->GetConfig();
 
 	const auto f_handle_nonsuccess_init = [ this, ui ]( const backend::MT_Response& response ) -> void {
 		switch ( response.result ) {
@@ -864,8 +863,7 @@ void Game::ShowAnimation( AnimationDef* def, const size_t animation_id, const ty
 }
 
 void Game::DefineAnimation( const backend::animation::Def* def ) {
-	auto animation_it = m_animationdefs.find( def->m_id );
-	ASSERT( animation_it == m_animationdefs.end(), "animation def already exists" );
+	ASSERT( m_animationdefs.find( def->m_id ) == m_animationdefs.end(), "animation def already exists" );
 
 	Log( "Initializing animation definition: " + def->m_id );
 
@@ -2127,7 +2125,7 @@ void Game::UpdateMinimap() {
 
 	const float sx = (float)mm.x / (float)m_map_data.width / (float)backend::map::s_consts.tc.texture_pcx.dimensions.x;
 	const float sy = (float)mm.y / (float)m_map_data.height / (float)backend::map::s_consts.tc.texture_pcx.dimensions.y;
-	const float sz = ( sx + sy ) / 2;
+	
 	const float ss = ( (float)mm.y / (float)m_viewport.window_height );
 	const float sxy = (float)scale.x / scale.y;
 

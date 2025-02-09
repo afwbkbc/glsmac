@@ -151,9 +151,11 @@ void MapGenerator::SmoothTerrain( tile::Tiles* tiles, MT_CANCELABLE, const bool 
 				continue;
 			}
 
+			/* TODO?
 			mod = tile->is_water_tile
 				? -1
 				: 1;
+			 */
 
 			// flatten every corner
 			for ( auto& c : tile->elevation.corners ) {
@@ -576,10 +578,6 @@ void MapGenerator::RemoveExtremeSlopes( tile::Tiles* tiles, const tile::elevatio
 	tile::elevation_t elevation_fixby_max = max_allowed_diff / 3; // to prevent infinite loops when it grows so large it starts creating new extreme slopes
 	float elevation_fixby_div_change = 0.001f; // needed to prevent infinite loops when nearby tiles keep 'fixing' each other forever
 
-	const auto w = tiles->GetWidth();
-	const auto h = tiles->GetHeight();
-
-	size_t pass = 0;
 	tile::Tile* tile;
 	tile::elevation_t elevation_fixby = 0;
 	float elevation_fixby_div = 1.0f;
@@ -638,8 +636,7 @@ void MapGenerator::RemoveExtremeSlopes( tile::Tiles* tiles, const tile::elevatio
 }
 
 void MapGenerator::NormalizeElevationRange( tile::Tiles* tiles, MT_CANCELABLE ) {
-	const auto w = tiles->GetWidth();
-	const auto h = tiles->GetHeight();
+
 	auto elevations_range = GetElevationsRange( tiles, MT_C );
 	MT_RETIF();
 	util::Clamper< tile::elevation_t > converter(
@@ -659,6 +656,7 @@ void MapGenerator::NormalizeElevationRange( tile::Tiles* tiles, MT_CANCELABLE ) 
 	}
 
 	// convert top rows too
+	const auto w = tiles->GetWidth();
 	for ( auto y = 0 ; y < 2 ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
 			if ( y == 0 ) {

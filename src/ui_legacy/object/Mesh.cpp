@@ -109,7 +109,10 @@ void Mesh::Align() {
 	types::Vec3 coord = {};
 	types::Vec2< coord_t > tex_coord = {};
 
-	coord_t mesh_left, mesh_top, mesh_right, mesh_bottom;
+	coord_t mesh_left = 0.0f;
+	coord_t mesh_top = 0.0f;
+	coord_t mesh_right = 1.0f;
+	coord_t mesh_bottom = 1.0f;
 
 	for ( types::mesh::index_t i = 0 ; i < c ; i++ ) {
 		m_original_mesh->GetVertexCoord( i, &coord );

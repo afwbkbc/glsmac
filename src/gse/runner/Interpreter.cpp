@@ -338,7 +338,12 @@ const gse::Value Interpreter::EvaluateExpression( context::Context* ctx, Executi
 		case OT_THROW: {
 			ASSERT( !expression->a, "unexpected left operand before throw" );
 			const auto& invalid_error_definition = [ expression, &ctx, &ep ]() -> gse::Exception {
-				return gse::Exception( EC.INVALID_CALL, "Invalid error definition. Expected: ErrorType(reason), found: " + expression->b->ToString(), ctx, expression->b->m_si, ep );
+				return gse::Exception(
+					EC.INVALID_CALL, "Invalid error definition. Expected: ErrorType(reason), found: " + ( expression->b
+						? expression->b->ToString()
+						: "Nothing"
+					), ctx, expression->a->m_si, ep
+				);
 			};
 			if ( !expression->b || expression->b->type != Operand::OT_CALL ) {
 				throw invalid_error_definition();

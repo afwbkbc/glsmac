@@ -161,18 +161,26 @@ const types::Buffer Mesh::Serialize() const {
 void Mesh::Unserialize( types::Buffer buf ) {
 
 	auto mesh_type = (mesh_type_t)buf.ReadInt();
-	ASSERT( m_mesh_type == mesh_type, "mesh type mismatch" );
+	if ( mesh_type != m_mesh_type ) {
+		THROW( "mesh type mismatch" );
+	}
 
 	size_t vertex_count = buf.ReadInt();
-	ASSERT( vertex_count == m_vertex_count, "mesh read vertex count mismatch ( " + std::to_string( vertex_count ) + " != " + std::to_string( m_vertex_count ) + " )" );
+	if ( vertex_count != m_vertex_count ) {
+		THROW( "mesh read vertex count mismatch ( " + std::to_string( vertex_count ) + " != " + std::to_string( m_vertex_count ) + " )" );
+	}
 	m_vertex_i = buf.ReadInt();
 	m_vertex_data = (uint8_t*)buf.ReadData( GetVertexDataSize() );
 
 	size_t index_count = buf.ReadInt();
-	ASSERT( index_count == m_index_count, "mesh read index count mismatch ( " + std::to_string( index_count ) + " != " + std::to_string( m_index_count ) + " )" );
+	if ( index_count != m_index_count ) {
+		THROW( "mesh read index count mismatch ( " + std::to_string( index_count ) + " != " + std::to_string( m_index_count ) + " )" );
+	}
 
 	size_t surface_count = buf.ReadInt();
-	ASSERT( surface_count == m_surface_count, "mesh read surface count mismatch ( " + std::to_string( surface_count ) + " != " + std::to_string( m_surface_count ) + " )" );
+	if ( surface_count != m_surface_count ) {
+		THROW( "mesh read surface count mismatch ( " + std::to_string( surface_count ) + " != " + std::to_string( m_surface_count ) + " )" );
+	}
 
 	m_surface_i = buf.ReadInt();
 	m_index_data = (uint8_t*)buf.ReadData( GetIndexDataSize() );

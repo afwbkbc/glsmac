@@ -136,7 +136,7 @@ void Orthographic::EnableAttributes() const {
 	vaofs += types::mesh::Render::VERTEX_TINT_SIZE * tsz;
 	glEnableVertexAttribArray( attributes.normal );
 	glVertexAttribPointer( attributes.normal, types::mesh::Render::VERTEX_NORMAL_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid*)vaofs );
-	vaofs += types::mesh::Render::VERTEX_NORMAL_SIZE * tsz;
+	// vaofs += types::mesh::Render::VERTEX_NORMAL_SIZE * tsz;
 };
 
 void Orthographic::DisableAttributes() const {

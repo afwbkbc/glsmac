@@ -47,10 +47,12 @@ const void Array::SetSubArray( const std::optional< size_t > from, const std::op
 	const auto dest_begin = from.has_value()
 		? value.begin() + from.value()
 		: value.begin();
+#ifdef DEBUG
 	const auto dest_end = to.has_value()
 		? value.begin() + to.value() + 1
 		: value.end();
 	ASSERT_NOLOG( v->value.size() == dest_end - dest_begin, "range assignment value size mismatch ( " + std::to_string( v->value.size() ) + " != " + std::to_string( dest_end - dest_begin ) + " ): " + v->ToString() );
+#endif
 	std::copy( v->value.begin(), v->value.end(), dest_begin );
 }
 

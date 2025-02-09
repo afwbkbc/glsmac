@@ -123,7 +123,9 @@ void Actor::Unserialize( types::Buffer buf ) {
 	buf.ReadVec3();
 
 	type_t type = (type_t)buf.ReadInt();
-	ASSERT( type == m_type, "loaded actor of wrong type ( " + std::to_string( type ) + " != " + std::to_string( m_type ) + " )" );
+	if ( type != m_type ) {
+		THROW( "loaded actor of wrong type ( " + std::to_string( type ) + " != " + std::to_string( m_type ) + " )" );
+	}
 
 	UpdateMatrix();
 }

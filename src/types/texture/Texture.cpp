@@ -163,7 +163,11 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 	}
 
 	size_t shiftx, shifty; // for random shifts
-	size_t cx, cy; // center
+
+	// center
+	size_t cx = floor( w / 2 );
+	size_t cy = floor( h / 2 );
+
 	ssize_t sx, sy; // source
 	ssize_t dx, dy; // dest
 	float r; // radius for rounded corners
@@ -186,8 +190,6 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 			( flags & types::texture::AM_GRADIENT_RIGHT ) ||
 			( flags & types::texture::AM_GRADIENT_BOTTOM )
 		) {
-		cx = floor( w / 2 );
-		cy = floor( h / 2 );
 
 		r = sqrt( pow( (float)cx, 2 ) + pow( (float)cy, 2 ) );
 		if (
@@ -937,9 +939,13 @@ void Texture::Unserialize( types::Buffer buf ) {
 
 	m_name = buf.ReadString();
 	size_t width = buf.ReadInt();
-	ASSERT( width == m_width, "texture read width mismatch ( " + std::to_string( width ) + " != " + std::to_string( m_width ) + " )" );
+	if ( width != m_width ) {
+		THROW( "texture read width mismatch ( " + std::to_string( width ) + " != " + std::to_string( m_width ) + " )" );
+	}
 	size_t height = buf.ReadInt();
-	ASSERT( height == m_height, "texture read height mismatch ( " + std::to_string( height ) + " != " + std::to_string( m_height ) + " )" );
+	if ( height != m_height ) {
+		THROW( "texture read height mismatch ( " + std::to_string( height ) + " != " + std::to_string( m_height ) + " )" );
+	}
 
 	m_aspect_ratio = buf.ReadFloat();
 

@@ -36,7 +36,6 @@ void Resource::Destroy() {
 void Resource::Update( base::Base* base ) {
 	HideTilePreviews();
 	UpdateResourceTiles( base );
-	const auto* const t = base->GetTile();
 	for ( const auto& it : m_resource_tiles ) {
 		PreviewTile( it.first, it.second );
 	}

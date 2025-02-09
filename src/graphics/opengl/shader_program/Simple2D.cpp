@@ -88,7 +88,7 @@ void Simple2D::EnableAttributes() const {
 	vaofs += types::mesh::Simple::VERTEX_COORD_SIZE * tsz;
 	glEnableVertexAttribArray( attributes.tex_coord );
 	glVertexAttribPointer( attributes.tex_coord, types::mesh::Simple::VERTEX_TEXCOORD_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid*)vaofs );
-	vaofs += types::mesh::Simple::VERTEX_TEXCOORD_SIZE * tsz;
+	// vaofs += types::mesh::Simple::VERTEX_TEXCOORD_SIZE * tsz;
 };
 
 void Simple2D::DisableAttributes() const {

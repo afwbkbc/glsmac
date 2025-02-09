@@ -431,7 +431,7 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_t
 	ASSERT( m_current_ts, "GetTileTextureInfo called outside of tile generation" );
 	Map::tile_texture_info_t info;
 
-	bool matches[16];
+	bool matches[16] = {};
 	uint8_t idx = 0;
 	for ( uint8_t i = 0 ; i < 2 ; i++ ) {
 		for ( auto& t : tile->neighbours ) {

@@ -152,7 +152,6 @@ void BaseManager::ProcessUnprocessed() {
 void BaseManager::PushUpdates() {
 	if ( m_game->IsRunning() && !m_base_updates.empty() ) {
 		for ( const auto& it : m_base_updates ) {
-			const auto base_id = it.first;
 			const auto& bu = it.second;
 			const auto& base = bu.base;
 			if ( bu.ops & BUO_SPAWN ) {
@@ -298,7 +297,6 @@ void BaseManager::Serialize( types::Buffer& buf ) const {
 	Log( "Serializing " + std::to_string( m_bases.size() ) + " bases" );
 	buf.WriteInt( m_bases.size() );
 	for ( const auto& it : m_bases ) {
-		buf.WriteInt( it.first );
 		buf.WriteString( base::Base::Serialize( it.second ).ToString() );
 	}
 	buf.WriteInt( base::Base::GetNextId() );
@@ -326,7 +324,6 @@ void BaseManager::Unserialize( types::Buffer& buf ) {
 		m_unprocessed_bases.reserve( sz );
 	}
 	for ( size_t i = 0 ; i < sz ; i++ ) {
-		const auto base_id = buf.ReadInt();
 		auto b = types::Buffer( buf.ReadString() );
 		SpawnBase( base::Base::Unserialize( b, m_game ) );
 	}

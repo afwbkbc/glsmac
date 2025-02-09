@@ -7,7 +7,9 @@ namespace font {
 
 void FreeType::Start() {
 	auto res = FT_Init_FreeType( &m_freetype );
-	ASSERT( !res, "Unable to initialize FreeType" );
+	if ( res ) {
+		THROW( "Unable to initialize FreeType: " + std::to_string( res ) );
+	}
 }
 
 void FreeType::Stop() {
@@ -26,7 +28,9 @@ types::Font* FreeType::LoadFontImpl( const std::string& name, const std::vector<
 
 	FT_Face ftface;
 	res = FT_New_Memory_Face( m_freetype, data.data(), data.size(), 0, &ftface );
-	ASSERT( !res, "Unable to load font \"" + name + "\"" );
+	if ( res ) {
+		THROW( "Unable to load font \"" + name + "\": " + std::to_string( res ) );
+	}
 
 	FT_Set_Pixel_Sizes( ftface, 0, size );
 
@@ -38,7 +42,9 @@ types::Font* FreeType::LoadFontImpl( const std::string& name, const std::vector<
 
 	for ( int i = 32 ; i < 128 ; i++ ) { // only ascii for now
 		res = FT_Load_Char( ftface, i, FT_LOAD_RENDER );
-		ASSERT( !res, "Font \"" + name + "\" bitmap loading failed" );
+		if ( res ) {
+			THROW( "Font \"" + name + "\" bitmap loading failed: " + std::to_string( res ) );
+		}
 
 		bitmap = &font->m_symbols[ i ];
 

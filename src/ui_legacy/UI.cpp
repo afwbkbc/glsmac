@@ -363,8 +363,7 @@ void UI::AddTheme( theme::Theme* theme ) {
 }
 
 void UI::RemoveTheme( theme::Theme* theme ) {
-	auto it = m_themes.find( theme );
-	ASSERT( it != m_themes.end(), "theme wasn't set" );
+	ASSERT( m_themes.find( theme ) != m_themes.end(), "theme wasn't set" );
 	m_themes.erase( theme );
 }
 

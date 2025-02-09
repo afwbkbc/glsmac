@@ -401,7 +401,6 @@ void UnitManager::Serialize( types::Buffer& buf ) const {
 	Log( "Serializing " + std::to_string( m_units.size() ) + " units" );
 	buf.WriteInt( m_units.size() );
 	for ( const auto& it : m_units ) {
-		buf.WriteInt( it.first );
 		buf.WriteString( Unit::Serialize( it.second ).ToString() );
 	}
 	buf.WriteInt( Unit::GetNextId() );
@@ -439,7 +438,6 @@ void UnitManager::Unserialize( types::Buffer& buf ) {
 		m_unprocessed_units.reserve( sz );
 	}
 	for ( size_t i = 0 ; i < sz ; i++ ) {
-		const auto unit_id = buf.ReadInt();
 		auto b = types::Buffer( buf.ReadString() );
 		SpawnUnit( Unit::Unserialize( b, this ) );
 	}
