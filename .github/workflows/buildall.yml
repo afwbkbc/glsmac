@@ -103,7 +103,7 @@ jobs:
           echo "BUGS_FOUND=$BUGS_FOUND" >> "$GITHUB_ENV"
           mkdir -p scanbuild-report
           cp scanbuild-output.txt scanbuild-report
-          zip -u scanbuild-report.zip scanbuild-report
+          zip -ur scanbuild-report.zip scanbuild-report
       - name: upload
         uses: actions/upload-release-asset@v1
         env:
