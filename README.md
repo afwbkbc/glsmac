@@ -9,6 +9,7 @@ Note: you will still need to own the original game and expansion - GLSMAC will l
 Check [Screenshots](https://github.com/afwbkbc/glsmac/wiki/Screenshots) and [Videos](https://www.youtube.com/playlist?list=PLX0T-HsVvJwL779fEsDpDuXGs1wkV6zwN) for current state and history of project.
 
 GLSMAC discord : https://discord.gg/fWG3xK7cUx
+GLSMAC jabber : xmpp:smac@conference.bitcheese.net?join
 
 ### Quickstart
 
