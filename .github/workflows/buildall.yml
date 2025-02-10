@@ -72,7 +72,7 @@ jobs:
         working-directory: ./build
         run: tar -C bin -zcvf GLSMAC.tar.gz GLSMAC GLSMAC_data
       - name: publish
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: GLSMAC-ubuntu64-bin
           path: |
@@ -112,7 +112,7 @@ jobs:
         working-directory: ./build/bin
         run: Compress-Archive -Path GLSMAC.exe,GLSMAC_data -Destination ../GLSMAC.zip
       - name: publish
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: GLSMAC-windows64-bin
           path: |
