@@ -8,6 +8,7 @@ SET( CMAKE_MODULE_PATH "." )
 SET( EXECUTABLE_OUTPUT_PATH "bin" )
 
 SET( SRC "" )
+
 SET( PWD "." )
 
 ADD_CUSTOM_TARGET( glsmac_version )
