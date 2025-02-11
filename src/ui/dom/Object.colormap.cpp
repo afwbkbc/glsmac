@@ -6,11 +6,12 @@
 namespace ui {
 namespace dom {
 
-#define C( _str, _r, _g, _b ) { #_str,  types::Color::FromRGB( _r, _g, _b ) }
-
 // based on https://www.w3.org/wiki/CSS/Properties/color/keywords
 
 static const std::unordered_map< std::string, types::Color > s_color_map = {
+
+	// non-transparent colors
+#define C( _str, _r, _g, _b ) { #_str,  types::Color::FromRGB( _r, _g, _b ) }
 
 	// basic colors
 	C( black, 0, 0, 0 ),
@@ -178,9 +179,16 @@ static const std::unordered_map< std::string, types::Color > s_color_map = {
 	C( whitesmoke, 245, 245, 245 ),
 	C( yellowgreen, 154, 205, 50 ),
 
-};
+#undef C
+
+	// transparent colors
+#define C( _str, _r, _g, _b, _a ) { #_str,  types::Color::FromRGBA( _r, _g, _b, _a ) }
+
+	C( transparent, 0, 0, 0, 0 ),
 
 #undef C
+
+};
 
 }
 }

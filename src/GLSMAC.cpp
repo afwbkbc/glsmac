@@ -24,6 +24,8 @@
 #include "game/backend/slot/Slots.h"
 #include "game/backend/Player.h"
 
+#include "game/frontend/Game.h"
+
 static GLSMAC* s_glsmac = nullptr;
 
 GLSMAC::GLSMAC() {
@@ -74,7 +76,22 @@ GLSMAC::GLSMAC() {
 
 GLSMAC::~GLSMAC() {
 
+	if ( m_load_thread ) {
+		Log( "Waiting for load thread to stop" );
+		m_load_thread.load()->join();
+		delete m_load_thread;
+	}
+
+	if ( m_is_loader_shown ) {
+		HideLoader();
+	}
+
 	Log( "Destroying global state" );
+
+	if ( m_game ) {
+		m_game->Stop();
+		delete m_game;
+	}
 
 	if ( m_state ) {
 		delete m_state;
@@ -95,6 +112,30 @@ GLSMAC::~GLSMAC() {
 }
 
 void GLSMAC::Iterate() {
+	{
+		bool ticked = false;
+		while ( m_loader_dots_timer.HasTicked() ) {
+			m_loader_dots++;
+			if ( m_loader_dots > 3 ) {
+				m_loader_dots = 1;
+			}
+			ticked = true;
+		}
+		if ( ticked ) {
+			UpdateLoaderText();
+		}
+	}
+	if ( m_load_thread ) {
+		if ( !m_is_loading ) {
+			ASSERT_NOLOG( m_f_after_load, "f_after_load not set" );
+			m_load_thread.load()->join();
+			delete m_load_thread;
+			m_load_thread = nullptr;
+			HideLoader();
+			m_f_after_load();
+			m_f_after_load = nullptr;
+		}
+	}
 	m_gse->Iterate();
 	m_ui->Iterate();
 }
@@ -132,10 +173,15 @@ WRAPIMPL_BEGIN( GLSMAC )
 		{
 			"init_single_player",
 			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 0 );
-				InitGameState( GSE_CALL );
-				m_state->m_settings.local.game_mode = game::backend::settings::LocalSettings::GM_SINGLEPLAYER;
-				m_state->m_settings.global.Initialize();
+				N_EXPECT_ARGS( 1 );
+				N_PERSIST_CALLABLE( on_complete, 0 );
+				InitGameState( GSE_CALL, [ this, on_complete, ctx, si, ep ] () {
+					m_state->m_settings.local.game_mode = game::backend::settings::LocalSettings::GM_SINGLEPLAYER;
+					m_state->m_settings.global.Initialize();
+					auto ep2 = ep;
+					on_complete->Run( ctx, si, ep2, {} );
+					N_UNPERSIST_CALLABLE( on_complete );
+				} );
 				return VALUE( gse::type::Undefined );
 			} )
 		},
@@ -155,6 +201,9 @@ WRAPIMPL_BEGIN( GLSMAC )
 				if ( m_is_game_running ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
 				}
+				if ( m_is_loading ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Game still initializing" );
+				}
 				AddSinglePlayerSlot();
 				StartGame( GSE_CALL );
 				return VALUE( gse::type::Undefined );
@@ -164,6 +213,37 @@ WRAPIMPL_BEGIN( GLSMAC )
 WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( GLSMAC )
+
+void GLSMAC::ShowLoader( const std::string& text ) {
+	ASSERT_NOLOG( !m_is_loader_shown, "loader already shown" );
+	m_is_loader_shown = true;
+	m_loader_text = text;
+	m_loader_dots = 1;
+	m_loader_dots_timer.SetInterval( 100 );
+	gse::ExecutionPointer ep;
+	Trigger( m_ctx, {}, ep, "loader_show", {} );
+	UpdateLoaderText();
+}
+
+void GLSMAC::HideLoader() {
+	ASSERT_NOLOG( m_is_loader_shown, "loader not shown" );
+	m_is_loader_shown = false;
+	m_loader_dots_timer.Stop();
+	gse::ExecutionPointer ep;
+	Trigger( m_ctx, {}, ep, "loader_hide", {} );
+}
+
+void GLSMAC::AsyncLoad( const std::string& text, const std::function< void() >& f, const std::function< void() >& f_after_load ) {
+	ASSERT_NOLOG( !m_load_thread, "load thread already set" );
+	ASSERT_NOLOG( !m_f_after_load, "f_after load already set" );
+	m_is_loading = true;
+	m_f_after_load = f_after_load;
+	ShowLoader( text );
+	m_load_thread = new std::thread( [ this, f ] {
+		f();
+		m_is_loading = false;
+	});
+}
 
 void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 	const auto& c = g_engine->GetConfig();
@@ -229,24 +309,19 @@ void GLSMAC::S_MainMenu( GSE_CALLABLE ) {
 
 void GLSMAC::S_Game( GSE_CALLABLE ) {
 	Trigger( GSE_CALL, "mainmenu_hide", {} );
+	m_game->Start();
 	Trigger( GSE_CALL, "game", {} );
 }
 
-void GLSMAC::ShowLoader( GSE_CALLABLE, const std::string& text ) {
-	Trigger( GSE_CALL, "loader_show", {} );
-	LoaderText( GSE_CALL, text );
-}
-
-void GLSMAC::LoaderText( GSE_CALLABLE, const std::string& text ) {
-	Trigger( GSE_CALL, "loader_text", {
+void GLSMAC::UpdateLoaderText() {
+	ASSERT( m_is_loader_shown, "loader not shown" );
+	gse::ExecutionPointer ep;
+	std::string text = m_loader_text + std::string( m_loader_dots, '.' ) + std::string( 3 - m_loader_dots, ' ' );
+	Trigger( m_ctx, {}, ep, "loader_text", {
 		{
 			"text", VALUE( gse::type::String, text )
 		}
 	} );
-}
-
-void GLSMAC::HideLoader( GSE_CALLABLE ) {
-	Trigger( GSE_CALL, "loader_hide", {} );
 }
 
 void GLSMAC::DeinitGameState( GSE_CALLABLE ) {
@@ -259,18 +334,18 @@ void GLSMAC::DeinitGameState( GSE_CALLABLE ) {
 	}
 }
 
-void GLSMAC::InitGameState( GSE_CALLABLE ) {
+void GLSMAC::InitGameState( GSE_CALLABLE, const f_t& on_complete  ) {
 	if ( m_state ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already initialized" );
 	}
 	if ( m_is_game_running ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
 	}
-	ShowLoader( GSE_CALL, "Initializing game state" );
-	m_state = new game::backend::State();
-	m_state->InitBindings();
-	m_state->Configure();
-	HideLoader( GSE_CALL );
+	AsyncLoad( "Initializing game state", [ this ] {
+		m_state = new game::backend::State();
+		m_state->InitBindings();
+		m_state->Configure();
+	}, on_complete );
 }
 
 void GLSMAC::RandomizeSettings( GSE_CALLABLE ) {
@@ -308,15 +383,14 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 	m_state = nullptr;
 	m_is_game_running = true;
 
-	// TODO: don't spawn new tasks
-	NEWV( task, task::Common );
-	g_engine->GetScheduler()->AddTask( task );
-	NEWV( task2, task::game::Game, real_state, UH( this ) {
+	m_game = new ::game::frontend::Game( nullptr, this, real_state, UH( this ) {
 		//g_engine->GetScheduler()->RemoveTask( this );
+		THROW( "TODO: reset" );
 	}, UH( this, real_state ) {
 		//m_menu_object->MaybeClose();
+		THROW( "TODO: cancel" );
 	} );
-	g_engine->GetScheduler()->AddTask( task2 );
+
 	S_Game( GSE_CALL );
 }
 

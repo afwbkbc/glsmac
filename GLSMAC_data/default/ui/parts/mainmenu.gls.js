@@ -30,13 +30,15 @@ return (m) => {
 				m.glsmac.deinit();
 				menublock.show([
 					['Start Game', () => {
-						m.glsmac.init_single_player();
-						steps.start_game();
+						m.glsmac.init_single_player(() => {
+							steps.start_game();
+						});
 					}],
 					['Quick Start', () => {
-						m.glsmac.init_single_player();
-						m.glsmac.randomize_settings();
-						m.glsmac.start_game();
+						m.glsmac.init_single_player(() => {
+							m.glsmac.randomize_settings();
+							m.glsmac.start_game();
+						});
 					}],
 					['Scenario', () => {
 

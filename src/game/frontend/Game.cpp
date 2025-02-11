@@ -56,6 +56,7 @@
 #include "task/game/Game.h"
 #include "game/frontend/ui_legacy/popup/base_popup/BasePopup.h"
 #include "input/Types.h"
+#include "GLSMAC.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -64,8 +65,9 @@ namespace frontend {
 
 const Game::consts_t Game::s_consts = {};
 
-Game::Game( task::game::Game* task, backend::State* state, ::ui_legacy::ui_handler_t on_start, ::ui_legacy::ui_handler_t on_cancel )
+Game::Game( task::game::Game* task, GLSMAC* glsmac, backend::State* state, ::ui_legacy::ui_handler_t on_start, ::ui_legacy::ui_handler_t on_cancel )
 	: m_task( task )
+	, m_glsmac( glsmac )
 	, m_state( state )
 	, m_on_start( on_start )
 	, m_on_cancel( on_cancel )
@@ -100,7 +102,7 @@ void Game::Start() {
 
 	}
 
-	ui->ShowLoader(
+	ShowLoader(
 		"Starting game", LCH( this ) {
 			CancelGame();
 			return false;
@@ -179,7 +181,7 @@ void Game::Iterate() {
 				m_mt_ids.get_map_data = game->MT_GetMapData();
 			}
 			else {
-				ui->HideLoader();
+				HideLoader();
 				m_mt_ids.get_map_data = 0;
 
 				if ( response.result == backend::R_SUCCESS ) {
@@ -225,7 +227,7 @@ void Game::Iterate() {
 	if ( m_mt_ids.reset ) {
 		auto response = game->MT_GetResponse( m_mt_ids.reset );
 		if ( response.result != backend::R_NONE ) {
-			ui->HideLoader();
+			HideLoader();
 			m_mt_ids.reset = 0;
 
 			switch ( response.result ) {
@@ -245,7 +247,7 @@ void Game::Iterate() {
 	if ( m_mt_ids.ping ) {
 		auto response = game->MT_GetResponse( m_mt_ids.ping );
 		if ( response.result != backend::R_NONE ) {
-			ui->HideLoader();
+			HideLoader();
 			m_mt_ids.ping = 0;
 			ASSERT( response.result == backend::R_SUCCESS, "ping not successful" );
 			CancelGame();
@@ -255,7 +257,7 @@ void Game::Iterate() {
 		if ( m_mt_ids.save_map ) {
 			auto response = game->MT_GetResponse( m_mt_ids.save_map );
 			if ( response.result != backend::R_NONE ) {
-				ui->HideLoader();
+				HideLoader();
 				m_mt_ids.save_map = 0;
 				if ( ui->HasPopup() ) {
 					ui->CloseLastPopup();
@@ -743,7 +745,7 @@ void Game::LoadMap( const std::string& path ) {
 	ASSERT( util::FS::FileExists( path ), "map file \"" + path + "\" not found" );
 
 	auto* game = g_engine->GetGame();
-	g_engine->GetUI()->ShowLoader(
+	ShowLoader(
 		"Loading map", LCH( this ) {
 			CancelRequests();
 			return false;
@@ -767,7 +769,7 @@ void Game::LoadMap( const std::string& path ) {
 void Game::SaveMap( const std::string& path ) {
 
 	auto* game = g_engine->GetGame();
-	g_engine->GetUI()->ShowLoader( "Saving game" );
+	ShowLoader( "Saving game" );
 	if ( m_mt_ids.save_map ) {
 		game->MT_Cancel( m_mt_ids.save_map );
 
@@ -1930,6 +1932,28 @@ void Game::OpenBasePopup( base::Base* base ) {
 	}
 }
 
+void Game::ShowLoader( const std::string& text, const ::ui_legacy::loader_cancel_handler_t on_cancel ) {
+	if ( m_glsmac ) {
+		// new ui
+		m_glsmac->ShowLoader( text ); // TODO: on_cancel
+	}
+	else {
+		// legacy ui
+		g_engine->GetUI()->ShowLoader( text, on_cancel );
+	}
+}
+
+void Game::HideLoader() {
+	if ( m_glsmac ) {
+		// new ui
+		m_glsmac->HideLoader();
+	}
+	else {
+		// legacy ui
+		g_engine->GetUI()->HideLoader();
+	}
+}
+
 void Game::AddActor( actor::Actor* actor ) {
 	ASSERT( m_actors_map.find( actor ) == m_actors_map.end(), "world actor already added" );
 	NEWV( instanced, scene::actor::Instanced, actor );
@@ -2125,7 +2149,7 @@ void Game::UpdateMinimap() {
 
 	const float sx = (float)mm.x / (float)m_map_data.width / (float)backend::map::s_consts.tc.texture_pcx.dimensions.x;
 	const float sy = (float)mm.y / (float)m_map_data.height / (float)backend::map::s_consts.tc.texture_pcx.dimensions.y;
-	
+
 	const float ss = ( (float)mm.y / (float)m_viewport.window_height );
 	const float sxy = (float)scale.x / scale.y;
 
@@ -2224,7 +2248,7 @@ void Game::CloseMenus() {
 void Game::ExitGame( const f_exit_game on_game_exit ) {
 	auto* ui = g_engine->GetUI();
 	auto* game = g_engine->GetGame();
-	ui->ShowLoader( "Exiting game" );
+	ShowLoader( "Exiting game" );
 	m_on_game_exit = on_game_exit;
 	CancelRequests();
 	if ( !m_mt_ids.reset ) {

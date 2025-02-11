@@ -27,6 +27,9 @@
 #include "game/frontend/tile/Tile.h"
 #include "game/BackendRequest.h"
 
+// for new ui
+class GLSMAC;
+
 namespace types {
 namespace texture {
 class Texture;
@@ -137,7 +140,7 @@ CLASS( Game, common::Module )
 
 	static constexpr size_t SCROLL_DURATION_MS = 100;
 
-	Game( task::game::Game* task, backend::State* state, ::ui_legacy::ui_handler_t on_start = 0, ::ui_legacy::ui_handler_t on_cancel = 0 );
+	Game( task::game::Game* task, GLSMAC* glsmac, backend::State* state, ::ui_legacy::ui_handler_t on_start = 0, ::ui_legacy::ui_handler_t on_cancel = 0 );
 	~Game();
 
 	void Start() override;
@@ -297,6 +300,7 @@ private:
 
 	void SetCameraPosition( const ::types::Vec3 camera_position );
 
+	GLSMAC* m_glsmac = nullptr;
 	backend::State* m_state = nullptr;
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)
@@ -387,6 +391,9 @@ private:
 	void SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id = 0 );
 	void DeselectTileOrUnit();
 	void OpenBasePopup( base::Base* base );
+
+	void ShowLoader( const std::string& text, const ::ui_legacy::loader_cancel_handler_t on_cancel = 0 );
+	void HideLoader();
 
 private:
 	friend class ui_legacy::ObjectsList;

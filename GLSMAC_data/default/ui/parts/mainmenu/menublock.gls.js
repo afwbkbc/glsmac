@@ -78,8 +78,8 @@ return (m) => {
 	const slideout_and_cb = (cb) => {
 		if (menublock_animation == null) {
 			menublock_animation = #async(10, () => {
-				current_menublock.right = current_menublock.right - 40;
-				if (current_menublock.right > -394) {
+				current_menublock.right = current_menublock.right - 60;
+				if (current_menublock.right > -414) {
 					return true;
 				} else {
 					menublock_animation = null;
@@ -192,7 +192,7 @@ return (m) => {
 
 			current_menublock.right = -354;
 			menublock_animation = #async(10, () => {
-				current_menublock.right = current_menublock.right + 40;
+				current_menublock.right = current_menublock.right + 60;
 				if (current_menublock.right < 0) {
 					return true;
 				} else {
@@ -211,4 +211,6 @@ return (m) => {
 		},
 
 	};
+
+
 };

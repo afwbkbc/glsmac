@@ -12,7 +12,7 @@ namespace ui {
 namespace dom {
 
 Window::Window( DOM_ARGS )
-	: Container( DOM_ARGS_PASS, "window", false ) {
+	: Panel( DOM_ARGS_PASS, "window", false ) {
 
 	m_geometry->SetAlign( geometry::Geometry::ALIGN_CENTER );
 
@@ -27,7 +27,7 @@ Window::Window( DOM_ARGS )
 		g->SetRight( 0 );
 	}
 	{
-		m_body = new Panel( GSE_CALL, ui, this, {}, "window_body", true );
+		m_body = new Container( GSE_CALL, ui, this, {}, "window_body", true );
 		Embed( m_body );
 		auto* g = m_body->GetGeometry();
 		g->SetAlign( geometry::Geometry::ALIGN_TOP_CENTER );
@@ -68,9 +68,6 @@ Window::Window( DOM_ARGS )
 		}
 	);
 
-	ForwardProperty( GSE_CALL, "background", m_body );
-	ForwardProperty( GSE_CALL, "border", m_body );
-
 	ForwardProperty( GSE_CALL, "header_background", "background", m_header );
 	ForwardProperty( GSE_CALL, "header_border", "border", m_header );
 	Property(
@@ -82,9 +79,19 @@ Window::Window( DOM_ARGS )
 			SetHeaderHeight( 0 );
 		}
 	);
+	Property(
+		GSE_CALL, "header_padding", gse::type::Type::T_INT, VALUE( gse::type::Undefined ), PF_NONE,
+		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
+			m_header->GetGeometry()->SetPadding( ( (gse::type::Int*)v.Get() )->value );
+		},
+		[ this ]( GSE_CALLABLE ) {
+			m_header->GetGeometry()->SetPadding( 0 );
+		}
+	);
 	ForwardProperty( GSE_CALL, "title", "text", m_title );
 	ForwardProperty( GSE_CALL, "header_color", "color", m_title );
 	ForwardProperty( GSE_CALL, "header_font", "font", m_title );
+	ForwardProperty( GSE_CALL, "header_transform", "transform", m_title );
 
 	ForwardFactories( GSE_CALL, m_body );
 }
