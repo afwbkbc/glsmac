@@ -1,6 +1,6 @@
 name: GLSMAC autobuild
 
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 jobs:
   prepare:
@@ -56,8 +56,8 @@ jobs:
           compression-level: 0
   prerelease:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/try_fix_windows_builds'
-    needs: [prepare, scanbuild_ubuntu, build_ubuntu, build_windows]
+    if: github.ref == 'refs/heads/main'
+    needs: [ prepare, scanbuild_ubuntu, build_ubuntu, build_windows ]
     steps:
       - uses: dev-drprasad/delete-tag-and-release@v1.1
         with:
@@ -76,7 +76,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/stable'
-    needs: [prepare, scanbuild_ubuntu, build_ubuntu, build_windows]
+    needs: [ prepare, scanbuild_ubuntu, build_ubuntu, build_windows ]
     steps:
       - uses: actions/download-artifact@v4
       - name: release
@@ -96,7 +96,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build_ubuntu:
-    needs: [prepare]
+    needs: [ prepare ]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/stable' || github.ref == 'refs/heads/main'
     steps:
@@ -118,7 +118,7 @@ jobs:
         working-directory: ./build
         run: mv ../GLSMAC_data bin/
       - name: pack
-        env: 
+        env:
           ARCHIVE_NAME: glsmac-ubuntu64-${{ needs.prepare.outputs.ver }}-${{ needs.prepare.outputs.sha }}.tar.gz
         run: |
           mkdir glsmac
@@ -131,7 +131,7 @@ jobs:
           path: glsmac-ubuntu64-${{ needs.prepare.outputs.ver }}-${{ needs.prepare.outputs.sha }}.tar.gz
           compression-level: 0
   build_windows:
-    needs: [prepare]
+    needs: [ prepare ]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
@@ -143,7 +143,7 @@ jobs:
           mkdir build
       - name: cmake
         working-directory: ./build
-        run: cmake -G Ninja -DCMAKE_BUILD_TYPE=Portable64 ..
+        run: cmake -G Ninja -DCMAKE_BUILD_TYPE=Portable64 -DCMAKE_CXX_COMPILER:FILEPATH="C:/PROGRAM FILES/MICROSOFT VISUAL STUDIO/2022/ENTERPRISE/VC/Tools/Llvm/x64/bin/clang.exe" ..
       - name: make
         working-directory: ./build
         run: ninja
@@ -151,7 +151,7 @@ jobs:
         working-directory: ./build
         run: mv ../GLSMAC_data bin/
       - name: pack
-        env: 
+        env:
           ARCHIVE_NAME: glsmac-win64-${{ needs.prepare.outputs.ver }}-${{ needs.prepare.outputs.sha }}.zip
         run: |
           mkdir glsmac
