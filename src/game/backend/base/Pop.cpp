@@ -33,9 +33,12 @@ void Pop::Unserialize( types::Buffer& buf, Game* game ) {
 	ASSERT_NOLOG( !m_base, "pop base is not null" );
 	ASSERT_NOLOG( !m_def, "pop def is not null" );
 
-	m_base = game->GetBM()->GetBase( buf.ReadInt() );
+	auto* bm = game->GetBM();
+	ASSERT_NOLOG( bm, "bm is null" );
+
+	m_base = bm->GetBase( buf.ReadInt() );
 	ASSERT_NOLOG( m_base, "base not found" );
-	m_def = game->GetBM()->GetPopDef( buf.ReadString() );
+	m_def = bm->GetPopDef( buf.ReadString() );
 	ASSERT_NOLOG( m_def, "pop def not found" );
 	m_variant = buf.ReadInt();
 }

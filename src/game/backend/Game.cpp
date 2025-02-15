@@ -190,12 +190,6 @@ void Game::Start() {
 void Game::Stop() {
 	Log( "Stopping thread" );
 
-	if ( m_state ) {
-		DELETE( m_state );
-		m_state = nullptr;
-		m_connection = nullptr;
-	}
-
 	ResetGame();
 
 	DELETE( m_map_editor );
@@ -236,6 +230,8 @@ void Game::Iterate() {
 		if ( m_game_state == GS_INITIALIZING ) {
 
 			bool ready = true;
+
+			ASSERT_NOLOG( m_state, "state is null" );
 
 			if ( m_state->IsMaster() ) {
 #ifdef DEBUG
@@ -1498,12 +1494,13 @@ void Game::ResetGame() {
 	if ( m_state ) {
 		// ui thread will reset state as needed
 		m_state->UnsetGame();
-		m_state = nullptr;
 		if ( m_connection ) {
 			m_connection->Disconnect();
 			m_connection->ResetHandlers();
+			m_connection = nullptr;
 		}
-		m_connection = nullptr;
+		delete m_state;
+		m_state = nullptr;
 	}
 }
 
