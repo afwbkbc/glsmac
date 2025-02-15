@@ -157,7 +157,7 @@ jobs:
           mkdir glsmac
           Copy-Item -Path build/bin/GLSMAC.exe -Destination glsmac
           Copy-Item -Path build/bin/GLSMAC_data -Destination glsmac -Recurse
-          Compress-Archive -Path glsmac -Destination $ARCHIVE_NAME
+          Compress-Archive -Path glsmac -Destination $Env:ARCHIVE_NAME
       - name: upload
         uses: actions/upload-artifact@v4
         with:
