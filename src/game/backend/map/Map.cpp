@@ -610,7 +610,7 @@ void Map::RemoveTerrainSpriteActorInstance( const std::string& key, const size_t
 
 const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_CANCELABLE ) {
 	auto* random = m_game->GetRandom();
-	generator::SimplePerlin generator( random );
+	generator::SimplePerlin generator( m_game, random );
 	types::Vec2< size_t > size = map_settings->size == settings::MAP_CONFIG_CUSTOM
 		? map_settings->custom_size
 		: map::s_consts.map_sizes.at( map_settings->size );
@@ -819,7 +819,7 @@ void Map::ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles, MT
 						sp = std::string( percent_len - sp.size(), ' ' ) + sp;
 					}
 					loading_text.replace( percent_pos, sp.size(), sp.c_str() );
-					ui->SetLoaderText( loading_text );
+					m_game->SetLoaderText( loading_text );
 				}
 
 				MT_RETIF();
@@ -854,7 +854,7 @@ void Map::LoadTiles( const tiles_t& tiles, MT_CANCELABLE ) {
 void Map::FixNormals( const tiles_t& tiles, MT_CANCELABLE ) {
 	Log( "Fixing normals" );
 
-	g_engine->GetUI()->SetLoaderText( "Fixing normals" );
+	m_game->SetLoaderText( "Fixing normals" );
 
 	std::vector< types::mesh::surface_id_t > surfaces = {};
 

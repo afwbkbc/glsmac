@@ -9,8 +9,8 @@ namespace generator {
 
 CLASS( SimplePerlin, MapGenerator )
 
-	SimplePerlin( util::random::Random* random )
-		: MapGenerator( random ) {}
+	SimplePerlin( Game* game, util::random::Random* random )
+		: MapGenerator( game, random ) {}
 
 	void GenerateElevations( tile::Tiles* tiles, const settings::MapSettings* map_settings, MT_CANCELABLE ) override;
 	void GenerateDetails( tile::Tiles* tiles, const settings::MapSettings* map_settings, MT_CANCELABLE ) override;

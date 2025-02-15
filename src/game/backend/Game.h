@@ -321,6 +321,10 @@ CLASS2( Game, MTModule, gse::Wrappable )
 	const Player* GetPlayer() const;
 	const size_t GetSlotNum() const;
 
+	void ShowLoader( const std::string& text );
+	void SetLoaderText( const std::string& text );
+	void HideLoader();
+
 	WRAPDEFS_PTR( Game )
 
 protected:

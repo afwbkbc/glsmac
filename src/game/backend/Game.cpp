@@ -314,7 +314,7 @@ void Game::Iterate() {
 							!config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) // no point saving if we just loaded it
 						) {
 						Log( (std::string)"Saving map dump to " + config->GetDebugPath() + map::s_consts.debug.lastdump_filename );
-						g_engine->GetUI()->SetLoaderText( "Saving dump", false );
+						SetLoaderText( "Saving dump" );
 						util::FS::WriteFile( config->GetDebugPath() + map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
 					}
 #endif
@@ -395,6 +395,8 @@ void Game::Iterate() {
 
 					if ( m_game_state == GS_RUNNING ) {
 
+						HideLoader();
+
 						m_um->ProcessUnprocessed();
 						m_bm->ProcessUnprocessed();
 
@@ -416,7 +418,6 @@ void Game::Iterate() {
 						}
 						m_unprocessed_events.clear();
 
-						g_engine->GetUI()->SetLoaderText( "Starting game...", false );
 						if ( m_state->IsMaster() ) {
 							try {
 								m_state->m_bindings->Trigger( this, "start", {
@@ -476,6 +477,24 @@ const Player* Game::GetPlayer() const {
 
 const size_t Game::GetSlotNum() const {
 	return m_slot_num;
+}
+
+void Game::ShowLoader( const std::string& text ) {
+	auto fr = FrontendRequest( FrontendRequest::FR_LOADER_SHOW );
+	NEW( fr.data.loader.text, std::string, text );
+	AddFrontendRequest( fr );
+}
+
+void Game::SetLoaderText( const std::string& text ) {
+	auto fr = FrontendRequest( FrontendRequest::FR_LOADER_TEXT );
+	NEW( fr.data.loader.text, std::string, text );
+	AddFrontendRequest( fr );
+	ProcessRequests(); // allow frontend to update % while backend is busy
+}
+
+void Game::HideLoader() {
+	auto fr = FrontendRequest( FrontendRequest::FR_LOADER_HIDE );
+	AddFrontendRequest( fr );
 }
 
 WRAPIMPL_BEGIN( Game )
@@ -1307,7 +1326,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			const std::string& filename = config->GetQuickstartMapDump();
 			ASSERT( util::FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
 			Log( (std::string)"Loading map dump from " + filename );
-			ui->SetLoaderText( "Loading dump", false );
+			SetLoaderText( "Loading dump" );
 			m_map->Unserialize( types::Buffer( util::FS::ReadTextFile( filename ) ) );
 			ec = map::Map::EC_NONE;
 		}
@@ -1344,27 +1363,29 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					}
 				);
 				m_connection->UpdateSlot( m_slot_num, m_slot, true );
+				SetLoaderText( "Waiting for players" );
+			}
+			else {
+				SetLoaderText( "Starting game" );
 			}
 
-			ui->SetLoaderText( "Waiting for players" );
 			m_game_state = GS_INITIALIZING;
 			response.result = R_SUCCESS;
 		}
-
 	}
 	else {
 		m_connection->IfClient(
 			[ this, &response, ui ]( connection::Client* connection ) -> void {
 
 				// wait for server to initialize
-				ui->SetLoaderText( "Waiting for server" );
+				SetLoaderText( "Waiting for server" );
 
 				const auto f_download_map = [ this, ui, connection ] {
 
-					ui->SetLoaderText( "Downloading world snapshot" );
+					SetLoaderText( "Downloading world snapshot" );
 
-					connection->m_on_download_progress = [ ui ]( const float progress ) -> void {
-						ui->SetLoaderText( "Downloading world snapshot:  " + std::to_string( (size_t)std::round( progress * 100 ) ) + "%" );
+					connection->m_on_download_progress = [ this ]( const float progress ) -> void {
+						SetLoaderText( "Downloading world snapshot:  " + std::to_string( (size_t)std::round( progress * 100 ) ) + "%" );
 					};
 					connection->m_on_download_complete = [ this, connection ]( const std::string serialized_snapshot ) -> void {
 						connection->m_on_download_complete = nullptr;

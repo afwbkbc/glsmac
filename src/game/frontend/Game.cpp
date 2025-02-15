@@ -117,16 +117,20 @@ void Game::Stop() {
 		Deinitialize();
 	}
 
+	auto* game = g_engine->GetGame();
+	if ( game ) {
+		ASSERT_NOLOG( !m_state || game->GetState() == m_state, "backend has different state" );
+	}
+	else if ( m_state ) {
+		DELETE( m_state );
+		m_state = nullptr;
+	}
+
 	if ( m_random ) {
 		DELETE( m_random );
 		m_random = nullptr;
 	}
 
-	if ( m_state ) {
-		// main menu has state copied
-		DELETE( m_state );
-		m_state = nullptr;
-	}
 }
 
 void Game::Iterate() {
@@ -265,7 +269,10 @@ void Game::Iterate() {
 				if ( response.result == backend::R_SUCCESS ) {
 					m_map_data.last_directory = util::FS::GetDirName( *response.data.save_map.path );
 					m_map_data.filename = util::FS::GetBaseName( *response.data.save_map.path );
-					m_ui.bottom_bar->UpdateMapFileName();
+					if ( !m_glsmac ) {
+						// legacy ui
+						m_ui.bottom_bar->UpdateMapFileName();
+					}
 				}
 				else {
 					ui->ShowError(
@@ -338,6 +345,33 @@ void Game::Iterate() {
 		}
 	}
 
+	// poll backend for frontend requests
+	if ( m_mt_ids.get_frontend_requests ) {
+		auto response = game->MT_GetResponse( m_mt_ids.get_frontend_requests );
+		if ( response.result != backend::R_NONE ) {
+			ASSERT( response.result == backend::R_SUCCESS, "unexpected frontend requests response" );
+			m_mt_ids.get_frontend_requests = 0;
+			const auto* requests = response.data.get_frontend_requests.requests;
+			if ( requests ) {
+				Log( "got " + std::to_string( requests->size() ) + " frontend requests" );
+
+				for ( const auto& request : *requests ) {
+					ProcessRequest( &request );
+					if ( m_on_game_exit ) {
+						break; // exiting game
+					}
+				}
+			}
+			game->MT_DestroyResponse( response );
+			if ( !m_on_game_exit ) {
+				m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests();
+			}
+		}
+	}
+	else {
+		m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests();
+	}
+
 	if ( m_is_initialized ) { // do not check anything else if error
 
 		// check if previous backend requests were sent successfully
@@ -353,33 +387,6 @@ void Game::Iterate() {
 		if ( !m_mt_ids.send_backend_requests && !m_pending_backend_requests.empty() ) {
 			m_mt_ids.send_backend_requests = game->MT_SendBackendRequests( m_pending_backend_requests );
 			m_pending_backend_requests.clear();
-		}
-
-		// poll backend for frontend requests
-		if ( m_mt_ids.get_frontend_requests ) {
-			auto response = game->MT_GetResponse( m_mt_ids.get_frontend_requests );
-			if ( response.result != backend::R_NONE ) {
-				ASSERT( response.result == backend::R_SUCCESS, "unexpected frontend requests response" );
-				m_mt_ids.get_frontend_requests = 0;
-				const auto* requests = response.data.get_frontend_requests.requests;
-				if ( requests ) {
-					Log( "got " + std::to_string( requests->size() ) + " frontend requests" );
-
-					for ( const auto& request : *requests ) {
-						ProcessRequest( &request );
-						if ( m_on_game_exit ) {
-							break; // exiting game
-						}
-					}
-				}
-				game->MT_DestroyResponse( response );
-				if ( !m_on_game_exit ) {
-					m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests();
-				}
-			}
-		}
-		else {
-			m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests();
 		}
 
 		if ( m_is_map_editing_allowed && m_editing_draw_timer.HasTicked() ) {
@@ -412,7 +419,10 @@ void Game::Iterate() {
 
 		auto minimap_texture = GetMinimapTextureResult();
 		if ( minimap_texture ) {
-			m_ui.bottom_bar->SetMinimapTexture( minimap_texture );
+			if ( !m_glsmac ) {
+				// legacy ui
+				m_ui.bottom_bar->SetMinimapTexture( minimap_texture );
+			}
 		}
 
 		bool is_camera_position_updated = false;
@@ -574,7 +584,15 @@ void Game::UpdateViewport() {
 	m_viewport.window_height = graphics->GetViewportHeight();
 	m_viewport.window_aspect_ratio = graphics->GetAspectRatio();
 	m_viewport.max.x = std::max< ssize_t >( m_viewport.min.x, m_viewport.window_width );
-	m_viewport.max.y = std::max< ssize_t >( m_viewport.min.y, m_viewport.window_height - m_ui.bottom_bar->GetHeight() + m_viewport.bottom_bar_overlap );
+	size_t bh;
+	if ( !m_glsmac ) {
+		// legacy ui
+		bh = m_ui.bottom_bar->GetHeight();
+	}
+	else {
+		bh = 256; // TODO
+	}
+	m_viewport.max.y = std::max< ssize_t >( m_viewport.min.y, m_viewport.window_height - bh + m_viewport.bottom_bar_overlap );
 	m_viewport.ratio.x = (float)m_viewport.window_width / m_viewport.max.x;
 	m_viewport.ratio.y = (float)m_viewport.window_height / m_viewport.max.y;
 	m_viewport.width = m_viewport.max.x - m_viewport.min.x;
@@ -620,17 +638,20 @@ void Game::UpdateCameraPosition() {
 		}
 	);
 
-	if ( m_ui.bottom_bar ) {
+	if ( !m_glsmac ) {
+		// legacy ui
+		if ( m_ui.bottom_bar ) {
 
-		m_ui.bottom_bar->SetMinimapSelection(
-			{
-				1.0f - m_map_data.range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z / m_viewport.window_aspect_ratio ),
-				1.0f - m_map_data.range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z / m_viewport.ratio.y / 0.707f )
-			}, {
-				2.0f / ( (float)( m_map_data.width ) * m_camera_position.z * m_viewport.window_aspect_ratio ),
-				2.0f / ( (float)( m_map_data.height ) * m_camera_position.z * m_viewport.ratio.y * 0.707f ),
-			}
-		);
+			m_ui.bottom_bar->SetMinimapSelection(
+				{
+					1.0f - m_map_data.range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z / m_viewport.window_aspect_ratio ),
+					1.0f - m_map_data.range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z / m_viewport.ratio.y / 0.707f )
+				}, {
+					2.0f / ( (float)( m_map_data.width ) * m_camera_position.z * m_viewport.window_aspect_ratio ),
+					2.0f / ( (float)( m_map_data.height ) * m_camera_position.z * m_viewport.ratio.y * 0.707f ),
+				}
+			);
+		}
 	}
 }
 
@@ -733,8 +754,14 @@ void Game::UpdateUICamera() {
 }
 
 const size_t Game::GetBottomBarMiddleHeight() const {
-	ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
-	return m_ui.bottom_bar->GetMiddleHeight();
+	if ( !m_glsmac ) {
+		// legacy ui
+		ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
+		return m_ui.bottom_bar->GetMiddleHeight();
+	}
+	else {
+		return 256 - 32 - 24; // TODO
+	}
 }
 
 const size_t Game::GetViewportHeight() const {
@@ -778,13 +805,16 @@ void Game::SaveMap( const std::string& path ) {
 }
 
 void Game::ConfirmExit( ::ui_legacy::ui_handler_t on_confirm ) {
-	if ( g_engine->GetConfig()->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
-		on_confirm();
-		return;
+	if ( !m_glsmac ) {
+		// legacy ui
+		if ( g_engine->GetConfig()->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
+			on_confirm();
+			return;
+		}
+		NEWV( popup, ui_legacy::popup::PleaseDontGo, this, on_confirm );
+		m_map_control.edge_scrolling.timer.Stop();
+		popup->Open();
 	}
-	NEWV( popup, ui_legacy::popup::PleaseDontGo, this, on_confirm );
-	m_map_control.edge_scrolling.timer.Stop();
-	popup->Open();
 }
 
 types::texture::Texture* Game::GetTerrainTexture() const {
@@ -829,11 +859,17 @@ Slot* Game::GetSlot( const size_t index ) const {
 }
 
 void Game::HideBottomBar() {
-	m_ui.bottom_bar->Hide();
+	if ( !m_glsmac ) {
+		// legacy ui
+		m_ui.bottom_bar->Hide();
+	}
 }
 
 void Game::ShowBottomBar() {
-	m_ui.bottom_bar->Show();
+	if ( !m_glsmac ) {
+		// legacy ui
+		m_ui.bottom_bar->Show();
+	}
 }
 
 void Game::DefineSlot(
@@ -942,8 +978,11 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 		}
 		case FrontendRequest::FR_TURN_STATUS: {
 			m_turn_status = request->data.turn_status.status;
-			ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
-			m_ui.bottom_bar->SetTurnStatus( m_turn_status );
+			if ( !m_glsmac ) {
+				// legacy ui
+				ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
+				m_ui.bottom_bar->SetTurnStatus( m_turn_status );
+			}
 			bool is_turn_active = m_turn_status == backend::turn::TS_TURN_ACTIVE || m_turn_status == backend::turn::TS_TURN_COMPLETE;
 			if ( m_is_turn_active != is_turn_active ) {
 				m_is_turn_active = is_turn_active;
@@ -1130,6 +1169,39 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			m_bm->RefreshBase( base );
 			break;
 		}
+		case FrontendRequest::FR_LOADER_SHOW: {
+			if ( m_glsmac ) {
+				// new ui
+				m_glsmac->ShowLoader( *request->data.loader.text );
+			}
+			else {
+				// legacy ui
+				g_engine->GetUI()->ShowLoader( *request->data.loader.text );
+			}
+			break;
+		}
+		case FrontendRequest::FR_LOADER_TEXT: {
+			if ( m_glsmac ) {
+				// new ui
+				m_glsmac->SetLoaderText( *request->data.loader.text );
+			}
+			else {
+				// legacy ui
+				g_engine->GetUI()->SetLoaderText( *request->data.loader.text );
+			}
+			break;
+		}
+		case FrontendRequest::FR_LOADER_HIDE: {
+			if ( m_glsmac ) {
+				// new ui
+				m_glsmac->HideLoader();
+			}
+			else {
+				// legacy ui
+				g_engine->GetUI()->HideLoader();
+			}
+			break;
+		}
 		default: {
 			THROW( "unexpected frontend request type: " + std::to_string( request->type ) );
 		}
@@ -1286,11 +1358,13 @@ void Game::Initialize(
 		}
 	}
 
-	// UI
-	NEW( m_ui.theme, ui_legacy::style::Theme );
-	ui->AddTheme( m_ui.theme );
-	NEW( m_ui.bottom_bar, ui_legacy::BottomBar, this );
-	ui->AddObject( m_ui.bottom_bar );
+	if ( !m_glsmac ) {
+		// legacy UI
+		NEW( m_ui.theme, ui_legacy::style::Theme );
+		ui->AddTheme( m_ui.theme );
+		NEW( m_ui.bottom_bar, ui_legacy::BottomBar, this );
+		ui->AddObject( m_ui.bottom_bar );
+	}
 
 	m_viewport.bottom_bar_overlap = 32; // it has transparent area on top so let map render through it
 
@@ -1319,7 +1393,10 @@ void Game::Initialize(
 				return false;
 			}
 
-			m_ui.bottom_bar->CloseMenus();
+			if ( !m_glsmac ) {
+				// legacy ui
+				m_ui.bottom_bar->CloseMenus();
+			}
 
 			if ( !data->key.modifiers ) {
 				auto* selected_tile = m_tm->GetSelectedTile();
@@ -1483,7 +1560,10 @@ void Game::Initialize(
 				return false;
 			}
 
-			m_ui.bottom_bar->CloseMenus();
+			if ( !m_glsmac ) {
+				// legacy ui
+				m_ui.bottom_bar->CloseMenus();
+			}
 
 			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
 				switch ( data->mouse.button ) {
@@ -1552,7 +1632,7 @@ void Game::Initialize(
 
 				m_map_control.last_drag_position = current_drag_position;
 			}
-			else if ( !m_ui.bottom_bar->IsMouseDraggingMiniMap() ) {
+			else if ( !m_glsmac && !m_ui.bottom_bar->IsMouseDraggingMiniMap() ) {
 				if ( g_engine->GetGraphics()->IsFullscreen() ) { // edge scrolling only usable in fullscreen
 					const ssize_t edge_distance = m_viewport.is_fullscreen
 						? Game::s_consts.map_scroll.static_scrolling.edge_distance_px.fullscreen
@@ -1687,7 +1767,7 @@ void Game::Deinitialize() {
 
 	auto* ui = g_engine->GetUI();
 
-	if ( m_ui.bottom_bar ) {
+	if ( !m_glsmac && m_ui.bottom_bar ) {
 		ui->RemoveObject( m_ui.bottom_bar );
 		ui->RemoveTheme( m_ui.theme );
 		m_ui.bottom_bar = nullptr;
@@ -1809,8 +1889,11 @@ void Game::Deinitialize() {
 }
 
 void Game::AddMessage( const std::string& text ) {
-	if ( m_ui.bottom_bar ) {
-		m_ui.bottom_bar->AddMessage( text );
+	if ( !m_glsmac ) {
+		// legacy ui
+		if ( m_ui.bottom_bar ) {
+			m_ui.bottom_bar->AddMessage( text );
+		}
 	}
 }
 
@@ -1896,7 +1979,10 @@ void Game::SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id ) {
 			m_um->DeselectUnit();
 			Log( "Selected tile at " + tile->GetCoords().ToString() + " ( " + tile->GetRenderData().selection_coords.center.ToString() + " )" );
 			ShowTileSelector();
-			m_ui.bottom_bar->PreviewTile( tile, selected_unit_id );
+			if ( !m_glsmac ) {
+				// legacy ui
+				m_ui.bottom_bar->PreviewTile( tile, selected_unit_id );
+			}
 			break;
 		}
 		case backend::TQP_UNIT_SELECT: {
@@ -1920,15 +2006,21 @@ void Game::DeselectTileOrUnit() {
 	m_um->DeselectUnit();
 	m_tm->DeselectTile();
 
-	m_ui.bottom_bar->HideTilePreview();
+	if ( !m_glsmac ) {
+		// legacy ui
+		m_ui.bottom_bar->HideTilePreview();
+	}
 }
 
 void Game::OpenBasePopup( base::Base* base ) {
-	if ( !m_base_popup ) {
-		m_tile_selected_before_base_popup = m_tm->GetPreviouslyDeselectedTile();
-		m_unit_selected_before_base_popup = m_um->GetPreviouslyDeselectedUnit();
-		NEW( m_base_popup, ui_legacy::popup::base_popup::BasePopup, this, base );
-		m_base_popup->Open();
+	if ( !m_glsmac ) {
+		// legacy ui
+		if ( !m_base_popup ) {
+			m_tile_selected_before_base_popup = m_tm->GetPreviouslyDeselectedTile();
+			m_unit_selected_before_base_popup = m_um->GetPreviouslyDeselectedUnit();
+			NEW( m_base_popup, ui_legacy::popup::base_popup::BasePopup, this, base );
+			m_base_popup->Open();
+		}
 	}
 }
 
@@ -2136,6 +2228,11 @@ types::texture::Texture* Game::GetMinimapTextureResult() {
 void Game::UpdateMinimap() {
 	NEWV( camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
 
+	if ( m_glsmac ) {
+		// new ui
+		return;
+	}
+
 	auto mm = m_ui.bottom_bar->GetMinimapDimensions();
 	// 'black grid' artifact workaround
 	// TODO: find reason and fix properly, maybe just keep larger internal viewport
@@ -2240,8 +2337,11 @@ util::random::Random* Game::GetRandom() const {
 }
 
 void Game::CloseMenus() {
-	if ( m_ui.bottom_bar ) {
-		m_ui.bottom_bar->CloseMenus();
+	if ( !m_glsmac ) {
+		// legacy ui
+		if ( m_ui.bottom_bar ) {
+			m_ui.bottom_bar->CloseMenus();
+		}
 	}
 }
 
@@ -2388,24 +2488,30 @@ void Game::SetSelectedTile( tile::Tile* tile ) {
 }
 
 void Game::RefreshSelectedTile( unit::Unit* selected_unit ) {
-	auto* selected_tile = m_tm->GetSelectedTile();
-	if ( selected_tile ) {
-		m_ui.bottom_bar->PreviewTile(
-			selected_tile, selected_unit
-				? selected_unit->GetId()
-				: 0
-		);
+	if ( !m_glsmac ) {
+		// legacy ui
+		auto* selected_tile = m_tm->GetSelectedTile();
+		if ( selected_tile ) {
+			m_ui.bottom_bar->PreviewTile(
+				selected_tile, selected_unit
+					? selected_unit->GetId()
+					: 0
+			);
+		}
 	}
 }
 
 void Game::RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* selected_unit ) {
-	auto* selected_tile = m_tm->GetSelectedTile();
-	if ( selected_tile && selected_tile == if_tile ) {
-		m_ui.bottom_bar->PreviewTile(
-			selected_tile, selected_unit
-				? selected_unit->GetId()
-				: 0
-		);
+	if ( !m_glsmac ) {
+		// legacy ui
+		auto* selected_tile = m_tm->GetSelectedTile();
+		if ( selected_tile && selected_tile == if_tile ) {
+			m_ui.bottom_bar->PreviewTile(
+				selected_tile, selected_unit
+					? selected_unit->GetId()
+					: 0
+			);
+		}
 	}
 }
 

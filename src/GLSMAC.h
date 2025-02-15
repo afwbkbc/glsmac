@@ -41,6 +41,7 @@ CLASS3( GLSMAC, common::Class, gse::Bindings, gse::Wrappable )
 	WRAPDEFS_PTR( GLSMAC )
 
 	void ShowLoader( const std::string& text );
+	void SetLoaderText( const std::string& text );
 	void HideLoader();
 
 private:

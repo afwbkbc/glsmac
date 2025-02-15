@@ -138,6 +138,9 @@ void GLSMAC::Iterate() {
 	}
 	m_gse->Iterate();
 	m_ui->Iterate();
+	if ( m_game ) {
+		m_game->Iterate();
+	}
 }
 
 WRAPIMPL_BEGIN( GLSMAC )
@@ -215,22 +218,34 @@ WRAPIMPL_END_PTR()
 UNWRAPIMPL_PTR( GLSMAC )
 
 void GLSMAC::ShowLoader( const std::string& text ) {
-	ASSERT_NOLOG( !m_is_loader_shown, "loader already shown" );
-	m_is_loader_shown = true;
-	m_loader_text = text;
-	m_loader_dots = 1;
-	m_loader_dots_timer.SetInterval( 100 );
-	gse::ExecutionPointer ep;
-	Trigger( m_ctx, {}, ep, "loader_show", {} );
+	if ( !m_is_loader_shown ) {
+		m_is_loader_shown = true;
+		m_loader_text = text;
+		m_loader_dots = 1;
+		m_loader_dots_timer.SetInterval( 100 );
+		gse::ExecutionPointer ep;
+		Trigger( m_ctx, {}, ep, "loader_show", {} );
+	}
 	UpdateLoaderText();
 }
 
+void GLSMAC::SetLoaderText( const std::string& text ) {
+	if ( !m_is_loader_shown ) {
+		ShowLoader( text );
+	}
+	else {
+		m_loader_text = text;
+		UpdateLoaderText();
+	}
+}
+
 void GLSMAC::HideLoader() {
-	ASSERT_NOLOG( m_is_loader_shown, "loader not shown" );
-	m_is_loader_shown = false;
-	m_loader_dots_timer.Stop();
-	gse::ExecutionPointer ep;
-	Trigger( m_ctx, {}, ep, "loader_hide", {} );
+	if ( m_is_loader_shown ) {
+		m_is_loader_shown = false;
+		m_loader_dots_timer.Stop();
+		gse::ExecutionPointer ep;
+		Trigger( m_ctx, {}, ep, "loader_hide", {} );
+	}
 }
 
 void GLSMAC::AsyncLoad( const std::string& text, const std::function< void() >& f, const std::function< void() >& f_after_load ) {
@@ -310,7 +325,6 @@ void GLSMAC::S_MainMenu( GSE_CALLABLE ) {
 void GLSMAC::S_Game( GSE_CALLABLE ) {
 	Trigger( GSE_CALL, "mainmenu_hide", {} );
 	m_game->Start();
-	Trigger( GSE_CALL, "game", {} );
 }
 
 void GLSMAC::UpdateLoaderText() {
@@ -383,9 +397,10 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 	m_state = nullptr;
 	m_is_game_running = true;
 
-	m_game = new ::game::frontend::Game( nullptr, this, real_state, UH( this ) {
+	m_game = new ::game::frontend::Game( nullptr, this, real_state, UH( this, ctx, si, ep ) {
 		//g_engine->GetScheduler()->RemoveTask( this );
-		THROW( "TODO: reset" );
+		auto ep2 = ep;
+		Trigger( ctx, si, ep2, "game", {} );
 	}, UH( this, real_state ) {
 		//m_menu_object->MaybeClose();
 		THROW( "TODO: cancel" );

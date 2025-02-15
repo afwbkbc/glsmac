@@ -75,6 +75,11 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.base_update.pops, base_pops_t, *other.data.base_update.pops );
 			break;
 		}
+		case FR_LOADER_SHOW:
+		case FR_LOADER_TEXT: {
+			NEW( data.loader.text, std::string, *other.data.loader.text );
+			break;
+		}
 
 		default: {
 			//
@@ -140,6 +145,11 @@ FrontendRequest::~FrontendRequest() {
 			DELETE( data.base_update.name );
 			DELETE( data.base_update.faction_id );
 			DELETE( data.base_update.pops );
+			break;
+		}
+		case FR_LOADER_TEXT:
+		case FR_LOADER_SHOW: {
+			DELETE( data.loader.text );
 			break;
 		}
 		default: {

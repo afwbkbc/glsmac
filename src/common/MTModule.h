@@ -25,21 +25,7 @@ class MTModule : public Module {
 public:
 
 	virtual void Iterate() {
-		mt_request_map_t requests = MT_GetRequests();
-		if ( !requests.empty() ) {
-			//Log( "MT Processing " + to_string( requests.size() ) + " requests" );
-			mt_response_map_t responses = {};
-			for ( auto& request : requests ) {
-				ASSERT( !m_current_request_id, "m_current_request_id already set to something" );
-				m_mt_states_mutex.lock();
-				m_current_request_id = request.first;
-				m_is_canceled = false;
-				m_mt_states_mutex.unlock();
-				responses[ request.first ] = ProcessRequest( request.second, m_is_canceled );
-				m_current_request_id = 0;
-			}
-			MT_SetResponses( responses );
-		}
+		ProcessRequests();
 	}
 
 	// use these to pass data from/to other threads
@@ -109,6 +95,26 @@ protected:
 	virtual const RESPONSE_TYPE ProcessRequest( const REQUEST_TYPE& request, MT_CANCELABLE ) = 0;
 	virtual void DestroyRequest( const REQUEST_TYPE& request ) = 0;
 	virtual void DestroyResponse( const RESPONSE_TYPE& response ) = 0;
+
+	void ProcessRequests() {
+		mt_request_map_t requests = MT_GetRequests();
+		if ( !requests.empty() ) {
+			//Log( "MT Processing " + to_string( requests.size() ) + " requests" );
+			mt_response_map_t responses = {};
+			for ( auto& request : requests ) {
+				ASSERT( !m_current_request_id, "m_current_request_id already set to something" );
+				m_mt_states_mutex.lock();
+				m_current_request_id = request.first;
+				m_is_canceled = false;
+				m_mt_states_mutex.unlock();
+				responses[ request.first ] = ProcessRequest( request.second, m_is_canceled );
+				m_current_request_id = 0;
+			}
+			if ( !responses.empty() ) {
+				MT_SetResponses( responses );
+			}
+		}
+	}
 
 private:
 

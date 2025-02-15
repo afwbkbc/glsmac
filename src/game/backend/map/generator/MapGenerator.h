@@ -13,6 +13,8 @@ class Random;
 namespace game {
 namespace backend {
 
+class Game;
+
 namespace settings {
 class MapSettings;
 }
@@ -81,7 +83,7 @@ CLASS( MapGenerator, common::Class )
 		{ settings::MAP_CONFIG_CLOUDS_DENSE,   0.75f }, // 'dense'
 	};
 
-	MapGenerator( util::random::Random* random );
+	MapGenerator( Game* game, util::random::Random* random );
 
 	void Generate( tile::Tiles* tiles, const settings::MapSettings* map_settings, MT_CANCELABLE );
 
@@ -92,6 +94,8 @@ CLASS( MapGenerator, common::Class )
 	virtual void GenerateDetails( tile::Tiles* tiles, const settings::MapSettings* map_settings, MT_CANCELABLE ) = 0;
 
 protected:
+
+	Game* m_game = nullptr;
 
 	// use this while generating for all random things
 	util::random::Random* const m_random = 0;
