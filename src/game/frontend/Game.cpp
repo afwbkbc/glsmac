@@ -352,7 +352,7 @@ void Game::Iterate() {
 			m_mt_ids.get_frontend_requests = 0;
 			const auto* requests = response.data.get_frontend_requests.requests;
 			if ( requests ) {
-				Log( "got " + std::to_string( requests->size() ) + " frontend requests" );
+				//Log( "got " + std::to_string( requests->size() ) + " frontend requests" );
 
 				for ( const auto& request : *requests ) {
 					ProcessRequest( &request );

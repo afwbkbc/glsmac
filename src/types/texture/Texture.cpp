@@ -441,8 +441,8 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 					if ( !perlin_need_pixel && !perlin_need_border && ( flags & types::texture::AM_COASTLINE_BORDER ) ) {
 						if (
 							( perlin_maxx[ y ] && x < perlin_maxx[ y ] + COASTLINES_BORDER_RND ) ||
-								( perlin_maxx[ y - 1 ] && y > 0 && x <= perlin_maxx[ y - 1 ] ) ||
-								( perlin_maxx[ y + 1 ] && y < h - 1 && x <= perlin_maxx[ y + 1 ] )
+								( y > 0 && perlin_maxx[ y - 1 ] && x <= perlin_maxx[ y - 1 ] ) ||
+								( y < h - 1 && perlin_maxx[ y + 1 ] && x <= perlin_maxx[ y + 1 ] )
 							) {
 							perlin_need_border = true;
 						}
@@ -455,8 +455,8 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 					if ( !perlin_need_pixel && !perlin_need_border && ( flags & types::texture::AM_COASTLINE_BORDER ) ) {
 						if (
 							( perlin_maxy[ x ] && y < perlin_maxy[ x ] + COASTLINES_BORDER_RND ) ||
-								( perlin_maxy[ x - 1 ] && x > 0 && y <= perlin_maxy[ x - 1 ] ) ||
-								( perlin_maxy[ x + 1 ] && x < w - 1 && y <= perlin_maxy[ x + 1 ] )
+								( x > 0 && perlin_maxy[ x - 1 ] && y <= perlin_maxy[ x - 1 ] ) ||
+								( x < w - 1 && perlin_maxy[ x + 1 ] && y <= perlin_maxy[ x + 1 ] )
 							) {
 							perlin_need_border = true;
 						}
@@ -470,7 +470,7 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 						if (
 							( perlin_maxx[ y ] && ( w - x ) < perlin_maxx[ y ] + COASTLINES_BORDER_RND ) ||
 								( y > 0 && perlin_maxx[ y - 1 ] && ( w - x ) <= perlin_maxx[ y - 1 ] ) ||
-								( perlin_maxx[ y + 1 ] && y < h - 1 && ( w - x ) <= perlin_maxx[ y + 1 ] )
+								( y < h - 1 && perlin_maxx[ y + 1 ] && ( w - x ) <= perlin_maxx[ y + 1 ] )
 							) {
 							perlin_need_border = true;
 						}
@@ -484,7 +484,7 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 						if (
 							( perlin_maxy[ x ] && ( h - y ) < perlin_maxy[ x ] + COASTLINES_BORDER_RND ) ||
 								( x > 0 && perlin_maxy[ x - 1 ] && ( h - y ) <= perlin_maxy[ x - 1 ] ) ||
-								( perlin_maxy[ x + 1 ] && x < w - 1 && ( h - y ) <= perlin_maxy[ x + 1 ] )
+								( x < w - 1 && perlin_maxy[ x + 1 ] && ( h - y ) <= perlin_maxy[ x + 1 ] )
 							) {
 							perlin_need_border = true;
 						}

@@ -691,7 +691,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 		case OP_GET_FRONTEND_REQUESTS: {
 			//Log( "got events request" );
 			if ( !m_pending_frontend_requests->empty() ) {
-				Log( "Sending " + std::to_string( m_pending_frontend_requests->size() ) + " events to frontend" );
+				//Log( "Sending " + std::to_string( m_pending_frontend_requests->size() ) + " events to frontend" );
 				response.data.get_frontend_requests.requests = m_pending_frontend_requests; // will be destroyed in DestroyResponse
 				NEW( m_pending_frontend_requests, std::vector< FrontendRequest > ); // reset
 			}
