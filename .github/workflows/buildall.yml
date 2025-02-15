@@ -56,7 +56,7 @@ jobs:
           compression-level: 0
   prerelease:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/try_fix_windows_builds'
     needs: [prepare, scanbuild_ubuntu, build_ubuntu, build_windows]
     steps:
       - uses: dev-drprasad/delete-tag-and-release@v1.1
