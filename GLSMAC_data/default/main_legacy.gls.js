@@ -11,8 +11,6 @@ return ((gm) => {
 
 	gm.on('start', (e) => {
 
-		#print('GM ON START');
-
 		let players = [];
 		let players_sz = 0;
 		let random_player = () => {
@@ -47,8 +45,6 @@ return ((gm) => {
 		let all_bases = [];
 
 		e.game.on('configure', (e) => {
-
-			#print('E GAME ON CONFIGURE');
 
 			units.configure(e.game);
 			resources.configure(e.game.rm);

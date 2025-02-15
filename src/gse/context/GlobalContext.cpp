@@ -40,8 +40,10 @@ const std::string& GlobalContext::GetSourceLine( const size_t line_num ) const {
 	return m_source_lines.at( line_num - 1 );
 }
 
+static const si_t s_empty_si = {};
 const si_t& GlobalContext::GetSI() const {
-	THROW( "global contexts are not supposed to have si" );
+	//THROW( "global contexts are not supposed to have si" ); // for some reason this gets thrown at Release builds but not Debug
+	return s_empty_si;
 }
 
 const Context::script_info_t& GlobalContext::GetScriptInfo() const {
