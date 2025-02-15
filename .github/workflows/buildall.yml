@@ -122,7 +122,7 @@ jobs:
           ARCHIVE_NAME: glsmac-ubuntu64-${{ needs.prepare.outputs.ver }}-${{ needs.prepare.outputs.sha }}.tar.gz
         run: |
           mkdir glsmac
-          cp -v build/bin/GLSMAC build/bin/GLSMAC_data glsmac
+          cp -r build/bin/GLSMAC build/bin/GLSMAC_data glsmac
           tar -zcvf $ARCHIVE_NAME glsmac
       - name: upload
         uses: actions/upload-artifact@v4
