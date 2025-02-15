@@ -21,7 +21,7 @@ int main( int argc, char* argv[] ) {
 
 	std::filesystem::create_directory( out_dir );
 
-	std::ofstream out( out_file.native() );
+	std::ofstream out( out_file.string() );
 	if ( !out.is_open() ) {
 		std::cout << "Could not open file for writing: " << out_file << std::endl;
 		exit( 1 );

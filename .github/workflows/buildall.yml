@@ -132,7 +132,7 @@ jobs:
           compression-level: 0
   build_windows:
     needs: [ prepare ]
-    runs-on: windows-2025
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
       - name: install_dependencies
