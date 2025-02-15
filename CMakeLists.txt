@@ -60,7 +60,7 @@ ENDIF ()
 # not using -Og for debug builds because it optimizes some variables out
 IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
 	TARGET_COMPILE_DEFINITIONS( ${PROJECT_NAME} PRIVATE DEBUG=1 )
-	SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb -O0" )
+	SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb -O0 -fsanitize=address -fsanitize=undefined" )
 ELSE ()
 	SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3" )
 	IF ( CMAKE_BUILD_TYPE STREQUAL "Portable" )
