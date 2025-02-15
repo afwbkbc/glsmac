@@ -170,7 +170,7 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 
 	ssize_t sx, sy; // source
 	ssize_t dx, dy; // dest
-	float r; // radius for rounded corners
+	float r = 0.0f; // radius for rounded corners
 	std::pair< float, float > srx, sry; // stretch ratio ranges
 	float ssx_start, ssx, ssy; // stretched source
 

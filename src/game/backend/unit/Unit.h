@@ -61,7 +61,7 @@ public:
 	void SetTile( map::tile::Tile* tile );
 
 	static const types::Buffer Serialize( const Unit* unit );
-	static Unit* Unserialize( types::Buffer& buf, UnitManager* units );
+	static Unit* Unserialize( types::Buffer& buf, UnitManager* um );
 
 	WRAPDEFS_DYNAMIC( Unit );
 

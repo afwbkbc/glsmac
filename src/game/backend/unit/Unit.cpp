@@ -95,19 +95,20 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 	return buf;
 }
 
-Unit* Unit::Unserialize( types::Buffer& buf, UnitManager* units ) {
+Unit* Unit::Unserialize( types::Buffer& buf, UnitManager* um ) {
+	ASSERT_NOLOG( um, "um is null" );
 	const auto id = buf.ReadInt();
 	auto defbuf = types::Buffer( buf.ReadString() );
 	auto* def = Def::Unserialize( defbuf );
-	auto* slot = units ? units->GetSlot( buf.ReadInt() ) : nullptr;
+	auto* slot = um->GetSlot( buf.ReadInt() );
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
-	auto* tile = units ? units->GetMap()->GetTile( pos_x, pos_y ) : nullptr;
+	auto* tile = um->GetMap()->GetTile( pos_x, pos_y );
 	const auto movement = (movement_t)buf.ReadFloat();
 	const auto morale = (morale_t)buf.ReadInt();
 	const auto health = (health_t)buf.ReadFloat();
 	const auto moved_this_turn = buf.ReadBool();
-	return new Unit( units, id, def, slot, tile, movement, morale, health, moved_this_turn );
+	return new Unit( um, id, def, slot, tile, movement, morale, health, moved_this_turn );
 }
 
 WRAPIMPL_DYNAMIC_GETTERS( Unit )

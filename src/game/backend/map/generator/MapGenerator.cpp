@@ -24,8 +24,6 @@ void MapGenerator::Generate( tile::Tiles* tiles, const settings::MapSettings* ma
 	ASSERT( TARGET_LAND_AMOUNTS.find( map_settings->ocean ) != TARGET_LAND_AMOUNTS.end(), "unknown map ocean setting " + std::to_string( map_settings->ocean ) );
 	float desired_land_amount = TARGET_LAND_AMOUNTS.at( map_settings->ocean );
 
-	auto* ui = g_engine->GetUI();
-
 	bool need_generation = true;
 	size_t regenerations_asked = 0;
 	while ( need_generation ) {

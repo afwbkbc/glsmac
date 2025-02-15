@@ -781,8 +781,6 @@ void Map::InitTextureAndMesh() {
 void Map::ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles, MT_CANCELABLE ) {
 	ASSERT( m_map_state, "map state not set" );
 
-	auto* ui = g_engine->GetUI();
-
 	// small optimization to avoid reallocations
 	const size_t percent_len = 2;
 	std::string sp( percent_len, ' ' );

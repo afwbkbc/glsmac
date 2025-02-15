@@ -184,6 +184,7 @@ void Game::Start() {
 	NEW( m_um, unit::UnitManager, this );
 	NEW( m_bm, base::BaseManager, this );
 	NEW( m_am, animation::AnimationManager, this );
+
 }
 
 void Game::Stop() {
