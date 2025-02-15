@@ -626,6 +626,7 @@ void UI::ActivateModule( module::Module* module ) {
 	m_active_module = module;
 	NEWV( event, event::MouseMove, m_last_mouse_position.x, m_last_mouse_position.y );
 	m_active_module->ProcessEvent( event );
+	DELETE( event );
 }
 
 void UI::DeactivateModule( module::Module* module ) {

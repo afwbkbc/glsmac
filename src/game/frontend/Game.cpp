@@ -86,7 +86,6 @@ void Game::Start() {
 	// note: game thread has it's own random, this one is mostly for UI and small things
 	NEW( m_random, util::random::Random );
 
-	auto* ui = g_engine->GetUI();
 	auto* game = g_engine->GetGame();
 	auto* config = g_engine->GetConfig();
 
@@ -2226,12 +2225,13 @@ types::texture::Texture* Game::GetMinimapTextureResult() {
 }
 
 void Game::UpdateMinimap() {
-	NEWV( camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
 
 	if ( m_glsmac ) {
 		// new ui
 		return;
 	}
+
+	NEWV( camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
 
 	auto mm = m_ui.bottom_bar->GetMinimapDimensions();
 	// 'black grid' artifact workaround
@@ -2346,7 +2346,6 @@ void Game::CloseMenus() {
 }
 
 void Game::ExitGame( const f_exit_game on_game_exit ) {
-	auto* ui = g_engine->GetUI();
 	auto* game = g_engine->GetGame();
 	ShowLoader( "Exiting game" );
 	m_on_game_exit = on_game_exit;
