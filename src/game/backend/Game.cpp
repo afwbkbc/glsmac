@@ -190,6 +190,12 @@ void Game::Start() {
 void Game::Stop() {
 	Log( "Stopping thread" );
 
+	if ( m_state ) {
+	   DELETE( m_state );
+	   m_state = nullptr;
+	   m_connection = nullptr;
+	}
+
 	ResetGame();
 
 	DELETE( m_map_editor );
