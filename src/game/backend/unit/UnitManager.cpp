@@ -254,7 +254,7 @@ void UnitManager::PushUpdates() {
 	}
 }
 
-WRAPIMPL_BEGIN( UnitManager, CLASS_UM )
+WRAPIMPL_BEGIN( UnitManager )
 	WRAPIMPL_PROPS
 		{
 			"define_morales",
@@ -364,8 +364,8 @@ WRAPIMPL_BEGIN( UnitManager, CLASS_UM )
 					owner->GetIndex(),
 					tile->coord.x,
 					tile->coord.y,
-					GetMorale( ctx, call_si, morale ),
-					GetHealth( ctx, call_si, health )
+					GetMorale( GSE_CALL, morale ),
+					GetHealth( GSE_CALL, health )
 				) );
 			})
 		},
@@ -378,7 +378,7 @@ WRAPIMPL_BEGIN( UnitManager, CLASS_UM )
 			})
 		},
 	};
-WRAPIMPL_END_PTR( UnitManager )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( UnitManager )
 
@@ -401,7 +401,6 @@ void UnitManager::Serialize( types::Buffer& buf ) const {
 	Log( "Serializing " + std::to_string( m_units.size() ) + " units" );
 	buf.WriteInt( m_units.size() );
 	for ( const auto& it : m_units ) {
-		buf.WriteInt( it.first );
 		buf.WriteString( Unit::Serialize( it.second ).ToString() );
 	}
 	buf.WriteInt( Unit::GetNextId() );
@@ -439,7 +438,6 @@ void UnitManager::Unserialize( types::Buffer& buf ) {
 		m_unprocessed_units.reserve( sz );
 	}
 	for ( size_t i = 0 ; i < sz ; i++ ) {
-		const auto unit_id = buf.ReadInt();
 		auto b = types::Buffer( buf.ReadString() );
 		SpawnUnit( Unit::Unserialize( b, this ) );
 	}

@@ -590,8 +590,8 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 
 	ASSERT( target == GL_TEXTURE_2D, "glTexImage2D unknown target " + std::to_string( target ) + " @" + source );
 	ASSERT( level == 0, "glTexImage2D unknown level " + std::to_string( level ) + " @" + source );
-	ASSERT( width > 0, "glTexImage2D zero width" );
-	ASSERT( height > 0, "glTexImage2D zero height" );
+	ASSERT( width >= 0, "glTexImage2D zero width" );
+	ASSERT( height >= 0, "glTexImage2D zero height" );
 	ASSERT( border == 0, "glTexImage2D unknown border " + std::to_string( border ) + " @" + source );
 	ASSERT(
 		type == GL_UNSIGNED_BYTE ||

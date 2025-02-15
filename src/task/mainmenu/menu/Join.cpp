@@ -3,9 +3,9 @@
 #include "engine/Engine.h"
 
 #include "game/backend/connection/Client.h"
-#include "ui/object/Section.h"
-#include "ui/object/Input.h"
-#include "ui/object/Label.h"
+#include "ui_legacy/object/Section.h"
+#include "ui_legacy/object/Input.h"
+#include "ui_legacy/object/Label.h"
 #include "task/mainmenu/MainMenu.h"
 #include "game/backend/State.h"
 
@@ -30,19 +30,19 @@ Join::~Join() {
 void Join::Show() {
 	PopupMenu::Show();
 
-	NEW( m_section, ui::object::Section, "PopupSection" );
+	NEW( m_section, ui_legacy::object::Section, "PopupSection" );
 	m_section->SetMargin( 4 );
 	m_body->AddChild( m_section );
 
-	NEW( m_label_yourname, ui::object::Label, "PopupLabel" );
-	m_label_yourname->SetAlign( ui::ALIGN_LEFT | ui::ALIGN_TOP );
+	NEW( m_label_yourname, ui_legacy::object::Label, "PopupLabel" );
+	m_label_yourname->SetAlign( ui_legacy::ALIGN_LEFT | ui_legacy::ALIGN_TOP );
 	m_label_yourname->SetLeft( 12 );
 	m_label_yourname->SetTop( 5 );
 	m_label_yourname->SetText( "Enter your name:" );
 	m_section->AddChild( m_label_yourname );
 
-	NEW( m_input_yourname, ui::object::Input, "PopupInput" );
-	m_input_yourname->SetAlign( ui::ALIGN_LEFT | ui::ALIGN_TOP );
+	NEW( m_input_yourname, ui_legacy::object::Input, "PopupInput" );
+	m_input_yourname->SetAlign( ui_legacy::ALIGN_LEFT | ui_legacy::ALIGN_TOP );
 	m_input_yourname->SetLeft( 144 );
 	m_input_yourname->SetTop( 5 );
 	m_input_yourname->SetRight( 12 );
@@ -50,15 +50,15 @@ void Join::Show() {
 	m_input_yourname->SetMaxLength( 20 ); // TODO: determine by rendered width
 	m_section->AddChild( m_input_yourname );
 
-	NEW( m_label_gameip, ui::object::Label, "PopupLabel" );
-	m_label_gameip->SetAlign( ui::ALIGN_LEFT | ui::ALIGN_TOP );
+	NEW( m_label_gameip, ui_legacy::object::Label, "PopupLabel" );
+	m_label_gameip->SetAlign( ui_legacy::ALIGN_LEFT | ui_legacy::ALIGN_TOP );
 	m_label_gameip->SetLeft( 12 );
 	m_label_gameip->SetTop( 34 );
 	m_label_gameip->SetText( "Enter game IP:" );
 	m_section->AddChild( m_label_gameip );
 
-	NEW( m_input_gameip, ui::object::Input, "PopupInput" );
-	m_input_gameip->SetAlign( ui::ALIGN_LEFT | ui::ALIGN_TOP );
+	NEW( m_input_gameip, ui_legacy::object::Input, "PopupInput" );
+	m_input_gameip->SetAlign( ui_legacy::ALIGN_LEFT | ui_legacy::ALIGN_TOP );
 	m_input_gameip->SetLeft( 144 );
 	m_input_gameip->SetTop( 34 );
 	m_input_gameip->SetRight( 12 );

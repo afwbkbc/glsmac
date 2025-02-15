@@ -6,11 +6,9 @@
 
 #include "version.h"
 
-#include "util/ArgParser.h"
+#include "util/ConfigManager.h"
 #include "util/FS.h"
 #include "util/random/Random.h"
-
-#include "game/backend/settings/Settings.h"
 
 namespace config {
 
@@ -18,7 +16,7 @@ void Config::Error( const std::string& error ) {
 	std::cout << std::endl
 		<< "ERROR: " << error << std::endl
 		<< std::endl
-		<< m_parser->GetUnknownArgumentNote() << std::endl
+		<< m_manager->GetUnknownArgumentNote() << std::endl
 		<< std::endl;
 	exit( EXIT_FAILURE );
 };
@@ -40,55 +38,55 @@ const types::Vec2< size_t > Config::ParseSize( const std::string& value ) {
 	return result;
 };
 
-Config::Config( const int argc, const char* argv[] )
+Config::Config( const std::string& path )
 	: m_smac_path( "" )
 	, m_data_path( "GLSMAC_data" )
 	, m_prefix( DEFAULT_GLSMAC_PREFIX + util::FS::PATH_SEPARATOR ) {
 
-	m_parser = new util::ArgParser( argc, argv );
+	m_manager = new util::ConfigManager( path, GetPrefix() + "config.yml" );
 
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"benchmark", "Disable VSync and FPS limit", AH( this ) {
 			m_launch_flags |= LF_BENCHMARK;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"datapath", "DATA_PATH", "Specify path to GLSMAC_data directory (default: " + util::FS::GetCurrentDirectory() + "/" + m_data_path + ")", AH( this ) {
 			m_data_path = value;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"help", "Show this message", AH( this ) {
-			std::cout << m_parser->GetHelpString() << std::endl;
+			std::cout << m_manager->GetHelpString() << std::endl;
 			exit( EXIT_SUCCESS );
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"nosound", "Start without sound", AH( this ) {
 			m_launch_flags |= LF_NOSOUND;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"prefix", "GLSMAC_PREFIX", "Path to store GLSMAC data in (default: " + DEFAULT_GLSMAC_PREFIX + ")", AH( this ) {
 			m_prefix = value + util::FS::PATH_SEPARATOR;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"skipintro", "Skip intro", AH( this ) {
 			m_launch_flags |= LF_SKIPINTRO;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"showfps", "Show FPS counter at top left corner", AH( this ) {
 			m_launch_flags |= LF_SHOWFPS;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"smacpath", "SMAC_PATH", "Specify path to SMAC directory (must contain SMACX too)", AH( this ) {
 			m_smac_path = value;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"smactype", "SMAC_TYPE", "Specify type of SMAC installation: gog, loki, steam, legacy (default: autodetect)", AH( this ) {
 			const std::unordered_map< std::string, smac_type_t > values = {
 				{ "gog",    ST_GOG },
@@ -109,7 +107,7 @@ Config::Config( const int argc, const char* argv[] )
 			}
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"version", "Show version of GLSMAC", AH() {
 			std::cout
 				<< std::endl
@@ -120,12 +118,12 @@ Config::Config( const int argc, const char* argv[] )
 			exit( EXIT_SUCCESS );
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"windowed", "Start in windowed mode", AH( this ) {
 			m_launch_flags |= LF_WINDOWED;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"window-size", "WINDOW_SIZE", "Size of window", AH( this ) {
 			if ( !HasLaunchFlag( LF_WINDOWED ) ) {
 				Error( "Window-related options can only be used after --windowed argument!" );
@@ -135,13 +133,13 @@ Config::Config( const int argc, const char* argv[] )
 		}
 	);
 
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"quickstart", "Skip intro and main menu and generate/load map directly", AH( this ) {
 			m_launch_flags |= LF_QUICKSTART;
 		}
 	);
 	const std::string s_quickstart_argument_missing = "Quickstart-related options can only be used after --quickstart argument!";
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"quickstart-seed", "SEED", "Generate map with specific seed (A:B:C:D)", AH( this, s_quickstart_argument_missing ) {
 			if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
 				Error( s_quickstart_argument_missing );
@@ -155,7 +153,7 @@ Config::Config( const int argc, const char* argv[] )
 			m_launch_flags |= LF_QUICKSTART_SEED;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"quickstart-mapfile", "MAP_FILE", "Load from existing map file (*.gsm)", AH( this, s_quickstart_argument_missing ) {
 			if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
 				Error( s_quickstart_argument_missing );
@@ -167,7 +165,7 @@ Config::Config( const int argc, const char* argv[] )
 			m_launch_flags |= LF_QUICKSTART_MAP_FILE;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"quickstart-mapsize", "MAP_SIZE", "Generate map of specific size (WxH)", AH( this, s_quickstart_argument_missing ) {
 			if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
 				Error( s_quickstart_argument_missing );
@@ -180,7 +178,7 @@ Config::Config( const int argc, const char* argv[] )
 		[ this, s_quickstart_argument_missing ]( const std::string& name, const std::vector< std::string >& values, const std::string& desc, launch_flag_t flag, game::backend::settings::map_config_value_t* out_param )
 			-> void {
 			ASSERT( values.size() == 3, "values size mismatch" );
-			m_parser->AddRule(
+			m_manager->AddRule(
 				name, values[ 0 ] + "|" + values[ 1 ] + "|" + values[ 2 ], "Generate map with specific " + desc + " setting",
 				AH( this, name, values, s_quickstart_argument_missing, out_param, &desc, flag ) {
 					if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
@@ -234,7 +232,7 @@ Config::Config( const int argc, const char* argv[] )
 		}, "cloud cover",
 		LF_QUICKSTART_MAP_CLOUDS, &m_quickstart_map_clouds
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"quickstart-faction", "FACTION", "Play as specific faction", AH( this, s_quickstart_argument_missing ) {
 			if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
 				Error( s_quickstart_argument_missing );
@@ -243,7 +241,7 @@ Config::Config( const int argc, const char* argv[] )
 			m_launch_flags |= LF_QUICKSTART_FACTION;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"mods", "MODS", "Comma-separated list of mods to load", AH( this ) {
 			std::stringstream ss( value );
 			while ( ss.good() ) {
@@ -269,29 +267,42 @@ Config::Config( const int argc, const char* argv[] )
 			m_launch_flags |= LF_MODS;
 		}
 	);
+	m_manager->AddRule(
+		"newui", "Use new (experimental/unfinished) UI, development purposes only", AH( this ) {
+			m_launch_flags |= LF_NEWUI;
+		}
+	);
+	m_manager->AddRule(
+		"newui-mainscript", "SCRIPT_NAME", "Specify alternate main script to run (default: main)", AH( this ) {
+			if ( !HasLaunchFlag( LF_NEWUI ) ) {
+				Error( "--newui-mainscript requires --newui argument!" );
+			}
+			m_newui_mainscript = value;
+		}
+	);
 
 #ifdef DEBUG
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"gdb", "Try to start within gdb (on supported platforms)", AH( this ) {
 			m_debug_flags |= DF_GDB;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"mapdump", "Save map dump upon loading map", AH( this ) {
 			m_debug_flags |= DF_MAPDUMP;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"memorydebug", "Add extra memory checks and tracking (slow!)", AH( this ) {
 			m_debug_flags |= DF_MEMORYDEBUG;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"nopings", "Omit pings and timeouts during multiplayer games", AH( this ) {
 			m_debug_flags |= DF_NOPINGS;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"quickstart-mapdump", "MAP_DUMP_FILE", "Load from existing map dump file (*.gsmd)", AH( this, s_quickstart_argument_missing ) {
 			if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
 				Error( s_quickstart_argument_missing );
@@ -303,22 +314,22 @@ Config::Config( const int argc, const char* argv[] )
 			m_debug_flags |= DF_QUICKSTART_MAP_DUMP;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"quiet", "Do not output debug logs to console", AH( this ) {
 			m_debug_flags |= DF_QUIET;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"gse-prompt-js", "Open interactive JS prompt", AH( this ) {
 			m_debug_flags |= DF_GSE_ONLY | DF_GSE_PROMPT_JS;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"gse-tests", "Run GSE tests and exit", AH( this ) {
 			m_debug_flags |= DF_GSE_ONLY | DF_GSE_TESTS;
 		}
 	);
-	m_parser->AddRule(
+	m_manager->AddRule(
 		"gse-tests-script", "SCRIPT_PATH", "Run only specific GSE test script", AH( this ) {
 			if ( !HasDebugFlag( DF_GSE_TESTS ) ) {
 				Error( "Gse-tests-related options can only be used after --gse-tests!" );
@@ -333,22 +344,18 @@ Config::Config( const int argc, const char* argv[] )
 }
 
 Config::~Config() {
-	if ( m_parser ) {
-		delete m_parser;
-	}
+	delete m_manager;
 }
 
-void Config::Init() {
-	ASSERT( m_parser, "parser not set" );
+void Config::Init( const int argc, const char* argv[] ) {
+	ASSERT( m_manager, "parser not set" );
 	try {
-		m_parser->Parse();
+		m_manager->ParseFile();
+		m_manager->ParseArgs( argc, argv );
 	}
 	catch ( std::runtime_error& e ) {
 		Error( e.what() );
 	}
-
-	delete m_parser; // all done
-	m_parser = nullptr;
 }
 
 const std::string Config::GetEnv( const std::string& var ) const {
@@ -390,6 +397,10 @@ const std::vector< std::string > Config::GetPossibleSMACPaths() const {
 
 const smac_type_t Config::GetSMACType() const {
 	return m_smac_type;
+}
+
+void Config::SetSMACPath( const std::string& path ) const {
+	m_manager->UpdateSetting( "smacpath", path );
 }
 
 const bool Config::HasLaunchFlag( launch_flag_t flag ) const {
@@ -434,6 +445,10 @@ const std::string& Config::GetQuickstartFaction() const {
 
 const std::vector< std::string >& Config::GetModPaths() const {
 	return m_mod_paths;
+}
+
+const std::string& Config::GetNewUIMainScript() const {
+	return m_newui_mainscript;
 }
 
 #ifdef DEBUG

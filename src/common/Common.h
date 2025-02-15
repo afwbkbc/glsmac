@@ -1,20 +1,10 @@
 #pragma once
 
-#ifdef _WIN32
-#include "env/Win32.h"
-#else
-#include "env/Posix.h"
-#endif
+#include "env/Env.h"
 
 #include <string>
 
 #include "Assert.h"
-
-#ifdef DEBUG
-#include "env/Debug.h"
-#else
-#include "env/Release.h"
-#endif
 
 // used in multiline ToString() implementations
 
@@ -101,6 +91,10 @@ class _name : public _parent { \
 
 #define CLASS2( _name, _parent1, _parent2 ) \
 class _name : public _parent1, public _parent2 { \
+    CLASS_HEADER( _name, _parent1 )
+
+#define CLASS3( _name, _parent1, _parent2, _parent3 ) \
+class _name : public _parent1, public _parent2, public _parent3 { \
     CLASS_HEADER( _name, _parent1 )
 
 }

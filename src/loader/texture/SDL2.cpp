@@ -48,10 +48,7 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename ) {
 		}
 
 		NEWV( texture, types::texture::Texture, filename, image->w, image->h );
-		texture->m_aspect_ratio = (float)texture->m_height / texture->m_width;
-		texture->m_bpp = image->format->BitsPerPixel / 8;
-		texture->m_bitmap_size = image->w * image->h * texture->m_bpp;
-		texture->m_bitmap = (unsigned char*)malloc( texture->m_bitmap_size );
+		ASSERT( texture->m_bpp == image->format->BitsPerPixel / 8, "unsupported texture bpp" );
 		memcpy( ptr( texture->m_bitmap, 0, texture->m_bitmap_size ), image->pixels, texture->m_bitmap_size );
 		SDL_FreeSurface( image );
 
@@ -60,7 +57,12 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename ) {
 		FixTransparency( texture );
 		FixYellowShadows( texture );
 
-		m_textures[ filename ] = texture;
+		m_textures.insert(
+			{
+				filename,
+				texture
+			}
+		);
 
 		DEBUG_STAT_INC( textures_loaded );
 
@@ -93,21 +95,21 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& name, const s
 		NEWV( subtexture, types::texture::Texture, subtexture_key, x2 - x1 + 1, y2 - y1 + 1 );
 
 		subtexture->AddFrom( full_texture, types::texture::AM_DEFAULT, x1, y1, x2, y2 );
-		if ( ( flags & ui::LT_ROTATE ) == ui::LT_ROTATE ) {
+		if ( ( flags & ui_legacy::LT_ROTATE ) == ui_legacy::LT_ROTATE ) {
 			subtexture->Rotate();
 		}
-		if ( ( flags & ui::LT_FLIPV ) == ui::LT_FLIPV ) {
+		if ( ( flags & ui_legacy::LT_FLIPV ) == ui_legacy::LT_FLIPV ) {
 			subtexture->FlipV();
 		}
 
-		if ( ( flags & ui::LT_ALPHA ) == ui::LT_ALPHA ) {
+		if ( ( flags & ui_legacy::LT_ALPHA ) == ui_legacy::LT_ALPHA ) {
 			subtexture->SetAlpha( value );
 		}
-		if ( ( flags & ui::LT_CONTRAST ) == ui::LT_CONTRAST ) {
+		if ( ( flags & ui_legacy::LT_CONTRAST ) == ui_legacy::LT_CONTRAST ) {
 			subtexture->SetContrast( value );
 		}
 
-		if ( ( flags & ui::LT_TILED ) == ui::LT_TILED ) {
+		if ( ( flags & ui_legacy::LT_TILED ) == ui_legacy::LT_TILED ) {
 			subtexture->m_is_tiled = true;
 		}
 
@@ -138,6 +140,7 @@ void SDL2::FixTransparency( types::texture::Texture* texture ) const {
 
 static const types::Color::rgba_t s_yellow_shadow_src = types::Color::RGB( 253, 189, 118 );
 static const types::Color::rgba_t s_yellow_shadow_dst = types::Color::RGBA( 0, 0, 0, 127 );
+
 void SDL2::FixYellowShadows( types::texture::Texture* texture ) const {
 	if ( m_fix_yellow_shadows ) {
 		void* at = nullptr;

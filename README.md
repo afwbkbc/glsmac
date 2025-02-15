@@ -20,7 +20,7 @@ GLSMAC discord : https://discord.gg/fWG3xK7cUx
 
 ### Why?
 
-SMAC was a great game, possibly the best in 4x genre, but it's outdated so much it barely runs on modern systems. Especially multiplayer (which is based on ancient directplay).
+SMAC was a great game, possibly the best in 4x genre, but it's outdated so much it barely runs on modern systems. Especially multiplayer (which is based on ancient directplay). Also it can't be modded as thoroughly as many would like.
 
 ### What will be same between GLSMAC and original game?
 
@@ -42,9 +42,19 @@ Maybe I'll make saves and maps compatible, but it's very low priority.
 
 Mod compatibility - it should work with asset mods that replace .PCX, .WAV or other asset files in SMAC directory (later it will also accept upscaled versions). It won't work with mods that modify or link to terranx.exe. Mods that change .txt files - probably not, maybe some settings and rules will be read from original SMAC's .txt but not all of them.
 
+### Modding
+
+Early stage of modding support is already here. Under the hood GLSMAC loads ".gls.js" scripts (language similar to JavaScript but simplified and optimized for our needs) for game logic decisions.
+
+You can check core scripts here: https://github.com/afwbkbc/glsmac/tree/main/GLSMAC_data/default
+
+I also made 'demo mod' to demonstrate how scripting can be used: https://github.com/afwbkbc/glsmac-demo-mod , I'll keep updating it as GLSMAC scripting gets more features over time.
+
+Some things are still hardcoded in C++ for now, but in the end everything will be exposed to scripts, for maximum tweaking potential.
+
 ### Other improvements?
 
-Once I replicate original game, I'll focus on other things, such as: larger maps, larger maximum number of players, custom mod support, online services such as game browser or hosting long-turns games (where people can login and make 1 turn per day or so), alternative art packs (used instead of original, this may mean better graphics)
+Once I replicate original game, I'll focus on other things, such as: larger maps, larger maximum number of players, online services such as game browser or hosting long-turns games (where people can login and make 1 turn per day or so), alternative art packs (used instead of original, this may mean better graphics). See "GLSMAC v2.x+ features" section below.
 
 ### Current Version:
 
@@ -122,7 +132,7 @@ Gentoo: `emerge cmake libsdl2 sdl2-image freetype glu glew ossp-uuid yaml-cpp`
 
 Ubuntu: `apt install cmake build-essential libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev`
 
-ArchLinux: 
+ArchLinux:
 `pacman -Syu cmake base-devel freetype2 sdl2 sdl2_image glew yaml-cpp` (you'll need to install `ossp-uuid` manually because it's not in repos)
 AUR-package: https://aur.archlinux.org/packages/uuid
 
@@ -161,7 +171,7 @@ In order to build it on Mac install XCode from AppStore - it is free, no Apple D
 - In case of missing packages just install it using brew.
 
 Package `ossp-uuid` is visible as `uuid`. Additionally we must link with OpenGL framework (dependency added to make file)
-Then we can follow with build commands as for Linux versions: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug  && make -C build`
+Then we can follow with build commands as for Linux versions: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug && make -C build`
 
 Game is build correctly however there are problems related to OpenGL currently which crashes the game.
 
@@ -294,7 +304,7 @@ SMAC art is 256-color and sounds are of 22khz mono quality. Maybe it's possible 
 
 Easy recording of replays (maybe even 'auto-record replay' checkbox in options), then they can be saved, sent to others and watched, alone or as multiplayer game (host game in replay mode). Replays will play in usual way, like in dota2 or stacraft2. Maybe also add replay-to-video and streaming functions.
 
-##### Javascript-based modding support
+##### Improved scripting and modding manager
 
 JavaScript wrappers for easy creation and modification of game logic. Upon starting new game player will be able to choose which mod he wants for this game. If he makes his own mod - there will also be some UI where he can share it, or browse mods of others. If somebody hosts game with mod he just made - others can join it and it will download for them automatically. 'Mod' package will include js files, art (textures, models, sounds), maybe css for custom UI, all bundled into single file for easy sharing.
 

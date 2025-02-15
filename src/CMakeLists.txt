@@ -14,6 +14,7 @@ SUBDIR( audio )
 SUBDIR( network )
 SUBDIR( scheduler )
 SUBDIR( scene )
+SUBDIR( ui_legacy )
 SUBDIR( ui )
 SUBDIR( engine )
 SUBDIR( rr )
@@ -25,6 +26,7 @@ ENDIF ()
 
 SET( SRC ${SRC}
 
+	${PWD}/GLSMAC.cpp
 	${PWD}/main.cpp
 
 	PARENT_SCOPE )

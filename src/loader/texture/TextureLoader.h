@@ -6,7 +6,7 @@
 
 #include "loader/Loader.h"
 
-#include "ui/theme/Types.h"
+#include "ui_legacy/theme/Types.h"
 
 #include "types/Color.h"
 
@@ -19,14 +19,17 @@ namespace texture {
 
 CLASS( TextureLoader, Loader )
 
+	virtual ~TextureLoader();
+
 	typedef std::unordered_set< types::Color::rgba_t > transparent_colors_t;
 
 	// load full texture
 	types::texture::Texture* LoadTexture( const resource::resource_t res );
+	types::texture::Texture* TryLoadCustomTexture( const std::string& filename );
 	types::texture::Texture* LoadCustomTexture( const std::string& filename );
 
 	// load part of texture
-	types::texture::Texture* LoadTexture( const resource::resource_t res, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = ui::LT_NONE, const float value = 1.0 );
+	types::texture::Texture* LoadTexture( const resource::resource_t res, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = ui_legacy::LT_NONE, const float value = 1.0 );
 
 	// create texture of solid color
 	types::texture::Texture* GetColorTexture( const types::Color& color );

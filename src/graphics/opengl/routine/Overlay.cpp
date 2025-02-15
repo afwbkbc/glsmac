@@ -4,7 +4,6 @@
 #include "graphics/opengl/FBO.h"
 #include "graphics/opengl/actor/Text.h"
 #include "graphics/opengl/shader_program/Simple2D.h"
-#include "graphics/opengl/shader_program/Font.h"
 #include "scene/Scene.h"
 #include "scene/actor/Actor.h"
 #include "scene/actor/Text.h"
@@ -13,10 +12,9 @@ namespace graphics {
 namespace opengl {
 namespace routine {
 
-Overlay::Overlay( OpenGL* opengl, shader_program::Simple2D* shader_program, shader_program::Font* shader_program_font )
+Overlay::Overlay( OpenGL* opengl, shader_program::Simple2D* shader_program )
 	: Routine( opengl )
-	, m_shader_program( shader_program )
-	, m_shader_program_font( shader_program_font ) {
+	, m_shader_program( shader_program ) {
 	//
 }
 
@@ -39,20 +37,22 @@ void Overlay::Iterate() {
 		glDisable( GL_DEPTH_TEST );
 
 		//Log( "Redrawing overlay" );
-		m_fbo->WriteBegin();
-		for ( auto& scene : m_gl_scenes ) {
-			switch ( scene->GetScene()->GetType() ) {
-				case scene::SCENE_TYPE_SIMPLE2D: {
-					scene->Draw( m_shader_program, m_shader_program_font );
-					break;
-				}
-				default: {
-					THROW( "unknown scene type " + std::to_string( scene->GetScene()->GetType() ) );
+		m_fbo->Write(
+			[ this ]() {
+				for ( auto& scene : m_gl_scenes ) {
+					switch ( scene->GetScene()->GetType() ) {
+						case scene::SCENE_TYPE_SIMPLE2D: {
+							scene->Draw( m_shader_program );
+							break;
+						}
+						default: {
+							THROW( "unknown scene type " + std::to_string( scene->GetScene()->GetType() ) );
+						}
+					}
+					ASSERT( !glGetError(), "Overlay draw error" );
 				}
 			}
-			ASSERT( !glGetError(), "Overlay draw error" );
-		}
-		m_fbo->WriteEnd();
+		);
 
 		glEnable( GL_DEPTH_TEST );
 
@@ -67,14 +67,13 @@ opengl::Actor* Overlay::AddCustomActor( scene::actor::Actor* actor ) {
 	switch ( actor_type ) {
 		case scene::actor::Actor::TYPE_TEXT: {
 			auto* text_actor = (scene::actor::Text*)actor;
-			NEWV( result, Text, text_actor, text_actor->GetFont() );
+			NEWV( result, Text, m_opengl, text_actor, text_actor->GetFont() );
 			return result;
 		}
 		default: {
 			THROW( "unknown actor type " + std::to_string( actor_type ) );
 		}
 	}
-	return NULL;
 }
 
 void Overlay::Redraw() {

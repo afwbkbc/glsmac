@@ -2,10 +2,10 @@
 
 #include "engine/Engine.h"
 
-#include "ui/object/Section.h"
-#include "ui/object/Panel.h"
-#include "ui/object/Button.h"
-#include "ui/UI.h"
+#include "ui_legacy/object/Section.h"
+#include "ui_legacy/object/Panel.h"
+#include "ui_legacy/object/Button.h"
+#include "ui_legacy/UI.h"
 
 namespace task {
 namespace mainmenu {
@@ -34,14 +34,14 @@ void PopupMenu::Show() {
 		}
 	};
 
-	NEW( m_frame, ui::object::Section, "PopupWindow" );
+	NEW( m_frame, ui_legacy::object::Section, "PopupWindow" );
 	m_frame->SetTitleText( m_title );
-	m_frame->SetAlign( ui::ALIGN_CENTER );
+	m_frame->SetAlign( ui_legacy::ALIGN_CENTER );
 	Resize();
 	m_frame->On(
-		ui::event::EV_KEY_DOWN, EH( this, on_ok, on_cancel ) {
+		ui_legacy::event::EV_KEY_DOWN, EH( this, on_ok, on_cancel ) {
 			if ( !data->key.modifiers ) {
-				if ( data->key.code == ui::event::K_ENTER ) {
+				if ( data->key.code == ui_legacy::event::K_ENTER ) {
 					if ( HasFlag( PF_HAS_OK ) ) {
 						on_ok();
 						return true;
@@ -51,7 +51,7 @@ void PopupMenu::Show() {
 						return true;
 					}*/
 				}
-				else if ( data->key.code == ui::event::K_ESCAPE ) {
+				else if ( data->key.code == ui_legacy::event::K_ESCAPE ) {
 					// TMP
 					//if ( HasFlag( PF_HAS_CANCEL ) || HasFlag( PF_HAS_OK ) ) {
 					on_cancel();
@@ -64,28 +64,28 @@ void PopupMenu::Show() {
 	);
 	g_engine->GetUI()->AddObject( m_frame );
 
-	NEW( m_body, ui::object::Panel );
-	m_body->SetAlign( ui::ALIGN_TOP );
+	NEW( m_body, ui_legacy::object::Panel );
+	m_body->SetAlign( ui_legacy::ALIGN_TOP );
 	if ( HasFlag( PF_HAS_OK ) || HasFlag( PF_HAS_CANCEL ) ) {
 		m_body->SetBottom( 40 );
 	}
 	m_frame->AddChild( m_body );
 
 	if ( HasFlag( PF_HAS_OK ) ) {
-		NEW( m_button_ok, ui::object::Button, "PopupButtonOkCancel" );
+		NEW( m_button_ok, ui_legacy::object::Button, "PopupButtonOkCancel" );
 		if ( HasFlag( PF_HAS_CANCEL ) ) {
 			// two buttons
-			m_button_ok->SetAlign( ui::ALIGN_BOTTOM | ui::ALIGN_LEFT );
+			m_button_ok->SetAlign( ui_legacy::ALIGN_BOTTOM | ui_legacy::ALIGN_LEFT );
 			m_button_ok->SetLeft( 12 );
 		}
 		else {
 			// one button
-			m_button_ok->SetAlign( ui::ALIGN_BOTTOM | ui::ALIGN_HCENTER );
+			m_button_ok->SetAlign( ui_legacy::ALIGN_BOTTOM | ui_legacy::ALIGN_HCENTER );
 		}
 		m_button_ok->SetBottom( 15 );
 		m_button_ok->SetLabel( "OK" );
 		m_button_ok->On(
-			ui::event::EV_BUTTON_CLICK, EH( this, on_ok ) {
+			ui_legacy::event::EV_BUTTON_CLICK, EH( this, on_ok ) {
 				on_ok();
 				return true;
 			}
@@ -94,20 +94,20 @@ void PopupMenu::Show() {
 	}
 
 	if ( HasFlag( PF_HAS_CANCEL ) ) {
-		NEW( m_button_cancel, ui::object::Button, "PopupButtonOkCancel" );
+		NEW( m_button_cancel, ui_legacy::object::Button, "PopupButtonOkCancel" );
 		if ( HasFlag( PF_HAS_OK ) ) {
 			// two buttons
-			m_button_cancel->SetAlign( ui::ALIGN_BOTTOM | ui::ALIGN_RIGHT );
+			m_button_cancel->SetAlign( ui_legacy::ALIGN_BOTTOM | ui_legacy::ALIGN_RIGHT );
 			m_button_cancel->SetRight( 12 );
 		}
 		else {
 			// one button
-			m_button_cancel->SetAlign( ui::ALIGN_BOTTOM | ui::ALIGN_HCENTER );
+			m_button_cancel->SetAlign( ui_legacy::ALIGN_BOTTOM | ui_legacy::ALIGN_HCENTER );
 		}
 		m_button_cancel->SetBottom( 15 );
 		m_button_cancel->SetLabel( "CANCEL" );
 		m_button_cancel->On(
-			ui::event::EV_BUTTON_CLICK, EH( this, on_cancel ) {
+			ui_legacy::event::EV_BUTTON_CLICK, EH( this, on_cancel ) {
 				on_cancel();
 				return true;
 			}

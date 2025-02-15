@@ -56,7 +56,7 @@ private:
 	const std::string CHARS_WHITESPACE = CHARS_EOLN + "	 ";
 	const std::string CHARS_NAMES = CHARS_LETTERS + "_#";
 	const std::string CHARS_NAMES_C = CHARS_LETTERS + CHARS_NUMBERS + "_";
-	const std::string CHARS_OPERATORS = "=+-:.<>*/!&|%";
+	const std::string CHARS_OPERATORS = "=+-:.<>*/!&|%~";
 	const std::string CHARS_QUOTES = "'";
 	const std::string CHARS_DELIMITERS = ";,{}()[]";
 
@@ -294,8 +294,16 @@ private:
 			program::OT_AT
 		},
 		{
-			"[]=",
-			program::OT_APPEND
+			":+",
+			program::OT_PUSH
+		},
+		{
+			":~",
+			program::OT_POP,
+		},
+		{
+			":-",
+			program::OT_ERASE,
 		},
 		{
 			":",
@@ -512,10 +520,24 @@ private:
 			}
 		},
 		{
-			program::OT_APPEND,
+			program::OT_PUSH,
 			{
-				2,
+				3,
 				OL_BOTH
+			}
+		},
+		{
+			program::OT_POP,
+			{
+				3,
+				OL_LEFT,
+			}
+		},
+		{
+			program::OT_ERASE,
+			{
+				3,
+				OL_BOTH,
 			}
 		},
 		{

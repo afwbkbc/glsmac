@@ -9,7 +9,7 @@ SET( SRC ${SRC}
 	${PWD}/Perlin.cpp
 	${PWD}/FS.cpp
 	${PWD}/UUID.cpp
-	${PWD}/ArgParser.cpp
+	${PWD}/ConfigManager.cpp
 	${PWD}/String.cpp
 
 	PARENT_SCOPE )

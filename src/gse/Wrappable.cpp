@@ -34,7 +34,11 @@ const Wrappable::callback_id_t Wrappable::On( GSE_CALLABLE, const std::string& e
 	return it->second.insert(
 		{
 			++m_next_callback_id,
-			callback
+			{
+				callback,
+				ctx,
+				si
+			}
 		}
 	).first->first;
 }
@@ -59,17 +63,28 @@ void Wrappable::Off( GSE_CALLABLE, const std::string& event, const callback_id_t
 	}
 }
 
-const Value Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const type::object_properties_t& args ) {
+const bool Wrappable::HasHandlers( const std::string& event ) const {
+	return m_callbacks.find( event ) != m_callbacks.end();
+}
+
+const Value Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const type::object_properties_t& args, const std::optional< type::Type::type_t > expected_return_type ) {
 	const auto& it = m_callbacks.find( event );
 	Value result = VALUE( gse::type::Undefined );
 	if ( it != m_callbacks.end() ) {
-		auto e = VALUE( gse::type::Object, args );
-		for ( const auto& it2 : it->second ) {
-			ASSERT_NOLOG( it2.second.Get()->type == type::Type::T_CALLABLE, "callback not callable" );
+		auto e = VALUE( gse::type::Object, nullptr, args );
+		const auto callbacks = it->second; // copy because callbacks may be changed during trigger
+		for ( const auto& it2 : callbacks ) {
+			const auto& cb = it2.second.callable;
+			ASSERT_NOLOG( cb.Get()->type == type::Type::T_CALLABLE, "callback not callable" );
+			result = ( (type::Callable*)cb.Get() )->Run( it2.second.ctx, it2.second.si, ep, { e } );
+			if ( expected_return_type.has_value() ) {
+				if ( result.Get()->type != expected_return_type.value() ) {
+					throw gse::Exception( gse::EC.INVALID_HANDLER, "Event handler is expected to return " + type::Type::GetTypeString( expected_return_type.value() ) + ", got " + result.GetTypeString() + ": " + result.ToString(), it2.second.ctx, it2.second.si, ep );
+				}
+			}
 			if ( result.Get()->type != type::Type::T_UNDEFINED ) {
 				// TODO: resolve result conflicts somehow
 			}
-			result = ( (type::Callable*)it2.second.Get() )->Run( ctx, call_si, { e } );
 		}
 	}
 	return result;

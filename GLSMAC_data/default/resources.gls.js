@@ -23,7 +23,10 @@ const define = (rm, id, levels_y, minusplus_y) => {
 };
 
 const result = {
-	define: (rm) => {
+
+	configure: (rm) => {
+
+		#print('CONFIGURING RM');
 
 		define(rm, 'Nutrients', 304, 13);
 		define(rm, 'Minerals', 345, 36);

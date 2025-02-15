@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <map>
 #include <vector>
+#include <functional>
 
 #include "common/Common.h"
 
@@ -36,11 +37,15 @@ namespace type {
 class Callable;
 }
 
+class Async;
+
 CLASS( GSE, common::Class )
 	GSE();
 	virtual ~GSE();
 
 	static const char PATH_SEPARATOR;
+
+	void Iterate();
 
 	parser::Parser* GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num = 1 ) const;
 	runner::Runner* GetRunner() const;
@@ -52,10 +57,14 @@ CLASS( GSE, common::Class )
 	void AddModule( const std::string& path, type::Callable* module );
 
 	void Run();
-	const Value RunScript( context::Context* ctx, const si_t& si, const std::string& path );
+	const Value RunScript( GSE_CALLABLE, const std::string& path );
 
 	void SetGlobal( const std::string& identifier, Value variable );
 	const Value& GetGlobal( const std::string& identifier );
+
+	context::Context* GetContextByPath( const std::string& path ) const;
+
+	Async* GetAsync();
 
 #ifdef DEBUG
 	void LogCaptureStart() const { m_builtins.LogCaptureStart(); }
@@ -81,10 +90,12 @@ private:
 		// TODO: why can't we delete these two upon getting result?
 		const program::Program* program;
 		const runner::Runner* runner;
-		void Cleanup();
+		void Cleanup( const bool force = false );
 	};
+	std::unordered_map< std::string, std::string > m_include_paths = {};
 	std::unordered_map< std::string, include_cache_t > m_include_cache = {};
 
+	Async* m_async = nullptr;
 };
 
 }

@@ -6,6 +6,7 @@
 #include "gse/GSE.h"
 #include "gse/context/GlobalContext.h"
 #include "gse/runner/Interpreter.h"
+#include "gse/ExecutionPointer.h"
 
 #include "mocks/Mocks.h"
 
@@ -14,9 +15,9 @@
 namespace gse {
 namespace tests {
 
-void AddRunnerTests( task::gsetests::GSETests* task ) {
+extern const program::Program* g_test_program;
 
-	const auto& test_program = GetTestProgram();
+void AddRunnerTests( task::gsetests::GSETests* task ) {
 
 	const std::string expected_output = GetExpectedResult();
 
@@ -25,21 +26,25 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 }
 	task->AddTest(
 		"test if interpreter executes programs correctly",
-		GT( task, test_program, expected_output ) {
+		GT( expected_output ) {
 
 			runner::Interpreter interpreter;
 
 			context::GlobalContext* context = gse->CreateGlobalContext();
 			context->IncRefs();
-			context->AddSourceLines( util::String::SplitToLines( GetTestSource() ) );
+			context->AddSourceLines( util::String::Split( GetTestSource(), '\n' ) );
 			mocks::AddMocks( context, {} );
 
 			gse->LogCaptureStart();
-			interpreter.Execute( context, test_program );
+			{
+				ExecutionPointer ep;
+				interpreter.Execute( context, ep, g_test_program );
+			}
 			const auto actual_output = gse->LogCaptureStopGet();
 
 			VALIDATE();
 
+			context->Clear();
 			context->DecRefs();
 
 			GT_OK();

@@ -4,7 +4,7 @@
 
 #include "util/Timer.h"
 
-namespace ui::object {
+namespace ui_legacy::object {
 class Surface;
 }
 
@@ -20,7 +20,7 @@ CLASS( Intro, common::Task )
 
 private:
 	Theme* m_theme = nullptr;
-	::ui::object::Surface* m_logo = nullptr;
+	::ui_legacy::object::Surface* m_logo = nullptr;
 	util::Timer m_timer;
 
 	void Finish();

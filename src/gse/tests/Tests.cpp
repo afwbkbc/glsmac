@@ -92,12 +92,12 @@ const std::string& GetTestSource() {
 									  "  key1: 'value1',\n"
 									  "  key2: 'value2',\n"
 									  "} ];\n"
-									  "testarr1 []= 'first';\n"
-									  "testarr1 []= 'second';\n"
-									  "testarr1 []= 1 + 2 + 3;\n"
+									  "testarr1 :+ 'first';\n"
+									  "testarr1 :+ 'second';\n"
+									  "testarr1 :+ 1 + 2 + 3;\n"
 									  "testarr1 += testarr2;\n"
-									  "testarr1 []= testarr2;\n"
-									  "let testarr3 = testarr1;\n"
+									  "testarr1 :+ testarr2;\n"
+									  "let testarr3 = #clone(testarr1);\n"
 									  "testarr3[1] = 'SECOND';\n"
 									  "testarr3[ testmethod2(a, b, c) + 61 ] = 'FIRST';\n"
 									  "testarr3[2:5] = testarr1[0:1] + testarr2[0:1];\n"
@@ -185,7 +185,7 @@ const std::string& GetTestSource() {
 									  "  },\n"
 									  "  TestError: (e) => {\n"
 									  "         #print('CAUGHT ' + e.type + ' : ' + e.reason);\n"
-									  "         #print(e.backtrace);\n"
+									  "         #print(e.stacktrace);\n"
 									  "  }\n"
 									  "};\n"
 									  "\n"
@@ -470,39 +470,39 @@ const Program* GetTestProgram() {
 					)
 				),
 				new Statement(
-					SI( 34, 1, 34, 21 ),
+					SI( 34, 1, 34, 20 ),
 					new Expression(
-						SI( 34, 1, 34, 21 ),
+						SI( 34, 1, 34, 20 ),
 						new Variable( SI( 34, 1, 34, 9 ), "testarr1" ),
-						new Operator( SI( 34, 10, 34, 13 ), OT_APPEND ),
-						new program::Value( SI( 34, 14, 34, 21 ), VALUE( type::String, "first" ) )
+						new Operator( SI( 34, 10, 34, 12 ), OT_PUSH ),
+						new program::Value( SI( 34, 13, 34, 20 ), VALUE( type::String, "first" ) )
 					)
 				),
 				new Statement(
-					SI( 35, 1, 35, 22 ),
+					SI( 35, 1, 35, 21 ),
 					new Expression(
-						SI( 35, 1, 35, 22 ),
+						SI( 35, 1, 35, 21 ),
 						new Variable( SI( 35, 1, 35, 9 ), "testarr1" ),
-						new Operator( SI( 35, 10, 35, 13 ), OT_APPEND ),
-						new program::Value( SI( 35, 14, 35, 22 ), VALUE( type::String, "second" ) )
+						new Operator( SI( 35, 10, 35, 12 ), OT_PUSH ),
+						new program::Value( SI( 35, 13, 35, 21 ), VALUE( type::String, "second" ) )
 					)
 				),
 				new Statement(
-					SI( 36, 1, 36, 23 ),
+					SI( 36, 1, 36, 22 ),
 					new Expression(
-						SI( 36, 1, 36, 23 ),
+						SI( 36, 1, 36, 22 ),
 						new Variable( SI( 36, 1, 36, 9 ), "testarr1" ),
-						new Operator( SI( 36, 10, 36, 13 ), OT_APPEND ),
+						new Operator( SI( 36, 10, 36, 12 ), OT_PUSH ),
 						new Expression(
-							SI( 36, 14, 36, 23 ),
+							SI( 36, 13, 36, 22 ),
 							new Expression(
-								SI( 36, 14, 36, 19 ),
-								new program::Value( SI( 36, 14, 36, 15 ), VALUE( type::Int, 1 ) ),
-								new Operator( SI( 36, 16, 36, 17 ), OT_ADD ),
-								new program::Value( SI( 36, 18, 36, 19 ), VALUE( type::Int, 2 ) )
+								SI( 36, 13, 36, 18 ),
+								new program::Value( SI( 36, 13, 36, 14 ), VALUE( type::Int, 1 ) ),
+								new Operator( SI( 36, 15, 36, 16 ), OT_ADD ),
+								new program::Value( SI( 36, 17, 36, 18 ), VALUE( type::Int, 2 ) )
 							),
-							new Operator( SI( 36, 20, 36, 21 ), OT_ADD ),
-							new program::Value( SI( 36, 22, 36, 23 ), VALUE( type::Int, 3 ) )
+							new Operator( SI( 36, 19, 36, 20 ), OT_ADD ),
+							new program::Value( SI( 36, 21, 36, 22 ), VALUE( type::Int, 3 ) )
 						)
 					)
 				),
@@ -516,21 +516,33 @@ const Program* GetTestProgram() {
 					)
 				),
 				new Statement(
-					SI( 38, 1, 38, 22 ),
+					SI( 38, 1, 38, 21 ),
 					new Expression(
-						SI( 38, 1, 38, 22 ),
+						SI( 38, 1, 38, 21 ),
 						new Variable( SI( 38, 1, 38, 9 ), "testarr1" ),
-						new Operator( SI( 38, 10, 38, 13 ), OT_APPEND ),
-						new Variable( SI( 38, 14, 38, 22 ), "testarr2" )
+						new Operator( SI( 38, 10, 38, 12 ), OT_PUSH ),
+						new Variable( SI( 38, 13, 38, 21 ), "testarr2" )
 					)
 				),
 				new Statement(
-					SI( 39, 1, 39, 24 ),
+					SI( 39, 1, 39, 32 ),
 					new Expression(
-						SI( 39, 5, 39, 24 ),
+						SI( 39, 5, 39, 32 ),
 						new Variable( SI( 39, 5, 39, 13 ), "testarr3", VH_CREATE_VAR ),
 						new Operator( SI( 39, 14, 39, 15 ), OT_ASSIGN ),
-						new Variable( SI( 39, 16, 39, 24 ), "testarr1" )
+						new Call(
+							SI( 39, 16, 39, 32 ),
+							new Expression(
+								SI( 39, 16, 39, 22 ),
+								new Variable( SI( 39, 16, 39, 22 ), "#clone" )
+							),
+							{
+								new Expression(
+									SI( 39, 23, 39, 31 ),
+									new Variable( SI( 39, 23, 39, 31 ), "testarr1" )
+								),
+							}
+						)
 					)
 				),
 				new Statement(
@@ -1825,7 +1837,7 @@ const Program* GetTestProgram() {
 											{
 												new Variable( SI( 125, 15, 125, 16 ), "e" )
 											}, new Scope(
-												SI( 126, 10, 127, 30 ),
+												SI( 126, 10, 127, 31 ),
 												{
 													print(
 														126, 10,
@@ -1862,10 +1874,10 @@ const Program* GetTestProgram() {
 														127, 10,
 														{
 															new Expression(
-																SI( 127, 17, 127, 28 ),
+																SI( 127, 17, 127, 29 ),
 																new Variable( SI( 127, 17, 127, 18 ), "e" ),
 																new Operator( SI( 127, 18, 127, 19 ), OT_CHILD ),
-																new Variable( SI( 127, 19, 127, 28 ), "backtrace" )
+																new Variable( SI( 127, 19, 127, 29 ), "stacktrace" )
 															)
 														}
 													)
@@ -1888,7 +1900,7 @@ const Program* GetTestProgram() {
 					}
 				),
 			}
-		)
+		), true
 	);
 	return program;
 }

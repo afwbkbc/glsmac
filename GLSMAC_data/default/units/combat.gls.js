@@ -93,7 +93,7 @@ const result = {
 
 			game.tm.lock_tiles([attacker_tile, defender_tile], (unlock) => {
 
-				let damages_sz = #size(e.resolutions);
+				let damages_sz = #sizeof(e.resolutions);
 
 				const process_next_damage = (damage_index) => {
 					let next = () => {

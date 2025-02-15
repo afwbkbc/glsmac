@@ -46,3 +46,68 @@ let f = () => {
 	return 'Y'
 };
 test.assert('X' + f() == 'XY');
+
+{
+	{
+		let aa = null;
+		{
+			let a = null;
+			{
+				let aa = 5;
+				a = () => {
+					return aa;
+				};
+				#print(a());
+			}
+			aa = a;
+		}
+		#print(aa());
+	}
+
+	let func1 = null;
+	let func2 = null;
+	{
+		const by1 = 1;
+		func1 = (x) => {
+			#print('func1', x);
+			if (x <= 0) {
+				return x;
+			} else {
+				return func2(x - by1);
+			}
+		}
+	}
+	{
+		const by2 = 2;
+		func2 = (x) => {
+			#print('func2', x);
+			if (x <= 0) {
+				return x;
+			} else {
+				return func1(x - by2);
+			}
+		}
+	}
+	func1(12);
+	func2(34);
+}
+
+let called1 = false;
+let called2 = false;
+const testfunc = () => {
+	called2 = true;
+};
+
+const testobjfunc = () => {
+	return {
+		key: 'value',
+		func: () => {
+			called1 = true;
+			testfunc();
+		}
+	};
+};
+
+testobjfunc().func();
+test.assert(called1);
+test.assert(called2);

@@ -2,7 +2,7 @@
 
 #include "common/Task.h"
 
-#include "ui/Types.h"
+#include "ui_legacy/Types.h"
 
 namespace game {
 namespace backend {
@@ -18,7 +18,7 @@ namespace game {
 
 CLASS( Game, common::Task )
 
-	Game( ::game::backend::State* state, ::ui::ui_handler_t on_start = 0, ::ui::ui_handler_t on_cancel = 0 );
+	Game( ::game::backend::State* state, ::ui_legacy::ui_handler_t on_start = 0, ::ui_legacy::ui_handler_t on_cancel = 0 );
 	~Game();
 
 	void Start() override;

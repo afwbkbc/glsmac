@@ -2,14 +2,15 @@
 
 #include "engine/Engine.h"
 #include "scene/actor/Text.h"
-#include "graphics/Graphics.h"
+#include "graphics/opengl/OpenGL.h"
 #include "graphics/opengl/texture/FontTexture.h"
+#include "graphics/opengl/shader_program/Simple2D.h"
 
 namespace graphics {
 namespace opengl {
 
-Text::Text( scene::actor::Text* actor, types::Font* font )
-	: Actor( actor )
+Text::Text( OpenGL* opengl, scene::actor::Text* actor, types::Font* font )
+	: Actor( AT_TEXT, opengl, actor )
 	, m_font( font ) {
 	//Log( "Creating OpenGL text '" + actor->GetText() + "' with font " + font->m_name );
 	glGenBuffers( 1, &m_vbo );
@@ -55,7 +56,7 @@ void Text::Update( types::Font* font, const std::string& text, const float x, co
 		if ( m_font ) {
 
 			if ( !m_texture ) {
-				NEW( m_texture, FontTexture, m_font );
+				NEW( m_texture, FontTexture, m_opengl, m_font );
 			}
 
 			const float sx = 2.0 / g_engine->GetGraphics()->GetViewportWidth();
@@ -93,10 +94,10 @@ void Text::Update( types::Font* font, const std::string& text, const float x, co
 
 				boxes.push_back(
 					{
-						{ x2,     -y2,     tbx1, tby1 },
-						{ x2 + w, -y2,     tbx2, tby1 },
-						{ x2,     -y2 - h, tbx1, tby2 },
-						{ x2 + w, -y2 - h, tbx2, tby2 },
+						{ x2,     -y2,     0, tbx1, tby1 },
+						{ x2 + w, -y2,     0, tbx2, tby1 },
+						{ x2,     -y2 - h, 0, tbx1, tby2 },
+						{ x2 + w, -y2 - h, 0, tbx2, tby2 },
 					}
 				);
 
@@ -104,15 +105,16 @@ void Text::Update( types::Font* font, const std::string& text, const float x, co
 				cy += bitmap->ay * sy;
 			}
 
-			glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
-			m_boxes_count = boxes.size();
-
-			if ( !boxes.empty() ) {
-				glBufferData( GL_ARRAY_BUFFER, sizeof( vertex_box_t ) * boxes.size(), boxes.data(), GL_STATIC_DRAW );
-			}
-
-			glBindBuffer( GL_ARRAY_BUFFER, 0 );
+			m_opengl->WithBindBuffer(
+				GL_ARRAY_BUFFER, m_vbo, [ this, &boxes ]() {
+					m_boxes_count = boxes.size();
+					if ( !boxes.empty() ) {
+						glBufferData( GL_ARRAY_BUFFER, sizeof( vertex_box_t ) * boxes.size(), boxes.data(), GL_STATIC_DRAW );
+					}
+				}
+			);
 		}
+
 	}
 
 	if ( m_coords.x != x || m_coords.y != y ) {
@@ -124,48 +126,54 @@ void Text::Update( types::Font* font, const std::string& text, const float x, co
 	}
 }
 
-void Text::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
+void Text::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
+	ASSERT( shader_program->GetType() == shader_program::ShaderProgram::TYPE_SIMPLE2D, "unexpected shader program" );
 	if ( m_boxes_count > 0 ) {
-		auto* sp = (shader_program::Font*)shader_program;
+		auto* sp = (shader_program::Simple2D*)shader_program;
 
 		auto* text_actor = (const scene::actor::Text*)m_actor;
 
-		glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
+		m_opengl->WithBindBuffer(
+			GL_ARRAY_BUFFER, m_vbo, [ this, &text_actor, &sp ]() {
 
-		glActiveTexture( GL_TEXTURE0 );
-		glBindTexture( GL_TEXTURE_2D, m_texture->m_texture );
+				glActiveTexture( GL_TEXTURE0 );
 
-		sp->Enable();
+				m_opengl->WithBindTexture(
+					m_texture->m_texture, [ this, &text_actor, &sp ]() {
 
-		auto flags = text_actor->GetRenderFlags();
+						m_opengl->WithShaderProgram(
+							sp, [ this, &text_actor, &sp ]() {
 
-		glUniform1ui( sp->uniforms.flags, flags );
-		if ( flags & scene::actor::Actor::RF_USE_AREA_LIMITS ) {
-			const auto& limits = text_actor->GetAreaLimits();
-			glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
-			glUniform3fv( sp->uniforms.area_limits.max, 1, (const GLfloat*)&limits.second );
-		}
+								auto flags = text_actor->GetRenderFlags() | scene::actor::Actor::RF_USE_TINT;
 
-		if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
-			glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&m_coords );
-		}
+								glUniform1ui( sp->uniforms.flags, flags );
+								if ( flags & scene::actor::Actor::RF_USE_AREA_LIMITS ) {
+									const auto& limits = text_actor->GetAreaLimits();
+									glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
+									glUniform3fv( sp->uniforms.area_limits.max, 1, (const GLfloat*)&limits.second );
+								}
 
-		glUniform1i( sp->uniforms.texture, 0 );
-		glUniform4fv( sp->uniforms.color, 1, (const GLfloat*)&text_actor->GetColor().value );
-		auto position = m_actor->GetPosition();
-		glUniform1f( sp->uniforms.z_index, position.z );
+								if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
+									glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&m_coords );
+								}
 
-		for ( size_t c = 0 ; c < m_boxes_count ; c++ ) {
-			glDrawArrays( GL_TRIANGLE_STRIP, c * 4, 4 );
-		}
+								glUniform1i( sp->uniforms.texture, 0 );
+								glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&text_actor->GetColor().value );
+								//auto position = m_actor->GetPosition();
+								//glUniform1f( sp->uniforms.z_index, position.z );
 
-		sp->Disable();
+								for ( size_t c = 0 ; c < m_boxes_count ; c++ ) {
+									glDrawArrays( GL_TRIANGLE_STRIP, c * 4, 4 );
+								}
 
-		glBindTexture( GL_TEXTURE_2D, 0 );
+							}
+						);
 
-		glBindBuffer( GL_ARRAY_BUFFER, 0 );
+					}
+				);
+			}
+		);
 	}
-
 }
 
 }

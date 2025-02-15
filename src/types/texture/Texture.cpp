@@ -19,6 +19,12 @@ Texture::Texture() {
 	// nothing
 }
 
+Texture::Texture( const size_t width, const size_t height ) {
+	if ( width > 0 && height > 0 ) {
+		Resize( width, height );
+	}
+}
+
 Texture::Texture( const std::string& name, const size_t width, const size_t height )
 	: m_name( name ) {
 	if ( width > 0 && height > 0 ) {
@@ -50,15 +56,22 @@ void Texture::Resize( const size_t width, const size_t height ) {
 		m_width = width;
 		m_height = height;
 
-		m_aspect_ratio = m_height / m_width;
-
 		if ( m_bitmap ) {
 			free( m_bitmap );
 		}
-		m_bitmap_size = m_width * m_height * m_bpp;
-		m_bitmap = (unsigned char*)malloc( m_bitmap_size );
-		memset( ptr( m_bitmap, 0, m_bitmap_size ), 0, m_bitmap_size );
 
+		m_bitmap_size = m_width * m_height * m_bpp;
+
+		if ( m_height > 0 && m_width > 0 ) {
+
+			m_aspect_ratio = m_height / m_width;
+
+			m_bitmap = (unsigned char*)malloc( m_bitmap_size );
+			memset( ptr( m_bitmap, 0, m_bitmap_size ), 0, m_bitmap_size );
+		}
+		else {
+			m_bitmap = nullptr;
+		}
 		FullUpdate();
 	}
 }
@@ -150,10 +163,14 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 	}
 
 	size_t shiftx, shifty; // for random shifts
-	size_t cx, cy; // center
+
+	// center
+	size_t cx = floor( w / 2 );
+	size_t cy = floor( h / 2 );
+
 	ssize_t sx, sy; // source
 	ssize_t dx, dy; // dest
-	float r; // radius for rounded corners
+	float r = 0.0f; // radius for rounded corners
 	std::pair< float, float > srx, sry; // stretch ratio ranges
 	float ssx_start, ssx, ssy; // stretched source
 
@@ -173,8 +190,6 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 			( flags & types::texture::AM_GRADIENT_RIGHT ) ||
 			( flags & types::texture::AM_GRADIENT_BOTTOM )
 		) {
-		cx = floor( w / 2 );
-		cy = floor( h / 2 );
 
 		r = sqrt( pow( (float)cx, 2 ) + pow( (float)cy, 2 ) );
 		if (
@@ -924,9 +939,13 @@ void Texture::Unserialize( types::Buffer buf ) {
 
 	m_name = buf.ReadString();
 	size_t width = buf.ReadInt();
-	ASSERT( width == m_width, "texture read width mismatch ( " + std::to_string( width ) + " != " + std::to_string( m_width ) + " )" );
+	if ( width != m_width ) {
+		THROW( "texture read width mismatch ( " + std::to_string( width ) + " != " + std::to_string( m_width ) + " )" );
+	}
 	size_t height = buf.ReadInt();
-	ASSERT( height == m_height, "texture read height mismatch ( " + std::to_string( height ) + " != " + std::to_string( m_height ) + " )" );
+	if ( height != m_height ) {
+		THROW( "texture read height mismatch ( " + std::to_string( height ) + " != " + std::to_string( m_height ) + " )" );
+	}
 
 	m_aspect_ratio = buf.ReadFloat();
 

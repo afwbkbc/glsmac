@@ -14,7 +14,7 @@ Random::Random( Game* game, const util::random::value_t seed )
 	//
 }
 
-WRAPIMPL_BEGIN( Random, CLASS_RANDOM )
+WRAPIMPL_BEGIN( Random )
 	WRAPIMPL_PROPS
 		{
 			"get_int",
@@ -47,7 +47,7 @@ WRAPIMPL_BEGIN( Random, CLASS_RANDOM )
 			})
 		},
 	};
-WRAPIMPL_END_PTR( Random )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Random )
 

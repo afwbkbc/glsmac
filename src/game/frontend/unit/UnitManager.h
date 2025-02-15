@@ -31,7 +31,7 @@ namespace faction {
 class Faction;
 }
 
-namespace ui {
+namespace ui_legacy {
 class ObjectsList;
 }
 

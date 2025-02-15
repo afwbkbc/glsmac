@@ -11,6 +11,7 @@
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
 #include "gse/type/Array.h"
+#include "gse/ExecutionPointer.h"
 
 namespace game {
 namespace backend {
@@ -166,7 +167,7 @@ void TileManager::ReleaseTileLocks( const size_t initiator_slot ) {
 	}
 }
 
-WRAPIMPL_BEGIN( TileManager, CLASS_TM )
+WRAPIMPL_BEGIN( TileManager )
 	WRAPIMPL_PROPS
 		{
 			"get_map_width",
@@ -221,11 +222,11 @@ WRAPIMPL_BEGIN( TileManager, CLASS_TM )
 					N_UNWRAP( tile, tileobj, map::tile::Tile );
 					tile_positions.push_back( tile->coord );
 				}
-				SendTileLockRequest( tile_positions, [ this, on_complete, tile_positions, ctx, call_si ]() {
-					on_complete->Run( ctx, call_si, {
+				SendTileLockRequest( tile_positions, [ this, on_complete, tile_positions, ctx, si, ep ]() {
+					auto ep2 = ep;
+					on_complete->Run( ctx, si, ep2, {
 						VALUE( gse::callable::Native, [ this, tile_positions ](
-							gse::context::Context* ctx,
-							const gse::si_t& call_si,
+							GSE_CALLABLE,
 							const gse::type::function_arguments_t& arguments
 						) -> gse::Value {
 							SendTileUnlockRequest( tile_positions );
@@ -238,7 +239,7 @@ WRAPIMPL_BEGIN( TileManager, CLASS_TM )
 			})
 		},
 	};
-WRAPIMPL_END_PTR( TileManager )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( TileManager )
 

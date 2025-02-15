@@ -123,8 +123,16 @@ static const std::unordered_map< operator_type_t, std::string > s_op_labels = {
 		"["
 	},
 	{
-		OT_APPEND,
-		"[]="
+		OT_PUSH,
+		":+"
+	},
+	{
+		OT_POP,
+		":~",
+	},
+	{
+		OT_ERASE,
+		":-",
 	},
 	{
 		OT_RANGE,

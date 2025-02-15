@@ -11,18 +11,18 @@
 #include "Types.h"
 
 namespace util {
-class ArgParser;
+class ConfigManager;
 }
 
 namespace config {
 
 CLASS( Config, common::Module )
-	Config( const int argc, const char* argv[] );
+	Config( const std::string& path );
 	~Config();
 
-	void Init();
+	void Init( const int argc, const char* argv[] );
 
-	enum launch_flag_t : uint16_t {
+	enum launch_flag_t : uint32_t {
 		LF_NONE = 0,
 		LF_BENCHMARK = 1 << 0,
 		LF_SHOWFPS = 1 << 1,
@@ -40,6 +40,7 @@ CLASS( Config, common::Module )
 		LF_QUICKSTART_MAP_CLOUDS = 1 << 13,
 		LF_QUICKSTART_FACTION = 1 << 14,
 		LF_MODS = 1 << 15,
+		LF_NEWUI = 1 << 16,
 	};
 
 #ifdef DEBUG
@@ -65,6 +66,8 @@ CLASS( Config, common::Module )
 
 	const smac_type_t GetSMACType() const;
 
+	void SetSMACPath( const std::string& path ) const;
+
 #ifdef DEBUG
 
 	const std::string GetDebugPath() const; // to store debug stuff like dumps
@@ -84,6 +87,8 @@ CLASS( Config, common::Module )
 
 	const std::vector< std::string >& GetModPaths() const;
 
+	const std::string& GetNewUIMainScript() const;
+
 #ifdef DEBUG
 
 	const bool HasDebugFlag( const debug_flag_t flag ) const;
@@ -94,7 +99,7 @@ CLASS( Config, common::Module )
 
 private:
 
-	util::ArgParser* m_parser = nullptr;
+	util::ConfigManager* m_manager = nullptr;
 
 	void Error( const std::string& error );
 	const types::Vec2< size_t > ParseSize( const std::string& value );
@@ -112,7 +117,7 @@ private:
 	std::string m_smac_path;
 	smac_type_t m_smac_type = ST_AUTO;
 
-	uint16_t m_launch_flags = LF_NONE;
+	uint32_t m_launch_flags = LF_NONE;
 	types::Vec2< size_t > m_window_size = {};
 
 	util::random::state_t m_quickstart_seed = {};
@@ -125,6 +130,8 @@ private:
 	std::string m_quickstart_faction = "";
 
 	std::vector< std::string > m_mod_paths = {};
+
+	std::string m_newui_mainscript = "main";
 
 #ifdef DEBUG
 

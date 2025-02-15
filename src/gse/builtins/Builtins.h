@@ -9,13 +9,14 @@
 #include "Conversions.h"
 #include "Math.h"
 #include "String.h"
+#include "Async.h"
 
 namespace gse {
 namespace builtins {
 
 class Builtins : public Bindings {
 public:
-	void AddToContext( context::Context* ctx ) override;
+	void AddToContext( context::Context* ctx, ExecutionPointer& ep ) override;
 
 #ifdef DEBUG
 	void LogCaptureStart() const { m_console.CaptureStart(); }
@@ -29,6 +30,7 @@ private:
 	Conversions m_conversions = {};
 	Math m_math = {};
 	String m_string = {};
+	Async m_async = {};
 
 };
 

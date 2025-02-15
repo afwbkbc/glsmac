@@ -247,6 +247,12 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 };
 static const TextureLoader::transparent_colors_t s_no_transparent_colors = {};
 
+TextureLoader::~TextureLoader() {
+	for ( const auto& it : m_color_textures ) {
+		DELETE( it.second );
+	}
+}
+
 const TextureLoader::transparent_colors_t& TextureLoader::GetTCs( const resource::resource_t res ) {
 	const auto& transparent_colors_it = s_tcs.find( res );
 	if ( transparent_colors_it != s_tcs.end() ) {
@@ -267,7 +273,8 @@ types::texture::Texture* TextureLoader::LoadTexture( const resource::resource_t 
 	m_fix_yellow_shadows = fix_yellow_shadows_old;
 	return result;
 }
-types::texture::Texture* TextureLoader::LoadCustomTexture( const std::string& filename ) {
+
+types::texture::Texture* TextureLoader::TryLoadCustomTexture( const std::string& filename ) {
 	std::string key;
 	key.resize( filename.size() );
 	std::transform( filename.begin(), filename.end(), key.begin(), ::tolower );
@@ -280,10 +287,21 @@ types::texture::Texture* TextureLoader::LoadCustomTexture( const std::string& fi
 		m_transparent_colors = GetTCs( res );
 		m_fix_yellow_shadows = s_fix_yellow_shadow.find( res ) != s_fix_yellow_shadow.end();
 	}
-	auto* result = LoadTextureImpl( GetCustomFilename( filename ) );
+	const auto path = TryGetCustomFilename( filename );
+	auto* result = path.empty()
+		? nullptr
+		: LoadTextureImpl( path );
 	if ( res != resource::NONE ) {
 		m_transparent_colors = colors_old;
 		m_fix_yellow_shadows = fix_yellow_shadows_old;
+	}
+	return result;
+}
+
+types::texture::Texture* TextureLoader::LoadCustomTexture( const std::string& filename ) {
+	auto* result = TryLoadCustomTexture( filename );
+	if ( !result ) {
+		THROW( "could not load texture: " + filename );
 	}
 	return result;
 }

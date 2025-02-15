@@ -269,6 +269,10 @@ const Tile::render_data_t& Tile::GetRenderData() const {
 	return m_render_data;
 }
 
+const backend::map::tile::yields_t& Tile::GetYields() const {
+	return m_yields;
+}
+
 void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::tile::TileState& ts ) {
 
 	m_is_water = tile.is_water_tile;
@@ -565,6 +569,9 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 	if ( m_base ) {
 		m_base->UpdateFromTile();
 	}
+
+	m_yields = tile.yields;
+
 }
 
 }

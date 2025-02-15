@@ -67,7 +67,7 @@ void Faction::Unserialize( types::Buffer buf ) {
 
 }
 
-WRAPIMPL_BEGIN( Faction, CLASS_FACTION )
+WRAPIMPL_BEGIN( Faction )
 	WRAPIMPL_PROPS
 		{
 			"id",
@@ -86,7 +86,7 @@ WRAPIMPL_BEGIN( Faction, CLASS_FACTION )
 			VALUE( gse::type::Bool, m_flags & Faction::FF_PROGENITOR )
 		},
 	};
-WRAPIMPL_END_PTR( Faction )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Faction )
 

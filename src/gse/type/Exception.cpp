@@ -6,8 +6,9 @@
 namespace gse {
 namespace type {
 
-Exception::Exception( const gse::Exception& exception, const std::vector< std::string >& backtrace )
+Exception::Exception( const gse::Exception& exception, const std::vector< std::string >& stacktrace )
 	: Object(
+	nullptr,
 	{
 		{
 			"type",
@@ -18,13 +19,13 @@ Exception::Exception( const gse::Exception& exception, const std::vector< std::s
 			VALUE( type::String, exception.reason )
 		},
 	},
-	Object::CLASS_EXCEPTION
+	"Exception"
 ) {
 	array_elements_t bt = {};
-	for ( const auto& it : backtrace ) {
+	for ( const auto& it : stacktrace ) {
 		bt.push_back( VALUE( type::String, it ) );
 	}
-	value.insert_or_assign( "backtrace", VALUE( type::Array, bt ) );
+	value.insert_or_assign( "stacktrace", VALUE( type::Array, bt ) );
 }
 
 }

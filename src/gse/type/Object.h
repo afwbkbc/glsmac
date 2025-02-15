@@ -16,6 +16,7 @@ class Wrappable;
 
 namespace context {
 class Context;
+class ChildContext;
 }
 
 namespace type {
@@ -24,38 +25,16 @@ class Object : public Type {
 public:
 
 	// internal use only for now
-	enum object_class_t {
-		CLASS_NONE,
-		CLASS_EXCEPTION,
-		CLASS_RANDOM,
-		CLASS_COLOR,
-		CLASS_SYSTEM,
-		CLASS_STATE,
-		CLASS_GAME,
-		CLASS_RM,
-		CLASS_TM,
-		CLASS_TILE,
-		CLASS_PLAYER,
-		CLASS_FACTION,
-		CLASS_FM,
-		CLASS_UM,
-		CLASS_UNITDEF,
-		CLASS_UNIT,
-		CLASS_BM,
-		CLASS_BASE,
-		CLASS_BASE_POP,
-		CLASS_AM,
-	};
-	static const std::string& GetClassString( const object_class_t object_class );
+	typedef std::string object_class_t;
 
 	static const type_t GetType() { return Type::T_OBJECT; }
 
-	typedef void (wrapsetter_t)( Wrappable*, const std::string&, const Value&, context::Context* ctx, const si_t& si ); // ( obj, key, value, ctx, si )
-	Object( object_properties_t initial_value = {}, const object_class_t object_class = CLASS_NONE, Wrappable* wrapobj = nullptr, wrapsetter_t* wrapsetter = nullptr );
+	typedef void (wrapsetter_t)( Wrappable*, const std::string&, const Value&, GSE_CALLABLE ); // ( obj, key, value, GSE_CALL )
+	Object( context::ChildContext* const ctx, object_properties_t initial_value = {}, const object_class_t object_class = "", Wrappable* wrapobj = nullptr, wrapsetter_t* wrapsetter = nullptr );
 	~Object();
 
 	const Value& Get( const object_key_t& key ) const;
-	void Set( const object_key_t& key, const Value& value, context::Context* ctx, const si_t& si );
+	void Set( const object_key_t& key, const Value& value, GSE_CALLABLE );
 
 	const Value GetRef( const object_key_t& key );
 
@@ -66,6 +45,8 @@ public:
 	Wrappable* wrapobj;
 	wrapsetter_t* wrapsetter;
 
+private:
+	context::ChildContext* const m_ctx;
 };
 
 }

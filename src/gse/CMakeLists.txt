@@ -14,9 +14,11 @@ SET( SRC ${SRC}
 
 	${PWD}/GSE.cpp
 	${PWD}/Value.cpp
+	${PWD}/ExecutionPointer.cpp
 	${PWD}/Exception.cpp
 	${PWD}/Wrappable.cpp
+	${PWD}/Async.cpp
 
-	)
+)
 
 SET( SRC ${SRC} PARENT_SCOPE )

@@ -46,8 +46,8 @@ CLASS( Entity, types::Serializable )
 	virtual const types::Buffer Serialize() const override;
 	virtual void Unserialize( types::Buffer buf ) override;
 
-	void Show();
-	void Hide();
+	virtual void Show();
+	virtual void Hide();
 	const bool IsVisible() const;
 
 protected:

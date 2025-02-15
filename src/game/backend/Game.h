@@ -321,6 +321,10 @@ CLASS2( Game, MTModule, gse::Wrappable )
 	const Player* GetPlayer() const;
 	const size_t GetSlotNum() const;
 
+	void ShowLoader( const std::string& text );
+	void SetLoaderText( const std::string& text );
+	void HideLoader();
+
 	WRAPDEFS_PTR( Game )
 
 protected:
@@ -365,6 +369,8 @@ private:
 	const gse::Value ProcessEvent( event::Event* event );
 
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
+
+	void UpdateYields( map::tile::Tile* tile ) const;
 
 	map::tile::TileManager* m_tm = nullptr;
 	resource::ResourceManager* m_rm = nullptr;

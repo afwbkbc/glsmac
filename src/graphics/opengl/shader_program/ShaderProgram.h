@@ -7,6 +7,9 @@
 
 namespace graphics {
 namespace opengl {
+
+class OpenGL;
+
 namespace shader_program {
 
 CLASS( ShaderProgram, common::Module )
@@ -14,9 +17,7 @@ CLASS( ShaderProgram, common::Module )
 		TYPE_SIMPLE2D,
 		TYPE_ORTHO,
 		TYPE_ORTHO_DATA,
-		TYPE_FONT,
 		TYPE_PERSP,
-		TYPE_SKYBOX,
 	};
 	ShaderProgram( const type_t type )
 		: m_type( type ) {};
@@ -26,8 +27,7 @@ CLASS( ShaderProgram, common::Module )
 
 	void Start() override;
 	void Stop() override;
-	void Enable();
-	void Disable();
+
 protected:
 	const type_t m_type;
 
@@ -47,6 +47,11 @@ protected:
 	// shader helpers
 	const std::string S_HasFlag( const std::string& var, const GLuint flag ) const;
 	const std::string S_For( const std::string& iterator, const size_t begin, const size_t end, const std::string& body ) const;
+
+private:
+	friend class opengl::OpenGL;
+	void Enable();
+	void Disable();
 
 };
 

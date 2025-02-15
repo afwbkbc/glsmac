@@ -10,7 +10,7 @@
 
 namespace resource {
 
-ResourceManager::ResourceManager()
+ResourceManager::ResourceManager( const std::string& data_path )
 	: m_resources_to_filenames(
 	{
 
@@ -223,6 +223,14 @@ ResourceManager::ResourceManager()
 
 	}
 ) {
+
+	m_data_path = util::FS::GeneratePath(
+		{
+			data_path,
+			"default"
+		}
+	);
+
 	for ( const auto& it : m_resources_to_filenames ) {
 		m_filenames_to_resources.insert(
 			{
@@ -233,14 +241,8 @@ ResourceManager::ResourceManager()
 	}
 }
 
-void ResourceManager::Init( const std::vector< std::string >& possible_smac_paths, const config::smac_type_t smac_type, const std::string& data_path ) {
+void ResourceManager::Init( const std::vector< std::string >& possible_smac_paths, const config::smac_type_t smac_type ) {
 	const bool print_errors = smac_type != config::ST_AUTO;
-	m_data_path = util::FS::GeneratePath(
-		{
-			data_path,
-			"default"
-		}
-	);
 	for ( const auto& path : possible_smac_paths ) {
 
 		// GOG / Steam
@@ -367,7 +369,7 @@ const std::string& ResourceManager::GetPath( const resource_t res ) const {
 	return m_resource_paths.at( res );
 }
 
-const std::string& ResourceManager::GetCustomPath( const std::string& path ) {
+const std::string& ResourceManager::TryGetCustomPath( const std::string& path ) {
 	std::string key = "";
 	key.resize( path.length() );
 	std::transform( path.begin(), path.end(), key.begin(), ::tolower );
@@ -395,20 +397,29 @@ const std::string& ResourceManager::GetCustomPath( const std::string& path ) {
 		// look in SMAC dir
 		resolved_file = util::FS::GetExistingCaseSensitivePath( m_smac_path, GetFixedPath( path, m_extension_path_map, m_path_modifiers ) );
 	}
-	if ( resolved_file.empty() ) {
-		THROW( "could not resolve resource (path does not exist: " + path + ")" );
+	if ( !resolved_file.empty() && !util::FS::IsFile( resolved_file ) ) {
+		resolved_file = "";
 	}
-
-	if ( !util::FS::IsFile( resolved_file ) ) {
-		THROW( "could not resolve resource (path is not a file: " + path + ")" );
+	if ( !resolved_file.empty() ) {
+		Log( "Resolved resource \"" + path + "\" to " + resolved_file );
 	}
-	Log( "Resolved resource \"" + path + "\" to " + resolved_file );
+	else {
+		Log( "Failed to resolve resource \"" + path + "\"" );
+	}
 	return m_custom_resource_paths.insert(
 		{
 			key,
 			resolved_file
 		}
 	).first->second;
+}
+
+const std::string& ResourceManager::GetCustomPath( const std::string& path ) {
+	const auto& result = TryGetCustomPath( path );
+	if ( result.empty() ) {
+		THROW( "could not resolve resource (path does not exist or is not a file: " + path + ")" );
+	}
+	return result;
 }
 
 const std::string ResourceManager::GetFixedPath( const std::string& file, const extension_path_map_t& extension_path_map, const path_modifier_t path_modifiers ) {

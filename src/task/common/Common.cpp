@@ -2,9 +2,9 @@
 
 #include "engine/Engine.h"
 #include "config/Config.h"
-#include "ui/UI.h"
-#include "ui/FPSCounter.h"
-#include "ui/style/Theme.h"
+#include "ui_legacy/UI.h"
+#include "ui_legacy/FPSCounter.h"
+#include "ui_legacy/style/Theme.h"
 
 namespace task {
 
@@ -15,7 +15,7 @@ void Common::Start() {
 	ui->AddTheme( m_theme );
 
 	if ( g_engine->GetConfig()->HasLaunchFlag( config::Config::LF_SHOWFPS ) ) {
-		NEW( m_fps_counter, ui::FPSCounter );
+		NEW( m_fps_counter, ui_legacy::FPSCounter );
 
 		ui->AddObject( m_fps_counter );
 	}

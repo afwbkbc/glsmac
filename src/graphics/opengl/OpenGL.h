@@ -6,11 +6,14 @@
 
 #define SDL_MAIN_HANDLED 1
 #include <SDL.h>
+
 #include <GL/glew.h>
 
 #include "graphics/Graphics.h"
 
 #include "types/Vec2.h"
+#include "types/mesh/Types.h"
+#include "util/Clamper.h"
 
 namespace graphics {
 namespace opengl {
@@ -51,10 +54,10 @@ CLASS( OpenGL, Graphics )
 	const unsigned short GetViewportWidth() const override;
 	const unsigned short GetViewportHeight() const override;
 
-	void LoadTexture( types::texture::Texture* texture ) override;
+	void LoadTexture( types::texture::Texture* texture, const bool smoothen = true ) override;
 	void UnloadTexture( const types::texture::Texture* texture ) override;
-	void EnableTexture( const types::texture::Texture* texture ) override;
-	void DisableTexture() override;
+
+	void WithTexture( const types::texture::Texture* texture, const f_t& f ) override;
 
 	FBO* CreateFBO();
 	void DestroyFBO( FBO* fbo );
@@ -69,6 +72,17 @@ CLASS( OpenGL, Graphics )
 
 	void ResizeViewport( const size_t width, const size_t height );
 	void ResizeWindow( const size_t width, const size_t height ) override;
+
+	void WithBindBuffer( GLenum target, GLuint buffer, const f_t& f ) const;
+	void WithBindBuffers( GLuint vbo, GLuint ibo, const f_t& f ) const;
+	void WithBindTexture( GLuint texture, const f_t& f ) const;
+	void WithBindFramebufferBegin( GLenum target, GLuint buffer ) const;
+	void WithBindFramebuffer( GLenum target, GLuint buffer, const f_t& f ) const;
+	void WithBindFramebufferEnd( GLenum target ) const;
+	void WithShaderProgram( shader_program::ShaderProgram* sp, const f_t& f ) const;
+
+	void CaptureToTexture( types::texture::Texture* const texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right, const f_t& f );
+	const types::Vec2< types::mesh::coord_t > GetGLCoords( const types::Vec2< size_t >& xy ) const;
 
 protected:
 	struct {
@@ -95,6 +109,7 @@ private:
 	struct texture_data_t {
 		GLuint obj = 0;
 		size_t last_texture_update_counter = 0;
+		types::Vec2< size_t > last_dimensions = {};
 	};
 	typedef std::unordered_map< const types::texture::Texture*, texture_data_t > m_textures_map;
 	m_textures_map m_textures = {};
@@ -105,6 +120,13 @@ private:
 	std::unordered_set< FBO* > m_fbos = {};
 
 	bool m_is_fullscreen = false;
+
+	FBO* m_capture_to_texture_fbo = nullptr;
+
+	struct {
+		util::Clamper< float > x;
+		util::Clamper< float > y;
+	} m_px_to_gl_clamp = {};
 
 	void UpdateViewportSize( const size_t width, const size_t height );
 };

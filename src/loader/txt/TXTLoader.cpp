@@ -12,7 +12,7 @@ const TXTLoader::txt_data_t& TXTLoader::GetTXTData( const std::string& path ) {
 		it = m_txt_data.insert(
 			{
 				path,
-				txt_data_t{ util::FS::ReadFile( path ) }
+				txt_data_t{ util::FS::ReadTextFile( path ) }
 			}
 		).first;
 	}
@@ -22,7 +22,7 @@ const TXTLoader::txt_data_t& TXTLoader::GetTXTData( const std::string& path ) {
 TXTLoader::txt_data_t::txt_data_t( const std::string& source ) {
 
 	// raw lines
-	lines = util::String::SplitToLines( source );
+	lines = util::String::Split( source, '\n' );
 
 	// sections
 	sections_t::iterator section_it = sections.end();

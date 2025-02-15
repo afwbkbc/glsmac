@@ -27,7 +27,7 @@
 #include "gse/type/Int.h"
 #include "gse/type/Undefined.h"
 #include "gse/type/Array.h"
-#include "ui/UI.h"
+#include "ui_legacy/UI.h"
 #include "map/tile/TileManager.h"
 #include "map/tile/Tiles.h"
 #include "map/MapState.h"
@@ -184,15 +184,16 @@ void Game::Start() {
 	NEW( m_um, unit::UnitManager, this );
 	NEW( m_bm, base::BaseManager, this );
 	NEW( m_am, animation::AnimationManager, this );
+
 }
 
 void Game::Stop() {
 	Log( "Stopping thread" );
 
 	if ( m_state ) {
-		DELETE( m_state );
-		m_state = nullptr;
-		m_connection = nullptr;
+	   DELETE( m_state );
+	   m_state = nullptr;
+	   m_connection = nullptr;
 	}
 
 	ResetGame();
@@ -215,6 +216,12 @@ void Game::Stop() {
 	DELETE( m_am );
 	m_am = nullptr;
 
+	DELETE( m_pending_frontend_requests );
+	m_pending_frontend_requests = nullptr;
+
+	DELETE( m_random );
+	m_random = nullptr;
+
 	MTModule::Stop();
 }
 
@@ -228,9 +235,9 @@ void Game::Iterate() {
 
 		if ( m_game_state == GS_INITIALIZING ) {
 
-			auto* ui = g_engine->GetUI();
-
 			bool ready = true;
+
+			ASSERT_NOLOG( m_state, "state is null" );
 
 			if ( m_state->IsMaster() ) {
 #ifdef DEBUG
@@ -310,7 +317,7 @@ void Game::Iterate() {
 							!config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) // no point saving if we just loaded it
 						) {
 						Log( (std::string)"Saving map dump to " + config->GetDebugPath() + map::s_consts.debug.lastdump_filename );
-						ui->SetLoaderText( "Saving dump", false );
+						SetLoaderText( "Saving dump" );
 						util::FS::WriteFile( config->GetDebugPath() + map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
 					}
 #endif
@@ -334,7 +341,11 @@ void Game::Iterate() {
 					m_response_map_data->sprites.actors = &m_map->m_sprite_actors;
 					m_response_map_data->sprites.instances = &m_map->m_sprite_instances;
 
+					for ( auto& tile : m_map->m_tiles->GetVector( m_init_cancel ) ) {
+						UpdateYields( tile );
+					}
 					m_response_map_data->tiles = m_map->GetTilesPtr()->GetTilesPtr();
+
 					m_response_map_data->tile_states = m_map->GetMapState()->GetTileStatesPtr();
 
 					if ( m_old_map ) {
@@ -387,6 +398,8 @@ void Game::Iterate() {
 
 					if ( m_game_state == GS_RUNNING ) {
 
+						HideLoader();
+
 						m_um->ProcessUnprocessed();
 						m_bm->ProcessUnprocessed();
 
@@ -408,7 +421,6 @@ void Game::Iterate() {
 						}
 						m_unprocessed_events.clear();
 
-						g_engine->GetUI()->SetLoaderText( "Starting game...", false );
 						if ( m_state->IsMaster() ) {
 							try {
 								m_state->m_bindings->Trigger( this, "start", {
@@ -419,7 +431,7 @@ void Game::Iterate() {
 								});
 							}
 							catch ( gse::Exception& e ) {
-								Log( (std::string)"Initialization failed: " + e.ToStringAndCleanup() );
+								Log( (std::string)"Initialization failed: " + e.ToString() );
 								f_init_failed( e.what() );
 							}
 							GlobalAdvanceTurn();
@@ -470,7 +482,25 @@ const size_t Game::GetSlotNum() const {
 	return m_slot_num;
 }
 
-WRAPIMPL_BEGIN( Game, CLASS_GAME )
+void Game::ShowLoader( const std::string& text ) {
+	auto fr = FrontendRequest( FrontendRequest::FR_LOADER_SHOW );
+	NEW( fr.data.loader.text, std::string, text );
+	AddFrontendRequest( fr );
+}
+
+void Game::SetLoaderText( const std::string& text ) {
+	auto fr = FrontendRequest( FrontendRequest::FR_LOADER_TEXT );
+	NEW( fr.data.loader.text, std::string, text );
+	AddFrontendRequest( fr );
+	ProcessRequests(); // allow frontend to update % while backend is busy
+}
+
+void Game::HideLoader() {
+	auto fr = FrontendRequest( FrontendRequest::FR_LOADER_HIDE );
+	AddFrontendRequest( fr );
+}
+
+WRAPIMPL_BEGIN( Game )
 	WRAPIMPL_PROPS
 		{
 			"year",
@@ -526,7 +556,7 @@ WRAPIMPL_BEGIN( Game, CLASS_GAME )
 			} )
 		},
 	};
-WRAPIMPL_END_PTR( Game )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Game )
 
@@ -675,21 +705,6 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			try {
 				for ( const auto& r : *request.data.send_backend_requests.requests ) {
 					switch ( r.type ) {
-						case BackendRequest::BR_GET_TILE_DATA: {
-							const auto& tile = m_map->GetTile( r.data.get_tile_data.tile_x, r.data.get_tile_data.tile_y );
-
-							NEWV( yields, FrontendRequest::tile_yields_t, m_rm->GetYields(
-								tile,
-								m_slot
-							) );
-
-							auto fr = FrontendRequest( FrontendRequest::FR_TILE_DATA );
-							fr.data.tile_data.tile_x = tile->coord.x;
-							fr.data.tile_data.tile_y = tile->coord.y;
-							fr.data.tile_data.tile_yields = yields;
-							AddFrontendRequest( fr );
-							break;
-						}
 						case BackendRequest::BR_ANIMATION_FINISHED: {
 							m_am->FinishAnimation( r.data.animation_finished.animation_id );
 							break;
@@ -831,7 +846,7 @@ void Game::OnError( std::runtime_error& err ) {
 void Game::OnGSEError( gse::Exception& err ) {
 	auto fr = FrontendRequest( FrontendRequest::FR_ERROR );
 	NEW( fr.data.error.what, std::string, (std::string)"Script error: " + err.what() );
-	NEW( fr.data.error.stacktrace, std::string, err.ToStringAndCleanup() );
+	NEW( fr.data.error.stacktrace, std::string, err.ToString() );
 	AddFrontendRequest( fr );
 }
 
@@ -1087,6 +1102,13 @@ const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
 	};
 }
 
+void Game::UpdateYields( map::tile::Tile* tile ) const {
+	tile->yields = m_rm->GetYields(
+		tile,
+		m_slot
+	);
+}
+
 void Game::AddFrontendRequest( const FrontendRequest& request ) {
 	//Log( "Sending frontend request (type=" + std::to_string( request.type ) + ")" ); // spammy
 	m_pending_frontend_requests->push_back( request );
@@ -1307,8 +1329,8 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			const std::string& filename = config->GetQuickstartMapDump();
 			ASSERT( util::FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
 			Log( (std::string)"Loading map dump from " + filename );
-			ui->SetLoaderText( "Loading dump", false );
-			m_map->Unserialize( types::Buffer( util::FS::ReadFile( filename ) ) );
+			SetLoaderText( "Loading dump" );
+			m_map->Unserialize( types::Buffer( util::FS::ReadTextFile( filename ) ) );
 			ec = map::Map::EC_NONE;
 		}
 		else
@@ -1344,27 +1366,29 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					}
 				);
 				m_connection->UpdateSlot( m_slot_num, m_slot, true );
+				SetLoaderText( "Waiting for players" );
+			}
+			else {
+				SetLoaderText( "Starting game" );
 			}
 
-			ui->SetLoaderText( "Waiting for players" );
 			m_game_state = GS_INITIALIZING;
 			response.result = R_SUCCESS;
 		}
-
 	}
 	else {
 		m_connection->IfClient(
 			[ this, &response, ui ]( connection::Client* connection ) -> void {
 
 				// wait for server to initialize
-				ui->SetLoaderText( "Waiting for server" );
+				SetLoaderText( "Waiting for server" );
 
 				const auto f_download_map = [ this, ui, connection ] {
 
-					ui->SetLoaderText( "Downloading world snapshot" );
+					SetLoaderText( "Downloading world snapshot" );
 
-					connection->m_on_download_progress = [ ui ]( const float progress ) -> void {
-						ui->SetLoaderText( "Downloading world snapshot:  " + std::to_string( (size_t)std::round( progress * 100 ) ) + "%" );
+					connection->m_on_download_progress = [ this ]( const float progress ) -> void {
+						SetLoaderText( "Downloading world snapshot:  " + std::to_string( (size_t)std::round( progress * 100 ) ) + "%" );
 					};
 					connection->m_on_download_complete = [ this, connection ]( const std::string serialized_snapshot ) -> void {
 						connection->m_on_download_complete = nullptr;
@@ -1476,12 +1500,13 @@ void Game::ResetGame() {
 	if ( m_state ) {
 		// ui thread will reset state as needed
 		m_state->UnsetGame();
-		m_state = nullptr;
 		if ( m_connection ) {
 			m_connection->Disconnect();
 			m_connection->ResetHandlers();
+			m_connection = nullptr;
 		}
-		m_connection = nullptr;
+		delete m_state;
+		m_state = nullptr;
 	}
 }
 

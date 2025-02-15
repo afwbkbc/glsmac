@@ -19,7 +19,7 @@ namespace parser {
 CLASS( Parser, common::Class )
 
 	Parser( const std::string& filename, const std::string& source, const size_t initial_line_num );
-	virtual ~Parser() = default;
+	virtual ~Parser();
 
 	const program::Program* Parse();
 
@@ -266,6 +266,8 @@ protected:
 	const si_t make_si( const si_t::pos_t& begin, const si_t::pos_t& end ) const;
 
 	const std::string unpack_backslashes( const std::string& source ) const;
+
+	gse::ExecutionPointer* m_ep = nullptr;
 
 private:
 	const std::string m_source;

@@ -65,8 +65,11 @@ MapEditor::MapEditor( Game* game )
 }
 
 MapEditor::~MapEditor() {
-	for ( auto& tool : m_tools ) {
-		DELETE( tool.second );
+	for ( const auto& it : m_brushes ) {
+		DELETE( it.second );
+	}
+	for ( const auto& it : m_tools ) {
+		DELETE( it.second );
 	}
 }
 

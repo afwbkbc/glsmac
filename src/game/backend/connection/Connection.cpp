@@ -3,7 +3,7 @@
 #include "game/backend/State.h"
 #include "engine/Engine.h"
 #include "network/Network.h"
-#include "ui/UI.h"
+#include "ui_legacy/UI.h"
 #include "game/backend/event/Event.h"
 
 namespace game {

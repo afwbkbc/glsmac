@@ -27,11 +27,11 @@ namespace gse {
 using namespace program;
 namespace tests {
 
+extern const gse::program::Program* g_test_program;
+
 void AddParserTests( task::gsetests::GSETests* task ) {
 
-	const auto& reference_program = GetTestProgram();
-
-	const auto validate_program = [ reference_program ]( const Program* program ) -> std::string {
+	const auto validate_program = []( const Program* program ) -> std::string {
 		GT_ASSERT( program != nullptr, "parser returned null program" );
 
 #define VALIDATOR( _type, ... ) [ __VA_ARGS__ ]( const _type* a, const _type* b ) -> std::string
@@ -306,7 +306,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			GT_OK();
 		};
 
-		VALIDATE( scope, reference_program->body, program->body );
+		VALIDATE( scope, g_test_program->body, program->body );
 
 #undef VALIDATOR
 #undef VALIDATE

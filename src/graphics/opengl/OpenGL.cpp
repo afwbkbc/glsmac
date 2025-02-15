@@ -5,11 +5,10 @@
 #include "shader_program/Simple2D.h"
 #include "shader_program/Orthographic.h"
 #include "shader_program/OrthographicData.h"
-#include "shader_program/Font.h"
 #include "scene/Scene.h"
 #include "scene/Camera.h"
 #include "routine/Overlay.h"
-#include "routine/Skybox.h"
+#include "routine/UI.h"
 #include "routine/World.h"
 #include "FBO.h"
 #include "types/texture/Texture.h"
@@ -28,46 +27,25 @@ OpenGL::OpenGL( const std::string title, const unsigned short window_width, cons
 
 	m_is_fullscreen = fullscreen;
 
-/*	NEWV( sp_skybox, shader_program::Skybox );
-	m_shader_programs.push_back( sp_skybox );
-	NEWV( r_skybox, routine::Skybox, sp_skybox );
-	m_routines.push_back( r_skybox );
+	m_px_to_gl_clamp.x.SetRange(
+		{
+			{ 0.0,  (float)window_width },
+			{ -1.0, 1.0 }
+		}
+	);
+	m_px_to_gl_clamp.x.SetOverflowAllowed( true );
 
-	NEWV( sp_world, shader_program::World );
-	m_shader_programs.push_back( sp_world );
-	NEWV( r_world, routine::World, sp_world );
-	m_routines.push_back( r_world );
-*/
-
-	// shader programs
-	NEWV( sp_orthographic, shader_program::Orthographic );
-	m_shader_programs.push_back( sp_orthographic );
-	NEWV( sp_orthographic_data, shader_program::OrthographicData );
-	m_shader_programs.push_back( sp_orthographic_data );
-	NEWV( sp_simple2d, shader_program::Simple2D );
-	m_shader_programs.push_back( sp_simple2d );
-	NEWV( sp_font, shader_program::Font );
-	m_shader_programs.push_back( sp_font );
-
-	// routines ( order is important )
-	NEWV( r_world, routine::World, this, scene::SCENE_TYPE_ORTHO, sp_orthographic, sp_orthographic_data );
-	m_routines.push_back( r_world );
-	NEWV( r_overlay, routine::Overlay, this, sp_simple2d, sp_font );
-	m_routines.push_back( r_overlay );
-	NEWV( r_world_ui, routine::World, this, scene::SCENE_TYPE_ORTHO_UI, sp_orthographic, sp_orthographic_data );
-	m_routines.push_back( r_world_ui );
-
-	// some routines are special
-	m_routine_overlay = r_overlay;
+	m_px_to_gl_clamp.y.SetRange(
+		{
+			{ 0.0,  (float)window_height },
+			{ -1.0, 1.0 }
+		}
+	);
+	m_px_to_gl_clamp.y.SetOverflowAllowed( true );
+	m_px_to_gl_clamp.y.SetInversed( true );
 }
 
 OpenGL::~OpenGL() {
-	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it ) {
-		DELETE( *it );
-	}
-	for ( auto it = m_shader_programs.begin() ; it != m_shader_programs.end() ; ++it ) {
-		DELETE( *it );
-	}
 }
 
 void OpenGL::Start() {
@@ -134,6 +112,27 @@ void OpenGL::Start() {
 		);
 	}
 
+	// shader programs
+	NEWV( sp_orthographic, shader_program::Orthographic );
+	m_shader_programs.push_back( sp_orthographic );
+	NEWV( sp_orthographic_data, shader_program::OrthographicData );
+	m_shader_programs.push_back( sp_orthographic_data );
+	NEWV( sp_simple2d, shader_program::Simple2D );
+	m_shader_programs.push_back( sp_simple2d );
+
+	// routines ( order is important )
+	NEWV( r_world, routine::World, this, scene::SCENE_TYPE_ORTHO, sp_orthographic, sp_orthographic_data );
+	m_routines.push_back( r_world );
+	NEWV( r_overlay, routine::Overlay, this, sp_simple2d );
+	m_routines.push_back( r_overlay );
+	NEWV( r_ui, routine::UI, this, sp_simple2d );
+	m_routines.push_back( r_ui );
+	NEWV( r_world_ui, routine::World, this, scene::SCENE_TYPE_ORTHO_UI, sp_orthographic, sp_orthographic_data );
+	m_routines.push_back( r_world_ui );
+
+	// some routines are special
+	m_routine_overlay = r_overlay;
+
 	for ( auto it = m_shader_programs.begin() ; it != m_shader_programs.end() ; ++it ) {
 		( *it )->Start();
 	}
@@ -158,19 +157,23 @@ void OpenGL::Start() {
 	glActiveTexture( GL_TEXTURE0 );
 	glGenTextures( 1, &m_no_texture );
 
-	glBindTexture( GL_TEXTURE_2D, m_no_texture );
+	WithBindTexture(
+		m_no_texture, [ this ]() {
+			uint32_t nothing = 0;
+			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &nothing );
+			ASSERT( !glGetError(), "Error loading texture" );
+		}
+	);
 
-	uint32_t nothing = 0;
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &nothing );
-	ASSERT( !glGetError(), "Error loading texture" );
-
-	glBindTexture( GL_TEXTURE_2D, 0 );
+	m_capture_to_texture_fbo = CreateFBO();
 
 	OnWindowResize();
 }
 
 void OpenGL::Stop() {
 	Log( "Uninitializing OpenGL" );
+
+	DestroyFBO( m_capture_to_texture_fbo );
 
 	glDeleteTextures( 1, &m_no_texture );
 
@@ -181,6 +184,15 @@ void OpenGL::Stop() {
 	for ( auto it = m_shader_programs.begin() ; it != m_shader_programs.end() ; ++it ) {
 		( *it )->Stop();
 	}
+
+	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it ) {
+		DELETE( *it );
+	}
+	m_routines.clear();
+	for ( auto it = m_shader_programs.begin() ; it != m_shader_programs.end() ; ++it ) {
+		DELETE( *it );
+	}
+	m_shader_programs.clear();
 
 	for ( auto& texture : m_textures ) {
 		glDeleteTextures( 1, &texture.second.obj );
@@ -218,7 +230,7 @@ void OpenGL::Iterate() {
 
 	GLenum errcode;
 	if ( ( errcode = glGetError() ) != GL_NO_ERROR ) {
-		THROW( "OpenGL error occured in render loop, aborting" );
+		THROW( "OpenGL error occured in render loop, aborting: " + std::to_string( errcode ) );
 	}
 
 	Unlock();
@@ -229,12 +241,16 @@ void OpenGL::Iterate() {
 void OpenGL::AddScene( scene::Scene* scene ) {
 	Log( "Adding scene [" + scene->GetName() + "]" );
 
+#ifdef DEBUG
 	bool added = false;
+#endif
 
 	auto it = m_routines.begin();
 	for ( ; it < m_routines.end() ; it++ ) {
 		if ( ( *it )->AddScene( scene ) ) {
+#ifdef DEBUG
 			added = true;
+#endif
 		}
 	}
 
@@ -244,12 +260,16 @@ void OpenGL::AddScene( scene::Scene* scene ) {
 void OpenGL::RemoveScene( scene::Scene* scene ) {
 	Log( "Removing scene [" + scene->GetName() + "]" );
 
+#ifdef DEBUG
 	bool removed = false;
+#endif
 
 	auto it = m_routines.begin();
 	for ( ; it < m_routines.end() ; it++ ) {
 		if ( ( *it )->RemoveScene( scene ) ) {
+#ifdef DEBUG
 			removed = true;
+#endif
 		}
 	}
 
@@ -277,6 +297,19 @@ const unsigned short OpenGL::GetViewportHeight() const {
 void OpenGL::OnWindowResize() {
 	Graphics::OnWindowResize();
 
+	m_px_to_gl_clamp.x.SetSrcRange(
+		{
+			0.0,
+			(float)m_viewport_size.x
+		}
+	);
+	m_px_to_gl_clamp.y.SetSrcRange(
+		{
+			0.0,
+			(float)m_viewport_size.y
+		}
+	);
+
 	for ( auto& f : m_fbos ) {
 		f->Resize( m_viewport_size.x, m_viewport_size.y );
 	}
@@ -286,31 +319,48 @@ void OpenGL::OnWindowResize() {
 	}
 }
 
-void OpenGL::LoadTexture( types::texture::Texture* texture ) {
+void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen ) {
 	ASSERT( texture, "texture is null" );
 
 	bool is_reload_needed = false;
 
 	const size_t texture_update_counter = texture->UpdatedCount();
 
-	m_textures_map::iterator it = m_textures.find( texture );
+	auto it = m_textures.find( texture );
 	bool need_full_update = false;
+
+	glActiveTexture( GL_TEXTURE0 );
+
 	if ( it == m_textures.end() ) {
 
 		//Log( "Initializing texture '" + texture->m_name + "'" );
-		m_textures[ texture ] = {
-			0,
-			texture->UpdatedCount()
-		};
+		it = m_textures.insert(
+			{
+				texture,
+				{
+					0,
+					texture->UpdatedCount(),
+					{
+						texture->m_width,
+						texture->m_height,
+					}
+				}
+			}
+		).first;
 
-		glActiveTexture( GL_TEXTURE0 );
-		glGenTextures( 1, &m_textures[ texture ].obj );
+		glGenTextures( 1, &it->second.obj );
 
 		is_reload_needed = true;
 		need_full_update = true;
 	}
 
-	auto& t = m_textures[ texture ];
+	auto& t = it->second;
+	if ( t.last_dimensions.x != texture->m_width || t.last_dimensions.y != texture->m_height ) {
+		is_reload_needed = true;
+		need_full_update = true;
+		t.last_dimensions.x = texture->m_width;
+		t.last_dimensions.y = texture->m_height;
+	}
 
 	if ( t.last_texture_update_counter != texture_update_counter ) {
 		t.last_texture_update_counter = texture_update_counter;
@@ -320,159 +370,170 @@ void OpenGL::LoadTexture( types::texture::Texture* texture ) {
 	if ( is_reload_needed ) {
 		//Log( "Loading texture '" + texture->m_name + "'" );
 
-		glBindTexture( GL_TEXTURE_2D, t.obj );
+		WithBindTexture(
+			t.obj, [ this, &need_full_update, &texture, &smoothen ]() {
 
-		if ( need_full_update ) {
-			ASSERT( !glGetError(), "Texture parameter error" );
-			glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+				if ( need_full_update ) {
+					ASSERT( !glGetError(), "Texture parameter error" );
+					glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
 
-			glTexImage2D(
-				GL_TEXTURE_2D,
-				0,
-				GL_RGBA8,
-				(GLsizei)texture->m_width,
-				(GLsizei)texture->m_height,
-				0,
-				GL_RGBA,
-				GL_UNSIGNED_BYTE,
-				ptr( texture->m_bitmap, 0, texture->m_width * texture->m_height * 4 )
-			);
-
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-		}
-		else if ( !texture->GetUpdatedAreas().empty() ) {
-
-			// combine multiple updates into one or fewer
-
-			types::texture::Texture::updated_areas_t areas = {};
-
-			const auto& updated_areas = texture->GetUpdatedAreas();
-
-			const uint8_t od = 1; // overlap distance
-
-			const auto f_are_combineable = []( const types::texture::Texture::updated_area_t& first, const types::texture::Texture::updated_area_t& second ) -> bool {
-				return
-					(
-						( first.left + od >= second.left && first.left - od <= second.right ) ||
-							( first.right + od >= second.left && first.right - od <= second.right )
-					) &&
-						(
-							( first.top + od >= second.top && first.top - od <= second.bottom ) ||
-								( first.bottom + od >= second.top && first.bottom - od <= second.bottom )
-						);
-			};
-
-			const auto f_combine = []( types::texture::Texture::updated_area_t& first, const types::texture::Texture::updated_area_t& second ) -> void {
-				//Log( "Merging texture area " + second.ToString() + " into " + first.ToString() );
-				first.left = std::min< size_t >( first.left, second.left );
-				first.top = std::min< size_t >( first.top, second.top );
-				first.right = std::max< size_t >( first.right, second.right );
-				first.bottom = std::max< size_t >( first.bottom, second.bottom );
-			};
-
-			// mark area as removed (merged into another)
-			const auto f_remove = []( types::texture::Texture::updated_area_t& area ) -> void {
-				area.right = area.top = 0; // hackish but no actual area would have these coordinates at 0
-			};
-
-			// check if area was marked as removed (to skip)
-			const auto f_is_removed = []( const types::texture::Texture::updated_area_t& area ) -> bool {
-				return area.right == 0 && area.top == 0;
-			};
-
-			for ( auto& updated_area : updated_areas ) {
-				//Log( "Processing texture area " + updated_area.ToString() );
-				// try to merge with existing one
-				auto it = areas.begin();
-				while ( it != areas.end() ) {
-					// if it overlaps then we can merge with existing (TODO: can optimize further by measuring overlap size)
-					if ( f_are_combineable( updated_area, *it ) ) {
-						// extend area to fit both new one and old one
-						f_combine( *it, updated_area );
-						break;
-					}
-					it++;
-				}
-				if ( it == areas.end() ) {
-					// couldn't find any suitable areas, add new one
-					//Log( "Adding texture area " + updated_area.ToString() );
-					areas.push_back(
-						{
-							updated_area.left,
-							updated_area.top,
-							updated_area.right,
-							updated_area.bottom
-						}
+					glTexImage2D(
+						GL_TEXTURE_2D,
+						0,
+						GL_RGBA8,
+						(GLsizei)texture->m_width,
+						(GLsizei)texture->m_height,
+						0,
+						GL_RGBA,
+						GL_UNSIGNED_BYTE,
+						ptr( texture->m_bitmap, 0, texture->m_width * texture->m_height * 4 )
 					);
-				}
-			}
 
-			// keep combining until can't combine anymore
-			bool combined = true;
-			do {
-				combined = false;
-				for ( auto it_dst = areas.begin() ; it_dst < areas.end() ; it_dst++ ) {
-					if ( f_is_removed( *it_dst ) ) {
-						continue;
+					if ( smoothen ) {
+						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 					}
-					for ( auto it_src = it_dst + 1 ; it_src < areas.end() ; it_src++ ) {
-						if ( f_is_removed( *it_src ) ) {
+					else {
+						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST );
+					}
+
+					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+				}
+				else if ( !texture->GetUpdatedAreas().empty() ) {
+
+					// combine multiple updates into one or fewer
+
+					types::texture::Texture::updated_areas_t areas = {};
+
+					const auto& updated_areas = texture->GetUpdatedAreas();
+
+					const uint8_t od = 1; // overlap distance
+
+					const auto f_are_combineable = []( const types::texture::Texture::updated_area_t& first, const types::texture::Texture::updated_area_t& second ) -> bool {
+						return
+							(
+								( first.left + od >= second.left && first.left - od <= second.right ) ||
+									( first.right + od >= second.left && first.right - od <= second.right )
+							) &&
+								(
+									( first.top + od >= second.top && first.top - od <= second.bottom ) ||
+										( first.bottom + od >= second.top && first.bottom - od <= second.bottom )
+								);
+					};
+
+					const auto f_combine = []( types::texture::Texture::updated_area_t& first, const types::texture::Texture::updated_area_t& second ) -> void {
+						//Log( "Merging texture area " + second.ToString() + " into " + first.ToString() );
+						first.left = std::min< size_t >( first.left, second.left );
+						first.top = std::min< size_t >( first.top, second.top );
+						first.right = std::max< size_t >( first.right, second.right );
+						first.bottom = std::max< size_t >( first.bottom, second.bottom );
+					};
+
+					// mark area as removed (merged into another)
+					const auto f_remove = []( types::texture::Texture::updated_area_t& area ) -> void {
+						area.right = area.top = 0; // hackish but no actual area would have these coordinates at 0
+					};
+
+					// check if area was marked as removed (to skip)
+					const auto f_is_removed = []( const types::texture::Texture::updated_area_t& area ) -> bool {
+						return area.right == 0 && area.top == 0;
+					};
+
+					for ( auto& updated_area : updated_areas ) {
+						//Log( "Processing texture area " + updated_area.ToString() );
+						// try to merge with existing one
+						auto it = areas.begin();
+						while ( it != areas.end() ) {
+							// if it overlaps then we can merge with existing (TODO: can optimize further by measuring overlap size)
+							if ( f_are_combineable( updated_area, *it ) ) {
+								// extend area to fit both new one and old one
+								f_combine( *it, updated_area );
+								break;
+							}
+							it++;
+						}
+						if ( it == areas.end() ) {
+							// couldn't find any suitable areas, add new one
+							//Log( "Adding texture area " + updated_area.ToString() );
+							areas.push_back(
+								{
+									updated_area.left,
+									updated_area.top,
+									updated_area.right,
+									updated_area.bottom
+								}
+							);
+						}
+					}
+
+					// keep combining until can't combine anymore
+					bool combined = true;
+					do {
+						combined = false;
+						for ( auto it_dst = areas.begin() ; it_dst < areas.end() ; it_dst++ ) {
+							if ( f_is_removed( *it_dst ) ) {
+								continue;
+							}
+							for ( auto it_src = it_dst + 1 ; it_src < areas.end() ; it_src++ ) {
+								if ( f_is_removed( *it_src ) ) {
+									continue;
+								}
+								if ( f_are_combineable( *it_dst, *it_src ) ) {
+									//Log( "Merging texture area " + it_src->ToString() + " into " + it_dst->ToString() );
+									f_combine( *it_dst, *it_src );
+									f_remove( *it_src );
+									combined = true;
+								}
+							}
+						}
+					}
+					while ( combined );
+
+					// reload areas into opengl
+					for ( auto& area : areas ) {
+						if ( f_is_removed( area ) ) {
 							continue;
 						}
-						if ( f_are_combineable( *it_dst, *it_src ) ) {
-							//Log( "Merging texture area " + it_src->ToString() + " into " + it_dst->ToString() );
-							f_combine( *it_dst, *it_src );
-							f_remove( *it_src );
-							combined = true;
+
+						//Log( "Reloading texture area " + area.ToString() );
+
+						const size_t w = area.right - area.left;
+						const size_t h = area.bottom - area.top;
+
+						if ( w > 0 && h > 0 ) {
+							auto* bitmap = texture->CopyBitmap(
+								area.left,
+								area.top,
+								area.right,
+								area.bottom
+							);
+
+							glTexSubImage2D(
+								GL_TEXTURE_2D,
+								0,
+								area.left,
+								area.top,
+								w,
+								h,
+								GL_RGBA,
+								GL_UNSIGNED_BYTE,
+								ptr( bitmap, 0, w * h * 4 )
+							);
+
+							free( bitmap );
 						}
 					}
 				}
+				texture->ClearUpdatedAreas();
+
+				const auto err = glGetError();
+				ASSERT( !err, "Error loading texture: " + std::to_string( err ) );
+
+				glGenerateMipmap( GL_TEXTURE_2D );
 			}
-			while ( combined );
-
-			// reload areas into opengl
-			for ( auto& area : areas ) {
-				if ( f_is_removed( area ) ) {
-					continue;
-				}
-
-				//Log( "Reloading texture area " + area.ToString() );
-
-				const size_t w = area.right - area.left;
-				const size_t h = area.bottom - area.top;
-
-				auto* bitmap = texture->CopyBitmap(
-					area.left,
-					area.top,
-					area.right,
-					area.bottom
-				);
-
-				glTexSubImage2D(
-					GL_TEXTURE_2D,
-					0,
-					area.left,
-					area.top,
-					w,
-					h,
-					GL_RGBA,
-					GL_UNSIGNED_BYTE,
-					ptr( bitmap, 0, w * h * 4 )
-				);
-
-				free( bitmap );
-			}
-		}
-		texture->ClearUpdatedAreas();
-
-		ASSERT( !glGetError(), "Error loading texture" );
-
-		glGenerateMipmap( GL_TEXTURE_2D );
-
-		glBindTexture( GL_TEXTURE_2D, 0 );
+		);
 
 		ASSERT( !glGetError(), "Error somewhere while loading texture" );
 	}
@@ -488,23 +549,21 @@ void OpenGL::UnloadTexture( const types::texture::Texture* texture ) {
 	}
 }
 
-void OpenGL::EnableTexture( const types::texture::Texture* texture ) {
+void OpenGL::WithTexture( const types::texture::Texture* texture, const f_t& f ) {
+	GLuint obj;
 	if ( texture ) {
 		auto it = m_textures.find( texture );
 		ASSERT( it != m_textures.end(), "texture to be enabled ( " + texture->m_name + " ) not found" );
-		glBindTexture( GL_TEXTURE_2D, it->second.obj );
+		obj = it->second.obj;
 	}
 	else {
-		glBindTexture( GL_TEXTURE_2D, m_no_texture );
+		obj = m_no_texture;
 	}
-}
-
-void OpenGL::DisableTexture() {
-	glBindTexture( GL_TEXTURE_2D, 0 );
+	WithBindTexture( obj, f );
 }
 
 FBO* OpenGL::CreateFBO() {
-	NEWV( fbo, FBO, m_options.viewport_width, m_options.viewport_height );
+	NEWV( fbo, FBO, this, m_options.viewport_width, m_options.viewport_height );
 	Log( "Created FBO " + fbo->GetName() );
 	m_fbos.insert( fbo );
 	return fbo;
@@ -527,6 +586,58 @@ void OpenGL::ResizeWindow( const size_t width, const size_t height ) {
 		m_window_size.y = height;
 		ResizeViewport( width, height );
 	}
+}
+
+void OpenGL::WithBindBuffer( GLenum target, GLuint buffer, const f_t& f ) const {
+	glBindBuffer( target, buffer );
+	f();
+	glBindBuffer( target, 0 );
+}
+
+void OpenGL::WithBindBuffers( GLuint vbo, GLuint ibo, const graphics::Graphics::f_t& f ) const {
+	glBindBuffer( GL_ARRAY_BUFFER, vbo );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, ibo );
+	f();
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+}
+
+void OpenGL::WithBindTexture( GLuint texture, const f_t& f ) const {
+	glBindTexture( GL_TEXTURE_2D, texture );
+	f();
+	glBindTexture( GL_TEXTURE_2D, 0 );
+}
+
+void OpenGL::WithBindFramebufferBegin( GLenum target, GLuint buffer ) const {
+	glBindFramebuffer( target, buffer );
+}
+
+void OpenGL::WithBindFramebuffer( GLenum target, GLuint buffer, const graphics::Graphics::f_t& f ) const {
+	glBindFramebuffer( target, buffer );
+	f();
+	glBindFramebuffer( target, 0 );
+}
+
+void OpenGL::WithBindFramebufferEnd( GLenum target ) const {
+	glBindFramebuffer( target, 0 );
+}
+
+void OpenGL::WithShaderProgram( shader_program::ShaderProgram* sp, const f_t& f ) const {
+	sp->Enable();
+	f();
+	sp->Disable();
+}
+
+void OpenGL::CaptureToTexture( types::texture::Texture* const texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right, const f_t& f ) {
+	m_capture_to_texture_fbo->Write( f );
+	m_capture_to_texture_fbo->CaptureToTexture( texture, top_left, bottom_right );
+}
+
+const types::Vec2< types::mesh::coord_t > OpenGL::GetGLCoords( const types::Vec2< size_t >& xy ) const {
+	return {
+		m_px_to_gl_clamp.x.Clamp( xy.x ),
+		m_px_to_gl_clamp.y.Clamp( xy.y ),
+	};
 }
 
 void OpenGL::ResizeViewport( const size_t width, const size_t height ) {

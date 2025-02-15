@@ -2,7 +2,7 @@
 
 #include "task/mainmenu/PopupMenu.h"
 
-namespace ui::object {
+namespace ui_legacy::object {
 class Label;
 }
 
@@ -24,7 +24,7 @@ protected:
 private:
 	const std::string m_error_text = "";
 
-	ui::object::Label* m_error_label = nullptr;
+	ui_legacy::object::Label* m_error_label = nullptr;
 };
 
 }

@@ -12,14 +12,15 @@ namespace resource {
 
 CLASS( ResourceManager, common::Module )
 
-	ResourceManager();
+	ResourceManager( const std::string& data_path );
 
-	void Init( const std::vector< std::string >& possible_smac_paths, const config::smac_type_t smac_type, const std::string& data_path );
+	void Init( const std::vector< std::string >& possible_smac_paths, const config::smac_type_t smac_type );
 
 	const config::smac_type_t GetDetectedSMACType() const;
 	const resource_t GetResource( const std::string& filename ) const;
 	const std::string& GetFilename( const resource_t res ) const;
 	const std::string& GetPath( const resource_t res ) const;
+	const std::string& TryGetCustomPath( const std::string& path );
 	const std::string& GetCustomPath( const std::string& path );
 
 private:

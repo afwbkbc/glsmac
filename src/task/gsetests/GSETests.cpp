@@ -3,13 +3,23 @@
 #include "GSETests.h"
 
 #include "gse/GSE.h"
+#include "gse/Async.h"
 #include "gse/tests/Tests.h"
 #include "engine/Engine.h"
+#include "gse/program/Program.h"
+#include "gse/tests/Tests.h"
+
+namespace gse::tests {
+const gse::program::Program* GetTestProgram();
+const gse::program::Program* g_test_program = nullptr;
+}
 
 namespace task {
 namespace gsetests {
 
 void GSETests::Start() {
+	ASSERT( !gse::tests::g_test_program, "test program already set" );
+	gse::tests::g_test_program = gse::tests::GetTestProgram();
 	Log( "Loading tests" );
 	gse::tests::AddTests( this );
 }
@@ -24,6 +34,9 @@ void GSETests::Stop() {
 	m_tests.clear();
 	m_stats.passed = 0;
 	m_stats.failed = 0;
+	ASSERT( gse::tests::g_test_program, "test program not set" );
+	delete gse::tests::g_test_program;
+	gse::tests::g_test_program = nullptr;
 }
 
 void GSETests::Iterate() {

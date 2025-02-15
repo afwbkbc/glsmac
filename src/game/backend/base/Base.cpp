@@ -74,17 +74,14 @@ const types::Buffer Base::Serialize( const Base* base ) {
 }
 
 Base* Base::Unserialize( types::Buffer& buf, Game* game ) {
+	ASSERT_NOLOG( game, "game is null" );
 	const auto id = buf.ReadInt();
-	auto* slot = game
-		? &game->GetState()->m_slots->GetSlot( buf.ReadInt() )
-		: nullptr;
+	auto* slot = &game->GetState()->m_slots->GetSlot( buf.ReadInt() );
 	const auto faction_id = buf.ReadString();
 	auto* faction = game->GetFaction( faction_id );
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
-	auto* tile = game
-		? game->GetMap()->GetTile( pos_x, pos_y )
-		: nullptr;
+	auto* tile = game->GetMap()->GetTile( pos_x, pos_y );
 	const auto name = buf.ReadString();
 	pops_t pops = {};
 	const auto pops_count = buf.ReadInt();
@@ -95,7 +92,7 @@ Base* Base::Unserialize( types::Buffer& buf, Game* game ) {
 	return new Base( game, id, slot, faction, tile, name, pops );
 }
 
-WRAPIMPL_DYNAMIC_GETTERS( Base, CLASS_BASE )
+WRAPIMPL_DYNAMIC_GETTERS( Base )
 	WRAPIMPL_GET( "id", Int, m_id )
 	WRAPIMPL_LINK( "get_owner", m_owner )
 	WRAPIMPL_LINK( "get_tile", m_tile )

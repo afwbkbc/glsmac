@@ -21,17 +21,19 @@ class FontTexture;
 
 CLASS( Text, Actor )
 
-	Text( scene::actor::Text* actor, types::Font* font );
+	Text( OpenGL* opengl, scene::actor::Text* actor, types::Font* font );
 	~Text();
 
 	void Update( types::Font* font, const std::string& text, const float x, const float y );
-	void Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) override;
 
 protected:
+
+	void DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) override;
 
 	struct vertex_t {
 		GLfloat x;
 		GLfloat y;
+		GLfloat z; // ignored
 		GLfloat tx;
 		GLfloat ty;
 	};

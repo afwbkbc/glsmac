@@ -36,10 +36,6 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.update_tiles.tile_updates, tile_updates_t, *other.data.update_tiles.tile_updates );
 			break;
 		}
-		case FR_TILE_DATA: {
-			NEW( data.tile_data.tile_yields, tile_yields_t, *other.data.tile_data.tile_yields );
-			break;
-		}
 		case FR_FACTION_DEFINE: {
 			NEW( data.faction_define.factiondefs, faction_defines_t, *other.data.faction_define.factiondefs );
 			break;
@@ -79,6 +75,11 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.base_update.pops, base_pops_t, *other.data.base_update.pops );
 			break;
 		}
+		case FR_LOADER_SHOW:
+		case FR_LOADER_TEXT: {
+			NEW( data.loader.text, std::string, *other.data.loader.text );
+			break;
+		}
 
 		default: {
 			//
@@ -105,10 +106,6 @@ FrontendRequest::~FrontendRequest() {
 		}
 		case FR_UPDATE_TILES: {
 			DELETE( data.update_tiles.tile_updates );
-			break;
-		}
-		case FR_TILE_DATA: {
-			DELETE( data.tile_data.tile_yields );
 			break;
 		}
 		case FR_FACTION_DEFINE: {
@@ -148,6 +145,11 @@ FrontendRequest::~FrontendRequest() {
 			DELETE( data.base_update.name );
 			DELETE( data.base_update.faction_id );
 			DELETE( data.base_update.pops );
+			break;
+		}
+		case FR_LOADER_TEXT:
+		case FR_LOADER_SHOW: {
+			DELETE( data.loader.text );
 			break;
 		}
 		default: {

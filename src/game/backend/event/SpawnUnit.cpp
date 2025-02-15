@@ -32,6 +32,9 @@ SpawnUnit::SpawnUnit(
 }
 
 const std::string* SpawnUnit::Validate( Game* game ) const {
+	if ( !game->GetUM() ) {
+		return Error( "Game is not initialized properly" );
+	}
 	if ( m_initiator_slot != 0 ) {
 		return Error( "Only master is allowed to spawn units" );
 	}
@@ -39,14 +42,16 @@ const std::string* SpawnUnit::Validate( Game* game ) const {
 }
 
 const gse::Value SpawnUnit::Apply( Game* game ) const {
-	auto* def = game->GetUM()->GetUnitDef( m_unit_def );
+	auto* um = game->GetUM();
+	ASSERT_NOLOG( um, "um is null" );
+	auto* def = um->GetUnitDef( m_unit_def );
 	ASSERT_NOLOG( def, "unit def '" + m_unit_def + "' not found" );
 	ASSERT_NOLOG( def->m_type == unit::DT_STATIC, "only static defs are supported" );
 	const auto* staticdef = (unit::StaticDef*)def;
 	auto& owner = game->GetState()->m_slots->GetSlot( m_owner_slot );
 	auto* tile = game->GetMap()->GetTile( m_pos_x, m_pos_y );
 	auto* unit = new unit::Unit(
-		game->GetUM(),
+		um,
 		unit::Unit::GetNextId(),
 		def,
 		&owner,

@@ -129,7 +129,7 @@ void Finalize::GenerateTile( const tile::Tile* tile, tile::TileState* ts, MapSta
 
 			// also copy tile to overdraw column
 
-			auto* layer = &ts->layers[ lt ];
+			// auto* layer = &ts->layers[ lt ]; // ?
 
 #define x( _k ) { \
                 ts->overdraw_column.coords._k.x = vertices._k.x + ms->dimensions.x * 0.5f; /* TODO: why 0.5? */ \

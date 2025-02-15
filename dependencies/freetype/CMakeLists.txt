@@ -9,7 +9,7 @@ SET( SKIP_INSTALL_ALL ON )
 
 FETCHCONTENT_DECLARE( freetype
 	GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype.git
-	GIT_TAG VER-2-13-2
+	GIT_TAG VER-2-13-3
 	)
 
 FETCHCONTENT_MAKEAVAILABLE( freetype )

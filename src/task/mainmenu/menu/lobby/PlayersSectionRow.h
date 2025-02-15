@@ -1,17 +1,17 @@
 #pragma once
 
-#include "ui/object/UIContainer.h"
+#include "ui_legacy/object/UIContainer.h"
 
 #include "game/backend/Player.h"
 
 // TODO: remove this
-#include "ui/object/Dropdown.h"
+#include "ui_legacy/object/Dropdown.h"
 
 namespace game::backend::slot {
 class Slot;
 }
 
-namespace ui::object {
+namespace ui_legacy::object {
 class Surface;
 }
 
@@ -21,7 +21,7 @@ namespace lobby {
 
 class PlayersSection;
 
-CLASS( PlayersSectionRow, ui::object::UIContainer )
+CLASS( PlayersSectionRow, ui_legacy::object::UIContainer )
 
 	PlayersSectionRow( PlayersSection* parent, const size_t slot_num, game::backend::slot::Slot* slot, const std::string& class_name = "" );
 
@@ -34,10 +34,10 @@ private:
 	game::backend::slot::Slot* m_slot;
 
 	struct {
-		ui::object::Surface* ready = nullptr;
-		ui::object::NumDropdown* actions = nullptr;
-		ui::object::AssocDropdown* faction = nullptr;
-		ui::object::NumDropdown* difficulty_level = nullptr;
+		ui_legacy::object::Surface* ready = nullptr;
+		ui_legacy::object::NumDropdown* actions = nullptr;
+		ui_legacy::object::AssocDropdown* faction = nullptr;
+		ui_legacy::object::NumDropdown* difficulty_level = nullptr;
 	} m_elements = {};
 
 };

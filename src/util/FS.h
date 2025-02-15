@@ -52,8 +52,11 @@ CLASS( FS, Util )
 
 #endif
 
-	static const std::string ReadFile( const std::string& path, const char path_separator = PATH_SEPARATOR );
+	static void ReadFile( std::vector< unsigned char >& buffer, const std::string& path, const char path_separator = PATH_SEPARATOR );
+	static const std::string ReadTextFile( const std::string& path, const char path_separator = PATH_SEPARATOR );
 	static const void WriteFile( const std::string& path, const std::string& data, const char path_separator = PATH_SEPARATOR );
+
+	static const std::vector< unsigned char >& GetEmbeddedFile( const std::string& key );
 
 };
 

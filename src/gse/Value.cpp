@@ -92,13 +92,14 @@ const Value Value::New( const type::Type* type ) const {
 			for ( const auto& it : obj->value ) {
 				properties.insert_or_assign( it.first, it.second.Clone() );
 			}
-			return VALUE( type::Object, properties, obj->object_class, obj->wrapobj );
+			return VALUE( type::Object, nullptr, properties, obj->object_class, obj->wrapobj, obj->wrapsetter );
 		}
 		case type::Type::T_CALLABLE:
 			return *this;
 		case type::Type::T_ARRAYREF:
 		case type::Type::T_ARRAYRANGEREF:
-		case type::Type::T_OBJECTREF: {
+		case type::Type::T_OBJECTREF:
+		case type::Type::T_VALUEREF: {
 			// no need to keep ref to old value if it's a copy
 			return New( type->Deref() );
 		}

@@ -4,6 +4,8 @@
 #include "scene/Camera.h"
 #include "common/ObjectLink.h"
 
+#include "scene/actor/Cache.h"
+
 namespace scene {
 namespace actor {
 
@@ -16,6 +18,9 @@ Actor::Actor( type_t type, const std::string& name )
 Actor::~Actor() {
 	if ( m_graphics_object ) {
 		m_graphics_object->Remove();
+	}
+	if ( m_cache_parent ) {
+		m_cache_parent->RemoveCacheChild( this );
 	}
 }
 
@@ -79,6 +84,30 @@ const Actor::render_flag_t Actor::GetRenderFlags() const {
 	return m_render_flags;
 }
 
+void Actor::SetCacheParent( Cache* const cache_parent ) {
+	ASSERT( !m_cache_parent, "cache parent already set" );
+	m_cache_parent = cache_parent;
+	m_cache_parent->AddCacheChild( this );
+}
+
+const Cache* const Actor::GetCacheParent() const {
+	return m_cache_parent;
+}
+
+void Actor::Show() {
+	if ( !m_is_visible ) {
+		Entity::Show();
+		UpdateCache();
+	}
+}
+
+void Actor::Hide() {
+	if ( m_is_visible ) {
+		Entity::Hide();
+		UpdateCache();
+	}
+}
+
 const types::Buffer Actor::Serialize() const {
 	types::Buffer buf = Entity::Serialize();
 
@@ -94,9 +123,17 @@ void Actor::Unserialize( types::Buffer buf ) {
 	buf.ReadVec3();
 
 	type_t type = (type_t)buf.ReadInt();
-	ASSERT( type == m_type, "loaded actor of wrong type ( " + std::to_string( type ) + " != " + std::to_string( m_type ) + " )" );
+	if ( type != m_type ) {
+		THROW( "loaded actor of wrong type ( " + std::to_string( type ) + " != " + std::to_string( m_type ) + " )" );
+	}
 
 	UpdateMatrix();
+}
+
+void Actor::UpdateCache() {
+	if ( m_cache_parent ) {
+		m_cache_parent->Update();
+	}
 }
 
 }

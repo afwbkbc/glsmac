@@ -7,6 +7,7 @@
 #include "gse/callable/Native.h"
 #include "gse/type/Array.h"
 #include "gse/type/Float.h"
+#include "gse/ExecutionPointer.h"
 #include "engine/Engine.h"
 #include "loader/sound/SoundLoader.h"
 #include "game/backend/animation/FramesRow.h"
@@ -80,7 +81,7 @@ void AnimationManager::FinishAnimation( const size_t animation_id ) {
 	on_complete();
 }
 
-WRAPIMPL_BEGIN( AnimationManager, CLASS_AM )
+WRAPIMPL_BEGIN( AnimationManager )
 	WRAPIMPL_PROPS
 		{
 			"define_animation",
@@ -139,8 +140,9 @@ WRAPIMPL_BEGIN( AnimationManager, CLASS_AM )
 			N_GETVALUE( id, 0, String );
 			N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
 			N_PERSIST_CALLABLE( on_complete, 2 );
-			const auto* errmsg = ShowAnimation( id, tile, [ on_complete, ctx, call_si ]() {
-				on_complete->Run( ctx, call_si, {} );
+			const auto* errmsg = ShowAnimation( id, tile, [ on_complete, ctx, si, ep ]() {
+				auto ep2 = ep;
+				on_complete->Run( ctx, si, ep2, {} );
 				N_UNPERSIST_CALLABLE( on_complete );
 			});
 			if ( errmsg ) {
@@ -151,7 +153,7 @@ WRAPIMPL_BEGIN( AnimationManager, CLASS_AM )
 		} )
 		}
 	};
-WRAPIMPL_END_PTR( AnimationManager )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( AnimationManager )
 

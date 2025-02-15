@@ -6,6 +6,8 @@
 
 namespace gse {
 
+class ExecutionPointer;
+
 namespace context {
 class Context;
 }
@@ -18,7 +20,7 @@ namespace runner {
 
 CLASS( Runner, common::Class )
 
-	virtual const Value Execute( context::Context* ctx, const program::Program* program ) const = 0;
+	virtual const Value Execute( context::Context* ctx, ExecutionPointer& ep, const program::Program* program ) const = 0;
 
 #ifdef DEBUG
 	void EnableScopeContextJoins() {

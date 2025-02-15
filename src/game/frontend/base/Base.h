@@ -89,10 +89,10 @@ public:
 	};
 	const render_data_t& GetRenderData() const;
 
-	void* CreateOnBottomBarList( ui::ObjectsListItem* element ) const override;
-	void DestroyOnBottomBarList( ui::ObjectsListItem* element, void* state ) const override;
-	void* CreateOnBottomBarPreview( ui::ObjectPreview* element ) const override;
-	void DestroyOnBottomBarPreview( ui::ObjectPreview* element, void* state ) const override;
+	void* CreateOnBottomBarList( ui_legacy::ObjectsListItem* element ) const override;
+	void DestroyOnBottomBarList( ui_legacy::ObjectsListItem* element, void* state ) const override;
+	void* CreateOnBottomBarPreview( ui_legacy::ObjectPreview* element ) const override;
+	void DestroyOnBottomBarPreview( ui_legacy::ObjectPreview* element, void* state ) const override;
 	const bool OnBottomBarListActivate( Game* game ) override;
 
 	typedef std::vector< Pop > pops_t;

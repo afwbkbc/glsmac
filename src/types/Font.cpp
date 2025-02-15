@@ -28,7 +28,7 @@ size_t Font::GetTextWidth( const char* text ) const {
 	for ( const char* p = text ; *p ; p++ ) {
 		unsigned char sym = (unsigned char)*p;
 		auto* bitmap = &m_symbols[ sym ];
-		width += bitmap->width + 1; // not sure why + 1 is needed but it aligns correctly with that
+		width += bitmap->ax;
 	}
 	return width;
 }
@@ -38,13 +38,13 @@ size_t Font::GetTextHeight( const char* text ) const {
 	for ( const char* p = text ; *p ; p++ ) {
 		unsigned char sym = (unsigned char)*p;
 		auto* bitmap = &m_symbols[ sym ];
-		if ( bitmap->height > height ) {
-			height = bitmap->height;
+		const auto h = bitmap->height + bitmap->ay;
+		if ( h > height ) {
+			height = h;
 		}
 	}
-	height++; // same
-	if ( height < m_dimensions.height - 2 ) {
-		height = m_dimensions.height - 2;
+	if ( height < m_dimensions.height ) {
+		height = m_dimensions.height - 2; // TODO: why?
 	}
 	return height;
 }

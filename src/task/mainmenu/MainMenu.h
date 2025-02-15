@@ -17,7 +17,7 @@ namespace util::random {
 class Random;
 }
 
-namespace ui {
+namespace ui_legacy {
 namespace object {
 class Label;
 class Surface;
@@ -57,12 +57,12 @@ CLASS( MainMenu, common::Task )
 private:
 	Theme* m_theme;
 
-	const ::ui::event::UIEventHandler* m_key_handler = nullptr;
-	const ::ui::event::UIEventHandler* m_mouse_handler = nullptr;
+	const ::ui_legacy::event::UIEventHandler* m_key_handler = nullptr;
+	const ::ui_legacy::event::UIEventHandler* m_mouse_handler = nullptr;
 
-	::ui::object::Surface* m_background = nullptr;
-	::ui::object::Surface* m_customize_map_preview = nullptr;
-	::ui::object::Surface* m_customize_map_moons = nullptr;
+	::ui_legacy::object::Surface* m_background = nullptr;
+	::ui_legacy::object::Surface* m_customize_map_preview = nullptr;
+	::ui_legacy::object::Surface* m_customize_map_moons = nullptr;
 
 	std::string m_customize_map_preview_filename = "";
 	std::vector< std::string > m_customize_map_preview_history = {};
@@ -74,9 +74,9 @@ private:
 	MenuObject* m_menu_next = nullptr;
 	bool m_goback = false;
 
-	::ui::object::SoundEffect* m_music = nullptr;
+	::ui_legacy::object::SoundEffect* m_music = nullptr;
 
-	::ui::object::Label* m_glsmac_logo = nullptr;
+	::ui_legacy::object::Label* m_glsmac_logo = nullptr;
 
 	util::random::Random* m_random;
 

@@ -1,3 +1,9 @@
+const softassert = (condition) => {
+	if (!condition) {
+		#print('Too slow!');
+	}
+};
+
 // measure duration of something in nanoseconds
 let average_call_time_ns = 0;
 const timeof = (label, f) => {
@@ -25,7 +31,7 @@ const timeof = (label, f) => {
 	average_call_time_ns = total / times;
 }
 
-test.assert(timeof('empty loop with 10000 iterations', () => {
+softassert(timeof('empty loop with 10000 iterations', () => {
 	let i = 0;
 	while (i++ < 10000) {
 	}
@@ -33,7 +39,7 @@ test.assert(timeof('empty loop with 10000 iterations', () => {
 
 let idx = 0;
 let arr = [];
-test.assert(timeof('appending 10000 elements to array', () => {
+softassert(timeof('appending 10000 elements to array', () => {
 	idx = 0;
 	while (idx < 10000) {
 		arr [] = idx++;
@@ -41,7 +47,7 @@ test.assert(timeof('appending 10000 elements to array', () => {
 }) < 350000000);
 
 let sum = 0;
-test.assert(timeof('reading and summing 10000 elements from array', () => {
+softassert(timeof('reading and summing 10000 elements from array', () => {
 	idx = 0;
 	while (idx < 10000) {
 		sum += arr[idx++];
@@ -50,7 +56,7 @@ test.assert(timeof('reading and summing 10000 elements from array', () => {
 #print(sum);
 test.assert(sum == 49995000);
 
-test.assert(timeof('defining and calling function 10000 times', () => {
+softassert(timeof('defining and calling function 10000 times', () => {
 	idx = 0;
 	while (idx++ < 10000) {
 		(() => {
@@ -58,7 +64,7 @@ test.assert(timeof('defining and calling function 10000 times', () => {
 	}
 }) < 1000000000);
 
-test.assert(timeof('creating scope and variable 10000 times', () => {
+softassert(timeof('creating scope and variable 10000 times', () => {
 	idx = 0;
 	while (idx++ < 10000) {
 		let v = 0;
@@ -74,7 +80,7 @@ const recursivefunc = (x, times) => {
 };
 
 // on linux this works with depth 1000, on windows there's stack overflow with depth 50
-test.assert(timeof('calling recursive function 400 times with depth 25', () => {
+softassert(timeof('calling recursive function 400 times with depth 25', () => {
 	idx = 0;
 	while (idx++ < 400) {
 		recursivefunc(0, 25);

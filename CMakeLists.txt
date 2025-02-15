@@ -18,9 +18,25 @@ IF ( NOT WIN32 )
 		TARGET glsmac_version PRE_BUILD
 		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 		COMMAND git show -s --format='\#define GLSMAC_LAST_COMMIT \"%h\"' > ${PROJECT_SOURCE_DIR}/src/tmp/last_commit.h
-		DEPENDS .git/COMMIT_EDITMSG
 	)
 ENDIF ()
+
+IF ( NOT WIN32 )
+	SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread" )
+ENDIF ()
+SET( CMAKE_CXX_FLAGS " -std=c++17 ${CMAKE_CXX_FLAGS} -Wno-pointer-arith -Wno-vla-extension" )
+
+ADD_SUBDIRECTORY( tools )
+SET( EMBED_CPP "src/tmp/embed.cpp" )
+SET( EMBED_FILES
+	"resource/font/terminus/TerminusTTF-4.49.3-minified.ttf"
+)
+ADD_CUSTOM_COMMAND(
+	OUTPUT ${EMBED_CPP}
+	DEPENDS ${EMBED_FILES} embedder
+	COMMAND "${CMAKE_CURRENT_BINARY_DIR}/tools/bin/embedder" "${EMBED_CPP}" "${PROJECT_SOURCE_DIR}" "${EMBED_FILES}"
+)
+ADD_CUSTOM_TARGET( embed ALL DEPENDS ${EMBED_FILES} "${CMAKE_CURRENT_BINARY_DIR}/tools/bin/embedder" )
 
 FUNCTION( SUBDIR DIR )
 	SET( PWD "${PWD}/${DIR}" )
@@ -31,6 +47,7 @@ ENDFUNCTION( SUBDIR )
 SUBDIR( src )
 ADD_EXECUTABLE( ${PROJECT_NAME}
 	${SRC}
+	${EMBED_CPP}
 )
 
 IF ( NOT WIN32 )
@@ -130,9 +147,6 @@ ENDIF ()
 
 IF ( NOT WIN32 )
 	ADD_DEPENDENCIES( ${PROJECT_NAME} glsmac_version )
-
-	SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread" )
-
 	TARGET_LINK_OPTIONS( ${PROJECT_NAME} PRIVATE ${FT2_LDFLAGS} ${GLEW_LDFLAGS} ${SDL2_LDFLAGS} ${SDL2IMAGE_LDFLAGS} )
 ENDIF ()
 
@@ -142,9 +156,7 @@ ENDIF ()
 
 IF ( WIN32 )
 	TARGET_LINK_OPTIONS( ${PROJECT_NAME} PRIVATE -lws2_32 )
-ENDIF()
-
-SET( CMAKE_CXX_FLAGS " -std=c++17 ${CMAKE_CXX_FLAGS} -Wno-pointer-arith -Wno-vla-cxx-extension" )
+ENDIF ()
 
 IF (
 	CMAKE_BUILD_TYPE STREQUAL "Release" OR

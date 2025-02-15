@@ -162,7 +162,7 @@ void Slot::Unserialize( types::Buffer buf ) {
 	m_linked_gsid = buf.ReadString();
 }
 
-WRAPIMPL_BEGIN( Slot, CLASS_PLAYER )
+WRAPIMPL_BEGIN( Slot )
 	ASSERT_NOLOG( m_slot_state == SS_PLAYER, "only player slots can be wrapped for now" );
 	auto* player = m_player_data.player;
 	WRAPIMPL_PROPS
@@ -183,7 +183,7 @@ WRAPIMPL_BEGIN( Slot, CLASS_PLAYER )
 			player->GetFaction()->Wrap()
 		},
 	};
-WRAPIMPL_END_PTR( Slot )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Slot )
 

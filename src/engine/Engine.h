@@ -4,8 +4,6 @@
 #include <unordered_map>
 #include <atomic>
 
-#include "common/Common.h"
-
 // TODO: move to config
 extern const size_t g_max_fps;
 
@@ -68,18 +66,19 @@ namespace scheduler {
 class Scheduler;
 }
 
-namespace ui {
+namespace ui_legacy {
 class UI;
 }
 
 namespace engine {
 
-CLASS( Engine, common::Class );
+class Engine {
+public:
 
 	Engine(
 		config::Config* config,
 		error_handler::ErrorHandler* error_handler,
-		logger::Logger* logger,
+		const std::vector< logger::Logger* >& loggers,
 		resource::ResourceManager* resource_manager,
 		loader::font::FontLoader* font_loader,
 		loader::texture::TextureLoader* texture_loader,
@@ -90,7 +89,7 @@ CLASS( Engine, common::Class );
 		graphics::Graphics* graphics,
 		audio::Audio* audio,
 		network::Network* network,
-		ui::UI* ui,
+		ui_legacy::UI* ui,
 		game::backend::Game* game
 	);
 
@@ -99,7 +98,6 @@ CLASS( Engine, common::Class );
 	void ShutDown();
 
 	config::Config* GetConfig() const { return m_config; }
-	logger::Logger* GetLogger() const { return m_logger; }
 	resource::ResourceManager* GetResourceManager() const { return m_resource_manager; }
 	loader::font::FontLoader* GetFontLoader() const { return m_font_loader; }
 	loader::texture::TextureLoader* GetTextureLoader() const { return m_texture_loader; }
@@ -110,8 +108,10 @@ CLASS( Engine, common::Class );
 	audio::Audio* GetAudio() const { return m_audio; }
 	network::Network* GetNetwork() const { return m_network; }
 	scheduler::Scheduler* GetScheduler() const { return m_scheduler; }
-	ui::UI* GetUI() const { return m_ui; }
+	ui_legacy::UI* GetUI() const { return m_ui; }
 	game::backend::Game* GetGame() const { return m_game; }
+
+	void Log( const std::string& text ) const;
 
 protected:
 
@@ -121,7 +121,7 @@ protected:
 
 	config::Config* const m_config = nullptr;
 	error_handler::ErrorHandler* m_error_handler = nullptr;
-	logger::Logger* m_logger = nullptr;
+	const std::vector< logger::Logger* > m_loggers = {};
 	resource::ResourceManager* m_resource_manager = nullptr;
 	loader::font::FontLoader* m_font_loader = nullptr;
 	loader::texture::TextureLoader* m_texture_loader = nullptr;
@@ -132,7 +132,7 @@ protected:
 	graphics::Graphics* m_graphics = nullptr;
 	audio::Audio* m_audio = nullptr;
 	network::Network* m_network = nullptr;
-	ui::UI* m_ui = nullptr;
+	ui_legacy::UI* m_ui = nullptr;
 	game::backend::Game* m_game = nullptr;
 
 };

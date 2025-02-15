@@ -1,15 +1,31 @@
 #pragma once
 
-#include <functional>
+#include <map>
+#include <string>
+#include <set>
+
+#include "gse/Value.h"
 
 namespace ui {
 
-typedef std::function< void() > ui_handler_t;
-#define UH( ... ) [ __VA_ARGS__ ] () -> void
+typedef float coord_t;
 
-// return true if loaded should hide immediately
-// return false if you want cancel button hidden but loader staying (you'll need to close loader manually later)
-typedef std::function< bool() > loader_cancel_handler_t;
-#define LCH( ... ) [ __VA_ARGS__ ] () -> bool
+typedef std::map< std::string, gse::Value > properties_t;
+
+// order is important, from lowest priority to highest
+enum class_modifier_t : uint8_t {
+	CM_NONE,
+	CM_FOCUS,
+	CM_HOVER,
+	CM_ACTIVE,
+};
+typedef std::set< class_modifier_t > class_modifiers_t;
+
+enum geometry_handler_type_t {
+	GH_ON_AREA_UPDATE,
+	GH_ON_EFFECTIVE_AREA_UPDATE,
+	GH_ON_CHILD_UPDATE,
+};
+typedef uint8_t geometry_handler_id_t;
 
 }

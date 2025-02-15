@@ -20,13 +20,13 @@
 #include "types/mesh/Mesh.h"
 #include "types/mesh/Data.h"
 #include "engine/Engine.h"
-#include "ui/UI.h"
+#include "ui_legacy/UI.h"
 
 namespace graphics {
 namespace opengl {
 
-Mesh::Mesh( scene::actor::Actor* actor )
-	: Actor( actor ) {
+Mesh::Mesh( OpenGL* opengl, scene::actor::Actor* actor )
+	: Actor( AT_MESH, opengl, actor ) {
 
 	//Log( "Creating OpenGL actor for " + actor->GetName() );
 
@@ -42,12 +42,14 @@ Mesh::~Mesh() {
 	glDeleteBuffers( 1, &m_vbo );
 
 	if ( m_data.is_allocated ) {
-		glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
-		glDeleteTextures( 1, &m_data.picking_texture );
-		glDeleteTextures( 1, &m_data.depth_texture );
-		glDeleteBuffers( 1, &m_data.vbo );
-		glDeleteBuffers( 1, &m_data.ibo );
-		glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+		m_opengl->WithBindFramebuffer(
+			GL_FRAMEBUFFER, m_data.fbo, [ this ]() {
+				glDeleteTextures( 1, &m_data.picking_texture );
+				glDeleteTextures( 1, &m_data.depth_texture );
+				glDeleteBuffers( 1, &m_data.vbo );
+				glDeleteBuffers( 1, &m_data.ibo );
+			}
+		);
 		glDeleteFramebuffers( 1, &m_data.fbo );
 	}
 }
@@ -108,16 +110,13 @@ void Mesh::LoadMesh() {
 	const auto* mesh = GetMeshActor()->GetMesh();
 	ASSERT( mesh, "actor mesh not set" );
 
-	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
-	glBufferData( GL_ARRAY_BUFFER, mesh->GetVertexDataSize(), (GLvoid*)ptr( mesh->GetVertexData(), 0, mesh->GetVertexDataSize() ), GL_STATIC_DRAW );
-
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ibo );
-	glBufferData( GL_ELEMENT_ARRAY_BUFFER, mesh->GetIndexDataSize(), (GLvoid*)ptr( mesh->GetIndexData(), 0, mesh->GetIndexDataSize() ), GL_STATIC_DRAW );
-
+	m_opengl->WithBindBuffers(
+		m_vbo, m_ibo, [ &mesh ]() {
+			glBufferData( GL_ARRAY_BUFFER, mesh->GetVertexDataSize(), (GLvoid*)ptr( mesh->GetVertexData(), 0, mesh->GetVertexDataSize() ), GL_STATIC_DRAW );
+			glBufferData( GL_ELEMENT_ARRAY_BUFFER, mesh->GetIndexDataSize(), (GLvoid*)ptr( mesh->GetIndexData(), 0, mesh->GetIndexDataSize() ), GL_STATIC_DRAW );
+		}
+	);
 	m_ibo_size = mesh->GetIndexCount();
-
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
-	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 
 }
 
@@ -125,7 +124,6 @@ void Mesh::LoadTexture() {
 	auto* texture = GetMeshActor()->GetTexture();
 
 	if ( texture ) {
-
 		g_engine->GetGraphics()->LoadTexture( texture );
 	}
 }
@@ -155,55 +153,64 @@ void Mesh::PrepareDataMesh() {
 			Log( "Initializing data mesh" );
 
 			glGenFramebuffers( 1, &m_data.fbo );
-			glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
 
-			glGenBuffers( 1, &m_data.vbo );
-			glGenBuffers( 1, &m_data.ibo );
+			m_opengl->WithBindFramebuffer(
+				GL_FRAMEBUFFER, m_data.fbo, [ this ]() {
 
-			glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+					glGenBuffers( 1, &m_data.vbo );
+					glGenBuffers( 1, &m_data.ibo );
+
+				}
+			);
 
 			m_data.ibo_size = data_mesh->GetIndexCount();
 		}
 
-		glBindFramebuffer( GL_FRAMEBUFFER, m_data.fbo );
+		m_opengl->WithBindFramebuffer(
+			GL_FRAMEBUFFER, m_data.fbo, [ this, &data_mesh ]() {
 
-		glBindBuffer( GL_ARRAY_BUFFER, m_data.vbo );
-		glBufferData( GL_ARRAY_BUFFER, data_mesh->GetVertexDataSize(), (GLvoid*)ptr( data_mesh->GetVertexData(), 0, data_mesh->GetVertexDataSize() ), GL_STATIC_DRAW );
-		glBindBuffer( GL_ARRAY_BUFFER, 0 );
+				m_opengl->WithBindBuffers(
+					m_data.vbo, m_data.ibo, [ &data_mesh ]() {
+						glBufferData( GL_ARRAY_BUFFER, data_mesh->GetVertexDataSize(), (GLvoid*)ptr( data_mesh->GetVertexData(), 0, data_mesh->GetVertexDataSize() ), GL_STATIC_DRAW );
+						glBufferData( GL_ELEMENT_ARRAY_BUFFER, data_mesh->GetIndexDataSize(), (GLvoid*)ptr( data_mesh->GetIndexData(), 0, data_mesh->GetIndexDataSize() ), GL_STATIC_DRAW );
+					}
+				);
 
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_data.ibo );
-		glBufferData( GL_ELEMENT_ARRAY_BUFFER, data_mesh->GetIndexDataSize(), (GLvoid*)ptr( data_mesh->GetIndexData(), 0, data_mesh->GetIndexDataSize() ), GL_STATIC_DRAW );
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+				size_t w = g_engine->GetGraphics()->GetViewportWidth();
+				size_t h = g_engine->GetGraphics()->GetViewportHeight();
 
-		size_t w = g_engine->GetGraphics()->GetViewportWidth();
-		size_t h = g_engine->GetGraphics()->GetViewportHeight();
+				Log( "(re)loading data mesh (viewport size: " + std::to_string( w ) + "x" + std::to_string( h ) + ")" );
 
-		Log( "(re)loading data mesh (viewport size: " + std::to_string( w ) + "x" + std::to_string( h ) + ")" );
+				if ( !m_data.is_allocated ) {
+					glGenTextures( 1, &m_data.picking_texture );
+				}
 
-		if ( !m_data.is_allocated ) {
-			glGenTextures( 1, &m_data.picking_texture );
-		}
-		glBindTexture( GL_TEXTURE_2D, m_data.picking_texture );
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_R32UI, w, h, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-		glBindTexture( GL_TEXTURE_2D, 0 );
-		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_data.picking_texture, 0 );
+				m_opengl->WithBindTexture(
+					m_data.picking_texture, [ &w, &h ]() {
+						glTexImage2D( GL_TEXTURE_2D, 0, GL_R32UI, w, h, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL );
+						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+					}
+				);
+				glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_data.picking_texture, 0 );
 
-		if ( !m_data.is_allocated ) {
-			glGenTextures( 1, &m_data.depth_texture );
-		}
-		glBindTexture( GL_TEXTURE_2D, m_data.depth_texture );
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL );
-		glBindTexture( GL_TEXTURE_2D, 0 );
-		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_data.depth_texture, 0 );
+				if ( !m_data.is_allocated ) {
+					glGenTextures( 1, &m_data.depth_texture );
+				}
+				m_opengl->WithBindTexture(
+					m_data.depth_texture, [ &w, &h ]() {
+						glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL );
+					}
+				);
+				glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_data.depth_texture, 0 );
 
 #ifdef DEBUG
-		GLenum status = glCheckFramebufferStatus( GL_FRAMEBUFFER );
-		ASSERT( status == GL_FRAMEBUFFER_COMPLETE, "FB error, status: " + std::to_string( status ) );
+				GLenum status = glCheckFramebufferStatus( GL_FRAMEBUFFER );
+				ASSERT( status == GL_FRAMEBUFFER_COMPLETE, "FB error, status: " + std::to_string( status ) );
 #endif
 
-		glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+			}
+		);
 
 		m_data.is_up_to_date = true;
 		if ( !m_data.is_allocated ) {
@@ -213,7 +220,13 @@ void Mesh::PrepareDataMesh() {
 
 }
 
-void Mesh::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
+void Mesh::OnWindowResize() {
+	if ( m_data.is_allocated ) {
+		m_data.is_up_to_date = false; // need to recreate fbo for new window size
+	}
+}
+
+void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
 
 	l_draw_begin:
 
@@ -224,18 +237,20 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* c
 	rr::Capture* capture_request = nullptr;
 	FBO* fbo = nullptr;
 
+	GLuint vbo, ibo;
 	if ( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA ) {
 		if ( !mesh_actor->GetDataMesh() || !mesh_actor->RR_HasRequests< rr::GetData >() ) {
 			return; // nothing to do
 		}
 		PrepareDataMesh();
-		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, m_data.fbo );
+		m_opengl->WithBindFramebufferBegin( GL_DRAW_FRAMEBUFFER, m_data.fbo );
 		glDrawBuffer( GL_COLOR_ATTACHMENT0 );
-		glBindBuffer( GL_ARRAY_BUFFER, m_data.vbo );
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_data.ibo );
 
 		// reset framebuffer to clean state
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+		vbo = m_data.vbo;
+		ibo = m_data.ibo;
 	}
 	else {
 
@@ -247,197 +262,203 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* c
 			capture_request = mesh_actor->RR_GetRequests< rr::Capture >().front();
 			ASSERT( capture_request->camera, "capture request without camera" );
 
-			NEW( fbo, FBO, capture_request->texture_width, capture_request->texture_height );
+			NEW( fbo, FBO, m_opengl, capture_request->texture_width, capture_request->texture_height );
 			fbo->WriteBegin();
 
 		}
 
-		glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ibo );
+		vbo = m_vbo;
+		ibo = m_ibo;
 	}
 
-	shader_program->Enable();
+	m_opengl->WithBindBuffers(
+		vbo, ibo, [ this, &shader_program, &mesh_actor, &capture_request, &camera ]() {
 
-	const auto* texture = mesh_actor->GetTexture();
-	auto flags = mesh_actor->GetRenderFlags();
+			m_opengl->WithShaderProgram(
+				shader_program, [ this, &shader_program, &mesh_actor, &capture_request, &camera ]() {
 
-	g_engine->GetGraphics()->EnableTexture( texture );
+					const auto* texture = mesh_actor->GetTexture();
+					auto flags = mesh_actor->GetRenderFlags();
 
-	switch ( shader_program->GetType() ) {
-		case ( shader_program::ShaderProgram::TYPE_SIMPLE2D ) : {
-			auto* sp = (shader_program::Simple2D*)shader_program;
-			glUniform1ui( sp->uniforms.flags, flags );
-			if ( flags & scene::actor::Actor::RF_USE_TINT ) {
-				glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&mesh_actor->GetTintColor().value );
-			}
-			if ( flags & scene::actor::Actor::RF_USE_AREA_LIMITS ) {
-				const auto& limits = mesh_actor->GetAreaLimits();
-				glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
-				glUniform3fv( sp->uniforms.area_limits.max, 1, (const GLfloat*)&limits.second );
-			}
-			if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
-				glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&mesh_actor->GetPosition() );
-			}
-			glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void*)( 0 ) );
-			break;
-		}
-		case ( shader_program::ShaderProgram::TYPE_ORTHO ):
-		case ( shader_program::ShaderProgram::TYPE_ORTHO_DATA ): {
-			auto* sp = (shader_program::Orthographic*)shader_program;
-			auto* sp_data = (shader_program::OrthographicData*)shader_program;
+					g_engine->GetGraphics()->WithTexture(
+						texture, [ this, &shader_program, &flags, &mesh_actor, &capture_request, &camera ]() {
 
-			GLuint ibo_size = 0;
+							switch ( shader_program->GetType() ) {
+								case ( shader_program::ShaderProgram::TYPE_SIMPLE2D ) : {
+									auto* sp = (shader_program::Simple2D*)shader_program;
+									glUniform1ui( sp->uniforms.flags, flags );
+									if ( flags & scene::actor::Actor::RF_USE_TINT ) {
+										glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&mesh_actor->GetTintColor().value );
+									}
+									if ( flags & scene::actor::Actor::RF_USE_AREA_LIMITS ) {
+										const auto& limits = mesh_actor->GetAreaLimits();
+										glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
+										glUniform3fv( sp->uniforms.area_limits.max, 1, (const GLfloat*)&limits.second );
+									}
+									if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
+										glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&mesh_actor->GetPosition() );
+									}
+									glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void*)( 0 ) );
+									break;
+								}
+								case ( shader_program::ShaderProgram::TYPE_ORTHO ):
+								case ( shader_program::ShaderProgram::TYPE_ORTHO_DATA ): {
+									auto* sp = (shader_program::Orthographic*)shader_program;
+									auto* sp_data = (shader_program::OrthographicData*)shader_program;
 
-			switch ( shader_program->GetType() ) {
-				case shader_program::ShaderProgram::TYPE_ORTHO: {
-					// non-world uniforms apply only to render mesh
-					glUniform1ui( sp->uniforms.flags, flags );
-					auto* lights = m_actor->GetScene()->GetLights();
-					if ( !( flags & scene::actor::Actor::RF_IGNORE_LIGHTING ) && !lights->empty() ) {
-						types::Vec3 light_pos[lights->size()];
-						types::Color::color_t light_color[lights->size()];
-						size_t i = 0;
-						for ( auto& light : *lights ) {
-							light_pos[ i ] = light->GetPosition();
-							light_color[ i ] = light->GetColor();
-							i++;
+									GLuint ibo_size;
+
+									switch ( shader_program->GetType() ) {
+										case shader_program::ShaderProgram::TYPE_ORTHO: {
+											// non-world uniforms apply only to render mesh
+											glUniform1ui( sp->uniforms.flags, flags );
+											auto* lights = m_actor->GetScene()->GetLights();
+											if ( !( flags & scene::actor::Actor::RF_IGNORE_LIGHTING ) && !lights->empty() ) {
+												types::Vec3 light_pos[lights->size()];
+												types::Color::color_t light_color[lights->size()];
+												size_t i = 0;
+												for ( auto& light : *lights ) {
+													light_pos[ i ] = light->GetPosition();
+													light_color[ i ] = light->GetColor();
+													i++;
+												}
+												glUniform3fv( sp->uniforms.light_pos, lights->size(), (const GLfloat*)light_pos );
+												glUniform4fv( sp->uniforms.light_color, lights->size(), (const GLfloat*)light_color );
+											}
+											if ( flags & scene::actor::Actor::RF_USE_TINT ) {
+												glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&mesh_actor->GetTintColor().value );
+											}
+											if ( flags & scene::actor::Actor::RF_USE_AREA_LIMITS ) {
+												const auto& limits = mesh_actor->GetAreaLimits();
+												glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
+												glUniform3fv( sp->uniforms.area_limits.max, 1, (const GLfloat*)&limits.second );
+											}
+											if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
+												glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&mesh_actor->GetPosition() );
+											}
+											ibo_size = m_ibo_size;
+											break;
+										}
+										case shader_program::ShaderProgram::TYPE_ORTHO_DATA: {
+											ibo_size = m_data.ibo_size;
+											break;
+										}
+										default: {
+											THROW( "unknown shader program type " + std::to_string( shader_program->GetType() ) );
+										}
+									}
+
+									if ( flags & scene::actor::Actor::RF_IGNORE_DEPTH ) {
+										glDisable( GL_DEPTH_TEST );
+									}
+
+									const bool ignore_camera =
+										( flags & scene::actor::Actor::RF_IGNORE_CAMERA )// ||
+									//fbo
+									;
+
+									// TODO: instanced capture_request ?
+									if ( !ignore_camera ) {
+										glUniformMatrix4fv(
+											shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA
+												? sp_data->uniforms.world
+												: sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)(
+												capture_request
+													? &( capture_request->camera->GetMatrix() )
+													: &( camera->GetMatrix() )
+											)
+										);
+									}
+									if ( ignore_camera || m_actor->GetType() == scene::actor::Actor::TYPE_MESH ) {
+										types::Matrix44 matrix;
+										ASSERT( !capture_request, "non-instanced captures not implemented" );
+										if ( ignore_camera ) {
+											matrix = g_engine->GetUI()->GetWorldUIMatrix();
+										}
+										else {
+											matrix = m_actor->GetWorldMatrix();
+										}
+										glUniformMatrix4fv(
+											shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA
+												? sp_data->uniforms.instances
+												: sp->uniforms.instances, 1, GL_TRUE, (const GLfloat*)( &matrix )
+										);
+										glDrawElements( GL_TRIANGLES, ibo_size, GL_UNSIGNED_INT, (void*)( 0 ) );
+									}
+									else if ( m_actor->GetType() == scene::actor::Actor::TYPE_INSTANCED_MESH ) {
+										auto* instanced = (scene::actor::Instanced*)m_actor;
+										scene::actor::Instanced::matrices_t matrices;
+										if ( capture_request ) {
+											instanced->GenerateInstanceMatrices( &matrices, capture_request->camera );
+										}
+										else {
+											matrices = instanced->GetInstanceMatrices();
+										}
+										const auto sz = matrices.size();
+										GLsizei i = 0;
+										GLsizei c;
+										for ( auto i = 0 ; i < sz ; i += OpenGL::MAX_INSTANCES ) {
+											c = std::min< size_t >( OpenGL::MAX_INSTANCES, sz - i );
+											glUniformMatrix4fv(
+												shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA
+													? sp_data->uniforms.instances
+													: sp->uniforms.instances, c, GL_TRUE, (const GLfloat*)( matrices.data() + i )
+											);
+											glDrawElementsInstanced( GL_TRIANGLES, ibo_size, GL_UNSIGNED_INT, (void*)( 0 ), c );
+										}
+									}
+									else {
+										THROW( "unknown actor type " + std::to_string( m_actor->GetType() ) );
+									}
+
+									if ( flags & scene::actor::Actor::RF_IGNORE_DEPTH ) {
+										glEnable( GL_DEPTH_TEST );
+									}
+
+									break;
+								}
+								case ( shader_program::ShaderProgram::TYPE_PERSP ): {
+
+									// TODO
+									THROW( "perspective projection not implemented yet" );
+
+									break;
+
+								}
+								default: {
+									THROW( "shader program type " + std::to_string( shader_program->GetType() ) + " not implemented" );
+								}
+							}
+
 						}
-						glUniform3fv( sp->uniforms.light_pos, lights->size(), (const GLfloat*)light_pos );
-						glUniform4fv( sp->uniforms.light_color, lights->size(), (const GLfloat*)light_color );
-					}
-					if ( flags & scene::actor::Actor::RF_USE_TINT ) {
-						glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&mesh_actor->GetTintColor().value );
-					}
-					if ( flags & scene::actor::Actor::RF_USE_AREA_LIMITS ) {
-						const auto& limits = mesh_actor->GetAreaLimits();
-						glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
-						glUniform3fv( sp->uniforms.area_limits.max, 1, (const GLfloat*)&limits.second );
-					}
-					if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
-						glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&mesh_actor->GetPosition() );
-					}
-					ibo_size = m_ibo_size;
-					break;
-				}
-				case shader_program::ShaderProgram::TYPE_ORTHO_DATA: {
-					ibo_size = m_data.ibo_size;
-					break;
-				}
-				default: {
-					THROW( "unknown shader program type " + std::to_string( shader_program->GetType() ) );
-				}
-			}
-
-			if ( flags & scene::actor::Actor::RF_IGNORE_DEPTH ) {
-				glDisable( GL_DEPTH_TEST );
-			}
-
-			const bool ignore_camera =
-				( flags & scene::actor::Actor::RF_IGNORE_CAMERA )// ||
-			//fbo
-			;
-
-			// TODO: instanced capture_request ?
-			if ( !ignore_camera ) {
-				glUniformMatrix4fv(
-					shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA
-						? sp_data->uniforms.world
-						: sp->uniforms.world, 1, GL_TRUE, (const GLfloat*)(
-						capture_request
-							? &( capture_request->camera->GetMatrix() )
-							: &( camera->GetMatrix() )
-					)
-				);
-			}
-			if ( ignore_camera || m_actor->GetType() == scene::actor::Actor::TYPE_MESH ) {
-				types::Matrix44 matrix;
-				ASSERT( !capture_request, "non-instanced captures not implemented" );
-				if ( ignore_camera ) {
-					matrix = g_engine->GetUI()->GetWorldUIMatrix();
-				}
-				else {
-					matrix = m_actor->GetWorldMatrix();
-				}
-				glUniformMatrix4fv(
-					shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA
-						? sp_data->uniforms.instances
-						: sp->uniforms.instances, 1, GL_TRUE, (const GLfloat*)( &matrix )
-				);
-				glDrawElements( GL_TRIANGLES, ibo_size, GL_UNSIGNED_INT, (void*)( 0 ) );
-			}
-			else if ( m_actor->GetType() == scene::actor::Actor::TYPE_INSTANCED_MESH ) {
-				auto* instanced = (scene::actor::Instanced*)m_actor;
-				scene::actor::Instanced::matrices_t matrices;
-				if ( capture_request ) {
-					instanced->GenerateInstanceMatrices( &matrices, capture_request->camera );
-				}
-				else {
-					matrices = instanced->GetInstanceMatrices();
-				}
-				const auto sz = matrices.size();
-				GLsizei i = 0;
-				GLsizei c;
-				for ( auto i = 0 ; i < sz ; i += OpenGL::MAX_INSTANCES ) {
-					c = std::min< size_t >( OpenGL::MAX_INSTANCES, sz - i );
-					glUniformMatrix4fv(
-						shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA
-							? sp_data->uniforms.instances
-							: sp->uniforms.instances, c, GL_TRUE, (const GLfloat*)( matrices.data() + i )
 					);
-					glDrawElementsInstanced( GL_TRIANGLES, ibo_size, GL_UNSIGNED_INT, (void*)( 0 ), c );
 				}
-			}
-			else {
-				THROW( "unknown actor type " + std::to_string( m_actor->GetType() ) );
-			}
-
-			if ( flags & scene::actor::Actor::RF_IGNORE_DEPTH ) {
-				glEnable( GL_DEPTH_TEST );
-			}
-
-			break;
+			);
 		}
-		case ( shader_program::ShaderProgram::TYPE_PERSP ): {
-
-			// TODO
-			THROW( "perspective projection not implemented yet" );
-
-			break;
-
-		}
-		default: {
-			THROW( "shader program type " + std::to_string( shader_program->GetType() ) + " not implemented" );
-		}
-	}
-
-	g_engine->GetGraphics()->DisableTexture();
-
-	shader_program->Disable();
+	);
 
 	if ( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA ) {
 
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
-		glBindBuffer( GL_ARRAY_BUFFER, 0 );
-
 		glDrawBuffer( GL_NONE );
-		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
+		m_opengl->WithBindFramebufferEnd( GL_DRAW_FRAMEBUFFER );
 
-		glBindFramebuffer( GL_READ_FRAMEBUFFER, m_data.fbo );
-		glReadBuffer( GL_COLOR_ATTACHMENT0 );
+		m_opengl->WithBindFramebuffer(
+			GL_READ_FRAMEBUFFER, m_data.fbo, [ this, &mesh_actor ]() {
 
-		auto requests = mesh_actor->RR_GetRequests< rr::GetData >();
-		for ( auto& r : requests ) {
-			r->data = GetDataAt( r->screen_x, r->screen_inverse_y );
-			r->SetProcessed();
-		}
+				glReadBuffer( GL_COLOR_ATTACHMENT0 );
 
-		glReadBuffer( GL_NONE );
-		glBindFramebuffer( GL_READ_FRAMEBUFFER, 0 );
+				auto requests = mesh_actor->RR_GetRequests< rr::GetData >();
+				for ( auto& r : requests ) {
+					r->data = GetDataAt( r->screen_x, r->screen_inverse_y );
+					r->SetProcessed();
+				}
+
+				glReadBuffer( GL_NONE );
+			}
+		);
 
 	}
 	else {
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
-		glBindBuffer( GL_ARRAY_BUFFER, 0 );
 
 		if ( mesh_actor->RR_HasRequests< rr::Capture >() ) {
 
@@ -452,12 +473,6 @@ void Mesh::Draw( shader_program::ShaderProgram* shader_program, scene::Camera* c
 			// this draw was captured into texture, draw for real now (or process next capture if there are more)
 			goto l_draw_begin;
 		}
-	}
-}
-
-void Mesh::OnWindowResize() {
-	if ( m_data.is_allocated ) {
-		m_data.is_up_to_date = false; // need to recreate fbo for new window size
 	}
 }
 

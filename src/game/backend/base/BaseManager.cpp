@@ -152,7 +152,6 @@ void BaseManager::ProcessUnprocessed() {
 void BaseManager::PushUpdates() {
 	if ( m_game->IsRunning() && !m_base_updates.empty() ) {
 		for ( const auto& it : m_base_updates ) {
-			const auto base_id = it.first;
 			const auto& bu = it.second;
 			const auto& base = bu.base;
 			if ( bu.ops & BUO_SPAWN ) {
@@ -198,7 +197,7 @@ void BaseManager::PushUpdates() {
 	}
 }
 
-WRAPIMPL_BEGIN( BaseManager, CLASS_BM )
+WRAPIMPL_BEGIN( BaseManager )
 	WRAPIMPL_PROPS
 		{
 			"define_pop",
@@ -211,7 +210,7 @@ WRAPIMPL_BEGIN( BaseManager, CLASS_BM )
 
 				base::pop_render_infos_t rh = {};
 				base::pop_render_infos_t rp = {};
-				const auto& f_read_renders = [ &def, &arg, &call_si, &ctx, &getprop_val, &obj_it ]( const std::string& key, base::pop_render_infos_t& out ) {
+				const auto& f_read_renders = [ &def, &arg, &ctx, &si, &ep, &getprop_val, &obj_it ]( const std::string& key, base::pop_render_infos_t& out ) {
 					N_GETPROP( renders, def, key, Array );
 					out.reserve( renders.size() );
 					for ( const auto& v : renders ) {
@@ -282,7 +281,7 @@ WRAPIMPL_BEGIN( BaseManager, CLASS_BM )
 			})
 		},
 	};
-WRAPIMPL_END_PTR( BaseManager )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( BaseManager )
 
@@ -298,7 +297,6 @@ void BaseManager::Serialize( types::Buffer& buf ) const {
 	Log( "Serializing " + std::to_string( m_bases.size() ) + " bases" );
 	buf.WriteInt( m_bases.size() );
 	for ( const auto& it : m_bases ) {
-		buf.WriteInt( it.first );
 		buf.WriteString( base::Base::Serialize( it.second ).ToString() );
 	}
 	buf.WriteInt( base::Base::GetNextId() );
@@ -326,7 +324,6 @@ void BaseManager::Unserialize( types::Buffer& buf ) {
 		m_unprocessed_bases.reserve( sz );
 	}
 	for ( size_t i = 0 ; i < sz ; i++ ) {
-		const auto base_id = buf.ReadInt();
 		auto b = types::Buffer( buf.ReadString() );
 		SpawnBase( base::Base::Unserialize( b, m_game ) );
 	}

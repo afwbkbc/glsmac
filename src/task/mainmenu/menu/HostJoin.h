@@ -3,9 +3,9 @@
 #include "task/mainmenu/PopupMenu.h"
 
 // TODO: remove this
-#include "ui/object/ChoiceList.h"
+#include "ui_legacy/object/ChoiceList.h"
 
-namespace ui::object {
+namespace ui_legacy::object {
 class Section;
 }
 
@@ -27,8 +27,8 @@ CLASS( HostJoin, PopupMenu )
 
 private:
 
-	ui::object::Section* m_section = nullptr;
-	ui::object::NumChoiceList* m_choices = nullptr;
+	ui_legacy::object::Section* m_section = nullptr;
+	ui_legacy::object::NumChoiceList* m_choices = nullptr;
 
 };
 

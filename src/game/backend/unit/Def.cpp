@@ -50,7 +50,7 @@ Def* Def::Unserialize( types::Buffer& buf ) {
 	}
 }
 
-WRAPIMPL_BEGIN( Def, CLASS_UNITDEF )
+WRAPIMPL_BEGIN( Def )
 	WRAPIMPL_PROPS
 		{
 			"name",
@@ -61,7 +61,7 @@ WRAPIMPL_BEGIN( Def, CLASS_UNITDEF )
 			VALUE( gse::type::String, "static" ) // TODO
 		},
 	};
-WRAPIMPL_END_PTR( Def )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Def )
 

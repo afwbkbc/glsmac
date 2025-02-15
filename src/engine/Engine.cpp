@@ -16,7 +16,7 @@
 #include "graphics/Graphics.h"
 #include "audio/Audio.h"
 #include "network/Network.h"
-#include "ui/UI.h"
+#include "ui_legacy/UI.h"
 #include "game/backend/Game.h"
 
 #ifdef DEBUG
@@ -33,7 +33,7 @@ namespace engine {
 Engine::Engine(
 	config::Config* config,
 	error_handler::ErrorHandler* error_handler,
-	logger::Logger* logger,
+	const std::vector< logger::Logger* >& loggers,
 	resource::ResourceManager* resource_manager,
 	loader::font::FontLoader* font_loader,
 	loader::texture::TextureLoader* texture_loader,
@@ -44,13 +44,13 @@ Engine::Engine(
 	graphics::Graphics* graphics,
 	audio::Audio* audio,
 	network::Network* network,
-	ui::UI* ui,
+	ui_legacy::UI* ui,
 	game::backend::Game* game
 )
 	:
 	m_config( config )
 	, m_error_handler( error_handler )
-	, m_logger( logger )
+	, m_loggers( loggers )
 	, m_resource_manager( resource_manager )
 	, m_font_loader( font_loader )
 	, m_texture_loader( texture_loader )
@@ -79,12 +79,17 @@ Engine::Engine(
 	t_main->AddModule( m_font_loader );
 	t_main->AddModule( m_texture_loader );
 	t_main->AddModule( m_sound_loader );
-	t_main->AddModule( m_logger );
+	for ( const auto& logger : m_loggers ) {
+		t_main->AddModule( logger );
+	}
 #ifdef DEBUG
 	if ( !m_config->HasDebugFlag( config::Config::DF_GSE_ONLY ) )
 #endif
 	{
-		m_resource_manager->Init( m_config->GetPossibleSMACPaths(), m_config->GetSMACType(), m_config->GetDataPath() );
+		if ( !m_config->HasLaunchFlag( config::Config::LF_NEWUI ) ) {
+			// with new ui this will happen in script
+			m_resource_manager->Init( m_config->GetPossibleSMACPaths(), m_config->GetSMACType() );
+		}
 		t_main->AddModule( m_resource_manager );
 	}
 	t_main->AddModule( m_input );
@@ -181,6 +186,12 @@ int Engine::Run() {
 void Engine::ShutDown() {
 
 	m_is_shutting_down = true;
+}
+
+void Engine::Log( const std::string& text ) const {
+	for ( const auto& logger : m_loggers ) {
+		logger->Log( text );
+	}
 }
 
 }

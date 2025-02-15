@@ -58,6 +58,7 @@ CLASS2( Mesh, Actor, common::RRAware )
 protected:
 	const types::mesh::Mesh* m_mesh = nullptr;
 	types::texture::Texture* m_texture = nullptr;
+	size_t m_texture_update_counter = 0;
 
 	types::Color m_tint_color = {
 		1.0f,

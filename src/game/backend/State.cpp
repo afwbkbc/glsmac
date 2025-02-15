@@ -121,7 +121,7 @@ void State::InitBindings() {
 				m_game->OnGSEError( err );
 			}
 			else {
-				throw std::runtime_error( err.ToStringAndCleanup() );
+				throw std::runtime_error( err.ToString() );
 			}
 		}
 	}
@@ -172,14 +172,14 @@ faction::FactionManager* State::GetFM() const {
 	return m_fm;
 }
 
-WRAPIMPL_BEGIN( State, CLASS_STATE )
+WRAPIMPL_BEGIN( State )
 	WRAPIMPL_PROPS
 		{
 			"fm",
 			m_fm->Wrap( true )
 		},
 	};
-WRAPIMPL_END_PTR( State )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( State )
 

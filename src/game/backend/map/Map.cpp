@@ -7,7 +7,7 @@
 #include "config/Config.h"
 #include "game/backend/Random.h"
 #include "util/FS.h"
-#include "ui/UI.h"
+#include "ui_legacy/UI.h"
 #include "loader/texture/TextureLoader.h"
 #include "game/backend/map/module/Prepare.h"
 #include "game/backend/map/module/LandMoisture.h"
@@ -431,7 +431,7 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_t
 	ASSERT( m_current_ts, "GetTileTextureInfo called outside of tile generation" );
 	Map::tile_texture_info_t info;
 
-	bool matches[16];
+	bool matches[16] = {};
 	uint8_t idx = 0;
 	for ( uint8_t i = 0 ; i < 2 ; i++ ) {
 		for ( auto& t : tile->neighbours ) {
@@ -610,7 +610,7 @@ void Map::RemoveTerrainSpriteActorInstance( const std::string& key, const size_t
 
 const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_CANCELABLE ) {
 	auto* random = m_game->GetRandom();
-	generator::SimplePerlin generator( random );
+	generator::SimplePerlin generator( m_game, random );
 	types::Vec2< size_t > size = map_settings->size == settings::MAP_CONFIG_CUSTOM
 		? map_settings->custom_size
 		: map::s_consts.map_sizes.at( map_settings->size );
@@ -679,7 +679,7 @@ const Map::error_code_t Map::LoadFromFile( const std::string& path ) {
 	ASSERT( util::FS::FileExists( path ), "map file \"" + path + "\" not found" );
 
 	Log( "Loading map from " + path );
-	auto b = types::Buffer( util::FS::ReadFile( path ) );
+	auto b = types::Buffer( util::FS::ReadTextFile( path ) );
 	return LoadFromBuffer( b );
 }
 
@@ -781,8 +781,6 @@ void Map::InitTextureAndMesh() {
 void Map::ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles, MT_CANCELABLE ) {
 	ASSERT( m_map_state, "map state not set" );
 
-	auto* ui = g_engine->GetUI();
-
 	// small optimization to avoid reallocations
 	const size_t percent_len = 2;
 	std::string sp( percent_len, ' ' );
@@ -819,7 +817,7 @@ void Map::ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles, MT
 						sp = std::string( percent_len - sp.size(), ' ' ) + sp;
 					}
 					loading_text.replace( percent_pos, sp.size(), sp.c_str() );
-					ui->SetLoaderText( loading_text );
+					m_game->SetLoaderText( loading_text );
 				}
 
 				MT_RETIF();
@@ -854,7 +852,7 @@ void Map::LoadTiles( const tiles_t& tiles, MT_CANCELABLE ) {
 void Map::FixNormals( const tiles_t& tiles, MT_CANCELABLE ) {
 	Log( "Fixing normals" );
 
-	g_engine->GetUI()->SetLoaderText( "Fixing normals" );
+	m_game->SetLoaderText( "Fixing normals" );
 
 	std::vector< types::mesh::surface_id_t > surfaces = {};
 

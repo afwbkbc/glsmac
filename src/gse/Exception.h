@@ -5,6 +5,7 @@
 #include "types/Exception.h"
 
 #include "gse/Types.h"
+#include "Value.h"
 
 namespace gse {
 
@@ -29,31 +30,25 @@ struct exception_ec_t {
 	const std::string INVALID_EVENT;
 	const std::string INVALID_DEFINITION;
 	const std::string INVALID_HANDLER;
+	const std::string UI_ERROR;
 };
 extern const exception_ec_t EC;
 
 class Exception : public types::Exception {
 public:
 
-	typedef std::vector< std::string > backtrace_t;
+	typedef std::vector< std::string > stacktrace_t;
 
-	Exception( const std::string& class_name, const std::string& reason, context::Context* context, const si_t& si )
-		: types::Exception( class_name, reason )
-		, class_name( class_name )
-		, reason( reason )
-		, context( context )
-		, si( si ) {}
+	Exception( const std::string& class_name, const std::string& reason, GSE_CALLABLE );
 
 	const std::string class_name;
 	const std::string reason;
-	context::Context* context;
-	const si_t si;
 
-	bool contexts_freed = false;
+	const stacktrace_t& GetStackTrace() const;
+	const std::string ToString() const;
 
-	const backtrace_t GetBacktraceAndCleanup( const context::Context* const current_ctx );
-
-	const std::string ToStringAndCleanup();
+private:
+	stacktrace_t m_stacktrace = {};
 
 };
 

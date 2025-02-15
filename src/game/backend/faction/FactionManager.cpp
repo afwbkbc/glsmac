@@ -68,7 +68,7 @@ const std::vector< Faction* > FactionManager::GetAll() const {
 	return result;
 }
 
-WRAPIMPL_BEGIN( FactionManager, CLASS_FM )
+WRAPIMPL_BEGIN( FactionManager )
 	WRAPIMPL_PROPS
 		{
 			"import_base_names",
@@ -90,7 +90,7 @@ WRAPIMPL_BEGIN( FactionManager, CLASS_FM )
 					{ "land", VALUE( gse::type::Array, land_names ) },
 					{ "water", VALUE( gse::type::Array, water_names ) },
 				};
-				return VALUE( gse::type::Object, properties );
+				return VALUE( gse::type::Object, nullptr, properties );
 			} )
 			},
 			{
@@ -108,7 +108,7 @@ WRAPIMPL_BEGIN( FactionManager, CLASS_FM )
 					{ "border_alpha", types::Color::FromRGBA( texture->GetPixel( 161, 757 ) ).Wrap() },
 					{ "vehicle", types::Color::FromRGBA( texture->GetPixel( 435, 744 ) ).Wrap() },
 				};
-				return VALUE( gse::type::Object, properties );
+				return VALUE( gse::type::Object, nullptr, properties );
 			} )
 		},
 		{
@@ -205,7 +205,7 @@ WRAPIMPL_BEGIN( FactionManager, CLASS_FM )
 			} )
 		},
 	};
-WRAPIMPL_END_PTR( FactionManager )
+WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( FactionManager )
 

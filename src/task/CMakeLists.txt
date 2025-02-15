@@ -1,7 +1,9 @@
 SUBDIR( common )
+SUBDIR( main )
 SUBDIR( intro )
 SUBDIR( mainmenu )
 SUBDIR( game )
+SUBDIR( console )
 
 IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
 	SUBDIR( gseprompt )

@@ -4,6 +4,7 @@
 #include "rr/Capture.h"
 #include "types/mesh/Mesh.h"
 #include "types/mesh/Data.h"
+#include "types/texture/Texture.h"
 
 namespace scene {
 namespace actor {
@@ -34,8 +35,11 @@ const types::mesh::Mesh* Mesh::GetMesh() const {
 }
 
 void Mesh::SetTintColor( const types::Color tint_color ) {
-	m_render_flags |= RF_USE_TINT;
-	m_tint_color = tint_color;
+	if ( !( m_render_flags & RF_USE_TINT ) || m_tint_color != tint_color ) {
+		m_render_flags |= RF_USE_TINT;
+		m_tint_color = tint_color;
+		UpdateCache();
+	}
 }
 
 const types::Color& Mesh::GetTintColor() const {
@@ -47,7 +51,14 @@ const types::mesh::Data* Mesh::GetDataMesh() const {
 }
 
 void Mesh::SetTexture( types::texture::Texture* texture ) {
-	m_texture = texture;
+	const auto counter = texture
+		? texture->UpdatedCount()
+		: 0;
+	if ( m_texture != texture || counter != m_texture_update_counter ) {
+		m_texture = texture;
+		m_texture_update_counter = counter;
+		UpdateCache();
+	}
 }
 
 types::texture::Texture* Mesh::GetTexture() const {

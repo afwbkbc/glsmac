@@ -3,12 +3,12 @@
 #include "engine/Engine.h"
 
 #include "util/FS.h"
-#include "ui/object/Section.h"
-#include "ui/object/FileBrowser.h"
+#include "ui_legacy/object/Section.h"
+#include "ui_legacy/object/FileBrowser.h"
 #include "game/backend/map/Consts.h"
 #include "graphics/Graphics.h"
-#include "ui/object/Panel.h"
-#include "ui/UI.h"
+#include "ui_legacy/object/Panel.h"
+#include "ui_legacy/UI.h"
 #include "task/mainmenu/MainMenu.h"
 #include "game/backend/State.h"
 
@@ -32,10 +32,10 @@ LoadMapFile::~LoadMapFile() {
 void LoadMapFile::Show() {
 	PopupMenu::Show();
 
-	NEW( m_section, ui::object::Section, "PopupSection" );
+	NEW( m_section, ui_legacy::object::Section, "PopupSection" );
 	m_body->AddChild( m_section );
 
-	NEW( m_file_browser, ::ui::object::FileBrowser );
+	NEW( m_file_browser, ::ui_legacy::object::FileBrowser );
 	// TODO: determine position from style
 	m_file_browser->SetTop( 8 );
 	m_file_browser->SetLeft( 6 );
@@ -44,7 +44,7 @@ void LoadMapFile::Show() {
 	m_file_browser->SetDefaultDirectory( util::FS::GetAbsolutePath( game::backend::map::s_consts.fs.default_map_directory ) );
 	m_file_browser->SetFileExtension( game::backend::map::s_consts.fs.default_map_extension );
 	m_file_browser->On(
-		ui::event::EV_SELECT, EH( this ) {
+		ui_legacy::event::EV_SELECT, EH( this ) {
 			const auto& path = m_file_browser->GetSelectedFile();
 			if ( !util::FS::FileExists( path ) ) {
 				g_engine->GetUI()->Error(

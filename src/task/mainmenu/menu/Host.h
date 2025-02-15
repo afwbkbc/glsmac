@@ -2,7 +2,7 @@
 
 #include "ConnectionPopupMenu.h"
 
-namespace ui::object {
+namespace ui_legacy::object {
 class Section;
 class Label;
 class Input;
@@ -26,13 +26,13 @@ CLASS( Host, ConnectionPopupMenu )
 
 private:
 
-	ui::object::Section* m_section = nullptr;
+	ui_legacy::object::Section* m_section = nullptr;
 
-	ui::object::Label* m_label_yourname = nullptr;
-	ui::object::Input* m_input_yourname = nullptr;
+	ui_legacy::object::Label* m_label_yourname = nullptr;
+	ui_legacy::object::Input* m_input_yourname = nullptr;
 
-	ui::object::Label* m_label_gamename = nullptr;
-	ui::object::Input* m_input_gamename = nullptr;
+	ui_legacy::object::Label* m_label_gamename = nullptr;
+	ui_legacy::object::Input* m_input_gamename = nullptr;
 
 };
 

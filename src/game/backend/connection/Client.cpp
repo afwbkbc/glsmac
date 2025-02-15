@@ -93,7 +93,8 @@ void Client::ProcessEvent( const network::Event& event ) {
 							if ( !ok ) {
 								break; // something went wrong
 							}
-							m_state->m_settings.global.Unserialize( types::Buffer( packet.data.str ) );
+							//m_state->m_settings.global.Unserialize( types::Buffer( packet.data.str ) );
+							m_state->Unserialize( types::Buffer( packet.data.str ) );
 							if ( m_on_global_settings_update ) {
 								m_on_global_settings_update();
 							}

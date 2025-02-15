@@ -100,10 +100,7 @@ Tile* TileManager::GetSelectedTile() const {
 }
 
 void TileManager::SelectTile( Tile* tile ) {
-	if ( tile != m_selected_tile ) {
-		m_selected_tile = tile;
-		m_game->SendGetTileData( tile );
-	}
+	m_selected_tile = tile;
 }
 
 void TileManager::DeselectTile() {

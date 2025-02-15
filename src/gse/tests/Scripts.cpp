@@ -8,10 +8,12 @@
 #include "gse/parser/Parser.h"
 #include "gse/runner/Runner.h"
 #include "gse/program/Program.h"
+#include "gse/Async.h"
 #include "config/Config.h"
 #include "task/gsetests/GSETests.h"
 #include "util/FS.h"
 #include "util/String.h"
+#include "gse/ExecutionPointer.h"
 
 #include "engine/Engine.h"
 
@@ -58,25 +60,34 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 
 				std::string last_error = "";
 				try {
-					const auto source = util::FS::ReadFile( script, GSE::PATH_SEPARATOR );
+					const auto source = util::FS::ReadTextFile( script, GSE::PATH_SEPARATOR );
 					parser = gse->GetParser( script, source );
 					context = gse->CreateGlobalContext( script );
-					context->IncRefs();
+					context->Begin();
 					mocks::AddMocks( context, { script } );
 					program = parser->Parse();
 					runner = gse->GetRunner();
-					runner->Execute( context, program );
+					{
+						ExecutionPointer ep;
+						runner->Execute( context, ep, program );
+					}
 				}
 				catch ( Exception& e ) {
-					last_error = e.ToStringAndCleanup();
-					context = nullptr;
+					last_error = e.ToString();
+					if ( context ) {
+						DELETE( context );
+						context = nullptr;
+					}
 				}
 				catch ( std::runtime_error const& e ) {
 					last_error = (std::string)"Internal error: " + e.what();
 				};
 
 				if ( context ) {
-					context->DecRefs();
+					ExecutionPointer ep;
+					gse->GetAsync()->ProcessAndExit( ep );
+					context->Clear();
+					context->End();
 				}
 				if ( program ) {
 					DELETE( program );

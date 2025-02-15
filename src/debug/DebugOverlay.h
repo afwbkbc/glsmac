@@ -14,7 +14,7 @@ class Texture;
 }
 }
 
-namespace ui {
+namespace ui_legacy {
 namespace object {
 class Label;
 class Surface;
@@ -43,24 +43,24 @@ protected:
 	util::Timer m_stats_timer;
 
 	types::texture::Texture* m_background_texture = nullptr;
-	ui::object::Surface* m_background_left = nullptr;
-	ui::object::Surface* m_background_middle = nullptr;
+	ui_legacy::object::Surface* m_background_left = nullptr;
+	ui_legacy::object::Surface* m_background_middle = nullptr;
 
 	size_t m_memory_stats_lines = 0;
 	size_t m_font_size = 0;
 	types::Font* m_stats_font = nullptr;
 
-#define D( _stat ) ui::object::Label* m_##_stats_label_##_stat = nullptr;
+#define D( _stat ) ui_legacy::object::Label* m_##_stats_label_##_stat = nullptr;
 	DEBUG_STATS;
 #undef D
 
-	std::vector< ui::object::Label* > m_memory_stats_labels = {};
-	void ActivateLabel( ui::object::Label* label, const size_t left, const size_t top );
+	std::vector< ui_legacy::object::Label* > m_memory_stats_labels = {};
+	void ActivateLabel( ui_legacy::object::Label* label, const size_t left, const size_t top );
 
 private:
 	bool m_is_visible = false;
 
-	const ui::event::UIEventHandler* m_toggle_handler = nullptr;
+	const ui_legacy::event::UIEventHandler* m_toggle_handler = nullptr;
 
 };
 

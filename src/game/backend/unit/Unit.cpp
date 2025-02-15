@@ -15,6 +15,7 @@
 #include "MoraleSet.h"
 #include "StaticDef.h"
 #include "UnitManager.h"
+#include "gse/ExecutionPointer.h"
 
 namespace game {
 namespace backend {
@@ -94,22 +95,23 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 	return buf;
 }
 
-Unit* Unit::Unserialize( types::Buffer& buf, UnitManager* units ) {
+Unit* Unit::Unserialize( types::Buffer& buf, UnitManager* um ) {
+	ASSERT_NOLOG( um, "um is null" );
 	const auto id = buf.ReadInt();
 	auto defbuf = types::Buffer( buf.ReadString() );
 	auto* def = Def::Unserialize( defbuf );
-	auto* slot = units ? units->GetSlot( buf.ReadInt() ) : nullptr;
+	auto* slot = um->GetSlot( buf.ReadInt() );
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
-	auto* tile = units ? units->GetMap()->GetTile( pos_x, pos_y ) : nullptr;
+	auto* tile = um->GetMap()->GetTile( pos_x, pos_y );
 	const auto movement = (movement_t)buf.ReadFloat();
 	const auto morale = (morale_t)buf.ReadInt();
 	const auto health = (health_t)buf.ReadFloat();
 	const auto moved_this_turn = buf.ReadBool();
-	return new Unit( units, id, def, slot, tile, movement, morale, health, moved_this_turn );
+	return new Unit( um, id, def, slot, tile, movement, morale, health, moved_this_turn );
 }
 
-WRAPIMPL_DYNAMIC_GETTERS( Unit, CLASS_UNIT )
+WRAPIMPL_DYNAMIC_GETTERS( Unit )
 	WRAPIMPL_GET( "id", Int, m_id )
 	WRAPIMPL_GET( "movement", Float, m_movement )
 	WRAPIMPL_GET( "morale", Int, m_morale )
@@ -135,16 +137,17 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit, CLASS_UNIT )
 	},
 	{
 		"move_to_tile",
-		NATIVE_CALL(this) {
+		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 2 );
 			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
 			N_PERSIST_CALLABLE( on_complete, 1 );
-			const auto* errmsg = m_um->MoveUnitToTile( this, tile, [ on_complete, ctx, call_si ]() {
-				on_complete->Run( ctx, call_si, {} );
+			const auto* errmsg = m_um->MoveUnitToTile( this, tile, [ on_complete, ctx, si, ep ]() {
+				auto ep2 = ep;
+				on_complete->Run( ctx, si, ep2, {} );
 				N_UNPERSIST_CALLABLE( on_complete );
 			});
 			if ( errmsg ) {
-				throw gse::Exception( gse::EC.GAME_ERROR, *errmsg, ctx, call_si );
+				throw gse::Exception( gse::EC.GAME_ERROR, *errmsg, GSE_CALL );
 				delete errmsg;
 			}
 			return VALUE( gse::type::Undefined );

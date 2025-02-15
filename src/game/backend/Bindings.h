@@ -32,7 +32,7 @@ public:
 	Bindings( State* state );
 	~Bindings();
 
-	void AddToContext( gse::context::Context* ctx ) override;
+	void AddToContext( gse::context::Context* ctx, gse::ExecutionPointer& ep ) override;
 
 	void RunMainScript();
 	void RunMain();

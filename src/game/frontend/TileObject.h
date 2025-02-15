@@ -13,7 +13,7 @@ namespace tile {
 class Tile;
 }
 
-namespace ui {
+namespace ui_legacy {
 class ObjectsListItem;
 class ObjectPreview;
 }
@@ -31,10 +31,10 @@ public:
 
 	const tile_object_type_t GetType() const;
 
-	virtual void* CreateOnBottomBarList( ui::ObjectsListItem* element ) const = 0;
-	virtual void DestroyOnBottomBarList( ui::ObjectsListItem* element, void* state ) const = 0;
-	virtual void* CreateOnBottomBarPreview( ui::ObjectPreview* element ) const = 0;
-	virtual void DestroyOnBottomBarPreview( ui::ObjectPreview* element, void* state ) const = 0;
+	virtual void* CreateOnBottomBarList( ui_legacy::ObjectsListItem* element ) const = 0;
+	virtual void DestroyOnBottomBarList( ui_legacy::ObjectsListItem* element, void* state ) const = 0;
+	virtual void* CreateOnBottomBarPreview( ui_legacy::ObjectPreview* element ) const = 0;
+	virtual void DestroyOnBottomBarPreview( ui_legacy::ObjectPreview* element, void* state ) const = 0;
 	virtual const bool OnBottomBarListActivate( Game* game ) = 0;
 
 protected:

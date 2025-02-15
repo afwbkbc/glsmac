@@ -2,7 +2,7 @@
 
 #include "task/mainmenu/PopupMenu.h"
 
-namespace ui::object {
+namespace ui_legacy::object {
 class Section;
 class FileBrowser;
 }
@@ -23,8 +23,8 @@ CLASS( LoadMapFile, PopupMenu )
 
 private:
 
-	ui::object::Section* m_section = nullptr;
-	::ui::object::FileBrowser* m_file_browser = nullptr;
+	ui_legacy::object::Section* m_section = nullptr;
+	::ui_legacy::object::FileBrowser* m_file_browser = nullptr;
 
 };
 

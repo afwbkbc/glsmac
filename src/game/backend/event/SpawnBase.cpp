@@ -32,6 +32,9 @@ SpawnBase::SpawnBase(
 }
 
 const std::string* SpawnBase::Validate( Game* game ) const {
+	if ( !game->GetBM() ) {
+		return Error( "Game is not initialized properly" );
+	}
 	if ( m_initiator_slot != 0 ) {
 		return Error( "Only master is allowed to spawn bases" );
 	}
@@ -52,7 +55,11 @@ const gse::Value SpawnBase::Apply( Game* game ) const {
 		m_name,
 		{} // will be added later
 	);
-	game->GetBM()->SpawnBase( base );
+
+	auto* bm = game->GetBM();
+	ASSERT_NOLOG( bm, "bm is null" );
+	bm->SpawnBase( base );
+
 	return base->Wrap();
 }
 

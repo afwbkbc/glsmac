@@ -1,10 +1,11 @@
 #include "MapGenerator.h"
 
+#include "game/backend/Game.h"
 #include "game/backend/settings/Settings.h"
 #include "game/backend/map/Consts.h"
 #include "game/backend/map/tile/Tiles.h"
 #include "engine/Engine.h"
-#include "ui/UI.h"
+#include "ui_legacy/UI.h"
 #include "util/Clamper.h"
 #include "util/random/Random.h"
 
@@ -13,16 +14,15 @@ namespace backend {
 namespace map {
 namespace generator {
 
-MapGenerator::MapGenerator( util::random::Random* random )
-	: m_random( random ) {
+MapGenerator::MapGenerator( Game* game, util::random::Random* random )
+	: m_game( game )
+	, m_random( random ) {
 	//
 }
 
 void MapGenerator::Generate( tile::Tiles* tiles, const settings::MapSettings* map_settings, MT_CANCELABLE ) {
 	ASSERT( TARGET_LAND_AMOUNTS.find( map_settings->ocean ) != TARGET_LAND_AMOUNTS.end(), "unknown map ocean setting " + std::to_string( map_settings->ocean ) );
 	float desired_land_amount = TARGET_LAND_AMOUNTS.at( map_settings->ocean );
-
-	auto* ui = g_engine->GetUI();
 
 	bool need_generation = true;
 	size_t regenerations_asked = 0;
@@ -32,11 +32,11 @@ void MapGenerator::Generate( tile::Tiles* tiles, const settings::MapSettings* ma
 		tiles->Clear();
 		MT_RETIF();
 
-		ui->SetLoaderText( "Generating elevations" );
+		m_game->SetLoaderText( "Generating elevations" );
 		GenerateElevations( tiles, map_settings, MT_C );
 		MT_RETIF();
 
-		ui->SetLoaderText( "Normalizing elevations" );
+		m_game->SetLoaderText( "Normalizing elevations" );
 		FixExtremeSlopes( tiles, MT_C );
 		MT_RETIF();
 		NormalizeElevationRange( tiles, MT_C );
@@ -48,7 +48,7 @@ void MapGenerator::Generate( tile::Tiles* tiles, const settings::MapSettings* ma
 
 		float acceptable_inaccuracy = INITIAL_ACCEPTABLE_INACCURACY;
 
-		ui->SetLoaderText( "Normalizing land amount" );
+		m_game->SetLoaderText( "Normalizing land amount" );
 		do {
 			if ( acceptable_inaccuracy > MAXIMUM_ACCEPTABLE_INACCURACY ) {
 				regenerations_asked++;
@@ -76,7 +76,7 @@ void MapGenerator::Generate( tile::Tiles* tiles, const settings::MapSettings* ma
 		MT_RETIF();
 	}
 
-	ui->SetLoaderText( "Normalizing erosive forces" );
+	m_game->SetLoaderText( "Normalizing erosive forces" );
 	// normalize erosive forces
 	ASSERT( TARGET_EVELATION_MULTIPLIERS.find( map_settings->erosive ) != TARGET_EVELATION_MULTIPLIERS.end(), "unknown map erosive setting " + std::to_string( map_settings->erosive ) );
 	const auto range = GetElevationsRange( tiles, MT_C );
@@ -98,21 +98,21 @@ void MapGenerator::Generate( tile::Tiles* tiles, const settings::MapSettings* ma
 	GenerateDetails( tiles, map_settings, MT_C );
 	MT_RETIF();
 
-	ui->SetLoaderText( "Normalizing fungus amount" );
+	m_game->SetLoaderText( "Normalizing fungus amount" );
 	// normalize fungus amount
 	ASSERT( TARGET_FUNGUS_AMOUNTS.find( map_settings->lifeforms ) != TARGET_FUNGUS_AMOUNTS.end(), "unknown map lifeforms setting " + std::to_string( map_settings->lifeforms ) );
 	const auto desired_fungus_amount = TARGET_FUNGUS_AMOUNTS.at( map_settings->lifeforms );
 	SetFungusAmount( tiles, desired_fungus_amount, MT_C );
 	MT_RETIF();
 
-	ui->SetLoaderText( "Normalizing moisture amount" );
+	m_game->SetLoaderText( "Normalizing moisture amount" );
 	// normalize moisture amount
 	ASSERT( TARGET_MOISTURE_AMOUNTS.find( map_settings->clouds ) != TARGET_MOISTURE_AMOUNTS.end(), "unknown map clouds setting " + std::to_string( map_settings->clouds ) );
 	const auto desired_moisture_amount = TARGET_MOISTURE_AMOUNTS.at( map_settings->clouds );
 	SetMoistureAmount( tiles, desired_moisture_amount, MT_C );
 	MT_RETIF();
 
-	ui->SetLoaderText( "Fixing impossible tiles" );
+	m_game->SetLoaderText( "Fixing impossible tiles" );
 	FixImpossibleThings( tiles, MT_C );
 	MT_RETIF();
 
@@ -127,7 +127,7 @@ void MapGenerator::Generate( tile::Tiles* tiles, const settings::MapSettings* ma
 	Log( "Final fungus amount: " + std::to_string( GetFungusAmount( tiles, MT_C ) ) );
 	Log( "Final moisture amount: " + std::to_string( GetMoistureAmount( tiles, MT_C ) ) );
 
-	ui->SetLoaderText( "Map generation complete" );
+	m_game->SetLoaderText( "Map generation complete" );
 }
 
 void MapGenerator::SmoothTerrain( tile::Tiles* tiles, MT_CANCELABLE, const bool smooth_land, const bool smooth_water ) {
@@ -151,9 +151,11 @@ void MapGenerator::SmoothTerrain( tile::Tiles* tiles, MT_CANCELABLE, const bool 
 				continue;
 			}
 
+			/* TODO?
 			mod = tile->is_water_tile
 				? -1
 				: 1;
+			 */
 
 			// flatten every corner
 			for ( auto& c : tile->elevation.corners ) {
@@ -576,10 +578,6 @@ void MapGenerator::RemoveExtremeSlopes( tile::Tiles* tiles, const tile::elevatio
 	tile::elevation_t elevation_fixby_max = max_allowed_diff / 3; // to prevent infinite loops when it grows so large it starts creating new extreme slopes
 	float elevation_fixby_div_change = 0.001f; // needed to prevent infinite loops when nearby tiles keep 'fixing' each other forever
 
-	const auto w = tiles->GetWidth();
-	const auto h = tiles->GetHeight();
-
-	size_t pass = 0;
 	tile::Tile* tile;
 	tile::elevation_t elevation_fixby = 0;
 	float elevation_fixby_div = 1.0f;
@@ -638,8 +636,7 @@ void MapGenerator::RemoveExtremeSlopes( tile::Tiles* tiles, const tile::elevatio
 }
 
 void MapGenerator::NormalizeElevationRange( tile::Tiles* tiles, MT_CANCELABLE ) {
-	const auto w = tiles->GetWidth();
-	const auto h = tiles->GetHeight();
+
 	auto elevations_range = GetElevationsRange( tiles, MT_C );
 	MT_RETIF();
 	util::Clamper< tile::elevation_t > converter(
@@ -659,6 +656,7 @@ void MapGenerator::NormalizeElevationRange( tile::Tiles* tiles, MT_CANCELABLE ) 
 	}
 
 	// convert top rows too
+	const auto w = tiles->GetWidth();
 	for ( auto y = 0 ; y < 2 ; y++ ) {
 		for ( auto x = y & 1 ; x < w ; x += 2 ) {
 			if ( y == 0 ) {

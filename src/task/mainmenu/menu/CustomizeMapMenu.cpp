@@ -1,6 +1,6 @@
 #include "CustomizeMapMenu.h"
 
-#include "task/mainmenu/ui/slidingmenu/Types.h"
+#include "task/mainmenu/ui_legacy/slidingmenu/Types.h"
 #include "task/mainmenu/MainMenu.h"
 
 namespace task {

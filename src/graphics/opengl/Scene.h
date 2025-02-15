@@ -17,6 +17,8 @@ class Scene;
 namespace graphics {
 namespace opengl {
 
+class OpenGL;
+
 class Texture;
 
 namespace shader_program {
@@ -28,14 +30,11 @@ class Routine;
 }
 
 CLASS( Scene, common::Class )
-	Scene( scene::Scene* scene, routine::Routine* routine );
+	Scene( OpenGL* opengl, scene::Scene* scene, routine::Routine* routine );
 	~Scene();
 	scene::Scene* GetScene() const;
-	Texture* GetSkyboxTexture() const;
-	common::ObjectLink* GetSkyboxTextureObj() const;
-	void SetSkyboxTextureObj( common::ObjectLink* skybox_texture );
-	// other_shader_program is used for fonts in Overlay routine // TODO: refactor
-	void Draw( shader_program::ShaderProgram* shader_program, shader_program::ShaderProgram* other_shader_program = nullptr );
+
+	void Draw( shader_program::ShaderProgram* shader_program );
 	void Update();
 
 	void OnWindowResize();
@@ -50,6 +49,10 @@ protected:
 	std::map< float, std::vector< Actor* > > m_gl_actors_by_zindex;
 
 private:
+	OpenGL* m_opengl;
+
+	Actor* CreateActor( scene::actor::Actor* const actor ) const;
+
 	void RemoveActor( common::ObjectLink* link );
 	void AddActorToZIndexSet( Actor* gl_actor );
 	void RemoveActorFromZIndexSet( Actor* gl_actor );

@@ -18,7 +18,7 @@ namespace lobby {
 PlayersSection::PlayersSection( Lobby* lobby )
 	: LobbySection( lobby ) {
 	SetTitleText( "PLAYERS" );
-	SetAlign( ui::ALIGN_RIGHT | ui::ALIGN_TOP );
+	SetAlign( ui_legacy::ALIGN_RIGHT | ui_legacy::ALIGN_TOP );
 }
 
 void PlayersSection::Create() {
@@ -93,11 +93,11 @@ void PlayersSection::UpdateSlots( std::vector< game::backend::slot::Slot >& slot
 	}
 }
 
-const ui::object::assoc_choices_t& PlayersSection::GetFactionChoices() {
+const ui_legacy::object::assoc_choices_t& PlayersSection::GetFactionChoices() {
 	return m_choices.factions;
 }
 
-const ui::object::num_choices_t& PlayersSection::GetDifficultyLevelChoices() {
+const ui_legacy::object::num_choices_t& PlayersSection::GetDifficultyLevelChoices() {
 	return m_choices.difficulty_levels;
 }
 

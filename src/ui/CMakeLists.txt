@@ -1,11 +1,9 @@
-SUBDIR( object )
-SUBDIR( theme )
-SUBDIR( event )
-SUBDIR( module )
-SUBDIR( popup )
+SUBDIR( geometry )
+SUBDIR( dom )
 
 SET( SRC ${SRC}
 
 	${PWD}/UI.cpp
+	${PWD}/Class.cpp
 
 	PARENT_SCOPE )

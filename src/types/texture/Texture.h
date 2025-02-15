@@ -25,6 +25,7 @@ namespace texture {
 
 CLASS( Texture, Serializable )
 	Texture();
+	Texture( const size_t width, const size_t height );
 	Texture( const std::string& name, const size_t width, const size_t height );
 	virtual ~Texture();
 

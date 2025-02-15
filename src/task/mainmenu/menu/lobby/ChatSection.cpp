@@ -1,8 +1,8 @@
 #include "ChatSection.h"
 
 #include "Lobby.h"
-#include "ui/object/TextView.h"
-#include "ui/object/Input.h"
+#include "ui_legacy/object/TextView.h"
+#include "ui_legacy/object/Input.h"
 
 namespace task {
 namespace mainmenu {
@@ -10,27 +10,27 @@ namespace lobby {
 
 ChatSection::ChatSection( Lobby* lobby )
 	: LobbySection( lobby ) {
-	SetAlign( ui::ALIGN_RIGHT | ui::ALIGN_TOP );
+	SetAlign( ui_legacy::ALIGN_RIGHT | ui_legacy::ALIGN_TOP );
 }
 
 void ChatSection::Create() {
 	LobbySection::Create();
 
-	NEW( m_log, ::ui::object::TextView, "PopupTextList" );
-	m_log->SetAlign( ui::ALIGN_TOP );
+	NEW( m_log, ::ui_legacy::object::TextView, "PopupTextList" );
+	m_log->SetAlign( ui_legacy::ALIGN_TOP );
 	m_log->SetBottom( 23 );
 	m_log->SetLeft( 2 );
 	m_log->SetRight( 2 );
 	m_log->SetTop( 2 );
 	AddChild( m_log );
 
-	NEW( m_input, ::ui::object::Input, "PopupInput" );
-	m_input->SetAlign( ui::ALIGN_BOTTOM );
+	NEW( m_input, ::ui_legacy::object::Input, "PopupInput" );
+	m_input->SetAlign( ui_legacy::ALIGN_BOTTOM );
 	m_input->SetHeight( 20 );
 	m_input->SetMaxLength( 40 ); // TODO: infinite length
 	m_input->On(
-		ui::event::EV_KEY_DOWN, EH( this ) {
-			if ( data->key.code == ui::event::K_ENTER ) {
+		ui_legacy::event::EV_KEY_DOWN, EH( this ) {
+			if ( data->key.code == ui_legacy::event::K_ENTER ) {
 				const auto& value = m_input->GetValue();
 				if ( !value.empty() ) {
 					GetLobby()->Message( value );

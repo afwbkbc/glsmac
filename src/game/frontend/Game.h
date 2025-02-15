@@ -7,7 +7,7 @@
 
 #include "Types.h"
 #include "common/MTTypes.h"
-#include "ui/Types.h"
+#include "ui_legacy/Types.h"
 #include "game/backend/turn/Types.h"
 #include "game/backend/map/Types.h"
 #include "game/backend/map_editor/Types.h"
@@ -26,6 +26,9 @@
 #include "game/backend/map/tile/TileState.h"
 #include "game/frontend/tile/Tile.h"
 #include "game/BackendRequest.h"
+
+// for new ui
+class GLSMAC;
 
 namespace types {
 namespace texture {
@@ -50,7 +53,7 @@ class Instanced;
 }
 }
 
-namespace ui {
+namespace ui_legacy {
 namespace event {
 class UIEventHandler;
 }
@@ -114,7 +117,7 @@ class Slot;
 class AnimationDef;
 class Animation;
 
-namespace ui {
+namespace ui_legacy {
 class BottomBar;
 class ObjectsList;
 namespace style {
@@ -137,7 +140,7 @@ CLASS( Game, common::Module )
 
 	static constexpr size_t SCROLL_DURATION_MS = 100;
 
-	Game( task::game::Game* task, backend::State* state, ::ui::ui_handler_t on_start = 0, ::ui::ui_handler_t on_cancel = 0 );
+	Game( task::game::Game* task, GLSMAC* glsmac, backend::State* state, ::ui_legacy::ui_handler_t on_start = 0, ::ui_legacy::ui_handler_t on_cancel = 0 );
 	~Game();
 
 	void Start() override;
@@ -211,7 +214,7 @@ CLASS( Game, common::Module )
 	void LoadMap( const std::string& path );
 	void SaveMap( const std::string& path );
 
-	void ConfirmExit( ::ui::ui_handler_t on_confirm );
+	void ConfirmExit( ::ui_legacy::ui_handler_t on_confirm );
 
 	// TODO: move this to .cpp
 	// structures received from game thread
@@ -292,11 +295,12 @@ private:
 	);
 	void Deinitialize();
 
-	::ui::ui_handler_t m_on_start;
-	::ui::ui_handler_t m_on_cancel;
+	::ui_legacy::ui_handler_t m_on_start;
+	::ui_legacy::ui_handler_t m_on_cancel;
 
 	void SetCameraPosition( const ::types::Vec3 camera_position );
 
+	GLSMAC* m_glsmac = nullptr;
 	backend::State* m_state = nullptr;
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)
@@ -356,13 +360,13 @@ private:
 	void FixCameraX();
 
 	struct {
-		const ::ui::event::UIEventHandler* keydown_before = nullptr;
-		const ::ui::event::UIEventHandler* keydown_after = nullptr;
-		const ::ui::event::UIEventHandler* keyup = nullptr;
-		const ::ui::event::UIEventHandler* mousedown = nullptr;
-		const ::ui::event::UIEventHandler* mousemove = nullptr;
-		const ::ui::event::UIEventHandler* mouseup = nullptr;
-		const ::ui::event::UIEventHandler* mousescroll = nullptr;
+		const ::ui_legacy::event::UIEventHandler* keydown_before = nullptr;
+		const ::ui_legacy::event::UIEventHandler* keydown_after = nullptr;
+		const ::ui_legacy::event::UIEventHandler* keyup = nullptr;
+		const ::ui_legacy::event::UIEventHandler* mousedown = nullptr;
+		const ::ui_legacy::event::UIEventHandler* mousemove = nullptr;
+		const ::ui_legacy::event::UIEventHandler* mouseup = nullptr;
+		const ::ui_legacy::event::UIEventHandler* mousescroll = nullptr;
 	} m_handlers;
 	void UpdateViewport();
 	void UpdateCameraPosition();
@@ -377,8 +381,8 @@ private:
 	// UI stuff
 
 	struct {
-		ui::style::Theme* theme = nullptr;
-		ui::BottomBar* bottom_bar = nullptr;
+		ui_legacy::style::Theme* theme = nullptr;
+		ui_legacy::BottomBar* bottom_bar = nullptr;
 	} m_ui;
 
 	bool m_is_resize_handler_set = false;
@@ -388,8 +392,11 @@ private:
 	void DeselectTileOrUnit();
 	void OpenBasePopup( base::Base* base );
 
+	void ShowLoader( const std::string& text, const ::ui_legacy::loader_cancel_handler_t on_cancel = 0 );
+	void HideLoader();
+
 private:
-	friend class ui::ObjectsList;
+	friend class ui_legacy::ObjectsList;
 
 	struct {
 		std::unordered_map< resource::resource_t, types::texture::Texture* > source;
@@ -469,13 +476,9 @@ private:
 
 	void SendAnimationFinished( const size_t animation_id );
 
-	ui::popup::base_popup::BasePopup* m_base_popup = nullptr;
+	ui_legacy::popup::base_popup::BasePopup* m_base_popup = nullptr;
 	unit::Unit* m_unit_selected_before_base_popup = nullptr;
 	tile::Tile* m_tile_selected_before_base_popup = nullptr;
-
-private:
-	friend class tile::TileManager;
-	void SendGetTileData( const tile::Tile* tile );
 
 private:
 	friend class unit::UnitManager;
@@ -494,11 +497,11 @@ private:
 	unit::Unit* GetSelectedTileMostImportantUnit() const;
 
 private:
-	friend class ui::popup::base_popup::BasePopup;
+	friend class ui_legacy::popup::base_popup::BasePopup;
 	void OnBasePopupClose();
 
 private:
-	friend class ui::popup::base_popup::bottom_bar::UnitsList;
+	friend class ui_legacy::popup::base_popup::bottom_bar::UnitsList;
 	void SetBasePopupSelectedUnit( unit::Unit* unit );
 
 private:

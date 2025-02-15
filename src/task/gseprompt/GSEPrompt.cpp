@@ -20,6 +20,7 @@
 #include "gse/runner/Runner.h"
 #include "gse/parser/Parser.h"
 #include "gse/program/Program.h"
+#include "gse/ExecutionPointer.h"
 
 namespace task {
 namespace gseprompt {
@@ -102,7 +103,7 @@ void GSEPrompt::Iterate() {
 					ProcessInput();
 				}
 			}
-			m_gse_context->AddSourceLines( util::String::SplitToLines( m_input ) );
+			m_gse_context->AddSourceLines( util::String::Split( m_input, '\n' ) );
 			PrintPrompt();
 		}
 	}
@@ -143,20 +144,28 @@ void GSEPrompt::ProcessInput() {
 					1
 				}
 			};
-			context = m_gse_context->ForkContext( nullptr, si, {}, {} );
+			{
+				gse::ExecutionPointer ep;
+				context = m_gse_context->ForkContext( nullptr, si, ep, {} );
+			}
 			context->IncRefs();
 		}
 		else {
 			context = m_gse_context;
 		}
-		const auto result = m_runner->Execute( context, program );
+		auto result = VALUE( gse::type::Undefined );
+		{
+			gse::ExecutionPointer ep;
+			result = m_runner->Execute( context, ep, program );
+		}
+
 		if ( m_is_tty ) {
 			( (gse::context::ChildContext*)context )->JoinContext();
 		}
 		std::cout << result.Dump() << std::endl;
 	}
 	catch ( gse::Exception& e ) {
-		std::cout << e.ToStringAndCleanup() << std::endl;
+		std::cout << e.ToString() << std::endl;
 		context = nullptr;
 	}
 	catch ( std::runtime_error& e ) {

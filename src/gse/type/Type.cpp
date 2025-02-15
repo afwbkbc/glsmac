@@ -13,6 +13,7 @@
 #include "ArrayRef.h"
 #include "ArrayRangeRef.h"
 #include "ObjectRef.h"
+#include "ValueRef.h"
 #include "Range.h"
 #include "Exception.h"
 #include "LoopControl.h"
@@ -22,6 +23,7 @@
 namespace gse {
 namespace type {
 
+static const std::string s_t_nothing = "Nothing";
 static const std::string s_t_undefined = "Undefined";
 static const std::string s_t_null = "Null";
 static const std::string s_t_bool = "Bool";
@@ -34,11 +36,15 @@ static const std::string s_t_callable = "Callable";
 static const std::string s_t_arrayref = "Arrayref";
 static const std::string s_t_arrayrangeref = "Arrayrangeref";
 static const std::string s_t_objectref = "Objectref";
+static const std::string s_t_valueref = "Valueref";
 static const std::string s_t_range = "Range";
 static const std::string s_t_loopcontrol = "LoopControl";
 static const std::string s_t_unknown = "Unknown";
+
 const std::string& Type::GetTypeString( const type_t type ) {
 	switch ( type ) {
+		case T_NOTHING:
+			return s_t_nothing;
 		case T_UNDEFINED:
 			return s_t_undefined;
 		case T_NULL:
@@ -63,6 +69,8 @@ const std::string& Type::GetTypeString( const type_t type ) {
 			return s_t_arrayrangeref;
 		case T_OBJECTREF:
 			return s_t_objectref;
+		case T_VALUEREF:
+			return s_t_valueref;
 		case T_RANGE:
 			return s_t_range;
 		case T_LOOPCONTROL:
@@ -74,6 +82,8 @@ const std::string& Type::GetTypeString( const type_t type ) {
 
 const std::string Type::ToString() const {
 	switch ( type ) {
+		case T_NOTHING:
+			return "nothing";
 		case T_UNDEFINED:
 			return "undefined";
 		case T_NULL:
@@ -107,7 +117,7 @@ const std::string Type::ToString() const {
 		case T_OBJECT: {
 			const auto* obj = (Object*)this;
 			std::string str = "";
-			str.append( Object::GetClassString( obj->object_class ) + "{ " );
+			str.append( obj->object_class + "{ " );
 			bool first = true;
 			for ( const auto& it : obj->value ) {
 				if ( first ) {
@@ -134,6 +144,10 @@ const std::string Type::ToString() const {
 		case T_OBJECTREF: {
 			const auto* that = (ObjectRef*)this;
 			return that->object->Get( that->key ).ToString();
+		}
+		case T_VALUEREF: {
+			const auto* that = (ValueRef*)this;
+			return that->target->ToString();
 		}
 		case T_RANGE: {
 			const auto* that = (Range*)this;
@@ -198,7 +212,7 @@ const std::string Type::Dump() const {
 		case T_OBJECT: {
 			const auto* obj = (Object*)this;
 			std::string str = "";
-			str.append( "object" + Object::GetClassString( obj->object_class ) + "{" );
+			str.append( "object(" + obj->object_class + "){" );
 			bool first = true;
 			for ( const auto& it : obj->value ) {
 				if ( first ) {
@@ -234,6 +248,10 @@ const std::string Type::Dump() const {
 			const auto* that = (ObjectRef*)this;
 			return "objectref{" + std::to_string( (ptr_int_t)that->object ) + "," + that->key + "}";
 		}
+		case T_VALUEREF: {
+			const auto* that = (ValueRef*)this;
+			return "valueref{" + std::to_string( (ptr_int_t)that->target ) + "}";
+		}
 		case T_RANGE: {
 			const auto* that = (Range*)this;
 			return "range{" + (
@@ -266,6 +284,10 @@ const Type* Type::Deref() const {
 		case T_OBJECTREF: {
 			const auto* that = (ObjectRef*)this;
 			return that->object->Get( that->key ).Get();
+		}
+		case T_VALUEREF: {
+			const auto* that = (ValueRef*)this;
+			return that->target;
 		}
 		default:
 			return this;
@@ -344,6 +366,11 @@ const bool Type::operator==( const Type& other ) const {
 			}
 			return true;
 		}
+		case T_CALLABLE: {
+			const auto* obj_a = (const Callable*)this;
+			const auto* obj_b = (const Callable*)&other;
+			return obj_a == obj_b;
+		}
 		DEFAULT_COMPARE( == )
 	}
 }
@@ -404,7 +431,7 @@ void Type::Serialize( types::Buffer* buf, const Type* type ) {
 		}
 		case T_OBJECT: {
 			const auto* obj = (Object*)type;
-			ASSERT_NOLOG( obj->object_class == Object::CLASS_NONE, "serialization of custom object classes is not supported" );
+			ASSERT_NOLOG( obj->object_class.empty(), "serialization of custom object classes is not supported" );
 			ASSERT_NOLOG( !obj->wrapobj, "serialization of objects with wrapobj is not supported" );
 			ASSERT_NOLOG( !obj->wrapsetter, "serialization of objects with wrapsetter is not supported" );
 			const auto& properties = obj->value;
@@ -456,7 +483,7 @@ Value Type::Unserialize( types::Buffer* buf ) {
 					}
 				);
 			}
-			return VALUE( Object, properties );
+			return VALUE( Object, nullptr, properties );
 		}
 		default:
 			THROW( "invalid/unsupported type for unserialization: " + GetTypeString( type ) );

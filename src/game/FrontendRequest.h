@@ -28,7 +28,6 @@ public:
 		FR_ERROR,
 		FR_GLOBAL_MESSAGE,
 		FR_UPDATE_TILES,
-		FR_TILE_DATA,
 		FR_TURN_STATUS,
 		FR_TURN_ADVANCE,
 		FR_FACTION_DEFINE,
@@ -42,7 +41,10 @@ public:
 		FR_UNIT_MOVE,
 		FR_BASE_POP_DEFINE,
 		FR_BASE_SPAWN,
-		FR_BASE_UPDATE
+		FR_BASE_UPDATE,
+		FR_LOADER_SHOW,
+		FR_LOADER_TEXT,
+		FR_LOADER_HIDE,
 	};
 	FrontendRequest( const request_type_t type );
 	FrontendRequest( const FrontendRequest& other );
@@ -181,6 +183,9 @@ public:
 			const std::string* name;
 			base_pops_t* pops;
 		} base_update;
+		struct {
+			const std::string* text;
+		} loader;
 	} data;
 };
 

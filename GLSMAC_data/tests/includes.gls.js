@@ -21,3 +21,7 @@ test.assert(test.global_get('include_var') == 'include_1_qweqwe');
 
 // each include must be executed only once (and cache returned later)
 test.assert(test.global_get('includes_executed') == [1, 2]);
+
+// test that scope of include is alive while object needs it
+test.assert(test.global_get('include_testfunc1') == 'OK');
+test.assert(test.global_get('include_testfunc2') == 'OK');

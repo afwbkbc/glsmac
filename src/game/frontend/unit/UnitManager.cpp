@@ -67,8 +67,7 @@ Unit* UnitManager::GetUnitById( const size_t id ) const {
 }
 
 void UnitManager::DefineUnit( const backend::unit::Def* def ) {
-	auto unitdef_it = m_unitdefs.find( def->m_id );
-	ASSERT( unitdef_it == m_unitdefs.end(), "unit def already exists" );
+	ASSERT( m_unitdefs.find( def->m_id ) == m_unitdefs.end(), "unit def already exists" );
 
 	Log( "Initializing unit definition: " + def->m_id );
 

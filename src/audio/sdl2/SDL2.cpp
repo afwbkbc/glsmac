@@ -1,4 +1,6 @@
 #include <algorithm>
+
+#define SDL_MAIN_HANDLED 1
 #include <SDL.h>
 
 #include "SDL2.h"
@@ -33,12 +35,18 @@ void SDL2::Start() {
 		return;
 	}
 
-	Log( "Initializing SDL2" );
+	Log( "Initializing SDL2 Audio" );
 
 	if ( SDL_Init( SDL_INIT_AUDIO ) ) {
 		Log( "Failed to enable audio, game will start without sound." );
 		return;
 	}
+
+	m_buffer_length = AUDIO_SAMPLES * AUDIO_CHANNELS;
+	m_buffer_size = sizeof( AUDIO_SAMPLE_TYPE ) * m_buffer_length;
+	m_mix_buffer_size = sizeof( AUDIO_MIX_TYPE ) * m_buffer_length;
+	m_mix_buffer = (AUDIO_MIX_TYPE*)malloc( m_mix_buffer_size );
+	m_buffer = (AUDIO_SAMPLE_TYPE*)malloc( m_buffer_size );
 
 	SDL_AudioSpec wav_spec;
 	wav_spec.freq = AUDIO_FREQUENCY;
@@ -56,16 +64,10 @@ void SDL2::Start() {
 		return;
 	}
 
+	m_is_sound_enabled = true;
+
 	/* Start playing */
 	SDL_PauseAudio( 0 );
-
-	m_buffer_length = AUDIO_SAMPLES * AUDIO_CHANNELS;
-	m_buffer_size = sizeof( AUDIO_SAMPLE_TYPE ) * m_buffer_length;
-	m_mix_buffer_size = sizeof( AUDIO_MIX_TYPE ) * m_buffer_length;
-	m_mix_buffer = (AUDIO_MIX_TYPE*)malloc( m_mix_buffer_size );
-	m_buffer = (AUDIO_SAMPLE_TYPE*)malloc( m_buffer_size );
-
-	m_is_sound_enabled = true;
 }
 
 void SDL2::Stop() {
@@ -73,11 +75,11 @@ void SDL2::Stop() {
 		return;
 	}
 
-	free( m_buffer );
-	free( m_mix_buffer );
-
 	Log( "Deinitializing SDL2" );
 	SDL_CloseAudio();
+
+	free( m_buffer );
+	free( m_mix_buffer );
 
 }
 
@@ -87,7 +89,6 @@ void SDL2::Iterate() {
 	}
 
 	Audio::Iterate();
-
 }
 
 void SDL2::AddActor( scene::actor::Sound* actor ) {
@@ -127,6 +128,7 @@ void SDL2::RemoveActor( scene::actor::Sound* actor ) {
 }
 
 void SDL2::Mix( Uint8* stream, int len ) {
+	ASSERT( m_is_sound_enabled, "SDL2::Mix() called while sound not enabled" );
 	ASSERT( len == m_buffer_size, "sample type or size mismatch" );
 
 	memset( ptr( m_mix_buffer, 0, m_mix_buffer_size ), 0, m_mix_buffer_size );

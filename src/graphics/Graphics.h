@@ -23,6 +23,8 @@ namespace graphics {
 
 CLASS( Graphics, common::Module )
 
+	typedef std::function< void() > f_t;
+
 	static constexpr size_t MAX_WORLD_LIGHTS = 2;
 
 	virtual ~Graphics();
@@ -36,10 +38,10 @@ CLASS( Graphics, common::Module )
 	virtual const unsigned short GetViewportWidth() const = 0;
 	virtual const unsigned short GetViewportHeight() const = 0;
 
-	virtual void LoadTexture( types::texture::Texture* texture ) = 0;
+	virtual void LoadTexture( types::texture::Texture* texture, const bool smoothen = true ) = 0;
 	virtual void UnloadTexture( const types::texture::Texture* texture ) = 0;
-	virtual void EnableTexture( const types::texture::Texture* texture ) = 0;
-	virtual void DisableTexture() = 0;
+
+	virtual void WithTexture( const types::texture::Texture* texture, const f_t& f ) = 0;
 
 	virtual const bool IsFullscreen() const = 0;
 	virtual void SetFullscreen() = 0;

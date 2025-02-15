@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui/object/Section.h"
+#include "ui_legacy/object/Section.h"
 
 namespace task {
 namespace mainmenu {
@@ -8,7 +8,7 @@ namespace lobby {
 
 class Lobby;
 
-CLASS( LobbySection, ui::object::Section )
+CLASS( LobbySection, ui_legacy::object::Section )
 	LobbySection( Lobby* lobby );
 
 	Lobby* GetLobby() const;
