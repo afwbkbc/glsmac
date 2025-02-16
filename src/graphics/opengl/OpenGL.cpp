@@ -254,7 +254,9 @@ void OpenGL::AddScene( scene::Scene* scene ) {
 		}
 	}
 
+#ifdef DEBUG
 	ASSERT( added, "no matching routine for scene [" + scene->GetName() + "]" );
+#endif
 }
 
 void OpenGL::RemoveScene( scene::Scene* scene ) {
@@ -273,7 +275,9 @@ void OpenGL::RemoveScene( scene::Scene* scene ) {
 		}
 	}
 
+#ifdef DEBUG
 	ASSERT( removed, "no matching routine for scene [" + scene->GetName() + "]" );
+#endif
 }
 
 const unsigned short OpenGL::GetWindowWidth() const {

@@ -1,4 +1,4 @@
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 
 #ifdef __linux__
 
@@ -12,13 +12,9 @@
 
 #endif
 
-#include <algorithm>
-
 #include "System.h"
 
 namespace util {
-
-#ifdef DEBUG
 
 // from https://stackoverflow.com/questions/3596781/how-to-detect-if-the-current-process-is-being-run-by-gdb
 bool System::AreWeUnderGDB() {
@@ -74,7 +70,6 @@ bool System::IsGDBAvailable() {
 #else
 	std::cout << "WARNING: gdb check skipped due to unsupported platform" << std::endl;
 	return false;
-#endif
 }
 
 #endif

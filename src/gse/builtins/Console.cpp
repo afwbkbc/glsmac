@@ -11,7 +11,7 @@
 namespace gse {
 namespace builtins {
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 static bool s_is_capturing = false;
 static std::string s_capture_buffer = "";
 void Console::CaptureStart() const {
@@ -36,7 +36,7 @@ void Console::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 			}
 			line += it.Get()->ToString();
 		}
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 		if ( s_is_capturing ) {
 			s_capture_buffer += line + "\n";
 		}
@@ -45,7 +45,7 @@ void Console::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 		return VALUE( type::Undefined );
 	} ), ep );
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 
 	ctx->CreateBuiltin( "global_mute", NATIVE_CALL() {
 		logger::g_is_muted = true;

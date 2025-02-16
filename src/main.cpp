@@ -1,6 +1,6 @@
 #include <thread>
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined ( FASTDEBUG )
 
 #include <iostream>
 #include <string>
@@ -20,7 +20,7 @@
 
 #include "logger/Console.h"
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 
 #include "logger/Stdout.h"
 #include "graphics/Null.h"
@@ -48,9 +48,11 @@
 
 #include "task/common/Common.h"
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
+
 #include "task/gseprompt/GSEPrompt.h"
 #include "task/gsetests/GSETests.h"
+
 #endif
 
 #include "task/console/Console.h"
@@ -76,7 +78,7 @@
 #define WINDOW_WIDTH 1024
 #define WINDOW_HEIGHT 768
 #define VSYNC true
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 #define START_FULLSCREEN false
 #else
 #define START_FULLSCREEN true
@@ -101,7 +103,7 @@ int main( const int argc, const char* argv[] ) {
 	// this changes the whole flow
 	const auto newui = config.HasLaunchFlag( config::Config::LF_NEWUI );
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
 #ifdef __linux__
 		// automatically start under gdb if possible
@@ -133,11 +135,13 @@ int main( const int argc, const char* argv[] ) {
 		std::cout << "WARNING: gdb check skipped due to unsupported platform" << std::endl;
 #endif
 	}
+#ifdef DEBUG
 	debug::MemoryWatcher memory_watcher( config.HasDebugFlag( config::Config::DF_MEMORYDEBUG ), config.HasDebugFlag( config::Config::DF_QUIET ) );
+#endif
 #endif
 
 	util::FS::CreateDirectoryIfNotExists( config.GetPrefix() );
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	util::FS::CreateDirectoryIfNotExists( config.GetDebugPath() );
 #endif
 
@@ -147,7 +151,7 @@ int main( const int argc, const char* argv[] ) {
 
 	std::vector< logger::Logger* > loggers = {};
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	if ( !config.HasDebugFlag( config::Config::DF_QUIET ) ) {
 		loggers.push_back( new logger::Stdout() );
 	}
@@ -163,7 +167,7 @@ int main( const int argc, const char* argv[] ) {
 #endif
 
 	auto title = GLSMAC_VERSION_FULL;
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	title += "-debug";
 #elif PORTABLE
 	title += "-portable";
@@ -173,7 +177,7 @@ int main( const int argc, const char* argv[] ) {
 	ui_legacy::Default ui;
 	scheduler::Simple scheduler;
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	if ( config.HasDebugFlag( config::Config::DF_GSE_ONLY ) ) {
 
 		loader::font::Null font_loader;

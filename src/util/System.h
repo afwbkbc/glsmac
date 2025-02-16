@@ -9,7 +9,7 @@ namespace util {
 
 CLASS( System, Util )
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 
 	static bool AreWeUnderGDB();
 	static bool IsGDBAvailable();

@@ -83,7 +83,7 @@ const gse::Value Interpreter::EvaluateScope( context::Context* ctx, ExecutionPoi
 				}
 			}
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 			if ( m_are_scope_context_joins_enabled ) {
 				subctx->JoinContext();
 			}

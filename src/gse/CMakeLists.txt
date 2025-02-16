@@ -6,7 +6,7 @@ SUBDIR( program )
 SUBDIR( runner )
 SUBDIR( builtins )
 
-IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "FastDebug" )
 	SUBDIR( tests )
 ENDIF ()
 

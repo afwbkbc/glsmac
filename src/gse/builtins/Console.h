@@ -11,7 +11,7 @@ class Console : public Bindings {
 public:
 	void AddToContext( context::Context* ctx, ExecutionPointer& ep ) override;
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	void CaptureStart() const;
 	const std::string& CaptureStopGet() const;
 #endif

@@ -149,7 +149,7 @@ const Value GSE::RunScript( GSE_CALLABLE, const std::string& path ) {
 	};
 	try {
 		cache.context = CreateGlobalContext( full_path );
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 		// copy mocks
 		if ( ctx && ctx->HasVariable( "test" ) ) {
 			cache.context->CreateVariable( "test", ctx->GetVariable( "test", si, ep ), si, ep );

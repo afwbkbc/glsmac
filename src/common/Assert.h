@@ -4,7 +4,7 @@
 
 #define THROW( _text ) throw std::runtime_error( _text )
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 
 #define ASSERT( _condition, _text ) \
     if ( !( _condition ) ) { \

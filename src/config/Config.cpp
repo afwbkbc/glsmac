@@ -281,37 +281,15 @@ Config::Config( const std::string& path )
 		}
 	);
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	m_manager->AddRule(
 		"gdb", "Try to start within gdb (on supported platforms)", AH( this ) {
 			m_debug_flags |= DF_GDB;
 		}
 	);
 	m_manager->AddRule(
-		"mapdump", "Save map dump upon loading map", AH( this ) {
-			m_debug_flags |= DF_MAPDUMP;
-		}
-	);
-	m_manager->AddRule(
-		"memorydebug", "Add extra memory checks and tracking (slow!)", AH( this ) {
-			m_debug_flags |= DF_MEMORYDEBUG;
-		}
-	);
-	m_manager->AddRule(
 		"nopings", "Omit pings and timeouts during multiplayer games", AH( this ) {
 			m_debug_flags |= DF_NOPINGS;
-		}
-	);
-	m_manager->AddRule(
-		"quickstart-mapdump", "MAP_DUMP_FILE", "Load from existing map dump file (*.gsmd)", AH( this, s_quickstart_argument_missing ) {
-			if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
-				Error( s_quickstart_argument_missing );
-			}
-			if ( !util::FS::FileExists( value ) ) {
-				Error( "Map dump file \"" + value + "\" not found!" );
-			}
-			m_quickstart_mapdump = value;
-			m_debug_flags |= DF_QUICKSTART_MAP_DUMP;
 		}
 	);
 	m_manager->AddRule(
@@ -338,6 +316,31 @@ Config::Config( const std::string& path )
 			m_gse_tests_script = value;
 		}
 	);
+
+#ifdef DEBUG
+	m_manager->AddRule(
+		"mapdump", "Save map dump upon loading map", AH( this ) {
+			m_debug_flags |= DF_MAPDUMP;
+		}
+	);
+	m_manager->AddRule(
+		"memorydebug", "Add extra memory checks and tracking (slow!)", AH( this ) {
+			m_debug_flags |= DF_MEMORYDEBUG;
+		}
+	);
+	m_manager->AddRule(
+		"quickstart-mapdump", "MAP_DUMP_FILE", "Load from existing map dump file (*.gsmd)", AH( this, s_quickstart_argument_missing ) {
+			if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
+				Error( s_quickstart_argument_missing );
+			}
+			if ( !util::FS::FileExists( value ) ) {
+				Error( "Map dump file \"" + value + "\" not found!" );
+			}
+			m_quickstart_mapdump = value;
+			m_debug_flags |= DF_QUICKSTART_MAP_DUMP;
+		}
+	);
+#endif
 
 #endif
 
@@ -372,7 +375,7 @@ const std::string& Config::GetPrefix() const {
 	return m_prefix;
 }
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 
 const std::string Config::GetDebugPath() const {
 	return m_prefix + "debug/";
@@ -451,7 +454,7 @@ const std::string& Config::GetNewUIMainScript() const {
 	return m_newui_mainscript;
 }
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 
 const bool Config::HasDebugFlag( const debug_flag_t flag ) const {
 	return m_debug_flags & flag;

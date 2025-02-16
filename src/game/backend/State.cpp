@@ -69,7 +69,7 @@ void State::AddPlayer( Player* player ) {
 
 void State::RemovePlayer( Player* player ) {
 	Log( "removing player: " + player->GetPlayerName() );
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	ASSERT( m_players.find( player ) != m_players.end(), "player not found" );
 	for ( auto& it : m_cid_slots ) {
 		ASSERT( m_slots->GetSlot( it.second ).GetPlayer() != player, "player still in cid slots" );
@@ -80,7 +80,7 @@ void State::RemovePlayer( Player* player ) {
 
 void State::AddCIDSlot( const network::cid_t cid, const size_t slot ) {
 	Log( "adding CID " + std::to_string( cid ) + " for slot " + std::to_string( slot ) );
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	ASSERT( m_cid_slots.find( cid ) == m_cid_slots.end(), "duplicate cid add" );
 	for ( auto& it : m_cid_slots ) {
 		ASSERT( it.second != slot, "slot " + std::to_string( slot ) + " already in cids" );

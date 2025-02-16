@@ -4,7 +4,7 @@
 namespace graphics {
 
 Graphics::~Graphics() {
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	if ( !m_on_resize_handlers.empty() ) {
 		Log( "WARNING: some resize handlers still set" );
 	}

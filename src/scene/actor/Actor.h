@@ -70,8 +70,8 @@ CLASS( Actor, Entity )
 	void SetCacheParent( Cache* const cache_parent );
 	const Cache* const GetCacheParent() const;
 
-	void Show();
-	void Hide();
+	void Show() override;
+	void Hide() override;
 
 	virtual const types::Buffer Serialize() const override;
 	virtual void Unserialize( types::Buffer buf ) override;

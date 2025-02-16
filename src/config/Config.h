@@ -43,19 +43,21 @@ CLASS( Config, common::Module )
 		LF_NEWUI = 1 << 16,
 	};
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	enum debug_flag_t : uint16_t {
 		DF_NONE = 0,
 		DF_GDB = 1 << 0,
-		DF_MAPDUMP = 1 << 1,
-		DF_MEMORYDEBUG = 1 << 2,
-		DF_QUIET = 1 << 3,
-		DF_GSE_ONLY = 1 << 4,
-		DF_GSE_TESTS = 1 << 5,
-		DF_GSE_TESTS_SCRIPT = 1 << 6,
-		DF_GSE_PROMPT_JS = 1 << 7,
-		DF_NOPINGS = 1 << 8,
+		DF_QUIET = 1 << 1,
+		DF_GSE_ONLY = 1 << 2,
+		DF_GSE_TESTS = 1 << 3,
+		DF_GSE_TESTS_SCRIPT = 1 << 4,
+		DF_GSE_PROMPT_JS = 1 << 5,
+		DF_NOPINGS = 1 << 6,
+#ifdef DEBUG
+		DF_MAPDUMP = 1 << 7,
+		DF_MEMORYDEBUG = 1 << 8,
 		DF_QUICKSTART_MAP_DUMP = 1 << 9,
+#endif
 	};
 #endif
 
@@ -68,8 +70,7 @@ CLASS( Config, common::Module )
 
 	void SetSMACPath( const std::string& path ) const;
 
-#ifdef DEBUG
-
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	const std::string GetDebugPath() const; // to store debug stuff like dumps
 #endif
 
@@ -89,7 +90,7 @@ CLASS( Config, common::Module )
 
 	const std::string& GetNewUIMainScript() const;
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 
 	const bool HasDebugFlag( const debug_flag_t flag ) const;
 	const std::string& GetQuickstartMapDump() const;
@@ -133,7 +134,7 @@ private:
 
 	std::string m_newui_mainscript = "main";
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 
 	uint16_t m_debug_flags = DF_NONE;
 	std::string m_quickstart_mapdump = "";

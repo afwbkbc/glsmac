@@ -66,9 +66,11 @@ CLASS( GSE, common::Class )
 
 	Async* GetAsync();
 
-#ifdef DEBUG
+#if defined ( DEBUG ) || defined( FASTDEBUG )
+
 	void LogCaptureStart() const { m_builtins.LogCaptureStart(); }
 	const std::string& LogCaptureStopGet() const { return m_builtins.LogCaptureStopGet(); }
+
 #endif
 
 private:

@@ -6,7 +6,7 @@
 
 #include "FS.h"
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 #define Log( _text ) std::cout << "<Util::FS> " << (_text) << std::endl
 #else
 #define Log( _text )

@@ -18,9 +18,12 @@ class Builtins : public Bindings {
 public:
 	void AddToContext( context::Context* ctx, ExecutionPointer& ep ) override;
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
+
 	void LogCaptureStart() const { m_console.CaptureStart(); }
+
 	const std::string& LogCaptureStopGet() const { return m_console.CaptureStopGet(); }
+
 #endif
 
 private:

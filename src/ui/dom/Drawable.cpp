@@ -115,6 +115,8 @@ const bool Drawable::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 			m_is_mouse_over = false;
 			break;
 		}
+		default: {
+		}
 	}
 	return Object::ProcessEvent( GSE_CALL, event );
 }
