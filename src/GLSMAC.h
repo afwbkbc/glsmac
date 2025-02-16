@@ -29,6 +29,9 @@ class Game;
 }
 
 namespace game::backend {
+namespace faction {
+class Faction;
+}
 class State;
 }
 
@@ -77,7 +80,7 @@ private:
 	void InitGameState( GSE_CALLABLE, const f_t& on_complete );
 	void RandomizeSettings( GSE_CALLABLE );
 
-	void AddSinglePlayerSlot();
+	void AddSinglePlayerSlot( game::backend::faction::Faction* const faction );
 	void StartGame( GSE_CALLABLE );
 
 	game::frontend::Game* m_game = nullptr;

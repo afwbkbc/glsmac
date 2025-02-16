@@ -23,6 +23,8 @@
 #include "game/backend/State.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/Player.h"
+#include "game/backend/faction/Faction.h"
+#include "game/backend/faction/FactionManager.h"
 
 #include "game/frontend/Game.h"
 
@@ -207,7 +209,7 @@ WRAPIMPL_BEGIN( GLSMAC )
 				if ( m_is_loading ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Game still initializing" );
 				}
-				AddSinglePlayerSlot();
+				AddSinglePlayerSlot( nullptr );
 				StartGame( GSE_CALL );
 				return VALUE( gse::type::Undefined );
 			} )
@@ -292,7 +294,27 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 	}
 
 	if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
-		THROW( "TODO: QUICKSTART" );
+		InitGameState( GSE_CALL, [ this, c, ctx, si, ep ] () {
+			m_state->m_settings.local.game_mode = game::backend::settings::LocalSettings::GM_SINGLEPLAYER;
+			m_state->m_settings.global.Initialize();
+			const auto& rules = m_state->m_settings.global.game_rules;
+			game::backend::faction::Faction* faction = nullptr;
+			if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
+				const auto* fm = m_state->GetFM();
+				ASSERT_NOLOG( fm, "fm is null" );
+				faction = fm->Get( c->GetQuickstartFaction() );
+				if ( !faction ) {
+					std::string errmsg = "Faction \"" + c->GetQuickstartFaction() + "\" does not exist. Available factions:";
+					for ( const auto& f : fm->GetAll() ) {
+						errmsg += " " + f->m_id;
+					}
+					THROW( errmsg );
+				}
+			}
+			AddSinglePlayerSlot( faction );
+			auto ep2 = ep;
+			StartGame( ctx, si, ep2 );
+		} );
 	}
 	else if (
 		c->HasLaunchFlag( config::Config::LF_SKIPINTRO ) ||
@@ -371,14 +393,14 @@ void GLSMAC::RandomizeSettings( GSE_CALLABLE ) {
 	}
 }
 
-void GLSMAC::AddSinglePlayerSlot() {
+void GLSMAC::AddSinglePlayerSlot( game::backend::faction::Faction* const faction ) {
 	m_state->m_slots->Resize( 7 ); // TODO: make dynamic?
 	const auto& rules = m_state->m_settings.global.game_rules;
 	m_state->m_settings.local.player_name = "Player";
 	NEWV( player, ::game::backend::Player,
 		m_state->m_settings.local.player_name,
 		::game::backend::Player::PR_SINGLE,
-		{},
+		faction,
 		rules.GetDefaultDifficultyLevel() // TODO: make configurable
 	);
 	m_state->AddPlayer( player );
@@ -387,6 +409,7 @@ void GLSMAC::AddSinglePlayerSlot() {
 	auto& slot = m_state->m_slots->GetSlot( slot_num );
 	slot.SetPlayer( player, 0, "" );
 	slot.SetPlayerFlag( ::game::backend::slot::PF_READY );
+	slot.SetLinkedGSID( m_state->m_settings.local.account.GetGSID() );
 }
 
 void GLSMAC::StartGame( GSE_CALLABLE ) {
