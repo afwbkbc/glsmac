@@ -1,5 +1,7 @@
 #include "Context.h"
 
+#include <iostream>
+
 #include "ChildContext.h"
 #include "gse/Exception.h"
 #include "common/Common.h"
@@ -69,6 +71,11 @@ const gse::Value Context::WithRefsV( const std::function< const gse::Value() >& 
 	auto result = VALUE( type::Undefined );
 	try {
 		result = f();
+	}
+	catch ( const gse::Exception& e ) {
+		std::cout << e.ToString() << std::endl;
+		DecRefs();
+		throw;
 	}
 	catch ( const std::exception& e ) {
 		DecRefs();

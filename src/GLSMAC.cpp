@@ -20,6 +20,7 @@
 #include "gse/Exception.h"
 #include "gse/type/Undefined.h"
 
+#include "game/backend/Game.h"
 #include "game/backend/State.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/Player.h"
@@ -225,8 +226,7 @@ void GLSMAC::ShowLoader( const std::string& text ) {
 		m_loader_text = text;
 		m_loader_dots = 1;
 		m_loader_dots_timer.SetInterval( 100 );
-		gse::ExecutionPointer ep;
-		Trigger( m_ctx, {}, ep, "loader_show", {} );
+		TriggerObject( this, "loader_show", {} );
 	}
 	UpdateLoaderText();
 }
@@ -245,9 +245,13 @@ void GLSMAC::HideLoader() {
 	if ( m_is_loader_shown ) {
 		m_is_loader_shown = false;
 		m_loader_dots_timer.Stop();
-		gse::ExecutionPointer ep;
-		Trigger( m_ctx, {}, ep, "loader_hide", {} );
+		TriggerObject( this, "loader_hide", {} );
 	}
+}
+
+const gse::Value GLSMAC::TriggerObject( gse::Wrappable* object, const std::string& event, const gse::type::object_properties_t& args ) {
+	gse::ExecutionPointer ep;
+	return object->Trigger( m_ctx, {}, ep, event, args );
 }
 
 void GLSMAC::AsyncLoad( const std::string& text, const std::function< void() >& f, const std::function< void() >& f_after_load ) {
@@ -351,9 +355,8 @@ void GLSMAC::S_Game( GSE_CALLABLE ) {
 
 void GLSMAC::UpdateLoaderText() {
 	ASSERT( m_is_loader_shown, "loader not shown" );
-	gse::ExecutionPointer ep;
 	std::string text = m_loader_text + std::string( m_loader_dots, '.' ) + std::string( 3 - m_loader_dots, ' ' );
-	Trigger( m_ctx, {}, ep, "loader_text", {
+	TriggerObject( this, "loader_text", {
 		{
 			"text", VALUE( gse::type::String, text )
 		}
@@ -378,9 +381,13 @@ void GLSMAC::InitGameState( GSE_CALLABLE, const f_t& on_complete  ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
 	}
 	AsyncLoad( "Initializing game state", [ this ] {
-		m_state = new game::backend::State();
-		m_state->InitBindings();
-		m_state->Configure();
+		m_state = new game::backend::State( this );
+		TriggerObject( this, "configure_state", {
+			{
+				"fm",
+				m_state->GetFM()->Wrap( true ),
+			}
+		} );
 	}, on_complete );
 }
 
@@ -420,10 +427,20 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 	m_state = nullptr;
 	m_is_game_running = true;
 
+	auto* game = g_engine->GetGame();
+	ASSERT_NOLOG( game, "game not set" );
+	TriggerObject( this, "configure_game", {
+		{
+			"game",
+			game->Wrap( true ),
+		}
+	} );
+
 	m_game = new ::game::frontend::Game( nullptr, this, real_state, UH( this, ctx, si, ep ) {
 		//g_engine->GetScheduler()->RemoveTask( this );
-		auto ep2 = ep;
-		Trigger( ctx, si, ep2, "game", {} );
+		TriggerObject( this, "game", {
+
+		} );
 	}, UH( this, real_state ) {
 		//m_menu_object->MaybeClose();
 		THROW( "TODO: cancel" );
@@ -439,7 +456,7 @@ void GLSMAC::RunMain() {
 			gse::ExecutionPointer ep;
 			( (gse::type::Callable*)main.Get() )->Run( m_ctx, {}, ep, { Wrap() } );
 		}
-	} catch ( gse::Exception& e ) {
+	} catch ( const gse::Exception& e ) {
 		std::cout << e.ToString() << std::endl;
 		throw e;
 	}

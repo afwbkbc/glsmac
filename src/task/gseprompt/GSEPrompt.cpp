@@ -3,7 +3,9 @@
 #define isatty _isatty
 #define fileno _fileno
 #else
+
 #include <unistd.h>
+
 #endif
 
 #include <iostream>
@@ -164,7 +166,7 @@ void GSEPrompt::ProcessInput() {
 		}
 		std::cout << result.Dump() << std::endl;
 	}
-	catch ( gse::Exception& e ) {
+	catch ( const gse::Exception& e ) {
 		std::cout << e.ToString() << std::endl;
 		context = nullptr;
 	}

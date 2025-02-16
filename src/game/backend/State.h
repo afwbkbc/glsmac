@@ -11,6 +11,8 @@
 #include "gse/Exception.h"
 #include "game/backend/settings/Settings.h"
 
+class GLSMAC;
+
 namespace game {
 namespace backend {
 
@@ -19,7 +21,9 @@ class FactionManager;
 }
 
 class Bindings;
+
 class Game;
+
 class Player;
 
 namespace connection {
@@ -31,7 +35,7 @@ class Slots;
 
 CLASS2( State, common::Class, gse::Wrappable )
 
-	State();
+	State( GLSMAC* glsmac );
 	virtual ~State();
 
 	void SetGame( Game* game );
@@ -43,7 +47,7 @@ CLASS2( State, common::Class, gse::Wrappable )
 
 	Bindings* m_bindings = nullptr;
 
-	std::function< void( gse::Exception& ) > m_on_gse_error = nullptr;
+	std::function< void( const gse::Exception& ) > m_on_gse_error = nullptr;
 
 	void Iterate();
 
@@ -68,12 +72,17 @@ CLASS2( State, common::Class, gse::Wrappable )
 
 	faction::FactionManager* GetFM() const;
 
+	const gse::Value TriggerObject( gse::Wrappable* object, const std::string& event, const gse::type::object_properties_t& args );
+
 	WRAPDEFS_PTR( State )
 
 	const types::Buffer Serialize() const;
 	void Unserialize( types::Buffer buf );
 
 private:
+
+	GLSMAC* m_glsmac = nullptr;
+
 	faction::FactionManager* m_fm = nullptr;
 	Game* m_game = nullptr;
 

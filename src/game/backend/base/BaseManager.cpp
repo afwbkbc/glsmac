@@ -127,7 +127,7 @@ void BaseManager::SpawnBase( base::Base* base ) {
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
-		state->m_bindings->Trigger( this, "base_spawn",{
+		state->TriggerObject( this, "base_spawn",{
 			{
 				"base",
 				base->Wrap()

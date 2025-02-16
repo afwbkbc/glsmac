@@ -87,7 +87,7 @@ const gse::Value Bindings::Trigger( gse::Wrappable* object, const std::string& e
 			return VALUE( gse::type::Undefined );
 		}
 	}
-	catch ( gse::Exception& e ) {
+	catch ( const gse::Exception& e ) {
 		if ( m_state->m_on_gse_error ) {
 			m_state->m_on_gse_error( e );
 		}

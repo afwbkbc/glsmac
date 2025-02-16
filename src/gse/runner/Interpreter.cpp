@@ -265,7 +265,7 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, Execut
 			try {
 				return EvaluateScope( ctx, ep, c->body );
 			}
-			catch ( gse::Exception& e ) {
+			catch ( const gse::Exception& e ) {
 				const auto* h = c->handlers->handlers;
 				auto it = h->properties.find( e.class_name );
 				if ( it == h->properties.end() ) {

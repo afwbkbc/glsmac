@@ -52,7 +52,7 @@ UI::UI( GSE_CALLABLE )
 			gse::ExecutionPointer ep;
 			m_root->ProcessEvent( GSE_CALL, event );
 		}
-		catch ( gse::Exception& e ) {
+		catch ( const gse::Exception& e ) {
 			const auto msg = e.ToString();
 			Log( msg );
 			throw std::runtime_error( msg );

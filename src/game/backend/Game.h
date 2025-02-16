@@ -28,6 +28,7 @@ class Texture;
 }
 namespace mesh {
 class Render;
+
 class Data;
 }
 }
@@ -72,6 +73,7 @@ class Event;
 }
 
 class State;
+
 class Player;
 
 namespace connection {
@@ -340,7 +342,7 @@ public:
 	void Message( const std::string& text );
 	void Quit( const std::string& reason );
 	void OnError( std::runtime_error& err );
-	void OnGSEError( gse::Exception& e );
+	void OnGSEError( const gse::Exception& e );
 	const gse::Value AddEvent( event::Event* event );
 	const size_t GetTurnId() const;
 	const bool IsTurnActive() const;

@@ -423,14 +423,14 @@ void Game::Iterate() {
 
 						if ( m_state->IsMaster() ) {
 							try {
-								m_state->m_bindings->Trigger( this, "start", {
+								m_state->TriggerObject( this, "start", {
 									{
 										"game",
 										Wrap()
 									},
 								});
 							}
-							catch ( gse::Exception& e ) {
+							catch ( const gse::Exception& e ) {
 								Log( (std::string)"Initialization failed: " + e.ToString() );
 								f_init_failed( e.what() );
 							}
@@ -715,7 +715,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 				}
 				response.result = R_SUCCESS;
 			}
-			catch ( gse::Exception& e ) {
+			catch ( const gse::Exception& e ) {
 				OnGSEError( e );
 				response.result = R_ERROR;
 			}
@@ -843,7 +843,7 @@ void Game::OnError( std::runtime_error& err ) {
 	AddFrontendRequest( fr );
 }
 
-void Game::OnGSEError( gse::Exception& err ) {
+void Game::OnGSEError( const gse::Exception& err ) {
 	auto fr = FrontendRequest( FrontendRequest::FR_ERROR );
 	NEW( fr.data.error.what, std::string, (std::string)"Script error: " + err.what() );
 	NEW( fr.data.error.stacktrace, std::string, err.ToString() );
@@ -945,7 +945,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 
 	for ( auto& it : m_um->GetUnits() ) {
 		auto* unit = it.second;
-		m_state->m_bindings->Trigger( m_um, "unit_turn", {
+		m_state->TriggerObject( m_um, "unit_turn", {
 			{
 				"unit",
 				unit->Wrap( true )
@@ -957,7 +957,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 
 	for ( auto& it : m_bm->GetBases() ) {
 		auto* base = it.second;
-		m_state->m_bindings->Trigger( m_bm, "base_turn", {
+		m_state->TriggerObject( m_bm, "base_turn", {
 			{
 				"base",
 				base->Wrap( true )
@@ -966,7 +966,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		m_bm->RefreshBase( base );
 	}
 
-	m_state->m_bindings->Trigger( this, "turn", {
+	m_state->TriggerObject( this, "turn", {
 		{
 			"game",
 			Wrap()
@@ -1120,8 +1120,8 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	ASSERT( m_game_state == GS_NONE || m_game_state == GS_RUNNING, "game still initializing" );
 
 	Log( "Initializing game" );
-
-	m_state->m_bindings->Trigger( this, "configure", {
+	
+	m_state->TriggerObject( this, "configure", {
 		{
 			"game",
 			Wrap()

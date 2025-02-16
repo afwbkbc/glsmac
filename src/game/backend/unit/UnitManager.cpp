@@ -106,7 +106,7 @@ void UnitManager::SpawnUnit( Unit* unit ) {
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
-		state->m_bindings->Trigger( this, "unit_spawn",{
+		state->TriggerObject( this, "unit_spawn",{
 			{
 				"unit",
 				unit->Wrap()
@@ -135,7 +135,7 @@ void UnitManager::DespawnUnit( const size_t unit_id ) {
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
-		state->m_bindings->Trigger( this, "unit_despawn", {
+		state->TriggerObject( this, "unit_despawn", {
 			{
 				"unit",
 				unit->Wrap()
@@ -490,7 +490,7 @@ const health_t UnitManager::GetHealth( GSE_CALLABLE, const float health ) {
 }
 
 const std::string* UnitManager::MoveUnitValidate( Unit* unit, map::tile::Tile* dst_tile ) {
-	const auto result = m_game->GetState()->m_bindings->Trigger( this, "unit_move_validate", {
+	const auto result = m_game->GetState()->TriggerObject( this, "unit_move_validate", {
 		{
 			"unit",
 			unit->Wrap()
@@ -507,6 +507,7 @@ const std::string* UnitManager::MoveUnitValidate( Unit* unit, map::tile::Tile* d
 	switch ( result.Get()->type ) {
 		case gse::type::Type::T_NULL:
 		case gse::type::Type::T_UNDEFINED:
+		case gse::type::Type::T_NOTHING:
 			return nullptr; // no errors
 		case gse::type::Type::T_STRING:
 			return new std::string( ( (gse::type::String*)result.Get() )->value ); // error
@@ -516,7 +517,7 @@ const std::string* UnitManager::MoveUnitValidate( Unit* unit, map::tile::Tile* d
 }
 
 const gse::Value UnitManager::MoveUnitResolve( Unit* unit, map::tile::Tile* dst_tile ) {
-	return m_game->GetState()->m_bindings->Trigger(this, "unit_move_resolve", {
+	return m_game->GetState()->TriggerObject(this, "unit_move_resolve", {
 		{
 			"unit",
 			unit->Wrap()
@@ -546,7 +547,7 @@ void UnitManager::MoveUnitApply( Unit* unit, map::tile::Tile* dst_tile, const gs
 	ASSERT( src_tile->units.find( unit->m_id ) != src_tile->units.end(), "src tile does not contain this unit" );
 	ASSERT( dst_tile->units.find( unit->m_id ) == dst_tile->units.end(), "dst tile already contains this unit" );
 
-	m_game->GetState()->m_bindings->Trigger( this, "unit_move_apply", {
+	m_game->GetState()->TriggerObject( this, "unit_move_apply", {
 		{
 			"unit",
 			unit->Wrap( true )
@@ -594,7 +595,7 @@ const std::string* UnitManager::MoveUnitToTile( Unit* unit, map::tile::Tile* dst
 }
 
 const std::string* UnitManager::AttackUnitValidate( Unit* attacker, Unit* defender ) {
-	const auto result = m_game->GetState()->m_bindings->Trigger( this, "unit_attack_validate", {
+	const auto result = m_game->GetState()->TriggerObject( this, "unit_attack_validate", {
 		{
 			"attacker",
 			attacker->Wrap()
@@ -607,6 +608,7 @@ const std::string* UnitManager::AttackUnitValidate( Unit* attacker, Unit* defend
 	switch ( result.Get()->type ) {
 		case gse::type::Type::T_NULL:
 		case gse::type::Type::T_UNDEFINED:
+		case gse::type::Type::T_NOTHING:
 			return nullptr; // no errors
 		case gse::type::Type::T_STRING:
 			return new std::string( ( (gse::type::String*)result.Get() )->value ); // error
@@ -616,7 +618,7 @@ const std::string* UnitManager::AttackUnitValidate( Unit* attacker, Unit* defend
 }
 
 const gse::Value UnitManager::AttackUnitResolve( Unit* attacker, Unit* defender ) {
-	return m_game->GetState()->m_bindings->Trigger( this, "unit_attack_resolve", {
+	return m_game->GetState()->TriggerObject( this, "unit_attack_resolve", {
 		{
 			"attacker",
 			attacker->Wrap()
@@ -630,7 +632,7 @@ const gse::Value UnitManager::AttackUnitResolve( Unit* attacker, Unit* defender 
 
 void UnitManager::AttackUnitApply( Unit* attacker, Unit* defender, const gse::Value resolutions ) {
 	auto* state = m_game->GetState();
-	state->m_bindings->Trigger( this, "unit_attack_apply",{
+	state->TriggerObject( this, "unit_attack_apply",{
 		{
 			"attacker",
 			attacker->Wrap( true )

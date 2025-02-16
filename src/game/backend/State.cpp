@@ -6,12 +6,14 @@
 #include "Bindings.h"
 #include "game/backend/slot/Slots.h"
 #include "Player.h"
+#include "GLSMAC.h"
 
 namespace game {
 namespace backend {
 
-State::State()
-	: m_slots( new slot::Slots( this ) ) {
+State::State( GLSMAC* glsmac )
+	: m_glsmac( glsmac )
+	, m_slots( new slot::Slots( this ) ) {
 	NEW( m_fm, faction::FactionManager );
 }
 
@@ -27,15 +29,17 @@ State::~State() {
 void State::SetGame( Game* game ) {
 	ASSERT( !m_game, "game already set" );
 	m_game = game;
-	m_on_gse_error = [ this ]( gse::Exception& e ) -> void {
+	m_on_gse_error = [ this ]( const gse::Exception& e ) -> void {
 		m_game->OnGSEError( e );
 	};
-	m_bindings->Trigger( this, "start", {
-		{
-			"game",
-			m_game->Wrap()
+	TriggerObject(
+		this, "start", {
+			{
+				"game",
+				m_game->Wrap()
+			}
 		}
-	});
+	);
 }
 
 void State::UnsetGame() {
@@ -110,6 +114,7 @@ connection::Connection* State::GetConnection() const {
 }
 
 void State::InitBindings() {
+	ASSERT_NOLOG( !m_glsmac, "do not use state bindings with new ui" );
 	if ( !m_bindings ) {
 		Log( "Initializing bindings" );
 		m_bindings = new Bindings( this );
@@ -170,6 +175,17 @@ void State::DetachConnection() {
 
 faction::FactionManager* State::GetFM() const {
 	return m_fm;
+}
+
+const gse::Value State::TriggerObject( gse::Wrappable* object, const std::string& event, const gse::type::object_properties_t& args ) {
+	if ( m_glsmac ) {
+		// new ui
+		return m_glsmac->TriggerObject( object, event, args );
+	}
+	else {
+		// legacy
+		return m_bindings->Trigger( object, event, args );
+	}
 }
 
 WRAPIMPL_BEGIN( State )

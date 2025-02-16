@@ -47,6 +47,8 @@ CLASS3( GLSMAC, common::Class, gse::Bindings, gse::Wrappable )
 	void SetLoaderText( const std::string& text );
 	void HideLoader();
 
+	const gse::Value TriggerObject( gse::Wrappable* object, const std::string& event, const gse::type::object_properties_t& args );
+
 private:
 	gse::GSE* m_gse = nullptr;
 	gse::context::GlobalContext* m_ctx = nullptr;

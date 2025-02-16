@@ -52,7 +52,7 @@ void ResourceManager::DefineResource( resource::Resource* resource ) {
 }
 
 const map::tile::yields_t ResourceManager::GetYields( map::tile::Tile* tile, slot::Slot* slot ) {
-	const auto result = m_game->GetState()->m_bindings->Trigger( this, "get_yields", {
+	const auto result = m_game->GetState()->TriggerObject( this, "get_yields", {
 			{
 				"tile",
 				tile->Wrap()
