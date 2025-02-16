@@ -10,8 +10,6 @@
 
 #include <iostream>
 
-#endif
-
 #include "System.h"
 
 namespace util {
@@ -75,3 +73,5 @@ bool System::IsGDBAvailable() {
 #endif
 
 }
+
+#endif
