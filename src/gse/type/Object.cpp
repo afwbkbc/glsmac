@@ -20,6 +20,7 @@ Object::Object( context::ChildContext* const ctx, object_properties_t initial_va
 	, wrapobj( wrapobj )
 	, wrapsetter( wrapsetter ) {
 	if ( m_ctx ) {
+		//m_ctx->IncRefs(); // TODO: investigate why it crashes without extra ref
 		m_ctx->IncRefs();
 	}
 	if ( wrapobj ) {

@@ -102,13 +102,17 @@ protected:
 			//Log( "MT Processing " + to_string( requests.size() ) + " requests" );
 			mt_response_map_t responses = {};
 			for ( auto& request : requests ) {
-				ASSERT( !m_current_request_id, "m_current_request_id already set to something" );
 				m_mt_states_mutex.lock();
+				const mt_id_t previous_request_id = m_current_request_id;
+				const bool was_canceled = m_is_canceled;
 				m_current_request_id = request.first;
 				m_is_canceled = false;
 				m_mt_states_mutex.unlock();
 				responses[ request.first ] = ProcessRequest( request.second, m_is_canceled );
-				m_current_request_id = 0;
+				m_mt_states_mutex.lock();
+				m_current_request_id = previous_request_id;
+				m_is_canceled = was_canceled;
+				m_mt_states_mutex.unlock();
 			}
 			if ( !responses.empty() ) {
 				MT_SetResponses( responses );

@@ -228,12 +228,17 @@ ChildContext* const Context::ForkContext(
 void Context::Clear() {
 	WithRefs(
 		[ this ]() {
+			IncRefs(); // we don't want to be deleted while processing children
 			const auto children = m_child_contexts;
 			for ( const auto& c : children ) {
 				c->Clear();
 			}
-			m_persisted_values.clear();
+			const auto persisted_values = m_persisted_values;
+			for ( const auto& value : persisted_values ) {
+				UnpersistValue( value.second );
+			}
 			m_variables.clear();
+			DecRefs(); // save to delete now
 		}
 	);
 }
@@ -245,6 +250,7 @@ void Context::AddChildContext( ChildContext* const child ) {
 }
 
 void Context::RemoveChildContext( ChildContext* const child ) {
+	ASSERT_NOLOG( !m_child_contexts.empty(), "child contexts empty" );
 	if ( !m_child_contexts.empty() ) {
 		ASSERT_NOLOG( m_child_contexts.find( child ) != m_child_contexts.end(), "child context not found" );
 		m_child_contexts.erase( child );
@@ -259,6 +265,7 @@ void Context::AddChildObject( type::Type* const child ) {
 }
 
 void Context::RemoveChildObject( type::Type* const child ) {
+	ASSERT_NOLOG( !m_child_objects.empty(), "child objects empty" );
 	if ( !m_child_objects.empty() ) {
 		ASSERT_NOLOG( m_child_objects.find( child ) != m_child_objects.end(), "child context not found" );
 		m_child_objects.erase( child );

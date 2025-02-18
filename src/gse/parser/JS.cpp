@@ -781,7 +781,7 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 									break;
 								}
 							}
-							const auto* expr = (Expression*)get_operand( callable_begin, elements.end() );
+							const auto* operand = (program::Operand*)get_operand( callable_begin, elements.end() );
 							elements.erase( callable_begin, elements.end() );
 
 							std::vector< const Expression* > arguments = {};
@@ -812,13 +812,13 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 							elements.push_back(
 								new Call(
 									{
-										expr->m_si.file,
-										expr->m_si.from,
+										operand->m_si.file,
+										operand->m_si.from,
 										( *it_end )->m_si.to
 									},
-									expr->type == Operand::OT_EXPRESSION
-										? (Expression*)expr
-										: new Expression( expr->m_si, expr ),
+									operand->type == Operand::OT_EXPRESSION
+										? (Expression*)operand
+										: new Expression( operand->m_si, operand ),
 									arguments
 								)
 							);

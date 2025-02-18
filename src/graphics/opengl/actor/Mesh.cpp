@@ -283,7 +283,8 @@ void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camer
 					g_engine->GetGraphics()->WithTexture(
 						texture, [ this, &shader_program, &flags, &mesh_actor, &capture_request, &camera ]() {
 
-							switch ( shader_program->GetType() ) {
+							const auto sptype = shader_program->GetType();
+							switch ( sptype ) {
 								case ( shader_program::ShaderProgram::TYPE_SIMPLE2D ) : {
 									auto* sp = (shader_program::Simple2D*)shader_program;
 									glUniform1ui( sp->uniforms.flags, flags );
@@ -303,8 +304,12 @@ void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camer
 								}
 								case ( shader_program::ShaderProgram::TYPE_ORTHO ):
 								case ( shader_program::ShaderProgram::TYPE_ORTHO_DATA ): {
-									auto* sp = (shader_program::Orthographic*)shader_program;
-									auto* sp_data = (shader_program::OrthographicData*)shader_program;
+									auto* sp = sptype == shader_program::ShaderProgram::TYPE_ORTHO
+										? (shader_program::Orthographic*)shader_program
+										: nullptr;
+									auto* sp_data = sptype == shader_program::ShaderProgram::TYPE_ORTHO_DATA
+										? (shader_program::OrthographicData*)shader_program
+										: nullptr;
 
 									GLuint ibo_size;
 

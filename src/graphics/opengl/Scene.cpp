@@ -38,12 +38,12 @@ Actor* Scene::CreateActor( scene::actor::Actor* const actor ) const {
 	switch ( actor->GetType() ) {
 		case scene::actor::Actor::TYPE_SPRITE:
 		case scene::actor::Actor::TYPE_INSTANCED_SPRITE: {
-			NEW( gl_actor, Sprite, m_opengl, (scene::actor::Sprite*)actor );
+			NEW( gl_actor, Sprite, m_opengl, actor );
 			break;
 		}
 		case scene::actor::Actor::TYPE_MESH:
 		case scene::actor::Actor::TYPE_INSTANCED_MESH: {
-			NEW( gl_actor, Mesh, m_opengl, (scene::actor::Mesh*)actor );
+			NEW( gl_actor, Mesh, m_opengl, actor );
 			break;
 		}
 		case scene::actor::Actor::TYPE_TEXT: {

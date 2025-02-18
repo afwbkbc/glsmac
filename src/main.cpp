@@ -86,9 +86,12 @@
 
 #include "util/FS.h"
 
+#if defined( DEBUG ) || defined( FASTDEBUG )
+#include "util/System.h"
+#endif
+
 #ifdef DEBUG
 
-#include "util/System.h"
 #include "debug/MemoryWatcher.h"
 #include "debug/DebugOverlay.h"
 
