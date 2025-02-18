@@ -1,12 +1,13 @@
 #ifdef DEBUG
 
 #include <unordered_map>
-#include <iostream>
 #include <algorithm>
 #include <string>
 #include <sstream>
 
 #include "MemoryWatcher.h"
+
+#include "util/LogHelper.h"
 
 // to avoid being intercepted by macros in Base.h again
 
@@ -1074,7 +1075,7 @@ void MemoryWatcher::Log( const std::string& text, const bool is_important ) {
 	if ( !m_is_quiet || is_important ) {
 		g_debug_stats._mutex.lock();
 		if ( !g_debug_stats._readonly ) { // don't spam from debug overlay
-			std::cout << "<MemoryWatcher> " << text << std::endl;
+			util::LogHelper::Println( "<MemoryWatcher> " + text );
 			fflush( stdout );
 		}
 		g_debug_stats._mutex.unlock();

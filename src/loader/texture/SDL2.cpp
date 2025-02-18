@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "SDL2.h"
 
 #include "util/FS.h"
@@ -41,7 +39,7 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename ) {
 		ASSERT( image, IMG_GetError() );
 		if ( image->format->format != SDL_PIXELFORMAT_RGBA32 ) {
 			// we must have all images in same format
-			SDL_Surface* old = image;
+			SDL_Surface * old = image;
 			image = SDL_ConvertSurfaceFormat( old, SDL_PIXELFORMAT_RGBA32, 0 );
 			ASSERT( image, IMG_GetError() );
 			SDL_FreeSurface( old );

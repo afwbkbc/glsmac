@@ -17,6 +17,7 @@ SUBDIR( scene )
 SUBDIR( ui_legacy )
 SUBDIR( ui )
 SUBDIR( engine )
+SUBDIR( gc )
 SUBDIR( rr )
 SUBDIR( task )
 

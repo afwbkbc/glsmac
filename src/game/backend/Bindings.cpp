@@ -34,12 +34,10 @@ Bindings::Bindings( State* state )
 	NEW( m_gse, gse::GSE );
 	m_gse->AddBindings( this );
 	m_gse_context = m_gse->CreateGlobalContext();
-	m_gse_context->IncRefs();
 
 }
 
 Bindings::~Bindings() {
-	m_gse_context->DecRefs();
 	DELETE( m_gse );
 }
 

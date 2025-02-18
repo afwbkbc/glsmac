@@ -63,7 +63,6 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 					const auto source = util::FS::ReadTextFile( script, GSE::PATH_SEPARATOR );
 					parser = gse->GetParser( script, source );
 					context = gse->CreateGlobalContext( script );
-					context->Begin();
 					mocks::AddMocks( context, { script } );
 					program = parser->Parse();
 					runner = gse->GetRunner();
@@ -75,7 +74,6 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 				catch ( Exception& e ) {
 					last_error = e.ToString();
 					if ( context ) {
-						DELETE( context );
 						context = nullptr;
 					}
 				}
@@ -87,7 +85,6 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 					ExecutionPointer ep;
 					gse->GetAsync()->ProcessAndExit( ep );
 					context->Clear();
-					context->End();
 				}
 				if ( program ) {
 					DELETE( program );

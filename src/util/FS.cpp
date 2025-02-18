@@ -6,8 +6,10 @@
 
 #include "FS.h"
 
+#include "util/LogHelper.h"
+
 #if defined( DEBUG ) || defined( FASTDEBUG )
-#define Log( _text ) std::cout << "<Util::FS> " << (_text) << std::endl
+#define Log( _text ) util::LogHelper::Println( "<Util::FS> " + (_text) )
 #else
 #define Log( _text )
 #endif

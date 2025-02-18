@@ -70,6 +70,10 @@ namespace ui_legacy {
 class UI;
 }
 
+namespace gc {
+class GC;
+}
+
 namespace engine {
 
 class Engine {
@@ -110,6 +114,7 @@ public:
 	scheduler::Scheduler* GetScheduler() const { return m_scheduler; }
 	ui_legacy::UI* GetUI() const { return m_ui; }
 	game::backend::Game* GetGame() const { return m_game; }
+	gc::GC* GetGC() const { return m_gc; }
 
 	void Log( const std::string& text ) const;
 
@@ -134,6 +139,7 @@ protected:
 	network::Network* m_network = nullptr;
 	ui_legacy::UI* m_ui = nullptr;
 	game::backend::Game* m_game = nullptr;
+	gc::GC* m_gc = nullptr;
 
 };
 

@@ -13,6 +13,10 @@
 #include "Value.h"
 #include "builtins/Builtins.h"
 
+namespace gc {
+class Space;
+}
+
 namespace gse {
 
 namespace context {
@@ -66,6 +70,8 @@ CLASS( GSE, common::Class )
 
 	Async* GetAsync();
 
+	gc::Space* const GetGCSpace() const;
+
 #if defined ( DEBUG ) || defined( FASTDEBUG )
 
 	void LogCaptureStart() const { m_builtins.LogCaptureStart(); }
@@ -74,6 +80,9 @@ CLASS( GSE, common::Class )
 #endif
 
 private:
+
+	gc::Space* m_gc_space = nullptr;
+	std::unordered_set< context::GlobalContext* > m_global_contexts = {};
 
 	const std::unordered_set< std::string > m_supported_extensions = {
 		".gls.js",
@@ -88,11 +97,11 @@ private:
 
 	struct include_cache_t {
 		Value result;
-		context::Context* context;
+		context::GlobalContext* context;
 		// TODO: why can't we delete these two upon getting result?
 		const program::Program* program;
 		const runner::Runner* runner;
-		void Cleanup( const bool force = false );
+		void Cleanup( GSE* const gse );
 	};
 	std::unordered_map< std::string, std::string > m_include_paths = {};
 	std::unordered_map< std::string, include_cache_t > m_include_cache = {};

@@ -57,12 +57,10 @@ const gse::Value Interpreter::Execute( context::Context* ctx, ExecutionPointer& 
 }
 
 const gse::Value Interpreter::EvaluateScope( context::Context* ctx, ExecutionPointer& ep, const Scope* scope ) const {
-	const auto subctx = ctx->ForkContext( ctx, scope->m_si, ep, false );
+	gse::Value result = VALUE( Nothing );
 
-	return subctx->WithRefsV(
-		[ this, &subctx, &ep, &scope ]() {
-
-			gse::Value result = VALUE( Nothing );
+	ctx->ForkAndExecute(
+		ctx, scope->m_si, ep, false, [ this, &scope, &ep, &result ]( gse::context::ChildContext* const subctx ) {
 
 			for ( const auto& it : scope->body ) {
 				switch ( it->control_type ) {
@@ -88,11 +86,10 @@ const gse::Value Interpreter::EvaluateScope( context::Context* ctx, ExecutionPoi
 				subctx->JoinContext();
 			}
 #endif
-
-			return result;
 		}
 	);
 
+	return result;
 }
 
 const gse::Value Interpreter::EvaluateStatement( context::Context* ctx, ExecutionPointer& ep, const Statement* statement ) const {
@@ -184,18 +181,18 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, Execut
 				case ForCondition::FCT_IN_OF: {
 					const auto* condition = (ForConditionInOf*)c->condition;
 					const auto target = Deref( ctx, condition->m_si, ep, EvaluateExpression( ctx, ep, condition->expression ) );
-					const auto forctx = ctx->ForkContext( ctx, condition->m_si, ep, false );
-					forctx->WithRefs(
-						[ this, &forctx, &target, &condition, &ep, &result, &need_break, &need_clear, &c ]() {
+					ctx->ForkAndExecute(
+						ctx, condition->m_si, ep, false, [ this, &target, &condition, &result, &ep, &c, &need_break, &need_clear ]( gse::context::ChildContext* const subctx ) {
+
 							switch ( target.Get()->type ) {
 								case Type::T_ARRAY: {
 									const auto* arr = (type::Array*)target.Get();
 									switch ( condition->for_inof_type ) {
 										case ForConditionInOf::FIC_IN: {
 											for ( size_t i = 0 ; i < arr->value.size() ; i++ ) {
-												forctx->CreateConst( condition->variable->name, VALUE( Int, i ), condition->m_si, ep );
-												result = EvaluateScope( forctx, ep, c->body );
-												forctx->DestroyVariable( condition->variable->name, condition->m_si, ep );
+												subctx->CreateConst( condition->variable->name, VALUE( Int, i ), condition->m_si, ep );
+												result = EvaluateScope( subctx, ep, c->body );
+												subctx->DestroyVariable( condition->variable->name, condition->m_si, ep );
 												CheckBreakCondition( result, &need_break, &need_clear );
 												if ( need_break ) {
 													if ( need_clear ) {
@@ -208,9 +205,9 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, Execut
 										}
 										case ForConditionInOf::FIC_OF: {
 											for ( const auto& v : arr->value ) {
-												forctx->CreateConst( condition->variable->name, v, condition->m_si, ep );
-												result = EvaluateScope( forctx, ep, c->body );
-												forctx->DestroyVariable( condition->variable->name, condition->m_si, ep );
+												subctx->CreateConst( condition->variable->name, v, condition->m_si, ep );
+												result = EvaluateScope( subctx, ep, c->body );
+												subctx->DestroyVariable( condition->variable->name, condition->m_si, ep );
 												CheckBreakCondition( result, &need_break, &need_clear );
 												if ( need_break ) {
 													if ( need_clear ) {
@@ -232,13 +229,13 @@ const gse::Value Interpreter::EvaluateConditional( context::Context* ctx, Execut
 										THROW( "unexpected for in_of condition type: " + std::to_string( condition->for_inof_type ) );
 									}
 									for ( const auto& v : obj->value ) {
-										forctx->CreateConst(
+										subctx->CreateConst(
 											condition->variable->name, condition->for_inof_type == ForConditionInOf::FIC_IN
 												? VALUE( String, v.first )
 												: v.second, condition->m_si, ep
 										);
-										result = EvaluateScope( forctx, ep, c->body );
-										forctx->DestroyVariable( condition->variable->name, condition->m_si, ep );
+										result = EvaluateScope( subctx, ep, c->body );
+										subctx->DestroyVariable( condition->variable->name, condition->m_si, ep );
 										if ( result.Get()->type != Type::T_NOTHING ) {
 											break;
 										}
@@ -872,17 +869,21 @@ const gse::Value Interpreter::EvaluateOperand( context::Context* ctx, ExecutionP
 			return VALUE( type::Array, elements );
 		}
 		case Operand::OT_OBJECT: {
-			const auto objctx = ctx->ForkContext( ctx, operand->m_si, ep, false );
-			auto result = VALUE( type::Object, objctx, object_properties_t{} );
-			auto& properties = ( (type::Object*)result.Get() )->value;
-			objctx->CreateConst( "this", VALUE( ValueRef, result.Get() ), operand->m_si, ep );
-			const auto* obj = (program::Object*)operand;
-			for ( const auto& it : obj->ordered_properties ) {
-				if ( it.first == "this" ) {
-					throw gse::Exception( EC.INVALID_ASSIGNMENT, "'this' can't be overwritten", ctx, it.second->m_si, ep );
+			auto result = VALUE( type::Undefined );
+			ctx->ForkAndExecute(
+				ctx, operand->m_si, ep, false, [ this, &result, &operand, &ep, &ctx ]( context::ChildContext* const subctx ) {
+					result = VALUE( type::Object, subctx, object_properties_t{} );
+					auto& properties = ( (type::Object*)result.Get() )->value;
+					subctx->CreateConst( "this", VALUE( ValueRef, result.Get() ), operand->m_si, ep );
+					const auto* obj = (program::Object*)operand;
+					for ( const auto& it : obj->ordered_properties ) {
+						if ( it.first == "this" ) {
+							throw gse::Exception( EC.INVALID_ASSIGNMENT, "'this' can't be overwritten", ctx, it.second->m_si, ep );
+						}
+						properties.insert_or_assign( it.first, EvaluateExpression( subctx, ep, it.second ).Clone() );
+					}
 				}
-				properties.insert_or_assign( it.first, EvaluateExpression( objctx, ep, it.second ).Clone() );
-			}
+			);
 			return result;
 		}
 		case Operand::OT_SCOPE: {
@@ -1106,27 +1107,31 @@ Interpreter::Function::Function(
 	, context( context )
 	, parameters( parameters )
 	, program( program ) {
-	context->IncRefs();
 }
 
 Interpreter::Function::~Function() {
 	delete program;
-	context->DecRefs();
 }
 
 gse::Value Interpreter::Function::Run( GSE_CALLABLE, const function_arguments_t& arguments ) {
-	auto* subctx = context->ForkContext( GSE_CALL, true, parameters, arguments );
-	return subctx->WithRefsV(
-		[ this, &subctx, &ep, &si ]() {
-			auto result = VALUE( gse::type::Undefined );
+	if ( parameters.size() != arguments.size() ) {
+		throw gse::Exception( EC.INVALID_CALL, "Expected " + std::to_string( parameters.size() ) + " arguments, found " + std::to_string( arguments.size() ), GSE_CALL );
+	}
+	auto result = VALUE( gse::type::Undefined );
+	context->ForkAndExecute(
+		GSE_CALL, true, [ this, &arguments, &si, &ep, &result ]( context::ChildContext* const subctx ) {
+
+			for ( size_t i = 0 ; i < parameters.size() ; i++ ) { // inject passed arguments
+				subctx->CreateVariable( parameters[ i ], arguments[ i ], si, ep );
+			}
 			ep.WithSI(
 				si, [ this, &result, &subctx, &ep ]() {
 					result = runner->Execute( subctx, ep, program );
 				}
 			);
-			return result;
 		}
 	);
+	return result;
 }
 
 }

@@ -19,10 +19,6 @@ Object::Object( context::ChildContext* const ctx, object_properties_t initial_va
 	, object_class( object_class )
 	, wrapobj( wrapobj )
 	, wrapsetter( wrapsetter ) {
-	if ( m_ctx ) {
-		//m_ctx->IncRefs(); // TODO: investigate why it crashes without extra ref
-		m_ctx->IncRefs();
-	}
 	if ( wrapobj ) {
 		wrapobj->Link( this );
 	}
@@ -31,9 +27,6 @@ Object::Object( context::ChildContext* const ctx, object_properties_t initial_va
 Object::~Object() {
 	if ( wrapobj ) {
 		wrapobj->Unlink( this );
-	}
-	if ( m_ctx ) {
-		m_ctx->DecRefs();
 	}
 }
 

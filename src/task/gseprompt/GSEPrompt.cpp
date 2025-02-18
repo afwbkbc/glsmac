@@ -8,7 +8,6 @@
 
 #endif
 
-#include <iostream>
 #include <cstring>
 
 #include "GSEPrompt.h"
@@ -16,6 +15,7 @@
 #include "gse/Exception.h"
 #include "engine/Engine.h"
 #include "util/String.h"
+#include "util/LogHelper.h"
 #include "gse/GSE.h"
 #include "gse/context/GlobalContext.h"
 #include "gse/context/ChildContext.h"
@@ -49,10 +49,9 @@ void GSEPrompt::Start() {
 		m_runner->EnableScopeContextJoins();
 	}
 	m_gse_context = m_gse->CreateGlobalContext();
-	m_gse_context->IncRefs();
 	m_is_running = true;
 	if ( m_is_tty ) {
-		std::cout << std::endl;
+		util::LogHelper::Println( "" );
 	}
 	PrintPrompt();
 }
@@ -63,7 +62,6 @@ void GSEPrompt::Stop() {
 		delete ( it );
 	}
 	m_programs.clear();
-	m_gse_context->DecRefs();
 	m_gse_context = nullptr;
 	delete m_runner;
 	m_runner = nullptr;
@@ -80,7 +78,8 @@ void GSEPrompt::Iterate() {
 			if ( !fgets( buff, sizeof( buff ), stdin ) ) {
 				m_is_running = false;
 				if ( m_is_tty ) {
-					std::cout << std::endl << std::endl;
+					util::LogHelper::Println( "" );
+					util::LogHelper::Println( "" );
 				}
 				else {
 					ProcessInput();
@@ -113,7 +112,8 @@ void GSEPrompt::Iterate() {
 
 void GSEPrompt::PrintPrompt() {
 	if ( m_is_tty ) {
-		std::cout << m_syntax << "> " << std::flush;
+		util::LogHelper::Println( m_syntax + "> " );
+		util::LogHelper::Flush();
 	}
 }
 
@@ -131,7 +131,7 @@ void GSEPrompt::ProcessInput() {
 	);
 
 	const gse::program::Program* program = nullptr;
-	gse::context::Context* context = nullptr;
+	auto result = VALUE( gse::type::Undefined );
 	try {
 		program = parser->Parse();
 		if ( m_is_tty ) {
@@ -148,36 +148,33 @@ void GSEPrompt::ProcessInput() {
 			};
 			{
 				gse::ExecutionPointer ep;
-				context = m_gse_context->ForkContext( nullptr, si, ep, {} );
+				m_gse_context->ForkAndExecute(
+					m_gse_context, si, ep, false, [ this, &result, &ep, &program ]( gse::context::ChildContext* const subctx ) {
+						result = m_runner->Execute( subctx, ep, program );
+						subctx->JoinContext();
+					}
+				);
 			}
-			context->IncRefs();
 		}
 		else {
-			context = m_gse_context;
-		}
-		auto result = VALUE( gse::type::Undefined );
-		{
-			gse::ExecutionPointer ep;
-			result = m_runner->Execute( context, ep, program );
+			m_gse_context->Execute(
+				[ this, &result, &program ] {
+					gse::ExecutionPointer ep;
+					result = m_runner->Execute( m_gse_context, ep, program );
+				}
+			);
 		}
 
-		if ( m_is_tty ) {
-			( (gse::context::ChildContext*)context )->JoinContext();
-		}
-		std::cout << result.Dump() << std::endl;
+		util::LogHelper::Println( result.Dump() );
 	}
 	catch ( const gse::Exception& e ) {
-		std::cout << e.ToString() << std::endl;
-		context = nullptr;
+		util::LogHelper::Println( e.ToString() );
 	}
 	catch ( std::runtime_error& e ) {
-		std::cout << "Internal error: " << e.what() << std::endl;
+		util::LogHelper::Println( (std::string)"Internal error: " + e.what() );
 	}
 	if ( m_is_tty ) {
-		if ( context ) {
-			context->DecRefs();
-		}
-		std::cout << std::endl;
+		util::LogHelper::Println( "" );
 	}
 
 	DELETE( parser );

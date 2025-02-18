@@ -1,12 +1,11 @@
 #include "Console.h"
 
-#include <iostream>
-
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
 #include "gse/type/Undefined.h"
 
 #include "logger/Stdout.h"
+#include "util/LogHelper.h"
 
 namespace gse {
 namespace builtins {
@@ -41,7 +40,7 @@ void Console::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 			s_capture_buffer += line + "\n";
 		}
 #endif
-		std::cout << "    " << si.ToString() << " " << line << std::endl;
+		util::LogHelper::Println( "    " + si.ToString() + " " + line );
 		return VALUE( type::Undefined );
 	} ), ep );
 

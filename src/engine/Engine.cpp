@@ -18,6 +18,7 @@
 #include "network/Network.h"
 #include "ui_legacy/UI.h"
 #include "game/backend/Game.h"
+#include "gc/GC.h"
 
 #ifdef DEBUG
 #include "util/Timer.h"
@@ -104,6 +105,12 @@ Engine::Engine(
 	t_network->AddModule( m_network );
 	m_threads.push_back( t_network );
 
+	NEWV( t_gc, common::Thread, "GC" );
+	t_gc->SetIPS( 1 );
+	NEW( m_gc, gc::GC );
+	t_gc->AddModule( m_gc );
+	m_threads.push_back( t_gc );
+
 	if ( m_game ) {
 		NEWV( t_game, common::Thread, "GAME" );
 		t_game->SetIPS( g_max_fps );
@@ -122,6 +129,7 @@ Engine::~Engine() {
 			DELETE( thread );
 		}
 	}
+	DELETE( m_gc );
 }
 
 int Engine::Run() {

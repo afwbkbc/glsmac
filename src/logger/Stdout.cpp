@@ -1,6 +1,6 @@
-#include <cstdio>
-
 #include "Stdout.h"
+
+#include "util/LogHelper.h"
 
 namespace logger {
 
@@ -13,8 +13,10 @@ void Stdout::Log( const std::string& text ) {
 		if ( !g_debug_stats._readonly ) { // don't spam from debug overlay
 #endif
 			m_log_mutex.lock();
-			printf( "%s\n", text.c_str() );
-			fflush( stdout ); // we want to flush to have everything printed in case of crash
+			util::LogHelper::Println( text );
+#ifdef DEBUG
+			util::LogHelper::Flush(); // we want to flush to have everything printed in case of crash
+#endif
 			m_log_mutex.unlock();
 #ifdef DEBUG
 		}

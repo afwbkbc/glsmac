@@ -1,5 +1,3 @@
-#include <iostream> // not using Log() everywhere because important stuff should be printed with --quiet too
-
 #include "GSETests.h"
 
 #include "gse/GSE.h"
@@ -7,7 +5,7 @@
 #include "gse/tests/Tests.h"
 #include "engine/Engine.h"
 #include "gse/program/Program.h"
-#include "gse/tests/Tests.h"
+#include "util/LogHelper.h"
 
 namespace gse::tests {
 const gse::program::Program* GetTestProgram();
@@ -73,7 +71,7 @@ void GSETests::LogTest( const std::string& text, bool is_debug ) {
 		Log( text );
 	}
 	else {
-		std::cout << text << std::endl;
+		util::LogHelper::Println( text );
 	}
 }
 

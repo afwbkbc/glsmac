@@ -28,9 +28,12 @@ const Async::timer_id_t Async::StartTimer( const size_t ms, const Value& f, GSE_
 		s_next_id = 0;
 	}
 	s_next_id++;
-	auto* subctx = ctx->ForkContext( GSE_CALL, true );
-	ValidateMs( ms, subctx, si, ep );
-	subctx->PersistValue( f );
+	auto* subctx = ctx->ForkAndExecute(
+		GSE_CALL, true, [ this, &ms, &si, &ep, &f ]( gse::context::ChildContext* const subctx ) {
+			ValidateMs( ms, subctx, si, ep );
+			subctx->PersistValue( f );
+		}
+	);
 	const auto time = Now() + ms;
 	m_timers[ time ].insert(
 		{

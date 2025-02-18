@@ -8,9 +8,9 @@
 
 #endif
 
-#include <iostream>
-
 #include "System.h"
+
+#include "util/LogHelper.h"
 
 namespace util {
 
@@ -23,7 +23,7 @@ bool System::AreWeUnderGDB() {
 
 	if ( pid == -1 ) {
 		perror( "fork" );
-		std::cout << "WARNING: gdb check failed" << std::endl;
+		util::LogHelper::Println( "WARNING: gdb check failed" );
 		return false;
 	}
 
@@ -57,7 +57,7 @@ bool System::AreWeUnderGDB() {
 	return res;
 
 #else
-	std::cout << "WARNING: gdb check skipped due to unsupported platform" << std::endl;
+	util::LogHelper::Println( "WARNING: gdb check skipped due to unsupported platform" );
 	return false;
 #endif
 }
@@ -66,7 +66,7 @@ bool System::IsGDBAvailable() {
 #ifdef __linux__
 	return ( !system( "which gdb > /dev/null 2>&1" ) );
 #else
-	std::cout << "WARNING: gdb check skipped due to unsupported platform" << std::endl;
+	util::LogHelper::Println( "WARNING: gdb check skipped due to unsupported platform" );
 	return false;
 }
 

@@ -2,7 +2,6 @@
 
 #if defined( DEBUG ) || defined ( FASTDEBUG )
 
-#include <iostream>
 #include <string>
 #include <stdlib.h>
 
@@ -85,6 +84,7 @@
 #endif
 
 #include "util/FS.h"
+#include "util/LogHelper.h"
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
 #include "util/System.h"
@@ -111,7 +111,7 @@ int main( const int argc, const char* argv[] ) {
 #ifdef __linux__
 		// automatically start under gdb if possible
 		if ( !util::System::AreWeUnderGDB() && util::System::IsGDBAvailable() ) {
-			std::cout << "Restarting process under GDB..." << std::endl;
+			util::LogHelper::Println( "Restarting process under GDB..." );
 
 			std::string cmdline = "printf \"r\\nbt\\n\" | gdb --args";
 			for ( int c = 0 ; c < argc ; c++ ) {
@@ -119,23 +119,23 @@ int main( const int argc, const char* argv[] ) {
 			}
 			cmdline += " 2>&1 | tee debug.log";
 
-			std::cout << cmdline << std::endl;
+			util::LogHelper::Println( cmdline );
 			int status = system( cmdline.c_str() );
 			if ( status < 0 ) {
-				std::cout << "Error: " << strerror( errno ) << std::endl;
+				util::LogHelper::Println( (std::string)"Error: " + strerror( errno ) );
 				exit( EXIT_FAILURE );
 			}
 			else if ( WIFEXITED( status ) ) {
-				std::cout << "Process finished, output saved to debug.log" << std::endl;
+				util::LogHelper::Println( "Process finished, output saved to debug.log" );
 				exit( EXIT_SUCCESS );
 			}
 			else {
-				std::cout << "Process finished, output saved to debug.log" << std::endl;
+				util::LogHelper::Println( "Process finished, output saved to debug.log" );
 				exit( EXIT_FAILURE );
 			}
 		}
 #else
-		std::cout << "WARNING: gdb check skipped due to unsupported platform" << std::endl;
+		util::LogHelper::Println( "WARNING: gdb check skipped due to unsupported platform" );
 #endif
 	}
 #ifdef DEBUG

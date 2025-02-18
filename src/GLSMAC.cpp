@@ -1,14 +1,12 @@
 #include "GLSMAC.h"
 
-#include <iostream>
-
 #include "util/FS.h"
 #include "engine/Engine.h"
 #include "config/Config.h"
 #include "resource/ResourceManager.h"
 #include "task/game/Game.h"
-#include "task/common/Common.h"
 #include "scheduler/Scheduler.h"
+#include "util/LogHelper.h"
 
 #include "ui/UI.h"
 
@@ -42,7 +40,6 @@ GLSMAC::GLSMAC() {
 	NEW( m_gse, gse::GSE );
 	m_gse->AddBindings( this );
 	m_ctx = m_gse->CreateGlobalContext();
-	m_ctx->IncRefs();
 
 	const auto& c = g_engine->GetConfig();
 
@@ -99,8 +96,6 @@ GLSMAC::~GLSMAC() {
 	if ( m_state ) {
 		delete m_state;
 	}
-
-	m_ctx->DecRefs();
 
 	m_gse->GetAsync()->StopTimers();
 
@@ -457,7 +452,7 @@ void GLSMAC::RunMain() {
 			( (gse::type::Callable*)main.Get() )->Run( m_ctx, {}, ep, { Wrap() } );
 		}
 	} catch ( const gse::Exception& e ) {
-		std::cout << e.ToString() << std::endl;
+		util::LogHelper::Println( e.ToString() );
 		throw e;
 	}
 }

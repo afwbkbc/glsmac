@@ -1,12 +1,12 @@
 #include "Context.h"
 
-#include <iostream>
-
 #include "ChildContext.h"
+#include "gse/GSE.h"
 #include "gse/Exception.h"
 #include "common/Common.h"
 #include "gse/type/Callable.h"
 #include "gse/type/Undefined.h"
+#include "gc/Space.h"
 
 namespace gse {
 namespace context {
@@ -21,71 +21,8 @@ GSE* Context::GetGSE() const {
 	return m_gse;
 }
 
-void Context::Begin() {
-	IncRefs();
-}
-
-const bool Context::End() {
-	std::vector< std::string > callables_to_remove = {};
-	for ( const auto& v : m_variables ) {
-		if ( v.second.value.Get()->type == type::Type::T_CALLABLE ) {
-			auto* c = (type::Callable*)v.second.value.Get();
-			if ( c->m_cleanup_needed ) {
-				callables_to_remove.push_back( v.first );
-			}
-		}
-	}
-	for ( const auto& c : callables_to_remove ) {
-		m_variables.erase( c );
-	}
-	return DecRefs();
-}
-
-void Context::IncRefs() {
-	m_refs++;
-}
-
-const bool Context::DecRefs() {
-	ASSERT_NOLOG( m_refs > 0, "refs not positive" );
-	if ( !--m_refs ) {
-		DELETE( this );
-		return true;
-	}
-	return false;
-}
-
-void Context::WithRefs( const std::function< void() >& f ) {
-	IncRefs();
-	try {
-		f();
-	}
-	catch ( const std::exception& e ) {
-		DecRefs();
-		throw;
-	}
-	DecRefs();
-}
-
-const gse::Value Context::WithRefsV( const std::function< const gse::Value() >& f ) {
-	IncRefs();
-	auto result = VALUE( type::Undefined );
-	try {
-		result = f();
-	}
-	catch ( const gse::Exception& e ) {
-		std::cout << e.ToString() << std::endl;
-		DecRefs();
-		throw;
-	}
-	catch ( const std::exception& e ) {
-		DecRefs();
-		throw;
-	}
-	DecRefs();
-	return result;
-}
-
 const bool Context::HasVariable( const std::string& name ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	const auto it = m_variables.find( name );
 	if ( it != m_variables.end() ) {
 		return true;
@@ -98,23 +35,31 @@ const bool Context::HasVariable( const std::string& name ) {
 }
 
 const Value Context::GetVariable( const std::string& name, const si_t& si, gse::ExecutionPointer& ep ) {
+	m_gc_mutex.lock();
 	const auto it = m_variables.find( name );
 	if ( it != m_variables.end() ) {
-		return it->second.value;
+		const auto result = it->second.value;
+		m_gc_mutex.unlock();
+		return result;
 	}
 	const auto ref_it = m_ref_contexts.find( name );
 	if ( ref_it != m_ref_contexts.end() ) {
-		ASSERT_NOLOG( ref_it->second != this, "unexpected ref context recursion (was this context freed while in use?)" );
-		return ref_it->second->GetVariable( name, si, ep );
+		const auto ref = ref_it->second;
+		m_gc_mutex.unlock();
+		ASSERT_NOLOG( ref != this, "unexpected ref context recursion (was this context freed while in use?)" );
+		return ref->GetVariable( name, si, ep );
 	}
+	m_gc_mutex.unlock();
 	throw Exception( EC.REFERENCE_ERROR, "Variable '" + name + "' is not defined", this, si, ep );
 }
 
 void Context::SetVariable( const std::string& name, const var_info_t& var_info ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	m_variables.insert_or_assign( name, var_info );
 }
 
 void Context::CreateVariable( const std::string& name, const Value& value, const si_t& si, gse::ExecutionPointer& ep ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	if ( m_variables.find( name ) != m_variables.end() ) {
 		throw Exception( EC.INVALID_ASSIGNMENT, "Variable '" + name + "' already exists", this, si, ep );
 	}
@@ -127,6 +72,7 @@ void Context::CreateVariable( const std::string& name, const Value& value, const
 }
 
 void Context::CreateConst( const std::string& name, const Value& value, const si_t& si, gse::ExecutionPointer& ep ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	if ( m_variables.find( name ) != m_variables.end() ) {
 		throw Exception( EC.INVALID_ASSIGNMENT, "Variable '" + name + "' already exists", this, si, ep );
 	}
@@ -139,6 +85,7 @@ void Context::CreateConst( const std::string& name, const Value& value, const si
 }
 
 void Context::UpdateVariable( const std::string& name, const Value& value, const si_t& si, gse::ExecutionPointer& ep ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	const auto it = m_variables.find( name );
 	if ( it != m_variables.end() ) {
 		if ( it->second.is_const ) {
@@ -156,6 +103,7 @@ void Context::UpdateVariable( const std::string& name, const Value& value, const
 }
 
 void Context::DestroyVariable( const std::string& name, const si_t& si, gse::ExecutionPointer& ep ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	const auto it = m_variables.find( name );
 	if ( it != m_variables.end() ) {
 		m_variables.erase( it );
@@ -169,6 +117,7 @@ void Context::CreateBuiltin( const std::string& name, const Value& value, gse::E
 }
 
 void Context::PersistValue( const Value& value ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	ASSERT_NOLOG( m_persisted_values.find( value.Get() ) == m_persisted_values.end(), "value already persisted" );
 	m_persisted_values.insert(
 		{
@@ -176,42 +125,37 @@ void Context::PersistValue( const Value& value ) {
 			value
 		}
 	);
-	/*// this context chain must live until all variables are unpersisted
-	Context* ctx = this;
-	while ( ctx ) {
-		ctx->IncRefs();
-		ctx = ctx->GetParentContext();
-	}*/
-	IncRefs();
 }
 
 void Context::UnpersistValue( const Value& value ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	ASSERT_NOLOG( m_persisted_values.find( value.Get() ) != m_persisted_values.end(), "value was not persisted" );
 	m_persisted_values.erase( value.Get() );
-	/*Context* ctx = this;
-	while ( ctx ) {
-		ctx->DecRefs();
-		ctx = ctx->GetParentContext();
-	}*/
-	DecRefs();
 }
 
 void Context::UnpersistValue( const type::Type* type ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	ASSERT_NOLOG( m_persisted_values.find( type ) != m_persisted_values.end(), "value was not persisted" );
 	m_persisted_values.erase( type );
-	DecRefs();
 }
 
-ChildContext* const Context::ForkContext(
+void Context::Execute( const std::function< void() >& f ) {
+	ASSERT_NOLOG( !m_is_executing, "context already executing" );
+	m_is_executing = true;
+	f();
+	ASSERT_NOLOG( m_is_executing, "context not executing" );
+	m_is_executing = false;
+}
+
+ChildContext* const Context::ForkAndExecute(
 	GSE_CALLABLE,
 	const bool is_traceable,
-	const std::vector< std::string > parameters,
-	const type::function_arguments_t& arguments
+	const std::function< void( ChildContext* const subctx ) >& f
 ) {
-	if ( parameters.size() != arguments.size() ) {
-		throw Exception( EC.INVALID_CALL, "Expected " + std::to_string( parameters.size() ) + " arguments, found " + std::to_string( arguments.size() ), this, si, ep );
-	}
 	NEWV( result, ChildContext, m_gse, this, si, is_traceable );
+	ASSERT_NOLOG( !result->m_is_executing, "context already executing" );
+	result->m_is_executing = true;
+	m_gse->GetGCSpace()->Add( result );
 	// functions have access to parent variables
 	for ( auto& it : m_ref_contexts ) {
 		result->m_ref_contexts.insert_or_assign( it.first, it.second );
@@ -219,57 +163,69 @@ ChildContext* const Context::ForkContext(
 	for ( auto& it : m_variables ) {
 		result->m_ref_contexts.insert_or_assign( it.first, this );
 	}
-	for ( size_t i = 0 ; i < parameters.size() ; i++ ) { // inject passed arguments
-		result->CreateVariable( parameters[ i ], arguments[ i ], si, ep );
+	try {
+		f( result );
 	}
+	catch ( const std::exception& e ) {
+		result->m_is_executing = false;
+		throw;
+	};
+	ASSERT_NOLOG( result->m_is_executing, "context not executing" );
+	result->m_is_executing = false;
 	return result;
 }
 
 void Context::Clear() {
-	WithRefs(
-		[ this ]() {
-			IncRefs(); // we don't want to be deleted while processing children
-			const auto children = m_child_contexts;
-			for ( const auto& c : children ) {
-				c->Clear();
-			}
-			const auto persisted_values = m_persisted_values;
-			for ( const auto& value : persisted_values ) {
-				UnpersistValue( value.second );
-			}
-			m_variables.clear();
-			DecRefs(); // save to delete now
-		}
-	);
+	const auto children = m_child_contexts;
+	for ( const auto& c : children ) {
+		c->Clear();
+	}
+	const auto persisted_values = m_persisted_values;
+	for ( const auto& value : persisted_values ) {
+		UnpersistValue( value.second );
+	}
+	m_variables.clear();
+}
+
+void Context::CollectActiveObjects( std::unordered_set< Object* >& active_objects ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
+
+	if ( !m_is_executing &&
+		m_variables.empty() &&
+		m_persisted_values.empty() &&
+		m_child_contexts.empty()
+		) {
+		// context is not used for anything anymore
+		return;
+	}
+
+	active_objects.insert( this );
+	for ( const auto& child_context : m_child_contexts ) {
+		child_context->CollectActiveObjects( active_objects );
+	}
 }
 
 void Context::AddChildContext( ChildContext* const child ) {
 	ASSERT_NOLOG( m_child_contexts.find( child ) == m_child_contexts.end(), "child context already added" );
-	IncRefs();
 	m_child_contexts.insert( child );
 }
 
 void Context::RemoveChildContext( ChildContext* const child ) {
-	ASSERT_NOLOG( !m_child_contexts.empty(), "child contexts empty" );
-	if ( !m_child_contexts.empty() ) {
+	if ( !m_child_contexts.empty() ) { // ?
 		ASSERT_NOLOG( m_child_contexts.find( child ) != m_child_contexts.end(), "child context not found" );
 		m_child_contexts.erase( child );
-		DecRefs();
 	}
 }
 
 void Context::AddChildObject( type::Type* const child ) {
 	ASSERT_NOLOG( m_child_objects.find( child ) == m_child_objects.end(), "child context already added" );
-	IncRefs();
 	m_child_objects.insert( child );
 }
 
 void Context::RemoveChildObject( type::Type* const child ) {
-	ASSERT_NOLOG( !m_child_objects.empty(), "child objects empty" );
-	if ( !m_child_objects.empty() ) {
+	if ( !m_child_objects.empty() ) { // ?
 		ASSERT_NOLOG( m_child_objects.find( child ) != m_child_objects.end(), "child context not found" );
 		m_child_objects.erase( child );
-		DecRefs();
 	}
 }
 

@@ -1,4 +1,3 @@
-#include <iostream>
 #include <stdexcept>
 #include <sstream>
 
@@ -9,15 +8,18 @@
 #include "util/ConfigManager.h"
 #include "util/FS.h"
 #include "util/random/Random.h"
+#include "util/LogHelper.h"
 
 namespace config {
 
 void Config::Error( const std::string& error ) {
-	std::cout << std::endl
-		<< "ERROR: " << error << std::endl
-		<< std::endl
-		<< m_manager->GetUnknownArgumentNote() << std::endl
-		<< std::endl;
+	util::LogHelper::Println(
+		(std::string)
+			"\n" +
+			+"ERROR: " + error + "\n" +
+			+"\n"
+			+ m_manager->GetUnknownArgumentNote() + "\n"
+	);
 	exit( EXIT_FAILURE );
 };
 
@@ -57,7 +59,7 @@ Config::Config( const std::string& path )
 	);
 	m_manager->AddRule(
 		"help", "Show this message", AH( this ) {
-			std::cout << m_manager->GetHelpString() << std::endl;
+			util::LogHelper::Println( m_manager->GetHelpString() );
 			exit( EXIT_SUCCESS );
 		}
 	);
@@ -109,12 +111,13 @@ Config::Config( const std::string& path )
 	);
 	m_manager->AddRule(
 		"version", "Show version of GLSMAC", AH() {
-			std::cout
-				<< std::endl
-				<< GLSMAC_VERSION_FULL << ' ' << GLSMAC_URL << std::endl
-				<< std::endl
-				<< GLSMAC_LICENSE << std::endl
-				<< std::endl;
+			util::LogHelper::Println(
+				(std::string)
+					"\n"
+					+ GLSMAC_VERSION_FULL + ' ' + GLSMAC_URL + "\n"
+					+ "\n"
+					+ GLSMAC_LICENSE + "\n"
+			);
 			exit( EXIT_SUCCESS );
 		}
 	);

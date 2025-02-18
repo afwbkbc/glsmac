@@ -5,6 +5,10 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <functional>
+#include <mutex>
+#include <atomic>
+
+#include "gc/Object.h"
 
 #include "gse/Types.h"
 #include "gse/type/Types.h"
@@ -23,7 +27,7 @@ namespace context {
 
 class ChildContext;
 
-class Context {
+class Context : public gc::Object {
 protected:
 	struct var_info_t {
 		Value value;
@@ -41,15 +45,6 @@ public:
 
 	GSE* GetGSE() const;
 
-	void Begin();
-	const bool End();
-
-	void IncRefs();
-	const bool DecRefs();
-
-	void WithRefs( const std::function< void() >& f );
-	const gse::Value WithRefsV( const std::function< const gse::Value() >& f );
-
 	const bool HasVariable( const std::string& name );
 	const Value GetVariable( const std::string& name, const si_t& si, gse::ExecutionPointer& ep );
 	void SetVariable( const std::string& name, const var_info_t& var_info );
@@ -62,11 +57,12 @@ public:
 	void UnpersistValue( const Value& value );
 	void UnpersistValue( const type::Type* type );
 
-	ChildContext* const ForkContext(
+	void Execute( const std::function< void() >& f );
+
+	ChildContext* const ForkAndExecute(
 		GSE_CALLABLE,
 		const bool is_traceable,
-		const std::vector< std::string > parameters = {},
-		const type::function_arguments_t& arguments = {}
+		const std::function< void( ChildContext* const subctx ) >& f
 	);
 
 	void Clear();
@@ -79,7 +75,6 @@ public:
 
 protected:
 	GSE* m_gse;
-	size_t m_refs = 0;
 
 	typedef std::unordered_map< std::string, var_info_t > variables_t;
 	variables_t m_variables = {};
@@ -88,7 +83,13 @@ protected:
 
 	std::unordered_map< const type::Type*, Value > m_persisted_values = {};
 
+	void CollectActiveObjects( std::unordered_set< Object* >& active_objects ) override;
+
 private:
+
+	std::atomic< bool > m_is_executing = false;
+
+	std::mutex m_gc_mutex;
 	std::unordered_set< ChildContext* > m_child_contexts = {};
 	std::unordered_set< type::Type* > m_child_objects = {};
 

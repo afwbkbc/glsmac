@@ -7,6 +7,8 @@
 #include "type/Undefined.h"
 #include "program/Program.h"
 #include "util/FS.h"
+#include "gc/Space.h"
+#include "gc/GC.h"
 #include "Async.h"
 #include "ExecutionPointer.h"
 
@@ -16,6 +18,7 @@ namespace gse {
 const char GSE::PATH_SEPARATOR = '/';
 
 GSE::GSE() {
+	NEW( m_gc_space, gc::Space );
 	m_bindings.push_back( &m_builtins );
 	m_async = new Async();
 }
@@ -30,8 +33,12 @@ GSE::~GSE() {
 		DELETE( it.second );
 	}
 	for ( auto& it : m_include_cache ) {
-		it.second.Cleanup( true );
+		it.second.Cleanup( this );
 	}
+	for ( const auto& context : m_global_contexts ) {
+		m_gc_space->Remove( context );
+	}
+	delete m_gc_space;
 }
 
 void GSE::Iterate() {
@@ -71,6 +78,8 @@ void GSE::AddBindings( Bindings* bindings ) {
 
 context::GlobalContext* GSE::CreateGlobalContext( const std::string& source_path ) {
 	NEWV( context, context::GlobalContext, this, source_path );
+	m_global_contexts.insert( context );
+	m_gc_space->Add( context );
 	{
 		gse::ExecutionPointer ep;
 		for ( const auto& it : m_bindings ) {
@@ -155,25 +164,23 @@ const Value GSE::RunScript( GSE_CALLABLE, const std::string& path ) {
 			cache.context->CreateVariable( "test", ctx->GetVariable( "test", si, ep ), si, ep );
 		}
 #endif
-		cache.context->Begin();
 		const auto parser = GetParser( full_path, source );
 		cache.program = parser->Parse();
 		DELETE( parser );
 		cache.runner = GetRunner();
 		{
-			ExecutionPointer ep;
 			cache.result = cache.runner->Execute( cache.context, ep, cache.program );
 		}
 		m_include_cache.insert_or_assign( full_path, cache );
 		return cache.result;
 	}
 	catch ( const Exception& e ) {
-		cache.Cleanup();
+		cache.Cleanup( this );
 		Log( e.ToString() );
 		throw;
 	}
 	catch ( const std::runtime_error& e ) {
-		cache.Cleanup();
+		cache.Cleanup( this );
 		throw;
 	}
 }
@@ -209,23 +216,14 @@ Async* GSE::GetAsync() {
 	return m_async;
 }
 
-void GSE::include_cache_t::Cleanup( const bool force ) {
+gc::Space* const GSE::GetGCSpace() const {
+	return m_gc_space;
+}
+
+void GSE::include_cache_t::Cleanup( GSE* const gse ) {
 	{
-		if ( force ) {
-			result = VALUE( type::Undefined );
-		}
-		if ( context ) {
-			if ( !force ) {
-				if ( context->End() ) {
-					context = nullptr;
-				}
-			}
-			else {
-				context->Clear();
-				context->DecRefs();
-				context = nullptr;
-			}
-		}
+		context = nullptr;
+		result = VALUE( type::Undefined );
 		if ( program ) {
 			DELETE( program );
 			program = nullptr;
