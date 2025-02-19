@@ -4,8 +4,8 @@
 #include "gse/GSE.h"
 #include "gse/Exception.h"
 #include "common/Common.h"
-#include "gse/type/Callable.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Callable.h"
+#include "gse/value/Undefined.h"
 #include "gc/Space.h"
 
 namespace gse {
@@ -40,7 +40,7 @@ const bool Context::HasVariable( const std::string& name ) {
 	return false;
 }
 
-const Value Context::GetVariable( const std::string& name, const si_t& si, gse::ExecutionPointer& ep ) {
+Value* const Context::GetVariable( const std::string& name, const si_t& si, gse::ExecutionPointer& ep ) {
 	m_gc_mutex.lock();
 	const auto it = m_variables.find( name );
 	if ( it != m_variables.end() ) {
@@ -64,7 +64,7 @@ void Context::SetVariable( const std::string& name, const var_info_t& var_info )
 	m_variables.insert_or_assign( name, var_info );
 }
 
-void Context::CreateVariable( const std::string& name, const Value& value, const si_t& si, gse::ExecutionPointer& ep ) {
+void Context::CreateVariable( const std::string& name, Value* const value, const si_t& si, gse::ExecutionPointer& ep ) {
 	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	if ( m_variables.find( name ) != m_variables.end() ) {
 		throw Exception( EC.INVALID_ASSIGNMENT, "Variable '" + name + "' already exists", this, si, ep );
@@ -77,7 +77,7 @@ void Context::CreateVariable( const std::string& name, const Value& value, const
 	);
 }
 
-void Context::CreateConst( const std::string& name, const Value& value, const si_t& si, gse::ExecutionPointer& ep ) {
+void Context::CreateConst( const std::string& name, Value* const value, const si_t& si, gse::ExecutionPointer& ep ) {
 	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	if ( m_variables.find( name ) != m_variables.end() ) {
 		throw Exception( EC.INVALID_ASSIGNMENT, "Variable '" + name + "' already exists", this, si, ep );
@@ -90,7 +90,7 @@ void Context::CreateConst( const std::string& name, const Value& value, const si
 	);
 }
 
-void Context::UpdateVariable( const std::string& name, const Value& value, const si_t& si, gse::ExecutionPointer& ep ) {
+void Context::UpdateVariable( const std::string& name, Value* const value, const si_t& si, gse::ExecutionPointer& ep ) {
 	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	const auto it = m_variables.find( name );
 	if ( it != m_variables.end() ) {
@@ -118,31 +118,25 @@ void Context::DestroyVariable( const std::string& name, const si_t& si, gse::Exe
 	throw Exception( EC.REFERENCE_ERROR, "Variable '" + name + "' is not defined", this, si, ep );
 }
 
-void Context::CreateBuiltin( const std::string& name, const Value& value, gse::ExecutionPointer& ep ) {
+void Context::CreateBuiltin( const std::string& name, Value* const value, gse::ExecutionPointer& ep ) {
 	CreateConst( "#" + name, value, {}, ep );
 }
 
-void Context::PersistValue( const Value& value ) {
+void Context::PersistValue( Value* const value ) {
 	std::lock_guard< std::mutex > guard( m_gc_mutex );
-	ASSERT_NOLOG( m_persisted_values.find( value.Get() ) == m_persisted_values.end(), "value already persisted" );
+	ASSERT_NOLOG( m_persisted_values.find( value ) == m_persisted_values.end(), "value already persisted" );
 	m_persisted_values.insert(
 		{
-			value.Get(),
+			value,
 			value
 		}
 	);
 }
 
-void Context::UnpersistValue( const Value& value ) {
+void Context::UnpersistValue( Value* const value ) {
 	std::lock_guard< std::mutex > guard( m_gc_mutex );
-	ASSERT_NOLOG( m_persisted_values.find( value.Get() ) != m_persisted_values.end(), "value was not persisted" );
-	m_persisted_values.erase( value.Get() );
-}
-
-void Context::UnpersistValue( const type::Type* type ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
-	ASSERT_NOLOG( m_persisted_values.find( type ) != m_persisted_values.end(), "value was not persisted" );
-	m_persisted_values.erase( type );
+	ASSERT_NOLOG( m_persisted_values.find( value ) != m_persisted_values.end(), "value was not persisted" );
+	m_persisted_values.erase( value );
 }
 
 void Context::Execute( const std::function< void() >& f ) {
@@ -227,13 +221,13 @@ void Context::RemoveChildContext( ChildContext* const child ) {
 	}
 }
 
-void Context::AddChildObject( type::Type* const child ) {
+void Context::AddChildObject( Value* const child ) {
 	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	ASSERT_NOLOG( m_child_objects.find( child ) == m_child_objects.end(), "child context already added" );
 	m_child_objects.insert( child );
 }
 
-void Context::RemoveChildObject( type::Type* const child ) {
+void Context::RemoveChildObject( Value* const child ) {
 	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	if ( !m_child_objects.empty() ) { // ?
 		ASSERT_NOLOG( m_child_objects.find( child ) != m_child_objects.end(), "child context not found" );

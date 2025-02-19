@@ -2,11 +2,8 @@
 
 #include <vector>
 
-#include "Type.h"
-
 #include "Types.h"
 #include "gse/Types.h"
-#include "gse/Value.h"
 
 namespace gse {
 
@@ -14,20 +11,20 @@ namespace context {
 class Context;
 }
 
-namespace type {
+namespace value {
 
-class Callable : public Type {
+class Callable : public Value {
 public:
 
-	static const type_t GetType() { return Type::T_CALLABLE; }
+	static const type_t GetType() { return Value::T_CALLABLE; }
 
 	Callable( const bool cleanup_needed )
-		: type::Type( GetType() )
+		: Value( GetType() )
 		, m_cleanup_needed( cleanup_needed ) {}
 
 	virtual ~Callable() {}
 
-	virtual Value Run( GSE_CALLABLE, const function_arguments_t& arguments ) = 0;
+	virtual Value* Run( GSE_CALLABLE, const function_arguments_t& arguments ) = 0;
 
 	const bool m_cleanup_needed;
 

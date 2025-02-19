@@ -21,7 +21,7 @@ const std::string* DefineUnit::Validate( Game* game ) const {
 	return Ok();
 }
 
-const gse::Value DefineUnit::Apply( Game* game ) const {
+gse::Value* const DefineUnit::Apply( Game* game ) const {
 	game->GetUM()->DefineUnit( m_def );
 	return m_def->Wrap();
 }

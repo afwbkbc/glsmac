@@ -4,8 +4,8 @@
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
-#include "gse/type/Undefined.h"
-#include "gse/type/String.h"
+#include "gse/value/Undefined.h"
+#include "gse/value/String.h"
 
 #include "util/FS.h"
 

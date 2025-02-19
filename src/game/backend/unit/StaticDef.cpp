@@ -2,9 +2,9 @@
 
 #include "Render.h"
 
-#include "gse/type/Bool.h"
-#include "gse/type/Int.h"
-#include "gse/type/Float.h"
+#include "gse/value/Bool.h"
+#include "gse/value/Int.h"
+#include "gse/value/Float.h"
 
 namespace game {
 namespace backend {

@@ -4,8 +4,8 @@
 
 #include "MoraleSet.h"
 
-#include "gse/type/Object.h"
-#include "gse/type/String.h"
+#include "gse/value/Object.h"
+#include "gse/value/String.h"
 
 namespace game {
 namespace backend {
@@ -54,11 +54,11 @@ WRAPIMPL_BEGIN( Def )
 	WRAPIMPL_PROPS
 		{
 			"name",
-			VALUE( gse::type::String, m_name )
+			VALUE( gse::value::String, m_name )
 		},
 		{
 			"type",
-			VALUE( gse::type::String, "static" ) // TODO
+			VALUE( gse::value::String, "static" ) // TODO
 		},
 	};
 WRAPIMPL_END_PTR()

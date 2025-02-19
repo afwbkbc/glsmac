@@ -27,8 +27,8 @@ Text::Text( DOM_ARGS )
 	Actor( m_actor );
 
 	Property(
-		GSE_CALL, "text", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v ) {
-			SetText( ( (gse::type::String*)v.Get() )->value );
+		GSE_CALL, "text", gse::Value::T_STRING, VALUE( gse::value::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			SetText( ( (gse::value::String*)v )->value );
 		},
 		[ this ]( GSE_CALLABLE ) {
 			SetText( "" );
@@ -36,8 +36,8 @@ Text::Text( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "transform", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v ) {
-			const auto& value = ( (gse::type::String*)v.Get() )->value;
+		GSE_CALL, "transform", gse::Value::T_STRING, VALUE( gse::value::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			const auto& value = ( (gse::value::String*)v )->value;
 			if ( value == "lowercase" ) {
 				SetTransform( T_LOWERCASE );
 			}
@@ -54,10 +54,10 @@ Text::Text( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "color", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
-		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
+		GSE_CALL, "color", gse::Value::T_STRING, VALUE( gse::value::Undefined ), PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			types::Color color = {};
-			ParseColor( GSE_CALL, ( (gse::type::String*)v.Get() )->value, color );
+			ParseColor( GSE_CALL, ( (gse::value::String*)v )->value, color );
 			m_actor->SetColor( color );
 		},
 		[ this ]( GSE_CALLABLE ) {
@@ -67,15 +67,15 @@ Text::Text( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "font", gse::type::Type::T_STRING, VALUE( gse::type::String, ":32" ), PF_NONE,
-		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
-			const auto parts = util::String::Split( ( (gse::type::String*)v.Get() )->value, ':' );
+		GSE_CALL, "font", gse::Value::T_STRING, VALUE( gse::value::String, ":32" ), PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			const auto parts = util::String::Split( ( (gse::value::String*)v )->value, ':' );
 			if ( parts.size() != 2 ) {
-				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property 'font' is expected to be font string ('<fontname>:<size>' ), got: " + v.ToString(), GSE_CALL );
+				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property 'font' is expected to be font string ('<fontname>:<size>' ), got: " + v->ToString(), GSE_CALL );
 			}
 			const auto sz = strtoul( parts.at( 1 ).c_str(), nullptr, 10 );
 			if ( !sz || sz > 255 ) {
-				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Invalid font size: " + v.ToString(), GSE_CALL );
+				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Invalid font size: " + v->ToString(), GSE_CALL );
 			}
 			m_fontname = parts.at( 0 );
 			m_fontsize = sz;

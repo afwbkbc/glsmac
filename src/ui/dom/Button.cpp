@@ -3,7 +3,7 @@
 #include "Text.h"
 #include "ui/geometry/Geometry.h"
 #include "input/Event.h"
-#include "gse/type/Bool.h"
+#include "gse/value/Bool.h"
 
 namespace ui {
 namespace dom {
@@ -28,18 +28,18 @@ Button::Button( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "is_ok", gse::type::Type::T_BOOL, VALUE( gse::type::Undefined ), PF_NONE,
-		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
-			m_is_ok = ( (gse::type::Bool*)v.Get() )->value;
+		GSE_CALL, "is_ok", gse::Value::T_BOOL, VALUE( gse::value::Undefined ), PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			m_is_ok = ( (gse::value::Bool*)v )->value;
 		},
 		[ this ]( GSE_CALLABLE ) {
 			m_is_ok = false;
 		}
 	);
 	Property(
-		GSE_CALL, "is_cancel", gse::type::Type::T_BOOL, VALUE( gse::type::Undefined ), PF_NONE,
-		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
-			m_is_cancel = ( (gse::type::Bool*)v.Get() )->value;
+		GSE_CALL, "is_cancel", gse::Value::T_BOOL, VALUE( gse::value::Undefined ), PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			m_is_cancel = ( (gse::value::Bool*)v )->value;
 		},
 		[ this ]( GSE_CALLABLE ) {
 			m_is_cancel = false;
@@ -90,7 +90,7 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 	return result;
 }
 
-void Button::SerializeEvent( const input::Event& e, gse::type::object_properties_t& obj ) const {
+void Button::SerializeEvent( const input::Event& e, gse::value::object_properties_t& obj ) const {
 	switch ( e.type ) {
 		case input::EV_CLICK: {
 			std::string buttonstr = "";
@@ -114,7 +114,7 @@ void Button::SerializeEvent( const input::Event& e, gse::type::object_properties
 			obj.insert(
 				{
 					"button",
-					VALUE( gse::type::String, buttonstr )
+					VALUE( gse::value::String, buttonstr )
 				}
 			);
 			break;

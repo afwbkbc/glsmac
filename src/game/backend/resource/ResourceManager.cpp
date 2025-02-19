@@ -63,10 +63,10 @@ const map::tile::yields_t ResourceManager::GetYields( map::tile::Tile* tile, slo
 			},
 		}
 	);
-	if ( result.Get()->type != gse::type::Type::T_OBJECT ) {
-		THROW( "unexpected return type: expected Object, got " + result.GetTypeString() );
+	if ( result->type != gse::Value::T_OBJECT ) {
+		THROW( "unexpected return type: expected Object, got " + result->GetTypeString() );
 	}
-	const auto& values = ( (gse::type::Object*)result.Get() )->value;
+	const auto& values = ( (gse::value::Object*)result )->value;
 	for ( const auto& v : values ) {
 		if ( m_resources.find( v.first ) == m_resources.end() ) {
 			THROW( "unknown resource type: " + v.first );
@@ -79,13 +79,13 @@ const map::tile::yields_t ResourceManager::GetYields( map::tile::Tile* tile, slo
 		if ( v == values.end() ) {
 			THROW( "missing yields for resource: " + idx );
 		}
-		if ( v->second.Get()->type != gse::type::Type::T_INT ) {
-			THROW( "invalid resource value, expected Int, got " + v->second.GetTypeString() + ": " + v->second.ToString() );
+		if ( v->second->type != gse::Value::T_INT ) {
+			THROW( "invalid resource value, expected Int, got " + v->second->GetTypeString() + ": " + v->second->ToString() );
 		}
 		yields.push_back(
 			{
 				idx,
-				( (gse::type::Int*)v->second.Get() )->value
+				( (gse::value::Int*)v->second )->value
 			}
 		);
 	}
@@ -149,7 +149,7 @@ WRAPIMPL_BEGIN( ResourceManager )
 					GSE_ERROR( gse::EC.GAME_ERROR, "Unsupported resource type: " + type );
 				}
 
-				return VALUE( gse::type::Undefined );
+				return VALUE( gse::value::Undefined );
 			} )
 		},
 	};

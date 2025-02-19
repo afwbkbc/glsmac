@@ -3,7 +3,7 @@
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
 #include "game/backend/map/tile/TileManager.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Undefined.h"
 
 namespace game {
 namespace backend {
@@ -26,9 +26,9 @@ const std::string* LockTiles::Validate( Game* game ) const {
 	return ValidateTilePositions( game, false );
 }
 
-const gse::Value LockTiles::Apply( Game* game ) const {
+gse::Value* const LockTiles::Apply( Game* game ) const {
 	game->GetTM()->LockTiles( m_lock_owner_slot, m_tile_positions );
-	return VALUE( gse::type::Undefined );
+	return VALUE( gse::value::Undefined );
 }
 
 void LockTiles::Serialize( types::Buffer& buf, const LockTiles* event ) {

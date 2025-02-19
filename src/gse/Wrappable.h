@@ -5,17 +5,18 @@
 #include <map>
 #include <optional>
 
-#include "type/Types.h"
-#include "type/Int.h"
-#include "type/String.h"
-#include "type/Undefined.h"
+#include "value/Types.h"
+#include "value/Int.h"
+#include "value/String.h"
+#include "value/Undefined.h"
+#include "value/Object.h"
 #include "callable/Native.h"
 #include "Exception.h"
 #include "Value.h"
 
 namespace gse {
 
-namespace type {
+namespace value {
 class Object;
 }
 
@@ -23,25 +24,25 @@ class Wrappable {
 public:
 	virtual ~Wrappable();
 
-	virtual const gse::Value Wrap( const bool dynamic = false ) = 0;
+	virtual Value* const Wrap( const bool dynamic = false ) = 0;
 
-	void Link( type::Object* wrapobj );
-	void Unlink( type::Object* wrapobj );
+	void Link( value::Object* wrapobj );
+	void Unlink( value::Object* wrapobj );
 
 	typedef uint16_t callback_id_t;
-	const callback_id_t On( GSE_CALLABLE, const std::string& event, const gse::Value& callback );
+	const callback_id_t On( GSE_CALLABLE, const std::string& event, Value* const callback );
 	void Off( GSE_CALLABLE, const std::string& event, const callback_id_t callback_id );
 
 	const bool HasHandlers( const std::string& event ) const;
-	const Value Trigger( GSE_CALLABLE, const std::string& event, const type::object_properties_t& args, const std::optional< type::Type::type_t > expected_return_type = {} );
+	Value* const Trigger( GSE_CALLABLE, const std::string& event, const value::object_properties_t& args, const std::optional< Value::type_t > expected_return_type = {} );
 
 protected:
-	std::unordered_set< type::Object* > m_wrapobjs = {};
+	std::unordered_set< value::Object* > m_wrapobjs = {};
 
 private:
 	struct callback_t {
-		gse::Value callable;
-		gse::context::Context* ctx;
+		Value* const callable;
+		context::Context* ctx;
 		si_t si;
 	};
 	typedef std::unordered_map< std::string, std::map< uint16_t, callback_t > > callbacks_t;

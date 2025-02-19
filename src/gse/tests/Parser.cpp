@@ -57,7 +57,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 
 		const auto value = VALIDATOR( program::Value, &errmsg, &si ) {
 			VALIDATE( si, a->m_si, b->m_si );
-			GT_ASSERT( a->value == b->value, "values differ ( " + a->value.ToString() + " != " + b->value.ToString() + " )" );
+			GT_ASSERT( *a->value == *b->value, "values differ ( " + a->value->ToString() + " != " + b->value->ToString() + " )" );
 			GT_OK();
 		};
 

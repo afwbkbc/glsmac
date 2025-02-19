@@ -3,7 +3,7 @@
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
 
-#include "gse/type/Undefined.h"
+#include "gse/value/Undefined.h"
 
 namespace game {
 namespace backend {
@@ -27,11 +27,11 @@ const std::string* TurnFinalized::Validate( Game* game ) const {
 	return Ok();
 }
 
-const gse::Value TurnFinalized::Apply( Game* game ) const {
+gse::Value* const TurnFinalized::Apply( Game* game ) const {
 	if ( game->GetState()->IsMaster() ) {
 		game->GlobalProcessTurnFinalized( m_initiator_slot, m_checksum );
 	}
-	return VALUE( gse::type::Undefined );
+	return VALUE( gse::value::Undefined );
 }
 
 TS_BEGIN( TurnFinalized )

@@ -4,8 +4,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include "gse/Value.h"
-#include "gse/type/Object.h"
+#include "gse/value/Object.h"
 #include "gse/Wrappable.h"
 
 // TODO: refactor

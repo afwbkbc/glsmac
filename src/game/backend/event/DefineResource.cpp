@@ -4,7 +4,7 @@
 
 #include "game/backend/resource/ResourceManager.h"
 #include "game/backend/resource/Resource.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Undefined.h"
 
 namespace game {
 namespace backend {
@@ -23,9 +23,9 @@ const std::string* DefineResource::Validate( Game* game ) const {
 	return Ok();
 }
 
-const gse::Value DefineResource::Apply( Game* game ) const {
+gse::Value* const DefineResource::Apply( Game* game ) const {
 	game->GetRM()->DefineResource( m_resource );
-	return VALUE( gse::type::Undefined );
+	return VALUE( gse::value::Undefined );
 }
 
 TS_BEGIN( DefineResource )

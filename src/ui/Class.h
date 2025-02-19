@@ -5,7 +5,7 @@
 #include <string>
 
 #include "gse/Wrappable.h"
-#include "gse/type/Object.h"
+#include "gse/value/Object.h"
 
 #include "Types.h"
 
@@ -23,7 +23,7 @@ public:
 	~Class();
 
 	const std::string& GetName() const;
-	const std::pair< gse::Value, class_modifier_t > GetProperty( const std::string& key, const class_modifiers_t& modifiers ) const;
+	const std::pair< gse::Value*, class_modifier_t > GetProperty( const std::string& key, const class_modifiers_t& modifiers ) const;
 	const properties_t& GetProperties() const;
 
 	void AddObject( GSE_CALLABLE, dom::Object* object, const class_modifiers_t& modifiers );
@@ -32,9 +32,9 @@ public:
 	void AddObjectModifier( GSE_CALLABLE, dom::Object* object, const class_modifier_t modifier );
 	void RemoveObjectModifier( GSE_CALLABLE, dom::Object* object, const class_modifier_t modifier );
 
-	virtual const gse::Value Wrap( const bool dynamic = false ) override;
-	virtual void WrapSet( const std::string& key, const gse::Value& value, GSE_CALLABLE );
-	static void WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, GSE_CALLABLE );
+	virtual gse::Value* const Wrap( const bool dynamic = false ) override;
+	virtual void WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE );
+	static void WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, gse::Value* const value, GSE_CALLABLE );
 
 private:
 	const UI* const m_ui;
@@ -44,8 +44,8 @@ private:
 	properties_t m_local_properties = {};
 	properties_t m_properties = {};
 
-	void SetProperty( GSE_CALLABLE, const std::string& name, const gse::Value& value );
-	void SetPropertyFromParent( GSE_CALLABLE, const std::string& name, const gse::Value& value );
+	void SetProperty( GSE_CALLABLE, const std::string& name, gse::Value* const value );
+	void SetPropertyFromParent( GSE_CALLABLE, const std::string& name, gse::Value* const value );
 	void SetPropertiesFromParent( GSE_CALLABLE );
 	void UnsetProperty( GSE_CALLABLE, const std::string& name );
 	void UnsetPropertyFromParent( GSE_CALLABLE, const std::string& name );

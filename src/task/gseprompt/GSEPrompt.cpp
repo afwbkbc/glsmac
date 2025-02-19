@@ -131,7 +131,7 @@ void GSEPrompt::ProcessInput() {
 	);
 
 	const gse::program::Program* program = nullptr;
-	auto result = VALUE( gse::type::Undefined );
+	gse::Value* result = VALUE( gse::value::Undefined );
 	try {
 		program = parser->Parse();
 		if ( m_is_tty ) {
@@ -165,7 +165,7 @@ void GSEPrompt::ProcessInput() {
 			);
 		}
 
-		util::LogHelper::Println( result.Dump() );
+		util::LogHelper::Println( result->Dump() );
 	}
 	catch ( const gse::Exception& e ) {
 		util::LogHelper::Println( e.ToString() );

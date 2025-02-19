@@ -12,7 +12,7 @@
 #include "gse/Wrappable.h"
 
 #include "gse/GSE.h"
-#include "gse/type/Object.h"
+#include "gse/value/Object.h"
 
 #include "util/Timer.h"
 
@@ -47,13 +47,13 @@ CLASS3( GLSMAC, common::Class, gse::Bindings, gse::Wrappable )
 	void SetLoaderText( const std::string& text );
 	void HideLoader();
 
-	const gse::Value TriggerObject( gse::Wrappable* object, const std::string& event, const gse::type::object_properties_t& args );
+	gse::Value* const TriggerObject( gse::Wrappable* object, const std::string& event, const gse::value::object_properties_t& args );
 
 private:
 	gse::GSE* m_gse = nullptr;
 	gse::context::GlobalContext* m_ctx = nullptr;
 
-	std::vector< gse::Value > m_main_callables = {};
+	std::vector< gse::Value* > m_main_callables = {};
 
 	ui::UI* m_ui = nullptr;
 

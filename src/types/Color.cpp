@@ -1,6 +1,6 @@
 #include "Color.h"
 
-#include "gse/type/Float.h"
+#include "gse/value/Float.h"
 
 namespace types {
 
@@ -160,29 +160,29 @@ WRAPIMPL_BEGIN( Color )
 	WRAPIMPL_PROPS
 		{
 			"r",
-			VALUE( gse::type::Float, value.red )
+			VALUE( gse::value::Float, value.red )
 		},
 		{
 			"g",
-			VALUE( gse::type::Float, value.green )
+			VALUE( gse::value::Float, value.green )
 		},
 		{
 			"b",
-			VALUE( gse::type::Float, value.blue )
+			VALUE( gse::value::Float, value.blue )
 		},
 		{
 			"a",
-			VALUE( gse::type::Float, value.alpha )
+			VALUE( gse::value::Float, value.alpha )
 		},
 	};
 WRAPIMPL_END_NOPTR( Color )
 
 UNWRAPIMPL_NOPTR_BEGIN( Color )
 	return {
-		( (gse::type::Float*)properties.at( "r" ).Get() )->value,
-		( (gse::type::Float*)properties.at( "g" ).Get() )->value,
-		( (gse::type::Float*)properties.at( "b" ).Get() )->value,
-		( (gse::type::Float*)properties.at( "a" ).Get() )->value
+		( (gse::value::Float*)properties.at( "r" ) )->value,
+		( (gse::value::Float*)properties.at( "g" ) )->value,
+		( (gse::value::Float*)properties.at( "b" ) )->value,
+		( (gse::value::Float*)properties.at( "a" ) )->value
 	};
 UNWRAPIMPL_NOPTR_END()
 

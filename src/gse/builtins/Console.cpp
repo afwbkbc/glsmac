@@ -2,7 +2,7 @@
 
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Undefined.h"
 
 #include "logger/Stdout.h"
 #include "util/LogHelper.h"
@@ -33,7 +33,7 @@ void Console::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 			if ( !line.empty() ) {
 				line += " ";
 			}
-			line += it.Get()->ToString();
+			line += it->ToString();
 		}
 #if defined( DEBUG ) || defined( FASTDEBUG )
 		if ( s_is_capturing ) {
@@ -41,19 +41,19 @@ void Console::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 		}
 #endif
 		util::LogHelper::Println( "    " + si.ToString() + " " + line );
-		return VALUE( type::Undefined );
+		return VALUE( value::Undefined );
 	} ), ep );
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
 
 	ctx->CreateBuiltin( "global_mute", NATIVE_CALL() {
 		logger::g_is_muted = true;
-		return VALUE( type::Undefined );
+		return VALUE( value::Undefined );
 	} ), ep );
 
 	ctx->CreateBuiltin( "global_unmute", NATIVE_CALL() {
 		logger::g_is_muted = false;
-		return VALUE( type::Undefined );
+		return VALUE( value::Undefined );
 	} ), ep );
 
 #endif

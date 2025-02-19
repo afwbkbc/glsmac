@@ -72,7 +72,7 @@ CLASS2( State, common::Class, gse::Wrappable )
 
 	faction::FactionManager* GetFM() const;
 
-	const gse::Value TriggerObject( gse::Wrappable* object, const std::string& event, const gse::type::object_properties_t& args );
+	gse::Value* const TriggerObject( gse::Wrappable* object, const std::string& event, const gse::value::object_properties_t& args );
 
 	WRAPDEFS_PTR( State )
 

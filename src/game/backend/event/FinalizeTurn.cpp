@@ -3,7 +3,7 @@
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
 
-#include "gse/type/Undefined.h"
+#include "gse/value/Undefined.h"
 
 namespace game {
 namespace backend {
@@ -24,9 +24,9 @@ const std::string* FinalizeTurn::Validate( Game* game ) const {
 	return Ok();
 }
 
-const gse::Value FinalizeTurn::Apply( Game* game ) const {
+gse::Value* const FinalizeTurn::Apply( Game* game ) const {
 	game->FinalizeTurn();
-	return VALUE( gse::type::Undefined );
+	return VALUE( gse::value::Undefined );
 }
 
 TS_BEGIN( FinalizeTurn )

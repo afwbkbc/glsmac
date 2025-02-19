@@ -343,7 +343,7 @@ public:
 	void Quit( const std::string& reason );
 	void OnError( std::runtime_error& err );
 	void OnGSEError( const gse::Exception& e );
-	const gse::Value AddEvent( event::Event* event );
+	gse::Value* const AddEvent( event::Event* event );
 	const size_t GetTurnId() const;
 	const bool IsTurnActive() const;
 	const bool IsTurnCompleted( const size_t slot_num ) const;
@@ -368,7 +368,7 @@ public:
 private:
 
 	void ValidateEvent( event::Event* event );
-	const gse::Value ProcessEvent( event::Event* event );
+	gse::Value* const ProcessEvent( event::Event* event );
 
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
 

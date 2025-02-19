@@ -7,23 +7,23 @@
 #include "gse/Wrappable.h"
 
 namespace gse {
-namespace type {
+namespace value {
 
-static Value s_undefined = VALUE( type::Undefined );
+static Value* s_undefined = VALUE( value::Undefined );
 
 Array::Array( array_elements_t initial_value )
-	: Type( GetType() )
+	: Value( GetType() )
 	, value( initial_value ) {}
 
-const Value& Array::Get( const size_t index ) const {
+Value* const Array::Get( const size_t index ) const {
 	return ( index < value.size() )
 		? value[ index ]
 		: s_undefined;
 }
 
-const Value Array::GetSubArray( const std::optional< size_t > from, const std::optional< size_t > to ) const {
+Value* const Array::GetSubArray( const std::optional< size_t > from, const std::optional< size_t > to ) const {
 	ValidateFromTo( from, to );
-	return VALUE( type::Array, std::vector(
+	return VALUE( value::Array, std::vector(
 		( from.has_value()
 			? value.begin() + from.value()
 			: value.begin()
@@ -35,15 +35,15 @@ const Value Array::GetSubArray( const std::optional< size_t > from, const std::o
 	) );
 }
 
-void Array::Set( const size_t index, const Value& new_value ) {
+void Array::Set( const size_t index, Value* const new_value ) {
 	ASSERT_NOLOG( index < value.size(), "index out of bounds" );
 	value[ index ] = new_value;
 }
 
-const void Array::SetSubArray( const std::optional< size_t > from, const std::optional< size_t > to, const Value& new_subarray ) {
+const void Array::SetSubArray( const std::optional< size_t > from, const std::optional< size_t > to, Value* const new_subarray ) {
 	ValidateFromTo( from, to );
-	ASSERT_NOLOG( new_subarray.Get()->type == Type::T_ARRAY, "operand of range assignment is not array: " + new_subarray.ToString() );
-	auto* v = (type::Array*)new_subarray.Get();
+	ASSERT_NOLOG( new_subarray->type == Value::T_ARRAY, "operand of range assignment is not array: " + new_subarray->ToString() );
+	auto* v = (value::Array*)new_subarray;
 	const auto dest_begin = from.has_value()
 		? value.begin() + from.value()
 		: value.begin();
@@ -56,19 +56,19 @@ const void Array::SetSubArray( const std::optional< size_t > from, const std::op
 	std::copy( v->value.begin(), v->value.end(), dest_begin );
 }
 
-void Array::Append( const Value& new_value ) {
+void Array::Append( Value* const new_value ) {
 	value.push_back( new_value );
 }
 
-const Value Array::GetRef( const size_t index ) {
+Value* const Array::GetRef( const size_t index ) {
 	return VALUE( ArrayRef, this, index );
 }
 
-const Value Array::GetRangeRef( const std::optional< size_t > from, const std::optional< size_t > to ) {
+Value* const Array::GetRangeRef( const std::optional< size_t > from, const std::optional< size_t > to ) {
 	return VALUE( ArrayRangeRef, this, from, to );
 }
 
-const Value Array::FromVector( const std::vector< Wrappable* >* data, const bool dynamic ) {
+Value* const Array::FromVector( const std::vector< Wrappable* >* data, const bool dynamic ) {
 	array_elements_t elements = {};
 	elements.reserve( data->size() );
 	for ( const auto& el : *data ) {

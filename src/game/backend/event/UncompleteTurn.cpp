@@ -2,7 +2,7 @@
 
 #include "game/backend/Game.h"
 
-#include "gse/type/Undefined.h"
+#include "gse/value/Undefined.h"
 
 namespace game {
 namespace backend {
@@ -24,9 +24,9 @@ const std::string* UncompleteTurn::Validate( Game* game ) const {
 	return Ok();
 }
 
-const gse::Value UncompleteTurn::Apply( Game* game ) const {
+gse::Value* const UncompleteTurn::Apply( Game* game ) const {
 	game->UncompleteTurn( m_initiator_slot );
-	return VALUE( gse::type::Undefined );
+	return VALUE( gse::value::Undefined );
 }
 
 TS_BEGIN( UncompleteTurn )

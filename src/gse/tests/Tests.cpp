@@ -26,11 +26,11 @@
 #include "gse/program/Operator.h"
 #include "gse/program/Object.h"
 #include "gse/program/SimpleCondition.h"
-#include "gse/type/Bool.h"
-#include "gse/type/Int.h"
-#include "gse/type/String.h"
-#include "gse/type/Null.h"
-#include "gse/type/Range.h"
+#include "gse/value/Bool.h"
+#include "gse/value/Int.h"
+#include "gse/value/String.h"
+#include "gse/value/Null.h"
+#include "gse/value/Range.h"
 
 namespace gse {
 namespace tests {
@@ -241,7 +241,7 @@ const Program* GetTestProgram() {
 						SI( 3, 5, 3, 10 ),
 						new Variable( SI( 3, 5, 3, 6 ), "a", VH_CREATE_VAR ),
 						new Operator( SI( 3, 7, 3, 8 ), OT_ASSIGN ),
-						new program::Value( SI( 3, 9, 3, 10 ), VALUE( type::Int, 5 ) )
+						new program::Value( SI( 3, 9, 3, 10 ), VALUE( value::Int, 5 ) )
 					)
 				),
 				new Statement(
@@ -264,9 +264,9 @@ const Program* GetTestProgram() {
 							new Operator( SI( 5, 11, 5, 12 ), OT_ADD ),
 							new Expression(
 								SI( 5, 13, 5, 18 ),
-								new program::Value( SI( 5, 13, 5, 14 ), VALUE( type::Int, 2 ) ),
+								new program::Value( SI( 5, 13, 5, 14 ), VALUE( value::Int, 2 ) ),
 								new Operator( SI( 5, 15, 5, 16 ), OT_MULT ),
-								new program::Value( SI( 5, 17, 5, 18 ), VALUE( type::Int, 4 ) )
+								new program::Value( SI( 5, 17, 5, 18 ), VALUE( value::Int, 4 ) )
 							)
 						)
 					)
@@ -283,10 +283,10 @@ const Program* GetTestProgram() {
 								SI( 6, 8, 6, 11 ),
 								new Variable( SI( 6, 8, 6, 9 ), "a" ),
 								new Operator( SI( 6, 9, 6, 10 ), OT_ADD ),
-								new program::Value( SI( 6, 10, 6, 11 ), VALUE( type::Int, 2 ) )
+								new program::Value( SI( 6, 10, 6, 11 ), VALUE( value::Int, 2 ) )
 							),
 							new Operator( SI( 6, 12, 6, 13 ), OT_MULT ),
-							new program::Value( SI( 6, 13, 6, 14 ), VALUE( type::Int, 4 ) )
+							new program::Value( SI( 6, 13, 6, 14 ), VALUE( value::Int, 4 ) )
 						)
 					)
 				),
@@ -303,7 +303,7 @@ const Program* GetTestProgram() {
 										SI( 8, 2, 8, 8 ),
 										new Variable( SI( 8, 2, 8, 3 ), "a" ),
 										new Operator( SI( 8, 4, 8, 5 ), OT_ASSIGN ),
-										new program::Value( SI( 8, 6, 8, 8 ), VALUE( type::Int, 15 ) )
+										new program::Value( SI( 8, 6, 8, 8 ), VALUE( value::Int, 15 ) )
 									)
 								),
 								new Statement(
@@ -312,7 +312,7 @@ const Program* GetTestProgram() {
 										SI( 9, 2, 9, 9 ),
 										new Variable( SI( 9, 2, 9, 3 ), "a" ),
 										new Operator( SI( 9, 4, 9, 6 ), OT_INC_BY ),
-										new program::Value( SI( 9, 7, 9, 9 ), VALUE( type::Int, 10 ) )
+										new program::Value( SI( 9, 7, 9, 9 ), VALUE( value::Int, 10 ) )
 									)
 								)
 							}
@@ -325,7 +325,7 @@ const Program* GetTestProgram() {
 						SI( 11, 1, 11, 8 ),
 						new Variable( SI( 11, 1, 11, 2 ), "c" ),
 						new Operator( SI( 11, 3, 11, 4 ), OT_ASSIGN ),
-						new program::Value( SI( 11, 5, 11, 8 ), VALUE( type::Int, 123 ) )
+						new program::Value( SI( 11, 5, 11, 8 ), VALUE( value::Int, 123 ) )
 					)
 				),
 				new Statement(
@@ -334,7 +334,7 @@ const Program* GetTestProgram() {
 						SI( 12, 1, 12, 8 ),
 						new Variable( SI( 12, 1, 12, 2 ), "c" ),
 						new Operator( SI( 12, 3, 12, 5 ), OT_DEC_BY ),
-						new program::Value( SI( 12, 6, 12, 8 ), VALUE( type::Int, 23 ) )
+						new program::Value( SI( 12, 6, 12, 8 ), VALUE( value::Int, 23 ) )
 					)
 				),
 				new Statement(
@@ -437,11 +437,11 @@ const Program* GetTestProgram() {
 							{
 								new Expression(
 									SI( 30, 18, 30, 19 ),
-									new program::Value( SI( 30, 18, 30, 19 ), VALUE( type::Int, 3 ) )
+									new program::Value( SI( 30, 18, 30, 19 ), VALUE( value::Int, 3 ) )
 								),
 								new Expression(
 									SI( 30, 21, 30, 27 ),
-									new program::Value( SI( 30, 21, 30, 27 ), VALUE( type::String, "TEST" ) )
+									new program::Value( SI( 30, 21, 30, 27 ), VALUE( value::String, "TEST" ) )
 								),
 								new Expression(
 									SI( 30, 29, 33, 2 ),
@@ -452,14 +452,14 @@ const Program* GetTestProgram() {
 												"key1",
 												new Expression(
 													SI( 31, 9, 31, 17 ),
-													new program::Value( SI( 31, 9, 31, 17 ), VALUE( type::String, "value1" ) )
+													new program::Value( SI( 31, 9, 31, 17 ), VALUE( value::String, "value1" ) )
 												)
 											},
 											{
 												"key2",
 												new Expression(
 													SI( 32, 9, 32, 17 ),
-													new program::Value( SI( 32, 9, 32, 17 ), VALUE( type::String, "value2" ) )
+													new program::Value( SI( 32, 9, 32, 17 ), VALUE( value::String, "value2" ) )
 												)
 											}
 										}
@@ -475,7 +475,7 @@ const Program* GetTestProgram() {
 						SI( 34, 1, 34, 20 ),
 						new Variable( SI( 34, 1, 34, 9 ), "testarr1" ),
 						new Operator( SI( 34, 10, 34, 12 ), OT_PUSH ),
-						new program::Value( SI( 34, 13, 34, 20 ), VALUE( type::String, "first" ) )
+						new program::Value( SI( 34, 13, 34, 20 ), VALUE( value::String, "first" ) )
 					)
 				),
 				new Statement(
@@ -484,7 +484,7 @@ const Program* GetTestProgram() {
 						SI( 35, 1, 35, 21 ),
 						new Variable( SI( 35, 1, 35, 9 ), "testarr1" ),
 						new Operator( SI( 35, 10, 35, 12 ), OT_PUSH ),
-						new program::Value( SI( 35, 13, 35, 21 ), VALUE( type::String, "second" ) )
+						new program::Value( SI( 35, 13, 35, 21 ), VALUE( value::String, "second" ) )
 					)
 				),
 				new Statement(
@@ -497,12 +497,12 @@ const Program* GetTestProgram() {
 							SI( 36, 13, 36, 22 ),
 							new Expression(
 								SI( 36, 13, 36, 18 ),
-								new program::Value( SI( 36, 13, 36, 14 ), VALUE( type::Int, 1 ) ),
+								new program::Value( SI( 36, 13, 36, 14 ), VALUE( value::Int, 1 ) ),
 								new Operator( SI( 36, 15, 36, 16 ), OT_ADD ),
-								new program::Value( SI( 36, 17, 36, 18 ), VALUE( type::Int, 2 ) )
+								new program::Value( SI( 36, 17, 36, 18 ), VALUE( value::Int, 2 ) )
 							),
 							new Operator( SI( 36, 19, 36, 20 ), OT_ADD ),
-							new program::Value( SI( 36, 21, 36, 22 ), VALUE( type::Int, 3 ) )
+							new program::Value( SI( 36, 21, 36, 22 ), VALUE( value::Int, 3 ) )
 						)
 					)
 				),
@@ -553,10 +553,10 @@ const Program* GetTestProgram() {
 							SI( 40, 1, 40, 12 ),
 							new Variable( SI( 40, 1, 40, 9 ), "testarr3" ),
 							new Operator( SI( 40, 9, 40, 12 ), OT_AT ),
-							new program::Value( SI( 40, 10, 40, 11 ), VALUE( type::Int, 1 ) )
+							new program::Value( SI( 40, 10, 40, 11 ), VALUE( value::Int, 1 ) )
 						),
 						new Operator( SI( 40, 13, 40, 14 ), OT_ASSIGN ),
-						new program::Value( SI( 40, 15, 40, 23 ), VALUE( type::String, "SECOND" ) )
+						new program::Value( SI( 40, 15, 40, 23 ), VALUE( value::String, "SECOND" ) )
 					)
 				),
 				new Statement(
@@ -593,11 +593,11 @@ const Program* GetTestProgram() {
 									}
 								),
 								new Operator( SI( 41, 32, 41, 33 ), OT_ADD ),
-								new program::Value( SI( 41, 34, 41, 36 ), VALUE( type::Int, 61 ) )
+								new program::Value( SI( 41, 34, 41, 36 ), VALUE( value::Int, 61 ) )
 							)
 						),
 						new Operator( SI( 41, 39, 41, 40 ), OT_ASSIGN ),
-						new program::Value( SI( 41, 41, 41, 48 ), VALUE( type::String, "FIRST" ) )
+						new program::Value( SI( 41, 41, 41, 48 ), VALUE( value::String, "FIRST" ) )
 					)
 				),
 				new Statement(
@@ -610,9 +610,9 @@ const Program* GetTestProgram() {
 							new Operator( SI( 42, 9, 42, 14 ), OT_AT ),
 							new Expression(
 								SI( 42, 10, 42, 13 ),
-								new program::Value( SI( 42, 10, 42, 11 ), VALUE( type::Int, 2 ) ),
+								new program::Value( SI( 42, 10, 42, 11 ), VALUE( value::Int, 2 ) ),
 								new Operator( SI( 42, 11, 42, 12 ), OT_RANGE ),
-								new program::Value( SI( 42, 12, 42, 13 ), VALUE( type::Int, 5 ) )
+								new program::Value( SI( 42, 12, 42, 13 ), VALUE( value::Int, 5 ) )
 							)
 						),
 						new Operator( SI( 42, 15, 42, 16 ), OT_ASSIGN ),
@@ -624,9 +624,9 @@ const Program* GetTestProgram() {
 								new Operator( SI( 42, 25, 42, 30 ), OT_AT ),
 								new Expression(
 									SI( 42, 26, 42, 29 ),
-									new program::Value( SI( 42, 26, 42, 27 ), VALUE( type::Int, 0 ) ),
+									new program::Value( SI( 42, 26, 42, 27 ), VALUE( value::Int, 0 ) ),
 									new Operator( SI( 42, 27, 42, 28 ), OT_RANGE ),
-									new program::Value( SI( 42, 28, 42, 29 ), VALUE( type::Int, 1 ) )
+									new program::Value( SI( 42, 28, 42, 29 ), VALUE( value::Int, 1 ) )
 								)
 							),
 							new Operator( SI( 42, 31, 42, 32 ), OT_ADD ),
@@ -636,9 +636,9 @@ const Program* GetTestProgram() {
 								new Operator( SI( 42, 41, 42, 46 ), OT_AT ),
 								new Expression(
 									SI( 42, 42, 42, 45 ),
-									new program::Value( SI( 42, 42, 42, 43 ), VALUE( type::Int, 0 ) ),
+									new program::Value( SI( 42, 42, 42, 43 ), VALUE( value::Int, 0 ) ),
 									new Operator( SI( 42, 43, 42, 44 ), OT_RANGE ),
-									new program::Value( SI( 42, 44, 42, 45 ), VALUE( type::Int, 1 ) )
+									new program::Value( SI( 42, 44, 42, 45 ), VALUE( value::Int, 1 ) )
 								)
 							)
 						)
@@ -658,7 +658,7 @@ const Program* GetTestProgram() {
 								SI( 43, 25, 43, 27 ),
 								nullptr,
 								new Operator( SI( 43, 25, 43, 26 ), OT_RANGE ),
-								new program::Value( SI( 43, 26, 43, 27 ), VALUE( type::Int, 3 ) )
+								new program::Value( SI( 43, 26, 43, 27 ), VALUE( value::Int, 3 ) )
 							)
 						)
 					)
@@ -679,10 +679,10 @@ const Program* GetTestProgram() {
 										SI( 44, 11, 44, 16 ),
 										new Variable( SI( 44, 11, 44, 12 ), "c" ),
 										new Operator( SI( 44, 13, 44, 14 ), OT_ADD ),
-										new program::Value( SI( 44, 15, 44, 16 ), VALUE( type::Int, 1 ) )
+										new program::Value( SI( 44, 15, 44, 16 ), VALUE( value::Int, 1 ) )
 									),
 									new Operator( SI( 44, 17, 44, 18 ), OT_SUB ),
-									new program::Value( SI( 44, 19, 44, 22 ), VALUE( type::Int, 100 ) )
+									new program::Value( SI( 44, 19, 44, 22 ), VALUE( value::Int, 100 ) )
 								),
 								new Operator( SI( 44, 23, 44, 24 ), OT_RANGE ),
 								new Expression(
@@ -691,10 +691,10 @@ const Program* GetTestProgram() {
 										SI( 44, 25, 44, 32 ),
 										new Variable( SI( 44, 25, 44, 26 ), "c" ),
 										new Operator( SI( 44, 27, 44, 28 ), OT_SUB ),
-										new program::Value( SI( 44, 29, 44, 32 ), VALUE( type::Int, 100 ) )
+										new program::Value( SI( 44, 29, 44, 32 ), VALUE( value::Int, 100 ) )
 									),
 									new Operator( SI( 44, 33, 44, 34 ), OT_ADD ),
-									new program::Value( SI( 44, 35, 44, 36 ), VALUE( type::Int, 2 ) )
+									new program::Value( SI( 44, 35, 44, 36 ), VALUE( value::Int, 2 ) )
 								)
 							)
 						),
@@ -704,11 +704,11 @@ const Program* GetTestProgram() {
 							{
 								new Expression(
 									SI( 44, 43, 44, 54 ),
-									new program::Value( SI( 44, 43, 44, 54 ), VALUE( type::String, "new first" ) )
+									new program::Value( SI( 44, 43, 44, 54 ), VALUE( value::String, "new first" ) )
 								),
 								new Expression(
 									SI( 44, 56, 44, 68 ),
-									new program::Value( SI( 44, 56, 44, 68 ), VALUE( type::String, "new second" ) )
+									new program::Value( SI( 44, 56, 44, 68 ), VALUE( value::String, "new second" ) )
 								)
 							}
 						)
@@ -736,7 +736,7 @@ const Program* GetTestProgram() {
 									"propertyString",
 									new Expression(
 										SI( 48, 18, 48, 26 ),
-										new program::Value( SI( 48, 18, 48, 26 ), VALUE( type::String, "STRING" ) )
+										new program::Value( SI( 48, 18, 48, 26 ), VALUE( value::String, "STRING" ) )
 									)
 								},
 								{
@@ -745,7 +745,7 @@ const Program* GetTestProgram() {
 										SI( 49, 16, 49, 27 ),
 										new Expression(
 											SI( 49, 16, 49, 23 ),
-											new program::Value( SI( 49, 16, 49, 19 ), VALUE( type::Int, 111 ) ),
+											new program::Value( SI( 49, 16, 49, 19 ), VALUE( value::Int, 111 ) ),
 											new Operator( SI( 49, 20, 49, 21 ), OT_ADD ),
 											new Variable( SI( 49, 22, 49, 23 ), "a" )
 										),
@@ -757,7 +757,7 @@ const Program* GetTestProgram() {
 									"propertyInt2",
 									new Expression(
 										SI( 50, 16, 50, 19 ),
-										new program::Value( SI( 50, 16, 50, 19 ), VALUE( type::Int, 222 ) )
+										new program::Value( SI( 50, 16, 50, 19 ), VALUE( value::Int, 222 ) )
 									)
 								}
 							}
@@ -791,7 +791,7 @@ const Program* GetTestProgram() {
 																	"value",
 																	new Expression(
 																		SI( 55, 14, 55, 27 ),
-																		new program::Value( SI( 55, 14, 55, 27 ), VALUE( type::String, "CHILD VALUE" ) )
+																		new program::Value( SI( 55, 14, 55, 27 ), VALUE( value::String, "CHILD VALUE" ) )
 																	)
 																}
 															}
@@ -841,7 +841,7 @@ const Program* GetTestProgram() {
 						SI( 61, 5, 61, 13 ),
 						new Variable( SI( 61, 5, 61, 6 ), "d", VH_CREATE_VAR ),
 						new Operator( SI( 61, 7, 61, 8 ), OT_ASSIGN ),
-						new program::Value( SI( 61, 9, 61, 13 ), VALUE( type::Null ) )
+						new program::Value( SI( 61, 9, 61, 13 ), VALUE( value::Null ) )
 					)
 				),
 				new Statement(
@@ -874,7 +874,7 @@ const Program* GetTestProgram() {
 							SI( 65, 14, 65, 23 ),
 							new Variable( SI( 65, 14, 65, 15 ), "d" ),
 							new Operator( SI( 65, 16, 65, 18 ), OT_EQ ),
-							new program::Value( SI( 65, 19, 65, 23 ), VALUE( type::Null ) )
+							new program::Value( SI( 65, 19, 65, 23 ), VALUE( value::Null ) )
 						)
 					}
 				),
@@ -957,19 +957,19 @@ const Program* GetTestProgram() {
 							SI( 70, 22, 70, 28 ),
 							new Variable( SI( 70, 22, 70, 23 ), "a" ),
 							new Operator( SI( 70, 24, 70, 26 ), OT_GTE ),
-							new program::Value( SI( 70, 27, 70, 28 ), VALUE( type::Int, 2 ) )
+							new program::Value( SI( 70, 27, 70, 28 ), VALUE( value::Int, 2 ) )
 						),
 						new Expression(
 							SI( 70, 30, 70, 38 ),
 							new Variable( SI( 70, 30, 70, 31 ), "c" ),
 							new Operator( SI( 70, 32, 70, 34 ), OT_LTE ),
-							new program::Value( SI( 70, 35, 70, 38 ), VALUE( type::Int, 200 ) )
+							new program::Value( SI( 70, 35, 70, 38 ), VALUE( value::Int, 200 ) )
 						),
 						new Expression(
 							SI( 70, 40, 70, 48 ),
 							new Variable( SI( 70, 40, 70, 41 ), "a" ),
 							new Operator( SI( 70, 42, 70, 44 ), OT_LTE ),
-							new program::Value( SI( 70, 45, 70, 48 ), VALUE( type::Int, 200 ) )
+							new program::Value( SI( 70, 45, 70, 48 ), VALUE( value::Int, 200 ) )
 						)
 					}
 				),
@@ -978,15 +978,15 @@ const Program* GetTestProgram() {
 					{
 						new Expression(
 							SI( 71, 14, 71, 21 ),
-							new program::Value( SI( 71, 14, 71, 16 ), VALUE( type::Int, 10 ) ),
+							new program::Value( SI( 71, 14, 71, 16 ), VALUE( value::Int, 10 ) ),
 							new Operator( SI( 71, 17, 71, 18 ), OT_LT ),
-							new program::Value( SI( 71, 19, 71, 21 ), VALUE( type::Int, 10 ) )
+							new program::Value( SI( 71, 19, 71, 21 ), VALUE( value::Int, 10 ) )
 						),
 						new Expression(
 							SI( 71, 23, 71, 31 ),
-							new program::Value( SI( 71, 23, 71, 25 ), VALUE( type::Int, 10 ) ),
+							new program::Value( SI( 71, 23, 71, 25 ), VALUE( value::Int, 10 ) ),
 							new Operator( SI( 71, 26, 71, 28 ), OT_LTE ),
-							new program::Value( SI( 71, 29, 71, 31 ), VALUE( type::Int, 10 ) )
+							new program::Value( SI( 71, 29, 71, 31 ), VALUE( value::Int, 10 ) )
 						),
 						new Expression(
 							SI( 71, 33, 71, 38 ),
@@ -1007,27 +1007,27 @@ const Program* GetTestProgram() {
 					{
 						new Expression(
 							SI( 72, 14, 72, 26 ),
-							new program::Value( SI( 72, 14, 72, 18 ), VALUE( type::Bool, true ) ),
+							new program::Value( SI( 72, 14, 72, 18 ), VALUE( value::Bool, true ) ),
 							new Operator( SI( 72, 19, 72, 21 ), OT_AND ),
-							new program::Value( SI( 72, 22, 72, 26 ), VALUE( type::Bool, true ) )
+							new program::Value( SI( 72, 22, 72, 26 ), VALUE( value::Bool, true ) )
 						),
 						new Expression(
 							SI( 72, 28, 72, 41 ),
-							new program::Value( SI( 72, 28, 72, 32 ), VALUE( type::Bool, true ) ),
+							new program::Value( SI( 72, 28, 72, 32 ), VALUE( value::Bool, true ) ),
 							new Operator( SI( 72, 33, 72, 35 ), OT_AND ),
-							new program::Value( SI( 72, 36, 72, 41 ), VALUE( type::Bool, false ) )
+							new program::Value( SI( 72, 36, 72, 41 ), VALUE( value::Bool, false ) )
 						),
 						new Expression(
 							SI( 72, 43, 72, 55 ),
-							new program::Value( SI( 72, 43, 72, 47 ), VALUE( type::Bool, true ) ),
+							new program::Value( SI( 72, 43, 72, 47 ), VALUE( value::Bool, true ) ),
 							new Operator( SI( 72, 48, 72, 50 ), OT_OR ),
-							new program::Value( SI( 72, 51, 72, 55 ), VALUE( type::Bool, true ) )
+							new program::Value( SI( 72, 51, 72, 55 ), VALUE( value::Bool, true ) )
 						),
 						new Expression(
 							SI( 72, 57, 72, 70 ),
-							new program::Value( SI( 72, 57, 72, 61 ), VALUE( type::Bool, true ) ),
+							new program::Value( SI( 72, 57, 72, 61 ), VALUE( value::Bool, true ) ),
 							new Operator( SI( 72, 62, 72, 64 ), OT_OR ),
-							new program::Value( SI( 72, 65, 72, 70 ), VALUE( type::Bool, false ) )
+							new program::Value( SI( 72, 65, 72, 70 ), VALUE( value::Bool, false ) )
 						)
 					}
 				),
@@ -1040,16 +1040,16 @@ const Program* GetTestProgram() {
 								SI( 73, 17, 73, 36 ),
 								new Expression(
 									SI( 73, 17, 73, 23 ),
-									new program::Value( SI( 73, 17, 73, 18 ), VALUE( type::Int, 5 ) ),
+									new program::Value( SI( 73, 17, 73, 18 ), VALUE( value::Int, 5 ) ),
 									new Operator( SI( 73, 19, 73, 20 ), OT_GT ),
-									new program::Value( SI( 73, 21, 73, 23 ), VALUE( type::Int, 10 ) )
+									new program::Value( SI( 73, 21, 73, 23 ), VALUE( value::Int, 10 ) )
 								),
 								new Operator( SI( 73, 26, 73, 28 ), OT_AND ),
 								new Expression(
 									SI( 73, 31, 73, 36 ),
-									new program::Value( SI( 73, 31, 73, 32 ), VALUE( type::Int, 2 ) ),
+									new program::Value( SI( 73, 31, 73, 32 ), VALUE( value::Int, 2 ) ),
 									new Operator( SI( 73, 33, 73, 34 ), OT_GT ),
-									new program::Value( SI( 73, 35, 73, 36 ), VALUE( type::Int, 1 ) )
+									new program::Value( SI( 73, 35, 73, 36 ), VALUE( value::Int, 1 ) )
 								)
 							),
 							new Operator( SI( 73, 40, 73, 42 ), OT_OR ),
@@ -1059,9 +1059,9 @@ const Program* GetTestProgram() {
 									SI( 73, 46, 73, 68 ),
 									new Expression(
 										SI( 73, 46, 73, 53 ),
-										new program::Value( SI( 73, 46, 73, 47 ), VALUE( type::Int, 5 ) ),
+										new program::Value( SI( 73, 46, 73, 47 ), VALUE( value::Int, 5 ) ),
 										new Operator( SI( 73, 48, 73, 50 ), OT_LTE ),
-										new program::Value( SI( 73, 51, 73, 53 ), VALUE( type::Int, 10 ) )
+										new program::Value( SI( 73, 51, 73, 53 ), VALUE( value::Int, 10 ) )
 									),
 									new Operator( SI( 73, 56, 73, 58 ), OT_AND ),
 									new Expression(
@@ -1070,18 +1070,18 @@ const Program* GetTestProgram() {
 										new Operator( SI( 73, 59, 73, 60 ), OT_NOT ),
 										new Expression(
 											SI( 73, 62, 73, 68 ),
-											new program::Value( SI( 73, 62, 73, 63 ), VALUE( type::Int, 5 ) ),
+											new program::Value( SI( 73, 62, 73, 63 ), VALUE( value::Int, 5 ) ),
 											new Operator( SI( 73, 64, 73, 65 ), OT_GT ),
-											new program::Value( SI( 73, 66, 73, 68 ), VALUE( type::Int, 35 ) )
+											new program::Value( SI( 73, 66, 73, 68 ), VALUE( value::Int, 35 ) )
 										)
 									)
 								),
 								new Operator( SI( 73, 71, 73, 73 ), OT_AND ),
 								new Expression(
 									SI( 73, 76, 73, 85 ),
-									new program::Value( SI( 73, 76, 73, 79 ), VALUE( type::Int, 100 ) ),
+									new program::Value( SI( 73, 76, 73, 79 ), VALUE( value::Int, 100 ) ),
 									new Operator( SI( 73, 80, 73, 82 ), OT_GTE ),
-									new program::Value( SI( 73, 83, 73, 85 ), VALUE( type::Int, 20 ) )
+									new program::Value( SI( 73, 83, 73, 85 ), VALUE( value::Int, 20 ) )
 								)
 							)
 						)
@@ -1101,7 +1101,7 @@ const Program* GetTestProgram() {
 								{
 									new Expression(
 										SI( 74, 25, 74, 27 ),
-										new program::Value( SI( 74, 25, 74, 27 ), VALUE( type::Int, 11 ) )
+										new program::Value( SI( 74, 25, 74, 27 ), VALUE( value::Int, 11 ) )
 									),
 									new Expression(
 										SI( 74, 29, 74, 30 ),
@@ -1109,7 +1109,7 @@ const Program* GetTestProgram() {
 									),
 									new Expression(
 										SI( 74, 32, 74, 34 ),
-										new program::Value( SI( 74, 32, 74, 34 ), VALUE( type::Int, 20 ) )
+										new program::Value( SI( 74, 32, 74, 34 ), VALUE( value::Int, 20 ) )
 									)
 								}
 							)
@@ -1163,7 +1163,7 @@ const Program* GetTestProgram() {
 								{
 									new Expression(
 										SI( 76, 26, 76, 27 ),
-										new program::Value( SI( 76, 26, 76, 27 ), VALUE( type::Int, 1 ) )
+										new program::Value( SI( 76, 26, 76, 27 ), VALUE( value::Int, 1 ) )
 									),
 									new Expression(
 										SI( 76, 29, 76, 90 ),
@@ -1176,7 +1176,7 @@ const Program* GetTestProgram() {
 											{
 												new Expression(
 													SI( 76, 41, 76, 42 ),
-													new program::Value( SI( 76, 41, 76, 42 ), VALUE( type::Int, 2 ) )
+													new program::Value( SI( 76, 41, 76, 42 ), VALUE( value::Int, 2 ) )
 												),
 												new Expression(
 													SI( 76, 44, 76, 65 ),
@@ -1189,15 +1189,15 @@ const Program* GetTestProgram() {
 														{
 															new Expression(
 																SI( 76, 56, 76, 57 ),
-																new program::Value( SI( 76, 56, 76, 57 ), VALUE( type::Int, 3 ) )
+																new program::Value( SI( 76, 56, 76, 57 ), VALUE( value::Int, 3 ) )
 															),
 															new Expression(
 																SI( 76, 59, 76, 60 ),
-																new program::Value( SI( 76, 59, 76, 60 ), VALUE( type::Int, 3 ) )
+																new program::Value( SI( 76, 59, 76, 60 ), VALUE( value::Int, 3 ) )
 															),
 															new Expression(
 																SI( 76, 62, 76, 63 ),
-																new program::Value( SI( 76, 62, 76, 63 ), VALUE( type::Int, 3 ) )
+																new program::Value( SI( 76, 62, 76, 63 ), VALUE( value::Int, 3 ) )
 															)
 														}
 													)
@@ -1213,15 +1213,15 @@ const Program* GetTestProgram() {
 														{
 															new Expression(
 																SI( 76, 79, 76, 80 ),
-																new program::Value( SI( 76, 79, 76, 80 ), VALUE( type::Int, 4 ) )
+																new program::Value( SI( 76, 79, 76, 80 ), VALUE( value::Int, 4 ) )
 															),
 															new Expression(
 																SI( 76, 82, 76, 83 ),
-																new program::Value( SI( 76, 82, 76, 83 ), VALUE( type::Int, 4 ) )
+																new program::Value( SI( 76, 82, 76, 83 ), VALUE( value::Int, 4 ) )
 															),
 															new Expression(
 																SI( 76, 85, 76, 86 ),
-																new program::Value( SI( 76, 85, 76, 86 ), VALUE( type::Int, 4 ) )
+																new program::Value( SI( 76, 85, 76, 86 ), VALUE( value::Int, 4 ) )
 															)
 														}
 													)
@@ -1240,11 +1240,11 @@ const Program* GetTestProgram() {
 											{
 												new Expression(
 													SI( 76, 104, 76, 105 ),
-													new program::Value( SI( 76, 104, 76, 105 ), VALUE( type::Int, 5 ) )
+													new program::Value( SI( 76, 104, 76, 105 ), VALUE( value::Int, 5 ) )
 												),
 												new Expression(
 													SI( 76, 107, 76, 108 ),
-													new program::Value( SI( 76, 107, 76, 108 ), VALUE( type::Int, 5 ) )
+													new program::Value( SI( 76, 107, 76, 108 ), VALUE( value::Int, 5 ) )
 												),
 												new Expression(
 													SI( 76, 110, 76, 131 ),
@@ -1257,15 +1257,15 @@ const Program* GetTestProgram() {
 														{
 															new Expression(
 																SI( 76, 122, 76, 123 ),
-																new program::Value( SI( 76, 122, 76, 123 ), VALUE( type::Int, 6 ) )
+																new program::Value( SI( 76, 122, 76, 123 ), VALUE( value::Int, 6 ) )
 															),
 															new Expression(
 																SI( 76, 125, 76, 126 ),
-																new program::Value( SI( 76, 125, 76, 126 ), VALUE( type::Int, 6 ) )
+																new program::Value( SI( 76, 125, 76, 126 ), VALUE( value::Int, 6 ) )
 															),
 															new Expression(
 																SI( 76, 128, 76, 129 ),
-																new program::Value( SI( 76, 128, 76, 129 ), VALUE( type::Int, 6 ) )
+																new program::Value( SI( 76, 128, 76, 129 ), VALUE( value::Int, 6 ) )
 															)
 														}
 													)
@@ -1278,7 +1278,7 @@ const Program* GetTestProgram() {
 						),
 						new Expression(
 							SI( 76, 136, 76, 138 ),
-							new program::Value( SI( 76, 136, 76, 138 ), VALUE( type::Int, 10 ) )
+							new program::Value( SI( 76, 136, 76, 138 ), VALUE( value::Int, 10 ) )
 						)
 					}
 				),
@@ -1325,7 +1325,7 @@ const Program* GetTestProgram() {
 							SI( 78, 14, 78, 25 ),
 							new Variable( SI( 78, 14, 78, 22 ), "testarr1" ),
 							new Operator( SI( 78, 22, 78, 25 ), OT_AT ),
-							new program::Value( SI( 78, 23, 78, 24 ), VALUE( type::Int, 0 ) )
+							new program::Value( SI( 78, 23, 78, 24 ), VALUE( value::Int, 0 ) )
 						)
 					}
 				),
@@ -1336,7 +1336,7 @@ const Program* GetTestProgram() {
 							SI( 78, 42, 78, 53 ),
 							new Variable( SI( 78, 42, 78, 50 ), "testarr1" ),
 							new Operator( SI( 78, 50, 78, 53 ), OT_AT ),
-							new program::Value( SI( 78, 51, 78, 52 ), VALUE( type::Int, 1 ) )
+							new program::Value( SI( 78, 51, 78, 52 ), VALUE( value::Int, 1 ) )
 						)
 					}
 				),
@@ -1349,9 +1349,9 @@ const Program* GetTestProgram() {
 							new Operator( SI( 78, 78, 78, 83 ), OT_AT ),
 							new Expression(
 								SI( 78, 79, 78, 82 ),
-								new program::Value( SI( 78, 79, 78, 80 ), VALUE( type::Int, 0 ) ),
+								new program::Value( SI( 78, 79, 78, 80 ), VALUE( value::Int, 0 ) ),
 								new Operator( SI( 78, 80, 78, 81 ), OT_RANGE ),
-								new program::Value( SI( 78, 81, 78, 82 ), VALUE( type::Int, 1 ) )
+								new program::Value( SI( 78, 81, 78, 82 ), VALUE( value::Int, 1 ) )
 							)
 						)
 					}
@@ -1365,7 +1365,7 @@ const Program* GetTestProgram() {
 							new Operator( SI( 79, 22, 79, 26 ), OT_AT ),
 							new Expression(
 								SI( 79, 23, 79, 25 ),
-								new program::Value( SI( 79, 23, 79, 24 ), VALUE( type::Int, 5 ) ),
+								new program::Value( SI( 79, 23, 79, 24 ), VALUE( value::Int, 5 ) ),
 								new Operator( SI( 79, 24, 79, 25 ), OT_RANGE ),
 								nullptr
 							)
@@ -1383,7 +1383,7 @@ const Program* GetTestProgram() {
 								SI( 79, 52, 79, 54 ),
 								nullptr,
 								new Operator( SI( 79, 52, 79, 53 ), OT_RANGE ),
-								new program::Value( SI( 79, 53, 79, 54 ), VALUE( type::Int, 3 ) )
+								new program::Value( SI( 79, 53, 79, 54 ), VALUE( value::Int, 3 ) )
 							)
 						)
 					}
@@ -1399,9 +1399,9 @@ const Program* GetTestProgram() {
 								new Operator( SI( 80, 22, 80, 27 ), OT_AT ),
 								new Expression(
 									SI( 80, 23, 80, 26 ),
-									new program::Value( SI( 80, 23, 80, 24 ), VALUE( type::Int, 4 ) ),
+									new program::Value( SI( 80, 23, 80, 24 ), VALUE( value::Int, 4 ) ),
 									new Operator( SI( 80, 24, 80, 25 ), OT_RANGE ),
-									new program::Value( SI( 80, 25, 80, 26 ), VALUE( type::Int, 5 ) )
+									new program::Value( SI( 80, 25, 80, 26 ), VALUE( value::Int, 5 ) )
 								)
 							),
 							new Operator( SI( 80, 28, 80, 29 ), OT_ADD ),
@@ -1411,9 +1411,9 @@ const Program* GetTestProgram() {
 								new Operator( SI( 80, 38, 80, 43 ), OT_AT ),
 								new Expression(
 									SI( 80, 39, 80, 42 ),
-									new program::Value( SI( 80, 39, 80, 40 ), VALUE( type::Int, 2 ) ),
+									new program::Value( SI( 80, 39, 80, 40 ), VALUE( value::Int, 2 ) ),
 									new Operator( SI( 80, 40, 80, 41 ), OT_RANGE ),
-									new program::Value( SI( 80, 41, 80, 42 ), VALUE( type::Int, 3 ) )
+									new program::Value( SI( 80, 41, 80, 42 ), VALUE( value::Int, 3 ) )
 								)
 							)
 						)
@@ -1454,7 +1454,7 @@ const Program* GetTestProgram() {
 							new Operator( SI( 82, 34, 82, 36 ), OT_EQ ),
 							new Expression(
 								SI( 82, 37, 82, 44 ),
-								new program::Value( SI( 82, 37, 82, 40 ), VALUE( type::Int, 272 ) ),
+								new program::Value( SI( 82, 37, 82, 40 ), VALUE( value::Int, 272 ) ),
 								new Operator( SI( 82, 41, 82, 42 ), OT_ADD ),
 								new Variable( SI( 82, 43, 82, 44 ), "c" )
 							)
@@ -1493,7 +1493,7 @@ const Program* GetTestProgram() {
 								{
 									new Expression(
 										SI( 85, 16, 85, 21 ),
-										new program::Value( SI( 85, 16, 85, 21 ), VALUE( type::String, "YES" ) )
+										new program::Value( SI( 85, 16, 85, 21 ), VALUE( value::String, "YES" ) )
 									)
 								}
 							)
@@ -1509,7 +1509,7 @@ const Program* GetTestProgram() {
 									{
 										new Expression(
 											SI( 88, 16, 88, 20 ),
-											new program::Value( SI( 88, 16, 88, 20 ), VALUE( type::String, "NO" ) )
+											new program::Value( SI( 88, 16, 88, 20 ), VALUE( value::String, "NO" ) )
 										)
 									}
 								)
@@ -1536,7 +1536,7 @@ const Program* GetTestProgram() {
 								{
 									new Expression(
 										SI( 91, 16, 91, 21 ),
-										new program::Value( SI( 91, 16, 91, 21 ), VALUE( type::String, "YES" ) )
+										new program::Value( SI( 91, 16, 91, 21 ), VALUE( value::String, "YES" ) )
 									)
 								}
 							)
@@ -1552,7 +1552,7 @@ const Program* GetTestProgram() {
 									{
 										new Expression(
 											SI( 94, 16, 94, 20 ),
-											new program::Value( SI( 94, 16, 94, 20 ), VALUE( type::String, "NO" ) )
+											new program::Value( SI( 94, 16, 94, 20 ), VALUE( value::String, "NO" ) )
 										)
 									}
 								)
@@ -1566,7 +1566,7 @@ const Program* GetTestProgram() {
 						SI( 96, 4, 96, 5 ),
 						new Expression(
 							SI( 96, 6, 96, 11 ),
-							new program::Value( SI( 96, 6, 96, 11 ), VALUE( type::Bool, false ) )
+							new program::Value( SI( 96, 6, 96, 11 ), VALUE( value::Bool, false ) )
 						)
 					),
 					new Scope(
@@ -1577,7 +1577,7 @@ const Program* GetTestProgram() {
 								{
 									new Expression(
 										SI( 96, 29, 96, 36 ),
-										new program::Value( SI( 96, 29, 96, 36 ), VALUE( type::String, "FALSE" ) )
+										new program::Value( SI( 96, 29, 96, 36 ), VALUE( value::String, "FALSE" ) )
 									)
 								}
 							)
@@ -1590,7 +1590,7 @@ const Program* GetTestProgram() {
 						SI( 97, 4, 97, 5 ),
 						new Expression(
 							SI( 97, 6, 97, 11 ),
-							new program::Value( SI( 97, 6, 97, 11 ), VALUE( type::Bool, false ) )
+							new program::Value( SI( 97, 6, 97, 11 ), VALUE( value::Bool, false ) )
 						)
 					),
 					new Scope(
@@ -1601,7 +1601,7 @@ const Program* GetTestProgram() {
 								{
 									new Expression(
 										SI( 98, 15, 98, 21 ),
-										new program::Value( SI( 98, 15, 98, 21 ), VALUE( type::String, "FAIL" ) )
+										new program::Value( SI( 98, 15, 98, 21 ), VALUE( value::String, "FAIL" ) )
 									)
 								}
 							)
@@ -1613,7 +1613,7 @@ const Program* GetTestProgram() {
 							SI( 99, 3, 101, 2 ),
 							new Expression(
 								SI( 99, 12, 99, 17 ),
-								new program::Value( SI( 99, 12, 99, 17 ), VALUE( type::Bool, false ) )
+								new program::Value( SI( 99, 12, 99, 17 ), VALUE( value::Bool, false ) )
 							)
 						),
 						new Scope(
@@ -1624,7 +1624,7 @@ const Program* GetTestProgram() {
 									{
 										new Expression(
 											SI( 100, 16, 100, 22 ),
-											new program::Value( SI( 100, 16, 100, 22 ), VALUE( type::String, "FAIL" ) )
+											new program::Value( SI( 100, 16, 100, 22 ), VALUE( value::String, "FAIL" ) )
 										)
 									}
 								)
@@ -1636,7 +1636,7 @@ const Program* GetTestProgram() {
 								SI( 101, 3, 103, 2 ),
 								new Expression(
 									SI( 101, 12, 101, 16 ),
-									new program::Value( SI( 101, 12, 101, 16 ), VALUE( type::Bool, true ) )
+									new program::Value( SI( 101, 12, 101, 16 ), VALUE( value::Bool, true ) )
 								)
 							),
 							new Scope(
@@ -1647,7 +1647,7 @@ const Program* GetTestProgram() {
 										{
 											new Expression(
 												SI( 102, 16, 102, 20 ),
-												new program::Value( SI( 102, 16, 102, 20 ), VALUE( type::String, "OK" ) )
+												new program::Value( SI( 102, 16, 102, 20 ), VALUE( value::String, "OK" ) )
 											)
 										}
 									)
@@ -1663,7 +1663,7 @@ const Program* GetTestProgram() {
 											{
 												new Expression(
 													SI( 104, 16, 104, 22 ),
-													new program::Value( SI( 104, 16, 104, 22 ), VALUE( type::String, "FAIL" ) )
+													new program::Value( SI( 104, 16, 104, 22 ), VALUE( value::String, "FAIL" ) )
 												)
 											}
 										)
@@ -1679,7 +1679,7 @@ const Program* GetTestProgram() {
 						SI( 107, 5, 107, 10 ),
 						new Variable( SI( 107, 5, 107, 6 ), "i", VH_CREATE_VAR ),
 						new Operator( SI( 107, 7, 107, 8 ), OT_ASSIGN ),
-						new program::Value( SI( 107, 9, 107, 10 ), VALUE( type::Int, 0 ) )
+						new program::Value( SI( 107, 9, 107, 10 ), VALUE( value::Int, 0 ) )
 					)
 				),
 				new While(
@@ -1694,7 +1694,7 @@ const Program* GetTestProgram() {
 								new Operator( SI( 108, 10, 108, 12 ), OT_INC )
 							),
 							new Operator( SI( 108, 13, 108, 14 ), OT_LT ),
-							new program::Value( SI( 108, 15, 108, 16 ), VALUE( type::Int, 5 ) )
+							new program::Value( SI( 108, 15, 108, 16 ), VALUE( value::Int, 5 ) )
 						)
 					),
 					new Scope(
@@ -1722,7 +1722,7 @@ const Program* GetTestProgram() {
 								{
 									new Expression(
 										SI( 113, 16, 113, 34 ),
-										new program::Value( SI( 113, 16, 113, 34 ), VALUE( type::String, "BEFORE EXCEPTION" ) )
+										new program::Value( SI( 113, 16, 113, 34 ), VALUE( value::String, "BEFORE EXCEPTION" ) )
 									)
 								}
 							),
@@ -1743,7 +1743,7 @@ const Program* GetTestProgram() {
 													{
 														new Expression(
 															SI( 115, 17, 115, 27 ),
-															new program::Value( SI( 115, 17, 115, 27 ), VALUE( type::String, "failfunc" ) )
+															new program::Value( SI( 115, 17, 115, 27 ), VALUE( value::String, "failfunc" ) )
 														),
 													}
 												),
@@ -1762,7 +1762,7 @@ const Program* GetTestProgram() {
 															{
 																new Expression(
 																	SI( 116, 21, 116, 41 ),
-																	new program::Value( SI( 116, 21, 116, 41 ), VALUE( type::String, "something happened" ) )
+																	new program::Value( SI( 116, 21, 116, 41 ), VALUE( value::String, "something happened" ) )
 																)
 															}
 														)
@@ -1792,7 +1792,7 @@ const Program* GetTestProgram() {
 								{
 									new Expression(
 										SI( 119, 16, 119, 33 ),
-										new program::Value( SI( 119, 16, 119, 33 ), VALUE( type::String, "AFTER EXCEPTION" ) )
+										new program::Value( SI( 119, 16, 119, 33 ), VALUE( value::String, "AFTER EXCEPTION" ) )
 									)
 								}
 							),
@@ -1819,7 +1819,7 @@ const Program* GetTestProgram() {
 														{
 															new Expression(
 																SI( 123, 17, 123, 38 ),
-																new program::Value( SI( 123, 17, 123, 38 ), VALUE( type::String, "shouldnt catch this" ) )
+																new program::Value( SI( 123, 17, 123, 38 ), VALUE( value::String, "shouldnt catch this" ) )
 															)
 														}
 													)
@@ -1848,7 +1848,7 @@ const Program* GetTestProgram() {
 																	SI( 126, 17, 126, 43 ),
 																	new Expression(
 																		SI( 126, 17, 126, 35 ),
-																		new program::Value( SI( 126, 17, 126, 26 ), VALUE( type::String, "CAUGHT " ) ),
+																		new program::Value( SI( 126, 17, 126, 26 ), VALUE( value::String, "CAUGHT " ) ),
 																		new Operator( SI( 126, 27, 126, 28 ), OT_ADD ),
 																		new Expression(
 																			SI( 126, 29, 126, 35 ),
@@ -1858,7 +1858,7 @@ const Program* GetTestProgram() {
 																		)
 																	),
 																	new Operator( SI( 126, 36, 126, 37 ), OT_ADD ),
-																	new program::Value( SI( 126, 38, 126, 43 ), VALUE( type::String, " : " ) )
+																	new program::Value( SI( 126, 38, 126, 43 ), VALUE( value::String, " : " ) )
 																),
 																new Operator( SI( 126, 44, 126, 45 ), OT_ADD ),
 																new Expression(
@@ -1895,7 +1895,7 @@ const Program* GetTestProgram() {
 					{
 						new Expression(
 							SI( 132, 13, 132, 19 ),
-							new program::Value( SI( 132, 13, 132, 19 ), VALUE( type::String, "bye!" ) )
+							new program::Value( SI( 132, 13, 132, 19 ), VALUE( value::String, "bye!" ) )
 						)
 					}
 				),

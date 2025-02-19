@@ -1,14 +1,12 @@
 #pragma once
 
-#include "Type.h"
-
 namespace gse {
-namespace type {
+namespace value {
 
-class Null : public Type {
+class Null : public Value {
 public:
 	Null()
-		: Type( Type::T_NULL ) {}
+		: Value( Value::T_NULL ) {}
 
 	Null( const Null& other )
 		: Null() {}

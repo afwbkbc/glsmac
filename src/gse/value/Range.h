@@ -2,18 +2,18 @@
 
 #include <optional>
 
-#include "Type.h"
+#include "gse/Value.h"
 
 namespace gse {
-namespace type {
+namespace value {
 
-class Range : public Type {
+class Range : public Value {
 public:
 
-	static const type_t GetType() { return Type::T_RANGE; }
+	static const type_t GetType() { return Value::T_RANGE; }
 
 	Range( const std::optional< size_t > from, const std::optional< size_t > to )
-		: Type( GetType() )
+		: Value( GetType() )
 		, from( from )
 		, to( to ) {}
 

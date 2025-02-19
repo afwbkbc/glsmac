@@ -28,14 +28,14 @@ Space::~Space() {
 
 void Space::Add( Object* object ) {
 	std::lock_guard< std::mutex > guard( m_objects_to_add_mutex );
-	Log( "Adding object: " + std::to_string( (unsigned long)object ) );
+	//Log( "Adding object: " + std::to_string( (unsigned long)object ) );
 	ASSERT( m_objects_to_add.find( object ) == m_objects_to_add.end(), "object " + std::to_string( (unsigned long)object ) + " already pending addition" );
 	m_objects_to_add.insert( object );
 }
 
 void Space::Remove( Object* object ) {
 	std::lock_guard< std::mutex > guard( m_objects_to_remove_mutex );
-	Log( "Removing object: " + std::to_string( (unsigned long)object ) );
+	//Log( "Removing object: " + std::to_string( (unsigned long)object ) );
 	//ASSERT( m_objects.find( object ) != m_objects.end(), "object not in gc space" );
 	ASSERT( m_objects_to_remove.find( object ) == m_objects_to_remove.end(), "object " + std::to_string( (unsigned long)object ) + " already pending removal" );
 	m_objects_to_remove.insert( object );
@@ -75,7 +75,7 @@ const bool Space::Collect() {
 	}
 #endif
 
-	Log( "Collecting from " + std::to_string( m_objects.size() ) + " objects" );
+	//Log( "Collecting from " + std::to_string( m_objects.size() ) + " objects" );
 	for ( const auto& object : m_objects ) {
 		if ( objects_to_remove.find( object ) == objects_to_remove.end() ) {
 			object->CollectActiveObjects( m_reachable_objects_tmp );
@@ -88,7 +88,7 @@ const bool Space::Collect() {
 	for ( const auto& object : m_objects ) {
 		const auto& it = m_reachable_objects_tmp.find( object );
 		if ( it == m_reachable_objects_tmp.end() ) {
-			Log( "Destroying unreachable object: " + std::to_string( (unsigned long)object ) );
+			//Log( "Destroying unreachable object: " + std::to_string( (unsigned long)object ) );
 			delete object;
 			anything_removed = true;
 			removed_objects.insert( object );

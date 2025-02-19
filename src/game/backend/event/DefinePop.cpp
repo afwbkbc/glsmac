@@ -3,7 +3,7 @@
 #include "game/backend/Game.h"
 #include "game/backend/base/PopDef.h"
 #include "game/backend/base/BaseManager.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Undefined.h"
 
 namespace game {
 namespace backend {
@@ -22,9 +22,9 @@ const std::string* DefinePop::Validate( Game* game ) const {
 	return Ok();
 }
 
-const gse::Value DefinePop::Apply( Game* game ) const {
+gse::Value* const DefinePop::Apply( Game* game ) const {
 	game->GetBM()->DefinePop( m_pop_def );
-	return VALUE( gse::type::Undefined );
+	return VALUE( gse::value::Undefined );
 }
 
 TS_BEGIN( DefinePop )

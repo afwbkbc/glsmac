@@ -35,15 +35,19 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 			mocks::AddMocks( context, {} );
 
 			gse->LogCaptureStart();
-			{
+			try {
 				ExecutionPointer ep;
 				interpreter.Execute( context, ep, g_test_program );
 			}
+			catch ( const std::runtime_error& e ) {
+				context->Clear();
+				throw;
+			}
+			context->Clear();
+
 			const auto actual_output = gse->LogCaptureStopGet();
 
 			VALIDATE();
-
-			context->Clear();
 
 			GT_OK();
 		}

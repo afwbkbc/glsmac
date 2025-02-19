@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "types/Buffer.h"
-#include "gse/Value.h"
 
 namespace game {
 namespace backend {
@@ -58,7 +57,7 @@ public:
 
 	virtual const std::string* Validate( Game* game ) const = 0;
 	virtual void Resolve( Game* game ) {};
-	virtual const gse::Value Apply( Game* game ) const = 0;
+	virtual gse::Value* const Apply( Game* game ) const = 0;
 	virtual const std::string ToString( const std::string& prefix = "" ) const = 0;
 
 	bool m_is_validated = false;

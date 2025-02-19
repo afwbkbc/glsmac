@@ -1,8 +1,8 @@
 #include "Faction.h"
 
 #include "types/texture/Texture.h"
-#include "gse/type/String.h"
-#include "gse/type/Bool.h"
+#include "gse/value/String.h"
+#include "gse/value/Bool.h"
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
 #include "resource/ResourceManager.h"
@@ -71,19 +71,19 @@ WRAPIMPL_BEGIN( Faction )
 	WRAPIMPL_PROPS
 		{
 			"id",
-			VALUE( gse::type::String, m_id )
+			VALUE( gse::value::String, m_id )
 		},
 		{
 			"name",
-			VALUE( gse::type::String, m_name )
+			VALUE( gse::value::String, m_name )
 		},
 		{
 			"is_naval",
-			VALUE( gse::type::Bool, m_flags & Faction::FF_NAVAL )
+			VALUE( gse::value::Bool, m_flags & Faction::FF_NAVAL )
 		},
 		{
 			"is_progenitor",
-			VALUE( gse::type::Bool, m_flags & Faction::FF_PROGENITOR )
+			VALUE( gse::value::Bool, m_flags & Faction::FF_PROGENITOR )
 		},
 	};
 WRAPIMPL_END_PTR()

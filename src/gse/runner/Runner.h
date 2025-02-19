@@ -2,11 +2,10 @@
 
 #include "common/Common.h"
 
-#include "gse/Value.h"
-
 namespace gse {
 
 class ExecutionPointer;
+class Value;
 
 namespace context {
 class Context;
@@ -20,7 +19,7 @@ namespace runner {
 
 CLASS( Runner, common::Class )
 
-	virtual const Value Execute( context::Context* ctx, ExecutionPointer& ep, const program::Program* program ) const = 0;
+	virtual Value* const Execute( context::Context* ctx, ExecutionPointer& ep, const program::Program* program ) const = 0;
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
 

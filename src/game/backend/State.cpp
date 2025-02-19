@@ -177,7 +177,7 @@ faction::FactionManager* State::GetFM() const {
 	return m_fm;
 }
 
-const gse::Value State::TriggerObject( gse::Wrappable* object, const std::string& event, const gse::type::object_properties_t& args ) {
+gse::Value* const State::TriggerObject( gse::Wrappable* object, const std::string& event, const gse::value::object_properties_t& args ) {
 	if ( m_glsmac ) {
 		// new ui
 		return m_glsmac->TriggerObject( object, event, args );

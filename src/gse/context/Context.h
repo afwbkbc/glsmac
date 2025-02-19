@@ -11,15 +11,13 @@
 #include "gc/Object.h"
 
 #include "gse/Types.h"
-#include "gse/type/Types.h"
-
-#include "gse/Value.h"
+#include "gse/value/Types.h"
 
 namespace gse {
 
 class GSE;
 
-namespace type {
+namespace value {
 class Object;
 }
 
@@ -30,7 +28,7 @@ class ChildContext;
 class Context : public gc::Object {
 protected:
 	struct var_info_t {
-		Value value;
+		Value* value;
 		bool is_const;
 	};
 	struct script_info_t {
@@ -46,16 +44,15 @@ public:
 	GSE* GetGSE() const;
 
 	const bool HasVariable( const std::string& name );
-	const Value GetVariable( const std::string& name, const si_t& si, gse::ExecutionPointer& ep );
+	Value* const GetVariable( const std::string& name, const si_t& si, gse::ExecutionPointer& ep );
 	void SetVariable( const std::string& name, const var_info_t& var_info );
-	void CreateVariable( const std::string& name, const Value& value, const si_t& si, gse::ExecutionPointer& ep );
-	void CreateConst( const std::string& name, const Value& value, const si_t& si, gse::ExecutionPointer& ep );
-	void UpdateVariable( const std::string& name, const Value& value, const si_t& si, gse::ExecutionPointer& ep );
+	void CreateVariable( const std::string& name, Value* const value, const si_t& si, gse::ExecutionPointer& ep );
+	void CreateConst( const std::string& name, Value* const value, const si_t& si, gse::ExecutionPointer& ep );
+	void UpdateVariable( const std::string& name, Value* const value, const si_t& si, gse::ExecutionPointer& ep );
 	void DestroyVariable( const std::string& name, const si_t& si, gse::ExecutionPointer& ep );
-	void CreateBuiltin( const std::string& name, const Value& value, gse::ExecutionPointer& ep );
-	void PersistValue( const Value& value );
-	void UnpersistValue( const Value& value );
-	void UnpersistValue( const type::Type* type );
+	void CreateBuiltin( const std::string& name, Value* const value, gse::ExecutionPointer& ep );
+	void PersistValue( Value* const value );
+	void UnpersistValue( Value* const value );
 
 	void Execute( const std::function< void() >& f );
 
@@ -81,7 +78,7 @@ protected:
 	typedef std::unordered_map< std::string, Context* > ref_contexts_t;
 	ref_contexts_t m_ref_contexts = {};
 
-	std::unordered_map< const type::Type*, Value > m_persisted_values = {};
+	std::unordered_map< const Value*, Value* > m_persisted_values = {};
 
 	void CollectActiveObjects( std::unordered_set< Object* >& active_objects ) override;
 
@@ -91,7 +88,7 @@ private:
 
 	std::mutex m_gc_mutex;
 	std::unordered_set< ChildContext* > m_child_contexts = {};
-	std::unordered_set< type::Type* > m_child_objects = {};
+	std::unordered_set< Value* > m_child_objects = {};
 
 private:
 	friend class ChildContext;
@@ -99,9 +96,9 @@ private:
 	void RemoveChildContext( ChildContext* const child );
 
 private:
-	friend class type::Object;
-	void AddChildObject( type::Type* const child );
-	void RemoveChildObject( type::Type* const child );
+	friend class value::Object;
+	void AddChildObject( Value* const child );
+	void RemoveChildObject( Value* const child );
 
 };
 

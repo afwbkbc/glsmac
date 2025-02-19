@@ -2,18 +2,18 @@
 
 #include <string>
 
-#include "Type.h"
+#include "gse/Value.h"
 
 namespace gse {
-namespace type {
+namespace value {
 
-class String : public Type {
+class String : public Value {
 public:
 
-	static const type_t GetType() { return Type::T_STRING; }
+	static const type_t GetType() { return Value::T_STRING; }
 
 	String( const std::string& initial_value )
-		: Type( GetType() )
+		: Value( GetType() )
 		, value( initial_value ) {
 	}
 

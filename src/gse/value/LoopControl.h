@@ -1,19 +1,17 @@
 #pragma once
 
-#include "Type.h"
-
 #include "gse/program/Types.h"
 
 namespace gse {
-namespace type {
+namespace value {
 
-class LoopControl : public Type {
+class LoopControl : public Value {
 public:
 
-	static const type_t GetType() { return Type::T_LOOPCONTROL; }
+	static const type_t GetType() { return Value::T_LOOPCONTROL; }
 
 	LoopControl( const program::loop_control_type_t initial_value )
-		: Type( GetType() )
+		: Value( GetType() )
 		, value( initial_value ) {
 	}
 

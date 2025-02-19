@@ -20,7 +20,7 @@ CLASS( Async, common::Class )
 
 	void Iterate( ExecutionPointer& ep );
 
-	const timer_id_t StartTimer( const size_t ms, const gse::Value& f, GSE_CALLABLE );
+	const timer_id_t StartTimer( const size_t ms, gse::Value* const f, GSE_CALLABLE );
 	const bool StopTimer( const timer_id_t id );
 	void StopTimers();
 
@@ -30,7 +30,7 @@ private:
 
 	struct timer_t {
 		size_t ms;
-		gse::Value callable;
+		gse::Value* callable;
 		gse::context::Context* ctx;
 		gse::si_t si;
 	};

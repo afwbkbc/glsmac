@@ -38,9 +38,9 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 	});
 
 	Property(
-		GSE_CALL, "overflow", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
-		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
-			const auto& value = ((gse::type::String*)v.Get())->value;
+		GSE_CALL, "overflow", gse::Value::T_STRING, VALUE( gse::value::Undefined ), PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			const auto& value = ((gse::value::String*)v)->value;
 			if ( value == "visible" ) {
 				m_geometry->SetOverflowAllowed( true );
 			}
@@ -50,7 +50,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 			else {
 				GSE_ERROR( gse::EC.UI_ERROR, "Invalid overflow value. Expected: visible or hidden, got: " + value );
 			};
-			return VALUE( gse::type::Undefined );
+			return VALUE( gse::value::Undefined );
 		},
 		[ this ]( GSE_CALLABLE ) {
 			m_geometry->SetOverflowAllowed( true );
@@ -72,7 +72,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 		for ( const auto& it : children ) {
 			RemoveChild( GSE_CALL,it.second );
 		}
-		return VALUE( gse::type::Undefined );
+		return VALUE( gse::value::Undefined );
 	} ) );
 
 }
@@ -196,10 +196,10 @@ void Container::Destroy( GSE_CALLABLE ) {
 		Object::_method( GSE_CALL, key __VA_ARGS__ ); \
 	}
 
-void Container::WrapSet( const std::string& key, const gse::Value& value, GSE_CALLABLE ) {
+void Container::WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE ) {
 	auto forward_it = m_forwarded_properties.find( key );
 	if ( forward_it != m_forwarded_properties.end() ) {
-		if ( value.Get()->type == gse::type::Type::T_UNDEFINED && !m_classes.empty() ) {
+		if ( value->type == gse::Value::T_UNDEFINED && !m_classes.empty() ) {
 			for ( const auto& c : m_classes ) {
 				const auto it = c->GetProperties().find( key );
 				if ( it != c->GetProperties().end() ) {
@@ -217,7 +217,7 @@ void Container::WrapSet( const std::string& key, const gse::Value& value, GSE_CA
 	}
 }
 
-void Container::Property( GSE_CALLABLE, const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value, const property_flag_t flags, const f_on_set_t& f_on_set, const f_on_unset_t& f_on_unset ) {
+void Container::Property( GSE_CALLABLE, const std::string& name, const gse::Value::type_t& type, gse::Value* default_value, const property_flag_t flags, const f_on_set_t& f_on_set, const f_on_unset_t& f_on_unset ) {
 	ASSERT_NOLOG( m_forwarded_properties.find( name ) == m_forwarded_properties.end(), "property '" + name + "' already exists (forwarded)" );
 	Object::Property( GSE_CALL, name, type, default_value, flags, f_on_set, f_on_unset );
 }
@@ -253,11 +253,11 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 		N_EXPECT_ARGS_MIN_MAX(0, 1);
 		properties_t initial_properties = {};
 		if ( arguments.size() == 1 ) {
-			const auto& v = arguments.at(0).Get();
-			if ( v->type != gse::type::Type::T_OBJECT ) {
-				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Expected properties object, got " + v->GetTypeString( v->type ) );
+			const auto& v = arguments.at(0);
+			if ( v->type != gse::Value::T_OBJECT ) {
+				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Expected properties object, got " + v->GetTypeString() );
 			}
-			initial_properties = ((gse::type::Object*)v)->value;
+			initial_properties = ((gse::value::Object*)v)->value;
 		}
 		auto* obj = f( GSE_CALL, initial_properties );
 		ASSERT_NOLOG( obj, "object not created" );
@@ -268,7 +268,7 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 	} ) );
 }
 
-void Container::OnPropertyChange( GSE_CALLABLE, const std::string& key, const gse::Value& value ) const {
+void Container::OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value ) const {
 	FORWARD_CALL( OnPropertyChange,, value )
 }
 
@@ -302,11 +302,11 @@ void Container::ProcessPendingDeletes( GSE_CALLABLE ) {
 	m_children_to_remove.clear();
 }
 
-void Container::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value, const class_modifier_t modifier ) {
+void Container::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, gse::Value* const value, const class_modifier_t modifier ) {
 	// check if property was set by any of previous classes with higher modifier
 	for ( const auto& c : m_classes ) {
 		const auto kv = c->GetProperty( key, m_modifiers );
-		if ( kv.first.Get()->type != gse::type::Type::T_UNDEFINED && kv.second > modifier ) {
+		if ( kv.first->type != gse::Value::T_UNDEFINED && kv.second > modifier ) {
 			return;
 		}
 	}
@@ -317,7 +317,7 @@ void Container::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
 	// check in other classes
 	for ( auto it = m_classes.rbegin() ; it != m_classes.rend() ; it++ ) {
 		const auto kv = (*it)->GetProperty( key, m_modifiers );
-		if ( kv.first.Get()->type != gse::type::Type::T_UNDEFINED ) {
+		if ( kv.first->type != gse::Value::T_UNDEFINED ) {
 			FORWARD_CALL( SetPropertyFromClass,, kv.first, kv.second );
 			return;
 		}

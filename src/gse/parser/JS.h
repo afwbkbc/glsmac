@@ -7,10 +7,9 @@
 
 #include "gse/program/Types.h"
 
-#include "gse/Value.h"
-#include "gse/type/Bool.h"
-#include "gse/type/Null.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Bool.h"
+#include "gse/value/Null.h"
+#include "gse/value/Undefined.h"
 
 namespace gse {
 
@@ -161,22 +160,22 @@ private:
 		}
 	};
 
-	const std::unordered_map< std::string, Value > PREDEF_OPERATORS = {
+	const std::unordered_map< std::string, Value* > PREDEF_OPERATORS = {
 		{
 			"true",
-			VALUE( type::Bool, true ),
+			VALUE( value::Bool, true ),
 		},
 		{
 			"false",
-			VALUE( type::Bool, false ),
+			VALUE( value::Bool, false ),
 		},
 		{
 			"null",
-			VALUE( type::Null ),
+			VALUE( value::Null ),
 		},
 		{
 			"undefined",
-			VALUE( type::Undefined ),
+			VALUE( value::Undefined ),
 		},
 	};
 

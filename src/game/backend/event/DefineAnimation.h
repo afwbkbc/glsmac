@@ -16,7 +16,7 @@ public:
 	DefineAnimation( const size_t initiator_slot, animation::Def* def );
 
 	const std::string* Validate( Game* game ) const override;
-	const gse::Value Apply( Game* game ) const override;
+	gse::Value* const Apply( Game* game ) const override;
 	TS_DEF()
 
 private:

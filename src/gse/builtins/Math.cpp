@@ -6,9 +6,9 @@
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
-#include "gse/type/Int.h"
-#include "gse/type/Float.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Int.h"
+#include "gse/value/Float.h"
+#include "gse/value/Undefined.h"
 
 namespace gse {
 namespace builtins {
@@ -19,23 +19,23 @@ void Math::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 	ctx->CreateBuiltin( _name, NATIVE_CALL() { \
 		N_EXPECT_ARGS( 2 ); \
 		for ( uint8_t i = 0 ; i < 2 ; i++ ) { \
-			const auto& value = arguments.at(i).Get(); \
-			if ( value->type != type::Type::T_INT && value->type != type::Type::T_FLOAT ) { \
-				throw Exception( EC.INVALID_CALL, "Argument " + std::to_string( i ) + " is expected to be " + type::Type::GetTypeString( type::Type::T_INT ) + " or " + type::Type::GetTypeString( type::Type::T_FLOAT ) + ", found: " + type::Type::GetTypeString( value->type ), GSE_CALL ); \
+			const auto& value = arguments.at(i); \
+			if ( value->type != Value::T_INT && value->type != Value::T_FLOAT ) { \
+				throw Exception( EC.INVALID_CALL, "Argument " + std::to_string( i ) + " is expected to be " + Value::GetTypeStringStatic( Value::T_INT ) + " or " + Value::GetTypeStringStatic( Value::T_FLOAT ) + ", found: " + value->GetTypeString(), GSE_CALL ); \
 			} \
 		} \
-		const auto& a = arguments.at(0).Get(); \
-		const auto& b = arguments.at(1).Get(); \
+		const auto& a = arguments.at(0); \
+		const auto& b = arguments.at(1); \
 		if ( a->type != b->type ) { \
-			throw Exception( EC.INVALID_CALL, "Arguments are of different types: " + type::Type::GetTypeString( a->type ) + ", " + type::Type::GetTypeString( b->type ), GSE_CALL ); \
+			throw Exception( EC.INVALID_CALL, "Arguments are of different types: " + a->GetTypeString() + ", " + b->GetTypeString(), GSE_CALL ); \
 		} \
 		switch ( a->type ) { \
-			case type::Type::T_INT: \
-				return VALUE( type::Int, _f_int( ((type::Int*)a)->value, ((type::Int*)b)->value ) ); \
-			case type::Type::T_FLOAT: \
-				return VALUE( type::Float, _f_float( ((type::Float*)a)->value, ((type::Float*)b)->value ) ); \
+			case Value::T_INT: \
+				return VALUE( value::Int, _f_int( ((value::Int*)a)->value, ((value::Int*)b)->value ) ); \
+			case Value::T_FLOAT: \
+				return VALUE( value::Float, _f_float( ((value::Float*)a)->value, ((value::Float*)b)->value ) ); \
 			default: \
-				THROW( "unexpected type: " + type::Type::GetTypeString( a->type ) ); \
+				THROW( "unexpected type: " + a->GetTypeString() ); \
 		} \
 	} ), ep );
 	AB( "min", std::min, std::fmin )
@@ -46,7 +46,7 @@ void Math::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 	ctx->CreateBuiltin( #_func, NATIVE_CALL() { \
 		N_EXPECT_ARGS( 1 ); \
 		N_GETVALUE( v, 0, _in_type ); \
-		return VALUE( type::_out_type, std::_func( v ) ); \
+		return VALUE( value::_out_type, std::_func( v ) ); \
 	} ), ep );
 	F( floor, Float, Int )
 	F( round, Float, Int )

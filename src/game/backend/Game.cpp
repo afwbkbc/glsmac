@@ -23,10 +23,10 @@
 #include "connection/Client.h"
 #include "map/Map.h"
 #include "map/Consts.h"
-#include "gse/type/String.h"
-#include "gse/type/Int.h"
-#include "gse/type/Undefined.h"
-#include "gse/type/Array.h"
+#include "gse/value/String.h"
+#include "gse/value/Int.h"
+#include "gse/value/Undefined.h"
+#include "gse/value/Array.h"
 #include "ui_legacy/UI.h"
 #include "map/tile/TileManager.h"
 #include "map/tile/Tiles.h"
@@ -504,7 +504,7 @@ WRAPIMPL_BEGIN( Game )
 	WRAPIMPL_PROPS
 		{
 			"year",
-			VALUE( gse::type::Int, 2100/*tmp*/ + m_current_turn.GetId() )
+			VALUE( gse::value::Int, 2100/*tmp*/ + m_current_turn.GetId() )
 		},
 		{
 			"random",
@@ -536,7 +536,7 @@ WRAPIMPL_BEGIN( Game )
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( text, 0, String );
 				Message( text );
-				return VALUE( gse::type::Undefined );
+				return VALUE( gse::value::Undefined );
 			})
 		},
 		{
@@ -544,7 +544,7 @@ WRAPIMPL_BEGIN( Game )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				auto& slots = m_state->m_slots->GetSlots();
-				gse::type::array_elements_t elements = {};
+				gse::value::array_elements_t elements = {};
 				for ( auto& slot : slots ) {
 					const auto state = slot.GetState();
 					if ( state == slot::Slot::SS_OPEN || state == slot::Slot::SS_CLOSED ) {
@@ -552,7 +552,7 @@ WRAPIMPL_BEGIN( Game )
 					}
 					elements.push_back( slot.Wrap() );
 				}
-				return VALUE( gse::type::Array, elements );
+				return VALUE( gse::value::Array, elements );
 			} )
 		},
 	};
@@ -850,7 +850,7 @@ void Game::OnGSEError( const gse::Exception& err ) {
 	AddFrontendRequest( fr );
 }
 
-const gse::Value Game::AddEvent( event::Event* event ) {
+gse::Value* const Game::AddEvent( event::Event* event ) {
 	ASSERT( event->m_initiator_slot == m_slot_num, "initiator slot mismatch" );
 	if ( m_connection ) {
 		m_connection->SendGameEvent( event );
@@ -859,7 +859,7 @@ const gse::Value Game::AddEvent( event::Event* event ) {
 		// note that this will work only on master, do slaves need return values too? i.e. for callbacks
 		return ProcessEvent( event );
 	}
-	return VALUE( gse::type::Undefined );
+	return VALUE( gse::value::Undefined );
 }
 
 const size_t Game::GetTurnId() const {
@@ -1071,7 +1071,7 @@ void Game::ValidateEvent( event::Event* event ) {
 	}
 }
 
-const gse::Value Game::ProcessEvent( event::Event* event ) {
+gse::Value* const Game::ProcessEvent( event::Event* event ) {
 	if ( m_state->IsMaster() ) { // TODO: validate in either case?
 		ValidateEvent( event );
 	}

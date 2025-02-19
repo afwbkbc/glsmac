@@ -9,7 +9,7 @@
 #include "game/backend/base/Base.h"
 #include "game/backend/base/Pop.h"
 #include "game/backend/base/BaseManager.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Undefined.h"
 #include "game/backend/Player.h"
 
 namespace game {
@@ -41,7 +41,7 @@ const std::string* SpawnBase::Validate( Game* game ) const {
 	return Ok();
 }
 
-const gse::Value SpawnBase::Apply( Game* game ) const {
+gse::Value* const SpawnBase::Apply( Game* game ) const {
 
 	auto& owner = game->GetState()->m_slots->GetSlot( m_owner_slot );
 	auto* tile = game->GetMap()->GetTile( m_pos_x, m_pos_y );

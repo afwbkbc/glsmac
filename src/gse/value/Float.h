@@ -1,17 +1,15 @@
 #pragma once
 
-#include "Type.h"
-
 namespace gse {
-namespace type {
+namespace value {
 
-class Float : public Type {
+class Float : public Value {
 public:
 
-	static const type_t GetType() { return Type::T_FLOAT; }
+	static const type_t GetType() { return Value::T_FLOAT; }
 
 	Float( const float initial_value )
-		: Type( GetType() )
+		: Value( GetType() )
 		, value( initial_value ) {}
 
 	float value;

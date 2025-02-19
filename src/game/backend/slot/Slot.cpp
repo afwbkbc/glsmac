@@ -4,8 +4,8 @@
 #include "game/backend/Player.h"
 #include "game/backend/faction/Faction.h"
 
-#include "gse/type/String.h"
-#include "gse/type/Int.h"
+#include "gse/value/String.h"
+#include "gse/value/Int.h"
 
 namespace game {
 namespace backend {
@@ -168,15 +168,15 @@ WRAPIMPL_BEGIN( Slot )
 	WRAPIMPL_PROPS
 		{
 			"id",
-			VALUE( gse::type::Int, m_player_data.cid )
+			VALUE( gse::value::Int, m_player_data.cid )
 		},
 		{
 			"type",
-			VALUE( gse::type::String, "human" )
+			VALUE( gse::value::String, "human" )
 		},
 		{
 			"name",
-			VALUE( gse::type::String, player->GetPlayerName() )
+			VALUE( gse::value::String, player->GetPlayerName() )
 		},
 		{
 			"faction",

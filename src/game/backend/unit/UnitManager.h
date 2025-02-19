@@ -3,7 +3,7 @@
 #include "common/Common.h"
 
 #include "gse/Wrappable.h"
-#include "gse/type/Object.h"
+#include "gse/value/Object.h"
 
 #include "Types.h"
 
@@ -58,12 +58,12 @@ public:
 	// TODO: limit access
 	typedef std::function< void() > cb_oncomplete;
 	const std::string* MoveUnitValidate( Unit* unit, map::tile::Tile* dst_tile );
-	const gse::Value MoveUnitResolve( Unit* unit, map::tile::Tile* dst_tile );
-	void MoveUnitApply( Unit* unit, map::tile::Tile* dst_tile, const gse::Value resolutions );
+	gse::Value* const MoveUnitResolve( Unit* unit, map::tile::Tile* dst_tile );
+	void MoveUnitApply( Unit* unit, map::tile::Tile* dst_tile, gse::Value* const resolutions );
 	const std::string* MoveUnitToTile( Unit* unit, map::tile::Tile* dst_tile, const cb_oncomplete& on_complete );
 	const std::string* AttackUnitValidate( Unit* attacker, Unit* defender );
-	const gse::Value AttackUnitResolve( Unit* attacker, Unit* defender );
-	void AttackUnitApply( Unit* attacker, Unit* defender, const gse::Value resolutions );
+	gse::Value* const AttackUnitResolve( Unit* attacker, Unit* defender );
+	void AttackUnitApply( Unit* attacker, Unit* defender, gse::Value* const resolutions );
 	void RefreshUnit( const Unit* unit );
 
 private:

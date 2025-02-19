@@ -98,10 +98,10 @@ WRAPIMPL_BEGIN( UI )
 						Log( "Creating UI class: " + name );
 						it = m_classes.insert({ name, new ui::Class( this, name, true ) }).first;
 						if ( arguments.size() >= 2 ) {
-							const gse::type::object_properties_t* properties = nullptr;
+							const gse::value::object_properties_t* properties = nullptr;
 							const std::string* parent_class = nullptr;
 							if ( arguments.size() == 2 ) {
-								if ( arguments.at(1).Get()->type == gse::type::Type::T_STRING ) {
+								if ( arguments.at(1)->type == gse::Value::T_STRING ) {
 									N_GETVALUE( s, 1, String );
 									parent_class = &s;
 								}

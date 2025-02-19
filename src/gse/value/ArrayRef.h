@@ -1,19 +1,17 @@
 #pragma once
 
-#include "Type.h"
-
 namespace gse {
-namespace type {
+namespace value {
 
 class Array;
 
-class ArrayRef : public Type {
+class ArrayRef : public Value {
 public:
 
-	static const type_t GetType() { return Type::T_ARRAYREF; }
+	static const type_t GetType() { return Value::T_ARRAYREF; }
 
 	ArrayRef( Array* array, const size_t index )
-		: Type( GetType() )
+		: Value( GetType() )
 		, array( array )
 		, index( index ) {}
 

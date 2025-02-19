@@ -2,7 +2,7 @@
 
 #include "ui/UI.h"
 #include "ui/dom/Object.h"
-#include "gse/type/Array.h"
+#include "gse/value/Array.h"
 
 namespace ui {
 
@@ -43,15 +43,15 @@ const std::string& Class::GetName() const {
 	return m_name;
 }
 
-const std::pair< gse::Value, class_modifier_t > Class::GetProperty( const std::string& key, const class_modifiers_t& modifiers ) const {
-	auto v = std::make_pair( VALUE( gse::type::Undefined ), CM_NONE );
+const std::pair< gse::Value*, class_modifier_t > Class::GetProperty( const std::string& key, const class_modifiers_t& modifiers ) const {
+	std::pair< gse::Value*, class_modifier_t > v = std::make_pair( VALUE( gse::value::Undefined ), CM_NONE );
 
 	if ( m_is_master ) {
 		// search in modifiers
 		for ( const auto& m : modifiers ) {
 			ASSERT_NOLOG( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
 			v = m_subclasses.at( m )->GetProperty( key, {} );
-			if ( v.first.Get()->type != gse::type::Type::T_UNDEFINED ) {
+			if ( v.first->type != gse::Value::T_UNDEFINED ) {
 				v.second = m;
 				return v;
 			}
@@ -145,23 +145,23 @@ void Class::RemoveObjectModifier( GSE_CALLABLE, dom::Object* object, const class
 		const auto& cls = m_subclasses.at( modifier );
 		m_subclasses.at( modifier )->RemoveObject( GSE_CALL, object );
 		for ( const auto& p : cls->m_properties ) {
-			auto v = VALUE( gse::type::Undefined );
+			gse::Value* v = VALUE( gse::value::Undefined );
 			// check if this property exists outside of subclass
 			for ( auto it = modifiers.rbegin() ; it != modifiers.rend() ; it++ ) {
 				const auto& pp = m_subclasses.at( *it )->m_properties;
 				const auto& it_p = pp.find( p.first );
-				if ( it_p != pp.end() && it_p->second.Get()->type != gse::type::Type::T_UNDEFINED ) {
+				if ( it_p != pp.end() && it_p->second->type != gse::Value::T_UNDEFINED ) {
 					v = it_p->second;
 					break;
 				}
 			}
-			if ( v.Get()->type == gse::type::Type::T_UNDEFINED ) {
+			if ( v->type == gse::Value::T_UNDEFINED ) {
 				const auto& it_p = m_properties.find( p.first );
-				if ( it_p != m_properties.end() && it_p->second.Get()->type != gse::type::Type::T_UNDEFINED ) {
+				if ( it_p != m_properties.end() && it_p->second->type != gse::Value::T_UNDEFINED ) {
 					v = it_p->second;
 				}
 			}
-			if ( v.Get()->type == gse::type::Type::T_UNDEFINED ) {
+			if ( v->type == gse::Value::T_UNDEFINED ) {
 				object->UnsetPropertyFromClass( GSE_CALL, p.first );
 			}
 			else {
@@ -171,8 +171,8 @@ void Class::RemoveObjectModifier( GSE_CALLABLE, dom::Object* object, const class
 	}
 }
 
-const gse::Value Class::Wrap( const bool dynamic ) {
-	gse::type::object_properties_t properties = {
+gse::Value* const Class::Wrap( const bool dynamic ) {
+	gse::value::object_properties_t properties = {
 		{
 			"extend",
 			NATIVE_CALL( this ) {
@@ -199,10 +199,10 @@ const gse::Value Class::Wrap( const bool dynamic ) {
 				std::vector< std::string > names = {};
 				names.reserve( properties.size() );
 				for ( const auto& v : properties ) {
-					if ( v.Get()->type != gse::type::Type::T_STRING ) {
-						GSE_ERROR( gse::EC.UI_ERROR, "Expected array of property names, got: " + arguments.at( 0 ).ToString() );
+					if ( v->type != gse::Value::T_STRING ) {
+						GSE_ERROR( gse::EC.UI_ERROR, "Expected array of property names, got: " + arguments.at( 0 )->ToString() );
 					}
-					names.push_back( ((gse::type::String*)v.Get())->value );
+					names.push_back( ((gse::value::String*)v)->value );
 				}
 				UnsetProperties( GSE_CALL, names );
 				return Wrap( true );
@@ -222,35 +222,33 @@ const gse::Value Class::Wrap( const bool dynamic ) {
 			properties.insert({ s_modifier_to_name.at( c.first ), c.second->Wrap( dynamic ) });
 		}
 	}
-	return gse::Value(
-		std::make_shared< gse::type::Object >(
-			nullptr, properties, "class", this, dynamic
-				? &Class::WrapSetStatic
-				: nullptr
-		)
+	return new gse::value::Object(
+		nullptr, properties, "class", this, dynamic
+			? &Class::WrapSetStatic
+			: nullptr
 	);
 }
 
-void Class::WrapSet( const std::string& key, const gse::Value& value, GSE_CALLABLE ) {
+void Class::WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE ) {
 	SetProperty( GSE_CALL, key, value );
 }
 
-void Class::WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, GSE_CALLABLE ) {
+void Class::WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, gse::Value* const value, GSE_CALLABLE ) {
 	ASSERT_NOLOG( wrapobj, "wrapobj not set" );
 	( (Class*)wrapobj )->WrapSet( key, value, GSE_CALL );
 }
 
-void Class::SetProperty( GSE_CALLABLE, const std::string& name, const gse::Value& value ) {
+void Class::SetProperty( GSE_CALLABLE, const std::string& name, gse::Value* value ) {
 	const auto& it_old = m_properties.find( name );
 	if ( it_old == m_properties.end() || it_old->second != value ) {
 		const auto& it = s_name_to_modifier.find( name );
 		if ( it != s_name_to_modifier.end() ) {
 			ASSERT_NOLOG( m_subclasses.find( it->second ) != m_subclasses.end(), "subclass not found" );
-			if ( value.Get()->type != gse::type::Type::T_OBJECT ) {
-				GSE_ERROR( gse::EC.UI_ERROR, "Class " + name + " definition must be Object, found " + value.GetTypeString() + ": " + value.ToString() );
+			if ( value->type != gse::Value::T_OBJECT ) {
+				GSE_ERROR( gse::EC.UI_ERROR, "Class " + name + " definition must be Object, found " + value->GetTypeString() + ": " + value->ToString() );
 			}
 			const auto& cls = m_subclasses.at( it->second );
-			for ( const auto& p : ((gse::type::Object*)value.Get())->value ) {
+			for ( const auto& p : ((gse::value::Object*)value)->value ) {
 				cls->SetProperty( GSE_CALL, p.first, p.second );
 			}
 		}
@@ -267,7 +265,7 @@ void Class::SetProperty( GSE_CALLABLE, const std::string& name, const gse::Value
 	}
 }
 
-void Class::SetPropertyFromParent( GSE_CALLABLE, const std::string& name, const gse::Value& value ) {
+void Class::SetPropertyFromParent( GSE_CALLABLE, const std::string& name, gse::Value* const value ) {
 	const auto& local_it = m_local_properties.find( name );
 	if ( local_it == m_local_properties.end() ) { // local properties should have priority
 		SetProperty( GSE_CALL, name, value );

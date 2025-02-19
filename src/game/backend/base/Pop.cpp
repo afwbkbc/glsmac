@@ -4,9 +4,9 @@
 #include "game/backend/base/Base.h"
 #include "game/backend/base/PopDef.h"
 #include "game/backend/base/BaseManager.h"
-#include "gse/type/String.h"
-#include "gse/type/Int.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/String.h"
+#include "gse/value/Int.h"
+#include "gse/value/Undefined.h"
 #include "gse/callable/Native.h"
 
 namespace game {
@@ -47,11 +47,11 @@ WRAPIMPL_BEGIN( Pop )
 	WRAPIMPL_PROPS
 		{
 			"type",
-			VALUE( gse::type::String, m_def->m_id )
+			VALUE( gse::value::String, m_def->m_id )
 		},
 		{
 			"variant",
-			VALUE( gse::type::Int, m_variant )
+			VALUE( gse::value::Int, m_variant )
 		},
 		{
 			"get_base",

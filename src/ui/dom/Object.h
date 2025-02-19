@@ -4,7 +4,7 @@
 #include <unordered_set>
 
 #include "gse/Wrappable.h"
-#include "gse/type/Object.h"
+#include "gse/value/Object.h"
 
 #include "ui/Types.h"
 #include "types/Color.h"
@@ -47,9 +47,9 @@ public:
 
 	Object( DOM_ARGS_T );
 
-	virtual const gse::Value Wrap( const bool dynamic = false ) override;
-	virtual void WrapSet( const std::string& key, const gse::Value& value, GSE_CALLABLE );
-	static void WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, GSE_CALLABLE );
+	virtual gse::Value* const Wrap( const bool dynamic = false ) override;
+	virtual void WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE );
+	static void WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, gse::Value* const value, GSE_CALLABLE );
 
 	const std::string m_tag;
 	Container* const m_parent;
@@ -71,7 +71,7 @@ protected:
 	virtual const bool IsEventRelevant( const input::Event& event ) const;
 	virtual const bool ProcessEventImpl( GSE_CALLABLE, const input::Event& event );
 
-	void UpdateProperty( const std::string& name, const gse::Value& v );
+	void UpdateProperty( const std::string& name, gse::Value* const v );
 
 	UI* const m_ui;
 	const properties_t m_initial_properties;
@@ -80,23 +80,23 @@ protected:
 		PF_NONE = 0,
 		PF_READONLY = 1 << 0,
 	};
-	typedef std::function< void( GSE_CALLABLE, const gse::Value& ) > f_on_set_t;
+	typedef std::function< void( GSE_CALLABLE, gse::Value* const ) > f_on_set_t;
 	typedef std::function< void( GSE_CALLABLE ) > f_on_unset_t;
 
 	void Actor( scene::actor::Actor* actor );
 
-	virtual void Property( GSE_CALLABLE, const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value = VALUE( gse::type::Undefined ), const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr, const f_on_unset_t& f_on_unset = nullptr );
-	void Method( GSE_CALLABLE, const std::string& name, const gse::Value& callable );
+	virtual void Property( GSE_CALLABLE, const std::string& name, const gse::Value::type_t& type, gse::Value* const default_value = VALUE( gse::value::Undefined ), const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr, const f_on_unset_t& f_on_unset = nullptr );
+	void Method( GSE_CALLABLE, const std::string& name, gse::Value* const callable );
 	void Events( const std::unordered_set< input::event_type_t >& events );
 	void Iterable( const std::function< void() >& f );
 
 	const bool TryParseColor( GSE_CALLABLE, const std::string& str, types::Color& color ) const;
 	void ParseColor( GSE_CALLABLE, const std::string& str, types::Color& color ) const;
 
-	virtual void OnPropertyChange( GSE_CALLABLE, const std::string& key, const gse::Value& value ) const;
+	virtual void OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value ) const;
 	virtual void OnPropertyRemove( GSE_CALLABLE, const std::string& key ) const;
 
-	virtual void SerializeEvent( const input::Event& event, gse::type::object_properties_t& event_data ) const;
+	virtual void SerializeEvent( const input::Event& event, gse::value::object_properties_t& event_data ) const;
 
 	void AddModifier( GSE_CALLABLE, const class_modifier_t modifier );
 	void RemoveModifier( GSE_CALLABLE, const class_modifier_t modifier );
@@ -110,7 +110,7 @@ private:
 	bool m_is_initialized = false;
 
 	struct property_def_t {
-		gse::type::Type::type_t type;
+		gse::Value::type_t type;
 		property_flag_t flags;
 		f_on_set_t f_on_set;
 		f_on_unset_t f_on_unset;
@@ -125,14 +125,14 @@ private:
 
 	std::vector< scene::actor::Actor* > m_actors = {};
 
-	void SetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key, const gse::Value& value );
+	void SetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key, gse::Value* const value );
 	void UnsetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key );
 
 	void SetClasses( GSE_CALLABLE, const std::vector< std::string >& names );
 
 	class_modifiers_t m_modifiers = {};
 
-	std::shared_ptr< gse::type::Object > m_wrapobj = nullptr;
+	gse::value::Object* m_wrapobj = nullptr;
 
 	bool m_is_iterable_set = false;
 
@@ -145,7 +145,7 @@ private:
 protected:
 	friend class ui::Class;
 
-	virtual void SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value, const class_modifier_t modifier );
+	virtual void SetPropertyFromClass( GSE_CALLABLE, const std::string& key, gse::Value* const value, const class_modifier_t modifier );
 	virtual void UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key );
 
 };

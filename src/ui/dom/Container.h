@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "Area.h"
-#include "gse/Value.h"
 
 #include "types/Vec2.h"
 
@@ -37,15 +36,15 @@ protected:
 
 	virtual ~Container();
 
-	void WrapSet( const std::string& key, const gse::Value& value, GSE_CALLABLE ) override;
+	void WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE ) override;
 
-	void Property( GSE_CALLABLE, const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value = VALUE( gse::type::Undefined ), const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr, const f_on_unset_t& f_on_unset = nullptr ) override;
+	void Property( GSE_CALLABLE, const std::string& name, const gse::Value::type_t& type, gse::Value* const default_value = VALUE( gse::value::Undefined ), const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr, const f_on_unset_t& f_on_unset = nullptr ) override;
 	void ForwardProperty( GSE_CALLABLE, const std::string& name, Object* const target );
 	void ForwardProperty( GSE_CALLABLE, const std::string& srcname, const std::string& dstname, Object* const target );
 
 	void Factory( GSE_CALLABLE, const std::string& name, const std::function< Object*( GSE_CALLABLE, const properties_t& ) >& f );
 
-	void OnPropertyChange( GSE_CALLABLE, const std::string& key, const gse::Value& value ) const override;
+	void OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value ) const override;
 	void OnPropertyRemove( GSE_CALLABLE, const std::string& key ) const override;
 
 private:
@@ -65,7 +64,7 @@ private:
 protected:
 	friend class ui::Class;
 
-	void SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value, const class_modifier_t modifier ) override;
+	void SetPropertyFromClass( GSE_CALLABLE, const std::string& key, gse::Value* const value, const class_modifier_t modifier ) override;
 	void UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) override;
 
 private:

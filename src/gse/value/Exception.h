@@ -7,7 +7,7 @@
 #include "gse/Exception.h"
 
 namespace gse {
-namespace type {
+namespace value {
 
 class Exception : public Object {
 public:

@@ -3,9 +3,9 @@
 #include <thread>
 #include <chrono>
 
-#include "gse/type/Callable.h"
-#include "gse/type/Bool.h"
-#include "gse/type/Int.h"
+#include "gse/value/Callable.h"
+#include "gse/value/Bool.h"
+#include "gse/value/Int.h"
 #include "gse/context/ChildContext.h"
 #include "Exception.h"
 
@@ -22,8 +22,8 @@ void Async::Iterate( ExecutionPointer& ep ) {
 
 static Async::timer_id_t s_next_id = 0;
 
-const Async::timer_id_t Async::StartTimer( const size_t ms, const Value& f, GSE_CALLABLE ) {
-	ASSERT( f.Get()->type == type::Type::T_CALLABLE, "invalid callable type: " + f.GetTypeString() );
+const Async::timer_id_t Async::StartTimer( const size_t ms, Value* const f, GSE_CALLABLE ) {
+	ASSERT( f->type == Value::T_CALLABLE, "invalid callable type: " + f->GetTypeString() );
 	if ( s_next_id == SIZE_MAX - 1 ) {
 		s_next_id = 0;
 	}
@@ -125,32 +125,32 @@ void Async::ProcessTimers( const timers_t::iterator& it, ExecutionPointer& ep ) 
 		auto* ctx = timer.ctx;
 		const auto f = timer.callable;
 		const auto si = timer.si;
-		const auto result = ( (type::Callable*)f.Get() )->Run( GSE_CALL, {} );
+		const auto result = ( (value::Callable*)f )->Run( GSE_CALL, {} );
 
 		size_t ms = 0;
 		bool repeat = false;
 
-		const auto& r = result.Get();
+		const auto& r = result;
 		switch ( r->type ) {
-			case type::Type::T_NOTHING:
-			case type::Type::T_UNDEFINED:
-			case type::Type::T_NULL:
+			case Value::T_NOTHING:
+			case Value::T_UNDEFINED:
+			case Value::T_NULL:
 				break;
-			case type::Type::T_BOOL: {
-				if ( ( (type::Bool*)r )->value ) {
+			case Value::T_BOOL: {
+				if ( ( (value::Bool*)r )->value ) {
 					repeat = true;
 					ms = timer.ms;
 				}
 				break;
 			}
-			case type::Type::T_INT: {
-				ms = ( (type::Int*)r )->value;
+			case Value::T_INT: {
+				ms = ( (value::Int*)r )->value;
 				ValidateMs( ms, GSE_CALL );
 				repeat = true;
 				break;
 			}
 			default:
-				GSE_ERROR( EC.INVALID_HANDLER, "Unexpected async return type. Expected: Nothing, Undefined, Null, Bool or Int, got: " + result.GetTypeString() );
+				GSE_ERROR( EC.INVALID_HANDLER, "Unexpected async return type. Expected: Nothing, Undefined, Null, Bool or Int, got: " + result->GetTypeString() );
 		}
 
 		if ( repeat ) {

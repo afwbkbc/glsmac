@@ -8,12 +8,12 @@
 #include "gse/context/ChildContext.h"
 
 namespace gse {
-namespace type {
+namespace value {
 
-static Value s_undefined = VALUE( type::Undefined );
+static Value* s_undefined = VALUE( value::Undefined );
 
 Object::Object( context::ChildContext* const ctx, object_properties_t initial_value, const object_class_t object_class, Wrappable* wrapobj, wrapsetter_t* wrapsetter )
-	: Type( GetType() )
+	: Value( GetType() )
 	, m_ctx( ctx )
 	, value( initial_value )
 	, object_class( object_class )
@@ -30,15 +30,15 @@ Object::~Object() {
 	}
 }
 
-const Value& Object::Get( const object_key_t& key ) const {
+Value* const Object::Get( const object_key_t& key ) const {
 	const auto& it = value.find( key );
 	return it == value.end()
 		? s_undefined
 		: it->second;
 }
 
-void Object::Set( const object_key_t& key, const Value& new_value, GSE_CALLABLE ) {
-	const bool has_value = new_value.Get()->type != T_UNDEFINED;
+void Object::Set( const object_key_t& key, Value* const new_value, GSE_CALLABLE ) {
+	const bool has_value = new_value->type != T_UNDEFINED;
 	const auto it = value.find( key );
 	if (
 		( has_value && ( it == value.end() || new_value != it->second ) ) ||
@@ -59,7 +59,7 @@ void Object::Set( const object_key_t& key, const Value& new_value, GSE_CALLABLE 
 	}
 }
 
-const Value Object::GetRef( const object_key_t& key ) {
+Value* const Object::GetRef( const object_key_t& key ) {
 	return VALUE( ObjectRef, this, key );
 }
 

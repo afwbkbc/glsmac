@@ -1,10 +1,10 @@
 #include "Base.h"
 
 #include "gse/context/Context.h"
-#include "gse/type/Object.h"
-#include "gse/type/Int.h"
-#include "gse/type/String.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Object.h"
+#include "gse/value/Int.h"
+#include "gse/value/String.h"
+#include "gse/value/Undefined.h"
 #include "gse/callable/Native.h"
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
@@ -111,7 +111,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			: 2; // humans have 2
 		ASSERT_NOLOG( max_variants > 0, "no variants found for pop type: " + poptype );
 		AddPop( Pop( this, def, m_game->GetRandom()->GetUInt(0, max_variants - 1) ) );
-		return VALUE( gse::type::Undefined );
+		return VALUE( gse::value::Undefined );
 	} )
 	},
 WRAPIMPL_DYNAMIC_SETTERS( Base )

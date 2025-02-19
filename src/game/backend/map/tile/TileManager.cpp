@@ -10,7 +10,7 @@
 
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
-#include "gse/type/Array.h"
+#include "gse/value/Array.h"
 #include "gse/ExecutionPointer.h"
 
 namespace game {
@@ -173,14 +173,14 @@ WRAPIMPL_BEGIN( TileManager )
 			"get_map_width",
 			NATIVE_CALL( this ) {
 				const auto* m = m_game->GetMap();
-				return VALUE( gse::type::Int, m->GetWidth() );
+				return VALUE( gse::value::Int, m->GetWidth() );
 			} )
 		},
 		{
 			"get_map_height",
 			NATIVE_CALL( this ) {
 				const auto* m = m_game->GetMap();
-				return VALUE( gse::type::Int, m->GetHeight() );
+				return VALUE( gse::value::Int, m->GetHeight() );
 			})
 		},
 		{
@@ -227,15 +227,15 @@ WRAPIMPL_BEGIN( TileManager )
 					on_complete->Run( ctx, si, ep2, {
 						VALUE( gse::callable::Native, [ this, tile_positions ](
 							GSE_CALLABLE,
-							const gse::type::function_arguments_t& arguments
-						) -> gse::Value {
+							const gse::value::function_arguments_t& arguments
+						)  {
 							SendTileUnlockRequest( tile_positions );
-							return VALUE( gse::type::Undefined );
+							return VALUE( gse::value::Undefined );
 						} )
 					});
 					N_UNPERSIST_CALLABLE( on_complete );
 				});
-				return VALUE( gse::type::Undefined );
+				return VALUE( gse::value::Undefined );
 			})
 		},
 	};

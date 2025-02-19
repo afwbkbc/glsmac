@@ -8,9 +8,9 @@
 #include "gse/GSE.h"
 #include "gse/context/GlobalContext.h"
 #include "gse/Exception.h"
-#include "gse/type/String.h"
-#include "gse/type/Callable.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/String.h"
+#include "gse/value/Callable.h"
+#include "gse/value/Undefined.h"
 #include "gse/callable/Native.h"
 #include "engine/Engine.h"
 #include "config/Config.h"
@@ -45,9 +45,9 @@ void Bindings::AddToContext( gse::context::Context* ctx, gse::ExecutionPointer& 
 	ctx->CreateBuiltin( "main", NATIVE_CALL(this) {
 		N_EXPECT_ARGS( 1 );
 		const auto& main = arguments.at(0);
-		N_CHECKARG( main.Get(), 0, Callable );
+		N_CHECKARG( main, 0, Callable );
 		m_main_callables.push_back( main );
-		return VALUE( gse::type::Undefined );
+		return VALUE( gse::value::Undefined );
 	} ), ep );
 }
 
@@ -61,15 +61,15 @@ void Bindings::RunMainScript() {
 
 void Bindings::RunMain() {
 	for ( const auto& main : m_main_callables ) {
-		ASSERT_NOLOG( main.Get()->type == gse::type::Type::T_CALLABLE, "main not callable" );
+		ASSERT_NOLOG( main->type == gse::Value::T_CALLABLE, "main not callable" );
 		auto gm = m_state->Wrap();
 		gse::ExecutionPointer ep;
-		((gse::type::Callable*)main.Get())->Run( m_gse_context, m_si_internal, ep, { gm });
+		((gse::value::Callable*)main)->Run( m_gse_context, m_si_internal, ep, { gm });
 	}
 }
 
-const gse::Value Bindings::Trigger( gse::Wrappable* object, const std::string& event, const gse::type::object_properties_t& args ) {
-	auto result = VALUE( gse::type::Undefined );
+gse::Value* const Bindings::Trigger( gse::Wrappable* object, const std::string& event, const gse::value::object_properties_t& args ) {
+	gse::Value* result = VALUE( gse::value::Undefined );
 	try {
 		{
 			gse::ExecutionPointer ep;
@@ -80,9 +80,9 @@ const gse::Value Bindings::Trigger( gse::Wrappable* object, const std::string& e
 			game->GetUM()->PushUpdates();
 			game->GetBM()->PushUpdates();
 		}
-		if ( result.Get()->type == gse::type::Type::T_NOTHING ) {
+		if ( result->type == gse::Value::T_NOTHING ) {
 			// return undefined by default
-			return VALUE( gse::type::Undefined );
+			return VALUE( gse::value::Undefined );
 		}
 	}
 	catch ( const gse::Exception& e ) {

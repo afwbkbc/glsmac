@@ -18,9 +18,9 @@
 
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
-#include "gse/type/Bool.h"
-#include "gse/type/Float.h"
-#include "gse/type/Array.h"
+#include "gse/value/Bool.h"
+#include "gse/value/Float.h"
+#include "gse/value/Array.h"
 
 namespace game {
 namespace backend {
@@ -268,10 +268,10 @@ WRAPIMPL_BEGIN( UnitManager )
 				}
 				unit::MoraleSet::morale_values_t values = {};
 				for ( const auto& v : arr ) {
-					if ( v.Get()->type != gse::type::Type::T_OBJECT ) {
+					if ( v->type != gse::Value::T_OBJECT ) {
 						GSE_ERROR( gse::EC.INVALID_CALL, "Morale set elements must be objects");
 					}
-					const auto* obj = (gse::type::Object*)v.Get();
+					const auto* obj = (gse::value::Object*)v;
 					N_GETPROP( name, obj->value, "name", String );
 					values.push_back( unit::Morale{ name } );
 				}
@@ -504,19 +504,19 @@ const std::string* UnitManager::MoveUnitValidate( Unit* unit, map::tile::Tile* d
 			dst_tile->Wrap()
 		},
 	});
-	switch ( result.Get()->type ) {
-		case gse::type::Type::T_NULL:
-		case gse::type::Type::T_UNDEFINED:
-		case gse::type::Type::T_NOTHING:
+	switch ( result->type ) {
+		case gse::Value::T_NULL:
+		case gse::Value::T_UNDEFINED:
+		case gse::Value::T_NOTHING:
 			return nullptr; // no errors
-		case gse::type::Type::T_STRING:
-			return new std::string( ( (gse::type::String*)result.Get() )->value ); // error
+		case gse::Value::T_STRING:
+			return new std::string( ( (gse::value::String*)result )->value ); // error
 		default:
-			THROW( "unexpected validation result type: " + gse::type::Type::GetTypeString( result.Get()->type ) );
+			THROW( "unexpected validation result type: " + result->GetTypeString() );
 	}
 }
 
-const gse::Value UnitManager::MoveUnitResolve( Unit* unit, map::tile::Tile* dst_tile ) {
+gse::Value* const UnitManager::MoveUnitResolve( Unit* unit, map::tile::Tile* dst_tile ) {
 	return m_game->GetState()->TriggerObject(this, "unit_move_resolve", {
 		{
 			"unit",
@@ -533,7 +533,7 @@ const gse::Value UnitManager::MoveUnitResolve( Unit* unit, map::tile::Tile* dst_
 	});
 }
 
-void UnitManager::MoveUnitApply( Unit* unit, map::tile::Tile* dst_tile, const gse::Value resolutions ) {
+void UnitManager::MoveUnitApply( Unit* unit, map::tile::Tile* dst_tile, gse::Value* const resolutions ) {
 	auto* src_tile = unit->GetTile();
 	ASSERT( dst_tile, "dst tile not set" );
 
@@ -605,19 +605,19 @@ const std::string* UnitManager::AttackUnitValidate( Unit* attacker, Unit* defend
 			defender->Wrap()
 		},
 	});
-	switch ( result.Get()->type ) {
-		case gse::type::Type::T_NULL:
-		case gse::type::Type::T_UNDEFINED:
-		case gse::type::Type::T_NOTHING:
+	switch ( result->type ) {
+		case gse::Value::T_NULL:
+		case gse::Value::T_UNDEFINED:
+		case gse::Value::T_NOTHING:
 			return nullptr; // no errors
-		case gse::type::Type::T_STRING:
-			return new std::string( ( (gse::type::String*)result.Get() )->value ); // error
+		case gse::Value::T_STRING:
+			return new std::string( ( (gse::value::String*)result )->value ); // error
 		default:
-			THROW( "unexpected validation result type: " + gse::type::Type::GetTypeString( result.Get()->type ) );
+			THROW( "unexpected validation result type: " + result->GetTypeString() );
 	}
 }
 
-const gse::Value UnitManager::AttackUnitResolve( Unit* attacker, Unit* defender ) {
+gse::Value* const UnitManager::AttackUnitResolve( Unit* attacker, Unit* defender ) {
 	return m_game->GetState()->TriggerObject( this, "unit_attack_resolve", {
 		{
 			"attacker",
@@ -630,7 +630,7 @@ const gse::Value UnitManager::AttackUnitResolve( Unit* attacker, Unit* defender 
 	});
 }
 
-void UnitManager::AttackUnitApply( Unit* attacker, Unit* defender, const gse::Value resolutions ) {
+void UnitManager::AttackUnitApply( Unit* attacker, Unit* defender, gse::Value* const resolutions ) {
 	auto* state = m_game->GetState();
 	state->TriggerObject( this, "unit_attack_apply",{
 		{

@@ -1,11 +1,11 @@
 #include "Unit.h"
 
 #include "gse/context/Context.h"
-#include "gse/type/Object.h"
-#include "gse/type/Int.h"
-#include "gse/type/Float.h"
-#include "gse/type/Bool.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Object.h"
+#include "gse/value/Int.h"
+#include "gse/value/Float.h"
+#include "gse/value/Bool.h"
+#include "gse/value/Undefined.h"
 #include "gse/callable/Native.h"
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
@@ -132,7 +132,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 			if ( tile != m_tile ) {
 				SetTile( tile );
 			}
-			return VALUE( gse::type::Undefined );
+			return VALUE( gse::value::Undefined );
 		} )
 	},
 	{
@@ -150,7 +150,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 				throw gse::Exception( gse::EC.GAME_ERROR, *errmsg, GSE_CALL );
 				delete errmsg;
 			}
-			return VALUE( gse::type::Undefined );
+			return VALUE( gse::value::Undefined );
 		} )
 	},
 WRAPIMPL_DYNAMIC_SETTERS( Unit )

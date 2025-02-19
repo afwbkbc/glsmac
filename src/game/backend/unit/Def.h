@@ -7,7 +7,6 @@
 
 #include "game/backend/map/tile/Types.h"
 #include "gse/Wrappable.h"
-#include "gse/Value.h"
 
 namespace game {
 namespace backend {

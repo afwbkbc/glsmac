@@ -4,7 +4,7 @@
 #include "runner/Interpreter.h"
 #include "gse/context/GlobalContext.h"
 #include "Exception.h"
-#include "type/Undefined.h"
+#include "value/Undefined.h"
 #include "program/Program.h"
 #include "util/FS.h"
 #include "gc/Space.h"
@@ -89,7 +89,7 @@ context::GlobalContext* GSE::CreateGlobalContext( const std::string& source_path
 	return context;
 }
 
-void GSE::AddModule( const std::string& path, type::Callable* module ) {
+void GSE::AddModule( const std::string& path, value::Callable* module ) {
 	if ( m_modules.find( path ) != m_modules.end() ) {
 		ExecutionPointer ep;
 		throw Exception( "GSE_InternalError", "module path '" + path + "' already taken", nullptr, {}, ep ); // ?
@@ -117,7 +117,7 @@ void GSE::Run() {
 	Log( "GSE finished" );
 }
 
-const Value GSE::RunScript( GSE_CALLABLE, const std::string& path ) {
+Value* const GSE::RunScript( GSE_CALLABLE, const std::string& path ) {
 	std::string full_path = "";
 	{
 		const auto& it = m_include_paths.find( path );
@@ -151,7 +151,7 @@ const Value GSE::RunScript( GSE_CALLABLE, const std::string& path ) {
 	}
 	const auto source = util::FS::ReadTextFile( full_path, PATH_SEPARATOR );
 	include_cache_t cache = {
-		VALUE( type::Undefined ),
+		VALUE( value::Undefined ),
 		nullptr,
 		nullptr,
 		nullptr
@@ -185,15 +185,15 @@ const Value GSE::RunScript( GSE_CALLABLE, const std::string& path ) {
 	}
 }
 
-void GSE::SetGlobal( const std::string& identifier, Value variable ) {
+void GSE::SetGlobal( const std::string& identifier, Value* variable ) {
 	ASSERT( m_globals.find( identifier ) == m_globals.end(), "duplicate global: " + identifier );
 	Log( "Set global: " + identifier );
 	m_globals.insert_or_assign( identifier, variable );
 }
 
-const static Value s_undefined_value = VALUE( type::Undefined );
+static Value* const s_undefined_value = VALUE( value::Undefined );
 
-const Value& GSE::GetGlobal( const std::string& identifier ) {
+Value* const GSE::GetGlobal( const std::string& identifier ) {
 	Log( "Get global: " + identifier );
 	const auto& it = m_globals.find( identifier );
 	if ( it != m_globals.end() ) {
@@ -226,7 +226,7 @@ void GSE::include_cache_t::Cleanup( GSE* const gse ) {
 			context->Clear();
 			context = nullptr;
 		}
-		result = VALUE( type::Undefined );
+		result = VALUE( value::Undefined );
 		if ( program ) {
 			DELETE( program );
 			program = nullptr;

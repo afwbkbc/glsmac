@@ -3,7 +3,7 @@
 #include "game/backend/Game.h"
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/MoraleSet.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Undefined.h"
 
 namespace game {
 namespace backend {
@@ -22,9 +22,9 @@ const std::string* DefineMorales::Validate( Game* game ) const {
 	return Ok();
 }
 
-const gse::Value DefineMorales::Apply( Game* game ) const {
+gse::Value* const DefineMorales::Apply( Game* game ) const {
 	game->GetUM()->DefineMoraleSet( m_moraleset );
-	return VALUE( gse::type::Undefined );
+	return VALUE( gse::value::Undefined );
 }
 
 TS_BEGIN( DefineMorales )

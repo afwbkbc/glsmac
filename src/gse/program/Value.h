@@ -12,9 +12,9 @@ namespace program {
 class Value : public Operand {
 public:
 
-	Value( const si_t& si, const gse::Value& value );
+	Value( const si_t& si, gse::Value* const value );
 
-	const gse::Value value;
+	gse::Value* const value;
 
 	const std::string ToString() const override;
 	const std::string Dump( const size_t depth = 0 ) const override;

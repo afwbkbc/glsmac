@@ -41,7 +41,7 @@ const std::string* SpawnUnit::Validate( Game* game ) const {
 	return Ok();
 }
 
-const gse::Value SpawnUnit::Apply( Game* game ) const {
+gse::Value* const SpawnUnit::Apply( Game* game ) const {
 	auto* um = game->GetUM();
 	ASSERT_NOLOG( um, "um is null" );
 	auto* def = um->GetUnitDef( m_unit_def );

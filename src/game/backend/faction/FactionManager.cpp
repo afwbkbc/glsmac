@@ -3,9 +3,9 @@
 #include "Faction.h"
 
 #include "gse/callable/Native.h"
-#include "gse/type/Bool.h"
-#include "gse/type/Float.h"
-#include "gse/type/Array.h"
+#include "gse/value/Bool.h"
+#include "gse/value/Float.h"
+#include "gse/value/Array.h"
 
 #include "engine/Engine.h"
 #include "loader/txt/TXTLoaders.h"
@@ -76,21 +76,21 @@ WRAPIMPL_BEGIN( FactionManager )
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( filename, 0, String );
 				const auto& data = g_engine->GetTXTLoaders()->factions->GetFactionData( filename );
-				std::vector< gse::Value > land_names = {};
+				std::vector< gse::Value* > land_names = {};
 				land_names.reserve( data.bases_names.land.size() );
 				for ( const auto& name : data.bases_names.land ) {
-					land_names.push_back( VALUE( gse::type::String, name ) );
+					land_names.push_back( VALUE( gse::value::String, name ) );
 				}
-				std::vector< gse::Value > water_names = {};
+				std::vector< gse::Value* > water_names = {};
 				water_names.reserve( data.bases_names.water.size() );
 				for ( const auto& name : data.bases_names.water ) {
-					water_names.push_back( VALUE( gse::type::String, name ) );
+					water_names.push_back( VALUE( gse::value::String, name ) );
 				}
-				const auto properties = gse::type::object_properties_t{
-					{ "land", VALUE( gse::type::Array, land_names ) },
-					{ "water", VALUE( gse::type::Array, water_names ) },
+				const auto properties = gse::value::object_properties_t{
+					{ "land", VALUE( gse::value::Array, land_names ) },
+					{ "water", VALUE( gse::value::Array, water_names ) },
 				};
-				return VALUE( gse::type::Object, nullptr, properties );
+				return VALUE( gse::value::Object, nullptr, properties );
 			} )
 			},
 			{
@@ -99,7 +99,7 @@ WRAPIMPL_BEGIN( FactionManager )
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( filename, 0, String );
 				const auto* texture = g_engine->GetTextureLoader()->LoadCustomTexture( filename );
-				const auto properties = gse::type::object_properties_t{
+				const auto properties = gse::value::object_properties_t{
 					{ "faction", types::Color::FromRGBA( texture->GetPixel( 4, 739 ) ).Wrap() },
 					{ "faction_shadow", types::Color::FromRGBA( texture->GetPixel( 4, 747 ) ).Wrap() },
 					{ "text", types::Color::FromRGBA( texture->GetPixel( 4, 755 ) ).Wrap() },
@@ -108,7 +108,7 @@ WRAPIMPL_BEGIN( FactionManager )
 					{ "border_alpha", types::Color::FromRGBA( texture->GetPixel( 161, 757 ) ).Wrap() },
 					{ "vehicle", types::Color::FromRGBA( texture->GetPixel( 435, 744 ) ).Wrap() },
 				};
-				return VALUE( gse::type::Object, nullptr, properties );
+				return VALUE( gse::value::Object, nullptr, properties );
 			} )
 		},
 		{
@@ -201,7 +201,7 @@ WRAPIMPL_BEGIN( FactionManager )
 					GSE_ERROR( gse::EC.GAME_ERROR, "Unknown faction: " + id );
 				}
 				Remove( id );
-				return VALUE( gse::type::Undefined );
+				return VALUE( gse::value::Undefined );
 			} )
 		},
 	};

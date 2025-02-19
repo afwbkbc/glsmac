@@ -3,7 +3,7 @@
 #include "common/Common.h"
 
 #include "gse/Wrappable.h"
-#include "gse/type/Object.h"
+#include "gse/value/Object.h"
 
 namespace game {
 namespace backend {

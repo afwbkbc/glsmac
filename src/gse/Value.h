@@ -4,7 +4,9 @@
 
 #include "common/Assert.h"
 
-#include "type/Type.h"
+namespace types {
+class Buffer;
+}
 
 namespace gse {
 
@@ -13,52 +15,52 @@ namespace gse {
 #define GSE_CALLABLE gse::context::Context* ctx, const gse::si_t& si, gse::ExecutionPointer& ep
 #define GSE_CALL ctx, si, ep
 
-#define VALUE( _type, ... ) gse::Value( std::make_shared<_type>( __VA_ARGS__ ) )
+#define VALUE( _type, ... ) ( new _type( __VA_ARGS__ ) )
 #ifdef DEBUG
-#define VALUE_DATA( _type, _var ) ( _var.Get()->type == _type::GetType() ? ((_type*)_var.Get()) : THROW( "invalid GSE value type (expected " + type::Type::GetTypeString( _type::GetType() ) + ", got " + type::Type::GetTypeString( _var.Get()->type ) + ")" ) )
+#define VALUE_DATA( _type, _var ) ( _var->type == _type::GetType() ? ((_type*)_var) : THROW( "invalid GSE value type (expected " + Value::GetTypeStringStatic( _type::GetType() ) + ", got " + _var->GetTypeString() + ")" ) )
 #else
-#define VALUE_DATA( _type, _var ) ((_type*)_var.Get())
+#define VALUE_DATA( _type, _var ) ((_type*)_var)
 #endif
 #define VALUE_GET( _type, _var ) VALUE_DATA( _type, _var )->value
 #define VALUE_SET( _type, _var, _value ) { VALUE_DATA( _type, _var )->value = _value; }
 #define VALUE_CLONE( _type, _var ) VALUE( _type, VALUE_GET( _type, _var ) )
 
 #define WRAPDEFS_CLASS() \
-    static const gse::type::Object::object_class_t WRAP_CLASS;
+    static const gse::value::Object::object_class_t WRAP_CLASS;
 #define WRAPDEFS_PTR( _type ) \
     WRAPDEFS_CLASS() \
-    virtual const gse::Value Wrap( const bool dynamic = false ) override; \
-    static _type* Unwrap( const gse::Value& value );
+    virtual gse::Value* const Wrap( const bool dynamic = false ) override; \
+    static _type* Unwrap( gse::Value* const value );
 #define WRAPDEFS_DYNAMIC( _type ) \
     WRAPDEFS_CLASS() \
-    virtual const gse::Value Wrap( const bool dynamic = false ) override; \
-    static _type* Unwrap( const gse::Value& value ); \
-    static void WrapSet( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, GSE_CALLABLE ); \
+    virtual gse::Value* const Wrap( const bool dynamic = false ) override; \
+    static _type* Unwrap( gse::Value* const value ); \
+    static void WrapSet( gse::Wrappable* wrapobj, const std::string& key, gse::Value* const value, GSE_CALLABLE ); \
     void OnWrapSet( const std::string& property_name );
 #define WRAPDEFS_NOPTR( _type ) \
     WRAPDEFS_CLASS() \
-    virtual const gse::Value Wrap( const bool dynamic = false ) override; \
-    static _type Unwrap( const gse::Value& value );
+    virtual gse::Value* const Wrap( const bool dynamic = false ) override; \
+    static _type Unwrap( gse::Value* const value );
 #define WRAPIMPL_CLASS( _type ) \
-    const gse::type::Object::object_class_t _type::WRAP_CLASS = #_type;
+    const gse::value::Object::object_class_t _type::WRAP_CLASS = #_type;
 #define WRAPIMPL_BEGIN( _type ) \
     WRAPIMPL_CLASS( _type ) \
-    const gse::Value _type::Wrap( const bool dynamic ) {
+    gse::Value* const _type::Wrap( const bool dynamic ) {
 #define WRAPIMPL_DYNAMIC_BEGIN( _type ) \
     WRAPIMPL_CLASS( _type ) \
-    const gse::Value _type::Wrap( const bool dynamic ) {
+    gse::Value* const _type::Wrap( const bool dynamic ) {
 #define WRAPIMPL_DYNAMIC_GETTERS( _type ) \
     WRAPIMPL_DYNAMIC_BEGIN( _type ) \
-    const gse::type::object_properties_t properties = {
-#define WRAPIMPL_PROPS gse::type::object_properties_t properties = { \
+    const gse::value::object_properties_t properties = {
+#define WRAPIMPL_PROPS gse::value::object_properties_t properties = { \
     { \
         "on", \
         NATIVE_CALL( this ) { \
             N_EXPECT_ARGS( 2 ); \
             N_GETVALUE( event, 0, String ); \
             N_GET( cb, 1 ); \
-            N_CHECKARG( cb.Get(), 1, Callable ); \
-            return VALUE( gse::type::Int, On( GSE_CALL, event, cb ) ); \
+            N_CHECKARG( cb, 1, Callable ); \
+            return VALUE( gse::value::Int, On( GSE_CALL, event, cb ) ); \
         } ) \
     }, \
     { \
@@ -73,7 +75,7 @@ namespace gse {
             else { \
                 Off( GSE_CALL, event, 0 ); \
             } \
-            return VALUE( gse::type::Undefined ); \
+            return VALUE( gse::value::Undefined ); \
         } ) \
     }, \
     { \
@@ -93,20 +95,20 @@ namespace gse {
 
 #define WRAPIMPL_PROPS_EXTEND( _parent ) \
     const auto wrapped_parent = _parent::Wrap(); \
-    const auto& wrapped_parent_props = ( (gse::type::Object*)wrapped_parent.Get() )->value; \
+    const auto& wrapped_parent_props = ( (gse::value::Object*)wrapped_parent )->value; \
     properties.insert( wrapped_parent_props.begin(), wrapped_parent_props.end() );
 #define WRAPIMPL_END_PTR() \
-    return VALUE( gse::type::Object, nullptr, properties, WRAP_CLASS, this ); \
+    return VALUE( gse::value::Object, nullptr, properties, WRAP_CLASS, this ); \
 }
 #define WRAPIMPL_DYNAMIC_SETTERS( _type ) \
     }; \
-    return VALUE( gse::type::Object, nullptr, properties, WRAP_CLASS, this, dynamic ? &_type::WrapSet : nullptr ); \
+    return VALUE( gse::value::Object, nullptr, properties, WRAP_CLASS, this, dynamic ? &_type::WrapSet : nullptr ); \
 } \
-void _type::WrapSet( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, GSE_CALLABLE ) { \
+void _type::WrapSet( gse::Wrappable* wrapobj, const std::string& key, gse::Value* const value, GSE_CALLABLE ) { \
     auto* obj = (_type*)wrapobj; \
     if ( !obj ) {}
 #define WRAPIMPL_END_NOPTR( _type ) \
-    return VALUE( gse::type::Object, nullptr, properties, WRAP_CLASS ); \
+    return VALUE( gse::value::Object, nullptr, properties, WRAP_CLASS ); \
 }
 #define WRAPIMPL_DYNAMIC_ON_SET( _type ) \
     else { \
@@ -119,7 +121,7 @@ void _type::OnWrapSet( const std::string& property_name ) {
 #define WRAPIMPL_GET( _key, _type, _property ) \
     { \
         _key, \
-        VALUE( gse::type::_type, _property ) \
+        VALUE( gse::value::_type, _property ) \
     },
 #define WRAPIMPL_LINK( _key, _property ) \
     { \
@@ -131,28 +133,28 @@ void _type::OnWrapSet( const std::string& property_name ) {
 
 #define WRAPIMPL_SET( _key, _type, _property ) \
     else if ( key == _key ) { \
-        if ( value.Get()->type != gse::type::_type::GetType() ) { \
-            throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Invalid assignment value type, expected: " + gse::type::Type::GetTypeString( gse::type::_type::GetType() ) + ", got: " + gse::type::Type::GetTypeString( value.Get()->type ), GSE_CALL ); \
+        if ( value->type != gse::value::_type::GetType() ) { \
+            throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Invalid assignment value type, expected: " + gse::Value::GetTypeStringStatic( gse::value::_type::GetType() ) + ", got: " + value->GetTypeString(), GSE_CALL ); \
         } \
-        obj->_property = ((gse::type::_type*)value.Get())->value; \
+        obj->_property = ((gse::value::_type*)value)->value; \
         obj->OnWrapSet( _key ); \
     }
 
 #define UNWRAPIMPL_PTR( _type ) \
-_type* _type::Unwrap( const gse::Value& value ) { \
-    const auto* valueobj = value.Get()->Deref(); \
-    ASSERT_NOLOG( valueobj->type == gse::type::Type::T_OBJECT, "can't unwrap non-object: " + valueobj->Dump() ); \
-    const auto* obj = (gse::type::Object*)valueobj; \
+_type* _type::Unwrap( gse::Value* const value ) { \
+    const auto* valueobj = value->Deref(); \
+    ASSERT_NOLOG( valueobj->type == gse::Value::T_OBJECT, "can't unwrap non-object: " + valueobj->Dump() ); \
+    const auto* obj = (gse::value::Object*)valueobj; \
     ASSERT_NOLOG( obj->object_class == WRAP_CLASS, "can't unwrap object of different class ( " + obj->object_class + " != " + WRAP_CLASS + " )" ); \
     ASSERT_NOLOG( obj->wrapobj, "can't unwrap object without internal link" ); \
     return (_type*)obj->wrapobj; \
 }
 
 #define UNWRAPIMPL_NOPTR_BEGIN( _type ) \
-_type _type::Unwrap( const gse::Value& value ) { \
-    const auto* valueobj = value.Get()->Deref(); \
-    ASSERT_NOLOG( valueobj->type == gse::type::Type::T_OBJECT, "can only unwrap objects" ); \
-    const auto* obj = (gse::type::Object*)valueobj; \
+_type _type::Unwrap( gse::Value* const value ) { \
+    const auto* valueobj = value->Deref(); \
+    ASSERT_NOLOG( valueobj->type == gse::Value::T_OBJECT, "can only unwrap objects" ); \
+    const auto* obj = (gse::value::Object*)valueobj; \
     ASSERT_NOLOG( obj->object_class == WRAP_CLASS, "can only unwrap objects of same class" ); \
     const auto& properties = obj->value;
 
@@ -161,16 +163,32 @@ _type _type::Unwrap( const gse::Value& value ) { \
 
 class Value {
 public:
-	Value() = delete;
-	Value( const std::shared_ptr< type::Type > data );
-	~Value();
+	enum type_t : uint8_t {
+		T_NOTHING,
+		T_UNDEFINED,
+		T_NULL,
+		T_BOOL,
+		T_INT,
+		T_FLOAT,
+		T_STRING,
+		T_ARRAY,
+		T_OBJECT,
+		T_CALLABLE,
+		T_ARRAYREF,
+		T_ARRAYRANGEREF,
+		T_OBJECTREF,
+		T_VALUEREF,
+		T_RANGE,
+		T_LOOPCONTROL,
+	};
 
-	const type::Type* Get() const;
+	static const std::string& GetTypeStringStatic( const type_t type );
 	const std::string& GetTypeString() const;
 	const std::string ToString() const;
 	const std::string Dump() const;
 
-	const Value Clone() const;
+	Value* const Deref();
+	Value* const Clone();
 
 #define OP( _op ) const bool operator _op( const Value& other ) const;
 	OP( == )
@@ -181,13 +199,17 @@ public:
 	OP( >= )
 #undef OP
 
-	static void Serialize( types::Buffer* buffer, const Value& value );
-	static Value Unserialize( types::Buffer* buf );
+	const type_t type;
 
-private:
-	std::shared_ptr< type::Type > m_data;
+	Value* const New( const Value* value );
 
-	const Value New( const type::Type* type ) const;
+	static void Serialize( types::Buffer* buf, Value* const type );
+	static Value* Unserialize( types::Buffer* buf );
+
+protected:
+	Value( const type_t type )
+		: type( type ) {}
+
 };
 
 }

@@ -25,10 +25,10 @@ Input::Input( DOM_ARGS )
 	m_text->SetText( m_value );
 
 	Property(
-		GSE_CALL, "value", gse::type::Type::T_STRING, VALUE( gse::type::String, "" ), PF_NONE,
-		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
-			SetValue( GSE_CALL, ( (gse::type::String*)v.Get() )->value );
-			return VALUE( gse::type::Undefined );
+		GSE_CALL, "value", gse::Value::T_STRING, VALUE( gse::value::String, "" ), PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			SetValue( GSE_CALL, ( (gse::value::String*)v )->value );
+			return VALUE( gse::value::Undefined );
 		}
 	);
 
@@ -104,7 +104,7 @@ const bool Input::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 	return Panel::ProcessEventImpl( GSE_CALL, event );
 }
 
-void Input::SerializeEvent( const input::Event& e, gse::type::object_properties_t& obj ) const {
+void Input::SerializeEvent( const input::Event& e, gse::value::object_properties_t& obj ) const {
 	switch ( e.type ) {
 		case input::EV_CHANGE:
 		case input::EV_SELECT: {
@@ -112,7 +112,7 @@ void Input::SerializeEvent( const input::Event& e, gse::type::object_properties_
 			obj.insert(
 				{
 					"value",
-					VALUE( gse::type::String, *e.data.value.change_select.text )
+					VALUE( gse::value::String, *e.data.value.change_select.text )
 				}
 			);
 			break;
@@ -132,7 +132,7 @@ void Input::SetValue( GSE_CALLABLE, const std::string& value ) {
 				: " "
 			)
 		);
-		UpdateProperty( "value", VALUE( gse::type::String, value ) );
+		UpdateProperty( "value", VALUE( gse::value::String, value ) );
 		input::Event e;
 		e.SetType( input::EV_CHANGE );
 		e.data.value.change_select.text = new std::string( m_value );

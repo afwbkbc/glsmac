@@ -37,7 +37,7 @@ namespace program {
 class Program;
 }
 
-namespace type {
+namespace value {
 class Callable;
 }
 
@@ -58,13 +58,13 @@ CLASS( GSE, common::Class )
 
 	context::GlobalContext* CreateGlobalContext( const std::string& source_path = "" );
 
-	void AddModule( const std::string& path, type::Callable* module );
+	void AddModule( const std::string& path, value::Callable* module );
 
 	void Run();
-	const Value RunScript( GSE_CALLABLE, const std::string& path );
+	Value* const RunScript( GSE_CALLABLE, const std::string& path );
 
-	void SetGlobal( const std::string& identifier, Value variable );
-	const Value& GetGlobal( const std::string& identifier );
+	void SetGlobal( const std::string& identifier, Value* variable );
+	Value* const GetGlobal( const std::string& identifier );
 
 	context::Context* GetContextByPath( const std::string& path ) const;
 
@@ -88,15 +88,15 @@ private:
 		".gls.js",
 	};
 
-	std::unordered_map< std::string, type::Callable* > m_modules = {};
+	std::unordered_map< std::string, value::Callable* > m_modules = {};
 	std::vector< std::string > m_modules_order = {};
-	std::map< std::string, Value > m_globals = {};
+	std::map< std::string, Value* > m_globals = {};
 
 	std::vector< Bindings* > m_bindings = {};
 	builtins::Builtins m_builtins = {};
 
 	struct include_cache_t {
-		Value result;
+		Value* result;
 		context::GlobalContext* context;
 		// TODO: why can't we delete these two upon getting result?
 		const program::Program* program;

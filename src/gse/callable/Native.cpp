@@ -11,7 +11,7 @@ Native::Native( const executor_t& executor )
 	//
 }
 
-Value Native::Run( GSE_CALLABLE, const type::function_arguments_t& arguments ) {
+Value* Native::Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) {
 	return m_executor( GSE_CALL, arguments );
 }
 

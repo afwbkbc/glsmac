@@ -5,8 +5,8 @@
 #include "Surface.h"
 #include "ui/UI.h"
 #include "ui/geometry/Geometry.h"
-#include "gse/type/Int.h"
-#include "gse/type/Bool.h"
+#include "gse/value/Int.h"
+#include "gse/value/Bool.h"
 
 namespace ui {
 namespace dom {
@@ -58,8 +58,8 @@ Window::Window( DOM_ARGS )
 	SetHeaderHeight( 20 );
 
 	Property(
-		GSE_CALL, "blocker", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
-		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
+		GSE_CALL, "blocker", gse::Value::T_STRING, VALUE( gse::value::Undefined ), PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* v ) {
 			WrapSetStatic( m_blocker, "background", v, GSE_CALL );
 			m_blocker->Show();
 		},
@@ -71,18 +71,18 @@ Window::Window( DOM_ARGS )
 	ForwardProperty( GSE_CALL, "header_background", "background", m_header );
 	ForwardProperty( GSE_CALL, "header_border", "border", m_header );
 	Property(
-		GSE_CALL, "header_height", gse::type::Type::T_INT, VALUE( gse::type::Int, 20 ), PF_NONE,
-		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
-			SetHeaderHeight( ( (gse::type::Int*)v.Get() )->value );
+		GSE_CALL, "header_height", gse::Value::T_INT, VALUE( gse::value::Int, 20 ), PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			SetHeaderHeight( ( (gse::value::Int*)v )->value );
 		},
 		[ this ]( GSE_CALLABLE ) {
 			SetHeaderHeight( 0 );
 		}
 	);
 	Property(
-		GSE_CALL, "header_padding", gse::type::Type::T_INT, VALUE( gse::type::Undefined ), PF_NONE,
-		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
-			m_header->GetGeometry()->SetPadding( ( (gse::type::Int*)v.Get() )->value );
+		GSE_CALL, "header_padding", gse::Value::T_INT, VALUE( gse::value::Undefined ), PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			m_header->GetGeometry()->SetPadding( ( (gse::value::Int*)v )->value );
 		},
 		[ this ]( GSE_CALLABLE ) {
 			m_header->GetGeometry()->SetPadding( 0 );

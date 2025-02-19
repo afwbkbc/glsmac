@@ -15,7 +15,7 @@ public:
 protected:
 	virtual const bool IsEventRelevant( const input::Event& event ) const override;
 
-	virtual void SerializeEvent( const input::Event& event, gse::type::object_properties_t& event_data ) const override;
+	virtual void SerializeEvent( const input::Event& event, gse::value::object_properties_t& event_data ) const override;
 
 };
 

@@ -16,7 +16,7 @@ public:
 protected:
 	virtual const bool ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) override;
 
-	virtual void SerializeEvent( const input::Event& e, gse::type::object_properties_t& obj ) const override;
+	virtual void SerializeEvent( const input::Event& e, gse::value::object_properties_t& obj ) const override;
 
 private:
 	std::string m_value = "";

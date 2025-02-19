@@ -3,9 +3,9 @@
 #include <stack>
 #include <functional>
 
-#include "gse/type/Int.h"
-#include "gse/type/Float.h"
-#include "gse/type/String.h"
+#include "gse/value/Int.h"
+#include "gse/value/Float.h"
+#include "gse/value/String.h"
 
 #include "gse/Exception.h"
 #include "gse/program/Program.h"
@@ -669,7 +669,7 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 					elements.push_back( GetOperator( (Operator*)( *it ) ) );
 					if ( op == "return" && ( ( it + 1 == it_end ) || ( *(it + 1))->m_type == SourceElement::ET_DELIMITER ) ) {
 						// return undefined by default
-						elements.push_back( new program::Value( (*it)->m_si, VALUE( type::Undefined ) ) );
+						elements.push_back( new program::Value( (*it)->m_si, VALUE( value::Undefined ) ) );
 					}
 				}
 				var_hints_allowed = false;
@@ -919,11 +919,11 @@ const program::Operand* JS::GetOperand( const Identifier* element, program::vari
 				const bool is_float = element->m_name.find( '.' ) != std::string::npos;
 				if ( is_float ) {
 					const auto f = std::stof( element->m_name.c_str() );
-					return new program::Value( element->m_si, VALUE( type::Float, f ) );
+					return new program::Value( element->m_si, VALUE( value::Float, f ) );
 				}
 				else {
 					const auto v = std::stol( element->m_name.c_str() );
-					return new program::Value( element->m_si, VALUE( type::Int, v ) );
+					return new program::Value( element->m_si, VALUE( value::Int, v ) );
 				}
 			}
 			catch ( std::logic_error const& ex ) {
@@ -931,7 +931,7 @@ const program::Operand* JS::GetOperand( const Identifier* element, program::vari
 			}
 		}
 		case IDENTIFIER_STRING: {
-			return new program::Value( element->m_si, VALUE( type::String, element->m_name ) );
+			return new program::Value( element->m_si, VALUE( value::String, element->m_name ) );
 		}
 		default:
 			THROW( "unexpected identifier type: " + std::to_string( element->m_identifier_type ) );

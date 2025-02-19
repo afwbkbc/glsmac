@@ -2,20 +2,18 @@
 
 #include <optional>
 
-#include "Type.h"
-
 namespace gse {
-namespace type {
+namespace value {
 
 class Array;
 
-class ArrayRangeRef : public Type {
+class ArrayRangeRef : public Value {
 public:
 
-	static const type_t GetType() { return Type::T_ARRAYRANGEREF; }
+	static const type_t GetType() { return Value::T_ARRAYRANGEREF; }
 
 	ArrayRangeRef( Array* array, const std::optional< size_t > from, const std::optional< size_t > to )
-		: Type( GetType() )
+		: Value( GetType() )
 		, array( array )
 		, from( from )
 		, to( to ) {}

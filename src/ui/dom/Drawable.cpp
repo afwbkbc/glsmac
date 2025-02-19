@@ -37,11 +37,11 @@ Drawable::Drawable( DOM_ARGS_T, geometry::Geometry* const geometry )
 
 #define GEOMSETTER( _key, _type ) \
     Property( \
-        GSE_CALL, _key, gse::type::Type::_type, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v )
+        GSE_CALL, _key, gse::Value::_type, VALUE( gse::value::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const v )
 
 #define GEOMPROP( _key, _method ) \
     GEOMSETTER( _key, T_INT ) { \
-        m_geometry->_method( ( (gse::type::Int*)v.Get() )->value ); \
+        m_geometry->_method( ( (gse::value::Int*)v )->value ); \
         if ( m_parent ) { \
             m_parent->UpdateMouseOver( GSE_CALL ); \
         } \
@@ -53,7 +53,7 @@ Drawable::Drawable( DOM_ARGS_T, geometry::Geometry* const geometry )
 #undef GEOMPROP
 
 	GEOMSETTER( "align", T_STRING ) {
-		const auto strs = util::String::Split( ( (gse::type::String*)v.Get() )->value, ' ' );
+		const auto strs = util::String::Split( ( (gse::value::String*)v )->value, ' ' );
 		uint8_t align = geometry::Geometry::ALIGN_NONE;
 		for ( const auto& str : strs ) {
 			const auto& it = s_align_strs.find( str );

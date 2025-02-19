@@ -5,8 +5,8 @@
 
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
-#include "gse/type/Array.h"
-#include "gse/type/Float.h"
+#include "gse/value/Array.h"
+#include "gse/value/Float.h"
 #include "gse/ExecutionPointer.h"
 #include "engine/Engine.h"
 #include "loader/sound/SoundLoader.h"
@@ -149,7 +149,7 @@ WRAPIMPL_BEGIN( AnimationManager )
 				GSE_ERROR( gse::EC.GAME_ERROR, *errmsg );
 				delete errmsg;
 			}
-			return VALUE( gse::type::Undefined );
+			return VALUE( gse::value::Undefined );
 		} )
 		}
 	};

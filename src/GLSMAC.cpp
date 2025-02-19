@@ -16,7 +16,7 @@
 #include "gse/context/GlobalContext.h"
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Undefined.h"
 
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
@@ -152,7 +152,7 @@ WRAPIMPL_BEGIN( GLSMAC )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				S_Init( GSE_CALL, {} );
-				return VALUE( gse::type::Undefined );
+				return VALUE( gse::value::Undefined );
 			} )
 		},
 		{
@@ -160,7 +160,7 @@ WRAPIMPL_BEGIN( GLSMAC )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				g_engine->ShutDown();
-				return VALUE( gse::type::Undefined );
+				return VALUE( gse::value::Undefined );
 			} )
 		},
 		{
@@ -168,7 +168,7 @@ WRAPIMPL_BEGIN( GLSMAC )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				DeinitGameState( GSE_CALL );
-				return VALUE( gse::type::Undefined );
+				return VALUE( gse::value::Undefined );
 			} )
 		},
 		{
@@ -183,14 +183,14 @@ WRAPIMPL_BEGIN( GLSMAC )
 					on_complete->Run( ctx, si, ep2, {} );
 					N_UNPERSIST_CALLABLE( on_complete );
 				} );
-				return VALUE( gse::type::Undefined );
+				return VALUE( gse::value::Undefined );
 			} )
 		},
 		{
 			"randomize_settings",
 			NATIVE_CALL( this ) {
 				RandomizeSettings( GSE_CALL );
-				return VALUE( gse::type::Undefined );
+				return VALUE( gse::value::Undefined );
 			} )
 		},
 		{
@@ -207,7 +207,7 @@ WRAPIMPL_BEGIN( GLSMAC )
 				}
 				AddSinglePlayerSlot( nullptr );
 				StartGame( GSE_CALL );
-				return VALUE( gse::type::Undefined );
+				return VALUE( gse::value::Undefined );
 			} )
 		},
 	};
@@ -244,7 +244,7 @@ void GLSMAC::HideLoader() {
 	}
 }
 
-const gse::Value GLSMAC::TriggerObject( gse::Wrappable* object, const std::string& event, const gse::type::object_properties_t& args ) {
+gse::Value* const GLSMAC::TriggerObject( gse::Wrappable* object, const std::string& event, const gse::value::object_properties_t& args ) {
 	gse::ExecutionPointer ep;
 	return object->Trigger( m_ctx, {}, ep, event, args );
 }
@@ -272,18 +272,18 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 			r->Init( c->GetPossibleSMACPaths(), c->GetSMACType() );
 		}
 	} catch ( const std::runtime_error& e ) {
-		gse::type::object_properties_t args = {
+		gse::value::object_properties_t args = {
 			{
-				"set_smacpath", VALUE( gse::callable::Native, [ this ]( GSE_CALLABLE, const gse::type::function_arguments_t& arguments ) -> gse::Value {
+				"set_smacpath", VALUE( gse::callable::Native, [ this ]( GSE_CALLABLE, const gse::value::function_arguments_t& arguments )  {
 					N_EXPECT_ARGS( 1 );
 					N_GETVALUE( path, 0, String );
 					S_Init( GSE_CALL, path );
-					return VALUE( gse::type::Undefined );
+					return VALUE( gse::value::Undefined );
 				} )
 			}
 		};
 		if ( path.has_value() ) {
-			args.insert({ "last_failed_path", VALUE( gse::type::String, path.value() ) } );
+			args.insert({ "last_failed_path", VALUE( gse::value::String, path.value() ) } );
 		}
 		Trigger( GSE_CALL, "smacpath_prompt", args );
 		return;
@@ -333,7 +333,7 @@ void GLSMAC::S_Intro( GSE_CALLABLE ) {
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				S_MainMenu( GSE_CALL );
-				return VALUE( gse::type::Undefined );
+				return VALUE( gse::value::Undefined );
 			} )
 		}
 	} );
@@ -353,7 +353,7 @@ void GLSMAC::UpdateLoaderText() {
 	std::string text = m_loader_text + std::string( m_loader_dots, '.' ) + std::string( 3 - m_loader_dots, ' ' );
 	TriggerObject( this, "loader_text", {
 		{
-			"text", VALUE( gse::type::String, text )
+			"text", VALUE( gse::value::String, text )
 		}
 	} );
 }
@@ -447,9 +447,9 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 void GLSMAC::RunMain() {
 	try {
 		for ( const auto& main : m_main_callables ) {
-			ASSERT_NOLOG( main.Get()->type == gse::type::Type::T_CALLABLE, "main not callable" );
+			ASSERT_NOLOG( main->type == gse::Value::T_CALLABLE, "main not callable" );
 			gse::ExecutionPointer ep;
-			( (gse::type::Callable*)main.Get() )->Run( m_ctx, {}, ep, { Wrap() } );
+			( (gse::value::Callable*)main )->Run( m_ctx, {}, ep, { Wrap() } );
 		}
 	} catch ( const gse::Exception& e ) {
 		util::LogHelper::Println( e.ToString() );
@@ -461,8 +461,8 @@ void GLSMAC::AddToContext( gse::context::Context* ctx, gse::ExecutionPointer& ep
 	ctx->CreateBuiltin( "main", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 1 );
 		const auto& main = arguments.at(0);
-		N_CHECKARG( main.Get(), 0, Callable );
+		N_CHECKARG( main, 0, Callable );
 		m_main_callables.push_back( main );
-		return VALUE( gse::type::Undefined );
+		return VALUE( gse::value::Undefined );
 	} ), ep );
 }

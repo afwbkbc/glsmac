@@ -12,7 +12,7 @@ public:
 
 	const std::string* Validate( Game* game ) const override;
 	void Resolve( Game* game ) override;
-	const gse::Value Apply( Game* game ) const override;
+	gse::Value* const Apply( Game* game ) const override;
 	TS_DEF()
 
 private:
@@ -25,7 +25,7 @@ private:
 	const size_t m_attacker_unit_id;
 	const size_t m_defender_unit_id;
 
-	gse::Value m_resolutions;
+	gse::Value* m_resolutions;
 
 };
 

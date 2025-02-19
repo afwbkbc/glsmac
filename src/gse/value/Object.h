@@ -7,9 +7,6 @@
 #include "Types.h"
 #include "gse/Types.h"
 
-#include "Type.h"
-#include "gse/Value.h"
-
 namespace gse {
 
 class Wrappable;
@@ -19,24 +16,24 @@ class Context;
 class ChildContext;
 }
 
-namespace type {
+namespace value {
 
-class Object : public Type {
+class Object : public Value {
 public:
 
 	// internal use only for now
 	typedef std::string object_class_t;
 
-	static const type_t GetType() { return Type::T_OBJECT; }
+	static const type_t GetType() { return Value::T_OBJECT; }
 
-	typedef void (wrapsetter_t)( Wrappable*, const std::string&, const Value&, GSE_CALLABLE ); // ( obj, key, value, GSE_CALL )
+	typedef void (wrapsetter_t)( Wrappable*, const std::string&, Value* const, GSE_CALLABLE ); // ( obj, key, value, GSE_CALL )
 	Object( context::ChildContext* const ctx, object_properties_t initial_value = {}, const object_class_t object_class = "", Wrappable* wrapobj = nullptr, wrapsetter_t* wrapsetter = nullptr );
 	~Object();
 
-	const Value& Get( const object_key_t& key ) const;
-	void Set( const object_key_t& key, const Value& value, GSE_CALLABLE );
+	Value* const Get( const object_key_t& key ) const;
+	void Set( const object_key_t& key, Value* const value, GSE_CALLABLE );
 
-	const Value GetRef( const object_key_t& key );
+	Value* const GetRef( const object_key_t& key );
 
 	void Unlink();
 

@@ -28,11 +28,11 @@ Area::Area( DOM_ARGS_T )
 
 #define GEOMSETTER( _key, _type ) \
     Property( \
-        GSE_CALL, _key, gse::type::Type::_type, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v )
+        GSE_CALL, _key, gse::Value::_type, VALUE( gse::value::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const v )
 
 #define GEOMPROP( _key, _method ) \
     GEOMSETTER( _key, T_INT ) { \
-        m_geometry->_method( ( (gse::type::Int*)v.Get() )->value ); \
+        m_geometry->_method( ( (gse::value::Int*)v )->value ); \
         if ( m_parent ) { \
             m_parent->UpdateMouseOver( GSE_CALL ); \
         } \
@@ -63,7 +63,7 @@ const bool Area::IsEventRelevant( const input::Event& event ) const {
 	return Drawable::IsEventRelevant( event );
 }
 
-void Area::SerializeEvent( const input::Event& e, gse::type::object_properties_t& obj ) const {
+void Area::SerializeEvent( const input::Event& e, gse::value::object_properties_t& obj ) const {
 	switch ( e.type ) {
 		case input::EV_MOUSE_MOVE:
 		case input::EV_MOUSE_OVER:
@@ -74,25 +74,25 @@ void Area::SerializeEvent( const input::Event& e, gse::type::object_properties_t
 			obj.insert(
 				{
 					"x",
-					VALUE( gse::type::Int, e.data.mouse.x - area.left )
+					VALUE( gse::value::Int, e.data.mouse.x - area.left )
 				}
 			);
 			obj.insert(
 				{
 					"y",
-					VALUE( gse::type::Int, e.data.mouse.y - area.top )
+					VALUE( gse::value::Int, e.data.mouse.y - area.top )
 				}
 			);
 			obj.insert(
 				{
 					"ax",
-					VALUE( gse::type::Int, e.data.mouse.x )
+					VALUE( gse::value::Int, e.data.mouse.x )
 				}
 			);
 			obj.insert(
 				{
 					"ay",
-					VALUE( gse::type::Int, e.data.mouse.y )
+					VALUE( gse::value::Int, e.data.mouse.y )
 				}
 			);
 			if ( e.type == input::EV_MOUSE_DOWN || e.type == input::EV_MOUSE_UP ) {
@@ -117,7 +117,7 @@ void Area::SerializeEvent( const input::Event& e, gse::type::object_properties_t
 				obj.insert(
 					{
 						"button",
-						VALUE( gse::type::String, buttonstr )
+						VALUE( gse::value::String, buttonstr )
 					}
 				);
 			}

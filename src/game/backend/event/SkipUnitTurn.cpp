@@ -4,7 +4,7 @@
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/slot/Slot.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Undefined.h"
 
 namespace game {
 namespace backend {
@@ -37,9 +37,9 @@ const std::string* SkipUnitTurn::Validate( Game* game ) const {
 	return Ok();
 }
 
-const gse::Value SkipUnitTurn::Apply( Game* game ) const {
+gse::Value* const SkipUnitTurn::Apply( Game* game ) const {
 	game->GetUM()->SkipUnitTurn( m_unit_id );
-	return VALUE( gse::type::Undefined );
+	return VALUE( gse::value::Undefined );
 }
 
 TS_BEGIN( SkipUnitTurn )

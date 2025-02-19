@@ -8,7 +8,7 @@
 
 #include "Types.h"
 
-#include "gse/type/Object.h"
+#include "gse/value/Object.h"
 #include "util/Clamper.h"
 #include "types/Vec2.h"
 #include "types/mesh/Types.h"

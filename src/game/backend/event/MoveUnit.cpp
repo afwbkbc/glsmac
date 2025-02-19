@@ -5,7 +5,7 @@
 #include "game/backend/unit/StaticDef.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/slot/Slot.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Undefined.h"
 
 namespace game {
 namespace backend {
@@ -15,7 +15,7 @@ MoveUnit::MoveUnit( const size_t initiator_slot, const size_t unit_id, const bac
 	: Event( initiator_slot, ET_UNIT_MOVE )
 	, m_unit_id( unit_id )
 	, m_direction( direction )
-	, m_resolutions( VALUE( gse::type::Undefined ) ) {
+	, m_resolutions( VALUE( gse::value::Undefined ) ) {
 
 }
 
@@ -54,11 +54,11 @@ void MoveUnit::Resolve( Game* game ) {
 	m_resolutions = game->GetUM()->MoveUnitResolve( unit, dst_tile );
 }
 
-const gse::Value MoveUnit::Apply( Game* game ) const {
+gse::Value* const MoveUnit::Apply( Game* game ) const {
 	auto* unit = game->GetUM()->GetUnit( m_unit_id );
 	ASSERT_NOLOG( unit, "unit not found" );
 	game->GetUM()->MoveUnitApply( unit, unit->GetTile()->GetNeighbour( m_direction ), m_resolutions );
-	return VALUE( gse::type::Undefined );
+	return VALUE( gse::value::Undefined );
 }
 
 TS_BEGIN( MoveUnit )

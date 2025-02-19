@@ -14,9 +14,9 @@
 
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
-#include "gse/type/Bool.h"
-#include "gse/type/Float.h"
-#include "gse/type/Array.h"
+#include "gse/value/Bool.h"
+#include "gse/value/Float.h"
+#include "gse/value/Array.h"
 
 namespace game {
 namespace backend {
@@ -214,10 +214,10 @@ WRAPIMPL_BEGIN( BaseManager )
 					N_GETPROP( renders, def, key, Array );
 					out.reserve( renders.size() );
 					for ( const auto& v : renders ) {
-						if ( v.Get()->type != gse::type::Type::T_OBJECT ) {
+						if ( v->type != gse::Value::T_OBJECT ) {
 							GSE_ERROR( gse::EC.INVALID_CALL, "Pop render elements must be objects" );
 						}
-						const auto* obj = (gse::type::Object*)v.Get();
+						const auto* obj = (gse::value::Object*)v;
 						const auto& ov = obj->value;
 						N_GETPROP( type, ov, "type", String );
 						if ( type == "sprite" ) {

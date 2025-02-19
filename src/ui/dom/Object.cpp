@@ -10,7 +10,7 @@
 #include "ui/Class.h"
 #include "scene/Scene.h"
 #include "input/Event.h"
-#include "gse/type/Bool.h"
+#include "gse/value/Bool.h"
 
 #include "Object.colormap.cpp"
 
@@ -25,11 +25,11 @@ Object::Object( DOM_ARGS_T )
 	, m_id( ++s_next_id )
 	, m_parent( parent )
 	, m_initial_properties( properties ) {
-	Property( GSE_CALL, "id", gse::type::Type::T_STRING );
+	Property( GSE_CALL, "id", gse::Value::T_STRING );
 
 	Property(
-		GSE_CALL, "class", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& value ) {
-			const auto names = util::String::Split( ( (gse::type::String*)value.Get() )->value, ' ' );
+		GSE_CALL, "class", gse::Value::T_STRING, VALUE( gse::value::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const value ) {
+			const auto names = util::String::Split( ( (gse::value::String*)value )->value, ' ' );
 			// check for duplicates
 			std::unordered_set< std::string > names_set = {};
 			for ( const auto& n : names ) {
@@ -44,20 +44,20 @@ Object::Object( DOM_ARGS_T )
 	Method( GSE_CALL, "addclass", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 1 );
 		N_GETVALUE( name, 0, String );
-		ASSERT_NOLOG( m_properties.at("class").Get()->type == gse::type::Type::T_STRING, "class is not string" );
-		auto names = util::String::Split( ((gse::type::String*)m_properties.at("class").Get())->value, ' ' );
+		ASSERT_NOLOG( m_properties.at("class")->type == gse::Value::T_STRING, "class is not string" );
+		auto names = util::String::Split( ((gse::value::String*)m_properties.at("class"))->value, ' ' );
 		if ( std::find( names.begin(), names.end(), name ) == names.end() ) {
 			names.push_back( name );
-			UpdateProperty( "class", VALUE( gse::type::String, util::String::Join( names, ' ' ) ) );
+			UpdateProperty( "class", VALUE( gse::value::String, util::String::Join( names, ' ' ) ) );
 			SetClasses( GSE_CALL, names );
 		}
-		return VALUE( gse::type::Undefined );
+		return VALUE( gse::value::Undefined );
 	} ) );
 	Method( GSE_CALL, "removeclass", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 1 );
 		N_GETVALUE( name, 0, String );
-		ASSERT_NOLOG( m_properties.at( "class" ).Get()->type == gse::type::Type::T_STRING, "class is not string" );
-		const auto names = util::String::Split( ( (gse::type::String*)m_properties.at( "class" ).Get() )->value, ' ' );
+		ASSERT_NOLOG( m_properties.at( "class" )->type == gse::Value::T_STRING, "class is not string" );
+		const auto names = util::String::Split( ( (gse::value::String*)m_properties.at( "class" ) )->value, ' ' );
 		if ( std::find( names.begin(), names.end(), name ) != names.end() ) {
 			std::vector< std::string > names_new = {};
 			names_new.reserve( names.size() - 1 );
@@ -66,15 +66,15 @@ Object::Object( DOM_ARGS_T )
 					names_new.push_back( n );
 				}
 			}
-			UpdateProperty( "class", VALUE( gse::type::String, util::String::Join( names_new, ' ' ) ) );
+			UpdateProperty( "class", VALUE( gse::value::String, util::String::Join( names_new, ' ' ) ) );
 			SetClasses( GSE_CALL, names_new );
 		}
-		return VALUE( gse::type::Undefined );
+		return VALUE( gse::value::Undefined );
 	} ) );
 	Method( GSE_CALL, "remove", NATIVE_CALL( this ) {
 		ASSERT_NOLOG( m_parent, "remove without parent" );
 		m_parent->RemoveChild( GSE_CALL, this );
-		return VALUE( gse::type::Undefined );
+		return VALUE( gse::value::Undefined );
 	} ) );
 }
 
@@ -89,7 +89,7 @@ Object::~Object() {
 	}
 };
 
-const gse::Value Object::Wrap( const bool dynamic ) {
+gse::Value* const Object::Wrap( const bool dynamic ) {
 	if ( !m_wrapobj ) {
 		WRAPIMPL_PROPS
 		};
@@ -101,16 +101,16 @@ const gse::Value Object::Wrap( const bool dynamic ) {
 				}
 			);
 		}
-		m_wrapobj = std::make_shared< gse::type::Object >(
+		m_wrapobj = new gse::value::Object(
 			nullptr, properties, m_tag, this, dynamic
 				? &Object::WrapSetStatic
 				: nullptr
 		);
 	}
-	return gse::Value( m_wrapobj );
+	return m_wrapobj;
 }
 
-void Object::WrapSet( const std::string& key, const gse::Value& value, GSE_CALLABLE ) {
+void Object::WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE ) {
 	auto def_it = m_property_defs.find( key );
 	if ( def_it == m_property_defs.end() ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' does not exist" );
@@ -118,7 +118,7 @@ void Object::WrapSet( const std::string& key, const gse::Value& value, GSE_CALLA
 	if ( def_it->second.flags & PF_READONLY ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' is read-only" );
 	}
-	if ( value.Get()->type != gse::type::Type::T_UNDEFINED ) {
+	if ( value->type != gse::Value::T_UNDEFINED ) {
 		SetProperty( GSE_CALL, &m_manual_properties, key, value );
 		SetProperty( GSE_CALL, &m_properties, key, value );
 	}
@@ -128,7 +128,7 @@ void Object::WrapSet( const std::string& key, const gse::Value& value, GSE_CALLA
 	}
 }
 
-void Object::WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, GSE_CALLABLE ) {
+void Object::WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, gse::Value* const value, GSE_CALLABLE ) {
 	ASSERT_NOLOG( wrapobj, "wrapobj not set" );
 	( (Object*)wrapobj )->WrapSet( key, value, GSE_CALL );
 }
@@ -191,15 +191,15 @@ const bool Object::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 	ASSERT_NOLOG( IsEventRelevant( event ), "event irrelevant" );
 	const auto& event_type = event.GetTypeStr();
 	if ( HasHandlers( event_type ) ) {
-		gse::type::object_properties_t event_data = {};
+		gse::value::object_properties_t event_data = {};
 		SerializeEvent( event, event_data );
-		const auto result = Trigger( GSE_CALL, event_type, event_data, gse::type::Type::T_BOOL );
-		return ( (gse::type::Bool*)result.Get() )->value;
+		const auto result = Trigger( GSE_CALL, event_type, event_data, gse::Value::T_BOOL );
+		return ( (gse::value::Bool*)result )->value;
 	}
 	return false;
 }
 
-void Object::UpdateProperty( const std::string& k, const gse::Value& v ) {
+void Object::UpdateProperty( const std::string& k, gse::Value* const v ) {
 	m_properties.insert_or_assign( k, v );
 	if ( m_wrapobj ) {
 		m_wrapobj->value.insert_or_assign( k, v );
@@ -215,7 +215,7 @@ void Object::Actor( scene::actor::Actor* actor ) {
 	m_actors.push_back( actor );
 }
 
-void Object::Property( GSE_CALLABLE, const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value, const property_flag_t flags, const f_on_set_t& f_on_set, const f_on_unset_t& f_on_unset ) {
+void Object::Property( GSE_CALLABLE, const std::string& name, const gse::Value::type_t& type, gse::Value* const default_value, const property_flag_t flags, const f_on_set_t& f_on_set, const f_on_unset_t& f_on_unset ) {
 	ASSERT_NOLOG( m_properties.find( name ) == m_properties.end(), "property '" + name + "' already exists" );
 	ASSERT_NOLOG( m_property_defs.find( name ) == m_property_defs.end(), "property def '" + name + "' already exists" );
 	m_property_defs.insert(
@@ -230,10 +230,10 @@ void Object::Property( GSE_CALLABLE, const std::string& name, const gse::type::T
 		}
 	);
 	const auto& it = m_initial_properties.find( name );
-	const gse::Value& v = it == m_initial_properties.end()
+	gse::Value* const v = it == m_initial_properties.end()
 		? default_value
 		: it->second;
-	if ( default_value.Get()->type != gse::type::Type::T_UNDEFINED ) {
+	if ( default_value->type != gse::Value::T_UNDEFINED ) {
 		m_default_properties.insert(
 			{
 				name,
@@ -244,14 +244,14 @@ void Object::Property( GSE_CALLABLE, const std::string& name, const gse::type::T
 	if ( it != m_initial_properties.end() ) {
 		SetProperty( GSE_CALL, &m_manual_properties, name, it->second );
 	}
-	if ( v.Get()->type != gse::type::Type::T_UNDEFINED ) {
+	if ( v->type != gse::Value::T_UNDEFINED ) {
 		SetProperty( GSE_CALL, &m_properties, name, v );
 	}
 }
 
-void Object::Method( GSE_CALLABLE, const std::string& name, const gse::Value& callable ) {
-	ASSERT_NOLOG( callable.Get()->type == gse::type::Type::T_CALLABLE, "method is not callable: " + callable.ToString() );
-	Property( GSE_CALL, name, gse::type::Type::T_CALLABLE, callable, PF_READONLY );
+void Object::Method( GSE_CALLABLE, const std::string& name, gse::Value* const callable ) {
+	ASSERT_NOLOG( callable->type == gse::Value::T_CALLABLE, "method is not callable: " + callable->ToString() );
+	Property( GSE_CALL, name, gse::Value::T_CALLABLE, callable, PF_READONLY );
 }
 
 void Object::Events( const std::unordered_set< input::event_type_t >& events ) {
@@ -313,11 +313,11 @@ void Object::ParseColor( GSE_CALLABLE, const std::string& str, types::Color& col
 	}
 }
 
-void Object::OnPropertyChange( GSE_CALLABLE, const std::string& key, const gse::Value& value ) const {
+void Object::OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value ) const {
 	const auto& def = m_property_defs.find( key );
 	ASSERT_NOLOG( def != m_property_defs.end(), "property def not found" );
-	if ( value.Get()->type != def->second.type ) {
-		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' is expected to be " + value.Get()->GetTypeString( def->second.type ) + ", got " + value.GetTypeString() + ": " + value.ToString() );
+	if ( value->type != def->second.type ) {
+		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' is expected to be " + gse::Value::GetTypeStringStatic( def->second.type ) + ", got " + value->GetTypeString() + ": " + value->ToString() );
 	}
 	for ( const auto& obj : m_wrapobjs ) {
 		obj->value.insert_or_assign( key, value );
@@ -335,21 +335,21 @@ void Object::OnPropertyRemove( GSE_CALLABLE, const std::string& key ) const {
 	}
 }
 
-void Object::SerializeEvent( const input::Event& e, gse::type::object_properties_t& obj ) const {
+void Object::SerializeEvent( const input::Event& e, gse::value::object_properties_t& obj ) const {
 	switch ( e.type ) {
 		case input::EV_KEY_DOWN: {
 			if ( e.data.key.is_printable ) {
 				obj.insert(
 					{
 						"key",
-						VALUE( gse::type::String, std::string( 1, e.data.key.key ) )
+						VALUE( gse::value::String, std::string( 1, e.data.key.key ) )
 					}
 				);
 			}
 			obj.insert(
 				{
 					"code",
-					VALUE( gse::type::String, e.GetKeyCodeStr() )
+					VALUE( gse::value::String, e.GetKeyCodeStr() )
 				}
 			);
 			break;
@@ -395,7 +395,7 @@ void Object::InitProperties( GSE_CALLABLE ) {
 	}
 }
 
-void Object::SetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key, const gse::Value& value ) {
+void Object::SetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key, gse::Value* const value ) {
 	const auto& it = properties->find( key );
 	if ( it == properties->end() ) {
 		if ( properties == &m_properties ) {
@@ -425,7 +425,7 @@ void Object::SetProperty( GSE_CALLABLE, properties_t* const properties, const st
 
 void Object::UnsetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key ) {
 	const auto& it = properties->find( key );
-	if ( it != properties->end() && it->second.Get()->type != gse::type::Type::T_UNDEFINED ) {
+	if ( it != properties->end() && it->second->type != gse::Value::T_UNDEFINED ) {
 		if ( properties == &m_properties && !m_classes.empty() ) {
 			for ( const auto& c : m_classes ) {
 				const auto& it2 = c->GetProperties().find( key );
@@ -470,7 +470,7 @@ void Object::SetClasses( GSE_CALLABLE, const std::vector< std::string >& names )
 	}
 }
 
-void Object::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value, const class_modifier_t modifier ) {
+void Object::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, gse::Value* const value, const class_modifier_t modifier ) {
 	const auto& def_it = m_property_defs.find( key );
 	if ( def_it == m_property_defs.end() ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' does not exist" );
@@ -479,7 +479,7 @@ void Object::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const g
 		// check if property was set by any of previous classes with higher modifier
 		for ( const auto& c : m_classes ) {
 			const auto kv = c->GetProperty( key, m_modifiers );
-			if ( kv.first.Get()->type != gse::type::Type::T_UNDEFINED && kv.second > modifier ) {
+			if ( kv.first->type != gse::Value::T_UNDEFINED && kv.second > modifier ) {
 				return;
 			}
 		}
@@ -491,7 +491,7 @@ void Object::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
 	const auto& def_it = m_property_defs.find( key );
 	ASSERT_NOLOG( def_it != m_property_defs.end(), "property def not found: " + key );
 
-	auto v = VALUE( gse::type::Undefined );
+	gse::Value* v = VALUE( gse::value::Undefined );
 
 	// search in manual properties
 	const auto& it = m_manual_properties.find( key );
@@ -499,26 +499,26 @@ void Object::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
 		v = it->second;
 	}
 
-	if ( v.Get()->type == gse::type::Type::T_UNDEFINED ) {
+	if ( v->type == gse::Value::T_UNDEFINED ) {
 		// search in other classes
-		for ( auto it = m_classes.rbegin() ; it != m_classes.rend() ; it++ ) {
-			const auto kv = ( *it )->GetProperty( key, m_modifiers );
+		for ( auto it2 = m_classes.rbegin() ; it2 != m_classes.rend() ; it2++ ) {
+			const auto kv = ( *it2 )->GetProperty( key, m_modifiers );
 			v = kv.first;
-			if ( v.Get()->type != gse::type::Type::T_UNDEFINED ) {
+			if ( v->type != gse::Value::T_UNDEFINED ) {
 				break;
 			}
 		}
 	}
 
-	if ( v.Get()->type == gse::type::Type::T_UNDEFINED ) {
+	if ( v->type == gse::Value::T_UNDEFINED ) {
 		// search in default properties
-		const auto& it = m_default_properties.find( key );
-		if ( it != m_default_properties.end() ) {
-			v = it->second;
+		const auto& it2 = m_default_properties.find( key );
+		if ( it2 != m_default_properties.end() ) {
+			v = it2->second;
 		}
 	}
 
-	if ( v.Get()->type != gse::type::Type::T_UNDEFINED ) {
+	if ( v->type != gse::Value::T_UNDEFINED ) {
 		SetProperty( GSE_CALL, &m_properties, key, v );
 	}
 	else {

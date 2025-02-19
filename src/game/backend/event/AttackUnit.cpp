@@ -5,7 +5,7 @@
 #include "game/backend/unit/StaticDef.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/slot/Slot.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Undefined.h"
 
 namespace game {
 namespace backend {
@@ -15,7 +15,7 @@ AttackUnit::AttackUnit( const size_t initiator_slot, const size_t attacker_unit_
 	: Event( initiator_slot, ET_UNIT_ATTACK )
 	, m_attacker_unit_id( attacker_unit_id )
 	, m_defender_unit_id( defender_unit_id )
-	, m_resolutions( VALUE( gse::type::Undefined ) ) {
+	, m_resolutions( VALUE( gse::value::Undefined ) ) {
 
 }
 
@@ -49,14 +49,14 @@ void AttackUnit::Resolve( Game* game ) {
 	m_resolutions = game->GetUM()->AttackUnitResolve( attacker, defender );
 }
 
-const gse::Value AttackUnit::Apply( Game* game ) const {
+gse::Value* const AttackUnit::Apply( Game* game ) const {
 	auto* attacker = game->GetUM()->GetUnit( m_attacker_unit_id );
 	ASSERT_NOLOG( attacker, "attacker unit not found" );
 	auto* defender = game->GetUM()->GetUnit( m_defender_unit_id );
 	ASSERT_NOLOG( defender, "defender unit not found" );
 
 	game->GetUM()->AttackUnitApply( attacker, defender, m_resolutions );
-	return VALUE( gse::type::Undefined );
+	return VALUE( gse::value::Undefined );
 }
 
 TS_BEGIN( AttackUnit )

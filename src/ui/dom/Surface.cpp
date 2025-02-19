@@ -22,9 +22,9 @@ Surface::Surface( DOM_ARGS )
 	Actor( m_actor );
 
 	Property(
-		GSE_CALL, "background", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
-		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
-			const auto& str = ( (gse::type::String*)v.Get() )->value;
+		GSE_CALL, "background", gse::Value::T_STRING, VALUE( gse::value::Undefined ), PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			const auto& str = ( (gse::value::String*)v )->value;
 			if ( str.empty() ) {
 				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property 'background' expects color code or texture path", GSE_CALL );
 			}

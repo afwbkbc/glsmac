@@ -1,11 +1,11 @@
 #include "Tile.h"
 
-#include "gse/type/Object.h"
-#include "gse/type/Array.h"
-#include "gse/type/Int.h"
-#include "gse/type/Bool.h"
-#include "gse/type/Null.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Object.h"
+#include "gse/value/Array.h"
+#include "gse/value/Int.h"
+#include "gse/value/Bool.h"
+#include "gse/value/Null.h"
+#include "gse/value/Undefined.h"
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
 
@@ -174,43 +174,43 @@ WRAPIMPL_BEGIN( Tile )
 	WRAPIMPL_PROPS
 		{
 			"x",
-			VALUE( gse::type::Int, coord.x )
+			VALUE( gse::value::Int, coord.x )
 		},
 		{
 			"y",
-			VALUE( gse::type::Int, coord.y )
+			VALUE( gse::value::Int, coord.y )
 		},
 		{
 			"is_water",
-			VALUE( gse::type::Bool, is_water_tile )
+			VALUE( gse::value::Bool, is_water_tile )
 		},
 		{
 			"is_land",
-			VALUE( gse::type::Bool, !is_water_tile )
+			VALUE( gse::value::Bool, !is_water_tile )
 		},
 		{
 			"moisture",
-			VALUE( gse::type::Int, moisture )
+			VALUE( gse::value::Int, moisture )
 		},
 		{
 			"rockiness",
-			VALUE( gse::type::Int, rockiness )
+			VALUE( gse::value::Int, rockiness )
 		},
 		{
 			"elevation",
-			VALUE( gse::type::Int, *elevation.center )
+			VALUE( gse::value::Int, *elevation.center )
 		},
 		{
 			"is_rocky",
-			VALUE( gse::type::Bool, rockiness == ROCKINESS_ROCKY )
+			VALUE( gse::value::Bool, rockiness == ROCKINESS_ROCKY )
 		},
 		{
 			"has_fungus",
-			VALUE( gse::type::Bool, features & FEATURE_XENOFUNGUS )
+			VALUE( gse::value::Bool, features & FEATURE_XENOFUNGUS )
 		},
 		{
 			"has_river",
-			VALUE( gse::type::Bool, features & FEATURE_RIVER )
+			VALUE( gse::value::Bool, features & FEATURE_RIVER )
 		},
 		GETN( W ),
 		GETN( NW ),
@@ -225,29 +225,29 @@ WRAPIMPL_BEGIN( Tile )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE_UNWRAP( other, 0, Tile );
-				return VALUE( gse::type::Bool, IsAdjactentTo( other ) );
+				return VALUE( gse::value::Bool, IsAdjactentTo( other ) );
 			})
 		},
 		{
 			"get_surrounding_tiles",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
-				gse::type::array_elements_t result = {};
+				gse::value::array_elements_t result = {};
 				for ( const auto& n : neighbours ) {
 					result.push_back( n->Wrap() );
 				}
-				return VALUE( gse::type::Array, result );
+				return VALUE( gse::value::Array, result );
 			})
 		},
 		{
 			"get_units",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
-				gse::type::array_elements_t result = {};
+				gse::value::array_elements_t result = {};
 				for ( auto& it : units ) {
 					result.push_back( it.second->Wrap() );
 				}
-				return VALUE( gse::type::Array, result );
+				return VALUE( gse::value::Array, result );
 			} )
 		},
 		{
@@ -258,7 +258,7 @@ WRAPIMPL_BEGIN( Tile )
 					return base->Wrap();
 				}
 				else {
-					return VALUE( gse::type::Null );
+					return VALUE( gse::value::Null );
 				}
 			} )
 		},

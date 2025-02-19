@@ -20,9 +20,9 @@ Panel::Panel( DOM_ARGS_T, const bool factories_allowed )
 	ForwardProperty( GSE_CALL, "background", m_surface );
 
 	Property(
-		GSE_CALL, "border", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
-		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
-			const auto& str = ( (gse::type::String*)v.Get() )->value;
+		GSE_CALL, "border", gse::Value::T_STRING, VALUE( gse::value::Undefined ), PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			const auto& str = ( (gse::value::String*)v )->value;
 
 			// TODO: refactor
 			auto commapos = str.rfind( ',' );

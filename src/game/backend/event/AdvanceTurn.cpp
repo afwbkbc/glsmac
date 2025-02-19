@@ -3,7 +3,7 @@
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
 
-#include "gse/type/Undefined.h"
+#include "gse/value/Undefined.h"
 
 namespace game {
 namespace backend {
@@ -22,9 +22,9 @@ const std::string* AdvanceTurn::Validate( Game* game ) const {
 	return Ok();
 }
 
-const gse::Value AdvanceTurn::Apply( Game* game ) const {
+gse::Value* const AdvanceTurn::Apply( Game* game ) const {
 	game->AdvanceTurn( m_turn_id );
-	return VALUE( gse::type::Undefined );
+	return VALUE( gse::value::Undefined );
 }
 
 TS_BEGIN( AdvanceTurn )

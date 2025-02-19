@@ -6,7 +6,7 @@
 #include "loader/sound/SoundLoader.h"
 #include "game/backend/animation/AnimationManager.h"
 #include "game/backend/animation/Def.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Undefined.h"
 
 namespace game {
 namespace backend {
@@ -28,9 +28,9 @@ const std::string* DefineAnimation::Validate( Game* game ) const {
 	return Ok();
 }
 
-const gse::Value DefineAnimation::Apply( Game* game ) const {
+gse::Value* const DefineAnimation::Apply( Game* game ) const {
 	game->GetAM()->DefineAnimation( m_def );
-	return VALUE( gse::type::Undefined );
+	return VALUE( gse::value::Undefined );
 }
 
 TS_BEGIN( DefineAnimation )
