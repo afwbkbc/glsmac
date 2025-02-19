@@ -15,7 +15,13 @@ Context::Context( gse::GSE* gse )
 	: m_gse( gse ) {
 }
 
-Context::~Context() {}
+Context::~Context() {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
+
+	for ( const auto& child_context : m_child_contexts ) {
+		child_context->Detach();
+	}
+}
 
 GSE* Context::GetGSE() const {
 	return m_gse;
@@ -176,6 +182,8 @@ ChildContext* const Context::ForkAndExecute(
 }
 
 void Context::Clear() {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
+
 	const auto children = m_child_contexts;
 	for ( const auto& c : children ) {
 		c->Clear();
@@ -206,11 +214,13 @@ void Context::CollectActiveObjects( std::unordered_set< Object* >& active_object
 }
 
 void Context::AddChildContext( ChildContext* const child ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	ASSERT_NOLOG( m_child_contexts.find( child ) == m_child_contexts.end(), "child context already added" );
 	m_child_contexts.insert( child );
 }
 
 void Context::RemoveChildContext( ChildContext* const child ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	if ( !m_child_contexts.empty() ) { // ?
 		ASSERT_NOLOG( m_child_contexts.find( child ) != m_child_contexts.end(), "child context not found" );
 		m_child_contexts.erase( child );
@@ -218,11 +228,13 @@ void Context::RemoveChildContext( ChildContext* const child ) {
 }
 
 void Context::AddChildObject( type::Type* const child ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	ASSERT_NOLOG( m_child_objects.find( child ) == m_child_objects.end(), "child context already added" );
 	m_child_objects.insert( child );
 }
 
 void Context::RemoveChildObject( type::Type* const child ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	if ( !m_child_objects.empty() ) { // ?
 		ASSERT_NOLOG( m_child_objects.find( child ) != m_child_objects.end(), "child context not found" );
 		m_child_objects.erase( child );

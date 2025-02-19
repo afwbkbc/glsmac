@@ -85,9 +85,9 @@ protected:
 
 	void CollectActiveObjects( std::unordered_set< Object* >& active_objects ) override;
 
-private:
-
 	std::atomic< bool > m_is_executing = false;
+
+private:
 
 	std::mutex m_gc_mutex;
 	std::unordered_set< ChildContext* > m_child_contexts = {};

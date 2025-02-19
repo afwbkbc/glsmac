@@ -22,6 +22,8 @@ public:
 	const si_t& GetSI() const override;
 	const script_info_t& GetScriptInfo() const override;
 
+	void Detach();
+
 	void JoinContext() const;
 
 private:

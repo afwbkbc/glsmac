@@ -10,12 +10,15 @@ ChildContext::ChildContext( GSE* gse, Context* parent_context, const si_t& si, c
 	, m_parent_context( parent_context )
 	, m_si( si )
 	, m_is_traceable( is_traceable ) {
+	ASSERT_NOLOG( m_parent_context, "parent context not set" );
 	ASSERT_NOLOG( m_parent_context->GetParentContext() != this, "circular context dependency" );
 	m_parent_context->AddChildContext( this );
 }
 
 ChildContext::~ChildContext() {
-	m_parent_context->RemoveChildContext( this );
+	if ( m_parent_context ) {
+		m_parent_context->RemoveChildContext( this );
+	}
 }
 
 Context* ChildContext::GetParentContext() const {
@@ -36,6 +39,11 @@ const bool ChildContext::IsTraceable() const {
 
 const std::string& ChildContext::GetSourceLine( const size_t line_num ) const {
 	return m_parent_context->GetSourceLine( line_num );
+}
+
+void ChildContext::Detach() {
+	ASSERT_NOLOG( m_parent_context, "detach but parent context not set" );
+	m_parent_context = nullptr;
 }
 
 void ChildContext::JoinContext() const {

@@ -79,13 +79,13 @@ void GSE::AddBindings( Bindings* bindings ) {
 context::GlobalContext* GSE::CreateGlobalContext( const std::string& source_path ) {
 	NEWV( context, context::GlobalContext, this, source_path );
 	m_global_contexts.insert( context );
-	m_gc_space->Add( context );
 	{
 		gse::ExecutionPointer ep;
 		for ( const auto& it : m_bindings ) {
 			it->AddToContext( context, ep );
 		}
 	}
+	m_gc_space->Add( context );
 	return context;
 }
 
@@ -222,7 +222,10 @@ gc::Space* const GSE::GetGCSpace() const {
 
 void GSE::include_cache_t::Cleanup( GSE* const gse ) {
 	{
-		context = nullptr;
+		if ( context ) {
+			context->Clear();
+			context = nullptr;
+		}
 		result = VALUE( type::Undefined );
 		if ( program ) {
 			DELETE( program );

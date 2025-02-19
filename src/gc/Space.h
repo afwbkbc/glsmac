@@ -19,8 +19,12 @@ CLASS( Space, common::Class )
 	void Remove( Object* object );
 
 private:
-	std::mutex m_objects_mutex;
 	std::unordered_set< Object* > m_objects = {};
+
+	std::mutex m_objects_to_add_mutex;
+	std::unordered_set< Object* > m_objects_to_add = {};
+	
+	std::mutex m_objects_to_remove_mutex;
 	std::unordered_set< Object* > m_objects_to_remove = {};
 
 	std::mutex m_collect_mutex;
